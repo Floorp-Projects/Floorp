@@ -111,10 +111,8 @@ NS_IMETHODIMP
 // The nsIXPCScriptable map declaration that will generate stubs for us...
 #define XPC_MAP_CLASSNAME           nsSOAPPropertyBag
 #define XPC_MAP_QUOTED_CLASSNAME   "SOAPPropertyBag"
-#define                             XPC_MAP_WANT_SETPROPERTY
 #define                             XPC_MAP_WANT_GETPROPERTY
-#define XPC_MAP_FLAGS       nsIXPCScriptable::USE_JSSTUB_FOR_ADDPROPERTY   | \
-                            nsIXPCScriptable::USE_JSSTUB_FOR_SETPROPERTY
+#define XPC_MAP_FLAGS               0
 #include "xpc_map_end.h"	/* This will #undef the above */
 
 NS_IMETHODIMP
@@ -134,32 +132,12 @@ NS_IMETHODIMP
     if (value == nsnull)
       return NS_OK;
     void *mark;
-    jsval *argv = JS_PushArguments(cx, &mark, "/%iv", value.get());
+    jsval *argv = JS_PushArguments(cx, &mark, "%iv", value.get());
     *vp = *argv;
     JS_PopArguments(cx, mark);
   }
   return NS_OK;
 }
-
-NS_IMETHODIMP
-    nsSOAPPropertyBag::SetProperty(nsIXPConnectWrappedNative * wrapper,
-				   JSContext * cx, JSObject * obj,
-				   jsval id, jsval * vp, PRBool * _retval)
-{
-  if (JSVAL_IS_STRING(id)) {
-    JSString *str = JSVAL_TO_STRING(id);
-    const PRUnichar *name = NS_REINTERPRET_CAST(const PRUnichar *,
-						JS_GetStringChars(str));
-    nsDependentString namestr(name);
-    nsStringKey nameKey(namestr);
-    nsCOMPtr < nsIVariant > value;	//  Call to convert to variant.
-    if (!JS_ConvertArguments(cx, 1, vp, "/%iv", getter_AddRefs(value)))
-      return NS_ERROR_ILLEGAL_VALUE;
-    mProperties->Put(&nameKey, value);
-  }
-  return NS_OK;
-}
-
 PRBool PropertyBagEnumFunc(nsHashKey * aKey, void *aData, void *aClosure)
 {
   nsISupportsArray *properties =
