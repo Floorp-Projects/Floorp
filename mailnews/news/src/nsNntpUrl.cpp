@@ -423,3 +423,15 @@ NS_IMETHODIMP nsNntpUrl::IsUrlType(PRUint32 type, PRBool *isType)
 
 }
 
+NS_IMETHODIMP
+nsNntpUrl::GetOriginalSpec(char **aSpec)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsNntpUrl::SetOriginalSpec(const char *aSpec)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+

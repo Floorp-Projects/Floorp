@@ -41,6 +41,9 @@
 
 #include "nsIFileLocator.h"
 #include "nsFileLocations.h"
+#include "nsIRDFService.h"
+#include "nsIRDFDataSource.h"
+#include "nsRDFCID.h"
 
 #define POP3_PORT 110 // The IANA port for Pop3
 
@@ -51,6 +54,7 @@ static NS_DEFINE_CID(kPop3UrlCID, NS_POP3URL_CID);
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_IID(kIFileLocatorIID,      NS_IFILELOCATOR_IID);
 static NS_DEFINE_CID(kFileLocatorCID,       NS_FILELOCATOR_CID);
+static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 nsPop3Service::nsPop3Service()
 {
@@ -263,18 +267,94 @@ NS_IMETHODIMP nsPop3Service::GetDefaultPort(PRInt32 *aDefaultPort)
 
 NS_IMETHODIMP nsPop3Service::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI **_retval)
 {
-	// i just haven't implemented this yet...I will be though....
-	NS_NOTREACHED("nsPop3Service::NewURI");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv = NS_ERROR_FAILURE;
+    if (!aSpec || !_retval) return rv;
+    nsCAutoString folderUri(aSpec);
+    nsCOMPtr<nsIRDFResource> resource;
+    PRInt32 offset = folderUri.Find("?");
+    if (offset)
+        folderUri.Truncate(offset);
+
+	NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv); 
+    if (NS_FAILED(rv)) return rv;
+    rv = rdfService->GetResource(folderUri.GetBuffer(),
+                                 getter_AddRefs(resource));
+    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(resource, &rv);
+    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIMsgIncomingServer> server;
+    rv = folder->GetServer(getter_AddRefs(server));
+    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIPop3IncomingServer> popServer = do_QueryInterface(server,&rv);
+    if (NS_FAILED(rv)) return rv;
+    nsXPIDLCString hostname;
+    nsXPIDLCString username;
+    server->GetHostName(getter_Copies(hostname));
+    server->GetUsername(getter_Copies(username));
+    nsCAutoString popSpec = "pop://";
+    popSpec += hostname;
+    popSpec += ":";
+    popSpec.AppendInt(POP3_PORT);
+    popSpec += "?";
+    const char *uidl = PL_strstr(aSpec, "uidl=");
+    if (!uidl) return NS_ERROR_FAILURE;
+    popSpec += uidl;
+    nsCOMPtr<nsIUrlListener> urlListener = do_QueryInterface(folder, &rv);
+    if (NS_FAILED(rv)) return rv;
+    rv = BuildPop3Url((char *)popSpec.GetBuffer(), folder, popServer,
+                      urlListener, _retval, nsnull); 
+    if (NS_SUCCEEDED(rv))
+    {
+        nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = 
+            do_QueryInterface(*_retval, &rv);
+        if (NS_SUCCEEDED(rv))
+        {
+            mailnewsurl->SetUsername((const char*) username);
+        }
+        nsCOMPtr<nsIPop3URL> popurl = do_QueryInterface(mailnewsurl, &rv);
+        if (NS_SUCCEEDED(rv))
+        {
+            nsCAutoString messageUri (aSpec);
+            messageUri.ReplaceSubstring("mailbox:", "mailbox_message:");
+            messageUri.ReplaceSubstring("?number=", "#");
+            offset = messageUri.Find("&");
+            if (offset)
+                messageUri.Truncate(offset);
+            popurl->SetMessageUri(messageUri.GetBuffer());
+            nsCOMPtr<nsIPop3Sink> pop3Sink;
+            rv = popurl->GetPop3Sink(getter_AddRefs(pop3Sink));
+            if (NS_SUCCEEDED(rv))
+                pop3Sink->SetBuildMessageUri(PR_TRUE);
+        }
+    }
+    return rv;
 }
 
 NS_IMETHODIMP nsPop3Service::NewChannel(nsIURI *aURI, nsIChannel **_retval)
 {
-	// mscott - right now, I don't like the idea of returning channels to the caller. They just want us
-	// to run the url, they don't want a channel back...I'm going to be addressing this issue with
-	// the necko team in more detail later on.
-	NS_NOTREACHED("nsPop3Service::NewChannel");
-    return NS_ERROR_NOT_IMPLEMENTED;
+	nsresult rv = NS_OK;
+	nsPop3Protocol * protocol = new nsPop3Protocol(aURI);
+	if (protocol)
+	{
+        rv = protocol->Initialize(aURI);
+        if (NS_FAILED(rv)) 
+        {
+            delete protocol;
+            return rv;
+        }
+        nsXPIDLCString username;
+        nsCOMPtr<nsIMsgMailNewsUrl> url = do_QueryInterface(aURI, &rv);
+        if (NS_SUCCEEDED(rv) && url)
+        {
+            url->GetUsername(getter_Copies(username));
+            protocol->SetUsername((const char *)username);
+        }
+		rv = protocol->QueryInterface(NS_GET_IID(nsIChannel), (void **) _retval);
+	}
+	else
+		rv = NS_ERROR_NULL_POINTER;
+
+	return rv;
 }
 
 
@@ -359,3 +439,5 @@ nsPop3Service::GetDefaultCopiesAndFoldersPrefsToServer(PRBool *aDefaultCopiesAnd
     *aDefaultCopiesAndFoldersPrefsToServer = PR_TRUE;
     return NS_OK;
 } 
+
+

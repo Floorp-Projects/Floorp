@@ -31,6 +31,9 @@ interface nsIPop3Sink : nsISupports {
 
   attribute boolean userAuthenticated;
   attribute string mailAccountURL;
+  attribute boolean buildMessageUri;
+  attribute string messageUri;
+  attribute string baseMessageUri;
 
   boolean BeginMailDelivery();
   void EndMailDelivery();

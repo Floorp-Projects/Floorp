@@ -36,10 +36,12 @@
 #include "nsMsgLocalCID.h"
 #include "nsMsgBaseCID.h"
 #include "nsIDocShell.h"
+#include "nsIPop3Service.h"
 
 static NS_DEFINE_CID(kCMailboxUrl, NS_MAILBOXURL_CID);
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
+static NS_DEFINE_CID(kCPop3ServiceCID, NS_POP3SERVICE_CID);
 
 nsMailboxService::nsMailboxService()
 {
@@ -289,7 +291,9 @@ nsresult nsMailboxService::PrepareMessageUrl(const char * aSrcMsgMailboxURI, nsI
 				rv = url->RegisterListener(aUrlListener);
 
 			url->SetMsgWindow(msgWindow);
-
+            nsCOMPtr<nsIMsgMessageUrl> msgUrl = do_QueryInterface(url);
+            if (msgUrl)
+                msgUrl->SetOriginalSpec(aSrcMsgMailboxURI);
 		} // if we got a url
 	} // if we got a url
 
@@ -320,18 +324,30 @@ NS_IMETHODIMP nsMailboxService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIU
 {
 	nsCOMPtr<nsIMailboxUrl> aMsgUrl;
 	nsresult rv = NS_OK;
-	rv = nsComponentManager::CreateInstance(kCMailboxUrl,
-                                            nsnull,
-                                            NS_GET_IID(nsIMailboxUrl),
-                                            getter_AddRefs(aMsgUrl));
-
-	if (NS_SUCCEEDED(rv))
-	{
-		nsCOMPtr<nsIURL> aUrl = do_QueryInterface(aMsgUrl);
-		aUrl->SetSpec((char *) aSpec);
-		aMsgUrl->SetMailboxAction(nsIMailboxUrl::ActionDisplayMessage);
-		aMsgUrl->QueryInterface(NS_GET_IID(nsIURI), (void **) _retval);
-	}
+    if (PL_strstr(aSpec, "?uidl=") || PL_strstr(aSpec, "&uidl="))
+    {
+        NS_WITH_SERVICE(nsIPop3Service, pop3Service, kCPop3ServiceCID, &rv);
+        if (NS_FAILED(rv)) return rv;
+        nsCOMPtr<nsIProtocolHandler> handler = do_QueryInterface(pop3Service,
+                                                                 &rv);
+        if (NS_SUCCEEDED(rv))
+            rv = handler->NewURI(aSpec, aBaseURI, _retval);
+    }
+    else
+    {
+        rv = nsComponentManager::CreateInstance(kCMailboxUrl,
+                                                nsnull,
+                                                NS_GET_IID(nsIMailboxUrl),
+                                                getter_AddRefs(aMsgUrl));
+        
+        if (NS_SUCCEEDED(rv))
+        {
+            nsCOMPtr<nsIURL> aUrl = do_QueryInterface(aMsgUrl);
+            aUrl->SetSpec((char *) aSpec);
+            aMsgUrl->SetMailboxAction(nsIMailboxUrl::ActionDisplayMessage);
+            aMsgUrl->QueryInterface(NS_GET_IID(nsIURI), (void **) _retval);
+        }
+    }
 
 	return rv;
 }

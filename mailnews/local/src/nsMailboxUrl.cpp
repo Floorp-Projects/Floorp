@@ -305,6 +305,21 @@ NS_IMETHODIMP nsMailboxUrl::GetMessageHeader(nsIMsgDBHdr ** aMsgHdr)
 NS_IMPL_GETSET(nsMailboxUrl, AddDummyEnvelope, PRBool, m_addDummyEnvelope);
 NS_IMPL_GETSET(nsMailboxUrl, CanonicalLineEnding, PRBool, m_canonicalLineEnding);
 
+NS_IMETHODIMP
+nsMailboxUrl::GetOriginalSpec(char **aSpec)
+{
+    if (!aSpec || !m_originalSpec) return NS_ERROR_NULL_POINTER;
+    *aSpec = nsCRT::strdup(m_originalSpec);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMailboxUrl::SetOriginalSpec(const char *aSpec)
+{
+    m_originalSpec = aSpec;
+    return NS_OK;
+}
+
 NS_IMETHODIMP nsMailboxUrl::SetMessageFile(nsIFileSpec * aFileSpec)
 {
 	m_messageFileSpec = dont_QueryInterface(aFileSpec);
@@ -428,5 +443,4 @@ char * extractAttributeValue(const char * searchString, const char * attributeNa
 
 	return attributeValue;
 }
-
 

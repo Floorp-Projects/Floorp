@@ -35,6 +35,7 @@
 #include "nsMimeTypes.h"
 #include "nsMsgMessageFlags.h"
 #include "nsEscape.h"
+#include "nsString.h"
 
 #define MIME_SUPERCLASS mimeContainerClass
 MimeDefClass(MimeMessage, MimeMessageClass, mimeMessageClass,
@@ -511,7 +512,7 @@ MimeMessage_parse_eof (MimeObject *obj, PRBool abort_p)
 		  if (msd)
 		  {
 			  char *html = obj->options->generate_footer_html_fn
-				  (msd->url_name, obj->options->html_closure, msg->hdrs);
+				  (msd->orig_url_name, obj->options->html_closure, msg->hdrs);
 			  if (html)
 			  {
 				  int lstatus = MimeObject_write(obj, html,
@@ -751,14 +752,15 @@ static char *
 MimeMessage_partial_message_html(const char *data, void *closure,
 								 MimeHeaders *headers)
 {
-#if defined(DEBUG_jefft)
-	printf ("** generate partial message html...\n");
-#endif 
+    nsCAutoString orig_url = data;
 	char *partialMsgHtml = nsnull;
 	char *uidl = MimeHeaders_get(headers, HEADER_X_UIDL, PR_FALSE, PR_FALSE);
 	char *msgId = MimeHeaders_get(headers, HEADER_MESSAGE_ID, PR_FALSE,
 								  PR_FALSE);
 	char *msgIdPtr = PL_strstr(msgId, "<");
+
+	orig_url.ReplaceSubstring("mailbox_message", "mailbox");
+	orig_url.ReplaceSubstring("#", "?number=");
 
 	if (msgIdPtr)
 		msgIdPtr++;
@@ -772,7 +774,8 @@ MimeMessage_partial_message_html(const char *data, void *closure,
 	char *fmt1 = MimeGetStringByID(1037);
 	char *fmt2 = MimeGetStringByID(1038);
 	char *fmt3 = MimeGetStringByID(1039);
-	char *msgUrl = PR_smprintf("%s&id=%s&uidl=%s", data, escapedMsgId, uidl);
+	char *msgUrl = PR_smprintf("%s&messageid=%s&uidl=%s",
+							   orig_url.GetBuffer(), escapedMsgId, uidl);
 	partialMsgHtml = PR_smprintf("%s%s%s%s", fmt1,fmt2, msgUrl, fmt3);
 	PR_FREEIF(uidl);
 	PR_FREEIF(msgId);

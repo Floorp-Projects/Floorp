@@ -59,5 +59,4 @@ interface nsIPop3Service : nsISupports {
   nsIURI CheckForNewMail(in nsIMsgWindow aMsgWindow, in nsIUrlListener aUrlListener,
 						 in nsIMsgFolder inbox,
                          in nsIPop3IncomingServer popServer);
-  
 };

@@ -802,6 +802,9 @@ mime_display_stream_complete (nsMIMESession *stream)
   if (msd->url_name)
 	  nsCRT::free(msd->url_name);
 
+  if (msd->orig_url_name)
+      nsCRT::free(msd->orig_url_name);
+
   PR_FREEIF(msd);
 }
 
@@ -824,6 +827,8 @@ mime_display_stream_abort (nsMIMESession *stream, int status)
     if (msd->options)
     {
       PR_FREEIF(msd->options->part_to_load);
+      PR_FREEIF(msd->options->default_charset);
+      PR_FREEIF(msd->options->override_charset);
       PR_FREEIF(msd->options);
       msd->options = 0;
     }
@@ -831,6 +836,12 @@ mime_display_stream_abort (nsMIMESession *stream, int status)
 
   if (msd->headers)
   	MimeHeaders_free (msd->headers);
+
+  if (msd->url_name)
+	  nsCRT::free(msd->url_name);
+
+  if (msd->orig_url_name)
+      nsCRT::free(msd->orig_url_name);
 
   PR_FREEIF(msd);
 }
@@ -1209,7 +1220,9 @@ mime_bridge_create_display_stream(
         PR_FREEIF(msd);
         return NULL;
       }
-
+      nsCOMPtr<nsIMsgMessageUrl> msgUrl = do_QueryInterface(uri);
+      if (msgUrl)
+          msgUrl->GetOriginalSpec(&msd->orig_url_name);
       PR_FREEIF(urlString);
     }
   }

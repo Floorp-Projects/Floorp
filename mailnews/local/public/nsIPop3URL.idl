@@ -26,6 +26,7 @@
 [scriptable, uuid(73c043d0-b7e2-11d2-ab5c-00805f8ac968)]
 interface nsIPop3URL : nsISupports {
     attribute nsIPop3Sink pop3Sink;
+    attribute string messageUri;
 	void SetUsername(in string aUserName);
 };
 

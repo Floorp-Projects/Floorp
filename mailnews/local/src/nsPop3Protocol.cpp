@@ -677,7 +677,7 @@ nsresult nsPop3Protocol::LoadUrl(nsIURI* aURL, nsISupports * /* aConsumer */)
 		
     if (uidl)
 	{
-		uidl += 6;
+		uidl += 5;
 		m_pop3ConData->only_uidl = PL_strdup(uidl);
 	}
 	

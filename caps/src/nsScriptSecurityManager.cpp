@@ -494,6 +494,7 @@ nsScriptSecurityManager::CheckLoadURI(nsIURI *aFromURI, nsIURI *aURI,
         { "imap",            DenyProtocol  },
         { "mailbox",         DenyProtocol  },
         { "pop3",            DenyProtocol  },
+        { "pop",             AllowProtocol },
         { "news",            AllowProtocol },
     };
 

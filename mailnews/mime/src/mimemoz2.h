@@ -106,6 +106,7 @@ struct mime_stream_data {           /* This struct is the state we pass around
                                        amongst the various stream functions
                                        used by MIME_MessageConverter(). */
   char                *url_name;
+  char                *orig_url_name; /* original url name */
   nsIChannel          *channel;
   nsMimeOutputType    format_out;
   void                *pluginObj2;  /* The new XP-COM stream converter object */

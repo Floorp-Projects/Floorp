@@ -78,6 +78,9 @@ protected:
     PRBool                m_addDummyEnvelope;
     PRBool                m_canonicalLineEnding;
 	nsresult ParseSearchPart();
+
+    // truncated message support
+    nsXPIDLCString m_originalSpec;
 };
 
 #endif // nsMailboxUrl_h__

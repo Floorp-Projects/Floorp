@@ -74,6 +74,7 @@
 #include "nsIDocShell.h"
 #include "nsIPrompt.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIPop3URL.h"
 
 
 static NS_DEFINE_CID(kRDFServiceCID,							NS_RDFSERVICE_CID);
@@ -2570,3 +2571,78 @@ nsresult nsMsgLocalMailFolder::CreateBaseMessageURI(const char *aURI)
 	return rv;
 
 }
+
+NS_IMETHODIMP
+nsMsgLocalMailFolder::OnStartRunningUrl(nsIURI * aUrl)
+{
+  nsresult rv;
+  nsCOMPtr<nsIPop3URL> popurl = do_QueryInterface(aUrl, &rv);
+  if (NS_SUCCEEDED(rv))
+  {
+    nsXPIDLCString aSpec;
+    aUrl->GetSpec(getter_Copies(aSpec));
+    if (aSpec && PL_strstr((const char *) aSpec, "uidl="))
+    {
+      nsCOMPtr<nsIPop3Sink> popsink;
+      rv = popurl->GetPop3Sink(getter_AddRefs(popsink));
+      if (NS_SUCCEEDED(rv))
+        popsink->SetBaseMessageUri(mBaseMessageURI);
+    }
+  }
+  return nsMsgDBFolder::OnStartRunningUrl(aUrl);
+}
+
+NS_IMETHODIMP
+nsMsgLocalMailFolder::OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode)
+{
+  if (NS_SUCCEEDED(aExitCode))
+  {
+    nsXPIDLCString aSpec;
+    aUrl->GetSpec(getter_Copies(aSpec));
+    if (PL_strstr(aSpec, "uidl="))
+    {
+      nsresult rv;
+      nsCOMPtr<nsIPop3URL> popurl = do_QueryInterface(aUrl, &rv);
+      if (NS_SUCCEEDED(rv))
+      {
+        nsXPIDLCString messageuri;
+        rv = popurl->GetMessageUri(getter_Copies(messageuri));
+        if (NS_SUCCEEDED(rv))
+        {
+          NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv); 
+          if(NS_SUCCEEDED(rv))
+          {
+            nsCOMPtr<nsIRDFResource> msgResource;
+            nsCOMPtr<nsIMessage> message;
+            rv = rdfService->GetResource(messageuri,
+                                         getter_AddRefs(msgResource));
+            if(NS_SUCCEEDED(rv))
+              rv = msgResource->QueryInterface(NS_GET_IID(nsIMessage),
+                                               getter_AddRefs(message));
+            if (NS_SUCCEEDED(rv))
+            {
+              nsCOMPtr <nsIMsgDBHdr> msgDBHdr;
+              nsCOMPtr<nsIDBMessage> dbMessage(do_QueryInterface(message,
+                                                                 &rv));
+
+              if(NS_SUCCEEDED(rv))
+              {
+                rv = dbMessage->GetMsgDBHdr(getter_AddRefs(msgDBHdr));
+                if(NS_SUCCEEDED(rv))
+                  rv = mDatabase->DeleteHeader(msgDBHdr, nsnull, PR_TRUE,
+                                               PR_TRUE);
+              }
+            }
+            nsCOMPtr<nsIPop3Sink> pop3sink;
+            nsXPIDLCString newMessageUri;
+            rv = popurl->GetPop3Sink(getter_AddRefs(pop3sink));
+            if (NS_SUCCEEDED(rv))
+              pop3sink->GetMessageUri(getter_Copies(newMessageUri));
+          }
+        }
+      }
+    }
+  }
+  return nsMsgDBFolder::OnStopRunningUrl(aUrl, aExitCode);
+}
+

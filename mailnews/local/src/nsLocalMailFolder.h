@@ -88,6 +88,10 @@ public:
 	// nsICollection methods:
 	NS_IMETHOD Enumerate(nsIEnumerator* *result);
 
+  // nsIUrlListener methods
+	NS_IMETHOD OnStartRunningUrl(nsIURI * aUrl);
+	NS_IMETHOD OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode);
+
 	// nsIFolder methods:
 	NS_IMETHOD GetSubFolders(nsIEnumerator* *result);
 

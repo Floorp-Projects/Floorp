@@ -499,6 +499,15 @@ NS_IMETHODIMP nsParseMailMessageState::GetState(nsMailboxParseState *aState)
 	return NS_OK;
 }
 
+NS_IMETHODIMP
+nsParseMailMessageState::GetEnvelopePos(PRUint32 *aEnvelopePos)
+{
+    if (!aEnvelopePos) 
+        return NS_ERROR_NULL_POINTER;
+    *aEnvelopePos = m_envelope_pos;
+    return NS_OK;
+}
+
 NS_IMETHODIMP nsParseMailMessageState::SetEnvelopePos(PRUint32 aEnvelopePos)
 {
 	m_envelope_pos = aEnvelopePos;

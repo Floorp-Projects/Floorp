@@ -35,9 +35,9 @@ typedef long nsMailboxParseState;
 [scriptable, uuid(0CC23170-1459-11d3-8097-006008128C4E)]
 interface nsIMsgParseMailMsgState : nsISupports {
 
+    attribute unsigned long envelopePos;
     void SetMailDB(in nsIMsgDatabase aDatabase);
     void Clear();
-    void SetEnvelopePos(in unsigned long aEnvelopePos);
 
     void ParseAFolderLine(in string line, in unsigned long lineLength);
     nsIMsgDBHdr GetNewMsgHdr();

@@ -92,4 +92,5 @@ interface nsIMsgMessageUrl : nsISupports {
 	attribute nsIFileSpec messageFile;
 	attribute boolean AddDummyEnvelope;	
     attribute boolean canonicalLineEnding;
+    attribute string originalSpec;
 };

@@ -32,6 +32,7 @@
 #include "plstr.h"
 #include "prenv.h"
 #include "nsIMsgFolder.h"
+#include "nsXPIDLString.h"
 
 class nsParseNewMailState;
 class nsIFolder;
@@ -66,6 +67,9 @@ protected:
     PRInt32 m_fileCounter;
 #endif
     nsIOFileStream* m_outFileStream;
+    PRBool m_buildMessageUri;
+    nsCString m_messageUri;
+    nsXPIDLCString m_baseMessageUri;
 };
 
 #endif

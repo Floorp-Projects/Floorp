@@ -43,6 +43,7 @@ protected:
 	virtual const char * GetUserName() { return m_userName.GetBuffer();}
 
 	nsCString m_userName;
+    nsCString m_messageUri;
 
 	/* Pop3 specific event sinks */
     nsCOMPtr<nsIPop3Sink> m_pop3Sink;

@@ -31,6 +31,7 @@
 #include "nsParseMailbox.h"
 #include "nsIFolder.h"
 #include "nsIMsgIncomingServer.h"
+#include "nsLocalUtils.h"
 #include "nsMsgLocalFolderHdrs.h"
 
 NS_IMPL_ISUPPORTS(nsPop3Sink, NS_GET_IID(nsIPop3Sink));
@@ -50,7 +51,8 @@ nsPop3Sink::nsPop3Sink()
 #endif
     m_popServer = nsnull;
     m_outFileStream = nsnull;
-	m_folder = nsnull;
+    m_folder = nsnull;
+    m_buildMessageUri = PR_FALSE;
 }
 
 nsPop3Sink::~nsPop3Sink()
@@ -371,6 +373,13 @@ nsresult nsPop3Sink::WriteLineToMailbox(char *buffer)
 nsresult
 nsPop3Sink::IncorporateComplete(void* closure)
 {
+  if (m_buildMessageUri && m_baseMessageUri)
+  {
+      PRUint32 msgKey = -1;
+      m_newMailParser->GetEnvelopePos(&msgKey);
+      m_messageUri.SetLength(0);
+      nsBuildLocalMessageURI(m_baseMessageUri, msgKey, m_messageUri);
+  }
 	WriteLineToMailbox(MSG_LINEBREAK);
 
 	// do not take out this printf as it is used by QA 
@@ -429,5 +438,57 @@ nsPop3Sink::SetBiffStateAndUpdateFE(PRUint32 aBiffState, PRInt32 numNewMessages)
         printf("You have no mail.\n");
         break;
     }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPop3Sink::GetBuildMessageUri(PRBool *bVal)
+{
+    if (!bVal)
+        return NS_ERROR_NULL_POINTER;
+    *bVal = m_buildMessageUri;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPop3Sink::SetBuildMessageUri(PRBool bVal)
+{
+    m_buildMessageUri = bVal;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPop3Sink::GetMessageUri(char **messageUri)
+{
+    if (!messageUri || m_messageUri.Length() <= 0) 
+        return NS_ERROR_NULL_POINTER;
+    *messageUri = m_messageUri.ToNewCString();
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPop3Sink::SetMessageUri(const char *messageUri)
+{
+    if (!messageUri)
+        return NS_ERROR_NULL_POINTER;
+    m_messageUri = messageUri;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPop3Sink::GetBaseMessageUri(char **baseMessageUri)
+{
+    if (!baseMessageUri || !m_baseMessageUri)
+        return NS_ERROR_NULL_POINTER;
+    *baseMessageUri = nsCRT::strdup((const char *) m_baseMessageUri);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPop3Sink::SetBaseMessageUri(const char *baseMessageUri)
+{
+    if (!baseMessageUri)
+        return NS_ERROR_NULL_POINTER;
+    m_baseMessageUri = baseMessageUri;
     return NS_OK;
 }
