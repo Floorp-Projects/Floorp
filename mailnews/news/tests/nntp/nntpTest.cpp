@@ -197,7 +197,7 @@ protected:
 
 	PRBool		m_runningURL;	// are we currently running a url? this flag is set to false on exit...
 
-	void InitializeProtocol(const char * urlSpec);
+	nsresult InitializeProtocol(const char * urlSpec);
     nsresult SetupUrl(char *group);
 	PRBool m_protocolInitialized; 
 };
@@ -219,7 +219,8 @@ nsNntpTestDriver::nsNntpTestDriver(nsINetService * pNetService,
 	m_nntpProtocol = nsnull; // we can't create it until we have a url...
 }
 
-void nsNntpTestDriver::InitializeProtocol(const char * urlString)
+nsresult 
+nsNntpTestDriver::InitializeProtocol(const char * urlString)
 {
     nsresult rv = NS_OK;
 
@@ -229,9 +230,13 @@ void nsNntpTestDriver::InitializeProtocol(const char * urlString)
                                       (nsISupports**)&m_url);
 	if (NS_FAILED(rv)) return rv;
 
+    //m_url->foobar(urlString);
+
 	// now create a protocl instance...
 	m_nntpProtocol = new nsNNTPProtocol(m_url, m_transport);
 	m_protocolInitialized = PR_TRUE;
+
+    return rv;
 }
 
 nsNntpTestDriver::~nsNntpTestDriver()
@@ -420,8 +425,12 @@ nsresult nsNntpTestDriver::OnListAllGroups()
 	PL_strcat(m_urlString, "/");
 	PL_strcat(m_urlString, "*");
 
-	if (m_protocolInitialized == PR_FALSE)
-		InitializeProtocol(m_urlString);
+	if (m_protocolInitialized == PR_FALSE){
+        rv = InitializeProtocol(m_urlString);
+        if (NS_FAILED(rv) || (m_url == nsnull)) {
+            return rv;
+        }
+    }
 
 	m_url->SetSpec(m_urlString); // reset spec
     printf("Running %s\n", m_urlString);
@@ -586,8 +595,12 @@ nsresult nsNntpTestDriver::OnGetGroup()
 	PL_strcat(m_urlString, "/");
 	PL_strcat(m_urlString, m_userData);
 
-	if (m_protocolInitialized == PR_FALSE)
-		InitializeProtocol(m_urlString);
+	if (m_protocolInitialized == PR_FALSE) {
+		rv = InitializeProtocol(m_urlString);
+        if (NS_FAILED(rv) || (m_url == nsnull)) {
+            return rv;
+        }
+    }
 	else
 		m_url->SetSpec(m_urlString); // reset spec
 
@@ -607,8 +620,12 @@ nsresult nsNntpTestDriver::OnReadNewsRC()
 	m_urlString[0] = '\0';
 	PL_strcpy(m_urlString, m_urlSpec);
 
-	if (m_protocolInitialized == PR_FALSE)
-		InitializeProtocol(m_urlString);
+	if (m_protocolInitialized == PR_FALSE) {
+		rv = InitializeProtocol(m_urlString);
+        if (NS_FAILED(rv) || (m_url == nsnull)) {
+            return rv;
+        }
+    }
 	else
 		m_url->SetSpec(m_urlString); // reset spec
 
@@ -624,8 +641,12 @@ nsresult nsNntpTestDriver::SetupUrl(char *groupname)
 {
     nsresult rv = NS_OK;
     
-	if (m_protocolInitialized == PR_FALSE)
-		InitializeProtocol(m_urlString);
+	if (m_protocolInitialized == PR_FALSE) {
+		rv = InitializeProtocol(m_urlString);
+        if (NS_FAILED(rv) || (m_url == nsnull)) {
+            return rv;
+        }
+    }
 	else
 		rv = m_url->SetSpec(m_urlString); // reset spec
     
