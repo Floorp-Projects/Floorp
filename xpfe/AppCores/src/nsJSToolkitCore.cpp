@@ -265,6 +265,48 @@ ToolkitCoreShowModalDialog(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
 }
 
 
+//
+// Native method CloseWindow
+//
+PR_STATIC_CALLBACK(JSBool)
+ToolkitCoreCloseWindow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMToolkitCore *nativeThis = (nsIDOMToolkitCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsIDOMWindowPtr b0;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 1) {
+
+    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
+                                           kIWindowIID,
+                                           "Window",
+                                           cx,
+                                           argv[0])) {
+      return JS_FALSE;
+    }
+
+    if (NS_OK != nativeThis->CloseWindow(b0)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function CloseWindow requires 1 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
 /***********************************************************************/
 //
 // class for ToolkitCore
@@ -300,6 +342,7 @@ static JSFunctionSpec ToolkitCoreMethods[] =
   {"ShowDialog",          ToolkitCoreShowDialog,     2},
   {"ShowWindow",          ToolkitCoreShowWindow,     2},
   {"ShowModalDialog",          ToolkitCoreShowModalDialog,     2},
+  {"CloseWindow",          ToolkitCoreCloseWindow,     1},
   {0}
 };
 
