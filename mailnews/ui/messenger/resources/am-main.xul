@@ -10,8 +10,7 @@
     <box align="vertical" flex="100%" style="height: 100%; width: 100%;">
     <html:div>Account Settings</html:div>
 
-    <box align="vertical" flex="100%" class="bigbox"
-         style="height: 100%; width: 100%;">
+    <box align="vertical" flex="100%" class="bigbox">
     <box align="horizontal">
       <spring flex="100%"/>
       <html:div>AccountName:</html:div>

@@ -9,6 +9,7 @@
       style="width: 100%"
       onload = "">
 
+<box align="vertical" style="width: 100%">
 <html:div>Advanced Settings</html:div>
   <html:div>SMTP Server</html:div>
 <box align="vertical" class="bigbox">
@@ -33,5 +34,6 @@
     <html:input type="text" flex="100%"/>
     <html:button type="button">Choose Folder...</html:button>
   </box>
+</box>
 </box>
 </xul:window>

@@ -8,8 +8,9 @@
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload = "">
 
+<box align="vertical" flex="100%" style="height: 100%; width: 100%;">
 <html:div>Copy and Folder settings</html:div>
-<box align="vertical" class="bigbox">
+<box align="vertical" class="bigbox" flex="100%">
 <html:div>When sending messages, automatically</html:div>
 
   <box align="horizontal">
@@ -30,7 +31,7 @@
 </box>
 
 <html:div>Special Folders</html:div>
-<box align="vertical" class="bigbox">
+<box align="vertical" class="bigbox" flex="100%">
   <box align="horizontal">
     <html:div>Keep junk mail in Junk Mail in Earthlink Inbox</html:div>
     <spring flex="100%"/>
@@ -46,5 +47,6 @@
     <spring flex="100%"/>
     <html:button type="button">Choose Folder...</html:button>
   </box>
+</box>
 </box>
 </xul:window>
