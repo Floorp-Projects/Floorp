@@ -200,7 +200,7 @@ Usage(const char *progName)
 
 "Usage: %s -n rsa_nickname -p port [-3DRTbmrvx] [-w password] [-t threads]\n"
 "         [-i pid_file] [-c ciphers] [-d dbdir] [-f fortezza_nickname] \n"
-"         [-M maxProcs] [-l]\n"
+"         [-L [seconds]] [-M maxProcs] [-l]\n"
 "-3 means disable SSL v3\n"
 "-D means disable Nagle delays in TCP\n"
 "-T means disable TLS\n"
@@ -214,6 +214,7 @@ Usage(const char *progName)
 "    4 -r's mean request  and require, cert on second handshake.\n"
 "-v means verbose output\n"
 "-x means use export policy.\n"
+"-L seconds means log statistics every 'seconds' seconds (default=30).\n"
 "-M maxProcs tells how many processes to run in a multi-process server\n"
 "-t threads -- specify the number of threads to use for connections.\n"
 "-i pid_file file to write the process id of selfserve\n"
@@ -1471,8 +1472,12 @@ main(int argc, char **argv)
 
         case 'L':
             logStats = PR_TRUE;
-            logPeriod  = PORT_Atoi(optstate->value);
-            if (logPeriod < 0) logPeriod = 30;
+	    if (optstate->value == NULL) {
+	    	logPeriod = 30;
+	    } else {
+                logPeriod  = PORT_Atoi(optstate->value);
+                if (logPeriod <= 0) logPeriod = 30;
+	    }
             break;
 
 	case 'M': 
