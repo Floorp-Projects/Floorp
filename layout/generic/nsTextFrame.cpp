@@ -58,6 +58,10 @@
 
 #include "nsILineIterator.h"
 
+#ifndef PR_ABS
+#define PR_ABS(x) (x < 0 ? -x : x)
+#endif
+
 static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 
 #ifdef NS_DEBUG
@@ -1630,6 +1634,7 @@ BinarySearchForPosition(nsIRenderingContext* acx,
 
   PRInt32 fullWidth = aBaseWidth + textWidth;
   if (fullWidth == aCursorPos) {
+    aTextWidth = textWidth;
     aIndex = inx;
     return PR_TRUE;
   } else if (aCursorPos < fullWidth) {
@@ -1729,7 +1734,7 @@ nsTextFrame::GetPosition(nsIPresContext& aCX,
         acx->GetWidth(text[indx], charWidth);
         charWidth /= 2;
 
-        if (PRInt32(aXCoord) - origin.x > textWidth+charWidth) {
+        if (PR_ABS(PRInt32(aXCoord) - origin.x) > textWidth+charWidth) {
           indx++;
         }
       }
@@ -2034,6 +2039,7 @@ nsTextFrame::PeekOffset(nsPeekOffsetStruct *aPos)
     PRInt32 start;
     PRBool found = PR_TRUE;
     if (aPos->mDirection == eDirPrevious){
+      aPos->mContentOffset = 0;
       PRInt32 i;
       for (i = aPos->mStartOffset -1 - mContentOffset; i >=0;  i--){
         if (ip[i] < ip[aPos->mStartOffset - mContentOffset]){
@@ -2049,6 +2055,7 @@ nsTextFrame::PeekOffset(nsPeekOffsetStruct *aPos)
     }
     else if (aPos->mDirection == eDirNext){
       PRInt32 i;
+      aPos->mContentOffset = mContentLength;
       for (i = aPos->mStartOffset +1 - mContentOffset; i <= mContentLength;  i++){
         if (ip[i] > ip[aPos->mStartOffset - mContentOffset]){
           aPos->mContentOffset = i + mContentOffset;

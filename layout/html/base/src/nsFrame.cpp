@@ -2045,16 +2045,30 @@ nsFrame::PeekOffset(nsPeekOffsetStruct *aPos)
       {
         if (firstFrame)
         {
-          while (--lineFrameCount)
-            firstFrame->GetNextSibling(&firstFrame);
-          nsPoint offsetPoint; //used for offset of result frame
-          nsIView * view; //used for call of get offset from view
-          firstFrame->GetOffsetFromView(offsetPoint, &view);
-          usedRect.x = offsetPoint.x;
-          usedRect.y = offsetPoint.y;
+          PRBool found = PR_FALSE;
+          while(!found)
+          {
+            nsIFrame *nextFrame = firstFrame;;
+            for (PRInt32 i=1;i<lineFrameCount;i++)//allready have 1st frame
+              nextFrame->GetNextSibling(&nextFrame);
 
-          result = firstFrame->GetPosition(*(context.get()),2*usedRect.width,//2* just to be sure we are off the edge
-                      getter_AddRefs(aPos->mResultContent),aPos->mContentOffset, aPos->mContentOffset);
+            nsPoint offsetPoint; //used for offset of result frame
+            nsIView * view; //used for call of get offset from view
+            nextFrame->GetOffsetFromView(offsetPoint, &view);
+            usedRect.x = offsetPoint.x;
+            usedRect.y = offsetPoint.y;
+
+            result = nextFrame->GetPosition(*(context.get()),2*usedRect.width,//2* just to be sure we are off the edge
+                        getter_AddRefs(aPos->mResultContent),aPos->mContentOffset, aPos->mContentOffset);
+            if (NS_SUCCEEDED(result))
+              found = PR_TRUE;
+            else
+            {
+              lineFrameCount--;
+              if (lineFrameCount == 0)
+                break;//just fail out
+            }
+          }
         }
       }
     }break;
