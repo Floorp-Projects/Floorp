@@ -19,7 +19,7 @@
 # (1) Directory specific info                                         #
 #######################################################################
 
-DEPTH = ../../../..
+DEPTH = ../../..
 
 CPPSRCS = 		PPC601AppleMacOSEmitter.cpp		\
 			PPCInstructions.cpp			\
