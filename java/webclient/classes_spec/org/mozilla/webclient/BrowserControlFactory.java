@@ -43,7 +43,7 @@ import java.io.FileNotFoundException;
  * This is a static class, it is neven instantiated.
 
  *
- * @version $Id: BrowserControlFactory.java,v 1.2 2000/03/13 18:41:36 edburns%acm.org Exp $
+ * @version $Id: BrowserControlFactory.java,v 1.3 2000/04/20 18:15:36 edburns%acm.org Exp $
  * 
  * @see	org.mozilla.webclient.test.EmbeddedMozilla
 
@@ -167,6 +167,11 @@ public static void setAppData(String absolutePathToNativeBrowserBinDir) throws F
     }
 }
 
+public static void appTerminate() throws Exception
+{
+    BrowserControlImpl.appTerminate();
+}
+
 public static BrowserControl newBrowserControl() throws InstantiationException, IllegalAccessException, IllegalStateException
 {
     if (!appDataHasBeenSet) {
@@ -220,7 +225,7 @@ public static void main(String [] args)
     Assert.setEnabled(true);
     Log.setApplicationName("BrowserControlFactory");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: BrowserControlFactory.java,v 1.2 2000/03/13 18:41:36 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: BrowserControlFactory.java,v 1.3 2000/04/20 18:15:36 edburns%acm.org Exp $");
 
     BrowserControlCanvas canvas = null;
     BrowserControl control = null;

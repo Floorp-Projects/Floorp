@@ -38,7 +38,7 @@ import org.mozilla.util.Assert;
  * This is a test application for using the BrowserControl.
 
  *
- * @version $Id: EmbeddedMozilla.java,v 1.3 2000/04/06 17:33:33 ashuk%eng.sun.com Exp $
+ * @version $Id: EmbeddedMozilla.java,v 1.4 2000/04/20 18:15:42 edburns%acm.org Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlFactory
 
@@ -77,6 +77,12 @@ public void DestroyEMWindow(int winNumber) {
   count--;
   if (count == 0) {
     System.out.println("closing application");
+    try {
+        BrowserControlFactory.appTerminate();
+    }
+    catch(Exception e) {
+        System.out.println("got Exception on exit: " + e.getMessage());
+     }
     System.exit(0);
   }
 }

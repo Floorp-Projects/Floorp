@@ -23,9 +23,12 @@
 #include "RDFTreeNode.h"
 
 #include "rdf_util.h"
+#include "rdf_progids.h"
 #include "jni_util.h"
 
 #include "nsIServiceManager.h"
+
+#include "prlog.h" // for PR_ASSERT
 
 //
 // Local function prototypes
@@ -256,11 +259,13 @@ Java_org_mozilla_webclient_wrapper_1native_RDFTreeNode_nativeInsertElementAt
         return;
     }
 
+    PR_ASSERT(gComponentManager);
+
     // get a container in order to create a child
-    rv = nsComponentManager::CreateInstance(NS_IRDFCONTAINER_PROGID,
-                                            nsnull,
-                                            NS_GET_IID(nsIRDFContainer),
-                                            getter_AddRefs(container));
+    rv = gComponentManager->CreateInstanceByProgID(NS_RDFCONTAINER_PROGID,
+                                                   nsnull,
+                                                   NS_GET_IID(nsIRDFContainer),
+                                                   getter_AddRefs(container));
     if (NS_FAILED(rv)) {
         ::util_ThrowExceptionToJava(env, "Exception: nativeNewRDFNode: can't create container.");
         return;

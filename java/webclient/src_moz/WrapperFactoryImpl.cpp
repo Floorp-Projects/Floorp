@@ -63,6 +63,10 @@ static NS_DEFINE_CID(kSessionHistoryCID, NS_SESSIONHISTORY_CID);
 
 #endif // XP_PC
 
+//
+// file data
+// 
+
 
 static nsFileSpec gBinDir; 
 
@@ -78,6 +82,16 @@ const char *gImplementedInterfaces[] = {
         nsnull
         };
 
+//
+// global data
+//
+
+nsIComponentManager *gComponentManager = nsnull;
+
+//
+// Functions to hook into mozilla
+// 
+
 extern "C" void NS_SetupRegistry();
 extern nsresult NS_AutoregisterComponents();
 
@@ -85,16 +99,25 @@ JNIEXPORT void JNICALL
 Java_org_mozilla_webclient_wrapper_1native_WrapperFactoryImpl_nativeAppInitialize(
 										JNIEnv *env, jobject obj, jstring verifiedBinDirAbsolutePath)
 {
-  JNIEnv		*	pEnv = env;
-  jobject			jobj = obj;
   static PRBool	gFirstTime = PR_TRUE;
+  nsresult rv;
+  
   if (gFirstTime) {
     const char *nativePath = (const char *) ::util_GetStringUTFChars(env, 
                                                                      verifiedBinDirAbsolutePath);
     gBinDir = nativePath;
     
+    // It is vitally important to call NS_InitXPCOM before calling
+    // anything else.
     NS_InitXPCOM(nsnull, &gBinDir);
     NS_SetupRegistry();
+    rv = NS_GetGlobalComponentManager(&gComponentManager);
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "NS_GetGlobalComponentManager() failed.");
+        ::util_ReleaseStringUTFChars(env, verifiedBinDirAbsolutePath, 
+                                     nativePath);
+        return;
+    }
     prLogModuleInfo = PR_NewLogModule("webclient");
     const char *webclientLogFile = PR_GetEnv("WEBCLIENT_LOG_FILE");
     if (nsnull != webclientLogFile) {
@@ -102,9 +125,9 @@ Java_org_mozilla_webclient_wrapper_1native_WrapperFactoryImpl_nativeAppInitializ
         // If this fails, it just goes to stdout/stderr
     }
 
-    nsComponentManager::RegisterComponentLib(kSessionHistoryCID, nsnull, 
-					     nsnull, APPSHELL_DLL, 
-					     PR_FALSE, PR_FALSE);
+    gComponentManager->RegisterComponentLib(kSessionHistoryCID, nsnull, 
+                                            nsnull, APPSHELL_DLL, 
+                                            PR_FALSE, PR_FALSE);
     NS_AutoregisterComponents();
     gFirstTime = PR_FALSE;
     ::util_ReleaseStringUTFChars(env, verifiedBinDirAbsolutePath, nativePath);
@@ -114,9 +137,10 @@ Java_org_mozilla_webclient_wrapper_1native_WrapperFactoryImpl_nativeAppInitializ
 
 JNIEXPORT void JNICALL 
 Java_org_mozilla_webclient_wrapper_1native_WrapperFactoryImpl_nativeTerminate
-(JNIEnv *, jobject)
+(JNIEnv *env, jobject obj)
 {
-
+    gComponentManager = nsnull;
+    gHistory = nsnull;
 }
 
 JNIEXPORT jboolean JNICALL 

@@ -23,10 +23,13 @@
 #include "RDFEnumeration.h"
 
 #include "rdf_util.h"
+#include "rdf_progids.h"
 #include "jni_util.h"
 
 #include "nsIRDFContainer.h"
 #include "nsIServiceManager.h"
+
+#include "prlog.h" // for PR_ASSERT
 
 //
 // Local function prototypes
@@ -192,12 +195,14 @@ jint getNativeEnumFromJava(JNIEnv *env, jobject obj, jint nativeRDFNode)
         }
         return -1;
     }
+
+    PR_ASSERT(gComponentManager);
     
     // get a container in order to get the enum
-    rv = nsComponentManager::CreateInstance(NS_IRDFCONTAINER_PROGID,
-                                            nsnull,
-                                            NS_GET_IID(nsIRDFContainer),
-                                            getter_AddRefs(container));
+    rv = gComponentManager->CreateInstanceByProgID(NS_RDFCONTAINER_PROGID,
+                                                   nsnull,
+                                                   NS_GET_IID(nsIRDFContainer),
+                                                   getter_AddRefs(container));
     if (NS_FAILED(rv)) {
         if (prLogModuleInfo) {
             PR_LOG(prLogModuleInfo, 3, 

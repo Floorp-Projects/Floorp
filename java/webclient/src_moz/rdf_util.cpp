@@ -21,10 +21,13 @@
  */
 
 #include "rdf_util.h"
+#include "rdf_progids.h"
 
-#include "ns_globals.h" // for prLogModuleInfo
+#include "ns_globals.h" // for prLogModuleInfo and gComponentManager
 
 #include "nsIServiceManager.h"
+
+#include "prlog.h" // for PR_ASSERT
 
 static PRBool rdf_inited = PR_FALSE;
 
@@ -52,9 +55,7 @@ nsresult rdf_InitRDFUtils()
     
     if (nsnull == gBookmarks) {
         // Get the bookmarks service
-        rv = nsServiceManager::GetService(NS_IBOOKMARKSSERVICE_PROGID,
-                                          NS_GET_IID(nsIBookmarksService),
-                                          getter_AddRefs(gBookmarks));
+        gBookmarks = do_GetService(NS_BOOKMARKS_SERVICE_PROGID, &rv);
         if (NS_FAILED(rv)) {
             return rv;
         }
@@ -71,9 +72,7 @@ nsresult rdf_InitRDFUtils()
 
     if (nsnull == gRDF) {
         // get the RDF service
-        rv = nsServiceManager::GetService(NS_IRDFSERVICE_PROGID,
-                                          NS_GET_IID(nsIRDFService),
-                                          getter_AddRefs(gRDF));
+        gRDF = do_GetService(NS_RDFSERVICE_PROGID, &rv);
         if (NS_FAILED(rv)) {
             return rv;
         }
@@ -81,9 +80,7 @@ nsresult rdf_InitRDFUtils()
     
     if (nsnull == gRDFCU) {
         // get the RDF service
-        rv = nsServiceManager::GetService(NS_ICONTAINERUTILS_PROGID,
-                                          NS_GET_IID(nsIRDFContainerUtils),
-                                          getter_AddRefs(gRDFCU));
+        gRDFCU = do_GetService(NS_CONTAINERUTILS_PROGID, &rv);
         if (NS_FAILED(rv)) {
             return rv;
         }
@@ -184,11 +181,13 @@ void rdf_recursiveResourceTraversal(nsCOMPtr<nsIRDFResource> currentResource)
             }
         }
             
+        PR_ASSERT(gComponentManager);
         // get a container in order to recurr
-        rv = nsComponentManager::CreateInstance(NS_IRDFCONTAINER_PROGID,
-                                                nsnull,
-                                                NS_GET_IID(nsIRDFContainer),
-                                                getter_AddRefs(container));
+        rv = gComponentManager->
+            CreateInstanceByProgID(NS_RDFCONTAINER_PROGID,
+                                   nsnull,
+                                   NS_GET_IID(nsIRDFContainer),
+                                   getter_AddRefs(container));
         if (NS_FAILED(rv)) {
             if (prLogModuleInfo) {
                 PR_LOG(prLogModuleInfo, 3, 
@@ -261,6 +260,7 @@ void rdf_recursiveResourceTraversal(nsCOMPtr<nsIRDFResource> currentResource)
     }
     else {
         // It's a bookmark
+        printf("BOOKMARK:\n");
         rdf_printArcLabels(currentResource);
 
         // see if it has a URL target
@@ -422,10 +422,12 @@ nsresult rdf_getChildAt(int index, nsIRDFResource *theParent,
         return NS_OK;
     }
 
-    rv = nsComponentManager::CreateInstance(NS_IRDFCONTAINER_PROGID,
-                                            nsnull,
-                                            NS_GET_IID(nsIRDFContainer),
-                                            getter_AddRefs(container));
+    PR_ASSERT(gComponentManager);
+
+    rv = gComponentManager->CreateInstanceByProgID(NS_RDFCONTAINER_PROGID,
+                                                   nsnull,
+                                                   NS_GET_IID(nsIRDFContainer),
+                                                   getter_AddRefs(container));
     if (NS_FAILED(rv)) {
         return rv;
     }
@@ -489,11 +491,11 @@ nsresult rdf_getChildCount(nsIRDFResource *theParent, PRInt32 *count)
     if (PR_FALSE == result) {
         return NS_OK;
     }
-    
-    rv = nsComponentManager::CreateInstance(NS_IRDFCONTAINER_PROGID,
-                                            nsnull,
-                                            NS_GET_IID(nsIRDFContainer),
-                                            getter_AddRefs(container));
+    PR_ASSERT(gComponentManager);
+    rv = gComponentManager->CreateInstanceByProgID(NS_RDFCONTAINER_PROGID,
+                                                   nsnull,
+                                                   NS_GET_IID(nsIRDFContainer),
+                                                   getter_AddRefs(container));
     if (NS_FAILED(rv)) {
         return rv;
     }
@@ -534,11 +536,11 @@ nsresult rdf_getIndexOfChild(nsIRDFResource *theParent,
     if (PR_FALSE == result) {
         return NS_OK;
     }
-
-    rv = nsComponentManager::CreateInstance(NS_IRDFCONTAINER_PROGID,
-                                            nsnull,
-                                            NS_GET_IID(nsIRDFContainer),
-                                            getter_AddRefs(container));
+    PR_ASSERT(gComponentManager);
+    rv = gComponentManager->CreateInstanceByProgID(NS_RDFCONTAINER_PROGID,
+                                                   nsnull,
+                                                   NS_GET_IID(nsIRDFContainer),
+                                                   getter_AddRefs(container));
     if (NS_FAILED(rv)) {
         return rv;
     }

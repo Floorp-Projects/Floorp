@@ -43,10 +43,12 @@
 #include "nsIEventQueueService.h" // for PLEventQueue
 #include "nsIPref.h" // for preferences
 #include "nsRepository.h"
-#include "nsIServiceManager.h" // for nsServiceManager::GetService
+#include "nsIServiceManager.h" // for do_GetService
 #include "nsISessionHistory.h" // for history
 #include "nsIThread.h" // for PRThread
 //nsIWebShell is included in jni_util.h
+
+#include "prlog.h" // for PR_ASSERT
 
 #ifdef XP_UNIX
 #include <unistd.h>
@@ -54,15 +56,8 @@
 #include "gtkmozarea.h"
 #endif
 
-
-
-static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
-static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-
 static NS_DEFINE_IID(kWebShellCID, NS_WEB_SHELL_CID);
 static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
-
-static NS_DEFINE_CID(kPrefCID,             NS_PREF_CID);
 
 static NS_DEFINE_IID(kISessionHistoryIID, NS_ISESSIONHISTORY_IID);
 static NS_DEFINE_CID(kSessionHistoryCID, NS_SESSIONHISTORY_CID);
@@ -92,7 +87,7 @@ nsresult InitMozillaStuff (WebShellInitContext * arg);
 // Local data
 //
 
-static nsISessionHistory *gHistory = nsnull;
+nsISessionHistory *gHistory = nsnull;
 
 char * errorMessages[] = {
 	"No Error",
@@ -331,7 +326,12 @@ static void event_processor_callback(gpointer data,
 
 nsresult InitMozillaStuff (WebShellInitContext * initContext) 
 {
-    nsIEventQueueService * aEventQService = nsnull;
+    PR_ASSERT(gComponentManager);
+
+    nsCOMPtr<nsIEventQueueService> 
+        aEventQService = do_GetService(NS_EVENTQUEUESERVICE_PROGID);
+
+    // if we get here, we know that aEventQService is not null.
     nsresult rv = NS_ERROR_FAILURE;
     PRBool allowPlugins = PR_FALSE;
 
@@ -346,11 +346,7 @@ nsresult InitMozillaStuff (WebShellInitContext * initContext)
 #endif
     
     // Create the Event Queue for the UI thread...
-    rv = nsServiceManager::GetService(kEventQueueServiceCID,
-                                      kIEventQueueServiceIID,
-                                      (nsISupports **) &aEventQService);
-    
-    if (NS_FAILED(rv)) {
+    if (!aEventQService) {
         initContext->initFailCode = kEventQueueError;
         return rv;
     }
@@ -452,23 +448,20 @@ nsresult InitMozillaStuff (WebShellInitContext * initContext)
     }
 #endif
 
-    nsIPref *prefs;
+    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_PROGID);
     
-    rv = nsServiceManager::GetService(kPrefCID, 
-                                      nsIPref::GetIID(), 
-                                      (nsISupports **)&prefs);
-    if (NS_SUCCEEDED(rv)) {
-        if (nsnull == gHistory) { // only do this once per app.
+    if (prefs) {
+        if (nsnull == gComponentManager) { // only do this once per app.
             prefs->ReadUserPrefs();
         }
         // Set the prefs in the outermost webshell.
         initContext->webShell->SetPrefs(prefs);
-        nsServiceManager::ReleaseService(kPrefCID, prefs);
     }
 
     if (nsnull == gHistory) {
-        rv = nsComponentManager::CreateInstance(kSessionHistoryCID, nsnull, kISessionHistoryIID, 
-                                                (void**)&gHistory);
+        rv = gComponentManager->CreateInstance(kSessionHistoryCID, nsnull, 
+                                               kISessionHistoryIID, 
+                                               (void**)&gHistory);
         if (NS_FAILED(rv)) {
             initContext->initFailCode = kHistoryWebShellError;
             return rv;

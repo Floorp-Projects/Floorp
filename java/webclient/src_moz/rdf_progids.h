@@ -17,50 +17,14 @@
  * Copyright (C) 1999 Kirk Baker and Ian Wilkinson. All
  * Rights Reserved.
  *
- * Contributor(s): Ed Burns <edburns@acm.org>
- *
+ * Contributor(s):  Ed Burns <edburns@acm.org>
  */
 
+#ifndef _rdf_progids_h
+#define _rdf_progids_h
 
-/**
+static const char *NS_RDFSERVICE_PROGID = "component://netscape/rdf/rdf-service";
+static const char *NS_CONTAINERUTILS_PROGID = "component://netscape/rdf/container-utils";
+static const char *NS_RDFCONTAINER_PROGID = "component://netscape/rdf/container";
 
- * Global data
-
- */
-
-#ifndef ns_globals_h
-#define ns_globals_h
-
-#include "prlog.h"
-extern PRLogModuleInfo *prLogModuleInfo; // defined in WrapperFactory.cpp
-
-/**
-
- * Lifetime: 
-
- * Created using NS_GetGlobalComponentManager in WrapperFactoryImpl.cpp
- * nativeAppInitialize().
-
- * Set to nsnull in WrapperFactoryImpl.cpp nativeTerminate().
-
- */
-
-class nsIComponentManager;
-extern nsIComponentManager *gComponentManager; // defined in WrapperFactoryImpl.cpp
-
-/**
-
- * Lifetime:
-
- * Lazily created in NativeEventThread.cpp InitMozillaStuff().
-
- * Set to nsnull in WrapperFactoryImpl.cpp nativeTerminate().
-
- */
-
-class nsISessionHistory;
-extern nsISessionHistory *gHistory; // defined in NativeEventThread.cpp
-
-
-
-#endif // ns_globals_h
+#endif
