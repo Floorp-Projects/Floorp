@@ -53,7 +53,14 @@
                         fWrap = (checked_cast<FixedInstance *>(obj))->fWrap;
                     else
                         fWrap = (checked_cast<DynamicInstance *>(obj))->fWrap;
-                    // XXX 
+                    // XXX - I made this stuff up - extract the 'prototype' property from
+                    // the function being invoked (defaulting to Object.prototype). Then 
+                    // contruct a new prototypeInstance, setting the acquired prototype
+                    // parent. Finally invoke the function, but insert the constructed
+                    // object at the bottom of the stack to be the 'return' value. 
+                    // XXX this won't last - if a non-primitive is returned from the function,
+                    // it's supposed to supplant the constructed object. XXX and I think the
+                    // stack is out of balance anyway...
                     js2val protoVal;
                     JS2Object *protoObj = meta->objectClass->prototype;
                     Multiname mn(prototype_StringAtom);
@@ -98,9 +105,13 @@
             if (JS2VAL_IS_PRIMITIVE(b))
                 meta->reportError(Exception::badValueError, "Can't call on primitive value", errorPos());
             JS2Object *fObj = JS2VAL_TO_OBJECT(b);
-            if ((fObj->kind == FixedInstanceKind) && (meta->objectType(b) == meta->functionClass)) {
-                FixedInstance *fInst = checked_cast<FixedInstance *>(fObj);
-                FunctionWrapper *fWrap = fInst->fWrap;
+            if (((fObj->kind == FixedInstanceKind) || (fObj->kind == DynamicInstanceKind))
+                        && (meta->objectType(b) == meta->functionClass)) {
+                FunctionWrapper *fWrap;
+                if (fObj->kind == FixedInstanceKind)
+                    fWrap = (checked_cast<FixedInstance *>(fObj))->fWrap;
+                else
+                    fWrap = (checked_cast<DynamicInstance *>(fObj))->fWrap;
                 js2val compileThis = fWrap->compileFrame->thisObject;
                 if (JS2VAL_IS_VOID(compileThis))
                     a = JS2VAL_VOID;

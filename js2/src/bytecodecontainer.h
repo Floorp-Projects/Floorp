@@ -133,9 +133,12 @@ public:
     void addShort(uint16 v)                 { mBuffer.insert(mBuffer.end(), (uint8 *)&v, (uint8 *)(&v) + sizeof(uint16)); }
     static uint16 getShort(void *pc)        { return *((uint16 *)pc); }
 
-    void addMultiname(Multiname *mn)        { mMultinameList.push_back(mn); addShort(mMultinameList.size() - 1); }
 
+    // Maintain list of associated pointers, so as to keep the objects safe across gc's
+    void addMultiname(Multiname *mn)        { mMultinameList.push_back(mn); addShort(mMultinameList.size() - 1); }
     void addFrame(Frame *f)                 { mFrameList.push_back(f); addShort(mFrameList.size() - 1); }
+    void saveFrame(Frame *f)                { mFrameList.push_back(f); }
+    void addRegExp(RegExpInstance *x, size_t pos)   { emitOp(eRegExp, pos); mRegExpList.push_back(x); addShort(mRegExpList.size() - 1); }
 
     void addOffset(int32 v)                 { mBuffer.insert(mBuffer.end(), (uint8 *)&v, (uint8 *)(&v) + sizeof(int32)); }
     void setOffset(uint32 index, int32 v)   { *((int32 *)(mBuffer.begin() + index)) = v; }
@@ -148,7 +151,6 @@ public:
     // XXX We lose StringAtom here (and is it safe to stash the address of a StringAtom?)
     // - is there any way of keeping StringAtoms themselves in a bytecodeContainer?
     
-    void addRegExp(RegExpInstance *x, size_t pos)   { emitOp(eRegExp, pos); mRegExpList.push_back(x); addShort(mRegExpList.size() - 1); }
 
 
     typedef std::vector<uint8> CodeBuffer;
@@ -166,6 +168,9 @@ public:
     LabelID getLabel();
     void addFixup(LabelID label);
     void setLabel(LabelID label);
+
+    Parser *mParser;                // for error reporting
+
 };
 
 

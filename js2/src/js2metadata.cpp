@@ -87,9 +87,10 @@ namespace MetaData {
                 stdOut << '\n';
             }
             if (parsedStatements) {
-                setCurrentParser(&p);  // for error reporting        
+                CompilationData *oldData = startCompilationUnit(&p);
                 ValidateStmtList(parsedStatements);
                 result = ExecuteStmtList(RunPhase, parsedStatements);
+                restoreCompilationUnit(oldData);
             }
         }
         catch (Exception &x) {
@@ -159,6 +160,7 @@ namespace MetaData {
             {
                 BlockStmtNode *b = checked_cast<BlockStmtNode *>(p);
                 b->compileFrame = new BlockFrame();
+                bCon->saveFrame(b->compileFrame);   // stash this frame so it doesn't get gc's before eval pass.
                 env->addFrame(b->compileFrame);
                 ValidateStmtList(cxt, env, b->statements);
                 env->removeTopFrame();
@@ -611,8 +613,6 @@ namespace MetaData {
      */
     js2val JS2Metadata::ExecuteStmtList(Phase phase, StmtNode *p)
     {
-        BytecodeContainer *saveBacon = bCon;
-        bCon = new BytecodeContainer();
         size_t lastPos = p->pos;
         while (p) {
             EvalStmt(&env, phase, p);
@@ -621,7 +621,6 @@ namespace MetaData {
         }
         bCon->emitOp(eReturnVoid, lastPos);
         js2val retval = engine->interpret(phase, bCon);
-        bCon = saveBacon;
         return retval;
     }
 
@@ -707,6 +706,9 @@ namespace MetaData {
             }
             break;
         case StmtNode::Break:
+            // XXX for break - if there's a finally that applies to this block, it should
+            // be invoked at this point - need to track the appropriate label and emit
+            // eCallFinally here.
         case StmtNode::Continue:
             {
                 GoStmtNode *g = checked_cast<GoStmtNode *>(p);
@@ -1524,6 +1526,7 @@ namespace MetaData {
         if (r) r->emitReadBytecode(bCon, p->pos);
         bCon->emitOp(eReturn, p->pos);
         js2val retval = engine->interpret(phase, bCon);
+        delete bCon;    // XXX check that the destructor does everything it should?
         bCon = saveBacon;
         return retval;
     }
@@ -3635,6 +3638,27 @@ deleteClassProperty:
         return toInt32(d);
     }
 
+    // Save off info about the current compilation and begin a
+    // new one - using the given parser.
+    CompilationData *JS2Metadata::startCompilationUnit(Parser *parser)
+    {
+        CompilationData *result = new CompilationData();
+        result->bCon = bCon;
+
+        bCon = new BytecodeContainer();
+        bCon->mParser = parser;
+
+        return result;
+    }
+
+    // Restore the compilation data, and then delete the cached copy.
+    void JS2Metadata::restoreCompilationUnit(CompilationData *oldData)
+    {
+        bCon = oldData->bCon;
+
+        delete oldData;
+    }
+
 
     /*
      * Throw an exception of the specified kind, indicating the position 'pos' and
@@ -3652,10 +3676,10 @@ deleteClassProperty:
             uint32 a = x.find(widenCString("{0}"));
             x.replace(a, 3, widenCString(arg));
         }
-        uint32 lineNum = mParser->lexer.reader.posToLineNum(pos);
-        size_t linePos = mParser->lexer.reader.getLine(lineNum, lineBegin, lineEnd);
+        uint32 lineNum = bCon->mParser->lexer.reader.posToLineNum(pos);
+        size_t linePos = bCon->mParser->lexer.reader.getLine(lineNum, lineBegin, lineEnd);
         ASSERT(lineBegin && lineEnd && linePos <= pos);
-        throw Exception(kind, x, mParser->lexer.reader.sourceLocation, 
+        throw Exception(kind, x, bCon->mParser->lexer.reader.sourceLocation, 
                             lineNum, pos - linePos, pos, lineBegin, lineEnd);
     }
 

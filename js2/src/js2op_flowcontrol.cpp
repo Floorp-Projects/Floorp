@@ -136,7 +136,7 @@
 
     case eThrow:
         {
-            a = pop();
+            // leave exception object on stack top
             throw Exception(Exception::userException, "");
         }
         break;

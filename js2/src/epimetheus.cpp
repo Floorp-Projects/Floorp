@@ -142,12 +142,12 @@ static int readEvalPrint(FILE *in)
                     stdOut << '\n';
                 }
                 if (parsedStatements) {
-                    metadata->setCurrentParser(&p);  // for error reporting
-            
+                    MetaData::CompilationData *oldData = metadata->startCompilationUnit(&p);            
                     metadata->ValidateStmtList(parsedStatements);
                     js2val rval = metadata->ExecuteStmtList(RunPhase, parsedStatements);
                     if (!JS2VAL_IS_VOID(rval))
                         stdOut << *metadata->toString(rval) << '\n';
+                    metadata->restoreCompilationUnit(oldData);
                 }
             }
             clear(buffer);

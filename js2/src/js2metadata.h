@@ -890,12 +890,19 @@ struct MemberDescriptor {
     QualifiedName *qname;
 };
 
+class CompilationData {
+public:
+    BytecodeContainer *bCon;
+};
+
 class JS2Metadata {
 public:
     
     JS2Metadata(World &world);
 
-    void setCurrentParser(Parser *parser) { mParser = parser; }
+    CompilationData *startCompilationUnit(Parser *parser);
+    void restoreCompilationUnit(CompilationData *oldData);
+
 
     void ValidateStmtList(StmtNode *p);
     js2val EvalStmtList(Phase phase, StmtNode *p);
@@ -1015,8 +1022,6 @@ public:
     JS2Class *regexpClass;
     JS2Class *mathClass;
     JS2Class *arrayClass;
-
-    Parser *mParser;                // used for error reporting
 
     BytecodeContainer *bCon;        // the current output container
 

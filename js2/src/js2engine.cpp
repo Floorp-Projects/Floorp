@@ -117,15 +117,11 @@ namespace MetaData {
                         if (jsx.hasKind(Exception::userException))  // snatch the exception before the stack gets clobbered
                             x = pop();
     /*
-                        mNamespaceList = prev->mNamespaceList;
-                        mCurModule = prev->mModule;
-                        endPC = mCurModule->mCodeBase + mCurModule->mLength;
-                        mLocals = prev->mLocals;
-                        mStack = prev->mStack;
-                        mStackMax = mCurModule->mStackDepth;
-                        mArgumentBase = prev->mArgumentBase;
-                        mThis = prev->mThis;
+            switch interpreter to execution of the activation 
+            XXX will need more (argument frame handling etc.)
     */
+                        activationStackTop = curAct;
+
                     }
                     else {
                         if (jsx.hasKind(Exception::userException))
