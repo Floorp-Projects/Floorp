@@ -473,7 +473,7 @@ NS_METHOD nsWindow::SetColorMap(nsColorMap *aColorMap)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Scroll aDx=<%d aDy=<%d> aClipRect=<%p> - Not Implemented.\n", aDx, aDy, aClipRect));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Scroll aDx=<%d aDy=<%d> aClipRect=<%p>.\n", aDx, aDy, aClipRect));
 
   PtWidget_t *widget;
 
@@ -491,7 +491,7 @@ NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
     PhArea_t    area;
     PhRid_t     rid = PtWidgetRid( widget );
     PhTile_t    *clipped_tiles, *sib_tiles, *tile;
-    PhTile_t    *offset_tiles, *intersection;
+    PhTile_t    *offset_tiles, *intersection = nsnull;
 
     // Take our nice, clean client-rect and shatter it into lots (maybe) of
     // unobscured tiles. sib_tiles represents the rects occupied by siblings
@@ -987,7 +987,7 @@ PRBool nsWindow::HandleEvent( PtCallbackInfo_t* aCbInfo )
         ScreenToWidget( ptrev->pos );
         if( ptrev->buttons & Ph_BUTTON_SELECT ) // Normally the left mouse button
         {
-        printf( "Window mouse click: (%ld,%ld)\n", ptrev->pos.x, ptrev->pos.y );
+//        printf( "Window mouse click: (%ld,%ld)\n", ptrev->pos.x, ptrev->pos.y );
           if( ptrev->click_count == 2 )
             result = DispatchMouseEvent( ptrev->pos, NS_MOUSE_LEFT_DOUBLECLICK );
           else
@@ -1290,41 +1290,52 @@ NS_METHOD nsWindow::GetSiblingClippedRegion( PhTile_t **btiles, PhTile_t **ctile
       PtArg_t    arg;
 
       PtSetArg( &arg, Pt_ARG_AREA, &area, 0 );
-      PtGetResources( mWidget, 1, &arg );
-      (*btiles)->rect.ul.x = area->pos.x;
-      (*btiles)->rect.ul.y = area->pos.y;
-      (*btiles)->rect.lr.x = area->pos.x + area->size.w - 1;
-      (*btiles)->rect.lr.y = area->pos.y + area->size.h - 1;
-      (*btiles)->next = nsnull;
+      if( PtGetResources( mWidget, 1, &arg ) == 0 )
+      {
+        nsRect rect( area->pos.x, area->pos.x, area->size.w, area->size.h );
+        GetParentClippedArea( rect );
 
-      *ctiles = last = nsnull;
+//        (*btiles)->rect.ul.x = area->pos.x;
+//        (*btiles)->rect.ul.y = area->pos.y;
+//        (*btiles)->rect.lr.x = area->pos.x + area->size.w - 1;
+//        (*btiles)->rect.lr.y = area->pos.y + area->size.h - 1;
 
-      for( w=PtWidgetBrotherInFront( mWidget ); w; w=PtWidgetBrotherInFront( w )) 
-      { 
-        PtSetArg( &arg, Pt_ARG_AREA, &area, 0 );
-        PtGetResources( w, 1, &arg );
-        tile = PhGetTile();
-        if( tile )
+        (*btiles)->rect.ul.x = rect.x;
+        (*btiles)->rect.ul.y = rect.y;
+        (*btiles)->rect.lr.x = rect.x + rect.width - 1;
+        (*btiles)->rect.lr.y = rect.y + rect.height - 1;
+
+        (*btiles)->next = nsnull;
+
+        *ctiles = last = nsnull;
+
+        for( w=PtWidgetBrotherInFront( mWidget ); w; w=PtWidgetBrotherInFront( w )) 
+        { 
+          PtSetArg( &arg, Pt_ARG_AREA, &area, 0 );
+          PtGetResources( w, 1, &arg );
+          tile = PhGetTile();
+          if( tile )
+          {
+            tile->rect.ul.x = area->pos.x;
+            tile->rect.ul.y = area->pos.y;
+            tile->rect.lr.x = area->pos.x + area->size.w - 1;
+            tile->rect.lr.y = area->pos.y + area->size.h - 1;
+            tile->next = NULL;
+            if( !*ctiles )
+              *ctiles = tile;
+            if( last )
+              last->next = tile;
+            last = tile;
+          }
+        }
+
+        if( *ctiles )
         {
-          tile->rect.ul.x = area->pos.x;
-          tile->rect.ul.y = area->pos.y;
-          tile->rect.lr.x = area->pos.x + area->size.w - 1;
-          tile->rect.lr.y = area->pos.y + area->size.h - 1;
-          tile->next = NULL;
-          if( !*ctiles )
-            *ctiles = tile;
-          if( last )
-            last->next = tile;
-          last = tile;
+          // We have siblings... now clip'em
+          *btiles = PhClipTilings( *btiles, *ctiles, nsnull );
+          res = NS_OK;
         }
       }
-
-      if( *ctiles )
-      {
-        // We have siblings... now clip'em
-        *btiles = PhClipTilings( *btiles, *ctiles, nsnull );
-        res = NS_OK;
-      }  
     }
   }
 
