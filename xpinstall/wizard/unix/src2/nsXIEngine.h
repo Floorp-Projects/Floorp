@@ -119,7 +119,7 @@ private:
     int     DelDLMarker();
     int     TotalToDownload(int aCustom, nsComponentList *aComps);
     PRBool  CRCCheckDownloadedArchives(char *dlPath, short dlPathLen, 
-              nsComponent *currComp, int count);
+              nsComponent *currComp, int count, int aCustom);
     PRBool  IsArchiveFile(char *path);
     int     VerifyArchive(char *szArchive);
     PRBool  CheckConn( char *URL, int type, CONN *myConn, PRBool force );
