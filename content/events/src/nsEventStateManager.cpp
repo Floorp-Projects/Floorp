@@ -3480,6 +3480,8 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
           }
         }
         else if (nsHTMLAtoms::img==tag) {
+          // Don't need to set disabled here, because if we
+          // match an imagemap, we'll return from there.
           if (sTabFocusModel & eTabFocus_linksMask) {
             nsCOMPtr<nsIDOMHTMLImageElement> nextImage(do_QueryInterface(child));
             nsAutoString usemap;
