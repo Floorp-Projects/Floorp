@@ -6,6 +6,7 @@
 
 #include "nsString.h"
 #include "nsSharedString.h"
+#include "nsWorkString.h"
 
 #ifdef TEST_STD_STRING
 #include "nsStdStringWrapper.h"
@@ -420,6 +421,19 @@ main()
         {
           tests_failed += failures;
           cout << "FAILED to keep a promise." << endl;
+        }
+    }
+
+
+    {
+      nsWorkCString s16("He");
+
+      s16.Append("llo");
+
+      if ( int failures = test_readable_hello(s16) )
+        {
+          tests_failed += failures;
+          cout << "FAILED to append to a work string." << endl;
         }
     }
 
