@@ -2340,7 +2340,12 @@ doUnary:
             break;
         case ExprNode::number:
             {
-                bCon->addFloat64(checked_cast<NumberExprNode *>(p)->value, p->pos);
+                int32 i;
+                float64 x = checked_cast<NumberExprNode *>(p)->value;
+                if (JSDOUBLE_IS_INT(x, i) && INT_FITS_IN_JS2VAL(i))
+                    bCon->addInteger(i, p->pos);
+                else
+                    bCon->addFloat64(x, p->pos);
             }
             break;
         case ExprNode::regExp:
@@ -2411,8 +2416,8 @@ doUnary:
                 if ((i->name == widenCString("eval")) || (i->name == widenCString("arguments"))) {
                     // find the parameterFrame for this function and make sure
                     // that the arguments property will get built
-                    FrameListIterator fi = env->getBegin();
-                    while (fi != env->getEnd()) {
+                    FrameListIterator fi = env->getBegin(), end = env->getEnd();
+                    while (fi != end) {
                         Frame *fr = fi->first;
                         if ((fr->kind != WithFrameKind) && (fr->kind != BlockFrameKind)) {
                             NonWithFrame *nwf = checked_cast<NonWithFrame *>(fr);
@@ -2437,9 +2442,9 @@ doUnary:
                 // and to see if we can change the reference to a FrameSlot or Slot (for member
                 // functions)
                 Multiname *multiname = ((LexicalReference *)returnRef)->variableMultiname;
-                FrameListIterator fi = env->getBegin();
+                FrameListIterator fi = env->getBegin(), end = env->getEnd();
                 bool keepLooking = true;
-                while (fi != env->getEnd() && keepLooking) {
+                while (fi != end && keepLooking) {
                     Frame *fr = fi->first;
                     if (fr->kind == WithFrameKind)
                         // XXX unless it's provably not a dynamic object that been with'd??
@@ -2832,8 +2837,8 @@ doUnary:
     // innermost such class; otherwise, it returns none.
     JS2Class *Environment::getEnclosingClass()
     {
-        FrameListIterator fi = getBegin();
-        while (fi != getEnd()) {
+        FrameListIterator fi = getBegin(), end = getEnd();
+        while (fi != end) {
             if ((fi->first)->kind == ClassKind)
                 return checked_cast<JS2Class *>(fi->first);
             fi++;
@@ -2845,8 +2850,8 @@ doUnary:
     // the innermost such function, otherwise return NULL
     ParameterFrame *Environment::getEnclosingParameterFrame()
     {
-        FrameListIterator fi = getBegin();
-        while (fi != getEnd()) {
+        FrameListIterator fi = getBegin(), end = getEnd();
+        while (fi != end) {
             switch ((fi->first)->kind) {
             case ClassKind:
             case PackageKind:
@@ -2921,9 +2926,9 @@ doUnary:
     // an error.
     void Environment::lexicalRead(JS2Metadata *meta, Multiname *multiname, Phase phase, js2val *rval, js2val *base)
     {
-        FrameListIterator fi = getBegin();
+        FrameListIterator fi = getBegin(), end = getEnd();
         bool result = false;
-        while (fi != getEnd()) {
+        while (fi != end) {
             Frame *f = fi->first;
             switch (f->kind) {
             case ClassKind:
@@ -2967,9 +2972,9 @@ doUnary:
     // exists, then fine. Otherwise create the property there.
     void Environment::lexicalWrite(JS2Metadata *meta, Multiname *multiname, js2val newValue, bool createIfMissing)
     {
-        FrameListIterator fi = getBegin();
+        FrameListIterator fi = getBegin(), end = getEnd();
         bool result = false;
-        while (fi != getEnd()) {
+        while (fi != end) {
             Frame *f = fi->first;
             switch (f->kind) {
             case ClassKind:
@@ -3020,9 +3025,9 @@ doUnary:
     // but it had darn well better be in the environment somewhere.
     void Environment::lexicalInit(JS2Metadata *meta, Multiname *multiname, js2val newValue)
     {
-        FrameListIterator fi = getBegin();
+        FrameListIterator fi = getBegin(), end = getEnd();
         bool result = false;
-        while (fi != getEnd()) {
+        while (fi != end) {
             Frame *f = fi->first;
             switch (f->kind) {
             case ClassKind:
@@ -3070,9 +3075,9 @@ doUnary:
     // can't be found, or the result of the deleteProperty call if it was found.
     bool Environment::lexicalDelete(JS2Metadata *meta, Multiname *multiname, Phase phase)
     {
-        FrameListIterator fi = getBegin();
+        FrameListIterator fi = getBegin(), end = getEnd();
         bool result = false;
-        while (fi != getEnd()) {
+        while (fi != end) {
             Frame *f = fi->first;
             switch (f->kind) {
             case ClassKind:
@@ -3134,8 +3139,8 @@ doUnary:
     // from finding frames further down the list.
     void Environment::markChildren()
     { 
-        FrameListIterator fi = getBegin();
-        while (fi != getEnd()) {
+        FrameListIterator fi = getBegin(), end = getEnd();
+        while (fi != end) {
             GCMARKOBJECT(fi->first)
             fi++;
         }
@@ -4233,12 +4238,12 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     // objectType(o) returns an OBJECT o's most specific type.
     JS2Class *JS2Metadata::objectType(js2val objVal)
     {
-        if (JS2VAL_IS_VOID(objVal))
-            return undefinedClass;
         if (JS2VAL_IS_NULL(objVal))
             return nullClass;
-        if (JS2VAL_IS_BOOLEAN(objVal))
-            return booleanClass;
+        if (JS2VAL_IS_OBJECT(objVal))
+            return objectType(JS2VAL_TO_OBJECT(objVal));
+        if (JS2VAL_IS_VOID(objVal))
+            return undefinedClass;
         if (JS2VAL_IS_NUMBER(objVal))
             return numberClass;
         if (JS2VAL_IS_STRING(objVal)) {
@@ -4249,8 +4254,10 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             else 
                 return stringClass;
         }
-        ASSERT(JS2VAL_IS_OBJECT(objVal));
-        return objectType(JS2VAL_TO_OBJECT(objVal));
+        if (JS2VAL_IS_BOOLEAN(objVal))
+            return booleanClass;
+        ASSERT(false);
+        return NULL;
     }
 
 
@@ -4317,16 +4324,18 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         else
             lMap = &checked_cast<NonWithFrame *>(container)->localBindings;
         
-        LocalBindingEntry **lbeP = (*lMap)[multiname->name];
-        if (lbeP) {
-            for (LocalBindingEntry::NS_Iterator i = (*lbeP)->begin(), end = (*lbeP)->end(); (i != end); i++) {
-                LocalBindingEntry::NamespaceBinding &ns = *i;
-                if ((ns.second->accesses & access) && multiname->listContains(ns.first)) {
-                    if (found && (ns.second->content != found))
-                        reportError(Exception::propertyAccessError, "Ambiguous reference to {0}", engine->errorPos(), multiname->name);
-                    else {
-                        found = ns.second->content;
-						enumerable = ns.second->enumerable;
+        if (lMap->size()) {
+            LocalBindingEntry **lbeP = (*lMap)[multiname->name];
+            if (lbeP) {
+                for (LocalBindingEntry::NS_Iterator i = (*lbeP)->begin(), end = (*lbeP)->end(); (i != end); i++) {
+                    LocalBindingEntry::NamespaceBinding &ns = *i;
+                    if ((ns.second->accesses & access) && multiname->listContains(ns.first)) {
+                        if (found && (ns.second->content != found))
+                            reportError(Exception::propertyAccessError, "Ambiguous reference to {0}", engine->errorPos(), multiname->name);
+                        else {
+                            found = ns.second->content;
+						    enumerable = ns.second->enumerable;
+                        }
                     }
                 }
             }

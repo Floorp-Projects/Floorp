@@ -1561,10 +1561,11 @@ public:
     float64 convertValueToInteger(js2val x);
     js2val convertValueToGeneralNumber(js2val x);
     js2val convertValueToObject(js2val x);
+    float64 valToFloat64(js2val x);
 
     const String *toString(js2val x)    { if (JS2VAL_IS_STRING(x)) return JS2VAL_TO_STRING(x); else return convertValueToString(x); }
     js2val toPrimitive(js2val x, Hint hint)        { if (JS2VAL_IS_PRIMITIVE(x)) return x; else return convertValueToPrimitive(x, hint); }
-    float64 toFloat64(js2val x);
+    float64 toFloat64(js2val x)         { if (JS2VAL_IS_INT(x)) return JS2VAL_TO_INT(x); else return valToFloat64(x); }
     js2val toGeneralNumber(js2val x)    { if (JS2VAL_IS_NUMBER(x)) return x; else return convertValueToGeneralNumber(x); }
     bool toBoolean(js2val x)            { if (JS2VAL_IS_BOOLEAN(x)) return JS2VAL_TO_BOOLEAN(x); else return convertValueToBoolean(x); }
     float64 toInteger(js2val x)         { if (JS2VAL_IS_INT(x)) return JS2VAL_TO_INT(x); else return convertValueToInteger(x); }

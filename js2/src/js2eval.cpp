@@ -540,7 +540,7 @@ namespace MetaData {
     }
     
     // x is any js2val
-    float64 JS2Metadata::toFloat64(js2val x)
+    float64 JS2Metadata::valToFloat64(js2val x)
     { 
         if (JS2VAL_IS_INT(x)) 
             return JS2VAL_TO_INT(x); 

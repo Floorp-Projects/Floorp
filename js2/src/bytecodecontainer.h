@@ -136,9 +136,11 @@ public:
     void addUInt64(const uint64 v, size_t pos) { emitOp(eUInt64, pos); mBuffer.insert(mBuffer.end(), (uint8 *)&v, (uint8 *)(&v) + sizeof(uint64)); }
     static uint64 getUInt64(void *pc)       { return *((uint64 *)pc); }
 
-    void addInt64(const int64 v, size_t pos)   { emitOp(eInt64, pos); mBuffer.insert(mBuffer.end(), (uint8 *)&v, (uint8 *)(&v) + sizeof(int64)); }
+    void addInt64(const int64 v, size_t pos){ emitOp(eInt64, pos); mBuffer.insert(mBuffer.end(), (uint8 *)&v, (uint8 *)(&v) + sizeof(int64)); }
     static int64 getInt64(void *pc)         { return *((int64 *)pc); }
 
+    void addInteger(int32 i, size_t pos)    { emitOp(eInteger, pos); addInt32(i); }
+   
     // These don't insert opcodes...
     void addUInt32(const uint32 v)          { mBuffer.insert(mBuffer.end(), (uint8 *)&v, (uint8 *)(&v) + sizeof(uint32)); }
     static uint32 getUInt32(void *pc)       { return *((uint32 *)pc); }
