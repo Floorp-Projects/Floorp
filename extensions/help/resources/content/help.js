@@ -457,7 +457,8 @@ function BrowserReloadWithFlags(reloadFlags)
    catch(ex) {
    }
  }
- 
+
+ // doc=null for regular page info, doc=owner document for frame info 
  function BrowserPageInfo(doc)
  {
    window.openDialog("chrome://navigator/content/pageInfo.xul",

@@ -134,7 +134,7 @@
 
     <!-- View Menu -->
     <command id="View:PageSource" oncommand="BrowserViewSource();"/>
-    <command id="View:PageInfo"   oncommand="BrowserPageInfo(getBrowser().contentDocument);"/>
+    <command id="View:PageInfo"   oncommand="BrowserPageInfo();"/>
     <command id="View:FullScreen" oncommand="BrowserFullScreen();"/>
   
     <!-- Search Menu -->
