@@ -876,6 +876,11 @@ DrawSelectionIterator::DrawSelectionIterator(const SelectionDetails *aSelDetails
       mDone = PR_TRUE;
       return;
     }
+    else if (!(details->mType & SELECTION_TYPES_WE_CARE_ABOUT ))//if all we have is selection we DONT care about, do nothing
+    {
+        mDone = PR_TRUE;
+        return;
+    }
     mInit = PR_TRUE;
 }
 
