@@ -350,7 +350,7 @@ nsDequeIterator nsDeque::End(void) const{
 }
 
 /**
- * Call this method when you want to to iterate all the
+ * Call this method when you want to iterate all the
  * members of the container, passing a functor along
  * to call your code.
  *
@@ -367,7 +367,7 @@ void nsDeque::ForEach(nsDequeFunctor& aFunctor) const{
 }
 
 /**
- * Call this method when you want to to iterate all the
+ * Call this method when you want to iterate all the
  * members of the container, passing a functor along
  * to call your code. Iteration continues until your
  * functor returns a non-null.
@@ -538,7 +538,7 @@ void* nsDequeIterator::GetCurrent(void) {
 }
 
 /**
- * Call this method when you want to to iterate all the
+ * Call this method when you want to iterate all the
  * members of the container, passing a functor along
  * to call your code.
  *
@@ -551,7 +551,7 @@ void nsDequeIterator::ForEach(nsDequeFunctor& aFunctor) const{
 }
 
 /**
- * Call this method when you want to to iterate all the
+ * Call this method when you want to iterate all the
  * members of the container, passing a functor along
  * to call your code.
  *
