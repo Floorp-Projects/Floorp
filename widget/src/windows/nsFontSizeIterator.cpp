@@ -28,11 +28,10 @@ NS_IMPL_RELEASE(nsFontSizeIterator)
 NS_IMPL_QUERY_INTERFACE(nsFontSizeIterator, nsIFontSizeIterator::GetIID())
 
 //----------------------------------------------------------
-nsFontSizeIterator::nsFontSizeIterator(nsVoidArray * aFontList) 
+nsFontSizeIterator::nsFontSizeIterator() 
 {
   NS_INIT_REFCNT();
-
-  mFontList     = aFontList;
+  mFontInfo     = nsnull;
   mSizeIterInx  = 0;
 
 }
@@ -54,9 +53,11 @@ NS_IMETHODIMP nsFontSizeIterator::Reset()
 //----------------------------------------------------------
 NS_IMETHODIMP nsFontSizeIterator::Get( double* aFontSize  )
 {
-  if (mSizeIterInx < mFontList->Count()) {
-    nsFont * font = (nsFont *)mFontList->ElementAt(mSizeIterInx);
-    *aFontSize = 0.0;//font->name;
+  if (nsnull != mFontInfo->mSizes && 
+      mFontInfo->mSizes->Count() > 0 && 
+      mSizeIterInx < mFontInfo->mSizes->Count()) {
+    PRUint32 size = (PRUint32)mFontInfo->mSizes->ElementAt(mSizeIterInx);
+    *aFontSize = (double)size;
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
@@ -66,23 +67,19 @@ NS_IMETHODIMP nsFontSizeIterator::Get( double* aFontSize  )
 //----------------------------------------------------------
 NS_IMETHODIMP nsFontSizeIterator::Advance()
 {
-  if (mSizeIterInx >= mFontList->Count()-1) {
-    return NS_ERROR_FAILURE;
+  if (nsnull != mFontInfo->mSizes && 
+      mFontInfo->mSizes->Count() > 0 &&
+      mSizeIterInx < mFontInfo->mSizes->Count()-2) {
+    mSizeIterInx++;
+    return NS_OK;
   }
 
-  while (mSizeIterInx < mFontList->Count()-2) {
-    mSizeIterInx++;
-    nsFont * font = (nsFont *)mFontList->ElementAt(mSizeIterInx);
-    if (mFontName.Equals(font->name)) {
-      return NS_OK;
-    }
-  }
   return NS_ERROR_FAILURE;
 }
 
 //----------------------------------------------------------
-NS_IMETHODIMP nsFontSizeIterator::SetFontName( const nsString& aFontName)
+NS_IMETHODIMP nsFontSizeIterator::SetFontInfo( FontInfo * aFontInfo )
 {
-  mFontName = aFontName;
+  mFontInfo = aFontInfo;
   return NS_OK;
 }

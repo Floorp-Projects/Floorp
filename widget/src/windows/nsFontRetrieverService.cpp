@@ -26,6 +26,7 @@
 NS_IMPL_ADDREF(nsFontRetrieverService)
 NS_IMPL_RELEASE(nsFontRetrieverService)
 
+
 //----------------------------------------------------------
 nsFontRetrieverService::nsFontRetrieverService()
 {
@@ -42,7 +43,10 @@ nsFontRetrieverService::~nsFontRetrieverService()
 {
   if (nsnull != mFontList) {
     for (PRInt32 i=0;i<mFontList->Count();i++) {
-      nsFont * font = (nsFont *)mFontList->ElementAt(i);
+      FontInfo * font = (FontInfo *)mFontList->ElementAt(i);
+      if (font->mSizes) {
+        delete font->mSizes;
+      }
       delete font;
     }
     delete mFontList;
@@ -100,18 +104,33 @@ NS_IMETHODIMP nsFontRetrieverService::CreateFontNameIterator( nsIFontNameIterato
 
 //----------------------------------------------------------
 NS_IMETHODIMP nsFontRetrieverService::CreateFontSizeIterator( const nsString * aFontName, 
-                                                             nsIFontSizeIterator** aIterator )
+                                                              nsIFontSizeIterator** aIterator )
 {
-  if (nsnull == mSizeIter) {
-    mSizeIter = new nsFontSizeIterator(mFontList);
+  PRBool found = PR_FALSE;
+  Reset();
+  do {
+    nsAutoString name;
+    Get(&name);
+    if (name.Equals(*aFontName)) {
+      found = PR_TRUE;
+      break;
+    }
+  } while (Advance() == NS_OK);
+
+  if (found) {
+    if (nsnull == mSizeIter) {
+      mSizeIter = new nsFontSizeIterator();
+    }
+    NS_ASSERTION( nsnull != mSizeIter, "nsFontSizeIterator instance pointer is null");
+
+    *aIterator = (nsIFontSizeIterator *)mSizeIter;
+    NS_ADDREF(mSizeIter);
+
+    FontInfo * fontInfo = (FontInfo *)mFontList->ElementAt(mNameIterInx);
+    mSizeIter->SetFontInfo(fontInfo);
+    return NS_OK;
   }
-  NS_ASSERTION( nsnull != mSizeIter, "nsFontSizeIterator instance pointer is null");
-
-  *aIterator = (nsIFontSizeIterator *)mSizeIter;
-  NS_ADDREF(mSizeIter);
-
-  mSizeIter->SetFontName(*aFontName);
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }
 
 //----------------------------------------------------------
@@ -127,8 +146,8 @@ NS_IMETHODIMP nsFontRetrieverService::Reset()
 NS_IMETHODIMP nsFontRetrieverService::Get( nsString* aFontName )
 {
   if (mNameIterInx < mFontList->Count()) {
-    nsFont * font = (nsFont *)mFontList->ElementAt(mNameIterInx);
-    *aFontName = font->name;
+    FontInfo * fontInfo = (FontInfo *)mFontList->ElementAt(mNameIterInx);
+    *aFontName = fontInfo->mName;
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
@@ -144,6 +163,77 @@ NS_IMETHODIMP nsFontRetrieverService::Advance()
   return NS_ERROR_FAILURE;
 }
 
+static int CALLBACK MyEnumFontFamProc(ENUMLOGFONT FAR *lpelf, 
+                                      NEWTEXTMETRIC FAR *lpntm, 
+                                      unsigned long fontType, 
+                                      LPARAM lParam)
+{
+  FontInfo * font = (FontInfo *)lParam;
+
+  ////printf("  sizes-> %d\n", lpelf->elfLogFont.lfHeight);
+  LOGFONT  ourLogFont;    // Local copy of the LOGFONT structure.
+  memcpy(&ourLogFont,  (const void *)&lpelf->elfLogFont, sizeof LOGFONT); // Make the copy
+  //printf("Size: %d", ourLogFont.lfHeight);
+
+  if (fontType & TRUETYPE_FONTTYPE) {
+    //printf("TRUETYPE_FONTTYPE;");
+    font->mIsScalable = PR_TRUE;
+    return 1;
+  } else if (fontType & RASTER_FONTTYPE) {
+    //printf("RASTER_FONTTYPE;");
+    if (nsnull == font->mSizes ) {
+      font->mSizes = new nsVoidArray();
+    }
+  } else if (fontType & DEVICE_FONTTYPE) {
+    //printf("DEVICE_FONTTYPE;");
+    //if (nsnull == font->mSizes ) {
+    //  font->mSizes = new nsVoidArray();
+    //}
+  } else {
+    //printf("VECTOR_FONTTYPE;");
+    font->mIsScalable = PR_TRUE;
+  }
+
+  if (nsnull != font->mSizes) {
+    font->mSizes->AppendElement((void *)ourLogFont.lfHeight);
+  }
+
+#if 0
+   if (ourLogFont.lfCharSet != ANSI_CHARSET)
+      //printf("FNT_NONANSI;");
+   else
+      //printf("FNT_ANSI;");
+
+   //
+   // We also need to set the family type (we use it for filtering)
+   //
+   switch (ourLogFont.lfPitchAndFamily & 0xF0)
+      {
+      case FF_SWISS:
+         //printf("FNT_SANSSERIF;");
+         break;
+
+      case FF_ROMAN:
+         //printf("FNT_SERIF;");
+         break;
+
+      case FF_MODERN:
+         //printf("FNT_MODERN;");
+         break;
+
+      case FF_SCRIPT:
+         //printf("FNT_SCRIPT;");
+         break;
+
+      default:
+         //printf("FNT_OTHER;"); 
+         break;
+      }
+#endif
+  //printf("\n");
+
+  return 1;
+}
 
 //--------------------------------------------------------------------- 
 // 
@@ -161,60 +251,27 @@ static int CALLBACK EnumerateMyFonts(ENUMLOGFONTEX    *lpLogFontEx,
 { 
   nsVoidArray * fontList = (nsVoidArray *)lParam;
 
-  printf("%s [%s][%s][%s]\n", lpLogFontEx->elfLogFont.lfFaceName, 
+  /*printf("%s [%s][%s][%s]", lpLogFontEx->elfLogFont.lfFaceName, 
                  lpLogFontEx->elfFullName, 
                  lpLogFontEx->elfStyle, 
                  lpLogFontEx->elfScript 
-                 ); 
+                 ); */
+  LOGFONT  ourLogFont;    // Local copy of the LOGFONT structure.
+  memcpy(&ourLogFont,  (const void *)&lpLogFontEx->elfLogFont, sizeof LOGFONT); // Make the copy
+  //printf("Size: %d\n", ourLogFont.lfHeight);
 
-  nsFont * font = new nsFont(lpLogFontEx->elfLogFont.lfFaceName, 0,0,0,0,0);
+  FontInfo * font   = new FontInfo();
+  font->mName       = (char *)lpLogFontEx->elfLogFont.lfFaceName; // XXX I18N ?
+  font->mIsScalable = PR_FALSE;
+  font->mSizes      = nsnull;
+
+
   fontList->AppendElement(font);
 
-  // 
-  // We need to set our TRUETYPE, BITMAP, and NONANSI flags 
-  // based on the font type. 
-  // 
-  /*if (fontType == TRUETYPE_FONTTYPE) 
-    faceFlag |= FNT_TRUETYPE; 
-  else 
-    faceFlag |= FNT_BITMAP; 
+   HDC myDC = ::GetDC(NULL);       // Get the old style DC handle 
+  ::EnumFontFamilies(myDC, lpLogFontEx->elfLogFont.lfFaceName, (FONTENUMPROC)&MyEnumFontFamProc, (LPARAM)font);
+  ::ReleaseDC(NULL, myDC); 
 
-  if (ourLogFont.lfCharSet != ANSI_CHARSET) 
-    faceFlag |= FNT_NONANSI; 
-  else 
-    faceFlag |= FNT_ANSI; 
-    */ 
-
-  // 
-  // We also need to set the family type (we use it for filtering) 
-  // 
-  /*switch (ourLogFont.lfPitchAndFamily & 0xF0) 
-    { 
-    case FF_SWISS: 
-       faceFlag |= FNT_SANSSERIF; 
-       break; 
-
-    case FF_ROMAN: 
-       faceFlag |= FNT_SERIF; 
-       break; 
-
-    case FF_MODERN: 
-       faceFlag |= FNT_MODERN; 
-       break; 
-
-    case FF_SCRIPT: 
-       faceFlag |= FNT_SCRIPT; 
-       break; 
-
-    default: 
-       faceFlag |= FNT_OTHER; 
-       break; 
-    }*/ 
-
-  // 
-  // Add the font to our font list. 
-  // 
-  //pFaceList->NewFont(lpLogFont->lfFaceName, faceFlag, fontType, ourLogFont); // Otherwise, build table. 
 
   return (1); 
 }
@@ -232,7 +289,6 @@ NS_IMETHODIMP nsFontRetrieverService::LoadFontList()
   LOGFONT        myLogFont;        // Our font structure 
   HDC            myDC;             // Our device context 
 
-  myDC = ::GetDC(NULL);       // Get the old style DC handle 
 
   // Here is a partial list CHAR_SETS
   /* 
@@ -246,6 +302,8 @@ NS_IMETHODIMP nsFontRetrieverService::LoadFontList()
   OEM_CHARSET 
   */ 
 
+  myDC = ::GetDC(NULL);       // Get the old style DC handle 
+
   // Font search parms (find all) 
   myLogFont.lfCharSet        = ANSI_CHARSET; 
   myLogFont.lfFaceName[0]    = 0; 
@@ -253,6 +311,10 @@ NS_IMETHODIMP nsFontRetrieverService::LoadFontList()
 
   // Force the calls to EnumerateMyFonts 
   ::EnumFontFamiliesEx(myDC, &myLogFont, (FONTENUMPROC)&EnumerateMyFonts, (LPARAM)mFontList, (DWORD)0); 
+
+  myLogFont.lfCharSet        = SYMBOL_CHARSET; 
+  ::EnumFontFamiliesEx(myDC, &myLogFont, (FONTENUMPROC)&EnumerateMyFonts, (LPARAM)mFontList, (DWORD)0);
+  
   ::ReleaseDC(NULL, myDC); 
 
   return NS_OK;
