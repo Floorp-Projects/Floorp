@@ -5638,6 +5638,20 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
 
     if (NS_SUCCEEDED(rv)) 
     {
+      // it is possible one plugin instance can request several different 
+      // streams, if we are serving those streams as files from 
+      // temp location (e.g. browser cache is not available)
+      // we do not have to delete the files until instance is active,
+      // usually temp files are getting deleted when listener peer is released by OnStopRequest(),
+      // lets add this listener peer to the to list of stream peers for this instance,
+      // it'll delay the release until nsActivePlugin::setStopped() call.
+      nsActivePlugin * p = mActivePluginList.find(aInstance);
+      if (p && p->mStreams)
+      {
+        p->mStreams->AppendElement((void *)listenerPeer);
+        NS_ADDREF(listenerPeer);
+      }
+
       nsCOMPtr<nsIInterfaceRequestor> callbacks;
 
       if (doc) 
