@@ -1944,6 +1944,9 @@ nsFtpConnectionThread::Init(nsIProtocolHandler* aHandler,
     if (NS_FAILED(rv)) return rv;
     
     if (preHost) {
+        // we found some username (and maybe password info) in the URL. 
+        // we know we're not going anonymously now.
+        mAnonymous = PR_FALSE;
         char *colon = PL_strchr(preHost, ':');
         if (colon) {
             *colon = '\0';
