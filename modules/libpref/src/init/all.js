@@ -417,6 +417,13 @@ pref("offline.news.download.use_days",          0);
 // prevents necko connecting to ports 1-5 unless the protocol
 // overrides.
 
+// Prevent using external protocol handlers for these schemes
+pref("network.protocol-handler.external.hcp", false);
+pref("network.protocol-handler.external.vbscript", false);
+pref("network.protocol-handler.external.javascript", false);
+pref("network.protocol-handler.external.ms-help", false);
+pref("network.protocol-handler.external.vnd.ms.radio", false);
+
 pref("network.hosts.smtp_server",           "mail");
 pref("network.hosts.pop_server",            "mail");
 pref("network.protocols.useSystemDefaults",   false); // set to true if user links should use system default handlers
