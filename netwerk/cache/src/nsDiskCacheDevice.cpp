@@ -438,8 +438,10 @@ nsresult MetaDataFile::Read(nsIInputStream* input)
     
     // read the header size used by this file.
     READ_LONG_(mHeaderSize);
-    NS_ASSERTION(mHeaderSize == sizeof(MetaDataHeader),
-        "### CACHE FORMAT CHANGED!!! PLEASE DELETE YOUR CACHE DIRECTORY!!! ###");
+    if (mHeaderSize != sizeof(MetaDataHeader)) {
+        NS_ERROR("### CACHE FORMAT CHANGED!!! PLEASE DELETE YOUR CACHE DIRECTORY!!! ###");
+        return NS_ERROR_ILLEGAL_VALUE;
+    }
     READ_LONG_(mFetchCount);
     READ_LONG_(mLastFetched);
     READ_LONG_(mLastModified);
