@@ -77,10 +77,17 @@ export::
 	-mkdir $(CCKDIST)\CCKTool\WSTemplate\Workspace\Sidebar
 
 	-mkdir $(CCKDIST)\CCKTool\CCKDocs
-
-	-mkdir $(CCKDIST)\CCKTool\NSCPXPI
 	-mkdir $(CCKDIST)\CCKTool\CCKHelp
 
+	-mkdir $(CCKDIST)\CCKTool\Version
+	-mkdir $(CCKDIST)\CCKTool\Version\$(VERSION)
+	-mkdir $(CCKDIST)\CCKTool\Version\$(VERSION)
+	-mkdir $(CCKDIST)\CCKTool\Version\$(VERSION)\Windows
+	-mkdir $(CCKDIST)\CCKTool\Version\$(VERSION)\Windows\enus
+	-mkdir $(CCKDIST)\CCKTool\Version\$(VERSION)\Windows\enus\Nscpxpi
+	-mkdir $(CCKDIST)\CCKTool\Version\$(VERSION)\MacintoshOSX
+	-mkdir $(CCKDIST)\CCKTool\Version\$(VERSION)\MacintoshOSX\enus
+	-mkdir $(CCKDIST)\CCKTool\Version\$(VERSION)\MacintoshOSX\enus\Nscpxpi
  
 #  We populate empty folders so zip will pick them up.
 	$(MAKE_INSTALL) .\build\DeleteThisFile $(CCKDIST)\CCKTool\Configs\Default\Output

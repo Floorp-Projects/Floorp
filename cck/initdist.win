@@ -20,6 +20,7 @@
 # Contributor(s): 
 
 CCKDIST=$(DEPTH)\cck\dist
+VERSION=6.5
 
 #NSZIP=$(DEPTH)\xpinstall\wizard\windows\nszip
 
