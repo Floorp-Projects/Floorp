@@ -222,8 +222,6 @@ nsresult nsLayer::FetchEventsByRange(
                       JulianPtrArray* anArray
                       )
 {
-  nsresult res;
-
   /*
    * Before we do anything, see if we've cached the info..
    */
@@ -392,6 +390,12 @@ nsresult nsLayer::FetchEventsByRange(
   PR_DestroyMonitor(pCBReaderMonitor);
 
   /*
+   * now that we have successfully retrieved information from aStart
+   * to aStop, update the Calendar's known range for events.
+   */
+  mpCal->updateEventsRange(*aStart, *aStop);
+
+  /*
    * todo: need to delete calendars in pParsedCalList without 
    * deleting events in it 
    */
@@ -402,8 +406,7 @@ nsresult nsLayer::FetchEventsByRange(
   /*
    * register the calendar...
    */
-  if (NS_OK != (res = mpShell->mCalList.Add(mpCal)))
-    return res;
+  mpShell->mCalList.Add(mpCal);
 
   return NS_OK;
 }

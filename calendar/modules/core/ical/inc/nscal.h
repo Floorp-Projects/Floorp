@@ -760,13 +760,26 @@ private:
      */
     void createVFreebusyHelper(Freebusy * f, DateTime start, DateTime end);
 
+public:
     /**
      *  update the m_EventsSpanStart and m_EventsSpanEnd members
      *  taking into account new VEvent.
      */ 
     void updateEventsRange(VEvent * v);
 
+    /**
+     *  caller of FetchEventsByRange must be able to set the known
+     *  event range span. There may not have been any events in
+     *  the database within a range. If ther are, the events do not 
+     *  necessarily span the full range. In any case, we need to be
+     *  able to update known limits on the event range...
+     *  -sman 10/12/98
+     *  @param  DTStart  Known good start time
+     *  @param  DTEnd    Known good stop time
+     */
+    void updateEventsRange(DateTime DTStart, DateTime DTEnd);
 
+private:
     /* -- private data members -- */
 
     /* parsing flags */

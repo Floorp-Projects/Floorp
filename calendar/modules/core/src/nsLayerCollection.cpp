@@ -287,6 +287,75 @@ nsresult nsLayerCollection::FetchEventsByRange(
   return NS_OK;
 }
 
+#if 0
+nsresult nsLayerCollection::FetchEventsByRange(
+                      DateTime*  aStart, 
+                      DateTime*  aStop,
+                      JulianPtrArray*  anArray
+                      )
+{
+  PRLock *pLock;
+  PRCondVar *pSomeThreadsCompleted;
+  NSVector PendingThreadCompletions;
+  PRInt32 i;
+  PRInt32 iTmpSize;
+  PRInt32 iFinishedThreadCount = 0;
+  PRInt32 iCount = mLayers->Count();
+  nsILayer *pLayer = 0;
+  PRThread *pThread = 0;
+
+  pLock = PR_NewLock();
+  pAThreadCompleted = PR_NewCondVar(pLock);
+
+  /*
+   * Create a thread for each layer in the collection...
+   */
+  for ( i = 0; i < iCount; i++)
+  {
+    pLayer = (nsILayer*)mLayers->ElementAt(i);
+    /*
+     * create a thread for pLayer..
+     */
+	pThread = PR_CreateThread(
+				PR_USER_THREAD,
+                main_LayerOpHandler,
+                pLayerOp,
+                PR_PRIORITY_NORMAL,
+                PR_LOCAL_THREAD,
+                PR_UNJOINABLE_THREAD,
+                0);
+  }
+
+  while (iFinishedThreadCount < iCount)
+  {
+    /*
+     * Wait for individual layers to complete...
+     */
+    PR_Lock(pLock);
+    while ( 0 == PendingThreadCompletions.Count() )
+    {
+      PR_WaitCondVar(pSomeThreadsCompleted,PR_INTERVAL_NO_TIMEOUT);
+    }
+
+    /*
+     * At least one layer is now complete. Remove any threads from
+     * the pending list and put them into the completed list
+     */
+    iFinishedThreadCount += PendingThreadCompletions.Count();
+    PendingThreadCompletions.RemoveAll();
+    PR_Unlock(pLock);
+  }
+
+  /*
+   * All threads are done. Send command indicating data collection is done.
+   */
+
+
+  return NS_OK;
+}
+
+#endif
+
 /**
  * @param aUrl   the url for comparison. In this case, we check to see if 
  *               both the host and cal store id match on any layer in

@@ -5,7 +5,7 @@
 <!-- This is the User Heading Rule -->
 <panel name="UserHeadingRule"> 
   <tcc foregroundcolor="#0000FF" name="PrevDay" orientation="west" control="MultiCalendarEventWeekView" usectxrule="day-1" weightminor="0" weightmajor="0"/> 
-  <object class="timebaruserheading" name="tuh" title="Julian Calendar 0.1" weightmajor="1"/>
+  <object class="timebaruserheading" name="tuh" title="Zulu Calendar 0.1" weightmajor="1"/>
   <tcc foregroundcolor="#0000FF" name="NextDay" orientation="east" control="MultiCalendarEventWeekView" usectxrule="day+1" weightminor="0" weightmajor="0"/> 
 </panel> 
 

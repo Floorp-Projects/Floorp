@@ -1158,37 +1158,42 @@ JulianPtrArray * NSCalendar::changeEventsOwnership()
     return out;
 }
 //---------------------------------------------------------------------
+void NSCalendar::updateEventsRange(DateTime dStart, DateTime dEnd)
+{
+  if (dStart.isValid())
+  {
+    if (!m_EventsSpanStart.isValid()) 
+      m_EventsSpanStart = dStart;
+    else
+    {
+      if (m_EventsSpanStart.afterDateTime(dStart))
+        m_EventsSpanStart = dStart;
+    }
+
+    /*
+     * set m_EventsSpanEnd to dStart if dEnd. not valid and m_EventsSpanNotSet
+     */
+    if (!m_EventsSpanEnd.isValid() && (!dEnd.isValid()))
+    {
+      m_EventsSpanEnd = dStart;
+    }
+  }
+
+  if (dEnd.isValid())
+  {
+    if (!m_EventsSpanEnd.isValid())
+      m_EventsSpanEnd = dEnd;
+    else
+    {
+      if (m_EventsSpanEnd.beforeDateTime(dEnd))
+        m_EventsSpanEnd = dEnd;
+    }
+  }
+}
 void NSCalendar::updateEventsRange(VEvent * v)
 {
-    DateTime start, end;
     PR_ASSERT(v->isValid());
-    start = v->getDTStart();
-    end = v->getDTEnd();
-    if (start.isValid())
-    {
-         if (!m_EventsSpanStart.isValid()) 
-             m_EventsSpanStart = start;
-         else
-         {
-             if (m_EventsSpanStart.afterDateTime(start))
-                 m_EventsSpanStart = start;
-         }
-         // set m_EventsSpanEnd to start if end not valid and m_EventsSpanNotSet
-         if (!m_EventsSpanEnd.isValid() && (!end.isValid()))
-         {
-             m_EventsSpanEnd = start;
-         }
-    }
-    if (end.isValid())
-    {
-         if (!m_EventsSpanEnd.isValid())
-             m_EventsSpanEnd = end;
-         else
-         {
-             if (m_EventsSpanEnd.beforeDateTime(end))
-                  m_EventsSpanEnd = end;
-         }
-    }
+    updateEventsRange( v->getDTStart(), v->getDTEnd() );
 }
 //---------------------------------------------------------------------
 void NSCalendar::addEvent(ICalComponent * v)
