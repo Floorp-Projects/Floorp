@@ -120,9 +120,15 @@ EXPORT_RESOURCE_SAMPLES = \
 	tab-leftedge.gif \
 	tab-rightedge.gif \
 	taskbar-addressbook.gif \
+	taskbar-addressbook-hover.gif \
 	taskbar-composer.gif \
+	taskbar-composer-hover.gif
 	taskbar-mail.gif \
+	taskbar-mail-hover.gif \
+    taskbar-gotmail.gif \
+    taskbar-gotmail-hover.gif \
 	taskbar-navigator.gif \
+	taskbar-navigator-hover.gif \
 	taskbar-popup-arrow.gif \
 	taskbar-tab-hover.gif \
 	taskbar-tab-minimized.gif \

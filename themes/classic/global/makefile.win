@@ -120,9 +120,15 @@ install::
 	$(MAKE_INSTALL) tab-leftedge.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) tab-rightedge.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) taskbar-addressbook.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) taskbar-addressbook-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) taskbar-composer.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) taskbar-composer-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) taskbar-mail.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+    $(MAKE_INSTALL) taskbar-mail-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+    $(MAKE_INSTALL) taskbar-gotmail.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+    $(MAKE_INSTALL) taskbar-gotmail-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) taskbar-navigator.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) taskbar-navigator-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) taskbar-popup-arrow.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) taskbar-tab-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) taskbar-tab-minimized.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
