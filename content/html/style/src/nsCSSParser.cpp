@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim:ts=2:et:sw=2:
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -1363,6 +1364,7 @@ PRBool CSSParserImpl::ParseSelectorList(PRInt32& aErrorCode,
 static PRBool IsPseudoClass(const nsIAtom* aAtom)
 {
   return PRBool((nsCSSAtoms::activePseudo == aAtom) || 
+                (nsCSSAtoms::anyLinkPseudo == aAtom) ||
                 (nsCSSAtoms::checkedPseudo == aAtom) ||
                 (nsCSSAtoms::disabledPseudo == aAtom) ||
                 (nsCSSAtoms::dragOverPseudo == aAtom) ||
@@ -2432,6 +2434,12 @@ CSSParserImpl::ParseDeclaration(PRInt32& aErrorCode,
       continue;
     }
 
+    if (!tk->IsSymbol('}')) {
+      REPORT_UNEXPECTED_TOKEN(
+        NS_LITERAL_STRING("Expected declaration but found"));
+      REPORT_UNEXPECTED(NS_LITERAL_STRING("Skipped to next declaration."));
+      OUTPUT_ERROR();
+    }
     // Not a declaration...
     UngetToken();
     return PR_FALSE;
