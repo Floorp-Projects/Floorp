@@ -301,6 +301,8 @@ var nsOpenCommand =
     fp.appendFilters(nsIFilePicker.filterText);
     fp.appendFilters(nsIFilePicker.filterAll);
 
+    SetFilePickerDirectory(fp, "html");
+
     /* doesn't handle *.shtml files */
     try {
       fp.show();
@@ -312,9 +314,10 @@ var nsOpenCommand =
   
     /* This checks for already open window and activates it... 
      * note that we have to test the native path length
-     *  since fileURL.spec will be "file:///" if no filename picked (Cancel button used)
+     *  since file.URL will be "file:///" if no filename picked (Cancel button used)
      */
     if (fp.file && fp.file.path.length > 0) {
+      SaveFilePickerDirectory(fp, "html");
       EditorOpenUrl(fp.fileURL.spec);
     }
   }
@@ -441,7 +444,18 @@ function PromptForSaveLocation(aDoSaveAsText, aEditorType, aMIMEType, ahtmlDocum
     fileLocation.URL = aDocumentURLString;
     var parentLocation = fileLocation.parent;
     if (parentLocation)
+    {
+      // Save current filepicker's default location
+      if ("gFilePickerDirectory" in window)
+        gFilePickerDirectory = fp.displayDirectory;
+
       fp.displayDirectory = parentLocation;
+    }
+    else
+    {
+      // Initialize to the last-used directory for the particular type (saved in prefs)
+      SetFilePickerDirectory(fp, aEditorType);
+    }
   }
   catch(e) {}
 
@@ -451,7 +465,10 @@ function PromptForSaveLocation(aDoSaveAsText, aEditorType, aMIMEType, ahtmlDocum
     // reset urlstring to new save location
     dialogResult.resultingURIString = fp.file.URL;
     dialogResult.resultingLocalFile = fp.file;
+    SaveFilePickerDirectory(fp, aEditorType);
   }
+  else if ("gFilePickerDirectory" in window && gFilePickerDirectory)
+    fp.displayDirectory = gFilePickerDirectory; 
 
   return dialogResult;
 }

@@ -1424,8 +1424,8 @@ function BuildRecentMenu(savePrefs)
   }
   for (i = 0; i < historyCount; i++)
   {
-    var title = getUnicharPref("editor.history_title_"+i);
-    var url = getUnicharPref("editor.history_url_"+i);
+    var title = GetUnicharPref("editor.history_title_"+i);
+    var url = GetUnicharPref("editor.history_url_"+i);
 
     // Continue if URL pref is missing because 
     //  a URL not found during loading may have been removed
@@ -1458,8 +1458,8 @@ function BuildRecentMenu(savePrefs)
     {
       if (!urlArray[i])
         break;
-      setUnicharPref("editor.history_title_"+i, titleArray[i]);
-      setUnicharPref("editor.history_url_"+i, urlArray[i]);
+      SetUnicharPref("editor.history_title_"+i, titleArray[i]);
+      SetUnicharPref("editor.history_url_"+i, urlArray[i]);
       savePrefs = true;
     }
   }
@@ -1509,34 +1509,6 @@ function AppendRecentMenuitem(menupopup, title, url, menuIndex)
       menupopup.appendChild(menuItem);
     }
   }
-}
-
-function setUnicharPref(aPrefName, aPrefValue)
-{
-  if (!gPrefs) return;
-  try
-  {
-    var str = Components.classes["@mozilla.org/supports-wstring;1"]
-                        .createInstance(Components.interfaces.nsISupportsWString);
-    str.data = aPrefValue;
-    gPrefs.setComplexValue(aPrefName, Components.interfaces.nsISupportsWString, str);
-  }
-  catch(e)
-  {
-  }
-}
-
-function  getUnicharPref(aPrefName, aDefVal)
-{
-  if (!gPrefs) return "";
-  try
-  {
-    return gPrefs.getComplexValue(aPrefName, Components.interfaces.nsISupportsWString).data;
-  }
-  catch(e)
-  {
-  }
-  return "";
 }
 
 function EditorInitFormatMenu()
