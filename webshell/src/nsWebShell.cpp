@@ -420,8 +420,6 @@ protected:
   static PRUint32          mPluginInitCnt;
   PRBool mProcessedEndDocumentLoad;
 
-  PRBool mViewSource;
-  
   MOZ_TIMER_DECLARE(mTotalTime)
 
 #ifdef DETECT_WEBSHELL_LEAKS
@@ -556,7 +554,6 @@ nsWebShell::nsWebShell() : nsDocShell()
   mDefaultCharacterSet = "";
   mProcessedEndDocumentLoad = PR_FALSE;
   mCharsetReloadState = eCharsetReloadInit;
-  mViewSource=PR_FALSE;
   mHistoryService = nsnull;
   mHistoryState = nsnull;
   mFiredUnloadEvent = PR_FALSE;
@@ -980,7 +977,7 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
                     nsISupports * aHistoryState,
                     const PRUnichar* aReferrer)
 {
-  const char *cmd = mViewSource ? "view-source" : "view" ;
+  const char *cmd = (mViewMode == viewSource) ? "view-source" : "view" ;
 
   return LoadURL(aURLSpec, cmd, aPostDataStream,
                  aModifyHistory,aType, aLocalIP, aHistoryState,
@@ -1319,16 +1316,12 @@ NS_IMETHODIMP nsWebShell::InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
          break;
       } 
 
-   nsXPIDLCString url;
-   aURI->GetSpec(getter_Copies(url));
-
    nsXPIDLCString referrer;
    if(aReferrer)
       aReferrer->GetSpec(getter_Copies(referrer));
 
-
-   return LoadURL(nsAutoString(url).GetUnicode(), nsnull, updateHistory,
-      0, 0, nsnull, nsAutoString(referrer).GetUnicode());
+   return LoadURI(aURI, "view", nsnull, updateHistory, nsIChannel::LOAD_NORMAL,
+      0, nsnull, nsAutoString(referrer).GetUnicode(), nsnull);
 }
 
 // nsIURIContentListener support
@@ -1563,8 +1556,6 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
      If you insist that this should be here, then put in URL parsing 
      optimizations here. -Gagan
   */
-
-  mViewSource = (0==PL_strcmp("view-source", aCommand));
 
   nsAutoString urlStr(aURLSpec);
   // first things first. try to create a uri out of the string.
