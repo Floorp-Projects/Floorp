@@ -18,7 +18,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
-$::UtilsVersion = '$Revision: 1.27 $ ';
+$::UtilsVersion = '$Revision: 1.28 $ ';
 
 package TinderUtils;
 
@@ -410,6 +410,7 @@ sub SetupPath {
             }
         }
     }
+    $Settings::ConfigureArgs .= '--cache-file=/dev/null';
     #print "Path after: $ENV{PATH}\n";
 }
 
