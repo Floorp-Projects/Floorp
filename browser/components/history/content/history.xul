@@ -121,7 +121,7 @@
   </hbox>
   <textbox id="search-box" flex="1"
            type="timed" timeout="800"
-           callback="searchHistory(this.value);"/>
+           callback="searchHistory(gSearchBox.value);"/>
 </toolbar>
 </toolbox>
 <tree id="historyTree"/>
