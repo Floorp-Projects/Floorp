@@ -43,6 +43,7 @@
 use Cwd;
 
 #// constants
+$SUBDIR = "mozilla-installer";
 $_DEPTH  = "../../..";
 $_orig = cwd();
 chdir($_DEPTH); # resolve absolute path
@@ -137,13 +138,17 @@ spew("Completed making .xpis");
 #-------------------------------------------------------------------------
 #// tar and gzip mozilla-installer, mozilla-installer-bin, README, license, 
 #// config.ini into stub
-chdir($RAW);
-system("tar cvf $STUB/$aStubName.tar mozilla-installer mozilla-installer-bin README config.ini MPL-1.1.txt"); 
+chdir("$RAW/..");
+system("mv $RAW $ROOT/$SUBDIR");
+system("tar cvf $STUB/$aStubName.tar ./$SUBDIR/mozilla-installer ./$SUBDIR/mozilla-installer-bin ./$SUBDIR/README ./$SUBDIR/config.ini ./$SUBDIR/MPL-1.1.txt"); 
+system("mv $ROOT/$SUBDIR $RAW");
 system("gzip $STUB/$aStubName.tar");
 
 #// tar and gzip mozilla-installer, mozilla-installer-bin, README, license, 
 #// config.ini, and .xpis into sea
-system("tar cvf $BLOB/$aBlobName.tar ."); 
+system("mv $RAW $ROOT/$SUBDIR");
+system("tar cvf $BLOB/$aBlobName.tar ./$SUBDIR/"); 
+system("mv $ROOT/$SUBDIR $RAW");
 system("gzip $BLOB/$aBlobName.tar");
 chdir($_orig);
 
