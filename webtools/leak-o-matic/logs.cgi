@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# $Id: logs.cgi,v 1.4 1999/11/17 20:42:57 waterson%netscape.com Exp $
+# $Id: logs.cgi,v 1.5 1999/11/17 22:14:21 leaf%mozilla.org Exp $
 #
 # The contents of this file are subject to the Mozilla Public
 # License Version 1.1 (the "License"); you may not use this file
@@ -20,7 +20,9 @@
 # 
 # Contributor(s):
 # Chris Waterson <waterson@netscape.com>
-# 
+#
+# $Id: logs.cgi,v 1.5 1999/11/17 22:14:21 leaf%mozilla.org Exp $
+#
 
 #
 # ``Front door'' script that shows all of the logs that are
@@ -64,10 +66,10 @@ that are currently available for your perusal.
 
 };
 
-# ``ls'' the directory, ``-1Sr'' returns it sorted by name, reversed, so
+# ``ls'' the directory, ``-1r'' returns it sorted by name, reversed, so
 # the most recent logs will be at the top.
 
-ZIP: foreach (qx/ls -1Sr $::logdir\/*.zip/) {
+ZIP: foreach (qx/ls -1r $::logdir\/*.zip/) {
     chomp;
 
     next ZIP unless (/(\d\d\d\d)(\d\d)(\d\d)/);
@@ -93,6 +95,6 @@ For more information on how to use the Leak-o-Matic, see the
 
 };
 
-print '<small>$Id: logs.cgi,v 1.4 1999/11/17 20:42:57 waterson%netscape.com Exp $</small>';
+print '<small>$Id: logs.cgi,v 1.5 1999/11/17 22:14:21 leaf%mozilla.org Exp $</small>';
 print $::query->end_html;
 
