@@ -308,9 +308,25 @@ ChangePassword()
 }
 
 static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
-/* void logout(); */
+
 NS_IMETHODIMP nsSecretDecoderRing::
 Logout()
+{
+  nsresult rv;
+  nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
+  if (NS_FAILED(rv))
+    return rv;
+
+  {
+    nsNSSShutDownPreventionLock locker;
+    PK11_LogoutAll();
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsSecretDecoderRing::
+LogoutAndTeardown()
 {
   nsresult rv;
   nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
