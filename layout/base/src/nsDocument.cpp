@@ -2415,6 +2415,30 @@ nsDocument::GetAnonymousNodes(nsIDOMElement* aElement, nsIDOMNodeList** aResult)
 }
 
 NS_IMETHODIMP    
+nsDocument::GetLocation(jsval* aLocation)
+{
+  if (mScriptGlobalObject) {
+    nsCOMPtr<nsIDOMWindow> window(do_QueryInterface(mScriptGlobalObject));
+    if(window) {
+      return window->GetLocation(aLocation);
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsDocument::SetLocation(jsval aLocation)
+{
+  if (mScriptGlobalObject) {
+    nsCOMPtr<nsIDOMWindow> window(do_QueryInterface(mScriptGlobalObject));
+    if(window) {
+      return window->SetLocation(aLocation);
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
 nsDocument::CreateRange(nsIDOMRange** aReturn)
 {
   return NS_NewRange(aReturn);
@@ -3129,22 +3153,7 @@ PRBool    nsDocument::DeleteProperty(JSContext *aContext, JSObject *aObj, jsval 
 
 PRBool    nsDocument::GetProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
 {
-  PRBool result = PR_TRUE;
-
-  if (JSVAL_IS_STRING(aID) && 
-      PL_strcmp("location", JS_GetStringBytes(JS_ValueToString(aContext, aID))) == 0) {
-    if (mScriptGlobalObject) {
-      nsCOMPtr<nsIJSScriptObject> window(do_QueryInterface(mScriptGlobalObject));
-      if(window) {
-        result = window->GetProperty(aContext, aObj, aID, aVp);
-      }
-      else {
-        result = PR_FALSE;
-      }
-    }
-  }
-
-  return result;
+  return PR_TRUE;
 }
 
 PRBool    nsDocument::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
@@ -3235,18 +3244,6 @@ PRBool    nsDocument::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID
         }
       }
       NS_IF_RELEASE(mManager);
-    }
-  }
-  else if (JSVAL_IS_STRING(aID) && 
-      PL_strcmp("location", JS_GetStringBytes(JS_ValueToString(aContext, aID))) == 0) {
-    if (mScriptGlobalObject) {
-      nsCOMPtr<nsIJSScriptObject> window(do_QueryInterface(mScriptGlobalObject));
-      if(window) {
-        result = window->SetProperty(aContext, aObj, aID, aVp);
-      }
-      else {
-        result = PR_FALSE;
-      }
     }
   }
 

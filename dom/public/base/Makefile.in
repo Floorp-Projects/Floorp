@@ -48,6 +48,7 @@ EXPORTS		= \
 		nsIDOMCRMFObject.h \
 		nsIDOMCrypto.h \
 		nsIDOMPkcs11.h \
+		nsIDOMWindowEventOwner.h \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))

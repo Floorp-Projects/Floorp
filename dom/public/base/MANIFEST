@@ -39,3 +39,4 @@ nsIDOMCrypto.h
 nsIDOMCRMFObject.h
 nsIDOMPkcs11.h
 nsIDOMViewCSS.h
+nsIDOMWindowEventOwner.h

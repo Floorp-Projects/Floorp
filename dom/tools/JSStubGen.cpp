@@ -321,6 +321,16 @@ static const char kPropFuncBeginStr[] = "\n"
 "  }\n"
 "\n";
 
+static const char kGlobalPropFuncBeginStr[] = "\n"
+"/***********************************************************************/\n"
+"//\n"
+"// %s Properties %ster\n"
+"//\n"
+"PR_STATIC_CALLBACK(JSBool)\n"
+"%s%sProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)\n"
+"{\n"
+"\n";
+
 static const char kIntCaseStr[] =
 "  nsresult rv = NS_OK;\n"
 "  if (JSVAL_IS_INT(id)) {\n"
@@ -328,6 +338,22 @@ static const char kIntCaseStr[] =
 "    if (!secMan)\n"
 "        return PR_FALSE;\n"
 "    switch(JSVAL_TO_INT(id)) {\n";
+
+static const char kGlobalIntCaseStr[] =
+"  nsresult rv = NS_OK;\n"
+"  if (JSVAL_IS_INT(id)) {\n"
+"    nsIDOM%s *a = (nsIDOM%s*)nsJSUtils::nsGetNativeThis(cx, obj);\n"
+"\n"
+"    // If there's no private data, this must be the prototype, so ignore\n"
+"    if (nsnull == a) {\n"
+"      return JS_TRUE;\n"
+"    }\n"
+"\n"
+"    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);\n"
+"    if (!secMan)\n"
+"        return PR_FALSE;\n"
+"    switch(JSVAL_TO_INT(id)) {\n";
+
 
 static const char kIntCaseNamedItemStr[] =
 "  PRBool checkNamedItem = PR_TRUE;\n"
@@ -342,6 +368,20 @@ static const char kIntCaseNamedItemStr[] =
 static const char kPropFuncDefaultStr[] = 
 "      default:\n"
 "        return nsJSUtils::nsCallJSScriptObject%sProperty(a, cx, obj, id, vp);\n"
+"    }\n"
+"  }\n";
+
+static const char kGlobalPropFuncDefaultStr[] = 
+"      default:\n"
+"      {\n"
+"        JSObject* global = JS_GetGlobalObject(cx);\n"
+"        if (global != obj) {\n"
+"          nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);\n"
+"          rv = secMan->CheckScriptAccess(cx, obj,\n"
+"                                         NS_DOM_PROP_WINDOW_SCRIPTGLOBALS,\n"
+"                                         %s);\n"
+"        }\n"
+"      }\n"
 "    }\n"
 "  }\n";
 
@@ -412,6 +452,22 @@ static const char kPropFuncDefaultItemEllipsisNonPrimaryStr[] =
 static const char kPropFuncEndStr[] = 
 "  else {\n"
 "    return nsJSUtils::nsCallJSScriptObject%sProperty(a, cx, obj, id, vp);\n"
+"  }\n"
+"\n"
+"  if (NS_FAILED(rv))\n"
+"      return nsJSUtils::nsReportError(cx, obj, rv);\n"
+"  return PR_TRUE;\n"
+"}\n";
+
+static const char kGlobalPropFuncEndStr[] = 
+"  else {\n"
+"    JSObject* global = JS_GetGlobalObject(cx);\n"
+"    if (global != obj) {\n"
+"      nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);\n"
+"      rv = secMan->CheckScriptAccess(cx, obj,\n"
+"                                     NS_DOM_PROP_WINDOW_SCRIPTGLOBALS,\n"
+"                                     %s);\n"
+"    }\n"
 "  }\n"
 "\n"
 "  if (NS_FAILED(rv))\n"
@@ -511,11 +567,17 @@ static const char kPropFuncNamedItemEllipsisNonPrimaryStr[] =
 #define JSGEN_GENERATE_PROPFUNCBEGIN(buffer, op, className)  \
      sprintf(buffer, kPropFuncBeginStr, className, op, op, className, className, className)
 
+#define JSGEN_GENERATE_GLOBALPROPFUNCBEGIN(buffer, op, className)  \
+     sprintf(buffer, kGlobalPropFuncBeginStr, className, op, op, className)
+
 #define JSGEN_GENERATE_PROPFUNCEND(buffer, op)   \
      sprintf(buffer, kPropFuncEndStr, op)
 
 #define JSGEN_GENERATE_PROPFUNCDEFAULT(buffer, op)   \
      sprintf(buffer, kPropFuncDefaultStr, op)
+
+#define JSGEN_GENERATE_GLOBALINTCASE(buffer, className)   \
+     sprintf(buffer, kGlobalIntCaseStr, className, className)
 
 static const char kPropCaseBeginStr[] = 
 "      case %s_%s:\n"
@@ -539,7 +601,22 @@ JSStubGen::GeneratePropertyFunc(IdlSpecification &aSpec, PRBool aIsGetter)
   IdlInterface *primary_iface = aSpec.GetInterfaceAt(0);
   PRBool any = PR_FALSE;
 
-  JSGEN_GENERATE_PROPFUNCBEGIN(buf,  aIsGetter ? "Get" : "Set", primary_iface->GetName());
+  if (aIsGetter) {
+    if (mIsGlobal) {
+      JSGEN_GENERATE_GLOBALPROPFUNCBEGIN(buf, "Get", primary_iface->GetName());
+    }
+    else {
+      JSGEN_GENERATE_PROPFUNCBEGIN(buf,  "Get", primary_iface->GetName());
+    }
+  }
+  else {
+    if (mIsGlobal) {
+      JSGEN_GENERATE_GLOBALPROPFUNCBEGIN(buf, "Set", primary_iface->GetName());
+    }
+    else {
+      JSGEN_GENERATE_PROPFUNCBEGIN(buf,  "Set", primary_iface->GetName());
+    }
+  }
   *file << buf;
 
   IdlFunction *item_func = NULL;
@@ -571,7 +648,13 @@ JSStubGen::GeneratePropertyFunc(IdlSpecification &aSpec, PRBool aIsGetter)
   }
 
   if (NULL == named_item_func) {
-    *file << kIntCaseStr;
+    if (mIsGlobal) {
+      JSGEN_GENERATE_GLOBALINTCASE(buf, primary_iface->GetName());
+      *file << buf;
+    }
+    else {
+      *file << kIntCaseStr;
+    }
   }
   else {
     *file << kIntCaseNamedItemStr;
@@ -648,14 +731,24 @@ JSStubGen::GeneratePropertyFunc(IdlSpecification &aSpec, PRBool aIsGetter)
     else if (NULL != named_item_func) {
       *file << kPropFuncDefaultNamedItemStr;
     }
+    else if (mIsGlobal) {
+      sprintf(buf, kGlobalPropFuncDefaultStr, "PR_FALSE");
+      *file << buf;
+    }
     else {
-      JSGEN_GENERATE_PROPFUNCDEFAULT(buf, aIsGetter ? "Get" : "Set");
+      JSGEN_GENERATE_PROPFUNCDEFAULT(buf, "Get");
       *file << buf;
     }
   }
   else {
-    JSGEN_GENERATE_PROPFUNCDEFAULT(buf, aIsGetter ? "Get" : "Set");
-    *file << buf;
+    if (mIsGlobal) {
+      sprintf(buf, kGlobalPropFuncDefaultStr, "PR_TRUE");
+      *file << buf;
+    }
+    else {
+      JSGEN_GENERATE_PROPFUNCDEFAULT(buf, "Set");
+      *file << buf;
+    }
   }
 
   if (aIsGetter && (NULL != named_item_func)) {
@@ -673,10 +766,20 @@ JSStubGen::GeneratePropertyFunc(IdlSpecification &aSpec, PRBool aIsGetter)
   }
 
   if (aIsGetter) {
-    JSGEN_GENERATE_PROPFUNCEND(buf, "Get");
+    if (mIsGlobal) {
+      sprintf(buf, kGlobalPropFuncEndStr, "PR_FALSE");
+    }
+    else {
+      JSGEN_GENERATE_PROPFUNCEND(buf, "Get");
+    }
   }
   else {
-    JSGEN_GENERATE_PROPFUNCEND(buf, "Set");
+    if (mIsGlobal) {
+      sprintf(buf, kGlobalPropFuncEndStr, "PR_TRUE");
+    }
+    else {
+      JSGEN_GENERATE_PROPFUNCEND(buf, "Set");
+    }
   }
   *file << buf;
 }
@@ -732,7 +835,17 @@ static const char kBoolGetCaseStr[] =
 "            *vp = BOOLEAN_TO_JSVAL(prop);\n";
 
 static const char kJSValGetCaseStr[] =
-"            *vp = prop;\n";
+"          rv = a->Get%s(vp);\n";
+
+static const char kJSValGetCaseNonPrimaryStr[] =
+"          nsIDOM%s* b;\n"
+"          if (NS_OK == a->QueryInterface(kI%sIID, (void **)&b)) {\n"
+"            rv = b->Get%s(vp);\n"
+"            NS_RELEASE(b);\n"
+"          }\n"
+"          else {\n"
+"            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;\n"
+"          }\n";
 
 void
 JSStubGen::GeneratePropGetter(ofstream *file,
@@ -771,9 +884,6 @@ JSStubGen::GeneratePropGetter(ofstream *file,
     case TYPE_FLOAT:
       case_str = kFloatGetCaseStr;
       break;
-    case TYPE_JSVAL:
-      case_str = kJSValGetCaseStr;
-      break;
     case TYPE_STRING:
       case_str = kStringGetCaseStr;
       break;
@@ -790,16 +900,28 @@ JSStubGen::GeneratePropGetter(ofstream *file,
   }
 
   if (JSSTUBGEN_PRIMARY == aType) {
-    sprintf(buf, kGetCaseStr, attr_type, attr_name,
-            aAttribute.GetType() == TYPE_STRING ? "" : "&",
-            case_str);
+    if (aAttribute.GetType() == TYPE_JSVAL) {
+      sprintf(buf, kJSValGetCaseStr, attr_name);
+    }
+    else {
+      sprintf(buf, kGetCaseStr, attr_type, attr_name,
+              aAttribute.GetType() == TYPE_STRING ? "" : "&",
+              case_str);
+    }
   }
   else if (JSSTUBGEN_NONPRIMARY == aType) {
-    sprintf(buf, kGetCaseNonPrimaryStr, attr_type,
-            aInterface.GetName(), aInterface.GetName(),
-            attr_name, 
-            aAttribute.GetType() == TYPE_STRING ? "" : "&",
-            case_str);
+    if (aAttribute.GetType() == TYPE_JSVAL) {
+      sprintf(buf, kJSValGetCaseNonPrimaryStr, 
+              aInterface.GetName(), aInterface.GetName(),
+              attr_name);
+    }
+    else {
+      sprintf(buf, kGetCaseNonPrimaryStr, attr_type,
+              aInterface.GetName(), aInterface.GetName(),
+              attr_name, 
+              aAttribute.GetType() == TYPE_STRING ? "" : "&",
+              case_str);
+    }
   }
   else if (JSSTUBGEN_DEFAULT == aType) {
     char upr_iface_name[128];

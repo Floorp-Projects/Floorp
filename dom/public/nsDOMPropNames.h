@@ -755,6 +755,7 @@
     "nsdocument.createelementwithnamespace", \
     "nsdocument.createrange", \
     "nsdocument.load", \
+    "nsdocument.location", \
     "nsdocument.plugins", \
     "nshtmlanchorelement.hash", \
     "nshtmlanchorelement.host", \
@@ -958,6 +959,7 @@
     "window.innerheight", \
     "window.innerwidth", \
     "window.length", \
+    "window.location", \
     "window.locationbar", \
     "window.menubar", \
     "window.moveby", \
@@ -1000,6 +1002,7 @@
     "window.status", \
     "window.statusbar", \
     "window.stop", \
+    "window.title", \
     "window.toolbar", \
     "window.top", \
     "window.unescape", \
@@ -1008,6 +1011,30 @@
     "windowcollection.item", \
     "windowcollection.length", \
     "windowcollection.nameditem", \
+    "windoweventowner.onabort", \
+    "windoweventowner.onblur", \
+    "windoweventowner.onchange", \
+    "windoweventowner.onclick", \
+    "windoweventowner.onclose", \
+    "windoweventowner.ondragdrop", \
+    "windoweventowner.onerror", \
+    "windoweventowner.onfocus", \
+    "windoweventowner.onkeydown", \
+    "windoweventowner.onkeypress", \
+    "windoweventowner.onkeyup", \
+    "windoweventowner.onload", \
+    "windoweventowner.onmousedown", \
+    "windoweventowner.onmousemove", \
+    "windoweventowner.onmouseout", \
+    "windoweventowner.onmouseover", \
+    "windoweventowner.onmouseup", \
+    "windoweventowner.onpaint", \
+    "windoweventowner.onreset", \
+    "windoweventowner.onresize", \
+    "windoweventowner.onscroll", \
+    "windoweventowner.onselect", \
+    "windoweventowner.onsubmit", \
+    "windoweventowner.onunload", \
     "xulbrowserelement.webbrowser", \
     "xulcommanddispatcher.active", \
     "xulcommanddispatcher.addcommandupdater", \

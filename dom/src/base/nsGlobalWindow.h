@@ -41,6 +41,7 @@
 #include "nsIDOMNavigator.h"
 #include "nsIDOMNSLocation.h"
 #include "nsIDOMWindow.h"
+#include "nsIDOMWindowEventOwner.h"
 #include "nsIJSScriptObject.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsITimer.h"
@@ -168,6 +169,9 @@ public:
    // nsIDOMAbstractView
    NS_DECL_IDOMABSTRACTVIEW
 
+   // nsIDOMWindowEventOwner
+   NS_DECL_IDOMWINDOWEVENTOWNER
+
 public:
    // Object Management
    GlobalWindowImpl();
@@ -208,7 +212,8 @@ protected:
    NS_IMETHOD GetWebBrowserChrome(nsIWebBrowserChrome** aBrowserChrome);
    NS_IMETHOD GetScrollInfo(nsIScrollableView** aScrollableView, float* aP2T,
       float* aT2P);
-   PRBool CheckForEventListener(JSContext* aContext, nsString& aPropName);
+   nsresult RegisterEventListener(const char* aEventName,
+                                  REFNSIID aIID);
    void FlushPendingNotifications();
    nsresult CheckSecurityWidthAndHeight(PRInt32* width, PRInt32* height);
    nsresult CheckSecurityLeftAndTop(PRInt32* left, PRInt32* top);
@@ -354,6 +359,8 @@ public:
    virtual PRBool    Resolve(JSContext *aContext, JSObject *aObj, jsval aID);
    virtual PRBool    Convert(JSContext *aContext, JSObject *aObj, jsval aID);
    virtual void      Finalize(JSContext *aContext, JSObject *aObj);
+
+   nsresult SetHrefWithContext(JSContext* cx, jsval val);
 
 protected:
    nsresult SetURL(nsIURI* aURL);

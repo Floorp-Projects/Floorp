@@ -914,6 +914,98 @@ NS_IMETHODIMP GlobalWindowImpl::SetName(const nsAReadableString& aName)
   return result;
 }
 
+NS_IMETHODIMP    
+GlobalWindowImpl::GetLocation(jsval* aLocation)
+{
+  nsCOMPtr<nsIThreadJSContextStack> stack(do_GetService("nsThreadJSContextStack"));
+  NS_ENSURE_TRUE(stack, NS_ERROR_FAILURE);
+  
+  JSContext* cx;
+  NS_ENSURE_SUCCESS(stack->Peek(&cx), NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(cx, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIDOMLocation> location;
+
+  *aLocation = JSVAL_NULL;
+  GetLocation(getter_AddRefs(location));
+  if(location) {
+    nsCOMPtr<nsIScriptObjectOwner> owner(do_QueryInterface(location));
+    if(owner) {
+      JSObject *object = nsnull;
+      nsCOMPtr<nsIScriptContext> scriptCX;
+      nsJSUtils::nsGetDynamicScriptContext(cx, getter_AddRefs(scriptCX));
+      if(scriptCX &&
+         (NS_SUCCEEDED(owner->GetScriptObject(scriptCX, (void**)&object)))) {
+        // set the return value
+        *aLocation = OBJECT_TO_JSVAL(object);
+      }
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+GlobalWindowImpl::SetLocation(jsval aLocation)
+{
+  nsresult result;
+  if (mLocation) {
+    nsCOMPtr<nsIThreadJSContextStack> stack(do_GetService("nsThreadJSContextStack"));
+    NS_ENSURE_TRUE(stack, NS_ERROR_FAILURE);
+
+    JSContext* cx;
+    NS_ENSURE_SUCCESS(stack->Peek(&cx), NS_ERROR_FAILURE);
+
+    NS_ENSURE_TRUE(cx, NS_ERROR_FAILURE);
+     
+    result = mLocation->SetHrefWithContext(cx, aLocation);
+    if (NS_FAILED(result)) return result;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+GlobalWindowImpl::GetTitle(nsAWritableString& aTitle)
+{
+  aTitle.Truncate();  
+  if (mDocShell) {
+    // See if we're a chrome shell.
+    PRInt32 type;
+    nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mDocShell));
+    docShellAsItem->GetItemType(&type);
+    if(type == nsIDocShellTreeItem::typeChrome) {
+      nsCOMPtr<nsIBaseWindow> docShellAsWin(do_QueryInterface(mDocShell));
+      if(docShellAsWin) {
+        nsXPIDLString title;
+        docShellAsWin->GetTitle(getter_Copies(title));
+        
+        aTitle.Assign(title);
+      }
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+GlobalWindowImpl::SetTitle(const nsAReadableString& aTitle)
+{
+  if(mDocShell) {
+    // See if we're a chrome shell.
+    PRInt32 type;
+    nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mDocShell));
+    docShellAsItem->GetItemType(&type);
+    if(type == nsIDocShellTreeItem::typeChrome) {
+      nsCOMPtr<nsIBaseWindow> docShellAsWin(do_QueryInterface(mDocShell));
+      if(docShellAsWin) {
+        docShellAsWin->SetTitle(nsPromiseFlatString(aTitle));
+      }
+    }
+  }
+  
+  return NS_OK;
+}
+
 NS_IMETHODIMP GlobalWindowImpl::GetInnerWidth(PRInt32* aInnerWidth)
 {
   nsCOMPtr<nsIDOMWindow> parent;
@@ -2077,19 +2169,6 @@ NS_IMETHODIMP GlobalWindowImpl::GetSelection(nsIDOMSelection** aSelection)
 PRBool GlobalWindowImpl::AddProperty(JSContext* aContext, JSObject* aObj,
                                      jsval aID, jsval* aVp)
 {
-  if (JSVAL_IS_STRING(aID) &&
-      ::JS_TypeOfValue(aContext, *aVp) == JSTYPE_FUNCTION) {
-    JSString *str = JSVAL_TO_STRING(aID);
-    if (::JS_GetStringLength(str) > 2) {
-      const jschar *chars = ::JS_GetStringChars(str);
-
-      if (chars[0] == 'o' && chars[1] == 'n') {
-        nsAutoString propName;
-        propName.Assign(NS_REINTERPRET_CAST(const PRUnichar *, chars));
-        return CheckForEventListener(aContext, propName);
-      }
-    }
-  }
   return PR_TRUE;
 }
 
@@ -2102,135 +2181,13 @@ PRBool GlobalWindowImpl::DeleteProperty(JSContext* aContext, JSObject* aObj,
 PRBool GlobalWindowImpl::GetProperty(JSContext* aContext, JSObject* aObj,
                                      jsval aID, jsval* aVp)
 {
-  if (JSVAL_IS_STRING(aID)) {
-    char *bytes = ::JS_GetStringBytes(JSVAL_TO_STRING(aID));
-    if (PL_strcmp("location", bytes) == 0) {
-      nsCOMPtr<nsIDOMLocation> location;
-
-      if (NS_OK == GetLocation(getter_AddRefs(location))) {
-        if (location) {
-          nsCOMPtr<nsIScriptObjectOwner>
-            owner(do_QueryInterface(location));
-          if (owner) {
-            JSObject *object = nsnull;
-            nsCOMPtr<nsIScriptContext> scriptCX;
-            nsJSUtils::nsGetDynamicScriptContext(aContext,
-                                                 getter_AddRefs(scriptCX));
-            if (scriptCX &&
-                NS_SUCCEEDED(owner->GetScriptObject(scriptCX, (void **) &object))) {
-              // set the return value
-              *aVp = OBJECT_TO_JSVAL(object);
-            }
-          }
-        }
-        else
-          *aVp = JSVAL_NULL;
-      }
-      else
-        return PR_FALSE;
-    }
-    else if (PL_strcmp("title", bytes) == 0) {
-      if (mDocShell) {
-        // See if we're a chrome shell.
-        PRInt32 type;
-        nsCOMPtr<nsIDocShellTreeItem>
-          docShellAsItem(do_QueryInterface(mDocShell));
-        docShellAsItem->GetItemType(&type);
-        if (type == nsIDocShellTreeItem::typeChrome) {
-          nsCOMPtr<nsIBaseWindow> docShellAsWin(do_QueryInterface(mDocShell));
-          if (docShellAsWin) {
-            nsXPIDLString title;
-            docShellAsWin->GetTitle(getter_Copies(title));
-
-            const PRUnichar *uniTitle = NS_STATIC_CAST(const PRUnichar*, title);
-            JSString *valstr =
-              ::JS_NewUCStringCopyZ(aContext,
-                                    NS_REINTERPRET_CAST(const jschar *,
-                                                        uniTitle));
-            if (!valstr)
-              return PR_FALSE;
-
-            *aVp = STRING_TO_JSVAL(valstr);
-          }
-        }
-      }
-    }
-    else {
-      nsIScriptSecurityManager *
-        securityManager = nsJSUtils::nsGetSecurityManager(aContext, aObj);
-      if (NS_FAILED(securityManager->CheckScriptAccess(aContext, aObj,
-                                                       NS_DOM_PROP_WINDOW_SCRIPTGLOBALS,
-                                                       PR_FALSE))) {
-        return PR_FALSE;
-      }
-    }
-  }
   return PR_TRUE;
 }
 
 PRBool GlobalWindowImpl::SetProperty(JSContext* aContext, JSObject* aObj,
                                      jsval aID, jsval* aVp)
 {
-  PRBool result = PR_TRUE;
-  if (JSVAL_IS_STRING(aID)) {
-    JSString *str = JSVAL_TO_STRING(aID);
-
-    if (::JS_TypeOfValue(aContext, *aVp) == JSTYPE_FUNCTION) {
-      if (::JS_GetStringLength(str) > 2) {
-        const jschar *chars = ::JS_GetStringChars(str);
-
-        if (chars[0] == 'o' && chars[1] == 'n') {
-          nsAutoString propName;
-          propName.Assign(NS_REINTERPRET_CAST(const PRUnichar *, chars));
-          result = CheckForEventListener(aContext, propName);
-        }
-      }
-    }
-    else {
-      char *bytes = ::JS_GetStringBytes(str);
-
-      if (PL_strcmp("location", bytes) == 0) {
-        nsCOMPtr<nsIDOMLocation> location;
-
-        if (NS_OK == GetLocation(getter_AddRefs(location))) {
-          nsCOMPtr<nsIJSScriptObject> scriptObj = do_QueryInterface(location);
-          str = ::JS_NewStringCopyZ(aContext, "href");
-
-          if (scriptObj && str)
-            result =
-              scriptObj->SetProperty(aContext, aObj, STRING_TO_JSVAL(str), aVp);
-        }
-        else
-          result = PR_FALSE;
-      }
-      else if (PL_strcmp("title", bytes) == 0) {
-        if (mDocShell) {
-          // See if we're a chrome shell.
-          PRInt32 type;
-          nsCOMPtr<nsIDocShellTreeItem>
-            docShellAsItem(do_QueryInterface(mDocShell));
-          docShellAsItem->GetItemType(&type);
-          if (type == nsIDocShellTreeItem::typeChrome) {
-            nsCOMPtr<nsIBaseWindow> docShellAsWin(do_QueryInterface(mDocShell));
-            if (docShellAsWin) {
-              JSString *valstr = ::JS_ValueToString(aContext, *aVp);
-              if (!valstr) {
-                result = PR_FALSE;
-              }
-              else {
-                const PRUnichar *uniTitle =
-                  NS_REINTERPRET_CAST(const PRUnichar *,
-                                      ::JS_GetStringChars(valstr));
-                docShellAsWin->SetTitle(uniTitle);
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-
-  return result;
+  return PR_TRUE;
 }
 
 PRBool GlobalWindowImpl::EnumerateProperty(JSContext* aContext, JSObject* aObj)
@@ -2243,7 +2200,6 @@ PRBool GlobalWindowImpl::Resolve(JSContext* aContext, JSObject* aObj, jsval aID)
   if (JSVAL_IS_STRING(aID)) {
     JSBool resolved;
     JSString *str;
-    const char *bytes;
 
     if (!::JS_ResolveStandardClass(aContext, aObj, aID, &resolved))
       return PR_FALSE;
@@ -2251,12 +2207,7 @@ PRBool GlobalWindowImpl::Resolve(JSContext* aContext, JSObject* aObj, jsval aID)
       return PR_TRUE;
 
     str = JSVAL_TO_STRING(aID);
-    bytes = ::JS_GetStringBytes(str);
-    if (PL_strcmp("location", bytes) == 0) {
-      ::JS_DefineProperty(aContext, (JSObject *) mScriptObject, "location",
-                          JSVAL_NULL, nsnull, nsnull, 0);
-    }
-    else if (mDocShell) {
+    if (mDocShell) {
       nsCOMPtr<nsIDocShellTreeNode>
         docShellAsNode(do_QueryInterface(mDocShell));
       PRInt32 count;
@@ -4022,174 +3973,6 @@ GlobalWindowImpl::GetScrollInfo(nsIScrollableView **aScrollableView,
   return NS_OK;
 }
 
-PRBool GlobalWindowImpl::CheckForEventListener(JSContext *aContext,
-                                               nsString& aPropName)
-{
-  nsCOMPtr<nsIEventListenerManager> manager;
-  nsCOMPtr<nsIAtom> atom(getter_AddRefs(NS_NewAtom(aPropName)));
-
-  // XXX Comparisons should really be atom based
-
-  if (aPropName.EqualsWithConversion("onmousedown")
-      || aPropName.EqualsWithConversion("onmouseup")
-      || aPropName.EqualsWithConversion("onclick")
-      || aPropName.EqualsWithConversion("onmouseover")
-      || aPropName.EqualsWithConversion("onmouseout")) {
-    if (NS_OK == GetListenerManager(getter_AddRefs(manager))) {
-      nsCOMPtr<nsIScriptContext> scriptCX;
-      nsJSUtils::nsGetDynamicScriptContext(aContext,
-                                           getter_AddRefs(scriptCX));
-      if (!scriptCX ||
-          NS_FAILED(manager->RegisterScriptEventListener(scriptCX, this, atom,
-                                                         NS_GET_IID
-                                                         (nsIDOMMouseListener))))
-      {
-        return PR_FALSE;
-      }
-    }
-  }
-  else if (aPropName.EqualsWithConversion("onkeydown")
-           || aPropName.EqualsWithConversion("onkeyup")
-           || aPropName.EqualsWithConversion("onkeypress")) {
-    if (NS_OK == GetListenerManager(getter_AddRefs(manager))) {
-      nsCOMPtr<nsIScriptContext> scriptCX;
-      nsJSUtils::nsGetDynamicScriptContext(aContext,
-                                           getter_AddRefs(scriptCX));
-      if (!scriptCX ||
-          NS_FAILED(manager->RegisterScriptEventListener(scriptCX, this, atom,
-                                                         NS_GET_IID
-                                                         (nsIDOMKeyListener))))
-      {
-        return PR_FALSE;
-      }
-    }
-  }
-  else if (aPropName.EqualsWithConversion("onmousemove")) {
-    if (NS_OK == GetListenerManager(getter_AddRefs(manager))) {
-      nsCOMPtr<nsIScriptContext> scriptCX;
-      nsJSUtils::nsGetDynamicScriptContext(aContext,
-                                           getter_AddRefs(scriptCX));
-      if (!scriptCX ||
-          NS_FAILED(manager->RegisterScriptEventListener(scriptCX, this, atom,
-                                                         NS_GET_IID
-                                                         (nsIDOMMouseMotionListener))))
-      {
-        return PR_FALSE;
-      }
-    }
-  }
-  else if (aPropName.EqualsWithConversion("onfocus")
-           || aPropName.EqualsWithConversion("onblur")) {
-    if (NS_OK == GetListenerManager(getter_AddRefs(manager))) {
-      nsCOMPtr<nsIScriptContext> scriptCX;
-      nsJSUtils::nsGetDynamicScriptContext(aContext,
-                                           getter_AddRefs(scriptCX));
-      if (!scriptCX ||
-          NS_FAILED(manager->RegisterScriptEventListener(scriptCX, this, atom,
-                                                         NS_GET_IID
-                                                         (nsIDOMFocusListener))))
-      {
-        return PR_FALSE;
-      }
-    }
-  }
-  else if (aPropName.EqualsWithConversion("onsubmit")
-           || aPropName.EqualsWithConversion("onreset")
-           || aPropName.EqualsWithConversion("onchange")
-           || aPropName.EqualsWithConversion("onselect")) {
-    if (NS_OK == GetListenerManager(getter_AddRefs(manager))) {
-      nsCOMPtr<nsIScriptContext> scriptCX;
-      nsJSUtils::nsGetDynamicScriptContext(aContext,
-                                           getter_AddRefs(scriptCX));
-      if (!scriptCX ||
-          NS_FAILED(manager->RegisterScriptEventListener(scriptCX, this, atom,
-                                                         NS_GET_IID
-                                                         (nsIDOMFormListener))))
-      {
-        return PR_FALSE;
-      }
-    }
-  }
-  else if (aPropName.EqualsWithConversion("onload")
-           || aPropName.EqualsWithConversion("onunload")
-           || aPropName.EqualsWithConversion("onclose")
-           || aPropName.EqualsWithConversion("onabort")
-           || aPropName.EqualsWithConversion("onerror")) {
-    if (NS_OK == GetListenerManager(getter_AddRefs(manager))) {
-      nsCOMPtr<nsIScriptContext> scriptCX;
-      nsJSUtils::nsGetDynamicScriptContext(aContext,
-                                           getter_AddRefs(scriptCX));
-      if (!scriptCX ||
-          NS_FAILED(manager->RegisterScriptEventListener(scriptCX, this, atom,
-                                                         NS_GET_IID
-                                                         (nsIDOMLoadListener))))
-      {
-        return PR_FALSE;
-      }
-    }
-  }
-  else if (aPropName.EqualsWithConversion("onpaint")) {
-    if (NS_OK == GetListenerManager(getter_AddRefs(manager))) {
-      nsCOMPtr<nsIScriptContext> scriptCX;
-      nsJSUtils::nsGetDynamicScriptContext(aContext,
-                                           getter_AddRefs(scriptCX));
-      if (!scriptCX ||
-          NS_FAILED(manager->RegisterScriptEventListener(scriptCX, this, atom,
-                                                         NS_GET_IID
-                                                         (nsIDOMPaintListener))))
-      {
-        return PR_FALSE;
-      }
-    }
-  }
-  else if (aPropName.EqualsWithConversion("ondragdrop")) {
-    if (NS_OK == GetListenerManager(getter_AddRefs(manager))) {
-      nsCOMPtr<nsIScriptContext> scriptCX;
-      nsJSUtils::nsGetDynamicScriptContext(aContext,
-                                           getter_AddRefs(scriptCX));
-      if (!scriptCX ||
-          NS_FAILED(manager->RegisterScriptEventListener(scriptCX, this, atom,
-                                                         NS_GET_IID
-                                                         (nsIDOMDragListener))))
-      {
-        return PR_FALSE;
-      }
-    }
-  }
-
-  else if (aPropName.EqualsWithConversion("onresize")) {
-    if (NS_OK == GetListenerManager(getter_AddRefs(manager))) {
-      nsCOMPtr<nsIScriptContext> scriptCX;
-      nsJSUtils::nsGetDynamicScriptContext(aContext,
-                                           getter_AddRefs(scriptCX));
-      if (!scriptCX ||
-          NS_FAILED(manager->RegisterScriptEventListener(scriptCX, this, atom,
-                                                         NS_GET_IID
-                                                         (nsIDOMPaintListener))))
-      {
-        return PR_FALSE;
-      }
-    }
-  }
-
-  else if (aPropName.EqualsWithConversion("onscroll")) {
-    if (NS_OK == GetListenerManager(getter_AddRefs(manager))) {
-      nsCOMPtr<nsIScriptContext> scriptCX;
-      nsJSUtils::nsGetDynamicScriptContext(aContext,
-                                           getter_AddRefs(scriptCX));
-      if (!scriptCX ||
-          NS_FAILED(manager->RegisterScriptEventListener(scriptCX, this, atom,
-                                                         NS_GET_IID
-                                                         (nsIDOMPaintListener))))
-      {
-        return PR_FALSE;
-      }
-    }
-  }
-
-  return PR_TRUE;
-}
-
 void GlobalWindowImpl::FlushPendingNotifications()
 {
   if (mDocument) {
@@ -4197,6 +3980,301 @@ void GlobalWindowImpl::FlushPendingNotifications()
     if (doc)
       doc->FlushPendingNotifications();
   }
+}
+
+nsresult
+GlobalWindowImpl::RegisterEventListener(const char* aEventName,
+                                        REFNSIID aIID)
+{
+  nsCOMPtr<nsIAtom> eventName = dont_AddRef(NS_NewAtom(aEventName));
+
+  // This should only happen from JS
+  nsCOMPtr<nsIThreadJSContextStack> stack(do_GetService("nsThreadJSContextStack"));
+  NS_ENSURE_TRUE(stack, NS_ERROR_FAILURE);
+  
+  JSContext* cx;
+  NS_ENSURE_SUCCESS(stack->Peek(&cx), NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(cx, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIEventListenerManager> manager;
+
+  if (NS_OK == GetListenerManager(getter_AddRefs(manager))) {
+    nsCOMPtr<nsIScriptContext> scriptCX;
+    nsJSUtils::nsGetDynamicScriptContext(cx, getter_AddRefs(scriptCX));
+    if (!scriptCX ||
+        NS_FAILED(manager->RegisterScriptEventListener(scriptCX, this, 
+                                                       eventName,
+                                                       aIID))) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+GlobalWindowImpl::GetOnmousedown(jsval* aOnmousedown)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+GlobalWindowImpl::SetOnmousedown(jsval aOnmousedown)
+{
+  return RegisterEventListener("onmousedown", NS_GET_IID(nsIDOMMouseListener));
+}
+
+NS_IMETHODIMP    
+GlobalWindowImpl::GetOnmouseup(jsval* aOnmouseup)
+{
+  return NS_OK;
+}
+NS_IMETHODIMP    
+GlobalWindowImpl::SetOnmouseup(jsval aOnmouseup)
+{
+  return RegisterEventListener("onmouseup", NS_GET_IID(nsIDOMMouseListener));
+}
+
+NS_IMETHODIMP    
+GlobalWindowImpl::GetOnclick(jsval* aOnclick)
+{
+  return NS_OK;
+}
+NS_IMETHODIMP    
+GlobalWindowImpl::SetOnclick(jsval aOnclick)
+{
+  return RegisterEventListener("onclick", NS_GET_IID(nsIDOMMouseListener));
+}
+
+NS_IMETHODIMP    
+GlobalWindowImpl::GetOnmouseover(jsval* aOnmouseover)
+{
+  return NS_OK;
+}
+NS_IMETHODIMP    
+GlobalWindowImpl::SetOnmouseover(jsval aOnmouseover)
+{
+  return RegisterEventListener("onmouseover", NS_GET_IID(nsIDOMMouseListener));
+}
+
+NS_IMETHODIMP    
+GlobalWindowImpl::GetOnmouseout(jsval* aOnmouseout)
+{
+  return NS_OK;
+}
+NS_IMETHODIMP    
+GlobalWindowImpl::SetOnmouseout(jsval aOnmouseout)
+{
+  return RegisterEventListener("onmouseout", NS_GET_IID(nsIDOMMouseListener));
+}
+
+NS_IMETHODIMP    
+GlobalWindowImpl::GetOnkeydown(jsval* aOnkeydown)
+{
+  return NS_OK;
+}
+NS_IMETHODIMP    
+GlobalWindowImpl::SetOnkeydown(jsval aOnkeydown)
+{
+  return RegisterEventListener("onkeydown", NS_GET_IID(nsIDOMKeyListener));
+}
+
+NS_IMETHODIMP    
+GlobalWindowImpl::GetOnkeyup(jsval* aOnkeyup)
+{
+  return NS_OK;
+}
+NS_IMETHODIMP    
+GlobalWindowImpl::SetOnkeyup(jsval aOnkeyup)
+{
+  return RegisterEventListener("onkeyup", NS_GET_IID(nsIDOMKeyListener));
+}
+
+NS_IMETHODIMP    
+GlobalWindowImpl::GetOnkeypress(jsval* aOnkeypress)
+{
+  return NS_OK;
+}
+NS_IMETHODIMP    
+GlobalWindowImpl::SetOnkeypress(jsval aOnkeypress)
+{
+  return RegisterEventListener("onkeypress", NS_GET_IID(nsIDOMKeyListener));
+}
+
+NS_IMETHODIMP    
+GlobalWindowImpl::GetOnmousemove(jsval* aOnmousemove)
+{
+  return NS_OK;
+}
+NS_IMETHODIMP    
+GlobalWindowImpl::SetOnmousemove(jsval aOnmousemove)
+{
+  return RegisterEventListener("onkeypress", NS_GET_IID(nsIDOMMouseMotionListener));
+}
+
+NS_IMETHODIMP    
+GlobalWindowImpl::GetOnfocus(jsval* aOnfocus)
+{
+  return NS_OK;
+}
+NS_IMETHODIMP    
+GlobalWindowImpl::SetOnfocus(jsval aOnfocus)
+{
+  return RegisterEventListener("onfocus", NS_GET_IID(nsIDOMFocusListener));
+}
+
+NS_IMETHODIMP    
+GlobalWindowImpl::GetOnblur(jsval* aOnblur)
+{
+  return NS_OK;
+}
+NS_IMETHODIMP    
+GlobalWindowImpl::SetOnblur(jsval aOnblur)
+{
+  return RegisterEventListener("onblur", NS_GET_IID(nsIDOMFocusListener));
+}
+
+NS_IMETHODIMP    
+GlobalWindowImpl::GetOnsubmit(jsval* aOnsubmit)
+{
+  return NS_OK;
+}
+NS_IMETHODIMP    
+GlobalWindowImpl::SetOnsubmit(jsval aOnsubmit)
+{
+  return RegisterEventListener("onsubmit", NS_GET_IID(nsIDOMFormListener));
+}
+
+NS_IMETHODIMP    
+GlobalWindowImpl::GetOnreset(jsval* aOnreset)
+{
+  return NS_OK;
+}
+NS_IMETHODIMP    
+GlobalWindowImpl::SetOnreset(jsval aOnreset)
+{
+  return RegisterEventListener("onreset", NS_GET_IID(nsIDOMFormListener));
+}
+
+NS_IMETHODIMP    
+GlobalWindowImpl::GetOnchange(jsval* aOnchange)
+{
+  return NS_OK;
+}
+NS_IMETHODIMP    
+GlobalWindowImpl::SetOnchange(jsval aOnchange)
+{
+  return RegisterEventListener("onchange", NS_GET_IID(nsIDOMFormListener));
+}
+
+NS_IMETHODIMP    
+GlobalWindowImpl::GetOnselect(jsval* aOnselect)
+{
+  return NS_OK;
+}
+NS_IMETHODIMP    
+GlobalWindowImpl::SetOnselect(jsval aOnselect)
+{
+  return RegisterEventListener("onselect", NS_GET_IID(nsIDOMFormListener));
+}
+
+NS_IMETHODIMP    
+GlobalWindowImpl::GetOnload(jsval* aOnload)
+{
+  return NS_OK;
+}
+NS_IMETHODIMP    
+GlobalWindowImpl::SetOnload(jsval aOnload)
+{
+  return RegisterEventListener("onload", NS_GET_IID(nsIDOMLoadListener));
+}
+
+NS_IMETHODIMP    
+GlobalWindowImpl::GetOnunload(jsval* aOnunload)
+{
+  return NS_OK;
+}
+NS_IMETHODIMP    
+GlobalWindowImpl::SetOnunload(jsval aOnunload)
+{
+  return RegisterEventListener("onunload", NS_GET_IID(nsIDOMLoadListener));
+}
+
+NS_IMETHODIMP    
+GlobalWindowImpl::GetOnclose(jsval* aOnclose)
+{
+  return NS_OK;
+}
+NS_IMETHODIMP    
+GlobalWindowImpl::SetOnclose(jsval aOnclose)
+{
+  return RegisterEventListener("onclose", NS_GET_IID(nsIDOMLoadListener));
+}
+
+NS_IMETHODIMP    
+GlobalWindowImpl::GetOnabort(jsval* aOnabort)
+{
+  return NS_OK;
+}
+NS_IMETHODIMP    
+GlobalWindowImpl::SetOnabort(jsval aOnabort)
+{
+  return RegisterEventListener("onabort", NS_GET_IID(nsIDOMLoadListener));
+}
+
+NS_IMETHODIMP    
+GlobalWindowImpl::GetOnerror(jsval* aOnerror)
+{
+  return NS_OK;
+}
+NS_IMETHODIMP    
+GlobalWindowImpl::SetOnerror(jsval aOnerror)
+{
+  return RegisterEventListener("onerror", NS_GET_IID(nsIDOMLoadListener));
+}
+
+NS_IMETHODIMP    
+GlobalWindowImpl::GetOnpaint(jsval* aOnpaint)
+{
+  return NS_OK;
+}
+NS_IMETHODIMP    
+GlobalWindowImpl::SetOnpaint(jsval aOnpaint)
+{
+  return RegisterEventListener("onpaint", NS_GET_IID(nsIDOMPaintListener));
+}
+
+NS_IMETHODIMP    
+GlobalWindowImpl::GetOndragdrop(jsval* aOndragdrop)
+{
+  return NS_OK;
+}
+NS_IMETHODIMP    
+GlobalWindowImpl::SetOndragdrop(jsval aOndragdrop)
+{
+  return RegisterEventListener("ondragdrop", NS_GET_IID(nsIDOMDragListener));
+}
+
+NS_IMETHODIMP    
+GlobalWindowImpl::GetOnresize(jsval* aOnresize)
+{
+  return NS_OK;
+}
+NS_IMETHODIMP    
+GlobalWindowImpl::SetOnresize(jsval aOnresize)
+{
+  return RegisterEventListener("onresize", NS_GET_IID(nsIDOMPaintListener));
+}
+
+NS_IMETHODIMP    
+GlobalWindowImpl::GetOnscroll(jsval* aOnscroll)
+{
+  return NS_OK;
+}
+NS_IMETHODIMP    
+GlobalWindowImpl::SetOnscroll(jsval aOnscroll)
+{
+  return RegisterEventListener("onscroll", NS_GET_IID(nsIDOMPaintListener));
 }
 
 //*****************************************************************************

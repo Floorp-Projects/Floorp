@@ -110,6 +110,12 @@ public:
   NS_IMETHOD    GetName(nsAWritableString& aName)=0;
   NS_IMETHOD    SetName(const nsAReadableString& aName)=0;
 
+  NS_IMETHOD    GetLocation(jsval* aLocation)=0;
+  NS_IMETHOD    SetLocation(jsval aLocation)=0;
+
+  NS_IMETHOD    GetTitle(nsAWritableString& aTitle)=0;
+  NS_IMETHOD    SetTitle(const nsAReadableString& aTitle)=0;
+
   NS_IMETHOD    GetInnerWidth(PRInt32* aInnerWidth)=0;
   NS_IMETHOD    SetInnerWidth(PRInt32 aInnerWidth)=0;
 
@@ -250,6 +256,10 @@ public:
   NS_IMETHOD    SetDefaultStatus(const nsAReadableString& aDefaultStatus);  \
   NS_IMETHOD    GetName(nsAWritableString& aName);  \
   NS_IMETHOD    SetName(const nsAReadableString& aName);  \
+  NS_IMETHOD    GetLocation(jsval* aLocation);  \
+  NS_IMETHOD    SetLocation(jsval aLocation);  \
+  NS_IMETHOD    GetTitle(nsAWritableString& aTitle);  \
+  NS_IMETHOD    SetTitle(const nsAReadableString& aTitle);  \
   NS_IMETHOD    GetInnerWidth(PRInt32* aInnerWidth);  \
   NS_IMETHOD    SetInnerWidth(PRInt32 aInnerWidth);  \
   NS_IMETHOD    GetInnerHeight(PRInt32* aInnerHeight);  \
@@ -342,6 +352,10 @@ public:
   NS_IMETHOD    SetDefaultStatus(const nsAReadableString& aDefaultStatus) { return _to SetDefaultStatus(aDefaultStatus); } \
   NS_IMETHOD    GetName(nsAWritableString& aName) { return _to GetName(aName); } \
   NS_IMETHOD    SetName(const nsAReadableString& aName) { return _to SetName(aName); } \
+  NS_IMETHOD    GetLocation(jsval* aLocation) { return _to GetLocation(aLocation); } \
+  NS_IMETHOD    SetLocation(jsval aLocation) { return _to SetLocation(aLocation); } \
+  NS_IMETHOD    GetTitle(nsAWritableString& aTitle) { return _to GetTitle(aTitle); } \
+  NS_IMETHOD    SetTitle(const nsAReadableString& aTitle) { return _to SetTitle(aTitle); } \
   NS_IMETHOD    GetInnerWidth(PRInt32* aInnerWidth) { return _to GetInnerWidth(aInnerWidth); } \
   NS_IMETHOD    SetInnerWidth(PRInt32 aInnerWidth) { return _to SetInnerWidth(aInnerWidth); } \
   NS_IMETHOD    GetInnerHeight(PRInt32* aInnerHeight) { return _to GetInnerHeight(aInnerHeight); } \
