@@ -17,6 +17,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  * 
  * Contributor(s): 
+ *   Milind Changire <changire@yahoo.com>
  */
 
 #ifndef QMozillaContainer_h__
