@@ -101,6 +101,20 @@ struct Activation : public gc_base {
             *dest = params[*src];
         }
     }
+
+    Activation(ICodeModule* iCode, const JSValue arg)
+        : mRegisters(iCode->itsMaxRegister + 1), mICode(iCode)
+    {
+        mRegisters[0] = arg;
+    }
+
+    Activation(ICodeModule* iCode, const JSValue arg1, const JSValue arg2)
+        : mRegisters(iCode->itsMaxRegister + 1), mICode(iCode)
+    {
+        mRegisters[0] = arg1;
+        mRegisters[1] = arg2;
+    }
+
 };
 
 JSValues& Context::getRegisters()    { return mActivation->mRegisters; }
@@ -113,13 +127,12 @@ ICodeModule* Context::getICode()     { return mActivation->mICode; }
 struct Linkage : public Context::Frame, public gc_base {
     Linkage*            mNext;              // next linkage in linkage stack.
     InstructionIterator mReturnPC;
-    InstructionIterator mBasePC;
     Activation*         mActivation;        // caller's activation.
     Register            mResult;            // the desired target register for the return value
 
-    Linkage(Linkage* linkage, InstructionIterator returnPC, InstructionIterator basePC,
+    Linkage(Linkage* linkage, InstructionIterator returnPC,
             Activation* activation, Register result) 
-        :   mNext(linkage), mReturnPC(returnPC), mBasePC(basePC),
+        :   mNext(linkage), mReturnPC(returnPC),
             mActivation(activation), mResult(result)
     {
     }
@@ -133,17 +146,108 @@ void getState(InstructionIterator& pc, JSValues*& registers, ICodeModule*& iCode
         iCode = mActivation->mICode;
     }
 };
+/*
+void Context::doCall(JSFunction *target, Instruction *pc)
+{
+    if (target->isNative()) {
+        RegisterList &params = op3(call);
+        JSValues argv(params.size());
+        JSValues::size_type i = 0;
+        for (RegisterList::const_iterator src = params.begin(), end = params.end();
+                        src != end; ++src, ++i) {
+            argv[i] = (*registers)[*src];
+        }
+        if (op2(call) != NotARegister)
+            (*registers)[op2(call)] = static_cast<JSNativeFunction*>(target)->mCode(argv);
+        return pc;
+    }
+    else {
+        mLinkage = new Linkage(mLinkage, ++mPC,
+                               mActivation, op1(call));
+        iCode = target->getICode();
+        mActivation = new Activation(iCode, mActivation, op3(call));
+        registers = &mActivation->mRegisters;
+        continue;
+    }
+}
+*/
+JSValue multiply_number(const JSValues& argv)
+{
+    return argv[0].f64 * argv[1].f64;
+}
+
+JSValue multiply_object(const JSValues& argv)
+{
+    JSValue num1(argv[0].toNumber());
+    JSValue num2(argv[1].toNumber());
+    return JSValue(num1.f64 * num2.f64);
+}
+
+
+class BinaryOperator {
+public:
+    typedef enum { 
+        Add, Subtract, Multiply, Divide,
+        Remainder, LeftShift, RightShift, LogicalRightShift,
+        BitwiseOr, BitwiseXor, BitwiseAnd, Less, LessEqual,
+        Equal, Identical
+    } BinaryOp;
+
+    BinaryOperator(const JSType *t1, const JSType *t2, JSFunction *function) :
+        t1(t1), t2(t2), function(function) { }
+
+    const JSType *t1;
+    const JSType *t2;
+    JSFunction *function;
+
+};
+
+typedef std::vector<BinaryOperator *> BinaryOperatorList;
+BinaryOperatorList binaryOperators[15];
+
+        
+
+class InitBinaryOperators {
+public:
+    InitBinaryOperators() {
+        binaryOperators[BinaryOperator::Multiply].push_back(new BinaryOperator(&Number_Type, &Number_Type, new JSNativeFunction(multiply_number)));
+        binaryOperators[BinaryOperator::Multiply].push_back(new BinaryOperator(&Any_Type, &Any_Type, new JSNativeFunction(multiply_object)));
+    }
+} initializer = InitBinaryOperators();
+
+
+const JSValue findBinaryOverride(JSValue &operand1, JSValue &operand2, BinaryOperator::BinaryOp op)
+{
+    int32 bestDist1 = JSType::NoRelation;
+    int32 bestDist2 = JSType::NoRelation;
+    BinaryOperatorList::iterator candidate = NULL;
+
+    for (BinaryOperatorList::iterator i = binaryOperators[op].begin();
+            i != binaryOperators[op].end(); i++) 
+    {
+        int32 dist1 = operand1.getType()->distance((*i)->t1);
+        int32 dist2 = operand2.getType()->distance((*i)->t2);
+
+        if ((dist1 < bestDist1) && (dist2 < bestDist2)) {
+            bestDist1 = dist1;
+            bestDist2 = dist2;
+            candidate = i;
+        }
+    }
+    ASSERT(candidate);
+    return JSValue((*candidate)->function);
+}
 
 JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
 {
     assert(mActivation == 0); /* recursion == bad */
     
     JSValue rv;
+    
     mActivation = new Activation(iCode, args);
     JSValues* registers = &mActivation->mRegisters;
 
-    InstructionIterator begin_pc = iCode->its_iCode->begin();
-    mPC = begin_pc;
+    mPC = mActivation->mICode->its_iCode->begin();
 
     // stack of all catch/finally handlers available for the current activation
     // to implement jsr/rts for finally code
@@ -175,15 +279,14 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                         break;
                     }
                     else {
-                        mLinkage = new Linkage(mLinkage, ++mPC, begin_pc,
+                        mLinkage = new Linkage(mLinkage, ++mPC,
                                                mActivation, op1(call));
-                        iCode = target->getICode();
-                        mActivation = new Activation(iCode, mActivation, op3(call));
+                        mActivation = new Activation(target->getICode(), mActivation, op3(call));
                         registers = &mActivation->mRegisters;
-                        begin_pc = mPC = iCode->its_iCode->begin();
+                        mPC = mActivation->mICode->its_iCode->begin();
+                        continue;
                     }
                 }
-                continue;
 
             case RETURN_VOID:
                 {
@@ -200,8 +303,6 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     registers = &mActivation->mRegisters;
                     (*registers)[linkage->mResult] = result;
                     mPC = linkage->mReturnPC;
-                    begin_pc = linkage->mBasePC;
-                    iCode = mActivation->mICode;
                 }
                 continue;
 
@@ -223,8 +324,6 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     registers = &mActivation->mRegisters;
                     (*registers)[linkage->mResult] = result;
                     mPC = linkage->mReturnPC;
-                    begin_pc = linkage->mBasePC;
-                    iCode = mActivation->mICode;
                 }
                 continue;
             case MOVE:
@@ -278,8 +377,9 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                 }
                 break;
 /*
-versions below are not right, there is no 'array' type really, the index operation
-turns into a get_property call like this, only we need to be using JSString throughout.
+In 1.5, there is no 'array' type really, the index operation
+turns into a get_property call like this, only we need to be
+using JSString throughout.
             case GET_ELEMENT:
                 {
                     GetElement* ge = static_cast<GetElement*>(instruction);
@@ -335,16 +435,17 @@ turns into a get_property call like this, only we need to be using JSString thro
                 {
                     GenericBranch* bra =
                         static_cast<GenericBranch*>(instruction);
-                    mPC = begin_pc + ofs(bra);
+                    mPC = mActivation->mICode->its_iCode->begin() + ofs(bra);
                     continue;
                 }
                 break;
+/*
             case BRANCH_LT:
                 {
                     GenericBranch* bc =
                         static_cast<GenericBranch*>(instruction);
                     if ((*registers)[src1(bc)].i32 < 0) {
-                        mPC = begin_pc + ofs(bc);
+                        mPC = mActivation->mICode->its_iCode->begin() + ofs(bc);
                         continue;
                     }
                 }
@@ -354,7 +455,7 @@ turns into a get_property call like this, only we need to be using JSString thro
                     GenericBranch* bc =
                         static_cast<GenericBranch*>(instruction);
                     if ((*registers)[src1(bc)].i32 <= 0) {
-                        mPC = begin_pc + ofs(bc);
+                        mPC = mActivation->mICode->its_iCode->begin() + ofs(bc);
                         continue;
                     }
                 }
@@ -364,7 +465,7 @@ turns into a get_property call like this, only we need to be using JSString thro
                     GenericBranch* bc =
                         static_cast<GenericBranch*>(instruction);
                     if ((*registers)[src1(bc)].i32 == 0) {
-                        mPC = begin_pc + ofs(bc);
+                        mPC = mActivation->mICode->its_iCode->begin() + ofs(bc);
                         continue;
                     }
                 }
@@ -374,29 +475,7 @@ turns into a get_property call like this, only we need to be using JSString thro
                     GenericBranch* bc =
                         static_cast<GenericBranch*>(instruction);
                     if ((*registers)[src1(bc)].i32 != 0) {
-                        mPC = begin_pc + ofs(bc);
-                        continue;
-                    }
-                }
-                break;
-            case BRANCH_TRUE:
-                {
-                    GenericBranch* bc =
-                        static_cast<GenericBranch*>(instruction);
-                    ASSERT((*registers)[src1(bc)].isBoolean());
-                    if ((*registers)[src1(bc)].boolean) {
-                        mPC = begin_pc + ofs(bc);
-                        continue;
-                    }
-                }
-                break;
-            case BRANCH_FALSE:
-                {
-                    GenericBranch* bc =
-                        static_cast<GenericBranch*>(instruction);
-                    ASSERT((*registers)[src1(bc)].isBoolean());
-                    if (!(*registers)[src1(bc)].boolean) {
-                        mPC = begin_pc + ofs(bc);
+                        mPC = mActivation->mICode->its_iCode->begin() + ofs(bc);
                         continue;
                     }
                 }
@@ -417,6 +496,29 @@ turns into a get_property call like this, only we need to be using JSString thro
                         static_cast<GenericBranch*>(instruction);
                     if ((*registers)[src1(bc)].i32 > 0) {
                         mPC = begin_pc + ofs(bc);
+                        continue;
+                    }
+                }
+                break;
+*/
+            case BRANCH_TRUE:
+                {
+                    GenericBranch* bc =
+                        static_cast<GenericBranch*>(instruction);
+                    ASSERT((*registers)[src1(bc)].isBoolean());
+                    if ((*registers)[src1(bc)].boolean) {
+                        mPC = mActivation->mICode->its_iCode->begin() + ofs(bc);
+                        continue;
+                    }
+                }
+                break;
+            case BRANCH_FALSE:
+                {
+                    GenericBranch* bc =
+                        static_cast<GenericBranch*>(instruction);
+                    ASSERT((*registers)[src1(bc)].isBoolean());
+                    if (!(*registers)[src1(bc)].boolean) {
+                        mPC = mActivation->mICode->its_iCode->begin() + ofs(bc);
                         continue;
                     }
                 }
@@ -526,9 +628,30 @@ turns into a get_property call like this, only we need to be using JSString thro
                     JSValue& dest = (*registers)[dst(mul)];
                     JSValue& r1 = (*registers)[src1(mul)];
                     JSValue& r2 = (*registers)[src2(mul)];
-                    JSValue num1(r1.toNumber());
-                    JSValue num2(r2.toNumber());
-                    dest = num1.f64 * num2.f64;
+                    const JSValue ovr = findBinaryOverride(r1, r2, BinaryOperator::Multiply);
+                    if (ovr.isFunction()) {
+                        JSFunction *target = ovr.function;
+                        if (target->isNative()) {
+                            JSValues argv(2);
+                            argv[0] = r1;
+                            argv[1] = r2;
+                            dest = static_cast<JSNativeFunction*>(target)->mCode(argv);
+                            break;
+                        }
+                        else {
+                            mLinkage = new Linkage(mLinkage, ++mPC,
+                                                   mActivation, dst(mul));
+                            mActivation = new Activation(target->getICode(), r1, r2);
+                            registers = &mActivation->mRegisters;
+                            mPC = mActivation->mICode->its_iCode->begin();
+                            continue;
+                        }
+                    }
+                    else {
+                        JSValue num1(r1.toNumber());
+                        JSValue num2(r2.toNumber());
+                        dest = num1.f64 * num2.f64;
+                    }
                 }
                 break;
             case DIVIDE:
@@ -678,7 +801,7 @@ turns into a get_property call like this, only we need to be using JSString thro
                     subroutineStack.push(++mPC);
                     Jsr* jsr = static_cast<Jsr*>(instruction);
                     uint32 offset = ofs(jsr);
-                    mPC = begin_pc + offset;
+                    mPC = mActivation->mICode->its_iCode->begin() + offset;
                     continue;
                 }
             case RTS:
@@ -719,13 +842,12 @@ turns into a get_property call like this, only we need to be using JSString thro
                             mActivation = pLinkage->mActivation;
                             Handler *h = mActivation->catchStack.back();
                             registers = &mActivation->mRegisters;
-                            begin_pc = pLinkage->mBasePC;
                             if (h->catchTarget) {
-                                mPC = begin_pc + h->catchTarget->mOffset;
+                                mPC = mActivation->mICode->its_iCode->begin() + h->catchTarget->mOffset;
                             }
                             else {
                                 ASSERT(h->finallyTarget);
-                                mPC = begin_pc + h->finallyTarget->mOffset;
+                                mPC = mActivation->mICode->its_iCode->begin() + h->finallyTarget->mOffset;
                             }
                             mLinkage = pLinkage;
                             break;
@@ -737,11 +859,11 @@ turns into a get_property call like this, only we need to be using JSString thro
                 else {
                     Handler *h = mActivation->catchStack.back();
                     if (h->catchTarget) {
-                        mPC = begin_pc + h->catchTarget->mOffset;
+                        mPC = mActivation->mICode->its_iCode->begin() + h->catchTarget->mOffset;
                     }
                     else {
                         ASSERT(h->finallyTarget);
-                        mPC = begin_pc + h->finallyTarget->mOffset;
+                        mPC = mActivation->mICode->its_iCode->begin() + h->finallyTarget->mOffset;
                     }
                     continue;
                 }

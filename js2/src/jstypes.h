@@ -56,6 +56,7 @@ namespace JSTypes {
     class JSArray;
     class JSFunction;
     class JSString;
+    class JSType;
     
     /**
      * All JavaScript data types.
@@ -114,6 +115,8 @@ namespace JSTypes {
         JSString*& operator=(JSString* string)          { return (tag = string_tag, this->string = string); }
         bool& operator=(bool boolean)                   { return (tag = boolean_tag, this->boolean = boolean); }
         
+        bool isFunction() const                         { return (tag == function_tag); }
+        bool isObject() const                           { return ((tag == object_tag) || (tag == function_tag) || (tag == array_tag)); }
         bool isString() const                           { return (tag == string_tag); }
         bool isBoolean() const                          { return (tag == boolean_tag); }
         bool isNumber() const                           { return (tag == f64_tag); }
@@ -136,6 +139,9 @@ namespace JSTypes {
         static JSValue valueToInt32(const JSValue& value);
         static JSValue valueToUInt32(const JSValue& value);
         static JSValue valueToBoolean(const JSValue& value);
+
+
+        const JSType *getType() const;
 
         int operator==(const JSValue& value) const;
     };
@@ -287,12 +293,6 @@ namespace JSTypes {
         virtual bool isNative()    { return true; }
     };
         
-    class JSException : public gc_base {
-    public:
-        JSException(JSValue v) : value(v) { }
-        JSValue value;
-    };
-    
 #if defined(XP_UNIX)
     // bastring.cc defines a funky operator new that assumes a byte-allocator.
     typedef string_char_traits<char16> JSCharTraits;
@@ -313,6 +313,13 @@ namespace JSTypes {
         explicit JSString(const char* str);
     };
 
+    class JSException : public gc_base {
+    public:
+        JSException(char *mess) : value(JSValue(new JSString(mess))) { }
+        JSException(JSValue v) : value(v) { }
+        JSValue value;
+    };
+    
     inline Formatter& operator<<(Formatter& f, const JSString& str)
     {
         printString(f, str.begin(), str.end());
@@ -374,6 +381,31 @@ namespace JSTypes {
             return defineVariable(name, value);
         }
     };
+
+    class JSType : public JSObject {
+    public:
+        JSType(const JSType *baseType) : baseType(baseType) { }
+        const JSType *baseType;
+
+        enum { NoRelation = 0x7FFFFFFF };
+
+        int32 distance(const JSType *other) const;
+    };
+
+
+    extern const JSType Any_Type;
+    extern const JSType Integer_Type;
+    extern const JSType Number_Type;
+    extern const JSType Character_Type;
+    extern const JSType String_Type;
+    extern const JSType Function_Type;
+    extern const JSType Array_Type;
+    extern const JSType Type_Type;
+    extern const JSType Boolean_Type;
+    extern const JSType Null_Type;
+    extern const JSType Void_Type;
+    extern const JSType None_Type;
+
     
 } /* namespace JSTypes */    
 } /* namespace JavaScript */

@@ -46,6 +46,21 @@ const JSValue kNaN = JSValue(nan);
 const JSValue kTrue = JSValue(true);
 const JSValue kFalse = JSValue(false);
 
+// PATRICK, HELP!!!!!
+const JSType Any_Type = JSType(NULL);
+const JSType Integer_Type = JSType(&Any_Type);
+const JSType Number_Type = JSType(&Integer_Type);
+const JSType Character_Type = JSType(&Any_Type);
+const JSType String_Type = JSType(&Character_Type);
+const JSType Function_Type = JSType(&Any_Type);
+const JSType Array_Type = JSType(&Any_Type);
+const JSType Type_Type = JSType(&Any_Type);
+const JSType Boolean_Type = JSType(&Any_Type);
+const JSType Null_Type = JSType(&Any_Type);
+const JSType Void_Type = JSType(&Any_Type);
+const JSType None_Type = JSType(&Any_Type);
+
+
 #ifdef IS_LITTLE_ENDIAN
 #define JSDOUBLE_HI32(x)        (((uint32 *)&(x))[1])
 #define JSDOUBLE_LO32(x)        (((uint32 *)&(x))[0])
@@ -72,6 +87,33 @@ const JSValue kFalse = JSValue(false);
 #define JSDOUBLE_IS_NEGZERO(d)  (JSDOUBLE_HI32(d) == JSDOUBLE_HI32_SIGNBIT && \
 				 JSDOUBLE_LO32(d) == 0)
 
+
+const JSType *JSValue::getType() const
+{
+    switch (tag) {
+    case JSValue::i32_tag:
+        return &Integer_Type;
+    case JSValue::u32_tag:
+        return &Integer_Type;
+    case JSValue::f64_tag:
+        return &Number_Type;
+    case JSValue::object_tag:
+        return &Any_Type;        // XXX get type from Object
+    case JSValue::array_tag:
+        return &Array_Type;
+    case JSValue::function_tag:
+        return &Function_Type;
+    case JSValue::string_tag:
+        return &String_Type;
+    case JSValue::boolean_tag:
+        return &Boolean_Type;
+    case JSValue::undefined_tag:
+        return &Void_Type;
+    default:
+        NOT_REACHED("Bad tag");
+        return &None_Type;
+    }
+}
 
 bool JSValue::isNaN() const
 {
@@ -141,6 +183,7 @@ Formatter& operator<<(Formatter& f, const JSValue& value)
 
 JSValue JSValue::toPrimitive(ECMA_type hint) const
 {
+    JSObject *obj;
     switch (tag) {
     case i32_tag:
     case u32_tag:
@@ -151,20 +194,34 @@ JSValue JSValue::toPrimitive(ECMA_type hint) const
         return *this;
 
     case object_tag:
+        obj = object;
+        break;
     case array_tag:
+        obj = array;
+        break;
     case function_tag:
-        if (hint == String) {
-            // FIXME
-        }
-        else {
-            // FIXME
-        }
+        obj = function;
         break;
 
     default:
         NOT_REACHED("Bad tag");
+        return kUndefinedValue;
     }
+
+    const JSValue &toString = obj->getProperty(widenCString("toString"));
+    if (toString.isObject()) {
+        if (toString.isFunction()) {
+        }
+        else    // right? The spec doesn't say
+            throw new JSException("Runtime error from toPrimitive");    // XXX
+    }
+
+    const JSValue &valueOf = obj->getProperty(widenCString("valueOf"));
+    if (!valueOf.isObject())
+        throw new JSException("Runtime error from toPrimitive");    // XXX
+    
     return kUndefinedValue;
+    
 }
 
 
@@ -371,6 +428,22 @@ JSString::JSString(const char* str)
     resize(n);
     std::transform(str, str + n, begin(), JavaScript::widen);
 }
+
+// # of sub-type relationship between this type and the other type 
+// (== MAX_INT if other is not a base type)
+
+int32 JSType::distance(const JSType *other) const
+{
+    if (other == this) 
+        return 0; 
+    if (baseType == NULL)
+        return NoRelation;
+    int32 baseDistance = baseType->distance(other);
+    if (baseDistance != NoRelation)
+        ++baseDistance;
+    return baseDistance;
+}
+
 
 } /* namespace JSTypes */    
 } /* namespace JavaScript */

@@ -74,6 +74,7 @@ namespace Interpreter {
         Frame* getFrames();
 
         JSValue interpret(ICodeModule* iCode, const JSValues& args);
+        void doCall(JSFunction *target, Instruction *pc);
 
     private:
         void broadcast(Event event);
