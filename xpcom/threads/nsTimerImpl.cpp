@@ -177,10 +177,7 @@ nsTimerImpl::nsTimerImpl() :
 
 nsTimerImpl::~nsTimerImpl()
 {
-  if (mCallbackType == CALLBACK_TYPE_INTERFACE)
-    NS_RELEASE(mCallback.i);
-  else if (mCallbackType == CALLBACK_TYPE_OBSERVER)
-    NS_RELEASE(mCallback.o);
+  ReleaseCallback();
 }
 
 
@@ -241,6 +238,7 @@ NS_IMETHODIMP nsTimerImpl::InitWithFuncCallback(nsTimerCallbackFunc aFunc,
   if (!gThread)
     return NS_ERROR_FAILURE;
 
+  ReleaseCallback();
   mCallbackType = CALLBACK_TYPE_FUNC;
   mCallback.c = aFunc;
   mClosure = aClosure;
@@ -255,6 +253,7 @@ NS_IMETHODIMP nsTimerImpl::InitWithCallback(nsITimerCallback *aCallback,
   if (!gThread)
     return NS_ERROR_FAILURE;
 
+  ReleaseCallback();
   mCallbackType = CALLBACK_TYPE_INTERFACE;
   mCallback.i = aCallback;
   NS_ADDREF(mCallback.i);
@@ -269,6 +268,7 @@ NS_IMETHODIMP nsTimerImpl::Init(nsIObserver *aObserver,
   if (!gThread)
     return NS_ERROR_FAILURE;
 
+  ReleaseCallback();
   mCallbackType = CALLBACK_TYPE_OBSERVER;
   mCallback.o = aObserver;
   NS_ADDREF(mCallback.o);
