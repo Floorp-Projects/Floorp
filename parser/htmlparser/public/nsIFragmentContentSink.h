@@ -46,6 +46,12 @@ class nsIDocument;
  { 0xe9ea6afb, 0x92f3, 0x4270, \
  { 0xb2, 0x67, 0xd2, 0xe3, 0x8d, 0x0e, 0x95, 0x45 } }
 
+/**
+ * The fragment sink allows a client to parse a fragment of sink, possibly
+ * surrounded in context. Also see nsIParser::ParseFragment().
+ * Note: once you've parsed a fragment, the fragment sink must be re-set on
+ * the parser in order to parse another fragment.
+ */
 class nsIFragmentContentSink : public nsISupports {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_I_FRAGMENT_CONTENT_SINK_IID)
