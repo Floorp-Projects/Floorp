@@ -106,7 +106,7 @@
 
 #define MORK_ENABLE_ZONE_ARENAS 1 /* using morkZone for pooling */
 
-#define MORK_ENABLE_PROBE_MAPS 1 /* use smaller hash tables */
+//#define MORK_ENABLE_PROBE_MAPS 1 /* use smaller hash tables */
 
 #define MORK_BEAD_OVER_NODE_MAPS 1 /* use bead not node maps */
 
