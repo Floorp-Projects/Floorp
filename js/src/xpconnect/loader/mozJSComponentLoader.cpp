@@ -98,6 +98,7 @@ UnrootGlobals(PLHashEntry *he, PRIntn i, void *arg)
 {
     JSContext *cx = (JSContext *)arg;
     JS_RemoveRoot(cx, &he->value);
+    nsCRT::free((char *)he->key);
     return HT_ENUMERATE_REMOVE;
 }
 
@@ -107,10 +108,10 @@ UnloadAndReleaseModules(PLHashEntry *he, PRIntn i, void *arg)
     nsIModule *module = NS_STATIC_CAST(nsIModule *, he->value);
     nsIComponentManager *mgr = NS_STATIC_CAST(nsIComponentManager *, arg);
     PRBool canUnload;
-    module->CanUnload(mgr, &canUnload);
-    if (canUnload) {
+    if (NS_SUCCEEDED(module->CanUnload(mgr, &canUnload)) && canUnload) {
         NS_RELEASE(module);
         /* XXX need to unroot the global for the module as well */
+        nsCRT::free((char *)he->key);
         return HT_ENUMERATE_REMOVE;
     }
     return HT_ENUMERATE_NEXT;
@@ -133,21 +134,10 @@ mozJSComponentLoader::~mozJSComponentLoader()
         mCompMgrWrapper = nsnull; // release wrapper so GC can release CM
         mXPC->AbandonJSContext(mContext);
 
-        /*
-         * ReallyInit pushes our context onto the stack.
-         */
-        JSContext *cx;
-        if (NS_SUCCEEDED(mContextStack->Pop(&cx))) {
-            NS_ASSERTION(cx == mContext, "JS thread context push/pop mismatch");
-        }
         JS_DestroyContext(mContext);
         mContext = nsnull;
-        nsServiceManager::ReleaseService(kJSContextStackProgID,
-                                         mContextStack);
-        nsServiceManager::ReleaseService(kJSRuntimeServiceProgID,
-                                         mRuntimeService);
-        nsServiceManager::ReleaseService(kXPConnectServiceProgID,
-                                         mXPC);
+        mXPC = nsnull;
+        mRuntimeService = nsnull;
     }
 }
 
@@ -194,20 +184,6 @@ Reporter(JSContext *cx, const char *message, JSErrorReport *rep)
             message ? message : "<no message>");
 }
 
-PR_STATIC_CALLBACK(PLHashNumber)
-HashUUID(const void *key)
-{
-    nsID *id = (nsID *)key;
-    return id->m0;
-}
-
-PR_STATIC_CALLBACK(PRIntn)
-CompareUUID(const void *v1, const void *v2)
-{
-    nsID *a = (nsID *)v1, *b = (nsID *)v2;
-    return a->Equals(*b);
-}
-
 NS_IMETHODIMP
 mozJSComponentLoader::Init(nsIComponentManager *aCompMgr, nsISupports *aReg)
 {
@@ -236,19 +212,17 @@ mozJSComponentLoader::ReallyInit()
      * We keep a reference around, because it's a Bad Thing if the runtime
      * service gets shut down before we're done.  Bad!
      */
-    mRuntimeService = nsnull;
-    rv = nsServiceManager::GetService(kJSRuntimeServiceProgID,
-                                      NS_GET_IID(nsIJSRuntimeService),
-                                      (nsISupports**)&mRuntimeService);
-    if (NS_FAILED(rv))
+    mRuntimeService = do_GetService(kJSRuntimeServiceProgID, &rv);
+    if (NS_FAILED(rv) ||
+        NS_FAILED(rv = mRuntimeService->GetRuntime(&mRuntime)))
         return rv;
     
-    if (NS_FAILED(rv = mRuntimeService->GetRuntime(&mRuntime))) {
-#ifdef DEBUG_shaver
-        fprintf(stderr, "mJCL: runtime NOT initialized!\n");
-#endif
+    /*
+     * Get the XPConnect service.
+     */
+    mXPC = do_GetService(kXPConnectServiceProgID, &rv);
+    if (NS_FAILED(rv))
         return rv;
-    }
 
     mContext = JS_NewContext(mRuntime, 8192 /* pref? */);
     if (!mContext)
@@ -257,21 +231,13 @@ mozJSComponentLoader::ReallyInit()
     mSuperGlobal = JS_NewObject(mContext, &gGlobalClass, NULL, NULL);
     if (!mSuperGlobal)
         return NS_ERROR_OUT_OF_MEMORY;
-    JS_AddNamedRoot(mContext, &mSuperGlobal, "mJCL::mSuperGlobal");
 
     if (!JS_InitStandardClasses(mContext, mSuperGlobal) ||
         !JS_DefineFunctions(mContext, mSuperGlobal, gGlobalFun))
         return NS_ERROR_FAILURE;
 
-    /* get the XPC service and initialize. */
-    if (NS_FAILED(rv = nsServiceManager::GetService(kXPConnectServiceProgID,
-                                                    NS_GET_IID(nsIXPConnect),
-                                                    (nsISupports**)&mXPC)) ||
-        NS_FAILED(rv = mXPC->InitJSContext(mContext, mSuperGlobal, PR_TRUE)) ||
-        NS_FAILED(rv = nsServiceManager::GetService(kJSContextStackProgID,
-                                             NS_GET_IID(nsIJSContextStack),
-                                             (nsISupports **)&mContextStack)) ||
-        NS_FAILED(rv = mContextStack->Push(mContext)))
+    rv = mXPC->InitJSContext(mContext, mSuperGlobal, PR_TRUE);
+    if (NS_FAILED(rv))
         return rv;
     
     nsCOMPtr<nsIXPConnectWrappedNative> wrappedCM;
@@ -292,11 +258,10 @@ mozJSComponentLoader::ReallyInit()
 #endif
         return rv;
     }
-    JS_AddNamedRoot(mContext, &mCompMgrWrapper, "mJCL::mCompMgrWrapper");
     JS_SetErrorReporter(mContext, Reporter);
 
-    mModules = PL_NewHashTable(16, HashUUID, CompareUUID, PL_CompareValues,
-                               0, 0);
+    mModules = PL_NewHashTable(16, PL_HashString, PL_CompareStrings,
+                               PL_CompareValues, 0, 0);
     if (!mModules)
         return NS_ERROR_OUT_OF_MEMORY;
     mGlobals = PL_NewHashTable(16, PL_HashString, PL_CompareStrings,
@@ -309,6 +274,9 @@ mozJSComponentLoader::ReallyInit()
 #endif
     mInitialized = PR_TRUE;
 
+    /* root last, so that we don't leak the roots in case of failure */
+    JS_AddNamedRoot(mContext, &mSuperGlobal, "mJCL::mSuperGlobal");
+    JS_AddNamedRoot(mContext, &mCompMgrWrapper, "mJCL::mCompMgrWrapper");
     return NS_OK;
 }
 
@@ -575,9 +543,10 @@ nsIModule *
 mozJSComponentLoader::ModuleForLocation(const char *registryLocation,
                                         nsIFileSpec *component)
 {
+    nsIModule *module = nsnull;
     if (!mInitialized &&
         NS_FAILED(ReallyInit()))
-        return NULL;
+        return nsnull;
 
     PLHashNumber hash = PL_HashString(registryLocation);
     PLHashEntry **hep = PL_HashTableRawLookup(mModules, hash,
@@ -594,6 +563,14 @@ mozJSComponentLoader::ModuleForLocation(const char *registryLocation,
         return nsnull;
     }
 
+    nsresult rv;
+    NS_WITH_SERVICE(nsIJSContextStack, cxstack, kJSContextStackProgID, &rv);
+    if (NS_FAILED(rv) ||
+        NS_FAILED(cxstack->Push(mContext)))
+        return nsnull;
+
+    /* from here on, return via out: to pop from cxstack */
+
     jsval argv[2], retval;
     argv[0] = OBJECT_TO_JSVAL(mCompMgrWrapper);
     argv[1] = STRING_TO_JSVAL(JS_NewStringCopyZ(mContext, registryLocation));
@@ -603,7 +580,7 @@ mozJSComponentLoader::ModuleForLocation(const char *registryLocation,
         fprintf(stderr, "mJCL: NSGetModule failed for %s\n",
                 registryLocation);
 #endif
-        return nsnull;
+        goto out;
     }
 
 #ifdef DEBUG_shaver_off
@@ -617,19 +594,23 @@ mozJSComponentLoader::ModuleForLocation(const char *registryLocation,
         /* XXX report error properly */
         fprintf(stderr, "mJCL: couldn't convert %s's nsIModule to obj\n",
                 registryLocation);
-        return nsnull;
+        goto out;
     }
 
-    nsIModule *module;
     if (NS_FAILED(mXPC->WrapJS(mContext, jsModuleObj, NS_GET_IID(nsIModule),
                                (nsISupports **)&module))) {
         /* XXX report error properly */
         fprintf(stderr, "mJCL: couldn't get nsIModule from jsval\n");
-        return nsnull;
+        goto out;
     }
 
     /* we hand our reference to the hash table, it'll be released much later */
-    he = PL_HashTableRawAdd(mModules, hep, hash, registryLocation, module);
+    he = PL_HashTableRawAdd(mModules, hep, hash,
+                            nsCRT::strdup(registryLocation), module);
+ out:
+    JSContext *cx;
+    cxstack->Pop(&cx);
+    NS_ASSERTION(cx == mContext, "JS context stack push/pop mismatch!");
     return module;
 }
 
@@ -637,6 +618,7 @@ JSObject *
 mozJSComponentLoader::GlobalForLocation(const char *aLocation,
                                         nsIFileSpec *component)
 {
+    JSObject *obj = nsnull;
     PRBool needRelease = PR_FALSE;
     PLHashNumber hash = PL_HashString(aLocation);
     PLHashEntry **hep = PL_HashTableRawLookup(mGlobals, hash,
@@ -649,7 +631,7 @@ mozJSComponentLoader::GlobalForLocation(const char *aLocation,
         NS_FAILED(ReallyInit()))
         return nsnull;
     
-    JSObject *obj = JS_NewObject(mContext, &gGlobalClass, mSuperGlobal, NULL);
+    obj = JS_NewObject(mContext, &gGlobalClass, mSuperGlobal, NULL);
     if (!obj)
         return nsnull;
 
@@ -660,17 +642,24 @@ mozJSComponentLoader::GlobalForLocation(const char *aLocation,
         needRelease = PR_TRUE;
     }
 
+    nsresult rv;
+    NS_WITH_SERVICE(nsIJSContextStack, cxstack, kJSContextStackProgID, &rv);
+    if (NS_FAILED(rv) ||
+        NS_FAILED(cxstack->Push(mContext)))
+        return nsnull;
+
+    char *location;             // declare before first jump to out:
     jsval retval;
-    char *nativePath;
+    nsXPIDLCString nativePath;
     /* XXX MAC: we use strings as file paths, *sigh* */
-    component->GetNativePath(&nativePath);
-    JSScript *script = JS_CompileFile(mContext, obj, nativePath);
+    component->GetNativePath(getter_Copies(nativePath));
+    JSScript *script = JS_CompileFile(mContext, obj, (const char *)nativePath);
     if (!script) {
 #ifdef DEBUG_shaver_off
         fprintf(stderr, "mJCL: script compilation of %s FAILED\n",
                 nativePath);
 #endif
-        obj = NULL;
+        obj = nsnull;
         goto out;
     }
 
@@ -682,18 +671,22 @@ mozJSComponentLoader::GlobalForLocation(const char *aLocation,
 #ifdef DEBUG_shaver_off
         fprintf(stderr, "mJCL: failed to execute %s\n", nativePath);
 #endif
-        obj = NULL;
+        obj = nsnull;
         goto out;
     }
 
-    he = PL_HashTableRawAdd(mGlobals, hep, hash, aLocation, obj);
-    JS_AddNamedRoot(mContext, &he->value, aLocation);
+    /* freed when we remove from the table */
+    location = nsCRT::strdup(aLocation);
+    he = PL_HashTableRawAdd(mGlobals, hep, hash, location, obj);
+    JS_AddNamedRoot(mContext, &he->value, location);
 
  out:
+    JSContext *cx;
+    rv = cxstack->Pop(&cx);
+    NS_ASSERTION(NS_SUCCEEDED(rv) && cx == mContext,
+                 "JS context stack push/pop mismatch!");
     if (needRelease)
         NS_RELEASE(component);
-    if (nativePath)
-        nsAllocator::Free(nativePath);
     return obj;
 }
 
@@ -731,294 +724,13 @@ mozJSComponentLoader::UnloadAll(PRInt32 aWhen)
     return NS_OK;
 }
 
-static NS_IMETHODIMP
-CreateJSComponentLoader(nsISupports *aOuter, const nsIID &iid, void **result)
-{
-    if (!result)
-        return NS_ERROR_NULL_POINTER;
-    if (aOuter)
-        return NS_ERROR_NO_AGGREGATION;
-
-    *result = 0;
-    nsCOMPtr<nsISupports> inst;
-
-    if (iid.Equals(NS_GET_IID(nsIComponentLoader)))
-        inst = NS_STATIC_CAST(nsISupports *, new mozJSComponentLoader());
-    else
-        return NS_ERROR_NO_INTERFACE;
-
-    if (!inst.get())
-        return NS_ERROR_OUT_OF_MEMORY;
-    
-    return inst->QueryInterface(iid, result);
-}
-
 //----------------------------------------------------------------------
 
-static NS_DEFINE_CID(kmozJSComponentLoaderCID, MOZJSCOMPONENTLOADER_CID);
+NS_GENERIC_FACTORY_CONSTRUCTOR(mozJSComponentLoader)
 
-// Module implementation for the sample library
-class nsJSComponentLoaderModule : public nsIModule
-{
-public:
-    nsJSComponentLoaderModule();
-    virtual ~nsJSComponentLoaderModule();
-
-    NS_DECL_ISUPPORTS
-
-    NS_DECL_NSIMODULE
-
-protected:
-    nsresult Initialize();
-
-    void Shutdown();
-
-    PRBool mInitialized;
-    nsCOMPtr<nsIGenericFactory> mFactory;
+static nsModuleComponentInfo components[] = {
+    { "JS component loader", MOZJSCOMPONENTLOADER_CID,
+      mozJSComponentLoaderProgID, mozJSComponentLoaderConstructor }
 };
 
-static NS_DEFINE_IID(kIModuleIID, NS_IMODULE_IID);
-
-nsJSComponentLoaderModule::nsJSComponentLoaderModule()
-    : mInitialized(PR_FALSE)
-{
-    NS_INIT_ISUPPORTS();
-}
-
-nsJSComponentLoaderModule::~nsJSComponentLoaderModule()
-{
-    Shutdown();
-}
-
-NS_IMPL_ISUPPORTS(nsJSComponentLoaderModule, kIModuleIID)
-
-// Perform our one-time intialization for this module
-nsresult
-nsJSComponentLoaderModule::Initialize()
-{
-    if (mInitialized) {
-        return NS_OK;
-    }
-    mInitialized = PR_TRUE;
-    return NS_OK;
-}
-
-// Shutdown this module, releasing all of the module resources
-void
-nsJSComponentLoaderModule::Shutdown()
-{
-    // Release the factory object
-    mFactory = nsnull;
-}
-
-// Create a factory object for creating instances of aClass.
-NS_IMETHODIMP
-nsJSComponentLoaderModule::GetClassObject(nsIComponentManager *aCompMgr,
-                               const nsCID& aClass,
-                               const nsIID& aIID,
-                               void** r_classObj)
-{
-    nsresult rv;
-
-    // Defensive programming: Initialize *r_classObj in case of error below
-    if (!r_classObj) {
-        return NS_ERROR_NULL_POINTER;
-    }
-    *r_classObj = NULL;
-
-    // Do one-time-only initialization if necessary
-    rv = Initialize();
-    if (NS_FAILED(rv)) {
-        // Initialization failed! yikes!
-        return rv;
-    }
-
-    // Choose the appropriate factory, based on the desired instance
-    // class type (aClass).
-    nsCOMPtr<nsIGenericFactory> fact;
-    if (aClass.Equals(kmozJSComponentLoaderCID)) {
-        if (!mFactory) {
-            rv = NS_NewGenericFactory(getter_AddRefs(mFactory),
-                                      CreateJSComponentLoader);
-        }
-        fact = mFactory;
-    }
-    else {
-		rv = NS_ERROR_FACTORY_NOT_REGISTERED;
-#ifdef DEBUG
-        char* cs = aClass.ToString();
-        printf("+++ nsJSComponentLoaderModule: unable to create factory for %s\n", cs);
-        nsCRT::free(cs);
-#endif
-    }
-
-    if (fact) {
-        rv = fact->QueryInterface(aIID, r_classObj);
-    }
-
-    return rv;
-}
-
-//----------------------------------------
-
-struct Components {
-    const char* mDescription;
-    const nsID* mCID;
-    const char* mProgID;
-};
-
-// The list of components we register
-static Components gComponents[] = {
-    { "JavaScript Component Loader", &kmozJSComponentLoaderCID,
-      mozJSComponentLoaderProgID, },
-};
-#define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))
-
-NS_IMETHODIMP
-nsJSComponentLoaderModule::RegisterSelf(nsIComponentManager *aCompMgr,
-                          nsIFileSpec* aPath,
-                          const char* registryLocation,
-                          const char* componentType)
-{
-    nsresult rv = NS_OK;
-
-#ifdef DEBUG
-    printf("*** Registering JSComponentLoader components\n");
-#endif
-
-    Components* cp = gComponents;
-    Components* end = cp + NUM_COMPONENTS;
-    while (cp < end) {
-        rv = aCompMgr->RegisterComponentSpec(*cp->mCID, cp->mDescription,
-                                             cp->mProgID, aPath, PR_TRUE,
-                                             PR_TRUE);
-        if (NS_FAILED(rv)) {
-#ifdef DEBUG
-            printf("nsJSComponentLoaderModule: unable to register %s component => %x\n",
-                   cp->mDescription, rv);
-#endif
-            break;
-        }
-        cp++;
-    }
-
-    rv = aCompMgr->RegisterComponentLoader(jsComponentTypeName,
-                                           mozJSComponentLoaderProgID,
-                                           PR_TRUE);
-
-    return rv;
-}
-
-NS_IMETHODIMP
-nsJSComponentLoaderModule::UnregisterSelf(nsIComponentManager* aCompMgr,
-                            nsIFileSpec* aPath,
-                            const char* registryLocation)
-{
-#ifdef DEBUG
-    printf("*** Unregistering JSComponentLoader components\n");
-#endif
-    Components* cp = gComponents;
-    Components* end = cp + NUM_COMPONENTS;
-    while (cp < end) {
-        nsresult rv = aCompMgr->UnregisterComponentSpec(*cp->mCID, aPath);
-        if (NS_FAILED(rv)) {
-#ifdef DEBUG
-            printf("nsJSComponentLoaderModule: unable to unregister %s component => %x\n",
-                   cp->mDescription, rv);
-#endif
-        }
-        cp++;
-    }
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsJSComponentLoaderModule::CanUnload(nsIComponentManager *aCompMgr, PRBool *okToUnload)
-{
-    if (!okToUnload) {
-        return NS_ERROR_INVALID_POINTER;
-    }
-    *okToUnload = PR_FALSE;
-    return NS_ERROR_FAILURE;
-}
-
-//----------------------------------------------------------------------
-
-static nsJSComponentLoaderModule *gModule = NULL;
-
-extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
-                                          nsIFileSpec* location,
-                                          nsIModule** return_cobj)
-{
-    nsresult rv = NS_OK;
-
-    NS_ASSERTION(return_cobj, "Null argument");
-    NS_ASSERTION(gModule == NULL, "nsJSComponentLoaderModule: Module already created.");
-
-    // Create an initialize the layout module instance
-    nsJSComponentLoaderModule *m = new nsJSComponentLoaderModule();
-    if (!m) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    // Increase refcnt and store away nsIModule interface to m in return_cobj
-    rv = m->QueryInterface(NS_GET_IID(nsIModule), (void**)return_cobj);
-    if (NS_FAILED(rv)) {
-        delete m;
-        m = nsnull;
-    }
-    gModule = m;                  // WARNING: Weak Reference
-    return rv;
-}
-
-#if 0
-
-extern "C" nsresult
-NSGetFactory(nsISupports* servMgr, const nsCID &aClass, const char *aClassName,
-             const char *aProgID, nsIFactory **aFactory)
-{
-    if (!aFactory)
-        return NS_ERROR_NULL_POINTER;
-
-    if (!aClass.Equals(kmozJSComponentLoaderCID))
-        return NS_ERROR_NO_INTERFACE;
-
-    nsIGenericFactory *factory;
-
-    nsresult rv = NS_NewGenericFactory(&factory, CreateJSComponentLoader);
-    
-    if (!factory)
-        return NS_ERROR_OUT_OF_MEMORY;
-    if (NS_SUCCEEDED(rv))
-        *aFactory = factory;
-
-    return rv;
-}
-
-extern "C" nsresult
-NSRegisterSelf(nsISupports *aServMgr, const char *aLocation)
-{
-    nsresult rv;
-#ifdef DEBUG_shaver
-    fprintf(stderr, "mJCL: registering component loader\n");
-#endif
-
-    static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
-
-    NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServMgr, kComponentManagerCID, &rv);
-    if (NS_FAILED(rv))
-        return rv;
-
-    rv = compMgr->RegisterComponent(kmozJSComponentLoaderCID,
-                                    "JavaScript Component Loader",
-                                    mozJSComponentLoaderProgID, aLocation, PR_TRUE,
-                                    PR_TRUE);
-    if (NS_FAILED(rv))
-        return rv;
-
-    return compMgr->RegisterComponentLoader(jsComponentTypeName,
-                                            mozJSComponentLoaderProgID,
-                                            PR_TRUE);
-}
-#endif
+NS_IMPL_NSGETMODULE("mozJSComponentLoader", components)
