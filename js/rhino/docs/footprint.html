@@ -12,35 +12,47 @@
 <h1>
 Small Footprint</h1></center>
 A few changes can be made to reduce the footprint of Rhino for embeddings
-where space is at a premium. On a recent build, Rhino consumed 355,883
-bytes of space for uncompressed class files. With various changes that
-number can be reduced to 281,455 bytes.
-<br>&nbsp;
-<h3>
-Tools</h3>
-Most embeddings won't need any of the classes in <tt>org.mozilla.javascript.tools</tt>
-or any of its subpackages.
-<br>&nbsp;
-<h3>
-Regular Expressions</h3>
-The package <tt>org.mozilla.javascript.regexp</tt> can be removed. Rhino
-will continue to run, although it will not be able to execute any regular
-expression matches. This change saves 37,792 bytes of class files.
-<br>&nbsp;
-<h3>
-JavaAdapter</h3>
-Implementing the JavaAdapter functionality requires the ability to generate
-classes on the fly. Removing <tt>org.mozilla.javascript.JavaAdapter</tt> and all
-the classes in package <tt>org.mozilla.classfile</tt> will disable this 
-functionality, but Rhino will otherwise run correctly. These changes save 
-36,636 bytes.
-<br>&nbsp;
+where space is at a premium. On a recent build, the length of js.jar was 603,127 bytes corresponding to 1,171,708 bytes of all uncompressed Rhino classes with debug information included.
+With various changes js.jar size can be reduced to 204,689 bytes corresponding to 424,774 bytes of uncompressed classes.
+
+<h3>Tools</h3>
+<p>
+Most embeddings won't need any of the classes in <tt>org.mozilla.javascript.tools</tt> or any of its sub-packages.
 <h3>
 Optimizer</h3>
+<p>
 It is possible to run Rhino with interpreter mode only, allowing you to remove
-classes for classfile generation. Remove the classes in packages
-<tt>org.mozilla.classfile</tt> and <tt>org.mozilla.javascript.optimizer</tt>.
-<br>&nbsp;
+classes for classfile generation that include all the classes from 
+<tt>org.mozilla.javascript.optimizer</tt> package and <tt>ClassNameHelper</tt>, <tt>ClassRepository</tt> classes from <tt>org.mozilla.javascript</tt> package.
+
+<h3>JavaAdapter</h3>
+<p>
+Implementing the JavaAdapter functionality requires the ability to generate
+classes on the fly. Removing <tt>org.mozilla.javascript.JavaAdapter</tt> will disable this functionality, but Rhino will otherwise run correctly. 
+
+<h3>Class generation library</h3>
+<p>
+If you do not include Optimizer or JavaAdapter, then you do not need Rhino library for class file generation and you can remove all the classes from in <tt>org.mozilla.classfile</tt> package.
+
+<h3>Regular Expressions</h3>
+<p>
+The package <tt>org.mozilla.javascript.regexp</tt> can be removed. Rhino
+will continue to run, although it will not be able to execute any regular
+expression matches. This change saves 47,984 bytes of class files.
+
+<h3>Debug information</h3>
+<p>
+Debug information in Rhino classes consumes about 25% of code size and if you can live without that, you can recompile Rhino to remove it.
+
+<h2>smalljs.jar</h2>
+
+Ant build script in Rhino supports smalljar target that will generate smalljs.jar that does not include Tools, Optimizer, JavaAdapter and Class generation library, Regular Expressions and deprecated files. To build such minimalist jar without debug information, run the following command from the top directory of Rhino distribution:
+<pre>
+ant clean
+ant -Ddebug=off -Dno-regexp=true  smalljar
+</pre>
+If you omit <tt>-Dno-regexp=true</tt>, then the resulting smalljs.jar will include Regular Expression support.
+
 <p>
 <hr WIDTH="100%">
 <br><a href="index.html">back to top</a>

@@ -12,7 +12,9 @@ Requires Ant version 1.2 or later
     <property name="Name" value="Rhino"/>
     <property name="version" value="1_5R5pre"/>
     <property name="rhino.jar" value="js.jar"/>
+    <property name="small-rhino.jar" value="smalljs.jar"/>
 
+    <property name="jar-compression" value="true"/>
     <property name="debug" value="on"/>
 
     <property name="build.dir" value="./build"/>
@@ -59,7 +61,29 @@ Requires Ant version 1.2 or later
   <target name="jar" depends="compile">
     <jar jarfile="${dist.dir}/${rhino.jar}"
          basedir="${classes}"
-         manifest="src/manifest" />
+         manifest="src/manifest"
+     compress="${jar-compression}"
+     />
+  </target>
+
+  <target name="smalljar" depends="compile">
+
+    <jar basedir="${classes}" destfile="${dist.dir}/${small-rhino.jar}"
+         compress="${jar-compression}">
+      <include name="org/mozilla/javascript/*.class"/>
+      <exclude name="org/mozilla/javascript/ClassNameHelper*.class"/>
+      <exclude name="org/mozilla/javascript/ClassRepository*.class"/>
+      <exclude name="org/mozilla/javascript/JavaAdapter*.class"/>
+      <exclude name="org/mozilla/javascript/NotAFunctionException*.class"/>
+      <exclude name="org/mozilla/javascript/Token.class"/>
+
+      <include name="org/mozilla/javascript/debug/*.class"/>
+      <include name="org/mozilla/javascript/resources/*.properties"/>
+
+      <include name="org/mozilla/javascript/regexp/*.class"
+               unless="no-regexp"/>
+    </jar>
+
   </target>
 
   <target name="copy-examples" depends="init">
@@ -118,6 +142,7 @@ Requires Ant version 1.2 or later
 
   <target name="clean" depends="properties">
     <delete quiet="true" file="${dist.dir}/${rhino.jar}"/>
+    <delete quiet="true" file="${dist.dir}/${small-rhino.jar}"/>
     <delete quiet="true" dir="${classes}"/>
   </target>
 
@@ -142,6 +167,10 @@ Requires Ant version 1.2 or later
  help        print this help
 
  jar         create ${rhino.jar} in ${dist.dir}
+
+ smalljar    create ${small-rhino.jar} in ${dist.dir} with
+             minimalist set of Rhino classes. See footprint.html
+             from the doc directory for details.
 
  javadoc     generate generate Rhino API documentation
              in ${dist.apidocs}
