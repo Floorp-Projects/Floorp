@@ -454,8 +454,8 @@ nsDOMScriptObjectFactory::NewScriptElement(const nsString &aTagName,
       return NS_NewScriptHTMLOListElement(aContext, aElement, aParent, aReturn);
     case DOMHTMLTag_object:
       return NS_NewScriptHTMLObjectElement(aContext, aElement, aParent, aReturn);
-    case DOMHTMLTag_embed:
-      return NS_NewScriptHTMLEmbedElement(aContext, aElement, aParent, aReturn);
+//    case DOMHTMLTag_embed:
+//      return NS_NewScriptHTMLEmbedElement(aContext, aElement, aParent, aReturn);
     case DOMHTMLTag_optgroup:
       return NS_NewScriptHTMLOptGroupElement(aContext, aElement, aParent, aReturn);
     case DOMHTMLTag_option:
