@@ -952,10 +952,17 @@ nsMsgAttachmentHandler::UrlExit(nsresult status, const PRUnichar* aMsg)
     nsMsgAskBooleanQuestionByString(aPrompt, printfString, &keepOnGoing);
     PR_FREEIF(printfString);
 
-    if (!keepOnGoing)
-      m_mime_delivery_state->SetStatus(status);
-    else
+    if (keepOnGoing)
       status = 0;
+    else
+    {
+      status = NS_ERROR_ABORT;
+      m_mime_delivery_state->SetStatus(status);
+      m_mime_delivery_state->Fail(status, 0);
+      m_mime_delivery_state->NotifyListenerOnStopSending(nsnull, status, 0, nsnull);
+      SetMimeDeliveryState(nsnull);
+      return status;
+    }
   }
 
   m_done = PR_TRUE;
