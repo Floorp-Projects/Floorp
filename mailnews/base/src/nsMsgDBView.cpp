@@ -1006,7 +1006,7 @@ nsresult nsMsgDBView::UpdateDisplayMessage(nsMsgViewIndex viewPosition)
 // given a msg key, we will load the message for it.
 NS_IMETHODIMP nsMsgDBView::LoadMessageByMsgKey(nsMsgKey aMsgKey)
 {
-  return LoadMessageByViewIndex(FindViewIndex(aMsgKey));
+  return LoadMessageByViewIndex(FindKey(aMsgKey, PR_FALSE));
 }
 
 NS_IMETHODIMP nsMsgDBView::LoadMessageByViewIndex(nsMsgViewIndex aViewIndex)
@@ -3353,7 +3353,8 @@ nsresult nsMsgDBView::GetLongField(nsIMsgDBHdr *msgHdr, nsMsgViewSortTypeValue s
     case nsMsgViewSortType::byDate:
       // when sorting threads by date, we want the date of the newest msg
       // in the thread
-      if (m_viewFlags & nsMsgViewFlagsType::kThreadedDisplay)
+      if (m_viewFlags & nsMsgViewFlagsType::kThreadedDisplay 
+        && ! (m_viewFlags & nsMsgViewFlagsType::kGroupBySort))
       {
         nsCOMPtr <nsIMsgThread> thread;
         rv = m_db->GetThreadContainingMsgHdr(msgHdr, getter_AddRefs(thread));
@@ -3826,7 +3827,12 @@ nsMsgViewIndex	nsMsgDBView::FindKey(nsMsgKey key, PRBool expand)
 {
   nsMsgViewIndex retIndex = nsMsgViewIndex_None;
   retIndex = (nsMsgViewIndex) (m_keys.FindIndex(key));
-  if (key != nsMsgKey_None && retIndex == nsMsgViewIndex_None && expand && m_db)
+  // for dummy headers, try to expand if the caller says so. And if the thread is
+  // expanded, ignore the dummy header and return the real header index.
+  if (retIndex != nsMsgViewIndex_None && m_flags[retIndex] & MSG_VIEW_FLAG_DUMMY && !expand && !(m_flags[retIndex] & MSG_FLAG_ELIDED))
+    return (nsMsgViewIndex) m_keys.FindIndex(key, retIndex + 1);
+  if (key != nsMsgKey_None && (retIndex == nsMsgViewIndex_None || m_flags[retIndex] & MSG_VIEW_FLAG_DUMMY)
+    && expand && m_db)
   {
     nsMsgKey threadKey = GetKeyOfFirstMsgInThread(key);
     if (threadKey != nsMsgKey_None)
@@ -3835,8 +3841,9 @@ nsMsgViewIndex	nsMsgDBView::FindKey(nsMsgKey key, PRBool expand)
       if (threadIndex != nsMsgViewIndex_None)
       {
         PRUint32 flags = m_flags[threadIndex];
-        if ((flags & MSG_FLAG_ELIDED) && NS_SUCCEEDED(ExpandByIndex(threadIndex, nsnull)))
-          retIndex = FindKey(key, PR_FALSE);
+        if ((flags & MSG_FLAG_ELIDED) && NS_SUCCEEDED(ExpandByIndex(threadIndex, nsnull))
+          || (flags & MSG_VIEW_FLAG_DUMMY))
+          retIndex = (nsMsgViewIndex) m_keys.FindIndex(key, threadIndex + 1);
       }
     }
   }

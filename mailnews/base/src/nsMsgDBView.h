@@ -224,7 +224,7 @@ protected:
 
   nsMsgKey		GetAt(nsMsgViewIndex index) ;
   nsMsgViewIndex	FindViewIndex(nsMsgKey  key) 
-					  {return (nsMsgViewIndex) (m_keys.FindIndex(key));}
+					  {return FindKey(key, PR_FALSE);}
   nsMsgViewIndex        FindHdr(nsIMsgDBHdr *msgHdr);
   virtual nsMsgViewIndex	FindKey(nsMsgKey key, PRBool expand);
   virtual nsresult GetDBForViewIndex(nsMsgViewIndex index, nsIMsgDatabase **db);

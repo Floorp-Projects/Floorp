@@ -427,8 +427,8 @@ NS_IMETHODIMP nsMsgGroupView::OnHdrDeleted(nsIMsgDBHdr *aHdrDeleted, nsMsgKey aP
     }
     else if (rootDeleted)
     {
-      m_keys.SetAt(viewIndexOfThread, m_keys.GetAt(viewIndexOfThread + 1));
-      OrExtraFlag(viewIndexOfThread, MSG_VIEW_FLAG_DUMMY | MSG_VIEW_FLAG_ISTHREAD);
+      m_keys.SetAt(viewIndexOfThread - 1, m_keys.GetAt(viewIndexOfThread));
+      OrExtraFlag(viewIndexOfThread - 1, MSG_VIEW_FLAG_DUMMY | MSG_VIEW_FLAG_ISTHREAD);
     }
   }
   if (!groupThread->m_keys.GetSize())
