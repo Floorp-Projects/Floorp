@@ -63,6 +63,14 @@ public:
              detailDescription, url);
     }
 
+	nsTarget(char *name, nsPrincipal *prin, 
+             PRInt32 risk = JavaSecUI_targetRiskHigh(), 
+             char *riskColor = JavaSecUI_getString(CAPS_TARGET_RISK_COLOR_HIGH), 
+             int desc_id = 0, 
+             int detail_desc_id = 0,
+             int help_url_id = 0, 
+             nsTargetArray* targetArray = NULL);
+
 	nsTarget * registerTarget(void);
 
 	nsTarget * registerTarget(void* context);
