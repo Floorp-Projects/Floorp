@@ -29,11 +29,6 @@ use lib ".";
 
 require "CGI.pl";
 
-# Prevents &make_options in CGI.pl from throwing an error if we give it
-# an invalid list of selections (from a remembered query containing values
-# that no longer exist), since we don't want to die in the query page.
-$::CheckOptionValues = 0;
-
 use vars qw(
     @CheckOptionValues
     @legal_resolution
