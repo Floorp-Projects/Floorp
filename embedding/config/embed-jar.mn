@@ -9,7 +9,8 @@
 
 # Stuff needed for key bindings, scroll bar graphics etc.
 content/global, toolkit/content/global
-skin/clasic/global, classic/skin/classic/global
+content/global/bindings, toolkit/content/global/bindings
+skin/classic/global, classic/skin/classic/global
 skin/classic/communicator/contents.rdf, classic/skin/classic/communicator/contents.rdf
 skin/classic/communicator/dialogOverlay.css, classic/skin/classic/communicator/dialogOverlay.css
 skin/classic/communicator/smallheader-bg.gif, classic/skin/classic/communicator/smallheader-bg.gif
