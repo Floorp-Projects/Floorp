@@ -107,7 +107,7 @@ sub validateRepository {
 
 sub ConnectToDatabase {
     if ($dbh == "") {
-        $dbh = DBI->connect("bonsai","$mysqluser","","mysql") || die "Can't connect to database server -- $DBD::mysql::db_errstr";
+        $dbh = DBI->connect("bonsai","$mysqluser","$mysqlpassword","mysql") || die "Can't connect to database server -- $DBD::mysql::db_errstr";
     }
     return $dbh;
 }
