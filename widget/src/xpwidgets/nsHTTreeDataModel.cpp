@@ -29,6 +29,7 @@
 #include "nsIImageRequest.h"
 #include "nsIImageGroup.h"
 #include "nsHTTreeItem.h"
+#include "nsIContent.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIImageObserverIID, NS_IIMAGEREQUESTOBSERVER_IID);
@@ -47,20 +48,12 @@ nsHTTreeDataModel::nsHTTreeDataModel() : nsTreeDataModel(), nsHTDataModel()
 
 	// Hard-coded values.
 	mVisibleColumnCount = 3;
-	mTotalColumnCount = 3;
-	mSingleColumn = new nsHTColumn();
-	mSecondColumn = new nsHTColumn();
-	mThirdColumn = new nsHTColumn();
-	mSingleControlStripItem = new nsHTControlStripItem();
 }
 
 //--------------------------------------------------------------------
 nsHTTreeDataModel::~nsHTTreeDataModel()
 {
 	// Delete hard-coded value
-	delete mSingleColumn;
-	delete mSecondColumn;
-	delete mThirdColumn;
 	delete mSingleControlStripItem;
 }
 
@@ -85,6 +78,45 @@ nsresult nsHTTreeDataModel::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
 // Hierarchical Tree Data Model Implementation ---------------------
 
+void nsHTTreeDataModel::SetContentRoot(nsIContent* pContent)
+{
+	// Construct our visible items array
+	SetContentRootDelegate(pContent);
+
+	// Destroy our old columns list. TODO
+	
+	// Create our new columns list.
+	// Column headers come from the root node.
+	if (mRootNode)
+	{
+		nsHTItem* pItem = (nsHTItem*)(mRootNode->GetImplData());
+		nsIContent* pColumnNode = pItem->FindChildWithName("columns");
+		if (pColumnNode)
+		{
+			PRInt32 numChildren;
+			pColumnNode->ChildCount(numChildren);
+			for (PRInt32 i = 0; i < numChildren; i++)
+			{
+				nsIContent* child = nsnull;
+				pContent->ChildAt(i, child);
+				if (child)
+				{
+					// We have a column to add to our array.
+					nsHTColumn* pColumn = new nsHTColumn(child);
+					mColumnArray.AppendElement(pColumn);
+				}
+
+				NS_IF_RELEASE(child);
+			}
+
+			// For now make only the name column visible.
+			mVisibleColumnCount = 1;
+			mTotalColumnCount = mColumnArray.Count();
+		}
+	}
+}
+
+
 PRUint32 nsHTTreeDataModel::GetVisibleColumnCount() const
 {
 	return mVisibleColumnCount;
@@ -97,12 +129,10 @@ PRUint32 nsHTTreeDataModel::GetColumnCount() const
 
 nsTreeColumn* nsHTTreeDataModel::GetNthColumn(PRUint32 n) const
 {
-	if (n == 0)
-		return mSingleColumn;
-	else if (n == 1)
-		return mSecondColumn;
-	else return mThirdColumn;
-}
+	if (n < mTotalColumnCount)
+		return (nsTreeColumn*)mColumnArray[n];
+	else return nsnull;
+}	
 
 void nsHTTreeDataModel::SetVisibleColumnCount(PRUint32 columnCount) 
 {
@@ -111,7 +141,7 @@ void nsHTTreeDataModel::SetVisibleColumnCount(PRUint32 columnCount)
 
 PRUint32 nsHTTreeDataModel::GetControlStripItemCount() const
 {
-	return 3;
+	return 2;
 }
 
 nsTreeControlStripItem* nsHTTreeDataModel::GetNthControlStripItem(PRUint32 n) const

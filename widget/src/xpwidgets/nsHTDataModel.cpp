@@ -28,6 +28,7 @@
 #include "nsIDocument.h"
 #include "nsIContent.h"
 #include "nsVoidArray.h"
+#include "nsIDOMNode.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
@@ -149,4 +150,22 @@ void nsHTDataModel::ImageLoaded(nsHierarchicalDataItem* pItem)
 		// Send it on along. Let the view know what happened.
 		mListener->HandleDataModelEvent(cDMImageLoaded, pItem);
 	}
+}
+
+void nsHTDataModel::GetChildTextForNode(nsIContent* pChildNode, nsString& text)
+{
+	nsIContent* pChild;
+	pChildNode->ChildAt(0, pChild);
+	nsIDOMNode* pTextChild = nsnull;
+
+static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
+
+	if (pChild->QueryInterface(kIDOMNodeIID, (void**)&pTextChild))
+	{
+		pTextChild->GetNodeValue(text);
+		NS_IF_RELEASE(pTextChild);
+	}
+	else text = "null";
+
+	NS_IF_RELEASE(pChild);
 }

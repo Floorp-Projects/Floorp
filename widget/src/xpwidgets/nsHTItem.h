@@ -34,8 +34,7 @@ public:
 	
 public:
 	nsIContent* FindChildWithName(const nsString& name) const; // Caller must release the content ptr.
-	static void GetChildTextForNode(nsIContent* pChildNode, nsString& text);
-
+	
 protected:
 	nsHierarchicalDataModel* mDataModel;
 	nsIContent* mContentNode;

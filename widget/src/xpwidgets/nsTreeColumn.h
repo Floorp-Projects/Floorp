@@ -33,6 +33,7 @@ public:
 	virtual double GetDesiredPercentage() const = 0;
 	virtual PRBool IsSortColumn() const = 0;
 	virtual void GetColumnName(nsString& name) const = 0;
+	virtual void GetColumnDisplayText(nsString& displayText) const = 0;
 
 	// Setters
 	virtual void SetPixelWidth(int newWidth) = 0;

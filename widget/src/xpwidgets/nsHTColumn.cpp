@@ -18,18 +18,23 @@
 
 #include "nspr.h"
 #include "nsString.h"
+#include "nsFont.h"
 #include "nsTreeColumn.h"
 #include "nsHTColumn.h"
+#include "nsIContent.h"
+#include "nsHTDataModel.h"
 
-nsHTColumn::nsHTColumn() : nsTreeColumn()
+nsHTColumn::nsHTColumn(nsIContent* pContent) : nsTreeColumn()
 {
   mPixelWidth = 25;
   mDesiredPercentage = 0.33;
+  mContentNode = pContent;
 }
 
 //--------------------------------------------------------------------
 nsHTColumn::~nsHTColumn()
 {
+	NS_IF_RELEASE(mContentNode);
 }
 
 
@@ -46,7 +51,16 @@ double nsHTColumn::GetDesiredPercentage() const
 
 void nsHTColumn::GetColumnName(nsString& name) const
 {
-	name = "Name";
+	// Need to look at our content node and get its tag name.
+	nsIAtom* pAtom = nsnull;
+	mContentNode->GetTag(pAtom);
+	pAtom->ToString(name);
+	NS_IF_RELEASE(pAtom);
+}
+
+void nsHTColumn::GetColumnDisplayText(nsString& displayText) const
+{
+	nsHTDataModel::GetChildTextForNode(mContentNode, displayText);
 }
 
 PRBool nsHTColumn::IsSortColumn() const

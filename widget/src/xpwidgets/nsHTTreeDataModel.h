@@ -57,7 +57,7 @@ public:
 	// Functions inherited from abstract hierarchical data model should be delegated to our
 	// concrete base class
 	// Setting the Content Root for the tree
-	virtual void SetContentRoot(nsIContent* pContent) { SetContentRootDelegate(pContent); }
+	virtual void SetContentRoot(nsIContent* pContent); 
 	virtual nsHierarchicalDataItem* GetRoot() const { return GetRootDelegate(); }
 	virtual PRUint32 GetFirstVisibleItemIndex() const { return GetFirstVisibleItemIndexDelegate(); };
 	virtual void SetFirstVisibleItemIndex(PRUint32 index) { SetFirstVisibleItemIndexDelegate(index); };
@@ -104,7 +104,7 @@ protected:
 	nsIImage* GetColumnHeaderBGImage() const;
 
 private:
-	nsTreeColumn *mSingleColumn, *mSecondColumn, *mThirdColumn;
+	nsVoidArray mColumnArray;
 	nsTreeControlStripItem *mSingleControlStripItem;
 
 	PRUint32 mVisibleColumnCount;

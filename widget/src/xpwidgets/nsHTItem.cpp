@@ -20,7 +20,6 @@
 #include "nsString.h"
 #include "nsHTItem.h"
 #include "nsIContent.h"
-#include "nsIDOMNode.h"
 
 nsHTItem::nsHTItem(nsIContent* pContent, nsHierarchicalDataModel* pDataModel)
 {
@@ -66,20 +65,3 @@ nsIContent* nsHTItem::FindChildWithName(const nsString& name) const
 	return nsnull;
 }
 
-void nsHTItem::GetChildTextForNode(nsIContent* pChildNode, nsString& text)
-{
-	nsIContent* pChild;
-	pChildNode->ChildAt(0, pChild);
-	nsIDOMNode* pTextChild = nsnull;
-
-static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
-
-	if (pChild->QueryInterface(kIDOMNodeIID, (void**)&pTextChild))
-	{
-		pTextChild->GetNodeValue(text);
-		NS_IF_RELEASE(pTextChild);
-	}
-	else text = "null";
-
-	NS_IF_RELEASE(pChild);
-}

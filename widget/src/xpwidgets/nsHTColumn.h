@@ -21,6 +21,8 @@
 
 #include "nsTreeColumn.h"
 
+class nsIContent;
+
 //------------------------------------------------------------
 // This class functions as the data source for column information (things like
 // width, desired percentage, and sorting).
@@ -29,7 +31,7 @@ class nsHTColumn : public nsTreeColumn
                   
 {
 public:
-    nsHTColumn();
+    nsHTColumn(nsIContent* pContentNode);
     virtual ~nsHTColumn();
 
 	// Inspectors
@@ -37,6 +39,7 @@ public:
 	virtual double GetDesiredPercentage() const;
 	virtual PRBool IsSortColumn() const;
 	virtual void GetColumnName(nsString& name) const;
+	virtual void GetColumnDisplayText(nsString& displayText) const;
 
 	// Setters
 	virtual void SetPixelWidth(int newWidth);
@@ -45,6 +48,8 @@ public:
 protected:
 	int mPixelWidth;
 	double mDesiredPercentage;
+
+	nsIContent* mContentNode;
 };
 
 #endif /* nsHTColumn_h___ */
