@@ -75,10 +75,13 @@ void CImgDlg::OnHelpButton()
 //		Mywnd.MessageBox("hello","hello",MB_OK);
 	CString helpvalue = iniTracker;
 	CString helpvar = helpvalue.Left(6);
+	CString htmlfile ="";
 	if (helpvar.CompareNoCase("Online")== 0)
 	{
 		helpvalue.Delete(0,7);
-		theInterpreter->OpenBrowser((char*)(LPCTSTR)helpvalue);
+//		AfxMessageBox("online",MB_OK);
+		htmlfile = theInterpreter->replaceVars((char*)(LPCTSTR)helpvalue, NULL);
+		theInterpreter->OpenBrowser((char*)(LPCTSTR)htmlfile);
 	}
 	else 
 	{
