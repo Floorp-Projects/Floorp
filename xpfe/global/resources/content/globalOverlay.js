@@ -11,3 +11,22 @@ function goQuitApplication()
 	if ( editorShell )
 		editorShell.Exit();
 }
+
+
+function goNewCardDialog(selectedAB)
+{
+	window.openDialog("chrome://addressbook/content/abNewCardDialog.xul",
+					  "",
+					  "chrome,resizeable=no,modal",
+					  {selectedAB:selectedAB});
+}
+
+
+function goEditCardDialog(abURI, card, okCallback)
+{
+	window.openDialog("chrome://addressbook/content/abEditCardDialog.xul",
+					  "",
+					  "chrome,resizeable=no,modal",
+					  {abURI:abURI, card:card, okCallback:okCallback});
+}
+
