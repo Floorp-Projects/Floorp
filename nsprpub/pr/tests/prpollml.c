@@ -42,6 +42,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define POLL_DESC_COUNT 256  /* This should be greater than the
                               * STACK_POLL_DESC_COUNT macro in
@@ -86,9 +87,30 @@ int main(int argc, char **argv)
 {
     int i;
     PRThread *thread;
+    PRFileDesc *sock;
+    PRNetAddr addr;
 
+    memset(&addr, 0, sizeof(addr));
+    addr.inet.family = PR_AF_INET;
+    addr.inet.port = PR_htons(0);
+    addr.inet.ip = PR_htonl(PR_INADDR_ANY);
     for (i = 0; i < POLL_DESC_COUNT; i++) {
-        pd[i].fd = NULL;
+        sock = PR_NewTCPSocket();
+        if (sock == NULL) {
+            fprintf(stderr, "PR_NewTCPSocket failed\n");
+            exit(1);
+        }
+        if (PR_Bind(sock, &addr) == PR_FAILURE) {
+            fprintf(stderr, "PR_Bind failed\n");
+            exit(1);
+        }
+        if (PR_Listen(sock, 5) == PR_FAILURE) {
+            fprintf(stderr, "PR_Listen failed\n");
+            exit(1);
+        }
+    
+        pd[i].fd = sock;
+        pd[i].in_flags = PR_POLL_READ;
     }
 
     /* first run the test on the primordial thread */
@@ -124,6 +146,12 @@ int main(int argc, char **argv)
     if (PR_JoinThread(thread) == PR_FAILURE) {
         fprintf(stderr, "PR_JoinThread failed\n");
         exit(1);
+    }
+    for (i = 0; i < POLL_DESC_COUNT; i++) {
+        if (PR_Close(pd[i].fd) == PR_FAILURE) {
+            fprintf(stderr, "PR_Close failed\n");
+            exit(1);
+        }
     }
     PR_Cleanup();
     printf("PASS\n");
