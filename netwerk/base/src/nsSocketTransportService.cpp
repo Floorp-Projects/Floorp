@@ -226,6 +226,11 @@ nsresult nsSocketTransportService::ProcessWorkQ(void)
 
     transport = nsSocketTransport::GetInstance(qp);
     PR_REMOVE_AND_INIT_LINK(qp);
+    //
+    // Make sure that the transport is not already on the select list.
+    // It will be added (if necessary) after Process() is called...
+    //
+    RemoveFromSelectList(transport);
 
     // Try to perform the operation...  
     //

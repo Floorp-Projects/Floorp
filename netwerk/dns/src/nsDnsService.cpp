@@ -21,6 +21,7 @@
 #include "nsIRequest.h"
 #include "prnetdb.h"
 
+#include "nsString2.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -111,7 +112,7 @@ nsDNSService::Lookup(nsISupports*    ctxt,
                      nsIDNSListener* listener,
                      nsIRequest*     *DNSRequest)
 {
-    nsresult	rv;
+    nsresult	rv, result;
     PRStatus    status;
     nsHostEnt*  hostentry;
 /*
@@ -137,21 +138,52 @@ nsDNSService::Lookup(nsISupports*    ctxt,
 */
 
     // temporary SYNC version
+    result = NS_OK;
+
     hostentry = new nsHostEnt;
     if (!hostentry)
         return NS_ERROR_OUT_OF_MEMORY;
 
     rv = listener->OnStartLookup(ctxt, hostname);
 	
-	
-    status = PR_GetHostByName(hostname, hostentry->buffer, PR_NETDB_BUF_SIZE, &hostentry->hostEnt);
+    PRBool numeric = PR_TRUE;
+    for (char *hostCheck = mHostName; *hostCheck; hostCheck++) {
+        if (!nsString2::IsDigit(*hostCheck) && (*hostCheck != '.') ) {
+            numeric = PR_FALSE;
+            break;
+        }
+    }
+
+    if (numeric) {
+        PRNetAddr *netAddr = (PRNetAddr*)nsAllocator::Alloc(sizeof(PRNetAddr));
+        status = PR_StringToNetAddr(hostname, netAddr);
+        if (PR_SUCCESS != status) {
+            result = NS_ERROR_UNKNOWN_HOST; // check this!
+        }
+        status = PR_GetHostByAddr(netAddr, 
+                                  hostentry->buffer, 
+                                  PR_NETDB_BUF_SIZE, 
+                                  &hostentry->hostEnt);
+        nsAllocator::Free(netAddr);
+    } else {
+        status = PR_GetHostByName(hostname, 
+                                  hostentry->buffer, 
+                                  PR_NETDB_BUF_SIZE, 
+                                  &hostentry->hostEnt);
+    }
     
-    if (PR_SUCCESS == status)
-        rv = listener->OnFound(ctxt, hostname, hostentry);	// turn ownership of hostentry over to listener?
-    else
-        delete hostentry;
+    if (PR_SUCCESS == status) {
+        rv = listener->OnFound(ctxt, hostname, hostentry);
+        result = NS_OK;
+    }
+    else {
+        result = NS_ERROR_UNKNOWN_HOST;
+    }
+    // XXX: The hostentry should really be reference counted so the 
+    //      listener does not need to copy it...
+    delete hostentry;
 	
-    rv = listener->OnStopLookup(ctxt, hostname);
+    rv = listener->OnStopLookup(ctxt, hostname, result);
 	
     return NS_OK;
 }
