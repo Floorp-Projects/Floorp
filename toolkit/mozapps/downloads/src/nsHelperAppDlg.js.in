@@ -255,30 +255,39 @@ nsUnknownContentTypeDialog.prototype = {
     
     validateLeafName: function (aLocalFile, aLeafName, aFileExt)
     {
-      if (aLeafName == "")
-        aLeafName = "unnamed" + (aFileExt ? "." + aFileExt : "");
-      aLocalFile.append(aLeafName);
-      
-      // Since we're automatically downloading, we don't get the file picker's 
-      // logic to check for existing files, so we need to do that here.
-      //
-      // Note - this code is identical to that in 
-      //   browser/base/content/contentAreaUtils.js. 
-      // If you are updating this code, update that code too! We can't share code
-      // here since this is called in a js component. 
-      while (aLocalFile.exists()) {
-        var parts = /.+-(\d+)(\..*)?$/.exec(aLocalFile.leafName);
-        if (parts) {
-          aLocalFile.leafName = aLocalFile.leafName.replace(/((\d+)\.)|((\d+)$)/,
-                                                            function (str, dot, dotNum, noDot, noDotNum, pos, s) {
-                                                              return (parseInt(str) + 1) + (dot ? "." : "");
-                                                            });
-        }
-        else {
-          aLocalFile.leafName = aLocalFile.leafName.replace(/\.|$/, "-1$&");
+      try {
+        if (aLeafName == "")
+          aLeafName = "unnamed" + (aFileExt ? "." + aFileExt : "");
+        aLocalFile.append(aLeafName);
+        
+        // Since we're automatically downloading, we don't get the file picker's 
+        // logic to check for existing files, so we need to do that here.
+        //
+        // Note - this code is identical to that in 
+        //   browser/base/content/contentAreaUtils.js. 
+        // If you are updating this code, update that code too! We can't share code
+        // here since this is called in a js component. 
+        while (aLocalFile.exists()) {
+          var parts = /.+-(\d+)(\..*)?$/.exec(aLocalFile.leafName);
+          if (parts) {
+            aLocalFile.leafName = aLocalFile.leafName.replace(/((\d+)\.)|((\d+)$)/,
+                                                              function (str, dot, dotNum, noDot, noDotNum, pos, s) {
+                                                                return (parseInt(str) + 1) + (dot ? "." : "");
+                                                              });
+          }
+          else {
+            aLocalFile.leafName = aLocalFile.leafName.replace(/\.|$/, "-1$&");
+          }
         }
       }
-      
+      catch (e) {
+        dump("*** exception in validateLeafName: " + e + "\n");
+        if (aLocalFile.leafName == "" || aLocalFile.isDirectory()) {
+          aLocalFile.append("unnamed");
+          if (aLocalFile.exists())
+            aLocalFile.createUnique(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 0600);
+        }
+      }      
       return aLocalFile;
     },
     
@@ -755,7 +764,7 @@ nsUnknownContentTypeDialog.prototype = {
             // Ensure that we don't overwrite any existing files here. 
             targetFile = this.validateLeafName(targetFile, leafName, null);
           }
-          catch(e) {}
+          catch(e) { }
           
           this.mLauncher.saveToDisk(targetFile, false);
         }
