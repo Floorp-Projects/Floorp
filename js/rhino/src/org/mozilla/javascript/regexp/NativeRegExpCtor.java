@@ -68,7 +68,7 @@ public class NativeRegExpCtor extends NativeFunction {
           {
             return args[0];
         }
-        return construct(cx, parent, args);
+        return construct(cx, scope, args);
     }
 
     public Scriptable construct(Context cx, Scriptable scope, Object[] args)
