@@ -37,7 +37,7 @@
 	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 	xmlns:web="http://home.netscape.com/WEB-rdf#"
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-	width="500" height="300" x="20" y="20" persist="width height x y" align="vertical"
+	width="540" height="340" x="20" y="20" persist="width height x y" align="vertical"
 	windowtype="internetsearch:editor" class="dialog"
 	onload="doLoad()" onunload="doUnload()"
 	>
