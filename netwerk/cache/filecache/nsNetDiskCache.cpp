@@ -192,27 +192,6 @@ nsNetDiskCache::~nsNetDiskCache()
   }
 }
 
-
-nsresult nsNetDiskCache::InitPrefs()
-{
-	nsresult rv;
-	NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
-	if ( NS_FAILED (rv ) )
-		return rv; 
-	rv = prefs->RegisterCallback( CACHE_DIR_PREF, folderChanged, this); 
-	if ( NS_FAILED( rv ) )
-		return rv;
-	
-	rv = prefs->RegisterCallback( CACHE_ENABLE_PREF, enableChanged, this); 
-	if ( NS_FAILED( rv ) )
-		return rv;
-	
-	folderChanged(CACHE_DIR_PREF , this );	
-	enableChanged(CACHE_ENABLE_PREF , this );
-	
-	return rv;
-}
-
 NS_IMETHODIMP nsNetDiskCache::InitCacheFolder()
 {
 
@@ -256,46 +235,22 @@ NS_IMETHODIMP nsNetDiskCache::InitCacheFolder()
 NS_IMETHODIMP
 nsNetDiskCache::Init(void) 
 {
-	nsresult rv =InitPrefs();
-/// Couldn't find a meaningful pref value for the cache location so create one in the users profile	 
-	 if (!mDiskCacheFolder.get() )
-	 {
-		nsCOMPtr<nsIFileSpec> cacheSubDir;
-		rv = NS_NewFileSpec(getter_AddRefs(cacheSubDir));
-		if(NS_FAILED(rv))
-	      return rv ;
-	    nsCOMPtr<nsIFileSpec> spec( dont_AddRef(  NS_LocateFileOrDirectory(nsSpecialFileSpec::App_UserProfileDirectory50) ));
-	    
-	   	rv = cacheSubDir->FromFileSpec(spec) ;
-	    if(NS_FAILED(rv))
-	      return rv ;
-		
-		rv = cacheSubDir->AppendRelativeUnixPath("Cache") ;
-		if(NS_FAILED(rv))
-	      return rv ;
-	  
-	 	// This is really wrong and should be fixed when the pref code is update
-		// If someone has a system where path names are not unique they are going to
-		// be in a world of hurt.
+	nsresult rv;
+	NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+	if ( NS_FAILED (rv ) )
+		return rv; 
+	rv = prefs->RegisterCallback( CACHE_DIR_PREF, folderChanged, this); 
+	if ( NS_FAILED( rv ) )
+		return rv;
 	
-		nsCOMPtr<nsILocalFile> cacheFolder;
-		char* path;
-		cacheSubDir->GetNativePath(& path );
-		rv = NS_NewLocalFile( path, getter_AddRefs(cacheFolder));
-		nsAllocator::Free( path );
-		
-		PRBool exists;
-		if ( NS_SUCCEEDED( cacheFolder->Exists(&exists ) ) && !exists)
-		{
-				rv = cacheFolder->Create( nsIFile::DIRECTORY_TYPE, PR_IRWXU );
-				if ( NS_FAILED( rv ) ) 
-					return rv;
-		}
-		
-		mDiskCacheFolder = cacheFolder;
-		rv =InitCacheFolder();
-	}
-  return rv;
+	rv = prefs->RegisterCallback( CACHE_ENABLE_PREF, enableChanged, this); 
+	if ( NS_FAILED( rv ) )
+		return rv;
+	
+	folderChanged(CACHE_DIR_PREF , this );	
+	enableChanged(CACHE_ENABLE_PREF , this );
+	
+	return rv;
 }
 
 NS_IMETHODIMP
@@ -312,7 +267,7 @@ nsNetDiskCache::InitDB(void)
 		PRBool exists;
 		if ( NS_SUCCEEDED( mDBFile->Exists(&exists ) ) && !exists)
 		{
-			mDBFile->Create( nsIFile::NORMAL_FILE_TYPE, PR_IRWXU );
+			mDBFile->Create( nsIFile::NORMAL_FILE_TYPE, PR_IRUSR | PR_IWUSR );
 		}
 	#endif
   rv = mDB->Init(mDBFile) ;
@@ -668,7 +623,7 @@ nsNetDiskCache::CreateDir(nsIFile* dir_spec)
   		return rv;
   }
   
-  rv = dir_spec->Create( nsIFile::DIRECTORY_TYPE, PR_IRWXU) ;  
+  rv = dir_spec->Create( nsIFile::DIRECTORY_TYPE, PR_IRUSR | PR_IWUSR) ;  
   return rv ;
 }
 

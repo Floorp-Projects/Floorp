@@ -66,7 +66,6 @@ class nsNetDiskCache : public nsINetDataDiskCache {
   NS_IMETHOD DBRecovery(void) ;
 
   private:
-  nsresult InitPrefs();
   NS_IMETHODIMP InitCacheFolder();
 		
   PRBool 			                mEnabled ;
