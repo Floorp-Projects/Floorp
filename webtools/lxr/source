@@ -1,5 +1,5 @@
 #!/usr/bonsaitools/bin/perl
-# $Id: source,v 1.2 1998/06/15 21:51:41 jwz Exp $
+# $Id: source,v 1.3 1998/06/15 22:18:06 jwz Exp $
 
 # source --	Present sourcecode as html, complete with references
 #
@@ -118,12 +118,20 @@ sub filename {
 sub filesize {
     my $templ = shift;
     my $s = (-s $Path->{'real'}.$filename);
-
+    my $str;
+    if ($s < 1<<10) {
+	$str = "$s";
+    } else {
+#	if ($s < 1<<20) {
+	    $str = ($s>>10) . "k";
+#	} else {
+#	    $str = ($s>>20) . "M";
+#	}
+    }
     return(&expandtemplate($templ,
-			   ('bytes',	sub {return($s)}),
-			   ('kbytes',	sub {return(($s>>10)."k")}),
-#			   ('kbytes',	sub {return($s/1024)}),
-			   ('mbytes',	sub {return($s/1048576)})
+			   ('bytes',	sub {return($str)}),
+			   ('kbytes',	sub {return($str)}),
+			   ('mbytes',	sub {return($str)})
 			   ));
 }
 
