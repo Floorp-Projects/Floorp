@@ -1825,6 +1825,27 @@ PR_GetLibraryFilePathname(const char *name, PRFuncPtr addr)
         strcpy(result, module_name);
     }
     return result;
+#elif defined(XP_OS2)
+    HMODULE module = NULL;
+    char module_name[_MAX_PATH];
+    char *result;
+    APIRET ulrc = DosQueryModFromEIP(&module, NULL, 0, NULL, NULL, (ULONG) addr);
+    if ((NO_ERROR != ulrc) || (NULL == module) ) {
+        PR_SetError(PR_LIBRARY_NOT_LOADED_ERROR, _MD_ERRNO());
+        DLLErrorInternal(_MD_ERRNO());
+        return NULL;
+    }
+    ulrc = DosQueryModuleName(module, sizeof module_name, module_name);
+    if (NO_ERROR != ulrc) {
+        /* should not happen */
+        _PR_MD_MAP_DEFAULT_ERROR(_MD_ERRNO());
+        return NULL;
+    }
+    result = PR_Malloc(strlen(module_name)+1);
+    if (result != NULL) {
+        strcpy(result, module_name);
+    }
+    return result;
 #else
     PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
     return NULL;
