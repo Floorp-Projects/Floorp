@@ -1835,14 +1835,6 @@ InMemoryDataSource::GetAllResources(nsISimpleEnumerator** aResult)
 }
 
 NS_IMETHODIMP
-InMemoryDataSource::GetAllCommands(nsIRDFResource* source,
-                                   nsIEnumerator/*<nsIRDFResource>*/** commands)
-{
-    NS_NOTYETIMPLEMENTED("write me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 InMemoryDataSource::GetAllCmds(nsIRDFResource* source,
                                nsISimpleEnumerator/*<nsIRDFResource>*/** commands)
 {
