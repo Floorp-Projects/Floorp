@@ -17,5 +17,7 @@ extern "C" __declspec(dllimport) void CopyDirectory(CString source, CString dest
 extern "C" __declspec(dllimport) void EraseDirectory(CString sPath);
 __declspec(dllimport) CString SearchDirectory(CString dirPath, BOOL subDir, CString searchStr);
 extern "C" __declspec(dllimport) void CreateDirectories(CString instblobPath);
+__declspec(dllexport) CString GetLocaleCode(CString localeName);
+__declspec(dllexport) CString GetLocaleName(CString localeCode);
 __declspec(dllimport) CString GetModulePath();
 

@@ -475,6 +475,32 @@ void CInterpret::GenerateList(CString action, WIDGET* curWidget, CString parentD
 	fileList.Close();
 }
 
+void CInterpret::GenerateLocaleNameList(WIDGET *curWidget, CString parentDirPath)
+{
+	// Generate the list of all subdirectories in parent directory
+	// and display the corresponing pretty locale name
+	CFileFind fileList;
+	CString tmpFile; 
+	int i = 0;
+	BOOL dirFound = fileList.FindFile(parentDirPath);
+	
+	while (dirFound)
+	{
+		dirFound = fileList.FindNextFile();
+		tmpFile  = fileList.GetFileName();
+
+		if (fileList.IsDirectory() && !(tmpFile == "." || tmpFile == "..")) 
+		{
+			CString localeName = GetLocaleName(tmpFile);
+			curWidget->options.value[i] = new char[localeName.GetLength()+1];
+			strcpy(curWidget->options.value[i], (char *)(LPCTSTR) localeName);
+			i++;
+		}
+	}
+	curWidget->numOfOptions = i;
+	fileList.Close();
+}
+
 CString CInterpret::replaceVars(CString str, char *listval)
 {
 	char *theStr = (char *) (LPCTSTR) str;
@@ -1140,6 +1166,29 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 				{
 					CString p2path = replaceVars(p2,NULL);
 					GenerateList(pcmd, w, p2path);
+				}
+			}
+			else if (strcmp(pcmd, "GenerateLocaleNameList") == 0)
+			{
+				// Generate the list of all subdirectories in the specified
+				// path and display the pretty locale names of the directories
+				// in the widget
+				char *p2 = strchr(parms, ',');
+
+				if (p2)
+					*p2++ = '\0';
+				CString value = replaceVars(parms, NULL);
+
+				WIDGET *w;
+				if (strcmp(parms, "self") == 0)
+					w = curWidget;
+				else
+					w = findWidget(parms);
+
+				if (w)
+				{
+					CString parentDirPath = replaceVars(p2,NULL);
+					GenerateLocaleNameList(w, parentDirPath);
 				}
 			}
 			else if (strcmp(pcmd, "CreateDirs") == 0)

@@ -142,7 +142,7 @@ int GenerateComponentList(CString parms, WIDGET *curWidget)
 	nscpxpiPath;
 	CString curVersion  = GetGlobal("Version");
 	CString curPlatform = GetGlobal("lPlatform");
-	CString curLanguage = GetGlobal("Language");
+	CString curLanguage = GetLocaleCode(GetGlobal("Language"));
 	CString localePath  = rootPath+"Version\\"+curVersion+"\\"+curPlatform+"\\"+curLanguage;
 
 	if (SearchPath(workspacePath, "NSCPXPI", NULL, 0, NULL, NULL))

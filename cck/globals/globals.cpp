@@ -2,6 +2,7 @@
 #include "WizardTypes.h"
 #include "winbase.h"  // for CopyDir
 #include <direct.h>
+#include <fstream.h>
 
 __declspec(dllexport) WIDGET GlobalWidgetArray[1000];
 __declspec(dllexport) int GlobalArrayIndex=0;
@@ -354,6 +355,101 @@ void PopulateNscpxpi(CString rootPath, CString platformInfo,
 			nscpxpiPath + "\\config.ini" + quotes;
 		ExecuteCommand((char *)(LPCTSTR) command, SW_HIDE, INFINITE);
 	}
+}
+
+__declspec(dllexport)
+CString GetLocaleName(CString localeCode)
+{
+	/*
+	Gets the pretty locale name given the locale code
+	Reads the browser region.properties and language.properties files to 
+	get the pretty region name and pretty language name respectively and 
+	finally returns the pretty locale name
+	For example, return 'English-United States (enus)' given 'enus'
+	*/
+
+	CString rootPath, languageFile, regionFile, langCode, regCode,
+			langName,regName, localeName;
+	int langlen, reglen;
+	char buffer[MIN_SIZE];
+	
+	rootPath = GetGlobal("Root");
+	strVersion = GetGlobal("Version");
+	languageFile = rootPath + "Version\\"+strVersion+"\\Windows\\enus\\"
+		"languageNames.properties";
+	regionFile = rootPath + "Version\\"+strVersion+"\\Windows\\enus\\"
+		"regionNames.properties";
+	ifstream languageNames(languageFile);
+	ifstream regionNames(regionFile);
+
+	langCode = (localeCode.Left(2)) + " = ";
+	langlen = langCode.GetLength();
+	regCode = (localeCode.Right(2)) + "\t=\t";
+	reglen = regCode.GetLength();
+
+	if (!languageNames)
+	{
+		AfxMessageBox("Cannot open file", MB_OK);
+		languageNames.close();
+		return "";
+	}
+	while (!languageNames.eof()) 
+	{
+		languageNames.getline(buffer,sizeof(buffer));
+		CString tempstr = buffer;
+		int templen = tempstr.GetLength();
+		if ((tempstr.Find(langCode)) != -1)
+		{
+			langName = tempstr.Right(templen-langlen);
+			break;
+		}
+	}
+	
+	if (!regionNames)
+	{
+		AfxMessageBox("Cannot open file", MB_OK);
+		languageNames.close();
+		regionNames.close();
+		return "";
+	}
+	while (!regionNames.eof()) 
+	{
+		regionNames.getline(buffer,sizeof(buffer));
+		CString tempstr = buffer;
+		int templen = tempstr.GetLength();
+		if ((tempstr.Find(regCode)) != -1)
+		{
+			regName = tempstr.Right(templen-reglen);
+			break;
+		}
+	}
+
+	if ((regName.IsEmpty()) && (!langName.IsEmpty()))
+		localeName = langName + " (" + localeCode + ")";
+	else if ((!regName.IsEmpty()) && (langName.IsEmpty()))
+		localeName = regName + " (" + localeCode + ")";
+	else if ((regName.IsEmpty()) && (langName.IsEmpty()))
+		localeName = "(" + localeCode + ")";
+	else
+		localeName = langName + "-" + regName + " (" + localeCode + ")";
+
+	languageNames.close();
+	regionNames.close();
+
+	return localeName;
+}
+
+__declspec(dllexport)
+CString GetLocaleCode(CString localeName)
+{
+	// Get the locale code given the pretty locale name
+	// For example, return 'enus' given 'English-United States (enus)'
+	int pos = localeName.Find("(");
+	int localelen = localeName.GetLength();
+	CString localeCode = localeName.Right(localelen-pos-1);
+	localeCode.Remove(')');
+
+	return localeCode;
 }
 
 __declspec(dllexport)

@@ -41,6 +41,7 @@ public:
 	BOOL BrowseFile(WIDGET *curWidget);
 	CString BrowseDir(WIDGET *curWidget);
 	void GenerateList(CString action, WIDGET* curWidget, CString ext);
+	void GenerateLocaleNameList(WIDGET *curWidget, CString parentDirPath);
 	BOOL Progress();  // Not actually used right now
 	BOOL ShowSection(WIDGET *curWidget);
 	BOOL IterateListBox(char *parms);
