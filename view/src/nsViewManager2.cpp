@@ -118,6 +118,7 @@ PRInt32 nsViewManager2::mVMCount = 0;
 nsDrawingSurface nsViewManager2::mDrawingSurface = nsnull;
 nsRect nsViewManager2::mDSBounds = nsRect(0, 0, 0, 0);
 
+nsIRenderingContext* nsViewManager2::gCleanupContext = nsnull;
 nsDrawingSurface nsViewManager2::gOffScreen = nsnull;
 nsDrawingSurface nsViewManager2::gRed = nsnull;
 nsDrawingSurface nsViewManager2::gBlue = nsnull;
@@ -135,10 +136,18 @@ nsViewManager2::nsViewManager2()
 {
 	NS_INIT_REFCNT();
 
-  if (mVMCount == 0) {
-    //Create a vector to hold each view manager
+  if (gViewManagers == nsnull) {
+    NS_ASSERTION(mVMCount == 0, "View Manager count is incorrect");
+    // Create an array to hold a list of view managers
     gViewManagers = new nsVoidArray;
   }
+
+  if (gCleanupContext == nsnull) {
+    nsComponentManager::CreateInstance(kRenderingContextCID, 
+    nsnull, NS_GET_IID(nsIRenderingContext), (void**)&gCleanupContext);
+    NS_ASSERTION(gCleanupContext != nsnull, "Wasn't able to create a graphics context for cleanup");
+  }
+
   gViewManagers->AppendElement(this);
 
 	mVMCount++;
@@ -168,41 +177,48 @@ nsViewManager2::~nsViewManager2()
   PRBool removed = gViewManagers->RemoveElement(this);
   NS_ASSERTION(removed, "Viewmanager instance not was not in the global list of viewmanagers");
 
-	if ((0 == mVMCount) &&
-		((nsnull != mDrawingSurface) || (nsnull != gOffScreen) ||
-		 (nsnull != gRed) || (nsnull != gBlue)))
-		{
+  if (0 == mVMCount) {
+      // There aren't any more view managers so
+      // release the global array of view managers
+   
+      NS_ASSERTION(gViewManagers != nsnull, "About to delete null gViewManagers");
       delete gViewManagers;
       gViewManagers = nsnull;
 
-			nsCOMPtr<nsIRenderingContext> rc;
-			nsresult rv = nsComponentManager::CreateInstance(kRenderingContextCID, 
-															 nsnull, 
-															 NS_GET_IID(nsIRenderingContext), 
-															 getter_AddRefs(rc));
+      // Cleanup all of the offscreen drawing surfaces if the last view manager
+      // has been destroyed and there is something to cleanup
 
-			if (NS_OK == rv)
-				{
-					if (nsnull != mDrawingSurface)
-						rc->DestroyDrawingSurface(mDrawingSurface);
+      // Note: A global rendering context is needed because it is not possible 
+      // to create a nsIRenderingContext during the shutdown of XPCOM. The last
+      // viewmanager is typically destroyed during XPCOM shutdown.
 
-					if (nsnull != gOffScreen)
-						rc->DestroyDrawingSurface(gOffScreen);
+      if (gCleanupContext) {
+        if (nsnull != mDrawingSurface)
+          gCleanupContext->DestroyDrawingSurface(mDrawingSurface);
 
-					if (nsnull != gRed)
-						rc->DestroyDrawingSurface(gRed);
+        if (nsnull != gOffScreen)
+          gCleanupContext->DestroyDrawingSurface(gOffScreen);
 
-					if (nsnull != gBlue)
-						rc->DestroyDrawingSurface(gBlue);
-				}
-    
-			mDrawingSurface = nsnull;
-			gOffScreen = nsnull;
-			gRed = nsnull;
-			gBlue = nsnull;
-			gBlendSize.SizeTo(0, 0);
-			gOffScreenSize.SizeTo(0, 0);
-		}
+        if (nsnull != gRed)
+          gCleanupContext->DestroyDrawingSurface(gRed);
+
+        if (nsnull != gBlue)
+          gCleanupContext->DestroyDrawingSurface(gBlue);
+
+      } else {
+        NS_ASSERTION(PR_FALSE, "Cleanup of drawing surfaces + offscreen buffer failed");
+      }
+
+      mDrawingSurface = nsnull;
+      gOffScreen = nsnull;
+      gRed = nsnull;
+      gBlue = nsnull;
+      gBlendSize.SizeTo(0, 0);
+      gOffScreenSize.SizeTo(0, 0);
+
+      NS_IF_RELEASE(gCleanupContext);
+  }
+
 
 	mObserver = nsnull;
 	mContext = nsnull;
