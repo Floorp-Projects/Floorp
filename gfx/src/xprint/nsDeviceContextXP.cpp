@@ -22,19 +22,11 @@
  *   Bradley Baetz <bbaetz@cs.mcgill.ca>
  */
  
-#include <strings.h>
-#include <unistd.h>
-#include <X11/Xatom.h>
-
 #include "nsDeviceContextXP.h"
 #include "nsRenderingContextXlib.h"
-#include "nsString.h"
 #include "nsFontMetricsXlib.h"
-#include "xlibrgb.h"
-#include "X11/Xatom.h"
 #include "nsIDeviceContext.h"
 #include "nsIDeviceContextSpecXPrint.h"
-#include "nsString.h"
 #include "nspr.h"
 #include "nsXPrintContext.h"
 
@@ -46,8 +38,8 @@ static PRLogModuleInfo *nsDeviceContextXpLM = PR_NewLogModule("nsDeviceContextXp
  *  See documentation in nsIDeviceContext.h
  */
 nsDeviceContextXp :: nsDeviceContextXp()
-{
-  NS_INIT_REFCNT();
+ : DeviceContextImpl()
+{ 
   mPrintContext        = nsnull;
   mSpec                = nsnull; 
   mParentDeviceContext = nsnull;
@@ -59,7 +51,7 @@ nsDeviceContextXp :: nsDeviceContextXp()
  */
 nsDeviceContextXp :: ~nsDeviceContextXp() 
 { 
-  NS_IF_RELEASE(mParentDeviceContext);
+  DestroyXPContext();
 }
 
 
@@ -74,7 +66,7 @@ nsDeviceContextXp :: SetSpec(nsIDeviceContextSpec* aSpec)
 
   mSpec = aSpec;
 
-  if(mPrintContext) delete mPrintContext; // we cannot reuse that...
+  if(mPrintContext) DestroyXPContext(); // we cannot reuse that...
     
   mPrintContext = new nsXPrintContext();
   xpSpec = do_QueryInterface(mSpec);
@@ -120,9 +112,8 @@ nsDeviceContextXp::InitDeviceContextXP(nsIDeviceContext *aCreatingDeviceContext,
   mAppUnitsToDevUnits = (a2d / t2d) * mTwipsToPixels;
   mDevUnitsToAppUnits = 1.0f / mAppUnitsToDevUnits;
 
+  NS_ASSERTION(aParentContext, "aCreatingDeviceContext cannot be NULL!!!");
   mParentDeviceContext = aParentContext;
-  NS_ASSERTION(mParentDeviceContext, "aCreatingDeviceContext cannot be NULL!!!");
-  NS_ADDREF(mParentDeviceContext);
 
   /* be sure we've cleaned-up old rubbish - new values will re-populate nsFontMetricsXlib soon... */
   nsFontMetricsXlib::FreeGlobals();
@@ -192,9 +183,6 @@ NS_IMETHODIMP nsDeviceContextXp :: GetDrawingSurface(nsIRenderingContext &aConte
  */
 NS_IMETHODIMP nsDeviceContextXp :: CheckFontExistence(const nsString& aFontName)
 {
-  PR_LOG(nsDeviceContextXpLM, PR_LOG_DEBUG, 
-         ("nsDeviceContextXp::CheckFontExistence('%s')\n", 
-          NS_ConvertUCS2toUTF8(aFontName).get()));
   return nsFontMetricsXlib::FamilyExists(aFontName);
 }
 
@@ -264,21 +252,15 @@ NS_IMETHODIMP nsDeviceContextXp::BeginDocument(PRUnichar * aTitle)
   return rv;
 }
 
-/** ---------------------------------------------------
- *  See documentation in nsIDeviceContext.h
- */
-NS_IMETHODIMP nsDeviceContextXp::EndDocument(void)
+
+void nsDeviceContextXp::DestroyXPContext()
 {
-  PR_LOG(nsDeviceContextXpLM, PR_LOG_DEBUG, ("nsDeviceContextXp::EndDocument()\n"));
-  nsresult  rv = NS_OK;
-  if (mPrintContext != nsnull) {
-    rv = mPrintContext->EndDocument();
-    
-    // gisburn: mPrintContext cannot be reused between to print 
-    // tasks as the destination print server may be a different one 
-    // or the printer used on the same print server has other 
-    // properties (build-in fonts for example ) than the printer 
-    // previously used
+  if (mPrintContext != nsnull) {   
+    /* gisburn: mPrintContext cannot be reused between to print 
+     * tasks as the destination print server may be a different one 
+     * or the printer used on the same print server has other 
+     * properties (build-in fonts for example ) than the printer 
+     * previously used. */
     FlushFontCache();           
     nsRenderingContextXlib::Shutdown();
     nsFontMetricsXlib::FreeGlobals();
@@ -286,6 +268,20 @@ NS_IMETHODIMP nsDeviceContextXp::EndDocument(void)
     delete mPrintContext;
     mPrintContext = nsnull;
   } 
+}
+
+/** ---------------------------------------------------
+ *  See documentation in nsIDeviceContext.h
+ */
+NS_IMETHODIMP nsDeviceContextXp::EndDocument(void)
+{
+  PR_LOG(nsDeviceContextXpLM, PR_LOG_DEBUG, ("nsDeviceContextXp::EndDocument()\n"));
+  nsresult rv = NS_OK;
+
+  if (mPrintContext != nsnull) {
+    rv = mPrintContext->EndDocument();
+    DestroyXPContext();
+  }
   
   return rv;
 }

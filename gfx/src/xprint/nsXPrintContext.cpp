@@ -30,8 +30,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
-#include <string.h> /* for strerror & memset& memset  */
-#include "xlibrgb.h"
+#include <string.h> /* for strerror & memset */
+#include "imgScaler.h"
 #include "nsXPrintContext.h"
 #include "nsDeviceContextXP.h"
 #include "xprintutil.h"
@@ -164,7 +164,7 @@ nsXPrintContext::Init(nsDeviceContextXp *dc, nsIDeviceContextSpecXp *aSpec)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsXPrintContext::SetupWindow(int x, int y, int width, int height)
 {
   PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG,
@@ -210,7 +210,7 @@ nsXPrintContext::SetupWindow(int x, int y, int width, int height)
 }
 
 
-NS_IMETHODIMP
+nsresult
 nsXPrintContext::SetupPrintContext(nsIDeviceContextSpecXp *aSpec)
 {
   PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("nsXPrintContext::SetupPrintContext()\n"));
@@ -257,7 +257,7 @@ nsXPrintContext::SetupPrintContext(nsIDeviceContextSpecXp *aSpec)
    * shared memory transport is used XCloseDisplay() tries to free() the 
    * shared memory segment - causing heap corruption and/or SEGV.
    */
-  putenv("XSUNTRANSPORT=xxx");
+  putenv((char *)"XSUNTRANSPORT=xxx");
      
   /* get printer, either by "name" (foobar) or "name@display" (foobar@gaja:5)
    * ToDo: report error to user (dialog)
@@ -306,7 +306,7 @@ nsXPrintContext::SetupPrintContext(nsIDeviceContextSpecXp *aSpec)
  * and *.UTF-8 locales...
  */
 static 
-const char *MyConvertUCS2ToLocalEncoding( PRUnichar *str )
+char *MyConvertUCS2ToLocalEncoding( PRUnichar *str )
 {
   /* Use strdup() to avoid any silly effects... 
    */
@@ -323,9 +323,9 @@ nsXPrintContext::BeginDocument( PRUnichar *aTitle )
        *job_title;
        
   if( aTitle != nsnull )
-    job_title = s = (char *)MyConvertUCS2ToLocalEncoding(aTitle); 
+    job_title = s = MyConvertUCS2ToLocalEncoding(aTitle); 
   else
-    job_title = "Mozilla document without title";  
+    job_title = (char *)"Mozilla document without title";  
 
   PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("nsXPrintContext::BeginDocument: document title: '%s'\n", XPU_NULLXSTR(job_title)));
   
@@ -402,67 +402,97 @@ nsXPrintContext::EndDocument()
 }
 
 static
-XImage *
-GetScaledXImage(XImage *img,
-                double factorX, double factorY,
-                unsigned short aSWidth,  unsigned short aSHeight,
-                unsigned short newWidth, unsigned short newHeight)
+PRUint8 *ComposeAlphaImage(
+               PRUint8 *alphaBits, PRInt32  alphaRowBytes, PRUint8 alphaDepth,
+               PRUint8 *image_bits, PRInt32  row_bytes,
+               PRInt32 aWidth, PRInt32 aHeight)
 {
-  XImage         *newImg;
-  unsigned short  dx, dy, sx, sy;
+  PRUint8 *composed_bits; /* composed image */
+  if (!(composed_bits = (PRUint8 *)PR_Malloc(aHeight * row_bytes)))
+    return nsnull;
+
+/* unfortunately this code does not work for some strange reason ... */
+#ifdef XPRINT_NOT_NOW
+  XGCValues gcv;
+  memset(&gcv, 0, sizeof(XGCValues)); /* this may be unneccesary */
+  XGetGCValues(mPDisplay, *xgc, GCForeground, &gcv);
   
-  if ((newImg = (XImage *)malloc(sizeof(XImage))) == nsnull)
-    return nsnull;
-
-  /* this is _evil_ code... I don't know how to make it better... ;-(( */
-  memset(newImg, 0, sizeof(XImage));
-  newImg->width            = newWidth;
-  newImg->height           = newHeight;
-  newImg->format           = img->format;
-  newImg->byte_order       = img->byte_order;
-  newImg->bitmap_unit      = img->bitmap_unit;
-  newImg->bitmap_bit_order = img->bitmap_bit_order;
-  newImg->bitmap_pad       = img->bitmap_pad;
-  newImg->depth            = img->depth;
-  newImg->bits_per_pixel   = img->bits_per_pixel;
-  newImg->xoffset          = 0;
-  newImg->depth            = img->depth;
-  newImg->data             = nsnull;
-  newImg->bytes_per_line   = 0; /* XInitImage() will calculate the correct value */
-  if(!XInitImage(newImg))
-  {
-    PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("GetScaledXImage: XInitImage() failure\n"));
-    XDestroyImage(newImg);
-    return nsnull;
-  }
-
-  newImg->data = (char *)malloc((newHeight * newImg->bytes_per_line)+16); 
-
-  if (!newImg->data) {
-    XDestroyImage(newImg);
-    return nsnull;
-  }
+  /* should be replaced by xxlibrgb_query_color() */
+  XColor color;
+  color.pixel = gcv.foreground;
+  XQueryColor(mPDisplay, xxlib_rgb_get_cmap(mXlibRgbHandle), &color);
   
-  for(dx = 0 ; dx < newWidth ; dx++)
-  {
-    sx = dx * factorX;
-    for(dy = 0 ; dy < newHeight ; dy++) 
-    {
-      sy = dy * factorY;
-#ifdef XPRINT_USE_SLOW_BUT_EASY_CODE      
-      XPutPixel(newImg, dx, dy, XGetPixel(img, sx, sy));
+  unsigned long background = NS_RGB(color.red>>8, color.green>>8, color.blue>>8);
 #else
-      /* quick&dirty - but this is still legal because XInitImage() has 
-       * initalized the function pointers
-       * This shortcut avoids tons of test in XGetPixel()/XPutPixel() 
-       * which are not neccesary here...
-       */
-      (*newImg->f.put_pixel)(newImg, dx, dy, (*img->f.get_pixel)(img, sx, sy));  
-#endif /* XPRINT_USE_SLOW_BUT_EASY_CODE */
-    }
+  unsigned long background = NS_RGB(0xFF,0xFF,0xFF); /* white! */
+#endif /* XPRINT_NOT_NOW */
+  long x, y;
+    
+  switch(alphaDepth)
+  {
+    case 1:
+    {
+#define NS_GET_BIT(rowptr, x) (rowptr[(x)>>3] &  (1<<(7-(x)&0x7)))
+        unsigned short r = NS_GET_R(background),
+                       g = NS_GET_R(background),
+                       b = NS_GET_R(background);
+                     
+        for(y = 0 ; y < aHeight ; y++)
+        {
+          unsigned char *imageRow  = image_bits    + y * row_bytes;
+          unsigned char *destRow   = composed_bits + y * row_bytes;
+          unsigned char *alphaRow  = alphaBits     + y * alphaRowBytes;
+          for(x = 0 ; x < aWidth ; x++)
+          {
+            if(NS_GET_BIT(alphaRow, x))
+            {
+              /* copy src color */
+              destRow[3*x  ] = imageRow[3*x  ];
+              destRow[3*x+1] = imageRow[3*x+1];
+              destRow[3*x+2] = imageRow[3*x+2];
+            }
+            else
+            {
+              /* copy background color (e.g. pixel is "transparent") */
+              destRow[3*x  ] = r;
+              destRow[3*x+1] = g;
+              destRow[3*x+2] = b;
+            }
+          }
+        }        
+    }  
+        break;
+    case 8:
+    {
+        unsigned short r = NS_GET_R(background),
+                       g = NS_GET_R(background),
+                       b = NS_GET_R(background);
+        
+        for(y = 0 ; y < aHeight ; y++)
+        {
+          unsigned char *imageRow  = image_bits    + y * row_bytes;
+          unsigned char *destRow   = composed_bits + y * row_bytes;
+          unsigned char *alphaRow  = alphaBits     + y * alphaRowBytes;
+          for(x = 0 ; x < aWidth ; x++)
+          {
+            unsigned short alpha = alphaRow[x];
+            MOZ_BLEND(destRow[3*x  ], r, imageRow[3*x  ], alpha);
+            MOZ_BLEND(destRow[3*x+1], g, imageRow[3*x+1], alpha);
+            MOZ_BLEND(destRow[3*x+2], b, imageRow[3*x+2], alpha);
+          }
+        }
+    }  
+        break;
+    default:
+    {
+        NS_WARNING("alpha depth x not supported");
+        PR_Free(composed_bits);
+        return nsnull;
+    }  
+        break;
   }
   
-  return newImg;
+  return composed_bits;      
 }
 
 
@@ -491,8 +521,10 @@ nsXPrintContext::DrawImage(xGC *xgc, nsIImage *aImage,
       (aSWidth == 0)   || (aSHeight == 0) ||
       (aDWidth == 0)   || (aDHeight == 0) )
   {
-    PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG,
-          ("nsXPrintContext::DrawImage(): Image with zero source||dest width||height supressed\n"));
+    NS_ASSERTION((aSrcWidth != 0) && (aSrcHeight != 0) &&
+      (aSWidth != 0)   && (aSHeight != 0) ||
+      (aDWidth != 0)   && (aDHeight != 0), 
+      "nsXPrintContext::DrawImage(): Image with zero source||dest width||height supressed\n");
     return NS_OK;
   }
 
@@ -553,157 +585,68 @@ nsXPrintContext::DrawImageBitsScaled(xGC *xgc, nsIImage *aImage,
 
   nsresult rv = NS_OK;
   
+  if (aDWidth==0 || aDHeight==0)
+  {
+    NS_ASSERTION((aDWidth==0 || aDHeight==0), 
+                 "nsXPrintContext::DrawImageBitsScaled(): Image with zero dest width||height supressed\n");
+    return NS_OK;
+  }
+  
   PRUint8 *image_bits    = aImage->GetBits();
   PRInt32  row_bytes     = aImage->GetLineStride();
+  PRUint8  imageDepth    = 24; /* R8G8B8 packed. Thanks to "tor" for that hint... */
   PRUint8 *alphaBits     = aImage->GetAlphaBits();
   PRInt32  alphaRowBytes = aImage->GetAlphaLineStride();
-  
-  XImage *srcImg        = nsnull;
-  XImage *srcAlphaImg   = nsnull;
-  XImage *subImg        = nsnull;
-  XImage *subAlphaImg   = nsnull;
-  XImage *dstImg        = nsnull;
-  XImage *dstAlphaImg   = nsnull;
+  int      alphaDepth    = aImage->GetAlphaDepth();
+  PRInt32  aSrcWidth     = aImage->GetWidth();
+  PRInt32  aSrcHeight    = aImage->GetHeight();
+  PRUint8 *composed_bits = nsnull;
+
+  // Use client-side alpha image composing - plain X11 can only do 1bit alpha 
+  // stuff - this method adds 8bit alpha support, too...
+  if( alphaBits != nsnull )
+  {
+    composed_bits = ComposeAlphaImage(alphaBits, alphaRowBytes, alphaDepth,
+                                      image_bits, row_bytes,
+                                      aSrcWidth, aSrcHeight);
+    if (!composed_bits)
+      return NS_ERROR_FAILURE;
+    image_bits = composed_bits;
+    alphaBits = nsnull; /* ComposeAlphaImage() handled the alpha channel. 
+                         * Once we enable XPRINT_SERVER_SIDE_ALPHA_COMPOSING 
+                         * we have to send the alpha data to the server
+                         * instead of processing them locally (e.g. on 
+                         * the client-side).
+                         */
+  }
+
+#define ROUNDUP(nbytes, pad) ((((nbytes) + ((pad)-1)) / (pad)) * ((pad)>>3))
+
+  PRInt32  srcimg_bytes_per_line = row_bytes;
+  PRInt32  dstimg_bytes_per_line = ROUNDUP((imageDepth * aDWidth), 32);
+  PRUint8 *srcimg_data           = image_bits;
+  PRUint8 *dstimg_data           = (PRUint8 *)PR_Malloc((aDHeight+1) * dstimg_bytes_per_line); 
+  if (!dstimg_data)
+    return NS_ERROR_FAILURE;
+
+  RectStretch(aSX, aSY, aSX+aSWidth-1, aSY+aSHeight-1,
+              0, 0, (aDWidth-1), (aDHeight-1),
+              srcimg_data, srcimg_bytes_per_line,
+              dstimg_data, dstimg_bytes_per_line,
+              imageDepth);
+
+#ifdef XPRINT_SERVER_SIDE_ALPHA_COMPOSING
+/* ToDo: scale alpha image */
+#endif /* XPRINT_SERVER_SIDE_ALPHA_COMPOSING */
     
-  PRInt32 aSrcWidth  = aImage->GetWidth();
-  PRInt32 aSrcHeight = aImage->GetHeight();
+  rv = DrawImageBits(xgc, alphaBits, alphaRowBytes, alphaDepth,
+                     dstimg_data, dstimg_bytes_per_line, 
+                     aDX, aDY, aDWidth, aDHeight);
 
-  double factorX = (double)aSrcWidth  / (double)aDWidth;
-  double factorY = (double)aSrcHeight / (double)aDHeight;
-  
-  PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("DrawImageBitsScaled: factorX=%f, factorY=%f\n", factorX, factorY));
-  
-  srcImg = (XImage *)malloc(sizeof(XImage));
-  if( srcImg == nsnull )
-    return NS_ERROR_OUT_OF_MEMORY;  // BUG: We should free all other stuff at this point, too
-  memset(srcImg, 0, sizeof(XImage));
-  srcImg->width            = aSrcWidth;
-  srcImg->height           = aSrcHeight;
-  srcImg->format           = ZPixmap;
-  srcImg->byte_order       = MSBFirst;
-  srcImg->bitmap_unit      = 32;
-  srcImg->bitmap_bit_order = MSBFirst;
-  srcImg->red_mask         = srcImg->green_mask = srcImg->blue_mask = 0;
-  srcImg->bits_per_pixel   = 24; /* R8G8B8 packed. Thanks to "tor" for that hint... */
-  srcImg->xoffset          = 0;
-  srcImg->bitmap_pad       = 32;
-  srcImg->depth            = 24;
-  srcImg->data             = (char *)image_bits;
-  srcImg->bytes_per_line   = row_bytes;
-
-  if( !XInitImage(srcImg) )
-    PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("XInitImage failure... ;-(\n"));
-
-  if( (aSX != 0) || (aSY != 0) || (aSrcWidth != aSWidth) || (aSrcHeight != aSHeight))
-  {
-    PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, 
-           ("  XSubImage(srcImg, aSX=%d, aSY=%d, aSWidth=%d, aSHeight=%d);\n", 
-            (int)aSX, (int)aSY, (int)aSWidth, (int)aSHeight));                          
-    subImg = XSubImage(srcImg, aSX, aSY, aSWidth, aSHeight);
-    
-    srcImg->data = nsnull; /* we do not own this piece of memory */
-    XDestroyImage(srcImg);
-    srcImg = subImg;       
-  }
-
-  dstImg = GetScaledXImage(srcImg, factorX, factorY,
-                           aSWidth, aSHeight,
-                           aDWidth, aDHeight);
-
-  if (!dstImg)
-  {
-    return PR_FALSE;
-  }
-      
-  if(alphaBits != nsnull)
-  {
-    srcAlphaImg = (XImage *)malloc(sizeof(XImage));
-    if( srcAlphaImg == nsnull )
-      return NS_ERROR_OUT_OF_MEMORY; // BUG: We should free all other stuff at this point, too
-    memset(srcAlphaImg, 0, sizeof(XImage));
-    srcAlphaImg->width            = aSrcWidth;
-    srcAlphaImg->height           = aSrcHeight;
-    srcAlphaImg->format           = XYPixmap;
-    srcAlphaImg->byte_order       = MSBFirst;
-    srcAlphaImg->bitmap_unit      = 32;
-    srcAlphaImg->bitmap_bit_order = MSBFirst;
-    srcAlphaImg->red_mask         = srcImg->green_mask = srcImg->blue_mask = 0;
-    srcAlphaImg->bits_per_pixel   = 1;
-    srcAlphaImg->xoffset          = 0;
-    srcAlphaImg->bitmap_pad       = 32;
-    srcAlphaImg->depth            = 1;
-    srcAlphaImg->data             = (char *)alphaBits;
-    srcAlphaImg->bytes_per_line   = alphaRowBytes;
-
-    if( !XInitImage(srcAlphaImg) )
-      PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("XInitImage failure... ;-(\n"));
-
-    if( (aSX != 0) || (aSY != 0) || (aSrcWidth != aSWidth) || (aSrcHeight != aSHeight) )
-    {
-      PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, 
-             ("  XSubImage(srcAlphaImg, aSX=%d, aSY=%d, aSWidth=%d, aSHeight=%d);\n", 
-              (int)aSX, (int)aSY, (int)aSWidth, (int)aSHeight));
-      subAlphaImg = XSubImage(srcAlphaImg, aSX, aSY, aSWidth, aSHeight);                            
-      if (!subAlphaImg)
-        return PR_FALSE;
-        
-       srcAlphaImg->data = nsnull; /* we do not own this piece of memory */
-       XDestroyImage(srcAlphaImg);
-       srcAlphaImg = subAlphaImg;        
-    }   
-
-    dstAlphaImg = GetScaledXImage(srcAlphaImg, factorX, factorY,
-                                  aSWidth, aSHeight,
-                                  aDWidth, aDHeight);
-
-    PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("rendering ALPHA image !!\n"));
-    rv = DrawImageBits(xgc,
-                       (PRUint8 *)dstAlphaImg->data, dstAlphaImg->bytes_per_line, 
-                       (PRUint8 *)dstImg->data,      dstImg->bytes_per_line, 
-                       aDX, aDY, aDWidth, aDHeight);
-
-    XDestroyImage(dstAlphaImg);
-  }
-  else
-  {
-    /* shortcut */
-    xxlib_draw_rgb_image(mXlibRgbHandle,
-                         mDrawable,
-                         *xgc,
-                         aDX, aDY, aDWidth, aDHeight,
-                         NS_XPRINT_RGB_DITHER,
-                         (unsigned char *)dstImg->data, dstImg->bytes_per_line);
-    rv = NS_OK;                        
-  }
-
-  if( srcImg != nsnull )
-  {
-    if( subImg == nsnull )
-    {
-      srcImg->data = nsnull; /* we do not own this piece of memory */
-      XDestroyImage(srcImg);
-    }
-    else
-    {
-      XDestroyImage(subImg);
-    }  
-  }      
-
-  if( srcAlphaImg != nsnull )
-  {
-    if( subAlphaImg == nsnull )
-    {
-      srcAlphaImg->data = nsnull; /* we do not own this piece of memory */
-      XDestroyImage(srcAlphaImg);
-    }
-    else
-    {
-      XDestroyImage(subAlphaImg);
-    }  
-  }  
-  
-
-  XDestroyImage(dstImg);
+  if (dstimg_data)   
+    PR_Free(dstimg_data);
+  if (composed_bits) 
+    PR_Free(composed_bits);
   
   return rv;
 }
@@ -712,43 +655,48 @@ nsXPrintContext::DrawImageBitsScaled(xGC *xgc, nsIImage *aImage,
 NS_IMETHODIMP
 nsXPrintContext::DrawImage(xGC *xgc, nsIImage *aImage,
                            PRInt32 aX, PRInt32 aY,
-                           PRInt32 aWidth, PRInt32 aHeight)
+                           PRInt32 dummy1, PRInt32 dummy2)
 {
-  PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("nsXPrintContext::DrawImage(%d/%d/%d/%d)\n",
-         (int)aX, (int)aY, (int)aWidth, (int)aHeight));
-         
+  PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("nsXPrintContext::DrawImage(%d/%d/%d(=dummy)/%d(=dummy))\n",
+         (int)aX, (int)aY, (int)dummy1, (int)dummy2));
+
+  nsresult rv;
   PRInt32  width         = aImage->GetWidth();
   PRInt32  height        = aImage->GetHeight();
   PRUint8 *alphaBits     = aImage->GetAlphaBits();
   PRInt32  alphaRowBytes = aImage->GetAlphaLineStride();
+  PRInt32  alphaDepth    = aImage->GetAlphaDepth();
   PRUint8 *image_bits    = aImage->GetBits();
+  PRUint8 *composed_bits = nsnull;
   PRInt32  row_bytes     = aImage->GetLineStride();
   
-  // XXX kipp: this is temporary code until we eliminate the
-  // width/height arguments from the draw method.
-  if ((aWidth != width) || (aHeight != height)) 
+  // Use client-side alpha image composing - plain X11 can only do 1bit alpha
+  // stuff - this method adds 8bit alpha support, too...
+  if( alphaBits != nsnull )
   {
-    aWidth  = width;
-    aHeight = height;
+    composed_bits = ComposeAlphaImage(alphaBits, alphaRowBytes, alphaDepth,
+                                      image_bits, row_bytes,
+                                      width, height);
+    if (!composed_bits)
+      return NS_ERROR_FAILURE;
+    image_bits = composed_bits;
+    alphaBits = nsnull;
   }
+               
+  rv = DrawImageBits(xgc, alphaBits, alphaRowBytes, alphaDepth,
+                     image_bits, row_bytes,
+                     aX, aY, width, height);
 
-  if( (aWidth == 0) || (aHeight == 0) )
-  {
-    PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG,
-           ("nsXPrintContext::DrawImage(): Image with zero width||height supressed\n"));
-    return NS_OK;
-  }
-      
-  return DrawImageBits(xgc, alphaBits, alphaRowBytes, 
-                       image_bits, row_bytes, 
-                       aX, aY, aWidth, aHeight);
+  if (composed_bits)
+    PR_Free(composed_bits);
+  return rv;                     
 }
 
-                           
+                          
 // Draw the bitmap, this draw just has destination coordinates
 nsresult
 nsXPrintContext::DrawImageBits(xGC *xgc,
-                               PRUint8 *alphaBits, PRInt32  alphaRowBytes,
+                               PRUint8 *alphaBits, PRInt32  alphaRowBytes, PRUint8 alphaDepth,
                                PRUint8 *image_bits, PRInt32  row_bytes,
                                PRInt32 aX, PRInt32 aY,
                                PRInt32 aWidth, PRInt32 aHeight)
@@ -759,8 +707,14 @@ nsXPrintContext::DrawImageBits(xGC *xgc,
   Pixmap alpha_pixmap  = None;
   GC     image_gc;
 
-/* this does not work yet... */
-#ifdef XPRINT_NOT_NOW
+  if( (aWidth == 0) || (aHeight == 0) )
+  {
+    NS_ASSERTION((aWidth != 0) && (aHeight != 0), "Image with zero width||height supressed.");
+    return NS_OK;
+  }
+  
+/* server-side alpha image support (1bit) - this does not work yet... */
+#ifdef XPRINT_SERVER_SIDE_ALPHA_COMPOSING
   // Create gc clip-mask on demand
   if( alphaBits != nsnull )
   {
@@ -809,7 +763,7 @@ nsXPrintContext::DrawImageBits(xGC *xgc,
     x_image->data = nsnull; /* Don't free the IL_Pixmap's bits. */
     XDestroyImage(x_image);
   }
-#endif /* XPRINT_NOT_NOW */  
+#endif /* XPRINT_SERVER_SIDE_ALPHA_COMPOSING */  
   
   if( alpha_pixmap != None )
   {
@@ -862,12 +816,19 @@ nsXPrintContext::DrawImageBits(xGC *xgc,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsXPrintContext::GetPrintResolution(int &aPrintResolution) const
+NS_IMETHODIMP nsXPrintContext::GetPrintResolution(int &aPrintResolution)
 {
-  PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("nsXPrintContext::GetPrintResolution() res=%d\n",
-         (int)mPrintResolution));
+  PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, 
+         ("nsXPrintContext::GetPrintResolution() res=%d, mPContext=%lx\n",
+          (int)mPrintResolution, (long)mPContext));
   
-  aPrintResolution = mPrintResolution;
-  return NS_OK;
+  if(mPContext!=None)
+  {
+    aPrintResolution = mPrintResolution;
+    return NS_OK;
+  }
+  
+  aPrintResolution = 0;
+  return NS_ERROR_FAILURE;    
 }
 
