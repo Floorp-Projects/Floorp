@@ -685,7 +685,7 @@ nsPresContext::SetShell(nsIPresShell* aShell)
       if (doc) {
         mBaseURL = doc->GetBaseURL();
 
-        if (mBaseURL) {
+        if (!mNeverAnimate && mBaseURL) {
             PRBool isChrome = PR_FALSE;
             PRBool isRes = PR_FALSE;
             mBaseURL->SchemeIs("chrome", &isChrome);
@@ -774,14 +774,6 @@ nsPresContext::SetCompatibilityMode(nsCompatibility aMode)
   }
 }
 
-NS_IMETHODIMP
-nsPresContext::GetImageAnimationMode(PRUint16* aModeResult)
-{
-  NS_PRECONDITION(aModeResult, "null out param");
-  *aModeResult = mImageAnimationMode;
-  return NS_OK;
-}
-
 // Helper function for setting Anim Mode on image
 static void SetImgAnimModeOnImgReq(imgIRequest* aImgReq, PRUint16 aMode)
 {
@@ -826,7 +818,7 @@ void nsPresContext::SetImgAnimations(nsIContent *aParent, PRUint16 aMode)
   }
 }
 
-NS_IMETHODIMP
+void
 nsPresContext::SetImageAnimationMode(PRUint16 aMode)
 {
   NS_ASSERTION(aMode == imgIContainer::kNormalAnimMode ||
@@ -851,7 +843,6 @@ nsPresContext::SetImageAnimationMode(PRUint16 aMode)
   }
 
   mImageAnimationMode = aMode;
-  return NS_OK;
 }
 
 /*

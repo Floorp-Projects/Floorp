@@ -140,10 +140,7 @@ NS_IMETHODIMP nsImageLoader::OnStartContainer(imgIRequest *aRequest,
      *   one frame = 1
      *   one loop = 2
      */
-    PRUint16 animateMode = imgIContainer::kNormalAnimMode; //default value
-    nsresult rv = mPresContext->GetImageAnimationMode(&animateMode);
-    if (NS_SUCCEEDED(rv))
-      aImage->SetAnimationMode(animateMode);
+    aImage->SetAnimationMode(mPresContext->ImageAnimationMode());
   }
   return NS_OK;
 }

@@ -331,15 +331,12 @@ nsImageFrame::Init(nsIPresContext*  aPresContext,
   // If we already have an image container, OnStartContainer won't be called
   // Set the animation mode here
   nsCOMPtr<imgIContainer> image;
-  if (currentRequest)
+  if (currentRequest) {
     currentRequest->GetImage(getter_AddRefs(image));
-  if (image) {
-    PRUint16 animateMode = imgIContainer::kNormalAnimMode; //default value
-    nsresult rv = mPresContext->GetImageAnimationMode(&animateMode);
-    if (NS_SUCCEEDED(rv))
-      image->SetAnimationMode(animateMode);
+    if (image)
+      image->SetAnimationMode(mPresContext->ImageAnimationMode());
   }
-  
+
   return rv;
 }
 
@@ -536,18 +533,12 @@ nsImageFrame::OnStartContainer(imgIRequest *aRequest, imgIContainer *aImage)
     return NS_OK;
   }
 
-  if (aImage)
-  {
-    /* Get requested animation policy from the pres context:
-     *   normal = 0
-     *   one frame = 1
-     *   one loop = 2
-     */
-    PRUint16 animateMode = imgIContainer::kNormalAnimMode; //default value
-    nsresult rv = mPresContext->GetImageAnimationMode(&animateMode);
-    if (NS_SUCCEEDED(rv))
-      aImage->SetAnimationMode(animateMode);
-  }
+  /* Get requested animation policy from the pres context:
+   *   normal = 0
+   *   one frame = 1
+   *   one loop = 2
+   */
+  aImage->SetAnimationMode(mPresContext->ImageAnimationMode());
 
   if (IsPendingLoad(aRequest)) {
     // We don't care
