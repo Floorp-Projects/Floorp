@@ -1091,15 +1091,10 @@ skipline:
 	    goto retry;
 	}
 	if (MatchChar(ts, '*')) {
-	    while ((c = GetChar(ts)) != EOF &&
-		   !(c == '*' && MatchChar(ts, '/'))) {
-		if (c == '/' && MatchChar(ts, '*')) {
-		    if (MatchChar(ts, '/'))
-			goto retry;
-		    js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
-                                                JSMSG_NESTED_COMMENT);
-		}
-	    }
+            while ((c = GetChar(ts)) != EOF &&
+                   !(c == '*' && MatchChar(ts, '/'))) {
+                /* Ignore all characters until comment close. */
+            }
 	    if (c == EOF) {
 		js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                             JSMSG_UNTERMINATED_COMMENT);
