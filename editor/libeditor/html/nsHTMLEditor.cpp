@@ -2985,11 +2985,44 @@ nsHTMLEditor::InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)
       if (!href.IsEmpty())      
       {
         nsAutoEditBatch beginBatching(this);
-        nsString attribute(NS_LITERAL_STRING("href")); 
-        SetInlineProperty(nsIEditProperty::a, attribute, href);
-        //TODO: Enumerate through other properties of the anchor tag
-        // and set those as well. 
-        // Optimization: Modify SetTextProperty to set all attributes at once?
+
+        // Set all attributes found on the supplied anchor element
+        nsCOMPtr<nsIDOMNamedNodeMap> attrMap;
+        aAnchorElement->GetAttributes(getter_AddRefs(attrMap));
+        if (!attrMap)
+          return NS_ERROR_FAILURE;
+
+        PRUint32 count, i;
+        attrMap->GetLength(&count);
+        nsAutoString name, value;
+
+        for (i = 0; i < count; i++)
+        {
+          nsCOMPtr<nsIDOMNode> attrNode;
+          res = attrMap->Item(i, getter_AddRefs(attrNode));
+          if (NS_FAILED(res)) return res;
+
+          if (attrNode)
+          {
+            nsCOMPtr<nsIDOMAttr> attribute = do_QueryInterface(attrNode);
+            if (attribute)
+            {
+              // We must clear the string buffers
+              //   because GetName, GetValue appends to previous string!
+              name.SetLength(0);
+              value.SetLength(0);
+
+              res = attribute->GetName(name);
+              if (NS_FAILED(res)) return res;
+
+              res = attribute->GetValue(value);
+              if (NS_FAILED(res)) return res;
+
+              res = SetInlineProperty(nsIEditProperty::a, name, value);
+              if (NS_FAILED(res)) return res;
+            }
+          }
+        }
       }
     }
   }
