@@ -570,6 +570,9 @@ nsScriptableInterfaceInfo::Init(const nsIID * aIID)
     if(mInfo)
         return NS_ERROR_ALREADY_INITIALIZED;
 
+    if(!aIID)
+        return NS_ERROR_NULL_POINTER;
+
     return FindInfo(IIDTester, aIID, getter_AddRefs(mInfo));
 }
 
@@ -579,6 +582,9 @@ nsScriptableInterfaceInfo::InitWithName(const char *name)
 {
     if(mInfo)
         return NS_ERROR_ALREADY_INITIALIZED;
+
+    if(!name)
+        return NS_ERROR_NULL_POINTER;
 
     return FindInfo(NameTester, name, getter_AddRefs(mInfo));
 }
