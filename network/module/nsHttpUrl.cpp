@@ -38,7 +38,7 @@ static NS_DEFINE_IID(kIURLIID, NS_IURL_IID);
 static NS_DEFINE_IID(kIPostToServerIID, NS_IPOSTTOSERVER_IID);
 static NS_DEFINE_IID(kIProtocolConnectionIID, NS_IPROTOCOLCONNECTION_IID);
 
-nsHttpUrlImpl::nsHttpUrlImpl(nsISupports* aContainer, nsIURLGroup* aGroup)
+nsHttpUrlImpl::nsHttpUrlImpl(nsISupports* aContainer, nsILoadGroup* aGroup)
 {
     NS_INIT_REFCNT();
  
@@ -55,11 +55,11 @@ nsHttpUrlImpl::nsHttpUrlImpl(nsISupports* aContainer, nsIURLGroup* aGroup)
     mSpec = nsnull;
     mSearch = nsnull;
     mContainer = nsnull;
-    mURLGroup = aGroup;
+    mLoadGroup = aGroup;
   
     NS_NewLoadAttribs( getter_AddRefs(mLoadAttribs) );
 
-    // NS_IF_ADDREF(mURLGroup); --- a url should not own its group, its group already owns it
+    // NS_IF_ADDREF(mLoadGroup); --- a url should not own its group, its group already owns it
 
     mContainer = aContainer;
     // NS_IF_ADDREF(mContainer); --- a url should not own its container, its container already owns it
@@ -69,7 +69,7 @@ nsHttpUrlImpl::nsHttpUrlImpl(nsISupports* aContainer, nsIURLGroup* aGroup)
 nsHttpUrlImpl::~nsHttpUrlImpl()
 {
     // NS_IF_RELEASE(mContainer);
-    // NS_IF_RELEASE(mURLGroup);
+    // NS_IF_RELEASE(mLoadGroup);
 
     PR_FREEIF(mSpec);
     PR_FREEIF(mProtocol);
@@ -852,22 +852,22 @@ nsresult nsHttpUrlImpl::SetLoadAttribs(nsILoadAttribs* aLoadAttribs)
     return NS_OK;
 }
   
-nsresult nsHttpUrlImpl::GetURLGroup(nsIURLGroup* *result) const
+nsresult nsHttpUrlImpl::GetLoadGroup(nsILoadGroup* *result) const
 {
     NS_LOCK_INSTANCE();
-    *result = mURLGroup;
-    NS_IF_ADDREF(mURLGroup); // getters must |AddRef| their result, even if they didn'st already own it
+    *result = mLoadGroup;
+    NS_IF_ADDREF(mLoadGroup); // getters must |AddRef| their result, even if they didn'st already own it
     NS_UNLOCK_INSTANCE();
     return NS_OK;
 }
   
-nsresult nsHttpUrlImpl::SetURLGroup(nsIURLGroup* group)
+nsresult nsHttpUrlImpl::SetLoadGroup(nsILoadGroup* group)
 {
     NS_ASSERTION(m_URL_s == nsnull, "URL has already been opened");
     NS_LOCK_INSTANCE();
-    // NS_IF_RELEASE(mURLGroup);
-    mURLGroup = group;
-    // NS_IF_ADDREF(mURLGroup);
+    // NS_IF_RELEASE(mLoadGroup);
+    mLoadGroup = group;
+    // NS_IF_ADDREF(mLoadGroup);
     NS_UNLOCK_INSTANCE();
     return NS_OK;
 }

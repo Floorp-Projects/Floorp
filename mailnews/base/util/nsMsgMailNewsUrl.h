@@ -95,8 +95,8 @@ public:
     NS_IMETHOD SetContainer(nsISupports* container);	
     NS_IMETHOD GetLoadAttribs(nsILoadAttribs* *result) const;	// make obsolete
     NS_IMETHOD SetLoadAttribs(nsILoadAttribs* loadAttribs);	// make obsolete
-    NS_IMETHOD GetURLGroup(nsIURLGroup* *result) const;	// make obsolete
-    NS_IMETHOD SetURLGroup(nsIURLGroup* group);	// make obsolete
+    NS_IMETHOD GetLoadGroup(nsILoadGroup* *result) const;	// make obsolete
+    NS_IMETHOD SetLoadGroup(nsILoadGroup* group);	// make obsolete
     NS_IMETHOD SetPostHeader(const char* name, const char* value);	// make obsolete
     NS_IMETHOD SetPostData(nsIInputStream* input);	// make obsolete
     NS_IMETHOD GetContentLength(PRInt32 *len);

@@ -82,7 +82,7 @@ public:
                          const nsString& aSpec,
                          const nsIURI* aContextURL = nsnull,
                          nsISupports* aContainer = nsnull,
-                         nsIURLGroup* aGroup = nsnull);
+                         nsILoadGroup* aGroup = nsnull);
     NS_IMETHOD AreThereActiveConnections(void);
 
 	NS_IMETHOD CreateSocketTransport(nsITransport **aTransport, PRUint32 aPortToUse, const char * aHostName);

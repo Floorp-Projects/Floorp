@@ -45,7 +45,7 @@ public:
 #ifdef NECKO
   nsresult Init(nsIDeviceContext *aDeviceContext);
 #else
-  nsresult Init(nsIDeviceContext *aDeviceContext, nsIURLGroup* aURLGroup);
+  nsresult Init(nsIDeviceContext *aDeviceContext, nsILoadGroup* aLoadGroup);
 #endif
 
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
@@ -81,7 +81,7 @@ public:
   ilINetContext* mNetContext;
   nsIStreamListener** mListenerRequest;
 #ifndef NECKO
-  nsIURLGroup* mURLGroup;
+  nsILoadGroup* mLoadGroup;
 #endif
 };
 
@@ -116,7 +116,7 @@ ImageGroupImpl::~ImageGroupImpl()
   NS_IF_RELEASE(mManager);
   NS_IF_RELEASE(mNetContext);
 #ifndef NECKO
-  NS_IF_RELEASE(mURLGroup);
+  NS_IF_RELEASE(mLoadGroup);
 #endif
 }
 
@@ -175,7 +175,7 @@ nsresult
 #ifdef NECKO
 ImageGroupImpl::Init(nsIDeviceContext *aDeviceContext)
 #else
-ImageGroupImpl::Init(nsIDeviceContext *aDeviceContext, nsIURLGroup* aURLGroup)
+ImageGroupImpl::Init(nsIDeviceContext *aDeviceContext, nsILoadGroup* aLoadGroup)
 #endif
 {
   ilIImageRenderer *renderer;
@@ -192,15 +192,15 @@ ImageGroupImpl::Init(nsIDeviceContext *aDeviceContext, nsIURLGroup* aURLGroup)
   }
 
 #ifndef NECKO
-  mURLGroup = aURLGroup;
-  NS_IF_ADDREF(mURLGroup);
+  mLoadGroup = aLoadGroup;
+  NS_IF_ADDREF(mLoadGroup);
 #endif // NECKO
 
   // Create an async net context
 #ifdef NECKO
   result = NS_NewImageNetContext(&mNetContext, ReconnectHack, this);
 #else
-  result = NS_NewImageNetContext(&mNetContext, mURLGroup, ReconnectHack, this);
+  result = NS_NewImageNetContext(&mNetContext, mLoadGroup, ReconnectHack, this);
 #endif
   if (NS_OK != result) {
     return result;

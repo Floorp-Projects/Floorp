@@ -891,7 +891,7 @@ nsDocument::Reset(nsIURI *aURL)
     NS_ADDREF(aURL);
 
 #ifndef NECKO
-    rv = aURL->GetURLGroup(&mDocumentLoadGroup);
+    rv = aURL->GetLoadGroup(&mDocumentLoadGroup);
 #endif
   }
 
@@ -932,7 +932,7 @@ nsDocument::GetContentType(nsString& aContentType) const
 #ifdef NECKO
 NS_IMETHODIMP_(nsILoadGroup*) nsDocument::GetDocumentLoadGroup() const
 #else
-nsIURLGroup* nsDocument::GetDocumentLoadGroup() const
+nsILoadGroup* nsDocument::GetDocumentLoadGroup() const
 #endif
 {
   NS_IF_ADDREF(mDocumentLoadGroup);

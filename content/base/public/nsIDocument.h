@@ -40,7 +40,7 @@ class nsIURI;
 #ifdef NECKO
 class nsILoadGroup;
 #else
-class nsIURLGroup;
+class nsILoadGroup;
 #endif
 class nsIViewManager;
 class nsString;
@@ -106,14 +106,14 @@ public:
 
 #ifdef NECKO
   /**
-   * Return the URLGroup for the document. May return null.
+   * Return the LoadGroup for the document. May return null.
    */
   NS_IMETHOD_(nsILoadGroup*) GetDocumentLoadGroup() const = 0;
 #else
   /**
-   * Return the URLGroup for the document. May return null.
+   * Return the LoadGroup for the document. May return null.
    */
-  virtual nsIURLGroup* GetDocumentLoadGroup() const = 0;
+  virtual nsILoadGroup* GetDocumentLoadGroup() const = 0;
 #endif
 
   /**

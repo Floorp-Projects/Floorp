@@ -30,7 +30,7 @@ class nsIImageRequest;
 class nsIDeviceContext;
 class nsIStreamListener;
 #ifndef NECKO
-class nsIURLGroup;
+class nsILoadGroup;
 #endif
 
 /** For important images, like backdrops. */
@@ -64,7 +64,7 @@ public:
 #ifdef NECKO
   virtual nsresult Init(nsIDeviceContext *aDeviceContext) = 0;
 #else
-  virtual nsresult Init(nsIDeviceContext *aDeviceContext, nsIURLGroup* aURLGroup) = 0;
+  virtual nsresult Init(nsIDeviceContext *aDeviceContext, nsILoadGroup* aLoadGroup) = 0;
 #endif
 
   /** 

@@ -2490,11 +2490,11 @@ HTMLContentSink::ProcessStyleLink(nsIHTMLContent* aElement,
     if ((0 == mimeType.Length()) || mimeType.EqualsIgnoreCase("text/css")) {
       nsIURI* url = nsnull;
 #ifndef NECKO
-      nsIURLGroup* urlGroup = nsnull;
-      mDocumentBaseURL->GetURLGroup(&urlGroup);
-      if (urlGroup) {
-        result = urlGroup->CreateURL(&url, mDocumentBaseURL, aHref, nsnull);
-        NS_RELEASE(urlGroup);
+      nsILoadGroup* LoadGroup = nsnull;
+      mDocumentBaseURL->GetLoadGroup(&LoadGroup);
+      if (LoadGroup) {
+        result = LoadGroup->CreateURL(&url, mDocumentBaseURL, aHref, nsnull);
+        NS_RELEASE(LoadGroup);
       }
       else
 #endif
@@ -2933,11 +2933,11 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
       // Use the SRC attribute value to load the URL
       nsIURI* url = nsnull;
 #ifndef NECKO
-      nsIURLGroup* urlGroup = nsnull;
-      mDocumentBaseURL->GetURLGroup(&urlGroup);
-      if (urlGroup) {
-        rv = urlGroup->CreateURL(&url, mDocumentBaseURL, src, nsnull);
-        NS_RELEASE(urlGroup);
+      nsILoadGroup* LoadGroup = nsnull;
+      mDocumentBaseURL->GetLoadGroup(&LoadGroup);
+      if (LoadGroup) {
+        rv = LoadGroup->CreateURL(&url, mDocumentBaseURL, src, nsnull);
+        NS_RELEASE(LoadGroup);
       }
       else
 #endif
@@ -3094,11 +3094,11 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
       // Use the SRC attribute value to load the URL
       nsIURI* url = nsnull;
 #ifndef NECKO
-      nsIURLGroup* urlGroup = nsnull;
-      mDocumentBaseURL->GetURLGroup(&urlGroup);
-      if (urlGroup) {
-        rv = urlGroup->CreateURL(&url, mDocumentBaseURL, src, nsnull);
-        NS_RELEASE(urlGroup);
+      nsILoadGroup* LoadGroup = nsnull;
+      mDocumentBaseURL->GetLoadGroup(&LoadGroup);
+      if (LoadGroup) {
+        rv = LoadGroup->CreateURL(&url, mDocumentBaseURL, src, nsnull);
+        NS_RELEASE(LoadGroup);
       }
       else
 #endif

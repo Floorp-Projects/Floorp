@@ -420,12 +420,12 @@ nsresult nsMsgMailNewsUrl::SetLoadAttribs(nsILoadAttribs* aLoadAttribs)
     return NS_OK;
 }
 
-nsresult nsMsgMailNewsUrl::GetURLGroup(nsIURLGroup* *result) const
+nsresult nsMsgMailNewsUrl::GetLoadGroup(nsILoadGroup* *result) const
 {
     return NS_OK;
 }
   
-nsresult nsMsgMailNewsUrl::SetURLGroup(nsIURLGroup* group)
+nsresult nsMsgMailNewsUrl::SetLoadGroup(nsILoadGroup* group)
 {
     NS_ASSERTION(m_URL_s == nsnull, "URL has already been opened");
     return NS_OK;

@@ -1003,14 +1003,14 @@ nsXMLContentSink::CreateStyleSheetURL(nsIURI** aUrl,
 {
   nsAutoString absURL;
   nsIURI* docURL = mDocument->GetDocumentURL();
-  nsIURLGroup* urlGroup; 
+  nsILoadGroup* LoadGroup; 
   nsresult result = NS_OK;
   
-  result = docURL->GetURLGroup(&urlGroup);
+  result = docURL->GetLoadGroup(&LoadGroup);
 
-  if ((NS_SUCCEEDED(result)) && urlGroup) {
-    result = urlGroup->CreateURL(aUrl, docURL, aHref, nsnull);
-    NS_RELEASE(urlGroup);
+  if ((NS_SUCCEEDED(result)) && LoadGroup) {
+    result = LoadGroup->CreateURL(aUrl, docURL, aHref, nsnull);
+    NS_RELEASE(LoadGroup);
   }
   else {
 #ifndef NECKO
@@ -1142,11 +1142,11 @@ nsXMLContentSink::ProcessStyleLink(nsIContent* aElement,
 
   if ((0 == mimeType.Length()) || mimeType.EqualsIgnoreCase("text/css")) {
     nsIURI* url = nsnull;
-    nsIURLGroup* urlGroup = nsnull;
-    mDocumentBaseURL->GetURLGroup(&urlGroup);
-    if (urlGroup) {
-      result = urlGroup->CreateURL(&url, mDocumentBaseURL, aHref, nsnull);
-      NS_RELEASE(urlGroup);
+    nsILoadGroup* LoadGroup = nsnull;
+    mDocumentBaseURL->GetLoadGroup(&LoadGroup);
+    if (LoadGroup) {
+      result = LoadGroup->CreateURL(&url, mDocumentBaseURL, aHref, nsnull);
+      NS_RELEASE(LoadGroup);
     }
     else {
 #ifndef NECKO
@@ -1764,13 +1764,13 @@ nsXMLContentSink::ProcessStartSCRIPTTag(const nsIParserNode& aNode)
       nsIURI* url = nsnull;
       nsAutoString absURL;
       nsIURI* docURL = mDocument->GetDocumentURL();
-      nsIURLGroup* urlGroup;
+      nsILoadGroup* LoadGroup;
 
-      rv = docURL->GetURLGroup(&urlGroup);
+      rv = docURL->GetLoadGroup(&LoadGroup);
       
-      if ((NS_OK == rv) && urlGroup) {
-        rv = urlGroup->CreateURL(&url, docURL, src, nsnull);
-        NS_RELEASE(urlGroup);
+      if ((NS_OK == rv) && LoadGroup) {
+        rv = LoadGroup->CreateURL(&url, docURL, src, nsnull);
+        NS_RELEASE(LoadGroup);
       }
       else {
 #ifndef NECKO

@@ -29,15 +29,15 @@ class nsIStreamListener;
 class nsILoadAttribs;
 
 /* {a4071430-5263-11d2-929b-00105a1b0d64} */
-#define NS_IURLGROUP_IID      \
+#define NS_ILOADGROUP_IID      \
 { 0xa4071430, 0x5263, 0x11d2, \
   {0x92, 0x9b, 0x00, 0x10, 0x5a, 0x1b, 0x0d, 0x64} }
 
-class nsIURLGroup : public nsISupports
+class nsILoadGroup : public nsISupports
 {
 public:
 
-    static const nsIID& GetIID() { static nsIID iid = NS_IURLGROUP_IID; return iid; }
+    static const nsIID& GetIID() { static nsIID iid = NS_ILOADGROUP_IID; return iid; }
 
     /**
      * Create a new URL, setting its LoadAttributes to the default
@@ -71,7 +71,7 @@ public:
                           nsIStreamListener *aConsumer) = 0;
 
     /**
-     * Get the nsILoadAttributes for this nsIURLGroup and its children...
+     * Get the nsILoadAttributes for this nsILoadGroup and its children...
      *
      * @param aLoadAttribs  Result parameter containing the nsILoadAttributes
      *                      instance.
@@ -81,34 +81,34 @@ public:
     NS_IMETHOD GetDefaultLoadAttributes(nsILoadAttribs*& aLoadAttribs) = 0;
 
     /**
-     * Set the nsILoadAttributes for this nsIURLGroup and its children...
+     * Set the nsILoadAttributes for this nsILoadGroup and its children...
      *
      * @param aLoadAttribs  nsILoadAttributes instance to be used by this
-     *                      nsIURLGroup and its children.
+     *                      nsILoadGroup and its children.
      *
      * @return  Returns NS_OK if successful, otherwise NS_ERROR_FAILURE.
      */
     NS_IMETHOD SetDefaultLoadAttributes(nsILoadAttribs*  aLoadAttribs) = 0;
 
     /**
-     * Add a child to an nsIURLGroup.
+     * Add a child to an nsILoadGroup.
      *
-     * @param aGroup    The nsIURLGroup to be added as a child.  When the
+     * @param aGroup    The nsILoadGroup to be added as a child.  When the
      *                  child is added it will receive the nsILoadAttribs
      *                  of its parent...
      *
      * @return  Returns NS_OK if successful, otherwise NS_ERROR_FAILURE.
      */
-    NS_IMETHOD AddChildGroup(nsIURLGroup* aGroup) = 0;
+    NS_IMETHOD AddChildGroup(nsILoadGroup* aGroup) = 0;
 
     /**
-     * Remove a child from an nsIURLGroup.
+     * Remove a child from an nsILoadGroup.
      *
-     * @param aGroup    The nsIURLGroup to be removed.
+     * @param aGroup    The nsILoadGroup to be removed.
      *
      * @return  Returns NS_OK if successful, otherwise NS_ERROR_FAILURE.
      */
-    NS_IMETHOD RemoveChildGroup(nsIURLGroup* aGroup) = 0;
+    NS_IMETHOD RemoveChildGroup(nsILoadGroup* aGroup) = 0;
 };
 
 #endif /* nsIURLGroup_h__ */

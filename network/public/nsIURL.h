@@ -26,7 +26,7 @@
 class nsIInputStream;
 class nsIStreamListener;
 class nsString;
-class nsIURLGroup;
+class nsILoadGroup;
 
 #define NS_IURL_IID           \
 { 0x6ecb2900, 0x93b5, 0x11d1, \
@@ -82,8 +82,8 @@ public:
   NS_IMETHOD GetLoadAttribs(nsILoadAttribs* *result) const = 0;
   NS_IMETHOD SetLoadAttribs(nsILoadAttribs* loadAttribs) = 0;
 
-  NS_IMETHOD GetURLGroup(nsIURLGroup* *result) const = 0;
-  NS_IMETHOD SetURLGroup(nsIURLGroup* group) = 0;
+  NS_IMETHOD GetLoadGroup(nsILoadGroup* *result) const = 0;
+  NS_IMETHOD SetLoadGroup(nsILoadGroup* group) = 0;
   //@}
 
   NS_IMETHOD SetPostHeader(const char* name, const char* value) = 0;
@@ -105,7 +105,7 @@ extern NS_NET nsresult NS_NewURL(nsIURI** aInstancePtrResult,
                                  const nsString& aSpec,
                                  const nsIURI* aBaseURL = nsnull,
                                  nsISupports* aContainer = nsnull,
-                                 nsIURLGroup* aGroup = nsnull);
+                                 nsILoadGroup* aGroup = nsnull);
 
 /**
  * Utility routine to take a url (may be nsnull) and a base url (may

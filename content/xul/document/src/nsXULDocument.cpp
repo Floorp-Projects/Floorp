@@ -432,7 +432,7 @@ public:
 
     virtual nsIURI* GetDocumentURL() const;
 
-    virtual nsIURLGroup* GetDocumentURLGroup() const;
+    virtual nsIURLGroup* GetDocumentLoadGroup() const;
 
     NS_IMETHOD GetBaseURL(nsIURI*& aURL) const;
 
@@ -1359,7 +1359,7 @@ XULDocumentImpl::GetDocumentURL() const
 }
 
 nsIURLGroup* 
-XULDocumentImpl::GetDocumentURLGroup() const
+XULDocumentImpl::GetDocumentLoadGroup() const
 {
     nsIURLGroup* result = mDocumentURLGroup;
     NS_IF_ADDREF(result);
