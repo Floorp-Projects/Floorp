@@ -22,16 +22,16 @@
 
 #include "rdf.h"
 #include "nsRDFDataModelItem.h"
-#include "nsITreeItem.h"
+#include "nsITreeDMItem.h"
 
 class nsRDFTreeModel;
 
 ////////////////////////////////////////////////////////////////////////
 
-class nsRDFTreeItem : public nsRDFDataModelItem, nsITreeItem {
+class nsRDFTreeDataModelItem : public nsRDFDataModelItem, nsITreeDMItem {
 public:
-    nsRDFTreeItem(nsRDFTreeModel& tree, RDF_Resource& resource);
-    virtual ~nsRDFTreeItem(void);
+    nsRDFTreeDataModelItem(nsRDFTreeModel& tree, RDF_Resource& resource);
+    virtual ~nsRDFTreeDataModelItem(void);
 
     ////////////////////////////////////////////////////////////////////////
     // nsISupports interface
