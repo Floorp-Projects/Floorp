@@ -81,7 +81,6 @@ CPPSRCS		= \
 		  Dashboard.cpp \
 		  DownloadFrame.cpp \
 		  DragDrop.cpp \
-		  EditHdrDialog.cpp \
 		  FindDialog.cpp \
 		  FrameListMenu.cpp \
 		  Frame.cpp \
@@ -170,6 +169,7 @@ CPPSRCS		+= \
 		  ComposeFolderView.cpp \
 		  ComposeFrame.cpp \
 		  ComposeView.cpp \
+		  EditHdrDialog.cpp \
 		  $(NULL)
 endif
 
