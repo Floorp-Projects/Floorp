@@ -24,7 +24,7 @@ calendar.jar:
     content/calendar/timepicker/timepicker.js (content/timepicker/timepicker.js)
     content/calendar/unifinder/unifinder.js (content/unifinder/unifinder.js)
     content/calendar/unifinder/unifinderBindings.xml (content/unifinder/unifinderBindings.xml)
-    content/calendar/unifinder/unifinderOverlay.js (content/unifinder/unifinderOverlay.js)
+    content/calendar/unifinder/unifinder-overlay.xul (content/unifinder/unifinder-overlay.xul)
     content/calendar/unifinder/unifinderOverlay.xul (content/unifinder/unifinderOverlay.xul)
     content/calendar/unifinder/unifinderxul.css (content/unifinder/unifinderxul.css)
     locale/en-US/calendar/calendar.dtd (locale/en-US/calendar.dtd)
