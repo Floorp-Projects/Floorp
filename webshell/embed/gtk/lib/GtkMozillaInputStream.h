@@ -28,12 +28,10 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIInputStream interface
-  NS_IMETHOD GetLength(PRUint32 *aLength);
-  
-  NS_IMETHOD Read(char* aBuf, PRUint32 aCount, PRUint32 *aReadCount); 
+  NS_DECL_NSIINPUTSTREAM
   
   // nsIBaseStream interface
-  NS_IMETHOD Close(void);
+  NS_DECL_NSIBASESTREAM
 
   // Specific interface
   NS_IMETHOD Fill(const char *buffer, PRUint32 aCount);

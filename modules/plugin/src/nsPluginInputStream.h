@@ -41,37 +41,9 @@ public:
 
     NS_DECL_ISUPPORTS
 
-    ////////////////////////////////////////////////////////////////////////////
-    // from nsIBaseStream:
+    NS_DECL_NSIBASESTREAM
 
-    /** Close the stream. */
-    NS_IMETHOD
-    Close(void);
-
-    ////////////////////////////////////////////////////////////////////////////
-    // from nsIInputStream:
-
-    /** Return the number of bytes in the stream
-     *  @param aLength out parameter to hold the length
-     *         of the stream. if an error occurs, the length
-     *         will be undefined
-     *  @return error status
-     */
-    NS_IMETHOD
-    GetLength(PRInt32 *aLength);
-
-    /** Read data from the stream.
-     *  @param aErrorCode the error code if an error occurs
-     *  @param aBuf the buffer into which the data is read
-     *  @param aOffset the start offset of the data
-     *  @param aCount the maximum number of bytes to read
-     *  @param aReadCount out parameter to hold the number of
-     *         bytes read, eof if 0. if an error occurs, the
-     *         read count will be undefined
-     *  @return error status
-     */   
-    NS_IMETHOD
-    Read(char* aBuf, PRInt32 aOffset, PRInt32 aCount, PRInt32 *aReadCount); 
+    NS_DECL_NSIINPUTSTREAM
 
     ////////////////////////////////////////////////////////////////////////////
     // from nsIPluginInputStream:

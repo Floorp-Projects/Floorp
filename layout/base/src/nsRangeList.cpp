@@ -261,17 +261,9 @@ see the nsIEnumerator for more details*/
 
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
 
-  NS_IMETHOD First();
+  NS_DECL_NSIENUMERATOR
 
-  NS_IMETHOD Last();
-
-  NS_IMETHOD Next();
-
-  NS_IMETHOD Prev();
-
-  NS_IMETHOD CurrentItem(nsISupports **aRange);
-
-  NS_IMETHOD IsDone();
+  NS_DECL_NSIBIDIRECTIONALENUMERATOR
 
 /*END nsIEnumerator interfaces*/
 /*BEGIN Helper Methods*/

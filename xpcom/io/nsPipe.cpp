@@ -31,21 +31,18 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIBaseStream methods:
-    NS_IMETHOD Close(void);
+    NS_DECL_NSIBASESTREAM
 
     // nsIInputStream methods:
-    NS_IMETHOD GetLength(PRUint32 *aLength);
-    NS_IMETHOD Read(char* aBuf, PRUint32 aCount, PRUint32 *aReadCount); 
+    NS_DECL_NSIINPUTSTREAM
 
     // nsIBufferInputStream methods:
-    NS_IMETHOD GetBuffer(nsIBuffer* *result);
-    NS_IMETHOD Search(const char *forString, PRBool ignoreCase, PRBool *found, PRUint32 *offsetSearchedTo);
+    NS_DECL_NSIBUFFERINPUTSTREAM
+
 #if 0
     NS_IMETHOD Fill(const char *buf, PRUint32 count, PRUint32 *_retval);
     NS_IMETHOD FillFrom(nsIInputStream *inStr, PRUint32 count, PRUint32 *_retval);
 #endif
-    NS_IMETHOD GetNonBlocking(PRBool *aNonBlocking);
-    NS_IMETHOD SetNonBlocking(PRBool aNonBlocking);
 
     // nsBufferInputStream methods:
     nsBufferInputStream(nsIBuffer* buf, PRBool blocking);
@@ -66,18 +63,13 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIBaseStream methods:
-    NS_IMETHOD Close(void);
+    NS_DECL_NSIBASESTREAM
 
     // nsIOutputStream methods:
-    NS_IMETHOD Write(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteCount); 
-    NS_IMETHOD Flush(void);
+    NS_DECL_NSIOUTPUTSTREAM
 
     // nsIBufferOutputStream methods:
-    NS_IMETHOD GetBuffer(nsIBuffer * *aBuffer);
-    NS_IMETHOD WriteFrom(nsIInputStream* fromStream, PRUint32 aCount,
-                         PRUint32 *aWriteCount);
-    NS_IMETHOD GetNonBlocking(PRBool *aNonBlocking);
-    NS_IMETHOD SetNonBlocking(PRBool aNonBlocking);
+    NS_DECL_NSIBUFFEROUTPUTSTREAM
 
     // nsBufferOutputStream methods:
     nsBufferOutputStream(nsIBuffer* buf, PRBool blocking);

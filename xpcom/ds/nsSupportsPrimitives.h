@@ -25,10 +25,7 @@ class nsSupportsIDImpl : public nsISupportsID
 {
 public:
     NS_DECL_ISUPPORTS
-
-    NS_IMETHOD GetData(nsID **aData);
-    NS_IMETHOD SetData(nsID *aData);
-    NS_IMETHOD toString(char **_retval);
+    NS_DECL_NSISUPPORTSID
 
     nsSupportsIDImpl();
     virtual ~nsSupportsIDImpl();
@@ -43,10 +40,7 @@ class nsSupportsStringImpl : public nsISupportsString
 {
 public:
     NS_DECL_ISUPPORTS
-
-    NS_IMETHOD GetData(char **aData);
-    NS_IMETHOD SetData(char *aData);
-    NS_IMETHOD toString(char **_retval);
+    NS_DECL_NSISUPPORTSSTRING
 
     nsSupportsStringImpl();
     virtual ~nsSupportsStringImpl();
@@ -61,10 +55,7 @@ class nsSupportsWStringImpl : public nsISupportsWString
 {
 public:
     NS_DECL_ISUPPORTS
-
-    NS_IMETHOD GetData(PRUnichar **aData);
-    NS_IMETHOD SetData(PRUnichar *aData);
-    NS_IMETHOD toString(PRUnichar **_retval);
+    NS_DECL_NSISUPPORTSWSTRING
 
     nsSupportsWStringImpl();
     virtual ~nsSupportsWStringImpl();
@@ -79,10 +70,7 @@ class nsSupportsPRBoolImpl : public nsISupportsPRBool
 {
 public:
     NS_DECL_ISUPPORTS
-
-    NS_IMETHOD GetData(PRBool *aData);
-    NS_IMETHOD SetData(PRBool aData);
-    NS_IMETHOD toString(char **_retval);
+    NS_DECL_NSISUPPORTSPRBOOL
 
     nsSupportsPRBoolImpl();
     virtual ~nsSupportsPRBoolImpl();
@@ -97,10 +85,7 @@ class nsSupportsPRUint8Impl : public nsISupportsPRUint8
 {
 public:
     NS_DECL_ISUPPORTS
-
-    NS_IMETHOD GetData(PRUint8 *aData);
-    NS_IMETHOD SetData(PRUint8 aData);
-    NS_IMETHOD toString(char **_retval);
+    NS_DECL_NSISUPPORTSPRUINT8
 
     nsSupportsPRUint8Impl();
     virtual ~nsSupportsPRUint8Impl();
@@ -115,10 +100,7 @@ class nsSupportsPRUint16Impl : public nsISupportsPRUint16
 {
 public:
     NS_DECL_ISUPPORTS
-
-    NS_IMETHOD GetData(PRUint16 *aData);
-    NS_IMETHOD SetData(PRUint16 aData);
-    NS_IMETHOD toString(char **_retval);
+    NS_DECL_NSISUPPORTSPRUINT16
 
     nsSupportsPRUint16Impl();
     virtual ~nsSupportsPRUint16Impl();
@@ -133,10 +115,7 @@ class nsSupportsPRUint32Impl : public nsISupportsPRUint32
 {
 public:
     NS_DECL_ISUPPORTS
-
-    NS_IMETHOD GetData(PRUint32 *aData);
-    NS_IMETHOD SetData(PRUint32 aData);
-    NS_IMETHOD toString(char **_retval);
+    NS_DECL_NSISUPPORTSPRUINT32
 
     nsSupportsPRUint32Impl();
     virtual ~nsSupportsPRUint32Impl();
@@ -151,10 +130,7 @@ class nsSupportsPRUint64Impl : public nsISupportsPRUint64
 {
 public:
     NS_DECL_ISUPPORTS
-
-    NS_IMETHOD GetData(PRUint64 *aData);
-    NS_IMETHOD SetData(PRUint64 aData);
-    NS_IMETHOD toString(char **_retval);
+    NS_DECL_NSISUPPORTSPRUINT64
 
     nsSupportsPRUint64Impl();
     virtual ~nsSupportsPRUint64Impl();
@@ -169,10 +145,7 @@ class nsSupportsPRTimeImpl : public nsISupportsPRTime
 {
 public:
     NS_DECL_ISUPPORTS
-
-    NS_IMETHOD GetData(PRTime *aData);
-    NS_IMETHOD SetData(PRTime aData);
-    NS_IMETHOD toString(char **_retval);
+    NS_DECL_NSISUPPORTSPRTIME
 
     nsSupportsPRTimeImpl();
     virtual ~nsSupportsPRTimeImpl();
@@ -187,10 +160,7 @@ class nsSupportsCharImpl : public nsISupportsChar
 {
 public:
     NS_DECL_ISUPPORTS
-
-    NS_IMETHOD GetData(char *aData);
-    NS_IMETHOD SetData(char aData);
-    NS_IMETHOD toString(char **_retval);
+    NS_DECL_NSISUPPORTSCHAR
 
     nsSupportsCharImpl();
     virtual ~nsSupportsCharImpl();
@@ -205,10 +175,7 @@ class nsSupportsPRInt16Impl : public nsISupportsPRInt16
 {
 public:
     NS_DECL_ISUPPORTS
-
-    NS_IMETHOD GetData(PRInt16 *aData);
-    NS_IMETHOD SetData(PRInt16 aData);
-    NS_IMETHOD toString(char **_retval);
+    NS_DECL_NSISUPPORTSPRINT16
 
     nsSupportsPRInt16Impl();
     virtual ~nsSupportsPRInt16Impl();
@@ -223,10 +190,7 @@ class nsSupportsPRInt32Impl : public nsISupportsPRInt32
 {
 public:
     NS_DECL_ISUPPORTS
-
-    NS_IMETHOD GetData(PRInt32 *aData);
-    NS_IMETHOD SetData(PRInt32 aData);
-    NS_IMETHOD toString(char **_retval);
+    NS_DECL_NSISUPPORTSPRINT32
 
     nsSupportsPRInt32Impl();
     virtual ~nsSupportsPRInt32Impl();
@@ -241,10 +205,7 @@ class nsSupportsPRInt64Impl : public nsISupportsPRInt64
 {
 public:
     NS_DECL_ISUPPORTS
-
-    NS_IMETHOD GetData(PRInt64 *aData);
-    NS_IMETHOD SetData(PRInt64 aData);
-    NS_IMETHOD toString(char **_retval);
+    NS_DECL_NSISUPPORTSPRINT64
 
     nsSupportsPRInt64Impl();
     virtual ~nsSupportsPRInt64Impl();
@@ -259,10 +220,7 @@ class nsSupportsFloatImpl : public nsISupportsFloat
 {
 public:
     NS_DECL_ISUPPORTS
-
-    NS_IMETHOD GetData(float *aData);
-    NS_IMETHOD SetData(float aData);
-    NS_IMETHOD toString(char **_retval);
+    NS_DECL_NSISUPPORTSFLOAT
 
     nsSupportsFloatImpl();
     virtual ~nsSupportsFloatImpl();
@@ -277,10 +235,7 @@ class nsSupportsDoubleImpl : public nsISupportsDouble
 {
 public:
     NS_DECL_ISUPPORTS
-
-    NS_IMETHOD GetData(double *aData);
-    NS_IMETHOD SetData(double aData);
-    NS_IMETHOD toString(char **_retval);
+    NS_DECL_NSISUPPORTSDOUBLE
 
     nsSupportsDoubleImpl();
     virtual ~nsSupportsDoubleImpl();
@@ -295,10 +250,7 @@ class nsSupportsVoidImpl : public nsISupportsVoid
 {
 public:
     NS_DECL_ISUPPORTS
-
-    NS_IMETHOD GetData(const void * *aData);
-    NS_IMETHOD SetData(void * aData);
-    NS_IMETHOD toString(char **_retval);
+    NS_DECL_NSISUPPORTSVOID
 
     nsSupportsVoidImpl();
     virtual ~nsSupportsVoidImpl();

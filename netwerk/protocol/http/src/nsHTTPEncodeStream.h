@@ -29,11 +29,10 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIBaseStream methods:
-    NS_IMETHOD Close(void);
+    NS_DECL_NSIBASESTREAM
 
     // nsIInputStream methods:
-    NS_IMETHOD GetLength(PRUint32 *result);
-    NS_IMETHOD Read(char * buf, PRUint32 count, PRUint32 *result);
+    NS_DECL_NSIINPUTSTREAM
     
     // nsHTTPEncodeStream methods:
     nsHTTPEncodeStream();

@@ -29,13 +29,8 @@ class nsHashtableEnumerator : public nsIBidirectionalEnumerator
 {
   public:    
     NS_DECL_ISUPPORTS
-
-    NS_IMETHOD First ();
-    NS_IMETHOD Last ();
-    NS_IMETHOD Prev ();
-    NS_IMETHOD Next ();
-    NS_IMETHOD CurrentItem (nsISupports **retval);
-    NS_IMETHOD IsDone ();
+    NS_DECL_NSIENUMERATOR
+    NS_DECL_NSIBIDIRECTIONALENUMERATOR
 
   public:    
     virtual ~nsHashtableEnumerator ();
