@@ -314,7 +314,6 @@ nsresult nsPref::useDefaultPrefFile()
 #else
 #error you_need_to_edit_this_file_for_your_freak_os
 #endif /* XP_FOO */
-    SetCharPref("browser.startup.homepage", "http://www.mozilla.org");
     SetCharPref("mail.accountmanager.accounts", "account0,account1");
     SetCharPref("mail.account.account0.identities", "id1");
     SetCharPref("mail.account.account0.server", "server0");
@@ -334,9 +333,6 @@ nsresult nsPref::useDefaultPrefFile()
     SetCharPref("mail.server.server1.directory", newsDirStr);
     SetCharPref("mail.server.server1.hostname", "news.mozilla.org");
     SetCharPref("mail.server.server1.type", "nntp");
-    SetIntPref("mail.wraplength", 72);
-    SetIntPref("news.max_articles",50);
-    SetBoolPref("news.mark_old_read",PR_FALSE);
     PR_FREEIF(imapDirStr);
     PR_FREEIF(newsDirStr);
     PR_FREEIF(emailStr);
