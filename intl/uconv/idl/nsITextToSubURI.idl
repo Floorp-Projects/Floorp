@@ -33,4 +33,5 @@
 interface nsITextToSubURI : nsISupports
 {
 	string ConvertAndEscape(in string charset, in wstring text);
+	wstring UnEscapeAndConvert(in string charset, in string text);
 };

@@ -55,6 +55,8 @@ NS_IMPL_ISUPPORTS(nsTextToSubURI, kITextToSubURIIID)
 NS_IMETHODIMP  nsTextToSubURI::ConvertAndEscape(
   const char *charset, const PRUnichar *text, char **_retval) 
 {
+  if(nsnull == _retval)
+    return NS_ERROR_NULL_POINTER;
   *_retval = nsnull;
   nsAutoString charsetStr(charset);
   nsIUnicodeEncoder *encoder = nsnull;
@@ -68,34 +70,81 @@ NS_IMETHODIMP  nsTextToSubURI::ConvertAndEscape(
   if(NS_SUCCEEDED(rv) && (nsnull != ccm)) {
      rv = ccm->GetUnicodeEncoder(&charsetStr, &encoder);
      nsServiceManager::ReleaseService( kCharsetConverterManagerCID, ccm);
-     rv = encoder->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace, nsnull, (PRUnichar)'?');
-     if(NS_SUCCEEDED(rv))
-     {
-        char buf[256];
-        char *pBuf = buf;
-        PRInt32 ulen = nsCRT::strlen(text);
-        PRInt32 outlen = 0;
-        if(NS_SUCCEEDED(rv = encoder->GetMaxLength(text, ulen, &outlen))) 
-        {
-           if(outlen >= 256) {
-              pBuf = (char*)PR_Malloc(outlen+1);
-           }
-           if(nsnull == pBuf) {
-              outlen = 255;
-              pBuf = buf;
-           }
-           if(NS_SUCCEEDED(rv = encoder->Convert(text,&ulen, pBuf, &outlen))) {
-              pBuf[outlen] = '\0';
-              *_retval = nsEscape(pBuf, url_XPAlphas);
-              if(nsnull == *_retval)
-                rv = NS_ERROR_OUT_OF_MEMORY;
-           }
-        }
-        if(pBuf != buf)
-           PR_Free(pBuf);
+     if (NS_SUCCEEDED(rv)) {
+       rv = encoder->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace, nsnull, (PRUnichar)'?');
+       if(NS_SUCCEEDED(rv))
+       {
+          char buf[256];
+          char *pBuf = buf;
+          PRInt32 ulen = nsCRT::strlen(text);
+          PRInt32 outlen = 0;
+          if(NS_SUCCEEDED(rv = encoder->GetMaxLength(text, ulen, &outlen))) 
+          {
+             if(outlen >= 256) {
+                pBuf = (char*)PR_Malloc(outlen+1);
+             }
+             if(nsnull == pBuf) {
+                outlen = 255;
+                pBuf = buf;
+             }
+             if(NS_SUCCEEDED(rv = encoder->Convert(text,&ulen, pBuf, &outlen))) {
+                pBuf[outlen] = '\0';
+                *_retval = nsEscape(pBuf, url_XPAlphas);
+                if(nsnull == *_retval)
+                  rv = NS_ERROR_OUT_OF_MEMORY;
+             }
+          }
+          if(pBuf != buf)
+             PR_Free(pBuf);
+       }
+       NS_IF_RELEASE(encoder);
      }
   }
   
+  return rv;
+}
+
+NS_IMETHODIMP  nsTextToSubURI::UnEscapeAndConvert(
+  const char *charset, const char *text, PRUnichar **_retval) 
+{
+  if(nsnull == _retval)
+    return NS_ERROR_NULL_POINTER;
+  *_retval = nsnull;
+  nsresult rv = NS_OK;
+  
+  // unescape the string, unescape changes the input
+  char *unescaped = nsCRT::strdup((char *) text);
+  if (nsnull == unescaped)
+    return NS_ERROR_OUT_OF_MEMORY;
+  unescaped = nsUnescape(unescaped);
+  NS_ASSERTION(unescaped, "nsUnescape returned null");
+
+  // Convert from the charset to unicode
+  NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &rv); 
+  if (NS_SUCCEEDED(rv)) {
+    nsAutoString charsetStr(charset);
+    nsIUnicodeDecoder *decoder;
+    rv = ccm->GetUnicodeDecoder(&charsetStr, &decoder);
+    if (NS_SUCCEEDED(rv)) {
+      PRUnichar *pBuf = nsnull;
+      PRInt32 len = nsCRT::strlen(unescaped);
+      PRInt32 outlen = 0;
+      if (NS_SUCCEEDED(rv = decoder->GetMaxLength(unescaped, len, &outlen))) {
+        pBuf = (PRUnichar *) PR_Malloc((outlen+1)*sizeof(PRUnichar*));
+        if (nsnull == pBuf)
+          rv = NS_ERROR_OUT_OF_MEMORY;
+        else {
+          if (NS_SUCCEEDED(rv = decoder->Convert(unescaped, &len, pBuf, &outlen))) {
+            pBuf[outlen] = 0;
+            *_retval = pBuf;
+          }
+        }
+      }
+      NS_IF_RELEASE(decoder);
+    }
+  }
+  PR_FREEIF(unescaped);
+
   return rv;
 }
 
