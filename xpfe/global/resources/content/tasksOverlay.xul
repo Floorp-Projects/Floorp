@@ -1,42 +1,10 @@
 <?xml version="1.0"?> 
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://global/skin/tasksOverlay.css" type="text/css"?> 
 
-<!-- FIX ME   this should change to German's new taskbar.css when it gets checked in  -->
-<?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?>
 
 
-<!DOCTYPE window
-[
-<!ENTITY tasksMenu.label				"Tasks">
-<!ENTITY navigatorCmd.label					"Navigator">  
-<!ENTITY messengerCmd.label					"Messenger">
-<!ENTITY editorCmd.label					"Editor">
-<!ENTITY textEditorCmd.label				"Plaintext Editor">
-
-<!ENTITY addressBookCmd.label				"Address Book">  
- 
-<!ENTITY newsgroupsCmd.label				"Newsgroups">  
-<!ENTITY toolsMenu.label					".Tools"> 
-<!ENTITY historyCmd.label						"History">  
-<!ENTITY securityInfoCmd.label					".Security Info">  
-<!ENTITY messageCenterCmd.label					".Message Center">  
-<!ENTITY importUtilCmd.label					".Import Utility">  
-<!ENTITY javaConsoleCmd.label					".Java Console">
-
-<!-- taskbar -->
-<!ENTITY  mozillaButton.label "Mozilla">
-<!ENTITY  shoppingButton.label "Shopping">
-<!ENTITY  entertainment.label "Entertainment">
-<!ENTITY  openWinButton.label "Open Windows">
-<!-- taskbar popups -->
-<!ENTITY  bugzillaButton.label "Go to Bugzilla">
-<!ENTITY  tinderboxButton.label "Look at Tinderbox">
-<!ENTITY  bonsai.label "Look at Bonsai">
-
-<!ENTITY  booksButton.label "Buy Books at Fatbrain">
-<!ENTITY  cdButton.label "Buy CD's at CDNOW">
-<!ENTITY  lifeButton.label "Get a life at Match.com">
-
-]> 
+<!DOCTYPE  window SYSTEM "chrome://global/locale/tasksOverlay.dtd">
 
 
 <overlay id="tasksOverlay"
