@@ -266,14 +266,10 @@ nsWindow::nsWindow() : nsBaseWidget()
     mFont               = nsnull;
     mIsVisible          = PR_FALSE;
     mHas3DBorder        = PR_FALSE;
-    mMenuBar            = nsnull;
-    mMenuCmdId          = 0;
     mWindowType         = eWindowType_child;
     mBorderStyle        = eBorderStyle_default;
     mBorderlessParent   = 0;
    
-    mHitMenu            = nsnull;
-    mHitSubMenus        = new nsVoidArray();
     mIsInMouseCapture   = PR_FALSE;
 
 	  mIMEProperty		= 0;
@@ -326,10 +322,6 @@ nsWindow::~nsWindow()
     Destroy();
   }
 
-  NS_IF_RELEASE(mHitMenu); // this should always have already been freed by the deselect
-
-  delete mHitSubMenus;
-  
   //XXX Temporary: Should not be caching the font
   delete mFont;
 
@@ -501,8 +493,6 @@ NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus
 
   aStatus = nsEventStatus_eIgnore;
  
-  //if (nsnull != mMenuListener)
-  //	aStatus = mMenuListener->MenuSelected(*event);
   if (nsnull != mEventCallback) {
     aStatus = (*mEventCallback)(event);
   }
@@ -1809,407 +1799,6 @@ void nsWindow::SetUpForPaint(HDC aHDC)
   ::SetBkMode (aHDC, TRANSPARENT);
 }
 
-//-------------------------------------------------------------------------
-nsIMenuItem * nsWindow::FindMenuItem(nsIMenu * aMenu, PRUint32 aId)
-{
-  PRUint32 i, count;
-  aMenu->GetItemCount(count);
-  for (i=0;i<count;i++) {
-    nsISupports * item;
-    nsIMenuItem * menuItem;
-    nsIMenu     * menu;
-
-    aMenu->GetItemAt(i, item);
-    if (NS_OK == item->QueryInterface(nsCOMTypeInfo<nsIMenuItem>::GetIID(), (void **)&menuItem)) {
-      if (((nsMenuItem *)menuItem)->GetCmdId() == (PRInt32)aId) {
-        NS_RELEASE(item);
-        return menuItem;
-      }
-    } else if (NS_OK == item->QueryInterface(nsCOMTypeInfo<nsIMenu>::GetIID(), (void **)&menu)) {
-      nsIMenuItem * fndItem = FindMenuItem(menu, aId);
-      NS_RELEASE(menu);
-      if (nsnull != fndItem) {
-        NS_RELEASE(item);
-        return fndItem;
-      }
-    }
-    NS_RELEASE(item);
-  }
-  return nsnull;
-}
-
-//-------------------------------------------------------------------------
-static nsIMenuItem * FindMenuChild(nsIMenu * aMenu, PRInt32 aId)
-{
-  PRUint32 i, count;
-  aMenu->GetItemCount(count);
-  for (i=0;i<count;i++) {
-    nsISupports * item;
-    aMenu->GetItemAt(i, item);
-    nsIMenuItem * menuItem;
-    if (NS_OK == item->QueryInterface(nsCOMTypeInfo<nsIMenuItem>::GetIID(), (void **)&menuItem)) {
-      if (((nsMenuItem *)menuItem)->GetCmdId() == (PRInt32)aId) {
-        NS_RELEASE(item);
-        return menuItem;
-      }
-    }
-    NS_RELEASE(item);
-  }
-  return nsnull;
-}
-
-
-//-------------------------------------------------------------------------
-nsIMenu * nsWindow::FindMenu(nsIMenu * aMenu, HMENU aNativeMenu, PRInt32 &aDepth)
-{
-  if (aNativeMenu == ((nsMenu *)aMenu)->GetNativeMenu()) {
-    NS_ADDREF(aMenu);
-    return aMenu;
-  }
-
-  //aDepth++;
-  PRUint32 i, count;
-  aMenu->GetItemCount(count);
-  for (i=0;i<count;i++) {
-    nsISupports * item;
-    aMenu->GetItemAt(i, item);
-    nsIMenu * menu;
-    if (NS_OK == item->QueryInterface(nsCOMTypeInfo<nsIMenu>::GetIID(), (void **)&menu)) {
-      HMENU nativeMenu = ((nsMenu *)menu)->GetNativeMenu();
-      if (nativeMenu == aNativeMenu) {
-		aDepth++;
-        return menu;
-      } else {
-        nsIMenu * fndMenu = FindMenu(menu, aNativeMenu, aDepth);
-        if (fndMenu) {
-          NS_RELEASE(item);
-          NS_RELEASE(menu);
-		  aDepth++;
-          return fndMenu;
-        }
-      }
-      NS_RELEASE(menu);
-    }
-    NS_RELEASE(item);
-  }
-  return nsnull;
-}
-
-//-------------------------------------------------------------------------
-static void AdjustMenus(nsIMenu * aCurrentMenu, nsIMenu * aNewMenu, nsMenuEvent & aEvent) 
-{
-  if (nsnull != aCurrentMenu) {
-    nsIMenuListener * listener;
-    if (NS_OK == aCurrentMenu->QueryInterface(nsCOMTypeInfo<nsIMenuListener>::GetIID(), (void **)&listener)) {
-      //listener->MenuDeselected(aEvent);
-      NS_RELEASE(listener);
-    }
-  }
-  if (nsnull != aNewMenu)  {
-    nsIMenuListener * listener;
-    if (NS_OK == aNewMenu->QueryInterface(nsCOMTypeInfo<nsIMenuListener>::GetIID(), (void **)&listener)) {
-		NS_ASSERTION(false, "get debugger");
-      //listener->MenuSelected(aEvent);
-      NS_RELEASE(listener);
-    }
-  }
-}
-
-
-
-//-------------------------------------------------------------------------
-
-nsresult nsWindow::MenuHasBeenSelected(
-  HMENU aNativeMenu, 
-  UINT  aItemNum, 
-  UINT  aFlags, 
-  UINT  aCommand)
-{
-
-  // Build nsMenuEvent
-  nsMenuEvent event;
-  event.mCommand = aCommand;
-  event.eventStructType = NS_MENU_EVENT;
-  InitEvent(event, NS_MENU_SELECTED);
-
-  // The MF_POPUP flag tells us if we are a menu item or a menu
-  // the aItemNum is either the command ID of the menu item or 
-  // the position of the menu as a child of its parent
-
-  PRBool isMenuItem = !(aFlags & MF_POPUP);
-  if(isMenuItem) {
-    //printf("WM_MENUSELECT for menu item\n"); 
-    //NS_RELEASE(event.widget);
-    //return NS_OK;
-  }
-  else
-  {
-	  //printf("WM_MENUSELECT for menu\n"); 
-  }
-
-  // uItem is the position of the item that was clicked
-  // aNativeMenu is a handle to the menu that was clicked
-
-  // if aNativeMenu is NULL then the menu is being deselected
-  if (!aNativeMenu) {
-	  //printf("... for deselect\n");
-    //printf("///////////// Menu is NULL!\n");
-    // check to make sure something had been selected
-    //AdjustMenus(mHitMenu, nsnull, event);
-	nsIMenu * aNewMenu = nsnull;
-	nsMenuEvent aEvent = event;
-    //static void AdjustMenus(nsIMenu * aCurrentMenu, nsIMenu * aNewMenu, nsMenuEvent & aEvent) 
-	{
-      if (nsnull != mHitMenu) {
-        nsIMenuListener * listener;
-        if (NS_OK == mHitMenu->QueryInterface(nsCOMTypeInfo<nsIMenuListener>::GetIID(), (void **)&listener)) {
-          listener->MenuDeselected(aEvent);
-          NS_RELEASE(listener);
-		}
-	  }
-      if (nsnull != aNewMenu)  {
-        nsIMenuListener * listener;
-        if (NS_OK == aNewMenu->QueryInterface(nsCOMTypeInfo<nsIMenuListener>::GetIID(), (void **)&listener)) {
-          listener->MenuSelected(aEvent);
-          NS_RELEASE(listener);
-		}
-	  }
-	}
-
-    NS_IF_RELEASE(mHitMenu);
-    // Clear All SubMenu items
-    while (mHitSubMenus->Count() > 0) {
-      PRUint32 inx = mHitSubMenus->Count()-1;
-      nsIMenu * menu = (nsIMenu *)mHitSubMenus->ElementAt(inx);
-      //AdjustMenus(menu, nsnull, event);
-	  nsIMenu * aCurrentMenu = menu;
-	  nsIMenu * aNewMenu = nsnull;
-      //static void AdjustMenus(nsIMenu * aCurrentMenu, nsIMenu * aNewMenu, nsMenuEvent & aEvent) 
-	  {
-        if (nsnull != aCurrentMenu) {
-          nsIMenuListener * listener;
-          if (NS_OK == aCurrentMenu->QueryInterface(nsCOMTypeInfo<nsIMenuListener>::GetIID(), (void **)&listener)) {
-            listener->MenuDeselected(event);
-            NS_RELEASE(listener);
-		  }
-		}
-        if (nsnull != aNewMenu)  {
-          nsIMenuListener * listener;
-          if (NS_OK == aNewMenu->QueryInterface(nsCOMTypeInfo<nsIMenuListener>::GetIID(), (void **)&listener)) {
-            listener->MenuSelected(event);
-            NS_RELEASE(listener);
-		  }
-		}
-	  }
-
-      NS_RELEASE(menu);
-      mHitSubMenus->RemoveElementAt(inx);
-    }
-    NS_RELEASE(event.widget);
-    return NS_OK;
-  } else { // The menu is being selected
-    //printf("... for selection\n");
-	  void * voidData;
-    mMenuBar->GetNativeData(voidData);
-    HMENU nativeMenuBar = (HMENU)voidData;
-
-    // first check to see if it is a member of the menubar
-    nsIMenu * hitMenu = nsnull;
-    if (aNativeMenu == nativeMenuBar) {
-      mMenuBar->GetMenuAt(aItemNum, hitMenu);
-      if (mHitMenu != hitMenu) {
-	    //mHitMenu, hitMenu, event
-		nsMenuEvent aEvent = event;
-        //AdjustMenus(nsIMenu * aCurrentMenu, nsIMenu * aNewMenu, nsMenuEvent & aEvent) 
-		{
-          if (nsnull != mHitMenu) {
-            nsIMenuListener * listener;
-            if (NS_OK == mHitMenu->QueryInterface(nsCOMTypeInfo<nsIMenuListener>::GetIID(), (void **)&listener)) {
-              listener->MenuDeselected(aEvent);
-              NS_RELEASE(listener);
-			}
-		  }
-          if (nsnull != hitMenu)  {
-            nsIMenuListener * listener;
-            if (NS_OK == hitMenu->QueryInterface(nsCOMTypeInfo<nsIMenuListener>::GetIID(), (void **)&listener)) {
-              listener->MenuSelected(aEvent);
-              NS_RELEASE(listener);
-			}
-		  }
-		}
-        NS_IF_RELEASE(mHitMenu);
-        mHitMenu = hitMenu;
-      } else {
-        NS_IF_RELEASE(hitMenu);
-      }
-    } else {
-      // At this point we know we are inside a menu
-
-      // Find the menu we are in (the parent menu)
-      nsIMenu * parentMenu = nsnull;
-      PRInt32 fndDepth = 0;
-      PRUint32 i, count;
-      mMenuBar->GetMenuCount(count);
-      for (i=0;i<count;i++) {
-        nsIMenu * menu;
-        mMenuBar->GetMenuAt(i, menu);
-        PRInt32 depth = 0;
-        parentMenu = FindMenu(menu, aNativeMenu, depth);
-        if (parentMenu) {
-          fndDepth = depth;
-          break;
-        }
-        NS_RELEASE(menu);
-      }
-
-      if (nsnull != parentMenu) {
-
-        // Sometimes an event comes through for a menu that is being popup down
-        // So it its depth is great then the current hit list count it already gone.
-        if (fndDepth > mHitSubMenus->Count()) {
-          NS_RELEASE(parentMenu);
-          NS_RELEASE(event.widget);
-          return NS_OK;
-        }
-
-        nsIMenu * newMenu  = nsnull;
-
-        // Skip if it is a menu item, otherwise, we get the menu by position
-        if (!isMenuItem) {
-          //printf("Getting submenu by position %d from parentMenu\n", aItemNum);
-          nsISupports * item;
-          parentMenu->GetItemAt((PRUint32)aItemNum, item);
-          if (NS_OK != item->QueryInterface(nsCOMTypeInfo<nsIMenu>::GetIID(), (void **)&newMenu)) {
-            //printf("Item was not a menu! What are we doing here? Return early....\n");
-            NS_RELEASE(event.widget);
-            return NS_ERROR_FAILURE;
-          }
-        }
-
-        // Figure out if this new menu is in the list of popup'ed menus
-        PRBool newFound = PR_FALSE;
-        PRInt32 newLevel = 0;
-        for (newLevel=0;newLevel<mHitSubMenus->Count();newLevel++) {
-          if (newMenu == (nsIMenu *)mHitSubMenus->ElementAt(newLevel)) {
-            newFound = PR_TRUE;
-            break;
-          }
-        }
-
-        // Figure out if the parent menu is in the list of popup'ed menus
-        PRBool found = PR_FALSE;
-        PRInt32 level = 0;
-        for (level=0;level<mHitSubMenus->Count();level++) {
-          if (parentMenu == (nsIMenu *)mHitSubMenus->ElementAt(level)) {
-            found = PR_TRUE;
-            break;
-          }
-        }
-
-        // So now figure out were we are compared to the hit list depth
-        // we figure out how many items are open below
-        //
-        // If the parent was found then we use it
-        // if the parent was NOT found this means we are at the very first level (menu from the menubar)
-        // Windows will send an event for a parent AND child that is already in the hit list
-        // and we think we should be popping it down. So we check to see if the 
-        // new menu is already in the tree so it doesn't get removed and then added.
-        PRInt32 numToRemove = 0;
-        if (found) {
-          numToRemove = mHitSubMenus->Count() - level - 1;
-        } else {
-          // This means we got a menu event for a menubar menu
-          if (newFound) { // newFound checks to see if the new menu to be added is already in the hit list
-            numToRemove = mHitSubMenus->Count() - newLevel - 1;
-          } else {
-            numToRemove = mHitSubMenus->Count();
-          }
-        }
-
-        // If we are to remove 1 item && the new menu to be added is the 
-        // same as the one we would be removing, then don't remove it.
-        if (numToRemove == 1 && newMenu == (nsIMenu *)mHitSubMenus->ElementAt(mHitSubMenus->Count()-1)) {
-          numToRemove = 0;
-        }
-
-        // Now loop thru and removing the menu from thre list
-        PRInt32 ii;
-        for (ii=0;ii<numToRemove;ii++) {
-          nsIMenu * m = (nsIMenu *)mHitSubMenus->ElementAt(mHitSubMenus->Count()-1 );
-          //AdjustMenus(m, nsnull, event);
-		  nsIMenu * aCurrentMenu = m;
-		  nsIMenu * aNewMenu = nsnull;
-		  nsMenuEvent aEvent = event;
-          //static void AdjustMenus(nsIMenu * aCurrentMenu, nsIMenu * aNewMenu, nsMenuEvent & aEvent) 
-		  {
-            if (nsnull != aCurrentMenu) {
-              nsIMenuListener * listener;
-              if (NS_OK == aCurrentMenu->QueryInterface(nsCOMTypeInfo<nsIMenuListener>::GetIID(), (void **)&listener)) {
-                listener->MenuDeselected(aEvent);
-                NS_RELEASE(listener);
-			  }
-			}
-            if (nsnull != aNewMenu)  {
-              nsIMenuListener * listener;
-              if (NS_OK == aNewMenu->QueryInterface(nsCOMTypeInfo<nsIMenuListener>::GetIID(), (void **)&listener)) {
-		        NS_ASSERTION(false, "get debugger");
-                listener->MenuSelected(aEvent);
-				NS_RELEASE(listener);
-			  }
-			}
-		  }
-          nsString name;
-          m->GetLabel(name);
-          NS_RELEASE(m);
-          mHitSubMenus->RemoveElementAt(mHitSubMenus->Count()-1);
-        }
- 
-        // At this point we bail if we are a menu item
-        if (isMenuItem) {
-          NS_RELEASE(event.widget);
-          return NS_OK;
-        }
-
-        // Here we know we have a menu, check one last time to see 
-        // if the new one is the last one in the list
-        // Add it if it isn't or skip adding it
-        nsString name;
-        newMenu->GetLabel(name);
-        if (newMenu != (nsIMenu *)mHitSubMenus->ElementAt(mHitSubMenus->Count()-1)) {
-          mHitSubMenus->AppendElement(newMenu);
-          NS_ADDREF(newMenu);
-          //AdjustMenus(nsnull, newMenu, event);
-		  nsIMenu * aCurrentMenu = nsnull;
-		  nsIMenu * aNewMenu = newMenu;
-		  nsMenuEvent aEvent = event;
-          //static void AdjustMenus(nsIMenu * aCurrentMenu, nsIMenu * aNewMenu, nsMenuEvent & aEvent) 
-		  {
-            if (nsnull != aCurrentMenu) {
-              nsIMenuListener * listener;
-              if (NS_OK == aCurrentMenu->QueryInterface(nsCOMTypeInfo<nsIMenuListener>::GetIID(), (void **)&listener)) {
-                listener->MenuDeselected(aEvent);
-                NS_RELEASE(listener);
-			  }
-			}
-            if (nsnull != aNewMenu)  {
-              nsIMenuListener * listener;
-              if (NS_OK == aNewMenu->QueryInterface(nsCOMTypeInfo<nsIMenuListener>::GetIID(), (void **)&listener)) {
-                listener->MenuSelected(aEvent);
-                NS_RELEASE(listener);
-			  }
-			}
-		  }
-        }
-        NS_RELEASE(parentMenu);
-      } else {
-        //printf("no menu was found. This is bad.\n");
-        // XXX need to assert here!
-      }
-    }
-  }  
-  NS_RELEASE(event.widget);
-  return NS_OK;
-}
 //---------------------------------------------------------
 NS_METHOD nsWindow::EnableDragDrop(PRBool aEnable)
 {
@@ -2531,31 +2120,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             event.eventStructType = NS_MENU_EVENT;
             InitEvent(event, NS_MENU_SELECTED);
             result = DispatchWindowEvent(&event);
-
-            if (mMenuBar) {
-              PRUint32 i, count;
-              mMenuBar->GetMenuCount(count);
-              for (i=0;i<count;i++) {
-                nsIMenu * menu;
-                mMenuBar->GetMenuAt(i, menu);
-                nsIMenuItem * menuItem = FindMenuItem(menu, event.mCommand);
-                if (menuItem) {
-                  nsIMenuListener * listener;
-                  if (NS_OK == menuItem->QueryInterface(nsCOMTypeInfo<nsIMenuListener>::GetIID(), (void **)&listener)) {
-                    listener->MenuItemSelected(event);
-                    NS_RELEASE(listener);
-
-					          menu->QueryInterface(nsCOMTypeInfo<nsIMenuListener>::GetIID(), (void **)&listener);
-					          if(listener){
-					            //listener->MenuDestruct(event);
-					            NS_RELEASE(listener);
-					          }
-                  }
-                  NS_RELEASE(menuItem);
-                }
-                NS_RELEASE(menu);
-              }
-            }
             NS_RELEASE(event.widget);
           }
         }
@@ -2695,17 +2259,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 			      else
 				      result = PR_FALSE;
 
-            // Let's consume the ALT key up so that we don't go into
-            // a menu bar if we don't have one.
-            // XXX This will cause a tiny breakage in viewer... namely
-            // that hitting ALT by itself in viewer won't move you into
-            // the menu.  ALT+shortcut key will still work, though, so
-            // I figure this is ok.
-            if (!mMenuBar && (wParam == NS_VK_ALT)) {
-              result = PR_TRUE;
-              *aRetValue = 0;
-            }
-
             break;
 
         // Let ths fall through if it isn't a key pad
@@ -2740,8 +2293,8 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 
             if (!mIMEIsComposing)
                result = OnKeyDown(wParam, (HIWORD(lParam)));
-	    else
-	       result = PR_FALSE;
+	          else
+	             result = PR_FALSE;
             }
             break;
 
@@ -2938,12 +2491,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             }
             break;
         }
-
-        case WM_MENUSELECT: 
-          if (mMenuBar) {
-            MenuHasBeenSelected((HMENU)lParam, (UINT)LOWORD(wParam), (UINT)HIWORD(wParam), (UINT) LOWORD(wParam));
-          }
-          break;
 
         case WM_SETTINGCHANGE:
           firstTime = TRUE;
@@ -3753,6 +3300,21 @@ DWORD nsWindow::GetBorderStyle(nsBorderStyle aBorderStyle)
   */
 }
 
+static char* GetACPString(const nsString& aStr)
+{
+   int acplen = aStr.Length() * 2 + 1;
+   char * acp = new char[acplen];
+   if(acp)
+   {
+      int outlen = ::WideCharToMultiByte( CP_ACP, 0, 
+                      aStr.GetUnicode(), aStr.Length(),
+                      acp, acplen, NULL, NULL);
+      if ( outlen > 0)
+         acp[outlen] = '\0';  // null terminate
+   }
+   return acp;
+}
+
 NS_METHOD nsWindow::SetTitle(const nsString& aTitle) 
 {
   char* title = GetACPString(aTitle);
@@ -3767,36 +3329,6 @@ NS_METHOD nsWindow::SetTitle(const nsString& aTitle)
 PRBool nsWindow::AutoErase()
 {
   return(PR_FALSE);
-}
-
-NS_METHOD nsWindow::SetMenuBar(nsIMenuBar * aMenuBar) 
-{
-  mMenuBar = aMenuBar;
-  NS_ADDREF(mMenuBar);
-  return ShowMenuBar(PR_TRUE);
-}
-
-NS_METHOD nsWindow::ShowMenuBar(PRBool aShow)
-{
-  nsresult rv = NS_ERROR_FAILURE;
-
-  if (aShow) {
-    if (mMenuBar) {
-      HMENU nativeMenuHandle;
-      void  *voidData;
-      mMenuBar->GetNativeData(voidData);
-      nativeMenuHandle = (HMENU)voidData;
-
-      if (nativeMenuHandle) {
-        ::SetMenu(mWnd, nativeMenuHandle);
-        rv = NS_OK;
-      }
-    }
-  } else {
-    ::SetMenu(mWnd, 0);
-    rv = NS_OK;
-  }
-  return rv;
 }
 
 NS_METHOD nsWindow::GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight)
