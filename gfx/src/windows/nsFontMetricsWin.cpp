@@ -4129,9 +4129,15 @@ GenerateSingleByte(nsCharsetInfo* aSelf)
   int i;
 
   memset(map, 0, sizeof(map));
-  for (i = 0; i < 256; ++i) {
+  for (i = 0; i < 127; ++i) {
     mb[i] = i;
   }
+  mb[145] = 145;
+  mb[146] = 146;
+  for (i = 160; i < 255; ++i) {
+    mb[i] = i;
+  }
+
   int len = MultiByteToWideChar(aSelf->mCodePage, 0, (char*) mb, 256, wc, 256);
 #ifdef NS_DEBUG
   if (len != 256) {
