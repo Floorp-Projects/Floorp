@@ -454,7 +454,7 @@ nsDOMImplementation::HasFeature(const nsString& aFeature,
 
   if ((aFeature.EqualsIgnoreCase("HTML") ||
       aFeature.EqualsIgnoreCase("XML")) &&
-      (ver >= 1.0) && (ver <= 2.0)) {
+      ((ver == 1.0) || (ver == 2.0) || (0 ==aVersion.Length()))) {
     *aReturn = PR_TRUE;
   }
   else {
