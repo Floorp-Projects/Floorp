@@ -26,11 +26,19 @@
 #include "nsXPComCIID.h"
 #include "nsIFileLocator.h"
 
+#include "MsgCompGlue.h"
+#include "nsCRT.h"
+#include "prmem.h"
+
+#include "nsIMimeURLUtils.h"
+
+
 #ifdef XP_PC
 #define NETLIB_DLL "netlib.dll"
 #define XPCOM_DLL  "xpcom32.dll"
 #define PREF_DLL   "xppref32.dll"
 #define APPSHELL_DLL "nsappshell.dll"
+#define MIME_DLL "mime.dll"
 #else
 #ifdef XP_MAC
 #include "nsMacRepository.h"
@@ -40,6 +48,7 @@
 #define PREF_DLL   "libpref.so"
 #define APPCORES_DLL  "libappcores.so"
 #define APPSHELL_DLL "libnsappshell.so"
+#define MIME_DLL "libmime.so"
 #endif
 #endif
 
@@ -60,6 +69,7 @@ static NS_DEFINE_IID(kIMsgSendIID, NS_IMSGSEND_IID);
 static NS_DEFINE_CID(kMsgSendCID, NS_MSGSEND_CID); 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
+static NS_DEFINE_CID(kMimeURLUtilsCID, NS_IMIME_URLUTILS_CID);
 
 nsresult OnIdentityCheck()
 {
@@ -94,6 +104,37 @@ nsresult OnIdentityCheck()
 	return result;
 }
 
+//nsMsgAttachmentData *
+nsMsgAttachedFile *
+GetAttachments(void)
+{  
+  nsMsgAttachedFile *attachments = (nsMsgAttachedFile *) PR_Malloc(sizeof(nsMsgAttachedFile) * 2);
+
+  if (!attachments)
+    return NULL;
+  
+  nsCRT::memset(attachments, 0, sizeof(MSG_AttachedFile) * 2);
+  attachments[0].orig_url = PL_strdup("file://C:/big.bmp");
+  attachments[0].file_name = PL_strdup("C:\\big.bmp");
+  attachments[0].type = PL_strdup("image/jpeg");
+  attachments[0].encoding = PL_strdup(ENCODING_BINARY);
+  attachments[0].description = PL_strdup("Boxster Image");
+  return attachments;
+}
+
+char *email = {"\
+<!doctype html public \"-//w3c//dtd html 4.0 transitional//en\">\n\
+<html>\n\
+<body text=\"#000000\" bgcolor=\"#FFFFFF\" link=\"#FF0000\" vlink=\"#800080\" alink=\"#0000FF\">\n\
+<b><font face=\"Arial,Helvetica\"><font color=\"#FF0000\">Here is some HTML\n\
+in RED!</font></font></b>\n\
+<br><b><font face=\"Arial,Helvetica\"><font color=\"#FF0000\">Now a picture:</font></font></b>\n\
+<br><img SRC=\"file://C:/test.jpg\" height=8 width=10>\n\
+<br>All done!\n\
+<br>&nbsp;\n\
+</body>\n\
+</html>"};
+
 /* 
  * This is a test stub for mail composition. This will be enhanced as the
  * development continues for message send functions. 
@@ -110,8 +151,9 @@ int main(int argc, char *argv[])
 	nsComponentManager::RegisterComponent(kEventQueueCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
 	nsComponentManager::RegisterComponent(kPrefCID, nsnull, nsnull, PREF_DLL, PR_TRUE, PR_TRUE);
 	nsComponentManager::RegisterComponent(kFileLocatorCID,  NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
+	nsComponentManager::RegisterComponent(kMimeURLUtilsCID,  NULL, NULL, MIME_DLL, PR_FALSE, PR_FALSE);
 
-  	// Create the Event Queue for this thread...
+  // Create the Event Queue for this thread...
 	NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv); 
 
 	if (NS_FAILED(rv)) 
@@ -176,12 +218,38 @@ int main(int argc, char *argv[])
       pMsgCompFields->SetFrom(", rhp@netscape.com, ", NULL);
       pMsgCompFields->SetTo("rhp@netscape.com", NULL);
       pMsgCompFields->SetSubject("[spam] test", NULL);
-      pMsgCompFields->SetBody("Sample message sent with Mozilla\n\nPlease do not reply, thanks\n\nRich Pizzarro\n", NULL);
-      pMsgCompFields->SetAttachments("c:\\boxster.jpg", NULL);
+      //pMsgCompFields->SetBody("Sample message sent with Mozilla\n\nPlease do not reply, thanks\n\nRich Pizzarro\n", NULL);
+      pMsgCompFields->SetBody(email, NULL);
+      // pMsgCompFields->SetAttachments("c:\\boxster.jpg", NULL);
 
-      pMsgSend->SendMessage(pMsgCompFields, "");
-    }
-    
+      PRInt32 nBodyLength;
+      char    *pBody;
+
+	    pMsgCompFields->GetBody(&pBody);
+	    if (pBody)
+		    nBodyLength = PL_strlen(pBody);
+	    else
+		    nBodyLength = 0;
+
+      // nsMsgAttachmentData *ptr = GetAttachments();
+      nsMsgAttachedFile *ptr = GetAttachments();
+
+      pMsgSend->SendMessage(pMsgCompFields, 
+                "",               // const char *smtp,
+						    PR_FALSE,         // PRBool                            digest_p,
+						    PR_FALSE,         // PRBool                            dont_deliver_p,
+						    nsMsgDeliverNow,   // nsMsgDeliverMode                  mode,
+						    TEXT_HTML, //TEXT_PLAIN,       // const char                        *attachment1_type,
+						    pBody,            // const char                        *attachment1_body,
+						    nBodyLength,      // PRUint32                          attachment1_body_length,
+						    NULL,             // const struct nsMsgAttachmentData   *attachments,
+						    ptr,              // const struct nsMsgAttachedFile     *preloaded_attachments,
+						    NULL,             // nsMsgSendPart                     *relatedPart,
+						    NULL);            // void  (*message_delivery_done_callback)(MWContext *context, void *fe_data,
+								                  //                                         int status, const char *error_message))
+
+      PR_FREEIF(ptr);
+    }    
   }
 
 #ifdef XP_PC
@@ -204,3 +272,4 @@ int main(int argc, char *argv[])
 
   return 0; 
 }
+
