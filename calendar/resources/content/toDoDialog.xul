@@ -69,12 +69,6 @@
    >
     
    
-<!-- Javascript DTD To Variable -->
-<script type="application/x-javascript">
-   var neStartTimeErrorAlertMessage = "&newevent.starttimeerror.alertmessage;";
-   var neRecurErrorAlertMessage     = "&newevent.recurendtimeerror.alertmessage;";
-</script>
-
 <!-- Javascript includes -->
 
 <script type="application/x-javascript" src="chrome://global/content/strres.js"/>

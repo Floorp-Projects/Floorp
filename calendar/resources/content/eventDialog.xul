@@ -77,8 +77,6 @@
    
 <!-- Javascript DTD To Variable -->
 <script type="application/x-javascript">
-   var neStartTimeErrorAlertMessage = "&newevent.starttimeerror.alertmessage;";
-   var neRecurErrorAlertMessage     = "&newevent.recurendtimeerror.alertmessage;";
    var DTD_noEmailMessage           = "&ab-selectAddressesDialogNoEmailMessage.label;";
    var DTD_toPrefix                 = "&ab-selectAddressesDialogPrefixTo.label;";
 </script>
@@ -106,7 +104,6 @@
 <dataset>
     <data id="data-event-title-new"             value="&event.title.new;" />
     <data id="data-event-title-edit"            value="&event.title.edit;" />
-    <data id="neStartTimeErrorAlertMessage"     value="&newevent.starttimeerror.alertmessage;" />
     <data id="onthe-text"                       value="&onthe-text;" />
     <data id="last-text"                        value="&last-text;" />
     <data id="ofthemonth-text"                  value="&ofthemonth-text;" />
