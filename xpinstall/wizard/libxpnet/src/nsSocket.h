@@ -33,6 +33,7 @@ class nsSocket
 {
 public:
     nsSocket(char *aHost, int aPort);
+    nsSocket(char *aHost, int aPort, int (*aEventPumpCB)(void) );
     ~nsSocket();
 
 //----------------------------------------------------------------------
@@ -76,7 +77,8 @@ public:
     float CalcRate(struct timeval *aPre, struct timeval *aPost, int aBytes);
 
 private:
-    char *mHost;
+    int   (*mEventPumpCB)(void);
+    char  *mHost;
     int   mPort;
     int   mFd; // connected socket
     int   mListenFd; // listening socket (only if SrvOpen() was called)

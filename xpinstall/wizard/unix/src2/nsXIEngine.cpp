@@ -53,6 +53,11 @@ nsXIEngine::~nsXIEngine()
 }
 
 int     
+EventPumpCB(void)
+{
+}
+
+int     
 nsXIEngine::Download(int aCustom, nsComponentList *aComps)
 {
     DUMP("Download");
@@ -142,7 +147,7 @@ nsXIEngine::Download(int aCustom, nsComponentList *aComps)
                     sprintf(proxyURL, "%s%s:%s", kHTTPProto,
                             gCtx->opt->mProxyHost, gCtx->opt->mProxyPort);
 
-                    nsHTTPConn *conn = new nsHTTPConn(proxyURL);
+                    nsHTTPConn *conn = new nsHTTPConn(proxyURL, EventPumpCB);
                     if (!conn)
                     {
                         err = E_MEM;
@@ -189,7 +194,7 @@ nsXIEngine::Download(int aCustom, nsComponentList *aComps)
                     }
                     sprintf(qualURL, "%s%s", currURL, currComp->GetArchive());
 
-                    nsHTTPConn *conn = new nsHTTPConn(qualURL);
+                    nsHTTPConn *conn = new nsHTTPConn(qualURL, EventPumpCB);
                     if (!conn)
                     {
                         err = E_MEM;
@@ -228,7 +233,7 @@ nsXIEngine::Download(int aCustom, nsComponentList *aComps)
                     }
                     sprintf(srvPath, "%s%s", currPath, currComp->GetArchive());
 
-                    nsFTPConn *conn = new nsFTPConn(currHost);
+                    nsFTPConn *conn = new nsFTPConn(currHost, EventPumpCB);
                     if (!conn)
                     {
                         err = E_MEM;

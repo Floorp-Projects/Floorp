@@ -445,6 +445,26 @@ void GetTotalArchivesToDownload(int *iTotalArchivesToDownload, DWORD *dwTotalEst
   *iTotalArchivesToDownload = iIndex;
 }
 
+/* 
+ * Name: ProcessWndMsgCB
+ *
+ * Arguments: None
+ *
+ * Description: Callback function invoked by socket code and by FTP and HTTP layers
+ *				to give the UI a chance to breath while we are in a look processing
+ *				incoming data, or looping in select()
+ *
+ * Author: syd@netscape.com 5/11/2001
+ *
+*/
+
+int
+ProcessWndMsgCB()
+{
+	ProcessWindowsMessages();
+	return 0;
+}
+
 /* Function used only to send the message stream error */
 int WGet(char *szUrl,
          char *szProxyServer,
@@ -477,7 +497,7 @@ int WGet(char *szUrl,
   else
   {
     /* no proxy information supplied. set up normal http object */
-    conn = new nsHTTPConn(szUrl);
+    conn = new nsHTTPConn(szUrl, ProcessWndMsgCB);
     if(conn == NULL)
       return(WIZ_OUT_OF_MEMORY);
   }
@@ -504,7 +524,7 @@ int DownloadViaProxy(char *szUrl, char *szProxyServer, char *szProxyPort, char *
   memset(proxyURL, 0, kProxySrvrLen);
   wsprintf(proxyURL, "http://%s:%s", szProxyServer, szProxyPort);
 
-  nsHTTPConn *conn = new nsHTTPConn(proxyURL);
+  nsHTTPConn *conn = new nsHTTPConn(proxyURL, ProcessWndMsgCB);
   if(conn == NULL)
   {
     char szBuf[MAX_BUF_TINY];
@@ -538,7 +558,7 @@ int DownloadViaHTTP(char *szUrl)
   int rv;
 
   rv = nsHTTPConn::OK;
-  nsHTTPConn *conn = new nsHTTPConn(szUrl);
+  nsHTTPConn *conn = new nsHTTPConn(szUrl, ProcessWndMsgCB);
   if(conn == NULL)
   {
     char szBuf[MAX_BUF_TINY];
@@ -569,7 +589,7 @@ int DownloadViaFTP(char *szUrl)
 
   rv = nsHTTPConn::ParseURL(kFTP, szUrl, &host, &port, &path);
 
-  nsFTPConn *conn = new nsFTPConn(host);
+  nsFTPConn *conn = new nsFTPConn(host, ProcessWndMsgCB);
   if(conn == NULL)
   {
     char szBuf[MAX_BUF_TINY];

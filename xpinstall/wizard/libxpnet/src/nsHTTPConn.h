@@ -34,12 +34,15 @@ class nsHTTPConn
 public:
     nsHTTPConn(char *aHost, int aPort, char *aPath);
     nsHTTPConn(char *aURL);
+    nsHTTPConn(char *aHost, int aPort, char *aPath, int (*aEventPumpCB)(void));
+    nsHTTPConn(char *aURL, int (*aEventPumpCB)(void));
     ~nsHTTPConn();
 
     int Open();
     int ResumeOrGet(HTTPGetCB aCallback, char *aDestFile);
     int Get(HTTPGetCB aCallback, char *aDestFile);
     int Get(HTTPGetCB aCallback, char *aDestFile, int aResumePos);
+
     int Close();
 
     void SetProxyInfo(char *aProxiedURL, char *aProxyUser, 
@@ -67,6 +70,7 @@ private:
     int Base64Encode(const unsigned char *in_str, int in_len,
                      char *out_str, int out_len);
 
+    int (*mEventPumpCB)(void);
     char *mHost;
     char *mPath;
     int   mPort;

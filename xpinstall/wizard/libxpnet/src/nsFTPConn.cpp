@@ -48,7 +48,18 @@ const int kKilobyte = 1024;
 const int kUsecsPerSec = 1000000;
 const int kDlBufSize = 1024;
 
+nsFTPConn::nsFTPConn(char *aHost, int (*aEventPumpCB)(void)) :
+    mEventPumpCB(aEventPumpCB),
+    mHost(aHost),
+    mState(CLOSED),
+    mPassive(FALSE),
+    mCntlSock(NULL),
+    mDataSock(NULL)
+{
+}
+
 nsFTPConn::nsFTPConn(char *aHost) :
+    mEventPumpCB(NULL),
     mHost(aHost),
     mState(CLOSED),
     mPassive(FALSE),
@@ -238,6 +249,8 @@ nsFTPConn::Get(char *aSrvPath, char *aLoclPath, int aType, int aResumePos,
             err = E_WRITE;
             goto BAIL;
         }
+		if ( mEventPumpCB )
+			mEventPumpCB();
     }
     while (err == nsSocket::E_READ_MORE || err == nsSocket::OK);
     if (err == nsSocket::E_EOF_FOUND)
@@ -312,7 +325,9 @@ nsFTPConn::IssueCmd(char *aCmd, char *aResp, int aRespSize, nsSocket *aSock)
             err != nsSocket::E_EOF_FOUND)
             goto BAIL;
         DUMP(aResp);
-    }
+    	if ( mEventPumpCB )
+			mEventPumpCB();
+	}
     while (err == nsSocket::E_READ_MORE);
 
     /* alternate interpretation of err codes */

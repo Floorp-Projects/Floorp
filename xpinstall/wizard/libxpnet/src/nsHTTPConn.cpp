@@ -41,7 +41,8 @@ const char kCRLF[3] = "\r\n";
 const char kHdrBodyDelim[5] = "\r\n\r\n";
 const char kDefaultDestFile[11] = "index.html";
 
-nsHTTPConn::nsHTTPConn(char *aHost, int aPort, char *aPath) :
+nsHTTPConn::nsHTTPConn(char *aHost, int aPort, char *aPath, int (*aEventPumpCB)(void)): 
+    mEventPumpCB(aEventPumpCB),
     mHost(aHost),
     mPath(aPath),
     mProxiedURL(NULL),
@@ -61,7 +62,53 @@ nsHTTPConn::nsHTTPConn(char *aHost, int aPort, char *aPath) :
     DUMP(("mPath = %s\n", mPath));
 }
 
+nsHTTPConn::nsHTTPConn(char *aHost, int aPort, char *aPath) :
+    mEventPumpCB(NULL),
+    mHost(aHost),
+    mPath(aPath),
+    mProxiedURL(NULL),
+    mProxyUser(NULL),
+    mProxyPswd(NULL),
+    mDestFile(NULL),
+    mHostPathAllocd(FALSE),
+    mSocket(NULL)
+{
+    if (aPort <= 0)
+        mPort = kHTTPPort;
+    else
+        mPort = aPort;
+
+    DUMP(("mHost = %s\n", mHost));
+    DUMP(("mPort = %d\n", mPort));
+    DUMP(("mPath = %s\n", mPath));
+}
+
+nsHTTPConn::nsHTTPConn(char *aURL, int (*aEventPumpCB)(void)) :
+    mEventPumpCB(aEventPumpCB),
+    mPort(kHTTPPort),
+    mProxiedURL(NULL),
+    mProxyUser(NULL),
+    mProxyPswd(NULL),
+    mDestFile(NULL),
+    mHostPathAllocd(FALSE),
+    mSocket(NULL)
+{
+    // parse URL
+    if (ParseURL(kHTTPProto, aURL, &mHost, &mPort, &mPath) == OK)
+        mHostPathAllocd = TRUE;
+    else
+    {
+        mHost = NULL;
+        mPath = NULL;
+    }
+
+    DUMP(("mHost = %s\n", mHost));
+    DUMP(("mPort = %d\n", mPort));
+    DUMP(("mPath = %s\n", mPath));
+}
+
 nsHTTPConn::nsHTTPConn(char *aURL) :
+    mEventPumpCB(NULL),
     mPort(kHTTPPort),
     mProxiedURL(NULL),
     mProxyUser(NULL),
@@ -380,7 +427,9 @@ nsHTTPConn::Response(HTTPGetCB aCallback, char *aDestFile, int aResumePos)
               rv = E_USER_CANCEL; // we want to ignore all errors returned
                                   // from aCallback() except E_USER_CANCEL 
 
-    } while (rv == nsSocket::E_READ_MORE || rv == nsSocket::OK);
+    	if ( mEventPumpCB )
+			mEventPumpCB();
+	} while (rv == nsSocket::E_READ_MORE || rv == nsSocket::OK);
 
     if (rv == nsSocket::E_EOF_FOUND)
     {
