@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pkistore.c,v $ $Revision: 1.8 $ $Date: 2002/02/08 02:51:38 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pkistore.c,v $ $Revision: 1.9 $ $Date: 2002/02/08 16:26:07 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIM_H
@@ -54,6 +54,10 @@ static const char CVS_ID[] = "@(#) $RCSfile: pkistore.c,v $ $Revision: 1.8 $ $Da
 #ifndef PKISTORE_H
 #include "pkistore.h"
 #endif /* PKISTORE_H */
+
+#ifdef NSS_3_4_CODE
+#include "cert.h"
+#endif
 
 /* 
  * Certificate Store
@@ -539,34 +543,35 @@ nssCertificateStore_FindCertificateByIssuerAndSerialNumber
     return rvCert;
 }
 
-/* XXX Get this to use issuer/serial! */
-
-struct der_template_str
+#ifdef NSS_3_4_CODE
+static PRStatus
+issuer_and_serial_from_encoding
+(
+  NSSBER *encoding, 
+  NSSDER *issuer, 
+  NSSDER *serial
+)
 {
-    NSSDER *encoding;
-    NSSCertificate *cert;
-};
-
-static void match_encoding(const void *k, void *v, void *a)
-{
-    PRStatus nssrv;
-    NSSCertificate *c;
-    nssList *subjectList = (nssList *)v;
-    struct der_template_str *der = (struct der_template_str *)a;
-    nssListIterator *iter = nssList_CreateIterator(subjectList);
-    if (iter) {
-	for (c  = (NSSCertificate *)nssListIterator_Start(iter);
-	     c != (NSSCertificate *)NULL;
-	     c  = (NSSCertificate *)nssListIterator_Next(iter))
-	{
-	    if (nssItem_Equal(&c->encoding, der->encoding, &nssrv)) {
-		der->cert = c;
-	    }
-	}
-	nssListIterator_Finish(iter);
-	nssListIterator_Destroy(iter);
+    SECItem derCert, derIssuer, derSerial;
+    SECStatus secrv;
+    derCert.data = (unsigned char *)encoding->data;
+    derCert.len = encoding->size;
+    secrv = CERT_IssuerNameFromDERCert(&derCert, &derIssuer);
+    if (secrv != SECSuccess) {
+	return PR_FAILURE;
     }
+    secrv = CERT_SerialNumberFromDERCert(&derCert, &derSerial);
+    if (secrv != SECSuccess) {
+	PORT_Free(derIssuer.data);
+	return PR_FAILURE;
+    }
+    issuer->data = derIssuer.data;
+    issuer->size = derIssuer.len;
+    serial->data = derSerial.data;
+    serial->size = derSerial.len;
+    return PR_SUCCESS;
 }
+#endif
 
 NSS_IMPLEMENT NSSCertificate *
 nssCertificateStore_FindCertificateByEncodedCertificate
@@ -575,16 +580,22 @@ nssCertificateStore_FindCertificateByEncodedCertificate
   NSSDER *encoding
 )
 {
-    struct der_template_str der;
+    PRStatus nssrv = PR_FAILURE;
+    NSSDER issuer, serial;
     NSSCertificate *rvCert = NULL;
-    der.encoding = encoding;
-    der.cert = NULL;
-    PZ_Lock(store->lock);
-    nssHash_Iterate(store->subject, match_encoding, &der);
-    if (der.cert) {
-	rvCert = nssCertificate_AddRef(der.cert);
+#ifdef NSS_3_4_CODE
+    nssrv = issuer_and_serial_from_encoding(encoding, &issuer, &serial);
+#endif
+    if (nssrv != PR_SUCCESS) {
+	return NULL;
     }
-    PZ_Unlock(store->lock);
+    rvCert = nssCertificateStore_FindCertificateByIssuerAndSerialNumber(store, 
+                                                                     &issuer, 
+                                                                     &serial);
+#ifdef NSS_3_4_CODE
+    PORT_Free(issuer.data);
+    PORT_Free(serial.data);
+#endif
     return rvCert;
 }
 
