@@ -429,21 +429,22 @@ void nsZipReadState::Init(nsZipItem* aZipItem, PRFileDesc* aFd)
     mFd = aFd;
 #endif
 
-    memset(&mZs, 0, sizeof(mZs));
+    if (mItem->compression != STORED) {
+      memset(&mZs, 0, sizeof(mZs));
 
 #ifndef STANDALONE
-    //-- ensure we have our zlib allocator for better performance
-    if (!gZlibAllocator) {
-      gZlibAllocator = new nsRecyclingAllocator(NBUCKETS, NS_DEFAULT_RECYCLE_TIMEOUT, "libjar");
-    }
+      //-- ensure we have our zlib allocator for better performance
+      if (!gZlibAllocator) {
+        gZlibAllocator = new nsRecyclingAllocator(NBUCKETS, NS_DEFAULT_RECYCLE_TIMEOUT, "libjar");
+      }
 
-    mZs.zalloc = zlibAlloc;
-    mZs.zfree = zlibFree;
-    mZs.opaque = gZlibAllocator;
+      mZs.zalloc = zlibAlloc;
+      mZs.zfree = zlibFree;
+      mZs.opaque = gZlibAllocator;
 #endif
-    int zerr = inflateInit2(&mZs, -MAX_WBITS);
-    PR_ASSERT(zerr == Z_OK);
-    
+      int zerr = inflateInit2(&mZs, -MAX_WBITS);
+      PR_ASSERT(zerr == Z_OK);
+    }
     mCrc = crc32(0L, Z_NULL, 0);
 }
 
@@ -1333,7 +1334,8 @@ nsZipReadState::ContinueInflate(char* aBuffer, PRUint32 aCount,
   *aBytesRead = (mZs.total_out - oldTotalOut);
 
   // be aggressive about closing the stream
-  if (zerr == Z_STREAM_END) {
+  // for some reason we don't always get Z_STREAM_END
+  if (zerr == Z_STREAM_END || mZs.total_out == mItem->realsize) {
     inflateEnd(&mZs);
   }
 
@@ -1345,7 +1347,6 @@ PRInt32 nsZipReadState::ContinueCopy(char* aBuf,
                                      PRUint32* aBytesRead)
 {
   // we still use the fields of mZs, we just use memcpy rather than inflate
-  int zerr = Z_OK;
 
   if (mCurPos + aCount > mItem->realsize)
     aCount = (mItem->realsize - mCurPos);
