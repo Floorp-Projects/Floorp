@@ -61,7 +61,7 @@ void            IPC_EnumClientNames      (ipcClientHandle client, ipcClientNameE
 void            IPC_EnumClientTargets    (ipcClientHandle client, ipcClientTargetEnumFunc func, void *closure);
 
 //-----------------------------------------------------------------------------
-// ipcMessage equivalents...
+// other internal IPCD methods
 //-----------------------------------------------------------------------------
 
 //

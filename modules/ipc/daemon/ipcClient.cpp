@@ -38,6 +38,7 @@
 #include "ipcLog.h"
 #include "ipcClient.h"
 #include "ipcMessage.h"
+#include "ipcModuleReg.h"
 #include "ipcd.h"
 #include "ipcm.h"
 
@@ -60,6 +61,9 @@ ipcClient::Init()
 
     // every client must be able to handle IPCM messages.
     mTargets.Append(IPCM_TARGET);
+
+    // see ipcCommandModule for this:
+    //IPC_NotifyClientUp(this);
 }
 
 //
@@ -68,6 +72,8 @@ ipcClient::Init()
 void
 ipcClient::Finalize()
 {
+    IPC_NotifyClientDown(this);
+
     mNames.DeleteAll();
     mTargets.DeleteAll();
 

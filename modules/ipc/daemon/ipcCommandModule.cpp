@@ -43,6 +43,7 @@
 #include "ipcClient.h"
 #include "ipcMessage.h"
 #include "ipcMessageUtils.h"
+#include "ipcModuleReg.h"
 #include "ipcd.h"
 #include "ipcm.h"
 
@@ -114,6 +115,15 @@ struct ipcCommandModule
         LOG(("got CLIENT_HELLO\n"));
 
         IPC_SendMsg(client, new ipcmMessageClientID(client->ID()));
+
+        //
+        // NOTE: it would almost make sense for this notification to live
+        // in the transport layer code.  however, clients expect to receive
+        // a CLIENT_ID as the first message following a CLIENT_HELLO, so we
+        // must not allow modules to see a client until after we have sent
+        // the CLIENT_ID message.
+        //
+        IPC_NotifyClientUp(client);
     }
 
     static void

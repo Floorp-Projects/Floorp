@@ -32,6 +32,16 @@ struct TestModule
         static const char buf[] = "pong";
         IPC_SendMsg(client, kTestModuleID, buf, sizeof(buf));
     }
+
+    static void ClientUp(ipcClientHandle client)
+    {
+        printf("*** TestModule::ClientUp [%u]\n", IPC_GetClientID(client));
+    }
+
+    static void ClientDown(ipcClientHandle client)
+    {
+        printf("*** TestModule::ClientDown [%u]\n", IPC_GetClientID(client));
+    }
 };
 
 static ipcModuleMethods gTestMethods =
@@ -39,7 +49,9 @@ static ipcModuleMethods gTestMethods =
     IPC_MODULE_METHODS_VERSION,
     TestModule::Init,
     TestModule::Shutdown,
-    TestModule::HandleMsg
+    TestModule::HandleMsg,
+    TestModule::ClientUp,
+    TestModule::ClientDown
 };
 
 static ipcModuleEntry gTestModuleEntry[] =

@@ -86,7 +86,6 @@ struct ipcModuleMethods
     // called when a new message arrives for this module.
     //
     // params:
-    //
     //   client  - an opaque "handle" to an object representing the client that
     //             sent the message.  modules should not store the value of this
     //             beyond the duration fo this function call.  (e.g., the handle
@@ -101,6 +100,16 @@ struct ipcModuleMethods
                         const nsID     &target,
                         const void     *data,
                         PRUint32        dataLen);
+
+    //
+    // called when a new client connects to the IPC daemon.
+    //
+    void (* clientUp) (ipcClientHandle client);
+
+    //
+    // called when a client disconnects from the IPC daemon.
+    //
+    void (* clientDown) (ipcClientHandle client);
 };
 
 //-----------------------------------------------------------------------------
@@ -147,10 +156,11 @@ struct ipcDaemonMethods
     // message to all clients.
     //
     // params:
-    //   client - if null, then broadcast message to all clients.  otherwise,
-    //            send message to the client specified.
-    // XXX:FIXME
-    //   msg    - the message to send.
+    //   client  - if null, then broadcast message to all clients.  otherwise,
+    //             send message to the client specified.
+    //   target  - message target
+    //   data    - message data
+    //   dataLen - message data length
     //
     // returns:
     //   PR_SUCCESS if message was sent (or queued up to be sent later).
@@ -186,8 +196,8 @@ struct ipcDaemonMethods
     PRUint32 (* getClientID) (ipcClientHandle client);
 
     //
-    // returns the primary client name (NULL if the client did not specify a name).
-    // this is the name specified by the client in its "client hello" message.
+    // returns the primary client name (NULL if the client did not specify a
+    // name).  this is the first element returned via |enumClientNames|.
     //
     const char * (* getPrimaryClientName) (ipcClientHandle client);
 
