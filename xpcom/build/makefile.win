@@ -76,7 +76,7 @@ LLIBS =                                \
 WIN_LIBS =                             \
         shell32.lib                    \
         ole32.lib                      \
-!if defined(MOZ_TRACE_XPCOM_REFCNT)
+!if defined(MOZ_DEBUG)
         imagehlp.lib                   \
 !endif
 !if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
