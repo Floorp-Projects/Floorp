@@ -2007,6 +2007,14 @@ nsCSSBlockFrame::ReflowBlockFrame(nsCSSBlockReflowState& aState,
       while (nsnull != rsp) {
         if (NS_UNCONSTRAINEDSIZE != rsp->maxSize.width) {
           aState.mBlockMaxWidth = rsp->maxSize.width;
+          const nsStyleSpacing* spacing = nsnull;
+          rsp->frame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)spacing);
+          if (nsnull!=spacing)
+          {
+            nsMargin borderPadding;
+            spacing->CalcBorderPaddingFor(rsp->frame, borderPadding);
+            aState.mBlockMaxWidth -= (borderPadding.right + borderPadding.left);
+          }
           break;
         }
         rsp = rsp->parentReflowState;
