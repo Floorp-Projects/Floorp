@@ -68,6 +68,7 @@ nsHTMLValue.h \
 nsImageMapUtils.h \
 nsLayoutAtomList.h \
 nsLayoutAtoms.h \
+nsPropertyTable.h \
 nsRuleNode.h \
 nsRuleWalker.h \
 nsStyleContext.h \

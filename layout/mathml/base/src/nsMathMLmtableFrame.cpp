@@ -116,26 +116,27 @@ struct nsValueList
 // The code doesn't include hooks for AttributeChanged() notifications.
 
 static void
-DestroyValueListFunc(nsPresContext* aPresContext,
-                     nsIFrame*       aFrame,
+DestroyValueListFunc(void*           aFrame,
                      nsIAtom*        aPropertyName,
-                     void*           aPropertyValue)
+                     void*           aPropertyValue,
+                     void*           aDtorData)
 {
   delete NS_STATIC_CAST(nsValueList*, aPropertyValue);
 }
 
 static PRUnichar*
-GetValueAt(nsPresContext* aPresContext,
+GetValueAt(nsPresContext*  aPresContext,
            nsIFrame*       aTableOrRowFrame,
            nsIAtom*        aAttributeAtom,
            PRInt32         aRowOrColIndex)
 {
   PRUnichar* result = nsnull;
+  nsPropertyTable *propTable = aPresContext->PropertyTable();
   nsValueList* valueList;
 
-  nsFrameManager *frameManager = aPresContext->FrameManager();
   valueList = NS_STATIC_CAST(nsValueList*,
-          frameManager->GetFrameProperty(aTableOrRowFrame, aAttributeAtom, 0));
+                             propTable->GetProperty(aTableOrRowFrame,
+                                                    aAttributeAtom));
 
   if (!valueList) {
     // The property isn't there yet, so set it
@@ -144,8 +145,8 @@ GetValueAt(nsPresContext* aPresContext,
         aTableOrRowFrame->GetContent()->GetAttr(kNameSpaceID_None, aAttributeAtom, values)) {
       valueList = new nsValueList(values);
       if (valueList) {
-        frameManager->SetFrameProperty(aTableOrRowFrame, aAttributeAtom,
-                                       valueList, DestroyValueListFunc);
+        propTable->SetProperty(aTableOrRowFrame, aAttributeAtom,
+                               valueList, DestroyValueListFunc, nsnull);
       }
     }
   }

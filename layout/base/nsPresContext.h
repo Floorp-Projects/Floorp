@@ -54,6 +54,7 @@
 #include "nsIObserver.h"
 #include "nsCRT.h"
 #include "nsIPrintSettings.h"
+#include "nsPropertyTable.h"
 #ifdef IBMBIDI
 class nsBidiPresUtils;
 #endif // IBMBIDI
@@ -572,6 +573,9 @@ public:
 
   nsIPrintSettings* GetPrintSettings() { return mPrintSettings; }
 
+  /* Accessor for table of frame properties */
+  nsPropertyTable* PropertyTable() { return &mPropertyTable; }
+
 #ifdef MOZ_REFLOW_PERF
   NS_HIDDEN_(void) CountReflows(const char * aName,
                                 PRUint32 aType, nsIFrame * aFrame);
@@ -620,6 +624,8 @@ protected:
   nsCOMPtr<nsITheme> mTheme;
   nsCOMPtr<nsILanguageAtomService> mLangService;
   nsCOMPtr<nsIPrintSettings> mPrintSettings;
+
+  nsPropertyTable       mPropertyTable;
 
   nsLanguageSpecificTransformType mLanguageSpecificTransformType;
   PRInt32               mFontScaler;

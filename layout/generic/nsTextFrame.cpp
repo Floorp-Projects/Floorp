@@ -878,17 +878,23 @@ nsContinuingTextFrame::Init(nsPresContext*  aPresContext,
       PRInt32 start, end;
       aPrevInFlow->GetOffsets(start, mContentOffset);
 
-      SetProperty(nsLayoutAtoms::embeddingLevel,
-                  aPrevInFlow->GetProperty(nsLayoutAtoms::embeddingLevel));
-      SetProperty(nsLayoutAtoms::baseLevel,
-                  aPrevInFlow->GetProperty(nsLayoutAtoms::baseLevel));
-      SetProperty(nsLayoutAtoms::charType,
-                  aPrevInFlow->GetProperty(nsLayoutAtoms::charType));
+      nsPropertyTable *propTable = aPresContext->PropertyTable();
+      propTable->SetProperty(this, nsLayoutAtoms::embeddingLevel,
+            propTable->GetProperty(aPrevInFlow, nsLayoutAtoms::embeddingLevel),
+                             nsnull, nsnull);
+      propTable->SetProperty(this, nsLayoutAtoms::baseLevel,
+                propTable->GetProperty(aPrevInFlow, nsLayoutAtoms::baseLevel),
+                             nsnull, nsnull);
+      propTable->SetProperty(this, nsLayoutAtoms::charType,
+                 propTable->GetProperty(aPrevInFlow, nsLayoutAtoms::charType),
+                             nsnull, nsnull);
 
-      void* value = aPrevInFlow->GetProperty(nsLayoutAtoms::nextBidi);
+      void* value = propTable->GetProperty(aPrevInFlow,
+                                           nsLayoutAtoms::nextBidi);
       if (value) {  // nextBidi
         // aPrevInFlow and this frame will point to the same next bidi frame.
-        SetProperty(nsLayoutAtoms::nextBidi, value);
+        propTable->SetProperty(this, nsLayoutAtoms::nextBidi,
+                               value, nsnull, nsnull);
 
         ( (nsIFrame*) value)->GetOffsets(start, end);
         mContentLength = PR_MAX(1, start - mContentOffset);
@@ -1403,13 +1409,14 @@ nsTextFrame::CharacterDataChanged(nsPresContext* aPresContext,
   if (markAllDirty) {
     // Mark this frame and all the next-in-flow frames as dirty
     nsTextFrame*  textFrame = this;
+    nsPropertyTable *propTable = aPresContext->PropertyTable();
     while (textFrame) {
       textFrame->mState &= ~TEXT_WHITESPACE_FLAGS;
       textFrame->mState |= NS_FRAME_IS_DIRTY;
 #ifdef IBMBIDI
       void* nextBidiFrame;
       if ((textFrame->mState & NS_FRAME_IS_BIDI) &&
-          (nextBidiFrame = textFrame->GetProperty(nsLayoutAtoms::nextBidi)))
+          (nextBidiFrame = propTable->GetProperty(textFrame, nsLayoutAtoms::nextBidi)))
         textFrame = (nsTextFrame*)nextBidiFrame;
       else
 #endif
@@ -2263,7 +2270,7 @@ nsTextFrame::PaintUnicodeText(nsPresContext* aPresContext,
     if (aPresContext->BidiEnabled()) {
       isBidiSystem = aPresContext->IsBidiSystem();
       isOddLevel = NS_GET_EMBEDDING_LEVEL(this) & 1;
-      charType = (nsCharType)NS_PTR_TO_INT32(GetProperty(nsLayoutAtoms::charType));
+      charType = (nsCharType)NS_PTR_TO_INT32(aPresContext->PropertyTable()->GetProperty(this, nsLayoutAtoms::charType));
 
       isRightToLeftOnBidiPlatform = (isBidiSystem &&
                                      (eCharType_RightToLeft == charType ||
@@ -2958,7 +2965,7 @@ nsTextFrame::PaintTextSlowly(nsPresContext* aPresContext,
 
       if (bidiUtils) {
         isOddLevel = NS_GET_EMBEDDING_LEVEL(this) & 1;
-        charType = (nsCharType)NS_PTR_TO_INT32(GetProperty(nsLayoutAtoms::charType));
+        charType = (nsCharType)NS_PTR_TO_INT32(aPresContext->PropertyTable()->GetProperty(this, nsLayoutAtoms::charType));
 #ifdef DEBUG
         PRInt32 rememberTextLength = textLength;
 #endif
@@ -3696,7 +3703,7 @@ nsTextFrame::SetSelected(nsPresContext* aPresContext,
 #ifdef IBMBIDI
     if ((mState & NS_FRAME_IS_BIDI) &&
         (frame = NS_STATIC_CAST(nsIFrame*,
-                                GetProperty(nsLayoutAtoms::nextBidi)))) {
+                                aPresContext->PropertyTable()->GetProperty(this, nsLayoutAtoms::nextBidi)))) {
       frame->SetSelected(aPresContext, aRange, aSelected, aSpread);
     }
 #endif // IBMBIDI
@@ -3903,7 +3910,8 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
 #ifdef IBMBIDI
     if (isOddLevel) {
       nextInFlow = NS_STATIC_CAST(nsIFrame*,
-                                  GetProperty(nsLayoutAtoms::nextBidi));
+                           aPresContext->PropertyTable()->GetProperty(this,
+                                                     nsLayoutAtoms::nextBidi));
     }
     else
 #endif
@@ -4562,7 +4570,8 @@ nsTextFrame::MeasureText(nsPresContext*          aPresContext,
 
   if (mState & NS_FRAME_IS_BIDI) {
     nextBidi = NS_STATIC_CAST(nsTextFrame*,
-                              GetProperty(nsLayoutAtoms::nextBidi));
+                              aPresContext->PropertyTable()->GetProperty(this,
+                                                     nsLayoutAtoms::nextBidi));
 
     if (nextBidi) {
       if (mContentLength < 1) {
@@ -5202,7 +5211,7 @@ nsTextFrame::Reflow(nsPresContext*          aPresContext,
     nsCharType charType = eCharType_LeftToRight;
     PRUint32 hints = 0;
     aReflowState.rendContext->GetHints(hints);
-    charType = (nsCharType)NS_PTR_TO_INT32(GetProperty(nsLayoutAtoms::charType));
+    charType = (nsCharType)NS_PTR_TO_INT32(aPresContext->PropertyTable()->GetProperty(this, nsLayoutAtoms::charType));
     if ((eCharType_RightToLeftArabic == charType &&
         (hints & NS_RENDERING_HINT_ARABIC_SHAPING) == NS_RENDERING_HINT_ARABIC_SHAPING) ||
         (eCharType_RightToLeft == charType &&

@@ -428,9 +428,7 @@ GetSpecialSibling(nsFrameManager* aFrameManager, nsIFrame* aFrame, nsIFrame** aR
   // frame in the flow. Walk back to find that frame now.
   aFrame = aFrame->GetFirstInFlow();
 
-  void* value =
-    aFrameManager->GetFrameProperty(aFrame,
-                                    nsLayoutAtoms::IBSplitSpecialSibling, 0);
+  void* value = aFrame->GetProperty(nsLayoutAtoms::IBSplitSpecialSibling);
 
   *aResult = NS_STATIC_CAST(nsIFrame*, value);
 }
@@ -482,9 +480,7 @@ SetFrameIsSpecial(nsFrameManager* aFrameManager, nsIFrame* aFrame, nsIFrame* aSp
 
     // Store the "special sibling" (if we were given one) with the
     // first frame in the flow.
-    aFrameManager->SetFrameProperty(aFrame,
-                                    nsLayoutAtoms::IBSplitSpecialSibling,
-                                    aSpecialSibling, nsnull);
+    aFrame->SetProperty(nsLayoutAtoms::IBSplitSpecialSibling, aSpecialSibling);
   }
 }
 
@@ -615,10 +611,9 @@ MarkIBSpecialPrevSibling(nsPresContext* aPresContext,
                          nsIFrame *aAnonymousFrame,
                          nsIFrame *aSpecialParent)
 {
-  aFrameManager->SetFrameProperty(aAnonymousFrame,
-                                  nsLayoutAtoms::IBSplitSpecialPrevSibling,
-                                  aSpecialParent,
-                                  nsnull);
+  aPresContext->PropertyTable()->SetProperty(aAnonymousFrame,
+                                      nsLayoutAtoms::IBSplitSpecialPrevSibling,
+                                             aSpecialParent, nsnull, nsnull);
 }
 
 // -----------------------------------------------------------
@@ -4793,9 +4788,9 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsIPresShell*            aPresShell,
         // there is no reasonable way to get the value there.
         // so we store it as a frame property.
         nsCOMPtr<nsIAtom> contentParentAtom = do_GetAtom("contentParent");
-        aState.mFrameManager->SetFrameProperty(newFrame,
-                                               contentParentAtom, 
-                                               aParentFrame, nsnull);
+        aPresContext->PropertyTable()->SetProperty(newFrame, contentParentAtom,
+                                                   aParentFrame, nsnull,
+                                                   nsnull);
       }
     }
   }
@@ -10021,18 +10016,20 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList,
   if (!count)
     return NS_OK;
 
-  nsFrameManager *frameManager = aPresContext->FrameManager();
+  nsPropertyTable *propTable = aPresContext->PropertyTable();
 
   // Mark frames so that we skip frames that die along the way, bug 123049.
   // A frame can be in the list multiple times with different hints. Further
   // optmization is possible if nsStyleChangeList::AppendChange could coalesce
   PRInt32 index = count;
+
   while (0 <= --index) {
     const nsStyleChangeData* changeData;
     aChangeList.ChangeAt(index, &changeData);
     if (changeData->mFrame) {
-      frameManager->SetFrameProperty(changeData->mFrame,
-        nsLayoutAtoms::changeListProperty, nsnull, nsnull);
+      propTable->SetProperty(changeData->mFrame,
+                             nsLayoutAtoms::changeListProperty,
+                             nsnull, nsnull, nsnull);
     }
   }
 
@@ -10047,12 +10044,11 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList,
     if (frame) {
       nsresult res;
 
-      void* dummy =
-        frameManager->GetFrameProperty(frame,
-                                       nsLayoutAtoms::changeListProperty, 0,
-                                       &res);
+      void* dummy = propTable->GetProperty(frame,
+                                           nsLayoutAtoms::changeListProperty,
+                                           &res);
 
-      if (NS_IFRAME_MGR_PROP_NOT_THERE == res)
+      if (NS_PROPTABLE_PROP_NOT_THERE == res)
         continue;
     }
 
@@ -10088,8 +10084,8 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList,
     const nsStyleChangeData* changeData;
     aChangeList.ChangeAt(index, &changeData);
     if (changeData->mFrame) {
-      frameManager->RemoveFrameProperty(changeData->mFrame,
-        nsLayoutAtoms::changeListProperty);
+      propTable->DeleteProperty(changeData->mFrame,
+                                nsLayoutAtoms::changeListProperty);
     }
   }
 
