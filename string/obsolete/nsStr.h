@@ -359,10 +359,8 @@ protected:
   * @param  aCount tells us the (max) # of chars to delete
   */
   static void Delete1(nsStr& aDest,PRUint32 aDestOffset,PRUint32 aCount);
-public:
   static void Delete2(nsStr& aDest,PRUint32 aDestOffset,PRUint32 aCount);
 
-protected:
   /**
    * helper routines for Delete1, Delete2
    */
