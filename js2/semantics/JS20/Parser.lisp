@@ -14,9 +14,9 @@
     (deftag syntax-error)
     (deftag reference-error)
     (deftag type-error)
-    (deftag method-not-found-error)
+    (deftag property-not-found-error)
     (deftag argument-mismatch-error)
-    (deftype semantic-error (tag syntax-error reference-error type-error method-not-found-error argument-mismatch-error))
+    (deftype semantic-error (tag syntax-error reference-error type-error property-not-found-error argument-mismatch-error))
     
     (deftag go-break (value object) (label string))
     (deftag go-continue (value object) (label string))
@@ -40,6 +40,7 @@
     (%subsection :semantics "Namespaces")
     (defrecord namespace (name string))
     (deftype namespace (tag namespace))
+    (deftype namespace-opt (union null namespace))
     
     (define public-namespace namespace (tag namespace "public"))
     
@@ -80,10 +81,12 @@
     (deftype invoker (-> (object (vector object) (vector named-argument)) object))
     
     (defrecord class
-      (superclass class-opt)
-      (reader-members (vector member) :var)
-      (writer-members (vector member) :var)
-      (prototype object :var)
+      (super class-opt)
+      (prototype object)
+      (global-members (vector global-member) :var)
+      (instance-members (vector instance-member) :var)
+      (definition-namespaces (vector namespace))
+      (class-mod class-modifier)
       (primitive boolean)
       (private-namespace namespace)
       (call invoker)
@@ -91,50 +94,66 @@
     (deftype class (tag class))
     (deftype class-opt (union null class))
     
-    (define (make-built-in-class (superclass class-opt) (primitive boolean)) class
+    (define (make-built-in-class (superclass class-opt) (class-mod class-modifier) (primitive boolean)) class
       (const private-namespace namespace (tag namespace "private"))
       (function (call (this object :unused) (positional-args (vector object) :unused) (named-args (vector named-argument) :unused)) object
         (todo))
       (function (construct (this object :unused) (positional-args (vector object) :unused) (named-args (vector named-argument) :unused)) object
         (todo))
-      (return (tag class superclass (vector-of member) (vector-of member) null primitive private-namespace call construct)))
+      (return (tag class superclass null (vector-of global-member) (vector-of instance-member)
+                   (vector private-namespace) class-mod primitive private-namespace call construct)))
     
-    (define object-class class (make-built-in-class null true))
-    (define undefined-class class (make-built-in-class object-class true))
-    (define null-class class (make-built-in-class object-class true))
-    (define boolean-class class (make-built-in-class object-class true))
-    (define number-class class (make-built-in-class object-class true))
-    (define string-class class (make-built-in-class object-class false))
-    (define namespace-class class (make-built-in-class object-class false))
-    (define attribute-class class (make-built-in-class object-class false))
-    (define class-class class (make-built-in-class object-class false))
+    (define object-class class (make-built-in-class null dynamic true))
+    (define undefined-class class (make-built-in-class object-class fixed true))
+    (define null-class class (make-built-in-class object-class fixed true))
+    (define boolean-class class (make-built-in-class object-class fixed true))
+    (define number-class class (make-built-in-class object-class fixed true))
+    (define string-class class (make-built-in-class object-class fixed false))
+    (define character-class class (make-built-in-class string-class fixed false))
+    (define namespace-class class (make-built-in-class object-class fixed false))
+    (define attribute-class class (make-built-in-class object-class fixed false))
+    (define class-class class (make-built-in-class object-class fixed false))
+    (define function-class class (make-built-in-class object-class fixed false))
     
-    (%text :comment "Return " (:tag true) " if " (:local c) " is " (:local d) " or a subclass of " (:local d) ".")
-    (define (is-subclass (c class) (d class)) boolean
+    (%text :comment "Return an ordered list of class " (:local d) :apostrophe "s ancestors, including " (:local d) " itself.")
+    (define (ancestors (c class)) (vector class)
+      (const s class-opt (& super c))
+      (if (:narrow-false (in (tag null) s))
+        (return (vector c))
+        (return (append (ancestors s) (vector c)))))
+    
+    (%text :comment "Return " (:tag true) " if " (:local c) " is " (:local d) " or an ancestor of " (:local d) ".")
+    (define (is-ancestor (c class) (d class)) boolean
       (cond
        ((= c d class) (return true))
-       (nil (const b class-opt (& superclass c))
-            (rwhen (:narrow-false (in (tag null) b))
+       (nil (const s class-opt (& super d))
+            (rwhen (:narrow-false (in (tag null) s))
               (return false))
-            (return (is-subclass b d)))))
+            (return (is-ancestor c s)))))
     
-    (%text :comment "Return " (:tag true) " if " (:local c) " is a subclass of " (:local d) " other than " (:local d) " itself.")
-    (define (is-proper-subclass (c class) (d class)) boolean
-      (const b class-opt (& superclass c))
-      (rwhen (:narrow-false (in (tag null) b))
-        (return false))
-      (return (is-subclass b d)))
+    (%text :comment "Return " (:tag true) " if " (:local c) " is an ancestor of " (:local d) " other than " (:local d) " itself.")
+    (define (is-proper-ancestor (c class) (d class)) boolean
+      (return (and (is-ancestor c d) (/= c d class))))
     
     
-    (%subsection :semantics "Instances")
+    (%subsection :semantics "Method Closures")
+    (deftag method-closure
+      (this object)
+      (method method))
+    (deftype method-closure (tag method-closure))
+    
+    
+    (%subsection :semantics "General Instances")
     (defrecord instance
       (type class)
+      (model instance-opt)
       (call invoker)
       (construct invoker)
       (typeof-string string)
       (slots (vector slot) :var)
       (dynamic-properties (vector dynamic-property) :var))
     (deftype instance (tag instance))
+    (deftype instance-opt (union null instance))
     
     (defrecord dynamic-property 
       (name string)
@@ -144,7 +163,7 @@
     
     (%subsection :semantics "Objects")
     
-    (deftype object (union undefined null boolean float64 string namespace attribute class instance))
+    (deftype object (union undefined null boolean float64 string namespace attribute class method-closure instance))
     
     
     (%text :comment "Return " (:local o) :apostrophe "s most specific type.")
@@ -154,24 +173,28 @@
         (:select null (return null-class))
         (:select boolean (return boolean-class))
         (:select float64 (return number-class))
-        (:select string (return string-class))
+        (:narrow string
+          (rwhen (= (length o) 1)
+            (return character-class))
+          (return string-class))
         (:select namespace (return namespace-class))
         (:select attribute (return attribute-class))
         (:select class (return class-class))
+        (:select method-closure (return function-class))
         (:narrow instance (return (& type o)))))
     
     (%text :comment "Return " (:tag true) " if " (:local o) " is an instance of class " (:local c) ". Consider "
            (:tag null) " to be an instance of the classes " (:character-literal "Null") " and "
            (:character-literal "Object") " only.")
     (define (instance-of (o object) (c class)) boolean
-      (return (is-subclass (object-type o) c)))
+      (return (is-ancestor c (object-type o))))
     
     (%text :comment "Return " (:tag true) " if " (:local o) " is an instance of class " (:local c) ". Consider "
            (:tag null) " to be an instance of the classes " (:character-literal "Null") ", "
            (:character-literal "Object") ", and all other non-primitive classes.")
-    (define (member-of (o object) (c class)) boolean
+    (define (relaxed-instance-of (o object) (c class)) boolean
       (const t class (object-type o))
-      (return (or (is-subclass t c)
+      (return (or (is-ancestor c t)
                   (and (= o null object) (not (& primitive c))))))
     
     (define (to-boolean (o object)) boolean
@@ -180,7 +203,7 @@
         (:narrow boolean (return o))
         (:narrow float64 (return (not-in (tag +zero -zero nan) o)))
         (:narrow string (return (/= o "" string)))
-        (:select (union namespace attribute class) (return true))
+        (:select (union namespace attribute class method-closure) (return true))
         (:select instance (todo))))
     
     (define (to-number (o object)) float64
@@ -190,7 +213,7 @@
         (:select (tag true) (return 1.0))
         (:narrow float64 (return o))
         (:select string (todo))
-        (:select (union namespace attribute class) (throw type-error))
+        (:select (union namespace attribute class method-closure) (throw type-error))
         (:select instance (todo))))
     
     (define (to-string (o object)) string
@@ -204,12 +227,13 @@
         (:select namespace (todo))
         (:select attribute (todo))
         (:select class (todo))
+        (:select method-closure (todo))
         (:select instance (todo))))
     
     (define (to-primitive (o object) (hint object :unused)) object
       (case o
         (:select (union undefined null boolean float64 string) (return o))
-        (:select (union namespace attribute class instance) (return (to-string o)))))
+        (:select (union namespace attribute class method-closure instance) (return (to-string o)))))
     
     (define (u-int32-to-int32 (i integer)) integer
       (if (< i (expt 2 31))
@@ -244,7 +268,7 @@
     
     
     (%subsection :semantics "Slots")
-    (defrecord slot-id)
+    (defrecord slot-id (type class))
     (deftype slot-id (tag slot-id))
     
     (defrecord slot
@@ -252,58 +276,179 @@
       (value object :var))
     (deftype slot (tag slot))
     
-    (define (find-slot (id slot-id) (slots (vector slot))) slot
+    (define (find-slot (o object) (id slot-id)) slot
+      (rwhen (:narrow-false (not-in instance o))
+        (bottom))
       (const matching-slots (vector slot)
-        (map slots s s (= (& id s) id slot-id)))
+        (map (& slots o) s s (= (& id s) id slot-id)))
       (assert (= (length matching-slots) 1))
       (return (nth matching-slots 0)))
     
+    (defrecord global-slot
+      (type class)
+      (value object :var))
+    (deftype global-slot (tag global-slot))
+    
     
     (%subsection :semantics "Signatures")
-    
-    (deftag optional-parameter
-      (name string)
-      (type class))
-    (deftype optional-parameter (tag optional-parameter))
-    
     (deftag signature
-      (positional-parameters (vector class))
-      (optional-parameters (vector optional-parameter))
-      (rest-parameter class-opt)
+      (required-positional (vector class))
+      (optional-positional (vector class))
+      (required-named (vector named-parameter))
+      (optional-named (vector named-parameter))
+      (rest class-opt)
+      (rest-allows-names boolean)
       (return-type class))
     (deftype signature (tag signature))
     
+    (deftag named-parameter
+      (name string)
+      (type class))
+    (deftype named-parameter (tag named-parameter))
     
-    (%subsection :semantics "Properties")
-    (deftype member-category (tag static constructor abstract virtual final))
     
-    (deftag member 
-      (name qualified-name)
-      (category member-category)
+    (%subsection :semantics "Members")
+    (defrecord method
+      (type signature)
+      (f instance-opt)) ;Method code (may be undefined)
+    (deftype method (tag method))
+    
+    (defrecord accessor
+      (type class)
+      (f instance)) ;Getter or setter function code
+    (deftype accessor (tag accessor))
+    
+    (deftype instance-category (tag abstract virtual final))
+    (deftype instance-data (union slot-id method accessor))
+    
+    (defrecord instance-member 
+      (name string)
+      (namespaces (vector namespace))
+      (category instance-category)
+      (readable boolean)
+      (writable boolean)
       (indexable boolean)
       (enumerable boolean)
-      (type (union class signature))
-      (data (union (tag missing) slot-id object accessor)))
-    (deftype member (tag member))
+      (data (union instance-data namespace)))
+    (deftype instance-member (tag instance-member))
     
-    (deftag missing)
+    (deftype global-category (tag static constructor))
+    (deftype global-data (union global-slot method accessor))
     
-    (deftag accessor (f object)) ;Getter or setter function code
-    (deftype accessor (tag accessor))
+    (defrecord global-member
+      (name string)
+      (namespaces (vector namespace))
+      (category global-category)
+      (readable boolean)
+      (writable boolean)
+      (indexable boolean)
+      (enumerable boolean)
+      (data (union global-data namespace)))
+    (deftype global-member (tag global-member))
+    (deftype member (union instance-member global-member))
+    (deftype member-data (union instance-data global-data))
+    (deftype member-data-opt (union null member-data))
     
     (deftag qualified-name (namespace namespace) (name string))
     (deftype qualified-name (tag qualified-name))
     
-    (define (find-member (n qualified-name) (properties (vector member))) (vector member)
-      (return (map properties p p (= n (& name p) qualified-name))))
     
-    (define (read-qualified-property (o object :unused) (qn qualified-name :unused) (indexable boolean :unused)) object
+    (define (most-specific-member (c class) (global boolean) (name string) (ns namespace) (indexable-only boolean)) member-data-opt
+      (function (test (m member)) boolean
+        (return (and (& readable m)
+                     (= name (& name m) string)
+                     (namespace-in (& namespaces m) ns)
+                     (or (not indexable-only) (& indexable m)))))
+      (var ns2 namespace ns)
+      (var members (vector member) (& instance-members c))
+      (when global
+        (<- members (& global-members c)))
+      (const matches (vector member) (map members m m (test m)))
+      (when (nonempty matches)
+        (assert (= (length matches) 1))
+        (const d (union member-data namespace) (& data (nth matches 0)))
+        (rwhen (:narrow-both (not-in namespace d))
+          (return d))
+        (<- ns2 d))
+      (const s class-opt (& super c))
+      (rwhen (:narrow-true (not-in (tag null) s))
+        (return (most-specific-member s global name ns2 indexable-only)))
+      (return null))
+    
+    (%text :comment "Temporary hack until I get sets of namespaces working")
+    (define (namespace-in (v (vector namespace)) (ns namespace)) boolean
+      (const d (vector namespace) (map v n n (= n ns namespace)))
+      (return (nonempty d)))
+    
+    (define (namespace-intersection (v (vector namespace) :unused) (w (vector namespace) :unused)) (vector namespace)
       (todo))
     
-    (define (write-qualified-property (o object :unused) (qn qualified-name :unused) (indexable boolean :unused) (new-value object :unused)) void
+    (define (read-qualified-property (o object) (name string) (ns namespace) (indexable-only boolean)) object
+      (when (:narrow-true (in instance o))
+        (when (= ns public-namespace namespace)
+          (const d (vector dynamic-property) (map (& dynamic-properties o) p p (= name (& name p) string)))
+          (rwhen (nonempty d)
+            (assert (= (length d) 1))
+            (return (& value (nth d 0)))))
+        (rwhen (not-in (tag null) (& model o))
+          (return (read-qualified-property (& model o) name ns indexable-only))))
+      (var d member-data-opt null)
+      (if (:narrow-true (in class o))
+        (<- d (most-specific-member o true name ns indexable-only))
+        (<- d (most-specific-member (object-type o) false name ns indexable-only)))
+      (case d
+        (:select (tag null)
+          (rwhen (= (& class-mod (object-type o)) dynamic class-modifier)
+            (return undefined))
+          (throw property-not-found-error))
+        (:narrow global-slot (return (& value d)))
+        (:narrow slot-id (return (& value (find-slot o d))))
+        (:narrow method
+          (return (tag method-closure o d)))
+        (:narrow accessor
+          (return ((& call (& f d)) o (vector-of object) (vector-of named-argument))))))
+    
+    (define (resolve-member-namespace (c class) (global boolean) (name string) (uses (vector namespace))) namespace-opt
+      (const s class-opt (& super c))
+      (when (:narrow-true (not-in (tag null) s))
+        (const ns namespace-opt (resolve-member-namespace s global name uses))
+        (rwhen (:narrow-true (not-in (tag null) ns))
+          (return ns)))
+      (function (test (m member)) boolean
+        (return (and (& readable m)
+                     (= name (& name m) string)
+                     (nonempty (namespace-intersection uses (& namespaces m))))))
+      (var members (vector member) (& instance-members c))
+      (when global
+        (<- members (& global-members c)))
+      (const matches (vector member) (map members m m (test m)))
+      (rwhen (nonempty matches)
+        (rwhen (> (length matches) 1)
+          (throw property-not-found-error))
+        (const matching-namespaces (vector namespace) (namespace-intersection uses (& namespaces (nth matches 0))))
+        (return (nth matching-namespaces 0)))
+      (return null))
+    
+    (define (resolve-object-namespace (o object) (name string) (uses (vector namespace))) namespace
+      (when (:narrow-true (in instance o))
+        (rwhen (not-in (tag null) (& model o))
+          (return (resolve-object-namespace (& model o) name uses))))
+      (var ns namespace-opt null)
+      (if (:narrow-true (in class o))
+        (<- ns (resolve-member-namespace o true name uses))
+        (<- ns (resolve-member-namespace (object-type o) false name uses)))
+      (rwhen (:narrow-true (not-in (tag null) ns))
+        (return ns))
+      (return public-namespace))
+    
+    (define (read-unqualified-property (o object) (name string) (uses (vector namespace))) object
+      (const ns namespace (resolve-object-namespace o name uses))
+      (return (read-qualified-property o name ns false)))
+    
+    (define (write-qualified-property (o object :unused) (name string :unused) (ns namespace :unused) (indexable-only boolean :unused) (new-value object :unused)) void
       (todo))
     
-    (define (delete-qualified-property (o object :unused) (qn qualified-name :unused) (indexable boolean :unused)) boolean
+    (define (delete-qualified-property (o object :unused) (name string :unused) (ns namespace :unused) (indexable-only boolean :unused)) boolean
       (todo))
     
     
@@ -364,43 +509,41 @@
     (deftag named-argument (name string) (value object))
     (deftype named-argument (tag named-argument))
     
-    (deftag un-op-method 
+    (deftag unary-method 
       (operand-type class)
       (op (-> (object object (vector object) (vector named-argument)) object)))
-    (deftype un-op-method (tag un-op-method))
+    (deftype unary-method (tag unary-method))
     
-    (defrecord unary-operator
-      (methods (vector un-op-method) :var))
-    (deftype unary-operator (tag unary-operator))
+    (defrecord unary-table
+      (methods (vector unary-method) :var))
+    (deftype unary-table (tag unary-table))
     
     (%text :comment "Return " (:tag true) " if " (:local v) " is a member of class " (:local c) " and, if "
-           (:local limit) " is non-" (:tag null) ", " (:local c) " is a proper superclass of " (:local limit) ".")
+           (:local limit) " is non-" (:tag null) ", " (:local c) " is a proper ancestor of " (:local limit) ".")
     (define (limited-instance-of (v object) (c class) (limit class-opt)) boolean
       (if (instance-of v c)
         (if (:narrow-false (in (tag null) limit))
           (return true)
-          (return (is-proper-subclass limit c)))
+          (return (is-proper-ancestor c limit)))
         (return false)))
     
-    (%text :comment "Return a function that takes a this argument " (:local this) ", a first " (:type object) " argument " (:local op)
+    (%text :comment "Dispatch the unary operator described by " (:local table) " applied to the " (:character-literal "this")
+           " value " (:local this) ", the first argument " (:local op)
            ", a vector of zero or more additional positional arguments " (:local positional-args)
            ", and a vector of zero or more named arguments " (:local named-args)
-           " and returns the operator " (:local un-op) " applied to the this value " (:local this)
-           " and the arguments " (:local op) ", " (:local positional-args) ", and " (:local named-args)
            ". If " (:local limit) " is non-" (:tag null)
-           ", restrict the lookup to operators defined on the proper superclasses of " (:local limit) ".")
-    (define (un-op-eval (un-op unary-operator) (limit class-opt)) (-> (object object (vector object) (vector named-argument)) object)
-      (function (f (this object) (op object) (positional-args (vector object)) (named-args (vector named-argument))) object
-        (const applicable-ops (vector un-op-method)
-          (map (& methods un-op) m m (limited-instance-of op (& operand-type m) limit)))
-        (const best-ops (vector un-op-method)
-          (map applicable-ops m m
-               (empty (map applicable-ops m2 m2 (not (is-subclass (& operand-type m) (& operand-type m2)))))))
-        (rwhen (empty best-ops)
-          (throw method-not-found-error))
-        (assert (= (length best-ops) 1))
-        (return ((& op (nth best-ops 0)) this op positional-args named-args)))
-      (return f))
+           ", restrict the lookup to operators defined on the proper ancestors of " (:local limit) ".")
+    (define (unary-dispatch (table unary-table) (limit class-opt) (this object) (op object) (positional-args (vector object))
+                            (named-args (vector named-argument))) object
+      (const applicable-ops (vector unary-method)
+        (map (& methods table) m m (limited-instance-of op (& operand-type m) limit)))
+      (const best-ops (vector unary-method)
+        (map applicable-ops m m
+             (empty (map applicable-ops m2 m2 (not (is-ancestor (& operand-type m2) (& operand-type m)))))))
+      (rwhen (empty best-ops)
+        (throw property-not-found-error))
+      (assert (= (length best-ops) 1))
+      (return ((& op (nth best-ops 0)) this op positional-args named-args)))
     
     
     (%subsection :semantics "Unary Operator Tables")
@@ -417,100 +560,96 @@
     
     (define (increment-object (this object :unused) (a object) (positional-args (vector object) :unused) (named-args (vector named-argument) :unused)) object
       (const x object (unary-plus a))
-      (return ((bin-op-eval bin-op-add null null) x 1.0)))
+      (return (binary-dispatch add-table null null x 1.0)))
     
     (define (decrement-object (this object :unused) (a object) (positional-args (vector object) :unused) (named-args (vector named-argument) :unused)) object
       (const x object (unary-plus a))
-      (return ((bin-op-eval bin-op-subtract null null) x 1.0)))
+      (return (binary-dispatch subtract-table null null x 1.0)))
     
     (define (call-object (this object) (a object) (positional-args (vector object)) (named-args (vector named-argument))) object
       (case a
         (:select (union undefined null boolean float64 string namespace attribute) (throw type-error))
-        (:narrow class (return ((& call a) this positional-args named-args)))
-        (:narrow instance (return ((& call a) this positional-args named-args)))))
+        (:narrow (union class instance) (return ((& call a) this positional-args named-args)))
+        (:narrow method-closure (return (call-object (& this a) (& f (& method a)) positional-args named-args)))))
     
     (define (construct-object (this object) (a object) (positional-args (vector object)) (named-args (vector named-argument))) object
       (case a
-        (:select (union undefined null boolean float64 string namespace attribute) (throw type-error))
-        (:narrow class (return ((& construct a) this positional-args named-args)))
-        (:narrow instance (return ((& construct a) this positional-args named-args)))))
+        (:select (union undefined null boolean float64 string namespace attribute method-closure) (throw type-error))
+        (:narrow (union class instance) (return ((& construct a) this positional-args named-args)))))
     
     (define (bracket-read-object (this object :unused) (a object) (positional-args (vector object)) (named-args (vector named-argument))) object
       (rwhen (or (/= (length positional-args) 1) (not (empty named-args)))
         (throw argument-mismatch-error))
       (const name string (to-string (nth positional-args 0)))
-      (return (read-qualified-property a (tag qualified-name public-namespace name) true)))
+      (return (read-qualified-property a name public-namespace true)))
     
     (define (bracket-write-object (this object :unused) (a object) (positional-args (vector object)) (named-args (vector named-argument))) object
       (rwhen (or (/= (length positional-args) 2) (not (empty named-args)))
         (throw argument-mismatch-error))
       (const new-value object (nth positional-args 0))
       (const name string (to-string (nth positional-args 1)))
-      (write-qualified-property a (tag qualified-name public-namespace name) true new-value)
+      (write-qualified-property a name public-namespace true new-value)
       (return new-value))
     
     (define (bracket-delete-object (this object :unused) (a object) (positional-args (vector object)) (named-args (vector named-argument))) object
       (rwhen (or (/= (length positional-args) 1) (not (empty named-args)))
         (throw argument-mismatch-error))
       (const name string (to-string (nth positional-args 0)))
-      (return (delete-qualified-property a (tag qualified-name public-namespace name) true)))
+      (return (delete-qualified-property a name public-namespace true)))
     
     
-    (define un-op-plus unary-operator (tag unary-operator (vector (tag un-op-method object-class plus-object))))
-    (define un-op-minus unary-operator (tag unary-operator (vector (tag un-op-method object-class minus-object))))
-    (define un-op-bitwise-not unary-operator (tag unary-operator (vector (tag un-op-method object-class bitwise-not-object))))
-    (define un-op-increment unary-operator (tag unary-operator (vector (tag un-op-method object-class increment-object))))
-    (define un-op-decrement unary-operator (tag unary-operator (vector (tag un-op-method object-class decrement-object))))
-    (define un-op-call unary-operator (tag unary-operator (vector (tag un-op-method object-class call-object))))
-    (define un-op-construct unary-operator (tag unary-operator (vector (tag un-op-method object-class construct-object))))
-    (define un-op-bracket-read unary-operator (tag unary-operator (vector (tag un-op-method object-class bracket-read-object))))
-    (define un-op-bracket-write unary-operator (tag unary-operator (vector (tag un-op-method object-class bracket-write-object))))
-    (define un-op-bracket-delete unary-operator (tag unary-operator (vector (tag un-op-method object-class bracket-delete-object))))
+    (define plus-table unary-table (tag unary-table (vector (tag unary-method object-class plus-object))))
+    (define minus-table unary-table (tag unary-table (vector (tag unary-method object-class minus-object))))
+    (define bitwise-not-table unary-table (tag unary-table (vector (tag unary-method object-class bitwise-not-object))))
+    (define increment-table unary-table (tag unary-table (vector (tag unary-method object-class increment-object))))
+    (define decrement-table unary-table (tag unary-table (vector (tag unary-method object-class decrement-object))))
+    (define call-table unary-table (tag unary-table (vector (tag unary-method object-class call-object))))
+    (define construct-table unary-table (tag unary-table (vector (tag unary-method object-class construct-object))))
+    (define bracket-read-table unary-table (tag unary-table (vector (tag unary-method object-class bracket-read-object))))
+    (define bracket-write-table unary-table (tag unary-table (vector (tag unary-method object-class bracket-write-object))))
+    (define bracket-delete-table unary-table (tag unary-table (vector (tag unary-method object-class bracket-delete-object))))
     
     
     (define (unary-plus (a object)) object
-      (return ((un-op-eval un-op-plus null) null a (vector-of object) (vector-of named-argument))))
+      (return (unary-dispatch plus-table null null a (vector-of object) (vector-of named-argument))))
     
     (define (unary-not (a object)) object
       (return (not (to-boolean a))))
     
     
     (%subsection :semantics "Binary Operators")
-    (deftag bin-op-method
+    (deftag binary-method
       (left-type class)
       (right-type class)
       (op (-> (object object) object)))
-    (deftype bin-op-method (tag bin-op-method))
+    (deftype binary-method (tag binary-method))
     
-    (defrecord binary-operator
-      (methods (vector bin-op-method) :var))
-    (deftype binary-operator (tag binary-operator))
+    (defrecord binary-table
+      (methods (vector binary-method) :var))
+    (deftype binary-table (tag binary-table))
     
     
     (%text :comment "Return " (:tag true) " if " (:local m1) " is at least as specific as " (:local m2) ".")
-    (define (is-bin-op-subclass (m1 bin-op-method) (m2 bin-op-method)) boolean
-      (return (and (is-subclass (& left-type m1) (& left-type m2))
-                   (is-subclass (& right-type m1) (& right-type m2)))))
+    (define (is-binary-descendant (m1 binary-method) (m2 binary-method)) boolean
+      (return (and (is-ancestor (& left-type m2) (& left-type m1))
+                   (is-ancestor (& right-type m2) (& right-type m1)))))
     
-    (%text :comment "Return a function that takes two " (:type object) " arguments " (:local left) " and " (:local right)
-           " and returns the operator " (:local bin-op) " applied to " (:local left) " and " (:local right)
+    (%text :comment "Dispatch the binary operator described by " (:local table) " applied to " (:local left) " and " (:local right)
            ". If " (:local left-limit) " is non-" (:tag null)
-           ", restrict the lookup to operator definitions with a superclass of " (:local left-limit)
+           ", restrict the lookup to operator definitions with an ancestor of " (:local left-limit)
            " for the left operand. Similarly, if " (:local right-limit) " is non-" (:tag null)
-           ", restrict the lookup to operator definitions with a superclass of " (:local right-limit) " for the right operand.")
-    (define (bin-op-eval (bin-op binary-operator) (left-limit class-opt) (right-limit class-opt)) (-> (object object) object)
-      (function (f (left object) (right object)) object
-        (const applicable-ops (vector bin-op-method)
-          (map (& methods bin-op) m m (and (limited-instance-of left (& left-type m) left-limit)
-                                           (limited-instance-of right (& right-type m) right-limit))))
-        (const best-ops (vector bin-op-method)
-          (map applicable-ops m m
-               (empty (map applicable-ops m2 m2 (not (is-bin-op-subclass m m2))))))
-        (rwhen (empty best-ops)
-          (throw method-not-found-error))
-        (assert (= (length best-ops) 1))
-        (return ((& op (nth best-ops 0)) left right)))
-      (return f))
+           ", restrict the lookup to operator definitions with an ancestor of " (:local right-limit) " for the right operand.")
+    (define (binary-dispatch (table binary-table) (left-limit class-opt) (right-limit class-opt) (left object) (right object)) object
+      (const applicable-ops (vector binary-method)
+        (map (& methods table) m m (and (limited-instance-of left (& left-type m) left-limit)
+                                        (limited-instance-of right (& right-type m) right-limit))))
+      (const best-ops (vector binary-method)
+        (map applicable-ops m m
+             (empty (map applicable-ops m2 m2 (not (is-binary-descendant m m2))))))
+      (rwhen (empty best-ops)
+        (throw property-not-found-error))
+      (assert (= (length best-ops) 1))
+      (return ((& op (nth best-ops 0)) left right)))
     
     
     (%subsection :semantics "Binary Operator Tables")
@@ -560,22 +699,22 @@
         (:narrow float64
           (const bp object (to-primitive b null))
           (case bp
-            (:select (union undefined null namespace attribute class instance) (return false))
+            (:select (union undefined null namespace attribute class method-closure instance) (return false))
             (:select (union boolean string float64) (return (= (float64-compare a (to-number bp)) equal order)))))
         (:narrow string
           (const bp object (to-primitive b null))
           (case bp
-            (:select (union undefined null namespace attribute class instance) (return false))
+            (:select (union undefined null namespace attribute class method-closure instance) (return false))
             (:select (union boolean float64) (return (= (float64-compare (to-number a) (to-number bp)) equal order)))
             (:narrow string (return (= a bp string)))))
-        (:select (union namespace attribute class instance)
+        (:select (union namespace attribute class method-closure instance)
           (case b
             (:select (union undefined null) (return false))
-            (:select (union namespace attribute class instance) (return (strict-equal-objects a b)))
+            (:select (union namespace attribute class method-closure instance) (return (strict-equal-objects a b)))
             (:select (union boolean float64 string)
               (const ap object (to-primitive a null))
               (case ap
-                (:select (union undefined null namespace attribute class instance) (return false))
+                (:select (union undefined null namespace attribute class method-closure instance) (return false))
                 (:select (union boolean float64 string) (return (equal-objects ap b)))))))))
     
     (define (strict-equal-objects (a object) (b object)) object
@@ -615,21 +754,21 @@
       (return (real-to-float64 (bitwise-or i j))))
     
     
-    (define bin-op-add binary-operator (tag binary-operator (vector (tag bin-op-method object-class object-class add-objects))))
-    (define bin-op-subtract binary-operator (tag binary-operator (vector (tag bin-op-method object-class object-class subtract-objects))))
-    (define bin-op-multiply binary-operator (tag binary-operator (vector (tag bin-op-method object-class object-class multiply-objects))))
-    (define bin-op-divide binary-operator (tag binary-operator (vector (tag bin-op-method object-class object-class divide-objects))))
-    (define bin-op-remainder binary-operator (tag binary-operator (vector (tag bin-op-method object-class object-class remainder-objects))))
-    (define bin-op-less binary-operator (tag binary-operator (vector (tag bin-op-method object-class object-class less-objects))))
-    (define bin-op-less-or-equal binary-operator (tag binary-operator (vector (tag bin-op-method object-class object-class less-or-equal-objects))))
-    (define bin-op-equal binary-operator (tag binary-operator (vector (tag bin-op-method object-class object-class equal-objects))))
-    (define bin-op-strict-equal binary-operator (tag binary-operator (vector (tag bin-op-method object-class object-class strict-equal-objects))))
-    (define bin-op-shift-left binary-operator (tag binary-operator (vector (tag bin-op-method object-class object-class shift-left-objects))))
-    (define bin-op-shift-right binary-operator (tag binary-operator (vector (tag bin-op-method object-class object-class shift-right-objects))))
-    (define bin-op-shift-right-unsigned binary-operator (tag binary-operator (vector (tag bin-op-method object-class object-class shift-right-unsigned-objects))))
-    (define bin-op-bitwise-and binary-operator (tag binary-operator (vector (tag bin-op-method object-class object-class bitwise-and-objects))))
-    (define bin-op-bitwise-xor binary-operator (tag binary-operator (vector (tag bin-op-method object-class object-class bitwise-xor-objects))))
-    (define bin-op-bitwise-or binary-operator (tag binary-operator (vector (tag bin-op-method object-class object-class bitwise-or-objects))))
+    (define add-table binary-table (tag binary-table (vector (tag binary-method object-class object-class add-objects))))
+    (define subtract-table binary-table (tag binary-table (vector (tag binary-method object-class object-class subtract-objects))))
+    (define multiply-table binary-table (tag binary-table (vector (tag binary-method object-class object-class multiply-objects))))
+    (define divide-table binary-table (tag binary-table (vector (tag binary-method object-class object-class divide-objects))))
+    (define remainder-table binary-table (tag binary-table (vector (tag binary-method object-class object-class remainder-objects))))
+    (define less-table binary-table (tag binary-table (vector (tag binary-method object-class object-class less-objects))))
+    (define less-or-equal-table binary-table (tag binary-table (vector (tag binary-method object-class object-class less-or-equal-objects))))
+    (define equal-table binary-table (tag binary-table (vector (tag binary-method object-class object-class equal-objects))))
+    (define strict-equal-table binary-table (tag binary-table (vector (tag binary-method object-class object-class strict-equal-objects))))
+    (define shift-left-table binary-table (tag binary-table (vector (tag binary-method object-class object-class shift-left-objects))))
+    (define shift-right-table binary-table (tag binary-table (vector (tag binary-method object-class object-class shift-right-objects))))
+    (define shift-right-unsigned-table binary-table (tag binary-table (vector (tag binary-method object-class object-class shift-right-unsigned-objects))))
+    (define bitwise-and-table binary-table (tag binary-table (vector (tag binary-method object-class object-class bitwise-and-objects))))
+    (define bitwise-xor-table binary-table (tag binary-table (vector (tag binary-method object-class object-class bitwise-xor-objects))))
+    (define bitwise-or-table binary-table (tag binary-table (vector (tag binary-method object-class object-class bitwise-or-objects))))
     
     
     (%section "Terminal Actions")
@@ -946,7 +1085,7 @@
            (:select string (return "string"))
            (:select namespace (return "namespace"))
            (:select attribute (return "attribute"))
-           (:select class (return "function"))
+           (:select (union class method-closure) (return "function"))
            (:narrow instance (return (& typeof-string a))))))
       (production :unary-expression (++ :postfix-expression-or-super) unary-expression-increment
         (verify (verify :postfix-expression-or-super))
@@ -954,7 +1093,7 @@
          (const r reference ((eval :postfix-expression-or-super) e))
          (const a object (read-reference r))
          (const sa class-opt ((super :postfix-expression-or-super) e))
-         (const b object ((un-op-eval un-op-increment sa) null a (vector-of object) (vector-of named-argument)))
+         (const b object (unary-dispatch increment-table sa null a (vector-of object) (vector-of named-argument)))
          (write-reference r b)
          (return b)))
       (production :unary-expression (-- :postfix-expression-or-super) unary-expression-decrement
@@ -963,7 +1102,7 @@
          (const r reference ((eval :postfix-expression-or-super) e))
          (const a object (read-reference r))
          (const sa class-opt ((super :postfix-expression-or-super) e))
-         (const b object ((un-op-eval un-op-decrement sa) null a (vector-of object) (vector-of named-argument)))
+         (const b object (unary-dispatch decrement-table sa null a (vector-of object) (vector-of named-argument)))
          (write-reference r b)
          (return b)))
       (production :unary-expression (+ :unary-expression-or-super) unary-expression-plus
@@ -971,19 +1110,19 @@
         ((eval e)
          (const a object (read-reference ((eval :unary-expression-or-super) e)))
          (const sa class-opt ((super :unary-expression-or-super) e))
-         (return ((un-op-eval un-op-plus sa) null a (vector-of object) (vector-of named-argument)))))
+         (return (unary-dispatch plus-table sa null a (vector-of object) (vector-of named-argument)))))
       (production :unary-expression (- :unary-expression-or-super) unary-expression-minus
         (verify (verify :unary-expression-or-super))
         ((eval e)
          (const a object (read-reference ((eval :unary-expression-or-super) e)))
          (const sa class-opt ((super :unary-expression-or-super) e))
-         (return ((un-op-eval un-op-minus sa) null a (vector-of object) (vector-of named-argument)))))
+         (return (unary-dispatch minus-table sa null a (vector-of object) (vector-of named-argument)))))
       (production :unary-expression (~ :unary-expression-or-super) unary-expression-bitwise-not
         (verify (verify :unary-expression-or-super))
         ((eval e)
          (const a object (read-reference ((eval :unary-expression-or-super) e)))
          (const sa class-opt ((super :unary-expression-or-super) e))
-         (return ((un-op-eval un-op-bitwise-not sa) null a (vector-of object) (vector-of named-argument)))))
+         (return (unary-dispatch bitwise-not-table sa null a (vector-of object) (vector-of named-argument)))))
       (production :unary-expression (! :unary-expression) unary-expression-logical-not
         (verify (verify :unary-expression))
         ((eval e)
@@ -1016,7 +1155,7 @@
          (const b object (read-reference ((eval :unary-expression-or-super) e)))
          (const sa class-opt ((super :multiplicative-expression-or-super) e))
          (const sb class-opt ((super :unary-expression-or-super) e))
-         (return ((bin-op-eval bin-op-multiply sa sb) a b))))
+         (return (binary-dispatch multiply-table sa sb a b))))
       (production :multiplicative-expression (:multiplicative-expression-or-super / :unary-expression-or-super) multiplicative-expression-divide
         ((verify s)
          ((verify :multiplicative-expression-or-super) s)
@@ -1026,7 +1165,7 @@
          (const b object (read-reference ((eval :unary-expression-or-super) e)))
          (const sa class-opt ((super :multiplicative-expression-or-super) e))
          (const sb class-opt ((super :unary-expression-or-super) e))
-         (return ((bin-op-eval bin-op-divide sa sb) a b))))
+         (return (binary-dispatch divide-table sa sb a b))))
       (production :multiplicative-expression (:multiplicative-expression-or-super % :unary-expression-or-super) multiplicative-expression-remainder
         ((verify s)
          ((verify :multiplicative-expression-or-super) s)
@@ -1036,7 +1175,7 @@
          (const b object (read-reference ((eval :unary-expression-or-super) e)))
          (const sa class-opt ((super :multiplicative-expression-or-super) e))
          (const sb class-opt ((super :unary-expression-or-super) e))
-         (return ((bin-op-eval bin-op-remainder sa sb) a b)))))
+         (return (binary-dispatch remainder-table sa sb a b)))))
     (%print-actions)
     
     (rule :multiplicative-expression-or-super ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)) (super (-> (dynamic-env) class-opt)))
@@ -1065,7 +1204,7 @@
          (const b object (read-reference ((eval :multiplicative-expression-or-super) e)))
          (const sa class-opt ((super :additive-expression-or-super) e))
          (const sb class-opt ((super :multiplicative-expression-or-super) e))
-         (return ((bin-op-eval bin-op-add sa sb) a b))))
+         (return (binary-dispatch add-table sa sb a b))))
       (production :additive-expression (:additive-expression-or-super - :multiplicative-expression-or-super) additive-expression-subtract
         ((verify s)
          ((verify :additive-expression-or-super) s)
@@ -1075,7 +1214,7 @@
          (const b object (read-reference ((eval :multiplicative-expression-or-super) e)))
          (const sa class-opt ((super :additive-expression-or-super) e))
          (const sb class-opt ((super :multiplicative-expression-or-super) e))
-         (return ((bin-op-eval bin-op-subtract sa sb) a b)))))
+         (return (binary-dispatch subtract-table sa sb a b)))))
     (%print-actions)
     
     (rule :additive-expression-or-super ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)) (super (-> (dynamic-env) class-opt)))
@@ -1104,7 +1243,7 @@
          (const b object (read-reference ((eval :additive-expression-or-super) e)))
          (const sa class-opt ((super :shift-expression-or-super) e))
          (const sb class-opt ((super :additive-expression-or-super) e))
-         (return ((bin-op-eval bin-op-shift-left sa sb) a b))))
+         (return (binary-dispatch shift-left-table sa sb a b))))
       (production :shift-expression (:shift-expression-or-super >> :additive-expression-or-super) shift-expression-right-signed
         ((verify s)
          ((verify :shift-expression-or-super) s)
@@ -1114,7 +1253,7 @@
          (const b object (read-reference ((eval :additive-expression-or-super) e)))
          (const sa class-opt ((super :shift-expression-or-super) e))
          (const sb class-opt ((super :additive-expression-or-super) e))
-         (return ((bin-op-eval bin-op-shift-right sa sb) a b))))
+         (return (binary-dispatch shift-right-table sa sb a b))))
       (production :shift-expression (:shift-expression-or-super >>> :additive-expression-or-super) shift-expression-right-unsigned
         ((verify s)
          ((verify :shift-expression-or-super) s)
@@ -1124,7 +1263,7 @@
          (const b object (read-reference ((eval :additive-expression-or-super) e)))
          (const sa class-opt ((super :shift-expression-or-super) e))
          (const sb class-opt ((super :additive-expression-or-super) e))
-         (return ((bin-op-eval bin-op-shift-right-unsigned sa sb) a b)))))
+         (return (binary-dispatch shift-right-unsigned-table sa sb a b)))))
     (%print-actions)
     
     (rule :shift-expression-or-super ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)) (super (-> (dynamic-env) class-opt)))
@@ -1153,7 +1292,7 @@
          (const b object (read-reference ((eval :shift-expression-or-super) e)))
          (const sa class-opt ((super :relational-expression-or-super) e))
          (const sb class-opt ((super :shift-expression-or-super) e))
-         (return ((bin-op-eval bin-op-less sa sb) a b))))
+         (return (binary-dispatch less-table sa sb a b))))
       (production (:relational-expression :beta) ((:relational-expression-or-super :beta) > :shift-expression-or-super) relational-expression-greater
         ((verify s)
          ((verify :relational-expression-or-super) s)
@@ -1163,7 +1302,7 @@
          (const b object (read-reference ((eval :shift-expression-or-super) e)))
          (const sa class-opt ((super :relational-expression-or-super) e))
          (const sb class-opt ((super :shift-expression-or-super) e))
-         (return ((bin-op-eval bin-op-less sb sa) b a))))
+         (return (binary-dispatch less-table sb sa b a))))
       (production (:relational-expression :beta) ((:relational-expression-or-super :beta) <= :shift-expression-or-super) relational-expression-less-or-equal
         ((verify s)
          ((verify :relational-expression-or-super) s)
@@ -1173,7 +1312,7 @@
          (const b object (read-reference ((eval :shift-expression-or-super) e)))
          (const sa class-opt ((super :relational-expression-or-super) e))
          (const sb class-opt ((super :shift-expression-or-super) e))
-         (return ((bin-op-eval bin-op-less-or-equal sa sb) a b))))
+         (return (binary-dispatch less-or-equal-table sa sb a b))))
       (production (:relational-expression :beta) ((:relational-expression-or-super :beta) >= :shift-expression-or-super) relational-expression-greater-or-equal
         ((verify s)
          ((verify :relational-expression-or-super) s)
@@ -1183,7 +1322,7 @@
          (const b object (read-reference ((eval :shift-expression-or-super) e)))
          (const sa class-opt ((super :relational-expression-or-super) e))
          (const sb class-opt ((super :shift-expression-or-super) e))
-         (return ((bin-op-eval bin-op-less-or-equal sb sa) b a))))
+         (return (binary-dispatch less-or-equal-table sb sa b a))))
       (production (:relational-expression :beta) ((:relational-expression :beta) is :shift-expression) relational-expression-is
         ((verify s)
          ((verify :relational-expression) s)
@@ -1232,7 +1371,7 @@
          (const b object (read-reference ((eval :relational-expression-or-super) e)))
          (const sa class-opt ((super :equality-expression-or-super) e))
          (const sb class-opt ((super :relational-expression-or-super) e))
-         (return ((bin-op-eval bin-op-equal sa sb) a b))))
+         (return (binary-dispatch equal-table sa sb a b))))
       (production (:equality-expression :beta) ((:equality-expression-or-super :beta) != (:relational-expression-or-super :beta)) equality-expression-not-equal
         ((verify s)
          ((verify :equality-expression-or-super) s)
@@ -1242,7 +1381,7 @@
          (const b object (read-reference ((eval :relational-expression-or-super) e)))
          (const sa class-opt ((super :equality-expression-or-super) e))
          (const sb class-opt ((super :relational-expression-or-super) e))
-         (return (unary-not ((bin-op-eval bin-op-equal sa sb) a b)))))
+         (return (unary-not (binary-dispatch equal-table sa sb a b)))))
       (production (:equality-expression :beta) ((:equality-expression-or-super :beta) === (:relational-expression-or-super :beta)) equality-expression-strict-equal
         ((verify s)
          ((verify :equality-expression-or-super) s)
@@ -1252,7 +1391,7 @@
          (const b object (read-reference ((eval :relational-expression-or-super) e)))
          (const sa class-opt ((super :equality-expression-or-super) e))
          (const sb class-opt ((super :relational-expression-or-super) e))
-         (return ((bin-op-eval bin-op-strict-equal sa sb) a b))))
+         (return (binary-dispatch strict-equal-table sa sb a b))))
       (production (:equality-expression :beta) ((:equality-expression-or-super :beta) !== (:relational-expression-or-super :beta)) equality-expression-strict-not-equal
         ((verify s)
          ((verify :equality-expression-or-super) s)
@@ -1262,7 +1401,7 @@
          (const b object (read-reference ((eval :relational-expression-or-super) e)))
          (const sa class-opt ((super :equality-expression-or-super) e))
          (const sb class-opt ((super :relational-expression-or-super) e))
-         (return (unary-not ((bin-op-eval bin-op-strict-equal sa sb) a b))))))
+         (return (unary-not (binary-dispatch strict-equal-table sa sb a b))))))
     (%print-actions)
     
     (rule (:equality-expression-or-super :beta) ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)) (super (-> (dynamic-env) class-opt)))
@@ -1291,7 +1430,7 @@
          (const b object (read-reference ((eval :equality-expression-or-super) e)))
          (const sa class-opt ((super :bitwise-and-expression-or-super) e))
          (const sb class-opt ((super :equality-expression-or-super) e))
-         (return ((bin-op-eval bin-op-bitwise-and sa sb) a b)))))
+         (return (binary-dispatch bitwise-and-table sa sb a b)))))
     
     (rule (:bitwise-xor-expression :beta) ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)))
       (production (:bitwise-xor-expression :beta) ((:bitwise-and-expression :beta)) bitwise-xor-expression-bitwise-and
@@ -1306,7 +1445,7 @@
          (const b object (read-reference ((eval :bitwise-and-expression-or-super) e)))
          (const sa class-opt ((super :bitwise-xor-expression-or-super) e))
          (const sb class-opt ((super :bitwise-and-expression-or-super) e))
-         (return ((bin-op-eval bin-op-bitwise-xor sa sb) a b)))))
+         (return (binary-dispatch bitwise-xor-table sa sb a b)))))
     
     (rule (:bitwise-or-expression :beta) ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)))
       (production (:bitwise-or-expression :beta) ((:bitwise-xor-expression :beta)) bitwise-or-expression-bitwise-xor
@@ -1321,7 +1460,7 @@
          (const b object (read-reference ((eval :bitwise-xor-expression-or-super) e)))
          (const sa class-opt ((super :bitwise-or-expression-or-super) e))
          (const sb class-opt ((super :bitwise-xor-expression-or-super) e))
-         (return ((bin-op-eval bin-op-bitwise-or sa sb) a b)))))
+         (return (binary-dispatch bitwise-or-table sa sb a b)))))
     (%print-actions)
     
     
@@ -1445,14 +1584,14 @@
          ((verify :postfix-expression-or-super) s)
          ((verify :assignment-expression) s))
         ((eval e)
-         (return (eval-assignment-op (bin-op-eval (bin-op :compound-assignment) ((super :postfix-expression-or-super) e) null)
+         (return (eval-assignment-op (table :compound-assignment) ((super :postfix-expression-or-super) e) null
                                      (eval :postfix-expression-or-super) (eval :assignment-expression) e))))
       (production (:assignment-expression :beta) (:postfix-expression-or-super :compound-assignment :super-expression) assignment-expression-compound-super
         ((verify s)
          ((verify :postfix-expression-or-super) s)
          ((verify :super-expression) s))
         ((eval e)
-         (return (eval-assignment-op (bin-op-eval (bin-op :compound-assignment) ((super :postfix-expression-or-super) e) ((super :super-expression) e))
+         (return (eval-assignment-op (table :compound-assignment) ((super :postfix-expression-or-super) e) ((super :super-expression) e)
                                      (eval :postfix-expression-or-super) (eval :super-expression) e))))
       (production (:assignment-expression :beta) (:postfix-expression :logical-assignment (:assignment-expression :beta)) assignment-expression-logical-compound
         ((verify s)
@@ -1460,27 +1599,28 @@
          ((verify :assignment-expression) s))
         ((eval (e :unused)) (todo))))
     
-    (define (eval-assignment-op (op (-> (object object) object)) (left-eval (-> (dynamic-env) reference)) (right-eval (-> (dynamic-env) reference)) (e dynamic-env)) reference
+    (define (eval-assignment-op (table binary-table) (left-limit class-opt) (right-limit class-opt)
+                                (left-eval (-> (dynamic-env) reference)) (right-eval (-> (dynamic-env) reference)) (e dynamic-env)) reference
       (const r-left reference (left-eval e))
       (const v-left object (read-reference r-left))
       (const v-right object (read-reference (right-eval e)))
-      (const result object (op v-left v-right))
+      (const result object (binary-dispatch table left-limit right-limit v-left v-right))
       (write-reference r-left result)
       (return result))
     (%print-actions)
     
-    (rule :compound-assignment ((bin-op binary-operator))
-      (production :compound-assignment (*=) compound-assignment-multiply (bin-op bin-op-multiply))
-      (production :compound-assignment (/=) compound-assignment-divide (bin-op bin-op-divide))
-      (production :compound-assignment (%=) compound-assignment-remainder (bin-op bin-op-remainder))
-      (production :compound-assignment (+=) compound-assignment-add (bin-op bin-op-add))
-      (production :compound-assignment (-=) compound-assignment-subtract (bin-op bin-op-subtract))
-      (production :compound-assignment (<<=) compound-assignment-shift-left (bin-op bin-op-shift-left))
-      (production :compound-assignment (>>=) compound-assignment-shift-right (bin-op bin-op-shift-right))
-      (production :compound-assignment (>>>=) compound-assignment-shift-right-unsigned (bin-op bin-op-shift-right-unsigned))
-      (production :compound-assignment (&=) compound-assignment-bitwise-and (bin-op bin-op-bitwise-and))
-      (production :compound-assignment (^=) compound-assignment-bitwise-xor (bin-op bin-op-bitwise-xor))
-      (production :compound-assignment (\|=) compound-assignment-bitwise-or (bin-op bin-op-bitwise-or)))
+    (rule :compound-assignment ((table binary-table))
+      (production :compound-assignment (*=) compound-assignment-multiply (table multiply-table))
+      (production :compound-assignment (/=) compound-assignment-divide (table divide-table))
+      (production :compound-assignment (%=) compound-assignment-remainder (table remainder-table))
+      (production :compound-assignment (+=) compound-assignment-add (table add-table))
+      (production :compound-assignment (-=) compound-assignment-subtract (table subtract-table))
+      (production :compound-assignment (<<=) compound-assignment-shift-left (table shift-left-table))
+      (production :compound-assignment (>>=) compound-assignment-shift-right (table shift-right-table))
+      (production :compound-assignment (>>>=) compound-assignment-shift-right-unsigned (table shift-right-unsigned-table))
+      (production :compound-assignment (&=) compound-assignment-bitwise-and (table bitwise-and-table))
+      (production :compound-assignment (^=) compound-assignment-bitwise-xor (table bitwise-xor-table))
+      (production :compound-assignment (\|=) compound-assignment-bitwise-or (table bitwise-or-table)))
     (%print-actions)
     
     (production :logical-assignment (&&=) logical-assignment-logical-and)
