@@ -166,9 +166,9 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
     aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_NORMAL]);
     break;
 
-  case eColor_buttonhighlight:  // ?
+  case eColor_buttonhighlight:
   case eColor_threedhighlight:
-    aColor = NS_BrightenColor(GDK_COLOR_TO_NS_RGB(mStyle->light[GTK_STATE_NORMAL]));
+    aColor = GDK_COLOR_TO_NS_RGB(mStyle->light[GTK_STATE_NORMAL]);
     break;
 
   case eColor_buttontext:
@@ -176,8 +176,11 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
     break;
 
   case eColor_buttonshadow:
-  case eColor_threeddarkshadow:
   case eColor_threedshadow: // i think these should be the same
+    aColor = GDK_COLOR_TO_NS_RGB(mStyle->dark[GTK_STATE_NORMAL]);
+    break;
+
+  case eColor_threeddarkshadow:
     aColor = GDK_COLOR_TO_NS_RGB(mStyle->black);
     break;
 
