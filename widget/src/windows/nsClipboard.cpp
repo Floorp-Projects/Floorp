@@ -545,9 +545,10 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
       default:
         break;
     } //switch
+    
+    ReleaseStgMedium(&stm);
   }
 
-  ReleaseStgMedium(&stm);
   return result;
 }
 
