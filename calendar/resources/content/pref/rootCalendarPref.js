@@ -105,6 +105,7 @@ function calendarPreferences( CalendarWindow )
      this.calendarPref.setIntPref( "event.defaultlength", 60 );
      this.calendarPref.setIntPref( "alarms.defaultsnoozelength", 10 );
      this.calendarPref.setCharPref( "categories.names", getDefaultCategories() );
+     this.calendarPref.setIntPref( "servers.count", 1 ); //this counts the default server as well, so its 1.
      this.loadPreferences();
   }
   
@@ -126,6 +127,8 @@ calendarPreferences.prototype.loadPreferences = function()
    this.arrayOfPrefs.defaultsnoozelength = this.calendarPref.getIntPref( "alarms.defaultsnoozelength" );
 
    this.arrayOfPrefs.categories = this.calendarPref.getCharPref( "categories.names" );
+
+   this.arrayOfPrefs.numberofservers = this.calendarPref.getIntPref( "servers.count" ); //this counts the default server
 }
 
 calendarPreferences.prototype.getPref = function( Preference )

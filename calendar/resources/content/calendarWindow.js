@@ -80,10 +80,16 @@ function CalendarWindow( calendarDataSource )
    //setup the preferences
    this.calendarPreferences = new calendarPreferences( this );
    
+   //setup the calendars
+   this.calendarManager = new calendarManager( this );
+   
+   //setup the calendar event selection
    this.EventSelection = new CalendarEventSelection( this );
 
+   //global date formater
    this.dateFormater = new DateFormater( this );
    
+   //the different views for the calendar
    this.monthView = new MonthView( this );
    this.weekView = new WeekView( this );
    this.dayView = new DayView( this );
@@ -114,13 +120,10 @@ function CalendarWindow( calendarDataSource )
          break;
       default:
          this.currentView = this.monthView;
-
          break;
    }
       
-
-   
-   // now that all is set up we can start to observe the data source
+   // now that everything is set up, we can start to observe the data source
    
    // make the observer, the calendarEventDataSource calls into the
    // observer when things change in the data source.
@@ -132,9 +135,7 @@ function CalendarWindow( calendarDataSource )
       
       onLoad   : function()
       {
-         // called when the data source has finished loading
-         
-         //calendarWindow.currentView.refreshEvents( );
+         //not needed, we get the events in the view         
       },
       onStartBatch   : function()
       {
@@ -211,7 +212,7 @@ function CalendarWindow( calendarDataSource )
 
 CalendarWindow.prototype.close = function( )
 {
-//   this.eventSource.removeObserver(  this.calendarEventDataSourceObserver ); 
+   gICalLib.removeObserver(  this.calendarEventDataSourceObserver ); 
 }
 
 

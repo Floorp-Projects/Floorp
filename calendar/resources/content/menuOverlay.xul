@@ -154,7 +154,7 @@
       <menupopup id="helpPopup">
          <menuitem id="releaseUrl"/>
          <menuseparator id="menu_HelpAboutSeparator"/>
-         <menuitem id="calendar-about-menu-item" label="&calendar.about.label;" accesskey="&calendar.about.accesskey;" oncommand="alertCalendarVersion()"/>
+         <menuitem id="calendar-about-menu-item" label="&calendar.about.label;" accesskey="&calendar.about.accesskey;" oncommand="displayCalendarVersion()"/>
       </menupopup>
    </menu>      
 </menubar>

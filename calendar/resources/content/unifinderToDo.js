@@ -438,3 +438,35 @@ function toDoUnifinderItemUpdate( calendarToDo )
       }
    }
 }
+
+
+function contextChangePriority( Priority, event )
+{
+   if (tree.treeBoxObject.selection.count > 0)
+   {
+      var treeitem = tree.treeBoxObject.view.getItemAtIndex( tree.currentIndex );
+      if(treeitem)
+      {
+         var todoId = treeitem.getAttribute("toDoID");
+         var ToDoItem = gICalLib.fetchToDo( todoId );
+         ToDoItem.priority = Priority;
+         gICalLib.modifyTodo( ToDoItem );
+      }
+   }
+}
+
+
+function contextChangePriority( Priority, event )
+{
+   if (tree.treeBoxObject.selection.count > 0)
+   {
+      var treeitem = tree.treeBoxObject.view.getItemAtIndex( tree.currentIndex );
+      if(treeitem)
+      {
+         var todoId = treeitem.getAttribute("toDoID");
+         var ToDoItem = gICalLib.fetchToDo( todoId );
+         ToDoItem.priority = Priority;
+         gICalLib.modifyTodo( ToDoItem );
+      }
+   }
+}

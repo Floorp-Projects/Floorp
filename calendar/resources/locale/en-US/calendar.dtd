@@ -75,8 +75,9 @@
 <!ENTITY newevent.private.label      "Private" >
 <!ENTITY newevent.private.note       "This event is private." >
 <!ENTITY newevent.alarm.label        "Alarm" >
+<!ENTITY newevent.server.label       "Calendar File" >
 <!ENTITY newevent.invite.label       "Invite" >
-<!ENTITY newevent.email.label       "Email Alarm To" >
+<!ENTITY newevent.email.label        "Email Alarm To" >
 <!ENTITY newevent.beforealarm.label  "before the event starts" >
 <!ENTITY newevent.repeat.label       "Repeat every" >
 <!ENTITY newevent.until.label        "Until" >
@@ -84,15 +85,12 @@
 <!ENTITY newevent.exceptions.caption "Exceptions">
 <!ENTITY newevent.addexceptions.label "Add Exception">
 <!ENTITY newevent.deleteexceptions.label "Delete Exception">
-
 <!ENTITY newevent.endtime.warning    "Your start time is after your end time.">
 <!ENTITY newevent.repeatdate.tooltip    "Choose a date to end on" >
 <!ENTITY newevent.recurend.warning    "Your repeat time ends before your end time.">
 <!ENTITY newevent.endtime.tooltip    "Choose an end time for this event" >
-                                       
 <!ENTITY newevent.starttimeerror.alertmessage "Your event cannot end before it has started. Please fix either the start time or the end time." >        
 <!ENTITY newevent.recurendtimeerror.alertmessage "Your event's repeat time cannot be before the event end time. Please fix this, or disable repeating." >
-
 <!ENTITY newevent.newevent.tab.label "New Event" >
 <!ENTITY newevent.recurrence.tab.label "Recurrence" >
 <!ENTITY newevent.contacts.tab.label "Contacts" >
@@ -239,6 +237,12 @@
 <!ENTITY calendar.context.emailevent.accesskey        "i">
 <!ENTITY calendar.context.emailtask.label             "Email Task">
 <!ENTITY calendar.context.emailtask.accesskey         "i">
+
+<!-- Task Context Menu -->
+<!ENTITY calendar.context.progress.label              "Progress">
+<!ENTITY calendar.context.progress.accesskey          "p">
+<!ENTITY calendar.context.priority.label              "Priority">
+<!ENTITY calendar.context.priority.accesskey          "r">
 
 <!-- About Dialog -->
 <!ENTITY calendar.about.title "About Mozilla Calendar">

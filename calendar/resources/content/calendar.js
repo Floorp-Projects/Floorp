@@ -531,9 +531,9 @@ function editNewEvent( calendarEvent )
 * notified of the change through their respective observers
 */
 
-function addEventDialogResponse( calendarEvent )
+function addEventDialogResponse( calendarEvent, Server )
 {
-   gICalLib.addEvent( calendarEvent );
+   gICalLib.addEvent( calendarEvent, Server );
 }
 
 
@@ -595,9 +595,9 @@ function editToDo( calendarToDo )
 * notified of the change through their respective observers
 */
 
-function modifyEventDialogResponse( calendarEvent )
+function modifyEventDialogResponse( calendarEvent, Server )
 {
-   gICalLib.modifyEvent( calendarEvent );
+   gICalLib.modifyEvent( calendarEvent, Server );
 }
 
 
@@ -614,7 +614,7 @@ function modifyToDoDialogResponse( calendarToDo )
 }
 
 
-function alertCalendarVersion()
+function displayCalendarVersion()
 {
    window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", 'chrome://calendar/content/about.html' );
 }

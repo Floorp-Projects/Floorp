@@ -96,6 +96,9 @@
    <command id="new_todo_command" oncommand="newToDoCommand()"/>
    <command id="delete_todo_command" oncommand="unifinderDeleteToDoCommand()"/>
 
+   <command id="new_server_command" oncommand="gCalendarWindow.calendarManager.launchAddCalendarDialog()"/>
+   <command id="delete_server_command" oncommand="gCalendarWindow.calendarManager.deleteCalendar()"/>
+
    <command id="next_command" oncommand="gCalendarWindow.currentView.goToNext()"/>
    <command id="previous_command" oncommand="gCalendarWindow.currentView.goToPrevious()"/>
    <command id="go_today_command" oncommand="gCalendarWindow.goToToday()"/>
@@ -143,6 +146,9 @@
 
 <!-- Javascript includes -->
 
+<!-- NEEDED FOR MULTIPLE CALENDAR SUPPORT -->
+<script type="application/x-javascript" src="chrome://calendar/content/calendarManager.js"/>
+
 <!-- NEEDED FOR CLIPBOARD SUPPORT -->
 <script type="application/x-javascript" src="chrome://calendar/content/calendarClipboard.js"/>
 
@@ -168,6 +174,7 @@
 <!-- Pop up menus -->
 <tooltip id="savetip"/>
 
+<!-- GENERAL CONTEXT MENU -->
 <popup id="context-menu">
    <menuitem label="&calendar.context.newevent.label;" accesskey="&calendar.context.newevent.accesskey;" observes="new_command"/>
    <menuitem label="&calendar.context.newtodo.label;" accesskey="&calendar.context.newtodo.accesskey;" observes="new_todo_command"/>
@@ -192,15 +199,36 @@
    
    <menuseparator/>
    <menuitem label="&calendar.context.reload.label;" accesskey="&calendar.context.reload.accesskey;" oncommand="window.location = 'chrome://calendar/content/calendar.xul';"/>
+   
+   <menuseparator/>
+   <menuitem label="New Server" observes="new_server_command"/>
 </popup>
 
+<!-- TASK ITEM CONTEXT MENU -->
 <popup id="taskitem-context-menu">
-<!--
+   <!--
    <menuitem label="&calendar.context.modifytask.label;" accesskey="&calendar.context.modifytask.accesskey;" observes="modify_command"/>
    <menuitem label="&calendar.context.emailtask.label;" accesskey="&calendar.context.emailtask.accesskey;" observes="send_event_command"/>
    <menuseparator/>
- -->
+   -->
    <menuitem label="&calendar.context.deletetask.label;" accesskey="&calendar.context.deletetask.accesskey;" observes="delete_todo_command"/>
+   <menu label="&calendar.context.progress.label;" accesskey="&calendar.context.progress.accesskey;">
+      <menupopup>
+         <menuitem label="0%"   oncommand="contextChangeProgress( event, 0 );"/>
+         <menuitem label="25%"  oncommand="contextChangeProgress( event, 25 );"/>
+         <menuitem label="50%"  oncommand="contextChangeProgress( event, 50 );"/>
+         <menuitem label="75%"  oncommand="contextChangeProgress( event, 75 );"/>
+         <menuitem label="100%" oncommand="contextChangeProgress( event, 100 );"/>
+      </menupopup>
+   </menu>
+   <menu label="&calendar.context.priority.label;" accesskey="&calendar.context.priority.accesskey;">
+      <menupopup>
+         <menuitem label="&priority.level.none;"   oncommand="contextChangePriority( event, 0 );"/>
+         <menuitem label="&priority.level.low;"    oncommand="contextChangePriority( event, 9 );"/>
+         <menuitem label="&priority.level.medium;" oncommand="contextChangePriority( event, 5 );"/>
+         <menuitem label="&priority.level.high;"   oncommand="contextChangePriority( event, 1 );"/>
+      </menupopup>
+   </menu>
 </popup>
 
 <popup id="oe-date-picker-popup"  position="after_start" oncommand="gCalendarWindow.goToDay( date )" value=""/>
@@ -246,16 +274,13 @@
 
       <vbox id="left-hand-content" flex="1">
          <vbox id="left-hand-above-splitter" flex="1">
-            <box align="center">
-               <label control="unifinder-search-field" value="&calendar.search.options.searchfor;"/>
-               <textbox id="unifinder-search-field" onkeypress="unifinderSearchKeyPress( this, event )" flex="1"/>
-            </box>
-            <box align="center">
-               <checkbox label="&calendar.unifinder.withalarms.label;" oncommand="unifinderShowEventsWithAlarmsOnly( event )" collapsed="true"/>
-               <checkbox label="&calendar.unifinder.todayandfuture.label;" id="unifinder-future-events" oncommand="unifinderShowFutureEventsOnly( event )" persist="checked"/>
-            </box>
-            <listbox tooltip="savetip" id="unifinder-search-results-listbox" seltype="multiple" onselect="unifinderClickEvent( this )" 
-               class="unifinder-tree-class" flex="1" ondragover="return( false );" onkeypress="if (event.keyCode == 13) unifinderEditCommand();" onfocus="focusFirstItemIfNoSelection( );"/>
+            <listbox id="list-calendars-listbox" class="unifinder-tree-class" flex="1" 
+               ondragover="return( false );" allowevents="true"> 
+               <listcols>
+                  <listcol/>
+                  <listcol flex="1"/>
+               </listcols>
+            </listbox>
          </vbox>
          <splitter id="calendar-todo-splitter" collapse="after" persist="state hidden collapsed top"
             class="chromeclass-extrachrome" orient="vertical" onmouseup="persist_height()">
@@ -269,18 +294,18 @@
                <checkbox id="only-completed-checkbox" label="&calendar.unifinder.hidecompletedtodos.label;" oncommand="toDoUnifinderRefesh( event )" persist="checked"/>
             </box>
 
-            <tree  tooltip="savetip" id="unifinder-todo-tree" flex="1" enableColumnDrag="true">
+            <tree tooltip="savetip" id="unifinder-todo-tree" flex="1" enableColumnDrag="false">
                <treecols id="unifinder-todo-tree-cols">
                   <treecol id="unifinder-todo-tree-col-completed"
                      persist="hidden ordinal width" minwidth="18" maxwidth="18" width="18" 
                      label="&calendar.unifinder.tree.done.label;">
-                     <image  id="checkboximg" contextmenu="taskitem-context-menu"/>
+                     <image id="checkboximg" contextmenu="taskitem-context-menu"/>
                   </treecol>
                   <splitter class="tree-splitter"/>
                    <treecol id="unifinder-todo-tree-col-priority" 
                       persist="hidden ordinal width" minwidth="18" maxwidth="18" width="18" 
                       label="&calendar.unifinder.tree.priority.label;">
-                           <image  id="checkboximg" contextmenu="taskitem-context-menu"/>
+                           <image id="priorityimg" contextmenu="taskitem-context-menu"/>
                       </treecol>
                    <splitter class="tree-splitter"/>
                    <treecol id="unifinder-todo-tree-col-title"
@@ -328,31 +353,53 @@
             <grippy class="sidebar-splitter-grippy"/>
          </splitter>
          
-         <!-- Begin Day/Month/Week Deck -->
-         <deck id="calendar-deck" persist="selectedIndex" flex="1">
+         <vbox>
+            <!-- Begin Day/Month/Week Deck -->
+            <deck id="calendar-deck" persist="selectedIndex" flex="1">
              
-             <!-- Calendar Month View -->
+               <!-- Calendar Month View -->
                 
-             <vbox id="month-view-box"/>
+               <vbox id="month-view-box"/>
              
-             <!-- End: Calendar Month View -->
+               <!-- End: Calendar Month View -->
          
              
-             <!-- Calendar Week View -->
+               <!-- Calendar Week View -->
                 
-             <vbox id="week-view-box"/>
+               <vbox id="week-view-box"/>
             
-             <!-- End: Calendar Week View -->
+               <!-- End: Calendar Week View -->
             
              
-             <!-- Calendar Day View -->
+               <!-- Calendar Day View -->
              
-             <vbox id="day-view-box"/>
+               <vbox id="day-view-box"/>
             
-             <!-- End: Calendar Day View -->
+               <!-- End: Calendar Day View -->
                       
-         </deck>  <!-- End: Day/Month/Week Deck -->
-   
+            </deck>  <!-- End: Day/Month/Week Deck -->
+            <splitter id="calendar-view-splitter" collapse="after" persist="state hidden collapsed"
+            class="chromeclass-extrachrome sidebar-splitter" orient="vertical">
+               <grippy class="sidebar-splitter-grippy"/>
+            </splitter>
+         
+            <vbox>
+               <box align="center">
+                  <label control="unifinder-search-field" value="&calendar.search.options.searchfor;"/>
+                  <textbox id="unifinder-search-field" onkeypress="unifinderSearchKeyPress( this, event )" flex="1"/>
+               </box>
+               <box align="center">
+                  <checkbox label="&calendar.unifinder.withalarms.label;" oncommand="unifinderShowEventsWithAlarmsOnly( event )" collapsed="true"/>
+                  <checkbox label="&calendar.unifinder.todayandfuture.label;" id="unifinder-future-events" oncommand="unifinderShowFutureEventsOnly( event )" persist="checked"/>
+               </box>
+               
+               <listbox tooltip="savetip" id="unifinder-search-results-listbox" seltype="multiple" 
+                  onselect="unifinderClickEvent( this )" class="unifinder-tree-class" flex="1" 
+                  ondragover="return( false );" onkeypress="if (event.keyCode == 13) unifinderEditCommand();" 
+                  onfocus="focusFirstItemIfNoSelection( );"/>
+            </vbox>
+         </vbox>
+         
       </hbox> <!-- End: box with unifinder on left, calendar on right -->
 </vbox>
 

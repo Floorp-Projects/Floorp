@@ -98,7 +98,7 @@
 function CalendarEventDataSource( observer, UserPath, syncPath )
 {
       try {
-          var iCalLibComponent = Components.classes["@mozilla.org/ical;1"].createInstance();
+          var iCalLibComponent = Components.classes["@mozilla.org/ical-container;1"].createInstance();
       } catch ( e ) {
           alert( "The ICAL Componenet is not registered properly. Please follow the instructions below:\n"+
 				 "Windows Users:\n"+
@@ -117,10 +117,10 @@ function CalendarEventDataSource( observer, UserPath, syncPath )
 				 "bug 134432 at http://bugzilla.mozilla.org/show_bug.cgi?id=134432.\n"+
 				 "and give more feedback on your platform, Mozilla version, calendar install type:\n"+
 				 "(build or xpi), any errors you see on the console that you think is related and any\n"+
-				 " other problems you come across when following the above insructions.\n" );
+				 " other problems you come across when following the above insructions.\n\n"+e );
       }
             
-      this.gICalLib = iCalLibComponent.QueryInterface(Components.interfaces.oeIICal);
+      this.gICalLib = iCalLibComponent.QueryInterface(Components.interfaces.oeIICalContainer);
         
       var profileComponent = Components.classes["@mozilla.org/profile/manager;1"].createInstance();
       
@@ -130,7 +130,7 @@ function CalendarEventDataSource( observer, UserPath, syncPath )
       
       profileFile.append("CalendarDataFile.ics");
                       
-      this.gICalLib.setServer( profileFile.path );
+      this.gICalLib.addCalendar( profileFile.path );
 
       this.gICalLib.addObserver( observer );
       

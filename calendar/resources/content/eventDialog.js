@@ -222,14 +222,17 @@ function loadCalendarEventDialog()
    setFieldValue( "repeat-until-radio", (gEvent.recurForever == undefined || gEvent.recurForever == false), "selected" );
    
    
+   /* Categories stuff */
    // Load categories
    var categoriesString = opener.gCalendarWindow.calendarPreferences.getPref( "categories" );
    var categoriesList = categoriesString.split( "," );
    
    // insert the category already in the task so it doesn't get lost
    if( gEvent.categories )
+   {
       if( categoriesString.indexOf( gEvent.categories ) == -1 )
          categoriesList[categoriesList.length] =  gEvent.categories;
+   }
 
    // categoriesList.sort();
 
@@ -245,9 +248,24 @@ function loadCalendarEventDialog()
    document.getElementById( "categories-field" ).selectedIndex = -1;
    setFieldValue( "categories-field", gEvent.categories );
 
-
-   // update enabling and disabling
+   /* Server stuff */
+   var serverList = opener.gCalendarWindow.calendarManager.calendars;
    
+
+   var oldMenulist = document.getElementById( "server-menulist-menupopup" );
+   while( oldMenulist.hasChildNodes() )
+      oldMenulist.removeChild( oldMenulist.lastChild );
+   
+   for (var i = 0; i < serverList.length ; i++)
+   {
+      document.getElementById( "server-field" ).appendItem(serverList[i].name, serverList[i].path);
+   }
+   
+   document.getElementById( "server-field" ).selectedIndex = -1;
+   //the next line seems to crash Mozilla
+   //setFieldValue( "server-field", gEvent.parent.server );
+   
+   // update enabling and disabling
    updateRepeatItemEnabled();
    updateStartEndItemEnabled();
    updateAlarmItemEnabled();
@@ -430,9 +448,11 @@ function onOKCommand()
         }
     }
 
+   var Server = getFieldValue( "server-field" );
+   
    //if the end time is later than the start time... alert the user using text from the dtd.
    // call caller's on OK function
-   gOnOkFunction( gEvent );
+   gOnOkFunction( gEvent, Server );
       
    // tell standard dialog stuff to close the dialog
    return true;

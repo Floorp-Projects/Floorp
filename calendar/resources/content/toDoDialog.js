@@ -187,10 +187,25 @@ function loadCalendarToDoDialog()
    document.getElementById( "categories-field" ).selectedIndex = -1;
    setFieldValue( "categories-field", gToDo.categories );
    
-   // update enabling and disabling
+   /* Server stuff */
+   var serverList = opener.gCalendarWindow.calendarManager.calendars;
    
-   updateAlarmItemEnabled();
 
+   var oldMenulist = document.getElementById( "server-menulist-menupopup" );
+   while( oldMenulist.hasChildNodes() )
+      oldMenulist.removeChild( oldMenulist.lastChild );
+   
+   for (var i = 0; i < serverList.length ; i++)
+   {
+      document.getElementById( "server-field" ).appendItem(serverList[i].name, serverList[i].path);
+   }
+   
+   document.getElementById( "server-field" ).selectedIndex = -1;
+   //the next line seems to crash Mozilla
+   //setFieldValue( "server-field", gEvent.parent.server );
+   
+   // update enabling and disabling
+   updateAlarmItemEnabled();
    updateCompletedItemEnabled();
    
    // set up OK, Cancel
@@ -278,10 +293,12 @@ function onOKCommand()
       gToDo.alarmEmailAddress = "";
    }
    
+   var Server = getFieldValue( "server-field" );
+   
    // :TODO: REALLY only do this if the alarm or start settings change.?
    //if the end time is later than the start time... alert the user using text from the dtd.
    // call caller's on OK function
-   gOnOkFunction( gToDo );
+   gOnOkFunction( gToDo, Server );
       
    // tell standard dialog stuff to close the dialog
    return true;
