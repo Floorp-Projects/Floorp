@@ -23,6 +23,7 @@
 #include "nsIProfile.h"
 #include "nsIProfileInternal.h"
 #include "nsIProfileStartupListener.h"
+#include "nsIProfileChangeStatus.h"
 #include "nsCOMPtr.h"
 #include "nsISupports.h"
 #include "nsIRegistry.h"
@@ -40,12 +41,14 @@
 #define _MAX_LENGTH   256
 
 class nsProfile: public nsIProfileInternal,
-                 public nsIDirectoryServiceProvider 
+                 public nsIDirectoryServiceProvider,
+                 public nsIProfileChangeStatus 
 {
     NS_DECL_ISUPPORTS
     NS_DECL_NSIPROFILE
     NS_DECL_NSIPROFILEINTERNAL
     NS_DECL_NSIDIRECTORYSERVICEPROVIDER
+    NS_DECL_NSIPROFILECHANGESTATUS
 
 private:
     nsresult ProcessArgs(nsICmdLineService *service,
@@ -65,18 +68,17 @@ private:
     PRBool mAutomigrate;
     PRBool mOutofDiskSpace;
     PRBool mDiskSpaceErrorQuitCalled;
+    PRBool mProfileChangeVetoed;
 
 public:
     nsProfile();
     virtual ~nsProfile();
 
-    nsresult RenameProfileDir(const PRUnichar *newProfileName);
-
     // Creates associated user directories on the creation of a new profile
-    nsresult CreateUserDirectories(nsILocalFile *profileDir);
+    nsresult CreateUserDirectories(nsIFile *profileDir);
 
     // Deletes associated user directories
-    nsresult DeleteUserDirectories(nsILocalFile *profileDir);
+    nsresult DeleteUserDirectories(nsIFile *profileDir);
 
     // Copies all the registry keys from old profile to new profile
     nsresult CopyRegKey(const PRUnichar *oldProfile, const PRUnichar *newProfile);

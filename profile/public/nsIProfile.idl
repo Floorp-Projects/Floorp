@@ -48,7 +48,7 @@ interface nsIProfile : nsISupports {
     void getProfileList(out unsigned long length, [retval, array, size_is(length)] out wstring profileNames); 
     boolean profileExists(in wstring profileName);
 
-    readonly attribute wstring currentProfile;
+    attribute wstring currentProfile;
 
     void createNewProfile(in wstring profileName, 
                           in wstring nativeProfileDir, 
