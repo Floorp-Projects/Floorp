@@ -666,9 +666,19 @@ function IsGetNextNMessagesEnabled()
     var server = folder.server;
     var serverType = server.type;
    
-    if((serverType == "nntp"))
+	var menuItem = document.getElementById("menu_getnextnmsg");
+    if((serverType == "nntp")) {
+		var newsServer = server.QueryInterface(Components.interfaces.nsINntpIncomingServer);
+		var menuValue = Bundle.formatStringFromName("getNextNMessages",
+                                        [ newsServer.maxArticles], 1);
+		menuItem.setAttribute("value",menuValue);
+		menuItem.setAttribute("hidden","false");
         return true;
-    else return false;
+	}
+    else {
+		menuItem.setAttribute("hidden","true");
+		return false;
+	}
 }
 
 function IsEmptyTrashEnabled()

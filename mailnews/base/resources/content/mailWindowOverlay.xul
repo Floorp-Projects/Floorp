@@ -573,7 +573,7 @@ Rights Reserved.
 			 accesskey="&getNewMsgCmd.accesskey;"
 			 key="key_getNewMessages"
 			 observes="cmd_getNewMessages"/>
-			<menuitem value="&getNextNMsgCmd.label;"
+			<menuitem id="menu_getnextnmsg" value="&getNextNMsgCmd.label;"
 			 observes="cmd_getNextNMessages"/>
 			<menuitem value="&sendUnsentCmd.label;"
 			 accesskey="&sendUnsentCmd.accesskey;"
