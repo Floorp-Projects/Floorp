@@ -37,10 +37,6 @@ use English;
 use CGI;
 my $request = new CGI;
 
-# Use a useful library for capturing filehandle output into a variable.
-# http://groups.google.com/groups?selm=yr0e8.12924%24ZC3.1033373%40newsread2.prod.itd.earthlink.net
-use IO::Capture;
-
 # Include the Perl library for creating and deleting directory hierarchies
 # and the one for creating temporary files and directories.
 use File::Path;
@@ -239,9 +235,7 @@ sub diff
   
   ValidateFile();
   
-  # Create and change to a temporary sub-directory into which 
-  # we will check out the file being reviewed.
-  CreateTempDir();
+  ChangeToTempDir();
   
   # Check out the file from the repository.
   my $file = $request->param('file');
@@ -254,9 +248,6 @@ sub diff
   # a diff between the edited file, and display it to the user.
   ReplaceFile($file);
   $vars->{'diff'} = DiffFile($file);
-  
-  # Delete the temporary directory into which we checked out the file.
-  DeleteTempDir();
   
   $vars->{'file'} = $file;
   $vars->{'content'} = $request->param('content');
@@ -324,9 +315,7 @@ sub queue
     $oldversion = "-new";
   }
   else {
-    # Create and change to a temporary sub-directory into which we will check out
-    # the file being committed.
-    CreateTempDir();
+    ChangeToTempDir();
     
     # Check out the file from the repository.
     $oldversion = $request->param('version');
@@ -338,9 +327,6 @@ sub queue
     # that patches the checked out file to make it look like the edited version.
     ReplaceFile($file);
     $patch = DiffFile($file);
-    
-    # Delete the temporary directory into which we checked out the file.
-    DeleteTempDir();
   }
 
   eval {
@@ -376,9 +362,7 @@ sub create
   ValidatePassword();
   ValidateComment();
   
-  # Create and change to a temporary directory where we'll do all our file
-  # and CVS manipulation.
-  CreateTempDir();
+  ChangeToTempDir();
   
   # Separate the name of the file from its path.
   $request->param('file') =~ /^(.*)\/([^\/]+)$/;
@@ -429,9 +413,6 @@ sub create
   chdir("..");
   $vars->{'checkin_results'} = CheckInFile($filename);
   
-  # Delete the temporary directory where we did all our file and CVS manipulation.
-  DeleteTempDir();
-  
   $vars->{'file'} = $request->param('file');
   
   print $request->header;
@@ -456,9 +437,7 @@ sub commit
     $patch_id = ValidateID($request->param('patch_id'));
   }
   
-  # Create and change to a temporary sub-directory into which 
-  # we will check out the file being committed.
-  CreateTempDir();
+  ChangeToTempDir();
   
   # Check out the file from the repository.
   my $file = $request->param('file');
@@ -473,9 +452,6 @@ sub commit
   ReplaceFile($file);
   $vars->{'diff'} = DiffFile($file);
   $vars->{'checkin_results'} = CheckInFile($file);
-  
-  # Delete the temporary directory into which we checked out the file.
-  DeleteTempDir();
   
   $vars->{'file'} = $file;
   
@@ -638,11 +614,7 @@ sub RetrieveFile
   
   # Check out the file from the CVS repository, capturing the file content
   # and any errors/notices.
-  my $CAPTURE_ERR = IO::Capture->new(\*STDERR);
-  my $CAPTURE_OUT = IO::Capture->new(\*STDOUT);
-  my $error_code = system("cvs", @args);
-  my $output = $CAPTURE_OUT->capture;
-  my $errors = $CAPTURE_ERR->capture;
+  my ($error_code, $output, $errors) = system_capture("cvs", @args);
   
   # If the CVS server returned an error, stop further processing and notify
   # the user.  The only error we don't stop for is a "not found" error, 
@@ -693,13 +665,9 @@ sub CheckOutFile
               $file);
   
   # Check out the file from the repository, capturing the output of the
-  # command and any error messages/notices.
-  my $CAPTURE_ERR = IO::Capture->new(\*STDERR);
-  my $CAPTURE_OUT = IO::Capture->new(\*STDOUT);
-  my $error_code = system("cvs", @args);
-  my $output = $CAPTURE_OUT->capture;
-  my $errors = $CAPTURE_ERR->capture;
-  
+  # command and any error messages.
+  my ($error_code, $output, $errors) = system_capture("cvs", @args);
+
   if ($error_code != 0) 
   {
     # Include the command in the error message (but hide the password).
@@ -735,11 +703,7 @@ sub DiffFile
   
   # Diff the file against the version in the repository, capturing the diff
   # and any error messages/notices.
-  my $CAPTURE_ERR = IO::Capture->new(\*STDERR);
-  my $CAPTURE_OUT = IO::Capture->new(\*STDOUT);
-  my $error_code = system("cvs", @args);
-  my $output = $CAPTURE_OUT->capture;
-  my $errors = $CAPTURE_ERR->capture;
+  my ($error_code, $output, $errors) = system_capture("cvs", @args);
   
   # Check the error messages/notices in addition to the error code 
   # returned by the system call, because for some reason the call 
@@ -782,11 +746,7 @@ sub CheckInFile
               $file);
   
   # Check the file into the repository and capture the results.
-  my $CAPTURE_ERR = IO::Capture->new(\*STDERR);
-  my $CAPTURE_OUT = IO::Capture->new(\*STDOUT);
-  my $error_code = system("cvs", @args);
-  my $output = $CAPTURE_OUT->capture;
-  my $errors = $CAPTURE_ERR->capture;
+  my ($error_code, $output, $errors) = system_capture("cvs", @args);
   
   if ($error_code != 0) 
   {
@@ -825,12 +785,7 @@ sub ThrowUserError
    $vars->{'cvs_error_code'}, 
    $vars->{'cvs_error_message'}) = @_;
   
-  # Return to the original working directory and delete the temporary
-  # working directory (if any; generally all user errors should be caught
-  # before we do anything requiring the creation of a temporary directory).
   chdir($HOME);
-  rmtree("$CONFIG{TEMP_DIR}/$PID", 0, 1) if -e "$CONFIG{TEMP_DIR}/$PID";
-  
   print $request->header;
   $template->process("user-error.tmpl", $vars)
     || print( ($vars->{'title'} ? "<h1>$vars->{'title'}</h1>" : "") . 
@@ -848,15 +803,7 @@ sub ThrowCodeError
   
   ($vars->{'message'}, $vars->{'title'}) = @_;
   
-  # Return to the original working directory and delete the temporary
-  # working directory.
-  (chdir($HOME) && (-e "$CONFIG{TEMP_DIR}/$PID" ? rmtree("$CONFIG{TEMP_DIR}/$PID", 0, 1) : 1))
-    || ($vars->{'message'} = 
-         ("couldn't return to original working directory '$HOME' " . 
-          "and delete temporary working directory '$CONFIG{TEMP_DIR}/$PID': $!" . 
-          "; error occurred while trying to display error message: " . 
-          ($vars->{'title'} ? "$vars->{'title'}: ": "") . $vars->{'message'}));
-  
+  chdir($HOME);
   print $request->header;
   $template->process("code-error.tmpl", $vars)
     || print("
@@ -915,38 +862,56 @@ sub GetUploadedContent
   }
 }
 
-sub CreateTempDir
+sub ChangeToTempDir
 {
-  # Creates and changes to a temporary sub-directory unique to this process
-  # that can be used for CVS activities requiring the manipulation of files.
-  
-  if (!-e $CONFIG{TEMP_DIR} and !mkdir($CONFIG{TEMP_DIR}))
-  {
-    ThrowCodeError("couldn't create the temporary directory 
-                    <em>$CONFIG{TEMP_DIR}</em>: $!");
-  }
-  elsif (!-d $CONFIG{TEMP_DIR})
-  {
-    ThrowCodeError("couldn't use the temporary directory <em>$CONFIG{TEMP_DIR}</em> 
-                    because it isn't a directory.");
-  }
-  
-  # Create and change to a unique sub-directory in the temporary directory.
-  mkdir("$CONFIG{TEMP_DIR}/$PID") 
-    || ThrowCodeError("couldn't create a temporary sub-directory 
-                       <em>$CONFIG{TEMP_DIR}/$PID</em>: $!");
-  
-  chdir("$CONFIG{TEMP_DIR}/$PID") 
-    || ThrowCodeError("couldn't change to the temporary sub-directory 
-                       <em>$CONFIG{TEMP_DIR}/$PID</em>: $!");
+  my $dir = tempdir("doctor-XXXXXXXX", TMPDIR => 1, CLEANUP => 1);
+  chdir $dir;
 }
 
-sub DeleteTempDir
-{
-  # Changes back to the home directory and deletes the temporary directory.
-  
-  chdir($HOME);
-  rmtree("$CONFIG{TEMP_DIR}/$PID", 0, 1)
-    || ThrowCodeError("couldn't delete the temporary sub-directory 
-                       <em>$CONFIG{TEMP_DIR}/$PID</em>: $!");
+sub system_capture {
+  # Runs a command and captures its output and errors.  This should be using
+  # in-memory files, but they require that we close STDOUT and STDERR
+  # before reopening them on the in-memory files, and closing and reopening
+  # STDERR causes CVS to choke with return value 256.
+
+  my ($command, @args) = @_;
+
+  my ($rv, $output, $errors);
+
+  # Back up the original STDOUT and STDERR so we can restore them later.
+  open my $oldout, ">&STDOUT"     or die "Can't back up STDOUT to \$oldout: $!";
+  open OLDERR,     ">&", \*STDERR or die "Can't back up STDERR to OLDERR: $!";
+  use vars qw( $OLDERR ); # suppress "used only once" warnings
+
+  # Close and reopen STDOUT and STDERR to in-memory files, which are just
+  # scalars that take output and append it to their value.
+  # XXX Disabled in-memory files in favor of temp files until in-memory issues
+  # can be worked out.
+  #close STDOUT;
+  #close STDERR;
+  #open STDOUT, ">", \$output or die "Can't open STDOUT to output var: $!";
+  #open STDERR, ">", \$errors or die "Can't open STDERR to errors var: $!";
+  my $outtmpfile = tempfile();
+  my $errtmpfile = tempfile();
+  open STDOUT, ">&", $outtmpfile or die "Can't dupe STDOUT to output cache: $!";
+  open STDERR, ">&", $errtmpfile or die "Can't dupe STDERR to errors cache: $!";
+
+  # Run the command.
+  $rv = system($command, @args);
+
+  # Restore original STDOUT and STDERR.
+  close STDOUT;
+  close STDERR;
+  open STDOUT, ">&", $oldout or die "Can't restore STDOUT from \$oldout: $!";
+  open STDERR, ">&OLDERR"    or die "Can't restore STDERR from OLDERR: $!";
+
+  # Grab output and errors from the caches.
+  # XXX None of this would be necessary if in-memory files was working.
+  undef $/;
+  seek($outtmpfile, 0, 0);
+  seek($errtmpfile, 0, 0);
+  $output = <$outtmpfile>;
+  $errors = <$errtmpfile>;
+
+  return ($rv, $output, $errors);
 }
