@@ -89,6 +89,24 @@ nsPNGDecoder::~nsPNGDecoder()
 /* void init (in imgILoad aLoad); */
 NS_IMETHODIMP nsPNGDecoder::Init(imgILoad *aLoad)
 {
+#if defined(PNG_UNKNOWN_CHUNKS_SUPPORTED)
+  static png_byte unused_chunks[]=
+       { 98,  75,  71,  68, '\0',   /* bKGD */
+         99,  72,  82,  77, '\0',   /* cHRM */
+        104,  73,  83,  84, '\0',   /* hIST */
+        105,  67,  67,  80, '\0',   /* iCCP */
+        105,  84,  88, 116, '\0',   /* iTXt */
+        111,  70,  70, 115, '\0',   /* oFFs */
+        112,  67,  65,  76, '\0',   /* pCAL */
+        115,  67,  65,  76, '\0',   /* sCAL */
+        112,  72,  89, 115, '\0',   /* pHYs */
+        115,  66,  73,  84, '\0',   /* sBIT */
+        115,  80,  76,  84, '\0',   /* sPLT */
+        116,  69,  88, 116, '\0',   /* tEXt */
+        116,  73,  77,  69, '\0',   /* tIME */
+        122,  84,  88, 116, '\0'};  /* zTXt */
+#endif
+
   mImageLoad = aLoad;
   mObserver = do_QueryInterface(aLoad);  // we're holding 2 strong refs to the request.
 
@@ -108,6 +126,12 @@ NS_IMETHODIMP nsPNGDecoder::Init(imgILoad *aLoad)
     png_destroy_read_struct(&mPNG, NULL, NULL);
     return NS_ERROR_OUT_OF_MEMORY;
   }
+
+#if defined(PNG_UNKNOWN_CHUNKS_SUPPORTED)
+  /* Ignore unused chunks */
+  png_set_keep_unknown_chunks(mPNG, 0, unused_chunks,
+     (int)sizeof(unused_chunks)/5);   
+#endif
 
   /* use this as libpng "progressive pointer" (retrieve in callbacks) */
   png_set_progressive_read_fn(mPNG, NS_STATIC_CAST(png_voidp, this),
@@ -197,6 +221,15 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
   /* always decode to 24-bit RGB or 32-bit RGBA  */
   png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type,
                &interlace_type, &compression_type, &filter_type);
+
+  /* limit image dimensions (bug #251381) */
+#define MOZ_PNG_MAX_DIMENSION 1000000L
+  if (width > MOZ_PNG_MAX_DIMENSION || height > MOZ_PNG_MAX_DIMENSION) {
+    nsPNGDecoder *decoder = NS_STATIC_CAST(nsPNGDecoder*,
+                                           png_get_progressive_ptr(png_ptr));
+    longjmp(decoder->mPNG->jmpbuf, 1);
+  }
+#undef MOZ_PNG_MAX_DIMENSION
 
   if (color_type == PNG_COLOR_TYPE_PALETTE)
     png_set_expand(png_ptr);
@@ -529,5 +562,8 @@ error_callback(png_structp png_ptr, png_const_charp error_msg)
 void
 warning_callback(png_structp png_ptr, png_const_charp warning_msg)
 {
+  /* convert tRNS warning to error (bug #251381) */
+  if (strncmp(warning_msg, "Missing PLTE before tRNS", 24) == 0)
+    png_error(png_ptr, warning_msg);
   PR_LOG(gPNGLog, PR_LOG_WARNING, ("libpng warning: %s\n", warning_msg));
 }
