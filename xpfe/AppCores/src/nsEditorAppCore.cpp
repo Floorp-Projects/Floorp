@@ -1755,6 +1755,8 @@ nsEditorAppCore::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection,
   if (!aElement || !aReturn)
     return NS_ERROR_NULL_POINTER;
 
+  *aReturn = 0;
+
   nsresult  result = NS_NOINTERFACE;
    switch (mEditorType)
   {
@@ -1762,7 +1764,7 @@ nsEditorAppCore::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection,
       {
         nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
         if (htmlEditor)
-          result = htmlEditor->InsertElement(aElement, aDeleteSelection, aReturn);
+          result = htmlEditor->InsertElement(aElement, aDeleteSelection);
       }
       break;
     default:
