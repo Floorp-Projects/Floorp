@@ -78,6 +78,7 @@ nsHTMLEditor::AbsolutePositionSelection(PRBool aEnabled)
                                             kOpRemoveAbsolutePosition,
                                  nsIEditor::eNext);
   
+  // the line below does not match the code; should it be removed?
   // Find out if the selection is collapsed:
   nsCOMPtr<nsISelection> selection;
   nsresult res = GetSelection(getter_AddRefs(selection));
@@ -194,6 +195,7 @@ nsHTMLEditor::RelativeChangeZIndex(PRInt32 aChange)
                                                  kOpIncreaseZIndex,
                                  nsIEditor::eNext);
   
+  // brade: can we get rid of this comment?
   // Find out if the selection is collapsed:
   nsCOMPtr<nsISelection> selection;
   nsresult res = GetSelection(getter_AddRefs(selection));
@@ -215,8 +217,8 @@ nsHTMLEditor::GetElementZIndex(nsIDOMElement * aElement,
 {
   nsAutoString zIndexStr;
   *aZindex = 0;
-  nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aElement);
-  nsresult res = mHTMLCSSUtils->GetSpecifiedProperty(node,
+
+  nsresult res = mHTMLCSSUtils->GetSpecifiedProperty(aElement,
                                                      nsEditProperty::cssZIndex,
                                                      zIndexStr);
   if (NS_FAILED(res)) return res;
@@ -224,9 +226,9 @@ nsHTMLEditor::GetElementZIndex(nsIDOMElement * aElement,
     // we have to look at the positioned ancestors
     // cf. CSS 2 spec section 9.9.1
     nsCOMPtr<nsIDOMNode> parentNode;
-    res = node->GetParentNode(getter_AddRefs(parentNode));
+    res = aElement->GetParentNode(getter_AddRefs(parentNode));
     if (NS_FAILED(res)) return res;
-    node = parentNode;
+    nsCOMPtr<nsIDOMNode> node = parentNode;
     nsAutoString positionStr;
     while (node && 
            zIndexStr.Equals(NS_LITERAL_STRING("auto")) &&
@@ -311,8 +313,6 @@ nsHTMLEditor::HideGrabber()
   NS_ENSURE_TRUE(mGrabber, NS_ERROR_NULL_POINTER);
 
   // get the presshell's document observer interface.
-
-  if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
   nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
   if (!ps) return NS_ERROR_NOT_INITIALIZED;
 
@@ -324,10 +324,9 @@ nsHTMLEditor::HideGrabber()
   nsCOMPtr<nsIDOMElement> bodyElement;
   res = GetRootElement(getter_AddRefs(bodyElement));
   if (NS_FAILED(res)) return res;
-  if (!bodyElement)   return NS_ERROR_NULL_POINTER;
 
   nsCOMPtr<nsIContent> bodyContent = do_QueryInterface(bodyElement);
-  if (!bodyContent) return res;
+  if (!bodyContent) return NS_ERROR_NULL_POINTER;
 
   DeleteRefToAnonymousNode(mGrabber, bodyContent, docObserver);
   mGrabber = nsnull;
@@ -358,9 +357,7 @@ nsHTMLEditor::ShowGrabberOnElement(nsIDOMElement * aElement)
   if (NS_FAILED(res)) return res;
   if (!bodyElement)   return NS_ERROR_NULL_POINTER;
 
-  nsCOMPtr<nsIDOMNode> bodyNode( do_QueryInterface(bodyElement) );
-
-  res = CreateGrabber(bodyNode, getter_AddRefs(mGrabber));
+  res = CreateGrabber(bodyElement, getter_AddRefs(mGrabber));
   if (NS_FAILED(res)) return res;
   // and set its position
   return RefreshGrabber();
@@ -374,10 +371,8 @@ nsHTMLEditor::StartMoving(nsIDOMElement *aHandle)
   if (NS_FAILED(result)) return result;
   if (!bodyElement)   return NS_ERROR_NULL_POINTER;
 
-  nsCOMPtr<nsIDOMNode> bodyNode( do_QueryInterface(bodyElement) );
-
   // now, let's create the resizing shadow
-  result = CreateShadow(getter_AddRefs(mPositioningShadow), bodyNode,
+  result = CreateShadow(getter_AddRefs(mPositioningShadow), bodyElement,
                         mAbsolutelyPositionedObject);
   if (NS_FAILED(result)) return result;
   result = SetShadowPosition(mPositioningShadow, mAbsolutelyPositionedObject,
@@ -388,15 +383,12 @@ nsHTMLEditor::StartMoving(nsIDOMElement *aHandle)
   mPositioningShadow->RemoveAttribute(NS_LITERAL_STRING("class"));
 
   // position it
-  nsAutoString w, h;
-  w.AppendInt(mPositionedObjectWidth);
-  h.AppendInt(mPositionedObjectHeight);
-  mHTMLCSSUtils->SetCSSProperty(mPositioningShadow,
-                                NS_LITERAL_STRING("width"),
-                                w + NS_LITERAL_STRING("px"));
-  mHTMLCSSUtils->SetCSSProperty(mPositioningShadow,
-                                NS_LITERAL_STRING("height"),
-                                h + NS_LITERAL_STRING("px"));
+  mHTMLCSSUtils->SetCSSPropertyPixels(mPositioningShadow,
+                                      NS_LITERAL_STRING("width"),
+                                      mPositionedObjectWidth);
+  mHTMLCSSUtils->SetCSSPropertyPixels(mPositioningShadow,
+                                      NS_LITERAL_STRING("height"),
+                                      mPositionedObjectHeight);
 
   mIsMoving = PR_TRUE;
   return result;
@@ -438,7 +430,6 @@ nsresult
 nsHTMLEditor::EndMoving()
 {
   if (mPositioningShadow) {
-    if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
     nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
     if (!ps) return NS_ERROR_NOT_INITIALIZED;
 
@@ -450,7 +441,6 @@ nsHTMLEditor::EndMoving()
     nsCOMPtr<nsIDOMElement> bodyElement;
     nsresult res = GetRootElement(getter_AddRefs(bodyElement));
     if (NS_FAILED(res)) return res;
-    if (!bodyElement)   return NS_ERROR_NULL_POINTER;
 
     nsCOMPtr<nsIContent> bodyContent( do_QueryInterface(bodyElement) );
     if (!bodyContent) return NS_ERROR_FAILURE;
@@ -492,14 +482,14 @@ nsHTMLEditor::SetFinalPosition(PRInt32 aX, PRInt32 aY)
   // we want one transaction only from a user's point of view
   nsAutoEditBatch batchIt(this);
 
-  mHTMLCSSUtils->SetCSSProperty(mAbsolutelyPositionedObject,
-                                nsEditProperty::cssTop,
-                                y + NS_LITERAL_STRING("px"),
-                                PR_FALSE);
-  mHTMLCSSUtils->SetCSSProperty(mAbsolutelyPositionedObject,
-                                nsEditProperty::cssLeft,
-                                x + NS_LITERAL_STRING("px"),
-                                PR_FALSE);
+  mHTMLCSSUtils->SetCSSPropertyPixels(mAbsolutelyPositionedObject,
+                                      nsEditProperty::cssTop,
+                                      newY,
+                                      PR_FALSE);
+  mHTMLCSSUtils->SetCSSPropertyPixels(mAbsolutelyPositionedObject,
+                                      nsEditProperty::cssLeft,
+                                      newX,
+                                      PR_FALSE);
   // keep track of that size
   mPositionedObjectX  = newX;
   mPositionedObjectY  = newY;
@@ -532,8 +522,7 @@ nsHTMLEditor::AbsolutelyPositionElement(nsIDOMElement * aElement,
   NS_ENSURE_ARG_POINTER(aElement);
 
   nsAutoString positionStr;
-  nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aElement);
-  mHTMLCSSUtils->GetComputedProperty(node, nsEditProperty::cssPosition,
+  mHTMLCSSUtils->GetComputedProperty(aElement, nsEditProperty::cssPosition,
                                      positionStr);
   PRBool isPositioned = (positionStr.Equals(NS_LITERAL_STRING("absolute")));
 
@@ -560,7 +549,7 @@ nsHTMLEditor::AbsolutelyPositionElement(nsIDOMElement * aElement,
     // we may need to create a br if the positioned element is alone in its
     // container
     nsCOMPtr<nsIDOMNode> parentNode;
-    res = node->GetParentNode(getter_AddRefs(parentNode));
+    res = aElement->GetParentNode(getter_AddRefs(parentNode));
     if (NS_FAILED(res)) return res;
 
     nsCOMPtr<nsIDOMNodeList> childNodes;
@@ -592,7 +581,7 @@ nsHTMLEditor::AbsolutelyPositionElement(nsIDOMElement * aElement,
                                      nsEditProperty::cssZIndex,
                                      emptyStr, PR_FALSE);
 
-    if (!nsHTMLEditUtils::IsImage(node)) {
+    if (!nsHTMLEditUtils::IsImage(aElement)) {
       mHTMLCSSUtils->RemoveCSSProperty(aElement,
                                        nsEditProperty::cssWidth,
                                        emptyStr, PR_FALSE);
@@ -604,12 +593,12 @@ nsHTMLEditor::AbsolutelyPositionElement(nsIDOMElement * aElement,
     PRBool hasStyleOrIdOrClass;
     res = HasStyleOrIdOrClass(aElement, &hasStyleOrIdOrClass);
     if (NS_FAILED(res)) return res;
-    if (!hasStyleOrIdOrClass && nsHTMLEditUtils::IsDiv(node)) {
+    if (!hasStyleOrIdOrClass && nsHTMLEditUtils::IsDiv(aElement)) {
       nsCOMPtr<nsIHTMLEditRules> htmlRules = do_QueryInterface(mRules);
       if (!htmlRules) return NS_ERROR_FAILURE;
       res = htmlRules->MakeSureElemStartsOrEndsOnCR(aElement);
       if (NS_FAILED(res)) return res;
-      res = RemoveContainer(node);
+      res = RemoveContainer(aElement);
     }
   }
   return res;
@@ -647,20 +636,16 @@ nsHTMLEditor::GetGridSize(PRUint32 * aSize)
 NS_IMETHODIMP
 nsHTMLEditor::SetElementPosition(nsIDOMElement *aElement, PRInt32 aX, PRInt32 aY)
 {
-  nsAutoString x, y;
-  x.AppendInt(aX);
-  y.AppendInt(aY);
-
   nsAutoEditBatch batchIt(this);
 
-  mHTMLCSSUtils->SetCSSProperty(aElement,
-                                nsEditProperty::cssLeft,
-                                x + NS_LITERAL_STRING("px"),
-                                PR_FALSE);
-  mHTMLCSSUtils->SetCSSProperty(aElement,
-                                nsEditProperty::cssTop,
-                                y + NS_LITERAL_STRING("px"),
-                                PR_FALSE);
+  mHTMLCSSUtils->SetCSSPropertyPixels(aElement,
+                                      nsEditProperty::cssLeft,
+                                      aX,
+                                      PR_FALSE);
+  mHTMLCSSUtils->SetCSSPropertyPixels(aElement,
+                                      nsEditProperty::cssTop,
+                                      aY,
+                                      PR_FALSE);
   return NS_OK;
 }
 

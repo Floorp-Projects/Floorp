@@ -123,7 +123,6 @@ nsHTMLEditor::CreateAnonymousElement(const nsAString & aTag, nsIDOMNode *  aPare
   if (!doc) return NS_ERROR_NULL_POINTER;
 
   // Get the pres shell
-  if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
   nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
   if (!ps) return NS_ERROR_NOT_INITIALIZED;
 
@@ -232,12 +231,12 @@ nsHTMLEditor::CheckSelectionStateForAnonymousButtons(nsISelection * aSelection)
   if (mIsObjectResizingEnabled && cellElement) {
     // we are here because Resizing is enabled AND selection is contained in
     // a cell
-    nsCOMPtr<nsIDOMNode> tableNode, cellNode = do_QueryInterface(cellElement);
+
     // get the enclosing table
-    tableNode = GetEnclosingTable(cellNode);
     if (nsEditProperty::img != focusTagAtom) {
       // the element container of the selection is not an image, so we'll show
       // the resizers around the table
+      nsCOMPtr<nsIDOMNode> tableNode = GetEnclosingTable(cellElement);
       focusElement = do_QueryInterface(tableNode);
       focusTagAtom = nsEditProperty::table;
     }
@@ -383,13 +382,6 @@ nsHTMLEditor::GetPositionAndDimensions(nsIDOMElement * aElement,
 void
 nsHTMLEditor::SetAnonymousElementPosition(PRInt32 aX, PRInt32 aY, nsIDOMElement *aElement)
 {
-  nsAutoString x, y;
-  x.AppendInt(aX);
-  y.AppendInt(aY);
-  mHTMLCSSUtils->SetCSSProperty(aElement,
-                                NS_LITERAL_STRING("left"),
-                                x + NS_LITERAL_STRING("px"));
-  mHTMLCSSUtils->SetCSSProperty(aElement,
-                                NS_LITERAL_STRING("top"),
-                                y + NS_LITERAL_STRING("px"));
+  mHTMLCSSUtils->SetCSSPropertyPixels(aElement, NS_LITERAL_STRING("left"), aX);
+  mHTMLCSSUtils->SetCSSPropertyPixels(aElement, NS_LITERAL_STRING("top"), aY);
 }

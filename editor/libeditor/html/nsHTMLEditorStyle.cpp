@@ -66,7 +66,6 @@ NS_IMETHODIMP nsHTMLEditor::AddDefaultProperty(nsIAtom *aProperty,
                                             const nsAString & aAttribute, 
                                             const nsAString & aValue)
 {
-  nsresult res = NS_OK;
   nsString outValue;
   PRInt32 index;
   nsString attr(aAttribute);
@@ -81,14 +80,13 @@ NS_IMETHODIMP nsHTMLEditor::AddDefaultProperty(nsIAtom *aProperty,
     PropItem *propItem = new PropItem(aProperty, attr, value);
     mDefaultStyles.AppendElement((void*)propItem);
   }
-  return res;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsHTMLEditor::RemoveDefaultProperty(nsIAtom *aProperty, 
                                    const nsAString & aAttribute, 
                                    const nsAString & aValue)
 {
-  nsresult res = NS_OK;
   nsString outValue;
   PRInt32 index;
   nsString attr(aAttribute);
@@ -98,7 +96,7 @@ NS_IMETHODIMP nsHTMLEditor::RemoveDefaultProperty(nsIAtom *aProperty,
     if (item) delete item;
     mDefaultStyles.RemoveElementAt(index);
   }
-  return res;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsHTMLEditor::RemoveAllDefaultProperties()
@@ -120,14 +118,12 @@ NS_IMETHODIMP nsHTMLEditor::SetCSSInlineProperty(nsIAtom *aProperty,
                             const nsAString & aAttribute, 
                             const nsAString & aValue)
 {
-  nsresult res = NS_OK;
   PRBool useCSS;
-
   GetIsCSSEnabled(&useCSS);
   if (useCSS) {
-    res = SetInlineProperty(aProperty, aAttribute, aValue);
+    return SetInlineProperty(aProperty, aAttribute, aValue);
   }
-  return res;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsHTMLEditor::SetInlineProperty(nsIAtom *aProperty, 
@@ -138,9 +134,8 @@ NS_IMETHODIMP nsHTMLEditor::SetInlineProperty(nsIAtom *aProperty,
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
   ForceCompositionEnd();
 
-  nsresult res;
   nsCOMPtr<nsISelection>selection;
-  res = GetSelection(getter_AddRefs(selection));
+  nsresult res = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(res)) return res;
   if (!selection) return NS_ERROR_NULL_POINTER;
   nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(selection));
@@ -305,22 +300,21 @@ nsHTMLEditor::SetInlinePropertyOnTextNode( nsIDOMCharacterData *aTextNode,
                                             const nsAString *aValue)
 {
   if (!aTextNode) return NS_ERROR_NULL_POINTER;
-  nsresult res = NS_OK;
   nsCOMPtr<nsIDOMNode> parent;
-  res = aTextNode->GetParentNode(getter_AddRefs(parent));
+  nsresult res = aTextNode->GetParentNode(getter_AddRefs(parent));
   if (NS_FAILED(res)) return res;
+
   nsAutoString tagString;
   aProperty->ToString(tagString);
   if (!CanContainTag(parent, tagString)) return NS_OK;
   
-  // dont need to do anything if no characters actually selected
+  // don't need to do anything if no characters actually selected
   if (aStartOffset == aEndOffset) return NS_OK;
   
-  nsCOMPtr<nsIDOMNode> tmp, node = do_QueryInterface(aTextNode);
+  nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aTextNode);
   
-  // dont need to do anything if property already set on node
+  // don't need to do anything if property already set on node
   PRBool bHasProp;
-  nsCOMPtr<nsIDOMNode> styleNode;
   PRBool useCSS;
   GetIsCSSEnabled(&useCSS);
 
@@ -335,13 +329,18 @@ nsHTMLEditor::SetInlinePropertyOnTextNode( nsIDOMCharacterData *aTextNode,
                                                        COMPUTED_STYLE_TYPE);
   }
   else
+  {
+    nsCOMPtr<nsIDOMNode> styleNode;
     IsTextPropertySetByContent(node, aProperty, aAttribute, aValue, bHasProp, getter_AddRefs(styleNode));
+  }
+
   if (bHasProp) return NS_OK;
   
   // do we need to split the text node?
   PRUint32 textLen;
   aTextNode->GetLength(&textLen);
   
+  nsCOMPtr<nsIDOMNode> tmp;
   if ( (PRUint32)aEndOffset != textLen )
   {
     // we need to split off back of text node
