@@ -583,6 +583,130 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
 	  </para>
 	</answer>
       </qandaentry>
+
+      <qandaentry>
+        <question id="faq-phb-reloginEveryone">
+          <para>
+            Why do users have to log in every time they access a page? This
+            affects everyone who accesses my Bugzilla. (If this only affects
+            some of your users, see the next FAQ item.)
+          </para>
+        </question>
+        <answer>
+          <para>
+            The most-likely cause is that the "cookiepath" parameter is not set
+            correctly in the Bugzilla configuration.  You can change this (if
+            you're a Bugzilla administrator) from the editparams.cgi page
+            via the web.
+          </para>
+          <para>
+            The value of the cookiepath parameter should be the actual directory
+            containing your Bugzilla installation, <emphasis>as seen by the
+            end-user's web browser</emphasis>. Leading and trailing slashes are
+            mandatory. You can also set the cookiepath to any directory which
+            is a parent of the Bugzilla directory (such as '/', the root
+            directory). But you can't put something that isn't at least
+            a partial match or it won't work. What you're actually doing
+            is restricting the end-user's browser to sending the cookies
+            back only to that directory.
+          </para>
+          <para>
+            How do you know if you want your specific Bugzilla directory or the
+            whole site?
+          </para>
+
+          <para>
+            If you have only one Bugzilla running on the server, and you
+            don't mind having other applications on the same server with it
+            being able to see the cookies (you might be doing this on purpose
+            if you have other things on your site that share authentication with
+            Bugzilla), then you'll want to have the cookiepath set to "/", or to
+            a sufficiently-high enough directory that all of the involved apps
+            can see the cookies.
+          </para>
+          <para>
+            Examples:
+
+            <blockquote>
+              <literallayout>
+        urlbase is <ulink url="http://bugzilla.mozilla.org/"/>
+        cookiepath is /
+
+        urlbase is <ulink url="http://tools.mysite.tld/bugzilla/"/>
+                but you have http://tools.mysite.tld/someotherapp/ which shares
+                authentication with your Bugzilla
+        cookiepath is /
+              </literallayout>
+            </blockquote>
+          </para>
+          
+         <para>
+            On the other hand, if you have more than one Bugzilla
+            running on the server (some people do - we do on landfill)
+            then you need to have the cookiepath restricted enough
+            so that the different Bugzillas don't
+            confuse their cookies with one another.
+          </para>
+          <para>
+            Examples:
+
+            <blockquote>
+              <literallayout>
+        urlbase is <ulink url="http://landfill.bugzilla.org/bugzilla-tip/"/>
+        cookiepath is /bugzilla-tip/
+
+        urlbase is <ulink url="http://landfill.bugzilla.org/bugzilla-2.16-branch/"/>
+        cookiepath is /bugzilla-2.16-branch/
+              </literallayout>
+            </blockquote>
+          </para>
+
+          <para>
+            If you had cookiepath set to / at any point in the past and
+            need to set it to something more restrictive (i.e. /bugzilla/),
+            you can safely do this without requiring users to delete
+            their Bugzilla-related cookies in their browser (this is
+            true starting with Bugzilla 2.17.7 and Bugzilla 2.16.5).
+          </para>
+        </answer>
+      </qandaentry>
+
+      <qandaentry>
+        <question id="faq-phb-reloginSome">
+          <para>
+            Why do users have to log in every time they access a page? This
+            only seems to affect some of my Bugzilla's users, others stay
+            logged in.
+          </para>
+        </question>
+        <answer>
+          <para>
+            First, make sure cookies are enabled in the user's browser.
+          </para>
+          <para>
+            If that doesn´t fix the problem, it may be that
+            the user´s ISP implements a rotating proxy server. This causes
+            the user´s effective IP address (the address which the Bugzilla server
+            perceives him coming from) to change periodically. Since
+            Bugzilla cookies are tied to a specific IP address, each time
+            the effective address changes, the user will have to log in again.
+          </para>
+          <para>
+            In newer versions of Bugzilla (2.17.1 and later) there is a
+            parameter called "loginnetmask", which you can use to set the
+            number of bits of the user's IP address to require to be matched
+            when authenticating the cookies. If you set this to something less
+            than 32, then the user will be given a checkbox for "Restrict this
+            login to my IP address" on the login screen, which defaults to
+            checked. If they leave the box checked, Bugzilla will behave the
+            same as it did before, requiring an exact match on their IP address
+            to remain logged in. If they uncheck the box, then only the left
+            side of their IP address (up to the number of bits you specified in
+            the parameter) has to match to remain logged in.
+          </para>
+        </answer>  
+      </qandaentry>
+
     </qandadiv>
 
     <qandadiv id="faq-security">
