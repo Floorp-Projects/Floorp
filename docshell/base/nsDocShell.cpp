@@ -4037,6 +4037,41 @@ nsDocShell::InternalLoad(nsIURI * aURI,
 
     nsresult rv;
 
+    nsCOMPtr<nsISupports> owner(aOwner);
+    //
+    // Check to see if an owner should be inherited...
+    //
+    if (!owner) {
+        // If an owner was passed in, use it
+        // Otherwise, if the caller has allowed inheriting from the current document,
+        // or if we're being called from chrome (which has the system principal),
+        // then use the current document principal
+        if (!aInheritOwner) {
+            // See if there's system or chrome JS code running
+            nsCOMPtr<nsIScriptSecurityManager> secMan;
+ 
+            secMan = do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+            if (NS_SUCCEEDED(rv)) {
+                nsCOMPtr<nsIPrincipal> sysPrin;
+                nsCOMPtr<nsIPrincipal> subjectPrin;
+    
+                // Just to compare, not to use!
+                rv = secMan->GetSystemPrincipal(getter_AddRefs(sysPrin));
+                if (NS_SUCCEEDED(rv)) {
+                    rv = secMan->GetSubjectPrincipal(getter_AddRefs(subjectPrin));
+                }
+                // XXX: Why can the subject principal be nsnull??
+                if (NS_SUCCEEDED(rv) &&
+                    (!subjectPrin || sysPrin.get() == subjectPrin.get())) {
+                    aInheritOwner = PR_TRUE;
+                }
+            }
+        }
+        if (aInheritOwner) {
+            GetCurrentDocumentOwner(getter_AddRefs(owner));
+        }
+    }
+
     //
     // Resolve the window target before going any further...
     // If the load has been targeted to another DocShell, then transfer the
@@ -4129,7 +4164,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
         if (targetDocShell) {
             rv = targetDocShell->InternalLoad(aURI,
                                               aReferrer,
-                                              aOwner,
+                                              owner,
                                               aInheritOwner,
                                               aStopActiveDoc,
                                               nsnull,         // No window target
@@ -4223,41 +4258,6 @@ nsDocShell::InternalLoad(nsIURI * aURI,
         }
     }
 
-    nsCOMPtr<nsISupports> owner(aOwner);
-    //
-    // Check to see if an owner should be inherited...
-    //
-    if (!owner) {
-        // If an owner was passed in, use it
-        // Otherwise, if the caller has allowed inheriting from the current document,
-        // or if we're being called from chrome (which has the system principal),
-        // then use the current document principal
-        if (!aInheritOwner) {
-            // See if there's system or chrome JS code running
-            nsCOMPtr<nsIScriptSecurityManager> secMan;
- 
-            secMan = do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-            if (NS_SUCCEEDED(rv)) {
-                nsCOMPtr<nsIPrincipal> sysPrin;
-                nsCOMPtr<nsIPrincipal> subjectPrin;
-    
-                // Just to compare, not to use!
-                rv = secMan->GetSystemPrincipal(getter_AddRefs(sysPrin));
-                if (NS_SUCCEEDED(rv)) {
-                    rv = secMan->GetSubjectPrincipal(getter_AddRefs(subjectPrin));
-                }
-                // XXX: Why can the subject principal be nsnull??
-                if (NS_SUCCEEDED(rv) &&
-                    (!subjectPrin || sysPrin.get() == subjectPrin.get())) {
-                    aInheritOwner = PR_TRUE;
-                }
-            }
-        }
-        if (aInheritOwner) {
-            GetCurrentDocumentOwner(getter_AddRefs(owner));
-        }
-    }
-
     NS_ENSURE_SUCCESS(StopLoad(), NS_ERROR_FAILURE);
     // Cancel any timers that were set for this loader.
     CancelRefreshURITimers();
@@ -4314,7 +4314,7 @@ nsDocShell::GetCurrentDocumentOwner(nsISupports ** aOwner)
             return NS_ERROR_FAILURE;
         rv = docViewer->GetDocument(*getter_AddRefs(document));
     }
-    else                        //-- If there's no document loaded yet, look at the parent (frameset)
+    else //-- If there's no document loaded yet, look at the parent (frameset)
     {
         nsCOMPtr<nsIDocShellTreeItem> parentItem;
         rv = GetSameTypeParent(getter_AddRefs(parentItem));
