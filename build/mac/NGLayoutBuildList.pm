@@ -928,8 +928,6 @@ sub BuildXPAppProjects()
 
 	BuildOneProject(":mozilla:xpfe:AppCores:macbuild:AppCores.mcp",				"AppCores$D.shlb", "AppCores.toc", 1, $main::ALIAS_SYM_FILES, 0);
 
-	BuildOneProject(":mozilla:xpfe:bootstrap:macbuild:apprunner.mcp",			"apprunner$D", "apprunner.toc", 0, 0, 1);
-
 	print("--- XPApp projects complete ----\n")
 
 }
@@ -978,7 +976,14 @@ sub BuildMailNewsProjects()
 	print("--- MailNews projects complete ----\n")
 }
 
-
+sub BuildAppRunner()
+{
+	unless( $main::build{xpapp} ) { return; }
+	_assertRightDirectory();
+	# $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
+	my($D) = $main::DEBUG ? "Debug" : "";
+	BuildOneProject(":mozilla:xpfe:bootstrap:macbuild:apprunner.mcp",			"apprunner$D", "apprunner.toc", 0, 0, 1);
+}
 
 #//--------------------------------------------------------------------------------------------------
 #// Build everything
@@ -994,8 +999,9 @@ sub BuildProjects()
 	BuildInternationalProjects();
 	BuildLayoutProjects();
 	BuildEditorProjects();
-	BuildMailNewsProjects();
 	MakeResourceAliases();
 	BuildViewerProjects();
 	BuildXPAppProjects();
+	BuildMailNewsProjects();
+	BuildAppRunner();
 }
