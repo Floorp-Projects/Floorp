@@ -395,7 +395,7 @@ ns4xPlugin::CreatePlugin(nsIServiceManager* aServiceMgr,
                                                        &pfnShutdown), fLibrary);
 
   NPP_PLUGIN_LOG(PLUGIN_LOG_BASIC,
-  ("NPP MainEntryProc called: this=%p, return=%d\n",this,error));
+  ("NPP MainEntryProc called: return=%d\n",error));
 
   if(error != NPERR_NO_ERROR)
     return NS_ERROR_FAILURE;
