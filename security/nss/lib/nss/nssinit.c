@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: nssinit.c,v 1.23 2001/09/06 21:14:06 relyea%netscape.com Exp $
+ # $Id: nssinit.c,v 1.24 2001/09/20 21:39:58 relyea%netscape.com Exp $
  */
 
 #include <ctype.h>
@@ -45,7 +45,6 @@
 #include "ssl.h"
 #include "sslproto.h"
 #include "secmod.h"
-#include "secmodi.h"
 #include "secoid.h"
 #include "nss.h"
 #include "secrng.h"
@@ -224,15 +223,19 @@ nss_Init(const char *configdir, const char *certPrefix, const char *keyPrefix,
 						pk11_password_required);
     if (flags == NULL) return rv;
 
-    moduleSpec = PR_smprintf("library= name=\"%s\" parameters=\"configdir=%s certPrefix=%s keyPrefix=%s secmod=%s flags='%s' %s\" NSS=\"flags=internal,moduleDB,moduleDBOnly,critical\"",
+    moduleSpec = PR_smprintf("name=\"%s\" parameters=\"configdir=%s certPrefix=%s keyPrefix=%s secmod=%s flags=%s %s\" NSS=\"flags=internal,moduleDB,moduleDBOnly,critical\"",
 		pk11_config_name ? pk11_config_name : NSS_DEFAULT_MOD_NAME,
 		configdir,certPrefix,keyPrefix,secmodName,flags,
 		pk11_config_strings ? pk11_config_strings : "");
     PORT_Free(flags);
 
     if (moduleSpec) {
-	rv = PK11_LoadPKCS11Module(moduleSpec,NULL,PR_TRUE);
+	SECMODModule *module = SECMOD_LoadModule(moduleSpec,NULL,PR_TRUE);
 	PR_smprintf_free(moduleSpec);
+	if (module) {
+	    if (module->loaded) rv=SECSuccess;
+	    SECMOD_DestroyModule(module);
+	}
     }
 
     return rv;
@@ -288,14 +291,13 @@ NSS_Initialize(const char *configdir, const char *certPrefix,
 SECStatus
 NSS_NoDB_Init(const char * configdir)
 {
-      return nss_Init(configdir,NULL,NULL,NULL,PR_TRUE,PR_TRUE,PR_TRUE,PR_TRUE);
+      return nss_Init(configdir?configdir:"","","",SECMOD_DB,
+					PR_TRUE,PR_TRUE,PR_TRUE,PR_TRUE);
 }
 
 void
 NSS_Shutdown(void)
 {
-    CERTCertDBHandle *certHandle;
-    SECKEYKeyDBHandle *keyHandle;
 
 #ifdef notdef
     SECOID_Shutdown();
