@@ -180,6 +180,9 @@ __CERT_AddTempCertToPerm(CERTCertificate *cert, char *nickname,
     cert = STAN_GetCERTCertificate(c); /* will return same pointer */
     cert->istemp = PR_FALSE;
     cert->isperm = PR_TRUE;
+    if (!trust) {
+	return PR_SUCCESS;
+    }
     return (STAN_ChangeCertTrust(cert, trust) == PR_SUCCESS) ? 
 							SECSuccess: SECFailure;
 }
