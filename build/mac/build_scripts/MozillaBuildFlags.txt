@@ -58,7 +58,7 @@ cache           1
 useimg2         1
 lowmem          0
 accessible      1
-bidi            0
+bidi            1
 p3p             0
 jsdebugger      0
 moz_logging     1
