@@ -3493,6 +3493,41 @@ void DeInitDlgSelectInstallPath(diSIP *diDialog)
   FreeMemory(&(diDialog->szMessage0));
 }
 
+HRESULT InitDlgUpgrade(diU *diDialog)
+{
+  diDialog->bShowDialog = FALSE;
+  diDialog->bShowInEasyInstall = FALSE;
+
+  /* set to show the Single dialog or the Multi dialog for the SelectComponents dialog */
+  if((diDialog->szTitle = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+  if((diDialog->szSubTitle = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+  if((diDialog->szMessageCleanup = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+  if((diDialog->szCheckboxSafeInstall = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+  if((diDialog->szSafeInstallInfo = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+  if((diDialog->szUnsafeInstallInfo = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+  if((diDialog->szNoSafeUpgradeWindir = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+
+  return(0);
+}
+
+void DeInitDlgUpgrade(diU *diDialog)
+{
+  FreeMemory(&(diDialog->szTitle));
+  FreeMemory(&(diDialog->szSubTitle));
+  FreeMemory(&(diDialog->szMessageCleanup));
+  FreeMemory(&(diDialog->szCheckboxSafeInstall));
+  FreeMemory(&(diDialog->szSafeInstallInfo));
+  FreeMemory(&(diDialog->szUnsafeInstallInfo));
+  FreeMemory(&(diDialog->szNoSafeUpgradeWindir));
+}
+
 HRESULT InitDlgWindowsIntegration(diWI *diDialog)
 {
   diDialog->bShowDialog = FALSE;
@@ -3769,7 +3804,7 @@ HRESULT InitSetupGeneral()
   sgProduct.bSharedInst          = FALSE;
   sgProduct.bInstallFiles        = TRUE;
   sgProduct.checkCleanupOnUpgrade = FALSE;
-  sgProduct.doCleanupOnUpgrade    = FALSE;
+  sgProduct.doCleanupOnUpgrade    = TRUE;
   sgProduct.greType              = GRE_TYPE_NOT_SET;
   sgProduct.dwCustomType         = ST_RADIO0;
   sgProduct.dwNumberOfComponents = 0;
@@ -7096,6 +7131,8 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
     return(1);
   if(InitDlgSelectInstallPath(&diSelectInstallPath))
     return(1);
+  if(InitDlgUpgrade(&diUpgrade))
+    return(1);
   if(InitDlgSelectComponents(&diSelectAdditionalComponents, SM_SINGLE))
     return(1);
   if(InitDlgWindowsIntegration(&diWindowsIntegration))
@@ -7380,6 +7417,7 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   if(lstrcmpi(szShowDialog, "TRUE") == 0)
     diSelectComponents.bShowDialog = TRUE;
 
+  /* Select Install Folder dialog */
   GetPrivateProfileString("Dialog Select Install Path", "Show Dialog",  "", szShowDialog,                    sizeof(szShowDialog), szFileIniConfig);
   GetPrivateProfileString("Dialog Select Install Path", "Title",        "", diSelectInstallPath.szTitle,     MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("Dialog Select Install Path", "Sub Title",    "", diSelectInstallPath.szSubTitle,  MAX_BUF, szFileIniConfig);
@@ -7387,6 +7425,21 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   if(lstrcmpi(szShowDialog, "TRUE") == 0)
     diSelectInstallPath.bShowDialog = TRUE;
 
+  /* Upgrade dialog */
+  GetPrivateProfileString("Dialog Upgrade", "Show Dialog",              "", szShowDialog,                    sizeof(szShowDialog), szFileIniConfig);
+  if(lstrcmpi(szShowDialog, "TRUE") == 0)
+    diUpgrade.bShowDialog = TRUE;
+  GetPrivateProfileString("Dialog Upgrade", "Show In Easy Install",     "", szShowDialog,                    sizeof(szShowDialog), szFileIniConfig);
+  if(lstrcmpi(szShowDialog, "TRUE") == 0)
+    diUpgrade.bShowInEasyInstall = TRUE;
+  GetPrivateProfileString("Dialog Upgrade", "Title",                    "", diUpgrade.szTitle,               MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Upgrade", "Sub Title",                "", diUpgrade.szSubTitle,            MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Upgrade", "Message Cleanup",          "", diUpgrade.szMessageCleanup,      MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Upgrade", "Checkbox Clean Install",   "", diUpgrade.szCheckboxSafeInstall, MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Upgrade", "Message Clean Install",    "", diUpgrade.szSafeInstallInfo,     MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Upgrade", "Message Install Over",     "", diUpgrade.szUnsafeInstallInfo,   MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Upgrade", "Message Install Over Windir", "", diUpgrade.szNoSafeUpgradeWindir,   MAX_BUF, szFileIniConfig);
+  
   /* Select Additional Components dialog */
   GetPrivateProfileString("Dialog Select Additional Components",   "Show Dialog",  "", szShowDialog,                              sizeof(szShowDialog), szFileIniConfig);
   GetPrivateProfileString("Dialog Select Additional Components",   "Title",        "", diSelectAdditionalComponents.szTitle,      MAX_BUF, szFileIniConfig);
@@ -9081,6 +9134,7 @@ void DeInitialize()
   DeInitDlgProgramFolder(&diProgramFolder);
   DeInitDlgWindowsIntegration(&diWindowsIntegration);
   DeInitDlgSelectComponents(&diSelectAdditionalComponents);
+  DeInitDlgUpgrade(&diUpgrade);
   DeInitDlgSelectInstallPath(&diSelectInstallPath);
   DeInitDlgSelectComponents(&diSelectComponents);
   DeInitDlgSetupType(&diSetupType);

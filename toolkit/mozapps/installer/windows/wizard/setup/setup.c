@@ -90,6 +90,7 @@ diQL            diQuickLaunch;
 diST            diSetupType;
 diSC            diSelectComponents;
 diSIP           diSelectInstallPath;
+diU             diUpgrade;
 diSC            diSelectAdditionalComponents;
 diWI            diWindowsIntegration;
 diPF            diProgramFolder;

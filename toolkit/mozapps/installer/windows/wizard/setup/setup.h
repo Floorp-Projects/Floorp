@@ -387,6 +387,19 @@ typedef struct dlgSelectInstallPath
   LPSTR szMessage0;
 } diSIP;
 
+typedef struct dlgUpgrade
+{
+  BOOL bShowDialog;
+  BOOL bShowInEasyInstall;
+  LPSTR szTitle;
+  LPSTR szSubTitle;
+  LPSTR szMessageCleanup;
+  LPSTR szCheckboxSafeInstall;
+  LPSTR szSafeInstallInfo;
+  LPSTR szUnsafeInstallInfo;
+  LPSTR szNoSafeUpgradeWindir;
+} diU;
+
 typedef struct wiCBstruct
 {
   BOOL  bEnabled;
