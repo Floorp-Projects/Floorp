@@ -46,15 +46,19 @@ NS_IMETHODIMP nsBasicStreamGenerator::GetSignature(char **signature)
 
 NS_IMETHODIMP nsBasicStreamGenerator::Setup(PRUint32 salt, nsISupports *consumer)
 {
+    nsresult rv = NS_OK;
     // Forget everything about previous setup
-    mPasswordSink = nsnull;
+    mWeakPasswordSink = nsnull;
     // XXX whipe out the password to zero in memory
     mPassword.Truncate(0);
 
     // Reestablish setup
-    mSalt = salt;
     if (consumer)
-        mPasswordSink = do_QueryInterface(consumer);
+    {
+        mWeakPasswordSink = NS_GetWeakReference(consumer, &rv);
+        if (NS_FAILED(rv)) return rv;
+    }
+    mSalt = salt;
     return NS_OK;
 }
 
@@ -72,9 +76,10 @@ NS_IMETHODIMP nsBasicStreamGenerator::GetByte(PRUint32 offset, PRUint8 *retval)
     if (mPassword.Length() == 0)
     {
         // First time we need the password. Get it.
-        if (!mPasswordSink) return NS_ERROR_FAILURE;
+        nsCOMPtr<nsIPasswordSink> weakPasswordSink = do_QueryReferent(mWeakPasswordSink);
+        if (!weakPasswordSink) return NS_ERROR_FAILURE;
         PRUnichar *aPassword;
-        rv = mPasswordSink->GetPassword(&aPassword);
+        rv = weakPasswordSink->GetPassword(&aPassword);
         if (NS_FAILED(rv)) return rv;
         mPassword = aPassword;
         nsAllocator::Free(aPassword);

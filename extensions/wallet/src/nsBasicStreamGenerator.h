@@ -24,6 +24,7 @@
 #include "nsIPasswordSink.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
+#include "nsIWeakReference.h"
 
 #define NS_SECURITY_LEVEL 1.0
 
@@ -50,6 +51,6 @@ class nsBasicStreamGenerator : public nsIKeyedStreamGenerator
     float mLevel;					// read only
     PRUint32 mSalt;					// not used for now
     nsCString mPassword;
-    nsCOMPtr<nsIPasswordSink> mPasswordSink;
+    nsCOMPtr<nsIWeakReference> mWeakPasswordSink;	// nsIPasswordSink
 };
 
