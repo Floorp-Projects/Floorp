@@ -69,7 +69,6 @@
 
 <window
    id="calendar-window"
-   title="Mozilla Calendar"
    onload="calendarInit()"
    onunload="calendarFinish()"
    xmlns:html="http://www.w3.org/1999/xhtml"
