@@ -50,7 +50,6 @@
 #include "jsdbgapi.h"
 #include "jslock.h"
 #include "jsnum.h"
-#include "jsopcode.h"
 #include "jsscope.h"
 #include "jsstr.h"
 
@@ -846,10 +845,7 @@ ReportReadOnlyScope(JSContext *cx, JSScope *scope)
 {
     JSString *str;
 
-    str = js_DecompileValueGenerator(cx, JSDVG_SEARCH_STACK,
-                                     OBJECT_TO_JSVAL(scope->object),
-                                     NULL);
-
+    str = js_ValueToString(cx, OBJECT_TO_JSVAL(scope->object));
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_READ_ONLY,
                          str
                          ? JS_GetStringBytes(str)
