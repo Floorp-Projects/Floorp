@@ -674,3 +674,30 @@ NS_IMETHODIMP nsClipboard::ForceDataToClipboard()
   return NS_OK;
 }
 
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsClipboard::HasDataMatchingFlavors(nsISupportsArray *aFlavorList,
+                                                  PRBool           *_retval)
+{
+  *_retval = PR_FALSE;
+  
+  PRUint32 i;
+  PRUint32 cnt;
+
+  aFlavorList->Count(&cnt);
+  for (i = 0;i < cnt; i++) {
+    nsCOMPtr<nsISupports> genericFlavor;
+    aFlavorList->GetElementAt (i, getter_AddRefs(genericFlavor));
+    nsCOMPtr<nsISupportsString> currentFlavor (do_QueryInterface(genericFlavor));
+    if (currentFlavor) {
+      nsXPIDLCString flavorStr;
+      currentFlavor->ToString(getter_Copies(flavorStr));
+      UINT format = GetFormat(flavorStr);
+      if (::IsClipboardFormatAvailable(format)) {
+        *_retval = PR_TRUE;
+        break;
+      }
+    }
+  }
+
+  return NS_OK;
+}
