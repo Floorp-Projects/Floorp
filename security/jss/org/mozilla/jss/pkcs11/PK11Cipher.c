@@ -209,7 +209,7 @@ Java_org_mozilla_jss_pkcs11_PK11Cipher_finalizeContext
         jboolean padded)
 {
     PK11Context *context=NULL;
-    char *outBuf = NULL;
+    unsigned char *outBuf = NULL;
     unsigned int outLen, newOutLen;
     jobject outBA=NULL;
     SECStatus status;
