@@ -246,21 +246,21 @@
   <box id="header" align="vertical" style="width:100%;height:100%">
     <toolbox>
       <toolbar>
-	  <titledbutton src="resource:/res/mailnews/messenger/getmsg.gif" align="bottom" value="Get Msg" onclick="MsgGetMessage()"/>
+	  <titledbutton src="resource:/res/mailnews/messenger/getmsg.gif" align="bottom" value="Get Spam" onclick="MsgGetMessage()"/>
 
-	  <titledbutton src="resource:/res/mailnews/messenger/newmsg.gif" align="bottom" value="New Msg" onclick="MsgNewMessage()"/>
+	  <titledbutton src="resource:/res/mailnews/messenger/newmsg.gif" align="bottom" value="Create New Spam" onclick="MsgNewMessage()"/>
 
-	  <titledbutton src="resource:/res/mailnews/messenger/reply.gif" align="bottom" value="Reply" onclick="MsgReplyMessage()"/>
+	  <titledbutton src="resource:/res/mailnews/messenger/reply.gif" align="bottom" value="Reply to Spam" onclick="MsgReplyMessage()"/>
 
-	  <titledbutton src="resource:/res/mailnews/messenger/forward.gif" align="bottom" value="Forward" onclick="MsgForwardMessage()"/>
+	  <titledbutton src="resource:/res/mailnews/messenger/forward.gif" align="bottom" value="Forward Spam" onclick="MsgForwardMessage()"/>
 
-	  <titledbutton src="resource:/res/mailnews/messenger/trash.gif" align="bottom" value="Delete" onclick="MsgDeleteMessage()"/>
+	  <titledbutton src="resource:/res/mailnews/messenger/trash.gif" align="bottom" value="Delete Spam" onclick="MsgDeleteMessage()"/>
 
-	  <titledbutton src="resource:/res/mailnews/messenger/getmsg.gif" align="bottom" value="Load Msg" onclick="MsgLoadNewsMessage('news://news.mcom.com:119/35BE6AB1.55A14AE4@netscape.com')"/>
+	  <titledbutton src="resource:/res/mailnews/messenger/getmsg.gif" align="bottom" value="Load Spam" onclick="MsgLoadNewsMessage('news://news.mcom.com:119/35BE6AB1.55A14AE4@netscape.com')"/>
 
           <spring flex="100%"/>
 
-	  <titledbutton src="resource:/res/throbber/anims00.gif" align="right" onclick="MsgHome('http://home.netscape.com/')"/>
+	  <titledbutton src="http://www.reed.edu/~reyn/true.spam.GIF" align="right" onclick="MsgHome('http://home.netscape.com/')"/>
       </toolbar>
     </toolbox>
 
