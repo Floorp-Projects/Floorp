@@ -579,6 +579,7 @@ nsDocumentBindInfo::nsDocumentBindInfo(nsDocLoaderImpl* aDocLoader,
 
     m_ExtraInfo = aExtraInfo;
     NS_IF_ADDREF(m_ExtraInfo);
+    mStatus = NS_BINDING_SUCCEEDED;
 }
 
 nsDocumentBindInfo::~nsDocumentBindInfo()
