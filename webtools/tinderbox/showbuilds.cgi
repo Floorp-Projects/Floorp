@@ -187,17 +187,26 @@ sub print_page_head {
             </center>
             <p>
           <td align=right valign=bottom>
-            <table cellspacing=0 cellpadding=1 border=0><tr><td align=center>
-              <TT>L</TT></td><td>= Show Build Log
-            </td></tr><tr><td align=center>
+            <table cellspacing=0 cellpadding=1 border=0>
+              <tr>
+                <td align=center><TT>L</TT></td>
+                <td>= Show Build Log</td>
+              </tr>
+              <tr>
+                <td align=center><TT>C</TT></td>
+                <td>= Show Checkins</td>
+              </tr>
+              <tr>
+              <td align=center>
               <img src="$images{star}"></td><td>= Show Log comments
             </td></tr><tr><td colspan=2>
               <table cellspacing=1 cellpadding=1 border=1>
-                <tr bgcolor="$colormap{success}"><td>Successful Build
-                <tr bgcolor="$colormap{building}"><td>Build in Progress
+                <tr bgcolor="$colormap{success}"><td>Successful Build, optional bloaty stats:<br>
+                  XXXXX (bytes leaked)<br>YYYYYYY (bytes allocated)</td>
+                <tr bgcolor="$colormap{building}"><td>Build in Progress</td>
                 <tr bgcolor="$colormap{testfailed}"><td>Successful Build,
-                                                          but Tests Failed
-                <tr bgcolor="$colormap{busted}"><td>Build Failed
+                                                          but Tests Failed</td>
+                <tr bgcolor="$colormap{busted}"><td>Build Failed</td>
               </table>
             </td></tr></table>
           </td>
