@@ -232,13 +232,13 @@ nsLocaleFactory::GetSystemLocale(nsILocale** systemLocale)
 
 	systemLocaleName = new nsString();
 	result = fWin32LocaleInterface->GetXPLocale(sysLCID,systemLocaleName);
-	if (result!=NS_OK) {
+	if (NS_FAILED(result)) {
 		delete systemLocaleName;
 		*systemLocale = (nsILocale*)nsnull;
 		return result;
 	}
 	result = this->NewLocale(systemLocaleName,&fSystemLocale);
-	if (result!=NS_OK) {
+	if (NS_FAILED(result)) {
 		delete systemLocaleName;
 		*systemLocale=(nsILocale*)nsnull;
 		fSystemLocale=(nsILocale*)nsnull;
@@ -270,7 +270,7 @@ nsLocaleFactory::GetSystemLocale(nsILocale** systemLocale)
     fPosixLocaleInterface->GetXPLocale(lc_all,lc_values[0]);
     tempvalue = lc_values[0]->ToNewCString();
     result = NewLocale(lc_values[0],&fSystemLocale);
-    if (result!=NS_OK) {
+    if (NS_FAILED(result)) {
       delete lc_values[0];
       *systemLocale=(nsILocale*)nsnull;
       fSystemLocale=(nsILocale*)nsnull;
@@ -298,7 +298,7 @@ nsLocaleFactory::GetSystemLocale(nsILocale** systemLocale)
 
   result = NewLocale(fCategoryList,(nsString**)lc_values,
                      LOCALE_CATEGORY_LISTLEN,&fSystemLocale);
-  if (result!=NS_OK) {
+  if (NS_FAILED(result)) {
     for(i=0;i<LOCALE_CATEGORY_LISTLEN;i++) {
       delete lc_values[i];
     }
@@ -319,7 +319,7 @@ nsLocaleFactory::GetSystemLocale(nsILocale** systemLocale)
 
 	systemLocaleName = new nsString("en-US");
 	result = this->NewLocale(systemLocaleName,&fSystemLocale);
-	if (result!=NS_OK) {
+	if (NS_FAILED(result)) {
 		delete systemLocaleName;
 		*systemLocale=(nsILocale*)nsnull;
 		fSystemLocale=(nsILocale*)nsnull;
@@ -371,13 +371,13 @@ nsLocaleFactory::GetApplicationLocale(nsILocale** applicationLocale)
 
 	applicationLocaleName = new nsString();
 	result = fWin32LocaleInterface->GetXPLocale(appLCID,applicationLocaleName);
-	if (result!=NS_OK) {
+	if (NS_FAILED(result)) {
 		delete applicationLocaleName;
 		*applicationLocale = (nsILocale*)nsnull;
 		return result;
 	}
 	result = this->NewLocale(applicationLocaleName,&fApplicationLocale);
-	if (result!=NS_OK) {
+	if (NS_FAILED(result)) {
 		delete applicationLocaleName;
 		*applicationLocale=(nsILocale*)nsnull;
 		fApplicationLocale=(nsILocale*)nsnull;
@@ -401,7 +401,7 @@ nsLocaleFactory::GetApplicationLocale(nsILocale** applicationLocale)
 
 	applicationLocaleName = new nsString("en-US");
 	result = this->NewLocale(applicationLocaleName,&fApplicationLocale);
-	if (result!=NS_OK) {
+	if (NS_FAILED(result)) {
 		delete applicationLocaleName;
 		*applicationLocale=(nsILocale*)nsnull;
 		fApplicationLocale=(nsILocale*)nsnull;
