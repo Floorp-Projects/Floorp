@@ -28,10 +28,7 @@ var CellElement;
 var TableCaptionElement;
 var globalCellElement;
 var globalTableElement
-const TablePanel = 0;
-const CellPanel = 1;
-var currentPanel = TablePanel;
-var validatePanel;
+var gValidateTab;
 const defHAlign =   "left";
 const centerStr =   "center";  //Index=1
 const rightStr =    "right";   // 2
@@ -115,6 +112,7 @@ function Startup()
   gDialog.TableAlignList = document.getElementById("TableAlignList");
   gDialog.TableCaptionList = document.getElementById("TableCaptionList");
   gDialog.TableInheritColor = document.getElementById("TableInheritColor");
+  gDialog.TabBox =  document.getElementById("TabBox");
 
   // Cell Panel
   gDialog.SelectionList = document.getElementById("SelectionList");
@@ -147,7 +145,6 @@ function Startup()
   gDialog.CellColorCheckbox = document.getElementById("CellColorCheckbox");
   gDialog.TableTab = document.getElementById("TableTab");
   gDialog.CellTab = document.getElementById("CellTab");
-  gDialog.TabPanels = document.getElementById("TabPanels");
 
   TableElement = editorShell.GetElementOrParentByTagName("table", null);
   if(!TableElement)
@@ -192,33 +189,18 @@ function Startup()
 
     // Starting TabPanel name is passed in
     if (window.arguments[1] == "CellPanel")
-    {
-      currentPanel = CellPanel;
-
-      //Set index for starting panel on the <tabpanels> element
-      gDialog.TabPanels.selectedIndex = CellPanel; // setAttribute("selectedIndex", CellPanel);
-
-      // Trigger setting of style for the tab widgets
-      gDialog.CellTab.selected = "true";
-      gDialog.TableTab.selected = null;
-
-      // Use cell element for Advanced Edit dialog
-      globalElement = globalCellElement;
-    }
+      gDialog.TabBox.selectedTab = gDialog.CellTab;
   }
 
-  if (currentPanel == TablePanel)
+  if (gDialog.TabBox.selectedTab == gDialog.TableTab)
   {
-    // Use table element for Advanced Edit dialog
-    globalElement = globalTableElement;
-
     // We may call this with table selected, but no cell,
     //  so disable the Cell Properties tab
     if(!CellElement)
     {
       // XXX: Disabling of tabs is currently broken, so for
       //      now we'll just remove the tab completely.
-      //CellTab.setAttribute("disabled", "true");
+      //gDialog.CellTab.disabled = true;
       gDialog.CellTab.parentNode.removeChild(gDialog.CellTab);
     }
   }
@@ -253,7 +235,7 @@ function Startup()
   // If first initializing, we really aren't changing anything
   CellDataChanged = false;
 
-  if (currentPanel == CellPanel)
+  if (gDialog.TabBox.selectedTab == gDialog.CellTab)
     setTimeout("gDialog.SelectionList.focus()", 0);
   else
     SetTextboxFocus(gDialog.TableRowsInput);
@@ -434,18 +416,6 @@ function GetCellData(rowIndex, colIndex)
   return true;
 }
 
-function SelectTableTab()
-{
-  globalElement = globalTableElement;
-  currentPanel = TablePanel;
-}
-
-function SelectCellTab()
-{
-  globalElement = globalCellElement;
-  currentPanel = CellPanel;
-}
-
 function SelectCellHAlign()
 {
   SetCheckbox("CellHAlignCheckbox");
@@ -538,7 +508,6 @@ function ChangeSelectionToFirstCell()
   }
   CellElement = cellData.cell;
   globalCellElement = CellElement;
-  globalElement = CellElement;
 
   curRowIndex = 0;
   curColIndex = 0;
@@ -699,7 +668,6 @@ function MoveSelection(forward)
 
   // Copy for new global cell
   globalCellElement = CellElement.cloneNode(false);
-  globalElement = globalCellElement;
 
   // Change the selection
   DoCellSelection();
@@ -780,21 +748,8 @@ function DisableSelectionButtons( disable )
 
 function SwitchToValidatePanel()
 {
-  if (currentPanel != validatePanel)
-  {
-    //Set index for starting panel on the <tabpanels> element
-    gDialog.TabPanels.selectedIndex = validatePanel; //setAttribute("selectedIndex", validatePanel);
-    if (validatePanel == CellPanel)
-    {
-      // Trigger setting of style for the tab widgets
-      gDialog.CellTab.selected = "true";
-      gDialog.TableTab.selected = null;
-    } else {
-      gDialog.TableTab.selected = "true";
-      gDialog.CellTab.selected = null;
-    }
-    currentPanel = validatePanel;
-  }
+  if (gDialog.TabBox.selectedTab != gValidateTab)
+    gDialog.TabBox.selectedTab = gValidateTab;
 }
 
 function SetAlign(listID, defaultValue, element, attName)
@@ -808,7 +763,7 @@ function SetAlign(listID, defaultValue, element, attName)
 
 function ValidateTableData()
 {
-  validatePanel = TablePanel;
+  gValidateTab = gDialog.TableTab;
   newRowCount = Number(ValidateNumber(gDialog.TableRowsInput, null, 1, maxRows, null, true, true));
   if (gValidationError) return false;
 
@@ -863,7 +818,7 @@ function ValidateTableData()
 function ValidateCellData()
 {
 
-  validatePanel = CellPanel;
+  gValidateTab = gDialog.CellTab;
 
   if (gDialog.CellHeightCheckbox.checked)
   {
@@ -918,10 +873,9 @@ function ValidateCellData()
 function ValidateData()
 {
   var result;
-  var savePanel = currentPanel;
 
   // Validate current panel first
-  if (currentPanel == TablePanel)
+  if (gDialog.TabBox.selectedTab == gDialog.TableTab)
   {
     result = ValidateTableData();
     if (result)
@@ -933,11 +887,8 @@ function ValidateData()
   }
   if(!result) return false;
 
-  // If we passed, restore former currentPanel
-  currentPanel = savePanel;
-
   // Set global element for AdvancedEdit
-  if(currentPanel == TablePanel)
+  if(gDialog.TabBox.selectedTab == gDialog.TableTab)
     globalElement = globalTableElement;
   else
     globalElement = globalCellElement;
@@ -950,7 +901,7 @@ function ChangeCellTextbox(textboxID)
   // Filter input for just integers
   forceInteger(textboxID);
 
-  if (currentPanel == CellPanel)
+  if (gDialog.TabBox.selectedTab == gDialog.CellTab)
     CellDataChanged = true;
 }
 

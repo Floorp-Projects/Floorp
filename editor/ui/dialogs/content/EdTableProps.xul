@@ -50,15 +50,15 @@
   <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
   <broadcaster id="args" value=""/>
 
-  <tabbox>
+  <tabbox id="TabBox">
     <tabs flex="1">
-      <tab id="TableTab" oncommand="SelectTableTab()" label="&tableTab.label;"/>
-      <tab id="CellTab" oncommand="SelectCellTab()" label="&cellTab.label;"/>
+      <tab id="TableTab" label="&tableTab.label;"/>
+      <tab id="CellTab" label="&cellTab.label;"/>
     </tabs>
-    <tabpanels id="TabPanels">
+    <tabpanels>
 
       <!-- TABLE PANEL -->
-      <vbox id="TablePanel">
+      <vbox>
         <groupbox orient="horizontal"><caption label="&size.label;"/>
           <grid>
             <columns><column/><column/><column/><column/><column/></columns>
@@ -155,7 +155,7 @@
       </vbox><!-- Table Panel -->
 
       <!-- CELL PANEL -->
-      <vbox id="CellPanel">
+      <vbox>
         <groupbox orient="horizontal" align="center">
           <caption label="&cellSelection.label;"/>
           <vbox>
