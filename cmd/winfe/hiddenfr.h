@@ -94,9 +94,7 @@ protected:
 #endif
     afx_msg BOOL OnQueryEndSession(); //~~av
 
-#ifdef MOZ_MAIL_NEWS
     afx_msg LONG OnProcessIPCHook(UINT, LONG);   // rhp - for IPC
-#endif
 
 	DECLARE_MESSAGE_MAP()
 };
