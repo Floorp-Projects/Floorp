@@ -168,6 +168,8 @@ public:
     NS_IMETHOD
     HandleEvent(nsPluginEvent* event, PRBool* handled);
 
+	void setFrame(EmbeddedFrame* frame);
+
 private:
 	nsIPluginInstancePeer* mPeer;
 	MRJPluginInstance* mParentInstance;

@@ -33,6 +33,7 @@
 #endif
 
 class MRJPluginInstance;
+class EmbeddedFramePluginInstance;
 class JSEvaluator;
 
 class EmbeddedFrame : public MRJFrame {
@@ -51,6 +52,8 @@ public:
 	virtual void activate(Boolean active);
 	virtual void click(const EventRecord* event);
 	
+	void setPluginInstance(EmbeddedFramePluginInstance* embeddedInstance);
+	
 	void setWindow(WindowRef window);
 	WindowRef getWindow();
 
@@ -58,7 +61,7 @@ protected:
 	virtual GrafPtr getPort();
 
 private:
-	MRJPluginInstance* mPluginInstance;
+	EmbeddedFramePluginInstance* mPluginInstance;
 	JSEvaluator* mEvaluator;
 	WindowRef mWindow;
 	Rect mBounds;

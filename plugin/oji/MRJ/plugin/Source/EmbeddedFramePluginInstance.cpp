@@ -29,7 +29,7 @@
 #include <stdio.h>
 
 EmbeddedFramePluginInstance::EmbeddedFramePluginInstance()
-	:	mPeer(NULL), mParentInstance(NULL), mFrame(NULL)
+	:	mPeer(NULL), mFrame(NULL)
 {
 	NS_INIT_REFCNT();
 }
@@ -53,6 +53,8 @@ NS_METHOD EmbeddedFramePluginInstance::Initialize(nsIPluginInstancePeer* peer)
 		if (tagInfo->GetAttribute("FRAME", &frameValue) == NS_OK) {
 			sscanf(frameValue, "%X", &mFrame);
 		}
+		if (mFrame != NULL)
+			mFrame->setPluginInstance(this);
 		NS_RELEASE(tagInfo);
 	}
 
@@ -71,7 +73,6 @@ NS_METHOD EmbeddedFramePluginInstance::GetPeer(nsIPluginInstancePeer* *resulting
 NS_METHOD EmbeddedFramePluginInstance::Destroy()
 {
 	NS_IF_RELEASE(mPeer);
-	NS_IF_RELEASE(mParentInstance);
 	if (mFrame != NULL) {
 		delete mFrame;
 		mFrame = NULL;
@@ -81,10 +82,12 @@ NS_METHOD EmbeddedFramePluginInstance::Destroy()
 
 NS_METHOD EmbeddedFramePluginInstance::SetWindow(nsPluginWindow* pluginWindow)
 {
-	if (pluginWindow != NULL)
-		mFrame->setWindow(WindowRef(pluginWindow->window->port));
-	else
-		mFrame->setWindow(NULL);
+	if (mFrame != NULL) {
+		if (pluginWindow != NULL)
+			mFrame->setWindow(WindowRef(pluginWindow->window->port));
+		else
+			mFrame->setWindow(NULL);
+	}
 	return NS_OK;
 }
 
@@ -93,4 +96,9 @@ NS_METHOD EmbeddedFramePluginInstance::HandleEvent(nsPluginEvent* pluginEvent, P
 	if (mFrame != NULL)
 		*eventHandled = mFrame->handleEvent(pluginEvent->event);
 	return NS_OK;
+}
+
+void EmbeddedFramePluginInstance::setFrame(EmbeddedFrame* frame)
+{
+	mFrame = frame;
 }
