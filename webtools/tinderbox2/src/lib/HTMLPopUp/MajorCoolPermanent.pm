@@ -7,8 +7,8 @@
 # anything.
 
 
-# $Revision: 1.1 $ 
-# $Date: 2002/05/09 22:56:37 $ 
+# $Revision: 1.2 $ 
+# $Date: 2002/12/09 18:19:59 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/HTMLPopUp/MajorCoolPermanent.pm,v $ 
 # $Name:  $ 
@@ -40,7 +40,7 @@
 # Contributor(s): 
 
 
-package HTMLPopUp::MajorCoolWindow;
+package HTMLPopUp::MajorCoolPermanent;
 
 $VERSION = '#tinder_version#';
 
