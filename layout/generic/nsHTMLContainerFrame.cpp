@@ -98,7 +98,9 @@ nsHTMLContainerFrame::Paint(nsIPresContext* aPresContext,
   // hidden
 
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
-  return NS_OK;
+
+  // see if we have to draw a selection frame around this container
+  return nsFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
 }
 
 /**

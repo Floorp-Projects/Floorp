@@ -480,7 +480,8 @@ nsHTMLButtonControlFrame::Paint(nsIPresContext* aPresContext,
 
 #endif
 
-  return NS_OK;
+  // to draw border when selected in editor
+  return nsFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
 }
 
 // XXX a hack until the reflow state does this correctly

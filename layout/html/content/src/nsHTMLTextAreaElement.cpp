@@ -47,12 +47,15 @@
 #include "nsLinebreakConverter.h"
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
+#include "nsIFrame.h"
+#include "nsIFormControlFrame.h"
 
 static NS_DEFINE_IID(kIDOMHTMLTextAreaElementIID, NS_IDOMHTMLTEXTAREAELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 static NS_DEFINE_IID(kIFormIID, NS_IFORM_IID);
 static NS_DEFINE_CID(kXULControllersCID,  NS_XULCONTROLLERS_CID);
+static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
 
 class nsHTMLTextAreaElement : public nsIDOMHTMLTextAreaElement,
                               public nsIDOMNSHTMLTextAreaElement,
@@ -528,6 +531,21 @@ nsHTMLTextAreaElement::HandleDOMEvent(nsIPresContext* aPresContext,
   nsresult rv = GetDisabled(&disabled);
   if (NS_FAILED(rv) || disabled) {
     return rv;
+  }
+
+  nsIFormControlFrame* formControlFrame = nsnull;
+  rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
+  nsIFrame* formFrame = nsnull;
+
+  if (formControlFrame && NS_SUCCEEDED(formControlFrame->QueryInterface(kIFrameIID, (void **)&formFrame) && formFrame))
+  {
+    const nsStyleUserInterface* uiStyle;
+    formFrame->GetStyleData(eStyleStruct_UserInterface, (const nsStyleUserInterface *&)uiStyle);
+    if (uiStyle->mUserInput == NS_STYLE_USER_INPUT_NONE ||
+        uiStyle->mUserInput == NS_STYLE_USER_INPUT_DISABLED)
+    {
+      return NS_OK;
+    }
   }
 
   return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,

@@ -2048,7 +2048,9 @@ nsComboboxControlFrame::HandleEvent(nsIPresContext* aPresContext,
     return NS_OK;
   }
 
-  return NS_OK;
+  // Have to feed event down to nsFrame::HandleEvent so that
+  // selection takes place when appropriate.
+  return nsAreaFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 }
 
 
@@ -2518,7 +2520,8 @@ nsComboboxControlFrame::Paint(nsIPresContext* aPresContext,
     }
   }
   
-  return NS_OK;
+  // Call to the base class to draw selection borders when appropriate
+  return nsFrame::Paint(aPresContext,aRenderingContext,aDirtyRect,aWhichLayer);
 }
 
 

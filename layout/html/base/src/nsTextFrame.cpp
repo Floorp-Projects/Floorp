@@ -2844,7 +2844,7 @@ nsTextFrame::SetSelected(nsIPresContext* aPresContext,
 
   // check whether style allows selection
   PRBool selectable;
-  IsSelectable(selectable);
+  IsSelectable(&selectable, nsnull);
   if (!selectable)
     return NS_OK;//do not continue no selection for this frame.
 

@@ -252,6 +252,21 @@ nsGfxRadioControlFrame::Reset(nsIPresContext* aPresContext)
   SetCurrentCheckState(checked);
 }  
 
+NS_IMETHODIMP
+nsGfxRadioControlFrame::HandleEvent(nsIPresContext* aPresContext, 
+                                          nsGUIEvent* aEvent,
+                                          nsEventStatus* aEventStatus)
+{
+  // Check for user-input:none style
+  const nsStyleUserInterface* uiStyle;
+  GetStyleData(eStyleStruct_UserInterface,  (const nsStyleUserInterface *&)uiStyle);
+  if (uiStyle->mUserInput == NS_STYLE_USER_INPUT_NONE || uiStyle->mUserInput == NS_STYLE_USER_INPUT_DISABLED)
+    return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
+
+  // otherwise, do nothing. Events are handled by the DOM.
+  return NS_OK;
+}
+
 //--------------------------------------------------------------
 void
 nsGfxRadioControlFrame::PaintRadioButton(nsIPresContext* aPresContext,
@@ -309,7 +324,9 @@ nsGfxRadioControlFrame::Paint(nsIPresContext* aPresContext,
   if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
     PaintRadioButton(aPresContext, aRenderingContext, aDirtyRect);
   }
-  return NS_OK;
+
+  // Call to the base class to draw selection borders when appropriate
+  return nsFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
 }
 
 

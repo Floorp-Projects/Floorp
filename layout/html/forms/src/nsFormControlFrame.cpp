@@ -441,8 +441,8 @@ nsFormControlFrame::Paint(nsIPresContext* aPresContext,
   nsresult rv = nsLeafFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
                             aWhichLayer);
 
- if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer){
-
+ if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer)
+ {
     nsRect rect(0, 0, mRect.width, mRect.height);
     PaintSpecialBorder(aPresContext, 
                        aRenderingContext,
@@ -781,6 +781,12 @@ nsFormControlFrame::HandleEvent(nsIPresContext* aPresContext,
   if (nsEventStatus_eConsumeNoDefault == *aEventStatus) {
     return NS_OK;
   }
+
+  // Check for user-input:none style
+  const nsStyleUserInterface* uiStyle;
+  GetStyleData(eStyleStruct_UserInterface,  (const nsStyleUserInterface *&)uiStyle);
+  if (uiStyle->mUserInput == NS_STYLE_USER_INPUT_NONE || uiStyle->mUserInput == NS_STYLE_USER_INPUT_DISABLED)
+    return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 
   // if not native then use the NS_MOUSE_LEFT_CLICK to see if pressed
   // unfortunately native widgets don't seem to handle this right. 

@@ -30,8 +30,11 @@
 #include "nsIMutableStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
+#include "nsIFrame.h"
+#include "nsIFormControlFrame.h"
 
 static NS_DEFINE_IID(kIDOMHTMLOptGroupElementIID, NS_IDOMHTMLOPTGROUPELEMENT_IID);
+static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
 
 class nsHTMLOptGroupElement : public nsIDOMHTMLOptGroupElement,
                               public nsIJSScriptObject,
@@ -188,6 +191,21 @@ nsHTMLOptGroupElement::HandleDOMEvent(nsIPresContext* aPresContext,
   nsresult rv = GetDisabled(&disabled);
   if (NS_FAILED(rv) || disabled) {
     return rv;
+  }
+
+  nsIFormControlFrame* formControlFrame = nsnull;
+  rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
+  nsIFrame* formFrame = nsnull;
+
+  if (formControlFrame && NS_SUCCEEDED(formControlFrame->QueryInterface(kIFrameIID, (void **)&formFrame) && formFrame))
+  {
+    const nsStyleUserInterface* uiStyle;
+    formFrame->GetStyleData(eStyleStruct_UserInterface, (const nsStyleUserInterface *&)uiStyle);
+    if (uiStyle->mUserInput == NS_STYLE_USER_INPUT_NONE ||
+        uiStyle->mUserInput == NS_STYLE_USER_INPUT_DISABLED)
+    {
+      return NS_OK;
+    }
   }
 
   return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,

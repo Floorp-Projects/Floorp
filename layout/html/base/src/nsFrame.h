@@ -260,9 +260,11 @@ public:
   NS_IMETHOD  SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
   NS_IMETHOD  VerifyTree() const;
 #endif
+
   NS_IMETHOD  SetSelected(nsIPresContext* aPresContext, nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread);
   NS_IMETHOD  GetSelected(PRBool *aSelected) const;
-  NS_IMETHOD  IsSelectable(PRBool& aSelectable) const;
+  NS_IMETHOD  IsSelectable(PRBool* aIsSelectable, PRUint8* aSelectStyle) const;
+
   NS_IMETHOD  GetSelectionController(nsIPresContext *aPresContext, nsISelectionController **aSelCon);
   NS_IMETHOD  PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos) ;
   NS_IMETHOD  CheckVisibility(nsIPresContext* aContext, PRInt32 aStartIndex, PRInt32 aEndIndex, PRBool aRecurse, PRBool *aFinished, PRBool *_retval);
@@ -409,7 +411,7 @@ protected:
   virtual ~nsFrame();
 
   PRInt16 DisplaySelection(nsIPresContext* aPresContext, PRBool isOkToTurnOn = PR_FALSE);
-
+  
   //this will modify aPos and return the next frame ect.
   NS_IMETHOD GetFrameFromDirection(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos);
 

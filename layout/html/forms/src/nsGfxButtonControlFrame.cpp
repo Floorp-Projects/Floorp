@@ -585,8 +585,13 @@ nsGfxButtonControlFrame::HandleEvent(nsIPresContext* aPresContext,
   // Do nothing here, nsHTMLInputElement::HandleDOMEvent
   // takes cares of calling MouseClicked for us.
 
+  // do we have user-input style?
+  const nsStyleUserInterface* uiStyle;
+  GetStyleData(eStyleStruct_UserInterface,  (const nsStyleUserInterface *&)uiStyle);
+  if (uiStyle->mUserInput == NS_STYLE_USER_INPUT_NONE || uiStyle->mUserInput == NS_STYLE_USER_INPUT_DISABLED)
+    return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
+  
   return NS_OK;
-
 }
 
 

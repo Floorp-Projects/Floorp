@@ -963,8 +963,11 @@ nsScrollFrame::Paint(nsIPresContext*      aPresContext,
   }
 
   // Paint our children
-  return nsContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
+  nsresult rv = nsContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
                                  aWhichLayer);
+  if (NS_FAILED(rv)) return rv;
+  
+  return nsFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
 }
 
 NS_IMETHODIMP

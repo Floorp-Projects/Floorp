@@ -1007,7 +1007,16 @@ public:
 
   NS_IMETHOD  GetSelected(PRBool *aSelected) const = 0;
 
-  NS_IMETHOD  IsSelectable(PRBool& aSelectable) const = 0;
+  /**
+   *  called to discover where this frame, or a parent frame has user-select style
+   *  applied, which affects that way that it is selected.
+   *    
+   *  @param aIsSelectable out param. Set to true if the frame can be selected
+   *                       (i.e. is not affected by user-select: none)
+   *  @param aSelectStyle  out param. Returns the type of selection style found
+   *                        (using values defined in nsStyleConsts.h).
+   */
+  NS_IMETHOD  IsSelectable(PRBool* aIsSelectable, PRUint8* aSelectStyle) const = 0;
 
   /** 
    *  Called to retrieve the SelectionController associated with the frame.
