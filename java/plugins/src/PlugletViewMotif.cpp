@@ -49,18 +49,23 @@ PlugletViewMotif::PlugletViewMotif() {
     WindowID = 0;
 }
 
-#ifdef SOLARIS    //following futures are not available under Linux Blackdown JDK
 extern "C" void getAwtData(int          *awt_depth,
                 Colormap     *awt_cmap,
                 Visual       **awt_visual,
                 int          *awt_num_colors,
                 void         *pReserved);
 
+extern "C" Display *getAwtDisplay(void);
+
+extern "C" void getAwtLockFunctions(void (**AwtLock)(JNIEnv *),
+                                    void (**AwtUnlock)(JNIEnv *),
+                                    void (**AwtNoFlushUnlock)(JNIEnv *),
+                                    void *pReserved);
+
 static int awt_depth;
 static Colormap awt_cmap;
 static Visual * awt_visual;
 static int awt_num_colors;
-#endif 
 
 void PlugletViewMotif::Initialize() {
     PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
@@ -77,21 +82,11 @@ void PlugletViewMotif::Initialize() {
         clazz = NULL;
         return;
     }
-#ifdef SOLARIS 
-  getAwtData(&awt_depth, &awt_cmap, &awt_visual, &awt_num_colors, NULL);
-#endif
+    getAwtData(&awt_depth, &awt_cmap, &awt_visual, &awt_num_colors, NULL);
 }
 
-#define AWT_LOCK()      (env)->MonitorEnter(awt_lock)
-
-#define AWT_UNLOCK()	(env)->MonitorExit(awt_lock)
-
-
-
-extern jobject awt_lock;
-extern Display *awt_display;
-
 PRBool PlugletViewMotif::SetWindow(nsPluginWindow* win) {
+    
     PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
 	              ("PlugletViewMotif.SetWindow this=%p\n",this));
     JNIEnv *env = PlugletEngine::GetJNIEnv();
@@ -136,7 +131,12 @@ PRBool PlugletViewMotif::SetWindow(nsPluginWindow* win) {
 
 
     WindowID = containerWindowID;
-    AWT_LOCK();
+    void (*AwtLock)(JNIEnv *);
+    void (*AwtUnLock)(JNIEnv *);
+    void (*AwtNoFlushUnLock)(JNIEnv *);
+    getAwtLockFunctions(&AwtLock, &AwtUnLock, &AwtNoFlushUnLock,NULL);
+    AwtLock(env);
+    Display *awt_display = getAwtDisplay();
     XSync(awt_display, FALSE);
     Arg args[40];
     int argc = 0;
@@ -146,12 +146,10 @@ PRBool PlugletViewMotif::SetWindow(nsPluginWindow* win) {
     XtSetArg(args[argc], XmNheight, win->height); argc++;
     XtSetArg(args[argc], XmNx, 0); argc++;
     XtSetArg(args[argc], XmNy, 0); argc++;
-    XtSetArg(args[argc],XmNmappedWhenManaged,False); argc++;
-#ifdef SOLARIS
+    XtSetArg(args[argc], XmNmappedWhenManaged,False); argc++;
     XtSetArg(args[argc], XmNvisual, awt_visual); argc++;
     XtSetArg(args[argc], XmNdepth, awt_depth); argc++;
     XtSetArg(args[argc], XmNcolormap, awt_cmap); argc++;
-#endif 
     Widget w = XtAppCreateShell("AWTapp", "XApplication", 
                                 vendorShellWidgetClass,
                                 awt_display,
@@ -183,7 +181,7 @@ PRBool PlugletViewMotif::SetWindow(nsPluginWindow* win) {
         }
         
     }
-    AWT_UNLOCK();
+    AwtUnLock(env);
     return PR_TRUE;
 }
 

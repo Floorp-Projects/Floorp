@@ -4,7 +4,8 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreeSelectionModel;
 import javax.swing.tree.TreePath;
 import javax.swing.JScrollPane;
-
+import javax.swing.JButton;
+import javax.swing.JTextField;
 
 import org.mozilla.pluglet.*;
 import org.mozilla.pluglet.mozilla.*;
@@ -43,7 +44,7 @@ class Node {
 
 }
 class ZipDecoder implements Pluglet {
-    Button extract;
+    JButton extract;
     byte[] b;
     Frame frm;
     Panel panel;
@@ -129,10 +130,13 @@ class ZipDecoder implements Pluglet {
 
 	extract.addActionListener(new ActionListener() {
 	    public void actionPerformed(ActionEvent ae) {
-
-                if (zipTree == null) return;
+                if (zipTree == null) {
+		    return;
+		}
 		TreePath tp = zipTree.getSelectionPath();
-		if (tp == null) return;
+		if (tp == null) {
+		    return;
+		}
 		Object[] elements = tp.getPath();
 
 		if (tp.getPathCount() == 1) return;
@@ -267,7 +271,7 @@ class ZipDecoder implements Pluglet {
 
     public void start() {
 	panel = new Panel();
-	extract = new Button("Extract");
+	extract = new JButton("Extract");
     }
 
     public void stop() {
@@ -289,7 +293,10 @@ class ZipDecoder implements Pluglet {
 	frame.setLayout(new BorderLayout());
 	frame.setSize(defaultSize);
 	frame.add(panel);
-	panel.add(extract);
+	JPanel jpanel = new JPanel();
+	panel.add(jpanel);
+
+	jpanel.add(extract);
 	frame.pack();
 	frm=frame;
     }

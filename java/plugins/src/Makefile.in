@@ -49,21 +49,21 @@ CPPSRCS =  \
 	PlugletViewFactory.cpp \
 	$(NULL)
 
-CXXFLAGS        += $(MOZ_TOOLKIT_REGISTRY_CFLAGS) -D_REENTRANT  -DOJI_DISABLE
+CXXFLAGS := -I$(JDKHOME)/include -I$(JDKHOME)/include/solaris $(MOZ_TOOLKIT_REGISTRY_CFLAGS) -D_REENTRANT  -DOJI_DISABLE $(CXXFLAGS) 
 
 DSO_LDOPTS += \
       -L$(JDKHOME)/jre/lib/$(HOSTTYPE)/ \
       -L$(JDKHOME)/jre/lib/$(HOSTTYPE)/classic \
-      -ljava -ljvm -lawt \
+      -ljava -ljvm -lawt -lXt\
       -lgdk
 						      
 ifneq ($(OS_ARCH), Linux)
 DSO_LDOPTS      += \
-                  -lthread -lXm -lX11 -lXt -lm
+                  -lthread
 endif
-		
 
 include $(topsrcdir)/config/rules.mk
+CCC += $(CXXFLAGS)
 
 
 

@@ -1,4 +1,4 @@
-/* 
+/* -*- Mode: java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -58,11 +58,13 @@ public class PlugletManagerImpl implements PlugletManager {
      *        'javascript:' URLs, even if the user currently has JavaScript 
      *        disabled (usually specify false)
      */
-    public native void getURL(Pluglet pluglet,
+    public void getURL(Pluglet pluglet,
                        URL url, String target,
                        PlugletStreamListener streamListener,
                        String altHost, URL referrer,
-                       boolean forceJSEnabled);
+                       boolean forceJSEnabled) {
+        throw(new UnsupportedOperationException("PlagletManager.getURL not implemented yet"));
+    }
     /**
      * Posts to a URL with post data and/or post headers.
      *
@@ -89,18 +91,20 @@ public class PlugletManagerImpl implements PlugletManager {
      *   are no post headers
      */
 
-    public native void postURL(Pluglet pluglet,
-            URL url,
-            int postDataLen, 
-            byte[] postData,
-            boolean isFile,
-            String target,
-            PlugletStreamListener streamListener,
-            String altHost, 
-            URL referrer,
-            boolean forceJSEnabled,
-            int postHeadersLength, 
-            byte[] postHeaders);
+    public void postURL(Pluglet pluglet,
+                        URL url,
+                        int postDataLen, 
+                        byte[] postData,
+                        boolean isFile,
+                        String target,
+                        PlugletStreamListener streamListener,
+                        String altHost, 
+                        URL referrer,
+                        boolean forceJSEnabled,
+                        int postHeadersLength, 
+                        byte[] postHeaders) {
+        throw(new UnsupportedOperationException("PlagletManager.postURL not implemented yet"));
+    }
     protected void finalize() {
         nativeFinalize();
     }

@@ -43,8 +43,8 @@ static NS_DEFINE_CID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
 
 PRLogModuleInfo* PlugletLog::log = NULL;
 
-#define PLUGLETENGINE_PROGID \
-"component://netscape/blackwood/pluglet-engine"
+#define PLUGLETENGINE_ContractID \
+ "@mozilla.org/blackwood/pluglet-engine;1"
 
 #define  PLUGLETENGINE_CID  \
 { /* C1E694F3-9BE1-11d3-837C-0004AC56C49E */ \
@@ -58,7 +58,7 @@ static  nsModuleComponentInfo components[] =
     {
         "Pluglet Engine",
         PLUGLETENGINE_CID,
-        PLUGLETENGINE_PROGID,
+        PLUGLETENGINE_ContractID,
         PlugletEngineConstructor
     }
 };
@@ -173,42 +173,36 @@ PlugletEngine::~PlugletEngine(void) {
 
 JavaVM *PlugletEngine::jvm = NULL;	
 
-void PlugletEngine::StartJVM(void) {
-    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
-	    ("PlugletEngine::StartJVM\n"));
-    JNIEnv *env = NULL;	
+void PlugletEngine::StartJVM() {
+    JNIEnv *env = NULL;
     jint res;
     jsize jvmCount;
     JNI_GetCreatedJavaVMs(&jvm, 1, &jvmCount);
     if (jvmCount) {
         PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
-               ("PlugletEngine::StartJVM we have running jvm. We do not need to start another one\n"));
+               ("PlugletEngine::StartJVM we got already started JVM\n"));
         return;
     }
-    JDK1_1InitArgs vm_args;
     char classpath[1024];
-    JNI_GetDefaultJavaVMInitArgs(&vm_args);
-    vm_args.version = 0x00010001;
-    /* Append USER_CLASSPATH to the default system class path */
-    sprintf(classpath, "%s%c%s",
-            vm_args.classpath, PATH_SEPARATOR, PR_GetEnv("CLASSPATH"));
+    JavaVMInitArgs vm_args;
+    JavaVMOption options[2];
+
+    sprintf(classpath, "-Djava.class.path=%s",PR_GetEnv("CLASSPATH"));
     PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
-           ("PlugletEngine::StartJVM classpath=%s\n",classpath));
-    char **props = new char*[2];
-    props[0]="java.compiler=NONE";
-    props[1]=0;
-    vm_args.properties = props;
-    vm_args.classpath = classpath;
-    /* Create the Java VM */	
-    res = JNI_CreateJavaVM(&jvm, &env, &vm_args);
-    if(res < 0 ) {
-        PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
-	       ("PlugletEngine::StartJVM JNI_CreateJavaVM failed \n"));
-    } else {
-        PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
-	       ("PlugletEngine::StartJVM jvm was started \n"));
-    }
+           ("PlugletEngine::StartJVM about to create JVM classpath=%s\n",classpath));
+    options[0].optionString = classpath;
+    options[1].optionString=""; //-Djava.compiler=NONE";
+    vm_args.version = 0x00010002;
+    vm_args.options = options;
+    vm_args.nOptions = 2;
+    vm_args.ignoreUnrecognized = JNI_TRUE;
+    /* Create the Java VM */
+    res = JNI_CreateJavaVM(&jvm, (void**)&env, &vm_args);
+    printf("--bcJavaGlobal::StartJVM jvm started res %d\n",res);
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+           ("PlugletEngine::StartJVM after CreateJavaVM res = %d\n",res));
 }
+
 #endif /* OJI_DISABLE */
 
 JNIEnv * PlugletEngine::GetJNIEnv(void) {
@@ -238,7 +232,7 @@ JNIEnv * PlugletEngine::GetJNIEnv(void) {
        StartJVM();
    }
    if (jvm) {
-       jvm->AttachCurrentThread(&res,NULL);
+       jvm->AttachCurrentThread((void**)&res,NULL);
    }
 #endif /* OJI_DISABLE */
    return res;
