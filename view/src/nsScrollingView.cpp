@@ -443,7 +443,12 @@ NS_IMETHODIMP nsScrollingView :: Init(nsIViewManager* aManager,
 
     // Create a view for a vertical scrollbar
 
+#ifdef XP_MAC
+	mVScrollBarView = nsnull;
+	PR_ASSERT(FALSE);	//¥¥¥TEMPORARY: scrollbar widgets are not supported yet ¥¥¥
+#else
     mVScrollBarView = new ScrollBarView(this);
+#endif
 
     if (nsnull != mVScrollBarView)
     {
@@ -464,7 +469,12 @@ NS_IMETHODIMP nsScrollingView :: Init(nsIViewManager* aManager,
 
     // Create a view for a horizontal scrollbar
 
+#ifdef XP_MAC
+	mHScrollBarView = nsnull;
+	PR_ASSERT(FALSE);	//¥¥¥TEMPORARY: scrollbar widgets are not supported yet ¥¥¥
+#else
     mHScrollBarView = new ScrollBarView(this);
+#endif
 
     if (nsnull != mHScrollBarView)
     {
