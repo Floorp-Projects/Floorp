@@ -63,6 +63,7 @@ interface nsIMessenger : nsISupports {
     void RenameFolder(in nsIRDFCompositeDataSource db, 
                       in nsIDOMXULElement folder, in string name);
     void CompactFolder(in nsIRDFCompositeDataSource db, in nsIDOMXULElement folder);
+    void EmptyTrash(in nsIRDFCompositeDataSource db, in nsIDOMXULElement folder);
 
     void Undo();
     void Redo();
