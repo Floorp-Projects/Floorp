@@ -1369,16 +1369,16 @@ public final class Context {
      * Set the security support for this context. 
      * <p> SecuritySupport may only be set if it is currently null.
      * Otherwise a SecurityException is thrown.
-     * @param securitySupportObj a SecuritySupport object
+     * @param supportObj a SecuritySupport object
      * @throws SecurityException if there is already a SecuritySupport
      *         object for this Context
      */
-    public void setSecuritySupport(SecuritySupport securitySupportObj) {
+    public synchronized void setSecuritySupport(SecuritySupport supportObj) {
         if (securitySupport != null) {
             throw new SecurityException("Cannot overwrite existing " +
                                         "SecuritySupport object");
         }
-        securitySupport = securitySupportObj;
+        securitySupport = supportObj;
     }
         
     /**
