@@ -268,11 +268,13 @@ nsFtpState::nsFtpState() {
     mControlConnection = nsnull;
     mDRequestForwarder = nsnull;
 
-    mGenerateHTMLContent = PR_FALSE;
+    mGenerateRawContent = mGenerateHTMLContent = PR_FALSE;
     nsresult rv;
     NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
-    if (NS_SUCCEEDED(rv) || pPref) 
+    if (NS_SUCCEEDED(rv) || pPref) { 
         pPref->GetBoolPref("network.dir.generate_html", &mGenerateHTMLContent);
+        pPref->GetBoolPref("network.ftp.raw_output", &mGenerateRawContent);
+    }
 }
 
 nsFtpState::~nsFtpState() 
@@ -1116,7 +1118,14 @@ nsFtpState::S_list() {
     if (!mDRequestForwarder) 
         return NS_ERROR_FAILURE;
         
-    if (mGenerateHTMLContent)
+    if (mGenerateRawContent) {
+        nsAutoString fromStr(NS_LITERAL_STRING("text/ftp-dir-"));
+        SetDirMIMEType(fromStr);
+
+        nsCAutoString contentType;contentType.AssignWithConversion(fromStr);
+        rv = mChannel->SetContentType(contentType);
+    }
+    else if (mGenerateHTMLContent)
         rv = mChannel->SetContentType("text/html");
     else
         rv = mChannel->SetContentType("application/http-index-format");
@@ -1818,8 +1827,10 @@ nsFtpState::BuildStreamConverter(nsIStreamListener** convertStreamListener)
 
     nsAutoString fromStr(NS_LITERAL_STRING("text/ftp-dir-"));
     SetDirMIMEType(fromStr);
-
-    if (mGenerateHTMLContent) {
+    if (mGenerateRawContent) {
+        converterListener = listener;
+    }
+    else if (mGenerateHTMLContent) {
         rv = scs->AsyncConvertData(fromStr.GetUnicode(), 
                                    NS_LITERAL_STRING("text/html").get(),
                                    listener, 

@@ -193,8 +193,9 @@ private:
     nsCOMPtr<nsIInputStream> mWriteStream; // This stream is written to the server.
     PRUint32               mWriteCount;    // The amount of data to write to the server.
     PRPackedBool           mFireCallbacks; // Fire the listener callback.
-    PRBool                 mGenerateHTMLContent;
     PRPackedBool           mIPv6Checked;
+    PRBool                 mGenerateHTMLContent;
+    PRBool                 mGenerateRawContent;
     nsCOMPtr<nsIPrompt>    mPrompter;
     nsCOMPtr<nsIFTPEventSink>       mFTPEventSink;
     nsCOMPtr<nsIAuthPrompt> mAuthPrompter;
