@@ -99,7 +99,7 @@ $msg .= "Subject: Moving bugs $::FORM{'buglist'}\n\n";
 $msg .= $xml . "\n";
 
 open(SENDMAIL,
-  "|/usr/lib/sendmail -ODeliveryMode=deferred -t") ||
+  "|/usr/lib/sendmail -ODeliveryMode=background -t") ||
     die "Can't open sendmail";
 
 print SENDMAIL $msg;
