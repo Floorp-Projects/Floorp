@@ -2448,7 +2448,22 @@ AC_PROG_GCC_TRADITIONAL
 AC_FUNC_MEMCMP
 AC_CHECK_FUNCS(random qsort strerror lchown fchmod snprintf localtime_r statvfs memmove usleep rint)
 AC_CHECK_HEADERS(gnu/libc-version.h)
-AC_CHECK_FUNCS(nl_langinfo gnu_get_libc_version)
+AC_CHECK_FUNCS(nl_langinfo)
+
+AC_CACHE_CHECK(
+    [for gnu_get_libc_version()],
+    ac_cv_func_gnu_get_libc_version,
+    [AC_TRY_COMPILE([
+        #ifdef HAVE_GNU_LIBC_VERSION_H
+        #include <gnu/libc-version.h>
+        #endif
+        ],
+        [const char *glibc_version = gnu_get_libc_version();],
+        [ac_cv_func_gnu_get_libc_version=yes 
+            AC_DEFINE(HAVE_GNU_GET_LIBC_VERSION)],
+        [ac_cv_func_gnu_get_libc_version=no] 
+        )]
+    )
 
 AC_MSG_CHECKING(how to call gettimeofday)
 AC_CACHE_VAL(ac_cv_gettimeofday_args,
