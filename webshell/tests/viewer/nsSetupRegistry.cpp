@@ -25,7 +25,6 @@
 #include "nsIComponentManager.h"
 #include "nsWidgetsCID.h"
 #include "nsViewsCID.h"
-#include "nsPluginsCID.h"
 
 #include "nsIDocumentLoader.h"
 
@@ -34,7 +33,6 @@
 #include "nsILiveconnect.h"
 #include "nsIJVMManager.h"
 #endif
-#include "nsIPluginManager.h"
 #include "nsIProperties.h"
 
 #include "nsIObserverService.h"
@@ -61,7 +59,6 @@
     #define VIEW_DLL        "NGVIEW"
     #define WEB_DLL         "WEBSHELL"
     #define DOM_DLL         "JSDOM"
-    #define PLUGIN_DLL      "NGPLUGIN"
     #define CAPS_DLL        "CAPS"
     #define LIVECONNECT_DLL "JSJ"
     #define OJI_DLL         "OJI"
@@ -70,7 +67,6 @@
     #define GFXWIN_DLL "gkgfxwin.dll"
     #define VIEW_DLL   "gkview.dll"
     #define DOM_DLL    "jsdom.dll"
-    #define PLUGIN_DLL "gkplugin.dll"
     #define CAPS_DLL   "caps.dll"
     #define LIVECONNECT_DLL    "jsj3250.dll"
     #define OJI_DLL    "oji.dll"
@@ -80,14 +76,12 @@
     #define VIEW_DLL        "VIEW_DLL"
     #define WEB_DLL            "WEB_DLL"
     #define DOM_DLL        "DOM_DLL"
-    #define PLUGIN_DLL    "PLUGIN_DLL"
     #define CAPS_DLL    "CAPS_DLL"
     #define LIVECONNECT_DLL "LIVECONNECT_DLL"
     #define OJI_DLL        "OJI_DLL"
 #else
     #define VIEW_DLL   "libgkview"MOZ_DLL_SUFFIX
     #define DOM_DLL    "libjsdom"MOZ_DLL_SUFFIX
-    #define PLUGIN_DLL "libgkplugin"MOZ_DLL_SUFFIX
     #define CAPS_DLL   "libcaps"MOZ_DLL_SUFFIX
     #define LIVECONNECT_DLL "libliveconnect"MOZ_DLL_SUFFIX
     #define OJI_DLL    "liboji"MOZ_DLL_SUFFIX
@@ -159,10 +153,6 @@ static NS_DEFINE_IID(kCScrollPortViewCID, NS_SCROLL_PORT_VIEW_CID);
 // DOM
 static NS_DEFINE_IID(kCDOMScriptObjectFactory, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 static NS_DEFINE_IID(kCScriptNameSetRegistry, NS_SCRIPT_NAMESET_REGISTRY_CID);
-
-// PLUGIN
-static NS_DEFINE_IID(kCPluginHostCID, NS_PLUGIN_HOST_CID);
-static NS_DEFINE_CID(kCPluginManagerCID,          NS_PLUGINMANAGER_CID);
 
 // for prefs
 static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
@@ -266,10 +256,6 @@ NS_SetupRegistry()
   // DOM
   nsComponentManager::RegisterComponentLib(kCDOMScriptObjectFactory, NULL, NULL, DOM_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCScriptNameSetRegistry, NULL, NULL, DOM_DLL, PR_FALSE, PR_FALSE);
-
-  // PLUGIN
-  nsComponentManager::RegisterComponentLib(kCPluginHostCID, NULL, NULL, PLUGIN_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kCPluginManagerCID, NULL, NULL, PLUGIN_DLL, PR_FALSE, PR_FALSE);
 
 #ifdef OJI
   nsComponentManager::RegisterComponentLib(kCLiveconnectCID, "LiveConnect", "component://netscape/javascript/liveconnect", LIVECONNECT_DLL, PR_FALSE, PR_FALSE);

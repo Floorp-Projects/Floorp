@@ -24,7 +24,7 @@
 /*******************************************************************************
  * npsimple.cpp
  ******************************************************************************
- * Simple LiveConnect Sample Plugin
+ * Simple Sample Plugin
  * Copyright (c) 1996 Netscape Communications. All rights reserved.
  ******************************************************************************
  * OVERVIEW
@@ -32,8 +32,7 @@
  * Section 1 - Includes
  * Section 2 - Instance Structs
  * Section 3 - API Plugin Implementations
- * Section 4 - Java Native Method Implementations
- * Section 5 - Utility Method Implementations
+ * Section 4 - Utility Method Implementations
  *******************************************************************************/
 
 /*******************************************************************************
@@ -45,6 +44,8 @@
 #include "nsIServiceManager.h"
 #include "nsISupports.h"
 #include "nsIFactory.h"
+#include "nsIGenericFactory.h"
+#include "nsMemory.h"
 #include "nsString.h"
 #include "simpleCID.h"
 
@@ -137,25 +138,28 @@ typedef struct _PlatformInstance
 
 
 // Define constants for easy use
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
-static NS_DEFINE_IID(kIPluginIID, NS_IPLUGIN_IID);
-static NS_DEFINE_IID(kIPluginInstanceIID, NS_IPLUGININSTANCE_IID);
-static NS_DEFINE_IID(kIPluginManagerIID, NS_IPLUGINMANAGER_IID);
-static NS_DEFINE_IID(kIServiceManagerIID, NS_ISERVICEMANAGER_IID);
-static NS_DEFINE_IID(kIPluginStreamListenerIID, NS_IPLUGINSTREAMLISTENER_IID);
-
-static NS_DEFINE_CID(kPluginCID, NS_PLUGIN_CID);
-static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
-static NS_DEFINE_CID(kCPluginManagerCID, NS_PLUGINMANAGER_CID);
 static NS_DEFINE_CID(kSimplePluginCID, NS_SIMPLEPLUGIN_CID);
+static NS_DEFINE_CID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
 
-#define PLUGIN_NAME             "Simple Sample Plug-in"
-#define PLUGIN_DESCRIPTION      "Demonstrates a simple plug-in."
-#define PLUGIN_MIME_DESCRIPTION "application/x-simple:smp:Simple Sample Plug-in"
 #define PLUGIN_MIME_TYPE "application/x-simple"
 
-static const char* g_desc = "Sample XPCOM Plugin";
+static const char kPluginName[] = "Simple Sample Plug-in";
+static const char kPluginDescription[] = "Demonstrates a simple plug-in.";
+
+static const char* kMimeTypes[] = {
+    PLUGIN_MIME_TYPE
+};
+
+static const char* kMimeDescriptions[] = {
+    "Simple Sample Plug-in"
+};
+
+static const char* kFileExtensions[] = {
+    "smp"
+};
+
+static const PRInt32 kNumMimeTypes = sizeof(kMimeTypes) / sizeof(*kMimeTypes);
+
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -163,84 +167,28 @@ static const char* g_desc = "Sample XPCOM Plugin";
 ////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
-// SimplePlugin represents the class of all simple plugins. One 
-// instance of this class is kept around for as long as there are
-// plugin instances outstanding.
-
-class SimplePlugin : public nsIPlugin {
-public:
-    
-    ////////////////////////////////////////////////////////////////////////////
-    // from nsIFactory:
-
-    NS_IMETHOD CreateInstance(nsISupports *aOuter,
-                              REFNSIID aIID,
-                              void **aResult);
-
-    NS_IMETHOD LockFactory(PRBool aLock);
-    
-    ////////////////////////////////////////////////////////////////////////////
-    // from nsIPlugin:
-
-    // This call initializes the plugin and will be called before any new
-    // instances are created. It is passed browserInterfaces on which QueryInterface
-    // may be used to obtain an nsIPluginManager, and other interfaces.
-    NS_IMETHOD
-    Initialize(void);
-
-    // (Corresponds to NPP_Shutdown.)
-    // Called when the browser is done with the plugin factory, or when
-    // the plugin is disabled by the user.
-    NS_IMETHOD
-    Shutdown(void);
-
-    // (Corresponds to NPP_GetMIMEDescription.)
-    NS_IMETHOD
-    GetMIMEDescription(const char* *result);
-
-    // (Corresponds to NPP_GetValue.)
-    NS_IMETHOD
-    GetValue(nsPluginVariable variable, void *value);
-
-    NS_IMETHOD
-    CreatePluginInstance(nsISupports *aOuter, REFNSIID aIID, 
-                         const char* aPluginMIMEType,
-                         void **aResult);
-
-    // The old NPP_New call has been factored into two plugin instance methods:
-    //
-    // CreateInstance -- called once, after the plugin instance is created. This 
-    // method is used to initialize the new plugin instance (although the actual
-    // plugin instance object will be created by the plugin manager).
-    //
-    // nsIPluginInstance::Start -- called when the plugin instance is to be
-    // started. This happens in two circumstances: (1) after the plugin instance
-    // is first initialized, and (2) after a plugin instance is returned to
-    // (e.g. by going back in the window history) after previously being stopped
-    // by the Stop method. 
-
-    // SimplePlugin specific methods:
-
-    SimplePlugin();
-    virtual ~SimplePlugin(void);
-
-    NS_DECL_ISUPPORTS
-
-    nsIPluginManager* GetPluginManager(void) { return mPluginManager; }
-
-protected:
-    nsIPluginManager* mPluginManager;
-	nsIServiceManager* mServiceManager;
-
-};
-
-////////////////////////////////////////////////////////////////////////////////
-// SimplePluginInstance represents an instance of the SimplePlugin class.
+// SimplePluginInstance represents an instance of the simple plugin class.
 
 class SimplePluginInstance : 
     public nsIPluginInstance, 
     public nsISimplePluginInstance {
 public:
+    ////////////////////////////////////////////////////////////////////////////
+    // for implementing a generic module
+    static NS_METHOD
+    Create(nsISupports* aOuter, REFNSIID aIID, void** aResult);
+
+    static NS_METHOD
+    RegisterSelf(nsIComponentManager* aCompMgr,
+                 nsIFile* aPath,
+                 const char* aRegistryLocation,
+                 const char* aComponentType);
+
+    static NS_METHOD
+    UnregisterSelf(nsIComponentManager* aCompMgr,
+                   nsIFile* aPath,
+                   const char* aRegistryLocation);
+
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSISIMPLEPLUGININSTANCE
@@ -401,323 +349,96 @@ public:
 
 protected:
     const char*                 fMessageName;
-
 };
 
 /*******************************************************************************
  * SECTION 3 - API Plugin Implementations
  ******************************************************************************/
 
-// This counter is used to keep track of the number of outstanding objects.
-// It is used to determine whether the plugin's DLL can be unloaded.
-static PRUint32 gPluginObjectCount = 0;
-
-// This flag is used to keep track of whether the plugin's DLL is explicitly
-// being retained by some client.
-static PRBool gPluginLocked = PR_FALSE;
-
-////////////////////////////////////////////////////////////////////////////////
-// SimplePlugin Methods
-////////////////////////////////////////////////////////////////////////////////
-
-SimplePlugin::SimplePlugin()
-    :   mPluginManager(NULL), 
-        mServiceManager(NULL)
-{
-    NS_INIT_REFCNT();
-
-    if(nsComponentManager::CreateInstance(kCPluginManagerCID, 
-                                          NULL, kIPluginManagerIID, (void**)&mPluginManager) != NS_OK)
-        return;
-
-    gPluginObjectCount++;
-}
-
-SimplePlugin::~SimplePlugin(void)
-{
-    if(mPluginManager)
-        mPluginManager->Release();
-
-    if(mServiceManager)
-        mServiceManager->Release();
-
-    gPluginObjectCount--;
-}
-
-// These macros produce simple version of QueryInterface and AddRef.
-// See the nsISupports.h header file for details.
-
-NS_METHOD
-SimplePlugin::QueryInterface(const nsIID& aIID, void** aInstancePtr) 
-{
-    if (!aInstancePtr)
-        return NS_ERROR_NULL_POINTER;
-
-    if (aIID.Equals(kISupportsIID)) {
-        *aInstancePtr = NS_STATIC_CAST(nsISupports*,this);
-    } else if (aIID.Equals(kIFactoryIID)) {
-        *aInstancePtr = NS_STATIC_CAST(nsISupports*,NS_STATIC_CAST(nsIFactory*,this));
-    } else if (aIID.Equals(kIPluginIID)) {
-        *aInstancePtr = NS_STATIC_CAST(nsISupports*,NS_STATIC_CAST(nsIPlugin*,this));
-    } else {
-        *aInstancePtr = nsnull;
-        return NS_ERROR_NO_INTERFACE;
-    }
-
-    NS_ADDREF(NS_REINTERPRET_CAST(nsISupports*,*aInstancePtr));
-
-    return NS_OK;
-}
- 
-NS_IMPL_ADDREF(SimplePlugin);
-NS_IMPL_RELEASE(SimplePlugin);
-
-/*+++++++++++++++++++++++++++++++++++++++++++++++++
- * NSGetFactory:
- * Provides global initialization for a plug-in, and returns an error value. 
- *
- * This function is called once when a plug-in is loaded, before the first instance
- * is created. You should allocate any memory or resources shared by all
- * instances of your plug-in at this time. After the last instance has been deleted,
- * NPP_Shutdown will be called, where you can release any memory or
- * resources allocated by NPP_Initialize. 
- +++++++++++++++++++++++++++++++++++++++++++++++++*/
-
-SimplePlugin* gPlugin = NULL;
-
-extern "C" NS_EXPORT nsresult
-NSGetFactory(nsISupports* serviceMgr,
-             const nsCID &aCID,
-             const char *aClassName,
-             const char *aProgID,
-             nsIFactory **aResult)
-{
-    if (!aResult)
-        return NS_ERROR_NULL_POINTER; 
-
-    *aResult = nsnull; 
-
-    nsISupports *inst; 
-
-    if (aCID.Equals(kSimplePluginCID)) {
-        // Ok, we know this CID and here is the factory
-        // that can manufacture the objects
-        inst = new SimplePlugin(); 
-    } else if (aCID.Equals(kPluginCID)) { 
-        inst = new SimplePlugin(); 
-    } else {
-        return NS_ERROR_NO_INTERFACE; 
-    } 
-
-    if (!inst)
-        return NS_ERROR_OUT_OF_MEMORY; 
-
-    nsresult rv = inst->QueryInterface(kIFactoryIID, 
-                                       (void **) aResult); 
-
-    if (NS_FAILED(rv)) { 
-        delete inst; 
-    } 
-
-    return rv; 
-}
-
-extern "C" NS_EXPORT PRBool
-NSCanUnload(nsISupports* serviceMgr)
-{
-    return gPluginObjectCount == 1 && !gPluginLocked;
-}
-
-extern "C" NS_EXPORT nsresult 
-NSRegisterSelf(nsISupports *aServMgr, const char *path)
-{
-    nsresult rv = NS_OK;
-
-    char buf[255];    // todo: use a const
-
-    nsCString progID(NS_INLINE_PLUGIN_PROGID_PREFIX);
-
-    // We will use the service manager to obtain the component
-    // manager, which will enable us to register a component
-    // with a ProgID (text string) instead of just the CID.
-
-    nsIServiceManager *sm;
-
-    // We can get the IID of an interface with the static GetIID() method as
-    // well.
-    
-    rv = aServMgr->QueryInterface(NS_GET_IID(nsIServiceManager), (void **)&sm);
-
-    if (NS_FAILED(rv))
-        return rv;
-
-    nsIComponentManager *cm;
-
-    rv = sm->GetService(kComponentManagerCID, NS_GET_IID(nsIComponentManager), (nsISupports **)&cm);
-
-    if (NS_FAILED(rv)) {
-        NS_RELEASE(sm);
-
-        return rv;
-    }
-
-    // Note the text string, we can access the hello component with just this
-    // string without knowing the CID
-
-    progID += PLUGIN_MIME_TYPE;
-    progID.ToCString(buf, 255);     // todo: need to use a const
-
-    rv = cm->RegisterComponent(kSimplePluginCID, g_desc, buf,
-		path, PR_TRUE, PR_TRUE);
-
-    sm->ReleaseService(kComponentManagerCID, cm);
-
-    NS_RELEASE(sm);
-
-#ifdef NS_DEBUG
-	printf("*** %s registered\n",g_desc);
-#endif
-
-	return rv;
-}
-
-extern "C" NS_EXPORT nsresult 
-NSUnregisterSelf(nsISupports* aServMgr, const char *path)
-{
-	nsresult rv = NS_OK;
-
-	nsIServiceManager *sm;
-
-	rv = aServMgr->QueryInterface(NS_GET_IID(nsIServiceManager), (void **)&sm);
-
-	if (NS_FAILED(rv))
-		return rv;
-
-	nsIComponentManager *cm;
-
-	rv = sm->GetService(kComponentManagerCID, NS_GET_IID(nsIComponentManager), (nsISupports **)&cm);
-
-	if (NS_FAILED(rv)) {
-		NS_RELEASE(sm);
-
-		return rv;
-	}
-
-	rv = cm->UnregisterComponent(kSimplePluginCID, path);
-
-	sm->ReleaseService(kComponentManagerCID, cm);
-
-	NS_RELEASE(sm);
-
-	return rv;
-}
-
-
-NS_METHOD
-SimplePlugin::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aResult)
-{
-    SimplePluginInstance* inst = new SimplePluginInstance();
-    if (inst == NULL) 
-        return NS_ERROR_OUT_OF_MEMORY;
-    inst->AddRef();
-    *aResult = inst;
-    return NS_OK;
-}
-
-NS_METHOD
-SimplePlugin::LockFactory(PRBool aLock)
-{
-    gPluginLocked = aLock;
-    return NS_OK;
-}
-
-NS_METHOD
-SimplePlugin::Initialize()
-{
-#ifdef NS_DEBUG
-    printf("SimplePlugin::Initialize\n");
-#endif
-
-    return NS_OK;
-}
-
-NS_METHOD
-SimplePlugin::Shutdown(void)
-{
-#ifdef NS_DEBUG
-    printf("SimplePlugin::Shutdown\n");
-#endif
-
-    return NS_OK;
-}
-
-/*+++++++++++++++++++++++++++++++++++++++++++++++++
- * GetMIMEDescription:
- +++++++++++++++++++++++++++++++++++++++++++++++++*/
-
-NS_METHOD
-SimplePlugin::GetMIMEDescription(const char* *result)
-{
-#ifdef NS_DEBUG
-    printf("SimplePlugin::GetMIMEDescription\n");
-#endif
-
-    *result = PLUGIN_MIME_DESCRIPTION;
-    return NS_OK;
-}
-
-/*+++++++++++++++++++++++++++++++++++++++++++++++++
- * NPP_GetValue:
- +++++++++++++++++++++++++++++++++++++++++++++++++*/
-
-NS_METHOD
-SimplePlugin::GetValue(nsPluginVariable variable, void *value)
-{
-#ifdef NS_DEBUG
-    printf("SimplePlugin::GetValue\n");
-#endif
-
-    nsresult err = NS_OK;
-    if (variable == nsPluginVariable_NameString)
-        *((char **)value) = PLUGIN_NAME;
-    else if (variable == nsPluginVariable_DescriptionString)
-        *((char **)value) = PLUGIN_DESCRIPTION;
-    else
-        err = NS_ERROR_FAILURE;
-
-    return err;
-}
-
-NS_IMETHODIMP
-SimplePlugin::CreatePluginInstance(nsISupports *aOuter, REFNSIID aIID, 
-                                      const char* aPluginMIMEType,
-                                      void **aResult)
-{
-#ifdef NS_DEBUG
-    printf("SimplePlugin::CreatePluginInstance\n");
-#endif
-
-    SimplePluginInstance* inst = new SimplePluginInstance();
-    if(!inst)
-    {
-        *aResult = NULL;
-        return NS_ERROR_UNEXPECTED;
-        
-    }
-    inst->AddRef();
-    *aResult = inst;
-    return NS_OK;
-}
+// XXXwaterson document!
+static nsModuleComponentInfo gComponentInfo[] = {
+    { "Simple Plugin",
+      NS_SIMPLEPLUGIN_CID,
+      NS_INLINE_PLUGIN_PROGID_PREFIX PLUGIN_MIME_TYPE,
+      SimplePluginInstance::Create,
+      SimplePluginInstance::RegisterSelf,
+      SimplePluginInstance::UnregisterSelf },
+};
+
+NS_IMPL_NSGETMODULE("SimplePlugin", gComponentInfo);
 
 ////////////////////////////////////////////////////////////////////////////////
 // SimplePluginInstance Methods
 ////////////////////////////////////////////////////////////////////////////////
 
+NS_METHOD
+SimplePluginInstance::Create(nsISupports* aOuter, REFNSIID aIID, void** aResult)
+{
+    NS_PRECONDITION(aOuter == nsnull, "no aggregation");
+    if (aOuter)
+        return NS_ERROR_NO_AGGREGATION;
+
+    SimplePluginInstance* plugin = new SimplePluginInstance();
+    if (! plugin)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    nsresult rv;
+    NS_ADDREF(plugin);
+    rv = plugin->QueryInterface(aIID, aResult);
+    NS_RELEASE(plugin);
+    return rv;
+}
+
+NS_METHOD
+SimplePluginInstance::RegisterSelf(nsIComponentManager* aCompMgr,
+                                   nsIFile* aPath,
+                                   const char* aRegistryLocation,
+                                   const char* aComponentType)
+{
+    nsresult rv;
+
+    nsIPluginManager* pm;
+    rv = nsServiceManager::GetService(kPluginManagerCID, NS_GET_IID(nsIPluginManager),
+                                      NS_REINTERPRET_CAST(nsISupports**, &pm));
+    if (NS_SUCCEEDED(rv)) {
+        rv = pm->RegisterPlugin(kSimplePluginCID,
+                                kPluginName,
+                                kPluginDescription,
+                                kMimeTypes,
+                                kMimeDescriptions,
+                                kFileExtensions,
+                                kNumMimeTypes);
+
+        NS_RELEASE(pm);
+    }
+
+    return rv;
+}
+
+
+NS_METHOD
+SimplePluginInstance::UnregisterSelf(nsIComponentManager* aCompMgr,
+                                     nsIFile* aPath,
+                                     const char* aRegistryLocation)
+{
+    nsresult rv;
+
+    nsIPluginManager* pm;
+    rv = nsServiceManager::GetService(kPluginManagerCID, NS_GET_IID(nsIPluginManager),
+                                      NS_REINTERPRET_CAST(nsISupports**, &pm));
+    if (NS_SUCCEEDED(rv)) {
+        rv = pm->UnregisterPlugin(kSimplePluginCID);
+        NS_RELEASE(pm);
+    }
+
+    return rv;
+}
+
+
 SimplePluginInstance::SimplePluginInstance(void)
-    : fPeer(NULL), fWindow(NULL), fMode(nsPluginMode_Embedded), fText(NULL)
+    : fText(NULL), fPeer(NULL), fWindow(NULL), fMode(nsPluginMode_Embedded)
 {
     NS_INIT_REFCNT();
-    gPluginObjectCount++;
 
     static const char text[] = "Hello World!";
     fText = (char*) nsMemory::Clone(text, sizeof(text));
@@ -732,7 +453,6 @@ SimplePluginInstance::SimplePluginInstance(void)
 
 SimplePluginInstance::~SimplePluginInstance(void)
 {
-    gPluginObjectCount--;
     if(fText)
         nsMemory::Free(fText);
     PlatformDestroy(); // Perform platform specific cleanup
@@ -1033,7 +753,6 @@ SimplePluginStreamListener::SimplePluginStreamListener(SimplePluginInstance* ins
                                                        const char* msgName)
     : fMessageName(msgName)
 {
-    gPluginObjectCount++;
     NS_INIT_REFCNT();
     char msg[256];
     sprintf(msg, "### Creating SimplePluginStreamListener for %s\n", fMessageName);
@@ -1041,7 +760,6 @@ SimplePluginStreamListener::SimplePluginStreamListener(SimplePluginInstance* ins
 
 SimplePluginStreamListener::~SimplePluginStreamListener(void)
 {
-    gPluginObjectCount--;
     char msg[256];
     sprintf(msg, "### Destroying SimplePluginStreamListener for %s\n", fMessageName);
 }
@@ -1049,7 +767,7 @@ SimplePluginStreamListener::~SimplePluginStreamListener(void)
 // This macro produces a simple version of QueryInterface, AddRef and Release.
 // See the nsISupports.h header file for details.
 
-NS_IMPL_ISUPPORTS(SimplePluginStreamListener, kIPluginStreamListenerIID);
+NS_IMPL_ISUPPORTS1(SimplePluginStreamListener, nsIPluginStreamListener);
 
 NS_METHOD
 SimplePluginStreamListener::OnStartBinding(nsIPluginStreamInfo* pluginInfo)
@@ -1132,7 +850,7 @@ SimplePluginStreamListener::GetStreamType(nsPluginStreamType *result)
 }
 
 /*******************************************************************************
- * SECTION 5 - Utility Method Implementations
+ * SECTION 4 - Utility Method Implementations
  *******************************************************************************/
 
 /*------------------------------------------------------------------------------

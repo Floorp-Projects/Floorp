@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -44,6 +44,14 @@
 #include "nsIProgressEventSink.h"
 #include "nsIDocument.h"
 
+// Friggin' X11 has to "#define None". Lame!
+#ifdef None
+#undef None
+#endif
+
+#include "nsIRegistry.h"
+#include "nsEnumeratorUtils.h"
+
 // for the dialog
 #include "nsIStringBundle.h"
 #include "nsINetSupportDialogService.h"
@@ -73,25 +81,27 @@
 #include "nsSpecialSystemDirectory.h"
 #include "nsFileSpec.h"
 
+#include "nsPluginDocLoaderFactory.h"
 #include "nsIDocumentLoaderFactory.h"
-#include "nsLayoutCID.h"
 
 #ifdef XP_UNIX
 #include <gdk/gdkx.h> // for GDK_DISPLAY()
 #endif
 
+// We need this hackery so that we can dynamically register doc
+// loaders for the 4.x plugins that we discover.
 #if defined(XP_PC)
-#define LAYOUT_DLL "gkhtml.dll"
+#define PLUGIN_DLL "gkplugin.dll"
 #elif defined(XP_UNIX) || defined(XP_BEOS)
-#define LAYOUT_DLL "libgklayout"MOZ_DLL_SUFFIX
+#define PLUGIN_DLL "libgkplugin" MOZ_DLL_SUFFIX
 #elif defined(XP_MAC)
-#define LAYOUT_DLL "LAYOUT_DLL"
+#define PLUGIN_DLL "PLUGIN_DLL"
 #endif
 
 #ifdef XP_MAC
-#define REL_LAYOUT_DLL LAYOUT_DLL
+#define REL_PLUGIN_DLL PLUGIN_DLL
 #else
-#define REL_LAYOUT_DLL "rel:"LAYOUT_DLL
+#define REL_PLUGIN_DLL "rel:" PLUGIN_DLL
 #endif
 
 //uncomment this to use netlib to determine what the
@@ -118,12 +128,13 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_IID(kIFileUtilitiesIID, NS_IFILEUTILITIES_IID);
 static NS_DEFINE_IID(kIOutputStreamIID, NS_IOUTPUTSTREAM_IID);
 
+static NS_DEFINE_CID(kRegistryCID, NS_REGISTRY_CID);
+
 // for the dialog
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
-static NS_DEFINE_IID(kDocumentFactoryImplCID, NS_LAYOUT_DOCUMENT_LOADER_FACTORY_CID);
 
 #define PLUGIN_PROPERTIES_URL "chrome://global/locale/downloadProgress.properties"
 void DisplayNoDefaultPluginDialog(const char *mimeType);
@@ -434,9 +445,6 @@ nsPluginTag::nsPluginTag()
 	mNext = nsnull;
 	mName = nsnull;
 	mDescription = nsnull;
-	mMimeType = nsnull;
-	mMimeDescription = nsnull;
-	mExtensions = nsnull;
 	mVariants = 0;
 	mMimeTypeArray = nsnull;
 	mMimeDescriptionArray = nsnull;
@@ -447,7 +455,7 @@ nsPluginTag::nsPluginTag()
   mFileName = nsnull;
 }
 
-inline char* new_str(char* str)
+inline char* new_str(const char* str)
 {
   if(str == nsnull)
     return nsnull;
@@ -463,9 +471,6 @@ nsPluginTag::nsPluginTag(nsPluginTag* aPluginTag)
 	mNext = nsnull;
 	mName = new_str(aPluginTag->mName);
 	mDescription = new_str(aPluginTag->mDescription);
-	mMimeType = new_str(aPluginTag->mMimeType);
-	mMimeDescription = new_str(aPluginTag->mMimeDescription);
-	mExtensions = new_str(aPluginTag->mExtensions);
 	mVariants = aPluginTag->mVariants;
 
   mMimeTypeArray = nsnull;
@@ -504,9 +509,6 @@ nsPluginTag::nsPluginTag(nsPluginInfo* aPluginInfo)
 	mNext = nsnull;
   mName = new_str(aPluginInfo->fName);
 	mDescription = new_str(aPluginInfo->fDescription);
-	mMimeType = new_str(aPluginInfo->fMimeType);
-	mMimeDescription = new_str(aPluginInfo->fMimeDescription);
-	mExtensions = new_str(aPluginInfo->fExtensions);
 	mVariants = aPluginInfo->fVariantCount;
 
   mMimeTypeArray = nsnull;
@@ -541,6 +543,40 @@ nsPluginTag::nsPluginTag(nsPluginInfo* aPluginInfo)
 	mFlags = NS_PLUGIN_FLAG_ENABLED;
 }
 
+
+nsPluginTag::nsPluginTag(const char* aName,
+                         const char* aDescription,
+                         const char* aFileName,
+                         const char* const* aMimeTypes,
+                         const char* const* aMimeDescriptions,
+                         const char* const* aExtensions,
+                         PRInt32 aVariants)
+  : mNext(nsnull),
+    mVariants(aVariants),
+    mMimeTypeArray(nsnull),
+    mMimeDescriptionArray(nsnull),
+    mExtensionsArray(nsnull),
+    mLibrary(nsnull),
+    mEntryPoint(nsnull),
+    mFlags(0)
+{
+  mName            = new_str(aName);
+  mDescription     = new_str(aDescription);
+  mFileName        = new_str(aFileName);
+
+  if (mVariants) {
+    mMimeTypeArray        = new char*[mVariants];
+    mMimeDescriptionArray = new char*[mVariants];
+    mExtensionsArray      = new char*[mVariants];
+
+    for (PRInt32 i = 0; i < aVariants; ++i) {
+      mMimeTypeArray[i]        = new_str(aMimeTypes[i]);
+      mMimeDescriptionArray[i] = new_str(aMimeDescriptions[i]);
+      mExtensionsArray[i]      = new_str(aExtensions[i]);
+    }
+  }
+}
+
 nsPluginTag::~nsPluginTag()
 {
   NS_IF_RELEASE(mEntryPoint);
@@ -553,21 +589,6 @@ nsPluginTag::~nsPluginTag()
   if (nsnull != mDescription) {
     delete[] (mDescription);
     mDescription = nsnull;
-  }
-
-  if (nsnull != mMimeType) {
-    delete[] (mMimeType);
-    mMimeType = nsnull;
-  }
-
-  if (nsnull != mMimeDescription) {
-    delete[] (mMimeDescription);
-    mMimeDescription = nsnull;
-  }
-
-  if (nsnull != mExtensions) {
-    delete[] (mExtensions);
-    mExtensions = nsnull;
   }
 
   if (nsnull != mMimeTypeArray) {
@@ -1313,11 +1334,10 @@ nsPluginStreamListenerPeer::GetLoadGroup()
 
 /////////////////////////////////////////////////////////////////////////
 
-nsPluginHostImpl::nsPluginHostImpl(nsIServiceManager *serviceMgr)
+nsPluginHostImpl::nsPluginHostImpl()
 {
   NS_INIT_REFCNT();
   mPluginsLoaded = PR_FALSE;
-  mServiceMgr = serviceMgr;
 }
 
 nsPluginHostImpl::~nsPluginHostImpl()
@@ -1340,66 +1360,29 @@ printf("killing plugin host\n");
   }
 }
 
-NS_IMPL_ADDREF(nsPluginHostImpl)
-NS_IMPL_RELEASE(nsPluginHostImpl)
+NS_IMPL_ISUPPORTS5(nsPluginHostImpl,
+                   nsIPluginManager,
+                   nsIPluginManager2,
+                   nsIPluginHost,
+                   nsIFileUtilities,
+                   nsICookieStorage);
 
-nsresult nsPluginHostImpl::QueryInterface(const nsIID& aIID,
-                                            void** aInstancePtrResult)
+NS_METHOD
+nsPluginHostImpl::Create(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
+  NS_PRECONDITION(aOuter == nsnull, "no aggregation");
+  if (aOuter)
+    return NS_ERROR_NO_AGGREGATION;
 
-  if (nsnull == aInstancePtrResult)
-    return NS_ERROR_NULL_POINTER;
+  nsPluginHostImpl* host = new nsPluginHostImpl();
+  if (! host)
+    return NS_ERROR_OUT_OF_MEMORY;
 
-  if (aIID.Equals(nsIPluginManager::GetIID()))
-  {
-    *aInstancePtrResult = (void *)((nsIPluginManager *)this);
-    AddRef();
-    return NS_OK;
-  }
-
-  if (aIID.Equals(nsIPluginManager2::GetIID()))
-  {
-    *aInstancePtrResult = (void *)((nsIPluginManager2 *)this);
-    AddRef();
-    return NS_OK;
-  }
-
-  if (aIID.Equals(nsIPluginHost::GetIID()))
-  {
-    *aInstancePtrResult = (void *)((nsIPluginHost *)this);
-    AddRef();
-    return NS_OK;
-  }
-
-  if (aIID.Equals(nsIFactory::GetIID()))
-  {
-    *aInstancePtrResult = (void *)((nsIFactory *)this);
-    AddRef();
-    return NS_OK;
-  }
-
-  if (aIID.Equals(nsIFileUtilities::GetIID()))
-  {
-    *aInstancePtrResult = (void*)(nsIFileUtilities*)this;
-    AddRef();
-    return NS_OK;
-  }
-
-  if (aIID.Equals(nsICookieStorage::GetIID())) {
-    *aInstancePtrResult = (void*)(nsICookieStorage*)this;
-    AddRef();
-    return NS_OK;
-  }
-
-  if (aIID.Equals(kISupportsIID))
-  {
-    *aInstancePtrResult = (void *)((nsISupports *)((nsIPluginHost *)this));
-    AddRef();
-    return NS_OK;
-  }
-
-  return NS_NOINTERFACE;
+  nsresult rv;
+  NS_ADDREF(host);
+  rv = host->QueryInterface(aIID, aResult);
+  NS_RELEASE(host);
+  return rv;
 }
 
 NS_IMETHODIMP nsPluginHostImpl::GetValue(nsPluginManagerVariable aVariable, void *aValue)
@@ -1422,6 +1405,9 @@ NS_IMETHODIMP nsPluginHostImpl::GetValue(nsPluginManagerVariable aVariable, void
 
 nsresult nsPluginHostImpl::ReloadPlugins(PRBool reloadPages)
 {
+  // XXX don't we want to nuke the old mPlugins right now?
+  // XXX for new-style plugins, we should also call
+  //     nsIComponentManager::AutoRegister()
   mPluginsLoaded = PR_FALSE;
   return LoadPlugins();
 }
@@ -1573,6 +1559,73 @@ NS_IMETHODIMP nsPluginHostImpl::PostURL(nsISupports* pluginInst,
   }
 
   return rv;
+}
+
+NS_IMETHODIMP nsPluginHostImpl::RegisterPlugin(REFNSIID aCID,
+                                               const char* aPluginName,
+                                               const char* aDescription,
+                                               const char** aMimeTypes,
+                                               const char** aMimeDescriptions,
+                                               const char** aFileExtensions,
+                                               PRInt32 aCount)
+{
+  nsCOMPtr<nsIRegistry> registry = do_CreateInstance(kRegistryCID);
+  if (! registry)
+    return NS_ERROR_FAILURE;
+
+  nsresult rv;
+  rv = registry->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry);
+  if (NS_FAILED(rv)) return rv;
+
+  nsCAutoString path = "software/plugins/";
+  char* cid = aCID.ToString();
+  if (! cid)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  path += cid;
+  nsMemory::Free(cid);
+
+  nsRegistryKey pluginKey;
+  rv = registry->AddSubtree(nsIRegistry::Common, path, &pluginKey);
+  if (NS_FAILED(rv)) return rv;
+
+  registry->SetStringUTF8(pluginKey, "name", aPluginName);
+  registry->SetStringUTF8(pluginKey, "description", aDescription);
+
+  for (PRInt32 i = 0; i < aCount; ++i) {
+    nsCAutoString mimepath;
+    mimepath.AppendInt(i);
+
+    nsRegistryKey key;
+    registry->AddSubtree(pluginKey, mimepath, &key);
+
+    registry->SetStringUTF8(key, "mimetype",    aMimeTypes[i]);
+    registry->SetStringUTF8(key, "description", aMimeDescriptions[i]);
+    registry->SetStringUTF8(key, "extension",   aFileExtensions[i]);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsPluginHostImpl::UnregisterPlugin(REFNSIID aCID)
+{
+  nsCOMPtr<nsIRegistry> registry = do_CreateInstance(kRegistryCID);
+  if (! registry)
+    return NS_ERROR_FAILURE;
+
+  nsresult rv;
+  rv = registry->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry);
+  if (NS_FAILED(rv)) return rv;
+
+  nsCAutoString path = "software/plugins/";
+  char* cid = aCID.ToString();
+  if (! cid)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  path += cid;
+  nsMemory::Free(cid);
+
+  return registry->RemoveSubtree(nsIRegistry::Common, path);
 }
 
 NS_IMETHODIMP nsPluginHostImpl::BeginWaitCursor(void)
@@ -1729,6 +1782,20 @@ NS_IMETHODIMP nsPluginHostImpl::HasAllocatedMenuID(nsIEventHandler* handler, PRI
 NS_IMETHODIMP nsPluginHostImpl::ProcessNextEvent(PRBool *bEventHandled)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsPluginHostImpl::CreateInstance(nsISupports *aOuter,
+                                               REFNSIID aIID,
+                                               void **aResult)
+{
+  NS_NOTREACHED("how'd I get here?");
+  return NS_ERROR_UNEXPECTED;
+}
+
+NS_IMETHODIMP nsPluginHostImpl::LockFactory(PRBool aLock)
+{
+  NS_NOTREACHED("how'd I get here?");
+  return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP nsPluginHostImpl::Init(void)
@@ -2057,7 +2124,7 @@ void nsPluginHostImpl::AddInstanceToActiveList(nsIPluginInstance* aInstance,
 
 nsresult nsPluginHostImpl::RegisterPluginMimeTypesWithLayout(nsPluginTag * pluginTag, 
                                                              nsIComponentManager * compManager, 
-                                                             nsIFile * layoutPath)
+                                                             nsIFile * path)
 {
   NS_ENSURE_ARG_POINTER(pluginTag);
   NS_ENSURE_ARG_POINTER(pluginTag->mMimeTypeArray);
@@ -2067,10 +2134,17 @@ nsresult nsPluginHostImpl::RegisterPluginMimeTypesWithLayout(nsPluginTag * plugi
 
   for(int i = 0; i < pluginTag->mVariants; i++)
   {
-    char progid[512];
-    char * contentType = pluginTag->mMimeTypeArray[i];
-    PR_snprintf(progid, sizeof(progid), NS_DOCUMENT_LOADER_FACTORY_PROGID_PREFIX "%s/%s", "view", contentType);
-    rv = compManager->RegisterComponentSpec(kDocumentFactoryImplCID, "Layout", progid, layoutPath, PR_TRUE, PR_TRUE);
+    static NS_DEFINE_CID(kPluginDocLoaderFactoryCID, NS_PLUGINDOCLOADERFACTORY_CID);
+
+    nsCAutoString progid = NS_DOCUMENT_LOADER_FACTORY_PROGID_PREFIX "view/";
+    progid += pluginTag->mMimeTypeArray[i];
+
+    rv = compManager->RegisterComponentSpec(kPluginDocLoaderFactoryCID,
+                                            "Plugin Loader Stub",
+                                            progid,
+                                            path,
+                                            PR_TRUE,
+                                            PR_FALSE);
   }
 
   return rv;
@@ -2557,12 +2631,17 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
 		nsIPlugin* plugin = pluginTag->mEntryPoint;
 		if(plugin == NULL)
 		{
+      // No, this is not a leak. GetGlobalServiceManager() doesn't
+      // addref the pointer on the way out. It probably should.
+      nsIServiceManager* serviceManager;
+      nsServiceManager::GetGlobalServiceManager(&serviceManager);
+
 			// need to get the plugin factory from this plugin.
 			nsFactoryProc nsGetFactory = nsnull;
 			nsGetFactory = (nsFactoryProc) PR_FindSymbol(pluginTag->mLibrary, "NSGetFactory");
 			if(nsGetFactory != nsnull)
 			{
-			    rv = nsGetFactory(mServiceMgr, kPluginCID, nsnull, nsnull,    // XXX fix ClassName/ProgID
+			    rv = nsGetFactory(serviceManager, kPluginCID, nsnull, nsnull,    // XXX fix ClassName/ProgID
                             (nsIFactory**)&pluginTag->mEntryPoint);
 			    plugin = pluginTag->mEntryPoint;
 			    if (plugin != NULL)
@@ -2570,10 +2649,10 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
 			}
 			else
 			{
-				rv = ns4xPlugin::CreatePlugin(mServiceMgr,
-                                              pluginTag->mFileName,
-                                              pluginTag->mLibrary,
-                                              &pluginTag->mEntryPoint);
+				rv = ns4xPlugin::CreatePlugin(serviceManager,
+                                      pluginTag->mFileName,
+                                      pluginTag->mLibrary,
+                                      &pluginTag->mEntryPoint);
 
 				plugin = pluginTag->mEntryPoint;
                 pluginTag->mFlags |= NS_PLUGIN_FLAG_OLDSCHOOL;
@@ -2597,16 +2676,17 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
 
 NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
 {
-  do {
-		// 1. scan the plugins directory (where is it?) for eligible plugin libraries.
-		nsPluginsDir pluginsDir;
-		if (! pluginsDir.Valid())
-			break;
-
     // retrieve a path for layout module. Needed for plugin mime types registration
     nsCOMPtr<nsIComponentManager> compManager = do_GetService(kComponentManagerCID);
     nsCOMPtr<nsIFile> path;
-    nsresult rvIsLayoutPath = compManager->SpecForRegistryLocation(REL_LAYOUT_DLL, getter_AddRefs(path));
+    nsresult rvIsLayoutPath = compManager->SpecForRegistryLocation(REL_PLUGIN_DLL, getter_AddRefs(path));
+
+    LoadXPCOMPlugins(compManager, path);
+
+		// 1. scan the plugins directory (where is it?) for eligible plugin libraries.
+		nsPluginsDir pluginsDir;
+		if (! pluginsDir.Valid())
+			return NS_ERROR_FAILURE;
 
     for (nsDirectoryIterator iter(pluginsDir, PR_TRUE); iter.Exists(); iter++) {
 			const nsFileSpec& file = iter;
@@ -2646,9 +2726,6 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
 
 		mPluginsLoaded = PR_TRUE;
 		return NS_OK;
-	} while (0);
-	
-	return NS_ERROR_FAILURE;
 }
 
 #else // go for new plugin finding logic on Windows
@@ -2714,6 +2791,13 @@ static PRBool isUnwantedPlugin(nsPluginTag * tag)
 
 NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
 {
+  // retrieve a path for layout module. Needed for plugin mime types registration
+  nsCOMPtr<nsIComponentManager> compManager = do_GetService(kComponentManagerCID);
+  nsCOMPtr<nsIFile> path;
+  nsresult rvIsLayoutPath = compManager->SpecForRegistryLocation(REL_PLUGIN_DLL, getter_AddRefs(path));
+
+  LoadXPCOMPlugins(compManager, path);
+
 // currently we decided to look in both local plugins dir and 
 // that of the previous 4.x installation combining plugins from both places.
 // See bug #21938
@@ -2725,11 +2809,6 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
 
   if(!pluginsDir4x.Valid() && !pluginsDirMoz.Valid())
   	return NS_ERROR_FAILURE;
-
-  // retrieve a path for layout module. Needed for plugin mime types registration
-  nsCOMPtr<nsIComponentManager> compManager = do_GetService(kComponentManagerCID);
-  nsCOMPtr<nsIFile> path;
-  nsresult rvIsLayoutPath = compManager->SpecForRegistryLocation(REL_LAYOUT_DLL, getter_AddRefs(path));
 
   // first, make a list from MOZ_LOCAL installation
   for (nsDirectoryIterator iter(pluginsDirMoz, PR_TRUE); iter.Exists(); iter++) 
@@ -2837,6 +2916,220 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
 	return NS_OK;
 }
 #endif // XP_WIN -- end new plugin finding logic
+
+
+static nsresult
+LoadXPCOMPlugin(nsIComponentManager* aComponentManager,
+                nsIRegistry* aRegistry,
+                const char* aCID,
+                nsRegistryKey aPluginKey,
+                nsPluginTag** aResult)
+{
+  nsresult rv;
+
+  // The name, description, MIME types, MIME descriptions, and
+  // supported file extensions will all hang off of the plugin's key
+  // in the registry. Pull these out now.
+  nsXPIDLCString name;
+  aRegistry->GetStringUTF8(aPluginKey, "name", getter_Copies(name));
+
+  nsXPIDLCString description;
+  aRegistry->GetStringUTF8(aPluginKey, "description", getter_Copies(description));
+
+  nsXPIDLCString filename;
+
+  // To figure out the filename of the plugin, we'll need to get the
+  // plugin's CID, and then navigate through the XPCOM registry to
+  // pull out the DLL name to which the CID is registered.
+  nsAutoString path = NS_LITERAL_STRING("software/mozilla/XPCOM/classID/");
+  path += NS_ConvertASCIItoUCS2(aCID);
+
+  nsRegistryKey cidKey;
+  rv = aRegistry->GetKey(nsIRegistry::Common, path.GetUnicode(), &cidKey);
+
+  if (NS_SUCCEEDED(rv)) {
+    PRUint8* library;
+    PRUint32 count;
+    // XXX Good grief, what does "GetBytesUTF8()" mean? They're bytes!
+    rv = aRegistry->GetBytesUTF8(cidKey, "InprocServer", &count, &library);
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsIFile> file;
+      rv = aComponentManager->SpecForRegistryLocation(NS_REINTERPRET_CAST(const char*, library),
+                                                      getter_AddRefs(file));
+
+      if (NS_SUCCEEDED(rv)) {
+        file->GetPath(getter_Copies(filename));
+      }
+
+      nsCRT::free(NS_REINTERPRET_CAST(char*, library));
+    }
+  }
+
+  nsCOMPtr<nsIEnumerator> enumerator;
+  rv = aRegistry->EnumerateAllSubtrees(aPluginKey, getter_AddRefs(enumerator));
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsISimpleEnumerator> subtrees;
+  rv = NS_NewAdapterEnumerator(getter_AddRefs(subtrees), enumerator);
+  if (NS_FAILED(rv)) return rv;
+
+  char** mimetypes = nsnull;
+  char** mimedescriptions = nsnull;
+  char** extensions = nsnull;
+  PRInt32 count = 0;
+  PRInt32 capacity = 0;
+
+  for (;;) {
+    PRBool hasmore;
+    subtrees->HasMoreElements(&hasmore);
+    if (! hasmore)
+      break;
+
+    nsCOMPtr<nsISupports> isupports;
+    subtrees->GetNext(getter_AddRefs(isupports));
+
+    nsCOMPtr<nsIRegistryNode> node = do_QueryInterface(isupports);
+    NS_ASSERTION(node != nsnull, "not an nsIRegistryNode");
+    if (! node)
+      continue;
+
+    nsRegistryKey key;
+    node->GetKey(&key);
+
+    if (count >= capacity) {
+      capacity += capacity ? capacity : 4;
+
+      char** newmimetypes        = new char*[capacity];
+      char** newmimedescriptions = new char*[capacity];
+      char** newextensions       = new char*[capacity];
+
+      if (!newmimetypes || !newmimedescriptions || !newextensions) {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+        delete[] newmimetypes;
+        delete[] newmimedescriptions;
+        delete[] newextensions;
+        break;
+      }
+
+      for (PRInt32 i = 0; i < count; ++i) {
+        newmimetypes[i]        = mimetypes[i];
+        newmimedescriptions[i] = mimedescriptions[i];
+        newextensions[i]       = extensions[i];
+      }
+
+      delete[] mimetypes;
+      delete[] mimedescriptions;
+      delete[] extensions;
+
+      mimetypes        = newmimetypes;
+      mimedescriptions = newmimedescriptions;
+      extensions       = newextensions;
+    }
+
+    aRegistry->GetStringUTF8(key, "mimetype",    &mimetypes[count]);
+    aRegistry->GetStringUTF8(key, "description", &mimedescriptions[count]);
+    aRegistry->GetStringUTF8(key, "extension",   &extensions[count]);
+    ++count;
+  }
+
+  if (NS_SUCCEEDED(rv)) {
+    // All done! Create the new nsPluginTag info and send it back.
+    nsPluginTag* tag
+      = new nsPluginTag(name,
+                        description,
+                        filename,
+                        mimetypes,
+                        mimedescriptions,
+                        extensions,
+                        count);
+
+    if (! tag)
+      rv = NS_ERROR_OUT_OF_MEMORY;
+
+    *aResult = tag;
+  }
+
+  for (PRInt32 i = 0; i < count; ++i) {
+    CRTFREEIF(mimetypes[i]);
+    CRTFREEIF(mimedescriptions[i]);
+    CRTFREEIF(extensions[i]);
+  }
+
+  delete[] mimetypes;
+  delete[] mimedescriptions;
+  delete[] extensions;
+
+  return rv;
+}
+
+nsresult
+nsPluginHostImpl::LoadXPCOMPlugins(nsIComponentManager* aComponentManager, nsIFile* aPath)
+{
+  // The "new style" XPCOM plugins have their information stored in
+  // the component registry, under the key
+  //
+  //   nsIRegistry::Common/software/plugins
+  //
+  // Enumerate through that list now, creating an nsPluginTag for
+  // each.
+  nsCOMPtr<nsIRegistry> registry = do_CreateInstance(kRegistryCID);
+  if (! registry)
+    return NS_ERROR_FAILURE;
+
+  nsresult rv;
+  rv = registry->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry);
+  if (NS_FAILED(rv)) return rv;
+  
+  nsRegistryKey pluginsKey;
+  rv = registry->GetSubtree(nsIRegistry::Common, "software/plugins", &pluginsKey);
+  if (NS_FAILED(rv)) return rv;
+
+  // XXX get rid nsIEnumerator someday!
+  nsCOMPtr<nsIEnumerator> enumerator;
+  rv = registry->EnumerateSubtrees(pluginsKey, getter_AddRefs(enumerator));
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsISimpleEnumerator> plugins;
+  rv = NS_NewAdapterEnumerator(getter_AddRefs(plugins), enumerator);
+  if (NS_FAILED(rv)) return rv;
+
+  for (;;) {
+    PRBool hasMore;
+    plugins->HasMoreElements(&hasMore);
+    if (! hasMore)
+      break;
+
+    nsCOMPtr<nsISupports> isupports;
+    plugins->GetNext(getter_AddRefs(isupports));
+
+    nsCOMPtr<nsIRegistryNode> node = do_QueryInterface(isupports);
+    NS_ASSERTION(node != nsnull, "not an nsIRegistryNode");
+    if (! node)
+      continue;
+
+    // Pull out the information for an individual plugin, and link it
+    // in to the mPlugins list.
+    nsXPIDLCString cid;
+    node->GetNameUTF8(getter_Copies(cid));
+
+    nsRegistryKey key;
+    node->GetKey(&key);
+
+    nsPluginTag* tag;
+    rv = LoadXPCOMPlugin(aComponentManager, registry, cid, key, &tag);
+    if (NS_FAILED(rv))
+      continue;
+
+    tag->mNext = mPlugins;
+    mPlugins = tag;
+
+    // Create an nsIDocumentLoaderFactory wrapper in case we ever see
+    // any naked streams.
+    RegisterPluginMimeTypesWithLayout(tag, aComponentManager, aPath);
+  }
+
+  return NS_OK;
+}
 
 /* Called by GetURL and PostURL */
 
@@ -3000,37 +3293,6 @@ nsresult nsPluginHostImpl::NewFullPagePluginStream(nsIStreamListener *&aStreamLi
   NS_IF_ADDREF(listener);
 
   return rv;
-}
-
-// nsIFactory interface
-
-nsresult nsPluginHostImpl::CreateInstance(nsISupports *aOuter,  
-                                            const nsIID &aIID,  
-                                            void **aResult)  
-{  
-  if (aResult == NULL)
-    return NS_ERROR_NULL_POINTER;  
-
-  nsISupports *inst = nsnull;
-
-  if (inst == NULL)
-    return NS_ERROR_OUT_OF_MEMORY;  
-
-  // XXX Doh, we never get here... what is going on???
-
-  NS_ADDREF(inst);  // Stabilize
-  
-  nsresult res = inst->QueryInterface(aIID, aResult);
-
-  NS_RELEASE(inst); // Destabilize and avoid leaks. Avoid calling delete <interface pointer>  
-
-  return res;  
-}  
-
-nsresult nsPluginHostImpl::LockFactory(PRBool aLock)  
-{  
-  // Not implemented in simplest case.  
-  return NS_OK;
 }
 
 // nsIFileUtilities interface

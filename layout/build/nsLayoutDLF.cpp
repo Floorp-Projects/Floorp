@@ -33,7 +33,6 @@
 #include "prprf.h"
 #include "nsNetUtil.h"
 #include "nsICSSLoader.h"
-#include "nsIPluginHost.h"
 
 #include "nsRDFCID.h"
 #include "nsIRDFResource.h"
@@ -55,7 +54,6 @@ static NS_DEFINE_IID(kHTMLDocumentCID, NS_HTMLDOCUMENT_CID);
 static NS_DEFINE_IID(kXMLDocumentCID, NS_XMLDOCUMENT_CID);
 static NS_DEFINE_IID(kImageDocumentCID, NS_IMAGEDOCUMENT_CID);
 static NS_DEFINE_IID(kXULDocumentCID, NS_XULDOCUMENT_CID);
-static NS_DEFINE_IID(kCPluginManagerCID, NS_PLUGINMANAGER_CID);
 
 extern nsresult NS_NewDocumentViewer(nsIDocumentViewer** aResult);
 
@@ -91,11 +89,6 @@ static char* gImageTypes[] = {
   "image/x-jg",
   0
 };
-
-extern nsresult
-NS_NewPluginContentViewer(const char* aCommand,
-                          nsIStreamListener** aDocListener,
-                          nsIContentViewer** aDocViewer);
 
 class nsLayoutDLF : public nsIDocumentLoaderFactory,
                     public nsIDocStreamLoaderFactory
@@ -305,17 +298,8 @@ nsLayoutDLF::CreateInstance(const char *aCommand,
     }
   }
 
-  // Try plugin types
-  nsCOMPtr<nsIPluginHost> pluginHost = do_GetService(kCPluginManagerCID);
-  if(pluginHost)
-  {
-    if(pluginHost->IsPluginEnabledForType(aContentType) == NS_OK)
-      return NS_NewPluginContentViewer(aCommand, aDocListener, aDocViewer);
-    else
-      return NS_ERROR_FAILURE;
-  }
-
-  return rv;
+  // If we get here, then we weren't able to create anything. Sorry!
+  return NS_ERROR_FAILURE;
 }
 
 

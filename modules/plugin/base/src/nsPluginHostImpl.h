@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -35,22 +35,34 @@
 
 class ns4xPlugin;
 class nsFileSpec;
-class nsIServiceManager;
+class nsIComponentManager;
+class nsIFile;
 
+/**
+ * A linked-list of plugin information that is used for
+ * instantiating plugins and reflecting plugin information
+ * into JavaScript.
+ */
 class nsPluginTag
 {
 public:
   nsPluginTag();
   nsPluginTag(nsPluginTag* aPluginTag);
   nsPluginTag(nsPluginInfo* aPluginInfo);
+
+  nsPluginTag(const char* aName,
+              const char* aDescription,
+              const char* aFileName,
+              const char* const* aMimeTypes,
+              const char* const* aMimeDescriptions,
+              const char* const* aExtensions,
+              PRInt32 aVariants);
+
   ~nsPluginTag();
 
   nsPluginTag   *mNext;
   char          *mName;
   char          *mDescription;
-  char          *mMimeType;
-  char          *mMimeDescription;
-  char          *mExtensions;
   PRInt32       mVariants;
   char          **mMimeTypeArray;
   char          **mMimeDescriptionArray;
@@ -106,8 +118,11 @@ class nsPluginHostImpl : public nsIPluginManager2,
                          public nsICookieStorage
 {
 public:
-  nsPluginHostImpl(nsIServiceManager *serviceMgr);
+  nsPluginHostImpl();
   virtual ~nsPluginHostImpl();
+
+  static NS_METHOD
+  Create(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
@@ -147,6 +162,18 @@ public:
             PRUint32 postHeadersLength = 0, 
             const char* postHeaders = NULL);
 
+  NS_IMETHOD
+  RegisterPlugin(REFNSIID aCID,
+                 const char* aPluginName,
+                 const char* aDescription,
+                 const char** aMimeTypes,
+                 const char** aMimeDescriptions,
+                 const char** aFileExtensions,
+                 PRInt32 aCount);
+
+  NS_IMETHOD
+  UnregisterPlugin(REFNSIID aCID);
+
   //nsIPluginHost interface - used to communicate to the nsPluginInstanceOwner
 
   NS_IMETHOD
@@ -157,7 +184,7 @@ public:
 
   NS_IMETHOD
   LoadPlugins(void);
-  
+
   NS_IMETHOD
   GetPluginFactory(const char *aMimeType, nsIPlugin** aPlugin);
 
@@ -217,8 +244,8 @@ public:
   NS_IMETHOD
   ProcessNextEvent(PRBool *bEventHandled);
 
-  //nsIFactory interface - used to create new Plugin instances
-
+  // nsIFactory interface, from nsIPlugin.
+  // XXX not currently used?
   NS_IMETHOD CreateInstance(nsISupports *aOuter,
                             REFNSIID aIID,
                             void **aResult);
@@ -264,6 +291,9 @@ public:
 
 private:
 
+  nsresult
+  LoadXPCOMPlugins(nsIComponentManager* aComponentManager, nsIFile* aPath);
+
   /* Called by InstantiatePlugin */
 
   nsresult
@@ -289,7 +319,6 @@ private:
   char        *mPluginPath;
   nsPluginTag *mPlugins;
   PRBool      mPluginsLoaded;
-  nsIServiceManager *mServiceMgr;
 
   nsActivePluginList mActivePluginList;
 };
