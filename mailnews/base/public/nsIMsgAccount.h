@@ -1,0 +1,62 @@
+/*
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM nsIMsgAccount.idl
+ */
+
+#ifndef __gen_nsIMsgAccount_h__
+#define __gen_nsIMsgAccount_h__
+
+#include "nsISupports.h" /* interface nsISupports */
+#include "nsIMsgIncomingServer.h" /* interface nsIMsgIncomingServer */
+#include "nsIMsgSignature.h" /* interface nsIMsgSignature */
+#include "nsIMsgIdentity.h" /* interface nsIMsgIdentity */
+#include "nsIMsgVCard.h" /* interface nsIMsgVCard */
+#include "nsIPref.h" /* interface nsIPref */
+#include "nsIEnumerator.h" /* interface nsIEnumerator */
+#include "nsID.h" /* interface nsID */
+
+#ifdef XPIDL_JS_STUBS
+#include "jsapi.h"
+#endif
+
+/* starting interface:    nsIMsgAccount */
+
+/* {da368bd0-e624-11d2-b7fc-00805f05ffa5} */
+#define NS_IMSGACCOUNT_IID_STR "da368bd0-e624-11d2-b7fc-00805f05ffa5"
+#define NS_IMSGACCOUNT_IID \
+  {0xda368bd0, 0xe624, 0x11d2, \
+    { 0xb7, 0xfc, 0x00, 0x80, 0x5f, 0x05, 0xff, 0xa5 }}
+
+class nsIMsgAccount : public nsISupports {
+ public: 
+  static const nsIID& GetIID() {
+    static nsIID iid = NS_IMSGACCOUNT_IID;
+    return iid;
+  }
+
+  /* attribute nsIMsgIncomingServer incomingServer; */
+  NS_IMETHOD GetIncomingServer(nsIMsgIncomingServer * *aIncomingServer) = 0;
+  NS_IMETHOD SetIncomingServer(nsIMsgIncomingServer * aIncomingServer) = 0;
+
+  /* nsIEnumerator getIdentities (); */
+  NS_IMETHOD getIdentities(nsIEnumerator **_retval) = 0;
+
+  /* attribute nsIMsgIdentity defaultIdentity; */
+  NS_IMETHOD GetDefaultIdentity(nsIMsgIdentity * *aDefaultIdentity) = 0;
+  NS_IMETHOD SetDefaultIdentity(nsIMsgIdentity * aDefaultIdentity) = 0;
+
+  /* void addIdentity (in nsIMsgIdentity identity); */
+  NS_IMETHOD addIdentity(nsIMsgIdentity *identity) = 0;
+
+  /* void removeIdentity (in nsIMsgIdentity identity); */
+  NS_IMETHOD removeIdentity(nsIMsgIdentity *identity) = 0;
+
+  /* void LoadPreferences (in nsIPref prefs, in string accountKey); */
+  NS_IMETHOD LoadPreferences(nsIPref *prefs, const char *accountKey) = 0;
+
+#ifdef XPIDL_JS_STUBS
+  static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
+  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIMsgAccount *priv);
+#endif
+};
+
+#endif /* __gen_nsIMsgAccount_h__ */

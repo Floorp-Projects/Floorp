@@ -1,0 +1,56 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+#include "nsISupports.idl"
+#include "nsIMsgAccount.idl"
+#include "nsIMsgIdentity.idl"
+#include "nsIMsgIncomingServer.idl"
+
+[object, uuid(6ed2cc00-e623-11d2-b7fc-00805f05ffa5)]
+interface nsIMsgAccountManager : nsISupports {
+
+  /* createAccount creates a new account and assigns a new accountKey */
+  nsIMsgAccount createAccount(in nsIMsgIncomingServer server,
+                              in nsIMsgIdentity identity);
+
+  /* similar to createAccount, but we already know the account key */
+  nsIMsgAccount createAccountWithKey(in nsIMsgIncomingServer server,
+                                     in nsIMsgIdentity identity,
+                                     in string accountKey);
+
+  void addAccount(in nsIMsgAccount account, in string accountKey);
+
+  /* account list stuff */
+
+  /* defaultAccount should always be set if there are any accounts
+   * in the account manager. You can only set the defaultAccount to an
+   * account already in the account manager */
+  attribute nsIMsgAccount defaultAccount;
+  nsIEnumerator getAccounts();
+
+  /* Each account will have a unique key, which should not change
+   * for the life of the account. */
+  string getAccountKey(in nsIMsgAccount account);
+
+  /* utility routines to enumerate elements in all accounts */
+  nsIEnumerator getAllIdentities();
+  nsIEnumerator getAllServers();
+
+  void LoadAccounts();
+};
+
