@@ -664,24 +664,22 @@ if ($c) {
 }
 
 Status("Checking for bugs with groups violating their product's group controls");
-BugCheck("bugs, groups, bug_group_map
-         LEFT JOIN group_control_map
-         ON group_control_map.product_id = bugs.product_id
-         AND group_control_map.group_id = bug_group_map.group_id
-         WHERE bugs.bug_id = bug_group_map.bug_id
-         AND bug_group_map.group_id = groups.id
-         AND groups.isactive != 0
+BugCheck("bugs
+         INNER JOIN bug_group_map ON bugs.bug_id = bug_group_map.bug_id
+         INNER JOIN groups ON bug_group_map.group_id = groups.id
+         LEFT JOIN group_control_map ON bugs.product_id = group_control_map.product_id
+                                     AND bug_group_map.group_id = group_control_map.group_id
+         WHERE groups.isactive != 0
          AND ((group_control_map.membercontrol = " . CONTROLMAPNA . ")
          OR (group_control_map.membercontrol IS NULL))",
          "Have groups not permitted for their products");
 
-BugCheck("bugs, groups, group_control_map
-         LEFT JOIN bug_group_map
-         ON group_control_map.group_id = bug_group_map.group_id
-         AND bugs.bug_id = bug_group_map.bug_id
-         WHERE group_control_map.product_id = bugs.product_id
-         AND bug_group_map.group_id = groups.id
-         AND groups.isactive != 0
+BugCheck("bugs
+         INNER JOIN bug_group_map ON bugs.bug_id = bug_group_map.bug_id
+         INNER JOIN groups ON bug_group_map.group_id = groups.id
+         LEFT JOIN group_control_map ON bugs.product_id = group_control_map.product_id
+                                     AND bug_group_map.group_id = group_control_map.group_id
+         WHERE groups.isactive != 0
          AND group_control_map.membercontrol = " . CONTROLMAPMANDATORY . "
          AND bug_group_map.group_id IS NULL",
          "Are missing groups required for their products");
