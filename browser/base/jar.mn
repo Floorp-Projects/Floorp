@@ -1,7 +1,7 @@
 browser.jar:
         content/browser/contents.rdf                  (content/contents.rdf)
-        content/browser/browser.xul                   (content/browser.xul)
-        content/browser/browser.js                    (content/browser.js)
+*       content/browser/browser.xul                   (content/browser.xul)
+*       content/browser/browser.js                    (content/browser.js)
         content/browser/browser.css                   (content/browser.css)
         content/browser/utilityOverlay.js             (content/utilityOverlay.js)
         content/browser/about.gif                     (content/about.gif)
@@ -60,7 +60,7 @@ classic.jar:
 
 en-US.jar:
         locale/en-US/browser/contents.rdf             (locale/contents.rdf)
-        locale/en-US/browser/browser.dtd              (locale/browser.dtd)
+*       locale/en-US/browser/browser.dtd              (locale/browser.dtd)
         locale/en-US/browser/browser.properties       (locale/browser.properties)
         locale/en-US/browser/aboutDialog.dtd          (locale/aboutDialog.dtd)
         locale/en-US/browser/viewSource.dtd           (locale/viewSource.dtd)
