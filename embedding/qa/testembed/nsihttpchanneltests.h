@@ -36,7 +36,9 @@ public:
 	void GetRedirectionLimitTest(nsIHttpChannel *, PRInt16);
 
 	// response methods
+	void CallResponseTests(nsIHttpChannel *, PRInt16);
 	void GetResponseStatusTest(nsIHttpChannel *, PRInt16);
+	void GetResponseStatusTextTest(nsIHttpChannel *, PRInt16);
 
 public:
 
