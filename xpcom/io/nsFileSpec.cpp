@@ -902,12 +902,14 @@ void nsFileSpec::MakeUnique()
         return;
 
     char* lastDot = strrchr(leafName, '.');
-    char* suffix = "";
+    char* suffix;
     if (lastDot)
     {
         suffix = nsCRT::strdup(lastDot); // include '.'
         *lastDot = '\0'; // strip suffix and dot.
     }
+    else
+        suffix = nsCRT::strdup("");
     const int kMaxRootLength
         = nsFileSpecHelpers::kMaxCoreLeafNameLength - strlen(suffix) - 1;
     if ((int)strlen(leafName) > (int)kMaxRootLength)
@@ -919,8 +921,7 @@ void nsFileSpec::MakeUnique()
         sprintf(newName, "%s-%d%s", leafName, indx, suffix);
         SetLeafName(newName);
     }
-    if (*suffix)
-        nsCRT::free(suffix);
+    nsCRT::free(suffix);
     nsCRT::free(leafName);
 } // nsFileSpec::MakeUnique
 
