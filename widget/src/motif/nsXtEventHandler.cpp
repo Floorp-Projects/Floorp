@@ -46,15 +46,16 @@ struct nsKeyConverter nsKeycodes[] = {
   NS_VK_CLEAR,      XK_Clear,
   NS_VK_RETURN,     XK_Return,
   NS_VK_SHIFT,      XK_Shift_Lock,      
-//  NS_VK_CONTROL,    XK_Control,
+  NS_VK_CONTROL,    XK_Control_L,
+  NS_VK_CONTROL,    XK_Control_R,
   NS_VK_ALT,        XK_Alt_L,
   NS_VK_ALT,        XK_Alt_R,
   NS_VK_PAUSE,      XK_Pause,
   NS_VK_CAPS_LOCK,  XK_Caps_Lock,
   NS_VK_ESCAPE,     XK_Escape,
   NS_VK_SPACE,      XK_space,
-//  NS_VK_PAGE_UP,   XK_PageUp,
-//  NS_VK_PAGE_DOWN, XK_PageDown,
+  NS_VK_PAGE_UP,    XK_Page_Up,
+  NS_VK_PAGE_DOWN,  XK_Page_Down,
   NS_VK_END,        XK_End,
   NS_VK_HOME,       XK_Home,
   NS_VK_LEFT,       XK_Left,
@@ -122,8 +123,9 @@ int nsConvertKey(XID keysym)
 {
  int i;
  int length = sizeof(nsKeycodes) / sizeof(struct nsKeyConverter);
+ XID maskKey = keysym & 0x0000FFFF;
  for (i = 0; i < length; i++) {
-   if (keysym == nsKeycodes[i].keysym)
+   if (nsKeycodes[i].keysym == maskKey)
      return(nsKeycodes[i].vkCode);
  }
 
@@ -617,13 +619,19 @@ void nsXtWidget_InitNSKeyEvent(int aEventType, nsKeyEvent& aKeyEvent, Widget w, 
   nsXtWidget_InitNSEvent(event, p, aKeyEvent, aEventType);
 
   XKeyEvent* xKeyEvent =  (XKeyEvent*)event; 
-  XtTranslateKeycode(xKeyEvent->display,xKeyEvent->keycode, xKeyEvent->state, &modout, &res);
+
+// Tried  XtTranslateKeycode(xKeyEvent->display,xKeyEvent->keycode, 
+// xKeyEvent->state, &modout, &res);
+// instead of XkeycodeToKeysym, but it doesn't work.
+
+  res = XKeycodeToKeysym(xKeyEvent->display, xKeyEvent->keycode, 0);
+
   aKeyEvent.keyCode   = nsConvertKey(res);
   aKeyEvent.time      = xKeyEvent->time; 
   aKeyEvent.isShift   = modout & ShiftMask; 
   aKeyEvent.isControl = modout & ControlMask;
   aKeyEvent.isAlt     = PR_FALSE; // Fix later
-// printf("KEY Event type %d %d shift %d control %d \n", aEventType == NS_KEY_DOWN, aKeyEvent.keyCode, aKeyEvent.isShift, aKeyEvent.isControl);
+ printf("KEY Event type %d %d shift %d control %d \n", aEventType == NS_KEY_DOWN, aKeyEvent.keyCode, aKeyEvent.isShift, aKeyEvent.isControl);
 }
 
 void nsXtWidget_KeyPressMask_EventHandler(Widget w, XtPointer p, XEvent * event, Boolean * b)
