@@ -134,12 +134,6 @@ interface nsIXULTreeBuilderObserver : nsISupports
      */
     boolean isEditable(in long row, in wstring colID);
 
-    /**
-     * API that allows an image to be specified by the observer (e.g., bookmarks wanting
-     * to supply site icons. 
-     */
-    AString getImageSource(in long row, in wstring colID);
-
     /** 
      * onSetCellText is called when the contents of the cell have been edited by the user.
      */
