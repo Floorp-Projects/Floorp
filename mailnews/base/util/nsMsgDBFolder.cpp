@@ -237,7 +237,7 @@ NS_IMETHODIMP nsMsgDBFolder::OnKeyChange(nsMsgKey aKeyChanged, PRUint32 aOldFlag
 {
 	nsCOMPtr<nsIMsgDBHdr> pMsgDBHdr;
 	nsresult rv = mDatabase->GetMsgHdrForKey(aKeyChanged, getter_AddRefs(pMsgDBHdr));
-	if(NS_SUCCEEDED(rv))
+	if(NS_SUCCEEDED(rv) && pMsgDBHdr)
 	{
 		nsCOMPtr<nsIMessage> message;
 		rv = CreateMessageFromMsgDBHdr(pMsgDBHdr, getter_AddRefs(message));
@@ -259,7 +259,7 @@ NS_IMETHODIMP nsMsgDBFolder::OnKeyDeleted(nsMsgKey aKeyChanged, PRInt32 aFlags,
 {
 	nsCOMPtr<nsIMsgDBHdr> pMsgDBHdr;
 	nsresult rv = mDatabase->GetMsgHdrForKey(aKeyChanged, getter_AddRefs(pMsgDBHdr));
-	if(NS_SUCCEEDED(rv))
+	if(NS_SUCCEEDED(rv) && pMsgDBHdr)
 	{
 		nsCOMPtr<nsIMessage> message;
 		rv = CreateMessageFromMsgDBHdr(pMsgDBHdr, getter_AddRefs(message));
@@ -283,7 +283,7 @@ NS_IMETHODIMP nsMsgDBFolder::OnKeyAdded(nsMsgKey aKeyChanged, PRInt32 aFlags,
 	nsresult rv;
 	nsCOMPtr<nsIMsgDBHdr> msgDBHdr;
 	rv = mDatabase->GetMsgHdrForKey(aKeyChanged, getter_AddRefs(msgDBHdr));
-	if(NS_SUCCEEDED(rv))
+	if(NS_SUCCEEDED(rv) && msgDBHdr)
 	{
 		nsCOMPtr<nsIMessage> message;
 		rv = CreateMessageFromMsgDBHdr(msgDBHdr, getter_AddRefs(message));
