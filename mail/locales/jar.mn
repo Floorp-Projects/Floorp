@@ -1,6 +1,7 @@
 #filter substitution
 
 @AB_CD@.jar:
++ locale/@AB_CD@/messenger/AccountWizard.dtd               (@AB_CD@/chrome/messenger/AccountWizard.dtd)
 + locale/@AB_CD@/messenger/start.html                      (@AB_CD@/chrome/messenger/start.html)
 * locale/@AB_CD@/messenger/credits.html                    (@AB_CD@/chrome/messenger/credits.html)
   locale/@AB_CD@/messenger/thunderbird-watermark.png       (@AB_CD@/chrome/messenger/thunderbird-watermark.png)
