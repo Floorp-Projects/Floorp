@@ -1771,9 +1771,9 @@ function EditorSetDefaultPrefsAndDoctype()
 
   var newDoc = window.editorShell.editorDocument.location == "about:blank";
 
-  // Insert a doctype element for a new doc or 
+  // Insert a doctype element 
   // if it is missing from existing doc
-  var needDoctype = newDoc ? true : !domdoc.doctype;
+  var needDoctype = !domdoc.doctype;
   if ( needDoctype )
   {
     var newdoctype = domdoc.implementation.createDocumentType("html", "-//W3C//DTD HTML 4.01 Transitional//EN","");
@@ -2044,22 +2044,6 @@ function onStyleChange(theStyle)
   if (theMenuItem)
   {
     theMenuItem.setAttribute("checked", isOn);
-  }
-}
-
-/* onDirtyChange() is not called */
-function onDirtyChange()
-{
-  // this should happen through style, but that doesn't seem to work.
-  var theButton = document.getElementById("saveButton");
-  if (theButton)
-  {
-    var isDirty = theButton.getAttribute("dirty");
-    if (isDirty == "true") {
-      theButton.setAttribute("src", "chrome://editor/skin/images/savemod.gif");
-    } else {
-      theButton.setAttribute("src", "chrome://editor/skin/images/savefile.gif");
-    }
   }
 }
 
