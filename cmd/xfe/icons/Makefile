@@ -153,15 +153,15 @@ MKICONS_LIB	= \
 			$(DIST)/lib/libxp.a \
 			$(DIST)/lib/libplc21.a \
 			$(DIST)/lib/libxpcom.a \
-			$(XFE_PNG_LIB) \
-			$(XFE_ZLIB_LIB) \
-			$(XFE_JPEG_LIB) \
+			$(XFE_MKICONS_PNG_LIB) \
+			$(XFE_MKICONS_ZLIB_LIB) \
+			$(XFE_MKICONS_JPEG_LIB) \
 			$(NULL)
 
 MKICONS_DSOS = \
-			$(XFE_JPEG_DSO) \
-			$(XFE_PNG_DSO) \
-			$(XFE_ZLIB_DSO) \
+			$(XFE_MKICONS_JPEG_DSO) \
+			$(XFE_MKICONS_PNG_DSO) \
+			$(XFE_MKICONS_ZLIB_DSO) \
 			$(NULL)
 
 GARBAGE		+= $(MKICONS_EXE) \

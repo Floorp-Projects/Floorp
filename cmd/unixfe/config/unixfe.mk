@@ -51,16 +51,18 @@
 # MOZ_NATIVE_JPEG can be set to make Mozilla build using a 'native' libjpeg
 # as found in platforms such as Linux and IRIX.
 #
-# Only one of the following gets set:
+# Only one of the following gets set for linking the xfe:
 #
 # XFE_JPEG_LIB
 # XFE_JPEG_DSO
 #
-# The following get set if required jpeg lib is not native, but its
-# dynamic:
+# Only one of the following gets set for linking mkicons.
 #
-# XFE_JPEG_REQUIRES
-# XFE_MKICONS_BIN_LDPATH
+# XFE_MKICONS_JPEG_LIB
+# XFE_MKICONS_JPEG_DSO
+#
+# We dont want to link mkicons dynamically against jpeg if we dont have to.
+# It breaks on many platforms.
 #
 ##########################################################################
 ifdef MOZ_NATIVE_JPEG
@@ -68,14 +70,16 @@ ifdef MOZ_NATIVE_JPEG
 XFE_JPEG_LIB				=
 XFE_JPEG_DSO				= -ljpeg
 XFE_JPEG_REQUIRES			=
-XFE_MKICONS_BIN_LDPATH		=
+XFE_MKICONS_JPEG_LIB		=
+XFE_MKICONS_JPEG_DSO		= -ljpeg
 
 else
 
 XFE_JPEG_LIB				= $(DIST)/lib/libjpeg.a
 XFE_JPEG_DSO				= 
 XFE_JPEG_REQUIRES			= jpeg
-XFE_MKICONS_BIN_LDPATH		= -L$(DIST)/bin
+XFE_MKICONS_JPEG_LIB		= $(DIST)/lib/libjpeg.a
+XFE_MKICONS_JPEG_DSO		=
 
 endif
 ##########################################################################
@@ -91,16 +95,18 @@ endif
 # MOZ_NATIVE_PNG can be set to make Mozilla build using a 'native' libpng
 # as found in platforms such as Linux and IRIX.
 #
-# Only one of the following gets set:
+# Only one of the following gets set for linking the xfe:
 #
 # XFE_PNG_LIB
 # XFE_PNG_DSO
 #
-# The following get set if required png lib is not native, but its
-# dynamic:
+# Only one of the following gets set for linking mkicons.
 #
-# XFE_PNG_REQUIRES
-# XFE_MKICONS_BIN_LDPATH
+# XFE_MKICONS_PNG_LIB
+# XFE_MKICONS_PNG_DSO
+#
+# We dont want to link mkicons dynamically against png if we dont have to.
+# It breaks on many platforms.
 #
 ##########################################################################
 ifdef MOZ_NATIVE_PNG
@@ -108,14 +114,16 @@ ifdef MOZ_NATIVE_PNG
 XFE_PNG_LIB					=
 XFE_PNG_DSO					= -lpng
 XFE_PNG_REQUIRES			=
-XFE_MKICONS_BIN_LDPATH		=
+XFE_MKICONS_PNG_LIB			=
+XFE_MKICONS_PNG_DSO			= -lpng
 
 else
 
 XFE_PNG_LIB					= $(DIST)/lib/libpng.a
 XFE_PNG_DSO					= 
 XFE_PNG_REQUIRES			= png
-XFE_MKICONS_BIN_LDPATH		= -L$(DIST)/bin
+XFE_MKICONS_PNG_LIB			= $(DIST)/lib/libpng.a
+XFE_MKICONS_PNG_DSO			=
 
 endif
 ##########################################################################
@@ -138,16 +146,19 @@ endif
 # The FULL_STATIC_BUILD force the final Mozilla binary to be as fully
 # staitc as possible - which includes zlib.
 #
-# Only one of the following gets set:
+# Only one of the following gets set for linking the xfe:
 #
 # XFE_ZLIB_LIB
 # XFE_ZLIB_DSO
 #
-# The following get set if required zlib lib is not native, but its
-# dynamic:
+# Only one of the following gets set for linking mkicons.
 #
-# XFE_ZLIB_REQUIRES
-# XFE_MKICONS_BIN_LDPATH
+# XFE_MKICONS_ZLIB_LIB
+# XFE_MKICONS_ZLIB_DSO
+#
+# We dont want to link mkicons dynamically against zlib if we dont have to.
+# It breaks on many platforms.
+#
 #
 ##########################################################################
 ifdef MOZ_NATIVE_ZLIB
@@ -155,7 +166,8 @@ ifdef MOZ_NATIVE_ZLIB
 XFE_ZLIB_LIB				=
 XFE_ZLIB_DSO				= -lz
 XFE_ZLIB_REQUIRES			=
-XFE_MKICONS_BIN_LDPATH		=
+XFE_MKICONS_ZLIB_LIB		=
+XFE_MKICONS_ZLIB_DSO		= -lz
 
 else
 
@@ -164,17 +176,19 @@ ifdef FULL_STATIC_BUILD
 XFE_ZLIB_LIB				= $(DIST)/lib/libzlib.a
 XFE_ZLIB_DSO				=
 XFE_ZLIB_REQUIRES			= zlib
-XFE_MKICONS_BIN_LDPATH		=
 
 else
 
 XFE_ZLIB_LIB				=
 XFE_ZLIB_DSO				= -lzlib
 XFE_ZLIB_REQUIRES			= zlib
-XFE_MKICONS_BIN_LDPATH		= -L$(DIST)/bin
 
 endif
 
+XFE_MKICONS_ZLIB_LIB		= $(DIST)/lib/libzlib.a
+XFE_MKICONS_ZLIB_DSO		=
+
 endif
+##########################################################################
 
 # eof
