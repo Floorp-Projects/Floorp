@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsScrollingView.h"
+#include "nsIServiceManager.h"
 #include "nsIWidget.h"
 #include "nsUnitConversion.h"
 #include "nsIPresContext.h"
@@ -146,7 +147,7 @@ public:
   PRBool            mShowQuality;
   nsContentQuality  mQuality;
   PRBool            mShow;
-  nsILookAndFeel    *mLookAndFeel;
+  nsCOMPtr<nsILookAndFeel>    mLookAndFeelService;
 };
 
 CornerView::CornerView()
@@ -154,12 +155,10 @@ CornerView::CornerView()
   mShowQuality = PR_FALSE;
   mQuality = nsContentQuality_kGood;
   mShow = PR_FALSE;
-  mLookAndFeel = nsnull;
 }
 
 CornerView::~CornerView()
 {
-  NS_IF_RELEASE(mLookAndFeel);
 }
 
 NS_IMETHODIMP CornerView::ShowQuality(PRBool aShow)
@@ -235,21 +234,18 @@ NS_IMETHODIMP CornerView::Paint(nsIRenderingContext& rc, const nsRect& rect,
 
     brect.x = brect.y = 0;
 
-    if (nsnull == mLookAndFeel)
-    {
-      nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull,
-                                         NS_GET_IID(nsILookAndFeel), (void **)&mLookAndFeel);
-    }
+    if (!mLookAndFeelService)
+      mLookAndFeelService = do_GetService(kLookAndFeelCID);
 
-    if (nsnull != mLookAndFeel)
-      mLookAndFeel->GetColor(nsILookAndFeel::eColor_WidgetBackground, bgcolor);
+    if (mLookAndFeelService)
+      mLookAndFeelService->GetColor(nsILookAndFeel::eColor_WidgetBackground, bgcolor);
     else
       bgcolor = NS_RGB(192, 192, 192);
 
     rc.SetColor(bgcolor);
     rc.FillRect(brect);
 
-    if (PR_TRUE == mShowQuality)
+    if (mShowQuality)
     {
       nscolor tcolor, bcolor;
 
