@@ -315,7 +315,7 @@ function deleteCerts()
 {
   getSelectedCerts();
   
-  var params = Components.classes[nsDialogParamBlock].getService(nsIDialogParamBlock);
+  var params = Components.classes[nsDialogParamBlock].createInstance(nsIDialogParamBlock);
   
   var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
   var selTab = document.getElementById('certMgrTabbox').selectedItem;
