@@ -207,7 +207,7 @@ ssmpkcs12context_writetoexportfile(void *arg, const char *buf,
                                    unsigned long len)
 {
     SSMPKCS12Context *p12Cxt = (SSMPKCS12Context*)arg;
-    PRInt32 bytesWritten;
+    PRUint32 bytesWritten;
 
     if (p12Cxt == NULL) {
         return;
@@ -383,6 +383,20 @@ ssmpkcs12context_createpkcs12file(SSMPKCS12Context *cxt,
     return rv;
 }
 
+#ifdef IS_LITTLE_ENDIAN
+void ssm_switch_endian(unsigned char *buf, unsigned int len)
+{
+    unsigned int i;
+    unsigned char tmp;
+
+    for (i=0; i<len; i+=2) {
+        tmp      = buf[i];
+        buf[i]   = buf[i+1];
+        buf[i+1] = tmp;
+    }
+}
+#endif
+
 /* This function converts ASCII strings to UCS2 strings in Network Byte Order.
 ** The "swapBytes" argument is ignored.  
 ** The PKCS#12 code only makes it true on Little Endian systems, 
@@ -405,7 +419,7 @@ SSM_UCS2_ASCIIConversion(PRBool toUnicode,
     	PRBool rv;
 #ifdef DEBUG
 	unsigned int outLen;
-	int i;
+	unsigned int i;
 	fprintf(stderr,"\n---ssm_ConvertAsciiToUCS2---\nInput: inBuf= ");
 	for (i = 0; i < inBufLen; i++) {
 	    fprintf(stderr, "%c", inBuf[i]);
@@ -415,14 +429,7 @@ SSM_UCS2_ASCIIConversion(PRBool toUnicode,
 	rv = nlsASCIIToUnicode(inBuf, inBufLen, 
 				    outBuf, maxOutBufLen, outBufLen);
     if (swapBytes) {
-        unsigned int i;
-        char tmp;
-
-        for (i=0; i<*outBufLen; i+=2) {
-            tmp = outBuf[i];
-            outBuf[i]   = outBuf[i+1];
-            outBuf[i+1] = tmp;
-        }
+        ssm_switch_endian(outBuf, *outBufLen);
     }
 #ifdef DEBUG
 	outLen = *outBufLen;
@@ -452,6 +459,7 @@ SSM_UCS2_UTF8Conversion(PRBool toUnicode, unsigned char *inBuf,
 #ifdef DEBUG
 	unsigned int i;
 #endif
+    char *newbuf=NULL;
 
     if(!inBuf || !outBuf || !outBufLen) {
         return PR_FALSE;
@@ -471,35 +479,42 @@ SSM_UCS2_UTF8Conversion(PRBool toUnicode, unsigned char *inBuf,
 	}
 	fprintf(stderr,"\n");
 #endif
-
     if(toUnicode) {
         retval = nlsUTF8ToUnicode(inBuf, inBufLen, outBuf, maxOutBufLen, 
                                  outBufLen);
-#ifdef IS_LITTLE_ENDIAN
-		{
-			unsigned int i;
-			char tmp;
-			/* Convert the output buffer to Network Byte Order */
-			for (i=0; i<*outBufLen; i+=2) {
-	            tmp = outBuf[i];
-		        outBuf[i]   = outBuf[i+1];
-			    outBuf[i+1] = tmp;
-			}
-		}
+#if IS_LITTLE_ENDIAN
+        /* Our converter gives us back the buffer in host order,
+         * so let's convert to network byte order
+         */
+        ssm_switch_endian(outBuf, *outBufLen);
 #endif
-
     } else {
-#ifdef IS_LITTLE_ENDIAN
-        unsigned int i;
-        char tmp;
-		for (i=0; i < inBufLen; i+=2) {
-			tmp = inBuf[i];
-			inBuf[i] = inBuf[i+1];
-			inBuf[i+1] = tmp;
-		}
+#if IS_LITTLE_ENDIAN
+        /* NSS is the only place where this function gets called.  It gives
+         * us the bytes in Network Byte Order, but the conversion functions
+         * expect the bytes in host order.  So we'll switch the bytes around
+         * before passing them to the translator.
+         */
+        
+        /* The buffer that comes won't necessarily have the trailing ending
+         * zero bytes, which our converter assumes. So we'll add them
+         * here.
+         */
+        /* Do a check to make sure it is in Network Byte Order first. */
+        if (inBuf[0] == 0) {
+            newbuf = SSM_NEW_ARRAY(char, inBufLen+2);
+            memcpy(newbuf, inBuf, inBufLen);
+            newbuf[inBufLen] = newbuf[inBufLen+1] = 0;
+            inBuf = newbuf;
+            ssm_switch_endian(inBuf, inBufLen);
+        }
 #endif
     	retval = nlsUnicodeToUTF8(inBuf, inBufLen, outBuf, maxOutBufLen, 
                                  outBufLen);
+        /* The value in *outBufLen isn't right, so we'll force it to be
+         * right.
+         */
+        *outBufLen = PL_strlen(outBuf);
 	}
 #ifdef DEBUG
     fprintf(stderr,"Output: \n");
@@ -512,6 +527,7 @@ SSM_UCS2_UTF8Conversion(PRBool toUnicode, unsigned char *inBuf,
 	}
 	fprintf(stderr,"\n\n");
 #endif
+    PR_FREEIF(newbuf);
 	return retval;
 }
 
