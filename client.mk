@@ -63,6 +63,8 @@
 #   MOZ_CO_FLAGS         - Flags to pass after 'cvs co' (default: -P)
 #   MOZ_MAKE_FLAGS       - Flags to pass to $(MAKE)
 #   MOZ_CO_BRANCH        - Branch tag (Deprecated. Use MOZ_CO_TAG below.)
+#   MOZ_CO_LOCALES       - localizations to pull (MOZ_CO_LOCALES="de-DE pt-BR")
+#   LOCALES_CVSROOT      - CVSROOT to use to pull localizations
 #
 
 #######################################################################
@@ -82,6 +84,7 @@ TOOLKIT_CO_TAG =
 BROWSER_CO_TAG =
 MAIL_CO_TAG =
 STANDALONE_COMPOSER_CO_TAG =
+LOCALES_CO_TAG =
 BUILD_MODULES = all
 
 #######################################################################
@@ -151,6 +154,10 @@ CVSCO_LOGFILE := $(shell echo $(CVSCO_LOGFILE) | sed s%//%/%)
 ifdef MOZ_CO_TAG
   CVS_CO_FLAGS := -r $(MOZ_CO_TAG)
 endif
+
+# if LOCALES_CVSROOT is not specified, set it here
+# (and let mozconfig override it)
+LOCALES_CVSROOT ?= :pserver:anonymous@cvs-mirror.mozilla.org:/l10n
 
 ####################################
 # Load mozconfig Options
@@ -406,6 +413,7 @@ ifdef MOZ_PHOENIX
 FASTUPDATE_PHOENIX := fast_update $(CVSCO_PHOENIX)
 CHECKOUT_PHOENIX := cvs_co $(CVSCO_PHOENIX)
 MOZ_XUL_APP = 1
+LOCALE_DIRS += mozilla/browser/locales
 else
 CHECKOUT_PHOENIX := true
 FASTUPDATE_PHOENIX := true
@@ -430,6 +438,7 @@ ifdef MOZ_THUNDERBIRD
 FASTUPDATE_THUNDERBIRD := fast_update $(CVSCO_THUNDERBIRD)
 CHECKOUT_THUNDERBIRD := cvs_co $(CVSCO_THUNDERBIRD)
 MOZ_XUL_APP = 1
+LOCALE_DIRS += mozilla/mail/locales
 else
 FASTUPDATE_THUNDERBIRD := true
 CHECKOUT_THUNDERBIRD := true
@@ -452,6 +461,7 @@ ifdef MOZ_STANDALONE_COMPOSER
 FASTUPDATE_STANDALONE_COMPOSER:= fast_update $(CVSCO_STANDALONE_COMPOSER)
 CHECKOUT_STANDALONE_COMPOSER:= cvs_co $(CVSCO_STANDALONE_COMPOSER)
 MOZ_XUL_APP = 1
+LOCALE_DIRS += mozilla/composer/locales
 else
 FASTUPDATE_STANDALONE_COMPOSER:= true
 CHECKOUT_STANDALONE_COMPOSER:= true
@@ -480,6 +490,7 @@ endif
 CVSCO_MOZTOOLKIT := $(CVS) $(CVS_FLAGS) co $(TOOLKIT_CO_FLAGS) $(CVS_CO_DATE_FLAGS)  mozilla/toolkit mozilla/chrome
 FASTUPDATE_MOZTOOLKIT := fast_update $(CVSCO_MOZTOOLKIT)
 CHECKOUT_MOZTOOLKIT := cvs_co $(CVSCO_MOZTOOLKIT)
+LOCALE_DIRS += mozilla/toolkit/locales
 
 ####################################
 # CVS defines for codesighs (pulled and built if MOZ_MAPINFO is set)
@@ -493,6 +504,46 @@ else
 CHECKOUT_CODESIGHS := true
 FASTUPDATE_CODESIGHS := true
 endif
+
+###################################
+# CVS defines for locales
+#
+LOCALES_CO_FLAGS := -P
+
+ifdef LOCALES_CO_TAG
+  LOCALES_CO_FLAGS := $(LOCALES_CO_FLAGS) -r $(LOCALES_CO_TAG)
+endif
+
+ifndef MOZ_CO_LOCALES
+FASTUPDATE_LOCALES := true
+CHECKOUT_LOCALES := true
+else
+ifeq (all,$(MOZ_CO_LOCALES))
+MOZCONFIG_MODULES += $(addsuffix /all-locales,$(LOCALE_DIRS))
+
+FASTUPDATE_LOCALES := \
+  for dir in $(LOCALE_DIRS); do \
+    for locale in `cat $$dir/all-locales`; do \
+      fast_update $(CVS) $(CVS_FLAGS) -d $(LOCALES_CVSROOT) co $$dir/$$locale; \
+    done; \
+  done 
+
+CHECKOUT_LOCALES := \
+  for dir in $(LOCALE_DIRS); do \
+    for locale in `cat $$dir/all-locales`; do \
+      cvs_co $(CVS) $(CVS_FLAGS) -d $(LOCALES_CVSROOT) co $(LOCALES_CO_FLAGS) $$dir/$$locale; \
+    done; \
+  done
+
+else
+LOCALE_CO_DIRS = $(foreach locale,$(MOZ_CO_LOCALES),$(addsuffix /$(locale),$(LOCALE_DIRS)))
+
+CVSCO_LOCALES := $(CVS) $(CVS_FLAGS) -d $(LOCALES_CVSROOT) co $(LOCALES_CO_FLAGS) $(LOCALE_CO_DIRS)
+
+FASTUPDATE_LOCALES := fast_update $(CVSCO_LOCALES)
+CHECKOUT_LOCALES := cvs_co $(CVSCO_LOCALES)
+endif
+endif #MOZ_CO_LOCALES
 
 #######################################################################
 # Rules
@@ -544,30 +595,30 @@ endif
 	$(CVSCO) $(CVS_CO_DATE_FLAGS) mozilla/client.mk $(MOZCONFIG_MODULES)
 	@cd $(ROOTDIR) && $(MAKE) -f mozilla/client.mk real_checkout
 
+#	Start the checkout. Split the output to the tty and a log file.
+
 real_checkout:
-#	@: Start the checkout. Split the output to the tty and a log file. \
-#	 : If it fails, touch an error file because "tee" hides the error.
-	@failed=.cvs-failed.tmp; rm -f $$failed*; \
-	cvs_co() { echo "$$@" ; \
-	  ("$$@" || touch $$failed) 2>&1 | tee -a $(CVSCO_LOGFILE) && \
-	  if test -f $$failed; then false; else true; fi; }; \
-	$(CHECKOUT_STANDALONE) && \
-	$(CHECKOUT_STANDALONE_NOSUBDIRS) && \
-	cvs_co $(CVSCO_NSPR) && \
-	cvs_co $(CVSCO_NSS) && \
-	cvs_co $(CVSCO_PSM) && \
-	cvs_co $(CVSCO_LDAPCSDK) && \
-	cvs_co $(CVSCO_ACCESSIBLE) && \
-	cvs_co $(CVSCO_IMGLIB2) && \
-	cvs_co $(CVSCO_IPC) && \
-	cvs_co $(CVSCO_CALENDAR) && \
-	$(CHECKOUT_LIBART) && \
-	$(CHECKOUT_MOZTOOLKIT) && \
-	$(CHECKOUT_PHOENIX) && \
-	$(CHECKOUT_THUNDERBIRD) && \
-	$(CHECKOUT_STANDALONE_COMPOSER) && \
-	$(CHECKOUT_CODESIGHS) && \
-	cvs_co $(CVSCO_SEAMONKEY)
+	@set -e; \
+	cvs_co() { set -e; echo "$$@" ; \
+	  "$$@" 2>&1 | tee -a $(CVSCO_LOGFILE); }; \
+	$(CHECKOUT_STANDALONE); \
+	$(CHECKOUT_STANDALONE_NOSUBDIRS); \
+	cvs_co $(CVSCO_NSPR); \
+	cvs_co $(CVSCO_NSS); \
+	cvs_co $(CVSCO_PSM); \
+	cvs_co $(CVSCO_LDAPCSDK); \
+	cvs_co $(CVSCO_ACCESSIBLE); \
+	cvs_co $(CVSCO_IMGLIB2); \
+	cvs_co $(CVSCO_IPC); \
+	cvs_co $(CVSCO_CALENDAR); \
+	$(CHECKOUT_LIBART); \
+	$(CHECKOUT_MOZTOOLKIT); \
+	$(CHECKOUT_PHOENIX); \
+	$(CHECKOUT_THUNDERBIRD); \
+	$(CHECKOUT_STANDALONE_COMPOSER); \
+	$(CHECKOUT_CODESIGHS); \
+	$(CHECKOUT_LOCALES); \
+	cvs_co $(CVSCO_SEAMONKEY);
 	@echo "checkout finish: "`date` | tee -a $(CVSCO_LOGFILE)
 # update the NSS checkout timestamp
 	@if test `egrep -c '^(U|C) mozilla/security/(nss|coreconf)' $(CVSCO_LOGFILE) 2>/dev/null` != 0; then \
@@ -608,34 +659,30 @@ endif
 	@cd $(TOPSRCDIR) && \
 	$(MAKE) -f client.mk real_fast-update
 
+# Start the update. Split the output to the tty and a log file.
 real_fast-update:
-#	@: Start the update. Split the output to the tty and a log file. \
-#	 : If it fails, touch an error file because "tee" hides the error.
-	@failed=.fast_update-failed.tmp; rm -f $$failed*; \
-	fast_update() { (config/cvsco-fast-update.pl $$@ || touch $$failed) 2>&1 | tee -a $(CVSCO_LOGFILE) && \
-	  if test -f $$failed; then false; else true; fi; }; \
-	cvs_co() { echo "$$@" ; \
-	  ("$$@" || touch $$failed) 2>&1 | tee -a $(CVSCO_LOGFILE) && \
-	  if test -f $$failed; then false; else true; fi; }; \
-	fast_update $(CVSCO_NSPR) && \
-	cd $(ROOTDIR) && \
-	failed=mozilla/.fast_update-failed.tmp && \
-	cvs_co $(CVSCO_NSS) && \
-	failed=.fast_update-failed.tmp && \
-	cd mozilla && \
-	fast_update $(CVSCO_PSM) && \
-	fast_update $(CVSCO_LDAPCSDK) && \
-	fast_update $(CVSCO_ACCESSIBLE) && \
-	fast_update $(CVSCO_IMGLIB2) && \
-	fast_update $(CVSCO_IPC) && \
-	fast_update $(CVSCO_CALENDAR) && \
-	$(FASTUPDATE_LIBART) && \
-	$(FASTUPDATE_MOZTOOLKIT) && \
-	$(FASTUPDATE_PHOENIX) && \
-	$(FASTUPDATE_THUNDERBIRD) && \
-	$(FASTUPDATE_STANDALONE_COMPOSER) && \
-	$(FASTUPDATE_CODESIGHS) && \
-	fast_update $(CVSCO_SEAMONKEY)
+	@set -e;
+	fast_update() { set -e; config/cvsco-fast-update.pl $$@ 2>&1 | tee -a $(CVSCO_LOGFILE); }; \
+	cvs_co() { set -e; echo "$$@" ; \
+	  "$$@" 2>&1 | tee -a $(CVSCO_LOGFILE); }; \
+	fast_update $(CVSCO_NSPR); \
+	cd $(ROOTDIR); \
+	cvs_co $(CVSCO_NSS); \
+	cd mozilla; \
+	fast_update $(CVSCO_PSM); \
+	fast_update $(CVSCO_LDAPCSDK); \
+	fast_update $(CVSCO_ACCESSIBLE); \
+	fast_update $(CVSCO_IMGLIB2); \
+	fast_update $(CVSCO_IPC); \
+	fast_update $(CVSCO_CALENDAR); \
+	$(FASTUPDATE_LIBART); \
+	$(FASTUPDATE_MOZTOOLKIT); \
+	$(FASTUPDATE_PHOENIX); \
+	$(FASTUPDATE_THUNDERBIRD); \
+	$(FASTUPDATE_STANDALONE_COMPOSER); \
+	$(FASTUPDATE_CODESIGHS); \
+	$(FASTUPDATE_LOCALES); \
+	fast_update $(CVSCO_SEAMONKEY);
 	@echo "fast_update finish: "`date` | tee -a $(CVSCO_LOGFILE)
 # update the NSS checkout timestamp
 	@if test `egrep -c '^(U|C) mozilla/security/(nss|coreconf)' $(CVSCO_LOGFILE) 2>/dev/null` != 0; then \
