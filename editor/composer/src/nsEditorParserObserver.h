@@ -24,14 +24,9 @@
 #include "nsIElementObserver.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
+
 #include "nsWeakReference.h"
-
-static const PRInt32 gParserObserver_TagCount=1;
-static const char * gParserObserver_Tags[1] = {"FRAMESET"};
-
-
-// this needs to support the weak reference API, so that the parser
-// does not need to hold a reference
+#include "nsVoidArray.h"
 
 class nsEditorParserObserver : public nsSupportsWeakReference,
                                public nsIElementObserver,
@@ -49,28 +44,30 @@ public:
   NS_IMETHOD                Notify(PRUint32 aDocumentID, eHTMLTags aTag, PRUint32 numOfAttributes, 
                                     const PRUnichar* nameArray[], const PRUnichar* valueArray[]);
   NS_IMETHOD                Notify(PRUint32 aDocumentID, const PRUnichar* aTag, PRUint32 numOfAttributes, 
-                                     const PRUnichar* nameArray[], const PRUnichar* valueArray[]);
+                                    const PRUnichar* nameArray[], const PRUnichar* valueArray[]);
 
   /* methods for nsIObserver */
   NS_DECL_NSIOBSERVER
 
-  /* begin observing */
+  /* begin and end observing */
   NS_IMETHOD                Start();
-
-  /** end observing */
   NS_IMETHOD                End();
 
-  /** query, did we find a bad tag? */
+  /* query, did we find a bad tag? */
   NS_IMETHOD                GetBadTagFound(PRBool *aFound);
+
+  /* register a tag to watch for */
+  NS_IMETHOD                RegisterTagToWatch(const char* tagName);
 
 protected:
 
   virtual void              Notify();
   
-  
 protected:
 
   PRBool                    mBadTagFound;
+  
+  nsCStringArray            mWatchTags;
   
 };
 
