@@ -1124,53 +1124,13 @@ NS_IMETHODIMP nsLocalFile::GetParent(nsIFile * *aParent)
   *aParent = nsnull;
   
   nsresult rv;
-
-#if DEBUG
-  // In a debug build, where components are symlinks, we need to do it this way.
-  // If a file object which is a symlink is asked for its parent, its parent
-  // will be that of the resolved link which isn't what the component mgr
-  // expects.
-  nsCAutoString thisPath;
-  rv = GetNativePath(thisPath);
-  if (NS_FAILED(rv))
-    return rv;
-    
-  char *buffer   = NS_CONST_CAST(char *, thisPath.get()),
-       *slashp   = buffer;
-
-  // find the last significant slash in buffer
-  slashp = strrchr(buffer, '/');
-  NS_ASSERTION(slashp, "non-canonical mPath?");
-  if (!slashp)
-    return NS_ERROR_FILE_INVALID_PATH;
-
-  // for the case where we are at '/'
-  if (slashp == buffer)
-      slashp++;
-
-  // temporarily terminate buffer at the last significant slash
-  char c = *slashp;
-  *slashp = '\0';
-
-  nsCOMPtr<nsILocalFile> localFile;
-  rv = NS_NewNativeLocalFile(nsDependentCString(buffer), PR_TRUE,
-                                      getter_AddRefs(localFile));
-
-  // make buffer whole again
-  *slashp = c;
-  
-  *aParent = localFile;
-  NS_IF_ADDREF(*aParent);
-    
-#else
-
   FSRef fsRef;
   nsLocalFile *newFile = nsnull;
 
   // If it can be determined without error that a file does not
   // have a parent, return nsnull for the parent and NS_OK as the result.
   // See bug 133617.
-
+    
   rv = GetFSRefInternal(fsRef);
   if (NS_SUCCEEDED(rv)) {
     FSRef parentRef;
@@ -1203,7 +1163,6 @@ NS_IMETHODIMP nsLocalFile::GetParent(nsIFile * *aParent)
     return NS_ERROR_FAILURE;
   *aParent = newFile;
   NS_ADDREF(*aParent);
-#endif
   
   return NS_OK;
 }
@@ -1356,7 +1315,7 @@ NS_IMETHODIMP nsLocalFile::OpenNSPRFileDesc(PRInt32 flags, PRInt32 mode, PRFileD
   NS_ENSURE_ARG_POINTER(_retval);
 
   nsCAutoString path;
-  nsresult rv = GetNativePath(path);
+  nsresult rv = GetPathInternal(path);
   if (NS_FAILED(rv))
     return rv;
     
@@ -1374,7 +1333,7 @@ NS_IMETHODIMP nsLocalFile::OpenANSIFileDesc(const char *mode, FILE **_retval)
   NS_ENSURE_ARG_POINTER(_retval);
 
   nsCAutoString path;
-  nsresult rv = GetNativePath(path);
+  nsresult rv = GetPathInternal(path);
   if (NS_FAILED(rv))
     return rv;
     
@@ -1394,7 +1353,7 @@ NS_IMETHODIMP nsLocalFile::Load(PRLibrary **_retval)
   NS_TIMELINE_START_TIMER("PR_LoadLibrary");
 
   nsCAutoString path;
-  nsresult rv = GetNativePath(path);
+  nsresult rv = GetPathInternal(path);
   if (NS_FAILED(rv))
     return rv;
 
@@ -1995,6 +1954,33 @@ nsresult nsLocalFile::GetFSRefInternal(FSRef& aFSSpec)
   if (NS_FAILED(rv))
     return rv;
   aFSSpec = mFollowLinks ? mTargetFSRef : mFSRef;  
+  return NS_OK;
+}
+
+nsresult nsLocalFile::GetPathInternal(nsACString& path)
+{
+  FSRef fsRef;
+  UInt8 pathBuf[PATH_MAX + 1];
+ 
+  if (NS_SUCCEEDED(Resolve()))
+    fsRef = mFollowLinks ? mTargetFSRef : mFSRef;    
+  else
+    fsRef = mFSRef;
+ 
+  OSErr err = ::FSRefMakePath(&fsRef, pathBuf, sizeof(pathBuf));
+  if (err != noErr)
+      return MacErrorMapper(err);
+  path.Assign((char *)pathBuf);
+
+  // If Resolve() succeeds, mNonExtantNodes is empty.
+  deque<nsString>::iterator iter(mNonExtantNodes.begin());
+  deque<nsString>::iterator end(mNonExtantNodes.end());
+  while (iter != end) {
+    path.Append(kPathSepChar);
+    path.Append((NS_ConvertUCS2toUTF8(*iter)));
+    ++iter;
+  }
+
   return NS_OK;
 }
 
