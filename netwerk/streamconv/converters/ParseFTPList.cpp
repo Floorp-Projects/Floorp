@@ -143,7 +143,9 @@ int ParseFTPList(const char *line, struct list_state *state,
               if (pos < linelen && line[pos] == ',')
               {
                 PRTime t;
-                PR_sscanf(p+1, "%llu", &t);
+                PRTime seconds;
+                PR_sscanf(p+1, "%llu", &seconds);
+                LL_MUL(t, seconds, PR_USEC_PER_SEC);
                 PR_ExplodeTime(t, PR_LocalTimeParameters, &(result->fe_time) );
               }
             }
