@@ -65,7 +65,7 @@ nsMsgRDFDataSource::Init()
     nsCOMPtr<nsIObserverService> obs = do_GetService(NS_OBSERVERSERVICE_PROGID,
                                                      &rv);
     if (NS_FAILED(rv)) return rv;
-    nsAutoString topic = NS_LITERAL_STRING(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+    nsAutoString topic; topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
     rv = obs->AddObserver(NS_STATIC_CAST(nsIObserver*, this), topic.GetUnicode());
     if (NS_FAILED(rv)) return rv;
 
@@ -86,8 +86,9 @@ void nsMsgRDFDataSource::Cleanup()
     nsCOMPtr<nsIObserverService> obs = do_GetService(NS_OBSERVERSERVICE_PROGID,
                                                      &rv);
     if (NS_SUCCEEDED(rv)) {
+        nsAutoString topic; topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
         rv = obs->RemoveObserver(NS_STATIC_CAST(nsIObserver*, this),
-                                 (const PRUnichar*)NS_LITERAL_STRING(NS_XPCOM_SHUTDOWN_OBSERVER_ID));
+                                 topic.GetUnicode());
     }
     
     // release the window
