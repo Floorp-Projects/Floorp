@@ -315,7 +315,11 @@ private:
   NS_IMETHOD TakeFocus(nsIContent *aNewFocus, PRUint32 aContentOffset, PRUint32 aContentEndOffset, 
                        PRBool aContinueSelection, PRBool aMultipleSelection);
 
-  friend class nsDOMSelection;
+//post and pop reasons for notifications. we may stack these later
+  void  PostReason(short aReason){mReason = aReason;}
+  short PopReason(){short retval = mReason; mReason=0;return retval;}
+
+  friend class nsDOMSelection; 
 #ifdef DEBUG
   void printSelection();       // for debugging
 #endif /* DEBUG */
@@ -387,7 +391,7 @@ private:
   PRBool mDelayCaretOverExistingSelection;
   PRBool mDelayedMouseEventValid;
   nsMouseEvent mDelayedMouseEvent;
-
+  short mReason; //reason for notifications of selection changing
 public:
   static nsIAtom *sTableAtom;
   static nsIAtom *sCellAtom;
@@ -830,6 +834,7 @@ nsSelection::nsSelection()
 
   mDelayCaretOverExistingSelection = PR_TRUE;
   mDelayedMouseEventValid = PR_FALSE;
+  mReason = nsIDOMSelectionListener::NO_REASON;
 }
 
 
@@ -1452,6 +1457,7 @@ nsSelection::MoveCaret(PRUint32 aKeycode, PRBool aContinue, nsSelectionAmount aA
       if (NS_SUCCEEDED(result = frame->PeekOffset(context, &pos)) && pos.mResultContent)
       {
         mHint = (HINT)pos.mPreferLeft;
+        PostReason(nsIDOMSelectionListener::MOUSEUP_REASON);//force an update as though we used the mouse.
         result = TakeFocus(pos.mResultContent, pos.mContentOffset, pos.mContentOffset, aContinue, PR_FALSE);
       }
     }
@@ -1575,6 +1581,7 @@ nsSelection::HandleClick(nsIContent *aNewFocus, PRUint32 aContentOffset,
   // Don't take focus when dragging off of a table
   if (!mSelectingTableCells)
   {
+    PostReason(nsIDOMSelectionListener::MOUSEDOWN_REASON + nsIDOMSelectionListener::DRAG_REASON);
     return TakeFocus(aNewFocus, aContentOffset, aContentEndOffset, aContinueSelection, aMultipleSelection);
   }
   
@@ -1655,7 +1662,7 @@ nsSelection::TakeFocus(nsIContent *aNewFocus, PRUint32 aContentOffset,
     nsresult rv = aNewFocus->GetParent(*getter_AddRefs(parent));
     if (NS_FAILED(rv))
       return rv;
-    if (mLimiter != parent.get())
+    if (mLimiter != parent.get() && mLimiter != aNewFocus) //if newfocus == the limiter. thats ok.
       return NS_ERROR_FAILURE; //not in the right content. mLimiter said so
   }
 
@@ -1756,6 +1763,7 @@ printf("SetMouseDownState to FALSE - stopping cell selection\n");
     mSelectingTableCells = PR_FALSE;
     mStartSelectedCell = nsnull;
     mEndSelectedCell = nsnull;
+    PostReason(aState?nsIDOMSelectionListener::MOUSEDOWN_REASON:nsIDOMSelectionListener::MOUSEUP_REASON);//not a drag reason
     NotifySelectionListeners(nsISelectionController::SELECTION_NORMAL);//notify that reason is mouse up please.
   }
   return NS_OK;
@@ -5628,12 +5636,13 @@ nsDOMSelection::NotifySelectionListeners()
       doc = 0;
     domdoc = do_QueryInterface(doc);
   }
+  short reason = mFrameSelection->PopReason();
   for (PRUint32 i = 0; i < cnt;i++)
   {
     nsCOMPtr<nsISupports> isupports(dont_AddRef(mSelectionListeners->ElementAt(i)));
     nsCOMPtr<nsIDOMSelectionListener> thisListener = do_QueryInterface(isupports);
     if (thisListener)
-    	thisListener->NotifySelectionChanged(domdoc,this, (short) mFrameSelection->mMouseDownState);
+    	thisListener->NotifySelectionChanged(domdoc,this, reason);
   }
 	return NS_OK;
 }
