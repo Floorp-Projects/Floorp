@@ -40,7 +40,7 @@ nsHTTPSOAPTransport::~nsHTTPSOAPTransport()
 {
 }
 
-NS_IMPL_ISUPPORTS1_CI(nsHTTPSOAPTransport, nsISOAPTransport)
+NS_IMPL_ISUPPORTS1(nsHTTPSOAPTransport, nsISOAPTransport)
 
 /* void syncCall (in nsISOAPCall aCall, in nsISOAPResponse aResponse); */
 NS_IMETHODIMP nsHTTPSOAPTransport::SyncCall(nsISOAPCall *aCall, nsISOAPResponse *aResponse)

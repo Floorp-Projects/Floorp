@@ -56,6 +56,7 @@
 #include "nsSOAPCall.h"
 #include "nsSOAPResponse.h"
 #include "nsSOAPEncoding.h"
+#include "nsSOAPFault.h"
 #include "nsDefaultSOAPEncoder.h"
 #include "nsHTTPSOAPTransport.h"
 #include "nsSchemaLoader.h"
@@ -88,6 +89,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTTPSOAPTransport)
 NS_DECL_CLASSINFO(nsSOAPCall)
 NS_DECL_CLASSINFO(nsSOAPResponse)
 NS_DECL_CLASSINFO(nsSOAPEncoding)
+NS_DECL_CLASSINFO(nsSOAPFault)
 NS_DECL_CLASSINFO(nsSOAPHeaderBlock)
 NS_DECL_CLASSINFO(nsSOAPParameter)
 NS_DECL_CLASSINFO(nsHTTPSOAPTransport)
@@ -298,6 +300,11 @@ static nsModuleComponentInfo components[] = {
     NS_CI_INTERFACE_GETTER_NAME(nsSOAPEncoding), 
     nsnull, &NS_CLASSINFO_NAME(nsSOAPEncoding), 
     nsIClassInfo::DOM_OBJECT },
+  { "SOAP Fault", NS_SOAPFAULT_CID, NS_SOAPFAULT_CONTRACTID,
+    nsnull, nsnull, nsnull, nsnull, 
+    NS_CI_INTERFACE_GETTER_NAME(nsSOAPFault), 
+    nsnull, &NS_CLASSINFO_NAME(nsSOAPFault), 
+    nsIClassInfo::DOM_OBJECT },
   { "SOAP Header Block", NS_SOAPHEADERBLOCK_CID, NS_SOAPHEADERBLOCK_CONTRACTID,
     nsSOAPHeaderBlockConstructor, nsnull, nsnull, nsnull, 
     NS_CI_INTERFACE_GETTER_NAME(nsSOAPHeaderBlock), 
@@ -313,10 +320,7 @@ static nsModuleComponentInfo components[] = {
     nsDefaultSOAPEncoderConstructor },
   { "HTTP SOAP Transport", NS_HTTPSOAPTRANSPORT_CID,
     NS_HTTPSOAPTRANSPORT_CONTRACTID, 
-    nsHTTPSOAPTransportConstructor, nsnull, nsnull, nsnull, 
-    NS_CI_INTERFACE_GETTER_NAME(nsHTTPSOAPTransport), 
-    nsnull, &NS_CLASSINFO_NAME(nsHTTPSOAPTransport), 
-    nsIClassInfo::DOM_OBJECT },
+    nsHTTPSOAPTransportConstructor },
   { "HTTP SOAP Transport Completion", NS_HTTPSOAPTRANSPORTCOMPLETION_CID,
     NS_HTTPSOAPTRANSPORTCOMPLETION_CONTRACTID, 
     nsnull, nsnull, nsnull, nsnull, 

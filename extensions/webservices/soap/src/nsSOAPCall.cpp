@@ -114,6 +114,14 @@ NS_IMETHODIMP nsSOAPCall::Invoke(nsISOAPResponse **_retval)
   rv = transport->SyncCall(this, response);
   if (NS_FAILED(rv)) return rv;
 
+  nsCOMPtr<nsIDOMDocument> document;
+  rv = response->GetMessage(getter_AddRefs(document));  //  No XML response.
+  if (NS_FAILED(rv)) return rv;
+  if (!document) {
+    *_retval = nsnull;
+    return NS_OK;
+  }
+  
   return response->QueryInterface(NS_GET_IID(nsISOAPResponse), (void**)_retval);
 }
 
