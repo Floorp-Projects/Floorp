@@ -1464,43 +1464,40 @@ dnl =                                                      =
 dnl ========================================================
 
 dnl ========================================================
-dnl =													   =
-dnl = --with-xprint										   =
-dnl = 													   =
+dnl =                                                      =
+dnl = --with-xprint                                        =
+dnl =                                                      =
 dnl = Xprint support hackery                               =
-dnl = 													   =
+dnl =                                                      =
 dnl ========================================================
 if test "$no_x" != "yes"
 then
-	AC_ARG_WITH(xprint,
-	[  --with-xprint           Enable Xprint support ],
-	[
-		if test "$withval" = "yes"
-		then
-			MOZ_ENABLE_XPRINT=1
-    	else
-			MOZ_ENABLE_XPRINT=
-    	fi
-	])
-fi
+    MOZ_ENABLE_XPRINT=1
 
-MISSING_XPRINT=
-if test "$MOZ_ENABLE_XPRINT"
-then
-	AC_MSG_CHECKING(for xprint insanity)
-
-	_SAVE_LDFLAGS="$LDFLAGS"
-	LDFLAGS="$XLDFLAGS $LDFLAGS"
+    _SAVE_LDFLAGS="$LDFLAGS"
+    LDFLAGS="$XLDFLAGS $LDFLAGS"
     AC_CHECK_LIB(Xp, XpGetPrinterList, [XPRINT_LIBS="-lXp"],
-	    [MISSING_XPRINT="$MISSING_XPRINT -lXp"], $XEXT_LIBS $XLIBS)
-
-	LDFLAGS="$_SAVE_LDFLAGS"
+    MOZ_ENABLE_XPRINT=, $XEXT_LIBS $XLIBS)
+    LDFLAGS="$_SAVE_LDFLAGS"
 
     MOZ_XPRINT_CFLAGS="$X_CFLAGS"
     MOZ_XPRINT_LDFLAGS="$XLDFLAGS $XPRINT_LIBS"
     MOZ_XPRINT_LDFLAGS="$MOZ_XPRINT_LDFLAGS $XEXT_LIBS $X11_LIBS"
 
+    MOZ_ARG_DISABLE_BOOL(xprint,
+    [  --disable-xprint        Disable Xprint support ],
+    [
+        if test "$enableval" = "no"; then
+            MOZ_ENABLE_XPRINT=
+        fi
+    ])
+    if test "$MOZ_ENABLE_XPRINT"; then
+        AC_MSG_WARN([Xprint support enabled])
+    else
+        AC_MSG_WARN([Xprint support disabled])
+    fi
 fi
+
 dnl ========================================================
 dnl = 													   =
 dnl = End Xprint support hackery                           =
@@ -4492,10 +4489,6 @@ dnl Check for missing components
 if test "$no_x" != "yes"; then
 if test ! -z "$MISSING_X"; then
    AC_MSG_ERROR([ Could not find the following X libraries: $MISSING_X ]);
-fi
-
-if test ! -z "$MISSING_XPRINT"; then
-   AC_MSG_ERROR([ Could not find the following XPRINT libraries: $MISSING_XPRINT ]);
 fi
 
 if test ! -z "$MISSING_MOTIF"; then
