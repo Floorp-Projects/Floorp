@@ -43,6 +43,8 @@
   </script>
   <script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
 
+  <keyset id="keyset"/>
+
   <label class="spacedtext" for="nameInput"> &anchorNameEditField.label; </label>
   <input type="text" id="nameInput" size="30" maxlength="255" />
   <!-- from EdDialogOverlay -->
