@@ -35,6 +35,9 @@ for (qw{value data tbox testname ua ip time}) {
 }
 
 # close HTTP transaction, and then decide whether to record data
+#
+# XXXX I had to comment this out, not sure why.  startup version
+#      of this cgi had this and worked.  -mcafee
 #close(STDOUT); 
 
 #my %nametable = read_config();
@@ -56,12 +59,12 @@ die "No 'data' parameter supplied"
 
 # Test for dirs.
 unless (-d "db") {
-  mkdir("db");
+  mkdir("db", 0755);
 }
 
 
 unless (-d "db/$testname") {
-  mkdir("db/$testname");
+  mkdir("db/$testname", 0755);
 }
 
 # If file doesn't exist, try creating empty file.
