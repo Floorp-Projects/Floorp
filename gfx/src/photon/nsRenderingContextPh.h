@@ -175,12 +175,14 @@ private:
   NS_IMETHOD CommonInit();
   void RestoreGC();
   void ApplyClipping( PhGC_t *);
+  void SetPhLineStyle();
 
 protected:
   PhGC_t             *mGC;
   PhGC_t             *mholdGC;
   PhGC_t             *mOldGC;
   nscolor            mCurrentColor;
+  nsLineStyle        mLineStyle;
   nsTransform2D      *mTMatrix;		// transform that all the graphics drawn here will obey
   nsIFontMetrics     *mFontMetrics;
   nsDrawingSurfacePh *mOffscreenSurface;
@@ -198,12 +200,7 @@ protected:
   //state management
   GraphicsState     *mStates;
   nsVoidArray       *mStateCache;
-  nscolor           mCurrBrushColor;
-  nsIFontMetrics    *mCurrFontMetrics;
-  nscolor           mCurrPenColor;
   PRUint8           *mGammaTable;
-  nscolor           mCurrTextColor;
-  nsLineStyle       mCurrLineStyle;
 
   static PhGC_t     *mPtGC;
 
