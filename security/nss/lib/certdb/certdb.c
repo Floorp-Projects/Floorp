@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.7 2001/01/30 21:01:53 wtc%netscape.com Exp $
+ * $Id: certdb.c,v 1.8 2001/02/09 01:06:41 nelsonb%netscape.com Exp $
  */
 
 #include "nssilock.h"
@@ -856,6 +856,22 @@ CERT_DecodeDERCertificate(SECItem *derSignedCert, PRBool copyDER,
 ** of the machine checking the certificate.
 */
 #define PENDING_SLOP (24L*60L*60L)
+static PRInt32 pendingSlop = PENDING_SLOP;
+
+PRInt32
+CERT_GetSlopTime(void)
+{
+    return pendingSlop;
+}
+
+SECStatus
+CERT_SetSlopTime(PRInt32 slop)
+{
+    if (slop < 0)
+	return SECFailure;
+    pendingSlop = slop;
+    return SECSuccess;
+}
 
 SECStatus
 CERT_GetCertTimes(CERTCertificate *c, int64 *notBefore, int64 *notAfter)
@@ -883,7 +899,7 @@ CERT_GetCertTimes(CERTCertificate *c, int64 *notBefore, int64 *notAfter)
 SECCertTimeValidity
 CERT_CheckCertValidTimes(CERTCertificate *c, int64 t, PRBool allowOverride)
 {
-    int64 notBefore, notAfter, pendingSlop;
+    int64 notBefore, notAfter, llPendingSlop;
     SECStatus rv;
 
     /* if cert is already marked OK, then don't bother to check */
@@ -897,8 +913,8 @@ CERT_CheckCertValidTimes(CERTCertificate *c, int64 t, PRBool allowOverride)
 	return(secCertTimeExpired); /*XXX is this the right thing to do here?*/
     }
     
-    LL_I2L(pendingSlop, PENDING_SLOP);
-    LL_SUB(notBefore, notBefore, pendingSlop);
+    LL_I2L(llPendingSlop, pendingSlop);
+    LL_SUB(notBefore, notBefore, llPendingSlop);
     if ( LL_CMP( t, <, notBefore ) ) {
 	PORT_SetError(SEC_ERROR_EXPIRED_CERTIFICATE);
 	return(secCertTimeNotValidYet);
@@ -940,7 +956,7 @@ SEC_GetCrlTimes(CERTCrl *date, int64 *notBefore, int64 *notAfter)
  */
 SECCertTimeValidity
 SEC_CheckCrlTimes(CERTCrl *crl, int64 t) {
-    int64 notBefore, notAfter, pendingSlop;
+    int64 notBefore, notAfter, llPendingSlop;
     SECStatus rv;
 
     rv = SEC_GetCrlTimes(crl, &notBefore, &notAfter);
@@ -949,8 +965,8 @@ SEC_CheckCrlTimes(CERTCrl *crl, int64 t) {
 	return(secCertTimeExpired); 
     }
 
-    LL_I2L(pendingSlop, PENDING_SLOP);
-    LL_SUB(notBefore, notBefore, pendingSlop);
+    LL_I2L(llPendingSlop, pendingSlop);
+    LL_SUB(notBefore, notBefore, llPendingSlop);
     if ( LL_CMP( t, <, notBefore ) ) {
 	return(secCertTimeNotValidYet);
     }
