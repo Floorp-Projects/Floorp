@@ -47,12 +47,12 @@ EXPORTS =				\
   nsSVGAtomList.h \
   nsSVGAtoms.h \
 !endif
-!ifdef IBMBIDI
-  nsBidiUtils.h \
-!endif
   nsXBLAtomList.h \
   nsXBLAtoms.h \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
 
+!ifdef IBMBIDI
+  EXPORTS += nsBidiUtils.h
+!endif
