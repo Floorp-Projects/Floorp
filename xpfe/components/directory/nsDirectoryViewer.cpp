@@ -741,7 +741,7 @@ nsresult
 nsHTTPIndexParser::ParseDate(nsIRDFResource *arc, nsString& aValue, nsIRDFNode** aResult)
 {
   PRTime tm;
-  PRStatus err = PR_ParseTimeString(nsCAutoString(aValue), PR_TRUE, &tm);
+  PRStatus err = PR_ParseTimeString(nsCAutoString(aValue), PR_FALSE, &tm);
   if (err != PR_SUCCESS)
     return NS_ERROR_FAILURE;
 
