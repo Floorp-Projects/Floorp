@@ -1253,10 +1253,8 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
 static JSBool
 fun_hasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
 {
-    jsval pval, cval;
+    jsval pval;
     JSString *str;
-    JSObject *proto, *obj2;
-    JSFunction *cfun, *ofun;
 
     if (!OBJ_GET_PROPERTY(cx, obj,
                           (jsid)cx->runtime->atomState.classPrototypeAtom,
@@ -1277,8 +1275,7 @@ fun_hasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
         return JS_FALSE;
     }
 
-    proto = JSVAL_TO_OBJECT(pval);
-    return js_IsDelegate(cx, proto, v, bp);
+    return js_IsDelegate(cx, JSVAL_TO_OBJECT(pval), v, bp);
 }
 
 #else  /* !JS_HAS_INSTANCEOF */
