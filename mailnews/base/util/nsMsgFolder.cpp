@@ -889,7 +889,7 @@ NS_IMETHODIMP nsMsgFolder::GetShowDeletedMessages(PRBool *showDeletedMessages)
 }
 
 
-NS_IMETHODIMP nsMsgFolder::OnCloseFolder ()
+NS_IMETHODIMP nsMsgFolder::ForceDBClosed ()
 {
 	return NS_OK;
 }

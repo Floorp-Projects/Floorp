@@ -83,7 +83,7 @@ public:
   NS_IMETHOD GetCanFileMessages(PRBool *aCanFileMessages);
   NS_IMETHOD GetCanCreateSubfolders(PRBool *aCanCreateSubfolders);
   NS_IMETHOD GetCanRename(PRBool *aCanRename);
-  NS_IMETHOD OnCloseFolder(void);
+  NS_IMETHOD ForceDBClosed(void);
   NS_IMETHOD Delete(void);
   NS_IMETHOD DeleteSubFolders(nsISupportsArray *folders);
   NS_IMETHOD PropagateDelete(nsIMsgFolder *folder, PRBool deleteStorage);

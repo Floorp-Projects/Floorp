@@ -114,7 +114,7 @@ interface nsIMsgFolder : nsIFolder {
    */
 	readonly attribute nsIMsgFolder rootFolder;
   
-	void OnCloseFolder ();
+	void ForceDBClosed ();
 	void Delete ();
 
 	void deleteSubFolders(in nsISupportsArray folders);
