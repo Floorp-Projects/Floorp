@@ -82,6 +82,7 @@ install::
 	$(MAKE_INSTALL) scrollThumb.gif $(DISTRES)
 	$(MAKE_INSTALL) scrollThumb_mo.gif $(DISTRES)
 	$(MAKE_INSTALL) scrollThumb_dis.gif $(DISTRES)
+	$(MAKE_INSTALL) tooltip.js $(DISTRES)
 
 clobber::
 	rm -f $(DIST)\bin\$(DLLNAME).dll
