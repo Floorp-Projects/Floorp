@@ -18,10 +18,15 @@
 
 
 #include "nsCollationWin.h"
+#include "nsRepository.h"
+#include "nsLocaleCID.h"
+#include "nsIWin32Locale.h"
 #include <windows.h>
 
 
-NS_DEFINE_IID(kICollationIID, NS_ICOLLATION_IID);
+static NS_DEFINE_CID(kWin32LocaleFactoryCID, NS_WIN32LOCALEFACTORY_CID);
+static NS_DEFINE_IID(kIWin32LocaleIID, NS_IWIN32LOCALE_IID);
+static NS_DEFINE_IID(kICollationIID, NS_ICOLLATION_IID);
 
 NS_IMPL_ISUPPORTS(nsCollationWin, kICollationIID);
 
@@ -40,12 +45,30 @@ nsCollationWin::~nsCollationWin()
 
 nsresult nsCollationWin::Initialize(nsILocale* locale) 
 {
+  NS_ASSERTION(mCollation == NULL, "Should only be initialized once.");
   mCollation = new nsCollation;
   if (mCollation == NULL) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  // locale -> LCID
+  // locale -> LCID 
+  mLCID = 1033; // initialize to en-US
+  if (locale != nsnull) {
+    nsString aLocale;
+    nsString aCategory("NSILOCALE_TIME");
+    nsresult res = locale->GetCatagory(&aCategory, &aLocale);
+    if (NS_FAILED(res)) {
+      return res;
+    }
+  
+	  nsIWin32Locale* win32Locale;
+	  res = nsRepository::CreateInstance(kWin32LocaleFactoryCID, NULL, kIWin32LocaleIID, (void**)&win32Locale);
+    if (NS_FAILED(res)) {
+      return res;
+    }
+    res = win32Locale->GetPlatformLocale(&aLocale, (LCID *) &mLCID);
+	  win32Locale->Release();
+  }
 
   return NS_OK;
 };
@@ -56,7 +79,7 @@ nsresult nsCollationWin::GetSortKeyLen(const nsCollationStrength strength,
 {
   // Currently, no length change by the normalization.
   // API returns number of bytes when LCMAP_SORTKEY is specified 
-	*outLen = LCMapStringW(GetUserDefaultLCID(), LCMAP_SORTKEY, 
+	*outLen = LCMapStringW(mLCID, LCMAP_SORTKEY, 
                               (LPCWSTR) stringIn.GetUnicode(), (int) stringIn.Length(), NULL, 0);
 
   return NS_OK;
@@ -71,7 +94,7 @@ nsresult nsCollationWin::CreateSortKey(const nsCollationStrength strength,
   if (mCollation != NULL && strength == kCollationCaseInSensitive) {
     mCollation->NormalizeString(stringNormalized);
   }
-  byteLen = LCMapStringW(GetUserDefaultLCID(), LCMAP_SORTKEY, 
+  byteLen = LCMapStringW(mLCID, LCMAP_SORTKEY, 
                             (LPCWSTR) stringNormalized.GetUnicode(), (int) stringNormalized.Length(), (LPWSTR) key, *outLen);
   *outLen = (PRUint32) byteLen;
 
