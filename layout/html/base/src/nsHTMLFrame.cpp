@@ -241,9 +241,11 @@ RootFrame::ListTag(FILE* out) const
 {
   if (nsnull == mContent) {
     fprintf(out, "*Root(-1)@%p", this);
-  } else {
+  } 
+  else {
     return nsFrame::ListTag(out);
   }
+  return NS_OK;
 }
 
 
