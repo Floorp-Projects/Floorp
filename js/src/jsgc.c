@@ -1277,8 +1277,16 @@ restart:
         }
     }
 
-    if (rt->gcCallback)
-        (void) rt->gcCallback(cx, JSGC_MARK_END);
+#define GC_CALLBACK(status)                                                   \
+    if (rt->gcCallback) {                                                     \
+        if (gcflags & GC_ALREADY_LOCKED)                                      \
+            JS_UNLOCK_GC(rt);                                                 \
+        (void) rt->gcCallback(cx, status);                                    \
+        if (gcflags & GC_ALREADY_LOCKED)                                      \
+            JS_LOCK_GC(rt);                                                   \
+    }
+
+    GC_CALLBACK(JSGC_MARK_END);
 
     /*
      * Sweep phase.
@@ -1370,8 +1378,7 @@ restart:
     /* Terminate the new freelist. */
     *flp = NULL;
 
-    if (rt->gcCallback)
-        (void) rt->gcCallback(cx, JSGC_FINALIZE_END);
+    GC_CALLBACK(JSGC_FINALIZE_END);
 
 out:
     JS_LOCK_GC(rt);
@@ -1395,6 +1402,7 @@ out:
         JS_UNLOCK_GC(rt);
 #endif
 
-    if (rt->gcCallback)
-        (void) rt->gcCallback(cx, JSGC_END);
+    GC_CALLBACK(JSGC_END);
+
+#undef GC_CALLBACK
 }
