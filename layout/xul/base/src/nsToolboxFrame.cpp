@@ -144,16 +144,34 @@ nsToolboxFrame :: ReResolveStyleContext ( nsIPresContext* aPresContext, nsIStyle
   }
 
   if (NS_COMFALSE != rv) {
-    nsCOMPtr<nsIAtom> grippyRolloverPseudo ( dont_AddRef(NS_NewAtom(":toolbox-rollover")) );
-    RefreshStyleContext(aPresContext, grippyRolloverPseudo, &mGrippyRolloverStyle, mContent, mStyleContext);
-
-    nsCOMPtr<nsIAtom> grippyNormalPseudo ( dont_AddRef(NS_NewAtom(":toolbox-normal")) );
-    RefreshStyleContext(aPresContext, grippyNormalPseudo, &mGrippyNormalStyle, mContent, mStyleContext);
+     UpdateStyles(aPresContext);
   }
   
   return rv;
   
 } // ReResolveStyleContext
+
+NS_IMETHODIMP
+nsToolboxFrame::Init(nsIPresContext&  aPresContext,
+              nsIContent*      aContent,
+              nsIFrame*        aParent,
+              nsIStyleContext* aContext,
+              nsIFrame*        aPrevInFlow)
+{
+  nsresult  rv = nsHTMLContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+  UpdateStyles(&aPresContext);
+  return rv;
+}
+
+void
+nsToolboxFrame::UpdateStyles(nsIPresContext*  aPresContext)
+{
+    nsCOMPtr<nsIAtom> grippyRolloverPseudo ( dont_AddRef(NS_NewAtom(":toolbox-rollover")) );
+    RefreshStyleContext(aPresContext, grippyRolloverPseudo, &mGrippyRolloverStyle, mContent, mStyleContext);
+
+    nsCOMPtr<nsIAtom> grippyNormalPseudo ( dont_AddRef(NS_NewAtom(":toolbox-normal")) );
+    RefreshStyleContext(aPresContext, grippyNormalPseudo, &mGrippyNormalStyle, mContent, mStyleContext);
+}
 
 
 //
@@ -262,16 +280,9 @@ nsToolboxFrame :: Reflow(nsIPresContext&          aPresContext,
                               const nsHTMLReflowState& aReflowState,
                               nsReflowStatus&          aStatus)
 {
-  //*** This temporary and used to initialize the psuedo-styles we use. But where else
-  //*** should it go?
-  switch (aReflowState.reason) {
-    case eReflowReason_Initial:
-      ReResolveStyleContext(&aPresContext, mStyleContext, NS_STYLE_HINT_REFLOW, nsnull, nsnull);
-      break;
-
-    default:
-      break;
-  }
+  // Pink you had code here to get you inital pseudo elements. Unfortunately it kind of 
+  // messes up boxes. So I put it in the right place. Now the elements are initally
+  // loaded in the Init method. -EDV
 
   mSumOfToolbarHeights = 0;
   mNumToolbars = 0;
@@ -368,7 +379,40 @@ nsToolboxFrame :: Reflow(nsIPresContext&          aPresContext,
     printf("BUG 3505:: Found a collapsed toolbar (display:none) but the frame still exists!!!!\n");
 #endif
 
-      const nsSize maxSize(availableSize.width - offset.x, aReflowState.availableHeight);
+      // Pink had turns out the reason I was getting weird box problems was because
+      // the tool box was growing by its childs border height. Why? Well if you layout
+      // your children you must subtract out the childs border and margin before laying
+      // out. The child will automatically add its border back in. If you don't the
+      // toolbox will just keep growning. So here we go. -EDV
+
+      // subtract out the childs margin and border 
+      const nsStyleSpacing* spacing;
+      nsresult rv = childFrame->GetStyleData(eStyleStruct_Spacing,
+                     (const nsStyleStruct*&) spacing);
+
+      nsMargin margin;
+      spacing->GetMargin(margin);
+      nsMargin border;
+      spacing->GetBorderPadding(border);
+      nsMargin total = margin + border;
+
+      nscoord w = availableSize.width;
+      nscoord h = aReflowState.availableHeight;
+
+      // only subrtact margin and border if the size is not intrinsic
+      // notice we do not subtract if INTRINSIC that would be bad.
+      if (NS_INTRINSICSIZE != w) 
+      {
+        w -= (total.left + total.right+ offset.x);
+      }
+
+
+      if (NS_INTRINSICSIZE != h) 
+      {
+        h -= (total.top + total.bottom);
+      }
+
+      const nsSize maxSize(w, h);
 		
       nsHTMLReflowState reflowState(aPresContext, aReflowState, childFrame, maxSize);
       nsIHTMLReflow* htmlReflow = nsnull;                               // can't use nsCOMPtr because of bad COM
@@ -379,6 +423,10 @@ nsToolboxFrame :: Reflow(nsIPresContext&          aPresContext,
         htmlReflow->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
       }
     
+      // add the margin back in. The child should add its border automatically
+      aDesiredSize.height += (margin.top + margin.bottom);
+      aDesiredSize.width += (margin.left + margin.right); 
+
       // set toolbar to desired width/height
       nsRect rect(offset.x, offset.y, aDesiredSize.width, aDesiredSize.height);
       childFrame->SetRect(rect);
