@@ -134,6 +134,7 @@ LINCS= $(LINCS) \
 		-I$(PUBLIC)/jtools	\
 		-I$(PUBLIC)/winfont	\
 		-I$(PUBLIC)/rdf		\
+		-I$(PUBLIC)/parse	\
 		-I$(PUBLIC)/network	\
 		-I$(PUBLIC)/zlib	\
 		-I$(PUBLIC)/plugin	\

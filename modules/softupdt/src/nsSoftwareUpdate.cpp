@@ -1438,9 +1438,9 @@ char* nsSoftwareUpdate::VerifyJSObject(void* jsObj)
   JSObject * jsobj;
   JSClass * jsclass;
   jsobj = (JSObject *) jsObj;
+#ifdef XXX
   /*	jsobj = JSJ_ExtractInternalJSObject(env, (HObject*)a);*/
   jsclass = JS_GetClass(jsobj);
-#ifdef XXX
   /* XXX Fix it */
   if ( jsclass != &lm_softup_class ) {
     errorMsg = SU_GetErrorMsg4(SU_ERROR_BAD_JS_ARGUMENT, -1);
