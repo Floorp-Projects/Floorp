@@ -1034,7 +1034,7 @@ case "$target" in
     if test "$?" != "0" || test -z "$MOZ_TOOLS_DIR"; then
         AC_MSG_ERROR([cd \$MOZ_TOOLS failed. MOZ_TOOLS ==? $MOZ_TOOLS])
     fi
-    if test `echo ${PATH} | grep -c "$MOZ_TOOLS_DIR/bin:"` = 0; then
+    if test `echo ${PATH}: | grep -c "$MOZ_TOOLS_DIR/bin:"` = 0; then
         AC_MSG_ERROR([\$MOZ_TOOLS\\bin must be in your path.])
     fi
     MOZ_TOOLS_DIR=`cygpath -w $MOZ_TOOLS_DIR | sed -e 's|\\\\|/|g'`
@@ -1042,7 +1042,7 @@ case "$target" in
     if test -n "$GLIB_PREFIX"; then
         _GLIB_PREFIX_DIR=`cd $GLIB_PREFIX && pwd`
         if test "$?" = "0"; then
-            if test `echo ${PATH} | grep -c "$_GLIB_PREFIX_DIR/bin:"` = 0; then
+            if test `echo ${PATH}: | grep -c "$_GLIB_PREFIX_DIR/bin:"` = 0; then
                 AC_MSG_ERROR([GLIB_PREFIX must be in your \$PATH.])
             fi
             _GLIB_PREFIX_DIR=`cygpath -w $_GLIB_PREFIX_DIR | sed -e 's|\\\\|/|g'`
@@ -1061,7 +1061,7 @@ case "$target" in
     if test -n "$LIBIDL_PREFIX"; then
         _LIBIDL_PREFIX_DIR=`cd $LIBIDL_PREFIX && pwd`
         if test "$?" = "0"; then
-            if test `echo ${PATH} | grep -c "$_LIBIDL_PREFIX_DIR/bin:"` = 0; then
+            if test `echo ${PATH}: | grep -c "$_LIBIDL_PREFIX_DIR/bin:"` = 0; then
                 AC_MSG_ERROR([LIBIDL_PREFIX must be in your \$PATH.])
             fi
             _LIBIDL_PREFIX_DIR=`cygpath -w $_LIBIDL_PREFIX_DIR | sed -e 's|\\\\|/|g'`
