@@ -462,9 +462,9 @@ nsresult DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument, nsIStyleSet*
 
     rv = NS_NewStyleSet(aStyleSet);
     if (NS_OK == rv) {
-        PRInt32 count = aDocument->GetNumberOfStyleSheets();
+        PRInt32 index = aDocument->GetNumberOfStyleSheets();
 
-        for (PRInt32 index = 0; index < count; index++) {
+        while (0 < index--) {
             nsIStyleSheet* sheet = aDocument->GetStyleSheetAt(index);
             (*aStyleSet)->AppendDocStyleSheet(sheet);
             NS_RELEASE(sheet);
