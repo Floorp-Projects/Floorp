@@ -78,7 +78,7 @@ static ToolbarSpec goodies_menu_spec[] = {
 
 static ToolbarSpec editor_style_toolbar_spec[] = {
 
-	{ xfeCmdSetParagraphStyle, COMBOBOX },
+//	{ xfeCmdSetParagraphStyle, COMBOBOX },
 	{ xfeCmdSetFontFace,       COMBOBOX },
 	{ xfeCmdSetFontSize,       COMBOBOX },
 	{ xfeCmdSetFontColor,      COMBOBOX },
@@ -86,7 +86,7 @@ static ToolbarSpec editor_style_toolbar_spec[] = {
 
 	{ xfeCmdToggleCharacterStyleBold,	   TOGGLEBUTTON, &ed_bold_group },
 	{ xfeCmdToggleCharacterStyleItalic,	   TOGGLEBUTTON, &ed_italic_group },
-	{ xfeCmdToggleCharacterStyleUnderline, TOGGLEBUTTON, &ed_underline_group },
+//	{ xfeCmdToggleCharacterStyleUnderline, TOGGLEBUTTON, &ed_underline_group },
 //	{ xfeCmdClearAllStyles,                PUSHBUTTON  , &ed_clear_group },
 	TOOLBAR_SEPARATOR,
 
