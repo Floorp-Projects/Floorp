@@ -86,7 +86,7 @@ nsresult imgRequestProxy::Init(imgRequest *request, nsILoadGroup *aLoadGroup, im
   nsCOMPtr<nsILoadGroup> loadGroup;
   mDummyChannel->GetLoadGroup(getter_AddRefs(loadGroup));
   if (loadGroup) {
-    loadGroup->AddRequest(mDummyChannel, cx);
+//    loadGroup->AddRequest(mDummyChannel, cx);
   }
 
 #ifdef MOZ_NEW_CACHE
@@ -284,7 +284,7 @@ NS_IMETHODIMP imgRequestProxy::OnStopRequest(nsIRequest *request, nsISupports *c
   nsCOMPtr<nsILoadGroup> loadGroup;
   mDummyChannel->GetLoadGroup(getter_AddRefs(loadGroup));
   if (loadGroup) {
-    loadGroup->RemoveRequest(mDummyChannel, mContext, statusCode, statusText);
+//    loadGroup->RemoveRequest(mDummyChannel, mContext, statusCode, statusText);
   }
   mDummyChannel = nsnull;
       

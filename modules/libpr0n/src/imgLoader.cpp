@@ -92,9 +92,29 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, nsILoadGroup *aLoadGroup, imgID
   ImageCache::Get(aURI, &request, getter_AddRefs(entry)); // addrefs request
 
   if (request && entry && aLoadGroup) {
+    /* this isn't exactly what I want here.  This code will re-doom every cache hit in a document while
+       it is force reloading.  So for multiple copies of an image on a page, when you force reload, this
+       will cause you to get seperate loads for each copy of the image... this sucks.
+     */
     PRUint32 flags = 0;
+    PRBool doomRequest = PR_FALSE;
     aLoadGroup->GetDefaultLoadAttributes(&flags);
-    if (flags & nsIChannel::FORCE_RELOAD) {
+    if (flags & nsIChannel::FORCE_RELOAD)
+      doomRequest = PR_TRUE;
+    else {
+      nsCOMPtr<nsIRequest> r;
+      aLoadGroup->GetDefaultLoadRequest(getter_AddRefs(r));
+      if (r) {
+        nsCOMPtr<nsIChannel> c(do_QueryInterface(r));
+        if (c) {
+          c->GetLoadAttributes(&flags);
+          if (flags & nsIChannel::FORCE_RELOAD)
+            doomRequest = PR_TRUE;
+        }
+      }
+    }
+
+    if (doomRequest) {
       entry->Doom(); // doom this thing.
       entry = nsnull;
       NS_RELEASE(request);
