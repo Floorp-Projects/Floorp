@@ -68,11 +68,45 @@ public:
     **/
     ~ProcessorState();
 
-    /**
-     *  Adds the given attribute set to the list of available named attribute sets
-     * @param attributeSet the Element to add as a named attribute set
-    **/
-    void addAttributeSet(Element* attributeSet);
+    /*
+     * Contain information that is import precedence dependant.
+     */
+    class ImportFrame {
+    public:
+        ImportFrame();
+        ~ImportFrame();
+    
+        // Map of named templates
+        NamedMap mNamedTemplates;
+
+        // Map of template modes, each item in the map is a list
+        // of templates
+        NamedMap mMatchableTemplates;
+
+        // List of whitespace preserving and stripping nametests
+        txList mWhiteNameTests;
+
+        // Map of named attribute sets
+        NamedMap mNamedAttributeSets;
+
+
+        // The following stuff is missing here:
+
+        // ImportFrame(?) for xsl:apply-imports
+        // Nametests for xsl:strip-space and xsl:preserve-space
+        // Namespace aliases (xsl:namespace-alias)
+        // Named attribute sets
+        // Toplevel variables/parameters
+        // Output specifier (xsl:output)
+    };
+
+    /*
+     * Adds the given attribute set to the list of available named attribute
+     * sets
+     * @param aAttributeSet the Element to add as a named attribute set
+     * @param aImportFrame  ImportFrame to add the attributeset to
+     */
+    void addAttributeSet(Element* aAttributeSet, ImportFrame* aImportFrame);
 
     /**
      * Registers the given ErrorObserver with this ProcessorState
@@ -80,10 +114,11 @@ public:
     void addErrorObserver(ErrorObserver& errorObserver);
 
     /**
-     *  Adds the given template to the list of templates to process
-     * @param xslTemplate, the Element to add as a template
+     * Adds the given template to the list of templates to process
+     * @param aXslTemplate  The Element to add as a template
+     * @param aImportFrame  ImportFrame to add the template to
     **/
-    void addTemplate(Element* xslTemplate);
+    void addTemplate(Element* aXslTemplate, ImportFrame* aImportFrame);
 
     /**
      *  Adds the given Node to the Result Tree
@@ -100,7 +135,7 @@ public:
      * Returns the AttributeSet associated with the given name
      * or null if no AttributeSet is found
     **/
-    NodeSet* getAttributeSet(const String& name);
+    NodeSet* getAttributeSet(const String& aName);
 
     /**
      * Returns the source node currently being processed
@@ -112,11 +147,11 @@ public:
     **/ 
     Stack* getDefaultNSURIStack();
 
-    /**
+    /*
      * Returns the template associated with the given name, or
      * null if not template is found
-    **/
-    Element* getNamedTemplate(String& name);
+     */
+    Element* getNamedTemplate(String& aName);
 
     /**
      * Returns the NodeStack which keeps track of where we are in the
@@ -152,11 +187,6 @@ public:
     **/
     void getResultNameSpaceURI(const String& name, String& nameSpaceURI);
 
-    /**
-     * Returns a pointer to a list of available templates
-    **/
-    NodeSet* getTemplates();
-
     String& getXSLNamespace();
 
     /**
@@ -178,37 +208,15 @@ public:
     Stack* getEnteredStylesheets();
 
     /**
-     * Contain information that is import precedence dependant.
-    **/
-    struct ImportFrame {
-        // The following stuff is missing here:
-
-        // ImportFrame(?) for xsl:apply-imports
-        // Nametests for xsl:strip-space and xsl:preserve-space
-        // Template rules
-        // Names templates
-        // Namespace aliases (xsl:namespace-alias)
-        // Named attribute sets
-        // Toplevel variables/parameters
-        // Output specifier (xsl:output)
-    };
-
-    /**
      * Return list of import containers
     **/
     List* getImportFrames();
 
-    /**
-     * Finds a template for the given Node. Only templates without
-     * a mode attribute will be searched.
-    **/
-    Element* findTemplate(Node* node, Node* context);
-
-    /**
+    /*
      * Finds a template for the given Node. Only templates with
      * a mode attribute equal to the given mode will be searched.
-    **/
-    Element* findTemplate(Node* node, Node* context, String* mode);
+     */
+    Element* findTemplate(Node* aNode, Node* aContext, const String& aMode);
 
     /**
      * Determines if the given XSL node allows Whitespace stripping
@@ -265,12 +273,14 @@ public:
     **/ 
     void setOutputMethod(const String& method);
 
-    /**
+    /*
      * Adds the set of names to the Whitespace stripping handling list.
      * xsl:strip-space calls this with MB_TRUE, xsl:preserve-space 
      * with MB_FALSE
-    **/
-    void shouldStripSpace(String& names, MBool shouldStrip);
+     */
+    void shouldStripSpace(String& aNames,
+                          MBool aShouldStrip,
+                          ImportFrame* aImportFrame);
 
     /**
      * Adds the supplied xsl:key to the set of keys
@@ -358,6 +368,11 @@ private:
         Node* node;
         XSLTAction* prev;
     };
+    
+    struct MatchableTemplate {
+        Element* mTemplate;
+        Pattern* mMatch;
+    };
 
     NodeStack currentNodeStack;
 
@@ -379,17 +394,7 @@ private:
     /**
      * List of import containers. Sorted by ascending import precedence
     **/
-    List           importFrames;
-
-    /**
-     * A map for named attribute sets
-    **/
-     NamedMap      namedAttributeSets;
-
-    /**
-     * A map for named templates
-    **/
-    NamedMap       namedTemplates;
+    List           mImportFrames;
 
     /**
      * Current stack of nodes, where we are in the result document tree
@@ -403,20 +408,10 @@ private:
     OutputFormat format;
 
     /**
-     * The list of whitespace preserving and stripping nametests
-    **/
-    txList mWhiteNameTests;
-
-    /**
      * Default whitespace stripping mode
     **/
     XMLSpaceMode       defaultSpace;
 
-    /**
-     * A set of all availabe templates
-    **/
-    NodeSet        templates;
-    
     /**
      * The set of loaded documents. This includes both document() loaded
      * documents and xsl:include/xsl:import'ed documents.

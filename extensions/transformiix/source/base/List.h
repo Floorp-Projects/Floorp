@@ -31,11 +31,12 @@
 #define TRANSFRMX_LIST_H
 
 #include "baseutils.h"
+#include "TxObject.h"
 
 /**
  * Represents an ordered list of Object pointers. Modeled after a Java 2 List.
 **/
-class txList {
+class txList : public TxObject {
 
 friend class txListIterator;
 

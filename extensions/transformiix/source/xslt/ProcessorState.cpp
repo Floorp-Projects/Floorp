@@ -101,43 +101,48 @@ ProcessorState::~ProcessorState() {
       delete item;
   }
 
-  // Delete all importFrames
-  txListIterator iter(&importFrames);
+  // Delete all ImportFrames
+  txListIterator iter(&mImportFrames);
   while (iter.hasNext())
       delete (ImportFrame*)iter.next();
 
   // Make sure that xslDocument and mSourceDocument isn't deleted along with
   // the rest of the documents in the loadedDocuments hash
-  loadedDocuments.remove(xslDocument->getBaseURI());
-  loadedDocuments.remove(mSourceDocument->getBaseURI());
-  
+  if (xslDocument)
+      loadedDocuments.remove(xslDocument->getBaseURI());
+  if (mSourceDocument)
+      loadedDocuments.remove(mSourceDocument->getBaseURI());
 
 } //-- ~ProcessorState
 
 
-/**
- *  Adds the given attribute set to the list of available named attribute sets
- * @param attributeSet the Element to add as a named attribute set
-**/
-void ProcessorState::addAttributeSet(Element* attributeSet) {
-    if ( !attributeSet ) return;
-    String name = attributeSet->getAttribute(NAME_ATTR);
-    if ( name.length() == 0 ) {
-#if 0
-        // XXX DEBUG OUTPUT
-        cout << "missing required name attribute for xsl:" << ATTRIBUTE_SET <<endl;
-#endif
+/*
+ * Adds the given attribute set to the list of available named attribute
+ * sets
+ * @param aAttributeSet the Element to add as a named attribute set
+ * @param aImportFrame  ImportFrame to add the attributeset to
+ */
+void ProcessorState::addAttributeSet(Element* aAttributeSet,
+                                     ImportFrame* aImportFrame)
+{
+    if (!aAttributeSet)
+        return;
+
+    const String& name = aAttributeSet->getAttribute(NAME_ATTR);
+    if (name.length() == 0) {
+        String err("missing required name attribute for xsl:attribute-set");
+        recieveError(err);
         return;
     }
     //-- get attribute set, if already exists, then merge
-    NodeSet* attSet = (NodeSet*)namedAttributeSets.get(name);
+    NodeSet* attSet = (NodeSet*)aImportFrame->mNamedAttributeSets.get(name);
     if ( !attSet) {
         attSet = new NodeSet();
-        namedAttributeSets.put(name, attSet);
+        aImportFrame->mNamedAttributeSets.put(name, attSet);
     }
 
     //-- add xsl:attribute elements to attSet
-    Node* node = attributeSet->getFirstChild();
+    Node* node = aAttributeSet->getFirstChild();
     while (node) {
         if ( node->getNodeType() == Node::ELEMENT_NODE) {
             String nodeName = node->getNodeName();
@@ -161,34 +166,58 @@ void ProcessorState::addErrorObserver(ErrorObserver& errorObserver) {
 } //-- addErrorObserver
 
 /**
- *  Adds the given template to the list of templates to process
- * @param xslTemplate, the Element to add as a template
+ * Adds the given template to the list of templates to process
+ * @param xslTemplate  The Element to add as a template
+ * @param importFrame  ImportFrame to add the template to
 **/
-void ProcessorState::addTemplate(Element* xslTemplate) {
-    if ( !xslTemplate ) return;
-    const String match = xslTemplate->getAttribute(MATCH_ATTR);
-    String name = xslTemplate->getAttribute(NAME_ATTR);
-    if ( name.length() > 0 ) {
-        //-- check for duplicates
-        TxObjectWrapper* mObj = (TxObjectWrapper*)namedTemplates.get(name);
-        if ( mObj ) {
-            String warn("error duplicate template name: ");
-            warn.append(name);
-            warn.append("\n -- using template closest to end of document");
-            recieveError(warn,ErrorObserver::WARNING);
-            delete mObj;
+void ProcessorState::addTemplate(Element* aXslTemplate,
+                                 ImportFrame* aImportFrame)
+{
+    NS_ASSERTION(aXslTemplate, "missing template");
+    
+    const String& name = aXslTemplate->getAttribute(NAME_ATTR);
+    if (name.length() > 0) {
+        // check for duplicates
+        Element* tmp = (Element*)aImportFrame->mNamedTemplates.get(name);
+        if (tmp) {
+            String err("Duplicate template name: ");
+            err.append(name);
+            recieveError(err);
+            return;
         }
-        TxObjectWrapper* oldObj = mObj;
-        mObj= new TxObjectWrapper();
-        mObj->object = xslTemplate;
-        namedTemplates.put(name,mObj);
-        if ( oldObj ) delete oldObj;
+        aImportFrame->mNamedTemplates.put(name, aXslTemplate);
     }
+
+    const String& match = aXslTemplate->getAttribute(MATCH_ATTR);
     if (match.length() > 0) {
-        getPatternExpr(match);
-        templates.add(xslTemplate);
+        // get the txList for the right mode
+        const String& mode = aXslTemplate->getAttribute(MODE_ATTR);
+        txList* templates =
+            (txList*)aImportFrame->mMatchableTemplates.get(mode);
+
+        if (!templates) {
+            templates = new txList;
+            if (!templates) {
+                NS_ASSERTION(0, "out of memory");
+                return;
+            }
+            aImportFrame->mMatchableTemplates.put(mode, templates);
+        }
+
+        // Add the template to the list of templates
+        MatchableTemplate* templ = new MatchableTemplate;
+        if (!templ) {
+            NS_ASSERTION(0, "out of memory");
+            return;
+        }
+        templ->mTemplate = aXslTemplate;
+        templ->mMatch = exprParser.createExpr(match);
+        if (templ->mMatch)
+            templates->add(templ);
+        else
+            delete templ;
     }
-} //-- addTempalte
+}
 
 /**
  * Adds the given node to the result tree
@@ -364,59 +393,55 @@ Stack* ProcessorState::getEnteredStylesheets()
  */
 List* ProcessorState::getImportFrames()
 {
-    return &importFrames;
+    return &mImportFrames;
 }
 
-/**
+/*
  * Finds a template for the given Node. Only templates with
  * a mode attribute equal to the given mode will be searched.
-**/
-Element* ProcessorState::findTemplate(Node* node, Node* context) {
-    return findTemplate(node, context, 0);
-} //-- findTemplate
+ */
+Element* ProcessorState::findTemplate(Node* aNode,
+                                      Node* aContext,
+                                      const String& aMode)
+{
+    if (!aNode)
+        return 0;
 
-/**
- * Finds a template for the given Node. Only templates with
- * a mode attribute equal to the given mode will be searched.
-**/
-Element* ProcessorState::findTemplate(Node* node, Node* context, String* mode) {
-
-    if (!node) return 0;
     Element* matchTemplate = 0;
     double currentPriority = Double::NEGATIVE_INFINITY;
+    ImportFrame* frame;
+    txListIterator frameIter(&mImportFrames);
 
-    for (int i = 0; i < templates.size(); i++) {
+    while (!matchTemplate && (frame = (ImportFrame*)frameIter.next())) {
+        // get templatelist for this mode
+        txList* templates;
+        templates = (txList*)frame->mMatchableTemplates.get(aMode);
 
-        //cout << "looking at template: " << i << endl;
-        Element* xslTemplate = (Element*) templates.get(i);
+        if (templates) {
+            txListIterator templateIter(templates);
 
-        //-- check mode attribute
-        Attr* modeAttr = xslTemplate->getAttributeNode(MODE_ATTR);
-        if (( mode ) && (!modeAttr)) continue;
-        else if (( !mode ) && (modeAttr)) continue;
-        else if ( mode ) {
-            if ( ! mode->isEqual( modeAttr->getValue() )  ) continue;
-        }
-        //-- get templates match expr
-        String match = xslTemplate->getAttribute(MATCH_ATTR);
-        //cout << "match attr: " << match << endl;
+            MatchableTemplate* templ;
+            while ((templ = (MatchableTemplate*)templateIter.next())) {
+                String priorityAttr =
+                    templ->mTemplate->getAttribute(PRIORITY_ATTR);
 
-        //-- get Expr from expression hash table
-        PatternExpr* pExpr = getPatternExpr(match);
-        if ( !pExpr ) continue;
+                double tmpPriority;
+                if (priorityAttr.length() > 0) {
+                    Double dbl(priorityAttr);
+                    tmpPriority = dbl.doubleValue();
+                }
+                else {
+                    tmpPriority = templ->mMatch->getDefaultPriority(aNode,
+                                                                    aContext,
+                                                                    this);
+                }
 
-        if (pExpr->matches(node, context, this)) {
-            String priorityAttr = xslTemplate->getAttribute(PRIORITY_ATTR);
-            double tmpPriority = 0;
-            if ( priorityAttr.length() > 0 ) {
-                Double dbl(priorityAttr);
-                tmpPriority = dbl.doubleValue();
-            }
-            else tmpPriority = pExpr->getDefaultPriority(node,context,this);
+                if (tmpPriority >= currentPriority &&
+                    templ->mMatch->matches(aNode, aContext, this)) {
 
-            if (tmpPriority >= currentPriority) {
-                matchTemplate = xslTemplate;
-                currentPriority = tmpPriority;
+                    matchTemplate = templ->mTemplate;
+                    currentPriority = tmpPriority;
+                }
             }
         }
     }
@@ -427,10 +452,26 @@ Element* ProcessorState::findTemplate(Node* node, Node* context, String* mode) {
 /**
  * Returns the AttributeSet associated with the given name
  * or null if no AttributeSet is found
-**/
-NodeSet* ProcessorState::getAttributeSet(const String& name) {
-    return (NodeSet*)namedAttributeSets.get(name);
-} //-- getAttributeSet
+ */
+NodeSet* ProcessorState::getAttributeSet(const String& aName)
+{
+    NodeSet* attset = new NodeSet;
+    if (!attset)
+        return attset;
+
+    attset->setDuplicateChecking(MB_FALSE);
+
+    ImportFrame* frame;
+    txListIterator frameIter(&mImportFrames);
+    frameIter.resetToEnd();
+
+    while ((frame = (ImportFrame*)frameIter.previous())) {
+        NodeSet* nodes = (NodeSet*)frame->mNamedAttributeSets.get(aName);
+        if (nodes)
+            nodes->copyInto(*attset);
+    }
+    return attset;
+}
 
 /**
  * Returns the source node currently being processed
@@ -463,19 +504,22 @@ Expr* ProcessorState::getExpr(const String& pattern) {
     return expr;
 } //-- getExpr
 
-/**
+/*
  * Returns the template associated with the given name, or
  * null if not template is found
-**/
-Element* ProcessorState::getNamedTemplate(String& name) {
-    TxObjectWrapper* mObj = (TxObjectWrapper*)namedTemplates.get(name);
-    if ( mObj ) {
-        return (Element*)mObj->object;
+ */
+Element* ProcessorState::getNamedTemplate(String& aName)
+{
+    ImportFrame* frame;
+    txListIterator frameIter(&mImportFrames);
+
+    while ((frame = (ImportFrame*)frameIter.next())) {
+        Element* templ = (Element*)frame->mNamedTemplates.get(aName);
+        if (templ)
+            return templ;
     }
     return 0;
-} //-- getNamedTemplate
-
-
+}
 
 /**
  * Returns the namespace URI for the given name, this method should only be
@@ -561,11 +605,6 @@ void ProcessorState::getResultNameSpaceURI(const String& name, String& nameSpace
     }
 
 } //-- getResultNameSpaceURI
-
-NodeSet* ProcessorState::getTemplates() {
-   return &templates;
-} //-- getTemplates
-
 
 Stack* ProcessorState::getVariableSetStack() {
     return &variableSets;
@@ -700,25 +739,27 @@ void ProcessorState::setOutputMethod(const String& method) {
     }
 }
 
-/**
+/*
  * Adds the set of names to the Whitespace handling list.
  * xsl:strip-space calls this with MB_TRUE, xsl:preserve-space 
  * with MB_FALSE
-**/
-void ProcessorState::shouldStripSpace(String& names, MBool shouldStrip) {
+ */
+void ProcessorState::shouldStripSpace(String& aNames,
+                                      MBool aShouldStrip,
+                                      ImportFrame* aImportFrame)
+{
     //-- split names on whitespace
-    Tokenizer tokenizer(names);
+    Tokenizer tokenizer(aNames);
     String name;
     while (tokenizer.hasMoreTokens()) {
         tokenizer.nextToken(name);
-        txNameTestItem* nti = new txNameTestItem(name,shouldStrip);
+        txNameTestItem* nti = new txNameTestItem(name, aShouldStrip);
         if (!nti) {
             // XXX error report, parsing error or out of mem
             break;
         }
-        // XXX ToDo: get import precedence right, bug 83651
         double priority = nti->getDefaultPriority();
-        txListIterator iter(&mWhiteNameTests);
+        txListIterator iter(&aImportFrame->mWhiteNameTests);
         while (iter.hasNext()) {
             txNameTestItem* iNameTest = (txNameTestItem*)iter.next();
             if (iNameTest->getDefaultPriority() <= priority) {
@@ -802,13 +843,17 @@ MBool ProcessorState::isStripSpaceAllowed(Node* node) {
         case Node::ELEMENT_NODE :
         {
             // check Whitespace stipping handling list against given Node
-            // XXX ToDo: get import precedence right, bug 83651
+            ImportFrame* frame;
+            txListIterator frameIter(&mImportFrames);
+
             String name = node->getNodeName();
-            txListIterator iter(&mWhiteNameTests);
-            while (iter.hasNext()) {
-                txNameTestItem* iNameTest = (txNameTestItem*)iter.next();
-                if (iNameTest->matches(node,this))
-                    return iNameTest->stripsSpace();
+            while ((frame = (ImportFrame*)frameIter.next())) {
+                txListIterator iter(&frame->mWhiteNameTests);
+                while (iter.hasNext()) {
+                    txNameTestItem* iNameTest = (txNameTestItem*)iter.next();
+                    if (iNameTest->matches(node, this))
+                        return iNameTest->stripsSpace();
+                }
             }
             String method;
             if (format.getMethod(method).isEqual("html")) {
@@ -999,12 +1044,6 @@ void ProcessorState::initialize() {
     exprHash.setObjectDeletion(MB_TRUE);
     patternExprHash.setObjectDeletion(MB_TRUE);
     nameSpaceMap.setObjectDeletion(MB_TRUE);
-    namedAttributeSets.setObjectDeletion(MB_TRUE);
-
-    //-- named templates uses deletion, to remove the ObjectWrappers
-    namedTemplates.setObjectDeletion(MB_TRUE);
-    //-- do not set ObjectDeletion for templates, since the Document
-    //-- handles the cleanup
 
     //-- create NodeStack
     resultNodeStack = new NodeStack();
@@ -1079,4 +1118,34 @@ void ProcessorState::initialize() {
     
     //-- Make sure all loaded documents get deleted
     loadedDocuments.setObjectDeletion(MB_TRUE);
+}
+
+ProcessorState::ImportFrame::ImportFrame()
+{
+    mNamedAttributeSets.setObjectDeletion(MB_TRUE);
+}
+
+ProcessorState::ImportFrame::~ImportFrame()
+{
+    // Delete all txNameTestItems
+    txListIterator whiteIter(&mWhiteNameTests);
+    while (whiteIter.hasNext())
+        delete (txNameTestItem*)whiteIter.next();
+
+    // Delete templates in mMatchableTemplates
+    StringList* templKeys = mMatchableTemplates.keys();
+    if (templKeys) {
+        StringListIterator keysIter(templKeys);
+        String* key;
+        while ((key = keysIter.next())) {
+            txList* templList = (txList*)mMatchableTemplates.get(*key);
+            txListIterator templIter(templList);
+            MatchableTemplate* templ;
+            while ((templ = (MatchableTemplate*)templIter.next())) {
+                delete templ->mMatch;
+                delete templ;
+            }
+            delete templList;
+        }
+    }
 }
