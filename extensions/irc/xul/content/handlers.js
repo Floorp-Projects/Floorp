@@ -107,6 +107,57 @@ function onToggleToolbarIcons()
 
 }
 
+function onToggleVisibility(thing)
+{    
+    var menu = document.getElementById("menu-view-" + thing);
+    var ids = new Array();
+    
+    switch (thing)
+    {
+        case "toolbar":
+            ids = ["views-tbox"];
+            break;
+            
+        case "info":
+            ids = ["user-list-box", "main-splitter"];            
+            break;
+            
+        case "status":
+            ids = ["status-bar-tbox"];
+            break;
+
+        default:
+            dd ("** Unknown element '" + menuId + 
+                "' passed to onToggleVisibility. **");
+            return;
+    }
+
+
+    var newState;
+    var elem = document.getElementById(ids[0]);
+    var d = elem.getAttribute("collapsed");
+    
+    if (d == "true")
+    {
+        newState = "false";
+        menu.setAttribute ("checked", "true");
+        client.uiState[thing] = true;
+    }
+    else
+    {
+        newState = "true";
+        menu.setAttribute ("checked", "false");
+        client.uiState[thing] = false;
+    }
+    
+    for (var i in ids)
+    {
+        elem = document.getElementById(ids[i]);
+        elem.setAttribute ("collapsed", newState);
+    }
+
+}
+
 function onDoStyleChange (newStyle)
 {
 
@@ -161,30 +212,82 @@ function onDeleteCurrentView()
     
 }
 
+function onSortCol(sortColName)
+{
+    dd ("in sortcol");
+    
+    const nsIXULSortService = Components.interfaces.nsIXULSortService;
+    const isupports_uri = "component://netscape/rdf/xul-sort-service";
+    
+    var node = document.getElementById(sortColName);
+    // determine column resource to sort on
+    var sortResource = node.getAttribute('resource');
+    if (!node)
+        return false;
+ 
+    var sortDirection = "ascending";
+        //node.setAttribute("sortActive", "true");
+
+    switch (sortColName)
+    {
+        case "usercol-op":
+            document.getElementById("usercol-voice")
+                .setAttribute("sortDirection", "natural");
+            document.getElementById("usercol-nick")
+                .setAttribute("sortDirection", "natural");
+            break;
+        case "usercol-voice":
+            document.getElementById("usercol-op")
+                .setAttribute("sortDirection", "natural");
+            document.getElementById("usercol-nick")
+                .setAttribute("sortDirection", "natural");
+            break;
+        case "usercol-nick":
+            document.getElementById("usercol-voice")
+                .setAttribute("sortDirection", "natural");
+            document.getElementById("usercol-op")
+                .setAttribute("sortDirection", "natural");
+            break;
+    }
+    
+    var currentDirection = node.getAttribute('sortDirection');
+    
+    if (currentDirection == "ascending")
+        sortDirection = "descending";
+    else if (currentDirection == "descending")
+        sortDirection = "natural";
+    else
+        sortDirection = "ascending";
+    
+    node.setAttribute ("sortDirection", sortDirection);
+ 
+    var xulSortService =
+        Components.classes[isupports_uri].getService(nsIXULSortService);
+    if (!xulSortService)
+        return false;
+    try
+    {
+        xulSortService.Sort(node, sortResource, sortDirection);
+    }
+    catch(ex)
+    {
+            //dd("Exception calling xulSortService.Sort()");
+    }
+    
+    return false;
+}
+
 function onToggleMunger()
 {
-    client.munger.enabled = !client.munger.enabled;
 
-    /*
-    if (client.munger.enabled)
-        alert ("The munger may be broken, see " +
-               "http://bugzilla.mozilla.org/show_bug.cgi?id=22048");
-    */
-    
+    client.munger.enabled = !client.munger.enabled;
     document.getElementById("menu-munger").setAttribute ("checked",
                                                          client.munger.enabled);
+
 }
 
 function onInputKeyUp (e)
 {
-    if (0 && e.target.id != "input")
-    {
-        dd ("** KeyUp event came from the wrong place, faking it.");
-        dd ("** e.target (" + e.target + ", '" + e.target.id + "') " +
-            " is of type '" + typeof e.target + "'");
-        e = new Object();
-        e.target = document.getElementById ("input");
-    }
     
     switch (e.which)
     {        
@@ -212,115 +315,129 @@ function onInputKeyUp (e)
             break;
 
         case 9: /* tab */
-            var selStart = e.target.selectionStart;
-            var selEnd = e.target.selectionEnd;
-            if (selStart != selEnd) 
-            {
-                /* text is highlighted, just move caret to end and exit */
-                e.target.selectionStart = e.target.selectionEnd = v.length;
-                break;
-            }
-            
-            var v = e.target.value;
-            var firstSpace = v.indexOf(" ");
-            if (firstSpace == -1)
-                firstSpace = v.length;
-            
-            if ((v[0] == client.COMMAND_CHAR) && (selStart <= firstSpace))
-            {
-                /* complete a command */                
-                var partialCommand = v.substring (1, firstSpace);
-                var cmds = client.commands.listNames(partialCommand);
-
-                if (cmds.length == 1)
-                {
-                    var pfx = client.COMMAND_CHAR + cmds[0];
-                    if (firstSpace == v.length)
-                        v =  pfx + " ";
-                    else
-                        v = pfx + v.substr (firstSpace);
-                    
-                    e.target.value = v;
-                    e.target.selectionStart = e.target.selectionEnd = 
-                        pfx.length + 1;
-                }
-                else if (cmds.length > 1)
-                {
-                    var d = new Date();
-                    if ((d - client.lastTabUp) <= client.DOUBLETAB_TIME)
-                        client.currentObject.display
-                            ("Commands matching ``" + partialCommand + 
-                             "'' are [" + cmds.join(", ") + "]", "INFO");
-                    else
-                        client.lastTabUp = d;
-
-                    var pfx = client.COMMAND_CHAR + getCommonPfx(cmds);
-                    if (firstSpace == v.length)
-                        v =  pfx;
-                    else
-                        v = pfx + v.substr (firstSpace);
-                    
-                    e.target.value = v;
-                    e.target.selectionStart = e.target.selectionEnd = pfx.length;
-
-                }
-                else
-                    client.currentObject.display ("No commands matching " +
-                                                  partialCommand, "ERROR");
-
-            }
-            else if (client.currentObject.users)
-            {
-                /* complete a nickname */
-                var users = client.currentObject.users;
-                var nicks = new Array();
-                    
-                for (var n in users)
-                    nicks.push (users[n].nick);
-                
-                var nickStart = v.lastIndexOf(" ", selStart) + 1;
-                var nickEnd = v.indexOf (" ", selStart);
-                if (nickEnd == -1)
-                    nickEnd = v.length;
-                
-                var partialNick = v.substring (nickStart, nickEnd);
-                
-                var matchingNicks = matchEntry (partialNick, nicks);
-                
-                if (matchingNicks.length > 0)
-                {
-                    var subst;
-                    
-                    if (matchingNicks.length == 1)
-                        subst = matchingNicks[0];
-                    else
-                    {
-                        var d = new Date();
-                        if ((d - client.lastTabUp) <= client.DOUBLETAB_TIME)
-                            client.currentObject.display
-                                ("Users matching ``" + partialNick +
-                                 "'' are [" + matchingNicks.join(", ") + "]",
-                                 "INFO");
-                        else
-                            client.lastTabUp = d;
-
-                        subst = getCommonPfx(matchingNicks);
-                    }
-
-                    v = v.substr (0, nickStart) + subst + v.substr (nickEnd);
-                    e.target.value = v;
-                    break;
-                        
-                }
-                        
-            }
-
+            onTabCompleteRequest(e);
             break;       
             
         default:
             client.incompleteLine = e.target.value;
 
             
+    }
+
+}
+
+function onTabCompleteRequest (e)
+{
+    var selStart = e.target.selectionStart;
+    var selEnd = e.target.selectionEnd;            
+    var v = e.target.value;
+
+    if (selStart != selEnd) 
+    {
+        /* text is highlighted, just move caret to end and exit */
+        e.target.selectionStart = e.target.selectionEnd = v.length;
+        return;
+    }
+
+    var firstSpace = v.indexOf(" ");
+    if (firstSpace == -1)
+        firstSpace = v.length;
+    
+    if ((v[0] == client.COMMAND_CHAR) && (selStart <= firstSpace))
+    {
+        /* complete a command */                
+        var partialCommand = v.substring(1, firstSpace).toLowerCase();
+        var cmds = client.commands.listNames(partialCommand);
+            
+        if (cmds.length == 1)
+        {
+            /* partial matched exactly one command */
+            var pfx = client.COMMAND_CHAR + cmds[0];
+            if (firstSpace == v.length)
+                v =  pfx + " ";
+            else
+                v = pfx + v.substr (firstSpace);
+            
+            e.target.value = v;
+            e.target.selectionStart = e.target.selectionEnd = 
+                pfx.length + 1;
+        }
+        else if (cmds.length > 1)
+        {
+            /* partial matched more than one command */
+            var d = new Date();
+            if ((d - client.lastTabUp) <= client.DOUBLETAB_TIME)
+                client.currentObject.display
+                    ("Commands matching ``" + partialCommand + 
+                     "'' are [" + cmds.join(", ") + "]", "INFO");
+            else
+                client.lastTabUp = d;
+            
+            var pfx = client.COMMAND_CHAR + getCommonPfx(cmds);
+            if (firstSpace == v.length)
+                v =  pfx;
+            else
+                v = pfx + v.substr (firstSpace);
+            
+            e.target.value = v;
+            e.target.selectionStart = e.target.selectionEnd = pfx.length;
+            
+        }
+        else
+            client.currentObject.display ("No commands matching " +
+                                          partialCommand, "ERROR");
+        
+    }
+    else if (client.currentObject.users)
+    {
+        /* complete a nickname */
+        var users = client.currentObject.users;
+        var nicks = new Array();
+        
+        for (var n in users)
+            nicks.push (users[n].nick);
+        
+        var nickStart = v.lastIndexOf(" ", selStart) + 1;
+        var nickEnd = v.indexOf (" ", selStart);
+        if (nickEnd == -1)
+            nickEnd = v.length;
+        
+        var partialNick = v.substring(nickStart, nickEnd).toLowerCase();
+        
+        var matchingNicks = matchEntry (partialNick, nicks);
+        
+        if (matchingNicks.length > 0)
+        {
+            var subst;
+            
+            if (matchingNicks.length == 1)
+            {   /* partial matched exactly one nick */
+                subst = 
+                    client.currentObject.users[matchingNicks[0]].properNick;
+                if (nickStart == 0)
+                    subst += client.ADDRESSED_NICK_SEP;
+                else
+                    subst += " ";
+            }
+            else
+            {   /* partial matched more than one command */
+                var d = new Date();
+                if ((d - client.lastTabUp) <= client.DOUBLETAB_TIME)
+                    client.currentObject.display
+                        ("Users matching ``" + partialNick +
+                         "'' are [" + matchingNicks.join(", ") + "]",
+                         "INFO");
+                else
+                    client.lastTabUp = d;
+                
+                subst = getCommonPfx(matchingNicks);
+            }
+            
+            v = v.substr (0, nickStart) + subst + v.substr (nickEnd);
+            e.target.value = v;
+            
+        }
+        
     }
 
 }
@@ -347,10 +464,28 @@ function onWindowKeyPress (e)
             return false;
             break;
 
+        case 33: /* pgup */
+            var w = window.frames[0];
+            var newOfs = w.pageYOffset - (w.innerHeight / 2);
+            if (newOfs > 0)
+                w.scrollTo (w.pageXOffset, newOfs);
+            else
+                w.scrollTo (w.pageXOffset, 0);
+            break;
+            
+        case 34: /* pgdn */
+            var w = window.frames[0];
+            var newOfs = w.pageYOffset + (w.innerHeight / 2);
+            if (newOfs < (w.innerHeight + w.pageYOffset))
+                w.scrollTo (w.pageXOffset, newOfs);
+            else
+                w.scrollTo (w.pageXOffset, (w.innerHeight + w.pageYOffset));
+            break;
+            
         default:
             
     }
-            
+
 }
 
 function onInputCompleteLine(e)
@@ -612,6 +747,77 @@ function cli_exit (e)
     client.quit(e.inputData);    
     window.close();
     
+}
+
+client.onInputDelete =
+function cli_idelete (e)
+{
+    
+    onDeleteCurrentView();
+    return true;
+
+}
+
+client.onInputHide=
+function cli_ihide (e)
+{
+    
+    onHideCurrentView();
+    return true;
+
+}
+
+client.onInputClear =
+function cli_iclear (e)
+{
+    
+    onClearCurrentView();
+    return true;
+
+}
+
+client.onInputNames =
+function cli_inames ()
+{
+    
+    onToggleVisibility ("info");
+    return true;
+    
+}
+
+client.onInputToolbar =
+function cli_itbar ()
+{
+    
+    onToggleVisibility ("toolbar");
+    return true;
+
+}
+
+client.onInputStatusbar =
+function cli_isbar ()
+{
+    
+    onToggleVisibility ("status");
+    return true;
+
+}
+
+client.onInputCommands =
+function cli_icommands (e)
+{
+    
+    if (e && e.inputData)
+        client.currentObject.display ("Currently implemented commands " +
+                                      "matching the pattern ``" + e.inputData +
+                                      "'' are ["  + 
+                                      client.commands.listNames(e.inputData)
+                                      .join(", ") + "].", "INFO");
+    else
+        client.currentObject.display ("Currently implemented commands are ["  + 
+                                      client.commands.listNames().join(", ") +
+                                      "].", "INFO");
+    return true;
 }
 
 client.onInputAttach =
@@ -1258,32 +1464,24 @@ function cli_ikick (e)
 }
 
 /* 'private' function, should only be used from inside */
-CIRCChannel.prototype._addToUserList =
-function my_addtolist (user)
+CIRCChannel.prototype._addUserToGraph =
+function my_addtograph (user)
 {
-    var ary = new Array();
-    var u;
-    var i;
+    if (!user.TYPE)
+        dd (getStackTrace());
+    
+    client.rdf.Assert (this.getGraphResource(), client.rdf.resChanUser,
+                       user.getGraphResource(), true);
+    
+}
 
-    for (u in this.users)
-        ary.push (this.users[u].nick);
-    
-    ary.sort();
+/* 'private' function, should only be used from inside */
+CIRCChannel.prototype._removeUserFromGraph =
+function my_remfgraph (user)
+{
 
-    for (i = 0; i < ary.length; i++)
-        if (user.nick == ary[i])
-            break;
-    
-    if (!this.list)
-        this.list = new CListBox();
-    
-    if (i < ary.length - 1)
-    {
-        this.list.prepend (user.getDecoratedNick(),
-                           this.users[ary[i + 1]].getDecoratedNick());
-    }
-    else
-        this.list.add (user.getDecoratedNick());
+    client.rdf.Unassert (this.getGraphResource(), client.rdf.resChanUser,
+                         user.getGraphResource());
     
 }
 
@@ -1451,20 +1649,13 @@ CIRCChannel.prototype.on366 =
 function my_366 (e)
 {
 
-    if (!this.list)
-        this.list = new CListBox();
-    else
-        this.list.clear();
-
-    var ary = new Array();    
+    client.rdf.clearTargets(this.getGraphResource(), client.rdf.resChanUser);
 
     for (var u in this.users)
-        ary.push (this.users[u].nick);
-    
-    ary.sort();
-    
-    for (var u in ary)
-        this.list.add (this.users[ary[u]].getDecoratedNick());
+    {
+        this.users[u].updateGraphResource();
+        this._addUserToGraph (this.users[u]);
+    }
     
 }    
 
@@ -1504,13 +1695,16 @@ function my_cjoin (e)
 {
 
     if (userIsMe (e.user))
+    {
         this.display ("YOU have joined " + e.channel.name, "JOIN", "!ME");
+        setCurrentObject(this);
+    }
     else
         this.display(e.user.properNick + " (" + e.user.name + "@" +
                      e.user.host + ") has joined " + e.channel.name,
                      "JOIN", e.user.nick);
 
-    this._addToUserList (e.user);
+    this._addUserToGraph (e.user);
     
     updateChannel (e.channel);
     
@@ -1520,12 +1714,18 @@ CIRCChannel.prototype.onPart =
 function my_cpart (e)
 {
 
+    this._removeUserFromGraph(e.user);
+
     if (userIsMe (e.user))
+    {
         this.display ("YOU have left " + e.channel.name, "PART", "!ME");
+        client.rdf.clearTargets(this.getGraphResource(),
+                                client.rdf.resChanUser, true);
+    }
     else
         this.display (e.user.properNick + " has left " + e.channel.name,
                       "PART");
-    this.list.remove (e.user.getDecoratedNick());
+
 
     updateChannel (e.channel);
     
@@ -1558,7 +1758,7 @@ function my_ckick (e)
                       e.reason + ")", "KICK", enforcerNick);
     }
     
-    this.list.remove (e.lamer.getDecoratedNick());
+    this._removeUserFromGraph(e.user);
 
     updateChannel (e.channel);
     
@@ -1573,7 +1773,7 @@ function my_cmode (e)
                       e.user.nick, "MODE");
 
     for (var u in e.usersAffected)
-        e.usersAffected[u].updateDecoratedNick();
+        e.usersAffected[u].updateGraphResource();
 
     updateChannel (e.channel);
     updateTitle (e.channel);
@@ -1596,9 +1796,12 @@ function my_cnick (e)
         this.display (e.oldNick + " is now known as " + e.user.properNick,
                       "NICK");
 
-    this.list.remove (e.user.getDecoratedNick());
-    e.user.updateDecoratedNick();
-    this._addToUserList(e.user);
+    /*
+      dd ("updating resource " + e.user.getGraphResource().Value +
+        " to new nickname " + e.user.properNick);
+    */
+
+    e.user.updateGraphResource();
     
 }
 
@@ -1614,7 +1817,7 @@ function my_cquit (e)
         this.display (e.user.properNick + " has left " + e.server.parent.name +
                       " (" + e.reason + ")", "QUIT");
 
-    this.list.remove (e.user.getDecoratedNick());
+    this._removeUserFromGraph(e.user);
 
     updateChannel (e.channel);
     

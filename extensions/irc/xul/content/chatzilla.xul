@@ -31,9 +31,12 @@
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/tasksOverlay.xul"?>
 
-<window xmlns:html="http://www.w3.org/TR/REC-html40"
+<window id="main-window"
+        xmlns:html="http://www.w3.org/TR/REC-html40"
+        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        align="vertical" onload="onLoad();" onunload="onUnload();">
+        align="vertical" onload="onLoad();" onunload="onUnload();"
+        persist="width height">
 
 <html:script src="chrome://chatzilla/content/lib/js/utils.js"/>
 <html:script src="chrome://chatzilla/content/lib/js/connection-xpcom.js"/>
@@ -41,13 +44,13 @@
 <html:script src="chrome://chatzilla/content/lib/js/command-manager.js"/>
 <html:script src="chrome://chatzilla/content/lib/js/irc.js"/>
 <html:script src="chrome://chatzilla/content/lib/js/irc-debug.js"/>
-<html:script src="chrome://chatzilla/content/lib/xul/listbox.js"/>
 <html:script src="chrome://chatzilla/content/lib/xul/munger.js"/>
 
 <html:script src="chrome://chatzilla/content/commands.js"/>
 <html:script src="chrome://chatzilla/content/readprefs.js"/>
 <html:script src="chrome://chatzilla/content/static.js"/>
 <html:script src="chrome://chatzilla/content/handlers.js"/>
+<html:script src="chrome://chatzilla/content/rdf.js"/>
 
 <!-- This is to test the popups in the 'quickList' channel name list -->
 
@@ -67,12 +70,18 @@
   <menubar id="main-menubar">
     <menu value="Options">
       <menupopup>
-        <menuitem id="menu-dmessages" value="Debug Messages"
-                  oncommand="onToggleTraceHook()" type="checkbox"/>
-        <menuitem id="menu-munger" value="Munger" oncommand="onToggleMunger()"
-                  type="checkbox"/>
-        <menuitem id="menu-viewicons" value="Icons in View Buttons" 
-                  type="checkbox" oncommand="onToggleToolbarIcons();"/>
+
+        <menu value="Toggles">
+          <menupopup>    
+            <menuitem id="menu-dmessages" value="Debug Messages"
+              oncommand="onToggleTraceHook()" type="checkbox"/>
+            <menuitem id="menu-munger" value="Munger"
+              oncommand="onToggleMunger()" type="checkbox"/>
+          </menupopup>
+        </menu>
+
+        <menuitem value="Logging..." enabled="false"
+                  oncommand="onNotImplemented();"/>
         <menuseparator/>
         <!--
         <menu value="Style">
@@ -91,8 +100,23 @@
         -->
       </menupopup>
     </menu>
-    <menu value="Views">
+    <menu value="View">
       <menupopup>
+        <menuitem id="menu-view-toolbar" value="Toolbar" 
+          type="checkbox" oncommand="onToggleVisibility('toolbar');"/>
+        <menuitem id="menu-view-info" value="Info Tree" 
+          type="checkbox" oncommand="onToggleVisibility('info');"/>
+
+        <menuitem id="menu-view-status" value="Statusbar" 
+          type="checkbox" oncommand="onToggleVisibility('status');"/>
+
+        <menuseparator/>
+
+        <menuitem id="menu-viewicons" value="Icons in View Buttons" 
+          type="checkbox" oncommand="onToggleToolbarIcons();"/>
+
+        <menuseparator/>
+
         <menu value="Current View">
           <menupopup>
             <menuitem value="Hide" oncommand="onHideCurrentView();"/>
@@ -100,26 +124,76 @@
             <menuitem value="Delete" oncommand="onDeleteCurrentView();"/>
           </menupopup>
         </menu>
-        <menuitem value="Logging..." enabled="false"
-                  oncommand="onNotImplemented();"/>
+
       </menupopup>
     </menu>
     <menu id="tasksMenu"/>
   </menubar>
 </toolbox>
 
-<toolbox id="views-tbox">
+<toolbox id="views-tbox" persist-notyet="collapsed">
   <toolbar id="views-tbar" class="toolbar-primary chromeclass-toolbar">
     <box id="views-tbar-inner"/>
   </toolbar>
 </toolbox>
 
 <box id="outer-box" align="vertical" flex="1">
-  <box id="inner-box" align="horizontal" flex="1">	
-    <box id="quickList" class="quick-list" align="vertical"
-	flex="0" width="150px" context="userlistPopup" />
+  <box id="inner-box" align="horizontal" flex="1">
+    <box id="user-list-box" flex="40%">
+    <tree id="user-list" container="true" datasources="rdf:null" flex="1"
+     containment="http://home.netscape.com/NC-irc#chanuser">
+
+      <template>
+        <treechildren>
+          <treeitem uri="...">
+            <treerow>
+                <treecell>
+                  <image class="op-image"
+                    state="rdf:http://home.netscape.com/NC-irc#op"/>
+                </treecell>
+                <treecell>
+                  <image class="voice-image"
+                    state="rdf:http://home.netscape.com/NC-irc#voice"/>
+                </treecell>
+                <treecell>
+                  <text value="rdf:http://home.netscape.com/NC-irc#nick"/>
+                </treecell>
+            </treerow>
+          </treeitem>
+        </treechildren>
+      </template>
+
+      <treecolgroup>
+       <treecol
+        rdf:resource="http://home.netscape.com/NC-irc#op"
+        width="15px"/>
+      <treecol
+       rdf:resource="http://home.netscape.com/NC-irc#voice"
+       width="15px"/>
+      <treecol
+        rdf:resource="http://home.netscape.com/NC-irc#nick"/>
+      </treecolgroup>
+
+      <treehead>
+        <treerow>
+          <treecell id="usercol-op"
+            rdf:resource="http://home.netscape.com/NC-irc#op"
+            class="treecell-header sortDirectionIndicator" value="O"
+            onclick="return onSortCol('usercol-op');"/>
+          <treecell id="usercol-voice"
+            rdf:resource="http://home.netscape.com/NC-irc#voice"
+            class="treecell-header sortDirectionIndicator" value="V"
+            onclick="return onSortCol('usercol-voice');"/>
+          <treecell id="usercol-nick"
+            rdf:resource="http://home.netscape.com/NC-irc#nick"
+            class="treecell-header sortDirectionIndicator" value="Nick"
+            onclick="return onSortCol('usercol-nick');"/>
+        </treerow>
+      </treehead>
+    </tree>      
+    </box>
     <splitter id="main-splitter" align="vertical" collapse="before"/>
-    <box align="vertical" flex="1">
+    <box align="vertical" flex="60%">
       <html:iframe id="it-doesnt-matter-anyway" class="output-container"
        src="about:blank" flex="1"/>
     <!--
@@ -130,9 +204,9 @@
   </box>
 </box>
 
-<toolbox>
+<toolbox id="status-bar-tbox" persist-notyet="collapsed">
   <toolbar id="status-bar" class="chromeclass-status">
-    <box class="status-table" align="horizontal" flex="20%">
+    <box class="status-box" align="horizontal" flex="20%">
       <box class="status-label" align="vertical">
         <label>Network</label>
         <label>Channel</label>
@@ -144,12 +218,13 @@
          <label id="channel-topicby">(nobody)</label>
       </box>
       <spring flex="20%"/>
+      <box class="status-label" align="vertical">
+         <label>Server</label>
+         <label>Mode</label>
+         <label>Topic</label>
+      </box>
       <box align="vertical" flex="80%">
         <box align="horizontal" flex="1">
-          <box class="status-label" align="vertical">
-            <label>Server</label>
-            <label>Mode</label>
-          </box>
           <box class="status-data" align="vertical">
             <label id="server-name">(none)</label>
             <label id="channel-mode">(none)</label>
@@ -183,9 +258,6 @@
           </box>
         </box>
         <box align="horizontal" flex="1">
-          <box class="status-label" align="vertical">
-            <label class="status-label">Topic</label>
-          </box>
           <box class="status-data" align="vertical" flex="1">
             <label id="channel-topic">(none)</label>
           </box>

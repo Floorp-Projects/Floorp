@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -41,37 +41,31 @@ client.COLLAPSE_HEIGHT = "25px";
 client.MAX_MESSAGES = 200;
 client.MAX_HISTORY = 50;
 client.TYPE = "IRCClient";
-client.OP1_IMG = client.IMAGEDIR + "is-op.gif"; /* user is op image */
-client.OP0_IMG = client.IMAGEDIR + "isnt-op.gif"; /* user isnt op */
-client.V1_IMG = client.IMAGEDIR + "is-voice.gif"; /* user is voice */
-client.V0_IMG = client.IMAGEDIR + "isnt-voice.gif"; /* user isnt voice */
 client.PRINT_DIRECTION = 1; /*1 => new messages at bottom, -1 => at top */
-                
+client.ADDRESSED_NICK_SEP = ", ";
+
 client.name = "*client*";
 client.viewsArray = new Array();
-client.lastListType = "chan-users";
+client.activityList = new Object();
+client.uiState = new Object(); /* state of ui elements (visible/collapsed */
 client.inputHistory = new Array();
 client.lastHistoryReferenced = -1;
 client.incompleteLine = "";
 client.isPermanent = true;
 
 client.lastTabUp = new Date();
-client.DOUBLETAB_TIME = 1500;
+client.DOUBLETAB_TIME = 500;
 
 CIRCNetwork.prototype.INITIAL_NICK = client.defaultNick;
 CIRCNetwork.prototype.INITIAL_NAME = "chatzilla";
 CIRCNetwork.prototype.INITIAL_DESC = "New Now Know How";
 CIRCNetwork.prototype.INITIAL_CHANNEL = "";
 CIRCNetwork.prototype.MAX_MESSAGES = 100;
-CIRCNetwork.prototype.IGNORE_MOTD = false;
+CIRCNetwork.prototype.IGNORE_MOTD = true;
 
 CIRCServer.prototype.READ_TIMEOUT = 0;
-CIRCServer.prototype.VERSION_RPLY += "\nChatZilla";
-if (jsenv.HAS_DOCUMENT)
-{
-    CIRCServer.prototype.VERSION_RPLY += ", running under " +
-        navigator.userAgent;
-}
+CIRCServer.prototype.VERSION_RPLY = "ChatZilla, running under " + 
+    navigator.userAgent;
 
 CIRCUser.prototype.MAX_MESSAGES = 100;
 
@@ -88,8 +82,10 @@ function initStatic()
     obj.addEventListener("keyup", onInputKeyUp, false);
 
         //obj = document.getElementById("tb[*client*]");
+    /*
     client.quickList = new CListBox(document.getElementById("quickList"));
     client.quickList.selectedItemCallback = quicklistCallback;
+    */
 
     var saveDir = client.PRINT_DIRECTION;
     client.PRINT_DIRECTION = 1;
@@ -100,12 +96,11 @@ function initStatic()
                     "More help is available with /help [<command-name>]",
                     "HELLO");
 
-    
-    client.display ("Currently implemented commands are: "  + 
-                    client.commands.listNames().join(", ") + ".", "INFO");
+    setCurrentObject (client);
+
+    client.onInputCommands();
     
     client.PRINT_DIRECTION = saveDir;
-    setCurrentObject (client);
 
     if (!jsenv.HAS_XPCOM)
         client.display ("ChatZilla was not given access to the XPConnect " +
@@ -120,14 +115,33 @@ function initStatic()
                   client.eventPump.getHook ("event-tracer").enabled);
     setMenuCheck ("menu-munger", client.munger.enabled);
     setMenuCheck ("menu-viewicons", client.ICONS_IN_TOOLBAR);
+    client.uiState["toolbar"] =
+        setMenuCheck ("menu-view-toolbar", isVisible("views-tbox"));
+    client.uiState["info"] =
+        setMenuCheck ("menu-view-info", isVisible("user-list"));
+    client.uiState["status"] =
+        setMenuCheck ("menu-view-status", isVisible("status-bar-tbox"));
     
 }
 
 function setMenuCheck (id, state)
 {
     var m = document.getElementById(id);
-    
     m.setAttribute ("checked", String(Boolean(state)));
+    return state;
+}
+
+function isVisible (id)
+{
+    var e = document.getElementById(id);
+
+    if (!e)
+    {
+        dd ("** Bogus id '" + id + "' passed to isVisible() **");
+        return false;
+    }
+    
+    return (e.getAttribute ("collapsed") != "true");
 }
 
 function initHost(obj)
@@ -188,6 +202,11 @@ function initHost(obj)
     //obj.munger.addRule ("strikethrough", /(\-.*\-)/, "strikethrough");
     obj.munger.addRule ("smallcap", /(\#.*\#)/, "smallcap");
 
+    obj.rdf = new RDFHelper();
+    
+    obj.rdf.initTree("user-list");
+    obj.rdf.setTreeRoot("user-list", obj.rdf.resNullChan);
+    
 }
 
 function matchMyNick (text, containerTag, eventDetails)
@@ -281,6 +300,12 @@ function getObjectDetails (obj, rv)
 {
     if (!rv)
         rv = new Object();
+
+    if (!obj || (typeof obj != "object"))
+    {
+        dd ("** INVALID OBJECT passed to getObjectDetails (" + obj + "). **");
+        dd (getStackTrace());
+    }
     
     rv.orig = obj;
     
@@ -443,7 +468,7 @@ function updateChannel (obj)
 
 function updateTitle (obj)
 {
-    if (obj && obj != client.currentObject)
+    if ((obj && obj != client.currentObject) || !client.currentObject)
         return;
 
     var tstring = "";
@@ -467,7 +492,9 @@ function updateTitle (obj)
 
         chan = o.channel.name;
         mode = o.channel.mode.getModeStr();
-        topic = o.channel.topic ? o.channel.topic : "--no topic--";
+        if (client.uiState["toolbar"])
+            topic = o.channel.topic ? " " + o.channel.topic : " --no topic--";
+
         if (!mode)
             mode = "no mode";
         tstring = chan + " (" + mode + ") " + topic;
@@ -487,6 +514,16 @@ function updateTitle (obj)
             tstring = "ChatZilla: " + tstring;
         else
             tstring = "ChatZilla!";
+    }
+
+    if (!client.uiState["toolbar"])
+    {
+        var actl = new Array();
+        for (var i in client.activityList)
+            actl.push ((client.activityList[i] == "!") ? (Number(i) + 1) + "!" : 
+                       (Number(i) + 1));
+        if (actl.length > 0)
+            tstring += " --  Activity [" + actl.join (", ") + "]";
     }
 
     document.title = tstring;
@@ -552,29 +589,25 @@ function setCurrentObject (obj)
         client.output.removeChild (client.output.firstChild);
     client.output.appendChild (obj.messages);
 
-    var quickList = document.getElementById ("quickList");
-
-    if (!obj.list)
-        obj.list = new CListBox();
-
-    if (quickList.firstChild)
-    {
-        quickList.removeChild (quickList.firstChild);
-    }
-    
-    quickList.appendChild (obj.list.listContainer);
+    if (obj.TYPE == "IRCChannel")
+        client.rdf.setTreeRoot ("user-list", obj.getGraphResource());
+    else
+        client.rdf.setTreeRoot ("user-list", client.rdf.resNullChan);
 
     client.currentObject = obj;
     tb = getTBForObject(obj);
     if (tb)
         tb.setAttribute ("state", "current");
 
+    var vk = Number(tb.getAttribute("viewKey"));
+    delete client.activityList[vk];
+
     updateNetwork();
     updateChannel();
     updateTitle ();
 
     if (client.PRINT_DIRECTION == 1)
-        window.frames[0].scrollTo(0, 100000);
+        window.frames[0].scrollTo(0, window.frames[0].document.height);
     
 }
 
@@ -608,10 +641,15 @@ function addHistory (source, obj)
         }       
     }
 
+    var needScroll = false;
+    var w = window.frames[0];
+    
     if (client.PRINT_DIRECTION == 1)
     {
+        if ((w.document.height - (w.innerHeight + w.pageYOffset)) <
+            (w.innerHeight / 3))
+            needScroll = true;
         source.messages.appendChild (obj);
-        window.frames[0].scrollTo(0, 100000);
     }
     else
         source.messages.insertBefore (obj, source.messages.firstChild);
@@ -629,6 +667,9 @@ function addHistory (source, obj)
             else
                 source.messages.removeChild (source.messages.lastChild);
     }
+
+    if (needScroll)
+        w.scrollTo (0, w.document.height);
     
 }
 
@@ -638,20 +679,26 @@ function notifyActivity (source)
         source = client.viewsArray[source].source;
     
     var tb = getTBForObject (source, true);
-
+    var vk = Number(tb.getAttribute("viewKey"));
+    
     if (client.currentObject != source)
     {
         if (tb.getAttribute ("state") == "normal")
         {       
             tb.setAttribute ("state", "activity");
+            if (!client.activityList[vk])
+            {
+                client.activityList[vk] = "+";
+                updateTitle();
+            }
         }
         else if (tb.getAttribute("state") == "activity")
             /* if act light is already lit, blink it real quick */
         {
             tb.setAttribute ("state", "normal");
-            setTimeout ("notifyActivity(" +
-                        Number(tb.getAttribute("viewKey")) + ");", 200);
+            setTimeout ("notifyActivity(" + vk + ");", 200);
         }
+        
     }
     
 }
@@ -662,9 +709,14 @@ function notifyAttention (source)
         source = client.viewsArray[source].source;
     
     var tb = getTBForObject (source, true);
+    var vk = Number(tb.getAttribute("viewKey"));
 
     if (client.currentObject != source)
+    {
         tb.setAttribute ("state", "attention");
+        client.activityList[vk] = "!";
+        updateTitle();
+    }
 
     if (client.FLASH_WINDOW)
         window.GetAttention();
@@ -905,76 +957,6 @@ function net_display (message, msgtype)
 
 }
 
-CIRCUser.prototype.getDecoratedNick =
-function usr_decoratednick()
-{
-
-    if (!this.decoNick)
-    {
-        var pfx;
-        var el = document.createElement ("box");
-        el.setAttribute ("align", "horizontal");
-        
-        if (this.TYPE == "IRCChanUser")
-        {
-            /*
-            var img = document.createElement ("menubutton");
-            img.setAttribute ("class", "menubutton-icon");
-            img.setAttribute ("src", this.isOp ? client.OP1_IMG :
-                              client.OP0_IMG);
-            el.appendChild (img);
-            
-            img = document.createElement ("menubutton");
-            img.setAttribute ("class", "menubutton-icon");
-            img.setAttribute ("src", this.isVoice ? client.V1_IMG :
-                              client.V0_IMG);
-                              
-            el.appendChild (img);
-            */
-        }
-        
-        var text = document.createElement ("text");
-        text.setAttribute ("value", this.properNick);
-        text.setAttribute ("class", "option-text");
-
-        el.appendChild(text);
-        
-        /*
-        el.appendChild (newInlineText (this.properNick, "option-text",
-                                       ""));
-        */
-
-        this.decoNick = el;
-    }
-
-    return this.decoNick;
-
-}
-
-CIRCUser.prototype.updateDecoratedNick =
-function usr_updnick()
-{
-    var decoNick = this.getDecoratedNick();
-
-    if (!decoNick)
-        return;
-    
-    if (this.TYPE == "IRCChanUser")
-    {
-        var obj = decoNick.firstChild;
-        obj.setAttribute ("src", this.isOp ? client.OP1_IMG :
-                          client.OP0_IMG);
-
-        obj = obj.nextSibling;
-        obj.setAttribute ("src", this.isVoice ? client.V1_IMG :
-                          client.V0_IMG);
-        
-        obj = obj.nextSibling;
-        obj.firstChild.data = this.properNick;
-    }
-    
-}
-
 CIRCUser.prototype.display =
 function user_display(message, msgtype, sourceNick)
 {
@@ -1099,6 +1081,22 @@ function my_getselectedusers ()
     return ary.length > 0 ? ary : null;
 }
 
+CIRCChannel.prototype.getGraphResource =
+function my_graphres ()
+{
+    if (!this.rdfRes)
+    {
+        this.rdfRes = 
+            client.rdf.GetResource(RES_PFX + "CHANNEL:" +
+                                   this.parent.parent.name +
+                                   ":" + this.name);
+            //dd ("created channel resource " + this.rdfRes.Value);
+
+    }
+    
+    return this.rdfRes;
+}
+
 CIRCChannel.prototype.display =
 function chan_display (message, msgtype, nick)
 {
@@ -1198,4 +1196,71 @@ function chan_display (message, msgtype, nick)
     addHistory (this, msgRow);
     notifyActivity (this);
 
+}
+
+CIRCUser.prototype.getGraphResource =
+function usr_graphres()
+{
+    if (this.TYPE != "IRCChanUser")
+        dd ("** WARNING: cuser.getGraphResource called on wrong object **");
+    
+    var rdf = client.rdf;
+    
+    if (!this.rdfRes)
+    {
+        if (!CIRCUser.nextResID)
+            CIRCUser.nextResID = 0;
+        
+        this.rdfRes = rdf.GetResource (RES_PFX + "CUSER:" + 
+                                       this.parent.parent.parent.name + ":" +
+                                       this.parent.name + ":" +
+                                       CIRCUser.nextResID++);
+        
+            //dd ("created cuser resource " + this.rdfRes.Value);
+        
+        rdf.Assert (this.rdfRes, rdf.resNick, rdf.GetLiteral(this.properNick));
+        if (this.name)
+            rdf.Assert (this.rdfRes, rdf.resUser, rdf.GetLiteral(this.name));
+        else
+            rdf.Assert (this.rdfRes, rdf.resUser, rdf.litUnk);
+        if (this.host)
+            rdf.Assert (this.rdfRes, rdf.resHost, rdf.GetLiteral(this.host));
+        else
+            rdf.Assert (this.rdfRes, rdf.resHost, rdf.litUnk);
+
+        rdf.Assert (this.rdfRes, rdf.resOp, 
+                    this.isOp ? rdf.litTrue : rdf.litFalse);
+        rdf.Assert (this.rdfRes, rdf.resVoice,
+                    this.isVoice ? rdf.litTrue : rdf.litFalse);
+    }
+
+    return this.rdfRes;
+
+}
+
+CIRCUser.prototype.updateGraphResource =
+function usr_updres()
+{
+    if (this.TYPE != "IRCChanUser")
+        dd ("** WARNING: cuser.updateGraphResource called on wrong object **");
+
+    if (!this.rdfRes)
+        this.getGraphResource();
+    
+    var rdf = client.rdf;
+    
+    rdf.Change (this.rdfRes, rdf.resNick, rdf.GetLiteral(this.properNick));
+    if (this.name)
+        rdf.Change (this.rdfRes, rdf.resUser, rdf.GetLiteral(this.name));
+    else
+        rdf.Change (this.rdfRes, rdf.resUser, rdf.litUnk);
+    if (this.host)
+        rdf.Change (this.rdfRes, rdf.resHost, rdf.GetLiteral(this.host));
+    else
+        rdf.Change (this.rdfRes, rdf.resHost, rdf.litUnk);
+    
+    rdf.Change (this.rdfRes, rdf.resOp, 
+                this.isOp ? rdf.litTrue : rdf.litFalse);
+    rdf.Change (this.rdfRes, rdf.resVoice,
+                this.isVoice ? rdf.litTrue : rdf.litFalse);
 }

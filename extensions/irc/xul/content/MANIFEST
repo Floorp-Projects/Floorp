@@ -5,3 +5,4 @@ commands.js
 handlers.js
 readprefs.js
 static.js
+rdf.js

@@ -51,14 +51,39 @@ function addCommands(commandObject)
          "<port> is not specified.");
 
     add ("quit", "onInputQuit", "[<reason>]",
-         "Disconnects from the server represented by the view active when " +
-         "the command is executed with <reason> if it is specified, or the " +
-         "default reason if not.");
+         "Disconnects from the server represented by the active view when " +
+         "the command is executed providing the reason <reason> " +
+         "or the default reason if <reason> is not specified.");
 
     add ("exit", "onInputExit", "[<reason>]",
-         "Disconnects from the all connected servers with <reason> if it is " +
-         "specified, or the default reason if not.  Exits ChatZilla after " +
-         "disconnecting.");
+         "Disconnects from all active servers and networks,  providing the " +
+         "reason <reason>, or the default reason if <reason> is not " +
+         "specified.  Exits ChatZilla after disconnecting.");
+
+    add ("clear", "onInputClear", "",
+         "Clear the current viewport, discarding *all* content.");
+    
+    add ("delete", "onInputDelete", "",
+         "Clear the current viewport, discarding *all* content, and drop it's " +
+         "icon from the toolbar.");
+
+    add ("hide", "onInputHide", "",
+         "Drop the current view's icon from the toolbar, but save it's " +
+         "contents.  The icon will reappear the next time there is activity " +
+         "on the view.");
+
+    add ("names", "onInputNames", "",
+         "Toggles the visibility of the username list.");
+
+    add ("toolbar", "onInputToolbar", "",
+         "Toggles the visibility of the channel toolbar.");
+
+    add ("statusbar", "onInputStatusbar", "",
+         "Toggles the visibility of the status bar.");
+
+    add ("commands", "onInputCommands", "[<pattern>]",
+         "Lists all command names matching <pattern>, or all command names " +
+         "if pattern is not specified.");
     
     add ("attach", "onInputAttach",
          "[<network-name>]",
