@@ -60,7 +60,7 @@ void _PR_InitIO(void)
 PR_IMPLEMENT(PRFileDesc*) PR_GetSpecialFD(PRSpecialFD osfd)
 {
     PRFileDesc *result = NULL;
-    PR_ASSERT(osfd >= PR_StandardInput && osfd <= PR_StandardError);
+    PR_ASSERT((int) osfd >= PR_StandardInput && osfd <= PR_StandardError);
 
     if (!_pr_initialized) _PR_ImplicitInitialization();
     
