@@ -225,7 +225,9 @@ nsHTMLTextAreaElement::Blur()
 NS_IMETHODIMP
 nsHTMLTextAreaElement::Focus() 
 {
-  SetElementFocus(PR_TRUE);
+  if (ShouldFocus(this)) {
+    SetElementFocus(PR_TRUE);
+  }
 
   return NS_OK;
 }

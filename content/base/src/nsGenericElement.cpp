@@ -96,6 +96,9 @@
 #include "nsIServiceManager.h"
 #include "nsIDOMEventListener.h"
 
+#include "nsIWebNavigation.h"
+#include "nsIBaseWindow.h"
+
 #include "jsapi.h"
 
 #include "nsIDOMXPathEvaluator.h"
@@ -2420,6 +2423,34 @@ nsGenericElement::SetFocus(nsPresContext* aPresContext)
     presShell->ScrollFrameIntoView(frame, NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE,
                                    NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE);
   }
+}
+
+// static
+PRBool
+nsGenericElement::ShouldFocus(nsIContent *aContent)
+{
+  PRBool visible = PR_TRUE;
+
+  // Figure out if we're focusing an element in an inactive (hidden)
+  // tab (whose docshell is not visible), if so, drop this focus
+  // request on the floor
+
+  nsIDocument *document = aContent->GetDocument();
+
+  if (document) {
+    nsIScriptGlobalObject *sgo = document->GetScriptGlobalObject();
+
+    if (sgo) {
+      nsCOMPtr<nsIWebNavigation> webNav(do_GetInterface(sgo));
+      nsCOMPtr<nsIBaseWindow> baseWin(do_QueryInterface(webNav));
+
+      if (baseWin) {
+        baseWin->GetVisibility(&visible);
+      }
+    }
+  }
+
+  return visible;
 }
 
 nsIContent*
