@@ -155,7 +155,7 @@ nsString::nsString( const nsAString& aReadable ) {
 #ifdef DEBUG
 void nsString::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const {
   if (aResult) {
-    *aResult = sizeof(*this) + mCapacity * mCharSize;
+    *aResult = sizeof(*this) + GetCapacity() * GetCharSize();
   }
 }
 #endif
@@ -168,7 +168,7 @@ void nsString::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const {
  * @return  nada
  */
 void nsString::SetLength(PRUint32 anIndex) {
-  if ( anIndex > mCapacity )
+  if ( anIndex > GetCapacity() )
     SetCapacity(anIndex);
     // |SetCapacity| normally doesn't guarantee the use we are putting it to here (see its interface comment in nsAWritableString.h),
     //  we can only use it since our local implementation, |nsString::SetCapacity|, is known to do what we want
@@ -187,7 +187,7 @@ nsString::SetCapacity( PRUint32 aNewCapacity )
   {
     if ( aNewCapacity )
       {
-        if( aNewCapacity > mCapacity )
+        if( aNewCapacity > GetCapacity() )
           GrowCapacity(*this, aNewCapacity);
         AddNullTerminator(*this);
       }
@@ -212,7 +212,7 @@ nsString::SetCapacity( PRUint32 aNewCapacity )
  * @return  ptr to internal (2-byte) buffer;
  */
 const PRUnichar* nsString::get() const {
-  const PRUnichar* result=(eOneByte==mCharSize) ? 0 : mUStr;
+  const PRUnichar* result=(eOneByte==GetCharSize()) ? 0 : mUStr;
   return result;
 }
 
@@ -225,7 +225,7 @@ const PRUnichar* nsString::get() const {
 PRBool nsString::SetCharAt(PRUnichar aChar,PRUint32 anIndex){
   PRBool result=PR_FALSE;
   if(anIndex<mLength){
-    if(eOneByte==mCharSize)
+    if(eOneByte==GetCharSize())
       mStr[anIndex]=char(aChar); 
     else mUStr[anIndex]=aChar;
 
@@ -258,7 +258,7 @@ PRBool nsString::SetCharAt(PRUnichar aChar,PRUint32 anIndex){
 void
 nsString::StripChar(PRUnichar aChar,PRInt32 anOffset){
   if(mLength && (anOffset<PRInt32(mLength))) {
-    if(eOneByte==mCharSize) {
+    if(eOneByte==GetCharSize()) {
       char*  to   = mStr + anOffset;
       char*  from = mStr + anOffset;
       char*  end  = mStr + mLength;
@@ -324,7 +324,7 @@ nsString::StripWhitespace() {
 void
 nsString::ReplaceChar(PRUnichar aSourceChar, PRUnichar aDestChar) {
   PRUint32 theIndex=0;
-  if(eTwoByte==mCharSize){
+  if(eTwoByte==GetCharSize()){
     for(theIndex=0;theIndex<mLength;theIndex++){
       if(mUStr[theIndex]==aSourceChar) {
         mUStr[theIndex]=aDestChar;
@@ -352,7 +352,7 @@ nsString::ReplaceChar(const char* aSet, PRUnichar aNewChar){
   if(aSet){
     PRInt32 theIndex=FindCharInSet(aSet,0);
     while(kNotFound<theIndex) {
-      if(eTwoByte==mCharSize) 
+      if(eTwoByte==GetCharSize()) 
         mUStr[theIndex]=aNewChar;
       else mStr[theIndex]=(char)aNewChar;
       theIndex=FindCharInSet(aSet,theIndex+1);
@@ -1349,7 +1349,7 @@ PRBool nsString::IsSpace(PRUnichar aChar) {
 PRBool nsString::IsASCII(const PRUnichar* aBuffer) {
 
   if(!aBuffer) {
-    if(eOneByte==mCharSize) {
+    if(eOneByte==GetCharSize()) {
         char* aByte = mStr;
         while(*aByte) {
           if(*aByte & 0x80) { // don't use (*aByte > 0x7F) since char is signed
@@ -1525,125 +1525,6 @@ class CalculateUTF8Length
       PRBool mErrorEncountered;
   };
 
-class ConvertUTF8toUCS2
-  {
-    public:
-      typedef nsACString::char_type value_type;
-      typedef nsAString::char_type  buffer_type;
-
-    ConvertUTF8toUCS2( buffer_type* aBuffer ) : mStart(aBuffer), mBuffer(aBuffer) {}
-
-    size_t Length() const { return mBuffer - mStart; }
-
-    PRUint32 write( const value_type* start, PRUint32 N )
-      {
-        // algorithm assumes utf8 units won't
-        // be spread across fragments
-        const value_type* p = start;
-        const value_type* end = start + N;
-        for ( ; p != end /* && *p */; )
-          {
-            char c = *p++;
-
-            if ( UTF8traits::isASCII(c) )
-              {
-                *mBuffer++ = buffer_type(c);
-                continue;
-              }
-
-            PRUint32 ucs4;
-            PRUint32 minUcs4;
-            PRInt32 state = 0;
-
-            if ( UTF8traits::is2byte(c) )
-              {
-                ucs4 = (PRUint32(c) << 6) & 0x000007C0L;
-                state = 1;
-                minUcs4 = 0x00000080;
-              }
-            else if ( UTF8traits::is3byte(c) )
-              {
-                ucs4 = (PRUint32(c) << 12) & 0x0000F000L;
-                state = 2;
-                minUcs4 = 0x00000800;
-              }
-            else if ( UTF8traits::is4byte(c) )
-              {
-                ucs4 = (PRUint32(c) << 18) & 0x001F0000L;
-                state = 3;
-                minUcs4 = 0x00010000;
-              }
-            else if ( UTF8traits::is5byte(c) )
-              {
-                ucs4 = (PRUint32(c) << 24) & 0x03000000L;
-                state = 4;
-                minUcs4 = 0x00200000;
-              }
-            else if ( UTF8traits::is6byte(c) )
-              {
-                ucs4 = (PRUint32(c) << 30) & 0x40000000L;
-                state = 5;
-                minUcs4 = 0x04000000;
-              }
-            else
-              {
-                NS_ERROR("Not a UTF-8 string. This code should only be used for converting from known UTF-8 strings.");
-                break;
-              }
-
-            while ( state-- )
-              {
-                c = *p++;
-
-                if ( UTF8traits::isInSeq(c) )
-                  {
-                    PRInt32 shift = state * 6;
-                    ucs4 |= (PRUint32(c) & 0x3F) << shift;
-                  }
-                else
-                  {
-                    NS_ERROR("not a UTF8 string");
-                    return p - start;
-                  }
-              }
-
-            if ( ucs4 < minUcs4 )
-              {
-                // Overlong sequence
-                *mBuffer++ = 0xFFFD;
-              }
-            else if ( ucs4 <= 0xD7FF )
-              {
-                *mBuffer++ = ucs4;
-              }
-            else if ( /* ucs4 >= 0xD800 && */ ucs4 <= 0xDFFF )
-              {
-                // Surrogates
-                *mBuffer++ = 0xFFFD;
-              }
-            else if ( ucs4 == 0xFFFE || ucs4 == 0xFFFF )
-              {
-                // Prohibited characters
-                *mBuffer++ = 0xFFFD;
-              }
-            else if ( ucs4 >= 0x00010000 )
-              {
-                *mBuffer++ = 0xFFFD;
-              }
-            else
-              {
-                if ( ucs4 != 0xFEFF ) // ignore BOM
-                    *mBuffer++ = ucs4;
-              }
-          }
-        return p - start;
-      }
-
-    private:
-      buffer_type* mStart;
-      buffer_type* mBuffer;
-  };
-
 void
 NS_ConvertUTF8toUCS2::Init( const nsACString& aCString )
 {
@@ -1668,7 +1549,7 @@ NS_ConvertUTF8toUCS2::Init( const nsACString& aCString )
     ConvertUTF8toUCS2 converter(mUStr);
     copy_string(aCString.BeginReading(start), aCString.EndReading(end), converter);
     mLength = converter.Length();
-    if (mCapacity)
+    if (GetCapacity())
       mUStr[mLength] = '\0'; // null terminate
   }
 
@@ -1705,7 +1586,7 @@ nsAutoString::~nsAutoString(){
 #ifdef DEBUG
 void nsAutoString::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const {
   if (aResult) {
-    *aResult = sizeof(*this) + mCapacity * mCharSize;
+    *aResult = sizeof(*this) + GetCapacity() * GetCharSize();
   }
 }
 #endif
