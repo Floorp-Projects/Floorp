@@ -492,58 +492,6 @@ NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
     gtk_signal_emit_by_name(GTK_OBJECT(horiz), "value_changed");
     gtk_signal_emit_by_name(GTK_OBJECT(vert), "value_changed");
   }
-
-#if 0
-  if (mWidget == nsnull) {
-    return NS_ERROR_FAILURE;
-  }
-
-   // Scroll all of the child widgets
-  Cardinal numChildren;
-  XtVaGetValues(mWidget, XtNnumChildren, &numChildren, nsnull);
-  if (numChildren > 0) {
-    WidgetList children;
-    XtVaGetValues(mWidget, XtNchildren, &children, nsnull);
-    int i ;
-    for(i = 0; i < numChildren; i++) {
-      Position x;
-      Position y;
-      XtVaGetValues(children[i], XtNx, &x, XtNy, &y, nsnull);
-
-      XtVaSetValues(children[i], XmNx, x + aDx, XmNy, y + aDy, nsnull);
-    }
-  }
-
-  Window  win      = XtWindow(mWidget);
-  Display *display = XtDisplay(mWidget);
-
-  if (nsnull != aClipRect) {
-    XCopyArea(display, win, win, XDefaultGC(display, 0),
-            aClipRect->x, aClipRect->y,
-            aClipRect->XMost(),  aClipRect->YMost(), aDx, aDy);
-  }
-
-   // Force a repaint
-  XEvent evt;
-  evt.xgraphicsexpose.type       = GraphicsExpose;
-  evt.xgraphicsexpose.send_event = False;
-  evt.xgraphicsexpose.display    = display;
-  evt.xgraphicsexpose.drawable   = win;
-  if (aDy < 0) {
-    evt.xgraphicsexpose.x          = 0;
-    evt.xgraphicsexpose.y          = mBounds.height+aDy;
-    evt.xgraphicsexpose.width      = mBounds.width;
-    evt.xgraphicsexpose.height     = -aDy;
-  } else {
-    evt.xgraphicsexpose.x          = 0;
-    evt.xgraphicsexpose.y          = 0;
-    evt.xgraphicsexpose.width      = mBounds.width;
-    evt.xgraphicsexpose.height     = aDy;
-  }
-  evt.xgraphicsexpose.count      = 0;
-  XSendEvent(display, win, False, ExposureMask, &evt);
-  XFlush(display);
-#endif
   return NS_OK;
 }
 
@@ -765,7 +713,7 @@ gint ResetResize(gpointer call_data)
 gint DoRefresh(gpointer call_data)
 {
     nsWindow *win = (nsWindow*)call_data;
-    
+
     nsRect bounds;
     win->GetResizeRect(&bounds);
 
@@ -784,7 +732,7 @@ gint DoRefresh(gpointer call_data)
     sizeEvent.windowSize     = &bounds;
     sizeEvent.mWinWidth      = bounds.width;
     sizeEvent.mWinHeight     = bounds.height;
- 
+
     win->SetBounds(bounds);
     win->OnResize(sizeEvent);
 
@@ -795,7 +743,8 @@ gint DoRefresh(gpointer call_data)
     pevent.rect = (nsRect *)&bounds;
     win->OnPaint(pevent);
 
-    gtk_timeout_add(10, (GtkFunction)ResetResize, win);
+    gtk_idle_add((GtkFunction)ResetResize, win);
+    //    gtk_timeout_add(10, (GtkFunction)ResetResize, win);
     return FALSE;
 }
 
@@ -819,7 +768,8 @@ void DoResize(GtkWidget *w, GtkAllocation *allocation, gpointer data)
       DoRefresh(win);
     }
     else {
-      gtk_timeout_add(250, (GtkFunction)DoRefresh, win);
+      gtk_idle_add((GtkFunction)DoRefresh, win);
+      //gtk_timeout_add(250, (GtkFunction)DoRefresh, win);
     }
   }
 
@@ -835,8 +785,8 @@ NS_METHOD nsWindow::SetMenuBar(nsIMenuBar * aMenuBar)
   aMenuBar->GetNativeData(voidData);
   menubar = GTK_WIDGET(voidData);
 
-//  gtk_menu_bar_set_shadow_type (GTK_MENU_BAR(menubar), GTK_SHADOW_NONE);
-  
+  // gtk_menu_bar_set_shadow_type (GTK_MENU_BAR(menubar), GTK_SHADOW_NONE);
+
   gtk_box_pack_start(GTK_BOX(mVBox), menubar, FALSE, FALSE, 0);
   gtk_box_reorder_child(GTK_BOX(mVBox), menubar, 0);
   printf("adding menu bar (%p) to vbox (%p)\n", menubar, mVBox);
