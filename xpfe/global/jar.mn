@@ -86,7 +86,9 @@ en-US.jar:
     locale/en-US/global/regionNames.properties      (resources/locale/en-US/regionNames.properties) 
     locale/en-US/global/about.html                  (resources/locale/en-US/about.html) 
     locale/en-US/global/commonDialogs.properties    (resources/locale/en-US/commonDialogs.properties) 
+    locale/en-US/global/plugins.properties          (resources/locale/en-US/plugins.properties) 
     locale/en-US/global/nsOutlinerSorting.properties (resources/locale/en-US/nsOutlinerSorting.properties)
+
 US.jar:
     locale/US/global-region/contents.rdf            (resources/locale/en-US/contents-region.rdf) 
     locale/US/global-region/region.dtd              (resources/locale/en-US/region.dtd)
