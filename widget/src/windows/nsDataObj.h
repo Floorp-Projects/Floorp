@@ -63,6 +63,46 @@
 #define CFSTR_INETURLW    "UniformResourceLocatorW"
 #endif
 
+// For support of MinGW w32api v2.4. 
+// When the next version of w32api is released with shlobj.h rev 1.35 
+// http://sources.redhat.com/cgi-bin/cvsweb.cgi/src/winsup/w32api/include/shlobj.h?cvsroot=src
+// then that can be made the base required version and this code should be removed.
+#ifndef CFSTR_FILEDESCRIPTORA
+# define CFSTR_FILEDESCRIPTORA   "FileGroupDescriptor"
+#endif
+#ifndef CFSTR_FILEDESCRIPTORW
+# define CFSTR_FILEDESCRIPTORW   "FileGroupDescriptorW"
+#endif
+
+#ifdef __MINGW32__
+# include <w32api.h>
+# if __W32API_MAJOR_VERSION < 3 || (__W32API_MAJOR_VERSION == 3 && __W32API_MINOR_VERSION == 0)
+#  ifndef FILEGROUPDESCRIPTORA
+#   define FILEGROUPDESCRIPTORA    FILEGROUPDESCRIPTOR
+#  endif
+#  ifndef LPFILEGROUPDESCRIPTORA
+#   define LPFILEGROUPDESCRIPTORA  LPFILEGROUPDESCRIPTOR
+#  endif
+typedef struct _FILEDESCRIPTORW {
+   DWORD dwFlags;
+   CLSID clsid;
+   SIZEL sizel;
+   POINTL pointl;
+   DWORD dwFileAttributes;
+   FILETIME ftCreationTime;
+   FILETIME ftLastAccessTime;
+   FILETIME ftLastWriteTime;
+   DWORD nFileSizeHigh;
+   DWORD nFileSizeLow;
+   WCHAR cFileName[MAX_PATH];
+} FILEDESCRIPTORW,*LPFILEDESCRIPTORW;
+typedef struct _FILEGROUPDESCRIPTORW {
+   UINT cItems;
+   FILEDESCRIPTORW fgd[1];
+} FILEGROUPDESCRIPTORW,*LPFILEGROUPDESCRIPTORW;
+# endif /*__W32API_MAJOR_VERSION*/
+#endif /*__MINGW32__*/
+
 class nsVoidArray;
 class CEnumFormatEtc;
 class nsITransferable;
