@@ -224,7 +224,7 @@ static int PR_CALLBACK floatPrefChanged (const char *newpref, void *data)
   return 0;
 }
 
-static int colorPrefChanged (const char *newpref, void *data)
+static int PR_CALLBACK colorPrefChanged (const char *newpref, void *data)
 {
   nsLookAndFeelColorPref* np = (nsLookAndFeelColorPref*)data;
   if (np)
