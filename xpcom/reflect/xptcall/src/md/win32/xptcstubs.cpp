@@ -115,16 +115,15 @@ static __declspec(naked) void SharedStub(void)
         push ecx            // make room for a ptr
         lea  eax, [ebp-4]   // pointer to stackBytesToPop
         push eax
-        lea  ecx, [ebp+16]  // pointer to args
-        push ecx
-        mov  edx, [ebp+4]   // vtbl_index
-        push edx
-        mov  eax, [ebp+12]  // this
+        lea  eax, [ebp+12]  // pointer to args
+        push eax
+        push ecx            // vtbl_index
+        mov  eax, [ebp+8]   // this
         push eax
         call PrepareAndDispatch
-        mov  edx, [ebp+8]   // return address
+        mov  edx, [ebp+4]   // return address
         mov  ecx, [ebp-4]   // stackBytesToPop
-        add  ecx, 12        // for this, the index, and ret address
+        add  ecx, 8         // for 'this' and return address
         mov  esp, ebp
         pop  ebp
         add  esp, ecx       // fix up stack pointer
@@ -135,7 +134,7 @@ static __declspec(naked) void SharedStub(void)
 // these macros get expanded (many times) in the file #included below
 #define STUB_ENTRY(n) \
 __declspec(naked) nsresult __stdcall nsXPTCStubBase::Stub##n() \
-{ __asm push n __asm jmp SharedStub }
+{ __asm mov ecx, n __asm jmp SharedStub }
 
 #define SENTINEL_ENTRY(n) \
 nsresult __stdcall nsXPTCStubBase::Sentinel##n() \
