@@ -1221,7 +1221,7 @@ nsHTMLFrameInnerFrame::DoLoadURL(nsIPresContext* aPresContext)
     webProgress->AddProgressListener(this);
   }
 
-  rv = docShell->LoadURI(uri, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE);
+  rv = docShell->LoadURI(uri, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE, PR_FALSE);
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to load URL");
 
   return rv;

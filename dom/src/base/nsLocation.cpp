@@ -243,7 +243,7 @@ LocationImpl::SetURL(nsIURI* aURI)
 
     webNav->Stop(nsIWebNavigation::STOP_CONTENT);
     return mDocShell->LoadURI(aURI, loadInfo,
-                              nsIWebNavigation::LOAD_FLAGS_NONE);
+                              nsIWebNavigation::LOAD_FLAGS_NONE, PR_TRUE);
   }
 
   return NS_OK;
@@ -312,7 +312,7 @@ LocationImpl::SetHash(const nsAReadableString& aHash)
           // want to stop the load when we're just scrolling to a
           // named anchor in the document. See bug 114975.
           mDocShell->LoadURI(url, loadInfo,
-                             nsIWebNavigation::LOAD_FLAGS_NONE);
+                             nsIWebNavigation::LOAD_FLAGS_NONE, PR_TRUE);
       }
     }
   }
@@ -572,7 +572,7 @@ LocationImpl::SetHrefWithBase(const nsAReadableString& aHref,
 
     webNav->Stop(nsIWebNavigation::STOP_CONTENT);
     return mDocShell->LoadURI(newUri, loadInfo,
-                              nsIWebNavigation::LOAD_FLAGS_NONE);
+                              nsIWebNavigation::LOAD_FLAGS_NONE, PR_TRUE);
   }
 
   return result;
