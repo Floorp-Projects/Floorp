@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<title></title>
+<style type="text/css">
+BODY {
+    background-color: yellow;
+    color: black;
+}
+
+DIV.horiz {
+    border: 2px solid black;
+    color: inherit;
+    right: 0px;
+    padding-left: 10px;
+    padding-right: 200px;
+    position: absolute;
+    height: 100px;
+    background-color: lightblue;
+}
+
+DIV.vert {
+    border: 2px solid black;
+    color: inherit;
+    bottom: 0px;
+    padding-top: 10px;
+    padding-bottom: 200px;
+    position: absolute;
+    width: 200px;
+    background-color: lightgreen;
+}
+
+DIV#foo2 {
+    top: 200px;
+    width: 300px;
+}
+DIV#bar2 {
+    top: 300px;
+}
+
+DIV#foo {
+    left: 0px;
+    height: 38px;
+}
+DIV#bar {
+    left: 300px;
+}
+</style>
+</head>
+
+<body>
+The green divs should be flush with the bottom of the initial containing
+block, the blue divs should be flush with the right edge of the initial
+containing block.
+<div id="foo" title="foo" class="vert">
+This <tt>&lt;div&gt;</tt> has been set to <tt>height: 38px</tt>.
+</div>
+
+<div id="bar" title="bar" class="vert">
+This <tt>&lt;div&gt;</tt> has no <tt>height</tt> property.
+</div>
+
+<div id="foo2" title="foo" class="horiz">
+This <tt>&lt;div&gt;</tt> has been set to <tt>width: 300px</tt>.
+</div>
+
+<div id="bar2" title="bar" class="horiz">
+This <tt>&lt;div&gt;</tt> has no <tt>width</tt> property.
+</div>
+
+
+</body></html>
