@@ -1,0 +1,39 @@
+HOMEDIR=..
+SRCDIR=$(HOMEDIR)\src
+CLASSDIR=$(HOMEDIR)\classes
+
+JAVAC=javac
+TESTPACKAGE=org\mozilla\dom\test
+DOMPACKAGE=org\mozilla\dom
+
+JAVAFILES= Execution.java \
+	   BWBaseTest.java \
+	   TestLoader.java \
+	   ParamCombination.java \
+	   ReflectionTest.java \
+	   BWTestThread.java \
+	   BWJavaTemplate.java
+
+DOMFILE=  DOMFactory.java \
+	  DOMAccessorImpl.java
+
+all: 
+	@echo "******************************************************"
+	@echo "Make changes to $(SRCDIR)\mozilla.bat"
+	@echo "and execute it else it may not compile..."
+	@echo "******************************************************"
+	@echo ""
+	@echo Building test accessory classes ...
+	@$(JAVAC) -d $(CLASSDIR) $(JAVAFILES) 
+	@$(JAVAC) -d $(CLASSDIR) $(DOMFILE) 
+	@echo done
+	@cd api
+	@nmake -f Makefile.win
+
+clean:
+	del /f/q $(CLASSDIR)\$(TESTPACKAGE)\*.class
+	del /f/q $(CLASSDIR)\$(DOMPACKAGE)\*.class  
+
+	
+	
+	

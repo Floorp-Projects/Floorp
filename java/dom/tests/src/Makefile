@@ -18,6 +18,7 @@ all:
 
 JAVAFILES= Execution.java \
 	   BWBaseTest.java \
+	   BWTestThread.java \
 	   TestLoader.java \
 	   ParamCombination.java \
 	   ReflectionTest.java \

@@ -173,7 +173,6 @@ public class TestLoader
         }
 
      }
-              txtPrint("Parent Thread Done", "PASSED");
      return null;
   }
 

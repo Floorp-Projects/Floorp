@@ -478,6 +478,11 @@ constructLogHeader
 CLASSPATH="$curdir/../classes:${CLASSPATH}"
 
 
+if [ "$executionMode" = "M" ]
+then
+   DELAY_FACTOR=`expr $DELAY_FACTOR \* 10`
+fi
+
 currcnt=0
 while true
 do
@@ -565,6 +570,7 @@ do
       fi
 
       cnt=`expr $cnt + 10`
+
       if [ $cnt -eq $DELAY_FACTOR ]
       then
          flag=0
@@ -583,13 +589,14 @@ do
    fi
   
    # if single threaded execution 
-   if [ "$executionMode" = "S" ]
+   if [ "$executionMode" = "M" ]
    then
         break
    fi
  done
 
  currcnt=`expr $currcnt + 1`
+
 
  if [ $currcnt -eq $runcnt ]
  then
