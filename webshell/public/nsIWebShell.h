@@ -43,6 +43,7 @@ class nsIWebShell;
 class nsIWebShellContainer;
 class nsIPref;
 class nsIContent;
+class nsIDOMDocument;
 
 // Interface ID for nsIWebShell
 #define NS_IWEB_SHELL_IID \
@@ -369,6 +370,14 @@ public:
                       const PRUint32 aLocalIP=0,
                       nsISupports * aHistoryState=nsnull,
                       const PRUnichar* aReferrer=nsnull) = 0;
+
+   /** Set the document for this webshell.
+     * This simulates a URI load, in that the same notifications are sent as
+     * if the caller had called LoadURI.
+     * @param aDOMDoc
+     * @param aRootNode
+     */
+   NS_IMETHOD SetDocument(nsIDOMDocument *aDOMDoc, nsIDOMElement *aRootNode) = 0;
 
 
   /**
