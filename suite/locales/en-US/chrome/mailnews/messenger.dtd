@@ -18,7 +18,7 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 --> 
 
-<!ENTITY messengerWindow.title "Messenger">
+<!ENTITY messengerWindow.title "Mail">
 <!ENTITY titleModifier.label "Mozilla">
 <!ENTITY titleSeperator.label " - ">
 
@@ -72,8 +72,8 @@ Rights Reserved.
 <!-- View Menu -->
 <!-- LOCALIZATION NOTE (showSidebarMenu) : Do not translate below line. -->
 <!ENTITY showSidebarMenu.label				".SideBar">
-<!ENTITY showMessengerToolbarCmd.label		"Show Messenger Toolbar">
-<!ENTITY showMessengerToolbarCmd.accesskey	"m">
+<!ENTITY showMessengerToolbarCmd.label		"Show Toolbar">
+<!ENTITY showMessengerToolbarCmd.accesskey	"t">
 <!ENTITY showMessageCmd.label				"Message">  
 <!ENTITY showFoldersCmd.label				"Folders">  
 <!ENTITY sortMenu.label "Sort"> 

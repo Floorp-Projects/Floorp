@@ -14,13 +14,29 @@
 		<spring flex="100%"/>
 		<!-- centering offset for two 10px springs that are not hidden -->
 		<spring style="width:20px"/>
-		<titledbutton id="ok" value="&okButton.label;" default="true" align="right" onclick="doOKButton()"/>	
+		<titledbutton id="ok"
+					  class="dialog push"
+					  value="&okButton.label;"
+					  default="true"
+					  align="right"
+					  onclick="doOKButton()"/>	
 		<spring style="width:10px"/>
-		<titledbutton id="cancel" value="&cancelButton.label;" onclick="doCancelButton()"/>	
+		<titledbutton id="cancel"
+					  class="dialog push"
+					  value="&cancelButton.label;"
+					  onclick="doCancelButton()"/>	
 		<spring style="width:10px"/>
-		<titledbutton id="Button2" value="&cancelButton.label;" style = "display:none;" onclick="doButton2()"/>	
+		<titledbutton id="Button2"
+					  class="dialog push"
+					  value="&cancelButton.label;"
+					  style="display:none;"
+					  onclick="doButton2()"/>	
 		<spring style="width:10px"/>
-		<titledbutton id="Button3" value="&cancelButton.label;" style = "display:none;" onclick="doButton3()"/>	
+		<titledbutton id="Button3"
+					  class="dialog push"
+					  value="&cancelButton.label;"
+					  style="display:none;"
+					  onclick="doButton3()"/>	
 		<spring flex="100%"/>
 	</box>
 	

@@ -473,13 +473,15 @@ Rights Reserved.
           <box id="toolbar_button_box">
             <titledbutton id="button_getmsg" class="button28" align="top" value="&getMsgButton.label;" onclick="MsgGetMessage()"/>
             <titledbutton id="button_newmsg" class="button28" align="top" value="&newMsgButton.label;" onclick="MsgNewMessage(event)"/>
+            <toolbarseparator/>
             <titledbutton id="button_reply" class="button28" align="top" value="&replyButton.label;" onclick="MsgReplyMessage(event)"/>
             <titledbutton id="button_replyall" class="button28" align="top" value="&replyAllButton.label;" onclick="MsgReplyToAllMessage(event)"/>
             <titledbutton id="button_forward" class="button28" align="top" value="&forwardButton.label;" onclick="MsgForwardMessage(event)"/>
-            <titledbutton id="button_next" align="top" value="&nextButton.label;" onclick="MsgNextUnreadMessage()"/>
-            <titledbutton id="button_delete" align="top" value="&deleteButton.label;" onclick="MsgDeleteMessage(true)"/>
-            <titledbutton id="button_print" align="top" value="&printButton.label;" onclick="Print()"/>
-            <titledbutton id="button_stop" align="top" value="&stopButton.label;" onclick="MsgStop();"/>
+            <toolbarseparator/>
+            <titledbutton id="button_next" class="other28" align="top" value="&nextButton.label;" onclick="MsgNextUnreadMessage()"/>
+            <titledbutton id="button_delete" class="other28" align="top" value="&deleteButton.label;" onclick="MsgDeleteMessage(true)"/>
+            <titledbutton id="button_print" class="other28" align="top" value="&printButton.label;" onclick="Print()"/>
+            <titledbutton id="button_stop" class="other28" align="top" value="&stopButton.label;" onclick="MsgStop();"/>
             <spring flex="100%"/>
           </box>
 
@@ -530,7 +532,7 @@ Rights Reserved.
 			<spring flex="100%"/>
 		  </box>
 
-		  <titledbutton id="statusText" align="left" flex="100%" value="&statusText.label;">
+		  <titledbutton id="statusText" class="status-bar" align="left" flex="100%" value="&statusText.label;">
               <observes element="Messenger:Status" attribute="value" onbroadcast="onStatus()"/>         
 		  </titledbutton>
 		 </box>

@@ -65,19 +65,23 @@ spring {
 /******* ToolBox & ToolBar *******/
 
 toolbox { 
-      display: block;
+  display: block;
 }
 
-
 toolbar, menubar {
-    display:block;
+  display:block;
 }
 
 toolbar[collapsed="true"] {
 	display:none;
 }
+
 toolbar[hidden="true"] {
 	display:none;
+}
+
+toolbarseparator { 
+  display: block;
 }
 
 /****** Progress Meter ********/

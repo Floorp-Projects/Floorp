@@ -33,7 +33,7 @@ Rights Reserved.
 		  ref="abdirectory://"
 		  open="true"
 		  datasources="rdf:addressdirectory"
-		  onselect="DirPaneSelectionChange(); document.commandDispatcher.updateCommands('select');">
+		  onselect="DirPaneSelectionChange(); document.commandDispatcher.updateCommands('tree-select');">
 		
 		<template>
 			<rule>

@@ -72,7 +72,7 @@ tree[class="abDirectory"] treeitem > treerow > treecell > .tree-icon {
 	list-style-image: url("chrome://addressbook/skin/myaddrbk.gif");
 }
 
-tree[class="abResults"] treeitem > treerow > treecell > .tree-icon {
+tree[class="abResults"] treeitem > treerow > treecell.cardicon {
 	 list-style-image: url("chrome://addressbook/skin/person.gif");
 }
 

@@ -293,12 +293,12 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
     <toolbar id="composeToolbar" class="standard" persist="collapsed">
 		<box id="toolbar_button_box">
 	 		<titledbutton id="button_send" class="button28" align="top" value="&sendButton.label;" onclick="SendMessage()"/>
-	 		<titledbutton id="button_address" align="top" value="&addressButton.label;" onclick="SelectAddress()"/>
-	 		<titledbutton id="button_attach" align="top" value="&attachButton.label;" onclick="AttachFile()"/>
-	 		<titledbutton id="button_quote" align="top" value="&quoteButton.label;" onclick="QuoteMessage()"/>
-	 		<titledbutton id="button_spelling" align="top" value="&spellingButton.label;" onclick="Spelling()"/>
-	 		<titledbutton id="button_save" align="top" value="&saveButton.label;" onclick="SaveAsDraft()"/>
-	 		<titledbutton id="button_stop" align="top" value="&stopButton.label;" onclick="Stop()"/>
+	 		<titledbutton id="button_address" class="other28" align="top" value="&addressButton.label;" onclick="SelectAddress()"/>
+	 		<titledbutton id="button_attach" class="other28" align="top" value="&attachButton.label;" onclick="AttachFile()"/>
+	 		<titledbutton id="button_quote" class="other28" align="top" value="&quoteButton.label;" onclick="QuoteMessage()"/>
+	 		<titledbutton id="button_spelling" class="other28" align="top" value="&spellingButton.label;" onclick="Spelling()"/>
+	 		<titledbutton id="button_save" class="other28" align="top" value="&saveButton.label;" onclick="SaveAsDraft()"/>
+	 		<titledbutton id="button_stop" class="other28" align="top" value="&stopButton.label;" onclick="Stop()"/>
 	    	<spring flex="100%"/>
 		</box>
 

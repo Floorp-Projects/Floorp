@@ -46,7 +46,7 @@ Rights Reserved.
 <commands id="commands">
 	<commandset id="CommandUpdate_AddressBook"
 				commandupdater="true"
-				events="focus,blur,select"
+				events="focus,blur,tree-select"
 				oncommandupdate="CommandUpdate_AddressBook()"/>
 	
 	<commandset id="globalEditMenuItems"/>
@@ -195,9 +195,10 @@ Rights Reserved.
 			<box id="toolbar_button_box">
 				<titledbutton id="button_newcard" class="button28" align="top" value="&newcardButton.label;" onclick="AbNewCard()"/>
 				<titledbutton id="button_newlist" class="button28" align="top" value="&newlistButton.label;" onclick="AbNewList()"/>
-				<titledbutton id="button_editcard" align="top" value="&editButton.label;" onclick="AbEditCard()"/>
-				<titledbutton id="button_newmessage" align="top" value="&newmsgButton.label;" onclick="AbNewMessage()"/>
-				<titledbutton id="button_delete" disabled="true" align="top" value="&deleteButton.label;" onclick="AbDelete()"/>
+            	<toolbarseparator/>
+				<titledbutton id="button_editcard" class="other28" align="top" value="&editButton.label;" onclick="AbEditCard()"/>
+				<titledbutton id="button_newmessage" class="other28" align="top" value="&newmsgButton.label;" onclick="AbNewMessage()"/>
+				<titledbutton id="button_delete" class="other28" disabled="true" align="top" value="&deleteButton.label;" onclick="AbDelete()"/>
 
 				<box align="vertical" flex="100%">
 					<spring flex="1"/> 
@@ -206,8 +207,8 @@ Rights Reserved.
 					<spring flex="1"/> 
 				</box>
 
-				<titledbutton id="button_stop" align="top" value="&stopButton.label;" onclick="AbStop()"/>
-				<titledbutton id="button_search" align="top" value="&searchButton.label;" onclick="AbSearch()"/>
+				<titledbutton id="button_stop" class="other28" align="top" value="&stopButton.label;" onclick="AbStop()"/>
+				<titledbutton id="button_search" class="other28" align="top" value="&searchButton.label;" onclick="AbSearch()"/>
 			</box>
 
 			<box id="toolbar_throbber_box" align="vertical">

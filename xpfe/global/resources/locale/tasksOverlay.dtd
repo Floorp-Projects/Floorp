@@ -1,7 +1,7 @@
 <!-- extracted from tasksOverlay.xul -->
 <!ENTITY tasksMenu.label				"Tasks">
 <!ENTITY navigatorCmd.label					"Navigator">  
-<!ENTITY messengerCmd.label					"Messenger">
+<!ENTITY messengerCmd.label					"Mail">
 <!ENTITY editorCmd.label					  "Composer">
 <!ENTITY addressBookCmd.label				"Address Book">  
 <!ENTITY newsgroupsCmd.label				"Newsgroups">  

@@ -1,7 +1,39 @@
 var addressbook = 0;
 var editCardCallback = 0;
 
-// functions used only by addressbook
+// Default Controller object for window
+var DefaultController =
+{
+    supportsCommand: function(command)
+	{
+        switch ( command )
+		{
+			case "cmd_delete":
+                return true;
+			default:
+				return false;
+		}
+	},
+
+	isCommandEnabled: function(command)
+	{
+		dump('DefaultController::isCommandEnabled(' + command + ')\n');
+		switch ( command )
+		{
+			case "cmd_delete":
+				// set the menu to the default text
+				goSetMenuValue(command, 'valueDefault');
+				return false;
+			
+			default:
+				return false;
+		}
+	},
+
+	doCommand: function(command)
+	{
+	}
+};
 
 function OnLoadAddressBook()
 {
@@ -55,7 +87,7 @@ function CommandUpdate_AddressBook()
 function AbUpdateCommandDelete()
 {
 	var command = "cmd_delete";
-	var focusedElement = document.commandDispatcher.focusedElement;
+	var focusedElement = document.commandDispatcher.focusedNode;
 
 	var id = 0;
 	if ( focusedElement )
@@ -107,7 +139,7 @@ function UpdateCardView()
 
 function AbClose()
 {
-	top.window.close();
+	top.close();
 }
 
 function AbNewAddressBook()

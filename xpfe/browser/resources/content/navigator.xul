@@ -421,13 +421,13 @@ Contributor(s): ______________________________________. -->
           <spring flex="100%"/>
         </box>
 		<spring style="width: 1em"/>
-        <titledbutton id="statusText" align="left" flex="100%" 
+        <titledbutton id="statusText" class="status-bar" align="left" flex="100%" 
           value="&statusText.label;"  style="min-width: 1px">
           <observes element="Browser:Status" attribute="value"
             onbroadcast="onStatus()"/>         
         </titledbutton>
     
-        <titledbutton align="left" value="&buildId.label;"/>
+        <titledbutton class="status-bar" align="left" value="&buildId.label;"/>
        
         <titledbutton id="protocol-icon" class="borderless" uri="..." 
           src="" align="left" onclick="onProtocolClick()">     

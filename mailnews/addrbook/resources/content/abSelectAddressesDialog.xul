@@ -55,9 +55,9 @@ Rights Reserved.
 		
 		<spring style="width: 1em;"/>
 		
-		<titledbutton id="stop" value="&stopButton.label;" class="push" onclick="SelectAddressStopButton()"/>	
+		<titledbutton id="stop" value="&stopButton.label;" class="dialog push" onclick="SelectAddressStopButton()"/>	
 		<spring style="width:5px"/>
-		<titledbutton id="search" value="&searchButton.label;" class="push" onclick="SelectAddressSearchButton()"/>	
+		<titledbutton id="search" value="&searchButton.label;" class="dialog push" onclick="SelectAddressSearchButton()"/>	
 	</box>
 
 	<!-- Main box, 3 pane and majority of buttons -->
@@ -92,11 +92,11 @@ Rights Reserved.
 					<!-- Box that holds (to,cc,bcc buttons) -->
 					<box align="horizontal" style="padding:0.3em; border-bottom:solid black 1px">
 						<spring flex="50%"/>
-						<titledbutton id="toButton" value="&toButton.label;" class="push" onclick="SelectAddressToButton()"/>	
+						<titledbutton id="toButton" value="&toButton.label;" class="dialog push" onclick="SelectAddressToButton()"/>	
 						<spring style="width:10px"/>
-						<titledbutton id="ccButton" value="&ccButton.label;" class="push" onclick="SelectAddressCcButton()"/>	
+						<titledbutton id="ccButton" value="&ccButton.label;" class="dialog push" onclick="SelectAddressCcButton()"/>	
 						<spring style="width:10px"/>
-						<titledbutton id="bccButton" value="&bccButton.label;" class="push" onclick="SelectAddressBccButton()"/>	
+						<titledbutton id="bccButton" value="&bccButton.label;" class="dialog push" onclick="SelectAddressBccButton()"/>	
 						<spring flex="50%"/>
 					</box>
 				</box>
@@ -120,16 +120,16 @@ Rights Reserved.
 		<box align="vertical" style="padding: .5em; padding-right: 0px">
 			<box align="vertical" flex="50%">
 				<spring style="height:10px"/>
-				<titledbutton id="new" value="&newButton.label;" class="push" onclick="AbNewCard()"/>	
+				<titledbutton id="new" value="&newButton.label;" class="dialog push" onclick="AbNewCard()"/>	
 				<spring style="height:10px"/>
-				<titledbutton id="edit" value="&editButton.label;" class="push" onclick="AbEditCard()"/>	
+				<titledbutton id="edit" value="&editButton.label;" class="dialog push" onclick="AbEditCard()"/>	
 				<spring style="height:10px"/>
-				<titledbutton id="view" value="&viewButton.label;" class="push" onclick="SelectAddressViewButton()"/>
+				<titledbutton id="view" value="&viewButton.label;" class="dialog push" onclick="SelectAddressViewButton()"/>
 				<spring flex="100%"/>
 			</box>
 			<box align="vertical" flex="50%">
 				<spring flex="50%"/>
-				<titledbutton id="remove" value="&removeButton.label;" class="push" onclick="RemoveSelectedFromBucket()"/>	
+				<titledbutton id="remove" value="&removeButton.label;" class="dialog push" onclick="RemoveSelectedFromBucket()"/>	
 				<spring flex="50%"/>
 			</box>
 		</box>
