@@ -49,7 +49,6 @@ nsMenuDismissalListener::~nsMenuDismissalListener()
 {
 }
 
-
 ////////////////////////////////////////////////////////////////////////
 nsresult
 nsMenuDismissalListener::MouseDown(nsIDOMEvent* aMouseEvent)
@@ -94,6 +93,13 @@ nsMenuDismissalListener::Rollup()
     else
       Unregister();
   }
+  return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////
+NS_IMETHODIMP nsMenuDismissalListener::ShouldRollupOnMouseWheelEvent(PRBool *aShouldRollup) 
+{ 
+  *aShouldRollup = PR_FALSE; 
   return NS_OK;
 }
 
