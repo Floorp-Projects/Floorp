@@ -76,9 +76,6 @@ public:
 	static Boolean		Start(ResIDT inWindowID, MWContext * context = NULL, short initTabValue = 0, Boolean insert = FALSE);
 
 	Boolean				AllowSubRemoval( LCommander *inSub );
-	void				FindCommandStatus( CommandT inCommand, Boolean &outEnabled, 
-									Boolean&, Char16&, Str255);
-	virtual void		ListenToMessage( MessageT inMessage, void* ioParam );
 
 	virtual void		InitializeDialogControls() = NULL;
 	
@@ -760,6 +757,9 @@ public:
 	virtual Boolean		AllFieldsOK();
 	
 protected:
+	LGAEditField* 		fNumRowsEditText;
+	LGAEditField*		fNumColsEditText;
+	
 	LControl*			fBorderCheckBox;
 	LGAEditField*		fBorderWidthEditText;
 	LGAEditField*		fCellSpacingEditText;
