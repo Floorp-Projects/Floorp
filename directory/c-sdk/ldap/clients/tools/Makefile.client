@@ -200,6 +200,9 @@ EXTRA_LIBS = -L$(NSCP_DISTDIR)/$(OBJDIR_NAME)/lib -l$(LDAP_LIBNAME) \
              -L$(NSCP_DISTDIR)/lib $(SVRCORE_LINK) \
 	     $(LDAPTOOLS_NSS_LINK) \
 	     -ldl -brtl -lpthreads -lc_r -lm
+ifndef HAVE_LIBNLS
+EXTRA_LIBS += -liconv
+endif
 EXTRA_LIBS += -L$(NSCP_DISTDIR)/lib $(DYNAMICNSPR)
 endif
 
