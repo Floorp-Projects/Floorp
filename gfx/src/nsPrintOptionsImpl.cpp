@@ -969,6 +969,25 @@ static void GetAdjustedPrinterName(nsIPrintSettings* aPS, PRBool aUsePNP, nsStri
   }
 }
 
+/* PRInt32 getPrinterPrefInt (in nsIPrintSettings aPrintSettings, in wstring aPrefName); */
+NS_IMETHODIMP nsPrintOptions::GetPrinterPrefInt(nsIPrintSettings *aPrintSettings, const PRUnichar *aPrefName, PRInt32 *_retval)
+{
+  nsString prtName;
+  // Get the Printer Name from the PtinerSettings 
+  // to use as a prefix for Pref Names
+  GetAdjustedPrinterName(aPrintSettings, PR_TRUE, prtName);
+
+  nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
+  if (prefs) {
+    PRInt32 iVal;
+    if (NS_SUCCEEDED(prefs->GetIntPref(GetPrefName(NS_LossyConvertUCS2toASCII(aPrefName).get(), prtName), &iVal))) {
+      *_retval = iVal;
+      return NS_OK;
+    }
+  }
+  return NS_ERROR_FAILURE;
+}
+
 /** ---------------------------------------------------
  *  See documentation in nsPrintOptionsImpl.h
  *	@update 1/12/01 rods
