@@ -370,6 +370,7 @@ orkinRow::GetOid(nsIMdbEnv* mev,
 orkinRow::BecomeContent(nsIMdbEnv* mev,
   const mdbOid* inOid)
 {
+  MORK_USED_1(inOid);
   mdb_err outErr = 0;
   morkRow* row = 0;
   morkEnv* ev = this->CanUseRow(mev, /*inMutable*/ morkBool_kFalse,
@@ -424,7 +425,7 @@ orkinRow::GetRowCellCursor( // make a cursor starting iteration at inRowPos
     {
       if ( ev->Good() )
       {
-        cursor->mCursor_Seed = inPos;
+        cursor->mCursor_Seed = (mork_seed) inPos;
         outCursor = cursor->AcquireRowCellCursorHandle(ev);
       }
       else
@@ -678,7 +679,6 @@ orkinRow::SetRow( // make exact duplicate of another row
   }
   return outErr;
 }
-
 // } ----- end row methods -----
 
 // } ===== end nsIMdbRow methods =====

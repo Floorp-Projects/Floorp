@@ -162,6 +162,7 @@ morkTable::CloseTable(morkEnv* ev) /*i*/ // called by CloseMorkNode();
 mork_u2
 morkTable::AddCellUse(morkEnv* ev)
 {
+  MORK_USED_1(ev); 
   if ( mTable_CellUses < morkTable_kMaxCellUses ) // not already maxed out?
     ++mTable_CellUses;
     
@@ -266,6 +267,7 @@ morkTable::AcquireTableHandle(morkEnv* ev)
 mork_pos
 morkTable::ArrayHasOid(morkEnv* ev, const mdbOid* inOid)
 {
+  MORK_USED_1(ev); 
   mork_count count = mTable_RowArray.mArray_Fill;
   mork_pos pos = -1;
   while ( ++pos < count )

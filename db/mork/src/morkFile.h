@@ -132,10 +132,10 @@ public: // non-poly morkFile methods
   mork_bool FileIoOpen() const  { return mFile_IoOpen == 'O'; }
   mork_bool FileActive() const  { return mFile_Active == 'A'; }
 
-  void SetFileFrozen(mork_bool b)  { mFile_Frozen = (b)? 'F' : 0; }
-  void SetFileDoTrace(mork_bool b) { mFile_DoTrace = (b)? 'T' : 0; }
-  void SetFileIoOpen(mork_bool b)  { mFile_IoOpen = (b)? 'O' : 0; }
-  void SetFileActive(mork_bool b)  { mFile_Active = (b)? 'A' : 0; }
+  void SetFileFrozen(mork_bool b)  { mFile_Frozen = (mork_u1) ((b)? 'F' : 0); }
+  void SetFileDoTrace(mork_bool b) { mFile_DoTrace = (mork_u1) ((b)? 'T' : 0); }
+  void SetFileIoOpen(mork_bool b)  { mFile_IoOpen = (mork_u1) ((b)? 'O' : 0); }
+  void SetFileActive(mork_bool b)  { mFile_Active = (mork_u1) ((b)? 'A' : 0); }
 
   
   mork_bool IsOpenActiveAndMutableFile() const

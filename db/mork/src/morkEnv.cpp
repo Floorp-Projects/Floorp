@@ -185,15 +185,15 @@ morkEnv::OidAsHex(void* outBuf, const mdbOid& inOid)
   mork_scope scope = inOid.mOid_Scope;
   if ( scope < 0x80 && morkCh_IsName((mork_ch) scope) )
   {
-	  *p++ = (mork_u1) scope;
-	  *p = 0; // null termination
-	  outSize += 2;
+    *p++ = (mork_u1) scope;
+    *p = 0; // null termination
+    outSize += 2;
   }
   else
   {
-	  *p++ = '^';
-	  mork_size scopeSize = this->TokenAsHex(p, scope);
-	  outSize += scopeSize + 2;
+    *p++ = '^';
+    mork_size scopeSize = this->TokenAsHex(p, scope);
+    outSize += scopeSize + 2;
   }
   return outSize;
 }
@@ -205,20 +205,20 @@ morkEnv::HexToByte(mork_ch inFirstHex, mork_ch inSecondHex)
   mork_u1 hi = 0; // high four hex bits
   mork_flags f = morkCh_GetFlags(inFirstHex);
   if ( morkFlags_IsDigit(f) )
-    hi = inFirstHex - '0';
+    hi = (mork_u1) (inFirstHex - (mork_ch) '0');
   else if ( morkFlags_IsUpper(f) )
-    hi = (inFirstHex - 'A') + 10;
+    hi = (mork_u1) ((inFirstHex - (mork_ch) 'A') + 10);
   else if ( morkFlags_IsLower(f) )
-    hi = (inFirstHex - 'a') + 10;
+    hi = (mork_u1) ((inFirstHex - (mork_ch) 'a') + 10);
   
   mork_u1 lo = 0; // low four hex bits
   f = morkCh_GetFlags(inSecondHex);
   if ( morkFlags_IsDigit(f) )
-    lo = inSecondHex - '0';
+    lo = (mork_u1) (inSecondHex - (mork_ch) '0');
   else if ( morkFlags_IsUpper(f) )
-    lo = (inSecondHex - 'A') + 10;
+    lo = (mork_u1) ((inSecondHex - (mork_ch) 'A') + 10);
   else if ( morkFlags_IsLower(f) )
-    lo = (inSecondHex - 'a') + 10;
+    lo = (mork_u1) ((inSecondHex - (mork_ch) 'a') + 10);
     
   return (mork_u1) ((hi << 4) | lo);
 }
@@ -240,7 +240,7 @@ morkEnv::TokenAsHex(void* outBuf, mork_token inToken)
     }
     *p = 0; // end the string with a null byte
     char* s = (char*) outBuf; // first byte in string
-    mork_size size = p - s; // distance from start
+    mork_size size = (mork_size) (p - s); // distance from start
 
     // now reverse the string in place:
     // note that p starts on the null byte, so we need predecrement:
@@ -311,7 +311,7 @@ morkEnv::NewErrorAndCode(const char* inString, mork_u2 inCode)
   MORK_ASSERT(morkBool_kFalse); // get developer's attention
 
   ++mEnv_ErrorCount;
-  mEnv_ErrorCode = (inCode)? inCode: morkEnv_kGenericError;
+  mEnv_ErrorCode = (mork_u4) ((inCode)? inCode: morkEnv_kGenericError);
   
   if ( mEnv_ErrorHook )
     mEnv_ErrorHook->OnErrorString(this->AsMdbEnv(), inString);

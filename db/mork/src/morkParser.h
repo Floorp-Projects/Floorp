@@ -476,12 +476,15 @@ protected: // protected parser helper methods
   void ReadTable(morkEnv* ev);
   void ReadTableMeta(morkEnv* ev);
   void ReadDict(morkEnv* ev);
+  void ReadGroup(morkEnv* ev);
   void ReadMeta(morkEnv* ev, int inEndMeta);
   void ReadAlias(morkEnv* ev);
   mork_id ReadHex(morkEnv* ev, int* outNextChar);
   morkBuf* ReadValue(morkEnv* ev);
   morkBuf* ReadName(morkEnv* ev, int c);
   mork_bool ReadMid(morkEnv* ev, morkMid* outMid);
+  
+  mork_bool MatchPattern(morkEnv* ev, const char* inPattern);
   
   void EndSpanOnThisByte(morkEnv* ev, morkSpan* ioSpan);
   void StartSpanOnLastByte(morkEnv* ev, morkSpan* ioSpan);

@@ -274,6 +274,7 @@ morkStore::CloseStore(morkEnv* ev) // called by CloseMorkNode();
 void
 morkStore::RenumberAllCollectableContent(morkEnv* ev)
 {
+  MORK_USED_1(ev);
   // do nothing currently
 }
 
@@ -367,6 +368,7 @@ morkStore::StageStringAsBookAtom(morkEnv* ev, const char* inString,
 
 morkAtomSpace* morkStore::LazyGetOidAtomSpace(morkEnv* ev)
 {
+  MORK_USED_1(ev);
   if ( !mStore_OidAtomSpace )
   {
   }
@@ -551,6 +553,7 @@ mork_bool
 morkStore::OpenStoreFile(morkEnv* ev, mork_bool inFrozen,
     const char* inFilePath, const mdbOpenPolicy* inOpenPolicy)
 {
+  MORK_USED_1(inOpenPolicy);
   morkFile::SlotStrongFile((morkFile*) 0, ev, &mStore_File);
   if ( ev->Good() )
   {
@@ -571,6 +574,7 @@ mork_bool
 morkStore::CreateStoreFile(morkEnv* ev,
     const char* inFilePath, const mdbOpenPolicy* inOpenPolicy)
 {
+  MORK_USED_1(inOpenPolicy);
   morkFile::SlotStrongFile((morkFile*) 0, ev, &mStore_File);
   if ( ev->Good() )
   {
@@ -736,6 +740,7 @@ morkStore::MidToAtom(morkEnv* ev, const morkMid& inMid)
 morkStore::SmallTokenToOneByteYarn(morkEnv* ev, mdb_token inToken,
   mdbYarn* outYarn)
 {
+  MORK_USED_1(ev);
   if ( outYarn->mYarn_Buf && outYarn->mYarn_Size ) // any space in yarn at all?
   {
     mork_u1* buf = (mork_u1*) outYarn->mYarn_Buf; // for byte arithmetic
@@ -1028,10 +1033,14 @@ mork_bool
 morkStore::HasTableKind(morkEnv* ev, mdb_scope inRowScope, 
   mdb_kind inTableKind, mdb_count* outTableCount)
 {
+  MORK_USED_2(inRowScope,inTableKind);
   mork_bool outBool = morkBool_kFalse;
+  mdb_count tableCount = 0;
 
   ev->StubMethodOnlyError();
   
+  if ( outTableCount )
+    *outTableCount = tableCount;
   return outBool;
 }
 
@@ -1057,6 +1066,22 @@ morkStore::GetTableKind(morkEnv* ev, mdb_scope inRowScope,
     }
   }
   return outTable;
+}
+
+morkRow*
+morkStore::FindRow(morkEnv* ev, mdb_scope inScope, mdb_column inColumn,
+  const mdbYarn* inYarn)
+{
+  morkRow* outRow = 0;
+  if ( ev->Good() )
+  {
+    morkRowSpace* rowSpace = this->LazyGetRowSpace(ev, inScope);
+    if ( rowSpace )
+    {
+      outRow = rowSpace->FindRow(ev, inColumn, inYarn);
+    }
+  }
+  return outRow;
 }
 
 morkRow*

@@ -294,6 +294,9 @@ public: // other store methods
   morkTable* GetTableKind(morkEnv* ev, mdb_scope inRowScope, 
     mdb_kind inTableKind, mdb_count* outTableCount,
     mdb_bool* outMustBeUnique);
+
+  morkRow* FindRow(morkEnv* ev, mdb_scope inScope, mdb_column inColumn,
+    const mdbYarn* inTargetCellValue);
   
   morkRow* GetRow(morkEnv* ev, const mdbOid* inOid);
   morkTable* GetTable(morkEnv* ev, const mdbOid* inOid);

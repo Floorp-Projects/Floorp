@@ -455,7 +455,9 @@ orkinRowCellCursor::SeekCell( // same as SetRow() followed by MakeCell()
   mdb_column* outColumn, // column for this particular cell
   nsIMdbCell** acqCell)
 {
+  MORK_USED_1(inPos);
   mdb_err outErr = 0;
+  mdb_column column = 0;
   nsIMdbCell* outCell = 0;
   morkRow* row = 0;
   morkEnv* ev =
@@ -468,6 +470,8 @@ orkinRowCellCursor::SeekCell( // same as SetRow() followed by MakeCell()
   }
   if ( acqCell )
     *acqCell = outCell;
+  if ( outColumn )
+    *outColumn = column;
   return outErr;
 }
 // } ----- end cell seeking methods -----
@@ -480,7 +484,10 @@ orkinRowCellCursor::NextCell( // get next cell in the row
   mdb_column* outColumn, // column for this particular cell
   mdb_pos* outPos)
 {
+  MORK_USED_1(ioCell);
   mdb_err outErr = 0;
+  mdb_pos pos = -1;
+  mdb_column column = 0;
   morkRow* row = 0;
   morkEnv* ev =
     this->CanUseRowCellCursor(mev, /*mut*/ morkBool_kFalse, &outErr, &row);
@@ -490,6 +497,10 @@ orkinRowCellCursor::NextCell( // get next cell in the row
     ev->StubMethodOnlyError();
     outErr = ev->AsErr();
   }
+  if ( outColumn )
+    *outColumn = column;
+  if ( outPos )
+    *outPos = pos;
   return outErr;
 }
   
@@ -504,6 +515,9 @@ orkinRowCellCursor::PickNextCell( // get next cell in row within filter set
 // cols, since this might imply a potential excessive consumption of time
 // over many cursor calls when looking for column and filter intersection.
 {
+  MORK_USED_2(ioCell,inFilterSet);
+  mdb_pos pos = -1;
+  mdb_column column = 0;
   mdb_err outErr = 0;
   morkRow* row = 0;
   morkEnv* ev =
@@ -514,6 +528,10 @@ orkinRowCellCursor::PickNextCell( // get next cell in row within filter set
     ev->StubMethodOnlyError();
     outErr = ev->AsErr();
   }
+  if ( outColumn )
+    *outColumn = column;
+  if ( outPos )
+    *outPos = pos;
   return outErr;
 }
 

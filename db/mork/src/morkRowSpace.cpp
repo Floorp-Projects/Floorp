@@ -68,6 +68,10 @@
 #include "morkRow.h"
 #endif
 
+#ifndef _MORKATOMMAP_
+#include "morkAtomMap.h"
+#endif
+
 #ifndef _MORKROWOBJECT_
 #include "morkRowObject.h"
 #endif
@@ -99,14 +103,29 @@ morkRowSpace::morkRowSpace(morkEnv* ev,
   const morkUsage& inUsage, mork_scope inScope, morkStore* ioStore,
   nsIMdbHeap* ioHeap, nsIMdbHeap* ioSlotHeap)
 : morkSpace(ev, inUsage, inScope, ioStore, ioHeap, ioSlotHeap)
+, mRowSpace_SlotHeap( ioSlotHeap )
 , mRowSpace_Rows(ev, morkUsage::kMember, (nsIMdbHeap*) 0, ioSlotHeap,
   morkRowSpace_kStartRowMapSlotCount)
 , mRowSpace_Tables(ev, morkUsage::kMember, (nsIMdbHeap*) 0, ioSlotHeap)
 , mRowSpace_NextTableId( 1 )
 , mRowSpace_NextRowId( 1 )
+
+, mRowSpace_IndexCount( 0 )
 {
+  morkAtomRowMap** cache = mRowSpace_IndexCache;
+  morkAtomRowMap** cacheEnd = cache + morkRowSpace_kPrimeCacheSize;
+  while ( cache < cacheEnd )
+    *cache++ = 0; // put nil into every slot of cache table
+    
   if ( ev->Good() )
-    mNode_Derived = morkDerived_kRowSpace;
+  {
+    if ( ioSlotHeap )
+    {
+      mNode_Derived = morkDerived_kRowSpace;
+    }
+    else
+      ev->NilPointerError();
+  }
 }
 
 /*public non-poly*/ void
@@ -116,11 +135,20 @@ morkRowSpace::CloseRowSpace(morkEnv* ev) // called by CloseMorkNode();
   {
     if ( this->IsNode() )
     {
+      morkAtomRowMap** cache = mRowSpace_IndexCache;
+      morkAtomRowMap** cacheEnd = cache + morkRowSpace_kPrimeCacheSize;
+      --cache; // prepare for preincrement:
+      while ( ++cache < cacheEnd )
+      {
+        if ( *cache )
+          morkAtomRowMap::SlotStrongAtomRowMap(0, ev, cache);
+      }
+      
       mRowSpace_Tables.CloseMorkNode(ev);
       
       morkStore* store = mSpace_Store;
       if ( store )
-          this->CutAllRows(ev, &store->mStore_Pool);
+        this->CutAllRows(ev, &store->mStore_Pool);
       
       mRowSpace_Rows.CloseMorkNode(ev);
       this->CloseSpace(ev);
@@ -187,18 +215,22 @@ morkRowSpace::CutAllRows(morkEnv* ev, morkPool* ioPool)
   for ( c = i.FirstRow(ev, &r); c && ev->Good();
         c = i.NextRow(ev, &r) )
   {
-    if ( r->IsRow() )
+    if ( r )
     {
-      if ( r->mRow_Object )
+      if ( r->IsRow() )
       {
-        morkRowObject::SlotWeakRowObject((morkRowObject*) 0, ev,
-          &r->mRow_Object);
-      }
-      if ( r )
+        if ( r->mRow_Object )
+        {
+          morkRowObject::SlotWeakRowObject((morkRowObject*) 0, ev,
+            &r->mRow_Object);
+        }
         ioPool->ZapRow(ev, r);
+      }
+      else
+        r->NonRowTypeWarning(ev);
     }
     else
-      r->NonRowTypeWarning(ev);
+      ev->NilPointerError();
     
     i.CutHereRow(ev, /*key*/ (morkRow**) 0);
   }
@@ -346,6 +378,136 @@ morkRowSpace::MakeNewRowId(morkEnv* ev)
   return outRid;
 }
 
+morkAtomRowMap*
+morkRowSpace::make_index(morkEnv* ev, mork_column inCol)
+{
+  morkAtomRowMap* outMap = 0;
+  nsIMdbHeap* heap = mRowSpace_SlotHeap;
+  if ( heap ) // have expected heap for allocations?
+  {
+    morkAtomRowMap* map = new(*heap, ev)
+      morkAtomRowMap(ev, morkUsage::kHeap, heap, heap, inCol);
+    
+    if ( map ) // able to create new map index?
+    {
+      if ( ev->Good() ) // no errors during construction?
+      {
+        morkRowMapIter i(ev, &mRowSpace_Rows);
+        mork_change* c = 0;
+        morkRow* row = 0;
+        mork_aid aidKey = 0;
+        
+        for ( c = i.FirstRow(ev, &row); c && ev->Good();
+              c = i.NextRow(ev, &row) ) // another row in space?
+        {
+          aidKey = row->GetCellAtomAid(ev, inCol);
+          if ( aidKey ) // row has indexed attribute?
+            map->AddAid(ev, aidKey, row); // include in map
+        }
+      }
+      if ( ev->Good() ) // no errors constructing index?
+        outMap = map; // return from function
+      else
+        map->CutStrongRef(ev); // discard map on error
+    }
+  }
+  else
+    ev->NilPointerError();
+  
+  return outMap;
+}
+
+morkAtomRowMap*
+morkRowSpace::ForceMap(morkEnv* ev, mork_column inCol)
+{
+  morkAtomRowMap* outMap = this->FindMap(ev, inCol);
+  
+  if ( !outMap && ev->Good() ) // no such existing index?
+  {
+    if ( mRowSpace_IndexCount < morkRowSpace_kMaxIndexCount )
+    {
+      morkAtomRowMap* map = this->make_index(ev, inCol);
+      if ( map ) // created a new index for col?
+      {
+        mork_count wrap = 0; // count times wrap-around occurs
+        morkAtomRowMap** slot = mRowSpace_IndexCache; // table
+        morkAtomRowMap** end = slot + morkRowSpace_kPrimeCacheSize;
+        slot += ( inCol % morkRowSpace_kPrimeCacheSize ); // hash
+        while ( *slot ) // empty slot not yet found?
+        {
+          if ( ++slot >= end ) // wrap around?
+          {
+            slot = mRowSpace_IndexCache; // back to table start
+            if ( ++wrap > 1 ) // wrapped more than once?
+            {
+              ev->NewError("no free cache slots"); // disaster
+              break; // end while loop
+            }
+          }
+        }
+        if ( ev->Good() ) // everything went just fine?
+        {
+          ++mRowSpace_IndexCount; // note another new map
+          *slot = map; // install map in the hash table
+          outMap = map; // return the new map from function
+        }
+        else
+          map->CutStrongRef(ev); // discard map on error
+      }
+    }
+    else
+      ev->NewError("too many indexes"); // why so many indexes?
+  }
+  return outMap;
+}
+
+morkAtomRowMap*
+morkRowSpace::FindMap(morkEnv* ev, mork_column inCol)
+{
+  if ( mRowSpace_IndexCount && ev->Good() )
+  {
+    mork_count wrap = 0; // count times wrap-around occurs
+    morkAtomRowMap** slot = mRowSpace_IndexCache; // table
+    morkAtomRowMap** end = slot + morkRowSpace_kPrimeCacheSize;
+    slot += ( inCol % morkRowSpace_kPrimeCacheSize ); // hash
+    morkAtomRowMap* map = *slot;
+    while ( map ) // another used slot to examine?
+    {
+      if ( inCol == map->mAtomRowMap_IndexColumn ) // found col?
+        return map;
+      if ( ++slot >= end ) // wrap around?
+      {
+        slot = mRowSpace_IndexCache;
+        if ( ++wrap > 1 ) // wrapped more than once?
+          return (morkAtomRowMap*) 0; // stop searching
+      }
+      map = *slot;
+    }
+  }
+  return (morkAtomRowMap*) 0;
+}
+
+morkRow*
+morkRowSpace::FindRow(morkEnv* ev, mork_column inCol, const mdbYarn* inYarn)
+{
+  morkRow* outRow = 0;
+  
+  morkAtom* atom = mSpace_Store->YarnToAtom(ev, inYarn);
+  if ( atom ) // have or created an atom corresponding to input yarn?
+  {
+    mork_aid atomAid = atom->GetBookAtomAid();
+    if ( atomAid ) // atom has an identity for use in hash table?
+    {
+      morkAtomRowMap* map = this->ForceMap(ev, inCol);
+      if ( map ) // able to find or create index for col?
+      {
+        outRow = map->GetAid(ev, atomAid); // search for row
+      }
+    }
+  }
+  
+  return outRow;
+}
 
 morkRow*
 morkRowSpace::NewRowWithOid(morkEnv* ev, const mdbOid* inOid)

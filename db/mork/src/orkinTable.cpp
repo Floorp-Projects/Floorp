@@ -310,6 +310,7 @@ orkinTable::GetOid(nsIMdbEnv* mev,
 orkinTable::BecomeContent(nsIMdbEnv* mev,
   const mdbOid* inOid) // exchange content
 {
+  MORK_USED_1(inOid);
   mdb_err outErr = 0;
   morkEnv* ev = this->CanUseTable(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
@@ -458,7 +459,7 @@ orkinTable::GetTableRowCursor( // make a cursor, starting iteration at inRowPos
     {
       if ( ev->Good() )
       {
-        cursor->mCursor_Seed = inRowPos;
+        cursor->mCursor_Seed = (mork_seed) inRowPos;
         outCursor = cursor->AcquireTableRowCursorHandle(ev);
       }
       else
@@ -483,7 +484,7 @@ orkinTable::PosToOid( // get row member for a table position
   mdb_err outErr = 0;
   mdbOid roid;
   roid.mOid_Scope = 0;
-  roid.mOid_Id = -1;
+  roid.mOid_Id = (mork_id) -1;
   
   morkEnv* ev = this->CanUseTable(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
@@ -576,6 +577,7 @@ orkinTable::AddOid( // make sure the row with inOid is a table member
   nsIMdbEnv* mev, // context
   const mdbOid* inOid) // row to ensure membership in table
 {
+  MORK_USED_1(inOid);
   mdb_err outErr = 0;
   morkEnv* ev = this->CanUseTable(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
@@ -736,6 +738,10 @@ orkinTable::SearchOneSortedColumn( // search only currently sorted col
   const mdbYarn* inPrefix, // content to find as prefix in row's column cell
   mdbRange* outRange) // range of matching rows
 {
+  MORK_USED_1(inPrefix);
+  mdbRange range;
+  range.mRange_FirstPos = -1;
+  range.mRange_LastPos = -1;
   mdb_err outErr = 0;
   morkEnv* ev = this->CanUseTable(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
@@ -743,6 +749,8 @@ orkinTable::SearchOneSortedColumn( // search only currently sorted col
     ev->StubMethodOnlyError();
     outErr = ev->AsErr();
   }
+  if ( outRange )
+    *outRange = range;
   return outErr;
 }
   
@@ -757,13 +765,17 @@ orkinTable::SearchManyColumns( // search variable number of sorted cols
 // is assumed referenced and used by the thumb; one should not inspect any
 // output results in ioSearch until after the thumb is finished with it.
 {
+  MORK_USED_2(inPrefix,ioSearch);
   mdb_err outErr = 0;
+  nsIMdbThumb* outThumb = 0;
   morkEnv* ev = this->CanUseTable(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
   {
     ev->StubMethodOnlyError();
     outErr = ev->AsErr();
   }
+  if ( acqThumb )
+    *acqThumb = outThumb;
   return outErr;
 }
 // } ----- end searching methods -----
@@ -774,6 +786,7 @@ orkinTable::SearchColumnsHint( // advise re future expected search cols
   nsIMdbEnv* mev, // context
   const mdbColumnSet* inColumnSet) // columns likely to be searched
 {
+  MORK_USED_1(inColumnSet);
   mdb_err outErr = 0;
   morkEnv* ev = this->CanUseTable(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
@@ -789,6 +802,7 @@ orkinTable::SortColumnsHint( // advise re future expected sort columns
   nsIMdbEnv* mev, // context
   const mdbColumnSet* inColumnSet) // columns for likely sort requests
 {
+  MORK_USED_1(inColumnSet);
   mdb_err outErr = 0;
   morkEnv* ev = this->CanUseTable(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
@@ -807,6 +821,7 @@ orkinTable::StartBatchChangeHint( // advise before many adds and cuts
   // the address of a local variable makes a good batch start label that
   // can be used at batch end time, and such addresses remain unique.
 {
+  MORK_USED_1(inLabel);
   mdb_err outErr = 0;
   morkEnv* ev = this->CanUseTable(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
@@ -831,6 +846,7 @@ orkinTable::EndBatchChangeHint( // advise before many adds and cuts
   // a full sort of all rows at need when the batch changes end, or when
   // a surprise request occurs for row position during batch changes.
 {
+  MORK_USED_1(inLabel);
   mdb_err outErr = 0;
   morkEnv* ev = this->CanUseTable(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
@@ -852,6 +868,8 @@ orkinTable::CanSortColumn( // query which col is currently used for sorting
   mdb_column inColumn, // column to query sorting potential
   mdb_bool* outCanSort) // whether the column can be sorted
 {
+  MORK_USED_1(inColumn);
+  mdb_bool canSort = morkBool_kFalse;
   mdb_err outErr = 0;
   morkEnv* ev = this->CanUseTable(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
@@ -861,6 +879,8 @@ orkinTable::CanSortColumn( // query which col is currently used for sorting
       
     outErr = ev->AsErr();
   }
+  if ( outCanSort )
+    *outCanSort = canSort;
   return outErr;
 }
 
@@ -871,6 +891,8 @@ orkinTable::NewSortColumn( // change col used for sorting in the table
   mdb_column* outActualColumn, // column actually used for sorting
   nsIMdbThumb** acqThumb) // acquire thumb for incremental table resort
 {
+  MORK_USED_1(inColumn);
+  mdb_column actualColumn = 0;
   mdb_err outErr = 0;
   nsIMdbThumb* outThumb = 0;
   morkEnv* ev = this->CanUseTable(mev, /*inMutable*/ morkBool_kFalse, &outErr);
@@ -879,6 +901,8 @@ orkinTable::NewSortColumn( // change col used for sorting in the table
     ev->StubMethodOnlyError();
     outErr = ev->AsErr();
   }
+  if ( outActualColumn )
+    *outActualColumn = actualColumn;
   if ( acqThumb )
     *acqThumb = outThumb;
   return outErr;
@@ -894,6 +918,8 @@ orkinTable::NewSortColumnWithCompare( // change sort col w/ explicit compare
   mdb_column* outActualColumn, // column actually used for sorting
   nsIMdbThumb** acqThumb) // acquire thumb for incremental table resort
 {
+  MORK_USED_2(inColumn,ioCompare);
+  mdb_column actualColumn = 0;
   mdb_err outErr = 0;
   nsIMdbThumb* outThumb = 0;
   morkEnv* ev = this->CanUseTable(mev, /*inMutable*/ morkBool_kFalse, &outErr);
@@ -902,6 +928,8 @@ orkinTable::NewSortColumnWithCompare( // change sort col w/ explicit compare
     ev->StubMethodOnlyError();
     outErr = ev->AsErr();
   }
+  if ( outActualColumn )
+    *outActualColumn = actualColumn;
   if ( acqThumb )
     *acqThumb = outThumb;
   return outErr;
@@ -937,6 +965,7 @@ orkinTable::CloneSortColumn( // view same table with a different sort
   mdb_column inColumn, // requested new column for sorting table
   nsIMdbThumb** acqThumb) // acquire thumb for incremental table clone
 {
+  MORK_USED_1(inColumn);
   mdb_err outErr = 0;
   nsIMdbThumb* outThumb = 0;
   morkEnv* ev = this->CanUseTable(mev, /*inMutable*/ morkBool_kFalse, &outErr);
@@ -958,6 +987,7 @@ orkinTable::ThumbToCloneSortTable( // redeem complete CloneSortColumn() thumb
   nsIMdbThumb* ioThumb, // thumb from CloneSortColumn() with done status
   nsIMdbTable** acqTable) // new table instance (or old if sort unchanged)
 {
+  MORK_USED_1(ioThumb);
   mdb_err outErr = 0;
   nsIMdbTable* outTable = 0;
   morkEnv* ev = this->CanUseTable(mev, /*inMutable*/ morkBool_kFalse, &outErr);
@@ -983,13 +1013,17 @@ orkinTable::MoveOid( // change position of row in unsorted table
   mdb_pos inToPos,       // desired new position for row inRowId
   mdb_pos* outActualPos) // actual new position of row in table
 {
+  MORK_USED_3(inHintFromPos,inToPos,inOid);
   mdb_err outErr = 0;
+  mdb_pos actualPos = 0;
   morkEnv* ev = this->CanUseTable(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
   {
     ev->StubMethodOnlyError();
     outErr = ev->AsErr();
   }
+  if ( outActualPos )
+    *outActualPos = actualPos;
   return outErr;
 }
 
@@ -1001,6 +1035,8 @@ orkinTable::MoveRow( // change position of row in unsorted table
   mdb_pos inToPos,       // desired new position for row inRowId
   mdb_pos* outActualPos) // actual new position of row in table
 {
+  MORK_USED_3(inHintFromPos,inToPos,ioRow);
+  mdb_pos actualPos = 0;
   mdb_err outErr = 0;
   morkEnv* ev = this->CanUseTable(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
@@ -1008,6 +1044,8 @@ orkinTable::MoveRow( // change position of row in unsorted table
     ev->StubMethodOnlyError();
     outErr = ev->AsErr();
   }
+  if ( outActualPos )
+    *outActualPos = actualPos;
   return outErr;
 }
 // } ----- end moving methods -----
@@ -1021,6 +1059,8 @@ orkinTable::AddIndex( // create a sorting index for column if possible
 // Call nsIMdbThumb::DoMore() until done, or until the thumb is broken, and
 // then the index addition will be finished.
 {
+  MORK_USED_1(inColumn);
+  nsIMdbThumb* outThumb = 0;
   mdb_err outErr = 0;
   morkEnv* ev = this->CanUseTable(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
@@ -1029,6 +1069,9 @@ orkinTable::AddIndex( // create a sorting index for column if possible
      
     outErr = ev->AsErr();
   }
+  if ( acqThumb )
+    *acqThumb = outThumb;
+
   return outErr;
 }
 
@@ -1040,7 +1083,9 @@ orkinTable::CutIndex( // stop supporting a specific column index
 // Call nsIMdbThumb::DoMore() until done, or until the thumb is broken, and
 // then the index removal will be finished.
 {
+  MORK_USED_1(inColumn);
   mdb_err outErr = 0;
+  nsIMdbThumb* outThumb = 0;
   morkEnv* ev = this->CanUseTable(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
   {
@@ -1048,6 +1093,9 @@ orkinTable::CutIndex( // stop supporting a specific column index
     
     outErr = ev->AsErr();
   }
+  if ( acqThumb )
+    *acqThumb = outThumb;
+    
   return outErr;
 }
 
@@ -1057,15 +1105,17 @@ orkinTable::HasIndex( // query for current presence of a column index
   mdb_column inColumn, // the column to investigate
   mdb_bool* outHasIndex) // whether column has index for this column
 {
+  MORK_USED_1(inColumn);
+  mdb_bool hasIndex = morkBool_kFalse;
   mdb_err outErr = 0;
   morkEnv* ev = this->CanUseTable(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
   {
-    if ( outHasIndex )
-      *outHasIndex = morkBool_kFalse;
       
     outErr = ev->AsErr();
   }
+  if ( outHasIndex )
+    *outHasIndex = hasIndex;
   return outErr;
 }
 
@@ -1074,6 +1124,7 @@ orkinTable::EnableIndexOnSort( // create an index for col on first sort
   nsIMdbEnv* mev, // context
   mdb_column inColumn) // the column to index if ever sorted
 {
+  MORK_USED_1(inColumn);
   mdb_err outErr = 0;
   morkEnv* ev = this->CanUseTable(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
@@ -1090,15 +1141,17 @@ orkinTable::QueryIndexOnSort( // check whether index on sort is enabled
   mdb_column inColumn, // the column to investigate
   mdb_bool* outIndexOnSort) // whether column has index-on-sort enabled
 {
+  MORK_USED_1(inColumn);
+  mdb_bool indexOnSort = morkBool_kFalse;
   mdb_err outErr = 0;
   morkEnv* ev = this->CanUseTable(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
   {
-    if ( outIndexOnSort )
-      *outIndexOnSort = morkBool_kFalse;
       
     outErr = ev->AsErr();
   }
+  if ( outIndexOnSort )
+    *outIndexOnSort = indexOnSort;
   return outErr;
 }
 
@@ -1107,6 +1160,7 @@ orkinTable::DisableIndexOnSort( // prevent future index creation on sort
   nsIMdbEnv* mev, // context
   mdb_column inColumn) // the column to index if ever sorted
 {
+  MORK_USED_1(inColumn);
   mdb_err outErr = 0;
   morkEnv* ev = this->CanUseTable(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )

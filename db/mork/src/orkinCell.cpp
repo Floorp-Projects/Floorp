@@ -292,6 +292,7 @@ orkinCell::IsOpenMdbObject(nsIMdbEnv* mev, mdb_bool* outOpen)
 orkinCell::SetBlob(nsIMdbEnv* mev,
   nsIMdbBlob* ioBlob)
 {
+  MORK_USED_1(ioBlob);
   mdb_err outErr = 0;
   morkCell* cell = 0;
   morkEnv* ev = this->CanUseCell(mev, /*inMutable*/ morkBool_kTrue,
@@ -331,6 +332,7 @@ orkinCell::GetBlobFill(nsIMdbEnv* mev,
 // with a yarn instance that had mYarn_Buf==nil and mYarn_Size==0.
 {
   mdb_err outErr = 0;
+  mdb_fill fill = 0;
   morkCell* cell = 0;
   morkEnv* ev = this->CanUseCell(mev, /*inMutable*/ morkBool_kTrue,
     &outErr, &cell);
@@ -339,6 +341,8 @@ orkinCell::GetBlobFill(nsIMdbEnv* mev,
     ev->StubMethodOnlyError();
     outErr = ev->AsErr();
   }
+  if ( outFill )
+    *outFill = fill;
     
   return outErr;
 }  // size of blob 
@@ -418,6 +422,7 @@ orkinCell::AliasYarn(nsIMdbEnv* mev,
 /*virtual*/ mdb_err
 orkinCell::SetColumn(nsIMdbEnv* mev, mdb_column inColumn)
 {
+  MORK_USED_1(inColumn);
   mdb_err outErr = 0;
   morkCell* cell = 0;
   morkEnv* ev = this->CanUseCell(mev, /*inMutable*/ morkBool_kTrue,
@@ -462,6 +467,12 @@ orkinCell::GetCellInfo(  // all cell metainfo except actual content
 // in to memory when you don't actually want to use the content.
 {
   mdb_err outErr = 0;
+  mdb_bool isRowChild = morkBool_kFalse;
+  mdbOid childOid;
+  childOid.mOid_Scope = 0;
+  childOid.mOid_Id = 0;
+  mork_fill blobFill = 0;
+  mdb_column column = 0;
   morkCell* cell = 0;
   morkEnv* ev = this->CanUseCell(mev, /*inMutable*/ morkBool_kTrue,
     &outErr, &cell);
@@ -471,6 +482,14 @@ orkinCell::GetCellInfo(  // all cell metainfo except actual content
     ev->StubMethodOnlyError();
     outErr = ev->AsErr();
   }
+  if ( outIsRowChild )
+    *outIsRowChild = isRowChild;
+  if ( outChildOid )
+    *outChildOid = childOid;
+   if ( outBlobFill )
+     *outBlobFill = blobFill;
+  if ( outColumn )
+    *outColumn = column;
     
   return outErr;
 }
@@ -594,6 +613,7 @@ orkinCell::SetChildRow( // access table of specific attribute
   nsIMdbEnv* mev, // context
   nsIMdbRow* ioRow)
 {
+  MORK_USED_1(ioRow);
   mdb_err outErr = 0;
   morkCell* cell = 0;
   morkEnv* ev = this->CanUseCell(mev, /*inMutable*/ morkBool_kTrue,
@@ -614,6 +634,7 @@ orkinCell::GetChildRow( // access row of specific attribute
   nsIMdbRow** acqRow) // acquire child row (or nil if no child)
 {
   mdb_err outErr = 0;
+  nsIMdbRow* outRow = 0;
   morkCell* cell = 0;
   morkEnv* ev = this->CanUseCell(mev, /*inMutable*/ morkBool_kTrue,
     &outErr, &cell);
@@ -623,6 +644,8 @@ orkinCell::GetChildRow( // access row of specific attribute
     ev->StubMethodOnlyError();
     outErr = ev->AsErr();
   }
+  if ( acqRow )
+    *acqRow = outRow;
     
   return outErr;
 }
@@ -633,6 +656,7 @@ orkinCell::SetChildTable( // access table of specific attribute
   nsIMdbEnv* mev, // context
   nsIMdbTable* inTable) // table must be bound inside this same db port
 {
+  MORK_USED_1(inTable);
   mdb_err outErr = 0;
   morkCell* cell = 0;
   morkEnv* ev = this->CanUseCell(mev, /*inMutable*/ morkBool_kTrue,
@@ -653,6 +677,7 @@ orkinCell::GetChildTable( // access table of specific attribute
   nsIMdbTable** acqTable) // acquire child tabdle (or nil if no chil)
 {
   mdb_err outErr = 0;
+  nsIMdbTable* outTable = 0;
   morkCell* cell = 0;
   morkEnv* ev = this->CanUseCell(mev, /*inMutable*/ morkBool_kTrue,
     &outErr, &cell);
@@ -662,6 +687,8 @@ orkinCell::GetChildTable( // access table of specific attribute
     ev->StubMethodOnlyError();
     outErr = ev->AsErr();
   }
+  if ( acqTable )
+    *acqTable = outTable;
     
   return outErr;
 }

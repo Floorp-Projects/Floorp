@@ -198,7 +198,7 @@ public: // other morkNode methods
   mork_bool  BadRefs() const { return mNode_Refs < mNode_Uses; }
 
   mork_uses  StrongRefsOnly() const { return mNode_Uses; }
-  mork_refs  WeakRefsOnly() const { return ( mNode_Refs - mNode_Uses ); }
+  mork_refs  WeakRefsOnly() const { return (mork_refs) ( mNode_Refs - mNode_Uses ); }
 
   // (this refcounting derives from public domain IronDoc node refcounts)
   mork_refs    AddStrongRef(morkEnv* ev);

@@ -111,8 +111,13 @@ morkThumb::morkThumb(morkEnv* ev,
 {
   if ( ev->Good() )
   {
-    mThumb_Magic = inMagic;
-    mNode_Derived = morkDerived_kThumb;
+    if ( ioSlotHeap )
+    {
+      mThumb_Magic = inMagic;
+      mNode_Derived = morkDerived_kThumb;
+    }
+    else
+      ev->NilPointerError();
   }
 }
 
@@ -218,7 +223,7 @@ morkThumb::Make_OpenFileStore(morkEnv* ev, nsIMdbHeap* ioHeap,
           morkBuilder* builder = ioStore->LazyGetBuilder(ev);
           if ( builder )
           {
-            outThumb->mThumb_Total = fileEof;
+            outThumb->mThumb_Total = (mork_count) fileEof;
             morkStore::SlotStrongStore(ioStore, ev, &outThumb->mThumb_Store);
             morkBuilder::SlotStrongBuilder(builder, ev,
               &outThumb->mThumb_Builder);
@@ -277,6 +282,7 @@ morkThumb::Make_CompressCommit(morkEnv* ev,
 void morkThumb::GetProgress(morkEnv* ev, mdb_count* outTotal,
   mdb_count* outCurrent, mdb_bool* outDone, mdb_bool* outBroken)
 {
+  MORK_USED_1(ev);
   if ( outTotal )
     *outTotal = mThumb_Total;
   if ( outCurrent )
@@ -350,6 +356,7 @@ void morkThumb::DoMore(morkEnv* ev, mdb_count* outTotal,
 
 void morkThumb::CancelAndBreakThumb(morkEnv* ev)
 {
+  MORK_USED_1(ev);
   mThumb_Broken = morkBool_kTrue;
 }
 
@@ -359,6 +366,7 @@ morkStore*
 morkThumb::ThumbToOpenStore(morkEnv* ev)
 // for orkinFactory::ThumbToOpenStore() after OpenFileStore()
 {
+  MORK_USED_1(ev);
   return mThumb_Store;
 }
 
@@ -376,7 +384,7 @@ void morkThumb::DoMore_OpenFileStore(morkEnv* ev)
     builder->ParseMore(ev, &pos, &mThumb_Done, &mThumb_Broken);
     // mThumb_Total = builder->mBuilder_TotalCount;
     // mThumb_Current = builder->mBuilder_DoneCount;
-    mThumb_Current = pos;
+    mThumb_Current = (mork_count) pos;
   }
   else
   {

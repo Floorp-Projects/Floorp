@@ -189,6 +189,7 @@ morkPool::NewCells(morkEnv* ev, mork_size inSize)
 void
 morkPool::ZapCells(morkEnv* ev, morkCell* ioVector, mork_size inSize)
 {
+  MORK_USED_1(inSize);
   if ( ioVector )
     mPool_Heap->Free(ev->AsMdbEnv(), ioVector);
 }
@@ -214,7 +215,7 @@ morkPool::AddRowCells(morkEnv* ev, morkRow* ioRow, mork_size inNewSize)
       }
       oldCells = ioRow->mRow_Cells;
       ioRow->mRow_Cells = newCells;
-      ioRow->mRow_Length = inNewSize;
+      ioRow->mRow_Length = (mork_u2) inNewSize;
       ++ioRow->mRow_Seed;
       
       if ( oldCells )
@@ -251,7 +252,7 @@ morkPool::CutRowCells(morkEnv* ev, morkRow* ioRow,
         }
         oldCells = ioRow->mRow_Cells;
         ioRow->mRow_Cells = newCells;
-        ioRow->mRow_Length = inNewSize;
+        ioRow->mRow_Length = (mork_u2) inNewSize;
         ++ioRow->mRow_Seed;
         
         if ( oldCells )

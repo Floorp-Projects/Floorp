@@ -248,6 +248,7 @@ orkinTableRowCursor::GetCount(nsIMdbEnv* mev, mdb_count* outCount)
 orkinTableRowCursor::GetSeed(nsIMdbEnv* mev, mdb_seed* outSeed)
 {
   mdb_err outErr = 0;
+  mdb_seed seed = 0;
   morkEnv* ev =
     this->CanUseTableRowCursor(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
@@ -255,6 +256,8 @@ orkinTableRowCursor::GetSeed(nsIMdbEnv* mev, mdb_seed* outSeed)
     ev->StubMethodOnlyError();
     outErr = ev->AsErr();
   }
+  if ( outSeed )
+    *outSeed = seed;
   return outErr;
 }
 
@@ -294,6 +297,7 @@ orkinTableRowCursor::GetPos(nsIMdbEnv* mev, mdb_pos* outPos)
 /*virtual*/ mdb_err
 orkinTableRowCursor::SetDoFailOnSeedOutOfSync(nsIMdbEnv* mev, mdb_bool inFail)
 {
+  MORK_USED_1(inFail);
   mdb_err outErr = 0;
   morkEnv* ev =
     this->CanUseTableRowCursor(mev, /*inMutable*/ morkBool_kFalse, &outErr);
@@ -308,6 +312,7 @@ orkinTableRowCursor::SetDoFailOnSeedOutOfSync(nsIMdbEnv* mev, mdb_bool inFail)
 /*virtual*/ mdb_err
 orkinTableRowCursor::GetDoFailOnSeedOutOfSync(nsIMdbEnv* mev, mdb_bool* outFail)
 {
+  mdb_bool fail = morkBool_kFalse;
   mdb_err outErr = 0;
   morkEnv* ev =
     this->CanUseTableRowCursor(mev, /*inMutable*/ morkBool_kFalse, &outErr);
@@ -316,6 +321,8 @@ orkinTableRowCursor::GetDoFailOnSeedOutOfSync(nsIMdbEnv* mev, mdb_bool* outFail)
     ev->StubMethodOnlyError();
     outErr = ev->AsErr();
   }
+  if ( outFail )
+    *outFail = fail;
   return outErr;
 }
 // } ----- end attribute methods -----
@@ -329,6 +336,7 @@ orkinTableRowCursor::GetDoFailOnSeedOutOfSync(nsIMdbEnv* mev, mdb_bool* outFail)
 /*virtual*/ mdb_err
 orkinTableRowCursor::SetTable(nsIMdbEnv* mev, nsIMdbTable* ioTable)
 {
+  MORK_USED_1(ioTable);
   mdb_err outErr = 0;
   morkEnv* ev =
     this->CanUseTableRowCursor(mev, /*inMutable*/ morkBool_kFalse, &outErr);
@@ -428,6 +436,11 @@ orkinTableRowCursor::NextRowCopy( // put row cells into sink only when already i
   mdbOid* outOid, // out row oid
   mdb_pos* outRowPos)
 {
+  MORK_USED_1(ioSinkRow);
+  mdbOid oid;
+  oid.mOid_Scope = 0;
+  oid.mOid_Id = (mork_id) -1;
+  mdb_pos rowPos = -1;
   mdb_err outErr = 0;
   morkEnv* ev =
     this->CanUseTableRowCursor(mev, /*inMutable*/ morkBool_kFalse, &outErr);
@@ -441,6 +454,10 @@ orkinTableRowCursor::NextRowCopy( // put row cells into sink only when already i
       ev->NilPointerError();
     outErr = ev->AsErr();
   }
+  if ( outRowPos )
+    *outRowPos = rowPos;
+  if ( outOid )
+    *outOid = oid;
   return outErr;
 }
 
@@ -451,6 +468,11 @@ orkinTableRowCursor::NextRowCopyAll( // put all row cells into sink, adding to s
   mdbOid* outOid, // out row oid
   mdb_pos* outRowPos)
 {
+  MORK_USED_1(ioSinkRow);
+  mdbOid oid;
+  oid.mOid_Scope = 0;
+  oid.mOid_Id = (mork_id) -1;
+  mdb_pos rowPos = -1;
   mdb_err outErr = 0;
   morkEnv* ev =
     this->CanUseTableRowCursor(mev, /*inMutable*/ morkBool_kFalse, &outErr);
@@ -459,6 +481,10 @@ orkinTableRowCursor::NextRowCopyAll( // put all row cells into sink, adding to s
     ev->StubMethodOnlyError();
     outErr = ev->AsErr();
   }
+  if ( outRowPos )
+    *outRowPos = rowPos;
+  if ( outOid )
+    *outOid = oid;
   return outErr;
 }  // nonzero if child, and a row child
 

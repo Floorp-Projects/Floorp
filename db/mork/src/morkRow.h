@@ -74,6 +74,10 @@ public: // other row methods
 
 public: // internal row methods
 
+  void cut_all_index_entries(morkEnv* ev);
+
+  // void cut_cell_from_space_index(morkEnv* ev, morkCell* ioCell);
+
   mork_count CountOverlap(morkEnv* ev, morkCell* ioVector, mork_fill inFill);
   // Count cells in ioVector that change existing cells in this row when
   // ioVector is added to the row (as in TakeCells()).   This is the set
@@ -99,6 +103,13 @@ public: // internal row methods
     morkStore* ioStore);
   morkCell* GetCell(morkEnv* ev, mdb_column inColumn, mork_pos* outPos) const;
   morkCell* CellAt(morkEnv* ev, mork_pos inPos) const;
+
+  mork_aid GetCellAtomAid(morkEnv* ev, mdb_column inColumn) const;
+  // GetCellAtomAid() finds the cell with column inColumn, and sees if the
+  // atom has a token ID, and returns the atom's ID if there is one.  Or
+  // else zero is returned if there is no such column, or no atom, or if
+  // the atom has no ID to return.  This method is intended to support
+  // efficient updating of column indexes for rows in a row space.
 
 public: // external row methods
 
@@ -132,7 +143,7 @@ public: // hash and equal
     return (mRow_Oid.mOid_Scope << 16) ^ mRow_Oid.mOid_Id;
   }
 
-  mork_u4 EqualRow(const morkRow* ioRow) const
+  mork_bool EqualRow(const morkRow* ioRow) const
   {
     return
     (
@@ -141,7 +152,7 @@ public: // hash and equal
     );
   }
 
-  mork_u4 EqualOid(const mdbOid* ioOid) const
+  mork_bool EqualOid(const mdbOid* ioOid) const
   {
     return
     (

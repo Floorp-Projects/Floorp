@@ -211,6 +211,7 @@ orkinPortTableCursor::IsOpenMdbObject(nsIMdbEnv* mev, mdb_bool* outOpen)
 orkinPortTableCursor::GetCount(nsIMdbEnv* mev, mdb_count* outCount)
 {
   mdb_err outErr = 0;
+  mdb_count count = 0;
   morkEnv* ev =
     this->CanUsePortTableCursor(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
@@ -218,6 +219,8 @@ orkinPortTableCursor::GetCount(nsIMdbEnv* mev, mdb_count* outCount)
     ev->StubMethodOnlyError();
     outErr = ev->AsErr();
   }
+  if ( outCount )
+    *outCount = count;
   return outErr;
 }
 
@@ -225,6 +228,7 @@ orkinPortTableCursor::GetCount(nsIMdbEnv* mev, mdb_count* outCount)
 orkinPortTableCursor::GetSeed(nsIMdbEnv* mev, mdb_seed* outSeed)
 {
   mdb_err outErr = 0;
+  mdb_seed seed = 0;
   morkEnv* ev =
     this->CanUsePortTableCursor(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
@@ -232,12 +236,15 @@ orkinPortTableCursor::GetSeed(nsIMdbEnv* mev, mdb_seed* outSeed)
     ev->StubMethodOnlyError();
     outErr = ev->AsErr();
   }
+  if ( outSeed )
+    *outSeed = seed;
   return outErr;
 }
 
 /*virtual*/ mdb_err
 orkinPortTableCursor::SetPos(nsIMdbEnv* mev, mdb_pos inPos)
 {
+  MORK_USED_1(inPos);
   mdb_err outErr = 0;
   morkEnv* ev =
     this->CanUsePortTableCursor(mev, /*inMutable*/ morkBool_kFalse, &outErr);
@@ -253,6 +260,7 @@ orkinPortTableCursor::SetPos(nsIMdbEnv* mev, mdb_pos inPos)
 orkinPortTableCursor::GetPos(nsIMdbEnv* mev, mdb_pos* outPos)
 {
   mdb_err outErr = 0;
+  mdb_pos pos = 0;
   morkEnv* ev =
     this->CanUsePortTableCursor(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
@@ -260,12 +268,16 @@ orkinPortTableCursor::GetPos(nsIMdbEnv* mev, mdb_pos* outPos)
     ev->StubMethodOnlyError();
     outErr = ev->AsErr();
   }
+  if ( outPos )
+    *outPos = pos;
+    
   return outErr;
 }
 
 /*virtual*/ mdb_err
 orkinPortTableCursor::SetDoFailOnSeedOutOfSync(nsIMdbEnv* mev, mdb_bool inFail)
 {
+  MORK_USED_1(inFail);
   mdb_err outErr = 0;
   morkEnv* ev =
     this->CanUsePortTableCursor(mev, /*inMutable*/ morkBool_kFalse, &outErr);
@@ -281,6 +293,7 @@ orkinPortTableCursor::SetDoFailOnSeedOutOfSync(nsIMdbEnv* mev, mdb_bool inFail)
 orkinPortTableCursor::GetDoFailOnSeedOutOfSync(nsIMdbEnv* mev, mdb_bool* outFail)
 {
   mdb_err outErr = 0;
+  mdb_bool fail = 0;
   morkEnv* ev =
     this->CanUsePortTableCursor(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
@@ -288,6 +301,8 @@ orkinPortTableCursor::GetDoFailOnSeedOutOfSync(nsIMdbEnv* mev, mdb_bool* outFail
     ev->StubMethodOnlyError();
     outErr = ev->AsErr();
   }
+  if ( outFail )
+    *outFail = fail;
   return outErr;
 }
 // } ----- end attribute methods -----
@@ -300,6 +315,7 @@ orkinPortTableCursor::GetDoFailOnSeedOutOfSync(nsIMdbEnv* mev, mdb_bool* outFail
 /*virtual*/ mdb_err
 orkinPortTableCursor::SetPort(nsIMdbEnv* mev, nsIMdbPort* ioPort)
 {
+  MORK_USED_1(ioPort);
   mdb_err outErr = 0;
   morkEnv* ev =
     this->CanUsePortTableCursor(mev, /*inMutable*/ morkBool_kFalse, &outErr);

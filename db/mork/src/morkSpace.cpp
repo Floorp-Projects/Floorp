@@ -94,7 +94,7 @@ morkSpace::morkSpace(morkEnv* ev,
 {
   if ( ev->Good() )
   {
-    if ( ioStore )
+    if ( ioStore && ioSlotHeap )
     {
       morkStore::SlotWeakStore(ioStore, ev, &mSpace_Store);
       if ( ev->Good() )
