@@ -55,10 +55,10 @@ function open() {
 	browser.loadUrl( url );
 
 	/* Close dialog. */
-	toolkit.CloseWindow( window );
+        window.close();
 }
 
 function cancel() {
-    toolkit.CloseWindow( window );
+        window.close();
 }
 
