@@ -259,7 +259,7 @@ nsXBLPrototypeBinding::Init(const nsACString& aID,
   if (url) {
     nsCAutoString debugRef;
     url->GetRef(debugRef);
-    NS_ASSERTION(ref.IsEmpty(), "Document URI must not have a ref");
+    NS_ASSERTION(debugRef.IsEmpty(), "Document URI must not have a ref");
   }
 #endif
   
