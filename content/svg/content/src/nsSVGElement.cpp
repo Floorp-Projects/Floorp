@@ -61,6 +61,7 @@
 #include "nsICSSParser.h"
 #include "nsGenericHTMLElement.h"
 #include "nsNodeInfoManager.h"
+#include "nsIScriptGlobalObject.h"
 
 nsSVGElement::nsSVGElement(nsINodeInfo *aNodeInfo)
   : nsGenericElement(aNodeInfo)
@@ -199,9 +200,51 @@ nsSVGElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName, nsIAtom* aPrefix,
     // We don't have an nsISVGValue attribute.
     attrValue.SetTo(aValue);
   }
+
+  if (aNamespaceID == kNameSpaceID_None && IsEventName(aName)) {
+    nsCOMPtr<nsIEventListenerManager> manager;
+    if (aName == nsSVGAtoms::onload) {
+      // If we have a document, and it has a script global, add the
+      // event listener on the global.
+
+      // until we figure out how to handle multiple onloads, only
+      // onload on the root element (least surprise, hopefully)
+      if (mDocument &&
+          mDocument->GetRootContent() == NS_STATIC_CAST(nsIContent*, this)) {
+        nsCOMPtr<nsIDOMEventReceiver> receiver =
+          do_QueryInterface(mDocument->GetScriptGlobalObject());
+        if (receiver) {
+          receiver->GetListenerManager(getter_AddRefs(manager));
+        }
+      }
+    }
+    else {
+      GetListenerManager(getter_AddRefs(manager));
+    }
+    if (manager) {
+      manager->AddScriptEventListener(NS_STATIC_CAST(nsIContent*, this), aName,
+                                      aValue, PR_TRUE);
+    }
+  }
   
   return SetAttrAndNotify(aNamespaceID, aName, aPrefix, oldValue, attrValue,
                           modification, hasListeners, aNotify);
+}
+
+nsresult
+nsSVGElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
+                        PRBool aNotify)
+{
+  if (aNamespaceID == kNameSpaceID_None && IsEventName(aName)) {
+    nsCOMPtr<nsIEventListenerManager> manager;
+    GetListenerManager(getter_AddRefs(manager));
+
+    if (manager) {
+      manager->RemoveScriptEventListener(aName);
+    }
+  }
+
+  return nsGenericElement::UnsetAttr(aNamespaceID, aName, aNotify);
 }
 
 nsresult
@@ -548,6 +591,12 @@ nsSVGElement::ParentChainChanged()
 //----------------------------------------------------------------------
 // Implementation Helpers:
 
+PRBool
+nsSVGElement::IsEventName(nsIAtom* aName)
+{
+  return PR_FALSE;
+}
+
 nsresult
 nsSVGElement::SetAttrAndNotify(PRInt32 aNamespaceID, nsIAtom* aAttribute,
                                nsIAtom* aPrefix, const nsAString& aOldValue,
@@ -741,4 +790,23 @@ nsSVGElement::AddMappedSVGValue(nsIAtom* aName, nsISupports* aValue,
   }
 
   return NS_OK;
+}
+
+/* static */
+PRBool
+nsSVGElement::IsGraphicElementEventName(nsIAtom* aName)
+{
+  const char* name;
+  aName->GetUTF8String(&name);
+
+  if (name[0] != 'o' || name[1] != 'n') {
+    return PR_FALSE;
+  }
+
+  return (aName == nsSVGAtoms::onclick     ||
+          aName == nsSVGAtoms::onmousedown ||
+          aName == nsSVGAtoms::onmouseup   ||
+          aName == nsSVGAtoms::onmouseover ||
+          aName == nsSVGAtoms::onmousemove ||
+          aName == nsSVGAtoms::onmouseout);
 }

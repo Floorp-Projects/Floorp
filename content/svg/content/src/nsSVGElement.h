@@ -79,7 +79,9 @@ public:
   virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
                            PRBool aNotify);
-
+  virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+                             PRBool aNotify);
+  
   virtual nsresult SetBindingParent(nsIContent* aParent);
   virtual PRBool IsContentOfType(PRUint32 aFlags) const;
 
@@ -115,6 +117,9 @@ public:
   virtual void ParentChainChanged(); 
   
 protected:
+  // Hooks for subclasses
+  virtual PRBool IsEventName(nsIAtom* aName);
+
   /**
    * Set attribute and (if needed) notify documentobservers and fire off
    * mutation events.
@@ -145,6 +150,8 @@ protected:
   nsresult AddMappedSVGValue(nsIAtom* aName, nsISupports* aValue,
                              PRInt32 aNamespaceID = kNameSpaceID_None);
   
+  static PRBool IsGraphicElementEventName(nsIAtom* aName);
+
   nsCOMPtr<nsICSSStyleRule> mContentStyleRule;
   nsAttrAndChildArray mMappedAttributes;
 };

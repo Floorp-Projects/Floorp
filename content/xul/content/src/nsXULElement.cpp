@@ -1495,7 +1495,8 @@ nsXULElement::CompileEventHandler(nsIScriptContext* aContext,
     }
 
     // Compile the event handler
-    rv = context->CompileEventHandler(scopeObject, aName, aBody,
+    const char *eventName = nsContentUtils::GetEventArgName(kNameSpaceID_XUL);
+    rv = context->CompileEventHandler(scopeObject, aName, eventName, aBody,
                                       aURL, aLineNo, !scopeObject,
                                       aHandler);
     if (NS_FAILED(rv)) return rv;

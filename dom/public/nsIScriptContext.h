@@ -160,6 +160,7 @@ public:
    * @param aName an nsIAtom pointer naming the function; it must be lowercase
    *        and ASCII, and should not be longer than 63 chars.  This bound on
    *        length is enforced only by assertions, so caveat caller!
+   * @param aEventName the name that the event object should be bound to
    * @param aBody the event handler function's body
    * @param aURL the URL or filename for error messages
    * @param aLineNo the starting line number of the script for error messages
@@ -176,6 +177,7 @@ public:
    */
   virtual nsresult CompileEventHandler(void* aTarget,
                                        nsIAtom* aName,
+                                       const char* aEventName,
                                        const nsAString& aBody,
                                        const char* aURL,
                                        PRUint32 aLineNo,

@@ -104,7 +104,9 @@ public:
   NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable);
   
 protected:
-  
+  // nsSVGElement overrides
+  PRBool IsEventName(nsIAtom* aName);
+
   // implementation helpers:
   void GetScreenPosition(PRInt32 &x, PRInt32 &y);
   
@@ -1186,6 +1188,16 @@ nsSVGSVGElement::DidModifySVGObservable (nsISVGValue* observable)
   printf("viewport/viewbox/preserveAspectRatio have been changed\n");
 #endif
   return NS_OK;
+}
+
+//----------------------------------------------------------------------
+// nsSVGElement overrides
+
+PRBool
+nsSVGSVGElement::IsEventName(nsIAtom* aName)
+{
+  return IsGraphicElementEventName(aName) ||
+         aName == nsSVGAtoms::onclick;
 }
 
 //----------------------------------------------------------------------

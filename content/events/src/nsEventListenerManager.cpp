@@ -1218,7 +1218,18 @@ nsEventListenerManager::AddScriptEventListener(nsISupports *aObject,
                                                aBody, url.get(), lineNo, &handler);
       }
       else {
-        rv = context->CompileEventHandler(scriptObject, aName, aBody,
+        PRInt32 nameSpace = kNameSpaceID_Unknown;
+        if (content)
+          content->GetNameSpaceID(&nameSpace);
+        else if (doc) {
+          nsCOMPtr<nsIContent> root = doc->GetRootContent();
+          if (root)
+            root->GetNameSpaceID(&nameSpace);
+        }
+        const char *eventName = nsContentUtils::GetEventArgName(nameSpace);
+
+        rv = context->CompileEventHandler(scriptObject, aName, eventName,
+                                          aBody,
                                           url.get(), lineNo,
                                           (handlerOwner != nsnull),
                                           &handler);
@@ -1427,7 +1438,12 @@ nsEventListenerManager::CompileEventHandlerInternal(nsIScriptContext *aContext,
                                                      &handler);
         }
         else {
-          result = aContext->CompileEventHandler(jsobj, aName, handlerBody,
+          PRInt32 nameSpace = kNameSpaceID_Unknown;
+          content->GetNameSpaceID(&nameSpace);
+          const char *eventName = nsContentUtils::GetEventArgName(nameSpace);
+
+          result = aContext->CompileEventHandler(jsobj, aName, eventName,
+                                                 handlerBody,
                                                  url.get(), lineNo,
                                                  (handlerOwner != nsnull),
                                                  &handler);

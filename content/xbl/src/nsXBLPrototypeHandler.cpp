@@ -444,8 +444,14 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
+  PRInt32 nameSpace = kNameSpaceID_Unknown;
+  if (content)
+    content->GetNameSpaceID(&nameSpace);
+  const char *eventName = nsContentUtils::GetEventArgName(nameSpace);
+
   if (isXULKey)
-    boundContext->CompileEventHandler(scriptObject, onEventAtom, xulText,
+    boundContext->CompileEventHandler(scriptObject, onEventAtom, eventName,
+                                      xulText,
                                       nsnull, 0,
                                       PR_TRUE, &handler);
   else {
@@ -457,7 +463,8 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
     if (mPrototypeBinding)
       mPrototypeBinding->DocURI()->GetSpec(bindingURI);
     
-    boundContext->CompileEventHandler(scriptObject, onEventAtom, handlerText,
+    boundContext->CompileEventHandler(scriptObject, onEventAtom, eventName,
+                                      handlerText,
                                       bindingURI.get(),
                                       mLineNumber,
                                       PR_TRUE, &handler);

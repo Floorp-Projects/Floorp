@@ -367,7 +367,14 @@ public:
   {
     return aNodeInfo->NodeInfoManager()->GetDocument();
   }
-  
+
+  /**
+   * Returns the appropriate event argument name for the specified
+   * namespace.  Added because we need to switch between SVG's "evt"
+   * and the rest of the world's "event".
+   */
+  static const char *GetEventArgName(PRInt32 aNameSpaceID);
+
 private:
   static nsresult doReparentContentWrapper(nsIContent *aChild,
                                            nsIDocument *aNewDocument,
