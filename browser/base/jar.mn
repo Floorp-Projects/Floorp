@@ -30,7 +30,7 @@ classic.jar:
         skin/classic/browser/home-small.png           (skin/home-small.png)
         skin/classic/browser/print-small.png          (skin/print-small.png)
         skin/classic/browser/bookmarks.png            (skin/bookmarks.png)
-        skin/classic/browser/bookmark-large.png       (skin/bookmark-large.png)
+        skin/classic/browser/bookmarks-large.png      (skin/bookmarks-large.png)
         skin/classic/browser/dropmarker.png           (skin/dropmarker.png)
         skin/classic/browser/close.png                (skin/close.png)
         skin/classic/browser/browser.xml              (skin/browser.xml)
