@@ -590,8 +590,10 @@ void nsContextMenu::LoadMenuItem(
     pnsMenuItem->SetDOMElement(domElement);
 
 	if(disabled == NS_STRING_TRUE )
-		//::EnableMenuItem(mMacMenuHandle, menuitemIndex, MF_BYPOSITION | MF_GRAYED);
-
+		::DisableMenuItem(mMacMenuHandle, menuitemIndex + 1);
+    else
+    	::EnableMenuItem(mMacMenuHandle, menuitemIndex + 1);
+		
 	NS_RELEASE(pnsMenuItem);
   } 
   return;
