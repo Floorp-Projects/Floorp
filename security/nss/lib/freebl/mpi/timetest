@@ -27,6 +27,7 @@
 ## Copyright (C) 2000 Michael J. Fromberger. All Rights Reserved
 ##
 ## Contributor(s):
+##	Netscape Communications Corporation
 ##
 ## Alternatively, the contents of this file may be used under the
 ## terms of the GNU General Public License Version 2 or later (the
@@ -39,7 +40,7 @@
 ## the GPL.  If you do not delete the provisions above, a recipient
 ## may use your version of this file under either the MPL or the GPL.
 ## 
-# $Id: timetest,v 1.1 2000/07/14 00:44:27 nelsonb%netscape.com Exp $
+# $Id: timetest,v 1.2 2000/07/17 22:33:46 nelsonb%netscape.com Exp $
 #
 
 # Avoid using built-in shell echoes
@@ -86,8 +87,8 @@ fi
 rm -f timing-results.txt
 touch timing-results.txt
 
-sizes="128 192 256 320 384 448 512 640 768 896 1024"
-ntests=200
+sizes="256 512 1024 2048"
+ntests=10
 
 trap 'echo "oop!";rm -f tt*.tmp timing-results.txt;exit 0' INT HUP
 
@@ -98,14 +99,14 @@ $ECHO "Running $ntests modular exponentiations per test:"
 for size in $sizes ; do
     $ECHO "- Gathering statistics for $size bits ... "
     secs=`./metime $ntests $size | tail -1 | awk '{print $2}'`
-    $ECHO "$size: " $secs >> timing-results.txt
+    $ECHO "$size: " $secs " seconds per op" >> timing-results.txt
     tail -1 timing-results.txt
 done
 
 $ECHO "<done>";
 
-sizes="128 192 256 320 384 448 512"
-ntests=200
+sizes="256 512 1024"
+ntests=1
 
 $ECHO "\n-- Prime generation\n"
 $ECHO "Prime generation:" >> timing-results.txt
