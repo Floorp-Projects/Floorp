@@ -98,15 +98,6 @@ interface nsIURILoader : nsISupports
                in nsISupports aWindowContext);
 
 
-  /* same call as OpenURI except this one takes an IP address to use as well...
-     adapterBinding -> the local IP address to bind to
-   */
-
-  void openURIVia(in nsIChannel aChannel,
-                  in boolean aIsContentPreferred,
-                  in nsISupports aWindowContext,
-                  in unsigned long adapterBinding); 
-
   /* stops an in progress load
    */
   void stop(in nsISupports aLoadCookie);

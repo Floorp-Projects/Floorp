@@ -562,50 +562,36 @@ NS_IMETHODIMP nsURILoader::OpenURI(nsIChannel *channel,
                                    PRBool aIsContentPreferred,
                                    nsISupports * aWindowContext)
 {
-  return OpenURIVia(channel, aIsContentPreferred, aWindowContext,
-                    0 /* ip address */); 
-}
-
-NS_IMETHODIMP nsURILoader::OpenURIVia(nsIChannel *channel, 
-                                      PRBool aIsContentPreferred,
-                                      nsISupports * aWindowContext,
-                                      PRUint32 aLocalIP)
-{
-  // we need to create a DocumentOpenInfo object which will go ahead and open the url
-  // and discover the content type....
-  nsresult rv = NS_OK;
-  nsDocumentOpenInfo* loader = nsnull;
-
-  if (!channel) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_ARG_POINTER(channel);
 
   // Let the window context's uriListener know that the open is starting.  This
   // gives that window a chance to abort the load process.
   nsCOMPtr<nsIURIContentListener> winContextListener(do_GetInterface(aWindowContext));
-  if(winContextListener) {
-      // get channel from request
+  if (winContextListener) {
     nsCOMPtr<nsIURI> uri;
     channel->GetURI(getter_AddRefs(uri));
-    if(uri) {
+    if (uri) {
       PRBool doAbort = PR_FALSE;
       winContextListener->OnStartURIOpen(uri, &doAbort);
          
-      if(doAbort)
-         return NS_OK;
+      if (doAbort) {
+        return NS_OK;
+      }
     }   
   }
 
+  // we need to create a DocumentOpenInfo object which will go ahead and open
+  // the url and discover the content type....
+  nsCOMPtr<nsDocumentOpenInfo> loader;
+
   NS_NEWXPCOM(loader, nsDocumentOpenInfo);
   if (!loader) return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(loader);
 
   nsCOMPtr<nsIInterfaceRequestor> loadCookie;
   SetupLoadCookie(aWindowContext, getter_AddRefs(loadCookie));
 
   // now instruct the loader to go ahead and open the url
-  rv = loader->Open(channel, aIsContentPreferred, aWindowContext);
-  NS_RELEASE(loader);
-
-  return rv;
+  return loader->Open(channel, aIsContentPreferred, aWindowContext);
 }
 
 NS_IMETHODIMP nsURILoader::Stop(nsISupports* aLoadCookie)
