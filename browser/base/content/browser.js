@@ -109,8 +109,9 @@ function loadEventHandlers(event)
     updatePageLivemarks();
   }
 
-  // some event handlers want to be told what the original browser is
+  // some event handlers want to be told what the original browser/listener is
   var targetBrowser = null;
+  var targetListener = null;
   if (gBrowser.mTabbedMode) {
     // var targetBrowserIndex = gBrowser.getBrowserIndexForDocument(event.originalTarget);
     // if (targetBrowserIndex == -1)
@@ -119,16 +120,18 @@ function loadEventHandlers(event)
     for (var i = 0; i < gBrowser.mPanelContainer.childNodes.length; i++) {
       if (gBrowser.mPanelContainer.childNodes[i].contentDocument == event.originalTarget) {
         targetBrowser = gBrowser.mPanelContainer.childNodes[i];
+        targetListener = gBrowser.mTabListeners[i];
         break;
       }
     }
   } else if (gBrowser.mCurrentBrowser.contentDocument == event.originalTarget) {
     targetBrowser = gBrowser.mCurrentBrowser;
+    targetListener = null;
   }
 
   if (targetBrowser == null)
     return;
-  updatePageFavIcon(targetBrowser);
+  updatePageFavIcon(targetBrowser, targetListener);
 }
 
 /**
@@ -4956,7 +4959,7 @@ function livemarkAddMark(wincontent, data) {
   BookmarksUtils.addLivemark(wincontent.document.baseURI, data, title);
 }
 
-function updatePageFavIcon(aBrowser) {
+function updatePageFavIcon(aBrowser, aListener) {
   var uri = aBrowser.currentURI;
 
   if (!gBrowser.shouldLoadFavIcon(uri))
@@ -4964,8 +4967,15 @@ function updatePageFavIcon(aBrowser) {
 
   // if we made it here with this null, then no <link> was found for
   // the page load.  We try to fetch a generic favicon.ico.
-  if (aBrowser.mFavIconURL == null)
+  if (aBrowser.mFavIconURL == null) {
     aBrowser.mFavIconURL = gBrowser.buildFavIconString(uri);
+    // give it to the listener as well
+    // XXX - there is no listener for non-tabbed-mode: this is why
+    // the urlbar has no favicon when you switch from tabbed mode to
+    // non-tabbed-mode.
+    if (aListener)
+      aListener.mIcon = aBrowser.mFavIconURL;
+  }
 
   if (aBrowser == gBrowser.mCurrentBrowser) {
       if (gProxyFavIcon.src != aBrowser.mFavIconURL) {
