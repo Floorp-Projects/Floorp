@@ -62,11 +62,12 @@ outlinerbody:-moz-outliner-row(current, focus) {
 outlinerbody:-moz-outliner-cell {
   border-top: 1px solid transparent;
   border-bottom: 1px solid transparent;
-  padding: 0px 0px 1px 2px;
+  padding: 0px 0px 1px 1px;
 }
 
 outlinerbody:-moz-outliner-cell-text {
   color: inherit;
+  padding-left: 1px;
 }
 
 outlinerbody:-moz-outliner-cell-text(selected) {
