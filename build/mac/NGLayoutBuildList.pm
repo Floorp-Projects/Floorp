@@ -1002,7 +1002,7 @@ sub BuildCommonProjects()
 	#// Shared libraries
 	#//
 
-	BuildOneProject(":mozilla:jpeg:macbuild:JPEG.mcp",							"JPEG$D.shlb", "JPEG.toc", 1, $main::ALIAS_SYM_FILES, 0);
+	BuildOneProject(":mozilla:jpeg:macbuild:JPEG.mcp",							"JPEG$D.o", "", 0, 0, 0);
 
 	BuildOneProject(":mozilla:modules:libreg:macbuild:libreg.mcp",				"libreg$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 0);
 
