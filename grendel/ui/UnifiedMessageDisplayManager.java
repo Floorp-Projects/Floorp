@@ -23,6 +23,9 @@
 package grendel.ui;
 
 import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.util.Enumeration;
@@ -51,8 +54,12 @@ import javax.mail.Message;
 import javax.mail.MessagingException;
 
 import grendel.ui.UIAction;
+
 import grendel.view.ViewedMessage;
+import grendel.widgets.CollapsiblePanel;
+import grendel.widgets.GrendelToolBar;
 import grendel.widgets.Splitter;
+import grendel.widgets.Spring;
 import grendel.widgets.StatusEvent;
 import grendel.widgets.TreePath;
 
@@ -168,39 +175,27 @@ class UnifiedMessageFrame extends GeneralFrame {
 
     getRootPane().setMenuBar(fMenu);
 
-    JToolBar masterToolBar = fFolders.getToolBar();
-    JToolBar folderToolBar = fThreads.getToolBar();
-    JToolBar messageToolBar = fMessage.getToolBar();
+    GrendelToolBar masterToolBar = fFolders.getToolBar();
+    GrendelToolBar folderToolBar = fThreads.getToolBar();
+    GrendelToolBar messageToolBar = fMessage.getToolBar();
 
-    fToolBar1 = Util.MergeToolBars(folderToolBar, messageToolBar);
-    if (DEBUG) {
-      System.out.println("MergeToolBars status:");
-      if (fToolBar1 == null) {
-        System.out.println("\tCreation of fToolBar1 failed.");
-      }
-      else {
-        System.out.println("\tfToolBar1 contains " + fToolBar1.getComponentCount() + " components.");
-      }
-    }
-    fToolBar = Util.MergeToolBars(masterToolBar, fToolBar1);
-    if (DEBUG) {
-      System.out.println("MergeToolBars status:");
-      if (fToolBar == null) {
-        System.out.println("\tCreation of fToolBar failed.");
-      }
-      else {
-        System.out.println("\tfToolBar contains " + fToolBar.getComponentCount() + " components.");
-      }
-    }
 
-    //    fToolBar = Util.MergeToolBars(masterToolBar,
-    //                            Util.MergeToolBars(folderToolBar,
-    //                                               messageToolBar));
+    fToolBar = Util.MergeToolBars(masterToolBar,
+                             Util.MergeToolBars(folderToolBar,
+                                                messageToolBar));
 
-    //    fToolBar.addItem(ToolbarFactory.MakeINSToolbarItem(ToolBarLayout.CreateSpring(),
-    //                                                       null));
-//    fToolBar.addItem(ToolbarFactory.MakeINSToolbarItem(fAnimation, null));
-      fToolBarPanel.add(fToolBar);
+      fToolBarPanelConstraints.fill = GridBagConstraints.HORIZONTAL;
+      fToolBarPanelConstraints.anchor = GridBagConstraints.WEST;
+      // fToolBarPanelConstraints.weightx = 10.0;
+      fToolBarPanel.add(fToolBar, fToolBarPanelConstraints);
+      //  fToolBarPanelConstraints.weightx = 10.0;
+      fToolBar.add(fToolBar.makeNewSpring());
+      fToolBarPanelConstraints.weightx = 1.0;
+      fToolBarPanelConstraints.fill = GridBagConstraints.NONE;
+      fToolBarPanelConstraints.gridwidth = GridBagConstraints.REMAINDER;
+      fToolBarPanelConstraints.anchor = GridBagConstraints.EAST;
+      
+      fToolBarPanel.add(fAnimation, fToolBarPanelConstraints);
 
     fStatusBar = buildStatusBar();
     fPanel.add(BorderLayout.SOUTH, fStatusBar);
@@ -342,7 +337,7 @@ class UnifiedMessageFrame extends GeneralFrame {
   LayoutAction fStackedLayoutAction =
     new LayoutAction(UnifiedMessageDisplayManager.STACKED);
 
-  UIAction actions[] = { ActionFactory.GetExitAction(),
+  UIAction[] actions = { ActionFactory.GetExitAction(),
                        ActionFactory.GetNewMailAction(),
                        ActionFactory.GetComposeMessageAction(),
                        ActionFactory.GetPreferencesAction(),

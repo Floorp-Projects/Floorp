@@ -27,6 +27,7 @@ import java.awt.Container;
 import java.awt.Frame;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.io.UnsupportedEncodingException;
@@ -36,20 +37,17 @@ import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeUtility;
 
-//import netscape.orion.toolbars.NSButton;
-//import netscape.orion.toolbars.NSToolbar;
-//import netscape.orion.uimanager.AbstractUICmd;
-//import netscape.orion.uimanager.IUICmd;
-
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
-import javax.swing.JToolBar;
+//import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
 
+import grendel.ui.ToolBarLayout;
 import grendel.ui.UIAction;
+import grendel.widgets.GrendelToolBar;
 
 public class Util {
   static final boolean DEBUG = true;
@@ -136,8 +134,10 @@ public class Util {
     return res;
   }
 
-  static public JToolBar MergeToolBars(JToolBar aBar1, JToolBar aBar2) {
-    JToolBar res = new JToolBar();
+  static public GrendelToolBar MergeToolBars(GrendelToolBar aBar1, GrendelToolBar aBar2) {
+    GrendelToolBar res = new GrendelToolBar();
+    res.setLayout(new ToolBarLayout());
+    
     Component barArray1[] = aBar1.getComponents();
     Component barArray2[] = aBar2.getComponents();
     int count1 = aBar1.getComponentCount();
