@@ -27,8 +27,10 @@
 <!ENTITY attachFileCmd.label "Attach File(s)...">
 <!ENTITY attachFileCmd.key "">
 <!ENTITY attachFileCmd.accesskey "F">
+<!ENTITY attachFileButton.label "File(s)...">
 <!ENTITY attachPageCmd.label "Attach Web Page...">
 <!ENTITY attachPageCmd.accesskey "W">
+<!ENTITY attachPageButton.label "Web Page...">
 <!ENTITY sendNowCmd.label "Send Now">
 <!ENTITY sendCmd.keycode "VK_RETURN">
 <!ENTITY sendNowCmd.accesskey "d">
@@ -185,7 +187,7 @@
 <!ENTITY sendlaterButton.tooltip "Send this message later"> 
 <!ENTITY quoteButton.tooltip "Quote the previous message"> 
 <!ENTITY addressButton.tooltip "Select a recipient from an Address Book"> 
-<!ENTITY attachButton.tooltip "Attach a file to this message"> 
+<!ENTITY attachButton.tooltip "Include an attachment"> 
 <!ENTITY saveButton.tooltip "Save this message"> 
 <!ENTITY stopButton.tooltip "Stop the current transfer"> 
 
@@ -210,5 +212,3 @@
 <!ENTITY delete.accesskey "D">
 <!ENTITY selectAll.label "Select All">
 <!ENTITY selectAll.accesskey "A">
-<!ENTITY addAttachment.label "Add Attachment">
-<!ENTITY addAttachment.accesskey "t">
