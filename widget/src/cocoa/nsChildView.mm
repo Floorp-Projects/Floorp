@@ -66,6 +66,8 @@
 #include <unistd.h>
 #include "nsCursorManager.h"
 
+#define NSAppKitVersionNumber10_2 663
+
 @interface ChildView(Private)
 
 // sends gecko an ime composition event
@@ -2422,11 +2424,27 @@ nsChildView::Idle()
     return;
   }
     
-   // tell gecko to paint.
-  nsRect r;
-  ConvertCocoaToGeckoRect(aRect, r);
-  nsCOMPtr<nsIRenderingContext> rendContext = getter_AddRefs(mGeckoChild->GetRenderingContext());
-  mGeckoChild->UpdateWidget(r, rendContext);
+  // tell gecko to paint.
+  // If < 10.3, just paint the rect
+  if (floor(NSAppKitVersionNumber) <= NSAppKitVersionNumber10_2) {
+    nsRect r;
+    ConvertCocoaToGeckoRect(aRect, r);
+    nsCOMPtr<nsIRenderingContext> rendContext = getter_AddRefs(mGeckoChild->GetRenderingContext());
+    mGeckoChild->UpdateWidget(r, rendContext);
+  }
+  // If >10.3, only paint the sub-rects that need it. This avoids the
+  // nasty coalesced updates that result in big white areas.
+  else {
+    const NSRect *rects;
+    int count, i;
+    [self getRectsBeingDrawn:&rects count:&count];
+    for (i=0; i<count; ++i) {
+      nsRect r;
+      ConvertCocoaToGeckoRect(rects[i], r);
+      nsCOMPtr<nsIRenderingContext> rendContext = getter_AddRefs(mGeckoChild->GetRenderingContext());
+      mGeckoChild->UpdateWidget(r, rendContext);
+    }
+  }
 }
 
 #if USE_CLICK_HOLD_CONTEXTMENU
