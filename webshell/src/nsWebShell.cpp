@@ -1953,15 +1953,20 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
 {
   nsresult rv;
   nsAutoString urlSpec;
-  convertFileToURL(nsString(aURLSpec), urlSpec);
+  nsString urlStr = aURLSpec;
+  urlStr.Trim(" ", PR_TRUE, PR_TRUE);
+  convertFileToURL(urlStr, urlSpec);
+
 //#ifdef NECKO
 //  nsCOMPtr<nsIURI> url;
 //  rv = NS_NewURI(getter_AddRefs(url), urlSpec);
 //  if (NS_FAILED(rv)) return rv;
 //#else
+
   PRInt32 colon, fSlash;
   PRUnichar port;
   fSlash=urlSpec.Find('/');
+  
 
   // if no scheme (protocol) is found, assume http.
   if ( ((colon=urlSpec.Find(':')) == -1) // no colon at all
