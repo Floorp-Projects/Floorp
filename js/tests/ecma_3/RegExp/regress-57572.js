@@ -29,61 +29,77 @@ var i = 0;
 var bug = 57572;
 var summary = 'Testing regular expressions containing "?"\n';
 var cnEmptyString = ''; var cnSingleSpace = ' ';
-var pattern = ''; var patterns = new Array();
-var string = ''; var strings = new Array();
-var actualmatch = '';  var actualmatches = new Array();
-var expectedmatch = ''; var expectedmatches = new Array();
+var status = '';
+var statusmessages = new Array();
+var pattern = '';
+var patterns = new Array();
+var string = '';
+var strings = new Array();
+var actualmatch = '';
+var actualmatches = new Array();
+var expectedmatch = '';
+var expectedmatches = new Array();
 
 
+status = inSection(1);
 pattern = /(\S+)?(.*)/;
 string = 'Test this';
 actualmatch = string.match(pattern);
 expectedmatch = Array(string,  'Test',  ' this');  //single space in front of  'this'
 addThis();
 
+status = inSection(2);
 pattern = /(\S+)? ?(.*)/;  //single space between the ? characters
 string= 'Test this';
 actualmatch = string.match(pattern);
 expectedmatch = Array(string,  'Test',  'this');  //NO space in front of  'this'
 addThis(); 
 
+status = inSection(3);
 pattern = /(\S+)????(.*)/;
 string= 'Test this';
 actualmatch = string.match(pattern);
 expectedmatch = Array(string, cnEmptyString, string);
 addThis();
 
+status = inSection(4);
 pattern = /(\S+)?(.*)/;
 string = 'Stupid phrase, with six - (short) words';
 actualmatch = string.match(pattern);
 expectedmatch = Array(string,  'Stupid',  ' phrase, with six - (short) words');  //single space in front of 'phrase'
 addThis();
 
+status = inSection(5);
 pattern = /(\S+)? ?(.*)/;  //single space between the ? characters
 string = 'Stupid phrase, with six - (short) words';
 actualmatch = string.match(pattern);
 expectedmatch = Array(string,  'Stupid',  'phrase, with six - (short) words');  //NO space in front of 'phrase'
 addThis();
 
+
 // let's add an extra back-reference this time - three instead of two -
+status = inSection(6);
 pattern = /(\S+)?( ?)(.*)/;  //single space before second ? character
 string = 'Stupid phrase, with six - (short) words';
 actualmatch = string.match(pattern);
 expectedmatch = Array(string,  'Stupid', cnSingleSpace, 'phrase, with six - (short) words');
 addThis();
 
+status = inSection(7);
 pattern = /^(\S+)?( ?)(B+)$/;  //single space before second ? character
 string = 'AAABBB';
 actualmatch = string.match(pattern);
 expectedmatch = Array(string,  'AAABB', cnEmptyString,  'B');
 addThis();
 
+status = inSection(8);
 pattern = /(\S+)?(!?)(.*)/;
 string = 'WOW !!! !!!';
 actualmatch = string.match(pattern);
 expectedmatch = Array(string, 'WOW', cnEmptyString,  ' !!! !!!');
 addThis();
 
+status = inSection(9);
 pattern = /(.+)?(!?)(!+)/;
 string = 'WOW !!! !!!';
 actualmatch = string.match(pattern);
@@ -100,6 +116,7 @@ test();
 
 function addThis()
 {
+  statusmessages[i] = status;
   patterns[i] = pattern;
   strings[i] = string;
   actualmatches[i] = actualmatch;
@@ -113,6 +130,6 @@ function test()
   enterFunc ('test');
   printBugNumber (bug);
   printStatus (summary);
-  testRegExp(patterns, strings, actualmatches, expectedmatches);
+  testRegExp(statusmessages, patterns, strings, actualmatches, expectedmatches);
   exitFunc ('test');
 }
