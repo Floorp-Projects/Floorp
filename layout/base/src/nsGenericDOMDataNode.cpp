@@ -602,8 +602,8 @@ nsGenericDOMDataNode::ConvertContentToXIF(nsXIFConverter& aConverter) const
 
   if (sel != nsnull && mDocument->IsInSelection(sel,content))
   {
-    nsIEnumerator *enumerator;
-    if (NS_SUCCEEDED(sel->QueryInterface(kIEnumeratorIID, (void **)&enumerator))) {
+    nsCOMPtr<nsIEnumerator> enumerator;
+    if (NS_SUCCEEDED(sel->GetEnumerator(getter_AddRefs(enumerator)))) {
       for (enumerator->First();NS_OK != enumerator->IsDone(); enumerator->Next()) {
         nsIDOMRange* range = nsnull;
         if (NS_SUCCEEDED(enumerator->CurrentItem((nsISupports**)&range))) {
