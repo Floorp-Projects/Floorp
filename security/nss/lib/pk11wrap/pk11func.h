@@ -521,6 +521,8 @@ SECStatus
 PK11_SaveSMimeProfile(PK11SlotInfo *slot, char *emailAddr, SECItem *derSubj,
 			SECItem *emailProfile, SECItem *profileTime);
 
+PRBool SECMOD_HasRootCerts(void);
+
 SEC_END_PROTOS
 
 #endif
