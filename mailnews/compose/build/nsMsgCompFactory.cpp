@@ -38,6 +38,7 @@
 #include "nsMsgQuote.h"
 #include "nsIMsgDraft.h"
 #include "nsMsgCreate.h"    // For drafts...I know, awful file name...
+#include "nsSmtpServer.h"
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kCMsgComposeCID, NS_MSGCOMPOSE_CID);
@@ -45,11 +46,11 @@ static NS_DEFINE_CID(kCMsgCompFieldsCID, NS_MSGCOMPFIELDS_CID);
 static NS_DEFINE_CID(kCMsgSendCID, NS_MSGSEND_CID);
 static NS_DEFINE_CID(kCMsgSendLaterCID, NS_MSGSENDLATER_CID);
 static NS_DEFINE_CID(kCSmtpServiceCID, NS_SMTPSERVICE_CID);
+static NS_DEFINE_CID(kSmtpServerCID, NS_SMTPSERVER_CID);
 static NS_DEFINE_CID(kCMsgComposeServiceCID, NS_MSGCOMPOSESERVICE_CID);
 static NS_DEFINE_CID(kCMsgQuoteCID, NS_MSGQUOTE_CID);
 static NS_DEFINE_CID(kCSmtpUrlCID, NS_SMTPURL_CID);
 static NS_DEFINE_CID(kMsgDraftCID, NS_MSGDRAFT_CID);
-
 
 ////////////////////////////////////////////////////////////
 //
@@ -131,6 +132,16 @@ nsresult nsMsgComposeFactory::CreateInstance(nsISupports *aOuter, const nsIID &a
 		// okay now turn around and give inst a handle on it....
     if (smtpService)
   		return smtpService->QueryInterface(aIID, aResult);
+    else
+      return NS_ERROR_OUT_OF_MEMORY;
+	}
+
+	if (mClassID.Equals(kSmtpServerCID)) 
+	{
+		nsSmtpServer * smtpServer = new nsSmtpServer();
+		// okay now turn around and give inst a handle on it....
+    if (smtpServer)
+  		return smtpServer->QueryInterface(aIID, aResult);
     else
       return NS_ERROR_OUT_OF_MEMORY;
 	}
@@ -238,6 +249,12 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char* 
 										"SMTP Service", nsnull,
 										path, PR_TRUE, PR_TRUE);
 	if (NS_FAILED(rv)) finalResult = rv;
+  
+	rv = compMgr->RegisterComponent(kSmtpServerCID,
+                                  "SMTP Server",
+                                  NS_SMTPSERVER_PROGID,
+                                  path, PR_TRUE, PR_TRUE);
+	if (NS_FAILED(rv)) finalResult = rv;
 	
 	rv = compMgr->RegisterComponent(kCSmtpUrlCID,
 										"Smtp url",
@@ -330,6 +347,9 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* path)
 	if (NS_FAILED(rv)) finalResult = rv;
 
 	rv = compMgr->UnregisterComponent(kCSmtpServiceCID, path);
+	if (NS_FAILED(rv)) finalResult = rv;
+
+	rv = compMgr->UnregisterComponent(kSmtpServerCID, path);
 	if (NS_FAILED(rv)) finalResult = rv;
 
 	rv = compMgr->UnregisterComponent(kCSmtpUrlCID, path);
