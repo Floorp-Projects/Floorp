@@ -758,9 +758,11 @@ static PRBool
 FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
 {
 #ifdef REALLY_NOISY_FONTS
+#ifdef DEBUG
   printf("font = '");
   fputs(aFamily, stdout);
   printf("'\n");
+#endif
 #endif
 
   if (!IsASCIIFontName(aFamily)) {
@@ -945,7 +947,9 @@ void nsFontMetricsGTK::RealizeFont()
     {
       mXHeight = nscoord(pr * f);
 #ifdef REALLY_NOISY_FONTS
+#ifdef DEBUG
       printf("xHeight=%d\n", mXHeight);
+#endif
 #endif
     }
   }
@@ -956,7 +960,9 @@ void nsFontMetricsGTK::RealizeFont()
      * fonts served by xfsft (not xfstt!) */
     mUnderlineOffset = -NSToIntRound(pr * f);
 #ifdef REALLY_NOISY_FONTS
+#ifdef DEBUG
     printf("underlineOffset=%d\n", mUnderlineOffset);
+#endif
 #endif
   }
   else
@@ -972,7 +978,9 @@ void nsFontMetricsGTK::RealizeFont()
     /* this will only be provided from adobe .afm fonts */
     mUnderlineSize = nscoord(MAX(f, NSToIntRound(pr * f)));
 #ifdef REALLY_NOISY_FONTS
+#ifdef DEBUG
     printf("underlineSize=%d\n", mUnderlineSize);
+#endif
 #endif
   }
   else
@@ -986,7 +994,9 @@ void nsFontMetricsGTK::RealizeFont()
   {
     mSuperscriptOffset = nscoord(MAX(f, NSToIntRound(pr * f)));
 #ifdef REALLY_NOISY_FONTS
+#ifdef DEBUG
     printf("superscriptOffset=%d\n", mSuperscriptOffset);
+#endif
 #endif
   }
   else
@@ -998,7 +1008,9 @@ void nsFontMetricsGTK::RealizeFont()
   {
     mSubscriptOffset = nscoord(MAX(f, NSToIntRound(pr * f)));
 #ifdef REALLY_NOISY_FONTS
+#ifdef DEBUG
     printf("subscriptOffset=%d\n", mSubscriptOffset);
+#endif
 #endif
   }
   else
@@ -2522,7 +2534,9 @@ GetFontNames(char* aPattern, nsFontNodeArray* aNodes)
     }
     if (!charSetInfo) {
 #ifdef NOISY_FONTS
+#ifdef DEBUG
       printf("cannot find charset %s\n", charSetName);
+#endif
 #endif
       charSetInfo = &Unknown;
     }
@@ -2535,7 +2549,9 @@ GetFontNames(char* aPattern, nsFontNodeArray* aNodes)
           &charSetInfo->mLangGroup);
         if (NS_FAILED(res)) {
 #ifdef NOISY_FONTS
+#ifdef DEBUG
           printf("=== cannot get lang group for %s\n", charSetInfo->mCharSet);
+#endif
 #endif
         }
       }
@@ -2601,7 +2617,9 @@ GetFontNames(char* aPattern, nsFontNodeArray* aNodes)
     int weightNumber = (int) gWeights->Get(&weightKey);
     if (!weightNumber) {
 #ifdef NOISY_FONTS
+#ifdef DEBUG
       printf("cannot find weight %s\n", weightName);
+#endif
 #endif
       weightNumber = NS_FONT_WEIGHT_NORMAL;
     }
@@ -2619,7 +2637,9 @@ GetFontNames(char* aPattern, nsFontNodeArray* aNodes)
     int stretchIndex = (int) gStretches->Get(&setWidthKey);
     if (!stretchIndex) {
 #ifdef NOISY_FONTS
+#ifdef DEBUG
       printf("cannot find stretch %s\n", setWidth);
+#endif
 #endif
       stretchIndex = 5;
     }

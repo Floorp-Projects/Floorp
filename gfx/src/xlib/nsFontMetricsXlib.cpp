@@ -1966,7 +1966,9 @@ SearchCharSet(PLHashEntry* he, PRIntn i, void* arg)
     if (m->mFontsIndex >= m->mFontsCount) {
        if (!IS_REPRESENTABLE(map, c)) {
 #ifdef REALLY_NOISY_FONTS
+#ifdef DEBUG
          printf("  ==> character not representable, trying next character set\n");
+#endif
 #endif
          return HT_ENUMERATE_NEXT;
        }

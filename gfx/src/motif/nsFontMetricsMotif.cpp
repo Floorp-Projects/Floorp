@@ -90,7 +90,9 @@ NS_IMETHODIMP nsFontMetricsMotif :: Init(const nsFont& aFont, nsIAtom* aLangGrou
     dpi = 100;
 
 #ifdef NOISY_FONTS
+#ifdef DEBUG
   fprintf(stderr, "looking for font %s (%d)", wildstring, aFont.size / 20);
+#endif
 #endif
 
   //font properties we care about:
@@ -161,7 +163,9 @@ NS_IMETHODIMP nsFontMetricsMotif :: Init(const nsFont& aFont, nsIAtom* aLangGrou
     mFontHandle = ::XLoadFont(dpy, nametouse);
 
 #ifdef NOISY_FONTS
+#ifdef DEBUG
     fprintf(stderr, " is: %s\n", nametouse);
+#endif
 #endif
 
     ::XFreeFontInfo(fnames, fonts, numnames);
@@ -171,7 +175,9 @@ NS_IMETHODIMP nsFontMetricsMotif :: Init(const nsFont& aFont, nsIAtom* aLangGrou
     //ack. we're in real trouble, go for fixed...
 
 #ifdef NOISY_FONTS
+#ifdef DEBUG
     fprintf(stderr, " is: %s\n", "fixed (final fallback)");
+#endif
 #endif
 
     mFontHandle = ::XLoadFont(dpy, "fixed");
