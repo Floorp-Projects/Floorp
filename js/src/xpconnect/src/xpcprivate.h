@@ -1248,9 +1248,11 @@ protected:
     {
         WrapperBufferHandle(XPCReadableJSStringWrapper *outer, JSString *str) :
             nsSharedBufferHandleWithAllocator<PRUnichar>
-                (NS_CONST_CAST(PRUnichar *, outer->get()),
-                 NS_CONST_CAST(PRUnichar *, outer->get() + outer->Length()),
-                 mAllocator),
+              (NS_REINTERPRET_CAST(PRUnichar *, JS_GetStringChars(str)),
+               NS_REINTERPRET_CAST(PRUnichar *,
+                                   JS_GetStringChars(str) +
+                                   JS_GetStringLength(str)),
+               mAllocator),
             mAllocator(str)
         { }
 
@@ -1269,7 +1271,7 @@ protected:
 
         Allocator mAllocator;
     };
-    
+
     const nsSharedBufferHandle<PRUnichar>* BufferHandle(JSBool shared) const;
 
     JSString            *mStr;
