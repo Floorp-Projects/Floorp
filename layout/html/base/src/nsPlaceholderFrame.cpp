@@ -141,10 +141,8 @@ nsPlaceholderFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aInden
 #ifdef DEBUG_waterson
   fprintf(out, " [parent=%p]", NS_STATIC_CAST(void*, mParent));
 #endif
-  nsIView* view;
-  GetView(aPresContext, &view);
-  if (nsnull != view) {
-    fprintf(out, " [view=%p]", (void*)view);
+  if (HasView()) {
+    fprintf(out, " [view=%p]", (void*)GetView(aPresContext));
   }
   fprintf(out, " {%d,%d,%d,%d}", mRect.x, mRect.y, mRect.width, mRect.height);
   if (0 != mState) {

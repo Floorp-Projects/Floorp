@@ -192,8 +192,7 @@ nsMenuPopupFrame::Init(nsIPresContext*  aPresContext,
   // Now that we've made a view, remove it and insert it at the correct
   // position in the view hierarchy (as the root view).  We do this so that we
   // can draw the menus outside the confines of the window.
-  nsIView* ourView;
-  GetView(aPresContext, &ourView);
+  nsIView* ourView = GetView(aPresContext);
 
   nsCOMPtr<nsIViewManager> viewManager;
   ourView->GetViewManager(*getter_AddRefs(viewManager));
@@ -528,9 +527,7 @@ nsMenuPopupFrame::GetRootViewForPopup(nsIPresContext* aPresContext,
   }
 
   if (parentWithView) {
-    nsIView* view = nsnull;
-    nsIView* temp = nsnull;
-    parentWithView->GetView(aPresContext, &view);
+    nsIView* view = parentWithView->GetView(aPresContext);
     NS_ASSERTION(view, "GetParentWithView returned frame with no view!");
     nsIView* rootView = nsnull;
     if (aStopAtViewManagerRoot) {
@@ -560,6 +557,7 @@ nsMenuPopupFrame::GetRootViewForPopup(nsIPresContext* aPresContext,
         return;
       }
 
+      nsIView* temp = nsnull;
       view->GetParent(temp);
       if (!temp) {
         // Otherwise, we've walked all the way up to the root view and not
@@ -910,8 +908,7 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
   // |view|
   //   The root view for the popup window widget associated with this frame,
   //   or, the view associated with this frame. 
-  nsIView* view = nsnull;
-  GetView(aPresContext, &view);
+  nsIView* view = GetView(aPresContext);
 
   ///////////////////////////////////////////////////////////////////////////////
   //
@@ -1497,9 +1494,9 @@ nsIScrollableView* nsMenuPopupFrame::GetScrollableView(nsIFrame* aStart)
   // try start frame and siblings
   currFrame=aStart;
   do {
-    currFrame->GetView(mPresContext, &view);
+    view = currFrame->GetView(mPresContext);
     if ( view )
-      view->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollableView);
+      CallQueryInterface(view, &scrollableView);
     if ( scrollableView )
       return scrollableView;
     currFrame->GetNextSibling(&currFrame);
@@ -2343,8 +2340,7 @@ nsMenuPopupFrame::MoveTo(PRInt32 aLeft, PRInt32 aTop)
   mContent->SetAttr(kNameSpaceID_None, nsXULAtoms::left, left, PR_FALSE);
   mContent->SetAttr(kNameSpaceID_None, nsXULAtoms::top, top, PR_FALSE);
 
-  nsIView* view = nsnull;
-  GetView(mPresContext, &view);   
+  nsIView* view = GetView(mPresContext);   
   
   // Retrieve screen position of parent view
   nsIView* parentView = nsnull;

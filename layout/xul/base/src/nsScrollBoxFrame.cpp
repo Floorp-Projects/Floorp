@@ -222,9 +222,9 @@ nsScrollBoxFrame::GetScrollingParentView(nsIPresContext* aPresContext,
                                           nsIFrame* aParent,
                                           nsIView** aParentView)
 {
-  nsresult rv = aParent->GetView(aPresContext, aParentView);
+  *aParentView = aParent->GetView(aPresContext);
   NS_ASSERTION(aParentView, "GetParentWithView failed");
-  return(rv);
+  return NS_OK;
 }
 
 nsresult
@@ -383,10 +383,9 @@ nsScrollBoxFrame::DoLayout(nsBoxLayoutState& aState)
   SyncLayout(aState);
 
   if (adaptor) {
-     nsIView* view;
      nsIFrame* frame;
      kid->GetFrame(&frame);
-     frame->GetView(presContext, &view);
+     nsIView* view = frame->GetView(presContext);
 
      nsRect r(0, 0, childRect.width, childRect.height);
      nsContainerFrame::SyncFrameViewAfterReflow(presContext, frame, view, &r,
@@ -394,8 +393,7 @@ nsScrollBoxFrame::DoLayout(nsBoxLayoutState& aState)
   }
 
   nsIScrollableView* scrollingView;
-  nsIView*           view;
-  GetView(presContext, &view);
+  nsIView* view = GetView(presContext);
   if (NS_SUCCEEDED(CallQueryInterface(view, &scrollingView))) {
     scrollingView->ComputeScrollOffsets(PR_TRUE);
   }
@@ -468,8 +466,7 @@ nsScrollBoxFrame::DoLayout(nsBoxLayoutState& aState)
     // it. if it does then the user must have moved it, and we no longer
     // need to restore.
     nsIPresContext* presContext = aState.GetPresContext();
-    nsIView* view;
-    GetView(presContext, &view);
+    nsIView* view = GetView(presContext);
     if (!view)
       return NS_OK; // don't freak out if we have no view
 
@@ -677,8 +674,7 @@ nsScrollBoxFrame::SaveState(nsIPresContext* aPresContext,
   nsCOMPtr<nsIPresState> state;
   nsresult res = NS_OK;
 
-  nsIView* view;
-  GetView(aPresContext, &view);
+  nsIView* view = GetView(aPresContext);
   NS_ENSURE_TRUE(view, NS_ERROR_FAILURE);
 
   PRInt32 x,y;
@@ -775,8 +771,7 @@ nsScrollBoxFrame::RestoreState(nsIPresContext* aPresContext,
     // don't do it now, store it later and do it in layout.
     if (NS_SUCCEEDED(res)) {
       mRestoreRect.SetRect(x, y, w, h);
-      nsIView* view;
-      GetView(aPresContext, &view);
+      nsIView* view = GetView(aPresContext);
       if (!view)
         return NS_ERROR_FAILURE;
 

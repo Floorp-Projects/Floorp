@@ -947,30 +947,7 @@ nsEventStateManager::HandleAccessKey(nsIPresContext* aPresContext,
 
         if (frame) {
           const nsStyleVisibility* vis = frame->GetStyleVisibility();
-          PRBool viewShown = PR_TRUE;
-
-          nsIView* frameView = nsnull;
-          frame->GetView(mPresContext, &frameView);
-
-          if (!frameView) {
-            nsIFrame* parentWithView = nsnull;
-            frame->GetParentWithView(mPresContext, &parentWithView);
-
-            if (parentWithView)
-              parentWithView->GetView(mPresContext, &frameView);
-          }
-
-          while (frameView) {
-            nsViewVisibility visib;
-            frameView->GetVisibility(visib);
-
-            if (visib == nsViewVisibility_kHide) {
-              viewShown = PR_FALSE;
-              break;
-            }
-
-            frameView->GetParent(frameView);
-          }
+          PRBool viewShown = frame->AreAncestorViewsVisible(mPresContext);
 
           // get the XUL element
           nsCOMPtr<nsIDOMXULElement> element = do_QueryInterface(content);
@@ -1702,15 +1679,9 @@ nsEventStateManager::DoWheelScroll(nsIPresContext* aPresContext,
     if (sv)
       CallQueryInterface(sv, &focusView);
   } else {
-    focusFrame->GetView(aPresContext, &focusView);
-    if (!focusView) {
-      nsIFrame* frameWithView;
-      focusFrame->GetParentWithView(aPresContext, &frameWithView);
-      if (frameWithView)
-        frameWithView->GetView(aPresContext, &focusView);
-      else
-        return NS_ERROR_FAILURE;
-    }
+    focusView = focusFrame->GetClosestView(aPresContext);
+    if (!focusView)
+      return NS_ERROR_FAILURE;
     
     sv = GetNearestScrollingView(focusView);
   }
@@ -3494,25 +3465,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
     const nsStyleVisibility* vis = currentFrame->GetStyleVisibility();
     const nsStyleUserInterface* ui = currentFrame->GetStyleUserInterface();
 
-    PRBool viewShown = PR_TRUE;
-
-    nsIView* frameView = nsnull;
-    currentFrame->GetView(mPresContext, &frameView);
-    if (!frameView) {
-      nsIFrame* parentWithView = nsnull;
-      currentFrame->GetParentWithView(mPresContext, &parentWithView);
-      if (parentWithView)
-        parentWithView->GetView(mPresContext, &frameView);
-    }
-    while (frameView) {
-      nsViewVisibility visib;
-      frameView->GetVisibility(visib);
-      if (visib == nsViewVisibility_kHide) {
-        viewShown = PR_FALSE;
-        break;
-      }
-      frameView->GetParent(frameView);
-    }
+    PRBool viewShown = currentFrame->AreAncestorViewsVisible(mPresContext);
 
     nsCOMPtr<nsIDOMElement> element(do_QueryInterface(child));
 

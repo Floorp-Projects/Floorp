@@ -918,8 +918,7 @@ IncrementalReflow::Dispatch(nsIPresContext      *aPresContext,
 
     first->SizeTo(aPresContext, aDesiredSize.width, aDesiredSize.height);
 
-    nsIView* view;
-    first->GetView(aPresContext, &view);
+    nsIView* view = first->GetView(aPresContext);
     if (view)
       nsContainerFrame::SyncFrameViewAfterReflow(aPresContext, first, view, nsnull);
 
@@ -2850,8 +2849,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
     rootFrame->SizeTo(mPresContext, desiredSize.width, desiredSize.height);
     mPresContext->SetVisibleArea(nsRect(0,0,desiredSize.width,desiredSize.height));
 
-    nsIView* view;
-    rootFrame->GetView(mPresContext, &view);
+    nsIView* view = rootFrame->GetView(mPresContext);
     if (view) {
       nsContainerFrame::SyncFrameViewAfterReflow(mPresContext, rootFrame, view,
                                                  nsnull);
@@ -2993,8 +2991,7 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
     rootFrame->SizeTo(mPresContext, desiredSize.width, desiredSize.height);
     mPresContext->SetVisibleArea(nsRect(0,0,desiredSize.width,desiredSize.height));
 
-    nsIView* view;
-    rootFrame->GetView(mPresContext, &view);
+    nsIView* view = rootFrame->GetView(mPresContext);
     if (view) {
       nsContainerFrame::SyncFrameViewAfterReflow(mPresContext, rootFrame, view,
                                                  nsnull);
@@ -3536,8 +3533,7 @@ PresShell::StyleChangeReflow()
     rootFrame->Reflow(mPresContext, desiredSize, reflowState, status);
     rootFrame->SizeTo(mPresContext, desiredSize.width, desiredSize.height);
     mPresContext->SetVisibleArea(nsRect(0,0,desiredSize.width,desiredSize.height));
-    nsIView* view;
-    rootFrame->GetView(mPresContext, &view);
+    nsIView* view = rootFrame->GetView(mPresContext);
     if (view) {
       nsContainerFrame::SyncFrameViewAfterReflow(mPresContext, rootFrame, view,
                                                  nsnull);
@@ -3959,14 +3955,10 @@ PresShell::CreateRenderingContext(nsIFrame *aFrame,
     return NS_ERROR_NULL_POINTER;
   }
 
-  nsIView   *view = nsnull;
   nsPoint   pt;
   nsresult  rv;
 
-  aFrame->GetView(mPresContext, &view);
-
-  if (nsnull == view)
-    aFrame->GetOffsetFromView(mPresContext, pt, &view);
+  nsIView *view = aFrame->GetClosestView(mPresContext);
 
   nsCOMPtr<nsIWidget> widget;
   if (nsnull != view) {
@@ -6261,7 +6253,7 @@ PresShell::HandleEvent(nsIView         *aView,
       nsPoint offset(0,0);
       nsRect oldTargetRect(mCurrentTargetRect);
       mCurrentEventFrame->GetRect(mCurrentTargetRect);
-      mCurrentEventFrame->GetView(mPresContext, &mCurrentTargetView);
+      mCurrentTargetView = mCurrentEventFrame->GetView(mPresContext);
       if (!mCurrentTargetView ) {
         mCurrentEventFrame->GetOffsetFromView(mPresContext, offset,
                                               &mCurrentTargetView);
@@ -7007,8 +6999,8 @@ CompareTrees(nsIPresContext* aFirstPresContext, nsIFrame* aFirstFrame,
         // do have views, make sure the views are the same size. If the
         // views have widgets, make sure they both do or neither does. If
         // they do, make sure the widgets are the same size.
-        k1->GetView(aFirstPresContext, &v1);
-        k2->GetView(aSecondPresContext, &v2);
+        v1 = k1->GetView(aFirstPresContext);
+        v2 = k2->GetView(aSecondPresContext);
         if (((nsnull == v1) && (nsnull != v2)) ||
             ((nsnull != v1) && (nsnull == v2))) {
           ok = PR_FALSE;

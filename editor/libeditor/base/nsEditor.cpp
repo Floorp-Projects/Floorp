@@ -2045,12 +2045,7 @@ GetEditorContentWindow(nsIPresShell *aPresShell, nsIDOMElement *aRoot, nsIWidget
 
   // Check first to see if this frame contains a view with a native widget.
 
-  nsIView *view = 0; // Not ref counted
-
-  result = frame->GetView(presContext, &view);
-
-  if (NS_FAILED(result))
-    return result;
+  nsIView *view = frame->GetViewExternal(presContext);
 
   if (view)
   {

@@ -3269,20 +3269,10 @@ nsDocShell::GetVisibility(PRBool * aVisibility)
         if (frame) {
             nsCOMPtr<nsIPresContext> pc;
             pPresShell->GetPresContext(getter_AddRefs(pc));
-            frame->GetView(pc, &view);
-            if (!view) {
-                nsIFrame* parentWithView;
-                frame->GetParentWithView(pc, &parentWithView);
-                parentWithView->GetView(pc, &view);
-            }
 
-            while (view) {
-                view->GetVisibility(vis);
-                if (vis == nsViewVisibility_kHide) {
-                    *aVisibility = PR_FALSE;
-                    return NS_OK;
-                }
-                view->GetParent(view);
+            if (!frame->AreAncestorViewsVisible(pc)) {
+                *aVisibility = PR_FALSE;
+                return NS_OK;
             }
         }
 
@@ -6888,8 +6878,7 @@ nsDocShell::SetCanvasHasFocus(PRBool aCanvasHasFocus)
         nsCOMPtr<nsIPresContext> presContext;
         GetPresContext(getter_AddRefs(presContext));
         
-        nsIView* canvasView = nsnull;
-        frame->GetView(presContext, &canvasView);
+        nsIView* canvasView = frame->GetViewExternal(presContext);
 
         nsCOMPtr<nsIViewManager> viewManager;
         canvasView->GetViewManager(*getter_AddRefs(viewManager));

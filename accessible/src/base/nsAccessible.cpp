@@ -464,10 +464,9 @@ PRBool nsAccessible::IsPartiallyVisible(PRBool *aIsOffscreen)
   // and the STATE_OFFSCREEN flag that this is used for only needs to be a rough indicator
 
   nsRect relFrameRect;
-  nsIView *containingView = nsnull;
   nsPoint frameOffset;
   frame->GetRect(relFrameRect);
-  frame->GetView(presContext, &containingView);
+  nsIView *containingView = frame->GetViewExternal(presContext);
   if (!containingView) {
     frame->GetOffsetFromView(presContext, frameOffset, &containingView);
     if (!containingView)
@@ -659,8 +658,7 @@ void nsAccessible::GetScreenOrigin(nsIPresContext *aPresContext, nsIFrame *aFram
     
     while (aFrame) {
       // Look for a widget so we can get screen coordinates
-      nsIView* view = nsnull;
-      aFrame->GetView(aPresContext, &view);
+      nsIView* view = aFrame->GetViewExternal(aPresContext);
       nsPoint origin;
       if (view) {
         view->GetWidget(*getter_AddRefs(widget));

@@ -1571,10 +1571,9 @@ nsImageFrame::TranslateEventCoords(nsIPresContext* aPresContext,
   // If we have a view then the event coordinates are already relative
   // to this frame; otherwise we have to adjust the coordinates
   // appropriately.
-  nsIView* view;
-  GetView(aPresContext, &view);
-  if (nsnull == view) {
+  if (!HasView()) {
     nsPoint offset;
+    nsIView *view;
     GetOffsetFromView(aPresContext, offset, &view);
     if (nsnull != view) {
       x -= offset.x;
@@ -1820,10 +1819,8 @@ nsImageFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) con
 #ifdef DEBUG_waterson
   fprintf(out, " [parent=%p]", mParent);
 #endif
-  nsIView*  view;
-  GetView(aPresContext, &view);
-  if (view) {
-    fprintf(out, " [view=%p]", view);
+  if (HasView()) {
+    fprintf(out, " [view=%p]", GetView(aPresContext));
   }
   fprintf(out, " {%d,%d,%d,%d}", mRect.x, mRect.y, mRect.width, 
 mRect.height);

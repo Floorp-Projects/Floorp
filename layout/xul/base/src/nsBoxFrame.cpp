@@ -269,13 +269,11 @@ nsBoxFrame::Init(nsIPresContext*  aPresContext,
     PRBool needsWidget = PR_FALSE;
     parent->ChildrenMustHaveWidgets(needsWidget);
     if (needsWidget) {
-        nsIView* view = nsnull;
-        GetView(aPresContext, &view);
 
-        if (!view) {
+        if (!HasView()) {
            nsHTMLContainerFrame::CreateViewForFrame(aPresContext,this,mStyleContext,nsnull,PR_TRUE); 
-           GetView(aPresContext, &view);
         }
+        nsIView* view = GetView(aPresContext);
 
         nsCOMPtr<nsIWidget> widget;
         view->GetWidget(*getter_AddRefs(widget));
@@ -1482,9 +1480,7 @@ nsBoxFrame::PaintChild(nsIPresContext*      aPresContext,
   if (aFrame->GetStyleVisibility()->mVisible == NS_STYLE_VISIBILITY_COLLAPSE)
      return;
 
-  nsIView *pView;
-  aFrame->GetView(aPresContext, &pView);
-  if (nsnull == pView) {
+  if (!aFrame->HasView()) {
     nsRect kidRect;
     aFrame->GetRect(kidRect);
  
@@ -1994,10 +1990,9 @@ nsBoxFrame::TranslateEventCoords(nsIPresContext* aPresContext,
   // If we have a view then the event coordinates are already relative
   // to this frame; otherwise we have to adjust the coordinates
   // appropriately.
-  nsIView* view;
-  GetView(aPresContext, &view);
-  if (nsnull == view) {
+  if (!HasView()) {
     nsPoint offset;
+    nsIView* view;
     GetOffsetFromView(aPresContext, offset, &view);
     if (nsnull != view) {
       x -= offset.x;
@@ -2456,10 +2451,8 @@ nsBoxFrame::CreateViewForFrame(nsIPresContext*  aPresContext,
                                nsStyleContext*  aStyleContext,
                                PRBool           aForce)
 {
-  nsIView* view;
-  aFrame->GetView(aPresContext, &view);
   // If we don't yet have a view, see if we need a view
-  if (nsnull == view) {
+  if (!aFrame->HasView()) {
     PRInt32 zIndex = 0;
     PRBool  autoZIndex = PR_FALSE;
     PRBool  fixedBackgroundAttachment = PR_FALSE;
@@ -2496,16 +2489,14 @@ nsBoxFrame::CreateViewForFrame(nsIPresContext*  aPresContext,
     if (aForce) {
       // Create a view
       nsIFrame* parent;
-
       aFrame->GetParentWithView(aPresContext, &parent);
       NS_ASSERTION(parent, "GetParentWithView failed");
-      nsIView* parentView;
-   
-      parent->GetView(aPresContext, &parentView);
+      nsIView* parentView = parent->GetView(aPresContext);
       NS_ASSERTION(parentView, "no parent with view");
 
       // Create a view
       static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
+      nsIView *view;
       nsresult result = CallCreateInstance(kViewCID, &view);
       if (NS_SUCCEEDED(result)) {
         nsIViewManager* viewManager;

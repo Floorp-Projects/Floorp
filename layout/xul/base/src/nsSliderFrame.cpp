@@ -137,8 +137,7 @@ nsSliderFrame::Init(nsIPresContext*  aPresContext,
   }
 
   CreateViewForFrame(aPresContext,this,aContext,PR_TRUE);
-  nsIView* view;
-  GetView(aPresContext, &view);
+  nsIView* view = GetView(aPresContext);
   nsCOMPtr<nsIViewManager> vm;
   view->GetViewManager(*getter_AddRefs(vm));
   vm->SetViewContentTransparency(view, PR_TRUE);
@@ -499,11 +498,10 @@ nsSliderFrame::HandleEvent(nsIPresContext* aPresContext,
        {
          // if we hit a scrollable view make sure we take into account
          // how much we are scrolled.
-         nsIScrollableView* scrollingView;
-         nsIView*           view;
-         parent->GetView(aPresContext, &view);
+         nsIView* view = parent->GetView(aPresContext);
          if (view) {
-           nsresult result = view->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollingView);
+           nsIScrollableView* scrollingView;
+           nsresult result = CallQueryInterface(view, &scrollingView);
            if (NS_SUCCEEDED(result)) {
              nscoord xoff = 0;
              nscoord yoff = 0;
@@ -538,20 +536,7 @@ nsSliderFrame::HandleEvent(nsIPresContext* aPresContext,
        // in the coordinate system for the frame's contained view so that it
        // matches aEvent->point's coordinate system.
 
-       nsIView *view = nsnull;
-
-       this->GetView(aPresContext, &view);
-
-       if (!view) {
-         // hmmmm, we don't have a contained view, let's
-         // just use our parent view.
-
-         nsIFrame *parent = nsnull;
-         GetParentWithView(aPresContext, &parent);
-
-         if (parent)
-           parent->GetView(aPresContext, &view);
-       }
+       nsIView *view = this->GetClosestView(aPresContext);
 
        nsCOMPtr<nsIWidget> rootWidget;
 
@@ -685,11 +670,10 @@ nsSliderFrame::HandleEvent(nsIPresContext* aPresContext,
     {
       // if we hit a scrollable view make sure we take into account
       // how much we are scrolled.
-      nsIScrollableView* scrollingView;
-      nsIView*           view;
-      parent->GetView(aPresContext, &view);
+      nsIView* view = parent->GetView(aPresContext);
       if (view) {
-        nsresult result = view->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollingView);
+        nsIScrollableView* scrollingView;
+        nsresult result = CallQueryInterface(view, &scrollingView);
         if (NS_SUCCEEDED(result)) {
           nscoord xoff = 0;
           nscoord yoff = 0;
@@ -988,12 +972,11 @@ nsSliderFrame::MouseDown(nsIDOMEvent* aMouseEvent)
     while(parent != nsnull) {
        // if we hit a scrollable view make sure we take into account
        // how much we are scrolled.
-       nsIScrollableView* scrollingView;
-       nsIView*           view;
        // XXX hack
-       parent->GetView(mPresContext, &view);
+       nsIView* view = parent->GetView(mPresContext);
        if (view) {
-         nsresult result = view->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollingView);
+         nsIScrollableView* scrollingView;
+         nsresult result = CallQueryInterface(view, &scrollingView);
          if (NS_SUCCEEDED(result)) {
              nscoord xoff = 0;
              nscoord yoff = 0;
@@ -1067,8 +1050,7 @@ NS_IMETHODIMP
 nsSliderFrame :: DragThumb(nsIPresContext* aPresContext, PRBool aGrabMouseEvents)
 {
     // get its view
-  nsIView* view = nsnull;
-  GetView(aPresContext, &view);
+  nsIView* view = GetView(aPresContext);
   nsCOMPtr<nsIViewManager> viewMan;
   PRBool result;
 
@@ -1091,8 +1073,7 @@ PRBool
 nsSliderFrame :: isDraggingThumb(nsIPresContext* aPresContext)
 {
     // get its view
-  nsIView* view = nsnull;
-  GetView(aPresContext, &view);
+  nsIView* view = GetView(aPresContext);
   nsCOMPtr<nsIViewManager> viewMan;
 
   if (view) {

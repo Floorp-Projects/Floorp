@@ -618,12 +618,11 @@ nsBox::SetBounds(nsBoxLayoutState& aState, const nsRect& aRect)
    /*  
     // only if the origin changed
     if ((rect.x != aRect.x) || (rect.y != aRect.y))  {
-      nsIView*  view;
-      frame->GetView(presContext, &view);
-      if (view) {
-          nsContainerFrame::PositionFrameView(presContext, frame, view);
+      if (frame->HasView()) {
+        nsContainerFrame::PositionFrameView(presContext, frame,
+                                            frame->GetView(presContext));
       } else {
-          nsContainerFrame::PositionChildViews(presContext, frame);
+        nsContainerFrame::PositionChildViews(presContext, frame);
       }
     }
     */
@@ -846,8 +845,7 @@ nsBox::CollapseChild(nsBoxLayoutState& aState, nsIFrame* aFrame, PRBool aHide)
       nsIPresContext* presContext = aState.GetPresContext();
 
     // shrink the view
-      nsIView* view = nsnull;
-      aFrame->GetView(presContext, &view);
+      nsIView* view = aFrame->GetView(presContext);
 
       // if we find a view stop right here. All views under it
       // will be clipped.
@@ -1111,8 +1109,7 @@ nsBox::SyncLayout(nsBoxLayoutState& aState)
 
   flags |= stateFlags;
 
-  nsIView*  view;
-  frame->GetView(presContext, &view);
+  nsIView* view = frame->GetView(presContext);
 
 /*
       // only if the origin changed
@@ -1182,23 +1179,18 @@ nsBox::Redraw(nsBoxLayoutState& aState,
   }
 
   PRUint32 flags = aImmediate ? NS_VMREFRESH_IMMEDIATE : NS_VMREFRESH_NO_SYNC;
-  nsIView* view;
 
-  frame->GetView(presContext, &view);
-  if (view) {
-    view->GetViewManager(*getter_AddRefs(viewManager));
-    viewManager->UpdateView(view, damageRect, flags);
-    
+  nsIView *view;
+  if (frame->HasView()) {
+    view = frame->GetView(presContext);
   } else {
-    nsRect    rect(damageRect);
     nsPoint   offset;
-  
     frame->GetOffsetFromView(presContext, offset, &view);
     NS_BOX_ASSERTION(this, nsnull != view, "no view");
-    rect += offset;
-    view->GetViewManager(*getter_AddRefs(viewManager));
-    viewManager->UpdateView(view, rect, flags);
+    damageRect += offset;
   }
+  view->GetViewManager(*getter_AddRefs(viewManager));
+  viewManager->UpdateView(view, damageRect, flags);
 
   return NS_OK;
 }

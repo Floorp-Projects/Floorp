@@ -384,10 +384,8 @@ nsBlockFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) con
 #ifdef DEBUG_waterson
   fprintf(out, " [parent=%p]", mParent);
 #endif
-  nsIView* view;
-  GetView(aPresContext, &view);
-  if (nsnull != view) {
-    fprintf(out, " [view=%p]", NS_STATIC_CAST(void*, view));
+  if (HasView()) {
+    fprintf(out, " [view=%p]", NS_STATIC_CAST(void*, GetView(aPresContext)));
   }
   if (nsnull != mNextSibling) {
     fprintf(out, " next=%p", NS_STATIC_CAST(void*, mNextSibling));
@@ -2722,10 +2720,9 @@ static void
 PlaceFrameView(nsIPresContext* aPresContext,
                nsIFrame*       aFrame)
 {
-  nsIView*  view;
-  aFrame->GetView(aPresContext, &view);
-  if (view)
-    nsContainerFrame::SyncFrameViewAfterReflow(aPresContext, aFrame, view,
+  if (aFrame->HasView())
+    nsContainerFrame::SyncFrameViewAfterReflow(aPresContext, aFrame,
+                      aFrame->GetView(aPresContext),
                       aFrame->GetOverflowAreaProperty(aPresContext));
 
   nsContainerFrame::PositionChildViews(aPresContext, aFrame);
@@ -5244,10 +5241,9 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
   // we've positioned the floater, and shouldn't we be doing the equivalent
   // of |::PlaceFrameView| here?
   floater->SizeTo(aState.mPresContext, metrics.width, metrics.height);
-  nsIView*  view;
-  floater->GetView(aState.mPresContext, &view);
-  if (view) {
-    nsContainerFrame::SyncFrameViewAfterReflow(aState.mPresContext, floater, view,
+  if (floater->HasView()) {
+    nsContainerFrame::SyncFrameViewAfterReflow(aState.mPresContext, floater,
+                                               floater->GetView(aState.mPresContext),
                                                &metrics.mOverflowArea,
                                                NS_FRAME_NO_MOVE_VIEW);
   }

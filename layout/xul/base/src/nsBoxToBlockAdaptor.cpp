@@ -176,14 +176,12 @@ nsBoxToBlockAdaptor::SetParentBox(nsIBox* aParent)
     if (needsWidget) {
         nsCOMPtr<nsIPresContext> context;
         mPresShell->GetPresContext(getter_AddRefs(context));
-        nsIView* view = nsnull;
-        mFrame->GetView(context, &view);
 
-        if (!view) {
+        if (!mFrame->HasView()) {
           nsStyleContext* style = mFrame->GetStyleContext();
           nsHTMLContainerFrame::CreateViewForFrame(context,mFrame,style,nsnull,PR_TRUE); 
-          mFrame->GetView(context, &view);
         }
+        nsIView* view = mFrame->GetView(context);
 
         nsCOMPtr<nsIWidget> widget;
         view->GetWidget(*getter_AddRefs(widget));

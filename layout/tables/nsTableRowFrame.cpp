@@ -635,10 +635,7 @@ void nsTableRowFrame::PaintChildren(nsIPresContext*      aPresContext,
 {
   nsIFrame* kid = mFrames.FirstChild();
   while (nsnull != kid) {
-    nsIView *pView;
-     
-    kid->GetView(aPresContext, &pView);
-    if (nsnull == pView) {
+    if (!kid->HasView()) {
       nsRect kidRect;
       kid->GetRect(kidRect);
       nsRect damageArea;

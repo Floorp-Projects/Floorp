@@ -797,10 +797,9 @@ nsObjectFrame::CreateWidget(nsIPresContext* aPresContext,
   nsRect boundBox(0, 0, aWidth, aHeight);
 
   nsIFrame* parWithView;
-  nsIView *parView;
 
   GetParentWithView(aPresContext, &parWithView);
-  parWithView->GetView(aPresContext, &parView);
+  nsIView *parView = parWithView->GetView(aPresContext);
 
   if (NS_SUCCEEDED(parView->GetViewManager(*getter_AddRefs(viewMan))))
   {
@@ -1533,9 +1532,8 @@ nsObjectFrame::DidReflow(nsIPresContext*           aPresContext,
 
   PRBool bHidden = IsHidden();
 
-  nsIView* view = nsnull;
-  GetView(aPresContext, &view);
-  if (view) {
+  if (HasView()) {
+    nsIView* view = GetView(aPresContext);
     nsCOMPtr<nsIViewManager> vm;
     view->GetViewManager(*getter_AddRefs(vm));
     if (vm)
@@ -2427,10 +2425,9 @@ NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRect(nsPluginRect *invalidRect)
   if(invalidRect)
   {
     //no reference count on view
-    nsIView* view;
-    rv = mOwner->GetView(mContext, &view);
+    nsIView* view = mOwner->GetView(mContext);
 
-    if((rv == NS_OK) && view)
+    if (view)
     {
       float ptot;
       mContext->GetPixelsToTwips(&ptot);
@@ -2462,11 +2459,11 @@ NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRegion(nsPluginRegion invalidRegi
 
 NS_IMETHODIMP nsPluginInstanceOwner::ForceRedraw()
 {
+  nsresult rv = NS_OK;
   //no reference count on view
-  nsIView* view;
-  nsresult rv = mOwner->GetView(mContext, &view);
+  nsIView* view = mOwner->GetView(mContext);
 
-  if((rv == NS_OK) && view)
+  if (view)
   {
     nsIViewManager* manager;
     rv = view->GetViewManager(manager);
@@ -3740,7 +3737,7 @@ nsPluginInstanceOwner::Destroy()
   
   nsIView* curView = nsnull;
   if (parentWithView)
-    parentWithView->GetView(mContext, &curView);
+    curView = parentWithView->GetView(mContext);
   while (curView)
   {
     nsIScrollableView* scrollingView;
@@ -3967,7 +3964,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::Init(nsIPresContext* aPresContext, nsObject
   mOwner->GetParentWithView(mContext, &parentWithView);
   nsIView* curView = nsnull;
   if (parentWithView)
-    parentWithView->GetView(mContext, &curView);
+    curView = parentWithView->GetView(mContext);
   while (curView)
   {
     nsIScrollableView* scrollingView;
@@ -4020,7 +4017,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
   {
     // Create view if necessary
 
-    mOwner->GetView(mContext, &view);
+    view = mOwner->GetView(mContext);
 
     if (!view || !mWidget)
     {
@@ -4036,7 +4033,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
                                 windowless);
       if (NS_OK == rv)
       {
-        mOwner->GetView(mContext, &view);
+        view = mOwner->GetView(mContext);
         if (view)
         {
           view->GetWidget(*getter_AddRefs(mWidget));
@@ -4109,9 +4106,8 @@ aContainerWidget)
   aAbs.x = 0;
   aAbs.y = 0;
 
-  nsIView *view = nsnull;
   // See if this frame has a view
-  aFrame->GetView(aPresContext, &view);
+  nsIView *view = aFrame->GetView(aPresContext);
   if (nsnull == view) {
    // Calculate frames offset from its nearest view
    aFrame->GetOffsetFromView(aPresContext,
@@ -4167,8 +4163,7 @@ nsPluginPort* nsPluginInstanceOwner::FixUpPluginWindow(PRInt32 inPaintState)
     return nsnull;
 
   // first, check our view for CSS visibility style
-  nsIView *view;
-  mOwner->GetView(mContext, &view);
+  nsIView *view = mOwner->GetView(mContext);
   nsViewVisibility vis;
   view->GetVisibility(vis);
   PRBool isVisible = (vis == nsViewVisibility_kShow) ? PR_TRUE : PR_FALSE;
@@ -4226,12 +4221,11 @@ nsPluginPort* nsPluginInstanceOwner::FixUpPluginWindow(PRInt32 inPaintState)
 void nsPluginInstanceOwner::Composite()
 {
   //no reference count on view
-  nsIView* view;
-  nsresult rv = mOwner->GetView(mContext, &view);
+  nsIView* view = mOwner->GetView(mContext);
 
-  if (NS_SUCCEEDED(rv) && view) {
+  if (view) {
     nsIViewManager* manager;
-    rv = view->GetViewManager(manager);
+    nsresult rv = view->GetViewManager(manager);
 
     //set flags to not do a synchronous update, force update does the redraw
     if (NS_SUCCEEDED(rv) && manager) {

@@ -276,8 +276,9 @@ nsImageLoader::RedrawDirtyFrame(const nsRect* aDamageRect)
     // XXX We should tell the frame the damage area and let it invalidate
     // itself. Add some API calls to nsIFrame to allow a caller to invalidate
     // parts of the frame...
-    mFrame->GetView(mPresContext, &view);
-    if (!view) {
+    if (mFrame->HasView()) {
+      view = mFrame->GetView(mPresContext);
+    } else {
       mFrame->GetOffsetFromView(mPresContext, offset, &view);
       bounds.x += offset.x;
       bounds.y += offset.y;

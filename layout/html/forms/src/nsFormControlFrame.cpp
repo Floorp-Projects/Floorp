@@ -496,8 +496,7 @@ nsFormControlFrame::DidReflow(nsIPresContext*           aPresContext,
   // The view is created hidden; once we have reflowed it and it has been
   // positioned then we show it.
   if (NS_FRAME_REFLOW_FINISHED == aStatus) {
-    nsIView* view = nsnull;
-    GetView(aPresContext, &view);
+    nsIView* view = GetView(aPresContext);
     if (view) {
       nsViewVisibility newVis = GetStyleVisibility()->IsVisible()
                                   ? nsViewVisibility_kShow

@@ -379,14 +379,11 @@ HRuleFrame::GetContentAndOffsetsFromPoint(nsIPresContext* aPresContext,
   if (!aNewContent) return NS_ERROR_NULL_POINTER;
   if (!mContent) return NS_ERROR_NULL_POINTER;
 
-  nsIView  *view         = nsnull;
-  rv = GetClosestViewForFrame(aPresContext, this, &view);
-  if (NS_FAILED(rv)) return rv;
-
   nsRect thisRect;
   rv = GetRect(thisRect);
   if (NS_FAILED(rv)) return rv;
   nsPoint offsetPoint;
+  nsIView *view;
   GetOffsetFromView(aPresContext, offsetPoint, &view);
   thisRect.x = offsetPoint.x;
   thisRect.y = offsetPoint.y;

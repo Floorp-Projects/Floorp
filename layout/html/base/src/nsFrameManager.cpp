@@ -2346,6 +2346,8 @@ FrameManager::SetFrameProperty(nsIFrame*               aFrame,
   nsresult result = NS_OK;
   PropertyListMapEntry *entry = NS_STATIC_CAST(PropertyListMapEntry*,
     PL_DHashTableOperate(&propertyList->mFrameValueMap, aFrame, PL_DHASH_ADD));
+  if (!entry)
+    return NS_ERROR_OUT_OF_MEMORY;
   // A NULL entry->key is the sign that the entry has just been allocated
   // for us.  If it's non-NULL then we have an existing entry.
   if (entry->key && propertyList->mDtorFunc) {

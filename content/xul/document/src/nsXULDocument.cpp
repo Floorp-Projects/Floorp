@@ -1684,32 +1684,29 @@ nsXULDocument::GetPixelDimensions(nsIPresShell* aShell, PRInt32* aWidth,
 
     result = aShell->GetPrimaryFrameFor(mRootContent, &frame);
     if (NS_SUCCEEDED(result) && frame) {
-        nsIView*                  view;
         nsCOMPtr<nsIPresContext>  presContext;
 
         aShell->GetPresContext(getter_AddRefs(presContext));
-        result = frame->GetView(presContext, &view);
-        if (NS_SUCCEEDED(result)) {
-            // If we have a view check if it's scrollable. If not,
-            // just use the view size itself
-            if (view) {
-                nsIScrollableView* scrollableView;
+        nsIView* view = frame->GetView(presContext);
+        // If we have a view check if it's scrollable. If not,
+        // just use the view size itself
+        if (view) {
+            nsIScrollableView* scrollableView;
 
-                if (NS_SUCCEEDED(CallQueryInterface(view, &scrollableView))) {
-                    scrollableView->GetScrolledView(view);
-                }
+            if (NS_SUCCEEDED(CallQueryInterface(view, &scrollableView))) {
+                scrollableView->GetScrolledView(view);
+            }
 
-                nsRect r;
-                result = view->GetBounds(r);
-                if (NS_SUCCEEDED(result)) {
-                    size.height = r.height;
-                    size.width = r.width;
-                }
+            nsRect r;
+            result = view->GetBounds(r);
+            if (NS_SUCCEEDED(result)) {
+                size.height = r.height;
+                size.width = r.width;
             }
-            // If we don't have a view, use the frame size
-            else {
-                result = frame->GetSize(size);
-            }
+        }
+        // If we don't have a view, use the frame size
+        else {
+            result = frame->GetSize(size);
         }
 
         // Convert from twips to pixels

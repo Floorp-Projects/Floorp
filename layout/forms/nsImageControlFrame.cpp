@@ -268,19 +268,17 @@ nsImageControlFrame::Init(nsIPresContext*  aPresContext,
                                                 aContext, aPrevInFlow);
   
   // create our view, we need a view to grab the mouse 
-  nsIView* view;
-  GetView(aPresContext, &view);
-  if (!view) {
-    nsresult result = nsComponentManager::CreateInstance(kViewCID, nsnull, NS_GET_IID(nsIView), (void **)&view);
+  if (!HasView()) {
+    nsIView* view;
+    nsresult result = CallCreateInstance(kViewCID, &view);
     nsCOMPtr<nsIPresShell> presShell;
     aPresContext->GetShell(getter_AddRefs(presShell));
     nsCOMPtr<nsIViewManager> viewMan;
     presShell->GetViewManager(getter_AddRefs(viewMan));
 
     nsIFrame* parWithView;
-    nsIView *parView;
     GetParentWithView(aPresContext, &parWithView);
-    parWithView->GetView(aPresContext, &parView);
+    nsIView *parView = parWithView->GetView(aPresContext);
     // the view's size is not know yet, but its size will be kept in synch with our frame.
     nsRect boundBox(0, 0, 0, 0); 
     result = view->Init(viewMan, boundBox, parView);

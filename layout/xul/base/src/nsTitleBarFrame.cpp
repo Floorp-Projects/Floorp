@@ -209,8 +209,7 @@ NS_IMETHODIMP
 nsTitleBarFrame::CaptureMouseEvents(nsIPresContext* aPresContext,PRBool aGrabMouseEvents)
 {
 	// get its view
-  nsIView* view = nsnull;
-  GetView(aPresContext, &view);
+  nsIView* view = GetView(aPresContext);
   nsCOMPtr<nsIViewManager> viewMan;
   PRBool result;
 
