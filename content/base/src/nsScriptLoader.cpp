@@ -535,6 +535,11 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest,
 {
   nsresult rv = NS_OK;
 
+  // We need a document to evaluate scripts.
+  if (!mDocument) {
+    return NS_ERROR_FAILURE;
+  }
+
   nsCOMPtr<nsIScriptGlobalObject> globalObject;
   mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
   NS_ENSURE_TRUE(globalObject, NS_ERROR_FAILURE);
