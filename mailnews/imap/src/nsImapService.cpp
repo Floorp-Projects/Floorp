@@ -2763,10 +2763,12 @@ nsImapService::BuildSubscribeDatasource(nsIImapIncomingServer *aServer, nsIMsgWi
         rv = server->GetRootFolder(getter_AddRefs(rootFolder));
 	if (NS_FAILED(rv)) return rv;
 
-        nsCOMPtr<nsIMsgFolder> rootMsgFolder = do_QueryInterface(rootFolder);
+        nsCOMPtr<nsIMsgFolder> rootMsgFolder = do_QueryInterface(rootFolder, &rv);
+	if (NS_FAILED(rv)) return rv;
 	if (!rootMsgFolder) return NS_ERROR_FAILURE;
 
-	nsCOMPtr<nsIUrlListener> listener = do_QueryInterface(aServer);
+	nsCOMPtr<nsIUrlListener> listener = do_QueryInterface(aServer, &rv);
+	if (NS_FAILED(rv)) return rv;
 	if (!listener) return NS_ERROR_FAILURE;
 
 	nsCOMPtr<nsIEventQueue> queue;

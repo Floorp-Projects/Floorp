@@ -1989,13 +1989,56 @@ nsImapIncomingServer::GetSubscribeListener(nsISubscribeListener **aListener)
 NS_IMETHODIMP
 nsImapIncomingServer::Subscribe(const char *aName)
 {
-	printf("subscribe to folder: %s\n",aName);
-	return NS_OK;
+	return SubscribeToFolder(aName, PR_TRUE);
 }
 
 NS_IMETHODIMP
 nsImapIncomingServer::Unsubscribe(const char *aName)
 {
-	printf("unsubscribe to folder: %s\n",aName);
+	return SubscribeToFolder(aName, PR_FALSE);
+}
+
+nsresult
+nsImapIncomingServer::SubscribeToFolder(const char *aName, PRBool subscribe)
+{
+	nsresult rv;
+	nsCOMPtr<nsIImapService> imapService = do_GetService(kImapServiceCID, &rv);
+	if (NS_FAILED(rv)) return rv;
+	if (!imapService) return NS_ERROR_FAILURE;
+
+	nsAutoString folderName;
+	folderName.AssignWithConversion(aName);
+
+    nsCOMPtr<nsIFolder> rootFolder;
+    rv = GetRootFolder(getter_AddRefs(rootFolder));
+	if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIMsgFolder> rootMsgFolder = do_QueryInterface(rootFolder, &rv);
+	if (NS_FAILED(rv)) return rv;
+    if (!rootMsgFolder) return NS_ERROR_FAILURE;
+
+	nsCOMPtr<nsIEventQueue> queue;
+    // get the Event Queue for this thread...
+    NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(queue));
+    if (NS_FAILED(rv)) return rv;
+
+	if (subscribe) {
+			printf("subscribe to folder: %s\n",aName);
+			rv = imapService->SubscribeFolder(queue,
+                               rootMsgFolder,
+                               folderName.GetUnicode(),
+                               nsnull, nsnull);
+	}
+	else {
+			printf("unsubscribe to folder: %s\n",aName);
+			rv = imapService->UnsubscribeFolder(queue,
+                               rootMsgFolder,
+                               folderName.GetUnicode(),
+                               nsnull, nsnull);
+	}
+
+	if (NS_FAILED(rv)) return rv;
 	return NS_OK;
 }
