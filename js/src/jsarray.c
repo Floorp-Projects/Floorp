@@ -101,52 +101,37 @@ IdIsIndex(jsid id, jsuint *indexp)
     return JS_FALSE;
 }
 
-
 static JSBool
 ValueIsLength(JSContext *cx, jsval v, jsuint *lengthp)
 {
     jsint i;
 
-    /*
-     * It's only an array length if it's an int or a double.  Some relevant
-     * ECMA language is 15.4.2.2 - 'If the argument len is a number, then the
-     * length property of the newly constructed object is set to ToUint32(len)
-     * - I take 'is a number' to mean 'typeof len' returns 'number' in
-     * javascript.
-     */
     if (JSVAL_IS_INT(v)) {
 	i = JSVAL_TO_INT(v);
-	/* jsuint cast does ToUint32 */
+        if (i < 0) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+				 JSMSG_BAD_ARRAY_LENGTH);
+            return JS_FALSE;
+        }
 	if (lengthp)
 	    *lengthp = (jsuint) i;
 	return JS_TRUE;
     }
     if (JSVAL_IS_DOUBLE(v)) {
-	/*
-	 * XXXmccabe I'd love to add another check here, against
-	 * js_DoubleToInteger(d) != d), so that ValueIsLength matches
-	 * IdIsIndex, but it doesn't seem to follow from ECMA.
-	 * (seems to be appropriate for IdIsIndex, though).
-	 */
-	return js_ValueToECMAUint32(cx, v, (uint32 *)lengthp);
-    }
-    return JS_FALSE;
-}
-
-
-static JSBool
-ValueToIndex(JSContext *cx, jsval v, jsuint *lengthp)
-{
-    jsint i;
-
-    if (JSVAL_IS_INT(v)) {
-	i = JSVAL_TO_INT(v);
-	/* jsuint cast does ToUint32. */
-	if (lengthp)
-	    *lengthp = (jsuint)i;
+        jsdouble d;
+	/* mccabe gets his wish */
+        if (!js_ValueToNumber(cx, v, &d))
+	    return JS_FALSE;
+        if (!js_DoubleToECMAUint32(cx, d, (uint32 *)lengthp))
+            return JS_FALSE;
+        if (d != *(uint32 *)lengthp) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+				 JSMSG_BAD_ARRAY_LENGTH);
+            return JS_FALSE;
+        }
 	return JS_TRUE;
     }
-    return js_ValueToECMAUint32(cx, v, (uint32 *)lengthp);
+    return JS_FALSE;
 }
 
 JSBool
@@ -250,7 +235,7 @@ array_length_setter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     jsid id2;
     jsval junk;
 
-    if (!ValueToIndex(cx, *vp, &newlen))
+    if (!ValueIsLength(cx, *vp, &newlen))
 	return JS_FALSE;
     if (!js_GetLengthProperty(cx, obj, &oldlen))
 	return JS_FALSE;
@@ -1320,17 +1305,23 @@ Array(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     if (argc == 0) {
 	length = 0;
 	vector = NULL;
-    } else if (cx->version != JSVERSION_1_2 &&
-	       argc == 1 && ValueIsLength(cx, argv[0], &length))
-    {
-	/*
-	 * Only use 1 arg as first element for version 1.2; for any other
-	 * version (including 1.3), follow ECMA and use it as a length.
-	 */
-	vector = NULL;
+    } else if (cx->version == JSVERSION_1_2) {
+        if (argc == 1 && ValueIsLength(cx, argv[0], &length))
+            vector = NULL;
+        else {
+	    length = (jsuint) argc;
+	    vector = argv;
+        }
     } else {
-	length = (jsuint) argc;
-	vector = argv;
+        if (argc > 1) {
+	    length = (jsuint) argc;
+	    vector = argv;
+        }
+        else {
+            if (!ValueIsLength(cx, argv[0], &length))
+                return JS_FALSE;
+            vector = NULL;
+        }
     }
     return InitArrayObject(cx, obj, length, vector);
 }

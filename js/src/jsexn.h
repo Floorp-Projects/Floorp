@@ -61,6 +61,10 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp);
 extern JSBool
 js_ReportUncaughtException(JSContext *cx);
 
+extern JSClass exn_class;
+extern JSBool
+js_exnHasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp);
+
 JS_END_EXTERN_C
 
 #endif /* jsexn_h___ */
