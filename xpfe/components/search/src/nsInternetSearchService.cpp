@@ -169,6 +169,20 @@ protected:
 
 friend	NS_IMETHODIMP	NS_NewInternetSearchService(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
+	// helper methods
+	PRBool		isEngineURI(nsIRDFResource* aResource);
+	PRBool		isSearchURI(nsIRDFResource* aResource);
+	nsresult	BeginSearchRequest(nsIRDFResource *source, PRBool doNetworkRequest);
+	nsresult	DoSearch(nsIRDFResource *source, nsIRDFResource *engine, nsString text);
+	nsresult	GetSearchEngineList(nsFileSpec spec);
+	nsresult	GetSearchFolder(nsFileSpec &spec);
+	nsresult	ReadFileContents(nsFileSpec baseFilename, nsString & sourceContents);
+static	nsresult	GetData(nsString data, char *sectionToFind, char *attribToFind, nsString &value);
+	nsresult	GetInputs(nsString data, nsString text, nsString &input);
+	nsresult	GetURL(nsIRDFResource *source, nsIRDFLiteral** aResult);
+	PRBool		isVisible(const nsNativeFileSpec& file);
+
+
 public:
 
 friend	class		InternetSearchDataSourceCallback;
@@ -178,6 +192,8 @@ friend	class		InternetSearchDataSourceCallback;
 			InternetSearchDataSource(void);
 	virtual		~InternetSearchDataSource(void);
 	nsresult	Init();
+
+	NS_DECL_NSIINTERNETSEARCHSERVICE
 
 	// nsIRDFDataSource methods
 
@@ -238,21 +254,6 @@ friend	class		InternetSearchDataSourceCallback;
 	NS_IMETHOD	DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
 				nsIRDFResource*   aCommand,
 				nsISupportsArray/*<nsIRDFResource>*/* aArguments);
-
-
-	// helper methods
-static PRBool		isEngineURI(nsIRDFResource* aResource);
-static PRBool		isSearchURI(nsIRDFResource* aResource);
-static nsresult		BeginSearchRequest(nsIRDFResource *source, PRBool doNetworkRequest);
-static nsresult		DoSearch(nsIRDFResource *source, nsIRDFResource *engine, nsString text);
-static nsresult		GetSearchEngineList(nsFileSpec spec);
-static nsresult		GetSearchFolder(nsFileSpec &spec);
-static nsresult		ReadFileContents(nsFileSpec baseFilename, nsString & sourceContents);
-static nsresult		GetData(nsString data, char *sectionToFind, char *attribToFind, nsString &value);
-static nsresult		GetInputs(nsString data, nsString text, nsString &input);
-static nsresult		GetURL(nsIRDFResource *source, nsIRDFLiteral** aResult);
-static PRBool		isVisible(const nsNativeFileSpec& file);
-
 };
 
 
@@ -843,6 +844,38 @@ NS_NewInternetSearchService(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 
 
 
+NS_IMETHODIMP
+InternetSearchDataSource::ClearResultSearchSites(void)
+{
+	// forget about any previous search sites
+
+	if (mInner)
+	{
+		nsresult			rv;
+		nsCOMPtr<nsISimpleEnumerator>	arcs;
+		if (NS_SUCCEEDED(rv = mInner->GetTargets(kNC_SearchResultsSitesRoot, kNC_Child, PR_TRUE, getter_AddRefs(arcs))))
+		{
+			PRBool			hasMore = PR_TRUE;
+			while (hasMore == PR_TRUE)
+			{
+				if (NS_FAILED(arcs->HasMoreElements(&hasMore)) || (hasMore == PR_FALSE))
+					break;
+				nsCOMPtr<nsISupports>	arc;
+				if (NS_FAILED(arcs->GetNext(getter_AddRefs(arc))))
+					break;
+				nsCOMPtr<nsIRDFResource>	child = do_QueryInterface(arc);
+				if (child)
+				{
+					mInner->Unassert(kNC_SearchResultsSitesRoot, kNC_Child, child);
+				}
+			}
+		}
+	}
+	return(NS_OK);
+}
+
+
+
 nsresult
 InternetSearchDataSource::BeginSearchRequest(nsIRDFResource *source, PRBool doNetworkRequest)
 {
@@ -931,30 +964,9 @@ InternetSearchDataSource::BeginSearchRequest(nsIRDFResource *source, PRBool doNe
 		}
 	}
 
-#if 0
-		nsCOMPtr<nsIRDFNode>	lastTarget;
-		if (NS_SUCCEEDED(rv = mInner->GetTarget(kNC_LastSearchRoot, kNC_Ref,
-			PR_TRUE, getter_AddRefs(lastTarget))))
-		{
-			if (rv != NS_RDF_NO_VALUE)
-			{
-				rv = mInner->Unassert(kNC_LastSearchRoot, kNC_Ref, lastTarget);
-			}
-		}
-		if (uri.Length() > 0)
-		{
-			const PRUnichar	*uriUni = uri.GetUnicode();
-			nsCOMPtr<nsIRDFLiteral>	uriLiteral;
-			if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(uriUni, getter_AddRefs(uriLiteral))))
-			{
-				rv = mInner->Assert(kNC_LastSearchRoot, kNC_Ref, uriLiteral, PR_TRUE);
-			}
-		}
-	}
-#endif
-
 	// forget about any previous search sites
-
+	ClearResultSearchSites();
+#if 0
 	if (mInner)
 	{
 		nsCOMPtr<nsISimpleEnumerator>	arcs;
@@ -976,7 +988,7 @@ InternetSearchDataSource::BeginSearchRequest(nsIRDFResource *source, PRBool doNe
 			}
 		}
 	}
-
+#endif
 	uri.Cut(0, strlen("internetsearch:"));
 
 	nsVoidArray	*engineArray = new nsVoidArray;

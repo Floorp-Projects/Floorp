@@ -30,8 +30,9 @@ interface nsILocalSearchService : nsISupports
 };
 
 [scriptable, uuid(6bd1d803-1c67-11d3-9820-ed1b357eb3c4)]
-interface nsInternetSearchService : nsISupports
+interface nsIInternetSearchService : nsISupports
 {
+	void	ClearResultSearchSites();
 };
 
 %{C++
