@@ -139,7 +139,7 @@ PK11_CreateSymKey(PK11SlotInfo *slot, CK_MECHANISM_TYPE type, PRBool owner,
     symKey->size = 0;
     symKey->refCount = 1;
     symKey->origin = PK11_OriginNULL;
-    symKey->origin = PK11_OriginNULL;
+    symKey->parent = NULL;
     PK11_ReferenceSlot(slot);
     return symKey;
 }
@@ -154,6 +154,9 @@ PK11_FreeSymKey(PK11SymKey *symKey)
     PRBool freeit = PR_TRUE;
 
     if (PR_AtomicDecrement(&symKey->refCount) == 0) {
+	PK11SymKey *parent = symKey->parent;
+
+	symKey->parent = NULL;
 	if ((symKey->owner) && symKey->objectID != CK_INVALID_HANDLE) {
 	    pk11_EnterKeyMonitor(symKey);
 	    (void) PK11_GETTAB(symKey->slot)->
@@ -180,6 +183,10 @@ PK11_FreeSymKey(PK11SymKey *symKey)
 	    PORT_Free(symKey);
 	}
 	PK11_FreeSlot(slot);
+
+	if (parent) {
+	    PK11_FreeSymKey(parent);
+	}
     }
 }
 
@@ -258,9 +265,9 @@ PK11_SymKeyFromHandle(PK11SlotInfo *slot, PK11SymKey *parent, PK11Origin origin,
      * keys do. */
     if (owner && parent) {
 	pk11_CloseSession(symKey->slot, symKey->session,symKey->sessionOwner);
-	symKey->sessionOwner = parent->sessionOwner;
+	symKey->sessionOwner = PR_FALSE;
 	symKey->session = parent->session;
-	parent->sessionOwner = PR_FALSE;
+	symKey->parent = PK11_ReferenceSymKey(parent);
     }
 
     return symKey;

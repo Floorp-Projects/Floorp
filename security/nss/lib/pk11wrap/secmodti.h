@@ -171,6 +171,7 @@ struct PK11SymKeyStr {
     int		size;		/* key size in bytes */
     PK11Origin	origin;		/* where this key came from 
 						(see def in secmodt.h) */
+    PK11SymKey *parent;
     uint16 series;		/* break up the slot info into various groups of 
 			 * inserted tokens so that keys and certs can be
 			 * invalidated */
