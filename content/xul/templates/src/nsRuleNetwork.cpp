@@ -25,6 +25,8 @@
 
 /*
 
+  Implementations for the rule network classes.
+
   To Do.
 
   - Constrain() & Propogate() still feel like they are poorly named.
@@ -729,7 +731,7 @@ JoinNode::Propogate(const InstantiationSet& aInstantiations, void* aClosure)
             mKids[j]->Propogate(instantiations, aClosure);
     }
 
-    return rv;
+    return NS_OK;
 }
 
 
