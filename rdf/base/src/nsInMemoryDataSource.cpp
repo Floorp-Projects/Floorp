@@ -161,15 +161,15 @@ protected:
 
     // Thread-safe writer implementation methods.
     nsresult
-    SafeAssert(nsIRDFResource* source, 
-               nsIRDFResource* property, 
-               nsIRDFNode* target,
-               PRBool tv);
+    LockedAssert(nsIRDFResource* source, 
+                 nsIRDFResource* property, 
+                 nsIRDFNode* target,
+                 PRBool tv);
 
     nsresult
-    SafeUnassert(nsIRDFResource* source,
-                 nsIRDFResource* property,
-                 nsIRDFNode* target);
+    LockedUnassert(nsIRDFResource* source,
+                   nsIRDFResource* property,
+                   nsIRDFNode* target);
 
     InMemoryDataSource(nsISupports* aOuter);
     virtual ~InMemoryDataSource();
@@ -1019,13 +1019,11 @@ InMemoryDataSource::GetTargets(nsIRDFResource* aSource,
 
 
 nsresult
-InMemoryDataSource::SafeAssert(nsIRDFResource* source,
-                               nsIRDFResource* property,
-                               nsIRDFNode* target,
-                               PRBool tv)
+InMemoryDataSource::LockedAssert(nsIRDFResource* source,
+                                 nsIRDFResource* property,
+                                 nsIRDFNode* target,
+                                 PRBool tv)
 {
-    NS_AUTOLOCK(mLock);
-
 #ifdef PR_LOGGING
     LogOperation("ASSERT", source, property, target, tv);
 #endif
@@ -1089,8 +1087,11 @@ InMemoryDataSource::Assert(nsIRDFResource* source,
 {
     nsresult rv;
 
-    if (NS_FAILED(rv = SafeAssert(source, property, target, tv)))
-        return rv;
+    {
+        NS_AUTOLOCK(mLock);
+        rv = LockedAssert(source, property, target, tv);
+        if (NS_FAILED(rv)) return rv;
+    }
 
     // notify observers
     if (mObservers) {
@@ -1111,12 +1112,10 @@ InMemoryDataSource::Assert(nsIRDFResource* source,
 
 
 nsresult
-InMemoryDataSource::SafeUnassert(nsIRDFResource* source,
+InMemoryDataSource::LockedUnassert(nsIRDFResource* source,
                                  nsIRDFResource* property,
                                  nsIRDFNode* target)
 {
-    NS_AUTOLOCK(mLock);
-
 #ifdef PR_LOGGING
     LogOperation("UNASSERT", source, property, target);
 #endif
@@ -1184,8 +1183,12 @@ InMemoryDataSource::Unassert(nsIRDFResource* source,
 {
     nsresult rv;
 
-    if (NS_FAILED(rv = SafeUnassert(source, property, target)))
-        return rv;
+    {
+        NS_AUTOLOCK(mLock);
+
+        rv = LockedUnassert(source, property, target);
+        if (NS_FAILED(rv)) return rv;
+    }
 
     // Notify the world
     if (mObservers) {
@@ -1211,8 +1214,36 @@ InMemoryDataSource::Change(nsIRDFResource* aSource,
                            nsIRDFNode* aOldTarget,
                            nsIRDFNode* aNewTarget)
 {
-    NS_NOTYETIMPLEMENTED("write me");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv;
+
+    {
+        NS_AUTOLOCK(mLock);
+
+        // XXX We can implement LockedChange() if we decide that this
+        // is a performance bottleneck.
+
+        rv = LockedUnassert(aSource, aProperty, aOldTarget);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = LockedAssert(aSource, aProperty, aNewTarget, PR_TRUE);
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    // Notify the world
+    if (mObservers) {
+        PRUint32 count;
+        rv = mObservers->Count(&count);
+        if (NS_FAILED(rv)) return rv;
+
+        for (PRInt32 i = PRInt32(count) - 1; i >= 0; --i) {
+            nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
+            obs->OnChange(aSource, aProperty, aOldTarget, aNewTarget);
+            NS_RELEASE(obs);
+            // XXX ignore return value?
+        }
+    }
+
+    return NS_RDF_ASSERTION_ACCEPTED;
 }
 
 
@@ -1222,8 +1253,36 @@ InMemoryDataSource::Move(nsIRDFResource* aOldSource,
                          nsIRDFResource* aProperty,
                          nsIRDFNode* aTarget)
 {
-    NS_NOTYETIMPLEMENTED("write me");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv;
+
+    {
+        NS_AUTOLOCK(mLock);
+
+        // XXX We can implement LockedMove() if we decide that this
+        // is a performance bottleneck.
+
+        rv = LockedUnassert(aOldSource, aProperty, aTarget);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = LockedAssert(aNewSource, aProperty, aTarget, PR_TRUE);
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    // Notify the world
+    if (mObservers) {
+        PRUint32 count;
+        rv = mObservers->Count(&count);
+        if (NS_FAILED(rv)) return rv;
+
+        for (PRInt32 i = PRInt32(count) - 1; i >= 0; --i) {
+            nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
+            obs->OnMove(aOldSource, aNewSource, aProperty, aTarget);
+            NS_RELEASE(obs);
+            // XXX ignore return value?
+        }
+    }
+
+    return NS_RDF_ASSERTION_ACCEPTED;
 }
 
 
