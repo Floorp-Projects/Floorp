@@ -100,44 +100,44 @@ nsresult nsExplainErrorDetails(nsISmtpUrl * aSmtpUrl, int code, ...)
 {
   NS_ENSURE_ARG(aSmtpUrl);
 
-	nsresult rv = NS_OK;
-	va_list args;
+  nsresult rv = NS_OK;
+  va_list args;
 	
   nsCOMPtr<nsIPrompt> dialog;
   aSmtpUrl->GetPrompt(getter_AddRefs(dialog));
   NS_ENSURE_TRUE(dialog, NS_ERROR_FAILURE);
 
   PRUnichar *  msg;
-	nsXPIDLString eMsg;
+  nsXPIDLString eMsg;
   nsCOMPtr<nsIMsgStringService> smtpBundle = do_GetService(NS_MSG_SMTPSTRINGSERVICE_CONTRACTID);
-
-	va_start (args, code);
-
-	switch (code)	{
+  
+  va_start (args, code);
+  
+  switch (code)	{
 		case NS_ERROR_SMTP_SERVER_ERROR:
-		case NS_ERROR_TCP_READ_ERROR:
-		case NS_ERROR_SENDING_FROM_COMMAND:
-		case NS_ERROR_SENDING_RCPT_COMMAND:
-		case NS_ERROR_SENDING_DATA_COMMAND:
-		case NS_ERROR_SENDING_MESSAGE:   
-      smtpBundle->GetStringByID(code, getter_Copies(eMsg));
-			msg = nsTextFormatter::vsmprintf(eMsg, args);
-			break;
-		default:
-      smtpBundle->GetStringByID(NS_ERROR_COMMUNICATIONS_ERROR, getter_Copies(eMsg));
-			msg = nsTextFormatter::smprintf(eMsg, code);
-			break;
-	}
-
-	if (msg) 
+                case NS_ERROR_TCP_READ_ERROR:
+                case NS_ERROR_SENDING_FROM_COMMAND:
+                case NS_ERROR_SENDING_RCPT_COMMAND:
+                case NS_ERROR_SENDING_DATA_COMMAND:
+                case NS_ERROR_SENDING_MESSAGE:   
+                  smtpBundle->GetStringByID(code, getter_Copies(eMsg));
+                  msg = nsTextFormatter::vsmprintf(eMsg, args);
+                  break;
+                default:
+                  smtpBundle->GetStringByID(NS_ERROR_COMMUNICATIONS_ERROR, getter_Copies(eMsg));
+                  msg = nsTextFormatter::smprintf(eMsg, code);
+                  break;
+  }
+  
+  if (msg) 
   {
-		rv = dialog->Alert(nsnull, msg);
-		nsTextFormatter::smprintf_free(msg);
-	}
-
-	va_end (args);
-
-	return rv;
+    rv = dialog->Alert(nsnull, msg);
+    nsTextFormatter::smprintf_free(msg);
+  }
+  
+  va_end (args);
+  
+  return rv;
 }
 
 /* RFC 1891 -- extended smtp value encoding scheme
@@ -182,33 +182,33 @@ nsresult nsExplainErrorDetails(nsISmtpUrl * aSmtpUrl, int code, ...)
 static char *
 esmtp_value_encode(char *addr)
 {
-	char *buffer = (char *) PR_Malloc(512); /* esmpt ORCPT allow up to 500 chars encoded addresses */
-	char *bp = buffer, *bpEnd = buffer+500;
-	int len, i;
-
-	if (!buffer) return NULL;
-
-	*bp=0;
-	if (! addr || *addr == 0) /* this will never happen */
-		return buffer;
-
-	for (i=0, len=PL_strlen(addr); i < len && bp < bpEnd; i++)
-	{
-		if (*addr >= 0x21 && 
-			*addr <= 0x7E &&
-			*addr != '+' &&
-			*addr != '=')
-		{
-			*bp++ = *addr++;
-		}
-		else
-		{
-			PR_snprintf(bp, bpEnd-bp, "+%.2X", ((int)*addr++));
-			bp += PL_strlen(bp);
-		}
-	}
-	*bp=0;
-	return buffer;
+  char *buffer = (char *) PR_Malloc(512); /* esmpt ORCPT allow up to 500 chars encoded addresses */
+  char *bp = buffer, *bpEnd = buffer+500;
+  int len, i;
+  
+  if (!buffer) return NULL;
+  
+  *bp=0;
+  if (! addr || *addr == 0) /* this will never happen */
+    return buffer;
+  
+  for (i=0, len=PL_strlen(addr); i < len && bp < bpEnd; i++)
+  {
+    if (*addr >= 0x21 && 
+      *addr <= 0x7E &&
+      *addr != '+' &&
+      *addr != '=')
+    {
+      *bp++ = *addr++;
+    }
+    else
+    {
+      PR_snprintf(bp, bpEnd-bp, "+%.2X", ((int)*addr++));
+      bp += PL_strlen(bp);
+    }
+  }
+  *bp=0;
+  return buffer;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -230,11 +230,11 @@ nsSmtpProtocol::nsSmtpProtocol(nsIURI * aURL)
 
 nsSmtpProtocol::~nsSmtpProtocol()
 {
-	// free our local state
-	PR_Free(m_addressCopy);
-	PR_Free(m_verifyAddress);
-	PR_Free(m_dataBuf);
-	delete m_lineStreamBuffer;
+  // free our local state
+  PR_Free(m_addressCopy);
+  PR_Free(m_verifyAddress);
+  PR_Free(m_dataBuf);
+  delete m_lineStreamBuffer;
 }
 
 void nsSmtpProtocol::Initialize(nsIURI * aURL)
@@ -329,26 +329,26 @@ void nsSmtpProtocol::Initialize(nsIURI * aURL)
 
 const char * nsSmtpProtocol::GetUserDomainName()
 {
-	nsresult rv;
-	NS_PRECONDITION(m_runningURL, "we must be running a url in order to get the user's domain...");
-
-	if (m_runningURL)
-	{
-		nsCOMPtr <nsIMsgIdentity> senderIdentity;
-		rv = m_runningURL->GetSenderIdentity(getter_AddRefs(senderIdentity));
-		if (NS_FAILED(rv) || !senderIdentity) 
-			return nsnull;
+  nsresult rv;
+  NS_PRECONDITION(m_runningURL, "we must be running a url in order to get the user's domain...");
+  
+  if (m_runningURL)
+  {
+    nsCOMPtr <nsIMsgIdentity> senderIdentity;
+    rv = m_runningURL->GetSenderIdentity(getter_AddRefs(senderIdentity));
+    if (NS_FAILED(rv) || !senderIdentity) 
+      return nsnull;
 				
-		rv =  senderIdentity->GetEmail(getter_Copies(m_mailAddr));
-		if (NS_FAILED(rv) || !((const char *)m_mailAddr)) 	
-			return nsnull;
-		
-		const char *atSignMarker = nsnull;
-		atSignMarker = PL_strchr(m_mailAddr, '@');
-		return atSignMarker ? atSignMarker+1 :  (const char *) m_mailAddr;  // return const ptr into buffer in running url...
-	}
-
-	return nsnull;
+    rv =  senderIdentity->GetEmail(getter_Copies(m_mailAddr));
+    if (NS_FAILED(rv) || !((const char *)m_mailAddr)) 	
+      return nsnull;
+    
+    const char *atSignMarker = nsnull;
+    atSignMarker = PL_strchr(m_mailAddr, '@');
+    return atSignMarker ? atSignMarker+1 :  (const char *) m_mailAddr;  // return const ptr into buffer in running url...
+  }
+  
+  return nsnull;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -383,18 +383,18 @@ nsresult aStatus)
 
 void nsSmtpProtocol::UpdateStatus(PRInt32 aStatusID)
 {
-	if (m_statusFeedback)
-	{
+  if (m_statusFeedback)
+  {
     nsXPIDLString msg;
     mSmtpBundle->GetStringByID(aStatusID, getter_Copies(msg));
-		UpdateStatusWithString(msg);
-	}
+    UpdateStatusWithString(msg);
+  }
 }
 
 void nsSmtpProtocol::UpdateStatusWithString(const PRUnichar * aStatusString)
 {
-	if (m_statusFeedback && aStatusString)
-		m_statusFeedback->ShowStatusString(aStatusString);
+  if (m_statusFeedback && aStatusString)
+    m_statusFeedback->ShowStatusString(aStatusString);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -413,83 +413,83 @@ PRInt32 nsSmtpProtocol::SmtpResponse(nsIInputStream * inputStream, PRUint32 leng
   char cont_char;
   PRUint32 ln = 0;
   PRBool pauseForMoreData = PR_FALSE;
-
-	if (!m_lineStreamBuffer)
-		return -1; // this will force an error and at least we won't crash
-
-	line = m_lineStreamBuffer->ReadNextLine(inputStream, ln, pauseForMoreData);
-
+  
+  if (!m_lineStreamBuffer)
+    return -1; // this will force an error and at least we won't crash
+  
+  line = m_lineStreamBuffer->ReadNextLine(inputStream, ln, pauseForMoreData);
+  
   if(pauseForMoreData || !line)
   {
-      SetFlag(SMTP_PAUSE_FOR_READ); /* pause */
-      PR_Free(line);
-      return(ln);
+    SetFlag(SMTP_PAUSE_FOR_READ); /* pause */
+    PR_Free(line);
+    return(ln);
   }
-
+  
   m_totalAmountRead += ln;
-
+  
   PR_LOG(SMTPLogModule, PR_LOG_ALWAYS, ("SMTP Response: %s", line));
-	cont_char = ' '; /* default */
+  cont_char = ' '; /* default */
   sscanf(line, "%d%c", &m_responseCode, &cont_char);
-
-	if(m_continuationResponse == -1)
+  
+  if(m_continuationResponse == -1)
   {
-		if (cont_char == '-')  /* begin continuation */
-			m_continuationResponse = m_responseCode;
-
-		if(PL_strlen(line) > 3)
-			m_responseText = line+4;
+    if (cont_char == '-')  /* begin continuation */
+      m_continuationResponse = m_responseCode;
+    
+    if(PL_strlen(line) > 3)
+      m_responseText = line+4;
   }
   else
   {    /* have to continue */
-		if (m_continuationResponse == m_responseCode && cont_char == ' ')
-			m_continuationResponse = -1;    /* ended */
-
-        if (m_responseText.CharAt(m_responseText.Length() - 1) != '\n')
-          m_responseText += "\n";
+    if (m_continuationResponse == m_responseCode && cont_char == ' ')
+      m_continuationResponse = -1;    /* ended */
+    
+    if (m_responseText.CharAt(m_responseText.Length() - 1) != '\n')
+      m_responseText += "\n";
     if(PL_strlen(line) > 3)
-			m_responseText += line+4;
+      m_responseText += line+4;
   }
-
+  
   if (m_responseCode == 220 && m_responseText.Length() && !m_tlsInitiated)
   { 
-        m_nextStateAfterResponse = SMTP_EXTN_LOGIN_RESPONSE;
+    m_nextStateAfterResponse = SMTP_EXTN_LOGIN_RESPONSE;
   }
-
-	if(m_continuationResponse == -1)  /* all done with this response? */
-	{
-		m_nextState = m_nextStateAfterResponse;
-		ClearFlag(SMTP_PAUSE_FOR_READ); /* don't pause */
-	}
-
+  
+  if(m_continuationResponse == -1)  /* all done with this response? */
+  {
+    m_nextState = m_nextStateAfterResponse;
+    ClearFlag(SMTP_PAUSE_FOR_READ); /* don't pause */
+  }
+  
   PR_Free(line);
   return(0);  /* everything ok */
 }
 
 PRInt32 nsSmtpProtocol::LoginResponse(nsIInputStream * inputStream, PRUint32 length)
 {
-	PRInt32 status = 0;
-	nsCAutoString buffer ("HELO ");
-
-	if(m_responseCode != 220)
-	{
-		m_urlErrorState = NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER;
-		return(NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER);
-	}
-
-	buffer += GetUserDomainName();
-	buffer += CRLF;
-	
-	nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
+  PRInt32 status = 0;
+  nsCAutoString buffer ("HELO ");
+  
+  if(m_responseCode != 220)
+  {
+    m_urlErrorState = NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER;
+    return(NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER);
+  }
+  
+  buffer += GetUserDomainName();
+  buffer += CRLF;
+  
+  nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
   status = SendData(url, buffer.get());
-
+  
   m_nextState = SMTP_RESPONSE;
   m_nextStateAfterResponse = SMTP_SEND_HELO_RESPONSE;
   SetFlag(SMTP_PAUSE_FOR_READ);
-
+  
   return(status);
 }
-    
+
 
 PRInt32 nsSmtpProtocol::ExtensionLoginResponse(nsIInputStream * inputStream, PRUint32 length) 
 {
@@ -517,99 +517,99 @@ PRInt32 nsSmtpProtocol::ExtensionLoginResponse(nsIInputStream * inputStream, PRU
     
 PRInt32 nsSmtpProtocol::SendHeloResponse(nsIInputStream * inputStream, PRUint32 length)
 {
-	PRInt32 status = 0;
-	nsCAutoString buffer;
-	nsresult rv;
-
-	// extract the email address from the identity
-	nsXPIDLCString emailAddress;
-
-	nsCOMPtr <nsIMsgIdentity> senderIdentity;
-	rv = m_runningURL->GetSenderIdentity(getter_AddRefs(senderIdentity));
-	if (NS_FAILED(rv) || !senderIdentity) {
-		m_urlErrorState = NS_ERROR_COULD_NOT_GET_USERS_MAIL_ADDRESS;
-		return(NS_ERROR_COULD_NOT_GET_USERS_MAIL_ADDRESS);
-	}
-	else 
-  {
-		senderIdentity->GetEmail(getter_Copies(emailAddress));
+  PRInt32 status = 0;
+  nsCAutoString buffer;
+  nsresult rv;
+  
+  // extract the email address from the identity
+  nsXPIDLCString emailAddress;
+  
+  nsCOMPtr <nsIMsgIdentity> senderIdentity;
+  rv = m_runningURL->GetSenderIdentity(getter_AddRefs(senderIdentity));
+  if (NS_FAILED(rv) || !senderIdentity) {
+    m_urlErrorState = NS_ERROR_COULD_NOT_GET_USERS_MAIL_ADDRESS;
+    return(NS_ERROR_COULD_NOT_GET_USERS_MAIL_ADDRESS);
   }
-
-	/* don't check for a HELO response because it can be bogus and
+  else 
+  {
+    senderIdentity->GetEmail(getter_Copies(emailAddress));
+  }
+  
+  /* don't check for a HELO response because it can be bogus and
 	 * we don't care
 	 */
-
-	if(!((const char *)emailAddress) || CHECK_SIMULATED_ERROR(SIMULATED_SEND_ERROR_16))
-	{
-		m_urlErrorState = NS_ERROR_COULD_NOT_GET_USERS_MAIL_ADDRESS;
-		return(NS_ERROR_COULD_NOT_GET_USERS_MAIL_ADDRESS);
-	}
-
-	if(m_verifyAddress)
-	{
-		buffer += "VRFY";
-		buffer += m_verifyAddress;
-		buffer += CRLF;
-	}
-	else
-	{
-		/* else send the MAIL FROM: command */
-		nsCOMPtr<nsIMsgHeaderParser> parser = do_GetService(NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID);
+  
+  if(!((const char *)emailAddress) || CHECK_SIMULATED_ERROR(SIMULATED_SEND_ERROR_16))
+  {
+    m_urlErrorState = NS_ERROR_COULD_NOT_GET_USERS_MAIL_ADDRESS;
+    return(NS_ERROR_COULD_NOT_GET_USERS_MAIL_ADDRESS);
+  }
+  
+  if(m_verifyAddress)
+  {
+    buffer += "VRFY";
+    buffer += m_verifyAddress;
+    buffer += CRLF;
+  }
+  else
+  {
+    /* else send the MAIL FROM: command */
+    nsCOMPtr<nsIMsgHeaderParser> parser = do_GetService(NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID);
     char *fullAddress = nsnull;
-		 if (parser) {
-			 // pass nsnull for the name, since we just want the email.
-			 //
-			 // seems a little weird that we are passing in the emailAddress
-			 // when that's the out parameter 
-			 parser->MakeFullAddress(nsnull, nsnull /* name */, emailAddress /* address */, &fullAddress);
-		}
+    if (parser) {
+      // pass nsnull for the name, since we just want the email.
+      //
+      // seems a little weird that we are passing in the emailAddress
+      // when that's the out parameter 
+      parser->MakeFullAddress(nsnull, nsnull /* name */, emailAddress /* address */, &fullAddress);
+    }
 #ifdef UNREADY_CODE		
-		 if (CE_URL_S->msg_pane) 
-		 {
-			if (MSG_RequestForReturnReceipt(CE_URL_S->msg_pane)) 
-			{
-				if (TestFlag(SMTP_EHLO_DSN_ENABLED)) 
-				{
-					PR_snprintf(buffer, sizeof(buffer), 
-								"MAIL FROM:<%.256s> RET=FULL ENVID=NS40112696JT" CRLF, fullAddress);
-				}
-				else 
-				{
-					FE_Alert (CE_WINDOW_ID, XP_GetString(XP_RETURN_RECEIPT_NOT_SUPPORT));
-					PR_snprintf(buffer, sizeof(buffer), "MAIL FROM:<%.256s>" CRLF, fullAddress);
-				}
-			}
-			else if (MSG_SendingMDNInProgress(CE_URL_S->msg_pane)) 
-			{
-				PR_snprintf(buffer, sizeof(buffer), "MAIL FROM:<%.256s>" CRLF, "");
-			}
-			else 
-			{
-				PR_snprintf(buffer, sizeof(buffer), "MAIL FROM:<%.256s>" CRLF, fullAddress);
-			}
-		}
-		else 
+    if (CE_URL_S->msg_pane) 
+    {
+      if (MSG_RequestForReturnReceipt(CE_URL_S->msg_pane)) 
+      {
+        if (TestFlag(SMTP_EHLO_DSN_ENABLED)) 
+        {
+          PR_snprintf(buffer, sizeof(buffer), 
+            "MAIL FROM:<%.256s> RET=FULL ENVID=NS40112696JT" CRLF, fullAddress);
+        }
+        else 
+        {
+          FE_Alert (CE_WINDOW_ID, XP_GetString(XP_RETURN_RECEIPT_NOT_SUPPORT));
+          PR_snprintf(buffer, sizeof(buffer), "MAIL FROM:<%.256s>" CRLF, fullAddress);
+        }
+      }
+      else if (MSG_SendingMDNInProgress(CE_URL_S->msg_pane)) 
+      {
+        PR_snprintf(buffer, sizeof(buffer), "MAIL FROM:<%.256s>" CRLF, "");
+      }
+      else 
+      {
+        PR_snprintf(buffer, sizeof(buffer), "MAIL FROM:<%.256s>" CRLF, fullAddress);
+      }
+    }
+    else 
 #endif
-		{
-			buffer = "MAIL FROM:<";
-			buffer += fullAddress;
-			buffer += ">" CRLF;
-		}
-		PR_FREEIF (fullAddress);
-	  }
-
-	nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
-    status = SendData(url, buffer.get());
-
-    m_nextState = SMTP_RESPONSE;
-
-	if(m_verifyAddress)
-    	m_nextStateAfterResponse = SMTP_SEND_VRFY_RESPONSE;
-	else
-    	m_nextStateAfterResponse = SMTP_SEND_MAIL_RESPONSE;
-    SetFlag(SMTP_PAUSE_FOR_READ);
-
-    return(status);
+    {
+      buffer = "MAIL FROM:<";
+      buffer += fullAddress;
+      buffer += ">" CRLF;
+    }
+    PR_FREEIF (fullAddress);
+  }
+  
+  nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
+  status = SendData(url, buffer.get());
+  
+  m_nextState = SMTP_RESPONSE;
+  
+  if(m_verifyAddress)
+    m_nextStateAfterResponse = SMTP_SEND_VRFY_RESPONSE;
+  else
+    m_nextStateAfterResponse = SMTP_SEND_MAIL_RESPONSE;
+  SetFlag(SMTP_PAUSE_FOR_READ);
+  
+  return(status);
 }
 
 
@@ -722,15 +722,13 @@ PRInt32 nsSmtpProtocol::SendTLSResponse()
       if (NS_SUCCEEDED(rv) && secInfo) {
           nsCOMPtr<nsISSLSocketControl> sslControl = do_QueryInterface(secInfo, &rv);
 
-          if (NS_SUCCEEDED(rv) && sslControl) {
+          if (NS_SUCCEEDED(rv) && sslControl)
               rv = sslControl->StartTLS();
-          }
       }
 
-    if (NS_FAILED(rv)) {
+    if (NS_FAILED(rv)) 
         // if we fail, should we close the connection?
         return rv;
-    }
 
     m_nextState = SMTP_EXTN_LOGIN_RESPONSE;
     m_nextStateAfterResponse = SMTP_EXTN_LOGIN_RESPONSE;
@@ -900,13 +898,13 @@ PRInt32 nsSmtpProtocol::AuthLoginUsername()
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
   
   rv = smtpServer->GetUsername(getter_Copies(username));
-
+  
   if (username.IsEmpty()) {
-      rv = GetUsernamePassword(getter_Copies(username), getter_Copies(origPassword));
-      m_usernamePrompted = PR_TRUE;
-      password.Assign(origPassword);
-      if (username.IsEmpty() || password.IsEmpty())
-          return NS_ERROR_SMTP_PASSWORD_UNDEFINED;
+    rv = GetUsernamePassword(getter_Copies(username), getter_Copies(origPassword));
+    m_usernamePrompted = PR_TRUE;
+    password.Assign(origPassword);
+    if (username.IsEmpty() || password.IsEmpty())
+      return NS_ERROR_SMTP_PASSWORD_UNDEFINED;
   }
   else if (!TestFlag(SMTP_USE_LOGIN_REDIRECTION))
   {
@@ -914,78 +912,78 @@ PRInt32 nsSmtpProtocol::AuthLoginUsername()
     password.Assign(origPassword);
     if (password.IsEmpty())
       return NS_ERROR_SMTP_PASSWORD_UNDEFINED;
-
+    
   }
   else
     password.Assign(mLogonCookie);
   
   if (TestFlag(SMTP_AUTH_PLAIN_ENABLED))
   {
-	  char plain_string[512];
-	  int len = 1; /* first <NUL> char */
-
-	  memset(plain_string, 0, 512);
-	  PR_snprintf(&plain_string[1], 510, "%s", (const char*)username);
-	  len += PL_strlen(username);
-	  len++; /* second <NUL> char */
-	  PR_snprintf(&plain_string[len], 511-len, "%s", password.get());
-	  len += password.Length();
-
-	  base64Str = PL_Base64Encode(plain_string, len, nsnull);
+    char plain_string[512];
+    int len = 1; /* first <NUL> char */
+    
+    memset(plain_string, 0, 512);
+    PR_snprintf(&plain_string[1], 510, "%s", (const char*)username);
+    len += PL_strlen(username);
+    len++; /* second <NUL> char */
+    PR_snprintf(&plain_string[len], 511-len, "%s", password.get());
+    len += password.Length();
+    
+    base64Str = PL_Base64Encode(plain_string, len, nsnull);
   }
   else
   {
-	  base64Str = 
-          PL_Base64Encode((const char *) username, 
-                          strlen((const char*)username), nsnull);
+    base64Str = 
+      PL_Base64Encode((const char *) username, 
+      strlen((const char*)username), nsnull);
   } 
   if (base64Str) {
-		// if cram md5 available, let's use it.
-		if (TestFlag(SMTP_AUTH_CRAM_MD5_ENABLED))
-		  PR_snprintf(buffer, sizeof(buffer), "AUTH CRAM-MD5" CRLF);
-	  else if (TestFlag(SMTP_AUTH_PLAIN_ENABLED))
-		  PR_snprintf(buffer, sizeof(buffer), "AUTH PLAIN %.256s" CRLF, base64Str);
-	  else if (TestFlag(SMTP_AUTH_LOGIN_ENABLED))
-		  PR_snprintf(buffer, sizeof(buffer), "AUTH LOGIN %.256s" CRLF, base64Str);
-	  else
-		  return (NS_ERROR_COMMUNICATIONS_ERROR);
-	
-	  nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
-	  status = SendData(url, buffer, PR_TRUE);
-	  m_nextState = SMTP_RESPONSE;
-	  m_nextStateAfterResponse = SMTP_AUTH_LOGIN_RESPONSE;
-	  SetFlag(SMTP_PAUSE_FOR_READ);
-	  nsCRT::free(base64Str);
-	
-	  return (status);
+    // if cram md5 available, let's use it.
+    if (TestFlag(SMTP_AUTH_CRAM_MD5_ENABLED))
+      PR_snprintf(buffer, sizeof(buffer), "AUTH CRAM-MD5" CRLF);
+    else if (TestFlag(SMTP_AUTH_PLAIN_ENABLED))
+      PR_snprintf(buffer, sizeof(buffer), "AUTH PLAIN %.256s" CRLF, base64Str);
+    else if (TestFlag(SMTP_AUTH_LOGIN_ENABLED))
+      PR_snprintf(buffer, sizeof(buffer), "AUTH LOGIN %.256s" CRLF, base64Str);
+    else
+      return (NS_ERROR_COMMUNICATIONS_ERROR);
+    
+    nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
+    status = SendData(url, buffer, PR_TRUE);
+    m_nextState = SMTP_RESPONSE;
+    m_nextStateAfterResponse = SMTP_AUTH_LOGIN_RESPONSE;
+    SetFlag(SMTP_PAUSE_FOR_READ);
+    nsCRT::free(base64Str);
+    
+    return (status);
   }
   return -1;
 }
 
 PRInt32 nsSmtpProtocol::AuthLoginPassword()
 {
-
+  
   /* use cached smtp password first
-   * if not then use cached pop password
-   * if pop password undefined 
-   * sync with smtp password
-   */
+  * if not then use cached pop password
+  * if pop password undefined 
+  * sync with smtp password
+  */
   PRInt32 status = 0;
   nsresult rv;
   nsXPIDLCString origPassword;
   nsCAutoString password;
-
+  
   if (!TestFlag(SMTP_USE_LOGIN_REDIRECTION))
   {
     rv = GetPassword(getter_Copies(origPassword));
     PRInt32 passwordLength = strlen((const char *) origPassword);
     if (!(const char*) origPassword || passwordLength == 0)
-	    return NS_ERROR_SMTP_PASSWORD_UNDEFINED;
-	  password.Assign((const char*) origPassword);
+      return NS_ERROR_SMTP_PASSWORD_UNDEFINED;
+    password.Assign((const char*) origPassword);
   }
   else
     password.Assign(mLogonCookie);
-
+  
   if (!password.IsEmpty()) 
   {
     char buffer[512];
@@ -1015,25 +1013,25 @@ PRInt32 nsSmtpProtocol::AuthLoginPassword()
         nsCOMPtr<nsISmtpServer> smtpServer;
         rv = m_runningURL->GetSmtpServer(getter_AddRefs(smtpServer));
         if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-  
+        
         nsXPIDLCString userName;
         rv = smtpServer->GetUsername(getter_Copies(userName));
-
+        
         PR_snprintf(buffer, sizeof(buffer), "%s %s", userName.get(), encodedDigest.get());
         char *base64Str = PL_Base64Encode(buffer, strlen(buffer), nsnull);
         PR_snprintf(buffer, sizeof(buffer), "%s" CRLF, base64Str);
         PR_Free(base64Str);
       }
       if (NS_FAILED(rv))
-        ClearFlag(SMTP_AUTH_CRAM_MD5_ENABLED);
+        PR_snprintf(buffer, sizeof(buffer), "*" CRLF);
     }
-		else
-		{
-			char *base64Str = PL_Base64Encode(password.get(), password.Length(), nsnull);
-
-			PR_snprintf(buffer, sizeof(buffer), "%.256s" CRLF, base64Str);
-			nsCRT::free(base64Str);
-		}
+    else
+    {
+      char *base64Str = PL_Base64Encode(password.get(), password.Length(), nsnull);
+      
+      PR_snprintf(buffer, sizeof(buffer), "%.256s" CRLF, base64Str);
+      nsCRT::free(base64Str);
+    }
     nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
     status = SendData(url, buffer, PR_TRUE);
     m_nextState = SMTP_RESPONSE;
@@ -1041,122 +1039,122 @@ PRInt32 nsSmtpProtocol::AuthLoginPassword()
     SetFlag(SMTP_PAUSE_FOR_READ);   
     return (status);
   }
-
+  
   return -1;
 }
 
 PRInt32 nsSmtpProtocol::SendVerifyResponse()
 {
 #if 0
-	PRInt32 status = 0;
-    char buffer[512];
-
-    if(m_responseCode == 250 || m_responseCode == 251)
-		return(NS_USER_VERIFIED_BY_SMTP);
-	else
-		return(NS_USER_NOT_VERIFIED_BY_SMTP);
+  PRInt32 status = 0;
+  char buffer[512];
+  
+  if(m_responseCode == 250 || m_responseCode == 251)
+    return(NS_USER_VERIFIED_BY_SMTP);
+  else
+    return(NS_USER_NOT_VERIFIED_BY_SMTP);
 #else	
-	PR_ASSERT(0);
-	return(-1);
+  PR_ASSERT(0);
+  return(-1);
 #endif
 }
 
 PRInt32 nsSmtpProtocol::SendMailResponse()
 {
-	PRInt32 status = 0;
-	nsCAutoString buffer;
-
+  PRInt32 status = 0;
+  nsCAutoString buffer;
+  
   if(m_responseCode != 250 || CHECK_SIMULATED_ERROR(SIMULATED_SEND_ERROR_11))
-	{
-		nsresult rv = nsExplainErrorDetails(m_runningURL, NS_ERROR_SENDING_FROM_COMMAND, m_responseText.get());
-		NS_ASSERTION(NS_SUCCEEDED(rv), "failed to explain SMTP error");
-
-		m_urlErrorState = NS_ERROR_BUT_DONT_SHOW_ALERT;
-		return(NS_ERROR_SENDING_FROM_COMMAND);
-	}
-
-    /* Send the RCPT TO: command */
+  {
+    nsresult rv = nsExplainErrorDetails(m_runningURL, NS_ERROR_SENDING_FROM_COMMAND, m_responseText.get());
+    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to explain SMTP error");
+    
+    m_urlErrorState = NS_ERROR_BUT_DONT_SHOW_ALERT;
+    return(NS_ERROR_SENDING_FROM_COMMAND);
+  }
+  
+  /* Send the RCPT TO: command */
 #ifdef UNREADY_CODE
-	if (TestFlag(SMTP_EHLO_DSN_ENABLED) &&
-		(CE_URL_S->msg_pane && 
-		 MSG_RequestForReturnReceipt(CE_URL_S->msg_pane)))
+  if (TestFlag(SMTP_EHLO_DSN_ENABLED) &&
+    (CE_URL_S->msg_pane && 
+    MSG_RequestForReturnReceipt(CE_URL_S->msg_pane)))
 #else
-	if (TestFlag(SMTP_EHLO_DSN_ENABLED) && PR_FALSE)
+    if (TestFlag(SMTP_EHLO_DSN_ENABLED) && PR_FALSE)
 #endif
-	{
-		char *encodedAddress = esmtp_value_encode(m_addresses);
-
-		if (encodedAddress) 
-		{
-			buffer = "RCPT TO:<";
-			buffer += m_addresses;
-			buffer += "> NOTIFY=SUCCESS,FAILURE ORCPT=rfc822;";
-			buffer += encodedAddress;
-			buffer += CRLF; 
-			PR_FREEIF(encodedAddress);
-		}
-		else 
-		{
-			m_urlErrorState = NS_ERROR_OUT_OF_MEMORY;
-			return (NS_ERROR_OUT_OF_MEMORY);
-		}
-	}
-	else
-	{
-		buffer = "RCPT TO:<";
-		buffer += m_addresses;
-		buffer += ">";
-		buffer += CRLF;
-	}
-	/* take the address we sent off the list (move the pointer to just
+    {
+      char *encodedAddress = esmtp_value_encode(m_addresses);
+      
+      if (encodedAddress) 
+      {
+        buffer = "RCPT TO:<";
+        buffer += m_addresses;
+        buffer += "> NOTIFY=SUCCESS,FAILURE ORCPT=rfc822;";
+        buffer += encodedAddress;
+        buffer += CRLF; 
+        PR_FREEIF(encodedAddress);
+      }
+      else 
+      {
+        m_urlErrorState = NS_ERROR_OUT_OF_MEMORY;
+        return (NS_ERROR_OUT_OF_MEMORY);
+      }
+    }
+    else
+    {
+      buffer = "RCPT TO:<";
+      buffer += m_addresses;
+      buffer += ">";
+      buffer += CRLF;
+    }
+    /* take the address we sent off the list (move the pointer to just
 	   past the terminating null.) */
-	m_addresses += PL_strlen (m_addresses) + 1;
-	m_addressesLeft--;
-	nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
+    m_addresses += PL_strlen (m_addresses) + 1;
+    m_addressesLeft--;
+    nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
     status = SendData(url, buffer.get());
-
+    
     m_nextState = SMTP_RESPONSE;
     m_nextStateAfterResponse = SMTP_SEND_RCPT_RESPONSE;
     SetFlag(SMTP_PAUSE_FOR_READ);
-
+    
     return(status);
 }
 
 PRInt32 nsSmtpProtocol::SendRecipientResponse()
 {
-    PRInt32 status = 0;
-	nsCAutoString buffer;
-
-	if(m_responseCode != 250 && m_responseCode != 251)
-	{
+  PRInt32 status = 0;
+  nsCAutoString buffer;
+  
+  if(m_responseCode != 250 && m_responseCode != 251)
+  {
     nsresult rv = nsExplainErrorDetails(m_runningURL, NS_ERROR_SENDING_RCPT_COMMAND, m_responseText.get());
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to explain SMTP error");
-
+    
     m_urlErrorState = NS_ERROR_BUT_DONT_SHOW_ALERT;
     return(NS_ERROR_SENDING_RCPT_COMMAND);
-	}
-
-	if(m_addressesLeft > 0)
-	{
+  }
+  
+  if(m_addressesLeft > 0)
+  {
 		/* more senders to RCPT to 
-		 */
-        // fake to 250 because SendMailResponse() can't handle 251
-        m_responseCode = 250;
-        m_nextState = SMTP_SEND_MAIL_RESPONSE; 
-		return(0);
-	}
-
-    /* else send the DATA command */
-	buffer = "DATA";
-	buffer += CRLF;
-    nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);  
-    status = SendData(url, buffer.get());
-
-    m_nextState = SMTP_RESPONSE;  
-    m_nextStateAfterResponse = SMTP_SEND_DATA_RESPONSE; 
-    SetFlag(SMTP_PAUSE_FOR_READ);   
-
-    return(status);  
+    */
+    // fake to 250 because SendMailResponse() can't handle 251
+    m_responseCode = 250;
+    m_nextState = SMTP_SEND_MAIL_RESPONSE; 
+    return(0);
+  }
+  
+  /* else send the DATA command */
+  buffer = "DATA";
+  buffer += CRLF;
+  nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);  
+  status = SendData(url, buffer.get());
+  
+  m_nextState = SMTP_RESPONSE;  
+  m_nextStateAfterResponse = SMTP_SEND_DATA_RESPONSE; 
+  SetFlag(SMTP_PAUSE_FOR_READ);   
+  
+  return(status);  
 }
 
 
