@@ -45,6 +45,7 @@ EX_LIBS = \
 	$(DIST)/bin/libraptorhtmlstyle_s.so \
 	$(DIST)/bin/libraptorhtmltable_s.so \
 	$(DIST)/bin/libraptorlayout_s.so \
+	$(DIST)/bin/libraptorevents_s.so \
 	$(DIST)/bin/libraptorview.so \
 	$(DIST)/bin/libreg.so \
 	$(DIST)/bin/libabouturl.so \
@@ -62,6 +63,7 @@ EX_LIBS = \
 	$(DIST)/bin/libnetcache.so \
 	$(DIST)/bin/libnetcnvts.so \
 	$(DIST)/bin/libnetlib.so \
+	$(DIST)/bin/libnetutil.so \
 	$(DIST)/bin/libnetwork.so \
 	$(DIST)/bin/libnspr21.so \
 	$(DIST)/bin/libplc21.so \
@@ -117,8 +119,42 @@ endif
 
 export::
 
+
+
 install:: $(TARGETS)
 	$(INSTALL) $(PROGS) $(DIST)/bin
+	$(INSTALL) samples\test0.html $(DIST)\bin\res\samples
+	$(INSTALL) samples\test1.html $(DIST)\bin\res\samples
+	$(INSTALL) samples\test2.html $(DIST)\bin\res\samples
+	$(INSTALL) samples\test3.html $(DIST)\bin\res\samples
+	$(INSTALL) samples\test4.html $(DIST)\bin\res\samples
+	$(INSTALL) samples\test5.html $(DIST)\bin\res\samples
+	$(INSTALL) samples\test6.html $(DIST)\bin\res\samples
+	$(INSTALL) samples\test7.html $(DIST)\bin\res\samples
+	$(INSTALL) samples\test8.html $(DIST)\bin\res\samples
+	$(INSTALL) samples\test8siz.html $(DIST)\bin\res\samples
+	$(INSTALL) samples\test8sca.html $(DIST)\bin\res\samples
+	$(INSTALL) samples\test8tab.html $(DIST)\bin\res\samples
+	$(INSTALL) samples\raptor.jpg $(DIST)\bin\res\samples
+	$(INSTALL) samples\Anieyes.gif $(DIST)\bin\res\samples
+	$(INSTALL) samples\gear1.gif $(DIST)\bin\res\samples
+	$(INSTALL) samples\rock_gra.gif $(DIST)\bin\res\samples
+	$(INSTALL) samples\bg.jpg $(DIST)\bin\res\samples
 
-
+clobber::
+	rm -f $(DIST)\bin\viewer.exe
+	rm -f $(DIST)\bin\res\samples\test0.html
+	rm -f $(DIST)\bin\res\samples\test1.html
+	rm -f $(DIST)\bin\res\samples\test2.html
+	rm -f $(DIST)\bin\res\samples\test3.html
+	rm -f $(DIST)\bin\res\samples\test4.html
+	rm -f $(DIST)\bin\res\samples\test5.html
+	rm -f $(DIST)\bin\res\samples\test6.html
+	rm -f $(DIST)\bin\res\samples\test7.html
+	rm -f $(DIST)\bin\res\samples\test8.html
+	rm -f $(DIST)\bin\res\samples\raptor.jpg
+	rm -f $(DIST)\bin\res\samples\Anieyes.gif
+	rm -f $(DIST)\bin\res\samples\gear1.gif
+	rm -f $(DIST)\bin\res\samples\rock_gra.gif
+	rm -f $(DIST)\bin\res\samples\bg.jpg
 
