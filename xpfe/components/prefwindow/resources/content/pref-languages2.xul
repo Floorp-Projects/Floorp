@@ -19,55 +19,68 @@
 -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/sidebar/customize.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-languages2.dtd" >
 
-
-
-<window
+<window id="langPanel"
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  id="main-box"
-  title="&languages.customize.title.label;"
-  class="dialog"
-  windowtype="sidebar:customize"
-  onload="InitActive();"
-  align="vertical"
-  persist="width height"
-  width="500" height="381">
+  class="color-dialog"
+  title="&languages.customize.window.title;" 
+  onload="Init();">
+  orient="vertical">
 
-  <html:script language="javascript" src="pref-languages.js"/>
-  <html:script language="javascript" src="chrome://global/content/strres.js"/>
+  <script language="javascript" src="chrome://communicator/content/pref/pref-languages.js"></script>
+  <script language="javascript" src="chrome://global/content/strres.js"></script>
+  <script language="JavaScript">
+  <![CDATA[
+    _elementIDs = ["intlAcceptLanguages"];
+  ]]>
+  </script>
 
-    <box type="smallheader"
-         title="&languages.customize.lHeader;" 
-         description="&languages.customize.rHeader;"/>
-         id="confirm_text"
-       	 value="&languages.customize.save.popup;"/>
+   <broadcaster id="intlAcceptLanguages" 
+                value="" pref="true" 
+                preftype="string" 
+                prefstring="intl.accept_languages" 
+                prefattribute="value"
+                wsm_persist="true"/>
 
-  <!-- The main pane -->
-  <!-- horz 1 -->
-  <box align="horizontal" flex="100%">
+  <!-- vert 0 -->
+  <box align="vertical" flex="100%">
 
+    <box class="box-smallheader" title="&languages.customize.lHeader;"/>
+    <!--
+      description="&languages.customize.rHeader;    
+    -->
 
-    <!-- Spacing between the left window border and list box -->
-    <spring style="width:2em"/>
+      <!-- The main pane -->
+      <!-- horz 1 -->
+      <box align="horizontal" flex="100%">
+
+        <!-- Spacing between the left window border and list box -->
+        <spring style="width:2em"/>
     
-    <!-- Active client languages: 
-         list box, reorder, add and remove widgets -->
+        <!-- vert 1 -->
+	      <box align="vertical" flex="1">
 
-    <!-- vert 1 -->
-	<box align="vertical" flex="1">
+          <spring style="height:4px"/>
 
-      <html:div class="vertical-gap">
-		&languages.customize.prefLangDescript;
-      </html:div>
+          <box align="horizontal" flex="0">
+            <html class="label" style="width: 370px;">
+              &languages.customize.prefLangDescript;
+            </html>
+          </box>
 
-      <spring style="height:8px"/>
+          <separator/>
+      
+          <html>
+    		    &languages.customize.active.label;
+          </html>
 
-      <!-- horz 2 -->
-      <box align="horizontal" class="box-group" flex="1">
+          <!-- horz 2 -->
+          <box align="horizontal" class="box-group" flex="1">
 
             <!-- Languages list box -->
             <!-- Active Charsets Tree -->
@@ -76,66 +89,60 @@
               indent="false"
               multiple="true"
               style="height:0px">
-             <!-- We explicitly create a 'treechildren' so we can refer
+              <!-- We explicitly create a 'treechildren' so we can refer
                   to it from the script -->
-             <treechildren id="active_languages_root">
-             </treechildren>
+              <treechildren id="active_languages_root">
+              </treechildren>
             </tree>
 
             <!-- Spacing between the right selector and "Reorder" -->
-            <spring style="width:8px"/>
+            <spring style="width:4px"/>
 
             <!-- The Reorder Buttons -->
             <!-- vert 2 -->
             <box align="vertical">
-              <spring flex="50%"/>
-              <titledbutton onclick="MoveUp();" id="up" class="borderless up" />
-              <html:div>
-              &languages.customize.reorder.label;
-              </html:div>
-              <titledbutton onclick="MoveDown();" id="down"
-                class="borderless down" />
-              <spring flex="50%"/>
+                <spring flex="50%"/>
+                <box autostretch="never">
+                  <button onclick="MoveUp();" id="up" class="up small" />
+                </box>
+
+                <!-- 
+                  <html>
+                    &languages.customize.reorder.label;
+                  </html>
+                -->
+
+                <box autostretch="never">
+                  <button onclick="MoveDown();" id="down" class="down small" />
+                </box>
+
+                <spring flex="50%"/>
             </box>
             <!-- vert 2 -->
 
             <!-- The Add/Remove Buttons -->
             <!-- vert 3 -->
             <box align="vertical">
-             <titledbutton class="dialog push" value="&languages.customize.addButton.label;" onclick="AddLanguage();"/>
-             <titledbutton class="dialog push" value="&languages.customize.deleteButton.label;" onclick="RemoveActiveLanguage();"/>
+              <button class="dialog push" value="&languages.customize.addButton.label;" onclick="AddLanguage();"/>
+              <button class="dialog push" value="&languages.customize.deleteButton.label;" onclick="RemoveActiveLanguage();"/>
+              <button class="dialog push" value="&languages.customize.save.label;" onclick="Save();"/>
+              <button class="dialog push" value="&languages.customize.cancel.label;" onclick="window.close();"/>
             </box>
             <!-- vert 3 -->
 
-      </box>
-	  <!-- horiz 2 -->
+        </box>
+	      <!-- horiz 2 -->
 
-      <spring style="height:8px"/>
+        <spring style="height:8px"/>
 
-    </box> 
-	<!-- vert 1 -->
+      </box> 
+	    <!-- vert 1 -->
   
+     </box>
+     <!-- horiz 1 -->	
+
    </box>
-   <!-- horiz 1 -->	
+   <!-- vert 0 -->	
 
-  <html:div>
-    <html:hr />
-  </html:div>
-
-  <!-- The 'Save' and 'Cancel' buttons -->
-  <!-- horz 2 -->
-  <box align="horizontal">
-    <spring flex="48%"/>
-    <titledbutton id="save_button" onclick="Save();"
-       class="dialog push"
-       value="&languages.customize.save.label;"/>
-    <spring flex="4%"/>
-    <titledbutton onclick="window.close()"
-       class="dialog push"
-       value="&languages.customize.cancel.label;" />
-    <spring flex="48%"/>
-  </box>
-  <!-- horz 2 -->
-  
 </window>
 
