@@ -55,6 +55,8 @@ public:
   // nsIMenuBar Methods
   NS_IMETHOD SetDOMElement(nsIDOMElement * aDOMElement);
   NS_IMETHOD GetDOMElement(nsIDOMElement ** aDOMElement);
+  NS_IMETHOD SetDOMNode(nsIDOMNode * aDOMNode);
+  NS_IMETHOD GetDOMNode(nsIDOMNode ** aDOMNode);
   NS_IMETHOD SetWebShell(nsIWebShell * aWebShell);
   NS_IMETHOD SetCommand(const nsString & aStrCmd);
   NS_IMETHOD DoCommand();
