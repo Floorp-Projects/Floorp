@@ -4,9 +4,9 @@
 # installed bonsai and are using cvsblame cvsguess and cvsquery to let
 # your webserver render html pages of your CVS repository.
 
-# $Revision: 1.4 $ 
-# $Date: 2000/11/09 19:12:55 $ 
-# $Author: kestes%staff.mail.com $ 
+# $Revision: 1.5 $ 
+# $Date: 2001/02/15 20:47:53 $ 
+# $Author: kestes%tradinglinx.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/VCDisplay/Bonsai.pm,v $ 
 # $Name:  $ 
 
@@ -79,7 +79,43 @@ $BONSAI_URL = ( $TinderConfig::BONSAI_URL ||
 $CVSQUERY = $BONSAI_URL."/cvsquery.cgi";
 $CVSBLAME = $BONSAI_URL."/cvsblame.cgi";
 $CVSGUESS = $BONSAI_URL."/cvsguess.cgi";
+
+# Bonsai wants the CVS root to be a local root.  i.e. use '/cvsroot'
+# not ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot'.  Sometimes
+# it is convienent to keep the remote server information in the
+# tinderbox config so that we can run BOTH the CVS and Bosai TinderDB
+# modules at the same time.
+
+# return the local cvsroot portion of the cvsroot.
+
+sub remote_cvsroot2local_cvsroot {
+  my ($root) = @_;
   
+  # remove everything up till the last colon.
+  $root =~ s!^.*\:!!g;
+
+  return $root;
+}
+
+
+# convert time() format to human readable bonsai format
+sub time2bonsai {
+  my ($time) = @_;
+
+  my ($sec,$min,$hour,$mday,$mon,
+      $year,$wday,$yday,$isdst) =
+        localtime($time);
+  $mon++;
+  $year += 1900;
+  my ($bonsai_date_str) = sprintf("%02u/%02u/%04u %02u:%02u:%02u",
+                                  $mon, $mday, $year, $hour, $min, $sec);
+
+
+  $bonsai_date_str = HTMLPopUp::escapeURL($bonsai_date_str);
+
+  return $bonsai_date_str;
+}
+
 
 # create a Link to a VC file and its line number
 
@@ -99,16 +135,33 @@ sub source {
   my @url_args = ();
   my %tree = %{$TreeData::VC_TREE{$args{'tree'}}};
 
-  push @url_args, (
-                   "cvsroot=".HTMLPopUp::escapeURL($tree{'root'}),
-                   # do we need to specify the 
-                   # "module=".HTMLPopUp::escapeURL($tree{'module'}),
-                   "branch=".HTMLPopUp::escapeURL($tree{'branch'}),
+  { 
 
-                   "rev=".HTMLPopUp::escapeURL($tree{'branch'}),
-                   "file=".HTMLPopUp::escapeURL($args{'file'}),
-                   "mark=".HTMLPopUp::escapeURL($args{'line'}."\#$goto_line"),
-                  );
+    # bonsai has certain conventions for what we would normally
+    # consider empty variables.
+
+    my ($tree) = ($args{'tree'} ||
+                  'default');  
+
+    my ($module) = ($tree{'module'} ||
+                    'all');
+
+    my ($root) = $tree{'root'}; 
+    $root = remote_cvsroot2local_cvsroot($root);
+
+    my ($branch) =$tree{'branch'};
+    
+    push @url_args, (
+                     "treeid=".HTMLPopUp::escapeURL($tree),
+                     "cvsroot=".HTMLPopUp::escapeURL($root),
+                     "module=".HTMLPopUp::escapeURL($module),
+                     "branch=".HTMLPopUp::escapeURL($branch),
+                     
+                     "rev=".HTMLPopUp::escapeURL($tree{'branch'}),
+                     "file=".HTMLPopUp::escapeURL($args{'file'}),
+                     "mark=".HTMLPopUp::escapeURL($args{'line'}."\#$goto_line"),
+                    );
+  }
 
   $args{'href'} = ("$CVSBLAME?".join('&', @url_args));
 
@@ -142,16 +195,34 @@ sub guess {
   my @url_args = ();
   my %tree = %{$TreeData::VC_TREE{$args{'tree'}}};
 
-  push @url_args, (
-                   "cvsroot=".HTMLPopUp::escapeURL($tree{'root'}),
-                   # do we need to specify the 
-                   # "module=".HTMLPopUp::escapeURL($tree{'module'}),
-                   "branch=".HTMLPopUp::escapeURL($tree{'branch'}),
 
-                   "rev=".HTMLPopUp::escapeURL($tree{'branch'}),
-                   "file=".HTMLPopUp::escapeURL($args{'file'}),
-                   "mark=".HTMLPopUp::escapeURL($args{'line'}."\#$goto_line"),
-                  );
+  { 
+
+    # bonsai has certain conventions for what we would normally
+    # consider empty variables.
+
+    my ($tree) = ($args{'tree'} ||
+                  'default');  
+
+    my ($module) = ($tree{'module'} ||
+                    'all');
+
+    my ($root) = $tree{'root'}; 
+    $root = remote_cvsroot2local_cvsroot($root);
+
+    my ($branch) =$tree{'branch'};
+    
+    push @url_args, (
+                     "treeid=".HTMLPopUp::escapeURL($tree),
+                     "cvsroot=".HTMLPopUp::escapeURL($root),
+                     "module=".HTMLPopUp::escapeURL($module),
+                     "branch=".HTMLPopUp::escapeURL($branch),
+                     
+                     "rev=".HTMLPopUp::escapeURL($tree{'branch'}),
+                     "file=".HTMLPopUp::escapeURL($args{'file'}),
+                     "mark=".HTMLPopUp::escapeURL($args{'line'}."\#$goto_line"),
+                    );
+  }
 
   $args{'href'} = ("$CVSGUESS?".join('&', @url_args));
 
@@ -182,28 +253,49 @@ sub query {
   my @url_args = ();
   my %tree = %{$TreeData::VC_TREE{$args{'tree'}}};
 
-  push @url_args, (
-                   "cvsroot=".HTMLPopUp::escapeURL($tree{'root'}),
-                   "module=".HTMLPopUp::escapeURL($tree{'module'}),
-                   "branch=".HTMLPopUp::escapeURL($tree{'branch'}),
-                  );
+  { 
+
+    # bonsai has certain conventions for what we would normally
+    # consider empty variables.
+
+    my ($tree) = ($args{'tree'} ||
+                  'default');  
+
+    my ($module) = ($tree{'module'} ||
+                    'all');
+
+    my ($root) = $tree{'root'}; 
+    $root = remote_cvsroot2local_cvsroot($root);
+
+    my ($branch) =$tree{'branch'};
+    
+    push @url_args, (
+                     "treeid=".HTMLPopUp::escapeURL($tree),
+                     "cvsroot=".HTMLPopUp::escapeURL($root),
+                     "module=".HTMLPopUp::escapeURL($module),
+                     "branch=".HTMLPopUp::escapeURL($branch),
+                    );
+  }
 
   ($args{'who'}) &&
-    (push @url_args, "who=".HTMLPopUp::escapeURL($args{'who'}));
+    (push @url_args, "who=".HTMLPopUp::escapeURL($args{'who'}) );
+
+  ($args{'mindate'} || $args{'maxdate'}) && 
+    (push @url_args, "date=explicit" );
+
+  # Convert times to a human readable date for the convience of the
+  # users.  Bonsai excepts data of form: 'mm/dd/yyyy hh:mm:ss' in
+  # addition to time format.
 
   ($args{'mindate'}) &&
-    (push @url_args, (
-                      "date=explicit",
-                      "mindate=".HTMLPopUp::escapeURL($args{'mindate'}),
-                     )
-    );
+    (push @url_args, "mindate=".time2bonsai($args{'mindate'}) );
 
   ($args{'maxdate'}) && 
-    (push @url_args, "maxdate=".HTMLPopUp::escapeURL($args{'maxdate'}));
+    (push @url_args, "maxdate=".time2bonsai($args{'maxdate'}) );
 
   $args{'href'} = ("$CVSQUERY?".join('&', @url_args));
 
-  my $output = HTMLPopUp::Link(%args);
+  my ($output) = HTMLPopUp::Link(%args);
 
   return $output;
 }
