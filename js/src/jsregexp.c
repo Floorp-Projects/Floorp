@@ -452,6 +452,8 @@ FixNext(CompilerState *state, RENode *ren1, RENode *ren2, RENode *oldnext)
       case REOP_OPT:
       case REOP_LPAREN:
       case REOP_LPARENNON:
+      case REOP_ASSERT:
+      case REOP_ASSERT_NOT:
 	if (!FixNext(state, (RENode*) ren1->kid, ren2, oldnext))
 	    return JS_FALSE;
 	break;
