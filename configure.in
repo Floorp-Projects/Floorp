@@ -1254,6 +1254,8 @@ dnl the qsort routine under solaris is faulty
     if test -z "$GNU_CC"; then
        NS_USE_NATIVE=1
        AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
+       CFLAGS="$CFLAGS -xstrconst -xbuiltin=%all"
+       CXXFLAGS="$CXXFLAGS -xbuiltin=%all"
        LDFLAGS="-xildoff -zlazyload -zcombreloc $LDFLAGS"
        MOZ_OPTIMIZE_FLAGS="-xO4"
        MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_PIC_FLAGS) $(DSO_LDOPTS) -o $@'
