@@ -16,7 +16,7 @@
 #
 
 #
-# Config stuff for Rhapsody5.0
+# Config stuff for Rhapsody
 #
 
 include $(MOD_DEPTH)/config/UNIX.mk
@@ -41,18 +41,16 @@ CPU_ARCH		= ppc
 # definitions so that the linker can catch multiply-defined symbols.
 # Also, common symbols are not allowed with Rhapsody dynamic libraries.
 
-OS_CFLAGS		= $(DSO_CFLAGS) $(OS_REL_CFLAGS) -fno-common -pipe -DRHAPSODY -DHAVE_STRERROR -DHAVE_BSD_FLOCK
+OS_CFLAGS		= $(DSO_CFLAGS) $(OS_REL_CFLAGS) -Wmost -fno-common -pipe -DRHAPSODY -DHAVE_STRERROR -DHAVE_BSD_FLOCK
 
 DEFINES			+= -D_PR_LOCAL_THREADS_ONLY -D_PR_NEED_FAKE_POLL
 
 ARCH			= rhapsody
 
-#DSO_CFLAGS		= -fPIC
-#DSO_LDOPTS		= -Bshareable
-#DSO_LDFLAGS		=
+# May override this with -bundle to create a loadable module.
+DSO_LDOPTS		= -dynamiclib
 
-# Do we need this?: -install_name
-MKSHLIB			= $(CC) -arch ppc -dynamiclib -compatibility_version 1 -current_version 1 -all_load
+MKSHLIB			= $(CC) -arch $(CPU_ARCH) $(DSO_LDOPTS)
 DLL_SUFFIX		= dylib
 
 #G++INCLUDES		= -I/usr/include/g++
