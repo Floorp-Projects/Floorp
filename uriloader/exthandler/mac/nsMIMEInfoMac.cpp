@@ -21,6 +21,7 @@
  *   Christian Biesinger <cbiesinger@web.de>
  */
 
+#include <LaunchServices.h>
 
 #include "nsMIMEInfoMac.h"
 #include "nsILocalFileMac.h"
