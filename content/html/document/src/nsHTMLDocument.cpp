@@ -1249,18 +1249,15 @@ nsHTMLDocument::ContentAppended(nsIContent* aContainer,
 {
   // Register new content. That is the content numbered from
   // aNewIndexInContainer and upwards.
-  PRInt32 i, count;
-  nsCOMPtr<nsIContent> newChild;
-
+  PRInt32 count=0;
   aContainer->ChildCount(count);
+
+  PRInt32 i;
+  nsCOMPtr<nsIContent> newChild;
   for (i = aNewIndexInContainer; i < count; ++i) {
     aContainer->ChildAt(i, *getter_AddRefs(newChild));
-    if (!newChild) {
-      // We should never get here.
-      NS_ERROR("Got a null child when registering named items!");
-      continue;
-    }
-    RegisterNamedItems(newChild);
+    if (newChild) 
+      RegisterNamedItems(newChild);
   }
 
   return nsDocument::ContentAppended(aContainer, aNewIndexInContainer);
