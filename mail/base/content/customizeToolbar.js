@@ -1,4 +1,3 @@
-/* 
 # The contents of this file are subject to the Netscape Public
 # License Version 1.1 (the "License"); you may not use this file
 # except in compliance with the License. You may obtain a copy of
@@ -21,8 +20,6 @@
 #   David Hyatt (hyatt@apple.com)
 #   Blake Ross (blaker@netscape.com)
 #   Joe Hewitt (hewitt@netscape.com)
-
-*/
 
 const kRowMax = 4;
 const kWindowWidth = 600;

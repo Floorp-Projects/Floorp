@@ -1,3 +1,4 @@
+/* 
 #
 # The contents of this file are subject to the Netscape Public
 # License Version 1.1 (the "License"); you may not use this file
@@ -20,10 +21,11 @@
 # Contributor(s):
 #
 #
+*/ 
 
-# ===== junkMail=======.css ==============================================
-# == Styles for the junk mail dialog
-# ========================================================================
+/*===== junkMail=======.css ==============================================
+  == Styles for the junk mail dialog
+ ======================================================================== */
 
 @import url("chrome://messenger/skin/");
 

@@ -1,9 +1,9 @@
 classic.jar:
-+   skin/classic/messenger/messengercompose/messengercompose.css   (skin/messengercompose.css)
++  skin/classic/messenger/messengercompose/messengercompose.css    (skin/messengercompose.css)
 
 messenger.jar:
 *+  content/messenger/messengercompose/messengercompose.xul        (content/messengercompose.xul)
-+   content/messenger/messengercompose/MsgComposeCommands.js       (content/MsgComposeCommands.js)
+*+  content/messenger/messengercompose/MsgComposeCommands.js       (content/MsgComposeCommands.js)
 
 en-US.jar:
 +   locale/en-US/messenger/messengercompose/messengercompose.dtd   (locale/messengercompose.dtd)
