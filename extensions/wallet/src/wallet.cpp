@@ -1920,7 +1920,7 @@ wallet_InitializeCurrentURL(nsIDocument * doc) {
 #endif
 }
 
-#define SEPARATOR "#*%&"
+#define SEPARATOR "#*%$"
 
 nsAutoString *
 wallet_GetNextInString(char*& ptr) {
@@ -2253,7 +2253,7 @@ WLLT_GetNocaptureListForViewer(nsString& aNocaptureList)
 
 PUBLIC void
 WLLT_PostEdit(nsAutoString walletList) {
-  if (Wallet_KeySet()) {
+  if (!Wallet_KeySet()) {
     return;
   }
 

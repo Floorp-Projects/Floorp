@@ -118,8 +118,8 @@
       fillins.value = "";
       for (i=0; !(i>=selname.length); i++) {
         fillins.value = fillins.value +
-          selname.elements[i].options[selname.elements[i].selectedIndex].value + "#*%&amp;" +
-          selname.elements[i].options[selname.elements[i].selectedIndex].text + "#*%&amp;";
+          selname.elements[i].options[selname.elements[i].selectedIndex].value + "#*%$" +
+          selname.elements[i].options[selname.elements[i].selectedIndex].text + "#*%$";
       }
       var result = "|list|"+list.value+"|fillins|"+fillins.value;
       result += "|url|"+url.value+"|skip|"+skip.checked+"|";
