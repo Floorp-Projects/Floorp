@@ -34,8 +34,8 @@ interface nsIAccessibleEditableText : nsISupports
       */
   void setAttributes (in long startPos, in long endPos,
                       in nsISupports attributes);
-  boolean setTextContents (in wstring text);
-  void insertText (in wstring text, in long length, inout long position);
+  boolean setTextContents (in AString text);
+  void insertText (in AString text, in long length, inout long position);
   void copyText (in long startPos, in long endPos);
   void cutText (in long startPos, in long endPos);
   void deleteText (in long startPos, in long endPos);

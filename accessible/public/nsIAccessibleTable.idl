@@ -31,7 +31,7 @@
 interface nsIAccessibleTable : nsISupports
 {
            attribute nsIAccessible       caption;
-           attribute nsIAccessible       summary;
+           attribute AString           summary;
   readonly attribute long                columns;
   readonly attribute nsIAccessibleTable  columnHeader;
   readonly attribute long                rows;
@@ -57,8 +57,8 @@ interface nsIAccessibleTable : nsISupports
   long getColumnExtentAt (in long row, in long column);
   long getRowExtentAt (in long row, in long column);
 
-  wstring getColumnDescription (in long column);
-  wstring getRowDescription (in long row);
+  AString getColumnDescription (in long column);
+  AString getRowDescription (in long row);
 
   boolean isColumnSelected (in long column);
   boolean isRowSelected (in  long row);

@@ -59,14 +59,14 @@ interface nsIAccessibleText : nsISupports
       * So the methods below might return UTF-16 strings, or they could
       * return "string" values which are UTF-8.
       */
-  wstring getText (in long startOffset, in long endOffset);
+  AString getText (in long startOffset, in long endOffset);
 
-  wstring getTextAfterOffset (in long offset,
+  AString getTextAfterOffset (in long offset,
                               in nsAccessibleTextBoundary boundaryType,
                               out long startOffset,
                               out long endOffset);
 
-  wstring getTextAtOffset (in long offset,
+  AString getTextAtOffset (in long offset,
                            in nsAccessibleTextBoundary boundaryType,
                            out long startOffset,
                            out long endOffset);
@@ -81,7 +81,7 @@ interface nsIAccessibleText : nsISupports
                                  out long rangeStartOffset,
                                  out long rangeEndOffset);
 
-  wstring getTextBeforeOffset (in long offset,
+  AString getTextBeforeOffset (in long offset,
                                in nsAccessibleTextBoundary boundaryType,
                                out long startOffset,
                                out long endOffset);
