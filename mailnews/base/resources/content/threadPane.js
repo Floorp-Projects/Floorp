@@ -115,24 +115,34 @@ function HandleColumnClick(columnID)
     return;
 
   var dbview = GetDBView();
-  // if we're already threaded, clicking the thread icon does a reverse sort by id.
-  if (sortType == nsMsgViewSortType.byThread && (dbview.viewFlags & nsMsgViewFlagsType.kThreadedDisplay))
-    sortType = nsMsgViewSortType.byId;
-  if (sortType == nsMsgViewSortType.byThread && !dbview.supportsThreading)
+  var simpleColumns = false;
+  try {
+    simpleColumns = !pref.getBoolPref("mailnews.thread_pane_column_unthreads");
+  }
+  catch (ex) {
+  }
+  if (sortType == nsMsgViewSortType.byThread) {
+    if (!dbview.supportsThreading)
       return;
-  if (dbview.sortType == sortType) {
-    MsgReverseSortThreadPane();
+
+    if (simpleColumns)
+      MsgToggleThreaded();
+    else if (dbview.viewFlags & nsMsgViewFlagsType.kThreadedDisplay)
+      MsgReverseSortThreadPane();
+    else
+      MsgSortByThread();
   }
   else {
-    try {
-      var flatSort = pref.getBoolPref("mailnews.thread_pane_column_unthreads"); 
-      if (flatSort)
-        dbview.viewFlags &= ~nsMsgViewFlagsType.kThreadedDisplay;
+    if (!simpleColumns && (dbview.viewFlags & nsMsgViewFlagsType.kThreadedDisplay)) {
+      dbview.viewFlags &= ~nsMsgViewFlagsType.kThreadedDisplay;
+      MsgSortThreadPane(sortType);
     }
-    catch (ex) {
+    else if (dbview.sortType == sortType) {
+      MsgReverseSortThreadPane();
     }
-
-    MsgSortThreadPane(sortType);
+    else {
+      MsgSortThreadPane(sortType);
+    }
   }
 }
 
@@ -242,7 +252,8 @@ function MsgSortByThread()
   var dbview = GetDBView();
   if(dbview && !dbview.supportsThreading)
     return;
-  MsgSortThreadPane(nsMsgViewSortType.byThread);
+  dbview.flags |= nsMsgViewFlagsType.kThreadedDisplay;
+  MsgSortThreadPane(nsMsgViewSortType.byId);
 }
 
 function MsgSortThreadPane(sortType)
@@ -266,10 +277,9 @@ function MsgReverseSortThreadPane()
 function MsgToggleThreaded()
 {
   var dbview = GetDBView();
-	curFlags = dbview.viewFlags;
-	dbview.viewFlags = dbview.viewFlags ^ nsMsgViewFlagsType.kThreadedDisplay;
-	dbview.sort(dbview.sortType, dbview.sortOrder); // resort
-  UpdateSortIndicators(dbview.sortType, nsMsgViewSortOrder.ascending);
+  dbview.viewFlags ^= nsMsgViewFlagsType.kThreadedDisplay;
+  dbview.sort(dbview.sortType, dbview.sortOrder); // resort
+  UpdateSortIndicators(dbview.sortType, dbview.sortOrder);
 }
 
 function MsgSortAscending()
