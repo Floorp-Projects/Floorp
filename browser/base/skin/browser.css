@@ -391,88 +391,88 @@ menubutton:not([disabled="true"]):hover:active {
   list-style-image: url("chrome://navigator/skin/icons/btn1-small.gif") !important;
 }*/
 
-toolbar[iconsize="small"] > #back-button {
+toolbar[iconsize="small"]  #back-button {
   list-style-image: url("chrome://browser/skin/back-forward-small.png") !important;
   -moz-image-region: rect(0px 28px 25px 0px);
 }
 
-toolbar[iconsize="small"] > #back-button[buttonover="true"] {
+toolbar[iconsize="small"]  #back-button[buttonover="true"] {
   -moz-image-region: rect(0px 56px 25px 28px);
 }
 
-toolbar[iconsize="small"] > #back-button[disabled="true"] {
+toolbar[iconsize="small"]  #back-button[disabled="true"] {
   -moz-image-region: rect(0px 84px 25px 56px);
 }
 
-toolbar[iconsize="small"] > #back-button[buttondown="true"] {
+toolbar[iconsize="small"]  #back-button[buttondown="true"] {
   -moz-image-region: rect(0px 112px 25px 84px) !important;
 }
 
-toolbar[iconsize="small"] > #forward-button {
+toolbar[iconsize="small"]  #forward-button {
   list-style-image: url("chrome://browser/skin/back-forward-small.png") !important;
   -moz-image-region: rect(25px 28px 50px 0px);
   margin-left: 0px !important;
 }
 
-toolbar[iconsize="small"] > #forward-button[buttonover="true"] {
+toolbar[iconsize="small"]  #forward-button[buttonover="true"] {
   -moz-image-region: rect(25px 56px 50px 28px);
 }
 
-toolbar[iconsize="small"] > #forward-button[buttondown="true"] {
+toolbar[iconsize="small"]  #forward-button[buttondown="true"] {
   -moz-image-region: rect(25px 84px 50px 56px);
 }
 
-toolbar[iconsize="small"] > #forward-button[disabled="true"] {
+toolbar[iconsize="small"]  #forward-button[disabled="true"] {
   -moz-image-region: rect(25px 112px 50px 84px) !important;
 }
 
-toolbar[iconsize="small"] > #reload-button {
+toolbar[iconsize="small"]  #reload-button {
   list-style-image: url("chrome://browser/skin/reload-small.png") !important;
   -moz-image-region: rect(0px 24px 25px 0px);
   margin-right: 3px !important;
 }
 
-toolbar[iconsize="small"] > #reload-button:hover {
+toolbar[iconsize="small"]  #reload-button:hover {
   -moz-image-region: rect(0px 48px 25px 24px);
 }
 
-toolbar[iconsize="small"] > #reload-button:hover:active {
+toolbar[iconsize="small"]  #reload-button:hover:active {
   -moz-image-region: rect(0px 72px 25px 48px);
 }
 
-toolbar[iconsize="small"] > #reload-button[disabled="true"] {
+toolbar[iconsize="small"]  #reload-button[disabled="true"] {
   -moz-image-region: rect(0px 96px 25px 72px) !important;
 }
 
-toolbar[iconsize="small"] > #stop-button {
+toolbar[iconsize="small"]  #stop-button {
   list-style-image: url("chrome://browser/skin/stop-small.png") !important;
   -moz-image-region: rect(0px 24px 25px 0px);
 }
 
-toolbar[iconsize="small"] > #stop-button:hover {
+toolbar[iconsize="small"]  #stop-button:hover {
   -moz-image-region: rect(0px 48px 25px 24px);
 }
 
-toolbar[iconsize="small"] > #stop-button:hover:active {
+toolbar[iconsize="small"]  #stop-button:hover:active {
   -moz-image-region: rect(0px 72px 25px 48px);
 }
 
-toolbar[iconsize="small"] > #stop-button[disabled="true"] {
+toolbar[iconsize="small"]  #stop-button[disabled="true"] {
   -moz-image-region: rect(0px 96px 25px 72px) !important;
 }
 
 
-toolbar[iconsize="small"] > #home {
+toolbar[iconsize="small"]  #home-button {
   margin-left: 3px !important;
   list-style-image: url("chrome://browser/skin/home-small.png") !important;
   -moz-image-region: rect(0 28px 25px 0);
 }
 
-toolbar[iconsize="small"] > #home:hover {
+toolbar[iconsize="small"]  #home-button:hover {
   -moz-image-region: rect(0 56px 25px 28px);
 }
 
-toolbar[iconsize="small"] > #home:hover:active {
+toolbar[iconsize="small"]  #home-button:hover:active {
   -moz-image-region: rect(0 112px 25px 84px);
 }
 
@@ -494,24 +494,24 @@ toolbar[iconsize="small"] > #home:hover:active {
   list-style-image: none !important;
 }*/
 
-toolbar[iconsize="small"] > #print-button {
+toolbar[iconsize="small"] #print-button {
   list-style-image: url("chrome://browser/skin/print-small.png") !important;
   -moz-image-region: rect(0 28px 25px 0);
 }
 
-toolbar[iconsize="small"] > #print-button[buttonover="true"] {
+toolbar[iconsize="small"]  #print-button[buttonover="true"] {
   -moz-image-region: rect(0 56px 25px 28px);
 }
 
-toolbar[iconsize="small"] > #print-button[buttondown="true"] {
+toolbar[iconsize="small"]  #print-button[buttondown="true"] {
   -moz-image-region: rect(0 84px 25px 56px);
 }
 
-toolbar[iconsize="small"] > #print-button[disabled="true"] {
+toolbar[iconsize="small"]  #print-button[disabled="true"] {
   -moz-image-region: rect(0 112px 25px 84px);
 }
 
-toolbar[iconsize="small"] > #search-button > .button-box > .button-text {
+toolbar[iconsize="small"]  #search-button > .button-box > .button-text {
   display: none;
 }
 

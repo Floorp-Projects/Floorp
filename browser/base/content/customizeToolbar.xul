@@ -74,7 +74,7 @@
        <menuitem label="&text.label;"/>
     </menupopup>
   </menulist>
-  <checkbox oncommand="updateIconSize(this.checked);" label="&useSmallIcons.label;"/>
+  <checkbox id="smallicons" oncommand="updateIconSize(this.checked);" label="&useSmallIcons.label;"/>
   <button label="&restoreDefaultSet.label;" oncommand="resetToDefault()"/>
 </box>
 
