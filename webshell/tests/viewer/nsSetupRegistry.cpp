@@ -99,6 +99,10 @@ static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
 static NS_DEFINE_IID(kCFilePickerCID, NS_FILEPICKER_CID);
 static NS_DEFINE_IID(kCPopUpCID,NS_POPUP_CID);
 
+#ifdef IBMBIDI
+static NS_DEFINE_IID(kCBidiKeyboardCID, NS_BIDIKEYBOARD_CID);
+#endif
+
 // widgets
 static NS_DEFINE_IID(kCLabelCID, NS_LABEL_CID);
 static NS_DEFINE_IID(kCButtonCID, NS_BUTTON_CID);
@@ -175,6 +179,10 @@ NS_SetupRegistry()
 #ifdef XP_PC
   nsComponentManager::RegisterComponentLib(kCTimerCID, "Timer", "@mozilla.org/timer;1", WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCTimerManagerCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+#endif
+
+#ifdef IBMBIDI
+  nsComponentManager::RegisterComponentLib(kCBidiKeyboardCID, "Bidi Keyboard", "@mozilla.org/widget/bidikeyboard;1", WIDGET_DLL, PR_FALSE, PR_FALSE);
 #endif
 
 #ifdef XP_MAC
