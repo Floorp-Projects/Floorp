@@ -124,6 +124,11 @@ void nsRegionGTK::SetTo(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 
 void nsRegionGTK::Intersect(const nsIRegion &aRegion)
 {
+  if(!mRegion) {
+    NS_WARNING("mRegion is NULL");
+    return;
+  }
+
   nsRegionGTK * pRegion = (nsRegionGTK *)&aRegion;
 
   GdkRegion *nRegion = ::gdk_regions_intersect(mRegion, pRegion->mRegion);
@@ -133,6 +138,11 @@ void nsRegionGTK::Intersect(const nsIRegion &aRegion)
 
 void nsRegionGTK::Intersect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
+  if(!mRegion) {
+    NS_WARNING("mRegion is NULL");
+    return;
+  }
+
   GdkRegion *tRegion = gdk_region_from_rect(aX, aY, aWidth, aHeight);
 
   GdkRegion *nRegion = ::gdk_regions_intersect(mRegion, tRegion);

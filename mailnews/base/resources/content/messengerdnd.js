@@ -395,7 +395,8 @@ function BeginDragTree(event, tree, selArray, flavor)
       }
       
       //and finally, clip the result to be sure we don't spill over...
-      region.intersectRect(bo.x, bo.y, bo.width, bo.height);
+      if(!region.isEmpty())
+        region.intersectRect(bo.x, bo.y, bo.width, bo.height);
     } catch(ex) {
       dump("Error while building selection region: " + ex + "\n");
       region = null;
