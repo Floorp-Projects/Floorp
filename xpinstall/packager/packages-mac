@@ -221,7 +221,6 @@ viewer:Components:mngdecoder.shlb
 viewer:Components:Necko.shlb 
 viewer:Components:Necko2.shlb
 viewer:Components:necko.xpt 
-viewer:Components:Cache.shlb 
 viewer:Components:cache.xpt
 
 ; LDAP components need to be in the browser for AutoConfig

@@ -123,7 +123,6 @@ Components:layout.xpt
 Components:Necko.shlb     
 Components:necko.xpt     
 Components:Necko2.shlb    
-Components:Cache.shlb
 Components:cache.xpt     
 
 ; imagelib
