@@ -187,35 +187,6 @@ struct nsWebShellInfo {
   }
 };
 
-// a little utility object to push an event queue and pop it when it
-// goes out of scope. should probably be in a file of utility functions.
-class stEventQueueStack {
-public:
-  stEventQueueStack();
-  ~stEventQueueStack();
-  nsresult Success() const { return mPushedStack; }
-private:
-  nsCOMPtr<nsIEventQueueService> mService;
-  nsCOMPtr<nsIEventQueue>        mQueue;
-  nsresult             mGotService,
-                       mPushedStack;
-};
-stEventQueueStack::stEventQueueStack() {
-
-  // ick! this makes bad assumptions about the structure of the service, but
-  // the service manager seems to need to work this way...
-  mService = do_GetService(kEventQueueServiceCID, &mGotService);
-
-  mPushedStack = mGotService;
-  if (NS_SUCCEEDED(mGotService))
-    mService->PushThreadEventQueue(getter_AddRefs(mQueue));
-}
-stEventQueueStack::~stEventQueueStack() {
-  if (NS_SUCCEEDED(mPushedStack))
-    mService->PopThreadEventQueue(mQueue);
-    // more ick!
-}
-
 nsWebShellWindow::nsWebShellWindow() : nsXULWindow()
 {
   NS_INIT_REFCNT();
