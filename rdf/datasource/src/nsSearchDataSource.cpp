@@ -912,6 +912,15 @@ SearchDataSource::GetSearchEngineList()
 	// on Mac, use system's search files
 	nsSpecialSystemDirectory	searchSitesDir(nsSpecialSystemDirectory::Mac_InternetSearchDirectory);
 	nsNativeFileSpec 		nativeDir(searchSitesDir);
+#else
+	// on other platforms, use our search files
+	nsSpecialSystemDirectory	searchSitesDir(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+	// XXX we should get this from prefs?
+	searchSitesDir += "res";
+	searchSitesDir += "rdf";
+	searchSitesDir += "search";
+	nsNativeFileSpec 		nativeDir(searchSitesDir);
+#endif
 	for (nsDirectoryIterator i(nativeDir); i.Exists(); i++)
 	{
 		const nsNativeFileSpec	nativeSpec = (const nsNativeFileSpec &)i;
@@ -982,10 +991,6 @@ SearchDataSource::GetSearchEngineList()
 			}
 		}
 	}
-#else
-	// on other platforms, use our search files
-#endif
-
 	return(rv);
 }
 
