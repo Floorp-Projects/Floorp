@@ -65,6 +65,8 @@ public:
 
   NS_IMETHOD    CollapseToEnd()=0;
 
+  NS_IMETHOD    SelectAllChildren(nsIDOMNode* aParentNode)=0;
+
   NS_IMETHOD    ContainsNode(nsIDOMNode* aNode, PRBool aRecursive, PRBool* aReturn)=0;
 
   NS_IMETHOD    DeleteFromDocument()=0;
@@ -104,6 +106,7 @@ public:
   NS_IMETHOD    Extend(nsIDOMNode* aParentNode, PRInt32 aOffset);  \
   NS_IMETHOD    CollapseToStart();  \
   NS_IMETHOD    CollapseToEnd();  \
+  NS_IMETHOD    SelectAllChildren(nsIDOMNode* aParentNode);  \
   NS_IMETHOD    ContainsNode(nsIDOMNode* aNode, PRBool aRecursive, PRBool* aReturn);  \
   NS_IMETHOD    DeleteFromDocument();  \
   NS_IMETHOD    AddRange(nsIDOMRange* aRange);  \
@@ -132,6 +135,7 @@ public:
   NS_IMETHOD    Extend(nsIDOMNode* aParentNode, PRInt32 aOffset) { return _to Extend(aParentNode, aOffset); }  \
   NS_IMETHOD    CollapseToStart() { return _to CollapseToStart(); }  \
   NS_IMETHOD    CollapseToEnd() { return _to CollapseToEnd(); }  \
+  NS_IMETHOD    SelectAllChildren(nsIDOMNode* aParentNode) { return _to SelectAllChildren(aParentNode); }  \
   NS_IMETHOD    ContainsNode(nsIDOMNode* aNode, PRBool aRecursive, PRBool* aReturn) { return _to ContainsNode(aNode, aRecursive, aReturn); }  \
   NS_IMETHOD    DeleteFromDocument() { return _to DeleteFromDocument(); }  \
   NS_IMETHOD    AddRange(nsIDOMRange* aRange) { return _to AddRange(aRange); }  \

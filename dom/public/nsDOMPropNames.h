@@ -906,6 +906,7 @@
     "selection.rangecount", \
     "selection.removerange", \
     "selection.removeselectionlistener", \
+    "selection.selectallchildren", \
     "selection.sethint", \
     "selection.startbatchchanges", \
     "selection.tostring", \

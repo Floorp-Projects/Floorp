@@ -304,6 +304,9 @@ extern "C" NS_DOM nsresult NS_InitSelectionListenerClass(nsIScriptContext *aCont
       vp = INT_TO_JSVAL(nsIDOMSelectionListener::KEYPRESS_REASON);
       JS_SetProperty(jscontext, constructor, "KEYPRESS_REASON", &vp);
 
+      vp = INT_TO_JSVAL(nsIDOMSelectionListener::SELECTALL_REASON);
+      JS_SetProperty(jscontext, constructor, "SELECTALL_REASON", &vp);
+
     }
 
   }

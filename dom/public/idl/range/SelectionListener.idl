@@ -6,6 +6,7 @@
   const short MOUSEDOWN_REASON=2;/*bitflags*/
   const short MOUSEUP_REASON=4;/*bitflags*/
   const short KEYPRESS_REASON=8;/*bitflags*/
+  const short SELECTALL_REASON=16;/*bitflags*/ /* Select All special command */
 
 	void			notifySelectionChanged(in Document doc, in Selection sel, in short reason);
 };

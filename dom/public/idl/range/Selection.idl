@@ -19,10 +19,11 @@
 		void 		collapse(in Node parentNode, in long offset);
 		void		extend(in Node parentNode, in long offset);
 
-    void    collapseToStart();
-    void    collapseToEnd();
+		void	  collapseToStart();
+		void		collapseToEnd();
+		void		selectAllChildren(in Node parentNode);
 
-		boolean	containsNode(in Node node, in boolean recursive);
+		boolean		containsNode(in Node node, in boolean recursive);
 
 		void		deleteFromDocument();
 
