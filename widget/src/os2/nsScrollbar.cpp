@@ -209,7 +209,7 @@ PRBool nsScrollbar::OnScroll( MPARAM mp1, MPARAM mp2)
          InitEvent( event, msg);
          event.eventStructType = NS_SCROLLBAR_EVENT;
          event.position = newpos;
-         DispatchEventInternal( &event);
+         DispatchWindowEvent( &event);
 
          // Ensure position is still sensible
          newpos = event.position;
