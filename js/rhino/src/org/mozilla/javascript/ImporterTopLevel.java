@@ -76,12 +76,15 @@ public class ImporterTopLevel extends ScriptableObject {
                 Object o = importedPackages.elementAt(i);
                 NativeJavaPackage p = (NativeJavaPackage) o;
                 Object v = p.getPkgProperty(name, start, false);
-                if (!(v instanceof NativeJavaPackage)) {
-                    if (result == NOT_FOUND)
+                if (v != null && !(v instanceof NativeJavaPackage)) {
+                    if (result == NOT_FOUND) {
                         result = v;
-                    else 
-                        throw new EvaluatorException("Ambiguous import: " +
-                                                     result + " and " + v);
+                    } else {
+                        String[] args = { result.toString(), v.toString() };
+                        throw Context.reportRuntimeError(
+                            Context.getMessage("msg.ambig.import", 
+                                               args));
+                    }
                 }
             }
         }
@@ -89,21 +92,33 @@ public class ImporterTopLevel extends ScriptableObject {
     }
     
     public void importClass(Object cl) {
-        if (!(cl instanceof NativeJavaClass))
-            throw new EvaluatorException("not a class");// TODO: better msg
+        if (!(cl instanceof NativeJavaClass)) {
+            String[] args = { Context.toString(cl) };
+            throw Context.reportRuntimeError(
+                Context.getMessage("msg.not.class", args));
+        }
         String s = ((NativeJavaClass) cl).getClassObject().getName();
         String n = s.substring(s.lastIndexOf('.')+1);
-        if (this.has(n, this))
-            throw new EvaluatorException("property " + n + 
-                                         " is already defined");
+        if (this.has(n, this)) {
+            String[] args = { n };
+            throw Context.reportRuntimeError(
+                Context.getMessage("msg.prop.defined", args));
+        }
         this.defineProperty(n, cl, DONTENUM);
     }
     
     public void importPackage(Object pkg) {
         if (importedPackages == null)
             importedPackages = new Vector();
-        if (!(pkg instanceof NativeJavaPackage))
-            throw new EvaluatorException("not a package");// TODO: better msg
+        if (!(pkg instanceof NativeJavaPackage)) {
+            String[] args = { Context.toString(pkg) };
+            throw Context.reportRuntimeError(
+                Context.getMessage("msg.not.pkg", args));
+        }
+        for (int i=0; i < importedPackages.size(); i++) {
+            if (pkg == importedPackages.elementAt(i))
+                return;     // allready in list
+        }
         importedPackages.addElement(pkg);
     }
     
