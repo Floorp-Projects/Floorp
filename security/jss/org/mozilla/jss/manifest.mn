@@ -33,7 +33,7 @@
 
 CORE_DEPTH = ../../../..
 
-MODULE = ninja
+MODULE = jss
 
 DIRS =	hclhacks\
 	policy	\
@@ -48,6 +48,5 @@ DIRS =	hclhacks\
 	pkix	\
 	pkcs7	\
 	pkcs12	\
-	ssl	\
 	tests	\
 	$(NULL)

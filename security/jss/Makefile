@@ -31,9 +31,6 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 
-# don't even try to build for now
-default:
-
 #######################################################################
 # (1) Include initial platform-independent assignments (MANDATORY).   #
 #######################################################################
