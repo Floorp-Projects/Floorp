@@ -34,7 +34,7 @@
 /*
  * CMS recipientInfo methods.
  *
- * $Id: cmsrecinfo.c,v 1.8 2002/12/17 01:39:46 wtc%netscape.com Exp $
+ * $Id: cmsrecinfo.c,v 1.9 2002/12/18 02:06:01 wtc%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -437,15 +437,16 @@ NSS_CMSRecipientInfo_WrapBulkKey(NSSCMSRecipientInfo *ri, PK11SymKey *bulkkey,
     switch (certalgtag) {
     case SEC_OID_PKCS1_RSA_ENCRYPTION:
 	/* wrap the symkey */
-	if (usesSubjKeyID) {
+	if (cert) {
+	    rv = NSS_CMSUtil_EncryptSymKey_RSA(poolp, cert, bulkkey, 
+	                         &ri->ri.keyTransRecipientInfo.encKey);
+ 	    if (rv != SECSuccess)
+		break;
+	} else if (usesSubjKeyID) {
 	    rv = NSS_CMSUtil_EncryptSymKey_RSAPubKey(poolp, extra->pubKey,
 	                         bulkkey, &ri->ri.keyTransRecipientInfo.encKey);
  	    if (rv != SECSuccess)
 		break;
-	} else if (NSS_CMSUtil_EncryptSymKey_RSA(poolp, cert, bulkkey, 
-	                 &ri->ri.keyTransRecipientInfo.encKey) != SECSuccess) {
-	    rv = SECFailure;
-	    break;
 	}
 
 	rv = SECOID_SetAlgorithmID(poolp, &(ri->ri.keyTransRecipientInfo.keyEncAlg), certalgtag, NULL);
