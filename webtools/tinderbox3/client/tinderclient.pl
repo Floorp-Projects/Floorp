@@ -38,7 +38,7 @@ sub create_clients {
       print "EEK @ARGV\n";
   my %args;
   $args{trust} = 1;
-  $args{throttle} = 60;
+  $args{throttle} = 5*60;
   $args{statusinterval} = 15;
   GetOptions(\%args, "config:s", "dir:s",
                      "throttle:i", "url:s",
@@ -48,6 +48,7 @@ sub create_clients {
                      "clobber!", "lowbandwidth!", "statusinterval:s",
                      "upload_ssh_loc:s", "upload_ssh_dir:s", "upload_dir:s",
                      "uploaded_url:s", "distribute:s",
+                     "use_fast_update!",
                      "help|h|?!");
   if ($args{config}) {
     # Go through each line, parse the arguments into @ARGV, and re-call this
@@ -118,6 +119,7 @@ will be used instead.
               "raw_zip" is another useful one, that just zips up everything in
               the dist/bin directory (actually makes a .tgz).
 --raw_zip_name: the project name of the raw build (defaults to "mozilla")
+--use_fast_update: whether or not to use fast-update
 
 CONFIG MODE (SWITCHING TINDERBOX):
   tinderclient.pl --config=<file>
@@ -147,9 +149,15 @@ EOM
     $args{clobber} = 0 if !defined($args{clobber});
     $args{distribute} = "build_zip" if !defined($args{distribute});
     $args{raw_zip_name} = "mozilla" if !defined($args{distribute});
+    $args{use_fast_update} = 1 if !defined($args{use_fast_update});
   }
 
-  push @{$clients}, new TinderClient(\%args, $ARGV[0], $ARGV[1], $original_args);
+  if ($args{dir} && !-d $args{dir}) {
+    die "Directory $args{dir} does not exist!";
+  }
+
+  my $current_args = [ @_ ];
+  push @{$clients}, new TinderClient(\%args, $ARGV[0], $ARGV[1], $original_args, $current_args);
 }
 
 
@@ -175,7 +183,7 @@ sub new {
   $VERSION = "0.1";
   $PROTOCOL_VERSION = "0.1";
 
-  my ($args, $tree, $machine_name, $original_args) = @_;
+  my ($args, $tree, $machine_name, $original_args, $current_args) = @_;
   # The arguments hash
   $this->{ARGS} = $args;
   $this->{CONFIG} = { %{$args} };
@@ -196,6 +204,8 @@ sub new {
   $this->{SYSINFO} = TinderClient::SysInfo::get_sysinfo();
   # the original program arguments in case we have to upgrade
   $this->{ORIGINAL_ARGS} = $original_args;
+  # the original program arguments in case we have to upgrade
+  $this->{CURRENT_ARGS} = $current_args;
   # persistent vars for the build modules
   $this->{PERSISTENT_VARS} = {};
 
@@ -581,7 +591,7 @@ Compiler: $this->{SYSINFO}{COMPILER} $this->{SYSINFO}{COMPILER_VERSION}
 Tinderbox Client: $TinderClient::VERSION
 Tinderbox Client Last Modified: @{[$this->get_prog_mtime()]}
 Tinderbox Protocol: $TinderClient::PROTOCOL_VERSION
-Arguments: @{[join ' ', @{$this->{ORIGINAL_ARGS}}]}
+Arguments: @{[join ' ', @{$this->{CURRENT_ARGS}}]}
 URL: $this->{CONFIG}{url}
 Tree: $this->{TREE}
 Commands: @{[join(' ', sort keys %{$this->{COMMANDS}})]}
@@ -611,6 +621,9 @@ sub get_prog_mtime {
 
 sub maybe_upgrade {
   my $this = shift;
+  my $current_dir = getcwd();
+  $this->print_log("---> cd $this->{BUILD_VARS}{olddir} <---\n");
+  chdir($this->{BUILD_VARS}{olddir});
   if ($this->{CONFIG}{upgrade} && $this->{CONFIG}{upgrade_url}) {
     my $time_str = $this->get_prog_mtime();
     $this->start_section("CHECKING FOR UPGRADE");
@@ -647,7 +660,6 @@ sub maybe_upgrade {
         eval {
           # Throttle just in case we get in an upgrade client loop
           $this->maybe_throttle();
-          chdir($this->{BUILD_VARS}{olddir});
           exec("perl", $0, @{$this->{ORIGINAL_ARGS}});
         };
         exit(0);
@@ -659,6 +671,8 @@ sub maybe_upgrade {
     }
     $this->end_section("CHECKING FOR UPGRADE");
   }
+  $this->print_log("---> cd $current_dir <---\n");
+  chdir($current_dir);
 }
 
 sub call_module {
@@ -682,7 +696,10 @@ sub build_iteration {
 
   if ($this->{ARGS}{dir}) {
     $this->{BUILD_VARS}{olddir} = getcwd();
-    chdir($this->{ARGS}{dir});
+    if (!chdir($this->{ARGS}{dir})) {
+      print "Could not change to directory $this->{ARGS}{dir}!\n";
+      return;
+    }
   }
 
   # Open the log
@@ -693,7 +710,6 @@ sub build_iteration {
   # Send build start notification
   #
   if (!$this->build_start()) {
-    $this->maybe_throttle();
     return;
   }
 
@@ -724,13 +740,12 @@ sub build_iteration {
   # Send build finish notification
   $this->build_finish($err || 100);
 
-  # Determine if we need to throttle
-  $this->maybe_throttle();
-
   # Change back to where we were before this iteration
   if (defined($this->{BUILD_VARS}{olddir})) {
+    $this->print_log("---> cd $this->{ARGS}{olddir} <---\n");
     chdir($this->{BUILD_VARS}{olddir});
   }
+  $this->maybe_throttle();
 }
 
 
@@ -835,10 +850,12 @@ sub get_config {
       $build_vars->{MOZCONFIG} = $1;
     }
   }
+  $client->get_field($content_ref, "throttle");
   $client->get_field($content_ref, "cvs_co_date");
   $client->get_field($content_ref, "cvsroot");
   $client->get_field($content_ref, "clobber");
   $client->get_field($content_ref, "branch");
+  $client->get_field($content_ref, "use_fast_update");
   if ($config->{usepatches}) {
     $build_vars->{PATCHES} = [];
     while (${$content_ref} =~ /<patch[^>]+id\s*=\s*['"](\d+)['"]/g) {
@@ -919,6 +936,7 @@ sub do_action {
   #
   # Change to mozilla directory
   #
+  $client->print_log("---> cd mozilla <---\n");
   if (!chdir("mozilla")) {
     $client->print_log("Could not cd mozilla!");
     return 200;
@@ -1042,12 +1060,14 @@ EOM
     # - we were given a "checkout" command or this is the first checkout
     # - the cvs_co_date changed
     # - the branch changed
+    # - use_fast_update is off
     #
     # All other times we do fast-update.
     #
     if ($config->{cvs_co_date} || $please_checkout ||
         (time - $persistent_vars->{LAST_CHECKOUT}) >= (24*60*60) ||
-        get_cvs_branch($client) ne $config->{branch}) {
+        get_cvs_branch($client) ne $config->{branch} ||
+        !$config->{use_fast_update}) {
       $ENV{MOZ_CO_FLAGS} = "-PA";
       $err = $client->do_command("make -f client.mk checkout", $init_tree_status+1, $parsing_code, $max_cvs_idle_time);
       $persistent_vars->{LAST_CHECKOUT} = time;
