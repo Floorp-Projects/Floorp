@@ -287,11 +287,14 @@ static JSObject_RegisterNativeMethods(JNIEnv* jEnv)
         "toString", "()Ljava/lang/String;", (void*)&Java_netscape_javascript_JSObject_toString,
         "getWindow", "(Ljava/applet/Applet;)Lnetscape/javascript/JSObject;", (void*)&Java_netscape_javascript_JSObject_getWindow,
         "finalize", "()V", (void*)&Java_netscape_javascript_JSObject_finalize,
-        "equals", "(Ljava/lang/Object;)Z", (void*)&Java_netscape_javascript_JSObject_equals
+        /* "equals", "(Ljava/lang/Object;)Z", (void*)&Java_netscape_javascript_JSObject_equals */
     };
     (*jEnv)->RegisterNatives(jEnv, njJSObject, nativeMethods, sizeof(nativeMethods) / sizeof(JNINativeMethod));
-    
-    // call the initClass method, since we nailed the static initializer for testing.
+    if ((*jEnv)->ExceptionOccurred(jEnv)) {
+        report_java_initialization_error(jEnv, "Couldn't initialize JSObject native methods.");
+        (*jEnv)->ExceptionClear(jEnv);
+    }
+    /* call the initClass method, since we nailed the static initializer for testing. */
     Java_netscape_javascript_JSObject_initClass(jEnv, njJSObject);
 }
 
