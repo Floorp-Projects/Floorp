@@ -601,7 +601,7 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 
     if (mOriginalHTMLBody)
     {
-      PRUint32    origLen = nsCRT::strlen(mOriginalHTMLBody);
+      PRUint32    origLen = strlen(mOriginalHTMLBody);
       status = tempfile.write(mOriginalHTMLBody, origLen);
       if (status < int(origLen)) 
       {
@@ -1277,10 +1277,10 @@ nsresult nsMsgComposeAndSend::BeginCryptoEncapsulation ()
       // too many string conversions....
 	    int status = 0;
 	    char * recipients = (char *)
-      PR_MALLOC((mCompFields->GetTo()  ? nsCRT::strlen(mCompFields->GetTo())  : 0) +
-				 (mCompFields->GetCc()  ? nsCRT::strlen(mCompFields->GetCc())  : 0) +
-				 (mCompFields->GetBcc() ? nsCRT::strlen(mCompFields->GetBcc()) : 0) +
-				 (mCompFields->GetNewsgroups() ? nsCRT::strlen(mCompFields->GetNewsgroups()) : 0) + 20);
+      PR_MALLOC((mCompFields->GetTo()  ? strlen(mCompFields->GetTo())  : 0) +
+				 (mCompFields->GetCc()  ? strlen(mCompFields->GetCc())  : 0) +
+				 (mCompFields->GetBcc() ? strlen(mCompFields->GetBcc()) : 0) +
+				 (mCompFields->GetNewsgroups() ? strlen(mCompFields->GetNewsgroups()) : 0) + 20);
 	    if (!recipients) return NS_ERROR_OUT_OF_MEMORY;
 
       *recipients = 0;
@@ -4177,7 +4177,7 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
       char *tmpLine = PR_smprintf(HEADER_X_MOZILLA_IDENTITY_KEY ": %s" CRLF, key);
       if (tmpLine)
       {
-        PRInt32 len = nsCRT::strlen(tmpLine);
+        PRInt32 len = strlen(tmpLine);
         n = tempOutfile.write(tmpLine, len);
         if (n != len)
         {

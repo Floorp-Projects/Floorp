@@ -2033,7 +2033,7 @@ NS_IMETHODIMP nsAddrDatabase::AddLdifListMember(nsIMdbRow* listRow, const char* 
     nsCAutoString valueString(value);
     nsCAutoString email;
     PRInt32 emailPos = valueString.Find("mail=");
-    emailPos += nsCRT::strlen("mail=");
+    emailPos += strlen("mail=");
     valueString.Right(email, valueString.Length() - emailPos);
     char* emailAddress = ToNewCString(email);
     nsIMdbRow    *cardRow = nsnull;    

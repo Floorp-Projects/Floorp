@@ -786,7 +786,7 @@ void nsParseMailMessageState::GetAggregateHeader (nsVoidArray &list, struct mess
 	{
 		header = (struct message_header*) list.ElementAt(i);
 		length += (header->length + 1); //+ for ","
-		NS_ASSERTION(header->length == (PRInt32)nsCRT::strlen(header->value), "header corrupted");
+		NS_ASSERTION(header->length == (PRInt32)strlen(header->value), "header corrupted");
 	}
 
 	if (length > 0)
@@ -1042,7 +1042,7 @@ int nsParseMailMessageState::InternSubject (struct message_header *header)
 		return 0;
 	}
 
-	NS_ASSERTION (header->length == (short) nsCRT::strlen(header->value), "subject corrupt while parsing message");
+	NS_ASSERTION (header->length == (short) strlen(header->value), "subject corrupt while parsing message");
 
 	key = (char *) header->value;  /* #### const evilness */
 
@@ -1089,7 +1089,7 @@ nsresult nsParseMailMessageState::InternRfc822 (struct message_header *header,
 	if (!header || header->length == 0)
 		return NS_OK;
 
-	NS_ASSERTION (header->length == (short) nsCRT::strlen (header->value), "invalid message_header");
+	NS_ASSERTION (header->length == (short) strlen (header->value), "invalid message_header");
 	NS_ASSERTION (ret_name != nsnull, "null ret_name");
 
 	if (m_HeaderAddressParser)
@@ -1238,12 +1238,12 @@ int nsParseMailMessageState::FinalizeHeaders()
       group in the summary list, and only being able to sort on the first
         group rather than the whole list.  It's worth it. */
         char * ch;
-        NS_ASSERTION (recipient->length == (PRUint16) nsCRT::strlen(recipient->value), "invalid recipient");
+        NS_ASSERTION (recipient->length == (PRUint16) strlen(recipient->value), "invalid recipient");
         ch = PL_strchr(recipient->value, ',');
         if (ch)
         {
           *ch = 0;
-          recipient->length = nsCRT::strlen(recipient->value);
+          recipient->length = strlen(recipient->value);
         }
         m_newMsgHdr->SetRecipients(recipient->value);
       }
@@ -1305,7 +1305,7 @@ int nsParseMailMessageState::FinalizeHeaders()
             md5_bin[8], md5_bin[9], md5_bin[10],md5_bin[11],
             md5_bin[12],md5_bin[13],md5_bin[14],md5_bin[15]);
           md5_header.value = md5_data;
-          md5_header.length = nsCRT::strlen(md5_data);
+          md5_header.length = strlen(md5_data);
           id = &md5_header;
         }
         

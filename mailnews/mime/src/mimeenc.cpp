@@ -354,7 +354,7 @@ mime_decode_uue_buffer (MimeDecoderData *data,
 		 we weren't called with a buffer that ended on a line boundary.)
 	   */
 	  {
-		char *out = line + nsCRT::strlen(line);
+		char *out = line + strlen(line);
 		while (input_length > 0 &&
 			   out < line_end)
 		  {
@@ -450,7 +450,7 @@ mime_decode_uue_buffer (MimeDecoderData *data,
 
 		  /* all the parens and casts are because gcc was doing something evil.
 		   */
-		  lost = ((long) i) - (((((long) nsCRT::strlen (in)) - 2L) * 3L) / 4L);
+		  lost = ((long) i) - (((((long) strlen (in)) - 2L) * 3L) / 4L);
 
 		  if (lost > 0) /* Short line!! */
 			{
@@ -713,7 +713,7 @@ mime_uuencode_buffer(MimeEncoderData *data,
 	{
 		char firstLine[256];
 		PR_snprintf(firstLine, sizeof(firstLine), "begin 644 %s\015\012", data->filename ? data->filename : "");
-		data->write_buffer(firstLine, nsCRT::strlen(firstLine), data->closure);
+		data->write_buffer(firstLine, strlen(firstLine), data->closure);
 		data->uue_wrote_begin = PR_TRUE;
 		data->current_column = 1; /* initialization unique to uuencode */
 	}
@@ -766,7 +766,7 @@ mime_uuencode_finish(MimeEncoderData *data)
 	}
 
 	/* Write 'end' on a line by itself. */
-	return data->write_buffer(endStr, nsCRT::strlen(endStr), data->closure);
+	return data->write_buffer(endStr, strlen(endStr), data->closure);
 }
 
 #undef ENC

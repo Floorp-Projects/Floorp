@@ -2779,7 +2779,7 @@ nsresult nsMsgDatabase::RowCellColumnToMime2DecodedString(nsIMdbRow *row, mdb_to
   nsresult err = NS_OK;
   const char *nakedString = nsnull;
   err = RowCellColumnToConstCharPtr(row, columnToken, &nakedString);
-  if (NS_SUCCEEDED(err) && nakedString && nsCRT::strlen(nakedString))
+  if (NS_SUCCEEDED(err) && nakedString && strlen(nakedString))
   {
     GetMimeConverter();
     if (m_mimeConverter) 

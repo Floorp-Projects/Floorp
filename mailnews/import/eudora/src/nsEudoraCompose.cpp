@@ -176,12 +176,12 @@ nsEudoraCompose::nsEudoraCompose()
 	m_pIdentity = nsnull;
 	m_pHeaders = p_test_headers;
 	if (m_pHeaders)
-		m_headerLen = nsCRT::strlen( m_pHeaders);
+		m_headerLen = strlen( m_pHeaders);
 	else
 		m_headerLen = 0;
 	m_pBody = p_test_body;
 	if (m_pBody)
-		m_bodyLen = nsCRT::strlen( m_pBody);
+		m_bodyLen = strlen( m_pBody);
 	else
 		m_bodyLen = 0;
 
@@ -391,7 +391,7 @@ void nsEudoraCompose::GetHeaderValue( const char *pData, PRInt32 dataLen, const 
 		return;
 
 	PRInt32	start = 0;
-	PRInt32 len = nsCRT::strlen( pHeader);
+	PRInt32 len = strlen( pHeader);
 	const char *pChar = pData;
 	if (!nsCRT::strncasecmp( pHeader, pData, len)) {
 		start = len;

@@ -2513,7 +2513,7 @@ nsMsgComposeSendListener::RemoveCurrentDraftMessage(nsIMsgCompose *compObj, PRBo
   NS_ASSERTION((NS_SUCCEEDED(rv) && (curDraftIdURL)), "RemoveCurrentDraftMessage can't get draft id");
 
   // Skip if no draft id (probably a new draft msg).
-  if (NS_SUCCEEDED(rv) && curDraftIdURL.get() && nsCRT::strlen(curDraftIdURL.get()))
+  if (NS_SUCCEEDED(rv) && curDraftIdURL.get() && strlen(curDraftIdURL.get()))
   { 
     nsCOMPtr <nsIMsgDBHdr> msgDBHdr;
     rv = GetMsgDBHdrFromURI(curDraftIdURL, getter_AddRefs(msgDBHdr));

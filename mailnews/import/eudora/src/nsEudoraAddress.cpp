@@ -119,7 +119,7 @@ nsresult nsEudoraAddress::ImportAddresses( PRUint32 *pBytes, PRBool *pAbort, con
 		if (wasTruncated)
 			pLine[kEudoraAddressBufferSz - 1] = 0;
 		if (NS_SUCCEEDED( rv)) {
-			PRInt32	len = nsCRT::strlen( pLine);
+			PRInt32	len = strlen( pLine);
 			ProcessLine( pLine, len, errors);
 			rv = pSrc->Eof( &eof);
 			if (pBytes)

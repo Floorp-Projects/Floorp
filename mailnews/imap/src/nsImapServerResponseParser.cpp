@@ -232,7 +232,7 @@ void nsImapServerResponseParser::ParseIMAPServerResponse(const char *currentComm
 						" didn't get the number of tagged responses we expected");
 					numberOfTaggedResponsesReceived = fNumberOfTaggedResponsesExpected;
           if (commandToken && !nsCRT::strcasecmp(commandToken, "authenticate") && placeInTokenString && 
-            !nsCRT::strncasecmp(placeInTokenString, "CRAM-MD5", nsCRT::strlen("CRAM-MD5")))
+            !nsCRT::strncasecmp(placeInTokenString, "CRAM-MD5", strlen("CRAM-MD5")))
           {
             // we need to store the digest from the server if we are using CRAM-MD5. 
             cramResponse_data();
@@ -605,8 +605,8 @@ void nsImapServerResponseParser::response_data()
 							fCurrentResponseUID = atoi(fNextToken);
 							// if this token ends in ')', then it is the last token
 							// else we advance
-							if ( *(fNextToken + nsCRT::strlen(fNextToken) - 1) == ')')
-								fNextToken += nsCRT::strlen(fNextToken) - 1;
+							if ( *(fNextToken + strlen(fNextToken) - 1) == ')')
+								fNextToken += strlen(fNextToken) - 1;
 						}
 					}
 					else if (!PL_strcasecmp(fNextToken, "MESSAGES"))
@@ -617,8 +617,8 @@ void nsImapServerResponseParser::response_data()
 							fNumberOfExistingMessages = atoi(fNextToken);
 							// if this token ends in ')', then it is the last token
 							// else we advance
-							if ( *(fNextToken + nsCRT::strlen(fNextToken) - 1) == ')')
-								fNextToken += nsCRT::strlen(fNextToken) - 1;
+							if ( *(fNextToken + strlen(fNextToken) - 1) == ')')
+								fNextToken += strlen(fNextToken) - 1;
 						}
 					}
 					else if (!PL_strcasecmp(fNextToken, "UNSEEN"))
@@ -629,8 +629,8 @@ void nsImapServerResponseParser::response_data()
 							fNumberOfUnseenMessages = atoi(fNextToken);
 							// if this token ends in ')', then it is the last token
 							// else we advance
-							if ( *(fNextToken + nsCRT::strlen(fNextToken) - 1) == ')')
-								fNextToken += nsCRT::strlen(fNextToken) - 1;
+							if ( *(fNextToken + strlen(fNextToken) - 1) == ')')
+								fNextToken += strlen(fNextToken) - 1;
 						}
 					}
 					else if (*fNextToken == ')')
@@ -809,7 +809,7 @@ void nsImapServerResponseParser::mailbox_list(PRBool discoveredFromLsub)
 				boxSpec->box_flags |= kNoselect;	
 			// we ignore flag extensions
 			
-			endOfFlags = *(fNextToken + nsCRT::strlen(fNextToken) - 1) == ')';
+			endOfFlags = *(fNextToken + strlen(fNextToken) - 1) == ')';
 			fNextToken = GetNextToken();
 		} while (!endOfFlags && ContinueParse());
 		
@@ -1035,8 +1035,8 @@ void nsImapServerResponseParser::msg_fetch()
 				
 				// if this token ends in ')', then it is the last token
 				// else we advance
-				if ( *(fNextToken + nsCRT::strlen(fNextToken) - 1) == ')')
-					fNextToken += nsCRT::strlen(fNextToken) - 1;
+				if ( *(fNextToken + strlen(fNextToken) - 1) == ')')
+					fNextToken += strlen(fNextToken) - 1;
 				else
 					fNextToken = GetNextToken();
 			}
@@ -1069,7 +1069,7 @@ void nsImapServerResponseParser::msg_fetch()
 				fDownloadingHeaders = PR_TRUE;
         BeginMessageDownload(MESSAGE_RFC822); // initialize header parser
 				// specific message header fields
-				while (ContinueParse() && fNextToken[nsCRT::strlen(fNextToken)-1] != ']')
+				while (ContinueParse() && fNextToken[strlen(fNextToken)-1] != ']')
 					fNextToken = GetNextToken();
 				if (ContinueParse())
 				{
@@ -1095,7 +1095,7 @@ void nsImapServerResponseParser::msg_fetch()
 							{
 								if (PL_strstr(fNextToken, "FIELDS"))
 								{
-									while (ContinueParse() && fNextToken[nsCRT::strlen(fNextToken)-1] != ']')
+									while (ContinueParse() && fNextToken[strlen(fNextToken)-1] != ']')
 										fNextToken = GetNextToken();
 								}
 								if (ContinueParse())
@@ -1174,8 +1174,8 @@ void nsImapServerResponseParser::msg_fetch()
 				
 				// if this token ends in ')', then it is the last token
 				// else we advance
-				if ( *(fNextToken + nsCRT::strlen(fNextToken) - 1) == ')')
-					fNextToken += nsCRT::strlen(fNextToken) - 1;
+				if ( *(fNextToken + strlen(fNextToken) - 1) == ')')
+					fNextToken += strlen(fNextToken) - 1;
 				else
 					fNextToken = GetNextToken();
 			}
@@ -1617,7 +1617,7 @@ void nsImapServerResponseParser::resp_text_code()
 {
 	// this is a special case way of advancing the token
 	// strtok won't break up "[ALERT]" into separate tokens
-	if (nsCRT::strlen(fNextToken) > 1)
+	if (strlen(fNextToken) > 1)
 		fNextToken++;
 	else 
 		fNextToken = GetNextToken();
@@ -2471,7 +2471,7 @@ PRBool nsImapServerResponseParser::msg_fetch_literal(PRBool chunk, PRInt32 origi
 
 			if (ContinueParse())
 			{
-				charsReadSoFar += nsCRT::strlen(fCurrentLine);
+				charsReadSoFar += strlen(fCurrentLine);
 				if (!fDownloadingHeaders && fCurrentCommandIsSingleMessageFetch)
 				{
 					fServerConnection.ProgressEventFunctionUsingId(IMAP_DOWNLOADING_MESSAGE);
@@ -2480,7 +2480,7 @@ PRBool nsImapServerResponseParser::msg_fetch_literal(PRBool chunk, PRInt32 origi
 				}
 				if (charsReadSoFar > numberOfCharsInThisChunk)
 				{	// this is rare.  If this msg ends in the middle of a line then only display the actual message.
-					char *displayEndOfLine = (fCurrentLine + nsCRT::strlen(fCurrentLine) - (charsReadSoFar - numberOfCharsInThisChunk));
+					char *displayEndOfLine = (fCurrentLine + strlen(fCurrentLine) - (charsReadSoFar - numberOfCharsInThisChunk));
 					char saveit = *displayEndOfLine;
 					*displayEndOfLine = 0;
 					fServerConnection.HandleMessageDownLoadLine(fCurrentLine, !lastChunk);
@@ -2489,7 +2489,7 @@ PRBool nsImapServerResponseParser::msg_fetch_literal(PRBool chunk, PRInt32 origi
 				}
 				else
 				{
-					lastCRLFwasCRCRLF = (*(fCurrentLine + nsCRT::strlen(fCurrentLine) - 1) == nsCRT::CR);
+					lastCRLFwasCRCRLF = (*(fCurrentLine + strlen(fCurrentLine) - 1) == nsCRT::CR);
 					fServerConnection.HandleMessageDownLoadLine(fCurrentLine, !lastChunk && (charsReadSoFar == numberOfCharsInThisChunk));
 				}
 			}
@@ -2507,7 +2507,7 @@ PRBool nsImapServerResponseParser::msg_fetch_literal(PRBool chunk, PRInt32 origi
 			// move the lexical analyzer state to the end of this message because this message
 			// fetch ends in the middle of this line.
 			//fCurrentTokenPlaceHolder = fLineOfTokens + nsCRT::strlen(fCurrentLine) - (charsReadSoFar - numberOfCharsInThisChunk);
-			AdvanceTokenizerStartingPoint(nsCRT::strlen(fCurrentLine) - (charsReadSoFar - numberOfCharsInThisChunk));
+			AdvanceTokenizerStartingPoint(strlen(fCurrentLine) - (charsReadSoFar - numberOfCharsInThisChunk));
 			fNextToken = GetNextToken();
 		}
 		else

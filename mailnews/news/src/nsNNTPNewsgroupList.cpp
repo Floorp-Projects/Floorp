@@ -506,7 +506,7 @@ nsNNTPNewsgroupList::ParseLine(char *line, PRUint32 * message_number)
 
 	{
 		const char *subject = line;  /* #### const evilness */
-		PRUint32 subjectLen = nsCRT::strlen(line);
+		PRUint32 subjectLen = strlen(line);
 
 		PRUint32 flags;
 		rv = newMsgHdr->GetFlags(&flags);

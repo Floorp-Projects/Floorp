@@ -315,7 +315,7 @@ PRBool ImportOutFile::WriteStrAtMarker( int markerID, const char *pStr)
 	if (NS_FAILED( rv))
 		return( PR_FALSE);
 	PRInt32 written;
-	rv = m_pFile->Write( pStr, nsCRT::strlen( pStr), &written);
+	rv = m_pFile->Write( pStr, strlen( pStr), &written);
 	if (NS_FAILED( rv))
 		return( PR_FALSE);
 

@@ -430,7 +430,7 @@ nsMessengerWinIntegration::Init()
   char appPath[_MAX_PATH] = {0};
   GetModuleFileName(nsnull, appPath, sizeof(appPath));
   WORD wideFormatAppPath[_MAX_PATH*2] = {0};
-  MultiByteToWideChar(CP_ACP, 0, appPath, nsCRT::strlen(appPath), wideFormatAppPath, _MAX_PATH*2);
+  MultiByteToWideChar(CP_ACP, 0, appPath, strlen(appPath), wideFormatAppPath, _MAX_PATH*2);
   mAppName.Assign((PRUnichar *)wideFormatAppPath);
 
   rv = ResetCurrent();

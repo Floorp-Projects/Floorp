@@ -110,7 +110,7 @@ MimeTextBuildPrefixCSS(PRInt32    quotedSizeSetting,   // mail.quoted_size
     break;
   }
   
-  if (citationColor && nsCRT::strlen(citationColor) != 0)
+  if (citationColor && strlen(citationColor) != 0)
   {
     formatString += "color: ";
     formatString += citationColor;
@@ -365,7 +365,7 @@ MimeInlineTextPlain_parse_line (char *line, PRInt32 length, MimeObject *obj)
         char *style = MimeTextBuildPrefixCSS(text->mQuotedSizeSetting,
                                              text->mQuotedStyleSetting,
                                              text->mCitationColor);
-        if (!plainHTML && style && nsCRT::strlen(style))
+        if (!plainHTML && style && strlen(style))
         {
           prefaceResultStr += "<blockquote type=cite style=\"";
           prefaceResultStr += style;

@@ -1010,7 +1010,7 @@ PRBool PR_CALLBACK nsMsgAccountManager::cleanupOnExit(nsHashKey *aKey, void *aDa
            server->GetPassword(getter_Copies(passwd));
          }
          if (!isImap || (isImap && (!serverRequiresPasswordForAuthentication || (passwd && 
-                        nsCRT::strlen((const char*) passwd)))))
+                        strlen((const char*) passwd)))))
          {
            nsCOMPtr<nsIUrlListener> urlListener;
            nsCOMPtr<nsIMsgAccountManager> accountManager = 

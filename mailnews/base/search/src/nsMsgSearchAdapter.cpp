@@ -289,7 +289,7 @@ nsMsgSearchAdapter::EscapeQuoteImapSearchProtocol(const PRUnichar *imapCommand)
 
 char *nsMsgSearchAdapter::UnEscapeSearchUrl (const char *commandSpecificData)
 {
-  char *result = (char*) PR_Malloc (nsCRT::strlen(commandSpecificData) + 1);
+  char *result = (char*) PR_Malloc (strlen(commandSpecificData) + 1);
 	if (result)
 	{
 		char *resultPtr = result;
@@ -493,9 +493,9 @@ nsresult nsMsgSearchAdapter::EncodeImapTerm (nsIMsgSearchTerm *term, PRBool real
     {
       nsXPIDLCString arbitraryHeaderTerm;
       term->GetArbitraryHeader(getter_Copies(arbitraryHeaderTerm));
-      if (nsCRT::strlen((const char *) arbitraryHeaderTerm) > 0)
+      if (strlen((const char *) arbitraryHeaderTerm) > 0)
 		  {
-			  arbitraryHeader = new char [nsCRT::strlen((const char *)arbitraryHeaderTerm) + 6];  // 6 bytes for SPACE \" .... \" SPACE
+			  arbitraryHeader = new char [strlen((const char *)arbitraryHeaderTerm) + 6];  // 6 bytes for SPACE \" .... \" SPACE
 			  if (!arbitraryHeader)
 				  return NS_ERROR_OUT_OF_MEMORY;
 			  arbitraryHeader[0] = '\0';
@@ -604,7 +604,7 @@ nsresult nsMsgSearchAdapter::EncodeImapTerm (nsIMsgSearchTerm *term, PRBool real
 			{
 				char *oldValue = value;
 				// max escaped length is one extra character for every character in the cmd.
-				char *newValue = (char*)PR_Malloc(sizeof(char) * (2*nsCRT::strlen(value) + 1));
+				char *newValue = (char*)PR_Malloc(sizeof(char) * (2*strlen(value) + 1));
 				if (newValue)
 				{
 					char *p = newValue;
@@ -631,10 +631,10 @@ nsresult nsMsgSearchAdapter::EncodeImapTerm (nsIMsgSearchTerm *term, PRBool real
 		}
 	}
 
-	int len = nsCRT::strlen(whichMnemonic) + nsCRT::strlen(value) + (useNot ? nsCRT::strlen(m_kImapNot) : 0) + 
-		(useQuotes ? 2 : 0) + nsCRT::strlen(m_kImapHeader) + 
-		(orHeaderMnemonic ? (nsCRT::strlen(m_kImapHeader) + nsCRT::strlen(m_kImapOr) + (useNot ? nsCRT::strlen(m_kImapNot) : 0) + 
-		nsCRT::strlen(orHeaderMnemonic) + nsCRT::strlen(value) + 2 /*""*/) : 0) + 1;
+	int len = strlen(whichMnemonic) + strlen(value) + (useNot ? strlen(m_kImapNot) : 0) + 
+		(useQuotes ? 2 : 0) + strlen(m_kImapHeader) + 
+		(orHeaderMnemonic ? (strlen(m_kImapHeader) + strlen(m_kImapOr) + (useNot ? strlen(m_kImapNot) : 0) + 
+		strlen(orHeaderMnemonic) + strlen(value) + 2 /*""*/) : 0) + 1;
 	char *encoding = new char[len];
 	if (encoding)
 	{
@@ -664,8 +664,8 @@ nsresult nsMsgSearchAdapter::EncodeImapTerm (nsIMsgSearchTerm *term, PRBool real
 		
 		// kmcentee, don't let the encoding end with whitespace, 
 		// this throws off later url STRCMP
-		if (*encoding && *(encoding + nsCRT::strlen(encoding) - 1) == ' ')
-			*(encoding + nsCRT::strlen(encoding) - 1) = '\0';
+		if (*encoding && *(encoding + strlen(encoding) - 1) == ' ')
+			*(encoding + strlen(encoding) - 1) = '\0';
 	}
 
 	if (value && valueWasAllocated)
@@ -728,7 +728,7 @@ nsresult nsMsgSearchAdapter::EncodeImap (char **ppOutEncoding, nsISupportsArray 
 		err = EncodeImapTerm (pTerm, reallyDredd, srcCharset, destCharset, &termEncodings[i]);
 		if (NS_SUCCEEDED(err) && nsnull != termEncodings[i])
 		{
-			encodingLength += nsCRT::strlen(termEncodings[i]) + 1;
+			encodingLength += strlen(termEncodings[i]) + 1;
 			expression = expression->AddSearchTerm(pTerm,termEncodings[i]);
 		}
 	}
@@ -736,7 +736,7 @@ nsresult nsMsgSearchAdapter::EncodeImap (char **ppOutEncoding, nsISupportsArray 
 	if (NS_SUCCEEDED(err)) 
 	{
 		// Catenate the intermediate encodings together into a big string
-		char *totalEncoding = new char [encodingLength + (!reallyDredd ? nsCRT::strlen(m_kImapUnDeleted) : 0) + 1];
+		char *totalEncoding = new char [encodingLength + (!reallyDredd ? strlen(m_kImapUnDeleted) : 0) + 1];
 		nsCString encodingBuff;
 
 		if (totalEncoding)
@@ -750,7 +750,7 @@ nsresult nsMsgSearchAdapter::EncodeImap (char **ppOutEncoding, nsISupportsArray 
 			if (!reallyDredd)
 			{
 				encodingBuff.Append(m_kImapUnDeleted);
-				offset = nsCRT::strlen(m_kImapUnDeleted);
+				offset = strlen(m_kImapUnDeleted);
 			}
 
 			expression->GenerateEncodeStr(&encodingBuff);

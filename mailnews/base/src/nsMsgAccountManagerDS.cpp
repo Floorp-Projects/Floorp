@@ -341,13 +341,13 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
             NS_ENSURE_SUCCESS(rv,rv);
 
             // make sure the pointer math we're about to do is safe.
-            NS_ENSURE_TRUE(sourceValue && (nsCRT::strlen(sourceValue) > nsCRT::strlen(NC_RDF_PAGETITLE_PREFIX)), NS_ERROR_UNEXPECTED);
+            NS_ENSURE_TRUE(sourceValue && (strlen(sourceValue) > strlen(NC_RDF_PAGETITLE_PREFIX)), NS_ERROR_UNEXPECTED);
 
             nsCAutoString bundleURL;
             bundleURL = "chrome://messenger/locale/";
             bundleURL += "am-";
             // turn NC#PageTitlefoobar into foobar, so we can get the am-foobar.properties bundle
-            bundleURL += (sourceValue + nsCRT::strlen(NC_RDF_PAGETITLE_PREFIX));
+            bundleURL += (sourceValue + strlen(NC_RDF_PAGETITLE_PREFIX));
             bundleURL += ".properties";
 
             nsCOMPtr <nsIStringBundle> bundle;
@@ -358,7 +358,7 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
 
             nsAutoString panelTitleName;
             panelTitleName = NS_LITERAL_STRING("prefPanel-");
-            panelTitleName.AppendWithConversion(sourceValue + nsCRT::strlen(NC_RDF_PAGETITLE_PREFIX));
+            panelTitleName.AppendWithConversion(sourceValue + strlen(NC_RDF_PAGETITLE_PREFIX));
             bundle->GetStringFromName(panelTitleName.get(),
                 getter_Copies(pageTitle));
       }
@@ -406,11 +406,11 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
         NS_ENSURE_SUCCESS(rv,rv);
         
         // make sure the pointer math we're about to do is safe.
-        NS_ENSURE_TRUE(sourceValue && (nsCRT::strlen(sourceValue) > nsCRT::strlen(NC_RDF_PAGETITLE_PREFIX)), NS_ERROR_UNEXPECTED);
+        NS_ENSURE_TRUE(sourceValue && (strlen(sourceValue) > strlen(NC_RDF_PAGETITLE_PREFIX)), NS_ERROR_UNEXPECTED);
         
         // turn NC#PageTitlefoobar into foobar, so we can get the am-foobar.xul file
         str = NS_LITERAL_STRING("am-");
-        str.AppendWithConversion((sourceValue + nsCRT::strlen(NC_RDF_PAGETITLE_PREFIX)));
+        str.AppendWithConversion((sourceValue + strlen(NC_RDF_PAGETITLE_PREFIX)));
         str += NS_LITERAL_STRING(".xul");
       }
     }

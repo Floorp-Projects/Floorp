@@ -1236,7 +1236,7 @@ void nsMsgAsyncWriteProtocol::UpdateProgress(PRUint32 aNewBytes)
 
 PRInt32 nsMsgAsyncWriteProtocol::SendData(nsIURI * aURL, const char * dataBuffer, PRBool aSuppressLogging)
 {
-  PRUint32 len = nsCRT::strlen(dataBuffer);
+  PRUint32 len = strlen(dataBuffer);
   PRUint32 cnt;
   nsresult rv = m_outputStream->Write(dataBuffer, len, &cnt);
   if (NS_SUCCEEDED(rv) && len==cnt) 

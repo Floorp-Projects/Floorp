@@ -110,7 +110,7 @@ PRUint8 * CMimeTypes::GetMimeType( nsCString& theExt)
 		return( NULL);
 	LPBYTE	pByte;
 	if (GetMimeTypeFromReg( ext, &pByte)) {
-		len = nsCRT::strlen( (const char *) pByte);
+		len = strlen( (const char *) pByte);
 		if (len && (len < kMaxMimeTypeSize)) {
 			memcpy( m_mimeBuffer, pByte, len);
 			m_mimeBuffer[len] = 0;

@@ -336,7 +336,7 @@ MimeMultipart_check_boundary(MimeObject *obj, const char *line, PRInt32 length)
 	return MimeMultipartBoundaryTypeNone;
 
   /* This is a candidate line to be a boundary.  Check it out... */
-  blen = nsCRT::strlen(mult->boundary);
+  blen = strlen(mult->boundary);
   term_p = PR_FALSE;
 
   /* strip trailing whitespace (including the newline.) */

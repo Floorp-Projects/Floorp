@@ -116,7 +116,7 @@ MimeRichtextConvert (char *line, PRInt32 length,
 	  if (this_start >= line + length) /* blank line */
 		{
 		  PL_strcpy (*obufferP, "<BR>");
-		  return output_fn (*obufferP, nsCRT::strlen(*obufferP), closure);
+		  return output_fn (*obufferP, strlen(*obufferP), closure);
 		}
 	}
 
@@ -162,18 +162,18 @@ MimeRichtextConvert (char *line, PRInt32 length,
 		break;
 	  else if (*this_start == '&')
 		{
-		  PL_strcpy (out, "&amp;"); out += nsCRT::strlen (out);
+		  PL_strcpy (out, "&amp;"); out += strlen (out);
 		}
 	  else if (*this_start == '>')
 		{
-		  PL_strcpy (out, "&gt;"); out += nsCRT::strlen (out);
+		  PL_strcpy (out, "&gt;"); out += strlen (out);
 		}
 	  else if (enriched_p &&
 			   this_start < data_end + 1 &&
 			   this_start[0] == '<' &&
 			   this_start[1] == '<')
 		{
-		  PL_strcpy (out, "&lt;"); out += nsCRT::strlen (out);
+		  PL_strcpy (out, "&lt;"); out += strlen (out);
 		}
 	  else if (this_start != this_end)
 		{
@@ -308,12 +308,12 @@ MimeRichtextConvert (char *line, PRInt32 length,
 		  if (this_start[1] == '/')
 			{
 			  if (tag_close) PL_strcpy (out, tag_close);
-			  out += nsCRT::strlen (out);
+			  out += strlen (out);
 			}
 		  else
 			{
 			  if (tag_open) PL_strcpy (out, tag_open);
-			  out += nsCRT::strlen (out);
+			  out += strlen (out);
 			}
 		}
 

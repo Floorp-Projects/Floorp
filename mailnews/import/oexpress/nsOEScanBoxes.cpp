@@ -532,7 +532,7 @@ PRBool nsOEScanBoxes::Scan50MailboxDir( nsIFileSpec * srcDir)
 				pLeaf = nsnull;
 				rv = spec->GetLeafName( &pLeaf);
 				if (NS_SUCCEEDED( rv) && pLeaf && 
-					((sLen = nsCRT::strlen( pLeaf)) > 4) && 
+					((sLen = strlen( pLeaf)) > 4) && 
 					(!nsCRT::strcasecmp( pLeaf + sLen - 3, "dbx"))) {
 					// This is a *.dbx file in the mail directory
 					if (nsOE5File::IsLocalMailFile( spec)) {
@@ -604,7 +604,7 @@ void nsOEScanBoxes::ScanMailboxDir( nsIFileSpec * srcDir)
 				pLeaf = nsnull;
 				rv = spec->GetLeafName( &pLeaf);
 				if (NS_SUCCEEDED( rv) && pLeaf && 
-					((sLen = nsCRT::strlen( pLeaf)) > 4) && 
+					((sLen = strlen( pLeaf)) > 4) && 
 					(!nsCRT::strcasecmp( pLeaf + sLen - 3, "mbx"))) {
 					// This is a *.mbx file in the mail directory
 					pEntry = new MailboxEntry;

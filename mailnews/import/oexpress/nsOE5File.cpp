@@ -267,7 +267,7 @@ nsresult nsOE5File::ImportMailbox( PRUint32 *pBytesDone, PRBool *pAbort, nsStrin
 		ConvertIndex( inFile, pBuffer, pIndex, indexSize);
 	
 	PRUint32	block[4];
-	PRInt32		sepLen = (PRInt32) nsCRT::strlen( m_pFromLineSep);
+	PRInt32		sepLen = (PRInt32) strlen( m_pFromLineSep);
 	PRInt32		written;
 
 	/*

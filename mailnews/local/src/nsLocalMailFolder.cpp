@@ -2252,7 +2252,7 @@ nsresult nsMsgLocalMailFolder::WriteStartOfNewMessage()
     *(mCopyState->m_fileStream) << statusStrBuf;
     if (mCopyState->m_parseMsgState)
         mCopyState->m_parseMsgState->ParseAFolderLine(
-        statusStrBuf, nsCRT::strlen(statusStrBuf));
+        statusStrBuf, strlen(statusStrBuf));
     result = "X-Mozilla-Status2: 00000000" MSG_LINEBREAK;
     *(mCopyState->m_fileStream) << result.get();
     if (mCopyState->m_parseMsgState)

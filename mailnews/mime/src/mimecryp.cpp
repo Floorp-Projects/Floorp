@@ -469,7 +469,7 @@ MimeEncrypted_emit_buffered_child(MimeObject *obj)
 		  obj->options->state->post_header_html_run_p = PR_TRUE;
 		  if (html)
 			{
-        status = MimeObject_write(obj, html, nsCRT::strlen(html), PR_FALSE);
+        status = MimeObject_write(obj, html, strlen(html), PR_FALSE);
 			  PR_FREEIF(html);
 			  if (status < 0) return status;
 			}

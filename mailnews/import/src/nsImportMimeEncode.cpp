@@ -309,8 +309,8 @@ PRBool nsImportMimeEncode::WriteFileName( nsCString& fName, PRBool wasTrans, con
 	int			len;
 	nsCString	numStr;
 
-	while ((((fName.Length() - idx) + nsCRT::strlen( pTag)) > 70) && result) {
-		len = 68 - nsCRT::strlen( pTag) - 5;
+	while ((((fName.Length() - idx) + strlen( pTag)) > 70) && result) {
+		len = 68 - strlen( pTag) - 5;
 		if (wasTrans) {
 			if (fName.CharAt( idx + len - 1) == '%')
 				len--;

@@ -167,7 +167,7 @@ PRInt32 nsMsgBodyHandler::GetNextFilterLine(char * buf, PRUint32 bufSize)
     
     if (m_headersSize > 0)
     {
-      numBytesCopied = nsCRT::strlen(m_headers)+1 /* + 1 to include NULL */ < bufSize ? nsCRT::strlen(m_headers)+1 : (PRInt32) bufSize;
+      numBytesCopied = strlen(m_headers)+1 /* + 1 to include NULL */ < bufSize ? strlen(m_headers)+1 : (PRInt32) bufSize;
       memcpy(buf, m_headers, numBytesCopied);
       m_headers += numBytesCopied;  
       // be careful...m_headersSize is unsigned. Don't let it go negative or we overflow to 2^32....*yikes*	
@@ -205,7 +205,7 @@ PRInt32 nsMsgBodyHandler::GetNextLocalLine(char * buf, int bufSize)
       PRBool wasTruncated = PR_FALSE;
       rv = m_fileSpec->ReadLine(&buf, bufSize, &wasTruncated);
       if (NS_SUCCEEDED(rv) && !wasTruncated)
-        return nsCRT::strlen(buf);
+        return strlen(buf);
     }
   }
   
@@ -232,7 +232,7 @@ PRInt32 nsMsgBodyHandler::ApplyTransformations (char *buf, PRInt32 length, PRBoo
     if (m_stripHtml && m_messageIsHtml)
     {
       StripHtml (buf);
-      newLength = nsCRT::strlen (buf);
+      newLength = strlen (buf);
     }
   }
   
@@ -242,7 +242,7 @@ PRInt32 nsMsgBodyHandler::ApplyTransformations (char *buf, PRInt32 length, PRBoo
 
 void nsMsgBodyHandler::StripHtml (char *pBufInOut)
 {
-  char *pBuf = (char*) PR_Malloc (nsCRT::strlen(pBufInOut) + 1);
+  char *pBuf = (char*) PR_Malloc (strlen(pBufInOut) + 1);
   if (pBuf)
   {
     char *pWalk = pBuf;

@@ -134,7 +134,7 @@ MimeExternalBody_parse_line (char *line, PRInt32 length, MimeObject *obj)
 	 subsequent lines get tacked onto the body. */
   if (bod->body)
 	{
-	  int L = nsCRT::strlen(bod->body);
+	  int L = strlen(bod->body);
 	  char *new_str = (char *)PR_Realloc(bod->body, L + length + 1);
 	  if (!new_str) return MIME_OUT_OF_MEMORY;
 	  bod->body = new_str;
@@ -184,14 +184,14 @@ MimeExternalBody_make_url(const char *ct,
 	{
 	  if (!site || !name)
 		return 0;
-	  s = (char *) PR_MALLOC(nsCRT::strlen(name) + nsCRT::strlen(site) +
-							(dir  ? nsCRT::strlen(dir) : 0) + 20);
+	  s = (char *) PR_MALLOC(strlen(name) + strlen(site) +
+							(dir  ? strlen(dir) : 0) + 20);
 	  if (!s) return 0;
 	  PL_strcpy(s, "ftp://");
 	  PL_strcat(s, site);
 	  PL_strcat(s, "/");
 	  if (dir) PL_strcat(s, (dir[0] == '/' ? dir+1 : dir));
-	  if (s[nsCRT::strlen(s)-1] != '/')
+	  if (s[strlen(s)-1] != '/')
 		PL_strcat(s, "/");
 	  PL_strcat(s, name);
 	  return s;
@@ -214,7 +214,7 @@ MimeExternalBody_make_url(const char *ct,
 	  return 0;						/* never, if not Unix. */
 #endif /* !XP_UNIX */
 
-	  s = (char *) PR_MALLOC(nsCRT::strlen(name)*3 + 20);
+	  s = (char *) PR_MALLOC(strlen(name)*3 + 20);
 	  if (!s) return 0;
 	  PL_strcpy(s, "file:");
 
@@ -231,9 +231,9 @@ MimeExternalBody_make_url(const char *ct,
 	  char *s2;
 	  if (!svr)
 		return 0;
-	  s = (char *) PR_MALLOC(nsCRT::strlen(svr)*4 +
-							(subj ? nsCRT::strlen(subj)*4 : 0) +
-							(body ? nsCRT::strlen(body)*4 : 0) + 20);
+	  s = (char *) PR_MALLOC(strlen(svr)*4 +
+							(subj ? strlen(subj)*4 : 0) +
+							(body ? strlen(body)*4 : 0) + 20);
 	  if (!s) return 0;
 	  PL_strcpy(s, "mailto:");
 
@@ -336,17 +336,17 @@ MimeExternalBody_parse_eof (MimeObject *obj, PRBool abort_p)
 	  ct = MimeHeaders_get(bod->hdrs, HEADER_CONTENT_TYPE,
 						   PR_TRUE, PR_FALSE);
 
-	  h = (char *) PR_MALLOC((at ? nsCRT::strlen(at) : 0) +
-							(lexp ? nsCRT::strlen(lexp) : 0) +
-							(size ? nsCRT::strlen(size) : 0) +
-							(perm ? nsCRT::strlen(perm) : 0) +
-							(dir ? nsCRT::strlen(dir) : 0) +
-							(mode ? nsCRT::strlen(mode) : 0) +
-							(name ? nsCRT::strlen(name) : 0) +
-							(site ? nsCRT::strlen(site) : 0) +
-							(svr ? nsCRT::strlen(svr) : 0) +
-							(subj ? nsCRT::strlen(subj) : 0) +
-							(url ? nsCRT::strlen(url) : 0) + 100);
+	  h = (char *) PR_MALLOC((at ? strlen(at) : 0) +
+							(lexp ? strlen(lexp) : 0) +
+							(size ? strlen(size) : 0) +
+							(perm ? strlen(perm) : 0) +
+							(dir ? strlen(dir) : 0) +
+							(mode ? strlen(mode) : 0) +
+							(name ? strlen(name) : 0) +
+							(site ? strlen(site) : 0) +
+							(svr ? strlen(svr) : 0) +
+							(subj ? strlen(subj) : 0) +
+							(url ? strlen(url) : 0) + 100);
 	  if (!h)
 		{
 		  status = MIME_OUT_OF_MEMORY;
@@ -381,7 +381,7 @@ MimeExternalBody_parse_eof (MimeObject *obj, PRBool abort_p)
 		  PL_strcpy(h, STR ": "); \
 		  PL_strcat(h, VAR); \
 		  PL_strcat(h, MSG_LINEBREAK); \
-		  status = MimeHeaders_parse_line(h, nsCRT::strlen(h), hdrs); \
+		  status = MimeHeaders_parse_line(h, strlen(h), hdrs); \
 		  if (status < 0) goto FAIL; \
 		}
 	  FROB("Access-Type",	at);
@@ -398,7 +398,7 @@ MimeExternalBody_parse_eof (MimeObject *obj, PRBool abort_p)
 	  FROB("Subject",		subj);
 # undef FROB
 	  PL_strcpy(h, MSG_LINEBREAK);
-	  status = MimeHeaders_parse_line(h, nsCRT::strlen(h), hdrs);
+	  status = MimeHeaders_parse_line(h, strlen(h), hdrs);
 	  if (status < 0) goto FAIL;
 
 	  lurl = MimeExternalBody_make_url(ct, at, lexp, size, perm, dir, mode,
@@ -425,12 +425,12 @@ MimeExternalBody_parse_eof (MimeObject *obj, PRBool abort_p)
 			  const char *pre = "<P><PRE>";
 			  const char *suf = "</PRE>";
 			  PRInt32 i;
-			  for(i = nsCRT::strlen(s)-1; i >= 0 && nsCRT::IsAsciiSpace(s[i]); i--)
+			  for(i = strlen(s)-1; i >= 0 && nsCRT::IsAsciiSpace(s[i]); i--)
 				s[i] = 0;
  			  s2 = nsEscapeHTML(s);
 			  if (!s2) goto FAIL;
-			  body = (char *) PR_MALLOC(nsCRT::strlen(pre) + nsCRT::strlen(s2) +
-									   nsCRT::strlen(suf) + 1);
+			  body = (char *) PR_MALLOC(strlen(pre) + strlen(s2) +
+									   strlen(suf) + 1);
 			  if (!body)
 				{
 				  nsCRT::free(s2);

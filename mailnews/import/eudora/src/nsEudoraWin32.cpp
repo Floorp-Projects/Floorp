@@ -215,7 +215,7 @@ nsresult nsEudoraWin32::ScanMailDir( nsIFileSpec *pFolder, nsISupportsArray *pAr
 	if (NS_SUCCEEDED( rv) && exists && isFile) {
 		rv = descMap->GetFileContents( &pContents);
 		if (NS_SUCCEEDED( rv) && pContents) {
-			len = nsCRT::strlen( pContents);	
+			len = strlen( pContents);	
 			if (NS_SUCCEEDED( rv))
 				rv = ScanDescmap( pFolder, pArray, pImport, pContents, len);
 			nsCRT::free( pContents);

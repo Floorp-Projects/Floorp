@@ -338,7 +338,7 @@ nsImapService::GetFolderName(nsIMsgFolder* aImapFolder,
     rv = aFolder->GetOnlineName(getter_Copies(onlineName));
 
     if (NS_FAILED(rv)) return rv;
-	if ((const char *)onlineName == nsnull || nsCRT::strlen((const char *) onlineName) == 0)
+	if ((const char *)onlineName == nsnull || strlen((const char *) onlineName) == 0)
 	{
 		char *uri = nsnull;
 		rv = aImapFolder->GetURI(&uri);
@@ -1944,7 +1944,7 @@ nsImapService::DiscoverChildren(nsIEventQueue* aClientEventQueue,
 
         if (NS_SUCCEEDED(rv))
         {
-            if (folderPath && (nsCRT::strlen(folderPath) > 0))
+            if (folderPath && (strlen(folderPath) > 0))
             {
                 nsCOMPtr<nsIURI> uri = do_QueryInterface(aImapUrl);
 
@@ -2004,7 +2004,7 @@ nsImapService::DiscoverLevelChildren(nsIEventQueue* aClientEventQueue,
 
         if (NS_SUCCEEDED(rv))
         {
-            if (folderPath && (nsCRT::strlen(folderPath) > 0))
+            if (folderPath && (strlen(folderPath) > 0))
             {
                 nsCOMPtr<nsIURI> uri = do_QueryInterface(aImapUrl);
                 urlSpec.Append("/discoverlevelchildren>");
@@ -2483,7 +2483,7 @@ nsImapService::CreateFolder(nsIEventQueue* eventQueue, nsIMsgFolder* parent,
             GetFolderName(parent, getter_Copies(folderName));
             urlSpec.Append("/create>");
             urlSpec.AppendWithConversion(hierarchySeparator);
-            if ((const char *) folderName && nsCRT::strlen(folderName) > 0)
+            if ((const char *) folderName && strlen(folderName) > 0)
             {
               nsXPIDLCString canonicalName;
 
@@ -2534,7 +2534,7 @@ nsImapService::EnsureFolderExists(nsIEventQueue* eventQueue, nsIMsgFolder* paren
             GetFolderName(parent, getter_Copies(folderName));
             urlSpec.Append("/ensureExists>");
             urlSpec.AppendWithConversion(hierarchySeparator);
-            if ((const char *) folderName && nsCRT::strlen(folderName) > 0)
+            if ((const char *) folderName && strlen(folderName) > 0)
             {
                 urlSpec.Append((const char *) folderName);
                 urlSpec.AppendWithConversion(hierarchySeparator);
@@ -2584,7 +2584,7 @@ nsImapService::ListFolder(nsIEventQueue* aClientEventQueue,
           GetFolderName(aImapMailFolder, getter_Copies(folderName));
           urlSpec.Append("/listfolder>");
           urlSpec.AppendWithConversion(hierarchySeparator);
-          if ((const char *) folderName && nsCRT::strlen(folderName) > 0)
+          if ((const char *) folderName && strlen(folderName) > 0)
           {
             urlSpec.Append((const char *) folderName);
             rv = uri->SetSpec(urlSpec.get());

@@ -272,7 +272,7 @@ nsresult nsEudoraMailbox::ImportMailbox( PRUint32 *pBytes, PRBool *pAbort, const
 				rv = WriteFromSep( pDst);
 				
 				rv = pDst->Write( kComposeErrorStr,
-									nsCRT::strlen( kComposeErrorStr),
+									strlen( kComposeErrorStr),
 									&written );
 				
 				if (NS_SUCCEEDED( rv))
@@ -922,7 +922,7 @@ int nsEudoraMailbox::IsMonthStr( const char *pStr)
 nsresult nsEudoraMailbox::WriteFromSep( nsIFileSpec *pDst)
 {
 	if (!m_fromLen)
-		m_fromLen = nsCRT::strlen( eudoraFromLine);
+		m_fromLen = strlen( eudoraFromLine);
 	PRInt32	written = 0;
 	nsresult rv = pDst->Write( eudoraFromLine, m_fromLen, &written);
 	if (NS_SUCCEEDED( rv) && (written != m_fromLen))

@@ -455,7 +455,7 @@ nsresult nsImapMailFolder::CreateSubFolders(nsFileSpec &path)
         nsXPIDLCString onlineFullUtf7Name;
 
         rv = cacheElement->GetStringProperty("onlineName", getter_Copies(onlineFullUtf7Name));
-        if (NS_SUCCEEDED(rv) && onlineFullUtf7Name.get() && nsCRT::strlen(onlineFullUtf7Name.get()))
+        if (NS_SUCCEEDED(rv) && onlineFullUtf7Name.get() && strlen(onlineFullUtf7Name.get()))
         {
           // Call ConvertFolderName() and HideFolderName() to do special folder name
           // mapping and hiding, if configured to do so. For example, need to hide AOL's
@@ -1654,7 +1654,7 @@ NS_IMETHODIMP nsImapMailFolder::ReadFromFolderCacheElem(nsIMsgFolderCacheElement
   if (NS_SUCCEEDED(element->GetInt32Property("hierDelim", &hierarchyDelimiter)))
     m_hierarchyDelimiter = (PRUnichar) hierarchyDelimiter;
   rv = element->GetStringProperty("onlineName", getter_Copies(onlineName));
-  if (NS_SUCCEEDED(rv) && (const char *) onlineName && nsCRT::strlen((const char *) onlineName))
+  if (NS_SUCCEEDED(rv) && (const char *) onlineName && strlen((const char *) onlineName))
     m_onlineFolderName.Assign(onlineName);
 #ifdef DEBUG_bienvenu
   if (!nsCRT::strcasecmp((const char *) onlineName, "Sent"))
@@ -1751,7 +1751,7 @@ nsImapMailFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatab
       nsXPIDLCString onlineName;
       if (NS_SUCCEEDED((*folderInfo)->GetCharPtrProperty("onlineName", getter_Copies(onlineName))))
       {
-        if ((const char*) onlineName && nsCRT::strlen((const char *) onlineName) > 0)
+        if ((const char*) onlineName && strlen((const char *) onlineName) > 0)
           m_onlineFolderName.Assign(onlineName);
         else
         {
@@ -2493,7 +2493,7 @@ NS_IMETHODIMP nsImapMailFolder::ParseAdoptedHeaderLine(
                                                 // local folders, 
     // is the msg key. Setting this will set the msg key for the new header.
 
-  PRInt32 len = nsCRT::strlen(str);
+  PRInt32 len = strlen(str);
     char *currentEOL  = PL_strstr(str, MSG_LINEBREAK);
     const char *currentLine = str;
     while (currentLine < (str + len))
@@ -4532,7 +4532,7 @@ nsImapMailFolder::NotifySearchHit(nsIMsgMailNewsUrl * aUrl,
       char *currentPosition = PL_strcasestr(tokenString, "SEARCH");
       if (currentPosition)
       {
-        currentPosition += nsCRT::strlen("SEARCH");
+        currentPosition += strlen("SEARCH");
         char *newStr;
           
           PRBool shownUpdateAlert = PR_FALSE;

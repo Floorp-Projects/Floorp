@@ -617,7 +617,7 @@ BOOL nsOutlookMail::WriteData( nsIFileSpec *pDest, const char *pData, PRInt32 le
 BOOL nsOutlookMail::WriteStr( nsIFileSpec *pDest, const char *pStr)
 {	
 	PRInt32		written;
-	PRInt32		len = nsCRT::strlen( pStr);
+	PRInt32		len = strlen( pStr);
 
 	nsresult rv = pDest->Write( pStr, len, &written);
 	if (NS_FAILED( rv) || (written != len))
@@ -791,7 +791,7 @@ void nsOutlookMail::BuildAttachments( CMapiMessage& msg, int count)
 						OutlookAttachment *a = new OutlookAttachment;
 						a->mimeType = nsCRT::strdup( msg.GetMimeType());
 						a->description = nsCRT::strdup( msg.GetFileName());
-						if (!nsCRT::strlen( a->description)) {
+						if (!strlen( a->description)) {
 							nsCRT::free( a->description);
 							nsCString	str("Attachment ");
 							str.AppendInt( (PRInt32) i);

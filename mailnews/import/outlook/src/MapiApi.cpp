@@ -915,7 +915,7 @@ BOOL CMapiApi::IterateStores( CMapiFolderList& stores)
 				// Currently, this does exclude IMAP server accounts
 				// which is the desired behaviour.
 
-                int         strLen = nsCRT::strlen(lpStr);
+                int         strLen = strlen(lpStr);
                 PRUnichar * pwszStr = (PRUnichar *) nsMemory::Alloc((strLen + 1) * sizeof(WCHAR));
                 if (!pwszStr) {
                     // out of memory
@@ -923,7 +923,7 @@ BOOL CMapiApi::IterateStores( CMapiFolderList& stores)
                     lpTable->Release();
                     return FALSE;
                 }
-                ::MultiByteToWideChar(CP_ACP, 0, lpStr, nsCRT::strlen(lpStr) + 1, pwszStr, (strLen + 1) * sizeof(WCHAR));
+                ::MultiByteToWideChar(CP_ACP, 0, lpStr, strlen(lpStr) + 1, pwszStr, (strLen + 1) * sizeof(WCHAR));
 				CMapiFolder *pFolder = new CMapiFolder( pwszStr, cbEID, lpEID, 0, MAPI_STORE);
                 nsMemory::Free(pwszStr);
 

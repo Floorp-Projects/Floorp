@@ -489,7 +489,7 @@ nsAbSyncPostEngine::OnStopRequest(nsIRequest *request, nsISupports * /* ctxt */,
       //
       char    tUser[256] = "";
 
-      if (Base64Encode((unsigned char *)mUser, nsCRT::strlen(mUser), tUser, sizeof(tUser)) < 0)
+      if (Base64Encode((unsigned char *)mUser, strlen(mUser), tUser, sizeof(tUser)) < 0)
       {
         rv = NS_ERROR_FAILURE;
         NotifyListenersOnStopAuthOperation(rv, tProtResponse);
@@ -801,7 +801,7 @@ nsAbSyncPostEngine::KickTheSyncOperation(void)
   const char postHeader[] = "Content-Type: application/x-www-form-urlencoded\r\nContent-Length: %d\r\nCookie: %s\r\n\r\n%s";
   protString = PR_smprintf("%s%s", mSyncProtocolRequestPrefix, mSyncProtocolRequest);
   if (protString)
-    mMessageSize = nsCRT::strlen(protString);
+    mMessageSize = strlen(protString);
   else
     mMessageSize = 0;
 

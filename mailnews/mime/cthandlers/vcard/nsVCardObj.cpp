@@ -549,7 +549,7 @@ static void printValue(nsOutputFileStream *fp, VObject *o, int level)
     buf = PR_smprintf("%d", INTEGER_VALUE_OF(o)); 
     if (buf)
     {
-      fp->write(buf, nsCRT::strlen(buf));
+      fp->write(buf, strlen(buf));
       PR_FREEIF(buf);
     }
     break;
@@ -558,7 +558,7 @@ static void printValue(nsOutputFileStream *fp, VObject *o, int level)
     buf = PR_smprintf("%ld", LONG_VALUE_OF(o)); 
     if (buf)
     {
-      fp->write(buf, nsCRT::strlen(buf));
+      fp->write(buf, strlen(buf));
       PR_FREEIF(buf);
     }
     break;
@@ -591,7 +591,7 @@ static void printNameValue(nsOutputFileStream *fp,VObject *o, int level)
     buf = PR_smprintf("%s", NAME_OF(o)); 
     if (buf)
     {
-      fp->write(buf, nsCRT::strlen(buf));
+      fp->write(buf, strlen(buf));
       PR_FREEIF(buf);
     }
   }

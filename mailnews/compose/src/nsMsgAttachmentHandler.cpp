@@ -1077,7 +1077,7 @@ nsMsgAttachmentHandler::UrlExit(nsresult status, const PRUnichar* aMsg)
               tData = ToNewCString(conData);
             if (tData)
             {
-              (void) tempfile.write(tData, nsCRT::strlen(tData));
+              (void) tempfile.write(tData, strlen(tData));
               PR_FREEIF(tData);
             }
             tempfile.close();

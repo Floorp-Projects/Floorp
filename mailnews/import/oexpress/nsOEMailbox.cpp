@@ -168,7 +168,7 @@ PRBool CImportMailbox::GetIndexFile( nsIFileSpec* file)
 	char *pLeaf = nsnull;
 	if (NS_FAILED( file->GetLeafName( &pLeaf)))
 		return( PR_FALSE);
-	PRInt32	len = nsCRT::strlen( pLeaf);
+	PRInt32	len = strlen( pLeaf);
 	if (len < 5) {
 		nsCRT::free( pLeaf);
 		return( PR_FALSE);
@@ -372,7 +372,7 @@ PRBool CMbxScanner::CopyMbxFileBytes( PRUint32 numBytes)
 	PRBool			first = PR_TRUE;
 	PRUint8 *		pIn;
 	PRUint8 *		pStart;
-	PRInt32			fromLen = nsCRT::strlen( m_pFromLine);
+	PRInt32			fromLen = strlen( m_pFromLine);
 	nsresult		rv;
 	PRInt32			cntRead;
 	PRUint8 *		pChar;

@@ -758,9 +758,9 @@ checkIfSubscribedFunction(nsCString &aElement, void *aData)
 NS_IMETHODIMP
 nsNntpIncomingServer::ContainsNewsgroup(const char *name, PRBool *containsGroup)
 {
-	NS_ASSERTION(name && nsCRT::strlen(name),"no name");
+	NS_ASSERTION(name && strlen(name),"no name");
 	if (!name || !containsGroup) return NS_ERROR_NULL_POINTER;
-	if (!nsCRT::strlen(name)) return NS_ERROR_FAILURE;
+	if (!strlen(name)) return NS_ERROR_FAILURE;
 
 	*containsGroup = !(mSubscribedNewsgroups.EnumerateForwards((nsCStringArrayEnumFunc)checkIfSubscribedFunction, (void *)name));
 	return NS_OK;
@@ -771,9 +771,9 @@ nsNntpIncomingServer::SubscribeToNewsgroup(const char *name)
 {
 	nsresult rv;
 
-	NS_ASSERTION(name && nsCRT::strlen(name),"no name");
+	NS_ASSERTION(name && strlen(name),"no name");
 	if (!name) return NS_ERROR_NULL_POINTER;
-	if (!nsCRT::strlen(name)) return NS_ERROR_FAILURE;
+	if (!strlen(name)) return NS_ERROR_FAILURE;
 
 	nsCOMPtr<nsIMsgFolder> msgfolder;
 	rv = GetRootMsgFolder(getter_AddRefs(msgfolder));

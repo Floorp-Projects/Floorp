@@ -335,7 +335,7 @@ HG09091
 													   msg->hdrs);
 		  if (html)
 			{
-			  lstatus = MimeObject_write(obj, html, nsCRT::strlen(html), PR_FALSE);
+			  lstatus = MimeObject_write(obj, html, strlen(html), PR_FALSE);
 			  PR_Free(html);
 			  if (lstatus < 0) return lstatus;
 			}
@@ -538,7 +538,7 @@ MimeMessage_parse_eof (MimeObject *obj, PRBool abort_p)
 			  if (html)
 			  {
 				  int lstatus = MimeObject_write(obj, html,
-												 nsCRT::strlen(html),
+												 strlen(html),
 												 PR_FALSE);
 				  PR_Free(html);
 				  if (lstatus < 0) return lstatus;
@@ -742,7 +742,7 @@ MimeMessage_write_headers_html (MimeObject *obj)
       obj->options->state->post_header_html_run_p = PR_TRUE;
       if (html)
       {
-        status = MimeObject_write(obj, html, nsCRT::strlen(html), PR_FALSE);
+        status = MimeObject_write(obj, html, strlen(html), PR_FALSE);
         PR_Free(html);
         if (status < 0) 
         {

@@ -227,8 +227,8 @@ xp_word_wrap(unsigned char *str, int maxColumn, int checkQuoting,
 				if (pfix) OUTPUTSTR(pfix);
 				continue;
 			}
-			byteWidth = nsCRT::strlen((const char *) in);
-			columnWidth = nsCRT::strlen((const char *) in);
+			byteWidth = strlen((const char *) in);
+			columnWidth = strlen((const char *) in);
 			if (currentColumn + columnWidth > (maxColumn +
 				(((*in == ' ') || (*in == '\t')) ? 1 : 0)))
 			{
@@ -480,7 +480,7 @@ static char *intlmime_encode_qp_buf(char *subject)
 
   if (subject == NULL || *subject == '\0')
     return NULL;
-  len = nsCRT::strlen(subject);
+  len = strlen(subject);
   output = (char *) PR_Malloc(len * 3 + 1);
   if (output == NULL)
     return NULL;
@@ -562,7 +562,7 @@ static unsigned char * utf8_nextchar(unsigned char *str)
   if (*str < 128) {
     return (str+1);
   }
-  int len = nsCRT::strlen((char *) str);
+  int len = strlen((char *) str);
   // RFC 2279 defines more than 3 bytes sequences (0xF0, 0xF8, 0xFC),
   // but I think we won't encounter those cases as long as we're supporting UCS-2 and no surrogate.
   if ((len >= 3) && (*str >= 0xE0)) {
@@ -634,7 +634,7 @@ char * utf8_mime_encode_mail_address(char *charset, const char *src, int maxLine
   /* allocate enough buffer for conversion, this way it can avoid
      do another memory allocation which is expensive
    */
-  retbufsize = nsCRT::strlen(srcbuf) * 3 + kMAX_CSNAME + 8;
+  retbufsize = strlen(srcbuf) * 3 + kMAX_CSNAME + 8;
   retbuf =  (char *) PR_Malloc(retbufsize);
   if (!retbuf) {  /* Give up if not enough memory */
     PR_Free(srcbuf);
@@ -827,7 +827,7 @@ convert_and_encode:
       if (bBase64Encode)
       {
         /* converts to Base64 Encoding */
-        buf2 = (char *)intlmime_encode_base64_buf(buf1, nsCRT::strlen(buf1));
+        buf2 = (char *)intlmime_encode_base64_buf(buf1, strlen(buf1));
       }
       else
       {
@@ -932,7 +932,7 @@ convert_and_encode:
       line_len += len + 1;  /* 1: SEP */
     }
 
-    buf1 = buf1 + nsCRT::strlen(buf1);
+    buf1 = buf1 + strlen(buf1);
     if (sep == nsCRT::CR || sep == nsCRT::LF || sep == TAB) /* strip CR,LF,TAB */
       *buf1 = '\0';
     else
@@ -977,7 +977,7 @@ char *utf8_EncodeMimePartIIStr(const char *subject, char *charset, int maxLineLe
 
   /* check to see if subject are all ascii or not */
   if((*subject == '\0') ||
-     (!intl_is_legal_utf8(subject, nsCRT::strlen(subject))) ||
+     (!intl_is_legal_utf8(subject, strlen(subject))) ||
     (!stateful_encoding((const char *) charset) && intlmime_only_ascii_str(subject)))
     return (char *) xp_word_wrap((unsigned char *) subject, maxLineLen, 0, " ", 1);
 
@@ -1149,7 +1149,7 @@ char *intl_decode_mime_part2_str(const char *header,
   charset[0] = '\0';
 
   /* Assume no more than 3X expansion due to UTF-8 conversion */
-  retbuff = (char *)PR_Malloc(3*nsCRT::strlen(header)+1);
+  retbuff = (char *)PR_Malloc(3*strlen(header)+1);
 
   if (retbuff == NULL)
     return NULL;
@@ -1256,7 +1256,7 @@ char *intl_decode_mime_part2_str(const char *header,
   }
 
   /* put the tail back  */
-  intl_copy_uncoded_header(&output_p, begin, nsCRT::strlen(begin), default_charset);
+  intl_copy_uncoded_header(&output_p, begin, strlen(begin), default_charset);
   *output_p = '\0';
 
   return retbuff;
@@ -1281,7 +1281,7 @@ extern "C" char *MIME_DecodeMimeHeader(const char *header,
 
   // If no MIME encoded then do nothing otherwise decode the input.
   if (PL_strstr(header, "=?") ||
-      (default_charset && !intl_is_legal_utf8(header, nsCRT::strlen(header)))) {
+      (default_charset && !intl_is_legal_utf8(header, strlen(header)))) {
 	  result = intl_decode_mime_part2_str(header, default_charset, override_charset);
   } else if (eatContinuations && 
              (PL_strchr(header, '\n') || PL_strchr(header, '\r'))) {

@@ -1003,7 +1003,7 @@ nsAbWinType getAbWinType(const char *aScheme, const char *aUri, nsCString& aStub
 {
     aStub.Truncate() ;
     aEntry.Truncate() ;
-    PRUint32 schemeLength = nsCRT::strlen(aScheme) ;
+    PRUint32 schemeLength = strlen(aScheme) ;
 
     if (nsCRT::strncmp(aUri, aScheme, schemeLength) == 0) {
         if (nsCRT::strncmp(aUri + schemeLength, kOutlookStub, kOutlookStubLength) == 0) {

@@ -161,7 +161,7 @@ MimeExternalObject_parse_begin (MimeObject *obj)
     else
     {
       const char *p = "Part ";  
-      char *s = (char *)PR_MALLOC(nsCRT::strlen(p) + nsCRT::strlen(id) + 1);
+      char *s = (char *)PR_MALLOC(strlen(p) + strlen(id) + 1);
       if (!s)
       {
         PR_Free(id);

@@ -626,7 +626,7 @@ mime_fix_up_html_address( char **addr)
     PRInt32 newLen = 0;
     do 
     {
-      newLen = nsCRT::strlen(*addr) + 3 + 1;
+      newLen = strlen(*addr) + 3 + 1;
       *addr = (char *) PR_REALLOC(*addr, newLen);
       NS_ASSERTION (*addr, "out of memory fixing up html address");
       lt = PL_strchr(*addr, '<');

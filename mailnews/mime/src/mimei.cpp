@@ -230,7 +230,7 @@ mime_new (MimeObjectClass *clazz, MimeHeaders *hdrs,
   int status;
 
   /* Some assertions to verify that this isn't random junk memory... */
-  PR_ASSERT(clazz->class_name && nsCRT::strlen(clazz->class_name) > 0);
+  PR_ASSERT(clazz->class_name && strlen(clazz->class_name) > 0);
   PR_ASSERT(size > 0 && size < 1000);
 
   if (!clazz->class_initialized)
@@ -759,7 +759,7 @@ mime_part_address(MimeObject *obj)
 		return nsCRT::strdup(buf);
 	  else
 		{
-		  char *s = (char *)PR_MALLOC(nsCRT::strlen(higher) + nsCRT::strlen(buf) + 3);
+		  char *s = (char *)PR_MALLOC(strlen(higher) + strlen(buf) + 3);
 		  if (!s)
 			{
 			  PR_Free(higher);
@@ -1077,7 +1077,7 @@ mime_set_url_part(const char *url, const char *part, PRBool append_p)
 		}
 	}
 
-  result = (char *) PR_MALLOC(nsCRT::strlen(url) + nsCRT::strlen(part) + 10);
+  result = (char *) PR_MALLOC(strlen(url) + strlen(part) + 10);
   if (!result) return 0;
 
   if (part_begin)
@@ -1110,7 +1110,7 @@ mime_set_url_part(const char *url, const char *part, PRBool append_p)
 
   /* Semi-broken kludge to omit a trailing "?part=0". */
   {
-	int L = nsCRT::strlen(result);
+	int L = strlen(result);
 	if (L > 6 &&
 		(result[L-7] == '?' || result[L-7] == '&') &&
 		!nsCRT::strcmp("part=0", result + L - 6))
@@ -1135,7 +1135,7 @@ mime_set_url_imap_part(const char *url, const char *imappart, const char *libmim
 	  *whereCurrent = 0;
   }
 	
-  result = (char *) PR_MALLOC(nsCRT::strlen(url) + nsCRT::strlen(imappart) + nsCRT::strlen(libmimepart) + 17);
+  result = (char *) PR_MALLOC(strlen(url) + strlen(imappart) + strlen(libmimepart) + 17);
   if (!result) return 0;
 
   PL_strcpy(result, url);
@@ -1143,7 +1143,7 @@ mime_set_url_imap_part(const char *url, const char *imappart, const char *libmim
   PL_strcat(result, imappart);
   PL_strcat(result, "&part=");
   PL_strcat(result, libmimepart);
-  result[nsCRT::strlen(result)] = 0;
+  result[strlen(result)] = 0;
 
   if (whereCurrent)
 	  *whereCurrent = '/';
@@ -1274,7 +1274,7 @@ mime_find_suggested_name_of_part(const char *part, MimeObject *obj)
    */
   if (result && obj->encoding && *obj->encoding)
 	{
-	  PRInt32 L = nsCRT::strlen(result);
+	  PRInt32 L = strlen(result);
 	  const char **exts = 0;
 
 	  /*
@@ -1296,7 +1296,7 @@ mime_find_suggested_name_of_part(const char *part, MimeObject *obj)
 	  while (exts && *exts)
 		{
 		  const char *ext = *exts;
-		  PRInt32 L2 = nsCRT::strlen(ext);
+		  PRInt32 L2 = strlen(ext);
 		  if (L > L2 + 1 &&							/* long enough */
 			  result[L - L2 - 1] == '.' &&			/* '.' in right place*/
 			  !nsCRT::strcasecmp(ext, result + (L - L2)))	/* ext matches */
@@ -1454,8 +1454,8 @@ mime_parse_url_options(const char *url, MimeDisplayOptions *options)
 	  else if (nsCRT::strcmp(options->part_to_load, "1"))	/* not 1 */
 		{
 		  const char *prefix = "1.";
-		  char *s = (char *) PR_MALLOC(nsCRT::strlen(options->part_to_load) +
-									  nsCRT::strlen(prefix) + 1);
+		  char *s = (char *) PR_MALLOC(strlen(options->part_to_load) +
+		                               strlen(prefix) + 1);
 		  if (!s) return MIME_OUT_OF_MEMORY;
 		  PL_strcpy(s, prefix);
 		  PL_strcat(s, options->part_to_load);
@@ -1494,7 +1494,7 @@ MimeOptions_write(MimeDisplayOptions *opt, char *data, PRInt32 length,
 	  else
 		{
 		  char sep[] = "<BR><HR WIDTH=\"90%\" SIZE=4><BR>";
-		  int lstatus = opt->output_fn(sep, nsCRT::strlen(sep), closure);
+		  int lstatus = opt->output_fn(sep, strlen(sep), closure);
 		  opt->state->separator_suppressed_p = PR_FALSE;
 		  if (lstatus < 0) return lstatus;
 		}

@@ -367,7 +367,7 @@ NS_IMETHODIMP nsImapUrl::CreateListOfMessageIdsString(char ** aResult)
 	if (nsnull == aResult || !m_listOfMessageIds) 
 		return  NS_ERROR_NULL_POINTER;
 
-  PRInt32 bytesToCopy = nsCRT::strlen(m_listOfMessageIds);
+  PRInt32 bytesToCopy = strlen(m_listOfMessageIds);
 
 	// mime may have glommed a "&part=" for a part download
 	// we return the entire message and let mime extract
@@ -758,7 +758,7 @@ NS_IMETHODIMP nsImapUrl::AddOnlineDirectoryIfNecessary(const char *onlineMailbox
 		// This invariant should be maintained by libmsg when reading/writing the prefs.
 		// We are only supporting online directories whose online delimiter is /
 		// Therefore, the online directory must end in a slash.
-		NS_ASSERTION (onlineDir[nsCRT::strlen(onlineDir) - 1] == '/', 
+		NS_ASSERTION (onlineDir[strlen(onlineDir) - 1] == '/', 
                       "online directory not ended with a slash\n");
 #endif
         nsIMAPNamespace *ns = nsnull;
@@ -777,8 +777,8 @@ NS_IMETHODIMP nsImapUrl::AddOnlineDirectoryIfNecessary(const char *onlineMailbox
 
 			// The namespace for this mailbox is the root ("").
 			// Prepend the online server directory
-			int finalLen = nsCRT::strlen(onlineDir) +
-                nsCRT::strlen(onlineMailboxName) + 1;
+			int finalLen = strlen(onlineDir) +
+			               strlen(onlineMailboxName) + 1;
 			newOnlineName = (char *)PR_Malloc(finalLen);
 			if (newOnlineName)
 			{
@@ -833,7 +833,7 @@ NS_IMETHODIMP nsImapUrl::AllocateServerPath(const char * canonicalPath, char onl
   NS_ENSURE_ARG(sourcePath);
   NS_ENSURE_ARG(resultPath);
   PRInt32 extra = 0;
-  PRInt32 len = nsCRT::strlen(sourcePath);
+  PRInt32 len = strlen(sourcePath);
   const char *src = sourcePath;
   PRInt32 i;
   for ( i = 0; i < len; i++)

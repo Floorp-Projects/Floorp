@@ -83,7 +83,7 @@ MimeInlineTextHTML_parse_begin (MimeObject *obj)
     {
       PR_snprintf(buf, 256, "<div class=\"moz-text-html\"  lang=\"%s\">", 
                   fontLang.get());
-      status = MimeObject_write(obj, buf, nsCRT::strlen(buf), PR_FALSE);
+      status = MimeObject_write(obj, buf, strlen(buf), PR_FALSE);
     }
     else
     {
@@ -116,7 +116,7 @@ MimeInlineTextHTML_parse_begin (MimeObject *obj)
     
     if (base_hdr)
     {
-      char *buf = (char *) PR_MALLOC(nsCRT::strlen(base_hdr) + 20);
+      char *buf = (char *) PR_MALLOC(strlen(base_hdr) + 20);
       const char *in;
       char *out;
       if (!buf)
@@ -130,7 +130,7 @@ MimeInlineTextHTML_parse_begin (MimeObject *obj)
         to insert whitespace every 40 characters or less.
       */
       PL_strcpy(buf, "<BASE HREF=\"");
-      out = buf + nsCRT::strlen(buf);
+      out = buf + strlen(buf);
       
       for (in = base_hdr; *in; in++)
         /* ignore whitespace and quotes */
@@ -144,7 +144,7 @@ MimeInlineTextHTML_parse_begin (MimeObject *obj)
         
         PR_Free(base_hdr);
         
-        status = MimeObject_write(obj, buf, nsCRT::strlen(buf), PR_FALSE);
+        status = MimeObject_write(obj, buf, strlen(buf), PR_FALSE);
         PR_Free(buf);
         if (status < 0) return status;
     }

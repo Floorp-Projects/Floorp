@@ -346,7 +346,7 @@ nsStreamConverter::DetermineOutputFormat(const char *url,  nsMimeOutputType *aNe
   // have to be represented via the "%2F" value
   if (format)
   {
-    format += nsCRT::strlen("?outformat=");
+    format += strlen("?outformat=");
     while (*format == ' ')
       ++format;
 
@@ -373,8 +373,8 @@ nsStreamConverter::DetermineOutputFormat(const char *url,  nsMimeOutputType *aNe
               )
           {
             *ptr = '/';
-            memmove(ptr+1, ptr+3, nsCRT::strlen(ptr+3));
-            *(ptr + nsCRT::strlen(ptr+3) + 1) = '\0';
+            memmove(ptr+1, ptr+3, strlen(ptr+3));
+            *(ptr + strlen(ptr+3) + 1) = '\0';
             ptr += 3;
           }
         }
@@ -390,7 +390,7 @@ nsStreamConverter::DetermineOutputFormat(const char *url,  nsMimeOutputType *aNe
   {
     if (header)
     {
-      PRInt32 lenOfHeader = nsCRT::strlen("?header=");
+      PRInt32 lenOfHeader = strlen("?header=");
 
       char *ptr2 = PL_strcasestr ("only", (header+lenOfHeader));
       char *ptr3 = PL_strcasestr ("quote", (header+lenOfHeader));
@@ -462,15 +462,15 @@ nsStreamConverter::DetermineOutputFormat(const char *url,  nsMimeOutputType *aNe
       {
         // store the real content type...mOutputFormat gets deleted later on...
 		// and make sure we only get our own value.
-		char *nextField = PL_strcasestr(typeField + nsCRT::strlen("&type="),"&");
+		char *nextField = PL_strcasestr(typeField + strlen("&type="),"&");
 		if (nextField)
 		{
 			*nextField = 0;
-        mRealContentType = typeField + nsCRT::strlen("&type=");
+        mRealContentType = typeField + strlen("&type=");
 			*nextField = '&';
 		}
 		else
-          mRealContentType = typeField + nsCRT::strlen("&type=");
+          mRealContentType = typeField + strlen("&type=");
         if (mRealContentType.Equals("message/rfc822"))
         {
           mRealContentType = "text/plain";
@@ -747,9 +747,9 @@ NS_IMETHODIMP nsStreamConverter::GetContentType(char **aOutputContentType)
   if (!mRealContentType.IsEmpty())
     *aOutputContentType = ToNewCString(mRealContentType);
   else if (nsCRT::strcasecmp(mOutputFormat, "raw") == 0)
-		*aOutputContentType = (char *) nsMemory::Clone(UNKNOWN_CONTENT_TYPE, nsCRT::strlen(UNKNOWN_CONTENT_TYPE) + 1);
+		*aOutputContentType = (char *) nsMemory::Clone(UNKNOWN_CONTENT_TYPE, strlen(UNKNOWN_CONTENT_TYPE) + 1);
 	else
-		*aOutputContentType = (char *) nsMemory::Clone(mOutputFormat, nsCRT::strlen(mOutputFormat) + 1);
+		*aOutputContentType = (char *) nsMemory::Clone(mOutputFormat, strlen(mOutputFormat) + 1);
 	return NS_OK;
 }
 
@@ -875,7 +875,7 @@ const char output[] = "\
     PR_FREEIF(url);
     
     if (mEmitter)
-      mEmitter->Write(outBuf, nsCRT::strlen(outBuf), &written);
+      mEmitter->Write(outBuf, strlen(outBuf), &written);
     mTotalRead += written;
 
     // rhp: will this stop the stream???? Not sure.    

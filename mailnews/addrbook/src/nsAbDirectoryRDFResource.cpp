@@ -89,9 +89,9 @@ NS_IMETHODIMP nsAbDirectoryRDFResource::Init(const char* aURI)
     mPath = path;
 
     PRUint32 queryStringLength;
-    if (queryString.get () && (queryStringLength = nsCRT::strlen (queryString)))
+    if (queryString.get () && (queryStringLength = strlen (queryString)))
     {
-        int pathLength = nsCRT::strlen (path) - queryStringLength - 1;
+        int pathLength = strlen (path) - queryStringLength - 1;
         mPath.Truncate (pathLength);
 
         mURINoQuery.Truncate (mURINoQuery.Length () - queryStringLength - 1);

@@ -2662,7 +2662,7 @@ nsImapProtocol::FetchMessage(const char * messageIds,
 
     // since messageIds can be infinitely long, use a dynamic buffer rather than the fixed one
   const char *commandTag = GetServerCommandTag();
-  int protocolStringSize = commandString.Length() + nsCRT::strlen(messageIds) + PL_strlen(commandTag) + 1 +
+  int protocolStringSize = commandString.Length() + strlen(messageIds) + PL_strlen(commandTag) + 1 +
     (part ? PL_strlen(part) : 0);
   char *protocolString = (char *) PR_CALLOC( protocolStringSize );
     
@@ -3467,7 +3467,7 @@ PRUint32 nsImapProtocol::GetMessageSize(const char * messageId,
   const char *folderFromParser = GetServerStateParser().GetSelectedMailboxName(); 
   if (folderFromParser && messageId)
   {
-    char *id = (char *)PR_CALLOC(nsCRT::strlen(messageId) + 1);
+    char *id = (char *)PR_CALLOC(strlen(messageId) + 1);
     char *folderName;
     PRUint32 size;
 
@@ -4432,7 +4432,7 @@ void nsImapProtocol::EscapeUserNamePasswordString(const char *strToEscape, nsCSt
   if (strToEscape) 
   {
     PRUint32 i = 0;
-    PRUint32 escapeStrlen = nsCRT::strlen(strToEscape);
+    PRUint32 escapeStrlen = strlen(strToEscape);
     for (i=0; i<escapeStrlen; i++)
     {
         if (strToEscape[i] == '\\' || strToEscape[i] == '\"') 
@@ -4794,7 +4794,7 @@ void nsImapProtocol::UploadMessageFromFile (nsIFileSpec* fileSpec,
           }
           nsXPIDLCString oldMsgId;
           rv = m_runningUrl->CreateListOfMessageIdsString(getter_Copies(oldMsgId));
-          if (NS_SUCCEEDED(rv) && nsCRT::strlen(oldMsgId) > 0)
+          if (NS_SUCCEEDED(rv) && strlen(oldMsgId) > 0)
           {
             PRBool idsAreUids = PR_TRUE;
             m_runningUrl->MessageIdsAreUids(&idsAreUids);
@@ -7264,8 +7264,8 @@ nsresult nsImapMockChannel::ReadFromMemCache(nsICacheEntryDescriptor *entry)
     rv = entry->GetMetaDataElement("ContentModified", getter_Copies(annotation));
     if (NS_SUCCEEDED(rv) && (annotation.get()))
     {
-      annotationLength = nsCRT::strlen(annotation.get());
-      if (annotationLength == nsCRT::strlen("Not Modified") && !nsCRT::strncmp(annotation, "Not Modified", annotationLength))
+      annotationLength = strlen(annotation.get());
+      if (annotationLength == strlen("Not Modified") && !nsCRT::strncmp(annotation, "Not Modified", annotationLength))
         shouldUseCacheEntry = PR_TRUE;
     }
   }

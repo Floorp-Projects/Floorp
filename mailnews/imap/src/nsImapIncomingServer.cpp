@@ -684,7 +684,7 @@ nsImapIncomingServer::CreateImapConnection(nsIEventQueue *aEventQueue,
   PR_CEnterMonitor(this);
 
 	GetRedirectorType(getter_Copies(redirectorType));
-	PRBool redirectLogon = ((const char *) redirectorType && nsCRT::strlen((const char *) redirectorType) > 0);
+	PRBool redirectLogon = ((const char *) redirectorType && strlen((const char *) redirectorType) > 0);
 
   PRInt32 maxConnections = 5; // default to be five
   rv = GetMaximumConnectionsNumber(&maxConnections);
@@ -917,7 +917,7 @@ nsImapIncomingServer::PerformExpand(nsIMsgWindow *aMsgWindow)
     rv = GetPassword(getter_Copies(password));
     if (NS_FAILED(rv)) return rv;
     if (!(const char*) password || 
-        nsCRT::strlen((const char*) password) == 0)
+        strlen((const char*) password) == 0)
         return NS_OK;
 
     rv = ResetFoldersToUnverified(nsnull);
@@ -1306,7 +1306,7 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
       if (hierarchyDelimiter != '/')
         nsImapUrl::UnescapeSlashes(NS_CONST_CAST(char*, dupFolderPath.get()));
       
-      if (! (onlineName.get()) || nsCRT::strlen(onlineName.get()) == 0
+      if (! (onlineName.get()) || strlen(onlineName.get()) == 0
         || nsCRT::strcmp(onlineName.get(), dupFolderPath.get()))
         imapFolder->SetOnlineName(dupFolderPath.get());
       if (hierarchyDelimiter != '/')
@@ -2741,7 +2741,7 @@ nsImapIncomingServer::StartPopulatingWithUri(nsIMsgWindow *aMsgWindow, PRBool aF
     if uri = imap://user@host/foo/bar, the serverUri is imap://user@host
     to get path from uri, skip over imap://user@host + 1 (for the /)
     */
-    const char *path = uri + nsCRT::strlen((const char *)serverUri) + 1;
+    const char *path = uri + strlen((const char *)serverUri) + 1;
 
     rv = imapService->GetListOfFoldersWithPath(this, aMsgWindow, path);
     NS_ENSURE_SUCCESS(rv,rv);

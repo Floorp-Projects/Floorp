@@ -256,7 +256,7 @@ PRUint32 UMimeEncode::ConvertBuffer( const PRUint8 * pIn, PRUint32 inLen, PRUint
 	PRUint32	maxLine = firstLineLen;
 	int	eolLen = 0;
 	if (pEolStr)
-		eolLen = nsCRT::strlen( pEolStr);
+		eolLen = strlen( pEolStr);
 
 	while ((pos + 2) < inLen) {
 		// Encode 3 bytes

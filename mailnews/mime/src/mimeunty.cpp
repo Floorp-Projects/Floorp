@@ -291,17 +291,17 @@ MimeUntypedText_open_subpart (MimeObject *obj,
   uty->open_hdrs = MimeHeaders_new();
   if (!uty->open_hdrs) return MIME_OUT_OF_MEMORY;
 
-  h = (char *) PR_MALLOC(nsCRT::strlen(type) +
-						(enc ? nsCRT::strlen(enc) : 0) +
-						(desc ? nsCRT::strlen(desc) : 0) +
-						(name ? nsCRT::strlen(name) : 0) +
+  h = (char *) PR_MALLOC(strlen(type) +
+						(enc ? strlen(enc) : 0) +
+						(desc ? strlen(desc) : 0) +
+						(name ? strlen(name) : 0) +
 						100);
   if (!h) return MIME_OUT_OF_MEMORY;
 
   PL_strcpy(h, HEADER_CONTENT_TYPE ": ");
   PL_strcat(h, type);
   PL_strcat(h, MSG_LINEBREAK);
-  status = MimeHeaders_parse_line(h, nsCRT::strlen(h), uty->open_hdrs);
+  status = MimeHeaders_parse_line(h, strlen(h), uty->open_hdrs);
   if (status < 0) goto FAIL;
 
   if (enc)
@@ -309,7 +309,7 @@ MimeUntypedText_open_subpart (MimeObject *obj,
 	  PL_strcpy(h, HEADER_CONTENT_TRANSFER_ENCODING ": ");
 	  PL_strcat(h, enc);
 	  PL_strcat(h, MSG_LINEBREAK);
-	  status = MimeHeaders_parse_line(h, nsCRT::strlen(h), uty->open_hdrs);
+	  status = MimeHeaders_parse_line(h, strlen(h), uty->open_hdrs);
 	  if (status < 0) goto FAIL;
 	}
 
@@ -318,7 +318,7 @@ MimeUntypedText_open_subpart (MimeObject *obj,
 	  PL_strcpy(h, HEADER_CONTENT_DESCRIPTION ": ");
 	  PL_strcat(h, desc);
 	  PL_strcat(h, MSG_LINEBREAK);
-	  status = MimeHeaders_parse_line(h, nsCRT::strlen(h), uty->open_hdrs);
+	  status = MimeHeaders_parse_line(h, strlen(h), uty->open_hdrs);
 	  if (status < 0) goto FAIL;
 	}
   if (name)
@@ -326,13 +326,13 @@ MimeUntypedText_open_subpart (MimeObject *obj,
 	  PL_strcpy(h, HEADER_CONTENT_DISPOSITION ": inline; filename=\"");
 	  PL_strcat(h, name);
 	  PL_strcat(h, "\"" MSG_LINEBREAK);
-	  status = MimeHeaders_parse_line(h, nsCRT::strlen(h), uty->open_hdrs);
+	  status = MimeHeaders_parse_line(h, strlen(h), uty->open_hdrs);
 	  if (status < 0) goto FAIL;
 	}
 
   /* push out a blank line. */
   PL_strcpy(h, MSG_LINEBREAK);
-  status = MimeHeaders_parse_line(h, nsCRT::strlen(h), uty->open_hdrs);
+  status = MimeHeaders_parse_line(h, strlen(h), uty->open_hdrs);
   if (status < 0) goto FAIL;
 
 
@@ -427,8 +427,8 @@ MimeUntypedText_uu_begin_line_p(const char *line, PRInt32 length,
   name[(line+length)-s] = 0;
 
   /* take off newline. */
-  if (name[nsCRT::strlen(name)-1] == nsCRT::LF) name[nsCRT::strlen(name)-1] = 0;
-  if (name[nsCRT::strlen(name)-1] == nsCRT::CR) name[nsCRT::strlen(name)-1] = 0;
+  if (name[strlen(name)-1] == nsCRT::LF) name[strlen(name)-1] = 0;
+  if (name[strlen(name)-1] == nsCRT::CR) name[strlen(name)-1] = 0;
 
   /* Now try and figure out a type.
    */

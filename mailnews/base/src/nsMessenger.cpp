@@ -1751,7 +1751,7 @@ nsSaveMsgListener::OnStopRequest(nsIRequest* request, nsISupports* aSupport,
       rv = nsMsgI18NSaveAsCharset(TEXT_PLAIN, nsMsgI18NFileSystemCharset(), 
                                   m_msgBuffer.get(), &conBuf); 
       if ( NS_SUCCEEDED(rv) && (conBuf) )
-        conLength = nsCRT::strlen(conBuf);
+        conLength = strlen(conBuf);
     }
 
     if ( (NS_SUCCEEDED(rv)) && (conBuf) )

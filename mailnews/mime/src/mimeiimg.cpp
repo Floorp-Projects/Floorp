@@ -152,7 +152,7 @@ MimeInlineImage_parse_begin (MimeObject *obj)
     html = obj->options->make_image_html(img->image_data);
     if (!html) return MIME_OUT_OF_MEMORY;
 
-    status = MimeObject_write(obj, html, nsCRT::strlen(html), PR_TRUE);
+    status = MimeObject_write(obj, html, strlen(html), PR_TRUE);
     PR_Free(html);
     if (status < 0) return status;
   }

@@ -456,8 +456,8 @@ nsSubscribeDataSource::GetServerAndRelativePathFromResource(nsIRDFResource *sour
     rv = incomingServer->GetServerURI(getter_Copies(serverURI));
     NS_ENSURE_SUCCESS(rv,rv);
  
-    PRUint32 serverURILen = nsCRT::strlen((const char *)serverURI);   
-    if (serverURILen == nsCRT::strlen(sourceURI)) {
+    PRUint32 serverURILen = strlen((const char *)serverURI);   
+    if (serverURILen == strlen(sourceURI)) {
         *relativePath = nsnull;
     }
     else {

@@ -803,27 +803,27 @@ nsAbSync::GenerateProtocolForCard(nsIAbCard *aCard, PRBool aAddId, nsString &pro
       // If this is a phone number, we have to special case this because
       // phone #'s are handled differently than all other tags...sigh!
       //
-      if (!nsCRT::strncasecmp(mSchemaMappingList[i].abField, kWorkPhoneColumn, nsCRT::strlen(kWorkPhoneColumn)))
+      if (!nsCRT::strncasecmp(mSchemaMappingList[i].abField, kWorkPhoneColumn, strlen(kWorkPhoneColumn)))
       {
         foundPhone = PR_TRUE;
         phoneType = ABSYNC_WORK_PHONE_TYPE;
       }
-      else if (!nsCRT::strncasecmp(mSchemaMappingList[i].abField, kHomePhoneColumn, nsCRT::strlen(kHomePhoneColumn)))
+      else if (!nsCRT::strncasecmp(mSchemaMappingList[i].abField, kHomePhoneColumn, strlen(kHomePhoneColumn)))
       {
         foundPhone = PR_TRUE;
         phoneType = ABSYNC_HOME_PHONE_TYPE;
       }
-      else if (!nsCRT::strncasecmp(mSchemaMappingList[i].abField, kFaxColumn, nsCRT::strlen(kFaxColumn)))
+      else if (!nsCRT::strncasecmp(mSchemaMappingList[i].abField, kFaxColumn, strlen(kFaxColumn)))
       {
         foundPhone = PR_TRUE;
         phoneType = ABSYNC_FAX_PHONE_TYPE;
       }
-      else if (!nsCRT::strncasecmp(mSchemaMappingList[i].abField, kPagerColumn, nsCRT::strlen(kPagerColumn)))
+      else if (!nsCRT::strncasecmp(mSchemaMappingList[i].abField, kPagerColumn, strlen(kPagerColumn)))
       {
         foundPhone = PR_TRUE;
         phoneType = ABSYNC_PAGER_PHONE_TYPE;
       }
-      else if (!nsCRT::strncasecmp(mSchemaMappingList[i].abField, kCellularColumn, nsCRT::strlen(kCellularColumn)))
+      else if (!nsCRT::strncasecmp(mSchemaMappingList[i].abField, kCellularColumn, strlen(kCellularColumn)))
       {
         foundPhone = PR_TRUE;
         phoneType = ABSYNC_CELL_PHONE_TYPE;
@@ -973,7 +973,7 @@ GetCRC(char *str)
 
   char *pChar = str;
   cm_ini( p);
-  for (PRUint32 i = 0; i < nsCRT::strlen(str); i++, pChar++)
+  for (PRUint32 i = 0; i < strlen(str); i++, pChar++)
     cm_nxt( p, *pChar);
   
   return( cm_crc( p) );
@@ -1315,7 +1315,7 @@ nsAbSync::AnalyzeAllRecords(nsIAddrDatabase *aDatabase, nsIAbDirectory *director
           char      *tMsg = BuildSyncTimestamp();
           PRInt32   tWriteSize;
 
-          mLockFile->Write(tMsg, nsCRT::strlen(tMsg), &tWriteSize);
+          mLockFile->Write(tMsg, strlen(tMsg), &tWriteSize);
           mLockFile->CloseStream();
         }
       }
@@ -1643,7 +1643,7 @@ nsAbSync::ExtractInteger(char *aLine, char *aTag, char aDelim, PRInt32 *aRetVal)
   if (!fLoc)
     return NS_ERROR_FAILURE;
 
-  fLoc += nsCRT::strlen(aTag);
+  fLoc += strlen(aTag);
   if (!*fLoc)
     return NS_ERROR_FAILURE;
 
@@ -1674,7 +1674,7 @@ nsAbSync::ExtractCharacterString(char *aLine, char *aTag, char aDelim)
   if (!fLoc)
     return nsnull;
 
-  fLoc += nsCRT::strlen(aTag);
+  fLoc += strlen(aTag);
   if (!*fLoc)
     return nsnull;
 
@@ -1699,9 +1699,9 @@ nsAbSync::ExtractCharacterString(char *aLine, char *aTag, char aDelim)
 PRBool
 nsAbSync::ErrorFromServer(char **errString)
 {
-  if (!nsCRT::strncasecmp(mProtocolOffset, SERVER_ERROR, nsCRT::strlen(SERVER_ERROR)))
+  if (!nsCRT::strncasecmp(mProtocolOffset, SERVER_ERROR, strlen(SERVER_ERROR)))
   {
-    *errString = mProtocolOffset + nsCRT::strlen(SERVER_ERROR);
+    *errString = mProtocolOffset + strlen(SERVER_ERROR);
     return PR_TRUE;
   }
   else
@@ -1731,19 +1731,19 @@ nsAbSync::ProcessOpReturn()
     // Find the right tag and do something with it!
     // First a locale for the data
     if (!nsCRT::strncasecmp(workLine, SERVER_OP_RETURN_LOCALE, 
-                            nsCRT::strlen(SERVER_OP_RETURN_LOCALE)))
+                            strlen(SERVER_OP_RETURN_LOCALE)))
     {
       char *locale = workLine;
-      locale += nsCRT::strlen(SERVER_OP_RETURN_LOCALE);
+      locale += strlen(SERVER_OP_RETURN_LOCALE);
       if (*locale)
         mLocale = NS_ConvertASCIItoUCS2(locale);
     }
     // this is for renaming records from the server...
     else if (!nsCRT::strncasecmp(workLine, SERVER_OP_RETURN_RENAME, 
-                                 nsCRT::strlen(SERVER_OP_RETURN_RENAME)))
+                                 strlen(SERVER_OP_RETURN_RENAME)))
     {
       char *renop = workLine;
-      renop += nsCRT::strlen(SERVER_OP_RETURN_RENAME);
+      renop += strlen(SERVER_OP_RETURN_RENAME);
       if (*renop)
       {
         nsresult  rv = NS_OK;
@@ -2133,12 +2133,12 @@ nsAbSync::TagHit(const char *aTag, PRBool advanceToNextLine)
   if ((!aTag) || (!*aTag))
     return PR_FALSE;
   
-  if (!nsCRT::strncasecmp(mProtocolOffset, aTag, nsCRT::strlen(aTag)))
+  if (!nsCRT::strncasecmp(mProtocolOffset, aTag, strlen(aTag)))
   {
     if (advanceToNextLine)
       AdvanceToNextLine();
     else
-      mProtocolOffset += nsCRT::strlen(aTag);
+      mProtocolOffset += strlen(aTag);
     return PR_TRUE;
   }
   else

@@ -141,7 +141,7 @@ NS_IMETHODIMP nsAbAddressCollecter::CollectAddress(const char *address)
 					nsCOMPtr<nsIAbCard> senderCard = do_CreateInstance(NS_ABCARDPROPERTY_CONTRACTID, &rv);
 					if (NS_SUCCEEDED(rv) && senderCard)
 					{
-						if (curName && nsCRT::strlen(curName) > 0)
+						if (curName && strlen(curName) > 0)
 						{
 							SetNamesForCard(senderCard, curName);
 						}

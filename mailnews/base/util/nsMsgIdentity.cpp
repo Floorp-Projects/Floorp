@@ -465,7 +465,7 @@ nsMsgIdentity::getFolderPref(const char *prefname, char **retval, PRBool mustHav
   if (!mustHaveDefault) return rv;
 
   // Use default value if fail to get or not set
-  if (NS_FAILED(rv) || !*retval || !nsCRT::strlen(*retval))
+  if (NS_FAILED(rv) || !*retval || !strlen(*retval))
   {
     PR_FREEIF(*retval);	// free the empty string
     rv = getDefaultCharPref(prefname, retval);

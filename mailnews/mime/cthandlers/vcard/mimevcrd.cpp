@@ -236,7 +236,7 @@ static PRInt32 INTL_ConvertCharset(const char* from_charset, const char* to_char
   if (NS_SUCCEEDED(res)) {
     res = ConvertFromUnicode(to_charset, outString, outBuffer);
     if (NS_SUCCEEDED(res)) {
-      *outLength = nsCRT::strlen(*outBuffer);
+      *outLength = strlen(*outBuffer);
     }
   }
 
@@ -267,7 +267,7 @@ MimeInlineTextVCard_parse_eof (MimeObject *obj, PRBool abort_p)
 
   if (!clazz->vCardString) return 0;
   
-  v = Parse_MIME(clazz->vCardString, nsCRT::strlen(clazz->vCardString));
+  v = Parse_MIME(clazz->vCardString, strlen(clazz->vCardString));
   
   if (clazz->vCardString) {
     PR_Free ((char*) clazz->vCardString);
@@ -301,14 +301,14 @@ static int WriteEachLineToStream (MimeObject *obj, const char *line)
 {
   int status = 0;
   char *htmlLine;
-  int htmlLen = nsCRT::strlen(line) + 1;
+  int htmlLen = strlen(line) + 1;
 
   htmlLine = (char *) PR_MALLOC (htmlLen);
   if (htmlLine)
   {
     htmlLine[0] = '\0';
     PL_strcat (htmlLine, line);
-      status = COM_MimeObject_write(obj, htmlLine, nsCRT::strlen(htmlLine), PR_TRUE);
+      status = COM_MimeObject_write(obj, htmlLine, strlen(htmlLine), PR_TRUE);
     PR_Free ((void*) htmlLine);
   }
   else
@@ -328,15 +328,15 @@ static int OutputTable (MimeObject *obj, PRBool endTable, PRBool border, char *c
   }
   else
   {
-    int htmlLen = nsCRT::strlen("<TABLE>") + 1;
+    int htmlLen = strlen("<TABLE>") + 1;
     if (border)
-      htmlLen += nsCRT::strlen (" BORDER");
+      htmlLen += strlen (" BORDER");
     if (cellspacing)
-      htmlLen += nsCRT::strlen(" CELLSPACING=") + nsCRT::strlen(cellspacing);
+      htmlLen += strlen(" CELLSPACING=") + strlen(cellspacing);
     if (cellpadding)
-      htmlLen += nsCRT::strlen(" CELLPADDING=") + nsCRT::strlen(cellpadding);
+      htmlLen += strlen(" CELLPADDING=") + strlen(cellpadding);
     if (bgcolor)
-      htmlLen += nsCRT::strlen(" BGCOLOR=") + nsCRT::strlen(bgcolor);
+      htmlLen += strlen(" BGCOLOR=") + strlen(bgcolor);
     if (border || cellspacing || cellpadding || bgcolor)
       htmlLen++;
 
@@ -368,7 +368,7 @@ static int OutputTable (MimeObject *obj, PRBool endTable, PRBool border, char *c
 
       PL_strcat (htmlLine, ">");
 
-      status = COM_MimeObject_write(obj, htmlLine, nsCRT::strlen(htmlLine), PR_TRUE);
+      status = COM_MimeObject_write(obj, htmlLine, strlen(htmlLine), PR_TRUE);
       PR_Free ((void*) htmlLine);
     }
     else
@@ -392,15 +392,15 @@ static int OutputTableRowOrData(MimeObject *obj, PRBool outputRow,
       status = WriteEachLineToStream (obj, "</TD>");
   else
   {
-    int htmlLen = nsCRT::strlen("<TR>") + 1;
+    int htmlLen = strlen("<TR>") + 1;
     if (align)
-      htmlLen += nsCRT::strlen(" ALIGN=") + nsCRT::strlen(align);
+      htmlLen += strlen(" ALIGN=") + strlen(align);
     if (colspan)
-      htmlLen += nsCRT::strlen(" COLSPAN=") + nsCRT::strlen(colspan);
+      htmlLen += strlen(" COLSPAN=") + strlen(colspan);
     if (width)
-      htmlLen += nsCRT::strlen(" WIDTH=") + nsCRT::strlen(width);
+      htmlLen += strlen(" WIDTH=") + strlen(width);
     if (valign)
-      htmlLen += nsCRT::strlen(" VALIGN=") + nsCRT::strlen(valign);
+      htmlLen += strlen(" VALIGN=") + strlen(valign);
     if (align || valign || colspan || width)
       htmlLen++;
 
@@ -437,7 +437,7 @@ static int OutputTableRowOrData(MimeObject *obj, PRBool outputRow,
 
       PL_strcat (htmlLine, ">");
 
-      status = COM_MimeObject_write(obj, htmlLine, nsCRT::strlen(htmlLine), PR_TRUE);
+      status = COM_MimeObject_write(obj, htmlLine, strlen(htmlLine), PR_TRUE);
       PR_Free ((void*) htmlLine);
     }
     else
@@ -457,11 +457,11 @@ static int OutputFont(MimeObject *obj, PRBool endFont, char * size, char* color)
     status = WriteEachLineToStream (obj, "</FONT>");
   else
   {
-    int htmlLen = nsCRT::strlen("<FONT>") + 1;
+    int htmlLen = strlen("<FONT>") + 1;
     if (size)
-      htmlLen += nsCRT::strlen(" SIZE=") + nsCRT::strlen(size);
+      htmlLen += strlen(" SIZE=") + strlen(size);
     if (color)
-      htmlLen += nsCRT::strlen(" COLOR=") + nsCRT::strlen(color);
+      htmlLen += strlen(" COLOR=") + strlen(color);
     if (size || color)
       htmlLen++;
 
@@ -485,7 +485,7 @@ static int OutputFont(MimeObject *obj, PRBool endFont, char * size, char* color)
 
       PL_strcat (htmlLine, ">");
 
-      status = COM_MimeObject_write(obj, htmlLine, nsCRT::strlen(htmlLine), PR_TRUE);
+      status = COM_MimeObject_write(obj, htmlLine, strlen(htmlLine), PR_TRUE);
       PR_Free ((void*) htmlLine);
     }
     else
@@ -509,7 +509,7 @@ static int OutputVcardAttribute(MimeObject *obj, VObject *v, const char* id)
         string = fakeCString (vObjectUStringZValue(prop));
       else
       {
-        string = (char *)PR_MALLOC(nsCRT::strlen((char *) vObjectAnyValue(prop)) + 1);
+        string = (char *)PR_MALLOC(strlen((char *) vObjectAnyValue(prop)) + 1);
         if (string)
           PL_strcpy(string, (char *) vObjectAnyValue(prop));
       }
@@ -553,7 +553,7 @@ static int OutputBasicVcard(MimeObject *obj, VObject *v)
         namestring  = fakeCString (vObjectUStringZValue(prop));
       else
       {
-        namestring = (char *)PR_MALLOC(nsCRT::strlen((char *) vObjectAnyValue(prop)) + 1);
+        namestring = (char *)PR_MALLOC(strlen((char *) vObjectAnyValue(prop)) + 1);
         if (namestring)
           PL_strcpy(namestring, (char *) vObjectAnyValue(prop));
       }
@@ -697,7 +697,7 @@ static int OutputAdvancedVcard(MimeObject *obj, VObject *v)
         namestring  = fakeCString (vObjectUStringZValue(prop));
       else
       {
-        namestring = (char *)PR_MALLOC(nsCRT::strlen((char *) vObjectAnyValue(prop)) + 1);
+        namestring = (char *)PR_MALLOC(strlen((char *) vObjectAnyValue(prop)) + 1);
         if (namestring)
           PL_strcpy(namestring, (char *) vObjectAnyValue(prop));
       }
@@ -1205,7 +1205,7 @@ static int EndVCard (MimeObject *obj)
   /* Scribble HTML-ending stuff into the stream */
   char htmlFooters[32];
   PR_snprintf (htmlFooters, sizeof(htmlFooters), "</BODY>%s</HTML>%s", MSG_LINEBREAK, MSG_LINEBREAK);
-  status = COM_MimeObject_write(obj, htmlFooters, nsCRT::strlen(htmlFooters), PR_FALSE);
+  status = COM_MimeObject_write(obj, htmlFooters, strlen(htmlFooters), PR_FALSE);
 
   if (status < 0) return status;
 
@@ -1221,7 +1221,7 @@ static int BeginVCard (MimeObject *obj)
 
   s_unique++;
   PR_snprintf (htmlHeaders, sizeof(htmlHeaders), "<HTML>%s<BODY>%s", MSG_LINEBREAK, MSG_LINEBREAK);
-    status = COM_MimeObject_write(obj, htmlHeaders, nsCRT::strlen(htmlHeaders), PR_TRUE);
+    status = COM_MimeObject_write(obj, htmlHeaders, strlen(htmlHeaders), PR_TRUE);
 
   if (status < 0) return status;
 
@@ -1749,7 +1749,7 @@ FindCharacterSet(MimeObject *obj)
 
   if (tCharSet)
   {
-    if (nsCRT::strlen(tCharSet) > 8)
+    if (strlen(tCharSet) > 8)
     {
       retCharSet = PL_strdup( (tCharSet + 8) );
       char  *ptr = retCharSet;
@@ -1798,7 +1798,7 @@ WriteLineToStream (MimeObject *obj, const char *line, PRBool aDoCharConversion)
       charset = nsCRT::strdup("ISO-8859-1");
     }
     // convert from the resource charset.
-    res = INTL_ConvertCharset(charset, "UTF-8", line, nsCRT::strlen(line),
+    res = INTL_ConvertCharset(charset, "UTF-8", line, strlen(line),
                               &converted, &converted_length);
     if ( (res != 0) || (converted == NULL) )
       converted = (char *)line;
@@ -1808,7 +1808,7 @@ WriteLineToStream (MimeObject *obj, const char *line, PRBool aDoCharConversion)
   else
     converted = (char *)line;
   
-  htmlLen = nsCRT::strlen(converted) + nsCRT::strlen("<DT></DT>") + 1;
+  htmlLen = strlen(converted) + strlen("<DT></DT>") + 1;
   htmlLine = (char *) PR_MALLOC (htmlLen);
   if (htmlLine)
   {
@@ -1816,7 +1816,7 @@ WriteLineToStream (MimeObject *obj, const char *line, PRBool aDoCharConversion)
     PL_strcat (htmlLine, "<DT>");
     PL_strcat (htmlLine, converted);
     PL_strcat (htmlLine, "</DT>");
-    status = COM_MimeObject_write(obj, htmlLine, nsCRT::strlen(htmlLine), PR_TRUE);
+    status = COM_MimeObject_write(obj, htmlLine, strlen(htmlLine), PR_TRUE);
     PR_Free ((void*) htmlLine);
   }
   else

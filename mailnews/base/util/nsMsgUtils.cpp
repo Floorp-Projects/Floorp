@@ -351,7 +351,7 @@ PRBool NS_MsgStripRE(const char **stringP, PRUint32 *lengthP)
   NS_ASSERTION(stringP, "bad null param");
   if (!stringP) return PR_FALSE;
   s = *stringP;
-  L = lengthP ? *lengthP : nsCRT::strlen(s);
+  L = lengthP ? *lengthP : strlen(s);
 
   s_end = s + L;
   last = s;

@@ -125,7 +125,7 @@ nsresult nsTextAddress::ImportAddresses( PRBool *pAbort, const PRUnichar *pName,
             *pProgress = (PRUint32)loc;
         rv = ReadRecord( pSrc, pLine, kTextAddressBufferSz, m_delim, &lineLen);
         if (NS_SUCCEEDED( rv)) {
-            rv = ProcessLine( pLine, nsCRT::strlen( pLine), errors);
+            rv = ProcessLine( pLine, strlen( pLine), errors);
             if (NS_FAILED( rv)) {
                 IMPORT_LOG0( "*** Error processing text record.\n");
             }
@@ -173,7 +173,7 @@ nsresult nsTextAddress::ReadRecord( nsIFileSpec *pSrc, char *pLine, PRInt32 buff
             rv = NS_ERROR_FAILURE;
         }
         else if (NS_SUCCEEDED( rv)) {
-            lineLen = nsCRT::strlen( pLine);
+            lineLen = strlen( pLine);
         }
     } while (NS_SUCCEEDED( rv) && !IsLineComplete( pLine, lineLen, delim));
 
@@ -439,7 +439,7 @@ nsresult nsTextAddress::DetermineDelim( nsIFileSpec *pSrc)
         if (wasTruncated)
             pLine[kTextAddressBufferSz - 1] = 0;
         if (NS_SUCCEEDED( rv)) {
-            lineLen = nsCRT::strlen( pLine);
+            lineLen = strlen( pLine);
             tabCount = CountFields( pLine, lineLen, 9);
             commaCount = CountFields( pLine, lineLen, ',');
             if (tabCount > commaCount)
@@ -584,7 +584,7 @@ nsresult nsTextAddress::IsLDIFFile( nsIFileSpec *pSrc, PRBool *pIsLDIF)
         if (wasTruncated)
             pLine[kTextAddressBufferSz - 1] = 0;
         if (NS_SUCCEEDED( rv)) {
-            lineLen = nsCRT::strlen( pLine);            
+            lineLen = strlen( pLine);            
             tabCount += CountFields( pLine, lineLen, 9);
             commaCount += CountFields( pLine, lineLen, ',');
             pChar = pLine;

@@ -543,7 +543,7 @@ nsNntpService::GetFolderFromUri(const char *uri, nsIMsgFolder **folder)
     // the user might have typed in or clicked on a nntp:// url
     // to support this, we turn it into a news:// url
     nsCOMPtr<nsIRDFResource> res;
-    if ((nsCRT::strlen(uri) > kNntpRootURILen) && nsCRT::strncmp(uri, kNntpRootURI, kNntpRootURILen) == 0) {
+    if ((strlen(uri) > kNntpRootURILen) && nsCRT::strncmp(uri, kNntpRootURI, kNntpRootURILen) == 0) {
       nsCAutoString uriStr(kNewsRootURI);
       uriStr.Append(uri+kNntpRootURILen);
       rv = rdf->GetResource(uriStr.get(), getter_AddRefs(res));

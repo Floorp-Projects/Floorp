@@ -1148,8 +1148,8 @@ mime_image_make_image_html(void *image_closure)
   else
     url = mid->url;
 
-  buf = (char *) PR_MALLOC (nsCRT::strlen(prefix) + nsCRT::strlen(suffix) +
-                           nsCRT::strlen(url) + 20) ;
+  buf = (char *) PR_MALLOC (strlen(prefix) + strlen(suffix) +
+                            strlen(url) + 20) ;
   if (!buf) 
     return 0;
   *buf = 0;

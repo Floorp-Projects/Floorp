@@ -238,7 +238,7 @@ char *nsMsgSearchNews::EncodeTerm (nsIMsgSearchTerm *term)
 	// Combine the XPAT command syntax with the attribute and the pattern to
 	// form the term encoding
 	const char xpatTemplate[] = "XPAT %s 1- %s";
-	int termLength = (sizeof(xpatTemplate) - 1) + nsCRT::strlen(attribEncoding) + pattern.Length() + 1;
+	int termLength = (sizeof(xpatTemplate) - 1) + strlen(attribEncoding) + pattern.Length() + 1;
 	char *termEncoding = new char [termLength];
 	if (termEncoding)
 		PR_snprintf (termEncoding, termLength, xpatTemplate, attribEncoding, pattern.get());
@@ -283,9 +283,9 @@ nsresult nsMsgSearchNews::Encode (nsCString *outEncoding)
 		
 			intermediateEncodings[i] = EncodeTerm (pTerm);	
 			if (intermediateEncodings[i])
-				encodingLength += nsCRT::strlen(intermediateEncodings[i]) + nsCRT::strlen(m_kTermSeparator);
+				encodingLength += strlen(intermediateEncodings[i]) + strlen(m_kTermSeparator);
 		}
-		encodingLength += nsCRT::strlen("?search");
+		encodingLength += strlen("?search");
 		// Combine all the term encodings into one big encoding
 		char *encoding = new char [encodingLength + 1];
 		if (encoding)

@@ -1153,7 +1153,7 @@ nsMsgIncomingServer::GetRealHostName(char **aResult)
   nsresult rv;
   rv = GetCharValue("realhostname", aResult);
   NS_ENSURE_SUCCESS(rv, rv);
-  if (!*aResult || (nsCRT::strlen(*aResult) == 0))
+  if (!*aResult || (strlen(*aResult) == 0))
     return(GetHostName(aResult));
 
   if (PL_strchr(*aResult, ':'))
@@ -1171,7 +1171,7 @@ nsMsgIncomingServer::GetRealUsername(char **aResult)
   nsresult rv;
   rv = GetCharValue("realuserName", aResult);
   NS_ENSURE_SUCCESS(rv, rv);
-  if (!*aResult || (nsCRT::strlen(*aResult) == 0))
+  if (!*aResult || (strlen(*aResult) == 0))
     return(GetUsername(aResult));
 
   return rv;

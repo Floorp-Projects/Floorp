@@ -358,7 +358,7 @@ MimeHeaders_get (MimeHeaders *hdrs, const char *header_name,
 	  return 0;
 	}
 
-  name_length = nsCRT::strlen(header_name);
+  name_length = strlen(header_name);
 
   for (i = 0; i < hdrs->heads_size; i++)
 	{
@@ -429,7 +429,7 @@ MimeHeaders_get (MimeHeaders *hdrs, const char *header_name,
 		  }
 		else
 		  {
-			PRInt32 L = nsCRT::strlen(result);
+			PRInt32 L = strlen(result);
 			s = (char *) PR_Realloc(result, (L + (end - contents + 10)));
 			if (!s)
 			  {
@@ -499,7 +499,7 @@ MimeHeaders_get_parameter (const char *header_value, const char *parm_name,
   if (language) *language = NULL;
 
   str = header_value;
-  parm_len = nsCRT::strlen(parm_name);
+  parm_len = strlen(parm_name);
 
   /* Skip forward to first ';' */
   for (; *str && *str != ';' && *str != ','; str++)
@@ -636,7 +636,7 @@ MimeHeaders_get_parameter (const char *header_value, const char *parm_name,
 			  char *ns = NULL;
 			  if (s)
 			  {
-				  len = nsCRT::strlen(s);
+				  len = strlen(s);
 				  ns = (char *) PR_Realloc(s, len+(value_end-value_start)+1);
 				  if (!ns)
                     {
@@ -1028,7 +1028,7 @@ MimeHeaders_write_raw_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt,
 									 hdrs->all_headers_fp);
 		  if (status < 0) return status;
 		}
-	  status = MimeHeaders_write(opt, nl, nsCRT::strlen(nl));
+	  status = MimeHeaders_write(opt, nl, strlen(nl));
 	  if (status < 0) return status;
 	}
   else if (hdrs)

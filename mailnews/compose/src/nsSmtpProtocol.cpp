@@ -849,7 +849,7 @@ PRInt32 nsSmtpProtocol::AuthLoginUsername()
   
   rv = smtpServer->GetUsername(getter_Copies(username));
 
-  if (!(const char*) username || nsCRT::strlen((const char*)username) == 0) {
+  if (!(const char*) username || strlen((const char*)username) == 0) {
       rv = GetUsernamePassword(getter_Copies(username), getter_Copies(origPassword));
       m_usernamePrompted = PR_TRUE;
       password.Assign(origPassword);
@@ -885,7 +885,7 @@ PRInt32 nsSmtpProtocol::AuthLoginUsername()
   {
 	  base64Str = 
           PL_Base64Encode((const char *) username, 
-                          nsCRT::strlen((const char*)username), nsnull);
+                          strlen((const char*)username), nsnull);
   } 
   if (base64Str) {
 	  if (TestFlag(SMTP_AUTH_PLAIN_ENABLED))
@@ -923,7 +923,7 @@ PRInt32 nsSmtpProtocol::AuthLoginPassword()
   if (!TestFlag(SMTP_USE_LOGIN_REDIRECTION))
   {
     rv = GetPassword(getter_Copies(origPassword));
-    PRInt32 passwordLength = nsCRT::strlen((const char *) origPassword);
+    PRInt32 passwordLength = strlen((const char *) origPassword);
     if (!(const char*) origPassword || passwordLength == 0)
 	    return NS_ERROR_SMTP_PASSWORD_UNDEFINED;
 	  password.Assign((const char*) origPassword);

@@ -245,7 +245,7 @@ escape_unescaped_percents(const char *incomingURL)
 {
   const char *inC;
   char *outC;
-  char *result = (char *) PR_Malloc(nsCRT::strlen(incomingURL)*3+1);
+  char *result = (char *) PR_Malloc(strlen(incomingURL)*3+1);
 
   if (result)
   {
@@ -284,7 +284,7 @@ escape_for_mrel_subst(char *inURL)
   char *output, *inC, *outC, *temp;
 
   /* nsCRT::strlen asserts the presence of a string in inURL */
-  int size = nsCRT::strlen(inURL) + 1;
+  int size = strlen(inURL) + 1;
 
   for(inC = inURL; *inC; inC++)
     if ((*inC == ' ') || (*inC == '>')) 
@@ -362,7 +362,7 @@ MimeThisIsStartPart(MimeObject *obj, MimeObject* child)
     {
       int length;
       tmp++;
-      length = nsCRT::strlen(tmp);
+      length = strlen(tmp);
       if (length > 0 && tmp[length - 1] == '>') 
       {
         tmp[length - 1] = '\0';
@@ -442,7 +442,7 @@ MimeMultipartRelated_output_child_p(MimeObject *obj, MimeObject* child)
         if (*tmp2 == '<') {
           int length;
           tmp2++;
-          length = nsCRT::strlen(tmp2);
+          length = strlen(tmp2);
           if (length > 0 && tmp2[length - 1] == '>') {
             tmp2[length - 1] = '\0';
           }
@@ -503,7 +503,7 @@ MimeMultipartRelated_output_child_p(MimeObject *obj, MimeObject* child)
                 {
                   int length;
                   tmp2++;
-                  length = nsCRT::strlen(tmp2);
+                  length = strlen(tmp2);
                   if (length > 0 && tmp2[length - 1] == '>') 
                   {
                     tmp2[length - 1] = '\0';
@@ -808,7 +808,7 @@ flush_tag(MimeMultipartRelated* relobj)
         /*If we found a mailbox part URL, write that out instead.*/
         if (part_url)
         {
-          status = real_write(relobj, part_url, nsCRT::strlen(part_url));
+          status = real_write(relobj, part_url, strlen(part_url));
           if (status < 0) return status;
           buf = ptr2; /* skip over the cid: URL we substituted */
         }
@@ -840,7 +840,7 @@ flush_tag(MimeMultipartRelated* relobj)
 
         if (realout)
         {
-          status = real_write(relobj, realout, nsCRT::strlen(realout));
+          status = real_write(relobj, realout, strlen(realout));
           if (status < 0) return status;
           buf = ptr2; /* skip over the cid: URL we substituted */
         }
@@ -860,7 +860,7 @@ flush_tag(MimeMultipartRelated* relobj)
     }
   }
   if (buf && *buf) {
-    status = real_write(relobj, buf, nsCRT::strlen(buf));
+    status = real_write(relobj, buf, strlen(buf));
     if (status < 0) return status;
   }
   relobj->curtag_length = 0;

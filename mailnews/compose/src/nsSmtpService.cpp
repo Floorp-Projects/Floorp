@@ -661,7 +661,7 @@ nsSmtpService::GetDefaultServer(nsISmtpServer **aServer)
       rv = pref->CopyCharPref("mail.smtp.defaultserver",
                              getter_Copies(defaultServerKey));
       if (NS_SUCCEEDED(rv) &&
-          nsCRT::strlen(defaultServerKey) > 0) {
+          strlen(defaultServerKey) > 0) {
 
           nsCOMPtr<nsISmtpServer> server;
           rv = GetServerByKey(defaultServerKey,

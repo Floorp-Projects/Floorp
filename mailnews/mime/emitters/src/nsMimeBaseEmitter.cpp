@@ -413,7 +413,7 @@ nsMimeBaseEmitter::AddAttachmentField(const char *field, const char *value)
 NS_IMETHODIMP
 nsMimeBaseEmitter::UtilityWrite(const char *buf)
 {
-  PRInt32     tmpLen = nsCRT::strlen(buf);
+  PRInt32     tmpLen = strlen(buf);
   PRUint32    written;
 
   Write(buf, tmpLen, &written);
@@ -424,7 +424,7 @@ nsMimeBaseEmitter::UtilityWrite(const char *buf)
 NS_IMETHODIMP
 nsMimeBaseEmitter::UtilityWriteCRLF(const char *buf)
 {
-  PRInt32     tmpLen = nsCRT::strlen(buf);
+  PRInt32     tmpLen = strlen(buf);
   PRUint32    written;
 
   Write(buf, tmpLen, &written);

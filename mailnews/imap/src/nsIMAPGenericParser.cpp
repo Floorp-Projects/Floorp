@@ -395,7 +395,7 @@ char *nsIMAPGenericParser::CreateNilString()
 {
 	if (!PL_strncasecmp(fNextToken, "NIL", 3))
 	{
-		if (nsCRT::strlen(fNextToken) != 3)
+		if (strlen(fNextToken) != 3)
 			fNextToken += 3;
 		//fNextToken = GetNextToken();
 		return NULL;
