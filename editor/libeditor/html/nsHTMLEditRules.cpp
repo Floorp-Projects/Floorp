@@ -2403,6 +2403,8 @@ nsHTMLEditRules::WillMakeList(nsISelection *aSelection,
         if (NS_FAILED(res)) return res;
         if (IsInlineNode(curNode)) 
           prevListItem = listItem;
+        else
+          prevListItem = nsnull;
       }
     }
     else
