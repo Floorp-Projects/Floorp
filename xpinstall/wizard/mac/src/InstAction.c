@@ -188,6 +188,11 @@ pascal void* Install(void* unused)
 	/* launch the downloaded apps who had the LAUNCHAPP attr set */
 	LaunchApps(vRefNum, dirID);
 	 
+#if MOZILLA == 0
+	/* cleanup downloaded .xpis */
+	DeleteXPIs(vRefNum, dirID);  /* temp folder location is supplied */
+#endif
+
 	/* wind down app */
 	gDone = true;
 	
@@ -502,6 +507,50 @@ LaunchApps(short vRefNum, long dirID)
 					if (pArchiveName)
 						DisposePtr((Ptr)pArchiveName);
 				}	
+			}
+		}
+		
+		compsDone++;
+	}
+}
+
+void
+DeleteXPIs(short vRefNum, long dirID)
+{
+	int 		compsDone = 0, i;
+	int 		instChoice = gControls->opt->instChoice - 1;
+	OSErr 		err = noErr;
+	StringPtr	pArchiveName;
+	FSSpec		fsCurr;
+	
+	// loop through 0 to kMaxComponents
+	for(i=0; i<kMaxComponents; i++)
+	{
+		// general test: if component in setup type
+		if ( (gControls->cfg->st[instChoice].comp[i] == kInSetupType) &&
+			 (compsDone < gControls->cfg->st[instChoice].numComps) )
+		{ 
+			// if custom and selected, or not custom setup type
+			if ( ((instChoice == gControls->cfg->numSetupTypes-1) && 
+				  (gControls->cfg->comp[i].selected == true)) ||
+				 (instChoice < gControls->cfg->numSetupTypes-1) )
+			{
+				HLock(gControls->cfg->comp[i].archive);
+				pArchiveName = CToPascal(*gControls->cfg->comp[i].archive);
+				HUnlock(gControls->cfg->comp[i].archive);
+				
+				err = FSMakeFSSpec(vRefNum, dirID, pArchiveName, &fsCurr);
+				if (err == noErr)
+				{
+					err = FSpDelete(&fsCurr);
+#ifdef MIW_DEBUG
+					if (err != noErr)
+						SysBeep(10);
+#endif
+				}
+				
+				if (pArchiveName)
+					DisposePtr((Ptr)pArchiveName);
 			}
 		}
 		
