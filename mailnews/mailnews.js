@@ -374,7 +374,7 @@ pref("mail.server.default.canFileMessages", true);
 // special enhancements for IMAP servers
 pref("mail.server.default.store_read_mail_in_pfc", false);  
 pref("mail.server.default.store_sent_mail_in_pfc", false);  
-
+pref("mail.server.default.use_idle", true); 
 // for spam
 pref("mail.server.default.spamLevel",100);  // 0 off, 100 on.  not doing bool since we might have real levels one day.
 pref("mail.server.default.moveOnSpam",false);

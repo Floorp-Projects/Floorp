@@ -460,3 +460,9 @@ char * nsMsgLineStreamBuffer::ReadNextLine(nsIInputStream * aInputStream, PRUint
   aPauseForMoreData = PR_TRUE;
   return nsnull; // if we somehow got here. we don't have another line in the buffer yet...need to wait for more data...
 }
+
+PRBool nsMsgLineStreamBuffer::NextLineAvailable()
+{
+  return (m_numBytesInBuffer > 0 && PL_strchr(m_dataBuffer+m_startPos, m_lineToken));
+}
+
