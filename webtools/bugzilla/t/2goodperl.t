@@ -57,12 +57,18 @@ foreach $file (@testitems) {
 			next;
 		}
 	}
-	if ($filecontent !~ /use strict;/) {
+}
+foreach $file (@testitems) {
+	$file =~ s/\s.*$//; # nuke everything after the first space (#comment)
+	next if (!$file); # skip null entries
+	$filecontent = `cat $file`;
+	if ($filecontent !~ /use strict/) {
 		ok(0,"$file DOES NOT use strict");
 	} else {
-		ok(1,"$files uses strict");
+		ok(1,"$file uses strict");
 	}
 }
+
 
 
 
