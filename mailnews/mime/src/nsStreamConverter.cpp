@@ -617,6 +617,7 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
       mOutputFormat = nsCRT::strdup("text/html");
       break;
       
+    case nsMimeOutput::nsMimeMessageDecrypt:  
     case nsMimeOutput::nsMimeMessageRaw:       // the raw RFC822 data (view source) and attachments
       CRTFREEIF(mOutputFormat);
       mOutputFormat = nsCRT::strdup("raw");

@@ -1512,6 +1512,7 @@ mime_bridge_create_display_stream(
   // Set the defaults, based on the context, and the output-type.
   //
   MIME_HeaderType = MimeHeadersAll;
+  msd->options->write_html_p = PR_TRUE;
   switch (format_out) 
   {
 		case nsMimeOutput::nsMimeMessageSplitDisplay:   // the wrapper HTML output to produce the split header/body display
@@ -1537,6 +1538,11 @@ mime_bridge_create_display_stream(
 		case nsMimeOutput::nsMimeMessageDraftOrTemplate:  // Loading drafts & templates
 		case nsMimeOutput::nsMimeMessageEditorTemplate:   // Loading templates into editor
     case nsMimeOutput::nsMimeMessageFilterSniffer:    // generating an output that can be scan by a message filter
+      break;
+
+    case nsMimeOutput::nsMimeMessageDecrypt:
+      msd->options->decrypt_p = PR_TRUE;
+      msd->options->write_html_p = PR_FALSE;
       break;
   }
 
@@ -1575,7 +1581,6 @@ mime_bridge_create_display_stream(
     msd->options->headers = MimeHeadersMicroPlus;
 
   msd->options->url = msd->url_name;
-  msd->options->write_html_p          = PR_TRUE;
   msd->options->output_init_fn        = mime_output_init_fn;
   
   msd->options->output_fn             = mime_output_fn;

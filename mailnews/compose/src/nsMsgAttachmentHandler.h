@@ -45,6 +45,7 @@
 #include "nsIRequest.h"
 #include "nsIMsgSend.h"
 #include "nsIFileStreams.h"
+#include "nsIStreamConverter.h"
 
 #ifdef XP_MAC
 
@@ -164,6 +165,8 @@ public:
   nsresult              SetMimeDeliveryState(nsIMsgSend* mime_delivery_state);
 private:
   nsCOMPtr<nsIMsgSend>  m_mime_delivery_state;
+  nsCOMPtr<nsIStreamConverter> m_mime_parser;
+  nsCOMPtr<nsIChannel>  m_converter_channel;
 };
 
 

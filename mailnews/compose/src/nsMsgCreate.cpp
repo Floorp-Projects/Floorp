@@ -94,9 +94,6 @@ nsMsgDraft::~nsMsgDraft()
 /* the following macro actually implement addref, release and query interface for our component. */
 NS_IMPL_ISUPPORTS1(nsMsgDraft, nsIMsgDraft)
 
-// stream converter
-static NS_DEFINE_CID(kStreamConverterCID,    NS_MAILNEWS_MIME_STREAM_CONVERTER_CID);
-
 nsresult    
 nsMsgDraft::ProcessDraftOrTemplateOperation(const char *msgURI, nsMimeOutputType aOutType, 
                                             nsIMsgIdentity * identity, const char *originalMsgURI, nsIMsgWindow *aMsgWindow)
@@ -123,10 +120,8 @@ nsMsgDraft::ProcessDraftOrTemplateOperation(const char *msgURI, nsMimeOutputType
 
   // Now, we can create a mime parser (nsIStreamConverter)!
   nsCOMPtr<nsIStreamConverter> mimeParser;
-  rv = nsComponentManager::CreateInstance(kStreamConverterCID, 
-                                          NULL, NS_GET_IID(nsIStreamConverter), 
-                                          (void **) getter_AddRefs(mimeParser)); 
-  if (NS_FAILED(rv) || !mimeParser)
+  mimeParser = do_CreateInstance(NS_MAILNEWS_MIME_STREAM_CONVERTER_CONTRACTID, &rv);
+  if (NS_FAILED(rv))
   {
     Release();
     mMessageService = nsnull;

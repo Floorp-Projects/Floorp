@@ -61,6 +61,10 @@
 #include "nsEscape.h"
 #include "nsIURL.h"
 #include "nsNetCID.h"
+#include "nsIStreamConverterService.h"
+#include "nsIMimeStreamConverter.h"
+#include "nsMsgMimeCID.h"
+#include "nsNetUtil.h"
 
 
 static  NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
@@ -539,7 +543,47 @@ nsMsgAttachmentHandler::SnarfMsgAttachment(nsMsgCompFields *compFields)
       uri.Append("?fetchCompleteMessage=true");
       nsCOMPtr<nsIStreamListener> strListener;
       fetcher->QueryInterface(NS_GET_IID(nsIStreamListener), getter_AddRefs(strListener));
-      rv = messageService->DisplayMessage(uri.get(), strListener, nsnull, nsnull, nsnull, nsnull);
+
+      // initialize a new stream converter, that uses the strListener as its input
+      // obtain the input stream listener from the new converter,
+      // and pass the converter's input stream listener to DisplayMessage
+
+      m_mime_parser = do_CreateInstance(NS_MAILNEWS_MIME_STREAM_CONVERTER_CONTRACTID, &rv);
+      if (NS_FAILED(rv))
+        goto done;
+
+      // Set us as the output stream for HTML data from libmime...
+      nsCOMPtr<nsIMimeStreamConverter> mimeConverter = do_QueryInterface(m_mime_parser);
+      if (mimeConverter)
+      {
+        mimeConverter->SetMimeOutputType(nsMimeOutput::nsMimeMessageDecrypt);
+        mimeConverter->SetForwardInline(PR_FALSE);
+        mimeConverter->SetIdentity(nsnull);
+        mimeConverter->SetOriginalMsgURI(nsnull);
+      }
+
+      nsCOMPtr<nsIStreamListener> convertedListener = do_QueryInterface(m_mime_parser, &rv);
+      if (NS_FAILED(rv))
+        goto done;
+
+      nsCOMPtr<nsIURI> aURL;
+      rv = messageService->GetUrlForUri(uri.get(), getter_AddRefs(aURL), nsnull);
+      if (aURL)
+        aURL->SetSpec(nsDependentCString(uri.get()));
+
+      rv = NS_NewInputStreamChannel(getter_AddRefs(m_converter_channel), aURL, nsnull,
+                                    NS_LITERAL_CSTRING(""), NS_LITERAL_CSTRING(""), -1);
+      if (NS_FAILED(rv))
+        goto done;
+
+      rv = m_mime_parser->AsyncConvertData(
+		    NS_LITERAL_STRING("message/rfc822").get(),
+		    NS_LITERAL_STRING("message/rfc822").get(),
+		    strListener, m_converter_channel);
+      if (NS_FAILED(rv))
+        goto done;
+
+      rv = messageService->DisplayMessage(uri.get(), convertedListener, nsnull, nsnull, nsnull, nsnull);
     }
   }
 done:

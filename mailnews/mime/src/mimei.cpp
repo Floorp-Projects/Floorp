@@ -383,7 +383,8 @@ mime_find_class (const char *content_type, MimeHeaders *hdrs,
            This mode will limit the features available (e.g. uncommon
            attachment types and inline images) and is for paranoid users.
        */
-  if (opts && opts->format_out != nsMimeOutput::nsMimeMessageFilterSniffer)
+  if (opts && opts->format_out != nsMimeOutput::nsMimeMessageFilterSniffer &&
+               opts->format_out != nsMimeOutput::nsMimeMessageDecrypt)
     if (pref)
     {
       pref->GetIntPref("mailnews.display.html_as", &html_as);
