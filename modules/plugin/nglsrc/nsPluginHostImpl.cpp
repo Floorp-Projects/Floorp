@@ -1579,7 +1579,7 @@ NS_IMETHODIMP nsPluginHostImpl::RegisterPlugin(REFNSIID aCID,
   rv = registry->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry);
   if (NS_FAILED(rv)) return rv;
 
-  nsCAutoString path = "software/plugins/";
+  nsCAutoString path("software/plugins/");
   char* cid = aCID.ToString();
   if (! cid)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -1619,7 +1619,7 @@ NS_IMETHODIMP nsPluginHostImpl::UnregisterPlugin(REFNSIID aCID)
   rv = registry->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry);
   if (NS_FAILED(rv)) return rv;
 
-  nsCAutoString path = "software/plugins/";
+  nsCAutoString path("software/plugins/");
   char* cid = aCID.ToString();
   if (! cid)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -2138,7 +2138,7 @@ nsresult nsPluginHostImpl::RegisterPluginMimeTypesWithLayout(nsPluginTag * plugi
   {
     static NS_DEFINE_CID(kPluginDocLoaderFactoryCID, NS_PLUGINDOCLOADERFACTORY_CID);
 
-    nsCAutoString progid = NS_DOCUMENT_LOADER_FACTORY_PROGID_PREFIX "view/";
+    nsCAutoString progid(NS_DOCUMENT_LOADER_FACTORY_PROGID_PREFIX "view/");
     progid += pluginTag->mMimeTypeArray[i];
 
     rv = compManager->RegisterComponentSpec(kPluginDocLoaderFactoryCID,
@@ -2952,8 +2952,8 @@ LoadXPCOMPlugin(nsIComponentManager* aComponentManager,
   // To figure out the filename of the plugin, we'll need to get the
   // plugin's CID, and then navigate through the XPCOM registry to
   // pull out the DLL name to which the CID is registered.
-  nsAutoString path = NS_LITERAL_STRING("software/mozilla/XPCOM/classID/");
-  path += NS_ConvertASCIItoUCS2(aCID);
+  nsAutoString path;
+  path = NS_LITERAL_STRING("software/mozilla/XPCOM/classID/") + NS_ConvertASCIItoUCS2(aCID);
 
   nsRegistryKey cidKey;
   rv = aRegistry->GetKey(nsIRegistry::Common, path.GetUnicode(), &cidKey);
