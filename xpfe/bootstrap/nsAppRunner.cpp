@@ -230,9 +230,11 @@ static void DumpArbitraryHelp()
     nsCOMPtr<nsISimpleEnumerator> e;
     rv = catman->EnumerateCategory(COMMAND_LINE_ARGUMENT_HANDLERS, getter_AddRefs(e));
     if(NS_SUCCEEDED(rv) && e) {
-      nsCOMPtr<nsISupportsString> progid;
-      rv = e->GetNext(getter_AddRefs(progid));
-      while (NS_SUCCEEDED(rv) && progid) {
+      while (PR_TRUE) {
+        nsCOMPtr<nsISupportsString> progid;
+        rv = e->GetNext(getter_AddRefs(progid));
+        if (NS_FAILED(rv) || !progid) break;
+
         nsXPIDLCString progidString;
         progid->ToString (getter_Copies(progidString));
         
@@ -240,7 +242,7 @@ static void DumpArbitraryHelp()
         printf("cmd line hander progid = %s\n", (const char *)progidString);
 #endif /* DEBUG_CMD_LINE */
         
-        nsCOMPtr <nsICmdLineHandler> handler = do_CreateInstance((const char *)progidString, &rv);
+        nsCOMPtr <nsICmdLineHandler> handler = do_GetService((const char *)progidString, &rv);
         
         if (handler) {
           nsXPIDLCString commandLineArg;
@@ -259,7 +261,6 @@ static void DumpArbitraryHelp()
           }
         }
         
-        rv = e->GetNext(getter_AddRefs(progid));
       }
     }
   }
@@ -293,18 +294,19 @@ static nsresult HandleArbitraryStartup( nsICmdLineService* cmdLineArgs, nsIPref 
     nsCOMPtr<nsISimpleEnumerator> e;
     rv = catman->EnumerateCategory(COMMAND_LINE_ARGUMENT_HANDLERS, getter_AddRefs(e));
     if(NS_SUCCEEDED(rv) && e) {
-      
-      nsCOMPtr<nsISupportsString> progid;
-      rv = e->GetNext(getter_AddRefs(progid));
-      while (NS_SUCCEEDED(rv) && progid) {
+      while (PR_TRUE) {
+        nsCOMPtr<nsISupportsString> progid;
+        rv = e->GetNext(getter_AddRefs(progid));
+        if (NS_FAILED(rv) || !progid) break;
+
        	nsXPIDLCString progidString;
-        progid->ToString (getter_Copies(progidString));
+        progid->ToString(getter_Copies(progidString));
         
 #ifdef DEBUG_CMD_LINE
         printf("cmd line hander progid = %s\n", (const char *)progidString);
 #endif /* DEBUG_CMD_LINE */
         
-        nsCOMPtr <nsICmdLineHandler> handler = do_CreateInstance((const char *)progidString, &rv);
+        nsCOMPtr <nsICmdLineHandler> handler = do_GetService((const char *)progidString, &rv);
         if (NS_FAILED(rv)) continue;
         
         if (handler) {
@@ -380,8 +382,6 @@ static nsresult HandleArbitraryStartup( nsICmdLineService* cmdLineArgs, nsIPref 
             }
           }
         }
-        
-        rv = e->GetNext(getter_AddRefs(progid));
       }
     }
   }
