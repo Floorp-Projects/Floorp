@@ -8,11 +8,12 @@
 # MTA like sendmail) and acts as the MDA (mail delivery agent).  This
 # program process the build logs for the tinderbox server (tinder.cgi)
 # and enforms the server of any status updates.  It also stores the
-# logs in compressed form for future reference.
+# logs in compressed form for future references by the tinderbox
+# server.  No locks are used by the mail processes, data is passed to
+# the tinderbox server in a maildir like format.
 
-
-# $Revision: 1.1 $ 
-# $Date: 2000/11/29 21:13:15 $ 
+# $Revision: 1.2 $ 
+# $Date: 2001/01/04 00:29:09 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/processmail_builds,v $ 
 # $Name:  $ 
@@ -381,12 +382,6 @@ sub check_required_vars {
 
   my ($err_string) = '';
 
-  $TINDERBOX{'starttime'} = main::extract_digits($TINDERBOX{'starttime'});
-  if ($build_start != $TINDERBOX{'starttime'} ) {
-    overwrite_file( $stamp_file, 
-                    "$TINDERBOX{'starttime'}\n");
-  }
-  
   if( $TINDERBOX{'tree'} eq ''){
     $err_string .= "Variable: 'tinderbox: tree' not set.\n";
   } elsif ( !(TreeData::tree_exists($TINDERBOX{'tree'})) ) {
@@ -1021,7 +1016,7 @@ sub assemble_files {
   assemble_files();
 
   my ($uniq_id) = join('.', 
-                       $tree,
+                       $TINDERBOX{'$tree'},
                        $TINDERBOX{'buildname'},
                        $TINDERBOX{'timenow'}
                       );
