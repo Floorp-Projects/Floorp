@@ -77,6 +77,7 @@ nsMacControl::~nsMacControl()
 {
 	if (mControl)
 	{
+		Show(PR_FALSE);
 		::DisposeControl(mControl);
 		mControl = nsnull;
 	}
@@ -142,16 +143,6 @@ PRBool nsMacControl::OnPaint(nsPaintEvent &aEvent)
 		::SetControlVisibility(mControl, isVisible, false);
 		::DrawOneControl(mControl);
 		::ValidRect(&(*mControl)->contrlRect);
-
-#if 0
-		RGBColor rgbRed = {65535, 0, 0};
-		::RGBForeColor(&rgbRed);
-		Rect macRect;
-		nsRectToMacRect(mBounds, macRect);
-		::OffsetRect(&macRect, -mBounds.x, -mBounds.y);
-		::InsetRect(&macRect, 1, 1);
-		::FrameRect(&macRect);
-#endif
 	}
 	return PR_FALSE;
 }
