@@ -1663,22 +1663,24 @@ nsFtpConnectionThread::Init(nsIProtocolHandler* aHandler,
     if (NS_FAILED(rv)) return rv;
 
     // pull any username and/or password out of the uri
-    nsXPIDLCString preHost;
-    rv = mURL->GetPreHost(getter_Copies(preHost));
-    if (NS_FAILED(rv)) return rv;
-    
-    if (preHost) {
-        // we found some username (and maybe password info) in the URL. 
-        // we know we're not going anonymously now.
-        mAnonymous = PR_FALSE;
-        char *colon = PL_strchr(preHost, ':');
-        if (colon) {
-            *colon = '\0';
-            mPassword = colon+1;
+    nsXPIDLCString uname;
+    rv = mURL->GetUsername(getter_Copies(uname));
+    if (NS_FAILED(rv)) {
+        return rv;
+    } else {
+        if ((const char*)uname && *(const char*)uname) {
+            mAnonymous = PR_FALSE;
+            mUsername = uname;
         }
-        mUsername = preHost;
     }
 
+    nsXPIDLCString password;
+    rv = mURL->GetPassword(getter_Copies(password));
+    if (NS_FAILED(rv))
+        return rv;
+    else
+        mPassword = password;
+    
     // setup the connection cache key
     nsXPIDLCString host;
     rv = mURL->GetHost(getter_Copies(host));
