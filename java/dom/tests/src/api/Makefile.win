@@ -157,6 +157,12 @@ JAVAFILES= AttrImpl_getName.java \
 	ElementImpl_getElementsByTagName_String_0.java \
 	ElementImpl_getElementsByTagName_String_1.java \
 	ElementImpl_getTagName.java \
+	ElementImpl_hasAttribute_String_0.java \
+	ElementImpl_hasAttribute_String_1.java \
+	ElementImpl_hasAttributeNS_String_String_0.java \
+	ElementImpl_hasAttributeNS_String_String_1.java \
+	ElementImpl_hasAttributeNS_String_String_2.java \
+	ElementImpl_hasAttributeNS_String_String_3.java \
 	ElementImpl_normalize.java \
 	ElementImpl_removeAttributeNS_String_String_0.java \
 	ElementImpl_removeAttributeNS_String_String_1.java \
