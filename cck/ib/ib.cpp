@@ -35,7 +35,7 @@ int xpiLen = -1;
 JAR jarList[100];
 int jarLen = -1;
 // Setup Sections for config.ini
-CString Setup0Short = "&Recommended";
+CString Setup0Short = "R&ecommended";
 CString Setup1Short = "C&ustom";
 CString quotes = "\"";
 CString spaces = " ";
