@@ -79,6 +79,7 @@ bool defaultBracketWrite(JS2Metadata *meta, js2val base, JS2Class *limit, Multin
 bool defaultDeleteProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, bool *result);
 bool defaultDeletePublic(JS2Metadata *meta, js2val base, JS2Class *limit, const String *name, bool *result);
 bool defaultBracketDelete(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, bool *result);
+bool arrayWritePublic(JS2Metadata *meta, js2val base, JS2Class *limit, const String *name, bool createIfMissing, js2val newValue);
 
 
 
@@ -148,21 +149,23 @@ enum Hint { NoHint, NumberHint, StringHint };
 class PondScum {
 public:    
 
-    void resetMark()        { size &= 0x7FFFFFFF; }
-    void mark()             { size |= 0x80000000; }
-    bool isMarked()         { return ((size & 0x80000000) != 0); }
+    void resetMark()        { markFlag = 0; }
+    void mark()             { markFlag = 1; }
+    bool isMarked()         { return (markFlag != 0); }
 
-    void setIsJS2Object()   { size |= 0x40000000; }
-    bool isJS2Object()      { return ((size & 0x40000000) != 0); }
+    void setIsJS2Object()   { js2Flag = 1; }
+    void clearIsJS2Object() { js2Flag = 0; }
+    bool isJS2Object()      { return (js2Flag != 0); }
 
-    uint32 getSize()        { return size & 0x3FFFFFFF; }
-    void setSize(uint32 sz) { ASSERT((sz & 0xC000000) == 0); size = (sz & 0x3FFFFFFF); }
+    uint32 getSize()        { return size; }
+    void setSize(uint32 sz) { ASSERT(sz < JS_BIT(30)); size = sz; }
 
     Pond *owner;    // for a piece of scum in use, this points to it's own Pond
                     // otherwise it's a link to the next item on the free list
 private:
-    uint32 size;    // The high bit is used as the gc mark flag
-                    // The next high bit is the flag that mark JS2Objects (1) or generic pointers
+    unsigned int markFlag:1;
+    unsigned int js2Flag:1;
+    unsigned int size:30;
 };
 
 // A pond is a place to get chunks of PondScum from and to return them to
@@ -219,7 +222,7 @@ public:
     static uint32 gc();
     static void removeRoot(RootIterator ri);
 
-    static void *alloc(size_t s, bool isJS2Object = false);
+    static void *alloc(size_t s, bool isJS2Object);
     static void unalloc(void *p);
 
     void *operator new(size_t s)    { return alloc(s, true); }
@@ -242,10 +245,11 @@ public:
         strcpy(file, pfile);
         ri = JS2Object::addRoot(this);
     }
+    ~RootKeeper() { JS2Object::removeRoot(ri); delete file; }
 #else
     RootKeeper(void *p) :{ ri = JS2Object::addRoot(p); }
-#endif
     ~RootKeeper() { JS2Object::removeRoot(ri); }
+#endif
 
     JS2Object::RootIterator ri;
 
@@ -380,6 +384,7 @@ public:
                                 // variable instantations in a parameter frame.
 
     virtual LocalMember *clone()       { if (forbidden) return this; ASSERT(false); return NULL; }
+    virtual void mark()                 { }
     bool forbidden;
 };
 
@@ -400,7 +405,7 @@ public:
     // XXX union this with the type field later?
     VariableBinding *vb;            // The variable definition node, to resolve future types
 
-    virtual void mark()                 { GCMARKVALUE(value); }
+    virtual void mark();
 };
 
 class DynamicVariable : public LocalMember {
@@ -816,7 +821,7 @@ public:
 // are added.
 class ArrayInstance : public SimpleInstance {
 public:
-    ArrayInstance(JS2Metadata *meta, js2val parent, JS2Class *type) : SimpleInstance(meta, parent, type) { setLength(meta, this, 0); }
+    ArrayInstance(JS2Metadata *meta, js2val parent, JS2Class *type) : SimpleInstance(meta, parent, type) { }
 
     virtual ~ArrayInstance()             { }
 };

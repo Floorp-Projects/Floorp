@@ -196,13 +196,13 @@ namespace MetaData {
             if (*float64Table[hash] == x)
                 return float64Table[hash];
             else {
-                float64 *p = (float64 *)JS2Object::alloc(sizeof(float64));
+                float64 *p = (float64 *)JS2Object::alloc(sizeof(float64), false);
                 *p = x;
                 return p;
             }
         }
         else {
-            float64 *p = (float64 *)JS2Object::alloc(sizeof(float64));
+            float64 *p = (float64 *)JS2Object::alloc(sizeof(float64), false);
             float64Table[hash] = p;
             *p = x;
             return p;
@@ -216,13 +216,13 @@ namespace MetaData {
 
     String *JS2Engine::allocStringPtr(const String *s)
     {
-        String *p = (String *)(JS2Object::alloc(sizeof(String)));
+        String *p = (String *)(JS2Object::alloc(sizeof(String), false));
         return new (p) String(*s);
     }
 
     String *JS2Engine::concatStrings(const String *s1, const String *s2)
     {
-        String *p = (String *)(JS2Object::alloc(sizeof(String)));
+        String *p = (String *)(JS2Object::alloc(sizeof(String), false));
         String *result = new (p) String(*s1);
         result->append(*s2);
         return result;
@@ -247,7 +247,7 @@ namespace MetaData {
     // Don't store as an int, even if possible, we need to retain 'longness'
     js2val JS2Engine::allocULong(uint64 x)
     {
-        uint64 *p = (uint64 *)(JS2Object::alloc(sizeof(uint64)));
+        uint64 *p = (uint64 *)(JS2Object::alloc(sizeof(uint64), false));
         *p = x;
         return ULONG_TO_JS2VAL(p);
         
@@ -256,7 +256,7 @@ namespace MetaData {
     // Don't store as an int, even if possible, we need to retain 'longness'
     js2val JS2Engine::allocLong(int64 x)
     {
-        int64 *p = (int64 *)(JS2Object::alloc(sizeof(int64)));
+        int64 *p = (int64 *)(JS2Object::alloc(sizeof(int64), false));
         *p = x;
         return LONG_TO_JS2VAL(p);
     }
@@ -264,7 +264,7 @@ namespace MetaData {
     // Don't store as an int, even if possible, we need to retain 'floatness'
     js2val JS2Engine::allocFloat(float32 x)
     {
-        float32 *p = (float32 *)(JS2Object::alloc(sizeof(float32)));
+        float32 *p = (float32 *)(JS2Object::alloc(sizeof(float32), false));
         *p = x;
         return FLOAT_TO_JS2VAL(p);
     }
@@ -417,7 +417,7 @@ namespace MetaData {
         for (int i = 0; i < 256; i++)
             float64Table[i] = NULL;
 
-        float64 *p = (float64 *)JS2Object::alloc(sizeof(float64));
+        float64 *p = (float64 *)JS2Object::alloc(sizeof(float64), false);
         *p = nan;
         nanValue = DOUBLE_TO_JS2VAL(p);
         posInfValue = DOUBLE_TO_JS2VAL(allocNumber(positiveInfinity));

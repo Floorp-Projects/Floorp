@@ -589,6 +589,7 @@ namespace MetaData {
     bool defaultReadPublicProperty(JS2Metadata *meta, js2val *base, JS2Class *limit, const String *name, Phase phase, js2val *rval)
     {
         // XXX could speed up by pushing knowledge of single namespace?
+        DEFINE_ROOTKEEPER(rk1, name);
         LookupKind lookup(false, JS2VAL_NULL);
         Multiname *mn = new Multiname(name, meta->publicNamespace);
         DEFINE_ROOTKEEPER(rk, mn);
@@ -597,6 +598,7 @@ namespace MetaData {
 
     bool defaultDeletePublic(JS2Metadata *meta, js2val base, JS2Class *limit, const String *name, bool *result)
     {
+        DEFINE_ROOTKEEPER(rk1, name);
         // XXX could speed up by pushing knowledge of single namespace & lookup?
         LookupKind lookup(false, JS2VAL_NULL);
         Multiname *mn = new Multiname(name, meta->publicNamespace);
@@ -606,6 +608,7 @@ namespace MetaData {
 
     bool defaultWritePublicProperty(JS2Metadata *meta, js2val base, JS2Class *limit, const String *name, bool createIfMissing, js2val newValue)
     {
+        DEFINE_ROOTKEEPER(rk1, name);
         // XXX could speed up by pushing knowledge of single namespace?
         LookupKind lookup(false, JS2VAL_NULL);
         Multiname *mn = new Multiname(name, meta->publicNamespace);
@@ -643,6 +646,16 @@ namespace MetaData {
         }
         return result;
     }    
+
+    bool arrayWritePublic(JS2Metadata *meta, js2val base, JS2Class *limit, const String *name, bool createIfMissing, js2val newValue)
+    {
+        DEFINE_ROOTKEEPER(rk1, name);
+        // XXX could speed up by pushing knowledge of single namespace?
+        LookupKind lookup(false, JS2VAL_NULL);
+        Multiname *mn = new Multiname(name, meta->publicNamespace);
+        DEFINE_ROOTKEEPER(rk, mn);
+        return arrayWriteProperty(meta, base, limit, mn, &lookup, createIfMissing, newValue);
+    }
 
     bool defaultWriteProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue)
     {

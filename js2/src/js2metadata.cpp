@@ -3359,6 +3359,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
 /*** ECMA 3  Array Class ***/
         MAKEBUILTINCLASS(arrayClass, objectClass, true, true, true, engine->allocStringPtr(&world.identifiers["Array"]), JS2VAL_NULL);
         arrayClass->write = arrayWriteProperty;
+        arrayClass->writePublic = arrayWritePublic;
         v = new Variable(classClass, OBJECT_TO_JS2VAL(arrayClass), true);
         defineLocalMember(env, &world.identifiers["Array"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
         initArrayObject(this);
@@ -3960,7 +3961,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
 
     js2val JS2Class::implicitCoerce(JS2Metadata *meta, js2val newValue)
     {
-        if (JS2VAL_IS_NULL(newValue) || (meta->objectType(newValue) == this))
+        if (JS2VAL_IS_NULL(newValue) || meta->objectType(newValue)->isAncestor(this) )
             return newValue;
         meta->reportError(Exception::badValueError, "Illegal coercion", meta->engine->errorPos());
         return JS2VAL_VOID;
@@ -4046,6 +4047,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     void SimpleInstance::markChildren()
     {
         GCMARKOBJECT(type)
+        GCMARKVALUE(super);
         if (fWrap) {
             GCMARKOBJECT(fWrap->compileFrame);
             GCMARKOBJECT(fWrap->env);
@@ -4191,6 +4193,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     void Package::markChildren()
     {
         NonWithFrame::markChildren();
+        GCMARKVALUE(super);
         GCMARKOBJECT(internalNamespace)
         for (LocalBindingIterator bi = localBindings.begin(), bend = localBindings.end(); (bi != bend); bi++) {
             LocalBindingEntry *lbe = *bi;
@@ -4242,11 +4245,12 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                 ASSERT(plural->positional[i]->cloneContent->kind == Member::Variable);
                 (checked_cast<Variable *>(plural->positional[i]->cloneContent))->value = argBase[i];
             }
-            mn->name = meta->engine->numberToString(i);
-            meta->arrayClass->writePublic(meta, OBJECT_TO_JS2VAL(argsObj), meta->arrayClass, mn->name, true, argBase[i]);
+//            mn->name = meta->engine->numberToString(i);
+            meta->arrayClass->writePublic(meta, OBJECT_TO_JS2VAL(argsObj), meta->arrayClass, meta->engine->numberToString(i), true, argBase[i]);
         }
         setLength(meta, argsObj, i);
-        meta->arrayClass->writePublic(meta, OBJECT_TO_JS2VAL(argsObj), meta->arrayClass, &meta->world.identifiers["callee"], true, argBase[i]);
+//        mn->name = meta->engine->allocStringPtr(&meta->world.identifiers["callee"]);
+        meta->arrayClass->writePublic(meta, OBJECT_TO_JS2VAL(argsObj), meta->arrayClass, meta->engine->allocStringPtr("callee"), true, OBJECT_TO_JS2VAL(fnObj));
     }
 
 
@@ -4257,6 +4261,18 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         GCMARKVALUE(thisObject);
     }
 
+
+ /************************************************************************************
+ *
+ *  Variable
+ *
+ ************************************************************************************/
+
+    void Variable::mark()                 
+    { 
+        GCMARKVALUE(value); 
+        GCMARKOBJECT(type)
+    }
 
  /************************************************************************************
  *
@@ -4366,7 +4382,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                     GCMARKOBJECT(obj)
                 }
                 else
-                    mark(p);
+                    mark(p + 1);
             }
 #else
             if (**i) {
@@ -4377,7 +4393,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                     GCMARKOBJECT(obj)
                 }
                 else
-                    mark(p);
+                    mark(p + 1);
             }
 #endif
         }
@@ -4470,6 +4486,10 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                         freeHeader = (PondScum *)(p->owner);
                     p->owner = this;
                     p->resetMark();      // might have lingering mark from previous gc
+                    if (isJS2Object) 
+                        p->setIsJS2Object();
+                    else
+                        p->clearIsJS2Object();
 #ifdef DEBUG
                     memset((p + 1), 0xB7, p->getSize() - sizeof(PondScum));
 #endif
@@ -4492,7 +4512,10 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         PondScum *p = (PondScum *)pondTop;
         p->owner = this;
         p->setSize(sz);
-        if (isJS2Object) p->setIsJS2Object();
+        if (isJS2Object) 
+            p->setIsJS2Object();
+        else
+            p->clearIsJS2Object();
         pondTop += sz;
         pondSize -= sz;
 #ifdef DEBUG

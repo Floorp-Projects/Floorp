@@ -110,6 +110,7 @@ js2val Array_Constructor(JS2Metadata *meta, const js2val /*thisValue*/, js2val *
             }
             else {
                 meta->createDynamicProperty(arrInst, meta->engine->numberToString((int32)0), argv[0], ReadWriteAccess, false, true);
+                setLength(meta, arrInst, 1);
             }
         }
         else {
