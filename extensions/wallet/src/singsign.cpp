@@ -100,6 +100,12 @@ extern void Wallet_StreamGeneratorReset();
  ***********/
 
 extern PRBool Wallet_ConfirmYN(PRUnichar * szMessage);
+extern void Wallet_Alert(PRUnichar * szMessage);
+
+PRIVATE void
+si_Alert(PRUnichar * szMessage) {
+  Wallet_Alert(szMessage);
+}
 
 PRIVATE PRBool
 si_ConfirmYN(PRUnichar * szMessage) {
@@ -2817,6 +2823,11 @@ SINGSIGN_GetSignonListForViewer(nsAutoString& aSignonList)
 
   /* unlock the database */
   if ((SI_LoadSignonData(PR_TRUE) != 0) || (Wallet_KeySize() < 0)) {
+    if (Wallet_KeySize() < 0) {
+      PRUnichar * message = Wallet_Localize("NoPasswordsEverSaved");
+      si_Alert(message);
+      Recycle(message);
+    }
     aSignonList = "."; /* a list of length 1 tells viewer that database was not unlocked */ 
     /* don't display saved signons if user couldn't unlock the database */
     return;
