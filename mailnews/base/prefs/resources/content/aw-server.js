@@ -50,6 +50,11 @@ function onInit() {
     if (selectedElements && selectedElements.length>0)
       servertypeMenulist.selectedItem = selectedElements[0];
   }
+
+  // initialize to default selected item
+  else {
+    hiddenInput.value = servertypeMenulist.selectedItem.getAttribute("data");
+  }
   
   var smtpTextField = document.getElementById("smtphostname");
 
