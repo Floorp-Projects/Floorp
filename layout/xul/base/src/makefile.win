@@ -28,6 +28,7 @@ CPPSRCS=					\
 	nsToolbarFrame.cpp		\
 	nsTreeFrame.cpp			\
 	nsTreeIndentationFrame.cpp \
+	nsTreeCellFrame.cpp \
 	$(NULL)
 
 CPP_OBJS=					\
@@ -35,6 +36,7 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsToolbarFrame.obj		\
 	.\$(OBJDIR)\nsTreeFrame.obj	\
 	.\$(OBJDIR)\nsTreeIndentationFrame.obj \
+	.\$(OBJDIR)\nsTreeCellFrame.obj \
 	$(NULL)
 
 EXPORTS =					\

@@ -43,6 +43,7 @@ CPPSRCS =				\
 	nsToolboxFrame.cpp			\
 	nsTreeFrame.cpp \
 	nsTreeIndentationFrame.cpp \
+	nsTreeCellFrame.cpp \
 	$(NULL)
 
 EXPORTS = \
