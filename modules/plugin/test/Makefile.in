@@ -29,7 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= npsimple
 LIBRARY_NAME	= npsimple
 IS_COMPONENT	= 1
-REQUIRES	= xpcom string plugin
+REQUIRES	= xpcom string plugin widget
 
 XPIDLSRCS	= nsISimplePluginInstance.idl
 

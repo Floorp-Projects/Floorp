@@ -26,6 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE		= mozxfer
 XPIDL_MODULE	= mozxfer
 
 XPIDLSRCS	= \

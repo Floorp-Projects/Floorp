@@ -30,7 +30,7 @@ MODULE		= plugin
 XPIDL_MODULE	= layout
 LIBRARY_NAME	= gkplugin
 IS_COMPONENT    = 1
-REQUIRES	= xpcom string java pref necko gtkxtbin webshell caps intl dom locale layout widget cookie mimetype oji exthandler appshell docshell webbrwsr nkcache gfx2 timer windowwatcher
+REQUIRES	= xpcom string java pref necko gtkxtbin webshell caps intl dom locale layout widget cookie mimetype oji exthandler docshell webbrwsr nkcache gfx2 timer windowwatcher
 
 CPPSRCS		= \
 		ns4xPlugin.cpp \

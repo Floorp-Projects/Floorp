@@ -29,7 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= caps
 LIBRARY_NAME	= caps
 IS_COMPONENT	= 1
-REQUIRES	= xpcom string pref js dom xpconnect necko jar widget plugin intl locale layout appshell docshell uriloader gfx2 windowwatcher
+REQUIRES	= xpcom string pref js dom xpconnect necko jar widget plugin intl locale layout docshell uriloader gfx2 windowwatcher
 
 CPPSRCS		= \
 		nsBasePrincipal.cpp \

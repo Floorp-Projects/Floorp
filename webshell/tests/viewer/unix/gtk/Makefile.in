@@ -26,6 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE		= webshell_tests
 LIBRARY_NAME	= viewer_gtk_s
 REQUIRES	= xpcom string webbrwsr widget timer dom layout docshell uriloader locale webshell necko util gfx2
 

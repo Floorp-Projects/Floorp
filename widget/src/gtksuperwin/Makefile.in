@@ -22,6 +22,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE		= widget
 LIBRARY_NAME	= gtksuperwin
 
 
