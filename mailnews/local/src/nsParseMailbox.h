@@ -162,7 +162,8 @@ inline int	nsParseMailMessageState::msg_UnHex(char C)
 class nsMsgMailboxParser : public nsIStreamListener, public nsParseMailMessageState, public nsMsgLineBuffer, public nsMsgLineBufferHandler, public nsIDBChangeListener
 {
 public:
-	nsMsgMailboxParser();
+	nsMsgMailboxParser(nsIMsgFolder *);
+  nsMsgMailboxParser();
 	virtual ~nsMsgMailboxParser();
 
 	PRBool  IsRunningUrl() { return m_urlInProgress;} // returns true if we are currently running a url and false otherwise...
@@ -175,7 +176,6 @@ public:
     NS_DECL_NSISTREAMLISTENER
     NS_DECL_NSIDBCHANGELISTENER
 
-  void      SetFolder(nsIMsgFolder *aFolder); 
 	void			SetDB (nsIMsgDatabase *mailDB) {m_mailDB = dont_QueryInterface(mailDB); }
 
 	void			SetIncrementalUpdate(PRBool update) {m_updateAsWeGo = update;}
@@ -221,8 +221,10 @@ protected:
 private:
 		// the following flag is used to determine when a url is currently being run. It is cleared on calls
 	// to ::StopBinding and it is set whenever we call Load on a url
-	PRBool	m_urlInProgress;	
+	PRBool	m_urlInProgress;
   nsWeakPtr m_folder; 
+  void Init();
+  void ReleaseFolderLock();
 
 };
 

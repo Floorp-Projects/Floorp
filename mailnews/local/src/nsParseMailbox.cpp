@@ -196,7 +196,7 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStopRequest(nsIRequest *request, nsISupports
     }
 #endif
 
-
+    ReleaseFolderLock();
     // be sure to clear any status text and progress info..
     m_graph_progress_received = 0;
     UpdateProgressPercent();
@@ -248,12 +248,26 @@ NS_IMETHODIMP nsMsgMailboxParser::OnReadChanged(nsIDBChangeListener *instigator)
     return NS_OK;
 }
 
-
 nsMsgMailboxParser::nsMsgMailboxParser() : nsMsgLineBuffer(nsnull, PR_FALSE)
+{
+  Init();
+}
+
+nsMsgMailboxParser::nsMsgMailboxParser(nsIMsgFolder *aFolder) : nsMsgLineBuffer(nsnull, PR_FALSE)
+{
+  Init();
+  m_folder = getter_AddRefs(NS_GetWeakReference(aFolder));
+}
+
+nsMsgMailboxParser::~nsMsgMailboxParser()
+{
+  ReleaseFolderLock();
+}
+
+void nsMsgMailboxParser::Init()
 {
   /* the following macro is used to initialize the ref counting data */
 	NS_INIT_ISUPPORTS();
-
 	m_obuffer = nsnull;
 	m_obuffer_size = 0;
 	m_graph_progress_total = 0;
@@ -261,18 +275,6 @@ nsMsgMailboxParser::nsMsgMailboxParser() : nsMsgLineBuffer(nsnull, PR_FALSE)
 	m_updateAsWeGo = PR_TRUE;
 	m_ignoreNonMailFolder = PR_FALSE;
 	m_isRealMailFolder = PR_TRUE;
-  m_folder=nsnull;
-
-}
-
-nsMsgMailboxParser::~nsMsgMailboxParser()
-{
-}
-
-void nsMsgMailboxParser::SetFolder(nsIMsgFolder *aFolder)
-{
-  if (aFolder)
-    m_folder = getter_AddRefs(NS_GetWeakReference(aFolder));
 }
 
 void nsMsgMailboxParser::UpdateStatusText (PRUint32 stringID)
@@ -484,6 +486,21 @@ PRInt32 nsMsgMailboxParser::HandleLine(char *line, PRUint32 lineLength)
 
 	return 0;
 
+}
+
+void
+nsMsgMailboxParser::ReleaseFolderLock()
+{
+  nsresult result;
+  nsCOMPtr<nsIMsgFolder> folder = do_QueryReferent(m_folder);
+  if (!folder) 
+    return;
+  PRBool haveSemaphore;
+  nsCOMPtr <nsISupports> supports = do_QueryInterface(NS_STATIC_CAST(nsIMsgParseMailMsgState*, this));
+  result = folder->TestSemaphore(supports, &haveSemaphore);
+  if(NS_SUCCEEDED(result) && haveSemaphore)
+    result = folder->ReleaseSemaphore(supports);
+  return;
 }
 
 NS_IMPL_ISUPPORTS1(nsParseMailMessageState, nsIMsgParseMailMsgState)
@@ -1755,7 +1772,8 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
   PRBool canFileMessages = PR_TRUE;
   nsCOMPtr<nsIFolder> parentFolder;
   destIFolder->GetParent(getter_AddRefs(parentFolder));
-  destIFolder->GetCanFileMessages(&canFileMessages);
+  if (parentFolder)
+    destIFolder->GetCanFileMessages(&canFileMessages);
   if (!parentFolder || !canFileMessages)
   {
     filter->SetEnabled(PR_FALSE);

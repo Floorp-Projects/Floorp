@@ -350,15 +350,28 @@ NS_IMETHODIMP nsMsgLocalMailFolder::ParseFolder(nsIMsgWindow *aMsgWindow, nsIUrl
 	         do_GetService(kMailboxServiceCID, &rv);
   
 	if (NS_FAILED(rv)) return rv; 
-	nsMsgMailboxParser *parser = new nsMsgMailboxParser;
+	nsMsgMailboxParser *parser = new nsMsgMailboxParser(this);
 	if(!parser)
 		return NS_ERROR_OUT_OF_MEMORY;
-  parser->SetFolder(this);
+        
+  PRBool isLocked;
+  nsCOMPtr <nsISupports> supports = do_QueryInterface(NS_STATIC_CAST(nsIMsgParseMailMsgState*, parser));
+  GetLocked(&isLocked);
+  if(!isLocked)
+    AcquireSemaphore(supports);
+  else
+  {
+    delete parser;
+    NS_ASSERTION(PR_FALSE, "Could not get folder lock");
+    return NS_MSG_FOLDER_BUSY;
+  }
+
 	rv = mailboxService->ParseMailbox(aMsgWindow, path, parser, listener, nsnull);
 
 	return rv;
 }
 
+//we treat failure as null db returned
 NS_IMETHODIMP nsMsgLocalMailFolder::GetDatabaseWOReparse(nsIMsgDatabase **aDatabase)
 {
   nsresult rv=NS_OK;
@@ -589,7 +602,11 @@ nsresult nsMsgLocalMailFolder::GetDatabase(nsIMsgWindow *aMsgWindow)
         folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE)
       {
         if(NS_FAILED(rv = ParseFolder(aMsgWindow, this)))
+        {
+          if (rv == NS_MSG_FOLDER_BUSY)
+            ThrowAlertMsg("parsingFolderFailed", aMsgWindow);
           return rv;
+        }
         else
           return NS_ERROR_NOT_INITIALIZED;
       }
@@ -1798,7 +1815,7 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
     {
       nsCOMPtr<nsIMsgDatabase> msgDb;
       mCopyState->m_parseMsgState = do_QueryInterface(parseMsgState, &rv);
-      rv = GetMsgDatabase(msgWindow, getter_AddRefs(msgDb));
+      GetDatabaseWOReparse(getter_AddRefs(msgDb));   
       if (msgDb)
         parseMsgState->SetMailDB(msgDb);
     }
@@ -2132,9 +2149,7 @@ nsMsgLocalMailFolder::CopyFileMessage(nsIFileSpec* fileSpec, nsIMsgDBHdr*
   {
     nsCOMPtr<nsIMsgDatabase> msgDb;
     mCopyState->m_parseMsgState = do_QueryInterface(parseMsgState, &rv);
-    rv = GetMsgDatabase(msgWindow, getter_AddRefs(msgDb));
-    if (NS_FAILED(rv))
-      goto done;
+    GetDatabaseWOReparse(getter_AddRefs(msgDb));
     if (msgDb)
       parseMsgState->SetMailDB(msgDb);
   }
@@ -2156,7 +2171,7 @@ nsMsgLocalMailFolder::CopyFileMessage(nsIFileSpec* fileSpec, nsIMsgDBHdr*
   rv = EndCopy(PR_TRUE);
   if (NS_FAILED(rv)) goto done;
 
-  if (msgToReplace)
+  if (msgToReplace && mDatabase)  //mDatabase should have been initialized above - if we got msgDb
   {
     rv = DeleteMessage(msgToReplace, msgWindow, PR_TRUE, PR_TRUE);
   }
@@ -2509,10 +2524,9 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
     if(!mCopyState->m_parseMsgState)
     {
       nsCOMPtr<nsIMsgDatabase> msgDatabase;
-      if(NS_SUCCEEDED(rv))
-        rv = GetMsgDatabase(mCopyState->m_msgWindow, getter_AddRefs(msgDatabase));
+      GetDatabaseWOReparse(getter_AddRefs(msgDatabase));
       
-      if(NS_SUCCEEDED(rv))
+      if(msgDatabase)
       {
         rv = mDatabase->CopyHdrFromExistingHdr(mCopyState->m_curDstKey,
                                                mCopyState->m_message, PR_TRUE,
@@ -2523,20 +2537,22 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
         // turn off offline flag - it's not valid for local mail folders.
         if (newHdr)
           newHdr->AndFlags(~MSG_FLAG_OFFLINE, &newHdrFlags);
-      }
-    }
-    PRBool isImap;
-    if (NS_SUCCEEDED(rv) && localUndoTxn)
-      localUndoTxn->GetSrcIsImap(&isImap);
-    if (NS_SUCCEEDED(rv) && localUndoTxn && (!isImap || !mCopyState->m_copyingMultipleMessages))
-    {
-      nsMsgKey aKey;
-      mCopyState->m_message->GetMessageKey(&aKey);
-      localUndoTxn->AddSrcKey(aKey);
-      localUndoTxn->AddDstKey(mCopyState->m_curDstKey);
-    }
-	}
 
+        PRBool isImap;
+        if (NS_SUCCEEDED(rv) && localUndoTxn)
+          localUndoTxn->GetSrcIsImap(&isImap);
+        if (NS_SUCCEEDED(rv) && localUndoTxn && (!isImap || !mCopyState->m_copyingMultipleMessages))
+        {
+          nsMsgKey aKey;
+          mCopyState->m_message->GetMessageKey(&aKey);
+          localUndoTxn->AddSrcKey(aKey);
+          localUndoTxn->AddDstKey(mCopyState->m_curDstKey);
+        }
+      }
+      else
+        mCopyState->m_undoMsgTxn = nsnull; //null out the transaction because we can't undo w/o the msg db
+    }
+  }
   if (mCopyState->m_dummyEnvelopeNeeded)
   {
     mCopyState->m_fileStream->seek(PR_SEEK_END, 0);
@@ -2548,30 +2564,33 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
   // CopyFileMessage() and CopyMessages() from servers other than mailbox
   if (mCopyState->m_parseMsgState)
   {
-    nsresult result;
     nsCOMPtr<nsIMsgDatabase> msgDb;
     nsCOMPtr<nsIMsgDBHdr> newHdr;
 
     mCopyState->m_parseMsgState->FinishHeader();
 
-    result = GetMsgDatabase(mCopyState->m_msgWindow, getter_AddRefs(msgDb));
-    if (NS_SUCCEEDED(result) && msgDb)
+    GetDatabaseWOReparse(getter_AddRefs(msgDb));
+    if (msgDb)
   	{
-		  result = mCopyState->m_parseMsgState->GetNewMsgHdr(getter_AddRefs(newHdr));
+		  nsresult result = mCopyState->m_parseMsgState->GetNewMsgHdr(getter_AddRefs(newHdr));
 		  if (NS_SUCCEEDED(result) && newHdr)
 		  {
-		  msgDb->AddNewHdrToDB(newHdr, PR_TRUE);
-		  if (localUndoTxn)
-		  { // ** jt - recording the message size for possible undo use; the
-			  // message size is different for pop3 and imap4 messages
-			  PRUint32 msgSize;
-			  newHdr->GetMessageSize(&msgSize);
-			  localUndoTxn->AddDstMsgSize(msgSize);
-		  }
-	  }
+		    msgDb->AddNewHdrToDB(newHdr, PR_TRUE);
+		    if (localUndoTxn)
+        { 
+          // ** jt - recording the message size for possible undo use; the
+			    // message size is different for pop3 and imap4 messages
+			    PRUint32 msgSize;
+			    newHdr->GetMessageSize(&msgSize);
+			    localUndoTxn->AddDstMsgSize(msgSize);
+        }
+      }
 //	    msgDb->SetSummaryValid(PR_TRUE);
 //	    msgDb->Commit(nsMsgDBCommitType::kLargeCommit);
     }
+    else
+      mCopyState->m_undoMsgTxn = nsnull; //null out the transaction because we can't undo w/o the msg db
+
     mCopyState->m_parseMsgState->Clear();
 
     if (mCopyState->m_listener) // CopyFileMessage() only
@@ -2589,7 +2608,6 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
   else
   { // both CopyMessages() & CopyFileMessage() go here if they have
     // done copying operation; notify completion to copy service
-    nsresult result;
     if(!mCopyState->m_isMove)
     {
       if (multipleCopiesFinished)
@@ -2721,7 +2739,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndMessage(nsMsgKey key)
       mCopyState->m_parseMsgState->GetNewMsgHdr(getter_AddRefs(newHdr));
     if (NS_SUCCEEDED(result) && newHdr)
     {
-      result = GetMsgDatabase(msgWindow, getter_AddRefs(msgDb));
+      result = GetDatabaseWOReparse(getter_AddRefs(msgDb));
       if (NS_SUCCEEDED(result) && msgDb)
       {
         msgDb->AddNewHdrToDB(newHdr, PR_TRUE);
@@ -2733,6 +2751,8 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndMessage(nsMsgKey key)
             localUndoTxn->AddDstMsgSize(msgSize);
         }
       }
+      else
+        mCopyState->m_undoMsgTxn = nsnull; //null out the transaction because we can't undo w/o the msg db
     }
     mCopyState->m_parseMsgState->Clear();
 
