@@ -513,8 +513,10 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     if (NS_FAILED(rv)) { return rv; }
     PRExplodedTime prtime;
     char buf[100];
+    PRInt64 intermediateValue;
 
-    LL_MUL(usecs, modDate, PR_USEC_PER_MSEC);
+    LL_I2L(intermediateValue, PR_USEC_PER_SEC);
+    LL_MUL(usecs, modDate, intermediateValue);
     PR_ExplodeTime(usecs, PR_LocalTimeParameters, &prtime);
 
     // Use '%#c' for windows, because '%c' is backward-compatible and
