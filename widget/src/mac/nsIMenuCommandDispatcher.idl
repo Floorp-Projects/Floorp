@@ -1,0 +1,49 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is Mozilla Communicator.
+ * 
+ * The Initial Developer of the Original Code is Netscape Communications
+ * Corp.  Portions created by Netscape are Copyright (C) 1999 Netscape 
+ * Communications Corp.  All Rights Reserved.
+ * 
+ * Contributor(s): 
+ *   Mike Pinkerton
+ */
+
+#include "nsISupports.idl"
+
+
+interface nsIMenuItem;
+
+
+//
+// nsIMenuCommandDispatcher
+//
+// A central manager for registering and unregistering CommandIDs
+// and their associated content node in the DOM.
+//
+
+[scriptable, uuid(d1969b7e-1dd1-11b2-a442-c5a01ae643d1)]
+interface nsIMenuCommandDispatcher : nsISupports
+{
+    // Given a menu item, creates a unique 4-character command ID and
+    // maps it to the item. Returns the id for use by the client.
+  unsigned long Register ( in nsIMenuItem aItem ) ;
+  
+    // Removes the mapping between the given 4-character command ID
+    // and its associated menu item.
+  void Unregister ( in unsigned long aCommandID ) ;
+  
+}; // nsIMenuCommandDispatcher
+
+
