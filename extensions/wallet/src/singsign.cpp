@@ -746,7 +746,7 @@ PRIVATE PRBool si_signon_list_changed = PR_FALSE;
 PRIVATE si_SignonURLStruct *
 si_GetURL(const char * passwordRealm) {
   si_SignonURLStruct * url;
-  if (!passwordRealm) {
+  if (!passwordRealm || !*passwordRealm) {
     /* no passwordRealm specified, return first URL (returns NULL if not URLs) */
     if (LIST_COUNT(si_signon_list)==0) {
       return NULL;
