@@ -21,7 +21,7 @@
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
-
+#include "nscore.h"
 #include "nsIDOMDocument.h"
 #include "nsEditor.h"
 #include "nsIDOMText.h"
@@ -1463,7 +1463,7 @@ nsHTMLEditor::DeleteRow(nsIDOMElement *aTable, PRInt32 aRowIndex)
     count--; // nsVoidArray is zero based
     cellPtr = (nsIDOMElement*)spanCellList.ElementAt(count);
     spanCellList.RemoveElementAt(count);
-    newSpan = (PRInt32)newSpanList.ElementAt(count);
+    newSpan = NS_PTR_TO_INT32(newSpanList.ElementAt(count));
     newSpanList.RemoveElementAt(count);
     if (cellPtr)
     {
@@ -3338,7 +3338,7 @@ static PRBool IndexNotTested(nsVoidArray *aArray, PRInt32 aIndex)
     PRInt32 count = aArray->Count();
     for (PRInt32 i = 0; i < count; i++)
     {
-      if(aIndex == (PRInt32)(aArray->ElementAt(i)))
+      if(aIndex == NS_PTR_TO_INT32(aArray->ElementAt(i)))
         return PR_FALSE;
     }
   }

@@ -24,6 +24,7 @@
 #ifndef nsRDFConInstanceTestNode_h__
 #define nsRDFConInstanceTestNode_h__
 
+#include "nscore.h"
 #include "nsRDFTestNode.h"
 #include "nsFixedSizeAllocator.h"
 #include "nsIRDFResource.h"
@@ -99,7 +100,7 @@ public:
             return "nsRDFConInstanceTestNode::Element"; }
 
         virtual PLHashNumber Hash() const {
-            return (PLHashNumber(mContainer.get()) >> 4) ^
+            return (PLHashNumber(NS_PTR_TO_INT32(mContainer.get())) >> 4) ^
                 PLHashNumber(mContainerTest) ^
                 (PLHashNumber(mEmptyTest) << 4); }
 

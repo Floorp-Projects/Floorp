@@ -22,6 +22,7 @@
 
 #include "prmon.h"
 #include "plhash.h"
+#include "nscore.h"
 #include "nsCOMPtr.h"
 #include "nsAppShell.h"
 #include "nsIAppShell.h"
@@ -459,7 +460,7 @@ NS_IMETHODIMP nsAppShell::ListenToEventQueue(nsIEventQueue *aQueue,
 PRBool processQueue(void *aElement, void *aData)
 {
   PLEventQueue *queue = (PLEventQueue *) aElement;
-  unsigned int  id = (unsigned int)aData;
+  unsigned int  id = NS_PTR_TO_INT32(aData);
   PL_ProcessEventsBeforeID(queue, id);
   return PR_TRUE;
 }

@@ -16,6 +16,7 @@
  * Reserved.
  */
 
+#include "nscore.h"
 #include "nsTextAddress.h"
 
 #include "nsIServiceManager.h"
@@ -927,7 +928,7 @@ nsresult nsTextAddress::ParseLdifFile( nsIFileSpec *pSrc)
 	PRInt32 listTotal = listPosArray.Count();
 	for (i = 0; i < listTotal; i++)
 	{
-		PRInt32 pos = (PRInt32)listPosArray.ElementAt(i);
+		PRInt32 pos = NS_PTR_TO_INT32(listPosArray.ElementAt(i));
 		if (NS_SUCCEEDED(pSrc->Seek(pos)))
 		{
 			if (NS_SUCCEEDED(pSrc->Read(&pBuf, (PRInt32)sizeof(buf), &len)) && len > 0)

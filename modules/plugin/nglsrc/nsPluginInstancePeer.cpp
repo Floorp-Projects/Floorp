@@ -912,7 +912,7 @@ nsresult nsPluginInstancePeerImpl::Initialize(nsIPluginInstanceOwner *aOwner,
   }
   
   // record the thread we were created in.
-  mThreadID = PRUint32(PR_GetCurrentThread());
+  mThreadID = NS_PTR_TO_INT32(PR_GetCurrentThread());
 
   return NS_OK;
 }

@@ -20,6 +20,7 @@
  * Contributor(s): 
  */
 
+#include "nscore.h"
 #include "nsNodeInfo.h"
 #include "nsNodeInfoManager.h"
 #include "nsCOMPtr.h"
@@ -415,7 +416,7 @@ nsNodeInfoInner::GetHashValue(const void *key)
     const nsNodeInfoInner *node = (const nsNodeInfoInner *)key;
 
     // Is this an acceptable has value?
-    return (((PLHashNumber)node->mName) & 0xffff) >> 8;
+    return (PLHashNumber(NS_PTR_TO_INT32(node->mName)) & 0xffff) >> 8;
   }
 
   return 0;

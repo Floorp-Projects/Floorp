@@ -22,6 +22,7 @@
  *   Håkan Waara <hwaara@chello.se>
  */
 
+#include "nscore.h"
 #include "nsPluginHostImpl.h"
 #include "nsPluginProxyImpl.h"
 #include <stdio.h>
@@ -1852,7 +1853,7 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(nsIRequest *request,
             return NS_ERROR_FAILURE;
 
         if (mDataForwardToRequest->Exists(&key))
-            amtForwardToPlugin = (PRInt32) mDataForwardToRequest->Remove(&key);
+            amtForwardToPlugin = NS_PTR_TO_INT32(mDataForwardToRequest->Remove(&key));
     
         mDataForwardToRequest->Put(&key, (void*) (amtForwardToPlugin+aLength));
     }

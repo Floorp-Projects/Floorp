@@ -359,7 +359,7 @@ nsBufferedInputStream::GetBuffer(PRUint32 aLength, PRUint32 aAlignMask)
         rem = mFillPoint - mCursor;
     }
 
-    PRUint32 mod = (PRUint32(buf) & aAlignMask);
+    PRUint32 mod = (NS_PTR_TO_INT32(buf) & aAlignMask);
     if (mod) {
         PRUint32 pad = aAlignMask + 1 - mod;
         if (pad > rem)

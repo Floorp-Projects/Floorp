@@ -24,6 +24,7 @@
  * Proxy JNI implementation.
  */
 
+#include "nscore.h"
 #include "jvmmgr.h"
 #include "nsISecureEnv.h"
 #include "nsIJVMPlugin.h"
@@ -88,7 +89,7 @@ static PRBool get_method_type(const char* sig, PRUint32& arg_count, jni_type*& a
         arg_count = vec.Count();
         arg_types = new jni_type[arg_count];
         for (int index = arg_count - 1; index >= 0; --index)
-            arg_types[index] = jni_type((jint)vec.ElementAt(index));
+            arg_types[index] = jni_type((jint)NS_PTR_TO_INT32(vec.ElementAt(index)));
         if (*sig == ')') {
             char return_sig = *++sig;
             return_type = get_jni_type(return_sig);

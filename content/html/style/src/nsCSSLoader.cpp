@@ -1110,7 +1110,7 @@ CSSLoaderImpl::InsertSheetInDoc(nsICSSStyleSheet* aSheet, PRInt32 aDocIndex,
     PRInt32 insertIndex = sheetMap->Count();
     PRBool insertedSheet = PR_FALSE;
     while (0 <= --insertIndex) {
-      PRInt32 targetIndex = (PRInt32)sheetMap->ElementAt(insertIndex);
+      PRInt32 targetIndex = NS_PTR_TO_INT32(sheetMap->ElementAt(insertIndex));
       if (targetIndex < aDocIndex) {
         mDocument->InsertStyleSheetAt(aSheet, insertIndex + 1, aNotify);
         sheetMap->InsertElementAt((void*)aDocIndex, insertIndex + 1);
@@ -1150,7 +1150,7 @@ CSSLoaderImpl::InsertChildSheet(nsICSSStyleSheet* aSheet, nsICSSStyleSheet* aPar
   if (sheetMap) {
     PRInt32 insertIndex = sheetMap->Count();
     while (0 <= --insertIndex) {
-      PRInt32 targetIndex = (PRInt32)sheetMap->ElementAt(insertIndex);
+      PRInt32 targetIndex = NS_PTR_TO_INT32(sheetMap->ElementAt(insertIndex));
       if (targetIndex < aIndex) {
         aParentSheet->InsertStyleSheetAt(aSheet, insertIndex + 1);
         sheetMap->InsertElementAt((void*)aIndex, insertIndex + 1);

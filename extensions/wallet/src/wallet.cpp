@@ -2662,7 +2662,7 @@ WLLT_GetPrefillListForViewer(nsString& aPrefillList)
 
   PRUnichar * urlUnichar = wallet_url.ToNewUnicode();
   buffer.AppendWithConversion(BREAK);
-  buffer.AppendInt(PRInt32(wallet_list));
+  buffer.AppendInt(NS_PTR_TO_INT32(wallet_list));
   buffer.AppendWithConversion(BREAK);
   buffer += urlUnichar;
   Recycle(urlUnichar);

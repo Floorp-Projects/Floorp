@@ -23,6 +23,7 @@
  *   Daniel Glazman <glazman@netscape.com>
  */
 
+#include "nscore.h"
 #include "nsRuleNode.h"
 #include "nsIDeviceContext.h"
 #include "nsILookAndFeel.h"
@@ -61,7 +62,7 @@ public:
   }
 
   PRUint32 HashCode(void) const {
-    return (PRUint32)mKey;
+    return NS_PTR_TO_INT32(mKey);
   }
 
   PRBool Equals(const nsHashKey *aKey) const {

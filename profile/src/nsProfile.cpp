@@ -19,7 +19,8 @@
  *
  * Contributor(s): 
  */
- 
+
+#include "nscore.h" 
 #include "nsProfile.h"
 #include "nsIPref.h"
 
@@ -410,7 +411,7 @@ nsProfile::StartupWithArgs(nsICmdLineService *cmdLineArgs, PRBool canInteract)
     // on profileManager
     // We should not set here
     nsCStringKey key((const char *)pathBuf);
-    if ((int)gLocaleProfiles->Get(&key) == PR_TRUE) {
+    if (NS_PTR_TO_INT32(gLocaleProfiles->Get(&key)) == PR_TRUE) {
 #ifdef DEBUG_profile_verbose
         printf(" already set UILocale and contentLocale: %s\n", NS_STATIC_CAST(const char*, pathBuf));
         printf(" will not install locale\n");

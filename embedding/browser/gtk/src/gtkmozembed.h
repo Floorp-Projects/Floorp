@@ -27,6 +27,7 @@
 extern "C" {
 #endif /* __cplusplus */
 
+#include <stddef.h>
 #include <gtk/gtk.h>
 
 #define GTK_TYPE_MOZ_EMBED             (gtk_moz_embed_get_type())

@@ -192,7 +192,7 @@ Assertion::~Assertion()
 static inline PLHashNumber PR_CALLBACK
 rdf_HashPointer(const void* key)
 {
-    return NS_REINTERPRET_CAST(PLHashNumber, key) >> 2;
+    return PLHashNumber(NS_PTR_TO_INT32(key)) >> 2;
 }
 
 ////////////////////////////////////////////////////////////////////////

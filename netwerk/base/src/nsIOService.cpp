@@ -482,7 +482,7 @@ static void CalculateStartEndPos(const char*string, const char* substring, PRUin
     if (startPos)
         *startPos = (PRUint32)(inst - string);
     if (endPos)
-        *endPos   = (PRUint32)(inst) + PL_strlen(substring);
+        *endPos   = NS_PTR_TO_INT32(inst) + PL_strlen(substring);
 }
 
 // Crap.  How do I ensure that startPos and endPos are correct.
@@ -776,7 +776,7 @@ nsIOService::AllowPort(PRInt32 port, const char *scheme, PRBool *_retval)
     PRInt32 badPortListCnt = mRestrictedPortList.Count();
     for (int i=0; i<badPortListCnt; i++)
     {
-        if (port == (PRInt32) mRestrictedPortList[i])
+        if (port == (PRInt32) NS_PTR_TO_INT32(mRestrictedPortList[i]))
         {
             *_retval = PR_FALSE;
 

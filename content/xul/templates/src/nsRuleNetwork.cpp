@@ -36,7 +36,7 @@
 
  */
 
-
+#include "nscore.h"
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
 #include "nsIComponentManager.h"
@@ -318,7 +318,7 @@ Value::Hash() const
         break;
 
     case eISupports:
-        temp = PLHashNumber(mISupports) >> 2; // strip alignment bits
+        temp = PLHashNumber(NS_PTR_TO_INT32(mISupports)) >> 2; // strip alignment bits
         break;
 
     case eString:

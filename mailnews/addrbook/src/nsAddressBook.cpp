@@ -21,6 +21,7 @@
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
+#include "nscore.h"
 #include "nsIAddressBook.h"
 #include "nsAddressBook.h"
 #include "nsAbBaseCID.h"
@@ -1028,7 +1029,7 @@ nsresult AddressBookParser::ParseLDIFFile()
 	PRInt32 listTotal = listPosArray.Count();
 	for (i = 0; i < listTotal; i++)
 	{
-		PRInt32 pos = (PRInt32)listPosArray.ElementAt(i);
+		PRInt32 pos = NS_PTR_TO_INT32(listPosArray.ElementAt(i));
 		if (NS_SUCCEEDED(mFileSpec->Seek(pos)))
 		{
 			if (NS_SUCCEEDED(mFileSpec->Read(&pBuf, (PRInt32)sizeof(buf), &len)) && len > 0)

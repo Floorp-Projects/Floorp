@@ -20,6 +20,7 @@
  * Contributor(s): 
  */
 
+#include "nscore.h"
 #include "nsFontSizeIterator.h"
 
 #include "nsFont.h"
@@ -59,7 +60,7 @@ NS_IMETHODIMP nsFontSizeIterator::Get( double* aFontSize  )
   if (nsnull != mFontInfo->mSizes && 
       mFontInfo->mSizes->Count() > 0 && 
       mSizeIterInx < mFontInfo->mSizes->Count()) {
-    PRUint32 size = (PRUint32)mFontInfo->mSizes->ElementAt(mSizeIterInx);
+    PRUint32 size = NS_PTR_TO_INT32(mFontInfo->mSizes->ElementAt(mSizeIterInx));
     *aFontSize = (double)size;
     return NS_OK;
   }

@@ -20,6 +20,7 @@
  * Contributor(s): 
  */
 
+#include "nscore.h"
 #include "nsFontRetrieverService.h"
 #include "nsIWidget.h"
 #include <ctype.h>
@@ -182,7 +183,7 @@ static void AddSizeToFontInfo(FontInfo * aFontInfo, PRInt32 aSize)
   PRInt32 i;
   PRInt32 cnt = sizes->Count();
   for (i=0;i<cnt;i++) {
-    PRInt32 size = (int)sizes->ElementAt(i);
+    PRInt32 size = NS_PTR_TO_INT32(sizes->ElementAt(i));
     if (size == aSize) {
       return;
     }

@@ -47,6 +47,7 @@
  * well as providing refcounting support.
  */
 
+#include "nscore.h"
 #include "xpcprivate.h"
 
 /*
@@ -240,7 +241,7 @@ XPCStringConvert::ReadableToJSString(JSContext *cx,
     handle = readable.GetSharedBufferHandle();
 
     JSString *str;
-    if (!handle || NS_REINTERPRET_CAST(int, handle) == 1)
+    if (!handle || NS_PTR_TO_INT32(handle) == 1)
     {
         // blech, have to copy.
         PRUint32 length = readable.Length();

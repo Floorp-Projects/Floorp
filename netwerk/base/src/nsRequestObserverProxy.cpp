@@ -21,6 +21,7 @@
  *   Darin Fisher <darin@netscape.com> (original author)
  */
 
+#include "nscore.h"
 #include "nsRequestObserverProxy.h"
 #include "nsIRequest.h"
 #include "nsIEventQueueService.h"
@@ -256,7 +257,7 @@ nsRequestObserverProxy::SetEventQueue(nsIEventQueue *eq)
     if ((eq == NS_CURRENT_EVENTQ) || (eq == NS_UI_THREAD_EVENTQ)) {
         nsCOMPtr<nsIEventQueueService> serv = do_GetService(kEventQueueService, &rv);
         if (NS_FAILED(rv)) return rv;
-        rv = serv->GetSpecialEventQueue((PRInt32) eq, getter_AddRefs(mEventQ));
+        rv = serv->GetSpecialEventQueue(NS_PTR_TO_INT32(eq), getter_AddRefs(mEventQ));
     }
     else
         mEventQ = eq;

@@ -24,6 +24,7 @@
 #ifndef nsRDFPropertyTestNode_h__
 #define nsRDFPropertyTestNode_h__
 
+#include "nscore.h"
 #include "nsFixedSizeAllocator.h"
 #include "nsRDFTestNode.h"
 #include "nsIRDFDataSource.h"
@@ -116,9 +117,9 @@ public:
             return "nsRDFPropertyTestNode::Element"; }
 
         virtual PLHashNumber Hash() const {
-            return PLHashNumber(mSource.get()) ^
-                (PLHashNumber(mProperty.get()) >> 4) ^
-                (PLHashNumber(mTarget.get()) >> 12); }
+            return PLHashNumber(NS_PTR_TO_INT32(mSource.get())) ^
+                (PLHashNumber(NS_PTR_TO_INT32(mProperty.get())) >> 4) ^
+                (PLHashNumber(NS_PTR_TO_INT32(mTarget.get())) >> 12); }
 
         virtual PRBool Equals(const MemoryElement& aElement) const {
             if (aElement.Type() == Type()) {

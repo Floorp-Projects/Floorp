@@ -20,6 +20,8 @@
  * Contributor(s): 
  */
 
+#include "nscore.h"
+
 #ifndef _MDB_
 #include "mdb.h"
 #endif
@@ -71,7 +73,7 @@ morkArray::morkArray(morkEnv* ev, const morkUsage& inUsage,
 , mArray_Heap( 0 )
 , mArray_Fill( 0 )
 , mArray_Size( 0 )
-, mArray_Seed( (mork_u4) this ) // "random" integer assignment
+, mArray_Seed( (mork_u4)NS_PTR_TO_INT32(this) ) // "random" integer assignment
 {
   if ( ev->Good() )
   {

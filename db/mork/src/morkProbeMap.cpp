@@ -25,6 +25,8 @@
 // In many places, code is identical; Mithril versions stay public domain.
 // Changes in porting are mainly class type and scalar type name changes.
 
+#include "nscore.h"
+
 #ifndef _MDB_
 #include "mdb.h"
 #endif
@@ -765,7 +767,7 @@ morkProbeMap::MapHash(morkEnv* ev, const void* inAppKey) const
     }
     return morkBool_kTrue;
   }
-  return (mork_u4) inAppKey;
+  return (mork_u4) NS_PTR_TO_INT32(inAppKey);
 }
 
 

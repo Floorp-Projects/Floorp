@@ -20,6 +20,7 @@
  * Contributor(s): 
  *   Daniel Glazman <glazman@netscape.com>
  */
+#include "nscore.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMHTMLBodyElement.h"
 #include "nsIDOMEventReceiver.h"
@@ -255,7 +256,7 @@ BodyRule::Equals(const nsIStyleRule* aRule, PRBool& aResult) const
 NS_IMETHODIMP
 BodyRule::HashValue(PRUint32& aValue) const
 {
-  aValue = (PRUint32)(mPart);
+  aValue = NS_PTR_TO_INT32(mPart);
   return NS_OK;
 }
 
@@ -441,7 +442,7 @@ BodyFixupRule::Equals(const nsIStyleRule* aRule, PRBool& aResult) const
 NS_IMETHODIMP
 BodyFixupRule::HashValue(PRUint32& aValue) const
 {
-  aValue = (PRUint32)(mPart);
+  aValue = NS_PTR_TO_INT32(mPart);
   return NS_OK;
 }
 

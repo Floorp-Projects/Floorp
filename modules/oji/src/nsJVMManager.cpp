@@ -37,6 +37,7 @@
 // Plugin Manager Methods to support the JVM Plugin API
 ////////////////////////////////////////////////////////////////////////////////
 
+#include "nscore.h"
 #include "nsJVMManager.h"
 #include "nspr.h"
 #include "xp_path.h"
@@ -221,7 +222,7 @@ nsJVMManager::CreateThread(PRUint32* outThreadID, nsIRunnable* runnable)
 {
 	PRThread* thread = PR_CreateThread(PR_USER_THREAD, &thread_starter, (void*) runnable,
 									PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD, PR_JOINABLE_THREAD, 0);
-	*outThreadID = (PRUint32) thread;
+	*outThreadID = NS_PTR_TO_INT32(thread);
 	return (thread != NULL ?  NS_OK : NS_ERROR_FAILURE);
 }
 

@@ -23,6 +23,7 @@
  *   Daniel Glazman <glazman@netscape.com>
  */
 
+#include "nscore.h"
 #include "nsICSSStyleSheet.h"
 #include "nsIArena.h"
 #include "nsCRT.h"
@@ -120,7 +121,7 @@ public:
 
 PRUint32 AtomKey_base::HashCode(void) const
 {
-  return (PRUint32)mAtom;
+  return NS_PTR_TO_INT32(mAtom);
 }
 
 PRBool AtomKey_base::Equals(const nsHashKey* aKey) const

@@ -33,6 +33,7 @@
 #define FORCE_PR_LOG
 #endif 
 
+#include "nscore.h"
 #include "msgCore.h"    // precompiled header...
 #include "nsNetUtil.h"
 #include "nspr.h"
@@ -98,7 +99,7 @@ net_pop3_check_for_hash_messages_marked_delete(PLHashEntry* he,
 				       						   PRIntn msgindex, 
 				       						   void *arg)
 {
-	char valueChar = (char) (int) he->value;
+	char valueChar = (char) NS_PTR_TO_INT32(he->value);
 	if (valueChar == DELETE_CHAR)
 	{
 		((Pop3ConData *) arg)->delete_server_message_during_top_traversal = PR_TRUE;
@@ -1448,7 +1449,7 @@ PRInt32 nsPop3Protocol::GetFakeUidlTop(nsIInputStream* inputStream,
         if (firstToken && !PL_strcasecmp(firstToken, "MESSAGE-ID:") )
         {
             char *message_id_token = nsCRT::strtok(newStr, " ", &newStr);
-            state = (int)PL_HashTableLookup(m_pop3ConData->uidlinfo->hash, message_id_token);
+            state = NS_PTR_TO_INT32(PL_HashTableLookup(m_pop3ConData->uidlinfo->hash, message_id_token));
             
             if (!m_pop3ConData->only_uidl && message_id_token && (state == 0))
             {	/* we have not seen this message before */
@@ -1776,8 +1777,8 @@ nsPop3Protocol::GetMsg()
                     continue;
                 }
                 if (m_pop3ConData->msg_info[i].uidl)
-                    c = (char) (int) PL_HashTableLookup(m_pop3ConData->uidlinfo->hash,
-                                                m_pop3ConData->msg_info[i].uidl);
+                    c = (char) NS_PTR_TO_INT32(PL_HashTableLookup(m_pop3ConData->uidlinfo->hash,
+                                                m_pop3ConData->msg_info[i].uidl));
                 if ((c == KEEP) && !m_pop3ConData->leave_on_server)
                 {		/* This message has been downloaded but kept on server, we
                      * no longer want to keep it there */ 
@@ -1921,8 +1922,8 @@ nsPop3Protocol::GetMsg()
                     return MK_OUT_OF_MEMORY;
             }
             if (info->uidl) {
-                c = (char) (int) PL_HashTableLookup(m_pop3ConData->uidlinfo->hash,
-                                            info->uidl);
+                c = (char) NS_PTR_TO_INT32(PL_HashTableLookup(m_pop3ConData->uidlinfo->hash,
+                                            info->uidl));
             }
             m_pop3ConData->truncating_cur_msg = PR_FALSE;
             if (c == DELETE_CHAR) {

@@ -23,6 +23,7 @@
  */
 
 #include "xp_core.h"
+#include "nscore.h"
 #include "nsQuickSort.h"
 #include "nsFontMetricsGTK.h"
 #include "nsIServiceManager.h"
@@ -3172,7 +3173,7 @@ GetFontNames(const char* aPattern, nsFontNodeArray* aNodes)
     }
 
     nsCStringKey weightKey(weightName);
-    int weightNumber = (int) gWeights->Get(&weightKey);
+    int weightNumber = NS_PTR_TO_INT32(gWeights->Get(&weightKey));
     if (!weightNumber) {
 #ifdef NOISY_FONTS
 #ifdef DEBUG
@@ -3192,7 +3193,7 @@ GetFontNames(const char* aPattern, nsFontNodeArray* aNodes)
     }
   
     nsCStringKey setWidthKey(setWidth);
-    int stretchIndex = (int) gStretches->Get(&setWidthKey);
+    int stretchIndex = NS_PTR_TO_INT32(gStretches->Get(&setWidthKey));
     if (!stretchIndex) {
 #ifdef NOISY_FONTS
 #ifdef DEBUG

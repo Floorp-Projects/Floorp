@@ -21,6 +21,7 @@
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
+#include "nscore.h"
 #include "nsLayoutCID.h"
 #include "nsIAtom.h"
 #include "nsString.h"
@@ -4447,8 +4448,8 @@ nsTextServicesDocument::PrintOffsetTable()
   for (i = 0; i < mOffsetTable.Count(); i++)
   {
     entry = (OffsetEntry *)mOffsetTable[i];
-    printf("ENTRY %4d: 0x%.8x  %c  %c  %4d  %4d  %4d\n",
-           i, (PRInt32)entry->mNode,  entry->mIsValid ? 'V' : 'N',
+    printf("ENTRY %4d: 0x%.8p  %c  %c  %4d  %4d  %4d\n",
+           i, entry->mNode,  entry->mIsValid ? 'V' : 'N',
            entry->mIsInsertedText ? 'I' : 'B',
            entry->mNodeOffset, entry->mStrOffset, entry->mLength);
   }

@@ -35,6 +35,7 @@
 
 /* Wrapper object for reflecting native xpcom objects into JavaScript. */
 
+#include "nscore.h"
 #include "xpcprivate.h"
 
 /***************************************************************************/
@@ -2351,7 +2352,7 @@ XPCWrappedNative::HandlePossibleNameCaseError(XPCCallContext& ccx,
         nsCRT::free(newStr);
         if(newJSStr && (set ?
              set->FindMember(STRING_TO_JSVAL(newJSStr), &member, &interface) :
-             (JSBool) iface->FindMember(STRING_TO_JSVAL(newJSStr))))
+                        (JSBool)NS_PTR_TO_INT32(iface->FindMember(STRING_TO_JSVAL(newJSStr)))))
         {
             // found it!
             const char* ifaceName = interface->GetNameString();

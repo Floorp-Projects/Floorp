@@ -23,6 +23,7 @@
 
 // this file implements the nsMsgDatabase interface using the MDB Interface.
 
+#include "nscore.h"
 #include "msgCore.h"
 #include "nsMsgDatabase.h"
 #include "nsDBFolderInfo.h"
@@ -245,7 +246,7 @@ nsMsgDatabase::GetKey(PLDHashTable* aTable, PLDHashEntryHdr* aEntry)
 PLDHashNumber PR_CALLBACK
 nsMsgDatabase::HashKey(PLDHashTable* aTable, const void* aKey)
 {
-  return PLDHashNumber(aKey);
+  return PLDHashNumber(NS_PTR_TO_INT32(aKey));
 }
 
 PRBool PR_CALLBACK

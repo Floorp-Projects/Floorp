@@ -22,6 +22,7 @@
  * Contributor(s): 
  */
 
+#include "nscore.h"
 #include "nsLeafBoxFrame.h"
 #include "nsIOutlinerBoxObject.h"
 #include "nsIOutlinerView.h"
@@ -72,7 +73,7 @@ public:
   PRUint32 HashCode(void) const {
     // Make a 32-bit integer that combines the low-order 16 bits of the state and the input symbol.
     PRInt32 hb = mState << 16;
-    PRInt32 lb = (((PRInt32)mInputSymbol.get()) << 16) >> 16;
+    PRInt32 lb = (NS_PTR_TO_INT32(mInputSymbol.get()) << 16) >> 16;
     return hb+lb;
   }
 

@@ -23,6 +23,7 @@
 
 /* The privileged system principal. */
 
+#include "nscore.h"
 #include "nsSystemPrincipal.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
@@ -76,7 +77,7 @@ nsSystemPrincipal::Equals(nsIPrincipal *other, PRBool *result)
 NS_IMETHODIMP
 nsSystemPrincipal::HashValue(PRUint32 *result)
 {
-    *result = (PRUint32) this;
+    *result = NS_PTR_TO_INT32(this);
     return NS_OK;
 }
 

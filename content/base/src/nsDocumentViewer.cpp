@@ -21,6 +21,7 @@
  *   Dan Rosen <dr@netscape.com>
  */
 
+#include "nscore.h"
 #include "nslayout.h"
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
@@ -4770,7 +4771,7 @@ NS_IMETHODIMP DocumentViewerImpl::GetHintCharacterSetSource(PRInt32 *aHintCharac
 static void
 SetChildHintCharacterSetSource(nsIMarkupDocumentViewer* aChild, void* aClosure)
 {
-  aChild->SetHintCharacterSetSource((PRInt32) aClosure);
+  aChild->SetHintCharacterSetSource(NS_PTR_TO_INT32(aClosure));
 }
 
 NS_IMETHODIMP DocumentViewerImpl::SetHintCharacterSetSource(PRInt32 aHintCharacterSetSource)
@@ -4798,7 +4799,7 @@ NS_IMETHODIMP DocumentViewerImpl::SetHintCharacterSet(const PRUnichar* aHintChar
 static void
 SetChildBidiOptions(nsIMarkupDocumentViewer* aChild, void* aClosure)
 {
-  aChild->SetBidiOptions((PRUint32)aClosure);
+  aChild->SetBidiOptions(NS_PTR_TO_INT32(aClosure));
 }
 
 #endif // IBMBIDI

@@ -21,6 +21,7 @@
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
+#include "nscore.h"
 #include "nsIHTMLAttributes.h"
 #include "nsIHTMLStyleSheet.h"
 #include "nsIStyleRule.h"
@@ -99,7 +100,7 @@ struct HTMLAttribute {
 
   PRUint32 HashValue(void) const
   {
-    return PRUint32(mAttribute) ^ mValue.HashValue();
+    return NS_PTR_TO_INT32(mAttribute) ^ mValue.HashValue();
   }
 
   void Reset(void)
@@ -638,7 +639,7 @@ nsHTMLMappedAttributes::Equals(const nsIHTMLMappedAttributes* aOther, PRBool& aR
 NS_IMETHODIMP
 nsHTMLMappedAttributes::HashValue(PRUint32& aValue) const
 {
-  aValue = PRUint32(mRuleMapper);
+  aValue = NS_PTR_TO_INT32(mRuleMapper);
   
   const HTMLAttribute* attr = &mFirst;
   while (nsnull != attr) {

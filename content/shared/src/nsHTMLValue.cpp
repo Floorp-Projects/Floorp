@@ -20,6 +20,7 @@
  * Contributor(s): 
  */
 
+#include "nscore.h"
 #include "nsHTMLValue.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
@@ -279,7 +280,7 @@ void nsHTMLValue::AppendToString(nsAWritableString& aBuffer) const
   else if (eHTMLUnit_ISupports == mUnit) {
     aBuffer.Append(NS_LITERAL_STRING("0x"));
     nsAutoString intStr;
-    intStr.AppendInt((PRInt32)mValue.mISupports, 16);
+    intStr.AppendInt(NS_PTR_TO_INT32(mValue.mISupports), 16);
     aBuffer.Append(intStr);
   }
   else if (eHTMLUnit_Color == mUnit){
