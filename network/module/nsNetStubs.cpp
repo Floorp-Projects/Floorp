@@ -770,11 +770,11 @@ XP_HandleHTMLDialog(URL_Struct *url)
 
 /*
  *---------------------------------------------------------------------------
- * From ns/nav-java/netscape/net/netStubs.c
+ * Needed by mkcache.c (at least) 
  *---------------------------------------------------------------------------
  */
 
-
+char ** fe_encoding_extensions = NULL;
 /*
  *---------------------------------------------------------------------------
  * From ns/lib/libmisc/glhist.c
