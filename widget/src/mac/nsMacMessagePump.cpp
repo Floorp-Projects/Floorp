@@ -351,7 +351,7 @@ PRBool nsMacMessagePump::BrowserIsBusy()
   static PRBool wasBusy;
   if (isBusy != wasBusy)
   {
-    printf("¤¤ Message pump became %s at %ld (next idle %ld)\n", isBusy ? "busy" : "idle", ::TickCount(), sNextIdleTicks);      
+    printf("*** Message pump became %s at %ld (next idle %ld)\n", isBusy ? "busy" : "idle", ::TickCount(), sNextIdleTicks);      
     wasBusy = isBusy;
   }
 #endif
