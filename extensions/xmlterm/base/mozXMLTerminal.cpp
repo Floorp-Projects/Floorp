@@ -719,8 +719,16 @@ NS_IMETHODIMP mozXMLTerminal::ShowCaret(void)
 
   nsCOMPtr<nsICaret> caret;
   if (NS_SUCCEEDED(mPresShell->GetCaret(getter_AddRefs(caret)))) {
-    caret->SetCaretVisible(PR_TRUE);
-    caret->SetCaretReadOnly(PR_FALSE);
+    nsCOMPtr<nsISelectionController> selCon = do_QueryInterface(mPresShell);
+    if (selCon)
+    {
+      nsCOMPtr<nsIDOMSelection> sel;
+      if (NS_SUCCEEDED(selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(sel))) && sel)
+      {
+        caret->SetCaretVisible(PR_TRUE, sel);
+        caret->SetCaretReadOnly(PR_FALSE, sel);
+      }
+    }
   }
 
   return NS_OK;
