@@ -841,7 +841,7 @@ END
          strike => sub { return $_; } ,
          js => sub { return $_; },
          html => sub { return $_; },
-         url_quote => sub { return $_; }
+         url_quote => sub { return $_; },
          no_break => sub { return $_; }
         },
       }) || die ("Could not create Template: " . Template->error() . "\n");
