@@ -76,6 +76,7 @@ public:
 	virtual void			EventMouseUp(const EventRecord &inMacEvent);
 	virtual Boolean			ObeyCommand(CommandT inCommand, void *ioParam);
 	virtual Boolean			HandleKeyPress(const EventRecord& inKeyEvent);
+	virtual Boolean			FocusDraw(LPane *inSubPane = nil);
 	virtual void			DrawSelf();
 	virtual void			SpendTime(const EventRecord& inMacEvent);
 	virtual void			ActivateSelf();

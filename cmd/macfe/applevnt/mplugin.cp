@@ -59,6 +59,7 @@
 #include <CodeFragments.h>
 
 #include "LMenuSharing.h"
+#include "CBrowserWindow.h"
 
 // On a powerPC, plugins depend on being able to find qd in our symbol table
 #ifdef powerc
@@ -1738,6 +1739,17 @@ Boolean	CPluginView::HandleKeyPress(const EventRecord& inKeyEvent)
 	return false;
 }
 
+Boolean CPluginView::FocusDraw(LPane *inSubPane)
+{
+	Boolean	revealed = LView::FocusDraw(inSubPane);
+
+	//
+	// Make sure that any exposed popdown view is clipped out before drawing occurs.
+	//
+	CBrowserWindow::ClipOutPopdown(this);
+
+	return revealed;
+}
 
 void CPluginView::DrawSelf()
 {
