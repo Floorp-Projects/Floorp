@@ -2865,7 +2865,7 @@ NS_IMETHODIMP nsImapService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI 
     // now extract lots of fun information...
     nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(aImapUrl);
     nsCAutoString unescapedSpec(aSpec);
-    nsUnescape(NS_CONST_CAST(char*, unescapedSpec.get()));
+    // nsUnescape(NS_CONST_CAST(char*, unescapedSpec.get()));
     mailnewsUrl->SetSpec(unescapedSpec.get()); // set the url spec...
     
     nsXPIDLCString userName;
@@ -2877,6 +2877,10 @@ NS_IMETHODIMP nsImapService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI 
     if (NS_FAILED(rv)) return rv;
     rv = mailnewsUrl->GetPreHost(getter_Copies(userName));
     if (NS_FAILED(rv)) return rv;
+
+    if ((const char *) userName)
+      nsUnescape(NS_CONST_CAST(char*,(const char*)userName));
+
     // if we can't get a folder name out of the url then I think this is an error
     aImapUrl->CreateCanonicalSourceFolderPathString(getter_Copies(folderName));
     if (NS_FAILED(rv)) return rv;
