@@ -36,6 +36,21 @@
 // frame) and unlike other frames, it *IS* reference counted so don't
 // forget to NS_RELEASE it when you are done with it!
 
+// Line Flags (see GetLine below)
+
+// This bit is set when the line is wrapping up a block frame. When
+// clear, it means that the line contains inline elements.
+#define NS_LINE_FLAG_IS_BLOCK           0x1
+
+// This bit, when set, indicates that the line has had a trailing
+// white-space compressed. The bit is only set on lines that contain
+// inline elements, and is only set when actual white-space is
+// compressed.
+#define NS_LINE_FLAG_IS_TRIMMED         0x2
+
+// This bit is set when the line ends in some sort of break.
+#define NS_LINE_FLAG_ENDS_IN_BREAK      0x4
+
 class nsILineIterator : public nsISupports {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ILINE_ITERATOR_IID)
@@ -52,14 +67,20 @@ public:
   // the first frame on the line and aNumFramesOnLine is the number of
   // frames that are on the line. If the line-number is invalid then
   // aFirstFrameOnLine will be nsnull and aNumFramesOnLine will be
-  // zero. For valid line numbers, aLineBounds is set to the bounding
-  // box of the line (which is based on the in-flow position of the
-  // frames on the line; if a frame was moved because of relative
-  // positioning then its coordinates may be outside the line bounds).
+  // zero.
+  //
+  // For valid line numbers, aLineBounds is set to the bounding box of
+  // the line (which is based on the in-flow position of the frames on
+  // the line; if a frame was moved because of relative positioning
+  // then its coordinates may be outside the line bounds).
+  //
+  // In addition, aLineFlags will contain flag information about the
+  // line.
   NS_IMETHOD GetLine(PRInt32 aLineNumber,
                      nsIFrame** aFirstFrameOnLine,
                      PRInt32* aNumFramesOnLine,
-                     nsRect& aLineBounds) = 0;
+                     nsRect& aLineBounds,
+                     PRUint32* aLineFlags) = 0;
 
   // Given a frame thats a child of the block, find which line its on
   // and return that line index into aIndexResult. aIndexResult will
