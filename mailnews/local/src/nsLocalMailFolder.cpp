@@ -53,11 +53,11 @@ static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 ////////////////////////////////////////////////////////////////////////////////
 
 nsMsgLocalMailFolder::nsMsgLocalMailFolder(void)
-  : nsMsgFolder(), mPath(""), mExpungedBytes(0), 
+  : nsMsgFolder(), mExpungedBytes(0), 
     mHaveReadNameFromDB(PR_FALSE), mGettingMail(PR_FALSE),
     mInitialized(PR_FALSE), mMailDatabase(nsnull)
 {
-
+	mPath = nsnull;
 //  NS_INIT_REFCNT(); done by superclass
 }
 
@@ -66,6 +66,8 @@ nsMsgLocalMailFolder::~nsMsgLocalMailFolder(void)
 	if(mMailDatabase)
 		//Close releases db;
 		mMailDatabase->Close(PR_TRUE);
+	if (mPath)
+		delete mPath;
 }
 
 NS_IMPL_ADDREF_INHERITED(nsMsgLocalMailFolder, nsMsgFolder)
@@ -830,6 +832,9 @@ nsresult  nsMsgLocalMailFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInf
 {
     nsresult openErr=NS_ERROR_UNEXPECTED;
     if(!db || !folderInfo)
+		return NS_ERROR_NULL_POINTER;	//ducarroz: should we use NS_ERROR_INVALID_ARG?
+
+	if (!mPath)
 		return NS_ERROR_NULL_POINTER;
 
 	nsIMsgDatabase * mailDBFactory = nsnull;
@@ -838,7 +843,7 @@ nsresult  nsMsgLocalMailFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInf
 	nsresult rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, nsIMsgDatabase::GetIID(), (void **) &mailDBFactory);
 	if (NS_SUCCEEDED(rv) && mailDBFactory)
 	{
-		openErr = mailDBFactory->Open(mPath, PR_FALSE, (nsIMsgDatabase **) &mailDB, PR_FALSE);
+		openErr = mailDBFactory->Open(*mPath, PR_FALSE, (nsIMsgDatabase **) &mailDB, PR_FALSE);
 		mailDBFactory->Release();
 	}
 
@@ -1081,12 +1086,15 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetRememberedPassword(char ** password)
 
 NS_IMETHODIMP nsMsgLocalMailFolder::GetPath(nsFileSpec& aPathName)
 {
-  nsFileSpec nopath("");
-  if (mPath == nopath) {
-    nsresult rv = nsLocalURI2Path(kMailboxRootURI, mURI, mPath);
+  if (! mPath) {
+  	mPath = new nsNativeFileSpec("");
+  	if (! mPath)
+  		return NS_ERROR_OUT_OF_MEMORY;
+  
+    nsresult rv = nsLocalURI2Path(kMailboxRootURI, mURI, *mPath);
     if (NS_FAILED(rv)) return rv;
   }
-  aPathName = mPath;
+  aPathName = *mPath;
   return NS_OK;
 }
 

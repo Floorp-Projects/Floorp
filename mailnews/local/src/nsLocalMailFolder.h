@@ -139,7 +139,7 @@ protected:
 
 
 protected:
-  nsNativeFileSpec mPath;
+	nsNativeFileSpec *mPath;
 	PRUint32  mExpungedBytes;
 	PRBool		mHaveReadNameFromDB;
 	PRBool		mGettingMail;

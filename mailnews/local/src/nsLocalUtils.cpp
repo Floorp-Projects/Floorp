@@ -65,7 +65,8 @@ nsGetMailboxRoot(const char *hostname, nsFileSpec &result)
 #endif
 
   // if there are no pop servers, how did we get here?
-  if (! serverSupports) return NS_ERROR_UNEXPECTED;
+  if (! serverSupports)
+  	return NS_ERROR_UNEXPECTED;
 
   nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(serverSupports);
 
@@ -126,6 +127,8 @@ nsLocalURI2Path(const char* rootURI, const char* uriStr,
   // begin pathResult with the mailbox root
   rv = nsGetMailboxRoot(hostname, pathResult);
   delete[] hostname;
+  if (NS_FAILED(rv))
+  	return rv;
 
   if (slashPos) {
     // advance past hostname
