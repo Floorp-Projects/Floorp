@@ -2,6 +2,7 @@ prefix=%prefix%
 exec_prefix=%exec_prefix%
 libdir=%libdir%
 includedir=%includedir%
+idldir=%idldir%
 
 Name: XPCOM
 Description: The Mozilla Cross Platform Component Library
