@@ -1394,7 +1394,7 @@ nsEventStateManager::SendFocusBlur(nsIContent *aContent)
       mCurrentFocus->HandleDOMEvent(*mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
     }
 
-    NS_RELEASE(mCurrentTargetContent);
+    NS_IF_RELEASE(mCurrentTargetContent);
   }
 
   if (nsnull != aContent) {
@@ -1411,7 +1411,7 @@ nsEventStateManager::SendFocusBlur(nsIContent *aContent)
       aContent->HandleDOMEvent(*mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
     }
 
-    NS_RELEASE(mCurrentTargetContent);
+    NS_IF_RELEASE(mCurrentTargetContent);
 
     //reset mCurretTargetContent to what it was
     mCurrentTargetContent = targetBeforeEvent;
