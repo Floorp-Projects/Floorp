@@ -15,7 +15,7 @@
    - 
    - The Initial Developer of the Original Code is Netscape
    - Communications Corporation. Portions created by Netscape are
-   - Copyright (C) 1998-1999 Netscape Communications Corporation. All
+   - Copyright (C) 1998-2000 Netscape Communications Corporation. All
    - Rights Reserved.
    - 
    - Contributor(s): 
@@ -33,386 +33,306 @@
 
 
 <!-- dialog containing a control requiring initial setup -->
-<xul:window class="dialog" title="&windowTitle.label;"
-    xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    xmlns="http://www.w3.org/TR/REC-html40"
+<window class="dialog" title="&windowTitle.label;"
+    xmlns ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    xmlns:html="http://www.w3.org/TR/REC-html40"
     onload = "Startup()"
-    align="vertical">
+    align="vertical"
+    id="imagedialog"
+    persist="screenX screenY"
+    >
   
   <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
   <script language="JavaScript" src="chrome://editor/content/EdImageProps.js"/>
   <script language="JavaScript" src="chrome://global/content/dialogOverlay.js"/>
 
-  <xul:broadcaster id="args" value=""/>
-  <xul:keyset id="keyset"/>
+  <broadcaster id="args" value=""/>
+  <keyset id="keyset"/>
 
-<xul:titledbox orient="vertical">
-  <xul:title
+<titledbox orient="vertical">
+  <title
     class = "dialog"
     align = "left">
-    <xul:text value="&locationBox.label;"/>
-  </xul:title>
+    <text value="&locationBox.label;"/>
+  </title>
 
-  <div style="width: 50px; height: 50px">
-  <table>
+  <box align="horizontal">
 
     <!--/////// Src URL and ALT Text //////-->
-    <tr>
-      <td align="right">  
-        <label 
-          class = "dialog"
-          for   = "srcInput">
-          &locationEditField.label;
-        </label>
-      </td> 
-      <td>  
-        <input 
-          type       = "text" 
+    <box align="vertical">
+      <box align="horizontal">
+        <text class = "label" 
+          for   = "srcInput"
+          value = "&locationEditField.label;"
+          align = "right" />
+      </box>
+      <box align="horizontal">
+        <text class = "label"
+          id    = "altTextLabel" 
+          for   = "altTextInput"
+          value = "&altTextEditField.label;" />
+      </box>
+    </box>
+    
+    <spring flex="100%"/>
+    
+    <box align="vertical">
+      <box align="horizontal">
+        <textfield 
           id         = "srcInput" 
-          size       = "30" 
+          style      = "min-width:150px; max-width:200px"
           onkeyup    = "doOverallEnabling()"
           onmouseup  = "doOverallEnabling()"
           onchange   = "doOverallEnabling()" />
-      </td>  
-      <td>  
+        <spring flex="100%"/>
         <!-- from EdDialogOverlay.xul - TEMP Style hack - use boxes -->
-        <xul:titledbutton id="ChooseFile" style="margin-left:5px;"/>
-      </td>  
-    </tr>  
-    <tr>  
-      <td>  
-        <label
-          class = "dialog"
-          id    = "altTextLabel" 
-          for   = "altTextInput"> 
-          &altTextEditField.label;
-        </label>
-      </td> 
-      <td>
-        <input 
-          type     ="text"
-          id       ="altTextInput"
-          size     ="30" 
-          onchange = "doOverallEnabling()"/>
-      </td>
-      <td/> 
-    </tr>  
-  </table> 
-  </div> 
-</xul:titledbox>
+        <titledbutton id="ChooseFile" style="margin-left:5px"
+               class = "push dialog"
+               onclick = "chooseImageFile()" />
+      </box>
 
-<xul:box align="horizontal">
-  <xul:titledbutton 
+      <spring flex="100%"/>
+
+      <box align="horizontal">  
+        <textfield
+          id       ="altTextInput"
+          style    = "min-width:100px; max-width:200px"
+          onchange = "doOverallEnabling()"/>
+      </box>  
+    </box> 
+  </box>
+</titledbox>
+
+<box align="horizontal">
+  <titledbutton 
     class   = "push dialog" 
     id      = "MoreFewerButton" 
     align   = "left" 
     onclick = "onMoreFewerImage()" 
     persist = "more"/>
-  <xul:spring flex="100%"/>
+  <spring flex="100%"/>
   <!-- From EdDialogOverlay.xul -->
-  <xul:titledbutton id="AdvancedEditButton2"/>
-</xul:box>
+  <titledbutton id="AdvancedEditButton2"/>
+</box>
 <!-- Area that shows and hides via MoreFewerButton --> 
-<!-- xul:box id="MoreSection" align="horizontal" -->
-<xul:box id="MoreSection" align="vertical" flex="100%">
-  <xul:box align="horizontal" flex="100%">
+<box id="MoreSection" align="vertical" flex="100%">
+  <box align="horizontal" flex="100%">
+    <box align="vertical">
     <!-- //////// Image Dimensions //////// -->
-    <xul:titledbox orient="vertical" flex="100%">
-      <xul:title
+    <titledbox orient="vertical" flex="100%">
+      <title
         class="dialog"
         id="dimensionsLabel">
-        <xul:text value="&dimensionsBox.label;"/>
-      </xul:title>
-	  <div>
-      <!-- THIS NEEDS TO BE onchange RATHER THAN onclick -->
-      <input 
-        type    = "radio" 
-        name    = "dimensionType" 
-        id      = "originalsizeRadio" 
-        onclick = "doDimensionEnabling( false );"/>
-                  <!-- onclick was: "doOverallEnabling();" -->
-      <label 
-        class   = "dialog" 
-        id      = "originalsizeLabel"
-        for     = "originalsizeRadio"> 
-        &originalSizeRadio.label;
-      </label>
-      <br/>
-	  </div>
-	  <div>
-      <!-- THIS NEEDS TO BE onchange RATHER THAN onclick -->
-      <input 
-        type    ="radio" 
-        name    = "dimensionType" 
-        id      = "customsizeRadio" 
-        onclick = "doDimensionEnabling( true );" />
-      <label 
-        class   = "dialog" 
-        id      = "customsizeLabel"
-        for     = "customsizeRadio"> 
-        &customSizeRadio.label;
-      </label>
-      </div>
+        <text value="&dimensionsBox.label;"/>
+      </title>
+      
+      <!-- THESE NEED TO BE onchange RATHER THAN onclick -->
+      <radiogroup orient="vertical">
+        <radio
+          id      = "originalsizeRadio" 
+          value   = "&originalSizeRadio.label;"
+         onclick = "doDimensionEnabling( false );"/>
+        <radio
+          id      = "customsizeRadio" 
+          value   = "&customSizeRadio.label;"
+          onclick = "doDimensionEnabling( true );" />
+      </radiogroup>
+
 	  <!-- preferred width and height added to increase performance in boxes (otherwise buttons will jump!!) -evaughan -->
-	  <div style="width: 50px; height: 50px">
-      <table>
+      <spring flex="100%"/>
+      
         <!--//////  IMAGE WIDTH  //////-->
-        <tr>
-          <td>
-            <label 
-              class = "dialog"
-              id    = "widthLabel"
-              for   = "widthInput">
-              &widthEditField.label;
-            </label>
-          </td>
-          <td>
-            <input 
-              type     = "text" 
-              id       = "widthInput" 
-              size     = "4" 
-              length   = "4"
-              onfocus  = "oldSourceInt = this.value;"
-              onkeyup  = "constrainProportions(this.id, 'heightInput')" 
-              onchange = "doOverallEnabling()" />
-          </td>
-          <td>
-            <select 
-              id      = "widthUnitsSelect" 
-              size    = "1"
-              style   = "width: 100px; min-width: 100px; max-width: 100px;"
-              onclick = "doOverallEnabling()"/>
-            <!-- option elements are appended by JS -->
-          </td>
-        </tr>
+      <box align="horizontal">
+        <text class = "label" 
+          id    = "widthLabel"
+          for   = "widthInput"
+          value = "&widthEditField.label;" />
+        <spring flex="100%"/>
+        <textfield
+          id       = "widthInput" 
+          style    = "min-width:30px; max-width:30px" 
+          length   = "4"
+          maxlength = "4" 
+          onfocus  = "oldSourceInt = this.value;"
+          onkeyup  = "constrainProportions(this.id, 'heightInput')" 
+          onchange = "doOverallEnabling()" />
+        <spring flex="100%"/>
+        <html:select 
+          id      = "widthUnitsSelect" 
+          size    = "1"
+          style   = "width: 100px; min-width: 100px; max-width: 100px;"
+          onclick = "doOverallEnabling()"/>
+        <!-- option elements are appended by JS -->
+      </box>
 
         <!--////// IMAGE HEIGHT //////-->
-        <tr>
-          <td>
-            <label 
-              class  = "dialog"
-              id     = "heightLabel"
-              for    = "heightInput">
-              &heightEditField.label;
-            </label>
-          </td>
-          <td>
-            <input 
-              type     = "text" 
-              size     = "4" 
-              length   = "4" 
-              id       = "heightInput" 
-              onfocus  = "oldSourceInt = this.value;"
-              onkeyup  = "constrainProportions(this.id, 'widthInput')"
-              onchange = "doOverallEnabling()" />
-          </td>
-          <td>
-            <select 
-              id      = "heightUnitsSelect" 
-              size    = "1" 
-              style   = "width: 100px; min-width: 100px; max-width: 100px;"
-              onclick = "doOverallEnabling()"/>
-              <!-- option elements are appended by JS -->
-          </td>
-        </tr>
-      </table>
-	  </div>
+      <box align="horizontal">
+        <text class = "label" 
+          id    = "heightLabel"
+          for   = "heightInput"
+          value = "&heightEditField.label;" />
+        <spring flex="100%"/>
+        <textfield 
+          id       = "heightInput" 
+          style    = "min-width:30px; max-width:30px" 
+          length   = "4" 
+          maxlength = "4" 
+          onfocus  = "oldSourceInt = this.value;"
+          onkeyup  = "constrainProportions(this.id, 'widthInput')"
+          onchange = "doOverallEnabling()" />
+        <spring flex="100%"/>
+        <html:select 
+          id      = "heightUnitsSelect" 
+          size    = "1" 
+          style   = "width: 100px; min-width: 100px; max-width: 100px;"
+          onclick = "doOverallEnabling()"/>
+          <!-- option elements are appended by JS -->
+      </box>
 
       <!--////// CONSTRAIN DIMENSIONS //////-->
-	  <div>
-      <input type="checkbox" id="constrainCheckbox"/>
-      <label 
-        class = "dialog" 
-        id    = "constrainLabel" 
-        for   = "constrainCheckbox">
-        &constrainCheckbox.label;
-      </label>
-	  </div>
-    </xul:titledbox>
-    <!-- End of Bottom Left Region -->
-    <xul:box align="vertical" flex="100%">
+	  <box align="horizontal">
+      <checkbox id="constrainCheckbox" value="&constrainCheckbox.label;"/>
+	  </box>
+    </titledbox>
+
+    <titledbox orient="horizontal" flex="100%">
+      <title
+        class="dialog"
+        id="imagemapLabel">
+        <text value="&imagemapBox.label;"/>
+      </title>
+      <titledbutton
+        class   = "push dialog"
+        id      = "editImageMap"
+        onclick = "editImageMap()"
+        value   = "&editImageMapButton.label;"/>
+      <titledbutton
+        class   = "push dialog"
+        id      = "removeImageMap"
+        onclick = "removeImageMap()"
+        value   = "&removeImageMapButton.label;"/>
+    </titledbox>
+
+    </box>
+
+    <box align="vertical" flex="100%">
       <!-- Bottom Right Region -->
       <!--//////// Alignment ////////-->
-      <xul:titledbox flex="100%" orient="vertical">
-        <xul:title
+      <titledbox flex="100%" orient="vertical">
+        <title
           class = "dialog" 
           id    = "alignLabel"
           for   = "alignTypeSelect">
-          <xul:text value="&alignment.label;"/>
-        </xul:title>
-		<div>
-        <!-- BUG: Select contents can be nothing but text! -->
-        <select
-          id   = "alignTypeSelect" 
-          size = "1">
-          <option>
-            &topPopup.value;
-          </option>
-          <option>
-            &centerPopup.value;
-          </option>
-          <option>
-            &bottomPopup.value;
-          </option>
-          <option>
-            &wrapLeftPopup.value;
-          </option>
-          <option>
-            &wrapRightPopup.value;
-          </option>
-  <!--
-  Use this when option content bug is fixed:
-          <option>
-            <titledbutton id="img-align-top" value="&topPopup.value;" align="left"/>
-          </option>
-          <option>
-            <titledbutton id="img-align-center" value="&centerPopup.value;" align="left"/>
-          </option>
-          <option>
-            <titledbutton id="img-align-bottom" value="&bottomPopup.value;" align="left"/>
-          </option>
-          <option>
-            <titledbutton id="img-align-left" value="&wrapLeftPopup.value;" align="left"/>
-          </option>
-          <option>
-            <titledbutton id="img-align-right" value="&wrapRightPopup.value;" align="left"/>
-          </option>
-  -->
-        </select>
-		</div>
-      </xul:titledbox>
-  <!--
-        <xul:titledbutton 
-          id          = "alignTypeSelect" 
-          src         = "resource:/chrome/editor/skin/default/images/img-align-bottom.gif" 
-          class       = "push dialog popup" 
-          popup       = "ImageTextAlignment" 
-          popupanchor = "bottomleft" 
-          align       = "left"
-          onchange    = "doOverallEnabling()" />
-  -->
+          <text value="&alignment.label;"/>
+        </title>
+
+      <menulist id = "alignTypeSelect" onchange = "doOverallEnabling()" >
+        <menupopup>
+          <menuitem value = "&topPopup.value;" 
+             src          = "resource:/chrome/editor/skin/default/images/img-align-top.gif"
+          />
+          <menuitem value = "&centerPopup.value;"
+             src          = "resource:/chrome/editor/skin/default/images/img-align-middle.gif" 
+          />
+          <menuitem value = "&bottomPopup.value;"
+             src          = "resource:/chrome/editor/skin/default/images/img-align-bottom.gif" 
+          />
+          <menuitem value = "&wrapLeftPopup.value;"
+             src          = "resource:/chrome/editor/skin/default/images/img-align-right.gif" 
+          />
+          <menuitem value = "&wrapRightPopup.value;"
+             src          = "resource:/chrome/editor/skin/default/images/img-align-left.gif" 
+          />
+        </menupopup>
+      </menulist>
+      </titledbox>
+
       <!--//////// Borders and Spacing ////////-->
-      <xul:titledbox orient="vertical" flex="100%">
-        <xul:title
+      <titledbox orient="horizontal" flex="100%">
+        <title
           class = "dialog"
           id    = "spacingLabel"> 
-          <xul:text value="&spacingBox.label;"/>
-        </xul:title>
-        <!-- preferred width and height added to increase performance in boxes (otherwise buttons will jump!!) -evaughan -->
-	    <div style="width: 50px; height: 50px">
-        <table>
-          <tr>
-            <td align="right">
-              <label 
-                class = "dialog" 
-                id    = "leftrightLabel"
-                for   = "imageleftrightInput">
-                &leftRightEditField.label;
-              </label>
-            </td>
-            <td>
-              <input 
-                type      = "text" 
-                id        = "imageleftrightInput" 
-                size      = "4" 
-                length    = "4" 
-                maxlength = "4" 
-                onkeyup   = "forceInteger(this.id)" 
-                onchange  = "doOverallEnabling()"/>
-            </td>
-            <td>
-              <label 
-                class = "dialog" 
-                id    = "leftrighttypeLabel"
-                for   = "imageleftrightInput">
-                &pixelsPopup.value;
-              </label>
-            </td>
-          </tr>
-          <tr>
-            <td align="right">
-              <label 
-                class = "dialog" 
-                id    = "topbottomLabel"
-                for   = "imagetopbottomInput">
-                &topBottomEditField.label;
-              </label>
-            </td>
-            <td>
-              <input 
-                type      = "text" 
-                id        = "imagetopbottomInput" 
-                size      = "4" 
-                length    = "4" 
-                maxlength = "4" 
-                onkeyup   = "forceInteger(this.id)"
-                onchange  = "doOverallEnabling()"/>
-            </td>
-            <td>
-              <label 
-                class = "dialog" 
-                id    = "topbottomtypeLabel"
-                for   = "imagetopbottomInput">
-                &pixelsPopup.value;
-              </label>
-            </td>
-          </tr>
-          <tr>
-            <td align="right">
-              <label 
-                class = "dialog" 
-                id    = "borderLabel"
-                for   = "border">
-                &borderEditField.label;
-              </label>
-            </td>
-            <td>
-              <input 
-                type      ="text" 
-                id        = "border" 
-                size      = "4" 
-                length    = "4" 
-                maxlength = "4"
-                onkeyup   = "forceInteger(this.id)"
-                onchange  = "doOverallEnabling()" />
-            </td>
-            <td valign="middle">
-              <label 
-                class = "dialog"
-                id    = "bordertypeLabel"
-                for   = "border">
-                &pixelsPopup.value;
-              </label>
-            </td>
-          </tr>
-        </table>
-		</div>
-      </xul:titledbox>
-    </xul:box> <!-- Bottom Right region -->
-  </xul:box> <!-- The horizontal box -->
+          <text value="&spacingBox.label;"/>
+        </title>
+
+        <box align="vertical">
+          <text class = "label" 
+            id    = "leftrightLabel"
+            for   = "imageleftrightInput"
+            value = "&leftRightEditField.label;"
+            style = "align:right" />
+          <spring flex="100%"/>
+          <text class = "label" 
+            id    = "topbottomLabel"
+            for   = "imagetopbottomInput"
+            value = "&topBottomEditField.label;"
+            style = "align:right" />
+          <spring flex="100%"/>
+          <text class = "label" 
+            id    = "borderLabel"
+            for   = "border"
+            value = "&borderEditField.label;"
+            style = "align:right" />
+        </box>
+        
+        <box align="vertical">
+          <textfield 
+            id        = "imageleftrightInput" 
+            style     = "min-width:30px; max-width:30px" 
+            length    = "4" 
+            maxlength = "4" 
+            onkeyup   = "forceInteger(this.id)" 
+            onchange  = "doOverallEnabling()"/>
+          <spring flex="100%"/>
+          <textfield 
+            id        = "imagetopbottomInput" 
+            style     = "min-width:30px; max-width:30px" 
+            length    = "4" 
+            maxlength = "4" 
+            onkeyup   = "forceInteger(this.id)"
+            onchange  = "doOverallEnabling()"/>
+          <spring flex="100%"/>
+          <textfield
+            id        = "border" 
+            style     = "min-width:30px; max-width:30px" 
+            length    = "4" 
+            maxlength = "4"
+            onkeyup   = "forceInteger(this.id)"
+            onchange  = "doOverallEnabling()" />
+        </box>
+        
+        <box align="vertical">
+          <text class = "label" 
+            id    = "leftrighttypeLabel"
+            for   = "imageleftrightInput"
+            value = "&pixelsPopup.value;" />
+          <spring flex="100%"/>
+          <text class = "label" 
+            id    = "topbottomtypeLabel"
+            for   = "imagetopbottomInput"
+            value = "&pixelsPopup.value;" />
+          <spring flex="100%"/>
+          <text class = "label" 
+            id    = "bordertypeLabel"
+            for   = "border"
+            value = "&pixelsPopup.value;" />
+        </box>
+
+      </titledbox>
+    </box> <!-- Bottom Right region -->
+  </box> <!-- The horizontal box -->
   
   <!-- buttons along bottom -->
-  <xul:box align="horizontal">
-<!-- USE THIS FOR IMAGE MAP BUTTONS
-    <xul:titledbutton
-      class   = "push dialog"
-      id      = "editImageMap"
-      onclick = "editImageMap()"
-      value   = "&editImageMapButton.label;"/>
-    <xul:titledbutton
-      class   = "push dialog"
-      id      = "removeImageMap"
-      onclick = "removeImageMap()"
-      value   = "&removeImageMapButton.label;"/>
--->
-    <xul:spring flex="100%"/>
+  <box align="horizontal">
+    <spring flex="100%"/>
     <!-- From EdDialogOverlay -->
-    <xul:titledbutton id="AdvancedEditButton3"/>
-  </xul:box>
-</xul:box> <!-- END OF MORE/FEWER SECTION -->
-<div class="separator" align="horizontal"/>
+    <titledbutton id="AdvancedEditButton3"/>
+  </box>
+</box> <!-- END OF MORE/FEWER SECTION -->
+
+<separator/>
 
 <!-- from global dialogOverlay -->
-<xul:box id="okCancelButtons"/> 
+<box id="okCancelButtons"/> 
 
-</xul:window>
+</window>
