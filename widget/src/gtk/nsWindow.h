@@ -196,6 +196,7 @@ private:
   // when this is PR_TRUE we will block focus
   // events to prevent recursion
   PRBool       mBlockFocusEvents;
+  PRInt32      mScrollExposeCounter;
 };
 
 //
