@@ -459,6 +459,8 @@ nsNativeFileSpec::nsNativeFileSpec(const std::string& inString)
 //----------------------------------------------------------------------------------------
 {
 	mError = MacFileHelpers::FSSpecFromFullUnixPath(inString.c_str(), mSpec, true);
+	if (mError == fnfErr)
+		mError = noErr;
 } // nsNativeFileSpec::nsNativeFileSpec
 
 //----------------------------------------------------------------------------------------
@@ -474,7 +476,7 @@ nsNativeFileSpec::nsNativeFileSpec(
 }
 
 //----------------------------------------------------------------------------------------
-nsNativeFileSpec::nsNativeFileSpec(const nsUnixFilePath& inPath)
+nsNativeFileSpec::nsNativeFileSpec(const nsFilePath& inPath)
 //----------------------------------------------------------------------------------------
 {
 	*this = inPath.GetNativeSpec();
@@ -508,7 +510,7 @@ void nsNativeFileSpec::operator = (const nsNativeFileSpec& inSpec)
 } // nsNativeFileSpec::operator =
 
 //----------------------------------------------------------------------------------------
-void nsNativeFileSpec::operator = (const nsUnixFilePath& inPath)
+void nsNativeFileSpec::operator = (const nsFilePath& inPath)
 //----------------------------------------------------------------------------------------
 {
 	mSpec = inPath.GetNativeSpec();
@@ -541,11 +543,11 @@ std::string nsNativeFileSpec::GetLeafName() const
 } // nsNativeFileSpec::GetLeafName
 
 //========================================================================================
-//					Macintosh nsUnixFilePath implementation
+//					Macintosh nsFilePath implementation
 //========================================================================================
 
 //----------------------------------------------------------------------------------------
-nsUnixFilePath::nsUnixFilePath(const nsNativeFileSpec& inSpec)
+nsFilePath::nsFilePath(const nsNativeFileSpec& inSpec)
 //----------------------------------------------------------------------------------------
 #ifdef XP_MAC
 :	mNativeFileSpec(inSpec)
@@ -558,7 +560,7 @@ nsUnixFilePath::nsUnixFilePath(const nsNativeFileSpec& inSpec)
 }
 
 //----------------------------------------------------------------------------------------
-void nsUnixFilePath::operator = (const nsNativeFileSpec& inSpec)
+void nsFilePath::operator = (const nsNativeFileSpec& inSpec)
 //----------------------------------------------------------------------------------------
 {
 	char * path = MacFileHelpers::PathNameFromFSSpec( inSpec.mSpec, TRUE );
@@ -568,4 +570,4 @@ void nsUnixFilePath::operator = (const nsNativeFileSpec& inSpec)
 #ifdef XP_MAC
 	mNativeFileSpec = inSpec;
 #endif
-} // nsUnixFilePath::operator =
+} // nsFilePath::operator =

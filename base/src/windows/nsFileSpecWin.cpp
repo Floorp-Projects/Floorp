@@ -16,18 +16,18 @@
  * Reserved.
  */
  
-//	This file is included by nsFile.cp, and includes the Windows-specific
+//	This file is included by nsFileSpec.cp, and includes the Windows-specific
 //	implementations.
 
 //----------------------------------------------------------------------------------------
-nsNativeFileSpec::nsNativeFileSpec(const nsUnixFilePath& inPath)
+nsNativeFileSpec::nsNativeFileSpec(const nsFilePath& inPath)
 //----------------------------------------------------------------------------------------
 {
 	*this = inPath;
 }
 
 //----------------------------------------------------------------------------------------
-void nsNativeFileSpec::operator = (const nsUnixFilePath& inPath)
+void nsNativeFileSpec::operator = (const nsFilePath& inPath)
 //----------------------------------------------------------------------------------------
 {
 	// Convert '/' to '\'
