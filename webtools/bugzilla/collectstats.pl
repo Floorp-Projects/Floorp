@@ -453,6 +453,12 @@ sub CollectSeriesData {
                             "(series_id, date, value) " .
                             "VALUES (?, " . $dbh->quote($today) . ", ?)");
 
+    # We delete from the table beforehand, to avoid SQL errors if people run
+    # collectstats.pl twice on the same day.
+    my $deletesth = $dbh->prepare("DELETE FROM series_data 
+                                   WHERE series_id = ? AND date = " .
+                                   $dbh->quote($today));
+                                     
     foreach my $series_id (keys %$serieses) {
         # We set up the user for Search.pm's permission checking - each series
         # runs with the permissions of its creator.
@@ -470,6 +476,7 @@ sub CollectSeriesData {
         
         my $count = scalar(@$data) || 0;
 
+        $deletesth->execute($series_id);
         $sth->execute($series_id, $count);
     }
 }

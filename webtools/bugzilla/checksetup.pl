@@ -3707,6 +3707,9 @@ if (!$series_exists) {
                                      "(series_id, date, value) " . 
                                      "VALUES (?, ?, ?)");
     
+    my $deletesth = $dbh->prepare("DELETE FROM series_data 
+                                   WHERE series_id = ? AND date = ?");
+                                     
     # Fields in the data file (matches the current collectstats.pl)
     my @statuses = 
                 qw(NEW ASSIGNED REOPENED UNCONFIRMED RESOLVED VERIFIED CLOSED);
@@ -3786,6 +3789,11 @@ if (!$series_exists) {
             # Insert values into series_data: series_id, date, value
             my %fielddata = %{$data{$field}};
             foreach my $date (keys %fielddata) {
+                # We need to delete in case the text file had duplicate entries
+                # in it.
+                $deletesth->execute($seriesids{$field},
+                                    $dbh->quote($date));
+                         
                 # We prepared this above
                 $seriesdatasth->execute($seriesids{$field},
                                         $dbh->quote($date), 
