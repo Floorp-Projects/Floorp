@@ -120,7 +120,7 @@ namespace JavaScript {
 		typedef const T &const_reference;
 		
 		gc_allocator() {}
-		// template<class U> gc_allocator(const gc_allocator<U>&) {}
+		template<typename U, typename UTraits> gc_allocator(const gc_allocator<U, UTraits>&) {}
 		// ~gc_allocator() {}
 		
 		static pointer address(reference r) { return &r; }
