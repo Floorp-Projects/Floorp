@@ -554,7 +554,7 @@ nsresult COtherDTD::HandleToken(CToken* aToken,nsIParser* aParser){
  * This gets called after we've handled a given start tag.
  * It's a generic hook to let us to post processing.
  * @param   aToken contains the tag in question
- * @param   aChildTag is the tag itself.
+ * @param   aTag is the tag itself.
  * @return  status
  */
 nsresult COtherDTD::DidHandleStartTag(nsIParserNode& aNode,eHTMLTags aChildTag){

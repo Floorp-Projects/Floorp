@@ -379,7 +379,7 @@ eHTMLTags nsEntryStack::operator[](PRInt32 anIndex) const
  * @update  harishd 04/04/99
  * @update  gess 04/21/99
  */
-eHTMLTags nsEntryStack::Last() const 
+eHTMLTags nsEntryStack::Last(void) const 
 {
   eHTMLTags result=eHTMLTag_unknown;
   if(0<mCount) {
@@ -1243,7 +1243,7 @@ void nsDTDContext::RemoveStyle(eHTMLTags aTag){
  * 
  * @return  nada
  */
-void nsDTDContext::ReleaseGlobalObjects(){
+void nsDTDContext::ReleaseGlobalObjects(void){
 }
 
 

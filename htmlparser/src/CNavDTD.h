@@ -176,8 +176,8 @@ public:
      * @return  True if closure was achieved -- other false
      */
     virtual PRBool ForwardPropagate(nsString& aSequence,
-                                    eHTMLTags aParentTag,
-                                    eHTMLTags aChildTag);
+                                    eHTMLTags aParent,
+                                    eHTMLTags aChild);
 
     /**
      * This method tries to design a context map (without actually
@@ -189,17 +189,17 @@ public:
      * @return  True if closure was achieved -- other false
      */
     virtual PRBool BackwardPropagate(nsString& aSequence,
-                                     eHTMLTags aParentTag,
-                                     eHTMLTags aChildTag) const;
+                                     eHTMLTags aParent,
+                                     eHTMLTags aChild) const;
 
     /**
      * Attempt forward and/or backward propagation for the given
      * child within the current context vector stack.
      * @update	gess5/11/98
-     * @param   type of child to be propagated.
+     * @param   aChild -- type of child to be propagated.
      * @return  TRUE if succeeds, otherwise FALSE
      */
-    nsresult CreateContextStackFor(eHTMLTags aChildTag);
+    nsresult CreateContextStackFor(eHTMLTags aChild);
 
     /**
      * Ask parser if a given container is open ANYWHERE on stack

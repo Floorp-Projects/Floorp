@@ -159,7 +159,7 @@ class COtherDTD : public nsIDTD
 protected:
 
 		nsresult        CollectAttributes(nsIParserNode& aNode,eHTMLTags aTag,PRInt32 aCount);
-    nsresult        WillHandleStartTag(CToken* aToken,eHTMLTags aChildTag,nsIParserNode& aNode);
+    nsresult        WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsIParserNode& aNode);
     nsresult        DidHandleStartTag(nsIParserNode& aNode,eHTMLTags aChildTag);
     nsIParserNode*  CreateNode(CToken* aToken=nsnull,PRInt32 aLineNumber=1,nsTokenAllocator* aTokenAllocator=0);
 

@@ -1391,7 +1391,7 @@ nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsC
  * This gets called before we've handled a given start tag.
  * It's a generic hook to let us do pre processing.
  * @param   aToken contains the tag in question
- * @param   aChildTag is the tag itself.
+ * @param   aTag is the tag itself.
  * @param   aNode is the node (tag) with associated attributes.
  * @return  TRUE if tag processing should continue; FALSE if the tag has been handled.
  */
@@ -2569,34 +2569,34 @@ PRBool CNavDTD::IsInlineElement(PRInt32 aTagID,PRInt32 aParentID) const {
  *  @param   aChild -- tag enum of child container
  *  @return  PR_TRUE if propagation should occur
  */
-PRBool CNavDTD::CanPropagate(eHTMLTags aParentTag,eHTMLTags aChildTag,PRBool aParentContains)  {
+PRBool CNavDTD::CanPropagate(eHTMLTags aParent,eHTMLTags aChild,PRBool aParentContains)  {
   PRBool    result=PR_FALSE;
-  PRBool    theParentContains=(-1==aParentContains) ? CanContain(aParentTag,aChildTag) : aParentContains;
+  PRBool    theParentContains=(-1==aParentContains) ? CanContain(aParent,aChild) : aParentContains;
 
-  if(aParentTag==aChildTag) {
+  if(aParent==aChild) {
     return result;
   }
 
-  if(nsHTMLElement::IsContainer(aChildTag)){
+  if(nsHTMLElement::IsContainer(aChild)){
     mScratch.Truncate();
-    if(!gHTMLElements[aChildTag].HasSpecialProperty(kNoPropagate)){
-      if(nsHTMLElement::IsBlockParent(aParentTag) || (gHTMLElements[aParentTag].GetSpecialChildren())) {
+    if(!gHTMLElements[aChild].HasSpecialProperty(kNoPropagate)){
+      if(nsHTMLElement::IsBlockParent(aParent) || (gHTMLElements[aParent].GetSpecialChildren())) {
 
-        result=ForwardPropagate(mScratch,aParentTag,aChildTag);
+        result=ForwardPropagate(mScratch,aParent,aChild);
 
         if(PR_FALSE==result){
 
-          if(eHTMLTag_unknown!=aParentTag) {
-            if(aParentTag!=aChildTag) //dont even bother if we're already inside a similar element...
-              result=BackwardPropagate(mScratch,aParentTag,aChildTag);
+          if(eHTMLTag_unknown!=aParent) {
+            if(aParent!=aChild) //dont even bother if we're already inside a similar element...
+              result=BackwardPropagate(mScratch,aParent,aChild);
           } //if
-          else result=BackwardPropagate(mScratch,eHTMLTag_html,aChildTag);
+          else result=BackwardPropagate(mScratch,eHTMLTag_html,aChild);
 
         } //elseif
 
       }//if
     }//if
-    if(mScratch.Length()-1>gHTMLElements[aParentTag].mPropagateRange)
+    if(mScratch.Length()-1>gHTMLElements[aParent].mPropagateRange)
       result=PR_FALSE;
   }//if
   else result=theParentContains;
@@ -2709,24 +2709,24 @@ PRBool CNavDTD::IsContainer(PRInt32 aTag) const {
  * @param   aChild -- tag type of child
  * @return  TRUE if propagation closes; false otherwise
  */
-PRBool CNavDTD::ForwardPropagate(nsString& aSequence,eHTMLTags aParentTag,eHTMLTags aChildTag)  {
+PRBool CNavDTD::ForwardPropagate(nsString& aSequence,eHTMLTags aParent,eHTMLTags aChild)  {
   PRBool result=PR_FALSE;
 
-  switch(aParentTag) {
+  switch(aParent) {
     case eHTMLTag_table:
       {
-        if((eHTMLTag_tr==aChildTag) || (eHTMLTag_td==aChildTag)) {
-          return BackwardPropagate(aSequence,aParentTag,aChildTag);
+        if((eHTMLTag_tr==aChild) || (eHTMLTag_td==aChild)) {
+          return BackwardPropagate(aSequence,aParent,aChild);
         }
       }
       //otherwise, intentionally fall through...
 
     case eHTMLTag_tr:
       {  
-        PRBool theCanContainResult=CanContain(eHTMLTag_td,aChildTag);
+        PRBool theCanContainResult=CanContain(eHTMLTag_td,aChild);
         if(PR_TRUE==theCanContainResult) {
           aSequence.Append((PRUnichar)eHTMLTag_td);
-          result=BackwardPropagate(aSequence,aParentTag,eHTMLTag_td);
+          result=BackwardPropagate(aSequence,aParent,eHTMLTag_td);
         }
       }
       break;
@@ -2752,25 +2752,25 @@ PRBool CNavDTD::ForwardPropagate(nsString& aSequence,eHTMLTags aParentTag,eHTMLT
  * @param   aChild -- tag type of child
  * @return  TRUE if propagation closes; false otherwise
  */
-PRBool CNavDTD::BackwardPropagate(nsString& aSequence,eHTMLTags aParentTag,eHTMLTags aChildTag) const {
+PRBool CNavDTD::BackwardPropagate(nsString& aSequence,eHTMLTags aParent,eHTMLTags aChild) const {
 
-  eHTMLTags theParentTag=aParentTag; //just init to get past first condition...
+  eHTMLTags theParent=aParent; //just init to get past first condition...
 
   do {
-    const TagList* theRootTags=gHTMLElements[aChildTag].GetRootTags();
+    const TagList* theRootTags=gHTMLElements[aChild].GetRootTags();
     if(theRootTags) {
-      theParentTag=theRootTags->mTags[0];
-      if(CanContain(theParentTag,aChildTag)) {
+      theParent=theRootTags->mTags[0];
+      if(CanContain(theParent,aChild)) {
         //we've found a complete sequence, so push the parent...
-        aChildTag=theParentTag;
-        aSequence.Append((PRUnichar)theParentTag);
+        aChild=theParent;
+        aSequence.Append((PRUnichar)theParent);
       }
     }
     else break;
   } 
-  while((theParentTag!=eHTMLTag_unknown) && (theParentTag!=aParentTag));
+  while((theParent!=eHTMLTag_unknown) && (theParent!=aParent));
 
-  return PRBool(aParentTag==theParentTag);
+  return PRBool(aParent==theParent);
 }
 
 
@@ -3635,21 +3635,21 @@ nsresult CNavDTD::CloseContainersTo(PRInt32 anIndex,eHTMLTags aTarget, PRBool aC
  * @param   aClosedByStartTag -- ONLY TRUE if the container is being closed by opening of another container.
  * @return  TRUE if ok, FALSE if error
  */
-nsresult CNavDTD::CloseContainersTo(eHTMLTags aTarget,PRBool aClosedByStartTag){
+nsresult CNavDTD::CloseContainersTo(eHTMLTags aTag,PRBool aClosedByStartTag){
   NS_PRECONDITION(mBodyContext->GetCount() > 0, kInvalidTagStackPos);
 
-  PRInt32 pos=mBodyContext->LastOf(aTarget);
+  PRInt32 pos=mBodyContext->LastOf(aTag);
 
   if(kNotFound!=pos) {
     //the tag is indeed open, so close it.
-    return CloseContainersTo(pos,aTarget,aClosedByStartTag);
+    return CloseContainersTo(pos,aTag,aClosedByStartTag);
   }
 
   eHTMLTags theTopTag=mBodyContext->Last();
 
-  PRBool theTagIsSynonymous=((nsHTMLElement::IsResidualStyleTag(aTarget)) && (nsHTMLElement::IsResidualStyleTag(theTopTag)));
+  PRBool theTagIsSynonymous=((nsHTMLElement::IsResidualStyleTag(aTag)) && (nsHTMLElement::IsResidualStyleTag(theTopTag)));
   if(!theTagIsSynonymous){
-    theTagIsSynonymous=(gHTMLElements[aTarget].IsMemberOf(kHeading) && 
+    theTagIsSynonymous=(gHTMLElements[aTag].IsMemberOf(kHeading) && 
                         gHTMLElements[theTopTag].IsMemberOf(kHeading));  
   }
 
@@ -3657,21 +3657,21 @@ nsresult CNavDTD::CloseContainersTo(eHTMLTags aTarget,PRBool aClosedByStartTag){
     //if you're here, it's because we're trying to close one tag,
     //but a different (synonymous) one is actually open. Because this is NAV4x
     //compatibililty mode, we must close the one that's really open.
-    aTarget=theTopTag;    
-    pos=mBodyContext->LastOf(aTarget);
+    aTag=theTopTag;    
+    pos=mBodyContext->LastOf(aTag);
     if(kNotFound!=pos) {
       //the tag is indeed open, so close it.
-      return CloseContainersTo(pos,aTarget,aClosedByStartTag);
+      return CloseContainersTo(pos,aTag,aClosedByStartTag);
     }
   }
   
   nsresult result=NS_OK;
-  const TagList* theRootTags=gHTMLElements[aTarget].GetRootTags();
+  const TagList* theRootTags=gHTMLElements[aTag].GetRootTags();
   eHTMLTags theParentTag=(theRootTags) ? theRootTags->mTags[0] : eHTMLTag_unknown;
   pos=mBodyContext->LastOf(theParentTag);
   if(kNotFound!=pos) {
     //the parent container is open, so close it instead
-    result=CloseContainersTo(pos+1,aTarget,aClosedByStartTag);
+    result=CloseContainersTo(pos+1,aTag,aClosedByStartTag);
   }
   return result;
 }
@@ -3762,25 +3762,25 @@ nsresult CNavDTD::AddHeadLeaf(nsIParserNode *aNode){
  *  stack until the child can be properly placed.
  *
  *  @update  gess 4/8/98
- *  @param   aChildTag is the child for whom we need to 
+ *  @param   aChild is the child for whom we need to 
  *           create a new context vector
  *  @return  true if we succeeded, otherwise false
  */
-nsresult CNavDTD::CreateContextStackFor(eHTMLTags aChildTag){
+nsresult CNavDTD::CreateContextStackFor(eHTMLTags aChild){
   
   mScratch.Truncate();
   
   nsresult  result=(nsresult)kContextMismatch;
   eHTMLTags theTop=mBodyContext->Last();
-  PRBool    bResult=ForwardPropagate(mScratch,theTop,aChildTag);
+  PRBool    bResult=ForwardPropagate(mScratch,theTop,aChild);
   
   if(PR_FALSE==bResult){
 
     if(eHTMLTag_unknown!=theTop) {
-      if(theTop!=aChildTag) //dont even bother if we're already inside a similar element...
-        bResult=BackwardPropagate(mScratch,theTop,aChildTag);      
+      if(theTop!=aChild) //dont even bother if we're already inside a similar element...
+        bResult=BackwardPropagate(mScratch,theTop,aChild);      
     } //if
-    else bResult=BackwardPropagate(mScratch,eHTMLTag_html,aChildTag);
+    else bResult=BackwardPropagate(mScratch,eHTMLTag_html,aChild);
   } //elseif
 
   PRInt32   theLen=mScratch.Length();

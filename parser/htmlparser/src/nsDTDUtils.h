@@ -127,7 +127,7 @@ public:
   void            EnsureCapacityFor(PRInt32 aNewMax, PRInt32 aShiftOffset=0);
   void            Push(nsCParserNode* aNode,nsEntryStack* aStyleStack=0, PRBool aRefCntNode = PR_TRUE);
   void            PushFront(nsCParserNode* aNode,nsEntryStack* aStyleStack=0, PRBool aRefCntNode = PR_TRUE);
-  void            Append(nsEntryStack *theStack);
+  void            Append(nsEntryStack *aStack);
   nsCParserNode*  Pop(void);
   nsCParserNode*  Remove(PRInt32 anIndex,eHTMLTags aTag);
   nsCParserNode*  NodeAt(PRInt32 anIndex) const;
@@ -355,7 +355,7 @@ public:
   PRInt32         GetResidualStyleCount(void) {return mResidualStyleCount;}
   nsEntryStack*   GetStylesAt(PRInt32 anIndex) const;
   void            PushStyle(nsCParserNode* aNode);
-  void            PushStyles(nsEntryStack *theStyles);
+  void            PushStyles(nsEntryStack *aStyles);
   nsCParserNode*  PopStyle(void);
   nsCParserNode*  PopStyle(eHTMLTags aTag);
   void            RemoveStyle(eHTMLTags aTag);
@@ -574,7 +574,7 @@ struct CRCStruct {
 class nsObserverEntry : public nsIObserverEntry {
 public:
   NS_DECL_ISUPPORTS
-            nsObserverEntry(const nsAString& aTopic);
+            nsObserverEntry(const nsAString& aString);
   virtual   ~nsObserverEntry();
 
   NS_IMETHOD Notify(nsIParserNode* aNode,
