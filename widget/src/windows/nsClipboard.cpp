@@ -752,7 +752,7 @@ nsClipboard :: FindURLFromLocalFile ( IDataObject* inDataObject, UINT inIndex, v
         // convert it to unicode and pass it out
         nsMemory::Free(*outData);
         *outData = UTF8ToNewUnicode(url);
-        *outDataLen = nsCRT::strlen(NS_STATIC_CAST(PRUnichar*, *outData));
+        *outDataLen = nsCRT::strlen(NS_STATIC_CAST(PRUnichar*, *outData)) * sizeof(PRUnichar);
 
         dataFound = PR_TRUE;
       }
@@ -765,7 +765,7 @@ nsClipboard :: FindURLFromLocalFile ( IDataObject* inDataObject, UINT inIndex, v
       // convert it to unicode and pass it out
       nsMemory::Free(*outData);
       *outData = UTF8ToNewUnicode(urlSpec);
-      *outDataLen = nsCRT::strlen(NS_STATIC_CAST(PRUnichar*, *outData));
+      *outDataLen = nsCRT::strlen(NS_STATIC_CAST(PRUnichar*, *outData)) * sizeof(PRUnichar);
       dataFound = PR_TRUE;
     } // else regular file
   }
