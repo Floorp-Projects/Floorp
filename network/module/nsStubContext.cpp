@@ -798,7 +798,12 @@ void stub_abort(NET_StreamClass *stream, int status)
     if (pConn->pConsumer) {
         nsAutoString status;
 
-        pConn->pConsumer->OnStopBinding(pConn->pURL, NS_BINDING_ABORTED, status.GetUnicode());
+		// mscott --> this code used to pass in NS_BINDING_ABORTED into the OnStopBinding
+		// call. But NS_BINDING_ABORTED is an error code!!! And aborting a stream
+		// is NOT an error condition. nsDocumentLoader::OnStopBinding was issuing
+		// printfs complaining that the status code was a failure code.
+		// I'm going to pass in NS_BINDING_SUCCEEDED instead.
+        pConn->pConsumer->OnStopBinding(pConn->pURL, NS_BINDING_SUCCEEDED, status.GetUnicode());
         pConn->mStatus = nsConnectionAborted;
     }
 
