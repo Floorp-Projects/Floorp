@@ -7,8 +7,8 @@
 # the build was and display a link to the build log.
 
 
-# $Revision: 1.25 $ 
-# $Date: 2002/02/25 19:29:25 $ 
+# $Revision: 1.26 $ 
+# $Date: 2002/04/24 03:18:58 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Build.pm,v $ 
 # $Name:  $ 
@@ -152,14 +152,6 @@ use Utils;
 $VERSION = '#tinder_version#';
 
 @ISA = qw(TinderDB::BasicTxtDB);
-
-
-# Add an empty object, of this DB subclass, to end of the set of all
-# HTML columns.  This registers the subclass with TinderDB and defines
-# the order of the HTML columns.
-
-push @TinderDB::HTML_COLUMNS, TinderDB::Build->new();
-
 
 
 # Find the name of each build and the proper order to display them.

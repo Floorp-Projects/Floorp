@@ -41,13 +41,7 @@ use VCDisplay;
 
 
 
-$VERSION = ( qw $Revision: 1.4 $ )[1];
-
-# Add an empty object, of this DB subclass, to end of the set of all
-# HTML columns.  This registers the subclass with TinderDB and defines
-# the order of the HTML columns.
-
-push @TinderDB::HTML_COLUMNS, TinderDB::Time->new();
+$VERSION = ( qw $Revision: 1.5 $ )[1];
 
 
 sub new {
@@ -57,6 +51,16 @@ sub new {
   bless $self, $type;
 }
 
+# last_hour is specific to each time column in the table it stores the
+# hour of the time we were computing between calls to
+# status_table_row.  Using this data we can set the full date
+# appropriately.
+
+sub last_hour {
+    my $self = shift;
+    if (@_) { $self->{LASTHOUR} = shift }
+    return $self->{LASTHOUR};
+}
 
 
 sub loadtree_db {
@@ -93,7 +97,7 @@ sub status_table_legend {
 sub status_table_start {
   my ($self, $row_times, $tree,) = @_;
 
-  $LAST_HOUR= -1;
+  $self->last_hour(-1);
 }
 
 
@@ -110,7 +114,7 @@ sub status_table_row {
   # just display the date.
 
   my ($query_link) = '';
-  if ($LAST_HOUR != $hour) {
+  if ($self->last_hour() != $hour) {
 
     $query_link = VCDisplay::query(
 				    'tree' => $tree,
@@ -135,7 +139,7 @@ sub status_table_row {
   my(@outrow) = ("\t<td align=right $hour_color>".
                  "$query_link</td>\n");
 
-  $LAST_HOUR = $hour;
+  $self->last_hour($hour);
   return @outrow;
 }
 

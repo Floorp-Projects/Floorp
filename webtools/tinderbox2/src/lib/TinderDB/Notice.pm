@@ -78,15 +78,10 @@ use Utils;
 use HTMLPopUp;
 use TinderDB::BasicTxtDB;
 
-$VERSION = ( qw $Revision: 1.12 $ )[1];
+$VERSION = ( qw $Revision: 1.13 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
-# Add an empty object, of this DB subclass, to end of the set of all
-# HTML columns.  This registers the subclass with TinderDB and defines
-# the order of the HTML columns.
-
-push @TinderDB::HTML_COLUMNS, TinderDB::Notice->new();
 
 # The indicator that a notice is availible for a given notice cell is
 # configurable.  Traditionally it is a star gif however if you wish to

@@ -19,9 +19,9 @@
 #       notice board display,  build display (colored squares)
 
 
-# $Revision: 1.5 $ 
-# $Date: 2000/11/09 19:31:05 $ 
-# $Author: kestes%staff.mail.com $ 
+# $Revision: 1.6 $ 
+# $Date: 2002/04/24 03:19:05 $ 
+# $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB.pm,v $ 
 # $Name:  $ 
 
@@ -88,7 +88,23 @@ if ( defined(@TinderConfig::DBImpl) ) {
            );
 }
 
+# Add an empty object, of this DB subclass, to end of the set of all
+# HTML columns.  This registers the subclass with TinderDB and defines
+# the order of the HTML columns.
+
+sub strings2columns {
+  my @impls = @_;
+  my @columns = ();
+
+  foreach $impl (@impls) {    
+    push @columns, $impl->new();
+  }
+
+  return @columns;
+}
+
 main::require_modules(@IMPLS);
+@HTML_COLUMNS = strings2columns(@IMPLS);
 
 
 

@@ -134,15 +134,9 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.21 $ )[1];
+$VERSION = ( qw $Revision: 1.22 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
-
-# Add an empty object, of this DB subclass, to end of the set of all
-# HTML columns.  This registers the subclass with TinderDB and defines
-# the order of the HTML columns.
-
-push @TinderDB::HTML_COLUMNS, TinderDB::VC_CVS->new();
 
 
 
