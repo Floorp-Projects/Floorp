@@ -196,8 +196,9 @@ sub warning
 sub doutput
 {
   my ($u, $cmt, $udec, $str) = (@_);
-    print "# U+$u $cmt\n";
-    print "entity.$udec=$str\n";
+  # don't print out comments - for debugging purposes only
+  # print "# U+$u $cmt\n";
+  print "entity.$udec=$str\n";
 }
 sub output
 {
@@ -208,7 +209,8 @@ sub output
        output($u,$cmt,$udec,$str);
     }
   } else {
-    print OUT "# U+$u $cmt\n";
+    # don't print out comments - for debugging purposes only
+    # print OUT "# U+$u $cmt\n";
     print OUT "entity.$udec=$str\n";
   }
 }
