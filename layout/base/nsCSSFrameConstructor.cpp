@@ -2716,7 +2716,7 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*          aPresContext
       if (canBePositioned) {
         if (isFloating) {
           geometricParent = aState.mFloatedItems.containingBlock;
-        } if (isAbsolutelyPositioned) {
+        } else if (isAbsolutelyPositioned) {
           geometricParent = aState.mAbsoluteItems.containingBlock;
         } else if (isFixedPositioned) {
           geometricParent = aState.mFixedItems.containingBlock;
