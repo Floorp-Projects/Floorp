@@ -1139,6 +1139,13 @@ PRInt32 nsNNTPProtocol::NewsResponse(nsIInputStream * inputStream, PRUint32 leng
             rv = dialog->Alert(combinedMsg.GetUnicode());  
             // XXX:  todo, check rv?
         }
+
+		if (m_responseCode == MK_NNTP_RESPONSE_AUTHINFO_DENIED) {
+			if (m_newsFolder) {
+				rv = m_newsFolder->ForgetGroupUsername();
+				rv = m_newsFolder->ForgetGroupPassword();	
+			}
+		}
     }
     
 	/* authentication required can come at any time
@@ -2506,7 +2513,10 @@ PRInt32 nsNNTPProtocol::AuthorizationResponse()
 									MK_NNTP_AUTH_FAILED,
 									m_responseText ? m_responseText : ""));
 
-        printf("TODO: bad username for news auth, remove entry in single signon database\n");
+		if (m_newsFolder) {
+			rv = m_newsFolder->ForgetGroupUsername();
+			rv = m_newsFolder->ForgetGroupPassword();	
+		}
 
         return(MK_NNTP_AUTH_FAILED);
 	  }
@@ -2563,7 +2573,12 @@ PRInt32 nsNNTPProtocol::PasswordResponse()
 									MK_NNTP_AUTH_FAILED,
 									m_responseText ? m_responseText : ""));
 
-        printf("TODO: bad password for news auth, remove entry in single signon database\n");
+		if (m_newsFolder) {
+			nsresult rv;
+
+			rv = m_newsFolder->ForgetGroupUsername();
+			rv = m_newsFolder->ForgetGroupPassword();	
+		}
 
         return(MK_NNTP_AUTH_FAILED);
 	  }

@@ -1171,11 +1171,11 @@ NS_IMETHODIMP nsMsgNewsFolder::GetGroupUsername(char **aGroupUsername)
 
 NS_IMETHODIMP nsMsgNewsFolder::SetGroupUsername(const char *aGroupUsername)
 {
-    NS_ENSURE_ARG_POINTER(aGroupUsername);
+ 	PR_FREEIF(mGroupUsername);
 
-	PR_FREEIF(mGroupUsername);
-
-	mGroupUsername = PL_strdup(aGroupUsername);
+	if (aGroupUsername) {
+		mGroupUsername = PL_strdup(aGroupUsername);
+	}
 
     return NS_OK;
 }
@@ -1198,11 +1198,11 @@ NS_IMETHODIMP nsMsgNewsFolder::GetGroupPassword(char **aGroupPassword)
 
 NS_IMETHODIMP nsMsgNewsFolder::SetGroupPassword(const char *aGroupPassword)
 {
-    NS_ENSURE_ARG_POINTER(aGroupPassword);
-
     PR_FREEIF(mGroupPassword);
 
-    mGroupPassword = PL_strdup(aGroupPassword);
+	if (aGroupPassword) {
+	    mGroupPassword = PL_strdup(aGroupPassword);
+	}
 
     return NS_OK;    
 }
@@ -1213,7 +1213,7 @@ NS_IMETHODIMP nsMsgNewsFolder::ForgetGroupUsername()
     NS_WITH_SERVICE(nsIWalletService, walletservice, kWalletServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    rv = SetGroupUsername("");
+    rv = SetGroupUsername(nsnull);
     if (NS_FAILED(rv)) return rv;
 
     nsCAutoString signonURI(mURI);
@@ -1229,7 +1229,7 @@ NS_IMETHODIMP nsMsgNewsFolder::ForgetGroupPassword()
     NS_WITH_SERVICE(nsIWalletService, walletservice, kWalletServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    rv = SetGroupPassword("");
+    rv = SetGroupPassword(nsnull);
     if (NS_FAILED(rv)) return rv;
 
     nsCAutoString signonURI(mURI);
