@@ -123,7 +123,7 @@ char* nsInstallExecute::toString()
         }
         
         if (tempString)
-            delete [] tempString;
+            Recycle(tempString);
     }
     else
     {

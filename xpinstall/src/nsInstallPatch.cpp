@@ -75,7 +75,7 @@ nsInstallPatch::nsInstallPatch( nsInstall* inInstall,
 
     PRInt32 err = VR_GetPath(tempVersionString, MAXREGPATHLEN, tempTargetFile );
     
-    delete [] tempVersionString;
+    Recycle(tempVersionString);
     
     if (err != REGERR_OK)
     {
@@ -285,8 +285,8 @@ PRInt32 nsInstallPatch::Complete()
                         tempVersion, 
                         PR_FALSE );
             
-            if (tempRegName) delete [] tempRegName;
-            if (tempVersion) delete [] tempVersion;
+            if (tempRegName) Recycle(tempRegName);
+            if (tempVersion) Recycle(tempVersion);
 
         }
         else

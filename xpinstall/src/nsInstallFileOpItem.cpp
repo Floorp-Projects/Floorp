@@ -362,7 +362,7 @@ nsInstallFileOpItem::NativeFileOpDirRename(nsFileSpec* aSrc, nsString* aTarget)
   aSrc->Rename(szTarget);
   
   if (szTarget)
-    delete [] szTarget;
+    Recycle(szTarget);
 
   return NS_OK;
 }
@@ -403,7 +403,7 @@ nsInstallFileOpItem::NativeFileOpFileRename(nsFileSpec* aSrc, nsString* aTarget)
   aSrc->Rename(szTarget);
   
   if (szTarget)
-    delete [] szTarget;
+    Recycle(szTarget);
 
   return NS_OK;
 }

@@ -390,7 +390,7 @@ nsInstallTrigger::CompareVersion(const nsString& aRegName, nsIDOMInstallVersion*
     }
         
     if (tempCString)
-        delete [] tempCString;
+        Recycle(tempCString);
     
     return NS_OK;
 }
@@ -428,7 +428,7 @@ nsInstallTrigger::GetVersion(const nsString& component, nsString& version)
     }
     
     if (tempCString)
-        delete [] tempCString;
+         Recycle(tempCString);
 
     return NS_OK;
 }

@@ -912,7 +912,7 @@ nsInstall::GetComponentFolder(const nsString& aComponentName, const nsString& aS
     }
 
     if (componentCString)
-        delete [] componentCString;
+        Recycle(componentCString);
     
     return NS_OK;
 }
@@ -1275,7 +1275,7 @@ nsInstall::StartInstall(const nsString& aUserPackageName, const nsString& aRegis
     }
 
     if(szRegPackageName)
-      delete [] szRegPackageName;
+      Recycle(szRegPackageName);
 
     if (mVersionInfo != nsnull)
         delete mVersionInfo;

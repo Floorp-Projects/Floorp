@@ -120,9 +120,9 @@ nsWinProfile::NativeGetString(nsString section, nsString key, nsString* aReturn 
 
     *aReturn        = valbuf;
 
-    if (sectionCString)  delete [] sectionCString;
-    if (keyCString)      delete [] keyCString;
-    if (filenameCString) delete [] filenameCString;
+    if (sectionCString)   Recycle(sectionCString);
+    if (keyCString)       Recycle(keyCString);
+    if (filenameCString)  Recycle(filenameCString);
   }
 
   return numChars;
@@ -147,10 +147,10 @@ nsWinProfile::NativeWriteString( nsString section, nsString key, nsString value 
 
     success = WritePrivateProfileString( sectionCString, keyCString, valueCString, filenameCString );
 
-    if (sectionCString)  delete [] sectionCString;
-    if (keyCString)      delete [] keyCString;
-    if (valueCString)    delete [] valueCString;
-    if (filenameCString) delete [] filenameCString;
+    if (sectionCString)   Recycle(sectionCString);
+    if (keyCString)       Recycle(keyCString);
+    if (valueCString)     Recycle(valueCString);
+    if (filenameCString)  Recycle(filenameCString);
   }
 
   return success;
