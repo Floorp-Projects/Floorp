@@ -212,16 +212,20 @@ nsXBLProtoImplProperty::InstallMember(nsIScriptContext* aContext,
   if ((mJSGetterObject || mJSSetterObject) && targetClassObject) {
     JSObject * getter = nsnull;
     if (mJSGetterObject)
-      getter = ::JS_CloneFunctionObject(cx, mJSGetterObject, globalObject);
+      if (!(getter = ::JS_CloneFunctionObject(cx, mJSGetterObject, globalObject)))
+        return NS_ERROR_OUT_OF_MEMORY;
     
     JSObject * setter = nsnull;
     if (mJSSetterObject)
-      setter = ::JS_CloneFunctionObject(cx, mJSSetterObject, globalObject);
+      if (!(setter = ::JS_CloneFunctionObject(cx, mJSSetterObject, globalObject)))
+        return NS_ERROR_OUT_OF_MEMORY;
 
     nsDependentString name(mName);
-    ::JS_DefineUCProperty(cx, targetClassObject, NS_REINTERPRET_CAST(const jschar*, mName), 
-                          name.Length(), JSVAL_VOID,  (JSPropertyOp) getter, 
-                          (JSPropertyOp) setter, mJSAttributes); 
+    if (!::JS_DefineUCProperty(cx, targetClassObject,
+                               NS_REINTERPRET_CAST(const jschar*, mName), 
+                               name.Length(), JSVAL_VOID,  (JSPropertyOp) getter, 
+                               (JSPropertyOp) setter, mJSAttributes))
+      return NS_ERROR_OUT_OF_MEMORY;
   }
   return NS_OK;
 }

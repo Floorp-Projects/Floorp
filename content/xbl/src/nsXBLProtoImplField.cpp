@@ -118,18 +118,21 @@ nsXBLProtoImplField::InstallMember(nsIScriptContext* aContext,
   jsval result = nsnull;
   PRBool undefined;
   // XXX Need a URI here!
-  aContext->EvaluateStringWithValue(nsDependentString(mFieldText,
-                                                      mFieldTextLength), 
-                                    scriptObject,
-                                    nsnull, bindingURI.get(),
-                                    mLineNumber, nsnull,
-                                    (void*) &result, &undefined);
-              
+  nsresult rv = aContext->EvaluateStringWithValue(nsDependentString(mFieldText,
+                                                                    mFieldTextLength), 
+                                                  scriptObject,
+                                                  nsnull, bindingURI.get(),
+                                                  mLineNumber, nsnull,
+                                                  (void*) &result, &undefined);
+  if (NS_FAILED(rv))
+    return rv;
+
   if (!undefined) {
     // Define the evaluated result as a JS property
     nsDependentString name(mName);
-   ::JS_DefineUCProperty(cx, scriptObject, NS_REINTERPRET_CAST(const jschar*, mName), 
-                         name.Length(), result,nsnull, nsnull, mJSAttributes); 
+    if (!::JS_DefineUCProperty(cx, scriptObject, NS_REINTERPRET_CAST(const jschar*, mName), 
+                               name.Length(), result, nsnull, nsnull, mJSAttributes))
+      return NS_ERROR_OUT_OF_MEMORY;
   }
   
   return NS_OK;
