@@ -1,5 +1,25 @@
 <?xml version="1.0"?> <!-- -*- Mode: SGML -*- -->
 
+<!--
+
+  The contents of this file are subject to the Netscape Public License
+  Version 1.0 (the "NPL"); you may not use this file except in
+  compliance with the NPL.  You may obtain a copy of the NPL at
+  http://www.mozilla.org/NPL/
+
+  Software distributed under the NPL is distributed on an "AS IS" basis,
+  WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+  for the specific language governing rights and limitations under the
+  NPL.
+
+  The Initial Developer of this code under the NPL is Netscape
+  Communications Corporation.  Portions created by Netscape are
+  Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+  Reserved.
+
+-->
+
+
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 
 <window title="Color Picker"
@@ -24,5 +44,84 @@
 <html:input id="input"/>
 <html:p/>
 <html:div id="mydiv" style="width:100px; height:100px; background-color:white"/>
+
+
+<html:hr/>
+
+<html:script>
+  function setColorWell(menu)
+  {
+    // Debug tree walking.
+    dump("\n");
+    
+    dump("parent: ");
+    dump(menu.id);
+    dump("\n");
+
+    dump("child 1: ");
+    dump(menu.firstChild.id);
+    dump("\n");
+
+    dump("child 2: ");
+    dump(menu.firstChild.nextSibling.id);
+    dump("\n");
+
+    dump("child 3: ");
+    dump(menu.firstChild.nextSibling.nextSibling.id);
+    dump("\n");
+
+    dump("child 3's child 1: ");
+    dump(menu.firstChild.nextSibling.nextSibling.firstChild.id);
+    dump("\n");
+
+
+    dump("\n");
+    dump("\n");
+
+    // Find the colorWell and colorPicker in the hierarchy.
+    var colorWell = menu.firstChild.nextSibling;
+    var colorPicker = menu.firstChild.nextSibling.nextSibling.firstChild;
+
+    // Extract color from colorPicker and assign to colorWell.
+    var color = colorPicker.getAttribute('color');
+    colorWell.style.backgroundColor = color;
+  }
+</html:script>
+
+<!-- ColorPicker #1 -->
+<box id="box1">
+<menu id="menu1">
+  <titledbutton id="button1" value="text1" class="popup" align="right"/>
+  <html:div id="colorWell1" style="width:30px; background-color:white"/>
+  <menupopup id="popup1">
+    <colorpicker id="cp1" palettename="standard" onclick="setColorWell(this.parentNode.parentNode);"/>
+  </menupopup>
+</menu>
+</box>
+
+<!-- ColorPicker #2 -->
+<html:hr/>
+<box id="box2">
+<menu id="menu2">
+  <titledbutton id="button2" value="text2" class="popup" align="right"/>
+  <html:div id="colorWell2" style="width:30px; background-color:white"/>
+  <menupopup id="popup2">
+    <colorpicker id="cp2" palettename="gray" onclick="setColorWell(this.parentNode.parentNode);"/>
+  </menupopup>
+</menu>
+</box>
+
+<!-- ColorPicker #3 -->
+<html:hr/>
+<box id="box3">
+<menu id="menu3">
+  <titledbutton id="button3" value="text3" class="popup" align="right"/>
+  <html:div id="colorWell3" style="width:30px; background-color:white"/>
+  <menupopup id="popup3">
+    <colorpicker id="cp3" palettename="web" onclick="setColorWell(this.parentNode.parentNode);"/>
+  </menupopup>
+</menu>
+</box>
+
 
 </window>
