@@ -2681,7 +2681,7 @@ NS_IMETHODIMP nsDocShell::StopCurrentLoads()
 NS_IMETHODIMP nsDocShell::ScrollIfAnchor(nsIURI* aURI, PRBool* aWasAnchor)
 {
     NS_ASSERTION(aURI, "null uri arg");
-    NS_ASSERTION(aURI, "null anchor arg");
+    NS_ASSERTION(aWasAnchor, "null anchor arg");
 
     if (aURI == nsnull || aWasAnchor == nsnull)
     {
@@ -2775,17 +2775,14 @@ NS_IMETHODIMP nsDocShell::ScrollIfAnchor(nsIURI* aURI, PRBool* aWasAnchor)
         rv = GetPresShell(getter_AddRefs(shell));
         if (NS_SUCCEEDED(rv) && shell)
         {
+            *aWasAnchor = PR_TRUE;
             rv = shell->GoToAnchor(sNewRef);
-            if (NS_SUCCEEDED(rv))
-            {
-                *aWasAnchor = PR_TRUE;
-            }
         }
     }
     else
     {
         // A bit of a hack - scroll to the top of the page.
-        SetCurScrollPos(ScrollOrientation_Y, 0);
+        SetCurScrollPosEx(0, 0);
         *aWasAnchor = PR_TRUE;
     }
 
