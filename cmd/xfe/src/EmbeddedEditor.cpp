@@ -69,11 +69,11 @@ static ToolbarSpec alignment_menu_spec[] = {
 };
 
 static ToolbarSpec goodies_menu_spec[] = {
-	{ xfeCmdInsertLink,           PUSHBUTTON, &ed_link_group   },
-	{ xfeCmdInsertTarget,         PUSHBUTTON, &ed_target_group },
-	{ xfeCmdInsertImage,          PUSHBUTTON, &ed_image_group  },
-	{ xfeCmdInsertHorizontalLine, PUSHBUTTON, &ed_hrule_group  },
-	{ xfeCmdInsertTable,          PUSHBUTTON, &ed_table_group  },
+	{ xfeCmdInsertLink,           PUSHBUTTON /* , &ed_link_group   */ },
+	{ xfeCmdInsertTarget,         PUSHBUTTON /* , &ed_target_group */ },
+	{ xfeCmdInsertImage,          PUSHBUTTON /* , &ed_image_group  */ },
+	{ xfeCmdInsertHorizontalLine, PUSHBUTTON /* , &ed_hrule_group  */ },
+	{ xfeCmdInsertTable,          PUSHBUTTON /* , &ed_table_group  */ },
 	{ NULL }
 };
 
