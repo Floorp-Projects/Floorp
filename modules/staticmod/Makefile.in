@@ -52,12 +52,12 @@ endif
 
 ifdef MOZ_STATIC_COMPONENTS
 SHARED_LIBRARY_LIBS = \
-		$(foreach m, $(MOZ_STATIC_COMPONENTS), $(DIST)/lib/components/lib$(m).$(LIB_SUFFIX))
+		$(foreach m, $(MOZ_STATIC_COMPONENTS), $(DIST)/lib/components/$(LIB_PREFIX)$(m).$(LIB_SUFFIX))
 endif
 
 ifdef _COMPONENT_BASE
-SHARED_LIBRARY_LIBS = $(foreach m,$($(_META_COMPONENT_LIBS)), $(DIST)/lib/components/lib$(m).$(LIB_SUFFIX))
-SHARED_LIBRARY_LIBS += $(foreach m,$($(_META_DEP_LIBS)), $(DIST)/lib/lib$(m).$(LIB_SUFFIX))
+SHARED_LIBRARY_LIBS = $(foreach m,$($(_META_COMPONENT_LIBS)), $(DIST)/lib/components/$(LIB_PREFIX)$(m).$(LIB_SUFFIX))
+SHARED_LIBRARY_LIBS += $(foreach m,$($(_META_DEP_LIBS)), $(DIST)/lib/$(LIB_PREFIX)$(m).$(LIB_SUFFIX))
 endif
 
 ifndef NO_RECURSE
@@ -87,6 +87,7 @@ ifdef MOZ_META_COMPONENTS
 DEFINES += -DMETA_MODULE=\"$(LIBRARY_NAME)\" -DXPCOM_TRANSLATE_NSGM_ENTRY_POINT
 ifeq ($(LIBRARY_NAME),meta_mail)
 EXTRA_DSO_LDOPTS += \
+	$(DIST)/lib/$(LIB_PREFIX)gkgfx.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)rdfutil_s.$(LIB_SUFFIX) \
 	$(NULL)
 endif
@@ -102,10 +103,21 @@ EXTRA_DSO_LDOPTS += \
 	$(NULL)
 endif
 
+ifeq ($(OS_ARCH),WINNT)
+OS_LIBS	+= ole32.lib shell32.lib
+endif
+
 GARBAGE += $(CPPSRCS)
 
 list:
 	echo $(MOZ_STATIC_COMPONENTS)
+
+ifdef _NO_AUTO_VARS
+_TARGET = $(srcdir)/$(@F)
+GARBAGE	+= $(addprefix $(srcdir)/,$(CPPSRCS))
+else
+_TARGET = $@
+endif
 
 ifdef MOZ_STATIC_COMPONENTS
 nsStaticModule.cpp: nsMetaModule.cpp.in Makefile Makefile.in $(DEPTH)/config/autoconf.mk
@@ -113,7 +125,7 @@ nsStaticModule.cpp: nsMetaModule.cpp.in Makefile Makefile.in $(DEPTH)/config/aut
 	cat $< | \
 	sed -e "s|%DECLARE_SUBMODULE_INFOS%|$(foreach m, $(MOZ_STATIC_COMPONENTS), extern nsModuleInfo NSMODULEINFO($(m));)|" | \
 	sed -e "s|%SUBMODULE_INFOS%|$(foreach m, $(MOZ_STATIC_COMPONENTS), \\& NSMODULEINFO($(m)),)|" \
-	> $@
+	> $(_TARGET)
 endif
 
 nsMetaModule_%.cpp: nsMetaModule.cpp.in Makefile Makefile.in $(topsrcdir)/config/config.mk
@@ -121,4 +133,4 @@ nsMetaModule_%.cpp: nsMetaModule.cpp.in Makefile Makefile.in $(topsrcdir)/config
 	cat $< | \
 	sed -e "s|%DECLARE_SUBMODULE_INFOS%|$(foreach m, $($(_META_COMPONENT_NAMES)), extern nsModuleInfo NSMODULEINFO($(m));)|" | \
 	sed -e "s|%SUBMODULE_INFOS%|$(foreach m, $($(_META_COMPONENT_NAMES)), \\& NSMODULEINFO($(m)),)|" \
-	> $@
+	> $(_TARGET)

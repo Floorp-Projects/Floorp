@@ -28,7 +28,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= MapiProxy
 LIBRARY_NAME	= $(MODULE)
-META_COMPONENT	= mail
 DEFFILE		= $(srcdir)/MapiProxy.def
 
 EXPORTS		= msgMapi.h
@@ -48,6 +47,10 @@ SRCDIR_CSRCS	= $(addprefix $(srcdir)/,$(CSRCS))
 GARBAGE	+= $(MIDL_GENERATED_FILES) done_gen $(CSRCS) $(SRCDIR_CSRCS)
 
 LOCAL_INCLUDES	= -I.
+
+# Force use of PIC
+FORCE_USE_PIC	= 1 
+FORCE_SHARED_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
 
