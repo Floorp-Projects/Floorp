@@ -1142,6 +1142,9 @@ PRUint32 nsWindowWatcher::CalculateChromeFlags(const char *aFeatures,
   chromeFlags |= WinHasOption(aFeatures, "minimizable", 0, &presenceFlag)
                  ? nsIWebBrowserChrome::CHROME_WINDOW_MIN : 0;
 
+  chromeFlags |= WinHasOption(aFeatures, "popup", 0, &presenceFlag)
+                 ? nsIWebBrowserChrome::CHROME_WINDOW_POPUP : 0; 
+
   /* OK.
      Normal browser windows, in spite of a stated pattern of turning off
      all chrome not mentioned explicitly, will want the new OS chrome (window
@@ -1211,6 +1214,7 @@ PRUint32 nsWindowWatcher::CalculateChromeFlags(const char *aFeatures,
     chromeFlags |= nsIWebBrowserChrome::CHROME_WINDOW_CLOSE;
     chromeFlags &= ~nsIWebBrowserChrome::CHROME_WINDOW_LOWERED;
     chromeFlags &= ~nsIWebBrowserChrome::CHROME_WINDOW_RAISED;
+    chromeFlags &= ~nsIWebBrowserChrome::CHROME_WINDOW_POPUP;
     //XXX Temporarily removing this check to allow modal dialogs to be
     //raised from script.  A more complete security based fix is needed.
     //chromeFlags &= ~nsIWebBrowserChrome::CHROME_MODAL;
