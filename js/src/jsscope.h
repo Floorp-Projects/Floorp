@@ -82,8 +82,8 @@ struct JSScopeProperty {
  * setter might be stored apart from sprop -- say in scope->opTable[i] for
  * a compressed getter or setter index i that is stored in sprop).
  */
-#define SPROP_GET(cx,sprop,obj,obj2,vp) ((sprop)->getter(cx,obj,sprop->id,vp))
-#define SPROP_SET(cx,sprop,obj,obj2,vp) ((sprop)->setter(cx,obj,sprop->id,vp))
+#define SPROP_GET(cx,sprop,obj,obj2,vp) ((sprop)->getter(cx,OBJ_THIS_OBJECT(cx,obj),sprop->id,vp))
+#define SPROP_SET(cx,sprop,obj,obj2,vp) ((sprop)->setter(cx,OBJ_THIS_OBJECT(cx,obj),sprop->id,vp))
 
 extern JSScope *
 js_GetMutableScope(JSContext *cx, JSObject *obj);
