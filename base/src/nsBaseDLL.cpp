@@ -24,7 +24,19 @@
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
 
+#ifdef XP_PC
+#include "nsIObserverService.h"
+#include "nsObserverService.h"
+#include "nsIObserver.h"
+#include "nsObserver.h"
+#endif
+
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
+
+#ifdef XP_PC
+static NS_DEFINE_IID(kObserverServiceCID, NS_OBSERVERSERVICE_CID);
+static NS_DEFINE_IID(kObserverCID, NS_OBSERVER_CID);
+#endif
 
 PRInt32 gLockCount = 0;
 
@@ -46,6 +58,16 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
 
   rv = compMgr->RegisterComponent(kPropertiesCID, NULL, NULL,
                                   path, PR_TRUE, PR_TRUE);
+#ifdef XP_PC
+  rv = compMgr->RegisterComponent(kObserverServiceCID,
+                                   "ObserverService", 
+                                   NS_OBSERVERSERVICE_PROGID,
+                                   path,PR_TRUE, PR_TRUE);
+  rv = compMgr->RegisterComponent(kObserverCID, 
+                                   "Observer", 
+                                   NS_OBSERVER_PROGID,
+                                   path,PR_TRUE, PR_TRUE);
+#endif
 
   (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
   return rv;
@@ -66,6 +88,11 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* path)
   if (NS_FAILED(rv)) return rv;
 
   rv = compMgr->UnregisterFactory(kPropertiesCID, path);
+
+#ifdef XP_PC
+  rv = compMgr->UnregisterFactory(kObserverServiceCID, path);
+  rv = compMgr->UnregisterFactory(kObserverCID, path);
+#endif
 
   (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
   return rv;
@@ -97,6 +124,35 @@ NSGetFactory(nsISupports* aServMgr,
 
     return res;
   }
+#ifdef XP_PC
+  else if (aClass.Equals(kObserverServiceCID)) {
+      nsObserverServiceFactory *observerServiceFactory = new nsObserverServiceFactory();
+
+      if (observerServiceFactory == nsnull)
+          return NS_ERROR_OUT_OF_MEMORY;
+
+      res = observerServiceFactory->QueryInterface(kIFactoryIID, (void**) aFactory);
+      if (NS_FAILED(res)) {
+          *aFactory = nsnull;
+          delete observerServiceFactory;
+      }
+
+    return res;
+  } else if (aClass.Equals(kObserverCID)) {
+      nsObserverFactory *observerFactory = new nsObserverFactory();
+
+      if (observerFactory == nsnull)
+          return NS_ERROR_OUT_OF_MEMORY;
+
+      res = observerFactory->QueryInterface(kIFactoryIID, (void**) aFactory);
+      if (NS_FAILED(res)) {
+          *aFactory = nsnull;
+          delete observerFactory;
+      }
+
+    return res;
+  }
+#endif
 
   return NS_NOINTERFACE;
 }

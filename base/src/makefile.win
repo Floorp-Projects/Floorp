@@ -48,6 +48,9 @@ CPPSRCS =				\
 	nsIFileStream.cpp \
 	nsThread.cpp \
 	nsSpecialSystemDirectory.cpp \
+	nsObserverService.cpp \
+	nsObserverList.cpp \
+	nsObserver.cpp \
 	$(NULL)
 
 CPP_OBJS =					\
@@ -75,6 +78,9 @@ CPP_OBJS =					\
 	.\$(OBJDIR)\nsThread.obj       \
 	.\$(OBJDIR)\nsIStringStream.obj       \
 	.\$(OBJDIR)\nsSpecialSystemDirectory.obj \
+	.\$(OBJDIR)\nsObserverService.obj \
+	.\$(OBJDIR)\nsObserverList.obj \
+	.\$(OBJDIR)\nsObserver.obj \
 	$(NULL)
 
 EXPORTS=nscore.h nsIArena.h nsIAtom.h nsIByteBuffer.h \
