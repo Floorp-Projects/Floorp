@@ -4248,7 +4248,8 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
 
     aContainer->ChildCount(count);
 
-    for (PRInt32 i = aNewIndexInContainer; i < count; i++) {
+	PRInt32 i;
+    for (i = aNewIndexInContainer; i < count; i++) {
       nsCOMPtr<nsIContent> child;
       
       aContainer->ChildAt(i, *getter_AddRefs(child));
