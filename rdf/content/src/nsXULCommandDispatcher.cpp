@@ -515,11 +515,11 @@ XULCommandDispatcherImpl::Matches(const nsString& aList, const nsString& aElemen
     while(currentWindow) {
       nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(currentWindow);
       if(domWindow) {
-        nsCOMPtr<nsIControllers> controllers;
-        domWindow->GetControllers(getter_AddRefs(controllers));
-        if(controllers) {
+        nsCOMPtr<nsIControllers> controllers2;
+        domWindow->GetControllers(getter_AddRefs(controllers2));
+        if(controllers2) {
           nsCOMPtr<nsIController> controller;
-          controllers->GetControllerForCommand(command.GetUnicode(), getter_AddRefs(controller));
+          controllers2->GetControllerForCommand(command.GetUnicode(), getter_AddRefs(controller));
           if(controller) {
             *_retval = controller;
             NS_ADDREF(*_retval);
