@@ -1714,16 +1714,6 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
-       <rdf:Description ID="jennifer_moore"
-         nc:name="jennifer moore"
-	 nc:link="chrome://help/locale/cs_nav_dialogs.html#jennifer_mooreSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
        <rdf:Description ID="john_gorham"
          nc:name="john gorham"
 	 nc:link="chrome://help/locale/cs_nav_dialogs.html#john_gorhamSDX"/>
@@ -1777,16 +1767,6 @@
        <rdf:Description ID="keywords"
          nc:name="keywords"
 	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#keywordsSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="laura_krietemeyer"
-         nc:name="laura krietemeyer"
-	 nc:link="chrome://help/locale/cs_nav_dialogs.html#laura_krietemeyerSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -3487,6 +3467,16 @@
        <rdf:Description ID="turning_off_JavaScript"
          nc:name="turning off JavaScript"
 	 nc:link="chrome://help/locale/nav_help.html#turning_off_JavaScriptSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="type_ahead_searching"
+         nc:name="type ahead searching"
+	 nc:link="chrome://help/locale/nav_help.html#type_ahead_searchingSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
