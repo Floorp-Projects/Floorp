@@ -120,8 +120,6 @@
       <separator />
       <menuitem name="Test Selection" onclick="EditorTestSelection()"/>
       <menuitem name="Test Document" onclick="EditorTestDocument()"/>
-      <separator />
-      <menuitem name="Show Clipboard" onclick="EditorShowClipboard()"/>
     </menu>
     <menu name="Help">
       <menuitem name=".About" onclick=""/>
