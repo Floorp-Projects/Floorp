@@ -72,6 +72,10 @@ sub parse_params {
     $query->param(-name=>'--enable-debug',
 		  -values=>[$query->param('debug_dirs')]);
   }
+  if ($query->param('pthreads_'.$query->param('nspr_option')) eq 'yes') {
+      $query->param(-name=>'--with-pthreads',
+		    -values=>['yes']);
+  }
   if ($query->param('debug_option') eq 'yes') {
     $query->param(-name=>'--enable-debug',
 		  -values=>['yes']);
@@ -194,6 +198,8 @@ sub print_script {
   foreach $param ($query->param()) {
     if ($param =~ /^MOZ_/) {
       my $value = $query->param($param);
+      $value =~ s/\s+$//;
+      $value =~ s/^\s+//;
       next if $value eq '';
       next if $param eq 'MOZ_CO_MODULE' and $value eq 'SeaMonkeyEditor';
       next if $param eq 'MOZ_CO_BRANCH' and $value eq 'HEAD';
@@ -241,9 +247,9 @@ sub print_configure_form {
 	<input type="Submit" value="Preview Build Script">
     </td></tr></table>
 
-    <table bgcolor="$chrome_color" cellspacing=0 cellpadding=0><tr><td>
-    <table bgcolor="#FFFFFF" cellspacing=0 cellpadding=0><tr><td>
-    <table cellspacing=0 cellpadding=1>
+    <table bgcolor="$chrome_color" cellspacing=0 cellpadding=0 border=0><tr><td>
+    <table bgcolor="#FFFFFF" cellspacing=2 cellpadding=0 border=0><tr><td>
+    <table cellspacing=0 cellpadding=4 border=0>
 
     <!-- Check out options -->
     <tr bgcolor="$chrome_color"><td>
@@ -266,9 +272,9 @@ sub print_configure_form {
     Object Directory:</b></font><br>
     </td></tr><tr><td><table><tr><td>
     <input type="radio" name="MOZ_OBJDIR" value="\@TOPSRCDIR\@" checked>
-    <code>mozilla</code></td><td> (i.e. In the source tree)<br></td></tr><tr><td>
+    <code>mozilla</code></td><td> (build in the source tree)<br></td></tr><tr><td>
     <input type="radio" name="MOZ_OBJDIR" value="\@TOPSRCDIR\@/obj-\@CONFIG_GUESS\@">
-    <code>mozilla/obj-\@CONFIG_GUESS\@</code> </td><td>(e.g. <code>mozilla/obj-i686-pc-linux-gnu</code>)<br>
+    <code>mozilla/obj-\@CONFIG_GUESS\@</code> </td><td>(use directory like&nbsp; <code>mozilla/obj-i686-pc-linux-gnu</code>)<br>
     <!-- Take this option out for now...
     <input type="radio" name="MOZ_OBJDIR" value="\@TOPSRCDIR\@/../obj-\@CONFIG_GUESS\@">
     mozilla/../obj-\@CONFIG_GUESS\@(e.g. <code>mozilla/../obj-i686-pc-linux-gnu</code>)<br>
@@ -276,47 +282,74 @@ sub print_configure_form {
     </td></tr></table>
     </td></tr>
 
-    <!-- NSPR -->
+    <!-- NSPR and Pthreads -->
     <tr bgcolor="$chrome_color"><td>
-    <font face="Helvetica,Arial"><b>NSPR to use:</b></font><br>
+    <font face="Helvetica,Arial"><b>NSPR and Pthreads:</b></font><br>
     </td></tr><tr><td>
+
+    NSPR and mozilla can be build either with or without
+    pthreads (POSIX threads). They should both be build the same way. Selecting Pthreads in the right column will cause mozilla to be built with be threads.
+    For more information on NSPR and pthreads, check 
+    <a href="http://www.mozilla.org/docs/refList/refNSPR/platforms.html">
+    the NSPR supported platforms</a>.
+
+    <table cellpadding=0 cellspacing=5><tr><td>
+    <table cellpadding=0 cellspacing=0><tr><td>
     <input type="radio" name="nspr_option" value="tip" checked>
-    Build nspr from the tip (installs in <code>\@OBJDIR\@/nspr</code>)<br>
+    Build NSPR from the tip (installs in <code>\@OBJDIR\@/nspr</code>)
+    </td><td>&nbsp;
+    </td><td>
+    <input type="checkbox" name="pthreads_tip" value="yes">
+    Use Pthreads for NSPR and mozilla
+    </td></tr><tr><td>
     <input type="radio" name="nspr_option" value="userdefined" onclick="document.ff.nspr_dir.focus();">
     NSPR is installed in
-    <input type="text" name="nspr_dir" onfocus="document.ff.nspr_option[1].checked=true;"><br>
+    <input type="text" name="nspr_dir" onfocus="document.ff.nspr_option[1].checked=true;">
+    </td><td>&nbsp;
+    </td><td>
+    <input type="checkbox" name="pthreads_userdefined" value="yes">
+    NSPR was Built with Pthreads, so build mozilla with Pthreads
+    </td></tr><tr><td>
     <input type="radio" name="nspr_option" value="rpm">
     NSPR is installed in /usr/lib (NSPR RPM installation)
+    </td><td>&nbsp;
+    </td><td>
+    <input type="checkbox" name="pthreads_rpm" value="yes">
+    NSPR was Built with Pthreads, so build mozilla with Pthreads
+    </td></tr></table>
+    </td></tr></table>
     </td></tr>
 
-    <!-- Threads -->
+    <!-- Threads
     <tr bgcolor="$chrome_color"><td>
     <font face="Helvetica,Arial"><b>Threads:</b></font><br>
     </td></tr><tr><td>
     NSPR and mozilla can both be built with or without
-    pthreads (POSIX threads). <br>
+    pthreads (POSIX threads).
     Check
     <a href="http://www.mozilla.org/docs/refList/refNSPR/platforms.html">
     the NSPR supported platforms</a>
     to see if you can choose this option.<p>
     <input type="checkbox" name="--with-pthreads" value="yes">
-    If the NSPR you selected was built with pthreads or you would like to 
-    build nspr with pthreads select this option.<br>
+    The selected NSPR was built with pthreads, 
+    or if building NSPR from the tip 
+    and you would like to build it with pthreads.<br>
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-    (Sets <code>USE_PTHREADS=1</code> for nspr, 
+    (Sets <code>USE_PTHREADS=1</code> for NSPR, 
     and <code>--with-pthreads</code> for mozilla client.)
     </td></tr>
+    -->
 
     <!-- Debug -->
     <tr bgcolor="$chrome_color"><td>
     <font face="Helvetica,Arial"><b>Debug option:</b></font><br>
     </td></tr><tr><td>
     <input type="radio" name="debug_option" value="yes" checked>
-    Enable debugging<br>
+    Enable debug symbols<br>
     <input type="radio" name="debug_option" value="no">
-    Disable debugging<br>
+    Disable debug symbols<br>
     <input type="radio" name="debug_option" value="userdefined" onclick="document.ff.debug_dirs.focus();">
-    Enable debugging but only for the following directories: <br>
+    Enable debug symbols, but only for the following directories: <br>
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
     <input type="text" name="debug_dirs" size=50 onfocus="document.ff.debug_option[2].checked=true;"> (comma separated, no spaces)<br>
     </td></tr>
@@ -327,11 +360,11 @@ sub print_configure_form {
 
     <br>
     <font size=+1 face="Helvetica,Arial"><b>
-    Options for "<code>configure</code>" script:</b></font><br>
+    Options for "<code>configure</code>" script</b> (updated on the fly)<b>:</b></font><br>
 
-    <table bgcolor="$chrome_color" cellspacing=0 cellpadding=0><tr><td>
-    <table bgcolor="#FFFFFF" cellspacing=0 cellpadding=0><tr><td>
-    <table cellspacing=0 cellpadding=1>
+    <table bgcolor="$chrome_color" cellspacing=0 cellpadding=0 border=0><tr><td>
+    <table bgcolor="#FFFFFF" cellspacing=2 cellpadding=0 border=0><tr><td>
+    <table cellspacing=0 cellpadding=4 border=0>
   );
 
   open(OPTIONS, "m4 webify-configure.m4 $configure_in|")
@@ -346,11 +379,15 @@ sub print_configure_form {
     next if $name eq 'debug';
 
     if ($type eq "header") {
+      print "</td></tr></table></td></tr>\n" if $inTable == 1;
       &header_option($comment);
+      print "<tr><td><table cellspacing=0 cellpadding=0 border=0><tr><td>\n";
+      $inTable = 1;
     } else {
       eval "&${type}_option(\"--$prename-$name\",\"$help\");";
     }
   }
+  print "</td></tr></table></td></tr>\n";
 
   print qq(
 	   </table>
@@ -367,22 +404,22 @@ sub print_configure_form {
 sub bool_option {
   my ($name, $help) = @_;
 
-  print "<tr><td align=right>";
+  print "<tr><td>";
   print "<INPUT type='checkbox' name='$name' value='yes'";
   print " CHECKED" if $query->param($name) eq 'yes';
   print ">";
-  print "</td><td>$name";
-  print "</td><td>$help</td></tr>";
+  print "$name";
+  print "</td><td>&nbsp;&nbsp;&nbsp;$help</td></tr>";
 }
 
 sub string_option {
   my ($name, $help) = @_;
 
-  print "<tr><td align=right>$name=</td><td align=left>";
+  print "<tr><td colspan=2>$name=";
   print "<INPUT type='text' name='$name'";
   print " value='".$query->param($name)."'" if defined $query->param($name);
   print ">";
-  print "</td><td>$help</td></tr>\n";
+  print " $help</td></tr>\n";
 }
 
 sub bool_or_string_option {
