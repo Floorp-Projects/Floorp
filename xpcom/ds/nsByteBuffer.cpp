@@ -45,7 +45,6 @@
 ByteBufferImpl::ByteBufferImpl(void)
   : mBuffer(NULL), mSpace(0), mLength(0)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 NS_IMETHODIMP

@@ -48,7 +48,7 @@ public:
 
     NS_DECL_NSIABOUTMODULE
 
-    nsAbout() { NS_INIT_ISUPPORTS(); }
+    nsAbout() {}
     virtual ~nsAbout() {}
 
     static NS_METHOD

@@ -72,7 +72,6 @@ nsLabel::nsLabel() : nsWidget(), nsILabel()
     PR_LOG(QtWidgetsLM, 
            PR_LOG_DEBUG, 
            ("nsLabel::nsLabel()\n"));
-    NS_INIT_ISUPPORTS();
     mAlignment = eAlign_Left;
 }
 

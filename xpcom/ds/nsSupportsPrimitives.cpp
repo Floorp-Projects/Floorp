@@ -191,7 +191,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsSupportsPRBoolImpl, nsISupportsPRBool,
 nsSupportsPRBoolImpl::nsSupportsPRBoolImpl()
     : mData(PR_FALSE)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsSupportsPRBoolImpl::~nsSupportsPRBoolImpl() {}
@@ -250,7 +249,6 @@ NS_IMPL_ISUPPORTS2(nsSupportsPRUint8Impl, nsISupportsPRUint8,
 nsSupportsPRUint8Impl::nsSupportsPRUint8Impl()
     : mData(0)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsSupportsPRUint8Impl::~nsSupportsPRUint8Impl() {}
@@ -298,7 +296,6 @@ NS_IMPL_ISUPPORTS2(nsSupportsPRUint16Impl, nsISupportsPRUint16,
 nsSupportsPRUint16Impl::nsSupportsPRUint16Impl()
     : mData(0)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsSupportsPRUint16Impl::~nsSupportsPRUint16Impl() {}
@@ -346,7 +343,6 @@ NS_IMPL_ISUPPORTS2(nsSupportsPRUint32Impl, nsISupportsPRUint32,
 nsSupportsPRUint32Impl::nsSupportsPRUint32Impl()
     : mData(0)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsSupportsPRUint32Impl::~nsSupportsPRUint32Impl() {}
@@ -394,7 +390,6 @@ NS_IMPL_ISUPPORTS2(nsSupportsPRUint64Impl, nsISupportsPRUint64,
 nsSupportsPRUint64Impl::nsSupportsPRUint64Impl()
     : mData(LL_ZERO)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsSupportsPRUint64Impl::~nsSupportsPRUint64Impl() {}
@@ -442,7 +437,6 @@ NS_IMPL_ISUPPORTS2(nsSupportsPRTimeImpl, nsISupportsPRTime,
 nsSupportsPRTimeImpl::nsSupportsPRTimeImpl()
     : mData(LL_ZERO)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsSupportsPRTimeImpl::~nsSupportsPRTimeImpl() {}
@@ -490,7 +484,6 @@ NS_IMPL_ISUPPORTS2(nsSupportsCharImpl, nsISupportsChar,
 nsSupportsCharImpl::nsSupportsCharImpl()
     : mData(0)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsSupportsCharImpl::~nsSupportsCharImpl() {}
@@ -538,7 +531,6 @@ NS_IMPL_ISUPPORTS2(nsSupportsPRInt16Impl, nsISupportsPRInt16,
 nsSupportsPRInt16Impl::nsSupportsPRInt16Impl()
     : mData(0)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsSupportsPRInt16Impl::~nsSupportsPRInt16Impl() {}
@@ -586,7 +578,6 @@ NS_IMPL_ISUPPORTS2(nsSupportsPRInt32Impl, nsISupportsPRInt32,
 nsSupportsPRInt32Impl::nsSupportsPRInt32Impl()
     : mData(0)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsSupportsPRInt32Impl::~nsSupportsPRInt32Impl() {}
@@ -634,7 +625,6 @@ NS_IMPL_ISUPPORTS2(nsSupportsPRInt64Impl, nsISupportsPRInt64,
 nsSupportsPRInt64Impl::nsSupportsPRInt64Impl()
     : mData(LL_ZERO)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsSupportsPRInt64Impl::~nsSupportsPRInt64Impl() {}
@@ -682,7 +672,6 @@ NS_IMPL_ISUPPORTS2(nsSupportsFloatImpl, nsISupportsFloat,
 nsSupportsFloatImpl::nsSupportsFloatImpl()
     : mData(float(0.0))
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsSupportsFloatImpl::~nsSupportsFloatImpl() {}
@@ -730,7 +719,6 @@ NS_IMPL_ISUPPORTS2(nsSupportsDoubleImpl, nsISupportsDouble,
 nsSupportsDoubleImpl::nsSupportsDoubleImpl()
     : mData(double(0.0))
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsSupportsDoubleImpl::~nsSupportsDoubleImpl() {}
@@ -779,7 +767,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsSupportsVoidImpl, nsISupportsVoid,
 nsSupportsVoidImpl::nsSupportsVoidImpl()
     : mData(nsnull)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsSupportsVoidImpl::~nsSupportsVoidImpl() {}
@@ -825,7 +812,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsSupportsInterfacePointerImpl,
 nsSupportsInterfacePointerImpl::nsSupportsInterfacePointerImpl()
     : mIID(nsnull)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsSupportsInterfacePointerImpl::~nsSupportsInterfacePointerImpl()

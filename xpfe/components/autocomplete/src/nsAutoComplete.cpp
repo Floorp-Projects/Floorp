@@ -49,7 +49,6 @@ NS_IMPL_ISUPPORTS1(nsAutoCompleteItem, nsIAutoCompleteItem)
 
 nsAutoCompleteItem::nsAutoCompleteItem()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsAutoCompleteItem::~nsAutoCompleteItem()
@@ -117,7 +116,6 @@ nsAutoCompleteResults::nsAutoCompleteResults() :
     mDefaultItemIndex(0)
 {
     NS_NewISupportsArray(getter_AddRefs(mItems));
-    NS_INIT_ISUPPORTS();
 }
 
 nsAutoCompleteResults::~nsAutoCompleteResults()

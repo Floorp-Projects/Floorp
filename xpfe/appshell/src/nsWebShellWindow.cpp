@@ -199,8 +199,6 @@ struct nsWebShellInfo {
 
 nsWebShellWindow::nsWebShellWindow() : nsXULWindow()
 {
-  NS_INIT_ISUPPORTS();
-
   mWebShell = nsnull;
   mWindow   = nsnull;
   mLockedUntilChromeLoad = PR_FALSE;

@@ -89,7 +89,6 @@ nsMultiplexInputStream::nsMultiplexInputStream()
     : mCurrentStream(0),
       mStartedReadingCurrent(PR_FALSE)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsMultiplexInputStream::~nsMultiplexInputStream()

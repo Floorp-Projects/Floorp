@@ -84,7 +84,6 @@ public:
 NS_IMPL_ISUPPORTS1(nsLeakDetector, nsILeakDetector)
 
 nsLeakDetector::nsLeakDetector() {
-   NS_INIT_ISUPPORTS();
    }
 nsLeakDetector::~nsLeakDetector() {}
 

@@ -199,7 +199,6 @@ PRInt32 nsThrobber::gNumThrobbers;
 // Note: operator new zeros our memory
 nsThrobber::nsThrobber()
 {
-  NS_INIT_ISUPPORTS();
   if (0 == gNumThrobbers++) {
     gThrobbers = new nsVoidArray;
   }

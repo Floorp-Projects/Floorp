@@ -80,7 +80,6 @@
 static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 
 nsWindowCreator::nsWindowCreator() {
-  NS_INIT_ISUPPORTS();
 }
 
 nsWindowCreator::~nsWindowCreator() {

@@ -61,7 +61,6 @@ nsFileSpecImpl::nsFileSpecImpl()
 	:	mInputStream(nsnull)
 	,	mOutputStream(nsnull)
 {
-	NS_INIT_ISUPPORTS();
 //    NS_ASSERTION(0, "nsFileSpec is unsupported - use nsIFile!");
 
 }
@@ -73,7 +72,6 @@ nsFileSpecImpl::nsFileSpecImpl(const nsFileSpec& inSpec)
 	,	mInputStream(nsnull)
 	,	mOutputStream(nsnull)
 {
-	NS_INIT_ISUPPORTS();
 //    NS_ASSERTION(0, "nsFileSpec is unsupported - use nsIFile!");
 
 }
@@ -727,7 +725,6 @@ nsDirectoryIteratorImpl::nsDirectoryIteratorImpl()
 //----------------------------------------------------------------------------------------
 	: mDirectoryIterator(nsnull)
 {
-	NS_INIT_ISUPPORTS();
 }
 
 //----------------------------------------------------------------------------------------

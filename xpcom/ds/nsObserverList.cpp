@@ -146,7 +146,6 @@ nsObserverList::GetObserverList(nsISimpleEnumerator** anEnumerator)
 ObserverListEnumerator::ObserverListEnumerator(nsISupportsArray* aValueArray)
     : mValueArray(aValueArray), mIndex(0)
 {
-    NS_INIT_ISUPPORTS();
     NS_IF_ADDREF(mValueArray);
     if (mValueArray) {
         PRUint32 total;

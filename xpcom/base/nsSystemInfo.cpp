@@ -42,7 +42,6 @@
 
 nsSystemInfo::nsSystemInfo()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsSystemInfo::~nsSystemInfo()

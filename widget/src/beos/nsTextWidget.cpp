@@ -61,7 +61,6 @@ static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 //-------------------------------------------------------------------------
 nsTextWidget::nsTextWidget() : nsTextHelper()
 {
-  NS_INIT_ISUPPORTS();
   mBackground = NS_RGB(124, 124, 124);
 }
 

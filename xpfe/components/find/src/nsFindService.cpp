@@ -52,7 +52,6 @@ nsFindService::nsFindService()
 , mEntireWord(PR_FALSE)
 , mMatchCase(PR_FALSE)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 

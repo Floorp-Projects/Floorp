@@ -55,7 +55,6 @@
 nsCheckButton::nsCheckButton() : nsWindow() , nsICheckButton(),
   mState(PR_FALSE)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 

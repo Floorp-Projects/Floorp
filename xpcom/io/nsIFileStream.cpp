@@ -140,8 +140,6 @@ FileImpl::FileImpl(PRFileDesc* inDesc)
 , mLength(-1)
 , mGotBuffers(PR_FALSE)
 {
-    NS_INIT_ISUPPORTS();
-    
     mWriteCursor = nsnull;
     mWriteLimit  = nsnull;
 }
@@ -156,8 +154,6 @@ FileImpl::FileImpl(const nsFileSpec& inFile, int nsprMode, PRIntn accessMode)
 , mLength(-1)
 , mGotBuffers(PR_FALSE)
 {
-    NS_INIT_ISUPPORTS();
-
     mWriteCursor = nsnull;
     mWriteLimit  = nsnull;
 

@@ -107,7 +107,6 @@ nsSSLStatus::GetCipherName(char** _result)
 nsSSLStatus::nsSSLStatus()
 : mKeyLength(0), mSecretKeyLength(0)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsSSLStatus, nsISSLStatus);

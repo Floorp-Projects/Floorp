@@ -57,7 +57,6 @@ nsProcess::nsProcess()
 :mExitValue(-1),
  mProcess(nsnull)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsProcess::~nsProcess()

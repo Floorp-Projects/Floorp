@@ -109,7 +109,6 @@ public:
 
     // nsSimpleArrayEnumerator methods
     nsCOMArrayEnumerator() : mIndex(0) {
-        NS_INIT_ISUPPORTS();
     }
     virtual ~nsCOMArrayEnumerator(void);
 

@@ -48,7 +48,6 @@ static PRLogModuleInfo *sRemoteLm = NULL;
 
 XRemoteClient::XRemoteClient()
 {
-  NS_INIT_ISUPPORTS();
   mDisplay = 0;
   mInitialized = PR_FALSE;
   mMozVersionAtom = 0;

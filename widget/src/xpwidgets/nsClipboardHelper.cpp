@@ -44,7 +44,6 @@ NS_IMPL_ISUPPORTS1(nsClipboardHelper, nsIClipboardHelper);
 
 nsClipboardHelper::nsClipboardHelper()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsClipboardHelper::~nsClipboardHelper()

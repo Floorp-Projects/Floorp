@@ -78,8 +78,6 @@ static NS_DEFINE_CID(kICServiceCID, NS_INTERNETCONFIGSERVICE_CID);
 
 nsInternetConfigService::nsInternetConfigService()
 {
-  NS_INIT_ISUPPORTS();
-
   long  version;
   OSErr err;
   mRunningOSX = ((err = ::Gestalt(gestaltSystemVersion, &version)) == noErr && version >= 0x00001000);

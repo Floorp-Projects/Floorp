@@ -159,7 +159,6 @@ void NS_PurgeAtomTable()
 
 AtomImpl::AtomImpl()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 AtomImpl::~AtomImpl()

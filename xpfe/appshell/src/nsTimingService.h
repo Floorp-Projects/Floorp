@@ -48,7 +48,7 @@
 class nsTimingService : public nsITimingService
 {
  public:
-    nsTimingService() { NS_INIT_ISUPPORTS();};
+    nsTimingService() {};
     virtual ~nsTimingService();
     
     NS_DECL_ISUPPORTS

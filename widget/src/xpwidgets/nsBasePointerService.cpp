@@ -22,7 +22,6 @@
 
 nsBasePointerService::nsBasePointerService()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsBasePointerService::~nsBasePointerService()

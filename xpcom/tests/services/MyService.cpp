@@ -63,7 +63,6 @@ NS_IMPL_ISUPPORTS1(MyService, IMyService);
 
 MyService::MyService()
 {
-    NS_INIT_ISUPPORTS();
     printf("  creating my service\n");
 }
 

@@ -420,7 +420,6 @@ nsDirectoryService* nsDirectoryService::mService = nsnull;
 
 nsDirectoryService::nsDirectoryService()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 NS_METHOD

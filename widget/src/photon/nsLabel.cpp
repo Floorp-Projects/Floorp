@@ -54,7 +54,6 @@ NS_IMPL_RELEASE_INHERITED(nsLabel, nsWidget)
 //-------------------------------------------------------------------------
 nsLabel::nsLabel() : nsWidget(), nsILabel()
 {
-  NS_INIT_ISUPPORTS();
   mAlignment = eAlign_Left;
 }
 

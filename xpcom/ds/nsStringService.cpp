@@ -42,7 +42,6 @@
 
 nsStringService::nsStringService()
 {
-  NS_INIT_ISUPPORTS();
 }
 nsStringService::~nsStringService()
 {

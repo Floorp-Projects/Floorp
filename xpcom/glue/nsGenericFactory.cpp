@@ -57,7 +57,6 @@
 nsGenericFactory::nsGenericFactory(const nsModuleComponentInfo *info)
     : mInfo(info)
 {
-    NS_INIT_ISUPPORTS();
     if (mInfo && mInfo->mClassInfoGlobal)
         *mInfo->mClassInfoGlobal = NS_STATIC_CAST(nsIClassInfo *, this);
 }
@@ -234,7 +233,6 @@ nsGenericModule::nsGenericModule(const char* moduleName, PRUint32 componentCount
       mCtor(ctor),
       mDtor(dtor)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsGenericModule::~nsGenericModule()

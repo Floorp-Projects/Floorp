@@ -115,7 +115,6 @@ protected:
 nsNativeAppSupportMac::nsNativeAppSupportMac()
 : mDialog(nsnull)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 

@@ -149,7 +149,6 @@ static const char *event_names[] =
 
 nsAppShell::nsAppShell()  
 { 
-  NS_INIT_ISUPPORTS();
   mDispatchListener = 0;
 
   if (!sEventQueueList)

@@ -70,7 +70,6 @@ nsClipboard::nsClipboard() : nsBaseClipboard()
   printf("  nsClipboard::nsClipboard()\n");
 #endif /* DEBUG_CLIPBOARD */
 
-  //NS_INIT_ISUPPORTS();
   mIgnoreEmptyNotification = PR_FALSE;
   mClipboardOwner = nsnull;
   mTransferable   = nsnull;

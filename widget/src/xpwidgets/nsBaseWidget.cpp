@@ -100,8 +100,6 @@ nsBaseWidget::nsBaseWidget()
 #endif
 
     NS_NewISupportsArray(getter_AddRefs(mChildren));
-    
-    NS_INIT_ISUPPORTS();
 }
 
 
@@ -1279,7 +1277,6 @@ nsBaseWidget::debug_DumpInvalidate(FILE *                aFileOut,
 nsBaseWidget::Enumerator::Enumerator(nsBaseWidget & inParent)
   : mCurrentPosition(0), mParent(inParent)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 

@@ -53,7 +53,6 @@ static PRUintn gToolkitTLSIndex = 0;
 //-------------------------------------------------------------------------
 nsToolkit::nsToolkit()
 {
-    NS_INIT_ISUPPORTS();
     mSharedGC = nsnull;
 }
 

@@ -91,7 +91,6 @@ NS_IMPL_ISUPPORTS3(nsDownloadManager, nsIDownloadManager, nsIDOMEventListener, n
 
 nsDownloadManager::nsDownloadManager() : mBatches(0)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsDownloadManager::~nsDownloadManager()
@@ -889,7 +888,6 @@ nsDownload::nsDownload():mDownloadState(NOTSTARTED),
                          mStartTime(0),
                          mLastUpdate(-500)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsDownload::~nsDownload()

@@ -54,7 +54,6 @@ nsScrollbar::InitializationState nsScrollbar::sScrollbarInited = nsScrollbar::eN
 //-------------------------------------------------------------------------
 nsScrollbar::nsScrollbar(PRBool aIsVertical) : nsWindow(), nsIScrollbar()
 {
-  NS_INIT_ISUPPORTS();
   mPositionFlag  = (aIsVertical) ? SBS_VERT : SBS_HORZ;
   mScaleFactor   = 1.0f;
   mLineIncrement = 0;

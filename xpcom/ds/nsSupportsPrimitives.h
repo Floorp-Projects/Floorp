@@ -66,7 +66,7 @@ public:
     NS_DECL_NSISUPPORTSPRIMITIVE
     NS_DECL_NSISUPPORTSCSTRING
 
-    nsSupportsCStringImpl() { NS_INIT_ISUPPORTS(); }
+    nsSupportsCStringImpl() {}
     virtual ~nsSupportsCStringImpl() {}
 
 private:
@@ -83,7 +83,7 @@ public:
     NS_DECL_NSISUPPORTSPRIMITIVE
     NS_DECL_NSISUPPORTSSTRING
 
-    nsSupportsStringImpl() { NS_INIT_ISUPPORTS(); }
+    nsSupportsStringImpl() {}
     virtual ~nsSupportsStringImpl() {}
 
 private:

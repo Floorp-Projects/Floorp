@@ -81,7 +81,6 @@ NS_IMPL_ISUPPORTS1(nsNSSCertificateDB, nsIX509CertDB)
 
 nsNSSCertificateDB::nsNSSCertificateDB()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsNSSCertificateDB::~nsNSSCertificateDB()

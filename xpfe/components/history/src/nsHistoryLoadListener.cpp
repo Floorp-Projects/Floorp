@@ -46,7 +46,6 @@ static NS_DEFINE_IID(kDocLoaderServiceCID, NS_DOCUMENTLOADER_SERVICE_CID);
 
 nsHistoryLoadListener::nsHistoryLoadListener(nsIBrowserHistory *aHistory)
 {
-    NS_INIT_ISUPPORTS();
     mHistory = aHistory;
     printf("Creating nsHistoryLoadListener\n");
 }

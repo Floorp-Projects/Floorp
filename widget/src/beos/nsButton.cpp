@@ -59,7 +59,6 @@ static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 //-------------------------------------------------------------------------
 nsButton::nsButton() : nsWindow() , nsIButton()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 //-------------------------------------------------------------------------

@@ -119,8 +119,6 @@ struct PLDHashTableOps property_HashTableOps = {
 
 nsPersistentProperties::nsPersistentProperties()
 {
-  NS_INIT_ISUPPORTS();
-
   mIn = nsnull;
   mSubclass = NS_STATIC_CAST(nsIPersistentProperties*, this);
   PL_DHashTableInit(&mTable, &property_HashTableOps, nsnull,

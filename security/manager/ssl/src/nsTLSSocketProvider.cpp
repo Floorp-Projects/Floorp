@@ -26,7 +26,6 @@
 
 nsTLSSocketProvider::nsTLSSocketProvider()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsTLSSocketProvider::~nsTLSSocketProvider()

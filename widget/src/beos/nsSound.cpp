@@ -55,7 +55,6 @@ NS_IMPL_ISUPPORTS1(nsSound, nsISound)
 nsSound::nsSound()
  : mSound(0)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsSound::~nsSound()

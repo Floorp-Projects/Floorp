@@ -27,7 +27,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsByteArrayInputStream, nsIInputStream, nsIByteArr
 nsByteArrayInputStream::nsByteArrayInputStream (char *buffer, PRUint32 bytes)
     : _buffer (buffer), _nbytes (bytes), _pos (0)
 { 
-    NS_INIT_ISUPPORTS ();
 }
 
 nsByteArrayInputStream::~nsByteArrayInputStream ()

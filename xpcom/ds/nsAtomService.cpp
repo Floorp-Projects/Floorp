@@ -42,7 +42,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsAtomService, nsIAtomService)
 
 nsAtomService::nsAtomService()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsAtomService::~nsAtomService()

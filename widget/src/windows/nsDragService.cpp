@@ -62,7 +62,6 @@
 //-------------------------------------------------------------------------
 nsDragService::nsDragService()
 {
-  NS_INIT_ISUPPORTS();
   mNativeDragTarget = nsnull;
   mNativeDragSrc    = nsnull;
   mDataObject       = nsnull;

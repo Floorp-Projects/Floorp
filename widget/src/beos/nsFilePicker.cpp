@@ -53,7 +53,6 @@ nsFilePicker::nsFilePicker()
 		, mUnicodeEncoder(nsnull)
 		, mUnicodeDecoder(nsnull)
 {
-	NS_INIT_ISUPPORTS();
 	mDisplayDirectory = do_CreateInstance("@mozilla.org/file/local;1");
 }
 

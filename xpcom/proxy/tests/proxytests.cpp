@@ -73,7 +73,6 @@ class nsTestXPCFoo : public nsITestProxy
 
 nsTestXPCFoo::nsTestXPCFoo()
 {
-    NS_INIT_ISUPPORTS();
     NS_ADDREF_THIS();
 }
 
@@ -134,7 +133,6 @@ class nsTestXPCFoo2 : public nsITestProxy
 
 nsTestXPCFoo2::nsTestXPCFoo2()
 {
-    NS_INIT_ISUPPORTS();
     NS_ADDREF_THIS();
 }
 

@@ -41,7 +41,6 @@
 nsSupportsArrayEnumerator::nsSupportsArrayEnumerator(nsISupportsArray* array)
   : mArray(array), mCursor(0)
 {
-  NS_INIT_ISUPPORTS();
   NS_ASSERTION(array, "null array");
   NS_ADDREF(mArray);
 }

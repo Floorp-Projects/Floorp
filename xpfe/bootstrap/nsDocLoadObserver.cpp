@@ -50,7 +50,6 @@
 nsDocLoadObserver::nsDocLoadObserver()
 :	mRegistered(PR_FALSE)
 {
-	NS_INIT_ISUPPORTS();
 }
 
 nsDocLoadObserver::~nsDocLoadObserver()

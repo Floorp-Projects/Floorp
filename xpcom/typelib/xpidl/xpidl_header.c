@@ -522,8 +522,6 @@ interface(TreeState *state)
     fprintf(state->file, "%s::%s()\n", classNameImpl, classNameImpl);
     fputs("{\n", state->file);
     write_indent(state->file);
-    fputs("NS_INIT_ISUPPORTS();\n", state->file);
-    write_indent(state->file);
     fputs("/* member initializers and constructor code */\n", state->file);
     fputs("}\n\n", state->file);
     

@@ -162,7 +162,6 @@ nsTimerImpl::nsTimerImpl() :
   mDelay(0),
   mTimeout(0)
 {
-  NS_INIT_ISUPPORTS();
   nsIThread::GetCurrent(getter_AddRefs(mCallingThread));
 
   static PRCallOnceType once;
@@ -541,7 +540,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsTimerManager, nsITimerManager)
 
 nsTimerManager::nsTimerManager()
 {
-  NS_INIT_ISUPPORTS();
   mLock = PR_NewLock();
   gManager = this;
 }

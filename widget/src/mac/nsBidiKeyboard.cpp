@@ -26,7 +26,6 @@ NS_IMPL_ISUPPORTS1(nsBidiKeyboard, nsIBidiKeyboard)
 
 nsBidiKeyboard::nsBidiKeyboard() : nsIBidiKeyboard()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsBidiKeyboard::~nsBidiKeyboard()

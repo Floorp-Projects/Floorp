@@ -66,7 +66,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsFontPackageHandler, nsIFontPackageHandler)
 
 nsFontPackageHandler::nsFontPackageHandler()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsFontPackageHandler::~nsFontPackageHandler()

@@ -71,9 +71,9 @@ NS_NewArray(nsIMutableArray** aResult, const nsCOMArray_base& base);
 class nsArray : public nsIMutableArray
 {
 public:
-    nsArray() { NS_INIT_ISUPPORTS(); }
+    nsArray() { }
     nsArray(const nsCOMArray_base& aBaseArray) : mArray(aBaseArray)
-    { NS_INIT_ISUPPORTS(); }
+    { }
     
     virtual ~nsArray();
 

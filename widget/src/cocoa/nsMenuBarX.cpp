@@ -88,8 +88,6 @@ EventHandlerUPP nsMenuBarX::sCommandEventHandler = nsnull;
 nsMenuBarX::nsMenuBarX()
   : mNumMenus(0), mParent(nsnull), mIsMenuBarAdded(PR_FALSE), mDocument(nsnull), mCurrentCommandID(1)
 {
-  NS_INIT_ISUPPORTS();
-
   OSStatus status = ::CreateNewMenu(0, 0, &mRootMenu);
   NS_ASSERTION(status == noErr, "nsMenuBarX::nsMenuBarX:  creation of root menu failed.");
   

@@ -479,7 +479,6 @@ PLDHashTableEnumeratorImpl::PLDHashTableEnumeratorImpl(PLDHashTable *table,
 
     nsAutoMonitor mon(mMonitor);
 
-    NS_INIT_ISUPPORTS();
     Closure c = { PR_FALSE, converter, converterData, this };
     mCount = PL_DHashTableEnumerate(table, Enumerator, &c);
     if (!c.succeeded) {
@@ -686,7 +685,6 @@ nsComponentManagerImpl::nsComponentManagerImpl()
     mLoaderData(nsnull),
     mRegistryDirty(PR_FALSE)
 {
-    NS_INIT_ISUPPORTS();
     mFactories.ops = nsnull;
     mContractIDs.ops = nsnull;
 }

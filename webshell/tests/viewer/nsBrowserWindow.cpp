@@ -1321,7 +1321,6 @@ GetTitleSuffix(void)
 // Note: operator new zeros our memory
 nsBrowserWindow::nsBrowserWindow()
 {
-  NS_INIT_ISUPPORTS();
   if (!gTitleSuffix) {
 #if XXX
     gTitleSuffix = GetTitleSuffix();

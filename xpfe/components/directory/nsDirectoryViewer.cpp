@@ -549,7 +549,6 @@ nsHTTPIndex::nsHTTPIndex()
   : mBindToGlobalObject(PR_TRUE),
     mRequestor(nsnull)
 {
-	NS_INIT_ISUPPORTS();
 }
 
 
@@ -557,7 +556,6 @@ nsHTTPIndex::nsHTTPIndex(nsIInterfaceRequestor* aRequestor)
   : mBindToGlobalObject(PR_TRUE),
     mRequestor(aRequestor)
 {
-	NS_INIT_ISUPPORTS();
 }
 
 
@@ -1325,7 +1323,6 @@ nsHTTPIndex::GetAllCmds(nsIRDFResource *aSource, nsISimpleEnumerator **_retval)
 //
 nsDirectoryViewerFactory::nsDirectoryViewerFactory()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 

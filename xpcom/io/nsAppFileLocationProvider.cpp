@@ -110,7 +110,6 @@
 
 nsAppFileLocationProvider::nsAppFileLocationProvider()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsAppFileLocationProvider::~nsAppFileLocationProvider()
@@ -453,7 +452,6 @@ class nsAppDirectoryEnumerator : public nsISimpleEnumerator
         mProvider(aProvider),
         mCurrentKey(aKeyList)
     {
-        NS_INIT_ISUPPORTS();
     }
 
     NS_IMETHOD HasMoreElements(PRBool *result) 

@@ -49,14 +49,12 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsX509CertValidity, nsIX509CertValidity)
 
 nsX509CertValidity::nsX509CertValidity() : mTimesInitialized(PR_FALSE)
 {
-  NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
 }
 
 nsX509CertValidity::nsX509CertValidity(CERTCertificate *cert) : 
                                            mTimesInitialized(PR_FALSE)
 {
-  NS_INIT_ISUPPORTS();
   if (cert) {
     SECStatus rv = CERT_GetCertTimes(cert, &mNotBefore, &mNotAfter);
     if (rv == SECSuccess)

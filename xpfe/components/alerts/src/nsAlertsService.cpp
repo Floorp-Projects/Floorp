@@ -57,7 +57,6 @@ NS_INTERFACE_MAP_END_THREADSAFE
 
 nsAlertsService::nsAlertsService()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsAlertsService::~nsAlertsService()

@@ -402,7 +402,6 @@ nsProxyEventObject::nsProxyEventObject(nsIEventQueue *destQueue,
       mRoot(root),
       mNext(nsnull)
 {
-    NS_INIT_ISUPPORTS();
     NS_IF_ADDREF(mRoot);
 
     mProxyObject = new nsProxyObject(destQueue, proxyType, aObj);

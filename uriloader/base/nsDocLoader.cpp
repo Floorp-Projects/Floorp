@@ -134,8 +134,6 @@ struct nsListenerInfo {
 nsDocLoaderImpl::nsDocLoaderImpl()
   : mListenerInfoList(8)
 {
-  NS_INIT_ISUPPORTS();
-
 #if defined(PR_LOGGING)
   if (nsnull == gDocLoaderLog) {
       gDocLoaderLog = PR_NewLogModule("DocLoader");

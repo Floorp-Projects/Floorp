@@ -51,7 +51,6 @@ NS_IMPL_QUERY_INTERFACE2(nsLabel, nsILabel, nsIWidget)
 //-------------------------------------------------------------------------
 nsLabel::nsLabel() : nsWidget(), nsILabel()
 {
-  NS_INIT_ISUPPORTS();
   mAlignment = eAlign_Left;
 }
 

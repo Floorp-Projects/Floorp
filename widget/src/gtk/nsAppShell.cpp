@@ -139,7 +139,6 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 //-------------------------------------------------------------------------
 nsAppShell::nsAppShell()
 {
-  NS_INIT_ISUPPORTS();
 #ifdef DEBUG_APPSHELL
   printf("nsAppShell::nsAppShell()\n");
 #endif
