@@ -67,10 +67,22 @@ ns4xPluginStreamListener::ns4xPluginStreamListener(nsIPluginInstance* inst,
 
 ns4xPluginStreamListener::~ns4xPluginStreamListener(void)
 {
-#ifdef NS_DEBUG
-  printf("ns4xPluginStreamListener::~ns4xPluginStreamListener\n");
-#endif
-	CleanUpStream();
+  // remove itself from the instance stream list
+  if(mInst) {
+    nsInstanceStream * prev = nsnull;
+    for(nsInstanceStream *is = mInst->mStreams; is != nsnull; is = is->mNext) {
+      if(is->mPluginStreamListener == this) {
+        if(prev == nsnull)
+          mInst->mStreams = is->mNext;
+        else
+          prev->mNext = is->mNext;
+
+        delete is;
+        break;
+      }
+      prev = is;
+    }
+  }
   NS_IF_RELEASE(mInst);
 }
 
@@ -79,7 +91,7 @@ nsresult ns4xPluginStreamListener::CleanUpStream()
   if(!mStreamStarted || mStreamCleanedUp)
     return NS_OK;
 
-  if(!mInst)
+  if(!mInst || !mInst->IsStarted())
     return NS_ERROR_FAILURE;
 
   NPP npp;
@@ -532,10 +544,10 @@ ns4xPluginStreamListener::OnStopBinding(nsIPluginStreamInfo* pluginInfo,
     pluginInfo->GetLastModified((PRUint32*)&(mNPStream.lastmodified));
   }
 
-  // check if the stream is not of asfileonly type and later its destruction
+  // check if the stream is of seekable type and later its destruction
   // see bug 91140    
   nsresult rv = NS_OK;
-  if(mStreamType == nsPluginStreamType_AsFileOnly)
+  if(mStreamType != nsPluginStreamType_Seek)
     rv = CleanUpStream();
   
   if(rv != NPERR_NO_ERROR)
@@ -549,6 +561,18 @@ ns4xPluginStreamListener::GetStreamType(nsPluginStreamType *result)
 {
   *result = mStreamType;
   return NS_OK;
+}
+
+/////////////////////////////////////////////////////
+
+nsInstanceStream::nsInstanceStream()
+{
+  mNext = nsnull;
+  mPluginStreamListener = nsnull;
+}
+
+nsInstanceStream::~nsInstanceStream()
+{
 }
 
 ns4xPluginInstance :: ns4xPluginInstance(NPPluginFuncs* callbacks, PRLibrary* aLibrary)
@@ -567,6 +591,7 @@ ns4xPluginInstance :: ns4xPluginInstance(NPPluginFuncs* callbacks, PRLibrary* aL
     mWindowless = PR_FALSE;
     mTransparent = PR_FALSE;
     mStarted = PR_FALSE;
+    mStreams = nsnull;
 }
 
 
@@ -579,6 +604,13 @@ ns4xPluginInstance :: ~ns4xPluginInstance(void)
   if (mXtBin)
     gtk_widget_destroy(mXtBin);
 #endif
+
+  // clean the stream list if any
+  for(nsInstanceStream *is = mStreams; is != nsnull;) {
+    nsInstanceStream * next = is->mNext;
+    delete is;
+    is = next;
+  }
 }
 
 PRBool
@@ -646,6 +678,17 @@ NS_IMETHODIMP ns4xPluginInstance::Stop(void)
     return NS_ERROR_FAILURE; // XXX right error?
 
   NPSavedData *sdata;
+
+  // clean up open streams
+  for(nsInstanceStream *is = mStreams; is != nsnull;) {
+    if(is->mPluginStreamListener)
+      is->mPluginStreamListener->CleanUpStream();
+
+    nsInstanceStream *next = is->mNext;
+    delete is;
+    is = next;
+    mStreams = is;
+  }
 
   NS_TRY_SAFE_CALL_RETURN(error, CallNPP_DestroyProc(fCallbacks->destroy, &fNPP, &sdata), fLibrary);
 
@@ -827,27 +870,34 @@ NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
 
 NS_IMETHODIMP ns4xPluginInstance::NewStream(nsIPluginStreamListener** listener)
 {
-  ns4xPluginStreamListener* stream = new ns4xPluginStreamListener(this, 
-                                                                  nsnull);
-
-	if(stream == nsnull)
-		return NS_ERROR_OUT_OF_MEMORY;
-
-	NS_ADDREF(stream);  // Stabilize
-    
-    nsresult res = stream->QueryInterface(kIPluginStreamListenerIID, (void**)listener);
-
-    // Destabilize and avoid leaks. 
-    // Avoid calling delete <interface pointer>
-	NS_RELEASE(stream);
-
-	return res;
+  return NewNotifyStream(listener, nsnull);
 }
 
 nsresult ns4xPluginInstance::NewNotifyStream(nsIPluginStreamListener** listener, void* notifyData)
 {
-  *listener = new ns4xPluginStreamListener(this, notifyData);
-  return NS_OK;
+  ns4xPluginStreamListener* stream = new ns4xPluginStreamListener(this, notifyData);
+
+  if(stream == nsnull)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  // add it to the list
+  nsInstanceStream * is = new nsInstanceStream();
+
+  if(!is)
+    return NS_ERROR_FAILURE;
+
+  is->mNext = mStreams;
+  is->mPluginStreamListener = stream;
+  mStreams = is;
+
+  NS_ADDREF(stream);  // Stabilize
+    
+  nsresult res = stream->QueryInterface(kIPluginStreamListenerIID, (void**)listener);
+
+  // Destabilize and avoid leaks. Avoid calling delete <interface pointer>
+  NS_RELEASE(stream);
+
+  return res;
 }
 
 NS_IMETHODIMP ns4xPluginInstance::Print(nsPluginPrint* platformPrint)
