@@ -101,3 +101,9 @@ DEFINES += -DWIN32
 #
 
 DEFINES += -D_WINDOWS
+
+#
+#  The default is no MFC anywhere
+#
+
+DEFINES += -DWIN32_LEAN_AND_MEAN
