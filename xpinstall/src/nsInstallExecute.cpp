@@ -81,7 +81,8 @@ PRInt32 nsInstallExecute::Complete()
 {
     PRBool flagExists;
     PRInt32 result = NS_OK;
-    
+    char *cArgs[1];
+
     if (mExecutableFile == nsnull)
         return nsInstall::INVALID_ARGUMENTS;
 
@@ -93,7 +94,16 @@ PRInt32 nsInstallExecute::Complete()
         return nsInstall::INVALID_ARGUMENTS;
     }
 
-    //PRInt32 result = app->Spawn(); // nsIFileXXX: Need to implement Spawn or stay with Execute.
+    cArgs[0] = nsnull;
+    cArgs[0] = mArgs.ToNewCString();
+
+    if(cArgs[0] == nsnull)
+      return nsInstall::OUT_OF_MEMORY;
+    
+    app->Spawn((const char **)&cArgs[0], 1);
+
+    if(cArgs[0])
+      delete(cArgs[0]);
     
     DeleteFileNowOrSchedule( app );
     
