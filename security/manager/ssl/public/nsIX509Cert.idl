@@ -56,6 +56,27 @@ interface nsIX509Cert : nsISupports {
   readonly attribute AString emailAddress;
 
   /**
+   *  Obtain a list of all email addresses
+   *  contained in the certificate.
+   *
+   *  @param length The number of strings in the returned array.
+   *  @return An array of email addresses.
+   */
+  void getEmailAddresses(out unsigned long length, 
+                         [retval, array, size_is(length)] out wstring addresses);
+
+  /**
+   *  Check whether a given address is contained in the certificate.
+   *  The comparison will convert the email address to lowercase.
+   *  The behaviour for non ASCII characters is undefined.
+   *
+   *  @param aEmailAddress The address to search for.
+   *                
+   *  @return True if the address is contained in the certificate.
+   */
+  boolean containsEmailAddress(in AString aEmailAddress);
+
+  /**
    *  The subject owning the certificate.
    */
   readonly attribute AString subjectName;

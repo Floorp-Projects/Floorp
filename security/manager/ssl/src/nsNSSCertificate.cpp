@@ -62,6 +62,8 @@
 #include "nsUsageArrayHelper.h"
 #include "nsICertificateDialogs.h"
 #include "nsNSSCertHelper.h"
+#include "nsISupportsPrimitives.h"
+#include "nsUnicharUtils.h"
 
 #include "nspr.h"
 extern "C" {
@@ -413,6 +415,7 @@ nsNSSCertificate::GetNickname(nsAString &_nickname)
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
 
+// XXX kaie: this is bad. We return a non localizable hardcoded string.
   const char *nickname = (mCert->nickname) ? mCert->nickname : "(no nickname)";
   _nickname = NS_ConvertUTF8toUCS2(nickname);
   return NS_OK;
@@ -425,8 +428,83 @@ nsNSSCertificate::GetEmailAddress(nsAString &_emailAddress)
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
 
+// XXX kaie: this is bad. We return a non localizable hardcoded string.
+//           And agents could be confused, assuming the email address == "(no nickname)"
   const char *email = (mCert->emailAddr) ? mCert->emailAddr : "(no email address)";
   _emailAddress = NS_ConvertUTF8toUCS2(email);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNSSCertificate::GetEmailAddresses(PRUint32 *aLength, PRUnichar*** aAddresses)
+{
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown())
+    return NS_ERROR_NOT_AVAILABLE;
+
+  NS_ENSURE_ARG(aLength);
+  NS_ENSURE_ARG(aAddresses);
+
+  *aLength = 0;
+
+  const char *aAddr;
+  for (aAddr = CERT_GetFirstEmailAddress(mCert)
+       ;
+       aAddr
+       ;
+       aAddr = CERT_GetNextEmailAddress(mCert, aAddr))
+  {
+    ++(*aLength);
+  }
+
+  *aAddresses = (PRUnichar **)nsMemory::Alloc(sizeof(PRUnichar *) * (*aLength));
+  if (!aAddresses)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  PRUint32 iAddr;
+  for (aAddr = CERT_GetFirstEmailAddress(mCert), iAddr = 0
+       ;
+       aAddr
+       ;
+       aAddr = CERT_GetNextEmailAddress(mCert, aAddr), ++iAddr)
+  {
+    (*aAddresses)[iAddr] = ToNewUnicode(NS_ConvertUTF8toUCS2(aAddr));
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNSSCertificate::ContainsEmailAddress(const nsAString &aEmailAddress, PRBool *result)
+{
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown())
+    return NS_ERROR_NOT_AVAILABLE;
+
+  NS_ENSURE_ARG(result);
+  *result = PR_FALSE;
+
+  const char *aAddr = nsnull;
+  for (aAddr = CERT_GetFirstEmailAddress(mCert)
+       ;
+       aAddr
+       ;
+       aAddr = CERT_GetNextEmailAddress(mCert, aAddr))
+  {
+    NS_ConvertUTF8toUCS2 certAddr(aAddr);
+    ToLowerCase(certAddr);
+
+    nsAutoString testAddr(aEmailAddress);
+    ToLowerCase(testAddr);
+    
+    if (certAddr == testAddr)
+    {
+      *result = PR_TRUE;
+      break;
+    }
+
+  }
+  
   return NS_OK;
 }
 
