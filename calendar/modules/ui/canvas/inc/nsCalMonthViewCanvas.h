@@ -20,6 +20,7 @@
 #define nsCalMonthViewCanvas_h___
 
 #include "nsCalTimebarComponentCanvas.h"
+#include "nsVoidArray.h"
 
 class nsCalMonthViewCanvas : public nsCalTimebarComponentCanvas
 {
@@ -48,9 +49,15 @@ private:
                                                   nsIRenderingContext& aRenderingContext,
                                                   const nsRect& aDirtyRect);
 
+  NS_IMETHOD CacheCellData(PRUint32& aCellRow, PRUint32& aCellColumn, PRUint32& aCellDate);
+  NS_IMETHOD CellFromDate(PRUint32& aCellDate, PRUint32& aCellRow, PRUint32& aCellColumn);
+  NS_IMETHOD GetCellBounds(PRUint32& aCellRow, PRUint32& aCellColumn, nsRect& aBounds);
+
 private:
   PRUint32 mNumColumns;
   PRUint32 mNumRows;
+  nsVoidArray * mArrayRows;
+  nsVoidArray * mArrayColumns;
 
 
 };

@@ -34,6 +34,9 @@ public:
 protected:
   ~nsCalTimebarComponentCanvas();
 
+protected:
+  nscolor mComponentColor;
+
 };
 
 #endif /* nsCalTimebarComponentCanvas_h___ */

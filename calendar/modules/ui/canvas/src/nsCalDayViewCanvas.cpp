@@ -50,7 +50,6 @@ static NS_DEFINE_IID(kICalendarModelIID,    NS_ICALENDAR_MODEL_IID);
 nsCalDayViewCanvas :: nsCalDayViewCanvas(nsISupports* outer) : nsCalTimebarComponentCanvas(outer)
 {
   NS_INIT_REFCNT();
-  mComponentColor = NS_RGB(68,141,192);
 }
 
 nsCalDayViewCanvas :: ~nsCalDayViewCanvas()

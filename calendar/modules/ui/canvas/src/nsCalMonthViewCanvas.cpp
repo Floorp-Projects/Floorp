@@ -36,8 +36,11 @@
 #include "datetime.h"
 #include "ptrarray.h"
 #include "vevent.h"
+#include "icalcomp.h"
 
 #include "capi.h"
+
+#define NUM_INTERVALS 5
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kCalMonthViewCanvasCID, NS_CAL_MONTHVIEWCANVAS_CID);
@@ -48,12 +51,21 @@ static NS_DEFINE_IID(kICalendarModelIID,    NS_ICALENDAR_MODEL_IID);
 nsCalMonthViewCanvas :: nsCalMonthViewCanvas(nsISupports* outer) : nsCalTimebarComponentCanvas(outer)
 {
   NS_INIT_REFCNT();
+
   mNumRows = 0;
   mNumColumns = 0;
+
+  mArrayRows = nsnull;
+  mArrayColumns = nsnull;
+
 }
 
 nsCalMonthViewCanvas :: ~nsCalMonthViewCanvas()
 {
+  if (mArrayRows != nsnull)
+    delete mArrayRows;
+  if (mArrayColumns != nsnull)
+    delete mArrayColumns;
 }
 
 nsresult nsCalMonthViewCanvas::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
@@ -86,6 +98,12 @@ NS_IMPL_RELEASE(nsCalMonthViewCanvas)
 
 nsresult nsCalMonthViewCanvas :: Init()
 {
+
+  // XXX: May need to init to some value here
+
+  mArrayRows    = new nsVoidArray(31);
+  mArrayColumns = new nsVoidArray(31);
+
   return (nsCalTimebarComponentCanvas::Init());
 }
 
@@ -99,7 +117,36 @@ nsEventStatus nsCalMonthViewCanvas :: PaintBorder(nsIRenderingContext& aRenderin
 nsEventStatus nsCalMonthViewCanvas :: PaintForeground(nsIRenderingContext& aRenderingContext,
                                                       const nsRect& aDirtyRect)
 {
-#if 0
+  nsICalTimeContext * tc = GetTimeContext();  
+  nsIDateTime * dts = nsnull;
+  nsIDateTime * dtmonth1 = nsnull;
+  nsIDateTime * dtmonth2 = nsnull;
+  nsresult res = NS_OK;
+  DateTime * dStart = nsnull ;
+  DateTime * dEnd = nsnull ;
+  PRUint32 i,j;
+  PRUint32 row, column;
+  PRUint32 currDate = 0;
+  PRUint32 indexOnDate = 0;
+
+
+  if (nsnull == tc)
+    return nsEventStatus_eConsumeNoDefault;   
+
+  dts = tc->GetDTStart(); // XXX: Deal with TimeContext correctly here
+  dtmonth1 = dts->Copy();
+  dtmonth2 = dts->Copy();
+  dStart = ((nsDateTime *)dtmonth1)->GetDateTime();
+  dEnd   = ((nsDateTime *)dtmonth2)->GetDateTime();
+
+  /*
+   * Compute number of weeks
+   */
+
+  dStart->setDayOfMonth(1);
+  dEnd->findLastDayOfMonth();
+
+
   JulianPtrArray * evtVctr = 0;
   VEvent *pEvent = 0;
   nsRect rect;
@@ -111,9 +158,6 @@ nsEventStatus nsCalMonthViewCanvas :: PaintForeground(nsIRenderingContext& aRend
 
   evtVctr = new JulianPtrArray();
 
-  DateTime * dStart = ((nsDateTime *)GetTimeContext()->GetDTStart())->GetDateTime();
-  DateTime * dEnd   = ((nsDateTime *)GetTimeContext()->GetDTEnd())->GetDateTime();
-
   nsIModel * model = GetModel();
   nsICalendarModel * calmodel = nsnull;
 
@@ -122,7 +166,7 @@ nsEventStatus nsCalMonthViewCanvas :: PaintForeground(nsIRenderingContext& aRend
 
   nsICalendarUser * user = nsnull;
 
-  nsresult res = model->QueryInterface(kICalendarModelIID, (void**)&calmodel);
+  res = model->QueryInterface(kICalendarModelIID, (void**)&calmodel);
   if (NS_OK != res)
     return nsEventStatus_eConsumeNoDefault;
 
@@ -139,100 +183,95 @@ nsEventStatus nsCalMonthViewCanvas :: PaintForeground(nsIRenderingContext& aRend
 
   layer->GetCal(nscal); 
 
+  nscal->sortComponentsByDTStart(ICalComponent::ICAL_COMPONENT::ICAL_COMPONENT_VEVENT);
+
   nscal->getEventsByRange(evtVctr, *dStart, *dEnd); 
 
-  for (int j = 0; j < evtVctr->GetSize(); j++)
+  for (j = 0; j < evtVctr->GetSize(); j++)
   {
     pEvent = (VEvent *) evtVctr->GetAt(j);
 
     DateTime dstart = pEvent->getDTStart();
     DateTime dsend  = pEvent->getDTEnd();
 
-    if (    (PRUint32) dstart.getHour() < (PRUint32) GetTimeContext()->GetLastVisibleTime()
-         && (PRUint32) dsend.getHour()  > (PRUint32) GetTimeContext()->GetFirstVisibleTime())
+    /*
+     * Let's find out which grid we belong to, then plop ourselves appropriately
+     * within that grid
+     */
+
+    PRUint32 ii = dstart.getDate();
+
+    CellFromDate(ii, row, column);
+
+    // Multiple events on one day?
+    if (currDate != dstart.getDate())
     {
-      /*
-       * compute rect for this event
-       *
-       * x,width are ok.  y and height must be computed
-       */
-      nsRect bounds;
-      GetBounds(rect);
-      GetBounds(bounds);
+      currDate = dstart.getDate();
+      indexOnDate = 0;
+    } else {
+      indexOnDate++;
+    }
 
-      /*
-       * XXX: Subtract off the modulus of the area. This should not be so hardcoded!
-       */
-      rect.height = rect.height - ((rect.height-2)%GetVisibleMajorIntervals());
 
-      PRUint32 vis_event_start_min = dstart.getHour() * 60 + dstart.getMinute();
-      PRUint32 vis_event_end_min   = dsend.getHour() * 60 + dsend.getMinute();
+    /*
+     * Now, let's compute the bounds for our event
+     */
 
-      PRFloat64 sratio = ((PRFloat64)(vis_event_start_min - vis_start_min)) * (div_ratio);
-      PRFloat64 eratio = ((PRFloat64)(vis_event_end_min   - vis_start_min)) * (div_ratio);
+    nsRect bounds;
 
-      rect.y += (int)(rect.height * sratio);
-      rect.height = (int)((rect.height * eratio) - (rect.y - bounds.y));
+    GetCellBounds(row, column, bounds);
 
+    /*
+     * Scale down to the size of our interval
+     */
+
+    bounds.height /= NUM_INTERVALS;
+    bounds.width--;
+
+    bounds.y += (bounds.height * indexOnDate);
+
+    bounds.x+=2; bounds.y+=2;
+    bounds.width-=4;bounds.height-=4;
+
+    // Set the color
+    aRenderingContext.SetColor(GetForegroundColor());
+
+    aRenderingContext.GetFontMetrics()->GetHeight(fm_height);
+
+    if (bounds.height > fm_height)
+    {
+      
       aRenderingContext.SetColor(mComponentColor);
+      aRenderingContext.FillRect(bounds);
+      aRenderingContext.SetColor(NS_BrightenColor(mComponentColor));
+      aRenderingContext.DrawLine(bounds.x,bounds.y,bounds.x+bounds.width,bounds.y);
+      aRenderingContext.DrawLine(bounds.x,bounds.y,bounds.x,bounds.y+bounds.height);
+      aRenderingContext.SetColor(NS_DarkenColor(mComponentColor));
+      aRenderingContext.DrawLine(bounds.x+bounds.width,bounds.y,bounds.x+bounds.width,bounds.y+bounds.height);
+      aRenderingContext.DrawLine(bounds.x,bounds.y+bounds.height,bounds.x+bounds.width,bounds.y+bounds.height);
 
-      rect.x = rect.x + 2 * INSET ; 
-      rect.width = rect.width - 4*INSET ;
-      rect.y = rect.y + INSET ;
-      rect.height = rect.height - 2 * INSET;
+      psBuf = pEvent->toStringFmt(usFmt).toCString("");
 
+      aRenderingContext.SetColor(NS_RGB(255,255,255)); 
+      aRenderingContext.DrawString(psBuf,nsCRT::strlen(psBuf),bounds.x+1,bounds.y,0);
 
-      if (rect.y < bounds.y)
-        rect.y = bounds.y+1;
+      delete psBuf;
 
-      if ((rect.y+rect.height) > (bounds.y+bounds.height))
-        rect.height = (bounds.y+bounds.height)-1;
-
-      aRenderingContext.FillRect(rect);
-
-      /*
-      * Render the highlights
-      */
-      aRenderingContext.SetColor(nsLighter(mComponentColor));
-      aRenderingContext.DrawLine(rect.x,rect.y,rect.x+rect.width,rect.y);
-      aRenderingContext.DrawLine(rect.x,rect.y,rect.x,rect.y+rect.height);
-      aRenderingContext.SetColor(nsDarker(mComponentColor));
-      aRenderingContext.DrawLine(rect.x+rect.width,rect.y,rect.x+rect.width,rect.y+rect.height);
-      aRenderingContext.DrawLine(rect.x,rect.y+rect.height,rect.x+rect.width,rect.y+rect.height);
-
-      aRenderingContext.GetFontMetrics()->GetHeight(fm_height);
-
-      if (rect.height > fm_height)
+      if (bounds.height > (2 * fm_height))
       {
-        // rndctx->SetColor(GetForegroundColor());
-        aRenderingContext.SetColor(NS_RGB(255,255,255));          /* XXX: This color should come from someplace else... */
-
-        /*
-         * XXX. we need to handle '\n' in a format string...
-         * This should not require two separate coding calls
-         * we need to generalize this.
-         */
-        psBuf = pEvent->toStringFmt(usFmt).toCString("");
-        aRenderingContext.DrawString(psBuf,nsCRT::strlen(psBuf),rect.x+1,rect.y,0);
+        psBuf = pEvent->getSummary().toCString("");
+        aRenderingContext.DrawString(psBuf,nsCRT::strlen(psBuf),bounds.x+1,bounds.y+fm_height,0);
         delete psBuf;
-
-        if (rect.height > (2 * fm_height))
-        {
-          psBuf = pEvent->getSummary().toCString("");
-          aRenderingContext.DrawString(psBuf,nsCRT::strlen(psBuf),rect.x+1,rect.y+fm_height,0);
-          delete psBuf;
-        }
       }
     }
   }
             
-  delete evtVctr;
+ delete evtVctr;
 
-  NS_RELEASE(calmodel);
+ NS_RELEASE(calmodel);
 
-  return nsEventStatus_eConsumeNoDefault;  
-
-#endif
+ NS_RELEASE(dtmonth1);
+ NS_RELEASE(dtmonth2);
 
  return nsEventStatus_eConsumeNoDefault;  
 }
@@ -259,8 +298,6 @@ nsEventStatus nsCalMonthViewCanvas :: PaintBackground(nsIRenderingContext& aRend
   dts = tc->GetDTStart(); // XXX: Deal with TimeContext correctly here
   dtmonth = dts->Copy();
   datetime = ((nsDateTime *)dtmonth)->GetDateTime();
-
-  PRInt32 ii = datetime->get(Calendar::MONTH);
 
   /*
    * Compute number of weeks
@@ -307,6 +344,9 @@ nsEventStatus nsCalMonthViewCanvas :: PaintBackground(nsIRenderingContext& aRend
         thisDate = 0;
       
       PaintCellBackground(i,j,thisDate,aRenderingContext,aDirtyRect);
+
+      CacheCellData(i,j,thisDate);
+
       iDate++;
     }
   }
@@ -331,51 +371,14 @@ nsEventStatus nsCalMonthViewCanvas :: PaintCellBackground( PRUint32& aCellRow, P
   nscoord cell_height;
   nsRect bounds;
   PRUint32 cell_width_remainder,cell_height_remainder;
-
-  GetBounds(bounds);
-
-  cell_width  = bounds.width  / mNumColumns;
-  cell_height = bounds.height / mNumRows;
-
-  x = cell_width  * aCellColumn + bounds.x;
-  y = cell_height * aCellRow + bounds.y;
-  w = cell_width;
-  h = cell_height;
-
-  /*
-   * If there is a modulus, disperse that across the cells
-   * beginning from front.
-   */
-
-  cell_width_remainder = bounds.width % mNumColumns;
-  cell_height_remainder = bounds.height % mNumRows;
-
-  if (aCellColumn >= cell_width_remainder)
-    x += cell_width_remainder;
-  else
-    x += aCellColumn;
-
-  if (cell_width_remainder > aCellColumn)
-    w++;
-
-  if (aCellRow >= cell_height_remainder)
-    y += cell_height_remainder;
-  else
-    y += aCellRow;
-
-  if (cell_height_remainder > aCellRow)
-    h++;
-
-  /*
-   * Now paint the cell outline (with shadows)
-   */
-
   nsRect rect;
 
-  rect.x = x;
-  rect.y = y;
-  rect.width = w;
-  rect.height = h;
+  GetCellBounds(aCellRow, aCellColumn, rect);
+
+  x = rect.x;
+  y = rect.y;
+  w = rect.width;
+  h = rect.height;
 
   rect.width--; rect.height--;
 
@@ -393,11 +396,12 @@ nsEventStatus nsCalMonthViewCanvas :: PaintCellBackground( PRUint32& aCellRow, P
    */
 
   aRenderingContext.SetColor(Dim(GetBorderColor()));
+  aRenderingContext.SetLineStyle(nsLineStyle_kDotted);
 
   rect.x++;
   rect.width--;
 
-  nscoord interval = rect.height / 5;
+  nscoord interval = rect.height / NUM_INTERVALS;
 
   PRInt32 i ;
 
@@ -410,6 +414,8 @@ nsEventStatus nsCalMonthViewCanvas :: PaintCellBackground( PRUint32& aCellRow, P
   /*
    * Now put the number of the day in lower right hand corner
    */
+
+  aRenderingContext.SetLineStyle(nsLineStyle_kSolid);
 
   nsString strDate;
 
@@ -432,9 +438,79 @@ nsEventStatus nsCalMonthViewCanvas :: PaintCellBackground( PRUint32& aCellRow, P
     y = y + h - text_height;
 
     aRenderingContext.SetColor(GetForegroundColor());
+
     aRenderingContext.DrawString(strDate,nsCRT::strlen(strDate),x,y,0);
+
   }
 
   return nsEventStatus_eConsumeNoDefault;  
 }
 
+nsresult nsCalMonthViewCanvas :: CacheCellData(PRUint32& aCellRow, PRUint32& aCellColumn, PRUint32& aCellDate)
+{
+  if (aCellDate > 0 && aCellDate < 32)
+  {
+    mArrayRows->ReplaceElementAt((void *)aCellRow, aCellDate);
+    mArrayColumns->ReplaceElementAt((void *)aCellRow, aCellDate);
+  }
+  
+  return NS_OK;
+}
+
+nsresult nsCalMonthViewCanvas :: CellFromDate(PRUint32& aCellDate, PRUint32& aCellRow, PRUint32& aCellColumn)
+{
+  aCellRow = -1;
+  aCellColumn = -1;
+
+  if (aCellDate > 0 && aCellDate < 32)
+  {
+    aCellRow    = (PRUint32) mArrayRows->ElementAt(aCellDate);
+    aCellColumn = (PRUint32) mArrayColumns->ElementAt(aCellDate);
+  }
+  
+  return NS_OK;
+}
+
+nsresult nsCalMonthViewCanvas :: GetCellBounds(PRUint32& aCellRow, PRUint32& aCellColumn, nsRect& aBounds)
+{
+  nscoord cell_width;
+  nscoord cell_height;
+  nsRect bounds;
+  PRUint32 cell_width_remainder,cell_height_remainder;
+
+  GetBounds(bounds);
+
+  cell_width  = bounds.width  / mNumColumns;
+  cell_height = bounds.height / mNumRows;
+
+  aBounds.x = cell_width  * aCellColumn + bounds.x;
+  aBounds.y = cell_height * aCellRow + bounds.y;
+  aBounds.width = cell_width;
+  aBounds.height = cell_height;
+
+  /*
+   * If there is a modulus, disperse that across the cells
+   * beginning from front.
+   */
+
+  cell_width_remainder = bounds.width % mNumColumns;
+  cell_height_remainder = bounds.height % mNumRows;
+
+  if (aCellColumn >= cell_width_remainder)
+    aBounds.x += cell_width_remainder;
+  else
+    aBounds.x += aCellColumn;
+
+  if (cell_width_remainder > aCellColumn)
+    aBounds.width++;
+
+  if (aCellRow >= cell_height_remainder)
+    aBounds.y += cell_height_remainder;
+  else
+    aBounds.y += aCellRow;
+
+  if (cell_height_remainder > aCellRow)
+    aBounds.height++;
+
+  return NS_OK;
+}

@@ -25,6 +25,7 @@ static NS_DEFINE_IID(kCalTimebarComponentCanvasCID, NS_CAL_TIMEBARCOMPONENTCANVA
 nsCalTimebarComponentCanvas :: nsCalTimebarComponentCanvas(nsISupports* outer) : nsCalTimebarCanvas(outer)
 {
   NS_INIT_REFCNT();
+  mComponentColor = NS_RGB(68,141,192);
 }
 
 nsCalTimebarComponentCanvas :: ~nsCalTimebarComponentCanvas()
