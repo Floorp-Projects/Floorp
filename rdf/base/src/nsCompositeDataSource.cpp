@@ -48,7 +48,7 @@
 
 */
 
-#include <new>
+#include <new.h>
 #include "nsCOMPtr.h"
 #include "nsIComponentManager.h"
 #include "nsIEnumerator.h"
