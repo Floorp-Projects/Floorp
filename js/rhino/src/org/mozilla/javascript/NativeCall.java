@@ -51,16 +51,6 @@ public final class NativeCall extends ScriptableObject {
         this(cx, scope, funObj, thisObj);
         this.originalArgs = args;
         
-        // initialize references to nested functions
-        NativeFunction[] fns = funObj.nestedFunctions;
-        if (fns != null) {
-            for (int i=0; i < fns.length; i++) {
-                NativeFunction f = fns[i];
-                if (f.names != null)
-                    super.put(f.names[0], this, f);
-            }
-        }
-        
         // initialize values of arguments
         String[] names = funObj.names;
         if (names != null) {

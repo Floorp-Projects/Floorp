@@ -119,7 +119,7 @@ class Parser {
 
             if (tt == ts.FUNCTION) {
                 try {
-                    nf.addChildToBack(tempBlock, function(ts, source));
+                    nf.addChildToBack(tempBlock, function(ts, source, false));
                     /* function doesn't add its own final EOL,
                      * because it gets SEMI + EOL from Statement when it's
                      * a nested function; so we need to explicitly add an
@@ -157,15 +157,31 @@ class Parser {
     private Object parseFunctionBody(TokenStream ts, Source source)
         throws IOException
     {
-        Object pn;
-
         int oldflags = ts.flags;
         ts.flags &= ~(TokenStream.TSF_RETURN_EXPR
                       | TokenStream.TSF_RETURN_VOID);
         ts.flags |= TokenStream.TSF_FUNCTION;
 
+        Object pn = nf.createBlock(ts.getLineno());
         try {
-            pn = statements(ts, source);
+            int tt;
+            while((tt = ts.peekToken()) > ts.EOF && tt != ts.RC) {
+                if (tt == TokenStream.FUNCTION) {
+                    ts.getToken();
+                    nf.addChildToBack(pn, function(ts, source, false));
+                    /* function doesn't add its own final EOL,
+                     * because it gets SEMI + EOL from Statement when it's
+                     * a nested function; so we need to explicitly add an
+                     * EOL here.
+                     */
+                    source.append((char)ts.EOL);
+                    wellTerminated(ts, ts.FUNCTION);       
+                } else {
+                    nf.addChildToBack(pn, statement(ts, source));
+                }
+            }
+        } catch (JavaScriptException e) {
+            this.ok = false;
         } finally {
             // also in finally block:
             // flushNewLines, clearPushback.
@@ -176,7 +192,7 @@ class Parser {
         return pn;
     }
 
-    private Object function(TokenStream ts, Source source)
+    private Object function(TokenStream ts, Source source, boolean isExpr)
         throws IOException, JavaScriptException
     {
         String name = null;
@@ -235,7 +251,8 @@ class Parser {
         return nf.createFunction(name, args, body,
                                  ts.getSourceName(),
                                  baseLineno, ts.getLineno(),
-                                 source.buf.toString());
+                                 source.buf.toString(),
+                                 isExpr);
     }
 
     private Object statements(TokenStream ts, Source source)
@@ -699,13 +716,6 @@ class Parser {
                 ts.flags |= ts.TSF_RETURN_VOID;
             }
 
-            /*
-            XXX: causes problems, not required by ECMA.
-            if ((ts.flags & (ts.TSF_RETURN_EXPR | ts.TSF_RETURN_VOID))
-                == (ts.TSF_RETURN_EXPR | ts.TSF_RETURN_VOID))
-                reportError(ts, "msg.fn.retval");
-            */
-
             // XXX ASSERT pn
             pn = nf.createReturn(retExpr, lineno);
             break;
@@ -756,8 +766,11 @@ class Parser {
                     return pn;
                 }
 
-                pn = nf.createExprStatement(pn, lineno);
+                if (lastExprType == ts.FUNCTION)
+                    nf.setFunctionExpressionStatement(pn);
 
+                pn = nf.createExprStatement(pn, lineno);
+                
                 /*
                  * Check explicitly against (multi-line) function
                  * statement.
@@ -1196,7 +1209,7 @@ class Parser {
         switch(tt) {
 
         case ts.FUNCTION:
-            return function(ts, source);
+            return function(ts, source, true);
 
         case ts.LB:
             {

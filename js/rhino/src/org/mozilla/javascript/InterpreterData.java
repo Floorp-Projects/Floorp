@@ -74,6 +74,7 @@ class InterpreterData {
     boolean itsNeedsActivation;
     boolean itsFromEvalCode;
     boolean itsUseDynamicScope;
+    byte itsFunctionType;
 
     String[] itsStringTable;
     int itsStringTableIndex;

@@ -1948,7 +1948,8 @@ public class ScriptRuntime {
 
     public static NativeFunction createFunctionObject(Scriptable scope,
                                                       Class functionClass,
-                                                      Context cx)
+                                                      Context cx,
+                                                      boolean setName)
     {
         Constructor[] ctors = functionClass.getConstructors();
 
@@ -1974,8 +1975,11 @@ public class ScriptRuntime {
         result.setParentScope(scope);
 
         String fnName = result.jsGet_name();
-        if (fnName != null && fnName.length() != 0 && !fnName.equals("anonymous"))
-            setName(scope, result, scope, fnName);
+        if (setName && fnName != null && fnName.length() != 0 && 
+            !fnName.equals("anonymous"))
+        {
+            setProp(scope, fnName, result, scope);
+        }
 
          return result;
     }

@@ -60,7 +60,35 @@ public class FunctionNode extends Node {
     public boolean setRequiresActivation(boolean b) {
         return itsNeedsActivation = b;
     }
+    
+    /**
+     * There are three types of functions that can be defined. The first
+     * is a function statement. This is a function appearing as a top-level
+     * statement (i.e., not nested inside some other statement) in either a
+     * script or a function.
+     * 
+     * The second is a function expression, which is a function appearing in
+     * an expression except for the third type, which is...
+     * 
+     * The third type is a function expression where the expression is the 
+     * top-level expression in an expression statement.
+     * 
+     * The three types of functions have different treatment and must be 
+     * distinquished.
+     */
+    public static final byte FUNCTION_STATEMENT            = 1;
+    public static final byte FUNCTION_EXPRESSION           = 2;
+    public static final byte FUNCTION_EXPRESSION_STATEMENT = 3;
+    
+    public byte getFunctionType() {
+        return itsFunctionType;
+    }
+
+    public void setFunctionType(byte functionType) {
+        itsFunctionType = functionType;
+    }
 
     protected VariableTable itsVariableTable;
     protected boolean itsNeedsActivation;
+    protected byte itsFunctionType;
 }

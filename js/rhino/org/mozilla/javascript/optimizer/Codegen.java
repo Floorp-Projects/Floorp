@@ -165,7 +165,7 @@ public class Codegen extends Interpreter {
             }
         }
         if (tree instanceof OptFunctionNode) {
-            return ScriptRuntime.createFunctionObject(scope, result, cx);
+            return ScriptRuntime.createFunctionObject(scope, result, cx, true);
         } else {
             try {
                 if (result == null) 
@@ -1900,7 +1900,7 @@ public class Codegen extends Interpreter {
 
     private void visitFunction(Node node) {
         aload(variableObjectLocal);
-        Node fn = (Node) node.getProp(Node.FUNCTION_PROP);
+        FunctionNode fn = (FunctionNode) node.getProp(Node.FUNCTION_PROP);
         Short index = (Short) fn.getProp(Node.FUNCTION_PROP);
         aload(funObjLocal);
         classFile.add(ByteCode.GETFIELD, "org/mozilla/javascript/NativeFunction",
@@ -1909,10 +1909,14 @@ public class Codegen extends Interpreter {
         addByteCode(ByteCode.AALOAD);
         addVirtualInvoke("java/lang/Object", "getClass", "()", "Ljava/lang/Class;");
         aload(contextLocal);
+        byte z = fn.getFunctionType() == FunctionNode.FUNCTION_EXPRESSION_STATEMENT
+                 ? (byte)1 : (byte)0;
+        addByteCode(ByteCode.BIPUSH, z);
+        
         addScriptRuntimeInvoke("createFunctionObject", 
                                     "(Lorg/mozilla/javascript/Scriptable;"+
                                     "Ljava/lang/Class;" +
-                                    "Lorg/mozilla/javascript/Context;)", 
+                                    "Lorg/mozilla/javascript/Context;Z)", 
                                     "Lorg/mozilla/javascript/NativeFunction;");
 
     }

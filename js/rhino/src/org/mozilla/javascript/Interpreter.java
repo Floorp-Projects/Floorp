@@ -68,6 +68,7 @@ public class Interpreter extends LabelTable {
             FunctionNode f = (FunctionNode) tree;
             InterpretedFunction result = 
                 generateFunctionICode(cx, scope, f, securityDomain);
+            result.itsData.itsFunctionType = f.getFunctionType();
             createFunctionObject(result, scope);
             return result;
         }
@@ -141,6 +142,7 @@ public class Interpreter extends LabelTable {
             jsi.itsSourceFile = itsSourceFile;
             jsi.itsData = new InterpreterData(0, 0, 0, securityDomain,
                             cx.hasCompileFunctionsWithDynamicScope());
+            jsi.itsData.itsFunctionType = def.getFunctionType();
             jsi.itsInFunctionFlag = true;
             itsNestedFunctions[i] = jsi.generateFunctionICode(cx, scope, def, 
                                                               securityDomain);
@@ -1291,8 +1293,16 @@ public class Interpreter extends LabelTable {
     {
         fn.setPrototype(ScriptableObject.getClassPrototype(scope, "Function"));
         fn.setParentScope(scope);
-        if ((fn.itsData.itsName.length() > 0) && (fn.itsClosure == null))
-            ScriptRuntime.setName(scope, fn, scope, fn.itsData.itsName);
+        InterpreterData id = fn.itsData;
+        if (id.itsName.length() == 0)
+            return;
+        if ((id.itsFunctionType == FunctionNode.FUNCTION_STATEMENT &&
+             fn.itsClosure == null) ||
+            (id.itsFunctionType == FunctionNode.FUNCTION_EXPRESSION_STATEMENT &&
+             fn.itsClosure != null))
+        {
+            ScriptRuntime.setProp(scope, fn.itsData.itsName, fn, scope);
+        }
     }
     
     public static Object interpret(InterpreterData theData)

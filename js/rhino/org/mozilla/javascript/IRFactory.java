@@ -215,9 +215,13 @@ public class IRFactory {
 
     public Object createFunction(String name, Object args, Object statements,
                                  String sourceName, int baseLineno, 
-                                 int endLineno, Object source)
+                                 int endLineno, Object source,
+                                 boolean isExpr)
     {
-        Node f = (Node) createFunctionNode(name, args, statements);
+        FunctionNode f = (FunctionNode) createFunctionNode(name, args, 
+                                                           statements);
+        f.setFunctionType(isExpr ? FunctionNode.FUNCTION_EXPRESSION
+                                 : FunctionNode.FUNCTION_STATEMENT);
         f.putProp(Node.SOURCENAME_PROP, sourceName);
         f.putProp(Node.BASE_LINENO_PROP, new Integer(baseLineno));
         f.putProp(Node.END_LINENO_PROP, new Integer(endLineno));
@@ -226,6 +230,12 @@ public class IRFactory {
         Node result = new Node(TokenStream.FUNCTION, name);
         result.putProp(Node.FUNCTION_PROP, f);
         return result;
+    }
+    
+    public void setFunctionExpressionStatement(Object o) {
+        Node n = (Node) o;
+        FunctionNode f = (FunctionNode) n.getProp(Node.FUNCTION_PROP);
+        f.setFunctionType(FunctionNode.FUNCTION_EXPRESSION_STATEMENT);
     }
 
     /**
