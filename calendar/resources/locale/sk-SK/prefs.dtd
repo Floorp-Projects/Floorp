@@ -126,9 +126,9 @@
 
 <!ENTITY pref.categories.help.description   "Nezabúdajte na čiarky medzi kategóriami.">
 
-<!ENTITY pref.categories.add.title    "Add Category">
-<!ENTITY pref.categories.add.prompt   "Enter the name of the category">
-<!ENTITY pref.categories.edit.title   "Edit Category">
+<!ENTITY pref.categories.add.title    "Pridať kategóriu">
+<!ENTITY pref.categories.add.prompt   "Zadajte názov kategórie">
+<!ENTITY pref.categories.edit.title   "Upraviť kategóriu">
 
 
 <!ENTITY pref.reloadonlaunch       "Znovu načítať kalendáre pri štarte">

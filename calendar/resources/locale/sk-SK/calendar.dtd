@@ -160,7 +160,7 @@
 <!ENTITY event.title.alarm         "Upozornenie" >
 <!ENTITY event.title.new         "Nová udalosť" >
 <!ENTITY event.title.edit        "Upraviť udalosť" >
-<!ENTITY event.title.heading        "Calendar Alarm" >
+<!ENTITY event.title.heading        "Kalendár - Alarm" >
 
 <!ENTITY onthe-text            "">
 <!ENTITY last-text             "Posledná ">
@@ -410,7 +410,7 @@
 <!ENTITY calendar.publish.example.url.description   "Napríklad http://www.mojserver.com/webdav/test.ics">
 
 <!-- TRANSLATORS: this label must be short to keep a reasonable column width in the week view -->
-<!ENTITY allDayEvents.label "Všetky udalosti dňa">
+<!ENTITY allDayEvents.label "Celodenné udalosti">
 
 <!-- Calendar Wizard Dialog -->
 <!ENTITY calendar.wizard.import.label              "Import: Import udalostí z lokálneho súboru do aktuálneho kalendára.">
