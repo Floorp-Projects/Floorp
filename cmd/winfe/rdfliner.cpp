@@ -372,6 +372,36 @@ void CRDFOutliner::InvalidateIconForResource(HT_Resource r)
 
 }
 
+void CRDFOutliner::InvalidateDragLine ( int iLineNo, BOOL useThirds, int dragFraction)
+{
+	if (iLineNo == -1)
+		return;
+    CRect rect, out;
+    GetClientRect ( &rect );
+    RectFromLine ( iLineNo - m_iTopLine, rect, out );
+
+	if (dragFraction == 1)
+	{
+		CRect topLine(out);
+		topLine.bottom = out.top;
+		InvalidateRect(&topLine);
+	}
+	
+	if (dragFraction == 2)
+	{
+		if (useThirds)
+			InvalidateRect(out);
+		else dragFraction = 3;
+	}
+	
+	if (dragFraction == 3)
+	{
+		CRect bottomLine(out);
+		bottomLine.top = out.bottom-1;
+		InvalidateRect ( &bottomLine );
+	}
+}
+
 LPCTSTR CRDFOutliner::GetColumnText ( UINT iColumn, void * pLineData )
 {
 	void* nodeData;
@@ -3081,7 +3111,7 @@ BOOL CRDFOutliner::HighlightIfDragging(void)
 
 void CRDFOutliner::PaintDragLine(HDC hdc, CRect &rectColumn)
 {
-	HPEN pen = ::CreatePen(PS_SOLID, 1, GetSysColor(COLOR_BTNSHADOW));
+	HPEN pen = ::CreatePen(PS_SOLID, 1, m_ForegroundColor);
 	HPEN pOldPen = (HPEN)::SelectObject(hdc, pen);
 
 	if(m_iDragSelectionLineThird == 1) {
@@ -3274,10 +3304,12 @@ DROPEFFECT CRDFOutliner::DropSelect(int iLineNo, COleDataObject *object)
         return answer;
 
     if (m_iDragSelection != -1)
-        InvalidateLine (m_iDragSelection);
-
+        InvalidateDragLine (m_iDragSelection, HT_IsContainer(r),
+							HT_IsContainer(r) ? m_iOldLineThird : m_iOldLineHalf);
+	
     m_iDragSelection = iLineNo;
-    InvalidateLine (m_iDragSelection);
+    InvalidateDragLine (m_iDragSelection, HT_IsContainer(r), 
+						HT_IsContainer(r) ? m_iDragSelectionLineThird : m_iDragSelectionLineHalf);
     
 	// Start the hover timer for folder springloading
 	

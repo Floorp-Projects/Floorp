@@ -303,6 +303,9 @@ public:
 	void InvalidateIconForResource(HT_Resource r);
 		// Invalidates only the icon for a given node.  The rest of the line is left alone.
 
+	void InvalidateDragLine(int iLineNo, BOOL useThirds, int dragFraction);
+		// Invalidates only the drag areas for a given node.  The rest of the line is left alone.
+
 	CRect ConstructDragRect(const CPoint& pt1, const CPoint& pt2);
 		// Constructs a new rectangle with the two points specified as opposing corners.
 

@@ -140,6 +140,9 @@ protected:
     int m_iDragSelection;
 	int m_iDragSelectionLineHalf;			// Which half of the selection is the drag over
 	int m_iDragSelectionLineThird;			// Which third of the selection is the drag over
+	int m_iOldLineHalf;
+	int m_iOldLineThird;
+
   	BOOL m_bDragSectionChanged;
 
 	BOOL m_bClearOnRelease;

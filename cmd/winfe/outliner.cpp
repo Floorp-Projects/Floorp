@@ -2245,13 +2245,15 @@ int COutliner::LineFromPoint (POINT point)
 	// Figure out which portion of the line the point is on.
 	int iDiff = point.y - ((iLine - m_iTopLine) *m_itemHeight);
 	
-	int iOldLineHalf = m_iDragSelectionLineHalf, iOldLineThird = m_iDragSelectionLineThird;
+	m_iOldLineHalf = m_iDragSelectionLineHalf;
+	m_iOldLineThird = m_iDragSelectionLineThird;
+
 	m_iDragSelectionLineHalf = (iDiff <= m_itemHeight / 2) ? 1 : 2;
 	m_iDragSelectionLineThird = (iDiff <= m_itemHeight / 3) ? 1 : (iDiff <= 2 * (m_itemHeight/3)) ? 2 : 3;
     
 	if(m_iTopLine !=0)
 		int i =0;
-	m_bDragSectionChanged = (iOldLineHalf != m_iDragSelectionLineHalf || iOldLineThird !=m_iDragSelectionLineThird);
+	m_bDragSectionChanged = (m_iOldLineHalf != m_iDragSelectionLineHalf || m_iOldLineThird !=m_iDragSelectionLineThird);
 
 	return ( iLine );
 }
