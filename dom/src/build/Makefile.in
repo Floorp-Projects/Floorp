@@ -80,8 +80,16 @@ EXTRA_DSO_LDOPTS = \
 	$(DIST)/lib/libjsurl.a				\
 	$(LD_NONE)					\
 	$(DIST)/bin/libraptorbase.so			\
-	$(DIST)/bin/libraptorgfx.so \
-  $(DIST)/bin/libgfxunix.so \
+	$(DIST)/bin/libraptorgfx.so			\
+	$(NULL)
+
+ifeq ($(USE_NGLAYOUT_GTK),1)
+EXTRA_DSO_OPTS += $(DIST)/bin/libgfxgtk.so
+else
+EXTRA_DSO_OPTS += $(DIST)/bin/libgfxunix.so
+endif
+
+EXTRA_DSO_LDOPTS += \
 	$(DIST)/bin/libgmbaseunix.so			\
 	$(DIST)/bin/libnetlib.so			\
 	$(DIST)/bin/libjs.so				\
