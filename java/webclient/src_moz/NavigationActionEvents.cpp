@@ -23,10 +23,11 @@
  *               Mark Lin <mark.lin@eng.sun.com>
  *               Mark Goddard
  *               Ed Burns <edburns@acm.org>
- *      Jason Mawdsley <jason@macadamian.com>
- *      Louis-Philippe Gagnon <louisphilippe@macadamian.com>
+ *               Jason Mawdsley <jason@macadamian.com>
+ *               Louis-Philippe Gagnon <louisphilippe@macadamian.com>
  *               Brian Satterfield <bsatterf@atl.lmco.com>
  *               Anthony Sizer <sizera@yahoo.com>
+ *               Ron Capelli <capelli@acm.org>
  */
 
 /*
@@ -158,8 +159,10 @@ wsLoadFromStreamEvent::handleEvent ()
         // Kick off a LoadStream.  This will cause
         // InputStreamShim::Read() to be called, 
         
-        rv = mInitContext->docShell->LoadStream(mShim, uri, mContentType, 
-                                                mShim->getContentLength(), 
+        rv = mInitContext->docShell->LoadStream(mShim, uri, 
+						nsDependentCString(mContentType, 
+                                                		   mShim->getContentLength()),
+					        NS_LITERAL_CSTRING(""),
                                                 nsnull);
         if (mProperties) {
             JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
