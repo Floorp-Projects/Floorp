@@ -2482,7 +2482,6 @@ static PRStatus pt_GetSocketOption(PRFileDesc *fd, PRSocketOptionData *data)
             case PR_SockOpt_Reuseaddr:
             case PR_SockOpt_Keepalive:
             case PR_SockOpt_NoDelay:
-            case PR_SockOpt_Broadcast:
             {
                 PRIntn value;
                 length = sizeof(PRIntn);
@@ -2601,7 +2600,6 @@ static PRStatus pt_SetSocketOption(PRFileDesc *fd, const PRSocketOptionData *dat
             case PR_SockOpt_Reuseaddr:
             case PR_SockOpt_Keepalive:
             case PR_SockOpt_NoDelay:
-            case PR_SockOpt_Broadcast:
             {
                 PRIntn value = (data->value.reuse_addr) ? 1 : 0;
                 rv = setsockopt(
