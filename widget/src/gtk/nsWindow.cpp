@@ -1208,8 +1208,7 @@ nsWindow::HandleGDKEvent(GdkEvent *event)
                               GDK_FOCUS_CHANGE_MASK |
                               GDK_KEY_PRESS_MASK |
                               GDK_KEY_RELEASE_MASK |
-                              GDK_POINTER_MOTION_MASK |
-                              GDK_POINTER_MOTION_HINT_MASK);
+                              GDK_POINTER_MOTION_MASK);
     
     gdk_window_set_events(((GdkEventButton*)event)->window,
                           mask);
@@ -1707,8 +1706,7 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
                         GDK_FOCUS_CHANGE_MASK |
                         GDK_KEY_PRESS_MASK |
                         GDK_KEY_RELEASE_MASK |
-                        GDK_POINTER_MOTION_MASK |
-                        GDK_POINTER_MOTION_HINT_MASK);
+                        GDK_POINTER_MOTION_MASK);
 
   NS_ASSERTION(mSuperWin,"no super window!");
   if (!mSuperWin) return NS_ERROR_FAILURE;
@@ -1727,7 +1725,7 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
   // set user data on the bin_window so we can find the superwin for it.
   gdk_window_set_user_data (mSuperWin->bin_window, (gpointer)mSuperWin);
 
-  SetBackgroundColor(NS_RGB(192,192,192));
+  gdk_window_set_back_pixmap(mSuperWin->bin_window, NULL, 0);
 
   // XXX fix this later...
   if (mIsToplevel)
@@ -1847,18 +1845,8 @@ NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
   mUpdateArea->Offset(aDx, aDy);
 
   if (mSuperWin) {
-    // save the old backing color
-    nscolor currentColor = GetBackgroundColor();
-    // this isn't too painful to do right before a scroll.
-    // as owen says "it's just 12 bytes sent to the server."
-    // and it makes scrolling look a lot better while still
-    // preserving the gray color when you drag another window
-    // on top or when just creating a window
-    gdk_window_set_back_pixmap(mSuperWin->bin_window, NULL, 0);
     // scroll baby, scroll!
     gdk_superwin_scroll(mSuperWin, aDx, aDy);
-    // reset the color
-    SetBackgroundColor(currentColor);
   }
   return NS_OK;
 }

@@ -1615,8 +1615,6 @@ nsWidget::OnMotionNotifySignal(GdkEventMotion * aGdkMotionEvent)
   {
     x = (gint) aGdkMotionEvent->x;
     y = (gint) aGdkMotionEvent->y;
- 
-    gdk_window_get_pointer(aGdkMotionEvent->window, &x, &y, nsnull);
 
     event.point.x = nscoord(x);
     event.point.y = nscoord(y);
