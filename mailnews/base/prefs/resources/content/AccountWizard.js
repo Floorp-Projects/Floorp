@@ -210,7 +210,7 @@ function FinishAccount()
     
     // we may need local folders before account is "Finished"
     // if it's a pop3 account which defers to Local Folders.
-    verifyLocalFoldersAccount(gCurrentAccount);
+    verifyLocalFoldersAccount();
 
     PageDataToAccountData(pageData, accountData);
 
@@ -223,6 +223,8 @@ function FinishAccount()
     // transfer all attributes from the accountdata
     finishAccount(gCurrentAccount, accountData);
     
+    setupCopiesAndFoldersServer(gCurrentAccount);
+
     if (!serverIsNntp(pageData))
         EnableCheckMailAtStartUpIfNeeded(gCurrentAccount);
 
@@ -576,59 +578,72 @@ function copyObjectToInterface(dest, src) {
 
 // check if there already is a "Local Folders"
 // if not, create it.
-function verifyLocalFoldersAccount(account) 
+function verifyLocalFoldersAccount() 
 {
-	var localMailServer = null;
-	try {
-		localMailServer = am.localFoldersServer;
-	}
-	catch (ex) {
-        // dump("exception in findserver: " + ex + "\n");
-		localMailServer = null;
-	}
+  dump ("verifying local folders account\n");
+  var localMailServer = null;
+  try {
+    localMailServer = am.localFoldersServer;
+  }
+  catch (ex) {
+         // dump("exception in findserver: " + ex + "\n");
+    localMailServer = null;
+  }
 
-    try {
+  try {
 
-	if (!localMailServer) {
-        	// dump("Creating local mail account\n");
-		// creates a copy of the identity you pass in
-    messengerMigrator = Components.classes["@mozilla.org/messenger/migrator;1"].getService(Components.interfaces.nsIMessengerMigrator);
-		messengerMigrator.createLocalMailAccount(false /* false, since we are not migrating */);
-		try {
-			localMailServer = am.localFoldersServer;
-		}
-		catch (ex) {
-			dump("error!  we should have found the local mail server after we created it.\n");
-			localMailServer = null;
-		}	
-    	}
-
-  var server = account.incomingServer;
-  var identity = account.identities.QueryElementAt(0, Components.interfaces.nsIMsgIdentity);
-	// for this server, do we default the folder prefs to this server, or to the "Local Folders" server
-	var defaultCopiesAndFoldersPrefsToServer = server.defaultCopiesAndFoldersPrefsToServer;
-
-	var copiesAndFoldersServer = null;
-	if (defaultCopiesAndFoldersPrefsToServer) {
-		copiesAndFoldersServer = server;
-	}
-	else {
-		if (!localMailServer) {
-			dump("error!  we should have a local mail server at this point\n");
-			return;
-		}
-		copiesAndFoldersServer = localMailServer;
-	}
-	
-	setDefaultCopiesAndFoldersPrefs(identity, copiesAndFoldersServer);
-
-    } catch (ex) {
-        // return false (meaning we did not create the account)
-        // on any error
-        dump("Error creating local mail: " + ex + "\n");
-        return false;
+    if (!localMailServer) 
+    {
+      // dump("Creating local mail account\n");
+      // creates a copy of the identity you pass in
+      messengerMigrator = Components.classes["@mozilla.org/messenger/migrator;1"].getService(Components.interfaces.nsIMessengerMigrator);
+      messengerMigrator.createLocalMailAccount(false /* false, since we are not migrating */);
+      try {
+        localMailServer = am.localFoldersServer;
+      }
+      catch (ex) {
+        dump("error!  we should have found the local mail server after we created it.\n");
+        localMailServer = null;
+      }	
     }
-    return true;
+  }
+  catch (ex) {dump("Error in verifyLocalFoldersAccount" + ex + "\n");  }
+
+}
+
+function setupCopiesAndFoldersServer(account)
+{
+  try {
+    var server = account.incomingServer;
+    var identity = account.identities.QueryElementAt(0, Components.interfaces.nsIMsgIdentity);
+    // for this server, do we default the folder prefs to this server, or to the "Local Folders" server
+    var defaultCopiesAndFoldersPrefsToServer = server.defaultCopiesAndFoldersPrefsToServer;
+    dump ("verifying local folders account \n");
+
+    var copiesAndFoldersServer = null;
+    if (defaultCopiesAndFoldersPrefsToServer) 
+    {
+      copiesAndFoldersServer = server;
+    }
+    else 
+    {
+      if (!am.localFoldersServer) 
+      {
+        dump("error!  we should have a local mail server at this point\n");
+        return;
+      }
+      copiesAndFoldersServer = am.localFoldersServer;
+    }
+	  
+    setDefaultCopiesAndFoldersPrefs(identity, copiesAndFoldersServer);
+
+  } catch (ex) {
+    // return false (meaning we did not setupCopiesAndFoldersServer)
+    // on any error
+    dump("Error setupCopiesAndFoldersServer" + ex + "\n");
+    return false;
+  }
+  return true;
 }
 
 function setDefaultCopiesAndFoldersPrefs(identity, server)
