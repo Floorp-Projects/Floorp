@@ -90,4 +90,17 @@ public interface SecuritySupport {
      * @return a security context object previously passed to defineClass
      */
     public Object getSecurityDomain(Class cl);
+    
+    /**
+     * Return true iff the Java class with the given name should be exposed
+     * to scripts.
+     * <p>
+     * An embedding may filter which Java classes are exposed through 
+     * LiveConnect to JavaScript scripts.
+     * @param fullClassName the full name of the class (including the package
+     *                      name, with '.' as a delimiter). For example the 
+     *                      standard string class is "java.lang.String"
+     * @return whether or not to reveal this class to scripts
+     */
+    public boolean visibleToScripts(String fullClassName);
 }

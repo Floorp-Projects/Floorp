@@ -135,8 +135,12 @@ public class NativeJavaPackage extends ScriptableObject {
         String newPackage = packageName.length() == 0
                             ? id 
                             : packageName + "." + id;
+        Context cx = Context.getContext();
+        SecuritySupport ss = cx.getSecuritySupport();
         Scriptable newValue;
         try {
+            if (ss != null && !ss.visibleToScripts(newPackage))
+                throw new ClassNotFoundException();
             Class newClass = Class.forName(newPackage);
             newValue =  NativeJavaClass.wrap(getTopLevelScope(this), newClass);
             newValue.setParentScope(this);

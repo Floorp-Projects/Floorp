@@ -16,6 +16,8 @@
  * Reserved.
  */
 
+// API class
+
 package org.mozilla.javascript;
 
 import java.util.Vector;
