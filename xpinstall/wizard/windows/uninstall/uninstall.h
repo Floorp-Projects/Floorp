@@ -93,6 +93,9 @@ typedef int PRInt32;
 #define NORMAL                          0
 #define SILENT                          1
 #define AUTO                            2
+#define SHOWICONS                       3
+#define HIDEICONS                       4
+#define SETDEFAULT                      5
 
 /* OS: Operating System */
 #define OS_WIN9x                        0x00000001
@@ -116,6 +119,7 @@ typedef struct dlgUninstall
 typedef struct uninstallStruct
 {
   DWORD     dwMode;
+  LPSTR     szAppPath;
   LPSTR     szLogPath;
   LPSTR     szLogFilename;
   LPSTR     szCompanyName;
@@ -128,6 +132,7 @@ typedef struct uninstallStruct
   HKEY      hWrRoot;
   LPSTR     szWrKey;
   LPSTR     szUserAgent;
+  LPSTR     szDefaultComponent;
   HFONT     definedFont;
 } uninstallGen;
 

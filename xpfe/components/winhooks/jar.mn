@@ -1,2 +1,5 @@
 en-win.jar:
     locale/en-US/global-platform/nsWindowsHooks.properties (locale/en-US/nsWindowsHooks.properties)
+
+toolkit.jar:
+    content/global/dummyWindow.xul (dummyWindow.xul)

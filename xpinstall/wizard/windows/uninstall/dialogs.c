@@ -29,6 +29,179 @@
 #include "parser.h"
 #include "rdi.h"
 
+void SetDefault()
+{
+  char szBuf[MAX_BUF];
+  char szRegKey[MAX_BUF];
+
+  GetPrivateProfileString(ugUninstall.szDefaultComponent, "ClientTypeName", "", szBuf, MAX_BUF, szFileIniDefaultsInfo);
+  wsprintf(szRegKey, "SOFTWARE\\Clients\\%s", szBuf);
+  GetPrivateProfileString(ugUninstall.szDefaultComponent, "ClientProductKey", "", szBuf, MAX_BUF, szFileIniDefaultsInfo);
+
+  SetWinReg(HKEY_LOCAL_MACHINE, szRegKey, "", REG_SZ, szBuf, lstrlen(szBuf));
+}
+
+void ParseDefaultsInfo()
+{
+  char szBuf[MAX_BUF];
+  char szIniKey[MAX_BUF];
+  char szStorageDir[MAX_BUF];
+  char szShortcutPath[MAX_BUF];
+  char szStoredShortcutPath[MAX_BUF];
+  char szRegKey[MAX_BUF];
+  char szClientTypeName[MAX_BUF];
+  char szClientProductKey[MAX_BUF];
+  int  iIndex;
+  DWORD dwIconsVisible;
+
+  // If szAppPath is a null sting, i.e. we cannot find where the app has been installed:
+  //   - HIDEICONS will still remove the shortcuts but
+  //   - SHOWICONS will do nothing because we won't be able to find the shortcuts to display.
+  ParsePath(ugUninstall.szAppPath, szStorageDir, MAX_BUF, PP_PATH_ONLY);
+  lstrcat(szStorageDir, "defaults\\shortcuts\\");
+
+  // CLEANUP ISSUE:  For all of the SHOWICON and HIDEICONS blocks below, there is a lot of
+  //   redundancy:
+  //   - Right now I'm just trying to create icons and, if I can't, trying under the PERSONAL
+  //     key instead.  I would be cleaner to check for restricted access once, and then just
+  //     create the appropriate key each time.
+  //   - Creating a ShowIcon() and a HideIcon() function would rid us much of the redundency.
+
+
+  // Deal with Desktop Icons
+  iIndex = 0;
+  wsprintf(szIniKey, "DesktopShortcut%d", iIndex);
+  GetPrivateProfileString(ugUninstall.szDefaultComponent, szIniKey, "", szBuf, MAX_BUF, szFileIniDefaultsInfo);
+  while(szBuf[0] != '\0')
+  {
+    strcpy(szShortcutPath, "COMMON_DESKTOP");
+    DecryptVariable(szShortcutPath, MAX_BUF);
+
+    if((ugUninstall.dwMode == SHOWICONS) && (szStorageDir[0] != '\0'))
+    {
+      wsprintf(szStoredShortcutPath, "%s%s", szStorageDir, szBuf);
+      FileCopy(szStoredShortcutPath, szShortcutPath, 0);
+      if( (!FileExists(szShortcutPath)) && (!(ulOSType & OS_WIN9x)) )
+      {
+        strcpy(szShortcutPath, "PERSONAL_DESKTOP");
+        DecryptVariable(szShortcutPath, MAX_BUF);
+        FileCopy(szStoredShortcutPath, szShortcutPath, 0);
+      }
+    }
+
+    if (ugUninstall.dwMode == HIDEICONS)
+    {
+      AppendBackSlash(szShortcutPath, MAX_BUF);
+      lstrcat(szShortcutPath, szBuf);
+      if( (!FileExists(szShortcutPath)) && (!(ulOSType & OS_WIN9x)) )
+      {
+        strcpy(szShortcutPath, "PERSONAL_DESKTOP");
+        DecryptVariable(szShortcutPath, MAX_BUF);
+        AppendBackSlash(szShortcutPath, MAX_BUF);
+        lstrcat(szShortcutPath, szBuf);
+      }
+
+      FileDelete(szShortcutPath);
+    }
+
+    iIndex++;
+    wsprintf(szIniKey, "DesktopShortcut%d", iIndex);
+    GetPrivateProfileString(ugUninstall.szDefaultComponent, szIniKey, "", szBuf, MAX_BUF, szFileIniDefaultsInfo);
+  }
+
+  // Deal with StartMenu Icons
+  iIndex = 0;
+  wsprintf(szIniKey, "StartMenuShortcut%d", iIndex);
+  GetPrivateProfileString(ugUninstall.szDefaultComponent, szIniKey, "", szBuf, MAX_BUF, szFileIniDefaultsInfo);
+  while(szBuf[0] != '\0')
+  {
+    strcpy(szShortcutPath, "COMMON_STARTMENU");
+    DecryptVariable(szShortcutPath, MAX_BUF);
+
+    if((ugUninstall.dwMode == SHOWICONS) && (szStorageDir[0] != '\0'))
+    {
+      lstrcpy(szStoredShortcutPath, szStorageDir);
+      lstrcat(szStoredShortcutPath, szBuf);
+      FileCopy(szStoredShortcutPath, szShortcutPath, 0);
+      if( (!FileExists(szShortcutPath)) && (!(ulOSType & OS_WIN9x)) )
+      {
+        strcpy(szShortcutPath, "PERSONAL_STARTMENU");
+        DecryptVariable(szShortcutPath, MAX_BUF);
+        FileCopy(szStoredShortcutPath, szShortcutPath, 0);
+      }
+    }
+
+    if (ugUninstall.dwMode == HIDEICONS)
+    {
+      AppendBackSlash(szShortcutPath, MAX_BUF);
+      lstrcat(szShortcutPath, szBuf);
+      if( (!FileExists(szShortcutPath)) && (!(ulOSType & OS_WIN9x)) )
+      {
+        strcpy(szShortcutPath, "PERSONAL_STARTMENU");
+        DecryptVariable(szShortcutPath, MAX_BUF);
+        AppendBackSlash(szShortcutPath, MAX_BUF);
+        lstrcat(szShortcutPath, szBuf);
+      }
+
+      FileDelete(szShortcutPath);
+    }
+
+    iIndex++;
+    wsprintf(szIniKey, "StartMenuShortcut%d", iIndex);
+    GetPrivateProfileString(ugUninstall.szDefaultComponent, szIniKey, "", szBuf, MAX_BUF, szFileIniDefaultsInfo);
+  }
+
+  // Deal with QuickLaunch Bar Icons
+  iIndex = 0;
+  wsprintf(szIniKey, "QuickLaunchBarShortcut%d", iIndex);
+  GetPrivateProfileString(ugUninstall.szDefaultComponent, szIniKey, "", szBuf, MAX_BUF, szFileIniDefaultsInfo);
+  while(szBuf[0] != '\0')
+  {
+    GetWinReg(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", "AppData", szShortcutPath, MAX_BUF);
+    lstrcat(szShortcutPath, "\\Microsoft\\Internet Explorer\\Quick Launch");
+
+    if((ugUninstall.dwMode == SHOWICONS) && (szStorageDir[0] != '\0'))
+    {
+      wsprintf(szStoredShortcutPath, "%s%s", szStorageDir, szBuf);
+      FileCopy(szStoredShortcutPath, szShortcutPath, 0);
+      if( (!FileExists(szShortcutPath)) && (!(ulOSType & OS_WIN9x)) )
+      {
+        GetWinReg(HKEY_CURRENT_USER, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\GrpConv\\MapGroups", "Quick Launch", szShortcutPath, MAX_BUF);
+        FileCopy(szStoredShortcutPath, szShortcutPath, 0);
+      }
+    }
+
+    if (ugUninstall.dwMode == HIDEICONS)
+    {
+      AppendBackSlash(szShortcutPath, MAX_BUF);
+      lstrcat(szShortcutPath, szBuf);
+      if( (!FileExists(szShortcutPath)) && (!(ulOSType & OS_WIN9x)) )
+      {
+        GetWinReg(HKEY_CURRENT_USER, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\GrpConv\\MapGroups", "Quick Launch", szShortcutPath, MAX_BUF);
+        AppendBackSlash(szShortcutPath, MAX_BUF);
+        lstrcat(szShortcutPath, szBuf);
+      }
+
+      FileDelete(szShortcutPath);
+    }
+
+    ++iIndex;
+    wsprintf(szIniKey, "QuickLaunchBarShortcut%d", iIndex);
+    GetPrivateProfileString(ugUninstall.szDefaultComponent, szIniKey, "", szBuf, MAX_BUF, szFileIniDefaultsInfo);
+  }
+
+  GetPrivateProfileString(ugUninstall.szDefaultComponent, "ClientTypeName", "", szClientTypeName, MAX_BUF, szFileIniDefaultsInfo);
+  GetPrivateProfileString(ugUninstall.szDefaultComponent, "ClientProductKey", "", szClientProductKey, MAX_BUF, szFileIniDefaultsInfo);
+  wsprintf(szRegKey, "SOFTWARE\\Clients\\%s\\%s\\InstallInfo", szClientTypeName, szClientProductKey);
+
+  if (ugUninstall.dwMode == SHOWICONS)
+    dwIconsVisible = 1;
+  else
+    dwIconsVisible = 0;
+
+  SetWinRegNumValue(HKEY_LOCAL_MACHINE, szRegKey, "IconsVisible", dwIconsVisible);
+}
+
 void ParseAllUninstallLogs()
 {
   char  szFileInstallLog[MAX_BUF];

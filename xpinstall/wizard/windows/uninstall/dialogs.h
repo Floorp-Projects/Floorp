@@ -30,6 +30,8 @@ LRESULT CALLBACK  DlgProcWhatToDo(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
 LRESULT CALLBACK  DlgProcMessage(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
 
 void              ParseAllUninstallLogs();
+void              ParseDefaultsInfo();
+void              SetDefault();
 HWND              InstantiateDialog(HWND hParent, DWORD dwDlgID, LPSTR szTitle, WNDPROC wpDlgProc);
 void              ShowMessage(LPSTR szMessage, BOOL bShow);
 void              ProcessWindowsMessages(void);

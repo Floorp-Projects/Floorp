@@ -206,6 +206,14 @@ HRESULT Initialize(HINSTANCE hInstance)
   AppendBackSlash(szFileIniUninstall, MAX_BUF);
   lstrcat(szFileIniUninstall, FILE_INI_UNINSTALL);
 
+  if((szFileIniDefaultsInfo = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+
+  lstrcpy(szFileIniDefaultsInfo, szUninstallDir);
+  AppendBackSlash(szFileIniDefaultsInfo, MAX_BUF);
+  GetPrivateProfileString("General", "Defaults Info Filename", "", szBuf, MAX_BUF, szFileIniUninstall);
+  lstrcat(szFileIniDefaultsInfo, szBuf);
+
   // determine the system's TEMP path
   if(GetTempPath(MAX_BUF, szTempDir) == 0)
   {
@@ -428,6 +436,12 @@ void SetUninstallRunMode(LPSTR szMode)
     ugUninstall.dwMode = AUTO;
   if(lstrcmpi(szMode, "SILENT") == 0)
     ugUninstall.dwMode = SILENT;
+  if(lstrcmpi(szMode, "SHOWICONS") == 0)
+    ugUninstall.dwMode = SHOWICONS;
+  if(lstrcmpi(szMode, "HIDEICONS") == 0)
+    ugUninstall.dwMode = HIDEICONS;
+  if(lstrcmpi(szMode, "SETDEFAULT") == 0)
+    ugUninstall.dwMode = SETDEFAULT;
 }
 
 void RemoveBackSlash(LPSTR szInput)
@@ -717,6 +731,8 @@ HRESULT InitUninstallGeneral()
 {
   ugUninstall.dwMode = NORMAL;
 
+  if((ugUninstall.szAppPath                 = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
   if((ugUninstall.szLogPath                 = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
   if((ugUninstall.szLogFilename             = NS_GlobalAlloc(MAX_BUF)) == NULL)
@@ -728,6 +744,8 @@ HRESULT InitUninstallGeneral()
   if((ugUninstall.szWrKey                   = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
   if((ugUninstall.szUserAgent               = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+  if((ugUninstall.szDefaultComponent        = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
   if((ugUninstall.szWrMainKey               = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
@@ -743,12 +761,14 @@ HRESULT InitUninstallGeneral()
 
 void DeInitUninstallGeneral()
 {
+  FreeMemory(&(ugUninstall.szAppPath));
   FreeMemory(&(ugUninstall.szLogPath));
   FreeMemory(&(ugUninstall.szLogFilename));
   FreeMemory(&(ugUninstall.szDescription));
   FreeMemory(&(ugUninstall.szUninstallKeyDescription));
   FreeMemory(&(ugUninstall.szUninstallFilename));
   FreeMemory(&(ugUninstall.szUserAgent));
+  FreeMemory(&(ugUninstall.szDefaultComponent));
   FreeMemory(&(ugUninstall.szWrKey));
   FreeMemory(&(ugUninstall.szCompanyName));
   FreeMemory(&(ugUninstall.szProductName));
@@ -847,6 +867,27 @@ void ParseCommandLine(LPSTR lpszCmdLine)
     {
       if((i + 1) < iArgC)
         GetArgV(lpszCmdLine, ++i, ugUninstall.szUserAgent, MAX_BUF);
+    }
+    else if((lstrcmpi(szArgVBuf, "-ss") == 0) || (lstrcmpi(szArgVBuf, "/ss") == 0))
+    // Show Shortcuts
+    {
+      SetUninstallRunMode("SHOWICONS");
+      if((i + 1) < iArgC)
+        GetArgV(lpszCmdLine, ++i, ugUninstall.szDefaultComponent, MAX_BUF);
+    }
+    else if((lstrcmpi(szArgVBuf, "-hs") == 0) || (lstrcmpi(szArgVBuf, "/hs") == 0))
+    // Hide Shortcuts
+    {
+      SetUninstallRunMode("HIDEICONS");
+      if((i + 1) < iArgC)
+        GetArgV(lpszCmdLine, ++i, ugUninstall.szDefaultComponent, MAX_BUF);
+    }
+    else if((lstrcmpi(szArgVBuf, "-sd") == 0) || (lstrcmpi(szArgVBuf, "/sd") == 0))
+    // SetDefault
+    {
+      SetUninstallRunMode("SETDEFAULT");
+      if((i + 1) < iArgC)
+        GetArgV(lpszCmdLine, ++i, ugUninstall.szDefaultComponent, MAX_BUF);
     }
 
     ++i;
@@ -1231,6 +1272,38 @@ BOOL CheckLegacy(HWND hDlg)
   return(FALSE);
 }
 
+HRESULT GetAppPath()
+{
+  char szTmpAppPath[MAX_BUF];
+  char szKey[MAX_BUF];
+  BOOL bRestrictedAccess;
+  HKEY hkRoot;
+
+  if(*ugUninstall.szUserAgent != '\0')
+  {
+    hkRoot = ugUninstall.hWrMainRoot;
+    wsprintf(szKey, "%s\\%s\\Main", ugUninstall.szWrMainKey, ugUninstall.szUserAgent);
+  }
+  else
+  {
+    hkRoot = ugUninstall.hWrRoot;
+    strcpy(szKey, ugUninstall.szWrKey);
+  }
+
+  bRestrictedAccess = VerifyRestrictedAccess();
+  if(bRestrictedAccess)
+    hkRoot = HKEY_CURRENT_USER;
+
+  GetWinReg(hkRoot, szKey, "PathToExe", szTmpAppPath, sizeof(szTmpAppPath));
+
+  if(FileExists(szTmpAppPath))
+  {
+    lstrcpy(ugUninstall.szAppPath, szTmpAppPath);
+  }
+
+  return(0);
+}
+
 HRESULT GetUninstallLogPath()
 {
   char szBuf[MAX_BUF];
@@ -1318,13 +1391,9 @@ HRESULT ParseUninstallIni(LPSTR lpszCmdLine)
   char fontSize[MAX_BUF];
   char charSet[MAX_BUF];
 
-  if(CheckInstances())
-    return(1);
   if(InitUninstallGeneral())
     return(1);
-  if(InitDlgUninstall(&diUninstall))
-    return(1);
- 
+
   lstrcpy(ugUninstall.szLogFilename, FILE_LOG_INSTALL);
 
   /* get install Mode information */
@@ -1332,6 +1401,12 @@ HRESULT ParseUninstallIni(LPSTR lpszCmdLine)
   SetUninstallRunMode(szBuf);
   ParseCommandLine(lpszCmdLine);
 
+  if((ugUninstall.dwMode != SHOWICONS) && (ugUninstall.dwMode != HIDEICONS) && (ugUninstall.dwMode != SETDEFAULT))
+    if(CheckInstances())
+      return(1);
+  if(InitDlgUninstall(&diUninstall))
+    return(1);
+ 
   /* get product name description */
   GetPrivateProfileString("General", "Company Name", "", ugUninstall.szCompanyName, MAX_BUF, szFileIniUninstall);
   GetPrivateProfileString("General", "Product Name", "", ugUninstall.szProductName, MAX_BUF, szFileIniUninstall);
@@ -1377,6 +1452,9 @@ HRESULT ParseUninstallIni(LPSTR lpszCmdLine)
   {
     case AUTO:
     case SILENT:
+    case SHOWICONS:
+    case HIDEICONS:
+    case SETDEFAULT:
       gdwWhatToDo             = WTD_NO_TO_ALL;
       diUninstall.bShowDialog = FALSE;
       break;
@@ -1392,6 +1470,7 @@ HRESULT ParseUninstallIni(LPSTR lpszCmdLine)
   lf.lfCharSet = atoi(charSet);
   ugUninstall.definedFont = CreateFontIndirect( &lf ); 
 
+  GetAppPath();
   return(GetUninstallLogPath());
 }
 
@@ -1435,6 +1514,29 @@ void SetWinReg(HKEY hkRootKey, LPSTR szKey, LPSTR szName, DWORD dwType, LPSTR sz
   if(dwErr == ERROR_SUCCESS)
   {
     dwErr = RegSetValueEx(hkResult, szName, 0, dwType, szData, dwSize);
+
+    RegCloseKey(hkResult);
+  }
+}
+
+void SetWinRegNumValue(HKEY hkRootKey, LPSTR szKey, LPSTR szName, DWORD dwData)
+{
+  HKEY    hkResult;
+  DWORD   dwErr;
+  DWORD   dwDisp;
+  DWORD   dwVal;
+  DWORD   dwValSize;
+
+  dwVal = dwData;
+  dwValSize = sizeof(DWORD);
+
+  dwErr = RegOpenKeyEx(hkRootKey, szKey, 0, KEY_WRITE, &hkResult);
+  if(dwErr != ERROR_SUCCESS)
+    dwErr = RegCreateKeyEx(hkRootKey, szKey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hkResult, &dwDisp);
+
+  if(dwErr == ERROR_SUCCESS)
+  {
+    dwErr = RegSetValueEx(hkResult, szName, 0, REG_DWORD, (LPBYTE)&dwVal, dwValSize);
 
     RegCloseKey(hkResult);
   }
@@ -1797,7 +1899,7 @@ HRESULT DecryptString(LPSTR szOutputStr, LPSTR szInputStr)
     bDecrypted = DecryptVariable(szVariable, MAX_BUF);
     if(!bDecrypted)
     {
-      /* Variable was not able to be dcripted. */
+      /* Variable was not able to be decrypted. */
       /* Leave the variable as it was read in by adding the '[' and ']' */
       /* characters back to the variable. */
       lstrcpy(szBuf, "[");
@@ -1848,5 +1950,7 @@ void DeInitialize()
   FreeMemory(&szEDllLoad);
   FreeMemory(&szEStringLoad);
   FreeMemory(&szEStringNull);
+  FreeMemory(&szFileIniUninstall);
+  FreeMemory(&szFileIniDefaultsInfo);
 }
 
