@@ -500,7 +500,7 @@ RFC822AddressList * construct_addresslist(char *s)
       }
     }
     else if (*s == '"') {
-      if (!comment) {
+      if (!comment && !angle_addr) {
         quoted = !quoted;
         if (quoted)
           displayname = s;
