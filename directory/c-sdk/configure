@@ -4677,7 +4677,7 @@ EOF
         IMPLIB='emximp -o'
         FILTER='emxexp'
         OS_DLLFLAGS='$(DSO_LDOPTS) -o $@'
-        _OPTIMIZE_FLAGS=-O3
+        _OPTIMIZE_FLAGS="-O2 -s"
         _DEBUG_FLAGS=-g
         if test -n "$MOZ_DEBUG"; then
           DLLFLAGS='-g'
