@@ -676,8 +676,15 @@ nsresult nsImapMailFolder::GetDatabase(nsIMsgWindow *aMsgWindow)
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIMsgDBService> msgDBService = do_GetService(NS_MSGDB_SERVICE_CONTRACTID, &rv);
-    if (msgDBService)
-      folderOpen = msgDBService->OpenFolderDB(this, PR_TRUE, PR_FALSE, getter_AddRefs(mDatabase));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    folderOpen = msgDBService->OpenFolderDB(this, PR_TRUE, PR_FALSE, getter_AddRefs(mDatabase));
+    
+    if (NS_FAILED(folderOpen) && folderOpen != NS_MSG_ERROR_FOLDER_SUMMARY_MISSING)
+      folderOpen = msgDBService->OpenFolderDB(this, PR_TRUE, PR_TRUE, getter_AddRefs(mDatabase));
+
+    if (NS_FAILED(folderOpen) && folderOpen != NS_MSG_ERROR_FOLDER_SUMMARY_MISSING)
+      return folderOpen;
 
     if(folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING)
       folderOpen = NS_OK;
