@@ -35,6 +35,15 @@ EXPORT_RESOURCE_CONTENT = \
 	$(srcdir)/editor.properties \
 	$(srcdir)/EditorStyles1.css \
 	$(srcdir)/EditorContent.css \
+	$(srcdir)/contentframe.xul \
+	$(srcdir)/sidebar-editor.rdf \
+	$(srcdir)/sidebar-editor.xul \
+	$(srcdir)/sb-bookmarks-panel.xul \
+	$(srcdir)/sb-bookmarks.js \
+	$(srcdir)/sb-file-contextMenu.js \
+	$(srcdir)/sb-file-panel.js \
+	$(srcdir)/sb-file-panel.xul \
+	$(srcdir)/sb-FileWidgetFileHandler.js \
 	$(NULL)
 
 install:: 
