@@ -376,7 +376,8 @@ LocationImpl::SetHrefWithBase(const nsString& aHref,
       return NS_ERROR_FAILURE;
 
     nsXPIDLCString referrerCSpec;
-    referrer->GetSpec(getter_Copies(referrerCSpec));
+    if(referrer)
+      referrer->GetSpec(getter_Copies(referrerCSpec));
     nsAutoString referrerSpec(referrerCSpec);
 
     // Load new URI.
