@@ -83,6 +83,7 @@ nsDOMEvent::nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent, const nsAR
   }
   mTarget = nsnull;
   mCurrentTarget = nsnull;
+  mOriginalTarget = nsnull;
   mText = nsnull;
   mTextRange = nsnull;
 
@@ -119,6 +120,7 @@ nsDOMEvent::~nsDOMEvent() {
   NS_IF_RELEASE(mPresContext);
   NS_IF_RELEASE(mTarget);
   NS_IF_RELEASE(mCurrentTarget);
+  NS_IF_RELEASE(mOriginalTarget);
   NS_IF_RELEASE(mTextRange);
 
   if (mEventIsInternal) {
@@ -204,6 +206,14 @@ nsDOMEvent::GetCurrentTarget(nsIDOMEventTarget** aCurrentTarget)
 {
   *aCurrentTarget = mCurrentTarget;
   NS_IF_ADDREF(*aCurrentTarget);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMEvent::GetOriginalTarget(nsIDOMEventTarget** aOriginalTarget)
+{
+  *aOriginalTarget = mOriginalTarget;
+  NS_IF_ADDREF(*aOriginalTarget);
   return NS_OK;
 }
 
@@ -1018,6 +1028,16 @@ NS_METHOD nsDOMEvent::SetCurrentTarget(nsIDOMEventTarget* aCurrentTarget)
     NS_IF_RELEASE(mCurrentTarget);
     NS_IF_ADDREF(aCurrentTarget);
     mCurrentTarget = aCurrentTarget;
+  }
+  return NS_OK;
+}
+
+NS_METHOD nsDOMEvent::SetOriginalTarget(nsIDOMEventTarget* aOriginalTarget)
+{
+  if (mOriginalTarget != aOriginalTarget) {
+    NS_IF_RELEASE(mOriginalTarget);
+    NS_IF_ADDREF(aOriginalTarget);
+    mOriginalTarget = aOriginalTarget;
   }
   return NS_OK;
 }

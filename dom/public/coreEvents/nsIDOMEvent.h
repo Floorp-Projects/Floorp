@@ -84,6 +84,8 @@ public:
 
   NS_IMETHOD    GetCurrentTarget(nsIDOMEventTarget** aCurrentTarget)=0;
 
+  NS_IMETHOD    GetOriginalTarget(nsIDOMEventTarget** aOriginalTarget)=0;
+
   NS_IMETHOD    GetEventPhase(PRUint16* aEventPhase)=0;
 
   NS_IMETHOD    GetBubbles(PRBool* aBubbles)=0;
@@ -108,6 +110,7 @@ public:
   NS_IMETHOD    GetType(nsAWritableString& aType);  \
   NS_IMETHOD    GetTarget(nsIDOMEventTarget** aTarget);  \
   NS_IMETHOD    GetCurrentTarget(nsIDOMEventTarget** aCurrentTarget);  \
+  NS_IMETHOD    GetOriginalTarget(nsIDOMEventTarget** aOriginalTarget);  \
   NS_IMETHOD    GetEventPhase(PRUint16* aEventPhase);  \
   NS_IMETHOD    GetBubbles(PRBool* aBubbles);  \
   NS_IMETHOD    GetCancelable(PRBool* aCancelable);  \
@@ -124,6 +127,7 @@ public:
   NS_IMETHOD    GetType(nsAWritableString& aType) { return _to GetType(aType); } \
   NS_IMETHOD    GetTarget(nsIDOMEventTarget** aTarget) { return _to GetTarget(aTarget); } \
   NS_IMETHOD    GetCurrentTarget(nsIDOMEventTarget** aCurrentTarget) { return _to GetCurrentTarget(aCurrentTarget); } \
+  NS_IMETHOD    GetOriginalTarget(nsIDOMEventTarget** aOriginalTarget) { return _to GetOriginalTarget(aOriginalTarget); } \
   NS_IMETHOD    GetEventPhase(PRUint16* aEventPhase) { return _to GetEventPhase(aEventPhase); } \
   NS_IMETHOD    GetBubbles(PRBool* aBubbles) { return _to GetBubbles(aBubbles); } \
   NS_IMETHOD    GetCancelable(PRBool* aCancelable) { return _to GetCancelable(aCancelable); } \

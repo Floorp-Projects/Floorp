@@ -20,6 +20,7 @@
  * Contributor(s): 
  *   Travis Bogard <travis@netscape.com>
  *   Brendan Eich <brendan@mozilla.org>
+ *   David Hyatt (hyatt@netscape.com)
  */
 
 // Local Includes

@@ -51,10 +51,11 @@ enum Event_slots {
   EVENT_TYPE = -1,
   EVENT_TARGET = -2,
   EVENT_CURRENTTARGET = -3,
-  EVENT_EVENTPHASE = -4,
-  EVENT_BUBBLES = -5,
-  EVENT_CANCELABLE = -6,
-  EVENT_TIMESTAMP = -7
+  EVENT_ORIGINALTARGET = -4,
+  EVENT_EVENTPHASE = -5,
+  EVENT_BUBBLES = -6,
+  EVENT_CANCELABLE = -7,
+  EVENT_TIMESTAMP = -8
 };
 
 /***********************************************************************/
@@ -108,6 +109,19 @@ GetEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         if (NS_SUCCEEDED(rv)) {
           nsIDOMEventTarget* prop;
           rv = a->GetCurrentTarget(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+          }
+        }
+        break;
+      }
+      case EVENT_ORIGINALTARGET:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_EVENT_ORIGINALTARGET, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMEventTarget* prop;
+          rv = a->GetOriginalTarget(&prop);
           if (NS_SUCCEEDED(rv)) {
             // get the js object
             nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
@@ -464,6 +478,7 @@ static JSPropertySpec EventProperties[] =
   {"type",    EVENT_TYPE,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"target",    EVENT_TARGET,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"currentTarget",    EVENT_CURRENTTARGET,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"originalTarget",    EVENT_ORIGINALTARGET,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"eventPhase",    EVENT_EVENTPHASE,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"bubbles",    EVENT_BUBBLES,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"cancelable",    EVENT_CANCELABLE,    JSPROP_ENUMERATE | JSPROP_READONLY},
