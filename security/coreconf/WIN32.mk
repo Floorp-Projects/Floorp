@@ -181,7 +181,8 @@ ifndef RELEASE_TREE
 endif
 
 #
-# override the definitions of IMPORT_LIB_PREFIX, LIB_PREFIX and DLL_PREFIX in prefix.mk
+# override the definitions of IMPORT_LIB_PREFIX, LIB_PREFIX, and
+# DLL_PREFIX in prefix.mk
 #
 
 ifndef IMPORT_LIB_PREFIX
