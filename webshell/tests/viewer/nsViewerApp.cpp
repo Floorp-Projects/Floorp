@@ -785,6 +785,7 @@ void yieldProc(const char * str)
  * HandleRobotEvent
  *--------------------------------------------------------------------------------
  */
+static
 nsEventStatus PR_CALLBACK HandleRobotEvent(nsGUIEvent *aEvent)
 {
   nsEventStatus result = nsEventStatus_eIgnore;
@@ -1153,6 +1154,7 @@ static char * gTop100List[] = {
  * HandleSiteEvent
  *--------------------------------------------------------------------------------
  */
+static
 nsEventStatus PR_CALLBACK HandleSiteEvent(nsGUIEvent *aEvent)
 {
   nsEventStatus result = nsEventStatus_eIgnore;
