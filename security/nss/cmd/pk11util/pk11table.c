@@ -1311,6 +1311,11 @@ const Commands _commands[] = {
 "reads filename as script of commands to execute\n",
 	{ArgVar|ArgNew, ArgNone, ArgNone, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
+    {"Time", F_Time,
+"Time pkcs11 command\n\n"
+"Execute a pkcs #11 command and time the results\n",
+	{ArgVar|ArgFull, ArgNone, ArgNone, ArgNone, ArgNone,
+	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"System", F_System,
 	"Fix Me... ",
 	{ArgULong, ArgNone, ArgNone, ArgNone, ArgNone,
@@ -1328,5 +1333,39 @@ const Commands _commands[] = {
 
 const Commands  *commands= &_commands[0];
 const int commandCount = sizeof(_commands) / sizeof(_commands[0]);
+
+const Topics _topics[] = {
+   { "variables", 
+"Variables are random strings of characters. These should begin with alpha\n"
+" characters, and should not contain any spaces, nor should they match any\n"
+" built-in constants. There is some checking in the code for these things,\n"
+" but it's not 100% and using invalid variable names can cause problems.\n"
+" Variables are created by any 'OUT' parameter. If the variable does not\n"
+" exist, it will be created. For in parameters variables must already exist.\n"
+   },
+   { "constants",
+"pk11util recognizes *lots* of constants. All CKA_, CKF_, CKO_, CKU_, CKS_,\n"
+" CKC_, CKK_, CKH_, CKM_, CKT_ values from the PKCS #11 spec are recognized.\n"
+" Constants can be specified with their fully qualified CK?_ value, or the\n"
+" prefix can be dropped. Constants are matched case insensitve.\n" 
+   },
+   { "arrays",
+"Arrays are special variables which represent 'C' arrays. Each array \n"
+" variable can be referenced as a group (using just the name), or as \n"
+" individual elements (with the [int] operator). Example:\n"
+"      print myArray    # prints the full array.\n"
+"      print myArray[3] # prints the 3rd elemement of the array \n"
+   },
+   { "sizes",
+"Size operaters returns the size in bytes of a variable, or the number of\n"
+" elements in an array.\n"
+"    size(var) and sizeof(var) return the size of var in bytes.\n"
+"    sizea(var) and sizeofarray(var) return the number of elements in var.\n"
+"       If var is not an array, sizea(var) returns 1.\n"
+   },
+};
+
+const Topics *topics=&_topics[0];
+const int topicCount = sizeof(_topics)/sizeof(_topics[0]);
 
 
