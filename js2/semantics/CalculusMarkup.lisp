@@ -43,13 +43,28 @@
 ;;; SEMANTIC DEPICTION UTILITIES
 
 (defparameter *semantic-keywords*
-  '(not and or mod is type oneof tuple action function if then else throw try catch in new case of end let letexc))
+  '(not and or xor mod new
+    type tag record
+    function
+    begin end nothing
+    if then elsif else
+    while do
+    invariant
+    return
+    throw try catch
+    case of))
 
 ; Emit markup for one of the semantic keywords, as specified by keyword-symbol.
-(defun depict-semantic-keyword (markup-stream keyword-symbol)
-  (assert-true (find keyword-symbol *semantic-keywords* :test #'eq))
+; space can be either nil, :before, or :after to indicate space placement.
+(defun depict-semantic-keyword (markup-stream keyword-symbol space)
+  (assert-true (and (member keyword-symbol *semantic-keywords*)
+                    (member space '(nil :before :after))))
+  (when (eq space :before)
+    (depict-space markup-stream))
   (depict-char-style (markup-stream :semantic-keyword)
-    (depict markup-stream (string-downcase (symbol-name keyword-symbol)))))
+    (depict markup-stream (string-downcase (symbol-name keyword-symbol))))
+  (when (eq space :after)
+    (depict-space markup-stream)))
 
 
 ; If test is true, depict an opening parenthesis, evaluate body, and depict a closing
@@ -100,9 +115,9 @@
   (unless (eq mode (depict-env-mode depict-env))
     (when (depict-env-visible-semantics depict-env)
       (ecase mode
-        (:syntax (depict-paragraph (markup-stream ':grammar-header)
+        (:syntax (depict-paragraph (markup-stream :grammar-header)
                    (depict markup-stream "Syntax")))
-        (:semantics (depict-paragraph (markup-stream ':grammar-header)
+        (:semantics (depict-paragraph (markup-stream :grammar-header)
                       (depict markup-stream "Semantics")))
         ((nil)))))
   (quiet-depict-mode depict-env mode))
@@ -135,16 +150,67 @@
 
 
 ;;; ------------------------------------------------------------------------------------------------------
+;;; DEPICTING TAGS
+
+
+(defparameter *tag-name-special-cases*
+  '((:+zero "PlusZero" "+zero")
+    (:-zero "MinusZero" (:minus "zero"))
+    (:+infinity "PlusInfinity" ("+" :infinity))
+    (:-infinity "MinusInfinity" (:minus :infinity))
+    (:nan "NaN" "NaN")))
+
+
+; Return two values:
+;   A string to use as the tag's link name;
+;   A depict item or list of items forming the tag's name.
+(defun tag-link-name-and-name (tag)
+  (let ((special-case (assoc (tag-keyword tag) *tag-name-special-cases*)))
+    (if special-case
+      (values (second special-case) (third special-case))
+      (let ((name (symbol-lower-mixed-case-name (tag-name tag))))
+        (values name name)))))
+
+
+; Emit markup for a tag.
+; link should be one of:
+;   :reference   if this is a reference or external reference of this tag;
+;   :definition  if this is a definition of this tag;
+;   nil          if this use of the tag should not be cross-referenced.
+(defun depict-tag-name (markup-stream tag link)
+  (when (eq link :reference)
+    (setq link (tag-link tag)))
+  (multiple-value-bind (link-name name) (tag-link-name-and-name tag)
+    (depict-link (markup-stream link "R-" link-name nil)
+      (depict-char-style (markup-stream :tag-name)
+        (depict-item-or-list markup-stream name)))))
+
+
+; Emit markup for a tag's label, which must be a symbol.
+; link should be one of:
+;   :reference   if this is a reference or external reference to this label;
+;   nil          if this use of the label should not be cross-referenced.
+(defun depict-label-name (markup-stream tag label link)
+  (unless (tag-find-field tag label)
+    (error "Tag ~A doesn't have label ~A" tag label))
+  (when (eq link :reference)
+    (setq link (tag-link tag)))
+  (depict-link (markup-stream link "R-" (tag-link-name-and-name tag) nil)
+    (depict-char-style (markup-stream :field-name)
+      (depict markup-stream (symbol-lower-mixed-case-name label)))))
+
+
+;;; ------------------------------------------------------------------------------------------------------
 ;;; DEPICTING TYPES
 
 ;;; The level argument indicates what kinds of component types may be represented without being placed
 ;;; in parentheses.
 
 (defparameter *type-level* (make-partial-order))
-(def-partial-order-element *type-level* %%primary%%)                              ;id, oneof, tuple, (type), {type}
-(def-partial-order-element *type-level* %%suffix%% %%primary%%)                   ;type[], type^
+(def-partial-order-element *type-level* %%primary%%)                              ;id, tuple, (type)
+(def-partial-order-element *type-level* %%suffix%% %%primary%%)                   ;type[], type{}
 (def-partial-order-element *type-level* %%function%% %%suffix%%)                  ;type x type -> type
-(defparameter %%max%% %%function%%)
+(def-partial-order-element *type-level* %%type%% %%function%%)                    ;type U type
 
 
 ; Emit markup for the name of a type, which must be a symbol.
@@ -158,31 +224,6 @@
     (depict-link (markup-stream link "T-" name nil)
       (depict-char-style (markup-stream :type-name)
         (depict markup-stream name)))))
-
-
-; Emit markup for the name of a tuple or oneof field, which must be a symbol.
-; link should be one of:
-;   :reference   if this is a reference of this general-nonterminal;
-;   :external    if this is an external reference of this general-nonterminal;
-;   :definition  if this is a definition of this general-nonterminal;
-;   nil          if this use of the general-nonterminal should not be cross-referenced.
-; type is the tuple or oneof type that contains the field or nil if not known
-; (it's only needed if link is :reference or :external).
-(defun depict-field-name (markup-stream field-name link &optional type)
-  (labels
-    ((depict-it (markup-stream)
-       (depict-char-style (markup-stream :field-name)
-         (depict markup-stream (symbol-lower-mixed-case-name field-name)))))
-    (if (or (eq link :reference) (eq link :external))
-      (let ((type-name (type-name type)))
-        (assert-true (field-type type field-name))
-        (if type-name
-          (depict-link (markup-stream link "T-" (symbol-upper-mixed-case-name type-name) nil)
-            (depict-it markup-stream))
-          (progn
-            (warn "Reference to field ~S of anonymous type ~S" field-name type)
-            (depict-it markup-stream))))
-      (depict-it markup-stream))))
 
 
 ; If level < threshold, depict an opening parenthesis, evaluate body, and depict a closing
@@ -201,15 +242,13 @@
    ((identifier? type-expr)
     (let ((type-name (world-intern world type-expr)))
       (depict-type-name markup-stream type-expr (if (symbol-type-user-defined type-name) :reference :external))))
-   ((type? type-expr)
-    (let ((type-str (print-type-to-string type-expr)))
-      (warn "Depicting raw type ~A" type-str)
-      (depict markup-stream "<<<" type-str ">>>")))
-   (t (let ((depictor (get (world-intern world (first type-expr)) :depict-type-constructor)))
-        (if level
-          (apply depictor markup-stream world level (rest type-expr))
-          (depict-char-style (markup-stream :type-expression)
-            (apply depictor markup-stream world %%max%% (rest type-expr))))))))
+   ((consp type-expr)
+    (let ((depictor (get (world-intern world (first type-expr)) :depict-type-constructor)))
+      (if level
+        (apply depictor markup-stream world level (rest type-expr))
+        (depict-char-style (markup-stream :type-expression)
+          (apply depictor markup-stream world %%type%% (rest type-expr))))))
+   (t (error "Bad type expression: ~S" type-expr))))
 
 
 ; (-> (<arg-type1> ... <arg-typen>) <result-type>)
@@ -223,7 +262,9 @@
                  :separator '(" " :cartesian-product-10 " ")
                  :empty "()")
     (depict markup-stream " " :function-arrow-10 " ")
-    (depict-type-expr markup-stream world result-type-expr %%suffix%%)))
+    (if (eq result-type-expr 'void)
+      (depict markup-stream "()")
+      (depict-type-expr markup-stream world result-type-expr %%suffix%%))))
 
 
 ; (vector <element-type>)
@@ -235,53 +276,51 @@
 
 
 ; (set <element-type>)
-;   "{<element-type>}"
+;   "<element-type>{}"
 (defun depict-set (markup-stream world level element-type-expr)
-  (declare (ignore level))
-  (depict markup-stream "{")
-  (depict-type-expr markup-stream world element-type-expr %%max%%)
-  (depict markup-stream "}"))
-
-
-; (address <element-type>)
-;   "<element-type>^"
-(defun depict-address (markup-stream world level element-type-expr)
   (depict-type-parentheses (markup-stream level %%suffix%%)
     (depict-type-expr markup-stream world element-type-expr %%suffix%%)
-    (depict markup-stream :up-arrow-10)))
+    (depict markup-stream "{}")))
 
 
-(defun depict-tuple-or-oneof (markup-stream world keyword-symbol tag-pairs)
-  (depict-semantic-keyword markup-stream keyword-symbol)
+; (tag <tag> ... <tag>)
+;   "{<tag> *, ..., <tag> *}"
+(defun depict-tag-type (markup-stream world level &rest tag-names)
+  (declare (ignore level))
   (depict-list
    markup-stream
-   #'(lambda (markup-stream tag-pair)
-       (if (identifier? tag-pair)
-         (depict-field-name markup-stream tag-pair :definition)
-         (progn
-           (depict-field-name markup-stream (first tag-pair) :definition)
-           (depict markup-stream ": ")
-           (depict-type-expr markup-stream world (second tag-pair) %%max%%))))
-   tag-pairs
-   :indent 6
-   :prefix " {"
-   :prefix-break 0
+   #'(lambda (markup-stream tag-name)
+       (let* ((tag (scan-tag world tag-name))
+              (mutable (tag-mutable tag)))
+         (depict-tag-name markup-stream tag :reference)
+         (unless (tag-keyword tag)
+           (depict markup-stream
+                   (if mutable :record-begin :tuple-begin)
+                   "..."
+                   (if mutable :record-end :tuple-end)))))
+   tag-names
+   :indent 1
+   :prefix "{"
    :suffix "}"
-   :separator ";"
-   :break 1
-   :empty nil))
+   :separator ","
+   :break 1))
 
-; (oneof (<tag1> <type1>) ... (<tagn> <typen>))
-;   "ONEOF{<tag1>: <type1>; ...; <tagn>:<typen>}"
-(defun depict-oneof (markup-stream world level &rest tags-and-types)
-  (declare (ignore level))
-  (depict-tuple-or-oneof markup-stream world 'oneof tags-and-types))
 
-; (tuple (<tag1> <type1>) ... (<tagn> <typen>))
-;   "TUPLE{<tag1>: <type1>; ...; <tagn>:<typen>}"
-(defun depict-tuple (markup-stream world level &rest tags-and-types)
-  (declare (ignore level))
-  (depict-tuple-or-oneof markup-stream world 'tuple tags-and-types))
+; (union <type1> ... <typen>)
+;   "<type1> U ... U <typen>"
+;   "{}" if no types are given
+(defun depict-union (markup-stream world level &rest type-exprs)
+  (cond
+   ((endp type-exprs) (depict markup-stream "{}"))
+   ((endp (cdr type-exprs)) (depict-type-expr markup-stream world (first type-exprs) level))
+   (t (depict-type-parentheses (markup-stream level %%type%%)
+        (depict-list markup-stream
+                     #'(lambda (markup-stream type-expr)
+                         (depict-type-expr markup-stream world type-expr %%function%%))
+                     type-exprs
+                     :indent 0
+                     :separator '(" " :union-10)
+                     :break 1)))))
 
 
 ;;; ------------------------------------------------------------------------------------------------------
@@ -334,12 +373,16 @@
     (depict markup-stream
             (if (zerop constant)
               (if (minusp (float64-sign constant)) "-0.0" "+0.0")
-              (format nil (if (= constant (floor constant 1)) "~,1F" "~F") constant))))
+              (progn
+                (when (minusp constant)
+                  (depict markup-stream :minus)
+                  (setq constant (- constant)))
+                (format nil (if (= constant (floor constant 1)) "~,1F" "~F") constant)))))
    ((characterp constant)
-    (depict markup-stream ':left-single-quote)
-    (depict-char-style (markup-stream ':character-literal)
+    (depict markup-stream :left-single-quote)
+    (depict-char-style (markup-stream :character-literal)
       (depict-character markup-stream constant nil))
-    (depict markup-stream ':right-single-quote))
+    (depict markup-stream :right-single-quote))
    ((stringp constant)
     (depict-string markup-stream constant))
    (t (error "Bad constant ~S" constant))))
@@ -347,7 +390,7 @@
 
 ; Emit markup for the primitive when it is not called in a function call.
 (defun depict-primitive (markup-stream primitive)
-  (unless (eq (primitive-appearance primitive) ':global)
+  (unless (eq (primitive-appearance primitive) :global)
     (error "Can't depict primitive ~S outside a call" primitive))
   (let ((markup (primitive-markup1 primitive))
         (external-name (primitive-markup2 primitive)))
@@ -361,7 +404,7 @@
 (defun depict-call-parameters (markup-stream world annotated-parameters)
   (depict-list markup-stream
                #'(lambda (markup-stream parameter)
-                   (depict-annotated-value-expr markup-stream world parameter))
+                   (depict-expression markup-stream world parameter %expr%))
                annotated-parameters
                :indent 4
                :prefix "("
@@ -385,23 +428,23 @@
           (:infix
            (assert-true (= (length annotated-arg-exprs) 2))
            (depict-logical-block (markup-stream 0)
-             (depict-annotated-value-expr markup-stream world (first annotated-arg-exprs) (primitive-level1 primitive))
+             (depict-expression markup-stream world (first annotated-arg-exprs) (primitive-level1 primitive))
              (let ((spaces (primitive-markup2 primitive)))
                (when spaces
                  (depict-space markup-stream))
                (depict-item-or-group-list markup-stream (primitive-markup1 primitive))
                (depict-break markup-stream (if spaces 1 0)))
-             (depict-annotated-value-expr markup-stream world (second annotated-arg-exprs) (primitive-level2 primitive))))
+             (depict-expression markup-stream world (second annotated-arg-exprs) (primitive-level2 primitive))))
           (:unary
            (assert-true (= (length annotated-arg-exprs) 1))
            (depict-item-or-group-list markup-stream (primitive-markup1 primitive))
-           (depict-annotated-value-expr markup-stream world (first annotated-arg-exprs) (primitive-level1 primitive))
+           (depict-expression markup-stream world (first annotated-arg-exprs) (primitive-level1 primitive))
            (depict-item-or-group-list markup-stream (primitive-markup2 primitive)))
           (:phantom
            (assert-true (= (length annotated-arg-exprs) 1))
-           (depict-annotated-value-expr markup-stream world (first annotated-arg-exprs) level)))))
+           (depict-expression markup-stream world (first annotated-arg-exprs) level)))))
     (depict-expr-parentheses (markup-stream level %suffix%)
-      (depict-annotated-value-expr markup-stream world annotated-function-expr %suffix%)
+      (depict-expression markup-stream world annotated-function-expr %suffix%)
       (depict-call-parameters markup-stream world annotated-arg-exprs))))
 
 
@@ -416,52 +459,37 @@
       (depict markup-stream :action-end))))
 
 
-; Emit markup for the given annotated value expression.  level indicates the binding level imposed
+; Emit markup for the given annotated value expression. level indicates the binding level imposed
 ; by the enclosing expression.
-(defun depict-annotated-value-expr (markup-stream world annotated-expr &optional (level %expr%))
+(defun depict-expression (markup-stream world annotated-expr level)
   (let ((annotation (first annotated-expr))
         (args (rest annotated-expr)))
     (ecase annotation
       (expr-annotation:constant (depict-constant markup-stream (first args)))
       (expr-annotation:primitive (depict-primitive markup-stream (symbol-primitive (first args))))
+      (expr-annotation:tag (depict-tag-name markup-stream (first args) :reference))
       (expr-annotation:local (depict-local-variable markup-stream (first args)))
       (expr-annotation:global (depict-global-variable markup-stream (first args) :reference))
       (expr-annotation:call (apply #'depict-call markup-stream world level args))
       (expr-annotation:action (apply #'depict-action-reference markup-stream args))
       (expr-annotation:special-form
-       (apply (get (first args) :depict-special-form) markup-stream world level (rest args)))
-      (expr-annotation:macro
-       (let ((depictor (get (first args) :depict-macro)))
-         (if depictor
-           (apply depictor markup-stream world level (rest args))
-           (depict-annotated-value-expr markup-stream world (second args) level)))))))
+       (apply (get (first args) :depict-special-form) markup-stream world level (rest args))))))
 
 
 ;;; ------------------------------------------------------------------------------------------------------
 ;;; DEPICTING SPECIAL FORMS
 
-(defmacro depict-statement ((markup-stream keyword &optional (space t)) &body body)
-  `(depict-logical-block (,markup-stream 0)
-     ;(when (partial-order-< level %stmt%)
-     ;  (depict-break ,markup-stream))
-     (depict-expr-parentheses (,markup-stream level %stmt%)
-       (depict-semantic-keyword ,markup-stream ,keyword)
-       ,@(and space `((depict-space ,markup-stream)))
-       ,@body)))
-
 
 ; (bottom)
 (defun depict-bottom (markup-stream world level)
   (declare (ignore world level))
-  (depict markup-stream ':bottom-10))
+  (depict markup-stream :bottom-10))
 
 
-; (^ <base> <exponent>)
-(defun depict-^ (markup-stream world level base exponent)
+; (todo)
+(defun depict-todo (markup-stream world level)
   (declare (ignore world level))
-  (depict-integer markup-stream base)
-  (depict-char-style (markup-stream ':superscript)
-    (depict-integer markup-stream exponent)))
+  (depict markup-stream "????"))
 
 
 ; (hex <integer> [<length>])
@@ -473,111 +501,148 @@
     (depict markup-stream (format nil "0x~V,'0X" length n))))
 
 
-(defun depict-function-bindings (markup-stream world arg-binding-exprs)
-  (depict-list markup-stream
-               #'(lambda (markup-stream arg-binding)
-                   (depict-local-variable markup-stream (first arg-binding))
-                   (depict markup-stream ": ")
-                   (depict-type-expr markup-stream world (second arg-binding)))
-               arg-binding-exprs
-               :indent 6
-               :prefix "("
-               :suffix ")"
-               :separator ","
-               :break 1
-               :empty nil))
+; (expt <base> <exponent>)
+(defun depict-expt (markup-stream world level base-annotated-expr exponent-annotated-expr)
+  (depict-expr-parentheses (markup-stream level %prefix%)
+    (depict-expression markup-stream world base-annotated-expr %primary%)
+    (depict-char-style (markup-stream :superscript)
+      (depict-expression markup-stream world exponent-annotated-expr %term%))))
 
-; (function ((<var1> <type1> [:unused]) ... (<varn> <typen> [:unused])) <body>)
-(defun depict-function (markup-stream world level arg-binding-exprs body-annotated-expr)
-  (depict-statement (markup-stream 'function nil)
-    (depict-function-bindings markup-stream world arg-binding-exprs)
-    (depict-logical-block (markup-stream 4)
-      (depict-break markup-stream 2)
-      (depict-annotated-value-expr markup-stream world body-annotated-expr %progn%))))
+
+; (= <expr1> <expr2> [<type>])
+; (/= <expr1> <expr2> [<type>])
+; (< <expr1> <expr2> [<type>])
+; (> <expr1> <expr2> [<type>])
+; (<= <expr1> <expr2> [<type>])
+; (>= <expr1> <expr2> [<type>])
+(defun depict-comparison (markup-stream world level order annotated-expr1 annotated-expr2)
+  (depict-expr-parentheses (markup-stream level %relational%)
+    (depict-logical-block (markup-stream 0)
+      (depict-expression markup-stream world annotated-expr1 %term%)
+      (depict-space markup-stream)
+      (depict markup-stream order)
+      (depict-break markup-stream 1)
+      (depict-expression markup-stream world annotated-expr2 %term%))))
+
+
+; (cascade <type> <expr1> <order1> <expr2> <order2> ... <ordern-1> <exprn>)
+(defun depict-cascade (markup-stream world level annotated-expr1 &rest orders-and-exprs)
+  (depict-expr-parentheses (markup-stream level %relational%)
+    (depict-logical-block (markup-stream 0)
+      (depict-expression markup-stream world annotated-expr1 %term%)
+      (do ()
+          ((endp orders-and-exprs))
+        (depict-space markup-stream)
+        (depict markup-stream (pop orders-and-exprs))
+        (depict-break markup-stream 1)
+        (depict-expression markup-stream world (pop orders-and-exprs) %term%)))))
+
+
+; (and <expr> ... <expr>)
+; (or <expr> ... <expr>)
+; (xor <expr> ... <expr>)
+(defun depict-and-or-xor (markup-stream world level op annotated-expr &rest annotated-exprs)
+  (if annotated-exprs
+    (depict-expr-parentheses (markup-stream level %logical%)
+      (depict-logical-block (markup-stream 0)
+        (depict-expression markup-stream world annotated-expr %not%)
+        (dolist (annotated-expr annotated-exprs)
+          (depict-semantic-keyword markup-stream op :before)
+          (depict-break markup-stream 1)
+          (depict-expression markup-stream world annotated-expr %not%))))
+    (depict-expression markup-stream world annotated-expr level)))
+
+
+(defun depict-function-signature (markup-stream world arg-binding-exprs result-type-expr show-type)
+  (depict-logical-block (markup-stream 12)
+    (depict-break markup-stream 0)
+    (depict-list markup-stream
+                 #'(lambda (markup-stream arg-binding)
+                     (depict-local-variable markup-stream (first arg-binding))
+                     (depict markup-stream ": ")
+                     (depict-type-expr markup-stream world (second arg-binding)))
+                 arg-binding-exprs
+                 :indent 2
+                 :prefix "("
+                 :suffix ")"
+                 :separator ","
+                 :break 1
+                 :empty nil)
+    (unless (or (eq result-type-expr 'void) (not show-type))
+      (depict markup-stream ":")
+      (depict-break markup-stream 1)
+      (depict-type-expr markup-stream world result-type-expr))))
+
+
+(defun depict-function-body (markup-stream world body-annotated-stmts)
+  (depict-logical-block (markup-stream 4)
+    (let ((first-annotated-stmt (first body-annotated-stmts)))
+      (if (and body-annotated-stmts
+               (endp (cdr body-annotated-stmts))
+               (special-form-annotated-stmt? world 'return first-annotated-stmt)
+               (cdr first-annotated-stmt))
+        (progn
+          (depict-break markup-stream 1)
+          (depict markup-stream :identical-10 " ")
+          (depict-expression markup-stream world (second first-annotated-stmt) %expr%))
+        (progn
+          (depict-break markup-stream t)
+          (depict-semantic-keyword markup-stream 'begin nil)
+          (depict-logical-block (markup-stream 4)
+            (depict-statements markup-stream world t body-annotated-stmts))
+          (depict-break markup-stream t)
+          (depict-semantic-keyword markup-stream 'end nil))))))
+
+
+; (lambda ((<var1> <type1> [:unused]) ... (<varn> <typen> [:unused])) <result-type> . <statements>)
+(defun depict-lambda (markup-stream world level arg-binding-exprs result-type-expr &rest body-annotated-stmts)
+  (depict-expr-parentheses (markup-stream level %expr%)
+    (depict-logical-block (markup-stream 0)
+      (depict-semantic-keyword markup-stream 'function nil)
+      (depict-function-signature markup-stream world arg-binding-exprs result-type-expr t)
+      (depict-function-body markup-stream world body-annotated-stmts))))
 
 
 ; (if <condition-expr> <true-expr> <false-expr>)
-(defun depict-if (markup-stream world level condition-annotated-expr true-annotated-expr false-annotated-expr)
-  (depict-statement (markup-stream 'if)
-    (depict-logical-block (markup-stream 4)
-      (depict-annotated-value-expr markup-stream world condition-annotated-expr))
-    (depict-break markup-stream 1)
-    (depict-semantic-keyword markup-stream 'then)
-    (depict-space markup-stream)
-    (depict-logical-block (markup-stream 7)
-      (depict-annotated-value-expr markup-stream world true-annotated-expr %stmt%))
-    (depict-break markup-stream 1)
-    (depict-semantic-keyword markup-stream 'else)
-    (depict-space markup-stream)
-    (depict-logical-block (markup-stream (if (special-form-annotated-expr? 'if false-annotated-expr) nil 6))
-      (depict-annotated-value-expr markup-stream world false-annotated-expr %stmt%))))
-
-
-; (progn <void-expr> ... <void-expr> <expr>)
-(defun depict-progn (markup-stream world level &rest annotated-exprs)
-  (depict-expr-parentheses (markup-stream level %progn%)
+(defun depict-if-expr (markup-stream world level condition-annotated-expr true-annotated-expr false-annotated-expr)
+  (depict-expr-parentheses (markup-stream level %expr%)
     (depict-logical-block (markup-stream 0)
-      (mapl #'(lambda (annotated-exprs)
-                (let ((annotated-expr (first annotated-exprs)))
-                  (depict-annotated-value-expr markup-stream world annotated-expr %stmt%)
-                  (when (cdr annotated-exprs)
-                    (depict markup-stream ";")
-                    (depict-break markup-stream 1))))
-            annotated-exprs))))
-
-
-; (throw <value-expr>)
-(defun depict-throw (markup-stream world level value-annotated-expr)
-  (depict-statement (markup-stream 'throw)
-    (depict-logical-block (markup-stream 4)
-      (depict-annotated-value-expr markup-stream world value-annotated-expr))))
-
-
-; (catch <body> (<var> [:unused]) <handler>)
-(defun depict-catch (markup-stream world level body-annotated-expr arg-binding-expr handler-annotated-expr)
-  (depict-statement (markup-stream 'try nil)
-    (depict-logical-block (markup-stream 4)
-      (depict-break markup-stream)
-      (depict-annotated-value-expr markup-stream world body-annotated-expr %progn%))
-    (depict-break markup-stream)
-    (depict-semantic-keyword markup-stream 'catch)
-    (depict-space markup-stream)
-    (depict markup-stream "(")
-    (depict-local-variable markup-stream (first arg-binding-expr))
-    (depict markup-stream ": ")
-    (depict-type-expr markup-stream world *semantic-exception-type-name*)
-    (depict markup-stream ")")
-    (depict-logical-block (markup-stream 4)
-      (depict-break markup-stream)
-      (depict-annotated-value-expr markup-stream world handler-annotated-expr %stmt%))))
+      (depict-semantic-keyword markup-stream 'if :after)
+      (depict-logical-block (markup-stream 4)
+        (depict-expression markup-stream world condition-annotated-expr %logical%))
+      (depict-break markup-stream 1)
+      (depict-semantic-keyword markup-stream 'then :after)
+      (depict-logical-block (markup-stream 7)
+        (depict-expression markup-stream world true-annotated-expr %expr%))
+      (depict-break markup-stream 1)
+      (depict-semantic-keyword markup-stream 'else :after)
+      (depict-logical-block (markup-stream (if (special-form-annotated-expr? world 'if false-annotated-expr) nil 6))
+        (depict-expression markup-stream world false-annotated-expr %expr%)))))
 
 
 ;;; Vectors
 
 ; (vector <element-expr> <element-expr> ... <element-expr>)
-(defun depict-vector-form (markup-stream world level &rest element-annotated-exprs)
+(defun depict-vector-expr (markup-stream world level &rest element-annotated-exprs)
   (declare (ignore level))
-  (depict-list markup-stream
-               #'(lambda (markup-stream element-annotated-expr)
-                   (depict-annotated-value-expr markup-stream world element-annotated-expr))
-               element-annotated-exprs
-               :indent 1
-               :prefix ':vector-begin
-               :suffix ':vector-end
-               :separator ","
-               :break 1))
+  (if element-annotated-exprs
+    (depict-list markup-stream
+                 #'(lambda (markup-stream element-annotated-expr)
+                     (depict-expression markup-stream world element-annotated-expr %expr%))
+                 element-annotated-exprs
+                 :indent 1
+                 :prefix :vector-begin
+                 :suffix :vector-end
+                 :separator ","
+                 :break 1)
+    (depict markup-stream :empty-vector)))
 
 
+#|
 (defun depict-subscript-type-expr (markup-stream world type-expr)
   (depict-char-style (markup-stream 'sub)
     (depict-type-expr markup-stream world type-expr)))
-
-
-; (vector-of <element-type>)
-(defun depict-vector-of (markup-stream world level element-type-expr)
-  (declare (ignore level))
-  (depict markup-stream ':empty-vector)
-  (depict-subscript-type-expr markup-stream world element-type-expr))
+|#
 
 
 #|
@@ -602,43 +667,30 @@
 (defun depict-length (markup-stream world level vector-annotated-expr)
   (declare (ignore level))
   (depict markup-stream "|")
-  (depict-annotated-value-expr markup-stream world vector-annotated-expr)
+  (depict-expression markup-stream world vector-annotated-expr %expr%)
   (depict markup-stream "|"))
 
 
 ; (nth <vector-expr> <n-expr>)
 (defun depict-nth (markup-stream world level vector-annotated-expr n-annotated-expr)
   (depict-expr-parentheses (markup-stream level %suffix%)
-    (depict-annotated-value-expr markup-stream world vector-annotated-expr %suffix%)
+    (depict-expression markup-stream world vector-annotated-expr %suffix%)
     (depict markup-stream "[")
-    (depict-annotated-value-expr markup-stream world n-annotated-expr)
+    (depict-expression markup-stream world n-annotated-expr %expr%)
     (depict markup-stream "]")))
 
 
 ; (subseq <vector-expr> <low-expr> [<high-expr>])
 (defun depict-subseq (markup-stream world level vector-annotated-expr low-annotated-expr high-annotated-expr)
   (depict-expr-parentheses (markup-stream level %suffix%)
-    (depict-annotated-value-expr markup-stream world vector-annotated-expr %suffix%)
+    (depict-expression markup-stream world vector-annotated-expr %suffix%)
     (depict-logical-block (markup-stream 4)
       (depict markup-stream "[")
-      (depict-annotated-value-expr markup-stream world low-annotated-expr)
+      (depict-expression markup-stream world low-annotated-expr %term%)
       (depict markup-stream " ...")
       (when high-annotated-expr
         (depict-break markup-stream 1)
-        (depict-annotated-value-expr markup-stream world high-annotated-expr))
-      (depict markup-stream "]"))))
-
-
-; (set-nth <vector-expr> <n-expr> <value-expr>)
-(defun depict-set-nth (markup-stream world level vector-annotated-expr n-annotated-expr value-annotated-expr)
-  (depict-expr-parentheses (markup-stream level %suffix%)
-    (depict-annotated-value-expr markup-stream world vector-annotated-expr %suffix%)
-    (depict-logical-block (markup-stream 4)
-      (depict markup-stream "[")
-      (depict-annotated-value-expr markup-stream world n-annotated-expr)
-      (depict markup-stream " " :vector-assign-10)
-      (depict-break markup-stream 1)
-      (depict-annotated-value-expr markup-stream world value-annotated-expr)
+        (depict-expression markup-stream world high-annotated-expr %term%))
       (depict markup-stream "]"))))
 
 
@@ -646,10 +698,23 @@
 (defun depict-append (markup-stream world level vector1-annotated-expr vector2-annotated-expr)
   (depict-expr-parentheses (markup-stream level %term%)
     (depict-logical-block (markup-stream 0)
-      (depict-annotated-value-expr markup-stream world vector1-annotated-expr %term%)
+      (depict-expression markup-stream world vector1-annotated-expr %term%)
       (depict markup-stream " " :vector-append)
       (depict-break markup-stream 1)
-      (depict-annotated-value-expr markup-stream world vector2-annotated-expr %term%))))
+      (depict-expression markup-stream world vector2-annotated-expr %term%))))
+
+
+; (set-nth <vector-expr> <n-expr> <value-expr>)
+(defun depict-set-nth (markup-stream world level vector-annotated-expr n-annotated-expr value-annotated-expr)
+  (depict-expr-parentheses (markup-stream level %suffix%)
+    (depict-expression markup-stream world vector-annotated-expr %suffix%)
+    (depict-logical-block (markup-stream 4)
+      (depict markup-stream "[")
+      (depict-expression markup-stream world n-annotated-expr %term%)
+      (depict markup-stream " \\")
+      (depict-break markup-stream 1)
+      (depict-expression markup-stream world value-annotated-expr %term%)
+      (depict markup-stream "]"))))
 
 
 ; (map <vector-expr> <var> <value-expr> [<condition-expr>])
@@ -657,17 +722,17 @@
   (declare (ignore level))
   (depict-logical-block (markup-stream 2)
     (depict markup-stream :vector-begin)
-    (depict-annotated-value-expr markup-stream world value-annotated-expr %expr%)
+    (depict-expression markup-stream world value-annotated-expr %expr%)
     (depict markup-stream " " :vector-construct)
     (depict-break markup-stream 1)
+    (depict markup-stream :for-all-10)
     (depict-local-variable markup-stream var)
     (depict markup-stream " " :member-10 " ")
-    (depict-annotated-value-expr markup-stream world vector-annotated-expr %term%)
+    (depict-expression markup-stream world vector-annotated-expr %term%)
     (when condition-annotated-expr
-      (depict markup-stream " ")
-      (depict-semantic-keyword markup-stream 'and)
+      (depict-semantic-keyword markup-stream 'and :before)
       (depict-break markup-stream 1)
-      (depict-annotated-value-expr markup-stream world condition-annotated-expr %not%))
+      (depict-expression markup-stream world condition-annotated-expr %not%))
     (depict markup-stream :vector-end)))
 
 
@@ -675,7 +740,7 @@
 
 ; (set-of-ranges <element-type> <low-expr> <high-expr> ... <low-expr> <high-expr>)
 (defun depict-set-of-ranges (markup-stream world level element-type-expr &rest element-annotated-exprs)
-  (declare (ignore level))
+  (declare (ignore level element-type-expr))
   (labels
     ((combine-exprs (element-annotated-exprs)
        (if (endp element-annotated-exprs)
@@ -686,244 +751,280 @@
                  #'(lambda (markup-stream element-annotated-expr-range)
                      (let ((element-annotated-expr1 (car element-annotated-expr-range))
                            (element-annotated-expr2 (cdr element-annotated-expr-range)))
-                       (depict-annotated-value-expr markup-stream world element-annotated-expr1)
+                       (depict-expression markup-stream world element-annotated-expr1 %term%)
                        (when element-annotated-expr2
                          (depict markup-stream " ...")
                          (depict-break markup-stream 1)
-                         (depict-annotated-value-expr markup-stream world element-annotated-expr2))))
+                         (depict-expression markup-stream world element-annotated-expr2 %term%))))
                  (combine-exprs element-annotated-exprs)
                  :indent 1
                  :prefix "{"
                  :suffix "}"
                  :separator ","
                  :break 1
-                 :empty nil)
-    (when (null element-annotated-exprs)
-      (depict-subscript-type-expr markup-stream world element-type-expr))))
-
-
-;;; Oneofs
-
-; (oneof <tag> <value-expr> [type])
-; [type] was added by scan-oneof-form.
-(defun depict-oneof-form (markup-stream world level tag value-annotated-expr type)
-  (depict-expr-parentheses (markup-stream level %prefix%)
-    (depict-field-name markup-stream tag :reference type)
-    (when value-annotated-expr
-      (depict-logical-block (markup-stream 4)
-        (depict-break markup-stream 1)
-        (depict-annotated-value-expr markup-stream world value-annotated-expr %unary%)))))
-
-
-; (typed-oneof <type-expr> <tag> <value-expr> [type])
-(defun depict-typed-oneof (markup-stream world level type-expr tag value-annotated-expr type)
-  (depict-expr-parentheses (markup-stream level %prefix%)
-    (depict-field-name markup-stream tag :reference type)
-    (depict-subscript-type-expr markup-stream world type-expr)
-    (when value-annotated-expr
-      (depict-logical-block (markup-stream 4)
-        (depict-break markup-stream 1)
-        (depict-annotated-value-expr markup-stream world value-annotated-expr %unary%)))))
-
-
-; (case <oneof-expr> [oneof-expr-type] (<tag-spec> <value-expr>) (<tag-spec> <value-expr>) ... (<tag-spec> <value-expr>))
-; where each <tag-spec> is either ((<tag> <tag> ... <tag>) nil nil) or ((<tag>) <var> <type>)
-(defun depict-case (markup-stream world level oneof-annotated-expr oneof-expr-type &rest annotated-cases)
-  (depict-statement (markup-stream 'case)
-    (depict-logical-block (markup-stream 6)
-      (depict-annotated-value-expr markup-stream world oneof-annotated-expr))
-    (depict-space markup-stream)
-    (depict-semantic-keyword markup-stream 'of)
-    (depict-logical-block (markup-stream 3)
-      (mapl #'(lambda (annotated-cases)
-                (let* ((annotated-case (first annotated-cases))
-                       (tag-spec (first annotated-case))
-                       (tags (first tag-spec))
-                       (var (second tag-spec))
-                       (value-annotated-expr (second annotated-case)))
-                  (depict-break markup-stream)
-                  (depict-logical-block (markup-stream 6)
-                    (depict-list markup-stream
-                                 #'(lambda (markup-stream field-name)
-                                     (depict-field-name markup-stream field-name :reference oneof-expr-type))
-                                 tags
-                                 :indent 0
-                                 :separator ","
-                                 :break 1)
-                    (when var
-                      (depict markup-stream "(")
-                      (depict-local-variable markup-stream var)
-                      (depict markup-stream ": ")
-                      (depict-type-expr markup-stream world (third tag-spec))
-                      (depict markup-stream ")"))
-                    (depict markup-stream ":")
-                    (depict-break markup-stream 1)
-                    (depict-annotated-value-expr markup-stream world value-annotated-expr %progn%)
-                    (when (cdr annotated-cases)
-                      (depict markup-stream ";")))))
-            annotated-cases)
-      (depict-break markup-stream)
-      (depict-semantic-keyword markup-stream 'end))))
-
-
-; (select <tag> <oneof-expr> [oneof-expr-type])
-; (& <tag> <tuple-expr> [tuple-expr-type])
-(defun depict-select-or-& (markup-stream world level tag annotated-expr expr-type)
-  (depict-expr-parentheses (markup-stream level %suffix%)
-    (depict-annotated-value-expr markup-stream world annotated-expr %suffix%)
-    (depict markup-stream ".")
-    (depict-field-name markup-stream tag :reference expr-type)))
-
-
-; (is <tag> <oneof-expr> [oneof-expr-type])
-(defun depict-is (markup-stream world level tag oneof-annotated-expr oneof-expr-type)
-  (depict-expr-parentheses (markup-stream level %relational%)
-    (depict-annotated-value-expr markup-stream world oneof-annotated-expr %suffix%)
-    (depict-space markup-stream)
-    (depict-semantic-keyword markup-stream 'is)
-    (depict-space markup-stream)
-    (depict-field-name markup-stream tag :reference oneof-expr-type)))
-
-
-;;; Tuples
-
-; (tuple <tuple-type> [type] <field-expr1> ... <field-exprn>)
-(defun depict-tuple-form (markup-stream world level type-expr type &rest annotated-exprs)
-  (declare (ignore level type-expr))
-  (let ((tags (type-tags type)))
-    (assert-true (= (length tags) (length annotated-exprs)))
-    (depict-list markup-stream
-                 #'(lambda (markup-stream parameter)
-                     (let ((tag (pop tags)))
-                       (depict-field-name markup-stream tag :reference type)
-                       (depict markup-stream " " :vector-assign-10)
-                       (depict-logical-block (markup-stream 4)
-                         (depict-break markup-stream 1)
-                         (depict-annotated-value-expr markup-stream world parameter %expr%))))
-                 annotated-exprs
-                 :indent 4
-                 :prefix ':tuple-begin
-                 :suffix ':tuple-end
-                 :separator ","
-                 :break 1
                  :empty nil)))
 
 
-;;; Addresses
+;;; Tags
 
-; (new <value-expr>)
-(defun depict-new (markup-stream world level value-annotated-expr)
-  (depict-logical-block (markup-stream 5)
-    (depict-semantic-keyword markup-stream 'new)
-    (unless (partial-order-< level %unparenthesized-new%)
-      (depict-space markup-stream))
-    (depict-expr-parentheses (markup-stream level %unparenthesized-new%)
-      (depict-annotated-value-expr markup-stream world value-annotated-expr
-                                   (if (partial-order-< level %unparenthesized-new%) %expr% %prefix%)))))
+(defparameter *depict-tag-labels* nil)
+
+; (tag <tag> <field-expr1> ... <field-exprn>)
+(defun depict-tag-expr (markup-stream world level tag &rest annotated-exprs)
+  (let ((mutable (tag-mutable tag)))
+    (flet
+      ((depict-tag-and-args (markup-stream)
+         (let ((fields (tag-fields tag)))
+           (assert-true (= (length fields) (length annotated-exprs)))
+           (depict-tag-name markup-stream tag :reference)
+           (if (tag-keyword tag)
+             (assert-true (null annotated-exprs))
+             (depict-list markup-stream
+                          #'(lambda (markup-stream parameter)
+                              (let ((field (pop fields)))
+                                (if (and mutable *depict-tag-labels*)
+                                  (depict-logical-block (markup-stream 4)
+                                    (depict-label-name markup-stream tag (field-label field) :reference)
+                                    (depict markup-stream " " :label-assign-10)
+                                    (depict-break markup-stream 1)
+                                    (depict-expression markup-stream world parameter %expr%))
+                                  (depict-expression markup-stream world parameter %expr%))))
+                          annotated-exprs
+                          :indent 4
+                          :prefix (if mutable :record-begin :tuple-begin)
+                          :prefix-break 0
+                          :suffix (if mutable :record-end :tuple-end)
+                          :separator ","
+                          :break 1
+                          :empty nil)))))
+      
+      (if mutable
+        (depict-expr-parentheses (markup-stream level %prefix%)
+          (depict-logical-block (markup-stream 4)
+            (depict-semantic-keyword markup-stream 'new :after)
+            (depict-tag-and-args markup-stream)))
+        (depict-tag-and-args markup-stream)))))
 
 
-; (@ <address-expr>)
-(defun depict-@ (markup-stream world level address-annotated-expr)
-  (depict-expr-parentheses (markup-stream level %prefix%)
-    (depict-logical-block (markup-stream 2)
-      (depict markup-stream "@")
-      (depict-annotated-value-expr markup-stream world address-annotated-expr %prefix%))))
+; (& <label> <record-expr>)
+(defun depict-& (markup-stream world level tag label annotated-expr)
+  (depict-expr-parentheses (markup-stream level %suffix%)
+    (depict-expression markup-stream world annotated-expr %suffix%)
+    (depict markup-stream ".")
+    (depict-label-name markup-stream tag label :reference)))
 
 
-; (@= <address-expr> <value-expr>)
-(defun depict-@= (markup-stream world level address-annotated-expr value-annotated-expr)
-  (depict-expr-parentheses (markup-stream level %stmt%)
-    (depict-logical-block (markup-stream 0)
-      (depict markup-stream "@")
-      (depict-annotated-value-expr markup-stream world address-annotated-expr %prefix%)
-      (depict markup-stream " " :vector-assign-10)
-      (depict-logical-block (markup-stream 6)
-        (depict-break markup-stream 1)
-        (depict-annotated-value-expr markup-stream world value-annotated-expr %stmt%)))))
+;;; Unions
 
-
-; (address-equal <address-expr1> <address-expr2>)
-(defun depict-address-equal (markup-stream world level address1-annotated-expr address2-annotated-expr)
+(defun depict-in-or-not-in (markup-stream world level type type-expr value-annotated-expr op single-op)
   (depict-expr-parentheses (markup-stream level %relational%)
-    (depict-logical-block (markup-stream 0)
-      (depict-annotated-value-expr markup-stream world address1-annotated-expr %term%)
-      (depict markup-stream " " :identical-10)
-      (depict-break markup-stream 1)
-      (depict-annotated-value-expr markup-stream world address2-annotated-expr %term%))))
+    (depict-expression markup-stream world value-annotated-expr %suffix%)
+    (depict-space markup-stream)
+    (if (and (eq (type-kind type) :tag) (tag-keyword (type-tag type)))
+      (progn
+        (depict markup-stream single-op)
+        (depict-space markup-stream)
+        (depict-tag-name markup-stream (type-tag type) :reference))
+      (progn
+        (depict markup-stream op)
+        (depict-space markup-stream)
+        (depict-type-expr markup-stream world type-expr)))))
+
+; (in <type> <expr>)
+(defun depict-in (markup-stream world level type type-expr value-annotated-expr)
+  (depict-in-or-not-in markup-stream world level type type-expr value-annotated-expr :member-10 "="))
+
+; (not-in <type> <expr>)
+(defun depict-not-in (markup-stream world level type type-expr value-annotated-expr)
+  (depict-in-or-not-in markup-stream world level type type-expr value-annotated-expr :not-member-10 :not-equal))
 
 
-;;; Macros
+;;; ------------------------------------------------------------------------------------------------------
+;;; DEPICTING STATEMENTS
 
-(defun depict-let-binding (markup-stream world var type-expr value-annotated-expr)
-  (depict-logical-block (markup-stream 4)
-    (depict-local-variable markup-stream var)
-    (depict markup-stream ": ")
-    (depict-type-expr markup-stream world type-expr)
+
+; Emit markup for the annotated statement.
+(defun depict-statement (markup-stream world annotated-stmt)
+  (apply (get (first annotated-stmt) :depict-statement) markup-stream world (rest annotated-stmt)))
+
+
+; Emit markup for the block of annotated statements, including the preceding line breaks using
+; the given prefix.
+(defun depict-statements (markup-stream world prefix-break annotated-stmts)
+  (if annotated-stmts
+    (depict-list markup-stream
+                 #'(lambda (markup-stream annotated-stmt)
+                     (depict-statement markup-stream world annotated-stmt))
+                 annotated-stmts
+                 :indent 0
+                 :prefix-break prefix-break
+                 :separator ";"
+                 :break t)
+    (progn
+      (depict-break markup-stream prefix-break)
+      (depict-semantic-keyword markup-stream 'nothing nil))))
+
+
+; (exec <expr>)
+(defun depict-exec (markup-stream world annotated-expr)
+  (depict-expression markup-stream world annotated-expr %logical%))
+
+
+; (const <name> <type> <value>)
+; (var <name> <type> <value>)
+(defun depict-var (markup-stream world name type-expr value-annotated-expr)
+  (depict-local-variable markup-stream name)
+  (depict markup-stream ": ")
+  (depict-type-expr markup-stream world type-expr)
+  (depict markup-stream " " :assign-10)
+  (depict-logical-block (markup-stream 6)
     (depict-break markup-stream 1)
-    (depict-logical-block (markup-stream 3)
-      (depict markup-stream "= ")
-      (depict-annotated-value-expr markup-stream world value-annotated-expr %progn%))))
+    (depict-expression markup-stream world value-annotated-expr %expr%)))
 
 
-(defun depict-let-body (markup-stream world body-annotated-expr)
-  (depict-break markup-stream)
-  (depict-semantic-keyword markup-stream 'in)
-  (depict-space markup-stream)
-  (depict-logical-block (markup-stream (if (or (macro-annotated-expr? 'let body-annotated-expr)
-                                               (macro-annotated-expr? 'letexc body-annotated-expr))
-                                         nil
-                                         4))
-    (depict-annotated-value-expr markup-stream world body-annotated-expr %stmt%)))
+; (function (<name> (<var1> <type1> [:unused]) ... (<varn> <typen> [:unused])) <result-type> . <statements>)
+(defun depict-function (markup-stream world name-and-arg-binding-exprs result-type-expr &rest body-annotated-stmts)
+  (depict-logical-block (markup-stream 0)
+    (depict-semantic-keyword markup-stream 'function :after)
+    (depict-local-variable markup-stream (first name-and-arg-binding-exprs))
+    (depict-function-signature markup-stream world (rest name-and-arg-binding-exprs) result-type-expr t)
+    (depict-function-body markup-stream world body-annotated-stmts)))
 
 
-; (let ((<var1> <type1> <expr1> [:unused]) ... (<varn> <typen> <exprn> [:unused])) <body>)  ==>
-; ((function ((<var1> <type1> [:unused]) ... (<varn> <typen> [:unused])) <body>) <expr1> ... <exprn>)
-(defun depict-let (markup-stream world level annotated-expansion)
-  (assert-true (eq (first annotated-expansion) 'expr-annotation:call))
-  (let ((function-annotated-expr (second annotated-expansion))
-        (arg-annotated-exprs (cddr annotated-expansion)))
-    (assert-true (special-form-annotated-expr? 'function function-annotated-expr))
-    (let ((arg-binding-exprs (third function-annotated-expr))
-          (body-annotated-expr (fourth function-annotated-expr)))
-      (depict-statement (markup-stream 'let)
-        (depict-list markup-stream
-                     #'(lambda (markup-stream arg-binding)
-                         (depict-let-binding markup-stream world (first arg-binding) (second arg-binding) (pop arg-annotated-exprs)))
-                     arg-binding-exprs
-                     :indent 4
-                     :separator ";"
-                     :break t
-                     :empty nil)
-        (depict-let-body markup-stream world body-annotated-expr)))))
+; (<- <name> <value>)
+(defun depict-<- (markup-stream world name value-annotated-expr)
+  (depict-local-variable markup-stream name)
+  (depict markup-stream " " :assign-10)
+  (depict-logical-block (markup-stream 6)
+    (depict-break markup-stream 1)
+    (depict-expression markup-stream world value-annotated-expr %expr%)))
 
 
-; (letexc (<var> <type> <expr> [:unused]) <body>)  ==>
-; (case <expr> [expr-type]
-;   ((abrupt x exception) (typed-oneof <body-type> abrupt x [body-type]))
-;   ((normal <var> <type> [:unused]) <body>)))
-(defun depict-letexc (markup-stream world level annotated-expansion)
-  (assert-true (special-form-annotated-expr? 'case annotated-expansion))
-  (let* ((expr-annotated-expr (third annotated-expansion))
-         (abrupt-binding (fifth annotated-expansion))
-         (abrupt-tag-spec (first abrupt-binding))
-         (normal-binding (sixth annotated-expansion))
-         (normal-tag-spec (first normal-binding)))
-    (assert-true (equal (first abrupt-tag-spec) '(abrupt)))
-    (assert-true (equal (first normal-tag-spec) '(normal)))
-    (let* ((var (second normal-tag-spec))
-           (type-expr (third normal-tag-spec))
-           (body-annotated-expr (second normal-binding)))
-      (depict-statement (markup-stream 'letexc)
-        (depict-logical-block (markup-stream 9)
-          (depict-let-binding markup-stream world var type-expr expr-annotated-expr))
-        (depict-let-body markup-stream world body-annotated-expr)))))
+; (&= <record-expr> <value-expr>)
+(defun depict-&= (markup-stream world tag label record-annotated-expr value-annotated-expr)
+  (depict-& markup-stream world %unary% tag label record-annotated-expr)
+  (depict markup-stream " " :assign-10)
+  (depict-logical-block (markup-stream 6)
+    (depict-break markup-stream 1)
+    (depict-expression markup-stream world value-annotated-expr %expr%)))
+
+
+; (return [<value-expr>])
+(defun depict-return (markup-stream world value-annotated-expr)
+  (depict-logical-block (markup-stream 4)
+    (depict-semantic-keyword markup-stream 'return nil)
+    (when value-annotated-expr
+      (depict-space markup-stream)
+      (depict-expression markup-stream world value-annotated-expr %logical%))))
+
+
+; (cond (<condition-expr> . <statements>) ... (<condition-expr> . <statements>) [(nil . <statements>)])
+(defun depict-cond (markup-stream world &rest annotated-cases)
+  (assert-true (and annotated-cases (caar annotated-cases)))
+  (depict-logical-block (markup-stream 0)
+    (do ((annotated-cases annotated-cases (rest annotated-cases))
+         (else nil t))
+        ((endp annotated-cases))
+      (let ((annotated-case (first annotated-cases)))
+        (depict-logical-block (markup-stream 4)
+          (let ((condition-annotated-expr (first annotated-case)))
+            (if condition-annotated-expr
+              (progn
+                (depict-semantic-keyword markup-stream (if else 'elsif 'if) :after)
+                (depict-logical-block (markup-stream 4)
+                  (depict-expression markup-stream world condition-annotated-expr %logical%))
+                (depict-semantic-keyword markup-stream 'then :before))
+              (depict-semantic-keyword markup-stream 'else nil)))
+          (depict-statements markup-stream world 1 (rest annotated-case)))
+        (depict-break markup-stream 1)))
+    (depict-semantic-keyword markup-stream 'end :after)
+    (depict-semantic-keyword markup-stream 'if nil)))
+
+
+; (while <condition-expr> . <statements>)
+(defun depict-while (markup-stream world condition-annotated-expr &rest loop-annotated-stmts)
+  (depict-logical-block (markup-stream 0)
+    (depict-logical-block (markup-stream 4)
+      (depict-semantic-keyword markup-stream 'while :after)
+      (depict-logical-block (markup-stream 4)
+        (depict-expression markup-stream world condition-annotated-expr %logical%))
+      (depict-semantic-keyword markup-stream 'do :before)
+      (depict-statements markup-stream world 1 loop-annotated-stmts))
+    (depict-break markup-stream 1)
+    (depict-semantic-keyword markup-stream 'end :after)
+    (depict-semantic-keyword markup-stream 'while nil)))
+
+
+; (assert <condition-expr>)
+(defun depict-assert (markup-stream world condition-annotated-expr)
+  (depict-logical-block (markup-stream 4)
+    (depict-semantic-keyword markup-stream 'invariant :after)
+    (depict-expression markup-stream world condition-annotated-expr %logical%)))
+
+
+; (throw <value-expr>)
+(defun depict-throw (markup-stream world value-annotated-expr)
+  (depict-logical-block (markup-stream 4)
+    (depict-semantic-keyword markup-stream 'throw :after)
+    (depict-expression markup-stream world value-annotated-expr %logical%)))
+
+
+; (catch <body-statements> (<var> [:unused]) . <handler-statements>)
+(defun depict-catch (markup-stream world body-annotated-stmts arg-binding-expr &rest handler-annotated-stmts)
+  (depict-logical-block (markup-stream 0)
+    (depict-logical-block (markup-stream 4)
+      (depict-semantic-keyword markup-stream 'try nil)
+      (depict-statements markup-stream world 1 body-annotated-stmts))
+    (depict-break markup-stream)
+    (depict-logical-block (markup-stream 4)
+      (depict-semantic-keyword markup-stream 'catch :after)
+      (depict-logical-block (markup-stream 4)
+        (depict-local-variable markup-stream (first arg-binding-expr))
+        (depict markup-stream ": ")
+        (depict-type-expr markup-stream world *semantic-exception-type-name*))
+      (depict-semantic-keyword markup-stream 'do :before)
+      (depict-statements markup-stream world 1 handler-annotated-stmts))
+    (depict-break markup-stream)
+    (depict-semantic-keyword markup-stream 'end :after)
+    (depict-semantic-keyword markup-stream 'try nil)))
+
+
+; (case <value-expr> (key <type> . <statements>) ... (keyword <type> . <statements>))
+; where each key is one of:
+;    :select    No special action
+;    :narrow    Narrow the type of <value-expr>, which must be a variable, to this case's <type>
+;    :otherwise Catch-all else case; <type> should be either nil or the remaining catch-all type
+(defun depict-case (markup-stream world value-annotated-expr &rest annotated-cases)
+  (depict-logical-block (markup-stream 0)
+    (depict-semantic-keyword markup-stream 'case :after)
+    (depict-logical-block (markup-stream 8)
+      (depict-expression markup-stream world value-annotated-expr %logical%))
+    (depict-semantic-keyword markup-stream 'of :before)
+    (depict-list
+     markup-stream
+     #'(lambda (markup-stream annotated-case)
+         (depict-logical-block (markup-stream 4)
+           (ecase (first annotated-case)
+             ((:select :narrow) (depict-type-expr markup-stream world (second annotated-case)))
+             ((:otherwise) (depict-semantic-keyword markup-stream 'else nil)))
+           (depict-semantic-keyword markup-stream 'do :before)
+           (depict-statements markup-stream world 1 (cddr annotated-case))))
+     annotated-cases
+     :indent 4
+     :prefix-break t
+     :separator ";"
+     :break t
+     :empty nil)
+    (depict-break markup-stream)
+    (depict-semantic-keyword markup-stream 'end :after)
+    (depict-semantic-keyword markup-stream 'case nil)))
 
 
 ;;; ------------------------------------------------------------------------------------------------------
 ;;; DEPICTING COMMANDS
 
 
-(defmacro depict-semantics ((markup-stream depict-env &optional (paragraph-style ':semantics)) &body body)
+(defmacro depict-semantics ((markup-stream depict-env &optional (paragraph-style :semantics)) &body body)
   `(when (depict-mode ,markup-stream ,depict-env :semantics)
      (depict-paragraph (,markup-stream ,paragraph-style)
        ,@body)))
@@ -945,7 +1046,7 @@
 ;   nil         This is a general comment
 (defun depict-%section (markup-stream world depict-env mode &optional section-name)
   (declare (ignore world))
-  (depict-section-or-subsection markup-stream depict-env mode section-name ':section-heading))
+  (depict-section-or-subsection markup-stream depict-env mode section-name :section-heading))
 
 
 ; (%subsection "subsection-name")
@@ -956,7 +1057,7 @@
 ;   nil         This is a general comment
 (defun depict-%subsection (markup-stream world depict-env mode &optional section-name)
   (declare (ignore world))
-  (depict-section-or-subsection markup-stream depict-env mode section-name ':subsection-heading))
+  (depict-section-or-subsection markup-stream depict-env mode section-name :subsection-heading))
 
 
 ; Common routine for depict-%section and depict-%subsection.
@@ -979,8 +1080,8 @@
 ;   :comment    This is a comment about the following piece of semantics (not displayed when semantics are not displayed)
 ;   nil         This is a general comment
 (defun depict-%text (markup-stream world depict-env mode &rest text)
-  (when (depict-mode markup-stream depict-env (if (eq mode ':comment) ':semantics mode))
-    (depict-paragraph (markup-stream (if (eq mode ':comment) ':semantic-comment ':body-text))
+  (when (depict-mode markup-stream depict-env (if (eq mode :comment) :semantics mode))
+    (depict-paragraph (markup-stream (if (eq mode :comment) :semantic-comment :body-text))
       (let ((grammar-info (depict-env-grammar-info depict-env))
             (*styled-text-world* world))
         (if grammar-info
@@ -1062,49 +1163,86 @@
   (setf (depict-env-pending-actions-reverse depict-env) nil))
 
 
+; (deftag <name> (<name1> <type1>) ... (<namen> <typen>))
+; (defrecord <name> (<name1> <type1>) ... (<namen> <typen>))
+(defun depict-deftag (markup-stream world depict-env name &rest fields)
+  (depict-semantics (markup-stream depict-env)
+    (depict-logical-block (markup-stream 2)
+      (let* ((tag (scan-tag world name))
+             (mutable (tag-mutable tag)))
+        (depict-semantic-keyword markup-stream (if mutable 'record 'tag) :after)
+        (depict-tag-name markup-stream tag :definition)
+        (when (or mutable fields)
+          (depict-list
+           markup-stream
+           #'(lambda (markup-stream field)
+               (depict-label-name markup-stream tag (first field) nil)
+               (depict markup-stream ": ")
+               (depict-type-expr markup-stream world (second field) %%type%%))
+           fields
+           :indent 6
+           :prefix (if mutable :record-begin :tuple-begin)
+           :prefix-break 0
+           :suffix (if mutable :record-end :tuple-end)
+           :separator ","
+           :break 1
+           :empty nil)))
+      (depict markup-stream ";"))))
+
+
 ; (deftype <name> <type>)
 (defun depict-deftype (markup-stream world depict-env name type-expr)
   (depict-semantics (markup-stream depict-env)
     (depict-logical-block (markup-stream 2)
-      (depict-semantic-keyword markup-stream 'type)
-      (depict-space markup-stream)
+      (depict-semantic-keyword markup-stream 'type :after)
       (depict-type-name markup-stream name :definition)
+      (depict-break markup-stream 0)
+      (depict-logical-block (markup-stream 4)
+        (depict markup-stream " = ")
+        (depict-type-expr markup-stream world type-expr))
+      (depict markup-stream ";"))))
+
+
+(defun depict-type-and-value (markup-stream world type-expr value-annotated-expr show-type)
+  (when show-type
+    (depict-logical-block (markup-stream 4)
+      (depict markup-stream ":")
       (depict-break markup-stream 1)
-      (depict-logical-block (markup-stream 3)
-        (depict markup-stream "= ")
-        (depict-type-expr markup-stream world type-expr)))))
+      (depict-type-expr markup-stream world type-expr)))
+  (if (eq (car value-annotated-expr) 'expr-annotation:begin)
+    (depict-function-body markup-stream world (cdr value-annotated-expr))
+    (progn
+      (depict-break markup-stream 0)
+      (depict-logical-block (markup-stream 4)
+        (depict markup-stream " = ")
+        (depict-expression markup-stream world value-annotated-expr %expr%))))
+  (depict markup-stream ";"))
 
-
-; (define <name> <type> <value> <destructured>)
-; <destructured> is a flag that is true if this define was originally in the form
-;   (define (<name> (<arg1> <type1>) ... (<argn> <typen>)) <result-type> <value>)
-; and converted into
-;   (define <name> (-> (<type1> ... <typen>) <result-type>)
-;      (function ((<arg1> <type1>) ... (<argn> <typen>)) <value>)
-;      t)
-(defun depict-define (markup-stream world depict-env name type-expr value-expr destructured)
+; (define <name> <type> <value>)
+(defun depict-define (markup-stream world depict-env name type-expr value-expr)
   (depict-semantics (markup-stream depict-env)
-    (depict-logical-block (markup-stream 2)
+    (depict-logical-block (markup-stream 0)
       (depict-global-variable markup-stream name :definition)
-      (flet
-        ((depict-type-and-value (markup-stream type-expr annotated-value-expr)
-           (depict-logical-block (markup-stream 0)
-             (depict-break markup-stream 1)
-             (depict markup-stream ": ")
-             (depict-type-expr markup-stream world type-expr))
-           (depict-break markup-stream 1)
-           (depict-logical-block (markup-stream 3)
-             (depict markup-stream "= ")
-             (depict-annotated-value-expr markup-stream world annotated-value-expr %max%))))
-        
-        (let ((annotated-value-expr (nth-value 2 (scan-value world *null-type-env* value-expr))))
-          (if destructured
-            (progn
-              (assert-true (eq (first type-expr) '->))
-              (assert-true (special-form-annotated-expr? 'function annotated-value-expr))
-              (depict-function-bindings markup-stream world (third annotated-value-expr))
-              (depict-type-and-value markup-stream (third type-expr) (fourth annotated-value-expr)))
-            (depict-type-and-value markup-stream type-expr annotated-value-expr)))))))
+      (let ((value-annotated-expr (nth-value 2 (scan-value world *null-type-env* value-expr))))
+        (depict-type-and-value markup-stream world type-expr value-annotated-expr t)))))
+
+
+(defun depict-signature-and-body (markup-stream world type-expr value-annotated-expr show-type)
+  (declare (ignore type-expr))
+  (assert-true (special-form-annotated-expr? world 'lambda value-annotated-expr))
+  (depict-function-signature markup-stream world (third value-annotated-expr) (fourth value-annotated-expr) show-type)
+  (depict-function-body markup-stream world (cddddr value-annotated-expr))
+  (depict markup-stream ";"))
+
+; (defun <name> (-> (<type1> ... <typen>) <result-type>) (lambda ((<arg1> <type1>) ... (<argn> <typen>)) <result-type> . <statements>))
+(defun depict-defun (markup-stream world depict-env name type-expr value-expr)
+  (assert-true (eq (first type-expr) '->))
+  (let ((value-annotated-expr (nth-value 2 (scan-value world *null-type-env* value-expr))))
+    (depict-semantics (markup-stream depict-env)
+      (depict-logical-block (markup-stream 0)
+        (depict-semantic-keyword markup-stream 'function :after)
+        (depict-global-variable markup-stream name :definition)
+        (depict-signature-and-body markup-stream world type-expr value-annotated-expr t)))))
 
 
 ; (set-grammar <name>)
@@ -1147,24 +1285,23 @@
 
 
 (defun depict-declare-action-contents (markup-stream world action-name general-grammar-symbol type-expr)
-  (depict-semantic-keyword markup-stream 'action)
-  (depict-space markup-stream)
   (depict-action-name markup-stream action-name)
   (depict markup-stream :action-begin)
   (depict-general-grammar-symbol markup-stream general-grammar-symbol :reference)
   (depict markup-stream :action-end)
-  (depict-break markup-stream 1)
+  (depict-break markup-stream 0)
   (depict-logical-block (markup-stream 2)
     (depict markup-stream ": ")
     (depict-type-expr markup-stream world type-expr)))
 
 
-; (declare-action <action-name> <general-grammar-symbol> <type>)
-(defun depict-declare-action (markup-stream world depict-env action-name general-grammar-symbol-source type-expr)
+; (declare-action <action-name> <general-grammar-symbol> <type> <n-productions>)
+(defun depict-declare-action (markup-stream world depict-env action-name general-grammar-symbol-source type-expr n-productions)
   (let* ((grammar-info (checked-depict-env-grammar-info depict-env))
          (general-grammar-symbol (grammar-parametrization-intern (grammar-info-grammar grammar-info) general-grammar-symbol-source)))
     (unless (or (and (general-nonterminal? general-grammar-symbol) (hidden-nonterminal? general-grammar-symbol))
-                (grammar-info-charclass-or-partition grammar-info general-grammar-symbol))
+                (grammar-info-charclass-or-partition grammar-info general-grammar-symbol)
+                (= n-productions 1))
       (depict-delayed-action (markup-stream depict-env)
         (depict-semantics (markup-stream depict-env)
           (depict-logical-block (markup-stream 4)
@@ -1185,46 +1322,41 @@
             (depict-global-variable markup-stream (lexer-action-function-name lexer-action) :external)
             (depict markup-stream "(")
             (depict-general-nonterminal markup-stream nonterminal :reference)
-            (depict markup-stream ")")))))))
+            (depict markup-stream ")"))
+          (depict markup-stream ";"))))))
 
 
-; (action <action-name> <production-name> <body>)
-; <destructured> is a flag that is true if this define was originally in the form
-;   (action (<action-name> (<arg1> <type1>) ... (<argn> <typen>)) <production-name> <body>)
-; and converted into
-;   (action <action-name> <production-name> (function ((<arg1> <type1>) ... (<argn> <typen>)) <body>) t)
-(defun depict-action (markup-stream world depict-env action-name production-name body-expr destructured)
+; (action <action-name> <production-name> <type> <n-productions> <value>)
+(defun depict-action (markup-stream world depict-env action-name production-name type-expr n-productions value-expr)
+  (depict-general-action markup-stream world depict-env action-name production-name type-expr n-productions value-expr nil))
+
+; (actfun <action-name> <production-name> (-> (<type1> ... <typen>) <result-type>) <n-productions>
+;    (lambda ((<arg1> <type1>) ... (<argn> <typen>)) <result-type> . <statements>))
+(defun depict-actfun (markup-stream world depict-env action-name production-name type-expr n-productions value-expr)
+  (depict-general-action markup-stream world depict-env action-name production-name type-expr n-productions value-expr t))
+
+(defun depict-general-action (markup-stream world depict-env action-name production-name type-expr n-productions value-expr destructured)
   (let* ((grammar-info (checked-depict-env-grammar-info depict-env))
          (grammar (grammar-info-grammar grammar-info))
          (general-production (grammar-general-production grammar production-name))
-         (lhs (general-production-lhs general-production)))
+         (lhs (general-production-lhs general-production))
+         (show-type (= n-productions 1)))
     (unless (or (grammar-info-charclass grammar-info lhs)
                 (hidden-nonterminal? lhs))
       (depict-delayed-action (markup-stream depict-env)
-        (depict-semantics (markup-stream depict-env :semantics-next)
-          (depict-logical-block (markup-stream 2)
+        (depict-semantics (markup-stream depict-env (if show-type :semantics :semantics-next))
+          (depict-logical-block (markup-stream 0)
             (let* ((initial-env (general-production-action-env grammar general-production))
-                   (body-annotated-expr (nth-value 2 (scan-value world initial-env body-expr)))
-                   (action-grammar-symbols (annotated-expr-grammar-symbols body-annotated-expr)))
+                   (type (scan-type world type-expr))
+                   (value-annotated-expr (nth-value 1 (scan-typed-value-or-begin world initial-env value-expr type)))
+                   (action-grammar-symbols (annotated-expr-grammar-symbols value-annotated-expr)))
               (depict-action-name markup-stream action-name)
               (depict markup-stream :action-begin)
               (depict-general-production markup-stream general-production :reference action-grammar-symbols)
               (depict markup-stream :action-end)
-              (flet
-                ((depict-body (markup-stream body-annotated-expr)
-                   (depict-break markup-stream 1)
-                   (depict-logical-block (markup-stream 3)
-                     (depict markup-stream "= ")
-                     (depict-annotated-value-expr markup-stream world body-annotated-expr %progn%))))
-                
-                (if destructured
-                  (progn
-                    (assert-true (special-form-annotated-expr? 'function body-annotated-expr))
-                    (depict-logical-block (markup-stream 10)
-                      (depict-break markup-stream 0)
-                      (depict-function-bindings markup-stream world (third body-annotated-expr)))
-                    (depict-body markup-stream (fourth body-annotated-expr)))
-                  (depict-body markup-stream body-annotated-expr))))))))))
+              (if destructured
+                (depict-signature-and-body markup-stream world type-expr value-annotated-expr show-type)
+                (depict-type-and-value markup-stream world type-expr value-annotated-expr show-type)))))))))
 
 
 ; (terminal-action <action-name> <terminal> <lisp-function>)
@@ -1245,11 +1377,18 @@
 (setf (styled-text-depictor :type) #'depict-styled-text-type)
 
 
-; (:field <name> <type-expression>)
-(defun depict-styled-text-field (markup-stream name type-expression)
-  (depict-field-name markup-stream name :reference (scan-type *styled-text-world* type-expression)))
+; (:tag <name>)
+(defun depict-styled-text-tag (markup-stream tag-name)
+  (depict-tag-name markup-stream (scan-tag *styled-text-world* tag-name) :reference))
 
-(setf (styled-text-depictor :field) #'depict-styled-text-field)
+(setf (styled-text-depictor :tag) #'depict-styled-text-tag)
+
+
+; (:label <tag-name> <label>)
+(defun depict-styled-text-label (markup-stream tag-name label)
+  (depict-label-name markup-stream (scan-tag *styled-text-world* tag-name) label :reference))
+
+(setf (styled-text-depictor :label) #'depict-styled-text-label)
 
 
 ; (:global <name>)
@@ -1257,7 +1396,10 @@
   (let ((interned-name (world-find-symbol *styled-text-world* name)))
     (if (and interned-name (symbol-primitive interned-name))
       (depict-primitive markup-stream (symbol-primitive interned-name))
-      (depict-global-variable markup-stream name :reference))))
+      (progn
+        (unless (symbol-type interned-name)
+          (warn "~A is depicted as a global variable but isn't one" name))
+        (depict-global-variable markup-stream name :reference)))))
 
 (setf (styled-text-depictor :global) #'depict-styled-text-global-variable)
 

@@ -90,25 +90,25 @@
 (defun depict-terminal (markup-stream terminal &optional subscript)
   (cond
    ((characterp terminal)
-    (depict-char-style (markup-stream ':character-literal)
+    (depict-char-style (markup-stream :character-literal)
       (depict-character markup-stream terminal)
       (when subscript
-        (depict-char-style (markup-stream ':plain-subscript)
+        (depict-char-style (markup-stream :plain-subscript)
           (depict-integer markup-stream subscript)))))
    ((and terminal (symbolp terminal))
     (let ((name (symbol-name terminal)))
       (if (and (> (length name) 0) (char= (char name 0) #\$))
-        (depict-char-style (markup-stream ':terminal)
+        (depict-char-style (markup-stream :terminal)
           (depict markup-stream (subseq (symbol-upper-mixed-case-name terminal) 1))
           (when subscript
-            (depict-char-style (markup-stream ':plain-subscript)
+            (depict-char-style (markup-stream :plain-subscript)
               (depict-integer markup-stream subscript))))
         (progn
-          (depict-char-style (markup-stream ':terminal-keyword)
+          (depict-char-style (markup-stream :terminal-keyword)
             (depict markup-stream (string-downcase name)))
           (when subscript
-            (depict-char-style (markup-stream ':terminal)
-              (depict-char-style (markup-stream ':plain-subscript)
+            (depict-char-style (markup-stream :terminal)
+              (depict-char-style (markup-stream :plain-subscript)
                 (depict-integer markup-stream subscript))))))))
    (t (error "Don't know how to emit markup for terminal ~S" terminal))))
 
@@ -131,8 +131,8 @@
 
 
 (defun depict-nonterminal-attribute (markup-stream attribute)
-  (depict-char-style (markup-stream ':nonterminal)
-    (depict-char-style (markup-stream ':nonterminal-attribute)
+  (depict-char-style (markup-stream :nonterminal)
+    (depict-char-style (markup-stream :nonterminal-attribute)
       (depict markup-stream (symbol-lower-mixed-case-name attribute)))))
 
 
@@ -148,7 +148,7 @@
     :xi :omicron :pi :rho :sigma :tau :upsilon :phi :chi :psi :omega))
 
 (defun depict-nonterminal-argument-symbol (markup-stream argument)
-  (depict-char-style (markup-stream ':nonterminal-argument)
+  (depict-char-style (markup-stream :nonterminal-argument)
     (let ((argument (symbol-abbreviation argument)))
       (depict markup-stream
               (if (member argument *special-nonterminal-arguments*)
@@ -156,7 +156,7 @@
                 (symbol-upper-mixed-case-name argument))))))
 
 (defun depict-nonterminal-argument (markup-stream argument)
-  (depict-char-style (markup-stream ':nonterminal)
+  (depict-char-style (markup-stream :nonterminal)
     (depict-nonterminal-argument-symbol markup-stream argument)))
 
 
@@ -287,18 +287,18 @@
      
      (depict-nonterminal-parameter (markup-stream parameter)
        (if (nonterminal-attribute? parameter)
-         (depict-char-style (markup-stream ':nonterminal-attribute)
+         (depict-char-style (markup-stream :nonterminal-attribute)
            (depict markup-stream (symbol-lower-mixed-case-name parameter)))
          (depict-nonterminal-argument-symbol markup-stream parameter)))
      
      (depict-parametrized-nonterminal (markup-stream symbol parameters)
        (depict-nonterminal-name markup-stream symbol)
-       (depict-char-style (markup-stream ':superscript)
+       (depict-char-style (markup-stream :superscript)
          (depict-list markup-stream #'depict-nonterminal-parameter parameters
                       :separator ",")))
      
      (depict-general (markup-stream)      
-       (depict-char-style (markup-stream ':nonterminal)
+       (depict-char-style (markup-stream :nonterminal)
          (cond
           ((keywordp general-nonterminal)
            (depict-nonterminal-name markup-stream general-nonterminal))
@@ -312,7 +312,7 @@
                                             (generic-nonterminal-parameters general-nonterminal)))
           (t (error "Bad nonterminal ~S" general-nonterminal)))
          (when subscript
-           (depict-char-style (markup-stream ':plain-subscript)
+           (depict-char-style (markup-stream :plain-subscript)
              (depict-integer markup-stream subscript))))))
     
     (if (or (eq link :definition)

@@ -341,7 +341,7 @@
     (if (consp html-source)
       (let ((tag (first html-source))
             (contents (rest html-source)))
-        (if (and (consp tag) (eq (first tag) ':nest))
+        (if (and (consp tag) (eq (first tag) :nest))
           (unnest-html-source (unnest-tags (rest tag) contents))
           (cons tag (mapcar #'unnest-html-source contents))))
       html-source)))
@@ -397,19 +397,23 @@
     
     ;Symbols (-10 suffix means 10-point, etc.)
     ((:bullet 1) (:script "document.write(U_bull)"))                    ;#x2022
-    ((:minus 1) "-")
     ((:not-equal 1) (:script "document.write(U_ne)"))                   ;#x2260
     ((:less-or-equal 1) (:script "document.write(U_le)"))               ;#x2264
     ((:greater-or-equal 1) (:script "document.write(U_ge)"))            ;#x2265
     ((:infinity 1) (:script "document.write(U_infin)"))                 ;#x221E
+    ((:minus 1) #x2013)
+    ((:m-dash 2) #x2014)
     ((:left-single-quote 1) #x2018)
     ((:right-single-quote 1) #x2019)
+    ((:apostrophe 1) #x2019)
     ((:left-double-quote 1) #x201C)
     ((:right-double-quote 1) #x201D)
     ((:left-angle-quote 1) #x00AB)
     ((:right-angle-quote 1) #x00BB)
+    ((:for-all-10 1) (:script "document.write(U_forall)"))              ;#x2200
+    ((:exists-10 1) (:script "document.write(U_exist)"))                ;#x2203
     ((:bottom-10 1) (:script "document.write(U_perp)"))                 ;#x22A5
-    ((:vector-assign-10 1) (:script "document.write(U_larr)"))          ;#x2190
+    ((:assign-10 1) (:script "document.write(U_larr)"))                 ;#x2190
     ((:up-arrow-10 1) (:script "document.write(U_uarr)"))               ;#x2191
     ((:function-arrow-10 2) (:script "document.write(U_rarr)"))         ;#x2192
     ((:cartesian-product-10 2) (:script "document.write(U_times)"))     ;#x00D7
@@ -420,9 +424,14 @@
     ((:union-10 1) (:script "document.write(U_cup)"))                   ;#x222A
     ((:member-10 2) (:script "document.write(U_isin)"))                 ;#x2208
     ((:not-member-10 2) (:script "document.write(U_notin)"))            ;#x2209
+    ((:label-assign-10 2) (:script "document.write(U_lArr)"))           ;#x21D0
     ((:derives-10 2) (:script "document.write(U_rArr)"))                ;#x21D2
     ((:left-triangle-bracket-10 1) (:script "document.write(U_lang)"))  ;#x2329
+    ((:left-ceiling-10 1) (:script "document.write(U_lceil)"))          ;#x2308
+    ((:left-floor-10 1) (:script "document.write(U_lfloor)"))           ;#x230A
     ((:right-triangle-bracket-10 1) (:script "document.write(U_rang)")) ;#x232A
+    ((:right-ceiling-10 1) (:script "document.write(U_rceil)"))         ;#x2309
+    ((:right-floor-10 1) (:script "document.write(U_rfloor)"))          ;#x230B
     
     ((:alpha 1) (:script "document.write(U_alpha)"))
     ((:beta 1) (:script "document.write(U_beta)"))
@@ -480,6 +489,7 @@
     (:type-expression (span (class "type-expression")))
     (:type-name (span (class "type-name")))
     (:field-name (span (class "field-name")))
+    (:tag-name (span (class "tag-name")))
     (:global-variable (span (class "global-variable")))
     (:local-variable (span (class "local-variable")))
     (:action-name (span (class "action-name")))
@@ -504,6 +514,8 @@
     ((:vector-append 2) :circle-plus-10)
     ((:tuple-begin 1) (b :left-triangle-bracket-10))
     ((:tuple-end 1) (b :right-triangle-bracket-10))
+    ((:record-begin 1) (b (:script "document.write(U_lang+U_lang)")))
+    ((:record-end 1) (b (:script "document.write(U_rang+U_rang)")))
     ((:true 4) (:global-variable "true"))
     ((:false 5) (:global-variable "false"))
     ((:unique 6) (:semantic-keyword "unique"))

@@ -23,24 +23,29 @@
 ;;; Waldemar Horwat (waldemar@acm.org)
 ;;;
 
+(declaim (optimize (debug 3))) ;*****
 (defvar *trace-variables* nil)
 
 
-#+mcl (dolist (indent-spec '((? . 1) (apply . 1) (funcall . 1) (production . 3) (rule . 2) (function . 1) (letexc . 1) (deftype . 1) (tuple . 1) (%text . 1)))
+#+mcl (dolist (indent-spec '((? . 1) (apply . 1) (funcall . 1) (production . 3) (rule . 2) (function . 2)
+                             (deftag . 1) (defrecord . 1) (deftype . 1) (tag . 1) (%text . 1)
+                             (var . 2) (const . 2) (rwhen . 1) (while . 1) (:narrow . 1) (:select . 1)))
         (pushnew indent-spec ccl:*fred-special-indent-alist* :test #'equal))
 
 
-; A strict version of and.
-(defun and2 (a b)
-  (and a b))
+; Return the boolean exclusive or of the arguments.
+(defun xor (&rest as)
+  (let ((result nil))
+    (dolist (a as)
+      (when a
+        (setq result (not result))))
+    result))
 
-; A strict version of or.
-(defun or2 (a b)
-  (or a b))
 
-; A strict version of xor.
-(defun xor2 (a b)
-  (or (and a (not b)) (and (not a) b)))
+; A boolean version of = that works on any nil/non-nil values.
+(declaim (inline boolean=))
+(defun boolean= (a b)
+  (eq (not a) (not b)))
 
 
 ; Complement of eq.
@@ -74,32 +79,44 @@
     (coerce result-type (nreverse results))))
 
 
+; Return the same symbol in the keyword package.
+(defun find-keyword (symbol)
+  (assert-non-null (find-symbol (string symbol) (find-package :keyword))))
+
+
 ;;; ------------------------------------------------------------------------------------------------------
 ;;; DOUBLE-PRECISION FLOATING-POINT NUMBERS
 
 (deftype float64 ()
-         '(or float (member :+inf :-inf :nan)))
+         '(or (and float (not (eql 0.0)) (not (eql -0.0))) (member :+zero :-zero :+inf :-inf :nan)))
 
 (defun float64? (n)
-  (or (floatp n)
-      (member n '(:+inf :-inf :nan))))
+  (or (and (floatp n) (not (zerop n)))
+      (member n '(:+zero :-zero :+inf :-inf :nan))))
 
-; Evaluate expr.  If it evaluates successfully, return its values.
-; If not, evaluate sign; if it returns a positive value, return :+inf;
+; Evaluate expr.  If it evaluates successfully, return its value except if it evaluates to
+; +0.0 or -0.0, in which case return :+zero (but not :-zero).
+; If evaluating expr overflows, evaluate sign; if it returns a positive value, return :+inf;
 ; otherwise return :-inf.  sign should not return zero.
 (defmacro handle-overflow (expr &body sign)
-  `(handler-case ,expr
-     (floating-point-overflow () (if (minusp (progn ,@sign)) :-inf :+inf))))
+  (let ((x (gensym)))
+    `(handler-case (let ((,x ,expr))
+                     (if (zerop ,x) :+zero ,x))
+       (floating-point-overflow () (if (minusp (progn ,@sign)) :-inf :+inf)))))
 
 
 (defun rational-to-float64 (r)
-  (handle-overflow (coerce r 'double-float) r))
+  (let ((f (handle-overflow (coerce r 'double-float)
+             r)))
+    (if (eq f :+zero)
+      (if (minusp r) :-zero :+zero)
+      f)))
 
 
 ; Return true if n is +0 or -0 and false otherwise.
 (declaim (inline float64-is-zero))
 (defun float64-is-zero (n)
-  (and (floatp n) (zerop n)))
+  (or (eq n :+zero) (eq n :-zero)))
 
 
 ; Return true if n is NaN and false otherwise.
@@ -114,12 +131,30 @@
   (or (eq n :+inf) (eq n :-inf)))
 
 
+; Convert n to a rational number.  Signal an error if n isn't finite.
+(defun float64-to-rational (n)
+  (if (float64-is-zero n)
+    0
+    (rational n)))
+
+
+; Truncate n to the next lower integer.  Signal an error if n isn't finite.
+(defun truncate-float64 (n)
+  (if (float64-is-zero n)
+    0
+    (truncate n)))
+
+
 ; Return:
 ;   less if n<m;
 ;   equal if n=m;
 ;   greater if n>m;
 ;   unordered if either n or m is :nan.
 (defun float64-compare (n m less equal greater unordered)
+  (when (float64-is-zero n)
+    (setq n 0.0))
+  (when (float64-is-zero m)
+    (setq m 0.0))
   (cond
    ((or (float64-is-nan n) (float64-is-nan m)) unordered)
    ((eql n m) equal)
@@ -136,13 +171,10 @@
 ;    0 if n is :nan.
 (defun float64-sign (n)
   (case n
-    (:+inf 1)
-    (:-inf -1)
+    ((:+zero :+inf) 1)
+    ((:-zero :-inf) -1)
     (:nan 0)
     (t (round (float-sign n)))))
-
-
-(assert-true (and (= (float64-sign 0.0) 1) (= (float64-sign -0.0) -1)))
 
 
 ; Return
@@ -156,13 +188,14 @@
 ; Return d truncated towards zero into a 32-bit integer.  Overflows wrap around.
 (defun float64-to-uint32 (d)
   (case d
-    ((:+inf :-inf :nan) 0)
+    ((:+zero :-zero :+inf :-inf :nan) 0)
     (t (mod (truncate d) #x100000000))))
 
 
 ; Return the absolute value of n.
 (defun float64-abs (n)
   (case n
+    ((:+zero :-zero) :+zero)
     ((:+inf :-inf) :+inf)
     (:nan :nan)
     (t (abs n))))
@@ -171,6 +204,8 @@
 ; Return -n.
 (defun float64-neg (n)
   (case n
+    (:+zero :-zero)
+    (:-zero :+zero)
     (:+inf :-inf)
     (:-inf :+inf)
     (:nan :nan)
@@ -180,16 +215,17 @@
 ; Return n+m.
 (defun float64-add (n m)
   (case n
+    (:+zero (if (eq m :-zero) :+zero m))
+    (:-zero m)
     (:+inf (case m
-             (:-inf :nan)
-             (:nan :nan)
+             ((:-inf :nan) :nan)
              (t :+inf)))
     (:-inf (case m
-             (:+inf :nan)
-             (:nan :nan)
+             ((:+inf :nan) :nan)
              (t :-inf)))
     (:nan :nan)
     (t (case m
+         ((:+zero :-zero) n)
          (:+inf :+inf)
          (:-inf :-inf)
          (:nan :nan)
@@ -212,8 +248,9 @@
         (m (float64-abs m)))
     (let ((result (cond
                    ((zerop sign) :nan)
-                   ((eq n :+inf) (if (float64-is-zero m) :nan :+inf))
-                   ((eq m :+inf) (if (float64-is-zero n) :nan :+inf))
+                   ((eq n :+inf) (if (eq m :+zero) :nan :+inf))
+                   ((eq m :+inf) (if (eq n :+zero) :nan :+inf))
+                   ((or (eq n :+zero) (eq m :+zero)) :+zero)
                    (t (handle-overflow (* n m) 1)))))
       (if (minusp sign)
         (float64-neg result)
@@ -228,8 +265,9 @@
     (let ((result (cond
                    ((zerop sign) :nan)
                    ((eq n :+inf) (if (eq m :+inf) :nan :+inf))
-                   ((eq m :+inf) 0d0)
-                   ((zerop m) (if (zerop n) :nan :+inf))
+                   ((eq m :+inf) :+zero)
+                   ((eq m :+zero) (if (eq n :+zero) :nan :+inf))
+                   ((eq n :+zero) :+zero)
                    (t (handle-overflow (/ n m) 1)))))
       (if (minusp sign)
         (float64-neg result)
@@ -241,7 +279,10 @@
   (cond
    ((or (float64-is-nan n) (float64-is-nan m) (float64-is-infinite n) (float64-is-zero m)) :nan)
    ((or (float64-is-infinite m) (float64-is-zero n)) n)
-   (t (float (rem (rational n) (rational m))))))
+   (t (let ((result (float (rem (rational n) (rational m)))))
+        (if (zerop result)
+          (if (minusp n) :-zero :+zero)
+          result)))))
 
 
 ;;; ------------------------------------------------------------------------------------------------------
@@ -275,25 +316,74 @@
 ;;; ------------------------------------------------------------------------------------------------------
 ;;; CODE GENERATION
 
+#+mcl(defvar *deferred-functions*)
+
+(defun quiet-compile (name definition)
+  #-mcl(compile name definition)
+  #+mcl(handler-bind ((ccl::undefined-function-reference
+                       #'(lambda (condition)
+                           (setq *deferred-functions* (append (slot-value condition 'ccl::args) *deferred-functions*))
+                           (muffle-warning condition))))
+         (compile name definition)))
+
+
+(defmacro defer-mcl-warnings (&body body)
+  #-mcl`(with-compilation-unit () ,@body)
+  #+mcl`(let ((*deferred-functions* nil))
+          (multiple-value-prog1
+            (with-compilation-unit () ,@body)
+            (let ((missing-functions (remove-if #'fboundp *deferred-functions*)))
+              (when missing-functions
+                (warn "Undefined functions: ~S" missing-functions))))))
+
+
+; If args has no elements, return the value of empty.
+; If args has one element, return that element.
+; If args has two or more elements, return (op . args).
+(defun gen-poly-op (op empty args)
+  (cond
+   ((endp args) empty)
+   ((endp (cdr args)) (car args))
+   (t (cons op args))))
+
+
 ; Return `(progn ,@statements), optimizing where possible.
-(defun gen-progn (&rest statements)
-  (if (and (= (length statements) 1)
-           (let ((first-statement (first statements)))
-             (not (and (consp first-statement)
-                       (eq (first first-statement) 'declare)))))
-    (first statements)
-    (cons 'progn statements)))
+(defun gen-progn (statements)
+  (cond
+   ((endp statements) nil)
+   ((and (endp (cdr statements))
+         (let ((first-statement (first statements)))
+           (not (and (consp first-statement)
+                     (eq (first first-statement) 'declare)))))
+    (first statements))
+   (t (cons 'progn statements))))
+
+
+; Return (nth <n> <code>), optimizing if possible.
+(defun gen-nth-code (n code)
+  (let ((abbrev (assoc n '((0 . first) (1 . second) (2 . third) (3 . fourth) (4 . fifth) (5 . sixth) (6 . seventh) (7 . eighth) (8 . ninth) (9 . tenth)))))
+    (if abbrev
+      (list (cdr abbrev) code)
+      (list 'nth n code))))
+
+
+; Return code that tests whether the result of evaluating code is a member of the given
+; list of symbols using the test eq.
+(defun gen-member-test (code symbols)
+  (assert-true symbols)
+  (if (cdr symbols)
+    (list 'member code (list 'quote symbols) :test '#'eq)
+    (list 'eq code (let ((symbol (car symbols)))
+                     (if (constantp symbol)
+                       symbol
+                       (list 'quote symbol))))))
 
 
 ; Return `(funcall ,function-value ,@arg-values), optimizing where possible.
 (defun gen-apply (function-value &rest arg-values)
-  (cond
-   ((and (consp function-value)
-         (eq (first function-value) 'function)
-         (consp (rest function-value))
-         (second function-value)
-         (null (cddr function-value)))
-    (let ((stripped-function-value (second function-value)))
+  (let ((stripped-function-value (simple-strip-function function-value)))
+    (cond
+     (stripped-function-value
       (if (and (consp stripped-function-value)
                (eq (first stripped-function-value) 'lambda)
                (listp (second stripped-function-value))
@@ -309,17 +399,17 @@
             (list* 'let
                    (mapcar #'list function-args arg-values)
                    function-body)
-            (apply #'gen-progn function-body)))
-        (cons stripped-function-value arg-values))))
-   ((and (consp function-value)
-         (eq (first function-value) 'symbol-function)
-         (null (cddr function-value))
-         (consp (cadr function-value))
-         (eq (caadr function-value) 'quote)
-         (identifier? (cadadr function-value))
-         (null (cddadr function-value)))
-    (cons (cadadr function-value) arg-values))
-   (t (list* 'funcall function-value arg-values))))
+            (gen-progn function-body)))
+        (cons stripped-function-value arg-values)))
+     ((and (consp function-value)
+           (eq (first function-value) 'symbol-function)
+           (null (cddr function-value))
+           (consp (cadr function-value))
+           (eq (caadr function-value) 'quote)
+           (identifier? (cadadr function-value))
+           (null (cddadr function-value)))
+      (cons (cadadr function-value) arg-values))
+     (t (list* 'funcall function-value arg-values)))))
 
 
 ; Return `#'(lambda ,args (declare (ignore-if-unused ,@args)) ,body-code), optimizing
@@ -388,6 +478,16 @@
       (list* 'defun name function-args function-body))
     (let ((args (intern-n-vars-with-prefix "_" n-args nil)))
       (list 'defun name args (apply #'gen-apply expr args)))))
+
+
+; If code has the form (function <expr>), return <expr>; otherwise, return nil.
+(defun simple-strip-function (code)
+  (when (and (consp code)
+             (eq (first code) 'function)
+             (consp (rest code))
+             (second code)
+             (null (cddr code)))
+    (assert-non-null (second code))))
 
 
 ; Strip the (function ...) covering from expr, leaving only a plain lambda expression.
@@ -514,18 +614,23 @@
                   (:predicate world?))
   (conditionals nil :type list)                      ;Assoc list of (conditional . highlight), where highlight can be a style keyword, nil (no style), or 'delete
   (package nil :type package)                        ;The package in which this world's identifiers are interned
-  (n-type-names 0 :type integer)                     ;Number of type names defined so far
-  (types-reverse nil :type (or null hash-table))     ;Hash table of (kind tags parameters) -> type; nil if invalid
-  (oneof-tags nil :type (or null hash-table))        ;Hash table of (oneof-tag . field-type) -> (must-be-unique oneof-type ... oneof-type); nil if invalid
+  (next-type-serial-number 0 :type integer)          ;Serial number to be used for the next type defined
+  (types-reverse nil :type (or null hash-table))     ;Hash table of (kind tag parameters) -> type; nil if invalid
+  (false-tag nil :type (or null tag))                ;Tag used for false
+  (true-tag nil :type (or null tag))                 ;Tag used for true
   (bottom-type nil :type (or null type))             ;Subtype of all types used for nonterminating computations
   (void-type nil :type (or null type))               ;Type used for placeholders
+  (false-type nil :type (or null type))              ;Type used for false
+  (true-type nil :type (or null type))               ;Type used for true
   (boolean-type nil :type (or null type))            ;Type used for booleans
   (integer-type nil :type (or null type))            ;Type used for integers
   (rational-type nil :type (or null type))           ;Type used for rational numbers
-  (float64-type nil :type (or null type))            ;Type used for double-precision floating-point numbers
-  (id-type nil :type (or null type))                 ;Type used for id's
+  (finite64-type nil :type (or null type))           ;Type used for nonzero finite double-precision floating-point numbers
   (character-type nil :type (or null type))          ;Type used for characters
   (string-type nil :type (or null type))             ;Type used for strings (vectors of characters)
+  (denormalized-false-type nil :type (or null type)) ;Type (denormalized-tag false)
+  (denormalized-true-type nil :type (or null type))  ;Type (denormalized-tag true)
+  (boxed-boolean-type nil :type (or null type))      ;Union type (union (tag true) (tag false))
   (grammar-infos nil :type list)                     ;List of grammar-info
   (commands-source nil :type list))                  ;List of source code of all commands applied to this world
 
@@ -575,8 +680,7 @@
   (let* ((p (make-package name :use nil))
          (world (allocate-world
                  :package p
-                 :types-reverse (make-hash-table :test #'equal)
-                 :oneof-tags (make-hash-table :test #'equal)))
+                 :types-reverse (make-hash-table :test #'equal)))
          (access-symbol (intern "*WORLD*" p)))
     (set access-symbol world)
     (export access-symbol p)
@@ -701,37 +805,34 @@
 ;;;
 ;;;   :command       expression code generation function ((world grammar-info-var . form-arg-list) -> void) if this identifier
 ;;;                  is a command like 'deftype or 'define
+;;;   :statement     expression code generation function ((world type-env rest last id . form-arg-list) -> codes, live, annotated-stmts)
+;;;                  if this identifier is a statement like 'if or 'catch;
+;;;                     codes is a list of generated statements, live is true if the statement can fall through, and
+;;;                     annotated-stmts is a list of generated annotated statements
 ;;;   :special-form  expression code generation function ((world type-env id . form-arg-list) -> code, type, annotated-expr)
-;;;                  if this identifier is a special form like 'if or 'function
+;;;                  if this identifier is a special form like 'tag or 'in
 ;;;
 ;;;   :primitive     primitive structure if this identifier is a primitive
 ;;;
-;;;   :macro         lisp expansion function ((world type-env . form-arg-list) -> expansion) if this identifier is a macro
-;;;
 ;;;   :type-constructor  expression code generation function ((world allow-forward-references . form-arg-list) -> type) if this
-;;;                  identifier is a type constructor like '->, 'vector, 'set, 'tuple, 'oneof, or 'address
+;;;                  identifier is a type constructor like '->, 'vector, 'set, 'tag, or 'union
 ;;;   :deftype       type if this identifier is a type; nil if this identifier is a forward-referenced type
 ;;;
 ;;;   <value>        value of this identifier if it is a variable of type other than ->
 ;;;   <function>     value of this identifier if it is a variable of type ->
-;;;   :code          lisp code that was evaluated to produce <value>
 ;;;   :value-expr    unparsed expression defining the value of this identifier if it is a variable
 ;;;   :type          type of this identifier if it is a variable
 ;;;   :type-expr     unparsed expression defining the type of this identifier if it is a variable
+;;;   :tag           tag structure if this identifier is a tag
+;;;   :tag=          a two-argument function that takes two values with this tag and compares them
 ;;;
 ;;;   :action        list of (grammar-info . grammar-symbol) that declare this action if this identifier is an action name
 ;;;
 ;;;   :depict-command           depictor function ((markup-stream world depict-env . form-arg-list) -> void)
-;;;   :depict-type-constructor  depictor function ((markup-stream world level . form-arg-list) -> void)
+;;;   :depict-statement         depictor function ((markup-stream world . form-annotated-arg-list) -> void)
 ;;;   :depict-special-form      depictor function ((markup-stream world level . form-annotated-arg-list) -> void)
-;;;   :depict-macro             depictor function ((markup-stream world level . form-annotated-arg-list) -> void)
+;;;   :depict-type-constructor  depictor function ((markup-stream world level . form-arg-list) -> void)
 ;;;
-
-
-; Return the code of the value associated with the given symbol or default if none.
-; This macro is appropriate for use with setf.
-(defmacro symbol-code (symbol &optional default)
-  `(get ,symbol :code ,@(and default (list default))))
 
 
 ; Return the preprocessor action associated with the given symbol or nil if none.
@@ -740,16 +841,29 @@
   `(get ,symbol :preprocess))
 
 
-; Return the macro definition associated with the given symbol or nil if none.
-; This macro is appropriate for use with setf.
-(defmacro symbol-macro (symbol)
-  `(get ,symbol :macro))
-
-
 ; Return the primitive definition associated with the given symbol or nil if none.
 ; This macro is appropriate for use with setf.
 (defmacro symbol-primitive (symbol)
   `(get ,symbol :primitive))
+
+
+; Return the tag definition associated with the given symbol or nil if none.
+; This macro is appropriate for use with setf.
+(defmacro symbol-tag (symbol)
+  `(get ,symbol :tag))
+
+
+; Call f on each tag definition in the world.
+; f takes two arguments:
+;   the name
+;   the tag structure
+(defun each-tag-definition (world f)
+  (each-world-external-symbol-with-property world :tag f))
+
+
+; Return a sorted list of the names of all tag definitions in the world.
+(defun world-tag-definitions (world)
+  (all-world-external-symbols-with-property world :tag))
 
 
 ; Return the type definition associated with the given symbol.
@@ -787,12 +901,6 @@
   `(get ,symbol :type))
 
 
-; Return true if there is a variable associated with the given symbol.
-(declaim (inline symbol-has-variable))
-(defun symbol-has-variable (symbol)
-  (not (eq (get symbol *get2-nonce*) *get2-nonce*)))
-
-
 ; Return a list of (grammar-info . grammar-symbol) pairs that each indicate
 ; a grammar and a grammar-symbol in that grammar that has an action named by the given symbol.
 ; This macro is appropriate for use with setf.
@@ -800,46 +908,174 @@
   `(get ,symbol :action))
 
 
+; Return an unused name for a new function in the world.  The given string is a suggested name.
+; The returned value is a symbol.
+(defun unique-function-name (world string)
+  (let ((f (world-intern world string)))
+    (if (fboundp f)
+      (gentemp string (world-package world))
+      f)))
+
+
+;;; ------------------------------------------------------------------------------------------------------
+;;; TAGS
+
+(defstruct (field (:type list) (:constructor make-field (label type mutable)))
+  label                     ;This field's name (not interned in the world)
+  type                      ;This field's type 
+  mutable)                  ;True if this fields is mutable
+
+
+(defstruct (tag (:constructor make-tag (name keyword mutable fields =-name link)) (:predicate tag?))
+  (name nil :type symbol :read-only t)               ;This tag's world-interned name
+  (keyword nil :type (or null keyword) :read-only t) ;This tag's keyword (non-null only when the tag is immutable and has no fields)
+  (mutable nil :type bool :read-only t)              ;True if this tag's equality is based on identity, in which case the tag's values have a hidden serial-number field
+  (fields nil :type list :read-only t)               ;List of fields after eval-tags-types or (field-name field-type-expression [:const|:var]) before eval-tags-types
+  (=-name nil :type symbol)                          ;Lazily computed name of a function that compares two values of this tag for equality; nil if not known yet
+  (link nil :type (or null keyword) :read-only t))   ;:reference if this is a local tag, :external if it's a predefined tag, or nil for no cross-references to this tag
+
+; Return three values:
+;   the one-based position of the tag's field corresponding to the given label or nil if the label is not present;
+;   the type the field; 
+;   true if the field is mutable.
+(defun tag-find-field (tag label)
+  (do ((fields (tag-fields tag) (cdr fields))
+       (n (if (tag-mutable tag) 2 1) (1+ n)))
+      ((endp fields) (values nil nil nil))
+    (let ((field (car fields)))
+      (when (eq label (field-label field))
+        (return (values n (field-type field) (field-mutable field)))))))
+
+
+; Define a new tag.  Signal an error if the name is already used.  Return the tag.
+; Do not evaluate the field and type expressions yet; that will be done by eval-tags-types.
+(defun add-tag (world name mutable fields link)
+  (assert-true (member link '(nil :reference :external)))
+  (let ((name (scan-name world name)))
+    (when (symbol-tag name)
+      (error "Attempt to redefine tag ~A" name))
+    (let ((keyword nil)
+          (=-name nil))
+      (unless (or mutable fields)
+        (setq keyword (intern (string name) :keyword)))
+      (when (or mutable (null fields))
+        (setq =-name 'eq)
+        (setf (get name :tag=) #'eq))
+      (let ((tag (make-tag name keyword mutable fields =-name link)))
+        (setf (symbol-tag name) tag)
+        (export-symbol name)
+        tag))))
+
+
+; Evaluate the type expressions in the tag's fields.
+(defun eval-tag-types (world tag)
+  (do ((fields (tag-fields tag) (cdr fields))
+       (labels nil))
+      ((endp fields))
+    (let ((field (first fields)))
+      (unless (and (consp field) (identifier? (first field))
+                   (consp (cdr field)) (second field)
+                   (member (third field) '(nil :const :var))
+                   (null (cdddr field)))
+        (error "Bad field ~S" field))
+      (let ((label (first field))
+            (mutable (eq (third field) :var)))
+        (when (member label labels)
+          (error "Duplicate label ~S" label))
+        (push label labels)
+        (when (and mutable (not (tag-mutable tag)))
+          (error "Tag ~S is immutable but contains a mutable field ~S" (tag-name tag) label))
+        (setf (first fields) (make-field label (scan-type world (second field)) mutable))))))
+
+
+; Evaluate the type expressions in all of the world's tag's fields.
+(defun eval-tags-types (world)
+  (each-tag-definition
+   world
+   #'(lambda (name tag)
+       (declare (ignore name))
+       (eval-tag-types world tag))))
+
+
+; Return the tag with the given un-world-interned name.  Signal an error if one wasn't found.
+(defun scan-tag (world tag-name)
+  (let ((name (world-find-symbol world tag-name)))
+    (or (symbol-tag name)
+        (error "No tag ~A defined" tag-name))))
+
+
+; Scan label to produce a label that is present in the given tag.
+; Return the label's position, its field type, and a flag indicating whether it is mutable.
+(defun scan-label (tag label)
+  (multiple-value-bind (position field-type mutable) (tag-find-field tag label)
+    (unless position
+      (error "Label ~S not present in ~A" label (tag-name tag)))
+    (values position field-type mutable)))
+
+
+; Print the tag nicely on the given stream.
+(defun print-tag (tag &optional (stream t))
+  (pprint-logical-block (stream (tag-fields tag) :prefix "(" :suffix ")")
+    (pprint-exit-if-list-exhausted)
+    (loop
+      (let ((field (pprint-pop)))
+        (pprint-logical-block (stream nil :prefix "(" :suffix ")")
+          (write (field-label field) :stream stream)
+          (format stream " ~@_")
+          (print-type (field-type field) stream)
+          (when (field-mutable field)
+            (format stream " ~@_t")))
+        (pprint-exit-if-list-exhausted)
+        (format stream " ~:_")))))
+
+
 ;;; ------------------------------------------------------------------------------------------------------
 ;;; TYPES
 
 (deftype typekind ()
-         '(member     ;tags             ;parameters
+         '(member     ;tag              ;parameters
            :bottom    ;nil              ;nil
            :void      ;nil              ;nil
            :boolean   ;nil              ;nil
            :integer   ;nil              ;nil
            :rational  ;nil              ;nil
-           :float64   ;nil              ;nil
-           :id        ;nil              ;nil
+           :finite64  ;nil              ;nil    ;All non-zero finite 64-bit double-precision floating-point numbers
            :character ;nil              ;nil
            :->        ;nil              ;(result-type arg1-type arg2-type ... argn-type)
+           :string    ;nil              ;(character)
            :vector    ;nil              ;(element-type)
            :set       ;nil              ;(element-type)
-           :tuple     ;(tag1 ... tagn)  ;(element1-type ... elementn-type)
-           :oneof     ;(tag1 ... tagn)  ;(element1-type ... elementn-type)
-           :address)) ;nil              ;(element-type)
+           :tag       ;tag              ;nil
+           :denormalized-tag ;tag       ;nil
+           :union))   ;nil              ;(type ... type) sorted by ascending serial numbers
+
+;A denormalized-tag is a singleton tag type whose value carries no meaning.
+;
+;All types are normalized except for those with kind :denormalized-tag and the boxed-boolean union type of tags true and false.
+;
+;A union type must have:
+;  at least two types
+;  only types with kinds :integer, :rational, :finite64, :character, :string, or :tag
+;  no type that is a duplicate or subtype of another type in the union
+;  types sorted by ascending type-serial-number.
+;
+;Note that types with the above kinds never change their serial-numbers during unite-types, so
+;unite-types does not need to worry about unions differing only in the order of their parameters.
 
 
-; Return true if typekind1 is the same or more specific (i.e. a subtype) than typekind2.
-(defun typekind<= (typekind1 typekind2)
-  (or (eq typekind1 typekind2)
-      (eq typekind1 :bottom)
-      (and (eq typekind1 :integer) (eq typekind2 :rational))))
-
-
-(defstruct (type (:constructor allocate-type (kind tags parameters))
-                 (:predicate type?))
+(defstruct (type (:constructor allocate-type (serial-number kind tag parameters =-name /=-name)) (:predicate type?))
   (name nil :type symbol)                          ;This type's name; nil if this type is anonymous
-  (name-serial-number nil :type (or null integer)) ;This type's name's serial number; nil if this type is anonymous
+  (serial-number nil :type integer)                ;This type's unique serial number
   (kind nil :type typekind :read-only t)           ;This type's kind
-  (tags nil :type list :read-only t)               ;List of tuple or oneof tags
-  (parameters nil :type list :read-only t))        ;List of parameter types (either types or symbols if forward-referenced) describing a compound type
+  (tag nil :type (or null tag) :read-only t)       ;This type's tag
+  (parameters nil :type list :read-only t)         ;List of parameter types (either types or symbols if forward-referenced) describing a compound type
+  (=-name nil :type symbol)                        ;Lazily computed name of a function that compares two values of this type for equality; nil if not known yet
+  (/=-name nil :type symbol))                      ;Name of a function that complements = or nil if none
 
 
 (declaim (inline make-->-type))
 (defun make-->-type (world argument-types result-type)
-  (make-type world :-> nil (cons result-type argument-types)))
+  (make-type world :-> nil (cons result-type argument-types) nil nil))
 
 (declaim (inline ->-argument-types))
 (defun ->-argument-types (type)
@@ -854,17 +1090,19 @@
 
 (declaim (inline make-vector-type))
 (defun make-vector-type (world element-type)
-  (make-type world :vector nil (list element-type)))
+  (if (eq element-type (world-character-type world))
+    (world-string-type world)
+    (make-type world :vector nil (list element-type) nil nil)))
 
 (declaim (inline vector-element-type))
 (defun vector-element-type (type)
-  (assert-true (eq (type-kind type) :vector))
+  (assert-true (member (type-kind type) '(:vector :string)))
   (car (type-parameters type)))
 
 
 (declaim (inline make-set-type))
 (defun make-set-type (world element-type)
-  (make-type world :set nil (list element-type)))
+  (make-type world :set nil (list element-type) 'intset= nil))
 
 (declaim (inline set-element-type))
 (defun set-element-type (type)
@@ -872,53 +1110,358 @@
   (car (type-parameters type)))
 
 
-; Return the type of the oneof's or tuple's field corresponding to the given tag
-; or nil if the tag is not present in the oneof's or tuple's tags.
-(defun field-type (type tag)
-  (assert-true (member (type-kind type) '(:oneof :tuple)))
-  (let ((pos (position tag (type-tags type))))
-    (and pos (nth pos (type-parameters type)))))
+(declaim (inline make-tag-type))
+(defun make-tag-type (world tag)
+  (make-type world :tag tag nil (tag-=-name tag) nil))
 
 
-(declaim (inline make-address-type))
-(defun make-address-type (world element-type)
-  (make-type world :address nil (list element-type)))
+(declaim (inline always-true))
+(defun always-true (a b)
+  (declare (ignore a b))
+  t)
 
-(declaim (inline address-element-type))
-(defun address-element-type (type)
-  (assert-true (eq (type-kind type) :address))
-  (car (type-parameters type)))
+(declaim (inline always-false))
+(defun always-false (a b)
+  (declare (ignore a b))
+  nil)
+
+(declaim (inline make-denormalized-tag-type))
+(defun make-denormalized-tag-type (world tag)
+  (assert-true (tag-keyword tag))
+  (make-type world :denormalized-tag tag nil 'always-true 'always-false))
 
 
-; Return true if type1 is the same or more specific (i.e. a subtype) than type2.
-(defun type<= (type1 type2)
-  (or (eq type1 type2)
+; Return three values:
+;   the one-based position of the type's field corresponding to the given label or nil if the label is not present;
+;   the type the field; 
+;   true if the field is mutable.
+(defun type-find-field (type label)
+  (tag-find-field (type-tag type) label))
+
+
+; Equivalent types are guaranteed to be eq to each other.
+(declaim (inline type=))
+(defun type= (type1 type2)
+  (eq type1 type2))
+
+
+; Convert a value of a union type that includes finite64 into a value of a union type that includes rational.
+(defun union-finite64-to-rational (value)
+  (if (floatp value)
+    (rational value)
+    value))
+
+
+; code is a lisp expression that evaluates to either :true or :false.
+; Return a lisp expression that evaluates code and returns either t or nil.
+(defun bool-unboxing-code (code)
+  (if (constantp code)
+    (ecase code
+      (:true t)
+      (:false nil))
+    (list 'eq code :true)))
+
+
+; code is a lisp expression that evaluates to either non-nil or nil.
+; Return a lisp expression that evaluates code and returns either :true or :false.
+(defun bool-boxing-code (code)
+  (if (constantp code)
+    (ecase code
+      ((t) :true)
+      ((nil) :false))
+    (list 'if code :true :false)))
+
+
+; code is a lisp expression that evaluates to a value of type type.
+; If type is the same or more specific (i.e. a subtype) than supertype, return code that evaluates code
+; and returns its value coerced to supertype.
+; Signal an error if type is not a subtype of supertype.  expr contains the source code that generated code
+; and is used for error reporting only.
+;
+; Coercions from :denormalized-tag types are not implemented, but they should not be necessary in practice.
+(defun widening-coercion-code (world supertype type code expr)
+  (if (type= type supertype)
+    code
+    (flet ((type-mismatch ()
+             (error "Expected type ~A for ~:W but got type ~A"
+                    (print-type-to-string supertype)
+                    expr
+                    (print-type-to-string type))))
+      (let ((kind (type-kind type)))
+        (if (eq kind :bottom)
+          code
+          (case (type-kind supertype)
+            (:boolean
+             (if (or (type= type (world-false-type world))
+                     (type= type (world-true-type world))
+                     (type= type (world-boxed-boolean-type world)))
+               (bool-unboxing-code code)
+               (type-mismatch)))
+            (:rational
+             (case kind
+               (:integer code)
+               (:finite64 (list 'rational code))
+               (t (type-mismatch))))
+            (:union
+             (let ((supertype-types (type-parameters supertype)))
+               (case kind
+                 (:boolean
+                  (if (and (member (world-false-type world) supertype-types) (member (world-true-type world) supertype-types))
+                    (bool-boxing-code code)
+                    (type-mismatch)))
+                 (:integer
+                  (if (or (member type supertype-types) (member (world-rational-type world) supertype-types))
+                    code
+                    (type-mismatch)))
+                 ((:rational :character :string :tag)
+                  (if (member type supertype-types)
+                    code
+                    (type-mismatch)))
+                 (:finite64
+                  (cond
+                   ((member type supertype-types) code)
+                   ((member (world-rational-type world) supertype-types) (list 'rational code))
+                   (t (type-mismatch))))
+                 (:union
+                  (let ((convert-finite64-to-rational nil))
+                    (dolist (type-type (type-parameters type))
+                      (unless (case (type-kind type-type)
+                                (:integer (or (member type-type supertype-types) (member (world-rational-type world) supertype-types)))
+                                ((:rational :character :string :tag) (member type-type supertype-types))
+                                (:finite64
+                                 (or (member type-type supertype-types)
+                                     (and (member (world-rational-type world) supertype-types) (setq convert-finite64-to-rational t)))))
+                        (type-mismatch)))
+                    (if convert-finite64-to-rational
+                      (list 'union-finite64-to-rational code)
+                      code)))
+                 (t (type-mismatch)))))
+            (t (type-mismatch))))))))
+
+
+; Return the list of constituent types that the given type would have if it were a union.
+; The result is sorted by ascending serial numbers and contains no duplicates.
+(defun type-to-union (world type)
+  (ecase (type-kind type)
+    (:boolean (type-parameters (world-boxed-boolean-type world)))
+    ((:integer :rational :finite64 :character :string :tag) (list type))
+    (:denormalized-tag (make-tag-type world (type-tag type)))
+    (:union (type-parameters type))))
+
+
+; Merge the two lists of types sorted by ascending serial numbers.
+; The result is also sorted by ascending serial numbers and contains no duplicates.
+(defun merge-type-lists (types1 types2)
+  (cond
+   ((endp types1) types2)
+   ((endp types2) types1)
+   (t (let ((type1 (first types1))
+            (type2 (first types2)))
+        (if (type= type1 type2)
+          (cons type1 (merge-type-lists (rest types1) (rest types2)))
+          (let ((serial-number1 (type-serial-number type1))
+                (serial-number2 (type-serial-number type2)))
+            (assert-true (/= serial-number1 serial-number2))
+            (if (< serial-number1 serial-number2)
+              (cons type1 (merge-type-lists (rest types1) types2))
+              (cons type2 (merge-type-lists types1 (rest types2))))))))))
+
+
+; Return true if the list of types is sorted by serial number.
+(defun type-list-sorted (types)
+  (let ((n (type-serial-number (first types))))
+    (dolist (type (rest types) t)
+      (let ((n2 (type-serial-number type)))
+        (unless (< n n2)
+          (return nil))
+        (setq n n2)))))
+
+
+(defun coercable-to-union-kind (kind)
+  (member kind '(:boolean :integer :rational :finite64 :character :string :tag :denormalized-tag :union)))
+
+
+; types is a list of distinct, non-overlapping types appropriate for inclusion in a union and
+; sorted by increasing serial numbers.  Return the union type for holding types, reducing it to
+; a simpler type as necessary.  If normalize is nil, don't change the representation of the destination type.
+(defun reduce-union-type (world types normalize)
+  (cond
+   ((endp types) (world-bottom-type world))
+   ((endp (cdr types)) (car types))
+   ((and (endp (cddr types)) (member (world-true-type world) types) (member (world-false-type world) types))
+    (if normalize
+      (world-boolean-type world)
+      (world-boxed-boolean-type world)))
+   ((every #'(lambda (type) (eq (type-=-name type) 'eq)) types)
+    (make-type world :union nil types 'eq nil))
+   ((every #'(lambda (type) (member (type-=-name type) '(eq eql = char=))) types)
+    (make-type world :union nil types 'eql nil))
+   (t (make-type world :union nil types nil nil))))
+
+
+; Return the union of type1 and type2.
+(defun type-union (world type1 type2)
+  (labels
+    ((numeric-kind (kind)
+       (member kind '(:integer :rational :finite64)))
+     (numeric-type (type)
+       (numeric-kind (type-kind type))))
+    (if (type= type1 type2)
+      type1
       (let ((kind1 (type-kind type1))
             (kind2 (type-kind type2)))
-        (or (eq kind1 :bottom)
-            (and (eq kind1 :integer) (eq kind2 :rational))
-            (and (eq kind1 :->) (eq kind2 :->)
-                 ; For now we require the argument types to match exactly.
-                 (equal (->-argument-types type1) (->-argument-types type2))
-                 ; This might fall into an infinite loop, but it's OK for now.
-                 (type<= (->-result-type type1) (->-result-type type2)))))))
+        (cond
+         ((eq kind1 :bottom) type2)
+         ((eq kind2 :bottom) type1)
+         ((and (numeric-kind kind1) (numeric-kind kind2)) (world-rational-type world))
+         ((and (coercable-to-union-kind kind1) (coercable-to-union-kind kind2))
+          (let ((types (merge-type-lists (type-to-union world type1) (type-to-union world type2))))
+            (when (> (count-if #'numeric-type types) 1)
+              ;Currently the union of any two or more different numeric types is always rational.
+              (setq types (merge-type-lists (remove-if #'numeric-type types) (list (world-rational-type world)))))
+            (assert-true (type-list-sorted types))
+            (reduce-union-type world types t)))
+         (t (error "No union of types ~A and ~A" (print-type-to-string type1) (print-type-to-string type2))))))))
 
 
-; Return the most specific common supertype of type1 and type2 or nil if there is none.
-(defun type-lub (type1 type2)
-  (cond
-   ((type<= type1 type2) type2)
-   ((type<= type2 type1) type1)
-   (t nil)))
+; Return the most specific common supertype of the types.
+(defun make-union-type (world &rest types)
+  (if types
+    (reduce #'(lambda (type1 type2) (type-union world type1 type2))
+            types)
+    (world-bottom-type world)))
 
 
-; Return true if serial-number-1 is less than serial-number-2.
-; Each serial-number is either an integer or nil, which is considered to
-; be positive infinity.
-(defun serial-number-< (serial-number-1 serial-number-2)
-  (and serial-number-1
-       (or (null serial-number-2)
-           (< serial-number-1 serial-number-2))))
+; Ensure that subtype is a subtype of type.  subtype must not be the bottom type.
+; Return two values:
+;    subtype1, a type that is equivalent to subtype but may be denormalized.
+;    subtype2, the type containing the instances of type but not subtype.
+; Any concrete value of type will have either subtype1 or subtype2 without needing coercion.
+; subtype1 and subtype2 may be denormalized in the following cases:
+;    type is boolean and subtype is (tag true) or (tag false);
+;    type is a union and subtype is boolean.
+; Signal an error if there is no subtype2.
+(defun type-difference (world type subtype)
+  (flet ((type-mismatch ()
+           (error "Cannot subtract type ~A from type ~A" (print-type-to-string subtype) (print-type-to-string type))))
+    (if (type= type subtype)
+      (if (type= subtype (world-bottom-type world))
+        (type-mismatch)
+        (values type (world-bottom-type world)))
+      (case (type-kind type)
+        (:boolean
+         (cond
+          ((or (type= subtype (world-false-type world)) (type= subtype (world-denormalized-false-type world)))
+           (values (world-denormalized-false-type world) (world-denormalized-true-type world)))
+          ((or (type= subtype (world-true-type world)) (type= subtype (world-denormalized-true-type world)))
+           (values (world-denormalized-true-type world) (world-denormalized-false-type world)))
+          ((type= subtype (world-boxed-boolean-type world))
+           (values type (world-bottom-type world)))
+          (t (type-mismatch))))
+        (:tag
+          (if (and (eq (type-kind subtype) :denormalized-tag) (eq (type-tag type) (type-tag subtype)))
+            (values type (world-bottom-type world))
+            (type-mismatch)))
+        (:denormalized-tag
+         (if (and (eq (type-kind subtype) :tag) (eq (type-tag type) (type-tag subtype)))
+           (values type (world-bottom-type world))
+           (type-mismatch)))
+        (:union
+         (let ((types (type-parameters type)))
+           (flet
+             ((remove-subtype (subtype)
+                (unless (member subtype types)
+                  (type-mismatch))
+                (setq types (remove subtype types))))
+             (case (type-kind subtype)
+               (:boolean
+                (remove-subtype (world-false-type world))
+                (remove-subtype (world-true-type world))
+                (setq subtype (world-boxed-boolean-type world)))
+               (:union
+                (mapc #'remove-subtype (type-parameters subtype)))
+               (:denormalized-tag
+                (remove-subtype (make-tag-type world (type-tag subtype))))
+               (t (remove-subtype subtype)))
+             (values subtype (reduce-union-type world types nil)))))
+        (t (type-mismatch))))))
+
+
+
+; types must be a list of types suitable for inclusion in a :union type's parameters.  Return the following values:
+;    a list of integerp, rationalp, floatp, characterp, and/or stringp, depending on whether types include the
+;       :integer, :rational, :finite64, :character, and/or :string member kinds;
+;    a list of keywords used by non-list tags in the types;
+;    a list of tag names used by list tags in the types
+(defun analyze-union-types (types)
+  (let ((atom-tests nil)
+        (keywords nil)
+        (list-tag-names nil))
+    (dolist (type types)
+      (ecase (type-kind type)
+        (:integer (push 'integerp atom-tests))
+        (:rational (push 'rationalp atom-tests))
+        (:finite64 (push 'floatp atom-tests))
+        (:character (push 'characterp atom-tests))
+        (:string (push 'stringp atom-tests))
+        (:tag (let* ((tag (type-tag type))
+                     (keyword (tag-keyword tag)))
+                (if keyword
+                  (push keyword keywords)
+                  (push (tag-name tag) list-tag-names))))))
+    (values
+     (nreverse atom-tests)
+     (nreverse keywords)
+     (nreverse list-tag-names))))
+
+
+; code is a lisp expression that evaluates to a value of type type.  subtype is a subtype of type, which
+; has already been verified by calling type-difference.
+; Return a lisp expression that may evaluate code and returns non-nil if the value is a member of the subtype.
+; The expression may evaluate code more than once or not at all.
+(defun type-member-test-code (world subtype type code)
+  (if (type= type subtype)
+    t
+    (ecase (type-kind type)
+      (:boolean
+       (cond
+        ((or (type= subtype (world-false-type world)) (type= subtype (world-denormalized-false-type world)))
+         (list 'not code))
+        ((or (type= subtype (world-true-type world)) (type= subtype (world-denormalized-true-type world)))
+         code)
+        (t (error "Bad type-member-test-code"))))
+      ((:tag :denormalized-tag) t)
+      (:union
+       (multiple-value-bind (type-atom-tests type-keywords type-list-tag-names) (analyze-union-types (type-parameters type))
+         (multiple-value-bind (subtype-atom-tests subtype-keywords subtype-list-tag-names)
+                              (case (type-kind subtype)
+                                (:boolean (values nil (list :false :true) nil))
+                                (:union (analyze-union-types (type-parameters subtype)))
+                                (:denormalized-tag (analyze-union-types (list (make-tag-type world (type-tag subtype)))))
+                                (t (analyze-union-types (list subtype))))
+           (assert-true (and (subsetp subtype-atom-tests type-atom-tests)
+                             (subsetp subtype-keywords type-keywords)
+                             (subsetp subtype-list-tag-names type-list-tag-names)))
+           (gen-poly-op 'or nil
+                        (nconc 
+                         (mapcar #'(lambda (atom-test) (list atom-test code)) subtype-atom-tests)
+                         (and subtype-keywords (list (gen-member-test code subtype-keywords)))
+                         (and subtype-list-tag-names
+                              (list (gen-poly-op 'and t
+                                                 (nconc
+                                                  (and (or type-atom-tests type-keywords) (list (list 'consp code)))
+                                                  (list (gen-member-test (list 'car code) subtype-list-tag-names))))))))))))))
+
+
+
+; Return true if type1's serial-number is less than type2's serial-number;
+; however, unnamed types' serial numbers are considered to be positive infinity.
+(defun type-named-serial-number-< (type1 type2)
+  (let ((name1 (if (type-name type1) 0 1))
+        (name2 (if (type-name type2) 0 1)))
+    (or (< name1 name2)
+        (and (= name1 name2)
+             (< (type-serial-number type1) (type-serial-number type2))))))
 
 
 ; Print the type nicely on the given stream.  If expand1 is true then print
@@ -927,57 +1470,45 @@
 (defun print-type (type &optional (stream t) expand1)
   (if (and (type-name type) (not expand1))
     (write-string (symbol-name (type-name type)) stream)
-    (labels
-      ((print-tuple-or-oneof (kind-string)
-         (pprint-logical-block (stream (mapcar #'cons (type-tags type) (type-parameters type))
-                                       :prefix "(" :suffix ")")
-           (write-string kind-string stream)
-           (pprint-exit-if-list-exhausted)
-           (format stream " ~@_")
-           (pprint-indent :current 0 stream)
-           (loop
-             (let ((tag-and-type (pprint-pop)))
-               (pprint-logical-block (stream nil :prefix "(" :suffix ")")
-                 (write (car tag-and-type) :stream stream)
-                 (format stream " ~@_")
-                 (print-type (cdr tag-and-type) stream))
+    (case (type-kind type)
+      (:bottom (write-string "bottom" stream))
+      (:void (write-string "void" stream))
+      (:boolean (write-string "boolean" stream))
+      (:integer (write-string "integer" stream))
+      (:rational (write-string "rational" stream))
+      (:finite64 (write-string "finite64" stream))
+      (:character (write-string "character" stream))
+      (:-> (pprint-logical-block (stream nil :prefix "(" :suffix ")")
+             (format stream "-> ~@_")
+             (pprint-indent :current 0 stream)
+             (pprint-logical-block (stream (->-argument-types type) :prefix "(" :suffix ")")
                (pprint-exit-if-list-exhausted)
-               (format stream " ~:_")))
-           (format stream " ~_")
-           (print-type (->-result-type type) stream))))
-      
-      (case (type-kind type)
-        (:bottom (write-string "bottom" stream))
-        (:void (write-string "void" stream))
-        (:boolean (write-string "boolean" stream))
-        (:integer (write-string "integer" stream))
-        (:rational (write-string "rational" stream))
-        (:float64 (write-string "float64" stream))
-        (:id (write-string "id" stream))
-        (:character (write-string "character" stream))
-        (:-> (pprint-logical-block (stream nil :prefix "(" :suffix ")")
-               (format stream "-> ~@_")
-               (pprint-indent :current 0 stream)
-               (pprint-logical-block (stream (->-argument-types type) :prefix "(" :suffix ")")
+               (loop
+                 (print-type (pprint-pop) stream)
                  (pprint-exit-if-list-exhausted)
-                 (loop
-                   (print-type (pprint-pop) stream)
-                   (pprint-exit-if-list-exhausted)
-                   (format stream " ~:_")))
-               (format stream " ~_")
-               (print-type (->-result-type type) stream)))
-        (:vector (pprint-logical-block (stream nil :prefix "(" :suffix ")")
-                   (format stream "vector ~@_")
-                   (print-type (vector-element-type type) stream)))
-        (:set (pprint-logical-block (stream nil :prefix "(" :suffix ")")
-                (format stream "set ~@_")
-                (print-type (set-element-type type) stream)))
-        (:tuple (print-tuple-or-oneof "tuple"))
-        (:oneof (print-tuple-or-oneof "oneof"))
-        (:address (pprint-logical-block (stream nil :prefix "(" :suffix ")")
-                    (format stream "address ~@_")
-                    (print-type (address-element-type type) stream)))
-        (t (error "Bad typekind ~S" (type-kind type)))))))
+                 (format stream " ~:_")))
+             (format stream " ~_")
+             (print-type (->-result-type type) stream)))
+      (:string (write-string "string" stream))
+      (:vector (pprint-logical-block (stream nil :prefix "(" :suffix ")")
+                 (format stream "vector ~@_")
+                 (print-type (vector-element-type type) stream)))
+      (:set (pprint-logical-block (stream nil :prefix "(" :suffix ")")
+              (format stream "set ~@_")
+              (print-type (set-element-type type) stream)))
+      (:tag (let ((tag (type-tag type)))
+              (pprint-logical-block (stream nil :prefix "(" :suffix ")")
+                (format stream "tag ~@_~A" (tag-name tag)))))
+      (:union (pprint-logical-block (stream (type-parameters type) :prefix "(" :suffix ")")
+                (write-string "union" stream)
+                (pprint-exit-if-list-exhausted)
+                (format stream " ~@_")
+                (pprint-indent :current 0 stream)
+                (loop
+                  (print-type (pprint-pop) stream)
+                  (pprint-exit-if-list-exhausted)
+                  (format stream " ~:_"))))
+      (t (error "Bad typekind ~S" (type-kind type))))))
 
 
 ; Same as print-type except that accumulates the output in a string
@@ -989,61 +1520,21 @@
 
 (defmethod print-object ((type type) stream)
   (print-unreadable-object (type stream)
-    (format stream "type ~@_")
+    (format stream "type~D ~@_" (type-serial-number type))
     (let ((name (type-name type)))
       (when name
         (format stream "~A = ~@_" name)))
     (print-type type stream t)))
 
 
-; Register all of the oneof type's tags in the world's oneof-tags hash table.
-; The hash table is indexed by pairs (tag . field-type) and is used to look up a
-; oneof type given just a tag and its field's type.  The data in the hash table
-; consists of lists (flag oneof-type ... oneof-type).  The flag is true if such a
-; lookup has been performed (in which case the data must contain exactly one oneof-type
-; and it is an error to add another one).
-(defun register-oneof-tags (world oneof-type)
-  (let ((oneof-tags-hash (world-oneof-tags world)))
-    (mapc #'(lambda (tag field-type)
-              (let* ((key (cons tag field-type))
-                     (data (gethash key oneof-tags-hash)))
-                (cond
-                 ((null data)
-                  (setf (gethash key oneof-tags-hash) (list nil oneof-type)))
-                 ((not (car data))
-                  (push oneof-type (cdr data)))
-                 (t (error "Ambiguous oneof lookup of tag ~A: ~A.  Possibilities are ~A or ~A"
-                           tag
-                           (print-type-to-string field-type)
-                           (print-type-to-string (second data))
-                           (print-type-to-string oneof-type))))))
-          (type-tags oneof-type)
-          (type-parameters oneof-type))))
-
-
-; Look up a oneof type given one of its tags and the corresponding field type.
-; Signal an error if there is no such type or there is more than one matching type.
-(defun lookup-oneof-tag (world tag field-type)
-  (let ((data (gethash (cons tag field-type) (world-oneof-tags world))))
-    (cond
-     ((null data)
-      (error "No known oneof type with tag ~A: ~A" tag (print-type-to-string field-type)))
-     ((cddr data)
-      (error "Ambiguous oneof lookup of tag ~A: ~A.  Possibilities are ~S" tag (print-type-to-string field-type) (cdr data)))
-     (t
-      (setf (first data) t)
-      (second data)))))
-
-
-; Create or reuse a type with the given kind, tags, and parameters.
-; A type is reused if one already exists with equal kind, tags, and parameters.
+; Create or reuse a type with the given kind, tag, and parameters.
+; A type is reused if one already exists with equal kind, tag, and parameters.
 ; Return the type.
-(defun make-type (world kind tags parameters)
-  (let ((reverse-key (list kind tags parameters)))
+(defun make-type (world kind tag parameters =-name /=-name)
+  (let ((reverse-key (list kind tag parameters)))
     (or (gethash reverse-key (world-types-reverse world))
-        (let ((type (allocate-type kind tags parameters)))
-          (when (eq kind :oneof)
-            (register-oneof-tags world type))
+        (let ((type (allocate-type (world-next-type-serial-number world) kind tag parameters =-name /=-name)))
+          (incf (world-next-type-serial-number world))
           (setf (gethash reverse-key (world-types-reverse world)) type)))))
 
 
@@ -1056,9 +1547,7 @@
     (error "Attempt to redefine type ~A" symbol))
   ;If the old type was anonymous, give it this name.
   (unless (type-name type)
-    (setf (type-name type) symbol)
-    (setf (type-name-serial-number type) (world-n-type-names world)))
-  (incf (world-n-type-names world))
+    (setf (type-name type) symbol))
   (setf (symbol-type-definition symbol) type)
   (when user-defined
     (setf (symbol-type-user-defined symbol) t))
@@ -1091,7 +1580,7 @@
     type-expr)
    (t (let ((type-constructor (and (consp type-expr)
                                    (symbolp (first type-expr))
-                                   (get (world-intern world (first type-expr)) :type-constructor))))
+                                   (get (world-find-symbol world (first type-expr)) :type-constructor))))
         (if type-constructor
           (apply type-constructor world allow-forward-references (rest type-expr))
           (error "Bad type ~S" type-expr))))))
@@ -1125,47 +1614,20 @@
   (make-set-type world (scan-type world element-type allow-forward-references)))
 
 
-; (address <element-type>)
-(defun scan-address (world allow-forward-references element-type)
-  (make-address-type world (scan-type world element-type allow-forward-references)))
+; (tag <tag> ... <tag>)
+(defun scan-tag-type (world allow-forward-references tag-name &rest tag-names)
+  (if tag-names
+    (apply #'make-union-type world (mapcar #'(lambda (tag-name)
+                                               (scan-tag-type world allow-forward-references tag-name))
+                                           (cons tag-name tag-names)))
+    (make-tag-type world (scan-tag world tag-name))))
 
 
-(defun scan-tuple-or-oneof (world allow-forward-references kind tag-pairs tags-so-far types-so-far)
-  (if tag-pairs
-    (let ((tag-pair (car tag-pairs)))
-      (when (and (identifier? tag-pair) (eq kind :oneof))
-        (setq tag-pair (list tag-pair 'void)))
-      (unless (and (consp tag-pair) (identifier? (first tag-pair))
-                   (second tag-pair) (null (cddr tag-pair)))
-        (error "Bad oneof or tuple pair ~S" tag-pair))
-      (let ((tag (first tag-pair)))
-        (when (member tag tags-so-far)
-          (error "Duplicate oneof or tuple tag ~S" tag))
-        (scan-tuple-or-oneof
-         world
-         allow-forward-references
-         kind
-         (cdr tag-pairs)
-         (cons tag tags-so-far)
-         (cons (scan-type world (second tag-pair) allow-forward-references) types-so-far))))
-    (make-type world kind (nreverse tags-so-far) (nreverse types-so-far))))
-
-; (oneof (<tag1> <type1>) ... (<tagn> <typen>))
-(defun scan-oneof (world allow-forward-references &rest tags-and-types)
-  (scan-tuple-or-oneof world allow-forward-references :oneof tags-and-types nil nil))
-
-; (tuple (<tag1> <type1>) ... (<tagn> <typen>))
-(defun scan-tuple (world allow-forward-references &rest tags-and-types)
-  (scan-tuple-or-oneof world allow-forward-references :tuple tags-and-types nil nil))
-
-
-; Scan tag to produce a tag that is present in the given tuple or oneof type.
-; Return the tag and its field type.
-(defun scan-tag (type tag)
-  (let ((field-type (field-type type tag)))
-    (unless field-type
-      (error "Tag ~S not present in ~A" tag (print-type-to-string type)))
-    (values tag field-type)))
+; (union <type1> ... <typen>)
+(defun scan-union (world allow-forward-references &rest type-exprs)
+  (apply #'make-union-type world (mapcar #'(lambda (type-expr)
+                                             (scan-type world type-expr allow-forward-references))
+                                         type-exprs)))
 
 
 ; Resolve all forward type references to refer to their target types.
@@ -1175,7 +1637,6 @@
 ; Return a list of all type structures encountered.
 (defun resolve-forward-types (world)
   (setf (world-types-reverse world) nil)
-  (setf (world-oneof-tags world) nil)
   (let ((visited-types (make-hash-table :test #'eq)))
     (labels
       ((resolve-in-type (type)
@@ -1197,20 +1658,19 @@
     (hash-table-keys visited-types)))
 
 
-; Recompute the types-reverse and oneof-tags hash tables from the types in the types
-; hash table and their constituents.
+; Recompute the types-reverse hash table from the types in the types hash table and their constituents.
 (defun recompute-type-caches (world)
   (let ((types-reverse (make-hash-table :test #'equal)))
-    (setf (world-oneof-tags world) (make-hash-table :test #'equal))
     (labels
       ((visit-type (type)
-         (let ((reverse-key (list (type-kind type) (type-tags type) (type-parameters type))))
+         (let ((reverse-key (list (type-kind type) (type-tag type) (type-parameters type))))
            (assert-true (eq (gethash reverse-key types-reverse type) type))
            (unless (gethash reverse-key types-reverse)
              (setf (gethash reverse-key types-reverse) type)
-             (when (eq (type-kind type) :oneof)
-               (register-oneof-tags world type))
              (mapc #'visit-type (type-parameters type))))))
+      (visit-type (world-denormalized-false-type world))
+      (visit-type (world-denormalized-true-type world))
+      (visit-type (world-boxed-boolean-type world))
       (each-type-definition
        world
        #'(lambda (symbol type)
@@ -1224,13 +1684,15 @@
 ; are affected, and names may be redirected to different type structures than
 ; the ones to which they currently point.  It is the caller's responsibility
 ; to make sure that there are no current outstanding references to types other
-; than via type names.
+; than via type names (except for types for which it can be guaranteed that
+; their type structures are defined only once; this applies to types such as
+; integer and character but not (vector integer)).
 ;
 ; This function calls resolve-forward-types before making equivalent types be eq
 ; and recompute-type-caches just before returning.
 ;
 ; This function works by initially assuming that all types with the same kind
-; and tags are the same type and then iterately determining which ones must be
+; and tag are the same type and then iterately determining which ones must be
 ; different because they contain different parameter types.
 (defun unite-types (world)
   (let* ((types (resolve-forward-types world))
@@ -1267,8 +1729,7 @@
          (let ((clique-representatives (make-array n-cliques :initial-element nil)))
            (maphash #'(lambda (type clique)
                         (let ((representative (svref clique-representatives clique)))
-                          (when (or (null representative)
-                                    (serial-number-< (type-name-serial-number type) (type-name-serial-number representative)))
+                          (when (or (null representative) (type-named-serial-number-< type representative))
                             (setf (svref clique-representatives clique) type))))
                     types-to-cliques)
            (assert-true (every #'identity clique-representatives))
@@ -1286,8 +1747,115 @@
       
       (multiple-value-call
        #'gen-cliques
-       (gen-cliques-1 #'(lambda (type) (cons (type-kind type) (type-tags type)))))
+       (gen-cliques-1 #'(lambda (type) (cons (type-kind type) (type-tag type)))))
       (recompute-type-caches world))))
+
+
+;;; ------------------------------------------------------------------------------------------------------
+;;; COMPARISONS
+
+
+; Return non-nil if the values are equal.  value1 and value2 must both belong to a union type.
+(defun union= (value1 value2)
+  (or (eql value1 value2)
+      (and (consp value1) (consp value2)
+           (let ((tag-name1 (car value1))
+                 (tag-name2 (car value2)))
+             (and (eq tag-name1 tag-name2)
+                  (funcall (get tag-name1 :tag=) value1 value2))))))
+
+
+; Create an equality comparison function for elements of the given :vector type.
+; Return the name of the function and also set it in the type.
+(defun compute-vector-type-=-name (world type)
+  (let ((element-type (vector-element-type type)))
+    (case (type-kind element-type)
+      ((:integer :rational) (setf (type-=-name type) 'equal))
+      (t (let ((=-name (gentemp (format nil "~A_VECTOR_=" (type-name element-type)) (world-package world))))
+           (setf (type-=-name type) =-name) ;Must do this now to prevent runaway recursion.
+           (quiet-compile =-name `(lambda (a b)
+                                    (and (= (length a) (length b))
+                                         (every #',(get-type-=-name world element-type) a b))))
+           =-name)))))
+
+
+; Create an equality comparison function for elements of the given :tag type.
+; Return the name of the function and also set it in the type, the tag, and the :tag= property of the tag-name.
+(defun compute-tag-type-=-name (world type)
+  (let ((tag (type-tag type)))
+    (assert-true (null (tag-=-name tag)))
+    (labels
+      ((fields-=-code (fields)
+         (assert-true fields)
+         (let ((field-=-code (cons (get-type-=-name world (field-type (car fields))) '((car a) (car b)))))
+           (if (cdr fields)
+             `(and ,field-=-code
+                   (let ((a (cdr a))
+                         (b (cdr b)))
+                     ,(fields-=-code (cdr fields))))
+             field-=-code))))
+      
+      (let* ((name (tag-name tag))
+             (=-name (world-intern world (concatenate 'string (string name) "_="))))
+        (setf (type-=-name type) =-name) ;Must do this now to prevent runaway recursion.
+        (let ((=-code `(lambda (a b)
+                         (let ((a (cdr a))
+                               (b (cdr b)))
+                           ,(fields-=-code (tag-fields tag))))))
+          (assert-true (not (fboundp =-name)))
+          (quiet-compile =-name =-code)
+          (setf (get name :tag=) (symbol-function =-name))
+          (setf (tag-=-name tag) =-name))))))
+
+
+; Return the name of a function that compares two instances of this type and returns non-nil if they are equal.
+; Signal an error if there is no such function.
+; If the type is a tag, also set the :tag= property of the tag.
+(defun get-type-=-name (world type)
+  (or (type-=-name type)
+      (case (type-kind type)
+        (:vector (compute-vector-type-=-name world type))
+        (:tag (compute-tag-type-=-name world type))
+        (:union
+         (setf (type-=-name type) 'union=) ;Must do this now to prevent runaway recursion.
+         (dolist (subtype (type-parameters type))
+           (get-type-=-name world subtype)) ;Set the :tag= symbol properties.
+         'union=)
+        (t (error "Can't apply = to instances of type ~S" (print-type-to-string type))))))
+
+
+; Return the name of a function that compares two instances of this type and returns non-nil if they satisfy the given
+; order, which should be one of the symbols =, /=, <, >, <=, >=.
+; Signal an error if there is no such function except for /=, in which case return nil.
+(defun get-type-order-name (world type order)
+  (ecase order
+    (= (get-type-=-name world type))
+    (/= (type-/=-name type))
+    ((< > <= >=)
+     (or (cdr (assoc order
+                     (case (type-kind type)
+                       ((:integer :rational) '((< . <) (> . >) (<= . <=) (>= . >=)))
+                       (:character '((< . char<) (> . char>) (<= . char<=) (>= . char>=)))
+                       (:string '((< . string<) (> . string>) (<= . string<=) (>= . string>=))))))
+         (error "Can't apply ~A to instances of type ~A" order (print-type-to-string type))))))
+
+
+; Return code to compare code expression a against b using the given order, which should be one of
+; the symbols =, /=, <, >, <=, >=..
+; Signal an error if this is not possible.
+(defun get-type-order-code (world type order a b)
+  (flet ((simple-constant? (code)
+           (or (keywordp code) (numberp code) (characterp code))))
+    (let ((order-name (get-type-order-name world type order)))
+      (cond
+       ((null order-name)
+        (assert-true (eq order '/=))
+        (list 'not (get-type-order-code world type '= a b)))
+       ((and (eq order-name 'union=) (or (simple-constant? a) (simple-constant? b)))
+        ;Optimize union= comparisons against a non-list constant.
+        (list 'eql a b))
+       (t (list order-name a b))))))
+
 
 
 ;;; ------------------------------------------------------------------------------------------------------
@@ -1301,28 +1869,33 @@
     fun))
 
 
-; Add a macro, command, or special form definition.  symbol is a symbol that names the
-; preprocessor directive, macro, command, or special form.  When a semantic form
+; Add a command or special form definition.  symbol is a symbol that names the
+; preprocessor directive, command, or special form.  When a semantic form
 ;   (id arg1 arg2 ... argn)
 ; is encountered and id is a symbol with the same name as symbol, the form is
 ; replaced by the result of calling one of:
 ;   (expander preprocessor-state id arg1 arg2 ... argn)           if property is :preprocess
-;   (expander world type-env arg1 arg2 ... argn)                  if property is :macro
 ;   (expander world grammar-info-var arg1 arg2 ... argn)          if property is :command
+;   (expander world type-env rest last id arg1 arg2 ... argn)     if property is :statement
 ;   (expander world type-env id arg1 arg2 ... argn)               if property is :special-form
 ;   (expander world allow-forward-references arg1 arg2 ... argn)  if property is :type-constructor
 ; expander must be a function or a function symbol.
 ;
-; depictor is used instead of expander when emitting markup for the macro, command, or special form.
+; In the case of the statement expander only, rest is a list of the remaining statements in the block;
+; the statement expander should recursively expand the statements in rest.
+; last is non-nil if this statement+rest's return value would pass through as the return value of the function;
+; last allows optimization of lisp code to eliminate extraneous return-from statements.
+;
+; depictor is used instead of expander when emitting markup for the command or special form.
 ; depictor is called via:
-;   (depictor markup-stream world level arg1 arg2 ... argn)          if property is :macro
 ;   (depictor markup-stream world depict-env arg1 arg2 ... argn)     if property is :command
+;   (depictor markup-stream world arg1 arg2 ... argn)                if property is :statement
 ;   (depictor markup-stream world level arg1 arg2 ... argn)          if property is :special-form
 ;   (depictor markup-stream world level arg1 arg2 ... argn)          if property is :type-constructor
 ;
 (defun add-special (property symbol expander &optional depictor)
-  (let ((emit-property (cdr (assoc property '((:macro . :depict-macro)
-                                              (:command . :depict-command)
+  (let ((emit-property (cdr (assoc property '((:command . :depict-command)
+                                              (:statement . :depict-statement)
                                               (:special-form . :depict-special-form)
                                               (:type-constructor . :depict-type-constructor))))))
     (assert-true (or emit-property (not depictor)))
@@ -1379,13 +1952,13 @@
   (setf (primitive-type primitive) (scan-type world (primitive-type-expr primitive))))
 
 
-; If name is an identifier not already used by a special form, command, primitive, or macro,
+; If name is an identifier not already used by a special form, command, or primitive,
 ; return it interened into the world's package.  If not, generate an error.
 (defun scan-name (world name)
   (unless (identifier? name)
     (error "~S should be an identifier" name))
   (let ((symbol (world-intern world name)))
-    (when (get-properties (symbol-plist symbol) '(:command :special-form :primitive :macro :type-constructor))
+    (when (get-properties (symbol-plist symbol) '(:command :statement :special-form :primitive :type-constructor))
       (error "~A is reserved" symbol))
     symbol))
 
@@ -1398,50 +1971,49 @@
 ;;; shadows ones further in the list.
 ;;; The following kinds of bindings are allowed in a type environment:
 ;;;
-;;;   (symbol . type)
-;;;   Normal local variable, where:
-;;;     symbol is a world-interned name of the local variable;
-;;;     type is that variable's type.
+;;;   <type-env-local> (see below)
+;;;   Normal local variable
+;;;
+;;;   <type-env-action> (see below)
+;;;   Action variable
+;;;
+;;;   (:return . type)
+;;;   The function's return type
+;;;
+;;;   (:return-block-name . symbol-or-nil)
+;;;   The name of the lisp return-from block to be used for returning from this function or nil if not needed yet.
+;;;   This binding's symbol-or-nil is mutated in place as needed.
 ;;;
 ;;;   (:lhs-symbol . symbol)
 ;;;   The lhs nonterminal's symbol if this is a type environment for an action function.
 ;;;
-;;;   ((action symbol . index) local-symbol type general-grammar-symbol)
-;;;   Action variable, where:
-;;;     action is a world-interned symbol denoting the action function being called
-;;;     symbol is a terminal or nonterminal's symbol on which the action is called
-;;;     index is the one-based index used to distinguish among identical
-;;;       symbols in the rhs of a production.  The first occurrence of this
-;;;       symbol has index 1, the second has index 2, and so on.
-;;;     local-symbol is a unique local variable name used to represent the action
-;;;       function's value in the generated lisp code
-;;;     type is the type of the action function's value
-;;;     general-grammar-symbol is the general-grammar-symbol corresponding to the index-th
-;;;       instance of symbol in the production's rhs
-;;;
-;;;   (:no-code-gen)
-;;;   If present, this indicates that the code returned from this scan-value or related call
-;;;   will be discarded; only the type is important.  This flag is used as an optimization.
+
+(defstruct (type-env-local (:type list) (:constructor make-type-env-local (name type mode)))
+  name      ;World-interned name of the local variable
+  type      ;That variable's type
+  mode)     ;:const if the variable is read-only; :var if it's writable; :function if it's bound by flet; :unused if it's defined but shouldn't be used
+
+(defstruct (type-env-action (:type list) (:constructor make-type-env-action (key local-symbol type general-grammar-symbol)))
+  key                     ;(action symbol . index)
+  ;                       ;   action is a world-interned symbol denoting the action function being called
+  ;                       ;   symbol is a terminal or nonterminal's symbol on which the action is called
+  ;                       ;   index is the one-based index used to distinguish among identical
+  ;                       ;     symbols in the rhs of a production.  The first occurrence of this
+  ;                       ;     symbol has index 1, the second has index 2, and so on.
+  local-symbol            ;A unique local variable name used to represent the action function's value in the generated lisp code
+  type                    ;Type of the action function's value
+  general-grammar-symbol) ;The general-grammar-symbol corresponding to the index-th instance of symbol in the production's rhs
+
 
 (defconstant *null-type-env* nil)
+(defconstant *type-env-flags* '(:return :return-block-name :lhs-symbol))
 
 
-; If symbol is a local variable, return two values:
-;   the name to use to refer to it from the generated lisp code;
-;   the variable's type.
-; Otherwise, return nil.
+; If symbol is a local variable, return its binding; if not, return nil.
 ; symbol must already be world-interned.
-(declaim (inline type-env-local))
-(defun type-env-local (type-env symbol)
-  (let ((binding (assoc symbol type-env :test #'eq)))
-    (when binding
-      (values (car binding) (cdr binding)))))
-
-
-; If the currently generated function is an action, return that action production's
-; lhs nonterminal's symbol; otherwise return nil.
-(defun type-env-lhs-symbol (type-env)
-  (cdr (assoc ':lhs-symbol type-env :test #'eq)))
+(declaim (inline type-env-get-local))
+(defun type-env-get-local (type-env symbol)
+  (assoc symbol type-env :test #'eq))
 
 
 ; If the currently generated function is an action for a rule with at least index
@@ -1453,26 +2025,66 @@
 ;   the general-grammar-symbol corresponding to the index-th instance of this symbol in the rhs.
 ; Otherwise, return nil.
 ; action must already be world-interned.
-(defun type-env-action (type-env action symbol index)
-  (let ((binding (assoc (list* action symbol index) type-env :test #'equal)))
-    (when binding
-      (values (second binding) (third binding) (fourth binding)))))
+(defun type-env-get-action (type-env action symbol index)
+  (assoc (list* action symbol index) type-env :test #'equal))
 
 
-; Append bindings to the front of the type-env.  The bindings list is destroyed.
-(declaim (inline type-env-add-bindings))
-(defun type-env-add-bindings (type-env bindings)
-  (nconc bindings type-env))
+; Nondestructively append the binding to the front of the type-env and return the new type-env.
+; If shadow is true, the binding may shadow an existing local variable with the same name.
+(defun type-env-add-binding (type-env name type mode &optional shadow)
+  (assert-true (and
+                (symbolp name)
+                (type? type)
+                (member mode '(:const :var :function :unused))))
+  (unless shadow
+    (let ((binding (type-env-get-local type-env name)))
+      (when binding
+        (error "Local variable ~A:~A shadows an existing local variable ~A:~A"
+               name (print-type-to-string type)
+               (type-env-local-name binding) (print-type-to-string (type-env-local-type binding))))))
+  (cons (make-type-env-local name type mode) type-env))
 
 
-; Return an environment obtained from the type-env by adding a :no-code-gen binding.
-(defun inhibit-code-gen (type-env)
-  (cons (list ':no-code-gen) type-env))
+; Nondestructively shadow the type of the binding of name in type-env and return the new type-env.
+(defun type-env-narrow-binding (type-env name type)
+  (let ((binding (assert-non-null (type-env-get-local type-env name))))
+    (type-env-add-binding type-env name type (type-env-local-mode binding) t)))
 
 
-; Return true if the type-env indicates that its code will be discarded.
-(defun code-gen-inhibited (type-env)
-  (assoc ':no-code-gen type-env))
+; Nondestructively shadow all writable bindings in the type-env by unused bindings and return the new type-env.
+; Also create new bindings for the function's return type and return block name.
+(defun type-env-init-function (type-env return-type)
+  (dolist (binding type-env)
+    (let ((name (first binding)))
+      (when (and (symbolp name) (not (keywordp name)) (eq (type-env-local-mode binding) :var))
+        (let* ((first-binding (type-env-get-local type-env name))
+               (first-mode (type-env-local-mode first-binding)))
+          (assert-true first-mode)
+          (unless (eq first-mode :unused)
+            (push (make-type-env-local (type-env-local-name first-binding) (type-env-local-type first-binding) :unused) type-env))))))
+  (set-type-env-flag
+   (set-type-env-flag type-env :return return-type)
+   :return-block-name
+   nil))
+
+
+; Either reuse or generate a name for return-from statements exiting this function.
+(defun gen-type-env-return-block-name (type-env)
+  (let ((return-block-binding (assert-non-null (assoc :return-block-name type-env))))
+    (or (cdr return-block-binding)
+        (setf (cdr return-block-binding) (gensym "RETURN")))))
+
+
+; Return an environment obtained from the type-env by adding a binding of flag to value.
+(defun set-type-env-flag (type-env flag value)
+  (assert-true (member flag *type-env-flags*))
+  (acons flag value type-env))
+
+
+; Return the value bound to the given flag.
+(defun get-type-env-flag (type-env flag)
+  (assert-true (member flag *type-env-flags*))
+  (cdr (assoc flag type-env)))
 
 
 ;;; ------------------------------------------------------------------------------------------------------
@@ -1484,17 +2096,37 @@
 ;;;   An integer
 ;;;   A rational number
 ;;;   A double-precision floating-point number (or :+inf, :-inf, or :nan)
-;;;   An id (represented by a lisp symbol)
 ;;;   A character
 ;;;   A function (represented by a lisp function)
+;;;   A string
 ;;;   A vector (represented by a list)
 ;;;   A set (represented by an intset of its elements converted to integers)
-;;;   A tuple (represented by a list of elements' values)
-;;;   A oneof (represented by a pair: tag . value)
-;;;   An address (represented by a cons cell whose cdr contains the value and car contains a serial number)
+;;;   A tag (represented by either a keyword or a list (keyword [serial-num] field-value1 ... field-value n));
+;;;     serial-num is a unique integer present only on mutable tag instances.
 
 
-(defvar *address-counter* 0) ;Last used address serial number
+; Return true if the value appears to have the given tag.  This function
+; may return false positives (return true when the value doesn't actually
+; have the given type) but never false negatives.
+; If shallow is true, only test at the top level.
+(defun value-has-tag (value tag &optional shallow)
+  (labels
+    ((check-fields (fields values)
+       (if (endp fields)
+         (null values)
+         (and (consp values)
+              (or shallow (value-has-type (car values) (field-type (car fields))))
+              (check-fields (cdr fields) (cdr values))))))
+    (let ((keyword (tag-keyword tag)))
+      (if keyword
+        (eq value keyword)
+        (and (consp value)
+             (eq (car value) (tag-name tag))
+             (let ((values (cdr value))
+                   (fields (tag-fields tag)))
+               (if (tag-mutable tag)
+                 (and (consp values) (integerp (car values)) (check-fields fields (cdr values)))
+                 (check-fields fields values))))))))
 
 
 ; Return true if the value appears to have the given type.  This function
@@ -1504,40 +2136,26 @@
 (defun value-has-type (value type &optional shallow)
   (case (type-kind type)
     (:bottom nil)
-    (:void (null value))
+    (:void t)
     (:boolean t)
     (:integer (integerp value))
     (:rational (rationalp value))
-    (:float64 (float64? value))
-    (:id (and value (symbolp value)))
+    (:finite64 (and (floatp value) (not (zerop value))))
     (:character (characterp value))
     (:-> (functionp value))
+    (:string (stringp value))
     (:vector (let ((element-type (vector-element-type type)))
-               (if (eq (type-kind element-type) :character)
-                 (stringp value)
-                 (labels
-                   ((test (value)
-                      (or (null value)
-                          (and (consp value)
-                               (or shallow (value-has-type (car value) element-type))
-                               (test (cdr value))))))
-                   (test value)))))
+               (labels
+                 ((test (value)
+                    (or (null value)
+                        (and (consp value)
+                             (or shallow (value-has-type (car value) element-type))
+                             (test (cdr value))))))
+                 (test value))))
     (:set (valid-intset? value))
-    (:tuple (labels
-              ((test (value types)
-                 (or (and (null value) (null types))
-                     (and (consp value)
-                          (consp types)
-                          (or shallow (value-has-type (car value) (car types)))
-                          (test (cdr value) (cdr types))))))
-              (test value (type-parameters type))))
-    (:oneof (and (consp value)
-                 (let ((field-type (field-type type (car value))))
-                   (and field-type
-                        (or shallow (value-has-type (cdr value) field-type))))))
-    (:address (and (consp value)
-                   (integerp (car value))
-                   (or shallow (value-has-type (cdr value) (address-element-type type)))))
+    (:tag (value-has-tag value (type-tag type) shallow))
+    (:union (some #'(lambda (subtype) (value-has-type value subtype shallow))
+                  (type-parameters type)))
     (t (error "Bad typekind ~S" (type-kind type)))))
 
 
@@ -1548,21 +2166,16 @@
     (:void (assert-true (null value))
            (write-string "empty" stream))
     (:boolean (write-string (if value "true" "false") stream))
-    ((:integer :rational :id :character :->) (write value :stream stream))
-    (:float64 (case value
-                (:+inf (write-string "+infinity" stream))
-                (:-inf (write-string "-infinity" stream))
-                (:nan (write-string "NaN" stream))
-                (t (write value :stream stream))))
+    ((:integer :rational :character :->) (write value :stream stream))
+    (:finite64 (write value :stream stream))
+    (:string (prin1 value stream))
     (:vector (let ((element-type (vector-element-type type)))
-               (if (eq (type-kind element-type) :character)
-                 (prin1 value stream)
-                 (pprint-logical-block (stream value :prefix "(" :suffix ")")
+               (pprint-logical-block (stream value :prefix "(" :suffix ")")
+                 (pprint-exit-if-list-exhausted)
+                 (loop
+                   (print-value (pprint-pop) element-type stream)
                    (pprint-exit-if-list-exhausted)
-                   (loop
-                     (print-value (pprint-pop) element-type stream)
-                     (pprint-exit-if-list-exhausted)
-                     (format stream " ~:_"))))))
+                   (format stream " ~:_")))))
     (:set (let ((converter (set-out-converter (set-element-type type))))
             (pprint-logical-block (stream value :prefix "{" :suffix "}")
               (pprint-exit-if-list-exhausted)
@@ -1575,17 +2188,22 @@
                     (write (list (funcall converter value1) (funcall converter value2)) :stream stream))))
               (pprint-exit-if-list-exhausted)
               (format stream " ~:_"))))
-    (:tuple (print-values value (type-parameters type) stream :prefix "[" :suffix "]"))
-    (:oneof (pprint-logical-block (stream nil :prefix "{" :suffix "}")
-              (let* ((tag (car value))
-                     (field-type (field-type type tag)))
-                (format stream "~A" tag)
-                (unless (eq (type-kind field-type) :void)
+    (:tag (let ((tag (type-tag type)))
+            (if (tag-keyword tag)
+              (write value :stream stream)
+              (pprint-logical-block (stream (tag-fields tag) :prefix "[" :suffix "]")
+                (write (pop value) :stream stream)
+                (when (tag-mutable tag)
+                  (format stream " ~:_~D" (pop value)))
+                (loop
+                  (pprint-exit-if-list-exhausted)
                   (format stream " ~:_")
-                  (print-value (cdr value) field-type stream)))))
-    (:address (pprint-logical-block (stream nil :prefix "{" :suffix "}")
-                (format stream "~D ~:_" (car value))
-                (print-value (cdr value) (address-element-type type) stream)))
+                  (print-value (pop value) (field-type (pprint-pop)) stream))))))
+    (:union (dolist (subtype (type-parameters type)
+                             (error "~S is not an instance of ~A" value (print-type-to-string type)))
+              (when (value-has-type value subtype t)
+                (print-value value subtype stream)
+                (return))))
     (t (error "Bad typekind ~S" (type-kind type)))))
 
 
@@ -1615,29 +2233,29 @@
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defpackage "EXPR-ANNOTATION"
     (:use)
-    (:export "CONSTANT"     ;(expr-annotation:constant <constant>)
-             "PRIMITIVE"    ;(expr-annotation:primitive <interned-id>)
-             "LOCAL"        ;(expr-annotation:local <interned-id>)      ;Local or lexically scoped variable
-             "GLOBAL"       ;(expr-annotation:global <interned-id>)     ;Global variable
-             "CALL"         ;(expr-annotation:call <function-expr> <arg-expr> ... <arg-expr>)
-             "ACTION"       ;(expr-annotation:action <action> <general-grammar-symbol> <optional-index>)
-             "SPECIAL-FORM" ;(expr-annotation:special-form <interned-form> ...)
-             "MACRO")))     ;(expr-annotation:macro <interned-macro> <expansion-expr>)
+    (:export "CONSTANT"        ;(expr-annotation:constant <constant>)
+             "PRIMITIVE"       ;(expr-annotation:primitive <interned-id>)
+             "TAG"             ;(expr-annotation:tag <tag>)
+             "LOCAL"           ;(expr-annotation:local <interned-id>)      ;Local or lexically scoped variable
+             "GLOBAL"          ;(expr-annotation:global <interned-id>)     ;Global variable
+             "CALL"            ;(expr-annotation:call <function-expr> <arg-expr> ... <arg-expr>)
+             "ACTION"          ;(expr-annotation:action <action> <general-grammar-symbol> <optional-index>)
+             "BEGIN"           ;(expr-annotation:begin <statement> ... <statement>)
+             "SPECIAL-FORM"))) ;(expr-annotation:special-form <interned-form> ...)
+
+
+; Return true if the annotated-stmt is a statement with the given special-form, which must be a symbol
+; but does not have to be interned in the world's package.
+(defun special-form-annotated-stmt? (world special-form annotated-stmt)
+  (eq (first annotated-stmt) (world-find-symbol world special-form)))
 
 
 ; Return true if the annotated-expr is a special form annotated expression with
 ; the given special-form.  special-form must be a symbol but does not have to be interned
 ; in the world's package.
-(defun special-form-annotated-expr? (special-form annotated-expr)
+(defun special-form-annotated-expr? (world special-form annotated-expr)
   (and (eq (first annotated-expr) 'expr-annotation:special-form)
-       (string= (symbol-name (second annotated-expr)) (symbol-name special-form))))
-
-
-; Return true if the annotated-expr is a macro annotated expression with the given macro.
-; macro must be a symbol but does not have to be interned in the world's package.
-(defun macro-annotated-expr? (macro annotated-expr)
-  (and (eq (first annotated-expr) 'expr-annotation:macro)
-       (string= (symbol-name (second annotated-expr)) (symbol-name macro))))
+       (eq (second annotated-expr) (world-find-symbol world special-form))))
 
 
 ; Return the value of the variable with the given symbol.
@@ -1675,69 +2293,86 @@
          (let ((arg-values (nreverse arg-values))
                (arg-types (nreverse arg-types))
                (arg-annotated-exprs (nreverse arg-annotated-exprs)))
-           (unless (and (eq (type-kind function-type) :->)
-                        (= (length arg-types) (length (->-argument-types function-type)))
-                        (every #'type<= arg-types (->-argument-types function-type)))
-             (error "~@<Call type mismatch in ~S: ~_Function of type ~A called with arguments of types~:_~{ ~A~}~:>"
-                    value-expr
-                    (print-type-to-string function-type)
-                    (mapcar #'print-type-to-string arg-types)))
-           (values (apply #'gen-apply function-value arg-values)
-                   (->-result-type function-type)
-                   (list* 'expr-annotation:call function-annotated-expr arg-annotated-exprs)))))
+           (handler-bind (((or error warning)
+                           #'(lambda (condition)
+                               (declare (ignore condition))
+                               (format *error-output*
+                                       "~@<In ~S: ~_Function of type ~A called with arguments of types~:_~{ ~A~}~:>"
+                                       value-expr
+                                       (print-type-to-string function-type)
+                                       (mapcar #'print-type-to-string arg-types)))))
+             (unless (eq (type-kind function-type) :->)
+               (error "Non-function called"))
+             (let ((parameter-types (->-argument-types function-type)))
+               (unless (= (length arg-types) (length parameter-types))
+                 (error "Argument count mismatch"))
+               (let ((arg-values (mapcar #'(lambda (arg-expr arg-value arg-type parameter-type)
+                                             (widening-coercion-code world parameter-type arg-type arg-value arg-expr))
+                                         arg-exprs arg-values arg-types parameter-types)))
+                 (values (apply #'gen-apply function-value arg-values)
+                         (->-result-type function-type)
+                         (list* 'expr-annotation:call function-annotated-expr arg-annotated-exprs))))))))
      
      ;Scan an action call
      (scan-action-call (action symbol &optional (index 1 index-supplied))
        (unless (integerp index)
          (error "Production rhs grammar symbol index ~S must be an integer" index))
-       (multiple-value-bind (symbol-code symbol-type general-grammar-symbol) (type-env-action type-env action symbol index)
-         (unless symbol-code
+       (let ((symbol-action (type-env-get-action type-env action symbol index)))
+         (unless symbol-action
            (error "Action ~S not found" (list action symbol index)))
-         (let ((multiple-symbols (type-env-action type-env action symbol 2)))
+         (let ((multiple-symbols (type-env-get-action type-env action symbol 2)))
            (when (and (not index-supplied) multiple-symbols)
              (error "Ambiguous index in action ~S" (list action symbol)))
-           (values symbol-code
-                   symbol-type
-                   (list* 'expr-annotation:action action general-grammar-symbol
+           (values (type-env-action-local-symbol symbol-action)
+                   (type-env-action-type symbol-action)
+                   (list* 'expr-annotation:action action (type-env-action-general-grammar-symbol symbol-action)
                           (and (or multiple-symbols
-                                   (grammar-symbol-= symbol (assert-non-null (type-env-lhs-symbol type-env))))
+                                   (grammar-symbol-= symbol (assert-non-null (get-type-env-flag type-env :lhs-symbol))))
                                (list index)))))))
      
      ;Scan an interned identifier
      (scan-identifier (symbol)
-       (multiple-value-bind (symbol-code symbol-type) (type-env-local type-env symbol)
-         (if symbol-code
-           (values symbol-code symbol-type (list 'expr-annotation:local symbol))
+       (let ((symbol-binding (type-env-get-local type-env symbol)))
+         (if symbol-binding
+           (ecase (type-env-local-mode symbol-binding)
+             ((:const :var)
+              (values (type-env-local-name symbol-binding)
+                      (type-env-local-type symbol-binding)
+                      (list 'expr-annotation:local symbol)))
+             (:function
+               (values (list 'function (type-env-local-name symbol-binding))
+                       (type-env-local-type symbol-binding)
+                       (list 'expr-annotation:local symbol)))
+             (:unused (error "Unused variable ~A referenced" symbol)))
            (let ((primitive (symbol-primitive symbol)))
              (if primitive
                (values (primitive-value-code primitive) (primitive-type primitive) (list 'expr-annotation:primitive symbol))
-               (let ((type (symbol-type symbol)))
-                 (if type
-                   (values (if (eq (type-kind type) :->)
-                             (list 'symbol-function (list 'quote symbol))
-                             (list 'fetch-value symbol))
-                           type
-                           (list 'expr-annotation:global symbol))
-                   (syntax-error))))))))
+               (let ((tag (symbol-tag symbol)))
+                 (if (and tag (tag-keyword tag))
+                   (values (tag-keyword tag)
+                           (make-tag-type world tag)
+                           (list 'expr-annotation:tag tag))
+                   (let ((type (symbol-type symbol)))
+                     (if type
+                       (values (if (eq (type-kind type) :->)
+                                 (list 'symbol-function (list 'quote symbol))
+                                 (list 'fetch-value symbol))
+                               type
+                               (list 'expr-annotation:global symbol))
+                       (syntax-error))))))))))
      
-     ;Scan a call or macro expansion
+     ;Scan a call or special form
      (scan-cons (first rest)
        (if (identifier? first)
-         (let* ((symbol (world-intern world first))
-                (expander (symbol-macro symbol)))
-           (if expander
-             (multiple-value-bind (expansion-code expansion-type expansion-annotated-expr)
-                                  (scan-value world type-env (apply expander world type-env rest))
-               (values
-                expansion-code
-                expansion-type
-                (list 'expr-annotation:macro symbol expansion-annotated-expr)))
-             (let ((handler (get symbol :special-form)))
-               (if handler
-                 (apply handler world type-env symbol rest)
-                 (if (and (symbol-action symbol) (not (type-env-local type-env symbol)))
-                   (apply #'scan-action-call symbol rest)
-                   (multiple-value-call #'scan-call (scan-identifier symbol) rest))))))
+         (let ((symbol (world-intern world first)))
+           (let ((handler (get symbol :special-form)))
+             (if handler
+               (apply handler world type-env symbol rest)
+               (if (and (symbol-action symbol)
+                        (let ((local (type-env-get-local type-env symbol)))
+                          (not (and local (eq (type-kind (type-env-local-type local)) :->)))))
+                 (apply #'scan-action-call symbol rest)
+                 (multiple-value-call #'scan-call (scan-identifier symbol) rest)))))
          (multiple-value-call #'scan-call (scan-value world type-env first) rest)))
      
      (scan-constant (value-expr type)
@@ -1748,15 +2383,13 @@
       ((consp value-expr) (scan-cons (first value-expr) (rest value-expr)))
       ((identifier? value-expr) (scan-identifier (world-intern world value-expr)))
       ((integerp value-expr) (scan-constant value-expr (world-integer-type world)))
-      ((floatp value-expr) (scan-constant value-expr (world-float64-type world)))
+      ((floatp value-expr)
+       (if (zerop value-expr)
+         (error "Use +zero or -zero instead of 0.0")
+         (scan-constant value-expr (world-finite64-type world))))
       ((characterp value-expr) (scan-constant value-expr (world-character-type world)))
       ((stringp value-expr) (scan-constant value-expr (world-string-type world)))
       (t (syntax-error))))))
-
-
-; Same as scan-value except that return only the expression's type.
-(defun scan-value-type (world type-env value-expr)
-  (nth-value 1 (scan-value world (inhibit-code-gen type-env) value-expr)))
 
 
 ; Same as scan-value except that ensure that the value has the expected type.
@@ -1765,70 +2398,83 @@
 ;   The annotated value-expr
 (defun scan-typed-value (world type-env value-expr expected-type)
   (multiple-value-bind (value type annotated-expr) (scan-value world type-env value-expr)
-    (unless (type<= type expected-type)
-      (error "Expected type ~A for ~:W but got type ~A"
-             (print-type-to-string expected-type)
-             value-expr
-             (print-type-to-string type)))
-    (values value annotated-expr)))
+    (values (widening-coercion-code world expected-type type value value-expr) annotated-expr)))
 
 
-; Same as scan-value except that ensure that the value has the expected type kind.
+; Same as scan-value except that ensure that the value has type bottom or void.
+; Return three values:
+;   The expression's value (a lisp expression)
+;   True if value has type void
+;   The annotated value-expr
+(defun scan-void-value (world type-env value-expr)
+  (multiple-value-bind (value type annotated-expr) (scan-value world type-env value-expr)
+    (values
+     value
+     (case (type-kind type)
+       (:bottom nil)
+       (:void t)
+       (t (error "Value ~S:~A should be void" value-expr (print-type-to-string type))))
+     annotated-expr)))
+
+
+; Same as scan-value except that ensure that the value is a vector type.
 ; Return three values:
 ;   The expression's value (a lisp expression)
 ;   The expression's type
 ;   The annotated value-expr
-(defun scan-kinded-value (world type-env value-expr expected-type-kind)
+(defun scan-vector-value (world type-env value-expr)
   (multiple-value-bind (value type annotated-expr) (scan-value world type-env value-expr)
-    (unless (typekind<= (type-kind type) expected-type-kind)
-      (error "Expected ~(~A~) for ~:W but got type ~A"
-             expected-type-kind
-             value-expr
-             (print-type-to-string type)))
+    (unless (member (type-kind type) '(:string :vector))
+      (error "Value ~S:~A should be a vector" value-expr (print-type-to-string type)))
+    (values value type annotated-expr)))
+
+
+; Same as scan-value except that ensure that the value is a tag type.
+; Return three values:
+;   The expression's value (a lisp expression)
+;   The expression's type
+;   The annotated value-expr
+(defun scan-tag-value (world type-env value-expr)
+  (multiple-value-bind (value type annotated-expr) (scan-value world type-env value-expr)
+    (unless (eq (type-kind type) :tag)
+      (error "Value ~S:~A should be a tag" value-expr (print-type-to-string type)))
     (values value type annotated-expr)))
 
 
 ; Return the code for computing value-expr, which will be assigned to the symbol.  Check that the
 ; value has the given type.
 (defun scan-global-value (symbol value-expr type)
-  (multiple-value-bind (value-code value-type) (scan-value (symbol-world symbol) *null-type-env* value-expr)
-    (unless (type<= value-type type)
-      (error "~A evaluates to type ~A, but is defined with type ~A"
-             symbol
-             (print-type-to-string value-type)
-             (print-type-to-string type)))
-    value-code))
+  (scan-typed-value (symbol-world symbol) *null-type-env* value-expr type))
 
 
-#|
-(defun compute-variable-function (symbol value-expr type)
-  (handler-bind (((or error warning)
-                  #'(lambda (condition)
-                      (declare (ignore condition))
-                      (format *error-output* "~&~@<~2IWhile computing ~A: ~_~:W~:>~%"
-                              symbol value-expr))))
-    (assert-true (not (or (boundp symbol) (fboundp symbol))))
-    (let ((code (gen-defun (scan-global-value symbol value-expr type) symbol (length (->-argument-types type)))))
-      (when *trace-variables*
-        (format *trace-output* "~&~S ::= ~:W~%" symbol code))
-      (setf (symbol-code symbol) code)
-      code)))
-|#
+; Same as scan-typed-value except that also allow the form (begin . <statements>); in this case
+; return can be used to return the expression's value.
+; Return two values:
+;   The expression's value (a lisp expression)
+;   The annotated value-expr
+(defun scan-typed-value-or-begin (world type-env value-expr expected-type)
+  (if (and (consp value-expr) (eq (first value-expr) 'begin))
+    (let* ((result-type (scan-type world expected-type))
+           (local-type-env (type-env-init-function type-env result-type)))
+      (multiple-value-bind (body-codes body-annotated-stmts) (finish-function-code world local-type-env result-type (cdr value-expr))
+        (values (gen-progn body-codes)
+                (cons 'expr-annotation:begin body-annotated-stmts))))
+    (scan-typed-value world type-env value-expr expected-type)))
+
+
+
 ; Generate the defun code for the world's variable named by symbol.
 ; The variable's type must be ->.
 (defun compute-variable-function (symbol value-expr type)
   (handler-bind (((or error warning)
                   #'(lambda (condition)
                       (declare (ignore condition))
-                      (format *error-output* "~&~@<~2IWhile computing ~A: ~_~:W~:>~%"
-                              symbol value-expr))))
+                      (format *error-output* "~&~@<~2IWhile computing ~A: ~_~:W~:>~%" symbol value-expr))))
     (assert-true (not (or (boundp symbol) (fboundp symbol))))
     (let ((code (strip-function (scan-global-value symbol value-expr type) symbol (length (->-argument-types type)))))
       (when *trace-variables*
         (format *trace-output* "~&~S ::= ~:W~%" symbol code))
-      (setf (symbol-code symbol) code)
-      (let (#+mcl (ccl::*suppress-compiler-warnings* t))
-        (compile symbol code)))))
+      (quiet-compile symbol code))))
 
 
 (defvar *busy-variables* nil)
@@ -1852,84 +2498,10 @@
                             (format *error-output* "~&~@<~2IWhile computing ~A: ~_~:W~:>~%"
                                     symbol value-expr))))
           (assert-true (not (eq (type-kind type) :->)))
-          (let ((named-value-code (name-lambda (scan-global-value symbol value-expr type) symbol)))
-            (setf (symbol-code symbol) named-value-code)
+          (let ((value-code (scan-global-value symbol value-expr type)))
             (when *trace-variables*
-              (format *trace-output* "~&~S := ~:W~%" symbol named-value-code))
-            (set symbol (eval named-value-code))))))))
-
-
-; Compute the initial type-env to use for the given general-production's action code.
-; The first cell of the type-env gives the production's lhs nonterminal's symbol;
-; the remaining cells give the action arguments in order.
-(defun general-production-action-env (grammar general-production)
-  (let* ((current-indices nil)
-         (lhs-general-nonterminal (general-production-lhs general-production))
-         (bound-arguments-alist (nonterminal-sample-bound-argument-alist grammar lhs-general-nonterminal)))
-    (acons ':lhs-symbol (general-grammar-symbol-symbol lhs-general-nonterminal)
-           (mapcan
-            #'(lambda (general-grammar-symbol)
-                (let* ((symbol (general-grammar-symbol-symbol general-grammar-symbol))
-                       (index (incf (getf current-indices symbol 0)))
-                       (grammar-symbol (instantiate-general-grammar-symbol bound-arguments-alist general-grammar-symbol)))
-                  (mapcar
-                   #'(lambda (declaration)
-                       (let* ((action-symbol (car declaration))
-                              (action-type (cdr declaration))
-                              (local-symbol (gensym (symbol-name action-symbol))))
-                         (list
-                          (list* action-symbol symbol index)
-                          local-symbol
-                          action-type
-                          general-grammar-symbol)))
-                   (grammar-symbol-signature grammar grammar-symbol))))
-            (general-production-rhs general-production)))))
-
-
-; Return the number of arguments that a function returned by compute-action-code
-; would expect.
-(defun n-action-args (grammar production)
-  (let ((n-args 0))
-    (dolist (grammar-symbol (production-rhs production))
-      (incf n-args (length (grammar-symbol-signature grammar grammar-symbol))))
-    n-args))
-
-
-; Compute the code for evaluating body-expr to obtain the value of one of the
-; production's actions.  Verify that the result has the given type.
-; The code is a lambda-expression that takes as arguments the results of all
-; defined actions on the production's rhs.  The arguments are listed in the
-; same order as the grammar symbols in the rhs.  If a grammar symbol in the rhs
-; has more than one associated action, arguments are used corresponding to all
-; of the actions in the same order as they were declared.  If a grammar symbol
-; in the rhs has no associated actions, no argument is used for it.
-(defun compute-action-code (world grammar production action-symbol body-expr type)
-  (handler-bind ((error #'(lambda (condition)
-                            (declare (ignore condition))
-                            (format *error-output* "~&~@<~2IWhile processing action ~A on ~S: ~_~:W~:>~%"
-                                    action-symbol (production-name production) body-expr))))
-    (let* ((initial-env (general-production-action-env grammar production))
-           (args (mapcar #'cadr (cdr initial-env)))
-           (body-code (scan-typed-value world initial-env body-expr type))
-           (named-body-code (name-lambda body-code
-                                         (concatenate 'string (symbol-name (production-name production))
-                                                      "~" (symbol-name action-symbol))
-                                         (world-package world))))
-      (gen-lambda args named-body-code))))
-
-
-; Return a list of all grammar symbols's symbols that are present in at least one expr-annotation:action
-; in the annotated expression.  The symbols are returned in no particular order.
-(defun annotated-expr-grammar-symbols (annotated-expr)
-  (let ((symbols nil))
-    (labels
-      ((scan (annotated-expr)
-         (when (consp annotated-expr)
-           (if (eq (first annotated-expr) 'expr-annotation:action)
-             (pushnew (general-grammar-symbol-symbol (third annotated-expr)) symbols :test *grammar-symbol-=*)
-             (mapc #'scan annotated-expr)))))
-      (scan annotated-expr)
-      symbols)))
+              (format *trace-output* "~&~S := ~:W~%" symbol value-code))
+            (set symbol (eval value-code))))))))
 
 
 ;;; ------------------------------------------------------------------------------------------------------
@@ -1938,9 +2510,10 @@
 ;;; Constants
 
 (defun eval-bottom ()
-  (error "Reached a BOTTOM statement"))
+  (error "Reached a BOTTOM expression"))
 
 ; (bottom)
+; (todo)
 ; Raises an error.
 (defun scan-bottom (world type-env special-form)
   (declare (ignore type-env))
@@ -1948,20 +2521,6 @@
    '(eval-bottom)
    (world-bottom-type world)
    (list 'expr-annotation:special-form special-form)))
-
-
-; (^ <base> <exponent>)
-; Alternative way of writing the integer or rational constant <base>^<exponent>.
-(defun scan-^ (world type-env special-form base exponent)
-  (declare (ignore type-env))
-  (unless (and (integerp base) (integerp exponent) (plusp base))
-    (error "Bad constant ~S^~S" base exponent))
-  (values
-   (expt base exponent)
-   (if (minusp exponent)
-     (world-rational-type world)
-     (world-integer-type world))
-   (list 'expr-annotation:special-form special-form base exponent)))
 
 
 ; (hex <integer> [<length>])
@@ -1976,110 +2535,226 @@
    (list 'expr-annotation:special-form special-form n length)))
 
 
-;;; Control structures
+;;; Expressions
 
-; (function ((<var1> <type1> [:unused]) ... (<varn> <typen> [:unused])) <body>)
-(defun scan-function (world type-env special-form arg-binding-exprs body-expr)
-  (flet
-    ((scan-arg-binding (arg-binding-expr)
-       (unless (and (consp arg-binding-expr)
-                    (consp (cdr arg-binding-expr))
-                    (member (cddr arg-binding-expr) '(nil (:unused)) :test #'equal))
-         (error "Bad function binding ~S" arg-binding-expr))
-       (let ((arg-symbol (scan-name world (first arg-binding-expr)))
-             (arg-type (scan-type world (second arg-binding-expr))))
-         (cons arg-symbol arg-type))))
-    
-    (unless (listp arg-binding-exprs)
-      (error "Bad function bindings ~S" arg-binding-exprs))
-    (let* ((arg-bindings (mapcar #'scan-arg-binding arg-binding-exprs))
-           (args (mapcar #'car arg-bindings))
-           (arg-types (mapcar #'cdr arg-bindings))
-           (unused-args (mapcan #'(lambda (arg arg-binding-expr)
-                                    (when (eq (third arg-binding-expr) ':unused)
-                                      (list arg)))
-                                args arg-binding-exprs))
-           (type-env (type-env-add-bindings type-env arg-bindings)))
-      (multiple-value-bind (body-code body-type body-annotated-expr) (scan-value world type-env body-expr)
-        (values (if unused-args
-                  `#'(lambda ,args (declare (ignore . ,unused-args)) ,body-code)
-                  `#'(lambda ,args ,body-code))
-                (make-->-type world arg-types body-type)
-                (list 'expr-annotation:special-form special-form arg-binding-exprs body-annotated-expr))))))
+
+(defun semantic-expt (base exponent)
+  (assert-true (and (rationalp base) (integerp exponent)))
+  (when (and (zerop base) (not (plusp exponent)))
+    (error "0 raised to a nonpositive exponent"))
+  (expt base exponent))
+
+
+; (expt <base> <exponent>)
+; The result is rational unless both base and exponent are integer constants and the result is an integer.
+(defun scan-expt (world type-env special-form base-expr exponent-expr)
+  (multiple-value-bind (base-code base-annotated-expr) (scan-typed-value world type-env base-expr (world-rational-type world))
+    (multiple-value-bind (exponent-code exponent-annotated-expr) (scan-typed-value world type-env exponent-expr (world-integer-type world))
+      (let ((code (list 'semantic-expt base-code exponent-code))
+            (type (world-rational-type world)))
+        (when (and (constantp base-code) (constantp exponent-code))
+          (setq code (semantic-expt base-code exponent-code))
+          (when (integerp code)
+            (setq type (world-integer-type world))))
+        (values
+         code
+         type
+         (list 'expr-annotation:special-form special-form base-annotated-expr exponent-annotated-expr))))))
+
+
+; Return the depict name for one of the comparison symbols =, /=, <, >, <=, >=.
+(defun comparison-name (order)
+  (cdr (assoc order '((= . "=") (/= . :not-equal) (< . "<") (> . ">") (<= . :less-or-equal) (>= . :greater-or-equal)))))
+
+
+; Both expr1 and expr2 are coerced to the given type and then compared using the given order.
+; The result is a boolean.  order-name should be suitable for depict.
+(defun scan-comparison (world type-env special-form order expr1 expr2 type-expr)
+  (let ((type (scan-type world type-expr)))
+    (multiple-value-bind (code1 annotated-expr1) (scan-typed-value world type-env expr1 type)
+      (multiple-value-bind (code2 annotated-expr2) (scan-typed-value world type-env expr2 type)
+        (values
+         (get-type-order-code world type order code1 code2)
+         (world-boolean-type world)
+         (list 'expr-annotation:special-form special-form (comparison-name order) annotated-expr1 annotated-expr2))))))
+
+
+; (= <expr1> <expr2> [<type>])
+(defun scan-= (world type-env special-form expr1 expr2 &optional (type-expr 'integer))
+  (scan-comparison world type-env special-form '= expr1 expr2 type-expr))
+
+; (/= <expr1> <expr2> [<type>])
+(defun scan-/= (world type-env special-form expr1 expr2 &optional (type-expr 'integer))
+  (scan-comparison world type-env special-form '/= expr1 expr2 type-expr))
+
+; (< <expr1> <expr2> [<type>])
+(defun scan-< (world type-env special-form expr1 expr2 &optional (type-expr 'integer))
+  (scan-comparison world type-env special-form '< expr1 expr2 type-expr))
+
+; (> <expr1> <expr2> [<type>])
+(defun scan-> (world type-env special-form expr1 expr2 &optional (type-expr 'integer))
+  (scan-comparison world type-env special-form '> expr1 expr2 type-expr))
+
+; (<= <expr1> <expr2> [<type>])
+(defun scan-<= (world type-env special-form expr1 expr2 &optional (type-expr 'integer))
+  (scan-comparison world type-env special-form '<= expr1 expr2 type-expr))
+
+; (>= <expr1> <expr2> [<type>])
+(defun scan->= (world type-env special-form expr1 expr2 &optional (type-expr 'integer))
+  (scan-comparison world type-env special-form '>= expr1 expr2 type-expr))
+
+
+; (cascade <type> <expr1> <order1> <expr2> <order2> ... <ordern-1> <exprn>)
+; Shorthand for (and (<order1> <expr1> <expr2> <type>) (<order1> <expr2> <expr3> <type>) ... (<ordern-1> <exprn-1> <exprn> <type>)),
+; where each order must be one of the symbols =, /=, <, >, <=, >=.
+; The intermediate expressions are evaluated at most once.
+(defun scan-cascade (world type-env special-form type-expr expr1 &rest orders-and-exprs)
+  (let ((type (scan-type world type-expr)))
+    (labels
+      ((cascade (v1 orders-and-exprs)
+         (unless (and (consp orders-and-exprs) (consp (cdr orders-and-exprs))
+                      (member (first orders-and-exprs) '(= /= < > <= >=)))
+           (error "Bad cascade tail: ~S" orders-and-exprs))
+         (let* ((order (first orders-and-exprs))
+                (order-name (comparison-name order))
+                (expr2 (second orders-and-exprs))
+                (orders-and-exprs (cddr orders-and-exprs)))
+           (multiple-value-bind (code2 annotated-expr2) (scan-typed-value world type-env expr2 type)
+             (if orders-and-exprs
+               (let ((v2 (gensym "L")))
+                 (multiple-value-bind (codes annotations) (cascade v2 orders-and-exprs)
+                   (values
+                    `(let ((,v2 ,code2))
+                       (and ,(get-type-order-code world type order v1 v2) ,codes))
+                    (list* order-name annotated-expr2 annotations))))
+               (values
+                (get-type-order-code world type order v1 code2)
+                (list order-name annotated-expr2)))))))
+      
+      (multiple-value-bind (code1 annotated-expr1) (scan-typed-value world type-env expr1 type)
+        (let ((v1 (gensym "L")))
+          (multiple-value-bind (codes annotations) (cascade v1 orders-and-exprs)
+            (values
+             `(let ((,v1 ,code1)) ,codes)
+             (world-boolean-type world)
+             (list* 'expr-annotation:special-form special-form annotated-expr1 annotations))))))))
+
+
+; (and <expr> ... <expr>)
+; Short-circuiting logical AND.
+(defun scan-and (world type-env special-form expr &rest exprs)
+  (apply #'scan-and-or-xor world type-env special-form 'and t expr exprs))
+
+; (or <expr> ... <expr>)
+; Short-circuiting logical OR.
+(defun scan-or (world type-env special-form expr &rest exprs)
+  (apply #'scan-and-or-xor world type-env special-form 'or nil expr exprs))
+
+; (xor <expr> ... <expr>)
+; Logical XOR.
+(defun scan-xor (world type-env special-form expr &rest exprs)
+  (apply #'scan-and-or-xor world type-env special-form 'xor nil expr exprs))
+
+(defun scan-and-or-xor (world type-env special-form op identity &rest exprs)
+  (multiple-value-map-bind (codes annotated-exprs)
+                           #'(lambda (expr)
+                               (scan-typed-value world type-env expr (world-boolean-type world)))
+                           (exprs)
+    (values
+     (gen-poly-op op identity codes)
+     (world-boolean-type world)
+     (list* 'expr-annotation:special-form special-form op annotated-exprs))))
+
+
+; (begin . <statements>)
+; Only allowed at the top level of an action.
+
+
+(defun finish-function-code (world type-env result-type body-statements)
+  (multiple-value-bind (body-codes body-live body-annotated-stmts) (scan-statements world type-env body-statements t t)
+    (when (and body-live (not (or (type= result-type (world-void-type world))
+                                  (type= result-type (world-bottom-type world)))))
+      (error "Execution falls off the end of a function with result type ~A" (print-type-to-string result-type)))
+    (let ((return-block-name (get-type-env-flag type-env :return-block-name)))
+      (values
+       (if return-block-name
+         (list (list* 'block return-block-name body-codes))
+         body-codes)
+       body-annotated-stmts))))
+
+
+; Scan a local function.
+;   arg-binding-exprs should have the form ((<var1> <type1> [:unused]) ... (<varn> <typen> [:unused])).
+;   result-type-expr should be a type expression.
+;   body-statements contains the function's body statements.
+; Return three values:
+;   A list of lisp function bindings followed by the code (i.e. '((a b c) (declare (ignore c)) (* a b)));
+;   The function's complete type;
+;   The annotated body statements.
+(defun scan-function-or-lambda (world type-env arg-binding-exprs result-type-expr body-statements)
+  (handler-bind (((or error warning)
+                  #'(lambda (condition)
+                      (declare (ignore condition))
+                      (format *error-output* "~&~@<~2IWhile processing lambda ~_~S ~_~S ~_~S:~:>~%"
+                              arg-binding-exprs result-type-expr body-statements))))
+    (let* ((result-type (scan-type world result-type-expr))
+           (local-type-env (type-env-init-function type-env result-type))
+           (args nil)
+           (arg-types nil)
+           (unused-args nil))
+      (unless (listp arg-binding-exprs)
+        (error "Bad function bindings ~S" arg-binding-exprs))
+      (dolist (arg-binding-expr arg-binding-exprs)
+        (unless (and (consp arg-binding-expr)
+                     (consp (cdr arg-binding-expr))
+                     (member (cddr arg-binding-expr) '(nil (:unused)) :test #'equal))
+          (error "Bad function binding ~S" arg-binding-expr))
+        (let ((arg-symbol (scan-name world (first arg-binding-expr)))
+              (arg-type (scan-type world (second arg-binding-expr)))
+              (arg-mode (or (third arg-binding-expr) :const)))
+          (setq local-type-env (type-env-add-binding local-type-env arg-symbol arg-type arg-mode))
+          (push arg-symbol args)
+          (push arg-type arg-types)
+          (when (eq arg-mode :unused)
+            (push arg-symbol unused-args))))
+      (setq args (nreverse args))
+      (setq arg-types (nreverse arg-types))
+      (setq unused-args (nreverse unused-args))
+      (multiple-value-bind (body-codes body-annotated-stmts) (finish-function-code world local-type-env result-type body-statements)
+        (when unused-args
+          (push (list 'declare (cons 'ignore unused-args)) body-codes))
+        (values (cons args body-codes)
+                (make-->-type world arg-types result-type)
+                body-annotated-stmts)))))
+
+
+; (lambda ((<var1> <type1> [:unused]) ... (<varn> <typen> [:unused])) <result-type> . <statements>)
+(defun scan-lambda (world type-env special-form arg-binding-exprs result-type-expr &rest body-statements)
+  (multiple-value-bind (args-and-body-codes type body-annotated-stmts)
+                       (scan-function-or-lambda world type-env arg-binding-exprs result-type-expr body-statements)
+    (values
+     (list 'function (cons 'lambda args-and-body-codes))
+     type
+     (list* 'expr-annotation:special-form special-form arg-binding-exprs result-type-expr body-annotated-stmts))))
 
 
 ; (if <condition-expr> <true-expr> <false-expr>)
-(defun scan-if (world type-env special-form condition-expr true-expr false-expr)
+(defun scan-if-expr (world type-env special-form condition-expr true-expr false-expr)
   (multiple-value-bind (condition-code condition-annotated-expr)
                        (scan-typed-value world type-env condition-expr (world-boolean-type world))
     (multiple-value-bind (true-code true-type true-annotated-expr) (scan-value world type-env true-expr)
       (multiple-value-bind (false-code false-type false-annotated-expr) (scan-value world type-env false-expr)
-        (let ((join-type (type-lub true-type false-type)))
-          (unless join-type
-            (error "~S: ~A and ~S: ~A used as alternatives in an if"
-                   true-expr (print-type-to-string true-type)
-                   false-expr (print-type-to-string false-type)))
-          (values
-           (list 'if condition-code true-code false-code)
-           join-type
-           (list 'expr-annotation:special-form special-form condition-annotated-expr true-annotated-expr false-annotated-expr)))))))
-
-
-; (progn <void-expr> ... <void-expr> <expr>)
-(defun scan-progn (world type-env special-form expr1 expr2 &rest more-exprs)
-  (let* ((exprs (list* expr1 expr2 more-exprs))
-         (last-expr (car (last exprs)))
-         (void-exprs (butlast exprs))
-         (codes nil)
-         (annotated-exprs nil))
-    (dolist (void-expr void-exprs)
-      (multiple-value-bind (void-code void-annotated-expr)
-                           (scan-typed-value world type-env void-expr (world-void-type world))
-        (push void-code codes)
-        (push void-annotated-expr annotated-exprs)))
-    (multiple-value-bind (last-code last-type last-annotated-expr) (scan-value world type-env last-expr)
-      (values
-       (cons 'progn (nreconc codes (list last-code)))
-       last-type
-       (list* 'expr-annotation:special-form special-form (nreconc annotated-exprs (list last-annotated-expr)))))))
-
-
-(defconstant *semantic-exception-type-name* 'semantic-exception)
-
-; (throw <value-expr>)
-; <value-expr> must have type *semantic-exception-type-name*, which must be the name of some user-defined type in the environment.
-(defun scan-throw (world type-env special-form value-expr)
-  (multiple-value-bind (value-code value-annotated-expr)
-                       (scan-typed-value world type-env value-expr (scan-type world *semantic-exception-type-name*))
-    (values
-     (list 'throw ':semantic-exception value-code)
-     (world-bottom-type world)
-     (list 'expr-annotation:special-form special-form value-annotated-expr))))
-
-
-; (catch <body> (<var> [:unused]) <handler>)
-(defun scan-catch (world type-env special-form body-expr arg-binding-expr handler-expr)
-  (multiple-value-bind (body-code body-type body-annotated-expr) (scan-value world type-env body-expr)
-    (unless (and (consp arg-binding-expr)
-                 (member (cdr arg-binding-expr) '(nil (:unused)) :test #'equal))
-      (error "Bad catch binding ~S" arg-binding-expr))
-    (let* ((arg-symbol (scan-name world (first arg-binding-expr)))
-           (arg-type (scan-type world *semantic-exception-type-name*))
-           (arg-bindings (list (cons arg-symbol arg-type)))
-           (type-env (type-env-add-bindings type-env arg-bindings)))
-      (multiple-value-bind (handler-code handler-type handler-annotated-expr) (scan-value world type-env handler-expr)
-        (let ((join-type (type-lub body-type handler-type)))
-          (unless join-type
-            (error "~S: ~A and ~S: ~A used as alternatives in a catch"
-                   body-expr (print-type-to-string body-type)
-                   handler-expr (print-type-to-string handler-type)))
-          (values
-           `(block nil
-              (let ((,arg-symbol (catch ':semantic-exception (return ,body-code))))
-                ,@(and (eq (second arg-binding-expr) ':unused) `((declare (ignore ,arg-symbol))))
-                ,handler-code))
-           join-type
-           (list 'expr-annotation:special-form special-form body-annotated-expr arg-binding-expr handler-annotated-expr)))))))
+        (handler-bind (((or error warning)
+                        #'(lambda (condition)
+                            (declare (ignore condition))
+                            (format *error-output* "~&~@<~2IWhile processing if with alternatives~_ ~S: ~A and~_ ~S: ~A:~:>~%"
+                                    true-expr (print-type-to-string true-type)
+                                    false-expr (print-type-to-string false-type)))))
+          (let ((type (type-union world true-type false-type)))
+            (values
+             (list 'if condition-code true-code false-code)
+             type
+             (list 'expr-annotation:special-form special-form condition-annotated-expr true-annotated-expr false-annotated-expr))))))))
 
 
 ;;; Vectors
@@ -2087,36 +2762,41 @@
 (defmacro non-empty-vector (v operation-name)
   `(or ,v (error ,(concatenate 'string operation-name " called on empty vector"))))
 
-; (vector <element-expr> <element-expr> ... <element-expr>)
+(defun make-vector-expr (world special-form element-type element-codes element-annotated-exprs)
+  (values
+   (if element-codes
+     (let ((elements-code (cons 'list element-codes)))
+       (if (eq element-type (world-character-type world))
+         (if (cdr element-codes)
+           (list 'coerce elements-code ''string)
+           (list 'string (car element-codes)))
+         elements-code))
+     (if (eq element-type (world-character-type world))
+       ""
+       nil))
+   (make-vector-type world element-type)
+   (list* 'expr-annotation:special-form special-form element-annotated-exprs)))
+
+; (vector <element-expr> ... <element-expr>)
 ; Makes a vector of one or more elements.
-(defun scan-vector-form (world type-env special-form element-expr &rest element-exprs)
+(defun scan-vector-expr (world type-env special-form element-expr &rest element-exprs)
   (multiple-value-bind (element-code element-type element-annotated-expr) (scan-value world type-env element-expr)
     (multiple-value-map-bind (rest-codes rest-annotated-exprs)
                              #'(lambda (element-expr)
                                  (scan-typed-value world type-env element-expr element-type))
                              (element-exprs)
-      (let ((elements-code (list* 'list element-code rest-codes)))
-        (values
-         (if (eq element-type (world-character-type world))
-           (if element-exprs
-             (list 'coerce elements-code ''string)
-             (list 'string element-code))
-           elements-code)
-         (make-vector-type world element-type)
-         (list* 'expr-annotation:special-form special-form element-annotated-expr rest-annotated-exprs))))))
+      (make-vector-expr world special-form element-type (cons element-code rest-codes) (cons element-annotated-expr rest-annotated-exprs)))))
 
 
-; (vector-of <element-type>)
-; Makes a zero-element vector of elements of the given type.
-(defun scan-vector-of (world type-env special-form element-type-expr)
-  (declare (ignore type-env))
+; (vector-of <element-type> <element-expr> ... <element-expr>)
+; Makes a vector of zero or more elements of the given type.
+(defun scan-vector-of (world type-env special-form element-type-expr &rest element-exprs)
   (let ((element-type (scan-type world element-type-expr)))
-    (values
-     (if (eq element-type (world-character-type world))
-       ""
-       nil)
-     (make-vector-type world element-type)
-     (list 'expr-annotation:special-form special-form element-type-expr))))
+    (multiple-value-map-bind (element-codes element-annotated-exprs)
+                             #'(lambda (element-expr)
+                                 (scan-typed-value world type-env element-expr element-type))
+                             (element-exprs)
+      (make-vector-expr world special-form element-type element-codes element-annotated-exprs))))
 
 
 ; (empty <vector-expr>)
@@ -2124,7 +2804,7 @@
 ; This is equivalent to (= (length <vector-expr>) 0) and depicts the same as the latter but
 ; is implemented more efficiently.
 (defun scan-empty (world type-env special-form vector-expr)
-  (multiple-value-bind (vector-code vector-type vector-annotated-expr) (scan-kinded-value world type-env vector-expr :vector)
+  (multiple-value-bind (vector-code vector-type vector-annotated-expr) (scan-vector-value world type-env vector-expr)
     (values
      (if (eq vector-type (world-string-type world))
        `(= (length ,vector-code) 0)
@@ -2136,7 +2816,7 @@
 ; (length <vector-expr>)
 ; Returns the number of elements in the vector.
 (defun scan-length (world type-env special-form vector-expr)
-  (multiple-value-bind (vector-code vector-type vector-annotated-expr) (scan-kinded-value world type-env vector-expr :vector)
+  (multiple-value-bind (vector-code vector-type vector-annotated-expr) (scan-vector-value world type-env vector-expr)
     (declare (ignore vector-type))
     (values
      (list 'length vector-code)
@@ -2147,7 +2827,7 @@
 ; (nth <vector-expr> <n-expr>)
 ; Returns the nth element of the vector.  Throws an error if the vector's length is less than n.
 (defun scan-nth (world type-env special-form vector-expr n-expr)
-  (multiple-value-bind (vector-code vector-type vector-annotated-expr) (scan-kinded-value world type-env vector-expr :vector)
+  (multiple-value-bind (vector-code vector-type vector-annotated-expr) (scan-vector-value world type-env vector-expr)
     (multiple-value-bind (n-code n-annotated-expr) (scan-typed-value world type-env n-expr (world-integer-type world))
       (values
        (cond
@@ -2168,7 +2848,7 @@
 ; It is required that 0 <= low-expr <= high-expr+1 <= length.
 (defun scan-subseq (world type-env special-form vector-expr low-expr &optional high-expr)
   (let ((integer-type (world-integer-type world)))
-    (multiple-value-bind (vector-code vector-type vector-annotated-expr) (scan-kinded-value world type-env vector-expr :vector)
+    (multiple-value-bind (vector-code vector-type vector-annotated-expr) (scan-vector-value world type-env vector-expr)
       (multiple-value-bind (low-code low-annotated-expr) (scan-typed-value world type-env low-expr integer-type)
         (if high-expr
           (multiple-value-bind (high-code high-annotated-expr) (scan-typed-value world type-env high-expr integer-type)
@@ -2190,7 +2870,7 @@
 ; (append <vector-expr> <vector-expr>)
 ; Returns a vector contatenating the two given vectors, which must have the same element type.
 (defun scan-append (world type-env special-form vector1-expr vector2-expr)
-  (multiple-value-bind (vector1-code vector-type vector1-annotated-expr) (scan-kinded-value world type-env vector1-expr :vector)
+  (multiple-value-bind (vector1-code vector-type vector1-annotated-expr) (scan-vector-value world type-env vector1-expr)
     (multiple-value-bind (vector2-code vector2-annotated-expr) (scan-typed-value world type-env vector2-expr vector-type)
       (values
        (if (eq vector-type (world-string-type world))
@@ -2204,7 +2884,7 @@
 ; Returns a vector containing the same elements of the given vector except that the nth has been replaced
 ; with value-expr.  n must be between 0 and length-1, inclusive.
 (defun scan-set-nth (world type-env special-form vector-expr n-expr value-expr)
-  (multiple-value-bind (vector-code vector-type vector-annotated-expr) (scan-kinded-value world type-env vector-expr :vector)
+  (multiple-value-bind (vector-code vector-type vector-annotated-expr) (scan-vector-value world type-env vector-expr)
     (multiple-value-bind (n-code n-annotated-expr) (scan-typed-value world type-env n-expr (world-integer-type world))
       (multiple-value-bind (value-code value-annotated-expr) (scan-typed-value world type-env value-expr (vector-element-type vector-type))
         (values
@@ -2229,10 +2909,10 @@
 
 ; (map <vector-expr> <var> <value-expr> [<condition-expr>])
 (defun scan-map (world type-env special-form vector-expr var-source value-expr &optional (condition-expr 'true))
-  (multiple-value-bind (vector-code vector-type vector-annotated-expr) (scan-kinded-value world type-env vector-expr :vector)
+  (multiple-value-bind (vector-code vector-type vector-annotated-expr) (scan-vector-value world type-env vector-expr)
     (let* ((var (scan-name world var-source))
            (element-type (vector-element-type vector-type))
-           (local-type-env (type-env-add-bindings type-env (list (cons var element-type)))))
+           (local-type-env (type-env-add-binding type-env var element-type :const)))
       (multiple-value-bind (value-code value-type value-annotated-expr) (scan-value world local-type-env value-expr)
         (multiple-value-bind (condition-code condition-annotated-expr) (scan-typed-value world local-type-env condition-expr (world-boolean-type world))
           (let* ((result-type (make-vector-type world value-type))
@@ -2288,6 +2968,16 @@
     (:character #'code-char)))
 
 
+; (set-of <element-type> <element-expr> ... <element-expr>)  ==>
+; (set-of-ranges <element-type> <element-expr> nil ... <element-expr> nil)
+(defun scan-set-of (world type-env special-form element-type-expr &rest element-exprs)
+  (apply #'scan-set-of-ranges
+    world type-env special-form element-type-expr
+    (mapcan #'(lambda (element-expr)
+                (list element-expr nil))
+            element-exprs)))
+
+
 ; (set-of-ranges <element-type> <low-expr> <high-expr> ... <low-expr> <high-expr>)
 ; Makes a set of zero or more elements or element ranges.  Each <high-expr> can be null to indicate a
 ; one-element range.
@@ -2312,261 +3002,603 @@
        (list* 'expr-annotation:special-form special-form element-type-expr element-annotated-exprs)))))
 
 
-;;; Oneofs
+;;; Tags
 
-; (oneof <tag> <value-expr>)
-; oneof-type is inferred from the tag.
-(defun scan-oneof-form (world type-env special-form tag &optional (value-expr nil has-value-expr))
-  (multiple-value-bind (value-code value-type value-annotated-expr)
-                       (if has-value-expr
-                         (scan-value world type-env value-expr)
-                         (values nil (world-void-type world) nil))
-    (let ((type (lookup-oneof-tag world tag value-type)))
-      (values
-       `(cons ',tag ,value-code)
-       type
-       (list 'expr-annotation:special-form special-form tag value-annotated-expr type)))))
+(defparameter *tag-counter* 0)
 
-
-; (typed-oneof <type-expr> <tag> <value-expr>)
-(defun scan-typed-oneof (world type-env special-form type-expr tag &optional (value-expr nil has-value-expr))
-  (let ((type (scan-kinded-type world type-expr :oneof)))
-    (multiple-value-bind (tag field-type) (scan-tag type tag)
-      (multiple-value-bind (value-code value-annotated-expr)
-                           (cond
-                            (has-value-expr (scan-typed-value world type-env value-expr field-type))
-                            ((eq (type-kind field-type) :void) (values nil nil))
-                            (t (error "Missing oneof value expression")))
-        (values
-         `(cons ',tag ,value-code)
-         type
-         (list 'expr-annotation:special-form special-form type-expr tag value-annotated-expr type))))))
-
-
-; (case <oneof-expr> (<tag-spec> <value-expr>) (<tag-spec> <value-expr>) ... (<tag-spec> <value-expr>))
-; where each <tag-spec> is either <tag> or (<tag> <var> <type> [:unused]) or ((<tag> <tag> ... <tag>))
-(defun scan-case (world type-env special-form oneof-expr &rest cases)
-  (multiple-value-bind (oneof-code oneof-type oneof-annotated-expr) (scan-kinded-value world type-env oneof-expr :oneof)
-    (let ((unseen-tags (copy-list (type-tags oneof-type)))
-          (case-codes nil)
-          (case-annotated-exprs nil)
-          (body-type nil)
-          (oneof-var (gensym "ONEOF")))
-      (unless cases
-        (error "Empty case statement"))
-      (dolist (case cases)
-        (unless (and (consp case) (= (length case) 2))
-          (error "Bad case ~S" case))
-        (let ((tag-spec (first case))
-              (tags nil)
-              (var nil)
-              (var-type-expr nil)
-              (local-type-env type-env))
-          (cond
-           ((atom tag-spec)
-            (setq tags (list tag-spec)))
-           ((atom (first tag-spec))
-            (unless (and (consp (cdr tag-spec))
-                         (consp (cddr tag-spec))
-                         (member (cdddr tag-spec) '(nil (:unused)) :test #'equal))
-              (error "Bad case tag ~S" tag-spec))
-            (setq tags (list (first tag-spec)))
-            (when (second tag-spec)
-              (setq var (scan-name world (second tag-spec)))
-              (setq var-type-expr (third tag-spec))))
-           (t (when (rest tag-spec)
-                (error "Bad case tag ~S" tag-spec))
-              (setq tags (first tag-spec))))
-          (dolist (tag tags)
-            (multiple-value-bind (tag field-type) (scan-tag oneof-type tag)
-              (if (member tag unseen-tags)
-                (setq unseen-tags (delete tag unseen-tags))
-                (error "Duplicate case tag ~A" tag))
-              (when var
-                (let ((var-type (scan-type world var-type-expr)))
-                  (unless (eq field-type var-type)
-                    (error "Case tag ~A type mismatch: ~A and ~S" tag
-                           (print-type-to-string field-type) var-type-expr))
-                  (setq local-type-env (type-env-add-bindings local-type-env (list (cons var field-type))))))))
-          (multiple-value-bind (value-code value-type value-annotated-expr) (scan-value world local-type-env (second case))
-            (if body-type
-              (let ((new-body-type (type-lub body-type value-type)))
-                (unless new-body-type
-                  (error "Case result type mismatch: ~A and ~A" (print-type-to-string body-type) (print-type-to-string value-type)))
-                (setq body-type new-body-type))
-              (setq body-type value-type))
-            (push (list tags
-                        (if var
-                          `(let ((,var (cdr ,oneof-var)))
-                             ,@(when (eq (fourth tag-spec) ':unused)
-                                 `((declare (ignore ,var))))
-                             ,value-code)
-                          value-code))
-                  case-codes)
-            (push (list (list tags var var-type-expr) value-annotated-expr) case-annotated-exprs))))
-      (when unseen-tags
-        (error "Missing case tags ~S" unseen-tags))
-      (values
-       `(let ((,oneof-var ,oneof-code))
-          (ecase (car ,oneof-var) ,@(nreverse case-codes)))
-       body-type
-       (list* 'expr-annotation:special-form special-form oneof-annotated-expr oneof-type (nreverse case-annotated-exprs))))))
-
-
-; (select <tag> <oneof-expr>)
-; Returns the tag's value or bottom if <oneof-expr> has a different tag.
-(defun scan-select (world type-env special-form tag oneof-expr)
-  (multiple-value-bind (oneof-code oneof-type oneof-annotated-expr) (scan-kinded-value world type-env oneof-expr :oneof)
-    (multiple-value-bind (tag field-type) (scan-tag oneof-type tag)
-      (values
-       `(select-field ',tag ,oneof-code)
-       field-type
-       (list 'expr-annotation:special-form special-form tag oneof-annotated-expr oneof-type)))))
-
-(defun select-field (tag value)
-  (if (eq (car value) tag)
-    (cdr value)
-    (error "Select ~S got tag ~S" tag (car value))))
-
-
-; (is <tag> <oneof-expr>)
-(defun scan-is (world type-env special-form tag oneof-expr)
-  (multiple-value-bind (oneof-code oneof-type oneof-annotated-expr) (scan-kinded-value world type-env oneof-expr :oneof)
-    (let ((tag (scan-tag oneof-type tag)))
-      (values
-       `(eq ',tag (car ,oneof-code))
-       (world-boolean-type world)
-       (list 'expr-annotation:special-form special-form tag oneof-annotated-expr oneof-type)))))
-
-
-;;; Tuples
-
-; (tuple <tuple-type> <field-expr1> ... <field-exprn>)
-(defun scan-tuple-form (world type-env special-form type-expr &rest value-exprs)
-  (let* ((type (scan-kinded-type world type-expr :tuple))
-         (field-types (type-parameters type)))
-    (unless (= (length value-exprs) (length field-types))
-      (error "Wrong number of tuple fields given in ~A constructor: ~S" (print-type-to-string type) value-exprs))
+; (tag <tag> <field-expr1> ... <field-exprn>)
+(defun scan-tag-expr (world type-env special-form tag-name &rest value-exprs)
+  (let* ((tag (scan-tag world tag-name))
+         (type (make-tag-type world tag))
+         (fields (tag-fields tag)))
+    (unless (= (length value-exprs) (length fields))
+      (error "Wrong number of ~A fields given in constructor: ~S" tag-name value-exprs))
     (multiple-value-map-bind (value-codes value-annotated-exprs)
-                             #'(lambda (field-type value-expr)
-                                 (scan-typed-value world type-env value-expr field-type))
-                             (field-types value-exprs)
+                             #'(lambda (field value-expr)
+                                 (scan-typed-value world type-env value-expr (field-type field)))
+                             (fields value-exprs)
       (values
-       (cons 'list value-codes)
+       (or (tag-keyword tag)
+           (let ((name (tag-name tag)))
+             (if (tag-mutable tag)
+               (list* 'list (list 'quote name) '(incf *tag-counter*) value-codes)
+               (list* 'list (list 'quote name) value-codes))))
        type
-       (list* 'expr-annotation:special-form special-form type-expr type value-annotated-exprs)))))
+       (list* 'expr-annotation:special-form special-form tag value-annotated-exprs)))))
 
 
-; (& <tag> <tuple-expr>)
-; Return the tuple field's value.
-(defun scan-& (world type-env special-form tag tuple-expr)
-  (multiple-value-bind (tuple-code tuple-type tuple-annotated-expr) (scan-kinded-value world type-env tuple-expr :tuple)
-    (multiple-value-bind (tag field-type) (scan-tag tuple-type tag)
+; (& <label> <record-expr>)
+; Return the tag field's value.
+(defun scan-& (world type-env special-form label record-expr)
+  (multiple-value-bind (record-code record-type record-annotated-expr) (scan-tag-value world type-env record-expr)
+    (let ((tag (type-tag record-type)))
+      (multiple-value-bind (position field-type mutable) (scan-label tag label)
+        (declare (ignore mutable))
+        (values
+         (gen-nth-code position record-code)
+         field-type
+         (list 'expr-annotation:special-form special-form tag label record-annotated-expr))))))
+
+
+;;; Unions
+
+; (in <type> <expr>)
+(defun scan-in (world type-env special-form type-expr value-expr)
+  (let ((type (scan-type world type-expr)))
+    (multiple-value-bind (value-code value-type value-annotated-expr) (scan-value world type-env value-expr)
+      (type-difference world value-type type)
       (values
-       (list 'nth (position tag (type-tags tuple-type)) tuple-code)
-       field-type
-       (list 'expr-annotation:special-form special-form tag tuple-annotated-expr tuple-type)))))
-
-
-;;; Addresses
-
-; (new <value-expr>)
-; Makes a mutable cell with the given initial value.
-(defun scan-new (world type-env special-form value-expr)
-  (multiple-value-bind (value-code value-type value-annotated-expr) (scan-value world type-env value-expr)
-    (values
-     (let ((var (gensym "VAL")))
-       `(let ((,var ,value-code))
-          (cons (incf *address-counter*) ,var)))
-     (make-address-type world value-type)
-     (list 'expr-annotation:special-form special-form value-annotated-expr))))
-
-
-; (@ <address-expr>)
-; Reads the value of the mutable cell.
-(defun scan-@ (world type-env special-form address-expr)
-  (multiple-value-bind (address-code address-type address-annotated-expr) (scan-kinded-value world type-env address-expr :address)
-    (values
-     `(cdr ,address-code)
-     (address-element-type address-type)
-     (list 'expr-annotation:special-form special-form address-annotated-expr))))
-
-
-; (@= <address-expr> <value-expr>)
-; Writes the value of the mutable cell.  Returns void.
-(defun scan-@= (world type-env special-form address-expr value-expr)
-  (multiple-value-bind (address-code address-type address-annotated-expr) (scan-kinded-value world type-env address-expr :address)
-    (multiple-value-bind (value-code value-annotated-expr) (scan-typed-value world type-env value-expr (address-element-type address-type))
-      (values
-       `(progn
-          (rplacd ,address-code ,value-code)
-          nil)
-       (world-void-type world)
-       (list 'expr-annotation:special-form special-form address-annotated-expr value-annotated-expr)))))
-
-
-; (address-equal <address-expr1> <address-expr2>)
-; Returns true if the two addresses are the same.
-(defun scan-address-equal (world type-env special-form address1-expr address2-expr)
-  (multiple-value-bind (address1-code address1-type address1-annotated-expr) (scan-kinded-value world type-env address1-expr :address)
-    (multiple-value-bind (address2-code address2-annotated-expr) (scan-typed-value world type-env address2-expr address1-type)
-      (values
-       `(eq ,address1-code ,address2-code)
+       (if (symbolp value-code)
+         (type-member-test-code world type value-type value-code)
+         (let ((var (gensym "IN")))
+           `(let ((,var ,value-code))
+              ,(type-member-test-code world type value-type var))))
        (world-boolean-type world)
-       (list 'expr-annotation:special-form special-form address1-annotated-expr address2-annotated-expr)))))
+       (list 'expr-annotation:special-form special-form type type-expr value-annotated-expr)))))
+
+; (not-in <type> <expr>)
+(defun scan-not-in (world type-env special-form type-expr value-expr)
+  (multiple-value-bind (code type annotated-expr) (scan-in world type-env special-form type-expr value-expr)
+    (values
+     (list 'not code)
+     type
+     annotated-expr)))
 
 
 ;;; ------------------------------------------------------------------------------------------------------
-;;; MACROS
+;;; STATEMENT EXPRESSIONS
 
 
-(defun let-binding? (form)
-  (and (consp form)
-       (consp (cdr form))
-       (consp (cddr form))
-       (member (cdddr form) '(nil (:unused)) :test #'equal)
-       (identifier? (first form))))
+; If source is a list that starts with a statement keyword, return that interned keyword;
+; otherwise return nil.
+(defun statement? (world source)
+  (and (consp source)
+       (let ((id (first source)))
+         (and (identifier? id)
+              (let ((symbol (world-find-symbol world id)))
+                (when (get symbol :statement)
+                  symbol))))))
 
 
-; (let ((<var1> <type1> <expr1> [:unused]) ... (<varn> <typen> <exprn> [:unused])) <body>)  ==>
-; ((function ((<var1> <type1> [:unused]) ... (<varn> <typen> [:unused])) <body>) <expr1> ... <exprn>)
-(defun expand-let (world type-env bindings &rest body)
-  (declare (ignore world type-env))
-  (unless (and (listp bindings)
-               (every #'let-binding? bindings))
-    (error "Bad let bindings ~S" bindings))
-  (cons (list* 'function (mapcar #'(lambda (binding)
-                                     (list* (first binding) (second binding) (cdddr binding)))
-                                 bindings) body)
-        (mapcar #'third bindings)))
+; Generate a list of lisp expressions that will execute the given statements.
+; type-env is the type environment.
+; last is true if these statements' lisp return value becomes the return value of the function if the function falls through.
+; live is true if these statements are reachable.
+;
+; Return three values:
+;   A list of codes (a list of lisp expressions)
+;   Non-nil if the statement can fall through
+;   A list of annotated statements
+(defun scan-statements (world type-env statements last live)
+  (if statements
+    (if live
+      (let* ((statement (first statements))
+             (rest-statements (rest statements))
+             (symbol (statement? world statement)))
+        (if symbol
+          (apply (get symbol :statement) world type-env rest-statements last symbol (rest statement))
+          (multiple-value-bind (statement-code live statement-annotated-expr)
+                               (scan-void-value world type-env statement)
+            (multiple-value-bind (rest-codes rest-live rest-annotated-stmts) (scan-statements world type-env rest-statements last live)
+              (values (cons statement-code rest-codes)
+                      rest-live
+                      (cons (list (world-intern world 'exec) statement-annotated-expr) rest-annotated-stmts))))))
+      (error "Unreachable statements: ~S" statements))
+    (values nil live nil)))
 
 
-; (letexc (<var> <type> <expr> [:unused]) <body>)  ==>
-; (case <expr>
-;   ((abrupt x exception) (typed-oneof <body-type> abrupt x))
-;   ((normal <var> <type> [:unused]) <body>)))
-; where <body-type> is the type of <body>.
-(defun expand-letexc (world type-env binding &rest body)
-  (unless (let-binding? binding)
-    (error "Bad letexc binding ~S" binding))
-  (let* ((var (first binding))
-         (type (second binding))
-         (expr (third binding))
-         (body-type (->-result-type (scan-value-type world type-env `(function ((,var ,type)) ,@body)))))
-    `(case ,expr
-       ((abrupt x exception) (typed-oneof ,body-type abrupt x))
-       ((normal ,var ,type ,@(cdddr binding)) ,@body))))
+; Compute the initial type-env to use for the given general-production's action code.
+; The first cell of the type-env gives the production's lhs nonterminal's symbol;
+; the remaining cells give the action arguments in order.
+(defun general-production-action-env (grammar general-production)
+  (let* ((current-indices nil)
+         (lhs-general-nonterminal (general-production-lhs general-production))
+         (bound-arguments-alist (nonterminal-sample-bound-argument-alist grammar lhs-general-nonterminal)))
+    (set-type-env-flag 
+     (mapcan
+      #'(lambda (general-grammar-symbol)
+          (let* ((symbol (general-grammar-symbol-symbol general-grammar-symbol))
+                 (index (incf (getf current-indices symbol 0)))
+                 (grammar-symbol (instantiate-general-grammar-symbol bound-arguments-alist general-grammar-symbol)))
+            (mapcar
+             #'(lambda (declaration)
+                 (let* ((action-symbol (car declaration))
+                        (action-type (cdr declaration))
+                        (local-symbol (gensym (symbol-name action-symbol))))
+                   (make-type-env-action
+                    (list* action-symbol symbol index)
+                    local-symbol
+                    action-type
+                    general-grammar-symbol)))
+             (grammar-symbol-signature grammar grammar-symbol))))
+      (general-production-rhs general-production))
+     :lhs-symbol (general-grammar-symbol-symbol lhs-general-nonterminal))))
 
 
-; (set-of <element-type> <element-expr> ... <element-expr>)  ==>
-; (set-of-ranges <element-type> <element-expr> nil ... <element-expr> nil)
-(defun expand-set-of (world type-env element-type-expr &rest element-exprs)
-  (declare (ignore world type-env))
-  (list* 'set-of-ranges
-         element-type-expr
-         (mapcan #'(lambda (element-expr)
-                     (list element-expr nil))
-                 element-exprs)))
+; Return the number of arguments that a function returned by compute-action-code
+; would expect.
+(defun n-action-args (grammar production)
+  (let ((n-args 0))
+    (dolist (grammar-symbol (production-rhs production))
+      (incf n-args (length (grammar-symbol-signature grammar grammar-symbol))))
+    n-args))
+
+
+; Compute the code for evaluating body-expr to obtain the value of one of the
+; production's actions.  Verify that the result has the given type and that the
+; type is the same as type-expr.
+; The code is a lambda-expression that takes as arguments the results of all
+; defined actions on the production's rhs.  The arguments are listed in the
+; same order as the grammar symbols in the rhs.  If a grammar symbol in the rhs
+; has more than one associated action, arguments are used corresponding to all
+; of the actions in the same order as they were declared.  If a grammar symbol
+; in the rhs has no associated actions, no argument is used for it.
+(defun compute-action-code (world grammar production action-symbol type-expr body-expr type)
+  (handler-bind (((or error warning)
+                  #'(lambda (condition)
+                      (declare (ignore condition))
+                      (format *error-output* "~&~@<~2IWhile processing action ~A on ~S: ~_~:W~:>~%"
+                              action-symbol (production-name production) body-expr))))
+    (let ((type2 (scan-type world type-expr)))
+      (unless (type= type type2)
+        (error "Action declared using type ~A but defined using ~A"
+               (print-type-to-string type) (print-type-to-string type2))))
+    (let* ((initial-env (general-production-action-env grammar production))
+           (args (mapcar #'cadr (cdr initial-env)))
+           (body-code (scan-typed-value-or-begin world initial-env body-expr type))
+           (named-body-code (name-lambda body-code
+                                         (concatenate 'string (symbol-name (production-name production))
+                                                      "~" (symbol-name action-symbol))
+                                         (world-package world))))
+      (gen-lambda args named-body-code))))
+
+
+; Return a list of all grammar symbols's symbols that are present in at least one expr-annotation:action
+; in the annotated expression.  The symbols are returned in no particular order.
+(defun annotated-expr-grammar-symbols (annotated-expr)
+  (let ((symbols nil))
+    (labels
+      ((scan (annotated-expr)
+         (when (consp annotated-expr)
+           (if (eq (first annotated-expr) 'expr-annotation:action)
+             (pushnew (general-grammar-symbol-symbol (third annotated-expr)) symbols :test *grammar-symbol-=*)
+             (mapc #'scan annotated-expr)))))
+      (scan annotated-expr)
+      symbols)))
+
+
+;;; ------------------------------------------------------------------------------------------------------
+;;; STATEMENTS
+
+
+; (exec <expr>)
+(defun scan-exec (world type-env rest-statements last special-form expr)
+  (multiple-value-bind (statement-code statement-type statement-annotated-expr)
+                       (scan-value world type-env expr)
+    (multiple-value-bind (rest-codes rest-live rest-annotated-stmts)
+                         (scan-statements world type-env rest-statements last (not (eq (type-kind statement-type) :bottom)))
+      (values (cons statement-code rest-codes)
+              rest-live
+              (cons (list special-form statement-annotated-expr) rest-annotated-stmts)))))
+
+
+; (const <name> <type> <value>)
+; (var <name> <type> <value>)
+(defun scan-var (world type-env rest-statements last special-form name type-expr value-expr)
+  (let* ((symbol (scan-name world name))
+         (type (scan-type world type-expr))
+         (placeholder-type-env (type-env-add-binding type-env symbol type :unused)))
+    (multiple-value-bind (value-code value-annotated-expr) (scan-typed-value world placeholder-type-env value-expr type)
+      (let ((local-type-env (type-env-add-binding type-env symbol type (find-keyword special-form))))
+        (multiple-value-bind (rest-codes rest-live rest-annotated-stmts)
+                             (scan-statements world local-type-env rest-statements last t)
+          (values
+           (list `(let ((,symbol ,value-code))
+                    ,@rest-codes))
+           rest-live
+           (cons (list special-form name type-expr value-annotated-expr) rest-annotated-stmts)))))))
+
+
+; (function (<name> (<var1> <type1> [:unused]) ... (<varn> <typen> [:unused])) <result-type> . <statements>)
+(defun scan-function (world type-env rest-statements last special-form name-and-arg-binding-exprs result-type-expr &rest body-statements)
+  (unless (consp name-and-arg-binding-exprs)
+    (error "Bad function name and bindings: ~S" name-and-arg-binding-exprs))
+  (let* ((symbol (scan-name world (first name-and-arg-binding-exprs)))
+         (placeholder-type-env (type-env-add-binding type-env symbol (world-void-type world) :unused)))
+    (multiple-value-bind (args-and-body-codes type body-annotated-stmts)
+                         (scan-function-or-lambda world placeholder-type-env (rest name-and-arg-binding-exprs) result-type-expr body-statements)
+      (let ((local-type-env (type-env-add-binding type-env symbol type :function)))
+        (multiple-value-bind (rest-codes rest-live rest-annotated-stmts)
+                             (scan-statements world local-type-env rest-statements last t)
+          (values
+           (list `(flet ((,symbol ,@args-and-body-codes))
+                    ,@rest-codes))
+           rest-live
+           (cons (list* special-form name-and-arg-binding-exprs result-type-expr body-annotated-stmts) rest-annotated-stmts)))))))
+
+
+; (<- <name> <value>)
+; Mutate the local variable.
+(defun scan-<- (world type-env rest-statements last special-form name value-expr)
+  (let* ((symbol (scan-name world name))
+         (symbol-binding (type-env-get-local type-env symbol)))
+    (unless symbol-binding
+      (error "Unknown local variable ~A" name))
+    (unless (eq (type-env-local-mode symbol-binding) :var)
+      (error "Local variable ~A not writable" name))
+    (multiple-value-bind (value-code value-annotated-expr) (scan-typed-value world type-env value-expr (type-env-local-type symbol-binding))
+      (multiple-value-bind (rest-codes rest-live rest-annotated-stmts)
+                           (scan-statements world type-env rest-statements last t)
+        (values
+         (cons (list 'setq (type-env-local-name symbol-binding) value-code) rest-codes)
+         rest-live
+         (cons (list special-form name value-annotated-expr) rest-annotated-stmts))))))
+
+
+; (&= <record-expr> <value-expr>)
+; Writes the value of the field.
+(defun scan-&= (world type-env rest-statements last special-form label record-expr value-expr)
+  (multiple-value-bind (record-code record-type record-annotated-expr) (scan-tag-value world type-env record-expr)
+    (let ((tag (type-tag record-type)))
+      (multiple-value-bind (position field-type mutable) (scan-label tag label)
+        (unless mutable
+          (error "Attempt to write to immutable field ~S of ~S" label (tag-name tag)))
+        (multiple-value-bind (value-code value-annotated-expr) (scan-typed-value world type-env value-expr field-type)
+          (multiple-value-bind (rest-codes rest-live rest-annotated-stmts)
+                               (scan-statements world type-env rest-statements last t)
+            (values
+             (cons (list 'setf (gen-nth-code position record-code) value-code) rest-codes)
+             rest-live
+             (cons (list special-form tag label record-annotated-expr value-annotated-expr) rest-annotated-stmts))))))))
+
+
+; (return [<value-expr>])
+(defun scan-return (world type-env rest-statements last special-form &optional value-expr)
+  (let ((value-code nil)
+        (value-annotated-expr nil)
+        (type (get-type-env-flag type-env :return)))
+    (cond
+     (value-expr
+      (multiple-value-setq (value-code value-annotated-expr)
+        (scan-typed-value world type-env value-expr type)))
+     ((not (type= type (world-bottom-type world)))
+      (error "Return statement needs a value")))
+    (scan-statements world type-env rest-statements last nil)
+    (values
+     (list (if last
+             value-code
+             (list* 'return-from
+                    (gen-type-env-return-block-name type-env)
+                    (and value-code (list value-code)))))
+     nil
+     (list (list special-form value-annotated-expr)))))
+
+
+; condition-expr is either (in <type> <var>) or (not-in <type> <var>), a condition expression that constrains
+; the type of var in the true branch if criteria is :narrow-true or :narrow-both and in the false branch
+; if criteria is :narrow-false or :narrow-both.
+; Return two values:
+;   A type-env to use if the condition is true;
+;   A type-env to use if the condition is false.
+(defun scan-narrowing-in-or-not-in (world type-env criteria condition-expr)
+  (unless (structured-type? condition-expr '(tuple (member in not-in) t identifier))
+    (error "Bad narrowing condition ~S" condition-expr))
+  (let ((test (first condition-expr))
+        (type-expr (second condition-expr))
+        (var-expr (third condition-expr)))
+    (multiple-value-bind (var var-type var-annotated-expr) (scan-value world type-env var-expr)
+      (declare (ignore var-annotated-expr))
+      (assert-true (symbolp var))
+      (multiple-value-bind (true-type false-type) (type-difference world var-type (scan-type world type-expr))
+        (ecase test
+          (in)
+          (not-in (rotatef true-type false-type)))
+        (values (if (member criteria '(:narrow-true :narrow-both))
+                  (type-env-narrow-binding type-env var true-type)
+                  type-env)
+                (if (member criteria '(:narrow-false :narrow-both))
+                  (type-env-narrow-binding type-env var false-type)
+                  type-env))))))
+
+
+; Scan a boolean expression <condition-expr>, which can be one of the following:
+;  <expr>         Condition expression <expr>
+;  (<key> (in <type> <var>))
+;  (<key> (not-in <type> <var>))
+;  (:narrow-true (and ([not-]in <type> <var>) ... ([not-]in <type> <var>)))
+;  (:narrow-false (or ([not-]in <type> <var>) ... ([not-]in <type> <var>)))
+;        where key is :narrow-true, :narrow-false, or :narrow-both
+;     Condition expression that constrains the type of var in the true branch if key is :narrow-true or :narrow-both
+;     and in the false branch if key is :narrow-false or :narrow-both.
+;
+; Return four values:
+;   The code for the condition;
+;   The annotated code for the condition;
+;   A type-env to use if the condition is true;
+;   A type-env to use if the condition is false.
+(defun scan-narrowing-condition (world type-env condition-expr)
+  (if (and (consp condition-expr)
+           (member (first condition-expr) '(:narrow-true :narrow-false :narrow-both)))
+    (if (structured-type? condition-expr '(tuple t (cons (member in not-in and or) t)))
+      (let ((criteria (first condition-expr))
+            (condition-expr (second condition-expr)))
+        (multiple-value-bind (condition-code condition-annotated-expr)
+                             (scan-typed-value world type-env condition-expr (world-boolean-type world))
+          (multiple-value-bind
+            (true-type-env false-type-env)
+            (ecase (first condition-expr)
+              ((in not-in) (scan-narrowing-in-or-not-in world type-env criteria condition-expr))
+              (and (unless (eq criteria :narrow-true)
+                     (error "Only :narrow-true may be used with a conjunction"))
+                   (let ((true-type-env type-env))
+                     (dolist (subcondition-expr (cdr condition-expr))
+                       (setq true-type-env (scan-narrowing-in-or-not-in world true-type-env criteria subcondition-expr)))
+                     (values true-type-env type-env)))
+              (or (unless (eq criteria :narrow-false)
+                    (error "Only :narrow-false may be used with a disjunction"))
+                  (let ((false-type-env type-env))
+                    (dolist (subcondition-expr (cdr condition-expr))
+                      (setq false-type-env (nth-value 1 (scan-narrowing-in-or-not-in world false-type-env criteria subcondition-expr))))
+                    (values type-env false-type-env))))
+            (values condition-code condition-annotated-expr true-type-env false-type-env))))
+      (error "Bad narrowing condition ~S" condition-expr))
+    (multiple-value-bind (condition-code condition-annotated-expr)
+                         (scan-typed-value world type-env condition-expr (world-boolean-type world))
+      (values condition-code condition-annotated-expr type-env type-env))))
+
+
+; (rwhen <condition-expr> . <true-statements>)
+; Same as when except that checks that true-statements cannot fall through and generates more efficient code.
+(defun scan-rwhen (world type-env rest-statements last special-form condition-expr &rest true-statements)
+  (multiple-value-bind (condition-code condition-annotated-expr true-type-env false-type-env)
+                       (scan-narrowing-condition world type-env condition-expr)
+    (multiple-value-bind (true-codes true-live true-annotated-stmts) (scan-statements world true-type-env true-statements last t)
+      (when true-live
+        (error "rwhen statements ~S must not fall through" true-statements))
+      (multiple-value-bind (rest-codes rest-live rest-annotated-stmts)
+                           (scan-statements world false-type-env rest-statements last t)
+        (values (list (list 'if condition-code (gen-progn true-codes) (gen-progn rest-codes)))
+                rest-live
+                (cons (list special-form (cons condition-annotated-expr true-annotated-stmts)) rest-annotated-stmts))))))
+
+
+; (when <condition-expr> . <true-statements>)
+(defun scan-when (world type-env rest-statements last special-form condition-expr &rest true-statements)
+  (scan-cond world type-env rest-statements last special-form (cons condition-expr true-statements)))
+
+
+; (if <condition-expr> <true-statement> <false-statement>)
+(defun scan-if-stmt (world type-env rest-statements last special-form condition-expr true-statement false-statement)
+  (scan-cond world type-env rest-statements last special-form (list condition-expr true-statement) (list nil false-statement)))
+
+
+; Generate and optimize a cond statement with the given cases.
+(defun gen-cond-code (cases)
+  (cond
+   ((endp cases) nil)
+   ((endp (cdr cases))
+    (cons 'when (car cases)))
+   ((and (endp (cddr cases)) (eq (car (second cases)) t) (endp (cddr (first cases))) (endp (cddr (second cases))))
+    (list 'if (first (first cases)) (second (first cases)) (second (second cases))))
+   (t (cons 'cond cases))))
+
+
+; (cond (<condition-expr> . <statements>) ... (<condition-expr> . <statements>) [(nil . <statements>)])
+; <condition-expr> can be one of the following:
+;  nil            Always true; used for an "else" clause
+;  true           Same as nil
+;  <expr>         Condition expression <expr>
+;  (<key> (in <type> <var>))
+;  (<key> (not-in <type> <var>))
+;  (:narrow-true (and ([not-]in <type> <var>) ... ([not-]in <type> <var>)))
+;  (:narrow-false (or ([not-]in <type> <var>) ... ([not-]in <type> <var>)))
+;        where key is :narrow-true, :narrow-false, or :narrow-both
+;     Condition expression that constrains the type of var in the true branch if key is :narrow-true or :narrow-both
+;     and in the false branch if key is :narrow-false or :narrow-both.
+(defun scan-cond (world type-env rest-statements last special-form &rest cases)
+  (unless cases
+    (error "Empty cond statement"))
+  (let ((local-type-env type-env)
+        (nested-last (and last (null rest-statements)))
+        (case-codes nil)
+        (annotated-cases nil)
+        (any-live nil)
+        (found-default-case nil))
+    (dolist (case cases)
+      (unless (consp case)
+        (error "Bad cond case: ~S" case))
+      (when found-default-case
+        (error "Cond case follows default case: ~S" cases))
+      (let ((condition-expr (first case)))
+        (multiple-value-bind (condition-code condition-annotated-expr true-type-env false-type-env)
+                             (if (member condition-expr '(nil true))
+                               (values t nil local-type-env local-type-env)
+                               (scan-narrowing-condition world local-type-env condition-expr))
+          (when (eq condition-code t)
+            (if (cdr cases)
+              (setq found-default-case t)
+              (error "Cond statement consisting only of an else case: ~S" cases)))
+          (multiple-value-bind (codes live annotated-stmts) (scan-statements world true-type-env (rest case) nested-last t)
+            (push (cons condition-code codes) case-codes)
+            (push (cons condition-annotated-expr annotated-stmts) annotated-cases)
+            (when live
+              (setq any-live t)))
+          (setq local-type-env false-type-env))))
+    (unless found-default-case
+      (setq any-live t))
+    (multiple-value-bind (rest-codes rest-live rest-annotated-stmts)
+                         (scan-statements world type-env rest-statements last any-live)
+      (values (cons (gen-cond-code (nreverse case-codes)) rest-codes)
+              rest-live
+              (cons (cons special-form (nreverse annotated-cases)) rest-annotated-stmts)))))
+
+
+; (while <condition-expr> . <statements>)
+(defun scan-while (world type-env rest-statements last special-form condition-expr &rest loop-statements)
+  (multiple-value-bind (condition-code condition-annotated-expr)
+                       (scan-typed-value world type-env condition-expr (world-boolean-type world))
+    (multiple-value-bind (loop-codes loop-live loop-annotated-stmts) (scan-statements world type-env loop-statements nil t)
+      (unless loop-live
+        (warn "While loop can execute at most once: ~S ~S" condition-expr loop-statements))
+      (let ((infinite (and (constantp condition-code) (symbolp condition-code) condition-code)))
+        (multiple-value-bind (rest-codes rest-live rest-annotated-stmts)
+                             (scan-statements world type-env rest-statements last (not infinite))
+          (values
+           (cons (if infinite
+                   (cons 'loop loop-codes)
+                   `(do ()
+                        ((not ,condition-code))
+                      ,@loop-codes))
+                 rest-codes)
+           rest-live
+           (cons (list* special-form condition-annotated-expr loop-annotated-stmts) rest-annotated-stmts)))))))
+
+
+; (assert <condition-expr>)
+; Used to declare conditions that are known to be true if the semantics function correctly.  Don't use this to
+; verify user input.
+(defun scan-assert (world type-env rest-statements last special-form condition-expr)
+  (multiple-value-bind (condition-code condition-annotated-expr)
+                       (scan-typed-value world type-env condition-expr (world-boolean-type world))
+    (multiple-value-bind (rest-codes rest-live rest-annotated-stmts) (scan-statements world type-env rest-statements last t)
+      (values (cons (list 'assert condition-code) rest-codes)
+              rest-live
+              (cons (list special-form condition-annotated-expr) rest-annotated-stmts)))))
+
+
+(defconstant *semantic-exception-type-name* 'semantic-exception)
+
+; (throw <value-expr>)
+; <value-expr> must have type *semantic-exception-type-name*, which must be the name of some user-defined type in the environment.
+(defun scan-throw (world type-env rest-statements last special-form value-expr)
+  (multiple-value-bind (value-code value-annotated-expr)
+                       (scan-typed-value world type-env value-expr (scan-type world *semantic-exception-type-name*))
+    (scan-statements world type-env rest-statements last nil)
+    (values
+     (list (list 'throw :semantic-exception value-code))
+     nil
+     (list (list special-form value-annotated-expr)))))
+
+
+; (catch <body-statements> (<var> [:unused]) . <handler-statements>)
+(defun scan-catch (world type-env rest-statements last special-form body-statements arg-binding-expr &rest handler-statements)
+  (multiple-value-bind (body-codes body-live body-annotated-stmts) (scan-statements world type-env body-statements nil t)
+    (unless (and (consp arg-binding-expr)
+                 (member (cdr arg-binding-expr) '(nil (:unused)) :test #'equal))
+      (error "Bad catch binding ~S" arg-binding-expr))
+    (let* ((nested-last (and last (null rest-statements)))
+           (arg-symbol (scan-name world (first arg-binding-expr)))
+           (arg-type (scan-type world *semantic-exception-type-name*))
+           (type-env (type-env-add-binding type-env arg-symbol arg-type :const)))
+      (multiple-value-bind (handler-codes handler-live handler-annotated-stmts) (scan-statements world type-env handler-statements nested-last t)
+        (multiple-value-bind (rest-codes rest-live rest-annotated-stmts)
+                             (scan-statements world type-env rest-statements last (or body-live handler-live))
+          (let ((code
+                 `(block nil
+                    (let ((,arg-symbol (catch :semantic-exception ,@body-codes ,@(when body-live '((return))))))
+                      ,@(and (eq (second arg-binding-expr) :unused) `((declare (ignore ,arg-symbol))))
+                      ,@handler-codes))))
+            (values (cons code rest-codes)
+                    rest-live
+                    (cons (list* special-form body-annotated-stmts arg-binding-expr handler-annotated-stmts) rest-annotated-stmts))))))))
+
+
+(defun case-error ()
+  (error "No case chosen"))
+
+; (case <value-expr> (key <type> . <statements>) ... (keyword <type> . <statements>))
+; where each key is one of:
+;    :select    No special action
+;    :narrow    Narrow the type of <value-expr>, which must be a variable, to this case's <type>
+;    :otherwise Catch-all else case; <type> should be either nil or the remaining catch-all type
+(defun scan-case (world type-env rest-statements last special-form value-expr &rest cases)
+  (multiple-value-bind (value-code value-type value-annotated-expr) (scan-value world type-env value-expr)
+    (handler-bind (((or error warning)
+                    #'(lambda (condition)
+                        (declare (ignore condition))
+                        (format *error-output* "~@<In case ~S: ~A ~_~S~:>" value-expr (print-type-to-string value-type) cases))))
+      (let ((var (if (symbolp value-code) value-code (gensym "CASE")))
+            (nested-last (and last (null rest-statements))))
+        (labels
+          ((process-remaining-cases (cases remaining-type)
+             (if cases
+               (let ((case (car cases))
+                     (cases (cdr cases)))
+                 (unless (and (consp case) (consp (cdr case)) (member (car case) '(:select :narrow :otherwise)))
+                   (error "Bad case ~S" case))
+                 (let ((key (first case))
+                       (type-expr (second case))
+                       (statements (cddr case)))
+                   (if (eq key :otherwise)
+                     (progn
+                       (when cases
+                         (error "Otherwise case must be the last one"))
+                       (when type-expr
+                         (let ((type (scan-type world type-expr)))
+                           (unless (type= type remaining-type)
+                             (error "Otherwise case type ~A given but ~A expected"
+                                    (print-type-to-string type) (print-type-to-string remaining-type)))))
+                       (when (type= remaining-type (world-bottom-type world))
+                         (error "Otherwise case not reached"))
+                       (multiple-value-bind (statements-codes statements-live statements-annotated-stmts)
+                                            (scan-statements world type-env statements nested-last t)
+                         (values (list (cons t statements-codes))
+                                 statements-live
+                                 (list (list* key type-expr statements-annotated-stmts)))))
+                     (multiple-value-bind (type remaining-type) (type-difference world remaining-type (scan-type world type-expr))
+                       (let ((condition-code (type-member-test-code world type value-type var)))
+                         (multiple-value-bind (remaining-code remaining-live remaining-annotated-stmts)
+                                              (process-remaining-cases cases remaining-type)
+                           (ecase key
+                             (:select
+                              (multiple-value-bind (statements-codes statements-live statements-annotated-stmts)
+                                                   (scan-statements world type-env statements nested-last t)
+                                (values (cons (cons condition-code statements-codes) remaining-code)
+                                        (or statements-live remaining-live)
+                                        (cons (list* key type-expr statements-annotated-stmts) remaining-annotated-stmts))))
+                             (:narrow
+                               (unless (equal var value-code)
+                                 (error "const and var cases can only be used when dispatching on a variable"))
+                               (multiple-value-bind (statements-codes statements-live statements-annotated-stmts)
+                                                    (scan-statements world (type-env-narrow-binding type-env var type) statements nested-last t)
+                                 (values (cons (cons condition-code statements-codes) remaining-code)
+                                         (or statements-live remaining-live)
+                                         (cons (list* key type-expr statements-annotated-stmts) remaining-annotated-stmts)))))))))))
+               (if (type= remaining-type (world-bottom-type world))
+                 (values '((t (case-error))) nil nil)
+                 (error "Type ~A not considered in case" remaining-type)))))
+          
+          (multiple-value-bind (cases-code cases-live cases-annotated-stmts) (process-remaining-cases cases value-type)
+            (multiple-value-bind (rest-codes rest-live rest-annotated-stmts)
+                                 (scan-statements world type-env rest-statements last cases-live)
+              (values
+               (cons (if (equal var value-code)
+                       (cons 'cond cases-code)
+                       `(let ((,var ,value-code))
+                          (cond ,@cases-code)))
+                     rest-codes)
+               rest-live
+               (cons (list* special-form value-annotated-expr cases-annotated-stmts) rest-annotated-stmts)))))))))
 
 
 ;;; ------------------------------------------------------------------------------------------------------
@@ -2585,6 +3617,23 @@
   (declare (ignore world grammar-info-var rest)))
 
 
+; (deftag <name> (<name1> <type1>) ... (<namen> <typen>))
+; Create the immutable tag in the world and set its contents.
+; Do not evaluate the field and type expressions yet; that will be done by eval-tags-types.
+(defun scan-deftag (world grammar-info-var name &rest fields)
+  (declare (ignore grammar-info-var))
+  (add-tag world name nil fields :reference))
+
+
+; (defrecord <name> (<name1> <type1> [:const | :var]) ... (<namen> <typen> [:const | :var]))
+; Create the mutable tag in the world and set its contents.
+; Do not evaluate the field and type expressions yet; that will be done by eval-tags-types.
+; Fields are immutable unless :var is specified.
+(defun scan-defrecord (world grammar-info-var name &rest fields)
+  (declare (ignore grammar-info-var))
+  (add-tag world name t fields :reference))
+
+
 ; (deftype <name> <type>)
 ; Create the type in the world and set its contents.
 (defun scan-deftype (world grammar-info-var name type-expr)
@@ -2596,12 +3645,11 @@
     (add-type-name world type symbol t)))
 
 
-; (define <name> <type> <value> <destructured>)
+; (define <name> <type> <value>)
+; (defun <name> (-> (<type1> ... <typen>) <result-type>) (lambda ((<arg1> <type1>) ... (<argn> <typen>)) <result-type> . <statements>))
 ; Create the variable in the world but do not evaluate its type or value yet.
-; <destructured> is a flag that is true if this define was originally in the form:
-;   (define (<name> (<arg1> <type1>) ... (<argn> <typen>)) <result-type> <value>)
-(defun scan-define (world grammar-info-var name type-expr value-expr destructured)
-  (declare (ignore grammar-info-var destructured))
+(defun scan-define (world grammar-info-var name type-expr value-expr)
+  (declare (ignore grammar-info-var))
   (let ((symbol (scan-name world name)))
     (unless (eq (get symbol :value-expr *get2-nonce*) *get2-nonce*)
       (error "Attempt to redefine variable ~A" symbol))
@@ -2634,8 +3682,9 @@
       (error "Grammar needed"))))
 
 
-; (declare-action <action-name> <general-grammar-symbol> <type>)
-(defun scan-declare-action (world grammar-info-var action-name general-grammar-symbol-source type-expr)
+; (declare-action <action-name> <general-grammar-symbol> <type> <n-productions>)
+(defun scan-declare-action (world grammar-info-var action-name general-grammar-symbol-source type-expr n-productions)
+  (declare (ignore n-productions))
   (let* ((grammar (checked-grammar grammar-info-var))
          (action-symbol (scan-name world action-name))
          (general-grammar-symbol (grammar-parametrization-intern grammar general-grammar-symbol-source)))
@@ -2645,14 +3694,13 @@
     (export-symbol action-symbol)))
 
 
-; (action <action-name> <production-name> <body> <destructured>)
-; <destructured> is a flag that is true if this define was originally in the form:
-;   (action (<action-name> (<arg1> <type1>) ... (<argn> <typen>)) <production-name> <body>)
-(defun scan-action (world grammar-info-var action-name production-name body destructured)
-  (declare (ignore destructured))
+; (action <action-name> <production-name> <type> <n-productions> <value>)
+; (actfun <action-name> <production-name> <type> <n-productions> <value>)
+(defun scan-action (world grammar-info-var action-name production-name type-expr n-productions value-expr)
+  (declare (ignore n-productions))
   (let ((grammar (checked-grammar grammar-info-var))
         (action-symbol (world-intern world action-name)))
-    (define-action grammar production-name action-symbol body)))
+    (define-action grammar production-name action-symbol type-expr value-expr)))
 
 
 ; (terminal-action <action-name> <terminal> <lisp-function>)
@@ -2678,11 +3726,6 @@
      (rule preprocess-rule)
      (exclude preprocess-exclude))
     
-    (:macro
-     (let expand-let depict-let)
-     (letexc expand-letexc depict-letexc)
-     (set-of expand-set-of nil))
-    
     (:command
      (%highlight scan-%highlight depict-%highlight) ;For internal use only; use ? instead.
      (%section scan-% depict-%section)
@@ -2692,31 +3735,60 @@
      (%rule scan-% depict-%rule)
      (%charclass scan-% depict-%charclass)
      (%print-actions scan-% depict-%print-actions)
+     (deftag scan-deftag depict-deftag)
+     (defrecord scan-defrecord depict-deftag)
      (deftype scan-deftype depict-deftype)
      (define scan-define depict-define)
+     (defun scan-define depict-defun)    ;Occurs from desugaring a function define
      (set-grammar scan-set-grammar depict-set-grammar)
      (clear-grammar scan-clear-grammar depict-clear-grammar)
      (declare-action scan-declare-action depict-declare-action)
      (action scan-action depict-action)
+     (actfun scan-action depict-actfun)
      (terminal-action scan-terminal-action depict-terminal-action))
+    
+    (:statement
+     (exec scan-exec depict-exec)
+     (const scan-var depict-var)
+     (var scan-var depict-var)
+     (function scan-function depict-function)
+     (<- scan-<- depict-<-)
+     (&= scan-&= depict-&=)
+     (return scan-return depict-return)
+     (rwhen scan-rwhen depict-cond)
+     (when scan-when depict-cond)
+     (if scan-if-stmt depict-cond)
+     (cond scan-cond depict-cond)
+     (while scan-while depict-while)
+     (assert scan-assert depict-assert)
+     (throw scan-throw depict-throw)
+     (catch scan-catch depict-catch)
+     (case scan-case depict-case))
     
     (:special-form
      ;;Constants
      (bottom scan-bottom depict-bottom)
-     (todo scan-bottom depict-bottom)
-     (^ scan-^ depict-^)
+     (todo scan-bottom depict-todo)
      (hex scan-hex depict-hex)
      
-     ;;Control structures
-     (function scan-function depict-function)
-     (if scan-if depict-if)
-     (progn scan-progn depict-progn)
-     (throw scan-throw depict-throw)
-     (catch scan-catch depict-catch)
+     ;;Expressions
+     (expt scan-expt depict-expt)
+     (= scan-= depict-comparison)
+     (/= scan-/= depict-comparison)
+     (< scan-< depict-comparison)
+     (> scan-> depict-comparison)
+     (<= scan-<= depict-comparison)
+     (>= scan->= depict-comparison)
+     (cascade scan-cascade depict-cascade)
+     (and scan-and depict-and-or-xor)
+     (or scan-or depict-and-or-xor)
+     (xor scan-xor depict-and-or-xor)
+     (lambda scan-lambda depict-lambda)
+   #|(if scan-if-expr depict-if-expr)|# ;Fully functional but turned off for stylistic reasons
      
      ;;Vectors
-     (vector scan-vector-form depict-vector-form)
-     (vector-of scan-vector-of depict-vector-of)
+     (vector scan-vector-expr depict-vector-expr)
+     (vector-of scan-vector-of depict-vector-expr)
      (empty scan-empty depict-empty)
      (length scan-length depict-length)
      (nth scan-nth depict-nth)
@@ -2726,88 +3798,51 @@
      (map scan-map depict-map)
      
      ;;Sets
+     (set-of scan-set-of depict-set-of-ranges)
      (set-of-ranges scan-set-of-ranges depict-set-of-ranges)
      
-     ;;Oneofs
-     (oneof scan-oneof-form depict-oneof-form)
-     (typed-oneof scan-typed-oneof depict-typed-oneof)
-     (case scan-case depict-case)
-     (select scan-select depict-select-or-&)
-     (is scan-is depict-is)
+     ;;Tags
+     (tag scan-tag-expr depict-tag-expr)
+     (& scan-& depict-&)
      
-     ;;Tuples
-     (tuple scan-tuple-form depict-tuple-form)
-     (& scan-& depict-select-or-&)
-     
-     ;;Addresses
-     (new scan-new depict-new)
-     (@ scan-@ depict-@)
-     (@= scan-@= depict-@=)
-     (address-equal scan-address-equal depict-address-equal))
+     ;;Unions
+     (in scan-in depict-in)
+     (not-in scan-not-in depict-not-in))
     
     (:type-constructor
      (-> scan--> depict-->)
      (vector scan-vector depict-vector)
      (set scan-set depict-set)
-     (oneof scan-oneof depict-oneof)
-     (tuple scan-tuple depict-tuple)
-     (address scan-address depict-address))))
-
-
-(defparameter *default-types*
-  '((bottom-type . :bottom)
-    (void . :void)
-    (boolean . :boolean)
-    (integer . :integer)
-    (rational . :rational)
-    (float64 . :float64)
-    (id . :id)
-    (character . :character)))
+     (tag scan-tag-type depict-tag-type)
+     (union scan-union depict-union))))
 
 
 (defparameter *default-primitives*
-  '((empty void nil :global :empty-10 %primary%)
-    (true boolean t :global :true %primary%)
-    (false boolean nil :global :false %primary%)
-    (+infinity float64 :+inf :global ("+" :infinity) %prefix%)
-    (-infinity float64 :-inf :global (:minus :infinity) %prefix%)
-    (nan float64 :nan :global "NaN" %primary%)
-    
-    (neg (-> (integer) integer) #'- :unary :minus nil %suffix% %suffix%)
-    (* (-> (integer integer) integer) #'* :infix "*" nil %factor% %factor% %factor%)
+  '((neg (-> (integer) integer) #'- :unary :minus nil %suffix% %suffix%)
+    (* (-> (integer integer) integer) #'* :infix :cartesian-product-10 nil %factor% %factor% %factor%)
     (mod (-> (integer integer) integer) #'mod :infix ((:semantic-keyword "mod")) t %factor% %factor% %unary%)
     (+ (-> (integer integer) integer) #'+ :infix "+" t %term% %term% %term%)
     (- (-> (integer integer) integer) #'- :infix :minus t %term% %term% %factor%)
-    (= (-> (integer integer) boolean) #'= :infix "=" t %relational% %term% %term%)
-    (/= (-> (integer integer) boolean) #'/= :infix :not-equal t %relational% %term% %term%)
-    (< (-> (integer integer) boolean) #'< :infix "<" t %relational% %term% %term%)
-    (> (-> (integer integer) boolean) #'> :infix ">" t %relational% %term% %term%)
-    (<= (-> (integer integer) boolean) #'<= :infix :less-or-equal t %relational% %term% %term%)
-    (>= (-> (integer integer) boolean) #'>= :infix :greater-or-equal t %relational% %term% %term%)
     
-    (rational-neg (-> (rational) rational) #'- :unary "-" nil %suffix% %suffix%)
-    (rational* (-> (rational rational) rational) #'* :infix "*" nil %factor% %factor% %factor%)
-    (rational/ (-> (rational rational) rational) #'/ :infix "/" nil %factor% %factor% %unary%)
-    (rational+ (-> (rational rational) rational) #'+ :infix "+" t %term% %term% %term%)
-    (rational- (-> (rational rational) rational) #'- :infix :minus t %term% %term% %factor%)
+    (rat-neg (-> (rational) rational) #'- :unary "-" nil %suffix% %suffix%)
+    (rat* (-> (rational rational) rational) #'* :infix :cartesian-product-10 nil %factor% %factor% %factor%)
+    (rat/ (-> (rational rational) rational) #'/ :infix "/" nil %factor% %factor% %unary%)
+    (rat+ (-> (rational rational) rational) #'+ :infix "+" t %term% %term% %term%)
+    (rat- (-> (rational rational) rational) #'- :infix :minus t %term% %term% %factor%)
+    (floor (-> (rational) integer) #'floor :unary :left-floor-10 :right-floor-10 %primary% %expr%)
+    (ceiling (-> (rational) integer) #'ceiling :unary :left-ceiling-10 :right-ceiling-10 %primary% %expr%)
     
     (not (-> (boolean) boolean) #'not :unary ((:semantic-keyword "not") " ") nil %not% %not%)
-    (and (-> (boolean boolean) boolean) #'and2 :infix ((:semantic-keyword "and")) t %and% %and% %and%)
-    (or (-> (boolean boolean) boolean) #'or2 :infix ((:semantic-keyword "or")) t %or% %or% %or%)
-    (xor (-> (boolean boolean) boolean) #'xor2 :infix ((:semantic-keyword "xor")) t %xor% %xor% %xor%)
     
     (bitwise-and (-> (integer integer) integer) #'logand)
     (bitwise-or (-> (integer integer) integer) #'logior)
     (bitwise-xor (-> (integer integer) integer) #'logxor)
     (bitwise-shift (-> (integer integer) integer) #'ash)
     
-    (rational-to-float64 (-> (rational) float64) #'rational-to-float64)
-    (float64-to-rational (-> (float64) rational) #'rational)
-    (truncate-float64 (-> (float64) integer) #'truncate)
+    (real-to-float64 (-> (rational) finite-float64) #'rational-to-float64)
+    (float64-to-rational (-> (finite-float64) rational) #'float64-to-rational)
+    (truncate-float64 (-> (finite-float64) integer) #'truncate-float64)
     
-    (float64-is-zero (-> (float64) boolean) #'float64-is-zero)
-    (float64-is-na-n (-> (float64) boolean) #'float64-is-nan)
-    (float64-is-infinite (-> (float64) boolean) #'float64-is-infinite)
     (float64-compare (-> (float64 float64 boolean boolean boolean boolean) boolean) #'float64-compare)
     (float64-abs (-> (float64 float64) float64) #'float64-abs)
     (float64-negate (-> (float64) float64) #'float64-neg)
@@ -2817,26 +3852,8 @@
     (float64-divide (-> (float64 float64) float64) #'float64-divide)
     (float64-remainder (-> (float64 float64) float64) #'float64-remainder)
     
-    (unique id (gensym "U") :global :unique %primary%)
-    (id= (-> (id id) boolean) #'eq :infix "=" t %relational% %term% %term%)
-    (id/= (-> (id id) boolean) #'not-eq :infix :not-equal t %relational% %term% %term%)
-    
     (code-to-character (-> (integer) character) #'code-char)
     (character-to-code (-> (character) integer) #'char-code)
-    
-    (char= (-> (character character) boolean) #'char= :infix "=" t %relational% %term% %term%)
-    (char/= (-> (character character) boolean) #'char/= :infix :not-equal t %relational% %term% %term%)
-    (char< (-> (character character) boolean) #'char< :infix "<" t %relational% %term% %term%)
-    (char> (-> (character character) boolean) #'char> :infix ">" t %relational% %term% %term%)
-    (char<= (-> (character character) boolean) #'char<= :infix :less-or-equal t %relational% %term% %term%)
-    (char>= (-> (character character) boolean) #'char>= :infix :greater-or-equal t %relational% %term% %term%)
-    
-    (string= (-> (string string) boolean) #'string= :infix "=" t %relational% %term% %term%)
-    (string/= (-> (string string) boolean) #'string/= :infix :not-equal t %relational% %term% %term%)
-    (string< (-> (string string) boolean) #'string< :infix "<" t %relational% %term% %term%)
-    (string> (-> (string string) boolean) #'string> :infix ">" t %relational% %term% %term%)
-    (string<= (-> (string string) boolean) #'string<= :infix :less-or-equal t %relational% %term% %term%)
-    (string>= (-> (string string) boolean) #'string>= :infix :greater-or-equal t %relational% %term% %term%)
     
     (integer-set-length (-> (integer-set) integer) #'intset-length :unary "|" "|" %primary% %expr%)
     (integer-set-min (-> (integer-set) integer) #'integer-set-min :unary ((:semantic-keyword "min") " ") nil %min-max% %prefix%)
@@ -2845,7 +3862,6 @@
     (integer-set-union (-> (integer-set integer-set) integer-set) #'intset-union :infix :union-10 t %term% %term% %term%)
     (integer-set-difference (-> (integer-set integer-set) integer-set) #'intset-difference :infix :minus t %term% %term% %factor%)
     (integer-set-member (-> (integer integer-set) boolean) #'integer-set-member :infix :member-10 t %relational% %term% %term%)
-    (integer-set= (-> (integer-set integer-set) boolean) #'intset= :infix "=" t %relational% %term% %term%)
     
     (character-set-length (-> (character-set) integer) #'intset-length :unary "|" "|" %primary% %expr%)
     (character-set-min (-> (character-set) character) #'character-set-min :unary ((:semantic-keyword "min") " ") nil %min-max% %prefix%)
@@ -2854,7 +3870,6 @@
     (character-set-union (-> (character-set character-set) character-set) #'intset-union :infix :union-10 t %term% %term% %term%)
     (character-set-difference (-> (character-set character-set) character-set) #'intset-difference :infix :minus t %term% %term% %factor%)
     (character-set-member (-> (character character-set) boolean) #'character-set-member :infix :member-10 t %relational% %term% %term%)
-    (character-set= (-> (character-set character-set) boolean) #'intset= :infix "=" t %relational% %term% %term%)
     
     (digit-value (-> (character) integer) #'digit-char-36)
     (is-initial-identifier-character (-> (character) boolean) #'initial-identifier-character?)
@@ -2863,24 +3878,20 @@
 
 ;;; Partial order of primitives for deciding when to depict parentheses.
 (defparameter *primitive-level* (make-partial-order))
-(def-partial-order-element *primitive-level* %primary%)                                          ;id, constant, (e), |e|, action
-(def-partial-order-element *primitive-level* %suffix% %primary%)                                 ;f(...), new(v), a[i], a[i...j], a[i<-v], a.f
-(def-partial-order-element *primitive-level* %prefix% %primary%)                                 ;-e, @, oneof-tag val
+(def-partial-order-element *primitive-level* %primary%)                                          ;id, constant, (e), tag<...>, |e|, action
+(def-partial-order-element *primitive-level* %suffix% %primary%)                                 ;f(...), a[i], a[i...j], a[i<-v], a.l
+(def-partial-order-element *primitive-level* %prefix% %primary%)                                 ;-e, new tag<...>, a^b
 (def-partial-order-element *primitive-level* %min-max% %prefix%)                                 ;min, max
 (def-partial-order-element *primitive-level* %unary% %suffix% %prefix%)                          ;
 (def-partial-order-element *primitive-level* %factor% %unary%)                                   ;/, *, intersection
 (def-partial-order-element *primitive-level* %term% %factor%)                                    ;+, -, append, union, set difference
-(def-partial-order-element *primitive-level* %relational% %term% %min-max%)                      ;<, <=, >, >=, =, /=, address=, is, member
+(def-partial-order-element *primitive-level* %relational% %term% %min-max%)                      ;<, <=, >, >=, =, /=, is, member
 (def-partial-order-element *primitive-level* %not% %relational%)                                 ;not
 (def-partial-order-element *primitive-level* %and% %not%)                                        ;and
 (def-partial-order-element *primitive-level* %or% %not%)                                         ;or
 (def-partial-order-element *primitive-level* %xor% %not%)                                        ;xor
 (def-partial-order-element *primitive-level* %logical% %and% %or% %xor%)                         ;
-(def-partial-order-element *primitive-level* %unparenthesized-new% %logical%)                    ;new v
-(defparameter %expr% %unparenthesized-new%)
-(def-partial-order-element *primitive-level* %stmt% %expr%)                                      ;:=, function, if/then/else
-(def-partial-order-element *primitive-level* %progn% %stmt%)                                     ;progn
-(defparameter %max% %progn%)
+(def-partial-order-element *primitive-level* %expr% %logical%)                                   ;if
 
 
 ; Return the tail end of the lambda list for make-primitive.  The returned list always starts with
@@ -2894,18 +3905,18 @@
        (ecase appearance
          (:global
           (assert-type args (tuple t symbol))
-          (list ':markup1 (first args) ':level (symbol-value (second args))))
+          (list :markup1 (first args) :level (symbol-value (second args))))
          (:infix
           (assert-type args (tuple t bool symbol symbol symbol))
-          (list ':markup1 (first args) ':markup2 (second args) ':level (symbol-value (third args))
-                ':level1 (symbol-value (fourth args)) ':level2 (symbol-value (fifth args))))
+          (list :markup1 (first args) :markup2 (second args) :level (symbol-value (third args))
+                :level1 (symbol-value (fourth args)) :level2 (symbol-value (fifth args))))
          (:unary
           (assert-type args (tuple t t symbol symbol))
-          (list ':markup1 (first args) ':markup2 (second args) ':level (symbol-value (third args))
-                ':level1 (symbol-value (fourth args))))
+          (list :markup1 (first args) :markup2 (second args) :level (symbol-value (third args))
+                :level1 (symbol-value (fourth args))))
          (:phantom
           (assert-true (null args))
-          (list ':level %primary%)))))
+          (list :level %primary%)))))
     (let ((name (symbol-lower-mixed-case-name name)))
       `(:global :markup1 ((:global-variable ,name)) :markup2 ,name :level ,%primary%))))
 
@@ -2934,11 +3945,47 @@
           (second primitive-spec)
           (third primitive-spec)
           (process-primitive-spec-appearance name (cdddr primitive-spec)))))
-    (dolist (type-spec *default-types*)
-      (add-type-name world (make-type world (cdr type-spec) nil nil) (world-intern world (car type-spec)) nil))
-    (add-type-name world (make-vector-type world (make-type world :character nil nil)) (world-intern world 'string) nil)
-    (add-type-name world (make-set-type world (make-type world :integer nil nil)) (world-intern world 'integer-set) nil)
-    (add-type-name world (make-set-type world (make-type world :character nil nil)) (world-intern world 'character-set) nil)
+    
+    ;Define simple types
+    (add-type-name world
+                   (setf (world-false-type world) (make-tag-type world (setf (world-false-tag world) (add-tag world 'false nil nil nil))))
+                   (world-intern world 'false)
+                   nil)
+    (add-type-name world
+                   (setf (world-true-type world) (make-tag-type world (setf (world-true-tag world) (add-tag world 'true nil nil nil))))
+                   (world-intern world 'true)
+                   nil)
+    (setf (world-denormalized-false-type world) (make-denormalized-tag-type world (world-false-tag world)))
+    (setf (world-denormalized-true-type world) (make-denormalized-tag-type world (world-true-tag world)))
+    (assert-true (< (type-serial-number (world-false-type world)) (type-serial-number (world-true-type world))))
+    (setf (world-boxed-boolean-type world)
+          (make-type world :union nil (list (world-false-type world) (world-true-type world)) 'eq nil))
+    (flet ((make-simple-type (name kind =-name /=-name)
+             (let ((type (make-type world kind nil nil =-name /=-name)))
+               (add-type-name world type (world-intern world name) nil)
+               type)))
+      (setf (world-bottom-type world) (make-simple-type 'bottom-type :bottom nil nil))
+      (setf (world-void-type world) (make-simple-type 'void :void nil nil))
+      (setf (world-boolean-type world) (make-simple-type 'boolean :boolean 'boolean= nil))
+      (setf (world-integer-type world) (make-simple-type 'integer :integer '= '/=))
+      (setf (world-rational-type world) (make-simple-type 'rational :rational '= '/=))
+      (setf (world-finite64-type world) (make-simple-type 'nonzero-finite-float64 :finite64 '= '/=))
+      (setf (world-character-type world) (make-simple-type 'character :character 'char= 'char/=))
+      (let ((string-type (make-type world :string nil (list (world-character-type world)) 'string= 'string/=)))
+        (add-type-name world string-type (world-intern world 'string) nil)
+        (setf (world-string-type world) string-type)))
+    (add-type-name world (make-set-type world (world-integer-type world)) (world-intern world 'integer-set) nil)
+    (add-type-name world (make-set-type world (world-character-type world)) (world-intern world 'character-set) nil)
+    
+    ;Define floating-point types
+    (let ((float64-tag-types (mapcar
+                              #'(lambda (tag-name)
+                                  (make-tag-type world (add-tag world tag-name nil nil nil)))
+                              '(+zero -zero +infinity -infinity nan))))
+      (add-type-name world (apply #'make-union-type world (world-finite64-type world) float64-tag-types)
+                     (world-intern world 'float64) nil)
+      (add-type-name world (make-union-type world (world-finite64-type world) (first float64-tag-types) (second float64-tag-types))
+                     (world-intern world 'finite-float64) nil))
     world))
 
 
@@ -2974,6 +4021,8 @@
         (print-symbols-and-contents
          :command "Commands:" "::" #'default-print-contents)
         (print-symbols-and-contents
+         :statement "Special Forms:" "::" #'default-print-contents)
+        (print-symbols-and-contents
          :special-form "Special Forms:" "::" #'default-print-contents)
         (print-symbols-and-contents
          :primitive "Primitives:" ":"
@@ -2985,10 +4034,13 @@
                  (format stream "~@<<<~;~W~;>>~:>" (primitive-type-expr primitive))))
              (format stream " ~_= ~@<<~;~W~;>~:>" (primitive-value-code primitive))))
         (print-symbols-and-contents
-         :macro "Macros:" "::" #'default-print-contents)
-        (print-symbols-and-contents
          :type-constructor "Type Constructors:" "::" #'default-print-contents))
       
+      (print-symbols-and-contents
+       :tag "Tags:" "=="
+       #'(lambda (symbol tag stream)
+           (declare (ignore symbol))
+           (print-tag tag stream)))
       (print-symbols-and-contents
        :deftype "Types:" "=="
        #'(lambda (symbol type stream)
@@ -3038,9 +4090,10 @@
 ; Scan a command.  Create types and variables in the world but do not evaluate variables' types or values yet.
 ; grammar-info-var is a cons cell whose car is either nil or a grammar-info for the grammar currently being defined.
 (defun scan-command (world grammar-info-var command)
-  (handler-bind ((error #'(lambda (condition)
-                            (declare (ignore condition))
-                            (format *error-output* "~&~@<~2IWhile processing: ~_~:W~:>~%" command))))
+  (handler-bind (((or error warning)
+                  #'(lambda (condition)
+                      (declare (ignore condition))
+                      (format *error-output* "~&~@<~2IWhile processing: ~_~:W~:>~%" command))))
     (let ((handler (and (consp command)
                         (identifier? (first command))
                         (get (world-intern world (first command)) :command))))
@@ -3072,19 +4125,20 @@
    world
    :type-expr
    #'(lambda (symbol type-expr)
+       (when (symbol-tag symbol)
+         (error "~S is both a tag and a variable" symbol))
        (setf (get symbol :type) (scan-type world type-expr))))
   
   ;Then compute the variables' values.
   (let ((vars nil))
-    (with-compilation-unit ()
-      (each-world-external-symbol-with-property
-       world
-       :value-expr
-       #'(lambda (symbol value-expr)
-           (let ((type (symbol-type symbol)))
-             (if (eq (type-kind type) :->)
-               (compute-variable-function symbol value-expr type)
-               (push symbol vars))))))
+    (each-world-external-symbol-with-property
+     world
+     :value-expr
+     #'(lambda (symbol value-expr)
+         (let ((type (symbol-type symbol)))
+           (if (eq (type-kind type) :->)
+             (compute-variable-function symbol value-expr type)
+             (push symbol vars)))))
     (mapc #'compute-variable-value vars)))
 
 
@@ -3120,7 +4174,7 @@
                           (error "Missing action ~S for production ~S" (car action-binding) (production-name production)))
                         (multiple-value-bind (has-type type) (action-declaration grammar (production-lhs production) action-symbol)
                           (declare (ignore has-type))
-                          (let ((code (compute-action-code world grammar production action-symbol (action-expr action) type)))
+                          (let ((code (compute-action-code world grammar production action-symbol (action-type action) (action-expr action) type)))
                             (setf (action-code action) code)
                             (when *trace-variables*
                               (format *trace-output* "~&~@<~S[~S] := ~2I~_~:W~:>~%" action-symbol (production-name production) code))
@@ -3132,44 +4186,38 @@
                           (vars (nreverse (butlast vars-and-rest)))
                           (applied-codes (mapcar #'(lambda (code) (apply #'gen-apply code vars))
                                                  (nreverse codes))))
-                     `#'(lambda (stack)
-                          (list*-bind ,vars-and-rest stack
-                            (list* ,@applied-codes stack-rest))))
-                   `#'(lambda (stack)
-                        (nthcdr ,n-action-args stack))))
-                (named-production-code (name-lambda production-code (production-name production))))
+                     `(lambda (stack)
+                        (list*-bind ,vars-and-rest stack
+                          (list* ,@applied-codes stack-rest))))
+                   `(lambda (stack)
+                      (nthcdr ,n-action-args stack))))
+                (production-code-name (unique-function-name world (string (production-name production)))))
            (setf (production-n-action-args production) n-action-args)
-           (setf (production-evaluator-code production) named-production-code)
            (when *trace-variables*
-             (format *trace-output* "~&~@<all[~S] := ~2I~_~:W~:>~%" (production-name production) named-production-code))
-           (handler-bind ((warning #'(lambda (condition)
-                                       (declare (ignore condition))
-                                       (format *error-output* "~&While computing production ~S:~%" (production-name production)))))
-             (setf (production-evaluator production) (eval named-production-code))))))))
+             (format *trace-output* "~&~@<all[~S] := ~2I~_~:W~:>~%" (production-name production) production-code))
+           (handler-bind (((or error warning)
+                           #'(lambda (condition)
+                               (declare (ignore condition))
+                               (format *error-output* "~&While computing production ~S:~%" (production-name production)))))
+             (quiet-compile production-code-name production-code)
+             (setf (production-evaluator production) (symbol-function production-code-name))))))))
 
 
 ; Evaluate the given commands in the world.
 ; This method can only be called once.
 (defun eval-commands (world commands)
-  (ensure-proper-form commands)
-  (assert-true (null (world-commands-source world)))
-  (setf (world-commands-source world) commands)
-  (let ((grammar-info-var (list nil)))
-    (scan-commands world grammar-info-var commands))
-  (unite-types world)
-  (setf (world-bottom-type world) (make-type world :bottom nil nil))
-  (setf (world-void-type world) (make-type world :void nil nil))
-  (setf (world-boolean-type world) (make-type world :boolean nil nil))
-  (setf (world-integer-type world) (make-type world :integer nil nil))
-  (setf (world-rational-type world) (make-type world :rational nil nil))
-  (setf (world-float64-type world) (make-type world :float64 nil nil))
-  (setf (world-id-type world) (make-type world :id nil nil))
-  (setf (world-character-type world) (make-type world :character nil nil))
-  (setf (world-string-type world) (make-vector-type world (world-character-type world)))
-  (define-primitives world)
-  (eval-action-declarations world)
-  (eval-variables world)
-  (eval-action-definitions world))
+  (defer-mcl-warnings
+    (ensure-proper-form commands)
+    (assert-true (null (world-commands-source world)))
+    (setf (world-commands-source world) commands)
+    (let ((grammar-info-var (list nil)))
+      (scan-commands world grammar-info-var commands))
+    (unite-types world)
+    (eval-tags-types world)
+    (define-primitives world)
+    (eval-action-declarations world)
+    (eval-variables world)
+    (eval-action-definitions world)))
 
 
 ;;; ------------------------------------------------------------------------------------------------------
@@ -3262,9 +4310,10 @@
              (when (identifier? first)
                (let ((action (symbol-preprocessor-function (world-intern world first))))
                  (when action
-                   (handler-bind ((error #'(lambda (condition)
-                                             (declare (ignore condition))
-                                             (format *error-output* "~&~@<~2IWhile preprocessing: ~_~:W~:>~%" form))))
+                   (handler-bind (((or error warning)
+                                   #'(lambda (condition)
+                                       (declare (ignore condition))
+                                       (format *error-output* "~&~@<~2IWhile preprocessing: ~_~:W~:>~%" form))))
                      (multiple-value-bind (preprocessed-form re-preprocess) (apply action preprocessor-state form)
                        (return-from preprocess-one
                          (if re-preprocess
@@ -3349,48 +4398,56 @@
 
 ; (define <name> <type> <value>)
 ;   ==>
-; (define <name> <type> <value> nil)
+; (define <name> <type> <value>)
 ;
-; (define (<name> (<arg1> <type1>) ... (<argn> <typen>)) <result-type> <value>)
+; (define (<name> (<arg1> <type1>) ... (<argn> <typen>)) <result-type> . <statements>)
 ;   ==>
-; (define <name> (-> (<type1> ... <typen>) <result-type>)
-;    (function ((<arg1> <type1>) ... (<argn> <typen>)) <value>)
-;    t)
-(defun preprocess-define (preprocessor-state command name type value)
-  (declare (ignore preprocessor-state))
-  (values (list
-           (if (consp name)
-             (let ((name (first name))
-                   (bindings (rest name)))
-               (list command
-                     name
-                     (list '-> (mapcar #'second bindings) type)
-                     (list 'function bindings value)
-                     t))
-             (list command name type value nil)))
-          nil))
+; (defun <name> (-> (<type1> ... <typen>) <result-type>)
+;    (lambda ((<arg1> <type1>) ... (<argn> <typen>)) <result-type> . <statements>))
+(defun preprocess-define (preprocessor-state command name type &rest value-or-statements)
+  (declare (ignore command preprocessor-state))
+  (values
+   (list
+    (if (consp name)
+      (let ((bindings (rest name)))
+        (list 'defun
+              (first name)
+              (list '-> (mapcar #'second bindings) type)
+              (list* 'lambda bindings type value-or-statements)))
+      (list* 'define name type value-or-statements)))
+   nil))
 
 
-; (action <action-name> <production-name> <body>)
+; (action <action-name> <production-name> <type> <n-productions> <value>)
 ;   ==>
-; (action <action-name> <production-name> <body> nil)
+; (action <action-name> <production-name> <type> <n-productions> <value>)
 ;
-; (action (<action-name> (<arg1> <type1>) ... (<argn> <typen>)) <production-name> <body>)
+; (action (<action-name> (<arg1>) ... (<argn>)) <production-name> (-> (<type1> ... <typen>) <result-type>) <n-productions> . <statements>)
 ;   ==>
-; (action <action-name> <production-name> (function ((<arg1> <type1>) ... (<argn> <typen>)) <body>) t)
-(defun preprocess-action (preprocessor-state command action-name production-name body)
-  (declare (ignore preprocessor-state))
-  (values (list
-           (if (consp action-name)
-             (let ((action-name (first action-name))
-                   (bindings (rest action-name)))
-               (list command
-                     action-name
-                     production-name
-                     (list 'function bindings body)
-                     t))
-             (list command action-name production-name body nil)))
-          nil))
+; (actfun <action-name> <production-name> (-> (<type1> ... <typen>) <result-type>) <n-productions>
+;    (lambda ((<arg1> <type1>) ... (<argn> <typen>)) <result-type> . <statements>))
+(defun preprocess-action (preprocessor-state command action-name production-name type n-productions &rest value-or-statements)
+  (declare (ignore command preprocessor-state))
+  (values
+   (list
+    (if (consp action-name)
+      (let ((action-name (first action-name))
+            (abbreviated-bindings (rest action-name)))
+        (unless (and (consp type) (eq (first type) '->))
+          (error "Destructuring requires ~S to be a -> type" type))
+        (let ((->-parameters (second type))
+              (->-result (third type)))
+          (unless (= (length ->-parameters) (length abbreviated-bindings))
+            (error "Parameter count mistmatch: ~S and ~S" ->-parameters abbreviated-bindings))
+          (let ((bindings (mapcar #'(lambda (binding type)
+                                      (if (consp binding)
+                                        (list* (first binding) type (rest binding))
+                                        (list binding type)))
+                                  abbreviated-bindings
+                                  ->-parameters)))
+            (list 'actfun action-name production-name type n-productions (list* 'lambda bindings ->-result value-or-statements)))))
+      (list* 'action action-name production-name type n-productions value-or-statements)))
+   nil))
 
 
 (defun preprocess-grammar-or-lexer (preprocessor-state kind kind2 name start-symbol &rest grammar-options)
@@ -3468,34 +4525,34 @@
           nil))
 
 
-; (production <lhs> <rhs> <name> (<action-spec-1> <body-1>) ... (<action-spec-n> <body-n>))
+; (production <lhs> <rhs> <name> (<action-spec-1> <type-1> . <body-1>) ... (<action-spec-n> <type-n> . <body-n>))
 ;   ==>
 ; grammar:
 ;   (<lhs> <rhs> <name> <current-highlight>)
 ; commands:
 ;   (%rule <lhs>)
-;   (action <action-spec-1> <name> <body-1>)
+;   (action <action-spec-1> <name> <type-1> 1 . <body-1>)
 ;   ...
-;   (action <action-spec-n> <name> <body-n>)
+;   (action <action-spec-n> <name> <type-n> 1 . <body-n>)
 (defun preprocess-production (preprocessor-state command lhs rhs name &rest actions)
   (declare (ignore command))
-  (assert-type actions (list (tuple t t)))
+  (assert-type actions (list (cons t (cons t t))))
   (preprocess-ensure-grammar preprocessor-state)
   (push (list lhs rhs name (preprocessor-state-highlight preprocessor-state))
         (preprocessor-state-grammar-source-reverse preprocessor-state))
   (values
    (cons (list '%rule lhs)
          (mapcar #'(lambda (action)
-                     (list 'action (first action) name (second action)))
+                     (list* 'action (first action) name (second action) 1 (cddr action)))
                  actions))
    t))
 
 
 ; (rule <general-grammar-symbol>
 ;       ((<action-name-1> <type-1>) ... (<action-name-n> <type-n>))
-;   (production <lhs-1> <rhs-1> <name-1> (<action-spec-1-1> <body-1-1>) ... (<action-spec-1-n> <body-1-n>))
+;   (production <lhs-1> <rhs-1> <name-1> (<action-spec-1-1> . <body-1-1>) ... (<action-spec-1-n> . <body-1-n>))
 ;   ...
-;   (production <lhs-m> <rhs-m> <name-m> (<action-spec-m-1> <body-m-1>) ... (<action-spec-m-n> <body-m-n>)))
+;   (production <lhs-m> <rhs-m> <name-m> (<action-spec-m-1> . <body-m-1>) ... (<action-spec-m-n> . <body-m-n>)))
 ;   ==>
 ; grammar:
 ;   (<lhs-1> <rhs-1> <name-1> <current-highlight>)
@@ -3505,15 +4562,15 @@
 ;   (%rule <lhs-1>)
 ;   ...
 ;   (%rule <lhs-m>)
-;   (declare-action <action-name-1> <general-grammar-symbol> <type-1>)
-;      (action <action-spec-1-1> <name-1> <body-1-1>)
+;   (declare-action <action-name-1> <general-grammar-symbol> <type-1> <n-productions>)
+;      (action <action-spec-1-1> <name-1> <type-1> <n-productions> . <body-1-1>)
 ;      ...
-;      (action <action-spec-m-1> <name-m> <body-m-1>)
+;      (action <action-spec-m-1> <name-m> <type-1> <n-productions> . <body-m-1>)
 ;   ...
-;   (declare-action <action-name-n> <general-grammar-symbol> <type-n>)
-;      (action <action-spec-1-n> <name-1> <body-1-n>)
+;   (declare-action <action-name-n> <general-grammar-symbol> <type-n> <n-productions>)
+;      (action <action-spec-1-n> <name-1> <type-n> <n-productions> . <body-1-n>)
 ;      ...
-;      (action <action-spec-m-n> <name-m> <body-m-n>)
+;      (action <action-spec-m-n> <name-m> <type-n> <n-productions> . <body-m-n>)
 ;
 ; The productions may be enclosed by (? <conditional> ...) preprocessor actions.
 (defun preprocess-rule (preprocessor-state command general-grammar-symbol action-declarations &rest productions)
@@ -3530,25 +4587,27 @@
              (and (eq declared-action-name action-name)
                   (actions-match (rest action-declarations) (rest actions)))))))
     
-    (let ((commands-reverse
-           (nreverse
-            (each-preprocessed-command
-             #'(lambda (production highlight)
-                 (assert-true (eq (first production) 'production))
-                 (let ((lhs (second production))
-                       (rhs (third production))
-                       (name (assert-type (fourth production) symbol))
-                       (actions (assert-type (cddddr production) (list (tuple t t)))))
-                   (unless (actions-match action-declarations actions)
-                     (error "Action name mismatch: ~S vs. ~S" action-declarations actions))
-                   (push (list lhs rhs name highlight) (preprocessor-state-grammar-source-reverse preprocessor-state))
-                   (list (list '%rule lhs))))
-             preprocessor-state
-             productions
-             (preprocessor-state-highlight preprocessor-state)))))
+    (let* ((n-productions 0)
+           (commands-reverse
+            (nreverse
+             (each-preprocessed-command
+              #'(lambda (production highlight)
+                  (assert-true (eq (first production) 'production))
+                  (let ((lhs (second production))
+                        (rhs (third production))
+                        (name (assert-type (fourth production) symbol))
+                        (actions (assert-type (cddddr production) (list (cons t t)))))
+                    (unless (actions-match action-declarations actions)
+                      (error "Action name mismatch: ~S vs. ~S" action-declarations actions))
+                    (push (list lhs rhs name highlight) (preprocessor-state-grammar-source-reverse preprocessor-state))
+                    (incf n-productions)
+                    (list (list '%rule lhs))))
+              preprocessor-state
+              productions
+              (preprocessor-state-highlight preprocessor-state)))))
       (dotimes (i (length action-declarations))
         (let ((action-declaration (nth i action-declarations)))
-          (push (list 'declare-action (first action-declaration) general-grammar-symbol (second action-declaration)) commands-reverse)
+          (push (list 'declare-action (first action-declaration) general-grammar-symbol (second action-declaration) n-productions) commands-reverse)
           (setq commands-reverse
                 (nreconc
                  (each-preprocessed-command
@@ -3556,7 +4615,7 @@
                       (declare (ignore highlight))
                       (let ((name (fourth production))
                             (action (nth (+ i 4) production)))
-                        (list (list 'action (first action) name (second action)))))
+                        (list (list* 'action (first action) name (second action-declaration) n-productions (rest action)))))
                   preprocessor-state
                   productions
                   (preprocessor-state-highlight preprocessor-state))
@@ -3574,3 +4633,26 @@
   (setf (preprocessor-state-excluded-nonterminals-source preprocessor-state)
         (append excluded-nonterminals-source (preprocessor-state-excluded-nonterminals-source preprocessor-state)))
   (values nil nil))
+
+
+;;; ------------------------------------------------------------------------------------------------------
+;;; DEBUGGING
+
+(defmacro fsource (name)
+  `(function-lambda-expression #',name))
+
+(defmacro =source (name)
+  `(function-lambda-expression (get ',name :tag=)))
+
+
+#|
+(defun test ()
+  (handler-bind ((ccl::undefined-function-reference
+                  #'(lambda (condition)
+                      (break)
+                      (muffle-warning condition))))
+    (let ((s1 (gentemp "TEMP"))
+          (s2 (gentemp "TEMP")))
+      (compile s1 `(lambda (x) (,s2 x y)))
+      (compile s2 `(lambda (x) (,s1 x))))))
+|#

@@ -58,22 +58,37 @@
                ($digit-value integer digit-value digit-char-36)))
        
        (rule :$next-input-element
-             ((input-element input-element))
+             ((lex input-element))
          (production :$next-input-element ($unit (:next-input-element unit)) $next-input-element-unit
-           (input-element (input-element :next-input-element)))
+           (lex (lex :next-input-element)))
          (production :$next-input-element ($re (:next-input-element re)) $next-input-element-re
-           (input-element (input-element :next-input-element)))
+           (lex (lex :next-input-element)))
          (production :$next-input-element ($non-re (:next-input-element div)) $next-input-element-non-re
-           (input-element (input-element :next-input-element))))
+           (lex (lex :next-input-element))))
        
        (%text nil "The start symbols are: "
               (:grammar-symbol (:next-input-element unit)) " if the previous input element was a number; "
-              (:grammar-symbol (:next-input-element re)) " if the previous input-element was not a number and a "
+              (:grammar-symbol (:next-input-element re)) " if the previous input element was not a number and a "
               (:character-literal #\/) " should be interpreted as a regular expression; and "
-              (:grammar-symbol (:next-input-element div)) " if the previous input-element was not a number and a "
+              (:grammar-symbol (:next-input-element div)) " if the previous input element was not a number and a "
               (:character-literal #\/) " should be interpreted as a division or division-assignment operator.")
        
-       (deftype semantic-exception (oneof syntax-error))
+       (deftag line-break)
+       (deftag end-of-input)
+       
+       (deftag keyword (name string))
+       (deftag punctuator (name string))
+       (deftag identifier (name string))
+       (deftag number (value float64))
+       (deftag string (value string))
+       (deftag regular-expression (body string) (flags string))
+       
+       (deftype token (tag keyword punctuator identifier number string regular-expression))
+       (deftype input-element (union (tag line-break end-of-input) token))
+       
+       
+       (deftag syntax-error)
+       (deftype semantic-exception (tag syntax-error))
        
        (%section "Unicode Character Classes")
        (%charclass :unicode-character)
@@ -133,74 +148,59 @@
        (grammar-argument :nu_2 re div)
        
        (rule (:next-input-element :nu)
-             ((input-element input-element))
+             ((lex input-element))
          (production (:next-input-element re) (:white-space (:input-element re)) next-input-element-re
-           (input-element (input-element :input-element)))
+           (lex (lex :input-element)))
          (production (:next-input-element div) (:white-space (:input-element div)) next-input-element-div
-           (input-element (input-element :input-element)))
+           (lex (lex :input-element)))
          (production (:next-input-element unit) ((:- :continuing-identifier-character #\\) :white-space (:input-element div)) next-input-element-unit-normal
-           (input-element (input-element :input-element)))
+           (lex (lex :input-element)))
          (production (:next-input-element unit) ((:- #\_) :identifier-name) next-input-element-unit-name
-           (input-element (oneof string (name :identifier-name))))
+           (lex (tag string (lex-name :identifier-name))))
          (production (:next-input-element unit) (#\_ :identifier-name) next-input-element-unit-underscore-name
-           (input-element (oneof string (name :identifier-name)))))
+           (lex (tag string (lex-name :identifier-name)))))
        
        (%print-actions)
        
        (rule (:input-element :nu_2)
-             ((input-element input-element))
+             ((lex input-element))
          (production (:input-element :nu_2) (:line-breaks) input-element-line-breaks
-           (input-element (oneof line-break)))
+           (lex line-break))
          (production (:input-element :nu_2) (:identifier-or-keyword) input-element-identifier-or-keyword
-           (input-element (input-element :identifier-or-keyword)))
+           (lex (lex :identifier-or-keyword)))
          (production (:input-element :nu_2) (:punctuator) input-element-punctuator
-           (input-element (oneof punctuator (punctuator :punctuator))))
+           (lex (lex :punctuator)))
          (production (:input-element div) (:division-punctuator) input-element-division-punctuator
-           (input-element (oneof punctuator (punctuator :division-punctuator))))
+           (lex (lex :division-punctuator)))
          (production (:input-element :nu_2) (:numeric-literal) input-element-numeric-literal
-           (input-element (oneof number (float64-value :numeric-literal))))
+           (lex (lex :numeric-literal)))
          (production (:input-element :nu_2) (:string-literal) input-element-string-literal
-           (input-element (oneof string (string-value :string-literal))))
+           (lex (lex :string-literal)))
          (production (:input-element re) (:reg-exp-literal) input-element-reg-exp-literal
-           (input-element (oneof regular-expression (r-e-value :reg-exp-literal))))
+           (lex (lex :reg-exp-literal)))
          (production (:input-element :nu_2) (:end-of-input) input-element-end
-           (input-element (oneof end))))
+           (lex end-of-input)))
        
        (production :end-of-input ($end) end-of-input-end)
        (production :end-of-input (:line-comment $end) end-of-input-line-comment)
-       
-       (deftype reg-exp (tuple (re-body string)
-                          (re-flags string)))
-       
-       (deftype quantity (tuple (amount float64)
-                           (unit string)))
-       
-       (deftype input-element (oneof line-break
-                                     (identifier string)
-                                     (keyword string)
-                                     (punctuator string)
-                                     (number float64)
-                                     (string string)
-                                     (regular-expression reg-exp)
-                                     end))
        (%print-actions)
        
        (%section "Keywords and identifiers")
        
        (rule :identifier-name
-             ((name string) (contains-escapes boolean))
+             ((lex-name string) (contains-escapes boolean))
          (production :identifier-name (:initial-identifier-character-or-escape) identifier-name-initial
-           (name (vector (character-value :initial-identifier-character-or-escape)))
+           (lex-name (vector (lex-char :initial-identifier-character-or-escape)))
            (contains-escapes (contains-escapes :initial-identifier-character-or-escape)))
          (production :identifier-name (:null-escapes :initial-identifier-character-or-escape) identifier-name-initial-null-escapes
-           (name (vector (character-value :initial-identifier-character-or-escape)))
+           (lex-name (vector (lex-char :initial-identifier-character-or-escape)))
            (contains-escapes true))
          (production :identifier-name (:identifier-name :continuing-identifier-character-or-escape) identifier-name-continuing
-           (name (append (name :identifier-name) (vector (character-value :continuing-identifier-character-or-escape))))
+           (lex-name (append (lex-name :identifier-name) (vector (lex-char :continuing-identifier-character-or-escape))))
            (contains-escapes (or (contains-escapes :identifier-name)
                                  (contains-escapes :continuing-identifier-character-or-escape))))
          (production :identifier-name (:identifier-name :null-escape) identifier-name-null-escape
-           (name (name :identifier-name))
+           (lex-name (lex-name :identifier-name))
            (contains-escapes true)))
        
        (production :null-escapes (:null-escape) null-escapes-one)
@@ -209,34 +209,34 @@
        (production :null-escape (#\\ #\_) null-escape-underscore)
        
        (rule :initial-identifier-character-or-escape
-             ((character-value character) (contains-escapes boolean))
+             ((lex-char character) (contains-escapes boolean))
          (production :initial-identifier-character-or-escape (:initial-identifier-character) initial-identifier-character-or-escape-ordinary
-           (character-value ($default-action :initial-identifier-character))
+           (lex-char ($default-action :initial-identifier-character))
            (contains-escapes false))
          (production :initial-identifier-character-or-escape (#\\ :hex-escape) initial-identifier-character-or-escape-escape
-           (character-value (if (is-initial-identifier-character (character-value :hex-escape))
-                              (character-value :hex-escape)
-                              (throw (oneof syntax-error))))
+           (lex-char (begin (if (is-initial-identifier-character (lex-char :hex-escape))
+                              (return (lex-char :hex-escape))
+                              (throw syntax-error))))
            (contains-escapes true)))
        
        (%charclass :initial-identifier-character)
        
        (rule :continuing-identifier-character-or-escape
-             ((character-value character) (contains-escapes boolean))
+             ((lex-char character) (contains-escapes boolean))
          (production :continuing-identifier-character-or-escape (:continuing-identifier-character) continuing-identifier-character-or-escape-ordinary
-           (character-value ($default-action :continuing-identifier-character))
+           (lex-char ($default-action :continuing-identifier-character))
            (contains-escapes false))
          (production :continuing-identifier-character-or-escape (#\\ :hex-escape) continuing-identifier-character-or-escape-escape
-           (character-value (if (is-continuing-identifier-character (character-value :hex-escape))
-                              (character-value :hex-escape)
-                              (throw (oneof syntax-error))))
+           (lex-char (begin (if (is-continuing-identifier-character (lex-char :hex-escape))
+                              (return (lex-char :hex-escape))
+                              (throw syntax-error))))
            (contains-escapes true)))
        
        (%charclass :continuing-identifier-character)
        (%print-actions)
        
        (define reserved-words (vector string)
-         (vector "abstract" "break" "case" "catch" "class" "const" "continue" "debugger" "default" "delete" "do" "else" "enum"
+         (vector "abstract" "as" "break" "case" "catch" "class" "const" "continue" "debugger" "default" "delete" "do" "else" "enum"
                  "export" "extends" "false" "final" "finally" "for" "function" "goto" "if" "implements" "import" "in"
                  "instanceof" "interface" "namespace" "native" "new" "null" "package" "private" "protected" "public" "return" "static" "super"
                  "switch" "synchronized" "this" "throw" "throws" "transient" "true" "try" "typeof" "use" "var" "volatile" "while" "with"))
@@ -246,165 +246,159 @@
          (append reserved-words non-reserved-words))
        
        (define (member (id string) (list (vector string))) boolean
-         (if (empty list)
-           false
-           (if (string= id (nth list 0))
-             true
-             (member id (subseq list 1)))))
+         (rwhen (empty list)
+           (return false))
+         (rwhen (= id (nth list 0) string)
+           (return true))
+         (return (member id (subseq list 1))))
        
        (rule :identifier-or-keyword
-             ((input-element input-element))
+             ((lex input-element))
          (production :identifier-or-keyword (:identifier-name) identifier-or-keyword-identifier-name
-           (input-element (let ((id string (name :identifier-name)))
-                            (if (and (member id keywords) (not (contains-escapes :identifier-name)))
-                              (oneof keyword id)
-                              (oneof identifier id))))))
+           (lex (begin
+                 (const id string (lex-name :identifier-name))
+                 (if (and (member id keywords) (not (contains-escapes :identifier-name)))
+                   (return (tag keyword id))
+                   (return (tag identifier id)))))))
        (%print-actions)
        
        (%section "Punctuators")
        
-       (rule :punctuator ((punctuator string))
-         (production :punctuator (#\!) punctuator-not (punctuator "!"))
-         (production :punctuator (#\! #\=) punctuator-not-equal (punctuator "!="))
-         (production :punctuator (#\! #\= #\=) punctuator-not-identical (punctuator "!=="))
-         (production :punctuator (#\#) punctuator-hash (punctuator "#"))
-         (production :punctuator (#\%) punctuator-modulo (punctuator "%"))
-         (production :punctuator (#\% #\=) punctuator-modulo-equals (punctuator "%="))
-         (production :punctuator (#\&) punctuator-and (punctuator "&"))
-         (production :punctuator (#\& #\&) punctuator-logical-and (punctuator "&&"))
-         (production :punctuator (#\& #\& #\=) punctuator-logical-and-equals (punctuator "&&="))
-         (production :punctuator (#\& #\=) punctuator-and-equals (punctuator "&="))
-         (production :punctuator (#\() punctuator-open-parenthesis (punctuator "("))
-         (production :punctuator (#\)) punctuator-close-parenthesis (punctuator ")"))
-         (production :punctuator (#\*) punctuator-times (punctuator "*"))
-         (production :punctuator (#\* #\=) punctuator-times-equals (punctuator "*="))
-         (production :punctuator (#\+) punctuator-plus (punctuator "+"))
-         (production :punctuator (#\+ #\+) punctuator-increment (punctuator "++"))
-         (production :punctuator (#\+ #\=) punctuator-plus-equals (punctuator "+="))
-         (production :punctuator (#\,) punctuator-comma (punctuator ","))
-         (production :punctuator (#\-) punctuator-minus (punctuator "-"))
-         (production :punctuator (#\- #\-) punctuator-decrement (punctuator "--"))
-         (production :punctuator (#\- #\=) punctuator-minus-equals (punctuator "-="))
-         (production :punctuator (#\- #\>) punctuator-arrow (punctuator "->"))
-         (production :punctuator (#\.) punctuator-dot (punctuator "."))
-         (production :punctuator (#\. #\.) punctuator-double-dot (punctuator ".."))
-         (production :punctuator (#\. #\. #\.) punctuator-triple-dot (punctuator "..."))
-         (production :punctuator (#\:) punctuator-colon (punctuator ":"))
-         (production :punctuator (#\: #\:) punctuator-namespace (punctuator "::"))
-         (production :punctuator (#\;) punctuator-semicolon (punctuator ";"))
-         (production :punctuator (#\<) punctuator-less-than (punctuator "<"))
-         (production :punctuator (#\< #\<) punctuator-left-shift (punctuator "<<"))
-         (production :punctuator (#\< #\< #\=) punctuator-left-shift-equals (punctuator "<<="))
-         (production :punctuator (#\< #\=) punctuator-less-than-or-equal (punctuator "<="))
-         (production :punctuator (#\=) punctuator-assignment (punctuator "="))
-         (production :punctuator (#\= #\=) punctuator-equal (punctuator "=="))
-         (production :punctuator (#\= #\= #\=) punctuator-identical (punctuator "==="))
-         (production :punctuator (#\>) punctuator-greater-than (punctuator ">"))
-         (production :punctuator (#\> #\=) punctuator-greater-than-or-equal (punctuator ">="))
-         (production :punctuator (#\> #\>) punctuator-right-shift (punctuator ">>"))
-         (production :punctuator (#\> #\> #\=) punctuator-right-shift-equals (punctuator ">>="))
-         (production :punctuator (#\> #\> #\>) punctuator-logical-right-shift (punctuator ">>>"))
-         (production :punctuator (#\> #\> #\> #\=) punctuator-logical-right-shift-equals (punctuator ">>>="))
-         (production :punctuator (#\?) punctuator-question (punctuator "?"))
-         (production :punctuator (#\@) punctuator-at (punctuator "@"))
-         (production :punctuator (#\[) punctuator-open-bracket (punctuator "["))
-         (production :punctuator (#\]) punctuator-close-bracket (punctuator "]"))
-         (production :punctuator (#\^) punctuator-xor (punctuator "^"))
-         (production :punctuator (#\^ #\=) punctuator-xor-equals (punctuator "^="))
-         (production :punctuator (#\^ #\^) punctuator-logical-xor (punctuator "^^"))
-         (production :punctuator (#\^ #\^ #\=) punctuator-logical-xor-equals (punctuator "^^="))
-         (production :punctuator (#\{) punctuator-open-brace (punctuator "{"))
-         (production :punctuator (#\|) punctuator-or (punctuator "|"))
-         (production :punctuator (#\| #\=) punctuator-or-equals (punctuator "|="))
-         (production :punctuator (#\| #\|) punctuator-logical-or (punctuator "||"))
-         (production :punctuator (#\| #\| #\=) punctuator-logical-or-equals (punctuator "||="))
-         (production :punctuator (#\}) punctuator-close-brace (punctuator "}"))
-         (production :punctuator (#\~) punctuator-complement (punctuator "~")))
+       (rule :punctuator ((lex token))
+         (production :punctuator (#\!) punctuator-not (lex (tag punctuator "!")))
+         (production :punctuator (#\! #\=) punctuator-not-equal (lex (tag punctuator "!=")))
+         (production :punctuator (#\! #\= #\=) punctuator-not-identical (lex (tag punctuator "!==")))
+         (production :punctuator (#\#) punctuator-hash (lex (tag punctuator "#")))
+         (production :punctuator (#\%) punctuator-modulo (lex (tag punctuator "%")))
+         (production :punctuator (#\% #\=) punctuator-modulo-equals (lex (tag punctuator "%=")))
+         (production :punctuator (#\&) punctuator-and (lex (tag punctuator "&")))
+         (production :punctuator (#\& #\&) punctuator-logical-and (lex (tag punctuator "&&")))
+         (production :punctuator (#\& #\& #\=) punctuator-logical-and-equals (lex (tag punctuator "&&=")))
+         (production :punctuator (#\& #\=) punctuator-and-equals (lex (tag punctuator "&=")))
+         (production :punctuator (#\() punctuator-open-parenthesis (lex (tag punctuator "(")))
+         (production :punctuator (#\)) punctuator-close-parenthesis (lex (tag punctuator ")")))
+         (production :punctuator (#\*) punctuator-times (lex (tag punctuator "*")))
+         (production :punctuator (#\* #\=) punctuator-times-equals (lex (tag punctuator "*=")))
+         (production :punctuator (#\+) punctuator-plus (lex (tag punctuator "+")))
+         (production :punctuator (#\+ #\+) punctuator-increment (lex (tag punctuator "++")))
+         (production :punctuator (#\+ #\=) punctuator-plus-equals (lex (tag punctuator "+=")))
+         (production :punctuator (#\,) punctuator-comma (lex (tag punctuator ",")))
+         (production :punctuator (#\-) punctuator-minus (lex (tag punctuator "-")))
+         (production :punctuator (#\- #\-) punctuator-decrement (lex (tag punctuator "--")))
+         (production :punctuator (#\- #\=) punctuator-minus-equals (lex (tag punctuator "-=")))
+         (production :punctuator (#\- #\>) punctuator-arrow (lex (tag punctuator "->")))
+         (production :punctuator (#\.) punctuator-dot (lex (tag punctuator ".")))
+         (production :punctuator (#\. #\.) punctuator-double-dot (lex (tag punctuator "..")))
+         (production :punctuator (#\. #\. #\.) punctuator-triple-dot (lex (tag punctuator "...")))
+         (production :punctuator (#\:) punctuator-colon (lex (tag punctuator ":")))
+         (production :punctuator (#\: #\:) punctuator-namespace (lex (tag punctuator "::")))
+         (production :punctuator (#\;) punctuator-semicolon (lex (tag punctuator ";")))
+         (production :punctuator (#\<) punctuator-less-than (lex (tag punctuator "<")))
+         (production :punctuator (#\< #\<) punctuator-left-shift (lex (tag punctuator "<<")))
+         (production :punctuator (#\< #\< #\=) punctuator-left-shift-equals (lex (tag punctuator "<<=")))
+         (production :punctuator (#\< #\=) punctuator-less-than-or-equal (lex (tag punctuator "<=")))
+         (production :punctuator (#\=) punctuator-assignment (lex (tag punctuator "=")))
+         (production :punctuator (#\= #\=) punctuator-equal (lex (tag punctuator "==")))
+         (production :punctuator (#\= #\= #\=) punctuator-identical (lex (tag punctuator "===")))
+         (production :punctuator (#\>) punctuator-greater-than (lex (tag punctuator ">")))
+         (production :punctuator (#\> #\=) punctuator-greater-than-or-equal (lex (tag punctuator ">=")))
+         (production :punctuator (#\> #\>) punctuator-right-shift (lex (tag punctuator ">>")))
+         (production :punctuator (#\> #\> #\=) punctuator-right-shift-equals (lex (tag punctuator ">>=")))
+         (production :punctuator (#\> #\> #\>) punctuator-logical-right-shift (lex (tag punctuator ">>>")))
+         (production :punctuator (#\> #\> #\> #\=) punctuator-logical-right-shift-equals (lex (tag punctuator ">>>=")))
+         (production :punctuator (#\?) punctuator-question (lex (tag punctuator "?")))
+         (production :punctuator (#\@) punctuator-at (lex (tag punctuator "@")))
+         (production :punctuator (#\[) punctuator-open-bracket (lex (tag punctuator "[")))
+         (production :punctuator (#\]) punctuator-close-bracket (lex (tag punctuator "]")))
+         (production :punctuator (#\^) punctuator-xor (lex (tag punctuator "^")))
+         (production :punctuator (#\^ #\=) punctuator-xor-equals (lex (tag punctuator "^=")))
+         (production :punctuator (#\^ #\^) punctuator-logical-xor (lex (tag punctuator "^^")))
+         (production :punctuator (#\^ #\^ #\=) punctuator-logical-xor-equals (lex (tag punctuator "^^=")))
+         (production :punctuator (#\{) punctuator-open-brace (lex (tag punctuator "{")))
+         (production :punctuator (#\|) punctuator-or (lex (tag punctuator "|")))
+         (production :punctuator (#\| #\=) punctuator-or-equals (lex (tag punctuator "|=")))
+         (production :punctuator (#\| #\|) punctuator-logical-or (lex (tag punctuator "||")))
+         (production :punctuator (#\| #\| #\=) punctuator-logical-or-equals (lex (tag punctuator "||=")))
+         (production :punctuator (#\}) punctuator-close-brace (lex (tag punctuator "}")))
+         (production :punctuator (#\~) punctuator-complement (lex (tag punctuator "~"))))
        
-       (rule :division-punctuator ((punctuator string))
-         (production :division-punctuator (#\/ (:- #\/ #\*)) punctuator-divide (punctuator "/"))
-         (production :division-punctuator (#\/ #\=) punctuator-divide-equals (punctuator "/=")))
+       (rule :division-punctuator ((lex token))
+         (production :division-punctuator (#\/ (:- #\/ #\*)) punctuator-divide (lex (tag punctuator "/")))
+         (production :division-punctuator (#\/ #\=) punctuator-divide-equals (lex (tag punctuator "/="))))
        (%print-actions)
        
        (%section "Numeric literals")
        
-       (rule :numeric-literal ((float64-value float64))
+       (rule :numeric-literal ((lex token))
          (production :numeric-literal (:decimal-literal) numeric-literal-decimal
-           (float64-value (rational-to-float64 (rational-value :decimal-literal))))
+           (lex (tag number (real-to-float64 (lex-number :decimal-literal)))))
          (production :numeric-literal (:hex-integer-literal (:- :hex-digit)) numeric-literal-hex
-           (float64-value (rational-to-float64 (integer-value :hex-integer-literal)))))
+           (lex (tag number (real-to-float64 (lex-number :hex-integer-literal))))))
        (%print-actions)
        
-       (define (expt (base rational) (exponent integer)) rational
-         (if (= exponent 0)
-           1
-           (if (< exponent 0)
-             (rational/ 1 (expt base (neg exponent)))
-             (rational* base (expt base (- exponent 1))))))
-       
-       (rule :decimal-literal ((rational-value rational))
+       (rule :decimal-literal ((lex-number rational))
          (production :decimal-literal (:mantissa) decimal-literal
-           (rational-value (rational-value :mantissa)))
+           (lex-number (lex-number :mantissa)))
          (production :decimal-literal (:mantissa :letter-e :signed-integer) decimal-literal-exponent
-           (rational-value (rational* (rational-value :mantissa) (expt 10 (integer-value :signed-integer))))))
+           (lex-number (rat* (lex-number :mantissa) (expt 10 (lex-number :signed-integer))))))
        
        (%charclass :letter-e)
        
-       (rule :mantissa ((rational-value rational))
+       (rule :mantissa ((lex-number rational))
          (production :mantissa (:decimal-integer-literal) mantissa-integer
-           (rational-value (integer-value :decimal-integer-literal)))
+           (lex-number (lex-number :decimal-integer-literal)))
          (production :mantissa (:decimal-integer-literal #\.) mantissa-integer-dot
-           (rational-value (integer-value :decimal-integer-literal)))
+           (lex-number (lex-number :decimal-integer-literal)))
          (production :mantissa (:decimal-integer-literal #\. :fraction) mantissa-integer-dot-fraction
-           (rational-value (rational+ (integer-value :decimal-integer-literal)
-                                      (rational-value :fraction))))
+           (lex-number (rat+ (lex-number :decimal-integer-literal)
+                             (lex-number :fraction))))
          (production :mantissa (#\. :fraction) mantissa-dot-fraction
-           (rational-value (rational-value :fraction))))
+           (lex-number (lex-number :fraction))))
        
-       (rule :decimal-integer-literal ((integer-value integer))
+       (rule :decimal-integer-literal ((lex-number integer))
          (production :decimal-integer-literal (#\0) decimal-integer-literal-0
-           (integer-value 0))
+           (lex-number 0))
          (production :decimal-integer-literal (:non-zero-decimal-digits) decimal-integer-literal-nonzero
-           (integer-value (integer-value :non-zero-decimal-digits))))
+           (lex-number (lex-number :non-zero-decimal-digits))))
        
-       (rule :non-zero-decimal-digits ((integer-value integer))
+       (rule :non-zero-decimal-digits ((lex-number integer))
          (production :non-zero-decimal-digits (:non-zero-digit) non-zero-decimal-digits-first
-           (integer-value (decimal-value :non-zero-digit)))
+           (lex-number (decimal-value :non-zero-digit)))
          (production :non-zero-decimal-digits (:non-zero-decimal-digits :a-s-c-i-i-digit) non-zero-decimal-digits-rest
-           (integer-value (+ (* 10 (integer-value :non-zero-decimal-digits)) (decimal-value :a-s-c-i-i-digit)))))
+           (lex-number (+ (* 10 (lex-number :non-zero-decimal-digits)) (decimal-value :a-s-c-i-i-digit)))))
        
        (%charclass :non-zero-digit)
        
-       (rule :fraction ((rational-value rational))
+       (rule :fraction ((lex-number rational))
          (production :fraction (:decimal-digits) fraction-decimal-digits
-           (rational-value (rational/ (integer-value :decimal-digits)
-                                      (expt 10 (n-digits :decimal-digits))))))
+           (lex-number (rat/ (lex-number :decimal-digits)
+                             (expt 10 (n-digits :decimal-digits))))))
        (%print-actions)
        
-       (rule :signed-integer ((integer-value integer))
+       (rule :signed-integer ((lex-number integer))
          (production :signed-integer (:decimal-digits) signed-integer-no-sign
-           (integer-value (integer-value :decimal-digits)))
+           (lex-number (lex-number :decimal-digits)))
          (production :signed-integer (#\+ :decimal-digits) signed-integer-plus
-           (integer-value (integer-value :decimal-digits)))
+           (lex-number (lex-number :decimal-digits)))
          (production :signed-integer (#\- :decimal-digits) signed-integer-minus
-           (integer-value (neg (integer-value :decimal-digits)))))
+           (lex-number (neg (lex-number :decimal-digits)))))
        (%print-actions)
        
        (rule :decimal-digits
-             ((integer-value integer) (n-digits integer))
+             ((lex-number integer) (n-digits integer))
          (production :decimal-digits (:a-s-c-i-i-digit) decimal-digits-first
-           (integer-value (decimal-value :a-s-c-i-i-digit))
+           (lex-number (decimal-value :a-s-c-i-i-digit))
            (n-digits 1))
          (production :decimal-digits (:decimal-digits :a-s-c-i-i-digit) decimal-digits-rest
-           (integer-value (+ (* 10 (integer-value :decimal-digits)) (decimal-value :a-s-c-i-i-digit)))
+           (lex-number (+ (* 10 (lex-number :decimal-digits)) (decimal-value :a-s-c-i-i-digit)))
            (n-digits (+ (n-digits :decimal-digits) 1))))
        (%print-actions)
        
-       (rule :hex-integer-literal ((integer-value integer))
+       (rule :hex-integer-literal ((lex-number integer))
          (production :hex-integer-literal (#\0 :letter-x :hex-digit) hex-integer-literal-first
-           (integer-value (hex-value :hex-digit)))
+           (lex-number (hex-value :hex-digit)))
          (production :hex-integer-literal (:hex-integer-literal :hex-digit) hex-integer-literal-rest
-           (integer-value (+ (* 16 (integer-value :hex-integer-literal)) (hex-value :hex-digit)))))
+           (lex-number (+ (* 16 (lex-number :hex-integer-literal)) (hex-value :hex-digit)))))
        (%charclass :letter-x)
        (%charclass :hex-digit)
        (%print-actions)
@@ -412,100 +406,100 @@
        (%section "String literals")
        
        (grammar-argument :theta single double)
-       (rule :string-literal ((string-value string))
+       (rule :string-literal ((lex token))
          (production :string-literal (#\' (:string-chars single) #\') string-literal-single
-           (string-value (string-value :string-chars)))
+           (lex (tag string (lex-string :string-chars))))
          (production :string-literal (#\" (:string-chars double) #\") string-literal-double
-           (string-value (string-value :string-chars))))
+           (lex (tag string (lex-string :string-chars)))))
        (%print-actions)
        
-       (rule (:string-chars :theta) ((string-value string))
+       (rule (:string-chars :theta) ((lex-string string))
          (production (:string-chars :theta) () string-chars-none
-           (string-value ""))
+           (lex-string ""))
          (production (:string-chars :theta) ((:string-chars :theta) (:string-char :theta)) string-chars-some
-           (string-value (append (string-value :string-chars)
-                                 (vector (character-value :string-char)))))
+           (lex-string (append (lex-string :string-chars)
+                               (vector (lex-char :string-char)))))
          (production (:string-chars :theta) ((:string-chars :theta) :null-escape) string-chars-null-escape
-           (string-value (string-value :string-chars))))
+           (lex-string (lex-string :string-chars))))
        
-       (rule (:string-char :theta) ((character-value character))
+       (rule (:string-char :theta) ((lex-char character))
          (production (:string-char :theta) ((:literal-string-char :theta)) string-char-literal
-           (character-value ($default-action :literal-string-char)))
+           (lex-char ($default-action :literal-string-char)))
          (production (:string-char :theta) (#\\ :string-escape) string-char-escape
-           (character-value (character-value :string-escape))))
+           (lex-char (lex-char :string-escape))))
        
        (%charclass (:literal-string-char single))
        (%charclass (:literal-string-char double))
        (%print-actions)
        
-       (rule :string-escape ((character-value character))
+       (rule :string-escape ((lex-char character))
          (production :string-escape (:control-escape) string-escape-control
-           (character-value (character-value :control-escape)))
+           (lex-char (lex-char :control-escape)))
          (production :string-escape (:zero-escape) string-escape-zero
-           (character-value (character-value :zero-escape)))
+           (lex-char (lex-char :zero-escape)))
          (production :string-escape (:hex-escape) string-escape-hex
-           (character-value (character-value :hex-escape)))
+           (lex-char (lex-char :hex-escape)))
          (production :string-escape (:identity-escape) string-escape-non-escape
-           (character-value ($default-action :identity-escape))))
+           (lex-char ($default-action :identity-escape))))
        (%charclass :identity-escape)
        (%print-actions)
        
-       (rule :control-escape ((character-value character))
-         (production :control-escape (#\b) control-escape-backspace (character-value #?0008))
-         (production :control-escape (#\f) control-escape-form-feed (character-value #?000C))
-         (production :control-escape (#\n) control-escape-new-line (character-value #?000A))
-         (production :control-escape (#\r) control-escape-return (character-value #?000D))
-         (production :control-escape (#\t) control-escape-tab (character-value #?0009))
-         (production :control-escape (#\v) control-escape-vertical-tab (character-value #?000B)))
+       (rule :control-escape ((lex-char character))
+         (production :control-escape (#\b) control-escape-backspace (lex-char #?0008))
+         (production :control-escape (#\f) control-escape-form-feed (lex-char #?000C))
+         (production :control-escape (#\n) control-escape-new-line (lex-char #?000A))
+         (production :control-escape (#\r) control-escape-return (lex-char #?000D))
+         (production :control-escape (#\t) control-escape-tab (lex-char #?0009))
+         (production :control-escape (#\v) control-escape-vertical-tab (lex-char #?000B)))
        (%print-actions)
        
-       (rule :zero-escape ((character-value character))
+       (rule :zero-escape ((lex-char character))
          (production :zero-escape (#\0 (:- :a-s-c-i-i-digit)) zero-escape-zero
-           (character-value #?0000)))
+           (lex-char #?0000)))
        (%print-actions)
        
-       (rule :hex-escape ((character-value character))
+       (rule :hex-escape ((lex-char character))
          (production :hex-escape (#\x :hex-digit :hex-digit) hex-escape-2
-           (character-value (code-to-character (+ (* 16 (hex-value :hex-digit 1))
-                                                  (hex-value :hex-digit 2)))))
+           (lex-char (code-to-character (+ (* 16 (hex-value :hex-digit 1))
+                                           (hex-value :hex-digit 2)))))
          (production :hex-escape (#\u :hex-digit :hex-digit :hex-digit :hex-digit) hex-escape-4
-           (character-value (code-to-character (+ (+ (+ (* 4096 (hex-value :hex-digit 1))
-                                                        (* 256 (hex-value :hex-digit 2)))
-                                                     (* 16 (hex-value :hex-digit 3)))
-                                                  (hex-value :hex-digit 4))))))
+           (lex-char (code-to-character (+ (+ (+ (* 4096 (hex-value :hex-digit 1))
+                                                 (* 256 (hex-value :hex-digit 2)))
+                                              (* 16 (hex-value :hex-digit 3)))
+                                           (hex-value :hex-digit 4))))))
        
        (%print-actions)
        
        (%section "Regular expression literals")
        
-       (rule :reg-exp-literal ((r-e-value reg-exp))
+       (rule :reg-exp-literal ((lex token))
          (production :reg-exp-literal (:reg-exp-body :reg-exp-flags) reg-exp-literal
-           (r-e-value (tuple reg-exp (r-e-body :reg-exp-body) (r-e-flags :reg-exp-flags)))))
+           (lex (tag regular-expression (lex-string :reg-exp-body) (lex-string :reg-exp-flags)))))
        
-       (rule :reg-exp-flags ((r-e-flags string))
+       (rule :reg-exp-flags ((lex-string string))
          (production :reg-exp-flags () reg-exp-flags-none
-           (r-e-flags ""))
+           (lex-string ""))
          (production :reg-exp-flags (:reg-exp-flags :continuing-identifier-character-or-escape) reg-exp-flags-more
-           (r-e-flags (append (r-e-flags :reg-exp-flags) (vector (character-value :continuing-identifier-character-or-escape)))))
+           (lex-string (append (lex-string :reg-exp-flags) (vector (lex-char :continuing-identifier-character-or-escape)))))
          (production :reg-exp-flags (:reg-exp-flags :null-escape) reg-exp-flags-null-escape
-           (r-e-flags (r-e-flags :reg-exp-flags))))
+           (lex-string (lex-string :reg-exp-flags))))
        
-       (rule :reg-exp-body ((r-e-body string))
+       (rule :reg-exp-body ((lex-string string))
          (production :reg-exp-body (#\/ (:- #\*) :reg-exp-chars #\/) reg-exp-body
-           (r-e-body (r-e-body :reg-exp-chars))))
+           (lex-string (lex-string :reg-exp-chars))))
        
-       (rule :reg-exp-chars ((r-e-body string))
+       (rule :reg-exp-chars ((lex-string string))
          (production :reg-exp-chars (:reg-exp-char) reg-exp-chars-one
-           (r-e-body (r-e-body :reg-exp-char)))
+           (lex-string (lex-string :reg-exp-char)))
          (production :reg-exp-chars (:reg-exp-chars :reg-exp-char) reg-exp-chars-more
-           (r-e-body (append (r-e-body :reg-exp-chars)
-                             (r-e-body :reg-exp-char)))))
+           (lex-string (append (lex-string :reg-exp-chars)
+                               (lex-string :reg-exp-char)))))
        
-       (rule :reg-exp-char ((r-e-body string))
+       (rule :reg-exp-char ((lex-string string))
          (production :reg-exp-char (:ordinary-reg-exp-char) reg-exp-char-ordinary
-           (r-e-body (vector ($default-action :ordinary-reg-exp-char))))
+           (lex-string (vector ($default-action :ordinary-reg-exp-char))))
          (production :reg-exp-char (#\\ :non-terminator) reg-exp-char-escape
-           (r-e-body (vector #\\ ($default-action :non-terminator)))))
+           (lex-string (vector #\\ ($default-action :non-terminator)))))
        
        (%charclass :ordinary-reg-exp-char)
        )))
@@ -521,41 +515,39 @@
  "JS20/LexerCharClasses.rtf"
  "JavaScript 2 Lexical Character Classes"
  #'(lambda (rtf-stream)
-     (depict-paragraph (rtf-stream ':grammar-header)
+     (depict-paragraph (rtf-stream :grammar-header)
        (depict rtf-stream "Character Classes"))
      (dolist (charclass (lexer-charclasses *ll*))
        (depict-charclass rtf-stream charclass))
-     (depict-paragraph (rtf-stream ':grammar-header)
+     (depict-paragraph (rtf-stream :grammar-header)
        (depict rtf-stream "Grammar"))
      (depict-grammar rtf-stream *lg*)))
 
 (values
-  (depict-rtf-to-local-file
-   "JS20/LexerGrammar.rtf"
-   "JavaScript 2 Lexical Grammar"
-   #'(lambda (rtf-stream)
-       (depict-world-commands rtf-stream *lw* :visible-semantics nil)))
-  (depict-rtf-to-local-file
-   "JS20/LexerSemantics.rtf"
-   "JavaScript 2 Lexical Semantics"
-   #'(lambda (rtf-stream)
-       (depict-world-commands rtf-stream *lw*))))
-
-(values
-  (depict-html-to-local-file
-   "JS20/LexerGrammar.html"
-   "JavaScript 2 Lexical Grammar"
-   t
-   #'(lambda (rtf-stream)
-       (depict-world-commands rtf-stream *lw* :visible-semantics nil))
-   :external-link-base "notation.html")
-  (depict-html-to-local-file
-   "JS20/LexerSemantics.html"
-   "JavaScript 2 Lexical Semantics"
-   t
-   #'(lambda (rtf-stream)
-       (depict-world-commands rtf-stream *lw*))
-   :external-link-base "notation.html"))
+ (depict-rtf-to-local-file
+  "JS20/LexerGrammar.rtf"
+  "JavaScript 2 Lexical Grammar"
+  #'(lambda (rtf-stream)
+      (depict-world-commands rtf-stream *lw* :visible-semantics nil)))
+ (depict-rtf-to-local-file
+  "JS20/LexerSemantics.rtf"
+  "JavaScript 2 Lexical Semantics"
+  #'(lambda (rtf-stream)
+      (depict-world-commands rtf-stream *lw*)))
+ (depict-html-to-local-file
+  "JS20/LexerGrammar.html"
+  "JavaScript 2 Lexical Grammar"
+  t
+  #'(lambda (rtf-stream)
+      (depict-world-commands rtf-stream *lw* :visible-semantics nil))
+  :external-link-base "notation.html")
+ (depict-html-to-local-file
+  "JS20/LexerSemantics.html"
+  "JavaScript 2 Lexical Semantics"
+  t
+  #'(lambda (rtf-stream)
+      (depict-world-commands rtf-stream *lw*))
+  :external-link-base "notation.html"))
 
 (with-local-output (s "JS20/LexerGrammar.txt") (print-lexer *ll* s) (print-grammar *lg* s))
 

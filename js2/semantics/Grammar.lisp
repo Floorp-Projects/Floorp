@@ -152,8 +152,9 @@
 ;;;   the values returned by the rhs's last grammar symbol's actions, in order of the
 ;;;     actions of that grammar symbol.
 ;;; Function f returns one value, which is the result of this action.
-(defstruct (action (:constructor make-action (expr))
+(defstruct (action (:constructor make-action (type expr))
                    (:predicate action?))
+  (type nil :read-only t)                     ;The unparsed type of the action's result
   (expr nil :read-only t)                     ;The unparsed source expression that defines the action
   (code nil))                                 ;The generated lisp source code that performs the action
 
@@ -261,9 +262,9 @@
 
 ; Emit a markup paragraph for the left-hand-side of a general production.
 (defun depict-general-production-lhs (markup-stream lhs-general-nonterminal)
-  (depict-paragraph (markup-stream ':grammar-lhs)
+  (depict-paragraph (markup-stream :grammar-lhs)
     (depict-general-nonterminal markup-stream lhs-general-nonterminal :definition)
-    (depict markup-stream " " ':derives-10)))
+    (depict markup-stream " " :derives-10)))
 
 
 ; Emit markup for a production right-hand-side component.
@@ -280,10 +281,10 @@
 ; first is true if this is the first production in a rule.
 ; last is true if this is the last production in a rule.
 (defun depict-general-production-rhs (markup-stream general-production first last)
-  (depict-paragraph (markup-stream (if last ':grammar-rhs-last ':grammar-rhs))
+  (depict-paragraph (markup-stream (if last :grammar-rhs-last :grammar-rhs))
     (if first
-      (depict markup-stream ':tab3)
-      (depict markup-stream "|" ':tab2))
+      (depict markup-stream :tab3)
+      (depict markup-stream "|" :tab2))
     (let ((rhs-components (general-production-rhs-components general-production)))
       (depict-list markup-stream
                    #'depict-production-rhs-component
@@ -301,7 +302,7 @@
   (let ((lhs (general-production-lhs general-production))
         (rhs-components (general-production-rhs-components general-production)))
     (depict-general-nonterminal markup-stream lhs link)
-    (depict markup-stream " " ':derives-10)
+    (depict markup-stream " " :derives-10)
     (if rhs-components
       (let ((counts-hash (make-hash-table :test *grammar-symbol-=*)))
         (when symbols-with-subscripts
@@ -326,7 +327,7 @@
                   (setq subscript (incf (gethash symbol counts-hash))))))
             (depict-space markup-stream)
             (depict-production-rhs-component markup-stream production-rhs-component subscript))))
-      (depict markup-stream " " ':left-angle-quote "empty" :right-angle-quote))))
+      (depict markup-stream " " :left-angle-quote "empty" :right-angle-quote))))
 
 
 ;;; ------------------------------------------------------------------------------------------------------
@@ -349,7 +350,6 @@
   (actions nil :type list)                    ;List of (action-symbol . action-or-nil) in the same order as the action-symbols
   ;                                           ; are listed in the grammar's action-signatures hash table for this lhs
   (n-action-args nil :type (or null integer)) ;Total size of the action-signatures of all grammar symbols in the rhs
-  (evaluator-code nil)                        ;The lisp evaluator's source code
   (evaluator nil :type (or null function)))   ;The lisp evaluator of the action
 
 
@@ -474,7 +474,7 @@
            (rule-highlight (and (endp (rest production-runs))
                                 (check-highlight (first (first production-runs)) highlights markup-stream))))
       (depict-block-style (markup-stream rule-highlight t)
-        (depict-block-style (markup-stream ':grammar-rule)
+        (depict-block-style (markup-stream :grammar-rule)
           (if (rest general-productions)
             (progn
               (depict-general-production-lhs markup-stream (general-rule-lhs general-rule))
@@ -482,7 +482,7 @@
                 (depict-block-style (markup-stream (check-highlight (first production-run) highlights markup-stream) t)
                   (dolist (p (rest production-run))
                     (apply #'depict-general-production-rhs markup-stream p)))))
-            (depict-paragraph (markup-stream ':grammar-lhs-last)
+            (depict-paragraph (markup-stream :grammar-lhs-last)
               (depict-general-production markup-stream (first general-productions) :definition))))))))
 
 
@@ -910,13 +910,13 @@
     (let ((parameter (first parameters))
           (subtree (make-parameter-subtree grammar (rest parameters) general-production)))
       (if (nonterminal-argument? parameter)
-        (list ':argument parameter subtree)
-        (list ':attributes nil (cons parameter subtree)))))
+        (list :argument parameter subtree)
+        (list :attributes nil (cons parameter subtree)))))
    ((production? general-production)
-    (list ':rule (grammar-rule grammar (production-lhs general-production))))
+    (list :rule (grammar-rule grammar (production-lhs general-production))))
    (t
     (assert-true (generic-production? general-production))
-    (list ':rule (make-generic-rule (list general-production))))))
+    (list :rule (make-generic-rule (list general-production))))))
 
 
 ; Create and return an initial parameter tree for the general-production.
@@ -939,16 +939,16 @@
                     (lhs (general-rule-lhs general-rule))
                     (new-lhs (general-grammar-symbol-substitute attribute argument lhs)))
                (assert-true (generic-rule? general-rule))
-               (list ':rule 
+               (list :rule 
                      (if (generic-nonterminal? new-lhs)
                        (generic-rule-substitute grammar attribute argument general-rule)
                        (grammar-rule grammar new-lhs)))))
            (:argument
-            (list ':argument
+            (list :argument
                   (second subtree)
                   (substitute-argument-with attribute (third subtree))))
            (:attributes
-            (list ':attributes
+            (list :attributes
                   (second subtree)
                   (mapcar #'(lambda (argument-subtree-binding)
                               (cons (car argument-subtree-binding)
@@ -958,7 +958,7 @@
        (create-attribute-subtree-binding (attribute)
          (cons attribute (substitute-argument-with attribute argument-subtree))))
       
-      (setf (first parameter-subtree) ':attributes)
+      (setf (first parameter-subtree) :attributes)
       (setf (cddr parameter-subtree)
             (mapcar #'create-attribute-subtree-binding
                     (grammar-parametrization-lookup-argument grammar argument))))))
@@ -1234,12 +1234,12 @@
               (pos 0))
           (dolist (component-source production-rhs-source)
             (cond
-             ((and (consp component-source) (eq (first component-source) ':-))
+             ((and (consp component-source) (eq (first component-source) :-))
               (let ((lookaheads (rest component-source)))
                 (push
                  (make-lookahead-constraint pos (assert-non-null lookaheads) lookaheads)
                  constraints)))
-             ((and (consp component-source) (eq (first component-source) ':--))
+             ((and (consp component-source) (eq (first component-source) :--))
               (let ((lookaheads (rest component-source)))
                 (push
                  (make-lookahead-constraint pos (assert-non-null (rest lookaheads)) (assert-non-null (first lookaheads)))
@@ -1574,7 +1574,7 @@
 
 ; Emit markup paragraphs for the grammar.
 (defun depict-grammar (markup-stream grammar)
-  (depict-paragraph (markup-stream ':body-text)
+  (depict-paragraph (markup-stream :body-text)
     (depict markup-stream "Start nonterminal: ")
     (depict-general-nonterminal markup-stream (gramar-user-start-symbol grammar) :reference))
   (dolist (nonterminal (grammar-nonterminals-list grammar))

@@ -197,8 +197,9 @@
     (incf (logical-position-position logical-position) width)))
 
 
-(defstruct (soft-break (:constructor make-soft-break (width)))
-  (width 0 :type integer))     ;Number of spaces by which to replace this soft break if it doesn't turn into a hard break; t if unconditional
+(defstruct (soft-break (:constructor make-soft-break (width groups)))
+  (width 0 :type integer)      ;Number of spaces by which to replace this soft break if it doesn't turn into a hard break; t if unconditional
+  (groups nil :type list))     ;List of groups to be added to the new line if a line break happens here
 
 
 ; Destructively replace any soft-break that appears in a car position in the tree with
@@ -231,18 +232,20 @@
 ; Return a freshly consed markup list for a hard line break followed by indent spaces.
 (defun hard-break-markup (indent)
   (if (zerop indent)
-    (list ':new-line)
-    (list ':new-line (make-string indent :initial-element #\space :element-type #-mcl 'character #+mcl 'base-character))))
+    (list :new-line)
+    (list :new-line (make-string indent :initial-element #\space :element-type #-mcl 'character #+mcl 'base-character))))
 
 
 ; Destructively replace any soft-break that appears in a car position in the tree
 ; with a line break followed by indent spaces.
+; Note that if the markup-stream's tail was pointing to a soft break, it may now not point
+; to the last cons cell of the tree and should be adjusted.
 (defun expand-soft-breaks (tree indent)
   (substitute-soft-breaks
    tree
    #'(lambda (soft-break)
-       (declare (ignore soft-break))
-       (hard-break-markup indent))))
+       (nconc (hard-break-markup indent)
+              (copy-list (soft-break-groups soft-break))))))
 
 
 ;;; ------------------------------------------------------------------------------------------------------
@@ -451,7 +454,7 @@
            (old-tail (markup-stream-tail markup-stream)))
       (setf (markup-stream-logical-position markup-stream) inner-logical-position)
       (when *show-logical-blocks*
-        (markup-stream-append1 markup-stream (list ':invisible (format nil "<~D" indent))))
+        (markup-stream-append1 markup-stream (list :invisible (format nil "<~D" indent))))
       (prog1
         (funcall emitter markup-stream)
         (when *show-logical-blocks*
@@ -479,8 +482,10 @@
             (remove-soft-breaks tree)
             (incf (logical-position-position logical-position) inner-count))
            (t
-            (assert-true tree)
-            (expand-soft-breaks tree cumulative-indent)
+            (let ((tail (markup-stream-tail markup-stream)))
+              (assert-true (and tree (consp tail) (null (cdr tail))))
+              (expand-soft-breaks tree cumulative-indent)
+              (setf (markup-stream-tail markup-stream) (assert-non-null (last tail))))
             (incf (logical-position-n-hard-breaks logical-position) (+ inner-n-hard-breaks inner-n-soft-breaks))
             (setf (logical-position-position logical-position) (logical-position-minimal-position inner-logical-position))
             (setf (logical-position-surplus logical-position) 0))))
@@ -503,15 +508,20 @@
 ; Emit a conditional line break.  If the line break is not needed, emit width spaces instead.
 ; If width is t or omitted, the line break is unconditional.
 ; If width is nil, do nothing.
-; If the line break is needed, the new line is indented to the current indent level.
+; If the line break is needed, the new line is indented to the current indent level and groups,
+; if provided, are added to the beginning of the new line.  The width of these groups is currently not taken
+; into account.
 ; Must be called from the dynamic scope of a depict-logical-block.
-(defun depict-break (markup-stream &optional (width t))
+(defun depict-break (markup-stream &optional (width t) &rest groups)
   (assert-true (>= (markup-stream-level markup-stream) *markup-stream-content-level*))
   (when width
     (let* ((logical-position (markup-stream-logical-position markup-stream))
            (indent (logical-position-indent logical-position)))
       (if (eq width t)
-        (depict-item-or-list markup-stream (hard-break-markup indent))
+        (progn
+          (depict-item-or-list markup-stream (hard-break-markup indent))
+          (dolist (item groups)
+            (markup-stream-append1 markup-stream item)))
         (progn
           (incf (logical-position-n-soft-breaks logical-position))
           (incf (logical-position-position logical-position) width)
@@ -521,7 +531,7 @@
             (setf (logical-position-surplus logical-position) surplus))
           (when *show-logical-blocks*
             (markup-stream-append1 markup-stream '(:invisible :bullet)))
-          (markup-stream-append1 markup-stream (make-soft-break width)))))))
+          (markup-stream-append1 markup-stream (make-soft-break width groups)))))))
 
 
 ; Call emitter to emit each element of the given list onto the markup-stream.
@@ -554,7 +564,7 @@
       (depict-logical-block (markup-stream indent)
         (depict-break markup-stream prefix-break)
         (emit-element markup-stream list)))
-     ((eq empty ':error) (error "Non-empty list required"))
+     ((eq empty :error) (error "Non-empty list required"))
      (t (depict-item-or-list markup-stream empty)))
     (depict-item-or-list markup-stream suffix)))
 
@@ -580,21 +590,21 @@
   (let ((code (char-code char)))
     (if (and (>= code 32) (< code 127) (not (member char escape-list)))
       (depict markup-stream (string char))
-      (depict-char-style (markup-stream ':character-literal-control)
+      (depict-char-style (markup-stream :character-literal-control)
         (let ((name (or (cdr (assoc code *character-names*))
                         (format nil "u~4,'0X" code))))
-          (depict markup-stream ':left-angle-quote name ':right-angle-quote))))))
+          (depict markup-stream :left-angle-quote name :right-angle-quote))))))
 
 
 ; Emit markup for the given string, enclosing it in curly double quotes.
 ; The markup-stream should be set to normal formatting.
 (defun depict-string (markup-stream string)
-  (depict markup-stream ':left-double-quote)
+  (depict markup-stream :left-double-quote)
   (unless (equal string "")
-    (depict-char-style (markup-stream ':character-literal)
+    (depict-char-style (markup-stream :character-literal)
       (dotimes (i (length string))
         (depict-character markup-stream (char string i) nil))))
-  (depict markup-stream ':right-double-quote))
+  (depict markup-stream :right-double-quote))
 
 
 ;;; ------------------------------------------------------------------------------------------------------
@@ -668,6 +678,9 @@
 
 ; Emit markup for the given integer, displaying it in decimal.
 (defun depict-integer (markup-stream i)
+  (when (minusp i)
+    (depict markup-stream :minus)
+    (setq i (- i)))
   (depict markup-stream (format nil "~D" i)))
 
 

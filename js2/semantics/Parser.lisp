@@ -667,7 +667,6 @@
      #'(lambda (production)
          (setf (production-actions production) nil)
          (setf (production-n-action-args production) nil)
-         (setf (production-evaluator-code production) nil)
          (setf (production-evaluator production) nil)))
     (clrhash (grammar-terminal-actions grammar))))
 
@@ -736,7 +735,7 @@
 
 ; Define action action-symbol, when called on the production with the given name,
 ; to be action-expr.  The action should have been declared already.
-(defun define-action (grammar production-name action-symbol action-expr)
+(defun define-action (grammar production-name action-symbol type action-expr)
   (dolist (production (general-production-productions (grammar-general-production grammar production-name)))
     (let ((definition (assoc action-symbol (production-actions production) :test #'eq)))
       (cond
@@ -744,7 +743,7 @@
         (error "Attempt to define action ~S on ~S, which hasn't been declared yet" action-symbol production-name))
        ((cdr definition)
         (error "Duplicate definition of action ~S on ~S" action-symbol production-name))
-       (t (setf (cdr definition) (make-action action-expr)))))))
+       (t (setf (cdr definition) (make-action type action-expr)))))))
 
 
 ; Define action action-symbol, when called on the given terminal,

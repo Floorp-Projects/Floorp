@@ -41,7 +41,8 @@
               (($default-action character nil identity)
                ($digit-value integer digit-value digit-char-36)))
        
-       (deftype semantic-exception (oneof syntax-error))
+       (deftag syntax-error)
+       (deftype semantic-exception (tag syntax-error))
        
        (%section "Unicode Character Classes")
        (%charclass :unicode-character)
@@ -56,34 +57,38 @@
        
        
        (%section "Regular Expression Definitions")
-       (deftype r-e-input (tuple (str string) (ignore-case boolean) (multiline boolean) (span boolean)))
+       (deftag re-input (str string) (ignore-case boolean) (multiline boolean) (span boolean))
+       (deftype r-e-input (tag re-input))
        (%text :semantics
-         "Field " (:field str r-e-input) " is the input string. "
-         (:field ignore-case r-e-input) ", "
-         (:field multiline r-e-input) ", and "
-         (:field span r-e-input) " are the corresponding regular expression flags.")
+         "Field " (:label re-input str) " is the input string. "
+         (:label re-input ignore-case) ", "
+         (:label re-input multiline) ", and "
+         (:label re-input span) " are the corresponding regular expression flags.")
        
-       (deftype r-e-result (oneof (success r-e-match) failure))
-       (deftype r-e-match (tuple (end-index integer)
-                            (captures (vector capture))))
+       (deftag present (s string))
+       (deftag absent)
+       (deftype capture (tag present absent))
+       
+       (deftag re-match (end-index integer) (captures (vector capture)))
+       (deftype r-e-match (tag re-match))
+       (deftag failure)
+       (deftype r-e-result (tag re-match failure))
        (%text :semantics
          "A " (:type r-e-match) " holds an intermediate state during the pattern-matching process. "
-         (:field end-index r-e-match)
+         (:label re-match end-index)
          " is the index of the next input character to be matched by the next component in a regular expression pattern. "
-         "If we are at the end of the pattern, " (:field end-index r-e-match)
+         "If we are at the end of the pattern, " (:label re-match end-index)
          " is one plus the index of the last matched input character. "
-         (:field captures r-e-match)
+         (:label re-match captures)
          " is a zero-based array of the strings captured so far by capturing parentheses.")
        
-       (deftype capture (oneof (present string)
-                               absent))
        (deftype continuation (-> (r-e-match) r-e-result))
        (%text :semantics
          "A " (:type continuation)
          " is a function that attempts to match the remaining portion of the pattern against the input string, "
          "starting at the intermediate state given by its " (:type r-e-match) " argument. "
-         "If a match is possible, it returns a " (:field success r-e-result) " result that contains the final "
-         (:type r-e-match) " state; if no match is possible, it returns a " (:field failure r-e-result) " result.")
+         "If a match is possible, it returns a " (:tag re-match)
+         " result that contains the final state; if no match is possible, it returns a " (:tag failure) " result.")
        
        (deftype matcher (-> (r-e-input r-e-match continuation) r-e-result))
        (%text :semantics
@@ -92,37 +97,37 @@
          "starting at the intermediate state given by its " (:type r-e-match) " argument. "
          "Since the remainder of the pattern heavily influences whether (and how) a middle portion will match, we "
          "must pass in a " (:type continuation) " function that checks whether the rest of the pattern matched. "
-         "If the continuation returns " (:field failure r-e-result) ", the matcher function may call it repeatedly, "
+         "If the continuation returns " (:tag failure) ", the matcher function may call it repeatedly, "
          "trying various alternatives at pattern choice points.")
        (%text :semantics
          "The " (:type r-e-input) " parameter contains the input string and is merely passed down to subroutines.")
        
-       (deftype matcher-generator (-> (integer) matcher))
        (%text :semantics
-         "A " (:type matcher-generator)
+         "A " (:type (-> (integer) matcher))
          " is a function executed at the time the regular expression is compiled that returns a " (:type matcher) " for a part "
          "of the pattern. The " (:type integer) " parameter contains the number of capturing left parentheses seen so far in the "
          "pattern and is used to assign static, consecutive numbers to capturing parentheses.")
        
        (define (character-set-matcher (acceptance-set (set character)) (invert boolean)) matcher   ;*********ignore case?
-         (function ((t r-e-input) (x r-e-match) (c continuation))
-           (let ((i integer (& end-index x))
-                 (s string (& str t)))
-             (if (= i (length s))
-               (oneof failure)
-               (if (xor (character-set-member (nth s i) acceptance-set) invert)
-                 (c (tuple r-e-match (+ i 1) (& captures x)))
-                 (oneof failure))))))
+         (function (m (t r-e-input) (x r-e-match) (c continuation)) r-e-result
+           (const i integer (& end-index x))
+           (const s string (& str t))
+           (cond
+            ((= i (length s)) (return failure))
+            ((xor (character-set-member (nth s i) acceptance-set) invert)
+             (return (c (tag re-match (+ i 1) (& captures x)))))
+            (nil (return failure))))
+         (return m))
        (%text :semantics
          (:global character-set-matcher) " returns a " (:type matcher)
          " that matches a single input string character. If "
-         (:local invert) " is false, the match succeeds if the character is a member of the "
+         (:local invert) " is " (:tag false) ", the match succeeds if the character is a member of the "
          (:local acceptance-set) " set of characters (possibly ignoring case). If "
-         (:local invert) " is true, the match succeeds if the character is not a member of the "
+         (:local invert) " is " (:tag true) ", the match succeeds if the character is not a member of the "
          (:local acceptance-set) " set of characters (possibly ignoring case).")
        
        (define (character-matcher (ch character)) matcher
-         (character-set-matcher (set-of character ch) false))
+         (return (character-set-matcher (set-of character ch) false)))
        (%text :semantics
          (:global character-matcher) " returns a " (:type matcher)
          " that matches a single input string character. The match succeeds if the character is the same as "
@@ -133,39 +138,41 @@
        
        (%section "Regular Expression Patterns")
        
-       (rule :regular-expression-pattern ((exec (-> (r-e-input integer) r-e-result)))
+       (rule :regular-expression-pattern ((execute (-> (r-e-input integer) r-e-result)))
          (production :regular-expression-pattern (:disjunction) regular-expression-pattern-disjunction
-           (exec
-            (let ((match matcher ((gen-matcher :disjunction) 0)))
-              (function ((t r-e-input) (index integer))
-                (match
-                 t
-                 (tuple r-e-match index (fill-capture (count-parens :disjunction)))
-                 success-continuation))))))
+           (execute
+            (begin
+             (const m1 matcher ((gen-matcher :disjunction) 0))
+             (function (e (t r-e-input) (index integer)) r-e-result
+               (const x r-e-match (tag re-match index (fill-capture (count-parens :disjunction))))
+               (return (m1 t x success-continuation)))
+             (return e)))))
        
        (%print-actions)
        (define (success-continuation (x r-e-match)) r-e-result
-         (oneof success x))
+         (return x))
        (define (fill-capture (i integer)) (vector capture)
          (if (= i 0)
-           (vector-of capture)
-           (append (fill-capture (- i 1)) (vector (oneof absent)))))
+           (return (vector-of capture))
+           (return (append (fill-capture (- i 1)) (vector-of capture absent)))))
        
        
        (%subsection "Disjunctions")
        
-       (rule :disjunction ((gen-matcher matcher-generator) (count-parens integer))
+       (rule :disjunction ((gen-matcher (-> (integer) matcher)) (count-parens integer))
          (production :disjunction (:alternative) disjunction-one
            (gen-matcher (gen-matcher :alternative))
            (count-parens (count-parens :alternative)))
          (production :disjunction (:alternative #\| :disjunction) disjunction-more
-           ((gen-matcher (paren-index integer))
-            (let ((match1 matcher ((gen-matcher :alternative) paren-index))
-                  (match2 matcher ((gen-matcher :disjunction) (+ paren-index (count-parens :alternative)))))
-              (function ((t r-e-input) (x r-e-match) (c continuation))
-                (case (match1 t x c)
-                  ((success y r-e-match) (oneof success y))
-                  (failure (match2 t x c))))))
+           ((gen-matcher paren-index)
+            (const m1 matcher ((gen-matcher :alternative) paren-index))
+            (const m2 matcher ((gen-matcher :disjunction) (+ paren-index (count-parens :alternative))))
+            (function (m3 (t r-e-input) (x r-e-match) (c continuation)) r-e-result
+              (const y r-e-result (m1 t x c))
+              (case y
+                (:select r-e-match (return y))
+                (:select (tag failure) (return (m2 t x c)))))
+            (return m3))
            (count-parens (+ (count-parens :alternative) (count-parens :disjunction)))))
        
        (%print-actions)
@@ -173,20 +180,22 @@
        
        (%subsection "Alternatives")
        
-       (rule :alternative ((gen-matcher matcher-generator) (count-parens integer))
+       (rule :alternative ((gen-matcher (-> (integer) matcher)) (count-parens integer))
          (production :alternative () alternative-none
-           ((gen-matcher (paren-index integer :unused))
-            (function ((t r-e-input :unused) (x r-e-match) (c continuation))
-              (c x)))
+           ((gen-matcher (paren-index :unused))
+            (function (m (t r-e-input :unused) (x r-e-match) (c continuation)) r-e-result
+              (return (c x)))
+            (return m))
            (count-parens 0))
          (production :alternative (:alternative :term) alternative-some
-           ((gen-matcher (paren-index integer))
-            (let ((match1 matcher ((gen-matcher :alternative) paren-index))
-                  (match2 matcher ((gen-matcher :term) (+ paren-index (count-parens :alternative)))))
-              (function ((t r-e-input) (x r-e-match) (c continuation))
-                (let ((d continuation (function ((y r-e-match))
-                                        (match2 t y c))))
-                  (match1 t x d)))))
+           ((gen-matcher paren-index)
+            (const m1 matcher ((gen-matcher :alternative) paren-index))
+            (const m2 matcher ((gen-matcher :term) (+ paren-index (count-parens :alternative))))
+            (function (m3 (t r-e-input) (x r-e-match) (c continuation)) r-e-result
+              (function (d (y r-e-match)) r-e-result
+                (return (m2 t y c)))
+              (return (m1 t x d)))
+            (return m3))
            (count-parens (+ (count-parens :alternative) (count-parens :term)))))
        
        (%print-actions)
@@ -194,28 +203,28 @@
        
        (%subsection "Terms")
        
-       (rule :term ((gen-matcher matcher-generator) (count-parens integer))
+       (rule :term ((gen-matcher (-> (integer) matcher)) (count-parens integer))
          (production :term (:assertion) term-assertion
-           ((gen-matcher (paren-index integer :unused))
-            (function ((t r-e-input) (x r-e-match) (c continuation))
+           ((gen-matcher (paren-index :unused))
+            (function (m (t r-e-input) (x r-e-match) (c continuation)) r-e-result
               (if ((test-assertion :assertion) t x)
-                (c x)
-                (oneof failure))))
+                (return (c x))
+                (return failure)))
+            (return m))
            (count-parens 0))
          (production :term (:atom) term-atom
            (gen-matcher (gen-matcher :atom))
            (count-parens (count-parens :atom)))
          (production :term (:atom :quantifier) term-quantified-atom
-           ((gen-matcher (paren-index integer))
-            (let ((match matcher ((gen-matcher :atom) paren-index))
-                  (min integer (minimum :quantifier))
-                  (max limit (maximum :quantifier))
-                  (greedy boolean (greedy :quantifier)))
-              (if (case max
-                    ((finite m integer) (< m min))
-                    (infinite false))
-                (throw (oneof syntax-error))
-                (repeat-matcher match min max greedy paren-index (count-parens :atom)))))
+           ((gen-matcher paren-index)
+            (const m matcher ((gen-matcher :atom) paren-index))
+            (const min integer (minimum :quantifier))
+            (const max limit (maximum :quantifier))
+            (const greedy boolean (greedy :quantifier))
+            (when (:narrow-true (not-in (tag +infinity) max))
+              (rwhen (< max min)
+                (throw syntax-error)))
+            (return (repeat-matcher m min max greedy paren-index (count-parens :atom))))
            (count-parens (count-parens :atom))))
        
        (%print-actions)
@@ -234,22 +243,22 @@
        (rule :quantifier-prefix ((minimum integer) (maximum limit))
          (production :quantifier-prefix (#\*) quantifier-prefix-zero-or-more
            (minimum 0)
-           (maximum (oneof infinite)))
+           (maximum +infinity))
          (production :quantifier-prefix (#\+) quantifier-prefix-one-or-more
            (minimum 1)
-           (maximum (oneof infinite)))
+           (maximum +infinity))
          (production :quantifier-prefix (#\?) quantifier-prefix-zero-or-one
            (minimum 0)
-           (maximum (oneof finite 1)))
+           (maximum 1))
          (production :quantifier-prefix (#\{ :decimal-digits #\}) quantifier-prefix-repeat
            (minimum (integer-value :decimal-digits))
-           (maximum (oneof finite (integer-value :decimal-digits))))
+           (maximum (integer-value :decimal-digits)))
          (production :quantifier-prefix (#\{ :decimal-digits #\, #\}) quantifier-prefix-repeat-or-more
            (minimum (integer-value :decimal-digits))
-           (maximum (oneof infinite)))
+           (maximum +infinity))
          (production :quantifier-prefix (#\{ :decimal-digits #\, :decimal-digits #\}) quantifier-prefix-repeat-range
            (minimum (integer-value :decimal-digits 1))
-           (maximum (oneof finite (integer-value :decimal-digits 2)))))
+           (maximum (integer-value :decimal-digits 2))))
        
        (rule :decimal-digits ((integer-value integer))
          (production :decimal-digits (:decimal-digit) decimal-digits-first
@@ -259,40 +268,45 @@
        (%charclass :decimal-digit)
        
        
-       (deftype limit (oneof (finite integer) infinite))
+       (deftype limit (union integer (tag +infinity)))
        
        (define (reset-parens (x r-e-match) (p integer) (n-parens integer)) r-e-match
-         (if (= n-parens 0)
-           x
-           (let ((y r-e-match (tuple r-e-match (& end-index x)
-                                     (set-nth (& captures x) p (oneof absent)))))
-             (reset-parens y (+ p 1) (- n-parens 1)))))
+         (var captures (vector capture) (& captures x))
+         (var i integer p)
+         (while (< i (+ p n-parens))
+           (<- captures (set-nth captures i absent))
+           (<- i (+ i 1)))
+         (return (tag re-match (& end-index x) captures)))
        
        (define (repeat-matcher (body matcher) (min integer) (max limit) (greedy boolean) (paren-index integer) (n-body-parens integer)) matcher
-         (function ((t r-e-input) (x r-e-match) (c continuation))
-           (if (case max
-                 ((finite m integer) (= m 0))
-                 (infinite false))
-             (c x)
-             (let ((d continuation (function ((y r-e-match))
-                                     (if (and (= min 0)
-                                              (= (& end-index y) (& end-index x)))
-                                       (oneof failure)
-                                       (let ((new-min integer (if (= min 0) 0 (- min 1)))
-                                             (new-max limit (case max
-                                                              ((finite m integer) (oneof finite (- m 1)))
-                                                              (infinite (oneof infinite)))))
-                                         ((repeat-matcher body new-min new-max greedy paren-index n-body-parens) t y c)))))
-                   (xr r-e-match (reset-parens x paren-index n-body-parens)))
-               (if (/= min 0)
-                 (body t xr d)
-                 (if greedy
-                   (case (body t xr d)
-                     ((success z r-e-match) (oneof success z))
-                     (failure (c x)))
-                   (case (c x)
-                     ((success z r-e-match) (oneof success z))
-                     (failure (body t xr d)))))))))
+         (function (m (t r-e-input) (x r-e-match) (c continuation)) r-e-result
+           (rwhen (= max 0 limit)
+             (return (c x)))
+           (function (d (y r-e-match)) r-e-result
+             (rwhen (and (= min 0) (= (& end-index y) (& end-index x)))
+               (return failure))
+             (var new-min integer min)
+             (when (/= min 0)
+               (<- new-min (- min 1)))
+             (var new-max limit max)
+             (when (:narrow-true (not-in (tag +infinity) max))
+               (<- new-max (- max 1)))
+             (const m2 matcher (repeat-matcher body new-min new-max greedy paren-index n-body-parens))
+             (return (m2 t y c)))
+           (const xr r-e-match (reset-parens x paren-index n-body-parens))
+           (cond
+            ((/= min 0) (return (body t xr d)))
+            (greedy
+             (const z r-e-result (body t xr d))
+             (case z
+               (:select r-e-match (return z))
+               (:select (tag failure) (return (c x)))))
+            (nil
+             (const z r-e-result (c x))
+             (case z
+               (:select r-e-match (return z))
+               (:select (tag failure) (return (body t xr d)))))))
+         (return m))
        
        (%print-actions)
        
@@ -301,95 +315,100 @@
        
        (rule :assertion ((test-assertion (-> (r-e-input r-e-match) boolean)))
          (production :assertion (#\^) assertion-beginning
-           ((test-assertion (t r-e-input) (x r-e-match))
-            (if (= (& end-index x) 0)
-              true
-              (and (& multiline t)
-                   (character-set-member (nth (& str t) (- (& end-index x) 1)) line-terminators)))))
+           ((test-assertion t x)
+            (return (or (= (& end-index x) 0)
+                        (and (& multiline t)
+                             (character-set-member (nth (& str t) (- (& end-index x) 1)) line-terminators))))))
          (production :assertion (#\$) assertion-end
-           ((test-assertion (t r-e-input) (x r-e-match))
-            (if (= (& end-index x) (length (& str t)))
-              true
-              (and (& multiline t)
-                   (character-set-member (nth (& str t) (& end-index x)) line-terminators)))))
+           ((test-assertion t x)
+            (return (or (= (& end-index x) (length (& str t)))
+                        (and (& multiline t)
+                             (character-set-member (nth (& str t) (& end-index x)) line-terminators))))))
          (production :assertion (#\\ #\b) assertion-word-boundary
-           ((test-assertion (t r-e-input) (x r-e-match))
-            (at-word-boundary (& end-index x) (& str t))))
+           ((test-assertion t x)
+            (return (at-word-boundary (& end-index x) (& str t)))))
          (production :assertion (#\\ #\B) assertion-non-word-boundary
-           ((test-assertion (t r-e-input) (x r-e-match))
-            (not (at-word-boundary (& end-index x) (& str t))))))
+           ((test-assertion t x)
+            (return (not (at-word-boundary (& end-index x) (& str t)))))))
        
        (%print-actions)
        
        (define (at-word-boundary (i integer) (s string)) boolean
-         (xor (in-word (- i 1) s) (in-word i s)))
+         (return (xor (in-word (- i 1) s) (in-word i s))))
        
        (define (in-word (i integer) (s string)) boolean
          (if (or (= i -1) (= i (length s)))
-           false
-           (character-set-member (nth s i) re-word-characters)))
+           (return false)
+           (return (character-set-member (nth s i) re-word-characters))))
        
        
        (%section "Atoms")
        
-       (rule :atom ((gen-matcher matcher-generator) (count-parens integer))
+       (rule :atom ((gen-matcher (-> (integer) matcher)) (count-parens integer))
          (production :atom (:pattern-character) atom-pattern-character
-           ((gen-matcher (paren-index integer :unused))
-            (character-matcher ($default-action :pattern-character)))
+           ((gen-matcher (paren-index :unused))
+            (return (character-matcher ($default-action :pattern-character))))
            (count-parens 0))
          (production :atom (#\.) atom-dot
-           ((gen-matcher (paren-index integer :unused))
-            (function ((t r-e-input) (x r-e-match) (c continuation))
-              ((character-set-matcher (if (& span t) (set-of character) line-terminators) true) t x c)))
+           ((gen-matcher (paren-index :unused))
+            (function (m1 (t r-e-input) (x r-e-match) (c continuation)) r-e-result
+              (var a (set character) line-terminators)
+              (when (& span t)
+                (<- a (set-of character)))
+              (const m2 matcher (character-set-matcher a true))
+              (return (m2 t x c)))
+            (return m1))
            (count-parens 0))
          (production :atom (:null-escape) atom-null-escape
-           ((gen-matcher (paren-index integer :unused))
-            (function ((t r-e-input :unused) (x r-e-match) (c continuation))
-              (c x)))
+           ((gen-matcher (paren-index :unused))
+            (function (m (t r-e-input :unused) (x r-e-match) (c continuation)) r-e-result
+              (return (c x)))
+            (return m))
            (count-parens 0))
          (production :atom (#\\ :atom-escape) atom-atom-escape
            (gen-matcher (gen-matcher :atom-escape))
            (count-parens 0))
          (production :atom (:character-class) atom-character-class
-           ((gen-matcher (paren-index integer :unused))
-            (let ((a (set character) (acceptance-set :character-class)))
-              (character-set-matcher a (invert :character-class))))
+           ((gen-matcher (paren-index :unused))
+            (const a (set character) (acceptance-set :character-class))
+            (return (character-set-matcher a (invert :character-class))))
            (count-parens 0))
          (production :atom (#\( :disjunction #\)) atom-parentheses
-           ((gen-matcher (paren-index integer))
-            (let ((match matcher ((gen-matcher :disjunction) (+ paren-index 1))))
-              (function ((t r-e-input) (x r-e-match) (c continuation))
-                (let ((d continuation
-                         (function ((y r-e-match))
-                           (let ((updated-captures (vector capture)
-                                                   (set-nth (& captures y) paren-index
-                                                            (oneof present (subseq (& str t) (& end-index x) (- (& end-index y) 1))))))
-                             (c (tuple r-e-match (& end-index y) updated-captures))))))
-                  (match t x d)))))
+           ((gen-matcher paren-index)
+            (const m1 matcher ((gen-matcher :disjunction) (+ paren-index 1)))
+            (function (m2 (t r-e-input) (x r-e-match) (c continuation)) r-e-result
+              (function (d (y r-e-match)) r-e-result
+                (const ref capture (tag present (subseq (& str t) (& end-index x) (- (& end-index y) 1))))
+                (const updated-captures (vector capture)
+                  (set-nth (& captures y) paren-index ref))
+                (return (c (tag re-match (& end-index y) updated-captures))))
+              (return (m1 t x d)))
+            (return m2))
            (count-parens (+ (count-parens :disjunction) 1)))
          (production :atom (#\( #\? #\: :disjunction #\)) atom-non-capturing-parentheses
            (gen-matcher (gen-matcher :disjunction))
            (count-parens (count-parens :disjunction)))
          (production :atom (#\( #\? #\= :disjunction #\)) atom-positive-lookahead
-           ((gen-matcher (paren-index integer))
-            (let ((match matcher ((gen-matcher :disjunction) paren-index)))
-              (function ((t r-e-input) (x r-e-match) (c continuation))
-                ;(let ((d continuation
-                ;         (function ((y r-e-match))
-                ;           (c (tuple r-e-match (& end-index x) (& captures y))))))
-                ;  (match t x d)))))
-                (case (match t x success-continuation)
-                  ((success y r-e-match)
-                   (c (tuple r-e-match (& end-index x) (& captures y))))
-                  (failure (oneof failure))))))
+           ((gen-matcher paren-index)
+            (const m1 matcher ((gen-matcher :disjunction) paren-index))
+            (function (m2 (t r-e-input) (x r-e-match) (c continuation)) r-e-result
+              ;(function (d (y r-e-match)) r-e-result
+              ;  (return (c (tag re-match (& end-index x) (& captures y)))))
+              ;(return (m1 t x d)))))
+              (const y r-e-result (m1 t x success-continuation))
+              (case y
+                (:narrow r-e-match (return (c (tag re-match (& end-index x) (& captures y)))))
+                (:select (tag failure) (return failure))))
+            (return m2))
            (count-parens (count-parens :disjunction)))
          (production :atom (#\( #\? #\! :disjunction #\)) atom-negative-lookahead
-           ((gen-matcher (paren-index integer))
-            (let ((match matcher ((gen-matcher :disjunction) paren-index)))
-              (function ((t r-e-input) (x r-e-match) (c continuation))
-                (case (match t x success-continuation)
-                  ((success y r-e-match :unused) (oneof failure))
-                  (failure (c x))))))
+           ((gen-matcher paren-index)
+            (const m1 matcher ((gen-matcher :disjunction) paren-index))
+            (function (m2 (t r-e-input) (x r-e-match) (c continuation)) r-e-result
+              (case (m1 t x success-continuation)
+                (:select r-e-match (return failure))
+                (:select (tag failure) (return (c x)))))
+            (return m2))
            (count-parens (count-parens :disjunction))))
        
        (%charclass :pattern-character)
@@ -400,39 +419,39 @@
        
        (production :null-escape (#\\ #\_) null-escape-underscore)
        
-       (rule :atom-escape ((gen-matcher matcher-generator))
+       (rule :atom-escape ((gen-matcher (-> (integer) matcher)))
          (production :atom-escape (:decimal-escape) atom-escape-decimal
-           ((gen-matcher (paren-index integer))
-            (let ((n integer (escape-value :decimal-escape)))
-              (if (= n 0)
-                (character-matcher #?0000)
-                (if (> n paren-index)
-                  (throw (oneof syntax-error))
-                  (backreference-matcher n))))))
+           ((gen-matcher paren-index)
+            (const n integer (escape-value :decimal-escape))
+            (cond
+             ((= n 0) (return (character-matcher #?0000)))
+             ((> n paren-index) (throw syntax-error))
+             (nil (return (backreference-matcher n))))))
          (production :atom-escape (:character-escape) atom-escape-character
-           ((gen-matcher (paren-index integer :unused))
-            (character-matcher (character-value :character-escape))))
+           ((gen-matcher (paren-index :unused))
+            (return (character-matcher (character-value :character-escape)))))
          (production :atom-escape (:character-class-escape) atom-escape-character-class
-           ((gen-matcher (paren-index integer :unused))
-            (character-set-matcher (acceptance-set :character-class-escape) false))))
+           ((gen-matcher (paren-index :unused))
+            (return (character-set-matcher (acceptance-set :character-class-escape) false)))))
        (%print-actions)
        
        (define (backreference-matcher (n integer)) matcher
-         (function ((t r-e-input) (x r-e-match) (c continuation))
-           (case (nth-backreference x n)
-             ((present ref string)
-              (let ((i integer (& end-index x))
-                    (s string (& str t)))
-                (let ((j integer (+ i (length ref))))
-                  (if (> j (length s))
-                    (oneof failure)
-                    (if (string= (subseq s i (- j 1)) ref)   ;*********ignore case?
-                      (c (tuple r-e-match j (& captures x)))
-                      (oneof failure))))))
-             (absent (c x)))))
+         (function (m (t r-e-input) (x r-e-match) (c continuation)) r-e-result
+           (const ref capture (nth-backreference x n))
+           (case ref
+             (:narrow (tag present)
+               (const i integer (& end-index x))
+               (const s string (& str t))
+               (const j integer (+ i (length (& s ref))))
+               (if (and (<= j (length s))
+                        (= (subseq s i (- j 1)) (& s ref) string))   ;*********ignore case?
+                 (return (c (tag re-match j (& captures x))))
+                 (return failure)))
+             (:select (tag absent) (return (c x)))))
+         (return m))
        
        (define (nth-backreference (x r-e-match) (n integer)) capture
-         (nth (& captures x) (- n 1)))
+         (return (nth (& captures x) (- n 1))))
        
        
        (rule :character-escape ((character-value character))
@@ -539,21 +558,20 @@
                                  (acceptance-set :nonempty-class-ranges))))
          (production (:nonempty-class-ranges :delta) ((:class-atom :delta) #\- (:class-atom dash) :class-ranges) nonempty-class-ranges-range
            (acceptance-set
-            (let ((range (set character) (character-range (acceptance-set :class-atom 1)
-                                                          (acceptance-set :class-atom 2))))
-              (character-set-union range (acceptance-set :class-ranges)))))
+            (character-set-union (character-range (acceptance-set :class-atom 1) (acceptance-set :class-atom 2))
+                                 (acceptance-set :class-ranges))))
          (production (:nonempty-class-ranges :delta) (:null-escape :class-ranges) nonempty-class-ranges-null-escape
            (acceptance-set (acceptance-set :class-ranges))))
        (%print-actions)
        
        (define (character-range (low (set character)) (high (set character))) (set character)
-         (if (or (/= (character-set-length low) 1) (/= (character-set-length high) 1))
-           (throw (oneof syntax-error))
-           (let ((l character (character-set-min low))
-                 (h character (character-set-min high)))
-             (if (char<= l h)
-               (set-of-ranges character l h)
-               (throw (oneof syntax-error))))))
+         (rwhen (or (/= (character-set-length low) 1) (/= (character-set-length high) 1))
+           (throw syntax-error))
+         (const l character (character-set-min low))
+         (const h character (character-set-min high))
+         (if (<= l h character)
+           (return (set-of-ranges character l h))
+           (throw syntax-error)))
        
        
        (%subsection "Character Class Range Atoms")
@@ -570,9 +588,10 @@
        (rule :class-escape ((acceptance-set (set character)))
          (production :class-escape (:decimal-escape) class-escape-decimal
            (acceptance-set
-            (if (= (escape-value :decimal-escape) 0)
-              (set-of character #?0000)
-              (throw (oneof syntax-error)))))
+            (begin
+             (if (= (escape-value :decimal-escape) 0)
+               (return (set-of character #?0000))
+               (throw syntax-error)))))
          (production :class-escape (#\b) class-escape-backspace
            (acceptance-set (set-of character #?0008)))
          (production :class-escape (:character-escape) class-escape-character-escape
@@ -586,43 +605,41 @@
   (defparameter *rg* (lexer-grammar *rl*)))
 
 
-(defun run-regexp (regexp input &key ignore-case multiline span)
-  (let ((exec (first (lexer-parse *rl* regexp))))
-    (dotimes (i (length input) '(failure))
-      (let ((result (funcall exec (list input ignore-case multiline span) i)))
-        (ecase (first result)
-          (success
-           (return (list* i (subseq input i (second result)) (cddr result))))
-          (failure))))))
+(eval-when (:load-toplevel :execute)
+  (defun run-regexp (regexp input &key ignore-case multiline span)
+    (let ((execute (first (lexer-parse *rl* regexp))))
+      (dotimes (i (length input) :failure)
+        (let ((result (funcall execute (list 'r:re-input input ignore-case multiline span) i)))
+          (unless (eq result :failure)
+            (assert-true (eq (first result) 'r:re-match))
+            (return (list* i (subseq input i (second result)) (cddr result)))))))))
 
 #|
 (values
-  (depict-rtf-to-local-file
-   "JS20/RegExpGrammar.rtf"
-   "Regular Expression Grammar"
-   #'(lambda (rtf-stream)
-       (depict-world-commands rtf-stream *rw* :visible-semantics nil)))
-  (depict-rtf-to-local-file
-   "JS20/RegExpSemantics.rtf"
-   "Regular Expression Semantics"
-   #'(lambda (rtf-stream)
-       (depict-world-commands rtf-stream *rw*))))
-
-(values
-  (depict-html-to-local-file
-   "JS20/RegExpGrammar.html"
-   "Regular Expression Grammar"
-   t
-   #'(lambda (html-stream)
-       (depict-world-commands html-stream *rw* :visible-semantics nil))
-   :external-link-base "notation.html")
-  (depict-html-to-local-file
-   "JS20/RegExpSemantics.html"
-   "Regular Expression Semantics"
-   t
-   #'(lambda (html-stream)
-       (depict-world-commands html-stream *rw*))
-   :external-link-base "notation.html"))
+ (depict-rtf-to-local-file
+  "JS20/RegExpGrammar.rtf"
+  "Regular Expression Grammar"
+  #'(lambda (rtf-stream)
+      (depict-world-commands rtf-stream *rw* :visible-semantics nil)))
+ (depict-rtf-to-local-file
+  "JS20/RegExpSemantics.rtf"
+  "Regular Expression Semantics"
+  #'(lambda (rtf-stream)
+      (depict-world-commands rtf-stream *rw*)))
+ (depict-html-to-local-file
+  "JS20/RegExpGrammar.html"
+  "Regular Expression Grammar"
+  t
+  #'(lambda (html-stream)
+      (depict-world-commands html-stream *rw* :visible-semantics nil))
+  :external-link-base "notation.html")
+ (depict-html-to-local-file
+  "JS20/RegExpSemantics.html"
+  "Regular Expression Semantics"
+  t
+  #'(lambda (html-stream)
+      (depict-world-commands html-stream *rw*))
+  :external-link-base "notation.html"))
 
 (with-local-output (s "JS20/RegExpGrammar.txt") (print-lexer *rl* s) (print-grammar *rg* s))
 
@@ -630,6 +647,7 @@
 (lexer-pparse *rl* "[]+" :trace t)
 (run-regexp "(0x|0)2" "0x20")
 (run-regexp "(a*)b\\1+c" "aabaaaac")
+(run-regexp "(a*)b\\1+c" "aabaabaaaac")
 (run-regexp "(a*)b\\1+" "baaaac")
 (run-regexp "b(a+)(a+)?(a+)c" "baaaac")
 (run-regexp "(((a+)?(b+)?c)*)" "aacbbbcac")

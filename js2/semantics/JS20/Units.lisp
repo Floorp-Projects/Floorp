@@ -1,5 +1,5 @@
 ;;;
-;;; JavaScript 2.0 lexer
+;;; JavaScript 2.0 unit lexer
 ;;;
 ;;; Waldemar Horwat (waldemar@acm.org)
 ;;;
@@ -41,27 +41,26 @@
        
        (%text nil "The start nonterminal is " (:grammar-symbol :unit-pattern) ".")
        
-       (deftype semantic-exception (oneof syntax-error))
        (%print-actions)
        
        
        (%section "White Space")
        
        (grammar-argument :sigma wsopt wsreq)
-
+       
        (%charclass :white-space-character)
        (%charclass :line-terminator)
-
+       
        (production :required-white-space (:white-space-character) required-white-space-character)
        (production :required-white-space (:line-terminator) required-white-space-line-terminator)
        (production :required-white-space (:required-white-space :white-space-character) required-white-space-more-character)
        (production :required-white-space (:required-white-space :line-terminator) required-white-space-more-line-terminator)
-
+       
        (production (:white-space :sigma) (:required-white-space) white-space-required-white-space)
        (production (:white-space wsopt) () white-space-empty)
-
+       
        (%section "Unit Patterns")
-
+       
        (rule :unit-pattern ((value unit-list))
          (production :unit-pattern ((:white-space wsopt) :unit-quotient) unit-pattern-quotient
            (value (value :unit-quotient))))
@@ -86,18 +85,16 @@
          (production (:unit-factor :sigma) (#\1 (:white-space wsopt) #\^ (:white-space wsopt) :signed-integer (:white-space :sigma)) unit-factor-one-exponent
            (value (vector-of unit-factor)))
          (production (:unit-factor :sigma) (:identifier (:white-space :sigma)) unit-factor-identifier
-           (value (vector (tuple unit-factor (name :identifier) 1))))
+           (value (vector (tag unit-factor (name :identifier) 1))))
          (production (:unit-factor :sigma) (:identifier (:white-space wsopt) #\^ (:white-space wsopt) :signed-integer (:white-space :sigma)) unit-factor-identifier-exponent
-           (value (vector (tuple unit-factor (name :identifier) (integer-value :signed-integer))))))
+           (value (vector (tag unit-factor (name :identifier) (integer-value :signed-integer))))))
        
+       (deftag unit-factor (identifier string) (exponent integer))
+       (deftype unit-factor (tag unit-factor))
        (deftype unit-list (vector unit-factor))
-       (deftype unit-factor (tuple (identifier string) (exponent integer)))
        
-       (define (unit-reciprocal (u unit-list)) unit-list
-         (if (empty u)
-           (vector-of unit-factor)
-           (let ((f unit-factor (nth u 0)))
-             (append (vector (tuple unit-factor (& identifier f) (neg (& exponent f)))) (subseq u 1)))))
+       (define (unit-reciprocal (value unit-list)) unit-list
+         (return (map value f (tag unit-factor (& identifier f) (neg (& exponent f))))))
        
        (%print-actions)
        
@@ -146,41 +143,39 @@
  "JS20/UnitCharClasses.rtf"
  "JavaScript 2 Unit Character Classes"
  #'(lambda (rtf-stream)
-     (depict-paragraph (rtf-stream ':grammar-header)
+     (depict-paragraph (rtf-stream :grammar-header)
        (depict rtf-stream "Character Classes"))
      (dolist (charclass (lexer-charclasses *ul*))
        (depict-charclass rtf-stream charclass))
-     (depict-paragraph (rtf-stream ':grammar-header)
+     (depict-paragraph (rtf-stream :grammar-header)
        (depict rtf-stream "Grammar"))
      (depict-grammar rtf-stream *ug*)))
 
 (values
-  (depict-rtf-to-local-file
-   "JS20/UnitGrammar.rtf"
-   "JavaScript 2 Unit Grammar"
-   #'(lambda (rtf-stream)
-       (depict-world-commands rtf-stream *uw* :visible-semantics nil)))
-  (depict-rtf-to-local-file
-   "JS20/UnitSemantics.rtf"
-   "JavaScript 2 Unit Semantics"
-   #'(lambda (rtf-stream)
-       (depict-world-commands rtf-stream *uw*))))
-
-(values
-  (depict-html-to-local-file
-   "JS20/UnitGrammar.html"
-   "JavaScript 2 Unit Grammar"
-   t
-   #'(lambda (rtf-stream)
-       (depict-world-commands rtf-stream *uw* :visible-semantics nil))
-   :external-link-base "notation.html")
-  (depict-html-to-local-file
-   "JS20/UnitSemantics.html"
-   "JavaScript 2 Unit Semantics"
-   t
-   #'(lambda (rtf-stream)
-       (depict-world-commands rtf-stream *uw*))
-   :external-link-base "notation.html"))
+ (depict-rtf-to-local-file
+  "JS20/UnitGrammar.rtf"
+  "JavaScript 2 Unit Grammar"
+  #'(lambda (rtf-stream)
+      (depict-world-commands rtf-stream *uw* :visible-semantics nil)))
+ (depict-rtf-to-local-file
+  "JS20/UnitSemantics.rtf"
+  "JavaScript 2 Unit Semantics"
+  #'(lambda (rtf-stream)
+      (depict-world-commands rtf-stream *uw*)))
+ (depict-html-to-local-file
+  "JS20/UnitGrammar.html"
+  "JavaScript 2 Unit Grammar"
+  t
+  #'(lambda (rtf-stream)
+      (depict-world-commands rtf-stream *uw* :visible-semantics nil))
+  :external-link-base "notation.html")
+ (depict-html-to-local-file
+  "JS20/UnitSemantics.html"
+  "JavaScript 2 Unit Semantics"
+  t
+  #'(lambda (rtf-stream)
+      (depict-world-commands rtf-stream *uw*))
+  :external-link-base "notation.html"))
 
 (with-local-output (s "JS20/UnitGrammar.txt") (print-lexer *ul* s) (print-grammar *ug* s))
 
