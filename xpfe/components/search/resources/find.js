@@ -71,7 +71,7 @@ function saveSearch()
 
   var bmks = Components.classes["@mozilla.org/browser/bookmarks-service;1"].getService();
   if (bmks) bmks = bmks.QueryInterface(Components.interfaces.nsIBookmarksService);
-  if (bmks) bmks.AddBookmark(searchURL, searchTitle, bmks.BOOKMARK_FIND_TYPE, null);
+  if (bmks) bmks.addBookmarkImmediately(searchURL, searchTitle, bmks.BOOKMARK_FIND_TYPE, null);
 
   return(true);
 }
