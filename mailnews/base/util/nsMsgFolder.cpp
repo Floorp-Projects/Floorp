@@ -163,7 +163,7 @@ nsMsgFolder::Init(const char* aURI)
   
   nsXPIDLCString hostName;
   rv = url->GetHost(getter_Copies(hostName));
-  if (NS_SUCCEEDED(rv) && (const char*)userName)
+  if (NS_SUCCEEDED(rv) && (const char*)hostName)
     nsUnescape(NS_CONST_CAST(char*,(const char*)hostName));
   
   // turn it back into a server:
@@ -177,6 +177,11 @@ nsMsgFolder::Init(const char* aURI)
                                   hostName,
                                   GetIncomingServerType(),
                                   &server);
+
+  // there is a reason we aren't returning rv if NS_FAILED(rv)
+  // if you feel the need to uncomment the line below, ask alecf@netscape.com
+  // if NS_FAILED(rv)) return rv;
+
   // keep weak ref to server
   m_server = server;
   NS_IF_RELEASE(server);
