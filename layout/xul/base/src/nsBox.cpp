@@ -277,8 +277,6 @@ nsBox::HasDirtyChildren(PRBool& aDirty)
 NS_IMETHODIMP
 nsBox::MarkDirty(nsBoxLayoutState& aState)
 {
-  NeedsRecalc();
-
   nsIFrame* frame;
   GetFrame(&frame);
   // only reflow if we aren't already dirty.
@@ -290,6 +288,8 @@ nsBox::MarkDirty(nsBoxLayoutState& aState)
   }
 
   frame->AddStateBits(NS_FRAME_IS_DIRTY);
+
+  NeedsRecalc();
 
   nsCOMPtr<nsIBoxLayout> layout;
   GetLayoutManager(getter_AddRefs(layout));

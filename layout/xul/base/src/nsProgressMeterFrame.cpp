@@ -50,6 +50,7 @@
 #include "nsXULAtoms.h"
 #include "nsINameSpaceManager.h"
 #include "nsCOMPtr.h"
+#include "nsBoxLayoutState.h"
 //
 // NS_NewToolbarFrame
 //
@@ -137,6 +138,9 @@ nsProgressMeterFrame::AttributeChanged(nsPresContext* aPresContext,
     rightFlex.AppendInt(remainder);
     barChild->GetContent()->SetAttr(kNameSpaceID_None, nsXULAtoms::flex, leftFlex, PR_TRUE);
     remainderChild->GetContent()->SetAttr(kNameSpaceID_None, nsXULAtoms::flex, rightFlex, PR_TRUE);
+
+    nsBoxLayoutState state(aPresContext);
+    MarkDirty(state);
   }
   return NS_OK;
 }
