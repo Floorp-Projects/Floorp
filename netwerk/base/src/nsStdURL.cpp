@@ -343,35 +343,7 @@ nsStdURL::Parse(const char* i_Spec)
     nsresult rv = mURLParser->ParseAtScheme(i_Spec, &mScheme, &mUsername, 
                                             &mPassword, &mHost, &mPort, 
                                             &ePath);
-
-    if (0 == PL_strcasecmp("about", mScheme))
-        mSchemeType = nsIURI::ABOUT;
-    else if (0 == PL_strcasecmp("chrome", mScheme))
-        mSchemeType = nsIURI::CHROME;
-    else if (0 == PL_strcasecmp("file", mScheme))
-        mSchemeType = nsIURI::FILE;
-    else if (0 == PL_strcasecmp("ftp", mScheme))
-        mSchemeType = nsIURI::FTP;
-    else if (0 == PL_strcasecmp("http", mScheme))
-        mSchemeType = nsIURI::HTTP;
-    else if (0 == PL_strcasecmp("https", mScheme))
-        mSchemeType = nsIURI::HTTPS;
-    else if (0 == PL_strcasecmp("imap", mScheme))
-        mSchemeType = nsIURI::IMAP;
-    else if (0 == PL_strcasecmp("jar", mScheme))
-        mSchemeType = nsIURI::JAR;
-    else if (0 == PL_strcasecmp("javascript", mScheme))
-        mSchemeType = nsIURI::JAVASCRIPT;
-    else if (0 == PL_strcasecmp("mailbox", mScheme))
-        mSchemeType = nsIURI::MAILBOX;
-    else if (0 == PL_strcasecmp("mailto", mScheme))
-        mSchemeType = nsIURI::MAILTO;
-    else if (0 == PL_strcasecmp("news", mScheme))
-        mSchemeType = nsIURI::NEWS;
-    else if (0 == PL_strcasecmp("resource", mScheme))
-        mSchemeType = nsIURI::RESOURCE;
-    else
-        mSchemeType = nsIURI::UNKNOWN;
+    mSchemeType = SchemeTypeFor(mScheme);
 
     if (NS_SUCCEEDED(rv)) {
         // Now parse the path

@@ -113,6 +113,7 @@ nsSimpleURI::SetSpec(const char* aSpec)
     mScheme = scheme.ToNewCString();
     if (mScheme == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
+    mSchemeType = SchemeTypeFor(mScheme);
     if (mPath)   
         nsCRT::free(mPath);
     mPath = path.ToNewCString();
