@@ -30,8 +30,10 @@ DLL			= $(OBJDIR)\$(LIBRARY_NAME).dll
 MAKE_OBJ_TYPE	= DLL
 
 OBJS	= \
+		.\$(OBJDIR)\ImageCache.obj \
 		.\$(OBJDIR)\nsImageLoader.obj \
 		.\$(OBJDIR)\nsImageRequest.obj \
+		.\$(OBJDIR)\nsImageRequestProxy.obj \
 		.\$(OBJDIR)\nsImageFactory.obj \
 		$(NULL)
 

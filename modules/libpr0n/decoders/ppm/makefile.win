@@ -37,6 +37,7 @@ OBJS	= \
 LLIBS=\
 	$(LIBNSPR) \
 	$(DIST)\lib\xpcom.lib \
+	$(DIST)\lib\gkgfxwin.lib \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

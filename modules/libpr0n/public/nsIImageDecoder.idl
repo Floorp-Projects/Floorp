@@ -27,9 +27,25 @@
 
 interface nsIImageRequest;
 
+/**
+ * nsIImageDecoder interface
+ *
+ * @author Stuart Parmenter <pavlov@netscape.com>
+ * @version 0.1
+ * @see imagelib2
+ */
 [scriptable, uuid(9eebf43a-1dd1-11b2-953e-f1782f4cbad3)]
 interface nsIImageDecoder : nsIOutputStream
 {
+  /**
+   * Initalize an image decoder.
+   * @param aRequest the request that owns the decoder.
+   *
+   * @note The decode should QI \a aRequest to an nsIImageDecoderObserver
+   * and should send decoder notifications to the request.
+   * The decoder should always pass NULL as the first two parameters to
+   * all of the nsIImageDecoderObserver APIs.
+   */
   void init(in nsIImageRequest aRequest);
 
   /// allows access to the nsIImage we have to put bits in to.

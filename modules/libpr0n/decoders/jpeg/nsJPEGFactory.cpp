@@ -34,7 +34,7 @@ static nsModuleComponentInfo components[] =
 {
   { "ppm decoder",
     NS_JPEGDECODER_CID,
-    "@mozilla.org/image/decoder?image/jpeg;1",
+    "@mozilla.org/image/decoder;2?type=image/jpeg",
     nsJPEGDecoderConstructor, },
 };
 

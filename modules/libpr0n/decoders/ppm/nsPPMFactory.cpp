@@ -34,7 +34,7 @@ static nsModuleComponentInfo components[] =
 {
   { "ppm decoder",
     NS_PPMDECODER_CID,
-    "@mozilla.org/image/decoder?image/x-portable-pixmap;1",
+    "@mozilla.org/image/decoder;2?type=image/x-portable-pixmap",
     nsPPMDecoderConstructor, },
 };
 
