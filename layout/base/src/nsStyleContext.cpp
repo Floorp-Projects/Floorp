@@ -1818,6 +1818,9 @@ StyleContextImpl::RemapStyle(nsIPresContext* aPresContext)
       StyleContextImpl* holdParent = mParent;
       mParent = nsnull; // cut off all inheritance. this really blows
 
+      // XXX the one piece of style we do preserve is visibility
+      PRUint8 visible = mDisplay.mVisible;
+
       // time to emulate a sub-document
       // This is ugly, but we need to map style once to determine display type
       // then reset and map it again so that all local style is preserved
@@ -1830,6 +1833,7 @@ StyleContextImpl::RemapStyle(nsIPresContext* aPresContext)
       mText.ResetFrom(nsnull, aPresContext);
       mPosition.ResetFrom(nsnull, aPresContext);
       mDisplay.ResetFrom(nsnull, aPresContext);
+      mDisplay.mVisible = visible;
 
       PRUint32 cnt = 0;
       if (mRules) {
