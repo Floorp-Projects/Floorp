@@ -71,6 +71,7 @@ public:
   NS_IMETHOD SetTitleChangeCallback       (GtkMozEmbedTitleCB *aCallback, void *aData);
   NS_IMETHOD SetProgressCallback          (GtkMozEmbedProgressCB *aCallback, void *aData);
   NS_IMETHOD SetNetCallback               (GtkMozEmbedNetCB *aCallback, void *aData);
+  NS_IMETHOD SetStartOpenCallback         (GtkMozEmbedStartOpenCB *aCallback, void *aData);
   NS_IMETHOD GetLinkMessage               (char **retval);
   NS_IMETHOD GetJSStatus                  (char **retval);
   NS_IMETHOD GetLocation                  (char **retval);
@@ -112,6 +113,8 @@ private:
   void                      *mProgressCBData;
   GtkMozEmbedNetCB          *mNetCB;
   void                      *mNetCBData;
+  GtkMozEmbedStartOpenCB    *mOpenCB;
+  void                      *mOpenCBData;
   nsRect                     mBounds;
   PRBool                     mVisibility;
   nsXPIDLCString             mLinkMessage;

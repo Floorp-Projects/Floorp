@@ -41,6 +41,7 @@ typedef void     (GtkMozEmbedTitleCB)           (void *aData);
 typedef void     (GtkMozEmbedProgressCB)        (void *aData, PRInt32 aProgressTotal,
 						 PRInt32 aProgressCurrent);
 typedef void     (GtkMozEmbedNetCB)             (void *aData, PRInt32 aFlags);
+typedef PRBool   (GtkMozEmbedStartOpenCB)       (const char *aURI, void *aData);
 
 class nsIGtkEmbed : public nsISupports
 {
@@ -58,6 +59,7 @@ public:
   NS_IMETHOD SetTitleChangeCallback       (GtkMozEmbedTitleCB *aCallback, void *aData) = 0;
   NS_IMETHOD SetProgressCallback          (GtkMozEmbedProgressCB *aCallback, void *aData) = 0;
   NS_IMETHOD SetNetCallback               (GtkMozEmbedNetCB *aCallback, void *aData) = 0;
+  NS_IMETHOD SetStartOpenCallback         (GtkMozEmbedStartOpenCB *aCallback, void *aData) = 0;
   NS_IMETHOD GetLinkMessage               (char **retval) = 0;
   NS_IMETHOD GetJSStatus                  (char **retval) = 0;
   NS_IMETHOD GetLocation                  (char **retval) = 0;

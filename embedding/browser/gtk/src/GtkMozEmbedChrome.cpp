@@ -71,6 +71,8 @@ GtkMozEmbedChrome::GtkMozEmbedChrome()
   mProgressCBData   = nsnull;
   mNetCB            = nsnull;
   mNetCBData        = nsnull;
+  mOpenCB           = nsnull;
+  mOpenCBData       = nsnull;
   mBounds.x         = 0;
   mBounds.y         = 0;
   mBounds.width     = 0;
@@ -190,6 +192,14 @@ NS_IMETHODIMP GtkMozEmbedChrome::SetNetCallback (GtkMozEmbedNetCB *aCallback, vo
   PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::SetNetCallback\n"));
   mNetCB = aCallback;
   mNetCBData = aData;
+  return NS_OK;
+}
+
+NS_IMETHODIMP GtkMozEmbedChrome::SetStartOpenCallback (GtkMozEmbedStartOpenCB *aCallback, void *aData)
+{
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::SetStartOpenCallback\n"));
+  mOpenCB = aCallback;
+  mOpenCBData = aData;
   return NS_OK;
 }
 
@@ -515,7 +525,25 @@ NS_IMETHODIMP GtkMozEmbedChrome::ShowAsModal(void)
 NS_IMETHODIMP GtkMozEmbedChrome::OnStartURIOpen(nsIURI *aURI, const char *aWindowTarget, PRBool *aAbortOpen)
 {
   PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::OnStartURIOpen\n"));
-  return NS_ERROR_NOT_IMPLEMENTED;
+  NS_ENSURE_ARG_POINTER(aAbortOpen);
+  NS_ENSURE_ARG_POINTER(aURI);
+  char *specString = NULL;
+  nsCAutoString autoString;
+  nsresult rv;
+
+  rv = aURI->GetSpec(&specString);
+  if (NS_FAILED(rv))
+    return rv;
+  
+  autoString = specString;
+
+  if (mOpenCB)
+  {
+    *aAbortOpen = mOpenCB(autoString, mOpenCBData);
+    return NS_OK;
+  }
+  else
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP GtkMozEmbedChrome::GetProtocolHandler(nsIURI *aURI, nsIProtocolHandler **aProtocolHandler)
