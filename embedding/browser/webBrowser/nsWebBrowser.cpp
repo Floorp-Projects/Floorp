@@ -1446,24 +1446,12 @@ nsEventStatus PR_CALLBACK nsWebBrowser::HandleEvent(nsGUIEvent *aEvent)
   switch(aEvent->message) {
 
   case NS_ACTIVATE: {
-    nsCOMPtr<nsIDOMWindow> domWindow;
-    browser->GetContentDOMWindow(getter_AddRefs(domWindow));
-    if (domWindow) {
-      nsCOMPtr<nsPIDOMWindow> privateDOMWindow = do_QueryInterface(domWindow);
-      if(privateDOMWindow)
-        privateDOMWindow->Activate();
-    }
+    browser->Activate();
     break;
   }
 
   case NS_DEACTIVATE: {
-    nsCOMPtr<nsIDOMWindow> domWindow;
-    browser->GetContentDOMWindow(getter_AddRefs(domWindow));
-    if (domWindow) {
-      nsCOMPtr<nsPIDOMWindow> privateDOMWindow = do_QueryInterface(domWindow);
-      if(privateDOMWindow)
-        privateDOMWindow->Deactivate();
-    }
+    browser->Deactivate();
     break;
   }
 
