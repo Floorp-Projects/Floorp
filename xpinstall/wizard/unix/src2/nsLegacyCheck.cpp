@@ -40,9 +40,9 @@
 #include "nsLegacyCheck.h"
 #include "assert.h"
 
-nsLegacyCheck::nsLegacyCheck() :
-    mFilename(NULL),
-    mMessage(NULL),
+nsLegacyCheck::nsLegacyCheck(char *aFilename, char *aMessage) :
+    mFilename(aFilename),
+    mMessage(aMessage),
     mNext(NULL)
 {
 }
@@ -57,32 +57,10 @@ nsLegacyCheck::~nsLegacyCheck()
     XI_IF_FREE(mMessage);
 }
 
-int
-nsLegacyCheck::SetFilename(char *aFilename)
-{
-    if (!aFilename)
-        return E_PARAM;
-    
-    mFilename = aFilename;
-
-    return OK;
-}
-
 char *
 nsLegacyCheck::GetFilename()
 {
     return mFilename;
-}
-
-int
-nsLegacyCheck::SetMessage(char *aMessage)
-{
-    if (!aMessage)
-        return E_PARAM;
-    
-    mMessage = aMessage;
-
-    return OK;
 }
 
 char *
@@ -106,13 +84,4 @@ nsLegacyCheck *
 nsLegacyCheck::GetNext()
 {
     return mNext;
-}
-
-int
-nsLegacyCheck::InitNext()
-{
-    XI_ASSERT((mNext==NULL), "Leaking nsLegacyCheck::mNext!\n");
-    mNext = NULL;
-
-    return OK;
 }

@@ -179,8 +179,9 @@ nsSetupTypeDlg::Parse(nsINIParser *aParser)
     char *currLCSec = (char *) malloc(strlen(LEGACY_CHECKd) + 1);
     if (!currLCSec) return E_MEM;
     char *currVal = NULL;
-    nsLegacyCheck *currLC = NULL, *lastLC = NULL, *nextLC = NULL;
     nsObjectIgnore *currOI = NULL, *lastOI = NULL, *nextOI = NULL;
+    char *currFile = NULL, *currMsg = NULL;
+    nsLegacyCheck *currLC = NULL, *nextLC = NULL;
     nsComponent *currComp = NULL;
     nsComponent *currCompDup = NULL;
     int currIndex;
@@ -254,8 +255,6 @@ nsSetupTypeDlg::Parse(nsINIParser *aParser)
         sObjectsToIgnore = NULL;
 
     /* legacy check */
-    sLegacyChecks = new nsLegacyCheck();
-    currLC = sLegacyChecks;
     for (i = 0; i < MAX_LEGACY_CHECKS; i++)
     {
         // construct section name based on index
@@ -264,7 +263,7 @@ nsSetupTypeDlg::Parse(nsINIParser *aParser)
 
         // get "Filename" and "Message" keys
         bufsize = 0;
-        err = aParser->GetStringAlloc(currLCSec, FILENAME, &currVal, &bufsize);
+        err = aParser->GetStringAlloc(currLCSec, FILENAME, &currFile, &bufsize);
         if (err != OK) 
         { 
             if (err != nsINIParser::E_NO_SEC &&
@@ -272,16 +271,12 @@ nsSetupTypeDlg::Parse(nsINIParser *aParser)
             else 
             {
                 err = OK; 
-                XI_IF_DELETE(currLC);
-                if (lastLC)
-                    lastLC->InitNext();
                 break; 
             } 
         }
-        currLC->SetFilename(currVal);
 
         bufsize = 0;
-        err = aParser->GetStringAlloc(currLCSec, MSG, &currVal, &bufsize);
+        err = aParser->GetStringAlloc(currLCSec, MSG, &currMsg, &bufsize);
         if (err != OK)
         {
             if (err != nsINIParser::E_NO_SEC &&
@@ -289,21 +284,22 @@ nsSetupTypeDlg::Parse(nsINIParser *aParser)
             else 
             {
                 err = OK; 
-                XI_IF_DELETE(currLC);
-                if (lastLC)
-                    lastLC->InitNext();
                 break; 
             } 
         }
-        currLC->SetMessage(currVal);
+        nextLC = new nsLegacyCheck(currFile, currMsg);
 
-        nextLC = new nsLegacyCheck();
-        currLC->SetNext(nextLC);
-        lastLC = currLC;
+        if (currLC)
+        {
+           currLC->SetNext(nextLC);
+        }
+        else if (!sLegacyChecks)
+        {
+           sLegacyChecks = nextLC;
+        }
+
         currLC = nextLC;
     }
-    if (i == 0) // none found
-        sLegacyChecks = NULL;
 
     /* setup types */
     for (i=0; i<MAX_SETUP_TYPES; i++)
