@@ -1932,6 +1932,7 @@ nsLocalFile::Reveal()
   nsresult rv = NS_OK;
   PRBool isDirectory = PR_FALSE;
   nsXPIDLCString path;
+  nsXPIDLString  unicodePath;
 
   IsDirectory(&isDirectory);
   if (isDirectory)
@@ -1943,15 +1944,161 @@ nsLocalFile::Reveal()
     nsCOMPtr<nsIFile> parent;
     GetParent(getter_AddRefs(parent));
     if (parent)
+    {
       parent->GetPath(getter_Copies(path));  
+      parent->GetUnicodePath(getter_Copies(unicodePath));
+    }
   }
 
+  // Remember the current fg window.
+  HWND origWin, fgWin;
+  origWin = fgWin = ::GetForegroundWindow();
+
   // use the app registry name to launch a shell execute....
-  LONG r = (LONG) ::ShellExecute( NULL, "explore", (const char *) path, NULL, NULL, SW_SHOWNORMAL);
+  LONG r = (LONG) ::ShellExecute( NULL, "open", (const char *) path, NULL, NULL, SW_SHOWNORMAL);
   if (r < 32) 
-    rv = NS_ERROR_FAILURE;
-	else
-		rv = NS_OK;
+    return NS_ERROR_FAILURE;
+
+  // If this is a directory, then we don't need to select a file.
+  if (isDirectory)
+    return NS_OK;
+
+  // Resources we may need to free when done.
+  IShellFolder *desktopFolder   = 0;
+  IMalloc      *shellMalloc     = 0;
+  IShellFolder *folder          = 0;
+  LPITEMIDLIST  folder_pidl     = 0;
+  LPITEMIDLIST  file_pidl       = 0;
+  LPITEMIDLIST  win95_file_pidl = 0;
+  HMODULE       shell32         = 0;
+
+  // We break out of this do/while non-loop at any point where we have to give up.
+  do {
+    // Wait for the window to open.  We wait a maximum of 2 seconds.
+    // If we get the wrong window, that will be dealt with below.
+    for (int iter = 10; iter; iter--)
+    {
+      fgWin = ::GetForegroundWindow();
+      if (fgWin != origWin)
+          break; // for loopo
+      ::Sleep(200);
+    }
+    // If we failed to locate the new window, give up.
+    if (origWin == fgWin)
+      break; // do/while
+
+    // Now we have the explorer window.  We need to send it the "select item"
+    // message (which isn't trivial, so buckly your seat belt)...
+
+    // We need the explorer's process id.
+    DWORD pid = 0;
+    ::GetWindowThreadProcessId(fgWin, &pid);
+
+    // Get desktop folder.
+    HRESULT rc = ::SHGetDesktopFolder(&desktopFolder);
+    if (!desktopFolder)
+      break;
+
+    // Get IMalloc interface to use for shell pidls.
+    rc = ::SHGetMalloc(&shellMalloc);
+    if (!shellMalloc)
+      break;
+
+    // Convert folder path to pidl.  This requires the Unicode path name.
+    // It returns a pidl that must be freed via shellMalloc->Free.
+    ULONG eaten = 0;
+    rc = desktopFolder->ParseDisplayName( 0,
+                                          0,
+                                          (LPOLESTR)unicodePath.get(),
+                                          &eaten,
+                                          &folder_pidl,
+                                          0 );
+    if (!folder_pidl)
+      break;
+
+    // Now get IShellFolder interface for the folder we opened.
+    rc = desktopFolder->BindToObject( folder_pidl,
+                                      0,
+                                      IID_IShellFolder,
+                                      (void**)&folder );
+    if (!folder)
+      break;
+
+    // Now get file name pidl from that folder.
+    nsXPIDLString unicodeLeaf;
+    if (NS_FAILED(GetUnicodeLeafName(getter_Copies(unicodeLeaf))))
+      break;
+    rc = folder->ParseDisplayName( 0,
+                                   0,
+                                   (LPOLESTR)unicodeLeaf.get(),
+                                   &eaten,
+                                   &file_pidl,
+                                   0 );
+    if (!file_pidl)
+      break;
+
+    // We need the module handle for shell32.dll.
+    shell32 = ::GetModuleHandle("shell32.dll");
+    if (!shell32)
+      break;
+
+    // Allocate shared memory copy of pidl.  This uses the undocumented "SHAllocShared"
+    // function.  Note that it is freed automatically after the ::SendMessage so we
+    // don't have to free it.
+    static HANDLE(WINAPI*SHAllocShared)(LPVOID,ULONG,DWORD) = (HANDLE(WINAPI*)(LPVOID,ULONG,DWORD))::GetProcAddress(shell32, (LPCTSTR)520);
+    HANDLE pidlHandle = 0;
+    if (SHAllocShared)
+    {
+      // We need the size of the pidl, which we get via another undocumented
+      // API: "ILGetSize".
+      UINT (WINAPI*ILGetSize)(LPCITEMIDLIST) = (UINT(WINAPI*)(LPCITEMIDLIST))::GetProcAddress(shell32, (LPCTSTR)152);
+      if (!ILGetSize)
+        break;
+      pidlHandle = SHAllocShared((void*)(ITEMIDLIST*)file_pidl,
+                                 ILGetSize(file_pidl),
+                                 pid);
+      if (!pidlHandle)
+        break;
+    }
+    else
+    {
+      // On Win95, there is no SHAllocShared.  Instead, we clone the file's pidl in
+      // the shell's global heap (via ILGlobalClone) and pass that.
+      LPITEMIDLIST(WINAPI*ILGlobalClone)(LPCITEMIDLIST) = (LPITEMIDLIST(WINAPI*)(LPCITEMIDLIST))::GetProcAddress(shell32, (LPCTSTR)20);
+      if (!ILGlobalClone)
+        break;
+      win95_file_pidl = ILGlobalClone(file_pidl);
+      if (!win95_file_pidl)
+        break;
+      // Arrange so that this pidl is passed on the ::SendMessage.
+      pidlHandle = win95_file_pidl;
+    }
+
+    // Send message to select this file.
+    ::SendMessage(fgWin,
+                  WM_USER+5,
+                  SVSI_SELECT | SVSI_DESELECTOTHERS | SVSI_ENSUREVISIBLE,
+                  (LPARAM)pidlHandle );
+  } while ( PR_FALSE );
+
+  // Clean up (freeing stuff as needed, in reverse order).
+  if (win95_file_pidl)
+  {
+    // We need to free this using ILGlobalFree, another undocumented API.
+    static void (WINAPI*ILGlobalFree)(LPCITEMIDLIST) = (void(WINAPI*)(LPCITEMIDLIST))::GetProcAddress(shell32,(LPCTSTR)156);
+    if (ILGlobalFree)
+      ILGlobalFree(win95_file_pidl);
+  }
+  if (file_pidl)
+    shellMalloc->Free(file_pidl);
+  if (folder_pidl)
+    shellMalloc->Free(folder_pidl);
+  if (folder)
+    folder->Release();
+  if (shellMalloc)
+    shellMalloc->Release();
+  if (desktopFolder)
+    desktopFolder->Release();
 
   return rv;
 }
