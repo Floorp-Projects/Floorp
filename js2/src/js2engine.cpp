@@ -1070,6 +1070,7 @@ namespace MetaData {
                 return (it != length);
             }
             else {
+/*
                 if (originalObj != obj) {
                     while (it != length)
                         if (engine->meta->lookupDynamicProperty(originalObj, nameList[it]) != obj)
@@ -1078,6 +1079,7 @@ namespace MetaData {
                         else
                             break;
                 }
+*/
                 if (it == length) {
                     if (obj->kind == SimpleInstanceKind) {
                         js2val protoval = (checked_cast<SimpleInstance *>(obj))->super;

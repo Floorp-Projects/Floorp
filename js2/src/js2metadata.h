@@ -52,7 +52,7 @@ class BytecodeContainer;
 class Pond;
 class SimpleInstance;
 class LookupKind;
-
+class Package;
 
 typedef void (Invokable)();
 typedef js2val (Callor)(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
@@ -263,9 +263,13 @@ typedef NamespaceList::iterator NamespaceListIterator;
 
 class Multiname : public JS2Object {
 public:    
+    Multiname() : JS2Object(MultinameKind), name(NULL), nsList(new NamespaceList) { }
+    Multiname(Namespace *ns) : JS2Object(MultinameKind), name(NULL), nsList(new NamespaceList) { nsList->push_back(ns); }
     Multiname(const String *name) : JS2Object(MultinameKind), name(name), nsList(new NamespaceList) { }
     Multiname(const String *name, Namespace *ns) : JS2Object(MultinameKind), name(name), nsList(new NamespaceList) { addNamespace(ns); }
     Multiname(QualifiedName& q) : JS2Object(MultinameKind), name(q.name), nsList(new NamespaceList)    { nsList->push_back(q.nameSpace); }
+    Multiname(const String *name, NamespaceList *ns) : JS2Object(MultinameKind), name(name), nsList(new NamespaceList) { addNamespace(ns); }
+    Multiname(const String *name, Context *cxt) : JS2Object(MultinameKind), name(name), nsList(new NamespaceList) { addNamespace(*cxt); }
 
     Multiname(const Multiname& m) : JS2Object(MultinameKind), name(m.name), nsList(m.nsList)    { }
 
@@ -285,7 +289,6 @@ public:
     virtual void markChildren();
     virtual ~Multiname()            { }
 };
-
 
 class NamedParameter {
 public:
@@ -584,7 +587,7 @@ public:
     Frame *getTopFrame()                    { return frameList.front(); }
     FrameListIterator getBegin()            { return frameList.begin(); }
     FrameListIterator getEnd()              { return frameList.end(); }
-    Frame *getPackageFrame();
+    Package *getPackageFrame();
     SystemFrame *getSystemFrame()           { return checked_cast<SystemFrame *>(frameList.back()); }
 
     void setTopFrame(Frame *f)              { while (frameList.front() != f) frameList.pop_front(); }
@@ -1129,7 +1132,7 @@ public:
     void ValidateStmt(Context *cxt, Environment *env, Plurality pl, StmtNode *p);
     void ValidateExpression(Context *cxt, Environment *env, ExprNode *p);
     void ValidateAttributeExpression(Context *cxt, Environment *env, ExprNode *p);
-    JS2Object *validateStaticFunction(FunctionDefinition *fnDef, js2val compileThis, bool prototype, bool unchecked, Context *cxt, Environment *env);
+    FunctionInstance *validateStaticFunction(FunctionDefinition *fnDef, js2val compileThis, bool prototype, bool unchecked, Context *cxt, Environment *env);
 
     js2val ExecuteStmtList(Phase phase, StmtNode *p);
     js2val EvalExpression(Environment *env, Phase phase, ExprNode *p);
@@ -1142,7 +1145,6 @@ public:
     JS2Class *objectType(js2val obj);
     JS2Class *objectType(JS2Object *obj);
     bool hasType(js2val objVal, JS2Class *c);
-    bool relaxedHasType(js2val objVal, JS2Class *c);
 
     LocalMember *findFlatMember(NonWithFrame *container, Multiname *multiname, Access access, Phase phase);
     InstanceBinding *resolveInstanceMemberName(JS2Class *js2class, Multiname *multiname, Access access, Phase phase, QualifiedName *qname);
@@ -1158,9 +1160,10 @@ public:
     LocalMember *findLocalMember(JS2Object *container, Multiname *multiname, Access access);
     js2val getSuperObject(JS2Object *obj);
     JS2Class *getVariableType(Variable *v, Phase phase, size_t pos);
-    InstanceMember *getDerivedInstanceMember(JS2Class *c, InstanceMember *mBase, Multiname *multiname, Access access);
+    InstanceMember *getDerivedInstanceMember(JS2Class *c, InstanceMember *mBase, Access access);
     InstanceMember *findBaseInstanceMember(JS2Class *limit, Multiname *multiname, Access access);
-    InstanceBinding *findLocalInstanceMember(JS2Class *limit, Multiname *multiname, Access access);
+    InstanceMember *findLocalInstanceMember(JS2Class *limit, Multiname *multiname, Access access);
+    Member *findCommonMember(js2val base, Multiname *multiname, Access access, bool flat);
 
     js2val invokeFunction(const char *fname);
     bool invokeFunctionOnObject(js2val thisValue, const String *fnName, js2val &result);
@@ -1176,15 +1179,15 @@ public:
 //    bool readProperty(Frame *pf, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval);
 //    bool readDynamicProperty(JS2Object *container, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval);
     bool readLocalMember(LocalMember *m, Phase phase, js2val *rval);
-    bool readInstanceMember(js2val containerVal, JS2Class *c, QualifiedName *qname, Phase phase, js2val *rval);
-    JS2Object *lookupDynamicProperty(JS2Object *obj, const String *name);
+    bool readInstanceMember(js2val containerVal, JS2Class *c, InstanceMember *mBase, Phase phase, js2val *rval);
+//    JS2Object *lookupDynamicProperty(JS2Object *obj, const String *name);
     bool JS2Metadata::hasOwnProperty(JS2Object *obj, const String *name);
 
 //    bool writeProperty(js2val container, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue, Phase phase);
 //    bool writeProperty(Frame *container, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue, Phase phase, bool initFlag);
 //    bool writeDynamicProperty(JS2Object *container, Multiname *multiname, bool createIfMissing, js2val newValue, Phase phase);
-    bool writeLocalMember(LocalMember *m, js2val newValue, Phase phase, bool initFlag);
-    bool writeInstanceMember(js2val containerVal, JS2Class *c, QualifiedName *qname, js2val newValue, Phase phase);
+    bool writeLocalMember(LocalMember *m, js2val newValue, bool initFlag);
+    bool writeInstanceMember(js2val containerVal, JS2Class *c, InstanceMember *mBase, js2val newValue);
 
 //    bool deleteProperty(Frame *container, Multiname *multiname, LookupKind *lookupKind, Phase phase, bool *result);
 //    bool deleteProperty(js2val container, Multiname *multiname, LookupKind *lookupKind, Phase phase, bool *result);

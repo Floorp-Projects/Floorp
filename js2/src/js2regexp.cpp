@@ -62,63 +62,58 @@ namespace MetaData {
 
     void RegExpInstance::setLastIndex(JS2Metadata *meta, js2val a)
     {
-        QualifiedName qname(meta->publicNamespace, &meta->world.identifiers["lastIndex"]);
-        if (!meta->writeInstanceMember(OBJECT_TO_JS2VAL(this), meta->regexpClass, &qname, a, RunPhase)) ASSERT(false);
+        meta->regexpClass->writePublic(meta, OBJECT_TO_JS2VAL(this), meta->regexpClass, &meta->world.identifiers["lastIndex"], true, a);
     }
     void RegExpInstance::setGlobal(JS2Metadata *meta, js2val a)
     {
-        QualifiedName qname(meta->publicNamespace, &meta->world.identifiers["global"]);
-        if (!meta->writeInstanceMember(OBJECT_TO_JS2VAL(this), meta->regexpClass, &qname, a, RunPhase)) ASSERT(false);
+        meta->regexpClass->writePublic(meta, OBJECT_TO_JS2VAL(this), meta->regexpClass, &meta->world.identifiers["global"], true, a);
     }
     void RegExpInstance::setMultiline(JS2Metadata *meta, js2val a)
     {
-        QualifiedName qname(meta->publicNamespace, &meta->world.identifiers["multiline"]);
-        if (!meta->writeInstanceMember(OBJECT_TO_JS2VAL(this), meta->regexpClass, &qname, a, RunPhase)) ASSERT(false);
+        meta->regexpClass->writePublic(meta, OBJECT_TO_JS2VAL(this), meta->regexpClass, &meta->world.identifiers["multiline"], true, a);
     }
     void RegExpInstance::setIgnoreCase(JS2Metadata *meta, js2val a)
     {
-        QualifiedName qname(meta->publicNamespace, &meta->world.identifiers["ignoreCase"]);
-        if (!meta->writeInstanceMember(OBJECT_TO_JS2VAL(this), meta->regexpClass, &qname, a, RunPhase)) ASSERT(false);
+        meta->regexpClass->writePublic(meta, OBJECT_TO_JS2VAL(this), meta->regexpClass, &meta->world.identifiers["ignoreCase"], true, a);
     }
     void RegExpInstance::setSource(JS2Metadata *meta, js2val a)
     {
-        QualifiedName qname(meta->publicNamespace, &meta->world.identifiers["source"]);
-        if (!meta->writeInstanceMember(OBJECT_TO_JS2VAL(this), meta->regexpClass, &qname, a, RunPhase)) ASSERT(false);
+        meta->regexpClass->writePublic(meta, OBJECT_TO_JS2VAL(this), meta->regexpClass, &meta->world.identifiers["source"], true, a);
     }
 
     js2val RegExpInstance::getLastIndex(JS2Metadata *meta)
     {
         js2val r;
-        QualifiedName qname(meta->publicNamespace, &meta->world.identifiers["lastIndex"]);
-        if (!meta->readInstanceMember(OBJECT_TO_JS2VAL(this), meta->regexpClass, &qname, RunPhase, &r)) ASSERT(false);
+        if (meta->regexpClass->readPublic(meta, OBJECT_TO_JS2VAL(this), meta->regexpClass, &meta->world.identifiers["lastIndex"], RunPhase, &r))
+            ASSERT(false);
         return r;
     }
     js2val RegExpInstance::getGlobal(JS2Metadata *meta)
     {
         js2val r;
-        QualifiedName qname(meta->publicNamespace, &meta->world.identifiers["global"]);
-        if (!meta->readInstanceMember(OBJECT_TO_JS2VAL(this), meta->regexpClass, &qname, RunPhase, &r)) ASSERT(false);
+        if (meta->regexpClass->readPublic(meta, OBJECT_TO_JS2VAL(this), meta->regexpClass, &meta->world.identifiers["global"], RunPhase, &r))
+            ASSERT(false);
         return r;
     }
     js2val RegExpInstance::getMultiline(JS2Metadata *meta)
     {
         js2val r;
-        QualifiedName qname(meta->publicNamespace, &meta->world.identifiers["multiline"]);
-        if (!meta->readInstanceMember(OBJECT_TO_JS2VAL(this), meta->regexpClass, &qname, RunPhase, &r)) ASSERT(false);
+        if (meta->regexpClass->readPublic(meta, OBJECT_TO_JS2VAL(this), meta->regexpClass, &meta->world.identifiers["multiline"], RunPhase, &r))
+            ASSERT(false);
         return r;
     }
     js2val RegExpInstance::getIgnoreCase(JS2Metadata *meta)
     {
         js2val r;
-        QualifiedName qname(meta->publicNamespace, &meta->world.identifiers["ignoreCase"]);
-        if (!meta->readInstanceMember(OBJECT_TO_JS2VAL(this), meta->regexpClass, &qname, RunPhase, &r)) ASSERT(false);
+        if (meta->regexpClass->readPublic(meta, OBJECT_TO_JS2VAL(this), meta->regexpClass, &meta->world.identifiers["ignoreCase"], RunPhase, &r))
+            ASSERT(false);
         return r;
     }
     js2val RegExpInstance::getSource(JS2Metadata *meta)
     {
         js2val r;
-        QualifiedName qname(meta->publicNamespace, &meta->world.identifiers["source"]);
-        if (!meta->readInstanceMember(OBJECT_TO_JS2VAL(this), meta->regexpClass, &qname, RunPhase, &r)) ASSERT(false);
+        if (meta->regexpClass->readPublic(meta, OBJECT_TO_JS2VAL(this), meta->regexpClass, &meta->world.identifiers["source"], RunPhase, &r))
+            ASSERT(false);
         return r;
     }
 
@@ -142,19 +137,17 @@ namespace MetaData {
 
             REMatchState *match = REExecute(thisInst->mRegExp, str->begin(), index, toInt32(str->length()), meta->toBoolean(globalMultiline));
             if (match) {
-                PrototypeInstance *A = new ArrayInstance(meta, meta->arrayClass->prototype, meta->arrayClass);
+                ArrayInstance *A = new ArrayInstance(meta, meta->arrayClass->prototype, meta->arrayClass);
                 result = OBJECT_TO_JS2VAL(A);
                 js2val matchStr = meta->engine->allocString(str->substr((uint32)match->startIndex, (uint32)match->endIndex - match->startIndex));
-                Multiname mname(&meta->world.identifiers[*meta->toString((long)0)], meta->publicNamespace);
-                meta->writeDynamicProperty(A, &mname, true, matchStr, RunPhase);
+                meta->createDynamicProperty(A, &meta->world.identifiers[*meta->toString((long)0)], matchStr, ReadWriteAccess, false, true);
                 for (int32 i = 0; i < match->parenCount; i++) {
-                    Multiname mname(&meta->world.identifiers[*meta->toString(i + 1)], meta->publicNamespace);
                     if (match->parens[i].index != -1) {
                         js2val parenStr = meta->engine->allocString(str->substr((uint32)(match->parens[i].index), (uint32)(match->parens[i].length)));
-                        meta->writeDynamicProperty(A, &mname, true, parenStr, RunPhase);
+                        meta->createDynamicProperty(A, &meta->world.identifiers[*meta->toString(i + 1)], parenStr, ReadWriteAccess, false, true);
                     }
-		    else
-                        meta->writeDynamicProperty(A, &mname, true, JS2VAL_UNDEFINED, RunPhase);
+		            else
+                        meta->createDynamicProperty(A, &meta->world.identifiers[*meta->toString(i + 1)], JS2VAL_UNDEFINED, ReadWriteAccess, false, true);
                 }
 /*
                 // XXX SpiderMonkey also adds 'index' and 'input' properties to the result
@@ -184,7 +177,7 @@ namespace MetaData {
     {
         // XXX Change constructors to take js2val pointer for the result (which would be an already
         // rooted pointer).
-        RegExpInstance *thisInst = new RegExpInstance(meta->regexpClass);
+        RegExpInstance *thisInst = new RegExpInstance(meta, meta->regexpClass->prototype, meta->regexpClass);
         RootKeeper rk(&thisInst);
         js2val thatValue = OBJECT_TO_JS2VAL(thisInst);
         REuint32 flags = 0;
@@ -249,8 +242,9 @@ namespace MetaData {
 
         for (uint32 i = 0; i < INSTANCE_VAR_COUNT; i++)
         {
-            InstanceMember *m = new InstanceVariable(RegExpInstanceVars[i].type, false, false, meta->regexpClass->slotCount++);
-            meta->defineInstanceMember(meta->regexpClass, &meta->cxt, &meta->world.identifiers[RegExpInstanceVars[i].name], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, m, 0);
+            Multiname *mn = new Multiname(&meta->world.identifiers[RegExpInstanceVars[i].name], &publicNamespaceList);
+            InstanceMember *m = new InstanceVariable(mn, RegExpInstanceVars[i].type, true, true, true, meta->regexpClass->slotCount++);
+            meta->defineInstanceMember(meta->regexpClass, &meta->cxt, mn->name, mn->nsList, Attribute::NoOverride, false, m, 0);
         }
 
     }

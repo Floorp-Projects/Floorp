@@ -122,7 +122,7 @@
                 ASSERT(JS2VAL_IS_STRING(a));
                 astr = JS2VAL_TO_STRING(a);
                 b = pop();
-                meta->createDynamicProperty(sInst, astr, b, false, true);
+                meta->createDynamicProperty(sInst, astr, b, ReadWriteAccess, false, true);
             }
             push(baseVal);
             baseVal = JS2VAL_VOID;
@@ -138,7 +138,7 @@
             baseVal = OBJECT_TO_JS2VAL(aInst);
             for (uint16 i = 0; i < argCount; i++) {
                 b = pop();
-                meta->createDynamicProperty(aInst, numberToString((argCount - 1) - i), b, false, true);
+                meta->createDynamicProperty(aInst, numberToString((argCount - 1) - i), b, ReadWriteAccess, false, true);
             }
             setLength(meta, aInst, argCount);
             push(baseVal);

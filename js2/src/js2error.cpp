@@ -61,8 +61,7 @@ js2val error_ConstructorCore(JS2Metadata *meta, JS2Class *errorClass, js2val arg
     js2val thatValue = OBJECT_TO_JS2VAL(obj);
 
     if (!JS2VAL_IS_VOID(arg)) {
-        Multiname mn(&meta->world.identifiers["message"], meta->publicNamespace);
-        meta->writeDynamicProperty(obj, &mn, true, meta->engine->allocString(meta->toString(arg)), RunPhase);
+        errorClass->writePublic(meta, thatValue, errorClass, &meta->world.identifiers["message"], true, meta->engine->allocString(meta->toString(arg)));
     }
 
     return thatValue;
@@ -110,9 +109,9 @@ js2val Error_toString(JS2Metadata *meta, const js2val thisValue, js2val *argv, u
     js2val result;
     LookupKind lookup(false, JS2VAL_NULL);
     Multiname mn(&meta->world.identifiers["message"], meta->publicNamespace);
-    js2val a = thisValue;
 
-    if (meta->readProperty(&a, &mn, &lookup, RunPhase, &result)) {
+    JS2Class *c = meta->objectType(thisValue);
+    if (c->readPublic(meta, thisValue, c, &meta->world.identifiers["message"], RunPhase, &result)) {
         if (JS2VAL_IS_STRING(result))
             return result;
         else
@@ -126,10 +125,10 @@ static void initErrorClass(JS2Metadata *meta, JS2Class *c, Constructor *construc
 {
 // XXX Or make 'name' a static class member?
     c->construct = constructor;
-    c->prototype = new SimpleInstance(meta, JS2VAL_NULL, c);
-    js2val nameVal = meta->engine->allocString(c->name);
-    QualifiedName qName(meta->publicNamespace, &meta->world.identifiers["name"])
-    meta->createDynamicProperty(c->prototype, &qName, nameVal, true, true);
+    c->prototype = OBJECT_TO_JS2VAL(new SimpleInstance(meta, JS2VAL_NULL, c));
+    js2val nameVal = meta->engine->allocString(c->getName());
+    QualifiedName qName(meta->publicNamespace, &meta->world.identifiers["name"]);
+    meta->createDynamicProperty(JS2VAL_TO_OBJECT(c->prototype), &qName, nameVal, ReadAccess, true, true);
 }
 
 void initErrorObject(JS2Metadata *meta)
@@ -153,11 +152,12 @@ void initErrorObject(JS2Metadata *meta)
 
     PrototypeFunction *pf = &errorProtos[0];
     while (pf->name) {
-        SimpleInstance *fInst = new SimpleInstance(meta->functionClass);
+        SimpleInstance *fInst = new SimpleInstance(meta, meta->functionClass->prototype, meta->functionClass);
         fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), pf->code, meta->env);
     
-        InstanceMember *m = new InstanceMethod(fInst);
-        meta->defineInstanceMember(meta->errorClass, &meta->cxt, &meta->world.identifiers[pf->name], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, m, 0);
+        Multiname *mn = new Multiname(&meta->world.identifiers[pf->name], &publicNamespaceList);
+        InstanceMember *m = new InstanceMethod(mn, fInst, true, false);
+        meta->defineInstanceMember(meta->errorClass, &meta->cxt, mn->name, mn->nsList, Attribute::NoOverride, false, m, 0);
         pf++;
     }
 

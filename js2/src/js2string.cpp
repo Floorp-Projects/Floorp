@@ -65,10 +65,7 @@ js2val String_Constructor(JS2Metadata *meta, const js2val /*thisValue*/, js2val 
     else
         strInst->mValue = meta->engine->allocStringPtr("");
 
-    DynamicPropertyBinding *dpb = new DynamicPropertyBinding(*meta->engine->length_StringAtom, 
-                                                        DynamicPropertyValue(meta->engine->allocNumber(strInst->mValue->length()), 
-                                                        DynamicPropertyValue::READONLY | DynamicPropertyValue::PERMANENT));
-    strInst->dynamicProperties.insert(dpb->name, dpb); 
+    meta->createDynamicProperty(strInst, meta->engine->length_StringAtom, meta->engine->allocNumber(strInst->mValue->length()), ReadAccess, true, false);
     return thatValue;
 }
 
@@ -93,8 +90,8 @@ js2val String_fromCharCode(JS2Metadata *meta, const js2val /*thisValue*/, js2val
 static js2val String_toString(JS2Metadata *meta, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
 {
     if (!JS2VAL_IS_OBJECT(thisValue) 
-            || (JS2VAL_TO_OBJECT(thisValue)->kind != PrototypeInstanceKind)
-            || ((checked_cast<PrototypeInstance *>(JS2VAL_TO_OBJECT(thisValue)))->type != meta->stringClass))
+            || (JS2VAL_TO_OBJECT(thisValue)->kind != SimpleInstanceKind)
+            || ((checked_cast<SimpleInstance *>(JS2VAL_TO_OBJECT(thisValue)))->type != meta->stringClass))
         meta->reportError(Exception::typeError, "String.toString called on something other than a string thing", meta->engine->errorPos());
     StringInstance *strInst = checked_cast<StringInstance *>(JS2VAL_TO_OBJECT(thisValue));
     return STRING_TO_JS2VAL(strInst->mValue);
@@ -103,8 +100,8 @@ static js2val String_toString(JS2Metadata *meta, const js2val thisValue, js2val 
 static js2val String_valueOf(JS2Metadata *meta, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
 {
     if (!JS2VAL_IS_OBJECT(thisValue) 
-            || (JS2VAL_TO_OBJECT(thisValue)->kind != PrototypeInstanceKind)
-            || ((checked_cast<PrototypeInstance *>(JS2VAL_TO_OBJECT(thisValue)))->type != meta->stringClass))
+            || (JS2VAL_TO_OBJECT(thisValue)->kind != SimpleInstanceKind)
+            || ((checked_cast<SimpleInstance *>(JS2VAL_TO_OBJECT(thisValue)))->type != meta->stringClass))
         meta->reportError(Exception::typeError, "String.valueOf called on something other than a string thing", meta->engine->errorPos());
     StringInstance *strInst = checked_cast<StringInstance *>(JS2VAL_TO_OBJECT(thisValue));
     return STRING_TO_JS2VAL(strInst->mValue);
@@ -171,7 +168,7 @@ static js2val String_match(JS2Metadata *meta, const js2val thisValue, js2val *ar
         return RegExp_exec(meta, regexp, &S, 1);                
     }
     else {
-        PrototypeInstance *A = new ArrayInstance(meta, meta->arrayClass->prototype, meta->arrayClass);
+        ArrayInstance *A = new ArrayInstance(meta, meta->arrayClass->prototype, meta->arrayClass);
         RootKeeper rk(&A);
         int32 index = 0;
         int32 lastIndex = 0;
@@ -184,9 +181,8 @@ static js2val String_match(JS2Metadata *meta, const js2val thisValue, js2val *ar
             else
                 lastIndex = match->endIndex;
             js2val matchStr = meta->engine->allocString(JS2VAL_TO_STRING(S)->substr(toUInt32(match->startIndex), toUInt32(match->endIndex) - match->startIndex));
-            Multiname mname(&meta->world.identifiers[*meta->engine->numberToString(index)], meta->publicNamespace);
             index++;
-            meta->writeDynamicProperty(A, &mname, true, matchStr, RunPhase);
+            meta->arrayClass->writePublic(meta, OBJECT_TO_JS2VAL(A), meta->arrayClass, meta->engine->numberToString(index), true, matchStr);
         }
         thisInst->setLastIndex(meta, meta->engine->allocNumber((float64)lastIndex));
         return OBJECT_TO_JS2VAL(A);
@@ -440,7 +436,6 @@ static js2val String_split(JS2Metadata *meta, const js2val thisValue, js2val *ar
         return JSValue(A);
     }
 */
-    Multiname mn(NULL, meta->publicNamespace);
     if (s == 0) {
         MatchResult z;
         if (RE)
@@ -449,8 +444,7 @@ static js2val String_split(JS2Metadata *meta, const js2val thisValue, js2val *ar
             strSplitMatch(S, 0, R, z);
         if (!z.failure)
             return result;
-        mn.name = meta->engine->numberToString((int32)0);       // XXX
-        meta->writeDynamicProperty(A, &mn, true, STRING_TO_JS2VAL(S), RunPhase);
+        meta->arrayClass->writePublic(meta, OBJECT_TO_JS2VAL(A), meta->arrayClass, meta->engine->numberToString((int32)0), true, STRING_TO_JS2VAL(S));
         return result;
     }
 
@@ -459,8 +453,7 @@ static js2val String_split(JS2Metadata *meta, const js2val thisValue, js2val *ar
 step11:
         if (q == s) {
             js2val v = meta->engine->allocString(new String(*S, p, (s - p)));
-            mn.name = meta->engine->numberToString(getLength(meta, A));
-            meta->writeDynamicProperty(A, &mn, true, v, RunPhase);
+            meta->arrayClass->writePublic(meta, OBJECT_TO_JS2VAL(A), meta->arrayClass, meta->engine->numberToString(getLength(meta, A)), true, v);
             return result;
         }
         MatchResult z;
@@ -479,15 +472,13 @@ step11:
         }
         String *T = meta->engine->allocStringPtr(new String(*S, p, (q - p)));   // XXX
         js2val v = STRING_TO_JS2VAL(T);
-        mn.name = meta->engine->numberToString(getLength(meta, A));
-        meta->writeDynamicProperty(A, &mn, true, v, RunPhase);
+        meta->arrayClass->writePublic(meta, OBJECT_TO_JS2VAL(A), meta->arrayClass, meta->engine->numberToString(getLength(meta, A)), true, v);
         if (getLength(meta, A) == lim)
             return result;
         p = e;
 
         for (uint32 i = 0; i < z.capturesCount; i++) {
-            mn.name = meta->engine->numberToString(getLength(meta, A));
-            meta->writeDynamicProperty(A, &mn, true, z.captures[i], RunPhase);
+            meta->arrayClass->writePublic(meta, OBJECT_TO_JS2VAL(A), meta->arrayClass, meta->engine->numberToString(getLength(meta, A)), true, z.captures[i]);
             if (getLength(meta, A) == lim)
                 return result;
         }
@@ -794,13 +785,10 @@ void initStringObject(JS2Metadata *meta)
     };
 
     StringInstance *strInst = new StringInstance(meta, meta->objectClass->prototype, meta->stringClass);
-    meta->stringClass->prototype = strInst;
+    meta->stringClass->prototype = OBJECT_TO_JS2VAL(strInst);
     strInst->mValue = meta->engine->allocStringPtr("");
 
-    DynamicPropertyBinding *dpb = new DynamicPropertyBinding(*meta->engine->length_StringAtom, 
-                                                        DynamicPropertyValue(meta->engine->allocNumber(strInst->mValue->length()), 
-                                                        DynamicPropertyValue::READONLY | DynamicPropertyValue::PERMANENT));
-    strInst->dynamicProperties.insert(dpb->name, dpb); 
+    meta->createDynamicProperty(strInst, meta->engine->length_StringAtom, meta->engine->allocNumber(strInst->mValue->length()), ReadAccess, true, false);
     meta->initBuiltinClass(meta->stringClass, &prototypeFunctions[0], &staticFunctions[0], String_Constructor, String_Call);
 
 }

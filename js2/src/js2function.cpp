@@ -89,7 +89,7 @@ namespace MetaData {
             FunctionInstance *fnInst = checked_cast<FunctionInstance *>(JS2VAL_TO_OBJECT(thatValue));
             fnInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), meta->env);
             fnInst->fWrap->bCon->emitOp(eReturnVoid, meta->engine->errorPos());
-            fnInst->writeProperty(meta, meta->engine->length_StringAtom, INT_TO_JS2VAL(0), DynamicPropertyValue::READONLY);
+            meta->createDynamicProperty(fnInst, meta->engine->length_StringAtom, INT_TO_JS2VAL(0), ReadAccess, true, false);
             return thatValue;
         }
     }
@@ -97,8 +97,8 @@ namespace MetaData {
     static js2val Function_toString(JS2Metadata *meta, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
     {
         if (!JS2VAL_IS_OBJECT(thisValue) 
-                || (JS2VAL_TO_OBJECT(thisValue)->kind != PrototypeInstanceKind)
-                || ((checked_cast<PrototypeInstance *>(JS2VAL_TO_OBJECT(thisValue)))->type != meta->functionClass))
+                || (JS2VAL_TO_OBJECT(thisValue)->kind != SimpleInstanceKind)
+                || ((checked_cast<SimpleInstance *>(JS2VAL_TO_OBJECT(thisValue)))->type != meta->functionClass))
             meta->reportError(Exception::typeError, "Function.toString called on something other than a function thing", meta->engine->errorPos());
 //        FunctionInstance *fnInst = checked_cast<FunctionInstance *>(JS2VAL_TO_OBJECT(thisValue));
         return STRING_TO_JS2VAL(meta->engine->Function_StringAtom);
@@ -107,8 +107,8 @@ namespace MetaData {
     static js2val Function_valueOf(JS2Metadata *meta, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
     {
         if (!JS2VAL_IS_OBJECT(thisValue) 
-                || (JS2VAL_TO_OBJECT(thisValue)->kind != PrototypeInstanceKind)
-                || ((checked_cast<PrototypeInstance *>(JS2VAL_TO_OBJECT(thisValue)))->type != meta->functionClass))
+                || (JS2VAL_TO_OBJECT(thisValue)->kind != SimpleInstanceKind)
+                || ((checked_cast<SimpleInstance *>(JS2VAL_TO_OBJECT(thisValue)))->type != meta->functionClass))
             meta->reportError(Exception::typeError, "Function.valueOf called on something other than a function thing", meta->engine->errorPos());
 //        FunctionInstance *nfInst = checked_cast<FunctionInstance *>(JS2VAL_TO_OBJECT(thisValue));
         return STRING_TO_JS2VAL(meta->engine->Function_StringAtom);
@@ -123,7 +123,7 @@ namespace MetaData {
             { NULL }
         };
 
-        meta->functionClass->prototype = new FunctionInstance(meta, meta->objectClass->prototype, meta->functionClass);
+        meta->functionClass->prototype = OBJECT_TO_JS2VAL(new FunctionInstance(meta, meta->objectClass->prototype, meta->functionClass));
         meta->initBuiltinClass(meta->functionClass, &prototypeFunctions[0], NULL, Function_Constructor, Function_Constructor);
     }
 

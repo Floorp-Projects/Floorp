@@ -65,6 +65,7 @@ namespace JavaScript {
         class Multiname;
         class FunctionWrapper;
         class BlockFrame;
+        class FunctionInstance;
         typedef uint32 LabelID;
     }
 #endif
@@ -148,7 +149,8 @@ namespace JavaScript {
         JS2Runtime::JSObject *scope;    // ditto
 #endif
 #ifdef EPIMETHEUS
-        MetaData::Member *member;           // the associated definition...
+        MetaData::Member *member;           // the associated definition,
+        MetaData::Member *overridden;       // overridden member...
         MetaData::Multiname *mn;            // ...and name constructed by the semantics phase
 #endif
 
@@ -396,7 +398,7 @@ namespace JavaScript {
 
         void print(PrettyPrinter &f) const;
 #ifdef EPIMETHEUS
-		MetaData::JS2Object *obj;		// used by backend to store the function object
+		MetaData::FunctionInstance *obj;		// used by backend to store the function object
 #endif
     };
 

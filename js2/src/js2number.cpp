@@ -78,8 +78,8 @@ namespace MetaData {
     static js2val Number_toString(JS2Metadata *meta, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
     {
         if (!JS2VAL_IS_OBJECT(thisValue) 
-                || (JS2VAL_TO_OBJECT(thisValue)->kind != PrototypeInstanceKind)
-                || ((checked_cast<PrototypeInstance *>(JS2VAL_TO_OBJECT(thisValue)))->type != meta->numberClass))
+                || (JS2VAL_TO_OBJECT(thisValue)->kind != SimpleInstanceKind)
+                || ((checked_cast<SimpleInstance *>(JS2VAL_TO_OBJECT(thisValue)))->type != meta->numberClass))
             meta->reportError(Exception::typeError, "Number.toString called on something other than a number thing", meta->engine->errorPos());
         NumberInstance *numInst = checked_cast<NumberInstance *>(JS2VAL_TO_OBJECT(thisValue));
         return STRING_TO_JS2VAL(meta->engine->numberToString(&numInst->mValue));
@@ -88,8 +88,8 @@ namespace MetaData {
     static js2val Number_valueOf(JS2Metadata *meta, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
     {
         if (!JS2VAL_IS_OBJECT(thisValue) 
-                || (JS2VAL_TO_OBJECT(thisValue)->kind != PrototypeInstanceKind)
-                || ((checked_cast<PrototypeInstance *>(JS2VAL_TO_OBJECT(thisValue)))->type != meta->numberClass))
+                || (JS2VAL_TO_OBJECT(thisValue)->kind != SimpleInstanceKind)
+                || ((checked_cast<SimpleInstance *>(JS2VAL_TO_OBJECT(thisValue)))->type != meta->numberClass))
             meta->reportError(Exception::typeError, "Number.valueOf called on something other than a number thing", meta->engine->errorPos());
         NumberInstance *numInst = checked_cast<NumberInstance *>(JS2VAL_TO_OBJECT(thisValue));
         return meta->engine->allocNumber(numInst->mValue);
@@ -133,7 +133,7 @@ namespace MetaData {
             { NULL }
         };
 
-        meta->numberClass->prototype = new NumberInstance(meta, meta->objectClass->prototype, meta->numberClass);
+        meta->numberClass->prototype = OBJECT_TO_JS2VAL(new NumberInstance(meta, meta->objectClass->prototype, meta->numberClass));
         meta->initBuiltinClass(meta->numberClass, &prototypeFunctions[0], NULL, Number_Constructor, Number_Call);
 
     }

@@ -68,7 +68,8 @@
                     LookupKind lookup(true, JS2VAL_NULL);   // make it a lexical lookup since we want it to
                                                             // fail if 'prototype' hasn't been defined
                                                             // XXX (prototype should always exist for functions)
-                    if (meta->readProperty(&a, &mn, &lookup, RunPhase, &protoVal)) {
+                    JS2Class *limit = meta->objectType(a);
+                    if (limit->read(meta, a, limit, &mn, &lookup, RunPhase, &protoVal)) {
                         if (!JS2VAL_IS_OBJECT(protoVal))
                             meta->reportError(Exception::badValueError, "Non-object prototype value", errorPos());
                     }

@@ -200,12 +200,10 @@ namespace MetaData {
     // function result value.
     bool JS2Metadata::invokeFunctionOnObject(js2val thisValue, const String *fnName, js2val &result)
     {
-        Multiname mn(fnName, publicNamespace);
-        LookupKind lookup(true, JS2VAL_NULL);   // XXX using lexical lookup since we want readProperty to fail
-                                                // if the function isn't defined
         js2val fnVal;
 
-        if (readProperty(&thisValue, &mn, &lookup, RunPhase, &fnVal)) {
+        JS2Class *limit = objectType(thisValue);
+        if (limit->readPublic(this, thisValue, limit, fnName, RunPhase, &fnVal)) {
             if (JS2VAL_IS_OBJECT(fnVal)) {
                 JS2Object *fnObj = JS2VAL_TO_OBJECT(fnVal);
                 result = invokeFunction(fnObj, thisValue, NULL, 0);

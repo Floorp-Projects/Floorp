@@ -340,13 +340,13 @@ void initMathObject(JS2Metadata *meta)
     meta->env->addFrame(meta->mathClass);
     FunctionData *pf = &prototypeFunctions[0];
     while (pf->name) {
-        SimpleInstance *callInst = new SimpleInstance(meta->functionClass);
+        SimpleInstance *callInst = new SimpleInstance(meta, meta->functionClass->prototype, meta->functionClass);
         callInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), pf->code, meta->env);
         Variable *v = new Variable(meta->functionClass, OBJECT_TO_JS2VAL(callInst), true);
         meta->defineLocalMember(meta->env, &meta->world.identifiers[pf->name], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
 
         // XXX add 'length' as a dynamic property of the method
-        meta->writeDynamicProperty(callInst, new Multiname(meta->engine->length_StringAtom, meta->publicNamespace), true, INT_TO_JS2VAL(pf->length), RunPhase);
+        meta->createDynamicProperty(callInst, meta->engine->length_StringAtom, INT_TO_JS2VAL(pf->length), ReadAccess, true, false);
         
         pf++;
     }
