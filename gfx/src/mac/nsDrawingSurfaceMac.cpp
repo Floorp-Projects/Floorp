@@ -121,19 +121,26 @@ NS_IMETHODIMP nsDrawingSurfaceMac :: Lock(PRInt32 aX, PRInt32 aY,
                                           void **aBits, PRInt32 *aStride,
                                           PRInt32 *aWidthBytes, PRUint32 aFlags)
 {
-GWorldPtr 		offscreenGWorld;
-PixMapHandle	thePixMap;
+  char*					baseaddr;
+  PRInt32				cmpSize, rowBytes;
+  GWorldPtr 		offscreenGWorld;
+  PixMapHandle	thePixMap;
 
 
-	if((mIsLocked == PR_FALSE) && mIsOffscreen && mPort){
-		// get the offscreen gworld for our use
-  	offscreenGWorld = (GWorldPtr)mPort;
-		// calculate the pixel data size
-		thePixMap = ::GetGWorldPixMap(offscreenGWorld);
-  	*aWidthBytes = *aStride = (**thePixMap).rowBytes & 0x3FFF;
-  	*aBits = GetPixBaseAddr(thePixMap);
-		mIsLocked = PR_TRUE;
-		}
+  if ((mIsLocked == PR_FALSE) && mIsOffscreen && mPort) {
+    // get the offscreen gworld for our use
+    offscreenGWorld = (GWorldPtr)mPort;
+
+    // calculate the pixel data size
+    thePixMap = ::GetGWorldPixMap(offscreenGWorld);
+    baseaddr = GetPixBaseAddr(thePixMap);
+    cmpSize = ((**thePixMap).pixelSize >> 3);
+    rowBytes = (**thePixMap).rowBytes & 0x3FFF;
+    *aBits = baseaddr + (aX * cmpSize) + aY * rowBytes;
+    *aStride = rowBytes;
+    *aWidthBytes = aWidth * cmpSize;
+    mIsLocked = PR_TRUE;
+  }
 
   return NS_OK;
 }
@@ -200,6 +207,7 @@ GrafPtr	gport;
 	mPort = gport;
 	mGS->Init(surface);
 	
+	
   return NS_OK;
 }
 
@@ -243,6 +251,9 @@ GWorldPtr offscreenGWorld;
 GrafPtr 	savePort;
 
   depth = aDepth;
+  mWidth = aWidth;
+  mHeight = aHeight;
+  
 
 	// calculate the rectangle
   if (aWidth != 0){
