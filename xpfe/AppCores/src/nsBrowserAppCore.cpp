@@ -495,7 +495,16 @@ nsBrowserAppCore::LoadUrl(const nsString& aUrl)
 
 
   /* Ask nsWebShell to load the URl */
-  mContentAreaWebShell->LoadURL(nsString(urlstr), nsnull, PR_TRUE);
+  nsString id;
+  GetId(id);
+  if ( id.Find("ViewSource") == 0 ) {
+    // Viewing source, load with "view-source" command.
+    mContentAreaWebShell->LoadURL(nsString(urlstr), "view-source", nsnull, PR_FALSE );
+  } else {
+    // Normal browser.
+    mContentAreaWebShell->LoadURL(nsString(urlstr));
+  }
+
   delete[] urlstr;
 
   return NS_OK;
@@ -602,7 +611,8 @@ static nsresult setAttribute( nsIWebShell *shell,
     nsresult rv = NS_OK;
 
     nsCOMPtr<nsIContentViewer> cv;
-    rv = shell->GetContentViewer(getter_AddRefs(cv));
+    rv = shell ? shell->GetContentViewer(getter_AddRefs(cv))
+               : NS_ERROR_NULL_POINTER;
     if ( cv ) {
         // Up-cast.
         nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(cv));
@@ -666,7 +676,7 @@ nsBrowserAppCore::OnEndDocumentLoad(nsIURL *aUrl, PRInt32 aStatus)
 
     // Update global history.
     NS_ASSERTION(mGHistory != nsnull, "history not initialized");
-    if (mGHistory) {
+    if (mGHistory && mWebShell) {
         nsresult rv;
 
         nsAutoString url(spec);
@@ -1315,7 +1325,9 @@ nsBrowserAppCore::OpenWindow()
   if (fileWidget->GetFile(nsnull, title, fileSpec) == nsFileDlgResults_OK) {
 
   nsFileURL fileURL(fileSpec);
-  printf("If I could open a new window with [%s] I would.\n", (const char *)nsAutoCString(fileURL.GetAsString()));
+  char buffer[1024];
+  PR_snprintf( buffer, sizeof buffer, "OpenFile(\"%s\")", (const char*)nsAutoCString(fileURL.GetAsString()) );
+  ExecuteScript( mToolbarScriptContext, buffer );
   }
 #endif
   NS_RELEASE(fileWidget);
