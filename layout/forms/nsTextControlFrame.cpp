@@ -690,8 +690,27 @@ nsTextInputSelectionImpl::GetSelection(PRInt16 type, nsISelection **_retval)
 NS_IMETHODIMP
 nsTextInputSelectionImpl::ScrollSelectionIntoView(PRInt16 aType, PRInt16 aRegion, PRBool aIsSynchronous)
 {
-  if (mFrameSelection)
-    return mFrameSelection->ScrollSelectionIntoView(aType, aRegion, aIsSynchronous);
+  if (mFrameSelection) {
+    nsresult rv = mFrameSelection->ScrollSelectionIntoView(aType, aRegion, aIsSynchronous);
+
+    nsIScrollableView* scrollableView = nsnull;
+    GetScrollableView(&scrollableView);
+    if (!scrollableView) {
+      return rv;
+    }
+    nsIView* view = nsnull;
+    scrollableView->GetScrolledView(view);
+    if (!view) {
+      return rv;
+    }
+    const nsRect portRect = scrollableView->View()->GetBounds();
+    const nsRect viewRect = view->GetBounds();
+    if (viewRect.XMost() < portRect.width) {
+      return scrollableView->ScrollTo(PR_MAX(viewRect.width - portRect.width, 0), viewRect.y, 0);
+    }
+
+    return rv;
+  }
   return NS_ERROR_NULL_POINTER;
 }
 
