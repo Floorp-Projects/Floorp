@@ -30,7 +30,8 @@ struct nsStylePosition;
 
 class nsBodyFrame : public nsHTMLContainerFrame,
                     public nsIAnchoredItems,
-                    public nsIAbsoluteItems {
+                    public nsIAbsoluteItems
+{
 public:
   static nsresult NewFrame(nsIFrame** aInstancePtrResult,
                            nsIContent* aContent,
@@ -75,6 +76,12 @@ public:
   NS_IMETHOD  RemoveAbsoluteItem(nsAbsoluteFrame* aAnchorFrame);
 
   NS_IMETHOD VerifyTree() const;
+
+  // nsContainerFrame
+  virtual void PropagateContentOffsets(nsIFrame* aChild,
+                                       PRInt32 aFirstContentOffset,
+                                       PRInt32 aLastContentOffset,
+                                       PRBool aLastContentIsComplete);
 
 protected:
   PRBool  mIsPseudoFrame;

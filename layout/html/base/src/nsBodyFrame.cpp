@@ -388,6 +388,30 @@ void nsBodyFrame::AddFrame(nsIFrame* aFrame)
   mChildCount++;
 }
 
+void
+nsBodyFrame::PropagateContentOffsets(nsIFrame* aChild,
+                                     PRInt32 aFirstContentOffset,
+                                     PRInt32 aLastContentOffset,
+                                     PRBool aLastContentIsComplete)
+{
+  NS_PRECONDITION(ChildIsPseudoFrame(aChild), "not a pseudo frame");
+
+  // First update our offsets
+  if (mFirstChild == aChild) {
+    mFirstContentOffset = aFirstContentOffset;
+    mLastContentOffset = aLastContentOffset;
+    mLastContentIsComplete = aLastContentIsComplete;
+  }
+
+  // If we are a pseudo-frame then we need to update our parent
+  if (IsPseudoFrame()) {
+    nsContainerFrame* parent = (nsContainerFrame*) mGeometricParent;
+    parent->PropagateContentOffsets(this, mFirstContentOffset,
+                                    mLastContentOffset,
+                                    mLastContentIsComplete);
+  }
+}
+
 /////////////////////////////////////////////////////////////////////////////
 // nsIAnchoredItems
 
