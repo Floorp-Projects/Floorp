@@ -52,24 +52,18 @@
 
 <BODY TEXT="#000000" BGCOLOR="#CCCCFF" LINK="#FFFFFF" VLINK="#FFFFFF" ALINK="#0000FF" onLoad='moveNavLayer()'>
 
-<P CLASS="title"><B>Removing the Previews</B></P>
+<P CLASS="title"><B>Hiding the Introduction Screens</B></P>
 
-<P>If you don't want Account Setup to display one of the Previews to your users, you can remove the link to the Preview found in the first screen of Account Setup. You don't need to remove the Preview's HTML files from the dialup package folder. </P>
+<P>If you don't want the opening screen of Account Setup to display the Internet Preview, the Communicator Preview, or the Set Up Communicator screens, you can hide these screens so that they don't appear. </P>
 
-<P>Note that you can't remove just one of the screens from a Preview without changing the JavaScript in Account Setup--the screens are linked as a sequence. For more information about changing JavaScript in Account Setup, click [BACK], below.</P>
-
-<P>To remove a Preview from Account Setup, follow these steps:</P>
+<P>To remove the Introduction screens, follow these steps:</P>
 
 		<OL>
 		<LI>Using the Account Setup navigation pane, move back to the first screen of Account Setup.</LI>
 		<spacer type=vertical size=3>
-		<LI>Click <B>Choose Editor</B> in the Toolbar to specify your text or HTML editor (if you haven't already).</LI>
+		<LI>Click <B>Screen Options</B> in the Toolbar.</LI>
 		<spacer type=vertical size=3>
-		<LI>Click <B>Edit Screen</B> in the Toolbar. The Account Setup Editor opens the screen's HTML file in your text or HTML editor. </LI>
-		<spacer type=vertical size=3>
-		<LI>In the HTML file, locate the <TT>&#60;!-- Previews --&#62;</TT> comment. It identifies the table that contains the links to the Previews.</LI>
-		<spacer type=vertical size=3>
-		<LI>Delete the appropriate rows from the table, as explained in the comments embedded in the table.</LI>
+		<LI>Uncheck the <B>Show Account Setup Introduction Screens</B> checkbox.</LI>
 		</OL>
 
 
