@@ -558,7 +558,8 @@ nsMsgAccountManager::createKeyedServer(const char* key,
   PR_smprintf_free(NS_CONST_CAST(char*, serverProgID));
   if (NS_FAILED(rv)) return rv;
   
-  server->SetKey(NS_CONST_CAST(char *,key));
+  server->SetKey(key);
+  server->SetType(type);
 
   nsStringKey hashKey(key);
 
