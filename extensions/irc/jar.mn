@@ -15,7 +15,6 @@ packages/chatzilla.jar:
 	chatzilla/content/rdf.js                     (xul/content/rdf.js)
 	chatzilla/content/chatzillaOverlay.xul       (xul/content/chatzillaOverlay.xul) 
 	chatzilla/content/chatzillaOverlay.js        (xul/content/chatzillaOverlay.js)
-	chatzilla/content/pref/pref-irc.xul          (xul/content/pref-irc.xul)
 	chatzilla/skin/chatzilla.css                 (xul/skin/chatzilla.css)
 	chatzilla/skin/output-default.css            (xul/skin/output-default.css) 
 	chatzilla/skin/output-loud.css               (xul/skin/output-loud.css)
@@ -45,3 +44,6 @@ packages/chatzilla.jar:
 
 locales/en-US.jar:
 	communicator/locale/pref/pref-irc.dtd        (xul/locale/en-US/pref-irc.dtd)
+
+packages/core.jar:
+	communicator/content/pref/pref-irc.xul          (xul/content/pref-irc.xul)
