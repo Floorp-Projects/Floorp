@@ -393,7 +393,16 @@ PRInt32 TimerThread::AddTimerInternal(nsTimerImpl *aTimer)
   for (; i < count; i++) {
     nsTimerImpl *timer = NS_STATIC_CAST(nsTimerImpl *, mTimers[i]);
 
-    if (TIMER_LESS_THAN(now, timer->mTimeout + mTimeoutAdjustment) &&
+    // Don't break till we have skipped any overdue timers.  Do not include
+    // mTimeoutAdjustment here, because we are really trying to avoid calling
+    // TIMER_LESS_THAN(t, u), where the t is now + DELAY_INTERVAL_MAX, u is
+    // now - overdue, and DELAY_INTERVAL_MAX + overdue > DELAY_INTERVAL_LIMIT.
+    // In other words, we want to use now-based time, now adjusted time, even
+    // though "overdue" ultimately depends on adjusted time.
+
+    // XXX does this hold for TYPE_REPEATING_PRECISE?  /be
+
+    if (TIMER_LESS_THAN(now, timer->mTimeout) &&
         TIMER_LESS_THAN(aTimer->mTimeout, timer->mTimeout)) {
       break;
     }
