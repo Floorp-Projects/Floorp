@@ -8,12 +8,11 @@ This is Tinderbox.  See <http://www.mozilla.org/tinderbox.html>.
 This is not very well packaged code.  It's not packaged at all.  Don't
 come here expecting something you plop in a directory, twiddle a few
 things, and you're off and using it.  Much work has to be done to get
-there.  I'd like to get there, but it wasn't clear when that would be,
+there.  We'd like to get there, but it wasn't clear when that would be,
 and so we decided to let people see it first.
 
 Don't believe for a minute that you can use this stuff without first
 understanding most of the code.
-
 
 
 	============
@@ -29,6 +28,10 @@ Be warned now that bonsai is not easily installed.
 	====================================
 	What's What in the Tinderbox sources:
 	====================================
+
+This is a rough first pass at cataloging and documenting the Tinderbox
+sources.  Many hands have been in this code over the years, and it has
+accreted wildly.  There is probably quite a lot of dead code in here.
 
 
 1afi003r.gif	The "flames" animation used by ???
