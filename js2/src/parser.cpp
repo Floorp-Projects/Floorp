@@ -935,7 +935,6 @@ void JS::Lexer::lexToken(bool preferRegExp)
 
 				  default:
 					syntaxError("Bad character");
-                    return;
 		    	}
 		    	break;
 
