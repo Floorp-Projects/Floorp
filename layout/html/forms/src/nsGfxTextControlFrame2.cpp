@@ -1349,11 +1349,10 @@ NS_IMETHODIMP nsGfxTextControlFrame2::GetAccessible(nsIAccessible** aAccessible)
 
 nsGfxTextControlFrame2::nsGfxTextControlFrame2(nsIPresShell* aShell):nsStackFrame(aShell)
 {
-  mUseEditor=PR_FALSE;
-  mIsProcessing=PR_FALSE;
+  mUseEditor = PR_FALSE;
+  mIsProcessing = PR_FALSE;
   mNotifyOnInput = PR_FALSE;
   mFormFrame = nsnull;
-  mCachedState = nsnull;
   mSuggestedWidth = NS_FORMSIZE_NOTSET;
   mSuggestedHeight = NS_FORMSIZE_NOTSET;
   mScrollableView = nsnull;
@@ -1369,18 +1368,22 @@ NS_IMETHODIMP
 nsGfxTextControlFrame2::Destroy(nsIPresContext* aPresContext)
 {
   // notify the editor that we are going away
-  if (mEditor) {
-    nsAutoString value;
-    GetTextControlFrameState(value);
-    // Tell the content the final value
-    nsCOMPtr<nsITextControlElement> control = do_QueryInterface(mContent);
-    if (control) {
-      // This really shouldn't be commented out, this is a workaround
-      // to fix a problem with input's losing their values when
-      // demoting a container
-      // (HTMLContentSink::DemoteContainer()). This is a workaround
-      // for blocker bug 108175.
-//      control->SetValueInternal(value);
+  if (mEditor)
+  {
+    // If we were in charge of state before, relinquish it back
+    // to the control.
+    if (mUseEditor)
+    {
+      // First get the frame state from the editor
+      nsAutoString value;
+      GetTextControlFrameState(value);
+
+      mUseEditor = PR_FALSE;
+
+      // Next store the frame state in the control
+      // (now that mUseEditor is false values get stored
+      // in content).
+      SetTextControlFrameState(value);
     }
     mEditor->PreDestroy();
   }
@@ -1419,8 +1422,6 @@ nsGfxTextControlFrame2::Destroy(nsIPresContext* aPresContext)
   mSelCon = 0;
   mEditor = 0;
   
-  InvalidateCachedState();
-
 //unregister self from content
   mTextListener->SetFrame(nsnull);
   nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
@@ -1873,29 +1874,22 @@ nsGfxTextControlFrame2::SetInitialValue()
   if (mUseEditor)
     return NS_OK;
 
-  // If the editor is not here, return failure.
+  // If the editor is not here, then we can't use it, now can we?
   if (!mEditor)
     return NS_ERROR_NOT_INITIALIZED;
 
-  // Get the current value of the textfield.
+  // Get the current value of the textfield from the content.
   nsAutoString defaultValue;
-  // If we have a cached state, use that.
-  if (mCachedState) {
-    defaultValue = mCachedState->get();
-  } else {
-    // The content will know to get the default value if it needs to.
-    nsCOMPtr<nsITextControlElement> control = do_QueryInterface(mContent);
-    if (control) {
-      control->GetValueInternal(defaultValue);
-    }
-  }
+  GetTextControlFrameState(defaultValue);
+
+  // Turn on mUseEditor so that subsequent calls will use the
+  // editor.
+  mUseEditor = PR_TRUE;
 
   // If we have a default value, insert it under the div we created
   // above, but be sure to use the editor so that '*' characters get
   // displayed for password fields, etc. SetTextControlFrameState()
   // will call the editor for us.
-
-  mUseEditor = PR_TRUE;
 
   if (!defaultValue.IsEmpty()) {
     PRUint32 editorFlags = 0;
@@ -1941,9 +1935,6 @@ nsGfxTextControlFrame2::SetInitialValue()
     if (NS_FAILED(rv))
       return rv;
   }
-
-  // Free mCachedState since we don't need it anymore!
-  InvalidateCachedState();
 
   return NS_OK;
 }
@@ -3222,8 +3213,6 @@ nsGfxTextControlFrame2::InternalContentChanged()
 
   if (!mContent) { return NS_ERROR_NULL_POINTER; }
 
-  InvalidateCachedState();
-  
   if (PR_FALSE==mNotifyOnInput) { 
     return NS_OK; // if notification is turned off, just return ok
   } 
@@ -3282,16 +3271,6 @@ nsGfxTextControlFrame2::CallOnChange()
 //======
 //privates
 
-void
-nsGfxTextControlFrame2::InvalidateCachedState()
-{
-  if (mCachedState)
-  {
-    delete mCachedState;
-    mCachedState = nsnull;
-  }
-}
-
 void nsGfxTextControlFrame2::GetTextControlFrameState(nsAWritableString& aValue)
 {
   aValue.Truncate();  // initialize out param
@@ -3300,7 +3279,8 @@ void nsGfxTextControlFrame2::GetTextControlFrameState(nsAWritableString& aValue)
   {
     PRUint32 flags = nsIDocumentEncoder::OutputLFLineBreak;;
 
-    if (PR_TRUE==IsPlainTextControl()) {
+    if (PR_TRUE==IsPlainTextControl())
+    {
       flags |= nsIDocumentEncoder::OutputBodyOnly;
     }
 
@@ -3317,8 +3297,15 @@ void nsGfxTextControlFrame2::GetTextControlFrameState(nsAWritableString& aValue)
 
     mEditor->OutputToString(aValue, NS_LITERAL_STRING("text/plain"), flags);
   }
-  else if (mCachedState)
-    aValue.Assign(*mCachedState);
+  else
+  {
+    // Otherwise get the value from content.
+    nsCOMPtr<nsITextControlElement> control = do_QueryInterface(mContent);
+    if (control)
+    {
+      control->GetValueInternal(aValue);
+    }
+  }
 }
 
 
@@ -3392,13 +3379,12 @@ nsGfxTextControlFrame2::SetTextControlFrameState(const nsAReadableString& aValue
   }
   else
   {
-    if (!mCachedState)
+    // Otherwise get the value from content.
+    nsCOMPtr<nsITextControlElement> control = do_QueryInterface(mContent);
+    if (control)
     {
-      mCachedState = new nsString;
-      if (!mCachedState)
-        return;
+      control->SetValueInternal(aValue);
     }
-    mCachedState->Assign(aValue); //store value for later initialization;
   }
 }
 
