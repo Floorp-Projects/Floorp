@@ -1159,7 +1159,17 @@ void nsFontMetricsGTK::RealizeFont()
   // 56% of ascent, best guess for non-true type
   mXHeight = NSToCoordRound((float) fontInfo->ascent* f * 0.56f);
 
-  gint rawWidth = gdk_text_width(mWesternFont->GetGDKFont(), " ", 1); 
+  gint rawWidth;
+  if ((fontInfo->min_byte1 == 0) && (fontInfo->max_byte1 == 0)) {
+    rawWidth = gdk_text_width(mWesternFont->GetGDKFont(), " ", 1); 
+  }
+  else {
+    XChar2b _16bit_space;
+    _16bit_space.byte1 = 0;
+    _16bit_space.byte2 = ' ';
+    rawWidth = gdk_text_width(mWesternFont->GetGDKFont(), 
+                               (const char *)&_16bit_space, sizeof(_16bit_space)); 
+  }
   mSpaceWidth = NSToCoordRound(rawWidth * f);
 
   unsigned long pr = 0;
