@@ -20,6 +20,7 @@
 #define _FileGen_h__
 
 #include <string.h>
+#include "plhash.h"
 
 class ofstream;
 class IdlObject;
@@ -34,17 +35,27 @@ public:
     ~FileGen();
     virtual void    Generate(char *aFileName, char *aOutputDirName, 
                              IdlSpecification &aSpec)=0;
-    
+
 protected:
     void            GenerateNPL();
     int             OpenFile(char *aFileName, char *aOutputDirName,
                              const char *aFilePrefix, const char *aFileSuffix);
     void            CloseFile();
-    ofstream*       GetFile() { return mOutputFile; }
-    void            GetVariableType(char *aBuffer, IdlVariable &aVariable);
+    void            GetVariableTypeForParameter(char *aBuffer, IdlVariable &aVariable);
+    void            GetVariableTypeForLocal(char *aBuffer, IdlVariable &aVariable);    
+    void            GetVariableTypeForMethodLocal(char *aBuffer, IdlVariable &aVariable);
+
     void            GetParameterType(char *aBuffer, IdlParameter &aParameter);
     void            GetInterfaceIID(char *aBuffer, IdlInterface &aInterface);
+    void            GetInterfaceIID(char *aBuffer, char *aInterfaceName);
     void            GetCapitalizedName(char *aBuffer, IdlObject &aObject);
+    void            EnumerateAllObjects(IdlSpecification &aSpec, 
+                                        PLHashEnumerator aEnumerator,
+                                        void *aArg,
+                                        PRBool aOnlyPrimary);
+    ofstream*       GetFile() { return mOutputFile; }
+    
+    void            StrUpr(char *aBuffer);
 
 private:
     ofstream        *mOutputFile;

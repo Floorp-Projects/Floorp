@@ -33,23 +33,30 @@
 
 static const char *kFilePrefix = "nsIDOM";
 static const char *kFileSuffix = "h";
-static const char *kIfdefStr = "#ifndef nsIDOM%s_h__\n#define nsIDOM%s_h__\n\n";
+static const char *kIfdefStr = "\n"
+"#ifndef nsIDOM%s_h__\n"
+"#define nsIDOM%s_h__\n\n";
 static const char *kIncludeISupportsStr = "#include \"nsISupports.h\"\n";
 static const char *kIncludeStr = "#include \"nsIDOM%s.h\"\n";
 static const char *kForwardClassStr = "class nsIDOM%s;\n";
-static const char *kUuidStr = "#define %s \\\n { 0x6f7652e0,  0xee43, 0x11d1,\\\n { x9b, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } }\n\n";
+static const char *kUuidStr = 
+"#define %s \\\n"
+" { 0x6f7652e0,  0xee43, 0x11d1,\\\n"
+" { 0x9b, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } }\n\n";
 static const char *kClassDeclStr = "class nsIDOM%s : ";
 static const char *kBaseClassStr = "public nsIDOM%s";
 static const char *kNoBaseClassStr = "public nsISupports";
 static const char *kClassPrologStr = " {\npublic:\n";
 static const char *kConstDeclStr = "  const %s %s = %l;\n";
-static const char *kGetterMethodDeclStr = "\n  virtual nsresult    Get%s(%s%s a%s)=0;\n";
-static const char *kSetterMethodDeclStr = "  virtual nsresult    Set%s(%s a%s)=0;\n";
-static const char *kMethodDeclStr = "\n  virtual nsresult    %s(%s)=0;\n";
+static const char *kGetterMethodDeclStr = "\n  NS_IMETHOD    Get%s(%s%s a%s)=0;\n";
+static const char *kSetterMethodDeclStr = "  NS_IMETHOD    Set%s(%s a%s)=0;\n";
+static const char *kMethodDeclStr = "\n  NS_IMETHOD    %s(%s)=0;\n";
 static const char *kParamStr = "%s a%s, ";
 static const char *kReturnStr = "%s%s aReturn";
-static const char *kClassEpilogStr = "};\n";
-static const char *kEndifStr = "endif // nsIDOM%s_h__\n";
+static const char *kClassEpilogStr = "};\n\n";
+static const char *kInitClassStr = "extern nsresult NS_Init%sClass(JSContext *aContext, JSObject **aPrototype);\n\n";
+static const char *kNewObjStr = "extern nsresult NS_NewScript%s(JSContext *aContext, nsIDOM%s *aSupports, JSObject *aParent, JSObject **aReturn);\n\n";
+static const char *kEndifStr = "#endif // nsIDOM%s_h__\n";
 
 
 XPCOMGen::XPCOMGen()
@@ -62,8 +69,8 @@ XPCOMGen::~XPCOMGen()
 
 void     
 XPCOMGen::Generate(char *aFileName, 
-		   char *aOutputDirName,
-		   IdlSpecification &aSpec)
+                   char *aOutputDirName,
+                   IdlSpecification &aSpec)
 {
   if (!OpenFile(aFileName, aOutputDirName, kFilePrefix, kFileSuffix)) {
       throw new CantOpenFileException(aFileName);
@@ -118,8 +125,8 @@ XPCOMGen::GenerateIncludes(IdlSpecification &aSpec)
     if (iface) {
       int b, bcount = iface->BaseClassCount();
       for (b = 0; b < bcount; b++) {
-	sprintf(buf, kIncludeStr, iface->GetBaseClassAt(b));
-	*file << buf;
+        sprintf(buf, kIncludeStr, iface->GetBaseClassAt(b));
+        *file << buf;
       }
     }
   }
@@ -143,52 +150,8 @@ void
 XPCOMGen::GenerateForwardDecls(IdlSpecification &aSpec)
 {
   ofstream *file = GetFile();
-  PLHashTable *htable = PL_NewHashTable(10, PL_HashString,
-					PL_CompareStrings, 
-					PL_CompareValues,
-					(PLHashAllocOps *)NULL, NULL);
-  
-  int i, icount = aSpec.InterfaceCount();
-  for (i = 0; i < icount; i++) {
-    IdlInterface *iface = aSpec.GetInterfaceAt(i);
-    
-    int a, acount = iface->AttributeCount();
-    for (a = 0; a < acount; a++) {
-      IdlAttribute *attr = iface->GetAttributeAt(a);
-      
-      if ((attr->GetType() == TYPE_OBJECT) &&
-	  !PL_HashTableLookup(htable, attr->GetTypeName())) {
-	PL_HashTableAdd(htable, attr->GetTypeName(), (void *)1);
-      }
-    }
-
-    int m, mcount = iface->FunctionCount();
-    for (m = 0; m < mcount; m++) {
-      IdlFunction *func = iface->GetFunctionAt(m);
-      IdlVariable *rval = func->GetReturnValue();
-
-      if ((rval->GetType() == TYPE_OBJECT) &&
-	  !PL_HashTableLookup(htable, rval->GetTypeName())) {
-	PL_HashTableAdd(htable, rval->GetTypeName(), (void *)1);
-      }
-
-      int p, pcount = func->ParameterCount();
-      for (p = 0; p < pcount; p++) {
-	IdlParameter *param = func->GetParameterAt(p);
-	
-	if ((param->GetType() == TYPE_OBJECT) &&
-	    !PL_HashTableLookup(htable, param->GetTypeName())) {
-	  PL_HashTableAdd(htable, param->GetTypeName(), (void *)1);
-	}
-      }
-    }
-  }
-
-  PL_HashTableEnumerateEntries(htable, 
-			       (PLHashEnumerator)ForwardDeclEnumerator, 
-			       file);
-
-  PL_HashTableDestroy(htable);
+  EnumerateAllObjects(aSpec, (PLHashEnumerator)ForwardDeclEnumerator, 
+                      file, PR_FALSE);
   *file << "\n";
 }
  
@@ -218,7 +181,7 @@ XPCOMGen::GenerateClassDecl(IdlInterface &aInterface)
     int b, bcount = aInterface.BaseClassCount();
     for (b = 0; b < bcount; b++) {
       if (b > 0) {
-	*file << ", ";
+        *file << ", ";
       }
       sprintf(buf, kBaseClassStr, aInterface.GetBaseClassAt(b));
       *file << buf;
@@ -243,15 +206,15 @@ XPCOMGen::GenerateMethods(IdlInterface &aInterface)
   for (a = 0; a < acount; a++) {
     IdlAttribute *attr = aInterface.GetAttributeAt(a);
 
-    GetVariableType(type_buf, *attr);
+    GetVariableTypeForParameter(type_buf, *attr);
     GetCapitalizedName(name_buf, *attr);
     sprintf(buf, kGetterMethodDeclStr, name_buf, type_buf,
-	    attr->GetType() == TYPE_STRING ? "" : "*", name_buf);
+            attr->GetType() == TYPE_STRING ? "" : "*", name_buf);
     *file << buf;
 
     if (!attr->GetReadOnly()) {
       sprintf(buf, kSetterMethodDeclStr, name_buf, type_buf, 
-	      name_buf);
+              name_buf);
       *file << buf;
     }
   }
@@ -273,9 +236,9 @@ XPCOMGen::GenerateMethods(IdlInterface &aInterface)
     }
 
     IdlVariable *rval = func->GetReturnValue();
-    GetVariableType(type_buf, *rval);
+    GetVariableTypeForParameter(type_buf, *rval);
     sprintf(cur_param, kReturnStr, type_buf,
-	    rval->GetType() == TYPE_STRING ? "" : "*");
+            rval->GetType() == TYPE_STRING ? "" : "*");
     
     GetCapitalizedName(name_buf, *func);
     sprintf(buf, kMethodDeclStr, name_buf, param_buf);
@@ -297,9 +260,16 @@ XPCOMGen::GenerateEpilog(IdlSpecification &aSpec)
   char buf[512];
   IdlInterface *iface = aSpec.GetInterfaceAt(0);
   ofstream *file = GetFile();
+  char *iface_name = iface->GetName();
+
+  sprintf(buf, kInitClassStr, iface_name);
+  *file << buf;
+  
+  sprintf(buf, kNewObjStr, iface_name, iface_name);
+  *file << buf;
 
   if (iface) {
-    sprintf(buf, kEndifStr, iface->GetName());
+    sprintf(buf, kEndifStr, iface_name);
     *file << buf;
   } 
 }
