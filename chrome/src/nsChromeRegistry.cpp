@@ -555,17 +555,23 @@ NS_IMETHODIMP nsChromeRegistry::LoadDataSource(const nsCAutoString &aFileName, n
     if (! remote)
         return NS_ERROR_UNEXPECTED;
 
+    if (!mDataSourceTable)
+      mDataSourceTable = new nsSupportsHashtable;
 
     rv = remote->Init(aFileName);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) {
+      nsStringKey skey(aFileName);
+      mDataSourceTable->Put(&skey, nsnull);
+      return rv;
+    }
 
     // We need to read this synchronously.
     rv = remote->Refresh(PR_TRUE);
-    if (NS_FAILED(rv)) return rv;
-
-
-    if (!mDataSourceTable)
-      mDataSourceTable = new nsSupportsHashtable;
+    if (NS_FAILED(rv)) {
+      nsStringKey skey(aFileName);
+      mDataSourceTable->Put(&skey, nsnull);
+      return rv;
+    }
 
     nsCOMPtr<nsISupports> supports = do_QueryInterface(remote);
     nsStringKey skey(aFileName);
@@ -609,6 +615,8 @@ nsChromeRegistry::InitializeDataSource(nsString &aPackage,
         }
         return NS_ERROR_FAILURE;
       }
+      else if (mDataSourceTable->Exists(&skey))
+      	return NS_OK;
     }
 
    nsCOMPtr<nsIRDFDataSource> overlayDataSource;
