@@ -69,6 +69,8 @@ class nsWebBrowser : public nsIWebBrowser,
 {
 friend class nsDocShellTreeOwner;
 public:
+   nsWebBrowser();
+
    NS_DECL_ISUPPORTS
 
    NS_DECL_NSIBASEWINDOW
@@ -83,7 +85,6 @@ public:
    static NS_METHOD Create(nsISupports* aOuter, const nsIID& aIID, void** ppv);
 
 protected:
-   nsWebBrowser();
    virtual ~nsWebBrowser();
 
    void UpdateListeners();
