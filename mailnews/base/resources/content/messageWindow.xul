@@ -80,8 +80,9 @@ Rights Reserved.
     <commandset id="mailGetMsgMenuItems"/>
     <commandset id="mailMarkMenuItems"/>
     <commandset id="mailLabelMenuItems"/>
+    <commandset id="mailToolsMenuItems"/>
     <commandset id="mailEditContextMenuItems"/>
-	<commandset id="tasksCommands"/>
+	  <commandset id="tasksCommands"/>
     <commandset id="commandKeys"/>
   </commandset>
 

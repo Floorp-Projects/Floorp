@@ -89,7 +89,7 @@ Rights Reserved.
   <commandset id="mailGetMsgMenuItems"/>
   <commandset id="mailMarkMenuItems"/>
   <commandset id="mailLabelMenuItems"/>
-
+  <commandset id="mailToolsMenuItems"/>
   <commandset id="globalEditMenuItems"/>
   <commandset id="selectEditMenuItems"/>
   <commandset id="clipboardEditMenuItems"/>

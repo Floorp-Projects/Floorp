@@ -194,7 +194,6 @@ var DefaultController =
 			case "cmd_markAsFlagged":
 			case "cmd_markAsJunk":
 			case "cmd_markAsNotJunk":
-      case "cmd_searchMsgs":
       case "cmd_applyFilters":
       case "cmd_runJunkControls":
       case "cmd_deleteJunk":
@@ -316,8 +315,6 @@ var DefaultController =
       case "cmd_markAsNotJunk":
         // can't do news on junk yet.
         return (GetNumSelectedMessages() > 0 && !isNewsURI(GetFirstSelectedMessage()));
-      case "cmd_searchMsgs":
-        return true;
       case "cmd_applyFilters":
         if (gDBView)
           gDBView.getCommandStatus(nsMsgViewCommandType.applyFilters, enabled, checkStatus);
@@ -600,9 +597,6 @@ var DefaultController =
 			case "cmd_markAsNotJunk":
         JunkSelectedMessages(false);
 				return;
-      case "cmd_searchMsgs":
-        MsgSearchMessages();
-        return;
       case "cmd_applyFilters":
         MsgApplyFilters(null);
         return;
