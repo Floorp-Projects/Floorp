@@ -38,7 +38,7 @@
 
 
 /*
- *  npupp.h $Revision: 3.9 $
+ *  npupp.h $Revision: 3.10 $
  *  function call mecahnics needed by platform specific glue code.
  */
 
@@ -1258,6 +1258,8 @@ NPError OSCALL NP_GetEntryPoints(NPPluginFuncs* pFuncs);
 NPError OSCALL NP_Initialize(NPNetscapeFuncs* pFuncs);
 
 NPError OSCALL NP_Shutdown();
+
+char*	NP_GetMIMEDescription();
 
 #ifdef __cplusplus
 }

@@ -53,3 +53,4 @@ nsPluginLogging.h
 nsPluginError.h
 npapi.h
 npupp.h
+nsDefaultPlugin.h
