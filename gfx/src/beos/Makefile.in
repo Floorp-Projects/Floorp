@@ -52,4 +52,5 @@ INCLUDES	+= $(TK_CFLAGS)
 EXTRA_DSO_LDOPTS += \
 	-lraptorgfx \
 	$(XPCOM_LIBS) \
-	$(TK_LIBS)
+	$(TK_LIBS) \
+	$(NSPR_LIBS) 

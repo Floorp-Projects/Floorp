@@ -41,5 +41,6 @@ INCLUDES	+= $(TK_CFLAGS) -I$(srcdir)/..
 
 EXTRA_DSO_LDOPTS += \
 	$(XPCOM_LIBS) \
-	$(TK_LIBS)
+	$(TK_LIBS) \
+	$(NSPR_LIBS)
 
