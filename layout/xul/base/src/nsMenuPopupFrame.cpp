@@ -1524,10 +1524,19 @@ nsMenuPopupFrame::FindMenuWithShortcut(PRUint32 aLetter)
 
   // didn't find a matching menu item
 #ifdef XP_WIN
-  // behavior on Windows - this item is in a popup, beep and do nothing else
-  nsCOMPtr<nsISound> soundInterface = do_CreateInstance("@mozilla.org/sound;1");
-  if (soundInterface)
-    soundInterface->Beep();    
+   // behavior on Windows - this item is in a menu popup off of the
+   // menu bar, so beep and do nothing else
+   nsCOMPtr<nsIContent> parentContent;
+   mContent->GetParent(*getter_AddRefs(parentContent));
+   if (parentContent) {
+     nsCOMPtr<nsIAtom> tag;
+     parentContent->GetTag(*getter_AddRefs(tag));
+     if (tag == nsXULAtoms::menu) {
+       nsCOMPtr<nsISound> soundInterface = do_CreateInstance("@mozilla.org/sound;1");
+       if (soundInterface)
+         soundInterface->Beep();
+     }
+   }
 #endif  // #ifdef XP_WIN
 
   return nsnull;
