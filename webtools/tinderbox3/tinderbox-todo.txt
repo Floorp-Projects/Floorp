@@ -1,0 +1,60 @@
+New Tinderbox Features:
+- easy to install both client and server
+- web administration of everything in the server
+- database-backed
+- kick clients during builds
+- upload patches for clients to try out
+- incremental logs / status
+- clients can throttle (not send build_starts more than a minute)
+- allows tinderboxen to build at a particular cvs co date
+- can configure tinderboxen .mozconfig
+- security (logins / passwords)
+- clients upgrade themselves if there is a new version of themselves on the server
+- builds can be uploaded and linked to for testing purposes
+- can clobber a tinderbox
+- client setup works without anything but build tools installed (ed: need to ensure environment is set up properly)
+- uses fast-update (every 6 hours it re-syncs with checkout)
+- does not bother building if there were no changes (build can be forced with build command)--minimum cycle time
+- uploaded binaries are intelligently deleted to keep a hard quota but still have a useful range of binaries around
+
+Todo:
+- tests
+- graphs
+- xml interfaces for botbot and such
+- sidebar
+- require build administrator email
+- add hostname into the machine_name automatically
+- have client report versions of files it updates so a correct "C" letter can happen
+
+Bugs:
+- clients don't reliably kill all children and don't happen during kick during hangs
+- add proper constraints into the DB
+- make tree_id, make most tables link to it (inputs to cgi scripts still use tree name)
+- round times to nearest minute, ensure nothing goes beyond bottom of shown tree
+- 1-minute cycles sometimes don't show up (possibly related to above)
+- .mozconfig can run arbitrary commands, maybe make it only possible to do ac_add_options from server-specified .mozconfig
+
+Would be nice:
+- allow server control of branch
+- * log parsing (maybe even have heuristics to determine % done)
+- * midcheckin detection
+- brief log
+- log brief-izing script (makes logs brief so you don't have to *remove* them)
+- targeted log quota script (same as build deleting script)
+- allow machine to move from tree to tree
+- auto-reload feature
+- "C" checkin list on a build
+- allow Netscape to build as well as Mozilla, based on server you connect to (server specifies that Netscape should build, maybe cvsroot too) - close, needs testing
+- Allow switching tinderboxen (a machine connects to tbox a, cycles, then moves to tbox b, etc.) (this allows you to prepare your work machine with multiple builds *and* to help the tinderbox server out--mooost excellent, dude.)
+- make Kinderbox possible (build on one machine and test on another)
+- upload installer builds
+- page showing a list of all builds for a particular time range or even forever (possibly using ShowBuilds)
+
+Test:
+- --notrust and friends
+- changing cvs co date around (esp. having one and then not having one--do we need to unstick the tree?)
+- clobber build
+
+Not Now, Dammit
+- allow clients to send status as multiple machines to different tinderboxen
+- allow clients to send status via email
