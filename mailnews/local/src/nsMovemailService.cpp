@@ -410,7 +410,19 @@ nsMovemailService::GetNewMail(nsIMsgWindow *aMsgWindow,
                     if (NS_FAILED(rv))
                         goto freebuff_and_unlock;
                     
-                    rv = m_newMailParser->Init(serverFolder,
+	            nsCOMPtr<nsIMsgFolder> inbox;
+	            if(NS_SUCCEEDED(rv))
+	            {
+		      nsCOMPtr<nsIMsgFolder> rootMsgFolder = do_QueryInterface(serverFolder);
+		      if(rootMsgFolder)
+		      {
+			      PRUint32 numFolders;
+			      rv = rootMsgFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, 1,
+                                                         &numFolders,
+                                                         getter_AddRefs(inbox));
+                      }
+                    }
+                    rv = m_newMailParser->Init(serverFolder, inbox, 
                                                fileSpec, m_outFileStream);
                     if (NS_FAILED(rv))
                         goto freebuff_and_unlock;
