@@ -386,9 +386,9 @@ X-Bugzilla-Reason: %reasonsheader%
 
 %urlbase%show_bug.cgi?id=%bugid%
 
-%diffs%
+%reasonsbody%
 
-%reasonsbody%");
+%diffs%");
 
 
 
