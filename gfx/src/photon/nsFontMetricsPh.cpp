@@ -65,7 +65,8 @@ nsFontMetricsPh :: ~nsFontMetricsPh()
 NS_IMPL_ISUPPORTS1(nsFontMetricsPh, nsIFontMetrics)
 
 NS_IMETHODIMP
-nsFontMetricsPh :: Init(const nsFont& aFont, nsIDeviceContext *aContext)
+nsFontMetricsPh :: Init ( const nsFont& aFont, nsIAtom* aLangGroup,
+                          nsIDeviceContext* aContext )
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsFontMetricsPh::Init with nsFont\n"));
 
@@ -129,6 +130,7 @@ nsFontMetricsPh :: Init(const nsFont& aFont, nsIDeviceContext *aContext)
 
 
     mFont = new nsFont(aFont);
+    mLangGroup = aLangGroup;
     mDeviceContext = (nsDeviceContextPh *) aContext;
 
     float app2dev, app2twip,scale;
@@ -389,6 +391,20 @@ nsFontMetricsPh :: GetFont(const nsFont *&aFont)
 {
 //  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsFontMetricsPh::GetFont\n"));
   aFont = mFont;
+  return NS_OK;
+}
+
+NS_IMETHODIMP  nsFontMetricsPh::GetLangGroup(nsIAtom** aLangGroup)
+{
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsFontMetricsPh::GetLangGroup - Not Implemented\n"));
+
+  if (!aLangGroup) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  *aLangGroup = mLangGroup;
+  NS_IF_ADDREF(*aLangGroup);
+
   return NS_OK;
 }
 
