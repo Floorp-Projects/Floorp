@@ -85,6 +85,22 @@ GetInstallProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
+      case INSTALL_JARFILE:
+      {
+        char* prop;
+        a->GetJarFileLocation(&prop);
+        nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+        break;
+      }
+
+      case INSTALL_ARGUMENTS:
+      {
+        char* prop;
+        a->GetInstallArguments(&prop);
+        nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+        break;
+      }
+
       default:
         return JS_TRUE;
     }
@@ -1065,7 +1081,7 @@ Install(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 // Install class initialization
 //
 
-PRInt32 InitXPInstallObjects(nsIScriptContext *aContext, nsFileSpec* jarfile, PRInt32 flags, char* argc, PRInt32 argv)
+PRInt32 InitXPInstallObjects(nsIScriptContext *aContext, char* jarfile, char* args)
 {
   JSContext *jscontext  = (JSContext *)aContext->GetNativeContext();
   JSObject *global      = JS_GetGlobalObject(jscontext);
@@ -1094,6 +1110,8 @@ PRInt32 InitXPInstallObjects(nsIScriptContext *aContext, nsFileSpec* jarfile, PR
   
   nativeInstallObject = new nsInstall();
 
+  nativeInstallObject->SetJarFileLocation(jarfile);
+  nativeInstallObject->SetInstallArguments(args);
 
   JS_SetPrivate(jscontext, installObject, nativeInstallObject);
   nativeInstallObject->SetScriptObject(installObject);

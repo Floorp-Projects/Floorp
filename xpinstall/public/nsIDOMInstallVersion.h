@@ -34,15 +34,15 @@ class nsIDOMInstallVersion : public nsISupports {
 public:
   static const nsIID& IID() { static nsIID iid = NS_IDOMINSTALLVERSION_IID; return iid; }
   enum {
-    SU_EQUAL = 0,
-    SU_BLD_DIFF = 1,
-    SU_BLD_DIFF_MINUS = -1,
-    SU_REL_DIFF = 2,
-    SU_REL_DIFF_MINUS = -2,
-    SU_MINOR_DIFF = 3,
-    SU_MINOR_DIFF_MINUS = -3,
-    SU_MAJOR_DIFF = 4,
-    SU_MAJOR_DIFF_MINUS = -4
+    EQUAL = 0,
+    BLD_DIFF = 1,
+    BLD_DIFF_MINUS = -1,
+    REL_DIFF = 2,
+    REL_DIFF_MINUS = -2,
+    MINOR_DIFF = 3,
+    MINOR_DIFF_MINUS = -3,
+    MAJOR_DIFF = 4,
+    MAJOR_DIFF_MINUS = -4
   };
 
   NS_IMETHOD    GetMajor(PRInt32* aMajor)=0;

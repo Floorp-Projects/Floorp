@@ -24,12 +24,14 @@
 
 #include "nsVector.h"
 #include "nsHashtable.h"
+#include "nsFileSpec.h"
 
 #include "prmem.h"
 #include "pratom.h"
 #include "prefapi.h"
 #include "VerReg.h"
 
+#include "zipfile.h"
 
 #include "nsInstall.h"
 
@@ -58,6 +60,8 @@ nsInstall::nsInstall()
     mScriptObject   = nsnull;
     mVersionInfo    = nsnull;
     
+    mJarFileData    = nsnull;
+
     mPackageName    = "";
     mUserPackageName= "";
 
@@ -734,8 +738,7 @@ nsInstall::StartInstall(const nsString& aUserPackageName, const nsString& aPacka
     *aReturn     = nsInstall::SUCCESS;
     
     ResetError();
-    ParseFlags(aFlags);
-    
+        
     mUserCancelled = PR_FALSE; 
     
     mUserPackageName = aUserPackageName;
@@ -779,36 +782,8 @@ nsInstall::StartInstall(const nsString& aUserPackageName, const nsString& aPacka
         return -1;  /* FIX: need real error code */
     }
  
-    if (mShowProgress)
-    {
-        /* Show our window here */
-    }   
-
-#if 0
-    // set up default package folder, if any
-    int   err;
-    char* path = (char*) PR_Malloc(MAXREGPATHLEN);
-    char* packageNameCString = mPackageName.ToNewCString();
-
-    err = VR_GetDefaultDirectory( packageNameCString , MAXREGPATHLEN, path );
+    /* Show our window here */
     
-    delete [] packageNameCString;
-
-    if (err != REGERR_OK)
-    {
-        PR_FREEIF(path);
-        path = NULL;
-    }
-    
-    if ( path !=  NULL ) 
-    {
-        mPackageFolder = new nsInstallFolder();
-        mPackageFolder->Init("Installed",  nsString(path), mPackageName);
-
-        PR_FREEIF(path); 
-    }
-#endif
-
     SaveError(*aReturn);
     
     if (*aReturn != nsInstall::SUCCESS)
@@ -852,20 +827,6 @@ nsInstall::Uninstall(const nsString& aPackageName, PRInt32* aReturn)
 }
 
 ////////////////////////////////////////
-
-/* 
-
-  aJarFile -  location inside a jar file
-
-
-*/
-  
-PRInt32    
-nsInstall::ExtractFileFromJar(const nsString& aJarfile, const nsString& aFinalFile, nsString& aTempFile, PRInt32* error)
-{
-    *error = SUCCESS;
-    return NS_OK;
-}
 
 
 void       
@@ -932,21 +893,7 @@ nsInstall::ScheduleForInstall(nsInstallObject* ob)
 }
 
 
-
-void
-nsInstall::ParseFlags(int flags)
-{
-    mShowProgress = mShowFinalize = PR_TRUE;
-    if ((flags & NO_STATUS_DLG) == NO_STATUS_DLG)
-    {
-        mShowProgress = PR_FALSE;
-    }
-    if ((flags & NO_FINALIZE_DLG) == NO_FINALIZE_DLG)
-    {
-        mShowFinalize = PR_FALSE;
-    }
-}
-
+    
 /**
  * SanityCheck
  *
@@ -1166,16 +1113,87 @@ nsInstall::CleanUp(void)
     //CloseProgressDialog();
 }
 
+
+void       
+nsInstall::GetJarFileLocation(char** aFile)
+{
+    *aFile = mJarFileLocation;
+}
+
+void       
+nsInstall::SetJarFileLocation(char* aFile)
+{
+    mJarFileLocation = aFile;
+}
+
+void       
+nsInstall::GetInstallArguments(char** args)
+{
+    *args = mInstallArguments;
+}
+
+void       
+nsInstall::SetInstallArguments(char* args)
+{
+    mInstallArguments = args;
+}
+
+
+
 PRInt32 
 nsInstall::OpenJARFile(void)
-{
-    return nsInstall::SUCCESS;
+{    
+    
+    PRInt32 result = ZIPR_OpenArchive(mJarFileLocation,  &mJarFileData);
+    
+    return result;
 }
 
 void
 nsInstall::CloseJARFile(void)
 {
+    ZIPR_CloseArchive(&mJarFileData);
+    mJarFileData = nsnull;
 }
+
+
+// aJarFile         - This is the filepath within the jar file.
+// aSuggestedName   - This is the name that we should try to extract to.  If we can, we will create a new temporary file.
+// aRealName        - This is the name that we did extract to.  This will be allocated by use and should be disposed by the caller.
+
+PRInt32    
+nsInstall::ExtractFileFromJar(const nsString& aJarfile, const nsString& aSuggestedName, nsString** aRealName)
+{
+    PRInt32 result;
+    char* extractFileHere;
+   
+    
+    nsFileSpec finalFile(aSuggestedName);
+
+    if (aSuggestedName == "" || finalFile.Exists() )
+    {
+        // Create a temporary file to extract to.
+
+        extractFileHere = "c:\\temp\\tempFile.tmp";
+    }
+    else
+    {
+        // extract to the final destination.
+        extractFileHere = aSuggestedName.ToNewCString();
+    }
+
+    *aRealName = new nsString(extractFileHere);
+    
+    char* fileInJar = aJarfile.ToNewCString();
+
+    result  = ZIPR_ExtractFile( mJarFileData, fileInJar, extractFileHere );
+    
+    delete [] fileInJar;
+    //delete [] extractFileHere;
+
+    return result;
+}
+
 
 PRInt32 
 nsInstall::ExtractDirEntries(const nsString& directory, nsVector *paths)

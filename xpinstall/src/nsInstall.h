@@ -2,20 +2,20 @@
 #define __NS_INSTALL_H__
 
 #include "nscore.h"
-#include "nsString.h"
 #include "nsISupports.h"
+
 #include "jsapi.h"
 
+#include "nsString.h"
 #include "nsFileSpec.h"
 #include "nsVector.h"
 #include "nsHashtable.h"
 
 #include "nsSoftwareUpdate.h"
 
+#include "nsInstallObject.h"
 #include "nsInstallFolder.h"
 #include "nsInstallVersion.h"
-
-#include "nsInstallObject.h"
 
 class nsInstall
 {
@@ -94,16 +94,28 @@ class nsInstall
         
 
 
-        PRInt32    ExtractFileFromJar(const nsString& aJarfile, const nsString& aFinalFile, nsString& aTempFile, PRInt32* aError);
+        PRInt32    ExtractFileFromJar(const nsString& aJarfile, const nsString& aFinalFile, nsString** aTempFile);
         void       AddPatch(nsHashKey *aKey, nsString* fileName);
         void       GetPatch(nsHashKey *aKey, nsString* fileName);
+        
+        void       GetJarFileLocation(char** aFile);
+        void       SetJarFileLocation(char* aFile);
+
+        void       GetInstallArguments(char** args);
+        void       SetInstallArguments(char* args);
+
 
     private:
         JSObject*           mScriptObject;
         
+
+        char*               mJarFileLocation;
+        void*               mJarFileData;
+        
+        char*               mInstallArguments;
+
         PRBool              mUserCancelled;
-        PRBool              mShowProgress;
-        PRBool              mShowFinalize;
+        
         PRBool              mUninstallPackage;
         PRBool              mRegisterPackage;
 

@@ -28,6 +28,7 @@
 
 #include "VerReg.h"
 
+
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
 
@@ -164,7 +165,7 @@ nsSoftwareUpdate::Startup()
     /* Stupid Hack to test js env*/
     /***************************************/
 
-    RunInstallJS("c:\\temp\\test.js");
+    InstallJar(nsString("c:\\temp\\test.jar"), "");
 
     DeleteScheduledNodes();
     
@@ -177,6 +178,23 @@ nsSoftwareUpdate::Shutdown()
 {
     NR_ShutdownRegistry();
     return NS_OK;
+}
+
+// We will need to have a overloaded function for multiple jarfile triggers.
+
+NS_IMETHODIMP
+nsSoftwareUpdate::InstallJar(const nsString& jarFile, const nsString& args)
+{
+    // FIX: Display some UI indicating that we are going to start an install.
+
+
+    char* tempJarFileName = jarFile.ToNewCString();
+
+    PRInt32 result = Install(tempJarFileName, nsnull);
+
+    delete [] tempJarFileName;
+
+    return result;
 }
 
 
@@ -334,13 +352,6 @@ nsSoftwareUpdateNameSet::AddNameSet(nsIScriptContext* aScriptContext)
     result = aScriptContext->GetNameSpaceManager(&manager);
     if (NS_OK == result) 
     {
-/*
-        result = manager->RegisterGlobalName("Install", 
-                                             kInstall_CID, 
-                                             PR_TRUE);
-
-        if (result != NS_OK) return result;
-*/        
         result = manager->RegisterGlobalName("InstallVersion", 
                                              kInstallVersion_CID, 
                                              PR_TRUE);
@@ -374,24 +385,28 @@ nsSoftwareUpdateNameSet::AddNameSet(nsIScriptContext* aScriptContext)
 ////////////////////////////////////////////////////////////////////////////////
 
 extern "C" NS_EXPORT PRBool
-NSCanUnload(void)
+NSCanUnload(nsISupports* serviceMgr)
 {
     return PRBool (gInstanceCnt == 0 && gLockCnt == 0);
 }
 
 extern "C" NS_EXPORT nsresult
-NSRegisterSelf(const char *path)
+NSRegisterSelf(nsISupports* serviceMgr, const char *path)
 {
-    nsRepository::RegisterFactory(kSoftwareUpdate_CID, path, PR_TRUE, PR_TRUE);
-    nsRepository::RegisterFactory(kInstallTrigger_CID, path, PR_TRUE, PR_TRUE);
-    nsRepository::RegisterFactory(kInstallVersion_CID, path, PR_TRUE, PR_TRUE);
-    nsRepository::RegisterFactory(kInstallFolder_CID, path, PR_TRUE, PR_TRUE);
+    printf("*** XPInstall is being registered\n");
+    nsRepository::RegisterComponent(kSoftwareUpdate_CID, NULL, NULL, path, PR_TRUE, PR_TRUE);
+    nsRepository::RegisterComponent(kInstallTrigger_CID, NULL, NULL, path, PR_TRUE, PR_TRUE);
+    nsRepository::RegisterComponent(kInstallVersion_CID, NULL, NULL, path, PR_TRUE, PR_TRUE);
+    nsRepository::RegisterComponent(kInstallFolder_CID, NULL, NULL, path, PR_TRUE, PR_TRUE);
+
     return NS_OK;
 }
 
 extern "C" NS_EXPORT nsresult
-NSUnregisterSelf(const char *path)
+NSUnregisterSelf(nsISupports* serviceMgr, const char *path)
 {
+    printf("*** XPInstall is being unregistered\n");
+
     nsRepository::UnregisterFactory(kSoftwareUpdate_CID, path);
     nsRepository::UnregisterFactory(kInstallTrigger_CID, path);
     nsRepository::UnregisterFactory(kInstallVersion_CID, path);
@@ -403,7 +418,11 @@ NSUnregisterSelf(const char *path)
 
 
 extern "C" NS_EXPORT nsresult
-NSGetFactory(const nsCID &aClass, nsISupports* serviceMgr, nsIFactory **aFactory)
+NSGetFactory(nsISupports* serviceMgr,
+             const nsCID &aClass,
+             const char *aClassName,
+             const char *aProgID,
+             nsIFactory **aFactory)
 {
 
     if (aFactory == NULL)
