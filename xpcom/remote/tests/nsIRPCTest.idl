@@ -1,0 +1,30 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Sun Microsystems,
+ * Inc. Portions created by Sun are
+ * Copyright (C) 1999 Sun Microsystems, Inc. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ */
+#include "nsISupports.idl"
+
+[scriptable, uuid(e7fc2bf4-1dd1-11b2-9253-8efe01a2f0d2)]
+interface nsIRPCTest : nsISupports
+{
+    void test1(inout long l);
+    void test2(in long l1,inout long l2);
+    void test3(in string s1,inout string s2);
+    void test4(in PRUint32 count,[array, size_is(count)] in string valueArray);
+};

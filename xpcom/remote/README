@@ -1,0 +1,30 @@
+This document is under construction.
+I am going to continue writing it after 01/10/2000
+
+The main goal of module is to give services for calling xpcom objects across
+process boundaries.
+
+Currently we are providing one to one relation 
+        1
+server <== client
+
+The reason of this is that this project was started to help blackwood
+projects to use oji on solaris.
+(Under solaris jvm is running in a separate process.)
+In this specific case we need to have only one to one relation 
+(We have one jvm per mozilla running)
+------------------------
+sources are organized as follows:
+
+server/ - server related
+client/ - client related
+common/ - related to bough
+tests/  - tests for this
+
+-----------------------------------
+This code was tested under solaris only
+
+
+
+
+
