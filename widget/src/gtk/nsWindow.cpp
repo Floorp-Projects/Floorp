@@ -21,6 +21,8 @@
 #include <gdk/gdkx.h>
 #include <gtk/gtkprivate.h>
 
+#include <X11/Xatom.h>   // For XA_STRING
+
 #include "nsWindow.h"
 #include "nsWidgetsCID.h"
 #include "nsIFontMetrics.h"
@@ -816,6 +818,28 @@ nsWindow::OnDrawSignal(GdkRectangle * aArea)
 
   return PR_TRUE;
 }
+
+// Add an XATOM property to this window.
+// Assuming XA_STRING type.
+// Borrowed from xfe classic branch.
+void nsWindow::StoreProperty(char *property, const unsigned char *data)
+{
+  
+  // This needs to happen before properties start working.
+  // Not sure if calling this is ? overkill or not.
+  gtk_widget_show_all (mShell);
+
+  // GetRenderWindow(mWidget),
+  gdk_property_change (mShell->window,
+                       gdk_atom_intern (property, FALSE), /* property */
+                       XA_STRING, /* type */
+                       8, /* *sizeof(GdkAtom) Format. ? */
+                       GDK_PROP_MODE_REPLACE, /* mode */
+                       data, /* data */
+                       strlen((const char *)data)); /* size of data */
+}
+
+
 
 ChildWindow::ChildWindow()
 {
