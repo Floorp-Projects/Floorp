@@ -24,13 +24,14 @@
 
 use diagnostics;
 use strict;
-
+# use Carp;                       # for confess
 # Shut up misguided -w warnings about "used only once".  For some reason,
 # "use vars" chokes on me when I try it here.
 
 sub CGI_pl_sillyness {
     my $zz;
     $zz = %::FILENAME;
+    $zz = %::MFORM;
     $zz = %::dontchange;
 }
 
@@ -451,6 +452,7 @@ sub make_options {
               "details of what you were doing when this message " . 
               "appeared.  Thank you.\n";
         PutFooter();
+#        confess "Gulp.";
         exit 0;
               
       } else {
