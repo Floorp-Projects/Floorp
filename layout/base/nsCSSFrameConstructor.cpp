@@ -1603,7 +1603,7 @@ nsCSSFrameConstructor::CreateInputFrame(nsIPresShell    *aPresShell,
 {
   // Figure out which type of input frame to create
   nsAutoString  val;
-  if (NS_OK == aContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::type, val)) {
+  if (NS_OK == aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, val)) {
     if (val.EqualsIgnoreCase("submit") ||
         val.EqualsIgnoreCase("reset") ||
         val.EqualsIgnoreCase("button")) {
@@ -3364,8 +3364,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
         PRInt32 nameSpaceID;
 #endif
 #ifdef INCLUDE_XUL
-        if (NS_SUCCEEDED(aDocElement->GetNameSpaceID(nameSpaceID)) &&
-            nameSpaceID == nsXULAtoms::nameSpaceID) {
+        if (aDocElement->IsContentOfType(nsIContent::eXUL)) {
           rv = NS_NewDocElementBoxFrame(aPresShell, &contentFrame);
           if (NS_FAILED(rv)) {
             return rv;
@@ -3581,9 +3580,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
         
     if (!isPaginated) {
 #ifdef INCLUDE_XUL
-        PRInt32 nameSpaceID;
-        if (NS_SUCCEEDED(aDocElement->GetNameSpaceID(nameSpaceID)) &&
-            nameSpaceID == nsXULAtoms::nameSpaceID) 
+        if (aDocElement->IsContentOfType(nsIContent::eXUL)) 
         {
           NS_NewRootBoxFrame(aPresShell, &rootFrame);
         } else 
@@ -3623,11 +3620,12 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
   // Currently OVERFLOW_SCROLL isn't honored, as
   // scrollportview::SetScrollPref is not implemented.
 
-  PRInt32 nameSpaceID;
-  aDocElement->GetNameSpaceID(nameSpaceID);
+  PRBool isHTML = aDocElement->IsContentOfType(nsIContent::eHTML);
+  PRBool isXUL = PR_FALSE;
 
-  PRBool isHTML = (nameSpaceID == kNameSpaceID_HTML);
-  PRBool isXUL = (nameSpaceID == nsXULAtoms::nameSpaceID);
+  if (!isHTML) {
+    isXUL = aDocElement->IsContentOfType(nsIContent::eXUL);
+  }
 
   // Never create scrollbars for XUL documents
 #ifdef INCLUDE_XUL
@@ -4618,8 +4616,9 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsIPresShell*            aPresShell,
                                           nsFrameItems&            aFrameItems)
 {
   // Ignore the tag if it's not HTML content
-  if (aNameSpaceID != kNameSpaceID_HTML)
+  if (!aContent->IsContentOfType(nsIContent::eHTML)) {
     return NS_OK;
+  }
 
   PRBool    processChildren = PR_FALSE;  // whether we should process child content
   PRBool    isAbsolutelyPositioned = PR_FALSE;

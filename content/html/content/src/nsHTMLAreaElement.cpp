@@ -123,7 +123,7 @@ NS_NewHTMLAreaElement(nsIHTMLContent** aInstancePtrResult,
     return rv;
   }
 
-  *aInstancePtrResult = NS_STATIC_CAST(nsIHTMLContent *, it);
+  *aInstancePtrResult = it;
   NS_ADDREF(*aInstancePtrResult);
 
   return NS_OK;
@@ -176,7 +176,7 @@ nsHTMLAreaElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 
   CopyInnerTo(this, it, aDeep);
 
-  *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
+  *aReturn = it;
 
   NS_ADDREF(*aReturn);
 
@@ -267,9 +267,7 @@ nsHTMLAreaElement::SetHref(const nsAString& aValue)
   // asks for it.
   mLinkState = eLinkState_Unknown;
 
-  return NS_STATIC_CAST(nsIContent *, this)->SetAttr(kNameSpaceID_HTML,
-                                                     nsHTMLAtoms::href,
-                                                     aValue, PR_TRUE);
+  return SetAttr(kNameSpaceID_None, nsHTMLAtoms::href, aValue, PR_TRUE);
 }
 
 #ifdef DEBUG
@@ -503,10 +501,8 @@ nsHTMLAreaElement::GetHrefCString(char* &aBuf)
   // Get href= attribute (relative URL).
   nsAutoString relURLSpec;
 
-  if (NS_CONTENT_ATTR_HAS_VALUE ==
-      NS_STATIC_CAST(nsIContent *, this)->GetAttr(kNameSpaceID_HTML,
-                                                  nsHTMLAtoms::href,
-                                                  relURLSpec)) {
+  if (GetAttr(kNameSpaceID_None, nsHTMLAtoms::href, relURLSpec) ==
+      NS_CONTENT_ATTR_HAS_VALUE) {
     // Clean up any leading or trailing whitespace
     relURLSpec.Trim(" \t\n\r");
 

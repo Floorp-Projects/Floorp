@@ -787,10 +787,10 @@ HTMLContentSink::AddAttributes(const nsIParserNode& aNode,
                                                          cname.get())));
 
         // Add attribute to content
-        aContent->SetAttr(kNameSpaceID_HTML, keyAtom, uv, aNotify);
+        aContent->SetAttr(kNameSpaceID_None, keyAtom, uv, aNotify);
       } else {
         // Add attribute to content
-        aContent->SetAttr(kNameSpaceID_HTML, keyAtom, v, aNotify);
+        aContent->SetAttr(kNameSpaceID_None, keyAtom, v, aNotify);
       }
     }
   }
@@ -3964,10 +3964,12 @@ void
 HTMLContentSink::AddBaseTagInfo(nsIHTMLContent* aContent)
 {
   if (!mBaseHREF.IsEmpty()) {
-    aContent->SetAttr(kNameSpaceID_HTML, nsHTMLAtoms::_baseHref, mBaseHREF, PR_FALSE);
+    aContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::_baseHref, mBaseHREF,
+                      PR_FALSE);
   }
   if (!mBaseTarget.IsEmpty()) {
-    aContent->SetAttr(kNameSpaceID_HTML, nsHTMLAtoms::_baseTarget, mBaseTarget, PR_FALSE);
+    aContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::_baseTarget,
+                      mBaseTarget, PR_FALSE);
   }
 }
 
@@ -4104,10 +4106,12 @@ HTMLContentSink::ProcessBASETag(const nsIParserNode& aNode)
         parent->AppendChildTo(element, PR_FALSE, PR_FALSE);
         if (!mInsideNoXXXTag) {
           nsAutoString value;
-          if (NS_CONTENT_ATTR_HAS_VALUE == element->GetAttr(kNameSpaceID_None, nsHTMLAtoms::href, value)) {
+          if (element->GetAttr(kNameSpaceID_None, nsHTMLAtoms::href,
+                               value) == NS_CONTENT_ATTR_HAS_VALUE) {
             ProcessBaseHref(value);
           }
-          if (NS_CONTENT_ATTR_HAS_VALUE == element->GetAttr(kNameSpaceID_None, nsHTMLAtoms::target, value)) {
+          if (element->GetAttr(kNameSpaceID_None, nsHTMLAtoms::target,
+                               value) == NS_CONTENT_ATTR_HAS_VALUE) {
             ProcessBaseTarget(value);
           }
         }
@@ -4354,7 +4358,8 @@ HTMLContentSink::ProcessStyleLink(nsIHTMLContent* aElement,
       */
 
       PRBool doneLoading;
-      result = mCSSLoader->LoadStyleLink(aElement, url, aTitle, aMedia, kNameSpaceID_Unknown,
+      result = mCSSLoader->LoadStyleLink(aElement, url, aTitle, aMedia,
+                                         kNameSpaceID_Unknown,
                                          mStyleSheetCount++, 
                                          ((blockParser) ? mParser : nsnull),
                                          doneLoading, 
@@ -4382,7 +4387,7 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
     // Create content object
     nsCOMPtr<nsIHTMLContent> element;
     nsCOMPtr<nsINodeInfo> nodeInfo;
-    mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::link, nsnull, kNameSpaceID_HTML,
+    mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::link, nsnull, kNameSpaceID_None,
                                   *getter_AddRefs(nodeInfo));
 
     result = NS_CreateHTMLElement(getter_AddRefs(element), nodeInfo, PR_FALSE);

@@ -110,7 +110,6 @@
 #include "nsHTMLTokens.h"
 
 static char kNameSpaceSeparator = ':';
-static char kStyleSheetPI[] = "xml-stylesheet";
 #define kXSLType "text/xsl"
 
 static NS_DEFINE_CID(kNameSpaceManagerCID, NS_NAMESPACEMANAGER_CID);
@@ -156,9 +155,13 @@ nsXMLContentSink::nsXMLContentSink()
   NS_INIT_REFCNT();
   gRefCnt++;
   if (gRefCnt == 1) {
-     nsresult rv = nsServiceManager::GetService(kNameSpaceManagerCID,
-                                          NS_GET_IID(nsINameSpaceManager),
-                                          (nsISupports**) &gNameSpaceManager);
+#ifdef DEBUG
+    nsresult rv =
+#endif
+    nsServiceManager::GetService(kNameSpaceManagerCID,
+                                 NS_GET_IID(nsINameSpaceManager),
+                                 (nsISupports**) &gNameSpaceManager);
+
      NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get namespace manager");
   }
 
@@ -648,23 +651,6 @@ nsXMLContentSink::AddContentAsLeaf(nsIContent *aContent)
   }
 
   return result;
-}
-
-static void
-ParseProcessingInstruction(const nsString& aText,
-                           nsString& aTarget,
-                           nsString& aData)
-{
-  PRInt32 offset;
-
-  aTarget.Truncate();
-  aData.Truncate();
-
-  offset = aText.FindCharInSet(" \n\r\t");
-  if (-1 != offset) {
-    aText.Mid(aTarget, 2, offset-2);
-    aText.Mid(aData, offset+1, aText.Length()-offset-3);
-  }
 }
 
 // Create an XML parser and an XSL content sink and start parsing
@@ -1196,12 +1182,6 @@ nsXMLContentSink::PopNameSpaces()
   return nsnull;
 }
 
-PRBool
-nsXMLContentSink::IsHTMLNameSpace(PRInt32 aID)
-{
-  return PRBool(kNameSpaceID_HTML == aID);
-}
-
 nsIContent*
 nsXMLContentSink::GetCurrentContent()
 {
@@ -1608,7 +1588,6 @@ nsXMLContentSink::HandleStartElement(const PRUnichar *aName,
                                      PRUint32 aLineNumber)
 {
   nsresult result = NS_OK;
-  PRBool isHTML = PR_FALSE;
   PRBool appendContent = PR_TRUE;
   nsCOMPtr<nsIContent> content;
 
@@ -1643,9 +1622,9 @@ nsXMLContentSink::HandleStartElement(const PRUnichar *aName,
   mNodeInfoManager->GetNodeInfo(tagAtom, nameSpacePrefix, nameSpaceID,
                                 *getter_AddRefs(nodeInfo));
 
-  isHTML = IsHTMLNameSpace(nameSpaceID);
+  const PRBool isXHTML = nameSpaceID == kNameSpaceID_XHTML;
 
-  if (isHTML) {
+  if (isXHTML) {
     if (tagAtom.get() == nsHTMLAtoms::script) {
       result = ProcessStartSCRIPTTag(aLineNumber);
       // Don't append the content to the tree until we're all
@@ -1678,7 +1657,7 @@ nsXMLContentSink::HandleStartElement(const PRUnichar *aName,
     mDocument->GetAndIncrementContentID(&id);
     content->SetContentID(id);
 
-    if (isHTML &&
+    if (isXHTML &&
         ((tagAtom == nsHTMLAtoms::link) ||
          (tagAtom == nsHTMLAtoms::style))) {
       nsCOMPtr<nsIStyleSheetLinkingElement> ssle(do_QueryInterface(content));
@@ -1692,7 +1671,7 @@ nsXMLContentSink::HandleStartElement(const PRUnichar *aName,
     content->SetDocument(mDocument, PR_FALSE, PR_TRUE);
 
     // Set the attributes on the new content element
-    result = AddAttributes(aAtts, content, isHTML);
+    result = AddAttributes(aAtts, content, isXHTML);
 
     if (NS_OK == result) {
       // If this is the document element
@@ -1715,9 +1694,11 @@ nsXMLContentSink::HandleStartElement(const PRUnichar *aName,
     }
 
     // Set the ID attribute atom on the node info object for this node
-    if (aIndex != -1) {
-      nsCOMPtr<nsIAtom> IDAttr = dont_AddRef(NS_NewAtom((const PRUnichar *) aAtts[aIndex]));
-      if (IDAttr && NS_SUCCEEDED(result)) {
+    if ((aIndex != (PRUint32)-1) && NS_SUCCEEDED(result)) {
+      nsCOMPtr<nsIAtom> IDAttr =
+        dont_AddRef(NS_NewAtom((const PRUnichar *)aAtts[aIndex]));
+
+      if (IDAttr) {
         result = nodeInfo->SetIDAttributeAtom(IDAttr);
       }
     }
@@ -1960,7 +1941,6 @@ nsXMLContentSink::HandleProcessingInstruction(const PRUnichar *aTarget,
 
   nsCOMPtr<nsIContent> node;
 
-  // ParseProcessingInstruction(text, target, data);
   result = NS_NewXMLProcessingInstruction(getter_AddRefs(node), target, data);
   if (NS_OK == result) {
     nsCOMPtr<nsIStyleSheetLinkingElement> ssle(do_QueryInterface(node));
@@ -2055,14 +2035,16 @@ nsXMLContentSink::ReportError(const PRUnichar* aErrorText,
 
   const PRUnichar* atts[] = {name.get(), value.get(), nsnull};
     
-  rv = HandleStartElement(NS_LITERAL_STRING("parsererror").get(), atts, 1, -1, -1);
+  rv = HandleStartElement(NS_LITERAL_STRING("parsererror").get(), atts, 1,
+                          (PRUint32)-1, (PRUint32)-1);
   NS_ENSURE_SUCCESS(rv,rv);
 
   rv = HandleCharacterData(aErrorText, nsCRT::strlen(aErrorText));
   NS_ENSURE_SUCCESS(rv,rv);  
   
   const PRUnichar* noAtts[] = {0, 0};
-  rv = HandleStartElement(NS_LITERAL_STRING("sourcetext").get(), noAtts, 0, -1, -1);
+  rv = HandleStartElement(NS_LITERAL_STRING("sourcetext").get(), noAtts, 0,
+                          (PRUint32)-1, (PRUint32)-1);
   NS_ENSURE_SUCCESS(rv,rv);
   
   rv = HandleCharacterData(aSourceText, nsCRT::strlen(aSourceText));

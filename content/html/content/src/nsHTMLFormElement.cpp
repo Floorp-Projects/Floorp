@@ -449,7 +449,7 @@ nsHTMLFormElement::GetElements(nsIDOMHTMLCollection** aElements)
 NS_IMETHODIMP
 nsHTMLFormElement::GetName(nsAString& aValue)
 {
-  return nsGenericHTMLContainerElement::GetAttr(kNameSpaceID_HTML,
+  return nsGenericHTMLContainerElement::GetAttr(kNameSpaceID_None,
                                                 nsHTMLAtoms::name,
                                                 aValue);
 }
@@ -457,7 +457,7 @@ nsHTMLFormElement::GetName(nsAString& aValue)
 NS_IMETHODIMP
 nsHTMLFormElement::SetName(const nsAString& aValue)
 {
-  return nsGenericHTMLContainerElement::SetAttr(kNameSpaceID_HTML,
+  return nsGenericHTMLContainerElement::SetAttr(kNameSpaceID_None,
                                                 nsHTMLAtoms::name,
                                                 aValue, PR_TRUE);
 }
@@ -471,7 +471,7 @@ NS_IMETHODIMP
 nsHTMLFormElement::GetTarget(nsAString& aValue)
 {
   aValue.Truncate();
-  nsresult rv = nsGenericHTMLContainerElement::GetAttr(kNameSpaceID_HTML,
+  nsresult rv = nsGenericHTMLContainerElement::GetAttr(kNameSpaceID_None,
                                                        nsHTMLAtoms::target,
                                                        aValue);
   if (rv == NS_CONTENT_ATTR_NOT_THERE) {
@@ -483,7 +483,7 @@ nsHTMLFormElement::GetTarget(nsAString& aValue)
 NS_IMETHODIMP
 nsHTMLFormElement::SetTarget(const nsAString& aValue)
 {
-  return nsGenericHTMLContainerElement::SetAttr(kNameSpaceID_HTML,
+  return nsGenericHTMLContainerElement::SetAttr(kNameSpaceID_None,
                                                 nsHTMLAtoms::target,
                                                 aValue, PR_TRUE);
 }

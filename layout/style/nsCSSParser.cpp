@@ -2109,7 +2109,8 @@ void CSSParserImpl::ParseAttributeSelector(PRInt32&  aDataMask,
         }
         if (mToken.IsSymbol(']')) {
           PRBool isCaseSensitive = mCaseSensitive;
-          if (nameSpaceID == kNameSpaceID_None || nameSpaceID == kNameSpaceID_HTML) {
+          if (nameSpaceID == kNameSpaceID_None ||
+              nameSpaceID == kNameSpaceID_XHTML) {
             static const char* caseSensitiveHTMLAttribute[] = {
               // list based on http://www.w3.org/TR/REC-html40/index/attributes.html
               "abbr",          "alt",        "label",

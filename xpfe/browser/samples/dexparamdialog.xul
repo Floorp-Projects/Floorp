@@ -188,13 +188,13 @@
 
   <html:table>
     <html:tr>
-      <html:td html:id="prompt">Give me your money</html:td>
+      <html:td id="prompt">Give me your money</html:td>
     </html:tr>
     <html:tr>
       <html:td>
         <!-- note the html namespace on the id attribute, which
              seems at this time to be required by getAttribute() -->
-        <html:input type="checkbox" html:id="remind"/>Remind me
+        <html:input type="checkbox" id="remind"/>Remind me
       </html:td>
     </html:tr>
     <html:tr>

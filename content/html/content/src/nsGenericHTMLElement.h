@@ -45,7 +45,7 @@
 #include "nsIContent.h"
 #include "nsHTMLValue.h"
 #include "nsVoidArray.h"
-#include "nsINameSpaceManager.h"  // for kNameSpaceID_HTML
+#include "nsINameSpaceManager.h"  // for kNameSpaceID_None
 #include "nsIFormControl.h"
 
 #include "nsIStatefulFrame.h"
@@ -751,7 +751,7 @@ protected:
   NS_IMETHODIMP                                                      \
   _class::Get##_method(nsAString& aValue)                            \
   {                                                                  \
-    nsresult rv = GetAttr(kNameSpaceID_HTML,                         \
+    nsresult rv = GetAttr(kNameSpaceID_None,                         \
                           nsHTMLAtoms::_atom, aValue);               \
     if (rv == NS_CONTENT_ATTR_NOT_THERE) {                           \
       aValue.Assign(NS_LITERAL_STRING(_default));                    \
@@ -761,7 +761,7 @@ protected:
   NS_IMETHODIMP                                                      \
   _class::Set##_method(const nsAString& aValue)                      \
   {                                                                  \
-    return SetAttr(kNameSpaceID_HTML, nsHTMLAtoms::_atom, aValue,    \
+    return SetAttr(kNameSpaceID_None, nsHTMLAtoms::_atom, aValue,    \
                    PR_TRUE);                                         \
   }
 
@@ -787,7 +787,7 @@ protected:
       return SetHTMLAttribute(nsHTMLAtoms::_atom, empty, PR_TRUE);    \
     }                                                                 \
     else {                                                            \
-      UnsetAttr(kNameSpaceID_HTML, nsHTMLAtoms::_atom, PR_TRUE);      \
+      UnsetAttr(kNameSpaceID_None, nsHTMLAtoms::_atom, PR_TRUE);      \
       return NS_OK;                                                   \
     }                                                                 \
   }

@@ -60,7 +60,6 @@ const nscoord kSuggestedNotSet = -1;
 
 nsGfxButtonControlFrame::nsGfxButtonControlFrame()
 {
-  mRenderer.SetNameSpace(kNameSpaceID_None);
   mSuggestedWidth  = kSuggestedNotSet;
   mSuggestedHeight = kSuggestedNotSet;
   mDefaultValueWasChanged = PR_FALSE;

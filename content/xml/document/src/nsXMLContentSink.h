@@ -147,7 +147,6 @@ protected:
                            nsIAtom **aTagName);
   PRInt32 GetNameSpaceId(nsIAtom* aPrefix);
   nsINameSpace*    PopNameSpaces();
-  PRBool  IsHTMLNameSpace(PRInt32 aId);
 
   nsIContent* GetCurrentContent();
   PRInt32 PushContent(nsIContent *aContent);

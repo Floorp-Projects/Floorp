@@ -100,7 +100,6 @@ nsHTMLButtonControlFrame::nsHTMLButtonControlFrame()
   mPreviousCursor = eCursor_standard;
   mTranslatedRect = nsRect(0,0,0,0);
   mDidInit = PR_FALSE;
-  mRenderer.SetNameSpace(kNameSpaceID_None);
 
   mCacheSize.width             = -1;
   mCacheSize.height            = -1;

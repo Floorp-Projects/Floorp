@@ -752,7 +752,7 @@ nsHTMLImageElement::GetSrc(nsAString& aSrc)
   GetBaseURL(*getter_AddRefs(baseURL));
 
   // Get href= attribute (relative URL).
-  nsGenericHTMLLeafElement::GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::src,
+  nsGenericHTMLLeafElement::GetAttr(kNameSpaceID_None, nsHTMLAtoms::src,
                                     relURLSpec);
   relURLSpec.Trim(" \t\n\r");
 
@@ -864,7 +864,7 @@ nsresult
 nsHTMLImageElement::SetSrcInner(nsIURI* aBaseURL,
                                 const nsAString& aSrc)
 {
-  nsresult result = SetAttr(kNameSpaceID_HTML, nsHTMLAtoms::src, aSrc,
+  nsresult result = SetAttr(kNameSpaceID_None, nsHTMLAtoms::src, aSrc,
                             PR_TRUE);
 
   if (NS_SUCCEEDED(result) && !mDocument) {

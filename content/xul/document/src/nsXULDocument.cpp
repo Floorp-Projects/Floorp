@@ -6001,7 +6001,7 @@ nsXULDocument::CreateElement(nsXULPrototypeElement* aPrototype, nsIContent** aRe
 
     nsCOMPtr<nsIContent> result;
 
-    if (aPrototype->mNodeInfo->NamespaceEquals(kNameSpaceID_HTML)) {
+    if (aPrototype->mNodeInfo->NamespaceEquals(kNameSpaceID_XHTML)) {
         // If it's an HTML element, it's gonna be heavyweight no matter
         // what. So we need to copy everything out of the prototype
         // into the element.

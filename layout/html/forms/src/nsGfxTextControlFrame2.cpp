@@ -1956,7 +1956,9 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
   NS_ENSURE_TRUE(nodeInfoManager, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  rv = nodeInfoManager->GetNodeInfo(nsHTMLAtoms::div, nsnull, kNameSpaceID_HTML, *getter_AddRefs(nodeInfo));
+  rv = nodeInfoManager->GetNodeInfo(nsHTMLAtoms::div, nsnull,
+                                    kNameSpaceID_XHTML,
+                                    *getter_AddRefs(nodeInfo));
 
   if (NS_FAILED(rv))
     return rv;

@@ -329,7 +329,7 @@ nsHTMLButtonElement::SetFocus(nsIPresContext* aPresContext)
   NS_ENSURE_ARG_POINTER(aPresContext);
   // first see if we are disabled or not. If disabled then do nothing.
   nsAutoString disabled;
-  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(kNameSpaceID_HTML,
+  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(kNameSpaceID_None,
                                                 nsHTMLAtoms::disabled,
                                                 disabled)) {
     return NS_OK;
@@ -616,13 +616,13 @@ nsHTMLButtonElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 nsresult
 nsHTMLButtonElement::GetDefaultValue(nsAString& aDefaultValue)
 {
-  return GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::value, aDefaultValue);
+  return GetAttr(kNameSpaceID_None, nsHTMLAtoms::value, aDefaultValue);
 }
 
 nsresult
 nsHTMLButtonElement::SetDefaultValue(const nsAString& aDefaultValue)
 {
-  return SetAttr(kNameSpaceID_HTML, nsHTMLAtoms::value, aDefaultValue, PR_TRUE);
+  return SetAttr(kNameSpaceID_None, nsHTMLAtoms::value, aDefaultValue, PR_TRUE);
 }
 
 NS_IMETHODIMP

@@ -63,8 +63,8 @@ void testAttributes(nsIHTMLContent* content) {
 
   content->SetHTMLAttribute(sBORDER, nullValue, PR_FALSE);
   content->SetHTMLAttribute(sWIDTH, nsHTMLValue(5, eHTMLUnit_Pixel), PR_FALSE);
-  content->SetAttribute(kNameSpaceID_HTML, sHEIGHT, sempty, PR_FALSE);
-  content->SetAttribute(kNameSpaceID_HTML, sSRC, sfoo_gif, PR_FALSE);
+  content->SetAttribute(kNameSpaceID_None, sHEIGHT, sempty, PR_FALSE);
+  content->SetAttribute(kNameSpaceID_None, sSRC, sfoo_gif, PR_FALSE);
 
   nsHTMLValue ret;
   nsresult rv;
@@ -83,7 +83,7 @@ void testAttributes(nsIHTMLContent* content) {
     printf("test 2 failed\n");
   }
 
-  content->UnsetAttribute(kNameSpaceID_HTML, sWIDTH, PR_FALSE);
+  content->UnsetAttribute(kNameSpaceID_None, sWIDTH, PR_FALSE);
 
   nsISupportsArray* allNames;
   NS_NewISupportsArray(&allNames);

@@ -175,51 +175,9 @@ nsHTMLUnknownElement::SetAttribute(PRInt32 aNameSpaceID,
                                    PRBool aNotify)
 {
   nsresult  result = NS_OK;
-  NS_ASSERTION((kNameSpaceID_HTML == aNameSpaceID) || 
-               (kNameSpaceID_None == aNameSpaceID) || 
-               (kNameSpaceID_Unknown == aNameSpaceID), 
-               "html content only holds HTML attributes");
-
-  if ((kNameSpaceID_HTML != aNameSpaceID) && 
-      (kNameSpaceID_None != aNameSpaceID) &&
-      (kNameSpaceID_Unknown != aNameSpaceID)) {
-    return NS_ERROR_ILLEGAL_VALUE;
-  }
 
   // Check for event handlers
-  if (nsLayoutAtoms::onclick == aAttribute ||
-      nsLayoutAtoms::ondblclick == aAttribute ||
-      nsLayoutAtoms::onmousedown == aAttribute ||
-      nsLayoutAtoms::onmouseup == aAttribute ||
-      nsLayoutAtoms::onmouseover == aAttribute ||
-      nsLayoutAtoms::onmouseout == aAttribute ||
-      nsLayoutAtoms::onkeydown == aAttribute ||
-      nsLayoutAtoms::onkeyup == aAttribute ||
-      nsLayoutAtoms::onkeypress == aAttribute ||
-      nsLayoutAtoms::onmousemove == aAttribute ||
-      nsLayoutAtoms::onload == aAttribute ||
-      nsLayoutAtoms::onunload == aAttribute ||
-      nsLayoutAtoms::onabort == aAttribute ||
-      nsLayoutAtoms::onerror == aAttribute ||
-      nsLayoutAtoms::onfocus == aAttribute ||
-      nsLayoutAtoms::onblur == aAttribute ||
-      nsLayoutAtoms::onsubmit == aAttribute ||
-      nsLayoutAtoms::onreset == aAttribute ||
-      nsLayoutAtoms::onchange == aAttribute ||
-      nsLayoutAtoms::onselect == aAttribute || 
-      nsLayoutAtoms::onpaint == aAttribute ||
-      nsLayoutAtoms::onresize == aAttribute ||
-      nsLayoutAtoms::onscroll == aAttribute ||
-      nsLayoutAtoms::oninput == aAttribute ||
-      nsLayoutAtoms::oncontextmenu == aAttribute || 
-      nsLayoutAtoms::onDOMAttrModified == aAttribute ||
-      nsLayoutAtoms::onDOMCharacterDataModified == aAttribute || 
-      nsLayoutAtoms::onDOMSubtreeModified == aAttribute ||
-      nsLayoutAtoms::onDOMNodeInsertedIntoDocument == aAttribute || 
-      nsLayoutAtoms::onDOMNodeRemovedFromDocument == aAttribute ||
-      nsLayoutAtoms::onDOMNodeInserted  == aAttribute || 
-      nsLayoutAtoms::onDOMNodeRemoved == aAttribute
-        ) {
+  if (aNameSpaceID == kNameSpaceID_None && IsEventName(aAttribute)) {
     AddScriptEventListener(aAttribute, aValue);
   }
   

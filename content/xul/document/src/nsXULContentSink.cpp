@@ -1315,7 +1315,7 @@ XULContentSinkImpl::OpenRoot(const PRUnichar** aAttributes,
 
     nsresult rv;
 
-    if (aNodeInfo->Equals(kScriptAtom, kNameSpaceID_HTML) || 
+    if (aNodeInfo->Equals(kScriptAtom, kNameSpaceID_XHTML) || 
         aNodeInfo->Equals(kScriptAtom, kNameSpaceID_XUL)) {
         PR_LOG(gLog, PR_LOG_ALWAYS,
                ("xul: script tag not allowed as root content element"));
@@ -1395,7 +1395,7 @@ XULContentSinkImpl::OpenTag(const PRUnichar** aAttributes,
 
     children->AppendElement(element);
 
-    if (aNodeInfo->Equals(kScriptAtom, kNameSpaceID_HTML) || 
+    if (aNodeInfo->Equals(kScriptAtom, kNameSpaceID_XHTML) || 
         aNodeInfo->Equals(kScriptAtom, kNameSpaceID_XUL)) {
         // Do scripty things now.  OpenScript will push the
         // nsPrototypeScriptElement onto the stack, so we're done after this.

@@ -2171,7 +2171,7 @@ FrameManager::GenerateStateKey(nsIContent* aContent,
     KeyAppendAtom(tag, aKey);
 
     nsAutoString name;
-    aContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::name, name);
+    aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, name);
     KeyAppendString(name, aKey);
   }
 

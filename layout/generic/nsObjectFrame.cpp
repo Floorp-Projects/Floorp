@@ -461,7 +461,7 @@ void nsObjectFrame::IsSupportedImage(nsIContent* aContent, PRBool* aImage)
     return;
 
   nsAutoString type;
-  nsresult rv = aContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::type, type);
+  nsresult rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, type);
   if((rv == NS_CONTENT_ATTR_HAS_VALUE) && (type.Length() > 0)) 
   {
     nsCOMPtr<imgILoader> loader(do_GetService("@mozilla.org/image/loader;1"));
@@ -470,13 +470,13 @@ void nsObjectFrame::IsSupportedImage(nsIContent* aContent, PRBool* aImage)
   }
 
   nsAutoString data;
-  rv = aContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::data, data);
+  rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::data, data);
 
   PRBool havedata = (rv == NS_CONTENT_ATTR_HAS_VALUE) && (data.Length() > 0);
 
   if(!havedata)
   {// try it once more for SRC attrubute
-    rv = aContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::src, data);
+    rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, data);
     havedata = (rv == NS_CONTENT_ATTR_HAS_VALUE) && (data.Length() > 0);
   }
 
@@ -521,7 +521,7 @@ void nsObjectFrame::IsSupportedDocument(nsIContent* aContent, PRBool* aDoc)
   if (NS_FAILED(rv)) return;
 
   nsAutoString type;
-  rv = aContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::type, type);
+  rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, type);
   if((rv == NS_CONTENT_ATTR_HAS_VALUE) && (type.Length() > 0)) 
   {
     nsXPIDLCString value;
@@ -536,7 +536,7 @@ void nsObjectFrame::IsSupportedDocument(nsIContent* aContent, PRBool* aDoc)
 
   // if we don't have a TYPE= try getting the mime-type via the DATA= url
   nsAutoString data;
-  rv = aContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::data, data);
+  rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::data, data);
   if((rv == NS_CONTENT_ATTR_HAS_VALUE) && (data.Length() > 0)) 
   {
     nsCOMPtr<nsIURI> uri;
@@ -980,7 +980,7 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
     if (NS_SUCCEEDED(rv = GetBaseURL(*getter_AddRefs(baseURL)))) {
       nsAutoString codeBase;
       if ((NS_CONTENT_ATTR_HAS_VALUE ==
-            mContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::codebase, codeBase)) &&
+            mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::codebase, codeBase)) &&
           !codeBase.IsEmpty()) {
         nsCOMPtr<nsIURI> codeBaseURL;
         rv = MakeAbsoluteURL(getter_AddRefs(codeBaseURL), codeBase, baseURL);
@@ -1062,7 +1062,7 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
       nsCOMPtr<nsIAtom> tag;
       mContent->GetTag(*getter_AddRefs(tag));
       if (tag.get() == nsHTMLAtoms::applet) {
-        if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::code, src)) {
+        if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::code, src)) {
           // Create an absolute URL
           rv = MakeAbsoluteURL(getter_AddRefs(fullURL), src, baseURL);
         }
@@ -1074,16 +1074,16 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
       } else { // traditional plugin
         nsXPIDLCString mimeTypeStr;
         nsAutoString type;
-        mContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::type, type);
+        mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, type);
 
         if (type.Length()) {
           mimeTypeStr.Adopt(ToNewCString(type));
         }
         //stream in the object source if there is one...
         if (NS_CONTENT_ATTR_HAS_VALUE ==
-              mContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::src, src) ||
+              mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, src) ||
             NS_CONTENT_ATTR_HAS_VALUE ==
-              mContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::data, src)) {
+              mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::data, src)) {
           // Create an absolute URL
           rv = MakeAbsoluteURL(getter_AddRefs(fullURL), src, baseURL);
           if (NS_FAILED(rv)) {

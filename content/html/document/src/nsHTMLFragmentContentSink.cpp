@@ -920,12 +920,12 @@ nsHTMLFragmentContentSink::AddAttributes(const nsIParserNode& aNode,
     nsIAtom*  keyAtom = NS_NewAtom(k);
     
     if (NS_CONTENT_ATTR_NOT_THERE == 
-        aContent->GetAttr(kNameSpaceID_HTML, keyAtom, v)) {
+        aContent->GetAttr(kNameSpaceID_None, keyAtom, v)) {
       // Get value and remove mandatory quotes
       GetAttributeValueAt(aNode, i, v);
 
       // Add attribute to content
-      aContent->SetAttr(kNameSpaceID_HTML, keyAtom, v, PR_FALSE);
+      aContent->SetAttr(kNameSpaceID_None, keyAtom, v, PR_FALSE);
     }
     NS_RELEASE(keyAtom);
   }
