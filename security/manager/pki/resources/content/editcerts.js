@@ -221,7 +221,7 @@ function editCaTrust()
    if(cacert != null)
    {
       window.openDialog('chrome://pippki/content/editcacert.xul', cacert.dbKey,
-                               'chrome,resizable=1,modal');
+                        'chrome,centerscreen,modal');
    }
    else
    {

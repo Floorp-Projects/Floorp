@@ -67,7 +67,7 @@ function onLoad() {
 
 function showInfo(cipher_name) {
   window.openDialog('chrome://pippki/content/cipherinfo.xul', cipher_name,
-                    'modal=yes,resizable,chrome');
+                    'chrome,centerscreen,modal');
 }
 
 function doOK() {

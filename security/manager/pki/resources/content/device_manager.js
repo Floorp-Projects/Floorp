@@ -337,7 +337,7 @@ function doLogout()
 function doLoad()
 {
   window.open("load_device.xul", "loaddevice", 
-              "chrome,resizable=1,dialog=1,modal=1");
+              "chrome,centerscreen,modal");
   var device_list = document.getElementById("device_list");
   while (device_list.firstChild)
     device_list.removeChild(device_list.firstChild);
@@ -363,7 +363,7 @@ function changePassword()
   params.SetString(1,selected_slot.tokenName);
   window.openDialog("changepassword.xul",
               "", 
-              "chrome,resizable=1,modal=1,dialog=1",params);
+              "chrome,centerscreen,modal", params);
   showSlotInfo();
   enableButtons();
 }

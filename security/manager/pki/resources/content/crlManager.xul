@@ -39,7 +39,8 @@
         title="&validation.crlmanager.label;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         style="width: 30em;"
-        onload="onLoad();">
+        onload="onLoad();"
+        persist="screenX screenY width height">
 
   <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
   <script type="application/x-javascript" src="chrome://pippki/content/crlManager.js"/>

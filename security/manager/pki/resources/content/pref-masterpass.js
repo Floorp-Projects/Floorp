@@ -105,12 +105,12 @@ function ChangePW()
   var params = Components.classes[nsDialogParamBlock].createInstance(nsIDialogParamBlock);
   params.SetString(1,"");
   window.openDialog("chrome://pippki/content/changepassword.xul","",
-              "chrome,resizable=1,modal=1,dialog=1",params);
+                    "chrome,centerscreen,modal",params);
 }
 
 function ResetPW()
 {
   window.open("chrome://pippki/content/resetpassword.xul",
               internal_token.tokenName,
-              "centerscreen,chrome,resizable=1,modal=1,dialog=1");
+              "chrome,centerscreen,modal");
 }

@@ -90,6 +90,6 @@ function changeURL()
 function openCrlManager()
 {
     window.open('chrome://pippki/content/crlManager.xul',  "",
-                'chrome,width=500,height=400,resizable=1');
+                'chrome,centerscreen,dialog,resizable');
 }
 

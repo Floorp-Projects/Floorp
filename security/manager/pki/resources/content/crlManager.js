@@ -207,7 +207,7 @@ function EditAutoUpdatePrefs() {
   var params = Components.classes[nsPKIParamBlock].createInstance(nsIPKIParamBlock);
   params.setISupportAtIndex(1, crlEntry);
   window.openDialog("chrome://pippki/content/pref-crlupdate.xul","",
-                                   "chrome,resizable=1,modal=1,dialog=1",params);
+                    "chrome,centerscreen,modal", params);
 }
 
 function UpdateCRL()

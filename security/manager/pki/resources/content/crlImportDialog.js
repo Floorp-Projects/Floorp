@@ -97,7 +97,7 @@ function onAccept()
   params.setISupportAtIndex(1, crl);
   
   window.openDialog("chrome://pippki/content/pref-crlupdate.xul","",
-                                   "chrome,resizable=1,modal=1,dialog=1",params);
+                    "chrome,centerscreen,modal",params);
   return true;
 }
 
