@@ -1,5 +1,7 @@
 # target: gfxDebug.shlb
 mozilla/gfx/src/mac/nsDeviceContextMac.cpp
+mozilla/gfx/src/mac/nsDeviceContextSpecFactoryM.cpp
+mozilla/gfx/src/mac/nsDeviceContextSpecMac.cpp
 mozilla/gfx/src/mac/nsFontMetricsMac.cpp
 mozilla/gfx/src/mac/nsGfxFactoryMac.cpp
 mozilla/gfx/src/mac/nsImageMac.cpp

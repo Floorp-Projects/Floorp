@@ -62,3 +62,4 @@ mozilla/network/protocol/http/mkhttp.c
 mozilla/network/protocol/remote/mkremote.c
 mozilla/network/util/mkreg.c
 mozilla/webshell/tests/viewer/macToBeImplemented.cp
+mozilla/webshell/tests/viewer/nsMacFile.cp

@@ -1,11 +1,18 @@
-# target: layout.shlb
+# target: layoutDebug.shlb
 mozilla/layout/base/src/nsContentList.cpp
 mozilla/layout/base/src/nsDocument.cpp
+mozilla/layout/base/src/nsDocumentFragment.cpp
 mozilla/layout/base/src/nsFrameImageLoader.cpp
+mozilla/layout/base/src/nsFrameUtil.cpp
 mozilla/layout/base/src/nsGalleyContext.cpp
 mozilla/layout/base/src/nsGenericElement.cpp
+mozilla/layout/base/src/nsLayoutAtoms.cpp
+mozilla/layout/base/src/nsNameSpaceManager.cpp
 mozilla/layout/base/src/nsPresContext.cpp
+mozilla/layout/base/src/nsPrintContext.cpp
 mozilla/layout/base/src/nsPrintPreviewContext.cpp
+mozilla/layout/base/src/nsRange.cpp
+mozilla/layout/base/src/nsRangeList.cpp
 mozilla/layout/base/src/nsSpaceManager.cpp
 mozilla/layout/base/src/nsStyleContext.cpp
 mozilla/layout/base/src/nsStyleCoord.cpp
@@ -18,9 +25,12 @@ mozilla/layout/events/src/nsDOMEventsIIDs.cpp
 mozilla/layout/events/src/nsEventListenerManager.cpp
 mozilla/layout/events/src/nsEventStateManager.cpp
 mozilla/layout/html/base/src/nsAbsoluteFrame.cpp
+mozilla/layout/html/base/src/nsBlockBandData.cpp
 mozilla/layout/html/base/src/nsBlockFrame.cpp
+mozilla/layout/html/base/src/nsBlockReflowContext.cpp
 mozilla/layout/html/base/src/nsBodyFrame.cpp
 mozilla/layout/html/base/src/nsBRFrame.cpp
+mozilla/layout/html/base/src/nsBulletFrame.cpp
 mozilla/layout/html/base/src/nsContainerFrame.cpp
 mozilla/layout/html/base/src/nsFrame.cpp
 mozilla/layout/html/base/src/nsFrameReflowState.cpp
@@ -36,6 +46,7 @@ mozilla/layout/html/base/src/nsImageMap.cpp
 mozilla/layout/html/base/src/nsInlineFrame.cpp
 mozilla/layout/html/base/src/nsInlineReflow.cpp
 mozilla/layout/html/base/src/nsLeafFrame.cpp
+mozilla/layout/html/base/src/nsLineBox.cpp
 mozilla/layout/html/base/src/nsLineLayout.cpp
 mozilla/layout/html/base/src/nsObjectFrame.cpp
 mozilla/layout/html/base/src/nsPageFrame.cpp
@@ -133,6 +144,7 @@ mozilla/layout/html/forms/src/nsLegendFrame.cpp
 mozilla/layout/html/forms/src/nsRadioControlFrame.cpp
 mozilla/layout/html/forms/src/nsSelectControlFrame.cpp
 mozilla/layout/html/forms/src/nsTextControlFrame.cpp
+mozilla/layout/html/style/src/nsCSSAtoms.cpp
 mozilla/layout/html/style/src/nsCSSDeclaration.cpp
 mozilla/layout/html/style/src/nsCSSKeywords.cpp
 mozilla/layout/html/style/src/nsCSSParser.cpp
