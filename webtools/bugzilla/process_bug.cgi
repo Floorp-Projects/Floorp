@@ -202,12 +202,7 @@ CheckFormFieldDefined(\%::FORM, 'product');
 CheckFormFieldDefined(\%::FORM, 'version');
 CheckFormFieldDefined(\%::FORM, 'component');
 
-# check if target milestone is defined - matthew@zeroknowledge.com
-if ( Param("usetargetmilestone") ) {
-  CheckFormFieldDefined(\%::FORM, 'target_milestone');
-}
 
-#
 # This function checks if there is a comment required for a specific
 # function and tests, if the comment was given.
 # If comments are required for functions is defined by params.
@@ -275,6 +270,7 @@ if ((($::FORM{'id'} && $::FORM{'product'} ne $::oldproduct)
 
     my $mok = 1;   # so it won't affect the 'if' statement if milestones aren't used
     if ( Param("usetargetmilestone") ) {
+       CheckFormFieldDefined(\%::FORM, 'target_milestone');
        $mok = lsearch($::target_milestone{$prod}, $::FORM{'target_milestone'}) >= 0;
     }
 
@@ -292,23 +288,21 @@ if ((($::FORM{'id'} && $::FORM{'product'} ne $::oldproduct)
             # if its a valid option, otherwise we use the default where
             # thats appropriate
             $vars->{'versions'} = $::versions{$prod};
-            if (lsearch($::versions{$prod}, $::FORM{'version'}) != -1) {
+            if ($vok) {
                 $defaults{'version'} = $::FORM{'version'};
             }
             $vars->{'components'} = $::components{$prod};
-            if (lsearch($::components{$prod}, $::FORM{'component'}) != -1) {
+            if ($cok) {
                 $defaults{'component'} = $::FORM{'component'};
             }
-
             if (Param("usetargetmilestone")) {
                 $vars->{'use_target_milestone'} = 1;
                 $vars->{'milestones'} = $::target_milestone{$prod};
-                if (lsearch($::target_milestone{$prod},
-                            $::FORM{'target_milestone'}) != -1) {
+                if ($mok) {
                     $defaults{'target_milestone'} = $::FORM{'target_milestone'};
                 } else {
-                    SendSQL("SELECT defaultmilestone FROM products WHERE " .
-                            "name = " . SqlQuote($prod));
+                    SendSQL("SELECT defaultmilestone FROM products " .
+                            "WHERE name = " . SqlQuote($prod));
                     $defaults{'target_milestone'} = FetchOneColumn();
                 }
             }
@@ -318,7 +312,7 @@ if ((($::FORM{'id'} && $::FORM{'product'} ne $::oldproduct)
             $vars->{'defaults'} = \%defaults;
         }
         else {
-            $vars->{"verify_fields"} = 0;
+            $vars->{'verify_fields'} = 0;
         }
         
         $vars->{'verify_bug_group'} = (AnyDefaultGroups() 
@@ -536,19 +530,23 @@ if (defined $::FORM{'id'}) {
     # (XXX those error checks need to happen too, but implementing them 
     # is more work in the current architecture of this script...)
     #
-    CheckFormField(\%::FORM, 'rep_platform', \@::legal_platform);
-    CheckFormField(\%::FORM, 'priority', \@::legal_priority);
-    CheckFormField(\%::FORM, 'bug_severity', \@::legal_severity);
+    CheckFormField(\%::FORM, 'product', \@::legal_product);
     CheckFormField(\%::FORM, 'component', 
                    \@{$::components{$::FORM{'product'}}});
-    CheckFormFieldDefined(\%::FORM, 'bug_file_loc');
-    CheckFormFieldDefined(\%::FORM, 'short_desc');
-    CheckFormField(\%::FORM, 'product', \@::legal_product);
     CheckFormField(\%::FORM, 'version', 
                    \@{$::versions{$::FORM{'product'}}});
+    if ( Param("usetargetmilestone") ) {
+        CheckFormField(\%::FORM, 'target_milestone', 
+                       \@{$::target_milestone{$::FORM{'product'}}});
+    }
+    CheckFormField(\%::FORM, 'rep_platform', \@::legal_platform);
     CheckFormField(\%::FORM, 'op_sys', \@::legal_opsys);
+    CheckFormField(\%::FORM, 'priority', \@::legal_priority);
+    CheckFormField(\%::FORM, 'bug_severity', \@::legal_severity);
+    CheckFormFieldDefined(\%::FORM, 'bug_file_loc');
+    CheckFormFieldDefined(\%::FORM, 'short_desc');
     CheckFormFieldDefined(\%::FORM, 'longdesclength');
-    
+
     if (trim($::FORM{'short_desc'}) eq "") {
         ThrowUserError("require_summary");
     }
@@ -676,9 +674,8 @@ while (my ($b, $isactive) = FetchSQLData()) {
     }
 }
 
-foreach my $field ("rep_platform", "priority", "bug_severity",          
-                   "summary", "bug_file_loc", "short_desc",
-                   "version", "op_sys",
+foreach my $field ("rep_platform", "priority", "bug_severity",
+                   "bug_file_loc", "short_desc", "version", "op_sys",
                    "target_milestone", "status_whiteboard") {
     if (defined $::FORM{$field}) {
         if (!$::FORM{'dontchange'}
@@ -1215,9 +1212,7 @@ foreach my $id (@idlist) {
         SendSQL("SELECT defaultmilestone FROM products WHERE name = " .
                 SqlQuote($oldhash{'product'}));
         if ($value eq FetchOneColumn()) {
-            ThrowUserError("milestone_required",
-                           { bug_id => $id },
-                           "abort");
+            ThrowUserError("milestone_required", { bug_id => $id }, "abort");
         }
     }   
     if (defined $::FORM{'delta_ts'} && $::FORM{'delta_ts'} ne $delta_ts) {
