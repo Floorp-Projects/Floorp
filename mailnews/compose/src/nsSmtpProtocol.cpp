@@ -271,9 +271,9 @@ void nsSmtpProtocol::Initialize(nsIURI * aURL)
 	nsresult rv = NS_OK;
 
 	m_flags = nsISmtpServer::cap_undefined;
-    m_prefAuthMethod = PREF_AUTH_NONE;
+  m_prefAuthMethod = PREF_AUTH_NONE;
 	m_port = SMTP_PORT;
-    m_tlsInitiated = PR_FALSE;
+  m_tlsInitiated = PR_FALSE;
 
 	m_urlErrorState = NS_ERROR_FAILURE;
 
@@ -512,7 +512,7 @@ PRInt32 nsSmtpProtocol::SmtpResponse(nsIInputStream * inputStream, PRUint32 leng
     // ESMTP server set capability accordingly
       if (nsCRT::strlen(m_responseText))
       {
-          if (TestFlag(nsISmtpServer::cap_undefined) && m_runningURL)
+          if ((TestFlag(nsISmtpServer::cap_undefined) || TestFlag(SMTP_USE_LOGIN_REDIRECTION)) && m_runningURL)
           {
               nsCOMPtr<nsISmtpServer> smtpServer;
               m_runningURL->GetSmtpServer(getter_AddRefs(smtpServer));
@@ -704,6 +704,8 @@ PRInt32 nsSmtpProtocol::SendEhloResponse(nsIInputStream * inputStream, PRUint32 
     
     if (m_responseCode != 250) 
     {
+      /* EHLO must not be implemented by the server so fall back to the HELO case */
+
         if (m_prefAuthMethod == PREF_AUTH_ANY ||
             m_prefAuthMethod == PREF_AUTH_TLS_ONLY ||
             m_prefAuthMethod == PREF_AUTH_LOGIN)
@@ -1305,7 +1307,7 @@ nsresult nsSmtpProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer )
 			char *addrs1 = 0;
 			char *addrs2 = 0;
    		m_nextState = SMTP_RESPONSE;
-        if (TestFlag(nsISmtpServer::cap_undefined))
+        if (TestFlag(nsISmtpServer::cap_undefined) || TestFlag(SMTP_USE_LOGIN_REDIRECTION))
             m_nextStateAfterResponse = SMTP_EXTN_LOGIN_RESPONSE;
         else if (TestFlag(nsISmtpServer::cap_esmtp_server))
             m_nextStateAfterResponse = SMTP_AUTH_PROCESS_STATE;
@@ -1385,12 +1387,12 @@ nsresult nsSmtpProtocol::ProcessProtocolState(nsIURI * url, nsIInputStream * inp
 			case SMTP_START_CONNECT:
 				SetFlag(SMTP_PAUSE_FOR_READ);
 				m_nextState = SMTP_RESPONSE;
-                if (TestFlag(nsISmtpServer::cap_undefined))
-                    m_nextStateAfterResponse = SMTP_EXTN_LOGIN_RESPONSE;
-                else if (TestFlag(nsISmtpServer::cap_esmtp_server))
-                    m_nextStateAfterResponse = SMTP_AUTH_PROCESS_STATE;
-                else
-                    m_nextStateAfterResponse = SMTP_SEND_HELO_RESPONSE;
+        if (TestFlag(nsISmtpServer::cap_undefined) || TestFlag(SMTP_USE_LOGIN_REDIRECTION))
+            m_nextStateAfterResponse = SMTP_EXTN_LOGIN_RESPONSE;
+        else if (TestFlag(nsISmtpServer::cap_esmtp_server))
+            m_nextStateAfterResponse = SMTP_AUTH_PROCESS_STATE;
+        else
+            m_nextStateAfterResponse = SMTP_SEND_HELO_RESPONSE;
 				break;
 			case SMTP_FINISH_CONNECT:
 	            SetFlag(SMTP_PAUSE_FOR_READ);

@@ -116,8 +116,8 @@ public:
 	virtual nsresult LoadUrl(nsIURI * aURL, nsISupports * aConsumer = nsnull);
   virtual PRInt32 SendData(nsIURI * aURL, const char * dataBuffer);
 
-    virtual void SetFlag (PRUint32 flag);
-    virtual void ClearFlag (PRUint32 flag);
+  virtual void SetFlag (PRUint32 flag);
+  virtual void ClearFlag (PRUint32 flag);
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// we suppport the nsIStreamListener interface 
@@ -150,11 +150,11 @@ private:
 	// after the next response? What was the last response code? etc. 
 	SmtpState	m_nextState;
   SmtpState	m_nextStateAfterResponse;
-  PRInt32     m_responseCode;    /* code returned from Smtp server */
+  PRInt32   m_responseCode;    /* code returned from Smtp server */
 	PRInt32 	m_previousResponseCode; 
 	PRInt32		m_continuationResponse;
-  nsCString   m_responseText;   /* text returned from Smtp server */
-	PRUint32    m_port;
+  nsCString m_responseText;   /* text returned from Smtp server */
+	PRUint32  m_port;
 
 	char	   *m_addressCopy;
 	char	   *m_addresses;
@@ -167,14 +167,14 @@ private:
   PRInt32 m_prefAuthMethod;
   PRBool m_tlsEnabled;
   
-    PRBool m_tlsInitiated;
+  PRBool m_tlsInitiated;
 
 	// message specific information
 	PRInt32		m_totalAmountWritten;
 	PRUint32	m_totalMessageSize;
     
 	char		*m_dataBuf;
-  PRUint32	 m_dataBufSize;
+  PRUint32 m_dataBufSize;
 
 	PRInt32   m_originalContentLength; /* the content length at the time of calling graph progress */
 	
