@@ -117,6 +117,7 @@ typedef struct MochaDecoder {
 #ifdef NAV_HARDWARE
     JSObject	    *hardware;
 #endif
+	JSObject	    *environment;
     JSObject	    *crypto;
     JSObject        *pkcs11;
 
