@@ -32,6 +32,9 @@
 // Defining attributes of a url's load behavior.
 class nsILoadAttribs : public nsISupports {
 public:
+    // Copy the state of another nsILoadAttribs instance.
+    NS_IMETHOD Clone(nsILoadAttribs* aLoadAttribs) = 0;
+
     // Bypass Proxy.
     NS_IMETHOD SetBypassProxy(PRBool aBypass) = 0;
     NS_IMETHOD GetBypassProxy(PRBool *aBypass) = 0;

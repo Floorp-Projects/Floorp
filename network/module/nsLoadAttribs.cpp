@@ -26,16 +26,19 @@
 class nsLoadAttribs : public nsILoadAttribs {
 public:
     nsLoadAttribs();
-    virtual ~nsLoadAttribs();
 
     // nsISupports
     NS_DECL_ISUPPORTS
 
     // nsILoadAttribs
+    NS_IMETHOD Clone(nsILoadAttribs* aLoadAttribs);
     NS_IMETHOD SetBypassProxy(PRBool aBypass);
     NS_IMETHOD GetBypassProxy(PRBool *aBypass);
     NS_IMETHOD SetLocalIP(const PRUint32 aIP);
     NS_IMETHOD GetLocalIP(PRUint32 *aIP);
+
+protected:
+    virtual ~nsLoadAttribs();
 
 private:
     PRBool mBypass;
@@ -48,14 +51,38 @@ static NS_DEFINE_IID(kILoadAttribsIID, NS_ILOAD_ATTRIBS_IID);
 NS_IMPL_THREADSAFE_ISUPPORTS(nsLoadAttribs, kILoadAttribsIID);
 
 nsLoadAttribs::nsLoadAttribs() {
-    mBypass = PR_FALSE;
-    mLocalIP = 0;
+  NS_INIT_REFCNT();
+  mBypass = PR_FALSE;
+  mLocalIP = 0;
 }
 
 nsLoadAttribs::~nsLoadAttribs() {
 }
 
-nsresult
+NS_IMETHODIMP
+nsLoadAttribs::Clone(nsILoadAttribs* aLoadAttribs)
+{
+    nsresult rv = NS_OK;
+
+    if (nsnull == aLoadAttribs) {
+        rv = NS_ERROR_NULL_POINTER;
+    } else {
+        PRBool bypass;
+        PRUint32 ip;
+
+        NS_LOCK_INSTANCE();
+        aLoadAttribs->GetBypassProxy(&bypass);
+        SetBypassProxy(bypass);
+
+        aLoadAttribs->GetLocalIP(&ip);
+        SetLocalIP(ip);
+        NS_UNLOCK_INSTANCE();
+    }
+    return rv;
+
+}
+
+NS_IMETHODIMP
 nsLoadAttribs::SetBypassProxy(PRBool aBypass) {
     NS_LOCK_INSTANCE();
     mBypass = aBypass;
@@ -63,7 +90,7 @@ nsLoadAttribs::SetBypassProxy(PRBool aBypass) {
     return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsLoadAttribs::GetBypassProxy(PRBool *aBypass) {
     nsresult rv = NS_OK;
 
@@ -77,7 +104,7 @@ nsLoadAttribs::GetBypassProxy(PRBool *aBypass) {
     return rv;
 }
 
-nsresult
+NS_IMETHODIMP
 nsLoadAttribs::SetLocalIP(const PRUint32 aLocalIP) {
     NS_LOCK_INSTANCE();
     mLocalIP = aLocalIP;
@@ -85,7 +112,7 @@ nsLoadAttribs::SetLocalIP(const PRUint32 aLocalIP) {
     return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsLoadAttribs::GetLocalIP(PRUint32 *aLocalIP) {
     nsresult rv = NS_OK;
 
@@ -101,7 +128,9 @@ nsLoadAttribs::GetLocalIP(PRUint32 *aLocalIP) {
 
 // Creation routines
 NS_NET nsresult NS_NewLoadAttribs(nsILoadAttribs** aInstancePtrResult) {
-  nsILoadAttribs* it = new nsLoadAttribs();
+  nsILoadAttribs* it;
+
+  NS_NEWXPCOM(it, nsLoadAttribs);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
