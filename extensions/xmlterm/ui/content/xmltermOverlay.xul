@@ -5,7 +5,7 @@
 <!-- This is the overlay that adds "XMLterm" to the (global) task menu. -->
 
 <overlay id="XMLtermTaskMenuID"
-    xmlns:html="http://www.w3.org/TR/REC-html40"
+    xmlns:html="http://www.w3.org/1999/xhtml"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <html:script language="JavaScript" src="chrome://xmlterm/content/xmltermOverlay.js"/>
