@@ -103,12 +103,6 @@ nsresult nsDrawingSurfaceOS2::GetBitmap( HBITMAP &aBitmap)
    return NS_OK;
 }
 
-nsresult nsDrawingSurfaceOS2::RequiresInvertedMask( PRBool *aBool)
-{
-   *aBool = (PRBool) (gModuleData.lDisplayDepth <= 8);
-   return NS_OK;
-}
-
 // Offscreen surface --------------------------------------------------------
 
 nsOffscreenSurface::nsOffscreenSurface() : mDC(0), mBitmap(0),
@@ -516,8 +510,3 @@ nsresult nsPrintSurface::GetDimensions( PRUint32 *aWidth, PRUint32 *aHeight)
    return NS_OK;
 }
 
-nsresult nsPrintSurface::RequiresInvertedMask( PRBool *aBool)
-{
-   *aBool = PR_FALSE;
-   return NS_OK;
-}
