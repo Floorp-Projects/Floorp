@@ -123,8 +123,6 @@ xt_event_dispatch (gpointer  source_data,
     XtAppProcessEvent(ac, XtIMXEvent);
   }
 
-  printf("dispatch %d\n", i);
-
   GDK_THREADS_LEAVE ();
 
   return TRUE;  
