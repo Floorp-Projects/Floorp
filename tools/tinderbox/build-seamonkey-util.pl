@@ -22,7 +22,7 @@ use File::Path;     # for rmtree();
 use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 
-$::UtilsVersion = '$Revision: 1.178 $ ';
+$::UtilsVersion = '$Revision: 1.179 $ ';
 
 package TinderUtils;
 
@@ -1587,7 +1587,8 @@ sub run_all_tests {
       $test_result = StartupPerformanceTest("StartupPerformanceTest",
                                             $binary,
                                             $startup_build_dir,
-                                            "-P $Settings::MozProfileName");
+                                            "-P $Settings::MozProfileName",
+                                            "file:$startup_build_dir/../startup-test.html");
     }
 }
 
@@ -1805,8 +1806,10 @@ sub LayoutPerformanceTest {
 # (or CPPFLAGS=-DMOZ_ENABLE_JS_DUMP in mozconfig since we
 # don't have profiles for tbox right now.)
 #
+# $startup_url needs ?begin=<time> dynamically inserted.
+#
 sub StartupPerformanceTest {
-  my ($test_name, $binary, $build_dir, $layout_test_args) = @_;
+  my ($test_name, $binary, $build_dir, $startup_test_args, $startup_url) = @_;
   
   my $i;
   my $startuptime;         # Startup time in ms.
@@ -1830,7 +1833,7 @@ sub StartupPerformanceTest {
     
     $cwd = get_system_cwd();
     print "cwd = $cwd\n";
-    $url  = "\"file:$build_dir/../startup-test.html?begin=$time\"";
+    $url  = "$startup_url?begin=$time";
     
     print "url = $url\n";
     
@@ -1845,11 +1848,13 @@ sub StartupPerformanceTest {
       $startuptime =
         AliveTestReturnToken("StartupPerformanceTest-$i",
                              $build_dir,
-                             "$binary -P $Settings::MozProfileName",
-                             $url,
+                             "$binary",
+                             " $startup_test_args \"$url\"",
                              $Settings::StartupPerformanceTestTimeout,
                              "__startuptime",
                              ",");
+    } else {
+      print "Startup test failed.\n";
     }
     
     if($startuptime) {
