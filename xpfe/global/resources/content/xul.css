@@ -435,22 +435,22 @@ stack {
    visibility: hidden;
 }
 
-/********** tabcontrol *********/
+/********** tabbox *********/
 
-tabcontrol {
-  -moz-binding: url("chrome://global/content/bindings/tabcontrol.xml#tabcontrol");
+tabbox {
+  -moz-binding: url("chrome://global/content/bindings/tabbox.xml#tabbox");
 }
 
 tabs {
-  -moz-binding: url("chrome://global/content/bindings/tabcontrol.xml#tabs");
+  -moz-binding: url("chrome://global/content/bindings/tabbox.xml#tabs");
 }
 
 tab {
-  -moz-binding: url("chrome://global/content/bindings/tabcontrol.xml#tab");
+  -moz-binding: url("chrome://global/content/bindings/tabbox.xml#tab");
 }
 
 tabpanels {
-  -moz-binding: url("chrome://global/content/bindings/tabcontrol.xml#tabpanels");
+  -moz-binding: url("chrome://global/content/bindings/tabbox.xml#tabpanels");
   display: -moz-xul-deck;
 }
 
