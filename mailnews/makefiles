@@ -74,10 +74,8 @@ mailnews/mime/cthandlers/resources/Makefile
 mailnews/mime/cthandlers/vcard/Makefile
 mailnews/mime/cthandlers/calendar/Makefile
 mailnews/mime/emitters/Makefile
-mailnews/mime/emitters/html/Makefile
+mailnews/mime/emitters/build/Makefile
 mailnews/mime/emitters/src/Makefile
-mailnews/mime/emitters/xml/Makefile
-mailnews/mime/emitters/raw/Makefile
 mailnews/mime/emitters/resources/Makefile
 mailnews/mime/emitters/resources/skin/Makefile
 mailnews/mime/tests/Makefile
