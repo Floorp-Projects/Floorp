@@ -47,7 +47,6 @@ OBJS =                                 \
 	.\$(OBJDIR)\ItemContainer.obj      \
 	.\$(OBJDIR)\PropertyBag.obj        \
 	.\$(OBJDIR)\MozillaControl.obj     \
-	.\$(OBJDIR)\nsSetupRegistry.obj    \
 	.\$(OBJDIR)\MozillaBrowser.obj     \
 	.\$(OBJDIR)\WebBrowserContainer.obj  \
 	.\$(OBJDIR)\IEHtmlNode.obj         \
@@ -55,6 +54,7 @@ OBJS =                                 \
 	.\$(OBJDIR)\IEHtmlElement.obj      \
 	.\$(OBJDIR)\IEHtmlDocument.obj     \
 	.\$(OBJDIR)\DropTarget.obj         \
+  .\$(OBJDIR)\PropertyDlg.obj        \
 	.\$(OBJDIR)\guids.obj              \
 	$(NULL)
 
@@ -82,8 +82,9 @@ OBJS =                                 \
 #  -I$(PUBLIC)\profile \
 #  $(NULL) 
 
-LLIBS=                         \
- $(DIST)\lib\xpcom.lib        \
+LLIBS=                          \
+ $(DIST)\lib\xpcom.lib          \
+ $(DIST)\lib\baseembed_s.lib    \
  $(LIBNSPR)                     \
  $(NULL)
 
@@ -107,7 +108,7 @@ include <$(DEPTH)\config\config.mak>
 LCFLAGS = $(LCFLAGS) -DMOZ_NO_DEBUG_RTL
 !endif
 
-LCFLAGS = $(LCFLAGS) -DMOZ_ACTIVEX_CONTROL_SUPPORT -DHACK_AROUND_NONREENTRANT_INITXPCOM
+LCFLAGS = $(LCFLAGS) -DMOZ_ACTIVEX_CONTROL_SUPPORT
 
 # Make sure destination is in path so registration/deregistration
 # doesn't fall over.
@@ -129,6 +130,8 @@ $(DEFFILE) : mkctldef.bat
 MozillaControl_i.c \
 MozillaControl.h: MozillaControl.idl
 	midl /Oicf /h MozillaControl.h /iid MozillaControl_i.c MozillaControl.idl
+
+PropertyDlg.cpp : StdAfx.h resource.h
 
 ControlSite.cpp \
 ControlSiteIPFrame.cpp \
