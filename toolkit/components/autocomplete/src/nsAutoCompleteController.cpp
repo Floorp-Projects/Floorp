@@ -462,12 +462,14 @@ nsAutoCompleteController::GetImageSrc(PRInt32 row, const PRUnichar *colID, nsASt
 NS_IMETHODIMP
 nsAutoCompleteController::GetProgressMode(PRInt32 row, const PRUnichar *colID, PRInt32* _retval)
 {
+  NS_NOTREACHED("tree has no progress cells");
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsAutoCompleteController::GetCellValue(PRInt32 row, const PRUnichar *colID, nsAString& _retval)
 {  
+  NS_NOTREACHED("all of our cells are text");
   return NS_OK;
 }
 
@@ -494,12 +496,14 @@ nsAutoCompleteController::IsContainer(PRInt32 index, PRBool *_retval)
 NS_IMETHODIMP
 nsAutoCompleteController::IsContainerOpen(PRInt32 index, PRBool *_retval)
 {
+  NS_NOTREACHED("no container cells");
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsAutoCompleteController::IsContainerEmpty(PRInt32 index, PRBool *_retval)
 {
+  NS_NOTREACHED("no container cells");
   return NS_OK;
 }
 
@@ -533,6 +537,7 @@ nsAutoCompleteController::ToggleOpenState(PRInt32 index)
 NS_IMETHODIMP
 nsAutoCompleteController::SetTree(nsITreeBoxObject *tree)
 {
+  mTree = tree;
   return NS_OK;
 }
 
@@ -837,6 +842,8 @@ nsAutoCompleteController::ProcessResult(PRInt32 aSearchIndex, nsIAutoCompleteRes
 
   // If the search failed, increase the match count to include the error description
   PRUint16 result = 0;
+  PRUint32 oldRowCount = mRowCount;
+
   if (aResult)
     aResult->GetSearchResult(&result);
   if (result == nsIAutoCompleteResult::RESULT_FAILURE) {
@@ -853,6 +860,9 @@ nsAutoCompleteController::ProcessResult(PRInt32 aSearchIndex, nsIAutoCompleteRes
     // Try to autocomplete the default index for this search
     CompleteDefaultIndex(aSearchIndex);
   }
+
+  if (oldRowCount != mRowCount && mTree)
+    mTree->RowCountChanged(oldRowCount, mRowCount - oldRowCount);
 
   // Refresh the popup view to display the new search results
   nsCOMPtr<nsIAutoCompletePopup> popup;
@@ -899,8 +909,11 @@ nsAutoCompleteController::PostSearchCleanup()
 nsresult
 nsAutoCompleteController::ClearResults()
 {
+  PRInt32 oldRowCount = mRowCount;
   mRowCount = 0;
   mResults->Clear();
+  if (oldRowCount != 0 && mTree)
+    mTree->RowCountChanged(0, -oldRowCount);
   return NS_OK;
 }
 
