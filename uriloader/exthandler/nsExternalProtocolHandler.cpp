@@ -173,14 +173,14 @@ nsresult nsExtProtocolChannel::OpenURL()
 
 NS_IMETHODIMP nsExtProtocolChannel::Open(nsIInputStream **_retval)
 {
-  OpenURL();  // force caller to abort.
-  return NS_ERROR_FAILURE; // force caller to abort.
+  OpenURL();
+  return NS_ERROR_NO_CONTENT; // force caller to abort.
 }
 
 NS_IMETHODIMP nsExtProtocolChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
 {
   OpenURL();
-  return NS_ERROR_FAILURE; // force caller to abort.
+  return NS_ERROR_NO_CONTENT; // force caller to abort.
 }
 
 NS_IMETHODIMP nsExtProtocolChannel::GetLoadFlags(nsLoadFlags *aLoadFlags)
