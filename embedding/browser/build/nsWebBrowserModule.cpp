@@ -61,10 +61,9 @@ UnregisterContentPolicy(nsIComponentManager *aCompMgr, nsIFile *aPath,
         do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    nsXPIDLCString previous;
     return catman->DeleteCategoryEntry("content-policy",
                                        NS_WEBBROWSERCONTENTPOLICY_CONTRACTID,
-                                       PR_TRUE, getter_Copies(previous));
+                                       PR_TRUE);
 }
 
 // Component Table

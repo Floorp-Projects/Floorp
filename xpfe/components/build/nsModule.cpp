@@ -91,9 +91,8 @@ UnregisterProc(nsIComponentManager *aCompMgr,
     nsCOMPtr<nsICategoryManager> catman = do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    nsXPIDLCString prevEntry;
-    rv = catman->DeleteCategoryEntry("Gecko-Content-Viewers", "application/http-index-format", PR_TRUE,
-                                     getter_Copies(prevEntry));
+    rv = catman->DeleteCategoryEntry("Gecko-Content-Viewers", 
+                                     "application/http-index-format", PR_TRUE);
 
     return NS_OK;
 }

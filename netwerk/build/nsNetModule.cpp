@@ -161,8 +161,7 @@ UnregisterBasicAuth(nsIComponentManager *aCompMgr, nsIFile *aPath,
     
     // only unregister if we're the current Basic-auth handler
     if (!strcmp(basicAuth, NS_BASICAUTH_CONTRACTID))
-        return catman->DeleteCategoryEntry("http-auth", "basic", PR_TRUE,
-                                           getter_Copies(basicAuth));
+        return catman->DeleteCategoryEntry("http-auth", "basic", PR_TRUE);
     return NS_OK;
 }
 #endif
@@ -284,14 +283,13 @@ UnregisterStreamConverters(nsIComponentManager *aCompMgr, nsIFile *aPath,
         do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    nsXPIDLCString entry;
 
     PRUint32 count = 0;
     while (count < g_StreamConverterCount) {
-        rv = catmgr->DeleteCategoryEntry(NS_ISTREAMCONVERTER_KEY, g_StreamConverterArray[count],
-                                         PR_TRUE, getter_Copies(entry));
+        rv = catmgr->DeleteCategoryEntry(NS_ISTREAMCONVERTER_KEY, 
+                                         g_StreamConverterArray[count], 
+                                         PR_TRUE);
         if (NS_FAILED(rv)) return rv;
-        NS_ASSERTION(entry, "deleting an entry that doesn't exist");
         count++;
     }
     return rv;

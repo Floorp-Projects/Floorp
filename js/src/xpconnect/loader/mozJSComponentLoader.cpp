@@ -1321,8 +1321,7 @@ UnregisterJSLoader(nsIComponentManager *aCompMgr, nsIFile *aPath,
     // only unregister if we're the current JS component loader
     if (!strcmp(jsLoader, mozJSComponentLoaderContractID)) {
         return catman->DeleteCategoryEntry("component-loader",
-                                           jsComponentTypeName, PR_TRUE,
-                                           getter_Copies(jsLoader));
+                                           jsComponentTypeName, PR_TRUE);
     }
     return NS_OK;
 }

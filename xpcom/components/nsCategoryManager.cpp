@@ -390,14 +390,11 @@ nsCategoryManager::AddCategoryEntry( const char *aCategoryName,
 NS_IMETHODIMP
 nsCategoryManager::DeleteCategoryEntry( const char *aCategoryName,
                                         const char *aEntryName,
-                                        PRBool aDontPersist,
-                                        char **_retval )
+                                        PRBool aDontPersist)
   {
 
     NS_ASSERTION(aCategoryName, "aCategoryName is NULL!");
     NS_ASSERTION(aEntryName,    "aEntryName is NULL!");
-    NS_ASSERTION(_retval,       "_retval is NULL!");
-
 
       /*
         Note: no errors are reported since failure to delete

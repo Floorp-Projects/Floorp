@@ -1233,7 +1233,7 @@ UnRegisterASObserver(nsIComponentManager *aCompMgr, nsIFile *aPath,
         rv = 
             categoryManager->DeleteCategoryEntry(APPSTART_CATEGORY,
                                                  "JSDebugger app-start observer",
-                                                 PR_TRUE,nsnull);
+                                                 PR_TRUE);
     }
     return rv;
 }
