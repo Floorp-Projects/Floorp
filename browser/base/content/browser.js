@@ -4069,8 +4069,10 @@ var BrowserOffline = {
 
   toggleOfflineStatus: function ()
   {
-    if (!this._canGoOffline())
+    if (!this._canGoOffline()) {
+      this._updateOfflineUI(false);
       return;
+    }
 
     var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
     ioService.offline = !ioService.offline;
