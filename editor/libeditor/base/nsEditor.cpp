@@ -979,7 +979,7 @@ nsEditor::GetWrapWidth(PRInt32 *aWrapColumn)
 }
 
 NS_IMETHODIMP 
-nsEditor::SaveFile(nsIFile *aFileSpec, PRBool aReplaceExisting,
+nsEditor::SaveFile(nsIURI *aFileSpec, PRBool aReplaceExisting,
                    PRBool aSaveCopy, const nsAReadableString& aFormat)
 {
   if (!aFileSpec)
@@ -1021,6 +1021,7 @@ nsEditor::SaveFile(nsIFile *aFileSpec, PRBool aReplaceExisting,
   if (wrapColumn > 0)
     flags |= nsIDocumentEncoder::OutputWrap;
   const nsPromiseFlatString &formatFlat = PromiseFlatString(aFormat);
+
   rv = diskDoc->SaveFile(aFileSpec, aReplaceExisting, aSaveCopy, 
                          formatFlat.get(), NS_LITERAL_STRING("").get(),
                          flags, wrapColumn);
