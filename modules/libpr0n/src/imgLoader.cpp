@@ -63,13 +63,16 @@ imgLoader::~imgLoader()
 /* imgIRequest loadImage (in nsIURI uri, in nsILoadGroup aLoadGroup, in imgIDecoderObserver aObserver, in nsISupports cx); */
 NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, nsILoadGroup *aLoadGroup, imgIDecoderObserver *aObserver, nsISupports *cx, imgIRequest **_retval)
 {
+  NS_ASSERTION(aURI, "imgLoader::LoadImage -- NULL URI pointer");
+
+  if (!aURI)
+    return NS_ERROR_NULL_POINTER;
+
 #if defined(PR_LOGGING)
   nsXPIDLCString spec;
   aURI->GetSpec(getter_Copies(spec));
   LOG_SCOPE_WITH_PARAM(gImgLog, "imgLoader::LoadImage", "aURI", spec.get());
 #endif
-
-  NS_ASSERTION(aURI, "imgLoader::LoadImage -- NULL URI pointer");
 
   imgRequest *request = nsnull;
 
