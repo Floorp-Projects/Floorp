@@ -44,7 +44,10 @@
 #include "nsICharsetAlias.h"
 #include "nsAVLTree.h"
 #include "nsIObserverService.h"
-#include "nsIPref.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefBranchInternal.h"
+#include "nsIWeakReference.h"
 #include "nsCRT.h"
 #include "nsNetUtil.h"
 
@@ -67,7 +70,7 @@ static PRBool SessionSave=PR_FALSE;
  */
 
 
-NS_IMPL_ISUPPORTS3(mozPersonalDictionary, mozIPersonalDictionary, nsIObserver, nsSupportsWeakReference)
+NS_IMPL_ISUPPORTS3(mozPersonalDictionary, mozIPersonalDictionary, nsIObserver, nsISupportsWeakReference)
 
 /* AVL node functors */
 
@@ -167,22 +170,6 @@ mozPersonalDictionary::~mozPersonalDictionary()
   delete mUnicodeIgnoreTree;
 }
 
-int PR_CALLBACK
-SpellcheckerSavePrefChanged(const char * newpref, void * data) 
-{
-  nsresult rv;
-  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-  if(NS_SUCCEEDED(rv)&&prefs) {
-    if(NS_FAILED(prefs->GetBoolPref(spellchecker_savePref,&SessionSave))){
-      SessionSave = PR_TRUE;
-    }
-  }
-  else{
-    SessionSave = PR_TRUE;
-  }
-  return 0;
-}
-
 NS_IMETHODIMP mozPersonalDictionary::Init()
 {
   nsresult rv;
@@ -190,7 +177,7 @@ NS_IMETHODIMP mozPersonalDictionary::Init()
   nsCOMPtr<nsIObserverService> svc = 
            do_GetService("@mozilla.org/observer-service;1", &rv);
   if (NS_SUCCEEDED(rv) && svc) {
-    // Register as an oserver of shutdown
+    // Register as an observer of shutdown
     rv = svc->AddObserver(this,   NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_TRUE);
     // Register as an observer of profile changes
     if (NS_SUCCEEDED(rv))
@@ -200,14 +187,16 @@ NS_IMETHODIMP mozPersonalDictionary::Init()
   }
   if(NS_FAILED(rv)) return rv;
    
-  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-  if(NS_SUCCEEDED(rv)&&prefs) {
+  nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+  if(NS_SUCCEEDED(rv)) {
     if(NS_FAILED(prefs->GetBoolPref(spellchecker_savePref, &SessionSave))){
       SessionSave = PR_TRUE;
     }
-    prefs->RegisterCallback(spellchecker_savePref,SpellcheckerSavePrefChanged,nsnull);
+    nsCOMPtr<nsIPrefBranchInternal> pbi(do_QueryInterface(prefs, &rv));
+    if(NS_SUCCEEDED(rv))
+      pbi->AddObserver(spellchecker_savePref, this, PR_TRUE);
   }
-  else{
+  else {
     SessionSave = PR_FALSE;
   }
 
@@ -248,7 +237,7 @@ NS_IMETHODIMP mozPersonalDictionary::Load()
   res = NS_NewUTF8ConverterStream(getter_AddRefs(convStream), inStream, 0);
   if(NS_FAILED(res)) return res;
   
-  // we're rereading get rid of the old data  -- we shouldn't have any, but...
+  // we're rereading to get rid of the old data  -- we shouldn't have any, but...
   delete mUnicodeTree;
   mUnicodeTree = new nsAVLTree(*gStringNodeComparitor,gDeallocatorFunctor);
 
@@ -407,23 +396,22 @@ NS_IMETHODIMP mozPersonalDictionary::GetCorrection(const PRUnichar *word, PRUnic
 /* void observe (in nsISupports aSubject, in string aTopic, in wstring aData); */
 NS_IMETHODIMP mozPersonalDictionary::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *aData)
 {
-  if (!nsCRT::strcmp(aTopic, "profile-before-change")) {
+  if (!nsCRT::strcmp(aTopic, "profile-before-change") || !nsCRT::strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
     Save();
     delete mUnicodeTree;
     delete mUnicodeIgnoreTree;
     mUnicodeTree=nsnull;
     mUnicodeIgnoreTree=nsnull;
   }
-  else if (!nsCRT::strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
-    Save();
-    delete mUnicodeTree;
-    delete mUnicodeIgnoreTree;
-    mUnicodeTree=nsnull;
-    mUnicodeIgnoreTree=nsnull;
+  else if (!nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
+    nsCOMPtr<nsIPrefBranch> prefs(do_QueryInterface(aSubject));
+    if(prefs)
+      prefs->GetBoolPref(spellchecker_savePref, &SessionSave);
   }
   if (!nsCRT::strcmp(aTopic, "profile-before-change")) {
     Load();
   }
+
   return NS_OK;
 }
 
