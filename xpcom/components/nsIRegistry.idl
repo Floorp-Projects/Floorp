@@ -35,6 +35,7 @@ interface nsIRegistry : nsISupports
     void openWellKnownRegistry(in long regid);
     void openDefault();
     void close();
+    void flush();
     boolean isOpen();
     
     string getString(in nsRegistryKey baseKey, in string path);
