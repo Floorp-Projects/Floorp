@@ -794,6 +794,7 @@ button {
 
 button:hover {
 /*   border : 2px solid black;  */
+  user-select: none !important;
 }
 
 button:active:hover {
