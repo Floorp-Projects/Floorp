@@ -1523,15 +1523,12 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CopyData(nsIInputStream *aIStream, PRInt32 a
 
 NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
 {
-  nsresult rv = NS_OK;
-
-  // rhp - rv isn't being set correctly further down...
-  if (!copySucceeded)
-  	rv = NS_ERROR_FAILURE;
+  nsresult rv = copySucceeded ? NS_OK : NS_ERROR_FAILURE;
 
 	//Copy the header to the new database
 	if(copySucceeded && mCopyState->message)
-	{
+	{ //  CopyMessages() goes here; CopyFileMessage() never gets in here because
+    //  the mCopyState->message will be always null for file message
 		nsCOMPtr<nsIMsgDBHdr> newHdr;
 		nsCOMPtr<nsIMsgDBHdr> msgDBHdr;
 		nsCOMPtr<nsIDBMessage> dbMessage(do_QueryInterface(mCopyState->message,
@@ -1559,7 +1556,8 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
   mCopyState->curCopyIndex++;
 
   if (mCopyState->curCopyIndex < mCopyState->totalMsgCount)
-  {
+  { // CopyMessages() goes here; CopyFileMessage() never gets in here because
+    // curCopyIndex will always be less than the mCopyState->totalMsgCount
     nsCOMPtr<nsISupports> aSupport =
       getter_AddRefs(mCopyState->messages->ElementAt(mCopyState->curCopyIndex));
     mCopyState->message = do_QueryInterface(aSupport, &rv);
@@ -1567,8 +1565,8 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
       rv = CopyMessageTo(mCopyState->message, this, mCopyState->isMove);
   }
   else
-  {
-    // ** done copying operation; notify completion to copy service
+  { // both CopyMessages() & CopyFileMessage() go here if they have
+    // done copying operation; notify completion to copy service
     nsresult result;
     NS_WITH_SERVICE(nsIMsgCopyService, copyService, 
                     kMsgCopyServiceCID, &result); 
@@ -1582,8 +1580,6 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
       mTxnMgr->Do(mCopyState->undoMsgTxn);
 
     ClearCopyState();
-    // rhp - otherwise, its not set...
-    rv = NS_OK;
   }
 
 	return rv;
