@@ -112,23 +112,25 @@ sub try(&;$) {
         (not ref($continuation) or not $continuation->isa('PLIF::Exception::Internal::Continuation'))) {
         syntax 'Syntax error in continuation of "try" clause', caller;
     }
-    my @result;
+    my $context = wantarray;
+    my @result; # for array context
+    my $result; # for scalar context
     eval {
-        if (wantarray) {
+        if ($context) {
+            # array context
             @result = &$code;
-        } elsif (defined(wantarray)) {
-            my $result = &$code;
-            push(@result, $result);
+        } elsif (defined($context)) {
+            # scalar context
+            $result = &$code;
         } else {
+            # void context
             &$code;
         }
     };
     if (defined($continuation)) {
-        $continuation->handle($@);
-        return;
-    } else {
-        return @result;
+        $continuation->handle($@, caller);
     }
+    return $context ? @result : $result;
 }
 
 sub catch($$) {
@@ -254,12 +256,14 @@ sub create {
 
 sub handle {
     my $self = shift;
-    my($exception) = @_;
+    my($exception, $package, $filename, $line) = @_;
     $self->{'resolved'} = 1;
     $exception = wrap($exception);
     my $reraise = undef;
     handler: while (1) {
         if (defined($exception)) {
+            $exception->{'filename'} = $filename;
+            $exception->{'line'} = $line;
             foreach my $handler (@{$self->{'handlers'}}) {
                 if ($exception->isa($handler->[0])) {
                     my $result = eval { &{$handler->[1]}($exception) };
