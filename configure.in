@@ -1011,6 +1011,7 @@ dnl the qsort routine under solaris is faulty
        AR='$(CXX) -xar'
        AR_FLAGS='-o $@'
        AS='/usr/ccs/bin/as'
+       ASFLAGS="$ASFLAGS -K PIC -L -P -D_ASM -D__STDC__=0"
        AS_DASH_C_FLAG=''
     else
        ASFLAGS="$ASFLAGS -fPIC"
