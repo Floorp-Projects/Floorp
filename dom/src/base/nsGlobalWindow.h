@@ -198,16 +198,6 @@ protected:
   // Window Control Functions
   NS_IMETHOD OpenInternal(JSContext* cx, jsval* argv, PRUint32 argc, 
                           PRBool aDialog, nsIDOMWindowInternal** aReturn);
-  NS_IMETHOD AttachArguments(nsIDOMWindowInternal* aWindow, jsval* argv,
-                             PRUint32 argc);
-  PRUint32 CalculateChromeFlags(char* aFeatures, PRBool aDialog);
-  NS_IMETHOD SizeOpenedDocShellItem(nsIDocShellTreeItem* aDocShellItem,
-                                    char* aFeatures, PRUint32 aChromeFlags);
-  NS_IMETHOD ReadyOpenedDocShellItem(nsIDocShellTreeItem* aDocShellItem,
-                                     nsIDOMWindowInternal** aDOMWindow);
-  NS_IMETHOD CheckWindowName(JSContext* cx, nsString& aName);
-  PRInt32 WinHasOption(char* aOptions, const char* aName, PRInt32 aDefault,
-                       PRBool* aPresenceFlag);
   static void CloseWindow(nsISupports* aWindow);
 
   // Timeout Functions
