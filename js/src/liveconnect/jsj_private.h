@@ -86,9 +86,11 @@ extern char* strdup(const char* str);
 #    endif
 #endif
 
-// This file doesn't include prtypes.h, which defines PR_BEGIN_EXTERN_C,
-// and I certainly don't want to pull it in to such a high level include
-// file, so I'll just do what prtypes.h does. edburns 
+/*
+ * This file doesn't include prtypes.h, which defines PR_BEGIN_EXTERN_C,
+ * and I certainly don't want to pull it in to such a high level include
+ * file, so I'll just do what prtypes.h does. edburns
+ */
 #ifdef __cplusplus
 extern "C" {
 #endif
