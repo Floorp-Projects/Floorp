@@ -40,11 +40,14 @@
 
 class nsISelection;
 class nsIDocument;
+class nsITransferable;
  
 class nsCopySupport
 {
   // class of static helper functions for copy support
   public:
     static nsresult HTMLCopy(nsISelection *aSel, nsIDocument *aDoc, PRInt16 aClipboardID);
+    static nsresult DoHooks(nsIDocument *aDoc, nsITransferable *aTrans,
+                            PRBool *aDoPutOnClipboard);
     static nsresult IsPlainTextContext(nsISelection *aSel, nsIDocument *aDoc, PRBool *aIsPlainTextContext);
 };
