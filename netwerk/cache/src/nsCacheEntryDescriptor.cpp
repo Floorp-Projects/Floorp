@@ -279,7 +279,7 @@ nsCacheEntryDescriptor::GetFile(nsIFile ** result)
     NS_ENSURE_ARG_POINTER(result);
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
     
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return nsCacheService::GlobalInstance()->GetFileForEntry(mCacheEntry, result);
 }
 
 

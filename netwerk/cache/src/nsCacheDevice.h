@@ -50,6 +50,9 @@ public:
                                            nsCacheAccessMode mode,
                                            nsITransport **result ) = 0;
 
+    virtual nsresult GetFileForEntry( nsCacheEntry *    entry,
+                                      nsIFile **        result ) = 0;
+
     virtual nsresult OnDataSizeChange( nsCacheEntry * entry, PRInt32 deltaSize ) = 0;
 
     // XXX need to define methods for enumerating entries

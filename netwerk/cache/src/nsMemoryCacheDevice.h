@@ -48,6 +48,9 @@ public:
                                            nsCacheAccessMode mode,
                                            nsITransport **transport );
 
+    virtual nsresult GetFileForEntry( nsCacheEntry *    entry,
+                                      nsIFile **        result );
+
     virtual nsresult OnDataSizeChange( nsCacheEntry * entry, PRInt32 deltaSize );
 
     virtual nsresult Visit( nsICacheVisitor * visitor );

@@ -207,6 +207,14 @@ nsMemoryCacheDevice::GetTransportForEntry( nsCacheEntry *    entry,
 
 
 nsresult
+nsMemoryCacheDevice::GetFileForEntry( nsCacheEntry *    entry,
+                                      nsIFile **        result )
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+nsresult
 nsMemoryCacheDevice::OnDataSizeChange( nsCacheEntry * entry, PRInt32 deltaSize)
 {
     // XXX keep track of totals
