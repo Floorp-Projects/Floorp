@@ -127,13 +127,15 @@ is_selfserv_alive()
 ########################################################################
 wait_for_selfserv()
 {
-  echo "tstclnt -p ${PORT} -h ${HOST} -q -d . < ${REQUEST_FILE} "
+  echo "tstclnt -p ${PORT} -h ${HOST} -q "
+  echo "        -d ${P_R_CLIENTDIR} < ${REQUEST_FILE} \\"
   #echo "tstclnt -q started at `date`"
-  tstclnt -p ${PORT} -h ${HOST} -q -d . < ${REQUEST_FILE}
+  tstclnt -p ${PORT} -h ${HOST} -q -d ${P_R_CLIENTDIR} < ${REQUEST_FILE}
   if [ $? -ne 0 ]; then
       html_failed "<TR><TD> Wait for Server "
-      echo "RETRY: tstclnt -p ${PORT} -h ${HOST} -q -d . < ${REQUEST_FILE}"
-      tstclnt -p ${PORT} -h ${HOST} -q -d . < ${REQUEST_FILE}
+      echo "RETRY: tstclnt -p ${PORT} -h ${HOST} -q \\"
+      echo "               -d ${P_R_CLIENTDIR} < ${REQUEST_FILE}"
+      tstclnt -p ${PORT} -h ${HOST} -q -d ${P_R_CLIENTDIR} < ${REQUEST_FILE}
   elif [ sparam = "-c ABCDEFabcdefghijklmnvy" ] ; then # "$1" = "cov" ] ; then
       html_passed "<TR><TD> Wait for Server"
   fi
@@ -165,15 +167,15 @@ start_selfserv()
       echo "$SCRIPTNAME: $testname ----"
   fi
   sparam=`echo $sparam | sed -e 's;_; ;g'`
-  echo "selfserv -D -p ${PORT} -d ${R_SERVERDIR} -n ${HOSTADDR} \\"
+  echo "selfserv -D -p ${PORT} -d ${P_R_SERVERDIR} -n ${HOSTADDR} \\"
   echo "         -w nss ${sparam} -i ${R_SERVERPID} $verbose &"
   echo "selfserv started at `date`"
   if [ ${fileout} -eq 1 ]; then
-      selfserv -D -p ${PORT} -d ${R_SERVERDIR} -n ${HOSTADDR} \
+      selfserv -D -p ${PORT} -d ${P_R_SERVERDIR} -n ${HOSTADDR} \
                -w nss ${sparam} -i ${R_SERVERPID} $verbose \
                > ${SERVEROUTFILE} 2>&1 &
   else
-      selfserv -D -p ${PORT} -d ${R_SERVERDIR} -n ${HOSTADDR} \
+      selfserv -D -p ${PORT} -d ${P_R_SERVERDIR} -n ${HOSTADDR} \
                -w nss ${sparam} -i ${R_SERVERPID} $verbose &
   fi
   wait_for_selfserv
@@ -211,11 +213,12 @@ ssl_cov()
 
           is_selfserv_alive
           echo "tstclnt -p ${PORT} -h ${HOST} -c ${param} ${TLS_FLAG} \\"
-          echo "        -f -d . < ${REQUEST_FILE}"
+          echo "        -f -d ${P_R_CLIENTDIR} < ${REQUEST_FILE}"
 
           rm ${TMP}/$HOST.tmp.$$ 2>/dev/null
           tstclnt -p ${PORT} -h ${HOST} -c ${param} ${TLS_FLAG} -f \
-                  -d . < ${REQUEST_FILE} >${TMP}/$HOST.tmp.$$  2>&1
+                  -d ${P_R_CLIENTDIR} < ${REQUEST_FILE} \
+                  >${TMP}/$HOST.tmp.$$  2>&1
           ret=$?
           cat ${TMP}/$HOST.tmp.$$ 
           rm ${TMP}/$HOST.tmp.$$ 2>/dev/null
@@ -240,11 +243,12 @@ ssl_auth()
           cparam=`echo $cparam | sed -e 's;_; ;g' -e "s/TestUser/$USER_NICKNAME/g" `
           start_selfserv
 
-          echo "tstclnt -p ${PORT} -h ${HOST} -f -d . ${cparam} \\"
-          echo "        < ${REQUEST_FILE}"
+          echo "tstclnt -p ${PORT} -h ${HOST} -f -d ${P_R_CLIENTDIR} \\"
+	  echo "        ${cparam}  < ${REQUEST_FILE}"
           rm ${TMP}/$HOST.tmp.$$ 2>/dev/null
           tstclnt -p ${PORT} -h ${HOST} -f ${cparam} \
-                  -d . < ${REQUEST_FILE} >${TMP}/$HOST.tmp.$$  2>&1
+                  -d ${P_R_CLIENTDIR} < ${REQUEST_FILE} \
+                  >${TMP}/$HOST.tmp.$$  2>&1
           ret=$?
           cat ${TMP}/$HOST.tmp.$$ 
           rm ${TMP}/$HOST.tmp.$$ 2>/dev/null
@@ -279,10 +283,11 @@ ssl_stress()
               ps -ef | grep selfserv
           fi
 
-          echo "strsclnt -q -p ${PORT} -d . -w nss $cparam $verbose \\"
-          echo "         ${HOSTADDR}"
+          echo "strsclnt -q -p ${PORT} -d ${P_R_CLIENTDIR} -w nss $cparam \\"
+          echo "         $verbose ${HOSTADDR}"
           echo "strsclnt started at `date`"
-          strsclnt -q -p ${PORT} -d . -w nss $cparam $verbose ${HOSTADDR}
+          strsclnt -q -p ${PORT} -d ${P_R_CLIENTDIR} -w nss $cparam \
+                   $verbose ${HOSTADDR}
           ret=$?
           echo "strsclnt completed at `date`"
           html_msg $ret $value "${testname}"
@@ -323,6 +328,8 @@ if [ -z  "$DO_REM_ST" -a -z  "$DO_DIST_ST" ] ; then
     CLIENTDIR=$EXT_CLIENTDIR
     R_SERVERDIR=$R_EXT_SERVERDIR
     R_CLIENTDIR=$R_EXT_CLIENTDIR
+    P_R_SERVERDIR=$P_R_EXT_SERVERDIR
+    P_R_CLIENTDIR=$P_R_EXT_CLIENTDIR
     USER_NICKNAME=ExtendedSSLUser
     NORM_EXT="Extended test"
     cd ${CLIENTDIR}

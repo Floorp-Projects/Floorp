@@ -89,12 +89,12 @@ smime_main()
 {
 
   echo "$SCRIPTNAME: Signing Attached Message ------------------------------"
-  echo "cmsutil -S -N Alice -i alice.txt -d ${R_ALICEDIR} -p nss -o alice.sig"
-  cmsutil -S -N Alice -i alice.txt -d ${R_ALICEDIR} -p nss -o alice.sig
+  echo "cmsutil -S -N Alice -i alice.txt -d ${P_R_ALICEDIR} -p nss -o alice.sig"
+  cmsutil -S -N Alice -i alice.txt -d ${P_R_ALICEDIR} -p nss -o alice.sig
   html_msg $? 0 "Create Signature Alice" "."
 
-  echo "cmsutil -D -i alice.sig -d ${R_BOBDIR} -o alice.data1"
-  cmsutil -D -i alice.sig -d ${R_BOBDIR} -o alice.data1
+  echo "cmsutil -D -i alice.sig -d ${P_R_BOBDIR} -o alice.data1"
+  cmsutil -D -i alice.sig -d ${P_R_BOBDIR} -o alice.data1
   html_msg $? 0 "Decode Alice's Signature" "."
 
   echo "diff alice.txt alice.data1"
@@ -102,14 +102,14 @@ smime_main()
   html_msg $? 0 "Compare Decoded Signature and Original" "."
 
   echo "$SCRIPTNAME: Enveloped Data Tests ------------------------------"
-  echo "cmsutil -E -r bob@bogus.com -i alice.txt -d ${R_ALICEDIR} -p nss \\"
+  echo "cmsutil -E -r bob@bogus.com -i alice.txt -d ${P_R_ALICEDIR} -p nss \\"
   echo "        -o alice.env"
-  cmsutil -E -r bob@bogus.com -i alice.txt -d ${R_ALICEDIR} -p nss -o alice.env
+  cmsutil -E -r bob@bogus.com -i alice.txt -d ${P_R_ALICEDIR} -p nss -o alice.env
   html_msg $? 0 "Create Enveloped Data Alice" "."
 
 
-  echo "cmsutil -D -i alice.env -d ${R_BOBDIR} -p nss -o alice.data1"
-  cmsutil -D -i alice.env -d ${R_BOBDIR} -p nss -o alice.data1
+  echo "cmsutil -D -i alice.env -d ${P_R_BOBDIR} -p nss -o alice.data1"
+  cmsutil -D -i alice.env -d ${P_R_BOBDIR} -p nss -o alice.data1
   html_msg $? 0 "Decode Enveloped Data Alice" "."
 
   echo "diff alice.txt alice.data1"
@@ -118,9 +118,9 @@ smime_main()
 
   # multiple recip
   echo "$SCRIPTNAME: Testing multiple recipients ------------------------------"
-  echo "cmsutil -E -i alicecc.txt -d ${R_ALICEDIR} -o alicecc.env \\"
+  echo "cmsutil -E -i alicecc.txt -d ${P_R_ALICEDIR} -o alicecc.env \\"
   echo "        -r bob@bogus.com,dave@bogus.com"
-  cmsutil -E -i alice.txt -d ${R_ALICEDIR} -o alicecc.env \
+  cmsutil -E -i alice.txt -d ${P_R_ALICEDIR} -o alicecc.env \
           -r bob@bogus.com,dave@bogus.com
   ret=$?
   html_msg $ret 0 "Create Multiple Recipients Enveloped Data Alice" "."
@@ -130,21 +130,21 @@ smime_main()
         cp -r ${R_ALICEDIR} ${R_ALICEDIR}.trouble
         while [ $i -lt 100 ] ; do
             echo "will attempt to list the certs in the db `expr 100 - $i` more times"
-	    echo "certutil -L -d ${R_ALICEDIR}"
-	    certutil -L -d ${R_ALICEDIR}
-	    echo "certutil -L -d ${R_ALICEDIR} -n dave@bogus.com"
-	    certutil -L -d ${R_ALICEDIR} -n dave@bogus.com
+	    echo "certutil -L -d ${P_R_ALICEDIR}"
+	    certutil -L -d ${P_R_ALICEDIR}
+	    echo "certutil -L -d ${P_R_ALICEDIR} -n dave@bogus.com"
+	    certutil -L -d ${P_R_ALICEDIR} -n dave@bogus.com
             sleep 30
             i=`expr $i + 1`
         done
   fi
 
-  echo "cmsutil -D -i alicecc.env -d ${R_BOBDIR} -p nss -o alice.data2"
-  cmsutil -D -i alicecc.env -d ${R_BOBDIR} -p nss -o alice.data2
+  echo "cmsutil -D -i alicecc.env -d ${P_R_BOBDIR} -p nss -o alice.data2"
+  cmsutil -D -i alicecc.env -d ${P_R_BOBDIR} -p nss -o alice.data2
   html_msg $? 0 "Decode Multiple Recipients Enveloped Data Alice by Bob" "."
 
-  echo "cmsutil -D -i alicecc.env -d ${R_DAVEDIR} -p nss -o alice.data2"
-  cmsutil -D -i alicecc.env -d ${R_DAVEDIR} -p nss -o alice.data3
+  echo "cmsutil -D -i alicecc.env -d ${P_R_DAVEDIR} -p nss -o alice.data2"
+  cmsutil -D -i alicecc.env -d ${P_R_DAVEDIR} -p nss -o alice.data3
   html_msg $? 0 "Decode Multiple Recipients Enveloped Data Alice by Dave" "."
 
   diff alice.txt alice.data2
@@ -155,24 +155,24 @@ smime_main()
   
   echo "$SCRIPTNAME: Sending CERTS-ONLY Message ------------------------------"
   echo "cmsutil -O -r \"Alice,bob@bogus.com,dave@bogus.com\" \\"
-  echo "        -d ${R_ALICEDIR} > co.der"
-  cmsutil -O -r "Alice,bob@bogus.com,dave@bogus.com" -d ${R_ALICEDIR} > co.der
+  echo "        -d ${P_R_ALICEDIR} > co.der"
+  cmsutil -O -r "Alice,bob@bogus.com,dave@bogus.com" -d ${P_R_ALICEDIR} > co.der
   html_msg $? 0 "Create Certs-Only Alice" "."
 
-  echo "cmsutil -D -i co.der -d ${R_BOBDIR}"
-  cmsutil -D -i co.der -d ${R_BOBDIR}
+  echo "cmsutil -D -i co.der -d ${P_R_BOBDIR}"
+  cmsutil -D -i co.der -d ${P_R_BOBDIR}
   html_msg $? 0 "Verify Certs-Only by CA" "."
 
   echo "$SCRIPTNAME: Encrypted-Data Message ---------------------------------"
-  echo "cmsutil -C -i alice.txt -e alicehello.env -d ${R_ALICEDIR} \\"
+  echo "cmsutil -C -i alice.txt -e alicehello.env -d ${P_R_ALICEDIR} \\"
   echo "        -r \"bob@bogus.com\" > alice.enc"
-  cmsutil -C -i alice.txt -e alicehello.env -d ${R_ALICEDIR} \
+  cmsutil -C -i alice.txt -e alicehello.env -d ${P_R_ALICEDIR} \
           -r "bob@bogus.com" > alice.enc
   html_msg $? 0 "Create Encrypted-Data" "."
 
-  echo "cmsutil -D -i alice.enc -d ${R_BOBDIR} -e alicehello.env -p nss \\"
+  echo "cmsutil -D -i alice.enc -d ${P_R_BOBDIR} -e alicehello.env -p nss \\"
   echo "        -o alice.data2"
-  cmsutil -D -i alice.enc -d ${R_BOBDIR} -e alicehello.env -p nss -o alice.data2
+  cmsutil -D -i alice.enc -d ${P_R_BOBDIR} -e alicehello.env -p nss -o alice.data2
   html_msg $? 0 "Decode Encrypted-Data" "."
 
   diff alice.txt alice.data2
