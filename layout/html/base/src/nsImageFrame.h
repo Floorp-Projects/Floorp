@@ -83,6 +83,14 @@ struct ImageLoad {
   nsTransform2D mTransform;
 };
 
+// Image Frame state
+#define IMAGE_SIZECONSTRAINED       0x00100000
+#define IMAGE_GOTINITIALREFLOW      0x00200000
+#define IMAGE_INITIALLOADCOMPLETED  0x00400000
+#define IMAGE_CANSENDLOADEVENT      0x00800000
+#define IMAGE_BLOCKED               0x01000000
+#define IMAGE_FAILUREREPLACE        0x02000000
+
 #define ImageFrameSuper nsSplittableFrame
 
 class nsImageFrame : public ImageFrameSuper, public nsIImageFrame {
@@ -238,14 +246,6 @@ private:
   nsSize mComputedSize;
   nsSize mIntrinsicSize;
 
-  PRPackedBool        mSizeConstrained;
-  PRPackedBool        mGotInitialReflow;
-  PRPackedBool        mInitialLoadCompleted;
-  PRPackedBool        mCanSendLoadEvent;
-  PRPackedBool        mImageBlocked;   // true if the image has been blocked
-
-  PRPackedBool        mFailureReplace;
-
   nsMargin            mBorderPadding;
   PRUint32            mNaturalImageWidth, 
                       mNaturalImageHeight;
@@ -275,7 +275,7 @@ private:
     PRPackedBool     mPrefAllImagesBlocked;
     PRPackedBool     mPrefShowPlaceholders;
   };
-  static IconLoad* mIconLoad; // singleton patern: one LoadIcons instance is used
+  static IconLoad* mIconLoad; // singleton pattern: one LoadIcons instance is used
 };
 
 #endif /* nsImageFrame_h___ */
