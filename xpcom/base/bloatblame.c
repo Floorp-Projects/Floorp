@@ -38,6 +38,7 @@
 #include <ctype.h>
 #include <errno.h>
 #include <getopt.h>
+#include <math.h>
 #include <time.h>
 #include <unistd.h>
 #include "prtypes.h"
@@ -213,14 +214,20 @@ typedef struct graphedge    graphedge;
 typedef struct graphnode    graphnode;
 typedef struct callsite     callsite;
 
+typedef struct counts {
+    int32       direct;         /* things allocated by this node's code */
+    int32       total;          /* direct + things from all descendents */
+} counts;
+
 struct graphnode {
     PLHashEntry entry;          /* key is serial or name, value must be name */
     graphedge   *in;
     graphedge   *out;
     graphnode   *up;
-    int32       direct;         /* bytes allocated by this node's code */
-    int32       total;          /* direct + bytes from all descendents */
     int         low;            /* 0 or lowest current tree walk level */
+    counts      bytes;          /* bytes (direct and total) allocated */
+    counts      allocs;         /* number of allocations */
+    double      sqsum;          /* sum of squared bytes.direct */
 };
 
 #define graphnode_name(node)    ((char*) (node)->entry.value)
@@ -231,8 +238,7 @@ struct graphnode {
 struct graphedge {
     graphedge   *next;
     graphnode   *node;
-    int32       direct;
-    int32       total;
+    counts      bytes;
 };
 
 struct callsite {
@@ -242,8 +248,8 @@ struct callsite {
     callsite    *kids;
     graphnode   *method;
     uint32      offset;
-    int32       direct;
-    int32       total;
+    counts      bytes;
+    counts      allocs;
 };
 
 #define callsite_serial(site)    ((uint32) (site)->entry.key)
@@ -261,10 +267,10 @@ static void connect_nodes(graphnode *from, graphnode *to, callsite *site)
              * lower site's total includes all its kids' totals).
              */
             if (!to->low || to->low < from->low) {
-                edge[0].direct += site->direct;
-                edge[1].direct += site->direct;
-                edge[0].total += site->total;
-                edge[1].total += site->total;
+                edge[0].bytes.direct += site->bytes.direct;
+                edge[1].bytes.direct += site->bytes.direct;
+                edge[0].bytes.total += site->bytes.total;
+                edge[1].bytes.total += site->bytes.total;
             }
             return;
         }
@@ -280,8 +286,8 @@ static void connect_nodes(graphnode *from, graphnode *to, callsite *site)
     edge[1].node = from;
     edge[1].next = to->in;
     to->in = &edge[1];
-    edge[0].direct = edge[1].direct = site->direct;
-    edge[0].total = edge[1].total = site->total;
+    edge[0].bytes.direct = edge[1].bytes.direct = site->bytes.direct;
+    edge[0].bytes.total = edge[1].bytes.total = site->bytes.total;
 }
 
 static void *generic_alloctable(void *pool, PRSize size)
@@ -305,8 +311,10 @@ static PLHashEntry *graphnode_allocentry(void *pool, const void *key)
     if (node) {
         node->in = node->out = NULL;
         node->up = NULL;
-        node->direct = node->total = 0;
         node->low = 0;
+        node->bytes.direct = node->bytes.total = 0;
+        node->allocs.direct = node->allocs.total = 0;
+        node->sqsum = 0;
     }
     return &node->entry;
 }
@@ -362,10 +370,12 @@ static void compute_callsite_totals(callsite *site)
 {
     callsite *kid;
 
-    site->total += site->direct;
+    site->bytes.total += site->bytes.direct;
+    site->allocs.total += site->allocs.direct;
     for (kid = site->kids; kid; kid = kid->siblings) {
         compute_callsite_totals(kid);
-        site->total += kid->total;
+        site->bytes.total += kid->bytes.total;
+        site->allocs.total += kid->allocs.total;
     }
 }
 
@@ -383,24 +393,30 @@ static void walk_callsite_tree(callsite *site, int level, int kidnum, FILE *fp)
         if (meth) {
             pmeth = parent->method;
             if (pmeth && pmeth != meth) {
-                if (!meth->low)
-                    meth->total += site->total;
+                if (!meth->low) {
+                    meth->bytes.total += site->bytes.total;
+                    meth->allocs.total += site->allocs.total;
+                }
                 connect_nodes(pmeth, meth, site);
 
                 comp = meth->up;
                 if (comp) {
                     pcomp = pmeth->up;
                     if (pcomp && pcomp != comp) {
-                        if (!comp->low)
-                            comp->total += site->total;
+                        if (!comp->low) {
+                            comp->bytes.total += site->bytes.total;
+                            comp->allocs.total += site->allocs.total;
+                        }
                         connect_nodes(pcomp, comp, site);
 
                         lib = comp->up;
                         if (lib) {
                             plib = pcomp->up;
                             if (plib && plib != lib) {
-                                if (!lib->low)
-                                    lib->total += site->total;
+                                if (!lib->low) {
+                                    lib->bytes.total += site->bytes.total;
+                                    lib->allocs.total += site->allocs.total;
+                                }
                                 connect_nodes(plib, lib, site);
                             }
                             old_lib_low = lib->low;
@@ -423,7 +439,7 @@ static void walk_callsite_tree(callsite *site, int level, int kidnum, FILE *fp)
         fprintf(fp, "%c%*s%3d %3d %s %lu %ld\n",
                 site->kids ? '+' : '-', level, "", level, kidnum,
                 meth ? graphnode_name(meth) : "???",
-                (unsigned long)site->direct, (long)site->total);
+                (unsigned long)site->bytes.direct, (long)site->bytes.total);
     }
     nkids = 0;
     for (kid = site->kids; kid; kid = kid->siblings) {
@@ -462,13 +478,33 @@ static int node_table_compare(const void *p1, const void *p2)
     node1 = *(const graphnode**) p1;
     node2 = *(const graphnode**) p2;
     if (sort_by_direct) {
-        key1 = node1->direct;
-        key2 = node2->direct;
+        key1 = node1->bytes.direct;
+        key2 = node2->bytes.direct;
     } else {
-        key1 = node1->total;
-        key2 = node2->total;
+        key1 = node1->bytes.total;
+        key2 = node2->bytes.total;
     }
     return key2 - key1;
+}
+
+static int mean_size_compare(const void *p1, const void *p2)
+{
+    const graphnode *node1, *node2;
+    double div1, div2, key1, key2;
+
+    node1 = *(const graphnode**) p1;
+    node2 = *(const graphnode**) p2;
+    div1 = (double)node1->allocs.direct;
+    div2 = (double)node2->allocs.direct;
+    if (div1 == 0 || div2 == 0)
+        return div2 - div1;
+    key1 = (double)node1->bytes.direct / div1;
+    key2 = (double)node2->bytes.direct / div2;
+    if (key1 < key2)
+        return 1;
+    if (key1 > key2)
+        return -1;
+    return 0;
 }
 
 static const char *prettybig(uint32 num, char *buf, size_t limit)
@@ -499,7 +535,7 @@ static void sort_graphedge_list(graphedge **currp)
     while ((curr = *currp) != NULL && curr->next) {
         nextp = &curr->next;
         while ((next = *nextp) != NULL) {
-            if (curr->total < next->total) {
+            if (curr->bytes.total < next->bytes.total) {
                 tmp = curr->next;
                 *currp = tmp;
                 if (tmp == next) {
@@ -532,14 +568,14 @@ static void dump_graphedge_list(graphedge *list, FILE *fp)
     fputs("<td valign=top>", fp);
     total = 0;
     for (edge = list; edge; edge = edge->next)
-        total += edge->total;
+        total += edge->bytes.total;
     for (edge = list; edge; edge = edge->next) {
         const char *node_name = graphnode_name(edge->node);
         fprintf(fp, "<a href='#%s' onmouseover='window.status=\"%s\"'>"
                 "%s&nbsp;(%1.2f%%)</a>\n",
                 node_name, node_name,
-                prettybig(edge->total, buf, sizeof buf),
-                percent(edge->total, total));
+                prettybig(edge->bytes.total, buf, sizeof buf),
+                percent(edge->bytes.total, total));
     }
     fputs("</td>", fp);
 }
@@ -547,8 +583,11 @@ static void dump_graphedge_list(graphedge *list, FILE *fp)
 static void dump_graph(PLHashTable *hashtbl, const char *title, FILE *fp)
 {
     uint32 i, count;
-    graphnode **table;
-    char buf1[32], buf2[32];
+    graphnode **table, *node;
+    char *name;
+    size_t namelen;
+    char buf1[16], buf2[16], buf3[16], buf4[16];
+    static char NA[] = "N/A";
 
     count = hashtbl->nentries;
     table = (graphnode**) malloc(count * sizeof(graphnode*));
@@ -561,21 +600,19 @@ static void dump_graph(PLHashTable *hashtbl, const char *title, FILE *fp)
 
     fprintf(fp,
             "<table border=1>\n"
-              "<tr><th>%s</th>"
+              "<tr>"
+                "<th>%s</th>"
                 "<th>Total/Direct (percents)</th>"
+                "<th>Allocations</th>"
                 "<th>Fan-in</th>"
                 "<th>Fan-out</th>"
               "</tr>\n",
             title);
 
     for (i = 0; i < count; i++) {
-        graphnode *node;
-        char *name;
-        int namelen;
-
         /* Don't bother with truly puny nodes. */
         node = table[i];
-        if (node->total < min_subtotal)
+        if (node->bytes.total < min_subtotal)
             break;
 
         name = graphnode_name(node);
@@ -583,14 +620,19 @@ static void dump_graph(PLHashTable *hashtbl, const char *title, FILE *fp)
         fprintf(fp,
                 "<tr>"
                   "<td valign=top><a name='%s'>%.*s%s</td>"
+                  "<td valign=top>%s/%s (%1.2f%%/%1.2f%%)</td>"
                   "<td valign=top>%s/%s (%1.2f%%/%1.2f%%)</td>",
                 name,
-                (namelen > 60) ? 60 : namelen, name,
-                (namelen > 60) ? "<i>...</i>" : "",
-                prettybig(node->total, buf1, sizeof buf1),
-                prettybig(node->direct, buf2, sizeof buf2),
-                percent(node->total, calltree_root.total),
-                percent(node->direct, calltree_root.total));
+                (namelen > 45) ? 45 : (int)namelen, name,
+                (namelen > 45) ? "<i>...</i>" : "",
+                prettybig(node->bytes.total, buf1, sizeof buf1),
+                prettybig(node->bytes.direct, buf2, sizeof buf2),
+                percent(node->bytes.total, calltree_root.bytes.total),
+                percent(node->bytes.direct, calltree_root.bytes.total),
+                prettybig(node->allocs.total, buf3, sizeof buf3),
+                prettybig(node->allocs.direct, buf4, sizeof buf4),
+                percent(node->allocs.total, calltree_root.allocs.total),
+                percent(node->allocs.direct, calltree_root.allocs.total));
 
         sort_graphedge_list(&node->in);
         dump_graphedge_list(node->in, fp);
@@ -598,6 +640,55 @@ static void dump_graph(PLHashTable *hashtbl, const char *title, FILE *fp)
         dump_graphedge_list(node->out, fp);
 
         fputs("</tr>\n", fp);
+    }
+
+    fputs("</table>\n<hr>\n", fp);
+
+    qsort(table, count, sizeof(graphnode*), mean_size_compare);
+
+    fprintf(fp,
+            "<table border=1>\n"
+              "<tr><th colspan=4>Direct Allocators</th></tr>\n"
+              "<tr>"
+                "<th>%s</th>"
+                "<th>Mean&nbsp;Size</th>"
+                "<th>Standard Deviation</th>"
+                "<th>Allocations<th>"
+              "</tr>\n",
+            title);
+
+    for (i = 0; i < count; i++) {
+        double allocs, bytes, mean, variance, sigma;
+
+        node = table[i];
+        allocs = (double)node->allocs.direct;
+        if (!allocs)
+            continue;
+
+        /* Compute direct-size mean and standard deviation. */
+        bytes = (double)node->bytes.direct;
+        mean = bytes / allocs;
+        variance = allocs * node->sqsum - bytes * bytes;
+        if (variance < 0 || allocs == 1)
+            variance = 0;
+        else
+            variance /= allocs * (allocs - 1);
+        sigma = sqrt(variance);
+
+        name = graphnode_name(node);
+        namelen = strlen(name);
+        fprintf(fp,
+                "<tr>"
+                  "<td valign=top>%.*s%s</td>"
+                  "<td valign=top>%s</td>"
+                  "<td valign=top>%s</td>"
+                  "<td valign=top>%s</td>"
+                "</tr>",
+                (namelen > 65) ? 45 : (int)namelen, name,
+                (namelen > 65) ? "<i>...</i>" : "",
+                prettybig((uint32)mean, buf1, sizeof buf1),
+                prettybig((uint32)sigma, buf2, sizeof buf2),
+                prettybig(node->allocs.direct, buf3, sizeof buf3));
     }
 
     fputs("</table>\n", fp);
@@ -813,7 +904,8 @@ int main(int argc, char **argv)
             meth = (graphnode*) *PL_HashTableRawLookup(methods, mhash, mkey);
             site->method = meth;
             site->offset = event.u.site.offset;
-            site->direct = site->total = 0;
+            site->bytes.direct = site->bytes.total = 0;
+            site->allocs.direct = site->allocs.total = 0;
             break;
           }
 
@@ -823,8 +915,9 @@ int main(int argc, char **argv)
             const void *key;
             PLHashNumber hash;
             callsite *site;
-            int32 delta;
+            int32 size, oldsize, delta;
             graphnode *meth, *comp, *lib;
+            double sqdelta, sqszdelta;
 
             key = (const void*) event.serial;
             hash = hash_serial(key);
@@ -835,17 +928,43 @@ int main(int argc, char **argv)
                 continue;
             }
 
-            delta = (int32)event.u.alloc.size - (int32)event.u.alloc.oldsize;
-            site->direct += delta;
+            size = (int32)event.u.alloc.size;
+            oldsize = (int32)event.u.alloc.oldsize;
+            delta = size - oldsize;
+            site->bytes.direct += delta;
+            if (event.type != 'R')
+                site->allocs.direct++;
             meth = site->method;
             if (meth) {
-                meth->direct += delta;
+                meth->bytes.direct += delta;
+                sqdelta = delta * delta;
+                if (event.type == 'R') {
+                    sqszdelta = ((double)size * size)
+                              - ((double)oldsize * oldsize);
+                    meth->sqsum += sqszdelta;
+                } else {
+                    meth->sqsum += sqdelta;
+                    meth->allocs.direct++;
+                }
                 comp = meth->up;
                 if (comp) {
-                    comp->direct += delta;
+                    comp->bytes.direct += delta;
+                    if (event.type == 'R') {
+                        comp->sqsum += sqszdelta;
+                    } else {
+                        comp->sqsum += sqdelta;
+                        comp->allocs.direct++;
+                    }
                     lib = comp->up;
-                    if (lib)
-                        lib->direct += delta;
+                    if (lib) {
+                        lib->bytes.direct += delta;
+                        if (event.type == 'R') {
+                            lib->sqsum += sqszdelta;
+                        } else {
+                            lib->sqsum += sqdelta;
+                            lib->allocs.direct++;
+                        }
+                    }
                 }
             }
             break;
