@@ -1809,16 +1809,13 @@ nsHTMLReflowState::InitConstraints(nsIPresContext* aPresContext,
           if (eCompatibility_NavQuirks == mode) {
             if (!IS_TABLE_CELL(fType)) {
               aContainingBlockHeight = CalcQuirkContainingBlockHeight(*cbrs);
+              if (aContainingBlockHeight == NS_AUTOHEIGHT) {
+                heightUnit = eStyleUnit_Auto;
+              }
             }
             else {
               heightUnit = eStyleUnit_Auto;
             }
-            // NOTE: since here we really do NEED the computed height of the containing block,
-            //       we pass PR_FALSE for the aRestrictToFirstLevel argument, allowing the method
-            //       to walk up the frame tree arbitrarily far to find a real height. This is NOT
-            //       default behavior, since it is an additional performance hit and is not usually 
-            //       necessary (see other call in ComputeContainingBlockRectangle). 
-            //       This is an IE emulation for %-height images - see bug 85016
           }
           // in standard mode, use the cb height.  if it's "auto", as will be the case
           // by default in BODY, use auto height as per CSS2 spec.
