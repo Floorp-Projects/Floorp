@@ -1405,7 +1405,7 @@ nsDNSService::Lookup(const char*     hostName,
         // IDN handling
         if (mIDNConverter && !nsCRT::IsAscii(hostName)) {
             nsXPIDLCString hostNameACE;
-            rv = mIDNConverter->UTF8ToIDNHostName(hostName, getter_Copies(hostNameACE));
+            rv = mIDNConverter->ConvertUTF8toACE(hostName, getter_Copies(hostNameACE));
             if (!hostNameACE.get()) return NS_ERROR_OUT_OF_MEMORY;
             lookup = FindOrCreateLookup(hostNameACE);
         }

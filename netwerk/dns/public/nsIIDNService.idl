@@ -47,22 +47,34 @@
  * nsIIDNService interface.
  *
  * IDN (Internationalized Domain Name) support. Provides facilities
- * for turning IDN's from UTF-8 to ACE (ASCII Compatible Encoding).
+ * for manipulating IDN hostnames according to the specification set
+ * forth by the IETF.
  *
- * See http://www.ietf.org/html.characters/idn-charter.html
- * or http://www.i-dns.net
+ * IDN effort:
+ * http://www.ietf.org/html.characters/idn-charter.html
+ * http://www.i-dns.net
+ *
+ * IDNA specification:
+ * http://search.ietf.org/internet-drafts/draft-ietf-idn-idna-06.txt
  */
 
 [scriptable, uuid(7B67747E-A8C4-4832-80C7-39EBB0C11F94)]
 interface nsIIDNService : nsISupports
 {
     /**
-     * Prepares the input hostname according to draft-ietf-idn-nameprep-05.txt.
-     * Then automatically converts it into an ACE that is most likely to be
-     * adopted as the standard.
+     * Prepares the input hostname according to IDNA ToASCII operation,
+     * the input hostname is assumed to be UTF8-encoded.
      *
-     * The current input is string, but in the future where everything-is-utf8
-     * this may change.  See http://bugzilla.mozilla.org/show_bug.cgi?id=84186
+     * The current input is string, but this may change pending Bug 84186.
      */
-    string UTF8ToIDNHostName(in string input);
+    [noscript] string ConvertUTF8toACE(in string input);
+
+
+    /**
+     * This is the ToUnicode operation as specified in the IDNA proposal,
+     * with an additional step to encode the result in UTF-8.
+     * It takes an ACE-encoded hostname and performs ToUnicode to it, then
+     * encodes the resulting string into UTF8.
+     */
+    [noscript] string ConvertACEtoUTF8(in string input);
 };
