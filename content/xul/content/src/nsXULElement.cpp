@@ -1346,27 +1346,35 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
         }
     }
 
-	// XUL Only. Find out if we have a broadcast listener for this element.
-	if (successful)
-        {
-            count = mBroadcastListeners.Count();
-            for (PRInt32 i = 0; i < count; i++)
-                {
-                    XULBroadcastListener* xulListener = (XULBroadcastListener*)mBroadcastListeners[i];
-                    nsString aString;
-                    aName->ToString(aString);
-                    if (xulListener->mAttribute.EqualsIgnoreCase(aString))
-                        {
-                            // Set the attribute in the broadcast listener.
-                            nsCOMPtr<nsIContent> contentNode(do_QueryInterface(xulListener->mListener));
-                            if (contentNode)
-                                {
-                                    contentNode->SetAttribute(aNameSpaceID, aName, aValue, aNotify);
-                                }
-                        }
+	  // XUL Only. Find out if we have a broadcast listener for this element.
+	  if (successful) {
+        count = mBroadcastListeners.Count();
+        for (PRInt32 i = 0; i < count; i++) {
+            XULBroadcastListener* xulListener = (XULBroadcastListener*)mBroadcastListeners[i];
+            nsString aString;
+            aName->ToString(aString);
+            if (xulListener->mAttribute.EqualsIgnoreCase(aString)) {
+                // Set the attribute in the broadcast listener.
+                nsCOMPtr<nsIContent> contentNode(do_QueryInterface(xulListener->mListener));
+                if (contentNode) {
+                    
+                    // If the namespace of the attribute and the namespace of the
+                    // tag are identical, then use the namespace of the listener's tag.
+                    // This allows you to do things like set xul:disabled on a xul tag
+                    // and have an html tag be annotated with an html:disabled instead.
+                    
+                    PRInt32 thisNameSpaceID, listenerNameSpaceID;
+                    GetNameSpaceID(thisNameSpaceID);
+                    contentNode->GetNameSpaceID(listenerNameSpaceID);
+
+                    if (aNameSpaceID == thisNameSpaceID)
+                        contentNode->SetAttribute(listenerNameSpaceID, aName, aValue, aNotify);
+                    else contentNode->SetAttribute(aNameSpaceID, aName, aValue, aNotify);
                 }
+            }
         }
-	// End XUL Only Code
+    }
+	  // End XUL Only Code
 
     if (NS_SUCCEEDED(rv) && aNotify && (nsnull != mDocument)) {
         mDocument->AttributeChanged(this, aName, NS_STYLE_HINT_UNKNOWN);
@@ -1473,30 +1481,38 @@ RDFElementImpl::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNot
     }
 
     // XUL Only. Find out if we have a broadcast listener for this element.
-    if (successful)
+    if (successful) {
+        PRInt32 count = mBroadcastListeners.Count();
+        for (PRInt32 i = 0; i < count; i++)
         {
-            PRInt32 count = mBroadcastListeners.Count();
-            for (PRInt32 i = 0; i < count; i++)
-                {
-                    XULBroadcastListener* xulListener = (XULBroadcastListener*)mBroadcastListeners[i];
-                    nsString aString;
-                    aName->ToString(aString);
-                    if (xulListener->mAttribute.EqualsIgnoreCase(aString))
-                        {
-                            // Unset the attribute in the broadcast listener.
-                            nsCOMPtr<nsIContent> contentNode(do_QueryInterface(xulListener->mListener));
-                            if (contentNode)
-                                {
-                                    contentNode->UnsetAttribute(aNameSpaceID, aName, aNotify);
-                                }
-                        }
-                }
+            XULBroadcastListener* xulListener = (XULBroadcastListener*)mBroadcastListeners[i];
+            nsString aString;
+            aName->ToString(aString);
+            if (xulListener->mAttribute.EqualsIgnoreCase(aString)) {
+                // Unset the attribute in the broadcast listener.
+                nsCOMPtr<nsIContent> contentNode(do_QueryInterface(xulListener->mListener));
+                
+                // If the namespace of the attribute and the namespace of the
+                // tag are identical, then use the namespace of the listener's tag.
+                // This allows you to do things like set xul:disabled on a xul tag
+                // and have an html tag be annotated with an html:disabled instead.
+            
+                PRInt32 thisNameSpaceID, listenerNameSpaceID;
+                GetNameSpaceID(thisNameSpaceID);
+                contentNode->GetNameSpaceID(listenerNameSpaceID);
 
-            // Notify document
-            if (NS_SUCCEEDED(rv) && aNotify && (nsnull != mDocument)) {
-                mDocument->AttributeChanged(this, aName, NS_STYLE_HINT_UNKNOWN);
+                if (aNameSpaceID == thisNameSpaceID)
+                    contentNode->UnsetAttribute(listenerNameSpaceID, aName, aNotify);
+                else contentNode->UnsetAttribute(aNameSpaceID, aName, aNotify);
             }
         }
+   
+        // Notify document
+        if (NS_SUCCEEDED(rv) && aNotify && (nsnull != mDocument)) {
+            mDocument->AttributeChanged(this, aName, NS_STYLE_HINT_UNKNOWN);
+        }
+    }
+
     // End XUL Only Code
 
     return rv;
