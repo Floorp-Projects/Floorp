@@ -24,7 +24,7 @@
   -----
 
   1) Implement the CreateDataBase() methods.
-     
+
  */
 
 #include "nsIAtom.h"
@@ -68,152 +68,6 @@ static NS_DEFINE_IID(kIRDFLiteralIID,         NS_IRDFLITERAL_IID);
 static NS_DEFINE_IID(kIRDFResourceIID,        NS_IRDFRESOURCE_IID);
 static NS_DEFINE_IID(kIRDFNodeIID,            NS_IRDFNODE_IID);
 static NS_DEFINE_IID(kISupportsIID,           NS_ISUPPORTS_IID);
-
-////////////////////////////////////////////////////////////////////////
-// PrefixMap
-//
-//   A simple map from a string prefix to a value. It maintains an
-//   ordered list of prefixes that map to a <tt>void*</tt>. The list
-//   is sorted in ASCII order such that if one prefix <b>p</b> is
-//   itself a prefix of another prefix <b>q</b>, the longest prefix
-//   (<b>q</b>) will appear first in the list. The idea is that you
-//   want to find the "best" match first. (Will this actually be
-//   useful? Probabably not...)
-//
-class PrefixMap
-{
-private:
-    struct PrefixMapEntry
-    {
-        const char*     mPrefix;
-        PRInt32         mPrefixLen;
-        const void*     mValue;
-        PrefixMapEntry* mNext;
-    };
-
-    PrefixMapEntry* mHead;
-
-public:
-    PrefixMap();
-    ~PrefixMap();
-
-    PRBool Add(const char* aPrefix, const void* aValue);
-    const void* Remove(const char* aPrefix);
-
-    /**
-     * Find the most specific value matching the specified string.
-     */
-    const void* Find(const char* aString);
-};
-
-
-PrefixMap::PrefixMap()
-    : mHead(nsnull)
-{
-}
-
-PrefixMap::~PrefixMap()
-{
-    while (mHead) {
-        PrefixMapEntry* doomed = mHead;
-        mHead = mHead->mNext;
-        PL_strfree(NS_CONST_CAST(char*, doomed->mPrefix));
-        delete doomed;
-    }
-}
-
-PRBool
-PrefixMap::Add(const char* aPrefix, const void* aValue)
-{
-    PRInt32 newPrefixLen = PL_strlen(aPrefix);
-    PrefixMapEntry* entry = mHead;
-    PrefixMapEntry* last = nsnull;
-
-    while (entry != nsnull) {
-        // check to see if the new prefix is longer than the current
-        // entry. If so, we'll want to insert the new prefix *before*
-        // this one.
-        if (newPrefixLen > entry->mPrefixLen)
-            break;
-
-        // check for exact equality: if so, the prefix is already
-        // registered, so fail (?)
-        if (PL_strcmp(entry->mPrefix, aPrefix) == 0)
-            return PR_FALSE;
-
-        // otherwise, the new prefix is the same length or shorter
-        // than the current entry: continue on to the next one.
-
-        last = entry;
-        entry = entry->mNext;
-    }
-
-    PrefixMapEntry* newEntry = new PrefixMapEntry;
-    if (! newEntry)
-        return PR_FALSE;
-
-
-    newEntry->mPrefix    = PL_strdup(aPrefix);
-    newEntry->mPrefixLen = newPrefixLen;
-    newEntry->mValue     = aValue;
-
-    if (last) {
-        // we found an entry that we need to insert the current
-        // entry *before*
-        newEntry->mNext = last->mNext;
-        last->mNext = newEntry;
-    }
-    else {
-        // Otherwise, insert at the start
-        newEntry->mNext = mHead;
-        mHead = newEntry;
-    }
-    return PR_TRUE;
-}
-
-const void*
-PrefixMap::Remove(const char* aPrefix)
-{
-    PrefixMapEntry* entry = mHead;
-    PrefixMapEntry* last = nsnull;
-
-    PRInt32 doomedPrefixLen = PL_strlen(aPrefix);
-
-    while (entry != nsnull) {
-        if ((doomedPrefixLen == entry->mPrefixLen) &&
-            (PL_strcmp(entry->mPrefix, aPrefix) == 0)) {
-            if (last) {
-                last->mNext = entry->mNext;
-            }
-            else {
-                mHead = entry->mNext;
-            }
-
-            const void* value = entry->mValue;
-
-            PL_strfree(NS_CONST_CAST(char*, entry->mPrefix));
-            delete entry;
-
-            return value;
-        }
-        last = entry;
-        entry = entry->mNext;
-    }
-    return nsnull;
-}
-
-
-const void*
-PrefixMap::Find(const char* aString)
-{
-    for (PrefixMapEntry* entry = mHead; entry != nsnull; entry = entry->mNext) {
-        PRInt32 cmp = PL_strncmp(entry->mPrefix, aString, entry->mPrefixLen);
-        if (cmp == 0)
-            return entry->mValue;
-    }
-    return nsnull;
-}
-
 
 ////////////////////////////////////////////////////////////////////////
 // LiteralImpl
@@ -340,7 +194,6 @@ LiteralImpl::EqualsLiteral(const nsIRDFLiteral* literal, PRBool* result) const
 class ServiceImpl : public nsIRDFService
 {
 protected:
-    PrefixMap    mResourceFactories;
     PLHashTable* mNamedDataSources;
     PLHashTable* mResources;
 
@@ -439,20 +292,32 @@ NS_IMPL_QUERY_INTERFACE(ServiceImpl, kIRDFServiceIID);
 
 
 NS_IMETHODIMP
-ServiceImpl::GetResource(const char* uri, nsIRDFResource** resource)
+ServiceImpl::GetResource(const char* aURI, nsIRDFResource** aResource)
 {
+    // Sanity checks
+    NS_PRECONDITION(aURI != nsnull, "null ptr");
+    if (! aURI)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(aResource != nsnull, "null ptr");
+    if (! aResource)
+        return NS_ERROR_NULL_POINTER;
+
+    // First, check the cache to see if we've already created and
+    // registered this thing.
     nsIRDFResource* result =
-        NS_STATIC_CAST(nsIRDFResource*, PL_HashTableLookup(mResources, uri));
-    
+        NS_STATIC_CAST(nsIRDFResource*, PL_HashTableLookup(mResources, aURI));
+
     if (result) {
         // Addref for the callee.
         NS_ADDREF(result);
-        *resource = result;
+        *aResource = result;
         return NS_OK;
-    }        
-        
+    }
+
+    // Nope. So go to the repository to create it.
     nsresult rv;
-    nsAutoString uriStr = uri;
+    nsAutoString uriStr(aURI);
     PRInt32 pos = uriStr.Find(':');
     if (pos < 0) {
         // no colon, so try the default resource factory
@@ -472,19 +337,29 @@ ServiceImpl::GetResource(const char* uri, nsIRDFResource** resource)
                                           nsnull, nsIRDFResource::IID(),
                                           (void**)&result);
 #endif
-        if (NS_FAILED(rv)) return rv;
+        if (NS_FAILED(rv)) {
+            NS_ERROR("unable to create resource");
+            return rv;
+        }
     }
     else {
-        nsAutoString prefix;
-        uriStr.Left(prefix, pos);      // truncate
-        char* prefixStr = prefix.ToNewCString();
-        if (prefixStr == nsnull)
-            return NS_ERROR_OUT_OF_MEMORY;
-        char* progID = PR_smprintf(NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "%s",
-                                   prefixStr);
-        delete[] prefixStr;
+        // the resource is qualified, so construct a ProgID and
+        // construct it from the repository.
+        nsAutoString progIDStr;
+        uriStr.Left(progIDStr, pos);      // truncate
+        progIDStr.Insert(NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX, 0);
+
+        // Safely convert to a C-string for the XPCOM APIs
+        char buf[128];
+        char* progID = buf;
+        if (progIDStr.Length() >= sizeof(buf))
+            progID = new char[progIDStr.Length() + 1];
+
         if (progID == nsnull)
             return NS_ERROR_OUT_OF_MEMORY;
+
+        progIDStr.ToCString(progID, progIDStr.Length() + 1);
+
 #if HACK_DONT_USE_LIBREG
         nsIServiceManager* servMgr;
         nsServiceManager::GetGlobalServiceManager(&servMgr);
@@ -501,7 +376,9 @@ ServiceImpl::GetResource(const char* uri, nsIRDFResource** resource)
                                           nsIRDFResource::IID(),
                                           (void**)&result);
 #endif
-        PR_smprintf_free(progID);
+        if (progID != buf)
+            delete[] progID;
+
         if (NS_FAILED(rv)) {
             // if we failed, try the default resource factory
 #if HACK_DONT_USE_LIBREG
@@ -520,29 +397,43 @@ ServiceImpl::GetResource(const char* uri, nsIRDFResource** resource)
                                               nsnull, nsIRDFResource::IID(),
                                               (void**)&result);
 #endif
-            if (NS_FAILED(rv)) return rv;
+            if (NS_FAILED(rv)) {
+                NS_ERROR("unable to create resource");
+                return rv;
+            }
         }
     }
-    rv = result->Init(uri);
+
+    // Now initialize it with it's URI. At this point, the resource
+    // implementation should register itself with the RDF service.
+    rv = result->Init(aURI);
     if (NS_FAILED(rv)) {
+        NS_ERROR("unable to initialize resource");
         NS_RELEASE(result);
         return rv;
     }
 
-    *resource = result;
-    rv = RegisterResource(result);
-    if (NS_FAILED(rv))
-        NS_RELEASE(result);
+    *aResource = result; // already refcounted from repository
     return rv;
 }
 
 NS_IMETHODIMP
-ServiceImpl::GetUnicodeResource(const PRUnichar* uri, nsIRDFResource** resource)
+ServiceImpl::GetUnicodeResource(const PRUnichar* aURI, nsIRDFResource** aResource)
 {
-    nsString s(uri);
-    char* cstr = s.ToNewCString();
-    nsresult rv = GetResource(cstr, resource);
-    delete[] cstr;
+    nsString uriStr(aURI);
+    char buf[128];
+    char* uri = buf;
+
+    if (uriStr.Length() >= sizeof(buf))
+        uri = new char[uriStr.Length() + 1];
+
+    uriStr.ToCString(uri, uriStr.Length() + 1);
+
+    nsresult rv = GetResource(uri, aResource);
+
+    if (uri != buf)
+        delete[] uri;
+
     return rv;
 }
 
@@ -570,15 +461,25 @@ ServiceImpl::RegisterResource(nsIRDFResource* aResource, PRBool replace)
 
     const char* uri;
     rv = aResource->GetValue(&uri);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) {
+        NS_ERROR("unable to get URI from resource");
+        return rv;
+    }
+
+    NS_ASSERTION(uri != nsnull, "resource has no URI");
+    if (! uri)
+        return NS_ERROR_NULL_POINTER;
 
     nsIRDFResource* prevRes =
         NS_STATIC_CAST(nsIRDFResource*, PL_HashTableLookup(mResources, uri));
     if (prevRes != nsnull) {
-        if (replace)
+        if (replace) {
             NS_RELEASE(prevRes);
-        else
+        }
+        else {
+            NS_WARNING("resource already registered, and replace not specified");
             return NS_ERROR_FAILURE;    // already registered
+        }
     }
 
     // This is a little trick to make storage more efficient. For
@@ -596,6 +497,10 @@ ServiceImpl::RegisterResource(nsIRDFResource* aResource, PRBool replace)
 NS_IMETHODIMP
 ServiceImpl::UnregisterResource(nsIRDFResource* resource)
 {
+    NS_PRECONDITION(resource != nsnull, "null ptr");
+    if (! resource)
+        return NS_ERROR_NULL_POINTER;
+
     nsresult rv;
 
     const char* uri;
@@ -646,7 +551,7 @@ ServiceImpl::UnregisterDataSource(nsIRDFDataSource* aDataSource)
     if (NS_FAILED(rv = aDataSource->GetURI(&uri)))
         return rv;
 
-    nsIRDFDataSource* ds = 
+    nsIRDFDataSource* ds =
         NS_STATIC_CAST(nsIRDFDataSource*, PL_HashTableLookup(mNamedDataSources, uri));
 
     if (! ds)
@@ -659,6 +564,8 @@ ServiceImpl::UnregisterDataSource(nsIRDFDataSource* aDataSource)
 NS_IMETHODIMP
 ServiceImpl::GetDataSource(const char* uri, nsIRDFDataSource** aDataSource)
 {
+    // First, check the cache to see if we already have this
+    // datasource loaded and initialized.
     nsIRDFDataSource* ds =
         NS_STATIC_CAST(nsIRDFDataSource*, PL_HashTableLookup(mNamedDataSources, uri));
 
@@ -667,21 +574,33 @@ ServiceImpl::GetDataSource(const char* uri, nsIRDFDataSource** aDataSource)
         *aDataSource = ds;
         return NS_OK;
     }
-    nsresult rv;
-	nsAutoString rdfName = uri;
-    nsAutoString dataSourceName;
-    PRInt32 pos = rdfName.Find(':');
-    if (pos < 0) return NS_ERROR_FAILURE;       // bad URI
 
+    // Nope. So go to the repository to try to create it.
+    nsresult rv;
+	nsAutoString rdfName(uri);
+    PRInt32 pos = rdfName.Find(':');
+    if (pos < 0) {
+        NS_WARNING("bad URI for data source, missing ':'");
+        return NS_ERROR_FAILURE;       // bad URI
+    }
+
+    nsAutoString dataSourceName;
     rdfName.Right(dataSourceName, rdfName.Length() - (pos + 1));
-    char* name = dataSourceName.ToNewCString();
-    if (name == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-    char* progID = PR_smprintf(NS_RDF_DATASOURCE_PROGID_PREFIX "%s",
-                               name);
-    delete[] name;
+
+    nsAutoString progIDStr(NS_RDF_DATASOURCE_PROGID_PREFIX);
+    progIDStr.Append(dataSourceName);
+
+    // Safely convert it to a C-string for the XPCOM APIs
+    char buf[64];
+    char* progID = buf;
+    if (progIDStr.Length() >= sizeof(buf))
+        progID = new char[progIDStr.Length() + 1];
+
     if (progID == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
+
+    progIDStr.ToCString(progID, progIDStr.Length() + 1);
+
 #if HACK_DONT_USE_LIBREG
     nsIServiceManager* servMgr;
     nsServiceManager::GetGlobalServiceManager(&servMgr);
@@ -697,8 +616,9 @@ ServiceImpl::GetDataSource(const char* uri, nsIRDFDataSource** aDataSource)
         cid = kRDFXMLDataSourceCID;
     else if (dataSourceName.Equals("xul-datasource"))
         cid = kXULDataSourceCID;
-    else
-        PR_ASSERT(0);
+    else {
+        NS_ERROR("unknown data source");
+    }
 
     rv = NSGetFactory(servMgr, cid,
                       "", progID, &fact);
@@ -712,17 +632,29 @@ ServiceImpl::GetDataSource(const char* uri, nsIRDFDataSource** aDataSource)
                                       nsIRDFDataSource::IID(),
                                       (void**)aDataSource);
 #endif
-    PR_smprintf_free(progID);
-    if (NS_FAILED(rv)) return rv;
+
+    if (progID != buf)
+        delete[] progID;
+
+    if (NS_FAILED(rv)) {
+        // XXX only a warning, because the URI may have been ill-formed.
+        NS_WARNING("unable to create data source");
+        return rv;
+    }
+
     rv = (*aDataSource)->Init(uri);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) {
+        NS_ERROR("unable to initialize data source");
+        return rv;
+    }
+
     return NS_OK;
 }
 
 NS_IMETHODIMP
 ServiceImpl::CreateDatabase(const char** uri, nsIRDFDataBase** dataBase)
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -730,7 +662,7 @@ ServiceImpl::CreateDatabase(const char** uri, nsIRDFDataBase** dataBase)
 NS_IMETHODIMP
 ServiceImpl::CreateBrowserDatabase(nsIRDFDataBase** dataBase)
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
