@@ -152,6 +152,15 @@ nsMenuBarListener::KeyUp(nsIDOMEvent* aKeyEvent)
 nsresult
 nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
 {
+  // if event has already been handled, bail
+  nsCOMPtr<nsIDOMNSUIEvent> uiEvent ( do_QueryInterface(aKeyEvent) );
+  if ( uiEvent ) {
+    PRBool eventHandled = PR_FALSE;
+    uiEvent->GetPreventDefault ( &eventHandled );
+    if ( eventHandled )
+      return NS_OK;       // don't consume event
+  }
+
   InitAccessKey();
 
   if (mAccessKey)
