@@ -164,9 +164,10 @@ checkout:
 	  mv $(CVSCO_LOGFILE) $(CVSCO_LOGFILE).old; \
 	else true; \
 	fi
-	@date > $(CVSCO_LOGFILE)
+	@date | tee $(CVSCO_LOGFILE)
 	cd $(ROOTDIR) && \
 	  $(CVSCO) $(MOZ_CO_MODULE) 2>&1 | tee -a $(CVSCO_LOGFILE)
+	@date | tee $(CVSCO_LOGFILE)
 	@conflicts=`egrep "^C " $(CVSCO_LOGFILE)` ;\
 	if test "$$conflicts" ; then \
 	  echo "$(MAKE): *** Conflicts during checkout." ;\
