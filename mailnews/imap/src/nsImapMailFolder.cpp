@@ -1234,6 +1234,12 @@ NS_IMETHODIMP nsImapMailFolder::Delete ()
                 summarySpec.Delete(PR_FALSE);
         }
     }
+    if (mPath)
+    {
+      nsFileSpec fileSpec;
+      if (NS_SUCCEEDED(mPath->GetFileSpec(&fileSpec)) && fileSpec.Exists())
+        fileSpec.Delete(PR_FALSE);
+    }
     return rv;
 }
 
@@ -1890,44 +1896,44 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
   PRBool deleteImmediatelyNoTrash = PR_FALSE;
   nsCAutoString messageIds;
   nsMsgKeyArray srcKeyArray;
-
+  
   nsMsgImapDeleteModel deleteModel = nsMsgImapDeleteModels::MoveToTrash;
-
+  
   nsCOMPtr<nsIImapIncomingServer> imapServer;
   rv = GetFlag(MSG_FOLDER_FLAG_TRASH, &deleteImmediatelyNoTrash);
   rv = GetImapIncomingServer(getter_AddRefs(imapServer));
-
+  
   if (NS_SUCCEEDED(rv) && imapServer)
   {
     imapServer->GetDeleteModel(&deleteModel);
     if (deleteModel != nsMsgImapDeleteModels::MoveToTrash || deleteStorage)
       deleteImmediatelyNoTrash = PR_TRUE;
   }
-
+  
   rv = BuildIdsAndKeyArray(messages, messageIds, srcKeyArray);
   if (NS_FAILED(rv)) return rv;
-
-
+  
+  
   nsCOMPtr<nsIMsgFolder> rootFolder;
   nsCOMPtr<nsIMsgFolder> trashFolder;
-
-	if (!deleteImmediatelyNoTrash)
-	{
-        rv = GetRootFolder(getter_AddRefs(rootFolder));
-        if (NS_SUCCEEDED(rv) && rootFolder)
-        {
-            PRUint32 numFolders = 0;
-            rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_TRASH,
-                                                1, &numFolders,
-                                                getter_AddRefs(trashFolder));
+  
+  if (!deleteImmediatelyNoTrash)
+  {
+    rv = GetRootFolder(getter_AddRefs(rootFolder));
+    if (NS_SUCCEEDED(rv) && rootFolder)
+    {
+      PRUint32 numFolders = 0;
+      rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_TRASH,
+        1, &numFolders,
+        getter_AddRefs(trashFolder));
       NS_ASSERTION(NS_SUCCEEDED(rv) && trashFolder != 0, "couldn't find trash");
-
-			// if we can't find the trash, we'll just have to do an imap delete and pretend this is the trash
-			if (NS_FAILED(rv) || !trashFolder)
-				deleteImmediatelyNoTrash = PR_TRUE;
-		}
-	}
-
+      
+      // if we can't find the trash, we'll just have to do an imap delete and pretend this is the trash
+      if (NS_FAILED(rv) || !trashFolder)
+        deleteImmediatelyNoTrash = PR_TRUE;
+    }
+  }
+  
   if ((NS_SUCCEEDED(rv) && deleteImmediatelyNoTrash) || deleteModel == nsMsgImapDeleteModels::IMAPDelete )
   {
     if (allowUndo)
@@ -1946,43 +1952,43 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
       if (txnMgr)
         txnMgr->DoTransaction(undoMsgTxn);
     }
-
+    
     rv = StoreImapFlags(kImapMsgDeletedFlag, PR_TRUE, srcKeyArray.GetArray(), srcKeyArray.GetSize());
     if (NS_SUCCEEDED(rv))
     {
-        if (mDatabase)
+      if (mDatabase)
+      {
+        if (deleteModel == nsMsgImapDeleteModels::IMAPDelete)
         {
-            if (deleteModel == nsMsgImapDeleteModels::IMAPDelete)
-            {
-                MarkMessagesImapDeleted(&srcKeyArray, PR_TRUE, mDatabase);
-            }
-            else
-            {
-                EnableNotifications(allMessageCountNotifications, PR_FALSE);  //"remove it immediately" model
-                mDatabase->DeleteMessages(&srcKeyArray,nsnull);
-                EnableNotifications(allMessageCountNotifications, PR_TRUE);
-                NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);            
-            }
-            
+          MarkMessagesImapDeleted(&srcKeyArray, PR_TRUE, mDatabase);
         }
+        else
+        {
+          EnableNotifications(allMessageCountNotifications, PR_FALSE);  //"remove it immediately" model
+          mDatabase->DeleteMessages(&srcKeyArray,nsnull);
+          EnableNotifications(allMessageCountNotifications, PR_TRUE);
+          NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);            
+        }
+        
+      }
     }
-        return rv;
-    }
-
-    // have to move the messages to the trash
+    return rv;
+  }
+  
+  // have to move the messages to the trash
   else
   {
     if(trashFolder)
-	  {
+    {
       nsCOMPtr<nsIMsgFolder> srcFolder;
       nsCOMPtr<nsISupports>srcSupport;
       PRUint32 count = 0;
       rv = messages->Count(&count);
-
+      
       rv = QueryInterface(NS_GET_IID(nsIMsgFolder),
-					  getter_AddRefs(srcFolder));
+        getter_AddRefs(srcFolder));
       rv = trashFolder->CopyMessages(srcFolder, messages, PR_TRUE, msgWindow, listener,PR_FALSE, allowUndo);
-	  }
+    }
   }
   return rv;
 }
@@ -5555,7 +5561,8 @@ nsresult nsImapMailFolder::CopyOfflineMsgBody(nsIMsgFolder *srcFolder, nsIMsgDBH
           // now, copy the dest folder offline store msg to the temp file
           PRInt32 inputBufferSize = 10240;
           char *inputBuffer = (char *) PR_Malloc(inputBufferSize);
-          PRUint32 bytesLeft, bytesRead, bytesWritten;
+          PRInt32 bytesLeft;
+          PRUint32 bytesRead, bytesWritten;
           bytesLeft = messageSize;
           rv = (inputBuffer) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
           while (bytesLeft > 0 && NS_SUCCEEDED(rv))
@@ -5563,8 +5570,8 @@ nsresult nsImapMailFolder::CopyOfflineMsgBody(nsIMsgFolder *srcFolder, nsIMsgDBH
             rv = offlineStoreInputStream->Read(inputBuffer, inputBufferSize, &bytesRead);
             if (NS_SUCCEEDED(rv) && bytesRead > 0)
             {
-              rv = outputStream->Write(inputBuffer, bytesRead, &bytesWritten);
-              NS_ASSERTION(bytesWritten == bytesRead, "wrote out correct number of bytes");
+              rv = outputStream->Write(inputBuffer, PR_MIN((PRInt32) bytesRead, bytesLeft), &bytesWritten);
+              NS_ASSERTION((PRInt32) bytesWritten == PR_MIN((PRInt32) bytesRead, bytesLeft), "wrote out incorrect number of bytes");
             }
             else
               break;
