@@ -190,7 +190,7 @@ case `uname -s` in
 	#OSF1) has been done already - always 64 bit
 	SunOS)
 		MAPPED_OS=Solaris*8
-		IS_64=`(isainfo -v | grep 64)>/dev/null && echo 64 bit`
+		IS_64=`(isainfo -v | grep 64)>/dev/null 2>/dev/null && echo 64 bit`
 		OSDIR=${D1}/builds/${QAYEAR}${BUILDDATE}.${BUILDNUMBER}/*${MAPPED_OS}
 		if [ -n "$IS_64" ] 
 		then #Wait for the 64 bit build to finish...

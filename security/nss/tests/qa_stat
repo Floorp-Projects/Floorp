@@ -107,7 +107,8 @@ set_files()
 	TMP_E_FILE=${RFILE}.E$$
 	TMP_P_FILE=${RFILE}.P$$
 	TMP_A_FILE=${RFILE}.A$$
-	TMP_PLATFORMLIST_FILE=${RFILE}.Q$$
+	TMP_PLATFORMLIST_FILE=${RFILE}.platform.$$
+	TMP_PERF_FILE=${RFILE}.perf.$$
 	HTML_FILE=${RFILE}.html
 	TMPFILES="$TMPFILES  $TMP_E_FILE $TMP_P_FILE" 
 	FILENAME=$RFILE		#we might want to mail it...later switch to html file
@@ -336,6 +337,55 @@ header()
 	echo "testing in $RESULTDIR"
 }
 
+rsaperf()
+{
+	grep RSAPERF */output.log | grep -v "_DBG" > $TMP_PERF_FILE
+	
+    #echo '&nbsp;'
+	#echo '<br>&nbsp;'
+	echo '<table BORDER WIDTH="100%" NOSAVE >'
+	echo '<tr NOSAVE>'
+	echo '<td NOSAVE><b><font size=+1>Build-OS and version</font></b></td>'
+	echo ''
+	echo '<td><b><font size=+1>Systemname</font></b></td>'
+	echo ''
+	echo '<td><b><font size=+1>Testnumber</font></b></td>'
+	echo ''
+	echo '<td><b><font size=+1># of iterations</font></b></td>'
+	echo ''
+	echo '<td><b><font size=+1>average for one op</font></b></td>'
+	echo ''
+	echo '<td><b><font size=+1>Total</font></b></td>'
+	echo ''
+	echo '<td></td>'
+	echo '</tr>'
+	cat $TMP_PERF_FILE | while read machine BUILDPLATFORM no_iter t1 t2 total total_unit t3 t4 t5 average average_unit
+	do
+		BUILD_SYS=`echo $BUILDPLATFORM | sed -e 's/\.OBJ//' \
+			-e 's/_DBG/ Debug/' \
+			-e 's/_OPT/ Optimized/'  -e 's/_64/ 64bit/' -e 's/_glibc_PTH//' \
+			-e 's/_/ /'`
+		testnum=`echo $machine | sed -e 's/[^\.]*\.//' -e 's/\/.*//'`
+		machine=`echo $machine | sed -e 's/\..*//'`
+		echo '<tr>'
+		echo '<td>'$BUILD_SYS'</td>'
+		echo ''
+		echo '<td>'$machine'</td>'
+		echo ''
+		echo '<td>'$testnum'</td>'
+		echo ''
+		echo '<td>'$no_iter'</td>'
+		echo ''
+		echo '<td>'$average' '$average_unit'</td>'
+		echo ''
+		echo '<td>'$total' '$total_unit'</td>'
+		echo ''
+		echo '<td></td>'
+		echo '</tr>'
+	done
+	echo '</table>'
+}
+
 set_files
 
 find_qa_systems >$TMP_A_FILE 2>/dev/null
@@ -357,6 +407,9 @@ check_platforms $RFILE
 html_eot >>$HTML_FILE
 
 echo '<a NAME="errorlist"></a>' >> $HTML_FILE
+
+rsaperf >>$HTML_FILE
+
 qa_errorlist 2  | sed -e "s/^/<br>/" >>$HTML_FILE
 
 html_footer >>$HTML_FILE
