@@ -460,7 +460,7 @@ void nsImapProtocol::SetupWithUrl(nsIURL * aURL)
 		m_fetchMsgListMonitor = PR_NewMonitor();
 
         m_thread = PR_CreateThread(PR_USER_THREAD, ImapThreadMain, (void*)
-                                   this, PR_PRIORITY_NORMAL, PR_LOCAL_THREAD,
+                                   this, PR_PRIORITY_HIGH, PR_LOCAL_THREAD,
                                    PR_UNJOINABLE_THREAD, 0);
         NS_ASSERTION(m_thread, "Unable to create imap thread.\n");
 
