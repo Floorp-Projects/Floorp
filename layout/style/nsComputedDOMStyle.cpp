@@ -44,8 +44,7 @@
  */
 
 class nsComputedDOMStyle : public nsIComputedDOMStyle,
-                           public nsIScriptObjectOwner,
-                           public nsSupportsWeakReference
+                           public nsIScriptObjectOwner
 {
 public:
   NS_DECL_ISUPPORTS
