@@ -68,7 +68,7 @@
 class nsPrintfCString
     : public nsAReadableCString
   {
-    static const int kLocalBufferSize = 15;
+    enum { kLocalBufferSize=15 };
       // ought to be large enough for most things ... a |long long| needs at most 20 (so you'd better ask)
       //  pinkerton suggests 7.  We should measure and decide what's appropriate
 
