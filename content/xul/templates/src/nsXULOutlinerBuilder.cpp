@@ -454,7 +454,19 @@ nsXULOutlinerBuilder::IsContainer(PRInt32 aIndex, PRBool* aResult)
     if (aIndex < 0 || aIndex >= mRows.Count())
         return NS_ERROR_INVALID_ARG;
 
-    return CheckContainer(GetResourceFor(aIndex), aResult, nsnull);
+    nsOutlinerRows::iterator iter = mRows[aIndex];
+
+    if (iter->mContainerType == nsOutlinerRows::eContainerType_Unknown) {
+        PRBool isContainer;
+        CheckContainer(GetResourceFor(aIndex), &isContainer, nsnull);
+
+        iter->mContainerType = isContainer
+            ? nsOutlinerRows::eContainerType_Container
+            : nsOutlinerRows::eContainerType_Noncontainer;
+    }
+
+    *aResult = (iter->mContainerType == nsOutlinerRows::eContainerType_Container);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -474,7 +486,21 @@ nsXULOutlinerBuilder::IsContainerEmpty(PRInt32 aIndex, PRBool* aResult)
     if (aIndex < 0 || aIndex >= mRows.Count())
         return NS_ERROR_INVALID_ARG;
 
-    return CheckContainer(GetResourceFor(aIndex), nsnull, aResult);
+    nsOutlinerRows::iterator iter = mRows[aIndex];
+    NS_ASSERTION(iter->mContainerType == nsOutlinerRows::eContainerType_Container,
+                 "asking for empty state on non-container");
+
+    if (iter->mContainerState == nsOutlinerRows::eContainerState_Unknown) {
+        PRBool isEmpty;
+        CheckContainer(GetResourceFor(aIndex), nsnull, &isEmpty);
+
+        iter->mContainerState = isEmpty
+            ? nsOutlinerRows::eContainerState_Empty
+            : nsOutlinerRows::eContainerState_Nonempty;
+    }
+
+    *aResult = (iter->mContainerState == nsOutlinerRows::eContainerState_Empty);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -928,6 +954,10 @@ nsXULOutlinerBuilder::ReplaceMatch(nsIRDFResource* aMember,
             PRInt32 delta = mRows.GetSubtreeSizeFor(iter);
             mRows.RemoveRowAt(iter);
 
+            // XXX Could potentially invalidate the iterator's
+            // mContainer[Type|State] caching here, but it'll work
+            // itself out.
+
             // Notify the box object
             mBoxObject->RowCountChanged(row, -delta);
         }
@@ -960,14 +990,26 @@ nsXULOutlinerBuilder::ReplaceMatch(nsIRDFResource* aMember,
                                              nsXULContentUtils::true_,
                                              PR_TRUE,
                                              &open);
-            if (open)
+
+            if (open) {
                 parent = mRows.EnsureSubtreeFor(iter);
+            }
+            else if ((iter->mContainerType != nsOutlinerRows::eContainerType_Container) ||
+                     (iter->mContainerState != nsOutlinerRows::eContainerState_Nonempty)) {
+                // The container is closed, but we know something has
+                // just been inserted into it.
+                iter->mContainerType  = nsOutlinerRows::eContainerType_Container;
+                iter->mContainerState = nsOutlinerRows::eContainerState_Nonempty;
+                mBoxObject->InvalidateRow(iter.GetRowIndex());
+            }
         }
         else
             parent = mRows.GetRoot();
  
         if (parent) {
-            // By default, place the new element at the end of the container
+            // If we get here, then we're inserting into an open
+            // container. By default, place the new element at the
+            // end of the container
             PRInt32 index = parent->Count();
 
             if (mSortVariable) {

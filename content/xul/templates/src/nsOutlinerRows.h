@@ -40,6 +40,20 @@ class nsOutlinerRows
 public:
     enum Direction { eDirection_Forwards = +1, eDirection_Backwards = -1 };
 
+    // N.B. these values are chosen to avoid problems with
+    // sign-extension from the bit-packed Row structure.
+    enum ContainerType {
+        eContainerType_Unknown      =  0,
+        eContainerType_Noncontainer =  1,
+        eContainerType_Container    = -2
+    };
+
+    enum ContainerState {
+        eContainerState_Unknown     =  0,
+        eContainerState_Empty       =  1,
+        eContainerState_Nonempty    = -2
+    };
+
     class Subtree;
 
     /**
@@ -49,6 +63,8 @@ public:
      */
     struct Row {
         nsTemplateMatch* mMatch;
+        ContainerType    mContainerType  : 2;
+        ContainerState   mContainerState : 2;
         Subtree*         mSubtree; // XXX eventually move to hashtable
     };
 

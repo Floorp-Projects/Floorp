@@ -229,6 +229,8 @@ nsOutlinerRows::Subtree::InsertRowAt(nsTemplateMatch* aMatch, PRInt32 aIndex)
         mRows[i + 1] = mRows[i];
 
     mRows[aIndex].mMatch = aMatch;
+    mRows[aIndex].mContainerType = eContainerType_Unknown;
+    mRows[aIndex].mContainerState = eContainerState_Unknown;
     mRows[aIndex].mSubtree = nsnull;
     ++mCount;
 
