@@ -110,24 +110,26 @@ function recreateMap(){
   map = imageElement.getAttribute("usemap");
   map = map.substring(1, map.length);
   mapCollection = imageElement.ownerDocument.getElementsByName(map);
-  areaCollection = mapCollection[0].childNodes;
-  var len = areaCollection.length;
-  for(j=0; j<len; j++){
-    area = areaCollection[j];
-    shape = area.getAttribute("shape");
-    shape = shape.toLowerCase();
-    coords = area.getAttribute("coords");
-    href = area.getAttribute("href");
-    target = area.getAttribute("target");
-    alt = area.getAttribute("alt");
-    if (shape == "rect")
-      Rect(coords, href, target, alt, true);
-    else if (shape == "circle")
-      Circle(coords, href, target, alt, true);
-    else
-      Poly(coords, href, target, alt, true);
+  if (mapCollection){
+    areaCollection = mapCollection[0].childNodes;
+    var len = areaCollection.length;
+    for(j=0; j<len; j++){
+      area = areaCollection[j];
+      shape = area.getAttribute("shape");
+      shape = shape.toLowerCase();
+      coords = area.getAttribute("coords");
+      href = area.getAttribute("href");
+      target = area.getAttribute("target");
+      alt = area.getAttribute("alt");
+      if (shape == "rect")
+        Rect(coords, href, target, alt, true);
+      else if (shape == "circle")
+        Circle(coords, href, target, alt, true);
+      else
+        Poly(coords, href, target, alt, true);
+    }
+    imageElement.ownerDocument.removeChild(mapCollection[0]);
   }
-  imageElement.ownerDocument.removeChild(mapCollection[0]);
 }
 
 function finishMap(){
@@ -145,8 +147,9 @@ function finishMap(){
         createPoly(curSpot);
     }
     imageElement.setAttribute("usemap", ("#"+mapName));
-    alert(imageMap);
-    //editorShell.InsertElementAtSelection(imageMap, false);
+//    alert(imageMap);
+    editorShell.InsertElementAtSelection(imageMap, false);
+    dump("image map element inserted\n");
   }
   return true;
 }
