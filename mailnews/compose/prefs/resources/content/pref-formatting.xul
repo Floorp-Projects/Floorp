@@ -18,21 +18,6 @@
 	</html:div>
 
 <html:br/>
-&msgFormatting.label;
-<html:form>
-	<html:table>
-		<html:tr><html:td>
-			<html:input name="formatting" type="radio" id="pref:1:int:mail.html_compose" checked="true"/>
-			&useHtml.label;
-		</html:td></html:tr>
-		<html:tr><html:td>
-			<html:input name="formatting" type="radio" id="pref:0:int:mail.html_compose"/>
-			&usePlain.label;
-		</html:td></html:tr>
-	</html:table>
-</html:form>
-
-<html:br/>
 &sendMail.label;
 <html:form>
 	<html:table>
