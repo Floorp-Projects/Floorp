@@ -62,6 +62,25 @@ public:
   NS_IMETHOD  Destroy() = 0;
 
   /**
+   * Return the font's xheight property, scaled into app-units.
+   */
+  NS_IMETHOD  GetXHeight(nscoord& aResult) = 0;
+
+  /**
+   * Return the font's superscript offset (the distance from the
+   * baseline to where a superscript's baseline should be placed). The
+   * value returned will be a positive value.
+   */
+  NS_IMETHOD  GetSuperscriptOffset(nscoord& aResult) = 0;
+
+  /**
+   * Return the font's subscript offset (the distance from the
+   * baseline to where a subscript's baseline should be placed). The
+   * value returned will be a positive value.
+   */
+  NS_IMETHOD  GetSubscriptOffset(nscoord& aResult) = 0;
+
+  /**
    * Returns the width (in app units) of an 8-bit character
    */
   NS_IMETHOD  GetWidth(char aC, nscoord &aWidth) = 0;
