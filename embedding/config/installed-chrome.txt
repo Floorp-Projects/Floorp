@@ -11,6 +11,9 @@ content,install,url,jar:resource:/chrome/embed.jar!/content/help/
 locale,install,url,jar:resource:/chrome/embed.jar!/locale/en-US/help/
 skin,install,url,jar:resource:/chrome/embed.jar!/skin/classic/global/
 skin,install,url,jar:resource:/chrome/embed.jar!/skin/classic/communicator/
+content,install,url,jar:resource:/chrome/embed.jar!/content/forms/
+locale,install,url,jar:resource:/chrome/embed.jar!/locale/en-US/forms/
+skin,install,url,jar:resource:/chrome/embed.jar!/skin/classic/forms/
 skin,install,select,classic/1.0 
 locale,install,select,en-US 
 content,install,url,jar:resource:/chrome/embed.jar!/content/global-region/

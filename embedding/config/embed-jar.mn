@@ -8,9 +8,11 @@
 # Use XXXX for locale specific parts of the path.
 
 # Stuff needed for key bindings, scroll bar graphics etc.
+content/forms, forms/content/forms
 content/global, toolkit/content/global
 content/global/bindings, toolkit/content/global/bindings
 content/global-platform, toolkit/content/global-platform
+skin/classic/forms, classic/skin/classic/forms
 skin/classic/global, classic/skin/classic/global
 skin/classic/communicator/contents.rdf, classic/skin/classic/communicator/contents.rdf
 skin/classic/communicator/dialogOverlay.css, classic/skin/classic/communicator/dialogOverlay.css
@@ -28,6 +30,7 @@ locale/XXXX/navigator, XXXX/locale/XXXX/navigator
 locale/XXXX/navigator-platform, en-unix/locale/XXXX/navigator-platform
 locale/XXXX/global-platform, en-unix/locale/XXXX/global-platform
 locale/XXXX/communicator/layout, XXXX/locale/XXXX/communicator/layout
+locale/XXXX/forms, XXXX/locale/XXXX/forms
 
 # Help stuff
 content/help, help/content/help,
