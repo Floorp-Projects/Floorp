@@ -56,10 +56,6 @@ public:
    }
    PRBool Equals(const nsUnicodeFontMappingMac& anther);
    
-   static nsUnicodeFontMappingMac* GetCachedInstance(nsFont* aFont, nsIDeviceContext *aDeviceContext, 
-   			const nsString& aLangGroup, const nsString& aLANG);
-   
-   
 protected:
    PRBool ScriptMapInitComplete();
    void InitByFontFamily(nsFont* aFont, nsIDeviceContext *aDeviceContext);

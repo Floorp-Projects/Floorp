@@ -40,7 +40,6 @@
 #include "nsIServiceManager.h"
 #include "nsTextFormatter.h"
 #include "nsUnicodeMappingUtil.h"
-#include "nsUnicodeFontMappingCache.h"
 #include "nsDeviceContextMac.h"
 #include "nsReadableUtils.h"
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
@@ -85,7 +84,6 @@ void nsUnicodeMappingUtil::Init()
 	InitFromPref();
 	InitScriptFontMapping();
 	InitBlockToScriptMapping(); // this must be called after InitScriptEnabled()
-	mCache = new nsUnicodeFontMappingCache();
 }
 void nsUnicodeMappingUtil::CleanUp()
 {
@@ -95,12 +93,6 @@ void nsUnicodeMappingUtil::CleanUp()
 	  		 delete mGenericFontMapping[i][j];
 	  	}
 	}
-	if (mCache)
-	{
-		delete mCache;
-		mCache = nsnull;
-	}
-
 }
 //--------------------------------------------------------------------------
 
