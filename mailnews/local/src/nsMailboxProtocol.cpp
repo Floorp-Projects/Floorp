@@ -243,7 +243,7 @@ nsresult nsMailboxProtocol::LoadUrl(nsIURL * aURL, nsISupports * aConsumer)
 					// create a temp file to write the message into. We need to do this because
 					// we don't have pluggable converters yet. We want to let mkfile do the work of 
 					// converting the message from RFC-822 to HTML before displaying it...
-				
+					ClearFlag(MAILBOX_MSG_PARSE_FIRST_LINE);
 					m_tempMessageFile->openStreamForWriting();
 					SetupMessageExtraction();
 					m_nextState = MAILBOX_READ_MESSAGE;
@@ -336,14 +336,18 @@ PRInt32 nsMailboxProtocol::ReadMessageResponse(nsIInputStream * inputStream, PRU
 					the local system will convert that to the local line
 					terminator as it is read.
 				*/
-
-				if (m_tempMessageFile)
+				// mscott - the firstline hack is aimed at making sure we don't write
+				// out the dummy header when we are trying to display the message.
+				// The dummy header is the From line with the date tag on it.
+				if (m_tempMessageFile && TestFlag(MAILBOX_MSG_PARSE_FIRST_LINE))
 				{
 					PRInt32 count = 0;
 					if (line)
 						m_tempMessageFile->write(line, PL_strlen(line), &count);
 					m_tempMessageFile->write(MSG_LINEBREAK, MSG_LINEBREAK_LEN, &count);
 				}
+				else
+					SetFlag(MAILBOX_MSG_PARSE_FIRST_LINE);
 			} 
 		}
 		while (line && !pauseForMoreData);

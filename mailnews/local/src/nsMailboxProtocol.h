@@ -47,6 +47,7 @@
 // commands, etc. I do not intend it to refer to protocol state)
 
 #define MAILBOX_PAUSE_FOR_READ			0x00000001  /* should we pause for the next read */
+#define MAILBOX_MSG_PARSE_FIRST_LINE    0x00000002 /* have we read in the first line of the msg */
 
 /* states of the machine
  */
