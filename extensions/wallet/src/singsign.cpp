@@ -1812,8 +1812,8 @@ si_OkToSave(char *passwordRealm, nsAutoString userName) {
 /*
  * Check for a signon submission and remember the data if so
  */
-PUBLIC void
-SINGSIGN_RememberSignonData (char* passwordRealm, nsVoidArray * signonData)
+PRIVATE void
+si_RememberSignonData (char* passwordRealm, nsVoidArray * signonData)
 {
   int passwordCount = 0;
   int pswd[3];
@@ -1924,7 +1924,28 @@ SINGSIGN_RememberSignonData (char* passwordRealm, nsVoidArray * signonData)
 }
 
 PUBLIC void
-SINGSIGN_RestoreSignonData (char* passwordRealm, PRUnichar* name, PRUnichar** value, PRUint32 elementNumber) {
+SINGSIGN_RememberSignonData (char* passwordRealm, nsVoidArray * signonData)
+{
+  nsresult rv;
+  NS_WITH_SERVICE(nsIURL, uri, "component://netscape/network/standard-url", &rv);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+  rv = uri->SetSpec(passwordRealm);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+  char * strippedRealm;
+  rv = uri->GetHost(&strippedRealm);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+  si_RememberSignonData (strippedRealm, signonData);
+  PR_Free(strippedRealm);
+}
+
+PRIVATE void
+si_RestoreSignonData (char* passwordRealm, PRUnichar* name, PRUnichar** value, PRUint32 elementNumber) {
   si_SignonUserStruct* user;
   si_SignonDataStruct* data;
   nsAutoString correctedName;
@@ -2024,6 +2045,26 @@ SINGSIGN_RestoreSignonData (char* passwordRealm, PRUnichar* name, PRUnichar** va
     }
   }
   si_unlock_signon_list();
+}
+
+PUBLIC void
+SINGSIGN_RestoreSignonData (char* passwordRealm, PRUnichar* name, PRUnichar** value, PRUint32 elementNumber) {
+  nsresult rv;
+  NS_WITH_SERVICE(nsIURL, uri, "component://netscape/network/standard-url", &rv);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+  rv = uri->SetSpec(passwordRealm);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+  char * strippedRealm;
+  rv = uri->GetHost(&strippedRealm);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+  si_RestoreSignonData (strippedRealm, name, value, elementNumber);
+  PR_Free(strippedRealm);
 }
 
 /*

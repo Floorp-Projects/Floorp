@@ -97,8 +97,17 @@ function LoadSignons()
     var currSignon = TrimString(signonList[i]);
     // TEMP HACK until morse fixes signon viewer functions
     currSignon = RemoveHTMLFormatting(currSignon);
+    /* parameter passed in is url:username */
     var site = currSignon.substring(0,currSignon.lastIndexOf(":"));
     var user = currSignon.substring(currSignon.lastIndexOf(":")+1,currSignon.length);
+    if (user == "") {
+      /* no username passed in, parse if out of url */
+      var uri =
+        Components.classes["component://netscape/network/standard-url"]
+          .createInstance(Components.interfaces.nsIURI); 
+      uri.spec = site; 
+      user = uri.username;
+    }
     AddItem("savesignonlist",[site,user],"signon_",i-1);
   }
   if (deleted_signons_count >= signonList.length) {
