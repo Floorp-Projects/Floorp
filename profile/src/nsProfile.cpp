@@ -872,6 +872,7 @@ NS_IMETHODIMP nsProfile::CreateNewProfile(const char* profileName, const char* n
 
 	gProfileDataAccess->mNumProfiles++;
 	gProfileDataAccess->mProfileDataChanged = PR_TRUE;
+	gProfileDataAccess->UpdateRegistry();
 
     return NS_OK;
 }
@@ -977,6 +978,7 @@ NS_IMETHODIMP nsProfile::RenameProfile(const char* oldName, const char* newName)
 	if (NS_FAILED(rv)) return rv;
 
 	gProfileDataAccess->mProfileDataChanged = PR_TRUE;
+	gProfileDataAccess->UpdateRegistry();
 
 	return NS_OK;
 }
@@ -1053,6 +1055,7 @@ NS_IMETHODIMP nsProfile::DeleteProfile(const char* profileName, PRBool canDelete
     if (NS_FAILED(rv)) return rv;
 
 	gProfileDataAccess->mProfileDataChanged = PR_TRUE;
+	gProfileDataAccess->UpdateRegistry();
 
     return rv;
 }
@@ -1156,6 +1159,8 @@ NS_IMETHODIMP nsProfile::MigrateProfileInfo()
 
 #endif /* XP_PC || XP_MAC */
 
+    gProfileDataAccess->UpdateRegistry();
+
 	return rv;
 }
 
@@ -1251,6 +1256,7 @@ NS_IMETHODIMP nsProfile::MigrateProfile(const char* profileName, PRBool showProg
 	gProfileDataAccess->mNumOldProfiles--;
 
 	gProfileDataAccess->mProfileDataChanged = PR_TRUE;
+	gProfileDataAccess->UpdateRegistry();
 
     return rv;
 }
