@@ -324,13 +324,10 @@ NS_IMETHODIMP nsImapMailFolder::GetSubFolders(nsIEnumerator* *result)
 			AddSubfolder(name, &child);
 			if (NS_SUCCEEDED(GetDatabase()))
 			{
-				nsIDBFolderInfo *dbFolderInfo = nsnull;
-				m_mailDatabase->GetDBFolderInfo(&dbFolderInfo);
+				nsCOMPtr <nsIDBFolderInfo> dbFolderInfo ;
+				m_mailDatabase->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
 				if (dbFolderInfo)
-				{
 					dbFolderInfo->SetMailboxName(name);
-					NS_RELEASE(dbFolderInfo);
-				}
 			}
 			if (child)
 				NS_RELEASE(child);
@@ -577,13 +574,12 @@ NS_IMETHODIMP nsImapMailFolder::CreateSubfolder(const char *folderName)
         if (NS_SUCCEEDED(rv) && unusedDB)
         {
 			//need to set the folder name
-			nsIDBFolderInfo *folderInfo;
-			rv = unusedDB->GetDBFolderInfo(&folderInfo);
+			nsCOMPtr <nsIDBFolderInfo> folderInfo;
+			rv = unusedDB->GetDBFolderInfo(getter_AddRefs(folderInfo));
 			if(NS_SUCCEEDED(rv))
 			{
 				// ### DMB used to be leafNameFromUser?
 				folderInfo->SetMailboxName(folderNameStr);
-				NS_IF_RELEASE(folderInfo);
 			}
 
 			//Now let's create the actual new folder
