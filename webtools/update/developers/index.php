@@ -4,7 +4,7 @@ require"core/sessionconfig.php";
 
 //If already logged in, we don't need to show the prompt... redirect the user in.
 if ($_SESSION["logoncheck"]=="YES") {
-$return_path="developers/main.php?sid=$sid";
+$return_path="developers/main.php";
 header("Location: http://$sitehostname/$return_path");
 exit;
 }
