@@ -31,6 +31,12 @@
     <key id="addBookmarkKb" key="&addCurPageCmd.commandkey;" command="Browser:AddBookmark" modifiers="accel,shift"/>
   </keyset>
 
+  <keyset id="viewSourceKeys">
+    <!-- Supporting IE 'refresh' shortcut key in view source -->
+    <key keycode="VK_F5" oncommand="BrowserReload();"/>
+    <key keycode="VK_F5" modifiers="control" oncommand="BrowserReloadSkipCache();"/>
+  </keyset>
+
   <menuitem id="menuitem_fullScreen" hidden="false"/>
 </overlay>
 
