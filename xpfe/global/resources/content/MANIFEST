@@ -39,4 +39,5 @@ nsJSComponentManager.js
 nsUserSettings.js
 toolbarBindings.xml
 stringbundleBindings.xml
+plugins.html
 
