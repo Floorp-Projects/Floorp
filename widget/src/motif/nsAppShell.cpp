@@ -18,6 +18,7 @@
 
 #include "nsAppShell.h"
 #include "nsIAppShell.h"
+#include <stdlib.h>
 
 //-------------------------------------------------------------------------
 //
