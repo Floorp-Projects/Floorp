@@ -731,6 +731,14 @@ nsAbSync::GenerateProtocolForCard(nsIAbCard *aCard, PRBool aAddId, nsString &pro
         {
           char      *utfString = nsString2(aName).ToNewUTF8String();
 
+          // Now, URL Encode the value string....
+          char *myTStr = nsEscape(utfString, url_Path);
+          if (myTStr)
+          {
+            PR_FREEIF(utfString);
+            utfString = myTStr;
+          }
+
           tProtLine.Append(NS_ConvertASCIItoUCS2("&"));
           tProtLine.Append(NS_ConvertASCIItoUCS2(pVal));
           tProtLine.Append(NS_ConvertASCIItoUCS2("="));
@@ -753,6 +761,14 @@ nsAbSync::GenerateProtocolForCard(nsIAbCard *aCard, PRBool aAddId, nsString &pro
       {
         char      *utfString = nsString2(aName).ToNewUTF8String();
 
+        // Now, URL Encode the value string....
+        char *myTStr = nsEscape(utfString, url_Path);
+        if (myTStr)
+        {
+          PR_FREEIF(utfString);
+          utfString = myTStr;
+        }
+
         tProtLine.Append(NS_ConvertASCIItoUCS2("&"));
         tProtLine.Append(NS_ConvertASCIItoUCS2(mSchemaMappingList[i].serverField));
         tProtLine.Append(NS_ConvertASCIItoUCS2("="));
@@ -764,6 +780,8 @@ nsAbSync::GenerateProtocolForCard(nsIAbCard *aCard, PRBool aAddId, nsString &pro
         else
           tProtLine.Append(aName);
       }
+
+      PR_FREEIF(aName);
     }
   }
 
@@ -2151,6 +2169,19 @@ nsAbSync::AddNewUsers()
 #endif
         }
 
+        // Ok, "val" could still be URL Encoded, so we need to decode
+        // first and then pass into the call...
+        //
+        char *myTStr = val->ToNewCString();
+        if (myTStr)
+        {
+          char *ret = nsUnescape(myTStr);
+          if (ret)
+          {
+            val->AssignWithConversion(ret);
+            PR_FREEIF(ret);
+          }
+        }
         AddValueToNewCard(newCard, mNewRecordTags->StringAt(j), val);
       }
     }
@@ -2332,74 +2363,59 @@ nsAbSync::AddValueToNewCard(nsIAbCard *aCard, nsString *aTagName, nsString *aTag
   //
   if (!aTagName->CompareWithConversion(kServerFirstNameColumn))
     aCard->SetFirstName(aTagValue->GetUnicode());
-
-  if (!aTagName->CompareWithConversion(kServerLastNameColumn))
+  else if (!aTagName->CompareWithConversion(kServerLastNameColumn))
     aCard->SetLastName(aTagValue->GetUnicode());
-
-  if (!aTagName->CompareWithConversion(kServerDisplayNameColumn))
+  else if (!aTagName->CompareWithConversion(kServerDisplayNameColumn))
     aCard->SetDisplayName(aTagValue->GetUnicode());
-
-  if (!aTagName->CompareWithConversion(kServerNicknameColumn))
+  else if (!aTagName->CompareWithConversion(kServerNicknameColumn))
     aCard->SetNickName(aTagValue->GetUnicode());
-
-  if (!aTagName->CompareWithConversion(kServerPriEmailColumn))
+  else if (!aTagName->CompareWithConversion(kServerPriEmailColumn))
   {
 #ifdef DEBUG_rhp
   char *t = aTagValue->ToNewCString();
   printf("Email: %s\n", t);
   PR_FREEIF(t);
 #endif
-
     aCard->SetPrimaryEmail(aTagValue->GetUnicode());
   }
-
-  if (!aTagName->CompareWithConversion(kServer2ndEmailColumn))
+  else if (!aTagName->CompareWithConversion(kServer2ndEmailColumn))
     aCard->SetSecondEmail(aTagValue->GetUnicode());
-
-  if (!aTagName->CompareWithConversion(kServerHomeAddressColumn))
+  else if (!aTagName->CompareWithConversion(kServerHomeAddressColumn))
     aCard->SetHomeAddress(aTagValue->GetUnicode());
-
-  if (!aTagName->CompareWithConversion(kServerHomeAddress2Column))
+  else if (!aTagName->CompareWithConversion(kServerHomeAddress2Column))
     aCard->SetHomeAddress2(aTagValue->GetUnicode());
-
-  if (!aTagName->CompareWithConversion(kServerHomeCityColumn))
+  else if (!aTagName->CompareWithConversion(kServerHomeCityColumn))
     aCard->SetHomeCity(aTagValue->GetUnicode());
-
-  if (!aTagName->CompareWithConversion(kServerHomeStateColumn))
+  else if (!aTagName->CompareWithConversion(kServerHomeStateColumn))
     aCard->SetHomeState(aTagValue->GetUnicode());
-
-  if (!aTagName->CompareWithConversion(kServerHomeZipCodeColumn))
+  else if (!aTagName->CompareWithConversion(kServerHomeZipCodeColumn))
     aCard->SetHomeZipCode(aTagValue->GetUnicode());
-
-  if (!aTagName->CompareWithConversion(kServerHomeCountryColumn))
+  else if (!aTagName->CompareWithConversion(kServerHomeCountryColumn))
     aCard->SetHomeCountry(aTagValue->GetUnicode());
-
-  if (!aTagName->CompareWithConversion(kServerWorkAddressColumn))
+  else if (!aTagName->CompareWithConversion(kServerWorkAddressColumn))
     aCard->SetWorkAddress(aTagValue->GetUnicode());
-
-  if (!aTagName->CompareWithConversion(kServerWorkAddress2Column))
+  else if (!aTagName->CompareWithConversion(kServerWorkAddress2Column))
     aCard->SetWorkAddress2(aTagValue->GetUnicode());
-
-  if (!aTagName->CompareWithConversion(kServerWorkCityColumn))
+  else if (!aTagName->CompareWithConversion(kServerWorkCityColumn))
     aCard->SetWorkCity(aTagValue->GetUnicode());
-
-  if (!aTagName->CompareWithConversion(kServerWorkStateColumn))
+  else if (!aTagName->CompareWithConversion(kServerWorkStateColumn))
     aCard->SetWorkState(aTagValue->GetUnicode());
-
-  if (!aTagName->CompareWithConversion(kServerWorkZipCodeColumn))
+  else if (!aTagName->CompareWithConversion(kServerWorkZipCodeColumn))
     aCard->SetWorkZipCode(aTagValue->GetUnicode());
-
-  if (!aTagName->CompareWithConversion(kServerWorkCountryColumn))
+  else if (!aTagName->CompareWithConversion(kServerWorkCountryColumn))
     aCard->SetWorkCountry(aTagValue->GetUnicode());
-
-  if (!aTagName->CompareWithConversion(kServerJobTitleColumn))
+  else if (!aTagName->CompareWithConversion(kServerJobTitleColumn))
     aCard->SetJobTitle(aTagValue->GetUnicode());
-
-  if (!aTagName->CompareWithConversion(kServerNotesColumn))
+  else if (!aTagName->CompareWithConversion(kServerNotesColumn))
     aCard->SetNotes(aTagValue->GetUnicode());
-
-  if (!aTagName->CompareWithConversion(kServerWebPage1Column))
+  else if (!aTagName->CompareWithConversion(kServerWebPage1Column))
     aCard->SetWebPage1(aTagValue->GetUnicode());
+  else if (!aTagName->CompareWithConversion(kServerDepartmentColumn))
+    aCard->SetDepartment(aTagValue->GetUnicode());
+  else if (!aTagName->CompareWithConversion(kServerCompanyColumn))
+    aCard->SetCompany(aTagValue->GetUnicode());
+  else if (!aTagName->CompareWithConversion(kServerWebPage2Column))
+    aCard->SetWebPage2(aTagValue->GetUnicode());
 
   return rv;
 }
@@ -2435,9 +2451,6 @@ nsAbSync::GetString(const PRUnichar *aStringName)
 
 /************ UNUSED FOR NOW
 aCard->SetDisplayName(aTagValue->GetUnicode());
-aCard->SetDepartment(aTagValue->GetUnicode());
-aCard->SetCompany(aTagValue->GetUnicode());
-aCard->SetWebPage2(aTagValue->GetUnicode());
 aCard->SetBirthYear(aTagValue->GetUnicode());
 aCard->SetBirthMonth(aTagValue->GetUnicode());
 aCard->SetBirthDay(aTagValue->GetUnicode());
@@ -2459,11 +2472,8 @@ aCard->SetAnonymousBoolAttribute(aTagValue->GetUnicode());
 **********************************************/
 
 /*************
-char *kServerDepartmentColumn = "OMIT:Department";
 char *kServerNicknameColumn = "OMIT:NickName";
 char *kServerPlainTextColumn = "OMIT:SendPlainText";
-char *kServerCompanyColumn = "OMIT:Company";
-char *kServerWebPage2Column = "OMIT:WebPage2";
 char *kServerBirthYearColumn = "OMIT:BirthYear";
 char *kServerBirthMonthColumn = "OMIT:BirthMonth";
 char *kServerBirthDayColumn = "OMIT:BirthDay";

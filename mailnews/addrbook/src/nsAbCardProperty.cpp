@@ -255,6 +255,12 @@ NS_IMETHODIMP nsAbCardProperty::GetCardValue(const char *attrname, PRUnichar **v
 		GetWorkPhone(value);
     else if (!PL_strcmp(attrname, kHomePhoneColumn))
 		GetHomePhone(value);
+    else if (!PL_strcmp(attrname, kDepartmentColumn))
+		GetDepartment(value);
+    else if (!PL_strcmp(attrname, kCompanyColumn))
+		GetCompany(value);
+    else if (!PL_strcmp(attrname, kJobTitleColumn))
+		GetJobTitle(value);
     else if (!PL_strcmp(attrname, kFaxColumn))
 		GetFaxNumber(value);
     else if (!PL_strcmp(attrname, kPagerColumn))
@@ -383,6 +389,10 @@ NS_IMETHODIMP nsAbCardProperty::SetCardValue(const char *attrname, const PRUnich
 		rv = SetCustom4((PRUnichar *)value);
     else if (!PL_strcmp(attrname, kNotesColumn))
 		rv = SetNotes((PRUnichar *)value);
+    else if (!PL_strcmp(attrname, kDepartmentColumn))
+		rv = SetDepartment((PRUnichar *)value);
+    else if (!PL_strcmp(attrname, kCompanyColumn))
+		rv = SetCompany((PRUnichar *)value);
 	else
 	{
 		nsAutoString cardValue(value);
