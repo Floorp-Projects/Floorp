@@ -51,6 +51,7 @@ REQUIRES	= xpcom \
 		  util \
 		  unicharutil \
 		  xsl_doc \
+		  intl \                  
 		  $(NULL)
 
 CPPSRCS		= \
