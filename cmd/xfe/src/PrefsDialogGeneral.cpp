@@ -63,6 +63,7 @@
 #include <Xm/DrawnB.h>
 #include <DtWidgets/ComboBox.h>
 #include <Xfe/Xfe.h>
+#include <Xfe/ToolTip.h>
 #include "Netcaster.h"
 
 #define DEFAULT_COLUMN_WIDTH 	35
@@ -562,6 +563,9 @@ void XFE_PrefsPageGeneralAppearance::read()
 
     sensitive = !PREF_PrefIsLocked("browser.chrome.toolbar_tips");
 	XtSetSensitive(fep->show_tooltips_toggle, sensitive);
+       // Set it in the Tooltips api
+    XfeTipStringGlobalSetEnabledState(sensitive);
+
 
 	setInitialized(TRUE);
 }
@@ -642,6 +646,10 @@ void XFE_PrefsPageGeneralAppearance::write()
 
 	XtVaGetValues(fep->show_tooltips_toggle, XmNset, &b, 0);
 	fe_globalPrefs.toolbar_tips_p = b;
+
+    // Globally enable/disable tooltips based on what is set on preferences
+    XfeTipStringGlobalSetEnabledState(b);
+
 
 	// Install preferences
 
