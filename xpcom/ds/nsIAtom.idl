@@ -77,4 +77,6 @@ extern NS_COM nsIAtom* NS_NewAtom(const nsString& aString);
  */
 extern NS_COM nsrefcnt NS_GetNumberOfAtoms(void);
 
+extern NS_COM void NS_PurgeAtomTable(void);
+
 %}
