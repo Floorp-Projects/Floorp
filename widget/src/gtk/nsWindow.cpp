@@ -141,6 +141,9 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
   if (!parentWidget) {
 
     mainWindow = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_window_set_default_size(GTK_WINDOW(mainWindow),
+    				mBounds.width,
+				mBounds.height);
     gtk_widget_show (mainWindow);
 
 // VBox for the menu, etc.
