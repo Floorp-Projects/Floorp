@@ -24,7 +24,10 @@ public:
 	CComboBox	m_urlflags;
 	CString	m_urlfield;
 	int		m_flagIndex;
+	int		m_protocolIndex;
 	BOOL	m_chkValue;
+	CComboBox m_protocol;
+	CString m_protocolvalue;
 	//}}AFX_DATA
 
 
@@ -44,6 +47,7 @@ protected:
 	afx_msg void OnChkurlflag();
 	virtual BOOL OnInitDialog();
 	afx_msg void OnSelchangeCombo1();
+	afx_msg void OnSelchangeCombo2();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

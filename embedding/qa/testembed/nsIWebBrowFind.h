@@ -75,19 +75,19 @@ public:
 
 	// local test methods for nsIWebBrowser
 	nsIWebBrowserFind * GetWebBrowFindObject();
-	void SetSearchStringTest();
-	void GetSearchStringTest();
-	void FindNextTest(PRBool);
-	void SetFindBackwardsTest(PRBool);
-	void GetFindBackwardsTest(PRBool);
-	void SetWrapFindTest(PRBool);
-	void GetWrapFindTest(PRBool);
-	void SetEntireWordTest(PRBool);
-	void GetEntireWordTest(PRBool);
-	void SetMatchCase(PRBool);
-	void GetMatchCase(PRBool);
-	void SetSearchFrames(PRBool);
-	void GetSearchFrames(PRBool);
+	void SetSearchStringTest(PRInt16);
+	void GetSearchStringTest(PRInt16);
+	void FindNextTest(PRBool, PRInt16);
+	void SetFindBackwardsTest(PRBool, PRInt16);
+	void GetFindBackwardsTest(PRBool, PRInt16);
+	void SetWrapFindTest(PRBool, PRInt16);
+	void GetWrapFindTest(PRBool, PRInt16);
+	void SetEntireWordTest(PRBool, PRInt16);
+	void GetEntireWordTest(PRBool, PRInt16);
+	void SetMatchCase(PRBool, PRInt16);
+	void GetMatchCase(PRBool, PRInt16);
+	void SetSearchFrames(PRBool, PRInt16);
+	void GetSearchFrames(PRBool, PRInt16);
 
 	void OnStartTests(UINT nMenuID);
 	void RunAllTests();

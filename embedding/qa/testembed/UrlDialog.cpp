@@ -37,6 +37,7 @@ void CUrlDialog::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_URLFIELD, m_urlfield);
 	DDX_CBIndex(pDX, IDC_COMBO1, m_flagIndex);
 	DDX_Check(pDX, IDC_CHKURLFLAG, m_chkValue);
+	DDX_Control(pDX, IDC_COMBO2, m_protocol);
 	//}}AFX_DATA_MAP
 }
 
@@ -47,6 +48,7 @@ BEGIN_MESSAGE_MAP(CUrlDialog, CDialog)
 	ON_BN_CLICKED(IDC_CHKURLFLAG, OnChkurlflag)
 	ON_EN_CHANGE(IDC_COMBO1, OnChangeUrlfield)
 	ON_CBN_SELCHANGE(IDC_COMBO1, OnSelchangeCombo1)
+	ON_CBN_SELCHANGE(IDC_COMBO2, OnSelchangeCombo2)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -79,22 +81,20 @@ BOOL CUrlDialog::OnInitDialog()
 	m_urlflags.EnableWindow(m_chkValue);
 
 	
-	
 	return TRUE;  // return TRUE unless you set the focus to a control
 	              // EXCEPTION: OCX Property Pages should return FALSE
 }
 
 void CUrlDialog::OnSelchangeCombo1() 
 {
-
    CString flagvalue;
 // m_urlflags.GetLBText(m_flagIndex,flagvalue);
    m_flagIndex = m_urlflags.GetCurSel();
 
 //   if (flagvalue == "NONE") {
    if (m_flagIndex == 0) {
-		m_flagvalue = nsIWebNavigation::LOAD_FLAGS_NONE;
-		QAOutput("Selected NONE flag.", 1);
+	   QAOutput("Selected NONE flag.", 1);
+	   m_flagvalue = nsIWebNavigation::LOAD_FLAGS_NONE;
    }
    else if (m_flagIndex == 1) {
 		QAOutput("Selected MASK flag.", 1);
@@ -130,4 +130,48 @@ void CUrlDialog::OnSelchangeCombo1()
    }
    else
 		QAOutput("NO FLAG!!!.", 1);
+}
+
+void CUrlDialog::OnSelchangeCombo2() 
+{
+   m_protocolIndex = m_protocol.GetCurSel();
+
+   if (m_protocolIndex == 0) {
+		QAOutput("Selected http protocol.", 1);
+		m_protocolvalue = "http";
+   }
+   else if (m_protocolIndex == 1) {
+		QAOutput("Selected https protocol.", 1);
+		m_protocolvalue = "https";
+   }
+   else if (m_protocolIndex == 2) {
+		QAOutput("Selected ftp protocol.", 1);
+		m_protocolvalue = "ftp";
+   }
+   else if (m_protocolIndex == 3) {
+		QAOutput("Selected file protocol.", 1);
+		m_protocolvalue = "file";
+   }
+   else if (m_protocolIndex == 4) {
+		QAOutput("Selected javascript protocol.", 1);
+		m_protocolvalue = "javascript";
+   }
+   else if (m_protocolIndex == 5) {
+		QAOutput("Selected about protocol.", 1);
+		m_protocolvalue = "about";
+   }
+   else if (m_protocolIndex == 6) {
+		QAOutput("Selected data protocol.", 1);
+		m_protocolvalue = "data";
+   }
+   else if (m_protocolIndex == 7) {
+		QAOutput("Selected mailto protocol.", 1);
+		m_protocolvalue = "mailto";	
+   }
+   else if (m_protocolIndex == 8) {
+		QAOutput("Selected imap protocol.", 1);
+		m_protocolvalue = "imap";	
+   }
+   else
+		QAOutput("NO PROTOCOL SELECTED!!!.", 1);
 }

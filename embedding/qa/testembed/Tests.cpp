@@ -624,11 +624,14 @@ void CTests::OnTestsProtocolHandlerNewURI()
 		nsCAutoString theStr, retStr;
 		nsCOMPtr<nsIURI> theOriginalURI;
 		nsIURI *theReturnURI = nsnull;
+		const char *theProtocol;
 
 		nsCOMPtr<nsIProtocolHandler> protocolHandler;
 
 		theStr = myDialog.m_urlfield;
-		rv = ioService->GetProtocolHandler("http", getter_AddRefs(protocolHandler));
+		theProtocol = myDialog.m_protocolvalue;
+		FormatAndPrintOutput("The protocol scheme = ", theProtocol, 1);
+		rv = ioService->GetProtocolHandler(theProtocol, getter_AddRefs(protocolHandler));
 		RvTestResult(rv, "ioService->GetProtocolHandler() test", 2);
 		rv = qaWebNav->GetCurrentURI(getter_AddRefs(theOriginalURI));
 		if (!protocolHandler) {
