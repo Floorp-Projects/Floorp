@@ -46,32 +46,34 @@ class BookmarksService;
 
 @interface MainController : NSObject 
 {
-    IBOutlet id mApplication;
+    IBOutlet NSApplication* mApplication;
     
     // The following two items are used by the filter list when saving files.
-    IBOutlet id mFilterView;
-    IBOutlet id mFilterList;
+    IBOutlet NSView*				mFilterView;
+    IBOutlet NSPopUpButton*	mFilterList;
     
-    IBOutlet id mOfflineMenuItem;
-    
+    IBOutlet NSMenuItem* 		mOfflineMenuItem;
+    IBOutlet NSMenuItem*		mCloseWindowMenuItem;
+    IBOutlet NSMenuItem*		mCloseTabMenuItem;
+
     // The bookmarks menu.
-    IBOutlet id mBookmarksMenu;
+    IBOutlet NSMenu* 				mBookmarksMenu;
 
-    IBOutlet id mBookmarksToolbarMenuItem;
+    IBOutlet NSMenuItem* 		mBookmarksToolbarMenuItem;
     
-    BOOL mOffline;
+    BOOL 										mOffline;
 
-    CHSplashScreenWindow *mSplashScreen;
+    CHSplashScreenWindow*		mSplashScreen;
     
-    CHPreferenceManager* mPreferenceManager;
+    CHPreferenceManager* 		mPreferenceManager;
 
-    BookmarksService *mMenuBookmarks;
+    BookmarksService*				mMenuBookmarks;
     
-    FindDlgController* mFindDialog;
+    FindDlgController* 			mFindDialog;
 
-    MVPreferencesController	*preferencesController;
+    MVPreferencesController* preferencesController;
 
-    NSString* mStartURL;
+    NSString* 							mStartURL;
 }
 
 -(void)dealloc;
@@ -121,6 +123,10 @@ class BookmarksService;
 
 -(BrowserWindowController*)openBrowserWindowWithURL: (NSString*)aURL;
 - (void)openNewWindowOrTabWithURL:(NSString*)inURLString;
+
+- (void)adjustCloseWindowMenuItemKeyEquivalent:(BOOL)inHaveTabs;
+- (void)adjustCloseTabMenuItemKeyEquivalent:(BOOL)inHaveTabs;
+- (void)fixCloseMenuItemKeyEquivalents;
 
 -(NSWindow*)getFrontmostBrowserWindow;
 
