@@ -46,7 +46,7 @@
 
   <box align="horizontal">
     <spring flex="50%"/>
-    <titledbutton onclick="window.close()" 
+    <titledbutton onclick="window.close()" class="push dialog"
        value="&sidebar.preview.close.label;" />
     <spring flex="50%"/>
   </box>
