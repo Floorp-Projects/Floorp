@@ -46,20 +46,15 @@
 #include "nsIEditorIMESupport.h"
 
 #include "nsIDOMDocument.h"
-#include "nsIDiskDocument.h"
 #include "nsISelection.h"
 #include "nsIDOMCharacterData.h"
-#include "nsIDOMEventListener.h"
-#include "nsIDOMRange.h"
 #include "nsIPrivateTextRange.h"
 #include "nsITransactionManager.h"
 #include "nsIComponentManager.h"
 #include "nsISupportsArray.h"
-#include "nsIDOMCharacterData.h"
 #include "nsICSSStyleSheet.h"
 #include "nsIDTD.h"
 #include "nsIDOMElement.h"
-#include "nsVoidArray.h"
 #include "nsSelectionState.h"
 
 class nsIEditActionListener;
@@ -278,17 +273,6 @@ protected:
   NS_IMETHOD DeleteSelectionAndPrepareToCreateNode(nsCOMPtr<nsIDOMNode> &parentSelectedNode, 
                                                    PRInt32& offsetOfNewNode);
 
-  // called each time we modify the document. Increments the mod
-  // count of the doc.
-  NS_IMETHOD IncDocModCount(PRInt32 inNumMods);
-  
-  // return the mod count of the doc we are editing. Zero means unchanged.
-  NS_IMETHOD GetDocModCount(PRInt32 &outModCount);
-  
-  // called ONLY when we need to override the doc's modification
-  // state. This should already be handled by nsIDiskDocument.
-  NS_IMETHOD ResetDocModCount();
-  
   // called after a transaction is done successfully
   NS_IMETHOD DoAfterDoTransaction(nsITransaction *aTxn);
   // called after a transaction is undone successfully
@@ -567,6 +551,7 @@ public:
 
 protected:
 
+  PRUint32        mModCount;		// number of modifications (for undo/redo stack)
   PRUint32        mFlags;		// behavior flags. See nsPlaintextEditor.h for the flags we use.
   
   nsWeakPtr       mPresShellWeak;   // weak reference to the nsIPresShell
