@@ -19,9 +19,9 @@ DEPTH=..\..\..
 IGNORE_MANIFEST=1
 
 EXPORTS =                              \
+    nsISpellChecker.h                  \
     nsITextService.h                   \
     nsITextServicesDocument.h          \
-    nsITextServicesDocumentInternal.h  \
     nsTextServicesCID.h	               \
     $(NULL)
 
