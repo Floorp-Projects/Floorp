@@ -38,24 +38,24 @@ nsXPTParamInfo::GetInterface(nsIInterfaceInfo *info) const
     NS_PRECONDITION(GetType().TagPart() == nsXPTType::T_INTERFACE,
                     "not an interface");
 
-    XPTInterfaceDirectoryEntry *entry = ((nsInterfaceInfo *)info)->getIDE();
+    nsInterfaceRecord *record =
+        ((nsInterfaceInfo *)info)->getInterfaceRecord();
 
+    
     nsIInterfaceInfoManager* mgr;
     if(!(mgr = nsInterfaceInfoManager::GetInterfaceInfoManager()))
         return NULL;
-    nsInterfaceInfoManager* mymgr = (nsInterfaceInfoManager *)mgr;
 
     // what typelib did the entry come from?
-    XPTHeader *which_header =
-        (XPTHeader *)PL_HashTableLookup(mymgr->mTypelibTable, entry);
-    NS_ASSERTION(which_header != NULL, "");
+    XPTHeader *which_header = record->which_header;
+    NS_ASSERTION(which_header != NULL, "missing header info assoc'd with II");
 
     // can't use IID, because it could be null for this entry.
     char *interface_name;
     interface_name = which_header->interface_directory[type.type.interface].name;
 
     nsIInterfaceInfo *ii;
-    nsresult nsr = mymgr->GetInfoForName(interface_name, &ii);
+    nsresult nsr = mgr->GetInfoForName(interface_name, &ii);
     if (NS_IS_ERROR(nsr)) {
         NS_RELEASE(mgr);
         return NULL;
@@ -69,25 +69,23 @@ nsXPTParamInfo::GetInterfaceIID(nsIInterfaceInfo *info) const
     NS_PRECONDITION(GetType().TagPart() == nsXPTType::T_INTERFACE,
                     "not an interface");
 
-    XPTInterfaceDirectoryEntry *entry = ((nsInterfaceInfo *)info)->getIDE();
+    nsInterfaceRecord *record =
+        ((nsInterfaceInfo *)info)->getInterfaceRecord();
 
     nsIInterfaceInfoManager* mgr;
     if(!(mgr = nsInterfaceInfoManager::GetInterfaceInfoManager()))
         return NULL;
-    nsInterfaceInfoManager* mymgr = (nsInterfaceInfoManager *)mgr;
 
     // what typelib did the entry come from?
-    XPTHeader *which_header =
-        (XPTHeader *)PL_HashTableLookup(mymgr->mTypelibTable, entry);
-    NS_ASSERTION(which_header != NULL, "");
+    XPTHeader *which_header = record->which_header;
+    NS_ASSERTION(which_header != NULL, "header missing?");
 
     // can't use IID, because it could be null for this entry.
     char *interface_name;
     interface_name = which_header->interface_directory[type.type.interface].name;
 
     nsIID* iid;
-
-    nsresult nsr = mymgr->GetIIDForName(interface_name, &iid);
+    nsresult nsr = mgr->GetIIDForName(interface_name, &iid);
     if (NS_IS_ERROR(nsr)) {
         NS_RELEASE(mgr);
         return NULL;

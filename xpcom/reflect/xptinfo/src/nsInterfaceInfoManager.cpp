@@ -16,6 +16,8 @@
  * Reserved.
  */
 
+/* Implementation of nsIInterfaceInfo. */
+
 #include <sys/stat.h>
 #include "nscore.h"
 
@@ -155,7 +157,6 @@ XPTHeader *getHeader(const char *filename) {
 static void
 indexify_file(const char *filename,
               PLHashTable *interfaceTable,
-              PLHashTable *typelibTable,
               nsHashtable *IIDTable,
               nsIAllocator *al)
 {
@@ -163,26 +164,24 @@ indexify_file(const char *filename,
 
     int limit = header->num_interfaces;
 
-    interface_record *value;
+    nsInterfaceRecord *value;
 #ifdef DEBUG_mccabe
     static int which = 0;
     which++;
 #endif
+
     for (int i = 0; i < limit; i++) {
         XPTInterfaceDirectoryEntry *current = header->interface_directory + i;
-
-        // associate the current entry with the header it came from.
-        PL_HashTableAdd(typelibTable, current, header);
 
 #ifdef DEBUG_mccabe
         fprintf(stderr, "%s", current->name);
 #endif
         // first try to look it up...
-        value = (interface_record *)PL_HashTableLookup(interfaceTable,
+        value = (nsInterfaceRecord *)PL_HashTableLookup(interfaceTable,
                                                   current->name);
         // if none found, make a dummy record.
         if (value == NULL) {
-            value = new interface_record();
+            value = new nsInterfaceRecord();
             value->which_header = NULL;
             value->resolved = PR_FALSE;
             value->which = -1;
@@ -237,11 +236,6 @@ static PRIntn
 check_enumerator(PLHashEntry *he, PRIntn index, void *arg); 
 #endif
 
-static PLHashNumber
-hash_by_value(const void *key) {
-    return (uint32)key;
-}
-
 void nsInterfaceInfoManager::initInterfaceTables()
 {
     // make a hashtable to associate names with arbitrary info
@@ -250,14 +244,6 @@ void nsInterfaceInfoManager::initInterfaceTables()
                                             PL_CompareStrings, // compare keys
                                             PL_CompareValues, // comp values
                                             NULL, NULL);
-
-    // make a hashtable to associate InterfaceDirectoryEntry values
-    // with XPTHeaders.  (for nsXPTParamInfo::GetInterface)
-    this->mTypelibTable = PL_NewHashTable(XPT_HASHSIZE,
-                                          hash_by_value,
-                                          PL_CompareValues,
-                                          PL_CompareValues,
-                                          NULL, NULL);
                                           
     // make a hashtable to map iids to names
     this->mIIDTable = new nsHashtable(XPT_HASHSIZE);
@@ -313,7 +299,6 @@ void nsInterfaceInfoManager::initInterfaceTables()
 #endif
             indexify_file(fullname,
                           this->mInterfaceTable,
-                          this->mTypelibTable,
                           this->mIIDTable,
                           this->mAllocator);
         } else {
@@ -333,7 +318,7 @@ void nsInterfaceInfoManager::initInterfaceTables()
 #ifdef DEBUG
 PRIntn check_enumerator(PLHashEntry *he, PRIntn index, void *arg) {
     char *key = (char *)he->key;
-    interface_record *value = (interface_record *)he->value;
+    nsInterfaceRecord *value = (nsInterfaceRecord *)he->value;
     nsHashtable *iidtable = (nsHashtable *)arg;
 
 
@@ -374,15 +359,15 @@ NS_IMETHODIMP
 nsInterfaceInfoManager::GetInfoForName(const char* name,
                                        nsIInterfaceInfo** info)
 {
-    interface_record *record =
-        (interface_record *)PL_HashTableLookup(this->mInterfaceTable, name);
+    nsInterfaceRecord *record =
+        (nsInterfaceRecord *)PL_HashTableLookup(this->mInterfaceTable, name);
     if (record == NULL || record->resolved == PR_FALSE) {
         *info = NULL;
         return NS_ERROR_FAILURE;
     }
     PR_ASSERT(record->entry != NULL);
 
-    // Is there already an II obj associated with the interface_record?
+    // Is there already an II obj associated with the nsInterfaceRecord?
     if (record->info != NULL) {
         // yay!
         *info = record->info;
@@ -392,8 +377,7 @@ nsInterfaceInfoManager::GetInfoForName(const char* name,
 
     // nope, better make one.  first, find a parent for it.
     nsIInterfaceInfo *parent;
-    XPTInterfaceDirectoryEntry *entry = record->entry;
-    uint16 parent_index = entry->interface_descriptor->parent_interface;
+    uint16 parent_index = record->entry->interface_descriptor->parent_interface;
     // Does it _get_ a parent? (is it nsISupports?)
     if (parent_index == 0) {
         // presumably this is only the case for nsISupports.
@@ -415,7 +399,7 @@ nsInterfaceInfoManager::GetInfoForName(const char* name,
 
     // got a parent for it, now build the object itself
     nsInterfaceInfo *result =
-        new nsInterfaceInfo(entry, (nsInterfaceInfo *)parent);
+        new nsInterfaceInfo(record, (nsInterfaceInfo *)parent);
     *info = result;
     NS_ADDREF(*info);
     return NS_OK;
@@ -424,8 +408,8 @@ nsInterfaceInfoManager::GetInfoForName(const char* name,
 NS_IMETHODIMP
 nsInterfaceInfoManager::GetIIDForName(const char* name, nsIID** iid)
 {
-    interface_record *record =
-        (interface_record *)PL_HashTableLookup(this->mInterfaceTable, name);
+    nsInterfaceRecord *record =
+        (nsInterfaceRecord *)PL_HashTableLookup(this->mInterfaceTable, name);
     if (record == NULL || record->resolved == PR_FALSE) {
         *iid = NULL;
         return NS_ERROR_FAILURE;
@@ -472,43 +456,8 @@ nsInterfaceInfoManager::GetNameForIID(const nsIID* iid, char** name)
     return NS_OK;
 }    
 
-// XXX this goes away; IIM should be a service.
-// ... where does decl for this go?
-// Even if this is a service, it is cool to provide a direct accessor
 XPTI_PUBLIC_API(nsIInterfaceInfoManager*)
 XPTI_GetInterfaceInfoManager()
 {
     return nsInterfaceInfoManager::GetInterfaceInfoManager();
 }
-
-#if 0
-struct XPTInterfaceDirectoryEntry {
-    nsID                   iid;
-    char                   *name;
-    char                   *name_space;
-    XPTInterfaceDescriptor *interface_descriptor;
-#if 0 /* not yet */
-    /* not stored on disk */
-    uint32                 offset; /* the offset for an ID still to be read */
-#endif
-};
-
-struct XPTInterfaceDescriptor {
-    uint16                     parent_interface;
-    uint16                     num_methods;
-    XPTMethodDescriptor        *method_descriptors;
-    uint16                     num_constants;
-    XPTConstDescriptor         *const_descriptors;
-};
-
-struct XPTHeader {
-    char                        magic[16];
-    uint8                       major_version;
-    uint8                       minor_version;
-    uint16                      num_interfaces;
-    uint32                      file_length;
-    XPTInterfaceDirectoryEntry  *interface_directory;
-    uint32                      data_pool;
-    XPTAnnotation               *annotations;
-};
-#endif
