@@ -43,6 +43,7 @@
 #define VIEWER_DUMP_VIEWS       40024
 #define VIEWER_DUMP_STYLE       40025
 #define VIEWER_DEBUGROBOT       40026
+#define VIEWER_DEBUGROBOT_UPDATE 40027
 
 // Note: must be in ascending sequential order
 #define VIEWER_ONE_COLUMN       40031

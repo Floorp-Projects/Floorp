@@ -51,7 +51,7 @@
 #include "nsDocLoader.h"
 
 // DebugRobot call
-extern "C" NS_EXPORT int DebugRobot(nsVoidArray * workList);
+extern "C" NS_EXPORT int DebugRobot(nsVoidArray * workList,  nsIWebWidget * ww);
 
 // Selection Repaint includes
 #include "nsIPresShell.h"
@@ -379,6 +379,7 @@ long PASCAL
 WndProc(HWND hWnd, UINT msg, WPARAM param, LPARAM lparam)
 {
   HMENU hMenu;
+  PRBool bVisual = PR_FALSE;
 
   if (msg == WM_CREATE) {
     LPCREATESTRUCT lpcs = (LPCREATESTRUCT) lparam;
@@ -462,6 +463,8 @@ WndProc(HWND hWnd, UINT msg, WPARAM param, LPARAM lparam)
         wd->ww->DumpStyle();
       }
       break;
+    case VIEWER_DEBUGROBOT_UPDATE:
+      bVisual = PR_TRUE;
     case VIEWER_DEBUGROBOT:
       if ((nsnull != wd) && (nsnull != wd->ww)) {
          nsIDocument* doc = wd->ww->GetDocument();
@@ -469,7 +472,7 @@ WndProc(HWND hWnd, UINT msg, WPARAM param, LPARAM lparam)
             const char * str = doc->GetDocumentURL()->GetSpec();
             nsVoidArray * gWorkList = new nsVoidArray();
             gWorkList->AppendElement(new nsString(str));
-            DebugRobot(gWorkList);
+            DebugRobot(gWorkList, bVisual ? wd->ww : nsnull);
          }
       }
       break;
