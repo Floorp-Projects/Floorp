@@ -27,6 +27,7 @@
 #include "nsIPresContext.h"
 #include "nsIReflowCommand.h"
 #include "nsIRunaround.h"
+#include "nsISpaceManager.h"
 
 nsCSSInlineLayout::nsCSSInlineLayout(nsCSSLineLayout&     aLineLayout,
                                      nsCSSContainerFrame* aContainerFrame,
@@ -228,7 +229,10 @@ nsCSSInlineLayout::ComputeMaxSize(nsIFrame* aFrame,
   else {
     aResult.width = mRightEdge - mX;
     aResult.width -= aKidMargin.left + aKidMargin.right;
-    if (!IsFirstChild() && (aResult.width <= 0)) {
+    // Note: We let zero sneak through here in case the next child is
+    // either something that gets compressed into zero or is a BR
+    // (which is zero width)
+    if (!IsFirstChild() && (aResult.width < 0)) {
       // XXX Make sure child is dirty for next time
       aFrame->WillReflow(*mLineLayout.mPresContext);
       NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
@@ -255,15 +259,26 @@ nsCSSInlineLayout::ReflowFrame(nsIFrame*            aKidFrame,
   // nsIInlineReflow, nsIFrame. For all three API's we map the reflow status
   // into an nsInlineReflowStatus.
 
+  NS_ASSERTION(nsnull != mLineLayout.mSpaceManager, "yikes");
   nsresult rv;
   nsIRunaround* runAround;
   nsIInlineReflow* inlineReflow;
+
+  // Make local copies of x,y in case what we are reflowing is a
+  // floater and the floater ends up being a left aligned
+  // current-line-floater (which means it will adjust our mX value)
+  nscoord x = mX;
+  nscoord y = mY;
+
   if ((nsnull != mLineLayout.mSpaceManager) &&
       (NS_OK == aKidFrame->QueryInterface(kIRunaroundIID,
                                           (void**)&runAround))) {
     nsRect r;
+    mLineLayout.mSpaceManager->Translate(x, y);
     runAround->Reflow(*mLineLayout.mPresContext, mLineLayout.mSpaceManager,
                       aMetrics, aReflowState, r, rv);
+    mLineLayout.mSpaceManager->Translate(-x, -y);
+
     aMetrics.width = r.width;
     aMetrics.height = r.height;
     aMetrics.ascent = r.height;
@@ -272,11 +287,15 @@ nsCSSInlineLayout::ReflowFrame(nsIFrame*            aKidFrame,
   }
   else if (NS_OK == aKidFrame->QueryInterface(kIInlineReflowIID,
                                               (void**)&inlineReflow)) {
+    mLineLayout.mSpaceManager->Translate(x, y);
     rv = inlineReflow->InlineReflow(mLineLayout, aMetrics, aReflowState);
+    mLineLayout.mSpaceManager->Translate(-x, -y);
     aInlineAware = PR_TRUE;
   }
   else {
+    mLineLayout.mSpaceManager->Translate(x, y);
     aKidFrame->Reflow(*mLineLayout.mPresContext, aMetrics, aReflowState, rv);
+    mLineLayout.mSpaceManager->Translate(-x, -y);
     aInlineAware = PR_FALSE;
   }
 
