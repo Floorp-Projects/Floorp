@@ -271,9 +271,9 @@ nsXMLDocument::Load(const nsAReadableString& aUrl)
     return NS_ERROR_FAILURE;
 
   // Set a principal for this document
+  NS_IF_RELEASE(mPrincipal);
   rv = secMan->GetCodebasePrincipal(uri, &mPrincipal);
   if (!mPrincipal) return rv;
-  NS_ADDREF(mPrincipal);
 
   // Create a channel
   rv = NS_OpenURI(getter_AddRefs(channel), uri, nsnull);
