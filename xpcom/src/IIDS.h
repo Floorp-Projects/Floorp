@@ -959,7 +959,7 @@ nsIRandomAccessData = { /* a6cf90eb-15b3-11d2-932e-00805f8add32 */
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90ec-15b3-11d2-932e-00805f8add32 */
+nsIFrameImageLoader = { /* a6cf90ec-15b3-11d2-932e-00805f8add32 */
     0xa6cf90ec,
     0x15b3,
     0x11d2,
