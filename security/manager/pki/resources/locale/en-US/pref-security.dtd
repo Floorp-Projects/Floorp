@@ -22,8 +22,8 @@
   -->
 
 <!ENTITY  security.title         "Security Preferences">
-<!ENTITY  security.label         "Privacy & Security">
-<!ENTITY  security.description   "Settings for Privacy & Security">
+<!ENTITY  security.label         "Privacy and Security">
+<!ENTITY  security.description   "Settings for Privacy and Security">
 
 <!ENTITY  resetsettings.label    "Reset Settings">
 <!ENTITY  resetpreferences.label "Reset Preferences...">
