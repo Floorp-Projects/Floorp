@@ -2504,7 +2504,8 @@ main(int argc, char **argv)
          !certutil.options[opt_SerialNumber].activated) {
 	/*  Make a default serial number from the current time.  */
 	PRTime now = PR_Now();
-	serialNumber = LL_L2UI(serialNumber, now);
+	serialNumber = LL_L2I(serialNumber, now);
+	if (serialNumber < 0) serialNumber *= -1;
     }
 
     /*  Validation needs the usage to validate for.  */
