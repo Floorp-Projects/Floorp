@@ -40,12 +40,10 @@ import java.util.*;
 class Type {
 	String mName;
 	int mSize;
-	boolean mKnown;
 
-	Type(String name, int size, boolean known) {
+	Type(String name, int size) {
 		mName = name;
 		mSize = size;
-		mKnown = known;
 	}
 
 	public int hashCode() {
@@ -61,12 +59,13 @@ class Type {
 	}
 
 	public String toString() {
-		String typeName = "&LT;" + mName + "&GT;";
-		if (mKnown) {
-			return "<A HREF=\"http://lxr.mozilla.org/seamonkey/ident?i=" + mName + "\">" +
-					typeName + "</A>";
-		} else {
-			return typeName + " (" + mSize + ")";
+		return "<A HREF=\"#" + mName + "_" + mSize + "\">&LT;" + mName + "&GT;</A> (" + mSize + ")";
+	}
+
+	static class Comparator implements QuickSort.Comparator {
+		public int compare(Object obj1, Object obj2) {
+			Type t1 = (Type) obj1, t2 = (Type) obj2;
+			return (t1.mSize - t2.mSize);
 		}
 	}
 }
@@ -90,16 +89,22 @@ class Leak {
 		return ("<A HREF=\"#" + mAddress + "\">" + mAddress + "</A> [" + mRefCount + "] " + mType);
 	}
 	
-	static class Comparator implements QuickSort.Comparator {
+	static class ByCount implements QuickSort.Comparator {
 		public int compare(Object obj1, Object obj2) {
 			Leak l1 = (Leak) obj1, l2 = (Leak) obj2;
-			return (l1.mRefCount - l2.mRefCount);
+			// return (l1.mRefCount - l2.mRefCount);
+			return (l1.mType.mSize - l2.mType.mSize);
 		}
 	}
-	
-	public static void sort(Leak[] leaks) {
-		QuickSort sorter = new QuickSort(new Comparator());
-		sorter.sort(leaks);
+
+	/**
+	 * Sorts in order of decreasing size.
+	 */
+	static class BySize implements QuickSort.Comparator {
+		public int compare(Object obj1, Object obj2) {
+			Leak l1 = (Leak) obj1, l2 = (Leak) obj2;
+			return (l2.mType.mSize - l1.mType.mSize);
+		}
 	}
 }
 
@@ -181,6 +186,7 @@ public class leaksoup {
 		try {
 			Vector vec = new Vector();
 			Hashtable table = new Hashtable();
+			Hashtable types = new Hashtable();
 			Histogram hist = new Histogram();
 			BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(inputName)));
 			String line = reader.readLine();
@@ -195,7 +201,14 @@ public class leaksoup {
 					} catch (NumberFormatException nfe) {
 						size = 0;
 					}
-					Type type = new Type(name, size, !name.equals("void*"));
+
+					// generate a unique type for this object.
+					String key = name + "_" + size;
+					Type type = (Type) types.get(key);
+					if (type == null) {
+						type = new Type(name, size);
+						types.put(key, type);
+					}
 					
 					// read in fields.
 					vec.setSize(0);
@@ -252,12 +265,20 @@ public class leaksoup {
 			
 			// store the leak report in inputName + ".html"
 			PrintStream out = new PrintStream(new FileOutputStream(inputName + ".html"));
+
+			Date now = new Date();
+			out.println("<TITLE>Leaks as of " + now + "</TITLE>");
+
+			// print leak summary.
+			out.println("<H2>Leak Summary</H2>");
+			out.println("total objects leaked = " + leakCount + "<BR>");
+			out.println("total memory leaked  = " + totalSize + " bytes.<BR>");
 			
 			// print the object histogram report.
 			printHistogram(out, hist);
 			
 			// print the leak report.
-			printLeaks(out, leaks, leakCount, totalSize);
+			printLeaks(out, leaks);
 			
 			out.close();
 		} catch (Exception e) {
@@ -265,6 +286,39 @@ public class leaksoup {
 		}
 	}
 	
+	/**
+	 * Sorts the bins of a histogram by (count * typeSize) to show the
+	 * most pressing leaks.
+	 */
+	static class HistComparator implements QuickSort.Comparator {
+		Histogram hist;
+		
+		HistComparator(Histogram hist) {
+			this.hist = hist;
+		}
+	
+		public int compare(Object obj1, Object obj2) {
+			Type t1 = (Type) obj1, t2 = (Type) obj2;
+			return (hist.count(t2) * t1.mSize - hist.count(t2) * t2.mSize);
+		}
+	}
+
+	static void printHistogram(PrintStream out, Histogram hist) throws IOException {
+		// sort the objects by histogram count.
+		Object[] objects = hist.objects();
+		QuickSort sorter = new QuickSort(new HistComparator(hist));
+		sorter.sort(objects);
+		
+		out.println("<H2>Leak Histogram:</H2>");
+		out.println("<PRE>");
+		int count = objects.length;
+		while (count > 0) {
+			Object object = objects[--count];
+			out.println(object.toString() + " : " + hist.count(object));
+		}
+		out.println("</PRE>");
+	}
+
 	static final String MOZILLA_BASE = "mozilla/";
 	static final String LXR_BASE = "http://lxr.mozilla.org/seamonkey/source/";
 	static final String BONSAI_BASE = "http://cvs-mirror.mozilla.org/webtools/bonsai/cvsblame.cgi?file=mozilla/";
@@ -299,23 +353,34 @@ public class leaksoup {
 		return "<A HREF=\"" + locationURL + "#" + lineNumber + "\"TARGET=\"SOURCE\">" + line.substring(0, leftBracket) + "</A>";
 	}
 	
-	static void printLeaks(PrintStream out, Leak[] leaks, int leakCount, long totalSize) throws IOException {
-		// sort the leaks by reference count.
-		QuickSort sorter = new QuickSort(new Leak.Comparator());
-		sorter.sort(leaks);
+	static void printLeaks(PrintStream out, Leak[] leaks) throws IOException {
+		// sort the leaks by size.
+		QuickSort bySize = new QuickSort(new Leak.BySize());
+		bySize.sort(leaks);
+
+		out.println("<H2>Leak Roots</H2>");
 		
-		// print leak graph.
-		out.println("<H2>Leak Summary</H2>");
 		out.println("<PRE>");
-		out.println("total objects leaked = " + leakCount);
-		out.println("total memory leaked  = " + totalSize + " bytes.");
 
-		Hashtable fileTables = new Hashtable();
-
-		// now, print the report, sorted by reference count.
+		int leakCount = leaks.length;
 		for (int i = 0; i < leakCount; i++) {
-			out.println("\n<HR>");
 			Leak leak = leaks[i];
+			if (leak.mRefCount == 0)
+				out.println(leak);
+		}
+		
+		Hashtable fileTables = new Hashtable();
+		Type anchorType = null;
+
+		// now, print the report, sorted by type size.
+		for (int i = 0; i < leakCount; i++) {
+			Leak leak = leaks[i];
+			if (anchorType != leak.mType) {
+				anchorType = leak.mType;
+				out.println("\n<HR>");
+				out.println("<A NAME=\"" + anchorType.mName + "_" + anchorType.mSize + "\"></A>");
+				out.println("<H3>" + anchorType + " Leaks</H3>");
+			}
 			out.println("<A NAME=\"" + leak.mAddress + "\"></A>");
 			out.println(leak);
 			// print object's fields:
@@ -332,39 +397,8 @@ public class leaksoup {
 			}
 		}
 
-		out.println("</PRE>");
-	}
-	
-	/**
-	 * Sorts the bins of a histogram by (count * typeSize) to show the
-	 * most pressing leaks.
-	 */
-	static class HistComparator implements QuickSort.Comparator {
-		Histogram hist;
-		
-		HistComparator(Histogram hist) {
-			this.hist = hist;
-		}
-	
-		public int compare(Object obj1, Object obj2) {
-			Type t1 = (Type) obj1, t2 = (Type) obj2;
-			return (hist.count(t2) * t1.mSize - hist.count(t2) * t2.mSize);
-		}
-	}
+		fileTables.clear();
 
-	static void printHistogram(PrintStream out, Histogram hist) throws IOException {
-		// sort the objects by histogram count.
-		Object[] objects = hist.objects();
-		QuickSort sorter = new QuickSort(new HistComparator(hist));
-		sorter.sort(objects);
-		
-		out.println("<H2>Leak Histogram:</H2>");
-		out.println("<PRE>");
-		int count = objects.length;
-		while (count > 0) {
-			Object object = objects[--count];
-			out.println(object.toString() + " : " + hist.count(object));
-		}
 		out.println("</PRE>");
 	}
 }
