@@ -60,7 +60,7 @@ public:
     void      GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize);
     void      SelectItem(PRInt32 aPosition);
     void      Deselect() ;
-    virtual   void      PreCreateWidget(void *aInitData);
+    virtual   void      PreCreateWidget(nsWidgetInitData *aInitData);
 
      // nsWindow interface
     virtual   PRBool AutoErase();

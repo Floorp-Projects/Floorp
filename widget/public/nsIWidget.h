@@ -90,6 +90,14 @@ enum nsCursor {   ///(normal cursor,       usually rendered as an arrow)
                   ///(can hyper-link,      usually rendered as a human hand)
                 eCursor_hyperlink }; 
 
+
+/**
+ * Basic struct for widget initialization data.
+ * @see Create member function of nsIWidget
+ */
+
+struct nsWidgetInitData { };
+
 /**
  * The base class for all the widgets. It provides the interface for
  * all basic and necessary functionality.
@@ -127,7 +135,7 @@ class nsIWidget : public nsISupports {
                         EVENT_CALLBACK   aHandleEventFunction,
                         nsIDeviceContext *aContext,
                         nsIToolkit       *aToolkit = nsnull,
-                        void             *aInitData = nsnull) = 0;
+                        nsWidgetInitData *aInitData = nsnull) = 0;
 
     /**
      * Create and initialize a widget with a native window parent
@@ -153,7 +161,7 @@ class nsIWidget : public nsISupports {
                         EVENT_CALLBACK aHandleEventFunction,
                         nsIDeviceContext *aContext,
                         nsIToolkit *aToolkit = nsnull,
-                        void *aInitData = nsnull) = 0;
+                        nsWidgetInitData *aInitData = nsnull) = 0;
 
     /**
      * Close and destroy the internal native window. 

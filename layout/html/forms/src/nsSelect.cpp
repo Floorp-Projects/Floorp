@@ -48,7 +48,7 @@ class nsSelectFrame : public nsInputFrame {
 public:
   nsSelectFrame(nsIContent* aContent, nsIFrame* aParentFrame);
 
-  virtual nsInputWidgetData* GetWidgetInitData();
+  virtual nsWidgetInitData* GetWidgetInitData();
 
   virtual void PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView);
 
@@ -242,15 +242,15 @@ nsSelectFrame::GetDesiredSize(nsIPresContext* aPresContext,
   NS_RELEASE(select);
 }
 
-nsInputWidgetData*
+nsWidgetInitData*
 nsSelectFrame::GetWidgetInitData()
 {
-  nsInputWidgetData* data = nsnull;
+  nsListBoxInitData* data = nsnull;
   nsSelect* content;
   GetContent((nsIContent *&) content);
   if (content->IsMultiple()) {
-    data = new nsInputWidgetData();
-    data->arg1 = 1;
+    data = new nsListBoxInitData();
+    data->mMultiSelect = PR_TRUE;
   }
   NS_RELEASE(content);
 

@@ -143,6 +143,7 @@ void nsComboBox::Deselect()
 nsComboBox::nsComboBox(nsISupports *aOuter) : nsWindow(aOuter)
 {
   mBackground = NS_RGB(124, 124, 124);
+  mDropDownHeight = 60; // Default to 60 pixels for drop-down list height
 }
 
 //-------------------------------------------------------------------------
@@ -225,6 +226,32 @@ DWORD nsComboBox::WindowStyle()
 DWORD nsComboBox::WindowExStyle()
 {
     return WS_EX_CLIENTEDGE;
+}
+
+//-------------------------------------------------------------------------
+//
+// Cache the drop down list height in mDropDownHeight
+//
+//-------------------------------------------------------------------------
+
+void nsComboBox::PreCreateWidget(nsWidgetInitData *aInitData)
+{
+  nsComboBoxInitData* comboData = (nsComboBoxInitData*)aInitData;
+  mDropDownHeight = comboData->mDropDownHeight;
+}
+
+//-------------------------------------------------------------------------
+//
+// Modify the height passed to create and resize to be 
+// the combo box drop down list height. (Note: Windows uses
+// the height of the window to specify the drop-down list size,
+// not the height of combobox text area.
+//
+//-------------------------------------------------------------------------
+
+PRInt32 nsComboBox::GetHeight(PRInt32 aProposedHeight)
+{
+  return(mDropDownHeight);
 }
 
 
