@@ -80,8 +80,8 @@ public:
 
   NS_IMETHOD OnChange(nsIRDFDataSource*, nsIRDFResource*, nsIRDFResource*, nsIRDFNode*, nsIRDFNode*);
 
-  NS_IMETHOD BeginUpdateBatch(nsIRDFDataSource*) { return NS_OK; }
-  NS_IMETHOD EndUpdateBatch(nsIRDFDataSource*)   { return NS_OK; }
+  NS_IMETHOD OnBeginUpdateBatch(nsIRDFDataSource*) { return NS_OK; }
+  NS_IMETHOD OnEndUpdateBatch(nsIRDFDataSource*)   { return NS_OK; }
 
 private:
 
