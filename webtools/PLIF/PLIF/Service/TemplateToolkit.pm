@@ -51,7 +51,7 @@ sub init {
 sub expand {
     my $self = shift;
     my($app, $output, $session, $protocol, $string, $data, $type) = @_;
-    local $Template::Config::STASH = 'Template::Stash'; # Don't use Template::Stash::XS as we can't currently get a hash back out of it
+    local $Template::Config::STASH = 'Template::Stash::Context'; # Don't use Template::Stash::XS as we can't currently get a hash back out of it
     my $template = Template->new({
         'CONTEXT' => PLIF::Service::TemplateToolkit::Context->new($app, $output, $session, $protocol),
     });
