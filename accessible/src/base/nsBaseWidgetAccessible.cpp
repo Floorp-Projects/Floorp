@@ -50,6 +50,8 @@
 #include "nsIPresShell.h"
 #include "nsISelection.h"
 #include "nsISelectionController.h"
+#include "nsIServiceManager.h"
+#include "nsIAccessibilityService.h"
 
 // ------------
 // nsBlockAccessible
@@ -340,6 +342,20 @@ NS_IMETHODIMP nsLinkableAccessible::AccDoAction(PRUint8 index)
   return NS_ERROR_INVALID_ARG;
 }
 
+NS_IMETHODIMP nsLinkableAccessible::GetAccKeyboardShortcut(nsAString& _retval)
+{
+  if (IsALink()) {
+    nsCOMPtr<nsIDOMNode> linkNode(do_QueryInterface(mLinkContent));
+    if (linkNode && mDOMNode != linkNode) {
+      nsCOMPtr<nsIAccessible> linkAccessible;
+      nsCOMPtr<nsIAccessibilityService> accService = 
+        do_GetService("@mozilla.org/accessibilityService;1");
+      accService->GetAccessibleFor(linkNode, getter_AddRefs(linkAccessible));
+      return linkAccessible->GetAccKeyboardShortcut(_retval);
+    }
+  }
+  return nsAccessible::GetAccKeyboardShortcut(_retval);;
+}
 
 PRBool nsLinkableAccessible::IsALink()
 {
