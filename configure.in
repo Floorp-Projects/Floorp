@@ -1801,14 +1801,14 @@ AC_CHECK_LIB(m, atan)
 AC_CHECK_LIB(dl, dlopen)
 if test ! "$GNU_CXX"; then
 
-    dnl The C++ compiler in Workshop 5.0 uses standard iostreams by
+    dnl The C++ compiler in Workshop 5.0+ uses standard iostreams by
     dnl default. -library=iostream will force use of classic iostreams.
     dnl The test is here because we need -liostream to be inserted before
     dnl the standard C++ library (which isn't -lC on Workshop5+, but is
     dnl a set of libraries).  Aurgh.
     case $target in
     *-solaris*)
-	if test ! -z "`${CC} -V 2>&1 | head -1 | grep '5.0'`" && test "$SUNWSPRO5_VTABLE"; then
+	if test ! -z "`${CC} -V 2>&1 | head -1 | grep -v '4.2'`" && test "$SUNWSPRO5_VTABLE"; then
 	    CXX="$CXX -library=iostream"
 	    LIBS="-liostream -lCrun $LIBS"
 	else
