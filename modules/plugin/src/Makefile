@@ -26,7 +26,7 @@ CPPSRCS		= nsplugin.cpp npglue.cpp
 
 EXPORTS		= nppg.h npglue.h nppriv.h
 
-REQUIRES	= lay layer js style applet nspr dbm img util java pref xpcom raptor netcnvts plugin oji ojiimpl
+REQUIRES	= lay layer js style applet nspr dbm img util java pref xpcom raptor netcnvts plugin plugimpl oji ojiimpl
 
 ifeq ($(subst /,_,$(shell uname -s)),OS2) 
 CPPSRCS		= npwplat.cpp
