@@ -37,6 +37,10 @@ class nsIDOMScreen : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMSCREEN_IID; return iid; }
 
+  NS_IMETHOD    GetTop(PRInt32* aTop)=0;
+
+  NS_IMETHOD    GetLeft(PRInt32* aLeft)=0;
+
   NS_IMETHOD    GetWidth(PRInt32* aWidth)=0;
 
   NS_IMETHOD    GetHeight(PRInt32* aHeight)=0;
@@ -56,6 +60,8 @@ public:
 
 
 #define NS_DECL_IDOMSCREEN   \
+  NS_IMETHOD    GetTop(PRInt32* aTop);  \
+  NS_IMETHOD    GetLeft(PRInt32* aLeft);  \
   NS_IMETHOD    GetWidth(PRInt32* aWidth);  \
   NS_IMETHOD    GetHeight(PRInt32* aHeight);  \
   NS_IMETHOD    GetPixelDepth(PRInt32* aPixelDepth);  \
@@ -68,6 +74,8 @@ public:
 
 
 #define NS_FORWARD_IDOMSCREEN(_to)  \
+  NS_IMETHOD    GetTop(PRInt32* aTop) { return _to GetTop(aTop); } \
+  NS_IMETHOD    GetLeft(PRInt32* aLeft) { return _to GetLeft(aLeft); } \
   NS_IMETHOD    GetWidth(PRInt32* aWidth) { return _to GetWidth(aWidth); } \
   NS_IMETHOD    GetHeight(PRInt32* aHeight) { return _to GetHeight(aHeight); } \
   NS_IMETHOD    GetPixelDepth(PRInt32* aPixelDepth) { return _to GetPixelDepth(aPixelDepth); } \
