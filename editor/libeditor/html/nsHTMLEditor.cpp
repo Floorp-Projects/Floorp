@@ -102,7 +102,7 @@ static NS_DEFINE_CID(kCClipboardCID,    NS_CLIPBOARD_CID);
 static NS_DEFINE_CID(kCTransferableCID, NS_TRANSFERABLE_CID);
 
 #if defined(NS_DEBUG) && defined(DEBUG_buster)
-static PRBool gNoisy = PR_TRUE;
+static PRBool gNoisy = PR_FALSE;
 #else
 static const PRBool gNoisy = PR_FALSE;
 #endif
