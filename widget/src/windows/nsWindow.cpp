@@ -1460,6 +1460,7 @@ nsWindow::StandardWindowCreate(nsIWidget *aParent,
   DWORD extendedStyle = WindowExStyle();
 
   if (mWindowType == eWindowType_popup) {
+    NS_ASSERTION(!aParent, "Popups should not be hooked into the nsIWidget hierarchy");
     mBorderlessParent = parent;
     // Don't set the parent of a popup window.
     parent = NULL;
@@ -2001,22 +2002,6 @@ NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
     return NS_OK;
   }
 
-  // When moving a borderless top-level window the window
-  // must be placed relative to its parent. WIN32 wants to
-  // place it relative to the screen, so we used the cached parent
-  // to calculate the parent's location then add the x,y passed to
-  // the move to get the screen coordinate for the borderless top-level
-  // window.
-  if (mWindowType == eWindowType_popup) {
-    HWND parent = mBorderlessParent;
-    if (parent) {
-      RECT pr;
-      VERIFY(::GetWindowRect(parent, &pr));
-      aX += pr.left;
-      aY += pr.top;
-    }
-  }
-
   mBounds.x = aX;
   mBounds.y = aY;
 
@@ -2126,22 +2111,6 @@ NS_METHOD nsWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeig
   if (mIsTranslucent)
     ResizeTranslucentWindow(aWidth, aHeight);
 #endif
-
-  // When resizing a borderless top-level window the window
-  // must be placed relative to its parent. WIN32 wants to
-  // place it relative to the screen, so we used the cached parent
-  // to calculate the parent's location then add the x,y passed to
-  // the resize to get the screen coordinate for the borderless top-level
-  // window.
-  if (mWindowType == eWindowType_popup) {
-    HWND parent = mBorderlessParent;
-    if (parent) {
-      RECT pr;
-      VERIFY(::GetWindowRect(parent, &pr));
-      aX += pr.left;
-      aY += pr.top;
-    }
-  }
 
   // Set cached value for lightweight and printing
   mBounds.x      = aX;

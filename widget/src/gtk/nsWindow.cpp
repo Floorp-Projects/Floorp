@@ -415,6 +415,13 @@ NS_IMETHODIMP nsWindow::Destroy(void)
 void nsWindow::InvalidateWindowPos(void)
 {
   mCachedX = mCachedY = -1;
+
+  for (nsIWidget* kid = mFirstChild; kid; kid = kid->GetNextSibling()) {
+    // Force kid to invalidate its window position if necessary.
+    nsRect kidBounds;
+    kid->GetBounds(kidBounds);
+    kid->Move(kidBounds.x, kidBounds.y);
+  }
 }
 
 void
@@ -428,7 +435,17 @@ PRBool nsWindow::GetWindowPos(nscoord &x, nscoord &y)
 {
   if ((mCachedX==-1) && (mCachedY==-1)) { /* Not cached */
     gint xpos, ypos;
-    if (mMozArea)
+
+    if (mParent)
+      {
+        // Just ask our parent; it might have its position cached, so
+        // we can save a bunch of work.
+        nsRect newRect;
+        mParent->WidgetToScreen(mBounds, newRect);
+        xpos = newRect.x;
+        ypos = newRect.y;
+      }
+    else if (mMozArea)
       {
         if (mMozArea->window)
           {
@@ -448,8 +465,11 @@ PRBool nsWindow::GetWindowPos(nscoord &x, nscoord &y)
             gdk_window_get_origin(mSuperWin->bin_window, &xpos, &ypos);
           }
         else
-          return FALSE;
+          return PR_FALSE;
       }
+    else
+      return PR_FALSE;
+
     mCachedX = xpos;
     mCachedY = ypos;
   }
@@ -2617,7 +2637,7 @@ NS_IMETHODIMP nsWindow::ConstrainPosition(PRBool aAllowSlop, PRInt32 *aX, PRInt3
 
 NS_IMETHODIMP nsWindow::Move(PRInt32 aX, PRInt32 aY)
 {
-  InvalidateWindowPos();	
+  InvalidateWindowPos();        
   // check if we are at right place already
   if((aX == mBounds.x) && (aY == mBounds.y) && !mIsToplevel) {
      return NS_OK;
