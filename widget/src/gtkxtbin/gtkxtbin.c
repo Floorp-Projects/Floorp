@@ -41,12 +41,6 @@
 #include <X11/Intrinsic.h>
 #include <X11/StringDefs.h>
 
-#include "nslog.h"
-
-NS_IMPL_LOG(gtkxtbinLog)
-#define PRINTF NS_LOG_PRINTF(gtkxtbinLog)
-#define FLUSH  NS_LOG_FLUSH(gtkxtbinLog)
-
 static void            gtk_xtbin_class_init (GtkXtBinClass *klass);
 static void            gtk_xtbin_init       (GtkXtBin      *xtbin);
 static void            gtk_xtbin_realize    (GtkWidget      *widget);
@@ -195,7 +189,7 @@ gtk_xtbin_init (GtkXtBin *xtbin)
     int            cnumber;
 
 #ifdef DEBUG_XTBIN
-    PRINTF("starting up Xt stuff\n");
+    printf("starting up Xt stuff\n");
 #endif
     /*
      * Initialize Xt stuff
@@ -347,7 +341,7 @@ gtk_xtbin_realize (GtkWidget *widget)
   
   XtRealizeWidget(embeded);
 #ifdef DEBUG_XTBIN
-  PRINTF("embeded window = %li\n", XtWindow(embeded));
+  printf("embeded window = %li\n", XtWindow(embeded));
 #endif
   XtManageChild(embeded);
 
@@ -399,7 +393,7 @@ gtk_xtbin_shutdown (GtkObject *object)
   GtkWidget *widget;
 
 #ifdef DEBUG_XTBIN
-  PRINTF("gtk_xtbin_shutdown()\n");
+  printf("gtk_xtbin_shutdown()\n");
 #endif
 
   /* gtk_object_destroy() will already hold a refcount on object
@@ -435,7 +429,7 @@ gtk_xtbin_destroy (GtkObject *object)
   GtkXtBin *xtbin;
 
 #ifdef DEBUG_XTBIN
-  PRINTF("gtk_xtbin_destroy()\n");
+  printf("gtk_xtbin_destroy()\n");
 #endif
 
   g_return_if_fail (object != NULL);
@@ -453,7 +447,7 @@ gtk_xtbin_destroy (GtkObject *object)
     XtAppContext  ac;
 
 #ifdef DEBUG_XTBIN
-    PRINTF("shutting down Xt stuff\n");
+    printf("shutting down Xt stuff\n");
 #endif
 
     /*
@@ -483,7 +477,7 @@ gtk_xtbin_show (GtkWidget *widget)
   g_return_if_fail (GTK_IS_WIDGET (widget));
 
 #ifdef DEBUG_XTBIN
-  PRINTF("gtk_xtbin_show()\n");
+  printf("gtk_xtbin_show()\n");
 #endif
 
   if (!GTK_WIDGET_VISIBLE (widget))
