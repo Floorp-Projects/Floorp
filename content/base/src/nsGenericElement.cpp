@@ -1359,7 +1359,7 @@ nsGenericElement::SetParent(nsIContent* aParent)
     nsCOMPtr<nsIContent> bindingParent;
     mParent->GetBindingParent(getter_AddRefs(bindingParent));
     nsIContent* par = mDOMSlots ? mDOMSlots->mBindingParent : nsnull;
-    if (bindingParent && (bindingParent != par))
+    if (bindingParent && (bindingParent.get() != par))
       UpdateBindingParent(mContent, bindingParent);
   }
 
