@@ -755,6 +755,18 @@ if [ "$MOZ_MATHML" ]; then
 END_MATHML_MAKEFILES
 fi
 
+# layout/svg
+if [ "$MOZ_SVG" ]; then
+  add_makefiles <<END_SVG_MAKEFILES
+  layout/svg/Makefile
+  layout/svg/base/Makefile
+  layout/svg/base/public/Makefile
+  layout/svg/base/src/Makefile
+  layout/svg/content/Makefile
+  layout/svg/content/src/Makefile
+END_SVG_MAKEFILES
+fi
+
 if [ `echo "$MOZ_EXTENSIONS" | grep -c cookie` != 0 ]; then
   add_makefiles <<END_EXTENSIONS_COOKIE_MAKEFILES
   extensions/cookie/Makefile

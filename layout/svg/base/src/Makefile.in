@@ -32,6 +32,7 @@ LIBRARY_NAME	= raptorsvgbase_s
 CPPSRCS		= \
   nsSVGContainerFrame.cpp \
   nsPolygonFrame.cpp \
+  nsPolylineFrame.cpp \
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk
