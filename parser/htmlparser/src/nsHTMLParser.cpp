@@ -514,7 +514,12 @@ PRInt32 nsHTMLParser::ParseFileIncrementally(const char* aFilename){
   PRInt32   iter=-1;
   const int kBufSize=10;
 
+#if defined(XP_UNIX) && defined(IRIX)
+  /* XXX: IRIX does not support ios::binary */
+  mFileStream=new fstream(aFilename,ios::in);
+#else
   mFileStream=new fstream(aFilename,ios::in|ios::binary);
+#endif
   if(mFileStream) {
     result=kNoError;
     while((kNoError==result) || (kInterrupted==result)) {
@@ -1556,7 +1561,7 @@ nsresult nsHTMLParser::OnDataAvailable(nsIInputStream *pIStream, PRInt32 length)
  *  @param   
  *  @return  
  */
-nsresult nsHTMLParser::OnStopBinding(void){
+nsresult nsHTMLParser::OnStopBinding(PRInt32 status, const char *msg){
   nsresult result=0;
   return result;
 }
