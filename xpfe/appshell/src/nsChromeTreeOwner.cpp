@@ -33,6 +33,7 @@
 // Interfaces needed to include
 #include "nsIPrompt.h"
 #include "nsIAuthPrompt.h"
+#include "nsIWebProgress.h"
 #include "nsIWindowMediator.h"
 
 // CIDs
@@ -357,9 +358,24 @@ NS_IMETHODIMP nsChromeTreeOwner::OnLocationChange(nsIWebProgress* aWebProgress,
                                                   nsIRequest* aRequest,
                                                   nsIURI* aLocation)
 {
+  PRBool itsForYou = PR_TRUE;
+
+  if (aWebProgress) {
+    nsCOMPtr<nsIDOMWindow> progressWin;
+    aWebProgress->GetDOMWindow(getter_AddRefs(progressWin));
+
+    nsCOMPtr<nsIDocShell> docshell;
+    mXULWindow->GetDocShell(getter_AddRefs(docshell));
+    nsCOMPtr<nsIDOMWindow> ourWin(do_QueryInterface(docshell));
+
+    if (ourWin != progressWin)
+      itsForYou = PR_FALSE;
+  }
+
    // If loading a new root .xul document, then redo chrome.
-   mXULWindow->mChromeLoaded = PR_FALSE;
-   return NS_OK;
+  if (itsForYou)
+    mXULWindow->mChromeLoaded = PR_FALSE;
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
