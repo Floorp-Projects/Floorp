@@ -24,6 +24,21 @@
 #include "nsIUnicharInputStream.h"
 #include "nsString.h"
 
+// XXX begin bad code
+#include "nsINetService.h"
+#include "nsRepository.h"
+#ifdef XP_PC
+#define NETLIB_DLL "netlib.dll"
+#else
+#ifdef XP_MAC
+#include "nsMacRepository.h"
+#else
+#define NETLIB_DLL "libnetlib.so"
+#endif
+#endif
+static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
+// XXX end bad code
+
 static void Usage(void)
 {
   printf("usage: TestCSSParser [-v] [-s string | url1 ...]\n");
@@ -31,6 +46,8 @@ static void Usage(void)
 
 int main(int argc, char** argv)
 {
+  nsRepository::RegisterFactory(kNetServiceCID, NETLIB_DLL, PR_FALSE, PR_FALSE);
+
   PRBool verbose = PR_FALSE;
   nsString* string = nsnull;
   int i;
