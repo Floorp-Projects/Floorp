@@ -2694,14 +2694,14 @@ JS_SetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, jsval v)
     return JS_TRUE;
 }
 
-JS_PUBLIC_API(JSPrincipalsDecoder)
-JS_SetPrincipalsDecoder(JSRuntime *rt, JSPrincipalsDecoder pd)
+JS_PUBLIC_API(JSPrincipalsTranscoder)
+JS_SetPrincipalsTranscoder(JSRuntime *rt, JSPrincipalsTranscoder px)
 {
-    JSPrincipalsDecoder oldpd;
+    JSPrincipalsTranscoder oldpx;
     
-    oldpd = rt->principalsDecoder;
-    rt->principalsDecoder = pd;
-    return oldpd;
+    oldpx = rt->principalsTranscoder;
+    rt->principalsTranscoder = px;
+    return oldpx;
 }
 
 JS_PUBLIC_API(JSFunction *)

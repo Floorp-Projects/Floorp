@@ -185,7 +185,7 @@ struct JSRuntime {
 #endif
 
     /* Security principals serialization support. */
-    JSPrincipalsDecoder principalsDecoder;
+    JSPrincipalsTranscoder principalsTranscoder;
 
 #ifdef DEBUG
     /* Function invocation metering. */

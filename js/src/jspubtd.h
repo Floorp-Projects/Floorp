@@ -501,10 +501,16 @@ typedef JSBool
  */
 typedef struct JSPrincipals JSPrincipals;
 
-/* NB: implementations must JSPRINCIPALS_HOLD *principalsp before returning. */
+/*
+ * XDR-encode or -decode a principals instance, based on whether xdr->mode is
+ * JSXDR_ENCODE, in which case *principalsp should be encoded; or JSXDR_DECODE,
+ * in which case implementations must return a held (via JSPRINCIPALS_HOLD),
+ * non-null *principalsp out parameter.  Return true on success, false on any
+ * error, which the implementation must have reported.
+ */
 typedef JSBool
-(* JS_DLL_CALLBACK JSPrincipalsDecoder)(JSXDRState *xdr,
-                                        JSPrincipals **principalsp);
+(* JS_DLL_CALLBACK JSPrincipalsTranscoder)(JSXDRState *xdr,
+                                           JSPrincipals **principalsp);
 
 JS_END_EXTERN_C
 
