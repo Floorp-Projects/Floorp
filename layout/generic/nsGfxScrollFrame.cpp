@@ -1205,12 +1205,14 @@ nsGfxScrollFrameInner::GetScrollbarStylesFromFrame() const
   switch (overflow) {
   case NS_STYLE_OVERFLOW_SCROLL:
   case NS_STYLE_OVERFLOW_HIDDEN:
-  case NS_STYLE_OVERFLOW_VISIBLE:
+  case NS_STYLE_OVERFLOW_VISIBLE: // should never happen
   case NS_STYLE_OVERFLOW_AUTO:
     return ScrollbarStyles(overflow, overflow);
-  case NS_STYLE_OVERFLOW_SCROLLBARS_NONE:
-    // This isn't quite right. The scrollframe will still be scrollable using keys.
-    // This can happen when HTML or BODY has propagated this style to the viewport.
+  case NS_STYLE_OVERFLOW_CLIP:
+    // This isn't quite right (although the value is deprecated and not
+    // very important). The scrollframe will still be scrollable using
+    // keys.  This can happen when HTML or BODY has propagated the style
+    // to the viewport.  (In other cases, there will be no scrollframe.)
     return ScrollbarStyles(NS_STYLE_OVERFLOW_HIDDEN, NS_STYLE_OVERFLOW_HIDDEN);
   case NS_STYLE_OVERFLOW_SCROLLBARS_VERTICAL:
     return ScrollbarStyles(NS_STYLE_OVERFLOW_HIDDEN, NS_STYLE_OVERFLOW_SCROLL);
