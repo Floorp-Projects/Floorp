@@ -1587,13 +1587,26 @@ nsXMLContentSink::ReportError(const PRUnichar* aErrorText,
 {
   nsresult rv = NS_OK;
 
+  mState = eXMLContentSinkState_InProlog;
+
+  // Clear the current content and
+  // prepare to set <parsererror> as the document root
+  nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mDocument));
+  if (node) {
+    for (;;) {
+      nsCOMPtr<nsIDOMNode> child, dummy;
+      node->GetLastChild(getter_AddRefs(child));
+      if (!child)
+        break;
+      node->RemoveChild(child, getter_AddRefs(dummy));
+    }
+  }
+  NS_IF_RELEASE(mDocElement); 
+
   NS_NAMED_LITERAL_STRING(name, "xmlns");
-  NS_NAMED_LITERAL_STRING(value, "http://www.w3.org/1999/xhtml");
+  NS_NAMED_LITERAL_STRING(value, "http://www.mozilla.org/newlayout/xml/parsererror.xml");
 
   const PRUnichar* atts[] = {name.get(), value.get(), nsnull};
-
-  mState = eXMLContentSinkState_InProlog;
-  NS_IF_RELEASE(mDocElement); // Do this inorder to set the <parsererror> as the document root
     
   rv = HandleStartElement(NS_LITERAL_STRING("parsererror").get(), atts, 1, -1, -1);
   NS_ENSURE_SUCCESS(rv,rv);
@@ -1601,7 +1614,8 @@ nsXMLContentSink::ReportError(const PRUnichar* aErrorText,
   rv = HandleCharacterData(aErrorText, nsCRT::strlen(aErrorText));
   NS_ENSURE_SUCCESS(rv,rv);  
   
-  rv = HandleStartElement(NS_LITERAL_STRING("sourcetext").get(), atts, 1, -1, -1);
+  const PRUnichar* noAtts[] = {0, 0};
+  rv = HandleStartElement(NS_LITERAL_STRING("sourcetext").get(), noAtts, 0, -1, -1);
   NS_ENSURE_SUCCESS(rv,rv);
   
   rv = HandleCharacterData(aSourceText, nsCRT::strlen(aSourceText));
