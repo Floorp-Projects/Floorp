@@ -22,8 +22,6 @@
   <broadcaster id="canPrint"/>
   <broadcaster id="Browser:LoadingProgress"/>
   <broadcaster id="Browser:Status"/>
-  <broadcaster id="Browser:OnStartBinding"/>
-  <broadcaster id="Browser:OnStopBinding"/>
   <broadcaster id="Browser:Security" secure="false"/>
   <broadcaster id="Browser:Throbber" busy="false"/>
   <broadcaster id="args" value="http://www.mozilla.org/quality/smoketests/"/>

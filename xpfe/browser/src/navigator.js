@@ -10,8 +10,6 @@
 	  appCore.setWebShellWindow(window);
 	  appCore.setToolbarWindow(window);
 	  tryToSetContentWindow();
-//      appCore.setDisableCallback("DoDisableButtons();");
-//      appCore.setEnableCallback("DoEnableButtons();");
     }
   }
 
@@ -26,20 +24,6 @@
         dump("Scheduling later attempt to set content window\n");
         window.setTimeout( "tryToSetContentWindow()", 100 );
     }
-  }
-
-  function DoDisableButtons()
-  {
-    // Find buttons in the UI and disable them
-	dump("here");
-    dump("Browser disabling buttons\n");
-    document.getElementById('urlbar')
-  }
-
-  function DoEnableButtons()
-  {
-    // Find buttons in the UI and enable them
-    dump("Browser enabling buttons\n");
   }
 
   function RefreshUrlbar()
@@ -589,16 +573,6 @@
                 if ( statusText ) {
                     statusText.setAttribute( "value", text );
                 }
-                /*
-                if ( bindCount == 0 ) {
-                    // This presumably precedes the first onStartBinding, spin
-                    // the progress meter.
-                    var meter = document.getElementById("Browser:LoadingProgress");
-                    if ( meter ) {
-                        meter.setAttribute( "mode", "undetermined" );
-                    } 
-                }
-                */
             } else {
                 dump("Can't find status broadcaster!\n");
             }
@@ -638,32 +612,6 @@
             // Turn security on.
             securityOn();
         }
-        function onStartBinding() {
-            bindCount++;
-            if ( bindCount == 1 ) {
-                // Something is going on, turn on progress meter.
-                var meter = document.getElementById("Browser:LoadingProgress");
-                if ( meter ) {
-                    meter.setAttribute( "mode", "undetermined" );
-                } 
-            }
-        }
-        function onStopBinding() {
-            bindCount--;
-            if ( bindCount < 0 ) {
-                // Something unusual occurred (stop/back?).
-                bindCount = 0;
-            }
-            var stop = document.getElementById("Browser:OnStopBinding");
-            if ( bindCount == 0 ) {
-                // Turn off progress meter.
-                var meter  = document.getElementById("Browser:LoadingProgress");
-                var status = document.getElementById("Browser:Status");
-                status.setAttribute("value","Document: Done");
-                meter.setAttribute("value","0");
-                meter.setAttribute("mode","normal");
-            }
-        }
         function onProgress() {
             var throbber = document.getElementById("Browser:Throbber");
             var meter    = document.getElementById("Browser:LoadingProgress");
@@ -678,7 +626,7 @@
                 if ( mode == "normal" ) {
                     var status = document.getElementById("Browser:Status");
                     if ( status ) {
-                        status.setAttribute("value","Document: Done");
+                        status.setAttribute("text","Document: Done");
                     }
                 }
             }
