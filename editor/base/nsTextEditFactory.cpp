@@ -30,17 +30,17 @@ static NS_DEFINE_CID(kTextEditorCID,   NS_TEXTEDITOR_CID);
 nsresult
 GetTextEditFactory(nsIFactory **aFactory, const nsCID & aClass)
 {
-  static nsCOMPtr<nsIFactory>  g_pNSIFactory;
   PR_EnterMonitor(GetEditorMonitor());
-  nsresult result = NS_ERROR_FAILURE;
-  if (!g_pNSIFactory)
-  {
-    nsTextEditFactory *factory = new nsTextEditFactory(aClass);
-    g_pNSIFactory = do_QueryInterface(factory);
-    if (factory)
-      result = NS_OK;
-  }
-  result = g_pNSIFactory->QueryInterface(nsIFactory::GetIID(), (void **)aFactory);
+
+  nsTextEditFactory *factory = new nsTextEditFactory(aClass);
+  if (factory)
+    return NS_ERROR_OUT_OF_MEMORY;
+  nsCOMPtr<nsIFactory> pNSIFactory = do_QueryInterface(factory);
+  if (!pNSIFactory)
+    return NS_ERROR_NO_INTERFACE;
+
+  nsresult result = pNSIFactory->QueryInterface(nsIFactory::GetIID(),
+                                                (void **)aFactory);
   PR_ExitMonitor(GetEditorMonitor());
   return result;
 }
