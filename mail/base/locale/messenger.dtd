@@ -223,6 +223,9 @@
 <!ENTITY searchMenu.label "Search">
 <!ENTITY searchMenu.accesskey "S">
 
+
+<!ENTITY find.label "Find">
+<!ENTITY find.accesskey "F">
 <!ENTITY findCmd.label "Find in This Message...">
 <!ENTITY findCmd.accesskey "F">
 <!ENTITY findCmd.key "f">

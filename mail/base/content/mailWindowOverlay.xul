@@ -1122,9 +1122,21 @@
         </menupopup>
       </menu>
       <menuseparator/>
+      <menu label="&find.label;" accesskey="&find.accesskey;">
+        <menupopup>
       <menuitem label="&findCmd.label;" key="key_find" accesskey="&findCmd.accesskey;" observes="cmd_find"/>
       <menuitem label="&findAgainCmd.label;" key="key_findAgain" accesskey="&findAgainCmd.accesskey;" observes="cmd_findAgain"/>
       <menuitem label="&findPrevCmd.label;"  key="key_findPrev"  accesskey="&findPrevCmd.accesskey;"  observes="cmd_findPrev"/>
+          <menuseparator/>
+          <menuitem id="searchMailCmd" label="&searchMailCmd.label;" 
+                    key="key_searchMail" 
+                    accesskey="&searchMailCmd.accesskey;" 
+                    oncommand="MsgSearchMessages();"/>
+          <menuitem id="searchAddressesCmd" label="&searchAddressesCmd.label;" 
+                    accesskey="&searchAddressesCmd.accesskey;" 
+                    oncommand="MsgSearchAddresses()"/>
+        </menupopup>
+      </menu>
       <menuseparator id="editPropertiesSeparator"/>
       <menuitem id="menu_properties" label="&folderPropsCmd.label;"
                 accesskey="&folderPropsCmd.accesskey;"
@@ -1552,14 +1564,6 @@
       <!-- Tasks -->
       <menu id="tasksMenu" label="&tasksMenu.label;" accesskey="&tasksMenu.accesskey;">
         <menupopup id="taskPopup" onpopupshowing="document.commandDispatcher.updateCommands('create-menu-tasks')">
-        <menuitem id="searchMailCmd" label="&searchMailCmd.label;" 
-                  key="key_searchMail" 
-                  accesskey="&searchMailCmd.accesskey;" 
-                  oncommand="MsgSearchMessages();"/>
-        <menuitem id="searchAddressesCmd" label="&searchAddressesCmd.label;" 
-                  accesskey="&searchAddressesCmd.accesskey;" 
-                  oncommand="MsgSearchAddresses()"/>
-        <menuseparator/>
         <menuitem id="filtersCmd" label="&filtersCmd.label;"
                   accesskey="&filtersCmd.accesskey;"
                   oncommand="MsgFilters(null);"/>
