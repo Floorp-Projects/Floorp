@@ -25,7 +25,7 @@
 #include "OLE2.h"
 #include "URLMON.h"
 
-#if 1
+#if 0
 #define PRNTDEBUG(_x) printf(_x);
 #define PRNTDEBUG2(_x1, _x2) printf(_x1, _x2);
 #define PRNTDEBUG3(_x1, _x2, _x3) printf(_x1, _x2, _x3);
@@ -164,7 +164,7 @@ STDMETHODIMP nsDataObj::GetData(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
 				  //case CF_METAFILEPICT:
 				  //	return GetMetafilePict(*pFE, *pSTM);
 				  default:
-            PRNTDEBUG2("***** nsDataObj::GetData - Unknown format %d\n", format);
+            PRNTDEBUG2("***** nsDataObj::GetData - Unknown format %x\n", format);
 					  return GetText(df, *pFE, *pSTM);
             break;
         } //switch
