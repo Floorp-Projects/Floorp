@@ -321,7 +321,7 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 			windowType = (mIsDialog ? eWindowType_dialog : eWindowType_toplevel);
 
 		short			wDefProcID;
-		Boolean		goAwayFlag;
+		Boolean			goAwayFlag;
 		short			hOffset;
 		short			vOffset;
 
@@ -345,6 +345,7 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 			case eWindowType_dialog:
 				if (aInitData &&
 					aInitData->mBorderStyle != eBorderStyle_all &&
+					aInitData->mBorderStyle != eBorderStyle_default &&
 					(aInitData->mBorderStyle == eBorderStyle_none ||
 					 !(aInitData->mBorderStyle & eBorderStyle_title)))
 				{
@@ -361,6 +362,7 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 			case eWindowType_toplevel:
 				if (aInitData &&
 					aInitData->mBorderStyle != eBorderStyle_all &&
+					aInitData->mBorderStyle != eBorderStyle_default &&
 					(aInitData->mBorderStyle == eBorderStyle_none ||
 					 !(aInitData->mBorderStyle & eBorderStyle_resizeh)))
 					wDefProcID = kWindowDocumentProc;
@@ -384,6 +386,8 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 		if (aInitData && aInitData->mBorderStyle != eBorderStyle_all)
 		{
 			if (aInitData->mBorderStyle == eBorderStyle_none ||
+					aInitData->mBorderStyle == eBorderStyle_default &&
+					windowType == eWindowType_dialog ||
 					!(aInitData->mBorderStyle & eBorderStyle_close))
 				goAwayFlag = false;
 		}
