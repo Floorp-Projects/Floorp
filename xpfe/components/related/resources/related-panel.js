@@ -26,6 +26,12 @@
 
  */
 
+function debug(msg)
+{
+  // uncomment for noise
+  //dump(msg);
+}
+
 // The content window that we're supposed to be observing.
 var ContentWindow = window.content;
 
@@ -36,7 +42,7 @@ Handler = Handler.QueryInterface(Components.interfaces.nsIRelatedLinksHandler);
 // Our observer object
 var Observer = {
     Observe: function(subject, topic, data) {
-        // dump("Observer.Observe(" + subject + ", " + topic + ", " + data + ")\n");
+        // debug("Observer.Observe(" + subject + ", " + topic + ", " + data + ")\n");
         if (subject != ContentWindow)
             return;
 
@@ -93,7 +99,7 @@ function refetchRelatedLinks(Handler, data)
 		if (theOffset >= 0)	currentSite = currentSite.substr(0, theOffset );
 	}
 
-	dump("Related Links:  Current top-level: " + currentSite + "    new top-level: " + newSite + "\n");
+	debug("Related Links:  Current top-level: " + currentSite + "    new top-level: " + newSite + "\n");
 
 	// only request new related links data if we've got a new web site (hostname change)
 	if (currentSite != newSite)
@@ -123,23 +129,35 @@ function Init()
     // Install the observer so we'll be notified when new content is loaded.
     var ObserverService = Components.classes["component://netscape/observer-service"].getService();
     ObserverService = ObserverService.QueryInterface(Components.interfaces.nsIObserverService);
-    dump("got observer service\n");
+    debug("got observer service\n");
 
     ObserverService.AddObserver(Observer, "EndDocumentLoad");
-    dump("added observer\n");
+    debug("added observer\n");
 }
 
+function clicked(event, target) {
+  if (target.getAttribute('container') == 'true') {
+    if (target.getAttribute('open') == 'true') {
+	  target.removeAttribute('open');
+    } else {
+      target.setAttribute('open','true');
+      // First, see if they're opening the related links node. If so,
+      // we'll need to go out and fetch related links _now_.
+      if (target.getAttribute('id') == 'NC:RelatedLinks') {
+          refetchRelatedLinks(Handler, ContentWindow.location);
+          return;
+      }
+    }
+  } else {
+    if (event.clickCount == 2) {
+      openURL(target, 'Tree');
+    }
+  }
+}
 
 
 function openURL(treeitem, root)
 {
-    // First, see if they're opening the related links node. If so,
-    // we'll need to go out and fetch related links _now_.
-    if (treeitem.getAttribute('id') == 'NC:RelatedLinks' &&
-        treeitem.getAttribute('open') == 'true') {
-	refetchRelatedLinks(Handler, ContentWindow.location);
-        return;
-    }
 
     // Next, check to see if it's a container. If so, then just let
     // the tree do its open and close stuff.

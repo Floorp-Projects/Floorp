@@ -22,7 +22,6 @@
 
 -->
 
-<!-- <?xml-stylesheet href="chrome://sidebar/skin/" type="text/css"?> -->
 <?xml-stylesheet href="chrome://bookmarks/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://bookmarks/skin/bm-panel.css" type="text/css"?>
 
@@ -31,6 +30,8 @@
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   align="vertical">
+
+  <html:script src="chrome://bookmarks/content/bm-panel.js" />
 
   <html:div style="width:100px;height:100px" flex="1">
 
@@ -41,7 +42,7 @@
     <tree id="bookmarksTree" context="contextual" ref="NC:BookmarksRoot"
           style="height: 100%; width:100%;"
           datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch" 
-          onclick="if (event.clickCount == 2) return top.OpenBookmarkURL(event.target.parentNode.parentNode, 'bookmarksTree');">
+          onclick="clicked(event, event.target.parentNode.parentNode)">
 
       <template>
         <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
