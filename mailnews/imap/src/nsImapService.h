@@ -56,6 +56,7 @@ public:
                             nsIImapMessageSink * aImapMessage,
                             nsIUrlListener * aUrlListener, 
                             nsIURL ** aURL,
+							nsISupports *aConsumer,
                             const char *messageIdentifierList,
                             PRBool messageIdsAreUID);
 	NS_IMETHOD Noop(PLEventQueue * aClientEventQueue, 

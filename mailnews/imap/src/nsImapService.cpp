@@ -265,7 +265,7 @@ NS_IMETHODIMP nsImapService::DisplayMessage(const char* aMessageURI, nsISupports
 
 				messageIdString.Append(msgKey, 10);
 				rv = FetchMessage(queue, folder, imapMessageSink, aUrlListener, 
-					aURL, messageIdString.GetBuffer(), PR_TRUE);
+					aURL, aDisplayConsumer, messageIdString.GetBuffer(), PR_TRUE);
 			}
 						
 		}
@@ -296,6 +296,7 @@ nsImapService::FetchMessage(PLEventQueue * aClientEventQueue,
                             nsIMsgFolder * aImapMailFolder, 
                             nsIImapMessageSink * aImapMessage,
                             nsIUrlListener * aUrlListener, nsIURL ** aURL,
+							nsISupports * aDisplayConsumer, 
                             const char *messageIdentifierList,
                             PRBool messageIdsAreUID)
 {
@@ -335,7 +336,7 @@ nsImapService::FetchMessage(PLEventQueue * aClientEventQueue,
             delete [] folderName;
 			rv = imapUrl->SetSpec(urlSpec.GetBuffer());
 			imapUrl->RegisterListener(aUrlListener);  // register listener if there is one.
-			protocolInstance->LoadUrl(imapUrl, nsnull);
+			protocolInstance->LoadUrl(imapUrl, aDisplayConsumer);
 			if (aURL)
 				*aURL = imapUrl; 
 			else

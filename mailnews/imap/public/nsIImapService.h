@@ -83,6 +83,7 @@ public:
                             nsIMsgFolder * aImapMailFolder, 
                             nsIImapMessageSink * aImapMessage,
                             nsIUrlListener * aUrlListener, nsIURL ** aURL,
+							nsISupports *aConsumer,
                             const char *messageIdentifierList,
                             PRBool messageIdsAreUID) = 0;
 	NS_IMETHOD Noop(PLEventQueue * aClientEventQueue, 

@@ -38,6 +38,7 @@
 
 class nsIMAPMessagePartIDArray;
 class nsIMsgIncomingServer;
+class nsIWebShell;
 
 // State Flags (Note, I use the word state in terms of storing 
 // state information about the connection (authentication, have we sent
@@ -97,6 +98,8 @@ public:
 
 	NS_IMETHOD GetFlagsForUID(PRUint32 uid, PRBool *foundIt, imapMessageFlagsType *flags);
 	NS_IMETHOD GetSupportedUserFlags(PRUint16 *flags);
+
+	NS_IMETHOD GetDisplayStream (nsIWebShell **webShell);
 	////////////////////////////////////////////////////////////////////////////////////////
 	// End of nsIStreamListenerSupport
 	////////////////////////////////////////////////////////////////////////////////////////
@@ -264,6 +267,7 @@ private:
 	nsIOutputStream			* m_outputStream;   // this will be obtained from the transport interface
 	nsIStreamListener	    * m_outputConsumer; // this will be obtained from the transport interface
 
+	nsIWebShell				* m_displayConsumer; // if we are displaying an article this is the rfc-822 display sink...
 
 	// this is a method designed to buffer data coming from the input stream and efficiently extract out 
 	// a line on each call. We read out as much of the stream as we can and store the extra that doesn't

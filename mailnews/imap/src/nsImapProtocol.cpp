@@ -30,6 +30,7 @@
 #include "nsImapServerResponseParser.h"
 #include "nspr.h"
 #include "plbase64.h"
+#include "nsIWebShell.h"
 
 PRLogModuleInfo *IMAP;
 
@@ -43,11 +44,26 @@ PRLogModuleInfo *IMAP;
 
 #include "nsIMsgIncomingServer.h"
 
+// for temp message hack
+#ifdef XP_UNIX
+#define MESSAGE_PATH "/usr/tmp/tempMessage.eml"
+#endif
+
+#ifdef XP_PC
+#define MESSAGE_PATH  "c:\\temp\\tempMessage.eml"
+#endif
+
+#ifdef XP_MAC
+#define MESSAGE_PATH  "tempMessage.eml"
+#endif
+
+
 #define ONE_SECOND ((PRUint32)1000)    // one second
 
 const char *kImapTrashFolderName = "Trash"; // **** needs to be localized ****
 
 static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
+static NS_DEFINE_IID(kIWebShell, NS_IWEB_SHELL_IID);
 
 #define OUTPUT_BUFFER_SIZE (4096*2) // mscott - i should be able to remove this if I can use nsMsgLineBuffer???
 
@@ -235,6 +251,7 @@ nsresult nsImapProtocol::Initialize(nsIImapHostSessionList * aHostSessionList, P
 	if (!aSinkEventQueue || !aHostSessionList)
         return NS_ERROR_NULL_POINTER;
 
+	m_displayConsumer = nsnull;
     m_sinkEventQueue = aSinkEventQueue;
     m_hostSessionList = aHostSessionList;
     m_parser.SetHostSessionList(aHostSessionList);
@@ -888,6 +905,16 @@ NS_IMETHODIMP nsImapProtocol::OnStopBinding(nsIURL* aURL, nsresult aStatus, cons
 // End of nsIStreamListenerSupport
 //////////////////////////////////////////////////////////////////////////////////////////////
 
+NS_IMETHODIMP nsImapProtocol::GetDisplayStream (nsIWebShell **webShell)
+{
+	if (webShell)
+	{
+		*webShell = m_displayConsumer;
+		return NS_OK;
+	}
+	return NS_ERROR_NULL_POINTER;
+}
+
 /*
  * Writes the data contained in dataBuffer into the current output stream. It also informs
  * the transport layer that this data is now available for transmission.
@@ -939,6 +966,9 @@ nsresult nsImapProtocol::LoadUrl(nsIURL * aURL, nsISupports * aConsumer)
 	nsIImapUrl * imapUrl = nsnull;
 	if (aURL)
 	{
+		if (aConsumer)
+			rv = aConsumer->QueryInterface(kIWebShell, (void **) &m_displayConsumer);
+
 		if (m_transport == nsnull) // i.e. we haven't been initialized yet....
 			SetupWithUrl(aURL); 
 

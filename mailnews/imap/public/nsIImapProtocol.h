@@ -39,6 +39,7 @@
 
 class nsIURL;
 class nsIImapHostSessionList;
+class nsIWebShell;
 
 class nsIImapProtocol : public nsIStreamListener
 {
@@ -72,6 +73,10 @@ public:
 	// methods to get data from the imap parser flag state.
 	NS_IMETHOD GetFlagsForUID(PRUint32 uid, PRBool *foundIt, imapMessageFlagsType *flags) = 0;
 	NS_IMETHOD GetSupportedUserFlags(PRUint16 *flags) = 0;
+
+	// this is for the temp message display hack
+	NS_IMETHOD GetDisplayStream (nsIWebShell **webShell) = 0;
+
 };
 
 #endif /* nsIImapProtocol_h___ */

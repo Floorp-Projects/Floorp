@@ -37,6 +37,7 @@
 #include "nsMsgUtils.h"
 #include "nsIMsgMailSession.h"
 #include "nsImapMessage.h"
+#include "nsIWebShell.h"
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
@@ -52,6 +53,18 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
+// for temp message hack
+#ifdef XP_UNIX
+#define MESSAGE_PATH "/usr/tmp/tempMessage.eml"
+#endif
+
+#ifdef XP_PC
+#define MESSAGE_PATH  "c:\\temp\\tempMessage.eml"
+#endif
+
+#ifdef XP_MAC
+#define MESSAGE_PATH  "tempMessage.eml"
+#endif
 
 nsImapMailFolder::nsImapMailFolder() :
 	nsMsgFolder(), m_pathName(""), m_mailDatabase(nsnull),
@@ -65,7 +78,7 @@ nsImapMailFolder::nsImapMailFolder() :
     
     nsIRDFService* rdfService = nsnull;
     nsIRDFDataSource* datasource = nsnull;
-    
+	m_tempMessageFile = nsnull;
     nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
                                                nsIRDFService::GetIID(),
                                                (nsISupports**) &rdfService);
@@ -1424,22 +1437,51 @@ NS_IMETHODIMP
 nsImapMailFolder::SetupMsgWriteStream(nsIImapProtocol* aProtocol,
                                       StreamInfo* aStreamInfo)
 {
-    return NS_ERROR_FAILURE;
+	// create a temp file to write the message into. We need to do this because
+	// we don't have pluggable converters yet. We want to let mkfile do the work of 
+	// converting the message from RFC-822 to HTML before displaying it...
+	PR_Delete(MESSAGE_PATH);
+	m_tempMessageFile = PR_Open(MESSAGE_PATH, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 00700);
+    return NS_OK;
 }
 
 NS_IMETHODIMP 
 nsImapMailFolder::ParseAdoptedMsgLine(nsIImapProtocol* aProtocol,
                                       msg_line_info* aMsgLineInfo)
 {
-    return NS_ERROR_FAILURE;
+   if (m_tempMessageFile)                                                      
+         PR_Write(m_tempMessageFile,(void *) aMsgLineInfo->adoptedMessageLine, 
+			 PL_strlen(aMsgLineInfo->adoptedMessageLine));
+                                                                                                                                                  
+     return NS_OK;                                                               
 }
     
 NS_IMETHODIMP
 nsImapMailFolder::NormalEndMsgWriteStream(nsIImapProtocol* aProtocol)
 {
-    return NS_ERROR_FAILURE;
+	nsresult res = NS_OK;
+	if (m_tempMessageFile)
+	{
+		nsIWebShell *webShell;
+
+		PR_Close(m_tempMessageFile);
+		m_tempMessageFile = nsnull;
+		res = aProtocol->GetDisplayStream(&webShell);
+		if (NS_SUCCEEDED(res) && webShell)
+		{
+			nsFilePath filePath(MESSAGE_PATH);
+			nsFileURL  fileURL(filePath);
+			char * message_path_url = PL_strdup(fileURL.GetAsString());
+
+			res = webShell->LoadURL(nsAutoString(message_path_url).GetUnicode(), nsnull, PR_TRUE, nsURLReload, 0);
+
+			PR_FREEIF(message_path_url);
+		}
+	}
+
+	return res;
 }
-    
+
 NS_IMETHODIMP
 nsImapMailFolder::AbortMsgWriteStream(nsIImapProtocol* aProtocol)
 {

@@ -270,6 +270,12 @@ protected:
 	PRInt32			m_nextMessageByteLength;
     PLEventQueue* m_eventQueue;
     PRBool m_urlRunning;
+
+	// part of temporary libmime converstion trick......these should go away once MIME uses a new stream
+	// converter interface...
+	PRFileDesc* m_tempMessageFile;
+
+
 };
 
 #endif
