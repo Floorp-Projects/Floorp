@@ -1533,6 +1533,12 @@ NS_IMETHODIMP nsMsgNewsFolder::SetReadSetFromStr(const char *newsrcLine)
 
     if (!mReadSet) return NS_ERROR_OUT_OF_MEMORY;
 
+    // Now that mReadSet is recreated, make sure it's stored in the db as well.
+    nsresult rv;
+    nsCOMPtr<nsINewsDatabase> db = do_QueryInterface(mDatabase, &rv);
+    if (NS_SUCCEEDED(rv) && db) // it's ok not to have a db here.
+      db->SetReadSet(mReadSet);
+
     return NS_OK;
 }
 
