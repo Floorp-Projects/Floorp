@@ -238,6 +238,9 @@ nsMsgPrintEngine::SetPrintURICount(PRInt32 aCount)
 NS_IMETHODIMP
 nsMsgPrintEngine::StartPrintOperation()
 {
+  // Load the about:blank on the tail end...
+  nsresult rv = AddPrintURI((const PRUnichar*)NS_LITERAL_STRING("about:blank").get()); 
+  if (NS_FAILED(rv)) return rv; 
   return StartNextPrintOperation();
 }
 
