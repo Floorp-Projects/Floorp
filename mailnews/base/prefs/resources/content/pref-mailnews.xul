@@ -50,7 +50,7 @@ Contributor(s):
     <hbox autostretch="never">
       <text class="label" value="&selectWindowLayout.label;"/>
       <spacer flex="1"/>
-      <radiogroup id="mailPaneConfig" pref="true" preftype="int" prefstring="mail.pane_config"
+      <radiogroup id="mailPaneConfig" pref="true" preftype="int" prefstring="mail.pane_config" orient="horizontal"
                   prefattribute="value">
         <radio group="mailPaneConfig" class="iconic" value="0" id="classic"/>
         <radio group="mailPaneConfig" class="iconic" value="1" id="wide"/>
