@@ -69,7 +69,8 @@ interface nsIOCSPResponder : nsISupports {
 
 [scriptable, uuid(c185d920-4a3e-11d5-ba27-00108303b117)]
 interface nsICrlEntry : nsISupports {
-  readonly attribute wstring name;
+  readonly attribute wstring org;
+  readonly attribute wstring orgUnit;
   readonly attribute wstring lastUpdate;
   readonly attribute wstring nextUpdate;
 };

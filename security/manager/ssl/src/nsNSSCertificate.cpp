@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsNSSCertificate.cpp,v 1.33 2001/06/19 05:29:56 javi%netscape.com Exp $
+ * $Id: nsNSSCertificate.cpp,v 1.34 2001/06/22 00:52:56 ddrinan%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -3091,11 +3091,12 @@ public:
   NS_DECL_NSICRLENTRY
 
   nsCrlEntry();
-  nsCrlEntry(const PRUnichar*, const PRUnichar*, const PRUnichar*);
+  nsCrlEntry(const PRUnichar*, const PRUnichar*, const PRUnichar*, const PRUnichar*);
   virtual ~nsCrlEntry();
   /* additional members */
 private:
-  nsString mName;
+  nsString mOrg;
+  nsString mOrgUnit;
   nsString mLastUpdate;
   nsString mNextUpdate;
 };
@@ -3109,10 +3110,11 @@ nsCrlEntry::nsCrlEntry()
   /* member initializers and constructor code */
 }
 
-nsCrlEntry::nsCrlEntry(const PRUnichar * aName, const PRUnichar * aLastUpdate, const PRUnichar *aNextUpdate)
+nsCrlEntry::nsCrlEntry(const PRUnichar * aOrg, const PRUnichar * aOrgUnit, const PRUnichar * aLastUpdate, const PRUnichar *aNextUpdate)
 {
   NS_INIT_ISUPPORTS();
-  mName.Assign(aName);
+  mOrg.Assign(aOrg);
+  mOrgUnit.Assign(aOrgUnit);
   mLastUpdate.Assign(aLastUpdate);
   mNextUpdate.Assign(aNextUpdate);
 }
@@ -3123,10 +3125,18 @@ nsCrlEntry::~nsCrlEntry()
 }
 
 /* readonly attribute */
-NS_IMETHODIMP nsCrlEntry::GetName(PRUnichar** aName)
+NS_IMETHODIMP nsCrlEntry::GetOrg(PRUnichar** aOrg)
 {
-  NS_ENSURE_ARG(aName);
-  *aName = mName.ToNewUnicode();
+  NS_ENSURE_ARG(aOrg);
+  *aOrg = mOrg.ToNewUnicode();
+  return NS_OK;
+}
+
+/* readonly attribute */
+NS_IMETHODIMP nsCrlEntry::GetOrgUnit(PRUnichar** aOrgUnit)
+{
+  NS_ENSURE_ARG(aOrgUnit);
+  *aOrgUnit = mOrgUnit.ToNewUnicode();
   return NS_OK;
 }
 
@@ -3158,7 +3168,8 @@ nsNSSCertificateDB::GetCrls(nsISupportsArray ** aCrls)
   CERTCrlHeadNode *head = nsnull;
   CERTCrlNode *node = nsnull;
   CERTCertificate *caCert = nsnull;
-  nsAutoString name;
+  nsAutoString org;
+  nsAutoString orgUnit;
   nsAutoString nextUpdate;
   nsAutoString lastUpdate;
   PRTime tmpDate;
@@ -3181,15 +3192,15 @@ nsNSSCertificateDB::GetCrls(nsISupportsArray ** aCrls)
 
   if (head) {
     for (node=head->first; node != nsnull; node = node->next) {
-      // Get the information we need here //
 
-      // Name (this is the OU of the CA)
-      caCert = CERT_FindCertByName(CERT_GetDefaultCertDB(), &(node->crl->crl.derName));
-      if (caCert) {
-        char *orgunit = CERT_GetOrgUnitName(&caCert->subject);
-        if (orgunit) {
-          name = NS_ConvertASCIItoUCS2(orgunit);
-        }
+      // Get the information we need here //
+      char * o = CERT_GetOrgName(&(node->crl->crl.name));
+      if (o) {
+        org = NS_ConvertASCIItoUCS2(o);
+      }
+      char * ou = CERT_GetOrgUnitName(&(node->crl->crl.name));
+      if (ou) {
+        orgUnit = NS_ConvertASCIItoUCS2(ou);
       }
 
       // Last Update time
@@ -3205,7 +3216,7 @@ nsNSSCertificateDB::GetCrls(nsISupportsArray ** aCrls)
         dateFormatter->FormatPRTime(nsnull, kDateFormatShort, kTimeFormatNone,
                               tmpDate, nextUpdate);
       }
-      nsCOMPtr<nsICrlEntry> entry = new nsCrlEntry(name.get(), lastUpdate.get(), nextUpdate.get());
+      nsCOMPtr<nsICrlEntry> entry = new nsCrlEntry(org.get(), orgUnit.get(), lastUpdate.get(), nextUpdate.get());
       crlsArray->AppendElement(entry);
     }
     PORT_FreeArena(head->arena, PR_FALSE);
