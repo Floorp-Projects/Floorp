@@ -98,6 +98,11 @@
 #define ACTIVATION_AIM_PREF            "aim.session.screenname"
 #define ACTIVATION_EMAIL_SERVER_NAME   "browser.registration.mailservername"
 #define ACTIVATION_EMAIL_SERVER_TYPE   "browser.registration.mailservertype"
+#define ACTIVATION_COOKIE_EXPIRE_STR   "expires=31-Dec-1971 23:59:59 GMT"
+#define SEMICOLON_DELIMITER            ";"
+#define DOMAIN_STR                     "domain="
+#define PATH_STR                       "path="
+#define EXPIRES_STR                    "expires="
 
 #define ACTIVATION_WINDOW_WIDTH        480 
 #define ACTIVATION_WINDOW_HEIGHT       480 
@@ -1201,19 +1206,13 @@ NS_IMETHODIMP nsProfile::MigrateProfileInfo()
     PL_strcpy(oldRegFile, systemDir.GetNativePathCString());
     PL_strcat(oldRegFile, OLD_REGISTRY_FILE_NAME);
 #else /* XP_MAC */
-    nsSpecialSystemDirectory *regLocation = NULL;
-    
-    regLocation = new nsSpecialSystemDirectory(
-                        nsSpecialSystemDirectory::Mac_SystemDirectory);
+    nsSpecialSystemDirectory regLocation(nsSpecialSystemDirectory::Mac_SystemDirectory);
     
     // Append the name of the old registry to the path obtained.
-    *regLocation += "Preferences";
-    *regLocation += OLD_REGISTRY_FILE_NAME;
+    regLocation += "Preferences";
+    regLocation += OLD_REGISTRY_FILE_NAME;
     
-    PL_strcpy(oldRegFile, regLocation->GetNativePathCString());
-
-    delete regLocation;
-
+    PL_strcpy(oldRegFile, regLocation.GetNativePathCString());
 #endif /* XP_PC */
 
     rv = gProfileDataAccess->Get4xProfileInfo(oldRegFile);
@@ -1374,6 +1373,14 @@ NS_IMETHODIMP nsProfile::ProcessPRegCookie()
     char *aCookie = nsnull;
     GetCookie(&aCookie);
     rv = ProcessPREGInfo(aCookie);
+
+    // We processed the cookie. Remove it from cookies file.
+    if (aCookie) {
+        if (PL_strlen(aCookie) > 0) {
+            RemoveCookie(aCookie);
+        }
+    }
+
     CRTFREEIF(aCookie);
     
     return rv;
@@ -2017,5 +2024,56 @@ nsProfile::DoContent(const char * aContentType,
     }
 
     return NS_OK;
+}
+
+
+NS_IMETHODIMP nsProfile::RemoveCookie(const char *cookie)
+{
+    NS_ENSURE_ARG_POINTER(cookie);
+
+    nsresult rv = NS_OK;
+    nsAutoString inputCookie(PL_strstr(cookie, NS_ACTIVATION_COOOKIE));
+    nsAutoString actvCookie;
+    
+    inputCookie.Mid(actvCookie, 0, inputCookie.Find(SEMICOLON_DELIMITER, 0));
+
+    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    nsXPIDLCString pregURL;
+    rv = prefs->CopyCharPref(ACTIVATION_SERVER_URL, 
+                             getter_Copies(pregURL));
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIURI> pregURI;
+    rv = NS_NewURI(getter_AddRefs(pregURI), pregURL);
+
+    nsXPIDLCString host;
+    nsXPIDLCString path;
+
+    pregURI->GetHost(getter_Copies(host));
+    nsAutoString domain(PL_strchr(host, '.'));
+
+    pregURI->GetPath(getter_Copies(path));
+
+    // Add domain
+    actvCookie += SEMICOLON_DELIMITER;
+    actvCookie += DOMAIN_STR;
+    actvCookie += domain;
+
+    // Add path
+    actvCookie += SEMICOLON_DELIMITER;
+    actvCookie += PATH_STR;
+    actvCookie += path;
+	
+    // Add expires string
+    actvCookie += SEMICOLON_DELIMITER;
+    actvCookie += ACTIVATION_COOKIE_EXPIRE_STR;
+
+    NS_WITH_SERVICE(nsICookieService, service, kCookieServiceCID, &rv);
+    if ((NS_OK == rv) && (nsnull != service) && (nsnull != pregURI)) {
+        rv = service->SetCookieString(pregURI, actvCookie);
+    }
+    return rv;
 }
 
