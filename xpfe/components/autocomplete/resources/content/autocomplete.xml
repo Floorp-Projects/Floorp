@@ -223,7 +223,7 @@
                     me.autoCompleteTimer = 0;
                   }
                   me.needToAutocomplete = false;
-                  if (this.disableAutocomplete)
+                  if (me.disableAutocomplete)
                     return;
                   var inputElement = document.getAnonymousNodes(me)[0].firstChild;
                   me.autoCompleteSession.onAutoComplete(inputElement.value, me.lastResults, me.autoCompleteListener);
