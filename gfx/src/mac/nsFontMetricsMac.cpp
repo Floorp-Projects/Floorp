@@ -259,7 +259,7 @@ NS_IMETHODIMP nsFontMetricsMac :: GetFontHandle(nsFontHandle &aHandle)
 // A utility routine to the the text style in a convenient manner.
 // This is static, which is unfortunate, because it introduces link
 // dependencies between libraries that should not exist.
-NS_EXPORT void nsFontMetricsMac::GetNativeTextStyle(const nsIFontMetrics& inMetrics,
+NS_EXPORT void nsFontMetricsMac::GetNativeTextStyle(nsIFontMetrics& inMetrics,
 		const nsIDeviceContext& inDevContext, TextStyle &outStyle)
 {
 	
