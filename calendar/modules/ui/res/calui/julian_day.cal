@@ -19,13 +19,18 @@
 <!-- This is the MonthController and Todo List -->
 <panel name="ToDoCalViewRule"> 
   <mcc name="MiniCalendar" control="MultiCalendarEventWeekView" usectxrule="DayList"/> 
+  <!--
   <todocanvas name="ToDoCanvas"/>
+  -->
 </panel> 
 
 <!-- This is the MultiDayView and Command Bar -->
 <panel name="MultiDayViewRule"> 
   <multidayviewcanvas name="MultiCalendarEventWeekView" control="MiniCalendar" repeatable="DayContext" minrepeat="1" maxrepeat="1" count="1" layout="xbox"/> 
+  <!--
   <commandcanvas name="CommandCanvas" weightmajor="0" weightminor="0"/> 
+  -->
+  <object class="timebaruserheading" name="tuh" title="Status Bar" weightmajor="0" weightminor="0"/>
 </panel> 
 
 
