@@ -208,6 +208,7 @@ nsLabelFrame::GetFor(nsString& aResult)
   return result;
 }
 
+static
 PRBool IsButton(PRInt32 aType)
 {
   if ((NS_FORM_INPUT_BUTTON == aType) || (NS_FORM_INPUT_RESET   == aType)   ||
