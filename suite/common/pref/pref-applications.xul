@@ -1,12 +1,10 @@
 <?xml version="1.0"?> 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://global/skin/dialogs.css" type="text/css"?>
-<?xml-stylesheet href="chrome://pref/skin/pref.css" type="text/css"?>
-
 <!DOCTYPE window
 [
 <!ENTITY window.title "Advanced">
-<!ENTITY appsHeader "Applications">
+<!ENTITY lHeader "Applications">
+<!ENTITY rHeader "Specify helper applications for different file types">
 <!ENTITY descript "Description">
 <!ENTITY aimLaunchSelect.label "AOL Instant Messenger Launch">
 <!ENTITY newTypeButton.label "New Type">
@@ -23,38 +21,48 @@
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="return StartUp('Applications');"  title="&window.title;">
 
-<html:script language="javascript" src="PrefsWindow.js"/>
+<html:script language="javascript" src="chrome://pref/content/PrefsWindow.js"/>
 <html:div flex="100%">
-<html:DIV ID="top">
-		<html:SPAN ID="lefttext">&appsHeader;</html:SPAN>
-</html:DIV>
-
-<html:form>
-	<html:table>  
-			<html:tr><html:td>&descript;</html:td></html:tr>
-			<html:tr><html:td>
-			   <html:select name="textstyle" size="5" >
-				 <html:optgroup>
+  
+  	<box id="header" align="horizontal">  
+		  <spring style="width:20px"/>
+		  <html:div style="vertical-align: middle;">
+		  <html:B>&lHeader;</html:B>
+		  </html:div>
+   		  <spring flex="100%"/><spring style="width:60px"/>
+		  <html:div >&rHeader;</html:div><spring style="width:5px"/>
+	</box>
+    <html:form>
+  <box align="horizontal" style="width: 100%;">
+			<box align="vertical" style="width: 100%;">
+			&descript;
+			<html:select name="textstyle" size="5" >
+				<html:optgroup>
 			    <html:option value="0" />
 				&aimLaunchSelect.label;
 				</html:optgroup>
 				</html:select> 
-			</html:td>
-			<html:td>
-			   <html:input name="choose" type="button" value="&newTypeButton.label;" />
-				 <html:br /><html:input name="choose" type="button" value="&editButton.label;" />
-         <html:br /><html:input name="choose" type="button" value="&removeButton.label;" />
-         </html:td></html:tr>
-	</html:table>
-</html:form>
-<html:br />
-<html:form>
-<html:table>
-			<html:tr><html:td>&file;</html:td></html:tr>
-			<html:tr><html:td>&exten;</html:td></html:tr>
-			<html:tr><html:td>&mimeType;</html:td></html:tr>
-			<html:tr><html:td>&handle;</html:td></html:tr>
-</html:table>
-</html:form>
+			</box>
+	<box align="vertical">
+
+		<titledbutton id="newTypeButton" value="&newTypeButton.label;" />
+		<titledbutton id="editButton" value="&editButton.label;" />
+		<titledbutton id="removeButton" value="&removeButton.label;" />
+
+	</box>
+  </box>
+ </html:form>
+
+<box align="vertical" style="width: 100%;">
+		<html:fieldset style="width: 100%;">
+			<html:legend align="left">
+				<html:div>&file;</html:div> 
+			</html:legend>
+			<html:div>&exten;</html:div>
+			<html:div>&mimeType;</html:div>
+			<html:div>&handle;</html:div>
+		</html:fieldset>
+</box>
+
 </html:div>
 </xul:window>

@@ -1,15 +1,18 @@
 <?xml version="1.0"?> 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://pref/skin/pref.css" type="text/css"?>
 
-<!DOCTYPE window [
+<!DOCTYPE window 
+[
 <!ENTITY  title.label "Cache">
-<!ENTITY  cacheHeader "Cache">
+<!ENTITY  lHeader "Cache">
+<!ENTITY  rHeader "Designate the size of the cache">
 <!ENTITY cachePara "The cache is used to keep local copies of frequently accessed documents
 	  and thus reduce time connected to the network. The Reload button will always
 	  compare the cache document to the network and show the most recent one.">
 <!ENTITY memCache "Memory Cache:">
+<!ENTITY diskCache "Disk Cache:">
 <!ENTITY kbyes "KBytes">
+<!ENTITY diskCacheFolder "Disk Cache Folder:">
 <!ENTITY clearMemcacheButton.label "Clear Memory Cache">
 <!ENTITY clearDiskcacheButton.label "Clear Disk Cache">
 <!ENTITY docCache "Document in cache is compared to document on network:">
@@ -20,29 +23,73 @@
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="return StartUp('Cache');"  title="&title.label;">
+        onload="return StartUp('Cache');"  align="vertical" title="&title.label;">
 
-<html:script language="javascript" src="PrefsWindow.js"/>
+<html:script language="javascript" src="chrome://pref/content/PrefsWindow.js"/>
 <html:div flex="100%">
-<html:DIV ID="top">
-		<html:SPAN ID="lefttext">&cacheHeader;</html:SPAN>
-</html:DIV>
 
+	<box id="header" style="width:100%" align="horizontal">  
+		  <spring style="width:20px"/>
+		  <html:div style="vertical-align: middle;">
+		  <html:B>&lHeader;</html:B>
+		  </html:div>
+   		  <spring flex="100%"/>
+		  <html:div align="right">&rHeader;</html:div><spring style="width:5px"/>
+	</box>
+ 	<box align="vertical" style="width: 100%;">
+	<!--	<html:fieldset style="width: 100%;">  
+			<html:legend align="left">>
+				<html:div></html:div>
+			</html:legend> -->
+	
+		<html:div>&cachePara;</html:div><spring flex="100%"/>
+		<html:div></html:div>
+		<box align="horizontal" style="width: 100%;"> 
+			<html:div>&memCache;</html:div>
+			<spring style="width:5px"/>
+			<html:input name="disk" type="text" size="3" id="pref:string:browser.cache.memory_cache_size" />
+			<html:div>&kbyes;</html:div>
+			<titledbutton name="clearm" value="&clearMemcacheButton.label;" />
+		</box> 
+		<box align="horizontal" style="width: 100%;"> 
+			<html:div>&diskCache;</html:div>
+			<spring style="width:5px"/>
+			<html:input name="disk" type="text" size="3" id="pref:string:browser.cache.disk_cache_size" />
+			<html:div>&kbyes;</html:div>
+			<titledbutton name="clearm" value="&clearDiskcacheButton.label;" />
+		</box>
+		<box align="horizontal" style="width: 100%;"> 
+			<html:div>&diskCacheFolder;</html:div>
+			<html:input name="disk" type="text" size="20" id="pref:string:browser.cache.directory" />
+			<html:div>
+				<titledbutton value="Choose File..." align="left"/>
+			</html:div>
+		</box>
 
-<html:table>
-      <html:tr><html:td>&cachePara;
-	  </html:td></html:tr>  
-            <html:tr><html:td>&memCache;<html:input name="disk" type="text" size="3" id="pref:string:composer.source" />&kbyes;<html:input name="clearm" type="button" value="&clearMemcacheButton.label;" /></html:td></html:tr>           
-			<html:tr><html:td>Disk Cache:<html:input name="memory" type="text" size="3" id="pref:string:composer.source" />&kbyes;<html:input name="cleard" type="button" value="&clearDiskcacheButton.label;" /></html:td></html:tr> 
-</html:table>
+	</box>
 
-
-<html:table> 
-       &docCache;			
-			<html:tr><html:td><html:label><html:input type="radio" name="cache" id="pref:0:int:composer.font.size" />&oncePsessionRadio.label;</html:label></html:td></html:tr>
-			<html:tr><html:td><html:label><html:input type="radio" name="cache" id="pref:1:int:composer.font.size" />&everyTimeRadio.label;</html:label></html:td></html:tr>
-			<html:tr><html:td><html:label><html:input type="radio" name="cache" id="pref:2:int:composer.font.size" />&neverRadio.label;</html:label></html:td></html:tr>
-</html:table>
+	<box align="vertical" style="width: 100%;">
+				<html:div>&docCache;</html:div>
+		<html:div>
+    		<html:input type="radio" name="cache" id="pref:0:browser.cache.check_doc_frequency" checked="true"/>
+			<html:label for="pref:0:browser.cache.check_doc_frequency" accesskey="o" tabindex="0">
+			&oncePsessionRadio.label;
+			</html:label>
+		</html:div>
+		<html:div>
+    		<html:input type="radio" name="cache" id="pref:1:browser.cache.check_doc_frequency" />
+			<html:label for="pref:1:browser.cache.check_doc_frequency" accesskey="e" tabindex="0">
+			&everyTimeRadio.label;	
+			</html:label>
+		</html:div>
+    	<html:div>
+    		<html:input type="radio" name="cache" id="pref:2:browser.cache.check_doc_frequency" />
+			<html:label for="pref:2:browser.cache.check_doc_frequency" accesskey="n" tabindex="0">
+			&neverRadio.label;	
+			</html:label>
+		</html:div>	
+	</box>
+	<!--	</html:fieldset> -->
 </html:div>
 </window>
 

@@ -1,11 +1,11 @@
 <?xml version="1.0"?> 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://global/skin/dialogs.css" type="text/css"?>
-<?xml-stylesheet href="chrome://pref/skin/pref.css" type="text/css"?>
 
 <!DOCTYPE window
 [
 <!ENTITY window.title "Appearance">
+<!ENTITY lHeader "Appearance">
+<!ENTITY rHeader "Change the appearance of the display">
 <!ENTITY onStartLegend.label "On startup, launch">
 <!ENTITY appear "Appearance">
 <!ENTITY navCheck.label "Navigator">
@@ -18,34 +18,89 @@
 <!ENTITY textonlyRadio.label "Text Only">
 ]>
 
-<xul:window  xmlns:html="http://www.w3.org/TR/REC-html40"
+<window  xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 		onload="StartUp('Appearance')" >
 
-<html:script language="javascript" src="PrefsWindow.js"/>
+
+
+<html:script language="javascript" src="chrome://pref/content/PrefsWindow.js"/>
 <html:div flex="100%">
-	<html:DIV ID="top">
-		<html:SPAN ID="lefttext">&appear;</html:SPAN>
-	</html:DIV>
 
-	&onStartLegend.label;
-	<html:form>
-		<html:table>		
-			<html:tr><html:td><html:label><html:input type="checkbox" id="pref:0:bool:general.startup.browser" />&navCheck.label;</html:label></html:td></html:tr>
-			<html:tr><html:td><html:label><html:input type="checkbox" id="pref:0:bool:general.startup.mail" />&mesCheck.label;</html:label></html:td></html:tr>
-			<html:tr><html:td><html:label><html:input type="checkbox" id="pref:0:bool:general.startup.editor" />&compCheck.label;</html:label></html:td></html:tr>
-			<html:tr><html:td><html:label><html:input type="checkbox" id="pref:0:bool:general.startup.calendar" />&calCheck.label;</html:label></html:td></html:tr>
-			</html:table>
+ 
+  	<box id="header" align="horizontal">  
+		  <spring style="width:20px"/>
+		  <html:div style="vertical-align: middle;">
+		  <html:B>&lHeader;</html:B>
+		  </html:div>
+   		  <spring flex="100%"/><spring style="width:60px"/>
+		  <html:div >&rHeader;</html:div><spring style="width:5px"/>
+	</box>
+
+<html:form>
+	<box align="vertical" style="width: 100%;">
+		<html:fieldset style="width: 100%;">
+			<html:legend align="left">
+			<html:div>&onStartLegend.label;</html:div> 
+			</html:legend>
+						<html:div>
+				<html:input type="checkbox" id="pref:0:bool:general.startup.browser" />
+				<html:label for="pref:0:bool:general.startup.browser" accesskey="n" tabindex="0">
+				&navCheck.label;
+				</html:label>
+			</html:div>
+			<html:div>
+				<html:input type="checkbox" id="pref:0:bool:general.startup.mail" />
+				<html:label for="pref:0:bool:general.startup.mail" accesskey="m" tabindex="0">
+				&mesCheck.label;
+				</html:label>
+			</html:div>
+			<html:div>
+				<html:input type="checkbox" id="pref:0:bool:general.startup.editor" />
+				<html:label for="pref:0:bool:general.startup.editor" accesskey="c" tabindex="0">
+				&compCheck.label;
+				</html:label>
+			</html:div>
+			<html:div>
+				<html:input type="checkbox" id="ref:0:bool:general.startup.calendar" />
+				<html:label for="ref:0:bool:general.startup.calendar" accesskey="a" tabindex="0">
+				&compCheck.label;
+				</html:label>
+			</html:div>
+		
+		</html:fieldset>
+	</box>
+</html:form>
+
+
+<html:form>
+<box align="vertical" style="width: 100%;">
+		<html:fieldset style="width: 100%;">
+			<html:legend align="left">
+			<html:div>&showToolsLegend.label;</html:div> 
+			</html:legend>
+			<html:div>
+				<html:input name="showtoolbar" type="radio" id="pref:2:int:browser.chrome.toolbar_style" />
+				<html:label for="pref:2:int:browser.chrome.toolbar_style" accesskey="p" tabindex="0">
+				&picsNtextRadio.label;
+				</html:label>
+			</html:div>
+			<html:div>
+				<html:input name="showtoolbar" type="radio" id="pref:0:int:browser.chrome.toolbar_style" />
+				<html:label for="pref:0:int:browser.chrome.toolbar_style" accesskey="o" tabindex="0">
+				&picsOnlyRadio.label;
+				</html:label>
+			</html:div>
+			<html:div>
+				<html:input name="showtoolbar" type="radio" id="pref:1:int:browser.chrome.toolbar_style" />
+				<html:label for="pref:1:int:browser.chrome.toolbar_style" accesskey="t" tabindex="0">
+				&textonlyRadio.label;
+				</html:label>
+			</html:div>
+			
+		</html:fieldset>
+	</box>
 	</html:form>
 
-	&showToolsLegend.label;
-
-	<html:form>
-		<html:table>
-			<html:tr><html:td><html:label><html:input name="showtoolbar" type="radio" id="pref:2:int:browser.chrome.toolbar_style" />&picsNtextRadio.label;</html:label></html:td></html:tr>
-			<html:tr><html:td><html:label><html:input name="showtoolbar" type="radio" id="pref:0:int:browser.chrome.toolbar_style" />&picsOnlyRadio.label;</html:label></html:td></html:tr>
-			<html:tr><html:td><html:label><html:input name="showtoolbar" type="radio" id="pref:1:int:browser.chrome.toolbar_style" />&textonlyRadio.label;</html:label></html:td></html:tr>
-		</html:table>
-	</html:form>
 </html:div>
-</xul:window>
+</window>

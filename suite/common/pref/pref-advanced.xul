@@ -1,12 +1,10 @@
 <?xml version="1.0"?> 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://global/skin/dialogs.css" type="text/css"?>
-<?xml-stylesheet href="chrome://pref/skin/pref.css" type="text/css"?>
 
 <!DOCTYPE window
 [
 <!ENTITY window.title "Advanced">
-<!ENTITY advHeader "Advanced">
+<!ENTITY lHeader "Advanced">
 <!ENTITY autoLoadImgCheck.label "Automatically load images"> 
 <!ENTITY enbJavaCheck.label "Enable Java">
 <!ENTITY enbJsCheck.label "Enable JavaScript">
@@ -20,109 +18,108 @@
 <!ENTITY warnCookCheck.label "Warn me before accepting a cookie">
 <!ENTITY remSignCheck.label "Automatically prefill usernames and passwords">
 <!ENTITY capFormsCheck.label "Enable prefilling of forms">
+<!ENTITY rHeader "Changing preferences that affect the entire product">
 
 ]
-
-
 > 
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="return StartUp('Advanced');"  title="&window.title;">
+        onload="return StartUp('Advanced');"  align="horizontal" title="&window.title;">
 
 
-<html:script language="javascript" src="PrefsWindow.js"/>
+<html:script language="javascript" src="chrome://pref/content/PrefsWindow.js"/>
 <html:div flex="100%">
-	<html:DIV ID="top"><html:SPAN ID="lefttext">
-		&advHeader;
-		</html:SPAN>
-	</html:DIV>
 
-	
-		<html:table>		
-			<html:tr>
-				<html:td>
-					<html:input type="checkbox" id="pref:0:bool:advanced.always_load_images" />
-					&autoLoadImgCheck.label;					
-				</html:td>
-			</html:tr>
-			<html:tr>
-				<html:td>
-					<html:input type="checkbox" id="pref:0:bool:security.enable_java" />
+
+	<box id="header" align="horizontal">  
+		  <spring style="width:20px"/>
+		  <html:div style="vertical-align: middle;">
+		  <html:B>&lHeader;</html:B>
+		  </html:div>
+   		  <spring flex="100%"/>
+		  <html:div align="right">&rHeader;</html:div><spring style="width:5px"/>
+	</box>
+
+
+	<box align="vertical" style="width: 100%;">
+			<html:fieldset style="width: 100%;">
+					<html:legend align="left">
+			<html:div></html:div> 
+			</html:legend>
+			<html:div>
+    		<html:input type="checkbox" id="pref:0:bool:advanced.always_load_images" />
+			<html:label for="pref:0:bool:advanced.always_load_images" accesskey="i" tabindex="0">
+				&autoLoadImgCheck.label;
+			</html:label>
+			</html:div>
+			<html:div>
+		    <html:input type="checkbox" id="pref:0:bool:advanced.java.allow" />
+				<html:label for="pref:0:bool:advanced.java.allow" accesskey="j" tabindex="0">
 					&enbJavaCheck.label;
-				</html:td>
-			</html:tr>
-			<html:tr>
-				<html:td>
-						<html:input type="checkbox" id="pref:0:bool:javascript.allow" />
-						&enbJsCheck.label;
-				</html:td>
-			</html:tr>
-			<html:tr>
-				<html:td>
-					<html:input type="checkbox" id="pref:0:bool:javascript.allow.mailnews" />
+				</html:label>
+			</html:div>
+			<html:div>
+			<html:input type="checkbox" id="pref:0:bool:javascript.allow" />
+				<html:label for="pref:0:bool:javascript.allow" accesskey="r" tabindex="0">	
+					&enbJsCheck.label;
+				</html:label>
+			</html:div>
+			<html:div>	
+			<html:input type="checkbox" id="pref:0:bool:javascript.allow.mailnews" />
+				<html:label for="pref:0:bool:javascript.allow.mailnews" accesskey="m" tabindex="0">
 					&enbJsCheck.labelforMailNNews;
-				</html:td>
-			</html:tr>
-		    <html:tr>
-				<html:td>
-					<html:input type="checkbox" id="pref:0:bool:css.allow" />
+				</html:label>
+			</html:div>
+			<html:div>
+			<html:input type="checkbox" id="pref:0:bool:css.allow" />
+				<html:label for="pref:0:bool:css.allow" accesskey="s" tabindex="0">
 					&enbCssCheck.label;
-			</html:td>
-			</html:tr>
-			<html:tr>
-				<html:td>
-					<html:input type="checkbox" id="pref:0:bool:advanced.mailftp" />
+				</html:label>
+			</html:div>
+			<html:div>
+			<html:input type="checkbox" id="pref:0:bool:advanced.mailftp" />
+				<html:label for="pref:0:bool:advanced.mailftp" accesskey="e" tabindex="0">
 					&sendAddFtpCheck.label;
-				</html:td>
-			</html:tr>
-			
+				</html:label>
+			</html:div>
+				
+	</html:fieldset>
+	</box>
 
-			<html:tr>
-				<html:td>
-					<html:input type="checkbox" id="pref:0:bool:signon.rememberSignons" />
-					&remSignCheck.label;
-			</html:td>
-			</html:tr>
-			<html:tr>
-				<html:td>
-					<html:input type="checkbox" checked="true" id="pref:0:bool:wallet.captureForms" />
-					&capFormsCheck.label;
-				</html:td>
-			</html:tr>
 
-		</html:table>
-	
-	    &cookies;
-		<html:table>
-			<html:tr>
-				<html:td>
-					<html:input name="cookies" type="radio" id="pref:0:int:network.cookie.cookieBehavior" sel="checked" />
-					&accAllCookiesRadio.label;
-				</html:td>
-			</html:tr>
-			<html:tr>
-				<html:td>
-					<html:input name="cookies" type="radio" id="pref:1:int:network.cookie.cookieBehavior" />
-					&accpOrgCookiesRadio.label;
-			</html:td>
-			</html:tr>
-			<html:tr>
-				<html:td>
-					<html:input name="cookies" type="radio" id="pref:2:int:network.cookie.cookieBehavior" />
+	<box align="vertical" style="width: 100%;">
+	<html:fieldset width="100%">
+			<html:legend align="left">
+				 <html:div>&cookies;</html:div> 
+			</html:legend>
+			<html:div>
+    	    <html:input name="cookies" type="radio" id="pref:0:int:network.cookie.cookieBehavior"  />
+			<html:label for="pref:2:int:network.cookie.cookieBehavior" accesskey="a" tabindex="0">
+			   &accAllCookiesRadio.label;
+			</html:label>
+			</html:div>
+			<html:div>
+		    <html:input type="radio" name="cookies" id="pref:1:int:network.cookie.cookieBehavior" />
+			<html:label for="pref:0:int:network.cookie.cookieBehavior" accesskey="o" tabindex="0">
+			   &accpOrgCookiesRadio.label;
+			</html:label>
+			</html:div>
+			<html:div>
+			<html:input type="radio" name="cookies" id="pref:2:int:network.cookie.cookieBehavior" />
+				<html:label for="pref:1:int:network.cookie.cookieBehavior" accesskey="d" tabindex="0">	
 					&disCookRadio.label;
-				</html:td>
-			</html:tr>
-		    <html:tr>
-				<html:td>
-					<html:input type="checkbox" id="pref:0:bool:network.cookie.warnAboutCookies" />
+				</html:label>
+			</html:div>
+			<html:div>	
+			<html:input type="checkbox" id="pref:0:bool:network.cookie.warnAboutCookies" />
+				<html:label for="pref:0:bool:network.cookie.warnAboutCookies" accesskey="w" tabindex="0">
 					&warnCookCheck.label;
-				</html:td>
-				</html:tr>
+				</html:label>
+			</html:div>
+				
+	</html:fieldset>
+	</box>
 
-
-
-		</html:table>
-	
 </html:div>
 </window>

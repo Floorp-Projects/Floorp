@@ -1,12 +1,12 @@
 <?xml version="1.0"?> 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://global/skin/dialogs.css" type="text/css"?>
-<?xml-stylesheet href="chrome://pref/skin/pref.css" type="text/css"?>
 
 <!DOCTYPE window
 [
 <!ENTITY  window.title "Colors">
-<!ENTITY  colorsHeader "Colors">
+<!ENTITY  lHeader "Colors">
+<!ENTITY  rHeader "Change the colors in your display">
+<!ENTITY  color "Colors">
 <!ENTITY  text "Text:">
 <!ENTITY  colorPick "Color Picker">
 <!ENTITY  background "Background:">
@@ -16,40 +16,74 @@
 <!ENTITY  unvisit "Unvisited Links:">
 <!ENTITY  visit "Visited Links:">
 <!ENTITY  someProvColors "Sometimes a document will provide its own colors and background.">
-<!ENTITY  alwaysOverCheck.label "Always use my colors, overriding documents.">
+<!ENTITY  alwaysOverCheck.label "Always use my colors, overriding documents">
 ]> 
 
 <xul:window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="StartUp('Colors')"  title="&window.title;">
+        onload="StartUp('Colors')"  title="&window.title;" align="vertical">
 
-<html:script language="JavaScript" src="PrefsWindow.js"/>
+<html:script language="JavaScript" src="chrome://pref/content/PrefsWindow.js"/>
 <html:div flex="100%">
-	<html:div ID="top">
-		<html:span ID="lefttext">
-			&colorsHeader;
-		</html:span>
-	</html:div>
 
-   <html:table>
-		<html:tr><html:td>&text;</html:td><html:td>&text;</html:td></html:tr>
-		<html:tr><html:td>&background;</html:td><html:td>&colorPick;</html:td></html:tr>
-		<html:tr><html:td><html:label><html:input  type="checkbox" id="pref:0:bool:browser.wfe.use_windows_colors" val="checked" />&useWinColorsCheck.label;</html:label></html:td></html:tr>
-   </html:table>
+	<box id="header" style="width:100%" align="horizontal">  
+		  <spring style="width:20px"/>
+		  <html:div style="vertical-align: middle;">
+		  <html:B>&lHeader;</html:B>
+		  </html:div>
+   		  <spring flex="100%"/>
+		  <html:div>&rHeader;</html:div><spring style="width:5px"/>
+	</box>
+  <box flex="100%" align="horizontal" style="width: 100%;">
+	<box align="vertical" flex="50%" style="width: 50%;">
+		<html:fieldset style="width: 50%;">
+					<html:legend align="left"> 
+			<html:div>&color;</html:div> 
+					</html:legend> 
+			<html:div>&text;<spring flex="50%"/>&colorPick;</html:div>
+			<html:div>&background;<spring flex="50%"/>&colorPick;</html:div>
+			<html:div>
+				<html:input  type="checkbox" id="pref:0:bool:browser.wfe.use_windows_colors" val="checked" />
+			<html:label for="pref:0:bool:browser.wfe.use_windows_colors" accesskey="w" tabindex="0">
+				&useWinColorsCheck.label;
+			</html:label>
+			</html:div> 
+	    	</html:fieldset>
+	</box>  
+	<spring style="width:10px"/>
+	<box align="horizontal" flex="50%" style="width: 50%;">
+			<html:fieldset style="width: 50%;">
+					<html:legend align="left">
+			<html:div>&links;</html:div> 
+					</html:legend>
+			<html:div>&unvisit;<spring flex="50%"/>&colorPick;</html:div>
+			<html:div>&visit;<spring flex="50%"/>&colorPick;</html:div>
+			<html:div><html:input  type="checkbox" id="pref:0:bool:browser.underline_anchors" val="checked" />		
+				<html:label for="pref:0:bool:browser.underline_anchors" accesskey="u" tabindex="0">				
+				&underLinksCheck.label;
+				</html:label>
+			
+			</html:div>		
+		</html:fieldset>
+	</box>  
+  </box>
 
-<html:table>
-&links;
-		<html:tr><html:td>&unvisit;</html:td><html:td>&colorPick;</html:td></html:tr>
-		<html:tr><html:td>&visit;</html:td><html:td>&colorPick;</html:td></html:tr>
-		<html:tr><html:td><html:label><html:input  type="checkbox" id="pref:0:bool:browser.underline_anchors" val="checked" />&underLinksCheck.label;</html:label></html:td></html:tr>
-</html:table>
-
-<html:br/>
-
-<html:table>
-   <html:tr><html:td>&someProvColors;</html:td></html:tr>
-   <html:tr><html:td><html:label><html:input type="checkbox" id="pref:0:bool:browser.use_document_" />&alwaysOverCheck.label;</html:label></html:td></html:tr>
-</html:table>
+	<box align="horizontal" flex="100%" style="width: 100%;">
+			<html:fieldset style="width: 100%;">
+					<html:legend align="left">
+			<html:div></html:div> 
+					</html:legend>
+			<html:div>
+				&someProvColors;
+			</html:div>
+			<html:div>
+				<html:input type="checkbox" id="pref:0:bool:browser.use_document_colors" />
+				<html:label for="pref:0:bool:browser.use_document_colors" accesskey="a" tabindex="0">
+				&alwaysOverCheck.label;
+			</html:label>
+			</html:div>		
+		</html:fieldset>
+	</box>
 
 </html:div>
 </xul:window>
