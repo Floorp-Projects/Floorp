@@ -65,7 +65,8 @@ public:
     * @param aQuotedText  The actual text to be quoted
     * @param aCitation    The "mid" URL of the source message
     */
-  NS_IMETHOD InsertAsQuotation(const nsString& aQuotedText)=0;
+  NS_IMETHOD InsertAsQuotation(const nsString& aQuotedText,
+                               nsIDOMNode** aNodeInserted)=0;
 
   /**
    * Document me!
@@ -78,7 +79,8 @@ public:
    * 
    */
   NS_IMETHOD InsertAsCitedQuotation(const nsString& aQuotedText,
-                                    const nsString& aCitation)=0;
+                                    const nsString& aCitation,
+                                    nsIDOMNode** aNodeInserted)=0;
 
   /**
    * Document me!

@@ -3613,7 +3613,7 @@ NS_IMETHODIMP nsHTMLEditor::PasteAsPlaintextQuotation()
         textDataObj->ToString ( &text );
         stuffToPaste.SetString ( text, len );
         nsAutoEditBatch beginBatching(this);
-        rv = InsertAsPlaintextQuotation(stuffToPaste);
+        rv = InsertAsPlaintextQuotation(stuffToPaste, 0);
       }
     }
     else if (flavor.Equals(kUnicodeMime))
@@ -3625,7 +3625,7 @@ NS_IMETHODIMP nsHTMLEditor::PasteAsPlaintextQuotation()
         textDataObj->ToString ( &text );
         stuffToPaste.SetString ( text, len / 2 );
         nsAutoEditBatch beginBatching(this);
-        rv = InsertAsPlaintextQuotation(stuffToPaste);
+        rv = InsertAsPlaintextQuotation(stuffToPaste, 0);
       }
     }
     nsCRT::free(flav);
@@ -3634,17 +3634,20 @@ NS_IMETHODIMP nsHTMLEditor::PasteAsPlaintextQuotation()
   return rv;
 }
 
-NS_IMETHODIMP nsHTMLEditor::InsertAsQuotation(const nsString& aQuotedText)
+NS_IMETHODIMP nsHTMLEditor::InsertAsQuotation(const nsString& aQuotedText,
+                                              nsIDOMNode **aNodeInserted)
 {
   if (mFlags & eEditorPlaintextMask)
-    return InsertAsPlaintextQuotation(aQuotedText);
+    return InsertAsPlaintextQuotation(aQuotedText, aNodeInserted);
 
   nsAutoString citation ("");
-  return InsertAsCitedQuotation(aQuotedText, citation);
+  return InsertAsCitedQuotation(aQuotedText, citation, aNodeInserted);
 }
 
 // text insert.
-NS_IMETHODIMP nsHTMLEditor::InsertAsPlaintextQuotation(const nsString& aQuotedText)
+NS_IMETHODIMP
+nsHTMLEditor::InsertAsPlaintextQuotation(const nsString& aQuotedText,
+                                         nsIDOMNode **aNodeInserted)
 {
   // Now we have the text.  Cite it appropriately:
   nsCOMPtr<nsICiter> citer;
@@ -3693,11 +3696,22 @@ NS_IMETHODIMP nsHTMLEditor::InsertAsPlaintextQuotation(const nsString& aQuotedTe
       selection->Collapse(preNode, 0);
   }
 
-  return InsertText(quotedStuff);
+  rv = InsertText(quotedStuff);
+  if (aNodeInserted)
+  {
+    if (NS_SUCCEEDED(rv))
+    {
+      *aNodeInserted = preNode;
+      NS_IF_ADDREF(*aNodeInserted);
+    }
+  }
+  return rv;
 }
 
-NS_IMETHODIMP nsHTMLEditor::InsertAsCitedQuotation(const nsString& aQuotedText,
-                                                   const nsString& aCitation)
+NS_IMETHODIMP
+nsHTMLEditor::InsertAsCitedQuotation(const nsString& aQuotedText,
+                                     const nsString& aCitation,
+                                     nsIDOMNode **aNodeInserted)
 {
   nsAutoEditBatch beginBatching(this);
   nsCOMPtr<nsIDOMNode> newNode;
@@ -3725,6 +3739,14 @@ NS_IMETHODIMP nsHTMLEditor::InsertAsCitedQuotation(const nsString& aQuotedText,
   }
 
   res = InsertHTML(aQuotedText);
+  if (aNodeInserted)
+  {
+    if (NS_SUCCEEDED(res))
+    {
+      *aNodeInserted = newNode;
+      NS_IF_ADDREF(*aNodeInserted);
+    }
+  }
   return res;
 }
 

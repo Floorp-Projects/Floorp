@@ -75,9 +75,9 @@ public:
   NS_IMETHOD PasteAsQuotation();
   NS_IMETHOD PasteAsPlaintextQuotation();
   NS_IMETHOD PasteAsCitedQuotation(const nsString& aCitation);
-  NS_IMETHOD InsertAsQuotation(const nsString& aQuotedText);
-  NS_IMETHOD InsertAsPlaintextQuotation(const nsString& aQuotedText);
-  NS_IMETHOD InsertAsCitedQuotation(const nsString& aQuotedText, const nsString& aCitation);
+  NS_IMETHOD InsertAsQuotation(const nsString& aQuotedText, nsIDOMNode** aNodeInserted);
+  NS_IMETHOD InsertAsPlaintextQuotation(const nsString& aQuotedText, nsIDOMNode** aNodeInserted);
+  NS_IMETHOD InsertAsCitedQuotation(const nsString& aQuotedText, const nsString& aCitation, nsIDOMNode** aNodeInserted);
 
   NS_IMETHOD ApplyStyleSheet(const nsString& aURL);
 

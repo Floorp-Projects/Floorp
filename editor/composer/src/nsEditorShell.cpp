@@ -2115,7 +2115,8 @@ nsEditorShell::PasteAsCitedQuotation(const PRUnichar *cite)
 }
 
 NS_IMETHODIMP    
-nsEditorShell::InsertAsQuotation(const PRUnichar *quotedText)
+nsEditorShell::InsertAsQuotation(const PRUnichar *quotedText,
+                                 nsIDOMNode** aNodeInserted)
 {  
   nsresult  err = NS_NOINTERFACE;
   
@@ -2128,7 +2129,7 @@ nsEditorShell::InsertAsQuotation(const PRUnichar *quotedText)
       {
         nsCOMPtr<nsIEditorMailSupport>  mailEditor = do_QueryInterface(mEditor);
         if (mailEditor)
-          err = mailEditor->InsertAsQuotation(aQuotedText);
+          err = mailEditor->InsertAsQuotation(aQuotedText, aNodeInserted);
       }
       break;
 
@@ -2140,7 +2141,9 @@ nsEditorShell::InsertAsQuotation(const PRUnichar *quotedText)
 }
 
 NS_IMETHODIMP    
-nsEditorShell::InsertAsCitedQuotation(const PRUnichar *quotedText, const PRUnichar *cite)
+nsEditorShell::InsertAsCitedQuotation(const PRUnichar *quotedText,
+                                      const PRUnichar *cite,
+                                      nsIDOMNode** aNodeInserted)
 {  
   nsresult  err = NS_NOINTERFACE;
   
@@ -2152,9 +2155,9 @@ nsEditorShell::InsertAsCitedQuotation(const PRUnichar *quotedText, const PRUnich
     case ePlainTextEditorType:
     case eHTMLTextEditorType:
       {
-        nsCOMPtr<nsIEditorMailSupport>  mailEditor = do_QueryInterface(mEditor);
+        nsCOMPtr<nsIEditorMailSupport> mailEditor = do_QueryInterface(mEditor);
         if (mailEditor)
-          err = mailEditor->InsertAsQuotation(aQuotedText);
+          err = mailEditor->InsertAsQuotation(aQuotedText, aNodeInserted);
       }
       break;
 

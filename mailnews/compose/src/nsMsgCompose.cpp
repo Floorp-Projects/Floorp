@@ -184,7 +184,7 @@ nsresult nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorShell,
     }
 
     if (aBuf != "")
-      aEditorShell->InsertAsQuotation(aBuf.GetUnicode());
+      aEditorShell->InsertAsQuotation(aBuf.GetUnicode(), 0);
 
     if (aSignature != "")
     {
