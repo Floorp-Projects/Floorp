@@ -118,10 +118,10 @@ static NS_DEFINE_CID(kXULSortServiceCID,         NS_XULSORTSERVICE_CID);
 // an nsISupports, and QueryInterface(), AddRef() and Release() are
 // not "const" methods, we need to let it be mutable.
 static nsISupports*
-value_to_isupports(const nsIID& aIID, /*const*/ Value& aValue)
+value_to_isupports(const nsIID& aIID, const Value& aValue)
 {
     nsresult rv;
-    nsISupports* isupports = NS_STATIC_CAST(nsISupports*, aValue);
+    nsISupports* isupports = NS_STATIC_CAST(nsISupports*, NS_CONST_CAST(Value&, aValue));
     if (isupports) {
         nsISupports* dummy;
         rv = isupports->QueryInterface(aIID, (void**) &dummy);
