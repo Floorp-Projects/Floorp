@@ -28,6 +28,9 @@ class nsIDocument;
 class nsIPresContext;
 class nsIPresShell;
 class nsIStyleSheet;
+#ifdef MOZ_XSL
+class nsITransformMediator;
+#endif
 
 #define NS_IDOCUMENT_VIEWER_IID \
  { 0xa6cf9057, 0x15b3, 0x11d2,{0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
@@ -51,6 +54,10 @@ public:
 
   NS_IMETHOD CreateDocumentViewerUsing(nsIPresContext* aPresContext,
                                        nsIDocumentViewer*& aResult) = 0;
+
+#ifdef MOZ_XSL
+  NS_IMETHOD SetTransformMediator(nsITransformMediator* aMediator)=0;
+#endif
 };
 
 #endif /* nsIDocumentViewer_h___ */

@@ -77,24 +77,10 @@
 #include "nsXULAtoms.h"
 #endif
 
-static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMDOCUMENT_IID);
-static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
-static NS_DEFINE_IID(kIXMLDocumentIID, NS_IXMLDOCUMENT_IID);
-static NS_DEFINE_IID(kIDOMCommentIID, NS_IDOMCOMMENT_IID);
-static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
-static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
-static NS_DEFINE_IID(kIHTMLContentContainerIID, NS_IHTMLCONTENTCONTAINER_IID);
-static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
-static NS_DEFINE_IID(kIDOMNodeListIID, NS_IDOMNODELIST_IID);
-static NS_DEFINE_IID(kIDOMProcessingInstructionIID, NS_IDOMPROCESSINGINSTRUCTION_IID);
-static NS_DEFINE_IID(kIDOMCDATASectionIID, NS_IDOMCDATASECTION_IID);
-static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
-
 #define DETECTOR_PROGID_MAX 127
 static char g_detector_progid[DETECTOR_PROGID_MAX + 1];
 static PRBool gInitDetector = PR_FALSE;
 static PRBool gPlugDetector = PR_FALSE;
-static NS_DEFINE_IID(kIParserFilterIID, NS_IPARSERFILTER_IID);
 
 static const char* kLoadAsData = "loadAsData";
 
@@ -163,7 +149,7 @@ NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
     }
   }
 
-  return doc->QueryInterface(kIDOMDocumentIID, (void**) aInstancePtrResult);
+  return doc->QueryInterface(NS_GET_IID(nsIDOMDocument), (void**) aInstancePtrResult);
 }
 
 
@@ -173,7 +159,7 @@ NS_NewXMLDocument(nsIDocument** aInstancePtrResult)
   nsXMLDocument* doc = new nsXMLDocument();
   if (doc == nsnull)
     return NS_ERROR_OUT_OF_MEMORY;
-  return doc->QueryInterface(kIDocumentIID, (void**) aInstancePtrResult);
+  return doc->QueryInterface(NS_GET_IID(nsIDocument), (void**) aInstancePtrResult);
 }
 
 nsXMLDocument::nsXMLDocument()
@@ -182,10 +168,6 @@ nsXMLDocument::nsXMLDocument()
   mAttrStyleSheet = nsnull;
   mInlineStyleSheet = nsnull;
   mCSSLoader = nsnull;
-
-#ifdef MOZ_XSL
-  mTransformMediator = nsnull;
-#endif
 }
 
 nsXMLDocument::~nsXMLDocument()
@@ -203,9 +185,6 @@ nsXMLDocument::~nsXMLDocument()
     mCSSLoader->DropDocumentReference();
     NS_RELEASE(mCSSLoader);
   }
-#ifdef MOZ_XSL
-  NS_IF_RELEASE(mTransformMediator);
-#endif
 }
 
 NS_IMETHODIMP 
@@ -215,12 +194,12 @@ nsXMLDocument::QueryInterface(REFNSIID aIID,
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(kIXMLDocumentIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIXMLDocument))) {
     NS_ADDREF_THIS();
     *aInstancePtr = (void**) (nsIXMLDocument *)this;
     return NS_OK;
   }
-  if (aIID.Equals(kIHTMLContentContainerIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIHTMLContentContainer))) {
     NS_ADDREF_THIS();
     *aInstancePtr = (void**) (nsIHTMLContentContainer *)this;
     return NS_OK;
@@ -258,17 +237,7 @@ nsXMLDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
     NS_RELEASE(mInlineStyleSheet);
   }
 
-  if (url) {
-    result = NS_NewHTMLStyleSheet(&mAttrStyleSheet, url, this);
-    if (NS_OK == result) {
-      AddStyleSheet(mAttrStyleSheet); // tell the world about our new style sheet
-      
-      result = NS_NewHTMLCSSStyleSheet(&mInlineStyleSheet, url, this);
-      if (NS_OK == result) {
-        AddStyleSheet(mInlineStyleSheet); // tell the world about our new style sheet
-      }
-    }
-  }
+  result = SetDefaultStylesheets(url);
 
   return result;
 }
@@ -544,7 +513,7 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
 							if(NS_SUCCEEDED( rv_detect = 
 								nsComponentManager::CreateInstance(
 									NS_CHARSET_DETECTION_ADAPTOR_PROGID, nsnull,
-									kIParserFilterIID, (void**)&cdetflt)))
+									NS_GET_IID(nsIParserFilter), (void**)&cdetflt)))
 								{
 									if(cdetflt && 
 											NS_SUCCEEDED( rv_detect=
@@ -594,8 +563,7 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
 
     if (NS_OK == rv) {      
       // Set the parser as the stream listener for the document loader...
-      static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
-      rv = mParser->QueryInterface(kIStreamListenerIID, (void**)aDocListener);
+      rv = mParser->QueryInterface(NS_GET_IID(nsIStreamListener), (void**)aDocListener);
 
       if (NS_OK == rv) {
 
@@ -703,7 +671,7 @@ nsXMLDocument::CreateCDATASection(const nsAReadableString& aData, nsIDOMCDATASec
   nsresult rv = NS_NewXMLCDATASection(&content);
 
   if (NS_OK == rv) {
-    rv = content->QueryInterface(kIDOMCDATASectionIID, (void**)aReturn);
+    rv = content->QueryInterface(NS_GET_IID(nsIDOMCDATASection), (void**)aReturn);
     (*aReturn)->AppendData(aData);
     NS_RELEASE(content);
   }
@@ -730,7 +698,7 @@ nsXMLDocument::CreateProcessingInstruction(const nsAReadableString& aTarget,
     return rv;
   }
 
-  rv = content->QueryInterface(kIDOMProcessingInstructionIID, (void**)aReturn);
+  rv = content->QueryInterface(NS_GET_IID(nsIDOMProcessingInstruction), (void**)aReturn);
   NS_RELEASE(content);
   
   return rv;
@@ -754,7 +722,7 @@ nsXMLDocument::CreateElement(const nsAReadableString& aTagName,
   rv = NS_NewXMLElement(&content, nodeInfo);
   NS_ENSURE_SUCCESS(rv, rv);
    
-  rv = content->QueryInterface(kIDOMElementIID, (void**)aReturn);
+  rv = content->QueryInterface(NS_GET_IID(nsIDOMElement), (void**)aReturn);
   NS_RELEASE(content);
  
   return rv;
@@ -878,7 +846,7 @@ nsXMLDocument::CreateElementNS(const nsAReadableString& aNamespaceURI,
 
   content->SetContentID(mNextContentID++);
 
-  return content->QueryInterface(kIDOMElementIID, (void**)aReturn);
+  return content->QueryInterface(NS_GET_IID(nsIDOMElement), (void**)aReturn);
 }
 
 static nsIContent *
@@ -949,17 +917,24 @@ nsXMLDocument::GetElementById(const nsAReadableString& aElementId,
 }
 
 // nsIXMLDocument
-#ifdef MOZ_XSL
 NS_IMETHODIMP 
-nsXMLDocument::SetTransformMediator(nsITransformMediator* aMediator)
+nsXMLDocument::SetDefaultStylesheets(nsIURI* aUrl)
 {
-  NS_ASSERTION(nsnull == mTransformMediator, "nsXMLDocument::SetTransformMediator(): \
-    Cannot set a second transform mediator\n");
-  mTransformMediator = aMediator;
-  NS_IF_ADDREF(mTransformMediator);
-  return NS_OK;
+  nsresult result = NS_OK;
+  if (aUrl) {
+    result = NS_NewHTMLStyleSheet(&mAttrStyleSheet, aUrl, this);
+    if (NS_OK == result) {
+      AddStyleSheet(mAttrStyleSheet); // tell the world about our new style sheet
+      
+      result = NS_NewHTMLCSSStyleSheet(&mInlineStyleSheet, aUrl, this);
+      if (NS_OK == result) {
+        AddStyleSheet(mInlineStyleSheet); // tell the world about our new style sheet
+      }
+    }
+  }
+
+  return result;
 }
-#endif
 
 NS_IMETHODIMP
 nsXMLDocument::GetCSSLoader(nsICSSLoader*& aLoader)

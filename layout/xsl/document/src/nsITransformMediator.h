@@ -25,7 +25,7 @@
 
 #include "nsISupports.h"
 
-class nsIDOMElement;
+class nsIDOMNode;
 class nsIDOMDocument;
 class nsIObserver;
 class nsIXMLContentSink;
@@ -47,11 +47,13 @@ class nsString;
 
 class nsITransformMediator : public nsISupports {
 public:
+  static const nsIID& GetIID() { static nsIID iid = NS_ITRANSFORM_MEDIATOR_IID; return iid; }
 
   NS_IMETHOD SetEnabled(PRBool aValue)=0;
-  NS_IMETHOD SetSourceContentModel(nsIDOMElement* aSource)=0;
-  NS_IMETHOD SetStyleSheetContentModel(nsIDOMElement* aStyle)=0;
-  NS_IMETHOD SetCurrentDocument(nsIDOMDocument* aDoc)=0;
+  NS_IMETHOD SetSourceContentModel(nsIDOMNode* aSource)=0;
+  NS_IMETHOD SetStyleSheetContentModel(nsIDOMNode* aStyle)=0;
+  NS_IMETHOD SetResultDocument(nsIDOMDocument* aDoc)=0;
+  NS_IMETHOD GetResultDocument(nsIDOMDocument** aDoc)=0;
   NS_IMETHOD SetTransformObserver(nsIObserver* aObserver)=0;
 
 };

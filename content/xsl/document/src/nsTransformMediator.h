@@ -25,7 +25,7 @@
 
 #include "nsITransformMediator.h"
 #include "nsIDocumentTransformer.h"
-#include "nsIDOMElement.h"
+#include "nsIDOMNode.h"
 #include "nsIDOMDocument.h"
 #include "nsIObserver.h"
 
@@ -41,20 +41,21 @@ public:
 
   // nsITransformMediator
   NS_IMETHOD SetEnabled(PRBool aValue);
-  NS_IMETHOD SetSourceContentModel(nsIDOMElement* aSource);  
-  NS_IMETHOD SetStyleSheetContentModel(nsIDOMElement* aStyle);
-  NS_IMETHOD SetCurrentDocument(nsIDOMDocument* aDoc);
+  NS_IMETHOD SetSourceContentModel(nsIDOMNode* aSource);  
+  NS_IMETHOD SetStyleSheetContentModel(nsIDOMNode* aStyle);
+  NS_IMETHOD SetResultDocument(nsIDOMDocument* aDoc);
+  NS_IMETHOD GetResultDocument(nsIDOMDocument** aDoc);
   NS_IMETHOD SetTransformObserver(nsIObserver* aObserver);
-  
+
 protected:
   void TryToTransform();
 
   PRBool mEnabled;
-  nsIDocumentTransformer* mTransformer; // Strong reference
-  nsIDOMElement* mSourceDOM;            // Weak reference
-  nsIDOMElement* mStyleDOM;             // Weak reference
-  nsIDOMDocument* mCurrentDoc;          // Weak reference
-  nsIObserver* mObserver;               // Weak reference
+  nsCOMPtr<nsIDocumentTransformer> mTransformer; // Strong reference
+  nsCOMPtr<nsIDOMNode> mSourceDOM;               // Strong reference
+  nsCOMPtr<nsIDOMNode> mStyleDOM;                // Strong reference
+  nsCOMPtr<nsIDOMDocument> mResultDoc;           // Strong reference
+  nsCOMPtr<nsIObserver> mObserver;               // Strong reference
 };
 
 #endif // nsTransformMediator_h__

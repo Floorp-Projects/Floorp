@@ -305,9 +305,7 @@ public:
                               nsEventStatus* aEventStatus);
 
     // nsIXMLDocument interface
-#ifdef MOZ_XSL
-    NS_IMETHOD SetTransformMediator(nsITransformMediator* aMediator);
-#endif
+    NS_IMETHOD SetDefaultStylesheets(nsIURI* aUrl);
 
     // nsIXULDocument interface
     NS_IMETHOD AddElementForID(const nsAReadableString& aID, nsIContent* aElement);
