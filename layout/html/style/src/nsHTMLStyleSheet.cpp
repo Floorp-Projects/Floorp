@@ -334,6 +334,9 @@ protected:
 
   nsIFrame* GetFrameFor(nsIPresShell* aPresShell, nsIContent* aContent);
 
+  PRBool AttributeRequiresRepaint(nsIAtom* aAttribute);
+  PRBool AttributeRequiresReflow (nsIAtom* aAttribute);
+
 protected:
   PRUint32 mInHeap : 1;
   PRUint32 mRefCnt : 31;
@@ -1962,6 +1965,39 @@ HTMLStyleSheetImpl::ContentChanged(nsIPresContext* aPresContext,
   return rv;
 }
 
+PRBool HTMLStyleSheetImpl::AttributeRequiresReflow(nsIAtom* aAttribute)
+{
+    // these are attributes that always require a restyle and reflow
+    // regardless of the tag they are associated with
+  return (PRBool)
+    (aAttribute==nsHTMLAtoms::align        ||
+     aAttribute==nsHTMLAtoms::border       ||
+     aAttribute==nsHTMLAtoms::cellpadding  ||
+     aAttribute==nsHTMLAtoms::cellspacing  ||
+     aAttribute==nsHTMLAtoms::ch           ||
+     aAttribute==nsHTMLAtoms::choff        ||
+     aAttribute==nsHTMLAtoms::colspan      ||
+     aAttribute==nsHTMLAtoms::face         ||
+     aAttribute==nsHTMLAtoms::frame        ||
+     aAttribute==nsHTMLAtoms::height       ||
+     aAttribute==nsHTMLAtoms::nowrap       ||
+     aAttribute==nsHTMLAtoms::rowspan      ||
+     aAttribute==nsHTMLAtoms::rules        ||
+     aAttribute==nsHTMLAtoms::span         ||
+     aAttribute==nsHTMLAtoms::valign       ||
+     aAttribute==nsHTMLAtoms::width);
+}
+
+PRBool HTMLStyleSheetImpl::AttributeRequiresRepaint(nsIAtom* aAttribute)
+{
+  // these are attributes that always require a restyle and a repaint
+  // regardless of the tag they are associated with
+  return (PRBool)
+    (aAttribute==nsHTMLAtoms::bgcolor ||
+     aAttribute==nsHTMLAtoms::color);
+}
+
+    
 NS_IMETHODIMP
 HTMLStyleSheetImpl::AttributeChanged(nsIPresContext* aPresContext,
                                      nsIContent* aContent,
@@ -1985,72 +2021,78 @@ HTMLStyleSheetImpl::AttributeChanged(nsIPresContext* aPresContext,
         aContent, ContentTag(aContent, 0), frame));
 #endif
 
-    nsIHTMLContent* htmlContent;
-    result = aContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent);
+    if (PR_TRUE==AttributeRequiresReflow(aAttribute)) {
+      restyle = PR_TRUE;
+      reflow = PR_TRUE;
+    }
+    else if (PR_TRUE==AttributeRequiresRepaint(aAttribute)) {
+      restyle = PR_TRUE;
+      render = PR_TRUE;
+    }
+    // the style tag has its own interpretation based on aHint
+    else if (nsHTMLAtoms::style==aAttribute) {
+      switch (aHint) {
+        default:
+        case NS_STYLE_HINT_UNKNOWN:
+        case NS_STYLE_HINT_FRAMECHANGE:
+          reframe = PR_TRUE;
+        case NS_STYLE_HINT_REFLOW:
+          reflow = PR_TRUE;
+        case NS_STYLE_HINT_VISUAL:
+          render = PR_TRUE;
+        case NS_STYLE_HINT_CONTENT:
+          restyle = PR_TRUE;
+          break;
+        case NS_STYLE_HINT_AURAL:
+          break;
+      }
+    }
 
-    if (NS_OK == result) {
-      nsIAtom*  tag;
-      htmlContent->GetTag(tag);
+    // this is the hook for specifying behavior of an attribute based on the tag
+    else
+    {
+      nsIHTMLContent* htmlContent;
+      result = aContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent);
 
-      // handle specific attributes by tag
-      if (tag == nsHTMLAtoms::img) {
-        if ((nsHTMLAtoms::width == aAttribute) ||
-            (nsHTMLAtoms::height == aAttribute)) {
+      if (NS_OK == result) {
+        nsIAtom*  tag;
+        htmlContent->GetTag(tag);
+
+        // handle specific attributes by tag
+        if (nsHTMLAtoms::table==tag)
+        {
+          if (nsHTMLAtoms::summary!=aAttribute)
+          {
+            restyle = PR_TRUE;
+            reflow = PR_TRUE;
+          }
+        }
+        else if (nsHTMLAtoms::col==tag      ||
+                 nsHTMLAtoms::colgroup==tag ||
+                 nsHTMLAtoms::tr==tag       ||
+                 nsHTMLAtoms::tbody==tag    ||
+                 nsHTMLAtoms::thead==tag    ||
+                 nsHTMLAtoms::tfoot==tag)
+        {
           restyle = PR_TRUE;
           reflow = PR_TRUE;
         }
-      }
-      else if (tag == nsHTMLAtoms::hr) {
-        if (nsHTMLAtoms::noshade == aAttribute) {
-          render = PR_TRUE;
-        }
-      }
-      else if (tag == nsHTMLAtoms::caption  ||
-               tag == nsHTMLAtoms::table    ||
-               tag == nsHTMLAtoms::col      ||
-               tag == nsHTMLAtoms::colgroup ||
-               tag == nsHTMLAtoms::tr       ||
-               tag == nsHTMLAtoms::tbody    ||
-               tag == nsHTMLAtoms::thead    ||
-               tag == nsHTMLAtoms::tfoot    ||
-               tag == nsHTMLAtoms::td || tag == nsHTMLAtoms::th)
-      {
-        restyle = PR_TRUE;
-        reflow = PR_TRUE;
-      }
-      else {
-      }
-
-      // handle general attributes
-      if (nsHTMLAtoms::style == aAttribute) {
-        switch (aHint) {
-          default:
-          case NS_STYLE_HINT_UNKNOWN:
-          case NS_STYLE_HINT_FRAMECHANGE:
-            reframe = PR_TRUE;
-          case NS_STYLE_HINT_REFLOW:
-            reflow = PR_TRUE;
-          case NS_STYLE_HINT_VISUAL:
-            render = PR_TRUE;
-          case NS_STYLE_HINT_CONTENT:
+        else if (nsHTMLAtoms::td==tag ||
+                 nsHTMLAtoms::th==tag)
+        {
+          if (nsHTMLAtoms::abbr!=aAttribute &&
+              nsHTMLAtoms::axis!=aAttribute &&
+              nsHTMLAtoms::headers!=aAttribute &&
+              nsHTMLAtoms::scope!=aAttribute)
+          {
             restyle = PR_TRUE;
-            break;
-          case NS_STYLE_HINT_AURAL:
-            break;
+            reflow = PR_TRUE;
+          }
         }
-      }
-      else if (nsHTMLAtoms::color == aAttribute) {
-        restyle = PR_TRUE;
-        render = PR_TRUE;
-      }
-      else if (nsHTMLAtoms::face == aAttribute) {
-        restyle = PR_TRUE;
-        reflow = PR_TRUE;
-      }
 
-
-      NS_IF_RELEASE(tag);
-      NS_RELEASE(htmlContent);
+        NS_IF_RELEASE(tag);
+        NS_RELEASE(htmlContent);
+      }
     }
 
     // apply changes
