@@ -37,23 +37,8 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIFileTransportService methods:
-    NS_IMETHOD AsyncRead(const char* path, 
-                         nsISupports* context,
-                         PLEventQueue* appEventQueue,
-                         nsIStreamListener* listener,
-                         nsITransport* *result);
-    NS_IMETHOD AsyncWrite(nsIInputStream* fromStream,
-                          const char* path,
-                          nsISupports* context,
-                          PLEventQueue* appEventQueue,
-                          nsIStreamObserver* observer,
-                          nsITransport* *result);
-    NS_IMETHOD OpenInputStream(const char* path, 
-                               nsISupports* context,
-                               nsIInputStream* *result);
-    NS_IMETHOD OpenOutputStream(const char* path, 
-                                nsISupports* context,
-                                nsIOutputStream* *result);
+    NS_IMETHOD CreateTransport(const char* path, 
+                               nsITransport* *result);
     NS_IMETHOD ProcessPendingRequests(void);
 
     // nsFileTransportService methods:
@@ -61,6 +46,7 @@ public:
     virtual ~nsFileTransportService();
 
     nsresult Init();
+    nsresult DispatchRequest(nsIRunnable* runnable);
     nsresult Suspend(nsFileTransport* request);
     nsresult Resume(nsFileTransport* request);
 

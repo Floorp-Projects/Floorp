@@ -20,7 +20,6 @@
 #include "nsFileTransport.h"
 #include "nsIThread.h"
 #include "nsIFileStream.h"
-#include "prcmon.h"
 #include "prmem.h"
 #include "nsIStreamListener.h"
 
@@ -51,98 +50,36 @@ nsFileTransportService::~nsFileTransportService()
 
 NS_IMPL_ISUPPORTS(nsFileTransportService, nsIFileTransportService::GetIID());
 
+////////////////////////////////////////////////////////////////////////////////
+
 NS_IMETHODIMP
-nsFileTransportService::AsyncRead(const char* path, 
-                                  nsISupports* context,
-                                  PLEventQueue* appEventQueue,
-                                  nsIStreamListener* listener,
-                                  nsITransport* *result)
+nsFileTransportService::CreateTransport(const char* path,
+                                        nsITransport* *result)
 {
     nsresult rv;
     nsFileTransport* trans = new nsFileTransport();
     if (trans == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
-
-    nsIStreamListener* asyncListener;
-    rv = NS_NewAsyncStreamListener(&asyncListener, appEventQueue, listener);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = trans->Init(path, context, asyncListener, this);
-    NS_RELEASE(asyncListener);
+    rv = trans->Init(path, this);
     if (NS_FAILED(rv)) {
         delete trans;
         return rv;
     }
     NS_ADDREF(trans);
-
-    rv = mPool->DispatchRequest(NS_STATIC_CAST(nsIRunnable*, trans));
-    if (NS_FAILED(rv)) {
-        NS_RELEASE(trans);
-        return rv;
-    }
-
     *result = trans;
     return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFileTransportService::AsyncWrite(nsIInputStream* fromStream,
-                                   const char* path,
-                                   nsISupports* context,
-                                   PLEventQueue* appEventQueue,
-                                   nsIStreamObserver* observer,
-                                   nsITransport* *result)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsFileTransportService::OpenInputStream(const char* path, 
-                                        nsISupports* context,
-                                        nsIInputStream* *result)
-{
-    nsresult rv;
-    nsFileTransport* trans = new nsFileTransport();
-    if (trans == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    nsIStreamListener* syncListener;
-    nsIInputStream* inStr;
-    rv = NS_NewSyncStreamListener(&syncListener, &inStr);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = trans->Init(path, context, syncListener, this);
-    NS_RELEASE(syncListener);
-    if (NS_FAILED(rv)) {
-        NS_RELEASE(inStr);
-        delete trans;
-        return rv;
-    }
-    NS_ADDREF(trans);
-
-    rv = mPool->DispatchRequest(NS_STATIC_CAST(nsIRunnable*, trans));
-    NS_RELEASE(trans);
-    if (NS_FAILED(rv)) {
-        NS_RELEASE(inStr);
-        return rv;
-    }
-
-    *result = inStr;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFileTransportService::OpenOutputStream(const char* path, 
-                                         nsISupports* context,
-                                         nsIOutputStream* *result)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsFileTransportService::ProcessPendingRequests(void)
 {
     return mPool->ProcessPendingRequests();
+}
+
+nsresult
+nsFileTransportService::DispatchRequest(nsIRunnable* runnable)
+{
+    return mPool->DispatchRequest(runnable);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

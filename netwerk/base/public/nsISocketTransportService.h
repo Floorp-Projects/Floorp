@@ -16,14 +16,15 @@
  * Reserved.
  */
 
-#ifndef nsIFileTransportService_h___
-#define nsIFileTransportService_h___
+#ifndef nsISocketTransportService_h___
+#define nsISocketTransportService_h___
 
 #include "nsISupports.h"
 
 class nsITransport;
 
-#define NS_IFILETRANSPORTSERVICE_IID                 \
+// XXX regenerate:
+#define NS_ISOCKETTRANSPORTSERVICE_IID               \
 { /* 2355dca0-ea35-11d2-931b-00104ba0fd40 */         \
     0x2355dca0,                                      \
     0xea35,                                          \
@@ -31,7 +32,8 @@ class nsITransport;
     {0x93, 0x1b, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
 }
 
-#define NS_FILETRANSPORTSERVICE_CID                  \
+// XXX regenerate:
+#define NS_SOCKETTRANSPORTSERVICE_CID                \
 { /* 2bb2b250-ea35-11d2-931b-00104ba0fd40 */         \
     0x2bb2b250,                                      \
     0xea35,                                          \
@@ -39,17 +41,16 @@ class nsITransport;
     {0x93, 0x1b, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
 }
 
-class nsIFileTransportService : public nsISupports
+class nsISocketTransportService : public nsISupports
 {
 public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFILETRANSPORTSERVICE_IID);
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISOCKETTRANSPORTSERVICE_IID);
 
-    NS_IMETHOD CreateTransport(const char* path, 
+    NS_IMETHOD CreateTransport(const char* host, PRInt32 port,
                                nsITransport* *result) = 0;
 
-    NS_IMETHOD ProcessPendingRequests(void) = 0;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#endif /* nsIFileTransportService_h___ */
+#endif /* nsISocketTransportService_h___ */

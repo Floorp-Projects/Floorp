@@ -39,6 +39,15 @@ public:
     NS_IMETHOD Resume(void);
 
     // nsITransport methods:
+    NS_IMETHOD AsyncRead(nsISupports* context,
+                         PLEventQueue* appEventQueue,
+                         nsIStreamListener* listener);
+    NS_IMETHOD AsyncWrite(nsIInputStream* fromStream,
+                          nsISupports* context,
+                          PLEventQueue* appEventQueue,
+                          nsIStreamObserver* observer);
+    NS_IMETHOD OpenInputStream(nsIInputStream* *result);
+    NS_IMETHOD OpenOutputStream(nsIOutputStream* *result);
 
     // nsIRunnable methods:
     NS_IMETHOD Run(void);
@@ -47,12 +56,6 @@ public:
     nsFileTransport();
     virtual ~nsFileTransport();
 
-    nsresult Init(const char* path,
-                  nsISupports* context,
-                  nsIStreamListener* listener,
-                  nsFileTransportService* service);
-    void Continue(void);
-
     enum State {
         STARTING,
         RUNNING,
@@ -60,6 +63,13 @@ public:
         ENDING,
         ENDED
     };
+
+    nsresult Init(const char* path,
+                  nsFileTransportService* service);
+    nsresult Init(nsISupports* context,
+                  nsIStreamListener* listener,
+                  State state);
+    void Continue(void);
 
 protected:
     char*                       mPath;

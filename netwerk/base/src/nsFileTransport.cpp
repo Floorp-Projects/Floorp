@@ -32,7 +32,8 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 nsFileTransport::nsFileTransport()
     : mPath(nsnull), mContext(nsnull), mListener(nsnull), mState(STARTING),
-      mFileStream(nsnull), mBufferStream(nsnull), mStatus(NS_OK)
+      mFileStream(nsnull), mBufferStream(nsnull), mStatus(NS_OK),
+      mService(nsnull)
 {
     NS_INIT_REFCNT();
 }
@@ -49,22 +50,30 @@ nsFileTransport::~nsFileTransport()
 
 nsresult
 nsFileTransport::Init(const char* path,
-                      nsISupports* context,
-                      nsIStreamListener* listener,
                       nsFileTransportService* service)
 {
     mPath = nsCRT::strdup(path);
     if (mPath == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
-    
+
+    mService = service;
+    NS_ADDREF(mService);
+
+    return NS_OK;
+}
+
+nsresult
+nsFileTransport::Init(nsISupports* context,
+                      nsIStreamListener* listener,
+                      State state)
+{
     mContext = context;
     NS_IF_ADDREF(mContext);
 
     mListener = listener;
     NS_ADDREF(mListener);
 
-    mService = service;
-    NS_ADDREF(mService);
+    mState = state;
 
     return NS_OK;
 }
@@ -158,6 +167,71 @@ nsFileTransport::Resume(void)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// nsITransport methods:
+
+NS_IMETHODIMP
+nsFileTransport::AsyncRead(nsISupports* context,
+                           PLEventQueue* appEventQueue,
+                           nsIStreamListener* listener)
+{
+    nsresult rv;
+
+    nsIStreamListener* asyncListener;
+    rv = NS_NewAsyncStreamListener(&asyncListener, appEventQueue, listener);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = Init(context, asyncListener, STARTING);
+    NS_RELEASE(asyncListener);
+
+    rv = mService->DispatchRequest(this);
+    if (NS_FAILED(rv)) return rv;
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFileTransport::AsyncWrite(nsIInputStream* fromStream,
+                            nsISupports* context,
+                            PLEventQueue* appEventQueue,
+                            nsIStreamObserver* observer)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsFileTransport::OpenInputStream(nsIInputStream* *result)
+{
+    nsresult rv;
+
+    nsIStreamListener* syncListener;
+    nsIInputStream* inStr;
+    rv = NS_NewSyncStreamListener(&syncListener, &inStr);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = Init(nsnull, syncListener, STARTING);
+    NS_RELEASE(syncListener);
+    if (NS_FAILED(rv)) {
+        NS_RELEASE(inStr);
+        return rv;
+    }
+
+    rv = mService->DispatchRequest(this);
+    if (NS_FAILED(rv)) {
+        NS_RELEASE(inStr);
+        return rv;
+    }
+
+    *result = inStr;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFileTransport::OpenOutputStream(nsIOutputStream* *result)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 void
 nsFileTransport::Continue(void)
@@ -193,7 +267,7 @@ nsFileTransport::Continue(void)
           if (NS_FAILED(mStatus)) goto error;
 
           // and feed the buffer to the application via the byte buffer stream:
-          mStatus = mListener->OnDataAvailable(mContext, mBufferStream, amt);      // XXX maybe amt should be bufStr->GetLength()
+          mStatus = mListener->OnDataAvailable(mContext, mBufferStream, amt);      // XXX maybe amt should be mBufferStream->GetLength()
           if (NS_FAILED(mStatus)) goto error;
           
           // stay in the RUNNING state

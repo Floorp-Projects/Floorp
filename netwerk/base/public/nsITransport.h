@@ -20,9 +20,12 @@
 #define nsITransport_h___
 
 #include "nsICancelable.h"
+#include "plevent.h"
 
 class nsIStreamListener;
 class nsIStreamObserver;
+class nsIInputStream;
+class nsIOutputStream;
 
 #define NS_ITRANSPORT_IID                            \
 { /* 7aa38100-ea35-11d2-931b-00104ba0fd40 */         \
@@ -36,6 +39,25 @@ class nsITransport : public nsICancelable
 {
 public:
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_ITRANSPORT_IID);
+
+    // Async routines: By calling these the calling thread agrees
+    // to eventually return to an event loop that will be notified
+    // with incoming data, calling the listener.
+
+    NS_IMETHOD AsyncRead(nsISupports* context,
+                         PLEventQueue* appEventQueue,
+                         nsIStreamListener* listener) = 0;
+
+    NS_IMETHOD AsyncWrite(nsIInputStream* fromStream,
+                          nsISupports* context,
+                          PLEventQueue* appEventQueue,
+                          nsIStreamObserver* observer) = 0;
+
+    // Synchronous routines
+
+    NS_IMETHOD OpenInputStream(nsIInputStream* *result) = 0;
+
+    NS_IMETHOD OpenOutputStream(nsIOutputStream* *result) = 0;
 
 };
 
