@@ -41,7 +41,7 @@
  * 
  * NOTE - These are not public interfaces
  *
- * $Id: secport.h,v 1.10 2004/06/18 01:28:41 jpierre%netscape.com Exp $
+ * $Id: secport.h,v 1.11 2004/06/18 01:34:11 jpierre%netscape.com Exp $
  */
 
 #ifndef _SECPORT_H_
@@ -169,6 +169,8 @@ extern char *PORT_ArenaStrdup(PLArenaPool *arena, const char *str);
 		(type*) PORT_ArenaAlloc (poolp, sizeof(type)*(num))
 #define PORT_ArenaZNewArray(poolp, type, num)	\
 		(type*) PORT_ArenaZAlloc (poolp, sizeof(type)*(num))
+
+/* Please, keep these defines sorted alphabetically.  Thanks! */
 
 #define PORT_Atoi 	atoi
 
