@@ -452,7 +452,7 @@ nsBaseWidget::Enumerator::~Enumerator()
 
 
 //enumerator interfaces
-nsresult
+NS_IMETHODIMP
 nsBaseWidget::Enumerator::Next()
 {
   if (mCurrentPosition < (mChildren.Count() -1) )
@@ -464,7 +464,7 @@ nsBaseWidget::Enumerator::Next()
 
 
  
-nsresult
+NS_IMETHODIMP
 nsBaseWidget::Enumerator::Prev()
 {
   if (mCurrentPosition > 0 )
@@ -476,7 +476,7 @@ nsBaseWidget::Enumerator::Prev()
 
 
 
-nsresult
+NS_IMETHODIMP
 nsBaseWidget::Enumerator::CurrentItem(nsISupports **aItem)
 {
 
@@ -495,7 +495,7 @@ nsBaseWidget::Enumerator::CurrentItem(nsISupports **aItem)
 
 
 
-nsresult
+NS_IMETHODIMP
 nsBaseWidget::Enumerator::First()
 {
   if (mChildren.Count()) {
@@ -510,7 +510,7 @@ nsBaseWidget::Enumerator::First()
 
 
 
-nsresult
+NS_IMETHODIMP
 nsBaseWidget::Enumerator::Last()
 {
   if (mChildren.Count() ) {
@@ -525,7 +525,7 @@ nsBaseWidget::Enumerator::Last()
 
 
 
-nsresult
+NS_IMETHODIMP
 nsBaseWidget::Enumerator::IsDone()
 {
   if ((mCurrentPosition == (mChildren.Count() -1)) || mChildren.Count() <= 0 ){ //empty lists always return done

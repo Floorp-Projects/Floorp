@@ -100,12 +100,12 @@ struct mozRegSubtreeEnumerator : public nsIEnumerator {
     NS_DECL_ISUPPORTS
 
     // This class implements the nsIEnumerator interface functions.
-    nsresult First();
-    nsresult Last();
-    nsresult Next();
-    nsresult Prev();
-    nsresult CurrentItem(nsISupports **aItem);
-    nsresult IsDone();
+    NS_IMETHOD First();
+    NS_IMETHOD Last();
+    NS_IMETHOD Next();
+    NS_IMETHOD Prev();
+    NS_IMETHOD CurrentItem(nsISupports **aItem);
+    NS_IMETHOD IsDone();
 
     // ctor/dtor
     mozRegSubtreeEnumerator( HREG hReg, RKEY rKey, PRBool all );
@@ -839,7 +839,8 @@ mozRegSubtreeEnumerator::mozRegSubtreeEnumerator( HREG hReg, RKEY rKey, PRBool a
 | the beginning.  We then do a Next() call in order to do a "lookahead" to     |
 | properly detect an empty list (i.e., set the mDone flag).                    |
 ------------------------------------------------------------------------------*/
-nsresult mozRegSubtreeEnumerator::First() {
+NS_IMETHODIMP
+mozRegSubtreeEnumerator::First() {
     nsresult rv = NS_OK;
     // Reset "done" flag.
     mDone = PR_FALSE;
@@ -853,7 +854,8 @@ nsresult mozRegSubtreeEnumerator::First() {
 /*---------------------- mozRegSubtreeEnumerator::Last -------------------------
 | This can't be implemented using the libreg functions.                        |
 ------------------------------------------------------------------------------*/
-nsresult mozRegSubtreeEnumerator::Last() {
+NS_IMETHODIMP
+mozRegSubtreeEnumerator::Last() {
     nsresult rv = NS_ERROR_NOT_IMPLEMENTED;
     return rv;
 }
@@ -866,7 +868,8 @@ nsresult mozRegSubtreeEnumerator::Last() {
 | lookahead buffer.  We must then call advance to lookahead and properly set   |
 | the isDone flag.                                                             |
 ------------------------------------------------------------------------------*/
-nsresult mozRegSubtreeEnumerator::Next() {
+NS_IMETHODIMP
+mozRegSubtreeEnumerator::Next() {
     nsresult rv = NS_OK;
     // Check for at end.
     if ( !mDone ) {
@@ -902,7 +905,8 @@ NS_IMETHODIMP mozRegSubtreeEnumerator::advance() {
 /*---------------------- mozRegSubtreeEnumerator::Prev -------------------------
 | This can't be implemented on top of libreg.                                  |
 ------------------------------------------------------------------------------*/
-nsresult mozRegSubtreeEnumerator::Prev() {
+NS_IMETHODIMP
+mozRegSubtreeEnumerator::Prev() {
     nsresult rv = NS_ERROR_NOT_IMPLEMENTED;
     return rv;
 }
@@ -912,7 +916,8 @@ nsresult mozRegSubtreeEnumerator::Prev() {
 | object will hold the curent mEnum value so it can obtain its name from       |
 | the registry when asked.                                                     |
 ------------------------------------------------------------------------------*/
-nsresult mozRegSubtreeEnumerator::CurrentItem( nsISupports **result) {
+NS_IMETHODIMP
+mozRegSubtreeEnumerator::CurrentItem( nsISupports **result) {
     nsresult rv = NS_OK;
     // Make sure there is a place to put the result.
     if( result ) {
@@ -931,7 +936,8 @@ nsresult mozRegSubtreeEnumerator::CurrentItem( nsISupports **result) {
 /*--------------------- mozRegSubtreeEnumerator::IsDone ------------------------
 | Simply return mDone.                                                         |
 ------------------------------------------------------------------------------*/
-nsresult mozRegSubtreeEnumerator::IsDone() {
+NS_IMETHODIMP
+mozRegSubtreeEnumerator::IsDone() {
     nsresult rv = mDone;
     return rv;
 }
@@ -950,7 +956,8 @@ mozRegValueEnumerator::mozRegValueEnumerator( HREG hReg, RKEY rKey )
 | As the mozRegSubtreeEnumerator counterpart, but allocates an object of       |
 | class mozRegistryValue.                                                      |
 ------------------------------------------------------------------------------*/
-nsresult mozRegValueEnumerator::CurrentItem( nsISupports **result ) {
+NS_IMETHODIMP
+mozRegValueEnumerator::CurrentItem( nsISupports **result ) {
     nsresult rv = NS_OK;
     // Make sure there is a place to put the result.
     if( result ) {

@@ -100,12 +100,12 @@ struct nsRegSubtreeEnumerator : public nsIEnumerator {
     NS_DECL_ISUPPORTS
 
     // This class implements the nsIEnumerator interface functions.
-    nsresult First();
-    nsresult Last();
-    nsresult Next();
-    nsresult Prev();
-    nsresult CurrentItem(nsISupports **aItem);
-    nsresult IsDone();
+    NS_IMETHOD First();
+    NS_IMETHOD Last();
+    NS_IMETHOD Next();
+    NS_IMETHOD Prev();
+    NS_IMETHOD CurrentItem(nsISupports **aItem);
+    NS_IMETHOD IsDone();
 
     // ctor/dtor
     nsRegSubtreeEnumerator( HREG hReg, RKEY rKey, PRBool all );
@@ -839,7 +839,8 @@ nsRegSubtreeEnumerator::nsRegSubtreeEnumerator( HREG hReg, RKEY rKey, PRBool all
 | the beginning.  We then do a Next() call in order to do a "lookahead" to     |
 | properly detect an empty list (i.e., set the mDone flag).                    |
 ------------------------------------------------------------------------------*/
-nsresult nsRegSubtreeEnumerator::First() {
+NS_IMETHODIMP
+nsRegSubtreeEnumerator::First() {
     nsresult rv = NS_OK;
     // Reset "done" flag.
     mDone = PR_FALSE;
@@ -853,7 +854,8 @@ nsresult nsRegSubtreeEnumerator::First() {
 /*----------------------- nsRegSubtreeEnumerator::Last -------------------------
 | This can't be implemented using the libreg functions.                        |
 ------------------------------------------------------------------------------*/
-nsresult nsRegSubtreeEnumerator::Last() {
+NS_IMETHODIMP
+nsRegSubtreeEnumerator::Last() {
     nsresult rv = NS_ERROR_NOT_IMPLEMENTED;
     return rv;
 }
@@ -866,7 +868,8 @@ nsresult nsRegSubtreeEnumerator::Last() {
 | lookahead buffer.  We must then call advance to lookahead and properly set   |
 | the isDone flag.                                                             |
 ------------------------------------------------------------------------------*/
-nsresult nsRegSubtreeEnumerator::Next() {
+NS_IMETHODIMP
+nsRegSubtreeEnumerator::Next() {
     nsresult rv = NS_OK;
     // Check for at end.
     if ( !mDone ) {
@@ -902,7 +905,8 @@ NS_IMETHODIMP nsRegSubtreeEnumerator::advance() {
 /*----------------------- nsRegSubtreeEnumerator::Prev -------------------------
 | This can't be implemented on top of libreg.                                  |
 ------------------------------------------------------------------------------*/
-nsresult nsRegSubtreeEnumerator::Prev() {
+NS_IMETHODIMP
+nsRegSubtreeEnumerator::Prev() {
     nsresult rv = NS_ERROR_NOT_IMPLEMENTED;
     return rv;
 }
@@ -912,7 +916,8 @@ nsresult nsRegSubtreeEnumerator::Prev() {
 | object will hold the curent mEnum value so it can obtain its name from       |
 | the registry when asked.                                                     |
 ------------------------------------------------------------------------------*/
-nsresult nsRegSubtreeEnumerator::CurrentItem( nsISupports **result) {
+NS_IMETHODIMP
+nsRegSubtreeEnumerator::CurrentItem( nsISupports **result) {
     nsresult rv = NS_OK;
     // Make sure there is a place to put the result.
     if( result ) {
@@ -931,7 +936,8 @@ nsresult nsRegSubtreeEnumerator::CurrentItem( nsISupports **result) {
 /*---------------------- nsRegSubtreeEnumerator::IsDone ------------------------
 | Simply return mDone.                                                         |
 ------------------------------------------------------------------------------*/
-nsresult nsRegSubtreeEnumerator::IsDone() {
+NS_IMETHODIMP
+nsRegSubtreeEnumerator::IsDone() {
     nsresult rv = mDone;
     return rv;
 }
@@ -950,7 +956,8 @@ nsRegValueEnumerator::nsRegValueEnumerator( HREG hReg, RKEY rKey )
 | As the nsRegSubtreeEnumerator counterpart, but allocates an object of        |
 | class nsRegistryValue.                                                       |
 ------------------------------------------------------------------------------*/
-nsresult nsRegValueEnumerator::CurrentItem( nsISupports **result ) {
+NS_IMETHODIMP
+nsRegValueEnumerator::CurrentItem( nsISupports **result ) {
     nsresult rv = NS_OK;
     // Make sure there is a place to put the result.
     if( result ) {
