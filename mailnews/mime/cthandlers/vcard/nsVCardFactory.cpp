@@ -35,13 +35,13 @@ static NS_DEFINE_CID(kMimeContentTypeHandlerCID, NS_VCARD_CONTENT_TYPE_HANDLER_C
 static PRInt32 g_InstanceCount = 0;
 static PRInt32 g_LockCount = 0;
 
-class nsMsgFactory : public nsIFactory
+class nsVCardFactory : public nsIFactory
 {   
 public:
 	// nsISupports methods
 	NS_DECL_ISUPPORTS 
 
-  nsMsgFactory(const nsCID &aClass,
+  nsVCardFactory(const nsCID &aClass,
                const char* aClassName,
                const char* aProgID,
                nsISupports*);
@@ -51,7 +51,7 @@ public:
   NS_IMETHOD LockFactory(PRBool aLock);   
 
 protected:
-  virtual ~nsMsgFactory();   
+  virtual ~nsVCardFactory();   
 
   nsCID mClassID;
   char* mClassName;
@@ -59,7 +59,7 @@ protected:
   nsIServiceManager* mServiceManager;
 };   
 
-nsMsgFactory::nsMsgFactory(const nsCID &aClass,
+nsVCardFactory::nsVCardFactory(const nsCID &aClass,
                            const char* aClassName,
                            const char* aProgID,
                            nsISupports *compMgrSupports)
@@ -74,7 +74,7 @@ nsMsgFactory::nsMsgFactory(const nsCID &aClass,
                                   (void **)&mServiceManager);
 }   
 
-nsMsgFactory::~nsMsgFactory()   
+nsVCardFactory::~nsVCardFactory()   
 {
 	NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
   
@@ -84,7 +84,7 @@ nsMsgFactory::~nsMsgFactory()
 }   
 
 nsresult
-nsMsgFactory::QueryInterface(const nsIID &aIID, void **aResult)   
+nsVCardFactory::QueryInterface(const nsIID &aIID, void **aResult)   
 {   
   if (aResult == NULL)  
     return NS_ERROR_NULL_POINTER;  
@@ -105,11 +105,11 @@ nsMsgFactory::QueryInterface(const nsIID &aIID, void **aResult)
   return NS_OK;   
 }   
 
-NS_IMPL_ADDREF(nsMsgFactory)
-NS_IMPL_RELEASE(nsMsgFactory)
+NS_IMPL_ADDREF(nsVCardFactory)
+NS_IMPL_RELEASE(nsVCardFactory)
 
 nsresult
-nsMsgFactory::CreateInstance(nsISupports *aOuter,
+nsVCardFactory::CreateInstance(nsISupports *aOuter,
                              const nsIID &aIID,
                              void **aResult)  
 {  
@@ -149,7 +149,7 @@ nsMsgFactory::CreateInstance(nsISupports *aOuter,
 }  
 
 nsresult
-nsMsgFactory::LockFactory(PRBool aLock)  
+nsVCardFactory::LockFactory(PRBool aLock)  
 {  
 	if (aLock)
 		PR_AtomicIncrement(&g_LockCount); 
@@ -171,7 +171,7 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
 	if (nsnull == aFactory)
 		return NS_ERROR_NULL_POINTER;
 
-  *aFactory = new nsMsgFactory(aClass, aClassName, aProgID, aServMgr);
+  *aFactory = new nsVCardFactory(aClass, aClassName, aProgID, aServMgr);
   if (aFactory)
     return (*aFactory)->QueryInterface(nsIFactory::GetIID(),
                                        (void**)aFactory);
@@ -189,53 +189,28 @@ extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* aServMgr)
 extern "C" NS_EXPORT nsresult
 NSRegisterSelf(nsISupports* aServMgr, const char* path)
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
 
-  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
-  if (NS_FAILED(rv)) return rv;
-
-  nsIComponentManager* compMgr;
-  rv = servMgr->GetService(kComponentManagerCID, 
-                           nsIComponentManager::GetIID(), 
-                           (nsISupports**)&compMgr);
+  NS_WITH_SERVICE(nsIComponentManager, compMgr, kComponentManagerCID, &rv); 
   if (NS_FAILED(rv)) return rv;
 
   rv = compMgr->RegisterComponent(kMimeContentTypeHandlerCID,
                                        "MIME VCard Handler",
                                        "mimecth:text/x-vcard",
                                        path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) goto done;
-
-#ifdef NS_DEBUG
-  printf("*** Register MIME VCard Content Type Handler...\n");
-#endif
-
-  done:
-  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
   return rv;
 }
 
 extern "C" NS_EXPORT nsresult
 NSUnregisterSelf(nsISupports* aServMgr, const char* path)
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
 
-  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
-  if (NS_FAILED(rv)) return rv;
-
-  nsIComponentManager* compMgr;
-  rv = servMgr->GetService(kComponentManagerCID, 
-                           nsIComponentManager::GetIID(), 
-                           (nsISupports**)&compMgr);
+  NS_WITH_SERVICE(nsIComponentManager, compMgr, kComponentManagerCID, &rv); 
   if (NS_FAILED(rv)) return rv;
 
   rv = compMgr->UnregisterComponent(kMimeContentTypeHandlerCID, path);
-  if (NS_FAILED(rv)) goto done;
-
-  done:
-  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
   return rv;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
