@@ -33,7 +33,7 @@ class nsIPresContext;
 
 /** editor Implementation of the DragListener interface
  */
-class nsMenuBarListener : public nsIDOMKeyListener, nsIDOMFocusListener
+class nsMenuBarListener : public nsIDOMKeyListener, nsIDOMFocusListener, nsIDOMMouseListener
 {
 public:
   /** default constructor
@@ -49,16 +49,22 @@ public:
   virtual nsresult KeyDown(nsIDOMEvent* aMouseEvent);
   virtual nsresult KeyPress(nsIDOMEvent* aMouseEvent);
   
-  
   virtual nsresult Focus(nsIDOMEvent* aEvent);
   virtual nsresult Blur(nsIDOMEvent* aEvent);
   
+  virtual nsresult MouseDown(nsIDOMEvent* aMouseEvent);
+  virtual nsresult MouseUp(nsIDOMEvent* aMouseEvent);
+  virtual nsresult MouseClick(nsIDOMEvent* aMouseEvent);
+  virtual nsresult MouseDblClick(nsIDOMEvent* aMouseEvent);
+  virtual nsresult MouseOver(nsIDOMEvent* aMouseEvent);
+  virtual nsresult MouseOut(nsIDOMEvent* aMouseEvent);
   
   NS_DECL_ISUPPORTS
 
 protected:
   nsMenuBarFrame* mMenuBarFrame; // The menu bar object.
   PRBool mAltKeyDown;            // Whether or not the ALT key is currently down.
+  PRBool mKeyboardNavigationActive; // Are we currently navigating via the keyboard
 };
 
 

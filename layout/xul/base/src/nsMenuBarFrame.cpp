@@ -141,7 +141,8 @@ nsMenuBarFrame::Init(nsIPresContext*  aPresContext,
   
   target->AddEventListener("blur", (nsIDOMFocusListener*)mMenuBarListener, PR_TRUE);
   
-  
+  target->AddEventListener("mousedown", (nsIDOMMouseListener*)mMenuBarListener, PR_TRUE);
+
   target->AddEventListener("keypress", (nsIDOMKeyListener*)mMenuBarListener, PR_TRUE); 
   target->AddEventListener("keydown", (nsIDOMKeyListener*)mMenuBarListener, PR_TRUE);  
   target->AddEventListener("keyup", (nsIDOMKeyListener*)mMenuBarListener, PR_TRUE);   
@@ -149,6 +150,20 @@ nsMenuBarFrame::Init(nsIPresContext*  aPresContext,
   
   return rv;
 }
+
+NS_IMETHODIMP
+nsMenuBarFrame::IsOpen()
+{
+  PRBool isOpen = PR_FALSE;
+  if(mCurrentMenu) {
+    mCurrentMenu->MenuIsOpen(isOpen);
+    if (isOpen) {
+      return PR_TRUE;
+	}
+  }
+  return PR_FALSE;
+}
+
 
 NS_IMETHODIMP
 nsMenuBarFrame::SetActive(PRBool aActiveFlag)
@@ -422,6 +437,7 @@ NS_IMETHODIMP nsMenuBarFrame::SetCurrentMenuItem(nsIMenuFrame* aMenuItem)
   return NS_OK;
 }
 
+
 void 
 nsMenuBarFrame::Escape()
 {
@@ -440,6 +456,8 @@ nsMenuBarFrame::Escape()
       // designation.
       mCurrentMenu->OpenMenu(PR_FALSE);
     }
+	if (nsMenuFrame::mDismissalListener)
+      nsMenuFrame::mDismissalListener->Unregister();
     return;
   }
 
@@ -550,6 +568,8 @@ nsMenuBarFrame::Destroy(nsIPresContext* aPresContext)
 {
   mTarget->RemoveEventListener("blur", (nsIDOMFocusListener*)mMenuBarListener, PR_TRUE); 
   
+  mTarget->RemoveEventListener("mousedown", (nsIDOMFocusListener*)mMenuBarListener, PR_TRUE); 
+
   mTarget->RemoveEventListener("keypress", (nsIDOMKeyListener*)mMenuBarListener, PR_TRUE); 
   mTarget->RemoveEventListener("keydown", (nsIDOMKeyListener*)mMenuBarListener, PR_TRUE);  
   mTarget->RemoveEventListener("keyup", (nsIDOMKeyListener*)mMenuBarListener, PR_TRUE);

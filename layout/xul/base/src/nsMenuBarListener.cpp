@@ -49,13 +49,13 @@
 
 NS_IMPL_ADDREF(nsMenuBarListener)
 NS_IMPL_RELEASE(nsMenuBarListener)
-NS_IMPL_QUERY_INTERFACE2(nsMenuBarListener, nsIDOMKeyListener, nsIDOMFocusListener)
+NS_IMPL_QUERY_INTERFACE3(nsMenuBarListener, nsIDOMKeyListener, nsIDOMFocusListener, nsIDOMMouseListener)
 
 
 ////////////////////////////////////////////////////////////////////////
 
 nsMenuBarListener::nsMenuBarListener(nsMenuBarFrame* aMenuBar) 
-:mAltKeyDown(PR_FALSE)
+:mAltKeyDown(PR_FALSE), mKeyboardNavigationActive(PR_FALSE)
 {
   NS_INIT_REFCNT();
   mMenuBarFrame = aMenuBar;
@@ -85,8 +85,14 @@ nsMenuBarListener::KeyUp(nsIDOMEvent* aKeyEvent)
   }
   
   PRBool active = mMenuBarFrame->IsActive();
-  if (active)
+  if (active) {
+	mKeyboardNavigationActive = PR_TRUE;
+
+    aKeyEvent->PreventBubble();
+    aKeyEvent->PreventCapture();
     return NS_ERROR_BASE; // I am consuming event
+  } else
+	mKeyboardNavigationActive = PR_FALSE;
   return NS_OK; // means I am NOT consuming event
 }
 
@@ -114,13 +120,19 @@ nsMenuBarListener::KeyDown(nsIDOMEvent* aKeyEvent)
       theChar == NS_VK_DOWN) {
     // The arrow keys were pressed. User is moving around within
     // the menus.
-    if (active) 
-      mMenuBarFrame->KeyboardNavigation(theChar);
+	  if (active) {
+        mMenuBarFrame->KeyboardNavigation(theChar);
+		mKeyboardNavigationActive = PR_TRUE;
+	  } else 
+        mKeyboardNavigationActive = PR_FALSE;
   }
   else if (theChar == NS_VK_ESCAPE) {
     // Close one level.
-    if (active)
+	if (active) {
       mMenuBarFrame->Escape();
+	  //if(!mMenuBarFrame->IsActive())
+		mKeyboardNavigationActive = PR_FALSE;
+	}
   }
   else if (theChar == NS_VK_ENTER ||
            theChar == NS_VK_RETURN) {
@@ -142,8 +154,14 @@ nsMenuBarListener::KeyDown(nsIDOMEvent* aKeyEvent)
       mMenuBarFrame->ShortcutNavigation(charCode, active);
     }
   }
-  if (active)
-    return NS_ERROR_BASE; // I am consuming event
+  if (active) {
+	mKeyboardNavigationActive = PR_TRUE;
+    aKeyEvent->PreventBubble();
+	aKeyEvent->PreventCapture();
+	return NS_ERROR_BASE; // I am consuming event
+  } else
+	mKeyboardNavigationActive = PR_FALSE;
+  
   return NS_OK; // means I am NOT consuming event
 }
 
@@ -155,8 +173,14 @@ nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
 
   PRBool active = mMenuBarFrame->IsActive();
   
-  if (active)
-    return NS_ERROR_BASE; // I am consuming event
+  if (active) {
+	mKeyboardNavigationActive = PR_TRUE;
+    aKeyEvent->PreventBubble();
+	aKeyEvent->PreventCapture();
+	return NS_ERROR_BASE; // I am consuming event
+  } else
+    mKeyboardNavigationActive = PR_FALSE;
+
   return NS_OK; // means I am NOT consuming event
 }
 
@@ -172,16 +196,89 @@ nsMenuBarListener::Focus(nsIDOMEvent* aEvent)
 nsresult
 nsMenuBarListener::Blur(nsIDOMEvent* aEvent)
 {
-  if(mAltKeyDown)
-    mAltKeyDown = PR_FALSE;
-  
-  if(mMenuBarFrame->IsActive()) {
-    mMenuBarFrame->ToggleMenuActiveState();
+  if(mKeyboardNavigationActive && mMenuBarFrame->IsActive()) {
+    //if(gRollupListener)
+	//  gRollupListener->Rollup();
+	  mMenuBarFrame->ToggleMenuActiveState();
+    mMenuBarFrame->Escape();
+	  mAltKeyDown = PR_FALSE;
+	mKeyboardNavigationActive = PR_FALSE;
+    //mMenuBarFrame->ToggleMenuActiveState();
   }
   
   return NS_OK; // means I am NOT consuming event
 }
   
+////////////////////////////////////////////////////////////////////////
+nsresult 
+nsMenuBarListener::MouseDown(nsIDOMEvent* aMouseEvent)
+{
+  PRBool isOpen;
+  //mMenuBarFrame->MenuIsOpen(&isOpen);
+  if(!mMenuBarFrame->IsOpen() && mMenuBarFrame->IsActive()) {
+    //if(gRollupListener)
+	//  gRollupListener->Rollup();
+	  mMenuBarFrame->ToggleMenuActiveState();
+	mMenuBarFrame->Escape();
+	mAltKeyDown = PR_FALSE;
+	mKeyboardNavigationActive = PR_FALSE;
+    //mMenuBarFrame->ToggleMenuActiveState();
+  }
+  return NS_OK; // means I am NOT consuming event
+}
+
+////////////////////////////////////////////////////////////////////////
+nsresult 
+nsMenuBarListener::MouseUp(nsIDOMEvent* aMouseEvent)
+{
+  if(!mMenuBarFrame->IsOpen() && mMenuBarFrame->IsActive()) {
+	//if(gRollupListener)
+	//  gRollupListener->Rollup();
+	  mMenuBarFrame->ToggleMenuActiveState();
+    mMenuBarFrame->Escape();
+	  mKeyboardNavigationActive = PR_FALSE;
+    mAltKeyDown = PR_FALSE;
+    //mMenuBarFrame->ToggleMenuActiveState();
+  }
+  return NS_OK; // means I am NOT consuming event
+}
+
+nsresult 
+nsMenuBarListener::MouseClick(nsIDOMEvent* aMouseEvent)
+{
+  PRBool isOpen;
+  if(!mMenuBarFrame->IsOpen() && mMenuBarFrame->IsActive()) {
+	  mMenuBarFrame->ToggleMenuActiveState();
+	mMenuBarFrame->Escape();
+	mKeyboardNavigationActive = PR_FALSE;
+    mAltKeyDown = PR_FALSE;
+    //mMenuBarFrame->ToggleMenuActiveState();
+  }
+
+  return NS_OK; // means I am NOT consuming event
+}
+
+////////////////////////////////////////////////////////////////////////
+nsresult 
+nsMenuBarListener::MouseDblClick(nsIDOMEvent* aMouseEvent)
+{
+  return NS_OK; // means I am NOT consuming event
+}
+
+////////////////////////////////////////////////////////////////////////
+nsresult 
+nsMenuBarListener::MouseOver(nsIDOMEvent* aMouseEvent)
+{
+  return NS_OK; // means I am NOT consuming event
+}
+
+////////////////////////////////////////////////////////////////////////
+nsresult 
+nsMenuBarListener::MouseOut(nsIDOMEvent* aMouseEvent)
+{
+  return NS_OK; // means I am NOT consuming event
+}
+
 ////////////////////////////////////////////////////////////////////////
 nsresult
 nsMenuBarListener::HandleEvent(nsIDOMEvent* aEvent)
