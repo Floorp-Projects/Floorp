@@ -327,13 +327,13 @@ NS_IMETHODIMP nsMsgDBView::Observe(nsISupports *aSubject, const char *aTopic, co
       return NS_ERROR_FAILURE;
 
     /* Determine if it's a description or a color preference */
-    if(prefName.Find(PREF_LABELS_DESCRIPTION, true, 0, 1) != kNotFound)
+    if(prefName.Find(PREF_LABELS_DESCRIPTION, PR_TRUE, 0, 1) != kNotFound)
     {
       /* it's a description, get the localized string from the pref */
       rv = GetPrefLocalizedString(prefName.get(), mLabelPrefDescriptions[indexInt - 1]);
       matchFound = PR_TRUE;
     }
-    else if(prefName.Find(PREF_LABELS_COLOR, true, 0, 1) != kNotFound)
+    else if(prefName.Find(PREF_LABELS_COLOR, PR_TRUE, 0, 1) != kNotFound)
     {
       /* it's a color, get the color string from the pref, and create a new atom for it */
       rv = GetLabelPrefStringAndAtom(prefName.get(), mLabelPrefColors[indexInt - 1], &mLabelPrefColorAtoms[indexInt - 1]);
