@@ -4562,6 +4562,9 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         }
         // there was room, so acquire it
         PondScum *p = (PondScum *)pondTop;
+#ifdef DEBUG
+        memset(p, 0xB7, sizeof(PondScum));
+#endif
         p->owner = this;
         p->setSize(sz);
         if (isJS2Object) 

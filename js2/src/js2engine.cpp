@@ -399,6 +399,7 @@ namespace MetaData {
                 : meta(NULL),
                   pc(NULL),
                   bCon(NULL),
+                  phase(RunPhase),
                   retval(JS2VAL_VOID),
                   a(JS2VAL_VOID),
                   b(JS2VAL_VOID),
