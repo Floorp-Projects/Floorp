@@ -404,17 +404,7 @@
         <body>
           <![CDATA[
             var iconURL = this.buildFavIconString(aURI);
-            if (!this.mMissedIconCache) {
-              var cacheService = Components.classes['@mozilla.org/network/cache-service;1'].getService(Components.interfaces.nsICacheService);
-              this.mMissedIconCache = cacheService.createSession("MissedIconCache", Components.interfaces.nsICache.STORE_ANYWHERE, true);
-              if (!this.mMissedIconCache)
-                return;
-            }
-
-            try {
-              var entry = this.mMissedIconCache.openCacheEntry(iconURL, Components.interfaces.nsICache.ACCESS_READ, true);
-            }
-            catch (exc) {}
+            var entry = this.openCacheEntry(iconURL, Components.interfaces.nsICache.ACCESS_READ);
             if (!entry)
               aElt.setAttribute(aAttr, iconURL);
             else {
@@ -429,12 +419,36 @@
         <parameter name="aURI"/>
         <body>
           <![CDATA[
-            var entry = this.mMissedIconCache.openCacheEntry(aURI, Components.interfaces.nsICache.ACCESS_READ_WRITE, true);
+            var entry = this.openCacheEntry(aURI, Components.interfaces.nsICache.ACCESS_READ_WRITE);
+            if (!entry)
+              return;
+
             if (entry.accessGranted == Components.interfaces.nsICache.ACCESS_WRITE)
               // It's a new entry.  Just write a bit of metadata in to the entry.
               entry.setMetaDataElement("Icon", "Missed");
             entry.markValid();
             entry.close();
+          ]]>
+        </body>
+      </method>
+
+      <method name="openCacheEntry">
+        <parameter name="key"/>
+        <parameter name="access"/>
+        <body>
+          <![CDATA[
+            try {
+              if (!this.mMissedIconCache) {
+                var cacheService = Components.classes['@mozilla.org/network/cache-service;1'].getService(Components.interfaces.nsICacheService);
+                this.mMissedIconCache = cacheService.createSession("MissedIconCache", Components.interfaces.nsICache.STORE_ANYWHERE, true);
+                if (!this.mMissedIconCache)
+                  return null;
+              }
+              return this.mMissedIconCache.openCacheEntry(key, access, true);
+            }
+            catch (e) {
+              return null;
+            }
           ]]>
         </body>
       </method>
