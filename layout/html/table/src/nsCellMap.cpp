@@ -311,10 +311,16 @@ nsTableCellMap::AppendCell(nsTableCellFrame& aCellFrame,
                            PRBool            aRebuildIfNecessary)
 {
   NS_ASSERTION(&aCellFrame == aCellFrame.GetFirstInFlow(), "invalid call on continuing frame");
+  nsIFrame* rgFrame = nsnull;
+  aCellFrame.GetParent(&rgFrame); // get the row
+  if (!rgFrame) return 0;
+  rgFrame->GetParent(&rgFrame);   // get the row group
+  if (!rgFrame) return 0;
+
   PRInt32 rowIndex = aRowIndex;
   nsCellMap* cellMap = mFirstMap;
   while (cellMap) {
-    if (cellMap->GetRowCount() > rowIndex) {
+    if (cellMap->GetRowGroup() == rgFrame) {
       return cellMap->AppendCell(*this, aCellFrame, rowIndex, aRebuildIfNecessary);
     }
     rowIndex -= cellMap->GetRowCount();

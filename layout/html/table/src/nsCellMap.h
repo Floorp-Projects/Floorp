@@ -211,8 +211,8 @@ public:
   PRInt32 GetNumCellsOriginatingInRow(PRInt32 aRowIndex) const;
   PRInt32 GetNumCellsOriginatingInCol(PRInt32 aColIndex) const;
 
-  /** return the actual number of rows in the table represented by this CellMap */
-  PRInt32 GetRowCount() const;
+  /** return the number of rows in the table represented by this CellMap */
+  PRInt32 GetRowCount(PRBool aConsiderDeadRowSpanRows = PR_FALSE) const;
 
   nsTableCellFrame* GetCellInfoAt(nsTableCellMap& aMap,
                                   PRInt32         aRowX, 
@@ -374,9 +374,10 @@ inline nsTableRowGroupFrame* nsCellMap::GetRowGroup() const
   return mRowGroupFrame;
 }
 
-inline PRInt32 nsCellMap::GetRowCount() const
+inline PRInt32 nsCellMap::GetRowCount(PRBool aConsiderDeadRowSpanRows) const
 { 
-  return mRowCount; 
+  PRInt32 rowCount = (aConsiderDeadRowSpanRows) ? mRows.Count() : mRowCount;
+  return rowCount; 
 }
 
 // nsColInfo
