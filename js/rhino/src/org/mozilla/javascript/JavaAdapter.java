@@ -119,8 +119,8 @@ public class JavaAdapter extends ScriptableObject
         System.arraycopy(intfs, 0, interfaces, 0, interfaceCount);
         Scriptable obj = (Scriptable) args[args.length - 1];
 
-        JavaClassSignature sig = new JavaClassSignature(superClass, interfaces,
-                                                        obj);
+        JavaAdapterSignature sig;
+        sig = new JavaAdapterSignature(superClass, interfaces, obj);
         Class adapterClass = (Class) generatedClasses.get(sig);
         if (adapterClass == null) {
             String adapterName;
@@ -151,8 +151,8 @@ public class JavaAdapter extends ScriptableObject
                                      Scriptable obj, Scriptable self)
         throws ClassNotFoundException
     {
-        JavaClassSignature sig = new JavaClassSignature(superClass, interfaces,
-                                                        obj);
+        JavaAdapterSignature sig;
+        sig = new JavaAdapterSignature(superClass, interfaces, obj);
         Class adapterClass = (Class) generatedClasses.get(sig);
         if (adapterClass == null) {
             String adapterName;
@@ -883,13 +883,13 @@ public class JavaAdapter extends ScriptableObject
  * Provides a key with which to distinguish previously generated
  * adapter classes stored in a hash table.
  */
-class JavaClassSignature
+class JavaAdapterSignature
 {
     Class mSuperClass;
     Class[] mInterfaces;
     Object[] mProperties;
 
-    JavaClassSignature(Class superClass, Class[] interfaces, Scriptable jsObj)
+    JavaAdapterSignature(Class superClass, Class[] interfaces, Scriptable jsObj)
     {
         mSuperClass = superClass;
         mInterfaces = interfaces;
@@ -898,8 +898,8 @@ class JavaClassSignature
 
     public boolean equals(Object obj)
     {
-        if (obj instanceof JavaClassSignature) {
-            JavaClassSignature sig = (JavaClassSignature) obj;
+        if (obj instanceof JavaAdapterSignature) {
+            JavaAdapterSignature sig = (JavaAdapterSignature) obj;
             if (mSuperClass == sig.mSuperClass) {
                 Class[] interfaces = sig.mInterfaces;
                 if (mInterfaces != interfaces) {
