@@ -146,7 +146,7 @@ protected:
    NS_IMETHOD DoURILoad(nsIURI* aURI);
    NS_IMETHOD StopCurrentLoads();
    NS_IMETHOD ScrollIfAnchor(nsIURI* aURI, PRBool* aWasAnchor);
-   NS_IMETHOD OnLoadingSite(nsIURI* aURI);
+   NS_IMETHOD OnLoadingSite(nsIChannel* aChannel);
    virtual void SetCurrentURI(nsIURI* aURI);
    virtual void SetReferrerURI(nsIURI* aURI);
 

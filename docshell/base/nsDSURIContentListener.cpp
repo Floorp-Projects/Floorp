@@ -94,9 +94,7 @@ NS_IMETHODIMP nsDSURIContentListener::DoContent(const char* aContentType,
    if(loadAttribs & nsIChannel::LOAD_RETARGETED_DOCUMENT_URI)
       mDocShell->StopCurrentLoads();
 
-   nsCOMPtr<nsIURI> aURI;
-   aOpenedChannel->GetURI(getter_AddRefs(aURI));
-   mDocShell->OnLoadingSite(aURI);
+   mDocShell->OnLoadingSite(aOpenedChannel);
 
    NS_ENSURE_SUCCESS(mDocShell->CreateContentViewer(aContentType, aCommand, 
       aOpenedChannel, aContentHandler), NS_ERROR_FAILURE);
