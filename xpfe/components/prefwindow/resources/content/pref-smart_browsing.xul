@@ -85,7 +85,7 @@
 			<html:legend align="left">&internetKeywordsHeader.label;</html:legend>
 				<html:div class="hspace-both">
 				<html:input name="keyword" type="checkbox" id="browserGoBrowsingEnabled"
-              pref="true" preftype="bool" prefstring="browser.goBrowsing.enabled"/>
+              pref="true" preftype="bool" prefstring="keyword.enabled"/>
 				<html:label for="browserGoBrowsingEnabled" accesskey="n" tabindex="0">
 				&enableKeyCheck.label;
 				</html:label>
