@@ -475,9 +475,6 @@ int main(int argc, char* argv[])
   }
   if (width) {
     PR_sscanf(width, "%d", &widthVal);
-    fprintf(stderr, "Width is set to %d\n", widthVal);
-  } else {
-    fprintf(stderr, "width was not set\n");
   }
   
   // Get the value of -height option
@@ -487,9 +484,6 @@ int main(int argc, char* argv[])
   }
   if (height) {
     PR_sscanf(height, "%d", &heightVal);
-    fprintf(stderr, "height is set to %d\n", heightVal);
-  } else {
-    fprintf(stderr, "height was not set\n");
   }
   
   /*
