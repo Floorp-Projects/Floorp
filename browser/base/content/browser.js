@@ -559,7 +559,11 @@ function ctrlNumberTabSelection(event)
     return;
   } 
 
+#ifdef XP_MACOSX
+  if (!event.metaKey)
+#else
   if (!event.ctrlKey)
+#endif
     return;
 
   var index = event.charCode - 49;
@@ -3878,8 +3882,12 @@ function asyncOpenWebPanel(event)
 function handleLinkClick(event, href, linkNode)
 {
   switch (event.button) {                                   
-    case 0:  
+    case 0:
+#ifdef XP_MACOSX
+      if (event.metaKey) {
+#else
       if (event.ctrlKey) {
+#endif
         openNewTabWith(href, linkNode, event, true);
         event.preventBubble();
         return true;
@@ -3925,7 +3933,11 @@ function middleMousePaste(event)
     return false;
 
   // On ctrl-middleclick, open in new tab.
+#ifdef XP_MACOSX
+  if (event.metaKey)
+#else
   if (event.ctrlKey)
+#endif
     openNewTabWith(url, null, event, true);
 
   // If ctrl wasn't down, then just load the url in the current win/tab.
