@@ -784,13 +784,6 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
           }
           break;
 
-        case eHTMLTag_script:
-          {
-            //nsCParserNode& theCNode=*(nsCParserNode*)&attrNode;
-            result=HandleScriptToken(attrNode);
-          }
-          break;
-
         case eHTMLTag_area:
           if (mHasOpenMap) {
             result = mSink->AddLeaf(attrNode);
