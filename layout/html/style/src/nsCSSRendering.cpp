@@ -3016,7 +3016,6 @@ PRInt16   adjust=0;
 void 
 RoundedRect::Set(nscoord aLeft,nscoord aTop,PRInt32  aWidth,PRInt32 aHeight,PRInt16 aRadius[4],PRInt16 aNumTwipPerPix)
 {
-  PRBool  doRound;
   nscoord x,y,width,height;
   int     i;
 
@@ -3042,6 +3041,7 @@ RoundedRect::Set(nscoord aLeft,nscoord aTop,PRInt32  aWidth,PRInt32 aHeight,PRIn
   // if we are drawing a circle
   mDoRound = PR_FALSE;
   if(aHeight==aWidth){
+    PRBool doRound = PR_TRUE;
     for(i=0;i<4;i++){
       if(mRoundness[i]<(aWidth>>1)){
         doRound = PR_FALSE;
