@@ -49,6 +49,8 @@ CPPSRCS =			 \
 	nsJSPluginArray.cpp  \
 	nsJSMimeTypeArray.cpp \
 	nsJSMimeType.cpp \
+	nsMimeTypeArray.cpp \
+	nsPluginArray.cpp \
 	$(NULL)
 
 EXPORTS = nsJSUtils.h
