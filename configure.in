@@ -3213,6 +3213,13 @@ MOZ_ARG_ENABLE_BOOL(cpp-exceptions,
     [ _MOZ_EXCEPTIONS_FLAGS=-fexceptions ]
 )
 
+
+dnl Disable jar packaging
+MOZ_ARG_DISABLE_BOOL(jar-packaging,
+[  --disable-jar-packaging Disable Jar packaging ],
+    MOZ_DISABLE_JAR_PACKAGING=1
+)
+
 dnl ========================================================
 dnl =
 dnl = Profiling and Instrumenting
