@@ -1262,7 +1262,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
     view->GetViewManager(*getter_AddRefs(vm));
 
     vm->ResizeView(view, pfd->mCombinedArea);
-    nsContainerFrame::SyncFrameViewAfterSizeChange(mPresContext, pfd->mFrame, nsnull, view);
+    //nsContainerFrame::SyncFrameViewAfterSizeChange(mPresContext, pfd->mFrame, nsnull, view);
   }
 
   // Tell the frame that we're done reflowing it
