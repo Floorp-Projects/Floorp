@@ -45,7 +45,7 @@
 #include "nsIOutlinerBoxObject.h"
 #include "nsIOutlinerSelection.h"
 #include "nsString.h"
-#include "nsISupportsArray.h"
+#include "nsVoidArray.h"
 #include "nsIAbDirectory.h"
 #include "nsIAtom.h"
 
@@ -62,11 +62,13 @@ public:
 private:
   nsCOMPtr<nsIOutlinerBoxObject> mOutliner;
   nsCOMPtr<nsIOutlinerSelection> mOutlinerSelection;
+  nsresult SortBy(const PRUnichar *colID);
 
   nsresult EnumerateCards(nsIAbDirectory* directory);
   nsCString mURI;
-  nsCOMPtr<nsISupportsArray> cards;
+  nsVoidArray mCards;
   nsCOMPtr<nsIAtom> mMailListAtom;
+  nsString mSortedColumn;
 };
 
 #endif /* _nsAbView_H_ */

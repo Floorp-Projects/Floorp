@@ -35,10 +35,7 @@ function AbResultsPaneOnClick(event)
 
     var t = event.originalTarget;
 
-    if (t.localName == "outlinercol") {
-       AbResultsPaneColumnClick(t.id);
-    }
-    else if (t.localName == "outlinerbody") {
+    if (t.localName == "outlinerbody") {
        var row = new Object;
        var colID = new Object;
        var childElt = new Object;
@@ -51,23 +48,14 @@ function AbResultsPaneOnClick(event)
          AbResultsPaneDoubleClick(row.value);
        }
        else {
-         var card = gAbView.getCardFromRow(row.value);
-         DisplayCardViewPane(card);
+         DisplayCardViewPane(gAbView.getCardFromRow(row.value));
        }
     }
 }
 
-function AbResultsPaneColumnClick(col)
-{
-  dump("XXX click on col " + col + "\n");
-}
-
 function AbResultsPaneDoubleClick(row)
 {
-  dump("XXX double click on row " + row + "\n");
-  var card = gAbView.getCardFromRow(row);
-
-  AbEditCard(card);
+  AbEditCard(gAbView.getCardFromRow(row));
 }
 
 function AbResultsPaneKeyPress(event)

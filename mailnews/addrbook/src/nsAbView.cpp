@@ -62,6 +62,15 @@ nsAbView::nsAbView()
 
 nsAbView::~nsAbView()
 {
+  nsIAbCard *card;
+
+  PRInt32 i = mCards.Count();
+  while(i-- > 0)
+  {
+      card = (nsIAbCard*) mCards.ElementAt(i);
+      NS_IF_RELEASE(card);
+      mCards.RemoveElementAt(i);
+  }
 }
 
 NS_IMETHODIMP nsAbView::Init(const char *aURI)
@@ -91,8 +100,6 @@ nsresult nsAbView::EnumerateCards(nsIAbDirectory* directory)
   nsCOMPtr<nsIEnumerator> cardsEnumerator;
   nsCOMPtr<nsIAbCard> card;
 
-  NS_NewISupportsArray(getter_AddRefs(cards));
-
   rv = directory->GetChildCards(getter_AddRefs(cardsEnumerator));
   if (NS_SUCCEEDED(rv) && cardsEnumerator)
   {
@@ -102,21 +109,24 @@ nsresult nsAbView::EnumerateCards(nsIAbDirectory* directory)
       rv = cardsEnumerator->CurrentItem(getter_AddRefs(item));
       if (NS_SUCCEEDED(rv))
       {
-        rv = cards->AppendElement(item);
+        nsCOMPtr <nsIAbCard> card = do_QueryInterface(item);
+        nsIAbCard *c = card;
+        NS_IF_ADDREF(c);
+        rv = mCards.AppendElement((void *)c);
         NS_ASSERTION(NS_SUCCEEDED(rv), "failed to append card");
       }
     }
   }
 
+  // XXX hard code, default sortby name
+  rv = SortBy(NS_LITERAL_STRING("DisplayName").get());
   return NS_OK;
 }
 
 NS_IMETHODIMP nsAbView::GetRowCount(PRInt32 *aRowCount)
 {
-  PRUint32 cnt;
-  nsresult rv = cards->Count(&cnt);
-  *aRowCount = (PRInt32) cnt;
-  return rv;
+  *aRowCount = mCards.Count();
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsAbView::GetSelection(nsIOutlinerSelection * *aSelection)
@@ -143,12 +153,10 @@ NS_IMETHODIMP nsAbView::GetCellProperties(PRInt32 row, const PRUnichar *colID, n
   if (colID[0] != 'D' || colID[1] != 'i')
     return NS_OK;
 
-  nsresult rv;
-  nsCOMPtr <nsIAbCard> card = do_QueryInterface(cards->ElementAt(row), &rv);
-  NS_ENSURE_SUCCESS(rv,rv);
+  nsIAbCard *card = (nsIAbCard *)(mCards.ElementAt(row));
 
   PRBool isMailList = PR_FALSE;
-  rv = card->GetIsMailList(&isMailList);
+  nsresult rv = card->GetIsMailList(&isMailList);
   NS_ENSURE_SUCCESS(rv,rv);
 
   if (isMailList)
@@ -223,12 +231,9 @@ NS_IMETHODIMP nsAbView::GetLevel(PRInt32 index, PRInt32 *_retval)
 
 NS_IMETHODIMP nsAbView::GetCellText(PRInt32 row, const PRUnichar *colID, PRUnichar **_retval)
 {
-  nsresult rv;
+  nsIAbCard *card = (nsIAbCard *)(mCards.ElementAt(row));
 
-  nsCOMPtr <nsIAbCard> card = do_QueryInterface(cards->ElementAt(row), &rv);
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  rv = card->GetCardUnicharValue(colID, _retval);
+  nsresult rv = card->GetCardUnicharValue(colID, _retval);
   NS_ENSURE_SUCCESS(rv,rv);
 
   return rv;
@@ -247,7 +252,14 @@ NS_IMETHODIMP nsAbView::ToggleOpenState(PRInt32 index)
 
 NS_IMETHODIMP nsAbView::CycleHeader(const PRUnichar *colID, nsIDOMElement *elt)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult rv = SortBy(colID);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = NS_ERROR_UNEXPECTED;
+  if (mOutliner)
+    rv = mOutliner->Invalidate();
+  NS_ENSURE_SUCCESS(rv,rv);
+  return rv;
 }
 
 NS_IMETHODIMP nsAbView::SelectionChanged()
@@ -287,12 +299,61 @@ NS_IMETHODIMP nsAbView::PerformActionOnCell(const PRUnichar *action, PRInt32 row
 
 NS_IMETHODIMP nsAbView::GetCardFromRow(PRInt32 row, nsIAbCard **aCard)
 {
-  nsresult rv;
-  
-  nsCOMPtr <nsIAbCard> card = do_QueryInterface(cards->ElementAt(row), &rv);
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  *aCard = card;
+  *aCard = (nsIAbCard *)(mCards.ElementAt(row));
   NS_IF_ADDREF(*aCard);
+  return NS_OK;
+}
+
+static int PR_CALLBACK
+inplaceSortCallback(const void *data1, const void *data2, void *privateData)
+{
+  nsIAbCard *card1 = (nsIAbCard *)data1;
+  nsIAbCard *card2 = (nsIAbCard *)data2;
+
+  nsXPIDLString val1;
+  nsXPIDLString val2;
+
+  const PRUnichar *colID = (const PRUnichar *)privateData;
+  // XXX fix me, do this with const to avoid the strcpy
+  nsresult rv = card1->GetCardUnicharValue(colID, getter_Copies(val1));
+  NS_ASSERTION(NS_SUCCEEDED(rv), "get value 1 failed");
+
+  rv = card2->GetCardUnicharValue(colID, getter_Copies(val2));
+  NS_ASSERTION(NS_SUCCEEDED(rv), "get value 2 failed");
+
+  PRInt32 sortValue = nsCRT::strcmp(val1.get(), val2.get());
+
+  // if we've got a value, or this is the "PrimaryEmail" column (ignore "PagerNumber")
+  // return now.  we ignore "PrimaryEmail", as we use that for our secondary sort
+  if (sortValue || (colID[0] == 'P' && colID[1] == 'r'))
+    return sortValue;
+  
+  // secondary sort is always email address.
+  // XXX fix me, do this with const to avoid the strcpy
+  rv = card1->GetCardUnicharValue(NS_LITERAL_STRING("PrimaryEmail").get(), getter_Copies(val1));
+  NS_ASSERTION(NS_SUCCEEDED(rv), "get value 1 failed");
+
+  rv = card2->GetCardUnicharValue(NS_LITERAL_STRING("PrimaryEmail").get(), getter_Copies(val2));
+  NS_ASSERTION(NS_SUCCEEDED(rv), "get value 2 failed");
+  
+  return nsCRT::strcmp(val1.get(), val2.get());
+}
+
+
+nsresult nsAbView::SortBy(const PRUnichar *colID)
+{
+  // if we are sorting by how we are already sorted, just reverse
+  if (!nsCRT::strcmp(mSortedColumn.get(),colID)) {
+    PRInt32 count = mCards.Count();
+    PRInt32 halfPoint = count / 2;
+    for (PRInt32 i=0; i < halfPoint; i++) {
+      mCards.MoveElement(i, count - i - 1);
+    }
+  }
+  else {
+    mCards.Sort(inplaceSortCallback, (void *)colID);
+    mSortedColumn = colID;
+  }
+
   return NS_OK;
 }
