@@ -1560,6 +1560,7 @@ sub BuildViewerProjects()
 	print("--- Starting Viewer projects ----\n");
 
 	BuildOneProject(":mozilla:webshell:tests:viewer:mac:viewer.mcp",			"viewer$D", "viewer.toc", 0, 0, 0);
+	BuildOneProject(":mozilla:embedding:browser:macbuild:webBrowser.mcp",		"webBrowser$D.shlb", "webBrowser.toc", 1, $main::ALIAS_SYM_FILES, 0);
 
 	print("--- Viewer projects complete ----\n");
 }
