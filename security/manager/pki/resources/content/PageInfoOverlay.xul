@@ -56,9 +56,14 @@
         var status = sp.SSLStatus;
         if (status) {
           var cert = status.serverCert;
+          var issuerName;
+
+          issuerName = this.mapIssuerOrganization(cert.issuerOrganization);
+          if (!issuerName) issuerName = cert.issuerName;
+
           return {
             hostName : w.location.host,
-            cAName : cert.issuerName,
+            cAName : issuerName,
             encryptionAlgorithm : status.cipherName,
             encryptionStrength : status.secretKeyLength,
             cert : cert,
@@ -77,6 +82,18 @@
       // Find the secureBrowserUI object (if present)
       _getSecurityUI : function() {
         return window.opener.gBrowser.boxObject.getPropertyAsSupports("secureBrowserUI");
+      },
+
+      // Interface for mapping a certificate issuer organization to
+      // the value to be displayed.
+      // Bug 82017 - this implementation should be moved to pipnss C++ code
+      mapIssuerOrganization: function(name) {
+        if (!name) return null;
+
+        if (name == "RSA Data Security, Inc.") return "Verisign, Inc.";
+
+        // No mapping required
+        return name;
       },
 
       _cert : null,
