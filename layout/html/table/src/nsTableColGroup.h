@@ -75,6 +75,11 @@ public:
     // For debugging purposes only
   NS_IMETHOD_(nsrefcnt) AddRef();
   NS_IMETHOD_(nsrefcnt) Release();
+
+  virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
+
+  virtual void MapAttributesInto(nsIStyleContext* aContext,
+                                 nsIPresContext* aPresContext);
   
   /** @see nsIHTMLContent::CreateFrame */
   virtual nsresult CreateFrame(nsIPresContext*  aPresContext,
@@ -138,19 +143,6 @@ public:
 
   /** @see nsIContent::InsertChildAt */
   virtual PRBool RemoveChildAt (int aIndex);
-
-protected:
-  virtual PRBool SetInternalAttribute (nsString *aName, nsString *aValue);  
-
-  virtual nsString *GetInternalAttribute (nsString *aName);
-
-  virtual PRBool UnsetInternalAttribute (nsString *aName);
-
-  virtual int GetInternalAttributeState (nsString *aName);
-
-  virtual PRBool IsInternalAttribute (nsString *aName);
-
-  virtual nsString * GetAllInternalAttributeNames ();
 
   
 };

@@ -45,17 +45,10 @@ public:
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect);
 
-  NS_IMETHOD ResizeReflow(nsIPresContext* aPresContext,
-                          nsReflowMetrics& aDesiredSize,
-                          const nsSize&   aMaxSize,
-                          nsSize*         aMaxElementSize,
-                          nsReflowStatus& aStatus);
-
-  NS_IMETHOD IncrementalReflow(nsIPresContext*  aPresContext,
-                               nsReflowMetrics& aDesiredSize,
-                               const nsSize&    aMaxSize,
-                               nsReflowCommand& aReflowCommand,
-                               nsReflowStatus&  aStatus);
+  NS_IMETHOD Reflow(nsIPresContext*      aPresContext,
+                    nsReflowMetrics&     aDesiredSize,
+                    const nsReflowState& aReflowState,
+                    nsReflowStatus&      aStatus);
 
 protected:
 
@@ -72,6 +65,7 @@ nsTableColFrame::nsTableColFrame(nsIContent* aContent, nsIFrame* aParentFrame)
 {
 }
 
+
 nsTableColFrame::~nsTableColFrame()
 {
 }
@@ -86,35 +80,19 @@ NS_METHOD nsTableColFrame::Paint(nsIPresContext& aPresContext,
 }
 
 
-NS_METHOD nsTableColFrame::ResizeReflow(nsIPresContext* aPresContext,
-                                        nsReflowMetrics& aDesiredSize,
-                                        const nsSize&   aMaxSize,
-                                        nsSize*         aMaxElementSize,
-                                        nsReflowStatus& aStatus)
+NS_METHOD nsTableColFrame::Reflow(nsIPresContext*      aPresContext,
+                                  nsReflowMetrics&     aDesiredSize,
+                                  const nsReflowState& aReflowState,
+                                  nsReflowStatus&      aStatus)
 {
   NS_ASSERTION(nsnull!=aPresContext, "bad arg");
-  if (gsDebug==PR_TRUE) printf("nsTableoupFrame::ResizeReflow\n");
   aDesiredSize.width=0;
   aDesiredSize.height=0;
-  if (nsnull!=aMaxElementSize)
+  if (nsnull!=aDesiredSize.maxElementSize)
   {
-    aMaxElementSize->width=0;
-    aMaxElementSize->height=0;
+    aDesiredSize.maxElementSize->width=0;
+    aDesiredSize.maxElementSize->height=0;
   }
-  aStatus = NS_FRAME_COMPLETE;
-  return NS_OK;
-}
-
-NS_METHOD nsTableColFrame::IncrementalReflow(nsIPresContext*  aPresContext,
-                                             nsReflowMetrics& aDesiredSize,
-                                             const nsSize&    aMaxSize,
-                                             nsReflowCommand& aReflowCommand,
-                                             nsReflowStatus&  aStatus)
-{
-  NS_ASSERTION(nsnull!=aPresContext, "bad arg");
-  if (gsDebug==PR_TRUE) printf("nsTableColFrame::IncrementalReflow\n");
-  aDesiredSize.width=0;
-  aDesiredSize.height=0;
   aStatus = NS_FRAME_COMPLETE;
   return NS_OK;
 }
@@ -184,6 +162,9 @@ nsrefcnt nsTableCol::Release(void)
   return mRefCnt;
 }
 
+// TODO: what about proportional width values (0*, 1*, etc.) down in COL tag
+// TODO: need a ::SetAttribute hook for width
+
 int nsTableCol::GetType()
 {
   return nsITableContent::kTableColType;
@@ -229,95 +210,6 @@ void nsTableCol::ResetColumns ()
     mColGroup->ResetColumns ();
 }
 
-static const nsString kRepeatAttributeName("REPEAT");
-
-PRBool nsTableCol::SetInternalAttribute (nsString * aName, nsString * aValue)
-{
-  /*
-  // Assert aName and aValue
-  if (aName->EqualsIgnoreCase (kRepeatAttributeName))
-  {
-    PRInt32 value = atoi(aValue->ToCString());
-    SetRepeat (aValue);
-    return true;
-  }
-  return super.setInternalAttribute (aName, aValue);
-  */
-  return PR_FALSE;
-}
-
-/** I allocated it for you, you delete it when you're done */
-// ack!!!  SEC this code and HTMLContainer need to get together and decide
-nsString * nsTableCol::GetInternalAttribute (nsString * aName)
-{
-  /*
-  // Assert aName
-  if (aName->EqualsIgnoreCase (kRepeatAttributeName))
-  {
-    char repeatAsCharArray[10];
-    sprintf(repeatAsCharArray, "%d", GetRepeat());
-    nsString * result = new nsString(repeatAsCharArray);
-  }
-  return nsTableContent::GetInternalAttribute (aName);
-  */
-  return nsnull;
-}
-
-PRBool nsTableCol::UnsetInternalAttribute (nsString * aName)
-{
-  /*
-  if (aName->EqualsIgnoreCase (kRepeatAttributeName))
-  {
-    fRepeat = 0;
-    return true;
-  }
-  return nsTableContent::UnsetInternalAttribute (aName);
-  */
-  return PR_FALSE;
-}
-
-int nsTableCol::GetInternalAttributeState (nsString * aName)
-{
-  /*
-  if (aName->EqualsIgnoreCase (kRepeatAttributeName))
-  {
-    if (0 < fRepeat)
-      return kAttributeSet;
-  }
-  return super.getInternalAttributeState (aName);
-  */
-  return 0;
-}
-
-PRBool nsTableCol::IsInternalAttribute (nsString * aName)
-{
-  /*
-  if (aName->EqualsIgnoreCase (kRepeatAttributeName))
-    return true;
-  return super.isInternalAttribute (aName);
-  */
-  return PR_FALSE;
-}
-
-
-static nsString * kInternalAttributeNames = nsnull;
-
-nsString * nsTableCol::GetAllInternalAttributeNames ()
-{
-  /*
-  if (null == kInternalAttributeNames)
-  {
-    nsString * [] superInternal = super.getAllInternalAttributeNames ();
-
-    int superLen = superInternal.length;
-    kInternalAttributeNames = new nsString * [superLen + 1];
-    System.arraycopy (superInternal, 0, kInternalAttributeNames, 0, superLen);
-    kInternalAttributeNames[superLen] = kRepeatAttributeName;
-  }
-  return kInternalAttributeNames;
-  */
-  return nsnull;
-}
 
 nsresult
 nsTableCol::CreateFrame(nsIPresContext* aPresContext,

@@ -131,6 +131,15 @@ public:
   static void ParseValueOrPercent(const nsString& aString,
                                   nsHTMLValue& aResult, nsHTMLUnit aValueUnit);
 
+ /** used to parser attribute values that could be either:
+   *   integer         (n), 
+   *   percent         (n%),
+   *   or proportional (n*)
+   */
+  static void nsHTMLTagContent::ParseValueOrPercentOrProportional(const nsString& aString,
+    																										          nsHTMLValue& aResult, 
+																												          nsHTMLUnit aValueUnit);
+
   static PRBool ValueOrPercentToString(const nsHTMLValue& aValue,
                                        nsString& aResult);
 

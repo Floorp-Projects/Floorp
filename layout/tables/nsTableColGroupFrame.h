@@ -39,16 +39,28 @@ public:
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect);
 
-  NS_IMETHOD ResizeReflow(nsIPresContext* aPresContext,
-                          nsReflowMetrics& aDesiredSize,
-                          const nsReflowState& aReflowState,
-                          nsReflowStatus& aStatus);
+  /** reflow of a column group is a trivial matter of reflowing
+    * the col group's children (columns), and setting this frame
+    * to 0-size.  Since tables are row-centric, column group frames
+    * don't play directly in the rendering game.  They do however
+    * maintain important state that effects table and cell layout.
+    */
+  NS_IMETHOD Reflow(nsIPresContext*      aPresContext,
+                    nsReflowMetrics&     aDesiredSize,
+                    const nsReflowState& aReflowState,
+                    nsReflowStatus&      aStatus);
 
 protected:
 
   nsTableColGroupFrame(nsIContent* aContent, nsIFrame* aParentFrame);
 
   ~nsTableColGroupFrame();
+
+  /** Hook for style post processing.  
+    * Since we need to know the full column structure before the COLS attribute
+    * can be interpreted, we can't just use DidSetStyleContext
+    */
+  NS_METHOD SetStyleContextForFirstPass(nsIPresContext* aPresContext);
 
 };
 

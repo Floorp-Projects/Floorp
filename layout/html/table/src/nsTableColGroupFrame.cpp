@@ -20,6 +20,14 @@
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
+#include "nsIPtr.h"
+#include "nsIContentDelegate.h"
+#include "nsTablePart.h"
+#include "nsTableContent.h"
+#include "nsHTMLAtoms.h"
+
+NS_DEF_PTR(nsIContent);
+NS_DEF_PTR(nsIStyleContext);
 
 static PRBool gsDebug = PR_FALSE;
 
@@ -43,15 +51,65 @@ NS_METHOD nsTableColGroupFrame::Paint(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
-
-NS_METHOD
-nsTableColGroupFrame::ResizeReflow(nsIPresContext* aPresContext,
-                        nsReflowMetrics& aDesiredSize,
-                        const nsReflowState& aReflowState,
-                        nsReflowStatus& aStatus)
+// TODO:  content changed notifications
+NS_METHOD nsTableColGroupFrame::Reflow(nsIPresContext*      aPresContext,
+                                       nsReflowMetrics&     aDesiredSize,
+                                       const nsReflowState& aReflowState,
+                                       nsReflowStatus&      aStatus)
 {
   NS_ASSERTION(nsnull!=aPresContext, "bad arg");
-  if (gsDebug==PR_TRUE) printf("nsTableColGroupFrame::Reflow\n");
+  NS_ASSERTION(nsnull!=mContent, "bad state -- null content for frame");
+
+  if (nsnull == mFirstChild) 
+  { // if we don't have any children, create them
+    nsIFrame* kidFrame = nsnull;
+    nsIFrame* prevKidFrame;
+   
+    LastChild(prevKidFrame);  // XXX remember this...
+    PRInt32 kidIndex = 0;
+    for (;;)
+    {
+      nsIContentPtr kid = mContent->ChildAt(kidIndex);   // kid: REFCNT++
+      if (kid.IsNull()) {
+        break;
+      }
+
+      // Resolve style
+      nsIStyleContextPtr kidSC =
+        aPresContext->ResolveStyleContextFor(kid, this);
+      nsStyleSpacing* kidSpacing = (nsStyleSpacing*)
+        kidSC->GetData(eStyleStruct_Spacing);
+
+      // Create a child frame
+      nsIContentDelegate* kidDel = nsnull;
+      kidDel = kid->GetDelegate(aPresContext);
+      nsresult rv = kidDel->CreateFrame(aPresContext, kid, this, kidSC,
+                                        kidFrame);
+      NS_RELEASE(kidDel);
+
+      // give the child frame a chance to reflow, even though we know it'll have 0 size
+      nsReflowMetrics kidSize(nsnull);
+      nsReflowState   kidReflowState(eReflowReason_Initial, nsSize(0,0));
+      kidFrame->WillReflow(*aPresContext);
+      nsReflowStatus status = ReflowChild(kidFrame,aPresContext, kidSize,
+                                          kidReflowState);
+      // note that DidReflow is called as the result of some ancestor firing off a DidReflow above me
+      kidFrame->SetRect(nsRect(0,0,0,0));
+
+      // Link child frame into the list of children
+      if (nsnull != prevKidFrame) {
+        prevKidFrame->SetNextSibling(kidFrame);
+      } else {
+        mFirstChild = kidFrame;  // our first child
+        SetFirstContentOffset(kidFrame);
+      }
+      prevKidFrame = kidFrame;
+      mChildCount++;
+      kidIndex++;
+    }
+    // now that I have all my COL children, adjust their style
+    SetStyleContextForFirstPass(aPresContext);
+  }
   aDesiredSize.width=0;
   aDesiredSize.height=0;
   if (nsnull!=aDesiredSize.maxElementSize)
@@ -60,6 +118,65 @@ nsTableColGroupFrame::ResizeReflow(nsIPresContext* aPresContext,
     aDesiredSize.maxElementSize->height=0;
   }
   aStatus = NS_FRAME_COMPLETE;
+  return NS_OK;
+}
+
+// Subclass hook for style post processing
+NS_METHOD nsTableColGroupFrame::SetStyleContextForFirstPass(nsIPresContext* aPresContext)
+{
+  nsTablePart* table = ((nsTableContent*)mContent)->GetTable();
+  NS_ASSERTION(table,"Table Must not be null");
+  if (!table)
+    return NS_OK;  // TODO:  error!
+
+  // check for the COLS attribute
+  nsContentAttr result;
+  nsHTMLValue value;
+  result = table->GetAttribute(nsHTMLAtoms::cols, value);
+  
+  // if COLS is set, then map it into the COL frames
+  // chicken and egg problem here.  I don't have any children yet, so I 
+  // don't know how many columns there are, so I can't do this!
+  // I need to just set some state, and let the individual columns query up into me
+  // in their own hooks
+  PRInt32 numCols;
+  if (result == eContentAttr_NoValue)
+    ChildCount(numCols);
+  else if (result == eContentAttr_HasValue)
+  {
+    nsHTMLUnit unit = value.GetUnit();
+    if (eHTMLUnit_Empty==unit)
+      ChildCount(numCols);
+    else
+      numCols = value.GetIntValue();
+  }
+
+  PRInt32 colIndex=0;
+  nsIFrame *colFrame;
+  FirstChild(colFrame);
+  for (; colIndex<numCols; colIndex++)
+  {
+    if (nsnull==colFrame)
+      break;  // the attribute value specified was greater than the actual number of columns
+    nsStylePosition * colPosition=nsnull;
+    colFrame->GetStyleData(eStyleStruct_Position, (nsStyleStruct*&)colPosition);
+    nsStyleCoord width (1, eStyleUnit_Proportional);
+    colPosition->mWidth = width;
+    colFrame->GetNextSibling(colFrame);
+  }
+  // if there are more columns, there width is set to "minimum"
+  PRInt32 numChildFrames;
+  ChildCount(numChildFrames);
+  for (; colIndex<numChildFrames; colIndex++)
+  {
+    nsStylePosition * colPosition=nsnull;
+    colFrame->GetStyleData(eStyleStruct_Position, (nsStyleStruct*&)colPosition);
+    nsStyleCoord width (0, eStyleUnit_Integer);
+    colPosition->mWidth = width;
+    colFrame->GetNextSibling(colFrame);
+  }
+
+  mStyleContext->RecalcAutomaticData(aPresContext);
   return NS_OK;
 }
 

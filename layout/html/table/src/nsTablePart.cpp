@@ -1027,9 +1027,24 @@ void nsTablePart::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
 {
   nsHTMLValue val;
 
+  
   if (aAttribute == nsHTMLAtoms::width) 
   {
     ParseValueOrPercent(aValue, val, eHTMLUnit_Pixel);
+    nsHTMLTagContent::SetAttribute(aAttribute, val);
+  }
+  else if ( aAttribute == nsHTMLAtoms::cols)
+  { // it'll either be empty, or have an integer value
+    nsHTMLValue val;
+    nsAutoString tmp(aValue);
+    tmp.StripWhitespace();
+    if (0 == tmp.Length()) {
+      val.SetEmptyValue();
+    }
+    else 
+    {
+      ParseValue(aValue, 0, val, eHTMLUnit_Integer);
+    }
     nsHTMLTagContent::SetAttribute(aAttribute, val);
   }
   else if ( aAttribute == nsHTMLAtoms::border)
