@@ -1084,13 +1084,12 @@ nsresult nsMsgLocalMailFolder::DeleteMessage(nsIMessage *message,
 		rv = GetRootFolder(getter_AddRefs(rootFolder));
 		if(NS_SUCCEEDED(rv))
 		{
-			nsIMsgFolder *trashFolder;
+			nsCOMPtr<nsIMsgFolder> trashFolder;
 			PRUint32 numFolders;
-			rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_TRASH, &trashFolder, 1, &numFolders);
+			rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_TRASH, getter_AddRefs(trashFolder), 1, &numFolders);
 			if(NS_SUCCEEDED(rv) && (numFolders == 1))
 			{
 				rv = MoveMessageToTrash(message, trashFolder);
-				NS_IF_RELEASE(trashFolder);
 			}
 		}
 	}

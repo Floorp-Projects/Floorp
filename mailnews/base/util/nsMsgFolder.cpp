@@ -912,6 +912,7 @@ NS_IMETHODIMP nsMsgFolder::GetFoldersWithFlag(PRUint32 flags, nsIMsgFolder **res
 	if ((flags & mFlags) == flags) {
 		if (result && (num < resultsize)) {
 			result[num] = this;
+			NS_IF_ADDREF(result[num]);
 		}
 		num++;
 	}

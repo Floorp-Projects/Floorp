@@ -1996,8 +1996,8 @@ nsresult ParseIMAPMailboxState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 
 	 	if (destinationFolder)
 	 	{
-			nsIMsgFolder *inbox=nsnull;
-			imapContainer->GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, &inbox, 1);
+			nsCOMPtr<nsIMsgFolder> inbox;
+			imapContainer->GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, getter_AddRefs(inbox), 1);
 			if (inbox)
 			{
 				MSG_FolderInfoMail *destMailFolder = destinationFolder->GetMailFolderInfo();

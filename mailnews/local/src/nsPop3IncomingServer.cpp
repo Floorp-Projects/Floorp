@@ -115,7 +115,7 @@ NS_IMETHODIMP nsPop3IncomingServer::PerformBiff()
 	NS_WITH_SERVICE(nsIPop3Service, pop3Service, kCPop3ServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-	nsIMsgFolder *inbox = nsnull;
+	nsCOMPtr<nsIMsgFolder> inbox;
 	nsCOMPtr<nsIFolder> rootFolder;
 	rv = GetRootFolder(getter_AddRefs(rootFolder));
 	if(NS_SUCCEEDED(rv))
@@ -124,7 +124,7 @@ NS_IMETHODIMP nsPop3IncomingServer::PerformBiff()
 		if(rootMsgFolder)
 		{
 			PRUint32 numFolders;
-			rv = rootMsgFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, &inbox, 1, &numFolders);
+			rv = rootMsgFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, getter_AddRefs(inbox), 1, &numFolders);
 		}
 	}
 
