@@ -211,6 +211,7 @@ bin\chrome\classic\*
 bin\defaults\pref\*
 bin\res\html.css
 bin\res\ua.css
+bin\res\forms.css
 bin\res\quirk.css
 bin\res\arrow.gif
 bin\defaults\wallet\FieldSchema.tbl
