@@ -1,8 +1,8 @@
 #!/usr/bonsaitools/bin/perl
-# $Id: Local.pm,v 1.4 1999/04/26 19:52:55 endico%mozilla.org Exp $
+# $Id: Local.pm,v 1.5 1999/04/30 19:00:47 endico%mozilla.org Exp $
 # Local.pm -- Subroutines that need to be customized for each installation
 #
-#	Dawn Endico <dawn@cannibal.mi.org>
+#	Dawn Endico <endico@mozilla.org>
 #
 ######################################################################
 # This package is for placing subroutines that are likely to need
