@@ -1036,7 +1036,7 @@ nsBrowserWindow::DoToolbarDemo()
 
 	nsCOMPtr<nsIWidget> widget(mToolbox);	
 	if ( widget ) {
-      widget->Create(pToolbarWindow, r, nsnull, nsnull);	
+      widget->Create((nsIWidget *)pToolbarWindow, r, nsnull, nsnull);	
       widget->Show(PR_TRUE);
     }
 
