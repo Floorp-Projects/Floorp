@@ -166,9 +166,9 @@ var gContentPane = {
     var hideStatusPref = document.getElementById("dom.disable_window_open_feature.status");
     var windowStatusPref = document.getElementById("dom.disable_window_status_change");
     
-    var disableImages = document.getElementById("disableAnnoyances");
-    contextMenuPref.value = !(windowMovePref.value = windowFlipPref.value = hideStatusPref.value = windowStatusPref.value = disableImages.checked);
-    return undefined;    
+    var disableAnnoyances = document.getElementById("disableAnnoyances");
+    contextMenuPref.value = !(windowMovePref.value = windowFlipPref.value = hideStatusPref.value = windowStatusPref.value = disableAnnoyances.checked);
+    return this.readAnnoyancesEnabled();    
   },
   
   annoyancesPrefChanged: function ()
