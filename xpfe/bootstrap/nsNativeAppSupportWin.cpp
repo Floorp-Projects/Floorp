@@ -25,6 +25,8 @@
 #include <windows.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <io.h>
+#include <fcntl.h>
  
 class nsSplashScreenWin : public nsISplashScreen {
 public:
@@ -69,6 +71,7 @@ public:
     }
 
     void SetDialog( HWND dlg );
+    static void CheckConsole();
     static nsSplashScreenWin* GetPointer( HWND dlg );
 
     static BOOL CALLBACK DialogProc( HWND dlg, UINT msg, WPARAM wp, LPARAM lp );
@@ -203,6 +206,63 @@ DWORD WINAPI nsSplashScreenWin::ThreadProc( LPVOID splashScreen ) {
     return 0;
 }
 
+void
+nsSplashScreenWin::CheckConsole() {
+    for ( int i = 1; i < __argc; i++ ) {
+        if ( strcmp( "-console", __argv[i] ) == 0
+             ||
+             strcmp( "/console", __argv[i] ) == 0 ) {
+            // Users wants to make sure we have a console.
+            // Try to allocate one.
+            BOOL rc = AllocConsole();
+            if ( rc ) {
+                // Console allocated.  Fix it up so that output works in
+                // all cases.  See http://support.microsoft.com/support/kb/articles/q105/3/05.asp.
+
+                // stdout
+                int hCrt = _open_osfhandle( (long)GetStdHandle( STD_OUTPUT_HANDLE ),
+                                            _O_TEXT );
+                if ( hCrt != -1 ) {
+                    FILE *hf = _fdopen( hCrt, "w" );
+                    if ( hf ) {
+                        *stdout = *hf;
+                        fprintf( stdout, "stdout directed to dynamic console\n" );
+                    }
+                }
+
+                // stderr
+                hCrt = _open_osfhandle( (long)GetStdHandle( STD_ERROR_HANDLE ),
+                                        _O_TEXT );
+                if ( hCrt != -1 ) {
+                    FILE *hf = _fdopen( hCrt, "w" );
+                    if ( hf ) {
+                        *stderr = *hf;
+                        fprintf( stderr, "stderr directed to dynamic console\n" );
+                    }
+                }
+
+                // stdin?
+                /* Don't bother for now.
+                hCrt = _open_osfhandle( (long)GetStdHandle( STD_INPUT_HANDLE ),
+                                        _O_TEXT );
+                if ( hCrt != -1 ) {
+                    FILE *hf = _fdopen( hCrt, "r" );
+                    if ( hf ) {
+                        *stdin = *hf;
+                    }
+                }
+                */
+            } else {
+                // Failed.  Probably because there already is one.
+                // There's little we can do, in any case.
+            }
+            // Don't bother doing this more than once.
+            break;
+        }
+    }
+    return;
+}
+
 nsresult NS_CreateSplashScreen( nsISplashScreen **aResult ) {
     if ( aResult ) {
         *aResult = 0;
@@ -223,6 +283,10 @@ nsresult NS_CreateSplashScreen( nsISplashScreen **aResult ) {
     } else {
         return NS_ERROR_NULL_POINTER;
     }
+
+    // Check for dynamic console creation request.
+    nsSplashScreenWin::CheckConsole();
+
     return NS_OK;
 }
 
