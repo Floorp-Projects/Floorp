@@ -1570,12 +1570,13 @@ nsHTMLReflowState::ComputeContainingBlockRectangle(nsIPresContext*          aPre
     if (NS_UNCONSTRAINEDSIZE == availableWidth) {
       aContainingBlockWidth = NS_UNCONSTRAINEDSIZE;
     }
-    // an element in quirks mode gets a containing block based on the viewport (less  
-    // body margins, border, padding) if the element is a child of the body.
+    // an element in quirks mode gets a containing block based on looking for a
+    // parent with a non-auto height if the element has a percent height
     if (NS_AUTOHEIGHT == aContainingBlockHeight) {
       nsCompatibility mode;
       aPresContext->GetCompatibilityMode(&mode);
-      if (eCompatibility_NavQuirks == mode) {
+      if (eCompatibility_NavQuirks == mode &&
+          mStylePosition->mHeight.GetUnit() == eStyleUnit_Percent) {
         aContainingBlockHeight = CalcQuirkContainingBlockHeight(*aContainingBlockRS, PR_TRUE);
         // NOTE: passing PR_TRUE for the aRestrictToFirstLevel argument, to restrict the search
         //       for the containing block height to only the immediate parent block or area
