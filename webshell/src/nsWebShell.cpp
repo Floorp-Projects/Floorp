@@ -115,6 +115,7 @@ public:
                      nsIPostData* aPostData=nsnull);
   NS_IMETHOD GoTo(PRInt32 aHistoryIndex);
   NS_IMETHOD GetHistoryIndex(PRInt32& aResult);
+  NS_IMETHOD GetURL(PRInt32 aHistoryIndex, nsString& aURLResult);
   NS_IMETHOD SetTitle(const nsString& aTitle);
   NS_IMETHOD GetTitle(nsString& aResult);
 
@@ -727,6 +728,22 @@ nsWebShell::GetHistoryIndex(PRInt32& aResult)
 {
   aResult = mHistoryIndex;
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebShell::GetURL(PRInt32 aHistoryIndex, nsString& aURLResult)
+{
+  nsresult rv = NS_ERROR_ILLEGAL_VALUE;
+  if ((aHistoryIndex >= 0) &&
+      (aHistoryIndex <= mHistory.Count() - 1)) {
+    aURLResult.Truncate();
+    nsString* s = (nsString*) mHistory.ElementAt(aHistoryIndex);
+    if (nsnull != s) {
+      aURLResult = *s;
+    }
+    rv = NS_OK;
+  }
+  return rv;
 }
 
 void
