@@ -49,6 +49,7 @@ endif
 
 DIRS +=				\
   modules/libutil		\
+  intl				\
   sun-java			\
   nav-java			\
   js				\
