@@ -214,9 +214,13 @@ namespace ICG {
         
         Register loadName(const StringAtom &name);
         void saveName(const StringAtom &name, Register value);
+        Register nameInc(const StringAtom &name);
+        Register nameDec(const StringAtom &name);
         
         Register getProperty(Register base, const StringAtom &name);
         void setProperty(Register base, const StringAtom &name, Register value);
+        Register propertyInc(Register base, const StringAtom &name);
+        Register propertyDec(Register base, const StringAtom &name);
         
         Register getElement(Register base, Register index);
         void setElement(Register base, Register index, Register value);

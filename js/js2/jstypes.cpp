@@ -42,7 +42,16 @@ namespace JSTypes {
 
 // the canonical undefined value.
 const JSValue kUndefinedValue;
+const JSValue kNaN(0.0, 0.0);
 
+
+       
+JSValue::JSValue(float64 a, float64 b)
+{
+    f64 = a/b;
+    tag = f64_tag;
+}
+       
 int JSValue::operator==(const JSValue& value) const
 {
     if (this->tag == value.tag) {
@@ -131,7 +140,9 @@ JSValue JSValue::valueToNumber(const JSValue& value) // can assume value is not 
     case JSValue::object_tag:
     case JSValue::array_tag:
     case JSValue::function_tag:
+        break;
     default:
+        return kNaN;
         break;
     }
     return kUndefinedValue;
