@@ -43,7 +43,9 @@ static NS_DEFINE_IID(kIDOMCharacterDataIID, NS_IDOMCHARACTERDATA_IID);
 #include "nsIServiceManager.h"
 #include "nsWidgetsCID.h"
 #include "nsIClipboard.h"
+#include "nsIDragService.h"
 #include "nsITransferable.h"
+#include "nsIGenericTransferable.h"
 #include "nsIDataFlavor.h"
 #include "nsIFormatConverter.h"
 
@@ -51,8 +53,11 @@ static NS_DEFINE_IID(kIDOMCharacterDataIID, NS_IDOMCHARACTERDATA_IID);
 static NS_DEFINE_IID(kIClipboardIID,     NS_ICLIPBOARD_IID);
 static NS_DEFINE_CID(kCClipboardCID,     NS_CLIPBOARD_CID);
 
-static NS_DEFINE_IID(kITransferableIID,  NS_ITRANSFERABLE_IID);
-static NS_DEFINE_CID(kCTransferableCID,  NS_TRANSFERABLE_CID);
+static NS_DEFINE_IID(kIDragServiceIID,   NS_IDRAGSERVICE_IID);
+static NS_DEFINE_CID(kCDragServiceCID,   NS_DRAGSERVICE_CID);
+
+static NS_DEFINE_IID(kIGenericTransferableIID,  NS_IGENERICTRANSFERABLE_IID);
+static NS_DEFINE_CID(kCGenericTransferableCID,  NS_GENERICTRANSFERABLE_CID);
 static NS_DEFINE_IID(kIDataFlavorIID,    NS_IDATAFLAVOR_IID);
 static NS_DEFINE_IID(kCDataFlavorCID,    NS_DATAFLAVOR_CID);
 
@@ -755,6 +760,16 @@ nsTextEditorDragListener::HandleEvent(nsIDOMEvent* aEvent)
 nsresult
 nsTextEditorDragListener::DragEnter(nsIDOMEvent* aDragEvent)
 {
+#ifdef NEW_DRAG_AND_DROP
+  nsIDragService* dragService;
+  nsresult rv = nsServiceManager::GetService(kCDragServiceCID,
+                                           kIDragServiceIID,
+                                           (nsISupports **)&dragService);
+  if (NS_OK == rv) {
+    dragService->SetCanDrop(PR_TRUE);
+    NS_RELEASE(dragService);
+  }
+#endif
   return NS_OK;
 }
 
@@ -762,6 +777,16 @@ nsTextEditorDragListener::DragEnter(nsIDOMEvent* aDragEvent)
 nsresult
 nsTextEditorDragListener::DragOver(nsIDOMEvent* aDragEvent)
 {
+#ifdef NEW_DRAG_AND_DROP
+  nsIDragService* dragService;
+  nsresult rv = nsServiceManager::GetService(kCDragServiceCID,
+                                           kIDragServiceIID,
+                                           (nsISupports **)&dragService);
+  if (NS_OK == rv) {
+    dragService->SetCanDrop(PR_TRUE);
+    NS_RELEASE(dragService);
+  }
+#endif
   return NS_OK;
 }
 
@@ -778,42 +803,48 @@ nsresult
 nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
 {
 
-#ifdef NEW_CLIPBOARD_SUPPORT
+#ifdef NEW_DRAG_AND_DROP
   nsString stuffToPaste;
-  nsIClipboard* clipboard;
-  nsresult rv = nsServiceManager::GetService(kCClipboardCID,
-                                             kIClipboardIID,
-                                             (nsISupports **)&clipboard);
-  nsITransferable *trans = 0;
-  rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, kITransferableIID, (void**) &trans);
+  nsIDragService* dragService;
+  nsresult rv = nsServiceManager::GetService(kCDragServiceCID,
+                                             kIDragServiceIID,
+                                             (nsISupports **)&dragService);
+  if (NS_OK == rv) {
+    nsIGenericTransferable *genericTrans = 0;
+    rv = nsComponentManager::CreateInstance(kCGenericTransferableCID, nsnull, 
+                                            kIGenericTransferableIID, (void**) &genericTrans);
+    if (NS_OK == rv) {
+      nsIDataFlavor *flavor = 0;
+      rv = nsComponentManager::CreateInstance(kCDataFlavorCID, nsnull, kIDataFlavorIID, (void**) &flavor);
+      if (NS_OK == rv) {
+        flavor->Init(kTextMime, "Text");
 
-  //nsIFormatConverter * xifConverter;
-  //rv = nsComponentManager::CreateInstance(kCXIFFormatConverterCID, nsnull, kIFormatConverterIID, (void**) &xifConverter);
+        genericTrans->AddDataFlavor(flavor);
 
-  //trans->SetConverter(xifConverter);
+        nsCOMPtr<nsITransferable> trans = do_QueryInterface(genericTrans);
+        if (trans) {
 
-  nsIDataFlavor *flavor = 0;
-  rv = nsComponentManager::CreateInstance(kCDataFlavorCID, nsnull, kIDataFlavorIID, (void**) &flavor);
-  flavor->Init(kTextMime, "Text");
-  trans->AddDataFlavor(flavor);
+          dragService->GetData(trans);
 
-  clipboard->GetData(trans);
+          char *str = 0;
+          PRUint32 len;
+          trans->GetTransferData(flavor, (void **)&str, &len);
 
-  char *str = 0;
-  PRUint32 len;
-  trans->GetTransferData(flavor, (void **)&str, &len);
+          if (str) {
+            if (str[len-1] == 0) {
+              len--;
+            }
+            stuffToPaste.SetString(str, len);
+            mEditor->InsertText(stuffToPaste);
+          }
 
-  if (str) {
-    if (str[len-1] == 0) {
-      len--;
+        }
+        NS_IF_RELEASE(flavor);
+      }
+      NS_IF_RELEASE(genericTrans);
     }
-    stuffToPaste.SetString(str, len);
-    mEditor->InsertText(stuffToPaste);
+    NS_IF_RELEASE(dragService);
   }
-
-  NS_IF_RELEASE(flavor);
-  NS_IF_RELEASE(trans);
-  NS_IF_RELEASE(clipboard);
 
 #endif  
   
