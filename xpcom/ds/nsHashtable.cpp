@@ -194,9 +194,15 @@ struct _HashEnumerateArgs {
 static PRIntn PR_CALLBACK _hashEnumerate(PLHashEntry *he, PRIntn i, void *arg)
 {
     _HashEnumerateArgs* thunk = (_HashEnumerateArgs*)arg;
-    return thunk->fn((nsHashKey *) he->key, he->value, thunk->arg)
-           ? HT_ENUMERATE_NEXT
-           : HT_ENUMERATE_STOP;
+    switch (thunk->fn((nsHashKey *) he->key, he->value, thunk->arg)) {
+      case kHashEnumerateNext:
+        return HT_ENUMERATE_NEXT;
+      case kHashEnumerateRemove:
+        return HT_ENUMERATE_REMOVE;
+      case kHashEnumerateUnhash:
+        return HT_ENUMERATE_UNHASH;
+    }
+    return HT_ENUMERATE_STOP;           
 }
 
 //
