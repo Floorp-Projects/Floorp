@@ -2528,19 +2528,19 @@ XULDocumentImpl::CreateContents(nsIContent* aElement)
     aElement->ChildCount(childCount);
     for (PRInt32 j = 0; j < childCount; j++)
     {
-        nsIContent* childContent = nsnull;
-        aElement->ChildAt(j, childContent);
+        nsCOMPtr<nsIContent> childContent;
+        aElement->ChildAt(j, *getter_AddRefs(childContent));
       
         if (!childContent)
           break;
 
-        nsIAtom* tag = nsnull;
-        childContent->GetTag(tag);
+        nsCOMPtr<nsIAtom> tag;
+        childContent->GetTag(*getter_AddRefs(tag));
 
         if (!tag)
           break;
 
-        if (tag == kObservesAtom)
+        if (tag.get() == kObservesAtom)
         {
             // Find the node that we're supposed to be
             // observing and perform the hookup.
@@ -2556,8 +2556,8 @@ XULDocumentImpl::CreateContents(nsIContent* aElement)
             domContent->GetAttribute("attribute",
                                      attributeValue);
 
-            nsIDOMElement* domElement = nsnull;
-            GetElementById(elementValue, &domElement);
+            nsCOMPtr<nsIDOMElement> domElement;
+            GetElementById(elementValue, getter_AddRefs(domElement));
             
             if (!domElement)
               break;
@@ -2572,12 +2572,7 @@ XULDocumentImpl::CreateContents(nsIContent* aElement)
                 broadcaster->AddBroadcastListener(attributeValue,
                                                   listener);
             }
-
-            NS_RELEASE(domElement);
         }
-
-        NS_RELEASE(childContent);
-        NS_RELEASE(tag);
     }
 
     return NS_OK;
@@ -2845,7 +2840,7 @@ XULDocumentImpl::CreateElementWithNameSpace(const nsString& aTagName,
 
     nsresult rv;
 
-    nsCOMPtr<nsIAtom> name = dont_QueryInterface(NS_NewAtom(aTagName.GetUnicode()));
+    nsCOMPtr<nsIAtom> name = dont_AddRef(NS_NewAtom(aTagName.GetUnicode()));
     if (! name)
         return NS_ERROR_OUT_OF_MEMORY;
 
