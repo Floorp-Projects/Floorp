@@ -136,11 +136,21 @@ nsHTMLImageLoader::StartLoadImage(nsIPresContext* aPresContext,
   // Get absolute url the first time through
   nsresult rv;
   nsAutoString src;
-  if (mLoadImageFailed || (nsnull == mURLSpec)) {
 #ifdef _WIN32
+  if (mLoadImageFailed) {
+    // We've already notified the pres shell that we're unable to render
+    // the image so just return
+    return NS_OK;
+  } else if (nsnull == mURLSpec) {
+    // No URI was specified for the src. Indicate we're unable to load the
+    // image and notify the pres shell
     mLoadImageFailed = PR_TRUE;
+    nsIPresShell* presShell = aPresContext->GetShell();
+    presShell->CantRenderReplacedElement(aPresContext, aForFrame);
+    NS_RELEASE(presShell);
     return NS_OK;
 #else
+  if (mLoadImageFailed || (nsnull == mURLSpec)) {
     src.Append(BROKEN_IMAGE_URL);
 #endif
   } else if (nsnull == mImageLoader) {
@@ -372,16 +382,10 @@ UpdateImageFrame(nsIPresContext& aPresContext, nsIFrame* aFrame,
       NS_RELEASE(content);
     }
   } else if (NS_IMAGE_LOAD_STATUS_ERROR & aStatus) {
-#if 0
-    // We failed to load the image. Notify the style system
+    // We failed to load the image. Notify the pres shell
     nsIPresShell* presShell = aPresContext.GetShell();
-    nsIStyleSet*  styleSet = presShell->GetStyleSet();
-    styleSet->CantRenderReplacedElement(&aPresContext, aFrame);
-    NS_RELEASE(styleSet);
+    presShell->CantRenderReplacedElement(&aPresContext, aFrame);
     NS_RELEASE(presShell);
-#else
-    ;
-#endif
   }
   return NS_OK;
 }
@@ -673,7 +677,7 @@ nsImageFrame::Paint(nsIPresContext& aPresContext,
     }
 
     if (eFramePaintLayer_Content == aWhichLayer) {
-      // Now render the image into our inner area (the area without the
+      // Now render the image into our content area (the area inside the
       // borders and padding)
       nsRect inner;
       GetInnerArea(&aPresContext, inner);

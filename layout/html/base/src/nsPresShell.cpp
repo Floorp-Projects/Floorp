@@ -49,6 +49,9 @@
 #include "nsIDOMElement.h"
 #include "nsHTMLAtoms.h"
 #include "nsCOMPtr.h"
+#include "nsIEventQueueService.h"
+#include "nsXPComCIID.h"
+#include "nsIServiceManager.h"
 
 static PRBool gsNoisyRefs = PR_FALSE;
 #undef NOISY
@@ -146,18 +149,23 @@ FrameHashTable::Remove(nsIFrame* aKey)
 
 //----------------------------------------------------------------------
 
+// Class IID's
+static NS_DEFINE_IID(kEventQueueServiceCID,   NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_IID(kRangeListCID, NS_RANGELIST_CID);
+static NS_DEFINE_IID(kCRangeCID, NS_RANGE_CID);
+
+// IID's
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIPresShellIID, NS_IPRESSHELL_IID);
 static NS_DEFINE_IID(kIDocumentObserverIID, NS_IDOCUMENT_OBSERVER_IID);
 static NS_DEFINE_IID(kIViewObserverIID, NS_IVIEWOBSERVER_IID);
-static NS_DEFINE_IID(kRangeListCID, NS_RANGELIST_CID);
 static NS_DEFINE_IID(kISelectionIID, NS_ISELECTION_IID);
 static NS_DEFINE_IID(kICollectionIID, NS_ICOLLECTION_IID);
 static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kIDOMRangeIID, NS_IDOMRANGE_IID);
-static NS_DEFINE_IID(kCRangeCID, NS_RANGE_CID);
 static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMDOCUMENT_IID);
 static NS_DEFINE_IID(kIFocusTrackerIID, NS_IFOCUSTRACKER_IID);
+static NS_DEFINE_IID(kIEventQueueServiceIID,  NS_IEVENTQUEUESERVICE_IID);
 
 
 class PresShell : public nsIPresShell, public nsIViewObserver,
@@ -256,6 +264,8 @@ public:
   NS_IMETHOD ProcessReflowCommands();
   virtual void ClearFrameRefs(nsIFrame*);
   NS_IMETHOD CreateRenderingContext(nsIFrame *aFrame, nsIRenderingContext *&aContext);
+  NS_IMETHOD CantRenderReplacedElement(nsIPresContext* aPresContext,
+                                       nsIFrame*       aFrame);
 
   //nsIViewObserver interface
 
@@ -272,6 +282,10 @@ public:
   NS_IMETHOD SetFocus(nsIFrame *aFrame, nsIFrame *aAnchorFrame);
 
   NS_IMETHOD GetFocus(nsIFrame **aFrame, nsIFrame **aAnchorFrame);
+
+  // implementation
+  void HandleCantRenderReplacedElementEvent(nsIFrame* aFrame);
+
 protected:
   ~PresShell();
 
@@ -1034,8 +1048,8 @@ PresShell::ClearFrameRefs(nsIFrame* aFrame)
   }
 }
 
-NS_IMETHODIMP PresShell :: CreateRenderingContext(nsIFrame *aFrame,
-                                                  nsIRenderingContext *&aContext)
+NS_IMETHODIMP
+PresShell::CreateRenderingContext(nsIFrame *aFrame, nsIRenderingContext *&aContext)
 {
   nsIWidget *widget = nsnull;
   nsIView   *view = nsnull;
@@ -1070,6 +1084,82 @@ NS_IMETHODIMP PresShell :: CreateRenderingContext(nsIFrame *aFrame,
     rv = dx->CreateRenderingContext(aContext);
 
   NS_RELEASE(dx);
+
+  return rv;
+}
+
+void
+PresShell::HandleCantRenderReplacedElementEvent(nsIFrame* aFrame)
+{
+  // Double-check that we haven't deleted the frame hierarchy
+  // XXX If we stay with this model we approach, then we need to observe
+  // aFrame and if it's deleted null out the pointer in the PL event struct
+  if (nsnull != mRootFrame) {
+    mStyleSet->CantRenderReplacedElement(mPresContext, aFrame);
+    ProcessReflowCommands();
+  }
+}
+
+struct CantRenderReplacedElementEvent : public PLEvent {
+  CantRenderReplacedElementEvent(PresShell* aShell, nsIFrame* aFrame);
+  ~CantRenderReplacedElementEvent();
+
+  PresShell* mShell;
+  nsIFrame*  mFrame;
+};
+
+static void PR_CALLBACK
+HandlePLEvent(CantRenderReplacedElementEvent* aEvent)
+{
+  aEvent->mShell->HandleCantRenderReplacedElementEvent(aEvent->mFrame);
+}
+
+static void PR_CALLBACK
+DestroyPLEvent(CantRenderReplacedElementEvent* aEvent)
+{
+  delete aEvent;
+}
+
+CantRenderReplacedElementEvent::CantRenderReplacedElementEvent(PresShell* aShell,
+                                                               nsIFrame*  aFrame)
+{
+  mShell = aShell;
+  NS_ADDREF(mShell);
+  mFrame = aFrame;
+  PL_InitEvent(this, nsnull, (PLHandleEventProc)::HandlePLEvent,
+               (PLDestroyEventProc)::DestroyPLEvent);
+}
+
+CantRenderReplacedElementEvent::~CantRenderReplacedElementEvent()
+{
+  NS_RELEASE(mShell);
+}
+
+NS_IMETHODIMP
+PresShell::CantRenderReplacedElement(nsIPresContext* aPresContext,
+                                     nsIFrame*       aFrame)
+{
+  nsIEventQueueService* eventService;
+  nsresult              rv;
+   
+  // Notify the style set, but post the notification so it doesn't happen
+  // now
+  rv = nsServiceManager::GetService(kEventQueueServiceCID,
+                                    kIEventQueueServiceIID,
+                                    (nsISupports **)&eventService);
+  if (NS_SUCCEEDED(rv)) {
+    PLEventQueue* eventQueue;
+    rv = eventService->GetThreadEventQueue(PR_GetCurrentThread(), 
+                                           &eventQueue);
+    nsServiceManager::ReleaseService(kEventQueueServiceCID, eventService);
+
+    if (nsnull != eventQueue) {
+      CantRenderReplacedElementEvent* ev;
+
+      ev = new CantRenderReplacedElementEvent(this, aFrame);
+      PL_PostEvent(eventQueue, ev);
+    }
+  }
 
   return rv;
 }
