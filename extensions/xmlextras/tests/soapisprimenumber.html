@@ -65,6 +65,7 @@ function makeCall(value) {
 </SCRIPT>
 <P>
 <FORM>
-<INPUT ID=NUMBER TYPE="text" onkeyup="makeCall(value);">
+<INPUT ID=NUMBER TYPE="text">
+<INPUT TYPE="button" VALUE="Call" ONCLICK="makeCall(document.getElementById('NUMBER').value);">
 </BODY>
 </HTML>
