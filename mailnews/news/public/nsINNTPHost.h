@@ -84,9 +84,6 @@ class nsINNTPHost : public nsISupports {
   NS_IMETHOD QuerySearchableHeader(const char *headerName, PRBool *_retval) = 0;
 
   /*  <IDL>  */
-  NS_IMETHOD AddSubscribedNewsgroup(const char *url) = 0;
-
-  /*  <IDL>  */
   NS_IMETHOD GroupNotFound(const char *group, PRBool opening) = 0;
 
   /*  <IDL>  */
@@ -108,7 +105,7 @@ class nsINNTPHost : public nsISupports {
   NS_IMETHOD SetGroupNeedsExtraInfo(const char *groupname, PRBool needsExtraInfo) = 0;
 
   /*  <IDL>  */
-  NS_IMETHOD GetNewsGroupAndNumberOfID(const char *message_id, nsINNTPNewsgroup **group, PRUint32 *message_number) = 0;
+  NS_IMETHOD GetNewsgroupAndNumberOfID(const char *message_id, nsINNTPNewsgroup **group, PRUint32 *message_number) = 0;
 
   /*  <IDL>  */
   NS_IMETHOD SetPrettyName(const char *groupName, const char *prettyName) = 0;

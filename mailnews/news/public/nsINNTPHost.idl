@@ -53,9 +53,9 @@ interface nsINNTPHost : nsISupports {
     
     void AddSearchableHeader(in string headerName);
     boolean QuerySearchableHeader(in string headerName);
-    
-    /* going away */
-    void AddSubscribedNewsgroup(in string url);
+
+    /* this used to just call pane->GetMaster()->AddNewsGroup(url) */
+    /* void AddSubscribedNewsgroup(in string url); */
     
     /* In response to an NNTP GROUP command, the server said
      * the group doesn't exist
@@ -103,7 +103,7 @@ interface nsINNTPHost : nsISupports {
      this.  If we don't know, we return 0 for both.   If the pane is not a
      thead or message pane, this routine will fail.
     */
-    void GetNewsGroupAndNumberOfID(in string message_id,
+    void GetNewsgroupAndNumberOfID(in string message_id,
                                    out nsINNTPNewsgroup group,
                                    out unsigned long message_number);
 
