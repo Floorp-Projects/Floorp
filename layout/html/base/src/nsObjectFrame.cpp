@@ -167,6 +167,7 @@ public:
                    const nsRect& aDirtyRect,
                    nsFramePaintLayer aWhichLayer);
   NS_IMETHOD Scrolled(nsIView *aView);
+  NS_IMETHOD GetFrameName(nsString& aResult) const;
 
   //~~~
   NS_IMETHOD ContentChanged(nsIPresContext* aPresContext,
@@ -300,6 +301,12 @@ nsObjectFrame::Init(nsIPresContext&  aPresContext,
   }
 
   return rv;
+}
+
+NS_IMETHODIMP
+nsObjectFrame::GetFrameName(nsString& aResult) const
+{
+  return MakeFrameName("ObjectFrame", aResult);
 }
 
 nsresult
