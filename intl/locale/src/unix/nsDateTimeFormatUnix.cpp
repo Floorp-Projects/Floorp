@@ -135,12 +135,12 @@ nsresult nsDateTimeFormatUnix::Initialize(nsILocale* locale)
     }
   }
 
-  mLocalePreferred24hour = LocalePreferred24hour();
+  LocalePreferred24hour();
 
   return res;
 }
 
-PRBool nsDateTimeFormatUnix::LocalePreferred24hour()
+void nsDateTimeFormatUnix::LocalePreferred24hour()
 {
   char str[100];
   time_t tt;
@@ -156,14 +156,24 @@ PRBool nsDateTimeFormatUnix::LocalePreferred24hour()
 
   char *temp = setlocale(LC_TIME, mPlatformLocale);
   strftime(str, (size_t)99, "%X", (struct tm *)tmc);
+
   (void) setlocale(LC_TIME, temp);
 
-  for (i=0; str[i]; i++)
+  mLocalePreferred24hour = PR_FALSE;
+  for (i=0; str[i]; i++) {
     if (str[i] == '2') {    // if there is any '2', that locale use 0-23 time format
-        return PR_TRUE;
+        mLocalePreferred24hour = PR_TRUE;
+        break;
     }
+  }
 
-  return PR_FALSE;
+  mLocaleAMPMfirst = PR_TRUE;
+  if (mLocalePreferred24hour == PR_FALSE) {
+    if (str[0] && str[0] == '1') { // if the first character is '1' of 10:00,
+			           // AMPM string is located after 10:00
+      mLocaleAMPMfirst = PR_FALSE;
+    }
+  }
 }
 
 nsresult nsDateTimeFormatUnix::FormatTime(nsILocale* locale, 
@@ -219,12 +229,12 @@ nsresult nsDateTimeFormatUnix::FormatTMTime(nsILocale* locale,
       break;
     case kTimeFormatSeconds:
       PL_strncpy(fmtT, 
-                 mLocalePreferred24hour ? "%H:%M:%S" : "%I:%M:%S %p", 
+                 mLocalePreferred24hour ? "%H:%M:%S" : mLocaleAMPMfirst ? "%p %I:%M:%S" : "%I:%M:%S %p", 
                  NSDATETIME_FORMAT_BUFFER_LEN);
       break;
     case kTimeFormatNoSeconds:
       PL_strncpy(fmtT, 
-                 mLocalePreferred24hour ? "%H:%M" : "%I:%M %p", 
+                 mLocalePreferred24hour ? "%H:%M" : mLocaleAMPMfirst ? "%p %I:%M" : "%I:%M %p", 
                  NSDATETIME_FORMAT_BUFFER_LEN);
       break;
     case kTimeFormatSecondsForce24Hour:
