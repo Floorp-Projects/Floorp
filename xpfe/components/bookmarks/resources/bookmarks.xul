@@ -116,29 +116,29 @@
 
      <rule>
       <treechildren>
-       <treeitem uri="..." rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type" loading="rdf:http://home.netscape.com/NC-rdf#loading">
+       <treeitem uri="..." persist="open" open="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#open" rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type" loading="rdf:http://home.netscape.com/NC-rdf#loading">
          <treerow>
            <treecell>
              <treeindentation />
-             <titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name" align="right" />
+             <titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name" align="left" />
            </treecell>
            <treecell>
-             <titledbutton value="rdf:http://home.netscape.com/NC-rdf#URL" align="right" style="list-style-image: none;" />
+             <titledbutton value="rdf:http://home.netscape.com/NC-rdf#URL" align="left" style="list-style-image: none;" />
            </treecell>
            <treecell>
-             <titledbutton value="rdf:http://home.netscape.com/NC-rdf#ShortcutURL" align="right" style="list-style-image: none;" />
+             <titledbutton value="rdf:http://home.netscape.com/NC-rdf#ShortcutURL" align="left" style="list-style-image: none;" />
            </treecell>
            <treecell>
-             <titledbutton value="rdf:http://home.netscape.com/NC-rdf#Description" align="right" style="list-style-image: none;" />
+             <titledbutton value="rdf:http://home.netscape.com/NC-rdf#Description" align="left" style="list-style-image: none;" />
            </treecell>
            <treecell>
-             <titledbutton value="rdf:http://home.netscape.com/WEB-rdf#LastVisitDate" align="right" style="list-style-image: none;" />
+             <titledbutton value="rdf:http://home.netscape.com/WEB-rdf#LastVisitDate" align="left" style="list-style-image: none;" />
            </treecell>
            <treecell>
-             <titledbutton value="rdf:http://home.netscape.com/NC-rdf#BookmarkAddDate" align="right" style="list-style-image: none;" />
+             <titledbutton value="rdf:http://home.netscape.com/NC-rdf#BookmarkAddDate" align="left" style="list-style-image: none;" />
            </treecell>
            <treecell>
-             <titledbutton value="rdf:http://home.netscape.com/WEB-rdf#LastModifiedDate" align="right" style="list-style-image: none;" />
+             <titledbutton value="rdf:http://home.netscape.com/WEB-rdf#LastModifiedDate" align="left" style="list-style-image: none;" />
            </treecell>
 
          </treerow>
