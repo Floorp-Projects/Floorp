@@ -112,24 +112,24 @@
                 <rows>
             
                     <!-- Title -->    
-                    <row>
-                        <hbox class="field-label-box-class">
+                    <row align="center">
+                        <hbox class="field-label-box-class" pack="end">
                             <label for="title-field" value="&newevent.title.label;"/>
                         </hbox>
                         <textbox id="title-field"/>
                     </row>
         
                     <!-- Location -->    
-                    <row>
-                        <hbox class="field-label-box-class" >
+                    <row align="center">
+                        <hbox class="field-label-box-class" pack="end">
                             <label for="location-field" value="&newevent.location.label;"/>
                         </hbox>
                         <textbox id="location-field"/>
                     </row>
             
                     <!-- Category -->    
-                    <row collapsed="true">
-                        <hbox class="field-label-box-class" >
+                    <row collapsed="true" align="center">
+                        <hbox class="field-label-box-class" pack="end">
                             <label for="category-field" value="&newevent.category.label;"/>
                         </hbox>
                         <menulist id="category-field" label="&newevent.choosecategory.label;" value="" >
@@ -140,11 +140,11 @@
                     </row>
             
                     <!-- Date -->    
-                    <row>
-                        <hbox class="field-label-box-class" >
+                    <row align="center">
+                        <hbox class="field-label-box-class" pack="end">
                             <label value="&newevent.date.label;"/>
                         </hbox>
-                        <hbox  id="start-date-box">
+                        <hbox  id="start-date-box" align="center">
                             <textbox id="start-date-text" readonly="true"                 onmousedown="prepareDatePicker('start-date-text')" popup="oe-date-picker-popup" position="after_start"/>
                             <image class="four-state-image-button" id="start-date-button" onmousedown="prepareDatePicker('start-date-text')" popup="oe-date-picker-popup" position="after_start" />
                         </hbox>
@@ -152,18 +152,18 @@
                     
             
                     <!-- All Day -->    
-                    <row>
+                    <row align="center">
                         <spacer />
                         <checkbox id="all-day-event-checkbox" label="&newevent.alldayevent.label;" checked="false" oncommand="commandAllDay()"/>
                     </row>
             
                     
                     <!-- Start -->    
-                    <row>
-                        <hbox class="field-label-box-class" >
+                    <row align="center">
+                        <hbox class="field-label-box-class" pack="end">
                             <label id="start-time-label" value="&newevent.start.label;"/>
                         </hbox>
-                        <hbox id="start-event-time-box">
+                        <hbox id="start-event-time-box" align="center">
                             <textbox id="start-time-text" readonly="true" value=""      onmousedown="prepareTimePicker('start-time-text')" popup="oe-time-picker-popup" position="after_start"/>
                             <image class="four-state-image-button" id="start-time-button" onmousedown="prepareTimePicker('start-time-text')" popup="oe-time-picker-popup" position="after_start"/>
                         </hbox>
@@ -171,11 +171,11 @@
                     
                     
                     <!-- End -->    
-                    <row>
-                        <hbox class="field-label-box-class" >
+                    <row align="center">
+                        <hbox class="field-label-box-class" pack="end">
                             <label id="end-time-label" value="&newevent.end.label;"/>
                         </hbox>
-                        <hbox id="end-event-time-box">
+                        <hbox id="end-event-time-box" align="center">
                             <textbox id="end-time-text" readonly="true" value=""      onmousedown="prepareTimePicker('end-time-text')" popup="oe-time-picker-popup" position="after_start"/>
                             <image class="four-state-image-button" id="end-time-button" onmousedown="prepareTimePicker('end-time-text')" popup="oe-time-picker-popup" position="after_start"/>
                         </hbox>
@@ -183,8 +183,8 @@
                     
                     
                     <!-- Description -->    
-                    <row flex="1">
-                        <hbox class="field-label-box-class" >
+                    <row flex="1" align="start">
+                        <hbox class="field-label-box-class" pack="end">
                             <label for="description-field" value="&newevent.description.label;"/>
                         </hbox>
                         <textbox id="description-field" multiline="true" rows="3" cols="30" />
@@ -192,19 +192,18 @@
                     
             
                     <!-- Private -->    
-                    <row collapsed="true">
+                    <row collapsed="true" align="center">
                         <spacer />
                         <checkbox id="private-checkbox" checked="false" label="&newevent.private.label;"/>
                     </row>
             
             
                     <!-- Alarm -->    
-                    <row>
+                    <row align="center">
                         <spacer />
                         <vbox>
-									<hbox  id="alarm-box">
-										 <checkbox id="alarm-checkbox"  label="&newevent.alarm.label;" checked="false" oncommand="commandAlarm()"/>
-										 <spacer id="alarm-spacer" />
+									<hbox  id="alarm-box" align="center">
+										 <checkbox id="alarm-checkbox" class="proper-align" label="&newevent.alarm.label;" checked="false" oncommand="commandAlarm()"/>
 										 <textbox id="alarm-length-field"  oninput="alarmLengthKeyDown( this )"/>
                                
                                <menulist id="alarm-length-units" labelnumber="labelplural">
@@ -218,7 +217,7 @@
 										 <label id="alarm-length-text" for="alarm-length-field" value="&newevent.beforealarm.label;"/>
                                
 									</hbox>
-									<hbox id="alarm-box-email" collapsed="true">
+									<hbox id="alarm-box-email" collapsed="true" align="center">
 										 <checkbox id="alarm-email-checkbox"  label="&newevent.email.label;" checked="false" oncommand="commandAlarmEmail()"/>
 										 <textbox id="alarm-email-field" disabled="true" size="39" value="" />
 									</hbox>       
@@ -226,10 +225,10 @@
                     </row>
              
                     <!-- Invite -->    
-                    <row collapsed="true">
+                    <row collapsed="true" align="center">
                         <spacer />
                         <vbox>
-									<hbox id="invite-box">
+									<hbox id="invite-box" align="center">
 										 <checkbox id="invite-checkbox"  label="&newevent.invite.label;" checked="false" oncommand="commandInvite()"/>
 										 <spacer id="invite-spacer" />
 										 <textbox id="invite-email-field" size="39" disabled="true"/>
@@ -238,11 +237,11 @@
                     </row>
              
                     <!-- Repeat -->    
-                    <row collapsed="false">
+                    <row collapsed="false" align="center">
                         <spacer />
                         <vbox>
-                          <hbox id="repeat-box">
-                            <checkbox id="repeat-checkbox" label="&newevent.repeat.label;"  checked="false" oncommand="commandRepeat()"/>
+                          <hbox id="repeat-box" align="center">
+                            <checkbox id="repeat-checkbox" class="proper-align" label="&newevent.repeat.label;"  checked="false" oncommand="commandRepeat()"/>
                             <textbox id="repeat-length-field" disable-controller="repeat" value="1"  oninput="repeatLengthKeyDown( this )"/>
                                     
                             <menulist crop="none" oncommand="repeatUnitCommand( this )" labelnumber="labelplural"  id="repeat-length-units" disable-controller="repeat">
@@ -256,7 +255,7 @@
                           </hbox>
                                
                           
-                          <hbox id="repeat-extenstions-week" disabled="true" disable-controller="repeat" collapsed="false">
+                          <hbox id="repeat-extenstions-week" disabled="true" disable-controller="repeat" collapsed="false" align="center">
                             <spacer class="repeat-left-spacer" />
                             <checkbox disable-controller="repeat" class="repeat-day-class" label="Sun" id="advanced-repeat-week-0" value="0" checked="false" />
                             <checkbox disable-controller="repeat" class="repeat-day-class" label="Mon" id="advanced-repeat-week-1" value="1" checked="false" />
@@ -268,9 +267,9 @@
                           </hbox>
                                
                           
-                          <hbox id="repeat-extenstions-month" diabled="true" collapsed="true">
+                          <hbox id="repeat-extenstions-month" diabled="true" collapsed="true" align="center">
                               <spacer class="repeat-left-spacer" />
-                              <vbox>
+                              <vbox align="center">
                                  <radiogroup id="advanced-repeat-month" disable-controller="repeat">
                                     <radio group="advanced-repeat-month" disable-controller="repeat" id="advanced-repeat-dayofmonth" label="On the xth day of the month" selected="true"/>
                                     <radio group="advanced-repeat-month" disable-controller="repeat" id="advanced-repeat-dayofweek"  label="Last Tuesday of the month"/>
@@ -280,14 +279,12 @@
                                
                           <spacer height="10" />
                             
-                          <hbox>
+                          <hbox align="center">
                             <spacer class="repeat-left-spacer" />
                             <radiogroup id="repeat-until-group" disable-controller="repeat">
-                              <hbox>
-                                <radio group="repeat-until-group" id="repeat-forever-radio" disable-controller="repeat" label="&newevent.forever.label;" oncommand="commandUntil()"/>
-                              </hbox>    
+                              <radio group="repeat-until-group" id="repeat-forever-radio" disable-controller="repeat" label="&newevent.forever.label;" oncommand="commandUntil()"/>
                               
-                              <hbox id="repeat-end-box">
+                              <hbox id="repeat-end-box" align="center">
                                   <radio group="repeat-until-group" id="repeat-until-radio" disable-controller="repeat" selected="true" label="&newevent.until.label;"   oncommand="commandUntil()"/>
                                   <spacer id="until-spacer"/>
                                   <textbox id="repeat-end-date-text" readonly="true" value="" onmousedown="prepareDatePicker('repeat-end-date-text')" popup="oe-date-picker-popup"  position="before_start"/>

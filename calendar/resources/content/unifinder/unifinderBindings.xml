@@ -54,7 +54,7 @@
     <content orient="vertical">
       <xul:box orient="vertical" class="unifinder-internal-box" flex="1" >
         <xul:box orient="horizontal" class="unifinder-top-box"  >
-          <xul:toolbox class="unifinder-toolbox"  flex="1">
+          <xul:toolbox class="toolbox-top" flex="1">
             <xul:toolbar id="unifinder-toolbar" flex="1">
                 <xul:box>
                     <children includes="unifinder-button" />
@@ -126,7 +126,7 @@
 
   <binding id="unifinder-search-controls" extends="chrome://calendar/content/unifinder/unifinderBindings.xml#unifinder-base">
     <content orient="horizontal">
-        <xul:hbox pack="center" align="start" flex="1">
+        <xul:hbox align="center" flex="1">
             <xul:label for="unifinder-search-field" value="&unifinder.search.options.searchfor;" />
             <xul:textbox id="unifinder-search-field" 
                      inherits="onkeypress=keypressfunction" flex="1"/>  

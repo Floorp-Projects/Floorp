@@ -65,6 +65,10 @@
    margin-right   : 4px;
 }
 
+.proper-align
+{
+	min-width		: 120px;
+}
 
 .field-label-box-class
 {
