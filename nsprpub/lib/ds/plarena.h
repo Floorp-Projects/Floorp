@@ -134,7 +134,7 @@ struct PLArenaPool {
     PR_BEGIN_MACRO \
         char *_m = (char *)(mark); \
         PLArena *_a = (pool)->current; \
-        if (PR_UPTRDIFF(_m, _a) <= PR_UPTRDIFF(_a->avail, _a)) { \
+        if (PR_UPTRDIFF(_m, _a->base) <= PR_UPTRDIFF(_a->avail, _a->base)) { \
             _a->avail = (PRUword)PL_ARENA_ALIGN(pool, _m); \
             PL_CLEAR_UNUSED(_a); \
             PL_ArenaCountRetract(pool, _m); \
