@@ -33,7 +33,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslerr.c,v 1.1 2000/03/31 19:34:59 relyea%netscape.com Exp $
+ * $Id: sslerr.c,v 1.2 2000/09/07 03:35:31 nelsonb%netscape.com Exp $
  */
 
 #include "prerror.h"
@@ -58,8 +58,10 @@ ssl_MapLowLevelError(int hiLevelError)
     case SEC_ERROR_IO:
     case SEC_ERROR_BAD_DATA:
     case SEC_ERROR_LIBRARY_FAILURE:
+    case SEC_ERROR_EXTENSION_NOT_FOUND:
     case SSL_ERROR_BAD_CLIENT:
     case SSL_ERROR_BAD_SERVER:
+    case SSL_ERROR_SESSION_NOT_FOUND:
     	PORT_SetError(hiLevelError);
 	return hiLevelError;
 
