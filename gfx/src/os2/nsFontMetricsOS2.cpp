@@ -1530,6 +1530,7 @@ nsFontMetricsOS2::GetUnicodeFont( HPS aPS )
   if( fh )
   {
     fh->mFattrs.usCodePage = 1208;
+    fh->mConvertCodePage = 1208;
     return fh;
   }
     
@@ -1552,6 +1553,7 @@ nsFontMetricsOS2::GetUnicodeFont( HPS aPS )
   if (context.mFont) // a suitable font was found
   {
     context.mFont->mFattrs.usCodePage = 1208;
+    context.mFont->mConvertCodePage = 1208;
     return context.mFont;
   }
   
@@ -1959,7 +1961,7 @@ nsFontMetricsOS2::InitializeGlobalFonts()
   font->nextFamily = count;
   ::WinReleasePS(ps);
     
-#ifdef DEBUG
+#ifdef DEBUG_pedemont
   for( int k = 0; k < gGlobalFonts->Count(); k++ )
   {
     font = (nsGlobalFont*)gGlobalFonts->ElementAt(k);
