@@ -1,6 +1,6 @@
-2.16 has not been released yet - these are prerelease notes.
+2.18 has not been released yet - these are prerelease notes.
 
-Insert nice little intro for version 2.16 here.
+Insert nice little intro for version 2.18 here.
 
 **************************
 *** ABOUT THIS VERSION ***
@@ -58,10 +58,11 @@ XML::Parser (any)
   (bug 87958)
 
 - This is possibly the last stable release to support the
-  shadow database. The replacement (using MySQL's built in
+  shadow database.  The replacement (using MySQL's built in
   replication) is not present in 2.16, but we expect that
-  very few sites use this feature.  If this would cause a
-  problem for you, please comment on the below bug.
+  very few sites use this feature, so we are not planning a
+  transition period.  If this would cause a problem for you,
+  please comment on the below bug.
   (bug 124589)
 
 *** Outstanding Issues Of Note ***
@@ -97,13 +98,13 @@ XML::Parser (any)
   Toolkit, in order to achieve best performance.  However, there are
   known problems with XS Stash and Perl 5.005_02 and lower.  If you
   wish to use these older versions of Perl, please use the regular
-  stash. You are asked which stash you want to use at Template Toolkit
+  stash.  You are asked which stash you want to use at Template Toolkit
   installation time.
   (bug 140674)
 
-- This release of Bugzilla uses the Template Toolkit. For speed,
-  compiled templates are cached on disk. If you modify the templates
-  in order to customise the look and feel of your Bugzilla instalation,
+- This release of Bugzilla uses the Template Toolkit.  For speed,
+  compiled templates are cached on disk.  If you modify the templates
+  in order to customise the look and feel of your Bugzilla installation,
   the toolkit will normally detect the changes, and recompile the
   changed templates.
 
@@ -112,54 +113,65 @@ XML::Parser (any)
   the template directory would have to be world-writable for automatic
   recompilation to happen.
 
-  Doing that would be a security risk. So, if you modify templates locally 
+  Doing that would be a security risk.  So, if you modify templates locally 
   and do not have a webservergroup set, you will have to rerun checksetup.pl
-  to recompile the templates manually. If you do not do this, the changes 
+  to recompile the templates manually.  If you do not do this, the changes 
   you make will not appear, and an error message will be reported.
 
   Adding new directories anywhere inside the template directory may cause 
-  permission errors. If you see these, rerun checksetup.pl as root. If you
+  permission errors.  If you see these, rerun checksetup.pl as root.  If you
   do not have root access, or cannot get someone who does to do this for you,
   you can rename the data/template directory to data/template.old (or any
-  other name bugzilla doesn't use). Then rerun checksetup.pl to regenerate
+  other name Bugzilla doesn't use).  Then rerun checksetup.pl to regenerate
   the compiled templates.
   (bug 97832)
 
 - Querying on CC takes too long on big databases.
   (bug 127200)
 
+*********************************************
+*** USERS UPGRADING FROM 2.16 OR EARLIER  ***
+*********************************************
+
+*** SECURITY ISSUES RESOLVED ***
+
+*** IMPORTANT CHANGES ***
+
+*** Other changes of note ***
+
+*** Bug fixes of note ***
+
 ***********************************************
-*** USERS UPGRADING FROM 2.14.1 OR EARLIER  ***
+*** USERS UPGRADING FROM 2.14.2 OR EARLIER  ***
 ***********************************************
 
 *** SECURITY ISSUES RESOLVED ***
 
-- The bug reporter could set the priority even when
-  'letsubmitterchoosepriority' was off.
-  (bug 63018)
 - It was possible for random confidential information to be
   divulged, if the shadow database was in use and became
   corrupted.
   (bug 92263)
+
 - Mass change would set the groupset of every bug to be the
   groupset of the first bug.
   (bug 107718)
-- Most CGIs now run in taint mode.  This helps to prevent
-  failure to validate errors.
-  (bug 108982)
-- queryhelp.cgi no longer shows confidential products to
-  people it shouldn't.
-  (bug 126801)
+
 - The bug list sort order could take arbitrary SQL.  There
   are no known exploits for this problem.
   (bug 130821)
-- It was possible for a user to bypass the IP check by
-  setting up a fake reverse DNS, if the Bugzilla web server
-  was configured to do reverse DNS lookups.  Apache is not
-  configured as such by default.  This is not a complete
-  exploit, as the user's login cookie would also need to
-  be divulged for this to be a problem.
-  (bug 129466)
+
+- The bug reporter could set the priority even when
+  'letsubmitterchoosepriority' was off.
+  (bug 63018)
+
+- Most CGIs are now templatised.  This helps to make it
+  easier to remember to HTML filter values and easier to spot
+  when they are not, preventing cross site scripting attacks.
+  (bug 86168)
+
+- Most CGIs now run in taint mode.  This helps to prevent
+  failure to validate errors.
+  (bug 108982)
 
 *** IMPORTANT CHANGES ***
 
@@ -332,6 +344,35 @@ XML::Parser (any)
   their only email preference was being added or removed from QA.
   (bug 143091)
 
+***********************************************
+*** USERS UPGRADING FROM 2.14.1 OR EARLIER  ***
+***********************************************
+
+*** SECURITY ISSUES RESOLVED ***
+
+- queryhelp.cgi no longer shows confidential products to
+  people it shouldn't.
+  (bug 126801)
+
+- It was possible for a user to bypass the IP check by
+  setting up a fake reverse DNS, if the Bugzilla web server
+  was configured to do reverse DNS lookups.  Apache is not
+  configured as such by default.  This is not a complete
+  exploit, as the user's login cookie would also need to
+  be divulged for this to be a problem.
+  (bug 129466)
+
+- In some situations the data directory became world writeable.
+  (bug 134575)
+
+- Any user with access to editusers.cgi could delete a user
+  regardless of whether 'allowuserdeletion' is on.
+  (bug 141557)
+
+- Real names were not HTML filtered, causing possible cross
+  site scripting attacks.
+  (bug 146447)
+
 ********************************************
 *** USERS UPGRADING FROM 2.14 OR EARLIER ***
 ********************************************
@@ -370,11 +411,13 @@ known to us after the Bugzilla 2.14 release.
 
 - buglist.cgi had an undocumented parameter that allowed you
   to pass arbitrary SQL for the "WHERE" part of a query.
-  This has been disabled. (bug 108812)
+  This has been disabled.
+  (bug 108812)
 
 - It was possible for a user to send arbitrary SQL by inserting
   single quotes in the "mybugslink" field in the user
-  preferences. (bug 108822)
+  preferences.
+  (bug 108822)
 
 - buglist.cgi was not validating that the field names being
   passed from the "boolean chart" query form were valid field
@@ -384,11 +427,72 @@ known to us after the Bugzilla 2.14 release.
 
 - long_list.cgi was not validating that the bug ID parameter
   was actually a number, allowing arbitrary SQL to be inserted
-  if you edited the HTML by hand. (bug 109690)
+  if you edited the HTML by hand.
+  (bug 109690)
 
 ********************************************
 *** USERS UPGRADING FROM 2.12 OR EARLIER ***
 ********************************************
+
+*** SECURITY ISSUES RESOLVED ***
+
+- Multiple instances of unauthorised access to confidential
+  bugs has been fixed.
+  (bug 39524, 39526, 39527, 39531, 39533, 70189, 82781)
+
+- Multiple instances of untrusted parameters not being
+  checked/escaped was fixed.  These included definite security
+  holes.
+  (bug 38854, 38855, 38859, 39536, 87701, 95235)
+
+- After logging in passwords no longer appear in the URL.
+  (bug 15980)
+
+- Procedures to prevent unauthorised access to confidential
+  files are now simpler.  In particular the shadow directory
+  no longer exists and the data/comments file no longer needs
+  to be directly accessible, so the entire data directory can
+  be blocked.  However, no changes are required here if you
+  have a properly secured 2.12 installation as no new files
+  must be protected.
+  (bug 71552, 73191)
+
+- If they do not already exist, checksetup.pl will attempt to
+  write Apache .htaccess files by default, to prevent
+  unauthorised access to confidential files.  You can turn this
+  off in the localconfig file.
+  (bug 76154)
+
+- Sanity check can now only be run by people in the 'editbugs'
+  group.  Although it would be better to have a separate
+  group, this is not possible until the limitation on the
+  number of groups allowed has been removed.
+  (bug 54556)
+
+- The password is no longer stored in plaintext form.  It will
+  be eradicated next time you run checksetup.pl.  A user must
+  now change their password via a password change request that
+  gets validated at their e-mail account, rather than have it
+  mailed to them.
+  (bug 74032)
+
+- When you are using product groups and you move a bug between
+  products (single or mass change), the bug will no longer be
+  restricted to the old product's group (if it was) and will
+  be restricted to the new product's group.
+  (bug 66235)
+
+- There are now options on a bug to choose whether the
+  reporter, and CCs can access a bug even if they aren't in
+  groups the bug it is restricted to.
+  (bug 39816)
+
+- You can no longer mark a bug as a duplicate of a bug you
+  can't see, and if you mark a bug a duplicate of a bug
+  the reporter cannot see you will be given options as to
+  what to do regarding adding the reporter of the resolved
+  bug to the CC of the open bug.
+  (bug 96085)
 
 *** IMPORTANT CHANGES ***
 
@@ -458,57 +562,6 @@ known to us after the Bugzilla 2.14 release.
   in this version to make sure that the user does this.
   (bug 28882, 92593)
 
-*** SECURITY ISSUES RESOLVED ***
-
-- Multiple instances of unauthorised access to confidential
-  bugs has been fixed.
-  (bug 39524, 39526, 39527, 39531, 39533, 70189, 82781)
-- Multiple instances of untrusted parameters not being
-  checked/escaped was fixed.  These included definite security
-  holes.
-  (bug 38854, 38855, 38859, 39536, 87701, 95235)
-- After logging in passwords no longer appear in the URL.
-  (bug 15980)
-- Procedures to prevent unauthorised access to confidential
-  files are now simpler.  In particular the shadow directory
-  no longer exists and the data/comments file no longer needs
-  to be directly accessible, so the entire data directory can
-  be blocked.  However, no changes are required here if you
-  have a properly secured 2.12 installation as no new files
-  must be protected.
-  (bug 71552, 73191)
-- If they do not already exist, checksetup.pl will attempt to
-  write Apache .htaccess files by default, to prevent
-  unauthorised access to confidential files.  You can turn this
-  off in the localconfig file.
-  (bug 76154)
-- Sanity check can now only be run by people in the 'editbugs'
-  group.  Although it would be better to have a separate
-  group, this is not possible until the limitation on the
-  number of groups allowed has been removed.
-  (bug 54556)
-- The password is no longer stored in plaintext form.  It will
-  be eradicated next time you run checksetup.pl.  A user must
-  now change their password via a password change request that
-  gets validated at their e-mail account, rather than have it
-  mailed to them.
-  (bug 74032)
-- When you are using product groups and you move a bug between
-  products (single or mass change), the bug will no longer be
-  restricted to the old product's group (if it was) and will
-  be restricted to the new product's group.
-  (bug 66235)
-- There are now options on a bug to choose whether the
-  reporter, and CCs can access a bug even if they aren't in
-  groups the bug it is restricted to.
-  (bug 39816)
-- You can no longer mark a bug as a duplicate of a bug you
-  can't see, and if you mark a bug a duplicate of a bug
-  the reporter cannot see you will be given options as to
-  what to do regarding adding the reporter of the resolved
-  bug to the CC of the open bug.
-  (bug 96085)
-
 *** Other changes of note ***
 
 - Groups can now be marked inactive, so you can't add a new
@@ -531,7 +584,6 @@ known to us after the Bugzilla 2.14 release.
 - The userregexp of system groups can now be edited without
   resorting to direct database access.
   (bug 65290)
-
 
 *** Bug fixes of note ***
 
@@ -571,6 +623,12 @@ known to us after the Bugzilla 2.14 release.
 *** USERS UPGRADING FROM 2.10 OR EARLIER ***
 ********************************************
 
+*** SECURITY ISSUES RESOLVED ***
+
+- Some security holes have been fixed where shell escape characters
+  could be passed to Bugzilla, allowing remote users to execute
+  system commands on the web server.
+
 *** IMPORTANT CHANGES ***
 
 - There is now a facility for users to choose the sort of
@@ -581,23 +639,19 @@ known to us after the Bugzilla 2.14 release.
 - "Changed" will no longer appear on the subject line of
   change notification emails.  Because of this, you should
   change the subject line in your 'changedmail' and
-  'newchangedmail' params on editparams.cgi. The subject
+  'newchangedmail' params on editparams.cgi.  The subject
   line needs to be changed from
 
     Subject: [Bug %bugid%] %neworchanged% - %summary%
 
-  to
+  to:
 
     Subject: [Bug %bugid%] %neworchanged%%summary%
 
   or whatever is appropriate for the subject you are using
-  on your system. Note the removal of the " - " in the
+  on your system.  Note the removal of the " - " in the
   middle.
   (bug 29820)
-
-- Some security holes have been fixed where shell escape characters
-  could be passed to Bugzilla, allowing remote users to execute
-  system commands on the web server.
 
 *** Other changes of note ***
 
@@ -632,7 +686,6 @@ known to us after the Bugzilla 2.14 release.
   open bug.
   (bug 28676)
 
-
 *** Bug fixes of note ***
 
 - Notification emails will now always be sent to QA contacts.
@@ -657,7 +710,6 @@ known to us after the Bugzilla 2.14 release.
   bug is resolved.  This occurred because of midair collisions.
   (bug 49306)
 
-
 *******************************************
 *** USERS UPGRADING FROM 2.8 OR EARLIER ***
 *******************************************
@@ -668,4 +720,3 @@ Release notes were not compiled for versions of Bugzilla before
 The file 'UPGRADING-pre-2.8' contains instructions you may
 need to perform in addition to running 'checksetup.pl' if you
 are running a pre 2.8 version.
-
