@@ -18,17 +18,20 @@ CRegMozCtlDlg::CRegMozCtlDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CRegMozCtlDlg::IDD, pParent)
 {
 	//{{AFX_DATA_INIT(CRegMozCtlDlg)
-		// NOTE: the ClassWizard will add member initialization here
+	m_szMozillaDir = _T("");
 	//}}AFX_DATA_INIT
 	// Note that LoadIcon does not require a subsequent DestroyIcon in Win32
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
+
+	GetCurrentDirectory(1024, m_szMozillaDir.GetBuffer(1024));
+	m_szMozillaDir.ReleaseBuffer();
 }
 
 void CRegMozCtlDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CRegMozCtlDlg)
-		// NOTE: the ClassWizard will add DDX and DDV calls here
+	DDX_Text(pDX, IDC_MOZILLADIR, m_szMozillaDir);
 	//}}AFX_DATA_MAP
 }
 
@@ -38,6 +41,7 @@ BEGIN_MESSAGE_MAP(CRegMozCtlDlg, CDialog)
 	ON_WM_QUERYDRAGICON()
 	ON_BN_CLICKED(IDC_REGISTER, OnRegister)
 	ON_BN_CLICKED(IDC_UNREGISTER, OnUnregister)
+	ON_BN_CLICKED(IDC_PICKDIR, OnPickDir)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -106,13 +110,13 @@ void CRegMozCtlDlg::OnUnregister()
 
 void CRegMozCtlDlg::RegisterMozillaControl(BOOL bRegister)
 {
+	UpdateData();
+
 	CFileFind cFind;
 	CString szFile;
 	CString szPath;
 
-	CString szDir;
-	GetCurrentDirectory(1024, szDir.GetBuffer(1024));
-	szDir.ReleaseBuffer();
+	SetCurrentDirectory(m_szMozillaDir);
 
 	CRegKey cKey;
 	if (cKey.Open(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\SharedDlls")) != ERROR_SUCCESS)
@@ -127,7 +131,7 @@ void CRegMozCtlDlg::RegisterMozillaControl(BOOL bRegister)
 	{
 		bWorking = cFind.FindNextFile();
 		szFile = cFind.GetFileName();
-		szPath = szDir + CString(_T("\\")) + szFile;
+		szPath = m_szMozillaDir + CString(_T("\\")) + szFile;
 		if (bRegister)
 		{
 			cKey.SetValue(1, szPath);
@@ -137,9 +141,14 @@ void CRegMozCtlDlg::RegisterMozillaControl(BOOL bRegister)
 			cKey.DeleteValue(szPath);
 		}
 	}
+	cKey.Close();
+
+	cKey.Create(HKEY_LOCAL_MACHINE, _T("Software\\Mozilla"));
+	cKey.SetValue(m_szMozillaDir, _T("MozillaDir"));
+	cKey.Close();
 
 	// Now register the mozilla control
-	CString szMozCtl = szDir + CString(_T("\\npmozctl.dll"));
+	CString szMozCtl = m_szMozillaDir + CString(_T("\\npmozctl.dll"));
 	HINSTANCE hMod = LoadLibrary(szMozCtl);
 	if (hMod == NULL)
 	{
@@ -155,3 +164,49 @@ void CRegMozCtlDlg::RegisterMozillaControl(BOOL bRegister)
 	AfxMessageBox(bRegister ? _T("Register completed") : _T("Unregister completed"));
 }
 
+
+void CRegMozCtlDlg::OnPickDir() 
+{
+	BROWSEINFO bi;
+	TCHAR szFolder[MAX_PATH + 1];
+
+	memset(szFolder, 0, sizeof(szFolder));
+
+	memset(&bi, 0, sizeof(bi));
+	bi.hwndOwner = GetSafeHwnd();
+	bi.pidlRoot = NULL;
+	bi.pszDisplayName = szFolder;
+	bi.lpszTitle = _T("Pick a folder to scan");
+
+	// Open the folder browser dialog
+	LPITEMIDLIST pItemList = SHBrowseForFolder(&bi);
+	if (pItemList)
+	{
+		IMalloc *pShellAllocator = NULL;
+		
+		SHGetMalloc(&pShellAllocator);
+		if (pShellAllocator)
+		{
+			char szPath[MAX_PATH + 1];
+
+			if (SHGetPathFromIDList(pItemList, szPath))
+			{
+				// Chop off the end path seperator
+				int nPathSize = strlen(szPath);
+				if (nPathSize > 0)
+				{
+					if (szPath[nPathSize - 1] == '\\')
+					{
+						szPath[nPathSize - 1] = '\0';
+					}
+				}
+
+				m_szMozillaDir = CString(szPath);
+				UpdateData(FALSE);
+			}
+
+			pShellAllocator->Free(pItemList);
+			pShellAllocator->Release();
+		}
+
+	}}

@@ -26,7 +26,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 // Dialog
 //
 
-IDD_REGMOZCTL_DIALOG DIALOGEX 0, 0, 210, 101
+IDD_REGMOZCTL_DIALOG DIALOGEX 0, 0, 210, 116
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_APPWINDOW
 CAPTION "RegMozCtl"
@@ -34,12 +34,14 @@ FONT 8, "MS Sans Serif"
 BEGIN
     LTEXT           "This application registers/deregisters the Mozilla Control and ensures that its dependent DLLs are listed as SHARED so that they can be found when the control is used by other applications.",
                     IDC_STATIC,34,7,169,35
-    LTEXT           "You must run this program from the directory containing the Mozilla control and click on the Register or Deregister as appropriate.",
-                    IDC_STATIC,34,47,169,25
-    DEFPUSHBUTTON   "&Register",IDC_REGISTER,7,80,50,14
-    PUSHBUTTON      "&Unregister",IDC_UNREGISTER,80,80,50,14
-    PUSHBUTTON      "&Close",IDCANCEL,153,80,50,14
+    LTEXT           "You must choose the directory containing the Mozilla control and click on the Register or Deregister as appropriate.",
+                    IDC_STATIC,7,47,196,24
+    DEFPUSHBUTTON   "&Register",IDC_REGISTER,7,95,50,14
+    PUSHBUTTON      "&Unregister",IDC_UNREGISTER,80,95,50,14
+    PUSHBUTTON      "&Close",IDCANCEL,153,95,50,14
     ICON            IDI_ICON2,IDC_STATIC,7,7,21,20
+    EDITTEXT        IDC_MOZILLADIR,7,73,179,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "...",IDC_PICKDIR,190,73,13,14
 END
 
 
@@ -99,7 +101,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 203
         TOPMARGIN, 7
-        BOTTOMMARGIN, 94
+        BOTTOMMARGIN, 109
     END
 END
 #endif    // APSTUDIO_INVOKED
