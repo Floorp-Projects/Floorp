@@ -208,13 +208,13 @@ nsLineLayout::BeginLineReflow(nscoord aX, nscoord aY,
 {
   NS_ASSERTION(nsnull == mRootSpan, "bad linelayout user");
 #ifdef DEBUG
-  if ((aWidth > 200000) && (aWidth != NS_UNCONSTRAINEDSIZE)) {
+  if ((aWidth != NS_UNCONSTRAINEDSIZE) && CRAZY_WIDTH(aWidth)) {
     nsFrame::ListTag(stdout, mBlockReflowState->frame);
     printf(": Init: bad caller: width WAS %d(0x%x)\n",
            aWidth, aWidth);
     aWidth = NS_UNCONSTRAINEDSIZE;
   }
-  if ((aHeight > 200000) && (aHeight != NS_UNCONSTRAINEDSIZE)) {
+  if ((aHeight != NS_UNCONSTRAINEDSIZE) && CRAZY_HEIGHT(aHeight)) {
     nsFrame::ListTag(stdout, mBlockReflowState->frame);
     printf(": Init: bad caller: height WAS %d(0x%x)\n",
            aHeight, aHeight);
@@ -301,13 +301,13 @@ nsLineLayout::UpdateBand(nscoord aX, nscoord aY,
   PerSpanData* psd = mRootSpan;
   NS_PRECONDITION(psd->mX == psd->mLeftEdge, "update-band called late");
 #ifdef DEBUG
-  if ((aWidth > 200000) && (aWidth != NS_UNCONSTRAINEDSIZE)) {
+  if ((aWidth != NS_UNCONSTRAINEDSIZE) && CRAZY_WIDTH(aWidth)) {
     nsFrame::ListTag(stdout, mBlockReflowState->frame);
     printf(": UpdateBand: bad caller: width WAS %d(0x%x)\n",
            aWidth, aWidth);
     aWidth = NS_UNCONSTRAINEDSIZE;
   }
-  if ((aHeight > 200000) && (aHeight != NS_UNCONSTRAINEDSIZE)) {
+  if ((aHeight != NS_UNCONSTRAINEDSIZE) && CRAZY_HEIGHT(aHeight)) {
     nsFrame::ListTag(stdout, mBlockReflowState->frame);
     printf(": UpdateBand: bad caller: height WAS %d(0x%x)\n",
            aHeight, aHeight);
@@ -748,10 +748,11 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   mSpaceManager->Translate(-tx, -ty);
 
 #ifdef DEBUG_kipp
-  NS_ASSERTION((metrics.width > -200000) && (metrics.width < 200000), "oy");
-  NS_ASSERTION((metrics.height > -200000) && (metrics.height < 200000), "oy");
-#endif
-#ifdef DEBUG
+  if (CRAZY_WIDTH(metrics.width) || CRAZY_HEIGHT(metrics.height)) {
+    printf("nsBlockReflowContext: ");
+    nsFrame::ListTag(stdout, aFrame);
+    printf(" metrics=%d,%d!\n", metrics.width, metrics.height);
+  }
   if (mComputeMaxElementSize &&
       ((nscoord(0xdeadbeef) == metrics.maxElementSize->width) ||
        (nscoord(0xdeadbeef) == metrics.maxElementSize->height))) {
@@ -1389,6 +1390,15 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
     psd->mTopLeading = 0;
     psd->mBottomLeading = 0;
     psd->mLogicalHeight = 0;
+
+    // Make sure we fixup their y coordinates to be relative to the
+    // parent, however, otherwise later calculations will bust.
+    PerFrameData* pfd = psd->mFirstFrame;
+    while (nsnull != pfd) {
+      pfd->mBounds.x = 0;
+      pfd->mBounds.y = 0;
+      pfd = pfd->mNext;
+    }
 #ifdef NOISY_VERTICAL_ALIGN
     printf("  ==> [empty line]\n");
 #endif
@@ -1630,8 +1640,8 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
   psd->mMinY = minY;
   psd->mMaxY = maxY;
 #ifdef NOISY_VERTICAL_ALIGN
-  printf("  ==> minY=%d maxY=%d delta=%d maxBoxHeight=%d\n",
-         minY, maxY, maxY - minY, maxBoxHeight);
+  printf("  ==> minY=%d maxY=%d delta=%d maxTopBoxHeight=%d maxBottomBoxHeight=%d\n",
+         minY, maxY, maxY - minY, maxTopBoxHeight, maxBottomBoxHeight);
 #endif
   if (maxTopBoxHeight > mMaxTopBoxHeight) {
     mMaxTopBoxHeight = maxTopBoxHeight;
@@ -1774,12 +1784,20 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsRect& aCombinedArea)
 
     nscoord xl = x + r->x;
     nscoord xr = x + r->XMost();
-    if (xl < x0) x0 = xl;
-    if (xr > x1) x1 = xr;
+    if (xl < x0) {
+      x0 = xl;
+    }
+    if (xr > x1) {
+      x1 = xr;
+    }
     nscoord yt = y + r->y;
     nscoord yb = y + r->YMost();
-    if (yt < y0) y0 = yt;
-    if (yb > y1) y1 = yb;
+    if (yt < y0) {
+      y0 = yt;
+    }
+    if (yb > y1) {
+      y1 = yb;
+    }
 
     pfd = pfd->mNext;
   }
