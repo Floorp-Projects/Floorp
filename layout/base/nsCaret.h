@@ -58,7 +58,7 @@ class nsCaret : public nsICaret,
     NS_IMETHOD    GetCaretVisible(PRBool *outMakeVisible);
  		NS_IMETHOD    SetCaretVisible(PRBool intMakeVisible);
   	NS_IMETHOD    SetCaretReadOnly(PRBool inMakeReadonly);
-		NS_IMETHOD 		GetWindowRelativeCoordinates(nsRect& outCoordinates, PRBool& outIsCollapsed, nsISelection *inDOMSel);
+		NS_IMETHOD 		GetCaretCoordinates(EViewCoordinates aRelativeToType, nsISelection *inDOMSel, nsRect* outCoordinates, PRBool* outIsCollapsed);
 		NS_IMETHOD 		ClearFrameRefs(nsIFrame* aFrame);
 		NS_IMETHOD 		EraseCaret();
 
@@ -76,11 +76,6 @@ class nsCaret : public nsICaret,
     
     nsresult      StartBlinking();
     nsresult      StopBlinking();
-    
-    enum EViewCoordinates {
-      eTopLevelWindowCoordinates,
-      eViewCoordinates
-    };
     
     void          GetViewForRendering(nsIFrame *caretFrame, EViewCoordinates coordType, nsPoint &viewOffset, nsRect& outClipRect, nsIView* &outView);
     PRBool        SetupDrawingFrameAndOffset();
