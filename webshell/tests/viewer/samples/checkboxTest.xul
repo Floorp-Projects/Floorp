@@ -1,20 +1,56 @@
 <?xml version="1.0"?> 
-<?xml-stylesheet href="xul.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://bookmarks/skin/" type="text/css"?> 
 
 <!DOCTYPE window> 
 
 <window style="width: 100%; height: 100%" xmlns:html="http://www.w3.org/TR/REC-html40"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="setTri()"> 
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" align="vertical" 
+        onload=""> 
 
 <html:h1>TriStateCheckbox Test 1</html:h1>
 
+
 <html:script>
 
-function setTri()
+function MakeOneTriState()
+{
+  var tsbox = document.getElementById("normal");
+  tsbox.setAttribute("moz-tristate", "1");
+}
+function MakeTwoNormal()
 {
   var tsbox = document.getElementById("tristate");
-  tsbox.setAttribute("value", "2");
+  tsbox.removeAttribute("moz-tristate");
+}
+
+function setTwoToMixed()
+{
+  var tsbox = document.getElementById("tristate");
+  tsbox.setAttribute("moz-tristatevalue", "2");
+}
+
+function dumpTwoValue()
+{
+  var tsbox = document.getElementById("tristate");
+  dump ( "value of button two is " + tsbox.getAttribute("moz-tristatevalue") + "\n" );
+}
+function dumpOneValue()
+{
+  var tsbox = document.getElementById("normal");
+  dump ( "value of button one is " + tsbox.getAttribute("moz-tristatevalue") + "\n" );
+}
+
+function disableTwo()
+{
+  var tsbox = document.getElementById("tristate");
+  tsbox.disabled = true;
+}
+function enableTwo()
+{
+  var tsbox = document.getElementById("tristate");
+  tsbox.disabled = false;
 }
 
 </html:script>
@@ -26,10 +62,30 @@ normal two-state checkbox. The last one should behave like a tri-state.
 
 <html:hr/>
 
-<checkbox/>Dual state<html:br/>
+<html:label>
+<html:input type="checkbox" id="normal"/>Button One (Normal)
+</html:label>
 
-<checkbox id="tristate"/>Tri state baby!<html:br/>
+<html:label>
+<html:input type="checkbox" moz-tristate="1" id="tristate"/>Button Two (Tristate)
+</html:label>
 
-<html:button onclick="setTri()">Click Me To Set TriState</html:button>
+<html:label>
+<html:input type="checkbox" style="moz-tristate: 1;" id="foop"/>Button Three (Tristate set by css)
+</html:label>
+
+<html:button onclick="MakeOneTriState()">Change Mode On Button One</html:button>
+<html:button onclick="MakeTwoNormal()">Change Mode On Button Two</html:button>
+
+<html:hr/>
+
+<html:button onclick="setTwoToMixed()">Set Two To Mixed</html:button>
+<html:button onclick="dumpOneValue()">Dump Value of Button One</html:button>
+<html:button onclick="dumpTwoValue()">Dump Value of Button Two</html:button>
+
+<html:hr/>
+
+<html:button onclick="disableTwo()">Disable Button Two</html:button>
+<html:button onclick="enableTwo()">Enable Button Two</html:button>
 
 </window>
