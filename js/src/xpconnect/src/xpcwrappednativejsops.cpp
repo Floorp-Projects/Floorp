@@ -794,6 +794,40 @@ WrappedNative_DropProperty(JSContext *cx, JSObject *obj, JSProperty *prop)
     }
 }        
 
+JS_STATIC_DLL_CALLBACK(JSBool)
+WrappedNative_Resolve(JSContext *cx, JSObject *obj, jsval idval)
+{
+    AUTO_PUSH_JSCONTEXT(cx);
+    SET_CALLER_JAVASCRIPT(cx);
+    nsXPCWrappedNative* wrapper;
+
+    wrapper = GET_WRAPPER(cx, obj);
+    if(wrapper && wrapper->IsValid())
+    {
+        nsXPCWrappedNativeClass* clazz = wrapper->GetClass();
+        NS_ASSERTION(clazz,"wrapper without class");
+
+        jsid id; 
+        if(JS_ValueToId(cx, idval, &id))
+        {
+            const XPCNativeMemberDescriptor* desc = clazz->LookupMemberByID(id);
+            if(desc)
+            {
+                jsval val;            
+                JSObject* real_obj = wrapper->GetJSObject();
+                if(WrappedNative_GetProperty(cx, real_obj, id, &val))
+                {
+                    return js_ObjectOps.defineProperty(cx, real_obj, 
+                                                       id, val,
+                                                       nsnull, nsnull, 
+                                                       0, nsnull);
+                }
+            }        
+        }
+    }
+    return JS_TRUE;        
+}        
+
 /*
 * We have two classes - one with and one without call and construct. We use
 * the one without for any object without an nsIXPCScriptable so that the
@@ -875,7 +909,8 @@ JSClass WrappedNative_class = {
     "XPCWrappedNative", 
     JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
-    JS_EnumerateStub, JS_ResolveStub,
+    JS_EnumerateStub, 
+    WrappedNative_Resolve,
     WrappedNative_Convert,
     WrappedNative_Finalize,
     /* Optionally non-null members start here. */
@@ -891,7 +926,8 @@ JSClass WrappedNativeWithCall_class = {
     "XPCWrappedNativeWithCall", 
     JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
-    JS_EnumerateStub, JS_ResolveStub,
+    JS_EnumerateStub, 
+    WrappedNative_Resolve,
     WrappedNative_Convert,
     WrappedNative_Finalize,
     /* Optionally non-null members start here. */

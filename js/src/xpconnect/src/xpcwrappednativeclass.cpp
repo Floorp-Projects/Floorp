@@ -1042,6 +1042,7 @@ done:
             void* p = dp->val.p;
             if(!p)
                 continue;
+
             if(dp->IsValArray())
             {
                 // going to have to cleanup the array and perhaps its contents
@@ -1303,12 +1304,7 @@ nsXPCWrappedNativeClass::GetWrappedNativeOfJSObject(JSContext* cx,
         if(JS_InstanceOf(cx, cur, &WrappedNative_class, nsnull) ||
            JS_InstanceOf(cx, cur, &WrappedNativeWithCall_class, nsnull))
             return (nsXPCWrappedNative*) JS_GetPrivate(cx, cur);
-        // This was an attempt to make it possible to use a wrapped
-        // native as a __proto__ for a plain JS object. There are still 
-        // problems with making this work.
-
-        // cur = JS_GetPrototype(cx, cur);
-        break;
+        cur = JS_GetPrototype(cx, cur);
     }
     return nsnull;
 }
