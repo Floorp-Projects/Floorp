@@ -332,7 +332,8 @@ nsMsgAccount::GetDefaultIdentity(nsIMsgIdentity * *aDefaultIdentity)
   if (!aDefaultIdentity) return NS_ERROR_NULL_POINTER;
   if (!m_defaultIdentity) return NS_ERROR_NULL_POINTER;
   
-  *aDefaultIdentity = m_defaultIdentity;
+  //  *aDefaultIdentity = m_defaultIdentity;
+  *aDefaultIdentity = nsnull;
   return NS_OK;
 }
 
