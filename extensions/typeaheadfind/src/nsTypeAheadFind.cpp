@@ -871,6 +871,8 @@ nsTypeAheadFind::HandleChar(PRUnichar aChar)
   aChar = ToLowerCase(NS_STATIC_CAST(PRUnichar, aChar));
   PRInt32 bufferLength = mTypeAheadBuffer.Length();
 
+  mIsFirstVisiblePreferred = PR_FALSE;
+
   // --------- No new chars after find again ----------
   if (mRepeatingMode == eRepeatingForward ||
       mRepeatingMode == eRepeatingReverse) {
@@ -935,6 +937,16 @@ nsTypeAheadFind::HandleChar(PRUnichar aChar)
         esm->MoveCaretToFocus();
         mIsFindingText = PR_FALSE;
         mIsFirstVisiblePreferred = PR_FALSE;
+      }
+      else {
+        nsCOMPtr<nsISupports> container = presContext->GetContainer();
+        nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem = 
+          do_QueryInterface(container);
+        nsCOMPtr<nsIDocShellTreeItem> parentTreeItem;
+        docShellTreeItem->GetSameTypeParent(getter_AddRefs(parentTreeItem));
+        if (parentTreeItem) {
+          mIsFirstVisiblePreferred = PR_FALSE; // focused on a frame or iframe
+        }
       }
     }
   }
@@ -1330,16 +1342,15 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell,
         if (!doc) {
           return NS_ERROR_FAILURE;
         }
-
         mFocusedWeakShell = do_GetWeakReference(presShell);
-        nsIContent *docContent = doc->GetRootContent();
-        if (docContent) {
-          // XXXbryner Do we really want to focus the root content here?
-          docContent->SetFocus(presContext);
-        }
+
         // Get selection controller and selection for new frame/iframe
         GetSelection(presShell, getter_AddRefs(mFocusedDocSelCon), 
                      getter_AddRefs(mFocusedDocSelection));
+        if (!mFocusedDocSelection || !mFocusedDocSelCon) {
+          // Apparently these can go away even though presshell/prescontext exist
+          return NS_ERROR_FAILURE;
+        }
       }
 
       // Select the found text and focus it
@@ -1353,6 +1364,7 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell,
       nsIEventStateManager *esm = presContext->EventStateManager();
 
       PRBool isSelectionWithFocus;
+      esm->SetContentState(nsnull, NS_EVENT_STATE_FOCUS); // Start off focusing doc
       esm->MoveFocusToCaret(PR_TRUE, &isSelectionWithFocus);
 
       nsCOMPtr<nsIContent> focusedContent;
@@ -1501,7 +1513,7 @@ nsTypeAheadFind::GetSearchContainers(nsISupports *aContainer,
   nsCOMPtr<nsIPresShell> selectionPresShell =
     do_QueryReferent(mFocusedWeakShell);
 
-  if (aCanUseDocSelection && selectionPresShell == presShell) {
+  if (aCanUseDocSelection && selectionPresShell == presShell && mFocusedDocSelection) {
     mFocusedDocSelection->GetRangeAt(0, getter_AddRefs(currentSelectionRange));
   }
 
