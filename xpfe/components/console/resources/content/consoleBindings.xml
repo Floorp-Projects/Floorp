@@ -211,8 +211,15 @@
             
       <method name="copySelectedItem">
         <body><![CDATA[
-          if (this.mSelectedItem)
-            this.copyString(this.mSelectedItem.toString());
+          if (this.mSelectedItem) try {
+            const clipURI = "@mozilla.org/widget/clipboardhelper;1";
+            const clipI = Components.interfaces.nsIClipboardHelper;
+            var clipboard = Components.classes[clipURI].getService(clipI);
+
+            clipboard.copyString(this.mSelectedItem.toString());
+          } catch (ex) {
+            // Unable to copy anything, die quietly
+          }
         ]]></body>
       </method>
                   
@@ -275,31 +282,6 @@
         ]]></body>
       </method>
           
-      <method name="copyString">
-        <parameter name="aString"/>
-        <body><![CDATA[
-          try {
-            const clipURI = "@mozilla.org/widget/clipboard;1";
-            const clipI = Components.interfaces.nsIClipboard;
-            var clipboard = Components.classes[clipURI].getService(clipI);
-          
-            const transURI = "@mozilla.org/widget/transferable;1";
-            var transferable = Components.classes[transURI].createInstance(Components.interfaces.nsITransferable);
-          
-            transferable.addDataFlavor("text/unicode");
-            
-            const strURI = "@mozilla.org/supports-string;1";
-            var wstring = Components.classes[strURI].createInstance(Components.interfaces.nsISupportsString);
-            
-            wstring.data = aString;
-            transferable.setTransferData("text/unicode", wstring, aString.length * 2);
-            clipboard.setData(transferable, null, clipI.kGlobalClipboard);
-          } catch (ex) {
-            // Unable to copy anything, die quietly
-          }
-        ]]></body>
-      </method>
-
       <constructor> this.init(); </constructor>
       <destructor> this.destroy(); </destructor>
     </implementation>
