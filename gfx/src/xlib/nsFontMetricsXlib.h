@@ -46,9 +46,6 @@
 #include "nsUnitConversion.h"
 #include "xlibrgb.h"
 
-// Remove this eventually after I remove all usage from implementation file. TonyT
-#define FONT_SWITCHING
-
 #undef FONT_HAS_GLYPH
 #define FONT_HAS_GLYPH(map, char) IS_REPRESENTABLE(map, char)
 
