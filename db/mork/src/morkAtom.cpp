@@ -453,7 +453,8 @@ morkBookAtom::EqualFormAndBody(morkEnv* ev, const morkBookAtom* inAtom) const
   else
     this->NonBookAtomTypeError(ev);
   
-  if ( body && thisBody && size == thisSize && form == thisForm )
+  // if atoms are empty, form is irrelevant
+  if ( body && thisBody && size == thisSize && (!size || form == thisForm ))
     outEqual = (MORK_MEMCMP(body, thisBody, size) == 0);
   
   return outEqual;
