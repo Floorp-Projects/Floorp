@@ -41,8 +41,7 @@ Rights Reserved.
                                         <description class="CardViewText" hide="true" id="cvDisplayName"/>
                                         <description class="CardViewText" hide="true" id="cvNickname"/>
                                         <description class="CardViewLink" hide="true" id="cvEmail1Box">
-						<html:p><html:a href="" id="cvEmail1"/>
-					</html:p></html>
+						<html:p><html:a href="" id="cvEmail1"/></html:p></description>
                                         <description class="CardViewLink" hide="true" id="cvEmail2Box">
 						<html:p><html:a href="" id="cvEmail2"/>
                                         </html:p></description>
@@ -82,7 +81,7 @@ Rights Reserved.
 				</vbox>
 				
 				<vbox id="cvbWork" class="cardViewGroup">
-                                        <description class="CardViewHeading" hide="true" id="cvhWork">&work.heading;</html>
+                                        <description class="CardViewHeading" hide="true" id="cvhWork">&work.heading;</description>
                                         <description class="CardViewText" hide="true" id="cvJobTitle"/>
                                         <description class="CardViewText" hide="true" id="cvDepartment"/>
                                         <description class="CardViewText" hide="true" id="cvCompany"/>
