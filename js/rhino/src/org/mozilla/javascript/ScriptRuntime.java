@@ -82,6 +82,19 @@ public class ScriptRuntime {
     public final static Class ObjectClass = Object.class;
     public final static Class FunctionClass = Function.class;
     public final static Class ClassClass = Class.class;
+    public final static Class SerializableClass = java.io.Serializable.class;
+    public final static Class ComparableClass;
+
+    static {
+        // Comparable is only since JDK 1.2
+        Class c;
+        try {
+            c = Class.forName("java.lang.Comparable");
+        } catch (ClassNotFoundException e) {
+            c = null;
+        }
+        ComparableClass = c;
+    }
 
     /**
      * Convert the value to a boolean.

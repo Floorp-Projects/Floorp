@@ -348,7 +348,10 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
             if (to == ScriptRuntime.StringClass) {
                 result = 1;
             }
-            else if (to == ScriptRuntime.ObjectClass) {
+            else if (to == ScriptRuntime.ObjectClass ||
+                     to == ScriptRuntime.SerializableClass ||
+                     to == ScriptRuntime.ComparableClass)
+            {
                 result = 2;
             }
             else if (to.isPrimitive() && to != Boolean.TYPE) {
@@ -516,8 +519,8 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
      * Type-munging for field setting and method invocation.
      * Conforms to LC3 specification
      */
-    static Object coerceType(Class type, Object value, 
-                             boolean useErrorHandler) 
+    static Object coerceType(Class type, Object value,
+                             boolean useErrorHandler)
     {
         if (value != null && value.getClass() == type) {
             return value;
@@ -575,7 +578,9 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
 
         case JSTYPE_STRING:
             if (type == ScriptRuntime.StringClass ||
-                type == ScriptRuntime.ObjectClass) {
+                type == ScriptRuntime.ObjectClass ||
+                type == ScriptRuntime.SerializableClass ||
+                type == ScriptRuntime.ComparableClass) {
                 return value;
             }
             else if (type == Character.TYPE ||
@@ -678,7 +683,7 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
                 for (int i = 0 ; i < length ; ++i) {
                     try  {
                         Array.set(Result, i, coerceType(arrayType,
-                                                        array.get(i, array), 
+                                                        array.get(i, array),
                                                         useErrorHandler));
                     }
                     catch (EvaluatorException ee) {
@@ -784,7 +789,7 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
                 return new Integer((int)toInteger(value,
                                                   ScriptRuntime.IntegerClass,
                                                   (double)Integer.MIN_VALUE,
-                                                  (double)Integer.MAX_VALUE, 
+                                                  (double)Integer.MAX_VALUE,
                                                   useErrorHandler));
             }
         }
@@ -806,7 +811,7 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
                 return new Long(toInteger(value,
                                           ScriptRuntime.LongClass,
                                           min,
-                                          max, 
+                                          max,
                                           useErrorHandler));
             }
         }
@@ -886,13 +891,13 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
     }
 
     static long toInteger(Object value, Class type, double min, double max,
-                          boolean useErrorHandler) 
+                          boolean useErrorHandler)
     {
         double d = toDouble(value, useErrorHandler);
 
         if (Double.isInfinite(d) || Double.isNaN(d)) {
             // Convert to string first, for more readable message
-            reportConversionError(ScriptRuntime.toString(value), type, 
+            reportConversionError(ScriptRuntime.toString(value), type,
                                   !useErrorHandler);
         }
 
@@ -905,14 +910,14 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
 
         if (d < min || d > max) {
             // Convert to string first, for more readable message
-            reportConversionError(ScriptRuntime.toString(value), type, 
+            reportConversionError(ScriptRuntime.toString(value), type,
                                   !useErrorHandler);
         }
         return (long)d;
     }
 
-    static void reportConversionError(Object value, Class type, 
-                                      boolean throwIllegalArg) 
+    static void reportConversionError(Object value, Class type,
+                                      boolean throwIllegalArg)
     {
         if (throwIllegalArg) {
             throw new IllegalArgumentException("Cannot convert " + value +
