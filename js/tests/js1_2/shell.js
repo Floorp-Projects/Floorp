@@ -2,32 +2,32 @@
  * Version 1.0 (the "License"); you may not use this file except in
  * compliance with the License. You may obtain a copy of the License at
  * http://www.mozilla.org/NPL/
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
  * License for the specific language governing rights and limitations
  * under the License.
- * 
+ *
  * The Original Code is Mozilla Communicator client code, released March
  * 31, 1998.
- * 
+ *
  * The Initial Developer of the Original Code is Netscape Communications
  * Corporation. Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation. All Rights Reserved.
- * 
+ *
  */
 var completed = false;
 var testcases;
 
-
-SECTION	= "";
-VERSION	= "";
-    startTest();
-BUGNUMBER =	"";
+var SECTION	= "";
+var VERSION	= "";
+var BUGNUMBER =	"";
 
 var	GLOBAL = "[object global]";
 var PASSED = " PASSED!"
 var FAILED = " FAILED! expected: ";
+
+startTest();
 
 function test() {
     for ( tc=0; tc < testcases.length; tc++ ) {
@@ -61,35 +61,35 @@ function TestCase( n, d, e, a ) {
 
     this.passed = getTestCaseResult( this.expect, this.actual );
 }
-/*
+function startTest() {
+
     //  JavaScript 1.3 is supposed to be compliant ecma version 1.0
     if ( VERSION == "ECMA_1" ) {
     startTest();
         version ( "130" );
     }
-    if ( VERSION == "JS_1.3" ) {
+    if ( VERSION == "JS1_3" ) {
     startTest();
         version ( "130" );
     }
-    if ( VERSION == "JS_1.2" ) {
+    if ( VERSION == "JS1_2" ) {
     startTest();
         version ( "120" );
     }
-    if ( VERSION  == "JS_1.1" ) {
+    if ( VERSION  == "JS1_1" ) {
     startTest();
         version ( "110" );
     }
     // for ecma version 2.0, we will leave the javascript version to
     // the default ( for now ).
-*/
+
 
     if ( BUGNUMBER ) {
-            writeLineToLog ("BUGNUMBER: " + BUGNUMBER );
+        writeLineToLog ("BUGNUMBER: " + BUGNUMBER );
     }
 
     testcases = new Array();
     tc = 0;
-
 }
 function getTestCaseResult( expect, actual ) {
     //  because ( NaN == NaN ) always returns false, need to do
