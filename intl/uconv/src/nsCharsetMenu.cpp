@@ -52,6 +52,7 @@ static NS_DEFINE_CID(kRDFContainerCID, NS_RDFCONTAINER_CID);
 static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
 static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID); 
 
+static const char * kURINC_BrowserAutodetMenuRoot = "NC:BrowserAutodetMenuRoot";
 static const char * kURINC_BrowserCharsetMenuRoot = "NC:BrowserCharsetMenuRoot";
 static const char * kURINC_BrowserMoreCharsetMenuRoot = "NC:BrowserMoreCharsetMenuRoot";
 static const char * kURINC_BrowserMore1CharsetMenuRoot = "NC:BrowserMore1CharsetMenuRoot";
@@ -106,6 +107,7 @@ class nsCharsetMenu : public nsIRDFDataSource, nsICurrentCharsetListener
   NS_DECL_ISUPPORTS
 
 private:
+  static nsIRDFResource * kNC_BrowserAutodetMenuRoot;
   static nsIRDFResource * kNC_BrowserCharsetMenuRoot;
   static nsIRDFResource * kNC_BrowserMoreCharsetMenuRoot;
   static nsIRDFResource * kNC_BrowserMore1CharsetMenuRoot;
@@ -155,9 +157,6 @@ private:
   nsresult SetCharsetCheckmark(nsString * aCharset, PRBool aValue);
 
   nsresult InitBrowserMenu();
-  nsresult InitBrowserMoreSubmenus(nsIRDFService * aRDFServ, 
-    nsICharsetConverterManager2 * aCCMan, nsIPref * aPref, 
-	nsISupportsArray * aDecs);
 
   nsresult InitMaileditMenu();
 
@@ -173,11 +172,14 @@ private:
     nsICharsetConverterManager2 * aCCMan, nsIPref * aPref, 
     nsISupportsArray * aDecs, nsIRDFResource * aResource, const char * aKey, 
     nsVoidArray * aArray);
-  nsresult InitChardetMenu(nsIRDFService * aRDFServ, 
-    nsICharsetConverterManager2 * aCCMan, nsIRDFContainer * aContainer);
+  nsresult InitAutodetMenu(nsIRDFService * aRDFServ, 
+    nsICharsetConverterManager2 * aCCMan, nsIRDFResource * aResource);
   nsresult InitMoreMenu(nsIRDFService * aRDFServ, 
     nsICharsetConverterManager2 * aCCMan, nsISupportsArray * aDecs, 
     nsIRDFResource * aResource, char * aFlag);
+  nsresult InitMoreSubmenus(nsIRDFService * aRDFServ, 
+    nsICharsetConverterManager2 * aCCMan, nsIPref * aPref, 
+	nsISupportsArray * aDecs);
 
   nsresult AddCharsetToItemArray(nsICharsetConverterManager2 * aCCMan, 
     nsVoidArray * aArray, nsIAtom * aCharset, nsMenuEntry ** aResult, 
@@ -326,6 +328,7 @@ static int PR_CALLBACK ComposerStaticChanged(const char * aPrefName,
 NS_IMPL_ISUPPORTS2(nsCharsetMenu, nsIRDFDataSource, nsICurrentCharsetListener)
 
 nsIRDFDataSource * nsCharsetMenu::mInner = NULL;
+nsIRDFResource * nsCharsetMenu::kNC_BrowserAutodetMenuRoot = NULL;
 nsIRDFResource * nsCharsetMenu::kNC_BrowserCharsetMenuRoot = NULL;
 nsIRDFResource * nsCharsetMenu::kNC_BrowserMoreCharsetMenuRoot = NULL;
 nsIRDFResource * nsCharsetMenu::kNC_BrowserMore1CharsetMenuRoot = NULL;
@@ -516,6 +519,7 @@ nsresult nsCharsetMenu::Init()
       (nsISupports **)&rdfServ);
   if (NS_FAILED(res)) goto done;
 
+  rdfServ->GetResource(kURINC_BrowserAutodetMenuRoot, &kNC_BrowserAutodetMenuRoot);
   rdfServ->GetResource(kURINC_BrowserCharsetMenuRoot, &kNC_BrowserCharsetMenuRoot);
   rdfServ->GetResource(kURINC_BrowserMoreCharsetMenuRoot, &kNC_BrowserMoreCharsetMenuRoot);
   rdfServ->GetResource(kURINC_BrowserMore1CharsetMenuRoot, &kNC_BrowserMore1CharsetMenuRoot);
@@ -540,6 +544,8 @@ nsresult nsCharsetMenu::Init()
     NS_GET_IID(nsIRDFContainerUtils), (nsISupports **)&rdfUtil);
   if (NS_FAILED(res)) goto done;
 
+  res = rdfUtil->MakeSeq(mInner, kNC_BrowserAutodetMenuRoot, NULL);
+  if (NS_FAILED(res)) goto done;
   res = rdfUtil->MakeSeq(mInner, kNC_BrowserCharsetMenuRoot, NULL);
   if (NS_FAILED(res)) goto done;
   res = rdfUtil->MakeSeq(mInner, kNC_BrowserMoreCharsetMenuRoot, NULL);
@@ -586,6 +592,7 @@ nsresult nsCharsetMenu::Done()
 done:
   if (rdfServ != NULL) nsServiceManager::ReleaseService(kRDFServiceCID, 
       rdfServ);
+  NS_IF_RELEASE(kNC_BrowserAutodetMenuRoot);
   NS_IF_RELEASE(kNC_BrowserCharsetMenuRoot);
   NS_IF_RELEASE(kNC_BrowserMoreCharsetMenuRoot);
   NS_IF_RELEASE(kNC_BrowserMore1CharsetMenuRoot);
@@ -679,62 +686,17 @@ nsresult nsCharsetMenu::InitBrowserMenu()
     kBrowserCachePrefKey, &mBrowserMenu);
   NS_ASSERTION(NS_SUCCEEDED(res), "error initializing browser cache charset menu");
 
-  res = InitBrowserMoreSubmenus(rdfServ, ccMan, pref, decs);
+  res = InitMoreSubmenus(rdfServ, ccMan, pref, decs);
   NS_ASSERTION(NS_SUCCEEDED(res), "error initializing browser static X charset menu");
 
   res = InitMoreMenu(rdfServ, ccMan, decs, kNC_BrowserMoreCharsetMenuRoot, ".notForBrowser");
   NS_ASSERTION(NS_SUCCEEDED(res), "error initializing browser more charset menu");
 
+  res = InitAutodetMenu(rdfServ, ccMan, kNC_BrowserAutodetMenuRoot);
+  NS_ASSERTION(NS_SUCCEEDED(res), "error initializing chardet menu");
+
   // register prefs callback
   pref->RegisterCallback(kBrowserStaticPrefKey, BrowserStaticChanged, this);
-
-  return res;
-}
-
-// XXX please make this method more general; the cut&pasted code is laughable
-nsresult nsCharsetMenu::InitBrowserMoreSubmenus(
-                        nsIRDFService * aRDFServ, 
-                        nsICharsetConverterManager2 * aCCMan, 
-                        nsIPref * aPref, 
-                        nsISupportsArray * aDecs)
-{
-  nsresult res = NS_OK;
-
-  nsCOMPtr<nsIRDFContainer> container1;
-  nsCOMPtr<nsIRDFContainer> container2;
-  nsCOMPtr<nsIRDFContainer> container3;
-  nsCOMPtr<nsIRDFContainer> container4;
-  nsCOMPtr<nsIRDFContainer> container5;
-  char * key1 = "intl.charsetmenu.browser.more1";
-  char * key2 = "intl.charsetmenu.browser.more2";
-  char * key3 = "intl.charsetmenu.browser.more3";
-  char * key4 = "intl.charsetmenu.browser.more4";
-  char * key5 = "intl.charsetmenu.browser.more5";
-
-  res = NewRDFContainer(mInner, kNC_BrowserMore1CharsetMenuRoot, 
-      getter_AddRefs(container1));
-  if (NS_FAILED(res)) return res;
-  AddFromPrefsToMenu(aPref, aRDFServ, aCCMan, NULL, container1, key1, aDecs, NULL);
-
-  res = NewRDFContainer(mInner, kNC_BrowserMore2CharsetMenuRoot, 
-      getter_AddRefs(container2));
-  if (NS_FAILED(res)) return res;
-  AddFromPrefsToMenu(aPref, aRDFServ, aCCMan, NULL, container2, key2, aDecs, NULL);
-
-  res = NewRDFContainer(mInner, kNC_BrowserMore3CharsetMenuRoot, 
-      getter_AddRefs(container3));
-  if (NS_FAILED(res)) return res;
-  AddFromPrefsToMenu(aPref, aRDFServ, aCCMan, NULL, container3, key3, aDecs, NULL);
-
-  res = NewRDFContainer(mInner, kNC_BrowserMore4CharsetMenuRoot, 
-      getter_AddRefs(container4));
-  if (NS_FAILED(res)) return res;
-  AddFromPrefsToMenu(aPref, aRDFServ, aCCMan, NULL, container4, key4, aDecs, NULL);
-
-  res = NewRDFContainer(mInner, kNC_BrowserMore5CharsetMenuRoot, 
-      getter_AddRefs(container5));
-  if (NS_FAILED(res)) return res;
-  AddFromPrefsToMenu(aPref, aRDFServ, aCCMan, NULL, container5, key5, aDecs, NULL);
 
   return res;
 }
@@ -881,12 +843,6 @@ nsresult nsCharsetMenu::InitStaticMenu(
   res = AddSeparatorToContainer(aRDFServ, aCCMan, container);
   NS_ASSERTION(NS_SUCCEEDED(res), "error adding separator to container");
 
-  res = InitChardetMenu(aRDFServ, aCCMan, container);
-  NS_ASSERTION(NS_SUCCEEDED(res), "error initializing chardet menu");
-
-  res = AddSeparatorToContainer(aRDFServ, aCCMan, container);
-  NS_ASSERTION(NS_SUCCEEDED(res), "error adding separator to container");
-
   res = AddFromPrefsToMenu(aPref, aRDFServ, aCCMan, aArray, container, 
       aKey, aDecs, "charset.");
   NS_ASSERTION(NS_SUCCEEDED(res), "error initializing static charset menu from prefs");
@@ -916,14 +872,17 @@ nsresult nsCharsetMenu::InitCacheMenu(
   return res;
 }
 
-nsresult nsCharsetMenu::InitChardetMenu(
+nsresult nsCharsetMenu::InitAutodetMenu(
                         nsIRDFService * aRDFServ, 
                         nsICharsetConverterManager2 * aCCMan, 
-                        nsIRDFContainer * aContainer)
+                        nsIRDFResource * aResource)
 {
   nsresult res = NS_OK;
-
   nsVoidArray chardetArray;
+  nsCOMPtr<nsIRDFContainer> container;
+
+  res = NewRDFContainer(mInner, aResource, getter_AddRefs(container));
+  if (NS_FAILED(res)) return res;
 
   nsCOMPtr<nsISupportsArray> array;
   res = aCCMan->GetCharsetDetectorList(getter_AddRefs(array));
@@ -936,7 +895,7 @@ nsresult nsCharsetMenu::InitChardetMenu(
   res = ReorderMenuItemArray(&chardetArray);
   if (NS_FAILED(res)) goto done;
 
-  res = AddMenuItemArrayToContainer(aRDFServ, aContainer, &chardetArray, 
+  res = AddMenuItemArrayToContainer(aRDFServ, container, &chardetArray, 
     kNC_CharsetDetector);
   if (NS_FAILED(res)) goto done;
 
@@ -979,6 +938,54 @@ nsresult nsCharsetMenu::InitMoreMenu(
 done:
   // free the elements in the VoidArray
   FreeMenuItemArray(&moreMenu);
+
+  return res;
+}
+
+// XXX please make this method more general; the cut&pasted code is laughable
+nsresult nsCharsetMenu::InitMoreSubmenus(
+                        nsIRDFService * aRDFServ, 
+                        nsICharsetConverterManager2 * aCCMan, 
+                        nsIPref * aPref, 
+                        nsISupportsArray * aDecs)
+{
+  nsresult res = NS_OK;
+
+  nsCOMPtr<nsIRDFContainer> container1;
+  nsCOMPtr<nsIRDFContainer> container2;
+  nsCOMPtr<nsIRDFContainer> container3;
+  nsCOMPtr<nsIRDFContainer> container4;
+  nsCOMPtr<nsIRDFContainer> container5;
+  char * key1 = "intl.charsetmenu.browser.more1";
+  char * key2 = "intl.charsetmenu.browser.more2";
+  char * key3 = "intl.charsetmenu.browser.more3";
+  char * key4 = "intl.charsetmenu.browser.more4";
+  char * key5 = "intl.charsetmenu.browser.more5";
+
+  res = NewRDFContainer(mInner, kNC_BrowserMore1CharsetMenuRoot, 
+      getter_AddRefs(container1));
+  if (NS_FAILED(res)) return res;
+  AddFromPrefsToMenu(aPref, aRDFServ, aCCMan, NULL, container1, key1, aDecs, NULL);
+
+  res = NewRDFContainer(mInner, kNC_BrowserMore2CharsetMenuRoot, 
+      getter_AddRefs(container2));
+  if (NS_FAILED(res)) return res;
+  AddFromPrefsToMenu(aPref, aRDFServ, aCCMan, NULL, container2, key2, aDecs, NULL);
+
+  res = NewRDFContainer(mInner, kNC_BrowserMore3CharsetMenuRoot, 
+      getter_AddRefs(container3));
+  if (NS_FAILED(res)) return res;
+  AddFromPrefsToMenu(aPref, aRDFServ, aCCMan, NULL, container3, key3, aDecs, NULL);
+
+  res = NewRDFContainer(mInner, kNC_BrowserMore4CharsetMenuRoot, 
+      getter_AddRefs(container4));
+  if (NS_FAILED(res)) return res;
+  AddFromPrefsToMenu(aPref, aRDFServ, aCCMan, NULL, container4, key4, aDecs, NULL);
+
+  res = NewRDFContainer(mInner, kNC_BrowserMore5CharsetMenuRoot, 
+      getter_AddRefs(container5));
+  if (NS_FAILED(res)) return res;
+  AddFromPrefsToMenu(aPref, aRDFServ, aCCMan, NULL, container5, key5, aDecs, NULL);
 
   return res;
 }
