@@ -27,13 +27,12 @@ MODULE		= embedcomponents
 LIBRARY_NAME	= embedcomponents
 SHORT_LIBNAME	= embedcmp
 IS_COMPONENT	= 1
-REQUIRES	= js xpcom string promptservice windowwatcher embed_base
+REQUIRES	= js xpcom string windowwatcher embed_base
 
 CPPSRCS		= nsModule.cpp
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 EXTRA_DSO_LIBS	= \
-	promptservice_s \
 	windowwatcher_s \
 	appstartupnotifier_s \
 	$(NULL)
@@ -46,7 +45,6 @@ endif
 else
 
 SHARED_LIBRARY_LIBS = \
-	$(DIST)/lib/libpromptservice_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/libwindowwatcher_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/libappstartupnotifier_s.$(LIB_SUFFIX) \
 	$(NULL)
@@ -58,7 +56,6 @@ endif
 endif
 
 LOCAL_INCLUDES	= \
-	-I$(srcdir)/../promptservice/src  \
 	-I$(srcdir)/../windowwatcher/src  \
 	-I$(srcdir)/../appstartup/src  \
 	$(NULL)

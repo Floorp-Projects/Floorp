@@ -745,9 +745,6 @@ embedding/browser/photon/src/Makefile
 embedding/browser/photon/tests/Makefile
 embedding/components/Makefile
 embedding/components/build/Makefile
-embedding/components/promptservice/Makefile
-embedding/components/promptservice/public/Makefile
-embedding/components/promptservice/src/Makefile
 embedding/components/windowwatcher/Makefile
 embedding/components/windowwatcher/public/Makefile
 embedding/components/windowwatcher/src/Makefile

@@ -23,6 +23,7 @@ DEPTH=..\..\..\..
 MODULE=windowwatcher
 
 XPIDLSRCS = \
+    .\nsIPromptService.idl \
     .\nsIWindowWatcher.idl \
     .\nsPIWindowWatcher.idl \
     $(NULL)

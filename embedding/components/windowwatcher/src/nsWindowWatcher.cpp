@@ -29,6 +29,7 @@
 #include "nsCRT.h"
 #include "nsWWJSUtils.h"
 #include "nsNetUtil.h"
+#include "nsPrompt.h"
 #include "plstr.h"
 
 #include "nsIBaseWindow.h"
@@ -703,6 +704,12 @@ nsWindowWatcher::GetWindowEnumerator(nsISimpleEnumerator** _retval)
   return NS_ERROR_OUT_OF_MEMORY;
 }
 	
+NS_IMETHODIMP
+nsWindowWatcher::GetNewPrompter(nsIDOMWindow *aParent, nsIPrompt **_retval)
+{
+  return NS_NewPrompter(_retval, aParent);
+}
+
 NS_IMETHODIMP
 nsWindowWatcher::SetWindowCreator(nsIWindowCreator *creator)
 {

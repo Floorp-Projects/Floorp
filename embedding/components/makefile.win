@@ -21,7 +21,6 @@
 DEPTH=..\..
 
 DIRS= \
-	promptservice \
 	windowwatcher \
 	appstartup \
 	build \
