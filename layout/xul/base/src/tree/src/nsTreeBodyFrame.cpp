@@ -1668,7 +1668,7 @@ nsOutlinerBodyFrame::GetImage(PRInt32 aRowIndex, const PRUnichar* aColID,
       nsresult rv;
       nsCOMPtr<imgILoader> il(do_GetService("@mozilla.org/image/loader;1", &rv));
       mImageGuard = PR_TRUE;
-      il->LoadImage(srcURI, nsnull, listener, mPresContext, nsIRequest::LOAD_NORMAL, nsnull, nsnull, getter_AddRefs(imageRequest));
+      il->LoadImage(srcURI, nsnull, nsnull, listener, mPresContext, nsIRequest::LOAD_NORMAL, nsnull, nsnull, getter_AddRefs(imageRequest));
       mImageGuard = PR_FALSE;
 
       // In a case it was already cached.

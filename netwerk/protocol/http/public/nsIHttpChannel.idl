@@ -54,6 +54,12 @@ interface nsIHttpChannel : nsIChannel
     const unsigned long REFERRER_NON_HTTP = 3;   // e.g. news or FTP clicks
 
     /**
+     * An http channel can own a reference to the document URI
+     */
+    attribute nsIURI documentURI;
+
+
+    /**
      * Header strings are case insensitive
      */
     string getRequestHeader(in string header);

@@ -1909,8 +1909,10 @@ nsImageFrame::RealLoadImage(const nsAReadableString& aSpec, nsIPresContext *aPre
   /* set this back to FALSE before we do the real load */
   mInitialLoadCompleted = PR_FALSE;
 
+  nsCOMPtr<nsIURI> baseURI;
+  rv = aPresContext->GetBaseURL(getter_AddRefs(baseURI));
   nsCOMPtr<imgIRequest> tempRequest;
-  return il->LoadImage(uri, loadGroup, mListener, aPresContext, loadFlags, nsnull, aRequest, getter_AddRefs(tempRequest));
+  return il->LoadImage(uri, baseURI, loadGroup, mListener, aPresContext, loadFlags, nsnull, aRequest, getter_AddRefs(tempRequest));
 }
 
 #define INTERNAL_GOPHER_LENGTH 16 /* "internal-gopher-" length */

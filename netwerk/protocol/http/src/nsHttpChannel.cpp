@@ -116,6 +116,7 @@ nsHttpChannel::Init(nsIURI *uri,
 
     mURI = uri;
     mOriginalURI = uri;
+    mDocumentURI = nsnull;
     mCapabilities = caps;
 
     //
@@ -198,10 +199,6 @@ nsHttpChannel::Init(nsIURI *uri,
 
     // check to see if authorization headers should be included
     AddAuthorizationHeaders();
-
-    // Notify nsIHttpNotify implementations
-    rv = nsHttpHandler::get()->OnModifyRequest(this);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "OnModifyRequest failed");
 
     return NS_OK;
 }
@@ -1217,6 +1214,7 @@ nsHttpChannel::ProcessRedirection(PRUint32 redirectType)
 
     nsresult rv;
     nsCOMPtr<nsIChannel> newChannel;
+    nsCOMPtr<nsIURI> newURI;
 
     if (redirectType == 305) {
         // we must repeat the request via the proxy specified by location
@@ -1246,7 +1244,6 @@ nsHttpChannel::ProcessRedirection(PRUint32 redirectType)
         nsCOMPtr<nsIIOService> ioService;
         rv = nsHttpHandler::get()->GetIOService(getter_AddRefs(ioService));
 
-        nsCOMPtr<nsIURI> newURI;
         rv = ioService->NewURI(location, mURI, getter_AddRefs(newURI));
         if (NS_FAILED(rv)) return rv;
 
@@ -1278,6 +1275,9 @@ nsHttpChannel::ProcessRedirection(PRUint32 redirectType)
 
     nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(newChannel);
     if (httpChannel) {
+        // update the DocumentURI indicator since we were just redirected
+        if (newURI && (mURI == mDocumentURI))
+            httpChannel->SetDocumentURI(newURI);
         // convey the referrer if one was used for this channel to the next one
         if (mReferrer)
             httpChannel->SetReferrer(mReferrer, mReferrerType);
@@ -2069,6 +2069,10 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
     rv = NS_CheckPortSafety(port, "http", ioService); // this works for https
     if (NS_FAILED(rv))
         return rv;
+
+    // Notify nsIHttpNotify implementations
+    rv = nsHttpHandler::get()->OnModifyRequest(this);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "OnModifyRequest failed");
     
     mIsPending = PR_TRUE;
 
@@ -2107,6 +2111,22 @@ nsHttpChannel::SetRequestMethod(const char *method)
         return NS_ERROR_FAILURE;
 
     mRequestHead.SetMethod(atom);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::GetDocumentURI(nsIURI **aDocumentURI)
+{
+    NS_ENSURE_ARG_POINTER(aDocumentURI);
+    *aDocumentURI = mDocumentURI;
+    NS_IF_ADDREF(*aDocumentURI);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::SetDocumentURI(nsIURI *aDocumentURI)
+{
+    mDocumentURI = aDocumentURI;
     return NS_OK;
 }
 

@@ -208,7 +208,8 @@ protected:
                                nsIURI * aReferrer,
                                nsISupports * aOwner,
                                nsIInputStream * aPostData,
-                               nsIInputStream * aHeadersData);
+                               nsIInputStream * aHeadersData,
+                               PRBool firstParty);
     NS_IMETHOD AddHeadersToChannel(nsIInputStream * aHeadersData, 
                                   nsIChannel * aChannel);
     virtual nsresult DoChannelLoad(nsIChannel * aChannel,

@@ -610,7 +610,8 @@ nsWebShell::HandleLinkClickEvent(nsIContent *aContent,
                           aPostDataStream,    // Post data stream
                           aHeadersDataStream, // Headers stream
                           LOAD_LINK,          // Load type
-                          nsnull);            // No SHEntry
+                          nsnull,             // No SHEntry
+                          PR_TRUE);           // first party site
       }
       break;
     case eLinkVerb_Embed:
@@ -1005,8 +1006,8 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
                        inputStream,                       // Post data stream
                        nsnull,                            // No headers stream
                        LOAD_RELOAD_BYPASS_PROXY_AND_CACHE,// Load type
-                       nsnull);                           // No SHEntry
-            
+                       nsnull,                            // No SHEntry
+                       PR_TRUE);                          // first party site
           }
         }
     }

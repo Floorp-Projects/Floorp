@@ -125,6 +125,7 @@ private:
 private:
     nsCOMPtr<nsIURI>                  mOriginalURI;
     nsCOMPtr<nsIURI>                  mURI;
+    nsCOMPtr<nsIURI>                  mDocumentURI;
     nsCOMPtr<nsIStreamListener>       mListener;
     nsCOMPtr<nsISupports>             mListenerContext;
     nsCOMPtr<nsILoadGroup>            mLoadGroup;
