@@ -118,13 +118,13 @@ nsWindow::~nsWindow()
 //-------------------------------------------------------------------------
 void nsWindow::ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY)
 {
-  return NS_OK;
+  
 }
 
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
 {
-  return NS_OK;
+ 
 }
 
 //-------------------------------------------------------------------------
@@ -1227,21 +1227,29 @@ PRBool nsWindow::ConvertStatus(nsEventStatus aStatus)
 //
 //-------------------------------------------------------------------------
 
-NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event)
+NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus)
 {
-  PRBool result = PR_FALSE;
-  event->widgetSupports = (nsISupports*)((nsObject*)this);
-
+  aStatus = nsEventStatus_eIgnore;
   if (nsnull != mEventCallback) {
-    result = ConvertStatus((*mEventCallback)(event));
-  }
-    // Dispatch to event listener if event was not consumed
-  if ((result != PR_TRUE) && (nsnull != mEventListener)) {
-    result = ConvertStatus(mEventListener->ProcessEvent(*event));
+    aStatus = (*mEventCallback)(event);
+  } 
+
+  // Dispatch to event listener if event was not consumed
+  if ((aStatus != nsEventStatus_eIgnore) && (nsnull != mEventListener)) {
+    aStatus = mEventListener->ProcessEvent(*event);
   }
 
-  return (result ? NS_OK : NS_ERROR_FAILURE);
+  return NS_OK;
+
 }
+
+PRBool nsWindow::DispatchWindowEvent(nsGUIEvent* event)
+{
+  nsEventStatus status;
+  DispatchEvent(event, status);
+  return ConvertStatus(status);
+}
+
 
 //-------------------------------------------------------------------------
 //
@@ -1258,7 +1266,7 @@ PRBool nsWindow::DispatchMouseEvent(nsMouseEvent& aEvent)
 
   // call the event callback 
   if (nsnull != mEventCallback) {
-    result = DispatchEvent(&aEvent) == NS_OK;
+    result = DispatchWindowEvent(&aEvent);
 
     return result;
   }
@@ -1331,7 +1339,7 @@ PRBool nsWindow::OnPaint(nsPaintEvent &event)
 					      (void **)&event.renderingContext))
       {
         event.renderingContext->Init(mContext, this);
-        result = DispatchEvent(&event) == NS_OK;
+        result = DispatchWindowEvent(&event);
         NS_RELEASE(event.renderingContext);
       }
     else 
@@ -1368,7 +1376,7 @@ PRBool nsWindow::OnResize(nsSizeEvent &aEvent)
   nsRect* size = aEvent.windowSize;
 
   if (mEventCallback && !mIgnoreResize) {
-    return(DispatchEvent(&aEvent) == NS_OK);
+    return DispatchWindowEvent(&aEvent);
   }
   return FALSE;
 }
@@ -1376,7 +1384,7 @@ PRBool nsWindow::OnResize(nsSizeEvent &aEvent)
 PRBool nsWindow::OnKey(PRUint32 aEventType, PRUint32 aKeyCode, nsKeyEvent* aEvent)
 {
   if (mEventCallback) {
-    return(DispatchEvent(aEvent) == NS_OK);
+    return DispatchWindowEvent(aEvent);
   }
   else
    return FALSE;
@@ -1386,7 +1394,7 @@ PRBool nsWindow::OnKey(PRUint32 aEventType, PRUint32 aKeyCode, nsKeyEvent* aEven
 PRBool nsWindow::DispatchFocus(nsGUIEvent &aEvent)
 {
   if (mEventCallback) {
-    return(DispatchEvent(&aEvent) == NS_OK);
+    return DispatchWindowEvent(&aEvent);
   }
 
  return FALSE;

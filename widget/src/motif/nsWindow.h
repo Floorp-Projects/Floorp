@@ -129,7 +129,7 @@ public:
     NS_IMETHOD            SetMenuBar(nsIMenuBar * aMenuBar); 
     NS_IMETHOD            GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight);
     NS_IMETHOD            SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight);
-    NS_IMETHOD            DispatchEvent(nsGUIEvent* event);
+    NS_IMETHOD            DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus);
 
     virtual PRBool IsChild() { return(PR_FALSE); };
 
@@ -157,7 +157,9 @@ public:
 
     char gInstanceClassName[256];
 protected:
-  void InitCallbacks(char * aName = nsnull);
+  void   InitCallbacks(char * aName = nsnull);
+  PRBool DispatchWindowEvent(nsGUIEvent* event);
+
 
   void CreateGC();
   void CreateWindow(nsNativeWidget aNativeParent, nsIWidget *aWidgetParent,
