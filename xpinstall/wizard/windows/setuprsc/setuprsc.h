@@ -3,8 +3,8 @@
 // Used by setuprsc.rc
 //
 //#include "winres.h"
-#include "winnt.rh"
-#include "winuser.rh"
+#include "winresrc.h"
+//#include "winuser.rh"
 
 #ifdef IDC_STATIC
 #undef IDC_STATIC

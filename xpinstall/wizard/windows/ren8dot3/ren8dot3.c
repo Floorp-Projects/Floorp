@@ -112,4 +112,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
     free(SubStringPtr);
     free(SrcIni);
     free(DestIni);
+
+    return(0);
 }

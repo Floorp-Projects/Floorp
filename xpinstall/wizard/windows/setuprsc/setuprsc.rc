@@ -1,5 +1,6 @@
 //Microsoft Developer Studio generated resource script.
 //
+#define WINVER 0x400
 #include "setuprsc.h"
 
 #define APSTUDIO_READONLY_SYMBOLS

@@ -28,7 +28,7 @@
  */
 
 #include "winuser.h"
-#include "winnt.rh"
+#include "winresrc.h"
 
 #define IDS_PROMPT                      1
 #define IDS_STATUS_EXTRACTING           2
