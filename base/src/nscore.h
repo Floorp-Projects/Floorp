@@ -22,6 +22,10 @@
 #define NS_WIN32 1
 #endif
 
+#if defined(__unix)
+#define NS_UNIX 1
+#endif
+
 #include "prtypes.h"
 #include "nsDebug.h"
 
