@@ -4,17 +4,44 @@
 	Contains:	A collection of useful high-level File Manager routines
 				which use the HFS Plus APIs wherever possible.
 
-	Version:	MoreFilesX 1.0
+	Version:	MoreFilesX 1.0.1
 
 	Copyright:	© 1992-2002 by Apple Computer, Inc., all rights reserved.
 
-	You may incorporate this sample code into your applications without
-	restriction, though the sample code has been provided "AS IS" and the
-	responsibility for its operation is 100% yours.	 However, what you are
-	not permitted to do is to redistribute the source as "DSC Sample Code"
-	after having made changes. If you're going to re-distribute the source,
-	we require that you make it clear in the source that the code was
-	descended from Apple Sample Code, but that you've made changes.
+	Disclaimer:	IMPORTANT:  This Apple software is supplied to you by Apple Computer, Inc.
+				("Apple") in consideration of your agreement to the following terms, and your
+				use, installation, modification or redistribution of this Apple software
+				constitutes acceptance of these terms.  If you do not agree with these terms,
+				please do not use, install, modify or redistribute this Apple software.
+
+				In consideration of your agreement to abide by the following terms, and subject
+				to these terms, Apple grants you a personal, non-exclusive license, under Apple’s
+				copyrights in this original Apple software (the "Apple Software"), to use,
+				reproduce, modify and redistribute the Apple Software, with or without
+				modifications, in source and/or binary forms; provided that if you redistribute
+				the Apple Software in its entirety and without modifications, you must retain
+				this notice and the following text and disclaimers in all such redistributions of
+				the Apple Software.  Neither the name, trademarks, service marks or logos of
+				Apple Computer, Inc. may be used to endorse or promote products derived from the
+				Apple Software without specific prior written permission from Apple.  Except as
+				expressly stated in this notice, no other rights or licenses, express or implied,
+				are granted by Apple herein, including but not limited to any patent rights that
+				may be infringed by your derivative works or by other works in which the Apple
+				Software may be incorporated.
+
+				The Apple Software is provided by Apple on an "AS IS" basis.  APPLE MAKES NO
+				WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE IMPLIED
+				WARRANTIES OF NON-INFRINGEMENT, MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+				PURPOSE, REGARDING THE APPLE SOFTWARE OR ITS USE AND OPERATION ALONE OR IN
+				COMBINATION WITH YOUR PRODUCTS.
+
+				IN NO EVENT SHALL APPLE BE LIABLE FOR ANY SPECIAL, INDIRECT, INCIDENTAL OR
+				CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+				GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+				ARISING IN ANY WAY OUT OF THE USE, REPRODUCTION, MODIFICATION AND/OR DISTRIBUTION
+				OF THE APPLE SOFTWARE, HOWEVER CAUSED AND WHETHER UNDER THEORY OF CONTRACT, TORT
+				(INCLUDING NEGLIGENCE), STRICT LIABILITY OR OTHERWISE, EVEN IF APPLE HAS BEEN
+				ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 	File Ownership:
 
@@ -32,27 +59,21 @@
 
 	Change History (most recent first):
 
+		 <4>	 8/22/02	JL		[3016251]  Changed FSMoveRenameObjectUnicode to not use
+		 							the Temporary folder because it isn't available on
+		 							NFS volumes.
+		 <3>	 4/19/02	JL		[2853905]  Fixed #if test around header includes.
+		 <2>	 4/19/02	JL		[2850624]  Fixed C++ compile errors and Project Builder
+		 							warnings.
+		 <2>	 4/19/02	JL		[2853901]  Updated standard disclaimer.
 		 <1>	 1/25/02	JL		MoreFilesX 1.0
 */
 
-#if 0
+#if defined(__MACH__)
 	#include <Carbon/Carbon.h>
+	#include <string.h>
 #else
-	#include <MacTypes.h>
-	#include <OSUtils.h>
-	#include <TextCommon.h>
-	#include <UTCUtils.h>
-	#include <Finder.h>
-	#include <Files.h>
-	#include <MacErrors.h>
-	#include <MacMemory.h>
-	#include <Folders.h>
-	#include <HFSVolumes.h>
-	#include <Gestalt.h>
-	#include <NumberFormatting.h>
-	#include <Script.h>
-	#include <UnicodeConverter.h>
-	#include <Debugging.h>
+	#include <Carbon.h>
 	#include <string.h>
 #endif
 
@@ -101,7 +122,7 @@ typedef struct FSDeleteContainerGlobals FSDeleteContainerGlobals;
 
 static
 void
-DeleteLevel(
+FSDeleteContainerLevel(
 	const FSRef *container,
 	FSDeleteContainerGlobals *theGlobals);
 
@@ -184,7 +205,6 @@ SourceResultNotEofErr:
 DestinationFSWriteForkFailed:
 DestinationFSSetForkPositionFailed:
 SourceFSSetForkPositionFailed:
-DestinationFSAllocateForkFailed:
 DestinationFSSetForkSizeFailed:
 SourceFSGetForkSizeFailed:
 BadParameter:
@@ -512,7 +532,7 @@ UnicodeNameGetHFSName(
 	require_action(NULL != hfsName, BadParameter, result = paramErr);
 	
 	/* make sure output is valid in case we get errors or there's nothing to convert */
-	StrLength(hfsName) = 0;
+	hfsName[0] = 0;
 	
 	unicodeByteLength = nameLength * sizeof(UniChar);
 	if ( 0 == unicodeByteLength )
@@ -559,7 +579,7 @@ UnicodeNameGetHFSName(
 			&unicodeBytesConverted, &actualPascalBytes, &hfsName[1]);
 		require_noerr(result, ConvertFromUnicodeToText);
 		
-		StrLength(hfsName) = (unsigned char)actualPascalBytes;	/* fill in length byte */
+		hfsName[0] = (unsigned char)actualPascalBytes;	/* fill in length byte */
 
 ConvertFromUnicodeToText:
 		
@@ -1353,10 +1373,8 @@ FSMoveRenameObjectUnicode(
 	FSRef			originalDirectory;
 	TextEncoding	originalTextEncodingHint;
 	HFSUniStr255	originalName;
-	long			tempItemsDirID;
-	Str31			uniqueTempDirName;
-	long			uniqueTempDirID;
-	FSRef			uniqueTempDirRef;
+	HFSUniStr255	uniqueName;		/* unique name given to object while moving it to destination */
+	long			theSeed;		/* the seed for generating unique names */
 	
 	/* check parameters */
 	require_action(NULL != newRef, BadParameter, result = paramErr);
@@ -1381,50 +1399,26 @@ FSMoveRenameObjectUnicode(
 	/* make sure ref and destDirectory are on same volume */
 	require_action(vRefNum == catalogInfo.volume, NotSameVolume, result = diffVolErr);
 	
-	/* Skip a lot of steps if we're not renaming */
+	/* Skip a few steps if we're not renaming */
 	if ( NULL != name )
 	{
-		/* find the Temporary Items Folder on sourcevRefNum */
-		result = FindFolder(vRefNum, kTemporaryFolderType, kCreateFolder, &vRefNum, &tempItemsDirID);
-		require_noerr(result, NoTemporaryFolder);
+		/* generate a name that is unique in both directories */
+		theSeed = 0x4a696d4c;	/* a fine unlikely filename */
 		
-		/* Create a new uniquely named folder in the temporary items folder. */
-		/* This is done to avoid the case where 'realName' or 'copyName' already */
-		/* exists in the temporary items folder. */
+		result = GenerateUniqueHFSUniStr(&theSeed, &originalDirectory, destDirectory, &uniqueName);
+		require_noerr(result, GenerateUniqueHFSUniStrFailed);
 		
-		/* Start with 'A' plus the current tick count as uniqueTempDirName */
-		NumToString(TickCount(), &uniqueTempDirName[1]);
-		uniqueTempDirName[0] = uniqueTempDirName[1] + 1;
-		uniqueTempDirName[1] = 'A';
-		do
-		{
-			result = DirCreate(vRefNum, tempItemsDirID, uniqueTempDirName, &uniqueTempDirID);
-			if ( dupFNErr == result )
-			{
-				/* Duplicate name - change the first character to the next ASCII character */
-				++uniqueTempDirName[1];
-			}
-		} while ( (dupFNErr == result) && (uniqueTempDirName[1] < 'Z') ); /* 26 new weirdly named directories per 1/60th second - not likely! */
-		require_noerr(result, CouldNotCreateUniqueTempDir);
-		
-		/* get FSRef to UniqueTempDir */
-		result = FSMakeFSRef(vRefNum, uniqueTempDirID, NULL, &uniqueTempDirRef);
-		require_noerr(result, FSMakeFSRef);
-
-		/* Move the object to the folder with uniqueTempDirRef for renaming */
-		result = FSMoveObject(ref, &uniqueTempDirRef, newRef);
-		require_noerr(result, FSMoveObjectBeforeRenameFailed);
-		
-		/* Rename the object */
-		result = FSRenameUnicode(newRef, nameLength, name, textEncodingHint, newRef);
-		require_noerr(result, FSRenameUnicode);
+		/* Rename the object to uniqueName */
+		result = FSRenameUnicode(ref, uniqueName.length, uniqueName.unicode, kTextEncodingUnknown, newRef);
+		require_noerr(result, FSRenameUnicodeBeforeMoveFailed);
 		
 		/* Move object to its new home */
 		result = FSMoveObject(newRef, destDirectory, newRef);
 		require_noerr(result, FSMoveObjectAfterRenameFailed);
 		
-		/* Done with ourTempDir, so delete it - ignore errors */
-		verify_noerr(HDelete(vRefNum, uniqueTempDirID, NULL));
+		/* Rename the object to new name */
+		result = FSRenameUnicode(ref, nameLength, name, textEncodingHint, newRef);
+		require_noerr(result, FSRenameUnicodeAfterMoveFailed);
 	}
 	else
 	{
@@ -1440,24 +1434,19 @@ FSMoveRenameObjectUnicode(
 /*
  * failure handling code when renaming
  */
+
+FSRenameUnicodeAfterMoveFailed:
+
+	/* Error handling: move object back to original location - ignore errors */
+	verify_noerr(FSMoveObject(newRef, &originalDirectory, newRef));
+	
 FSMoveObjectAfterRenameFailed:
 
 	/* Error handling: rename object back to original name - ignore errors */
 	verify_noerr(FSRenameUnicode(newRef, originalName.length, originalName.unicode, originalTextEncodingHint, newRef));
 	
-FSRenameUnicode:
-
-	/* Error handling: move object back to original location - ignore errors */
-	verify_noerr(FSMoveObject(newRef, &originalDirectory, newRef));
-	
-FSMoveObjectBeforeRenameFailed:
-FSMakeFSRef:
-
-	/* Done with ourTempDir, so delete it - ignore errors */
-	verify_noerr(HDelete(vRefNum, uniqueTempDirID, NULL));
-	
-CouldNotCreateUniqueTempDir:
-NoTemporaryFolder:
+FSRenameUnicodeBeforeMoveFailed:
+GenerateUniqueHFSUniStrFailed:
 
 /*
  * failure handling code for renaming or not
@@ -1861,7 +1850,7 @@ GenerateUniqueHFSUniStr(
 	long			i;
 	FSRefParam		pb;
 	FSRef			newRef;
-	unsigned char	hexStr[16] = "0123456789ABCDEF";
+	unsigned char	hexStr[17] = "0123456789ABCDEF";
 	
 	/* set up the parameter block */
 	pb.name = uniqueName->unicode;
@@ -2120,7 +2109,6 @@ NotAFile:
 NotSameVolume:
 DestFSGetCatalogInfoFailed:
 SourceFSGetCatalogInfoFailed:
-FSGetVolParmsFailed:
 DetermineSourceVRefNumFailed:	
 BadParameter:
 
@@ -2562,7 +2550,7 @@ FSResolveFileIDRef(
 	require_action(NULL != ref, BadParameter, result = paramErr);
 	
 	/* resolve the file ID reference */
-	StrLength(tempStr) = 0;
+	tempStr[0] = 0;
 	pb.ioNamePtr = tempStr;
 	pb.ioVRefNum = volRefNum;
 	pb.ioFileID = fileID;
