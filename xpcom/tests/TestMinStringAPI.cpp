@@ -184,6 +184,98 @@ static PRBool test_append()
     return PR_TRUE;
   }
 
+// Replace all occurances of |matchVal| with |newVal|
+static void ReplaceSubstring( nsACString& str,
+                              const nsACString& matchVal,
+                              const nsACString& newVal )
+  {
+    const char* sp, *mp, *np;
+    PRUint32 sl, ml, nl;
+
+    sl = NS_CStringGetData(str, &sp);
+    ml = NS_CStringGetData(matchVal, &mp);
+    nl = NS_CStringGetData(newVal, &np);
+
+    for (const char* iter = sp; iter <= sp + sl - ml; ++iter)
+      {
+        if (memcmp(iter, mp, ml) == 0)
+          {
+            PRUint32 offset = iter - sp;
+
+            NS_CStringSetDataRange(str, offset, ml, np, nl);
+
+            sl = NS_CStringGetData(str, &sp);
+
+            iter = sp + offset + nl - 1;
+          }
+      }
+  }
+
+static PRBool test_replace_driver(const char *strVal,
+                                  const char *matchVal,
+                                  const char *newVal,
+                                  const char *finalVal)
+  {
+    nsCStringContainer a;
+    NS_CStringContainerInit(a);
+    NS_CStringSetData(a, strVal);
+
+    nsCStringContainer b;
+    NS_CStringContainerInit(b);
+    NS_CStringSetData(b, matchVal);
+
+    nsCStringContainer c;
+    NS_CStringContainerInit(c);
+    NS_CStringSetData(c, newVal);
+
+    ReplaceSubstring(a, b, c);
+
+    const char *data;
+    NS_CStringGetData(a, &data);
+    if (strcmp(data, finalVal) != 0)
+      return PR_FALSE;
+
+    NS_CStringContainerFinish(c);
+    NS_CStringContainerFinish(b);
+    NS_CStringContainerFinish(a);
+    return PR_TRUE;
+  }
+
+static PRBool test_replace()
+  {
+    PRBool rv;
+
+    rv = test_replace_driver("hello world, hello again!",
+                             "hello",
+                             "goodbye",
+                             "goodbye world, goodbye again!");
+    if (!rv)
+      return rv;
+
+    rv = test_replace_driver("foofoofoofoo!",
+                             "foo",
+                             "bar",
+                             "barbarbarbar!");
+    if (!rv)
+      return rv;
+
+    rv = test_replace_driver("foo bar systems",
+                             "xyz",
+                             "crazy",
+                             "foo bar systems");
+    if (!rv)
+      return rv;
+
+    rv = test_replace_driver("oh",
+                             "xyz",
+                             "crazy",
+                             "oh");
+    if (!rv)
+      return rv;
+
+    return PR_TRUE;
+  }
+
 //----
 
 typedef PRBool (*TestFunc)();
@@ -199,6 +291,7 @@ tests[] =
     { "test_basic_2", test_basic_2 },
     { "test_convert", test_convert },
     { "test_append", test_append },
+    { "test_replace", test_replace },
     { nsnull, nsnull }
   };
 
