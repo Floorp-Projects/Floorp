@@ -262,7 +262,7 @@ real_checkout:
 	  if test -f $$failed; then false; else true; fi; }; \
 	cvs_co $(CVSCO_NSPR) && \
 	cvs_co $(CVSCO_PSM) && \
-	cvs_co $(CVSCO_SEAMONKEY) && \
+	cvs_co $(CVSCO_SEAMONKEY)
 	@echo "checkout finish: "`date` | tee -a $(CVSCO_LOGFILE)
 	@: Check the log for conflicts. ;\
 	conflicts=`egrep "^C " $(CVSCO_LOGFILE)` ;\
