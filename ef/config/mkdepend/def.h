@@ -26,10 +26,23 @@ in this Software without prior written authorization from the X Consortium.
 
 */
 
-#include <stdlib.h>
-#include <string.h>
+#ifndef NO_X11
+#include <X11/Xosdefs.h>
+#ifdef WIN32
+#include <X11/Xw32defs.h>
+#endif
+#ifndef SUNOS4
+#include <X11/Xfuncproto.h>
+#endif /* SUNOS4 */
+#endif /* NO_X11 */
+
 #include <stdio.h>
 #include <ctype.h>
+#ifndef X_NOT_POSIX
+#ifndef _POSIX_SOURCE
+#define _POSIX_SOURCE
+#endif
+#endif
 #include <sys/types.h>
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -129,29 +142,9 @@ struct symtab		*fdefined();
 struct filepointer	*getfile();
 struct inclist		*newinclude();
 struct inclist		*inc_path();
-void remove_dotdot(char	*path);
-int isdot(char *p);
-int isdotdot(char *p);
-int issymbolic(char *dir, char *component);
-void define2(char	*name, char	*val, struct inclist	*file);
-void pr(struct inclist  *ip, char	*file, char	*base);
-void included_by(struct inclist	*ip, struct inclist	*newfile);
-int find_includes(struct filepointer	*filep, struct inclist		*file, struct inclist		*file_red, int recursion, boolean failOK);
-void freefile(struct filepointer	*fp);
-int deftype (char	*line, struct filepointer *filep, struct inclist *file_red, struct inclist *file, int	parse_it);
-void recursive_pr_include(struct inclist	*head, char	*file, char	*base);
-void inc_clean ();
-void define(char	*def, struct inclist	*file);
-void redirect(char	*line, char	*makefile);
-int gobble(struct filepointer *filep, struct inclist		*file, struct inclist		*file_red);
-void undefine(char	*symbol, struct inclist	*file);
-void add_include(struct filepointer	*filep, struct inclist	*file, struct inclist	*file_red, char	*include, boolean dot, int failOK);
-int match(char	*str, char	**list);
-int zero_value(char	*exp, struct filepointer *filep, struct inclist *file_red);
-int cppsetup(char	*line, struct filepointer	*filep, struct inclist		*inc);
 
 #if NeedVarargsPrototypes
-extern void fatalerr(char *, ...);
-extern void warning(char *, ...);
-extern void warning1(char *, ...);
+extern fatalerr(char *, ...);
+extern warning(char *, ...);
+extern warning1(char *, ...);
 #endif

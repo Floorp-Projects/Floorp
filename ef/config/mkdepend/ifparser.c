@@ -57,12 +57,8 @@
  *     ParseIfExpression		parse a string for #if
  */
 
-#include <stdlib.h>
-#include <string.h>
 #include "ifparser.h"
 #include <ctype.h>
-
-extern int remove_dotdot(char	*path);
 
 /****************************************************************************
 		   Internal Macros and Utilities for Parser
@@ -132,10 +128,6 @@ parse_value (g, cp, valp)
       case '(':
 	DO (cp = ParseIfExpression (g, cp + 1, valp));
 	SKIPSPACE (cp);
-	if (*cp == '?')
-	  while (*cp != ')')
-		cp++;
-
 	if (*cp != ')') 
 	    return CALLFUNC(g, handle_error) (g, cp, ")");
 
@@ -220,7 +212,11 @@ parse_product (g, cp, valp)
 
       case '/':
 	DO (cp = parse_product (g, cp + 1, &rightval));
-	*valp = (*valp / rightval);
+
+	/* Do nothing in the divide-by-zero case. */
+	if (rightval) {
+		*valp = (*valp / rightval);
+	}
 	break;
 
       case '%':

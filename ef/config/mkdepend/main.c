@@ -50,10 +50,6 @@ in this Software without prior written authorization from the X Consortium.
 #include <stdarg.h>
 #endif
 
-#ifndef _WIN32
-#include <unistd.h>
-#endif
-
 #ifdef MINIX
 #define USE_CHMOD	1
 #endif
@@ -117,7 +113,7 @@ catch (sig)
 	fatalerr ("got signal %d\n", sig);
 }
 
-#if defined(USG) || (defined(i386) && defined(SYSV)) || defined(WIN32) || defined(__EMX__) || defined(Lynx_22) || defined(FREEBSD)
+#if defined(USG) || (defined(i386) && defined(SYSV)) || defined(WIN32) || defined(__EMX__) || defined(Lynx_22)
 #define USGISH
 #endif
 
@@ -131,7 +127,6 @@ catch (sig)
 struct sigaction sig_act;
 #endif /* USGISH */
 
-int
 main(argc, argv)
 	int	argc;
 	char	**argv;
@@ -360,6 +355,7 @@ main(argc, argv)
 #ifdef SIGSYS
 	signal (SIGSYS, catch);
 #endif
+	signal (SIGFPE, catch);
 #else
 	sig_act.sa_handler = catch;
 #ifdef _POSIX_SOURCE
@@ -451,7 +447,7 @@ struct filepointer *getfile(file)
 	return(content);
 }
 
-void freefile(fp)
+freefile(fp)
 	struct filepointer	*fp;
 {
 	free(fp->f_base);
@@ -467,7 +463,7 @@ char *copy(str)
 	return(p);
 }
 
-int match(str, list)
+match(str, list)
 	register char	*str, **list;
 {
 	register int	i;
@@ -579,7 +575,7 @@ int rename (from, to)
 }
 #endif /* USGISH */
 
-void redirect(line, makefile)
+redirect(line, makefile)
 	char	*line,
 		*makefile;
 {
@@ -615,20 +611,15 @@ void redirect(line, makefile)
 	unlink(backup);
 #if defined(WIN32) || defined(__EMX__)
 	fclose(fdin);
-
-	/* Remove backup file if it already exists */
-	_unlink(backup);
 #endif
-	
 	if (rename(makefile, backup) < 0)
 		fatalerr("cannot rename %s to %s\n", makefile, backup);
-
 #if defined(WIN32) || defined(__EMX__)
 	if ((fdin = fopen(backup, "r")) == NULL)
 		fatalerr("cannot open \"%s\"\n", backup);
 #endif
 	if ((fdout = freopen(makefile, "w", stdout)) == NULL)
-		fatalerr("cannot open \"%s\"\n", makefile);
+		fatalerr("cannot open \"%s\"\n", backup);
 	len = strlen(line);
 	while (!found && fgets(buf, BUFSIZ, fdin)) {
 		if (*buf == '#' && strncmp(line, buf, len) == 0)
@@ -654,10 +645,10 @@ void redirect(line, makefile)
 }
 
 #if NeedVarargsPrototypes
-void fatalerr(char *msg, ...)
+fatalerr(char *msg, ...)
 #else
 /*VARARGS*/
-void fatalerr(msg,x1,x2,x3,x4,x5,x6,x7,x8,x9)
+fatalerr(msg,x1,x2,x3,x4,x5,x6,x7,x8,x9)
     char *msg;
 #endif
 {
@@ -676,13 +667,14 @@ void fatalerr(msg,x1,x2,x3,x4,x5,x6,x7,x8,x9)
 }
 
 #if NeedVarargsPrototypes
-void warning(char *msg, ...)
+warning(char *msg, ...)
 #else
 /*VARARGS0*/
-void warning(msg,x1,x2,x3,x4,x5,x6,x7,x8,x9)
+warning(msg,x1,x2,x3,x4,x5,x6,x7,x8,x9)
     char *msg;
 #endif
 {
+#ifdef DEBUG_MKDEPEND
 #if NeedVarargsPrototypes
 	va_list args;
 #endif
@@ -694,16 +686,18 @@ void warning(msg,x1,x2,x3,x4,x5,x6,x7,x8,x9)
 #else
 	fprintf(stderr, msg,x1,x2,x3,x4,x5,x6,x7,x8,x9);
 #endif
+#endif /* DEBUG_MKDEPEND */
 }
 
 #if NeedVarargsPrototypes
-void warning1(char *msg, ...)
+warning1(char *msg, ...)
 #else
 /*VARARGS0*/
-void warning1(msg,x1,x2,x3,x4,x5,x6,x7,x8,x9)
+warning1(msg,x1,x2,x3,x4,x5,x6,x7,x8,x9)
     char *msg;
 #endif
 {
+#ifdef DEBUG_MKDEPEND
 #if NeedVarargsPrototypes
 	va_list args;
 	va_start(args, msg);
@@ -712,4 +706,5 @@ void warning1(msg,x1,x2,x3,x4,x5,x6,x7,x8,x9)
 #else
 	fprintf(stderr, msg,x1,x2,x3,x4,x5,x6,x7,x8,x9);
 #endif
+#endif /* DEBUG_MKDEPEND */
 }

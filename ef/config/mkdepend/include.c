@@ -122,7 +122,7 @@ struct inclist *inc_path(file, include, dot)
  * Any of the 'x/..' sequences within the name can be eliminated.
  * (but only if 'x' is not a symbolic link!!)
  */
-void remove_dotdot(path)
+remove_dotdot(path)
 	char	*path;
 {
 	register char	*end, *from, *to, **cp;
@@ -191,7 +191,7 @@ void remove_dotdot(path)
 	strcpy(path, newpath);
 }
 
-int isdot(p)
+isdot(p)
 	register char	*p;
 {
 	if(p && *p++ == '.' && *p++ == '\0')
@@ -199,7 +199,7 @@ int isdot(p)
 	return(FALSE);
 }
 
-int isdotdot(p)
+isdotdot(p)
 	register char	*p;
 {
 	if(p && *p++ == '.' && *p++ == '.' && *p++ == '\0')
@@ -207,7 +207,7 @@ int isdotdot(p)
 	return(FALSE);
 }
 
-int issymbolic(dir, component)
+issymbolic(dir, component)
 	register char	*dir, *component;
 {
 #ifdef S_IFLNK
@@ -253,7 +253,7 @@ struct inclist *newinclude(newfile, incstring)
 	return(ip);
 }
 
-void included_by(ip, newfile)
+included_by(ip, newfile)
 	register struct inclist	*ip, *newfile;
 {
 	register i;
@@ -278,7 +278,7 @@ void included_by(ip, newfile)
 				  newfile->i_file[i-1] == 'c' &&
 				  newfile->i_file[i-2] == '.'))
 			    {
-				/* only bitch if ip has */
+				/* only complain if ip has */
 				/* no #include SYMBOL lines  */
 				/* and is not a .c file */
 				if (warn_multiple)
@@ -298,7 +298,7 @@ void included_by(ip, newfile)
 	ip->i_list[ ip->i_listlen-1 ] = newfile;
 }
 
-void inc_clean ()
+inc_clean ()
 {
 	register struct inclist *ip;
 

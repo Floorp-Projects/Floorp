@@ -235,7 +235,7 @@ in this Software without prior written authorization from the X Consortium.
 #ifdef _CRAY
 #define DEFAULT_CPP "/lib/pcpp"
 #endif
-#if defined(__386BSD__) || defined(__NetBSD__) || defined(__FreeBSD__)
+#if defined(__386BSD__) || defined(__NetBSD__) || defined(__FreeBSD__) || defined(__OpenBSD__)
 #define DEFAULT_CPP "/usr/libexec/cpp"
 #endif
 #ifdef	MACH
@@ -273,7 +273,7 @@ char *cpp_argv[ARGUMENTS] = {
 #ifdef unix
 	"-Uunix",	/* remove unix symbol so that filename unix.c okay */
 #endif
-#if defined(__386BSD__) || defined(__NetBSD__) || defined(__FreeBSD__) || defined(MACH)
+#if defined(__386BSD__) || defined(__NetBSD__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(MACH)
 # ifdef __i386__
 	"-D__i386__",
 # endif
@@ -715,6 +715,9 @@ struct symtab	predefs[] = {
 #endif
 #ifdef __NetBSD__
 	{"__NetBSD__", "1"},
+#endif
+#ifdef __OpenBSD__
+	{"__OpenBSD__", "1"},
 #endif
 #ifdef __EMX__
 	{"__EMX__", "1"},

@@ -31,7 +31,7 @@ in this Software without prior written authorization from the X Consortium.
 extern char	*directives[];
 extern struct inclist	maininclist;
 
-int find_includes(filep, file, file_red, recursion, failOK)
+find_includes(filep, file, file_red, recursion, failOK)
 	struct filepointer	*filep;
 	struct inclist		*file, *file_red;
 	int			recursion;
@@ -41,7 +41,7 @@ int find_includes(filep, file, file_red, recursion, failOK)
 	register int	type;
 	boolean recfailOK;
 
-	while ((line = getline(filep))) {
+	while (line = getline(filep)) {
 		switch(type = deftype(line, filep, file_red, file, TRUE)) {
 		case IF:
 		doif:
@@ -156,14 +156,14 @@ int find_includes(filep, file, file_red, recursion, failOK)
 	return(-1);
 }
 
-int gobble(filep, file, file_red)
+gobble(filep, file, file_red)
 	register struct filepointer *filep;
 	struct inclist		*file, *file_red;
 {
 	register char	*line;
 	register int	type;
 
-	while ((line = getline(filep))) {
+	while (line = getline(filep)) {
 		switch(type = deftype(line, filep, file_red, file, FALSE)) {
 		case IF:
 		case IFFALSE:
@@ -360,12 +360,12 @@ struct symtab *isdefined(symbol, file, srcfile)
 {
 	register struct symtab	*val;
 
-	if ((val = slookup(symbol, &maininclist))) {
+	if (val = slookup(symbol, &maininclist)) {
 		debug(1,("%s defined on command line\n", symbol));
 		if (srcfile != NULL) *srcfile = &maininclist;
 		return(val);
 	}
-	if ((val = fdefined(symbol, file, srcfile)))
+	if (val = fdefined(symbol, file, srcfile))
 		return(val);
 	debug(1,("%s not defined in %s\n", symbol, file->i_file));
 	return(NULL);
@@ -384,12 +384,12 @@ struct symtab *fdefined(symbol, file, srcfile)
 	if (file->i_defchecked)
 		return(NULL);
 	file->i_defchecked = TRUE;
-	if ((val = slookup(symbol, file)))
+	if (val = slookup(symbol, file))
 		debug(1,("%s defined in %s as %s\n", symbol, file->i_file, val->s_value));
-	if ((val == NULL && file->i_list))
+	if (val == NULL && file->i_list)
 		{
 		for (ip = file->i_list, i=0; i < file->i_listlen; i++, ip++)
-			if ((val = fdefined(symbol, *ip, srcfile))) {
+			if (val = fdefined(symbol, *ip, srcfile)) {
 				break;
 			}
 		}
@@ -403,7 +403,7 @@ struct symtab *fdefined(symbol, file, srcfile)
 /*
  * Return type based on if the #if expression evaluates to 0
  */
-int zero_value(exp, filep, file_red)
+zero_value(exp, filep, file_red)
 	register char	*exp;
 	register struct filepointer *filep;
 	register struct inclist *file_red;
@@ -414,7 +414,7 @@ int zero_value(exp, filep, file_red)
 	    return(IF);
 }
 
-void define(def, file)
+define(def, file)
 	char	*def;
 	struct inclist	*file;
 {
@@ -434,7 +434,7 @@ void define(def, file)
     define2(def, val, file);
 }
 
-void define2(name, val, file)
+define2(name, val, file)
 	char	*name, *val;
 	struct inclist	*file;
 {
@@ -552,7 +552,7 @@ struct symtab *slookup(symbol, file)
 	return(NULL);
 }
 
-void undefine(symbol, file)
+undefine(symbol, file)
 	char	*symbol;
 	register struct inclist	*file;
 {

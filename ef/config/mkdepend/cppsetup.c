@@ -59,7 +59,7 @@ extern char	slotab[];
 struct filepointer	*currentfile;
 struct inclist		*currentinc;
 
-int cppsetup(line, filep, inc)
+cppsetup(line, filep, inc)
 	register char	*line;
 	register struct filepointer	*filep;
 	register struct inclist		*inc;
@@ -137,6 +137,7 @@ _my_if_errors (ip, cp, expecting)
     const char *cp;
     const char *expecting;
 {
+#ifdef DEBUG_MKDEPEND
     struct _parse_data *pd = (struct _parse_data *) ip->data;
     int lineno = pd->filep->f_line;
     char *filename = pd->inc->i_file;
@@ -155,6 +156,7 @@ _my_if_errors (ip, cp, expecting)
 	putc (' ', stderr);
     }
     fprintf (stderr, "^--- expecting %s\n", expecting);
+#endif /* DEBUG_MKDEPEND */
     return NULL;
 }
 
@@ -215,7 +217,6 @@ _my_eval_variable (ip, var, len)
 }
 
 
-int
 cppsetup(line, filep, inc)
 	register char	*line;
 	register struct filepointer	*filep;
