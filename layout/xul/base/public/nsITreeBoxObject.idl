@@ -23,15 +23,19 @@
  */
 
 #include "nsIBoxObject.idl"
+#include "domstubs.idl"
 
 [scriptable, uuid(D0CA1546-44C8-4a15-81CB-A4B5E560BE24)]
 interface nsITreeBoxObject : nsISupports
 {
-  void ensureRowIsVisible(in long rowIndex);
+  void ensureIndexIsVisible(in long rowIndex);
+  void scrollToIndex(in long rowIndex);
 
-  // XXX Can eventually be eliminated when event creation/firing is
-  // online in XBL.
-  void fireOnSelect();
+  nsIDOMElement getNextItem(in nsIDOMElement startItem, in long delta);
+  nsIDOMElement getPreviousItem(in nsIDOMElement startItem, in long delta);
+  nsIDOMElement getItemAtIndex(in long index);
+  long getIndexOfItem(in nsIDOMElement item);
+
 };
 
 %{C++

@@ -166,8 +166,11 @@ protected:
 
   PRBool IsAncestor(nsIContent *aRowContent, nsIContent *aOldRowContent, nsIContent **firstDescendant);
 
+public:
   void FindPreviousRowContent(PRInt32& aDelta, nsIContent* aUpwardHint, 
                               nsIContent* aDownwardHint, nsIContent** aResult);
+  void FindNextRowContent(PRInt32& aDelta, nsIContent* aUpwardHint, 
+                          nsIContent* aDownwardHint, nsIContent** aResult);
   void FindRowContentAtIndex(PRInt32& aIndex, nsIContent* aParent, 
                              nsIContent** aResult);
   void MarkTreeAsDirty(nsIPresContext* aPresContext, nsTreeFrame* aTreeFrame);

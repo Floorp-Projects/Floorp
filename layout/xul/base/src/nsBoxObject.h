@@ -42,7 +42,7 @@ public:
   NS_IMETHOD Init(nsIContent* aContent, nsIPresShell* aPresShell);
   NS_IMETHOD SetDocument(nsIDocument* aDocument);
 
-  nsIFrame* GetFrame();
+  virtual nsIFrame* GetFrame();
 
 // MEMBER VARIABLES
 protected: 

@@ -54,11 +54,11 @@ public:
   NS_IMETHOD CollapseScrollbar(nsIPresContext* aPresContext, PRBool aHide);
   NS_IMETHOD ScrollByPages(nsIPresContext* aPresContext, PRInt32 pages);
 
+  nsITreeFrame* FindTreeFrame(nsIPresContext* aPresContext);
+
 protected:
   nsTreeOuterFrame();
   virtual ~nsTreeOuterFrame();
-
-  nsITreeFrame* FindTreeFrame(nsIPresContext* aPresContext);
 
 protected: // Data Members
   
