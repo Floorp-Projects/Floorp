@@ -1449,7 +1449,8 @@ nsWebShellWindow::OnStartDocumentLoad(nsIDocumentLoader* loader,
 
 NS_IMETHODIMP
 nsWebShellWindow::OnEndDocumentLoad(nsIDocumentLoader* loader, 
-                                    nsIURL* aURL, PRInt32 aStatus)
+                                    nsIURL* aURL, PRInt32 aStatus,
+									nsIDocumentLoaderObserver * aDocObserver)
 {
 #ifdef DEBUG_MENUSDEL
   printf("OnEndDocumentLoad\n");
