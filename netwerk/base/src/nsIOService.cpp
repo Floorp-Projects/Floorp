@@ -181,7 +181,7 @@ nsIOService::Init()
     // Hold onto the eventQueue service.  We do not want any eventqueues to go away
     // when we shutdown until we process all remaining transports
 
-    mEventQueueService = do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID);
+    mEventQueueService = do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv))
         NS_WARNING("failed to get event queue service");
     
