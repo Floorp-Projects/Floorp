@@ -20,6 +20,7 @@
 # Contributor(s):
 #   Hubbie Shaw
 #   Doug Turner <dougt@netscape.com>
+#   Terry Hayes <thayes@netscape.com>
 #
 
 MODULE = psmglue
@@ -43,6 +44,7 @@ XPIDLSRCS= \
     .\nsISecureBrowserUI.idl \
     .\nsISSLSocketProvider.idl \
     .\nsIPSMSocketInfo.idl \
+    .\nsISecretDecoderRing.idl \
     $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
