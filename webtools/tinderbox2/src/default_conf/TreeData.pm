@@ -29,8 +29,8 @@
 # issue to work out.
 
 
-# $Revision: 1.11 $ 
-# $Date: 2002/04/26 00:06:18 $ 
+# $Revision: 1.12 $ 
+# $Date: 2002/04/26 23:00:10 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/TreeData.pm,v $ 
 # $Name:  $ 
@@ -177,7 +177,7 @@ $VERSION = '#tinder_version#';
  
 	    'SeaMonkey' =>  {
                    root => '/cvsroot',
-                   module => '',
+                   module => 'MozillaTinderboxAll',
                    branch => 'HEAD',
                   },
 
