@@ -156,6 +156,7 @@ nsAuthURLParser::ParseAtPreHost(const char* i_Spec, char* *o_Username,
 
     static const char delimiters[] = "/:@?"; 
     char* brk = PL_strpbrk(fwdPtr, delimiters);
+	char* brk2 = nsnull;
 
     if (!brk) 
     {
@@ -166,7 +167,37 @@ nsAuthURLParser::ParseAtPreHost(const char* i_Spec, char* *o_Username,
     char* e_PreHost = nsnull;
     switch (*brk)
     {
-    case '@' :
+    case ':' :
+         // this maybe the : of host:port or username:password
+         // look if the next special char is @
+         brk2 = PL_strpbrk(brk+1, delimiters);
+ 
+         if (!brk2) 
+         {
+             rv = ParseAtHost(fwdPtr, o_Host, o_Port, o_Path);
+             return rv;
+         }
+         switch (*brk2)
+         {
+         case '@' :
+             rv = ExtractString(fwdPtr, &e_PreHost, (brk2 - fwdPtr));
+             if (NS_FAILED(rv)) {
+                 CRTFREEIF(e_PreHost);
+                 return rv;
+             }
+             rv = ParsePreHost(e_PreHost,o_Username,o_Password);
+             CRTFREEIF(e_PreHost);
+             if (NS_FAILED(rv))
+                 return rv;
+ 
+             rv = ParseAtHost(brk2+1, o_Host, o_Port, o_Path);
+             break;
+         default:
+             rv = ParseAtHost(fwdPtr, o_Host, o_Port, o_Path);
+             return rv;
+         }
+         break;
+	case '@' :
         rv = ExtractString(fwdPtr, &e_PreHost, (brk - fwdPtr));
         if (NS_FAILED(rv)) {
             CRTFREEIF(e_PreHost);
