@@ -322,6 +322,8 @@ JS_TypeOfValue(JSContext *cx, jsval v)
 {
     JSType type;
     JSObject *obj;
+    JSObjectOps *ops;
+    JSClass *clasp;
 
     CHECK_REQUEST(cx);
     if (JSVAL_IS_VOID(v)) {
@@ -329,9 +331,11 @@ JS_TypeOfValue(JSContext *cx, jsval v)
     } else if (JSVAL_IS_OBJECT(v)) {
 	obj = JSVAL_TO_OBJECT(v);
         if (obj &&
-            (OBJ_IS_NATIVE(obj)
-             ? OBJ_GET_CLASS(cx, obj)->call || OBJ_GET_CLASS(cx, obj) == &js_FunctionClass
-             : obj->map->ops->call != 0)) {
+            (ops = obj->map->ops,
+	     ops == &js_ObjectOps
+             ? (clasp = OBJ_GET_CLASS(cx, obj),
+		clasp->call || clasp == &js_FunctionClass)
+             : ops->call != 0)) {
             type = JSTYPE_FUNCTION;
         } else {
             type = JSTYPE_OBJECT;
@@ -432,7 +436,7 @@ JS_BeginRequest(JSContext *cx)
 	JS_LOCK_GC(rt);
 	while (rt->gcLevel > 0)
 	    JS_AWAIT_GC_DONE(rt);
-	
+
 	/* Indicate that a request is running. */
 	rt->requestCount++;
 	JS_UNLOCK_GC(rt);
@@ -462,7 +466,7 @@ JS_PUBLIC_API(void)
 JS_YieldRequest(JSContext *cx)
 {
     JSRuntime *rt;
-    
+
     CHECK_REQUEST(cx);
 
     PR_ASSERT(rt->requestCount > 0);
@@ -502,7 +506,7 @@ JS_ResumeRequest(JSContext *cx)
 	JS_LOCK_GC(rt);
 	while (rt->gcLevel > 0)
 	    JS_AWAIT_GC_DONE(rt);
-	
+
 	/* Indicate that a request is running. */
 	rt->requestCount++;
 	JS_UNLOCK_GC(rt);
@@ -539,13 +543,13 @@ JS_DestroyContext(JSContext *cx)
 JS_PUBLIC_API(void*)
 JS_GetContextPrivate(JSContext *cx)
 {
-    return cx->pvt;
+    return cx->data;
 }
 
 JS_PUBLIC_API(void)
-JS_SetContextPrivate(JSContext *cx, void *pvt)
+JS_SetContextPrivate(JSContext *cx, void *data)
 {
-    cx->pvt = pvt;
+    cx->data = data;
 }
 
 JS_PUBLIC_API(JSRuntime *)
@@ -961,7 +965,7 @@ JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
 	/* Bootstrap Function.prototype (see also JS_InitStandardClasses). */
 	if (OBJ_GET_CLASS(cx, ctor) == clasp) {
 	    /* XXXMLM - this fails in framesets that are writing over
-	     *           themselves! 
+	     *           themselves!
 	     * PR_ASSERT(!OBJ_GET_PROTO(cx, ctor));
 	     */
 	    OBJ_SET_PROTO(cx, ctor, proto);
@@ -1205,7 +1209,7 @@ JS_DefineConstDoubles(JSContext *cx, JSObject *obj, JSConstDoubleSpec *cds)
             value = DOUBLE_TO_JSVAL(&cds->dval);
         } else {
             jsint i = (jsint)d;
-            
+
             value = (JSDOUBLE_IS_INT(d, i) && INT_FITS_IN_JSVAL(i))
 		? INT_TO_JSVAL(i)
 		: DOUBLE_TO_JSVAL(&cds->dval);
@@ -1753,7 +1757,7 @@ JS_Enumerate(JSContext *cx, JSObject *obj)
 	    vector[i++] = id;
 	}
     }
-              
+
     return ida;
 
 error:
@@ -2532,7 +2536,7 @@ JS_IsExceptionPending(JSContext *cx)
 {
     CHECK_REQUEST(cx);
 #if JS_HAS_EXCEPTIONS
-    return (JSBool) cx->fp->exceptPending;
+    return (JSBool) cx->fp->throwing;
 #else
     return JS_FALSE;
 #endif
@@ -2543,9 +2547,9 @@ JS_GetPendingException(JSContext *cx, jsval *vp)
 {
     CHECK_REQUEST(cx);
 #if JS_HAS_EXCEPTIONS
-    if (!cx->fp->exceptPending)
+    if (!cx->fp->throwing)
 	return JS_FALSE;
-    *vp = cx->fp->exception;
+    *vp = cx->fp->rval;
     return JS_TRUE;
 #else
     return JS_FALSE;
@@ -2557,8 +2561,8 @@ JS_SetPendingException(JSContext *cx, jsval v)
 {
     CHECK_REQUEST(cx);
 #if JS_HAS_EXCEPTIONS
-    cx->fp->exceptPending = JS_TRUE;
-    cx->fp->exception = v;
+    cx->fp->throwing = JS_TRUE;
+    cx->fp->rval = v;
 #endif
 }
 
@@ -2567,7 +2571,7 @@ JS_ClearPendingException(JSContext *cx)
 {
     CHECK_REQUEST(cx);
 #if JS_HAS_EXCEPTIONS
-    cx->fp->exceptPending = JS_FALSE;
+    cx->fp->throwing = JS_FALSE;
 #endif
 }
 
@@ -2594,7 +2598,6 @@ JS_ClearContextThread(JSContext *cx)
     return old;
 }
 #endif
-    
 
 /************************************************************************/
 

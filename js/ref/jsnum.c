@@ -704,7 +704,7 @@ js_strtointeger(JSContext *cx, const jschar *s, const jschar **ep, jsint base, j
         s1++;
 
     if (base == 0)
-        /* No base supplied, or some base that evaluated to 0. */ 
+        /* No base supplied, or some base that evaluated to 0. */
         if (*s1 == '0')
             /* It's either hex or octal; only increment char if str isn't '0' */
             if (s1[1] == 'X' || s1[1] == 'x') { /* Hex */
@@ -776,18 +776,18 @@ js_strtointeger(JSContext *cx, const jschar *s, const jschar **ep, jsint base, j
 	    struct BinaryDigitReader bdr;
 	    intN bit, bit2;
 	    intN j;
-	    
+
 	    bdr.base = base;
 	    bdr.digitMask = 0;
 	    bdr.digits = start;
 	    bdr.end = s1;
 	    value = 0.0;
-	    
+
 	    /* Skip leading zeros. */
 	    do {
 	        bit = GetNextBinaryDigit(&bdr);
 	    } while (bit == 0);
-	    
+
 	    if (bit == 1) {
 	        /* Gather the 53 significant bits (including the leading 1) */
 	        value = 1.0;
@@ -803,7 +803,7 @@ js_strtointeger(JSContext *cx, const jschar *s, const jschar **ep, jsint base, j
 	            jsdouble factor = 2.0;
 	            intN sticky = 0;  /* sticky is 1 if any bit beyond the 54th is 1 */
 	            intN bit3;
-	            
+
 	            while ((bit3 = GetNextBinaryDigit(&bdr)) >= 0) {
 	                sticky |= bit3;
 	                factor *= 2;

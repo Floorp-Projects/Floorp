@@ -270,7 +270,7 @@ js_EnterSharpObject(JSContext *cx, JSObject *obj, JSIdArray **idap,
         hash = js_hash_object(obj);
         hep = PR_HashTableRawLookup(table, hash, obj);
         he = *hep;
-    
+
         /*
          * It's possible that the value of a property has changed from the
          * first time the object's properties are traversed (when the property
@@ -1073,11 +1073,9 @@ FindConstructor(JSContext *cx, const char *name, jsval *vp)
 	}
     }
 
-    if(!OBJ_LOOKUP_PROPERTY(cx, obj, (jsid)atom, &pobj, (JSProperty **) &sprop))
-    {
+    if (!OBJ_LOOKUP_PROPERTY(cx, obj, (jsid)atom, &pobj, (JSProperty**)&sprop))
 	return JS_FALSE;
-    }
-    if(!sprop)  {
+    if (!sprop)  {
 	*vp = JSVAL_VOID;
 	return JS_TRUE;
     }
@@ -1277,7 +1275,7 @@ js_DefineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
     JSScope *scope;
     JSScopeProperty *sprop;
 
-    /* Handle old bug that treated empty string as zero index. 
+    /* Handle old bug that treated empty string as zero index.
      * Also convert string indices to numbers if applicable. */
     CHECK_FOR_FUNNY_INDEX(id);
 
@@ -1348,7 +1346,7 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
     JSObject *obj2, *proto;
     JSScopeProperty *sprop;
 
-    /* Handle old bug that treated empty string as zero index. 
+    /* Handle old bug that treated empty string as zero index.
      * Also convert string indices to numbers if applicable. */
     CHECK_FOR_FUNNY_INDEX(id);
 
@@ -1553,7 +1551,7 @@ js_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     if (!js_LookupProperty(cx, obj, id, &obj2, (JSProperty **)&sprop))
 	return JS_FALSE;
     if (!sprop) {
-        /* Handle old bug that treated empty string as zero index. 
+        /* Handle old bug that treated empty string as zero index.
          * Also convert string indices to numbers if applicable. */
 	CHECK_FOR_FUNNY_INDEX(id);
 
@@ -1619,7 +1617,7 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 	return JS_FALSE;
     }
 
-    /* Handle old bug that treated empty string as zero index. 
+    /* Handle old bug that treated empty string as zero index.
      * Also convert string indices to numbers if applicable. */
     CHECK_FOR_FUNNY_INDEX(id);
 
@@ -1892,7 +1890,7 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *rval)
 
     *rval = JSVERSION_IS_ECMA(cx->version) ? JSVAL_TRUE : JSVAL_VOID;
 
-    /* Handle old bug that treated empty string as zero index. 
+    /* Handle old bug that treated empty string as zero index.
      * Also convert string indices to numbers if applicable. */
     CHECK_FOR_FUNNY_INDEX(id);
 
@@ -2084,7 +2082,7 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
     enumerate = clasp->enumerate;
     if (clasp->flags & JSCLASS_NEW_ENUMERATE)
         return ((JSNewEnumerateOp) enumerate)(cx, obj, enum_op, statep, idp);
-        
+
     switch (enum_op) {
 
     case JSENUMERATE_INIT:
@@ -2099,40 +2097,40 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
          */
         JS_LOCK_OBJ(cx, obj);
         scope = (JSScope *) obj->map;
- 
-         /*
-          * If this object shares a scope with its prototype, don't enumerate
-          * its properties.  Otherwise they will be enumerated a second time
-          * when the prototype object is enumerated.
-          */
-         proto_obj = OBJ_GET_PROTO(cx, obj);
-         if (proto_obj && (scope == (JSScope *)proto_obj->map)) {
-             ida = js_NewIdArray(cx, 0);
-             if (!ida) {
-               JS_UNLOCK_OBJ(cx, obj);
-               goto init_error;
-             }
-         } else {
-             /* Object has a private scope; Enumerate all props in scope. */
-             for (sprop = scope->props; sprop; sprop = sprop->next) {
-                 if ((sprop->attrs & JSPROP_ENUMERATE) && sprop->symbols)
-                     length++;
-             }
-             ida = js_NewIdArray(cx, length);
-             if (!ida) {
-                 JS_UNLOCK_OBJ(cx, obj);
-                 goto init_error;
-             }
-             i = 0;
-             for (sprop = scope->props; sprop; sprop = sprop->next) {
-                 if ((sprop->attrs & JSPROP_ENUMERATE) && sprop->symbols) {
-                     PR_ASSERT(i < length);
-                     ida->vector[i++] = sym_id(sprop->symbols);
-                 }
-             }
-        }
+
+	/*
+	 * If this object shares a scope with its prototype, don't enumerate
+	 * its properties.  Otherwise they will be enumerated a second time
+	 * when the prototype object is enumerated.
+	 */
+	proto_obj = OBJ_GET_PROTO(cx, obj);
+	if (proto_obj && (scope == (JSScope *)proto_obj->map)) {
+	    ida = js_NewIdArray(cx, 0);
+	    if (!ida) {
+	      JS_UNLOCK_OBJ(cx, obj);
+	      goto init_error;
+	    }
+	} else {
+	    /* Object has a private scope; Enumerate all props in scope. */
+	    for (sprop = scope->props; sprop; sprop = sprop->next) {
+		if ((sprop->attrs & JSPROP_ENUMERATE) && sprop->symbols)
+		    length++;
+	    }
+	    ida = js_NewIdArray(cx, length);
+	    if (!ida) {
+		JS_UNLOCK_OBJ(cx, obj);
+		goto init_error;
+	    }
+	    i = 0;
+	    for (sprop = scope->props; sprop; sprop = sprop->next) {
+		if ((sprop->attrs & JSPROP_ENUMERATE) && sprop->symbols) {
+		    PR_ASSERT(i < length);
+		    ida->vector[i++] = sym_id(sprop->symbols);
+		}
+	    }
+	}
         JS_UNLOCK_OBJ(cx, obj);
-        
+
         state = JS_malloc(cx, sizeof(JSNativeIteratorState));
         if (!state) {
             JS_DestroyIdArray(cx, ida);
@@ -2144,7 +2142,7 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
         if (idp)
             *idp = INT_TO_JSVAL(length);
         return JS_TRUE;
-   
+
     case JSENUMERATE_NEXT:
         state = JSVAL_TO_PRIVATE(*statep);
         ida = state->ida;
@@ -2509,7 +2507,7 @@ void printVal(jsval val) {
         fprintf(stderr, "(double) %g\n", *JSVAL_TO_DOUBLE(val));
     } else {
         PR_ASSERT(JSVAL_IS_BOOLEAN(val));
-        fprintf(stderr, "(boolean) %s\n", 
+        fprintf(stderr, "(boolean) %s\n",
                 JSVAL_TO_BOOLEAN(val) ? "true" : "false");
     }
     fflush(stderr);

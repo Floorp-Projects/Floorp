@@ -34,13 +34,13 @@
 static PRLock *_global_lock;
 
 static void
-js_LockGlobal() 
+js_LockGlobal()
 {
   PR_Lock(_global_lock);
 }
 
 static void
-js_UnlockGlobal() 
+js_UnlockGlobal()
 {
   PR_Unlock(_global_lock);
 }
@@ -113,8 +113,8 @@ swap [%1],%4
 ba 3f
 mov 0,%0
 2:  mov 1,%0
-3:" 
-		  : "=r" (res) 
+3:"
+		  : "=r" (res)
 		  : "r" (w), "r" (ov), "r" (nv), "r" (-1));
 #else /* ULTRA_SPARC */
     PR_ASSERT(ov != nv);
@@ -124,8 +124,8 @@ cmp %2,%3
 be,a 1f
 mov 1,%0
 mov 0,%0
-1:" 
-		  : "=r" (res) 
+1:"
+		  : "=r" (res)
 		  : "r" (w), "r" (ov), "r" (nv));
 #endif /* ULTRA_SPARC */
     return (int)res;
@@ -135,7 +135,7 @@ mov 0,%0
     PR_ASSERT(nv >= 0);
 #else
     PR_ASSERT(ov != nv);
-#endif    
+#endif
     return compare_and_swap(w,ov,nv);
 #endif
 }
@@ -230,7 +230,7 @@ js_DestroyLock(JSThinLock *p)
 static void js_Dequeue(JSThinLock *);
 
 PR_INLINE jsval
-js_GetSlotWhileLocked(JSContext *cx, JSObject *obj, uint32 slot) 
+js_GetSlotWhileLocked(JSContext *cx, JSObject *obj, uint32 slot)
 {
     jsval v;
 #ifndef NSPR_LOCK
@@ -265,7 +265,7 @@ js_GetSlotWhileLocked(JSContext *cx, JSObject *obj, uint32 slot)
 }
 
 PR_INLINE void
-js_SetSlotWhileLocked(JSContext *cx, JSObject *obj, uint32 slot, jsval v) 
+js_SetSlotWhileLocked(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
 {
 #ifndef NSPR_LOCK
     JSScope *scp = (JSScope *)obj->map;
@@ -292,14 +292,14 @@ js_SetSlotWhileLocked(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
 	obj->slots[slot] = v;
 	return;
     }
-#endif 
+#endif
     js_LockObj(cx,obj);
     obj->slots[slot] = v;
     js_UnlockObj(cx,obj);
 }
 
 static JSFatLock *
-mallocFatlock() 
+mallocFatlock()
 {
     JSFatLock *fl = (JSFatLock *)malloc(sizeof(JSFatLock)); /* for now */
     PR_ASSERT(fl);
@@ -312,14 +312,14 @@ mallocFatlock()
 }
 
 static void
-freeFatlock(JSFatLock *fl) 
+freeFatlock(JSFatLock *fl)
 {
-    PR_DestroyLock(fl->slock); 
+    PR_DestroyLock(fl->slock);
     PR_DestroyCondVar(fl->svar);
     free(fl);
 }
 
-static int 
+static int
 js_SuspendThread(JSThinLock *p)
 {
     JSFatLock *fl = p->fat;
@@ -332,7 +332,7 @@ js_SuspendThread(JSThinLock *p)
 		PR_Unlock(fl->slock);
 		return 1;
     }
-    stat = PR_WaitCondVar(fl->svar,PR_INTERVAL_NO_TIMEOUT); 
+    stat = PR_WaitCondVar(fl->svar,PR_INTERVAL_NO_TIMEOUT);
     if (stat == PR_FAILURE) {
 		fl->susp--;
 		return 0;
@@ -347,14 +347,14 @@ js_ResumeThread(JSThinLock *p)
     JSFatLock *fl = p->fat;
     PRStatus stat;
     PR_Lock(fl->slock);
-    fl->susp--; 
+    fl->susp--;
     stat = PR_NotifyCondVar(fl->svar);
     PR_ASSERT(stat != PR_FAILURE);
     PR_Unlock(fl->slock);
 }
 
-static JSFatLock * 
-listOfFatlocks(int l) 
+static JSFatLock *
+listOfFatlocks(int l)
 {
     JSFatLock *m;
     JSFatLock *m0;
@@ -370,7 +370,7 @@ listOfFatlocks(int l)
 }
 
 static void
-deleteListOfFatlocks(JSFatLock *m) 
+deleteListOfFatlocks(JSFatLock *m)
 {
     JSFatLock *m0;
     for (; m; m=m0) {
@@ -382,7 +382,7 @@ deleteListOfFatlocks(JSFatLock *m)
 static JSFatLockTable _fl_table;
 
 JSFatLock *
-allocateFatlock() 
+allocateFatlock()
 {
   JSFatLock *m;
 
@@ -404,8 +404,8 @@ allocateFatlock()
   return m;
 }
 
-void 
-deallocateFatlock(JSFatLock *m) 
+void
+deallocateFatlock(JSFatLock *m)
 {
   if (m == NULL)
 	return;
@@ -489,16 +489,16 @@ js_InitContextForLocking(JSContext *cx)
 
   Using p->slock as below (and correspondingly in js_SuspendThread()),
   js_SuspendThread() will notice that p->fat is empty, and hence return
-  immediately. 
+  immediately.
 
   */
 
 int
-emptyFatlock(JSThinLock *p) 
+emptyFatlock(JSThinLock *p)
 {
   JSFatLock *fl = p->fat;
   int i;
-  
+
   if (fl == NULL)
 	return 1;
   PR_Lock(fl->slock);
@@ -512,7 +512,7 @@ emptyFatlock(JSThinLock *p)
   return i < 1;
 }
 
-/* 
+/*
   Fast locking and unlocking is implemented by delaying the
   allocation of a system lock (fat lock) until contention. As long as
   a locking thread A runs uncontended, the lock is represented solely
@@ -608,7 +608,7 @@ js_Lock(JSThinLock *p, prword me)
 }
 
 PR_INLINE void
-js_Unlock(JSThinLock *p, prword me) 
+js_Unlock(JSThinLock *p, prword me)
 {
 #ifdef DEBUG_
     printf("\nT%x about to unlock %p\n",me,p);

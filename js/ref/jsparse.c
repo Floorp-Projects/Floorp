@@ -1464,15 +1464,15 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     JSScopeProperty *sprop;
     JSBool ok;
 
-    /**
-     * The tricky part of this code is to create special 
-     * parsenode opcodes for getting and setting variables 
-     * (which will be stored as special slots in the frame). 
-     * The complex special case is an eval() inside a 
+    /*
+     * The tricky part of this code is to create special
+     * parsenode opcodes for getting and setting variables
+     * (which will be stored as special slots in the frame).
+     * The complex special case is an eval() inside a
      * function. If the evaluated string references variables in
      * the enclosing function, then we need to generate
      * the special variable opcodes.
-     * We determine this by looking up the variable id in the 
+     * We determine this by looking up the variable id in the
      * current variable scope.
      */
     PR_ASSERT(ts->token.type == TOK_VAR);
@@ -1536,7 +1536,7 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 				  JSVAL_TO_INT(sprop->id) < fun->nvars);
                     } else if (clasp == &js_CallClass) {
                         if (sprop->getter == js_GetCallVariable) {
-                            /* 
+                            /*
                              * Referencing a variable introduced by a var
                              * statement in the enclosing function. Check
                              * that the slot number we have is in range.
@@ -1544,7 +1544,7 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 			    PR_ASSERT(JSVAL_IS_INT(sprop->id) &&
 				      JSVAL_TO_INT(sprop->id) < fun->nvars);
                         } else {
-                            /* 
+                            /*
                              * A variable introduced through another eval:
                              * don't use the special getters and setters
                              * since we can't allocate a slot in the frame.
@@ -1563,8 +1563,8 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 		sprop->attrs &= ~JSPROP_READONLY;
 	    }
 	} else {
-            /* 
-             * Property not found in current variable scope: we have not 
+            /*
+             * Property not found in current variable scope: we have not
              * seen this variable before.
              * Define a new variable by adding a property to the current
              * scope, or by allocating more slots in the function's frame.
@@ -1586,9 +1586,9 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	    if (ok && prop) {
 		pobj = obj;
 		if (getter == js_GetLocalVariable) {
-                    /* 
-                     * Allocate more room for variables in the 
-                     * function's frame. We can do this only 
+                    /*
+                     * Allocate more room for variables in the
+                     * function's frame. We can do this only
                      * before the function is called.
                      */
 		    sprop = (JSScopeProperty *)prop;
@@ -1612,10 +1612,10 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	}
 
 	if (ok && fun && (clasp == &js_FunctionClass ||
-                          clasp == &js_CallClass) && 
-            !InWithStatement(tc)) 
+                          clasp == &js_CallClass) &&
+            !InWithStatement(tc))
         {
-            /* Depending on the value of the getter, change the 
+            /* Depending on the value of the getter, change the
              * opcodes to the forms for arguments and variables.
              */
 	    if (getter == js_GetArgument) {
@@ -1624,7 +1624,7 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 			     ? JSOP_GETARG
 			     : JSOP_SETARG;
 		pn2->pn_slot = JSVAL_TO_INT(sprop->id);
-	    } else if (getter == js_GetLocalVariable || 
+	    } else if (getter == js_GetLocalVariable ||
                        getter == js_GetCallVariable)
             {
 		PR_ASSERT(sprop && JSVAL_IS_INT(sprop->id));
@@ -1669,7 +1669,7 @@ Expr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     return pn;
 }
 
-/* ZZZbe don't create functions till codegen? or at least don't bind 
+/* ZZZbe don't create functions till codegen? or at least don't bind
  * fn name */
 static JSBool
 LookupArgOrVar(JSContext *cx, JSAtom *atom, JSTreeContext *tc,
@@ -1694,8 +1694,8 @@ LookupArgOrVar(JSContext *cx, JSAtom *atom, JSTreeContext *tc,
 	if (sprop->getter == js_GetArgument) {
 	    *opp = JSOP_GETARG;
 	    *slotp = JSVAL_TO_INT(sprop->id);
-	} else if (sprop->getter == js_GetLocalVariable || 
-                   sprop->getter == js_GetCallVariable) 
+	} else if (sprop->getter == js_GetLocalVariable ||
+                   sprop->getter == js_GetCallVariable)
         {
 	    *opp = JSOP_GETVAR;
 	    *slotp = JSVAL_TO_INT(sprop->id);

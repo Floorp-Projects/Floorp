@@ -30,7 +30,7 @@
 #  elif defined(__GNUC__)
 #       define PR_INLINE inline
 #  else
-#       define PR_INLINE 
+#       define PR_INLINE
 #  endif
 #endif /* PR_INLINE */
 
@@ -162,7 +162,7 @@ typedef struct JSXDRState	 JSXDRState;
 #ifdef XP_OS2
 #define CRT_CALL _Optlink
 #else
-#define CRT_CALL 
+#define CRT_CALL
 #endif
 #endif
 
@@ -176,7 +176,7 @@ typedef JSBool
  *  JSObject.  The behavior depends on the value of enum_op:
  *
  *    JSENUMERATE_INIT - A new, opaque iterator state should be allocated and
- *           stored in *statep.  (You can use PRIVATE_TO_JSVAL() to store 
+ *           stored in *statep.  (You can use PRIVATE_TO_JSVAL() to store
  *           a pointer in *statep).  The number of properties that will be
  *           enumerated should be returned as an integer jsval in *idp, if idp
  *           is non-NULL.

@@ -838,7 +838,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		      case JSOP_SETNAME:
 			lval = ATOM_BYTES(GET_ATOM(cx, jp->script, pc));
 		    do_catchvar:
-			js_printf(jp, "%s%s", 
+			js_printf(jp, "%s%s",
 				  (sn && SN_TYPE(sn) == SRC_VAR ? "var " : ""), lval);
 			break;
 		      default:
@@ -1889,7 +1889,7 @@ js_DecompileFunction(JSPrinter *jp, JSFunction *fun, JSBool newlines)
             }
             if (atom == NULL)
                 break;
-            js_printf(jp, (i > 0 ? ", %s" : "%s"), ATOM_BYTES(atom));            
+            js_printf(jp, (i > 0 ? ", %s" : "%s"), ATOM_BYTES(atom));
         }
     }
     js_puts(jp, ") {\n");

@@ -273,7 +273,7 @@ extern PR_PUBLIC_API(void*)
 JS_GetContextPrivate(JSContext *cx);
 
 extern PR_PUBLIC_API(void)
-JS_SetContextPrivate(JSContext *cx, void *pvt);
+JS_SetContextPrivate(JSContext *cx, void *data);
 
 extern JS_PUBLIC_API(JSRuntime *)
 JS_GetRuntime(JSContext *cx);
@@ -559,7 +559,6 @@ JS_DefineProperty(JSContext *cx, JSObject *obj, const char *name, jsval value,
  * If the object does not have a property by that name, *foundp will be
  * JS_FALSE and the value of *attrsp is undefined.
  */
-
 extern JS_PUBLIC_API(JSBool)
 JS_GetPropertyAttributes(JSContext *cx, JSObject *obj, const char *name,
 			 uintN *attrsp, JSBool *foundp);
@@ -570,7 +569,6 @@ JS_GetPropertyAttributes(JSContext *cx, JSObject *obj, const char *name,
  * If the object does not have a property by that name, *foundp will be
  * JS_FALSE and nothing will be altered.
  */
-
 extern JS_PUBLIC_API(JSBool)
 JS_SetPropertyAttributes(JSContext *cx, JSObject *obj, const char *name,
 			 uintN attrs, JSBool *foundp);
@@ -965,7 +963,7 @@ JS_ClearPendingException(JSContext *cx);
 
 #ifdef JS_THREADSAFE
 /*
- * Associate the current thread with the given context.  This is done 
+ * Associate the current thread with the given context.  This is done
  * implicitly by JS_NewContext.
  *
  * Returns the old thread id for this context, which should be treated as

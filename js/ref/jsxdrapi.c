@@ -417,7 +417,7 @@ JS_XDRDouble(JSXDRState *xdr, jsdouble **dp)
     }
     return JS_TRUE;
 }
-    
+
 JS_PUBLIC_API(JSBool)
 JS_XDRValue(JSXDRState *xdr, jsval *vp)
 {

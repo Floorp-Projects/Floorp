@@ -837,7 +837,7 @@ fun_enumProperty(JSContext *cx, JSObject *obj)
 	    if (id == ATOM_KEY(cx->runtime->atomState.arityAtom) ||
 	        id == ATOM_KEY(cx->runtime->atomState.lengthAtom) ||
 	        id == ATOM_KEY(cx->runtime->atomState.callerAtom) ||
-	        id == ATOM_KEY(cx->runtime->atomState.nameAtom)) 
+	        id == ATOM_KEY(cx->runtime->atomState.nameAtom))
             {
 	        sprop->attrs &= ~JSPROP_ENUMERATE;
 	    }
@@ -1042,7 +1042,7 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
 	!JS_XDRUint16(xdr, &fun->nargs) ||
 	!JS_XDRUint16(xdr, &fun->extra) ||
 	!JS_XDRUint16(xdr, &fun->nvars) ||
-	!JS_XDRUint8(xdr, &fun->flags)) 
+	!JS_XDRUint8(xdr, &fun->flags))
 	return JS_FALSE;
 
     /* do arguments and local vars */
@@ -1437,7 +1437,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             JS_free(cx, collected_args);
             return JS_FALSE;
         }
-        
+
         tt = js_GetToken(cx, ts);
         /* The argument string may be empty or contain no tokens. */
         if (tt != TOK_EOF) {
@@ -1493,7 +1493,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                 PR_ASSERT(sprop);
                 sprop->id = INT_TO_JSVAL(fun->nargs++);
                 OBJ_DROP_PROPERTY(cx, obj, (JSProperty *)sprop);
-        
+
                 /* Done with the NAME; get the next token. */
                 tt = js_GetToken(cx, ts);
                 /* Stop if we've reached the end of the string. */
@@ -1506,7 +1506,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                 if (tt == TOK_COMMA)
                     tt = js_GetToken(cx, ts);
             }
-        }        
+        }
         /* Clean up. */
         JS_free(cx, collected_args);
         if (!js_CloseTokenStream(cx, ts))

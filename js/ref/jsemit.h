@@ -361,7 +361,7 @@ js_AllocTryNotes(JSContext *cx, JSCodeGenerator *cg);
  */
 extern JS_FRIEND_API(JSTryNote *)
 js_NewTryNote(JSContext *cx, JSCodeGenerator *cg, ptrdiff_t start,
-	      ptrdiff_t end, ptrdiff_t catch, ptrdiff_t finally);
+	      ptrdiff_t end, ptrdiff_t catchStart, ptrdiff_t finallyStart);
 
 /*
  * Finish generating exception information, and copy it to JS_malloc

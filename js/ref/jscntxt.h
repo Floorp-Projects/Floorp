@@ -146,8 +146,8 @@ struct JSContext {
     JSErrorReporter     errorReporter;
 
     /* Client opaque pointer */
-    void                *pvt;
-    
+    void                *data;
+
     /* Java environment and JS errors to throw as exceptions. */
     void                *javaEnv;
     void                *savedErrors;

@@ -27,29 +27,33 @@
 PR_BEGIN_EXTERN_C
 
 /*
- * Exception handling information.
- * All fields are code offsets, relative to the beginning of the script.
+ * Exception handling runtime information.
+ *
+ * All fields except length are code offsets, relative to the beginning of
+ * the script.  If script->trynotes is not null, it points to a vector of
+ * these structs terminated by one with start, catchStart, and finallyStart
+ * all equal to 0, and length == script->length.
  */
-
 struct JSTryNote {
-    ptrdiff_t	start;		/* beginning of try{} region */
-    ptrdiff_t	end;		/* end of try{} region */
-    ptrdiff_t	catchStart;	/* beginning of catch{} (backptr during CG) */
-    ptrdiff_t	finallyStart;	/* beginning of finally handler */
+    ptrdiff_t    start;         /* start of try statement */
+    ptrdiff_t    length;        /* count of try statement bytecodes */
+    ptrdiff_t    catchStart;    /* start of catch block (0 if none) */
+    ptrdiff_t    finallyStart;  /* XXX unneeded except for end-of-vector mark:
+				   if (!catchStart && !finallyStart) break */
 };
 
 struct JSScript {
-    jsbytecode     *code;          /* bytecodes and their immediate operands */
-    uint32         length;         /* length of code vector */
-    JSAtomMap      atomMap;        /* maps immediate index to literal struct */
-    const char     *filename;      /* source filename or null */
-    uintN          lineno;         /* base line number of script */
-    uintN          depth;          /* maximum stack depth in slots */
-    jssrcnote      *notes;         /* line number and other decompiling data */
-    JSTryNote      *trynotes;      /* exception table for this script */
-    JSPrincipals   *principals;	   /* principals for this script */
-    void           *javaData;      /* XXX extra data used by jsjava.c */
-    JSObject       *object;        /* optional Script-class object wrapper */
+    jsbytecode   *code;         /* bytecodes and their immediate operands */
+    uint32       length;        /* length of code vector */
+    JSAtomMap    atomMap;       /* maps immediate index to literal struct */
+    const char   *filename;     /* source filename or null */
+    uintN        lineno;        /* base line number of script */
+    uintN        depth;         /* maximum stack depth in slots */
+    jssrcnote    *notes;        /* line number and other decompiling data */
+    JSTryNote    *trynotes;     /* exception table for this script */
+    JSPrincipals *principals;   /* principals for this script */
+    void         *javaData;     /* XXX extra data used by jsjava.c */
+    JSObject     *object;       /* optional Script-class object wrapper */
 };
 
 extern JSClass js_ScriptClass;

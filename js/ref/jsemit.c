@@ -479,20 +479,20 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
       {
 	JSFunction *fun;
 
+	/* Fold constants and generate code for the function's body. */
+	pn2 = pn->pn_body;
+	if (!js_FoldConstants(cx, pn2))
+	    return JS_FALSE;
 	if (!js_InitCodeGenerator(cx, &cg2, cg->filename,
 				  pn->pn_pos.begin.lineno,
 				  cg->principals)) {
 	    return JS_FALSE;
 	}
-	ok = js_FoldConstants(cx, pn->pn_body);
-	if (ok) {
-	    cg2.treeContext.tryCount = pn->pn_tryCount;
-	    fun = pn->pn_fun;
-	    ok = js_EmitFunctionBody(cx, &cg2, pn->pn_body, fun);
-	}
-	js_ResetCodeGenerator(cx, &cg2);
-	if (!ok)
+	cg2.treeContext.tryCount = pn->pn_tryCount;
+	fun = pn->pn_fun;
+	if (!js_EmitFunctionBody(cx, &cg2, pn2, fun))
 	    return JS_FALSE;
+	js_ResetCodeGenerator(cx, &cg2);
 
 	/* Make the function object a literal in the outer script's pool. */
 	atom = js_AtomizeObject(cx, fun->object, 0);
@@ -1070,7 +1070,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
 #if JS_HAS_EXCEPTIONS
       case TOK_TRY: {
-	ptrdiff_t start, end, catch;
+	ptrdiff_t start, end, catchStart;
+
 #if shaver_finally
 	/* if this try has a finally, push marker onto treeContext */
 	if (pn->pn_kid3)
@@ -1085,7 +1086,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 	start = CG_OFFSET(cg);
 	if(!js_EmitTree(cx, cg, pn->pn_kid1))
 	    return JS_FALSE;
-	
+
 	/* emit (hidden) jump over try and/or finally */
 	if (js_NewSrcNote(cx, cg, SRC_HIDDEN) < 0)
 	    return JS_FALSE;
@@ -1097,9 +1098,11 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
 	/* if this try has a catch block, emit it */
 	if (pn->pn_kid2) {
-	    catch = CG_OFFSET(cg);
+	    catchStart = end;
 	    if (!js_EmitTree(cx, cg, pn->pn_kid2))
 		return JS_FALSE;
+	} else {
+	    catchStart = 0;
 	}
 
 #if shaver_finally
@@ -1125,13 +1128,13 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 	 * Add the try note last, to let post-order give us the right ordering
 	 * (first to last, inner to outer).
 	 */
-	if (!js_NewTryNote(cx, cg, start, end, catch, 0))
+	if (!js_NewTryNote(cx, cg, start, end, catchStart, 0))
 	    return JS_FALSE;
 	break;
       }
 
       case TOK_CATCH:
-	/* 
+	/*
 	 * Catch blocks are very magical.  Mainly, the magic involves
 	 * special generation for the declaration/conditional, and
 	 * mucking with the stack depth counter so that the implicit
@@ -2037,7 +2040,7 @@ js_SetSrcNoteOffset(JSContext *cx, JSCodeGenerator *cg, uintN index,
              * accomodate either the first or second byte of additional storage
              * required by this 3-byte offset.
              */
-            if ((cg->noteCount - 1) % SNINCR <= 1) {                
+            if ((cg->noteCount - 1) % SNINCR <= 1) {
 		if (!GrowSrcNotes(cx, cg))
 		    return JS_FALSE;
 		sn = cg->notes + index;
@@ -2089,16 +2092,15 @@ JS_FRIEND_API(JSTryNote *)
 js_NewTryNote(JSContext *cx, JSCodeGenerator *cg, ptrdiff_t start,
 	      ptrdiff_t end, ptrdiff_t catchStart, ptrdiff_t finallyStart)
 {
-    JSTryNote *cur;
+    JSTryNote *tn;
 
     PR_ASSERT(cg->tryNext < cg->tryLimit);
-    cur = cg->tryNext;
-    cg->tryNext++;
-    cur->start = start;
-    cur->end = end;
-    cur->catchStart = catchStart;
-    cur->finallyStart = finallyStart;
-    return cur;
+    tn = cg->tryNext++;
+    tn->start = start;
+    tn->length = end - start;
+    tn->catchStart = catchStart;
+    tn->finallyStart = finallyStart;
+    return tn;
 }
 
 JS_FRIEND_API(JSBool)
@@ -2121,7 +2123,7 @@ js_FinishTakingTryNotes(JSContext *cx, JSCodeGenerator *cg, JSTryNote **tryp)
     }
     memcpy(final, tmp, count * sizeof(JSTryNote));
     final[count].start = 0;
-    final[count].end = 0;
+    final[count].length = CG_OFFSET(cg);
     final[count].catchStart = 0;
     final[count].finallyStart = 0;
     *tryp = final;

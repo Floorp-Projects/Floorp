@@ -76,10 +76,10 @@ static void initConsole(StringPtr consoleName, const char* startupMessage, int *
 	// SIOUXSettings.showstatusline = true;
 	puts(startupMessage);
 	SIOUXSetTitle(consoleName);
-	
+
 	// set up a buffer for stderr (otherwise it's a pig).
 	setvbuf(stderr, malloc(BUFSIZ), _IOLBF, BUFSIZ);
-	
+
 	*argc = 1;
 	*argv = mac_argv;
 }
@@ -127,7 +127,7 @@ Process(JSContext *cx, JSObject *obj, char *filename)
             while((ch = fgetc(ts->file)) != EOF) {
                 if(ch == '\n' || ch == '\r')
                     break;
-            } 
+            }
         }
         ungetc(ch, ts->file);
     }
@@ -236,7 +236,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
     if (argsObj == NULL)
         return 1;
 
-    if (!JS_DefineProperty(cx, obj, "arguments", 
+    if (!JS_DefineProperty(cx, obj, "arguments",
                            OBJECT_TO_JSVAL(argsObj), NULL, NULL, 0))
         return 1;
 
@@ -294,13 +294,8 @@ Load(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	filename = JS_GetStringBytes(str);
 	errno = 0;
 	script = JS_CompileFile(cx, obj, filename);
-	if (!script) {
-	    fprintf(stderr, "js: cannot load %s", filename);
-	    if (errno)
-		fprintf(stderr, ": %s", strerror(errno));
-	    putc('\n', stderr);
+	if (!script)
 	    continue;
-	}
 	ok = JS_ExecuteScript(cx2, obj, script, &result);
 	JS_DestroyScript(cx, script);
 	if (!ok)
@@ -507,7 +502,7 @@ PCToLine(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 #ifdef DEBUG
 
 static void
-SingleNote(JSContext *cx, JSFunction *fun )
+SrcNotes(JSContext *cx, JSFunction *fun )
 {
     uintN offset, delta;
     jssrcnote *notes, *sn;
@@ -566,23 +561,23 @@ Notes(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	if (!fun)
 	    return JS_FALSE;
 
-	SingleNote(cx, fun);
+	SrcNotes(cx, fun);
     }
     return JS_TRUE;
 }
 
 static JSBool
-ExceptionTable(JSContext *cx, JSFunction *fun)
+TryNotes(JSContext *cx, JSFunction *fun)
 {
-    JSTryNote *iter = fun->script->trynotes;
+    JSTryNote *tn = fun->script->trynotes;
 
-    if (!iter)
+    if (!tn)
 	return JS_TRUE;
     printf("\nException table:\nstart\tend\tcatch\tfinally\n");
-    while (iter->start && iter->end) {
+    while (tn->catchStart || tn->finallyStart) {
 	printf("  %d\t%d\t%d\t%d\n",
-	       iter->start, iter->end, iter->catchStart, iter->finallyStart);
-	iter++;
+	       tn->start, tn->length, tn->catchStart, tn->finallyStart);
+	tn++;
     }
     return JS_TRUE;
 }
@@ -608,8 +603,8 @@ Disassemble(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	    return JS_FALSE;
 
 	js_Disassemble(cx, fun->script, lines, stdout);
-	SingleNote(cx, fun);
-	ExceptionTable(cx, fun);
+	SrcNotes(cx, fun);
+	TryNotes(cx, fun);
     }
     return JS_TRUE;
 }

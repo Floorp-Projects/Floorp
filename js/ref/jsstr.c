@@ -69,7 +69,7 @@
 
 static const unsigned char netCharType[256] =
 /*	Bit 0		xalpha		-- the alphas
-**	Bit 1		xpalpha		-- as xalpha but 
+**	Bit 1		xpalpha		-- as xalpha but
 **                             converts spaces to plus and plus to %20
 **	Bit 2 ...	path		-- as xalphas but doesn't escape '/'
 */
@@ -106,7 +106,7 @@ str_escape(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         if (!js_ValueToNumber(cx, argv[1], &d))
             return JS_FALSE;
         if (!JSDOUBLE_IS_FINITE(d) ||
-            (mask = (jsint)d) != d || 
+            (mask = (jsint)d) != d ||
             mask & ~(URL_XALPHAS | URL_XPALPHAS | URL_PATH))
         {
             JS_ReportError(cx, "invalid string escape mask %x", mask);
@@ -2267,7 +2267,7 @@ js_InflateString(JSContext *cx, const char *bytes, size_t length)
     if (!chars)
 	return NULL;
     for (i = 0; i < length; i++)
-	chars[i] = (jschar) (unsigned char) bytes[i];
+	chars[i] = (unsigned char) bytes[i];
     chars[i] = 0;
     return chars;
 }

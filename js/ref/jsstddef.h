@@ -55,7 +55,7 @@ typedef long ptrdiff_t;
 
 #define PTRDIFF(p1, p2, type)                                 \
 	((p1) - (p2))
-	
+
 #endif
 
 #include <stddef.h>
