@@ -108,6 +108,11 @@
       <handler event="keypress" keycode="VK_END" modifiers="shift" command="cmd_selectEndLine" />
       <handler event="keypress" keycode="VK_UP" modifiers="shift" command="cmd_selectLinePrevious" />
       <handler event="keypress" keycode="VK_DOWN" modifiers="shift" command="cmd_selectLineNext" />
+
+      <!-- Supporting IE forward and back accelerators out of courtesy
+           to transitioning IE users -->
+      <handler event="keypress" keycode="VK_BACK" command="cmd_browserBack"/>
+      <handler event="keypress" keycode="VK_BACK" modifiers="shift" command="cmd_browserForward" />
     </handlers>
   </binding>
 

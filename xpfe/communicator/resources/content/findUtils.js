@@ -61,7 +61,7 @@ function findInPage(browser, rootSearchWindow, startSearchWindow)
     window.findDialog = window.openDialog("chrome://global/content/finddialog.xul", "_blank", "chrome,resizable=no,dependent=yes", findInst);
 }
 
-function findAgainInPage(browser, rootSearchWindow, startSearchWindow)
+function findAgainInPage(browser, rootSearchWindow, startSearchWindow, reverse)
 {
   if ("findDialog" in window && window.findDialog)
     window.findDialog.focus();
@@ -85,7 +85,7 @@ function findAgainInPage(browser, rootSearchWindow, startSearchWindow)
     findInst.matchCase     = findService.matchCase;
     findInst.wrapFind      = findService.wrapFind;
     findInst.entireWord    = findService.entireWord;
-    findInst.findBackwards = findService.findBackwards;
+    findInst.findBackwards = findService.findBackwards ^ reverse;
 
     var found = false;
     if (findInst.searchString.length == 0) {
@@ -104,6 +104,9 @@ function findAgainInPage(browser, rootSearchWindow, startSearchWindow)
           
       gPromptService.alert(window, gFindBundle.getString("notFoundTitle"), gFindBundle.getString("notFoundWarning"));
     }      
+
+    // Reset to normal value, otherwise setting can get changed in find dialog
+    findInst.findBackwards = findService.findBackwards; 
   }
 }
 

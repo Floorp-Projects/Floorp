@@ -382,13 +382,13 @@ function BrowserFind()
   findInPage(getBrowser(), window._content, focusedWindow)
 }
 
-function BrowserFindAgain()
+function BrowserFindAgain(reverse)
 {
     var focusedWindow = document.commandDispatcher.focusedWindow;
     if (!focusedWindow || focusedWindow == window)
       focusedWindow = window._content;
 
-  findAgainInPage(getBrowser(), window._content, focusedWindow)
+  findAgainInPage(getBrowser(), window._content, focusedWindow, reverse)
 }
 
 function BrowserCanFindAgain()

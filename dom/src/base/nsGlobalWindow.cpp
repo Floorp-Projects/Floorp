@@ -5874,6 +5874,8 @@ const char * const sScrollLineUpString = "cmd_scrollLineUp";
 const char * const sScrollLineDownString = "cmd_scrollLineDown";
 const char * const sScrollLeftString = "cmd_scrollLeft";
 const char * const sScrollRightString = "cmd_scrollRight";
+const char * const sBrowserBackString = "cmd_browserBack";
+const char * const sBrowserForwardString = "cmd_browserForward";
 
 // These are so the browser can use editor navigation key bindings
 // helps with accessibility (boolean pref accessibility.browsewithcaret)
@@ -6089,6 +6091,8 @@ nsDOMWindowController::SupportsCommand(const char * aCommand,
       !nsCRT::strcmp(aCommand,sScrollPageDownString) ||
       !nsCRT::strcmp(aCommand,sMovePageUpString) ||
       !nsCRT::strcmp(aCommand,sMovePageDownString) ||
+      !nsCRT::strcmp(aCommand,sBrowserBackString) ||
+      !nsCRT::strcmp(aCommand,sBrowserForwardString) ||
       !nsCRT::strcmp(aCommand,sScrollLineUpString) ||
       !nsCRT::strcmp(aCommand,sScrollLineDownString) ||
       !nsCRT::strcmp(aCommand,sScrollLeftString) ||
@@ -6165,7 +6169,29 @@ nsDOMWindowController::DoCommand(const char *aCommand)
       }
     }
   }
+  else if (!nsCRT::strcmp(aCommand,sBrowserBackString) ||
+    !nsCRT::strcmp(aCommand,sBrowserForwardString)) {
+    rv = DoCommandWithWebNavigationInterface(aCommand);
+  }
 
+  return rv;
+}
+
+nsresult
+nsDOMWindowController::DoCommandWithWebNavigationInterface(const char *aCommandName)
+{
+  nsCOMPtr<nsIWebNavigation> webNav(do_GetInterface(mWindow));
+
+  nsresult rv = NS_ERROR_FAILURE;
+
+  if (webNav) {
+    if (!nsCRT::strcmp(aCommandName, sBrowserBackString)) {
+      rv = webNav->GoBack();
+    }
+    else if (!nsCRT::strcmp(aCommandName, sBrowserForwardString)) {
+      rv= webNav->GoForward();
+    }
+  }
   return rv;
 }
 

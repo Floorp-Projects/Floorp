@@ -51,6 +51,9 @@
 #include "nsIDOMHTMLDocument.h"
 #include "nsIContent.h"
 #include "nsContentCID.h"
+#include "nsIServiceManager.h"
+#include "nsIObserverService.h"
+#include "nsISupportsPrimitives.h"
 
 #if DEBUG
 #include "nsIWebNavigation.h"
@@ -94,7 +97,25 @@ NS_IMETHODIMP nsWebBrowserFind::FindNext(PRBool *outDidFind)
     nsCOMPtr<nsIDOMWindow> searchFrame = do_QueryReferent(mCurrentSearchFrame);
     NS_ENSURE_TRUE(searchFrame, NS_ERROR_NOT_INITIALIZED);
 
-    // first, look in the current frame. If found, return.
+    // first, if there's a "cmd_findagain" observer around, check to see if it
+    // wants to perform the find again command . If it performs the find again
+    // it will return true, in which case we exit ::FindNext() early.
+    // Otherwise, nsWebBrowserFind needs to perform the find again command itself
+    // this is used by nsTypeAheadFind, which controls find again when it was
+    // the last executed find in the current window.
+    nsCOMPtr<nsIObserverService> observerService(do_GetService("@mozilla.org/observer-service;1"));
+    if (observerService) {
+        nsCOMPtr<nsISupportsPRBool> didExecute = 
+          do_CreateInstance(NS_SUPPORTS_PRBOOL_CONTRACTID, &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+        didExecute->SetData(PR_FALSE);
+        observerService->NotifyObservers(didExecute, "nsWebBrowserFind_FindAgain", mFindBackwards? NS_L("up"): NS_L("down"));
+        didExecute->GetData(outDidFind);
+        if (*outDidFind)
+            return NS_OK;
+    }
+
+    // next, look in the current frame. If found, return.
     rv = SearchInFrame(searchFrame, PR_FALSE, outDidFind);
     if (NS_FAILED(rv)) return rv;
     if (*outDidFind)

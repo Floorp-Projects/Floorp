@@ -460,6 +460,7 @@ private:
 	nsresult GetEditInterface( nsIContentViewerEdit** aEditInterface);
   nsresult GetSelectionController(nsISelectionController ** aSelCon);
 
+  nsresult DoCommandWithWebNavigationInterface(const char * aCommandName);
   nsresult DoCommandWithEditInterface(const char * aCommandName);
   nsresult DoCommandWithSelectionController(const char * aCommandName);
 
