@@ -133,13 +133,17 @@ void nsCyrillicDetector::DataEnd()
    PRUint8 j;
    if(mDone) 
       return;
-   for(j=1;j<mItems;j++) {
+   for(j=0;j<mItems;j++) {
       if(mProb[j] > max)
       {
            max = mProb[j];
            maxIdx= j;
       }
    }
+
+   if( 0 == max ) // if we didn't get any 8 bits data 
+     return;
+
 #ifdef DEBUG
    for(j=0;j<mItems;j++) 
       printf("Charset %s->\t%d\n", mCharsets[j], mProb[j]);
