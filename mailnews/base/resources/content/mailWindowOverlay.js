@@ -484,9 +484,8 @@ function MsgMoveMessage(destFolder)
     var destUri = destFolder.getAttribute('id');
     var destResource = RDF.GetResource(destUri);
     var destMsgFolder = destResource.QueryInterface(Components.interfaces.nsIMsgFolder);
-    var sameServer = destMsgFolder.server == gDBView.msgFolder.server;
     // we don't move news messages, we copy them
-    if (isNewsURI(gDBView.msgFolder.URI) || !sameServer) {
+    if (isNewsURI(gDBView.msgFolder.URI)) {
       gDBView.doCommandWithFolder(nsMsgViewCommandType.copyMessages, destMsgFolder);
     }
     else {
