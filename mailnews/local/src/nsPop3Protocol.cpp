@@ -1026,11 +1026,10 @@ PRInt32 nsPop3Protocol::SendPassword()
         m_pop3ConData->next_state = POP3_ERROR_DONE;
         return NS_ERROR_ABORT;
     }
-    else if (NS_FAILED(rv) || !password || !(* (const char *) password))
+    else if (NS_FAILED(rv) || !password)
     {
       return Error(POP3_PASSWORD_UNDEFINED);
     }
-
     nsCAutoString cmd;
 
     if (POP3_HAS_AUTH_LOGIN & m_pop3ConData->capability_flags) 
@@ -2671,11 +2670,11 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
                 net_pop3_password_pending = PR_TRUE;
             }
 #endif 
-           if (m_username.IsEmpty() || !pwd || !*pwd)
-            {
+           if (m_username.IsEmpty() || !pwd )
+           {
                 m_pop3ConData->next_state = POP3_ERROR_DONE;
                 m_pop3ConData->pause_for_read = PR_FALSE;
-            }
+           }
            else
            {
               //we are already connected so just go on and send the username

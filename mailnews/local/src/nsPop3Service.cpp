@@ -224,17 +224,14 @@ nsresult nsPop3Service::BuildPop3Url(const char * urlSpec,
 		*((char **)getter_Copies(escapedUsername)) = nsEscape((const char *)userName, url_XAlphas);
 		pop3Uri->SetUsername((const char *)escapedUsername);
 
-		if (aUrlListener)
-		{
-			nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(pop3Url);
-			if (mailnewsurl)
-			{
-				mailnewsurl->RegisterListener(aUrlListener);
-
-				mailnewsurl->SetMsgWindow(aMsgWindow);
-			}
-		}
-
+        nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(pop3Url);
+        if (mailnewsurl)
+        {
+          if (aUrlListener)
+           mailnewsurl->RegisterListener(aUrlListener);
+          if (aMsgWindow)
+           mailnewsurl->SetMsgWindow(aMsgWindow);
+        }
 
 		if (aUrl)
 		{
@@ -583,3 +580,4 @@ nsPop3Service::GetSpecialFoldersDeletionAllowed(PRBool *specialFoldersDeletionAl
     *specialFoldersDeletionAllowed = PR_TRUE;
     return NS_OK;
 }
+
