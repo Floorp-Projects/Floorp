@@ -1231,7 +1231,8 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext&      aPresContext,
 
     if (gsDebug)
       printf("incr -- row %p width = %d MES=%d from maxSize %d\n", 
-             this, aDesiredSize.width, aDesiredSize.maxElementSize->width,
+             this, aDesiredSize.width, 
+             aDesiredSize.maxElementSize ? aDesiredSize.maxElementSize->width : -1,
              aReflowState.reflowState.maxSize.width);
   }
   else

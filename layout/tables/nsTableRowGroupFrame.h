@@ -92,6 +92,9 @@ public:
   /** set aCount to the number of child rows (not necessarily == number of child frames) */
   NS_METHOD GetRowCount(PRInt32 &aCount);
 
+  /** get the maximum number of columns taken up by any row in this rowgroup */
+  NS_METHOD GetMaxColumns(PRInt32 &aMaxColumns) const;
+
   NS_IMETHOD  List(FILE* out = stdout, PRInt32 aIndent = 0, nsIListFilter *aFilter = nsnull) const;
 
 

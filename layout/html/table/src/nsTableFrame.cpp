@@ -886,7 +886,10 @@ void nsTableFrame::AddColumnFrame (nsTableColFrame *aColFrame)
   nsCellMap *cellMap = GetCellMap();
   NS_PRECONDITION (nsnull!=cellMap, "null cellMap.");
   if (nsnull!=cellMap)
+  {
+    if (gsDebug) printf("TIF AddColumnFrame: adding column frame %p\n", aColFrame);
     cellMap->AppendColumnFrame(aColFrame);
+  }
 }
 
 /** return the index of the next row that is not yet assigned */
@@ -1039,6 +1042,7 @@ void nsTableFrame::DumpCellMap ()
   printf("dumping CellMap:\n");
   if (nsnull != mCellMap)
   {
+    PRInt32 colIndex;
     PRInt32 rowCount = mCellMap->GetRowCount();
     PRInt32 colCount = mCellMap->GetColCount();
     printf("rowCount=%d, colCount=%d\n", rowCount, colCount);
@@ -1048,7 +1052,7 @@ void nsTableFrame::DumpCellMap ()
       { printf("row %d", rowIndex);
         printf(": ");
       }
-      for (PRInt32 colIndex = 0; colIndex < colCount; colIndex++)
+      for (colIndex = 0; colIndex < colCount; colIndex++)
       {
         CellData *cd =mCellMap->GetCellAt(rowIndex, colIndex);
         if (cd != nsnull)
@@ -1087,12 +1091,18 @@ void nsTableFrame::DumpCellMap ()
       printf ("  spanners=%s spannedInto=%s\n", spanners?"T":"F", spannedInto?"T":"F");
     }
 		// output colspan info
-		for (PRInt32 colIndex=0; colIndex<colCount; colIndex++)
+		for (colIndex=0; colIndex<colCount; colIndex++)
 		{
 			PRBool colSpanners = ColHasSpanningCells(colIndex);
 			PRBool colSpannedInto = ColIsSpannedInto(colIndex);
 			printf ("%d colSpanners=%s colSpannedInto=%s\n", 
 				      colIndex, colSpanners?"T":"F", colSpannedInto?"T":"F");
+		}
+		// output col frame info
+		for (colIndex=0; colIndex<colCount; colIndex++)
+		{
+      nsTableColFrame *colFrame = mCellMap->GetColumnFrame(colIndex);
+			printf ("col index %d has frame=%p\n", colIndex, colFrame);
 		}
   }
   else
@@ -2229,6 +2239,8 @@ NS_METHOD nsTableFrame::IR_RowGroupAppended(nsIPresContext&        aPresContext,
   if (NS_FAILED(rv))
     return rv;
 
+  EnsureColumns(aPresContext);
+
   // if any column widths have to change due to this, rebalance column widths
   //XXX need to calculate this, but for now just do it
   InvalidateColumnWidths();  
@@ -3011,7 +3023,8 @@ void nsTableFrame::BuildColumnCache( nsIPresContext&          aPresContext,
       childFrame->FirstChild((nsIFrame *&)colFrame);
       while (nsnull!=colFrame)
       { 
-        mCellMap->AppendColumnFrame(colFrame);
+        if (gsDebug) printf("TIF BCB: adding column frame %p\n", colFrame);
+        //mCellMap->AppendColumnFrame(colFrame);
         colFrame->GetNextSibling((nsIFrame *&)colFrame);
       }
     }
