@@ -34,7 +34,6 @@
 #include "nsIParser.h"
 #include "nsParserCIID.h"
 #include "nsHTMLContentSinkStream.h"
-#include "nsHTMLToTXTSinkStream.h"
 #include "nsXIFDTD.h"
 #include "nsIStringStream.h"
 
