@@ -72,12 +72,16 @@ sub _grab_cache {
 ([^<]*) # 5=version
 \s*(?:</\w+[^>]*>\s*)*
 
+(?:<td[^>]*>\s*(?:<\w+[^>]*>\s*)*
+([^<]*) # 6=branch
+\s*(?:</\w+[^>]*>\s*)*)?
+
 <td[^>]*>\s*(?:<\w+[^>]*>\s*)*
-(\d+)/(\d+) # 6/7=minus/plus lines
+(\d+)/(\d+) # 7/8=minus/plus lines
 \s*(?:</\w+[^>]*>\s*)*(?:\&nbsp)?\s*
 
 (?:<td[^>]*>\s*
-((?:.(?!</(font|td|tr)>))*) # 8=description
+((?:.(?!</(font|td|tr)>))*) # 9=description
 \s*(?:</\w+[^>]*>\s*)*)?
 }mgxi) {
       if (defined($8)) {
@@ -87,11 +91,11 @@ sub _grab_cache {
                                $description);
         }
         ($checkin_date, $who, $revisions, $size_plus, $size_minus,
-         $description) = ("$1 $2", $3, $5, $6, $7, $8);
+         $description) = ("$1 $2", $3, $5, $7, $8, $9);
       } else {
         $revisions .= ",$5";
-        $size_plus += $6;
-        $size_minus += $7;
+        $size_plus += $7;
+        $size_minus += $8;
       }
 
       # Do regexp things down here instead of above because it will disturb
