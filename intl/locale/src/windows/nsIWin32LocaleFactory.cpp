@@ -104,19 +104,5 @@ nsIWin32LocaleFactory::LockFactory(PRBool	aBool)
 	return NS_OK;
 }
 
-
-nsrefcnt
-nsIWin32LocaleFactory::AddRef()   
-{   
-  return ++mRefCnt;   
-}   
-
-nsrefcnt
-nsIWin32LocaleFactory::Release()   
-{   
-  if (--mRefCnt == 0) {   
-    delete this;   
-    return 0; // Don't access mRefCnt after deleting!   
-  }   
-  return mRefCnt;   
-}  
+NS_IMPL_ADDREF(nsIWin32LocaleFactory);
+NS_IMPL_RELEASE(nsIWin32LocaleFactory);

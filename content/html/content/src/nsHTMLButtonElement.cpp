@@ -155,7 +155,9 @@ nsHTMLButtonElement::~nsHTMLButtonElement()
 NS_IMETHODIMP_(nsrefcnt) 
 nsHTMLButtonElement::AddRef(void)
 {
-  return ++mRefCnt; 
+  ++mRefCnt;
+  NS_LOG_ADDREF(this, mRefCnt, "nsHTMLButtonElement");
+  return mRefCnt;
 }
 
 nsresult
@@ -164,7 +166,7 @@ nsHTMLButtonElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
   if (aIID.Equals(kIDOMHTMLButtonElementIID)) {
     *aInstancePtr = (void*)(nsIDOMHTMLButtonElement*)this;
-    mRefCnt++;
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   else if (aIID.Equals(kIFormControlIID)) {
@@ -184,6 +186,7 @@ NS_IMETHODIMP_(nsrefcnt)
 nsHTMLButtonElement::Release()
 {
   --mRefCnt;
+  NS_LOG_RELEASE(this, mRefCnt, "nsHTMLButtonElement");
 	if (mRefCnt <= 0) {
     delete this;                                       
     return 0;                                          

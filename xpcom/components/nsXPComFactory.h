@@ -69,45 +69,9 @@
 class ns##_name##Factory : public nsIFactory                      \
 {                                                                 \
 public:                                                           \
+  NS_DECL_ISUPPORTS                                               \
+                                                                  \
   ns##_name##Factory() { NS_INIT_REFCNT(); }                      \
-                                                                  \
-  NS_IMETHOD_(nsrefcnt) AddRef (void)                             \
-  {                                                               \
-    return ++mRefCnt;                                             \
-  }                                                               \
-                                                                  \
-  NS_IMETHOD_(nsrefcnt) Release(void)                             \
-  {                                                               \
-    NS_PRECONDITION(0 != mRefCnt, "dup release");                 \
-    if (--mRefCnt == 0) {                                         \
-      NS_DELETEXPCOM(this);                                       \
-      return 0;                                                   \
-    }                                                             \
-    return mRefCnt;                                               \
-  }                                                               \
-                                                                  \
-  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr)   \
-  {                                                               \
-    if (NULL == aInstancePtr) {                                   \
-      return NS_ERROR_NULL_POINTER;                               \
-    }                                                             \
-                                                                  \
-    *aInstancePtr = NULL;                                         \
-                                                                  \
-    static NS_DEFINE_IID(kIFactoryIID,  NS_IFACTORY_IID);         \
-    static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);        \
-    if (aIID.Equals(kIFactoryIID)) {                              \
-      *aInstancePtr = (void*) this;                               \
-      NS_ADDREF_THIS();                                           \
-      return NS_OK;                                               \
-    }                                                             \
-    if (aIID.Equals(kISupportsIID)) {                             \
-      *aInstancePtr = (void*) ((nsISupports*)this);               \
-      NS_ADDREF_THIS();                                           \
-      return NS_OK;                                               \
-    }                                                             \
-    return NS_NOINTERFACE;                                        \
-  }                                                               \
                                                                   \
   NS_IMETHOD CreateInstance(nsISupports *aOuter,                  \
                             const nsIID &aIID,                    \
@@ -145,14 +109,12 @@ public:                                                           \
     return NS_OK;                                                 \
   }                                                               \
                                                                   \
-                                                                  \
 protected:                                                        \
   virtual ~ns##_name##Factory()                                   \
   {                                                               \
     NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction"); \
   }                                                               \
-                                                                  \
-  nsrefcnt mRefCnt;                                               \
-};
+};                                                                \
+NS_IMPL_ISUPPORTS1(ns##_name##Factory, nsIFactory);
 
 #endif /* nsXPComFactory_h__ */

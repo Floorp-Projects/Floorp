@@ -119,24 +119,7 @@ nsPresContext::~nsPresContext()
   }
 }
 
-nsrefcnt
-nsPresContext::AddRef(void)
-{
-  return ++mRefCnt;
-}
-
-nsrefcnt
-nsPresContext::Release(void)
-{
-  NS_PRECONDITION(0 != mRefCnt, "bad refcnt");
-  if (--mRefCnt == 0) {
-    delete this;
-    return 0;
-  }
-  return mRefCnt;
-}
-
-NS_IMPL_QUERY_INTERFACE(nsPresContext, kIPresContextIID);
+NS_IMPL_ISUPPORTS(nsPresContext, kIPresContextIID);
 
 void
 nsPresContext::GetUserPreferences()

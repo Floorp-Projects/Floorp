@@ -229,7 +229,7 @@ nsHTMLMapElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (aIID.Equals(kIDOMHTMLMapElementIID)) {
     nsIDOMHTMLMapElement* tmp = this;
     *aInstancePtr = (void*) tmp;
-    mRefCnt++;
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   return NS_NOINTERFACE;

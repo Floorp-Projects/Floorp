@@ -426,7 +426,9 @@ nsrefcnt PresShell::AddRef(void)
   if (gsNoisyRefs) {
     printf("PresShell: AddRef: %p, cnt = %d \n",this, mRefCnt+1);
   }
-  return ++mRefCnt;
+  ++mRefCnt;
+  NS_LOG_ADDREF(this, mRefCnt, "PresShell");
+  return mRefCnt;
 }
 
 // for debugging only
@@ -435,7 +437,9 @@ nsrefcnt PresShell::Release(void)
   if (gsNoisyRefs) {
     printf("PresShell Release: %p, cnt = %d \n",this, mRefCnt-1);
   }
-  if (--mRefCnt == 0) {
+  --mRefCnt;
+  NS_LOG_RELEASE(this, mRefCnt, "PresShell");
+  if (mRefCnt == 0) {
     if (gsNoisyRefs) {
       printf("PresShell Delete: %p, \n",this);
     }

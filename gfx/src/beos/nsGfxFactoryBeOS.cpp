@@ -100,19 +100,8 @@ nsresult nsGfxFactoryBeOS::QueryInterface(const nsIID &aIID,
   return NS_OK;   
 }   
 
-nsrefcnt nsGfxFactoryBeOS::AddRef()   
-{   
-  return ++mRefCnt;   
-}   
-
-nsrefcnt nsGfxFactoryBeOS::Release()   
-{   
-  if (--mRefCnt == 0) {   
-    delete this;   
-    return 0; // Don't access mRefCnt after deleting!   
-  }   
-  return mRefCnt;   
-}  
+NS_IMPL_ADDREF(nsGfxFactoryBeOS);
+NS_IMPL_RELEASE(nsGfxFactoryBeOS);
 
 nsresult nsGfxFactoryBeOS::CreateInstance(nsISupports *aOuter,  
                                           const nsIID &aIID,  

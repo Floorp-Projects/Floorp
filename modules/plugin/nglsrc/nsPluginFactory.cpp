@@ -95,19 +95,8 @@ nsresult nsPluginFactory :: QueryInterface(const nsIID &aIID,
   return NS_OK;   
 }   
 
-nsrefcnt nsPluginFactory :: AddRef()   
-{   
-  return ++mRefCnt;   
-}   
-
-nsrefcnt nsPluginFactory :: Release()   
-{   
-  if (--mRefCnt == 0) {   
-    delete this;   
-    return 0; // Don't access mRefCnt after deleting!   
-  }   
-  return mRefCnt;   
-}  
+NS_IMPL_ADDREF(nsPluginFactory);
+NS_IMPL_RELEASE(nsPluginFactory);
 
 nsresult nsPluginFactory :: CreateInstance(nsISupports *aOuter,  
                                           const nsIID &aIID,  

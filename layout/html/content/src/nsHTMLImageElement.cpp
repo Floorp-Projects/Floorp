@@ -183,7 +183,7 @@ nsHTMLImageElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (aIID.Equals(kIDOMHTMLImageElementIID)) {
     nsIDOMHTMLImageElement* tmp = this;
     *aInstancePtr = (void*) tmp;
-    mRefCnt++;
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(kIJSNativeInitializerIID)) {

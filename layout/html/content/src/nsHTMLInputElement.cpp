@@ -190,7 +190,9 @@ nsHTMLInputElement::~nsHTMLInputElement()
 NS_IMETHODIMP_(nsrefcnt) 
 nsHTMLInputElement::AddRef(void)
 {
-  return ++mRefCnt; 
+  ++mRefCnt;
+  NS_LOG_ADDREF(this, mRefCnt, "nsHTMLInputElement");
+  return mRefCnt;
 }
 
 
@@ -220,6 +222,7 @@ NS_IMETHODIMP_(nsrefcnt)
 nsHTMLInputElement::Release()
 {
   --mRefCnt;
+  NS_LOG_RELEASE(this, mRefCnt, "nsHTMLInputElement");
 	if (mRefCnt <= 0) {
     delete this;                                       
     return 0;                                          

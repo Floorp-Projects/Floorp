@@ -243,7 +243,9 @@ NS_IMETHODIMP_(nsrefcnt)
 nsHTMLFormElement::AddRef(void)                                
 { 
   //nsTraceRefcnt::AddRef((nsIForm*)this, mRefCnt+1, __FILE__, __LINE__);
-  return ++mRefCnt;                                          
+  ++mRefCnt;
+  NS_LOG_ADDREF(this, mRefCnt, "nsHTMLFormElement");
+  return mRefCnt;
 }
 
 NS_IMETHODIMP_(nsrefcnt)
@@ -251,6 +253,7 @@ nsHTMLFormElement::Release()
 {
   //nsTraceRefcnt::Release((nsIForm*)this, mRefCnt-1, __FILE__, __LINE__);
   --mRefCnt;
+  NS_LOG_RELEASE(this, mRefCnt, "nsHTMLFormElement");
   PRUint32 numChildren;
   GetElementCount(&numChildren);
   if (mRefCnt == nsrefcnt(numChildren)) {

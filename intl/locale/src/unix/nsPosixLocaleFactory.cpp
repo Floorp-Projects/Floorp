@@ -105,19 +105,5 @@ nsPosixLocaleFactory::LockFactory(PRBool	aBool)
 	return NS_OK;
 }
 
-
-nsrefcnt
-nsPosixLocaleFactory::AddRef()   
-{   
-  return ++mRefCnt;   
-}   
-
-nsrefcnt
-nsPosixLocaleFactory::Release()   
-{   
-  if (--mRefCnt == 0) {   
-    delete this;   
-    return 0; // Don't access mRefCnt after deleting!   
-  }   
-  return mRefCnt;   
-}  
+NS_IMPL_ADDREF(nsPosixLocaleFactory);
+NS_IMPL_RELEASE(nsPosixLocaleFactory);

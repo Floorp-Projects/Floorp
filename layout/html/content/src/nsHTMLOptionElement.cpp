@@ -160,7 +160,7 @@ nsHTMLOptionElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
   if (aIID.Equals(kIDOMHTMLOptionElementIID)) {
     *aInstancePtr = (void*)(nsIDOMHTMLOptionElement*) this;
-    mRefCnt++;
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(kIJSNativeInitializerIID)) {

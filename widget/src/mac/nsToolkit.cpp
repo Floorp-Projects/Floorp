@@ -74,6 +74,7 @@ void nsMacNSPREventQueueHandler::StartPumping()
 	}
 
 	++mRefCnt;
+  NS_LOG_ADDREF(this, mRefCnt, "nsMacNSPREventQueueHandler");
 	StartRepeating();
 }
 
@@ -86,7 +87,9 @@ PRBool nsMacNSPREventQueueHandler::StopPumping()
 		return PR_TRUE;
 
 	if (mRefCnt > 0) {
-		if (--mRefCnt == 0) {
+    --mRefCnt;
+    NS_LOG_RELEASE(this, mRefCnt, "nsMacNSPREventQueueHandler");
+    if (mRefCnt == 0) {
 			StopRepeating();
 		 	nsServiceManager::ReleaseService(kEventQueueServiceCID, mEventQService);
 		 	mEventQService = nsnull;

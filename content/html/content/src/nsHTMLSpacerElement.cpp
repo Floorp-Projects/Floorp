@@ -109,7 +109,7 @@ nsHTMLSpacerElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (aIID.Equals(kIDOMHTMLSpacerElementIID)) {
     nsIDOMHTMLSpacerElement* tmp = this;
     *aInstancePtr = (void*) tmp;
-    mRefCnt++;
+    NS_ADDREF_THIS();
     return NS_OK;
   }
 #endif

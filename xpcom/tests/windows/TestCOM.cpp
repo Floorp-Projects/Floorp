@@ -62,6 +62,7 @@ NS_IMPL_QUERY_INTERFACE(nsTestCom, kITestComIID);
 nsrefcnt nsTestCom::AddRef() 
 {
   nsrefcnt res = ++mRefCnt;
+  NS_LOG_ADDREF(this, mRefCnt, "nsTestCom");
   cout << "nsTestCom: Adding ref = " << res << "\n";
   return res;
 }
@@ -69,6 +70,7 @@ nsrefcnt nsTestCom::AddRef()
 nsrefcnt nsTestCom::Release() 
 {
   nsrefcnt res = --mRefCnt;
+  NS_LOG_RELEASE(this, mRefCnt, "nsTestCom");
   cout << "nsTestCom: Releasing = " << res << "\n";
   if (res == 0) {
     delete this;

@@ -685,9 +685,9 @@ static NS_DEFINE_IID(kIDocumentObserverIID, NS_IDOCUMENT_OBSERVER_IID);
 
 nsImageMap::nsImageMap()
 {
+  NS_INIT_REFCNT();
   mMap = nsnull;
   mDomMap = nsnull;
-  mRefCnt = 1;
   mDocument = nsnull;
   mContainsBlockContents = PR_FALSE;
 }

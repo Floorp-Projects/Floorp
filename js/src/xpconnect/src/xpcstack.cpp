@@ -181,15 +181,18 @@ XPCJSStackFrame::AddRef(void)
 {
     if(mStack)
         mStack->AddRef();
-    return ++mRefCnt;
+    ++mRefCnt;
+    NS_LOG_ADDREF(this, mRefCnt, "XPCJSStackFrame");
+    return mRefCnt;
 }
 
 nsrefcnt
 XPCJSStackFrame::Release(void)
 {
     // use a local since there can be recursion here.
-    nsrefcnt count;
-    if(0 == (count = --mRefCnt))
+    nsrefcnt count = --mRefCnt;
+    NS_LOG_RELEASE(this, mRefCnt, "XPCJSStackFrame");
+    if(0 == count)
     {
         NS_DELETEXPCOM(this);
         return 0;

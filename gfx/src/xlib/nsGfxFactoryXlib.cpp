@@ -97,19 +97,8 @@ nsresult nsGfxFactoryXlib::QueryInterface(const nsIID &aIID,
   return NS_OK;
 }
 
-nsrefcnt nsGfxFactoryXlib::AddRef()
-{
-  return ++mRefCnt;
-}
-
-nsrefcnt nsGfxFactoryXlib::Release()
-{
-  if (--mRefCnt == 0) {
-    delete this;
-    return 0; // don't access mRefCnt after a delete!
-  }
-  return mRefCnt;
-}
+NS_IMPL_ADDREF(nsGfxFactoryXlib);
+NS_IMPL_RELEASE(nsGfxFactoryXlib);
 
 nsresult nsGfxFactoryXlib::CreateInstance(nsISupports *aOuter,
                                           const nsIID &aIID,

@@ -117,19 +117,8 @@ nsresult nsGfxFactoryWin::QueryInterface(const nsIID &aIID,
   return NS_OK;   
 }   
 
-nsrefcnt nsGfxFactoryWin::AddRef()   
-{   
-  return ++mRefCnt;   
-}   
-
-nsrefcnt nsGfxFactoryWin::Release()   
-{   
-  if (--mRefCnt == 0) {   
-    delete this;   
-    return 0; // Don't access mRefCnt after deleting!   
-  }   
-  return mRefCnt;   
-}  
+NS_IMPL_ADDREF(nsGfxFactoryWin);
+NS_IMPL_RELEASE(nsGfxFactoryWin);
 
 nsresult nsGfxFactoryWin::CreateInstance(nsISupports *aOuter,  
                                           const nsIID &aIID,  

@@ -211,7 +211,9 @@ nsProxyEventObject::AddRef(void)
 {
     NS_PRECONDITION(mRoot, "bad root");
 
-    if(1 == ++mRefCnt && mRoot && mRoot != this)
+    ++mRefCnt;
+    NS_LOG_ADDREF(this, mRefCnt, "nsProxyEventObject");
+    if(1 == mRefCnt && mRoot && mRoot != this)
         NS_ADDREF(mRoot);
 
     return mRefCnt;
@@ -223,7 +225,9 @@ nsProxyEventObject::Release(void)
     NS_PRECONDITION(mRoot, "bad root");
     NS_PRECONDITION(0 != mRefCnt, "dup release");
 
-    if(0 == --mRefCnt)
+    --mRefCnt;
+    NS_LOG_RELEASE(this, mRefCnt, "nsProxyEventObject");
+    if (mRefCnt == 0)
     {
         if(mRoot == this)
         {

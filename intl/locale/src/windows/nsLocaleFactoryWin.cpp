@@ -69,19 +69,8 @@ nsresult nsLocaleWinFactory::QueryInterface(const nsIID &aIID,
   return NS_OK;   
 }   
 
-nsrefcnt nsLocaleWinFactory::AddRef()   
-{   
-  return ++mRefCnt;   
-}   
-
-nsrefcnt nsLocaleWinFactory::Release()   
-{   
-  if (--mRefCnt == 0) {   
-    delete this;   
-    return 0; // Don't access mRefCnt after deleting!   
-  }   
-  return mRefCnt;   
-}  
+NS_IMPL_ADDREF(nsLocaleWinFactory);
+NS_IMPL_RELEASE(nsLocaleWinFactory);
 
 nsresult nsLocaleWinFactory::CreateInstance(nsISupports *aOuter,  
                                          const nsIID &aIID,  

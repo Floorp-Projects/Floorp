@@ -4239,21 +4239,8 @@ nsWebShellFactory::QueryInterface(const nsIID &aIID, void **aResult)
   return NS_OK;
 }
 
-nsrefcnt
-nsWebShellFactory::AddRef()
-{
-  return ++mRefCnt;
-}
-
-nsrefcnt
-nsWebShellFactory::Release()
-{
-  if (--mRefCnt == 0) {
-    delete this;
-    return 0; // Don't access mRefCnt after deleting!
-  }
-  return mRefCnt;
-}
+NS_IMPL_ADDREF(nsWebShellFactory);
+NS_IMPL_RELEASE(nsWebShellFactory);
 
 nsresult
 nsWebShellFactory::CreateInstance(nsISupports *aOuter,
