@@ -222,7 +222,7 @@ void nsTableRowFrame::ResetMaxChildHeight()
 
 void nsTableRowFrame::SetMaxChildHeight(nscoord aChildHeight, nscoord aTopMargin, nscoord aBottomMargin)
 {
-  if (gsDebug) printf("Row ResetMaxChildHeight to %d\n", aChildHeight);
+  if (gsDebug) printf("Row SetMaxChildHeight to %d\n", aChildHeight);
   if (mTallestCell<aChildHeight)
     mTallestCell = aChildHeight;
 
