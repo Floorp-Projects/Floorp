@@ -76,7 +76,7 @@
 #define PR_LOG_OPTION_NIL               0x0000
 #define PR_LOG_OPTION_SHOW_THREAD_ID    0x0001
 #define PR_LOG_OPTION_ADD_NEWLINE       0x0002
-#define PR_LOG_OPTION_DEFAULT           (PR_LOG_OPTION_SHOW_THREAD_ID | PR_LOG_OPTION_ADD_NEWLINE)
+#define PR_LOG_OPTION_DEFAULT           (0)
 typedef PRUint16 PRLogModuleOptions;
 
 #ifdef PR_LOGGING
