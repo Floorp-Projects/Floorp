@@ -65,14 +65,7 @@ public:
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIFINDSERVICE
-  
-  static nsFindService*     GetSingleton();
-  static void               FreeSingleton();
-
-protected:
-
-  static nsFindService*   gFindService;
-  
+ 
 protected:
 
   nsString        mSearchString;
@@ -82,5 +75,4 @@ protected:
   PRPackedBool    mWrapFind;
   PRPackedBool    mEntireWord;
   PRPackedBool    mMatchCase;
-
 };

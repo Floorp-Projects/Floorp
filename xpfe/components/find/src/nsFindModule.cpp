@@ -8,9 +8,6 @@
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFindService)
 
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIFindService, nsFindService::GetSingleton)
-
-
 static const nsModuleComponentInfo gComponents[] = {
   { 
     "Find Service",
@@ -18,16 +15,7 @@ static const nsModuleComponentInfo gComponents[] = {
     NS_FIND_SERVICE_CONTRACTID,
     nsFindServiceConstructor
   }
-
 };
 
-
-PR_STATIC_CALLBACK(void)
-nsFindModuleDtor(nsIModule* self)
-{
-    // Release our singletons
-    nsFindService::FreeSingleton();
-}
-
-NS_IMPL_NSGETMODULE_WITH_DTOR(nsFindComponent, gComponents, nsFindModuleDtor)
+NS_IMPL_NSGETMODULE(nsFindComponent, gComponents)
 
