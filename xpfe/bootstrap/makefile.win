@@ -108,7 +108,9 @@ LFLAGS= $(LFLAGS) /subsystem:windows
 # These are the libraries we need to link with to create the exe
 LLIBS=                               \
  $(DIST)\lib\xpcom.lib               \
+!ifndef DISABLE_LDAP
  $(DIST)\lib\nsldap32v40.lib         \
+!endif
  $(DIST)\lib\js3250.lib              \
  $(DIST)\lib\util.lib                \
  $(DIST)\lib\gkgfx.lib            \
