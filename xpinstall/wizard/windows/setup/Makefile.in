@@ -65,6 +65,8 @@ LOCAL_INCLUDES	= -I$(srcdir) -I$(srcdir)/../uninstall
 
 NO_DIST_INSTALL	= 1
 
+MOZ_WINCONSOLE = 0
+
 include $(topsrcdir)/config/rules.mk
 
 _OS_LIBS 	= ole32 comdlg32 shell32 version
