@@ -1946,10 +1946,14 @@ nsHTMLEditRules::WillIndent(nsIDOMSelection *aSelection, PRBool *aCancel, PRBool
         if (NS_FAILED(res)) return res;
         res = mEditor->CreateNode(quoteType, curParent, offset, getter_AddRefs(curQuote));
         if (NS_FAILED(res)) return res;
+        
+/* !!!!!!!!!!!!!!!  TURNED OFF PER BUG 33213 !!!!!!!!!!!!!!!!!!!!
         // set style to not have unwanted vertical margins
         nsCOMPtr<nsIDOMElement> quoteElem = do_QueryInterface(curQuote);
         res = mEditor->SetAttribute(quoteElem, NS_ConvertASCIItoUCS2("style"), NS_ConvertASCIItoUCS2("margin: 0 0 0 40px;"));
         if (NS_FAILED(res)) return res;
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
+
         // curQuote is now the correct thing to put curNode in
       }
         
