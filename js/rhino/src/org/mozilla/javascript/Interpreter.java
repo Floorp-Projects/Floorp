@@ -600,8 +600,10 @@ public class Interpreter
                 itsStackDepth--;
                 break;
 
-            case Token.POS:
+            case Token.POS :
             case Token.NEG :
+            case Token.NOT :
+            case Token.BITNOT :
                 iCodeTop = generateICode(child, iCodeTop);
                 iCodeTop = addToken(type, iCodeTop);
                 break;
@@ -612,12 +614,6 @@ public class Interpreter
                     case Token.VOID :
                         iCodeTop = addToken(Token.POP, iCodeTop);
                         iCodeTop = addToken(Token.UNDEFINED, iCodeTop);
-                        break;
-                    case Token.NOT :
-                        iCodeTop = addToken(Token.NOT, iCodeTop);
-                        break;
-                    case Token.BITNOT :
-                        iCodeTop = addToken(Token.BITNOT, iCodeTop);
                         break;
                     case Token.TYPEOF :
                         iCodeTop = addToken(Token.TYPEOF, iCodeTop);

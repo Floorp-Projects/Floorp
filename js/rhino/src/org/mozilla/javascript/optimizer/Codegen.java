@@ -1199,6 +1199,35 @@ public class Codegen extends Interpreter {
                 visitGOTO(node, type, child);
                 break;
 
+              case Token.NOT: {
+                int trueTarget = acquireLabel();
+                int falseTarget = acquireLabel();
+                int beyond = acquireLabel();
+                generateIfJump(child, node, trueTarget, falseTarget);
+
+                markLabel(trueTarget);
+                classFile.add(ByteCode.GETSTATIC, "java/lang/Boolean",
+                                        "FALSE", "Ljava/lang/Boolean;");
+                addByteCode(ByteCode.GOTO, beyond);
+                markLabel(falseTarget);
+                classFile.add(ByteCode.GETSTATIC, "java/lang/Boolean",
+                                        "TRUE", "Ljava/lang/Boolean;");
+                markLabel(beyond);
+                classFile.adjustStackTop(-1);
+                break;
+              }
+
+              case Token.BITNOT:
+                addByteCode(ByteCode.NEW, "java/lang/Double");
+                addByteCode(ByteCode.DUP);
+                generateCodeFromNode(child, node);
+                addScriptRuntimeInvoke("toInt32", "(Ljava/lang/Object;)I");
+                push(-1);         // implement ~a as (a ^ -1)
+                addByteCode(ByteCode.IXOR);
+                addByteCode(ByteCode.I2D);
+                addDoubleConstructor();
+                break;
+
               case Token.UNARYOP:
                 visitUnary(node, child);
                 break;
@@ -1467,11 +1496,9 @@ public class Codegen extends Interpreter {
         boolean jumpIsDone = false;
 
         switch (type) {
-          case Token.UNARYOP:
-            if (node.getOperation() == Token.NOT) {
-                generateIfJump(child, node, falseLabel, trueLabel);
-                jumpIsDone = true;
-            }
+          case Token.NOT:
+            generateIfJump(child, node, falseLabel, trueLabel);
+            jumpIsDone = true;
             break;
 
           case Token.OR:
@@ -2289,23 +2316,6 @@ public class Codegen extends Interpreter {
     {
         int op = node.getOperation();
         switch (op) {
-          case Token.NOT: {
-            int trueTarget = acquireLabel();
-            int falseTarget = acquireLabel();
-            int beyond = acquireLabel();
-            generateIfJump(child, node, trueTarget, falseTarget);
-
-            markLabel(trueTarget);
-            classFile.add(ByteCode.GETSTATIC, "java/lang/Boolean",
-                                    "FALSE", "Ljava/lang/Boolean;");
-            addByteCode(ByteCode.GOTO, beyond);
-            markLabel(falseTarget);
-            classFile.add(ByteCode.GETSTATIC, "java/lang/Boolean",
-                                    "TRUE", "Ljava/lang/Boolean;");
-            markLabel(beyond);
-            classFile.adjustStackTop(-1);
-            break;
-          }
 
           case Token.TYPEOF:
             visitTypeof(node, child);
@@ -2315,17 +2325,6 @@ public class Codegen extends Interpreter {
             generateCodeFromNode(child, node);
             addByteCode(ByteCode.POP);
             pushUndefined();
-            break;
-
-          case Token.BITNOT:
-            addByteCode(ByteCode.NEW, "java/lang/Double");
-            addByteCode(ByteCode.DUP);
-            generateCodeFromNode(child, node);
-            addScriptRuntimeInvoke("toInt32", "(Ljava/lang/Object;)I");
-            push(-1);         // implement ~a as (a ^ -1)
-            addByteCode(ByteCode.IXOR);
-            addByteCode(ByteCode.I2D);
-            addDoubleConstructor();
             break;
 
           default:

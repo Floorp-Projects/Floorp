@@ -1110,10 +1110,13 @@ class Parser {
         switch(tt) {
         case Token.TYPEOF:
         case Token.VOID:
+            decompiler.addToken(tt);
+            return nf.createUnary(Token.UNARYOP, tt, unaryExpr(ts));
+
         case Token.NOT:
         case Token.BITNOT:
             decompiler.addToken(tt);
-            return nf.createUnary(Token.UNARYOP, tt, unaryExpr(ts));
+            return nf.createUnary(tt, unaryExpr(ts));
 
         case Token.ADD:
             // Convert to special POS token in decompiler and parse tree
