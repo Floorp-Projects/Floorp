@@ -1990,6 +1990,7 @@ nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
       }
     }
 
+#ifdef NOTNOW
     nsDrawingSurface  theSurface;
     nsRect            srcRect,destRect;
     PRInt32           x,y;
@@ -2004,11 +2005,6 @@ nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
     // XXX pushing state to fix clipping problem, need to look into why the clip is set here
     aRenderingContext.PushState();
     PRBool  clip;
-    //nsRect  clipRect;
-    //clipRect = srcRect;
-    //clipRect.width = x1-x0;
-    //clipRect.height = y1-y0;
-    //aRenderingContext.SetClipRect(clipRect, nsClipCombine_kReplace, clip);
     aRenderingContext.SetClipRect(aBorderArea, nsClipCombine_kReplace, clip);
 
     // copy the initial image to our buffer
@@ -2045,8 +2041,14 @@ nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
         aRenderingContext.CopyOffScreenBits(theSurface,srcRect.x,srcRect.y,destRect,flag);
       }
     }  
+#endif
 
-
+    nscoord x,y;
+    for(y=y0;y<y1;y+=tileHeight){
+      for(x=x0;x<x1;x+=tileWidth){
+        aRenderingContext.DrawImage(image,x,y,tileWidth,tileHeight);
+      }
+    }
     // Restore clipping
     aRenderingContext.PopState(clipState);
 
