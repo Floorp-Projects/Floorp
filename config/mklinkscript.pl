@@ -1,4 +1,4 @@
-#!perl
+#!/usr/bin/perl -w
 #
 # This perl script takes an order file produced by the "order" program
 # as input (specified on the command line) and outputs a script for
@@ -30,6 +30,7 @@ sub PrintOrder {
     while ($line = <ORDER>) {
         chomp $line;
         print(TMP "*(.text.$line)\n");
+        print(TMP "*(.gnu.linkonce.t.$line)\n");
     }
     close(ORDER);
 }
@@ -49,7 +50,7 @@ while ($line = <LD>) {
     }
     print TMP "$line\n";
     if ($line =~ /^[\s]*.text[\s]*:[\s]*$/) {
-        ($line = <LD>) || die("Premature end of ld input");
+        defined($line = <LD>) || die("Premature end of ld input");
         print TMP "$line";
 	print TMP "*(.text)\n";
         &PrintOrder();
