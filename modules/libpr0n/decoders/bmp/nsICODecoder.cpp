@@ -122,7 +122,7 @@ inline nsresult nsICODecoder::SetAlphaData()
 nsICODecoder::nsICODecoder()
 {
   NS_INIT_ISUPPORTS();
-  mPos = mNumColors = mCurLine = mRowBytes = mImageOffset = mCurrIcon = 0;
+  mPos = mNumColors = mCurLine = mRowBytes = mImageOffset = mCurrIcon = mNumIcons = 0;
   mColors = nsnull;
   mRow = nsnull;
   mDecodingAndMask = PR_FALSE;
@@ -232,6 +232,8 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
       aCount -= toCopy;
       aBuffer += toCopy;
     }
+    if (aCount == 0)
+      return NS_OK; // Need more data
 
     if (mPos == 22+mCurrIcon*sizeof(mDirEntryArray)) {
       mCurrIcon++;
@@ -357,7 +359,7 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
             aBuffer += toCopy;
             mRowBytes += toCopy;
         }
-        if ((rowSize - mRowBytes) == 0) {
+        if (rowSize == mRowBytes) {
 #if defined(XP_MAC) || defined(XP_MACOSX)
             PRUint8* decoded = mDecodedBuffer+((mCurLine-1)*mDirEntry.mWidth*4);
 #else
