@@ -152,7 +152,9 @@ dnl MKSHLIB='$(LD) $(DSO_LDOPTS)'
 *-*-solaris*) 
     AC_DEFINE(BROKEN_QSORT)
     if test -z "$GNU_CC"; then
-       MKSHLIB='$(CXX) -xar $(DSO_LDOPTS)'
+       MKSHLIB='$(CXX) $(DSO_LDOPTS)'
+       MKSHLIB_FORCE_ALL='-z allextract'
+       MKSHLIB_UNFORCE_ALL='-z defaultextract'
 	DSO_LDOPTS='-G -h $(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
     else
        MKSHLIB='$(CC) $(DSO_LDOPTS)'
