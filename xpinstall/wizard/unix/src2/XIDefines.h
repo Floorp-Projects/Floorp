@@ -52,7 +52,9 @@
 #define DOWNLOADING "Downloading..."
 #define PREPARING "Preparing installer modules..."
 #define EXTRACTING "Extracting installer files..."
-#define INSTALLING "Installing"
+#define INSTALLING "Installing..."
+#define INSTALLING_XPI "Installing %s..."
+#define PROCESSING_FILE "Processing file %d of %d..."
 
 
 /*--------------------------------------------------------------------*

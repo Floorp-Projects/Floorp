@@ -155,9 +155,8 @@ BAIL:
 gint
 nsXInstaller::Kill(GtkWidget *widget, GtkWidget *event, gpointer data)
 {
-    // XXX call Shutdown() ?
-
     gtk_main_quit();
+    XI_IF_DELETE(gCtx);
     return FALSE;
 }
 
@@ -301,6 +300,8 @@ main(int argc, char **argv)
         err = E_MEM;
 
     XI_IF_DELETE(installer);
+    DUMP("post nsXInstaller instance deletion");
+
 	exit(err);
 }
 

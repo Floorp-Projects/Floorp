@@ -49,11 +49,13 @@ nsXIEngine::~nsXIEngine()
 {
     DUMP("~nsXIEngine");
 
-    // rm tmp dir
-    char cmd[1024];
+    char cwd[1024];
+    memset(cwd, 0, 1024);
+    DUMP(cwd);
 
-    sprintf(cmd, "rm -rf %s", mTmp);
-    system(cmd);
+    // rm tmp dir
+    chdir("../..");
+    rmdir(mTmp);
 
     XI_IF_FREE(mTmp);
 }
@@ -148,7 +150,6 @@ nsXIEngine::Install(int aCustom, nsComponentList *aComps, char *aDestination)
 
     int err = OK;
     xpistub_t stub;
-    char cmd[1024];
     char *old_LD_LIBRARY_PATH = NULL;
     char new_LD_LIBRARY_PATH[256];
     int i;
@@ -199,16 +200,6 @@ nsXIEngine::Install(int aCustom, nsComponentList *aComps, char *aDestination)
 
     // restore LD_LIBRARY_PATH settings
     setenv("LD_LIBRARY_PATH", old_LD_LIBRARY_PATH, 1);
-
-    // rm tmp dir                           --> now in {ROOT}/
-    chdir("../..");
-    sprintf(cmd, "rm -rf %s", mTmp);
-    DUMP(cmd);
-    system(cmd);
-    
-    // XXX call gCtx->me->Shutdown();
-    gtk_main_quit();
-    exit(err);
 
     return err;
 }

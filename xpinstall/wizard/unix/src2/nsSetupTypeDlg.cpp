@@ -30,6 +30,8 @@ static gint             sBrowseBtnID;
 static GtkWidget        *sFolder;
 static GSList           *sGroup;
 static GtkWidget        *sCreateDestDlg;
+static int              sFilePickerUp = FALSE;
+static int              sConfirmCreateUp = FALSE;
 
 nsSetupTypeDlg::nsSetupTypeDlg() :
     mMsg0(NULL),
@@ -79,6 +81,10 @@ nsSetupTypeDlg::Next(GtkWidget *aWidget, gpointer aData)
         gCtx->bMoving = FALSE;
         return;
     }
+
+    // creation confirmation dlg still up
+    if (sConfirmCreateUp)
+        return;
 
     // verify selected destination directory exists
     if (OK != nsSetupTypeDlg::VerifyDestination())
@@ -529,13 +535,10 @@ nsSetupTypeDlg::SelectFolder(GtkWidget *aWidget, gpointer aData)
                        "clicked", (GtkSignalFunc) SelectFolderOK, fileSel);
     gtk_signal_connect_object(GTK_OBJECT(
                                 GTK_FILE_SELECTION(fileSel)->cancel_button),
-                                "clicked", (GtkSignalFunc) gtk_widget_destroy,
+                                "clicked", (GtkSignalFunc) SelectFolderCancel,
                                 GTK_OBJECT(fileSel));
     gtk_widget_show(fileSel); 
-
-    
-    
-    // XXX very much incomplete...
+    sFilePickerUp = TRUE;
 }
 
 void
@@ -558,6 +561,16 @@ nsSetupTypeDlg::SelectFolderOK(GtkWidget *aWidget, GtkFileSelection *aFileSel)
 
     // tear down file sel dlg
     gtk_object_destroy(GTK_OBJECT(aFileSel)); 
+    sFilePickerUp = FALSE;
+}
+
+void
+nsSetupTypeDlg::SelectFolderCancel(GtkWidget *aWidget, 
+                                   GtkFileSelection *aFileSel)
+{
+    // tear down file sel dlg
+    gtk_object_destroy(GTK_OBJECT(aFileSel)); 
+    sFilePickerUp = FALSE;
 }
 
 void
@@ -602,6 +615,7 @@ nsSetupTypeDlg::VerifyDestination()
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(sCreateDestDlg)->vbox), label);
     
     gtk_widget_show_all(sCreateDestDlg);
+    sConfirmCreateUp = TRUE;
 
     return err;
 }
@@ -613,6 +627,7 @@ nsSetupTypeDlg::CreateDestYes(GtkWidget *aWidget, gpointer aData)
     int err = 0; 
     err = mkdir(gCtx->opt->mDestination, 0755);
     gtk_widget_destroy(sCreateDestDlg);
+    sConfirmCreateUp = FALSE;
 
     if (err != 0)
     {
@@ -641,4 +656,5 @@ nsSetupTypeDlg::CreateDestNo(GtkWidget *aWidget, gpointer aData)
     DUMP("CreateDestNo");
 
     gtk_widget_destroy(sCreateDestDlg);
+    sConfirmCreateUp = FALSE;
 }

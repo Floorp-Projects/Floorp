@@ -114,6 +114,7 @@ nsInstallDlg::Next(GtkWidget *aWidget, gpointer aData)
 
     *me = pthread_self();
     pthread_create(&ength, NULL, WorkDammitWork, (void*) me);
+    pthread_detach(ength);
 
     gtk_timeout_add(1, ProgressUpdater, NULL);
 
@@ -321,10 +322,13 @@ nsInstallDlg::WorkDammitWork(void *arg)
 
     // destroy xpiengine
     XI_IF_DELETE(xpiengine);
-
-    // XXX call gCtx->me->Shutdown();  ???
-    gtk_main_quit();
-    exit(0);
+    
+    gCtx->bDone = TRUE;
+    gCtx->threadTurn = nsXIContext::UI_THREAD;
+    pthread_cond_signal(&gCtx->prog_cv);
+    pthread_mutex_unlock(&gCtx->prog_mutex);
+    pthread_exit((void *) 0);
+    return ((void *) 0);  // XXX which one?
 
 BAIL:
     // destroy xpiengine
@@ -343,6 +347,15 @@ nsInstallDlg::ProgressUpdater(gpointer aData)
 
     while (gtk_events_pending())
         gtk_main_iteration();
+
+    if (gCtx->bDone)
+    {
+        pthread_cond_destroy(&gCtx->prog_cv);
+        pthread_mutex_destroy(&gCtx->prog_mutex);
+
+        gtk_main_quit();
+        return 0;
+    }
 
     switch (sActivity)
     {
@@ -367,14 +380,14 @@ nsInstallDlg::ProgressUpdater(gpointer aData)
             // DUMP("Installing...");
             if (!bInstallStarted)
             {
-                gtk_label_set_text(GTK_LABEL(sMajorLabel), "Installing...");
+                gtk_label_set_text(GTK_LABEL(sMajorLabel), INSTALLING);
                 gtk_widget_show(sMajorLabel);
 
                 bInstallStarted = TRUE;
             }
 
             pthread_mutex_lock(&gCtx->prog_mutex);
-            while (gCtx->threadTurn != nsXIContext::UI_THREAD)
+            while (gCtx->threadTurn != nsXIContext::UI_THREAD && !gCtx->bDone)
                 pthread_cond_wait(&gCtx->prog_cv, &gCtx->prog_mutex);
 
             gtk_widget_show(sMinorLabel);
@@ -382,7 +395,9 @@ nsInstallDlg::ProgressUpdater(gpointer aData)
             gtk_widget_draw(sMinorLabel, NULL);
             gtk_widget_draw(sMinorProgBar, NULL);
 
-            gCtx->threadTurn = nsXIContext::ENGINE_THREAD;
+            if (!gCtx->bDone)
+                gCtx->threadTurn = nsXIContext::ENGINE_THREAD;
+
             pthread_mutex_unlock(&gCtx->prog_mutex);
 
             status = 1;
@@ -400,20 +415,21 @@ nsInstallDlg::XPIProgressCB(const char *aMsg, int aVal, int aMax)
 {
     // DUMP("XPIProgressCB");
 
-    char msg[32];
+    char msg[64];
+    char *colon = NULL, *lastSlash = NULL;
+    memset(msg, 0, 64);
 
-    if (aMax != 0)
+    if (aMax > 0)
     {
-        gfloat percent = aVal/aMax;
+        gfloat percent = (gfloat)((gfloat)aVal/(gfloat)aMax);
 #ifdef DEBUG
-    printf("progress percent: %f\n", percent);
+    printf("progress percent: %f\taVal: %d\taMax: %d\n", percent, aVal, aMax);
 #endif
         gtk_progress_set_activity_mode(GTK_PROGRESS(sMinorProgBar), FALSE);
         gtk_progress_bar_update(GTK_PROGRESS_BAR(sMinorProgBar), percent);
         gtk_widget_show(sMinorProgBar);
 
-        sprintf(msg, "Processing file %d of %d", aVal, aMax);
-        gtk_label_set_text(GTK_LABEL(sMinorLabel), msg);
+        sprintf(msg, PROCESSING_FILE, aVal, aMax);
     }
     else
     {
@@ -421,10 +437,23 @@ nsInstallDlg::XPIProgressCB(const char *aMsg, int aVal, int aMax)
         gtk_progress_bar_update(GTK_PROGRESS_BAR(sMinorProgBar), 1);
         gtk_widget_show(sMinorProgBar);
 
-        gtk_label_set_text(GTK_LABEL(sMinorLabel), aMsg);
+        /* tack on XPInstall action */
+        colon = strchr(aMsg, ':');
+        if (colon)
+            strncpy(msg, aMsg, colon - aMsg);
+
+        strncat(msg, " ", 1);
+
+        /* tack on leaf name */
+        lastSlash = strrchr(aMsg, '/');
+        if (lastSlash)
+            strncat(msg, lastSlash + 1, strlen(lastSlash) - 1);
+
+        strncat(msg, "\0", 1);
     }
 
-    gtk_widget_show(sMinorLabel);
+    gtk_label_set_text(GTK_LABEL(sMinorLabel), msg);
+    gtk_widget_draw(sMinorLabel, NULL);
 
     while (gtk_events_pending())
         gtk_main_iteration();
@@ -441,15 +470,17 @@ nsInstallDlg::MajorProgressCB(char *aCompName, int aCompNum, int aTotalComps)
         return;
 
     memset(msg, 0, 256);
-    sprintf(msg, "%s %s...", INSTALLING, aCompName);
-    
+    sprintf(msg, INSTALLING_XPI, aCompName);
+   
+    gtk_label_set_text(GTK_LABEL(sMajorLabel), ""); 
+    gtk_widget_show(sMajorLabel);
     gtk_label_set_text(GTK_LABEL(sMajorLabel), msg);
     gtk_widget_show(sMajorLabel);
 
     if (aTotalComps <= 0)
         return;
 
-    gfloat percent = aCompNum/aTotalComps;
+    gfloat percent = (gfloat)((gfloat)aCompNum/(gfloat)aTotalComps);
     gtk_progress_bar_update(GTK_PROGRESS_BAR(sMajorProgBar), percent);
     gtk_widget_show(sMajorProgBar);
 }
