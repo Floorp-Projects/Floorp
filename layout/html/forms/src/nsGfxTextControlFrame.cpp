@@ -20,6 +20,9 @@
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
+
+#ifndef ENDER_LITE
+
 #include "nsCOMPtr.h"
 #include "nsGfxTextControlFrame.h"
 #include "nsIContent.h"
@@ -5024,3 +5027,4 @@ nsEnderListenerForContent::SetFrame(nsGfxTextControlFrame *aFrame)
   return NS_OK;
 }
 
+#endif

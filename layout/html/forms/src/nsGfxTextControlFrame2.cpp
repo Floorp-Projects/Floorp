@@ -21,6 +21,8 @@
  * Contributor(s): 
  */
 
+#ifdef ENDER_LITE
+
 #include "nsCOMPtr.h"
 #include "nsWeakReference.h"
 #include "nsGfxTextControlFrame2.h"
@@ -2022,3 +2024,5 @@ nsGfxTextControlFrame2::RestoreState(nsIPresContext* aPresContext, nsIPresState*
   nsresult res = SetProperty(aPresContext, nsHTMLAtoms::value, stateString);
   return res;
 }
+
+#endif
