@@ -46,7 +46,7 @@ XP_File XP_FileOpen( const char* name, XP_FileType type,
 		return NULL;
 	}
 	PRIntn permissions = 0;
-	for ( char * p = inPermissions; p; p++)
+	for ( char * p = inPermissions; *p; p++)
 	{
 		switch (*p)	{
 			case 'r':
