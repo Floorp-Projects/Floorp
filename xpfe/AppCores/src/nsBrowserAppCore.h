@@ -40,7 +40,7 @@ class nsIURI;
 class nsIWebShellWindow;
 class nsIFindComponent;
 
-
+#define SHISTORY_POPUP_LIST 10
 ////////////////////////////////////////////////////////////////////////////////
 // nsBrowserAppCore:
 ////////////////////////////////////////////////////////////////////////////////
@@ -163,8 +163,12 @@ class nsBrowserAppCore : public nsBaseAppCore,
 
     NS_IMETHOD GetURLForIndex(PRInt32 aIndex, const PRUnichar ** aURL);
 
-
     NS_IMETHOD SetURLForIndex(PRInt32 aIndex, const PRUnichar * aURL);
+
+	NS_IMETHOD GetTitleForIndex(PRInt32 aIndex, const PRUnichar ** aTitle);
+
+    NS_IMETHOD SetTitleForIndex(PRInt32 aIndex, const PRUnichar * aTitle);
+
 
   protected:
     NS_IMETHOD DoDialog();
@@ -174,6 +178,8 @@ class nsBrowserAppCore : public nsBaseAppCore,
     void BeginObserving();
     void EndObserving();
     NS_IMETHOD CreateMenuItem(nsIDOMNode * , PRInt32,const PRUnichar * );
+	NS_IMETHOD UpdateGoMenu();
+	NS_IMETHOD ClearHistoryPopup(nsIDOMNode * );
 
     nsIScriptContext   *mToolbarScriptContext;			// weak reference
     nsIScriptContext   *mContentScriptContext;			// weak reference
