@@ -55,6 +55,18 @@ REQUIRES  = \
 	network \
 	$(NULL)
 
+
+
+LIBS = -ljs -llayer -lxp -lutil -lraptorplugin -lsecfree \
+-lnetcache -labouturl -lftpurl -lfileurl -lmimetype -lhttpurl \
+-ljsurl -lgophurl -lremoturl -lnetutil -lnetwork -lnetcnvts \
+-lpwcac -lreg -ljsdom -lraptorgfx -limg -ljpeg -lpng -lraptorbase \
+-lnetlib -lxpcom -lraptorwebwidget -lpref -lxpcom -lnspr21 -lplds21 \
+-lplc21
+
+# MOZ_MAIL_COMPOSE=1
+# LIBS += smtpurl
+
 TARGETS		+= $(OBJDIR)/moz-export
 
 ALL_TARGETS = $(TARGETS)
@@ -65,7 +77,7 @@ include $(DEPTH)/config/rules.mk
 $(OBJDIR)/moz-export: $(OBJS) 
 	@$(MAKE_OBJDIR)
 	rm -f $@
-	$(CCC) -o $@ $(LDFLAGS) $(OBJS) $(BASIC_LIBS) -L$(DIST)/bin -L$(DIST)/lib $(DSO_EX_LIBS) $(DNS_LIB)
+	$(CCC) -o $@ $(LDFLAGS) -m $(OBJS) $(BASIC_LIBS) -L$(DIST)/bin -L$(DIST)/lib $(DSO_EX_LIBS) $(DNS_LIB) $(LIBS)
 	@$(EXTRA_POST_LINK_CMD) $@
 
 install:: $(TARGETS)
@@ -75,3 +87,4 @@ endif
 
 
 everything:	all $(ALL_TARGETS)
+
