@@ -227,6 +227,44 @@ class Arguments extends IdScriptable {
         return null;
     }
 
+    Object[] getIds(boolean getAll)
+    {
+        Object[] ids = super.getIds(getAll);
+        if (getAll && args.length != 0) {
+            boolean[] present = null;
+            int extraCount = args.length;
+            for (int i = 0; i != ids.length; ++i) {
+                Object id = ids[i];
+                if (id instanceof Integer) {
+                    int index = ((Integer)id).intValue();
+                    if (0 <= index && index < args.length) {
+                        if (present == null) {
+                            present = new boolean[args.length];
+                        }
+                        if (!present[index]) {
+                            present[index] = true;
+                            extraCount--;
+                        }
+                    }
+                }
+            }
+            if (extraCount != 0) {
+                Object[] tmp = new Object[extraCount + ids.length];
+                System.arraycopy(ids, 0, tmp, extraCount, ids.length);
+                ids = tmp;
+                int offset = 0;
+                for (int i = 0; i != args.length; ++i) {
+                    if (present == null || !present[i]) {
+                        ids[offset] = new Integer(i);
+                        ++offset;
+                    }
+                }
+                if (offset != extraCount) Kit.codeBug();
+            }
+        }
+        return ids;
+    }
+
 // #string_id_map#
 
     private static final int
