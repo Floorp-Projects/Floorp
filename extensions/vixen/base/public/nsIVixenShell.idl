@@ -1,0 +1,44 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ */
+
+#include "nsISupports.idl"
+
+interface nsIDOMElement;
+
+[scriptable, uuid(86b91da8-2516-4478-8dad-4c17185f1065)]
+interface nsIVixenShell : nsISupports 
+{
+    void setAttribute(in nsIDOMElement aElement, in wstring aAttribute, in wstring aValue);
+    void removeAttribute(in nsIDOMElement aElement, in wstring aAttribute);
+
+    void insertElement(in nsIDOMElement aElement, in nsIDOMElement aParent, in PRInt32 aPos);
+    void removeElement(in nsIDOMElement aElement);
+};
+
+%{ C++
+#define NS_VIXENSHELL_CID                           \
+{ /* 5029a73a-8ff6-4d30-99df-f53cd44f2542 */        \
+   0x5029a73a, 0x8ff6, 0x4d30,                      \
+  {0x99, 0xdf, 0xf5, 0x3c, 0xd4, 0x4f, 0x25, 0x42} }
+#define NS_VIXENSHELL_PROGID \
+"component://netscape/vixen/shell"
+%}

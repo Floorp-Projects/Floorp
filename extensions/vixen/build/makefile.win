@@ -19,9 +19,9 @@
 #
 # Contributor(s): 
 
-DEPTH=..\..
+DEPTH=..\..\..
 include <$(DEPTH)/config/config.mak>
 
-DIRS = resources base build
+DIRS = src
 
 include <$(DEPTH)\config\rules.mak>

@@ -19,9 +19,39 @@
 #
 # Contributor(s): 
 
-DEPTH=..\..
-include <$(DEPTH)/config/config.mak>
+DEPTH=..\..\..\.. 
 
-DIRS = resources base build
+LIBRARY_NAME=vixen_s 
+MODULE=vixen
+
+DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
+
+CPPSRCS=					\
+	nsVixenShell.cpp			\
+	$(NULL)
+
+
+CPP_OBJS=					\
+	.\$(OBJDIR)\nsVixenShell.obj		\
+	$(NULL)
+
+EXPORTS =					\
+	$(NULL)
+
+LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js \
+	-I$(PUBLIC)\dom -I$(PUBLIC)\uconv
+
+LCFLAGS = \
+        $(LCFLAGS) \
+        $(DEFINES) \
+        $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
+
+install:: $(LIBRARY)
+	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+
+clobber::
+	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
+
+ 
