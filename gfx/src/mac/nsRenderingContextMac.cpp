@@ -29,6 +29,7 @@ DrawString();  DrawText for cstrings
 
 #include "nsRenderingContextMac.h"
 #include "nsDeviceContextMac.h"
+#include "nsFontMetricsMac.h"
 
 #include <math.h>
 #include "nspr.h"
@@ -502,34 +503,7 @@ void nsRenderingContextMac :: SetFont(const nsFont& aFont)
 		mFontCache->GetMetricsFor(aFont, mFontMetrics);
 
 	if (mFontMetrics)
-	{
-		short fontNum;
-		nsDeviceContextMac::GetMacFontNumber(aFont.name, fontNum);
-		::TextFont(fontNum);
-
-		float  dev2app;
-		mContext->GetDevUnitsToAppUnits(dev2app);
-		::TextSize(short(float(aFont.size) / dev2app));
-
-		Style textFace = normal;
-		switch (aFont.style)
-		{
-			case NS_FONT_STYLE_NORMAL: 								break;
-			case NS_FONT_STYLE_ITALIC: 		textFace |= italic;		break;
-			case NS_FONT_STYLE_OBLIQUE: 	textFace |= italic;		break;	//XXX
-		}
-		switch (aFont.variant)
-		{
-			case NS_FONT_VARIANT_NORMAL: 							break;
-			case NS_FONT_VARIANT_SMALL_CAPS: textFace |= condense;	break;	//XXX
-		}
-		switch (aFont.weight)
-		{
-			case NS_FONT_WEIGHT_NORMAL: 							break;
-			case NS_FONT_WEIGHT_BOLD:		textFace |= bold;		break;
-		}
-		::TextFace(textFace);
-	}
+		nsFontMetricsMac::SetFont(aFont, mContext);
 }
 
 //------------------------------------------------------------------------
