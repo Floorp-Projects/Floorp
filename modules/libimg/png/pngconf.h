@@ -16,6 +16,11 @@
 #ifndef PNGCONF_H
 #define PNGCONF_H
 
+/* This include defines the subset of the libpng library that
+ * mozilla utilizes.
+ */
+#include "mozpngconf.h"
+
 /* This is the size of the compression buffer, and thus the size of
  * an IDAT chunk.  Make this whatever size you feel is best for your
  * machine.  One of these will be allocated per png_struct.  When this
