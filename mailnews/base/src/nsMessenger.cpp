@@ -2473,6 +2473,8 @@ public:
   virtual ~nsDelAttachListener();
   nsresult StartProcessing(nsMessenger * aMessenger, nsIMsgWindow * aMsgWindow, 
     nsAttachmentState * aAttach, PRBool aSaveFirst);
+  nsresult DeleteOriginalMessage();
+  void SelectNewMessage();
 
 public:
   nsAttachmentState * mAttach;                      // list of attachments to process
@@ -2534,12 +2536,11 @@ nsDelAttachListener::OnStopRequest(nsIRequest * aRequest, nsISupports * aContext
   mMsgFileStream = nsnull;
   mMsgFileSpec->CloseStream();
   mNewMessageKey = PR_UINT32_MAX;
-  return mMessageFolder->CopyFileMessage(
-    mMsgFileSpec,         // fileSpec
-    nsnull,               // msgToReplace
-    PR_FALSE,             // isDraft
-    mMsgWindow,           // msgWindow
-    listenerCopyService); // listener
+  nsCOMPtr<nsIMsgCopyService> copyService = do_GetService(NS_MSGCOPYSERVICE_CONTRACTID);
+  if (copyService)
+    rv = copyService->CopyFileMessage(mMsgFileSpec, mMessageFolder, nsnull, PR_FALSE, 
+                                      listenerCopyService, mMsgWindow);
+  return rv;
 }
 
 //
@@ -2568,26 +2569,58 @@ nsDelAttachListener::OnStartRunningUrl(nsIURI * aUrl)
   return NS_OK;
 }
 
+nsresult nsDelAttachListener::DeleteOriginalMessage()
+{
+  nsCOMPtr<nsISupportsArray> messageArray;
+  nsresult rv = NS_NewISupportsArray(getter_AddRefs(messageArray));
+  NS_ENSURE_SUCCESS(rv,rv);
+  rv = messageArray->AppendElement(mOriginalMessage);
+  NS_ENSURE_SUCCESS(rv,rv);
+  nsCOMPtr<nsIMsgCopyServiceListener> listenerCopyService;
+
+  QueryInterface( NS_GET_IID(nsIMsgCopyServiceListener), getter_AddRefs(listenerCopyService) );
+
+  mOriginalMessage = nsnull;
+  return mMessageFolder->DeleteMessages( 
+    messageArray,         // messages
+    mMsgWindow,           // msgWindow
+    PR_TRUE,              // deleteStorage
+    PR_TRUE,              // isMove
+    listenerCopyService,  // listener
+    PR_FALSE);            // allowUndo
+}
+
+void nsDelAttachListener::SelectNewMessage()
+{
+  nsXPIDLCString displayUri;
+  // all attachments refer to the same message
+  const char * messageUri = mAttach->mAttachmentArray[0].mMessageUri;
+  mMessenger->GetLastDisplayedMessageUri(getter_Copies(displayUri));
+  if (displayUri.Equals(messageUri))
+  {
+    mMessageFolder->GenerateMessageURI(mNewMessageKey, getter_Copies(displayUri));
+    if (displayUri)
+    {
+      mMsgWindow->SelectMessage(displayUri);
+    }
+  }
+  mNewMessageKey = PR_UINT32_MAX;
+}
+
 NS_IMETHODIMP
 nsDelAttachListener::OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode)
 {
+  nsresult rv = NS_OK;
+  // the imap code gets here, since the delete triggers an OnStopRunningUrl.
+  // the local msg code doesn't get here.
+  const char * messageUri = mAttach->mAttachmentArray[0].mMessageUri;
+  if (mOriginalMessage && !strncmp(messageUri, "imap:", 5))
+    rv = DeleteOriginalMessage();
   // check if we've deleted the original message, and we know the new msg id.
-  if (!mOriginalMessage && mNewMessageKey != PR_UINT32_MAX && mMsgWindow)
-  {
-    nsXPIDLCString displayUri;
-    // all attachments refer to the same message
-    const char * messageUri = mAttach->mAttachmentArray[0].mMessageUri;
-    mMessenger->GetLastDisplayedMessageUri(getter_Copies(displayUri));
-    if (displayUri.Equals(messageUri))
-    {
-      mMessageFolder->GenerateMessageURI(mNewMessageKey, getter_Copies(displayUri));
-      if (displayUri)
-      {
-        mMsgWindow->SelectMessage(displayUri);
-      }
-    }
-  }
-  return NS_OK;
+  else if (!mOriginalMessage && mNewMessageKey != PR_UINT32_MAX && mMsgWindow)
+    SelectNewMessage();
+
+  return rv;
 }
 
 // 
@@ -2634,30 +2667,20 @@ nsDelAttachListener::OnStopCopy(nsresult aStatus)
   if (NS_FAILED(aStatus))
     return aStatus;
 
-  if (mOriginalMessage)
-  {
-
-    nsCOMPtr<nsISupportsArray> messageArray;
-    nsresult rv = NS_NewISupportsArray(getter_AddRefs(messageArray));
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = messageArray->AppendElement(mOriginalMessage);
-    NS_ENSURE_SUCCESS(rv,rv);
-    nsCOMPtr<nsIMsgCopyServiceListener> listenerCopyService;
-
-    QueryInterface( NS_GET_IID(nsIMsgCopyServiceListener), getter_AddRefs(listenerCopyService) );
-
-    rv = mMessageFolder->DeleteMessages( 
-      messageArray,         // messages
-      mMsgWindow,           // msgWindow
-      PR_TRUE,              // deleteStorage
-      PR_TRUE,              // isMove
-      listenerCopyService,  // listener
-      PR_FALSE);            // allowUndo
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    mOriginalMessage = nsnull;
-  }
-
+  // check if we've deleted the original message, and we know the new msg id.
+  if (!mOriginalMessage && mNewMessageKey != PR_UINT32_MAX && mMsgWindow)
+    SelectNewMessage();
+  // do this for non-imap messages - for imap, we'll do the delete in
+  // OnStopRunningUrl. For local messages, we won't get an OnStopRunningUrl
+  // notification. And for imap, it's too late to delete the message here,
+  // because we'll be updating the folder naturally as a result of
+  // running an append url. If we delete the header here, that folder
+  // update will think we need to download the header...If we do it
+  // in OnStopRunningUrl, we'll issue the delete before we do the
+  // update....all nasty stuff.
+  const char * messageUri = mAttach->mAttachmentArray[0].mMessageUri;
+  if (mOriginalMessage && strncmp(messageUri, "imap:", 5))
+    return DeleteOriginalMessage();
   return NS_OK;
 }
 
