@@ -100,55 +100,7 @@ public final class XMLLibImpl extends XMLLib
         prettyIndent = 2;
     }
 
-    boolean ignoreComments()
-    {
-        return ignoreComments;
-    }
-
-    boolean ignoreProcessingInstructions()
-    {
-        return ignoreProcessingInstructions;
-    }
-
-    boolean ignoreWhitespace()
-    {
-        return ignoreWhitespace;
-    }
-
-    boolean prettyPrinting()
-    {
-        return prettyPrinting;
-    }
-
-    int prettyIndent()
-    {
-        return prettyIndent;
-    }
-
-    private Namespace resolveNamespace(String prefix, Scriptable scope)
-    {
-        Namespace ns = null;
-        Scriptable nsScope = scope;
-
-        while (nsScope != null) {
-            Object obj = ScriptableObject.getProperty(nsScope, prefix);
-            if (obj instanceof Namespace) {
-                ns = (Namespace)obj;
-                break;
-            }
-            nsScope = nsScope.getParentScope();
-        }
-
-        if (ns == null) {
-            // Only namespace type allowed to left of :: operator.
-            throw Context.reportRuntimeError(
-                ScriptRuntime.getMessage1("msg.namespace.expected", prefix));
-        }
-
-        return ns;
-    }
-
-    XMLName toAttributeNameImpl(Context cx, Object nameValue)
+    XMLName toAttributeName(Context cx, Object nameValue)
     {
         String uri;
         String localName;
@@ -531,10 +483,12 @@ public final class XMLLibImpl extends XMLLib
         return true;
     }
 
-    public Object toQualifiedName(String namespace,
-                                  Object nameValue,
-                                  Scriptable scope)
+    XMLName toQualifiedName(Context cx, Object namespaceValue,
+                            Object nameValue)
     {
+        // This is duplication of constructQName(cx, namespaceValue, nameValue)
+        // but for XMLName
+
         String uri;
         String localName;
 
@@ -545,31 +499,57 @@ public final class XMLLibImpl extends XMLLib
             localName = ScriptRuntime.toString(nameValue);
         }
 
-        if ("*".equals(namespace)) {
+        Namespace ns;
+        if (namespaceValue == Undefined.instance) {
+            if ("*".equals(localName)) {
+                ns = null;
+            } else {
+                ns = getDefaultNamespace(cx);
+            }
+        } else if (namespaceValue == null) {
+            ns = null;
+        } else if (namespaceValue instanceof Namespace) {
+            ns = (Namespace)namespaceValue;
+        } else {
+            ns = constructNamespace(cx, namespaceValue);
+        }
+
+        if (ns == null) {
             uri = null;
         } else {
-            uri = resolveNamespace(namespace, scope).uri();
+            uri = ns.uri();
         }
 
         return XMLName.formProperty(uri, localName);
     }
 
-    public Object toAttributeName(Context cx, Object nameValue)
+    public Reference nameRef(Context cx, Object name,
+                             Scriptable scope, int memberTypeFlags)
     {
-        return toAttributeNameImpl(cx, nameValue);
+        if ((memberTypeFlags & Node.ATTRIBUTE_FLAG) == 0) {
+            // should only be called foir cases like @name or @[expr]
+            throw Kit.codeBug();
+        }
+        XMLName xmlName = toAttributeName(cx, name);
+        return xmlPrimaryReference(cx, xmlName, scope);
     }
 
-    /**
-     * See E4X 11.1 PrimaryExpression : PropertyIdentifier production
-     */
-    public Reference xmlPrimaryReference(Context cx,
-                                         Object nameObject,
-                                         Scriptable scope)
+    public Reference nameRef(Context cx, Object namespace, Object name,
+                             Scriptable scope, int memberTypeFlags)
     {
-        if (!(nameObject instanceof XMLName))
-            throw new IllegalArgumentException();
+        XMLName xmlName = toQualifiedName(cx, namespace, name);
+        if ((memberTypeFlags & Node.ATTRIBUTE_FLAG) != 0) {
+            if (!xmlName.isAttributeName()) {
+                xmlName.setAttributeName();
+            }
+        }
+        return xmlPrimaryReference(cx, xmlName, scope);
+    }
 
-        XMLName xmlName = (XMLName)nameObject;
+    private Reference xmlPrimaryReference(Context cx,
+                                          XMLName xmlName,
+                                          Scriptable scope)
+    {
         XMLObjectImpl xmlObj;
         XMLObjectImpl firstXmlObject = null;
         for (;;) {
@@ -606,7 +586,7 @@ public final class XMLLibImpl extends XMLLib
     {
         String text = ScriptRuntime.toString(value);
 
-        if (text.length() == 0) return text;
+        if (text.length() == 0) return "\"\"";
 
         XmlObject xo = XmlObject.Factory.newInstance();
 

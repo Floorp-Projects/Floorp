@@ -52,7 +52,6 @@ public class Node
         LOCAL_BLOCK_PROP   =  3,
         REGEXP_PROP        =  4,
         CASEARRAY_PROP     =  5,
-        SPECIAL_PROP_PROP  =  6,
     /*
         the following properties are defined and manipulated by the
         optimizer -
@@ -65,17 +64,19 @@ public class Node
                           matches.
     */
 
-        TARGETBLOCK_PROP   =  7,
-        VARIABLE_PROP      =  8,
-        ISNUMBER_PROP      =  9,
-        DIRECTCALL_PROP    = 10,
-        SPECIALCALL_PROP   = 11,
-        SKIP_INDEXES_PROP  = 12, // array of skipped indexes of array literal
-        OBJECT_IDS_PROP    = 13, // array of properties for object literal
-        INCRDECR_PROP      = 14, // pre or post type of increment/decerement
-        CATCH_SCOPE_PROP   = 15, // Index of catch scope block in catch
-        LABEL_ID_PROP      = 16, // Label id: code generation uses it
-        LAST_PROP          = 16;
+        TARGETBLOCK_PROP   =  6,
+        VARIABLE_PROP      =  7,
+        ISNUMBER_PROP      =  8,
+        DIRECTCALL_PROP    =  9,
+        SPECIALCALL_PROP   = 10,
+        SKIP_INDEXES_PROP  = 11, // array of skipped indexes of array literal
+        OBJECT_IDS_PROP    = 12, // array of properties for object literal
+        INCRDECR_PROP      = 13, // pre or post type of increment/decerement
+        CATCH_SCOPE_PROP   = 14, // index of catch scope block in catch
+        LABEL_ID_PROP      = 15, // label id: code generation uses it
+        MEMBER_TYPE_PROP   = 16, // type of element access operation
+        NAME_PROP          = 17, // property name
+        LAST_PROP          = 17;
 
     // values of ISNUMBER_PROP to specify
     // which of the children are Number types
@@ -92,6 +93,11 @@ public class Node
     public static final int   // flags for INCRDECR_PROP
         DECR_FLAG = 0x1,
         POST_FLAG = 0x2;
+
+    public static final int   // flags for MEMBER_TYPE_PROP
+        PROPERTY_FLAG    = 0x1, // property access: element is valid name
+        ATTRIBUTE_FLAG   = 0x2, // x.@y or x..@y
+        DESCENDANTS_FLAG = 0x4; // x..y or x..@i
 
     private static class NumberNode extends Node
     {
@@ -432,7 +438,6 @@ public class Node
                 case LOCAL_BLOCK_PROP:   return "local_block";
                 case REGEXP_PROP:        return "regexp";
                 case CASEARRAY_PROP:     return "casearray";
-                case SPECIAL_PROP_PROP:  return "special_prop";
 
                 case TARGETBLOCK_PROP:   return "targetblock";
                 case VARIABLE_PROP:      return "variable";
@@ -445,6 +450,8 @@ public class Node
                 case INCRDECR_PROP:      return "incrdecr_prop";
                 case CATCH_SCOPE_PROP:   return "catch_scope_prop";
                 case LABEL_ID_PROP:      return "label_id_prop";
+                case MEMBER_TYPE_PROP:   return "member_type_prop";
+                case NAME_PROP:          return "name_prop";
 
                 default: Kit.codeBug();
             }

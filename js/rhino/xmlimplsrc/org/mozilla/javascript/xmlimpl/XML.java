@@ -287,17 +287,17 @@ class XML extends XMLObjectImpl
 
         XmlOptions options = new XmlOptions();
 
-        if (lib.ignoreComments())
+        if (lib.ignoreComments)
         {
             options.put(XmlOptions.LOAD_STRIP_COMMENTS);
         }
 
-        if (lib.ignoreProcessingInstructions())
+        if (lib.ignoreProcessingInstructions)
         {
             options.put(XmlOptions.LOAD_STRIP_PROCINSTS);
         }
 
-        if (lib.ignoreWhitespace())
+        if (lib.ignoreWhitespace)
         {
             options.put(XmlOptions.LOAD_STRIP_WHITESPACE);
         }
@@ -476,25 +476,25 @@ todo need to handle namespace prefix not found in XML look for namespace type in
     {
         XmlOptions options = new XmlOptions();
 
-        if (lib.ignoreComments())
+        if (lib.ignoreComments)
         {
             options.put(XmlOptions.LOAD_STRIP_COMMENTS);
         }
 
-        if (lib.ignoreProcessingInstructions())
+        if (lib.ignoreProcessingInstructions)
         {
             options.put(XmlOptions.LOAD_STRIP_PROCINSTS);
         }
 
-        if (lib.ignoreWhitespace())
+        if (lib.ignoreWhitespace)
         {
             options.put(XmlOptions.LOAD_STRIP_WHITESPACE);
         }
 
-        if (lib.prettyPrinting())
+        if (lib.prettyPrinting)
         {
             options.put(XmlOptions.SAVE_PRETTY_PRINT, null);
-            options.put(XmlOptions.SAVE_PRETTY_PRINT_INDENT, new Integer(lib.prettyIndent()));
+            options.put(XmlOptions.SAVE_PRETTY_PRINT_INDENT, new Integer(lib.prettyIndent));
         }
 
         return options;

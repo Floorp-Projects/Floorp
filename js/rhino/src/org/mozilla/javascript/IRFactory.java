@@ -230,55 +230,6 @@ final class IRFactory
     }
 
     /**
-     *  PropertySelector :: PropertySelector
-     */
-    Node createQualifiedName(String namespace, String name)
-    {
-        Node namespaceNode = createString(namespace);
-        Node nameNode = createString(name);
-        return new Node(Token.COLONCOLON, namespaceNode, nameNode);
-    }
-
-    /**
-     *  PropertySelector :: [Expression]
-     */
-    Node createQualifiedExpr(String namespace, Node expr)
-    {
-        Node namespaceNode = createString(namespace);
-        return new Node(Token.COLONCOLON, namespaceNode, expr);
-    }
-
-    /**
-     *  @PropertySelector or @QualifiedIdentifier
-     */
-    Node createAttributeName(Node nameNode)
-    {
-        int type = nameNode.getType();
-        if (type == Token.NAME) {
-            nameNode.setType(Token.STRING);
-        } else {
-            // If not name, then it should come from createQualifiedExpr
-            if (type != Token.COLONCOLON)
-                throw new IllegalArgumentException(String.valueOf(type));
-        }
-        return new Node(Token.TOATTRNAME, nameNode);
-    }
-
-    /**
-     *  @::[Expression]
-     */
-    Node createAttributeExpr(Node expr)
-    {
-        return new Node(Token.TOATTRNAME, expr);
-    }
-
-    Node createXMLPrimary(Node xmlName)
-    {
-        Node xmlRef = new Node(Token.XML_REF, xmlName);
-        return new Node(Token.GET_REF, xmlRef);
-    }
-
-    /**
      * Catch clause of try/catch/finally
      * @param varName the name of the variable to bind to the exception
      * @param catchCond the condition under which to catch the exception.
@@ -1055,44 +1006,78 @@ final class IRFactory
         throw Kit.codeBug();
     }
 
+    Node createPropertyGet(Node target, String namespace, String name,
+                           int memberTypeFlags)
+    {
+        if (namespace == null && memberTypeFlags == 0) {
+            if (target == null) {
+                return createName(name);
+            }
+            checkActivationName(name, Token.GETPROP);
+            if (ScriptRuntime.isSpecialProperty(name)) {
+                Node ref = new Node(Token.REF_SPECIAL, target);
+                ref.putProp(Node.NAME_PROP, name);
+                return new Node(Token.GET_REF, ref);
+            }
+            return new Node(Token.GETPROP, target, createString(name));
+        }
+        Node elem = createString(name);
+        memberTypeFlags |= Node.PROPERTY_FLAG;
+        return createMemberRefGet(target, namespace, elem, memberTypeFlags);
+    }
+
+    Node createElementGet(Node target, String namespace, Node elem,
+                          int memberTypeFlags)
+    {
+        // OPT: could optimize to createPropertyGet
+        // iff elem is string that can not be number
+        if (namespace == null && memberTypeFlags == 0) {
+            // stand-alone [aaa] as primary expression is array literal
+            // declaration and should not come here!
+            if (target == null) throw Kit.codeBug();
+            return new Node(Token.GETELEM, target, elem);
+        }
+        return createMemberRefGet(target, namespace, elem, memberTypeFlags);
+    }
+
+    private Node createMemberRefGet(Node target, String namespace, Node elem,
+                                    int memberTypeFlags)
+    {
+        Node nsNode = null;
+        if (namespace != null) {
+            // See 11.1.2 in ECMA 357
+            if (namespace.equals("*")) {
+                nsNode = new Node(Token.NULL);
+            } else {
+                nsNode = createName(namespace);
+            }
+        }
+        Node ref;
+        if (target == null) {
+            if (namespace == null) {
+                ref = new Node(Token.REF_NAME, elem);
+            } else {
+                ref = new Node(Token.REF_NS_NAME, nsNode, elem);
+            }
+        } else {
+            if (namespace == null) {
+                ref = new Node(Token.REF_MEMBER, target, elem);
+            } else {
+                ref = new Node(Token.REF_NS_MEMBER, target, nsNode, elem);
+            }
+        }
+        if (memberTypeFlags != 0) {
+            ref.putIntProp(Node.MEMBER_TYPE_PROP, memberTypeFlags);
+        }
+        return new Node(Token.GET_REF, ref);
+    }
+
     /**
      * Binary
      */
     Node createBinary(int nodeType, Node left, Node right)
     {
         switch (nodeType) {
-
-          case Token.DOT:
-            if (right.getType() == Token.NAME) {
-                String id = right.getString();
-                if (ScriptRuntime.isSpecialProperty(id)) {
-                    Node ref = new Node(Token.SPECIAL_REF, left);
-                    ref.putProp(Node.SPECIAL_PROP_PROP, id);
-                    return new Node(Token.GET_REF, ref);
-                }
-                nodeType = Token.GETPROP;
-                right.setType(Token.STRING);
-                checkActivationName(id, Token.GETPROP);
-            } else {
-                // corresponds to name.@... or name.namespace::...
-                nodeType = Token.GETELEM;
-            }
-            break;
-
-          case Token.DOTDOT:
-            {
-                Node ref;
-                if (right.getType() == Token.NAME) {
-                    right.setType(Token.STRING);
-                }
-                ref = new Node(Token.DESC_REF, left, right);
-                return new Node(Token.GET_REF, ref);
-            }
-
-          case Token.LB:
-            // OPT: could optimize to GETPROP iff string can't be a number
-            nodeType = Token.GETELEM;
-            break;
 
           case Token.ADD:
             // numerical addition and string concatenation

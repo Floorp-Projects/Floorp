@@ -141,20 +141,20 @@ public class Token
         SET_REF        = 66, // *reference    = something
         DEL_REF        = 67, // delete reference
         REF_CALL       = 68, // f(args)    = something or f(args)++
-        SPECIAL_REF    = 69, // reference for special properties like __proto
+        REF_SPECIAL    = 69, // reference for special properties like __proto
 
         // For XML support:
         DEFAULTNAMESPACE = 70, // default xml namespace =
-        COLONCOLON     = 71, // ::
-        ESCXMLATTR     = 72,
-        ESCXMLTEXT     = 73,
-        TOATTRNAME     = 74,
-        DESC_REF       = 75, // Descendants reference to implement x..y
-        XML_REF        = 76;
+        ESCXMLATTR     = 71,
+        ESCXMLTEXT     = 72,
+        REF_MEMBER     = 73, // Reference for x.@y, x..y etc.
+        REF_NS_MEMBER  = 74, // Reference for x.ns::y, x..ns::y etc.
+        REF_NAME       = 75, // Reference for @y, @[y] etc.
+        REF_NS_NAME    = 76; // Reference for ns::y, @ns::y@[y] etc.
 
         // End of interpreter bytecodes
     public final static int
-        LAST_BYTECODE_TOKEN    = XML_REF,
+        LAST_BYTECODE_TOKEN    = REF_NS_NAME,
 
         TRY            = 77,
         SEMI           = 78,  // semicolon
@@ -233,12 +233,13 @@ public class Token
 
         // For XML support:
         DOTDOT         = 139,  // member operator (..)
-        XML            = 140,  // XML type
-        DOTQUERY       = 141,  // .() -- e.g., x.emps.emp.(name == "terry")
-        XMLATTR        = 142,  // @
-        XMLEND         = 143,
+        COLONCOLON     = 140,  // namespace::name
+        XML            = 141,  // XML type
+        DOTQUERY       = 142,  // .() -- e.g., x.emps.emp.(name == "terry")
+        XMLATTR        = 143,  // @
+        XMLEND         = 144,
 
-        LAST_TOKEN     = 143;
+        LAST_TOKEN     = 144;
 
     public static String name(int token)
     {
@@ -322,14 +323,14 @@ public class Token
           case SET_REF:         return "SET_REF";
           case DEL_REF:         return "DEL_REF";
           case REF_CALL:        return "REF_CALL";
-          case SPECIAL_REF:     return "SPECIAL_REF";
+          case REF_SPECIAL:     return "REF_SPECIAL";
           case DEFAULTNAMESPACE:return "DEFAULTNAMESPACE";
-          case COLONCOLON:      return "COLONCOLON";
           case ESCXMLTEXT:      return "ESCXMLTEXT";
           case ESCXMLATTR:      return "ESCXMLATTR";
-          case TOATTRNAME:      return "TOATTRNAME";
-          case DESC_REF:        return "DESC_REF";
-          case XML_REF:         return "XML_REF";
+          case REF_MEMBER:      return "REF_MEMBER";
+          case REF_NS_MEMBER:   return "REF_NS_MEMBER";
+          case REF_NAME:        return "REF_NAME";
+          case REF_NS_NAME:     return "REF_NS_NAME";
           case TRY:             return "TRY";
           case SEMI:            return "SEMI";
           case LB:              return "LB";
@@ -392,6 +393,7 @@ public class Token
           case LOCAL_BLOCK:     return "LOCAL_BLOCK";
           case SET_REF_OP:      return "SET_REF_OP";
           case DOTDOT:          return "DOTDOT";
+          case COLONCOLON:      return "COLONCOLON";
           case XML:             return "XML";
           case DOTQUERY:        return "DOTQUERY";
           case XMLATTR:         return "XMLATTR";

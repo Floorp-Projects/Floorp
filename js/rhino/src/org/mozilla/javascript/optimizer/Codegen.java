@@ -2123,10 +2123,9 @@ class BodyCodegen
                 cfw.addALoad(getLocalBlockRegister(node));
                 break;
 
-              case Token.SPECIAL_REF:
+              case Token.REF_SPECIAL:
                 {
-                    String special
-                        = (String)node.getProp(Node.SPECIAL_PROP_PROP);
+                    String special = (String)node.getProp(Node.NAME_PROP);
                     generateExpression(child, node);
                     cfw.addPush(special);
                     cfw.addALoad(contextLocal);
@@ -2140,16 +2139,61 @@ class BodyCodegen
                 }
                 break;
 
-              case Token.XML_REF:
+              case Token.REF_MEMBER:
+              case Token.REF_NS_MEMBER:
+              case Token.REF_NAME:
+              case Token.REF_NS_NAME:
                 {
-                    generateExpression(child, node);
+                    int memberTypeFlags
+                        = node.getIntProp(Node.MEMBER_TYPE_PROP, 0);
+                    // generate possible target, possible namespace and member
+                    do {
+                        generateExpression(child, node);
+                        child = child.getNext();
+                    } while (child != null);
                     cfw.addALoad(contextLocal);
-                    cfw.addALoad(variableObjectLocal);
-                    addScriptRuntimeInvoke("xmlReference",
-                        "(Ljava/lang/Object;"
-                        +"Lorg/mozilla/javascript/Context;"
-                        +"Lorg/mozilla/javascript/Scriptable;"
-                        +")Lorg/mozilla/javascript/Reference;");
+                    String methodName, signature;
+                    switch (type) {
+                      case Token.REF_MEMBER:
+                        methodName = "memberRef";
+                        signature = "(Ljava/lang/Object;"
+                                    +"Ljava/lang/Object;"
+                                    +"Lorg/mozilla/javascript/Context;"
+                                    +"I"
+                                    +")Lorg/mozilla/javascript/Reference;";
+                        break;
+                      case Token.REF_NS_MEMBER:
+                        methodName = "memberRef";
+                        signature = "(Ljava/lang/Object;"
+                                    +"Ljava/lang/Object;"
+                                    +"Ljava/lang/Object;"
+                                    +"Lorg/mozilla/javascript/Context;"
+                                    +"I"
+                                    +")Lorg/mozilla/javascript/Reference;";
+                        break;
+                      case Token.REF_NAME:
+                        methodName = "nameRef";
+                        signature = "(Ljava/lang/Object;"
+                                    +"Lorg/mozilla/javascript/Context;"
+                                    +"Lorg/mozilla/javascript/Scriptable;"
+                                    +"I"
+                                    +")Lorg/mozilla/javascript/Reference;";
+                        cfw.addALoad(variableObjectLocal);
+                        break;
+                      case Token.REF_NS_NAME:
+                        methodName = "nameRef";
+                        signature = "(Ljava/lang/Object;"
+                                    +"Lorg/mozilla/javascript/Context;"
+                                    +"Lorg/mozilla/javascript/Scriptable;"
+                                    +"I"
+                                    +")Lorg/mozilla/javascript/Reference;";
+                        cfw.addALoad(variableObjectLocal);
+                        break;
+                      default:
+                        throw Kit.codeBug();
+                    }
+                    cfw.addPush(memberTypeFlags);
+                    addScriptRuntimeInvoke(methodName, signature);
                 }
                 break;
 
@@ -2183,45 +2227,6 @@ class BodyCodegen
                                        +"Lorg/mozilla/javascript/Context;"
                                        +")Ljava/lang/Object;");
                 break;
-              case Token.TOATTRNAME:
-                generateExpression(child, node);
-                cfw.addALoad(contextLocal);
-                addScriptRuntimeInvoke("toAttributeName",
-                                       "(Ljava/lang/Object;"
-                                       +"Lorg/mozilla/javascript/Context;"
-                                       +")Ljava/lang/Object;");
-                break;
-
-              case Token.DESC_REF:
-                generateExpression(child, node);
-                generateExpression(child.getNext(), node);
-                cfw.addALoad(contextLocal);
-                cfw.addALoad(variableObjectLocal);
-                addScriptRuntimeInvoke("getDescendantsRef",
-                                       "(Ljava/lang/Object;"
-                                       +"Ljava/lang/Object;"
-                                       +"Lorg/mozilla/javascript/Context;"
-                                       +"Lorg/mozilla/javascript/Scriptable;"
-                                       +")Lorg/mozilla/javascript/Reference;");
-                break;
-
-              case Token.COLONCOLON : {
-                if (child.getType() != Token.STRING)
-                    throw Codegen.badTree();
-                String namespace = child.getString();
-                cfw.addPush(namespace);
-                child = child.getNext();
-                generateExpression(child, node);
-                cfw.addALoad(contextLocal);
-                cfw.addALoad(variableObjectLocal);
-                addScriptRuntimeInvoke("toQualifiedName",
-                                       "(Ljava/lang/String;"
-                                       +"Ljava/lang/Object;"
-                                       +"Lorg/mozilla/javascript/Context;"
-                                       +"Lorg/mozilla/javascript/Scriptable;"
-                                       +")Ljava/lang/Object;");
-                break;
-              }
 
               default:
                 throw new RuntimeException("Unexpected node type "+type);

@@ -89,7 +89,7 @@ public class NativeJavaArray extends NativeJavaObject {
             return new Integer(length);
         Object result = super.get(id, start);
         if (result == NOT_FOUND &&
-            !ScriptRuntime.hasProp(getPrototype(), id))
+            !ScriptableObject.hasProperty(getPrototype(), id))
         {
             throw Context.reportRuntimeError2(
                 "msg.java.member.not.found", array.getClass().getName(), id);

@@ -245,10 +245,38 @@ abstract class XMLObjectImpl extends XMLObject
         return true;
     }
 
-    public Reference getDescendantsRef(Context cx, Object id)
+    public Reference memberRef(Context cx, Object elem, int memberTypeFlags)
     {
-        XMLName xmlName = lib.toXMLName(cx, id);
-        return new XMLReference(true, this, xmlName);
+        XMLName xmlName;
+        if ((memberTypeFlags & Node.ATTRIBUTE_FLAG) != 0) {
+            xmlName = lib.toAttributeName(cx, elem);
+        } else {
+            if ((memberTypeFlags & Node.DESCENDANTS_FLAG) == 0) {
+                // Code generation would use ecma(Get|Has|Delete|Set) for
+                // normal name idenrifiers so one ATTRIBUTE_FLAG
+                // or DESCENDANTS_FLAG has to be set
+                throw Kit.codeBug();
+            }
+            xmlName = lib.toXMLName(cx, elem);
+        }
+        boolean descendants = ((memberTypeFlags & Node.DESCENDANTS_FLAG) != 0);
+        return new XMLReference(descendants, this, xmlName);
+    }
+
+    /**
+     * Generic reference to implement x::ns, x.@ns::y, x..@ns::y etc.
+     */
+    public Reference memberRef(Context cx, Object namespace, Object elem,
+                               int memberTypeFlags)
+    {
+        XMLName xmlName = lib.toQualifiedName(cx, namespace, elem);
+        if ((memberTypeFlags & Node.ATTRIBUTE_FLAG) != 0) {
+            if (!xmlName.isAttributeName()) {
+                xmlName.setAttributeName();
+            }
+        }
+        boolean descendants = ((memberTypeFlags & Node.DESCENDANTS_FLAG) != 0);
+        return new XMLReference(descendants, this, xmlName);
     }
 
     public NativeWith enterWith(Scriptable scope)
@@ -523,7 +551,7 @@ abstract class XMLObjectImpl extends XMLObject
                 // it should be OK. Trust test suite for now.
                 arg0 = ScriptRuntime.toString(arg0);
             }
-            XMLName xmlName = lib.toAttributeNameImpl(cx, arg0);
+            XMLName xmlName = lib.toAttributeName(cx, arg0);
             return realThis.attribute(xmlName);
           }
           case Id_attributes:

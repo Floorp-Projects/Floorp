@@ -990,13 +990,7 @@ public class Interpreter
             addStringOp(Token.GETPROP, child.getString());
             break;
 
-          case Token.GET_REF:
-            visitExpression(child, 0);
-            addToken(Token.GET_REF);
-            break;
-
           case Token.GETELEM:
-          case Token.DESC_REF:
           case Token.DELPROP:
           case Token.BITAND:
           case Token.BITOR:
@@ -1032,6 +1026,7 @@ public class Interpreter
           case Token.BITNOT:
           case Token.TYPEOF:
           case Token.VOID:
+          case Token.GET_REF:
           case Token.DEL_REF:
             visitExpression(child, 0);
             if (type == Token.VOID) {
@@ -1231,17 +1226,27 @@ public class Interpreter
             visitLiteral(node, child);
             break;
 
-          case Token.SPECIAL_REF:
-            {
-                String special = (String)node.getProp(Node.SPECIAL_PROP_PROP);
-                visitExpression(child, 0);
-                addStringOp(Token.SPECIAL_REF, special);
-            }
+          case Token.REF_SPECIAL:
+            visitExpression(child, 0);
+            addStringOp(type, (String)node.getProp(Node.NAME_PROP));
             break;
 
-          case Token.XML_REF:
-            visitExpression(child, 0);
-            addToken(type);
+          case Token.REF_MEMBER:
+          case Token.REF_NS_MEMBER:
+          case Token.REF_NAME:
+          case Token.REF_NS_NAME:
+            {
+                int memberTypeFlags = node.getIntProp(Node.MEMBER_TYPE_PROP, 0);
+                // generate possible target, possible namespace and member
+                int childCount = 0;
+                do {
+                    visitExpression(child, 0);
+                    ++childCount;
+                    child = child.getNext();
+                } while (child != null);
+                addIndexOp(type, memberTypeFlags);
+                stackChange(1 - childCount);
+            }
             break;
 
           case Token.DOTQUERY:
@@ -1260,20 +1265,8 @@ public class Interpreter
           case Token.DEFAULTNAMESPACE :
           case Token.ESCXMLATTR :
           case Token.ESCXMLTEXT :
-          case Token.TOATTRNAME :
             visitExpression(child, 0);
             addToken(type);
-            break;
-
-          case Token.COLONCOLON :
-            {
-                if (child.getType() != Token.STRING)
-                    throw badTree(child);
-                String namespace = child.getString();
-                child = child.getNext();
-                visitExpression(child, 0);
-                addStringOp(Token.COLONCOLON, namespace);
-            }
             break;
 
           default:
@@ -3229,28 +3222,54 @@ switch (op) {
                           : (Object)ScriptRuntime.enumId(val, cx);
         continue Loop;
     }
-    case Token.SPECIAL_REF : {
+    case Token.REF_SPECIAL : {
         //stringReg: name of special property
-        Object lhs = stack[stackTop];
-        if (lhs == DBL_MRK) lhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
-        stack[stackTop] = ScriptRuntime.specialReference(lhs, stringReg,
+        Object obj = stack[stackTop];
+        if (obj == DBL_MRK) obj = ScriptRuntime.wrapNumber(sDbl[stackTop]);
+        stack[stackTop] = ScriptRuntime.specialReference(obj, stringReg,
                                                          cx, frame.scope);
         continue Loop;
     }
-    case Token.DESC_REF : {
-        Object rhs = stack[stackTop];
-        if (rhs == DBL_MRK) rhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
+    case Token.REF_MEMBER: {
+        //indexReg: flags
+        Object elem = stack[stackTop];
+        if (elem == DBL_MRK) elem = ScriptRuntime.wrapNumber(sDbl[stackTop]);
         --stackTop;
-        Object lhs = stack[stackTop];
-        if (lhs == DBL_MRK) lhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
-        stack[stackTop] = ScriptRuntime.getDescendantsRef(lhs, rhs,
-                                                          cx, frame.scope);
+        Object obj = stack[stackTop];
+        if (obj == DBL_MRK) obj = ScriptRuntime.wrapNumber(sDbl[stackTop]);
+        stack[stackTop] = ScriptRuntime.memberRef(obj, elem, cx, indexReg);
         continue Loop;
     }
-    case Token.XML_REF : {
-        Object lhs = stack[stackTop];
-        if (lhs == DBL_MRK) lhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
-        stack[stackTop] = ScriptRuntime.xmlReference(lhs, cx, frame.scope);
+    case Token.REF_NS_MEMBER: {
+        //indexReg: flags
+        Object elem = stack[stackTop];
+        if (elem == DBL_MRK) elem = ScriptRuntime.wrapNumber(sDbl[stackTop]);
+        --stackTop;
+        Object ns = stack[stackTop];
+        if (ns == DBL_MRK) ns = ScriptRuntime.wrapNumber(sDbl[stackTop]);
+        --stackTop;
+        Object obj = stack[stackTop];
+        if (obj == DBL_MRK) obj = ScriptRuntime.wrapNumber(sDbl[stackTop]);
+        stack[stackTop] = ScriptRuntime.memberRef(obj, ns, elem, cx, indexReg);
+        continue Loop;
+    }
+    case Token.REF_NAME: {
+        //indexReg: flags
+        Object name = stack[stackTop];
+        if (name == DBL_MRK) name = ScriptRuntime.wrapNumber(sDbl[stackTop]);
+        stack[stackTop] = ScriptRuntime.nameRef(name, cx, frame.scope,
+                                                indexReg);
+        continue Loop;
+    }
+    case Token.REF_NS_NAME: {
+        //indexReg: flags
+        Object name = stack[stackTop];
+        if (name == DBL_MRK) name = ScriptRuntime.wrapNumber(sDbl[stackTop]);
+        --stackTop;
+        Object ns = stack[stackTop];
+        if (ns == DBL_MRK) ns = ScriptRuntime.wrapNumber(sDbl[stackTop]);
+        stack[stackTop] = ScriptRuntime.nameRef(ns, name, cx, frame.scope,
+                                                indexReg);
         continue Loop;
     }
     case Icode_SCOPE :
@@ -3347,20 +3366,6 @@ switch (op) {
         if (value != DBL_MRK) {
             stack[stackTop] = ScriptRuntime.escapeTextValue(value, cx);
         }
-        continue Loop;
-    }
-    case Token.TOATTRNAME : {
-        Object value = stack[stackTop];
-        if (value == DBL_MRK) value = ScriptRuntime.wrapNumber(sDbl[stackTop]);
-        stack[stackTop] = ScriptRuntime.toAttributeName(value, cx);
-        continue Loop;
-    }
-    case Token.COLONCOLON : {
-        Object value = stack[stackTop];
-        if (value == DBL_MRK) value = ScriptRuntime.wrapNumber(sDbl[stackTop]);
-        // stringReg contains namespace
-        stack[stackTop] = ScriptRuntime.toQualifiedName(stringReg, value,
-                                                        cx, frame.scope);
         continue Loop;
     }
     case Icode_LINE :

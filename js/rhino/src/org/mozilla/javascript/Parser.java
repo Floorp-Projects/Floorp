@@ -1648,30 +1648,54 @@ public class Parser
             int tt = peekToken();
             switch (tt) {
 
-              case Token.DOT: {
-                consumeToken();
-                decompiler.addToken(Token.DOT);
-                Node n;
-                if (compilerEnv.isXmlAvailable()) {
-                    n = nameOrPropertyIdentifier();
-                } else {
-                    mustMatchToken(Token.NAME, "msg.no.name.after.dot");
-                    String s = ts.getString();
-                    decompiler.addName(s);
-                    n = nf.createName(s);
-                }
-                pn = nf.createBinary(Token.DOT, pn, n);
-                break;
-              }
+              case Token.DOT:
+              case Token.DOTDOT:
+                {
+                    int memberTypeFlags;
+                    String s;
 
-              case Token.DOTDOT: {
-                consumeToken();
-                mustHaveXML();
-                decompiler.addToken(Token.DOTDOT);
-                Node n = nameOrPropertyIdentifier();
-                pn = nf.createBinary(Token.DOTDOT, pn, n);
+                    consumeToken();
+                    decompiler.addToken(tt);
+                    memberTypeFlags = 0;
+                    if (tt == Token.DOTDOT) {
+                        mustHaveXML();
+                        memberTypeFlags = Node.DESCENDANTS_FLAG;
+                    }
+                    if (!compilerEnv.isXmlAvailable()) {
+                        mustMatchToken(Token.NAME, "msg.no.name.after.dot");
+                        s = ts.getString();
+                        decompiler.addName(s);
+                        pn = nf.createPropertyGet(pn, null, s, memberTypeFlags);
+                        break;
+                    }
+
+                    tt = nextToken();
+                    switch (tt) {
+                      // handles: name, ns::name, ns::*, ns::[expr]
+                      case Token.NAME:
+                        s = ts.getString();
+                        decompiler.addName(s);
+                        pn = propertyName(pn, s, memberTypeFlags);
+                        break;
+
+                      // handles: *, *::name, *::*, *::[expr]
+                      case Token.MUL:
+                        decompiler.addName("*");
+                        pn = propertyName(pn, "*", memberTypeFlags);
+                        break;
+
+                      // handles: '@attr', '@ns::attr', '@ns::*', '@ns::*',
+                      //          '@::attr', '@::*', '@*', '@*::attr', '@*::*'
+                      case Token.XMLATTR:
+                        decompiler.addToken(Token.XMLATTR);
+                        pn = attributeAccess(pn, memberTypeFlags);
+                        break;
+
+                      default:
+                        reportError("msg.no.name.after.dot");
+                    }
+                }
                 break;
-              }
 
               case Token.DOTQUERY:
                 consumeToken();
@@ -1684,7 +1708,7 @@ public class Parser
               case Token.LB:
                 consumeToken();
                 decompiler.addToken(Token.LB);
-                pn = nf.createBinary(Token.LB, pn, expr(false));
+                pn = nf.createElementGet(pn, null, expr(false), 0);
                 mustMatchToken(Token.RB, "msg.no.bracket.index");
                 decompiler.addToken(Token.RB);
                 break;
@@ -1707,78 +1731,43 @@ public class Parser
         return pn;
     }
 
-    private Node nameOrPropertyIdentifier()
-        throws IOException, ParserException
-    {
-        Node pn;
-        int tt = nextToken();
-
-        switch (tt) {
-          // handles: name, ns::name, ns::*, ns::[expr]
-          case Token.NAME: {
-            String s = ts.getString();
-            decompiler.addName(s);
-            pn = nameOrQualifiedName(s, false);
-            break;
-          }
-
-          // handles: *, *::name, *::*, *::[expr]
-          case Token.MUL:
-            decompiler.addName("*");
-            pn = nameOrQualifiedName("*", false);
-            break;
-
-          // handles: '@attr', '@ns::attr', '@ns::*', '@ns::*',
-          //          '@::attr', '@::*', '@*', '@*::attr', '@*::*'
-          case Token.XMLATTR:
-            decompiler.addToken(Token.XMLATTR);
-            pn = attributeIdentifier();
-            break;
-
-          default:
-            reportError("msg.no.name.after.dot");
-            pn = nf.createName("?");
-        }
-
-        return pn;
-    }
-
     /*
      * Xml attribute expression:
      *   '@attr', '@ns::attr', '@ns::*', '@ns::*', '@*', '@*::attr', '@*::*'
      */
-    private Node attributeIdentifier()
+    private Node attributeAccess(Node pn, int memberTypeFlags)
         throws IOException
     {
-        Node pn;
+        memberTypeFlags |= Node.ATTRIBUTE_FLAG;
         int tt = nextToken();
 
         switch (tt) {
           // handles: @name, @ns::name, @ns::*, @ns::[expr]
-          case Token.NAME: {
-            String s = ts.getString();
-            decompiler.addName(s);
-            pn = nf.createAttributeName(nameOrQualifiedName(s, false));
+          case Token.NAME:
+            {
+                String s = ts.getString();
+                decompiler.addName(s);
+                pn = propertyName(pn, s, memberTypeFlags);
+            }
             break;
-          }
 
           // handles: @*, @*::name, @*::*, @*::[expr]
           case Token.MUL:
             decompiler.addName("*");
-            pn = nf.createAttributeName(nameOrQualifiedName("*", false));
+            pn = propertyName(pn, "*", memberTypeFlags);
             break;
 
           // handles @[expr]
           case Token.LB:
             decompiler.addToken(Token.LB);
-            pn = nf.createAttributeExpr(expr(false));
+            pn = nf.createElementGet(pn, null, expr(false), memberTypeFlags);
             mustMatchToken(Token.RB, "msg.no.bracket.index");
             decompiler.addToken(Token.RB);
             break;
 
           default:
             reportError("msg.no.name.after.xmlAttr");
-            pn = nf.createAttributeExpr(nf.createString("?"));
+            pn = nf.createPropertyGet(pn, null, "?", memberTypeFlags);
             break;
         }
 
@@ -1788,51 +1777,45 @@ public class Parser
     /**
      * Check if :: follows name in which case it becomes qualified name
      */
-    private Node nameOrQualifiedName(String name, boolean primaryContext)
+    private Node propertyName(Node pn, String name, int memberTypeFlags)
         throws IOException, ParserException
     {
-      colonColonCheck:
+        String namespace = null;
         if (matchToken(Token.COLONCOLON)) {
             decompiler.addToken(Token.COLONCOLON);
+            namespace = name;
 
-            Node pn;
             int tt = nextToken();
-
             switch (tt) {
               // handles name::name
-              case Token.NAME: {
-                String s = ts.getString();
-                decompiler.addName(s);
-                pn = nf.createQualifiedName(name, s);
+              case Token.NAME:
+                name = ts.getString();
+                decompiler.addName(name);
                 break;
-              }
 
               // handles name::*
               case Token.MUL:
                 decompiler.addName("*");
-                pn = nf.createQualifiedName(name, "*");
+                name = "*";
                 break;
 
               // handles name::[expr]
               case Token.LB:
                 decompiler.addToken(Token.LB);
-                pn = nf.createQualifiedExpr(name, expr(false));
+                pn = nf.createElementGet(pn, namespace, expr(false),
+                                         memberTypeFlags);
                 mustMatchToken(Token.RB, "msg.no.bracket.index");
                 decompiler.addToken(Token.RB);
-                break;
+                return pn;
 
               default:
                 reportError("msg.no.name.after.coloncolon");
-                break colonColonCheck;
+                name = "?";
             }
-
-            if (primaryContext) {
-                pn = nf.createXMLPrimary(pn);
-            }
-            return pn;
         }
 
-        return nf.createName(name);
+        pn = nf.createPropertyGet(pn, namespace, name, memberTypeFlags);
+        return pn;
     }
 
     private Node primaryExpr()
@@ -1956,8 +1939,8 @@ public class Parser
           case Token.XMLATTR:
             mustHaveXML();
             decompiler.addToken(Token.XMLATTR);
-            pn = attributeIdentifier();
-            return nf.createXMLPrimary(pn);
+            pn = attributeAccess(null, 0);
+            return pn;
 
           case Token.NAME: {
             String name = ts.getString();
@@ -1972,7 +1955,7 @@ public class Parser
 
             decompiler.addName(name);
             if (compilerEnv.isXmlAvailable()) {
-                pn = nameOrQualifiedName(name, true);
+                pn = propertyName(null, name, 0);
             } else {
                 pn = nf.createName(name);
             }

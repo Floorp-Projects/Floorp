@@ -84,7 +84,7 @@ public final class NativeCall extends IdScriptableObject
             for (int i = function.argCount; i != argNames.length; i++) {
                 String name = argNames[i];
                 if (!super.has(name, this)) {
-            		defineProperty(name, Undefined.instance, PERMANENT);
+                    defineProperty(name, Undefined.instance, PERMANENT);
                 }
             }
         }

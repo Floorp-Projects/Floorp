@@ -2898,7 +2898,7 @@ public class ScriptRuntime {
                 String name = argNames[i];
                 // Don't overwrite existing def if already defined in object
                 // or prototypes of object.
-                if (!hasProp(scope, name)) {
+                if (!ScriptableObject.hasProperty(scope, name)) {
                     if (!evalScript) {
                         // Global var definitions are supposed to be DONTDELETE
                         ScriptableObject.defineProperty(
@@ -3444,47 +3444,39 @@ public class ScriptRuntime {
         return xmlLib.escapeTextValue(value);
     }
 
-    public static Object toAttributeName(Object name, Context cx)
-    {
-        XMLLib xmlLib = currentXMLLib(cx);
-        return xmlLib.toAttributeName(cx, name);
-    }
-
-    public static Reference getDescendantsRef(Object obj, Object elem,
-                                              Context cx, Scriptable scope)
+    public static Reference memberRef(Object obj, Object elem, Context cx,
+                                      int memberTypeFlags)
     {
         if (!(obj instanceof XMLObject)) {
             throw notXmlError(obj);
         }
         XMLObject xmlObject = (XMLObject)obj;
-        return xmlObject.getDescendantsRef(cx, elem);
+        return xmlObject.memberRef(cx, elem, memberTypeFlags);
     }
 
-    public static Object toQualifiedName(String namespace,
-                                         Object name,
-                                         Context cx, Scriptable scope)
+    public static Reference memberRef(Object obj, Object namespace,
+                                      Object elem, Context cx,
+                                      int memberTypeFlags)
+    {
+        if (!(obj instanceof XMLObject)) {
+            throw notXmlError(obj);
+        }
+        XMLObject xmlObject = (XMLObject)obj;
+        return xmlObject.memberRef(cx, namespace, elem, memberTypeFlags);
+    }
+
+    public static Reference nameRef(Object name, Context cx,
+                                    Scriptable scope, int memberTypeFlags)
     {
         XMLLib xmlLib = currentXMLLib(cx);
-        return xmlLib.toQualifiedName(namespace, name, scope);
+        return xmlLib.nameRef(cx, name, scope, memberTypeFlags);
     }
 
-    public static Reference xmlReference(Object xmlName,
-                                         Context cx,
-                                         Scriptable scope)
+    public static Reference nameRef(Object namespace, Object name, Context cx,
+                                    Scriptable scope, int memberTypeFlags)
     {
         XMLLib xmlLib = currentXMLLib(cx);
-        return xmlLib.xmlPrimaryReference(cx, xmlName, scope);
-    }
-
-
-    static boolean hasProp(Scriptable start, String name) {
-        Scriptable m = start;
-        do {
-            if (m.has(name, start))
-                return true;
-            m = m.getPrototype();
-        } while (m != null);
-        return false;
+        return xmlLib.nameRef(cx, namespace, name, scope, memberTypeFlags);
     }
 
     private static void storeIndexResult(Context cx, int index)

@@ -77,9 +77,16 @@ public abstract class XMLObject extends IdScriptableObject
     public abstract boolean ecmaDelete(Context cx, Object id);
 
     /**
-     * To implement ECMAScript [[Descendants]].
+     * Generic reference to implement x.@y, x..y etc.
      */
-    public abstract Reference getDescendantsRef(Context cx, Object id);
+    public abstract Reference memberRef(Context cx, Object elem,
+                                        int memberTypeFlags);
+
+    /**
+     * Generic reference to implement x::ns, x.@ns::y, x..@ns::y etc.
+     */
+    public abstract Reference memberRef(Context cx, Object namespace,
+                                        Object elem, int memberTypeFlags);
 
     /**
      * Wrap this object into NativeWith to implement the with statement.
