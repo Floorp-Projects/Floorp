@@ -976,18 +976,14 @@ NS_IMETHODIMP nsDocShell::GoBack()
       }
 
    NS_ENSURE_STATE(mSessionHistory);
-   
-   PRBool canGoBack = PR_FALSE;
-   GetCanGoBack(&canGoBack);
-   NS_ENSURE_TRUE(canGoBack, NS_ERROR_UNEXPECTED);
-   
-   UpdateCurrentSessionHistory();  
 
    nsCOMPtr<nsISHEntry> previousEntry;
 
    NS_ENSURE_SUCCESS(mSessionHistory->GetPreviousEntry(PR_TRUE, 
       getter_AddRefs(previousEntry)), NS_ERROR_FAILURE);
    NS_ENSURE_TRUE(previousEntry, NS_ERROR_FAILURE);
+
+   UpdateCurrentSessionHistory();  
 
    NS_ENSURE_SUCCESS(LoadHistoryEntry(previousEntry), NS_ERROR_FAILURE);
 
@@ -1006,17 +1002,13 @@ NS_IMETHODIMP nsDocShell::GoForward()
 
    NS_ENSURE_STATE(mSessionHistory);
    
-   PRBool canGoForward = PR_FALSE;
-   GetCanGoForward(&canGoForward);
-   NS_ENSURE_TRUE(canGoForward, NS_ERROR_UNEXPECTED);  
-
-   UpdateCurrentSessionHistory();  
-
    nsCOMPtr<nsISHEntry> nextEntry;
 
    NS_ENSURE_SUCCESS(mSessionHistory->GetNextEntry(PR_TRUE, 
       getter_AddRefs(nextEntry)), NS_ERROR_FAILURE);
    NS_ENSURE_TRUE(nextEntry, NS_ERROR_FAILURE);
+
+   UpdateCurrentSessionHistory();  
 
    NS_ENSURE_SUCCESS(LoadHistoryEntry(nextEntry), NS_ERROR_FAILURE);
 
