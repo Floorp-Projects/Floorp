@@ -11,7 +11,8 @@
   <RDF:Description about="urn:mozilla:package:messenger"
         chrome:displayName="Messenger"
         chrome:author="mozilla.org"
-        chrome:name="messenger">
+        chrome:name="messenger"
+		chrome:skinVersion="1">
   </RDF:Description>
 
   <!-- overlay information -->

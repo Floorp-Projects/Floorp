@@ -11,6 +11,7 @@
   <RDF:Description about="urn:mozilla:package:global"
         chrome:displayName="Toolkit"
         chrome:author="mozilla.org"
-        chrome:name="global">
+        chrome:name="global"
+		chrome:skinVersion="1">
   </RDF:Description>
 </RDF:RDF>
