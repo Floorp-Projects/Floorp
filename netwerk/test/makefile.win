@@ -48,11 +48,12 @@ PROGG = .\$(OBJDIR)\TestIDN.exe
 PROGH = .\$(OBJDIR)\TestStandardURL.exe
 PROGI = .\$(OBJDIR)\TestURLParser.exe
 PROGJ = .\$(OBJDIR)\TestPerf.exe
+PROGK = .\$(OBJDIR)\PropertiesTest.exe
 
 PROGRAMS = \
 $(PROG1) $(PROG2) $(PROG3) $(PROG4) $(PROG5) $(PROG6) $(PROG7) $(PROG8)\
           $(PROGA) $(PROGB) $(PROGC) $(PROGD) $(PROGE) $(PROGF) $(PROGG)\
-          $(PROGH) $(PROGI) $(PROGJ)
+          $(PROGH) $(PROGI) $(PROGJ) $(PROGK)
 
 LCFLAGS=-DUSE_NSREG -GX
 
@@ -111,7 +112,7 @@ $(PROGH): $(OBJDIR) TestStandardURL.cpp
 
 $(PROGI): $(OBJDIR) TestURLParser.cpp
 
-$(PROGI): $(OBJDIR) TestPerf.cpp
+$(PROGJ): $(OBJDIR) TestPerf.cpp
 
-
+$(PROGK): $(OBJDIR) PropertiesTest.cpp
 
