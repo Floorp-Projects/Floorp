@@ -30,6 +30,7 @@ MODULE=raptor
 CPPSRCS=                                \
  nsAppRunner.cpp                        \
  nsSetupRegistry.cpp                    \
+ nsWindowCreator.cpp                    \
  nsNativeAppSupportBase.cpp             \
  nsNativeAppSupportWin.cpp              \
  $(NULL)
@@ -37,6 +38,7 @@ CPPSRCS=                                \
 CPP_OBJS=                               \
  .\$(OBJDIR)\nsAppRunner.obj            \
  .\$(OBJDIR)\nsSetupRegistry.obj        \
+ .\$(OBJDIR)\nsWindowCreator.obj        \
  .\$(OBJDIR)\nsNativeAppSupportBase.obj \
  .\$(OBJDIR)\nsNativeAppSupportWin.obj  \
  $(NULL)
