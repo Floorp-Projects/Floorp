@@ -987,7 +987,7 @@ nsresult nsObserverTopic::Notify(eHTMLTags aTag,nsIParserNode& aNode,void* aUniq
       
         
       mKeys.Push((PRUnichar*)mSourceKey.GetUnicode()); 
-      intValue.Append(PRInt32(theCharsetSource),10);
+      intValue.AppendInt(PRInt32(theCharsetSource),10);
       mValues.Push((PRUnichar*)intValue.GetUnicode());
 
       mKeys.Push((PRUnichar*)mDTDKey.GetUnicode());
