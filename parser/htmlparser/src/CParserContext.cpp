@@ -9,7 +9,7 @@
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
  * for the specific language governing rights and limitations under the
  * NPL.
- *
+ * 
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
@@ -20,7 +20,7 @@
 #include "CParserContext.h"
 #include "nsToken.h"
 
-
+/*
 class CTokenDeallocator: public nsDequeFunctor{
 public:
   virtual void* operator()(void* anObject) {
@@ -32,7 +32,7 @@ public:
 
 CTokenDeallocator gTokenDeallocator;
 
-
+*/
 
 /**
  * Your friendly little constructor. Ok, it's not the friendly, but the only guy
@@ -42,9 +42,9 @@ CTokenDeallocator gTokenDeallocator;
  * @param   aKey
  * @param   aListener
  */
-CParserContext::CParserContext(CScanner* aScanner,void* aKey,nsIStreamObserver* aListener) :
-  mSourceType(),
-  mTokenDeque(gTokenDeallocator)
+CParserContext::CParserContext(nsScanner* aScanner,void* aKey,nsIStreamObserver* aListener) :
+  mSourceType()
+  //,mTokenDeque(gTokenDeallocator)
 {
   mScanner=aScanner;
   mKey=aKey;
@@ -54,9 +54,8 @@ CParserContext::CParserContext(CScanner* aScanner,void* aKey,nsIStreamObserver* 
   mParseMode=eParseMode_unknown;
   mAutoDetectStatus=eUnknownDetect;
   mTransferBuffer=0;
-  mCurrentPos=0;
-  mMarkPos=0;
   mDTD=0;
+  mTransferBufferSize=eTransferBufferSize;
 }
 
 
@@ -66,11 +65,6 @@ CParserContext::CParserContext(CScanner* aScanner,void* aKey,nsIStreamObserver* 
  * @update	gess7/11/98
  */
 CParserContext::~CParserContext(){
-
-  if(mCurrentPos)
-    delete mCurrentPos;
-  if(mMarkPos)
-    delete mMarkPos;
 
   if(mScanner)
     delete mScanner;

@@ -28,11 +28,12 @@
 
 #include "nsHTMLTags.h"
 #include "nsHTMLTokens.h"
-#include "nsParserTypes.h"
+#include "nsIParser.h"
 #include "nsCRT.h"
 #include "nsDeque.h"
 #include "nsIDTD.h"
 #include <fstream.h>
+#include "nsITokenizer.h"
 
 /***************************************************************
   Before digging into the NavDTD, we'll define a helper 
@@ -48,36 +49,33 @@
  ***************************************************************/
 
 void DebugDumpContainmentRules(nsIDTD& theDTD,const char* aFilename,const char* aTitle);
-
-//#define rickgdebug 1
+void DebugDumpContainmentRules2(nsIDTD& theDTD,const char* aFilename,const char* aTitle);
 
 class nsTagStack {
 public:
 
-#ifdef rickgdebug
+#ifdef NS_DEBUG
   enum {eStackSize=200};
 #else
   enum {eStackSize=30};
 #endif
+              nsTagStack(int aDefaultSize=eStackSize);
+              ~nsTagStack();
+  void        Push(eHTMLTags aTag);
+  eHTMLTags   Pop();
+  eHTMLTags   First() const;
+  eHTMLTags   TagAt(PRInt32 anIndex) const;
+  eHTMLTags   operator[](PRInt32 anIndex) const;
+  eHTMLTags   Last() const;
+  void        Empty(void); 
 
-            nsTagStack(int aDefaultSize=eStackSize);
-            ~nsTagStack();
-  void      Push(eHTMLTags aTag);
-  eHTMLTags Pop();
-  eHTMLTags First() const;
-  eHTMLTags Last() const;
-  void      Empty(void); 
-
-  nsTagStack* mPrevious;
-  int         mSize;
+  int         mCapacity;
   int         mCount;
 
-#ifndef rickgdebug
+#ifndef NS_DEBUG
   eHTMLTags*  mTags;
-  PRBool*     mBits;
 #else
   eHTMLTags   mTags[eStackSize];
-  PRBool      mBits[eStackSize];
 #endif
 };
 
@@ -93,11 +91,23 @@ class nsDTDContext {
 public:
                 nsDTDContext(int aDefaultSize=nsTagStack::eStackSize);
                 ~nsDTDContext();
-  void          pushStyleStack(nsTagStack* aStack=0);
-  nsTagStack*   popStyleStack();
+  void          Push(eHTMLTags aTag);
+  eHTMLTags     Pop();
+  eHTMLTags     First() const;
+  eHTMLTags     TagAt(PRInt32 anIndex) const;
+  eHTMLTags     operator[](PRInt32 anIndex) const;
+  eHTMLTags     Last() const;
+  void          Empty(void); 
+  PRInt32       GetCount(void);
 
-  nsTagStack    mElements;  //no need to hide these members. 
-  nsTagStack*   mStyles;    //the dtd should have direct access to them.
+  nsTagStack    mTags;
+
+#ifndef NS_DEBUG
+  nsTagStack**  mStyles;
+#else
+  nsTagStack*   mStyles[nsTagStack::eStackSize];
+#endif
+  int           mOpenStyles;
 };
 
 
@@ -132,6 +142,7 @@ public:
 
 protected:
     nsDeque*  mTokenCache[eToken_last-1];
+    // int       mTotals[eToken_last-1];
 };
 
 /************************************************************************

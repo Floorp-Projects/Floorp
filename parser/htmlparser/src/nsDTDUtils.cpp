@@ -15,10 +15,10 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-
+ 
 
 #include "nsDTDUtils.h"
-
+#include "CNavDTD.h"
 
 static CTokenDeallocator gTokenKiller;
  
@@ -27,23 +27,17 @@ static CTokenDeallocator gTokenKiller;
  ***************************************************************/
 
 
-
 /**
  * Default constructor
  * @update	gess9/10/98
  */
 nsTagStack::nsTagStack(int aDefaultSize) {
-#ifndef rickgdebug
-  mSize=aDefaultSize;
-  mTags =new eHTMLTags[mSize];
-  mBits =new PRBool[mSize];
-#else
-  mSize=eStackSize;
+#ifndef NS_DEBUG
+  mTags =new eHTMLTags[mCapacity];
 #endif
+  mCapacity=aDefaultSize;
   mCount=0;
-  mPrevious=0;
-  nsCRT::zero(mTags,mSize*sizeof(eHTMLTags));
-  nsCRT::zero(mBits,mSize*sizeof(PRBool));
+  nsCRT::zero(mTags,mCapacity*sizeof(eHTMLTags));
 }
 
 /**
@@ -51,14 +45,12 @@ nsTagStack::nsTagStack(int aDefaultSize) {
  * @update  gess7/9/98
  */
 nsTagStack::~nsTagStack() {
-#ifndef rickgdebug
-    delete mTags;
-    delete mBits;
-    mTags=0;
-    mBits=0;
+#ifndef NS_DEBUG
+  delete mTags;
+  mTags=0;
 #endif
-    mSize=mCount=0; 
-  }
+  mCapacity=mCount=0; 
+}
 
 /**
  * Resets state of stack to be empty.
@@ -73,27 +65,17 @@ void nsTagStack::Empty(void) {
  * @update  gess7/9/98 
  */
 void nsTagStack::Push(eHTMLTags aTag) {
-
-  if(mCount>=mSize) {
-#ifndef rickgdebug
-      //regrow the dynamic stack... 
-    eHTMLTags* tmp=new eHTMLTags[2*mSize];
-    nsCRT::zero(tmp,2*mSize*sizeof(eHTMLTag_html));
-    nsCRT::memcpy(tmp,mTags,mSize*sizeof(eHTMLTag_html));
+  if(mCount>=mCapacity) {
+#ifndef NS_DEBUG
+    eHTMLTags* tmp=new eHTMLTags[2*mCapacity];
+    nsCRT::zero(tmp,2*mCapacity*sizeof(eHTMLTag_html));
+    nsCRT::memcpy(tmp,mTags,mCapacity*sizeof(eHTMLTag_html));
     delete mTags;
     mTags=tmp;
-
-    PRBool* tmp2=new PRBool[2*mSize];
-    nsCRT::zero(tmp2,2*mSize*sizeof(PRBool));
-    nsCRT::memcpy(tmp2,mBits,mSize*sizeof(PRBool));
-    delete mBits;
-    mBits=tmp2;
-    mSize*=2;
 #else
     NS_PRECONDITION(mCount<eStackSize,"TagStack Overflow: DEBUG VERSION!");
 #endif
   }
-
   mTags[mCount++]=aTag;
 }
 
@@ -106,7 +88,6 @@ eHTMLTags nsTagStack::Pop() {
   if(mCount>0) {
     result=mTags[--mCount];
     mTags[mCount]=eHTMLTag_unknown;
-    mBits[mCount]=PR_FALSE;
   }
   return result;
 }
@@ -120,6 +101,29 @@ eHTMLTags nsTagStack::First() const {
     return mTags[0];
   return eHTMLTag_unknown;
 }
+
+/**
+ * 
+ * @update  gess7/9/98
+ */
+eHTMLTags nsTagStack::TagAt(PRInt32 anIndex) const {
+  if((anIndex>=0) && (anIndex<mCount))
+    return mTags[anIndex];
+  return eHTMLTag_unknown;
+}
+
+
+/**
+ * 
+ * @update  gess7/9/98
+ */
+eHTMLTags nsTagStack::operator[](PRInt32 anIndex) const {
+  if((anIndex>=0) && (anIndex<mCount))
+    return mTags[anIndex];
+  return eHTMLTag_unknown;
+}
+
+
 
 /**
  * 
@@ -141,9 +145,13 @@ eHTMLTags nsTagStack::Last() const {
  * 
  * @update	gess9/10/98
  */
-nsDTDContext::nsDTDContext(int aDefaultSize) : mElements(aDefaultSize) {
-  mStyles=new nsTagStack(aDefaultSize);
-}
+nsDTDContext::nsDTDContext(int aDefaultSize) {
+#ifndef NS_DEBUG
+  mStyles =new nsTagStack*[mCapacity];
+#endif
+  mOpenStyles=0;
+  nsCRT::zero(mStyles,mTags.mCapacity*sizeof(void*));
+} 
  
 
 /**
@@ -151,41 +159,86 @@ nsDTDContext::nsDTDContext(int aDefaultSize) : mElements(aDefaultSize) {
  * @update	gess9/10/98
  */
 nsDTDContext::~nsDTDContext() {
-  while(mStyles){
-    nsTagStack* next=mStyles->mPrevious;
+#ifndef NS_DEBUG
+  delete mTags;
+  delete mStyles;
+  mTags=0;
+  mStyles=0;
+#endif
+}
+
+/**
+ * 
+ * @update  gess7/9/98 
+ */
+PRInt32 nsDTDContext::GetCount(void) {
+  return mTags.mCount;
+}
+
+/**
+ * 
+ * @update  gess7/9/98 
+ */
+void nsDTDContext::Push(eHTMLTags aTag) {
+  if(mTags.mCount>=mTags.mCapacity) {
+#ifndef NS_DEBUG
+    nsTagStack** tmp2=new nsTagStack*[2*mTags.mCapacity];
+    nsCRT::zero(tmp2,2*mTags.mCapacity*sizeof(void*));
+    nsCRT::memcpy(tmp2,mStyles,mTags.mCapacity*sizeof(void*));
     delete mStyles;
-    mStyles=next;
+    mStyles=tmp2;
+    //mCapacity*=2;
+#else
+    NS_PRECONDITION(mTags.mCount<nsTagStack::eStackSize,"TagStack Overflow: DEBUG VERSION!");
+#endif
   }
+  mTags.Push(aTag);
 }
 
-
 /**
- * Creates and pushes a new style stack onto our
- * internal list of style stacks.
- * @update	gess9/10/98
+ * 
+ * @update  gess7/9/98
  */
-void nsDTDContext::pushStyleStack(nsTagStack* aStyleStack){
-  if(!aStyleStack)
-    aStyleStack=new nsTagStack();
-  if(aStyleStack){
-    mStyles->mPrevious=mStyles;
-    mStyles=aStyleStack;
-  }
-}
-
-
-/**
- * Pops the topmost style stack off our internal
- * list of style stacks.
- * @update	gess9/10/98
- */
-nsTagStack* nsDTDContext::popStyleStack(){
-  nsTagStack* result=0;
-  if(mStyles) {
-    result=mStyles;
-    mStyles=mStyles->mPrevious;
+eHTMLTags nsDTDContext::Pop() {
+  eHTMLTags result=eHTMLTag_unknown;
+  if(mTags.mCount>0) {
+    result=mTags.Pop();
+    mStyles[mTags.mCount]=0;
   }
   return result;
+}
+
+/**
+ * 
+ * @update  gess7/9/98
+ */
+eHTMLTags nsDTDContext::First() const {
+  return mTags.First();
+}
+
+/**
+ * 
+ * @update  gess7/9/98
+ */
+eHTMLTags nsDTDContext::TagAt(PRInt32 anIndex) const {
+  return mTags.TagAt(anIndex);
+}
+
+
+/**
+ * 
+ * @update  gess7/9/98
+ */
+eHTMLTags nsDTDContext::operator[](PRInt32 anIndex) const {
+  return mTags[anIndex];
+}
+
+/**
+ * 
+ * @update  gess7/9/98
+ */
+eHTMLTags nsDTDContext::Last() const {
+  return mTags.Last();
 }
 
 
@@ -202,7 +255,7 @@ CTokenRecycler::CTokenRecycler() : nsITokenRecycler() {
   int i=0;
   for(i=0;i<eToken_last-1;i++) {
     mTokenCache[i]=new nsDeque(gTokenKiller);
-//    mTotals[i]=0;
+    //mTotals[i]=0;
   }
 }
 
@@ -219,6 +272,17 @@ CTokenRecycler::~CTokenRecycler() {
   }
 }
 
+class CTokenFinder: public nsDequeFunctor{
+public:
+  CTokenFinder(CToken* aToken) {mToken=aToken;}
+  virtual void* operator()(void* anObject) {
+    if(anObject==mToken) {
+      return anObject;
+    }
+    return 0;
+  }
+  CToken* mToken;
+};
 
 /**
  * This method gets called when someone wants to recycle a token
@@ -229,6 +293,10 @@ CTokenRecycler::~CTokenRecycler() {
 void CTokenRecycler::RecycleToken(CToken* aToken) {
   if(aToken) {
     PRInt32 theType=aToken->GetTokenType();
+    CToken* theMatch=(CToken*)mTokenCache[theType-1]->FirstThat(CTokenFinder(aToken));
+    if(theMatch) {
+      int x=5;
+    }
     mTokenCache[theType-1]->Push(aToken);
   }
 }
@@ -248,7 +316,7 @@ CToken* CTokenRecycler::CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag, 
     result->Reinitialize(aTag,aString);
   }
   else {
-//    mTotals[aType-1]++;
+    //mTotals[aType-1]++;
     switch(aType){
       case eToken_start:      result=new CStartToken(aTag); break;
       case eToken_end:        result=new CEndToken(aTag); break;

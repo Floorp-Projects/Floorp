@@ -30,6 +30,8 @@ DEFINES += -D_IMPL_NS_HTMLPARS
 
 CPPSRCS=					\
 	nsDTDUtils.cpp				\
+	nsHTMLTokenizer.cpp \
+	nsXMLTokenizer.cpp \
 	CNavDTD.cpp				\
 	COtherDTD.cpp				\
 	CRtfDTD.cpp				\
@@ -57,6 +59,7 @@ CPPSRCS=					\
 EXPORTS =     \
   nshtmlpars.h    \
   nsIContentSink.h  \
+	nsITokenizer.h \
   nsIHTMLContentSink.h  \
   nsHTMLContentSinkStream.h \
   nsHTMLEntities.h    \

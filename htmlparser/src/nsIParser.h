@@ -34,24 +34,14 @@
 #include "nsIStreamListener.h"
 #include "nsIDTD.h"
 #include "nsIInputStream.h"
-#include "nsError.h"
 #include <fstream.h>
+
 
 #define NS_IPARSER_IID      \
   {0x355cbba0, 0xbf7d,  0x11d1,  \
   {0xaa, 0xd9, 0x00,    0x80, 0x5f, 0x8a, 0x3e, 0x14}}
 
-/**
- * Return codes for parsing routines.
- * @update vidur 12/11/98
- *
- * NS_ERROR_HTMLPARSER_BLOCK indicates that the parser should
- * block further parsing until it gets a Unblock() method call.
- * NS_ERROR_HTMLPARSER_CONTINUE indicates that the parser should
- * continue parsing
- */
-#define NS_ERROR_HTMLPARSER_BLOCK       NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_HTMLPARSER,1)
-#define NS_ERROR_HTMLPARSER_CONTINUE    NS_OK
+
 
 class nsIContentSink;
 class nsIStreamObserver;
@@ -133,10 +123,10 @@ class nsIParser : public nsISupports {
      *  until you wind up being emitted to the given contentsink (which may or may not
 	   *  be a proxy for the NGLayout content model).
      ******************************************************************************************/
-    virtual PRBool  EnableParser(PRBool aState) = 0;
-    virtual PRInt32 Parse(nsIURL* aURL,nsIStreamObserver* aListener = nsnull,PRBool aEnableVerify=PR_FALSE) = 0;
-    virtual PRInt32 Parse(fstream& aStream,PRBool aEnableVerify=PR_FALSE) = 0;
-    virtual PRInt32 Parse(nsString& aSourceBuffer,PRBool anHTMLString,PRBool aEnableVerify=PR_FALSE) = 0;
+    virtual PRBool    EnableParser(PRBool aState) = 0;
+    virtual nsresult  Parse(nsIURL* aURL,nsIStreamObserver* aListener = nsnull,PRBool aEnableVerify=PR_FALSE) = 0;
+    virtual nsresult  Parse(fstream& aStream,PRBool aEnableVerify=PR_FALSE) = 0;
+    virtual nsresult  Parse(nsString& aSourceBuffer,PRBool anHTMLString,PRBool aEnableVerify=PR_FALSE) = 0;
 
     /**
      * This method gets called when the tokens have been consumed, and it's time
@@ -144,7 +134,7 @@ class nsIParser : public nsISupports {
      * @update	gess5/11/98
      * @return  error code -- 0 if model building went well .
      */
-    virtual PRInt32 BuildModel(void)=0;
+    virtual nsresult  BuildModel(void)=0;
 
 
     /**
@@ -157,5 +147,74 @@ class nsIParser : public nsISupports {
 
 
 };
+
+/* ===========================================================*
+  Some useful constants...
+ * ===========================================================*/
+
+#include "prtypes.h"
+#include "nsError.h"
+
+#define NS_ERROR_HTMLPARSER_EOF                   NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_HTMLPARSER,1000)
+#define NS_ERROR_HTMLPARSER_UNKNOWN               NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_HTMLPARSER,1001)
+#define NS_ERROR_HTMLPARSER_CANTPROPAGATE         NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_HTMLPARSER,1002)
+#define NS_ERROR_HTMLPARSER_CONTEXTMISMATCH       NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_HTMLPARSER,1003)
+#define NS_ERROR_HTMLPARSER_BADFILENAME           NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_HTMLPARSER,1004)
+#define NS_ERROR_HTMLPARSER_BADURL                NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_HTMLPARSER,1005)
+#define NS_ERROR_HTMLPARSER_INVALIDPARSERCONTEXT  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_HTMLPARSER,1006)
+#define NS_ERROR_HTMLPARSER_INTERRUPTED           NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_HTMLPARSER,1007)
+
+/**
+ * Return codes for parsing routines.
+ * @update vidur 12/11/98
+ *
+ * NS_ERROR_HTMLPARSER_BLOCK indicates that the parser should
+ * block further parsing until it gets a Unblock() method call.
+ * NS_ERROR_HTMLPARSER_CONTINUE indicates that the parser should
+ * continue parsing
+ */
+#define NS_ERROR_HTMLPARSER_BLOCK       NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_HTMLPARSER,1008)
+#define NS_ERROR_HTMLPARSER_CONTINUE    NS_OK
+
+
+const PRInt32   kEOF              = NS_ERROR_HTMLPARSER_EOF;
+const PRInt32   kUnknownError     = NS_ERROR_HTMLPARSER_UNKNOWN;
+const PRInt32   kCantPropagate    = NS_ERROR_HTMLPARSER_CANTPROPAGATE;
+const PRInt32   kContextMismatch  = NS_ERROR_HTMLPARSER_CONTEXTMISMATCH;
+const PRInt32   kBadFilename      = NS_ERROR_HTMLPARSER_BADFILENAME;
+const PRInt32   kBadURL           = NS_ERROR_HTMLPARSER_BADURL;
+const PRInt32   kInvalidParserContext = NS_ERROR_HTMLPARSER_INVALIDPARSERCONTEXT;
+const PRInt32   kNotFound         = -1;
+const PRInt32   kBlock            = NS_ERROR_HTMLPARSER_BLOCK;
+
+const PRUint32  kNewLine          = '\n';
+const PRUint32  kCR               = '\r';
+const PRUint32  kLF               = '\n';
+const PRUint32  kTab              = '\t';
+const PRUint32  kSpace            = ' ';
+const PRUint32  kQuote            = '"';
+const PRUint32  kApostrophe       = '\'';
+const PRUint32  kLessThan         = '<';
+const PRUint32  kGreaterThan      = '>';
+const PRUint32  kAmpersand        = '&';
+const PRUint32  kForwardSlash     = '/';
+const PRUint32  kBackSlash        = '\\';
+const PRUint32  kEqual            = '=';
+const PRUint32  kMinus            = '-';
+const PRUint32  kPlus             = '+';
+const PRUint32  kExclamation      = '!';
+const PRUint32  kSemicolon        = ';';
+const PRUint32  kHashsign         = '#';
+const PRUint32  kAsterisk         = '*';
+const PRUint32  kUnderbar         = '_';
+const PRUint32  kComma            = ',';
+const PRUint32  kLeftParen        = '(';
+const PRUint32  kRightParen       = ')';
+const PRUint32  kLeftBrace        = '{';
+const PRUint32  kRightBrace       = '}';
+const PRUint32  kQuestionMark     = '?';
+const PRUint32  kLeftSquareBracket  = '[';
+const PRUint32  kRightSquareBracket = ']';
+const PRUnichar kNullCh           = '\0';
 
 #endif 

@@ -21,6 +21,7 @@
 #include "string.h"
 #include "nsHTMLTokens.h"
 #include "nshtmlpars.h"
+#include "nsITokenizer.h"
 
 const nsAutoString nsCParserNode::mEmptyString("");
 
@@ -35,24 +36,34 @@ static NS_DEFINE_IID(kIParserNodeIID, NS_IPARSER_NODE_IID);
  *  @param   aToken -- token to init internal token
  *  @return  
  */
-nsCParserNode::nsCParserNode(CToken* aToken,PRInt32 aLineNumber): nsIParserNode() {
+nsCParserNode::nsCParserNode(CToken* aToken,PRInt32 aLineNumber,nsITokenRecycler* aRecycler): nsIParserNode() {
   NS_INIT_REFCNT();
   mAttributeCount=0;
   mLineNumber=aLineNumber;
   mToken=aToken;
   memset(mAttributes,0,sizeof(mAttributes));
-  mSkippedContent=nsnull;
+  mSkippedContent=0;
+  mRecycler=aRecycler;
 }
 
 
 /**
  *  default destructor
- *  
+ *  NOTE: We intentionally DONT recycle mToken here.
+ *        It may get cached for use elsewhere
  *  @update  gess 3/25/98
  *  @param   
  *  @return  
  */
 nsCParserNode::~nsCParserNode() {
+  if(mRecycler) {
+    int index=0;
+    for(index=0;index<mAttributeCount;index++){
+      mRecycler->RecycleToken(mAttributes[index]);
+    }
+    if(mSkippedContent)
+      mRecycler->RecycleToken(mSkippedContent);
+  }
 }
 
 NS_IMPL_ADDREF(nsCParserNode)

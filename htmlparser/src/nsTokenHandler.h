@@ -39,7 +39,7 @@ public:
   virtual               ~CTokenHandler();
                           
   virtual   PRInt32     GetTokenType(void);
-  virtual   PRInt32     operator()(CToken* aToken,nsIDTD* aDTD);
+  virtual   nsresult    operator()(CToken* aToken,nsIDTD* aDTD);
 
 protected:
             PRInt32     mType;

@@ -15,6 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+
 #ifndef nsIDTD_h___
 #define nsIDTD_h___
 
@@ -33,6 +34,7 @@
 #include "nshtmlpars.h"
 #include "nsISupports.h"
 #include "prtypes.h"
+#include "nsITokenizer.h"
 
 #define NS_IDTD_IID \
  { 0xa6cf9053, 0x15b3, 0x11d2,{0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
@@ -48,11 +50,6 @@ class nsITagHandler;
 enum eAutoDetectResult {eUnknownDetect, eValidDetect, eInvalidDetect};
 
 
-class nsITokenRecycler {
-public:
-    virtual void RecycleToken(CToken* aToken)=0;
-};
-
 
 class nsIDTD : public nsISupports {
   public:
@@ -64,6 +61,7 @@ class nsIDTD : public nsISupports {
      */
     virtual ~nsIDTD() {};
 
+    virtual const nsIID&  GetMostDerivedIID(void) const =0;
 
     /**
      * Call this method if you want the DTD to construct a clone of itself.
@@ -109,16 +107,24 @@ class nsIDTD : public nsISupports {
      * @param	anErrorCode - contains error code resulting from parse process
      * @return
      */
-    NS_IMETHOD DidBuildModel(PRInt32 anErrorCode,PRBool aNotifySink,nsIParser* aParser)=0;
+    NS_IMETHOD DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParser* aParser)=0;
+
+    /**
+     * Called by the parser after the parsing process has concluded
+     * @update	gess5/18/98
+     * @param	anErrorCode - contains error code resulting from parse process
+     * @return
+     */
+    NS_IMETHOD BuildModel(nsIParser* aParser)=0;
     
     /**
      *	Called during model building phase of parse process. Each token created during
-	 *  the parse phase is stored in a deque (in the parser) and are passed to this method
-	 *  so that the DTD can process the token. Ultimately, the DTD will transform given
-	 *  token into calls onto a contentsink.
+	   *  the parse phase is stored in a deque (in the parser) and are passed to this method
+	   *  so that the DTD can process the token. Ultimately, the DTD will transform given
+	   *  token into calls onto a contentsink.
      *  @update  gess 3/25/98
      *  @param   aToken -- token object to be put into content model
-	 *  @return	 error code (usually 0)
+	   *  @return	 error code (usually 0)
      */
     NS_IMETHOD HandleToken(CToken* aToken,nsIParser* aParser)=0;
 
@@ -130,7 +136,9 @@ class nsIDTD : public nsISupports {
   	 *  @param   aToken -- will contain newly created and consumed token
 	   *  @return	 error code (usually 0)
      */
-    NS_IMETHOD ConsumeToken(CToken*& aToken,nsIParser* aParser)=0;
+    virtual nsITokenizer* GetTokenizer(void)=0;
+
+    virtual  nsITokenRecycler* GetTokenRecycler(void)=0;
 
     /**
      *  This method causes all tokens to be dispatched to the given tag handler.
@@ -195,14 +203,6 @@ class nsIDTD : public nsISupports {
      * @return
      */
     virtual PRBool Verify(nsString& aURLRef,nsIParser* aParser)=0;
-
-    /**
-     * Retrieve a ptr to the global token recycler...
-     * @update	gess8/4/98
-     * @return  ptr to recycler (or null)
-     */
-    virtual nsITokenRecycler* GetTokenRecycler(void)=0;
-
 };
 
 

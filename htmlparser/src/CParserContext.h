@@ -26,13 +26,12 @@
 #define __CParserContext
 
 #include "nsIParser.h"
-#include "nsDeque.h"
-#include "nsParserTypes.h"
 #include "nsIURL.h"
 #include "nsIDTD.h"
 #include "nsScanner.h"
 #include "nsIStreamListener.h"
 #include "nsString.h"
+#include "nshtmlpars.h"
 
 /**
  * Note that the parser is given FULL access to all
@@ -45,7 +44,7 @@ public:
 
     enum {eTransferBufferSize=4096};
 
-    CParserContext( CScanner* aScanner,
+    CParserContext( nsScanner* aScanner,
                     void* aKey=0,
                     nsIStreamObserver* aListener=0);
 
@@ -56,10 +55,7 @@ public:
     nsString            mSourceType;
     eAutoDetectResult   mAutoDetectStatus;
 
-    nsDequeIterator*    mCurrentPos;
-    nsDequeIterator*    mMarkPos;
-    nsDeque             mTokenDeque;
-    CScanner*           mScanner;
+    nsScanner*          mScanner;
     nsIDTD*             mDTD;
 
     eParseMode          mParseMode;
@@ -68,7 +64,8 @@ public:
 
     CParserContext*     mPrevContext;
     void*               mKey;
-
+    PRUint32            mTransferBufferSize;
+    // nsDeque          mTokenDeque;
 };
 
 

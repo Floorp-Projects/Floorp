@@ -62,6 +62,8 @@ class COtherDTD : public CNavDTD {
      */
     virtual ~COtherDTD();
 
+    virtual const nsIID&  GetMostDerivedIID(void) const;
+
     /**
      * Call this method if you want the DTD to construct a clone of itself.
      * @update	gess7/23/98
@@ -118,17 +120,6 @@ class COtherDTD : public CNavDTD {
     virtual PRBool CanContain(PRInt32 aParent,PRInt32 aChild) const;
 
     /**
-     *  This method is called to determine whether or not a tag
-     *  of one type can contain a tag of another type.
-     *  
-     *  @update  gess 3/25/98
-     *  @param   aParent -- tag enum of parent container
-     *  @param   aChild -- tag enum of child container
-     *  @return  PR_TRUE if parent can contain child
-     */
-    virtual PRBool CanContainIndirect(eHTMLTags aParent,eHTMLTags aChild) const;
-
-    /**
      *  This method gets called to determine whether a given 
      *  tag can contain newlines. Most do not.
      *  
@@ -148,17 +139,6 @@ class COtherDTD : public CNavDTD {
      *  @return  PR_TRUE if given tag can contain other tags
      */
     virtual PRBool CanOmitEndTag(eHTMLTags aParent,eHTMLTags aChild)const;
-
-    /**
-     * This method does two things: 1st, help construct
-     * our own internal model of the content-stack; and
-     * 2nd, pass this message on to the sink.
-     * @update  gess4/6/98
-     * @param   aNode -- next node to be added to model
-     * @return  TRUE if ok, FALSE if error
-     */
-    virtual eHTMLTags GetDefaultParentTagFor(eHTMLTags aTag) const;
-
    
     /**
      * This method gets called when a start token has been consumed and needs 
@@ -426,104 +406,6 @@ private:
     nsresult CloseTransientStyles(eHTMLTags aTag);
     nsresult UpdateStyleStackForOpenTag(eHTMLTags aTag,eHTMLTags aActualTag);
     nsresult UpdateStyleStackForCloseTag(eHTMLTags aTag,eHTMLTags aActualTag);
-
-
-    /****************************************************
-        These methods interface with the parser to do
-        the tokenization phase.
-     ****************************************************/
-
-
-    /**
-     * Retrieve the next TAG from the given scanner.
-     * @update	gess 5/11/98
-     * @param   aScanner is the input source
-     * @param   aToken is the next token (or null)
-     * @return  error code
-     */
-    nsresult     ConsumeTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
-    
-    /**
-     * Retrieve next START tag from given scanner.
-     * @update	gess 5/11/98
-     * @param   aScanner is the input source
-     * @param   aToken is the next token (or null)
-     * @return  error code
-     */
-    nsresult     ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
-    
-    /**
-     * Retrieve collection of HTML/XML attributes from given scanner
-     * @update	gess 5/11/98
-     * @param   aScanner is the input source
-     * @param   aToken is the next token (or null)
-     * @return  error code
-     */
-    nsresult     ConsumeAttributes(PRUnichar aChar,CScanner& aScanner,CStartToken* aToken);
-    
-    /**
-     * Retrieve a sequence of text from given scanner.
-     * @update	gess 5/11/98
-     * @param   aString will contain retrieved text.
-     * @param   aScanner is the input source
-     * @param   aToken is the next token (or null)
-     * @return  error code
-     */
-    nsresult     ConsumeText(const nsString& aString,CScanner& aScanner,CToken*& aToken);
-    
-    /**
-     * Retrieve an entity from given scanner
-     * @update	gess 5/11/98
-     * @param   aChar last char read from scanner
-     * @param   aScanner is the input source
-     * @param   aToken is the next token (or null)
-     * @return  error code
-     */
-    nsresult     ConsumeEntity(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
-    
-    /**
-     * Retrieve a whitespace sequence from the given scanner
-     * @update	gess 5/11/98
-     * @param   aChar last char read from scanner
-     * @param   aScanner is the input source
-     * @param   aToken is the next token (or null)
-     * @return  error code
-     */
-    nsresult     ConsumeWhitespace(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
-    
-    /**
-     * Retrieve a comment from the given scanner
-     * @update	gess 5/11/98
-     * @param   aChar last char read from scanner
-     * @param   aScanner is the input source
-     * @param   aToken is the next token (or null)
-     * @return  error code
-     */
-    nsresult     ConsumeComment(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
-
-    /**
-     * Retrieve newlines from given scanner
-     * @update	gess 5/11/98
-     * @param   aChar last char read from scanner
-     * @param   aScanner is the input source
-     * @param   aToken is the next token (or null)
-     * @return  error code
-     */
-    nsresult     ConsumeNewline(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
-
-    /**
-     * Causes content to be skipped up to sequence contained in aString.
-     * @update	gess 5/11/98
-     * @param   aString ????
-     * @param   aChar last char read from scanner
-     * @param   aScanner is the input source
-     * @param   aToken is the next token (or null)
-     * @return  error code
-     */
-    virtual nsresult ConsumeContentToEndTag(PRUnichar aChar,
-																						eHTMLTags aChildTag,
-																						CScanner& aScanner,
-																						CToken*& aToken);
 
 
 protected:

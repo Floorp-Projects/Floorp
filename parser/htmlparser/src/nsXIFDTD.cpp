@@ -26,7 +26,7 @@
 #include "nsXIFDTD.h" 
 #include "nsHTMLTokens.h"
 #include "nsCRT.h"
-#include "nsParserTypes.h"
+#include "nsIParser.h"
 #include "nsParser.h"
 #include "nsScanner.h"
 #include "nsTokenHandler.h"
@@ -34,7 +34,7 @@
 #include "nsIHTMLContentSink.h"
 #include "nsHTMLContentSinkStream.h"
 #include "prmem.h"
-
+#include "nsXMLTokenizer.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
 static NS_DEFINE_IID(kIDTDIID,      NS_IDTD_IID);
@@ -321,6 +321,7 @@ static nsXIfTokenDeallocator gTokenKiller;
  */
 nsXIFDTD::nsXIFDTD() : nsIDTD(), mTokenDeque(gTokenKiller)  {
   mParser=0;
+  mTokenizer=0;
   nsCRT::zero(mContextStack,sizeof(mContextStack));
   nsCRT::zero(mTokenHandlers,sizeof(mTokenHandlers));
   
@@ -351,6 +352,17 @@ nsXIFDTD::nsXIFDTD() : nsIDTD(), mTokenDeque(gTokenKiller)  {
 nsXIFDTD::~nsXIFDTD(){
   DeleteTokenHandlers();
 //  NS_RELEASE(mSink);
+}
+
+
+/**
+ * 
+ * @update	gess1/8/99
+ * @param 
+ * @return
+ */
+const nsIID& nsXIFDTD::GetMostDerivedIID(void) const{
+  return kClassIID;
 }
 
 
@@ -420,12 +432,25 @@ nsresult nsXIFDTD::WillBuildModel(nsString& aFileName,PRBool aNotifySink,nsIPars
 }
 
 /**
+  * The parser uses a code sandwich to wrap the parsing process. Before
+  * the process begins, WillBuildModel() is called. Afterwards the parser
+  * calls DidBuildModel(). 
+  * @update	gess5/18/98
+  * @param	aFilename is the name of the file being parsed.
+  * @return	error code (almost always 0)
+  */
+NS_IMETHODIMP nsXIFDTD::BuildModel(nsIParser* aParser) {
+  nsresult result=NS_OK;
+  return result;
+}
+
+/**
  * 
  * @update	gess 7/24/98
  * @param 
  * @return
  */
-nsresult nsXIFDTD::DidBuildModel(PRInt32 anErrorCode,PRBool aNotifySink,nsIParser* aParser){
+nsresult nsXIFDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParser* aParser){
   nsresult result=NS_OK;
 
   if(aParser){
@@ -503,7 +528,7 @@ nsresult nsXIFDTD::ReleaseTokenPump(nsITagHandler* aHandler){
  *  @param   aNode -- CParserNode representing this start token
  *  @return  PR_TRUE if all went well; PR_FALSE if error occured
  */
-PRInt32 nsXIFDTD::HandleWhiteSpaceToken(CToken* aToken) {
+nsresult nsXIFDTD::HandleWhiteSpaceToken(CToken* aToken) {
   NS_PRECONDITION(0!=aToken,kNullToken);
 
   CStartToken*  st    = (CStartToken*)(aToken);
@@ -512,9 +537,9 @@ PRInt32 nsXIFDTD::HandleWhiteSpaceToken(CToken* aToken) {
   //Begin by gathering up attributes...
   nsCParserNode node((CHTMLToken*)aToken);
   PRInt16       attrCount=aToken->GetAttributeCount();
-  PRInt32       result=(0==attrCount) ? kNoError : CollectAttributes(node,attrCount);
+  nsresult      result=(0==attrCount) ? NS_OK : CollectAttributes(node,attrCount);
 
-  if(kNoError==result)
+  if(NS_OK==result)
   {
     if (mInContent == PR_TRUE)
       mSink->AddLeaf(node);
@@ -532,14 +557,14 @@ PRInt32 nsXIFDTD::HandleWhiteSpaceToken(CToken* aToken) {
  *  @param   aNode -- CParserNode representing this start token
  *  @return  PR_TRUE if all went well; PR_FALSE if error occured
  */
-PRInt32 nsXIFDTD::HandleTextToken(CToken* aToken) {
+nsresult nsXIFDTD::HandleTextToken(CToken* aToken) {
   NS_PRECONDITION(0!=aToken,kNullToken);
 
   CStartToken*    st    = (CStartToken*)(aToken);
   eXIFTags        type  =(eXIFTags)st->GetTypeID();
   nsCParserNode   node((CHTMLToken*)aToken);
 
-  PRInt32 result = kNoError;
+  nsresult result = NS_OK;
 
   if (type == eXIFTag_text)
   {
@@ -555,8 +580,7 @@ PRInt32 nsXIFDTD::HandleTextToken(CToken* aToken) {
 }
 
 
-void nsXIFDTD::AddAttribute(nsIParserNode& aNode)
-{
+void nsXIFDTD::AddAttribute(nsIParserNode& aNode) {
   nsString key;
   nsString value;
   PRBool   hasValue;
@@ -572,12 +596,12 @@ void nsXIFDTD::AddAttribute(nsIParserNode& aNode)
  *  This method gets called when a start token has been 
  *  encountered in the parse process. 
  *  
- *  @update  gpk 06/18/98
+ *  @update  gess 12/28/98
  *  @param   aToken -- next (start) token to be handled
  *  @param   aNode -- CParserNode representing this start token
  *  @return  PR_TRUE if all went well; PR_FALSE if error occured
  */
-PRInt32 nsXIFDTD::HandleStartToken(CToken* aToken) {
+nsresult nsXIFDTD::HandleStartToken(CToken* aToken) {
   NS_PRECONDITION(0!=aToken,kNullToken);
 
   CStartToken*  st    = (CStartToken*)(aToken);
@@ -586,10 +610,9 @@ PRInt32 nsXIFDTD::HandleStartToken(CToken* aToken) {
   //Begin by gathering up attributes...
   nsCParserNode   node = ((CHTMLToken*)aToken);
   PRInt16         attrCount=aToken->GetAttributeCount();
-  PRInt32         result=(0==attrCount) ? kNoError : CollectAttributes(node,attrCount);
+  nsresult        result=(0==attrCount) ? NS_OK : CollectAttributes(node,attrCount);
 
-  if(kNoError==result)
-  {
+  if(NS_OK==result)   {
     switch (type)
     {
       case eXIFTag_container:
@@ -647,10 +670,10 @@ PRInt32 nsXIFDTD::HandleStartToken(CToken* aToken) {
  *  @param   aToken -- next (start) token to be handled
  *  @return  PR_TRUE if all went well; PR_FALSE if error occured
  */
-PRInt32 nsXIFDTD::HandleEndToken(CToken* aToken) {
+nsresult nsXIFDTD::HandleEndToken(CToken* aToken) {
   NS_PRECONDITION(0!=aToken,kNullToken);
 
-  PRInt32         result        = kNoError;
+  nsresult        result        = NS_OK;
   CEndToken*      et            = (CEndToken*)(aToken);
   eXIFTags        tokenTagType  = (eXIFTags)et->GetTypeID();
   nsCParserNode   node          = ((CHTMLToken*)aToken);
@@ -694,11 +717,11 @@ PRInt32 nsXIFDTD::HandleEndToken(CToken* aToken) {
  *  @param   aToken -- next (start) token to be handled
  *  @return  PR_TRUE if all went well; PR_FALSE if error occured
  */
-PRInt32 nsXIFDTD::HandleEntityToken(CToken* aToken) {
+nsresult nsXIFDTD::HandleEntityToken(CToken* aToken) {
   NS_PRECONDITION(0!=aToken,kNullToken);
 
   CEntityToken* et = (CEntityToken*)(aToken);
-  PRInt32       result=kNoError;
+  nsresult      result=NS_OK;
   eXIFTags      tokenTagType=(eXIFTags)et->GetTypeID();
 
   if(PR_FALSE==CanOmit(GetTopNode(),tokenTagType)) {
@@ -718,9 +741,9 @@ PRInt32 nsXIFDTD::HandleEntityToken(CToken* aToken) {
  *  @param   aToken -- next (start) token to be handled
  *  @return  PR_TRUE if all went well; PR_FALSE if error occured
  */
-PRInt32 nsXIFDTD::HandleCommentToken(CToken* aToken) {
+nsresult nsXIFDTD::HandleCommentToken(CToken* aToken) {
   NS_PRECONDITION(0!=aToken,kNullToken);
-  return kNoError;
+  return NS_OK;
 }
 
 /**
@@ -733,12 +756,12 @@ PRInt32 nsXIFDTD::HandleCommentToken(CToken* aToken) {
  *  @param   aToken -- next (start) token to be handled
  *  @return  PR_TRUE if all went well; PR_FALSE if error occured
  */
-PRInt32 nsXIFDTD::HandleAttributeToken(CToken* aToken) {
+nsresult nsXIFDTD::HandleAttributeToken(CToken* aToken) {
   CAttributeToken*  at = (CAttributeToken*)(aToken);
   NS_PRECONDITION(0!=aToken,kNullToken);
   NS_ERROR("attribute encountered -- this shouldn't happen!");
 
-  PRInt32 result=kNoError;
+  nsresult result=NS_OK;
   return result;
 }
 
@@ -833,21 +856,6 @@ PRBool nsXIFDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
   // Revisit -- for now, anybody can contain anything
   result = PR_TRUE;  
   
-  return result;
-}
-
-
-/**
- *  This method is called to determine whether or not a tag
- *  of one type can contain a tag of another type.
- *  
- *  @update  gpk 06/18/98
- *  @param   aParent -- tag enum of parent container
- *  @param   aChild -- tag enum of child container
- *  @return  PR_TRUE if parent can contain child
- */
-PRBool nsXIFDTD::CanContainIndirect(eXIFTags aParent,eXIFTags aChild) const {
-  PRBool result=PR_FALSE;
   return result;
 }
 
@@ -975,8 +983,8 @@ eXIFTags nsXIFDTD::GetDefaultParentTagFor(eXIFTags aTag) const{
  * @param   aTag is the id of the html container being opened
  * @return  0 if all is well.
  */
-PRInt32 nsXIFDTD::DidOpenContainer(eXIFTags aTag,PRBool /*anExplicitOpen*/){
-  PRInt32   result=0;
+nsresult nsXIFDTD::DidOpenContainer(eXIFTags aTag,PRBool /*anExplicitOpen*/){
+  nsresult   result=NS_OK;
   return result;
 }
 
@@ -986,8 +994,8 @@ PRInt32 nsXIFDTD::DidOpenContainer(eXIFTags aTag,PRBool /*anExplicitOpen*/){
  * @param 
  * @return
  */
-PRInt32 nsXIFDTD::DidCloseContainer(eXIFTags aTag,PRBool/*anExplicitClosure*/){
-  PRInt32 result=0;
+nsresult nsXIFDTD::DidCloseContainer(eXIFTags aTag,PRBool/*anExplicitClosure*/){
+  nsresult result=NS_OK;
   return result;
 }
 
@@ -1046,14 +1054,6 @@ PRInt32 nsXIFDTD::GetTopmostIndexOf(eXIFTags aTag) const {
   *
   */
 
-
-
-
-
-
-
-
-
 PRBool nsXIFDTD::GetAttribute(const nsIParserNode& aNode, const nsString& aKey, nsString& aValue)
 {
   PRInt32   i;
@@ -1073,6 +1073,13 @@ PRBool nsXIFDTD::GetAttribute(const nsIParserNode& aNode, const nsString& aKey, 
 }
 
 
+
+/**
+ * 
+ * @update	gess12/28/98
+ * @param 
+ * @return
+ */
 PRBool nsXIFDTD::GetAttributePair(nsIParserNode& aNode, nsString& aKey, nsString& aValue)
 {
  
@@ -1105,6 +1112,13 @@ PRBool nsXIFDTD::GetAttributePair(nsIParserNode& aNode, nsString& aKey, nsString
 }
 
 
+
+/**
+ * 
+ * @update	gess12/28/98
+ * @param 
+ * @return
+ */
 eHTMLTags nsXIFDTD::GetHTMLTag(const nsString& aName)
 {
   eHTMLTags  tag = eHTMLTag_unknown;
@@ -1123,6 +1137,13 @@ eHTMLTags nsXIFDTD::GetHTMLTag(const nsString& aName)
 
 
 
+
+/**
+ * 
+ * @update	gess12/28/98
+ * @param 
+ * @return
+ */
 eHTMLTags nsXIFDTD::GetStartTag(const nsIParserNode& aNode, nsString& aName)
 {
   eXIFTags  type = (eXIFTags)aNode.GetNodeType();  
@@ -1145,6 +1166,13 @@ eHTMLTags nsXIFDTD::GetStartTag(const nsIParserNode& aNode, nsString& aName)
 }
 
 
+
+/**
+ * 
+ * @update	gess12/28/98
+ * @param 
+ * @return
+ */
 void nsXIFDTD::PushHTMLTag(const eHTMLTags aTag, const nsString& aName)
 {
 
@@ -1153,6 +1181,13 @@ void nsXIFDTD::PushHTMLTag(const eHTMLTags aTag, const nsString& aName)
   mHTMLTagStack[++mHTMLStackPos]=eHTMLTag_unknown;
 }
 
+
+/**
+ * 
+ * @update	gess12/28/98
+ * @param 
+ * @return
+ */
 void nsXIFDTD::PopHTMLTag(eHTMLTags& aTag, nsString*& aName)
 {
   NS_ASSERTION(mHTMLStackPos > 0,"The stack must not be empty");
@@ -1167,6 +1202,13 @@ void nsXIFDTD::PopHTMLTag(eHTMLTags& aTag, nsString*& aName)
 }
 
 
+
+/**
+ * 
+ * @update	gess12/28/98
+ * @param 
+ * @return
+ */
 void nsXIFDTD::PushNodeAndToken(nsString& aName)
 {
   CToken*         token = new CStartToken(aName);
@@ -1176,6 +1218,13 @@ void nsXIFDTD::PushNodeAndToken(nsString& aName)
   mNodeStack.AppendElement((void*)node);  
 }
 
+
+/**
+ * 
+ * @update	gess12/28/98
+ * @param 
+ * @return
+ */
 nsIParserNode* nsXIFDTD::PeekNode()
 {
   PRInt32 count = mNodeStack.Count()-1;
@@ -1185,6 +1234,13 @@ nsIParserNode* nsXIFDTD::PeekNode()
   return nsnull;
 }
 
+
+/**
+ * 
+ * @update	gess12/28/98
+ * @param 
+ * @return
+ */
 CToken* nsXIFDTD::PeekToken()
 {
   PRInt32 count = mTokenStack.Count()-1; 
@@ -1193,6 +1249,13 @@ CToken* nsXIFDTD::PeekToken()
   return nsnull;
 }
 
+
+/**
+ * 
+ * @update	gess12/28/98
+ * @param 
+ * @return
+ */
 void nsXIFDTD::PopAndDelete()
 {
   nsIParserNode* node = PeekNode();
@@ -1208,6 +1271,13 @@ void nsXIFDTD::PopAndDelete()
   }
 }
 
+
+/**
+ * 
+ * @update	gess12/28/98
+ * @param 
+ * @return
+ */
 PRBool nsXIFDTD::StartTopOfStack()
 {
   // If something is already on the stack, then
@@ -1232,6 +1302,13 @@ PRBool nsXIFDTD::StartTopOfStack()
 }
 
 
+
+/**
+ * 
+ * @update	gess12/28/98
+ * @param 
+ * @return
+ */
 void nsXIFDTD::BeginStartTag(const nsIParserNode& aNode)
 {
   eXIFTags  type = (eXIFTags)aNode.GetNodeType();
@@ -1283,10 +1360,10 @@ void nsXIFDTD::AddEndTag(const nsIParserNode& aNode)
  * @param   aNode -- next node to be added to model
  * @return  TRUE if ok, FALSE if error
  */
-PRInt32 nsXIFDTD::OpenContainer(const nsIParserNode& aNode){
+nsresult nsXIFDTD::OpenContainer(const nsIParserNode& aNode){
   NS_PRECONDITION(mContextStackPos > 0, kInvalidTagStackPos);
   
-  PRInt32   result=kNoError; 
+  nsresult  result=NS_OK; 
   eXIFTags  type =(eXIFTags)aNode.GetNodeType();
 
   switch (type)
@@ -1309,10 +1386,10 @@ PRInt32 nsXIFDTD::OpenContainer(const nsIParserNode& aNode){
  * @param   aNode -- next node to be removed from our model
  * @return  TRUE if ok, FALSE if error
  */
-PRInt32 nsXIFDTD::CloseContainer(const nsIParserNode& aNode)
+nsresult nsXIFDTD::CloseContainer(const nsIParserNode& aNode)
 {
   NS_PRECONDITION(mContextStackPos > 0, kInvalidTagStackPos);
-  PRInt32   result=kNoError; //was false
+  nsresult   result=NS_OK; //was false
   eXIFTags type=(eXIFTags)aNode.GetNodeType();
   
   if (type == eXIFTag_container)
@@ -1333,10 +1410,10 @@ PRInt32 nsXIFDTD::CloseContainer(const nsIParserNode& aNode)
  * @param   aNode -- next node to be added to model
  * @return  TRUE if ok, FALSE if error
  */
-PRInt32 nsXIFDTD::AddLeaf(const nsIParserNode& aNode)
+nsresult nsXIFDTD::AddLeaf(const nsIParserNode& aNode)
 {
   eXIFTags  type = (eXIFTags)aNode.GetNodeType();    
-  PRInt32 result=mSink->AddLeaf(aNode); 
+  nsresult result=mSink->AddLeaf(aNode); 
   return result;
 }
 
@@ -1351,345 +1428,34 @@ PRInt32 nsXIFDTD::AddLeaf(const nsIParserNode& aNode)
  *           create a new context vector
  *  @return  true if we succeeded, otherwise false
  */
-PRInt32 nsXIFDTD::CreateContextStackFor(eXIFTags aChildTag)
+nsresult nsXIFDTD::CreateContextStackFor(eXIFTags aChildTag)
 {
   mContextStack[++mContextStackPos] = aChildTag;
-  return kNoError;
+  return NS_OK;
 }
 
 
-
-
-/*******************************************************************
-  These methods used to be hidden in the tokenizer-delegate. 
-  That file merged with the DTD, since the separation wasn't really
-  buying us anything.
- *******************************************************************/
-
 /**
- *  This method is called just after a "<" has been consumed 
- *  and we know we're at the start of some kind of tagged 
- *  element. We don't know yet if it's a tag or a comment.
- *  
- *  @update  gpk 06/18/98
- *  @param   aChar is the last char read
- *  @param   aScanner is represents our input source
- *  @param   aToken is the out arg holding our new token
- *  @return  error code (may return kInterrupted).
+ * 
+ * @update	gess12/28/98
+ * @param 
+ * @return
  */
-PRInt32 nsXIFDTD::ConsumeTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
-
-  nsAutoString empty("");
-  PRInt32 result=aScanner.GetChar(aChar);
-
-  if(kNoError==result) {
-
-    switch(aChar) {
-      case kForwardSlash:
-        PRUnichar ch; 
-        result=aScanner.Peek(ch);
-        if(kNoError==result) {
-          if(nsString::IsAlpha(ch))
-            aToken=new CEndToken(empty);
-          else aToken=new CCommentToken(empty); //Special case: </ ...> is treated as a comment
-        }//if
-        break;
-      case kExclamation:
-        aToken=new CCommentToken(empty);
-        break;
-      default:
-        if(nsString::IsAlpha(aChar))
-          return ConsumeStartTag(aChar,aScanner,aToken);
-        else if(kEOF!=aChar) {
-          nsAutoString temp("<");
-          return ConsumeText(temp,aScanner,aToken);
-        }
-    } //switch
-
-    if((0!=aToken) && (kNoError==result)) {
-      result= aToken->Consume(aChar,aScanner);  //tell new token to finish consuming text...    
-      if(result) {
-        delete aToken;
-        aToken=0;
-      }
-    } //if
-  } //if
-  return result;
+nsITokenizer* nsXIFDTD::GetTokenizer(void){
+  if(!mTokenizer)
+    mTokenizer=new nsXMLTokenizer();
+  return mTokenizer;
 }
 
 /**
- *  This method is called just after we've consumed a start
- *  tag, and we now have to consume its attributes.
- *  
- *  @update  gpk 06/18/98
- *  @param   aChar: last char read
- *  @param   aScanner: see nsScanner.h
- *  @return  
+ * 
+ * @update	gess8/4/98
+ * @param 
+ * @return
  */
-PRInt32 nsXIFDTD::ConsumeAttributes(PRUnichar aChar,CScanner& aScanner,CStartToken* aToken) {
-  PRBool done=PR_FALSE;
-  PRInt32 result=kNoError;
-  nsAutoString as("");
-  PRInt16 theAttrCount=0;
-
-  while((!done) && (result==kNoError)) {
-    CAttributeToken* theToken= new CAttributeToken(as);
-    if(theToken){
-      result=theToken->Consume(aChar,aScanner);  //tell new token to finish consuming text...    
-
-      //Much as I hate to do this, here's some special case code.
-      //This handles the case of empty-tags in XML. Our last
-      //attribute token will come through with a text value of ""
-      //and a textkey of "/". We should destroy it, and tell the 
-      //start token it was empty.
-      nsString& key=theToken->GetKey();
-      nsString& text=theToken->GetStringValueXXX();
-      if((key[0]==kForwardSlash) && (0==text.Length())){
-        //tada! our special case! Treat it like an empty start tag...
-        aToken->SetEmpty(PR_TRUE);
-        delete theToken;
-      }
-      else  if(kNoError==result){
-        theAttrCount++;
-        mTokenDeque.Push(theToken);
-      }//if
-      else delete theToken; //we can't keep it...
-    }//if
-    
-    if(kNoError==result){
-      result=aScanner.Peek(aChar);
-      if(aChar==kGreaterThan) { //you just ate the '>'
-        aScanner.GetChar(aChar); //skip the '>'
-        done=PR_TRUE;
-      }//if
-    }//if
-  }//while
-
-  aToken->SetAttributeCount(theAttrCount);
-  return result;
-}
-
-/**
- *  This is a special case method. It's job is to consume 
- *  all of the given tag up to an including the end tag.
- *
- *  @param  aChar: last char read
- *  @param  aScanner: see nsScanner.h
- *  @param  anErrorCode: arg that will hold error condition
- *  @return new token or null
- */
-PRInt32 nsXIFDTD::ConsumeContentToEndTag(const nsString& aString,PRUnichar aChar,CScanner& aScanner,CToken*& aToken){
-  
-  //In the case that we just read the given tag, we should go and
-  //consume all the input until we find a matching end tag.
-
-  nsAutoString endTag("</");
-  endTag.Append(aString);
-  endTag.Append(">");
-  aToken=new CSkippedContentToken(endTag);
-  return aToken->Consume(aChar,aScanner);  //tell new token to finish consuming text...    
-}
-
-/**
- *  This method is called just after a "<" has been consumed 
- *  and we know we're at the start of a tag.  
- *  
- *  @update gpk 06/18/98
- *  @param  aChar: last char read
- *  @param  aScanner: see nsScanner.h
- *  @param  anErrorCode: arg that will hold error condition
- *  @return new token or null 
- */
-PRInt32 nsXIFDTD::ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
-  PRInt32 theDequeSize=mTokenDeque.GetSize();
-  PRInt32 result=kNoError;
-
-  aToken=new CStartToken(eHTMLTag_unknown);
-
-  if(aToken) {
-    result= aToken->Consume(aChar,aScanner);  //tell new token to finish consuming text...    
-    if(kNoError==result) {
-      if(((CStartToken*)aToken)->IsAttributed()) {
-        result=ConsumeAttributes(aChar,aScanner,(CStartToken*)aToken);
-      }
-    } //if
-  } //if
-  return result;
-}
-
-/**
- *  This method is called just after a "&" has been consumed 
- *  and we know we're at the start of an entity.  
- *  
- *  @update gpk 06/18/98
- *  @param  aChar: last char read
- *  @param  aScanner: see nsScanner.h
- *  @param  anErrorCode: arg that will hold error condition
- *  @return new token or null 
- */
-PRInt32 nsXIFDTD::ConsumeEntity(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
-   PRUnichar  ch;
-   PRInt32 result=aScanner.GetChar(ch);
-
-   if(kNoError==result) {
-     if(nsString::IsAlpha(ch)) { //handle common enity references &xxx; or &#000.
-       aToken = new CEntityToken(nsAutoString(""));
-       result = aToken->Consume(ch,aScanner);  //tell new token to finish consuming text...    
-     }
-     else if(kHashsign==ch) {
-       aToken = new CEntityToken(nsAutoString(""));
-       result=aToken->Consume(0,aScanner);
-     }
-     else {
-       //oops, we're actually looking at plain text...
-       nsAutoString temp("&");
-       result=ConsumeText(temp,aScanner,aToken);
-     }
-   }//if
-   return result;
-}
-
-/**
- *  This method is called just after whitespace has been 
- *  consumed and we know we're at the start a whitespace run.  
- *  
- *  @update gpk 06/18/98
- *  @param  aChar: last char read
- *  @param  aScanner: see nsScanner.h
- *  @param  anErrorCode: arg that will hold error condition
- *  @return new token or null 
- */
-PRInt32 nsXIFDTD::ConsumeWhitespace(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
-  aToken = new CWhitespaceToken(nsAutoString(""));
-  PRInt32 result=kNoError;
-  if(aToken) {
-     result=aToken->Consume(aChar,aScanner);
-  }
-  return result;
-}
-
-/**
- *  This method is called just after a "<!" has been consumed 
- *  and we know we're at the start of a comment.  
- *  
- *  @update gpk 06/18/98
- *  @param  aChar: last char read
- *  @param  aScanner: see nsScanner.h
- *  @param  anErrorCode: arg that will hold error condition
- *  @return new token or null 
- */
-PRInt32 nsXIFDTD::ConsumeComment(PRUnichar aChar,CScanner& aScanner,CToken*& aToken){
-  aToken = new CCommentToken(nsAutoString(""));
-  PRInt32 result=kNoError;
-  if(aToken) {
-     result=aToken->Consume(aChar,aScanner);
-  }
-  return result;
-}
-
-/**
- *  This method is called just after a known text char has
- *  been consumed and we should read a text run.
- *  
- *  @update gpk 06/18/98
- *  @param  aChar: last char read
- *  @param  aScanner: see nsScanner.h
- *  @param  anErrorCode: arg that will hold error condition
- *  @return new token or null 
- */
-PRInt32 nsXIFDTD::ConsumeText(const nsString& aString,CScanner& aScanner,CToken*& aToken){
-
-  PRInt32 result=kNoError;
-  if(aToken=new CTextToken(aString)) {
-    PRUnichar ch=0;
-    result=aToken->Consume(ch,aScanner);
-  }
-  return result;
-}
-
-/**
- *  This method is called just after a newline has been consumed. 
- *  
- *  @update gpk 06/18/98
- *  @param  aChar: last char read
- *  @param  aScanner: see nsScanner.h
- *  @param  anErrorCode: arg that will hold error condition
- *  @return new token or null 
- */
-PRInt32 nsXIFDTD::ConsumeNewline(PRUnichar aChar,CScanner& aScanner,CToken*& aToken){
-  aToken=new CNewlineToken(nsAutoString(""));
-  PRInt32 result=kNoError;
-  if(aToken) {
-    result=aToken->Consume(aChar,aScanner);
-  }
-  return result;
-}
-
-/**
- *  This method repeatedly called by the tokenizer. 
- *  Each time, we determine the kind of token were about to 
- *  read, and then we call the appropriate method to handle
- *  that token type.
- *  
- *  @update gpk 06/18/98
- *  @param  aChar: last char read
- *  @param  aScanner: see nsScanner.h
- *  @param  anErrorCode: arg that will hold error condition
- *  @return new token or null 
- */
-nsresult nsXIFDTD::ConsumeToken(CToken*& aToken,nsIParser* aParser) {
-  
-  aToken=0;
-  if(mTokenDeque.GetSize()>0) {
-    aToken=(CToken*)mTokenDeque.Pop();
-    return kNoError;
-  }
-
-  mParser=(nsParser*)aParser;
-
-  nsresult   result=NS_OK;
-  CScanner* theScanner=mParser->GetScanner();
-  if(NS_OK==result){
-    
-    PRUnichar aChar;
-    result=theScanner->GetChar(aChar);
-    switch(result) {
-      case kEOF:
-        break;
-
-      case kInterrupted:
-        theScanner->RewindToMark();
-        break; 
-
-      case NS_OK:
-      default:
-        switch(aChar) {
-          case kLessThan:
-            return ConsumeTag(aChar,*theScanner,aToken);
-
-          case kAmpersand:
-            return ConsumeEntity(aChar,*theScanner,aToken);
-          
-          case kCR: case kLF:
-            return ConsumeNewline(aChar,*theScanner,aToken);
-          
-          case kNotFound:
-            break;
-          
-          default:
-            if(!nsString::IsSpace(aChar)) {
-              nsAutoString temp(aChar);
-              return ConsumeText(temp,*theScanner,aToken);
-            }
-            else return ConsumeWhitespace(aChar,*theScanner,aToken);
-            break;
-        } //switch
-        break; 
-    } //switch
-    if(NS_OK==result)
-      result=theScanner->Eof();
-  } //while
-  return result;
+nsITokenRecycler* nsXIFDTD::GetTokenRecycler(void){
+  nsITokenizer* theTokenizer=GetTokenizer();
+  return theTokenizer->GetTokenRecycler();
 }
 
 /**
@@ -1701,38 +1467,20 @@ nsresult nsXIFDTD::ConsumeToken(CToken*& aToken,nsIParser* aParser) {
  * @param   aCount is the # of attributes you're expecting
  * @return error code (should be 0)
  */
-PRInt32 nsXIFDTD::CollectAttributes(nsCParserNode& aNode,PRInt32 aCount){
-/*
-  nsDequeIterator end=mParserContext->mTokenDeque.End();
-
-  int attr=0;
-  for(attr=0;attr<aCount;attr++) {
-    if(*mParserContext->mCurrentPos<end) {
-      CToken* tkn=(CToken*)(++(*mParserContext->mCurrentPos));
-      if(tkn){
-        if(eToken_attribute==eHTMLTokenTypes(tkn->GetTokenType())){
-          aNode.AddAttribute(tkn);
-        } 
-        else (*mParserContext->mCurrentPos)--;
-      }
-      else return kInterrupted;
-    }
-    else return kInterrupted;
-  }
-*/
+nsresult nsXIFDTD::CollectAttributes(nsCParserNode& aNode,PRInt32 aCount){
   int attr=0;
   for(attr=0;attr<aCount;attr++){
-    CToken* theToken=mParser->PeekToken();
+    CToken* theToken=mTokenizer->PeekToken();
     if(theToken)  {
       eHTMLTokenTypes theType=eHTMLTokenTypes(theToken->GetTokenType());
       if(eToken_attribute==theType){
-        mParser->PopToken(); //pop it for real...
+        mTokenizer->PopToken(); //pop it for real...
         aNode.AddAttribute(theToken);
       } 
     }
-    else return kInterrupted;
+    else return kEOF;
   }
-  return kNoError;
+  return NS_OK;
 }
 
 
@@ -1744,23 +1492,8 @@ PRInt32 nsXIFDTD::CollectAttributes(nsCParserNode& aNode,PRInt32 aCount){
  * @param   holds the number of skipped content elements encountered
  * @return  Error condition.
  */
-PRInt32 nsXIFDTD::CollectSkippedContent(nsCParserNode& aNode,PRInt32& aCount) {
-  PRInt32           result=kNoError;
-/*
-  eHTMLTokenTypes   subtype=eToken_attribute;
-  nsDequeIterator   end=mParserContext->mTokenDeque.End();
-
-  aCount=0;
-  while((*mParserContext->mCurrentPos!=end) && (eToken_attribute==subtype)) {
-    CToken* tkn=(CToken*)(++(*mParserContext->mCurrentPos));
-    subtype=eHTMLTokenTypes(tkn->GetTokenType());
-    if(eToken_skippedcontent==subtype) {
-      aNode.SetSkippedContent(tkn);
-      aCount++;
-    } 
-    else (*mParserContext->mCurrentPos)--;
-  }
-*/
+nsresult nsXIFDTD::CollectSkippedContent(nsCParserNode& aNode,PRInt32& aCount) {
+  nsresult           result=NS_OK;
   return result;
 }
 
@@ -2004,13 +1737,4 @@ void nsXIFDTD::AddCSSDeclaration(const nsIParserNode& aNode)
 }
 
 
-/**
- * 
- * @update	gess8/4/98
- * @param 
- * @return
- */
-nsITokenRecycler* nsXIFDTD::GetTokenRecycler(void){
-  return 0;
-}
-
+ 

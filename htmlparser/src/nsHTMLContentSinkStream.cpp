@@ -32,7 +32,7 @@
 #include "nsHTMLTokens.h"
 #include <iostream.h>
 #include "nsString.h"
-#include "nsParserTypes.h"
+#include "nsIParser.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
 static NS_DEFINE_IID(kIContentSinkIID, NS_ICONTENT_SINK_IID);

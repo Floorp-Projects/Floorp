@@ -40,11 +40,11 @@ const int   kBufsize=64;
  *  @param   aMode represents the parser mode (nav, other)
  *  @return  
  */
-CScanner::CScanner(nsString& anHTMLString) : 
+nsScanner::nsScanner(nsString& anHTMLString) : 
   mBuffer(anHTMLString), mFilename("") 
 {
   mTotalRead=mBuffer.Length();
-  mIncremental=PR_FALSE;
+  mIncremental=PR_TRUE;
   mOwnsStream=PR_FALSE;
   mOffset=0;
   mMarkPos=-1;
@@ -60,7 +60,7 @@ CScanner::CScanner(nsString& anHTMLString) :
  *  @param   aFilename --
  *  @return  
  */
-CScanner::CScanner(nsString& aFilename,PRBool aCreateStream) : 
+nsScanner::nsScanner(nsString& aFilename,PRBool aCreateStream) : 
     mBuffer(""), mFilename(aFilename) 
 {
   mIncremental=PR_TRUE;
@@ -92,7 +92,7 @@ CScanner::CScanner(nsString& aFilename,PRBool aCreateStream) :
  *  @param   aFilename --
  *  @return  
  */
-CScanner::CScanner(nsString& aFilename,fstream& aStream,PRBool assumeOwnership) :
+nsScanner::nsScanner(nsString& aFilename,fstream& aStream,PRBool assumeOwnership) :
     mBuffer(""), mFilename(aFilename)
 {    
   mIncremental=PR_TRUE;
@@ -111,7 +111,7 @@ CScanner::CScanner(nsString& aFilename,fstream& aStream,PRBool assumeOwnership) 
  *  @param   
  *  @return  
  */
-CScanner::~CScanner() {
+nsScanner::~nsScanner() {
   if(mFileStream) {
     mFileStream->close();
     if(mOwnsStream)
@@ -130,7 +130,7 @@ CScanner::~CScanner() {
  *  @param   
  *  @return  
  */
-PRUint32 CScanner::RewindToMark(void){
+PRUint32 nsScanner::RewindToMark(void){
   mOffset=mMarkPos;
   return mOffset;
 }
@@ -145,7 +145,7 @@ PRUint32 CScanner::RewindToMark(void){
  *  @param   
  *  @return  
  */
-PRUint32 CScanner::Mark(void){
+PRUint32 nsScanner::Mark(void){
   if((mOffset>0) && (mOffset>eBufferSizeThreshold)) {
     mBuffer.Cut(0,mOffset);   //delete chars up to mark position
     mOffset=0;
@@ -162,7 +162,7 @@ PRUint32 CScanner::Mark(void){
  * @update  gess4/3/98
  * @return  error code 
  */
-PRBool CScanner::Append(nsString& aBuffer) {
+PRBool nsScanner::Append(nsString& aBuffer) {
   mBuffer.Append(aBuffer);
   mTotalRead+=aBuffer.Length();
   return PR_TRUE;
@@ -175,13 +175,13 @@ PRBool CScanner::Append(nsString& aBuffer) {
  *  @param   
  *  @return  
  */
-PRBool CScanner::Append(const char* aBuffer, PRUint32 aLen){
+PRBool nsScanner::Append(const char* aBuffer, PRUint32 aLen){
   mBuffer.Append(aBuffer,aLen);
   mTotalRead+=aLen;
   return PR_TRUE;
 }
 
-PRBool CScanner::Append(const PRUnichar* aBuffer, PRInt32 aLen){
+PRBool nsScanner::Append(const PRUnichar* aBuffer, PRUint32 aLen){
   mBuffer.Append(aBuffer,aLen);
   mTotalRead+=aLen;
   return PR_TRUE;
@@ -193,8 +193,8 @@ PRBool CScanner::Append(const PRUnichar* aBuffer, PRInt32 aLen){
  * @update  gess4/3/98
  * @return  error code
  */
-nsresult CScanner::FillBuffer(void) {
-  nsresult anError=NS_OK;
+nsresult nsScanner::FillBuffer(void) {
+  nsresult result=NS_OK;
 
   if(!mFileStream) {
     //This is DEBUG code!!!!!!  XXX DEBUG XXX
@@ -205,7 +205,7 @@ nsresult CScanner::FillBuffer(void) {
       mBuffer.Append((const char*)kBadHTMLText);
       mBuffer.Append(mFilename);
     }
-    else anError=(mIncremental) ? kInterrupted : kEOF;
+    else result=kEOF;
   }
   else {
     PRInt32 numread=0;
@@ -220,12 +220,12 @@ nsresult CScanner::FillBuffer(void) {
       }
     }
     mOffset=mBuffer.Length();
-    if((0<numread) && (0==anError))
+    if((0<numread) && (0==result))
       mBuffer.Append((const char*)buf,numread);
     mTotalRead+=mBuffer.Length();
   }
 
-  return anError;
+  return result;
 }
 
 /**
@@ -233,9 +233,9 @@ nsresult CScanner::FillBuffer(void) {
  *  
  *  @update  gess 5/12/98
  *  @param   
- *  @return  0=!eof 1=eof kInterrupted=interrupted
+ *  @return  0=!eof 1=eof 
  */
-nsresult CScanner::Eof() {
+nsresult nsScanner::Eof() {
   nsresult theError=NS_OK;
 
   if(mOffset>=(PRUint32)mBuffer.Length()) {
@@ -243,7 +243,7 @@ nsresult CScanner::Eof() {
   }
   
   if(NS_OK==theError) {
-    if (0==mBuffer.Length()) {
+    if (0==(PRUint32)mBuffer.Length()) {
       return kEOF;
     }
   }
@@ -258,9 +258,10 @@ nsresult CScanner::Eof() {
  *  @param   
  *  @return  error code reflecting read status
  */
-nsresult CScanner::GetChar(PRUnichar& aChar) {
+nsresult nsScanner::GetChar(PRUnichar& aChar) {
   nsresult result=NS_OK;
   
+  aChar=0;
   if(mOffset>=(PRUint32)mBuffer.Length()) 
     result=Eof();
 
@@ -279,9 +280,9 @@ nsresult CScanner::GetChar(PRUnichar& aChar) {
  *  @param   
  *  @return  
  */
-nsresult CScanner::Peek(PRUnichar& aChar) {
+nsresult nsScanner::Peek(PRUnichar& aChar) {
   nsresult result=NS_OK;
-  
+  aChar=0;  
   if(mOffset>=(PRUint32)mBuffer.Length()) 
     result=Eof();
 
@@ -299,7 +300,7 @@ nsresult CScanner::Peek(PRUnichar& aChar) {
  *  @param   
  *  @return  error code
  */
-nsresult CScanner::PutBack(PRUnichar aChar) {
+nsresult nsScanner::PutBack(PRUnichar aChar) {
   if(mOffset>0)
     mOffset--;
   else mBuffer.Insert(aChar,0);
@@ -314,7 +315,7 @@ nsresult CScanner::PutBack(PRUnichar aChar) {
  *  @param   
  *  @return  error status
  */
-nsresult CScanner::SkipWhitespace(void) {
+nsresult nsScanner::SkipWhitespace(void) {
   static nsAutoString chars(" \n\r\t");
   return SkipOver(chars);
 }
@@ -326,7 +327,7 @@ nsresult CScanner::SkipWhitespace(void) {
  *  @param   
  *  @return  error code
  */
-nsresult CScanner::SkipOver(PRUnichar aSkipChar){
+nsresult nsScanner::SkipOver(PRUnichar aSkipChar){
   PRUnichar ch=0;
   nsresult   result=NS_OK;
 
@@ -350,16 +351,16 @@ nsresult CScanner::SkipOver(PRUnichar aSkipChar){
  *  @param   aSkipSet is an ordered string.
  *  @return  error code
  */
-nsresult CScanner::SkipOver(nsString& aSkipSet){
-  PRUnichar ch=0;
-  nsresult   result=NS_OK;
+nsresult nsScanner::SkipOver(nsString& aSkipSet){
+  PRUnichar theChar=0;
+  nsresult  result=NS_OK;
 
   while(NS_OK==result) {
-    result=GetChar(ch);
+    result=GetChar(theChar);
     if(NS_OK == result) {
-      PRInt32 pos=aSkipSet.Find(ch);
+      PRInt32 pos=aSkipSet.Find(theChar);
       if(kNotFound==pos) {
-        PutBack(ch);
+        PutBack(theChar);
         break;
       }
     } 
@@ -377,7 +378,7 @@ nsresult CScanner::SkipOver(nsString& aSkipSet){
  *           contains chars you're looking for
  *  @return  error code
  */
-nsresult CScanner::SkipTo(nsString& aValidSet){
+nsresult nsScanner::SkipTo(nsString& aValidSet){
   PRUnichar ch=0;
   nsresult  result=NS_OK;
 
@@ -405,7 +406,7 @@ nsresult CScanner::SkipTo(nsString& aValidSet){
  *           characters you want to skip
  *  @return  error code
  */
-nsresult CScanner::SkipPast(nsString& aValidSet){
+nsresult nsScanner::SkipPast(nsString& aValidSet){
   NS_NOTYETIMPLEMENTED("Error: SkipPast not yet implemented.");
   return NS_OK;
 }
@@ -420,7 +421,7 @@ nsresult CScanner::SkipPast(nsString& aValidSet){
  *           valid characters
  *  @return  error code
  */
-nsresult CScanner::ReadWhile(nsString& aString,
+nsresult nsScanner::ReadWhile(nsString& aString,
                              nsString& aValidSet,
                              PRBool anOrderedSet,
                              PRBool addTerminal){
@@ -456,7 +457,7 @@ nsresult CScanner::ReadWhile(nsString& aString,
  *           the set of INVALID characters
  *  @return  error code
  */
-nsresult CScanner::ReadUntil(nsString& aString,
+nsresult nsScanner::ReadUntil(nsString& aString,
                              nsString& aTerminalSet,
                              PRBool anOrderedSet,
                              PRBool addTerminal){
@@ -490,21 +491,21 @@ nsresult CScanner::ReadUntil(nsString& aString,
  *  @param   
  *  @return  error code
  */
-nsresult CScanner::ReadUntil(nsString& aString,
+nsresult nsScanner::ReadUntil(nsString& aString,
                              PRUnichar aTerminalChar,
                              PRBool addTerminal){
-  PRUnichar ch=0;
-  nsresult   result=NS_OK;
+  PRUnichar theChar=0;
+  nsresult  result=NS_OK;
 
   while(NS_OK==result) {
-    result=GetChar(ch);
-    if(ch==aTerminalChar) {
+    result=GetChar(theChar);
+    if(theChar==aTerminalChar) {
       if(addTerminal)
-        aString+=ch;
-      else PutBack(ch);
+        aString+=theChar;
+      else PutBack(theChar);
       break;
     }
-    else aString+=ch;
+    else aString+=theChar;
   }
   return result;
 }
@@ -515,7 +516,7 @@ nsresult CScanner::ReadUntil(nsString& aString,
  *  @param   
  *  @return  
  */
-nsString& CScanner::GetBuffer(void) {
+nsString& nsScanner::GetBuffer(void) {
   return mBuffer;
 }
 
@@ -527,7 +528,7 @@ nsString& CScanner::GetBuffer(void) {
  *  @update  gess 5/12/98
  *  @return  
  */
-nsString& CScanner::GetFilename(void) {
+nsString& nsScanner::GetFilename(void) {
   return mFilename;
 }
 
@@ -540,7 +541,7 @@ nsString& CScanner::GetFilename(void) {
  *  @return  
  */
 
-void CScanner::SelfTest(void) {
+void nsScanner::SelfTest(void) {
 #ifdef _DEBUG
 #endif
 }

@@ -38,7 +38,7 @@
 #include "nsParser.h"
 #include "nsIHTMLContentSink.h" 
 #include "nsScanner.h"
-#include "nsParserTypes.h"
+#include "nsIParser.h"
 
 #include "prenv.h"  //this is here for debug reasons...
 #include "prtypes.h"
@@ -50,7 +50,7 @@
 #ifdef XP_PC
 #include <direct.h> //this is here for debug reasons...
 #endif
-#include <time.h>
+#include <time.h> 
 #include "prmem.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
@@ -146,6 +146,16 @@ COtherDTD::COtherDTD() : CNavDTD() {
  */
 COtherDTD::~COtherDTD(){
   //parent does all the real work of destruction.
+}
+
+/**
+ * 
+ * @update	gess1/8/99
+ * @param 
+ * @return
+ */
+const nsIID& COtherDTD::GetMostDerivedIID(void) const{
+  return kClassIID;
 }
 
 /**
@@ -331,19 +341,6 @@ PRBool COtherDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
 
 
 /**
- *  This method is called to determine whether or not a tag
- *  of one type can contain a tag of another type.
- *  
- *  @update  gess 4/8/98
- *  @param   aParent -- tag enum of parent container
- *  @param   aChild -- tag enum of child container
- *  @return  PR_TRUE if parent can contain child
- */
-PRBool COtherDTD::CanContainIndirect(eHTMLTags aParent,eHTMLTags aChild) const {
-  return CNavDTD::CanContainIndirect(aParent,aChild);
-}
-
-/**
  *  This method gets called to determine whether a given 
  *  tag can contain newlines. Most do not.
  *  
@@ -366,18 +363,6 @@ PRBool COtherDTD::CanOmit(eHTMLTags aParent,eHTMLTags aChild) const {
  */
 PRBool COtherDTD::CanOmitEndTag(eHTMLTags aParent,eHTMLTags aChild) const {
   return CNavDTD::CanOmitEndTag(aParent,aChild);
-}
-
-/**
- * This method does two things: 1st, help construct
- * our own internal model of the content-stack; and
- * 2nd, pass this message on to the sink.
- * @update  gess4/6/98
- * @param   aNode -- next node to be added to model
- * @return  TRUE if ok, FALSE if error
- */
-eHTMLTags COtherDTD::GetDefaultParentTagFor(eHTMLTags aTag) const{
-  return CNavDTD::GetDefaultParentTagFor(aTag);
 }
 
 
@@ -692,140 +677,6 @@ nsresult COtherDTD::UpdateStyleStackForOpenTag(eHTMLTags aTag,eHTMLTags anActual
 nsresult COtherDTD::UpdateStyleStackForCloseTag(eHTMLTags aTag,eHTMLTags anActualTag){
   return CNavDTD::UpdateStyleStackForCloseTag(aTag,anActualTag);
 } //update...
-
-/*******************************************************************
-  These methods used to be hidden in the tokenizer-delegate. 
-  That file merged with the DTD, since the separation wasn't really
-  buying us anything.
- *******************************************************************/
-
-/**
- *  This method is called just after a "<" has been consumed 
- *  and we know we're at the start of some kind of tagged 
- *  element. We don't know yet if it's a tag or a comment.
- *  
- *  @update  gess 5/12/98
- *  @param   aChar is the last char read
- *  @param   aScanner is represents our input source
- *  @param   aToken is the out arg holding our new token
- *  @return  error code (may return kInterrupted).
- */
-nsresult COtherDTD::ConsumeTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
-  return CNavDTD::ConsumeTag(aChar,aScanner,aToken);
-}
-
-/**
- *  This method is called just after we've consumed a start
- *  tag, and we now have to consume its attributes.
- *  
- *  @update  gess 3/25/98
- *  @param   aChar: last char read
- *  @param   aScanner: see nsScanner.h
- *  @return  
- */
-nsresult COtherDTD::ConsumeAttributes(PRUnichar aChar,CScanner& aScanner,CStartToken* aToken) {
-  return CNavDTD::ConsumeAttributes(aChar,aScanner,aToken);
-}
-
-/**
- *  This is a special case method. It's job is to consume 
- *  all of the given tag up to an including the end tag.
- *
- *  @param  aChar: last char read
- *  @param  aScanner: see nsScanner.h
- *  @param  anErrorCode: arg that will hold error condition
- *  @return new token or null
- */
-nsresult COtherDTD::ConsumeContentToEndTag(PRUnichar aChar,
-																					 eHTMLTags aChildTag,
-																					 CScanner& aScanner,
-																					 CToken*& aToken){
-  return CNavDTD::ConsumeContentToEndTag(aChar,aChildTag,aScanner,aToken);
-}
-
-/**
- *  This method is called just after a "<" has been consumed 
- *  and we know we're at the start of a tag.  
- *  
- *  @update gess 3/25/98
- *  @param  aChar: last char read
- *  @param  aScanner: see nsScanner.h
- *  @param  anErrorCode: arg that will hold error condition
- *  @return new token or null 
- */
-nsresult COtherDTD::ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
-  return CNavDTD::ConsumeStartTag(aChar,aScanner,aToken);
-}
-
-/**
- *  This method is called just after a "&" has been consumed 
- *  and we know we're at the start of an entity.  
- *  
- *  @update gess 3/25/98
- *  @param  aChar: last char read
- *  @param  aScanner: see nsScanner.h
- *  @param  anErrorCode: arg that will hold error condition
- *  @return new token or null 
- */
-nsresult COtherDTD::ConsumeEntity(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
-  return CNavDTD::ConsumeEntity(aChar,aScanner,aToken);
-}
-
-/**
- *  This method is called just after whitespace has been 
- *  consumed and we know we're at the start a whitespace run.  
- *  
- *  @update gess 3/25/98
- *  @param  aChar: last char read
- *  @param  aScanner: see nsScanner.h
- *  @param  anErrorCode: arg that will hold error condition
- *  @return new token or null 
- */
-nsresult COtherDTD::ConsumeWhitespace(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
-  return CNavDTD::ConsumeWhitespace(aChar,aScanner,aToken);
-}
-
-/**
- *  This method is called just after a "<!" has been consumed 
- *  and we know we're at the start of a comment.  
- *  
- *  @update gess 3/25/98
- *  @param  aChar: last char read
- *  @param  aScanner: see nsScanner.h
- *  @param  anErrorCode: arg that will hold error condition
- *  @return new token or null 
- */
-nsresult COtherDTD::ConsumeComment(PRUnichar aChar,CScanner& aScanner,CToken*& aToken){
-  return CNavDTD::ConsumeComment(aChar,aScanner,aToken);
-}
-
-/**
- *  This method is called just after a known text char has
- *  been consumed and we should read a text run.
- *  
- *  @update gess 3/25/98
- *  @param  aChar: last char read
- *  @param  aScanner: see nsScanner.h
- *  @param  anErrorCode: arg that will hold error condition
- *  @return new token or null 
- */
-nsresult COtherDTD::ConsumeText(const nsString& aString,CScanner& aScanner,CToken*& aToken){
-  return CNavDTD::ConsumeText(aString,aScanner,aToken);
-}
-
-/**
- *  This method is called just after a newline has been consumed. 
- *  
- *  @update gess 3/25/98
- *  @param  aChar: last char read
- *  @param  aScanner: see nsScanner.h
- *  @param  anErrorCode: arg that will hold error condition
- *  @return new token or null 
- */
-nsresult COtherDTD::ConsumeNewline(PRUnichar aChar,CScanner& aScanner,CToken*& aToken){
-  return CNavDTD::ConsumeNewline(aChar,aScanner,aToken);
-}
-
 
 /**
  * 

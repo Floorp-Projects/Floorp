@@ -29,11 +29,12 @@
 #include "nsCRT.h"
 #include "nsParser.h"
 #include "nsScanner.h"
-#include "nsParserTypes.h"
+#include "nsIParser.h"
 #include "nsTokenHandler.h"
 #include "nsDTDUtils.h"
 #include "nsIContentSink.h"
 #include "nsIHTMLContentSink.h"
+#include "nsXMLTokenizer.h"
 
 #include "prenv.h"  //this is here for debug reasons...
 #include "prtypes.h"  //this is here for debug reasons...
@@ -136,6 +137,7 @@ CWellFormedDTD::CWellFormedDTD() : nsIDTD(), mTokenDeque(gTokenKiller) {
   mSink=0;
   mFilename;
   mLineNumber=0;
+  mTokenizer=0;
 }
 
 /**
@@ -147,6 +149,16 @@ CWellFormedDTD::CWellFormedDTD() : nsIDTD(), mTokenDeque(gTokenKiller) {
  */
 CWellFormedDTD::~CWellFormedDTD(){
   mParser=0; //just to prove we destructed...
+}
+
+/**
+ * 
+ * @update	gess1/8/99
+ * @param 
+ * @return
+ */
+const nsIID& CWellFormedDTD::GetMostDerivedIID(void) const{
+  return kClassIID;
 }
 
 /**
@@ -232,12 +244,44 @@ NS_IMETHODIMP CWellFormedDTD::WillBuildModel(nsString& aFilename,PRBool aNotifyS
 }
 
 /**
+  * The parser uses a code sandwich to wrap the parsing process. Before
+  * the process begins, WillBuildModel() is called. Afterwards the parser
+  * calls DidBuildModel(). 
+  * @update	gess  1/4/99
+  * @param	aFilename is the name of the file being parsed.
+  * @return	error code (almost always 0)
+  */
+NS_IMETHODIMP CWellFormedDTD::BuildModel(nsIParser* aParser) {
+  nsresult result=NS_OK;
+
+  nsHTMLTokenizer*  theTokenizer=(nsHTMLTokenizer*)GetTokenizer();
+  nsITokenRecycler* theRecycler=GetTokenRecycler();
+  if(theTokenizer) {
+    while(NS_OK==result){
+      CToken* theToken=theTokenizer->PopToken();
+      if(theToken) {
+        result=HandleToken(theToken,aParser);
+        if(NS_SUCCEEDED(result)) {
+          theRecycler->RecycleToken(theToken);
+        }
+        else {
+          theTokenizer->PushTokenFront(theToken);
+        }
+        // theRootDTD->Verify(kEmptyString,aParser);
+      }
+      else break;
+    }
+  }
+  return result;
+}
+
+/**
  * 
  * @update	gess5/18/98
  * @param 
  * @return
  */
-NS_IMETHODIMP CWellFormedDTD::DidBuildModel(PRInt32 anErrorCode,PRBool aNotifySink,nsIParser* aParser){
+NS_IMETHODIMP CWellFormedDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParser* aParser){
   nsresult result= NS_OK;
 
   //ADD CODE HERE TO CLOSE OPEN CONTAINERS...
@@ -270,411 +314,27 @@ NS_IMETHODIMP CWellFormedDTD::DidBuildModel(PRInt32 anErrorCode,PRBool aNotifySi
   return result;
 }
 
-static eHTMLTags gSkippedContentTags[]={ eHTMLTag_script, eHTMLTag_style,  eHTMLTag_title,  eHTMLTag_textarea};
-
-
 /**
  * 
- * @update	gess11/9/98
+ * @update	gess8/4/98
  * @param 
  * @return
  */
-NS_IMETHODIMP CWellFormedDTD::ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
-  PRInt32 theDequeSize=mTokenDeque.GetSize();
-  nsresult result=NS_OK;
-
-  aToken=gTokenRecycler.CreateTokenOfType(eToken_start,eHTMLTag_unknown,gEmpty);
-  
-  if(aToken) {
-    result= aToken->Consume(aChar,aScanner);  //tell new token to finish consuming text...    
-    if(NS_OK==result) {
-      if(((CStartToken*)aToken)->IsAttributed()) {
-        result=ConsumeAttributes(aChar,aScanner,(CStartToken*)aToken);
-      }
-
-      //EEEEECCCCKKKK!!! 
-      //This code is confusing, so pay attention.
-      //If you're here, it's because we were in the midst of consuming a start
-      //tag but ran out of data (not in the stream, but in this *part* of the stream.
-      //For simplicity, we have to unwind our input. Therefore, we pop and discard
-      //any new tokens we've cued this round. Later we can get smarter about this.
-      if(NS_OK!=result) {
-        while(mTokenDeque.GetSize()>theDequeSize) {
-          delete (CToken*)mTokenDeque.PopBack();
-        }
-      }
-
-
-    } //if
-  } //if
-  return result;
+nsITokenRecycler* CWellFormedDTD::GetTokenRecycler(void){
+  nsITokenizer* theTokenizer=GetTokenizer();
+  return theTokenizer->GetTokenRecycler();
 }
 
 /**
- *  This method is called just after a known text char has
- *  been consumed and we should read a text run.
- *  
- *  @update gess 3/25/98
- *  @param  aChar: last char read
- *  @param  aScanner: see nsScanner.h
- *  @param  anErrorCode: arg that will hold error condition
- *  @return new token or null 
+ * Retrieve the preferred tokenizer for use by this DTD.
+ * @update	gess12/28/98
+ * @param   none
+ * @return  ptr to tokenizer
  */
-NS_IMETHODIMP CWellFormedDTD::ConsumeText(const nsString& aString,CScanner& aScanner,CToken*& aToken){
-  nsresult result=NS_OK;
-
-  aToken=gTokenRecycler.CreateTokenOfType(eToken_text,eHTMLTag_text,aString);
-  if(aToken) {
-    PRUnichar ch=0;
-    result=aToken->Consume(ch,aScanner);
-    if(result) {
-      nsString& temp=aToken->GetStringValueXXX();
-      if(0==temp.Length()){
-        delete aToken;
-        aToken = nsnull;
-      }
-      else result=kNoError;
-    }
-  }
-  return result;
-}
-
-/**
- *  This method is called just after we've consumed a start
- *  tag, and we now have to consume its attributes.
- *  
- *  @update  gess 3/25/98
- *  @param   aChar: last char read
- *  @param   aScanner: see nsScanner.h
- *  @return  
- */
-NS_IMETHODIMP CWellFormedDTD::ConsumeAttributes(PRUnichar aChar,CScanner& aScanner,CStartToken* aToken) {
-  PRBool done=PR_FALSE;
-  nsresult result=NS_OK;
-  PRInt16 theAttrCount=0;
-
-  while((!done) && (result==NS_OK)) {
-    CAttributeToken* theToken= (CAttributeToken*)gTokenRecycler.CreateTokenOfType(eToken_attribute,eHTMLTag_unknown,gEmpty);
-    if(theToken){
-      result=theToken->Consume(aChar,aScanner);  //tell new token to finish consuming text...    
- 
-      //Much as I hate to do this, here's some special case code.
-      //This handles the case of empty-tags in XML. Our last
-      //attribute token will come through with a text value of ""
-      //and a textkey of "/". We should destroy it, and tell the 
-      //start token it was empty.
-      nsString& key=theToken->GetKey();
-      nsString& text=theToken->GetStringValueXXX();
-      if((key[0]==kForwardSlash) && (0==text.Length())){
-        //tada! our special case! Treat it like an empty start tag...
-        aToken->SetEmpty(PR_TRUE);
-        delete theToken;
-      }
-      else if(NS_OK==result){
-        theAttrCount++;
-        mTokenDeque.Push(theToken);
-      }//if
-      else delete theToken; //we can't keep it...
-    }//if
-    
-    if(NS_OK==result){
-      result=aScanner.Peek(aChar);
-      if(aChar==kGreaterThan) { //you just ate the '>'
-        aScanner.GetChar(aChar); //skip the '>'
-        done=PR_TRUE;
-      }//if
-    }//if
-  }//while
-
-  aToken->SetAttributeCount(theAttrCount);
-  return result;
-}
-
-/**
- *  This method is called just after a "&" has been consumed 
- *  and we know we're at the start of an entity.  
- *  
- *  @update gess 3/25/98
- *  @param  aChar: last char read
- *  @param  aScanner: see nsScanner.h
- *  @param  anErrorCode: arg that will hold error condition
- *  @return new token or null 
- */
-NS_IMETHODIMP CWellFormedDTD::ConsumeEntity(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
-   PRUnichar  theChar;
-   nsresult result=aScanner.GetChar(theChar);
-
-   if(NS_OK==result) {
-     if(nsString::IsAlpha(theChar)) { //handle common enity references &xxx; or &#000.
-       aToken = gTokenRecycler.CreateTokenOfType(eToken_entity,eHTMLTag_entity,gEmpty);
-       result = aToken->Consume(theChar,aScanner);  //tell new token to finish consuming text...    
-     }
-     else if(kHashsign==theChar) {
-       aToken = gTokenRecycler.CreateTokenOfType(eToken_entity,eHTMLTag_entity,gEmpty);
-       result=aToken->Consume(0,aScanner);
-     }
-     else {
-       //oops, we're actually looking at plain text...
-       nsAutoString temp("&");
-       aScanner.PutBack(theChar);
-       result=ConsumeText(temp,aScanner,aToken);
-     }
-   }//if
-   return result;
-}
-
-/**
- *  This method is called just after whitespace has been 
- *  consumed and we know we're at the start a whitespace run.  
- *  
- *  @update gess 3/25/98
- *  @param  aChar: last char read
- *  @param  aScanner: see nsScanner.h
- *  @param  anErrorCode: arg that will hold error condition
- *  @return new token or null 
- */
-NS_IMETHODIMP CWellFormedDTD::ConsumeWhitespace(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
-  aToken = gTokenRecycler.CreateTokenOfType(eToken_whitespace,eHTMLTag_whitespace,gEmpty);
-  nsresult result=kNoError;
-  if(aToken) {
-     result=aToken->Consume(aChar,aScanner);
-  }
-  return kNoError;
-}
-
-/**
- *  This method is called just after a "<!" has been consumed 
- *  and we know we're at the start of a comment.  
- *  
- *  @update gess 3/25/98
- *  @param  aChar: last char read
- *  @param  aScanner: see nsScanner.h
- *  @param  anErrorCode: arg that will hold error condition
- *  @return new token or null 
- */
-NS_IMETHODIMP CWellFormedDTD::ConsumeComment(PRUnichar aChar,CScanner& aScanner,CToken*& aToken){
-  aToken = gTokenRecycler.CreateTokenOfType(eToken_comment,eHTMLTag_comment,gEmpty);
-  nsresult result=NS_OK;
-  if(aToken) {
-     result=aToken->Consume(aChar,aScanner);
-  }
-  return result;
-}
-
-/*
- * Consume characters as long as they match the string passed in.
- * If they don't match, put them all back. 
- * XXX The scanner should be able to do this.
- *
- *  @update vidur 11/12/98
- */
-static nsresult
-ConsumeConditional(CScanner& aScanner, 
-                   const nsString& aMatchString,
-                   PRBool& aMatch)
-{
-  nsresult result=NS_OK;
-  PRUnichar matchChar;
-
-  PRInt32 i, count = aMatchString.Length();
-  for (i=0; i < count; i++) {
-    result = aScanner.GetChar(matchChar);
-    if ((NS_OK != result) || (aMatchString.CharAt(i) != matchChar)) {
-      break;
-    }
-  }
-
-  if (NS_OK == result) {
-    if (i != count) {
-      for (; i >= 0; i--) {
-        aScanner.PutBack(aMatchString.CharAt(i));
-      }
-      aMatch = PR_FALSE;
-    }
-    else {
-      aMatch = PR_TRUE;
-    }
-  }
-
-  return result;
-}
-
-/**
- *  This method is called when we see a "<!" sequence. The result
- *  could be a comment or a CDATASection.
- *  XXX "Escaped Content" is not the right term, but I couldn't think
- *  of a good one.
- *  
- *  @update vidur 11/12/98
- *  @param  aChar: last char read
- *  @param  aScanner: see nsScanner.h
- *  @param  aToken is the newly created token (comment or cdatasection)
- *  @return error code
- */
-NS_IMETHODIMP CWellFormedDTD::ConsumeEscapedContent(PRUnichar aChar,CScanner& aScanner,CToken*& aToken){
-  nsresult result=NS_OK;
-  nsAutoString CDATAString("[CDATA[");
-  PRBool isCDATA = PR_FALSE;
-
-  result = ConsumeConditional(aScanner, CDATAString, isCDATA);
-  if (NS_OK == result) {
-    if (isCDATA) {
-      aToken=gTokenRecycler.CreateTokenOfType(eToken_cdatasection,eHTMLTag_unknown,gEmpty);
-    }
-    else {
-      aToken=gTokenRecycler.CreateTokenOfType(eToken_comment,eHTMLTag_comment,gEmpty);
-    }
-  }
-
-  return result;
-}
-
-/**
- *  This method is called just after a newline has been consumed. 
- *  
- *  @update gess 3/25/98
- *  @param  aChar: last char read
- *  @param  aScanner: see nsScanner.h
- *  @param  aToken is the newly created newline token that is parsing
- *  @return error code
- */
-NS_IMETHODIMP CWellFormedDTD::ConsumeNewline(PRUnichar aChar,CScanner& aScanner,CToken*& aToken){
-  aToken=gTokenRecycler.CreateTokenOfType(eToken_newline,eHTMLTag_newline,gEmpty);
-  nsresult result=NS_OK;
-  if(aToken) {
-    result=aToken->Consume(aChar,aScanner);
-  }
-  return kNoError;
-}
-
-/**
- *  This method is called just after a "<" has been consumed 
- *  and we know we're at the start of some kind of tagged 
- *  element. We don't know yet if it's a tag or a comment.
- *  
- *  @update  vidur 11/12/98
- *  @param   aChar is the last char read
- *  @param   aScanner is represents our input source
- *  @param   aToken is the out arg holding our new token
- *  @return  error code (may return kInterrupted).
- */
-NS_IMETHODIMP CWellFormedDTD::ConsumeTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
-
-  nsresult result=aScanner.GetChar(aChar);
-
-  if(NS_OK==result) {
-
-    switch(aChar) {
-      case kForwardSlash:
-        PRUnichar ch; 
-        result=aScanner.Peek(ch);
-        if(NS_OK==result) {
-          if(nsString::IsAlpha(ch))
-            aToken=gTokenRecycler.CreateTokenOfType(eToken_end,eHTMLTag_unknown,gEmpty);
-          else aToken=gTokenRecycler.CreateTokenOfType(eToken_comment,eHTMLTag_unknown,gEmpty);
-        }//if
-        break;
-
-      case kExclamation:
-        result = ConsumeEscapedContent(aChar, aScanner, aToken);
-        break;
-
-      case kQuestionMark: //it must be an XML processing instruction...
-        aToken=gTokenRecycler.CreateTokenOfType(eToken_instruction,eHTMLTag_unknown,gEmpty);
-        break;
-
-      default:
-        if(nsString::IsAlpha(aChar))
-          return ConsumeStartTag(aChar,aScanner,aToken);
-        else if(kEOF!=aChar) {
-          nsAutoString temp("<");
-          return ConsumeText(temp,aScanner,aToken);
-        }
-    } //switch
-
-    if((0!=aToken) && (NS_OK==result)) {
-      result= aToken->Consume(aChar,aScanner);  //tell new token to finish consuming text...    
-      if(result) {
-        delete aToken;
-        aToken=0;
-      }
-    } //if
-  } //if
-  return result;
-}
-
-
-/**
- *  This method repeatedly called by the tokenizer. 
- *  Each time, we determine the kind of token were about to 
- *  read, and then we call the appropriate method to handle
- *  that token type.
- *  
- *  @update gess 3/25/98
- *  @param  aChar: last char read
- *  @param  aScanner: see nsScanner.h
- *  @param  anErrorCode: arg that will hold error condition
- *  @return new token or null 
- */
-NS_IMETHODIMP CWellFormedDTD::ConsumeToken(CToken*& aToken,nsIParser* aParser) {
-  aToken=0;
-  if(mTokenDeque.GetSize()>0) {
-    aToken=(CToken*)mTokenDeque.Pop();
-    return NS_OK;
-  }
-
-  mParser=(nsParser*)aParser;
-  nsresult   result=NS_OK;
-  CScanner* theScanner=mParser->GetScanner();
-  if(NS_OK==result){
-    PRUnichar theChar;
-    result=theScanner->GetChar(theChar);
-    switch(result) {
-      case kEOF:
-          //We convert from eof to complete here, because we never really tried to get data.
-          //All we did was try to see if data was available, which it wasn't.
-          //It's important to return process complete, so that controlling logic can know that
-          //everything went well, but we're done with token processing.
-        result=kProcessComplete;
-        break;
-
-      case kInterrupted:
-        theScanner->RewindToMark();
-        break; 
-
-      case NS_OK:
-      default:
-        switch(theChar) {
-          case kLessThan:
-            result=ConsumeTag(theChar,*theScanner,aToken);
-            break;
-
-          case kAmpersand:
-            result=ConsumeEntity(theChar,*theScanner,aToken);
-            break;
-          
-          case kCR: case kLF:
-            result=ConsumeNewline(theChar,*theScanner,aToken);
-            break;
-            
-          case kNotFound:
-            break;
-          
-          default:
-            if(!nsString::IsSpace(theChar)) {
-              nsAutoString temp(theChar);
-              result=ConsumeText(temp,*theScanner,aToken);
-              break;
-            }
-            result=ConsumeWhitespace(theChar,*theScanner,aToken);
-            break;
-        } //switch
-        break; 
-    } //switch
-//    if(NS_OK==result)
-//      result=theScanner->Eof(); 
-  } //if
-  return result;
+nsITokenizer* CWellFormedDTD::GetTokenizer(void) {
+  if(!mTokenizer)
+    mTokenizer=new nsXMLTokenizer();
+  return mTokenizer;
 }
 
 /**
@@ -796,15 +456,15 @@ NS_IMETHODIMP CWellFormedDTD::HandleToken(CToken* aToken,nsIParser* aParser) {
         if(0<attrCount){ //go collect the attributes...
           int attr=0;
           for(attr=0;attr<attrCount;attr++){
-            CToken* theToken=mParser->PeekToken();
+            CToken* theToken=mTokenizer->PeekToken();
             if(theToken)  {
               eHTMLTokenTypes theType=eHTMLTokenTypes(theToken->GetTokenType());
               if(eToken_attribute==theType){
-                mParser->PopToken(); //pop it for real...
+                mTokenizer->PopToken(); //pop it for real...
                 theNode.AddAttribute(theToken);
               } 
             }
-            else return kInterrupted;
+            else return kEOF;
           }
         }
         if(NS_OK==result){
@@ -851,14 +511,4 @@ nsresult CWellFormedDTD::CaptureTokenPump(nsITagHandler* aHandler) {
 nsresult CWellFormedDTD::ReleaseTokenPump(nsITagHandler* aHandler){
   nsresult result=NS_OK;
   return result;
-}
-
-/**
- * 
- * @update	gess8/4/98
- * @param 
- * @return
- */
-nsITokenRecycler* CWellFormedDTD::GetTokenRecycler(void){
-  return &gTokenRecycler;
 }

@@ -28,7 +28,7 @@
 #include "nsDebug.h"
 #include "nsIDTD.h"
 #include "nsToken.h"
-#include "nsParserTypes.h"
+#include "nsIParser.h"
 
 
 /**
@@ -74,8 +74,8 @@ PRInt32 CTokenHandler::GetTokenType(void){
  *  @param   
  *  @return  
  */
-PRInt32 CTokenHandler::operator()(CToken* aToken,nsIDTD* aDTD){
-  PRInt32 result=kNoError;
+nsresult CTokenHandler::operator()(CToken* aToken,nsIDTD* aDTD){
+  nsresult result=NS_OK;
   if((0!=aDTD) && (0!=mFP)) {
      result=(*mFP)(aToken,aDTD);
   }

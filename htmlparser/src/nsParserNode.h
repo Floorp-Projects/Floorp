@@ -41,6 +41,7 @@
 #include "nsString.h"
 #include "nsParserCIID.h"
 
+class nsITokenRecycler;
 
 class nsCParserNode :  public nsIParserNode {
   enum {eMaxAttr=20};
@@ -54,7 +55,7 @@ class nsCParserNode :  public nsIParserNode {
      * @update	gess5/11/98
      * @param   aToken is the token this node "refers" to
      */
-    nsCParserNode(CToken* aToken=nsnull,PRInt32 aLineNumber=1);
+    nsCParserNode(CToken* aToken=nsnull,PRInt32 aLineNumber=1,nsITokenRecycler* aRecycler=0);
 
     /**
      * Destructor
@@ -169,6 +170,8 @@ class nsCParserNode :  public nsIParserNode {
     CToken*   mToken;
     CToken*   mAttributes[eMaxAttr]; // XXX Ack! This needs to be dynamic! 
     CToken*   mSkippedContent;
+    nsITokenRecycler* mRecycler;
+    
     // nsAutoString  mName;
 
     static const nsAutoString  mEmptyString;

@@ -81,7 +81,10 @@ public:
     NS_IF_RELEASE(mTargetDTD);
   }
   virtual void* operator()(void* anObject) {
-    return (anObject==(void*)mTargetDTD) ? anObject : 0;
+    nsIDTD* theDTD=(nsIDTD*)anObject;
+    if(theDTD->GetMostDerivedIID().Equals(mTargetDTD->GetMostDerivedIID()))
+      return anObject;
+    return 0;
   }
   nsIDTD* mTargetDTD;
 };
@@ -90,12 +93,14 @@ class CSharedParserObjects {
 public:
 
   CSharedParserObjects() : mDeallocator(), mDTDDeque(mDeallocator) {
-    nsIDTD* theDTD;
-    NS_NewWellFormed_DTD(&theDTD);
-    RegisterDTD(theDTD);
+    /*
+      nsIDTD* theDTD;
+      NS_NewWellFormed_DTD(&theDTD);
+      RegisterDTD(theDTD);
 
-    NS_NewViewSourceHTML(&theDTD);
-    RegisterDTD(theDTD);
+      NS_NewViewSourceHTML(&theDTD);
+      RegisterDTD(theDTD);
+    */
   }
 
   ~CSharedParserObjects() {
@@ -119,66 +124,6 @@ CSharedParserObjects gSharedParserObjects;
 
 //----------------------------------------
 
-#define NOT_USED 0xfffd
-
-static PRUint16 PA_HackTable[] = {
-	NOT_USED,
-	NOT_USED,
-	0x201a,  /* SINGLE LOW-9 QUOTATION MARK */
-	0x0192,  /* LATIN SMALL LETTER F WITH HOOK */
-	0x201e,  /* DOUBLE LOW-9 QUOTATION MARK */
-	0x2026,  /* HORIZONTAL ELLIPSIS */
-	0x2020,  /* DAGGER */
-	0x2021,  /* DOUBLE DAGGER */
-	0x02c6,  /* MODIFIER LETTER CIRCUMFLEX ACCENT */
-	0x2030,  /* PER MILLE SIGN */
-	0x0160,  /* LATIN CAPITAL LETTER S WITH CARON */
-	0x2039,  /* SINGLE LEFT-POINTING ANGLE QUOTATION MARK */
-	0x0152,  /* LATIN CAPITAL LIGATURE OE */
-	NOT_USED,
-	NOT_USED,
-	NOT_USED,
-
-	NOT_USED,
-	0x2018,  /* LEFT SINGLE QUOTATION MARK */
-	0x2019,  /* RIGHT SINGLE QUOTATION MARK */
-	0x201c,  /* LEFT DOUBLE QUOTATION MARK */
-	0x201d,  /* RIGHT DOUBLE QUOTATION MARK */
-	0x2022,  /* BULLET */
-	0x2013,  /* EN DASH */
-	0x2014,  /* EM DASH */
-	0x02dc,  /* SMALL TILDE */
-	0x2122,  /* TRADE MARK SIGN */
-	0x0161,  /* LATIN SMALL LETTER S WITH CARON */
-	0x203a,  /* SINGLE RIGHT-POINTING ANGLE QUOTATION MARK */
-	0x0153,  /* LATIN SMALL LIGATURE OE */
-	NOT_USED,
-	NOT_USED,
-	0x0178   /* LATIN CAPITAL LETTER Y WITH DIAERESIS */
-};
-
-static PRUnichar gToUCS2[256];
-
-static void
-MakeConversionTable()
-{
-  static PRBool firstTime = PR_TRUE;
-  if (firstTime) {
-    firstTime = PR_FALSE;
-    PRUnichar* cp = gToUCS2;
-    PRInt32 i;
-    for (i = 0; i < 256; i++) {
-      *cp++ = PRUnichar(i);
-    }
-    cp = gToUCS2;
-    for (i = 0; i < 32; i++) {
-      cp[0x80 + i] = PA_HackTable[i];
-    }
-  }
-}
-
-//----------------------------------------
-
 /**
  *  default constructor
  *  
@@ -195,7 +140,6 @@ nsParser::nsParser() : mCommand("") {
   mParserContext=0;
   mDTDVerification=PR_FALSE;
   mParserEnabled=PR_TRUE;
-  MakeConversionTable();
 }
 
 
@@ -219,7 +163,7 @@ nsParser::~nsParser() {
 
 NS_IMPL_ADDREF(nsParser)
 NS_IMPL_RELEASE(nsParser)
-//NS_IMPL_ISUPPORTS(nsParser,NS_IHTML_PARSER_IID)
+//NS_IMPL_ISUPPORTS(nsParser,NS_IHTML_HTMLPARSER_IID)
 
 
 /**
@@ -348,7 +292,7 @@ void nsParser::RegisterDTD(nsIDTD* aDTD){
  *  @update  gess 6/9/98
  *  @return  ptr to internal scanner
  */
-CScanner* nsParser::GetScanner(void){
+nsScanner* nsParser::GetScanner(void){
   if(mParserContext)
     return mParserContext->mScanner;
   return 0;
@@ -442,7 +386,7 @@ eAutoDetectResult nsParser::AutoDetectContentType(nsString& aBuffer,nsString& aT
 
 
 /**
- *  This is called (by willBuildModel) when it's time to find out 
+ *  This is called when it's time to find out 
  *  what mode the parser/DTD should run for this document.
  *  (Each parsercontext can have it's own mode).
  *  
@@ -453,7 +397,7 @@ eParseMode DetermineParseMode(nsParser& aParser) {
   const char* theModeStr= PR_GetEnv("PARSE_MODE");
   const char* other="other";
   
-  CScanner* theScanner=aParser.GetScanner();
+  nsScanner* theScanner=aParser.GetScanner();
   if(theScanner){
     nsString& theBuffer=theScanner->GetBuffer();
     PRInt32 theIndex=theBuffer.Find("HTML 4.0");
@@ -488,20 +432,28 @@ eParseMode DetermineParseMode(nsParser& aParser) {
  * @param 
  * @return  error code -- 0 if ok, non-zero if error.
  */
-PRInt32 nsParser::WillBuildModel(nsString& aFilename,nsIDTD* aDefaultDTD){
+nsresult nsParser::WillBuildModel(nsString& aFilename,nsIDTD* aDefaultDTD){
 
-  mMajorIteration=-1; 
-  mMinorIteration=-1; 
-  PRInt32 result=kNoError;
-  if(mParserContext){
-    mParserContext->mParseMode=DetermineParseMode(*this);  
-    mParserContext->mDTD=aDefaultDTD;
-    if(PR_TRUE==FindSuitableDTD(*mParserContext,mCommand)) {
-      //mParserContext->mDTD->SetContentSink(mSink);
-      mParserContext->mDTD->WillBuildModel(aFilename,PRBool(0==mParserContext->mPrevContext),this);
+  nsresult result=NS_OK;
+
+  if(eOnStart==mStreamListenerState) {  
+    mMajorIteration=-1; 
+    mMinorIteration=-1; 
+    if(eUnknownDetect==mParserContext->mAutoDetectStatus) {
+      if(eValidDetect==AutoDetectContentType(mParserContext->mScanner->GetBuffer(),mParserContext->mSourceType)) {
+        if(mParserContext){
+          mParserContext->mParseMode=DetermineParseMode(*this);  
+          mParserContext->mDTD=aDefaultDTD;
+          if(PR_TRUE==FindSuitableDTD(*mParserContext,mCommand)) {
+            //mParserContext->mDTD->SetContentSink(mSink);
+            mStreamListenerState=eOnDataAvail;
+            mParserContext->mDTD->WillBuildModel(aFilename,PRBool(0==mParserContext->mPrevContext),this);
+          }
+        }
+        else result=kInvalidParserContext;    
+      } //if
     }
   }
-  else result=kInvalidParserContext;
   return result;
 }
 
@@ -513,25 +465,15 @@ PRInt32 nsParser::WillBuildModel(nsString& aFilename,nsIDTD* aDefaultDTD){
  * @param 
  * @return  error code -- 0 if ok, non-zero if error.
  */
-PRInt32 nsParser::DidBuildModel(PRInt32 anErrorCode) {
+nsresult nsParser::DidBuildModel(nsresult anErrorCode) {
   //One last thing...close any open containers.
-  PRInt32 result=anErrorCode;
+  nsresult result=anErrorCode;
 
-  if((!mParserContext->mPrevContext) && (mParserContext->mDTD)) {
-    result=mParserContext->mDTD->DidBuildModel(anErrorCode,PRBool(0==mParserContext->mPrevContext),this);
-
-    //Now recycle any tokens that are still hanging around.
-    //Come to think of it, there really shouldn't be any.
-    nsDeque&  theDeque=mParserContext->mTokenDeque;
-    nsITokenRecycler* theRecycler=mParserContext->mDTD->GetTokenRecycler();
-    if(theRecycler) {
-      CToken* theToken=(CToken*)theDeque.Pop();
-      while(theToken) {
-        theRecycler->RecycleToken(theToken);
-        theToken=(CToken*)theDeque.Pop();
-      }
+  if(mParserEnabled) {
+    if((!mParserContext->mPrevContext) && (mParserContext->mDTD)) {
+      result=mParserContext->mDTD->DidBuildModel(anErrorCode,PRBool(0==mParserContext->mPrevContext),this);
     }
-  }
+  }//if
 
   return result;
 }
@@ -589,13 +531,6 @@ PRBool nsParser::EnableParser(PRBool aState){
   if ((PR_FALSE == mParserEnabled) && aState) {
     mParserEnabled = PR_TRUE;
     ResumeParse();
-    // If the stream has already closed, finish out the parsing
-    // process. Note if the parser was disabled when we resumed
-    // parsing, then we have to wait till its reenabled before
-    // finishing.
-    if ((eOnStop == mStreamListenerState) && mParserEnabled) {
-      DidBuildModel(mStreamStatus);
-    }
   }
   else {
     mParserEnabled=aState;
@@ -619,22 +554,23 @@ PRBool nsParser::EnableParser(PRBool aState){
  *  @param   aFilename -- const char* containing file to be parsed.
  *  @return  error code -- 0 if ok, non-zero if error.
  */
-PRInt32 nsParser::Parse(nsIURL* aURL,nsIStreamObserver* aListener,PRBool aVerifyEnabled) {
+nsresult nsParser::Parse(nsIURL* aURL,nsIStreamObserver* aListener,PRBool aVerifyEnabled) {
   NS_PRECONDITION(0!=aURL,kNullURL);
 
-  PRInt32 status=kBadURL;
+  nsresult result=kBadURL;
   mDTDVerification=aVerifyEnabled;
- 
+  mStreamListenerState=eNone;  
+  mIncremental=PR_TRUE; 
   if(aURL) {
     const char* spec;
     nsresult rv = aURL->GetSpec(&spec);
     if (rv != NS_OK) return rv;
     nsAutoString theName(spec);
-    CParserContext* cp=new CParserContext(new CScanner(theName,PR_FALSE),aURL,aListener);
+    CParserContext* cp=new CParserContext(new nsScanner(theName,PR_FALSE),aURL,aListener);
     PushContext(*cp);
-    status=NS_OK;
+    result=NS_OK;
   }
-  return status;
+  return result;
 }
 
 
@@ -644,27 +580,22 @@ PRInt32 nsParser::Parse(nsIURL* aURL,nsIStreamObserver* aListener,PRBool aVerify
  * @param   aStream is the i/o source
  * @return  error code -- 0 if ok, non-zero if error.
  */
-PRInt32 nsParser::Parse(fstream& aStream,PRBool aVerifyEnabled){
+nsresult nsParser::Parse(fstream& aStream,PRBool aVerifyEnabled){
 
-  PRInt32 status=kNoError;
   mDTDVerification=aVerifyEnabled;
+  mStreamListenerState=eOnStart;  
   
   //ok, time to create our tokenizer and begin the process
-  CParserContext* pc=new CParserContext(new CScanner(kUnknownFilename,aStream,PR_FALSE),&aStream,0);
+  CParserContext* pc=new CParserContext(new nsScanner(kUnknownFilename,aStream,PR_FALSE),&aStream,0);
   PushContext(*pc);
   pc->mSourceType="text/html";
   mParserContext->mScanner->Eof();
-  if(eValidDetect==AutoDetectContentType(mParserContext->mScanner->GetBuffer(),
-                                         mParserContext->mSourceType)) {
-    WillBuildModel(mParserContext->mScanner->GetFilename(),0);
-    status=ResumeParse();
-    DidBuildModel(status);
-  } //if
-
+  mIncremental=PR_FALSE;
+  nsresult result=ResumeParse();
   pc=PopContext();
   delete pc;
 
-  return status;
+  return result;
 }
 
 
@@ -678,23 +609,21 @@ PRInt32 nsParser::Parse(fstream& aStream,PRBool aVerifyEnabled){
  * @param   anHTMLString tells us whether we should assume the content is HTML (usually true)
  * @return  error code -- 0 if ok, non-zero if error.
  */
-PRInt32 nsParser::Parse(nsString& aSourceBuffer,PRBool anHTMLString,PRBool aVerifyEnabled){
-  PRInt32 result=kNoError;
+nsresult nsParser::Parse(nsString& aSourceBuffer,PRBool anHTMLString,PRBool aVerifyEnabled){
   mDTDVerification=aVerifyEnabled;
+  mStreamListenerState=eOnStart;  
 
+  nsresult result=NS_OK;
   if(0<aSourceBuffer.Length()){
-    CParserContext* pc=new CParserContext(new CScanner(aSourceBuffer),&aSourceBuffer,0);
+    CParserContext* pc=new CParserContext(new nsScanner(aSourceBuffer),&aSourceBuffer,0);
 
     nsIDTD* thePrevDTD=(mParserContext) ? mParserContext->mDTD: 0;
       
     PushContext(*pc);
     if(PR_TRUE==anHTMLString)
       pc->mSourceType="text/html";
-    if(eValidDetect==AutoDetectContentType(aSourceBuffer,mParserContext->mSourceType)) {
-      WillBuildModel(mParserContext->mScanner->GetFilename(),thePrevDTD);
-      result=ResumeParse();
-      DidBuildModel(result);
-    }
+    mIncremental=PR_FALSE;
+    result=ResumeParse();
     mParserContext->mDTD=0; 
     pc=PopContext();
     delete pc;
@@ -702,7 +631,7 @@ PRInt32 nsParser::Parse(nsString& aSourceBuffer,PRBool anHTMLString,PRBool aVeri
   return result;
 }
 
-
+ 
 /**
  *  This routine is called to cause the parser to continue
  *  parsing it's underlying stream. This call allows the
@@ -713,22 +642,28 @@ PRInt32 nsParser::Parse(nsString& aSourceBuffer,PRBool anHTMLString,PRBool aVeri
  *  @param   
  *  @return  error code -- 0 if ok, non-zero if error.
  */
-PRInt32 nsParser::ResumeParse() {
-  PRInt32 result=kNoError;
-  PRInt32 buildResult=kNoError;
-
+nsresult nsParser::ResumeParse(nsIDTD* aDefaultDTD) {
+  
+  nsresult result=WillBuildModel(mParserContext->mScanner->GetFilename(),aDefaultDTD);
   mParserContext->mDTD->WillResumeParse();
-  if(kNoError==result) {
+  if(NS_OK==result) {
+     
     result=Tokenize();
-    buildResult=BuildModel();
-    if(kInterrupted==result)
+    result=BuildModel();
+
+    if((!mIncremental) || (eOnStop==mStreamListenerState)){
+      DidBuildModel(mStreamStatus);
+    }
+    else {
       mParserContext->mDTD->WillInterruptParse();
     // If we're told to block the parser, we disable
     // all further parsing (and cache any data coming
     // in) until the parser is enabled.
-    if(NS_ERROR_HTMLPARSER_BLOCK==buildResult) {
-      EnableParser(PR_FALSE);
-    }
+      PRUint32 b1=NS_ERROR_HTMLPARSER_BLOCK;
+      if(NS_ERROR_HTMLPARSER_BLOCK==result) {
+        EnableParser(PR_FALSE);
+      }
+    }//if
   }
   return result;
 }
@@ -741,23 +676,27 @@ PRInt32 nsParser::ResumeParse() {
  *  @param   
  *  @return  error code -- 0 if ok, non-zero if error.
  */
-PRInt32 nsParser::BuildModel() {
+nsresult nsParser::BuildModel() {
   
-  nsDequeIterator e=mParserContext->mTokenDeque.End(); 
-  nsDequeIterator theMarkPos(e);
+  //nsDequeIterator e=mParserContext->mTokenDeque.End(); 
 
-  if(!mParserContext->mCurrentPos)
-    mParserContext->mCurrentPos=new nsDequeIterator(mParserContext->mTokenDeque.Begin());
+//  if(!mParserContext->mCurrentPos)
+//    mParserContext->mCurrentPos=new nsDequeIterator(mParserContext->mTokenDeque.Begin());
 
     //Get the root DTD for use in model building...
   CParserContext* theRootContext=mParserContext;
-  while(theRootContext->mPrevContext)
+  while(theRootContext->mPrevContext) {
     theRootContext=theRootContext->mPrevContext;
+  }
 
   nsIDTD* theRootDTD=theRootContext->mDTD;
-  
-  PRInt32 result=kNoError;
-  while((kNoError==result) && ((*mParserContext->mCurrentPos<e))){
+  nsresult result=NS_OK;
+  if(theRootDTD) {
+    result=theRootDTD->BuildModel(this);
+  }
+
+/*  
+  while((NS_OK==result) && ((*mParserContext->mCurrentPos<e))){
     mMinorIteration++;
     CToken* theToken=(CToken*)mParserContext->mCurrentPos->GetCurrent();
     theMarkPos=*mParserContext->mCurrentPos;
@@ -771,6 +710,7 @@ PRInt32 nsParser::BuildModel() {
     //The current context has a deque full of them,
     //and the ones that preceed currentpos are no
     //longer needed. Let's recycle them.
+  
   nsITokenRecycler* theRecycler=theRootDTD->GetTokenRecycler();
   if(theRecycler) {
     nsDeque&  theDeque=mParserContext->mTokenDeque;
@@ -785,53 +725,11 @@ PRInt32 nsParser::BuildModel() {
     }
     mParserContext->mCurrentPos->First();
   }
+  */
 
   return result;
 }
 
-
-/**
- * This method provides access to the topmost token in the tokenDeque.
- * The token is not really removed from the list.
- * @update	gess8/2/98
- * @return  ptr to token
- */
-CToken* nsParser::PeekToken() {
-  CToken* theToken=0;
-  if(mParserContext)
-    if(mParserContext->mCurrentPos)
-      theToken=(CToken*)mParserContext->mCurrentPos->GetCurrent();
-  return theToken;
-}
-
-
-/**
- * This method provides access to the topmost token in the tokenDeque.
- * The token is really removed from the list; if the list is empty we return 0.
- * @update	gess8/2/98
- * @return  ptr to token or NULL
- */
-CToken* nsParser::PopToken() {
-  CToken* theToken=0;
-  if(mParserContext)
-    if(mParserContext->mCurrentPos) {
-      theToken=(CToken*)mParserContext->mCurrentPos->GetCurrent();
-      ++(*mParserContext->mCurrentPos);
-    }
-  return theToken;
-}
-
-
-/**
- * 
- * @update	gess8/2/98
- * @param 
- * @return
- */
-CToken* nsParser::PushToken(CToken* theToken) {
-  mParserContext->mTokenDeque.Push(theToken);
-	return theToken;
-}
 
 /*******************************************************************
   These methods are used to talk to the netlib system...
@@ -883,6 +781,11 @@ nsParser::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
   return result;
 }
 
+#undef _DEBUGDUMPFILE 
+#ifdef _DEBUGDUMPFILE
+  fstream* gDumpFile;
+#endif
+
 /**
  *  
  *  
@@ -900,72 +803,77 @@ nsresult nsParser::OnStartBinding(nsIURL* aURL, const char *aSourceType){
   mParserContext->mAutoDetectStatus=eUnknownDetect;
   mParserContext->mDTD=0;
   mParserContext->mSourceType=aSourceType;
-  return kNoError;
+
+#ifdef _DEBUGDUMPFILE
+  gDumpFile = new fstream("c:/temp/out.file",ios::trunc);
+#endif
+
+  return NS_OK;
 }
 
 /**
  *  
  *  
- *  @update  vidur 12/11/98
+ *  @update  gess 1/4/99
  *  @param   pIStream contains the input chars
  *  @param   length is the number of bytes waiting input
  *  @return  error code (usually 0)
  */
-nsresult nsParser::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRUint32 length){
+nsresult nsParser::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRUint32 aLength){
 /*  if (nsnull != mListener) {
       //Rick potts removed this.
       //Does it need to be here?
-    mListener->OnDataAvailable(pIStream, length);
+    mListener->OnDataAvailable(pIStream, aLength);
   }
 */
   NS_PRECONDITION(((eOnStart==mStreamListenerState)||(eOnDataAvail==mStreamListenerState)),kOnStartNotCalled);
 
-  mStreamListenerState=eOnDataAvail;  
   if(eInvalidDetect==mParserContext->mAutoDetectStatus) {
     if(mParserContext->mScanner) {
       mParserContext->mScanner->GetBuffer().Truncate();
     }
   }
 
-  PRUint32 len=1; //init to a non-zero value
-
-  if(!mParserContext->mTransferBuffer)
-    mParserContext->mTransferBuffer = new char[CParserContext::eTransferBufferSize+1];
-
-  while (len > 0) {
-    nsresult rv = pIStream->Read(mParserContext->mTransferBuffer, 0,
-                                 mParserContext->eTransferBufferSize, &len);
-    if((rv == NS_OK) && (len>0)) {
-      if(mParserFilter)
-         mParserFilter->RawBuffer(mParserContext->mTransferBuffer, &len);
-
-      // XXX kipp was here: this is a temporary piece of code that
-      // fixes up the data in the transfer buffer so that the 8 bit
-      // ascii is mapped to ucs2 properly. The problem is that for the
-      // default character set, some web pages use illegal codes (0x80
-      // to 0x9f, inclusive); we already have code to map entities
-      // properly in this range. This code maps raw stream data the
-      // same way.
-      PRUnichar buf[CParserContext::eTransferBufferSize];
-      PRUnichar* dst = buf;
-      const PRUnichar* table = gToUCS2;
-      const char* src = mParserContext->mTransferBuffer;
-      const char* end = src + len;
-      while (src < end) {
-        unsigned char ch = *(unsigned char*)src;
-        *dst++ = table[ch];
-        src++;
-      }
-
-      mParserContext->mScanner->Append(buf, len);
-
-      if(eUnknownDetect==mParserContext->mAutoDetectStatus) {
-        if(eValidDetect==AutoDetectContentType(mParserContext->mScanner->GetBuffer(),mParserContext->mSourceType)) {
-          WillBuildModel(mParserContext->mScanner->GetFilename(),0);
-        } //if
-      }
-    } //if
+  PRInt32 newLength=(aLength>mParserContext->mTransferBufferSize) ? aLength : mParserContext->mTransferBufferSize;
+  if(!mParserContext->mTransferBuffer) {
+    mParserContext->mTransferBufferSize=newLength;
+    mParserContext->mTransferBuffer=new char[newLength+20];
   }
+  else if(aLength>mParserContext->mTransferBufferSize){
+    delete [] mParserContext->mTransferBuffer;
+    mParserContext->mTransferBufferSize=newLength;
+    mParserContext->mTransferBuffer=new char[newLength+20];
+  }
+
+  PRUint32  theTotalRead=0; 
+  PRUint32  theNumRead=1;   //init to a non-zero value
+  int       theStartPos=0;
+  nsresult result=NS_OK;
+
+  while ((theNumRead>0) && (aLength>theTotalRead) && (NS_OK==result)) {
+    result = pIStream->Read(mParserContext->mTransferBuffer, 0, aLength, &theNumRead);
+    if((result == NS_OK) && (theNumRead>0)) {
+      theTotalRead+=theNumRead;
+      if(mParserFilter)
+         mParserFilter->RawBuffer(mParserContext->mTransferBuffer, &theNumRead);
+
+#ifdef  NS_DEBUG
+      int index=0;
+      for(index=0;index<10;index++)
+        mParserContext->mTransferBuffer[theNumRead+index]=0;
+#endif
+
+      mParserContext->mScanner->Append(mParserContext->mTransferBuffer,theNumRead);
+      nsString& theBuffer=mParserContext->mScanner->GetBuffer();
+      theBuffer.ToUCS2(theStartPos);
+
+#ifdef _DEBUGDUMPFILE
+      (*gDumpFile) << mParserContext->mTransferBuffer;
+#endif
+
+    } //if
+    theStartPos+=theNumRead;
+  }//while
 
   if (mParserEnabled) {
     return ResumeParse();
@@ -976,7 +884,8 @@ nsresult nsParser::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRUin
 }
 
 /**
- *  
+ *  This is called by the networking library once the last block of data
+ *  has been collected from the net.
  *  
  *  @update  vidur 12/11/98
  *  @param   
@@ -988,14 +897,27 @@ nsresult nsParser::OnStopBinding(nsIURL* aURL, nsresult status, const PRUnichar*
   nsresult result;
   // If the parser isn't enabled, we don't finish parsing till
   // it is reenabled.
+
   if (mParserEnabled) {
-    result=DidBuildModel(status);
+    return ResumeParse();
   }
+  else {
+    return NS_OK;
+  }
+
   // XXX Should we wait to notify our observers as well if the
   // parser isn't yet enabled?
   if (nsnull != mObserver) {
     mObserver->OnStopBinding(aURL, status, aMsg);
   }
+
+#ifdef _DEBUGDUMPFILE
+  if(gDumpFile){
+    gDumpFile->close();
+    delete gDumpFile;
+  }
+#endif
+
   return result;
 }
 
@@ -1028,34 +950,21 @@ PRBool nsParser::WillTokenize(){
  *  @update  gess 3/25/98
  *  @return  error code -- 0 if ok, non-zero if error.
  */
-PRInt32 nsParser::Tokenize(){
-  CToken* theToken=0;
-  PRInt32 result=kNoError;
+nsresult nsParser::Tokenize(){
+
+  nsresult result=NS_OK;
 
   ++mMajorIteration;
 
   WillTokenize();
-  while(kNoError==result) {
+  nsITokenizer* theTokenizer=mParserContext->mDTD->GetTokenizer();
+  while(NS_SUCCEEDED(result)) {
     mParserContext->mScanner->Mark();
-    result=mParserContext->mDTD->ConsumeToken(theToken,this);
-    if(kNoError==result) {
-      if(theToken) {
-
-  #ifdef VERBOSE_DEBUG
-          theToken->DebugDumpToken(cout);
-  #endif
-        mParserContext->mTokenDeque.Push(theToken);
-      }
-
-    }
-    else {
-      if(theToken)
-        delete theToken;
+    result=theTokenizer->ConsumeToken(*mParserContext->mScanner);
+    if(!NS_SUCCEEDED(result)) {
       mParserContext->mScanner->RewindToMark();
     }
   } 
-  if(kProcessComplete==result)
-    result=NS_OK;
   DidTokenize();
   return result;
 }
@@ -1084,6 +993,7 @@ PRBool nsParser::DidTokenize(){
  *  @return  
  */
 void nsParser::DebugDumpTokens(ostream& out) {
+/*
   nsDequeIterator b=mParserContext->mTokenDeque.Begin();
   nsDequeIterator e=mParserContext->mTokenDeque.End();
 
@@ -1092,6 +1002,7 @@ void nsParser::DebugDumpTokens(ostream& out) {
     theToken=(CToken*)(b++);
     theToken->DebugDumpToken(out);
   }
+*/
 }
 
 
@@ -1105,6 +1016,7 @@ void nsParser::DebugDumpTokens(ostream& out) {
  *  @return  
  */
 void nsParser::DebugDumpSource(ostream& out) {
+/*
   nsDequeIterator b=mParserContext->mTokenDeque.Begin();
   nsDequeIterator e=mParserContext->mTokenDeque.End();
 
@@ -1113,7 +1025,7 @@ void nsParser::DebugDumpSource(ostream& out) {
     theToken=(CToken*)(b++);
     theToken->DebugDumpSource(out);
   }
-
+*/
 }
 
 

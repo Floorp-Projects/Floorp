@@ -33,12 +33,12 @@
 #define SCANNER
 
 #include "nsString.h"
-#include "nsParserTypes.h"
+#include "nsIParser.h"
 #include "prtypes.h"
 #include <fstream.h>
 
 
-class CScanner {
+class nsScanner {
   public:
 
       /**
@@ -50,7 +50,7 @@ class CScanner {
        *  @param   aMode represents the parser mode (nav, other)
        *  @return  
        */
-      CScanner(nsString& anHTMLString);
+      nsScanner(nsString& anHTMLString);
 
       /**
        *  Use this constructor if you want i/o to be based on 
@@ -60,7 +60,7 @@ class CScanner {
        *  @param   aMode represents the parser mode (nav, other)
        *  @return  
        */
-      CScanner(nsString& aFilename,PRBool aCreateStream);
+      nsScanner(nsString& aFilename,PRBool aCreateStream);
 
       /**
        *  Use this constructor if you want i/o to be stream based.
@@ -69,10 +69,10 @@ class CScanner {
        *  @param   aMode represents the parser mode (nav, other)
        *  @return  
        */
-      CScanner(nsString& aFilename,fstream& aStream,PRBool assumeOwnership=PR_TRUE);
+      nsScanner(nsString& aFilename,fstream& aStream,PRBool assumeOwnership=PR_TRUE);
 
 
-      ~CScanner();
+      ~nsScanner();
 
       /**
        *  retrieve next char from internal input stream
@@ -232,7 +232,7 @@ class CScanner {
        */
       PRBool Append(const char* aBuffer, PRUint32 aLen);
 
-      PRBool Append(const PRUnichar* aBuffer, PRInt32 aLen);
+      PRBool Append(const PRUnichar* aBuffer, PRUint32 aLen);
 
       /**
        *  
