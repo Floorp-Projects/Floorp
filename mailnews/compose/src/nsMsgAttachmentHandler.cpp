@@ -195,15 +195,15 @@ nsMsgAttachmentHandler::AnalyzeDataChunk(const char *chunk, PRInt32 length)
       m_unprintable_count++;
       m_ctl_count++;
       if (*s == 0)
-      m_null_count++;
+        m_null_count++;
     }
 
     if (*s == nsCRT::CR || *s == nsCRT::LF)
     {
       if (s+1 < end && s[0] == nsCRT::CR && s[1] == nsCRT::LF)
-      s++;
+        s++;
       if (m_max_column < m_current_column)
-      m_max_column = m_current_column;
+        m_max_column = m_current_column;
       m_current_column = 0;
       m_lines++;
     }
@@ -327,7 +327,6 @@ nsMsgAttachmentHandler::PickEncoding(const char *charset, nsIMsgSend *mime_deliv
         m_encoding = PL_strdup (ENCODING_7BIT);
       }
       else if (encode_p &&
-        m_size > 500 &&
         m_unprintable_count > (m_size / 10))
         /* If the document contains more than 10% unprintable characters,
         then that seems like a good candidate for base64 instead of
