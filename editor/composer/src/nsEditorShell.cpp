@@ -315,6 +315,10 @@ nsEditorShell::Shutdown()
     editor->PreDestroy();
   }
 
+  // Make sure we blow the spellchecker away, just in
+  // case it hasn't been destroyed already.
+  mSpellChecker = nsnull;
+  
   if (mDocShell)
     mDocShell->SetParentURIContentListener(nsnull);
 
