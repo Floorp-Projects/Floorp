@@ -104,6 +104,9 @@ XUL_ATOM(toggled, "toggled")
 XUL_ATOM(grippy, "grippy")
 XUL_ATOM(splitter, "splitter")
 XUL_ATOM(collapse, "collapse")
+XUL_ATOM(resizebefore, "resizebefore")
+XUL_ATOM(resizeafter, "resizeafter")
+XUL_ATOM(state, "state")
 
 
 XUL_ATOM(widget, "widget")

@@ -39,6 +39,8 @@
 #include "nsHTMLParts.h"
 #include "nsIViewManager.h"
 #include "nsIPresShell.h"
+#include "nsGenericHTMLElement.h"
+#include "nsFrameNavigator.h"
 
 #define CONSTANT float(0.0)
 #define DEBUG_REFLOW 0
@@ -56,6 +58,7 @@ public:
   void DrawKnob( nsIPresContext& aPresContext, nsIRenderingContext& aRenderingContext, nscoord x, nscoord y, nscoord springSize);
   void AddInDebugInset( nsIPresContext& aPresContext, PRBool aIsHorizontal, nsMargin& inset);
   void CollapseChild(nsIFrame* frame);
+  void AdjustChildren(nsIPresContext& aPresContext, nsBoxFrame* aBox);
 
     // XXX for the moment we can only handle 100 children.
     // Should use a dynamic array.
@@ -136,7 +139,7 @@ nsBoxFrame::Init(nsIPresContext&  aPresContext,
  * if so it used those instead. Currently it gets its values from css
  */
 void 
-nsBoxFrame::GetRedefinedMinPrefMax(nsIFrame* aFrame, nsCalculatedBoxInfo& aSize)
+nsBoxFrame::GetRedefinedMinPrefMax(nsIPresContext&  aPresContext, nsIFrame* aFrame, nsCalculatedBoxInfo& aSize)
 {
   // add in the css min, max, pref
     const nsStylePosition* position;
@@ -195,16 +198,20 @@ nsBoxFrame::GetRedefinedMinPrefMax(nsIFrame* aFrame, nsCalculatedBoxInfo& aSize)
 
     if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::width, value))
     {
-        value.Trim("%");
-        // convert to a percent.
-        aSize.prefSize.width = value.ToInteger(&error);
+        nsHTMLValue aResult;
+        nsGenericHTMLElement::ParseValueOrPercent(value, aResult, eHTMLUnit_Pixel);
+        float p2t;
+        aPresContext.GetScaledPixelsToTwips(&p2t);
+        aSize.prefSize.width = NSIntPixelsToTwips(aResult.GetPixelValue(), p2t);
     }
 
     if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::height, value))
     {
-        value.Trim("%");
-        // convert to a percent.
-        aSize.prefSize.height = value.ToInteger(&error);
+        nsHTMLValue aResult;
+        nsGenericHTMLElement::ParseValueOrPercent(value, aResult, eHTMLUnit_Pixel);
+        float p2t;
+        aPresContext.GetScaledPixelsToTwips(&p2t);
+        aSize.prefSize.height = NSIntPixelsToTwips(aResult.GetPixelValue(), p2t);
     }
 }
 
@@ -228,7 +235,7 @@ nsBoxFrame::GetChildBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflowStat
   if (NS_SUCCEEDED(aFrame->QueryInterface(nsIBox::GetIID(), (void**)&ibox)) && ibox) {
      ibox->GetBoxInfo(aPresContext, aReflowState, aSize); 
      // add in the border, padding, width, min, max
-     GetRedefinedMinPrefMax(aFrame, aSize);
+     GetRedefinedMinPrefMax(aPresContext, aFrame, aSize);
      return NS_OK;
   }   
 
@@ -239,7 +246,7 @@ nsBoxFrame::GetChildBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflowStat
   aSize.prefHeightIntrinsic = PR_TRUE;
 
   // redefine anything depending on css
-  GetRedefinedMinPrefMax(aFrame, aSize);
+  GetRedefinedMinPrefMax(aPresContext, aFrame, aSize);
 
   // if we are still intrinsically sized the flow to get the size otherwise
   // we are done.
@@ -1101,6 +1108,9 @@ nsBoxFrame::GetInset(nsMargin& margin)
 
 #define GET_WIDTH(size) (mHorizontal ? size.width : size.height)
 #define GET_HEIGHT(size) (mHorizontal ? size.height : size.width)
+#define GET_WIDTH_FOR(box, size) (box->mHorizontal ? box->size.width : box->size.height)
+#define GET_HEIGHT_FOR(box, size) (box->mHorizontal ? box->size.height : box->size.width)
+
 
 void
 nsBoxFrame::InvalidateChildren()
@@ -1242,55 +1252,209 @@ nsBoxFrame::LayoutChildrenInRect(nsRect& size)
         }
 }
 
-/**
- * Ok if we want to resize a child we will know the actual size in pixels we want it to be.
- * This is not the preferred size. But they only way we can change a child is my manipulating its
- * preferred size. So give the actual pixel size this return method will return figure out the preferred
- * size and set it.
- */
+/*
 void
-nsBoxFrame::ResizeChildTo(nscoord aChildIndex, nscoord aNewSize)
+nsBoxFrameImpl::AdjustChildren(nsIPresContext& aPresContext, nsBoxFrame* aBox)
 {
-  // get all the variables we need
-  nscoord min         = GET_WIDTH(mSprings[aChildIndex].minSize);
-  nscoord max         = GET_WIDTH(mSprings[aChildIndex].maxSize);
-  nscoord c           = GET_WIDTH(mSprings[aChildIndex].calculatedSize);
-  nscoord pref        = GET_WIDTH(mSprings[aChildIndex].prefSize);
-  float flex          = mSprings[aChildIndex].flex;
-  float stretchFactor = float(c-pref)/flex;
+  printf("------- AdjustChildren------\n");
 
-  // check bounds
-  if (aNewSize < min)
-     aNewSize = min;
-  else if (aNewSize > max)
-     aNewSize = max;
-
-  // determine the new pref size
-  pref = aNewSize - NSToIntFloor(flex/stretchFactor);
-
-  // find the child at the index
-  nsIFrame* childFrame = mFrames.FirstChild(); 
+  nsIFrame* childFrame;
+  
+  aBox->FirstChild(nsnull, &childFrame); 
+  nscoord total = nsFrameNavigator::CountFrames(aBox);
   nscoord count = 0;
   while (nsnull != childFrame) 
   {
-    if (count == aChildIndex)
-      break;
 
+    nscoord pref = GET_WIDTH_FOR(aBox, mSprings[count].prefSize);
+    nscoord c    = GET_WIDTH_FOR(aBox, mSprings[count].calculatedSize);
     nsresult rv;
+
+    // if the preferred size changes
+    if (pref != c) { 
+//      nsRect r;
+//      childFrame->GetRect(r);
+     
+      pref = c;
+      const nsStyleSpacing* spacing;
+      rv = childFrame->GetStyleData(eStyleStruct_Spacing,
+                    (const nsStyleStruct*&) spacing);
+
+      NS_ASSERTION(rv == NS_OK,"failed to get spacing info");
+
+      nsMargin margin(0,0,0,0);
+      spacing->GetMargin(margin);
+      nsMargin border(0,0,0,0);
+      spacing->GetBorderPadding(border);
+      margin += border;
+
+      nsIAtom* attribute;
+
+      if (aBox->mHorizontal) {
+        pref -= (margin.left + margin.right);
+        attribute = nsHTMLAtoms::width;
+      //  childFrame->SizeTo(pref, r.height);
+      } else {
+        pref -= (margin.top + margin.bottom);
+        attribute = nsHTMLAtoms::height;
+      //  childFrame->SizeTo(r.width, pref);
+      }
+
+      float p2t;
+      aPresContext.GetScaledPixelsToTwips(&p2t);
+      nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+
+      aBox->mSprings[count].needsRecalc = PR_TRUE;
+      nsCOMPtr<nsIContent> content;
+      childFrame->GetContent(getter_AddRefs(content));
+
+      // set its preferred size.
+      char ch[50];
+      sprintf(ch,"%d",pref/onePixel);
+      printf("index=%d, pref=%s\n", count, ch);
+      content->SetAttribute(kNameSpaceID_None, attribute, ch, PR_FALSE));
+  }
+
     rv = childFrame->GetNextSibling(&childFrame);
     NS_ASSERTION(rv == NS_OK,"failed to get next child");
     count++;
   }
 
-  nsCOMPtr<nsIContent> content;
-  childFrame->GetContent(getter_AddRefs(content));
-
-
-  // set its preferred size.
-  char ch[50];
-  sprintf(ch,"%d",pref);
-  content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::width, ch, PR_TRUE);
 }
+
+
+void
+nsBoxFrame::ResizeChildTo(nsIPresContext& aPresContext, 
+                          nscoord aChildIndex, 
+                          nscoord& aDiff, 
+                          PRInt32* aChildrenBefore, 
+                          PRInt32* aChildrenAfter, 
+                          PRInt32 aChildrenBeforeCount, 
+                          PRInt32 aChildrenAfterCount, 
+                          PRBool aBounded)
+{ 
+  nscoord spaceLeft = 0;
+  int i;
+  for (i=0; i < aChildrenBeforeCount; i++) {
+    PRInt32 index = aChildrenBefore[i];
+   
+    nscoord min1         = GET_WIDTH(mSprings[index].minSize);
+    nscoord max1         = GET_WIDTH(mSprings[index].maxSize);
+    nscoord& c1          = GET_WIDTH(mSprings[index].calculatedSize);
+
+    // figure our how much space to add or remove
+    if (c1 + aDiff < min1) {
+     spaceLeft = aDiff + (c1 - min1);
+     c1 = min1;
+    } else if (c1 + aDiff > max1) {
+     spaceLeft = aDiff + (max1 - c1);
+     c1 = max1;
+    } else {
+     spaceLeft = 0;
+     c1 += aDiff;
+    }
+
+    // there is not space left? We are done
+    if (spaceLeft == 0)
+       break;
+  }
+
+  // if there is any space left over remove it from the dif we were originally given
+  aDiff -= spaceLeft;
+  spaceLeft = 0;
+
+  for (i=0; i < aChildrenAfterCount; i++) {
+    PRInt32 index = aChildrenAfter[i];
+
+    nscoord min2         = GET_WIDTH(mSprings[index].minSize);
+    nscoord max2         = GET_WIDTH(mSprings[index].maxSize);
+    nscoord& c2          = GET_WIDTH(mSprings[index].calculatedSize);
+ 
+    // see how much space we can take or give
+    if (c2 - aDiff < min2) {
+     spaceLeft = aDiff - (c2 - min2);
+     c2 = min2;
+    } else if (c2 - aDiff > max2) {
+     spaceLeft = aDiff - (max2 - c2);
+     c2 = max2;
+    } else {
+      spaceLeft = 0;
+      c2 -= aDiff;
+    }
+
+    // there is not space left? We are done
+    if (spaceLeft == 0)
+       break;
+  }
+ 
+  // if we have space that could not be allocated. Then put the space back.
+  if (spaceLeft != 0) {
+    if (!aBounded) {
+      nscoord diff = -spaceLeft;
+      spaceLeft = 0;
+
+      for (i=0; i < aChildrenBeforeCount; i++) {
+		  PRInt32 index = aChildrenBefore[i];
+   
+		  nscoord min1         = GET_WIDTH(mSprings[index].minSize);
+		  nscoord max1         = GET_WIDTH(mSprings[index].maxSize);
+		  nscoord& c1          = GET_WIDTH(mSprings[index].calculatedSize);
+
+		  // figure our how much space to add or remove
+		  if (c1 + diff < min1) {
+		   spaceLeft = diff + (c1 - min1);
+		   c1 = min1;
+		  } else if (c1 + diff > max1) {
+		   spaceLeft = diff + (max1 - c1);
+		   c1 = max1;
+		  } else {
+			spaceLeft = 0;
+			c1 += diff;
+		  }
+
+		  // there is no space left? We are done
+		  if (spaceLeft == 0)
+			 break;
+      }
+	  aDiff += diff;
+    } else {
+      spaceLeft = 0;
+    }
+  }
+
+  printf("Spaceleft=%d\n",spaceLeft);
+
+  nsIFrame* splitter = nsFrameNavigator::GetChildAt(this, aChildIndex);
+
+  nsRect r;
+  splitter->GetRect(r);
+
+  if (mHorizontal) 
+      splitter->MoveTo(r.x + aDiff, r.y);
+  else
+      splitter->MoveTo(r.x, r.y + aDiff);
+      
+  
+  mImpl->AdjustChildren(aPresContext, this);  
+  Invalidate(nsRect(0,0,mRect.width, mRect.height), PR_TRUE);
+
+}
+*/
+
+void 
+nsBoxFrame::GetChildBoxInfo(PRInt32 aIndex, nsBoxInfo& aSize)
+{
+    NS_ASSERTION(aIndex >= 0 && aIndex < mSpringCount,"Index out of bounds!!");
+    aSize = mSprings[aIndex];
+}
+
+void 
+nsBoxFrame::SetChildNeedsRecalc(PRInt32 aIndex, PRBool aRecalc)
+{
+    NS_ASSERTION(aIndex >= 0 && aIndex < mSpringCount,"Index out of bounds!!");
+    mSprings[aIndex].needsRecalc = PR_TRUE;
+}
+
 
 // Marks the frame as dirty and generates an incremental reflow
 // command targeted at this frame

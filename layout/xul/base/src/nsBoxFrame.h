@@ -109,17 +109,19 @@ public:
 
   virtual PRBool IsHorizontal() const { return mHorizontal; }
 
-  virtual void ResizeChildTo(nscoord aChildIndex, nscoord aNewSize);
-
   
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);
 
   virtual ~nsBoxFrame();
+
+  virtual void GetChildBoxInfo(PRInt32 aIndex, nsBoxInfo& aSize);
+  virtual void SetChildNeedsRecalc(PRInt32 aIndex, PRBool aRecalc);
+
 protected:
     nsBoxFrame(PRUint32 aFlags = 0);
 
-    virtual void GetRedefinedMinPrefMax(nsIFrame* aFrame, nsCalculatedBoxInfo& aSize);
+    virtual void GetRedefinedMinPrefMax(nsIPresContext& aPresContext, nsIFrame* aFrame, nsCalculatedBoxInfo& aSize);
     virtual nsresult GetChildBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflowState& aReflowState, nsIFrame* aFrame, nsCalculatedBoxInfo& aSize);
     virtual nsresult FlowChildren(nsIPresContext&   aPresContext,
                      nsHTMLReflowMetrics&     aDesiredSize,
@@ -157,6 +159,7 @@ protected:
 
 private: 
   
+    friend class nsBoxFrameImpl;
     nsBoxFrameImpl* mImpl;
 
 }; // class nsBoxFrame
