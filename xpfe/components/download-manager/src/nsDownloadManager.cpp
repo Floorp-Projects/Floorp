@@ -54,7 +54,6 @@
 #include "nsIWebBrowserPersist.h"
 #include "nsIWindowWatcher.h"
 #include "nsIStringBundle.h"
-#include "nsIWindowMediator.h"
 
 /* Outstanding issues/todo:
  * 1. Implement pause/resume.
@@ -564,8 +563,8 @@ nsDownloadManager::CancelDownload(const char* aPath)
     if (NS_FAILED(rv)) return rv;
   }
   
-  DownloadEnded(aPath, nsnull);  
-
+  DownloadEnded(aPath, nsnull);
+  
   // if there's a progress dialog open for the item,
   // we have to notify it that we're cancelling
   nsCOMPtr<nsIProgressDialog> dialog;
@@ -619,18 +618,9 @@ nsDownloadManager::Open(nsIDOMWindow* aParent)
   // if this fails, it fails -- continue.
   AssertProgressInfo();
   
-  //check for an existing manager window and focus it
-  nsresult rv;
-  nsCOMPtr<nsIWindowMediator> wm = do_GetService("@mozilla.org/rdf/datasource;1?name=window-mediator", &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  nsCOMPtr<nsIDOMWindowInternal> recentWindow;
-  wm->GetMostRecentWindow(NS_LITERAL_STRING("Download:Manager").get(), getter_AddRefs(recentWindow));
-  if (recentWindow)
-    return recentWindow->Focus();
-
   // if we ever have the capability to display the UI of third party dl managers,
   // we'll open their UI here instead.
+  nsresult rv;
   nsCOMPtr<nsIWindowWatcher> ww = do_GetService("@mozilla.org/embedcomp/window-watcher;1", &rv);
   if (NS_FAILED(rv)) return rv;
 
@@ -712,8 +702,6 @@ nsDownloadManager::OpenProgressDialogFor(const char* aPath, nsIDOMWindow* aParen
   // helper app...
   nsXPIDLString openingWith;
   download->GetOpeningWith(getter_Copies(openingWith));
-
-  dialog->SetCancelOnClose(PR_FALSE);
 
   dl->Init(source, target, nsnull, openingWith, startTime, nsnull); 
   dl->SetObserver(this);
