@@ -47,7 +47,7 @@
 // Parser Observation
 #include "nsEditorParserObserver.h"
 
-class nsIWebShell;
+class nsIDocShell;
 class nsIScriptContext;
 class nsIDOMWindow;
 class nsIDOMElement;
@@ -103,7 +103,7 @@ class nsEditorShell :   public nsIEditorShell,
   		eHTMLTextEditorType = 2
   	} EEditorType;
   	
-    nsresult   			DoEditorMode(nsIWebShell *aWebShell);
+    nsresult   			DoEditorMode(nsIDocShell *aDocShell);
     nsresult  			InstantiateEditor(nsIDOMDocument *aDoc, nsIPresShell *aPresShell);
 		nsresult    	  PrepareDocumentForEditing(nsIDocumentLoader* aLoader, nsIURI *aUrl);
     nsresult  			ScrollSelectionIntoView();
@@ -163,13 +163,12 @@ class nsEditorShell :   public nsIEditorShell,
     nsIDOMWindow        *mToolbarWindow;				// weak reference
     nsIDOMWindow        *mContentWindow;				// weak reference
 
-    nsIWebShellWindow   *mWebShellWin;					// weak reference
-    nsIWebShell         *mWebShell;						  // weak reference
+    nsIDocShell         *mDocShell;						  // weak reference
 
     // The webshell that contains the document being edited.
     // Don't assume that webshell directly contains the document being edited;
     // if we are in a frameset, this assumption is false.
-    nsIWebShell         *mContentAreaWebShell;	// weak reference
+    nsIDocShell         *mContentAreaDocShell;	// weak reference
 
     PRPackedBool        mCloseWindowWhenLoaded; // error on load. Close window when loaded
 
