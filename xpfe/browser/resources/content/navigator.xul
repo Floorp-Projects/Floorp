@@ -246,8 +246,11 @@ Contributor(s): ______________________________________. -->
 <!ENTITY xptk8Cmd.label "Sound">
 <!ENTITY xptk9Cmd.label "XP Menus">
 
-<!-- DO not localize strresCmd.label; test case --> 
+<!-- L10n BEGIN : DO not localize the entities below; test case --> 
 <!ENTITY strresCmd.label "StringBundle Test">
+<!ENTITY languages.label "Languages">
+<!ENTITY da-DK.label "Danish (da-DK)">
+<!-- L10n END   : DO not localize the entities above; test case --> 
 
 <!ENTITY QA.label "QA">
 <!ENTITY QABugCmd.label "Bug Writing">
@@ -286,9 +289,11 @@ Contributor(s): ______________________________________. -->
         titlemenuseparator ="&mainWindow.titlemodifiermenuseparator;"  windowtype="navigator:browser"
         align="vertical" width="640" height="480"> 
 
-  <html:script language="javascript" src="navigator.js">
+   <html:script language="javascript" src="chrome://global/content/strres.js" />
+
+   <html:script language="javascript" src="navigator.js">
   </html:script>
-  
+ 
   <html:script language="javascript" src="tooltip.js">
   </html:script>
 
@@ -698,6 +703,12 @@ Contributor(s): ______________________________________. -->
         <menuitem value="&QAKnownBugCmd.label;" onaction="window.content.location.href='http://www.mozilla.org/quality/most-frequent-bugs/'"/>
         <menuseparator />
         <menuitem value="&strresCmd.label;" onaction="window.content.location.href='resource:/res/strres-test.xul'"/>
+		<menu value="&languages.label;">
+	    	<menupopup>
+        		<menuitem value="&da-DK.label;" onaction="localeTo('da-DK');" />
+			</menupopup>
+
+		</menu>
 	</menupopup>
   </menu>
     <spring flex="100%"/>
