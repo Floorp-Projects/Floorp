@@ -209,7 +209,7 @@ bugs.bug_status";
 
 
 $query .= "
-from   bugs left join votes using(bug_id),
+from   bugs left join votes on bugs.bug_id = votes.bug_id,
        profiles assign,
        profiles report
        left join profiles qacont on bugs.qa_contact = qacont.userid,
@@ -228,7 +228,7 @@ if ((defined $::FORM{'emailcc1'} && $::FORM{'emailcc1'}) ||
     # We need to poke into the CC table.  Do weird SQL left join stuff so that
     # we can look in the CC table, but won't reject any bugs that don't have
     # any CC fields.
-    $query =~ s/bugs left join,/bugs left join cc using (bug_id) left join profiles ccname on cc.who = ccname.userid left join,/;
+    $query =~ s/bugs left join/bugs left join cc on bugs.bug_id = cc.bug_id left join profiles ccname on cc.who = ccname.userid left join/;
 }
 
 if (defined $::FORM{'sql'}) {
