@@ -1221,19 +1221,24 @@ nsHTMLDocument::InternalAddStyleSheet(nsIStyleSheet* aSheet, PRUint32 aFlags)
 {
   if (aSheet == mAttrStyleSheet) {  // always first
     NS_ASSERTION(mStyleSheets.Count() == 0 ||
-                 mAttrStyleSheet != mStyleSheets[0],
+                 mAttrStyleSheet !=
+                   NS_STATIC_CAST(nsIStyleSheet*, mStyleSheets[0]),
                  "Adding attr sheet twice!");
     mStyleSheets.InsertObjectAt(aSheet, 0);
   }
   else if (aSheet == mStyleAttrStyleSheet) {  // always last
     NS_ASSERTION(mStyleSheets.Count() == 0 ||
-                 mStyleSheets[mStyleSheets.Count() - 1] != mStyleAttrStyleSheet,
+                 NS_STATIC_CAST(nsIStyleSheet*,
+                                mStyleSheets[mStyleSheets.Count() - 1]) !=
+                   mStyleAttrStyleSheet,
                  "Adding style attr sheet twice!");
     mStyleSheets.AppendObject(aSheet);
   }
   else {
     PRInt32 count = mStyleSheets.Count();
-    if (count != 0 && mStyleAttrStyleSheet == mStyleSheets[count - 1]) {
+    if (count != 0 &&
+        mStyleAttrStyleSheet ==
+          NS_STATIC_CAST(nsIStyleSheet*, mStyleSheets[count - 1])) {
       // keep attr sheet last
       mStyleSheets.InsertObjectAt(aSheet, count - 1);
     }
