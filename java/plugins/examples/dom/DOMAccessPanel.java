@@ -74,7 +74,7 @@ public class DOMAccessPanel extends JPanel implements ActionListener, ItemListen
 
 	JLabel l = new JLabel("Name:");
 	c.anchor = GridBagConstraints.WEST;
-	c.fill = GridBagConstraints.NONE;
+	c.fill = GridBagConstraints.BOTH;
 	layout.setConstraints(l, c);
 	nodeInfo.add(l);
 
@@ -148,6 +148,7 @@ public class DOMAccessPanel extends JPanel implements ActionListener, ItemListen
 	    }
 	});
 
+	c.fill = GridBagConstraints.BOTH;
 	JScrollPane valueScrollPane = new JScrollPane(value);
 	layout.setConstraints(valueScrollPane, c);
 	nodeInfo.add(valueScrollPane);
@@ -189,10 +190,10 @@ public class DOMAccessPanel extends JPanel implements ActionListener, ItemListen
 	save.setActionCommand("save");
 	save.addActionListener(this);
 	c.anchor = GridBagConstraints.CENTER;
-	c.fill = GridBagConstraints.BOTH;
+	c.fill = GridBagConstraints.HORIZONTAL;
 	layout.setConstraints(save, c);
 	add(save);
-
+	setMinimumSize(new Dimension(350, 400));
 	setButtonState();
 
     }

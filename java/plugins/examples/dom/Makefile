@@ -24,7 +24,7 @@ DOMViewer.jar: DOMViewerFactory.class DOMAccessPanel.class DOMTreeDumper.class m
 
 .SUFFIXES: .java .class
 .java.class:
-	$(JDKHOME)/bin/javac -classpath .:../../classes:$(CLASSPATH) $<
+	$(JDKHOME)/bin/javac -classpath .:../../classes:$(CLASSPATH):JavaDOM.jar $<
 clobber:
 	rm *.class *.jar
 install:

@@ -236,8 +236,10 @@ class DOMViewer implements Pluglet {
 	if (frame == null) {
 	    frame  = new JFrame("DOM Viewer");
 	    frame.getContentPane().setLayout(new BorderLayout());
-	    frame.getContentPane().add(new JSplitPane(JSplitPane.VERTICAL_SPLIT, panel, elementPanel));
+	    JSplitPane sp = new JSplitPane(JSplitPane.VERTICAL_SPLIT, panel, elementPanel);
+	    frame.getContentPane().add(sp);
 	    frame.pack();
+	    sp.setDividerLocation(0.35);
 	    frame.show();
 	}
     }
