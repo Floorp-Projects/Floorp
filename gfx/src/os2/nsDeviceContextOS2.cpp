@@ -173,10 +173,7 @@ nsresult nsDeviceContextOS2::Init( nsNativeDeviceContext aContext,
   // We need to begin a document now, because the client is entitled at
   // this point to do stuff like create fonts, which required the PS to
   // be associated with a DC which has been DEVESC_STARTDOC'd.
-
-  // Commenting out for now - we'll see what people say about the effects
-  // This line causes us not to print on Lexmark printers
-//  BeginDocument(nsnull);
+  BeginDocument(nsnull);
 #endif
 
   return NS_OK;
@@ -889,10 +886,19 @@ nsresult nsDeviceContextOS2::BeginDocument(PRUnichar * aTitle)
 
     PSZ pszDocName = title != nsnull?title:"Mozilla Document";
 
+    long lResult;
+
+    // ENDDOC first so we work on Lexmark printer drivers
+    long   lOutCount = 2;
+    USHORT usJobID = 0;
+    lResult = ::DevEscape(mPrintDC, DEVESC_ENDDOC,
+                          0, NULL,
+                          &lOutCount, (PBYTE)&usJobID);
+
     long lDummy = 0;
-    long lResult = ::DevEscape(mPrintDC, DEVESC_STARTDOC,
-                               strlen(pszDocName) + 1, pszDocName,
-                               &lDummy, NULL);
+    lResult = ::DevEscape(mPrintDC, DEVESC_STARTDOC,
+                          strlen(pszDocName) + 1, pszDocName,
+                          &lDummy, NULL);
 
     if (lResult == DEV_OK)
       rv = NS_OK;
