@@ -37,10 +37,13 @@ CSRCS		= \
 		memmove.c \
 		mktemp.c \
 		ndbm.c \
-		snprintf.c \
 		strerror.c \
 		nsres.c \
 		$(NULL)
+
+ifeq (,$(filter -DHAVE_SNPRINTF=1,$(DEFS)))
+CSRC += snprintf.c
+endif
 
 LOCAL_INCLUDES	= -I$(srcdir)/../include
 
