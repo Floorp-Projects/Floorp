@@ -72,7 +72,7 @@ exn_initPrivate(JSContext *cx, JSErrorReport *report, const char *message)
     newPrivate = (JSExnPrivate *)JS_malloc(cx, sizeof (JSExnPrivate));
 
     PR_ASSERT(message);
-    newMessage = (char *)JS_malloc(cx, strlen(message));
+    newMessage = (char *)JS_malloc(cx, strlen(message)+1);
     strcpy(newMessage, message);
     newPrivate->message = newMessage;
 
@@ -81,7 +81,7 @@ exn_initPrivate(JSContext *cx, JSErrorReport *report, const char *message)
 
     if (report->filename) {
 	newReport->filename =
-	    (const char *)JS_malloc(cx, strlen(report->filename));
+	    (const char *)JS_malloc(cx, strlen(report->filename)+1);
 	/* Ack.  Const! */
 	strcpy((char *)newReport->filename, report->filename);
     } else {
@@ -110,7 +110,7 @@ exn_initPrivate(JSContext *cx, JSErrorReport *report, const char *message)
 
 #if 0
     if (report->uclinebuf) {
-	size_t len = js_strlen(report->uclinebuf);
+	size_t len = js_strlen(report->uclinebuf)+1;
 	newReport->uclinebuf =
 	    (const jschar *)JS_malloc(cx, len);
 	js_strncpy(newReport->uclinebuf, report->uclinebuf, len);
