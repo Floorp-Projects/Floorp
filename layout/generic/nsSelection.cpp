@@ -1969,7 +1969,9 @@ nsSelection::SelectLines(nsIPresContext *aPresContext,
   nsIFrame *theFrame;
   PRInt32 currentOffset, frameStart, frameEnd;
   
-  GetFrameForNodeOffset(aPos.mResultContent, aPos.mContentOffset, HINTLEFT, &theFrame, &currentOffset);
+  result = GetFrameForNodeOffset(aPos.mResultContent, aPos.mContentOffset, HINTLEFT, &theFrame, &currentOffset);
+  if (NS_FAILED(result))
+    return result;
   theFrame->GetOffsets(frameStart, frameEnd);
   startOffset = frameStart;
   startContent = aPos.mResultContent;
@@ -1993,7 +1995,9 @@ nsSelection::SelectLines(nsIPresContext *aPresContext,
   if (NS_FAILED(result))
     return result;
 
-  GetFrameForNodeOffset(aPos.mResultContent, aPos.mContentOffset, HINTRIGHT, &theFrame, &currentOffset);
+  result = GetFrameForNodeOffset(aPos.mResultContent, aPos.mContentOffset, HINTRIGHT, &theFrame, &currentOffset);
+  if (NS_FAILED(result))
+    return result;
   theFrame->GetOffsets(frameStart, frameEnd);
   endOffset = frameEnd;
   endContent = aPos.mResultContent;
@@ -2174,7 +2178,11 @@ nsSelection::VisualSelectFrames(nsIPresContext *aPresContext,
 
     // Select all the lines between the line containing the anchor point and the line containing the current point
     aPos.mJumpLines = PR_TRUE;
-    SelectLines(aPresContext, selectionDirection, anchorNode, anchorFrame, anchorOffset, currentNode, aCurrentFrame, currentOffset, aPos);
+    result = SelectLines(aPresContext, selectionDirection,
+                         anchorNode, anchorFrame, anchorOffset,
+                         currentNode, aCurrentFrame, currentOffset, aPos);
+    if (NS_FAILED(result))
+      return result;
 
     // Go to the current point
 
@@ -2227,8 +2235,13 @@ nsSelection::GetPrevNextBidiLevels(nsIPresContext *aPresContext,
   PRInt32     currentOffset;
   PRInt32     frameStart, frameEnd;
   nsDirection direction;
+  nsresult    result;
 
-  GetFrameForNodeOffset(aNode, aContentOffset, mHint, &currentFrame, &currentOffset);
+  *aPrevLevel = *aNextLevel = 0;
+
+  result = GetFrameForNodeOffset(aNode, aContentOffset, mHint, &currentFrame, &currentOffset);
+  if (NS_FAILED(result))
+    return result;
   currentFrame->GetOffsets(frameStart, frameEnd);
 
   if (0 == frameStart && 0 == frameEnd)
@@ -2259,7 +2272,7 @@ nsSelection::GetPrevNextBidiLevels(nsIPresContext *aPresContext,
   nsIFrame *thisBlock;
   PRInt32   thisLine;
   nsCOMPtr<nsILineIteratorNavigator> it; 
-  nsresult result = NS_ERROR_FAILURE;
+  result = NS_ERROR_FAILURE;
   while (NS_FAILED(result) && blockFrame)
   {
     thisBlock = blockFrame;
@@ -2516,7 +2529,10 @@ void nsSelection::BidiLevelFromClick(nsIContent *aNode, PRUint32 aContentOffset)
   PRUint8 frameLevel;
   PRInt32 OffsetNotUsed;
 
-  GetFrameForNodeOffset(aNode, aContentOffset, mHint, &clickInFrame, &OffsetNotUsed);
+  result = GetFrameForNodeOffset(aNode, aContentOffset, mHint, &clickInFrame, &OffsetNotUsed);
+  if (NS_FAILED(result))
+    return;
+
   clickInFrame->GetBidiProperty(context, nsLayoutAtoms::embeddingLevel,
                                 (void**)&frameLevel, sizeof(PRUint8) );
   shell->SetCursorBidiLevel(frameLevel);
@@ -2597,23 +2613,31 @@ nsSelection::HandleDrag(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint&
   if (NS_SUCCEEDED(result))
   {
 #ifdef IBMBIDI
-    long level;
-    nsPeekOffsetStruct pos;
-    pos.SetData(mTracker, 0, eSelectDir, eDirNext /*????*/, startPos, PR_FALSE,PR_TRUE, PR_TRUE);
-    mHint = HINT(beginOfContent);
-    HINT saveHint = mHint;
-    newFrame->GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel, (void**)&level);
-    if (level & 1)
-      mHint = (mHint==HINTLEFT) ? HINTRIGHT : HINTLEFT;
-    pos.mResultContent = newContent;
-    pos.mContentOffset = contentOffsetEnd;
-    result = VisualSelectFrames(aPresContext, newFrame, pos);
-    if (NS_FAILED(result))
-      result = HandleClick(newContent, startPos, contentOffsetEnd , PR_FALSE, PR_FALSE, beginOfContent);
-    mHint = saveHint;
-#else
-    result = HandleClick(newContent, startPos, contentOffsetEnd , PR_TRUE, PR_FALSE, beginOfContent);
+    PRBool bidiEnabled = PR_FALSE;
+    aPresContext->BidiEnabled(bidiEnabled);
+    if (bidiEnabled) {
+      long level;
+      nsPeekOffsetStruct pos;
+      pos.SetData(mTracker, 0, eSelectDir, eDirNext, startPos, PR_FALSE,
+                  PR_TRUE, PR_TRUE);
+      mHint = HINT(beginOfContent);
+      HINT saveHint = mHint;
+      newFrame->GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel,
+                                (void**)&level);
+      if (level & 1)
+        mHint = (mHint==HINTLEFT) ? HINTRIGHT : HINTLEFT;
+      pos.mResultContent = newContent;
+      pos.mContentOffset = contentOffsetEnd;
+      result = VisualSelectFrames(aPresContext, newFrame, pos);
+      if (NS_FAILED(result))
+        result = HandleClick(newContent, startPos, contentOffsetEnd, PR_FALSE,
+	                     PR_FALSE, beginOfContent);
+      mHint = saveHint;
+    }
+    else
 #endif // IBMBIDI
+      result = HandleClick(newContent, startPos, contentOffsetEnd, PR_TRUE,
+                           PR_FALSE, beginOfContent);
   }
 
   return result;
