@@ -1959,7 +1959,7 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
    SetHistoryState(aHistoryState);
 
   /* Add the page to session history */
-  if (aModifyHistory && shist)  {
+  if (aModifyHistory && shist && (!isMail))  {
         PRInt32  ret;
         ret = shist->Add(spec, this);
   }
