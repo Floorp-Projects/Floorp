@@ -49,6 +49,7 @@
 #content-source,
 #doctype-text {
   font-family: -moz-fixed;
+  font-size: -moz-initial;
 }
 
 #appcontent {
@@ -61,5 +62,4 @@
   border-left: 1px solid ThreeDDarkShadow;
   border-right: 1px solid ThreeDLightShadow;
 }
-
 
