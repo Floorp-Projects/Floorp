@@ -674,8 +674,7 @@ nsMenuFrame::ActivateMenu(PRBool aActivateFlag)
 }  
 
 NS_IMETHODIMP
-nsMenuFrame::AttributeChanged(nsPresContext* aPresContext,
-                              nsIContent* aChild,
+nsMenuFrame::AttributeChanged(nsIContent* aChild,
                               PRInt32 aNameSpaceID,
                               nsIAtom* aAttribute,
                               PRInt32 aModType)
@@ -692,7 +691,7 @@ nsMenuFrame::AttributeChanged(nsPresContext* aPresContext,
     }
   } else if (aAttribute == nsHTMLAtoms::checked) {
     if (mType != eMenuType_Normal)
-        UpdateMenuSpecialState(aPresContext);
+        UpdateMenuSpecialState(GetPresContext());
   } else if (aAttribute == nsXULAtoms::acceltext) {
     // someone reset the accelText attribute, so clear the bit that says *we* set it
     AddStateBits(NS_STATE_ACCELTEXT_IS_DERIVED);
@@ -700,7 +699,7 @@ nsMenuFrame::AttributeChanged(nsPresContext* aPresContext,
   } else if (aAttribute == nsXULAtoms::key) {
     BuildAcceleratorText();
   } else if ( aAttribute == nsHTMLAtoms::type || aAttribute == nsHTMLAtoms::name )
-    UpdateMenuType(aPresContext);
+    UpdateMenuType(GetPresContext());
 
   return NS_OK;
 }

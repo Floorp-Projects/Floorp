@@ -127,7 +127,7 @@ public:
 
   void GeneratedContentFrameRemoved(nsIFrame* aFrame);
 
-  nsresult AttributeChanged(nsPresContext* aPresContext,
+  nsresult AttributeChanged(nsPresContext*  aPresContext,
                             nsIContent*     aContent,
                             PRInt32         aNameSpaceID,
                             nsIAtom*        aAttribute,

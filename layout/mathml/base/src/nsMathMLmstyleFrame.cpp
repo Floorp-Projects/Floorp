@@ -206,8 +206,7 @@ nsMathMLmstyleFrame::UpdatePresentationDataFromChildAt(nsPresContext* aPresConte
 }
 
 NS_IMETHODIMP
-nsMathMLmstyleFrame::AttributeChanged(nsPresContext* aPresContext,
-                                      nsIContent*     aContent,
+nsMathMLmstyleFrame::AttributeChanged(nsIContent*     aContent,
                                       PRInt32         aNameSpaceID,
                                       nsIAtom*        aAttribute,
                                       PRInt32         aModType)
@@ -217,5 +216,5 @@ nsMathMLmstyleFrame::AttributeChanged(nsPresContext* aPresContext,
   // them in our subtree. However, our siblings will be re-laid too. We used
   // to have a more speedier but more verbose alternative that didn't re-layout
   // our siblings. See bug 114909 - attachment 67668.
-  return ReLayoutChildren(aPresContext, mParent);
+  return ReLayoutChildren(GetPresContext(), mParent);
 }

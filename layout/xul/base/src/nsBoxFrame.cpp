@@ -1232,15 +1232,13 @@ nsBoxFrame::AppendFrames(nsPresContext* aPresContext,
 
 
 NS_IMETHODIMP
-nsBoxFrame::AttributeChanged(nsPresContext* aPresContext,
-                             nsIContent* aChild,
+nsBoxFrame::AttributeChanged(nsIContent* aChild,
                              PRInt32 aNameSpaceID,
                              nsIAtom* aAttribute,
                              PRInt32 aModType)
 {
-  nsresult rv = nsContainerFrame::AttributeChanged(aPresContext, aChild,
-                                                   aNameSpaceID, aAttribute,
-                                                   aModType);
+  nsresult rv = nsContainerFrame::AttributeChanged(aChild, aNameSpaceID, 
+                                                   aAttribute, aModType);
 
   // Ignore 'width', 'height', 'screenX', 'screenY' and 'sizemode' on a
   // <window>.
@@ -1336,11 +1334,11 @@ nsBoxFrame::AttributeChanged(nsPresContext* aPresContext,
       UpdateMouseThrough();
     }
 
-    nsBoxLayoutState state(aPresContext);
+    nsBoxLayoutState state(GetPresContext());
     MarkDirty(state);
   }
   else if (aAttribute == nsXULAtoms::ordinal) {
-    nsBoxLayoutState state(aPresContext->PresShell());
+    nsBoxLayoutState state(GetPresContext()->PresShell());
     
     nsIBox* parent;
     GetParentBox(&parent);
@@ -1350,7 +1348,7 @@ nsBoxFrame::AttributeChanged(nsPresContext* aPresContext,
   // If the accesskey changed, register for the new value
   // The old value has been unregistered in nsXULElement::SetAttr
   else if (aAttribute == nsXULAtoms::accesskey) {
-    RegUnregAccessKey(aPresContext, PR_TRUE);
+    RegUnregAccessKey(GetPresContext(), PR_TRUE);
   }
 
   return rv;

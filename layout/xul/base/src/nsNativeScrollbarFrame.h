@@ -75,9 +75,8 @@ public:
                     nsIFrame* aParent, nsStyleContext* aContext, nsIFrame* aPrevInFlow);
            
   // nsIFrame overrides
-  NS_IMETHOD AttributeChanged(nsPresContext* aPresContext, nsIContent* aChild,
-                              PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                              PRInt32 aModType);
+  NS_IMETHOD AttributeChanged(nsIContent* aChild, PRInt32 aNameSpaceID,
+                              nsIAtom* aAttribute, PRInt32 aModType);
 
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }

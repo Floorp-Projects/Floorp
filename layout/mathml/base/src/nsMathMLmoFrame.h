@@ -84,8 +84,7 @@ public:
                    nsIFrame*     aChild);
 
   NS_IMETHOD
-  AttributeChanged(nsPresContext* aPresContext,
-                   nsIContent*     aContent,
+  AttributeChanged(nsIContent*     aContent,
                    PRInt32         aNameSpaceID,
                    nsIAtom*        aAttribute,
                    PRInt32         aModType);

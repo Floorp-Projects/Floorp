@@ -87,8 +87,7 @@ public:
                           nsFramePaintLayer aWhichLayer,    
                           nsIFrame**     aFrame);
    
-  NS_IMETHOD AttributeChanged(nsPresContext* aPresContext,
-                              nsIContent* aChild,
+  NS_IMETHOD AttributeChanged(nsIContent* aChild,
                               PRInt32 aNameSpaceID,
                               nsIAtom* aAttribute,
                               PRInt32 aModType);

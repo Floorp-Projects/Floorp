@@ -125,8 +125,7 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
-  NS_IMETHOD AttributeChanged(nsPresContext* aPresContext,
-                              nsIContent* aChild,
+  NS_IMETHOD AttributeChanged(nsIContent* aChild,
                               PRInt32 aNameSpaceID,
                               nsIAtom* aAttribute,
                               PRInt32 aModType);
@@ -445,8 +444,7 @@ nsSubDocumentFrame::VerifyTree() const
 }
 
 NS_IMETHODIMP
-nsSubDocumentFrame::AttributeChanged(nsPresContext* aPresContext,
-                                     nsIContent* aChild,
+nsSubDocumentFrame::AttributeChanged(nsIContent* aChild,
                                      PRInt32 aNameSpaceID,
                                      nsIAtom* aAttribute,
                                      PRInt32 aModType)
@@ -493,7 +491,7 @@ nsSubDocumentFrame::AttributeChanged(nsPresContext* aPresContext,
     // If our container is a web-shell, inform it that it has a new
     // child. If it's not a web-shell then some things will not operate
     // properly.
-    nsCOMPtr<nsISupports> container = aPresContext->GetContainer();
+    nsCOMPtr<nsISupports> container = GetPresContext()->GetContainer();
     nsCOMPtr<nsIDocShellTreeNode> parentAsNode(do_QueryInterface(container));
 
     if (parentAsNode) {

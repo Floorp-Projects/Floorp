@@ -283,23 +283,21 @@ nsSplitterFrame::GetCursor(const nsPoint&    aPoint,
 }
 
 NS_IMETHODIMP
-nsSplitterFrame::AttributeChanged(nsPresContext* aPresContext,
-                                  nsIContent* aChild,
+nsSplitterFrame::AttributeChanged(nsIContent* aChild,
                                   PRInt32 aNameSpaceID,
                                   nsIAtom* aAttribute,
                                   PRInt32 aModType)
 {
-  nsresult rv = nsBoxFrame::AttributeChanged(aPresContext, aChild,
-                                              aNameSpaceID, aAttribute,
-                                              aModType);
+  nsresult rv = nsBoxFrame::AttributeChanged(aChild, aNameSpaceID,
+                                             aAttribute, aModType);
   // if the alignment changed. Let the grippy know
   if (aAttribute == nsHTMLAtoms::align) {
     // tell the slider its attribute changed so it can 
     // update itself
     nsIFrame* grippy = nsnull;
-    nsScrollbarButtonFrame::GetChildWithTag(aPresContext, nsXULAtoms::grippy, this, grippy);
+    nsScrollbarButtonFrame::GetChildWithTag(GetPresContext(), nsXULAtoms::grippy, this, grippy);
     if (grippy)
-      grippy->AttributeChanged(aPresContext, aChild, aNameSpaceID, aAttribute, aModType);
+      grippy->AttributeChanged(aChild, aNameSpaceID, aAttribute, aModType);
   } else if (aAttribute == nsXULAtoms::state) {
     mInner->UpdateState();
   }

@@ -94,8 +94,7 @@ public:
   GetAdditionalStyleContext(PRInt32 aIndex) const;
 
   NS_IMETHOD
-  AttributeChanged(nsPresContext* aPresContext,
-                   nsIContent*     aChild,
+  AttributeChanged(nsIContent*     aChild,
                    PRInt32         aNameSpaceID,
                    nsIAtom*        aAttribute,
                    PRInt32         aModType);

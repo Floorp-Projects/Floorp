@@ -100,20 +100,18 @@ nsDeckFrame::ChildrenMustHaveWidgets(PRBool& aMust) const
 }
 
 NS_IMETHODIMP
-nsDeckFrame::AttributeChanged(nsPresContext* aPresContext,
-                              nsIContent*     aChild,
+nsDeckFrame::AttributeChanged(nsIContent*     aChild,
                               PRInt32         aNameSpaceID,
                               nsIAtom*        aAttribute,
                               PRInt32         aModType)
 {
-  nsresult rv = nsBoxFrame::AttributeChanged(aPresContext, aChild,
-                                             aNameSpaceID, aAttribute,
-                                             aModType);
+  nsresult rv = nsBoxFrame::AttributeChanged(aChild, aNameSpaceID,
+                                             aAttribute, aModType);
 
 
    // if the index changed hide the old element and make the now element visible
   if (aAttribute == nsXULAtoms::selectedIndex) {
-    IndexChanged(aPresContext);
+    IndexChanged(GetPresContext());
   }
 
   return rv;

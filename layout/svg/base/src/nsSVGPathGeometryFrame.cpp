@@ -119,8 +119,7 @@ nsSVGPathGeometryFrame::Init(nsPresContext*  aPresContext,
 }
 
 NS_IMETHODIMP
-nsSVGPathGeometryFrame::AttributeChanged(nsPresContext* aPresContext,
-                                         nsIContent*     aChild,
+nsSVGPathGeometryFrame::AttributeChanged(nsIContent*     aChild,
                                          PRInt32         aNameSpaceID,
                                          nsIAtom*        aAttribute,
                                          PRInt32         aModType,

@@ -303,8 +303,7 @@ nsListBoxBodyFrame::Destroy(nsPresContext* aPresContext)
 }
 
 NS_IMETHODIMP
-nsListBoxBodyFrame::AttributeChanged(nsPresContext* aPresContext,
-                                     nsIContent* aChild,
+nsListBoxBodyFrame::AttributeChanged(nsIContent* aChild,
                                      PRInt32 aNameSpaceID,
                                      nsIAtom* aAttribute, 
                                      PRInt32 aModType)
@@ -318,20 +317,21 @@ nsListBoxBodyFrame::AttributeChanged(nsPresContext* aPresContext,
     if (!rows.IsEmpty()) {
       PRInt32 dummy;
       PRInt32 count = rows.ToInteger(&dummy);
+      nsPresContext* presContext = GetPresContext();
       float t2p;
-      t2p = aPresContext->TwipsToPixels();
+      t2p = presContext->TwipsToPixels();
       PRInt32 rowHeight = GetRowHeightTwips();
       rowHeight = NSTwipsToIntPixels(rowHeight, t2p);
       nsAutoString value;
       value.AppendInt(rowHeight*count);
       mContent->SetAttr(kNameSpaceID_None, nsXULAtoms::minheight, value, PR_FALSE);
 
-      nsBoxLayoutState state(aPresContext);
+      nsBoxLayoutState state(presContext);
       MarkDirty(state);
     }
   }
   else
-    rv = nsBoxFrame::AttributeChanged(aPresContext, aChild, aNameSpaceID, aAttribute, aModType);
+    rv = nsBoxFrame::AttributeChanged(aChild, aNameSpaceID, aAttribute, aModType);
 
   return rv;
  

@@ -1758,22 +1758,20 @@ nsImageFrame::GetCursor(const nsPoint& aPoint,
 }
 
 NS_IMETHODIMP
-nsImageFrame::AttributeChanged(nsPresContext* aPresContext,
-                               nsIContent* aChild,
+nsImageFrame::AttributeChanged(nsIContent* aChild,
                                PRInt32 aNameSpaceID,
                                nsIAtom* aAttribute,
                                PRInt32 aModType)
 {
-  nsresult rv = nsSplittableFrame::AttributeChanged(aPresContext, aChild,
-                                                    aNameSpaceID, aAttribute,
-                                                    aModType);
+  nsresult rv = nsSplittableFrame::AttributeChanged(aChild, aNameSpaceID,
+                                                    aAttribute, aModType);
   if (NS_FAILED(rv)) {
     return rv;
   }
   if (nsHTMLAtoms::alt == aAttribute)
   {
     mState |= NS_FRAME_IS_DIRTY;
-    mParent->ReflowDirtyChild(aPresContext->PresShell(), (nsIFrame*) this);
+    mParent->ReflowDirtyChild(GetPresContext()->PresShell(), (nsIFrame*) this);
   }
 
   return NS_OK;

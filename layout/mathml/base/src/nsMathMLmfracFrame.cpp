@@ -453,8 +453,7 @@ nsMathMLmfracFrame::Place(nsPresContext*      aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLmfracFrame::AttributeChanged(nsPresContext* aPresContext,
-                                     nsIContent*     aContent,
+nsMathMLmfracFrame::AttributeChanged(nsIContent*     aContent,
                                      PRInt32         aNameSpaceID,
                                      nsIAtom*        aAttribute,
                                      PRInt32         aModType)
@@ -472,15 +471,16 @@ nsMathMLmfracFrame::AttributeChanged(nsPresContext* aPresContext,
       if (!mSlashChar) {
         mSlashChar = new nsMathMLChar();
         if (mSlashChar) {
+          nsPresContext* presContext = GetPresContext();
           nsAutoString slashChar; slashChar.Assign(kSlashChar);
-          mSlashChar->SetData(aPresContext, slashChar);
-          ResolveMathMLCharStyle(aPresContext, mContent, mStyleContext, mSlashChar, PR_TRUE);
+          mSlashChar->SetData(presContext, slashChar);
+          ResolveMathMLCharStyle(presContext, mContent, mStyleContext, mSlashChar, PR_TRUE);
         }
       }
     }
   }
   return nsMathMLContainerFrame::
-         AttributeChanged(aPresContext, aContent,aNameSpaceID,
+         AttributeChanged(aContent, aNameSpaceID,
                           aAttribute, aModType);
 }
 

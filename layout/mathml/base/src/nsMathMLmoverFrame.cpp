@@ -80,8 +80,7 @@ nsMathMLmoverFrame::~nsMathMLmoverFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmoverFrame::AttributeChanged(nsPresContext* aPresContext,
-                                     nsIContent*     aContent,
+nsMathMLmoverFrame::AttributeChanged(nsIContent*     aContent,
                                      PRInt32         aNameSpaceID,
                                      nsIAtom*        aAttribute,
                                      PRInt32         aModType)
@@ -89,11 +88,11 @@ nsMathMLmoverFrame::AttributeChanged(nsPresContext* aPresContext,
   if (nsMathMLAtoms::accent_ == aAttribute) {
     // When we have automatic data to update within ourselves, we ask our
     // parent to re-layout its children
-    return ReLayoutChildren(aPresContext, mParent);
+    return ReLayoutChildren(GetPresContext(), mParent);
   }
 
   return nsMathMLContainerFrame::
-         AttributeChanged(aPresContext, aContent, aNameSpaceID,
+         AttributeChanged(aContent, aNameSpaceID,
                           aAttribute, aModType);
 }
 

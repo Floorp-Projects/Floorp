@@ -2163,8 +2163,7 @@ nsFrame::CharacterDataChanged(nsPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsFrame::AttributeChanged(nsPresContext* aPresContext,
-                          nsIContent*     aChild,
+nsFrame::AttributeChanged(nsIContent*     aChild,
                           PRInt32         aNameSpaceID,
                           nsIAtom*        aAttribute,
                           PRInt32         aModType)
