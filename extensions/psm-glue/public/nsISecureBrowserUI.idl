@@ -30,7 +30,7 @@ interface nsIDOMElement;
 [scriptable, uuid(081e31e0-a144-11d3-8c7c-00609792278c)]
 interface nsSecureBrowserUI : nsISupports
 {
-	void init(in nsIDOMWindow window, in nsIDOMElement button);
+	void init(in nsIDOMWindow window, in nsIDOMElement button, in nsIDOMElement certauth);
     void displayPageInfoUI();
 };
 
