@@ -54,12 +54,13 @@ nsWindow::CreateNative(Window aParent, nsRect aRect)
   attr.bit_gravity = NorthWestGravity;
   // make sure that we listen for events
   attr.event_mask = SubstructureNotifyMask | StructureNotifyMask | ExposureMask;
-  // set the default background color to that awful gray
+  // set the default background color and border to that awful gray
   attr.background_pixel = bg_pixel;
+  attr.border_pixel = border_pixel;
   // set the colormap
   attr.colormap = xlib_rgb_get_cmap();
   // here's what's in the struct
-  attr_mask = CWBitGravity | CWEventMask | CWBackPixel;
+  attr_mask = CWBitGravity | CWEventMask | CWBackPixel | CWBorderPixel;
   // check to see if there was actually a colormap.
   if (attr.colormap)
     attr_mask |= CWColormap;
