@@ -20,7 +20,10 @@
 #include "nsCOMPtr.h"
 
 #include "nsDOMCID.h"
+#include "nsMsgBaseCID.h"
+#include "nsIMsgMailSession.h"
 
+static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
 
 
 NS_IMPL_ISUPPORTS(nsMessengerBootstrap, nsCOMTypeInfo<nsIAppShellComponent>::GetIID())
@@ -51,6 +54,11 @@ nsMessengerBootstrap::Shutdown()
 	nsresult finalrv = NS_OK;
 	nsresult rv;
 
+    NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &rv);
+    if (NS_SUCCEEDED(rv))
+	{
+		mailSession->Shutdown();
+	}
 	rv = nsServiceManager::UnregisterService("component://netscape/appshell/component/messenger");
 	if(NS_FAILED(rv)) finalrv = rv;
 

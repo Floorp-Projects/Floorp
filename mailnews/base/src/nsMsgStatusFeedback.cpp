@@ -229,7 +229,11 @@ NS_IMETHODIMP nsMsgStatusFeedback::SetWebShell(nsIWebShell *shell, nsIDOMWindow 
 		if (globalScript)
 			globalScript->GetWebShell(getter_AddRefs(webshell));
 		if (webshell)
-			webshell->GetRootWebShell(*getter_AddRefs(mWebShell));
+		{
+			webshell->GetRootWebShell(mWebShell);
+			nsIWebShell *root = mWebShell;
+			NS_RELEASE(root); // don't hold reference
+		}
 	}
 	mWindow = aWindow;
 	return NS_OK;

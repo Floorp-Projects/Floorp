@@ -46,6 +46,7 @@ interface nsIMsgMailSession : nsISupports {
 
   attribute nsIMsgStatusFeedback temporaryMsgStatusFeedback;
 
+  void Shutdown();
   void AddFolderListener(in nsIFolderListener listener);
   void RemoveFolderListener(in nsIFolderListener listener);
   void NotifyFolderItemPropertyChanged(in nsISupports item,

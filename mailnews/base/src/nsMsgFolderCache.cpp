@@ -60,11 +60,6 @@ nsMsgFolderCache::nsMsgFolderCache()
 	m_mdbStore = nsnull;
 	NS_INIT_REFCNT();
 	m_mdbAllFoldersTable = nsnull;
-    nsresult rv = nsServiceManager::GetService(kCMsgMailSessionCID,
-                                      nsCOMTypeInfo<nsIMsgMailSession>::GetIID(),
-                                      (nsISupports**)&m_mailSession,
-                                      this);
-	NS_ASSERTION(NS_SUCCEEDED(rv), "have to get mail session service");
 	m_morkEnvMemPool = new FolderCachePool;
 	if (m_morkEnvMemPool)
 		m_morkEnvMemPool->Init();
@@ -80,8 +75,8 @@ nsMsgFolderCache::~nsMsgFolderCache()
 		m_mdbStore->Release();
 	if (gMDBFactory)
 	{
-//		gMDBFactory->CloseMdbObject(m_mdbEnv);
-		gMDBFactory->CutStrongRef(GetEnv());
+		gMDBFactory->CloseMdbObject(m_mdbEnv);
+//		gMDBFactory->CutStrongRef(GetEnv());
 	}
 	gMDBFactory = nsnull;
 	if (m_mdbEnv)
@@ -109,9 +104,6 @@ nsMsgFolderCache::QueryInterface(const nsIID& iid, void **result)
 	if (iid.Equals(nsCOMTypeInfo<nsIMsgFolderCache>::GetIID()) ||
 	      iid.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))
 		res = NS_STATIC_CAST(nsIMsgFolderCache*, this);
-	else if (iid.Equals(nsCOMTypeInfo<nsIShutdownListener>::GetIID()))
-		res = NS_STATIC_CAST(nsIShutdownListener*, this);
-
 	if (res) 
 	{
 		NS_ADDREF(this);
@@ -120,32 +112,6 @@ nsMsgFolderCache::QueryInterface(const nsIID& iid, void **result)
 	}
 	return rv;
 }
-
-
-/* called if the mail session service goes offline */
-NS_IMETHODIMP
-nsMsgFolderCache::OnShutdown(const nsCID& aClass, nsISupports *service)
-{
-	// I'm getting a bogus class id here - don't know why.
-//	if (aClass.Equals(kCMsgMailSessionCID)) 
-	{
-		nsCOMPtr <nsIMsgAccountManager> accountManager;
-
-		if (m_mailSession)
-		{
-			nsresult rv = m_mailSession->GetAccountManager(getter_AddRefs(accountManager));
-			if (NS_SUCCEEDED(rv)  && accountManager)
-				rv = accountManager->WriteToFolderCache(this);
-			// releasing the service seems to be wrong, since it causes the service to
-			// be deleted out from under itself while getting shut down.
-//			nsServiceManager::ReleaseService(kCMsgMailSessionCID, m_mailSession /*, this */);
-		}
-		m_mailSession = nsnull;
-	}
-
-	return NS_OK;
-}
-
 
 /* static */ nsIMdbFactory *nsMsgFolderCache::GetMDBFactory()
 {

@@ -53,20 +53,7 @@ nsMsgMailSession::nsMsgMailSession():
 
 nsMsgMailSession::~nsMsgMailSession()
 {
-	
-  if(m_accountManager)
-  {
-//	  if (m_msgFolderCache)
-//		m_accountManager->WriteToFolderCache(m_msgFolderCache);
-	  m_accountManager->CloseCachedConnections();
-	  m_accountManager->UnloadAccounts();
-  }
-
-  NS_IF_RELEASE(m_accountManager);
-
-  NS_IF_RELEASE(m_msgFolderCache);
-
-
+	Shutdown();
 }
 
 nsresult nsMsgMailSession::Init()
@@ -75,6 +62,23 @@ nsresult nsMsgMailSession::Init()
 
 	return rv;
 
+}
+
+nsresult nsMsgMailSession::Shutdown()
+{
+  if(m_accountManager)
+  {
+	  if (m_msgFolderCache)
+		m_accountManager->WriteToFolderCache(m_msgFolderCache);
+	  m_accountManager->CloseCachedConnections();
+	  m_accountManager->UnloadAccounts();
+  }
+
+  NS_IF_RELEASE(m_accountManager);
+
+  NS_IF_RELEASE(m_msgFolderCache);
+
+  return NS_OK;
 }
 
 // nsIMsgMailSession
