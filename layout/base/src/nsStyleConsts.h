@@ -204,9 +204,8 @@
 //#define NS_STYLE_VERTICAL_ALIGN_PERCENT         19
 
 // See nsStyleDisplay
-#define NS_STYLE_VISIBILITY_INHERIT             0
+#define NS_STYLE_VISIBILITY_HIDDEN              0
 #define NS_STYLE_VISIBILITY_VISIBLE             1
-#define NS_STYLE_VISIBILITY_HIDDEN              2
 
 // See nsStyleText
 #define NS_STYLE_WHITESPACE_NORMAL              0
