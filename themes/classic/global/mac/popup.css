@@ -31,6 +31,7 @@
 
 menupopup,
 popup {
+  -moz-appearance: menu;
   border-top: 2px solid;
   border-right: 3px solid;
   border-bottom: 3px solid;
@@ -46,6 +47,7 @@ popup {
 /* ::::: tooltip ::::: */
 
 tooltip {
+  -moz-appearance: tooltip;
   margin-top: 21px;
   border: 1px solid #000000;
   padding: 2px 3px;
