@@ -146,6 +146,7 @@ protected:
   nsresult GetPurgeThreshold(PRInt32 *aThreshold);
 
   nsresult PerformBiffNotifications(void); // if there are new, non spam messages, do biff
+  nsresult CloseDBIfFolderNotOpen();
 
   virtual nsresult SpamFilterClassifyMessage(const char *aURI, nsIMsgWindow *aMsgWindow, nsIJunkMailPlugin *aJunkMailPlugin);
   virtual nsresult SpamFilterClassifyMessages(const char **aURIArray, PRUint32 aURICount, nsIMsgWindow *aMsgWindow, nsIJunkMailPlugin *aJunkMailPlugin);

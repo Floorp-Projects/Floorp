@@ -1026,8 +1026,8 @@ NS_IMETHODIMP nsMsgDBFolder::ReadFromFolderCacheElem(nsIMsgFolderCacheElement *e
     mFlags |= MSG_FOLDER_FLAG_ELIDED;
   }
 
-	element->GetInt32Property("totalMsgs", &mNumTotalMessages);
-	element->GetInt32Property("totalUnreadMsgs", &mNumUnreadMessages);
+  element->GetInt32Property("totalMsgs", &mNumTotalMessages);
+  element->GetInt32Property("totalUnreadMsgs", &mNumUnreadMessages);
   element->GetInt32Property("pendingUnreadMsgs", &mNumPendingUnreadMessages);
   element->GetInt32Property("pendingMsgs", &mNumPendingTotalMessages);
   element->GetInt32Property("expungedBytes", (PRInt32 *) &mExpungedBytes);
@@ -1211,8 +1211,6 @@ nsMsgDBFolder::MarkAllMessagesRead(void)
     EnableNotifications(allMessageCountNotifications, PR_FALSE, PR_TRUE /*dbBatching*/);
     rv = mDatabase->MarkAllRead(nsnull);
     EnableNotifications(allMessageCountNotifications, PR_TRUE, PR_TRUE /*dbBatching*/);
-    mDatabase->SetSummaryValid(PR_TRUE);
-    mDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
   }
   return rv;
 }
@@ -3154,6 +3152,7 @@ void nsMsgDBFolder::ChangeNumPendingUnread(PRInt32 delta)
     PRInt32 oldUnreadMessages = mNumUnreadMessages + mNumPendingUnreadMessages;
     mNumPendingUnreadMessages += delta;
     PRInt32 newUnreadMessages = mNumUnreadMessages + mNumPendingUnreadMessages;
+    NS_ASSERTION(newUnreadMessages >= 0, "shouldn't have negative unread message count");
     nsCOMPtr<nsIMsgDatabase> db;
     nsCOMPtr<nsIDBFolderInfo> folderInfo;
     nsresult rv = GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(db));
@@ -4387,6 +4386,21 @@ NS_IMETHODIMP nsMsgDBFolder::NotifyCompactCompleted()
 {
   NS_ASSERTION(PR_FALSE, "should be overridden by child class");
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult nsMsgDBFolder::CloseDBIfFolderNotOpen()
+{
+  nsresult rv;
+  nsCOMPtr<nsIMsgMailSession> session = 
+           do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv); 
+  if (NS_SUCCEEDED(rv) && session) // don't use NS_ENSURE_SUCCESS here - we need to release semaphore below
+  {
+    PRBool folderOpen;
+    session->IsFolderOpenInWindow(this, &folderOpen);
+    if (!folderOpen && ! (mFlags & (MSG_FOLDER_FLAG_TRASH | MSG_FOLDER_FLAG_INBOX)))
+      SetMsgDatabase(nsnull);
+  }
+  return rv;
 }
 
 NS_IMETHODIMP nsMsgDBFolder::SetSortOrder(PRInt32 order)
