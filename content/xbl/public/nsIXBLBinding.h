@@ -98,8 +98,6 @@ public:
 
   NS_IMETHOD MarkForDeath()=0;
   NS_IMETHOD MarkedForDeath(PRBool* aResult)=0;
-
-  NS_IMETHOD ImplementsInterface(REFNSIID aIID, PRBool* aResult)=0;
 };
 
 extern nsresult
