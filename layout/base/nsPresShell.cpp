@@ -62,6 +62,8 @@
 #include "nsViewsCID.h"
 #include "nsIFrameManager.h"
 #include "nsISupportsPrimitives.h"
+#include "nsILayoutHistoryState.h"
+#include "nsIStatefulFrame.h"
 
 // Drag & Drop, Clipboard
 #include "nsWidgetsCID.h"
@@ -174,7 +176,9 @@ public:
   NS_IMETHOD GetFrameManager(nsIFrameManager** aFrameManager) const;
 
   NS_IMETHOD DoCopy();
- 
+  NS_IMETHOD GetHistoryState(nsILayoutHistoryState** aLayoutHistoryState);
+  NS_IMETHOD CaptureFrameState(nsIFrame* aFrame, nsILayoutHistoryState* aState);
+
   //nsIViewObserver interface
 
   NS_IMETHOD Paint(nsIView *aView,
@@ -1550,6 +1554,64 @@ PresShell::DoCopy()
   return NS_OK;
 }
 
+NS_IMETHODIMP
+PresShell::GetHistoryState(nsILayoutHistoryState** aState)
+{
+  nsresult rv = NS_OK;
+
+  NS_PRECONDITION(nsnull != aState, "null state pointer");
+
+  // Create the document state object
+  rv = NS_NewLayoutHistoryState(aState);
+  
+  if (NS_FAILED(rv)) { 
+    *aState = nsnull;
+    return rv;
+  }
+
+  // Capture frame state for the entire frame hierarchy
+  nsIFrame* rootFrame = nsnull;
+  rv = GetRootFrame(&rootFrame);
+  if (NS_FAILED(rv) || nsnull == rootFrame) return rv;
+
+  rv = CaptureFrameState(rootFrame, *aState);
+
+  return rv;
+}
+
+NS_IMETHODIMP
+PresShell::CaptureFrameState(nsIFrame* aFrame, nsILayoutHistoryState* aState)
+{
+  nsresult rv = NS_OK;
+  NS_PRECONDITION(nsnull != aFrame && nsnull != aState, "null parameters passed in");
+
+  // See if the frame is stateful.
+  nsCOMPtr<nsIStatefulFrame> statefulFrame = do_QueryInterface(aFrame);
+  if (nsnull != statefulFrame) {
+    // If so, ask the frame to save its state
+    rv = statefulFrame->SaveState(aState);    
+  }
+
+  // XXX We are only going through the principal child list right now.
+  // Need to talk to Troy to find out about other kinds of
+  // child lists and whether they will contain stateful frames.
+
+  // Capture frame state for the first child 
+  nsIFrame* child = nsnull;
+  rv = aFrame->FirstChild(nsnull, &child);
+  if (NS_SUCCEEDED(rv) && nsnull != child) {
+    rv = CaptureFrameState(child, aState);
+  }
+
+  // Capture frame state for the next sibling
+  nsIFrame* sibling = nsnull;
+  rv = aFrame->GetNextSibling(&sibling);
+  if (NS_SUCCEEDED(rv) && nsnull != sibling) {
+    rv = CaptureFrameState(sibling, aState);    
+  }
+
+  return rv;
+}
 
 NS_IMETHODIMP
 PresShell::ContentChanged(nsIDocument *aDocument,

@@ -59,6 +59,7 @@ CPPSRCS =				\
 	nsCaret.cpp			\
 	nsRange.cpp			\
 	nsTextNode.cpp			\
+	nsLayoutHistoryState.cpp	\
 	$(NULL)
 
 MODULE=raptor 
@@ -101,6 +102,7 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsCaret.obj			\
 	.\$(OBJDIR)\nsRange.obj			\
 	.\$(OBJDIR)\nsTextNode.obj		\
+	.\$(OBJDIR)\nsLayoutHistoryState.obj	\
 	$(NULL)
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \

@@ -60,6 +60,8 @@ EXPORTS =				\
 	nsStyleCoord.h			\
 	nsStyleStruct.h			\
 	nsTextFragment.h		\
+	nsILayoutHistoryState.h \
+	nsIStatefulFrame.h \
 	$(NULL)
 
 MODULE=raptor 
