@@ -131,7 +131,7 @@ MD2_Begin(MD2Context *cx)
 static void
 md2_compress(MD2Context *cx)
 {
-	int j, k, l;
+	int j;
 	unsigned char P;
 	P = cx->checksum[MD2_CHECKSUM_SIZE-1];
 	/* Compute the running checksum, and set the tmp variables to be 

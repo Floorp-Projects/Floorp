@@ -315,7 +315,6 @@ MD5_Begin(MD5Context *cx)
 static void
 md5_compress(MD5Context *cx)
 {
-	int i;
 	PRUint32 a, b, c, d;
 	PRUint32 tmp;
 	a = cx->cv[0];
@@ -465,7 +464,6 @@ MD5_End(MD5Context *cx, unsigned char *digest,
 	PRUint32 tmp;
 	PRUint32 lowInput, highInput;
 	PRUint32 inBufIndex = cx->lsbInput & 63;
-	int i;
 
 	if (maxDigestLen < MD5_HASH_LEN) {
 		PORT_SetError(SEC_ERROR_INVALID_ARGS);
