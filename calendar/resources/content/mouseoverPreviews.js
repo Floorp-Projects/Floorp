@@ -168,7 +168,7 @@ function getPreviewForEventDisplay( calendarEventDisplay )
   // End date is normally at the time at which event ends.
   // So AllDay displayed ending today end at 0:00 next day.
   var instEndDate = new Date(calendarEventDisplay.displayEndDate);
-  if (calendarEventDisplay.event.allDay)
+  if (calendarEventDisplay.event.isAllDay)
     instEndDate.setDate(instEndDate.getDate() + 1);
 
   return getPreviewForEvent(calendarEventDisplay.event,
@@ -202,11 +202,11 @@ function getPreviewForEvent( event, instStartDate, instEndDate )
       boxAppendLabeledText(vbox, "tooltipLocation", location);
     }
 
-    if (event.start || instStartDate)
+    if (event.startDate || instStartDate)
     {
-      var eventStart = new Date(event.start.getTime());
-      var eventEnd = event.end && new Date(event.end.getTime());
-      if (event.allDay && eventEnd) { 
+      var eventStart = new Date(event.startDate.jsDate);
+      var eventEnd = event.endDate && new Date(event.endDate.jsDate);
+      if (event.isAllDay && eventEnd) { 
         eventEnd.setDate(eventEnd.getDate() - 1);
       }
       var relativeToDate;
@@ -231,13 +231,13 @@ function getPreviewForEvent( event, instStartDate, instEndDate )
         // Event may be recurrent event.   If no displayed instance specified,
         // use next instance, or previous instance if no next instance.
         startDate = instStartDate || getCurrentNextOrPreviousRecurrence(event);
-        var eventDuration = (event.end
-                             ? event.end.getTime() - event.start.getTime()
+        var eventDuration = (event.endDate
+                             ? event.endDate.jsDate - event.startDate.jsDate
                              : 0);
         endDate = new Date(startDate.getTime() + eventDuration);
       }
       boxAppendLabeledDateTimeInterval(vbox, "tooltipDate",
-                                       startDate, endDate, event.allDay,
+                                       startDate, endDate, event.isAllDay,
                                        relativeToDate);
     }
 

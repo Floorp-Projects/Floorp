@@ -615,7 +615,7 @@ function getCurrentNextOrPreviousRecurrence( calendarEvent )
 
       var result = new Object();
 
-      var dur = calendarEvent.end.getTime() - calendarEvent.start.getTime();
+      var dur = calendarEvent.endDate.jsDate - calendarEvent.startDate.jsDate;
 
       // To find current event when now is during event, look for occurrence
       // starting duration ago.
@@ -640,7 +640,7 @@ function getCurrentNextOrPreviousRecurrence( calendarEvent )
    
    if( !isValid )
    {
-      eventStartDate = new Date( calendarEvent.start.getTime() );
+      eventStartDate = new Date( calendarEvent.startDate.jsDate );
    }
       
    return eventStartDate;
