@@ -62,7 +62,7 @@
         var pref = Components.classes['component://netscape/preferences'];
 
         // if all else fails, use trusty "about:" as the start page
-        var startPage = "about:";  
+        var startpage = "about:";  
         if (pref) {
           pref = pref.getService();
         }
