@@ -36,6 +36,7 @@
 
 #include "nsIUrlListener.h"
 
+#include "nsIPref.h"
 #include "nsIImapUrl.h"
 #include "nsIImapProtocol.h"
 #include "nsIMsgIdentity.h"
@@ -48,12 +49,14 @@
 #ifdef XP_PC
 #define NETLIB_DLL "netlib.dll"
 #define XPCOM_DLL  "xpcom32.dll"
+#define PREF_DLL	 "xppref32.dll"
 #else
 #ifdef XP_MAC
 #include "nsMacRepository.h"
 #else
 #define NETLIB_DLL "libnetlib.so"
 #define XPCOM_DLL  "libxpcom.so"
+#define PREF_DLL	 "pref.so"   // mscott: is this right?
 #endif
 #endif
 
@@ -65,6 +68,7 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 static NS_DEFINE_CID(kImapUrlCID, NS_IMAPURL_CID);
 static NS_DEFINE_CID(kImapProtocolCID, NS_IMAPPROTOCOL_CID);
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 /////////////////////////////////////////////////////////////////////////////////
 // Define default values to be used to drive the test
@@ -138,6 +142,11 @@ nsIMAP4TestDriver::nsIMAP4TestDriver(PLEventQueue *queue)
     m_eventQueue = queue;
 
 	m_IMAP4Protocol = nsnull; // we can't create it until we have a url...
+
+	// until we read from the prefs, just use the default, I guess.
+	strcpy(m_urlSpec, DEFAULT_URL_TYPE);
+	strcat(m_urlSpec, DEFAULT_HOST);
+	strcat(m_urlSpec, "/");
 }
 
 NS_IMPL_ISUPPORTS(nsIMAP4TestDriver, nsIUrlListener::GetIID())
@@ -493,7 +502,7 @@ int main()
 //    nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
 	nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
 //	nsComponentManager::RegisterComponent(kRDFServiceCID, nsnull, nsnull, RDF_DLL, PR_TRUE, PR_TRUE);
-//	nsComponentManager::RegisterComponent(kPrefCID, nsnull, nsnull, PREF_DLL, PR_TRUE, PR_TRUE);
+	nsComponentManager::RegisterComponent(kPrefCID, nsnull, nsnull, PREF_DLL, PR_TRUE, PR_TRUE);
 	// IMAP Service goes here?
 
 	// Create the Event Queue for the test app thread...a standin for the ui thread
