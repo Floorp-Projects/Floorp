@@ -171,7 +171,7 @@ public:
   virtual nsIStyleRule* GetImportantRule(void) = 0;
 
   // Hook for inspector.
-  virtual nsresult GetValue(nsCSSProperty aProperty, nsCSSValue& aValue);
+  virtual nsresult GetValue(nsCSSProperty aProperty, nsCSSValue& aValue) = 0;
 };
 
 extern NS_EXPORT nsresult
