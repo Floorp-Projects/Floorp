@@ -1029,18 +1029,18 @@ nsSpaceManager::DestroyFrameInfo(FrameInfo* aFrameInfo)
 /////////////////////////////////////////////////////////////////////////////
 // FrameInfo
 
-MOZ_DECL_CTOR_COUNTER(FrameInfo);
+MOZ_DECL_CTOR_COUNTER(nsSpaceManager::FrameInfo);
 
 nsSpaceManager::FrameInfo::FrameInfo(nsIFrame* aFrame, const nsRect& aRect)
   : mFrame(aFrame), mRect(aRect), mNext(0)
 {
-  MOZ_COUNT_CTOR(FrameInfo);
+  MOZ_COUNT_CTOR(nsSpaceManager::FrameInfo);
 }
 
-#ifdef DEBUG
+#ifdef NS_BUILD_REFCNT_LOGGING
 nsSpaceManager::FrameInfo::~FrameInfo()
 {
-  MOZ_COUNT_DTOR(FrameInfo);
+  MOZ_COUNT_DTOR(nsSpaceManager::FrameInfo);
 }
 #endif
 

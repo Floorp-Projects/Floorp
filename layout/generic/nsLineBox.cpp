@@ -917,7 +917,7 @@ nsFloaterCache::nsFloaterCache()
   MOZ_COUNT_CTOR(nsFloaterCache);
 }
 
-#ifdef DEBUG
+#ifdef NS_BUILD_REFCNT_LOGGING
 nsFloaterCache::~nsFloaterCache()
 {
   MOZ_COUNT_DTOR(nsFloaterCache);
