@@ -518,7 +518,7 @@ PRInt32   len;
   }
 
   // is line longer than the AFM specifications
-  if(i>=sizeof(mToken))
+  if(((PRUint32)i)>=sizeof(mToken))
     return 0;
 
   mToken[i] = '\0';
@@ -547,11 +547,11 @@ PRInt32 i, ch;
   ungetc (ch, mAFMFile);
 
   // Read to the end of the line. 
-  for (i = 0, ch = getc (mAFMFile);i < sizeof (mToken) && ch != EOF && ch != '\n';i++, ch = getc (mAFMFile)){
+  for (i = 0, ch = getc (mAFMFile);((PRUint32)i) < sizeof (mToken) && ch != EOF && ch != '\n';i++, ch = getc (mAFMFile)){
     mToken[i] = ch;
   }
 
-  if (i >= sizeof (mToken)){
+  if (((PRUint32)i) >= sizeof (mToken)){
     //parse_error (handle, AFM_ERROR_SYNTAX);
   }
 
@@ -724,15 +724,15 @@ void
 nsAFMObject :: GetStringWidth(const char *aString,nscoord& aWidth,nscoord aLength)
 {
 char    *cptr;
-PRInt32 i,fwidth,index;
+PRInt32 i,idx,fwidth;
 float   totallen=0.0f;
 
   // add up the length of the character widths, in floating to avoid roundoff
   aWidth = 0;
   cptr = (char*) aString;
   for(i=0;i<aLength;i++,cptr++){
-    index = *cptr-32;
-    fwidth = (PRInt32)(mPSFontInfo->mAFMCharMetrics[index].mW0x);
+    idx = *cptr-32;
+    fwidth = (PRInt32)(mPSFontInfo->mAFMCharMetrics[idx].mW0x);
     totallen += fwidth;
   }
 
@@ -753,7 +753,7 @@ nsAFMObject :: GetStringWidth(const PRUnichar *aString,nscoord& aWidth,nscoord a
 {
 PRUint8   asciichar;
 PRUnichar *cptr;
-PRInt32   i ,fwidth,index;
+PRInt32   i ,fwidth,idx;
 float     totallen=0.0f;
 
  //XXX This needs to get the aString converted to a normal cstring  DWC
@@ -762,8 +762,8 @@ float     totallen=0.0f;
 
   for(i=0;i<aLength;i++,cptr++){
     asciichar = (*cptr)&0x00ff;
-    index = asciichar-32;
-    fwidth = (PRInt32)(mPSFontInfo->mAFMCharMetrics[index].mW0x);
+    idx = asciichar-32;
+    fwidth = (PRInt32)(mPSFontInfo->mAFMCharMetrics[idx].mW0x);
     totallen += fwidth;
   }
 
@@ -797,10 +797,10 @@ nsAFMObject :: WriteFontHeaderInformation(FILE *aOutFile)
   fprintf(aOutFile,"\"%s\",\n",CORRECTSTRING(mPSFontInfo->mVersion));
   fprintf(aOutFile,"\"%s\",\n",CORRECTSTRING(mPSFontInfo->mNotice));
   fprintf(aOutFile,"\"%s\",\n",CORRECTSTRING(mPSFontInfo->mEncodingScheme));
-  fprintf(aOutFile,"%ld,\n",mPSFontInfo->mMappingScheme);
-  fprintf(aOutFile,"%ld,\n",mPSFontInfo->mEscChar);
+  fprintf(aOutFile,"%d,\n",mPSFontInfo->mMappingScheme);
+  fprintf(aOutFile,"%d,\n",mPSFontInfo->mEscChar);
   fprintf(aOutFile,"\"%s\",\n", CORRECTSTRING(mPSFontInfo->mCharacterSet));
-  fprintf(aOutFile,"%ld,\n",mPSFontInfo->mCharacters);
+  fprintf(aOutFile,"%d,\n",mPSFontInfo->mCharacters);
   fprintf(aOutFile,"%s,\n",BOOLOUT(mPSFontInfo->mIsBaseFont));
   fprintf(aOutFile,"%f,\n",mPSFontInfo->mVVector_0);
   fprintf(aOutFile,"%f,\n",mPSFontInfo->mVVector_1);
@@ -811,7 +811,7 @@ nsAFMObject :: WriteFontHeaderInformation(FILE *aOutFile)
   fprintf(aOutFile,"%f,\n",mPSFontInfo->mDescender);
   fprintf(aOutFile,"%f,\n",mPSFontInfo->mUnderlinePosition);
   fprintf(aOutFile,"%f,\n",mPSFontInfo->mUnderlineThickness);
-  fprintf(aOutFile,"%ld\n",mPSFontInfo->mNumCharacters);
+  fprintf(aOutFile,"%d\n",mPSFontInfo->mNumCharacters);
 }
 
 /** ---------------------------------------------------
@@ -827,7 +827,7 @@ PRInt32 i;
   // individual font characteristics
   for(i=0;i<mPSFontInfo->mNumCharacters;i++) {
     fprintf(aOutFile,"{\n");
-    fprintf(aOutFile,"%ld, \n",mPSFontInfo->mAFMCharMetrics[i].mCharacter_Code);
+    fprintf(aOutFile,"%d, \n",mPSFontInfo->mAFMCharMetrics[i].mCharacter_Code);
     fprintf(aOutFile,"%f, \n",mPSFontInfo->mAFMCharMetrics[i].mW0x);
     fprintf(aOutFile,"%f, \n",mPSFontInfo->mAFMCharMetrics[i].mW0y);
     fprintf(aOutFile,"%f, \n",mPSFontInfo->mAFMCharMetrics[i].mW1x);

@@ -85,109 +85,114 @@ nsPostScriptObj::~nsPostScriptObj()
 nsresult 
 nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec )
 {
-  PrintInfo* pi = new PrintInfo();
   PRBool isGray, isAPrinter, isFirstPageFirst;
   int printSize;
   char *buf;
-  
+
+  PrintInfo* pi = new PrintInfo(); 
   mPrintSetup = new PrintSetup();
-  memset(mPrintSetup, 0, sizeof(struct PrintSetup_));
 
-  mPrintSetup->color = PR_TRUE;              // Image output 
-  mPrintSetup->deep_color = PR_TRUE;         // 24 bit color output 
-  mPrintSetup->paper_size = NS_LEGAL_SIZE;   // Paper Size(letter,legal,exec,a4)
-  mPrintSetup->reverse = 0;                  // Output order, 0 is acsending 
-  if ( aSpec != nsnull ) {
-    aSpec->GetGrayscale( isGray );
-    if ( isGray == PR_TRUE ) {
-      mPrintSetup->color = PR_FALSE; 
-      mPrintSetup->deep_color = PR_FALSE; 
-    }
-    aSpec->GetFirstPageFirst( isFirstPageFirst );
-    if ( isFirstPageFirst == PR_FALSE )
-      mPrintSetup->reverse = 1;
-    aSpec->GetSize( printSize );
-    mPrintSetup->paper_size = printSize;
-    aSpec->GetToPrinter( isAPrinter );
-    if ( isAPrinter == PR_TRUE ) {
-      aSpec->GetCommand( &buf );
-      mPrintSetup->out = popen( buf, "w" );
-      mPrintSetup->filename = (char *) NULL;  
-    } else {
-      aSpec->GetPath( &buf );
-      mPrintSetup->filename = buf;          
-      mPrintSetup->out = fopen(mPrintSetup->filename, "w");  
-    }
-  } else 
+  if( (nsnull!=pi) && (nsnull!=mPrintSetup) ){
+    memset(mPrintSetup, 0, sizeof(struct PrintSetup_));
+
+    mPrintSetup->color = PR_TRUE;              // Image output 
+    mPrintSetup->deep_color = PR_TRUE;         // 24 bit color output 
+    mPrintSetup->paper_size = NS_LEGAL_SIZE;   // Paper Size(letter,legal,exec,a4)
+    mPrintSetup->reverse = 0;                  // Output order, 0 is acsending 
+    if ( aSpec != nsnull ) {
+      aSpec->GetGrayscale( isGray );
+      if ( isGray == PR_TRUE ) {
+        mPrintSetup->color = PR_FALSE; 
+        mPrintSetup->deep_color = PR_FALSE; 
+      }
+      aSpec->GetFirstPageFirst( isFirstPageFirst );
+      if ( isFirstPageFirst == PR_FALSE )
+        mPrintSetup->reverse = 1;
+      aSpec->GetSize( printSize );
+      mPrintSetup->paper_size = printSize;
+      aSpec->GetToPrinter( isAPrinter );
+      if ( isAPrinter == PR_TRUE ) {
+        aSpec->GetCommand( &buf );
+        mPrintSetup->out = popen( buf, "w" );
+        mPrintSetup->filename = (char *) NULL;  
+      } else {
+        aSpec->GetPath( &buf );
+        mPrintSetup->filename = buf;          
+        mPrintSetup->out = fopen(mPrintSetup->filename, "w");  
+      }
+    } else 
+        return NS_ERROR_FAILURE;
+
+    /* make sure the open worked */
+
+    if ( mPrintSetup->out < 0 )
       return NS_ERROR_FAILURE;
+    mPrintContext = new PSContext();
+    memset(mPrintContext, 0, sizeof(struct PSContext_));
+    memset(pi, 0, sizeof(struct PrintInfo_));
+ 
+    mPrintSetup->top = 32;                      // Margins  (PostScript Only) 
+    mPrintSetup->bottom = 0;
+    mPrintSetup->left = 32;
+    mPrintSetup->right = 0;
+    mPrintSetup->width = PAGE_WIDTH;           // Paper size, # of cols for text xlate 
+    mPrintSetup->height = PAGE_HEIGHT;
+    mPrintSetup->header = "header";
+    mPrintSetup->footer = "footer";
+    mPrintSetup->sizes = NULL;
+    mPrintSetup->landscape = FALSE;            // Rotated output 
+    mPrintSetup->underline = TRUE;             // underline links 
+    mPrintSetup->scale_images = TRUE;          // Scale unsized images which are too big 
+    mPrintSetup->scale_pre = FALSE;		        // do the pre-scaling thing 
+    mPrintSetup->dpi = 72.0f;                  // dpi for externally sized items 
+    mPrintSetup->rules = 1.0f;			            // Scale factor for rulers 
+    mPrintSetup->n_up = 0;                     // cool page combining 
+    mPrintSetup->bigger = 1;                   // Used to init sizes if sizesin NULL 
+    mPrintSetup->prefix = "";                  // For text xlate, prepended to each line 
+    mPrintSetup->eol = "";			    // For text translation, line terminator 
+    mPrintSetup->bullet = "+";                 // What char to use for bullets 
 
-  /* make sure the open worked */
+    URL_Struct_* url = new URL_Struct_;
+    memset(url, 0, sizeof(URL_Struct_));
+    mPrintSetup->url = url;                    // url of doc being translated 
+    mPrintSetup->completion = NULL;            // Called when translation finished 
+    mPrintSetup->carg = NULL;                  // Data saved for completion routine 
+    mPrintSetup->status = 0;                   // Status of URL on completion 
+	                                    // "other" font is for encodings other than iso-8859-1 
+    mPrintSetup->otherFontName[0] = NULL;		   
+  				                            // name of "other" PostScript font 
+    mPrintSetup->otherFontInfo[0] = NULL;	   
+    // font info parsed from "other" afm file 
+    mPrintSetup->otherFontCharSetID = 0;	      // charset ID of "other" font 
+    //mPrintSetup->cx = NULL;                  // original context, if available 
 
-  if ( mPrintSetup->out < 0 )
+    pi->page_height=PAGE_HEIGHT * 10;	// Size of printable area on page 
+    pi->page_width = PAGE_WIDTH * 10;	// Size of printable area on page 
+    pi->page_break = 0;	              // Current page bottom 
+    pi->page_topy = 0;	              // Current page top 
+    pi->phase = 0;
+
+ 
+    pi->pages=NULL;		                // Contains extents of each page 
+
+    pi->pt_size = 0;		              // Size of above table 
+    pi->n_pages = 0;	        	      // # of valid entries in above table 
+
+    pi->doc_title="Test Title";	      // best guess at title 
+    pi->doc_width = 0;	              // Total document width 
+    pi->doc_height = 0;	              // Total document height 
+
+    mPrintContext->prInfo = pi;
+
+    // begin the document
+    initialize_translation(mPrintSetup);
+
+    begin_document();	
+    mPageNumber = 1;                  // we are on the first page
+    return NS_OK;
+    } else {
     return NS_ERROR_FAILURE;
-  mPrintContext = new PSContext();
-  memset(mPrintContext, 0, sizeof(struct PSContext_));
-  memset(pi, 0, sizeof(struct PrintInfo_));
- 
-  mPrintSetup->top = 32;                      // Margins  (PostScript Only) 
-  mPrintSetup->bottom = 0;
-  mPrintSetup->left = 32;
-  mPrintSetup->right = 0;
-  mPrintSetup->width = PAGE_WIDTH;           // Paper size, # of cols for text xlate 
-  mPrintSetup->height = PAGE_HEIGHT;
-  mPrintSetup->header = "header";
-  mPrintSetup->footer = "footer";
-  mPrintSetup->sizes = NULL;
-  mPrintSetup->landscape = FALSE;            // Rotated output 
-  mPrintSetup->underline = TRUE;             // underline links 
-  mPrintSetup->scale_images = TRUE;          // Scale unsized images which are too big 
-  mPrintSetup->scale_pre = FALSE;		        // do the pre-scaling thing 
-  mPrintSetup->dpi = 72.0f;                  // dpi for externally sized items 
-  mPrintSetup->rules = 1.0f;			            // Scale factor for rulers 
-  mPrintSetup->n_up = 0;                     // cool page combining 
-  mPrintSetup->bigger = 1;                   // Used to init sizes if sizesin NULL 
-  mPrintSetup->prefix = "";                  // For text xlate, prepended to each line 
-  mPrintSetup->eol = "";			    // For text translation, line terminator 
-  mPrintSetup->bullet = "+";                 // What char to use for bullets 
-
-  URL_Struct_* url = new URL_Struct_;
-  memset(url, 0, sizeof(URL_Struct_));
-  mPrintSetup->url = url;                    // url of doc being translated 
-  mPrintSetup->completion = NULL;            // Called when translation finished 
-  mPrintSetup->carg = NULL;                  // Data saved for completion routine 
-  mPrintSetup->status = 0;                   // Status of URL on completion 
-	                                  // "other" font is for encodings other than iso-8859-1 
-  mPrintSetup->otherFontName[0] = NULL;		   
-  				                          // name of "other" PostScript font 
-  mPrintSetup->otherFontInfo[0] = NULL;	   
-  // font info parsed from "other" afm file 
-  mPrintSetup->otherFontCharSetID = 0;	      // charset ID of "other" font 
-  //mPrintSetup->cx = NULL;                  // original context, if available 
-
-  pi->page_height=PAGE_HEIGHT * 10;	// Size of printable area on page 
-  pi->page_width = PAGE_WIDTH * 10;	// Size of printable area on page 
-  pi->page_break = 0;	              // Current page bottom 
-  pi->page_topy = 0;	              // Current page top 
-  pi->phase = 0;
-
- 
-  pi->pages=NULL;		                // Contains extents of each page 
-
-  pi->pt_size = 0;		              // Size of above table 
-  pi->n_pages = 0;	        	      // # of valid entries in above table 
-
-  pi->doc_title="Test Title";	      // best guess at title 
-  pi->doc_width = 0;	              // Total document width 
-  pi->doc_height = 0;	              // Total document height 
-
-  mPrintContext->prInfo = pi;
-
-  // begin the document
-  initialize_translation(mPrintSetup);
-
-  begin_document();	
-  mPageNumber = 1;                  // we are on the first page
-  return NS_OK;
+    }
 }
 
 /** ---------------------------------------------------
@@ -552,15 +557,15 @@ nsPostScriptObj::moveto_loc(int x, int y)
  *	@update 2/1/99 dwc
  */
 void 
-nsPostScriptObj::lineto( int x1, int y1)
+nsPostScriptObj::lineto( int aX1, int aY1)
 {
   XL_SET_NUMERIC_LOCALE();
 
-  y1 -= mPrintContext->prInfo->page_topy;
-  y1 = (mPrintContext->prInfo->page_height - y1 - 1) + mPrintContext->prSetup->bottom;
+  aY1 -= mPrintContext->prInfo->page_topy;
+  aY1 = (mPrintContext->prInfo->page_height - aY1 - 1) + mPrintContext->prSetup->bottom;
 
   XP_FilePrintf(mPrintContext->prSetup->out, "%g %g lineto\n",
-		PAGE_TO_POINT_F(x1), PAGE_TO_POINT_F(y1));
+		PAGE_TO_POINT_F(aX1), PAGE_TO_POINT_F(aY1));
 
   XL_RESTORE_NUMERIC_LOCALE();
 }
@@ -696,20 +701,19 @@ nsPostScriptObj::initclip()
  *	@update 2/1/99 dwc
  */
 void 
-nsPostScriptObj::line( int x1, int y1, int x2, int y2, int thick)
+nsPostScriptObj::line( int aX1, int aY1, int aX2, int aY2, int aThick)
 {
   XL_SET_NUMERIC_LOCALE();
-  XP_FilePrintf(mPrintContext->prSetup->out, "gsave %g setlinewidth\n ",
-				PAGE_TO_POINT_F(thick));
+  XP_FilePrintf(mPrintContext->prSetup->out, "gsave %g setlinewidth\n ",PAGE_TO_POINT_F(aThick));
 
-  y1 -= mPrintContext->prInfo->page_topy;
-  y1 = (mPrintContext->prInfo->page_height - y1 - 1) + mPrintContext->prSetup->bottom;
-  y2 -= mPrintContext->prInfo->page_topy;
-  y2 = (mPrintContext->prInfo->page_height - y2 - 1) + mPrintContext->prSetup->bottom;
+  aY1 -= mPrintContext->prInfo->page_topy;
+  aY1 = (mPrintContext->prInfo->page_height - aY1 - 1) + mPrintContext->prSetup->bottom;
+  aY2 -= mPrintContext->prInfo->page_topy;
+  aY2 = (mPrintContext->prInfo->page_height - aY2 - 1) + mPrintContext->prSetup->bottom;
 
   XP_FilePrintf(mPrintContext->prSetup->out, "%g %g moveto %g %g lineto\n",
-		    PAGE_TO_POINT_F(x1), PAGE_TO_POINT_F(y1),
-		    PAGE_TO_POINT_F(x2), PAGE_TO_POINT_F(y2));
+		    PAGE_TO_POINT_F(aX1), PAGE_TO_POINT_F(aY1),
+		    PAGE_TO_POINT_F(aX2), PAGE_TO_POINT_F(aY2));
   stroke();
 
   XP_FilePrintf(mPrintContext->prSetup->out, "grestore\n");
