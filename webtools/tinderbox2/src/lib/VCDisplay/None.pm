@@ -6,8 +6,8 @@
 # cvsquery an we may need to generalize the interfaces in the future
 # to accomidate more VC systems.
 
-# $Revision: 1.6 $ 
-# $Date: 2002/12/10 19:34:34 $ 
+# $Revision: 1.7 $ 
+# $Date: 2003/01/19 17:15:41 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/VCDisplay/None.pm,v $ 
 # $Name:  $ 
@@ -75,7 +75,10 @@ sub source {
       die("function VCDisplay::source, tree: $args{'tree'} does not exist\n");
   }
 
-  my $output = $args{"linktxt"};
+  my $output = '';
+  if ($args{"alt_linktxt"}) {
+      $output = $args{"alt_linktxt"};
+  }
 
   return $output;
 };
@@ -104,7 +107,10 @@ sub guess {
       die("function VCDisplay::guess, tree: $args{'tree'} does not exist\n");
   }
 
-  my $output = $args{"linktxt"};
+  my $output = '';
+  if ($args{"alt_linktxt"}) {
+      $output = $args{"alt_linktxt"};
+  }
 
   return $output;
 };
@@ -132,7 +138,23 @@ sub query {
       die("function VCDisplay::query, tree: $args{'tree'} does not exist\n");
   }
 
-  my $output = $args{"linktxt"};
+  my $output = '';
+  if ($args{'who'}) {
+
+      # If there is an author, then allowing the user to send mail to
+      # this person is most useful. 
+
+      my $display_author=$args{'who'};
+      $display_author =~ s/\%.*//;
+
+      $mailto_author = TreeData::VCName2MailAddress($args{'who'});
+      $output = HTMLPopUp::Link(
+                                "href" => "mailto: $mailto_author",
+                                "linktxt" => "\t\t<tt>$display_author</tt>",
+                                );
+  } elsif ($args{"alt_linktxt"}) {
+      $output = $args{"alt_linktxt"};
+  }
 
   return $output;
 };
