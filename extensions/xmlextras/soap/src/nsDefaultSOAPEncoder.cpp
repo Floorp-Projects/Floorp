@@ -1685,7 +1685,7 @@ NS_IMETHODIMP
   
   nsCOMPtr<nsIWritableVariant> result = do_CreateInstance(NS_VARIANT_CONTRACTID, &rc);
 
-#define DECODE_SIMPLE_ARRAY(XPType, VType, VTYPE, Test, Ref) \
+#define DECODE_ARRAY(XPType, VTYPE, Test, iid, Convert) \
       XPType* a = new XPType[size];\
       nsCOMPtr<nsIDOMElement> child;\
       nsSOAPUtils::GetFirstChildElement(aSource, getter_AddRefs(child));\
@@ -1719,23 +1719,24 @@ NS_IMETHODIMP
         if (NS_FAILED(rc))\
           break;\
 \
-	rc = v->GetAs##VType(Ref(a + p));\
-        if (NS_FAILED(rc))\
-          break;\
-	\
         nsCOMPtr<nsIDOMElement> next;\
         nsSOAPUtils::GetNextSiblingElement(child, getter_AddRefs(next));\
         child = next;\
       }\
       if (!NS_FAILED(rc)) {\
-        rc = result->SetAsArray(nsIDataType::VTYPE_##VTYPE,nsnull,size,a);\
+        rc = result->SetAsArray(nsIDataType::VTYPE_##VTYPE,iid,size,a);\
       }\
       delete[] a;\
       if (NS_FAILED(rc))\
 	return rc;
 
+#define DECODE_SIMPLE_ARRAY(XPType, VType, VTYPE, Test, Ref) \
+  DECODE_ARRAY(XPType, VTYPE, Test, nsnull, rc = v->GetAs##VType(Ref(a + p));if(NS_FAILED(rc))break;)
+
+
   if (NS_FAILED(rc))
     return rc;
+  PRBool unhandled = PR_FALSE;
   if (ns.Equals(*nsSOAPUtils::kXSURI[mSchemaVersion])) {
     if (name.Equals(kStringSchemaType)) {
       DECODE_SIMPLE_ARRAY(nsString,AString,ASTRING,!a[p].IsEmpty(),*);
@@ -1761,18 +1762,15 @@ NS_IMETHODIMP
       DECODE_SIMPLE_ARRAY(PRUint16,Uint16,UINT16,a[p],);
     } else if (name.Equals(kUnsignedByteSchemaType)) {
       DECODE_SIMPLE_ARRAY(PRUint8,Uint8,UINT8,a[p],);
-    } else
-      return NS_ERROR_ILLEGAL_VALUE;
-  } else if (ns.Equals(*nsSOAPUtils::kSOAPEncURI[mSOAPVersion])) {
-    if (name.Equals(kArraySOAPType)) {
-      return NS_ERROR_ILLEGAL_VALUE;	//  Fix nested arrays later
-    } else if (name.Equals(kStructSOAPType)) {
-      return NS_ERROR_ILLEGAL_VALUE;	//  Fix nested structs later
-    } else
-      return NS_ERROR_ILLEGAL_VALUE;
-  } else
-    return NS_ERROR_ILLEGAL_VALUE;
-
+    } else {
+      unhandled = PR_TRUE;
+    }
+  } else {
+    unhandled = PR_TRUE;
+  }
+  if (unhandled) {  //  Handle all the other cases as variants.
+    DECODE_ARRAY(nsIVariant*,INTERFACE,a[p],&NS_GET_IID(nsIVariant),a[p] = v;);
+  }
   *_retval = result;
   NS_ADDREF(*_retval);
   return NS_OK;
