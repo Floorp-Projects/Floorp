@@ -34,7 +34,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslimpl.h,v 1.12 2001/04/11 00:29:18 nelsonb%netscape.com Exp $
+ * $Id: sslimpl.h,v 1.13 2001/05/08 23:12:31 nelsonb%netscape.com Exp $
  */
 
 #ifndef __sslimpl_h_
@@ -268,7 +268,7 @@ struct sslSocketStr {
     unsigned int     enableTLS		: 1;
     unsigned int     clientAuthRequested: 1;
     unsigned int     noCache		: 1;
-    unsigned int     fdx		: 1; /* simultaneous read/write threads */
+    unsigned int     fdx		: 1; /* simultaneous R/W threads */
     unsigned int     v2CompatibleHello	: 1; /* Send v3+ client hello in v2 format */
     unsigned int     detectRollBack   	: 1; /* Detect rollback to SSL v3 */
     unsigned int     firstHsDone	: 1; /* first handshake is complete. */
@@ -277,6 +277,7 @@ struct sslSocketStr {
     unsigned int     lastWriteBlocked   : 1;
     unsigned int     TCPconnected       : 1;
     unsigned int     handshakeBegun     : 1;
+    unsigned int     delayDisabled      : 1; /* Nagle delay disabled */
 
     /* version of the protocol to use */
     SSL3ProtocolVersion version;
@@ -1055,6 +1056,8 @@ extern PRBool    ssl_FdIsBlocking(PRFileDesc *fd);
 extern PRBool    ssl_SocketIsBlocking(sslSocket *ss);
 
 extern void      ssl_SetAlwaysBlock(sslSocket *ss);
+
+extern SECStatus ssl_EnableNagleDelay(sslSocket *ss, PRBool enabled);
 
 #define SSL_LOCK_READER(ss)		if (ss->recvLock) PZ_Lock(ss->recvLock)
 #define SSL_UNLOCK_READER(ss)	if (ss->recvLock) PZ_Unlock(ss->recvLock)
