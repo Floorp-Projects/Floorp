@@ -72,13 +72,17 @@ PrepareAndDispatch( nsXPTCStubBase *self, PRUint32 methodIndex,
        the stack where it was pushed */
     if (paramCount) {
         args[0] = args[-4];
-    }
 
-    /* If paramCount is > 1, write out the ECX pointer to the
-       space on the stack args[1]. args[-3] is the space on
-       the stack where it was pushed */
-    if (paramCount > 1) {
-        args[1] = args[-3];
+        /* If this is the second parameter, or if the first parameter is an
+           8 byte long long, write out the ECX pointer to the space on the
+           stack args[1]. args[-3] is the space on the stack where it was
+           pushed */
+        nsXPTType type = info->GetParam(0).GetType();
+        if( paramCount > 1 ||
+            type == nsXPTType::T_I64 || type == nsXPTType::T_U64 )
+        {
+            args[1] = args[-3];
+        }            
     }
 #endif
 
