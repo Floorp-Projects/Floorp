@@ -183,6 +183,12 @@ NS_IMETHODIMP nsContentTreeOwner::ShowModal()
    return mXULWindow->ShowModal();   
 }
 
+NS_IMETHODIMP nsContentTreeOwner::IsModal(PRBool *_retval)
+{
+  *_retval = mXULWindow->mContinueModalLoop;
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsContentTreeOwner::ExitModalLoop(nsresult aStatus)
 {
    return mXULWindow->ExitModalLoop(aStatus);   
@@ -281,6 +287,11 @@ NS_IMETHODIMP nsContentTreeOwner::SizeBrowserTo(PRInt32 aCX, PRInt32 aCY)
 NS_IMETHODIMP nsContentTreeOwner::ShowAsModal()
 {
    return ShowModal();
+}
+
+NS_IMETHODIMP nsContentTreeOwner::IsWindowModal(PRBool *_retval)
+{
+  return IsModal(_retval);
 }
 
 NS_IMETHODIMP nsContentTreeOwner::ExitModalEventLoop(nsresult aStatus)

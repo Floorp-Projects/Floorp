@@ -124,12 +124,18 @@ interface nsIWebBrowserChrome : nsISupports
 	*/
 	void showAsModal();
 
-    /**
-        Exit a modal event loop if we're in one. The implementation
-        should also exit out of the loop if the window is destroyed.
-        @param aStatus - the result code to return from showAsModal
-    */
-    void exitModalEventLoop(in nsresult aStatus);
+	/**
+	Is the window modal (that is, currently executing a modal loop)?
+        @return true if it's a modal window
+	*/
+	boolean isWindowModal();
+
+	/**
+	 Exit a modal event loop if we're in one. The implementation
+	 should also exit out of the loop if the window is destroyed.
+	 @param aStatus - the result code to return from showAsModal
+	*/
+	void exitModalEventLoop(in nsresult aStatus);
 
 	/*
 	Sets the persistence of different dimensions of the window.
