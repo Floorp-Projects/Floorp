@@ -47,6 +47,7 @@
 #endif
 
 #define NS_PAGEMGR_MIN_PAGES            32      // XXX bogus -- this should be a runtime parameter
+#define NS_PAGEMGR_MAX_PAGES            32767   // XXX bogus -- this should be a runtime parameter
 
 /******************************************************************************/
 
@@ -120,7 +121,7 @@ class nsPageMgr : public nsIPageManager, public nsIAllocator {
     virtual ~nsPageMgr();
 
     nsresult Init(nsPageCount minPages = NS_PAGEMGR_MIN_PAGES,
-                  nsPageCount maxPages = NS_PAGEMGR_MIN_PAGES);
+                  nsPageCount maxPages = NS_PAGEMGR_MAX_PAGES);
 
     struct nsClusterDesc {
         nsClusterDesc*  mNext;   /* Link to next cluster of free pages */
