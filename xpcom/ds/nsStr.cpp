@@ -275,6 +275,7 @@ void nsStr::Delete(nsStr& aDest,PRUint32 aDestOffset,PRUint32 aCount,nsIMemoryAg
       //so shift the chars left by theLength...
       (*gShiftChars[aDest.mCharSize][KSHIFTLEFT])(aDest.mStr,aDest.mLength,aDestOffset,theLength);
       aDest.mLength-=theLength;
+      AddNullTerminator(aDest);
     }
     else Truncate(aDest,aDestOffset,anAgent);
   }//if
