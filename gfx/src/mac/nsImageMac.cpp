@@ -862,20 +862,22 @@ PRBool nsImageMac::RenderingToPrinter(nsIRenderingContext &aContext)
 // the picture because CopyDeepMask isn't supported on PICTs.
 //
 NS_IMETHODIMP
-nsImageMac :: ConvertToPICT ( PicHandle* outPicture )
+nsImageMac::ConvertToPICT(PicHandle* outPicture)
 {
   *outPicture = nsnull;
 
   Rect picFrame = mImagePixmap.bounds;
   Rect maskFrame = mMaskPixmap.bounds;
   GWorldPtr tempGWorld;
+
   if (AllocateGWorld(mImagePixmap.pixelSize, nsnull, picFrame, &tempGWorld) == noErr) 
   {
     // erase it to white
     ClearGWorld(tempGWorld);
 
     PixMapHandle tempPixMap = ::GetGWorldPixMap(tempGWorld);
-    if (tempPixMap) {
+    if (tempPixMap)
+    {
       StPixelLocker tempPixLocker(tempPixMap);      // locks the pixels
     
       // the handles may have moved, make sure we reset baseAddr of our
@@ -886,22 +888,24 @@ nsImageMac :: ConvertToPICT ( PicHandle* outPicture )
       if (mMaskBitsHandle)
         mMaskPixmap.baseAddr = *mMaskBitsHandle;
 
-      // copy from the destination into our temp GWorld, to get the background
-      CopyBitsWithMask((BitMap*)(&mImagePixmap),
-          mMaskBitsHandle ? (BitMap*)(&mMaskPixmap) : nsnull, mAlphaDepth,
-          (BitMap*)(*tempPixMap), picFrame, maskFrame, picFrame, PR_FALSE);
-      
       // now copy into the picture
       GWorldPtr currPort;
       GDHandle currDev;
       ::GetGWorld(&currPort, &currDev);
-      ::SetGWorld(tempGWorld, nsnull);    
+      ::SetGWorld(tempGWorld, nsnull);
+
+      ::SetOrigin(0, 0);
+      ::ForeColor(blackColor);
+      ::BackColor(whiteColor);
+
+      // copy from the destination into our temp GWorld, to get the background
+      CopyBitsWithMask((BitMap*)(&mImagePixmap),
+          mMaskBitsHandle ? (BitMap*)(&mMaskPixmap) : nsnull, mAlphaDepth,
+          (BitMap*)(*tempPixMap), picFrame, maskFrame, picFrame, PR_FALSE);
+
       PicHandle thePicture = ::OpenPicture(&picFrame);
       OSErr err = noErr;
       if ( thePicture ) {
-        ::ForeColor(blackColor);
-        ::BackColor(whiteColor);
-      
         ::CopyBits((BitMap*)*tempPixMap, (BitMap*)*tempPixMap,
                      &picFrame, &picFrame, srcCopy, nsnull);
       
@@ -921,19 +925,18 @@ nsImageMac :: ConvertToPICT ( PicHandle* outPicture )
     return NS_ERROR_FAILURE;
   
   return NS_OK;
- 
 } // ConvertToPICT
 
 
 NS_IMETHODIMP
-nsImageMac :: ConvertFromPICT ( PicHandle inPicture )
+nsImageMac::ConvertFromPICT(PicHandle inPicture)
 {
   return NS_ERROR_FAILURE;
  
 } // ConvertFromPICT
 
 NS_IMETHODIMP
-nsImageMac::GetPixMap ( PixMap** aPixMap )
+nsImageMac::GetPixMap(PixMap** aPixMap)
 {
   *aPixMap = &mImagePixmap;
   return NS_OK;
