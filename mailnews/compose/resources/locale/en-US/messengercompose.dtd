@@ -61,8 +61,8 @@
 <!ENTITY findPrevCmd.key "G">
 <!ENTITY findPrevCmd.key2 "VK_F3">
 <!ENTITY findPrevCmd.accesskey "v">
-<!ENTITY accountManagerCmd.label "Mail &amp; Newsgroups Account Settings...">
-<!ENTITY accountManagerCmd.accesskey "m">
+<!ENTITY accountManagerCmd.label "Account Settings...">
+<!ENTITY accountManagerCmd.accesskey "n">
 
 <!-- View menu items -->
 <!ENTITY showComposeToolbarCmd.label "Mail Toolbar">

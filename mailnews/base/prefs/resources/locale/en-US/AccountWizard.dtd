@@ -73,7 +73,7 @@
      text after the "&quot;" entity in haveSmtp1.suffix, if required grammatically.
 -->
 <!ENTITY haveSmtp1.prefix "Your existing outgoing server (SMTP), &quot;">
-<!ENTITY haveSmtp1.suffix "&quot;, will be used. You can modify outgoing server settings by choosing Mail &amp; Newsgroups Account Settings from the Edit menu.">
+<!ENTITY haveSmtp1.suffix "&quot;, will be used. You can modify outgoing server settings by choosing Account Settings from the Edit menu.">
 
 <!-- Entities for Login page -->
 
@@ -91,13 +91,13 @@
      text after the "&quot;" entity in haveSmtp2.suffix, if required grammatically.
 -->
 <!ENTITY haveSmtp2.prefix "Your existing outgoing (SMTP) username, &quot;">
-<!ENTITY haveSmtp2.suffix "&quot;, will be used. You can modify outgoing server settings by choosing Mail &amp; Newsgroups Account Settings from the Edit menu.">
+<!ENTITY haveSmtp2.suffix "&quot;, will be used. You can modify outgoing server settings by choosing Account Settings from the Edit menu.">
 <!-- LOCALIZATION NOTE (haveSmtp3.prefix and haveSmtp3.suffix) : Do not translate "SMTP" and "&quot;" in
      these variables. Also, translate haveSmtp3.prefix and haveSmtp3.suffix as a single sentence, inserting
      text after the "&quot;" entity in haveSmtp3.suffix, if required grammatically.
 -->
 <!ENTITY haveSmtp3.prefix "Your outgoing (SMTP) server, &quot;">
-<!ENTITY haveSmtp3.suffix "&quot;, is identical to your incoming server, your incoming user name will be used to access it. You can modify outgoing server settings by choosing Mail &amp; Newsgroups Account Settings from the Edit menu.">
+<!ENTITY haveSmtp3.suffix "&quot;, is identical to your incoming server, your incoming user name will be used to access it. You can modify outgoing server settings by choosing Account Settings from the Edit menu.">
 
 <!-- Entities for Account name page -->
 

@@ -18,7 +18,7 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 --> 
 
-<!ENTITY pane.title                       "Mail &amp; Newsgroups">
+<!ENTITY pane.title                       "Messenger">
 <!ENTITY generalSettings.label            "General Settings">
 <!ENTITY confirmMove.label                "Confirm when moving folders to the Trash">
 <!ENTITY confirmMove.accesskey            "C">
@@ -27,7 +27,7 @@ Rights Reserved.
 <!ENTITY autounzip.label                  "Automatically expand zip files when saving attachments">
 <!ENTITY autounzip.accesskey              "A">
 <!ENTITY messengerStartPage.label         "Mail Start Page">
-<!ENTITY enableStartPage.label            "When Mail launches, show the Start Page in the message area">
+<!ENTITY enableStartPage.label            "When Messenger launches, show the Start Page in the message area">
 <!ENTITY enableStartPage.accesskey        "W">
 <!ENTITY location.label                   "Location:">
 <!ENTITY location.accesskey               "L">

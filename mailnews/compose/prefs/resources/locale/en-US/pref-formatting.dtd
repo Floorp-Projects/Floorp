@@ -22,7 +22,7 @@ Rights Reserved.
 <!ENTITY pane.description             "Message formatting">
 <!ENTITY sendMail.label               "Send Format">
 <!ENTITY sendMaildesc.label           "When sending messages in HTML format and one or more recipients are not listed as being able to receive HTML:">
-<!ENTITY askMe.label                  "Ask me what to do (Mail prompts you to choose a format)">
+<!ENTITY askMe.label                  "Ask me what to do (Messenger prompts you to choose a format)">
 <!ENTITY askMe.accesskey              "k">
 <!ENTITY convertPlain.label           "Convert the message to plain text (some formatting may be lost)">
 <!ENTITY convertPlain.accesskey       "c">
@@ -35,7 +35,7 @@ Rights Reserved.
 
 <!-- Html and Plain Text Domains  -->
 <!ENTITY domain.title                 "HTML and Plain Text Domains">
-<!ENTITY domaindesc.label             "When you send a message to an address with one of the domain names listed below, Mail automatically sends the message in the correct format.">
+<!ENTITY domaindesc.label             "When you send a message to an address with one of the domains listed below, Messenger automatically sends the message in the correct format.">
 <!ENTITY HTMLdomaintitle.label        "HTML Domains">
 <!ENTITY HTMLdomaintitle.accesskey    "M">
 <!ENTITY PlainTexttitle.label         "Plain Text Domains">
