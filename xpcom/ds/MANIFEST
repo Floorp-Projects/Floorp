@@ -21,6 +21,7 @@ nsAReadableString.h
 nsAWritableString.h
 nsReadableUtils.h
 nsSharedString.h
+nsStaticNameTable.h
 nsStatistics.h
 nsStr.h
 nsString.h
