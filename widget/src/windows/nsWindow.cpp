@@ -3021,7 +3021,12 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             break;
 
         case WM_CONTEXTMENU:
-            result = DispatchMouseEvent(NS_CONTEXTMENU);
+        {
+            // if the context menu is brought up from the keyboard, |lParam|
+            // will be maxlong. Send a different event msg instead.
+            PRUint32 msg = (lParam == 0xFFFFFFFF) ? NS_CONTEXTMENU_KEY : NS_CONTEXTMENU;
+            result = DispatchMouseEvent(msg);
+        }
             break;
             
         case WM_LBUTTONDBLCLK:
@@ -4112,7 +4117,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint* aPoint)
         gCurrentWindow = nsnull;
       }
     }
-    NS_RELEASE(event.widget);
+    NS_IF_RELEASE(event.widget);
     return result;
   }
 

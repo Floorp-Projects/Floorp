@@ -271,13 +271,7 @@ struct nsReconversionEvent : public nsInputEvent {
   nsReconversionEventReply  theReply;
 };
 
-/**
- * Tooltip event
- */
-struct nsTooltipEvent : public nsGUIEvent {
-                /// Index of tooltip area which generated the event. @see SetTooltips in nsIWidget
-    PRUint32        tipIndex;           
-};
+
 
 /**
  * MenuItem event
@@ -314,6 +308,7 @@ enum nsDragDropEventStatus {
     /// The event is drop
   nsDragDropEventStatus_eDrop  
 };
+
 
 /**
  * Event Struct Types
@@ -426,6 +421,7 @@ enum nsDragDropEventStatus {
 
 #define NS_CONTEXTMENU_MESSAGE_START    500
 #define NS_CONTEXTMENU                  (NS_CONTEXTMENU_MESSAGE_START)
+#define NS_CONTEXTMENU_KEY              (NS_CONTEXTMENU_MESSAGE_START + 1)
 
 #define NS_SCROLLBAR_MESSAGE_START      1000
 #define NS_SCROLLBAR_POS                (NS_SCROLLBAR_MESSAGE_START)
