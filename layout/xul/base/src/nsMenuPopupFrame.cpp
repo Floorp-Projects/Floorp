@@ -317,12 +317,11 @@ NS_IMETHODIMP nsMenuPopupFrame::SetCurrentMenuItem(nsIFrame* aMenuItem)
     return NS_OK;
 
   nsMenuFrame* menuFrame = (nsMenuFrame*)mCurrentMenu;
-  PRBool wasOpen = PR_FALSE;
-  
+    
   // Unset the current child.
   if (mCurrentMenu) {
-    wasOpen = menuFrame->IsOpen();
-    menuFrame->OpenMenu(PR_FALSE);
+    if (menuFrame->IsOpen())
+      menuFrame->OpenMenu(PR_FALSE);
     menuFrame->SelectMenu(PR_FALSE);
   }
 
@@ -330,8 +329,6 @@ NS_IMETHODIMP nsMenuPopupFrame::SetCurrentMenuItem(nsIFrame* aMenuItem)
   if (aMenuItem) {
     nsMenuFrame* newFrame = (nsMenuFrame*)aMenuItem;
     newFrame->SelectMenu(PR_TRUE);
-    if (wasOpen)
-      newFrame->OpenMenu(PR_TRUE);
   }
 
   mCurrentMenu = aMenuItem;
