@@ -192,6 +192,11 @@ my $platform_popup = make_popup('rep_platform', \@::legal_platform,
                                 pickplatform(), 0);
 my $opsys_popup = make_popup('op_sys', \@::legal_opsys, pickos(), 0);
 
+if (1 == @{$::components{$product}}) {
+    # Only one component; just pick it.
+    $::FORM{'component'} = $::components{$product}->[0];
+}
+
 my $component_popup = make_popup('component', $::components{$product},
                                  formvalue('component'), 1);
 
