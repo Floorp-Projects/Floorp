@@ -268,7 +268,7 @@ BasicTableLayoutStrategy::BalanceColumnWidths(nsIStyleContext*         aTableSty
   if (totalCounts[PCT] > 0) {
     if (totalAllocated + totalAvailWidths[PCT] - minWidths[PCT] <= maxWidth) {
       AllocateFully(totalAllocated, allocTypes, PCT);
-      NS_WARN_IF_FALSE(totalAllocated <= maxWidth, "over allocated");
+      //NS_WARN_IF_FALSE(totalAllocated <= maxWidth, "over allocated");
     }
     else {
       AllocateConstrained(maxWidth - totalAllocated, PCT, PR_FALSE, allocTypes);
@@ -279,7 +279,7 @@ BasicTableLayoutStrategy::BalanceColumnWidths(nsIStyleContext*         aTableSty
   if (totalAllocated < maxWidth && totalCounts[FIX] > 0) {
     if (totalAllocated + totalAvailWidths[FIX] - minWidths[FIX] <= maxWidth) { 
       AllocateFully(totalAllocated, allocTypes, FIX);
-      NS_WARN_IF_FALSE(totalAllocated <= maxWidth, "over allocated");
+      //NS_WARN_IF_FALSE(totalAllocated <= maxWidth, "over allocated");
     }
     else {
       AllocateConstrained(maxWidth - totalAllocated, FIX, PR_TRUE, allocTypes);
@@ -290,7 +290,7 @@ BasicTableLayoutStrategy::BalanceColumnWidths(nsIStyleContext*         aTableSty
   if (totalAllocated < maxWidth && totalCounts[FIX_ADJ] > 0) {
     if (totalAllocated + totalAvailWidths[FIX_ADJ] - minWidths[FIX_ADJ] <= maxWidth) { 
       AllocateFully(totalAllocated, allocTypes, FIX_ADJ);
-      NS_WARN_IF_FALSE(totalAllocated <= maxWidth, "over allocated");
+      //NS_WARN_IF_FALSE(totalAllocated <= maxWidth, "over allocated");
     }
     else {
       AllocateConstrained(maxWidth - totalAllocated, FIX_ADJ, PR_TRUE, allocTypes);
@@ -301,7 +301,7 @@ BasicTableLayoutStrategy::BalanceColumnWidths(nsIStyleContext*         aTableSty
   if (totalAllocated < maxWidth && totalCounts[MIN_PRO] > 0) {
     if (totalAllocated + totalAvailWidths[MIN_PRO] - minWidths[MIN_PRO] <= maxWidth) { 
       AllocateFully(totalAllocated, allocTypes, MIN_PRO, PR_FALSE);
-      NS_WARN_IF_FALSE(totalAllocated <= maxWidth, "over allocated");
+      //NS_WARN_IF_FALSE(totalAllocated <= maxWidth, "over allocated");
     }
     else {
       AllocateConstrained(maxWidth - totalAllocated, MIN_PRO, PR_FALSE, allocTypes);
@@ -313,7 +313,7 @@ BasicTableLayoutStrategy::BalanceColumnWidths(nsIStyleContext*         aTableSty
   if (totalAllocated < maxWidth && totalCounts[DES_CON] > 0) {
     if (totalAllocated + totalAvailWidths[DES_CON] - minWidths[DES_CON]<= maxWidth) { 
       AllocateFully(totalAllocated, allocTypes, DES_CON);
-      NS_WARN_IF_FALSE(totalAllocated <= maxWidth, "over allocated");
+      //NS_WARN_IF_FALSE(totalAllocated <= maxWidth, "over allocated");
     }
     else {
       AllocateConstrained(maxWidth - totalAllocated, DES_CON, PR_FALSE, allocTypes);
