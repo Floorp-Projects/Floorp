@@ -40,7 +40,7 @@ const char* kFoolMsg = "Error: Some fool overwrote the shared buffer.";
 
 PRUnichar kCommonEmptyBuffer[100];   //shared by all strings; NEVER WRITE HERE!!!
 
-#ifdef  NS_DEBUG
+#ifdef  RICKG_DEBUG
 PRBool nsString1::mSelfTested = PR_FALSE;   
 #endif
 
@@ -174,7 +174,7 @@ nsString1::nsString1() {
   mLength = mCapacity = 0;
   mStr = kCommonEmptyBuffer;
 
-#ifdef NS_DEBUG
+#ifdef RICKG_DEBUG
   if(!mSelfTested) {
     mSelfTested=PR_TRUE;
 		SelfTest();
@@ -2246,7 +2246,7 @@ NS_BASE int fputs(const nsString1& aString, FILE* out){
  */
 void nsString1::SelfTest(void) {
 
-#ifdef  NS_DEBUG
+#ifdef  RICKG_DEBUG
 	mSelfTested=PR_TRUE;
 
   {

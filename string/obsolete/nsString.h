@@ -765,7 +765,7 @@ typedef PRUnichar chartype;
             chartype*       mStr;
             PRInt32         mLength;
             PRInt32         mCapacity;
-#ifdef  NS_DEBUG
+#ifdef  RICKG_DEBUG
 		static	PRBool					mSelfTested;
 #endif
 };
