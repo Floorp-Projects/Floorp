@@ -965,7 +965,7 @@ NS_METHOD nsWindow::Show(PRBool bState)
     if (mWnd) {
         if (bState) {
           DWORD flags = SWP_NOSIZE | SWP_NOMOVE | SWP_SHOWWINDOW;
-          if ((mIsVisible) || (mWindowType == eWindowType_popup)) {
+          if (mIsVisible || mWindowType == eWindowType_popup) {
              flags |= SWP_NOZORDER;
           }
 
@@ -991,6 +991,20 @@ NS_METHOD nsWindow::Show(PRBool bState)
 NS_METHOD nsWindow::IsVisible(PRBool & bState)
 {
   bState = mIsVisible;
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+//
+// Position the window behind the given window
+//
+//-------------------------------------------------------------------------
+NS_METHOD nsWindow::PlaceBehind(nsIWidget *aWidget)
+{
+  HWND behind;
+  behind = aWidget ? (HWND)aWidget->GetNativeData(NS_NATIVE_WINDOW) : HWND_TOP;
+  ::SetWindowPos(mWnd, behind, 0, 0, 0, 0,
+                 SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOREPOSITION | SWP_NOSIZE);
   return NS_OK;
 }
 
@@ -2018,6 +2032,42 @@ BOOL nsWindow::OnChar( UINT mbcsCharCode, UINT virtualKeyCode, bool isMultiByte 
 static PRBool gJustGotDeactivate = PR_FALSE;
 static PRBool gJustGotActivate = PR_FALSE;
 
+void nsWindow::ConstrainZLevel(HWND *aAfter) {
+
+  nsZLevelEvent  event;
+  nsWindow      *aboveWindow = 0;
+
+  event.eventStructType = NS_ZLEVEL_EVENT;
+  InitEvent(event, NS_SETZLEVEL);
+
+  if (*aAfter == HWND_BOTTOM)
+    event.mPlacement = nsWindowZBottom;
+  else if (*aAfter == HWND_TOP || *aAfter == HWND_TOPMOST || *aAfter == HWND_NOTOPMOST)
+    event.mPlacement = nsWindowZTop;
+  else {
+    event.mPlacement = nsWindowZRelative;
+    aboveWindow = (nsWindow*)::GetWindowLong(*aAfter, GWL_USERDATA);
+  }
+  event.mReqBelow = aboveWindow;
+
+  event.mImmediate = PR_FALSE;
+  event.mAdjusted = PR_FALSE;
+  DispatchWindowEvent(&event);
+
+  if (event.mAdjusted) {
+    if (event.mPlacement == nsWindowZBottom)
+      *aAfter = HWND_BOTTOM;
+    else if (event.mPlacement == nsWindowZTop)
+      *aAfter = HWND_TOP;
+    else {
+      *aAfter = (HWND)event.mActualBelow->GetNativeData(NS_NATIVE_WINDOW);
+      NS_IF_RELEASE(event.mActualBelow);
+    }
+  }
+
+  NS_RELEASE(event.widget);
+}
+
 PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *aRetValue)
 {
     static UINT vkKeyCached = 0;                // caches VK code fon WM_KEYDOWN
@@ -2051,7 +2101,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         break;
 
         case WM_SYSCOMMAND:
-          // all we care about right now are the minimize and maximize buttons
           if (wParam == SC_MINIMIZE || wParam == SC_MAXIMIZE || wParam == SC_RESTORE) {
             nsSizeModeEvent event;
             event.eventStructType = NS_SIZEMODE_EVENT;
@@ -2333,45 +2382,52 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             result = PR_TRUE;
             break;
 
-		case WM_ACTIVATE:
-			if (mEventCallback) {
-			  PRInt32 fActive = LOWORD(wParam);
-			
-			  if(WA_INACTIVE == fActive) {
-          gJustGotDeactivate = PR_TRUE;
-			  } else {
-				  gJustGotActivate = PR_TRUE;
-			    nsMouseEvent event;
-			    event.eventStructType = NS_GUI_EVENT;
-			    InitEvent(event, NS_MOUSE_ACTIVATE);
+        case WM_ACTIVATE:
+          if (mEventCallback) {
+            PRInt32 fActive = LOWORD(wParam);
 
-          event.acceptActivation = PR_TRUE;
+            if(WA_INACTIVE == fActive) {
+              gJustGotDeactivate = PR_TRUE;
+            } else {
+              gJustGotActivate = PR_TRUE;
+              nsMouseEvent event;
+              event.eventStructType = NS_GUI_EVENT;
+              InitEvent(event, NS_MOUSE_ACTIVATE);
 
-          PRBool result = DispatchWindowEvent(&event);
-          NS_RELEASE(event.widget);
-				  
-				  if(event.acceptActivation)
-					  *aRetValue = MA_ACTIVATE;
-				  else
-					  *aRetValue = MA_NOACTIVATE; 
-			  }				
-			}
-			break;
+              event.acceptActivation = PR_TRUE;
+
+              PRBool result = DispatchWindowEvent(&event);
+              NS_RELEASE(event.widget);
+
+              if(event.acceptActivation)
+                *aRetValue = MA_ACTIVATE;
+              else
+                *aRetValue = MA_NOACTIVATE; 
+            }				
+          }
+          break;
+
+        case WM_WINDOWPOSCHANGING: {
+          LPWINDOWPOS info = (LPWINDOWPOS) lParam;
+          if (!(info->flags & SWP_NOZORDER))
+            ConstrainZLevel(&info->hwndInsertAfter);
+          break;
+        }
 
       case WM_SETFOCUS:
         result = DispatchFocus(NS_GOTFOCUS);
-		    if(gJustGotActivate) {
+        if(gJustGotActivate) {
           gJustGotActivate = PR_FALSE;
           result = DispatchFocus(NS_ACTIVATE);
-			  }
+        }
         break;
 
       case WM_KILLFOCUS:
         result = DispatchFocus(NS_LOSTFOCUS);
-			  if(gJustGotDeactivate) {
+        if(gJustGotDeactivate) {
           gJustGotDeactivate = PR_FALSE;
-			    result = DispatchFocus(NS_DEACTIVATE);
-			  } 
+          result = DispatchFocus(NS_DEACTIVATE);
+        } 
         break;
 
       case WM_WINDOWPOSCHANGED: 

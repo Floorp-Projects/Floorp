@@ -98,6 +98,7 @@ public:
     virtual nsIWidget*      GetParent(void);
     NS_IMETHOD              Show(PRBool bState);
     NS_IMETHOD              IsVisible(PRBool & aState);
+    NS_IMETHOD              PlaceBehind(nsIWidget *aWidget);
 
     NS_IMETHOD              ModalEventFilter(PRBool aRealEvent, void *aEvent,
                                              PRBool *aForWindow);
@@ -239,6 +240,8 @@ protected:
 
     NS_IMETHOD PasswordFieldEnter(PRUint32& oSavedState);
     NS_IMETHOD PasswordFieldExit(PRUint32 aRestoredState);
+
+    void ConstrainZLevel(HWND *aAfter);
 
 private:
 
