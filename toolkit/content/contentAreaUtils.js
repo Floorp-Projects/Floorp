@@ -195,7 +195,7 @@ function foundHeaderInfo(aSniffer, aData)
       return;
   
     var directory = fp.file.parent.QueryInterface(nsILocalFile);
-    prefs.setComplexValue("dir", nsILocalFile, directory);
+    // prefs.setComplexValue("dir", nsILocalFile, directory);
     fp.file.leafName = validateFileName(fp.file.leafName);
     filterIndex = fp.filterIndex;
     file = fp.file;
