@@ -1,2 +1,125 @@
-when foo gets built, goes into
-dist/bin/chrome/messenger/skin/modern
+#
+# The contents of this file are subject to the Netscape Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/NPL/
+#
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 2000 Netscape Communications Corporation. All
+# Rights Reserved.
+#
+# Contributor(s): 
+# Seth Spitzer <sspitzer@netscape.com>
+#
+
+DEPTH		= ../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+THEME       = modern
+
+include $(DEPTH)/config/autoconf.mk
+
+SAMPLES_DIR	= $(DIST)/bin/chrome/messenger/$(THEME)/skin
+
+EXPORT_RESOURCE_SAMPLES = \
+		messenger.css \
+		folderPane.css \
+		threadPane.css \
+		msgHdrViewOverlay.css \
+		mailWidgets.xml \
+		mailfolder.gif \
+		open-mailfolder.gif \
+		message-mail.gif \
+		message-mail-new.gif \
+		message-mail-attach.gif \
+		message-mail-imapdelete.gif \
+		message-news.gif \
+		message-news-new.gif \
+		inbox.gif \
+		trash.gif \
+		outbox.gif \
+		getmsg.gif \
+		newmsg.gif \
+		reply.gif \
+		forward.gif \
+		trash.gif \
+		check.gif \
+		dot.gif \
+		subscribe.css \
+		folder-hasmail.gif \
+		readcol.gif \
+		readmail.gif \
+		unreadmail.gif \
+		replyall.gif \
+		file.gif \
+		next.gif \
+		threadcol.gif \
+		unthreadcol.gif \
+		flagcol.gif \
+		flaggedmail.gif \
+		folder-closed.gif \
+		folder-draft.gif \
+		folder-draft-open.gif \
+		folder-draft-share.gif \
+		folder-draft-share-open.gif \
+		folder-filed.gif \
+		folder-filed-open.gif \
+		folder-inbox.gif \
+		folder-inbox-new.gif \
+		folder-inbox-open.gif \
+		folder-inbox-share.gif \
+		folder-inbox-share-open.gif \
+		folder-mailserver.gif \
+		folder-new.gif \
+		folder-new-open.gif \
+		folder-new-closed.gif \
+		folder-newsgroup.gif \
+		folder-newsgroup-new.gif \
+		folder-open.gif \
+		folder-outbox.gif \
+		folder-outbox-open.gif \
+		folder-sent.gif \
+		folder-sent-open.gif \
+		folder-sent-share.gif \
+		folder-sent-share-open.gif \
+		folder-server.gif \
+		folder-server-open.gif \
+		folder-share.gif \
+		folder-share-open.gif \
+		folder-template.gif \
+		folder-template-open.gif \
+		folder-template-share.gif \
+		folder-template-share-open.gif \
+		folder-trash.gif \
+		folder-trash-open.gif \
+		folder-trash-share.gif \
+		folder-trash-share-open.gif \
+		server-mail.gif \
+		server-mail-new.gif \
+		server-local.gif \
+		server-local-new.gif \
+		server-news.gif \
+		server-news-new.gif \
+		server-remote.gif \
+		server-news-lock.gif \
+		server-remote-lock.gif \
+        attach.gif  \
+        addtoab.gif \
+		$(NULL)
+
+include $(topsrcdir)/config/rules.mk
+
+GARBAGE		+= $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))
+
+install::
+	$(INSTALL) $(addprefix $(srcdir)/, $(EXPORT_RESOURCE_SAMPLES)) $(SAMPLES_DIR)
+
