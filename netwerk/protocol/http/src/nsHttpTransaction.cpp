@@ -171,7 +171,9 @@ nsHttpTransaction::SetupRequest(nsHttpRequestHead *requestHead,
 
     // Create a string stream for the request header buf
     nsCOMPtr<nsISupports> sup;
-    rv = NS_NewCStringInputStream(getter_AddRefs(sup), mReqHeaderBuf);
+    rv = NS_NewByteInputStream(getter_AddRefs(sup),
+                               mReqHeaderBuf.get(),
+                               mReqHeaderBuf.Length());
     if (NS_FAILED(rv)) return rv;
     mReqHeaderStream = do_QueryInterface(sup, &rv);
 
