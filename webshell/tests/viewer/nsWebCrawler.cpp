@@ -218,10 +218,25 @@ nsWebCrawler::OnEndDocumentLoad(nsIDocumentLoader* loader,
                                 nsresult aStatus,
                                 nsIDocumentLoaderObserver* aObserver)
 {
+  nsresult rv;
   PRTime endLoadTime = PR_Now();
 
+  if (loader != mDocLoader) {
+    // This notifications is not for the "main" document...
+    return NS_OK;
+  }
+
+  if (NS_BINDING_ABORTED == aStatus) {
+    //
+    // Sometimes a Refresh will interrupt a document that is loading...
+    // When this happens just ignore the ABORTED notification and wait
+    // for the notification that the Refreshed document has finished..
+    //
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIURI> aURL;
-  nsresult rv = channel->GetURI(getter_AddRefs(aURL));
+  rv = channel->GetURI(getter_AddRefs(aURL));
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -493,6 +508,7 @@ nsWebCrawler::Start()
   nsIWebShell* shell = nsnull;
   mBrowser->GetWebShell(shell);
   shell->SetDocLoaderObserver(this);
+  shell->GetDocumentLoader(*getter_AddRefs(mDocLoader));
   NS_RELEASE(shell);
   if (mPendingURLs.Count() > 1) {
     mHaveURLList = PR_TRUE;
@@ -767,6 +783,8 @@ nsWebCrawler::LoadNextURL(PRBool aQueueLoad)
           nsIWebShell* webShell;
           mBrowser->GetWebShell(webShell);
           if (aQueueLoad) {
+            // Call stop to cancel any pending URL Refreshes...
+///            webShell->Stop();
             QueueLoadURL(*url);
           }
           else {
