@@ -204,7 +204,7 @@ public:
   NS_IMETHOD GetContainer(nsIWebShellContainer*& aResult);
   NS_IMETHOD GetTopLevelWindow(nsIWebShellContainer** aWebShellWindow);
   NS_IMETHOD SetDocLoaderObserver(nsIDocumentLoaderObserver* anObserver);
-  NS_IMETHOD GetDocLoaderObserver(nsIDocumentLoaderObserver*& aResult);
+  NS_IMETHOD GetDocLoaderObserver(nsIDocumentLoaderObserver** aResult);
   NS_IMETHOD SetPrefs(nsIPref* aPrefs);
   NS_IMETHOD GetPrefs(nsIPref*& aPrefs);
   NS_IMETHOD GetRootWebShell(nsIWebShell*& aResult);
@@ -1306,9 +1306,9 @@ nsWebShell::SetDocLoaderObserver(nsIDocumentLoaderObserver* anObserver)
 
 
 NS_IMETHODIMP
-nsWebShell::GetDocLoaderObserver(nsIDocumentLoaderObserver*& aResult)
+nsWebShell::GetDocLoaderObserver(nsIDocumentLoaderObserver** aResult)
 {
-  aResult = mDocLoaderObserver;
+  *aResult = mDocLoaderObserver;
   NS_IF_ADDREF(mDocLoaderObserver);
   return NS_OK;
 }
@@ -3319,7 +3319,7 @@ nsWebShell::OnStartDocumentLoad(nsIDocumentLoader* loader,
       nsresult res = GetRootWebShell(*getter_AddRefs(root));
 
       if (NS_SUCCEEDED(res) && root)
-        root->GetDocLoaderObserver(*getter_AddRefs(dlObserver));
+        root->GetDocLoaderObserver(getter_AddRefs(dlObserver));
     }
     else
     {
@@ -3408,7 +3408,7 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
       nsresult res = GetRootWebShell(*getter_AddRefs(root));
 
       if (NS_SUCCEEDED(res) && root)
-        root->GetDocLoaderObserver(*getter_AddRefs(dlObserver));
+        root->GetDocLoaderObserver(getter_AddRefs(dlObserver));
     }
     else
     {
