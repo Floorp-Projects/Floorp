@@ -39,8 +39,11 @@ LINCS=-I$(PUBLIC)\raptor                \
       -I$(PUBLIC)\js                    \
       -I$(PUBLIC)\dom                   \
       -I$(PUBLIC)\rdf                   \
-      -I$(PUBLIC)\editor 
-#      -I$(PUBLIC)\editor                \
+      -I$(PUBLIC)\editor                \
+      -I$(PUBLIC)\caps                  \
+      -I$(PUBLIC)\plugin                \
+      -I$(PUBLIC)\java                  \
+      -I$(PUBLIC)\oji                  
 #      -I..\browser
 
 MAKE_OBJ_TYPE = EXE
