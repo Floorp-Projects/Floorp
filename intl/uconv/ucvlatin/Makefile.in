@@ -35,6 +35,10 @@ CPPSRCS		= \
                   nsUCvLatinDll.cpp \
 		  $(NULL)
 
+EXPORTS         = \
+                  nsUCvLatinCID.h \
+		  $(NULL)
+                
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
 CFLAGS		+= -DUSE_NSREG -D__STDC__
