@@ -26,7 +26,10 @@
 
 #if defined(OS2)
 #define INCL_DOS
-#include os2.h
+#include <os2.h>
+/* define the required constant if it is not already defined in the headers */
+#ifndef QSV_NUMPROCESSORS
+#define QSV_NUMPROCESSORS 26
 #endif
 
 #if defined(HPUX)
