@@ -646,7 +646,7 @@ nsSecureBrowserUIImpl::CheckPost(nsIURI *actionURL, PRBool *okayToPost)
   if (NS_FAILED(rv))
     return rv;
   
-  // if we are posting to a secure link, all is okay
+  // if we are posting to a secure link from a secure page, all is okay.
   if (secure &&
       (mSecurityState == STATE_IS_SECURE ||
        mSecurityState == STATE_IS_BROKEN)) {
