@@ -27,6 +27,7 @@
 #include "nsFileSpec.h"
 
 /* include all of our event sink interfaces */
+#include "nsIImapLog.h"
 
 /* 21A89610-DC0D-11d2-806C-006008128C4E */
 
@@ -57,6 +58,8 @@ public:
 	/////////////////////////////////////////////////////////////////////////////// 
 	// Getters and Setters for the imap specific event sinks to bind to to your url
 	///////////////////////////////////////////////////////////////////////////////
+	NS_IMETHOD GetImapLog(nsIImapLog ** aImapLog) = 0;
+	NS_IMETHOD SetImapLog(nsIImapLog  * aImapLog) = 0;
 
 	/////////////////////////////////////////////////////////////////////////////// 
 	// Getters and Setters for the imap url state
