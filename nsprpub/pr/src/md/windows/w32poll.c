@@ -36,6 +36,9 @@
  * This file implements _PR_MD_PR_POLL for Win32.
  */
 
+/* The default value of FD_SETSIZE is 64. */
+#define FD_SETSIZE 1024
+
 #include "primpl.h"
 
 #if !defined(_PR_GLOBAL_THREADS_ONLY)
@@ -105,6 +108,8 @@ PRInt32 _PR_MD_PR_POLL(PRPollDesc *pds, PRIntn npds, PRIntervalTime timeout)
 {
     int ready, err;
     fd_set rd, wt, ex;
+    fd_set *rdp, *wtp, *exp;
+    int nrd, nwt, nex;
     PRFileDesc *bottom;
     PRPollDesc *pd, *epd;
     PRThread *me = _PR_MD_CURRENT_THREAD();
@@ -127,6 +132,7 @@ PRInt32 _PR_MD_PR_POLL(PRPollDesc *pds, PRIntn npds, PRIntervalTime timeout)
         return 0;
     }
 
+    nrd = nwt = nex = 0;
     FD_ZERO(&rd);
     FD_ZERO(&wt);
     FD_ZERO(&ex);
@@ -189,23 +195,30 @@ PRInt32 _PR_MD_PR_POLL(PRPollDesc *pds, PRIntn npds, PRIntervalTime timeout)
                         {
                             pd->out_flags |= _PR_POLL_READ_SYS_READ;
                             FD_SET(osfd, &rd);
+                            nrd++;
                         }
                         if (in_flags_read & PR_POLL_WRITE)
                         {
                             pd->out_flags |= _PR_POLL_READ_SYS_WRITE;
                             FD_SET(osfd, &wt);
+                            nwt++;
                         }
                         if (in_flags_write & PR_POLL_READ)
                         {
                             pd->out_flags |= _PR_POLL_WRITE_SYS_READ;
                             FD_SET(osfd, &rd);
+                            nrd++;
                         }
                         if (in_flags_write & PR_POLL_WRITE)
                         {
                             pd->out_flags |= _PR_POLL_WRITE_SYS_WRITE;
                             FD_SET(osfd, &wt);
+                            nwt++;
                         }
-                        if (pd->in_flags & PR_POLL_EXCEPT) FD_SET(osfd, &ex);
+                        if (pd->in_flags & PR_POLL_EXCEPT) {
+                            FD_SET(osfd, &ex);
+                            nex++;
+                        }
                     }
                 }
                 else
@@ -231,6 +244,20 @@ PRInt32 _PR_MD_PR_POLL(PRPollDesc *pds, PRIntn npds, PRIntervalTime timeout)
 
     if (0 != ready) return ready;  /* no need to block */
 
+    if ((nrd > FD_SETSIZE) || (nwt > FD_SETSIZE) || (nex > FD_SETSIZE)) {
+        PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
+        return -1;
+    }
+
+    rdp = (0 == nrd) ? NULL : &rd;
+    wtp = (0 == nwt) ? NULL : &wt;
+    exp = (0 == nex) ? NULL : &ex;
+
+    if ((NULL == rdp) && (NULL == wtp) && (NULL == exp)) {
+        PR_Sleep(timeout);
+        return 0;
+    }
+
     if (timeout != PR_INTERVAL_NO_TIMEOUT)
     {
         PRInt32 ticksPerSecond = PR_TicksPerSecond();
@@ -241,9 +268,9 @@ PRInt32 _PR_MD_PR_POLL(PRPollDesc *pds, PRIntn npds, PRIntervalTime timeout)
     }
 
 #if defined(_PR_GLOBAL_THREADS_ONLY)
-    ready = _MD_SELECT(0, &rd, &wt, &ex, tvp);
+    ready = _MD_SELECT(0, rdp, wtp, exp, tvp);
 #else
-    ready = _PR_NTFiberSafeSelect(0, &rd, &wt, &ex, tvp);
+    ready = _PR_NTFiberSafeSelect(0, rdp, wtp, exp, tvp);
 #endif
 
     /*
