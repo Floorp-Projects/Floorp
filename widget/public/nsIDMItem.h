@@ -40,9 +40,13 @@ public:
 	// Methods for iterating over children.
 	NS_IMETHOD GetChildCount(PRUint32& count) const = 0;
 	NS_IMETHOD GetNthChild(nsIDMItem*& pItem, PRUint32 item) const = 0;
+	NS_IMETHOD GetSubtreeSize(PRUint32& size) const = 0;
 
 	// Parent access
 	NS_IMETHOD GetParent(nsIDMItem*& pItem) const = 0;
+
+	// Setters
+    NS_IMETHOD SetOpenState(PRBool state) = 0;
 
 	// Methods to query the data model for a specific item displayed within the widget.
 	NS_IMETHOD GetStringPropertyValue(nsString& value, const nsString& itemProperty) const = 0;
