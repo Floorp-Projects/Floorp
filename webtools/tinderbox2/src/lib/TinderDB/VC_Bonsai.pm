@@ -46,7 +46,7 @@ package TinderDB::VC_Bonsai;
 
 package TinderDB::VC;
 
-$VERSION = ( qw $Revision: 1.1 $ )[1];
+$VERSION = ( qw $Revision: 1.2 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -56,11 +56,12 @@ sub html_legend {
 
 # print all the possible tree states in a cell with the color
 
+  $out .= "\t<td align=right valign=top>\n";
   $out .= "\t<table>\n";
   
   $out .= ("\t\t<thead><tr><td align=center>".
            "VC Cell Colors".
-           "</td><tr></thead>\n");
+           "</td></tr></thead>\n");
 
   foreach $state (keys %TinderConfig::TREE_STATE2COLOR) {
     my $color = TinderConfig::TREE_STATE2COLOR{$state};
@@ -69,6 +70,7 @@ sub html_legend {
   }
 
   $out .= "\t</table>\n";
+  $out .= "\t</td>\n";
 
 
   return ($out);  

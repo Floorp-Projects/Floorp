@@ -73,7 +73,7 @@ use Utils;
 use HTMLPopUp;
 use TinderDB::BasicTxtDB;
 
-$VERSION = ( qw $Revision: 1.3 $ )[1];
+$VERSION = ( qw $Revision: 1.4 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -99,10 +99,11 @@ sub status_table_legend {
   # notice at this time.
 
   $out .= <<EOF;
+        <td align=right valign=top>
 	<table $TinderDB::LEGEND_BORDER>
 		<thead><tr>
 			<td align=center>Notices</td>
-		<tr></thead>
+		</tr></thead>
 		<tr>
 			<td>Notice posted: </td>
 			<td align=center>$NOTICE_AVAILIBLE</td>
@@ -112,6 +113,7 @@ sub status_table_legend {
 			<td align=center>$HTMLPopUp::EMPTY_TABLE_CELL</td>
 		</tr>
 	</table>
+        </td>
 EOF
 
   $out .= "\t\n";

@@ -7,8 +7,8 @@
 # the build was and display a link to the build log.
 
 
-# $Revision: 1.3 $ 
-# $Date: 2000/08/24 14:51:47 $ 
+# $Revision: 1.4 $ 
+# $Date: 2000/08/30 02:29:36 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Build.pm,v $ 
 # $Name:  $ 
@@ -189,6 +189,10 @@ push @TinderDB::HTML_COLUMNS, TinderDB::Build->new();
 %STATUS = (
 
            'not_running'=> {
+
+                            # You may want this to be 'aqua' if you
+                            # need to distinguish from 'building'
+
                             'html_color'=>  'yellow',
                             'hdml_char'=> '.',
                             'handler'=> \&main::null,
@@ -597,6 +601,7 @@ sub status_table_legend {
 # print all the possible links which can be included in a build
 
 $out .=<<EOF;
+        <td align=right valign=top>
 	<table $TinderDB::LEGEND_BORDER>
 	<thead><tr>
 		<td align=right>Build</td>
@@ -613,6 +618,7 @@ $out .=<<EOF;
               <tr><td align=center><TT>Bl:XXX</TT></td>
                   <td>=  (bytes allocated, bloat)</td></tr>
 	</table>
+        </td>
 EOF
   ;
 
@@ -637,12 +643,14 @@ EOF
   }
 
 $out .=<<EOF;
+        <td align=right valign=top>
 	<table $TinderDB::LEGEND_BORDER>
 		<thead>
-		<tr><td align=center>Build Cell Colors</td><tr>
+		<tr><td align=center>Build Cell Colors</td></tr>
 		</thead>
 $state_rows
 	</table>
+        </td>
 EOF
   ;
 
