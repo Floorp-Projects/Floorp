@@ -973,7 +973,7 @@ RDFXMLDataSourceImpl::MakeQName(nsIRDFResource* resource,
         if (index == -1) {
             // Okay, just punt and assume there is _no_ namespace on
             // this thing...
-            NS_ASSERTION(PR_FALSE, "couldn't find reasonable namespace prefix");
+            //NS_ASSERTION(PR_FALSE, "couldn't find reasonable namespace prefix");
             nameSpaceURI.Truncate();
             nameSpacePrefix.Truncate();
             property = uri;
