@@ -26,11 +26,11 @@ class nsIPresContext;
 
 class nsNativeTextControlFrame : public nsTextControlFrame
 {
-private:
-	typedef nsNativeFormControlFrame Inherited;
-
 public:
-       // nsIFormControlFrame
+  nsNativeTextControlFrame();
+  virtual ~nsNativeTextControlFrame();
+  
+  // nsIFormControlFrame
   NS_IMETHOD SetProperty(nsIAtom* aName, const nsString& aValue);
   NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
 
@@ -75,6 +75,8 @@ public:
   
   virtual nsresult RequiresWidget(PRBool &aRequiresWidget);
 
+protected:
+  nsString* mCachedState;
 };
 
 #endif

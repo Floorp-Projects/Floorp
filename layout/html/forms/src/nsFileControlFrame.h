@@ -23,6 +23,7 @@
 #include "nsIFormControlFrame.h"
 #include "nsIDOMMouseListener.h"
 #include "nsIAnonymousContentCreator.h"
+#include "nsIStatefulFrame.h"
 
 class nsButtonControlFrame;
 class nsTextControlFrame;
@@ -33,7 +34,8 @@ class nsIHTMLContent;
 class nsFileControlFrame : public nsAreaFrame,
                            public nsIFormControlFrame,
                            public nsIDOMMouseListener,
-                           public nsIAnonymousContentCreator
+                           public nsIAnonymousContentCreator,
+			   public nsIStatefulFrame
 
 {
 public:
@@ -144,6 +146,11 @@ public:
 
   virtual nsresult HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; }
 
+  //nsIStatefulFrame
+  NS_IMETHOD GetStateType(StateType* aStateType);
+  NS_IMETHOD SaveState(nsISupports** aState);
+  NS_IMETHOD RestoreState(nsISupports* aState);
+
 protected:
   nsIWidget* GetWindowTemp(nsIView *aView); // XXX temporary
 
@@ -152,6 +159,7 @@ protected:
   nsTextControlFrame* mTextFrame;
   nsFormFrame*        mFormFrame;
   nsIHTMLContent*     mTextContent;
+  nsString*           mCachedState;
 
 private:
   nsTextControlFrame* GetTextControlFrame(nsIFrame* aStart);
