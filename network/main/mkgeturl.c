@@ -2469,7 +2469,7 @@ NET_GetURL (URL_Struct *URL_s,
 
 	if (!cache_method)
 	  {
-        TIMING_MESSAGE(("cache,%s,not found", URL_s->address));
+        TIMING_MESSAGE(("cache,%.64s,%08x,not found", URL_s->address, window_id));
 
 		/* cache testing stuff */
 		if(NET_IsCacheTraceOn())
@@ -2520,7 +2520,7 @@ NET_GetURL (URL_Struct *URL_s,
 		  {
 	    /* the cached file is valid so use it unilaterally
 	     */
-        TIMING_MESSAGE(("cache,%s,valid", URL_s->address));
+        TIMING_MESSAGE(("cache,%.64s,%08x,valid", URL_s->address, window_id));
 	    type = cache_method;
 		  }
 		else if(URL_s->real_content_length > URL_s->content_length)
@@ -2538,12 +2538,14 @@ NET_GetURL (URL_Struct *URL_s,
 	    URL_s->memory_copy = 0;
 	    cache_method = 0;
 	    TRACEMSG(("Getting the rest of a partial cache file"));
-        TIMING_MESSAGE(("cache,%s,partial", URL_s->address));
+        TIMING_MESSAGE(("cache,%.64s,%08x,partial", URL_s->address, window_id));
 		  }
 	else if (URL_s->force_reload != NET_DONT_RELOAD)
 	  {
 	    TRACEMSG(("Force reload flag set.  Checking server to see if modified"));
-        TIMING_MESSAGE(("cache,%s,forced reload", URL_s->address));
+        TIMING_MESSAGE(("cache,%.64s,%08x,forced reload",
+                        URL_s->address, window_id));
+
 	    /* cache testing stuff */
 	    if(NET_IsCacheTraceOn())
 	      {
@@ -2577,7 +2579,8 @@ NET_GetURL (URL_Struct *URL_s,
 		URL_s->expires = 0;  /* remove cache reference */
 		cache_method = 0;
 
-        TIMING_MESSAGE(("cache,%s,expired", URL_s->address));
+        TIMING_MESSAGE(("cache,%.64s,%08x,expired",
+                        URL_s->address, window_id));
 
 		/* cache testing stuff */
 		if(NET_IsCacheTraceOn())
@@ -2593,14 +2596,18 @@ NET_GetURL (URL_Struct *URL_s,
 			  {
 			/* the cached file is valid so use it unilaterally
 			 */
-        TIMING_MESSAGE(("cache,%s,valid", URL_s->address));
+        TIMING_MESSAGE(("cache,%.64s,%08x,valid",
+                        URL_s->address, window_id));
+
 		type = cache_method;
 			  }
 		  }
 		else if((NET_CacheUseMethod == CU_NEVER_CHECK || URL_s->history_num)
 				  && !URL_s->expires)
 		  {
-        TIMING_MESSAGE(("cache,%s,valid", URL_s->address));
+        TIMING_MESSAGE(("cache,%.64s,%08x,valid",
+                        URL_s->address, window_id));
+
 	    type = cache_method;
 		  }
 		else if(NET_CacheUseMethod == CU_CHECK_ALL_THE_TIME
@@ -2624,7 +2631,9 @@ NET_GetURL (URL_Struct *URL_s,
 			  * and it doesn't have an expiration date...
 			  * FORCE Reload it
 			  */
-        TIMING_MESSAGE(("cache,%s,forced reload:non-history http", URL_s->address));
+        TIMING_MESSAGE(("cache,%.64s,%08x,forced reload:non-history http",
+                        URL_s->address, window_id));
+
 	    TRACEMSG(("Non history http file found. Force reloading it "));
 	    /* strip the cache file and
 	     * memory pointer
@@ -2642,7 +2651,9 @@ NET_GetURL (URL_Struct *URL_s,
 #endif /* MOZ_OFFLINE */
 	    )  /* *X* check for is offline */
 		  {
-            TIMING_MESSAGE(("cache,%s,forced reload:non-history cgi", URL_s->address));
+            TIMING_MESSAGE(("cache,%.64s,%08x,forced reload:non-history cgi",
+                            URL_s->address, window_id));
+
 			TRACEMSG(("Non history cgi script found (probably)."
 					  " Force reloading it "));
 			/* cache testing stuff */
@@ -2667,7 +2678,8 @@ NET_GetURL (URL_Struct *URL_s,
 		  {
 		    /* the cached file is valid so use it unilaterally
 		     */
-        TIMING_MESSAGE(("cache,%s,valid", URL_s->address));
+        TIMING_MESSAGE(("cache,%.64s,%08x,valid", URL_s->address, window_id));
+
 	    type = cache_method;
 		  }
       }

@@ -1640,8 +1640,8 @@ net_send_http_request (ActiveEntry *ce)
 
     TRACEMSG(("Sending HTTP Request:\n---------------------------------"));
 
-    TIMING_STARTCLOCK_NAME("http:complete", ce->URL_s->address);
-    TIMING_STARTCLOCK_NAME("http:request", ce->URL_s->address);
+    TIMING_STARTCLOCK_NAME("http:xfer", ce->URL_s->address);
+    TIMING_STARTCLOCK_NAME("http:req", ce->URL_s->address);
     ce->status = (int) NET_BlockingWrite(cd->connection->sock, command, command_size);
 
 #if defined(JAVA)
@@ -1768,7 +1768,7 @@ net_http_send_post_data (ActiveEntry *ce)
         /* normal done
          */
         TRACEMSG(("End of post data data"));
-        TIMING_STOPCLOCK_NAME("http:post", ce->URL_s->address, "ok");
+        TIMING_STOPCLOCK_NAME("http:post", ce->URL_s->address, ce->window_id, "ok");
 
     /* make sure these are empty
      */
@@ -2063,7 +2063,8 @@ net_parse_first_http_line (ActiveEntry *ce)
   
   /* ce->status greater than 0 
    */
-    TIMING_STOPCLOCK_NAME("http:request", ce->URL_s->address, "response received");
+    TIMING_STOPCLOCK_NAME("http:req", ce->URL_s->address,
+                          ce->window_id, "response received");
     BlockAllocCat(cd->line_buffer, cd->line_buffer_size, small_buf, ce->status);
     cd->line_buffer_size += ce->status;
 
@@ -3533,7 +3534,8 @@ HG51096
             break;
         
         case HTTP_DONE:
-            TIMING_STOPCLOCK_NAME("http:complete", ce->URL_s->address, "ok");
+            TIMING_STOPCLOCK_NAME("http:xfer", ce->URL_s->address,
+                                  ce->window_id, "ok");
 
             NET_ClearReadSelect(ce->window_id, cd->connection->sock);
             NET_TotalNumberOfOpenConnections--;
@@ -3566,9 +3568,9 @@ HG51096
             break;
         
         case HTTP_ERROR_DONE:
-            TIMING_STOPCLOCK_NAME("http:post", ce->URL_s->address, "error");
-            TIMING_STOPCLOCK_NAME("http:request", ce->URL_s->address, "error");
-            TIMING_STOPCLOCK_NAME("http:complete", ce->URL_s->address, "error");
+            TIMING_STOPCLOCK_NAME("http:post", ce->URL_s->address, ce->window_id, "error");
+            TIMING_STOPCLOCK_NAME("http:request", ce->URL_s->address, ce->window_id, "error");
+            TIMING_STOPCLOCK_NAME("http:complete", ce->URL_s->address, ce->window_id, "error");
             if(cd->connection->sock != NULL) {
                 NET_ClearDNSSelect(ce->window_id, cd->connection->sock);
                 NET_ClearReadSelect(ce->window_id, cd->connection->sock);
