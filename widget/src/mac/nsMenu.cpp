@@ -33,6 +33,7 @@
 #include "nsIMenuBar.h"
 #include "nsIMenuItem.h"
 #include "nsIMenuListener.h"
+#include "nsIPresContext.h"
 
 #include "nsString.h"
 #include "nsStringUtil.h"
@@ -720,35 +721,23 @@ nsEventStatus nsMenu::MenuConstruct(
     const nsMenuEvent & aMenuEvent,
     nsIWidget         * aParentWindow, 
     void              * menuNode,
-	void              * aWebShell)
+	  void              * aWebShell)
 {
    //printf("nsMenu::MenuConstruct called for %s = %d \n", mLabel.ToNewCString(), mMacMenuHandle);
    // Begin menuitem inner loop
-
-   // Open the node.
-   nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(mDOMNode);
-   if (domElement)
-     domElement->SetAttribute("open", "true");
   
-   gCurrentMenuDepth++;
+  // Open the node.
+  nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(mDOMNode);
+  if (domElement)
+    domElement->SetAttribute("open", "true");
+  
+  gCurrentMenuDepth++;
    
-    // Now get the kids. Retrieve our menupopup child.
-    nsCOMPtr<nsIDOMNode> menuPopupNode;
-    mDOMNode->GetFirstChild(getter_AddRefs(menuPopupNode));
-    while (menuPopupNode) {
-      nsCOMPtr<nsIDOMElement> menuPopupElement(do_QueryInterface(menuPopupNode));
-      if (menuPopupElement) {
-        nsString menuPopupNodeType;
-        menuPopupElement->GetNodeName(menuPopupNodeType);
-        if (menuPopupNodeType.Equals("menupopup"))
-          break;
-      }
-      nsCOMPtr<nsIDOMNode> oldMenuPopupNode(menuPopupNode);
-      oldMenuPopupNode->GetNextSibling(getter_AddRefs(menuPopupNode));
-    }
-
-    if (!menuPopupNode)
-      return nsEventStatus_eIgnore;
+  // Now get the kids. Retrieve our menupopup child.
+  nsCOMPtr<nsIDOMNode> menuPopupNode;
+  GetMenuPopupElement ( getter_AddRefs(menuPopupNode) );
+  if (!menuPopupNode)
+    return nsEventStatus_eIgnore;
       
   // Now get the kids
   nsCOMPtr<nsIDOMNode> menuitemNode;
@@ -756,32 +745,36 @@ nsEventStatus nsMenu::MenuConstruct(
 
 	unsigned short menuIndex = 0;
 
-  while (menuitemNode) {
-    
-    nsCOMPtr<nsIDOMElement> menuitemElement(do_QueryInterface(menuitemNode));
-    if (menuitemElement) {
-      nsString menuitemNodeType;
-      nsString menuitemName;
+  // Fire our oncreate handler. If we're told to stop, don't build the menu at all
+  PRBool keepProcessing = OnCreate();
+  if ( keepProcessing ) {
+    while (menuitemNode) {
       
-      nsString label;
-      menuitemElement->GetAttribute("value", label);
-      //printf("label = %s \n", label.ToNewCString());
-      
-      menuitemElement->GetNodeName(menuitemNodeType);
-      if (menuitemNodeType.Equals("menuitem")) {
-        // LoadMenuItem
-        LoadMenuItem(this, menuitemElement, menuitemNode, menuIndex, (nsIWebShell*)aWebShell);
-      } else if (menuitemNodeType.Equals("menuseparator")) {
-        AddSeparator();
-      } else if (menuitemNodeType.Equals("menu")) {
-        // Load a submenu
-        LoadSubMenu(this, menuitemElement, menuitemNode);
+      nsCOMPtr<nsIDOMElement> menuitemElement(do_QueryInterface(menuitemNode));
+      if (menuitemElement) {
+        nsString menuitemNodeType;
+        nsString menuitemName;
+        
+        nsString label;
+        menuitemElement->GetAttribute("value", label);
+        //printf("label = %s \n", label.ToNewCString());
+        
+        menuitemElement->GetNodeName(menuitemNodeType);
+        if (menuitemNodeType.Equals("menuitem")) {
+          // LoadMenuItem
+          LoadMenuItem(this, menuitemElement, menuitemNode, menuIndex, (nsIWebShell*)aWebShell);
+        } else if (menuitemNodeType.Equals("menuseparator")) {
+          AddSeparator();
+        } else if (menuitemNodeType.Equals("menu")) {
+          // Load a submenu
+          LoadSubMenu(this, menuitemElement, menuitemNode);
+        }
       }
-    }
-	++menuIndex;
-    nsCOMPtr<nsIDOMNode> oldmenuitemNode(menuitemNode);
-    oldmenuitemNode->GetNextSibling(getter_AddRefs(menuitemNode));
-  } // end menu item innner loop
+      ++menuIndex;
+      nsCOMPtr<nsIDOMNode> oldmenuitemNode(menuitemNode);
+      oldmenuitemNode->GetNextSibling(getter_AddRefs(menuitemNode));
+    } // end menu item innner loop
+  }
   
   //printf("  Done building, mMenuItemVoidArray.Count() = %d \n", mMenuItemVoidArray.Count());
   
@@ -800,38 +793,25 @@ nsEventStatus nsMenu::HelpMenuConstruct(
     void              * menuNode,
 	void              * aWebShell)
 {
-   //printf("nsMenu::MenuConstruct called for %s = %d \n", mLabel.ToNewCString(), mMacMenuHandle);
-   // Begin menuitem inner loop
+  //printf("nsMenu::MenuConstruct called for %s = %d \n", mLabel.ToNewCString(), mMacMenuHandle);
+  // Begin menuitem inner loop
 
-   int numHelpItems = ::CountMItems(mMacMenuHandle);
-   for(int i=0; i<numHelpItems; ++i) {
-     mMenuItemVoidArray.AppendElement(nsnull);
-   }
-      
-   // Open the node.
-   nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(mDOMNode);
-   if (domElement)
-     domElement->SetAttribute("open", "true");
-  
-   gCurrentMenuDepth++;
+  int numHelpItems = ::CountMItems(mMacMenuHandle);
+  for(int i=0; i<numHelpItems; ++i)
+    mMenuItemVoidArray.AppendElement(nsnull);
+     
+  // Open the node.
+  nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(mDOMNode);
+  if (domElement)
+   domElement->SetAttribute("open", "true");
+
+  gCurrentMenuDepth++;
    
-    // Now get the kids. Retrieve our menupopup child.
-    nsCOMPtr<nsIDOMNode> menuPopupNode;
-    mDOMNode->GetFirstChild(getter_AddRefs(menuPopupNode));
-    while (menuPopupNode) {
-      nsCOMPtr<nsIDOMElement> menuPopupElement(do_QueryInterface(menuPopupNode));
-      if (menuPopupElement) {
-        nsString menuPopupNodeType;
-        menuPopupElement->GetNodeName(menuPopupNodeType);
-        if (menuPopupNodeType.Equals("menupopup"))
-          break;
-      }
-      nsCOMPtr<nsIDOMNode> oldMenuPopupNode(menuPopupNode);
-      oldMenuPopupNode->GetNextSibling(getter_AddRefs(menuPopupNode));
-    }
-
-    if (!menuPopupNode)
-      return nsEventStatus_eIgnore;
+  // Now get the kids. Retrieve our menupopup child.
+  nsCOMPtr<nsIDOMNode> menuPopupNode;
+  GetMenuPopupElement ( getter_AddRefs(menuPopupNode) );
+  if (!menuPopupNode)
+    return nsEventStatus_eIgnore;
       
   // Now get the kids
   nsCOMPtr<nsIDOMNode> menuitemNode;
@@ -881,26 +861,29 @@ nsEventStatus nsMenu::MenuDestruct(const nsMenuEvent & aMenuEvent)
 {
   //printf("nsMenu::MenuDestruct() called for %s \n", mLabel.ToNewCString());
   
-  RemoveAll();
-  //printf("  mMenuItemVoidArray.Count() = %d \n", mMenuItemVoidArray.Count());
-  // Close the node.
-  nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(mDOMNode);
-  if(!domElement) {
-      NS_ERROR("Unable to QI dom element.");
-      return nsEventStatus_eIgnore;  
-  }
-  
-  nsCOMPtr<nsIContent> contentNode = do_QueryInterface(domElement);
-  if (!contentNode) {
-      NS_ERROR("DOM Node doesn't support the nsIContent interface required to handle DOM events.");
-      return nsEventStatus_eIgnore;
-  }
-  
-  nsCOMPtr<nsIDocument> document;
-  contentNode->GetDocument(*getter_AddRefs(document));
-      
-  if(document) {
-    domElement->RemoveAttribute("open");
+  // Fire our ondestroy handler. If we're told to stop, don't destroy the menu
+  PRBool keepProcessing = OnDestroy();
+  if ( keepProcessing ) {
+    RemoveAll();
+    //printf("  mMenuItemVoidArray.Count() = %d \n", mMenuItemVoidArray.Count());
+    // Close the node.
+    nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(mDOMNode);
+    if(!domElement) {
+        NS_ERROR("Unable to QI dom element.");
+        return nsEventStatus_eIgnore;  
+    }
+    
+    nsCOMPtr<nsIContent> contentNode = do_QueryInterface(domElement);
+    if (!contentNode) {
+        NS_ERROR("DOM Node doesn't support the nsIContent interface required to handle DOM events.");
+        return nsEventStatus_eIgnore;
+    }
+    
+    nsCOMPtr<nsIDocument> document;
+    contentNode->GetDocument(*getter_AddRefs(document));
+        
+    if(document)
+      domElement->RemoveAttribute("open");
   }
   
   return nsEventStatus_eIgnore;
@@ -1582,3 +1565,152 @@ nsMenu::DocumentWillBeDestroyed(
 {
   return NS_OK;
 }
+
+
+//
+// OnCreate
+//
+// Fire our oncreate handler. Returns TRUE if we should keep processing the event,
+// FALSE if the handler wants to stop the creation of the menu
+//
+PRBool
+nsMenu::OnCreate()
+{
+  nsEventStatus status = nsEventStatus_eIgnore;
+  nsMouseEvent event;
+  event.eventStructType = NS_EVENT;
+  event.message = NS_MENU_CREATE;
+  event.isShift = PR_FALSE;
+  event.isControl = PR_FALSE;
+  event.isAlt = PR_FALSE;
+  event.isMeta = PR_FALSE;
+  event.clickCount = 0;
+  event.widget = nsnull;
+  
+  nsCOMPtr<nsIPresContext> presContext;
+  MenuHelpers::WebShellToPresContext ( mWebShell, getter_AddRefs(presContext) );
+  
+  nsresult rv;
+  nsCOMPtr<nsIDOMNode> menuPopup;
+  GetMenuPopupElement(getter_AddRefs(menuPopup));
+  nsCOMPtr<nsIContent> popupContent ( do_QueryInterface(menuPopup) );
+  if ( popupContent ) 
+    rv = popupContent->HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+  else {
+    nsCOMPtr<nsIContent> me ( do_QueryInterface(mDOMNode) );
+    if ( me )
+      rv = me->HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+  }
+
+  if ( NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault )
+    return PR_FALSE;
+  return PR_TRUE;
+}
+
+
+//
+// OnDestroy
+//
+// Fire our ondestroy handler. Returns TRUE if we should keep processing the event,
+// FALSE if the handler wants to stop the destruction of the menu
+//
+PRBool
+nsMenu::OnDestroy()
+{
+  nsEventStatus status = nsEventStatus_eIgnore;
+  nsMouseEvent event;
+  event.eventStructType = NS_EVENT;
+  event.message = NS_MENU_DESTROY;
+  event.isShift = PR_FALSE;
+  event.isControl = PR_FALSE;
+  event.isAlt = PR_FALSE;
+  event.isMeta = PR_FALSE;
+  event.clickCount = 0;
+  event.widget = nsnull;
+  
+  nsCOMPtr<nsIPresContext> presContext;
+  MenuHelpers::WebShellToPresContext ( mWebShell, getter_AddRefs(presContext) );
+    
+  nsresult rv;
+  nsCOMPtr<nsIDOMNode> menuPopup;
+  GetMenuPopupElement(getter_AddRefs(menuPopup));
+  nsCOMPtr<nsIContent> popupContent ( do_QueryInterface(menuPopup) );
+  if ( popupContent ) 
+    rv = popupContent->HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+  else {
+    nsCOMPtr<nsIContent> me ( do_QueryInterface(mDOMNode) );
+    if ( me )
+      rv = me->HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+  }
+
+  if ( NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault )
+    return PR_FALSE;
+  return PR_TRUE;
+}
+
+
+//
+// GetMenuPopupElement
+//
+// Find the |menupopup| child from the node representing this menu. It should be one
+// of a very few children so we won't be iterating over a bazillion menu items to find
+// it (so the strcmp won't kill us).
+//
+void
+nsMenu::GetMenuPopupElement(nsIDOMNode** aResult)
+{
+  if ( !aResult )
+    return;
+    
+  nsCOMPtr<nsIDOMNode> menuPopupNode;
+  mDOMNode->GetFirstChild(getter_AddRefs(menuPopupNode));
+  while (menuPopupNode) {
+    nsCOMPtr<nsIDOMElement> menuPopupElement(do_QueryInterface(menuPopupNode));
+    if (menuPopupElement) {
+      nsString menuPopupNodeType;
+      menuPopupElement->GetNodeName(menuPopupNodeType);
+      if (menuPopupNodeType.Equals("menupopup")) {
+        *aResult = menuPopupNode.get();
+        NS_ADDREF(*aResult);        
+        return;
+      }
+    }
+    nsCOMPtr<nsIDOMNode> oldMenuPopupNode(menuPopupNode);
+    oldMenuPopupNode->GetNextSibling(getter_AddRefs(menuPopupNode));
+  }
+
+} // GetMenuPopupElement
+
+
+#pragma mark -
+
+
+//
+// WebShellToPresContext
+//
+// Helper to dig out a pres context from a webshell. A common thing to do before
+// sending an event into the dom.
+//
+nsresult
+MenuHelpers :: WebShellToPresContext ( nsIWebShell* inWebShell, nsIPresContext** outContext )
+{
+  if ( !inWebShell || !outContext )
+    return NS_ERROR_INVALID_ARG ;
+  
+  nsresult retval = NS_OK;
+  
+  nsCOMPtr<nsIContentViewer> contentViewer;
+  inWebShell->GetContentViewer(getter_AddRefs(contentViewer));
+  if ( contentViewer ) {
+    nsCOMPtr<nsIDocumentViewer> docViewer ( do_QueryInterface(contentViewer) );
+    if ( docViewer )
+      docViewer->GetPresContext(*outContext);     // AddRefs for us
+    else
+      retval = NS_ERROR_FAILURE;
+  }
+  else
+    retval = NS_ERROR_FAILURE;
+  
+  return retval;
+  
+} // WebShellToPresContext
