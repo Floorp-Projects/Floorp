@@ -1922,10 +1922,6 @@ nsBookmarksService::Init()
 	rv = bm_AddRefGlobals();
 	if (NS_FAILED(rv))	return(rv);
 
-	// register this as a named data source with the RDF service
-	rv = gRDF->RegisterDataSource(this, PR_FALSE);
-	if (NS_FAILED(rv)) return rv;
-
 	/* create a URL for the string resource file */
 	nsCOMPtr<nsIIOService>	pNetService;
 	if (NS_SUCCEEDED(rv = nsServiceManager::GetService(kIOServiceCID, NS_GET_IID(nsIIOService),
@@ -2005,10 +2001,18 @@ nsBookmarksService::Init()
 	{
 		busySchedule = PR_FALSE;
 		mTimer = do_CreateInstance("component://netscape/timer", &rv);
+		NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create a timer");
 		if (NS_FAILED(rv)) return rv;
 		mTimer->Init(nsBookmarksService::FireTimer, this, BOOKMARK_TIMEOUT, NS_PRIORITY_LOWEST, NS_TYPE_REPEATING_SLACK);
 		// Note: don't addref "this" as we'll cancel the timer in the nsBookmarkService destructor
 	}
+
+	// register this as a named data source with the RDF
+	// service. Do this *last*, because if Init() fails, then the
+	// object will be destroyed (leaving the RDF service with a
+	// dangling pointer).
+	rv = gRDF->RegisterDataSource(this, PR_FALSE);
+	if (NS_FAILED(rv)) return rv;
 
 	return NS_OK;
 }
