@@ -44,7 +44,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsXULAtoms.h"
 
-nsBox::nsBox(nsIPresShell* aShell):mParentBox(nsnull),mNextChild(nsnull),mMouseThrough(sometimes)
+nsBox::nsBox(nsIPresShell* aShell):mParentBox(nsnull),mNextChild(nsnull),mMouseThrough(unset)
 {
   //mX = 0;
   //mY = 0;
@@ -96,36 +96,69 @@ nsBox::MarkDirty(nsBoxLayoutState& aState)
   state |= NS_FRAME_IS_DIRTY;
   frame->SetFrameState(state);
 
-  nsIFrame* parent = nsnull;
-  frame->GetParent(&parent);
-  nsCOMPtr<nsIPresShell> shell;
-  aState.GetPresShell(getter_AddRefs(shell));
+  nsCOMPtr<nsIBoxLayout> layout;
+  GetLayoutManager(getter_AddRefs(layout));
+  if (layout)
+    layout->BecameDirty(this, aState);
 
-  return parent->ReflowDirtyChild(shell, frame);
+ if (state & NS_FRAME_HAS_DIRTY_CHILDREN)      
+      return NS_OK;
+
+  nsIBox* parent = nsnull;
+  GetParentBox(&parent);
+  if (parent)
+     return parent->RelayoutDirtyChild(aState, this);
+  else {
+    nsIFrame* parent = nsnull;
+    frame->GetParent(&parent);
+    nsCOMPtr<nsIPresShell> shell;
+    aState.GetPresShell(getter_AddRefs(shell));
+    return parent->ReflowDirtyChild(shell, frame);
+  }
 }
 
 NS_IMETHODIMP
 nsBox::MarkDirtyChildren(nsBoxLayoutState& aState)
 {
-  nsFrameState state;
-  nsIFrame* frame;
-  GetFrame(&frame);
-  frame->GetFrameState(&state);
+  return RelayoutDirtyChild(aState, nsnull);
+}
 
-  // only reflow if we aren't already dirty.
-  if (state & NS_FRAME_HAS_DIRTY_CHILDREN)      
-      return NS_OK;
+NS_IMETHODIMP
+nsBox::RelayoutDirtyChild(nsBoxLayoutState& aState, nsIBox* aChild)
+{
+    nsFrameState state;
+    nsIFrame* frame;
+    GetFrame(&frame);
+    frame->GetFrameState(&state);
 
-  state |= NS_FRAME_HAS_DIRTY_CHILDREN;
-  frame->SetFrameState(state);
+    // if we are not dirty mark ourselves dirty and tell our parent we are dirty too.
+    if (!(state & NS_FRAME_HAS_DIRTY_CHILDREN)) {      
+      // Mark yourself as dirty and needing to be recalculated
+      state |= NS_FRAME_HAS_DIRTY_CHILDREN;
+      frame->SetFrameState(state);
+      NeedsRecalc();
 
-  NeedsRecalc();
-  nsIFrame* parent = nsnull;
-  frame->GetParent(&parent);
-  nsCOMPtr<nsIPresShell> shell;
-  aState.GetPresShell(getter_AddRefs(shell));
+      if (aChild != nsnull) {
+          nsCOMPtr<nsIBoxLayout> layout;
+          GetLayoutManager(getter_AddRefs(layout));
+          if (layout)
+            layout->ChildBecameDirty(this, aState, aChild);
+      }
 
-  return parent->ReflowDirtyChild(shell, frame);
+      nsIBox* parent = nsnull;
+      GetParentBox(&parent);
+      if (parent)
+         return parent->RelayoutDirtyChild(aState, this);
+      else {
+        nsIFrame* parent = nsnull;
+        frame->GetParent(&parent);
+        nsCOMPtr<nsIPresShell> shell;
+        aState.GetPresShell(getter_AddRefs(shell));
+        return parent->ReflowDirtyChild(shell, frame);
+      }
+    }
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -547,6 +580,7 @@ NS_IMETHODIMP
 nsBox::GetFlex(nsBoxLayoutState& aState, nscoord& aFlex)
 {
   aFlex = 0;
+  GetDefaultFlex(aFlex);
   PRBool collapsed = PR_FALSE;
   nsIBox::AddCSSFlex(aState, this, aFlex);
 
@@ -1009,6 +1043,40 @@ nsBox::GetDebug(PRBool& aDebug)
 {
   aDebug = PR_FALSE;
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBox::GetMouseThrough(PRBool& aMouseThrough)
+{
+  switch(mMouseThrough)
+  {
+    case always:
+      aMouseThrough = PR_TRUE;
+      return NS_OK;
+    case never:
+      aMouseThrough = PR_FALSE;      
+      return NS_OK;
+    case unset:
+    {
+      nsIBox* parent = nsnull;
+      GetParentBox(&parent);
+      if (parent)
+        return parent->GetMouseThrough(aMouseThrough);
+      else {
+        aMouseThrough = PR_FALSE;      
+        return NS_OK;
+      }
+    }
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+PRBool
+nsBox::GetDefaultFlex(PRInt32& aFlex) 
+{ 
+  aFlex = 0; 
+  return PR_TRUE; 
 }
 
 // nsISupports

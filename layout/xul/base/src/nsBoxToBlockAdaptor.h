@@ -82,7 +82,7 @@ protected:
   nsSize mLastSize;
   nscoord mMinWidth;
   PRBool mWasCollapsed;
-
+  nscoord mCachedMaxElementHeight;
 };
 
 #endif

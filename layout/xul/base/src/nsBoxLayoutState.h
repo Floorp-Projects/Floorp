@@ -53,11 +53,12 @@ public:
 
   nsBoxLayoutState(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsHTMLReflowMetrics& aDesiredSize);
   nsBoxLayoutState(nsIPresContext* aPresContext);
+  nsBoxLayoutState(nsIPresShell* aShell);
   nsBoxLayoutState(const nsBoxLayoutState& aState);
 
   virtual PRBool HandleReflow(nsIBox* aRootBox, PRBool aCoalesce);
 
-  virtual nsIPresContext* GetPresContext() { return mPresContext; }
+  virtual nsIPresContext* GetPresContext() { return mPresContext.get(); }
   virtual nsresult GetPresShell(nsIPresShell** aShell);
   virtual void GetMaxElementSize(nsSize** aMaxElementSize);
 
@@ -79,7 +80,7 @@ private:
   nsIBox* GetTargetBox(nsIReflowCommand* mCommand, PRBool& aIsAdaptor);
   nsIBox* GetBoxForFrame(nsIFrame* aFrame, PRBool& aIsAdaptor);
 
-  nsIPresContext* mPresContext;
+  nsCOMPtr<nsIPresContext> mPresContext;
   const nsHTMLReflowState* mReflowState;
   eBoxLayoutReason mType;
   nsSize* mMaxElementSize;

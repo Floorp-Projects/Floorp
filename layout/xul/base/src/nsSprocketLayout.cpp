@@ -576,109 +576,141 @@ nsSprocketLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, nsBox
 
   PRInt32 count = 0;
   aFlexes = 0;
-  nsBoxSize*         currentBox = nsnull;
-  //nsComputedBoxSize* currentComputed = nsnull;
+  nsBoxSize* currentBox = nsnull;
 
+  /*
+  nsBoxSize* start = aBoxSizes;
+  
   while(child)
   {
-    if (!currentBox) {
-      aBoxSizes      = new (aState) nsBoxSize();
-      //aComputedBoxSizes = new (aState) nsComputedBoxSizeSpecial();
-
-      currentBox      = aBoxSizes;
-      //currentComputed = aComputedBoxSizes;
-    } else {
-      currentBox->next      = new (aState) nsBoxSize();
-      //currentComputed->next = new (aState) nsComputedBoxSizeSpecial();
-
-      currentBox      = currentBox->next;
-      //currentComputed = currentComputed->next;
-    }
-
+    // ok if we started with a list move down the list
+    // until we reach the end. Then start looking at childen.
+    // This feature is used extensively for Grid.
     nscoord flex = 0;    
-    child->GetFlex(aState, flex);
-    PRBool collapsed = PR_FALSE;    
-    child->IsCollapsed(aState, collapsed);
 
-    currentBox->flex = flex;
-    currentBox->collapsed = collapsed;
-    //currentComputed->resized = PR_FALSE;
-    //currentComputed->size = 0;
+    if (!start) {
+      if (!currentBox) {
+        aBoxSizes      = new (aState) nsBoxSize();
+        currentBox      = aBoxSizes;
+      } else {
+        currentBox->next      = new (aState) nsBoxSize();
+        currentBox      = currentBox->next;
+      }
+    
 
+      child->GetFlex(aState, flex);
+      PRBool collapsed = PR_FALSE;    
+      child->IsCollapsed(aState, collapsed);
+
+      currentBox->flex = flex;
+      currentBox->collapsed = collapsed;
+    } else {
+      flex = start->flex;
+      start = start->next;
+    }
+    
     if (flex > 0) 
        aFlexes++;
    
     child->GetNextBox(&child);
   }
+  */
 
   // get pref, min, max
   aBox->GetChildBox(&child);
   currentBox = aBoxSizes;
+  nsBoxSize* last = nsnull;
+
   while(child)
   {
     nsSize pref(0,0);
     nsSize min(0,0);
-    nsSize max(0,0);
+    nsSize max(NS_INTRINSICSIZE,NS_INTRINSICSIZE);
 
-      // only one flexible child? Cool we will just make its preferred size
-      // 0 then and not even have to ask for it.
-      //if (flexes != 1)  {
-        child->GetPrefSize(aState, pref);
-        child->GetAscent(aState, currentBox->ascent);
-        nsMargin margin;
-        child->GetMargin(margin);
-        currentBox->ascent += margin.top + margin.bottom;
-      //}
+    // only one flexible child? Cool we will just make its preferred size
+    // 0 then and not even have to ask for it.
+    //if (flexes != 1)  {
+    nscoord ascent = 0;
+    child->GetPrefSize(aState, pref);
+    child->GetMinSize(aState, min);
+    child->GetMaxSize(aState, max);
+    child->GetAscent(aState, ascent);
+    nsMargin margin;
+    child->GetMargin(margin);
+    ascent += margin.top + margin.bottom;
+    //}
 
-      child->GetMinSize(aState, min);
-      child->GetMaxSize(aState, max);
-      nsBox::BoundsCheck(min, pref, max);
+    nsBox::BoundsCheck(min, pref, max);
 
-      AddMargin(child, pref);
-      AddMargin(child, min);
-      AddMargin(child, max);
+    AddMargin(child, pref);
+    AddMargin(child, min);
+    AddMargin(child, max);
 
-      nscoord minWidth  = min.width;
-      nscoord maxWidth  = max.width;
-      nscoord prefWidth = pref.width;
-
-      if (!isHorizontal) {
-        minWidth = min.height;
-        maxWidth = max.height;
-        prefWidth = pref.height;
-        if (min.width > aMinSize)
-          aMinSize = min.width;
-
-        if (max.width < aMaxSize)
-          aMaxSize = max.width;
-
+    if (!currentBox) {
+      // create one.
+      currentBox = new (aState) nsBoxSize();
+      if (!aBoxSizes) {
+        aBoxSizes = currentBox;
+        last = aBoxSizes;
       } else {
-        if (min.height > aMinSize)
-          aMinSize = min.height;
-
-        if (max.height < aMaxSize)
-          aMaxSize = max.height;
+        last->next = currentBox;
+        last = currentBox;
       }
+
+      nscoord minWidth;
+      nscoord maxWidth;
+      nscoord prefWidth;
+
+      // get sizes from child
+      if (isHorizontal) {
+          minWidth  = min.width;
+          maxWidth  = max.width;
+          prefWidth = pref.width;
+      } else {
+          minWidth = min.height;
+          maxWidth = max.height;
+          prefWidth = pref.height;
+      }
+
+      nscoord flex = 0;
+      child->GetFlex(aState, flex);
+      PRBool collapsed = PR_FALSE;    
+      child->IsCollapsed(aState, collapsed);
+
+      // set them
+      currentBox->flex = flex;
+      currentBox->collapsed = collapsed;
+      currentBox->pref    = prefWidth;
+      currentBox->min     = minWidth;
+      currentBox->max     = maxWidth;
 
       NS_ASSERTION(minWidth <= prefWidth && prefWidth <= maxWidth,"Bad min, pref, max widths!");
 
-      /*
-      if (minWidth > maxWidth)
-          minWidth = maxWidth;
+    }
 
-      if (prefWidth > maxWidth)
-          prefWidth = maxWidth;
+    if (!isHorizontal) {
+      if (min.width > aMinSize)
+        aMinSize = min.width;
 
-      if (prefWidth < minWidth)
-          prefWidth = minWidth;
-      */
+      if (max.width < aMaxSize)
+        aMaxSize = max.width;
 
-      currentBox->pref = prefWidth;
-      currentBox->min  = minWidth;
-      currentBox->max  = maxWidth;
+    } else {
+      if (min.height > aMinSize)
+        aMinSize = min.height;
+
+      if (max.height < aMaxSize)
+        aMaxSize = max.height;
+    }
+
+    currentBox->ascent  = ascent;
+    aFlexes += currentBox->flex;
 
     child->GetNextBox(&child);
+
+    last = currentBox;
     currentBox = currentBox->next;
+
   }
 }
 

@@ -59,6 +59,7 @@ nsBoxToBlockAdaptor::nsBoxToBlockAdaptor(nsIPresShell* aPresShell, nsIFrame* aFr
   mFrame = aFrame;
   mSpaceManager = nsnull;
   mWasCollapsed = PR_FALSE;
+  mCachedMaxElementHeight = 0;
   NeedsRecalc();
 }
 
@@ -165,11 +166,16 @@ nsBoxToBlockAdaptor::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
                   NS_INTRINSICSIZE,
                   PR_FALSE);
 
-      if (currentSize) {
+     if (currentSize) {
         desiredSize.maxElementSize = nsnull;
+
+        if (size.width > currentSize->width)
+          currentSize->width = size.width;
 
         if (size.height > currentSize->height)
            currentSize->height = size.height;
+
+        mCachedMaxElementHeight = size.height;
       }
 
        nsFrameState frameState = 0;
@@ -310,8 +316,13 @@ nsBoxToBlockAdaptor::Layout(nsBoxLayoutState& aState)
       desiredSize.maxElementSize = nsnull;
 
       if (size.width > currentSize->width)
-         currentSize->width = size.width;  
+         currentSize->width = size.width;
+  
+      if (mCachedMaxElementHeight > currentSize->height) {
+        currentSize->height = mCachedMaxElementHeight;
+      }
     }
+
 
      mAscent = desiredSize.ascent;
      mFrame->SizeTo(presContext, desiredSize.width, desiredSize.height);
