@@ -560,6 +560,10 @@ function showPanel(panelId) {
     document.getElementById("help-toc-btn").removeAttribute("selected");
     //add the selected style to the correct panel.
     theButton.setAttribute("selected", "true");
+
+    //focus the searchbox if the search sidebar panel is shown.
+    if (panelId == "help-search")
+      document.getElementById("findText").focus();
 }
 
 function findParentNode(node, parentNode)
