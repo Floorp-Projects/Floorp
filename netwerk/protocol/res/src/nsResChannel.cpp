@@ -384,6 +384,7 @@ nsResChannel::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
         rv = mSubstitutions.Init();
         if (NS_FAILED(rv)) return rv;
         // fall through
+        mState = ASYNC_READ;
 
       case ASYNC_READ:
         break;
@@ -435,6 +436,7 @@ nsResChannel::AsyncWrite(nsIInputStream *fromStream,
         rv = mSubstitutions.Init();
         if (NS_FAILED(rv)) return rv;
         // fall through
+        mState = ASYNC_READ;
 
       case ASYNC_READ:
         break;
