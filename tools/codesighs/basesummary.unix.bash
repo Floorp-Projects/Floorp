@@ -141,7 +141,12 @@ if test "$READELF_PROG"; then
 else
   READELF_PROG=`which readelf 2>/dev/null`
   if test "$READELF_PROG"; then
-    READELF_PROG="readelf -W"
+    # Check whether we need -W
+    if readelf --help | grep "\--wide" >&/dev/null; then
+      READELF_PROG="readelf -W"
+    else
+      READELF_PROG="readelf"
+    fi
     USE_READELF=1
   else
     USE_READELF=
