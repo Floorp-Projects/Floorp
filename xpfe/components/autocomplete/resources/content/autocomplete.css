@@ -10,3 +10,13 @@
 .autocomplete-result-popup {
   display: -moz-popup !important;
 }
+
+/* The following rule is here to fix bug 96899.  Somehow trees create a situation
+   in which a popupset flows itself as if its popup child is directly within it
+   instead of the placeholder child that should actually be inside the popupset.
+   This is a stopgap measure, and it does not address the real bug.  */
+popupset {
+  max-width: 0px;
+  width: 0px;
+}
+
