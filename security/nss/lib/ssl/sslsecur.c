@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslsecur.c,v 1.17 2002/03/23 01:06:08 nelsonb%netscape.com Exp $
+ * $Id: sslsecur.c,v 1.18 2002/05/01 00:21:50 wtc%netscape.com Exp $
  */
 #include "cert.h"
 #include "secitem.h"
@@ -42,16 +42,6 @@
 #include "sslproto.h"
 #include "secoid.h"	/* for SECOID_GetALgorithmTag */
 #include "pk11func.h"	/* for PK11_GenerateRandom */
-
-#if defined(_WINDOWS)
-#include "winsock.h"	/* for MSG_PEEK */
-#elif defined(XP_MAC)
-#include "macsocket.h"
-#elif defined(BEOS)
-#define MSG_PEEK 0x2
-#else
-#include <sys/socket.h> /* for MSG_PEEK */
-#endif
 
 #define MAX_BLOCK_CYPHER_SIZE	32
 
@@ -549,7 +539,7 @@ DoRecv(sslSocket *ss, unsigned char *out, int len, int flags)
     /* Dole out clear data to reader */
     amount = PR_MIN(len, available);
     PORT_Memcpy(out, ss->gs.buf.buf + ss->gs.readOffset, amount);
-    if (!(flags & MSG_PEEK)) {
+    if (!(flags & PR_MSG_PEEK)) {
 	ss->gs.readOffset += amount;
     }
     rv = amount;
@@ -952,7 +942,7 @@ ssl_SecureRecv(sslSocket *ss, unsigned char *buf, int len, int flags)
 	PORT_SetError(PR_SOCKET_SHUTDOWN_ERROR);
     	return PR_FAILURE;
     }
-    if (flags & ~MSG_PEEK) {
+    if (flags & ~PR_MSG_PEEK) {
 	PORT_SetError(PR_INVALID_ARGUMENT_ERROR);
     	return PR_FAILURE;
     }
