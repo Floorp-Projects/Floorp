@@ -63,7 +63,7 @@ class WriteStreamWrapper : public nsIOutputStream
 };
 
 // implement nsISupports
-NS_IMPL_ISUPPORTS(WriteStreamWrapper, NS_GET_IID(nsIOutputStream))
+NS_IMPL_THREADSAFE_ISUPPORTS(WriteStreamWrapper, NS_GET_IID(nsIOutputStream))
 
 WriteStreamWrapper::WriteStreamWrapper(nsDiskCacheRecordChannel* aChannel, 
                                        nsIOutputStream *aBaseStream) 
