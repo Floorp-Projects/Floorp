@@ -19,7 +19,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#if defined(XP_UNIX) || defined(XP_OS2_EMX) || defined(XP_BEOS)
+#if defined(VMS)
+#include <sys/timeb.h>
+#elif defined(XP_UNIX) || defined(XP_OS2_EMX) || defined(XP_BEOS)
 #include <sys/time.h>
 #elif defined(WIN32) || defined(XP_OS2_VACPP)
 #include <sys/timeb.h>
@@ -41,6 +43,14 @@ int main(int argc, char **argv)
      * of this program and omit the library build time
      * in PRVersionDescription.
      */
+#elif defined(VMS)
+    long long now;
+    struct timeb b;
+    ftime(&b);
+    now = b.time;
+    now *= 1000000;
+    now += (1000 * b.millitm);
+    fprintf(stdout, "%Ld", now);
 #elif defined(XP_UNIX) || defined(XP_OS2_EMX) || defined(XP_BEOS)
     long long now;
     struct timeval tv;

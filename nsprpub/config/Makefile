@@ -19,6 +19,9 @@
 
 MOD_DEPTH	= ..
 
+# Indicate that this directory builds build tools.
+INTERNAL_TOOLS	= 1
+
 include $(MOD_DEPTH)/config/config.mk
 
 CSRCS	= nsinstall.c now.c

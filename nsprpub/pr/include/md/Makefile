@@ -67,6 +67,10 @@ ifeq ($(OS_ARCH),OpenBSD)
 MDCPUCFG_H = _openbsd.cfg
 endif
 
+ifeq ($(OS_ARCH),OpenVMS)
+MDCPUCFG_H = _openvms.cfg
+endif
+
 ifeq ($(OS_ARCH),NetBSD)
 MDCPUCFG_H = _netbsd.cfg
 endif
@@ -149,6 +153,15 @@ ifeq ($(MOZ_BITS),16)
 	mv -f $(DIST)/include/$(MDCPUCFG_H) $(MOZ_INCL)/prcpucfg.h
 else
 	mv -f $(DIST)/include/$(MDCPUCFG_H) $(DIST)/include/prcpucfg.h
+endif
+ifeq ($(OS_ARCH),OpenVMS)
+# mv'ing a link causes the file itself to move, not the link, so fix it.
+	rm -f $(DIST)/include/$(MDCPUCFG_H)
+	if [ ! -L $(DIST)/include/prcpucfg.h ]; then \
+	  mv -f $(DIST)/include/prcpucfg.h $(MDCPUCFG_H); \
+	  ln -fs $(MOD_DEPTH)/nsprpub/pr/include/md/$(MDCPUCFG_H) \
+	    $(DIST)/include/prcpucfg.h; \
+	fi
 endif
 
 release:: export

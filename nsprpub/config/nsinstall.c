@@ -46,7 +46,7 @@
 #if defined(AIX) || defined(BSDI) || defined(HPUX) || defined(LINUX) \
     || defined(SUNOS4) || defined(SCO) || defined(UNIXWARE) \
     || defined(RHAPSODY) || defined(NEXTSTEP) || defined(QNX) \
-    || defined(BEOS)
+    || defined(BEOS) || defined(VMS)
 #undef HAVE_LCHOWN
 #endif
 
@@ -60,7 +60,7 @@
  * Does getcwd() take NULL as the first argument and malloc
  * the result buffer?
  */
-#if !defined(RHAPSODY) && !defined(NEXTSTEP)
+#if !defined(RHAPSODY) && !defined(NEXTSTEP) && !defined(VMS)
 #define GETCWD_CAN_MALLOC
 #endif
 
