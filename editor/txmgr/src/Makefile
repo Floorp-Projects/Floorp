@@ -21,7 +21,7 @@ DEPTH=../../..
 LIBRARY_NAME = txmgr
 
 CPPSRCS =                       \
-	transactionManager.cpp		\
+	nsTransactionManager.cpp	\
     $(NULL)
 
 MODULE = txmgr
