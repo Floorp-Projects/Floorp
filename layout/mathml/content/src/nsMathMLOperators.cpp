@@ -49,7 +49,7 @@ struct OperatorData {
       mRightSpace(0.0f)
   { // point to the incomming buffer
     // note that the incomming buffer may really be 2 byte
-    nsStr::Initialize(mStr, aStringValue.mStr, aStringValue.mCapacity,
+    nsStr::Initialize(mStr, aStringValue.mStr, eCharSize(aStringValue.mCapacity),
                       aStringValue.mLength, aStringValue.mCharSize, PR_FALSE);
   }
 
