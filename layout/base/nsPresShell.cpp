@@ -3874,6 +3874,9 @@ FindTopFrame(nsIFrame* aRoot)
 PRBool
 PresShell::VerifyIncrementalReflow()
 {
+   if (VERIFY_REFLOW_NOISY & gVerifyReflowFlags) {
+     printf("Building Verification Tree...\n");
+   }
   // All the stuff we are creating that needs releasing
   nsIPresContext* cx;
   nsIViewManager* vm;
@@ -3976,6 +3979,9 @@ PresShell::VerifyIncrementalReflow()
   vm->SetViewObserver((nsIViewObserver *)((PresShell*)sh));
   sh->InitialReflow(r.width, r.height);
   sh->SetVerifyReflowEnable(PR_TRUE);  // turn on verify reflow again now that we're done reflowing the test frame tree
+  if (VERIFY_REFLOW_NOISY & gVerifyReflowFlags) {
+     printf("Verification Tree built, comparing...\n");
+  }
 
   // Now that the document has been reflowed, use its frame tree to
   // compare against our frame tree.
@@ -3999,15 +4005,15 @@ PresShell::VerifyIncrementalReflow()
     }
   }
 
-//  printf("Incremental reflow doomed view tree:\n");
-//  view->List(stdout, 1);
-//  view->SetVisibility(nsViewVisibility_kHide);
   cx->Stop();
   cx->SetContainer(nsnull);
   NS_RELEASE(cx);
   sh->EndObservingDocument();
   NS_RELEASE(sh);
   NS_RELEASE(vm);
+  if (VERIFY_REFLOW_NOISY & gVerifyReflowFlags) {
+    printf("Finished Verifying Reflow...\n");
+  }
 
   return ok;
 }

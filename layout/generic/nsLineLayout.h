@@ -18,6 +18,8 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Steve Clark <buster@netscape.com>
+ *   Robert O'Callahan <roc+moz@cs.cmu.edu>
  */
 #ifndef nsLineLayout_h___
 #define nsLineLayout_h___
@@ -32,7 +34,7 @@ class nsBlockReflowState;
 class nsPlaceholderFrame;
 struct nsStyleText;
 
-#define NS_LINELAYOUT_NUM_FRAMES        10
+#define NS_LINELAYOUT_NUM_FRAMES        5
 #define NS_LINELAYOUT_NUM_SPANS         5
 
 class nsLineLayout {
@@ -122,23 +124,69 @@ public:
 
   //----------------------------------------
 
+  // Supporting methods and data for flags
+protected:
+#define LL_ENDSINWHITESPACE            0x00000001
+#define LL_UNDERSTANDSNWHITESPACE      0x00000002
+#define LL_TEXTSTARTSWITHNBSP          0x00000004
+#define LL_FIRSTLETTERSTYLEOK          0x00000008
+#define LL_ISTOPOFPAGE                 0x00000010
+#define LL_UPDATEDBAND                 0x00000020
+#define LL_IMPACTEDBYFLOATERS          0x00000040
+#define LL_LASTFLOATERWASLETTERFRAME   0x00000080
+#define LL_CANPLACEFLOATER             0x00000100
+#define LL_KNOWSTRICTMODE              0x00000200
+#define LL_INSTRICTMODE                0x00000400
+#define LL_LINEENDSINBR                0x00000800
+#define LL_LASTFLAG                    LL_LINEENDSINBR
+
+  PRUint16 mFlags;
+
+  void SetFlag(PRUint32 aFlag, PRBool aValue)
+  {
+    NS_ASSERTION(aFlag<=LL_LASTFLAG, "bad flag");
+    NS_ASSERTION(aValue==PR_FALSE || aValue==PR_TRUE, "bad value");
+    if (aValue) { // set flag
+      mFlags |= aFlag;
+    }
+    else {        // unset flag
+      mFlags &= ~aFlag;
+    }
+  }
+
+  PRBool GetFlag(PRUint32 aFlag) const
+  {
+    NS_ASSERTION(aFlag<=LL_LASTFLAG, "bad flag");
+    PRBool result = (mFlags & aFlag);
+    if (result) return PR_TRUE;
+    return PR_FALSE;
+  }
+
+public:
+
   // Support methods for white-space compression and word-wrapping
   // during line reflow
 
   void SetEndsInWhiteSpace(PRBool aState) {
-    mEndsInWhiteSpace = aState;
+    SetFlag(LL_ENDSINWHITESPACE, aState);
   }
 
   PRBool GetEndsInWhiteSpace() const {
-    return mEndsInWhiteSpace;
+    return GetFlag(LL_ENDSINWHITESPACE);
   }
 
   void SetUnderstandsWhiteSpace(PRBool aSetting) {
-    mUnderstandsWhiteSpace = aSetting;
+    SetFlag(LL_UNDERSTANDSNWHITESPACE, aSetting);
   }
 
+  void SetTextJustificationWeights(PRInt32 aNumSpaces, PRInt32 aNumLetters) {
+    mTextJustificationNumSpaces = aNumSpaces;
+    mTextJustificationNumLetters = aNumLetters;
+  }
+
+
   void SetTextStartsWithNBSP(PRBool aYes) {
-    mTextStartsWithNBSP = aYes;
+    SetFlag(LL_TEXTSTARTSWITHNBSP, aYes);
   }
 
   void RecordWordFrame(nsIFrame* aWordFrame) {
@@ -163,9 +211,15 @@ public:
 
   PRBool LineIsBreakable() const;
 
-  PRBool GetLineEndsInBR() const { return mLineEndsInBR; }
+  PRBool GetLineEndsInBR() const 
+  { 
+    return GetFlag(LL_LINEENDSINBR); 
+  }
 
-  void SetLineEndsInBR(PRBool aOn) { mLineEndsInBR = aOn; }
+  void SetLineEndsInBR(PRBool aOn) 
+  { 
+    SetFlag(LL_LINEENDSINBR, aOn); 
+  }
 
   //----------------------------------------
   // Inform the line-layout about the presence of a floating frame
@@ -176,11 +230,11 @@ public:
   //----------------------------------------
 
   PRBool GetFirstLetterStyleOK() const {
-    return mFirstLetterStyleOK;
+    return GetFlag(LL_FIRSTLETTERSTYLEOK);
   }
 
   void SetFirstLetterStyleOK(PRBool aSetting) {
-    mFirstLetterStyleOK = aSetting;
+    SetFlag(LL_FIRSTLETTERSTYLEOK, aSetting);
   }
 
   void SetFirstLetterFrame(nsIFrame* aFrame) {
@@ -233,19 +287,11 @@ protected:
   nsIFrame* mFirstLetterFrame;
   PRInt32 mLineNumber;
   PRInt32 mColumn;
+  PRInt32 mTextJustificationNumSpaces;
+  PRInt32 mTextJustificationNumLetters;
+
   nsLineBox* mLineBox;
-  PRPackedBool mEndsInWhiteSpace;
-  PRPackedBool mUnderstandsWhiteSpace;
-  PRPackedBool mTextStartsWithNBSP;
-  PRPackedBool mFirstLetterStyleOK;
-  PRPackedBool mIsTopOfPage;
-  PRPackedBool mUpdatedBand;
-  PRPackedBool mImpactedByFloaters;
-  PRPackedBool mLastFloaterWasLetterFrame;
-  PRPackedBool mCanPlaceFloater;
-  PRPackedBool mKnowStrictMode;
-  PRPackedBool mInStrictMode;
-  PRPackedBool mLineEndsInBR;
+
   PRUint8 mPlacedFloaters;
   PRInt32 mTotalPlacedFrames;
   nsVoidArray mWordFrames;
@@ -294,15 +340,47 @@ protected:
     nsMargin mMargin;
     nsMargin mBorderPadding;
     nsMargin mOffsets;
-    PRPackedBool mRelativePos;
 
     // Other state we use
     PRUint8 mVerticalAlign;
-    PRPackedBool mIsTextFrame;
-    PRPackedBool mIsNonEmptyTextFrame;
-    PRPackedBool mIsNonWhitespaceTextFrame;
-    PRPackedBool mIsLetterFrame;
-    PRPackedBool mIsSticky;
+
+    // state for text justification
+    PRInt32 mJustificationNumSpaces;
+    PRInt32 mJustificationNumLetters;
+
+
+// PerFrameData flags
+#define PFD_RELATIVEPOS                 0x00000001
+#define PFD_ISTEXTFRAME                 0x00000002
+#define PFD_ISNONEMPTYTEXTFRAME         0x00000004
+#define PFD_ISNONWHITESPACETEXTFRAME    0x00000008
+#define PFD_ISLETTERFRAME               0x00000010
+#define PFD_ISSTICKY                    0x00000020
+#define PFD_ISBULLET                    0x00000040
+#define PFD_LASTFLAG                    PFD_ISBULLET
+
+    PRPackedBool mFlags;
+
+    void SetFlag(PRUint32 aFlag, PRBool aValue)
+    {
+      NS_ASSERTION(aFlag<=PFD_LASTFLAG, "bad flag");
+      NS_ASSERTION(aValue==PR_FALSE || aValue==PR_TRUE, "bad value");
+      if (aValue) { // set flag
+        mFlags |= aFlag;
+      }
+      else {        // unset flag
+        mFlags &= ~aFlag;
+      }
+    }
+
+    PRBool GetFlag(PRUint32 aFlag) const
+    {
+      NS_ASSERTION(aFlag<=PFD_LASTFLAG, "bad flag");
+      PRBool result = (mFlags & aFlag);
+      if (result) return PR_TRUE;
+      return PR_FALSE;
+    }
+
 
     PerFrameData* Last() {
       PerFrameData* pfd = this;
@@ -408,6 +486,22 @@ protected:
   void RelativePositionFrames(PerSpanData* psd, nsRect& aCombinedArea);
 
   PRBool TrimTrailingWhiteSpaceIn(PerSpanData* psd, nscoord* aDeltaWidth);
+
+
+  void ComputeJustificationWeights(PerSpanData* psd, PRInt32* numSpaces, PRInt32* numLetters);
+
+  struct FrameJustificationState {
+    PRInt32 mTotalNumSpaces;
+    PRInt32 mTotalNumLetters;
+    nscoord mTotalWidthForSpaces;
+    nscoord mTotalWidthForLetters;
+    PRInt32 mNumSpacesProcessed;
+    PRInt32 mNumLettersProcessed;
+    nscoord mWidthForSpacesProcessed;
+    nscoord mWidthForLettersProcessed;
+  };
+  nscoord ApplyFrameJustification(PerSpanData* aPSD, FrameJustificationState* aState);
+
 
 #ifdef DEBUG
   void DumpPerSpanData(PerSpanData* psd, PRInt32 aIndent);

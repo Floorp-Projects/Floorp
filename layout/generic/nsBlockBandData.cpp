@@ -81,6 +81,10 @@ nsBlockBandData::GetAvailableSpace(nscoord aY, nsRect& aResult)
   // between any left and right floaters.
   ComputeAvailSpaceRect();
   aResult = mAvailSpace;
+#ifdef REALLY_NOISY_COMPUTEAVAILSPACERECT
+  printf("nsBBD %p GetAvailableSpace(%d) returing (%d, %d, %d, %d)\n",
+          this, aY, aResult.x, aResult.y, aResult.width, aResult.height);
+#endif
   return NS_OK;
 }
 
@@ -134,7 +138,7 @@ void
 nsBlockBandData::ComputeAvailSpaceRect()
 {
 #ifdef REALLY_NOISY_COMPUTEAVAILSPACERECT
-  printf("nsBlockBandData::ComputeAvailSpaceRect %p \n", this);
+  printf("nsBlockBandData::ComputeAvailSpaceRect %p with count %d\n", this, mCount);
 #endif
   if (0 == mCount) {
     mAvailSpace.x = 0;
@@ -248,6 +252,11 @@ nsBlockBandData::ComputeAvailSpaceRect()
   if (NS_UNCONSTRAINEDSIZE == mSpace.width) {
     mAvailSpace.width = NS_UNCONSTRAINEDSIZE;
   }
+#ifdef REALLY_NOISY_COMPUTEAVAILSPACERECT
+  printf("  ComputeAvailSpaceRect settting state mAvailSpace (%d,%d,%d,%d)\n", 
+         mAvailSpace.x, mAvailSpace.y, mAvailSpace.width, mAvailSpace.height);
+#endif
+
 }
 
 /**
@@ -471,3 +480,15 @@ nsBlockBandData::GetMaxElementSize(nsIPresContext* aPresContext,
   *aWidthResult = maxWidth;
   *aHeightResult = maxHeight;
 }
+
+#ifdef DEBUG
+void nsBlockBandData::List()
+{
+  printf("nsBlockBandData %p sm=%p, sm coord = (%d,%d), mSpace = (%d,%d)\n",
+          this, mSpaceManager, mSpaceManagerX, mSpaceManagerY,
+          mSpace.width, mSpace.height);
+  printf("  availSpace=(%d, %d, %d, %d), floaters l=%d r=%d\n",
+          mAvailSpace.x, mAvailSpace.y, mAvailSpace.width, mAvailSpace.height,
+          mLeftFloaters, mRightFloaters);
+}
+#endif

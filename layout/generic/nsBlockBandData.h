@@ -89,6 +89,10 @@ public:
                                     nsIFrame* aFrame,
                                     nsSize* aResult);
 
+#ifdef DEBUG
+  void List();
+#endif
+
 protected:
 
   /** utility method to calculate the band data at aY.

@@ -197,10 +197,12 @@ nsBlockReflowContext::AlignBlockHorizontally(nscoord                 aWidth,
           // compatability cases.
           switch (styleText->mTextAlign) {
             case NS_STYLE_TEXT_ALIGN_MOZ_RIGHT:
+            case NS_STYLE_TEXT_ALIGN_RIGHT:
               aAlign.mXOffset += remainingSpace;
               doCSS = PR_FALSE;
               break;
             case NS_STYLE_TEXT_ALIGN_MOZ_CENTER:
+            case NS_STYLE_TEXT_ALIGN_CENTER:
               aAlign.mXOffset += remainingSpace / 2;
               doCSS = PR_FALSE;
               break;
@@ -359,7 +361,11 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
                    reflowState.mComputedBorderPadding.right;
     }
 
-    x = aSpace.XMost() - mMargin.right - frameWidth;
+    // if this is an unconstrained width reflow, then just place the floater at the left margin
+    if (NS_UNCONSTRAINEDSIZE == aSpace.width)
+      x = aSpace.x;
+    else
+      x = aSpace.XMost() - mMargin.right - frameWidth;
 
   } else {
     x = aSpace.x + mMargin.left;
