@@ -39,6 +39,8 @@ const jsdIExecutionHook = Components.interfaces.jsdIExecutionHook;
 const jsdIValue = Components.interfaces.jsdIValue;
 const jsdIProperty = Components.interfaces.jsdIProperty;
 
+var $ = new Array(); /* array to store results from evals in debug frames */
+
 console.scriptHooker = new Object();
 console.scriptHooker.onScriptLoaded =
 function sh_scripthook (cx, script, creating)
@@ -72,9 +74,11 @@ function debugTrap (cx, state, type)
     /* set our default return value */
     console.continueCodeStack.push (jsdIExecutionHook.RETURN_CONTINUE);
 
+    $ = new Array();
     console.currentContext = cx;
     console.currentThreadState = state;
-    var frame = console.currentFrame = state.topFrame;
+    console.currentFrameIndex = 0;
+    var frame = state.topFrame;
     
     /* build an array of frames */
     console.frames = new Array(frame);
@@ -103,7 +107,7 @@ function debugTrap (cx, state, type)
     if (tn)
         display (getMsg(MSN_STOP, tn), MT_STOP);
 
-    display (formatStackFrame(console.currentFrame));
+    display (formatStackFrame(console.frames[console.currentFrameIndex]));
     
     console.jsds.enterNestedEventLoop(); 
 
@@ -114,9 +118,10 @@ function debugTrap (cx, state, type)
     if (tn)
         display (getMsg(MSN_CONT, tn), MT_CONT);
 
+    $ = new Array();
     delete console.currentContext;
     delete console.currentThreadState;
-    delete console.currentFrame;
+    delete console.currentFrameIndex;
     delete console.frames;
     
     return console.continueCodeStack.pop();
