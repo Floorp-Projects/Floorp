@@ -151,6 +151,8 @@ protected:
   static void
   GetElementFactory(PRInt32 aNameSpaceID, nsIElementFactory** aResult);
 
+  void ScrollToRef();
+
   static nsINameSpaceManager* gNameSpaceManager;
   static PRUint32 gRefCnt;
 
@@ -184,6 +186,8 @@ protected:
   nsICSSLoader* mCSSLoader;
   nsCOMPtr<nsINodeInfoManager> mNodeInfoManager;
   nsCOMPtr<nsITransformMediator> mXSLTransformMediator;
+
+  nsString           mRef; // ScrollTo #ref
 };
 
 #endif // nsXMLContentSink_h__

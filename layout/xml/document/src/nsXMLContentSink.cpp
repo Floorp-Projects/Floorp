@@ -240,6 +240,23 @@ nsXMLContentSink::WillBuildModel(void)
   return NS_OK;
 }
 
+void
+nsXMLContentSink::ScrollToRef()
+{
+  if (mRef.Length() > 0)
+  {
+    PRInt32 i, ns = mDocument->GetNumberOfShells();
+    for (i = 0; i < ns; i++) {
+      nsCOMPtr<nsIPresShell> shell(dont_AddRef(mDocument->GetShellAt(i)));
+      if (shell) {
+        shell->FlushPendingNotifications();
+        // Scroll to the anchor
+        shell->GoToAnchor(mRef);
+      }
+    }
+  }
+}
+
 NS_IMETHODIMP
 nsXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
 {
@@ -265,6 +282,7 @@ nsXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
 
   if (!mXSLTransformMediator || NS_FAILED(rv)) {
     StartLayout();
+    ScrollToRef();
     mDocument->EndLoad();
   }
 
@@ -1475,13 +1493,17 @@ nsXMLContentSink::StartLayout()
 
   // If the document we are loading has a reference or it is a top level
   // frameset document, disable the scroll bars on the views.
-  char* ref = nsnull;
+  nsXPIDLCString ref;
   nsIURL* url;
   nsresult rv = mDocumentURL->QueryInterface(NS_GET_IID(nsIURL), (void**)&url);
   if (NS_SUCCEEDED(rv)) {
-    rv = url->GetRef(&ref);
+    rv = url->GetRef(getter_Copies(ref));
     NS_RELEASE(url);
   }
+  if (rv == NS_OK) {
+    mRef.AssignWithConversion(ref);
+  }
+
   PRBool topLevelFrameset = PR_FALSE;
   nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mWebShell));
   if (docShellAsItem) {
@@ -1492,7 +1514,7 @@ nsXMLContentSink::StartLayout()
     }
   }
 
-  if ((nsnull != ref) || topLevelFrameset) {
+  if (ref || topLevelFrameset) {
     // XXX support more than one presentation-shell here
 
     // Get initial scroll preference and save it away; disable the
@@ -1521,8 +1543,6 @@ nsXMLContentSink::StartLayout()
         NS_RELEASE(shell);
       }
     }
-    // XXX who actually uses ref here anyway?
-    nsCRT::free(ref);
   }
 }
 
