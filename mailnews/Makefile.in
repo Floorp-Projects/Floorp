@@ -22,7 +22,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= idl public base db news local compose mime imap addrbook
+DIRS		= idl public base db news local mime compose imap addrbook
 
 include $(topsrcdir)/config/rules.mk
 
