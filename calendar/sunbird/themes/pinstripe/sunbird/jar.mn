@@ -4,6 +4,7 @@ calendar.jar:
    skin/classic/calendar/toolbar-small.png
    skin/classic/calendar/pageupdown.png
    skin/classic/calendar/prevnextarrow.png
++  skin/classic/calendar/synch_animated.gif
    skin/classic/calendar/pref/Options.png                           (pref/Options.png)
    skin/classic/calendar/pref/pref.css                              (pref/pref.css)
    skin/classic/calendar/datetimepickers/left-arrow.png             (datetimepickers/left-arrow.png)
