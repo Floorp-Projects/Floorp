@@ -229,6 +229,8 @@ endif
 
 ifdef MOZ_PHOENIX
 tier_9_dirs	+= toolkit
+# remove this when bug 201821 is fixed
+tier_9_dirs	+= browser/components/bookmarks/public
 endif
 
 #
