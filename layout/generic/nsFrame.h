@@ -463,6 +463,9 @@ public:
                                  nsHTMLReflowMetrics& aMetrics,
                                  PRUint32             aStatus,
                                  void*                aFrameTreeNode);
+
+  static void DisplayReflowStartup();
+  static void DisplayReflowShutdown();
 #endif
 
 protected:
