@@ -27,6 +27,7 @@
 #include "prmem.h"
 #include "nsMsgBaseCID.h"
 #include "nsIPref.h"
+#include "nsCOMPtr.h"
 
 static NS_DEFINE_CID(kMsgIdentityCID, NS_MSGIDENTITY_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
@@ -61,9 +62,10 @@ public:
 private:
   char *m_accountKey;
   nsIPref *m_prefs;
-  nsIMsgIncomingServer *m_incomingServer;
+  nsCOMPtr<nsIMsgIncomingServer> m_incomingServer;
 
-  nsIMsgIdentity *m_defaultIdentity;
+  nsCOMPtr<nsIMsgIdentity> m_defaultIdentity;
+  nsCOMPtr<nsISupportsArray> m_identities;
 };
 
 
@@ -73,20 +75,17 @@ NS_IMPL_ISUPPORTS(nsMsgAccount, GetIID())
 nsMsgAccount::nsMsgAccount():
   m_accountKey(0),
   m_prefs(0),
-  m_incomingServer(0),
-  m_defaultIdentity(0)
+  m_incomingServer(null_nsCOMPtr()),
+  m_defaultIdentity(null_nsCOMPtr())
 {
+  NS_NewISupportsArray(getter_AddRefs(m_identities));
   NS_INIT_REFCNT();
-  
 }
 
 nsMsgAccount::~nsMsgAccount()
 {
   PR_FREEIF(m_accountKey);
-  NS_RELEASE(m_incomingServer);
   
-  // in the future, the default identity should not be refcounted
-  NS_RELEASE(m_defaultIdentity);
 }
 
 
@@ -170,9 +169,8 @@ nsMsgAccount::GetIncomingServer(nsIMsgIncomingServer * *aIncomingServer)
   if (!m_incomingServer) return NS_ERROR_UNEXPECTED;
   
   *aIncomingServer = m_incomingServer;
+  NS_ADDREF(*aIncomingServer);
 
-  // addref for the caller
-  NS_ADDREF(m_incomingServer);
   return NS_OK;
 }
 
@@ -180,11 +178,7 @@ nsMsgAccount::GetIncomingServer(nsIMsgIncomingServer * *aIncomingServer)
 NS_IMETHODIMP
 nsMsgAccount::SetIncomingServer(nsIMsgIncomingServer * aIncomingServer)
 {
-  if (aIncomingServer != m_incomingServer) {
-    NS_IF_RELEASE(m_incomingServer);
-    m_incomingServer = aIncomingServer;
-    if (m_incomingServer) NS_ADDREF(m_incomingServer);
-  }
+  m_incomingServer = dont_QueryInterface(aIncomingServer);
   return NS_OK;
 }
 
@@ -192,6 +186,7 @@ nsMsgAccount::SetIncomingServer(nsIMsgIncomingServer * aIncomingServer)
 NS_IMETHODIMP
 nsMsgAccount::GetIdentities(nsISupportsArray **_retval)
 {
+  
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -203,19 +198,18 @@ nsMsgAccount::GetDefaultIdentity(nsIMsgIdentity * *aDefaultIdentity)
   if (!m_defaultIdentity) return NS_ERROR_NULL_POINTER;
   
   *aDefaultIdentity = m_defaultIdentity;
-  NS_ADDREF(*aDefaultIdentity);
   return NS_OK;
 }
 
-
+// todo - make sure this is in the identity array!
 NS_IMETHODIMP
 nsMsgAccount::SetDefaultIdentity(nsIMsgIdentity * aDefaultIdentity)
 {
-  if (aDefaultIdentity != m_defaultIdentity) {
-    NS_IF_RELEASE(m_defaultIdentity);
-    m_defaultIdentity = aDefaultIdentity;
-    if (m_defaultIdentity) NS_ADDREF(m_defaultIdentity);
-  }
+  NS_ASSERTION(m_identities->IndexOf(aDefaultIdentity) != -1, "Where did that identity come from?!");
+  if (m_identities->IndexOf(aDefaultIdentity) == -1)
+    return NS_ERROR_UNEXPECTED;
+  
+  m_defaultIdentity = dont_QueryInterface(aDefaultIdentity);
   return NS_OK;
 }
 
@@ -226,7 +220,10 @@ nsMsgAccount::addIdentity(nsIMsgIdentity *identity)
   // hack hack - need to add this to the list of identities.
   // for now just tread this as a Setxxx accessor
   // when this is actually implemented, don't refcount the default identity
-  SetDefaultIdentity(identity);
+  m_identities->AppendElement(identity);
+  if (!m_defaultIdentity)
+    SetDefaultIdentity(identity);
+  
   return NS_OK;
 }
 
