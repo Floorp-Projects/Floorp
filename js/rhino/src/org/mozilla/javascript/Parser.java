@@ -688,9 +688,7 @@ class Parser {
             tt = ts.peekTokenSameLine();
             ts.flags &= ~ts.TSF_REGEXP;
 
-            if (tt != ts.EOF && tt != ts.EOL && tt != ts.SEMI && 
-                tt != ts.RC && !(tt == ts.PRIMARY && ts.getOp() == ts.THIS))         
-            {
+            if (tt != ts.EOF && tt != ts.EOL && tt != ts.SEMI && tt != ts.RC) {
                 lineno = ts.getLineno();
                 retExpr = expr(ts, source, false);
                 if (ts.getLineno() == lineno)
@@ -700,9 +698,12 @@ class Parser {
                 ts.flags |= ts.TSF_RETURN_VOID;
             }
 
+            /*
+            XXX: causes problems, not required by ECMA.
             if ((ts.flags & (ts.TSF_RETURN_EXPR | ts.TSF_RETURN_VOID))
                 == (ts.TSF_RETURN_EXPR | ts.TSF_RETURN_VOID))
                 reportError(ts, "msg.fn.retval");
+            */
 
             // XXX ASSERT pn
             pn = nf.createReturn(retExpr, lineno);
