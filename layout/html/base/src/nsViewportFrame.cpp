@@ -105,6 +105,8 @@ public:
    * @see nsLayoutAtoms::viewportFrame
    */
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
+
+  NS_IMETHOD IsPercentageBase(PRBool& aBase) const;
   
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
@@ -630,6 +632,13 @@ ViewportFrame::GetFrameType(nsIAtom** aType) const
   NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
   *aType = nsLayoutAtoms::viewportFrame; 
   NS_ADDREF(*aType);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ViewportFrame::IsPercentageBase(PRBool& aBase) const
+{
+  aBase = PR_TRUE;
   return NS_OK;
 }
 

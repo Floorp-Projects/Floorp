@@ -39,7 +39,7 @@
 
 /* blocks */
 
-html, div, map, dt, isindex, *|*:-moz-anonymous-block, *|*:-moz-cell-content {
+html, div, map, dt, isindex {
   display: block;
 }
 
@@ -158,11 +158,6 @@ table {
   text-indent: 0;
 }
 
-*|*:-moz-table {
-  display: table;
-  -moz-box-sizing: border-box; /* XXX do we really want this? */
-}
-
 table[align="left"] {
   float: left;
 }
@@ -174,33 +169,6 @@ table[align="right"] {
 
 table[rules] {
   border-collapse: collapse;
-}
-
-*|*:-moz-table-outer {
-  display: table;
-  margin: 0;
-  padding: 0;
-  width: 0;
-  height: 0;
-  float: inherit;
-  clear: inherit;
-  position: inherit;
-  top: inherit;
-  right: inherit;
-  bottom: inherit;
-  left: inherit;
-  z-index: inherit;
-  clip: inherit;
-  /* background and border should be inherited so that computed style
-   * (which uses the outer frame) will get the right values for these
-   * properties.  Since the outer frame does not paint, inheriting
-   * these is OK.
-   */
-  background: inherit;
-  border: inherit;
-  -moz-opacity: inherit;
-  page-break-before: inherit;
-  page-break-after: inherit;
 }
 
 /* make sure backgrounds are inherited in tables  -- see bug 4510*/
@@ -233,17 +201,11 @@ tr {
   vertical-align: inherit;
 }
 
-*|*:-moz-table-row {
-  display: table-row;
-}
-
-/* The :-moz-table-column pseudo-element is for extra columns at the end 
-   of a table. */
-col, *|*:-moz-table-column {
+col {
   display: table-column;
 }
 
-colgroup, *|*:-moz-table-column-group {
+colgroup {
   display: table-column-group;
 }
 
@@ -262,10 +224,6 @@ tfoot {
   vertical-align: middle;
 }
 
-*|*:-moz-table-row-group {
-  display: table-row-group;
-}
-
 td { 
   display: table-cell;
   vertical-align: inherit;
@@ -278,12 +236,6 @@ th {
   vertical-align: inherit;
   font-weight: bold;
   padding: 1px;
-}
-
-*|*:-moz-table-cell {
-  display: table-cell;
-  padding: 1px;
-  white-space: inherit;
 }
 
 /* inlines */
@@ -350,12 +302,6 @@ abbr[title], acronym[title] {
 }
 
 /* lists */
-
-*|*:-moz-list-bullet, *|*:-moz-list-number {
-  display: inline;
-  vertical-align: baseline;
-  margin-right: 8px;
-}
 
 ul, menu, dir {
   display: block;
@@ -456,19 +402,6 @@ noframes {
 /* focusable content */
 
 /* links */
-*|*:-moz-any-link {
-  cursor: pointer;
-  -moz-user-focus: normal;
-}
-
-*|*:-moz-any-link:active {
-  color: red;
-}
-
-*|*:-moz-any-link:focus {
-  -moz-outline: 1px dotted invert;
-}
-
 *|*:-moz-any-link:focus img {
   -moz-outline: 1px dotted invert;
 }
@@ -483,51 +416,6 @@ noframes {
 area, base, basefont, head, meta, script, style, title,
 noembed, noscript, param {
    display: none;
-}
-
-
-/* magic */
-
-*|*:-moz-viewport, *|*:-moz-viewport-scroll, *|*:-moz-canvas {
-  display: block;
-  background-color: inherit;
-}
-
-*|*:-moz-scrolled-content { 
-  /* e.g., text inputs, select boxes */
-  background: inherit;
-  padding: inherit;
-  display: inherit;
-  -moz-box-orient: inherit;
-}
-
-*|*:-moz-page, *|*:-moz-page-sequence {
-  display: block;
-  background: transparent;
-}
-
-*|*:-moz-pagecontent {
-  display: block;
-}
-
-*|*:-moz-pagebreak {
-  display: -moz-page-break;
-}
-
-*|*:-moz-anonymous-positioned-block {
-  display: block;
-  position: relative;
-  top: inherit; 
-  left: inherit;
-  bottom: inherit;
-  right: inherit;
-  z-index: inherit;
-  clip: inherit;
-  -moz-opacity: inherit;
-}
-
-*|*:-moz-gc-wrapper-block {
-  display: block;
 }
 
 /* emulation of non-standard HTML <marquee> tag */
@@ -547,15 +435,7 @@ marquee[direction="up"], marquee[direction="down"] {
 
 @media print {
  
-  * {
-    cursor: default !important;
-  }
-
-  *|*:-moz-viewport, *|*:-moz-viewport-scroll, *|*:-moz-canvas {
-    background-color: #737373 !important;
-  }
-
-  *|*:-moz-any-link, *|*:-moz-any-link img, img[usemap], object[usemap],
+  *|*:-moz-any-link img, img[usemap], object[usemap],
   img[usemap], object[usemap], object, embed, applet, iframe {
     -moz-user-focus: none !important;
   }
@@ -563,5 +443,5 @@ marquee[direction="up"], marquee[direction="down"] {
   blink {
     text-decoration: none;
   }
-  
+ 
 }
