@@ -51,11 +51,27 @@ extern char * fallback_resources[];
 /* extern */ void
 XfeAppCreate(char * app_name,int * argc,String * argv)
 {
+	char * pc;
+
 	assert( _xfe_app_context == NULL );
 	assert( _xfe_app_shell == NULL );
-	
-    _xfe_app_shell = XtAppInitialize(&_xfe_app_context,app_name,
-									 NULL,0,argc,argv,
+
+	pc = strstr(argv[0],".shared");
+
+	if (!pc)
+	{
+		pc = strstr(argv[0],".static");
+	}
+
+	if (pc != NULL)
+	{
+		*pc = '\0';
+	}
+
+    _xfe_app_shell = XtAppInitialize(&_xfe_app_context,
+									 app_name,
+									 NULL,0,
+									 argc,argv,
 									 fallback_resources,
 									 NULL,0);
 
@@ -67,7 +83,10 @@ XfeAppCreate(char * app_name,int * argc,String * argv)
 				  XmNheight,				1,
 				  NULL);
 
-/* 	XfeAddEditresSupport(_xfe_app_shell); */
+    XtRealizeWidget(_xfe_app_shell);
+
+/*  	XfeAddEditresSupport(_xfe_app_shell); */
+
 	XfeRegisterStringToWidgetCvt();
 }
 /*----------------------------------------------------------------------*/
@@ -144,7 +163,11 @@ XfeAddEditresSupport(Widget shell)
 	assert( XfeIsAlive(shell) );
 	assert( XtIsShell(shell) );
 
-    XtAddEventHandler(shell,0,True,_XEditResCheckMessages,NULL);
+    XtAddEventHandler(shell,
+					  (EventMask) 0,
+					  True,
+					  (XtEventHandler) _XEditResCheckMessages,
+					  NULL);
 }
 /*----------------------------------------------------------------------*/
 /* extern */ void
