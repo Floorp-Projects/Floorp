@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.31 2002/05/02 18:59:55 ian.mcgreer%sun.com Exp $
+ * $Id: certdb.c,v 1.32 2002/05/10 20:21:38 jpierre%netscape.com Exp $
  */
 
 #include "nssilock.h"
@@ -2007,6 +2007,7 @@ CERT_SaveImportedCert(CERTCertificate *cert, SECCertUsage usage,
 loser:
     rv = SECFailure;
 done:
+
     return(rv);
 }
 
@@ -2039,20 +2040,37 @@ CERT_ImportCerts(CERTCertDBHandle *certdb, SECCertUsage usage,
 
 	if ( keepCerts ) {
 	    for ( i = 0; i < fcerts; i++ ) {
+                char* canickname = NULL;
+                PRBool freeNickname = PR_FALSE;
+
 		SECKEY_UpdateCertPQG(certs[i]);
+                
+                if ( CERT_IsCACert(certs[i], NULL) ) {
+                    canickname = CERT_MakeCANickname(certs[i]);
+                    if ( canickname != NULL ) {
+                        freeNickname = PR_TRUE;
+                    }
+                }
+
 		if(CERT_IsCACert(certs[i], NULL) && (fcerts > 1)) {
 		    /* if we are importing only a single cert and specifying
 		     * a nickname, we want to use that nickname if it a CA,
 		     * otherwise if there are more than one cert, we don't
-		     * know which cert it belongs to.
+		     * know which cert it belongs to. But we still may try
+                     * the individual canickname from the cert itself.
 		     */
-		    rv = CERT_AddTempCertToPerm(certs[i], NULL, NULL);
+		    rv = CERT_AddTempCertToPerm(certs[i], canickname, NULL);
 		} else {
-		    rv = CERT_AddTempCertToPerm(certs[i], nickname, NULL);
+		    rv = CERT_AddTempCertToPerm(certs[i],
+                                                nickname?nickname:canickname, NULL);
 		}
 		if (rv == SECSuccess) {
 		    CERT_SaveImportedCert(certs[i], usage, caOnly, NULL);
 		}
+
+                if (PR_TRUE == freeNickname) {
+                    PORT_Free(canickname);
+                }
 		/* don't care if it fails - keep going */
 	    }
 	}
