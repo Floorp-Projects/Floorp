@@ -20,6 +20,9 @@
  * Contributor(s): 
  */
 
+#include "nslog.h"
+#undef printf
+
 #include "nsPluginHostImpl.h"
 #include <stdio.h>
 #include "prio.h"
@@ -50,7 +53,6 @@
 #include "nsNetUtil.h"
 #include "nsIProgressEventSink.h"
 #include "nsIDocument.h"
-#include "nslog.h"
 
 NS_IMPL_LOG(nsPluginHostImplLog)
 #define PRINTF NS_LOG_PRINTF(nsPluginHostImplLog)
