@@ -113,19 +113,19 @@ NS_IMETHODIMP nsXULButtonAccessible::GetRole(PRUint32 *_retval)
 /**
   * Possible states: focused, focusable, unavailable(disabled)
   */
-NS_IMETHODIMP nsXULButtonAccessible::GetState(PRUint32 *_retval)
+NS_IMETHODIMP nsXULButtonAccessible::GetState(PRUint32 *aState)
 {
   // get focus and disable status from base class
-  nsAccessible::GetState(_retval);
+  nsAccessible::GetState(aState);
 
   PRBool disabled = PR_FALSE;
   nsCOMPtr<nsIDOMXULControlElement> xulFormElement(do_QueryInterface(mDOMNode));  
   if (xulFormElement) {
     xulFormElement->GetDisabled(&disabled);
     if (disabled)
-      *_retval |= STATE_UNAVAILABLE;
+      *aState |= STATE_UNAVAILABLE;
     else 
-      *_retval |= STATE_FOCUSABLE;
+      *aState |= STATE_FOCUSABLE;
   }
 
   // Buttons can be checked -- they simply appear pressed in rather than checked
@@ -135,10 +135,10 @@ NS_IMETHODIMP nsXULButtonAccessible::GetState(PRUint32 *_retval)
     PRInt32 checkState = 0;
     xulButtonElement->GetChecked(&checked);
     if (checked) {
-      *_retval |= STATE_PRESSED;
+      *aState |= STATE_PRESSED;
       xulButtonElement->GetCheckState(&checkState);
       if (checkState == nsIDOMXULButtonElement::CHECKSTATE_MIXED)  
-        *_retval |= STATE_MIXED;
+        *aState |= STATE_MIXED;
     }
   }
 
@@ -147,7 +147,13 @@ NS_IMETHODIMP nsXULButtonAccessible::GetState(PRUint32 *_retval)
   PRBool isDefault = PR_FALSE;
   element->HasAttribute(NS_LITERAL_STRING("default"), &isDefault) ;
   if (isDefault)
-    *_retval |= STATE_DEFAULT;
+    *aState |= STATE_DEFAULT;
+
+  nsAutoString type;
+  element->GetAttribute(NS_LITERAL_STRING("type"), type);
+  if (type.EqualsLiteral("menu") || type.EqualsLiteral("menu-button")) {
+    *aState |= STATE_HASPOPUP;
+  }
 
   return NS_OK;
 }
