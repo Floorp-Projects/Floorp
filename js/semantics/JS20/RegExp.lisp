@@ -603,14 +603,14 @@
    t
    #'(lambda (html-stream)
        (depict-world-commands html-stream *rw* :visible-semantics nil))
-   :external-link-base "notation-semantic.html")
+   :external-link-base "notation.html")
   (depict-html-to-local-file
    ";JS20;RegExpSemantics.html"
    "Regular Expression Semantics"
    t
    #'(lambda (html-stream)
        (depict-world-commands html-stream *rw*))
-   :external-link-base "notation-semantic.html"))
+   :external-link-base "notation.html"))
 
 (with-local-output (s ";JS20;RegExpGrammar.txt") (print-lexer *rl* s) (print-grammar *rg* s))
 
