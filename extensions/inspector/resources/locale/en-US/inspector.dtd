@@ -35,8 +35,6 @@
   <!ENTITY cmdPaste.accesskey "p">
   <!ENTITY cmdDelete.label "Delete">
   <!ENTITY cmdDelete.accesskey "d">
-  <!ENTITY cmdPrefs.label "Preferences...">
-  <!ENTITY cmdPrefs.accesskey "f">
 
 <!ENTITY mnSearch.label "Search">
 <!ENTITY mnSearch.accesskey "s">
