@@ -42,7 +42,7 @@ package org.mozilla.javascript;
  * See ECMA 15.2.
  * @author Norris Boyd
  */
-public class NativeObject extends IdScriptable
+public class NativeObject extends IdScriptableObject
 {
     private static final Object OBJECT_TAG = new Object();
 

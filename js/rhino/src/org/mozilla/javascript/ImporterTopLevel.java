@@ -71,7 +71,7 @@ import java.io.Serializable;
  *
  * @author Norris Boyd
  */
-public class ImporterTopLevel extends IdScriptable
+public class ImporterTopLevel extends IdScriptableObject
 {
     private static final Object IMPORTER_TAG = new Object();
 

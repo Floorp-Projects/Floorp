@@ -46,39 +46,39 @@ import org.mozilla.javascript.xml.*;
 
 import org.apache.xmlbeans.XmlCursor;
 
-public class XMLList extends XMLObjectImpl implements Function
+class XMLList extends XMLObjectImpl implements Function
 {
 
-    static protected class AnnotationList
+    static class AnnotationList
     {
         private Vector v;
 
 
-        public AnnotationList ()
+        AnnotationList ()
         {
             v = new Vector();
         }
 
 
-        public void add (XML.XScriptAnnotation n)
+        void add (XML.XScriptAnnotation n)
         {
             v.add(n);
         }
 
 
-        public XML.XScriptAnnotation item(int index)
+        XML.XScriptAnnotation item(int index)
         {
             return (XML.XScriptAnnotation)(v.get(index));
         }
 
 
-        public void remove (int index)
+        void remove (int index)
         {
             v.remove(index);
         }
 
 
-        public int length()
+        int length()
         {
             return v.size();
         }
@@ -302,7 +302,7 @@ public class XMLList extends XMLObjectImpl implements Function
 
     //
     //
-    //  methods overriding IdScriptable
+    //  methods overriding IdScriptableObject
     //
     //
 
@@ -332,7 +332,7 @@ public class XMLList extends XMLObjectImpl implements Function
      * @param start
      * @return
      */
-    public boolean hasXMLProperty(XMLName xmlName)
+    boolean hasXMLProperty(XMLName xmlName)
     {
         boolean result = false;
 
@@ -365,7 +365,7 @@ public class XMLList extends XMLObjectImpl implements Function
      * @param name
      * @param value
      */
-    public void putXMLProperty(XMLName xmlName, Object value)
+    void putXMLProperty(XMLName xmlName, Object value)
     {
         //Log("put property: " + name);
 
@@ -436,7 +436,7 @@ public class XMLList extends XMLObjectImpl implements Function
      * @param name
      * @return
      */
-    public Object getXMLProperty(XMLName name)
+    Object getXMLProperty(XMLName name)
     {
         return getPropertyList(name);
     }
@@ -572,7 +572,7 @@ public class XMLList extends XMLObjectImpl implements Function
      *
      * @param name
      */
-    public void deleteXMLProperty(XMLName name)
+    void deleteXMLProperty(XMLName name)
     {
         for (int i = 0; i < length(); i++)
         {
@@ -657,7 +657,7 @@ public class XMLList extends XMLObjectImpl implements Function
      * @param index
      * @return
      */
-    public XML item (int index)
+    XML item (int index)
     {
         return _annos != null ? getXmlFromAnnotation(index) : XML.createXML(lib, null);
     }
@@ -682,7 +682,7 @@ public class XMLList extends XMLObjectImpl implements Function
      *
      * @param toAdd
      */
-    public void addToList(Object toAdd)
+    void addToList(Object toAdd)
     {
         if (toAdd instanceof Undefined)
         {
@@ -718,7 +718,7 @@ public class XMLList extends XMLObjectImpl implements Function
      *
      * @param toAdd
      */
-    public XML addNamespace(Namespace ns)
+    XML addNamespace(Namespace ns)
     {
         if(length() == 1)
         {
@@ -735,7 +735,7 @@ public class XMLList extends XMLObjectImpl implements Function
      * @param xml
      * @return
      */
-    public XML appendChild(Object xml)
+    XML appendChild(Object xml)
     {
         if (length() == 1)
         {
@@ -752,7 +752,7 @@ public class XMLList extends XMLObjectImpl implements Function
      * @param attr
      * @return
      */
-    public XMLList attribute(XMLName xmlName)
+    XMLList attribute(XMLName xmlName)
     {
         XMLList result = new XMLList(lib);
 
@@ -769,7 +769,7 @@ public class XMLList extends XMLObjectImpl implements Function
      *
      * @return
      */
-    public XMLList attributes()
+    XMLList attributes()
     {
         XMLList result = new XMLList(lib);
 
@@ -782,7 +782,7 @@ public class XMLList extends XMLObjectImpl implements Function
         return result;
     }
 
-    public XMLList child(long index)
+    XMLList child(long index)
     {
         XMLList result = new XMLList(lib);
 
@@ -794,7 +794,7 @@ public class XMLList extends XMLObjectImpl implements Function
         return result;
     }
 
-    public XMLList child(XMLName xmlName)
+    XMLList child(XMLName xmlName)
     {
         XMLList result = new XMLList(lib);
 
@@ -810,7 +810,7 @@ public class XMLList extends XMLObjectImpl implements Function
      *
      * @return
      */
-    public int childIndex()
+    int childIndex()
     {
         if (length() == 1)
         {
@@ -826,7 +826,7 @@ public class XMLList extends XMLObjectImpl implements Function
      *
      * @return
      */
-    public XMLList children()
+    XMLList children()
     {
         Vector v = new Vector();
 
@@ -865,7 +865,7 @@ public class XMLList extends XMLObjectImpl implements Function
      *
      * @return
      */
-    public XMLList comments()
+    XMLList comments()
     {
         XMLList result = new XMLList(lib);
 
@@ -884,7 +884,7 @@ public class XMLList extends XMLObjectImpl implements Function
      * @param xml
      * @return
      */
-    public boolean contains(Object xml)
+    boolean contains(Object xml)
     {
         boolean result = false;
 
@@ -906,7 +906,7 @@ public class XMLList extends XMLObjectImpl implements Function
      *
      * @return
      */
-    public Object copy()
+    Object copy()
     {
         XMLList result = new XMLList(lib);
 
@@ -923,7 +923,7 @@ public class XMLList extends XMLObjectImpl implements Function
      *
      * @return
      */
-    public XMLList descendants(XMLName xmlName)
+    XMLList descendants(XMLName xmlName)
     {
         XMLList result = new XMLList(lib);
 
@@ -940,7 +940,7 @@ public class XMLList extends XMLObjectImpl implements Function
      *
      * @return
      */
-    public Object[] inScopeNamespaces()
+    Object[] inScopeNamespaces()
     {
         if(length() == 1)
         {
@@ -957,7 +957,7 @@ public class XMLList extends XMLObjectImpl implements Function
      * @param child
      * @param xml
      */
-    public XML insertChildAfter(Object child, Object xml)
+    XML insertChildAfter(Object child, Object xml)
     {
         if (length() == 1)
         {
@@ -974,7 +974,7 @@ public class XMLList extends XMLObjectImpl implements Function
      * @param child
      * @param xml
      */
-    public XML insertChildBefore(Object child, Object xml)
+    XML insertChildBefore(Object child, Object xml)
     {
         if (length() == 1)
         {
@@ -990,7 +990,7 @@ public class XMLList extends XMLObjectImpl implements Function
      *
      * @return
      */
-    public boolean hasOwnProperty(XMLName xmlName)
+    boolean hasOwnProperty(XMLName xmlName)
     {
         boolean hasProperty = false;
 
@@ -1011,7 +1011,7 @@ public class XMLList extends XMLObjectImpl implements Function
      *
      * @return
      */
-    public boolean hasComplexContent()
+    boolean hasComplexContent()
     {
         boolean complexContent;
         int length = length();
@@ -1046,7 +1046,7 @@ public class XMLList extends XMLObjectImpl implements Function
      *
      * @return
      */
-    public boolean hasSimpleContent()
+    boolean hasSimpleContent()
     {
         boolean simpleContent;
         int length = length();
@@ -1081,7 +1081,7 @@ public class XMLList extends XMLObjectImpl implements Function
      *
      * @return
      */
-    public int length()
+    int length()
     {
         int result = 0;
 
@@ -1097,7 +1097,7 @@ public class XMLList extends XMLObjectImpl implements Function
      *
      * @return
      */
-    public String localName()
+    String localName()
     {
         if (length() == 1)
         {
@@ -1113,7 +1113,7 @@ public class XMLList extends XMLObjectImpl implements Function
      *
      * @return
      */
-    public QName name()
+    QName name()
     {
         if (length() == 1)
         {
@@ -1130,7 +1130,7 @@ public class XMLList extends XMLObjectImpl implements Function
      * @param prefix
      * @return
      */
-    public Object namespace(String prefix)
+    Object namespace(String prefix)
     {
         if (length() == 1)
         {
@@ -1146,7 +1146,7 @@ public class XMLList extends XMLObjectImpl implements Function
      *
      * @return
      */
-    public Object[] namespaceDeclarations()
+    Object[] namespaceDeclarations()
     {
         if (length() == 1)
         {
@@ -1162,7 +1162,7 @@ public class XMLList extends XMLObjectImpl implements Function
      *
      * @return
      */
-    public Object nodeKind()
+    Object nodeKind()
     {
         if (length() == 1)
         {
@@ -1177,7 +1177,7 @@ public class XMLList extends XMLObjectImpl implements Function
     /**
      *
      */
-    public void normalize()
+    void normalize()
     {
         for (int i = 0; i < length(); i++)
         {
@@ -1191,7 +1191,7 @@ public class XMLList extends XMLObjectImpl implements Function
      *
      * @return
      */
-    public Object parent()
+    Object parent()
     {
         Object sameParent = Undefined.instance;
 
@@ -1227,7 +1227,7 @@ public class XMLList extends XMLObjectImpl implements Function
      * @param xml
      * @return
      */
-    public XML prependChild(Object xml)
+    XML prependChild(Object xml)
     {
         if (length() == 1)
         {
@@ -1243,7 +1243,7 @@ public class XMLList extends XMLObjectImpl implements Function
      *
      * @return
      */
-    public Object processingInstructions(XMLName xmlName)
+    Object processingInstructions(XMLName xmlName)
     {
         XMLList result = new XMLList(lib);
 
@@ -1262,7 +1262,7 @@ public class XMLList extends XMLObjectImpl implements Function
      * @param name
      * @return
      */
-    public boolean propertyIsEnumerable(XMLName xmlName)
+    boolean propertyIsEnumerable(XMLName xmlName)
     {
         return hasXMLProperty(xmlName);
     }
@@ -1271,7 +1271,7 @@ public class XMLList extends XMLObjectImpl implements Function
      *
      * @param ns
      */
-    public XML removeNamespace(Namespace ns)
+    XML removeNamespace(Namespace ns)
     {
         if(length() == 1)
         {
@@ -1283,7 +1283,7 @@ public class XMLList extends XMLObjectImpl implements Function
         }
     }
 
-    public XML replace(long index, Object xml)
+    XML replace(long index, Object xml)
     {
         if (length() == 1)
         {
@@ -1301,7 +1301,7 @@ public class XMLList extends XMLObjectImpl implements Function
      * @param xml
      * @return
      */
-    public XML replace(XMLName xmlName, Object xml)
+    XML replace(XMLName xmlName, Object xml)
     {
         if (length() == 1)
         {
@@ -1317,7 +1317,7 @@ public class XMLList extends XMLObjectImpl implements Function
      *
      * @param xml
      */
-    public XML setChildren(Object xml)
+    XML setChildren(Object xml)
     {
         if (length() == 1)
         {
@@ -1333,7 +1333,7 @@ public class XMLList extends XMLObjectImpl implements Function
      *
      * @param name
      */
-    public void setLocalName(String localName)
+    void setLocalName(String localName)
     {
         if (length() == 1)
         {
@@ -1349,7 +1349,7 @@ public class XMLList extends XMLObjectImpl implements Function
      *
      * @param name
      */
-    public void setName(QName qname)
+    void setName(QName qname)
     {
         if (length() == 1)
         {
@@ -1365,7 +1365,7 @@ public class XMLList extends XMLObjectImpl implements Function
      *
      * @param ns
      */
-    public void setNamespace(Namespace ns)
+    void setNamespace(Namespace ns)
     {
         if (length() == 1)
         {
@@ -1381,7 +1381,7 @@ public class XMLList extends XMLObjectImpl implements Function
      *
      * * @return
      */
-    public XMLList text()
+    XMLList text()
     {
         XMLList result = new XMLList(lib);
 
@@ -1421,7 +1421,7 @@ public class XMLList extends XMLObjectImpl implements Function
      *
      * @return
      */
-    public String toXMLString()
+    String toXMLString()
     {
         StringBuffer sb = new StringBuffer();
 
@@ -1445,7 +1445,7 @@ public class XMLList extends XMLObjectImpl implements Function
      *
      * @return
      */
-    public Object valueOf()
+    Object valueOf()
     {
         return this;
     }
@@ -1459,7 +1459,7 @@ public class XMLList extends XMLObjectImpl implements Function
      * @param target
      * @return
      */
-    public boolean equivalentXml(Object target)
+    boolean equivalentXml(Object target)
     {
         boolean result = false;
 

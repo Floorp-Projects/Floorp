@@ -59,7 +59,7 @@ import org.mozilla.javascript.*;
 
 
 
-public class NativeRegExp extends IdScriptable implements Function
+public class NativeRegExp extends IdScriptableObject implements Function
 {
     private static final Object REGEXP_TAG = new Object();
 

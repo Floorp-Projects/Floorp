@@ -49,7 +49,8 @@ package org.mozilla.javascript;
  * @author Mike McCabe
  * @author Norris Boyd
  */
-final class NativeString extends IdScriptable {
+final class NativeString extends IdScriptableObject
+{
 
     private static final Object STRING_TAG = new Object();
 

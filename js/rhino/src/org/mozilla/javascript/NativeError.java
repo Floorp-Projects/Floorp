@@ -43,7 +43,7 @@ package org.mozilla.javascript;
  *
  *  ECMA 15.11
  */
-final class NativeError extends IdScriptable
+final class NativeError extends IdScriptableObject
 {
     private static final Object ERROR_TAG = new Object();
 

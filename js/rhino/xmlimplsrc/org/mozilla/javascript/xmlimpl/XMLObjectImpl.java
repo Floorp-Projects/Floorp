@@ -46,7 +46,7 @@ import org.mozilla.javascript.xml.*;
  *
  * @see XML
  */
-public abstract class XMLObjectImpl extends XMLObject
+abstract class XMLObjectImpl extends XMLObject
 {
     private static final Object XMLOBJECT_TAG = new Object();
 
@@ -62,78 +62,78 @@ public abstract class XMLObjectImpl extends XMLObject
      * ecmaHas(cx, id) calls this after resolving when id to XMLName
      * and checking it is not Uint32 index.
      */
-    public abstract boolean hasXMLProperty(XMLName name);
+    abstract boolean hasXMLProperty(XMLName name);
 
     /**
      * ecmaGet(cx, id) calls this after resolving when id to XMLName
      * and checking it is not Uint32 index.
      */
-    public abstract Object getXMLProperty(XMLName name);
+    abstract Object getXMLProperty(XMLName name);
 
     /**
      * ecmaPut(cx, id, value) calls this after resolving when id to XMLName
      * and checking it is not Uint32 index.
      */
-    public abstract void putXMLProperty(XMLName name, Object value);
+    abstract void putXMLProperty(XMLName name, Object value);
 
     /**
      * ecmaDelete(cx, id) calls this after resolving when id to XMLName
      * and checking it is not Uint32 index.
      */
-    public abstract void deleteXMLProperty(XMLName name);
+    abstract void deleteXMLProperty(XMLName name);
 
     /**
      * Test XML equality with target the target.
      */
-    public abstract boolean equivalentXml(Object target);
+    abstract boolean equivalentXml(Object target);
 
     // Methods from section 12.4.4 in the spec
-    public abstract XML addNamespace(Namespace ns);
-    public abstract XML appendChild(Object xml);
-    public abstract XMLList attribute(XMLName xmlName);
-    public abstract XMLList attributes();
-    public abstract XMLList child(long index);
-    public abstract XMLList child(XMLName xmlName);
-    public abstract int childIndex();
-    public abstract XMLList children();
-    public abstract XMLList comments();
-    public abstract boolean contains(Object xml);
-    public abstract Object copy();
-    public abstract XMLList descendants(XMLName xmlName);
-    public abstract Object[] inScopeNamespaces();
-    public abstract XML insertChildAfter(Object child, Object xml);
-    public abstract XML insertChildBefore(Object child, Object xml);
-    public abstract boolean hasOwnProperty(XMLName xmlName);
-    public abstract boolean hasComplexContent();
-    public abstract boolean hasSimpleContent();
-    public abstract int length();
-    public abstract String localName();
-    public abstract QName name();
-    public abstract Object namespace(String prefix);
-    public abstract Object[] namespaceDeclarations();
-    public abstract Object nodeKind();
-    public abstract void normalize();
-    public abstract Object parent();
-    public abstract XML prependChild(Object xml);
-    public abstract Object processingInstructions(XMLName xmlName);
-    public abstract boolean propertyIsEnumerable(XMLName xmlName);
-    public abstract XML removeNamespace(Namespace ns);
-    public abstract XML replace(long index, Object xml);
-    public abstract XML replace(XMLName name, Object xml);
-    public abstract XML setChildren(Object xml);
-    public abstract void setLocalName(String name);
-    public abstract void setName(QName xmlName);
-    public abstract void setNamespace(Namespace ns);
-    public abstract XMLList text();
+    abstract XML addNamespace(Namespace ns);
+    abstract XML appendChild(Object xml);
+    abstract XMLList attribute(XMLName xmlName);
+    abstract XMLList attributes();
+    abstract XMLList child(long index);
+    abstract XMLList child(XMLName xmlName);
+    abstract int childIndex();
+    abstract XMLList children();
+    abstract XMLList comments();
+    abstract boolean contains(Object xml);
+    abstract Object copy();
+    abstract XMLList descendants(XMLName xmlName);
+    abstract Object[] inScopeNamespaces();
+    abstract XML insertChildAfter(Object child, Object xml);
+    abstract XML insertChildBefore(Object child, Object xml);
+    abstract boolean hasOwnProperty(XMLName xmlName);
+    abstract boolean hasComplexContent();
+    abstract boolean hasSimpleContent();
+    abstract int length();
+    abstract String localName();
+    abstract QName name();
+    abstract Object namespace(String prefix);
+    abstract Object[] namespaceDeclarations();
+    abstract Object nodeKind();
+    abstract void normalize();
+    abstract Object parent();
+    abstract XML prependChild(Object xml);
+    abstract Object processingInstructions(XMLName xmlName);
+    abstract boolean propertyIsEnumerable(XMLName xmlName);
+    abstract XML removeNamespace(Namespace ns);
+    abstract XML replace(long index, Object xml);
+    abstract XML replace(XMLName name, Object xml);
+    abstract XML setChildren(Object xml);
+    abstract void setLocalName(String name);
+    abstract void setName(QName xmlName);
+    abstract void setNamespace(Namespace ns);
+    abstract XMLList text();
     public abstract String toString();
-    public abstract String toXMLString();
-    public abstract Object valueOf();
+    abstract String toXMLString();
+    abstract Object valueOf();
 
     protected abstract Object jsConstructor(Context cx, boolean inNewExpr,
                                             Object[] args);
 
 
-    public final Object getMethod(String id)
+    final Object getMethod(String id)
     {
         return super.get(id, this);
     }
@@ -251,7 +251,7 @@ public abstract class XMLObjectImpl extends XMLObject
 
     //
     //
-    // IdScriptable machinery
+    // IdScriptableObject machinery
     //
     //
 

@@ -46,7 +46,7 @@ import org.mozilla.javascript.xml.*;
  *
  * @see XML
  */
-public abstract class XMLObject extends IdScriptable
+public abstract class XMLObject extends IdScriptableObject
 {
     public abstract XMLLib lib();
 

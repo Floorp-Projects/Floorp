@@ -42,7 +42,7 @@ package org.mozilla.javascript;
  * @author Norris Boyd
  */
 
-final class NativeMath extends IdScriptable
+final class NativeMath extends IdScriptableObject
 {
     private static final Object MATH_TAG = new Object();
 

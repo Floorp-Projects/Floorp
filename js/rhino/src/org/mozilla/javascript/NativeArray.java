@@ -42,7 +42,8 @@ package org.mozilla.javascript;
  * @author Norris Boyd
  * @author Mike McCabe
  */
-public class NativeArray extends IdScriptable {
+public class NativeArray extends IdScriptableObject
+{
 
     /*
      * Optimization possibilities and open issues:

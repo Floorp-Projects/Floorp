@@ -50,7 +50,7 @@ import org.apache.xmlbeans.XmlException;
 import org.apache.xmlbeans.XmlObject;
 import org.apache.xmlbeans.XmlOptions;
 
-public class XML extends XMLObjectImpl
+class XML extends XMLObjectImpl
 {
     final static class XScriptAnnotation extends XmlBookmark
     {
@@ -64,14 +64,14 @@ public class XML extends XMLObjectImpl
         //
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        public XScriptAnnotation (XML xml, XmlCursor curs)
+        XScriptAnnotation (XML xml, XmlCursor curs)
         {
             init(curs);
             _xScriptXML = xml;
         }
 
 
-        public XScriptAnnotation (XmlCursor curs)
+        XScriptAnnotation (XmlCursor curs)
         {
             init(curs);
         }
@@ -83,7 +83,7 @@ public class XML extends XMLObjectImpl
         //
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        public static XML getXML (XMLLibImpl lib, XScriptAnnotation anno)
+        static XML getXML (XMLLibImpl lib, XScriptAnnotation anno)
         {
             if (anno._xScriptXML == null)
             {
@@ -116,7 +116,7 @@ public class XML extends XMLObjectImpl
         private String          _defaultNSURI;
 
 
-        public NamespaceDeclarations (XmlCursor curs)
+        NamespaceDeclarations (XmlCursor curs)
         {
             _prefixIdx = 0;
             _namespaceDecls = new StringBuffer();
@@ -140,7 +140,7 @@ public class XML extends XMLObjectImpl
         }
 
 
-        public String getNextPrefix (String ns)
+        String getNextPrefix (String ns)
         {
             String prefix = "NS" + _prefixIdx++;
 
@@ -150,13 +150,13 @@ public class XML extends XMLObjectImpl
         }
 
 
-        public boolean isAnyDefaultNamespace ()
+        boolean isAnyDefaultNamespace ()
         {
             return _defaultNSURI != null ?_defaultNSURI.length() > 0 : false;
         }
 
 
-        public String getDeclarations()
+        String getDeclarations()
         {
             return _namespaceDecls.toString();
         }
@@ -207,7 +207,7 @@ public class XML extends XMLObjectImpl
      *
      * @param inputObject
      */
-    public XML(XMLLibImpl lib, Object inputObject)
+    XML(XMLLibImpl lib, Object inputObject)
     {
         super(lib);
         XmlObject xo;
@@ -408,7 +408,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-    public static XML createXML (XMLLibImpl lib, XmlCursor curs)
+    static XML createXML (XMLLibImpl lib, XmlCursor curs)
     {
         XML xml = new XML(lib);
 
@@ -439,7 +439,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
      * @param value
      * @return
      */
-    public static XML createTextElement(XMLLibImpl lib, javax.xml.namespace.QName qname, String value)
+    static XML createTextElement(XMLLibImpl lib, javax.xml.namespace.QName qname, String value)
     {
         XmlObject xo = XmlObject.Factory.newInstance();
         XmlCursor cursor = xo.newCursor();
@@ -1159,7 +1159,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
 
     //
     //
-    //  methods overriding IdScriptable
+    //  methods overriding IdScriptableObject
     //
     //
 
@@ -1191,7 +1191,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
      * @param start
      * @return
      */
-    public boolean hasXMLProperty(XMLName xmlName)
+    boolean hasXMLProperty(XMLName xmlName)
     {
         boolean result = false;
 
@@ -1269,7 +1269,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
      * @param start
      * @return
      */
-    public Object getXMLProperty(XMLName xmlName)
+    Object getXMLProperty(XMLName xmlName)
     {
         Object result = NOT_FOUND;
 
@@ -1293,7 +1293,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
      * @param start
      * @param value
      */
-    public void putXMLProperty(XMLName xmlName, Object value)
+    void putXMLProperty(XMLName xmlName, Object value)
     {
         //Log("put property: " + name + " value: " + value.getClass());
 
@@ -1401,7 +1401,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
      *
      * @param name
      */
-    public void deleteXMLProperty(XMLName name)
+    void deleteXMLProperty(XMLName name)
     {
         if (!name.isDescendants() && name.isAttributeName())
         {
@@ -1909,7 +1909,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
      *
      * @param toAdd
      */
-    public XML addNamespace(Namespace ns)
+    XML addNamespace(Namespace ns)
     {
         // When a namespace is used it will be added automatically
         // to the inScopeNamespaces set. There is no need to add
@@ -1975,7 +1975,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
      * @param xml
      * @return
      */
-    public XML appendChild(Object xml)
+    XML appendChild(Object xml)
     {
         XmlCursor curs = newCursor();
 
@@ -2002,7 +2002,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
      * @param name
      * @return
      */
-    public XMLList attribute(XMLName xmlName)
+    XMLList attribute(XMLName xmlName)
     {
         return matchAttributes(xmlName);
     }
@@ -2011,13 +2011,13 @@ todo need to handle namespace prefix not found in XML look for namespace type in
      *
      * @return
      */
-    public XMLList attributes()
+    XMLList attributes()
     {
         XMLName xmlName = XMLName.formStar();
         return matchAttributes(xmlName);
     }
 
-    public XMLList child(long index)
+    XMLList child(long index)
     {
         XMLList result = new XMLList(lib);
         result.setTargets(this, null);
@@ -2025,7 +2025,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
         return result;
     }
 
-    public XMLList child(XMLName xmlName)
+    XMLList child(XMLName xmlName)
     {
         if (xmlName == null)
             return new XMLList(lib);
@@ -2067,7 +2067,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
      *
      * @return
      */
-    public int childIndex()
+    int childIndex()
     {
         int index = 0;
 
@@ -2126,7 +2126,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
      *
      * @return
      */
-    public XMLList children()
+    XMLList children()
     {
         return allChildNodes(null);
     }
@@ -2135,7 +2135,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
      *
      * @return
      */
-    public XMLList comments()
+    XMLList comments()
     {
         return matchChildren(XmlCursor.TokenType.COMMENT);
     }
@@ -2145,7 +2145,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
      * @param xml
      * @return
      */
-    public boolean contains(Object xml)
+    boolean contains(Object xml)
     {
         boolean result = false;
 
@@ -2161,7 +2161,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
      *
      * @return
      */
-    public Object copy()
+    Object copy()
     {
         XmlCursor srcCurs = newCursor();
 
@@ -2188,7 +2188,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
      * @param name
      * @return
      */
-    public XMLList descendants(XMLName xmlName)
+    XMLList descendants(XMLName xmlName)
     {
         XMLList result;
         if (xmlName.isAttributeName())
@@ -2210,7 +2210,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
      *
      * @return Array of all Namespaces in scope for this XML Object.
      */
-    public Object[] inScopeNamespaces()
+    Object[] inScopeNamespaces()
     {
         XmlCursor cursor = newCursor();
         Object[] namespaces = NamespaceHelper.inScopeNamespaces(lib, cursor);
@@ -2223,7 +2223,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
      * @param child
      * @param xml
      */
-    public XML insertChildAfter(Object child, Object xml)
+    XML insertChildAfter(Object child, Object xml)
     {
         if (child == null)
         {
@@ -2243,7 +2243,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
      * @param child
      * @param xml
      */
-    public XML insertChildBefore(Object child, Object xml)
+    XML insertChildBefore(Object child, Object xml)
     {
         if (child == null)
         {
@@ -2262,7 +2262,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
      *
      * @return
      */
-    public boolean hasOwnProperty(XMLName xmlName)
+    boolean hasOwnProperty(XMLName xmlName)
     {
         boolean hasProperty = false;
 
@@ -2283,7 +2283,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
      *
      * @return
      */
-    public boolean hasComplexContent()
+    boolean hasComplexContent()
     {
         return !hasSimpleContent();
     }
@@ -2292,7 +2292,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
      *
      * @return
      */
-    public boolean hasSimpleContent()
+    boolean hasSimpleContent()
     {
         boolean simpleContent = false;
 
@@ -2315,7 +2315,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
      *
      * @return
      */
-    public int length()
+    int length()
     {
         return 1;
     }
@@ -2324,7 +2324,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
      *
      * @return
      */
-    public String localName()
+    String localName()
     {
         XmlCursor cursor = newCursor();
         if (cursor.isStartdoc())
@@ -2349,7 +2349,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
      *
      * @return The qualified name associated with this XML object.
      */
-    public QName name()
+    QName name()
     {
         XmlCursor cursor = newCursor();
         if (cursor.isStartdoc())
@@ -2384,7 +2384,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
      * @param prefix
      * @return
      */
-    public Object namespace(String prefix)
+    Object namespace(String prefix)
     {
         XmlCursor cursor = newCursor();
         if (cursor.isStartdoc())
@@ -2426,7 +2426,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
      *
      * @return
      */
-    public Object[] namespaceDeclarations()
+    Object[] namespaceDeclarations()
     {
         XmlCursor cursor = newCursor();
         Object[] namespaces = NamespaceHelper.namespaceDeclarations(lib, cursor);
@@ -2438,7 +2438,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
      *
      * @return
      */
-    public Object nodeKind()
+    Object nodeKind()
     {
         String result;
         XmlCursor.TokenType tt = tokenType();
@@ -2475,7 +2475,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
     /**
      *
      */
-    public void normalize()
+    void normalize()
     {
         XmlCursor curs = newCursor();
         TokenType tt = curs.currentTokenType();
@@ -2551,7 +2551,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
      *
      * @return
      */
-    public Object parent()
+    Object parent()
     {
         Object parent;
 
@@ -2593,7 +2593,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
      * @param xml
      * @return
      */
-    public XML prependChild (Object xml)
+    XML prependChild (Object xml)
     {
         XmlCursor curs = newCursor();
 
@@ -2616,7 +2616,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
      *
      * @return
      */
-    public Object processingInstructions(XMLName xmlName)
+    Object processingInstructions(XMLName xmlName)
     {
         return matchChildren(XmlCursor.TokenType.PROCINST, xmlName);
     }
@@ -2626,7 +2626,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
      * @param name
      * @return
      */
-    public boolean propertyIsEnumerable(XMLName xmlName)
+    boolean propertyIsEnumerable(XMLName xmlName)
     {
         return (getPropertyList(xmlName).length() > 0);
     }
@@ -2635,7 +2635,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
      *
      * @param namespace
      */
-    public XML removeNamespace(Namespace ns)
+    XML removeNamespace(Namespace ns)
     {
         XmlCursor cursor = newCursor();
 
@@ -2741,7 +2741,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
         return this;
     }
 
-    public XML replace(long index, Object xml)
+    XML replace(long index, Object xml)
     {
         XMLList xlChildToReplace = (XMLList)child(index);
         if (xlChildToReplace.length() > 0)
@@ -2760,7 +2760,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
      * @param xml
      * @return
      */
-    public XML replace(XMLName xmlName, Object xml)
+    XML replace(XMLName xmlName, Object xml)
     {
         putXMLProperty(xmlName, xml);
         return this;
@@ -2770,7 +2770,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
      *
      * @param xml
      */
-    public XML setChildren(Object xml)
+    XML setChildren(Object xml)
     {
         // remove all children
         XMLName xmlName = XMLName.formStar();
@@ -2787,7 +2787,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
      *
      * @param name
      */
-    public void setLocalName(String localName)
+    void setLocalName(String localName)
     {
         XmlCursor cursor = newCursor();
 
@@ -2813,7 +2813,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
      *
      * @param name
      */
-    public void setName(QName qname)
+    void setName(QName qname)
     {
         XmlCursor cursor = newCursor();
 
@@ -2847,7 +2847,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
      *
      * @param ns
      */
-    public void setNamespace(Namespace ns)
+    void setNamespace(Namespace ns)
     {
         XmlCursor cursor = newCursor();
 
@@ -2877,7 +2877,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
      *
      * @return
      */
-    public XMLList text()
+    XMLList text()
     {
         return matchChildren(XmlCursor.TokenType.TEXT);
     }
@@ -2916,7 +2916,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
      *
      * @return
      */
-    public String toXMLString ()
+    String toXMLString ()
     {
         String result;
 
@@ -2973,7 +2973,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
      *
      * @return
      */
-    public Object valueOf()
+    Object valueOf()
     {
         return this;
     }
@@ -2987,7 +2987,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
      * @param target
      * @return
      */
-    public boolean equivalentXml(Object target)
+    boolean equivalentXml(Object target)
     {
         boolean result = false;
 

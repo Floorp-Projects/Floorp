@@ -43,7 +43,8 @@ package org.mozilla.javascript;
  * See ECMA 15.3.
  * @author Norris Boyd
  */
-public class BaseFunction extends IdScriptable implements Function {
+public class BaseFunction extends IdScriptableObject implements Function
+{
 
     private static final Object FUNCTION_TAG = new Object();
 

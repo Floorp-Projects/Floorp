@@ -42,7 +42,7 @@ package org.mozilla.javascript;
  * See ECMA 15.6.
  * @author Norris Boyd
  */
-final class NativeBoolean extends IdScriptable
+final class NativeBoolean extends IdScriptableObject
 {
     private static final Object BOOLEAN_TAG = new Object();
 

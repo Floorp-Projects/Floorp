@@ -44,7 +44,7 @@ package org.mozilla.javascript;
  *
  * @author Norris Boyd
  */
-final class NativeNumber extends IdScriptable
+final class NativeNumber extends IdScriptableObject
 {
     private static final Object NUMBER_TAG = new Object();
 

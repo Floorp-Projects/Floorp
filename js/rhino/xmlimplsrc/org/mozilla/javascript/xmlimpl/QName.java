@@ -43,7 +43,7 @@ import org.mozilla.javascript.*;
  * Class QName
  *
  */
-public final class QName extends IdScriptable
+final class QName extends IdScriptableObject
 {
     private static final Object QNAME_TAG = new Object();
 

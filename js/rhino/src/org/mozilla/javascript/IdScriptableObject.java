@@ -56,7 +56,7 @@ To customize initializition of constructor and protype objects, descendant
 may override scopeInit or fillConstructorProperties methods.
 
 */
-public abstract class IdScriptable extends ScriptableObject
+public abstract class IdScriptableObject extends ScriptableObject
     implements IdFunctionMaster
 {
     private static final class PrototypeValues implements Serializable
@@ -65,7 +65,7 @@ public abstract class IdScriptable extends ScriptableObject
         private static final int NAME_SLOT = 1;
         private static final int SLOT_SPAN = 2;
 
-        private IdScriptable obj;
+        private IdScriptableObject obj;
         private Object tag;
         private int maxId;
         private volatile Object[] valueArray;
@@ -78,7 +78,7 @@ public abstract class IdScriptable extends ScriptableObject
         private IdFunction constructor;
         private short constructorAttrs;
 
-        PrototypeValues(IdScriptable obj, int maxId)
+        PrototypeValues(IdScriptableObject obj, int maxId)
         {
             if (obj == null) throw new IllegalArgumentException();
             if (maxId < 1) throw new IllegalArgumentException();
@@ -320,7 +320,7 @@ public abstract class IdScriptable extends ScriptableObject
         }
     }
 
-    public IdScriptable()
+    public IdScriptableObject()
     {
     }
 
@@ -596,7 +596,7 @@ public abstract class IdScriptable extends ScriptableObject
                                             Scriptable scope,
                                             boolean sealed)
     {
-        // Set scope and prototype unless IdScriptable is top level scope itself
+        // Set scope and prototype unless this is top level scope itself
         if (scope != this && scope != null) {
             setParentScope(scope);
             setPrototype(getObjectPrototype(scope));

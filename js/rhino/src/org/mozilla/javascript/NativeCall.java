@@ -43,7 +43,7 @@ package org.mozilla.javascript;
  * @see org.mozilla.javascript.Arguments
  * @author Norris Boyd
  */
-public final class NativeCall extends IdScriptable
+public final class NativeCall extends IdScriptableObject
 {
     private static final Object CALL_TAG = new Object();
 

@@ -44,7 +44,8 @@ package org.mozilla.javascript;
  * @see org.mozilla.javascript.NativeCall
  * @author Norris Boyd
  */
-class Arguments extends IdScriptable {
+final class Arguments extends IdScriptableObject
+{
 
     public Arguments(NativeCall activation)
     {

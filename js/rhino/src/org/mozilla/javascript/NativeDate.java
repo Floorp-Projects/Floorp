@@ -48,7 +48,7 @@ import java.text.SimpleDateFormat;
  * See ECMA 15.9.
  * @author Mike McCabe
  */
-final class NativeDate extends IdScriptable
+final class NativeDate extends IdScriptableObject
 {
     private static final Object DATE_TAG = new Object();
 

@@ -43,7 +43,7 @@ import org.mozilla.javascript.*;
  * Class Namespace
  *
  */
-class Namespace extends IdScriptable
+class Namespace extends IdScriptableObject
 {
     private static final Object NAMESPACE_TAG = new Object();
 
