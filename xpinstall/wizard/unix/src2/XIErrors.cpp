@@ -53,7 +53,7 @@ static char *ERRORS[] = {
         "A .xpi failed to install",
         "Copy of a .xpi failed", 
         "Destination directory doesn't exist",
-        "Can't make destination directory",
+        "Can't make destination directory.  Please try another directory.",
 
         "___PREVENT_FALLING_OF_END___"
 };
