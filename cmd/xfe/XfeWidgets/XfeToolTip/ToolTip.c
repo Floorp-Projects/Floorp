@@ -44,6 +44,40 @@
   KeyReleaseMask )
 
 
+
+/* Using the window for the has key would require the widget or gadget's
+ * parent to be realized.  This would complicate the adding and changing
+ * if tip/doc strings significantl.
+ *
+ * I looked at the Xlib source for the XSaveContext() and XFindContext().
+ * There is nothing special about using an XID (a Window) as the hash 
+ * key.  It is simply a key.
+ *
+ * Using the Widget pointer instead of the Window will work just as well
+ * with the following 2 caveats:
+ *
+ * 1.  The has function might not be as effecient.  No big deal.
+ *
+ * 2.  If a random Window happens to be numerically identical to a Widget
+ *     pointer, these will hash to the same value if-and-only-of the same
+ *     unique context is used (XUniqueContext()).  
+ *
+ *     Since context management happens on the client side, this will not
+ *     be a problem since the unique context (_xfe_tt_manager_context)
+ *     used for the tool tip magic, is not available outside this module.
+ *
+ * One alternative solution would be to install realize (the first mapping)
+ * event handlers for Widgets or gadget parents and install the tooltips
+ * there.  However, this seems like too much work given the above solution
+ * works well.  Also, this would not allow the caller to modify tooltips
+ * until the widgets were realized - which would suck.
+ */
+
+#define HASH_KEY(w) ((XID) w)
+
+/* #define HASH_KEY(w) (_XfeWindow(w)) */
+
+
 #if 0
 #define DEBUG_TOOL_TIPS yes
 #endif
@@ -405,15 +439,15 @@ ManagerGetInfo(Widget w)
 {
 	_XfeTipManagerInfo	manager_info = NULL;
 
+	assert( w != NULL );
 	assert( _XfeIsAlive(w) );
-	assert( _XfeIsRealized(w) );
 	assert( XmIsManager(w) );
 
 	/* Make sure the manager context has been allocated */
 	if (_xfe_tt_manager_context != None)
 	{
 		int find_result = XFindContext(XtDisplay(w),
-									   _XfeWindow(w),
+									   HASH_KEY(w),
 									   _xfe_tt_manager_context,
 									   (XPointer *) &manager_info);
 
@@ -431,8 +465,8 @@ ManagerAllocateInfo(Widget w)
 {
 	_XfeTipManagerInfo	manager_info = NULL;
 
+	assert( w != NULL );
 	assert( _XfeIsAlive(w) );
-	assert( _XfeIsRealized(w) );
 	assert( XmIsManager(w) );
 
 	manager_info = (_XfeTipManagerInfo) 
@@ -473,8 +507,8 @@ ManagerAddInfo(Widget w)
 	_XfeTipManagerInfo	manager_info = NULL;
 	int						save_result;
 
+	assert( w != NULL );
 	assert( _XfeIsAlive(w) );
-	assert( _XfeIsRealized(w) );
 	assert( XmIsManager(w) );
 
 	/* Allocate the gadget context only once */
@@ -484,7 +518,7 @@ ManagerAddInfo(Widget w)
 	}
 
 	assert( XFindContext(XtDisplay(w),
-						 _XfeWindow(w),
+						 HASH_KEY(w),
 						 _xfe_tt_manager_context,
 						 (XPointer *) &manager_info) != 0);
 
@@ -492,7 +526,7 @@ ManagerAddInfo(Widget w)
 	manager_info = ManagerAllocateInfo(w);
 	
 	save_result = XSaveContext(XtDisplay(w),
-							   _XfeWindow(w),
+							   HASH_KEY(w),
 							   _xfe_tt_manager_context,
 							   (XPointer) manager_info);
 	
@@ -508,12 +542,12 @@ ManagerRemoveInfo(Widget w,_XfeTipManagerInfo manager_info)
 {
 	int delete_result;
 
-	assert( _XfeIsRealized(w) );
+	assert( w != NULL );
 	assert( manager_info != NULL );
 	assert( _xfe_tt_manager_context != None );
 
 	delete_result = XDeleteContext(XtDisplay(w),
-								   _XfeWindow(w),
+								   HASH_KEY(w),
 								   _xfe_tt_manager_context);
 
 	assert( delete_result == 0 );
@@ -540,9 +574,9 @@ ManagerDestroyCB(Widget w,XtPointer client_data,XtPointer call_data)
 static void
 WidgetAddStageOneEH(Widget w)
 {
+	assert( w != NULL );
 	assert( _XfeIsAlive(w) );
 	assert( XtIsWidget(w) );
-	assert( _XfeIsRealized(w) );
 
 	/* Remove the event handler so that we start with a clean item */
     XtRemoveEventHandler(w,
@@ -563,9 +597,8 @@ WidgetAddStageOneEH(Widget w)
 static void
 WidgetRemoveStageOneEH(Widget w)
 {
-/* 	assert( _XfeIsAlive(w) ); */
+ 	assert( w != NULL );
 	assert( XtIsWidget(w) );
-/* 	assert( _XfeIsRealized(w) ); */
 
 	/* Remove the event handler so that we start with a clean item */
     XtRemoveEventHandler(w,
@@ -580,9 +613,9 @@ WidgetAddTipString(Widget w)
 {
 	_XfeTipItemInfo		info = NULL;
 
+	assert( w != NULL );
 	assert( _XfeIsAlive(w) );
 	assert( XtIsWidget(w) );
-	assert( _XfeIsRealized(w) );
 
 	/* Try to find the info */
 	info = WidgetGetInfo(w);
@@ -634,9 +667,9 @@ WidgetAddDocString(Widget w)
 {
 	_XfeTipItemInfo		info = NULL;
 
+	assert( w != NULL );
 	assert( _XfeIsAlive(w) );
 	assert( XtIsWidget(w) );
-	assert( _XfeIsRealized(w) );
 
 	/* Try to find the info */
 	info = WidgetGetInfo(w);
@@ -689,14 +722,13 @@ WidgetGetInfo(Widget w)
 	_XfeTipItemInfo	info = NULL;
 
  	assert( w != NULL );
- 	assert( _XfeIsRealized(w) );
 	assert( XtIsWidget(w) );
 
 	/* Make sure the item context has been allocated */
 	if (_xfe_tt_item_context != None)
 	{
 		int find_result = XFindContext(XtDisplay(w),
-									   _XfeWindow(w),
+									   HASH_KEY(w),
 									   _xfe_tt_item_context,
 									   (XPointer *) &info);
 
@@ -715,8 +747,8 @@ WidgetAddInfo(Widget w,_XfeTipItemInfo info)
 {
 	int save_result;
 
+	assert( w != NULL );
 	assert( _XfeIsAlive(w) );
-	assert( _XfeIsRealized(w) );
 	assert( XtIsWidget(w) );
 	assert( info != NULL );
 
@@ -728,12 +760,12 @@ WidgetAddInfo(Widget w,_XfeTipItemInfo info)
 
 	/* Make sure the info is not already installed */
 	assert( XFindContext(XtDisplay(w),
-						 _XfeWindow(w),
+						 HASH_KEY(w),
 						 _xfe_tt_item_context,
 						 (XPointer *) &info) != 0);
 
 	save_result = XSaveContext(XtDisplay(w),
-							   _XfeWindow(w),
+							   HASH_KEY(w),
 							   _xfe_tt_item_context,
 							   (XPointer) info);
 	
@@ -749,11 +781,11 @@ WidgetRemoveInfo(Widget w,_XfeTipItemInfo info)
 	assert( _xfe_tt_item_context != None );
 
 #ifdef DEBUG_TOOL_TIPS
-	printf("WidgetRemoveInfo(%s,window = %p)\n",XtName(w),_XfeWindow(w));
+	printf("WidgetRemoveInfo(%s,window = %p)\n",XtName(w),HASH_KEY(w));
 #endif
 
 	delete_result = XDeleteContext(XtDisplay(w),
-								   _XfeWindow(w),
+								   HASH_KEY(w),
 								   _xfe_tt_item_context);
 
 	assert( delete_result == 0 );
@@ -992,8 +1024,8 @@ ItemAllocateInfo(Widget w)
 {
 	_XfeTipItemInfo	info = NULL;
 
+	assert( w != NULL );
 	assert( _XfeIsAlive(w) );
-	assert( _XfeIsRealized(w) );
 
 	info = (_XfeTipItemInfo) XtMalloc(sizeof(_XfeTipItemInfoRec) * 1);
 
