@@ -135,6 +135,7 @@ protected:
 
     nsresult InitEncoder(const nsString& aCharset);
 
+    void UnicodeToHTMLString(nsString& aString);
     void EncodeToBuffer(const nsString& aString);
     
     void Write(const nsString& aString);
