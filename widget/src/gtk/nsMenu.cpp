@@ -230,11 +230,9 @@ NS_METHOD nsMenu::AddMenu(nsIMenu * aMenu)
 {
   nsString Label;
   GtkWidget *newmenu=nsnull;
-  char *labelStr;
   void *voidData=NULL;
   
   aMenu->GetLabel(Label);
-  labelStr = Label.ToNewCString();
 
   // Create nsMenuItem
   nsIMenuItem * pnsMenuItem = nsnull;
@@ -245,7 +243,7 @@ NS_METHOD nsMenu::AddMenu(nsIMenu * aMenu)
   if (NS_OK == rv) {
     nsISupports * supports = nsnull;
     QueryInterface(kISupportsIID, (void**) &supports);
-    pnsMenuItem->Create(supports, labelStr, PR_FALSE); //PR_TRUE); 
+    pnsMenuItem->Create(supports, Label, PR_FALSE); //PR_TRUE); 
     NS_RELEASE(supports);               
     
     pnsMenuItem->QueryInterface(kISupportsIID, (void**) &supports);
@@ -263,8 +261,6 @@ NS_METHOD nsMenu::AddMenu(nsIMenu * aMenu)
   
     NS_RELEASE(pnsMenuItem);
   } 
-
-  delete[] labelStr;
 
   return NS_OK;
 }
