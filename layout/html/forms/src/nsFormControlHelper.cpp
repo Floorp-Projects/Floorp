@@ -958,6 +958,18 @@ nsFormControlHelper::DoManualSubmitOrReset(nsIPresContext* aPresContext,
   nsCOMPtr<nsIContent> formContent;
   aFormFrame->GetContent(getter_AddRefs(formContent));
 
+  // Here we save a pointer to the form control content
+  // so we can get its frame again after the Shell has processed the event.
+  //
+  // Control's Frame may get destroyed during the processing of the event (by the Shell)
+  // meaning: aFormControlFrame becomes invalid, so instead of using aFormControlFrame
+  // we use the saved content and the shell to go back and get the frame and 
+  // use it only if it isn't null
+  nsCOMPtr<nsIContent> controlContent;
+  if (aDoSubmit && aFormControlFrame != nsnull) {
+    aFormControlFrame->GetContent(getter_AddRefs(controlContent));
+  }
+
   nsEventStatus status = nsEventStatus_eIgnore;
   if (formContent) {
     //Either use the PresShell passed in or go get it from the PresContext
@@ -988,7 +1000,13 @@ nsFormControlHelper::DoManualSubmitOrReset(nsIPresContext* aPresContext,
     if (NS_SUCCEEDED(result) && formMan) {
       // now do the Submit or Reset
       if (aDoSubmit) {
-        formMan->OnSubmit(aPresContext, aFormControlFrame);
+        // Now go back and get the frame for the control's content 
+        // to make sure it is still valid
+        nsIFrame* controlFrame;
+        aPresShell->GetPrimaryFrameFor(controlContent, &controlFrame);
+        if (controlFrame != nsnull) {
+          formMan->OnSubmit(aPresContext, controlFrame);
+        }
       } else {
         formMan->OnReset(aPresContext);
       }
