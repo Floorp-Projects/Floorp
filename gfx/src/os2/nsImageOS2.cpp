@@ -396,7 +396,7 @@ nsImageOS2 :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
                POINTL aptlNew[ 4] = { { 0, 0 },              // TLL
                                       { bihMem.cx, bihMem.cy },                // TUR
                                       { aSX, mInfo->cy - (aSY + aSHeight) },   // SLL
-                                      { aSX + aSWidth, mInfo->cy - aSY } };    // SUR
+                                      { aSX + aSWidth+1, mInfo->cy - aSY+1 } };    // SUR
    
                // Apply mask to target, clear pels we will fill in from the image
                MONOBITMAPINFO MaskBitmapInfo (mInfo);                                   
