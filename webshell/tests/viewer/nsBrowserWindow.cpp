@@ -1271,10 +1271,14 @@ nsBrowserWindow::DoDebugSave()
         nsIHTMLContentSink* sink = nsnull;
 
         rv = NS_New_HTML_ContentSinkStream(&sink);
-
-
-        char filename[MAX_PATH+1];
-        path.ToCString(filename,MAX_PATH);
+        
+#ifdef WIN32
+#define   BUFFER_SIZE MAX_PATH
+#else
+#define   BUFFER_SIZE 1024
+#endif
+        char filename[BUFFER_SIZE];
+        path.ToCString(filename,BUFFER_SIZE);
         ofstream    out(filename);
         ((nsHTMLContentSinkStream*)sink)->SetOutputStream(out);
 
