@@ -421,9 +421,22 @@ function Shutdown()
     document.getElementById('urlbar').value = window.content.location.href;
   }
 
-  function gotoHistoryIndex(index)
+  function gotoHistoryIndex(event)
   {
-     appCore.gotoHistoryIndex(index);
+     dump("In gotoHistoryIndex\n");
+	 var index = event.target.getAttribute("index");
+	 if (index) {
+	    dump("gotoHistoryIndex:: Index = " + index);
+        appCore.gotoHistoryIndex(index);
+	    return true;
+	 }
+	 else {
+	   var id = event.target.getAttribute("id");
+	   if (id == "menuitem-back")
+	      BrowserBack();
+	   else if (id == "menuitem-forward")
+	      BrowserForward();	  
+     }
   }
 
   function BrowserBack()
@@ -450,7 +463,42 @@ function Shutdown()
 
       dump("Going Forward\n");
       appCore.forward();
-		UpdateBackForwardButtons();
+      UpdateBackForwardButtons();
+  }
+
+  function BrowserBackMenu(event)
+  {
+  //   dump("&&&& In BrowserbackMenu &&&&\n");
+     // Get a handle to the back-button
+     var bb = document.getElementById("canGoBack");
+     // If the button is disabled, don't bother calling in to Appcore
+     if ( (bb.getAttribute("disabled")) == "true" ) 
+        return;
+
+    if (appCore != null) {
+      appCore.backButtonPopup(event.target);
+    } else {
+      dump("BrowserAppCore has not been created!\n");
+    }
+	
+  }
+
+
+  function BrowserForwardMenu(event)
+  {
+  //    dump("&&&& In BrowserForwardMenu &&&&\n");
+     // Get a handle to the forward-button
+     var bb = document.getElementById("canGoForward");
+     // If the button is disabled, don't bother calling in to Appcore
+     if ( (bb.getAttribute("disabled")) == "true" ) 
+        return;
+
+    if (appCore != null) {
+      appCore.forwardButtonPopup(event.target);
+    } else {
+      dump("BrowserAppCore has not been created!\n");
+    }
+	
   }
 
 
@@ -499,6 +547,17 @@ function Shutdown()
    window.content.home();
    RefreshUrlbar();
   }
+
+  function updateGoMenu(event)
+  {
+      dump("In updategomenu\n");
+      if (appCore)
+	     appCore.updateGoMenu(event.target);
+	  else
+	    dump("BrowserAppCore has not been created!\n");
+
+  }
+
 
   function setKeyword(index)
   {

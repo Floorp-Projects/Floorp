@@ -38,9 +38,10 @@ interface nsIBrowserInstance : nsISupports {
     void stop();
     void loadUrl(in wstring url);
     void loadInitialPage();
-    void backButtonPopup();
-    void forwardButtonPopup();
+    void backButtonPopup(in nsIDOMNode backMenu);
+    void forwardButtonPopup(in nsIDOMNode forwardMenu);
     void gotoHistoryIndex(in PRInt32 index);
+	void updateGoMenu(in nsIDOMNode goMenu);
     
     // Wallet (should reside elsewhere, somehow).
     void walletPreview(in nsIDOMWindow win, in nsIDOMWindow form);

@@ -89,9 +89,8 @@ class nsBrowserInstance : public nsIBrowserInstance,
   protected:
     nsresult InitializeSearch(nsIFindComponent*);
     NS_IMETHOD CreateMenuItem(nsIDOMNode * , PRInt32,const PRUnichar * );
-	  NS_IMETHOD UpdateGoMenu();
-	  NS_IMETHOD ClearHistoryPopup(nsIDOMNode * );
-     NS_IMETHOD EnsureXULBrowserWindow();
+    NS_IMETHOD EnsureXULBrowserWindow();
+	NS_IMETHOD ClearHistoryMenus(nsIDOMNode * );
 
     PRBool              mIsClosed;
 
