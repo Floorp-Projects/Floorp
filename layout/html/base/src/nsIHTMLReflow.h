@@ -163,6 +163,10 @@ struct nsHTMLReflowState : nsReflowState {
   // Compact margin available space
   nscoord               mCompactMarginWidth;
 
+  // The line-height for the frame. If the frame has no specific
+  // line-height value then this field will be "-1".
+  nscoord               mLineHeight;
+
   // Constructs an initial reflow state (no parent reflow state) for a
   // non-incremental reflow command. Sets reflowType to eReflowType_Block
   nsHTMLReflowState(nsIPresContext&      aPresContext,
@@ -288,6 +292,14 @@ struct nsHTMLReflowState : nsReflowState {
   static void ComputeBorderPaddingFor(nsIFrame* aFrame,
                                       const nsReflowState* aParentRS,
                                       nsMargin& aResult);
+
+  /**
+   * Calculate the line-height property for the given frame. The return
+   * value, if line-height was applied and is valid will be >= 0. Otherwise,
+   * the return value will be <0 which is illegal (CSS2 spec: section 10.8.1).
+   */
+  static nscoord CalcLineHeight(nsIPresContext& aPresContext,
+                                nsIFrame* aFrame);
 
 protected:
   // This method initializes the widthConstraint, heightConstraint and
