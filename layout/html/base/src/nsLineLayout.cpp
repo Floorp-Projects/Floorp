@@ -1482,8 +1482,10 @@ nsLineLayout::PlaceFrame(PerFrameData* pfd, nsHTMLReflowMetrics& aMetrics)
     SetFlag(LL_ENDSINWHITESPACE, PR_FALSE);
   }
 
-  // Count the number of frames on the line...
-  mTotalPlacedFrames++;
+  // Count the number of non-empty frames on the line...
+  if (!emptyFrame) {
+    mTotalPlacedFrames++;
+  }
   if (psd->mX != psd->mLeftEdge || pfd->mBounds.x != psd->mLeftEdge) {
     // As soon as a frame placed on the line advances an X coordinate
     // of any span we can no longer place a float on the line.

@@ -4584,7 +4584,7 @@ nsTextFrame::MeasureText(nsPresContext*          aPresContext,
     aTs.mNormalFont->GetMaxDescent(aTextData.mDescent);
   }
   PRBool firstWordDone = PR_FALSE;
-  for (;;firstThing = PR_FALSE) {
+  for (;;) {
 #ifdef IBMBIDI
     if (nextBidi && (mContentLength <= 0) ) {
       if (textRun.IsBuffering()) {
@@ -4690,6 +4690,7 @@ nsTextFrame::MeasureText(nsPresContext*          aPresContext,
         mState |= TEXT_SKIP_LEADING_WS;
         continue;
       }
+      firstThing = PR_FALSE;
 
       // NOTE: Even if the textRun absorbs the whitespace below, we still
       // want to remember that we're breakable.
@@ -4746,6 +4747,7 @@ nsTextFrame::MeasureText(nsPresContext*          aPresContext,
       } //(aTextData.mMeasureText)
     }
     else {
+      firstThing = PR_FALSE;
       aTextData.mSkipWhitespace = PR_FALSE;
 
       if (aTextData.mFirstLetterOK) {
