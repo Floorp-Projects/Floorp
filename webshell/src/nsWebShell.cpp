@@ -20,6 +20,7 @@
 #include "nsIDocumentLoader.h"
 #include "nsIContentViewer.h"
 #include "nsIDocumentViewer.h"
+#include "nsIClipboardCommands.h"
 #include "nsIDeviceContext.h"
 #include "nsILinkHandler.h"
 #include "nsIStreamListener.h"
@@ -103,7 +104,8 @@ class nsWebShell : public nsIWebShell,
                    public nsIDocumentLoaderObserver,
                    public nsIRefreshUrl,
                    public nsINetSupport,
-                   public nsIStreamObserver
+                   public nsIStreamObserver,
+                   public nsIClipboardCommands
 {
 public:
   nsWebShell();
@@ -233,14 +235,18 @@ public:
   NS_IMETHOD_(PRBool) PromptPassword(const nsString &aText,
                                      nsString &aPassword);
 
-  // Selection methods
-  NS_IMETHOD IsSelection(PRBool & aIsSelection);
-  NS_IMETHOD IsSelectionCutable(PRBool & aIsSelection);
-  NS_IMETHOD IsSelectionPastable(PRBool & aIsSelection);
-  NS_IMETHOD GetSelection(PRUnichar *& aSelection);
-  NS_IMETHOD CutSelection(PRUnichar *& aSelection);
-  NS_IMETHOD PasteSelection(const PRUnichar * aSelection);
-  NS_IMETHOD SelectAll();
+  // nsIClipboardCommands 
+  NS_IMETHOD CanCutSelection  (PRBool* aResult);
+  NS_IMETHOD CanCopySelection (PRBool* aResult);
+  NS_IMETHOD CanPasteSelection(PRBool* aResult);
+
+  NS_IMETHOD CutSelection  (void);
+  NS_IMETHOD CopySelection (void);
+  NS_IMETHOD PasteSelection(void);
+
+  NS_IMETHOD SelectAll(void);
+  NS_IMETHOD SelectNone(void);
+
   NS_IMETHOD FindNext(const PRUnichar * aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound);
 
   // nsWebShell
@@ -327,6 +333,7 @@ static NS_DEFINE_IID(kRefreshURLIID,          NS_IREFRESHURL_IID);
 static NS_DEFINE_IID(kITimerCallbackIID,      NS_ITIMERCALLBACK_IID);
 static NS_DEFINE_IID(kIWebShellContainerIID,  NS_IWEB_SHELL_CONTAINER_IID);
 static NS_DEFINE_IID(kIBrowserWindowIID,      NS_IBROWSER_WINDOW_IID);
+static NS_DEFINE_IID(kIClipboardCommandsIID,  NS_ICLIPBOARDCOMMANDS_IID);
 
 // XXX not sure
 static NS_DEFINE_IID(kILinkHandlerIID,        NS_ILINKHANDLER_IID);
@@ -498,6 +505,11 @@ nsWebShell::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }
   if (aIID.Equals(kINetSupportIID)) {
     *aInstancePtr = (void*) ((nsINetSupport*)this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIClipboardCommandsIID)) {
+    *aInstancePtr = (void*) ((nsIClipboardCommands*)this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -1989,54 +2001,73 @@ nsWebShell::PromptPassword(const nsString &aText,
 
 //----------------------------------------------------
 NS_IMETHODIMP
-nsWebShell::IsSelection(PRBool & aIsSelection)
+nsWebShell::CanCutSelection(PRBool* aResult)
 {
-  aIsSelection = PR_FALSE;
+  nsresult rv = NS_OK;
+
+  if (nsnull == aResult) {
+    rv = NS_ERROR_NULL_POINTER;
+  } else {
+    *aResult = PR_FALSE;
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsWebShell::CanCopySelection(PRBool* aResult)
+{
+  nsresult rv = NS_OK;
+
+  if (nsnull == aResult) {
+    rv = NS_ERROR_NULL_POINTER;
+  } else {
+    *aResult = PR_FALSE;
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsWebShell::CanPasteSelection(PRBool* aResult)
+{
+  nsresult rv = NS_OK;
+
+  if (nsnull == aResult) {
+    rv = NS_ERROR_NULL_POINTER;
+  } else {
+    *aResult = PR_FALSE;
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsWebShell::CutSelection(void)
+{
   return NS_ERROR_FAILURE;
 }
 
-//----------------------------------------------------
 NS_IMETHODIMP
-nsWebShell::IsSelectionCutable(PRBool & aIsSelection)
-{
-  aIsSelection = PR_FALSE;
-  return NS_ERROR_FAILURE;
-}
-
-//----------------------------------------------------
-NS_IMETHODIMP
-nsWebShell::IsSelectionPastable(PRBool & aIsSelection)
-{
-  aIsSelection = PR_FALSE;
-  return NS_ERROR_FAILURE;
-}
-
-//----------------------------------------------------
-NS_IMETHODIMP
-nsWebShell::GetSelection(PRUnichar *& aSelection)
-{
-  aSelection = nsnull;
-  return NS_ERROR_FAILURE;
-}
-
-//----------------------------------------------------
-NS_IMETHODIMP
-nsWebShell::CutSelection(PRUnichar *& aSelection)
-{
-  aSelection = nsnull;
-  return NS_ERROR_FAILURE;
-}
-
-//----------------------------------------------------
-NS_IMETHODIMP
-nsWebShell::PasteSelection(const PRUnichar * aSelection)
+nsWebShell::CopySelection(void)
 {
   return NS_ERROR_FAILURE;
 }
 
-//----------------------------------------------------
 NS_IMETHODIMP
-nsWebShell::SelectAll()
+nsWebShell::PasteSelection(void)
+{
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsWebShell::SelectAll(void)
+{
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsWebShell::SelectNone(void)
 {
   return NS_ERROR_FAILURE;
 }
