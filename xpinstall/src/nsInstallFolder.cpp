@@ -184,10 +184,10 @@ nsInstallFolder::SetDirectoryPath(const nsString& aFolderID, const nsString& aRe
                         *mFileSpec += "Plugins";
 #else
                         *mFileSpec += "plugins";
+#endif
                     }
                     else
                         mFileSpec = nsnull;
-#endif
                 }
                 break; 
 
