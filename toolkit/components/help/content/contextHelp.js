@@ -19,8 +19,8 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#   brantgurganus2001@cherokeescouting.org
-#   Jswalden86@netzero.net
+#   Brant Gurganus <brantgurganus2001@cherokeescouting.org>
+#   Jeff Walden <jwalden+code@mit.edu>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,11 +36,8 @@
 #
 # ***** END LICENSE BLOCK *****
 
-#ifndef MOZ_THUNDERBIRD
-const MOZILLA_CONTENT_PACK = "chrome://help/locale/firebirdhelp.rdf";
-#else
-const MOZILLA_CONTENT_PACK = "chrome://help/locale/thunderbirdhelp.rdf";
-#endif
+# default content pack used by Help
+const MOZILLA_CONTENT_PACK = "chrome://help/locale/help.rdf";
 
 # Set the default content pack to the Mozilla content pack. Use the
 # setHelpFileURI function to set this value.
