@@ -116,8 +116,8 @@ NS_IMETHODIMP nsXPCToolsCompiler::CompileFile(nsILocalFile *aFile, PRBool strict
     if (!JS_InitStandardClasses(cx, glob))
         return NS_ERROR_FAILURE;
 
-    char * path = nsnull;
-    if(NS_FAILED(aFile->GetPath(&path)))
+    nsCAutoString path;
+    if(NS_FAILED(aFile->GetNativePath(path)))
         return NS_ERROR_FAILURE;
 
     uint32 oldoptions = JS_GetOptions(cx);
@@ -125,7 +125,7 @@ NS_IMETHODIMP nsXPCToolsCompiler::CompileFile(nsILocalFile *aFile, PRBool strict
     JSErrorReporter older = JS_SetErrorReporter(cx, ErrorReporter);
     JSExceptionState *es =JS_SaveExceptionState(cx);
 
-    if(!JS_CompileFileHandle(cx, glob, path, handle))
+    if(!JS_CompileFileHandle(cx, glob, path.get(), handle))
     {
         jsval v;
         JSErrorReport* report;
@@ -152,7 +152,5 @@ NS_IMETHODIMP nsXPCToolsCompiler::CompileFile(nsILocalFile *aFile, PRBool strict
     JS_SetErrorReporter(cx, older);
     JS_SetOptions(cx, oldoptions);
         
-    if(path)
-        nsMemory::Free(path);
     return NS_OK;
 }
