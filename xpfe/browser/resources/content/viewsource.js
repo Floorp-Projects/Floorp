@@ -105,6 +105,15 @@ function ViewSourceEditPage()
   editPage(url,window, false);
 }
 
+// Strips the |view-source:| for saveURL()
+function ViewSourceSavePage()
+{
+  var url = window._content.document.location.href;
+  url = url.substring(12,url.length);
+
+  saveURL(url, null, "SaveLinkTitle");
+}
+
 //function to toggle long-line wrapping and set the view_source.wrap_long_lines 
 //pref to persist the last state
 function wrapLongLines()
