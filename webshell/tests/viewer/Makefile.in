@@ -24,7 +24,6 @@ DIRS=public
 
 include $(DEPTH)/config/autoconf.mk
 
-include $(topsrcdir)/config/config.mk
 
 TOOLKIT_GFX_LIB		= $(addprefix -lgfx, $(MOZ_TOOLKIT))
 TOOLKIT_WIDGET_LIB	= $(addprefix -lwidget, $(MOZ_TOOLKIT))
@@ -74,18 +73,9 @@ CPPSRCS = \
 	nsStubs.cpp             \
 	$(NULL)
 
-CFLAGS += $(TOOLKIT_CFLAGS)
+include $(topsrcdir)/config/config.mk
 
-INCLUDES += \
-			-I$(PUBLIC)/raptor \
-			-I$(PUBLIC)/xpcom \
-			-I$(PUBLIC)/dom \
-			-I$(PUBLIC)/netlib \
-			-I$(PUBLIC)/js \
-			-I$(PUBLIC)/pref \
-			-I$(PUBLIC)/network \
-			-I$(PUBLIC)/xp \
-			-I$(PUBLIC)/editor
+CFLAGS += $(TOOLKIT_CFLAGS)
 
 ifdef MOZ_OJI
 	JSJ_LIB = -ljsj
@@ -140,6 +130,8 @@ LIBS = \
 	-lraptorplugin \
 	-lmozdbm \
 	$(NULL)
+
+LIBS += $(TK_GTK_LIBS)
 
 PROGRAM = viewer
 
