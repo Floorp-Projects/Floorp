@@ -53,6 +53,7 @@ sub FetchAndFormat {
 print "Content-type: text/html\n\n";
 print "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">
 <html><head><title>BugZilla module owners list</title></head>\n";
+PutHeader("Owner list");
 
 ConnectToDatabase();
 GetVersionTable();

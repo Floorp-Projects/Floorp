@@ -34,7 +34,7 @@ print "Content-type: text/html\n";
 print "\n";
 
 if (!defined $::FORM{'id'} || $::FORM{'id'} !~ /^\s*\d+\s*$/) {
-    print "<H2>Search By Bug Number</H2>\n";
+    PutHeader("Search by bug number");
     print "<FORM METHOD=GET ACTION=\"show_bug.cgi\">\n";
     print "You may find a single bug by entering its bug id here: \n";
     print "<INPUT NAME=id>\n";
