@@ -532,30 +532,45 @@ NS_IMETHODIMP nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorS
     {
       if (!aBuf.IsEmpty())
       {
-        /* If we have attribute for the body tag, we need to save them in order
-           to add them back later as InsertSource will ignore them */
+        PRInt32 start;
+        PRInt32 end;
         nsAutoString bodyAttributes;
-        PRInt32 start = aBuf.Find("<body", PR_TRUE);
-        if (start != kNotFound && aBuf[start + 5] == ' ')
+        nsAutoString headContent;
+
+        /* Before we can insert the data into editor, we need to remove the <head> tag
+           content and then insert it back using ReplaceHeadContentsWithHTML */
+        start = aBuf.Find("<head>", PR_TRUE);
+        if (start != kNotFound)
         {
-          PRInt32 end = aBuf.Find(">", PR_FALSE, start + 6);
+          start += 6; // move pass the <head> tag
+          end = aBuf.Find("</head>", PR_TRUE, start);
           if (end != kNotFound)
           {
             const PRUnichar* data = aBuf.get();
-            PRUnichar* attribute = new PRUnichar[end - start - 5];
-            if (attribute)
-            {
-              attribute = nsCRT::strndup(&data[start + 6], end - start - 6);
-              bodyAttributes.Adopt(attribute);
-            }
+            headContent.Adopt(nsCRT::strndup(&data[start], end - start));
+            aBuf.Cut(start, end - start);
           }
         }
 
-      {
-        aEditorShell->InsertSource(aBuf.get());
-        editor->EndOfDocument();
-      }
+        /* If we have attribute for the body tag, we need to save them in order
+           to add them back later as InsertSource will ignore them. */
+        start = aBuf.Find("<body", PR_TRUE);
+        if (start != kNotFound && aBuf[start + 5] == ' ')
+        {
+          start += 6;
+          end = aBuf.FindChar('>', start);
+          if (end != kNotFound)
+          {
+            const PRUnichar* data = aBuf.get();
+            bodyAttributes.Adopt(nsCRT::strndup(&data[start], end - start));
+          }
+        }
 
+        if (!headContent.IsEmpty())
+          aEditorShell->ReplaceHeadContentsWithHTML(headContent.get());
+        aEditorShell->InsertSource(aBuf.get());
+
+        editor->EndOfDocument();
         SetBodyAttributes(bodyAttributes);
       }
       if (!aSignature.IsEmpty())
