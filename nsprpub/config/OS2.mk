@@ -122,7 +122,7 @@ endif
 
 OS_LIBS     		= -lsocket -lemxio
 
-DEFINES += -DXP_OS2 -DXP_OS2_EMX  -DOS2EMX_PLAIN_CHAR #-DHAVE_SIGNED_CHAR
+DEFINES += -DXP_OS2 -DXP_OS2_EMX -DHAVE_SIGNED_CHAR
 
 OS_CFLAGS     		= $(OMF_FLAG) -Wall -Wno-unused -Zmtd
 OS_EXE_CFLAGS 		= $(OMF_FLAG) -Wall -Wno-unused -Zmtd
