@@ -21,6 +21,8 @@
 #include "nsIWebShell.h"
 #include "GtkMozillaInputStream.h"
 #include "gtkmozilla.h"
+#include "gdksuperwin.h"
+#include "gtkmozarea.h"
 
 
 class nsIWebShell;
@@ -109,6 +111,9 @@ protected:
 
   GtkMozilla *mozilla;
   int width, height;
+
+  GtkWidget   *mMozArea;
+  GdkSuperWin *mSuperWin;
 
   /* Stream stuff: */
   GtkMozillaInputStream *mStream;

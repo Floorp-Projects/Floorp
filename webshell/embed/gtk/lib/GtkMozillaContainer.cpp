@@ -36,13 +36,14 @@ GtkMozillaContainer::GtkMozillaContainer(GtkMozilla *moz, nsIPref * aPrefs)
 {
   mWebShell = nsnull;
 
-
   width = height = 0;
   mStream = nsnull;
 
   mChannel = nsnull;
   mLoadGroup = nsnull;
   mContext = nsnull;
+  mMozArea = nsnull;
+  mSuperWin = nsnull;
   
   mozilla = moz;
 
@@ -79,9 +80,17 @@ GtkMozillaContainer::Show()
   {
     width = alloc->width;
     height = alloc->height;
+
+    // we need to create the mozbox here that will shim
+    // between the superwin and the widget.
+
+    mMozArea = gtk_mozarea_new();
+    gtk_container_add(GTK_CONTAINER(mozilla), mMozArea);
+    gtk_widget_realize(mMozArea);
+    mSuperWin = GTK_MOZAREA(mMozArea)->superwin;
     
     //printf("Init, size: %d, %d\n", width, height);
-    mWebShell->Init((nsNativeWidget *)mozilla,
+    mWebShell->Init((nsNativeWidget *)mSuperWin,
                     0,
                     0,
                     width,
@@ -95,6 +104,9 @@ GtkMozillaContainer::Show()
     }
   }
 
+  gdk_window_show(mSuperWin->bin_window);
+  gdk_window_show(mSuperWin->shell_window);
+
   if (mWebShell) 
   {
     mWebShell->Show();
@@ -105,13 +117,19 @@ void
 GtkMozillaContainer::Resize(gint w, gint h)
 {
   int new_size;
+  GtkAllocation alloc;
   //  printf("GtkMozillaContainer::Resize called width: %d, %d\n", w, h);
   new_size = ((width != w) || (height != h));
   if (new_size && mWebShell) {
     width = w;
     height = h;
     //printf("GtkMozillaContainer::Resize setting to: %d, %d\n", width, height);
-    gtk_layout_set_size(GTK_LAYOUT(mozilla), width, height);
+    alloc.x = GTK_WIDGET(mozilla)->allocation.x;
+    alloc.y = GTK_WIDGET(mozilla)->allocation.y;
+    alloc.width = w;
+    alloc.height = h;
+    gtk_widget_size_allocate(GTK_WIDGET(mozilla), &alloc); 
+    gdk_superwin_resize(mSuperWin, width, height);
     mWebShell->SetBounds(0, 0, width, height);
   }
 }
