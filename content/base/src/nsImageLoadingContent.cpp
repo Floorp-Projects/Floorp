@@ -669,6 +669,10 @@ nsImageLoadingContent::FireEvent(const nsAString& aEventType)
 
   nsCOMPtr<nsIDocument> document;
   rv = GetOurDocument(getter_AddRefs(document));
+  if (!document) {
+    // no use to fire events if there is no document....
+    return rv;
+  }                                                                             
 
   nsCOMPtr<nsIPresShell> shell;
   document->GetShellAt(0, getter_AddRefs(shell));
