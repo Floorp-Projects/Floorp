@@ -96,6 +96,8 @@ if (err) 								\
 #define END_SECTION		']'
 #define KV_DELIM		'='
 
+#define TEMP_DIR		"\pTemp NSInstall"
+
 #define kScrollBarPad	3		/* constants */	
 #define kTxtRectPad		5
 #define	kInterWidgetPad	12
@@ -509,17 +511,17 @@ Boolean		UnloadSDLib(CFragConnectionID *);
 /*-----------------------------------------------------------*
  *   Deflation
  *-----------------------------------------------------------*/
-OSErr		ExtractCoreFile(void);
+OSErr		ExtractCoreFile(short, long);
 OSErr		AppleSingleDecode(FSSpecPtr, FSSpecPtr);
 void		ResolveDirs(char *, char*);
 OSErr		ForceMoveFile(short, long, ConstStr255Param, long);
-OSErr		CleanupExtractedFiles(void);
+OSErr		CleanupExtractedFiles(short, long);
 
 /*-----------------------------------------------------------*
  *   XPInstallGlue
  *-----------------------------------------------------------*/
 OSErr		RunAllXPIs(short vRefNum, long dirID);
-OSErr		RunXPI(FSSpec&, FSSpec&);
+OSErr		RunXPI(FSSpec&, FSSpec&, FSSpec&);
 /* NB:
 ** See XPInstallGlue.c for rest of prototypes
 */

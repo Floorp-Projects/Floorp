@@ -32,13 +32,40 @@ pascal void* Install(void* unused)
 	short			vRefNum;
 	long			dirID;
 	OSErr 			err;
-	FSSpec			idiSpec, coreFileSpec;
+	FSSpec			idiSpec, coreFileSpec, tmpSpec;
 	SDISTRUCT		sdistruct;
 	Str255			pIDIfname;
 	StringPtr		coreFile;
 	THz				ourHZ;
+	Boolean 		isDir = false;
 	
-	ERR_CHECK_RET( GetCWD(&dirID, &vRefNum), (void*)0 );
+#if CORRECT_DL_LOCATION == 1
+	/* get "Temporary Items" folder path */
+	ERR_CHECK_RET(FindFolder(kOnSystemDisk, kTemporaryFolderType, kCreateFolder, &vRefNum, &dirID), (void*)0);
+#else
+
+	vRefNum = gControls->opt->vRefNum;
+	err = FSMakeFSSpec( vRefNum, 0, TEMP_DIR, &tmpSpec );
+	if (err != noErr)
+	{
+		err = FSpDirCreate(&tmpSpec, smSystemScript, &dirID);
+		if (err != noErr)
+		{
+			ErrorHandler();
+			return (void*)0;
+		}
+	}
+	else
+	{
+		err = FSpGetDirectoryID( &tmpSpec, &dirID, &isDir );
+		if (!isDir || err!=noErr)
+		{
+			ErrorHandler();
+			return (void*)0;
+		}
+	}
+		
+#endif /* CORRECT_DL_LOCATION == 1 */
 	
 	GetIndString(pIDIfname, rStringList, sTempIDIName);
 	
@@ -48,15 +75,6 @@ pascal void* Install(void* unused)
 		ErrorHandler();
 		return (void*) nil;
 	}		
-
-#if CORRECT_DL_LOCATION == 1
-	/* get "Temporary Items" folder path */
-	ERR_CHECK_RET( FindFolder(kOnSystemDisk, kTemporaryFolderType, kCreateFolder, 
-							&vRefNum, &dirID)) != noErr), (void*) 0);
-#else
-	vRefNum = gControls->opt->vRefNum;
-	dirID = gControls->opt->dirID;
-#endif /* CORRECT_DL_LOCATION == 1 */
 	
 	/* populate SDI struct */
 	sdistruct.dwStructSize 	= sizeof(SDISTRUCT);
@@ -94,21 +112,21 @@ pascal void* Install(void* unused)
 		if (err==noErr) /* core file was downloaded */
 		{
 			/* extract contents of downloaded core file */
-			err = ExtractCoreFile();
+			err = ExtractCoreFile(vRefNum, dirID);
 			if (err!=noErr) 
 			{
 				ErrorHandler();
 				return (void*) nil;
 			}
-					
+				
 			/* run all .xpi's through XPInstall */
 			err = RunAllXPIs(vRefNum, dirID);
 			if (err!=noErr)
 				ErrorHandler();
 
+			CleanupExtractedFiles(vRefNum, dirID);
 		}
 	
-		CleanupExtractedFiles();
 		if (coreFile)
 			DisposePtr((Ptr)coreFile);
 	}

@@ -31,7 +31,7 @@
  *-----------------------------------------------------------*/
 
 /* XPI Stub Entry Points */
-typedef		nsresult (*XPI_InitProc)(const FSSpec& targetDir,
+typedef		nsresult (*XPI_InitProc)(const FSSpec& aXPIStubDir, const FSSpec& aProgramDir,
 									 pfnXPIStart startCB, 
 								 	 pfnXPIProgress progressCB, 
 								 	 pfnXPIFinal finalCB);
@@ -94,15 +94,17 @@ OSErr
 RunAllXPIs(short vRefNum, long dirID)
 {
 	OSErr 	err = noErr;
-	FSSpec	tgtDirSpec, xpiSpec;
+	FSSpec	tgtDirSpec, xpiStubDirSpec, xpiSpec;
+
+	err = FSMakeFSSpec(vRefNum, dirID, 0, &xpiStubDirSpec); /* temp dir */
+	err = FSMakeFSSpec(gControls->opt->vRefNum, gControls->opt->dirID, 0, &tgtDirSpec);	/* program dir */
 	
 	// TO DO
 	//		enumerate through all .xpi's
-	
-	err = FSMakeFSSpec(vRefNum, dirID, "\pmozilla.jar", &xpiSpec);
-	err = FSMakeFSSpec(vRefNum, dirID, 0, &tgtDirSpec);
+	err = FSMakeFSSpec(vRefNum, dirID, "\pmozilla.jar", &xpiSpec); // XXX change
+
 	if (err==noErr)
-		err =  RunXPI(xpiSpec, tgtDirSpec);
+		err =  RunXPI(xpiSpec, xpiStubDirSpec, tgtDirSpec);
 	else
 		ErrorHandler(); 
 		
@@ -110,7 +112,7 @@ RunAllXPIs(short vRefNum, long dirID)
 }
 
 OSErr
-RunXPI(FSSpec& aXPI, FSSpec& aTargetDir)
+RunXPI(FSSpec& aXPI, FSSpec& aXPIStubDir, FSSpec& aTargetDir)
 {	
 	nsresult			rv;
 	OSErr	 			err = noErr;
@@ -120,9 +122,9 @@ RunXPI(FSSpec& aXPI, FSSpec& aTargetDir)
 	XPI_ExitProc		xpi_exitProc;
 	CFragConnectionID	connID;
 	
-	ERR_CHECK_RET(LoadXPIStub(&xpi_initProc, &xpi_installProc, &xpi_exitProc, &connID, aTargetDir), err);
+	ERR_CHECK_RET(LoadXPIStub(&xpi_initProc, &xpi_installProc, &xpi_exitProc, &connID, aXPIStubDir), err);
 	
-	XPI_ERR_CHECK(xpi_initProc( aTargetDir, xpicbStart, xpicbProgress, xpicbFinal ));
+	XPI_ERR_CHECK(xpi_initProc( aXPIStubDir, aTargetDir, xpicbStart, xpicbProgress, xpicbFinal ));
 
 	XPI_ERR_CHECK(xpi_installProc( aXPI, "", flags ));
 	
@@ -143,18 +145,18 @@ LoadXPIStub(XPI_InitProc* pfnInit, XPI_InstallProc* pfnInstall, XPI_ExitProc* pf
 	FSSpec				fslib;
 	Str63 				fragName = XPISTUB_DLL;
 	Ptr					mainAddr, symAddr;
-	Str255				errName;
-	long				currDirID;
-	short				currVRefNum;	
+	Str255				errName;	
 	CFragSymbolClass	symClass;
+	long				tgtDirID;
+	Boolean 			isDir;
 	
-	err = GetCWD(&currDirID, &currVRefNum);
+	err = FSpGetDirectoryID( &aTargetDir, &tgtDirID, &isDir );
 	if (err!=noErr)
-		return false;
+		return err;
+	else if (!isDir)
+		return paramErr;
 		
-	// TO DO use aTargetDir to load XPISTUB_DLL 
-	
-	err = FSMakeFSSpec(currVRefNum, currDirID, fragName, &fslib);
+	err = FSMakeFSSpec(aTargetDir.vRefNum, tgtDirID, fragName, &fslib);
 	if (err!=noErr)
 		return err;
 		

@@ -161,11 +161,8 @@ OurNavEventFunction(NavEventCallbackMessage callBackSelector, NavCBRecPtr callBa
                      
 	windowPtr = (WindowPtr) callBackParms->eventData.eventDataParms.event->message;
 	if (!windowPtr)
-	{
-		ErrorHandler();
 		return;
-	}
-	
+		
 	switch(callBackSelector)
 	{
 		case kNavCBEvent:
@@ -244,48 +241,40 @@ InSetupTypeContent(EventRecord* evt, WindowPtr wCurrPtr)
 		part = TrackControl(currCntl, localPt, (ControlActionUPP) -1);
 		cntlVal = GetControlValue(currCntl);
 		
-		err = NavLoad();
+		err = NavGetDefaultDialogOptions(&dlgOpts);
+		GetIndString( dlgOpts.message, rStringList, sFolderDlgMsg );
+		eventProc = NewNavEventProc( (ProcPtr) OurNavEventFunction );
+		ERR_CHECK(FSMakeFSSpec(gControls->opt->vRefNum, gControls->opt->dirID, NULL, &tmp));
+		ERR_CHECK(AECreateDesc(typeFSS, (void*) &tmp, sizeof(FSSpec), &initDesc));
+		err = NavChooseFolder( &initDesc, &reply, &dlgOpts, eventProc, NULL, NULL );
 		
-		if (err==noErr) {
+		AEDisposeDesc(&initDesc);
+		DisposeRoutineDescriptor(eventProc);
 		
-			err = NavGetDefaultDialogOptions(&dlgOpts);
-			GetIndString( dlgOpts.message, rStringList, sFolderDlgMsg );
-			eventProc = NewNavEventProc( (ProcPtr) OurNavEventFunction );
-			ERR_CHECK(FSMakeFSSpec(gControls->opt->vRefNum, gControls->opt->dirID, NULL, &tmp));
-			ERR_CHECK(AECreateDesc(typeFSS, (void*) &tmp, sizeof(FSSpec), &initDesc));
-			err = NavChooseFolder( &initDesc, &reply, &dlgOpts, eventProc, NULL, NULL );
-		
-			AEDisposeDesc(&initDesc);
-			DisposeRoutineDescriptor(eventProc);
-		
-			if((reply.validRecord) && (err == noErr))
+		if((reply.validRecord) && (err == noErr))
+		{
+			if((err = AECoerceDesc(&(reply.selection),typeFSS,&resultDesc)) == noErr)
 			{
-				if((err = AECoerceDesc(&(reply.selection),typeFSS,&resultDesc)) == noErr)
-				{
-					BlockMoveData(*resultDesc.dataHandle,&tmp,sizeof(FSSpec));
-					/* forces name to get filled */
-					FSMakeFSSpec(tmp.vRefNum, tmp.parID, tmp.name, &folderSpec); 
+				BlockMoveData(*resultDesc.dataHandle,&tmp,sizeof(FSSpec));
+				/* forces name to get filled */
+				FSMakeFSSpec(tmp.vRefNum, tmp.parID, tmp.name, &folderSpec); 
 				
-					/* NOTE: 
-					** ----
-					** gControls->opt->parID and gControls->opt->folder refer to the
-					** same folder. The -dirID- is used by Install() when passing params to
-					** the SDINST_DLL through its prescribed interface that just takes the
-					** vRefNum and parID of the FSSpec that describes the folder.
-					** Whilst, the -folder- string is used by DrawDiskNFolder() in repainting.
-					*/
-					pstrcpy(gControls->opt->folder, folderSpec.name);
-					DrawDiskNFolder(folderSpec.vRefNum, folderSpec.name);
-					gControls->opt->vRefNum = tmp.vRefNum;
-					gControls->opt->dirID = tmp.parID;
-				}
-            
-				AEDisposeDesc(&resultDesc);
-				NavDisposeReply(&reply);
+				/* NOTE: 
+				** ----
+				** gControls->opt->parID and gControls->opt->folder refer to the
+				** same folder. The -dirID- is used by Install() when passing params to
+				** the SDINST_DLL through its prescribed interface that just takes the
+				** vRefNum and parID of the FSSpec that describes the folder.
+				** Whilst, the -folder- string is used by DrawDiskNFolder() in repainting.
+				*/
+				pstrcpy(gControls->opt->folder, folderSpec.name);
+				DrawDiskNFolder(folderSpec.vRefNum, folderSpec.name);
+				gControls->opt->vRefNum = tmp.vRefNum;
+				gControls->opt->dirID = tmp.parID;
 			}
-		
-			//err = NavUnload();
-			//if (err!=noErr) SysBeep(10); // DEBUG
+            
+			AEDisposeDesc(&resultDesc);
+			NavDisposeReply(&reply);
 		}
 		
 		return;
