@@ -385,27 +385,6 @@ public:
   StopPluginInstance(nsIPluginInstance* aInstance);
 
 private:
-
-  /**
-   * Called from NewPluginURLStream, this method takes postData and 
-   * makes it correct according to the assumption of nsHTTPRequest.cpp 
-   * that postData include "\r\n\r\n". 
-   * This method assumes inPostData DOES NOT already have "\r\n\r\n".
-   * This method will search for "\r\n\n", which indicates the end of 
-   * the last header. It will then search for the first non-whitespace 
-   * character after the last header. It will then create a new buffer 
-   * with the existing headers, a correct "\r\n\r\n", then the post data.  
-   * If no "\r\n" is found, the data does not contain headers, and a simple 
-   * "\r\n\r\n" is prepended to the buffer. See bug 60228 for more info.
-   * @param inPostData, the post data from NewPluginURLStream
-   * @param the length of inPostData
-   * @param outPostData the buffer which must be freed with delete [].
-   * @param outPostDataLen the length of outPostData
-   */
-  nsresult
-  FixPostData(const char *inPostData, PRUint32 inPostDataLen, 
-              char **outPostData, PRUint32 *outPostDataLen);
-
   nsresult
   LoadXPCOMPlugins(nsIComponentManager* aComponentManager, nsIFile* aPath);
 

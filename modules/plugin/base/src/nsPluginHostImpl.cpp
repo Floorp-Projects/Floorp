@@ -2824,18 +2824,6 @@ NS_IMETHODIMP nsPluginHostImpl::PostURL(nsISupports* pluginInst,
                     else if (0 == PL_strcmp(target, "_current"))
                       target = "_self";
                   }
-
-                  // Make sure there is "r\n\r\n" before the post data
-                  if (!PL_strnstr(postData, "\r\n\r\n", postDataLen)) 
-                  {
-                    char *newPostData = nsnull;
-                    PRUint32 newPostDataLen = 0;
-                    if (NS_SUCCEEDED(FixPostData(postData, postDataLen, &newPostData, &newPostDataLen))) 
-                    {
-                      postData = newPostData;
-                      postDataLen = newPostDataLen;
-                    }   
-                  }                 
                   
                   rv = owner->GetURL(url, target, (void*)postData, postDataLen,
                                      (void*) postHeaders, postHeadersLength, isFile);
@@ -5301,51 +5289,27 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
 
       // deal with headers and post data
       nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
-      if(httpChannel)
-      {
-
-        // figure out if we need to set the post data stream on the
-        // channel...  right now, this is only done for http
-        // channels.....
-        if(aPostData)
-        {
+      if(httpChannel) {
+        if (aPostData) {
+          
           nsCOMPtr<nsIInputStream> postDataStream;
+          const char * dataToPost = aPostData;
+          nsXPIDLCString filename;
 
-          // In the file case, hand the filename off to NewPostDataStream
-          if (aIsFile) 
-          {
-            // convert file:///c:/ to c:
-            nsXPIDLCString filename;
-            nsCOMPtr<nsILocalFile> aFile = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);     
-            if (NS_SUCCEEDED(aFile->SetURL(aPostData)))
+          if (aIsFile) {
+            // convert file:///c:/ to c:            
+            nsCOMPtr<nsILocalFile> aFile = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);
+            if (NS_SUCCEEDED(aFile->SetURL(dataToPost)))
               if (NS_SUCCEEDED(aFile->GetPath(getter_Copies(filename)))) {
                 // tell the listener about it so it will delete the file later
                 listenerPeer->SetLocalFile(filename);
-                // use NewPostDataStream only for post data on disk
-                NS_NewPostDataStream(getter_AddRefs(postDataStream), aIsFile, filename, 0);
+                dataToPost = filename;
               }
           }
-          else
-          {
-            // In the string case, we create a string buffer stream
-            // Make sure there is "r\n\r\n" before the post data
-            if (!PL_strnstr(aPostData, "\r\n\r\n", aPostDataLen)) 
-            {
-              if (NS_SUCCEEDED(FixPostData(aPostData, aPostDataLen, &newPostData, &newPostDataLen))) 
-              {
-                aPostData = newPostData;
-                aPostDataLen = newPostDataLen;
-              }   
-            }
-            if (aPostData) {
-              nsCOMPtr<nsISupports> result;
-              // use NewByteInputStream to handle binary post data, see bug 105417
-              rv = NS_NewByteInputStream(getter_AddRefs(result), aPostData, aPostDataLen);
-              if (result)
-                postDataStream = do_QueryInterface(result, &rv);
-            }
-          }
-              
+          
+          rv = NS_NewPluginPostDataStream(getter_AddRefs(postDataStream), dataToPost, 
+                                          aPostDataLen, aIsFile);
+
           if (!postDataStream) 
           {
             NS_RELEASE(aInstance);
@@ -5380,60 +5344,6 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
     NS_RELEASE(listenerPeer);
   }
   return rv;
-}
-
-
-////////////////////////////////////////////////////////////////////////
-nsresult
-nsPluginHostImpl::FixPostData(const char *inPostData, PRUint32 inPostDataLen,
-                              char **outPostData, PRUint32 *outPostDataLen)
-{
-  NS_ENSURE_ARG_POINTER(inPostData);
-  NS_ENSURE_ARG_POINTER(outPostData);
-  NS_ENSURE_ARG_POINTER(outPostDataLen);
-  if(inPostDataLen <= 0)
-    return NS_ERROR_UNEXPECTED;
-
-  const char *postData = inPostData;
-  const char *crlf = nsnull;
-  const char *crlfcrlf = "\r\n\r\n";
-  const char *t;
-  char *newBuf;
-  PRInt32 headersLen = 0, dataLen = 0;
-
-  if (!(newBuf = new char[inPostDataLen + 4])) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsCRT::memset(newBuf, 0, inPostDataLen + 4);
-
-  if (!(crlf = PL_strnstr(postData, "\r\n\n", inPostDataLen))) {
-    delete [] newBuf;
-    return NS_ERROR_NULL_POINTER;
-  }
-  headersLen = crlf - postData;
-
-  // find the next non-whitespace char
-  t = crlf + 3;
-  while (*t == '\r' || *t == '\n' || *t == '\t' || *t == ' ' && *t) {
-    t++;
-  }
-  if (*t) {
-    // copy the headers
-    nsCRT::memcpy(newBuf, postData, headersLen);
-    // copy the correct crlfcrlf
-    nsCRT::memcpy(newBuf + headersLen, crlfcrlf, 4);
-    // copy the rest of the postData
-    dataLen = inPostDataLen - (t - postData);
-    nsCRT::memcpy(newBuf + headersLen + 4, t, dataLen);
-    *outPostDataLen = headersLen + 4 + dataLen;
-    *outPostData = newBuf;
-  }
-  else {
-    delete [] newBuf;
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  return NS_OK;
 }
 
 

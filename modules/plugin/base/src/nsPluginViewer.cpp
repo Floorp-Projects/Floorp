@@ -1056,39 +1056,34 @@ NS_IMETHODIMP pluginInstanceOwner::GetURL(const char *aURL, const char *aTarget,
   nsCRT::free(absURIStr);
   NS_ENSURE_TRUE(NS_SUCCEEDED(rv),NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsISupports> result;
   nsCOMPtr<nsIInputStream> postDataStream;
   nsCOMPtr<nsIInputStream> headersDataStream;
 
   // deal with post data, either in a file or raw data, and any headers
   if (aPostData) {
+    const char * dataToPost = (const char *)aPostData;  // default to raw data
+    nsXPIDLCString filename;
+
     if (isFile) {
-      // convert file:///c:/ to c:
-      const char * fileURL = (const char*)aPostData; // default to raw data
-      nsXPIDLCString path;
-      nsCOMPtr<nsILocalFile> aFile = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);     
-      if (NS_SUCCEEDED(aFile->SetURL(fileURL)))
-        if (NS_SUCCEEDED(aFile->GetPath(getter_Copies(path))))
-          fileURL = (const char*)path;
+      // convert file:///c:/ to c: if needed
+      nsCOMPtr<nsILocalFile> aFile = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);
+      if (NS_SUCCEEDED(aFile->SetURL(dataToPost)) &&
+          NS_SUCCEEDED(aFile->GetPath(getter_Copies(filename))))
+          dataToPost = filename;
+    }
 
-      // use NewPostDataStream only for post data on disk
-      rv = NS_NewPostDataStream(getter_AddRefs(postDataStream), isFile, fileURL, 0);
-    } else  {
-      // use NewByteInputStream to handle binary post data, see bug 105417
-      rv = NS_NewByteInputStream(getter_AddRefs(result), (const char *) aPostData, aPostDataLen);
-      if (result)
-        postDataStream = do_QueryInterface(result, &rv);
+    rv = NS_NewPluginPostDataStream(getter_AddRefs(postDataStream), dataToPost, aPostDataLen, isFile);
+
+    if (aHeadersData) {
+      rv = NS_NewPluginPostDataStream(getter_AddRefs(headersDataStream), 
+                                      (const char *) aHeadersData, 
+                                      aHeadersDataLen,
+                                      PR_FALSE,
+                                      PR_TRUE);  // last arg says we are headers
+      NS_ASSERTION(NS_SUCCEEDED(rv),"failed in creating plugin header data stream");
     }
   }
 
-  if (aHeadersData) {
-    rv = NS_NewByteInputStream(getter_AddRefs(result), (const char *) aHeadersData, aHeadersDataLen);
-    if (result) {
-      headersDataStream = do_QueryInterface(result, &rv);
-    }
-  }
-
-  NS_ASSERTION(NS_SUCCEEDED(rv),"failed in creating plugin post data stream");
 
   nsAutoString  unitarget; unitarget.AssignWithConversion(aTarget);
   rv = lh->OnLinkClick(nsnull, eLinkVerb_Replace, 
