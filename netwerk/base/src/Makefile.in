@@ -25,7 +25,7 @@ include $(DEPTH)/config/autoconf.mk
 
 CPPSRCS =                              \
         nsConnectionGroup.cpp          \
-        nsMarshalingStreamListener.cpp \
+        nsAsyncStreamListener.cpp      \
         nsSyncStreamListener.cpp       \
         nsFileTransport.cpp            \
         nsFileTransportService.cpp     \
