@@ -58,7 +58,6 @@ CPP_OBJS =                                 \
         .\$(OBJDIR)\nsRepository.obj       \
         .\$(OBJDIR)\nsServiceManager.obj   \
         .\$(OBJDIR)\xcDll.obj              \
-        .\$(OBJDIR)\xcDllStore.obj         \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
