@@ -116,6 +116,8 @@ public:
     virtual void            ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect);
     virtual void            AddMouseListener(nsIMouseListener * aListener);
     virtual void            AddEventListener(nsIEventListener * aListener);
+    virtual void            BeginResizingChildren(void);
+    virtual void            EndResizingChildren(void);
 
     // nsSwitchToUIThread interface
     virtual BOOL            CallMethod(MethodInfo *info);
@@ -219,6 +221,8 @@ protected:
     };
 
     static BOOL sIsRegistered;
+
+    HDWP mDeferredPositioner;
 };
 
 //
@@ -409,6 +413,14 @@ protected:
     void ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect) \
     { \
       nsWindow::ScreenToWidget(aOldRect, aNewRect); \
+    } \
+    void BeginResizingChildren(void) \
+    { \
+      nsWindow::BeginResizingChildren(); \
+    } \
+    void EndResizingChildren(void) \
+    { \
+      nsWindow::EndResizingChildren(); \
     } 
 
 

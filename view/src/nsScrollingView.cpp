@@ -299,7 +299,11 @@ nsEventStatus nsScrollingView :: HandleEvent(nsGUIEvent *aEvent, PRUint32 aEvent
           clip.height = NS_TO_INT_ROUND(scale * (mBounds.height - sy));
 
           mViewManager->ClearDirtyRegion();
-          mWindow->Scroll(0, dy, &clip);
+
+          nsIWidget *thiswin = GetWidget();
+
+          if (nsnull != thiswin)
+            thiswin->BeginResizingChildren();
 
           //and now we make sure that the scrollbar thumb is in sync with the
           //numbers we came up with here, but only if we actually moved at least
@@ -307,6 +311,18 @@ nsEventStatus nsScrollingView :: HandleEvent(nsGUIEvent *aEvent, PRUint32 aEvent
           //very slow scrolling would never actually work.
 
           ((nsScrollbarEvent *)aEvent)->position = mOffsetY;
+
+          if (dy != 0)
+          {
+            AdjustChildWidgets(0, dy);
+            mWindow->Scroll(0, dy, &clip);
+          }
+
+          if (nsnull != thiswin)
+          {
+            thiswin->EndResizingChildren();
+            NS_RELEASE(thiswin);
+          }
         }
       }
       else if ((nsnull != mHScrollBarView) && (scview == mHScrollBarView))
@@ -344,7 +360,11 @@ nsEventStatus nsScrollingView :: HandleEvent(nsGUIEvent *aEvent, PRUint32 aEvent
           clip.height = NS_TO_INT_ROUND(scale * (mBounds.height - sy));
 
           mViewManager->ClearDirtyRegion();
-          mWindow->Scroll(dx, 0, &clip);
+
+          nsIWidget *thiswin = GetWidget();
+
+          if (nsnull != thiswin)
+            thiswin->BeginResizingChildren();
 
           //and now we make sure that the scrollbar thumb is in sync with the
           //numbers we came up with here, but only if we actually moved at least
@@ -352,11 +372,20 @@ nsEventStatus nsScrollingView :: HandleEvent(nsGUIEvent *aEvent, PRUint32 aEvent
           //very slow scrolling would never actually work.
 
           ((nsScrollbarEvent *)aEvent)->position = mOffsetX;
+
+          if (dx != 0)
+          {
+            AdjustChildWidgets(dx, 0);
+            mWindow->Scroll(dx, 0, &clip);
+          }
+
+          if (nsnull != thiswin)
+          {
+            thiswin->EndResizingChildren();
+            NS_RELEASE(thiswin);
+          }
         }
       }
-
-      if ((dx != 0) || (dy != 0))
-        AdjustChildWidgets(dx, dy);
 
       retval = nsEventStatus_eConsumeNoDefault;
 
@@ -388,6 +417,7 @@ void nsScrollingView :: ComputeContainerSize()
     nscoord         dx = 0, dy = 0;
     nsIPresContext  *px = mViewManager->GetPresContext();
     nscoord         width, height;
+    nscoord         vwidth, vheight;
     PRUint32        oldsizey = mSizeY, oldsizex = mSizeX;
     nsRect          area(0, 0, 0, 0);
     nscoord         offx, offy;
@@ -400,7 +430,7 @@ void nsScrollingView :: ComputeContainerSize()
 
     if (nsnull != mVScrollBarView)
     {
-      mVScrollBarView->GetDimensions(&width, &height);
+      mVScrollBarView->GetDimensions(&vwidth, &vheight);
       offy = mOffsetY;
 
       win = mVScrollBarView->GetWidget();
@@ -430,7 +460,8 @@ void nsScrollingView :: ComputeContainerSize()
           mVScrollBarView->SetVisibility(nsViewVisibility_kHide);
         }
 
-        NS_RELEASE(scrollv);
+        //don't release the vertical scroller here because if we need to
+        //create a horizontal one, it will need to tweak the vertical one
       }
 
       NS_RELEASE(win);
@@ -459,7 +490,13 @@ void nsScrollingView :: ComputeContainerSize()
 
           dx = NS_TO_INT_ROUND(scale * (offx - mOffsetX));
 
-          scrollh->SetParameters(mSizeX, mBounds.width, mOffsetX, NS_POINTS_TO_TWIPS_INT(12));
+          scrollh->SetParameters(mSizeX, mBounds.width - ((nsnull != scrollv) ? vwidth : 0),
+                                 mOffsetX, NS_POINTS_TO_TWIPS_INT(12));
+
+          //now make the vertical scroll region account for this scrollbar
+
+          if (nsnull != scrollv)
+            scrollv->SetParameters(mSizeY, mBounds.height - height, mOffsetY, NS_POINTS_TO_TWIPS_INT(12));
         }
         else
         {
@@ -473,6 +510,10 @@ void nsScrollingView :: ComputeContainerSize()
 
       NS_RELEASE(win);
     }
+
+    // now we can release the vertical srcoller if there was one...
+
+    NS_IF_RELEASE(scrollv);
 
     if ((dx != 0) || (dy != 0))
       AdjustChildWidgets(dx, dy);
@@ -537,7 +578,7 @@ void nsScrollingView :: GetVisibleOffset(nscoord *aOffsetX, nscoord *aOffsetY)
 
 void nsScrollingView :: AdjustChildWidgets(nscoord aDx, nscoord aDy)
 {
-  PRInt32 numkids = GetChildCount();
+  PRInt32   numkids = GetChildCount();
 
   for (PRInt32 cnt = 0; cnt < numkids; cnt++)
   {
@@ -551,13 +592,18 @@ void nsScrollingView :: AdjustChildWidgets(nscoord aDx, nscoord aDy)
       {
         nsRect  bounds;
 
+        win->BeginResizingChildren();
         win->GetBounds(bounds);
         win->Move(bounds.x + aDx, bounds.y + aDy);
-
-        NS_RELEASE(win);
       }
 
       kid->AdjustChildWidgets(aDx, aDy);
+
+      if (nsnull != win)
+      {
+        win->EndResizingChildren();
+        NS_RELEASE(win);
+      }
     }
   }
 }

@@ -877,12 +877,17 @@ void nsView :: AdjustChildWidgets(nscoord aDx, nscoord aDy)
     {
       nsRect  bounds;
 
+      win->BeginResizingChildren();
       win->GetBounds(bounds);
       win->Move(bounds.x + aDx, bounds.y + aDy);
-
-      NS_RELEASE(win);
     }
 
     kid->AdjustChildWidgets(aDx, aDy);
+
+    if (nsnull != win)
+    {
+      win->EndResizingChildren();
+      NS_RELEASE(win);
+    }
   }
 }
