@@ -267,8 +267,8 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElement::get_parentElement(IHTMLElement __RPC_F
     *p = NULL;
     if (mParent)
     {
-        IDispatch *pDisp = reinterpret_cast<IDispatch *>(mParent);
-        pDisp->QueryInterface(IID_IHTMLElement, (void **) p);
+        CIEHtmlElement *pElt = static_cast<CIEHtmlElement *>(mParent);
+        pElt->QueryInterface(IID_IHTMLElement, (void **) p);
     }
     else
     {
