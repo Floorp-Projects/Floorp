@@ -117,7 +117,7 @@ function InitDialog()
 {
   // Get image from document
   backgroundImage = GetHTMLOrCSSStyleValue(globalElement, backgroundStr, cssBackgroundImageStr);
-  innerURL = backgroundImage.match( /url\((.*)\)/ ) ;
+  var innerURL = backgroundImage.match( /url\((.*)\)/ ) ;
   if (innerURL)
   {
     backgroundImage = RegExp.$1;
