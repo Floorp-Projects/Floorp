@@ -2,12 +2,12 @@ interface Range {
  /* IID: { 0xa6cf90ce, 0x15b3, 0x11d2, \
   { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } */
 
-    attribute boolean     isPositioned;
+    attribute boolean   isPositioned;
 
-    attribute Element     startParent;
-    attribute long        startOffset;
-    attribute Element     endParent;
-    attribute long        endOffset;
+    attribute Node      startParent;
+    attribute long      startOffset;
+    attribute Node      endParent;
+    attribute long      endOffset;
 
     void                setStart(in Node parent, in long offset);
     void                setEnd(in Node parent, in long offset);
