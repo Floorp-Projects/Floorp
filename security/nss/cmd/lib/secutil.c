@@ -269,7 +269,8 @@ secu_InitSlotPassword(PK11SlotInfo *slot, PRBool retry, void *arg)
 
     if (pwdata->source == PW_FROMFILE) {
 	return SECU_FilePasswd(slot, retry, pwdata->data);
-    } else if (pwdata->source == PW_PLAINTEXT) {
+    } 
+    if (pwdata->source == PW_PLAINTEXT) {
 	return PL_strdup(pwdata->data);
     }
     
@@ -301,15 +302,16 @@ secu_InitSlotPassword(PK11SlotInfo *slot, PRBool retry, void *arg)
 
 
     for (;;) {
-	if (!p0) {
-	    p0 = SEC_GetPassword(input, output, "Enter new password: ",
-			         SEC_BlindCheckPassword);
-	}
-	if (pwdata->source == PW_NONE) {
-	    p1 = SEC_GetPassword(input, output, "Re-enter password: ",
-				 SEC_BlindCheckPassword);
-	}
-	if (pwdata->source != PW_NONE || (PORT_Strcmp(p0, p1) == 0)) {
+	if (p0) 
+	    PORT_Free(p0);
+	p0 = SEC_GetPassword(input, output, "Enter new password: ",
+			     SEC_BlindCheckPassword);
+
+	if (p1)
+	    PORT_Free(p1);
+	p1 = SEC_GetPassword(input, output, "Re-enter password: ",
+			     SEC_BlindCheckPassword);
+	if (p0 && p1 && !PORT_Strcmp(p0, p1)) {
 	    break;
 	}
 	PR_fprintf(PR_STDERR, "Passwords do not match. Try again.\n");
@@ -1040,7 +1042,7 @@ secu_PrintUniversal(FILE *out, SECItem *i, char *m, int level)
 static void
 secu_PrintAny(FILE *out, SECItem *i, char *m, int level)
 {
-    if ( i->len ) {
+    if ( i && i->len && i->data ) {
 	switch (i->data[0] & SEC_ASN1_CLASS_MASK) {
 	case SEC_ASN1_CONTEXT_SPECIFIC:
 	    secu_PrintContextSpecific(out, i, m, level);
@@ -1649,7 +1651,8 @@ SECU_PrintCertificateRequest(FILE *out, SECItem *der, char *m, int level)
 	PORT_FreeArena(arena, PR_FALSE);
 	return rv;
     }
-    secu_PrintAny(out, cr->attributes[0], "Attributes", level+1);
+    if (cr->attributes)
+	secu_PrintAny(out, cr->attributes[0], "Attributes", level+1);
 
     PORT_FreeArena(arena, PR_FALSE);
     return 0;
