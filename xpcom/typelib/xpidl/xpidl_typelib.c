@@ -834,9 +834,11 @@ handle_iid_is:
 
                   ident = IDL_IDENT(type).str;
                   if (IDL_tree_property_get(type, "nsid")) {
-                      td->prefix.flags = TD_PNSIID | XPT_TDP_POINTER;
+                      td->prefix.flags = TD_PNSIID;
                       if (IDL_tree_property_get(type, "ref"))
-                          td->prefix.flags |= XPT_TDP_REFERENCE;
+                          td->prefix.flags |= XPT_TDP_POINTER | XPT_TDP_REFERENCE;
+                      else if (IDL_tree_property_get(type,"ptr"))
+                          td->prefix.flags |= XPT_TDP_POINTER;
                   } else if (IDL_tree_property_get(type, "domstring")) {
                       td->prefix.flags = TD_DOMSTRING | XPT_TDP_POINTER;
                       if (IDL_tree_property_get(type, "ref"))
