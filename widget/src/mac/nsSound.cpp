@@ -330,8 +330,8 @@ nsSound::GetCacheSession(nsICacheSession** outCacheSession)
   if (NS_FAILED(rv)) return rv;
   
   return cacheService->CreateSession("sound",
-                              nsICache::NOT_STREAM_BASED,
-                              PR_FALSE, outCacheSession);
+                              nsICache::STORE_IN_MEMORY,
+                              nsICache::NOT_STREAM_BASED, outCacheSession);
 }
 
 
