@@ -19,6 +19,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   John Bandhauer <jband@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -101,6 +102,11 @@
 #define NS_ERROR_XPC_INTERFACE_NOT_SCRIPTABLE          GENERATE_XPC_FAILURE(40)
 #define NS_ERROR_XPC_INTERFACE_NOT_FROM_NSISUPPORTS    GENERATE_XPC_FAILURE(41)
 #define NS_ERROR_XPC_CANT_GET_JSOBJECT_OF_DOM_OBJECT   GENERATE_XPC_FAILURE(42)
+#define NS_ERROR_XPC_CANT_SET_READ_ONLY_CONSTANT       GENERATE_XPC_FAILURE(43)
+#define NS_ERROR_XPC_CANT_SET_READ_ONLY_ATTRIBUTE      GENERATE_XPC_FAILURE(44)
+#define NS_ERROR_XPC_CANT_SET_READ_ONLY_METHOD         GENERATE_XPC_FAILURE(45)
+#define NS_ERROR_XPC_CANT_ADD_PROP_TO_WRAPPED_NATIVE   GENERATE_XPC_FAILURE(46)
+#define NS_ERROR_XPC_CALL_TO_SCRIPTABLE_FAILED         GENERATE_XPC_FAILURE(47)
 
 // any new errors here should have an associated entry added in xpc.msg
 /***************************************************************************/
@@ -125,12 +131,18 @@ interface nsIXPConnectFinalizeListener : nsISupports
 
 /***************************************************************************/
 
-[uuid(215DBE02-94A7-11d2-BA58-00805F8A5DD7)]
-interface nsIXPConnectWrappedNative : nsISupports
+[uuid(8916a320-d118-11d3-8f3a-0010a4e73d9a)]
+interface nsIXPConnectJSObjectHolder : nsISupports
 {
+    readonly attribute JSObjectPtr      JSObject;
+};
+
+[uuid(215DBE02-94A7-11d2-BA58-00805F8A5DD7)]
+interface nsIXPConnectWrappedNative : nsIXPConnectJSObjectHolder
+{
+    /* attribute 'JSObject' inherited from nsIXPConnectJSObjectHolder */
     readonly attribute nsIXPCScriptable DynamicScriptable;
     readonly attribute nsIXPCScriptable ArbitraryScriptable;
-    readonly attribute JSObjectPtr      JSObject;
     readonly attribute nsISupports      Native;
     readonly attribute nsIInterfaceInfo InterfaceInfo;
     readonly attribute nsIIDPtr         IID;
@@ -140,26 +152,10 @@ interface nsIXPConnectWrappedNative : nsISupports
     void debugDump(in short depth);
 };
 
-/***************************************************************************/
-
-/*
-* Wrappers around JSObject are passed around as plain nsISupports pointers.
-* To manipulate such a wrapper (as opposed to manipulating the wrapped
-* JSObject via the wrapper) do a QueryInterface for the
-* nsIXPConnectWrappedJSMethods interface
-* i.e. 'GET_NS_IID(nsIXPConnectWrappedJSMethods)'
-* and use the methods on that interface. (see below)
-*
-* The nsIXPConnectWrappedJSMethods interface for any given wrapped JS object 
-* is implemented using a separate aggregated tearoff object.
-*/
-
-/***************************************************************************/
-
 [uuid(BED52030-BCA6-11d2-BA79-00805F8A5DD7)]
-interface nsIXPConnectWrappedJSMethods : nsISupports
+interface nsIXPConnectWrappedJS : nsIXPConnectJSObjectHolder
 {
-    readonly attribute JSObjectPtr      JSObject;
+    /* attribute 'JSObject' inherited from nsIXPConnectJSObjectHolder */
     readonly attribute nsIInterfaceInfo InterfaceInfo;
     readonly attribute nsIIDPtr         IID;
 
@@ -225,17 +221,77 @@ interface nsIXPConnect : nsISupports
                   in nsISupports  aCOMObj,
                   in nsIIDRef     aIID);
 
-    nsIXPConnectWrappedNative
+    /**
+    * wrapNative will create a new JSObject or return an existing one. 
+    * 
+    * The JSObject is returned inside a refcounted nsIXPConnectJSObjectHolder.
+    * As long as this holder is held the JSObject will be protected from 
+    * collection by JavaScript's garbage collector. It is a good idea to
+    * transfer the JSObject to some equally protected place before releasing
+    * the holder (i.e. use JS_SetProperty to make this object a property of
+    * some other JSObject).
+    * 
+    * This method now correctly deals with cases where the passed in xpcom
+    * object already has an associated JSObject for the cases:
+    *  1) The xpcom object has already been wrapped for use in the same scope
+    *     as an nsIXPConnectWrappedNative.
+    *  2) The xpcom object is in fact a nsIXPConnectWrappedJS and thus already
+    *     has an underlying JSObject.
+    *  3) The xpcom object implements nsIScriptObjectOwner; i.e. is an idlc 
+    *     style DOM object for which we can call GetScriptObject to get the
+    *     JSObject it uses to represent itself into JavaScript.
+    *
+    * It *might* be possible to QueryInterface the nsIXPConnectJSObjectHolder 
+    * returned by the method into a nsIXPConnectWrappedNative or a 
+    * nsIXPConnectWrappedJS.
+    *
+    * Returns:
+    *    success:
+    *       NS_OK
+    *    failure:
+    *       NS_ERROR_XPC_BAD_CONVERT_NATIVE
+    *       NS_ERROR_XPC_CANT_GET_JSOBJECT_OF_DOM_OBJECT
+    *       NS_ERROR_FAILURE
+    */
+    nsIXPConnectJSObjectHolder
     wrapNative(in JSContextPtr aJSContext,
                in JSObjectPtr  aScope,
                in nsISupports  aCOMObj,
                in nsIIDRef     aIID);
 
-    nsISupports
+    /**
+    * wrapJS will yield a new or previously existing xpcom interface pointer
+    * to represent the JSObject passed in.
+    *
+    * This method now correctly deals with cases where the passed in JSObject
+    * already has an associated xpcom interface for the cases:
+    *  1) The JSObject has already been wrapped as a nsIXPConnectWrappedJS.
+    *  2) The JSObject is in fact a nsIXPConnectWrappedNative and thus already
+    *     has an underlying xpcom object.
+    *  3) The JSObject is of a jsclass which supports getting the nsISupports
+    *     from the JSObject directly. This is used for idlc style objects 
+    *     (e.g. DOM objects).
+    *
+    * It *might* be possible to QueryInterface the resulting interface pointer
+    * to nsIXPConnectWrappedJS.
+    *
+    * Returns:
+    *   success:
+    *     NS_OK
+    *    failure:
+    *       NS_ERROR_XPC_BAD_CONVERT_JS
+    *       NS_ERROR_FAILURE
+    */
+    void
     wrapJS(in JSContextPtr aJSContext,
            in JSObjectPtr  aJSObj,
-           in nsIIDRef     aIID);
+           in nsIIDRef     aIID,
+           [iid_is(aIID),retval] out nsQIResult result);
 
+    /**
+    * This only succeeds if the JSObject is a nsIXPConnectWrappedNative. A
+    * new wrapper is *never* constructed.
+    */
     nsIXPConnectWrappedNative
     getWrappedNativeOfJSObject(in JSContextPtr aJSContext,
                                in JSObjectPtr  aJSObj);
@@ -248,6 +304,16 @@ interface nsIXPConnect : nsISupports
                                         out nsIXPCSecurityManager aManager,
                                         out PRUint16 flags);
 
+    /**
+    * The security manager to use when the current JSContext has no security
+    * manager.
+    */
+    void setDefaultSecurityManager(in nsIXPCSecurityManager aManager,
+                                   in PRUint16 flags);
+
+    void getDefaultSecurityManager(out nsIXPCSecurityManager aManager,
+                                   out PRUint16 flags);
+
     nsIJSStackFrameLocation
     createStackFrameLocation(in PRBool                   isJSFrame,
                              in string                   aFilename,
@@ -255,6 +321,13 @@ interface nsIXPConnect : nsISupports
                              in PRInt32                  aLineNumber,
                              in nsIJSStackFrameLocation  aCaller);
 
+    /**
+    * XPConnect builds internal objects that parallel, and are one-to-one with,
+    * the JSContexts in the JSRuntime. It builks these objects as needed. 
+    * This method tells XPConnect to resynchronize its representations with the
+    * list of JSContexts currently 'alive' in the JSRuntime. This allows it
+    * to cleanup any representations of JSContexts that are no longer valid.
+    */
     void syncJSContexts();
 
     readonly attribute nsIJSStackFrameLocation      CurrentJSStack;

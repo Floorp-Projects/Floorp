@@ -149,6 +149,19 @@ var jsobj =  {
         }
         len.value *= 2;
         s.value = out;
+    },
+
+    QueryInterface : function(iid)  {
+//        print("+++++QI called for "+iid);
+        if(iid.equals(Components.interfaces.nsIEcho)) {
+//            print("+++++QI matched nsIEcho");
+            return this;
+        }
+        if(iid.equals(Components.interfaces.nsISupports)) {
+//              print("+++++QI matched nsISupports");
+            return this;
+        }
+        throw Components.results.NS_ERROR_NO_INTERFACE;  
     }
 };
 

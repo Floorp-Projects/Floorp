@@ -19,6 +19,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   John Bandhauer <jband@netscape.com>
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *
  * Alternatively, the contents of this file may be used under the
@@ -172,21 +173,6 @@ GetStaticScriptContext(JSContext* aContext,
   *aScriptContext = scriptContext;
   return scriptContext ? NS_OK : NS_ERROR_FAILURE;
 }  
-/***************************************************************************/
-/***************************************************************************/
-
-static JSBool
-ObjectHasPrivate(JSContext* cx, JSObject* obj)
-{
-    JSClass* jsclass =
-#ifdef JS_THREADSAFE
-            JS_GetClass(cx, obj);
-#else
-            JS_GetClass(obj);
-#endif
-    NS_ASSERTION(jsclass, "obj has no class");
-    return jsclass && (jsclass->flags & JSCLASS_HAS_PRIVATE);
-}
 
 /***************************************************************************/
 /***************************************************************************/
@@ -231,7 +217,7 @@ JAM_DOUBLE(JSContext *cx, double v, jsdouble *dbl)
 JSBool
 XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
                           const nsXPTType& type, const nsID* iid,
-                          JSObject* jsscope, nsresult* pErr)
+                          JSObject* scope, nsresult* pErr)
 {
     NS_PRECONDITION(s, "bad param");
     NS_PRECONDITION(d, "bad param");
@@ -299,7 +285,7 @@ XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
                 if(!iid)
                     break;
                 JSObject* obj;
-                if(!(obj = xpc_NewIDObject(cx, jsscope, *iid)))
+                if(!(obj = xpc_NewIDObject(cx, scope, *iid)))
                     return JS_FALSE;
                 *d = OBJECT_TO_JSVAL(obj);
                 break;
@@ -338,64 +324,21 @@ XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
         case nsXPTType::T_INTERFACE_IS:
             {
                 nsISupports* iface = *((nsISupports**)s);
-                if(!iface)
-                    break;
-                JSObject* aJSObj = nsnull;
-                JSBool success = JS_FALSE;
-                // is this a wrapped JS object?
-                if(nsXPCWrappedJSClass::IsWrappedJS(iface))
+                if(iface)
                 {
-                    nsCOMPtr<nsIXPConnectWrappedJSMethods> methods = 
-                        do_QueryInterface(iface);
-                    if(methods && NS_SUCCEEDED(methods->GetJSObject(&aJSObj)))
-                        success = JS_TRUE;
-                }
-                else
-                {
-                    // is this a DOM wrapped native object?
-                    nsCOMPtr<nsIScriptObjectOwner> owner = 
-                        do_QueryInterface(iface);
-                    if(owner)
+                    nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
+                    if(!NativeInterface2JSObject(cx, getter_AddRefs(holder),
+                                                 iface, iid, scope, pErr))
+                        return JS_FALSE;        
+                
+                    if(holder)
                     {
-                        // is a DOM object
-                        nsCOMPtr<nsIScriptContext> scriptCX;
-                        GetStaticScriptContext(cx, jsscope,
-                                               getter_AddRefs(scriptCX));
-                        if(scriptCX &&
-                           NS_SUCCEEDED(owner->GetScriptObject(scriptCX,
-                                                          (void **)&aJSObj)))
-                            success = JS_TRUE;
-                        else if(pErr)
-                            *pErr = NS_ERROR_XPC_CANT_GET_JSOBJECT_OF_DOM_OBJECT;
-                    }
-                    else
-                    {
-                        // not a DOM object. Just try to build a wrapper                            
-                        nsXPCWrappedNativeScope* scope;
-                        XPCContext* xpcc;
-                        if(iid &&
-                           nsnull != (xpcc = nsXPConnect::GetContext(cx)) &&
-                           nsnull != (scope = 
-                            nsXPCWrappedNativeScope::FindInJSObjectScope(xpcc, 
-                                                                    jsscope)))
-                        {
-                            nsXPCWrappedNative* wrapper = 
-                                nsXPCWrappedNative::GetNewOrUsedWrapper(xpcc,
-                                                            scope, jsscope,
-                                                            iface, *iid, pErr);
-                            if(wrapper)
-                            {
-                                aJSObj = wrapper->GetJSObject();
-                                NS_RELEASE(wrapper);
-                                success = JS_TRUE;
-                            }
-                        }
+                        JSObject* jsobj;
+                        if(NS_FAILED(holder->GetJSObject(&jsobj)))
+                            return JS_FALSE;        
+                        *d = OBJECT_TO_JSVAL(jsobj);
                     }
                 }
-                if(!success)
-                    return JS_FALSE;
-                if(aJSObj)
-                    *d = OBJECT_TO_JSVAL(aJSObj);
                 break;
             }
         default:
@@ -405,6 +348,7 @@ XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
     }
     return JS_TRUE;
 }
+
 
 /***************************************************************************/
 // static
@@ -673,46 +617,9 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
 
             // only wrap JSObjects
             if(!JSVAL_IS_OBJECT(s) || !(obj = JSVAL_TO_OBJECT(s)))
-            {
                 return JS_FALSE;
-            }
 
-            // is this really a native xpcom object with a wrapper?
-            nsXPCWrappedNative* wrapper;
-            if(nsnull != (wrapper =
-               nsXPCWrappedNativeClass::GetWrappedNativeOfJSObject(cx,obj)))
-            {
-                iface = wrapper->GetNative();
-                // is the underlying object the right interface?
-                if(wrapper->GetIID().Equals(*iid))
-                    NS_ADDREF(iface);
-                else
-                    iface->QueryInterface(*iid, (void**)&iface);
-            }
-            else if(GetISupportsFromJSObject(cx, obj, &iface))
-            {
-                if(iface)
-                    iface->QueryInterface(*iid, (void**)&iface);
-                else
-                {
-                    *((nsISupports**)d) = nsnull;
-                    return JS_TRUE;
-                }
-            }
-            else
-            {
-                // lets try to build a wrapper around the JSObject
-                XPCContext* xpcc;
-                if(nsnull != (xpcc = nsXPConnect::GetContext(cx)))
-                    iface = nsXPCWrappedJS::GetNewOrUsedWrapper(xpcc, obj, *iid);
-            }
-            if(iface)
-            {
-                // one AddRef has already been done
-                *((nsISupports**)d) = iface;
-                return JS_TRUE;
-            }
-            return JS_FALSE;
+            return JSObject2NativeInterface(cx, (void**)d, obj, iid, pErr);
         }
         default:
             NS_ASSERTION(0, "bad type");
@@ -722,6 +629,159 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
     return JS_TRUE;
 }
 
+/***************************************************************************/
+// static 
+JSBool 
+XPCConvert::NativeInterface2JSObject(JSContext* cx,
+                                     nsIXPConnectJSObjectHolder** dest,
+                                     nsISupports* src,
+                                     const nsID* iid,
+                                     JSObject* scope, nsresult* pErr)
+{
+    NS_ASSERTION(cx, "bad param");
+    NS_ASSERTION(dest, "bad param");
+    NS_ASSERTION(iid, "bad param");
+    NS_ASSERTION(scope, "bad param");
+
+    *dest = nsnull;
+    if(!src)
+        return JS_TRUE;
+    if(pErr)
+        *pErr = NS_ERROR_XPC_BAD_CONVERT_NATIVE;
+
+    // is this a wrapped JS object?
+    if(nsXPCWrappedJSClass::IsWrappedJS(src))
+    {
+        // verify that this wrapper is for the right interface
+        nsCOMPtr<nsISupports> wrapper;
+        if(NS_FAILED(src->QueryInterface(*iid,(void**)getter_AddRefs(wrapper))))
+            return JS_FALSE;
+        return NS_SUCCEEDED(wrapper->QueryInterface(
+                                        NS_GET_IID(nsIXPConnectJSObjectHolder),
+                                        (void**) dest));
+    }
+    else
+    {
+        // is this a DOM wrapped native object?
+        nsCOMPtr<nsIScriptObjectOwner> owner = do_QueryInterface(src);
+        if(owner)
+        {
+            // is a DOM object
+            nsCOMPtr<nsIScriptContext> scriptCX;
+            GetStaticScriptContext(cx, scope, getter_AddRefs(scriptCX));
+            JSObject* aJSObj = nsnull;
+            if(scriptCX &&
+               NS_SUCCEEDED(owner->GetScriptObject(scriptCX, (void **)&aJSObj)))
+            {
+                if(aJSObj)
+                {
+                    nsIXPConnectJSObjectHolder* holder = 
+                        nsXPCJSObjectHolder::newHolder(cx, aJSObj);
+                    if(holder)
+                    {
+                        NS_ADDREF(holder);
+                        *dest = holder;    
+                        return JS_TRUE;
+                    }
+                    return JS_FALSE;
+                }
+                return JS_TRUE;
+            }
+            if(pErr)
+                *pErr = NS_ERROR_XPC_CANT_GET_JSOBJECT_OF_DOM_OBJECT;
+        }
+        else
+        {
+            // not a DOM object. Just try to build a wrapper                            
+            nsXPCWrappedNativeScope* xpcscope;
+            XPCContext* xpcc;
+            if(nsnull != (xpcc = nsXPConnect::GetContext(cx)) &&
+               nsnull != (xpcscope = 
+                nsXPCWrappedNativeScope::FindInJSObjectScope(xpcc, scope)))
+            {
+                nsXPCWrappedNative* wrapper = 
+                    nsXPCWrappedNative::GetNewOrUsedWrapper(xpcc,
+                                                xpcscope, scope,
+                                                src, *iid, pErr);
+                if(wrapper)
+                {
+                    *dest = wrapper;
+                    return JS_TRUE;
+                }
+            }
+        }
+    }
+    return JS_FALSE;
+}
+
+/***************************************************************************/
+
+// static 
+JSBool 
+XPCConvert::JSObject2NativeInterface(JSContext* cx,
+                                     void** dest, JSObject* src,
+                                     const nsID* iid, nsresult* pErr)
+{
+    NS_ASSERTION(cx, "bad param");
+    NS_ASSERTION(dest, "bad param");
+    NS_ASSERTION(src, "bad param");
+    NS_ASSERTION(iid, "bad param");
+
+    *dest = nsnull;
+     if(pErr)
+        *pErr = NS_ERROR_XPC_BAD_CONVERT_JS;
+
+    nsISupports* iface;
+    nsresult rv = NS_OK;
+
+    // is this really a native xpcom object with a wrapper?
+    nsXPCWrappedNative* wrapper =
+                nsXPCWrappedNativeClass::GetWrappedNativeOfJSObject(cx, src);
+    if(wrapper)
+    {
+        iface = wrapper->GetNative();
+        // is the underlying object the right interface?
+        if(wrapper->GetIID().Equals(*iid))
+        {
+            NS_ADDREF(iface);
+            *dest = iface;
+            return JS_TRUE;
+        }
+        else
+            return NS_SUCCEEDED(iface->QueryInterface(*iid, dest));
+    }
+
+    // else...
+
+    // does the JSObject have 'nsISupportness'? (as do DOM objects)
+    if(GetISupportsFromJSObject(cx, src, &iface))
+    {
+        if(iface)
+            return NS_SUCCEEDED(iface->QueryInterface(*iid, dest));
+        return JS_FALSE;
+
+    }
+
+    // else...
+
+    // lets try to build a wrapper around the JSObject
+    XPCContext* xpcc = nsXPConnect::GetContext(cx);
+    if(xpcc)
+    {
+        nsXPCWrappedJS* wrapper = 
+            nsXPCWrappedJS::GetNewOrUsedWrapper(xpcc, src, *iid);
+        if(wrapper)
+        {
+            *dest = NS_STATIC_CAST(nsXPTCStubBase*, wrapper);
+            return JS_TRUE;
+        }
+    }
+    
+    // else...
+    return JS_FALSE;
+}
+
+/***************************************************************************/
 /***************************************************************************/
 
 static nsIXPCException*

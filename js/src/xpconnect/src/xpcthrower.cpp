@@ -19,6 +19,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   John Bandhauer <jband@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -219,26 +220,25 @@ XPCJSThrower::ThrowExceptionObject(JSContext* cx, nsIXPCException* e)
     JSBool success = JS_FALSE;
     if(e)
     {
-        nsIXPConnectWrappedNative* wrapper;
-        nsresult rv;
-        nsXPConnect* xpc = nsXPConnect::GetXPConnect();
-        if(!xpc)
-            return JS_FALSE;
-
-        // XXX funky
-        JSObject* glob = JS_GetGlobalObject(cx);
-
-        rv = xpc->WrapNative(cx, glob, e, NS_GET_IID(nsIXPCException), &wrapper);
-        NS_RELEASE(xpc);
-        if(NS_SUCCEEDED(rv))
+        nsCOMPtr<nsXPConnect> xpc = dont_AddRef(nsXPConnect::GetXPConnect());
+        if(xpc)
         {
-            JSObject* obj;
-            if(NS_SUCCEEDED(wrapper->GetJSObject(&obj)))
+            // XXX funky
+            JSObject* glob = JS_GetGlobalObject(cx);
+    
+            nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
+            nsresult rv = xpc->WrapNative(cx, glob, e, 
+                                          NS_GET_IID(nsIXPCException), 
+                                          getter_AddRefs(holder));
+            if(NS_SUCCEEDED(rv) && holder)
             {
-                JS_SetPendingException(cx, OBJECT_TO_JSVAL(obj));
-                success = JS_TRUE;
+                JSObject* obj;
+                if(NS_SUCCEEDED(holder->GetJSObject(&obj)))
+                {
+                    JS_SetPendingException(cx, OBJECT_TO_JSVAL(obj));
+                    success = JS_TRUE;
+                }
             }
-            NS_RELEASE(wrapper);
         }
     }
     return success;

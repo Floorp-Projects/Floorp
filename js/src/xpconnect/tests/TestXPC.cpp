@@ -342,7 +342,6 @@ TestSecurityManager(JSContext* jscontext, JSObject* glob, nsIXPConnect* xpc)
     JSBool success = JS_TRUE;
     MySecMan* sm = new MySecMan();
     nsTestXPCFoo* foo = new nsTestXPCFoo();
-    nsIXPConnectWrappedNative* wrapper;
 
     if(!sm || ! foo)
     {
@@ -382,17 +381,19 @@ TestSecurityManager(JSContext* jscontext, JSObject* glob, nsIXPConnect* xpc)
 */
     sm->SetMode(MySecMan::OK_ALL);
     printf("  build wrapper no veto: ");
-    if(NS_SUCCEEDED(xpc->WrapNative(jscontext, glob, foo, NS_GET_IID(nsITestXPCFoo2), &wrapper)))
+    nsIXPConnectJSObjectHolder* holder;
+    if(NS_SUCCEEDED(xpc->WrapNative(jscontext, glob, foo, 
+                    NS_GET_IID(nsITestXPCFoo2), &holder)))
     {
         printf("passed\n");
         JSObject* obj;
-        if(NS_SUCCEEDED(wrapper->GetJSObject(&obj)))
+        if(NS_SUCCEEDED(holder->GetJSObject(&obj)))
         {
             rval = OBJECT_TO_JSVAL(obj);
             JS_SetProperty(jscontext, glob, "foo", &rval);
         }
             
-        NS_RELEASE(wrapper);
+        NS_RELEASE(holder);
     }
     else
     {
@@ -614,12 +615,7 @@ int main()
 
     // get the JSRuntime from the runtime svc, if possible
     NS_WITH_SERVICE(nsIJSRuntimeService, rtsvc, "nsJSRuntimeService", &rv);
-    if(NS_FAILED(rv) || NS_FAILED(rtsvc->GetRuntime(&rt)))
-    {
-        rtsvc = NULL;
-        rt = JS_NewRuntime(8L * 1024L * 1024L);
-    }
-    if(!rt) 
+    if(NS_FAILED(rv) || NS_FAILED(rtsvc->GetRuntime(&rt)) || !rt)
         DIE("failed to get a JSRuntime");
 
     jscontext = JS_NewContext(rt, 8192);
@@ -672,16 +668,12 @@ int main()
 
     cxstack = nsnull;   // release service held by nsCOMPtr
     xpc     = nsnull;   // release service held by nsCOMPtr
-    
-    if (!rtsvc) {
-        /* no runtime service, so we have to handle shutdown */
-        JS_DestroyRuntime(rt);
-        JS_ShutDown();
-    }
-    rtsvc   = nsnull;   // release service held by nsCOMPtr
 
     rv = NS_ShutdownXPCOM( NULL );
     NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
+    
+    rtsvc   = nsnull;   // release service held by nsCOMPtr
+
     return 0;
 }
 

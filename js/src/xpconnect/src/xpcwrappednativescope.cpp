@@ -19,6 +19,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   John Bandhauer <jband@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -57,7 +58,11 @@ nsXPCWrappedNativeScope::nsXPCWrappedNativeScope(XPCContext* xpcc)
 
 nsXPCWrappedNativeScope::~nsXPCWrappedNativeScope()
 {
-    // XXX cleanup map here!
+    if(mWrappedNativeMap)
+    {
+        NS_ASSERTION(0 == mWrappedNativeMap->Count(), "scope has non-empty map");
+        delete mWrappedNativeMap;    
+    }
 
     // remove ourselves from the scopes list
     {   // scoped lock
@@ -95,6 +100,7 @@ nsXPCWrappedNativeScope::FindInJSObjectScope(XPCContext* xpcc, JSObject* obj)
     if(!obj)
         return nsnull;
     
+    // XXX this parent walk is probably unnecessary
     JSObject* parent;
     while(nsnull != (parent = JS_GetParent(cx, obj)))
         obj = parent;
@@ -122,7 +128,7 @@ nsXPCWrappedNativeScope::FindInJSObjectScope(XPCContext* xpcc, JSObject* obj)
     if(NS_FAILED(rv))
         return nsnull;
 
-    // We can not safely assume that this is really one of our
+    // We can fairly safely assume that this is really one of our
     // nsXPConnectWrappedNative objects. No other component in our
     // universe should be creating objects that implement the
     // nsIXPConnectWrappedNative interface!

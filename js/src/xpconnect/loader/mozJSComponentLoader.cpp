@@ -239,7 +239,7 @@ mozJSComponentLoader::ReallyInit()
     if (NS_FAILED(rv))
         return rv;
     
-    nsCOMPtr<nsIXPConnectWrappedNative> wrappedCM;
+    nsCOMPtr<nsIXPConnectJSObjectHolder> wrappedCM;
     rv = mXPC->WrapNative(mContext, mSuperGlobal, mCompMgr, 
                           NS_GET_IID(nsIComponentManager),
                           getter_AddRefs(wrappedCM));
@@ -603,7 +603,7 @@ mozJSComponentLoader::ModuleForLocation(const char *registryLocation,
     }
 
     if (NS_FAILED(mXPC->WrapJS(mContext, jsModuleObj, NS_GET_IID(nsIModule),
-                               (nsISupports **)&module))) {
+                               (void **)&module))) {
         /* XXX report error properly */
         fprintf(stderr, "mJCL: couldn't get nsIModule from jsval\n");
         goto out;

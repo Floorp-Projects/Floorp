@@ -19,6 +19,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   John Bandhauer <jband@netscape.com>
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *
  * Alternatively, the contents of this file may be used under the
@@ -37,7 +38,9 @@
 
 #include "xpcprivate.h"
 
-NS_IMPL_ISUPPORTS1(nsXPConnect, nsIXPConnect)
+NS_IMPL_THREADSAFE_ADDREF(nsXPConnect)
+NS_IMPL_THREADSAFE_RELEASE(nsXPConnect)
+NS_IMPL_QUERY_INTERFACE1(nsXPConnect, nsIXPConnect)
 
 nsXPConnect* nsXPConnect::gSelf = nsnull;
 
@@ -249,7 +252,9 @@ nsXPConnect::nsXPConnect()
         mArbitraryScriptable(nsnull),
         mInterfaceInfoManager(nsnull),
         mThrower(nsnull),
-        mContextStack(nsnull)
+        mContextStack(nsnull),
+        mDefaultSecurityManager(nsnull),
+        mDefaultSecurityManagerFlags(0)
 {
     NS_INIT_REFCNT();
 
@@ -276,6 +281,7 @@ nsXPConnect::~nsXPConnect()
     NS_IF_RELEASE(mArbitraryScriptable);
     NS_IF_RELEASE(mInterfaceInfoManager);
     NS_IF_RELEASE(mContextStack);
+    NS_IF_RELEASE(mDefaultSecurityManager);
     gSelf = nsnull;
 }
 
@@ -490,12 +496,12 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext, nsISupports
     return NS_ERROR_NOT_IMPLEMENTED;
 }        
 
-/* nsIXPConnectWrappedNative wrapNative (in JSContextPtr aJSContext, in JSObjectPtr aJSObj, in nsISupports aCOMObj, in nsIIDRef aIID); */
+/* nsIXPConnectJSObjectHolder wrapNative (in JSContextPtr aJSContext, in JSObjectPtr aScope, in nsISupports aCOMObj, in nsIIDRef aIID); */
 NS_IMETHODIMP
-nsXPConnect::WrapNative(JSContext * aJSContext, JSObject * aJSObj, nsISupports *aCOMObj, const nsIID & aIID, nsIXPConnectWrappedNative **_retval)
+nsXPConnect::WrapNative(JSContext * aJSContext, JSObject * aScope, nsISupports *aCOMObj, const nsIID & aIID, nsIXPConnectJSObjectHolder **_retval)
 {
     NS_ENSURE_ARG_POINTER(aJSContext);
-    NS_ENSURE_ARG_POINTER(aJSObj);
+    NS_ENSURE_ARG_POINTER(aScope);
     NS_ENSURE_ARG_POINTER(aCOMObj);
     NS_ENSURE_ARG_POINTER(_retval);
 
@@ -509,36 +515,23 @@ nsXPConnect::WrapNative(JSContext * aJSContext, JSObject * aJSObj, nsISupports *
 
     SET_CALLER_NATIVE(xpcc);
 
-    nsXPCWrappedNativeScope* scope =
-        nsXPCWrappedNativeScope::FindInJSObjectScope(xpcc, aJSObj);
-    if(!scope)
-        return NS_ERROR_FAILURE;
-
     nsresult rv;
-    nsXPCWrappedNative* wrapper =
-        nsXPCWrappedNative::GetNewOrUsedWrapper(xpcc, scope, aJSObj,
-                                                aCOMObj, aIID, &rv);
-    if(!wrapper)
-    {
-        if(NS_FAILED(rv))
-            return rv;
-        return NS_ERROR_FAILURE;
-    }
-
-    *_retval = wrapper;
+    if(!XPCConvert::NativeInterface2JSObject(aJSContext, _retval,
+                                             aCOMObj, &aIID, aScope, &rv))
+        return rv;
     return NS_OK;
-}        
+}
 
-/* nsISupports wrapJS (in JSContextPtr aJSContext, in JSObjectPtr aJSObj, in nsIIDRef aIID); */
-NS_IMETHODIMP
-nsXPConnect::WrapJS(JSContext * aJSContext, JSObject * aJSObj, const nsIID & aIID, nsISupports **_retval)
+/* void wrapJS (in JSContextPtr aJSContext, in JSObjectPtr aJSObj, in nsIIDRef aIID, [iid_is (aIID), retval] out nsQIResult result); */
+NS_IMETHODIMP 
+nsXPConnect::WrapJS(JSContext * aJSContext, JSObject * aJSObj, const nsIID & aIID, void * *result)
 {
     NS_ENSURE_ARG_POINTER(aJSContext);
     NS_ENSURE_ARG_POINTER(aJSObj);
-    NS_ENSURE_ARG_POINTER(_retval);
+    NS_ENSURE_ARG_POINTER(result);
 
     AUTO_PUSH_JSCONTEXT2(aJSContext, this);
-    *_retval = nsnull;
+    *result = nsnull;
 
     // This also ensures that we have a valid runtime
     XPCContext* xpcc = GetContext(aJSContext, this);
@@ -547,14 +540,12 @@ nsXPConnect::WrapJS(JSContext * aJSContext, JSObject * aJSObj, const nsIID & aII
 
     SET_CALLER_NATIVE(xpcc);
 
-    nsXPCWrappedJS* wrapper =
-        nsXPCWrappedJS::GetNewOrUsedWrapper(xpcc, aJSObj, aIID);
-    if(!wrapper)
-        return NS_ERROR_FAILURE;
-
-    *_retval = wrapper;
+    nsresult rv;
+    if(!XPCConvert::JSObject2NativeInterface(aJSContext, result, aJSObj, 
+                                             &aIID, &rv))
+        return rv;
     return NS_OK;
-}        
+}
 
 /* nsIXPConnectWrappedNative getWrappedNativeOfJSObject (in JSContextPtr aJSContext, in JSObjectPtr aJSObj); */
 NS_IMETHODIMP
@@ -620,6 +611,30 @@ nsXPConnect::GetSecurityManagerForJSContext(JSContext * aJSContext, nsIXPCSecuri
     NS_IF_ADDREF(manager);
     *aManager = manager;
     *flags = xpcc->GetSecurityManagerFlags();
+    return NS_OK;
+}        
+
+/* void setDefaultSecurityManager (in nsIXPCSecurityManager aManager, in PRUint16 flags); */
+NS_IMETHODIMP
+nsXPConnect::SetDefaultSecurityManager(nsIXPCSecurityManager *aManager, PRUint16 flags)
+{
+    NS_IF_ADDREF(aManager);
+    NS_IF_RELEASE(mDefaultSecurityManager);
+    mDefaultSecurityManager = aManager;
+    mDefaultSecurityManagerFlags = flags;
+    return NS_OK;
+}        
+
+/* void getDefaultSecurityManager (out nsIXPCSecurityManager aManager, out PRUint16 flags); */
+NS_IMETHODIMP
+nsXPConnect::GetDefaultSecurityManager(nsIXPCSecurityManager **aManager, PRUint16 *flags)
+{
+    NS_ENSURE_ARG_POINTER(aManager);
+    NS_ENSURE_ARG_POINTER(flags);
+
+    NS_IF_ADDREF(mDefaultSecurityManager);
+    *aManager = mDefaultSecurityManager;
+    *flags = mDefaultSecurityManagerFlags;
     return NS_OK;
 }        
 
@@ -728,7 +743,7 @@ nsXPConnect::DebugDumpObject(nsISupports *p, PRInt16 depth)
     nsIXPCWrappedNativeClass* wnc;
     nsIXPCWrappedJSClass* wjsc;
     nsIXPConnectWrappedNative* wn;
-    nsIXPConnectWrappedJSMethods* wjsm;
+    nsIXPConnectWrappedJS* wjs;
 
     if(NS_SUCCEEDED(p->QueryInterface(NS_GET_IID(nsIXPConnect),
                         (void**)&xpc)))
@@ -758,12 +773,12 @@ nsXPConnect::DebugDumpObject(nsISupports *p, PRInt16 depth)
         wn->DebugDump(depth);
         NS_RELEASE(wn);
     }
-    else if(NS_SUCCEEDED(p->QueryInterface(NS_GET_IID(nsIXPConnectWrappedJSMethods),
-                        (void**)&wjsm)))
+    else if(NS_SUCCEEDED(p->QueryInterface(NS_GET_IID(nsIXPConnectWrappedJS),
+                        (void**)&wjs)))
     {
-        XPC_LOG_ALWAYS(("Dumping a nsIXPConnectWrappedJSMethods..."));
-        wjsm->DebugDump(depth);
-        NS_RELEASE(wjsm);
+        XPC_LOG_ALWAYS(("Dumping a nsIXPConnectWrappedJS..."));
+        wjs->DebugDump(depth);
+        NS_RELEASE(wjs);
     }
     else
         XPC_LOG_ALWAYS(("*** Could not dump the nsISupports @ %x", p));
@@ -832,3 +847,17 @@ nsXPConnect::DebugDump(PRInt16 depth)
     return NS_OK;
 }        
 
+#ifdef DEBUG
+/* This is here to be callable from a debugger */
+JS_BEGIN_EXTERN_C
+void DumpJSStack()
+{
+    nsresult rv;
+    NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
+    if(NS_SUCCEEDED(rv))
+        xpc->DebugDumpJSStack();
+    else    
+        printf("failed to get XPConnect service!\n");
+}
+JS_END_EXTERN_C
+#endif

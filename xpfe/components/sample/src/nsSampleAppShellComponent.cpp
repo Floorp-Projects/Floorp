@@ -113,12 +113,15 @@ nsSampleAppShellComponent::DoDialogTests( nsISupports *parent, nsIObserver *obse
             if ( context ) {
                 JSContext *jsContext = (JSContext*)context->GetNativeContext();
                 if ( jsContext ) {
+                    // XXX Since xpconnect now has a JS argument converter for
+                    // interfaces this explicit wrapping could be avoided.
+                    //
                     // Convert observer to jsval so we can pass it as argument.
                     static NS_DEFINE_CID( kXPConnectCID, NS_XPCONNECT_CID );
                     NS_WITH_SERVICE( nsIXPConnect, xpc, kXPConnectCID, &rv );
 
                     if ( NS_SUCCEEDED( rv ) ) {
-                        nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
+                        nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
                         rv = xpc->WrapNative( jsContext,
                                               JS_GetGlobalObject(jsContext),
                                               observer,

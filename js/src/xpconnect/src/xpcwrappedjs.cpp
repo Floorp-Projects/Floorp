@@ -19,6 +19,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   John Bandhauer <jband@netscape.com>
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *
  * Alternatively, the contents of this file may be used under the
@@ -48,16 +49,17 @@ nsXPCWrappedJS::QueryInterface(REFNSIID aIID, void** aInstancePtr)
         return NS_ERROR_NULL_POINTER;
     }
 
-    if(aIID.Equals(NS_GET_IID(nsIXPConnectWrappedJSMethods)))
+    if(aIID.Equals(NS_GET_IID(nsIXPConnectWrappedJS)))
     {
-        if(!mMethods && !(mMethods = new nsXPCWrappedJSMethods(this)))
-        {
-            *aInstancePtr = nsnull;
-            return NS_ERROR_OUT_OF_MEMORY;
-        }
-        // intentional second addref
-        NS_ADDREF(mMethods);
-        *aInstancePtr = (void*) mMethods;
+        NS_ADDREF_THIS();
+        *aInstancePtr = (void*) NS_STATIC_CAST(nsIXPConnectWrappedJS*,this);
+        return NS_OK;
+    }
+
+    if(aIID.Equals(NS_GET_IID(nsIXPConnectJSObjectHolder)))
+    {
+        NS_ADDREF_THIS();
+        *aInstancePtr = (void*) NS_STATIC_CAST(nsIXPConnectJSObjectHolder*,this);
         return NS_OK;
     }
 
@@ -72,12 +74,12 @@ nsrefcnt
 nsXPCWrappedJS::AddRef(void)
 {
     NS_PRECONDITION(mRoot, "bad root");
-    ++mRefCnt;
-    NS_LOG_ADDREF(this, mRefCnt, "nsXPCWrappedJS", sizeof(*this));
-    if(1 == mRefCnt && mRoot && mRoot != this)
+    nsrefcnt cnt = (nsrefcnt) PR_AtomicIncrement((PRInt32*)&mRefCnt);
+    NS_LOG_ADDREF(this, cnt, "nsXPCWrappedJS", sizeof(*this));
+    if(1 == cnt && mRoot && mRoot != this)
         NS_ADDREF(mRoot);
 
-    return mRefCnt;
+    return cnt;
 }
 
 nsrefcnt
@@ -85,9 +87,9 @@ nsXPCWrappedJS::Release(void)
 {
     NS_PRECONDITION(mRoot, "bad root");
     NS_PRECONDITION(0 != mRefCnt, "dup release");
-    --mRefCnt;
-    NS_LOG_RELEASE(this, mRefCnt, "nsXPCWrappedJS");
-    if(0 == mRefCnt)
+    nsrefcnt cnt = (nsrefcnt) PR_AtomicDecrement((PRInt32*)&mRefCnt);
+    NS_LOG_RELEASE(this, cnt, "nsXPCWrappedJS");
+    if(0 == cnt)
     {
         if(mRoot == this)
         {
@@ -99,7 +101,17 @@ nsXPCWrappedJS::Release(void)
         }
         return 0;
     }
-    return mRefCnt;
+    return cnt;
+}
+
+NS_IMETHODIMP
+nsXPCWrappedJS::GetJSObject(JSObject** aJSObj)
+{
+    NS_PRECONDITION(aJSObj, "bad param");
+    NS_PRECONDITION(mJSObj, "bad wrapper");
+    if(!(*aJSObj = mJSObj))
+        return NS_ERROR_OUT_OF_MEMORY;
+    return NS_OK;
 }
 
 // static
@@ -217,7 +229,6 @@ nsXPCWrappedJS::nsXPCWrappedJS(XPCContext* xpcc,
                                nsXPCWrappedJS* root)
     : mJSObj(aJSObj),
       mClass(aClass),
-      mMethods(nsnull),
       mRoot(root ? root : this),
       mNext(nsnull)
 {
@@ -253,12 +264,10 @@ nsXPCWrappedJS::~nsXPCWrappedJS()
                     map->Remove(this);
                 }
             }
-            JS_RemoveRootRT(rt->GetJSRuntime(), &mJSObj);
+                JS_RemoveRootRT(rt->GetJSRuntime(), &mJSObj);
         }
         NS_RELEASE(mClass);
     }
-    if(mMethods)
-        NS_RELEASE(mMethods);
     if(mNext)
         NS_DELETEXPCOM(mNext);  // cascaded delete
 }
@@ -300,110 +309,18 @@ nsXPCWrappedJS::CallMethod(PRUint16 methodIndex,
     return GetClass()->CallMethod(this, methodIndex, info, params);
 }
 
-/***************************************************************************/
-
 NS_IMETHODIMP
-nsXPCWrappedJSMethods::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+nsXPCWrappedJS::GetIID(nsIID** iid)
 {
-    NS_PRECONDITION(mWrapper, "bad state");
-    return mWrapper->QueryInterface(aIID, aInstancePtr);
-}
-
-// maintain a weak link to the wrapper
-
-nsrefcnt
-nsXPCWrappedJSMethods::AddRef(void)
-{
-    NS_PRECONDITION(mWrapper, "bad state");
-    ++mRefCnt;
-    NS_LOG_ADDREF(this, mRefCnt, "nsXPCWrappedJSMethods", sizeof(*this));
-    if(2 == mRefCnt)
-        NS_ADDREF(mWrapper);
-    return mRefCnt;
-}
-
-nsrefcnt
-nsXPCWrappedJSMethods::Release(void)
-{
-    NS_PRECONDITION(mWrapper, "bad state");
-    --mRefCnt;
-    NS_LOG_RELEASE(this, mRefCnt, "nsXPCWrappedJSMethods");
-    if(0 == mRefCnt)
-    {
-        NS_DELETEXPCOM(this);
-        return 0;
-    }
-    else if(1 == mRefCnt)
-        mWrapper->Release();    // do NOT zero out the ptr (weak ref)
-    return mRefCnt;
-}
-
-nsXPCWrappedJSMethods::nsXPCWrappedJSMethods(nsXPCWrappedJS* aWrapper)
-    : mWrapper(aWrapper)
-{
-    NS_PRECONDITION(mWrapper, "bad param");
-    NS_INIT_REFCNT();
-    NS_ADDREF_THIS();
-}
-
-nsXPCWrappedJSMethods::~nsXPCWrappedJSMethods()
-{
-    NS_ASSERTION(0 == mRefCnt, "recounting error");
-}
-
-/***************************************/
-
-NS_IMETHODIMP
-nsXPCWrappedJSMethods::GetJSObject(JSObject** aJSObj)
-{
-    NS_PRECONDITION(mWrapper, "bad state");
-    NS_PRECONDITION(aJSObj,"bad param");
-    if(!(*aJSObj = mWrapper->GetJSObject()))
-        return NS_ERROR_UNEXPECTED;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXPCWrappedJSMethods::GetInterfaceInfo(nsIInterfaceInfo** info)
-{
-    NS_PRECONDITION(mWrapper, "bad state");
-    NS_PRECONDITION(info, "bad param");
-    NS_PRECONDITION(mWrapper->GetClass(), "bad wrapper");
-    NS_PRECONDITION(mWrapper->GetClass()->GetInterfaceInfo(), "bad wrapper");
-
-    if(!(*info = mWrapper->GetClass()->GetInterfaceInfo()))
-        return NS_ERROR_UNEXPECTED;
-    NS_ADDREF(*info);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXPCWrappedJSMethods::GetIID(nsIID** iid)
-{
-    NS_PRECONDITION(mWrapper, "bad state");
     NS_PRECONDITION(iid, "bad param");
 
-    *iid = (nsIID*) nsAllocator::Clone(&mWrapper->GetIID(), sizeof(nsIID));
+    *iid = (nsIID*) nsAllocator::Clone(&(GetIID()), sizeof(nsIID));
     return *iid ? NS_OK : NS_ERROR_UNEXPECTED;
 }
 
 /***************************************************************************/
 
-
 NS_IMETHODIMP
-nsXPCWrappedJSMethods::DebugDump(PRInt16 depth)
-{
-#ifdef DEBUG
-    XPC_LOG_ALWAYS(("nsXPCWrappedJSMethods @ %x with mRefCnt = %d for...", \
-                    this, mRefCnt));
-        XPC_LOG_INDENT();
-        mWrapper->DebugDump(depth);
-        XPC_LOG_OUTDENT();
-#endif
-    return NS_OK;
-}
-
-void
 nsXPCWrappedJS::DebugDump(PRInt16 depth)
 {
 #ifdef DEBUG
@@ -422,11 +339,6 @@ nsXPCWrappedJS::DebugDump(PRInt16 depth)
         XPC_LOG_ALWAYS(("IID number is %s", iid));
         delete iid;
         XPC_LOG_ALWAYS(("nsXPCWrappedJSClass @ %x", mClass));
-        if(mMethods)
-            XPC_LOG_ALWAYS(("mMethods @ %x with mRefCnt = %d", \
-                            mMethods, mMethods->GetRefCnt()));
-        else
-            XPC_LOG_ALWAYS(("NO mMethods object"));
 
         if(!isRoot)
             XPC_LOG_OUTDENT();
@@ -444,5 +356,6 @@ nsXPCWrappedJS::DebugDump(PRInt16 depth)
         if(isRoot)
             XPC_LOG_OUTDENT();
 #endif
+    return NS_OK;
 }
 

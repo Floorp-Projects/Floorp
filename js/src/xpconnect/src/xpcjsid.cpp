@@ -19,6 +19,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   John Bandhauer <jband@netscape.com>
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *
  * Alternatively, the contents of this file may be used under the
@@ -633,12 +634,9 @@ CIDCreateInstance::Call(JSContext *cx, JSObject *obj,
     if(nsnull != (xpcc = nsXPConnect::GetContext(cx)))
     {
         nsIXPCSecurityManager* sm;
-        NS_WARN_IF_FALSE(xpcc->CallerTypeIsKnown(),"missing caller type set somewhere");
-        if(xpcc->CallerTypeIsJavaScript() &&
-           nsnull != (sm = xpcc->GetSecurityManager()) &&
-           (xpcc->GetSecurityManagerFlags() &
-            nsIXPCSecurityManager::HOOK_CREATE_INSTANCE) &&
-           NS_OK != sm->CanCreateInstance(cx, *cid))
+        sm = xpcc->GetAppropriateSecurityManager(
+                            nsIXPCSecurityManager::HOOK_CREATE_INSTANCE);
+        if(sm && NS_OK != sm->CanCreateInstance(cx, *cid))
         {
             // the security manager vetoed. It should have set an exception.
             nsAllocator::Free(cid);
@@ -668,10 +666,11 @@ CIDCreateInstance::Call(JSContext *cx, JSObject *obj,
     else
         iid = NS_GET_IID(nsISupports);
 
-    nsISupports* inst;
+    nsCOMPtr<nsISupports> inst;
     nsresult rv;
 
-    rv = nsComponentManager::CreateInstance(*cid, nsnull, iid, (void**) &inst);
+    rv = nsComponentManager::CreateInstance(*cid, nsnull, iid, 
+                                            (void**) getter_AddRefs(inst));
     NS_ASSERTION(NS_FAILED(rv) || inst, "component manager returned success, but instance is null!");
     nsAllocator::Free(cid);
 
@@ -682,29 +681,27 @@ CIDCreateInstance::Call(JSContext *cx, JSObject *obj,
         return NS_OK;
     }
 
-    nsIXPConnectWrappedNative* instWrapper = nsnull;
-
-    nsIXPConnect* xpc = nsXPConnect::GetXPConnect();
-    if(xpc)
+    nsCOMPtr<nsXPConnect> xpc = dont_AddRef(nsXPConnect::GetXPConnect());
+    if(!xpc)
     {
-        rv = xpc->WrapNative(cx, obj, inst, iid, &instWrapper);
-        NS_RELEASE(xpc);
+        ThrowBadResultException(NS_ERROR_UNEXPECTED, cx, rv);
+        *retval = JS_FALSE;
+        return NS_OK;
     }
 
-    NS_RELEASE(inst);
-    if(NS_FAILED(rv) || !instWrapper)
+    JSObject* instJSObj;
+    nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
+    rv = xpc->WrapNative(cx, obj, inst, iid, getter_AddRefs(holder));
+    if(NS_FAILED(rv) || !holder || NS_FAILED(holder->GetJSObject(&instJSObj)))
     {
         ThrowException(NS_ERROR_XPC_CANT_CREATE_WN, cx);
         *retval = JS_FALSE;
         return NS_OK;
     }
 
-    JSObject* instJSObj;
-    instWrapper->GetJSObject(&instJSObj);
     *rval = OBJECT_TO_JSVAL(instJSObj);
     *retval = JS_TRUE;
 
-    NS_RELEASE(instWrapper);
     return NS_OK;
 }
 
@@ -799,12 +796,9 @@ CIDGetService::Call(JSContext *cx, JSObject *obj,
     if(nsnull != (xpcc = nsXPConnect::GetContext(cx)))
     {
         nsIXPCSecurityManager* sm;
-        NS_WARN_IF_FALSE(xpcc->CallerTypeIsKnown(),"missing caller type set somewhere");
-        if(xpcc->CallerTypeIsJavaScript() &&
-           nsnull != (sm = xpcc->GetSecurityManager()) &&
-           (xpcc->GetSecurityManagerFlags() &
-            nsIXPCSecurityManager::HOOK_GET_SERVICE) &&
-           NS_OK != sm->CanGetService(cx, *cid))
+        sm = xpcc->GetAppropriateSecurityManager(
+                            nsIXPCSecurityManager::HOOK_GET_SERVICE);
+        if(sm && NS_OK != sm->CanGetService(cx, *cid))
         {
             // the security manager vetoed. It should have set an exception.
             nsAllocator::Free(cid);
@@ -856,17 +850,16 @@ CIDGetService::Call(JSContext *cx, JSObject *obj,
         return NS_OK;
     }
 
-    nsCOMPtr<nsIXPConnectWrappedNative> srvcWrapper;
-    rv = xpc->WrapNative(cx, obj, srvc, iid, getter_AddRefs(srvcWrapper));
-    if(NS_FAILED(rv))
+    JSObject* srvcJSObj;
+    nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
+    rv = xpc->WrapNative(cx, obj, srvc, iid, getter_AddRefs(holder));
+    if(NS_FAILED(rv) || !holder || NS_FAILED(holder->GetJSObject(&srvcJSObj)))
     {
         ThrowException(NS_ERROR_XPC_CANT_CREATE_WN, cx);
         *retval = JS_FALSE;
         return NS_OK;
     }
 
-    JSObject* srvcJSObj;
-    srvcWrapper->GetJSObject(&srvcJSObj);
     *rval = OBJECT_TO_JSVAL(srvcJSObj);
     *retval = JS_TRUE;
 
@@ -1022,25 +1015,25 @@ xpc_NewIDObject(JSContext *cx, JSObject* jsobj, const nsID& aID)
     char* idString = aID.ToString();
     if(idString)
     {
-        nsJSID* iid = nsJSID::NewID(idString);
+        nsCOMPtr<nsIJSID> iid = 
+            dont_AddRef(NS_STATIC_CAST(nsIJSID*, nsJSID::NewID(idString)));
         nsCRT::free(idString);
         if(iid)
         {
-            nsXPConnect* xpc = nsXPConnect::GetXPConnect();
+            nsCOMPtr<nsXPConnect> xpc = 
+                dont_AddRef(nsXPConnect::GetXPConnect());
             if(xpc)
             {
-                nsIXPConnectWrappedNative* nsid_wrapper;
-                if(NS_SUCCEEDED(xpc->WrapNative(cx, jsobj,
-                                        NS_STATIC_CAST(nsISupports*,iid),
-                                        NS_GET_IID(nsIJSID),
-                                        &nsid_wrapper)))
+                nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
+                nsresult rv = xpc->WrapNative(cx, jsobj,
+                                              NS_STATIC_CAST(nsISupports*,iid),
+                                              NS_GET_IID(nsIJSID),
+                                              getter_AddRefs(holder));
+                if(NS_SUCCEEDED(rv) && holder)
                 {
-                    nsid_wrapper->GetJSObject(&obj);
-                    NS_RELEASE(nsid_wrapper);
+                    holder->GetJSObject(&obj);
                 }
-                NS_RELEASE(xpc);
             }
-            NS_RELEASE(iid);
         }
     }
     return obj;

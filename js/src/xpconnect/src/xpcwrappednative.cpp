@@ -19,6 +19,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   John Bandhauer <jband@netscape.com>
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *
  * Alternatively, the contents of this file may be used under the
@@ -37,7 +38,7 @@
 
 #include "xpcprivate.h"
 
-NS_IMPL_QUERY_INTERFACE1(nsXPCWrappedNative, nsIXPConnectWrappedNative)
+NS_IMPL_QUERY_INTERFACE2(nsXPCWrappedNative, nsIXPConnectWrappedNative, nsIXPConnectJSObjectHolder)
 
 // do chained ref counting
 
@@ -45,9 +46,9 @@ nsrefcnt
 nsXPCWrappedNative::AddRef(void)
 {
     NS_PRECONDITION(mRoot, "bad root");
-    ++mRefCnt;
-    NS_LOG_ADDREF(this, mRefCnt, "nsXPCWrappedNative", sizeof(*this));
-    if(2 == mRefCnt)
+    nsrefcnt cnt = (nsrefcnt) PR_AtomicIncrement((PRInt32*)&mRefCnt);
+    NS_LOG_ADDREF(this, cnt, "nsXPCWrappedNative", sizeof(*this));
+    if(2 == cnt)
     {
         AutoPushCompatibleJSContext 
                     autoContext(mClass->GetRuntime()->GetJSRuntime());
@@ -55,7 +56,7 @@ nsXPCWrappedNative::AddRef(void)
         if(cx)
             JS_AddNamedRoot(cx, &mJSObj, "nsXPCWrappedNative::mJSObj");
     }
-    return mRefCnt;
+    return cnt;
 }
 
 nsrefcnt
@@ -63,20 +64,20 @@ nsXPCWrappedNative::Release(void)
 {
     NS_PRECONDITION(mRoot, "bad root");
     NS_PRECONDITION(0 != mRefCnt, "dup release");
-    --mRefCnt;
-    NS_LOG_RELEASE(this, mRefCnt, "nsXPCWrappedNative");
-    if(0 == mRefCnt)
+    nsrefcnt cnt = (nsrefcnt) PR_AtomicDecrement((PRInt32*)&mRefCnt);
+    NS_LOG_RELEASE(this, cnt, "nsXPCWrappedNative");
+    if(0 == cnt)
     {
         NS_DELETEXPCOM(this);   // also unlinks us from chain
         return 0;
     }
-    if(1 == mRefCnt)
+    if(1 == cnt)
     {
         XPCJSRuntime* rt = mClass->GetRuntime();
         if(rt)
             JS_RemoveRootRT(rt->GetJSRuntime(), &mJSObj);
     }
-    return mRefCnt;
+    return cnt;
 }
 
 void
@@ -165,12 +166,9 @@ nsXPCWrappedNative::GetNewOrUsedWrapper(XPCContext* xpcc,
     // do the security check if necessary
 
     nsIXPCSecurityManager* sm;
-    NS_WARN_IF_FALSE(xpcc->CallerTypeIsKnown(),"missing caller type set somewhere");
-    if(xpcc->CallerTypeIsJavaScript() &&
-       nsnull != (sm = xpcc->GetSecurityManager()) &&
-       (xpcc->GetSecurityManagerFlags() &
-        nsIXPCSecurityManager::HOOK_CREATE_WRAPPER) &&
-       NS_OK != sm->CanCreateWrapper(xpcc->GetJSContext(), aIID, realObj))
+       sm = xpcc->GetAppropriateSecurityManager(
+                            nsIXPCSecurityManager::HOOK_CREATE_WRAPPER);
+    if(sm && NS_OK != sm->CanCreateWrapper(xpcc->GetJSContext(), aIID, realObj))
     {
         // the security manager vetoed. It should have set an exception.
         SET_ERROR_CODE(NS_ERROR_XPC_SECURITY_MANAGER_VETO);
@@ -549,3 +547,40 @@ nsXPCWrappedNative::DebugDump(PRInt16 depth)
 #endif
     return NS_OK;
 }
+
+/***************************************************************************/
+
+NS_IMPL_ISUPPORTS1(nsXPCJSObjectHolder, nsIXPConnectJSObjectHolder)
+
+NS_IMETHODIMP
+nsXPCJSObjectHolder::GetJSObject(JSObject** aJSObj)
+{
+    NS_PRECONDITION(aJSObj, "bad param");
+    NS_PRECONDITION(mJSObj, "bad object state");
+    *aJSObj = mJSObj;
+    return NS_OK;
+}
+
+nsXPCJSObjectHolder::nsXPCJSObjectHolder(JSContext* cx, JSObject* obj)
+    : mRuntime(JS_GetRuntime(cx)), mJSObj(obj)
+{
+    NS_INIT_REFCNT();
+    JS_AddNamedRoot(cx, &mJSObj, "nsXPCJSObjectHolder::mJSObj");
+}
+
+nsXPCJSObjectHolder::~nsXPCJSObjectHolder()
+{
+    JS_RemoveRootRT(mRuntime, &mJSObj);
+}
+
+nsXPCJSObjectHolder* 
+nsXPCJSObjectHolder::newHolder(JSContext* cx, JSObject* obj)
+{
+    if(!cx || !obj)
+    {
+        NS_ASSERTION(0, "bad param");
+        return nsnull;
+    }
+    return new nsXPCJSObjectHolder(cx, obj);        
+}
+

@@ -19,6 +19,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   John Bandhauer <jband@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -133,6 +134,11 @@ public:
     static JSBool IsISupportsDescendant(nsIInterfaceInfo* info);
     nsIXPCScriptable* GetArbitraryScriptable() {return mArbitraryScriptable;}
 
+    nsIXPCSecurityManager* GetDefaultSecurityManager() const
+        {return mDefaultSecurityManager;}
+    PRUint16 GetDefaultSecurityManagerFlags() const
+        {return mDefaultSecurityManagerFlags;}
+
     // called by module code on dll shutdown
     static void ReleaseXPConnectSingleton();
     virtual ~nsXPConnect();
@@ -153,12 +159,14 @@ private:
     nsIInterfaceInfoManager* mInterfaceInfoManager;
     XPCJSThrower* mThrower;
     nsIJSContextStack* mContextStack;
+    nsIXPCSecurityManager* mDefaultSecurityManager;
+    PRUint16 mDefaultSecurityManagerFlags;
 };
 
 /***************************************************************************/
 
 // In the current xpconnect systen there can only be one XPCJSRuntime.
-// AND thus, xpconnect can only be used on one JSRuntime within the process.
+// So, xpconnect can only be used on one JSRuntime within the process.
 
 // no virtuals. no refcounting.
 class XPCJSRuntime
@@ -343,6 +351,27 @@ public:
 
     nsXPCNativeCallContext* GetNativeCallContext()
         {return &mNativeCallContext;}
+
+    nsIXPCSecurityManager* GetAppropriateSecurityManager(PRUint16 flags) const
+        {
+            NS_WARN_IF_FALSE(CallerTypeIsKnown(),"missing caller type set somewhere");
+            if(!CallerTypeIsJavaScript())
+                return nsnull;
+            if(mSecurityManager)
+            {
+                if(flags & mSecurityManagerFlags)
+                    return mSecurityManager;
+            }
+            else 
+            {
+                nsIXPCSecurityManager* mgr;
+                nsXPConnect* xpc = mRuntime->GetXPConnect();
+                mgr = xpc->GetDefaultSecurityManager();
+                if(mgr && (flags & xpc->GetDefaultSecurityManagerFlags()))
+                    return mgr;
+            }
+            return nsnull;
+        }
 
     void DebugDump(PRInt16 depth);
 
@@ -622,10 +651,10 @@ private:
     JSObject*  CallQueryInterfaceOnJSObject(JSObject* jsobj, REFNSIID aIID);
 
     JSBool IsReflectable(uint16 i) const
-    {return (JSBool)(mDescriptors[i/32] & (1 << (i%32)));}
+        {return (JSBool)(mDescriptors[i/32] & (1 << (i%32)));}
     void SetReflectable(uint16 i, JSBool b)
-    {if(b) mDescriptors[i/32] |= (1 << (i%32));
-     else mDescriptors[i/32] &= ~(1 << (i%32));}
+        {if(b) mDescriptors[i/32] |= (1 << (i%32));
+         else mDescriptors[i/32] &= ~(1 << (i%32));}
 
     enum SizeMode {GET_SIZE, GET_LENGTH};
 
@@ -664,17 +693,26 @@ private:
 
 /*************************/
 
-class nsXPCWrappedJS : public nsXPTCStubBase
+class nsXPCWrappedJS : public nsXPTCStubBase, public nsIXPConnectWrappedJS
 {
 public:
     NS_DECL_ISUPPORTS
+    NS_DECL_NSIXPCONNECTJSOBJECTHOLDER
+    NS_DECL_NSIXPCONNECTWRAPPEDJS
 
-    NS_IMETHOD GetInterfaceInfo(nsIInterfaceInfo** info);
+    // Note that both nsXPTCStubBase and nsIXPConnectWrappedJS declare
+    // a GetInterfaceInfo methos\d with the same sig. So, the declaration
+    // for it here comes from the NS_DECL_NSIXPCONNECTWRAPPEDJS macro
 
     NS_IMETHOD CallMethod(PRUint16 methodIndex,
                           const nsXPTMethodInfo* info,
                           nsXPTCMiniVariant* params);
 
+    /* 
+    * This is rarely called directly. Instead one usually calls
+    * XPCConvert::JSObject2NativeInterface which will handles cases where the
+    * JS object is already a wrapped native or a DOM object. 
+    */
     static nsXPCWrappedJS* GetNewOrUsedWrapper(XPCContext* xpcc,
                                                JSObject* aJSObj,
                                                REFNSIID aIID);
@@ -683,7 +721,6 @@ public:
     nsXPCWrappedJSClass*  GetClass() const {return mClass;}
     REFNSIID GetIID() const {return GetClass()->GetIID();}
     nsXPCWrappedJS* GetRootWrapper() const {return mRoot;}
-    void DebugDump(PRInt16 depth);
 
     nsXPCWrappedJS* Find(REFNSIID aIID);
 
@@ -698,28 +735,8 @@ private:
 private:
     JSObject* mJSObj;
     nsXPCWrappedJSClass* mClass;
-    nsXPCWrappedJSMethods* mMethods;
     nsXPCWrappedJS* mRoot;
     nsXPCWrappedJS* mNext;
-};
-
-class nsXPCWrappedJSMethods : public nsIXPConnectWrappedJSMethods
-{
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIXPCONNECTWRAPPEDJSMETHODS
-
-public:
-    nsXPCWrappedJSMethods(nsXPCWrappedJS* aWrapper);
-    virtual ~nsXPCWrappedJSMethods();
-    // used in nsXPCWrappedJS::DebugDump
-    int GetRefCnt() const {return mRefCnt;}
-
-private:
-    nsXPCWrappedJSMethods();  // not implemented
-
-private:
-    nsXPCWrappedJS* mWrapper;
 };
 
 /***************************************************************************/
@@ -739,8 +756,8 @@ private:
     };
 
 public:
-    jsid            id;  /* hashed name for quick JS property lookup */
-    uintN           index; /* in InterfaceInfo for const, method, and get */
+    jsid            id;     /* hashed name for quick JS property lookup */
+    uintN           index;  /* in InterfaceInfo for const, method, and get */
     uintN           index2; /* in InterfaceInfo for set */
     intN            argc;
 private:
@@ -874,6 +891,7 @@ public:
                            jsval *statep, jsid *idp);
 
     virtual ~nsXPCWrappedNativeClass();
+
 private:
     nsXPCWrappedNativeClass();   // not implemented
     nsXPCWrappedNativeClass(XPCContext* xpcc, 
@@ -942,11 +960,17 @@ class nsXPCWrappedNative : public nsIXPConnectWrappedNative
 public:
     // all the interface method declarations...
     NS_DECL_ISUPPORTS
+    NS_DECL_NSIXPCONNECTJSOBJECTHOLDER
     NS_DECL_NSIXPCONNECTWRAPPEDNATIVE
 
     // non-interface implementation
 
 public:
+    /* 
+    *This is rarely called directly. Instead one usually calls
+    * XPCConvert::NativeInterface2JSObject which will handles cases where the
+    * xpcom object is already a wrapped JS or a DOM object. 
+    */
     static nsXPCWrappedNative* 
     GetNewOrUsedWrapper(XPCContext* xpcc,
                         nsXPCWrappedNativeScope* aScope,
@@ -995,8 +1019,29 @@ private:
     nsIXPConnectFinalizeListener* mFinalizeListener;
 };
 
-/***************************************************************************/
+/*************************/
 
+class nsXPCJSObjectHolder : public nsIXPConnectJSObjectHolder
+{
+public:
+    // all the interface method declarations...
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIXPCONNECTJSOBJECTHOLDER
+
+    // non-interface implementation
+
+public:
+    static nsXPCJSObjectHolder* newHolder(JSContext* cx, JSObject* obj);
+
+    virtual ~nsXPCJSObjectHolder();
+
+private:
+    nsXPCJSObjectHolder(JSContext* cx, JSObject* obj);
+    nsXPCJSObjectHolder(); // not implemented
+
+    JSRuntime* mRuntime;
+    JSObject* mJSObj;
+};
 
 /***************************************************************************/
 // data convertion
@@ -1015,6 +1060,16 @@ public:
                                 const nsXPTType& type,
                                 JSBool useAllocator, const nsID* iid,
                                 nsresult* pErr);
+
+    static JSBool NativeInterface2JSObject(JSContext* cx,
+                                           nsIXPConnectJSObjectHolder** dest,
+                                           nsISupports* src,
+                                           const nsID* iid,
+                                           JSObject* scope, nsresult* pErr);
+
+    static JSBool JSObject2NativeInterface(JSContext* cx,
+                                           void** dest, JSObject* src,
+                                           const nsID* iid, nsresult* pErr);
 
     static JSBool NativeArray2JS(JSContext* cx,
                                  jsval* d, const void** s,

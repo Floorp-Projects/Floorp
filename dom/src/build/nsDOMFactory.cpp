@@ -715,3 +715,21 @@ void XXXDomNeverCalled()
     NS_InitDocumentClass(nsnull, nsnull);
   }
 }
+
+#ifdef DEBUG
+/* This is here to be callable from a debugger */
+#include "nsIServiceManager.h"
+#include "nsIXPConnect.h"
+JS_BEGIN_EXTERN_C
+void DumpJSStack()
+{
+    nsresult rv;
+    NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
+    if(NS_SUCCEEDED(rv))
+        xpc->DebugDumpJSStack();
+    else    
+        printf("failed to get XPConnect service!\n");
+}
+JS_END_EXTERN_C
+#endif
+
