@@ -171,8 +171,6 @@ protected:
                        nsReflowStatus&          aStatus,
                        nsIFrame*                child);
  
-  nsresult GetBaseURL(nsIURI* &aURL);
-
   // check attributes and optionally CSS to see if we should display anything
   PRBool IsHidden(PRBool aCheckVisibilityStyle = PR_TRUE) const;
 

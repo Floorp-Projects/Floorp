@@ -75,12 +75,6 @@ public:
    *         which case, the caller should stop parsing as well.
    */
   NS_IMETHOD MaybeTriggerAutoLink(nsIDocShell *aShell) = 0;
-
-  /**
-   * Get the XML Base URI for this element (http://www.w3.org/TR/xmlbase/)
-   * @param aURI the base URI [OUT]
-   */
-  NS_IMETHOD GetXMLBaseURI(nsIURI **aURI) = 0;
 };
 
 nsresult

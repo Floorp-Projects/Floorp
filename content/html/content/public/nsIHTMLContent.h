@@ -134,16 +134,6 @@ public:
                                nsHTMLValue& aResult) = 0;
 
   /**
-   * Get the base URL for any relative URLs within this piece
-   * of content. Generally, this is the document's base URL,
-   * but certain content carries a local base for backward
-   * compatibility.
-   *
-   * @param aBaseURL the base URL [OUT]
-   */
-  NS_IMETHOD GetBaseURL(nsIURI** aBaseURL) const = 0;
-
-  /**
    * Get the base target for any links within this piece
    * of content. Generally, this is the document's base target,
    * but certain content carries a local base for backward

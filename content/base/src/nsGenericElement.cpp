@@ -192,38 +192,7 @@ nsNode3Tearoff::GetBaseURI(nsAString& aURI)
 {
   nsCOMPtr<nsIURI> uri;
 
-  nsCOMPtr<nsIDocument> doc;
-  mContent->GetDocument(getter_AddRefs(doc));
-
-  // XML content can use the XML Base (W3C spec) way of setting the
-  // base per element. We look at this node and its ancestors until we
-  // find the first XML content and get it's base.
-  nsCOMPtr<nsIContent> content(mContent);
-
-  do {
-    nsCOMPtr<nsIXMLContent> xmlContent(do_QueryInterface(content));
-
-    if (xmlContent) {
-      xmlContent->GetXMLBaseURI(getter_AddRefs(uri));
-
-      break;
-    }
-
-    nsCOMPtr<nsIContent> parent;
-    content->GetParent(getter_AddRefs(parent));
-    content.swap(parent);
-  } while (content);
-
-  if (!uri && doc) {
-    // HTML document or for some reason there was no XML content in
-    // XML document
-
-    doc->GetBaseURL(getter_AddRefs(uri));
-
-    if (!uri) {
-      doc->GetDocumentURL(getter_AddRefs(uri));
-    }
-  }
+  mContent->GetBaseURL(getter_AddRefs(uri));
 
   nsCAutoString spec;
 
@@ -1316,16 +1285,6 @@ nsGenericElement::HasAttributes(PRBool* aReturn)
 }
 
 NS_IMETHODIMP
-nsGenericElement::GetXMLBaseURI(nsIURI **aURI)
-{
-  NS_ENSURE_ARG_POINTER(aURI);
-
-  *aURI = nsnull;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsGenericElement::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
 {
   NS_PRECONDITION(nsnull != aAttributes, "null pointer argument");
@@ -2281,7 +2240,56 @@ nsGenericElement::StringToAttribute(nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsGenericElement::GetBaseURL(nsIURI** aBaseURL) const
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsCOMPtr<nsIDocument> doc = mDocument;
+
+  if (!doc) {
+    mNodeInfo->GetDocument(getter_AddRefs(doc));
+  }
+
+  // Our base URL depends on whether we have an xml:base attribute, as
+  // well as on whether any of our ancestors do.
+  nsCOMPtr<nsIURI> parentBase;
+  if (mParent) {
+    mParent->GetBaseURL(getter_AddRefs(parentBase));
+  } else if (doc) {
+    // No parent, so just use the document (we must be the root or not in the
+    // tree).
+    doc->GetBaseURL(getter_AddRefs(parentBase));
+  }
+  
+  // Now check for an xml:base attr 
+  nsAutoString value;
+  nsresult rv = GetAttr(kNameSpaceID_XML, nsHTMLAtoms::base, value);
+  if (rv != NS_CONTENT_ATTR_HAS_VALUE) {
+    // No xml:base, so we just use the parent's base URL
+    NS_IF_ADDREF(*aBaseURL = parentBase);
+    return NS_OK;
+  }
+
+  nsCAutoString charset;
+  if (doc) {
+    doc->GetDocumentCharacterSet(charset);
+  }
+
+  nsCOMPtr<nsIURI> ourBase;
+  rv = NS_NewURI(getter_AddRefs(ourBase), value, charset.get(), parentBase);
+  if (NS_SUCCEEDED(rv)) {
+    // do a security check, almost the same as nsDocument::SetBaseURL()
+    nsCOMPtr<nsIScriptSecurityManager> securityManager = 
+      do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+    if (securityManager) {
+      rv = securityManager->CheckLoadURI(parentBase, ourBase,
+                                         nsIScriptSecurityManager::STANDARD);
+    }
+  }
+  
+  if (NS_FAILED(rv)) {
+    NS_IF_ADDREF(*aBaseURL = parentBase);
+  } else {
+    NS_IF_ADDREF(*aBaseURL = ourBase);
+  }
+  
+  return NS_OK;    
 }
 
 NS_IMETHODIMP

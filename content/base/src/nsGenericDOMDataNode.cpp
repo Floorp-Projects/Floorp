@@ -49,7 +49,7 @@
 #include "nsMutationEvent.h"
 #include "nsINameSpaceManager.h"
 #include "nsIDOM3Node.h"
-
+#include "nsIURI.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMText.h"
@@ -287,23 +287,14 @@ nsGenericDOMDataNode::IsSupported(const nsAString& aFeature,
 nsresult
 nsGenericDOMDataNode::GetBaseURI(nsAString& aURI)
 {
-  aURI.Truncate();
-  nsresult rv = NS_OK;
+  nsCOMPtr<nsIURI> baseURI;
+  nsresult rv = GetBaseURL(getter_AddRefs(baseURI));
 
-  // DOM Data Node inherits the base from its parent element/document
-  nsCOMPtr<nsIDOM3Node> node;
-
-  nsIContent *parent_weak = GetParentWeak();
-
-  if (parent_weak) {
-    node = do_QueryInterface(parent_weak);
-  } else if (mDocument) {
-    node = do_QueryInterface(mDocument);
+  nsCAutoString spec;
+  if (NS_SUCCEEDED(rv) && baseURI) {
+    baseURI->GetSpec(spec);
   }
-
-  if (node) {
-    rv = node->GetBaseURI(aURI);
-  }
+  CopyUTF8toUTF16(spec, aURI);
 
   return rv;
 }
@@ -1068,6 +1059,23 @@ nsGenericDOMDataNode::DumpContent(FILE* out, PRInt32 aIndent,
   return NS_OK;
 }
 #endif
+
+NS_IMETHODIMP
+nsGenericDOMDataNode::GetBaseURL(nsIURI** aURI) const
+{
+  // DOM Data Node inherits the base from its parent element/document
+  nsIContent* parent_weak = GetParentWeak();
+  if (parent_weak) {
+    return parent_weak->GetBaseURL(aURI);
+  }
+
+  if (mDocument) {
+    return mDocument->GetBaseURL(aURI);
+  }
+
+  *aURI = nsnull;
+  return NS_OK;
+}
 
 //----------------------------------------------------------------------
 

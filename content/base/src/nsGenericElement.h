@@ -419,6 +419,7 @@ public:
   NS_IMETHOD SetBindingParent(nsIContent* aParent);
   NS_IMETHOD_(PRBool) IsContentOfType(PRUint32 aFlags);
   NS_IMETHOD GetListenerManager(nsIEventListenerManager** aInstancePtrResult);
+  NS_IMETHOD GetBaseURL(nsIURI** aBaseURL) const;
   NS_IMETHOD DoneCreatingElement();
 
 
@@ -433,7 +434,6 @@ public:
 
   // nsIXMLContent interface methods
   NS_IMETHOD MaybeTriggerAutoLink(nsIDocShell *aShell);
-  NS_IMETHOD GetXMLBaseURI(nsIURI **aURI);
 
   // nsIHTMLContent interface methods
   NS_IMETHOD Compact();
@@ -449,7 +449,6 @@ public:
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
                                const nsAString& aValue,
                                nsHTMLValue& aResult);
-  NS_IMETHOD GetBaseURL(nsIURI** aBaseURL) const;
   NS_IMETHOD GetBaseTarget(nsAString& aBaseTarget) const;
 
   // nsIDOMNode method implementation

@@ -148,125 +148,6 @@ NS_IMPL_RELEASE_INHERITED(nsXMLElement, nsGenericElement)
 
 
 NS_IMETHODIMP
-nsXMLElement::GetXMLBaseURI(nsIURI **aURI)
-{
-  NS_ENSURE_ARG_POINTER(aURI);
-  *aURI = nsnull;
-  
-  nsresult rv;
-
-  nsAutoString base;
-  nsCOMPtr<nsIContent> content(do_QueryInterface(NS_STATIC_CAST(nsIXMLContent*,this),&rv));
-  while (NS_SUCCEEDED(rv) && content) {
-    nsAutoString value;
-    rv = content->GetAttr(kNameSpaceID_XML,nsHTMLAtoms::base,value);
-    PRInt32 value_len;
-    if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-      PRInt32 colon = value.FindChar(':');
-      PRInt32 slash = value.FindChar('/');
-      if (colon > 0 && !( slash >= 0 && slash < colon)) {
-        // Yay, we have absolute path!
-        // The complex looking if above is to make sure that we do not erroneously
-        // think a value of "./this:that" would have a scheme of "./that"
-
-        rv = NS_NewURIWithDocumentCharset(aURI, value, mDocument, nsnull);
-        if (NS_FAILED(rv))
-          break;
-
-        if (!base.IsEmpty()) { // XXXdarin base is always empty
-          NS_ConvertUTF16toUTF8 str(base);
-          nsCAutoString resolvedStr;
-          rv = (*aURI)->Resolve(str, resolvedStr);
-          if (NS_FAILED(rv)) break;
-          rv = (*aURI)->SetSpec(resolvedStr);
-        }
-        break;
-
-      } else if ((value_len = value.Length()) > 0) {        
-        if (!base.IsEmpty()) {
-          if (base[0] == '/') {
-            // Do nothing, we are waiting for a scheme starting value
-          } else {
-            // We do not want to add double / delimiters (although the user is free to do so)
-            if (value[value_len - 1] != '/')
-              value.Append(PRUnichar('/'));
-            base.Insert(value, 0);
-          }
-        } else {
-          if (value[value_len - 1] != '/')
-            value.Append(PRUnichar('/')); // Add delimiter/make sure we treat this as dir
-          base = value;
-        }
-      }
-    } // if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-    nsCOMPtr<nsIContent> parent;
-    rv = content->GetParent(getter_AddRefs(parent));
-    content = parent;
-  } // while
-
-  if (NS_SUCCEEDED(rv)) {
-    if (!*aURI && mDocument) {
-      nsCOMPtr<nsIURI> docBase;
-      mDocument->GetBaseURL(getter_AddRefs(docBase));
-      if (!docBase) {
-        mDocument->GetDocumentURL(getter_AddRefs(docBase));
-      }
-      if (base.IsEmpty()) {
-        *aURI = docBase.get();    
-        NS_IF_ADDREF(*aURI);  // nsCOMPtr releases this once
-      } else {
-        rv = NS_NewURIWithDocumentCharset(aURI, base, mDocument, docBase);
-      }
-    }
-
-    // Finally do a security check, almost the same as nsDocument::SetBaseURL()
-    if (*aURI) {
-      nsCOMPtr<nsIScriptSecurityManager> securityManager = 
-        do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-      if (NS_SUCCEEDED(rv)) {
-        nsCOMPtr<nsIURI> docURI;
-        mDocument->GetDocumentURL(getter_AddRefs(docURI));
-        rv = securityManager->CheckLoadURI(docURI, *aURI, nsIScriptSecurityManager::STANDARD);
-        if (NS_FAILED(rv)) {
-          // Now we need to get the "closest" allowed base URI
-          NS_RELEASE(*aURI);
-
-          if (content) { // content is the last content we tried above
-            nsCOMPtr<nsIContent> parent;
-            content->GetParent(getter_AddRefs(parent));
-            content = parent;
-            while (content) {
-              nsCOMPtr<nsIXMLContent> xml(do_QueryInterface(content));
-              if (xml) {
-                return xml->GetXMLBaseURI(aURI);
-              }
-              content->GetParent(getter_AddRefs(parent));
-              content = parent;
-            }
-          }
-          
-          nsCOMPtr<nsIURI> docBase;
-          mDocument->GetBaseURL(getter_AddRefs(docBase));
-          if (!docBase) {
-            mDocument->GetDocumentURL(getter_AddRefs(docBase));
-          }
-
-          *aURI = docBase.get();
-          NS_IF_ADDREF(*aURI);
-          rv = NS_OK;
-        }
-      }
-    }
-  }
-
-  if (NS_FAILED(rv)) {
-    NS_IF_RELEASE(*aURI);
-  }
-
-  return rv;
-}
-
-NS_IMETHODIMP
 nsXMLElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                       const nsAString& aValue,
                       PRBool aNotify)
@@ -308,7 +189,6 @@ static nsresult DocShellToPresContext(nsIDocShell *aShell,
 
   return ds->GetPresContext(aPresContext);
 }
-
 
 static nsresult CheckLoadURI(const nsString& aSpec, nsIURI *aBaseURI,
                              nsIDocument* aDocument, nsIURI **aAbsURI)
@@ -428,7 +308,7 @@ nsXMLElement::MaybeTriggerAutoLink(nsIDocShell *aShell)
 
         // base
         nsCOMPtr<nsIURI> base;
-        rv = GetXMLBaseURI(getter_AddRefs(base));
+        rv = GetBaseURL(getter_AddRefs(base));
         if (NS_FAILED(rv))
           break;
 
@@ -528,7 +408,7 @@ nsXMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
           }
 
           nsCOMPtr<nsIURI> baseURL;
-          GetXMLBaseURI(getter_AddRefs(baseURL));
+          GetBaseURL(getter_AddRefs(baseURL));
           nsCOMPtr<nsIURI> uri;
           ret = NS_NewURIWithDocumentCharset(getter_AddRefs(uri), href,
                                              mDocument, baseURL);
@@ -587,7 +467,7 @@ nsXMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
         }
 
         nsCOMPtr<nsIURI> baseURL;
-        GetXMLBaseURI(getter_AddRefs(baseURL));
+        GetBaseURL(getter_AddRefs(baseURL));
 
         nsCOMPtr<nsIURI> uri;
         ret = NS_NewURIWithDocumentCharset(getter_AddRefs(uri), href,

@@ -383,7 +383,7 @@ nsImageLoadingContent::ImageURIChanged(const nsACString& aNewURI)
 
   nsresult rv;   // XXXbz Should failures in this method fire onerror?
 
-  // First, get a document (needed for security checks, base URI and the like)
+  // First, get a document (needed for security checks and the like)
   nsCOMPtr<nsIDocument> doc;
   rv = GetOurDocument(getter_AddRefs(doc));
   if (!doc) {
@@ -586,15 +586,9 @@ nsImageLoadingContent::StringToURI(const nsACString& aSpec,
   
   // (1) Get the base URI
   nsCOMPtr<nsIURI> baseURL;
-  nsCOMPtr<nsIHTMLContent> thisContent = do_QueryInterface(this);
-  if (thisContent) {
-    rv = thisContent->GetBaseURL(getter_AddRefs(baseURL));
-  } else {
-    rv = aDocument->GetBaseURL(getter_AddRefs(baseURL));
-    if (!baseURL) {
-      rv = aDocument->GetDocumentURL(getter_AddRefs(baseURL));
-    }
-  }
+  nsCOMPtr<nsIContent> thisContent = do_QueryInterface(this);
+  NS_ASSERTION(thisContent, "An image loading content must be an nsIContent");
+  rv = thisContent->GetBaseURL(getter_AddRefs(baseURL));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // (2) Get the charset

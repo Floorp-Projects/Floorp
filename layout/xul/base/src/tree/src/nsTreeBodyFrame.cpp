@@ -1944,7 +1944,8 @@ nsTreeBodyFrame::GetImage(PRInt32 aRowIndex, const PRUnichar* aColID, PRBool aUs
     if (!doc)
       // The page is currently being torn down.  Why bother.
       return NS_ERROR_FAILURE;
-    doc->GetBaseURL(getter_AddRefs(baseURI));
+
+    mContent->GetBaseURL(getter_AddRefs(baseURI));
 
     nsCOMPtr<nsIURI> srcURI;
     NS_NewURI(getter_AddRefs(srcURI), *imagePtr, nsnull, baseURI);

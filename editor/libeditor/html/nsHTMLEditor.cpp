@@ -5982,23 +5982,24 @@ nsHTMLEditor::ParseStyleAttrIntoCSSRule(const nsAString& aString,
     return NS_ERROR_UNEXPECTED;
   nsCOMPtr <nsIURI> docURL;
   doc->GetBaseURL(getter_AddRefs(docURL));
-  nsCOMPtr<nsICSSParser> css;
-  nsCOMPtr<nsIStyleRule> mRule;
-  nsComponentManager::CreateInstance(kCSSParserCID,
-                                     nsnull,
-                                     NS_GET_IID(nsICSSParser),
-                                     getter_AddRefs(css));
+  nsCOMPtr<nsICSSParser> css = do_CreateInstance(kCSSParserCID);;
   NS_ASSERTION(css, "can't get a css parser");
   if (!css) return NS_ERROR_NULL_POINTER;    
 
-  //nsAutoString value(aString);
+  nsCOMPtr<nsIStyleRule> mRule;
   css->ParseStyleAttribute(aString, docURL, getter_AddRefs(mRule));
-  nsCOMPtr<nsIDOMCSSStyleRule> styleRule = do_QueryInterface(mRule);
-  if (styleRule) {
-    *_retval = styleRule;
-    NS_ADDREF(*_retval);
+  nsCOMPtr<nsICSSRule> styleRule = do_QueryInterface(mRule);
+  if (!styleRule) {
+    return NS_ERROR_UNEXPECTED;
   }
-  return NS_OK;
+
+  nsCOMPtr<nsIDOMCSSRule> domRule;
+  styleRule->GetDOMRule(getter_AddRefs(domRule));
+  if (!domRule) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  
+  return CallQueryInterface(domRule, _retval);
 }
 
 NS_IMETHODIMP

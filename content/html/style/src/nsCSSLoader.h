@@ -307,8 +307,11 @@ private:
   nsresult CheckLoadAllowed(nsIURI* aSourceURI,
                             nsIURI* aTargetURI,
                             nsISupports* aContext);
-  
+
+  // For inline style, the aURI param is null, but the aLinkingContent
+  // must be non-null then.
   nsresult CreateSheet(nsIURI* aURI,
+                       nsIContent* aLinkingContent,
                        PRUint32 aDefaultNameSpaceID,
                        PRBool aSyncLoad,
                        StyleSheetState& aSheetState,
@@ -319,7 +322,7 @@ private:
                         const nsAString& aMedia);
 
   nsresult InsertSheetInDoc(nsICSSStyleSheet* aSheet,
-                            nsIContent* aLinkingElement,
+                            nsIContent* aLinkingContent,
                             nsIDocument* aDocument);
 
   nsresult InsertChildSheet(nsICSSStyleSheet* aSheet,

@@ -43,7 +43,7 @@
 #include "nsISupports.h"
 
 class nsIStyleRule;
-class nsIDocument;
+class nsIContent;
 
 // {BD099C4C-8FA5-47c4-A44E-189B5AA5DBAF}
 #define NS_ISVGSTYLEVALUE_IID \
@@ -54,7 +54,7 @@ class nsISVGStyleValue : public nsISupports
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISVGSTYLEVALUE_IID)
   
-  NS_IMETHOD GetStyleRule(nsIDocument* baseDocument, nsIStyleRule** rule)=0;
+  NS_IMETHOD GetStyleRule(nsIContent* aContent, nsIStyleRule** rule)=0;
 };
 
 #endif // __NS_ISVGSTYLEVALUE_H__

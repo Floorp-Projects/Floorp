@@ -40,7 +40,7 @@
 #include "nsISVGStyleValue.h"
 #include "nsSVGStyleValue.h"
 #include "nsIStyleRule.h"
-#include "nsIDocument.h"
+#include "nsIContent.h"
 #include "nsIURI.h"
 #include "nsICSSParser.h"
 #include "nsIServiceManager.h"
@@ -65,11 +65,11 @@ public:
   NS_IMETHOD GetValueString(nsAString& aValue);
 
   // nsISVGStyleValue interface:
-  NS_IMETHOD GetStyleRule(nsIDocument* baseDoc, nsIStyleRule** rule);
+  NS_IMETHOD GetStyleRule(nsIContent* aContent, nsIStyleRule** rule);
   
 protected:
   // Implementation helpers:
-  void UpdateStyleRule(nsIDocument* baseDoc);
+  void UpdateStyleRule(nsIContent* aContent);
   
   nsString mValue;
   nsCOMPtr<nsIStyleRule> mRule; // lazily cached
@@ -127,10 +127,10 @@ nsSVGStyleValue::GetValueString(nsAString& aValue)
 // nsISVGStyleValue interface:
 
 NS_IMETHODIMP
-nsSVGStyleValue::GetStyleRule(nsIDocument* baseDoc, nsIStyleRule** rule)
+nsSVGStyleValue::GetStyleRule(nsIContent* aContent, nsIStyleRule** rule)
 {
   if (!mRule) {
-    UpdateStyleRule(baseDoc);
+    UpdateStyleRule(aContent);
   }
   
   *rule = mRule;
@@ -143,7 +143,7 @@ nsSVGStyleValue::GetStyleRule(nsIDocument* baseDoc, nsIStyleRule** rule)
 // Implementation helpers:
 
 void
-nsSVGStyleValue::UpdateStyleRule(nsIDocument* baseDoc)
+nsSVGStyleValue::UpdateStyleRule(nsIContent* aContent)
 {
   
   if (mValue.IsEmpty()) {
@@ -152,17 +152,13 @@ nsSVGStyleValue::UpdateStyleRule(nsIDocument* baseDoc)
     return;
   }
 
-  NS_ASSERTION(baseDoc,"need base document");
-  nsCOMPtr <nsIURI> docURL;
-  baseDoc->GetBaseURL(getter_AddRefs(docURL));
+  NS_ASSERTION(aContent, "need content node for base URL");
+  nsCOMPtr <nsIURI> baseURL;
+  aContent->GetBaseURL(getter_AddRefs(baseURL));
   
-  nsCOMPtr<nsICSSParser> css;
-  nsComponentManager::CreateInstance(kCSSParserCID,
-                                     nsnull,
-                                     NS_GET_IID(nsICSSParser),
-                                     getter_AddRefs(css));
+  nsCOMPtr<nsICSSParser> css = do_CreateInstance(kCSSParserCID);
   NS_ASSERTION(css, "can't get a css parser");
   if (!css) return;    
 
-  css->ParseStyleAttribute(mValue, docURL, getter_AddRefs(mRule)); 
+  css->ParseStyleAttribute(mValue, baseURL, getter_AddRefs(mRule)); 
 }

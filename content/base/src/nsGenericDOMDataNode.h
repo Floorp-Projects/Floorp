@@ -54,6 +54,7 @@ class nsIDOMNodeList;
 class nsIFrame;
 class nsIDOMText;
 class nsINodeInfo;
+class nsURI;
 
 #define PARENT_BIT_RANGELISTS       ((PtrBits)0x1 << 0)
 #define PARENT_BIT_LISTENERMANAGER  ((PtrBits)0x1 << 1)
@@ -212,6 +213,7 @@ public:
   NS_IMETHOD_(PRBool) IsContentOfType(PRUint32 aFlags);
 
   NS_IMETHOD GetListenerManager(nsIEventListenerManager** aInstancePtrResult);
+  NS_IMETHOD GetBaseURL(nsIURI** aURI) const;
   NS_IMETHOD DoneCreatingElement();
 
   NS_IMETHOD GetNodeInfo(nsINodeInfo** aResult) const;

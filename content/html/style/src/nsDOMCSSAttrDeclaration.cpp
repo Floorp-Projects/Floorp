@@ -168,15 +168,15 @@ nsDOMCSSAttributeDeclaration::GetCSSParsingEnvironment(nsIURI** aBaseURI,
   if (NS_FAILED(result)) {
     return result;
   }
+
+  mContent->GetBaseURL(aBaseURI);
   
-  if (doc) {
-    doc->GetBaseURL(aBaseURI);
-    nsCOMPtr<nsIHTMLContentContainer> htmlContainer(do_QueryInterface(doc));
-    if (htmlContainer) {
-      htmlContainer->GetCSSLoader(*aCSSLoader);
-    }
-    NS_ASSERTION(*aCSSLoader, "Document with no CSS loader!");
+  nsCOMPtr<nsIHTMLContentContainer> htmlContainer(do_QueryInterface(doc));
+  if (htmlContainer) {
+    htmlContainer->GetCSSLoader(*aCSSLoader);
   }
+  NS_ASSERTION(!doc || *aCSSLoader, "Document with no CSS loader!");
+  
   if (*aCSSLoader) {
     result = (*aCSSLoader)->GetParserFor(nsnull, aCSSParser);
   } else {

@@ -55,6 +55,7 @@ class nsISupportsArray;
 class nsIDOMRange;
 class nsINodeInfo;
 class nsIEventListenerManager;
+class nsIURI;
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
@@ -483,6 +484,16 @@ public:
    * @param aResult the event listener manager [OUT]
    */
   NS_IMETHOD GetListenerManager(nsIEventListenerManager** aResult) = 0;
+
+  /**
+   * Get the base URL for any relative URLs within this piece
+   * of content. Generally, this is the document's base URL,
+   * but certain content carries a local base for backward
+   * compatibility.
+   *
+   * @param aBaseURL the base URL [OUT]
+   */
+  NS_IMETHOD GetBaseURL(nsIURI** aBaseURL) const = 0;
 
   /**
    * This method is called when the parser finishes creating the element.  This

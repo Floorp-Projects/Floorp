@@ -140,8 +140,9 @@ public:
   NS_IMETHOD GetDocumentLoadGroup(nsILoadGroup** aGroup) const = 0;
 
   /**
-   * Return the base URL for relative URLs in the document. May return
-   * null (or the document URL).
+   * Return the base URL for relative URLs in the document (the document url
+   * unless it's overridden by SetBaseURL, HTML <base> tags, etc.).  The
+   * returned URL could be null if there is no document URL.
    */
   NS_IMETHOD GetBaseURL(nsIURI** aURL) const = 0;
   NS_IMETHOD SetBaseURL(nsIURI* aURL) = 0;

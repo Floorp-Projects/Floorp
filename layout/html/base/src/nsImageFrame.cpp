@@ -1692,7 +1692,7 @@ nsImageFrame::HandleEvent(nsIPresContext* aPresContext,
 
         if (!inside && isServerMap) {
           nsCOMPtr<nsIURI> baseURL;
-          GetBaseURI(getter_AddRefs(baseURL));
+          mContent->GetBaseURL(getter_AddRefs(baseURL));
           
           if (baseURL) {
             // Server side image maps use the href in a containing anchor
@@ -1906,36 +1906,14 @@ nsImageFrame::SpecToURI(const nsAString& aSpec, nsIIOService *aIOService,
                          nsIURI **aURI)
 {
   nsCOMPtr<nsIURI> baseURI;
-  GetBaseURI(getter_AddRefs(baseURI));
+  if (mContent) {
+    mContent->GetBaseURL(getter_AddRefs(baseURI));
+  }
   nsCAutoString charset;
   GetDocumentCharacterSet(charset);
   NS_NewURI(aURI, aSpec, 
             charset.IsEmpty() ? nsnull : charset.get(), 
             baseURI, aIOService);
-}
-
-void
-nsImageFrame::GetBaseURI(nsIURI **aURI)
-{
-  NS_PRECONDITION(nsnull != aURI, "null OUT parameter pointer");
-
-  nsresult rv;
-  nsCOMPtr<nsIURI> baseURI;
-  nsCOMPtr<nsIHTMLContent> htmlContent(do_QueryInterface(mContent, &rv));
-  if (NS_SUCCEEDED(rv)) {
-    htmlContent->GetBaseURL(getter_AddRefs(baseURI));
-  }
-  else {
-    nsCOMPtr<nsIDocument> doc;
-    if (mContent) {
-      rv = mContent->GetDocument(getter_AddRefs(doc));
-      if (doc) {
-        doc->GetBaseURL(getter_AddRefs(baseURI));
-      }
-    }
-  }
-  *aURI = baseURI;
-  NS_IF_ADDREF(*aURI);
 }
 
 void
