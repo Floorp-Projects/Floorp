@@ -539,13 +539,11 @@ mCurrent=mTotal=mProgress=mMaxProgress=0;
      
 #ifdef MOZ_PERF_METRICS
       if (PR_FALSE == mTimerSet) {
-        char* url;
+        nsCAutoString url;
         nsresult rv = NS_OK;
-        rv = uri->GetSpec(&url);
-        if (NS_SUCCEEDED(rv)) {
-          MOZ_TIMER_LOG(("*** Timing layout processes on url: '%s', WebBrowserChrome: %p\n", url, this));
-          delete [] url;
-        }
+        rv = uri->GetSpec(url);
+        if (NS_SUCCEEDED(rv))
+          MOZ_TIMER_LOG(("*** Timing layout processes on url: '%s', WebBrowserChrome: %p\n", url.get(), this));
         MOZ_TIMER_DEBUGLOG(("Reset and start: nsWebBrowserChrome::OnLoadStart(), this=%p\n", this));
         MOZ_TIMER_RESET(mTotalTime);
         MOZ_TIMER_START(mTotalTime);
