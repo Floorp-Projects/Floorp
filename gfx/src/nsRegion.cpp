@@ -14,8 +14,8 @@
  * The Initial Developer of the Original Code is Dainis Jonitis,
  * <Dainis_Jonitis@swh-t.lv>.  Portions created by Dainis Jonitis are
  * Copyright (C) 2001 Dainis Jonitis. All Rights Reserved.
- * 
- * Contributor(s): 
+ *
+ * Contributor(s):
  */
 
 #include "prlock.h"
@@ -458,25 +458,31 @@ nsRegion& nsRegion::And (const nsRegion& aRegion, const nsRect& aRect)
       Copy (TmpRect);
     } else                        // Intersect complex region with rectangle
     {
-      aRegion.GetBoundRect (&TmpRect);
+      nsRect BoundRect;
+      aRegion.GetBoundRect (&BoundRect);
 
-      if (!TmpRect.IntersectRect (TmpRect, aRect))  // Rectangle does not intersect region
+      if (!TmpRect.IntersectRect (BoundRect, aRect))  // Rectangle does not intersect region
         Empty ();
       else
       {
-        nsRegion TmpRegion;
-        const RgnRect* pSrcRect = aRegion.mRectListHead.next;
-
-        while (pSrcRect != &aRegion.mRectListHead)
+        if (aRect.Contains (BoundRect))               // Rectangle fully overlays region
+          Copy (aRegion);
+        else
         {
-          if (TmpRect.IntersectRect (*pSrcRect, aRect))
-            TmpRegion.InsertInPlace (new RgnRect (TmpRect));
+          nsRegion TmpRegion;
+          const RgnRect* pSrcRect = aRegion.mRectListHead.next;
 
-          pSrcRect = pSrcRect->next;
+          while (pSrcRect != &aRegion.mRectListHead)
+          {
+            if (TmpRect.IntersectRect (*pSrcRect, aRect))
+              TmpRegion.InsertInPlace (new RgnRect (TmpRect));
+
+            pSrcRect = pSrcRect->next;
+          }
+
+          TmpRegion.Optimize ();
+          Copy (TmpRegion);
         }
-
-        TmpRegion.Optimize ();
-        Copy (TmpRegion);
       }
     }
   }
@@ -605,11 +611,10 @@ nsRegion& nsRegion::Xor (const nsRegion& aRegion, const nsRect& aRect)
         Sub (TmpRegion, aRegion);
       } else
       {
-        nsRegion IntersectRegion, TmpRegion1, TmpRegion2;
-        IntersectRegion.And (aRegion, aRect);
-        TmpRegion1.Sub (aRegion, IntersectRegion);
-        TmpRegion2.Copy (aRect);
-        TmpRegion2.Sub (TmpRegion2, IntersectRegion);
+        nsRegion TmpRegion1, TmpRegion2;
+        TmpRegion2.And (aRegion, aRect);            // Overlay
+        TmpRegion1.Sub (aRegion, TmpRegion2);       // aRegion - Overlay
+        TmpRegion2.Sub (aRect, TmpRegion2);         // aRect - Overlay
         Merge (TmpRegion1, TmpRegion2);
       }
     }
@@ -862,3 +867,4 @@ void nsRegion::Offset (PRInt32 aXOffset, PRInt32 aYOffset)
     mBoundRect.MoveBy (aXOffset, aYOffset);
   }
 }
+

@@ -1,160 +1,206 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/*
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is mozilla.org code.
+ * 
+ * The Initial Developer of the Original Code is Dainis Jonitis,
+ * <Dainis_Jonitis@swh-t.lv>.  Portions created by Dainis Jonitis are
+ * Copyright (C) 2001 Dainis Jonitis. All Rights Reserved.
  *
- * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "NPL"); you may not use this file except in
- * compliance with the NPL.  You may obtain a copy of the NPL at
- * http://www.mozilla.org/NPL/
- *
- * Software distributed under the NPL is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
- * for the specific language governing rights and limitations under the
- * NPL.
- *
- * The Initial Developer of this code under the NPL is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
- * Reserved.
+ * Contributor(s):
  */
 
-#ifndef nsRegion_h___
-#define nsRegion_h___
+#ifndef nsRegion_h__
+#define nsRegion_h__
 
-#include "nscore.h"
+
+// Implementation of region. 
+// Region is represented as circular double-linked list of nsRegion::RgnRect structures.
+// Rectangles in this list do not overlap and are sorted by (y, x) coordinates.
+
 #include "nsRect.h"
 
-// Function type passed into nsRegion::forEachRect, invoked
-// for each rectangle in a region
-typedef void (*nsRectInRegionFunc)(void *closure, nsRect& rect);
 
-// An implementation of a region primitive that can be used to
-// represent arbitrary pixel areas. Probably implemented on top
-// of the native region primitive. The assumption is that, at worst,
-// it is a rectangle list.
-class nsRegion : public nsObjBase
+class nsRegion
 {
+  friend class nsRegionRectIterator;
+  friend class RgnRectMemoryAllocator;
+
+  struct RgnRect : public nsRect
+  {
+    RgnRect* prev;
+    RgnRect* next;
+
+    RgnRect () {}                           // No need to call parent constructor to set default values
+    RgnRect (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight) : nsRect (aX, aY, aWidth, aHeight) {}
+    RgnRect (const nsRect& aRect) : nsRect (aRect) {}
+
+    void* operator new (size_t);
+    void  operator delete (void* aRect, size_t);
+    operator = (const RgnRect& aRect)       // Do not overwrite prev/next pointers
+    { 
+       x = aRect.x;
+       y = aRect.y;
+       width  = aRect.width;
+       height = aRect.height;
+    }
+  };
+
+
 public:
-  /**
-  * copy operator equivalent that takes another region
-  *
-  * @param      region to copy
-  * @return     void
-  *
-  **/
-  virtual void setRegion(const nsRegion* region) = 0;
+  nsRegion ();
+  ~nsRegion () { Empty (); }
 
-  /**
-  * copy operator equivalent that takes a rect
-  *
-  * @param      rect to copy
-  * @return     void
-  *
-  **/
-  virtual void setRect(const nsRect* rect) = 0;
+  nsRegion& Copy (const nsRegion& aRegion);
+  nsRegion& Copy (const nsRect& aRect);
 
-  /**
-  * destructively intersect another region with this one
-  *
-  * @param      region to intersect
-  * @return     void
-  *
-  **/
-  virtual void intersect(const nsRegion* region) = 0;
+  nsRegion& And  (const nsRegion& aRgn1, const nsRegion& aRgn2);
+  nsRegion& And  (const nsRegion& aRegion, const nsRect& aRect);
+  nsRegion& And  (const nsRect& aRect, const nsRegion& aRegion)
+  {
+    return  And  (aRegion, aRect);
+  }
+  nsRegion& And  (const nsRect& aRect1, const nsRect& aRect2)
+  {
+    nsRect TmpRect;
+    TmpRect.IntersectRect (aRect1, aRect2);
+    return Copy (TmpRect);
+  }
+    
+  nsRegion& Or   (const nsRegion& aRgn1, const nsRegion& aRgn2);
+  nsRegion& Or   (const nsRegion& aRegion, const nsRect& aRect);
+  nsRegion& Or   (const nsRect& aRect, const nsRegion& aRegion)
+  {  
+    return  Or   (aRegion, aRect);
+  }
+  nsRegion& Or   (const nsRect& aRect1, const nsRect& aRect2)
+  {
+    nsRegion TmpRegion;
+    TmpRegion.Copy (aRect1);
+    return Or (TmpRegion, aRect2);
+  }
 
-  /**
-  * destructively intersect a rect with this region
-  *
-  * @param      rect to intersect
-  * @return     void
-  *
-  **/
-  virtual void intersect(const nsRect* rect) = 0;
+  nsRegion& Xor  (const nsRegion& aRgn1, const nsRegion& aRgn2);
+  nsRegion& Xor  (const nsRegion& aRegion, const nsRect& aRect);
+  nsRegion& Xor  (const nsRect& aRect, const nsRegion& aRegion)
+  {
+    return  Xor  (aRegion, aRect);
+  }
+  nsRegion& Xor  (const nsRect& aRect1, const nsRect& aRect2)
+  {
+    nsRegion TmpRegion;
+    TmpRegion.Copy (aRect1);
+    return Xor (TmpRegion, aRect2);
+  }
 
-  /**
-  * destructively union another region with this one
-  *
-  * @param      region to union
-  * @return     void
-  *
-  **/
-  virtual void union(const nsRegion* region) = 0;
+  nsRegion& Sub  (const nsRegion& aRgn1, const nsRegion& aRgn2);
+  nsRegion& Sub  (const nsRegion& aRegion, const nsRect& aRect);
+  nsRegion& Sub  (const nsRect& aRect, const nsRegion& aRegion)
+  {
+    nsRegion TmpRegion;
+    TmpRegion.Copy (aRect);
+    return Sub (TmpRegion, aRegion);
+  }
+  nsRegion& Sub  (const nsRect& aRect1, const nsRect& aRect2)
+  {
+    nsRegion TmpRegion;
+    TmpRegion.Copy (aRect1);
+    return Sub (TmpRegion, aRect2);
+  }
 
-  /**
-  * destructively union a rect with this region
-  *
-  * @param      rect to union
-  * @return     void
-  *
-  **/
-  virtual void union(const nsRect* rect) = 0;
 
-  /**
-  * destructively subtract another region with this one
-  *
-  * @param      region to subtract
-  * @return     void
-  *
-  **/
-  virtual void subtract(const nsRegion* region) = 0;
+  PRBool GetBoundRect (nsRect* aBound) const
+  {
+    *aBound = mBoundRect;
+    return !mBoundRect.IsEmpty ();
+  }
+
+  void Offset (PRInt32 aXOffset, PRInt32 aYOffset);
+  void Empty ();
+  PRBool IsEmpty () const { return mRectCount == 0; }
+  PRBool IsComplex () const { return mRectCount > 1; }
+  PRBool IsEqual (const nsRegion& aRegion) const;
+  PRUint32 GetNumRects () const { return mRectCount; }
+
+
+private:
+  PRUint32    mRectCount;
+  RgnRect*    mCurRect;
+  RgnRect     mRectListHead;
+  nsRect      mBoundRect;
+
+  void InsertBefore (RgnRect* aNewRect, RgnRect* aRelativeRect)
+  {
+    aNewRect->prev = aRelativeRect->prev;
+    aNewRect->next = aRelativeRect;
+    aRelativeRect->prev->next = aNewRect;
+    aRelativeRect->prev = aNewRect;
+    mCurRect = aNewRect;
+    mRectCount++;
+  }
+
+  void InsertAfter (RgnRect* aNewRect, RgnRect* aRelativeRect)
+  {
+    aNewRect->prev = aRelativeRect;
+    aNewRect->next = aRelativeRect->next;
+    aRelativeRect->next->prev = aNewRect;
+    aRelativeRect->next = aNewRect;
+    mCurRect = aNewRect;
+    mRectCount++;
+  }
+
+  RgnRect* Remove (RgnRect* aRect);
+  void InsertInPlace (RgnRect* aRect, PRBool aOptimizeOnFly = PR_FALSE);
+  void Optimize ();
+  void SubRectFromRegion (const nsRegion& aRegion, const nsRect& aRect);
+  void Merge (const nsRegion& aRgn1, const nsRegion& aRgn2);
   
-  /**
-  * is this region empty? i.e. does it contain any pixels
-  *
-  * @param      none
-  * @return     returns whether the region is empty
-  *
-  **/
-  virtual nsbool isEmpty() = 0;
-
-  /**
-  * == operator equivalent i.e. do the regions contain exactly
-  * the same pixels
-  *
-  * @param      region to compare
-  * @return     whether the regions are identical
-  *
-  **/
-  virtual nsbool isEqual(const nsRegion* region) = 0;
-
-  /**
-  * returns the bounding box of the region i.e. the smallest
-  * rectangle that completely contains the region.        
-  *
-  * @param      rect to set to the bounding box
-  * @return     void
-  *
-  **/
-  virtual void getBoundingBox(nsRect* rect) = 0;
-
-  /**
-  * offsets the region in x and y
-  *
-  * @param  xoffset  pixel offset in x
-  * @param  yoffset  pixel offset in y
-  * @return          void
-  *
-  **/
-  virtual void offset(nsfloat xoffset, nsfloat yoffset) = 0;
-
-  /**
-  * does the region completely contain the rectangle?
-  *
-  * @param      rect to check for containment
-  * @return     true iff the rect is completely contained
-  *
-  **/
-  virtual nsbool containsRect(const nsRect* rect) = 0;
-  
-  /**
-  * invoke a function for each rectangle in the region
-  *
-  * @param  func    Function to invoke for each rectangle
-  * @param  closure Arbitrary data to pass to the function
-  * @return          void
-  *
-  **/
-  virtual void forEachRect(nsRectInRegionFunc* func, void* closure) = 0;
+  nsRegion (const nsRegion& aRegion);       // Prevent copying of regions
+  operator = (const nsRegion& aRegion);
 };
 
-extern NS_GFX nsRegion* NS_NewRegion(nsPresentationContext* context);
 
-#endif  // nsRegion_h___ 
+
+// Allow read-only access to region rectangles by iterating the list
+
+class nsRegionRectIterator
+{
+  const nsRegion*  mRegion;
+  const nsRegion::RgnRect* mCurPtr;
+
+public:
+  nsRegionRectIterator (const nsRegion& aRegion) 
+  { 
+    mRegion = &aRegion; 
+    mCurPtr = &aRegion.mRectListHead; 
+  }
+
+  const nsRect* Next () 
+  { 
+    mCurPtr = mCurPtr->next; 
+    return (mCurPtr != &mRegion->mRectListHead) ? mCurPtr : nsnull;
+  }
+
+  const nsRect* Prev ()
+  { 
+    mCurPtr = mCurPtr->prev; 
+    return (mCurPtr != &mRegion->mRectListHead) ? mCurPtr : nsnull;
+  }
+
+  void Reset () 
+  { 
+    mCurPtr = &mRegion->mRectListHead; 
+  }
+};
+
+
+#endif
+
