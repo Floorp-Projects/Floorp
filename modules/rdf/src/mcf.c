@@ -590,7 +590,7 @@ RDF_Update(RDF rdf, RDF_Resource u) {
   int32 size = rdf->numTranslators;
   int32 n = 0;
   while (n < size) {
-    callUpdateRoutine(n, rdf, u, );
+    callUpdateRoutine(n, rdf, u);
     n++;
   }
   return 0; 
