@@ -40,6 +40,9 @@ DIRS = wallet \
 !endif 
 	universalchardet \
 	xml-rpc \
+!if defined(MOZ_ENABLE_IIX)
+    interfaceinfo \
+!endif
 	xmlextras \
 	$(NULL)
 
