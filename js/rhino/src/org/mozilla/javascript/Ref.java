@@ -43,30 +43,16 @@ import java.io.Serializable;
  */
 public abstract class Ref implements Serializable
 {
-    public static Ref pushTarget(Context cx, Ref ref, Scriptable target)
-    {
-        if (cx.scratchRefTarget != null) throw new IllegalStateException();
-        cx.scratchRefTarget = target;
-        return ref;
-    }
-
-    public static Scriptable popTarget(Context cx)
-    {
-        Scriptable target = cx.scratchRefTarget;
-        cx.scratchRefTarget = null;
-        return target;
-    }
-
-    public boolean has(Context cx, Scriptable target)
+    public boolean has(Context cx)
     {
         return true;
     }
 
-    public abstract Object get(Context cx, Scriptable target);
+    public abstract Object get(Context cx);
 
-    public abstract Object set(Context cx, Scriptable target, Object value);
+    public abstract Object set(Context cx, Object value);
 
-    public boolean delete(Context cx, Scriptable target)
+    public boolean delete(Context cx)
     {
         return false;
     }

@@ -41,11 +41,13 @@ class SpecialRef extends Ref
     private static final int SPECIAL_PROTO = 1;
     private static final int SPECIAL_PARENT = 2;
 
+    private Scriptable target;
     private int type;
     private String name;
 
-    private SpecialRef(int type, String name)
+    private SpecialRef(Scriptable target, int type, String name)
     {
+        this.target = target;
         this.type = type;
         this.name = name;
     }
@@ -71,10 +73,10 @@ class SpecialRef extends Ref
             type = SPECIAL_NONE;
         }
 
-        return Ref.pushTarget(cx, new SpecialRef(type, name), target);
+        return new SpecialRef(target, type, name);
     }
 
-    public Object get(Context cx, Scriptable target)
+    public Object get(Context cx)
     {
         switch (type) {
           case SPECIAL_NONE:
@@ -88,7 +90,7 @@ class SpecialRef extends Ref
         }
     }
 
-    public Object set(Context cx, Scriptable target, Object value)
+    public Object set(Context cx, Object value)
     {
         switch (type) {
           case SPECIAL_NONE:
@@ -125,7 +127,7 @@ class SpecialRef extends Ref
         }
     }
 
-    public boolean has(Context cx, Scriptable target)
+    public boolean has(Context cx)
     {
         if (type == SPECIAL_NONE) {
             return ScriptRuntime.hasObjectElem(target, name, cx);
@@ -133,7 +135,7 @@ class SpecialRef extends Ref
         return true;
     }
 
-    public boolean delete(Context cx, Scriptable target)
+    public boolean delete(Context cx)
     {
         if (type == SPECIAL_NONE) {
             return ScriptRuntime.deleteObjectElem(target, name, cx);

@@ -678,7 +678,10 @@ public final class XMLLibImpl extends XMLLib
 
         // xmlObj == null corresponds to undefined as the target of
         // the reference
-        return Ref.pushTarget(cx, xmlName, xmlObj);
+        if (xmlObj != null) {
+            xmlName.initXMLObject(xmlObj);
+        }
+        return xmlName;
     }
 
     /**

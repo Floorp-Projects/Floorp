@@ -1505,20 +1505,19 @@ public class ScriptRuntime {
         return result;
     }
 
-    public static Object refGet(Ref ref, Scriptable target, Context cx)
+    public static Object refGet(Ref ref, Context cx)
     {
-        return ref.get(cx, target);
+        return ref.get(cx);
     }
 
-    public static Object refSet(Ref ref, Scriptable target,
-                                Object value, Context cx)
+    public static Object refSet(Ref ref, Object value, Context cx)
     {
-        return ref.set(cx, target, value);
+        return ref.set(cx, value);
     }
 
-    public static Object refDel(Ref ref, Scriptable target, Context cx)
+    public static Object refDel(Ref ref, Context cx)
     {
-        return wrapBoolean(ref.delete(cx, target));
+        return wrapBoolean(ref.delete(cx));
     }
 
     static boolean isSpecialProperty(String s)
@@ -2035,7 +2034,6 @@ public class ScriptRuntime {
             BaseFunction bf = (BaseFunction)function;
             Ref ref = bf.callRef(cx, scope, thisObj, args);
             if (ref != null) {
-                storeScriptable(cx, thisObj);
                 return ref;
             }
         }
@@ -2405,10 +2403,9 @@ public class ScriptRuntime {
         }
     }
 
-    public static Object refIncrDecr(Ref ref, Scriptable target,
-                                     Context cx, int incrDecrMask)
+    public static Object refIncrDecr(Ref ref, Context cx, int incrDecrMask)
     {
-        Object value = ref.get(cx, target);
+        Object value = ref.get(cx);
         boolean post = ((incrDecrMask & Node.POST_FLAG) != 0);
         double number;
         if (value instanceof Number) {
@@ -2426,7 +2423,7 @@ public class ScriptRuntime {
             --number;
         }
         Number result = wrapNumber(number);
-        ref.set(cx, target, result);
+        ref.set(cx, result);
         if (post) {
             return value;
         } else {

@@ -267,7 +267,8 @@ abstract class XMLObjectImpl extends XMLObject
         if ((memberTypeFlags & Node.DESCENDANTS_FLAG) != 0) {
             xmlName.setIsDescendants();
         }
-        return Ref.pushTarget(cx, xmlName, this);
+        xmlName.initXMLObject(this);
+        return xmlName;
     }
 
     /**
@@ -285,7 +286,8 @@ abstract class XMLObjectImpl extends XMLObject
         if ((memberTypeFlags & Node.DESCENDANTS_FLAG) != 0) {
             xmlName.setIsDescendants();
         }
-        return Ref.pushTarget(cx, xmlName, this);
+        xmlName.initXMLObject(this);
+        return xmlName;
     }
 
     public NativeWith enterWith(Scriptable scope)

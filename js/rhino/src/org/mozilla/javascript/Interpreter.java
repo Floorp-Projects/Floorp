@@ -857,7 +857,6 @@ public class Interpreter
         int type = node.getType();
         Node child = node.getFirstChild();
         int savedStackDepth = itsStackDepth;
-        int expectedStackDelta = 1;
         switch (type) {
 
           case Token.FUNCTION:
@@ -902,9 +901,6 @@ public class Interpreter
             break;
 
           case Token.REF_CALL:
-            // account for the reference represented as pair (ref, target)
-            expectedStackDelta = 2;
-            // fallthrough
           case Token.CALL:
           case Token.NEW:
             {
@@ -1043,7 +1039,6 @@ public class Interpreter
           case Token.DEL_REF:
             visitExpression(child, 0);
             addToken(type);
-            stackChange(-1);
             break;
 
           case Token.SETPROP:
@@ -1090,16 +1085,15 @@ public class Interpreter
             visitExpression(child, 0);
             child = child.getNext();
             if (type == Token.SET_REF_OP) {
-                addIcode(Icode_DUP2);
-                stackChange(2);
+                addIcode(Icode_DUP);
+                stackChange(1);
                 addToken(Token.GET_REF);
-                stackChange(-1);
                 // Compensate for the following USE_STACK
                 stackChange(-1);
             }
             visitExpression(child, 0);
             addToken(Token.SET_REF);
-            stackChange(-2);
+            stackChange(-1);
             break;
 
           case Token.SETNAME:
@@ -1225,8 +1219,6 @@ public class Interpreter
           case Token.REF_SPECIAL:
             visitExpression(child, 0);
             addStringOp(type, (String)node.getProp(Node.NAME_PROP));
-            stackChange(1);
-            expectedStackDelta = 2;
             break;
 
           case Token.REF_MEMBER:
@@ -1243,8 +1235,7 @@ public class Interpreter
                     child = child.getNext();
                 } while (child != null);
                 addIndexOp(type, memberTypeFlags);
-                stackChange(2 - childCount);
-                expectedStackDelta = 2;
+                stackChange(1 - childCount);
             }
             break;
 
@@ -1271,7 +1262,7 @@ public class Interpreter
           default:
             throw badTree(node);
         }
-        if (savedStackDepth + expectedStackDelta != itsStackDepth) {
+        if (savedStackDepth + 1 != itsStackDepth) {
             Kit.codeBug();
         }
     }
@@ -1359,7 +1350,6 @@ public class Interpreter
             visitExpression(ref, 0);
             addIcode(Icode_REF_INC_DEC);
             addUint8(incrDecrMask);
-            stackChange(-1);
             break;
           }
           default : {
@@ -2763,35 +2753,26 @@ switch (op) {
         continue Loop;
     }
     case Token.GET_REF : {
-        Scriptable target = (Scriptable)stack[stackTop];
-        --stackTop;
         Ref ref = (Ref)stack[stackTop];
-        stack[stackTop] = ScriptRuntime.refGet(ref, target, cx);
+        stack[stackTop] = ScriptRuntime.refGet(ref, cx);
         continue Loop;
     }
     case Token.SET_REF : {
         Object value = stack[stackTop];
         if (value == DBL_MRK) value = ScriptRuntime.wrapNumber(sDbl[stackTop]);
         --stackTop;
-        Scriptable target = (Scriptable)stack[stackTop];
-        --stackTop;
         Ref ref = (Ref)stack[stackTop];
-        stack[stackTop] = ScriptRuntime.refSet(ref, target, value, cx);
+        stack[stackTop] = ScriptRuntime.refSet(ref, value, cx);
         continue Loop;
     }
     case Token.DEL_REF : {
-        Scriptable target = (Scriptable)stack[stackTop];
-        --stackTop;
         Ref ref = (Ref)stack[stackTop];
-        stack[stackTop] = ScriptRuntime.refDel(ref, target, cx);
+        stack[stackTop] = ScriptRuntime.refDel(ref, cx);
         continue Loop;
     }
     case Icode_REF_INC_DEC : {
-        Scriptable target = (Scriptable)stack[stackTop];
-        --stackTop;
         Ref ref = (Ref)stack[stackTop];
-        stack[stackTop] = ScriptRuntime.refIncrDecr(ref, target, cx,
-                                                    iCode[frame.pc]);
+        stack[stackTop] = ScriptRuntime.refIncrDecr(ref, cx, iCode[frame.pc]);
         ++frame.pc;
         continue Loop;
     }
@@ -2902,8 +2883,6 @@ switch (op) {
                                             indexReg);
             stack[stackTop] = ScriptRuntime.callRef(fun, funThisObj, outArgs,
                                                     cx, calleeScope);
-            ++stackTop;
-            stack[stackTop] = Ref.popTarget(cx);
             continue Loop;
         }
 
@@ -3195,8 +3174,6 @@ switch (op) {
         Object obj = stack[stackTop];
         if (obj == DBL_MRK) obj = ScriptRuntime.wrapNumber(sDbl[stackTop]);
         stack[stackTop] = ScriptRuntime.specialRef(obj, stringReg, cx);
-        ++stackTop;
-        stack[stackTop] = Ref.popTarget(cx);
         continue Loop;
     }
     case Token.REF_MEMBER: {
@@ -3207,8 +3184,6 @@ switch (op) {
         Object obj = stack[stackTop];
         if (obj == DBL_MRK) obj = ScriptRuntime.wrapNumber(sDbl[stackTop]);
         stack[stackTop] = ScriptRuntime.memberRef(obj, elem, cx, indexReg);
-        ++stackTop;
-        stack[stackTop] = Ref.popTarget(cx);
         continue Loop;
     }
     case Token.REF_NS_MEMBER: {
@@ -3222,8 +3197,6 @@ switch (op) {
         Object obj = stack[stackTop];
         if (obj == DBL_MRK) obj = ScriptRuntime.wrapNumber(sDbl[stackTop]);
         stack[stackTop] = ScriptRuntime.memberRef(obj, ns, elem, cx, indexReg);
-        ++stackTop;
-        stack[stackTop] = Ref.popTarget(cx);
         continue Loop;
     }
     case Token.REF_NAME: {
@@ -3232,8 +3205,6 @@ switch (op) {
         if (name == DBL_MRK) name = ScriptRuntime.wrapNumber(sDbl[stackTop]);
         stack[stackTop] = ScriptRuntime.nameRef(name, cx, frame.scope,
                                                 indexReg);
-        ++stackTop;
-        stack[stackTop] = Ref.popTarget(cx);
         continue Loop;
     }
     case Token.REF_NS_NAME: {
@@ -3245,8 +3216,6 @@ switch (op) {
         if (ns == DBL_MRK) ns = ScriptRuntime.wrapNumber(sDbl[stackTop]);
         stack[stackTop] = ScriptRuntime.nameRef(ns, name, cx, frame.scope,
                                                 indexReg);
-        ++stackTop;
-        stack[stackTop] = Ref.popTarget(cx);
         continue Loop;
     }
     case Icode_SCOPE_LOAD :

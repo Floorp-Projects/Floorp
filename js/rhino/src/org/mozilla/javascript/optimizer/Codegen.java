@@ -1785,8 +1785,6 @@ class BodyCodegen
                     +"Lorg/mozilla/javascript/Context;"
                     +"Lorg/mozilla/javascript/Scriptable;"
                     +")Ljava/lang/Object;");
-                // Load reference target stored in cx by refCal
-                refTargetToStack();
                 break;
 
               case Token.NUMBER:
@@ -2101,12 +2099,11 @@ class BodyCodegen
                 break;
 
               case Token.GET_REF:
-                generateExpression(child, node); // reference and target
+                generateExpression(child, node); // reference
                 cfw.addALoad(contextLocal);
                 addScriptRuntimeInvoke(
                     "refGet",
                     "(Lorg/mozilla/javascript/Ref;"
-                    +"Lorg/mozilla/javascript/Scriptable;"
                     +"Lorg/mozilla/javascript/Context;"
                     +")Ljava/lang/Object;");
                 break;
@@ -2139,12 +2136,11 @@ class BodyCodegen
                     generateExpression(child, node);
                     child = child.getNext();
                     if (type == Token.SET_REF_OP) {
-                        cfw.add(ByteCode.DUP2);
+                        cfw.add(ByteCode.DUP);
                         cfw.addALoad(contextLocal);
                         addScriptRuntimeInvoke(
                             "refGet",
                             "(Lorg/mozilla/javascript/Ref;"
-                            +"Lorg/mozilla/javascript/Scriptable;"
                             +"Lorg/mozilla/javascript/Context;"
                             +")Ljava/lang/Object;");
                     }
@@ -2153,7 +2149,6 @@ class BodyCodegen
                     addScriptRuntimeInvoke(
                         "refSet",
                         "(Lorg/mozilla/javascript/Ref;"
-                        +"Lorg/mozilla/javascript/Scriptable;"
                         +"Ljava/lang/Object;"
                         +"Lorg/mozilla/javascript/Context;"
                         +")Ljava/lang/Object;");
@@ -2165,7 +2160,6 @@ class BodyCodegen
                 cfw.addALoad(contextLocal);
                 addScriptRuntimeInvoke("refDel",
                                        "(Lorg/mozilla/javascript/Ref;"
-                                       +"Lorg/mozilla/javascript/Scriptable;"
                                        +"Lorg/mozilla/javascript/Context;"
                                        +")Ljava/lang/Object;");
                 break;
@@ -2217,8 +2211,6 @@ class BodyCodegen
                         +"Ljava/lang/String;"
                         +"Lorg/mozilla/javascript/Context;"
                         +")Lorg/mozilla/javascript/Ref;");
-                    // Load reference target stored in cx by specialRef
-                    refTargetToStack();
                 }
                 break;
 
@@ -2277,8 +2269,6 @@ class BodyCodegen
                     }
                     cfw.addPush(memberTypeFlags);
                     addScriptRuntimeInvoke(methodName, signature);
-                    // Load reference target stored in cx by methodName
-                    refTargetToStack();
                 }
                 break;
 
@@ -3258,7 +3248,6 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
             addScriptRuntimeInvoke(
                 "refIncrDecr",
                 "(Lorg/mozilla/javascript/Ref;"
-                +"Lorg/mozilla/javascript/Scriptable;"
                 +"Lorg/mozilla/javascript/Context;"
                 +"I)Ljava/lang/Object;");
             break;
@@ -3930,16 +3919,6 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
             cfw.addPush(size);
             cfw.add(ByteCode.ANEWARRAY, "java/lang/Object");
         }
-    }
-
-    private void refTargetToStack()
-    {
-        cfw.addALoad(contextLocal);
-        cfw.addInvoke(ByteCode.INVOKESTATIC,
-                      "org.mozilla.javascript.Ref",
-                      "popTarget",
-                      "(Lorg/mozilla/javascript/Context;"
-                      +")Lorg/mozilla/javascript/Scriptable;");
     }
 
     private void addScriptRuntimeInvoke(String methodName,
