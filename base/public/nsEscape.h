@@ -21,7 +21,7 @@
 #ifndef _ESCAPE_H_
 #define _ESCAPE_H_
 
-#include "PRTypes.h"
+#include "prtypes.h"
 
 /* valid mask values for NET_Escape() and NET_EscapedSize(). */
 typedef enum {

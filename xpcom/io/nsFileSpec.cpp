@@ -66,7 +66,7 @@ char* nsFileSpecHelpers::StringDup(
 {
 	if (!allocLength && inString)
 		allocLength = strlen(inString);
-	char* newPath = inString || allocLength ? new char[allocLength + 1] : NULL;
+	char* newPath = inString || allocLength ? new char[allocLength + 1] : 0;
 	if (!newPath)
 		return NULL;
 	strcpy(newPath, inString);
@@ -80,7 +80,7 @@ char* nsFileSpecHelpers::AllocCat(
 //----------------------------------------------------------------------------------------
 {
 	if (!inString1)
-		return StringDup(inString2);
+		return inString2 ? StringDup(inString2) : (char*)NULL;
 	if (!inString2)
 		return StringDup(inString1);
 	char* outString = StringDup(inString1, strlen(inString1) + strlen(inString2));
@@ -98,15 +98,16 @@ char* nsFileSpecHelpers::StringAssign(
 	if (!inString2)
 	{
 		delete [] ioString;
-		ioString = NULL;
+		ioString = (char*)NULL;
+		return ioString;
 	}
-	else if (!ioString || (ioString && strlen(inString2) > strlen(ioString)))
+	if (!ioString || (strlen(inString2) > strlen(ioString)))
 	{
 		delete [] ioString;
 		ioString = StringDup(inString2);
+		return ioString;
 	}
-	else
-		strcpy(ioString, inString2);
+	strcpy(ioString, inString2);
 	return ioString;
 } // nsFileSpecHelpers::StringAssign
 
@@ -157,7 +158,7 @@ char* nsFileSpecHelpers::GetLeaf(const char* inPath, char inSeparator)
 #elif defined(XP_MAC)
 #include "nsFileSpecMac.cpp" // Macintosh-specific implementations
 #elif defined(XP_UNIX)
-#include "nsFileSpecUnix.cpp" // Unix-specific implementations
+#include "unix/nsFileSpecUnix.cpp" // Unix-specific implementations
 #endif
 
 //========================================================================================

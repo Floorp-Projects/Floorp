@@ -18,7 +18,12 @@
  
 //	First checked in on 98/12/08 by John R. McMullen.
 //  Since nsFileStream.h is entirely templates, common code (such as open())
-//  does not actually depend on the charT, can be placed here.
+//  which does not actually depend on the charT, can be placed here.
+
+#ifdef XP_UNIX
+// Compile the un-inlined functions in this file only.
+#define DEFINING_FILE_STREAM
+#endif
 
 #include "nsFileStream.h"
 

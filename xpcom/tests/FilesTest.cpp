@@ -1,7 +1,7 @@
 #include "nsFileSpec.h"
 #include "nsFileStream.h"
 
-#ifdef NS_USING_NAMESPACE
+#ifdef NS_USING_STL
 #include <iostream>
 	using namespace std;
 #else
@@ -10,7 +10,7 @@
 
 NS_NAMESPACE FileTest
 {
-	void WriteStuff(ostream& s);
+	NS_NAMESPACE_PROTOTYPE void WriteStuff(ostream& s);
 } NS_NAMESPACE_END
 
 //----------------------------------------------------------------------------------------
@@ -56,9 +56,6 @@ void main()
 //----------------------------------------------------------------------------------------
 {
 
-#if !defined(DEBUG) || (DEBUG==0)
-#error "This test only works with a DEBUG build."
-#endif
 	// Test of nsFileSpec
 	
 	cout << "WRITING TEST OUTPUT TO cout" << endl << endl;
