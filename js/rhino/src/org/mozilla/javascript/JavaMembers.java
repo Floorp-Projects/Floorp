@@ -86,6 +86,7 @@ class JavaMembers {
         }
         if (member instanceof Scriptable)
             return member;      // why is this here?
+        Context cx = Context.getContext();
         Object rval;
         Class type;
         try {
@@ -113,11 +114,11 @@ class JavaMembers {
             // Since JavaScriptException is a checked exception, must
             // wrap the JavaScriptException in a WrappedException
             throw WrappedException.wrapException(
-                JavaScriptException.wrapException(scope, e));
+                JavaScriptException.wrapException(cx, scope, e));
         }
         // Need to wrap the object before we return it.
         scope = ScriptableObject.getTopLevelScope(scope);
-        return NativeJavaObject.wrap(scope, rval, type);
+        return cx.getWrapFactory().wrap(cx, scope, rval, type);
     }
 
     Member findExplicitFunction(String name, boolean isStatic) {
@@ -225,7 +226,8 @@ class JavaMembers {
                                            "accessing Java field");
             } catch (InvocationTargetException e) {
                 throw WrappedException.wrapException(
-                    JavaScriptException.wrapException(scope, e));
+                    JavaScriptException.wrapException(
+                        Context.getContext(), scope, e));
             }
         }
         else {
@@ -588,7 +590,8 @@ class FieldAndMethods extends NativeJavaMethod {
             throw Context.reportRuntimeError1(
                 "msg.java.internal.private", getName());
         }
-        rval = NativeJavaObject.wrap(this, rval, type);
+        Context cx  = Context.getContext();
+        rval = cx.getWrapFactory().wrap(cx, this, rval, type);
         if (rval instanceof Scriptable) {
             rval = ((Scriptable) rval).getDefaultValue(hint);
         }

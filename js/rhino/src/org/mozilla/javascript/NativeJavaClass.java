@@ -233,7 +233,7 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
             throw Context.reportRuntimeError3(
                 "msg.bad.ctor.sig", argEx.getMessage(), ctorString, signature);
         } catch (InvocationTargetException e) {
-            throw JavaScriptException.wrapException(scope, e);
+            throw JavaScriptException.wrapException(cx, scope, e);
         } catch (IllegalAccessException accessEx) {
             throw Context.reportRuntimeError1(
                 "msg.java.internal.private", accessEx.getMessage());

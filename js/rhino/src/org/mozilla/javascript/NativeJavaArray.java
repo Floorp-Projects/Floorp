@@ -97,8 +97,11 @@ public class NativeJavaArray extends NativeJavaObject {
     }
 
     public Object get(int index, Scriptable start) {
-        if (0 <= index && index < length)
-            return NativeJavaObject.wrap(this, Array.get(array, index), cls);
+        if (0 <= index && index < length) {
+            Context cx = Context.getContext();
+            Object obj = Array.get(array, index);
+            return cx.getWrapFactory().wrap(cx, this, obj, cls);
+        }
         return Undefined.instance;
     }
 
@@ -110,7 +113,7 @@ public class NativeJavaArray extends NativeJavaObject {
 
     public void put(int index, Scriptable start, Object value) {
         if (0 <= index && index < length) {
-            Array.set(array, index, NativeJavaObject.coerceType(cls, value, 
+            Array.set(array, index, NativeJavaObject.coerceType(cls, value,
                                                                 true));
             return;
         }

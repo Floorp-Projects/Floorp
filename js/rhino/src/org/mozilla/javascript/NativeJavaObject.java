@@ -161,6 +161,10 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
         return members.getIds(false);
     }
 
+/**
+@deprecated Use {@link Context#getWrapFactory()} together with calling {@link
+WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
+*/
     public static Object wrap(Scriptable scope, Object obj, Class staticType) {
 
         Context cx = Context.getContext();
@@ -172,7 +176,6 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
     {
         if (obj == null)
             return obj;
-        Class cls = obj.getClass();
         if (staticType != null && staticType.isPrimitive()) {
             if (staticType == Void.TYPE)
                 return Undefined.instance;
@@ -180,15 +183,17 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
                 return new Integer((int) ((Character) obj).charValue());
             return obj;
         }
-        if (cls.isArray())
-            return NativeJavaArray.wrap(scope, obj);
         if (obj instanceof Scriptable)
             return obj;
+        Class cls = obj.getClass();
+        if (cls.isArray())
+            return NativeJavaArray.wrap(scope, obj);
         if (Context.useJSObject && jsObjectClass != null &&
             staticType != jsObjectClass && jsObjectClass.isInstance(obj))
         {
             try {
-                return jsObjectGetScriptable.invoke(obj, ScriptRuntime.emptyArgs);
+                return jsObjectGetScriptable.
+                        invoke(obj, ScriptRuntime.emptyArgs);
             }
             catch (InvocationTargetException e) {
                 // Just abandon conversion from JSObject

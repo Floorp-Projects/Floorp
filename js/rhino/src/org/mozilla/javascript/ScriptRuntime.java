@@ -521,7 +521,8 @@ public class ScriptRuntime {
 
         if (className == null) {
             // Extension: Wrap as a LiveConnect object.
-            Object wrapped = NativeJavaObject.wrap(scope, val, staticClass);
+            Object wrapped = cx.getWrapFactory().
+                                wrap(cx, scope, val, staticClass);
             if (wrapped instanceof Scriptable)
                 return (Scriptable) wrapped;
             throw errorWithClassName("msg.invalid.type", val);

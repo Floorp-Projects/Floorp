@@ -58,14 +58,15 @@ public class JavaScriptException extends Exception {
         this.value = value;
     }
 
-    static JavaScriptException wrapException(Scriptable scope,
+    static JavaScriptException wrapException(Context cx, Scriptable scope,
                                              Throwable exn)
     {
         if (exn instanceof InvocationTargetException)
             exn = ((InvocationTargetException)exn).getTargetException();
         if (exn instanceof JavaScriptException)
             return (JavaScriptException)exn;
-        Object wrapper = NativeJavaObject.wrap(scope, exn, Throwable.class);
+        Object wrapper = cx.getWrapFactory().
+                            wrap(cx, scope, exn, Throwable.class);
         return new JavaScriptException(wrapper);
     }
 

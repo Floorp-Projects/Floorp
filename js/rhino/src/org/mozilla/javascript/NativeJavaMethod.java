@@ -262,7 +262,7 @@ public class NativeJavaMethod extends NativeFunction implements Function {
                 "\" in class \"" + meth.getDeclaringClass().getName() +
                 "\" receieved " + accessEx.toString());
         } catch (InvocationTargetException e) {
-            throw JavaScriptException.wrapException(scope, e);
+            throw JavaScriptException.wrapException(cx, scope, e);
         }
     }
 

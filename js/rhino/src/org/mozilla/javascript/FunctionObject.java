@@ -439,7 +439,7 @@ public class FunctionObject extends NativeFunction implements Serializable {
             return hasVoidReturn ? Undefined.instance : result;
         }
         catch (InvocationTargetException e) {
-            throw JavaScriptException.wrapException(scope, e);
+            throw JavaScriptException.wrapException(cx, scope, e);
         }
         catch (IllegalAccessException e) {
             throw WrappedException.wrapException(e);
@@ -551,7 +551,7 @@ public class FunctionObject extends NativeFunction implements Serializable {
             if (target instanceof EcmaError)
                 throw (EcmaError) target;
             Scriptable scope = thisObj == null ? this : thisObj;
-            throw JavaScriptException.wrapException(scope, target);
+            throw JavaScriptException.wrapException(cx, scope, target);
         }
         catch (IllegalAccessException e) {
             throw WrappedException.wrapException(e);
@@ -578,7 +578,7 @@ public class FunctionObject extends NativeFunction implements Serializable {
         }
     }
 
-    private void writeObject(ObjectOutputStream out) 
+    private void writeObject(ObjectOutputStream out)
         throws IOException
     {
         out.defaultWriteObject();
@@ -603,13 +603,13 @@ public class FunctionObject extends NativeFunction implements Serializable {
 
     /**
      * Writes a Constructor or Method object.
-     * 
+     *
      * Methods and Constructors are not serializable, so we must serialize
      * information about the class, the name, and the parameters and
      * recreate upon deserialization.
      */
-    static void writeMember(ObjectOutputStream out, Member member) 
-        throws IOException 
+    static void writeMember(ObjectOutputStream out, Member member)
+        throws IOException
     {
         if (member == null) {
             out.writeBoolean(false);
@@ -631,7 +631,7 @@ public class FunctionObject extends NativeFunction implements Serializable {
     /**
      * Reads a Method or a Constructor from the stream.
      */
-    static Member readMember(ObjectInputStream in) 
+    static Member readMember(ObjectInputStream in)
         throws IOException, ClassNotFoundException
     {
         if (!in.readBoolean())
@@ -666,11 +666,11 @@ public class FunctionObject extends NativeFunction implements Serializable {
     /**
      * Writes an array of parameter types to the stream.
      *
-     * Requires special handling because primitive types cannot be 
+     * Requires special handling because primitive types cannot be
      * found upon deserialization by the default Java implementation.
      */
     static void writeParameters(ObjectOutputStream out, Class[] parms)
-        throws IOException 
+        throws IOException
     {
         out.writeShort(parms.length);
     outer:
@@ -687,7 +687,7 @@ public class FunctionObject extends NativeFunction implements Serializable {
                     continue outer;
                 }
             }
-            throw new IllegalArgumentException("Primitive " + parm + 
+            throw new IllegalArgumentException("Primitive " + parm +
                                                " not found");
         }
     }
@@ -695,8 +695,8 @@ public class FunctionObject extends NativeFunction implements Serializable {
     /**
      * Reads an array of parameter types from the stream.
      */
-    static Class[] readParameters(ObjectInputStream in) 
-        throws IOException, ClassNotFoundException 
+    static Class[] readParameters(ObjectInputStream in)
+        throws IOException, ClassNotFoundException
     {
         Class[] result = new Class[in.readShort()];
         for (int i=0; i < result.length; i++) {
