@@ -147,6 +147,9 @@ pref("browser.tabs.loadFolderAndReplace", true);
 pref("browser.tabs.opentabfor.middleclick", true);
 pref("browser.tabs.opentabfor.urlbar", true);
 
+// Image resizing
+pref("browser.enable_automatic_image_resizing", true);
+
 // view source
 pref("view_source.syntax_highlight", true);
 pref("view_source.wrap_long_lines", false);
