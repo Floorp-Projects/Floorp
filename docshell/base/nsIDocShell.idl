@@ -172,5 +172,13 @@ interface nsIDocShell : nsISupports
 	XXX Comment here!
 	*/
 	attribute long marginHeight;
+
+	/* Current busy state for DocShell */
+	const unsigned long BUSY_FLAGS_NONE = 0;
+	const unsigned long BUSY_FLAGS_BUSY = 1;
+	const unsigned long BUSY_FLAGS_BEFORE_PAGE_LOAD = 2;
+	const unsigned long BUSY_FLAGS_PAGE_LOADING = 4;
+
+	readonly attribute unsigned long busyFlags;
 };
 
