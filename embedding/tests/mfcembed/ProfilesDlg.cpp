@@ -167,6 +167,7 @@ BEGIN_MESSAGE_MAP(CProfilesDlg, CDialog)
 	ON_BN_CLICKED(IDC_PROF_NEW, OnNewProfile)
 	ON_BN_CLICKED(IDC_PROF_RENAME, OnRenameProfile)
 	ON_BN_CLICKED(IDC_PROF_DELETE, OnDeleteProfile)
+	ON_LBN_DBLCLK(IDC_LIST1, OnDblclkProfile)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -294,4 +295,9 @@ void CProfilesDlg::OnDeleteProfile()
                 GetDlgItem(IDOK)->EnableWindow(FALSE);
         }
     }	
+}
+
+void CProfilesDlg::OnDblclkProfile() 
+{
+    OnOK();
 }

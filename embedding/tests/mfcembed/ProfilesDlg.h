@@ -110,6 +110,7 @@ protected:
 	afx_msg void OnNewProfile();
 	afx_msg void OnRenameProfile();
 	afx_msg void OnDeleteProfile();
+	afx_msg void OnDblclkProfile();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };
