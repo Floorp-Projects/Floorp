@@ -58,6 +58,10 @@ function buildDialog()
   var toolbar = window.opener.document.getElementById("nav-bar");
   var cloneToolbarBox = document.getElementById("cloned-bar-container");
   var paletteBox = document.getElementById("palette-box");
+  var currentSet = toolbar.getAttribute("currentset");
+  if (!currentSet)
+    currentSet = toolbar.getAttribute("defaultset");
+  currentSet = currentSet.split(",");
   var enclosure;
   // Create a new toolbar that will model the one the user is trying to customize.
   // We won't just cloneNode() because we want to wrap each element on the toolbar in a
@@ -88,7 +92,19 @@ function buildDialog()
   var rowMax = 4;
 
   var node = toolbar.palette.firstChild;
+  var isOnToolbar = false;
   while (node) {
+    for (var i = 0; i < currentSet.length; ++i) {
+      if (currentSet[i] == node.id) {
+        isOnToolbar = true;
+        break;
+      }
+    }
+    if (isOnToolbar) {
+      node = node.nextSibling;
+      isOnToolbar = false;
+      continue;
+    }
     var paletteItem = node.cloneNode(true);
     cleanUpItemForAdding(paletteItem);
 
@@ -171,43 +187,46 @@ var dropObserver = {
   {
     var newButtonId = aXferData.data;
     var toolbar = document.getElementById("cloneToolbar");
-    
-    // If dropping a button that's already on the toolbar, we want to move it to
-    // the new location, so remove it here and we'll add it in the correct spot further down.
-    var toolbarItem = toolbar.firstChild;
-    while (toolbarItem) {
-      if (toolbarItem.firstChild.id == newButtonId) {
-        toolbar.removeChild(toolbarItem);
-        break;
+    var item = null;
+    if (gDraggingFromPalette) {
+      var palette = document.getElementById("palette-box");
+      var paletteItems = palette.getElementsByTagName("toolbarpaletteitem");
+      var paletteItem;
+      for (var i = 0; i < paletteItems.length; ++i) {
+        paletteItem = paletteItems[i];
+        if (paletteItem.firstChild.id == newButtonId) {
+          item = paletteItem.cloneNode(true);
+          paletteItem.parentNode.removeChild(paletteItem);
+          break;
+        }
       }
-      toolbarItem = toolbarItem.nextSibling;
-    }
- 
-    var palette = window.opener.document.getElementById("nav-bar").palette;
-    var paletteItem = palette.firstChild;
-    while (paletteItem) {
-      if (paletteItem.id == newButtonId)
-        break;
-      paletteItem = paletteItem.nextSibling;
-    }
 
-    if (!paletteItem)
+    }
+    else {
+      // If drag-rearranging within the toolbar, we want to move it to
+      // the new location, so remove it here and we'll add it in the correct spot further down.
+      var toolbarItem = toolbar.firstChild;
+      while (toolbarItem) {
+        if (toolbarItem.firstChild.id == newButtonId) {
+          item = toolbarItem.cloneNode(true);
+          toolbar.removeChild(toolbarItem);
+          break;
+        }
+        toolbarItem = toolbarItem.nextSibling;
+      }
+    }
+       
+    if (!item)
       return;
 
-    paletteItem = paletteItem.cloneNode(paletteItem);
-
-    var enclosure = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-                                             "toolbarpaletteitem");
-    if (paletteItem.getAttribute("flex"))
-      enclosure.setAttribute("flex", paletteItem.getAttribute("flex"));
-
-    enclosure.setAttribute("ondraggesture", "gDraggingFromPalette = false; nsDragAndDrop.startDrag(event, dragObserver)");
-    cleanUpItemForAdding(paletteItem);
-    enclosure.appendChild(paletteItem);
+    item.removeAttribute("flex");
+    item.removeAttribute("width");
+    item.setAttribute("ondraggesture", "gDraggingFromPalette = false; nsDragAndDrop.startDrag(event, dragObserver);");
+ 
     if (gCurrentDragOverItem.id == "cloneToolbar")
-      toolbar.appendChild(enclosure);
+      toolbar.appendChild(item);
     else
-      toolbar.insertBefore(enclosure, gCurrentDragOverItem);
+      toolbar.insertBefore(item, gCurrentDragOverItem);
     gCurrentDragOverItem.removeAttribute("dragactive");
     gCurrentDragOverItem = null;
 
