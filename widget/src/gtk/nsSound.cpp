@@ -31,21 +31,45 @@
 #include "nsSound.h"
 
 #include "nsIURI.h"
+#include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "prmem.h"
+
+#include "nsXPIDLString.h"
+#include "nsCOMPtr.h"
+#include "nsFileSpec.h"
+#include "nsIChromeRegistry.h"
+#include "nsIFileLocator.h"
+#include "nsFileLocations.h"
+
+static NS_DEFINE_CID(kChromeRegistryCID, NS_CHROMEREGISTRY_CID);
 
 #include <unistd.h>
 
 #include <gtk/gtk.h>
 /* used with esd_open_sound */
 static int esdref = -1;
-static PRLibrary *lib = nsnull;
+static PRLibrary *elib = nsnull;
+static PRLibrary *alib = nsnull;
 
-#define ESD_BITS16 (0x0001)
-#define ESD_STEREO (0x0020)
+#define AF_DEFAULT_TRACK 1001    // audiofile.h
+
+// the following from esd.h
+
+#define ESD_BITS8  (0x0000)
+#define ESD_BITS16 (0x0001) 
+#define ESD_MONO (0x0010)
+#define ESD_STEREO (0x0020) 
 #define ESD_STREAM (0x0000)
 #define ESD_PLAY (0x1000)
-#define ESD_DEFAULT_RATE 44100
+
+typedef void * (PR_CALLBACK *afOpenFileType)(const char *in_file, const char *mode,
+	void *unused ); // set unused to (char *) NULL
+typedef double (PR_CALLBACK *afGetRateType)(void *in_file, int track );
+typedef void (PR_CALLBACK *afGetSampleFormatType)(void *in_file, int track,
+	int *format, int *width );
+typedef int (PR_CALLBACK *afGetChannelsType)(void *in_file, int track );
+typedef int (PR_CALLBACK *afCloseFileType)(void *in_file );
 
 typedef int (PR_CALLBACK *EsdOpenSoundType)(const char *host);
 typedef int (PR_CALLBACK *EsdCloseType)(int);
@@ -66,11 +90,17 @@ nsSound::nsSound()
 
   EsdOpenSoundType EsdOpenSound;
 
-  lib = PR_LoadLibrary("libesd.so");
+  elib = PR_LoadLibrary("libesd.so");
 
-  if (!lib)
+  if (!elib)
     return;
-  EsdOpenSound = (EsdOpenSoundType) PR_FindSymbol(lib, "esd_open_sound");
+  alib = PR_LoadLibrary("libaudiofile.so.0");
+
+  if (!alib) {
+    printf( "sound: unable to load libaudiofile\n" );
+    return;
+  }
+  EsdOpenSound = (EsdOpenSoundType) PR_FindSymbol(elib, "esd_open_sound");
   esdref = (*EsdOpenSound)("localhost");
 }
 
@@ -80,7 +110,7 @@ nsSound::~nsSound()
 
   if (esdref != -1)
   {
-    EsdCloseType EsdClose = (EsdCloseType) PR_FindSymbol(lib, "esd_close");
+    EsdCloseType EsdClose = (EsdCloseType) PR_FindSymbol(elib, "esd_close");
     (*EsdClose)(esdref);
     esdref = -1;
   }
@@ -129,22 +159,102 @@ NS_METHOD nsSound::Beep()
 NS_METHOD nsSound::Play(nsIURI *aURI)
 {
   nsresult rv;
+  char *spec;
   nsIInputStream *inputStream;
-  int fd;
-  PRUint32 totalLen = 0;
-  PRUint32 len;
+  int mask, fd, format, width, channels;
+  PRUint32 len, totalLen = 0;
+  nsXPIDLCString tempPath;
+  void *afRef;
+  double rate;
 
-  if (lib)
+  nsCOMPtr<nsIFileLocator> fl;
+
+  rv = nsComponentManager::CreateInstance( "component://netscape/filelocator", 
+	nsnull, NS_GET_IID(nsIFileLocator), getter_AddRefs(fl));
+
+  if (NS_FAILED(rv))
+    return NS_OK;
+
+  // Build a fileSpec that points to the destination
+  // (profile dir + chrome + package + provider + chrome.rdf)
+  nsCOMPtr<nsIFileSpec> chromeFileInterface;
+  fl->GetFileLocation(nsSpecialFileSpec::App_ChromeDirectory, 
+	getter_AddRefs(chromeFileInterface));
+
+  NS_WITH_SERVICE(nsIChromeRegistry, reg, kChromeRegistryCID, &rv);
+  if (NS_FAILED(rv)) 
+	return rv;
+  nsCOMPtr<nsIURI> chromeURI;
+  rv = aURI->Clone(getter_AddRefs(chromeURI)); // don't mangle the original
+  if (NS_FAILED(rv)) 
+	return rv;
+  rv = reg->ConvertChromeURL(chromeURI);
+  if (NS_FAILED(rv)) 
+	return rv;
+
+  if (elib && alib)
   {
-    EsdPlayStreamFallbackType EsdPlayStreamFallback = (EsdPlayStreamFallbackType) PR_FindSymbol(lib, "esd_play_stream_fallback");
+    EsdPlayStreamFallbackType EsdPlayStreamFallback = (EsdPlayStreamFallbackType) PR_FindSymbol(elib, "esd_play_stream_fallback");
+    afOpenFileType afOpenFile = (afOpenFileType) PR_FindSymbol(alib, "afOpenFile"); 
+    afGetRateType afGetRate = (afGetRateType) PR_FindSymbol(alib, "afGetRate"); 
+    afGetSampleFormatType afGetSampleFormat = (afGetSampleFormatType) PR_FindSymbol(alib, "afGetSampleFormat"); 
+    afGetChannelsType afGetChannels = (afGetChannelsType) PR_FindSymbol(alib, "afGetChannels"); 
+    afCloseFileType afCloseFile = (afCloseFileType) PR_FindSymbol(alib, "afCloseFile"); 
 
+    if ( !EsdPlayStreamFallback || !afOpenFile || !afGetRate || !afGetSampleFormat || !afGetChannels || !afCloseFile ) {
+	return NS_ERROR_FAILURE;
+    }
     if ( mPlayBuf ) {
-//          ::PlaySound(nsnull, nsnull, 0);       // stop what might be playing so we can free
           PR_Free( this->mPlayBuf );
           this->mPlayBuf = (char *) NULL;
     }
+
     rv = NS_OpenURI(&inputStream, aURI);
-    fd = (*EsdPlayStreamFallback)(ESD_BITS16 | ESD_STEREO | ESD_STREAM | ESD_PLAY, ESD_DEFAULT_RATE, "localhost", "YabbaDabbaDoo"); 
+
+    nsCOMPtr<nsIURL> aUrl = do_QueryInterface(chromeURI, &rv);
+    nsFileSpec chromeFile;
+    if (NS_SUCCEEDED(rv) && aUrl) { 
+    	rv = aUrl->GetFilePath(getter_Copies(tempPath));
+    	if ( NS_FAILED(rv) || tempPath == (char *) NULL ) {
+		printf( "Sound: unable to get path on URI\n" );
+        	NS_IF_RELEASE( inputStream );
+        	return NS_ERROR_FAILURE;
+    	}
+        if (chromeFileInterface) {
+    		chromeFileInterface->GetFileSpec(&chromeFile);
+    		chromeFile += "/../";
+    		chromeFile += (const char*)tempPath;
+	}
+    	rv = aUrl->GetSpec(&spec);
+    	printf( "Sound: tempPath '%s' spec '%s' chromeFile '%s'\n", 
+		(const char *) tempPath, spec, (const char *) chromeFile );
+    } else {
+        NS_IF_RELEASE( inputStream );
+        return NS_ERROR_FAILURE;
+    }
+    
+    afRef = (*afOpenFile)(chromeFile, "r", (char *) NULL );
+    if ( afRef == (void *) NULL ) {
+	printf( "Sound: unable to open input stream '%s'\n", (const char *) tempPath );
+        NS_IF_RELEASE( inputStream );
+        return NS_ERROR_FAILURE;
+    }
+    rate = (*afGetRate)( afRef, AF_DEFAULT_TRACK );
+    (*afGetSampleFormat)( afRef, AF_DEFAULT_TRACK, &format, &width );
+    channels = (*afGetChannels)( afRef, AF_DEFAULT_TRACK );
+   
+    printf( "Sound: rate %f width %d channels %d\n", rate, width, channels );
+    mask = ESD_PLAY | ESD_STREAM; 
+    if ( width == 8 )
+        mask |= ESD_BITS8;
+    else 
+        mask |= ESD_BITS16;
+    if ( channels == 1 )
+        mask |= ESD_MONO;
+    else 
+        mask |= ESD_STEREO;
+
+    fd = (*EsdPlayStreamFallback)(mask, (int) rate, "localhost", "mozillansSound"); 
     if (fd < 0) {
 	NS_IF_RELEASE( inputStream );
 	return NS_ERROR_FAILURE;
@@ -174,6 +284,7 @@ NS_METHOD nsSound::Play(nsIURI *aURI)
     if ( this->mPlayBuf != (char *) NULL )
 	write( fd, this->mPlayBuf, totalLen );
     close( fd );
+    (*afCloseFile)( afRef );
     NS_IF_RELEASE( inputStream );
     return NS_OK;
   } else 
