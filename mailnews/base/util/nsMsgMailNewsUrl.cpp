@@ -413,11 +413,6 @@ NS_IMETHODIMP nsMsgMailNewsUrl::Clone(nsIURI **_retval)
 	return m_baseURL->Clone(_retval);
 }	
 
-NS_IMETHODIMP nsMsgMailNewsUrl::SetRelativePath(const char *i_RelativePath)
-{
-	return m_baseURL->SetRelativePath(i_RelativePath);
-}
-
 NS_IMETHODIMP nsMsgMailNewsUrl::Resolve(const char *relativePath, char **result) 
 {
   // mailnews urls aren't like http or file urls...

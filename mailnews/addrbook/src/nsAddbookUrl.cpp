@@ -385,11 +385,6 @@ NS_IMETHODIMP nsAddbookUrl::Clone(nsIURI **_retval)
 	return m_baseURL->Clone(_retval);
 }	
 
-NS_IMETHODIMP nsAddbookUrl::SetRelativePath(const char *i_RelativePath)
-{
-	return m_baseURL->SetRelativePath(i_RelativePath);
-}
-
 NS_IMETHODIMP nsAddbookUrl::Resolve(const char *relativePath, char **result) 
 {
 	return m_baseURL->Resolve(relativePath, result);

@@ -388,11 +388,6 @@ NS_IMETHODIMP nsMailtoUrl::Clone(nsIURI **_retval)
 	return m_baseURL->Clone(_retval);
 }	
 
-NS_IMETHODIMP nsMailtoUrl::SetRelativePath(const char *i_RelativePath)
-{
-	return m_baseURL->SetRelativePath(i_RelativePath);
-}
-
 NS_IMETHODIMP nsMailtoUrl::Resolve(const char *relativePath, char **result) 
 {
 	return m_baseURL->Resolve(relativePath, result);

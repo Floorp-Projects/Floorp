@@ -291,30 +291,6 @@ nsJARURI::Clone(nsIURI **result)
 }
 
 NS_IMETHODIMP
-nsJARURI::SetRelativePath(const char *relativePath)
-{
-    nsresult rv;
-    NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    nsCAutoString path(mJAREntry);
-    PRInt32 pos = path.RFind("/");
-    if (pos >= 0)
-        path.Truncate(pos + 1);
-    else
-        path = "";
-
-    char* resolvedEntry;
-    rv = serv->ResolveRelativePath(relativePath, path.GetBuffer(),
-                                   &resolvedEntry);
-    if (NS_FAILED(rv)) return rv;
-
-    nsCRT::free(mJAREntry);
-    mJAREntry = resolvedEntry;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsJARURI::Resolve(const char *relativePath, char **result)
 {
     nsresult rv;
