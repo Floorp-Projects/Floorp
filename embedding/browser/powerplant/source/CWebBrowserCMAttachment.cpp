@@ -103,8 +103,10 @@ void CWebBrowserCMAttachment::ExecuteSelf(MessageT	inMessage,
 
 void CWebBrowserCMAttachment::SetCommandList(SInt16 mcmdResID)
 {
-    StResource  mcmdRes(ResType_MenuCommands, mcmdResID);
-    LHandleStream inStream(static_cast<Handle>(mcmdRes));
+    Handle mcmdRes = ::GetResource(ResType_MenuCommands, mcmdResID);
+    ThrowIfResFail_(mcmdRes);
+    ::DetachResource(mcmdRes);  // LHandleStream takes ownership and uses DisposeHandle()
+    LHandleStream inStream(mcmdRes);
     
     mCommandList.RemoveItemsAt(mCommandList.GetCount(), LArray::index_First);
     
