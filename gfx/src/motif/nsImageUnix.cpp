@@ -93,18 +93,16 @@ nsresult nsImageUnix :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsM
   // create the memory for the image
   ComputMetrics();
 
-printf("******************\nWidth %d  Height %d  Depth %d mSizeImage %d\n", 
-                  mWidth, mHeight, mDepth, mSizeImage);
-    mImageBits = (PRUint8*) new PRUint8[mSizeImage]; 
+  mImageBits = (PRUint8*) new PRUint8[mSizeImage]; 
 
-    mColorMap = new nsColorMap;
+  mColorMap = new nsColorMap;
 
-    if (mColorMap != nsnull)
-      {
-      mColorMap->NumColors = mNumPalleteColors;
-      mColorMap->Index = new PRUint8[3 * mNumPalleteColors];
-      memset(mColorMap->Index, 0, sizeof(PRUint8) * (3 * mNumPalleteColors));
-      }
+  if (mColorMap != nsnull)
+    {
+    mColorMap->NumColors = mNumPalleteColors;
+    mColorMap->Index = new PRUint8[3 * mNumPalleteColors];
+    memset(mColorMap->Index, 0, sizeof(PRUint8) * (3 * mNumPalleteColors));
+    }
 
   return NS_OK;
 }
@@ -185,7 +183,6 @@ nsDrawingSurfaceUnix	*unixdrawing =(nsDrawingSurfaceUnix*) aSurface;
   if (nsnull == mImage)
     return PR_FALSE;
 
-  printf("Draw::XPutImage %d %d %d %d %d %d\n",  aSX,aSY,aDX,aDY,aDWidth,aDHeight);
   XPutImage(unixdrawing->display,unixdrawing->drawable,unixdrawing->gc,mImage,
                     aSX,aSY,aDX,aDY,aDWidth,aDHeight);  
 
@@ -207,11 +204,8 @@ nsDrawingSurfaceUnix	*unixdrawing =(nsDrawingSurfaceUnix*) aSurface;
  
   if (nsnull == mImage)
     return PR_FALSE;
-printf("Draw::XPutImage2 %d %d %d %d\n", aX,aY,aWidth,aHeight);
   XPutImage(unixdrawing->display,unixdrawing->drawable,unixdrawing->gc,mImage,
                     0,0,aX,aY,aWidth,aHeight);  
-
-printf("Out Draw::XPutImage2 %d %d %d %d\n", aX,aY,aWidth,aHeight);
   return PR_TRUE;
 }
 
@@ -250,16 +244,10 @@ PRInt16			red,green,blue,*cur16;
 
   if((unixdrawing->depth==24) &&  (mOriginalDepth==8))
     {
-    printf("Converting the image NOWWWWWWWWWWWWWW\n");
-
     // convert this nsImage to a 24 bit image
     mDepth = 24;
-
     ComputePaletteSize(mDepth);
-
-    // create the memory for the image
     ComputMetrics();
-
     AllocConvertedBits(mSizeImage);
     tempbuffer = mConvertedBits;
     mBitsForCreate = mConvertedBits;
@@ -280,7 +268,10 @@ PRInt16			red,green,blue,*cur16;
         } 
       }
    
-  #if 0 
+#if 0 
+    if(mColorMap)
+      delete mColorMap;
+
     // after we are finished converting the image, build a new color map   
     mColorMap = new nsColorMap;
 
@@ -293,17 +284,11 @@ PRInt16			red,green,blue,*cur16;
 #endif
     }
  
-
+  // convert the 8 bit image to 16 bit
   if((unixdrawing->depth==16) && (mOriginalDepth==8))
     {
-    printf("Converting 8 to 16\n");
-
-    // convert this nsImage to a 24 bit image
     mDepth = 16;
-
     ComputePaletteSize(mDepth);
-
-    // create the memory for the image
     ComputMetrics();
     AllocConvertedBits(mSizeImage);
     tempbuffer = mConvertedBits;
@@ -319,8 +304,6 @@ PRInt16			red,green,blue,*cur16;
         red = mColorMap->Index[(3*(*cursrc))+2];  // red
         green = mColorMap->Index[(3*(*cursrc))+1];  // green
         blue = mColorMap->Index[(3*(*cursrc))];  // blue
-//	blue = 255; red =0 ; green = 0;
-
         *cur16 = ((red&0xf8)<<8)|((green&0xfc)<<3)| ((blue&0xf8)>>3);	
         cur16++;
         } 
@@ -343,20 +326,9 @@ PRInt16			red,green,blue,*cur16;
 nsresult nsImageUnix::Optimize(nsDrawingSurface aDrawingSurface)
 {
 PRInt16 i;
-printf("Optimize.................................\n");
+
   if (nsnull == mImage)
     {
-#ifdef NOTNOW  
-  if(mColorMap->NumColors>0)
-      {
-      for(i=0;i<mColorMap->NumColors;i++)
-        {
-        printf("Red = %d\n",mColorMap->Index[(3*i)+2]);
-        printf("Green = %d\n",mColorMap->Index[(3*i)+1]);
-        printf("Blue = %d\n",mColorMap->Index[(3*i)]);
-        }
-      }
-#endif
     ConvertImage(aDrawingSurface);
     CreateImage(aDrawingSurface);
     }
@@ -377,16 +349,14 @@ void nsImageUnix::CreateImage(nsDrawingSurface aSurface)
         unixdrawing->visual->c_class == DirectColor) 
       {
       format = ZPixmap;
-      printf("%s\n", (unixdrawing->visual->c_class == TrueColor?"True Color":"DirectColor"));
       } 
     else 
       {
       format = XYPixmap;
-      printf("Not True Color\n");
       }
-printf("Width %d  Height %d Visual Depth %d  Image Depth %d\n", 
+/*printf("Width %d  Height %d Visual Depth %d  Image Depth %d\n", 
                   mWidth, mHeight,  
-                  unixdrawing->depth, mDepth);
+                  unixdrawing->depth, mDepth);*/
 
     mImage = ::XCreateImage(unixdrawing->display,
 			    unixdrawing->visual,
