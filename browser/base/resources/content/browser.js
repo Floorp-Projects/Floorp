@@ -1817,16 +1817,17 @@ function toDownloadManager()
   
 function toJavaScriptConsole()
 {
-    toOpenWindowByType("global:console", "chrome://global/content/console.xul");
+  openDialog("chrome://global/content/history/console.xul", "JSConsole",
+             "chrome,all,dialog=no" );
 }
 
 function javaItemEnabling()
 {
     var element = document.getElementById("java");
     if (navigator.javaEnabled())
-      element.removeAttribute("disabled");
+      element.removeAttribute("hidden");
     else
-      element.setAttribute("disabled", "true");
+      element.setAttribute("hidden", "true");
 }
             
 function toJavaConsole()
