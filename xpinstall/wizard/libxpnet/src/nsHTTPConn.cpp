@@ -562,7 +562,7 @@ void
 nsHTTPConn::ParseResponseCode(const char *aBuf, int *aCode)
 {
   char codeStr[4];
-  char *pos;
+  const char *pos;
 
   if (!aBuf || !aCode)
     return;
