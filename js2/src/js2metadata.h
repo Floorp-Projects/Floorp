@@ -425,11 +425,14 @@ class Frame : public JS2Object {
 public:
     enum Plurality { Singular, Plural };
 
-    Frame(ObjectKind kind) : JS2Object(kind), nextFrame(NULL), pluralFrame(NULL) { }
-    Frame(ObjectKind kind, Frame *pluralFrame) : JS2Object(kind), nextFrame(NULL), pluralFrame(pluralFrame) { }
+    Frame(ObjectKind kind) : JS2Object(kind), temps(NULL), nextFrame(NULL), pluralFrame(NULL) { }
+    Frame(ObjectKind kind, Frame *pluralFrame) : JS2Object(kind), temps(NULL), nextFrame(NULL), pluralFrame(pluralFrame) { }
 
     StaticBindingMap staticReadBindings;        // Map of qualified names to readable static members defined in this frame
     StaticBindingMap staticWriteBindings;       // Map of qualified names to writable static members defined in this frame
+
+    std::vector<js2val> *temps;               // temporaries allocted in this frame
+    uint16 allocateTemp();
 
     virtual void instantiate(Environment *env)  { ASSERT(false); }
 

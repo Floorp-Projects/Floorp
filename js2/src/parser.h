@@ -523,6 +523,9 @@ namespace JavaScript {
 #ifdef DIKDIK
         uint32 label;       // Used for case statements' code generation
 #endif
+#ifdef EPIMETHEUS
+        MetaData::LabelID labelID;  // Used for case statements' code generation
+#endif
 
         ExprStmtNode(size_t pos, Kind kind, ExprNode *expr): StmtNode(pos, kind), expr(expr) {}
 
@@ -556,7 +559,8 @@ namespace JavaScript {
         void print(PrettyPrinter &f, bool noSemi) const;
 
 #ifdef EPIMETHEUS
-        MetaData::BlockFrame *compileFrame;      // used by backend
+        MetaData::BlockFrame *compileFrame;      // Used by backend, it's the plural frame for the 
+                                                 // declarations contained in the block.
 #endif
     };
 
@@ -635,7 +639,7 @@ namespace JavaScript {
 
         void print(PrettyPrinter &f, bool noSemi) const;
 #ifdef EPIMETHEUS
-        MetaData::LabelID *tgtID;
+        MetaData::LabelID tgtID;
 #endif    
     };
 
@@ -699,7 +703,7 @@ namespace JavaScript {
         JS2Runtime::JSFunction *mFunction; // used by backend
 #endif
 #ifdef EPIMETHEUS
-        MetaData::FunctionWrapper *fWrap;
+        MetaData::FunctionWrapper *fWrap;       // Runtime data, bytecode, parameters etc.
 #endif
         FunctionStmtNode(size_t pos, Kind kind, ExprNode *attributes): AttributeStmtNode(pos, kind, attributes) {}
 
@@ -723,7 +727,7 @@ namespace JavaScript {
         JS2Runtime::JSType *mType;      // used by backend
 #endif
 #ifdef EPIMETHEUS
-        MetaData::JS2Class *c;
+        MetaData::JS2Class *c;          // Runtime metadata structure
 #endif
         ClassStmtNode(size_t pos, ExprNode *attributes, const StringAtom &name, ExprNode *superclass, BlockStmtNode *body):
                 NamespaceStmtNode(pos, Class, attributes, name), superclass(superclass), body(body) {}

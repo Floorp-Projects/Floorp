@@ -160,7 +160,7 @@ namespace MetaData {
             {
                 BlockStmtNode *b = checked_cast<BlockStmtNode *>(p);
                 b->compileFrame = new BlockFrame();
-                bCon->saveFrame(b->compileFrame);   // stash this frame so it doesn't get gc's before eval pass.
+                bCon->saveFrame(b->compileFrame);   // stash this frame so it doesn't get gc'd before eval pass.
                 env->addFrame(b->compileFrame);
                 ValidateStmtList(cxt, env, b->statements);
                 env->removeTopFrame();
@@ -169,6 +169,7 @@ namespace MetaData {
         case StmtNode::label:
             {
                 LabelStmtNode *l = checked_cast<LabelStmtNode *>(p);
+                l->labelID = bCon->getLabel();
 /*
     A labelled statement catches contained, named, 'breaks' but simply adds itself as a label for
     contained iteration statements. (i.e. you can 'break' out of a labelled statement, but not 'continue'
@@ -214,6 +215,8 @@ namespace MetaData {
                     ValidateExpression(cxt, env, f->expr2);
                 if (f->expr3)
                     ValidateExpression(cxt, env, f->expr3);
+                f->breakLabelID = bCon->getLabel();
+                f->continueLabelID = bCon->getLabel();
                 targetList.push_back(p);
                 ValidateStmt(cxt, env, f->stmt);
                 targetList.pop_back();
@@ -222,11 +225,14 @@ namespace MetaData {
         case StmtNode::Switch:
             {
                 SwitchStmtNode *sw = checked_cast<SwitchStmtNode *>(p);
+                sw->breakLabelID = bCon->getLabel();
                 ValidateExpression(cxt, env, sw->expr);
+                targetList.push_back(p);
                 StmtNode *s = sw->statements;
                 while (s) {
                     if (s->getKind() == StmtNode::Case) {
                         ExprStmtNode *c = checked_cast<ExprStmtNode *>(s);
+                        c->labelID = bCon->getLabel();
                         if (c->expr)
                             ValidateExpression(cxt, env, c->expr);
                     }
@@ -234,12 +240,15 @@ namespace MetaData {
                         ValidateStmt(cxt, env, s);
                     s = s->next;
                 }
+                targetList.pop_back();
             }
             break;
         case StmtNode::While:
         case StmtNode::DoWhile:
             {
                 UnaryStmtNode *w = checked_cast<UnaryStmtNode *>(p);
+                w->breakLabelID = bCon->getLabel();
+                w->continueLabelID = bCon->getLabel();
                 targetList.push_back(p);
                 ValidateExpression(cxt, env, w->expr);
                 ValidateStmt(cxt, env, w->stmt);
@@ -257,7 +266,7 @@ namespace MetaData {
                         if ((*si)->getKind() == StmtNode::label) {
                             LabelStmtNode *l = checked_cast<LabelStmtNode *>(*si);
                             if (l->name == *g->name) {
-                                g->tgtID = &l->labelID;
+                                g->tgtID = l->labelID;
                                 found = true;
                                 break;
                             }
@@ -269,27 +278,27 @@ namespace MetaData {
                         case StmtNode::label:
                             {
                                 LabelStmtNode *l = checked_cast<LabelStmtNode *>(*si);
-                                g->tgtID = &l->labelID;
+                                g->tgtID = l->labelID;
                             }
                             break;
                         case StmtNode::While:
                         case StmtNode::DoWhile:
                             {
                                 UnaryStmtNode *w = checked_cast<UnaryStmtNode *>(*si);
-                                g->tgtID = &w->breakLabelID;
+                                g->tgtID = w->breakLabelID;
                             }
                             break;
                         case StmtNode::For:
                         case StmtNode::ForIn:
                             {
                                 ForStmtNode *f = checked_cast<ForStmtNode *>(*si);
-                                g->tgtID = &f->breakLabelID;
+                                g->tgtID = f->breakLabelID;
                             }
                             break;
                        case StmtNode::Switch:
                             {
                                 SwitchStmtNode *s = checked_cast<SwitchStmtNode *>(*si);
-                                g->tgtID = &s->breakLabelID;
+                                g->tgtID = s->breakLabelID;
                             }
                             break;
                         }
@@ -311,7 +320,7 @@ namespace MetaData {
                         if ((*si)->getKind() == StmtNode::label) {
                             LabelStmtNode *l = checked_cast<LabelStmtNode *>(*si);
                             if (l->name == *g->name) {
-                                g->tgtID = &l->labelID;
+                                g->tgtID = l->labelID;
                                 found = true;
                                 break;
                             }
@@ -324,14 +333,14 @@ namespace MetaData {
                         case StmtNode::DoWhile:
                             {
                                 UnaryStmtNode *w = checked_cast<UnaryStmtNode *>(*si);
-                                g->tgtID = &w->breakLabelID;
+                                g->tgtID = w->breakLabelID;
                             }
                             break;
                         case StmtNode::For:
                         case StmtNode::ForIn:
                             {
                                 ForStmtNode *f = checked_cast<ForStmtNode *>(p);
-                                g->tgtID = &f->breakLabelID;
+                                g->tgtID = f->breakLabelID;
                             }
                         }
                         found = true;
@@ -413,30 +422,7 @@ namespace MetaData {
                     compileThis = JS2VAL_INACCESSIBLE;
                 ParameterFrame *compileFrame = new ParameterFrame(compileThis, prototype);
                 Frame *topFrame = env->getTopFrame();
-                env->addFrame(compileFrame);
-                VariableBinding *pb = f->function.parameters;
-                if (pb) {
-                    NamespaceList publicNamespaceList;
-                    publicNamespaceList.push_back(publicNamespace);
-                    uint32 pCount = 0;
-                    while (pb) {
-                        pCount++;
-                        pb = pb->next;
-                    }
-                    pb = f->function.parameters;
-                    compileFrame->positional = new Variable *[pCount];
-                    compileFrame->positionalCount = pCount;
-                    pCount = 0;
-                    while (pb) {
-                        // XXX define a static binding for each parameter
-                        Variable *v = new Variable();
-                        compileFrame->positional[pCount++] = v;
-                        pb->mn = defineStaticMember(env, pb->name, &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, p->pos);
-                        pb = pb->next;
-                    }
-                }
-                ValidateStmt(cxt, env, f->function.body);
-                env->removeTopFrame();
+
                 if (unchecked 
                         && ((topFrame->kind == GlobalObjectKind)
                                         || (topFrame->kind == ParameterKind))
@@ -475,6 +461,34 @@ namespace MetaData {
                         break;
                     }
                 }
+
+
+                CompilationData *oldData = startCompilationUnit(f->fWrap->bCon, bCon->mSource, bCon->mSourceLocation);
+                env->addFrame(compileFrame);
+                VariableBinding *pb = f->function.parameters;
+                if (pb) {
+                    NamespaceList publicNamespaceList;
+                    publicNamespaceList.push_back(publicNamespace);
+                    uint32 pCount = 0;
+                    while (pb) {
+                        pCount++;
+                        pb = pb->next;
+                    }
+                    pb = f->function.parameters;
+                    compileFrame->positional = new Variable *[pCount];
+                    compileFrame->positionalCount = pCount;
+                    pCount = 0;
+                    while (pb) {
+                        // XXX define a static binding for each parameter
+                        Variable *v = new Variable();
+                        compileFrame->positional[pCount++] = v;
+                        pb->mn = defineStaticMember(env, pb->name, &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, p->pos);
+                        pb = pb->next;
+                    }
+                }
+                ValidateStmt(cxt, env, f->function.body);
+                env->removeTopFrame();
+                restoreCompilationUnit(oldData);
             }
             break;
         case StmtNode::Var:
@@ -751,7 +765,7 @@ namespace MetaData {
         case StmtNode::Continue:
             {
                 GoStmtNode *g = checked_cast<GoStmtNode *>(p);
-                bCon->emitBranch(eBranch, *g->tgtID, p->pos);
+                bCon->emitBranch(eBranch, g->tgtID, p->pos);
             }
             break;
         case StmtNode::ForIn:
@@ -793,8 +807,6 @@ namespace MetaData {
                         NOT_REACHED("what else??");
                 }            
 
-                f->breakLabelID = bCon->getLabel();
-                f->continueLabelID = bCon->getLabel();
                 BytecodeContainer::LabelID loopTop = bCon->getLabel();
 
                 Reference *r = EvalExprNode(env, phase, f->expr2);
@@ -819,8 +831,6 @@ namespace MetaData {
         case StmtNode::For:
             {
                 ForStmtNode *f = checked_cast<ForStmtNode *>(p);
-                f->breakLabelID = bCon->getLabel();
-                f->continueLabelID = bCon->getLabel();
                 BytecodeContainer::LabelID loopTop = bCon->getLabel();
                 BytecodeContainer::LabelID testLocation = bCon->getLabel();
 
@@ -851,13 +861,12 @@ namespace MetaData {
         case StmtNode::Switch:
 /*
             <swexpr>        
-            eLexicalWrite    <switchTemp>
-            Pop
+            eSlotWrite    <switchTemp>
 
         // test sequence in source order except 
         // the default is moved to end.
 
-            eLexicalRead    <switchTemp>
+            eSlotRead    <switchTemp>
             <case1expr>
             Equal
             BranchTrue --> case1StmtLabel
@@ -881,30 +890,56 @@ namespace MetaData {
 */
             {
                 SwitchStmtNode *sw = checked_cast<SwitchStmtNode *>(p);
+                uint16 swVarIndex = env->getTopFrame()->allocateTemp();
+                BytecodeContainer::LabelID defaultLabel = NotALabel;
 
                 Reference *r = EvalExprNode(env, phase, sw->expr);
                 if (r) r->emitReadBytecode(bCon, p->pos);
+                bCon->emitOp(eSlotWrite, p->pos);
+                bCon->addShort(swVarIndex);
 
+                // First time through, generate the conditional waterfall 
                 StmtNode *s = sw->statements;
                 while (s) {
                     if (s->getKind() == StmtNode::Case) {
                         ExprStmtNode *c = checked_cast<ExprStmtNode *>(s);
                         if (c->expr) {
+                            bCon->emitOp(eSlotRead, c->pos);
+                            bCon->addShort(swVarIndex);
                             Reference *r = EvalExprNode(env, phase, c->expr);
-                            if (r) r->emitReadBytecode(bCon, p->pos);
+                            if (r) r->emitReadBytecode(bCon, c->pos);
+                            bCon->emitOp(eEqual, c->pos);
+                            bCon->emitBranch(eBranchTrue, c->labelID, c->pos);
                         }
+                        else
+                            defaultLabel = c->labelID;
+                    }
+                    s = s->next;
+                }
+                if (defaultLabel == NotALabel)
+                    bCon->emitBranch(eBranch, sw->breakLabelID, p->pos);
+                else
+                    bCon->emitBranch(eBranch, defaultLabel, p->pos);
+                // Now emit the contents
+                targetList.push_back(p);
+                s = sw->statements;
+                while (s) {
+                    if (s->getKind() == StmtNode::Case) {
+                        ExprStmtNode *c = checked_cast<ExprStmtNode *>(s);
+                        bCon->setLabel(c->labelID);
                     }
                     else
                         EvalStmt(env, phase, s);
                     s = s->next;
                 }
+                targetList.pop_back();
+
+                bCon->setLabel(sw->breakLabelID);
             }
             break;
         case StmtNode::While:
             {
                 UnaryStmtNode *w = checked_cast<UnaryStmtNode *>(p);
-                w->breakLabelID = bCon->getLabel();
-                w->continueLabelID = bCon->getLabel();
                 BytecodeContainer::LabelID loopTop = bCon->getLabel();
                 bCon->emitBranch(eBranch, w->continueLabelID, p->pos);
                 bCon->setLabel(loopTop);
@@ -921,8 +956,6 @@ namespace MetaData {
         case StmtNode::DoWhile:
             {
                 UnaryStmtNode *w = checked_cast<UnaryStmtNode *>(p);
-                w->breakLabelID = bCon->getLabel();
-                w->continueLabelID = bCon->getLabel();
                 BytecodeContainer::LabelID loopTop = bCon->getLabel();
                 bCon->setLabel(loopTop);
                 targetList.push_back(p);
@@ -4050,6 +4083,18 @@ deleteClassProperty:
  *
  ************************************************************************************/
 
+    // Allocate a new temporary variable in this frame and stick it
+    // on the list (which may need to be created) for gc tracking.
+    uint16 Frame::allocateTemp()
+    {
+        if (temps == NULL)
+            temps = new std::vector<js2val>;
+        uint16 result = temps->size();
+        temps->push_back(JS2VAL_VOID);
+        return result;
+    }
+
+
     // gc-mark all contained JS2Objects and visit contained structures to do likewise
     void Frame::markChildren()
     {
@@ -4061,6 +4106,10 @@ deleteClassProperty:
         }
         for (sbi = staticWriteBindings.begin(), end = staticWriteBindings.end(); (sbi != end); sbi++) {
             GCMARKOBJECT(sbi->second->content)
+        }
+        if (temps) {
+            for (std::vector<js2val>::iterator i = temps->begin(), end = temps->end(); (i != end); i++)
+                GCMARKVALUE(*i);
         }
     }
 

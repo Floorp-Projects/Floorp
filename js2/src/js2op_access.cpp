@@ -216,3 +216,22 @@
             indexVal = JS2VAL_VOID;
         }
         break;
+
+    case eSlotWrite:
+        {
+            uint16 slotIndex = BytecodeContainer::getShort(pc);
+            pc += sizeof(short);
+            Frame *f = meta->env.getTopFrame();
+            a = pop();
+            (*f->temps)[slotIndex] = a;
+        }
+        break;
+
+    case eSlotRead:
+        {
+            uint16 slotIndex = BytecodeContainer::getShort(pc);
+            pc += sizeof(short);
+            Frame *f = meta->env.getTopFrame();
+            push((*f->temps)[slotIndex]);
+        }
+        break;

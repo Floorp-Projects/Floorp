@@ -93,6 +93,9 @@ enum JS2Op {
     eNext,
     eForValue,
 
+    eSlotRead,          // <slot index:u16>
+    eSlotWrite,         // <slot index:u16>
+
     eLexicalRead,       // <multiname index:u16>
     eLexicalWrite,      // <multiname index:u16>
     eLexicalRef,        // <multiname index:u16>

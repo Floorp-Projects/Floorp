@@ -437,6 +437,11 @@ namespace MetaData {
         case eRegExp:
             return 1;       // push literal value
 
+        case eSlotWrite:
+            return -1;      // write the value, don't preserve it
+        case eSlotRead:     // push the value
+            return 1;
+
         case eLexicalRead:
             return 1;       // push the value
         case eLexicalWrite:
