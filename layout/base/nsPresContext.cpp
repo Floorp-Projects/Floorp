@@ -77,6 +77,7 @@ nsPresContext::nsPresContext()
   mWidgetRenderingMode = eWidgetRendering_Gfx; 
 
   mLookAndFeel = nsnull;
+  mShell = nsnull;
 
 #ifdef _WIN32
   // XXX This needs to be elsewhere, e.g., part of nsIDeviceContext
