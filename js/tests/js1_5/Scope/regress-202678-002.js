@@ -62,7 +62,7 @@ function myFunc()
   {
     var hidden = 'bbb';
     self.outSideFunc = insideFunc;
-    self.runOnce = 1;
+    self.runOnce = true;
   }
   else
   {
@@ -78,7 +78,6 @@ function myFunc()
 }
 
 
-var hidden = 'AAA';
 
 status = inSection(1);
 myFunc();  // this sets |actual|
