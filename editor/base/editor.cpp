@@ -21,6 +21,7 @@
 #include "nsIDOMEventReceiver.h" 
 #include "nsIDOMText.h"
 #include "nsIDOMElement.h"
+#include "nsIDocument.h"
 
 //class implementations are in order they are declared in editor.h
 
@@ -37,6 +38,7 @@ static NS_DEFINE_IID(kIDOMKeyListenerIID, NS_IDOMKEYLISTENER_IID);
 static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
+static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
 
 
 nsEditor::~nsEditor()
@@ -88,6 +90,14 @@ nsEditor::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
 
 
+nsresult 
+nsEditor::GetDomInterface(nsIDOMDocument **aDomInterface)
+{
+  *aDomInterface = mDomInterfaceP; return NS_OK;
+}
+
+
+
 nsresult
 nsEditor::Init(nsIDOMDocument *aDomInterface)
 {
@@ -120,6 +130,26 @@ nsEditor::Init(nsIDOMDocument *aDomInterface)
   }
   erP->AddEventListener(mKeyListenerP, kIDOMKeyListenerIID);
   //erP->AddEventListener(mMouseListenerP, kIDOMMouseListenerIID);
+
+  /*
+  now to handle selection
+  */
+  COM_auto_ptr<nsIDocument> document;
+  if (NS_SUCCEEDED(t_result = mDomInterfaceP->QueryInterface(kIDocumentIID, func_AddRefs(document))))
+  {
+    if (!NS_SUCCEEDED(t_result = document->GetSelection(*func_AddRefs(mSelectionP))))
+    {
+      NS_NOTREACHED("query interface");
+      return t_result;
+    }
+  }
+  else
+  {
+    NS_NOTREACHED("query interface");
+    return t_result;
+  }
+
+  
   return NS_OK;
 }
 
@@ -133,6 +163,36 @@ nsEditor::InsertString(nsString *aString)
 
 
 
+nsresult
+nsEditor::SetProperties(PROPERTIES aProperty)
+{
+  return NS_OK;
+}
+
+
+
+nsresult
+nsEditor::GetProperties(PROPERTIES **)
+{
+  return NS_OK;
+}
+
+
+
+nsresult
+nsEditor::Commit(PRBool aCtrlKey)
+{
+  if (aCtrlKey)
+  {
+  }
+  else
+  {
+  }
+  return NS_OK;
+}
+ 
+
+ 
 //END nsIEditorInterfaces
 
 
@@ -150,6 +210,9 @@ nsEditor::MouseClick(int aX,int aY)
 {
   return PR_FALSE;
 }
+
+
+
 //END nsEditor Calls from public
 
 

@@ -17,8 +17,10 @@
  */
 
 #include "nsIEditor.h"
+#include "nsIContextLoader.h"
 #include "COM_auto_ptr.h"
 #include "editorInterfaces.h"
+#include "nsISelection.h"
 
 /** implementation of an editor object.  it will be the controler/focal point 
  *  for the main editor services. i.e. the GUIControler, publishing, transaction 
@@ -28,9 +30,10 @@
 class nsEditor : public nsIEditor
 {
 private:
-  COM_auto_ptr<nsIDOMDocument> mDomInterfaceP;
+  COM_auto_ptr<nsIDOMDocument>      mDomInterfaceP;
   COM_auto_ptr<nsIDOMEventListener> mKeyListenerP;
   COM_auto_ptr<nsIDOMEventListener> mMouseListenerP;
+  COM_auto_ptr<nsISelection>        mSelectionP;
 public:
   /** The default constructor. This should suffice. the setting of the interfaces is done
    *  after the construction of the editor class.
@@ -49,14 +52,16 @@ public:
 
   virtual nsresult Init(nsIDOMDocument *aDomInterface);
 
-  virtual nsresult GetDomInterface(nsIDOMDocument **aDomInterface){*aDomInterface = mDomInterfaceP; return NS_OK;}
+  virtual nsresult GetDomInterface(nsIDOMDocument **aDomInterface);
 
-  virtual nsresult SetProperties(PROPERTIES aProperty){return NS_OK;}
+  virtual nsresult SetProperties(PROPERTIES aProperty);
 
-  virtual nsresult GetProperties(PROPERTIES **){return NS_OK;}
+  virtual nsresult GetProperties(PROPERTIES **);
 
   virtual nsresult InsertString(nsString *aString);
   
+  virtual nsresult Commit(PRBool aCtrlKey);
+
 /*END nsIEditor interfaces*/
 
 /*BEGIN nsEditor interfaces*/
@@ -106,4 +111,5 @@ public:
 /*
 factory method(s)
 */
-nsresult NS_InitEditor(nsIEditor ** aInstancePtrResult, nsIDOMDocument *aDomDoc);
+
+nsresult NS_MakeEditorLoader(nsIContextLoader **aResult);

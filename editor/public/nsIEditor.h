@@ -37,7 +37,7 @@ enum PROPERTIES{NONE = 0,BOLD = 1,NUMPROPERTIES};
  * It's implemented by an object that has to execute specific editor
  * behavior.
  * <P>
- * It is used by the script runtime to collect information about an object
+ * The specific behavior is still in design this is an unfinished interface
  */
 class nsIEditor  : public nsISupports{
 public:
@@ -75,6 +75,14 @@ public:
    * @param aString An nsString that is the string to be inserted
    */
   virtual nsresult InsertString(nsString *aString)=0;
+
+  /**
+   * Commit(PRBool aCtrlKey) is a catch all method.  It may be depricated later.
+   * <BR>It is to respond to RETURN keys and CTRL return keys.  Its action depends
+   * on the selection at the time.  It may insert a <BR> or a <P> or activate the properties of the element
+   * @param aCtrlKey  was the CtrlKey down?
+   */
+  virtual nsresult Commit(PRBool aCtrlKey)=0;
 
 };
 

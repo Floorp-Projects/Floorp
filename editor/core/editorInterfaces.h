@@ -109,11 +109,11 @@ public:
 
 /** factory for the editor key listener
  */
-extern nsresult NS_NewnsEditorKeyListener(nsIDOMEventListener ** aInstancePtrResult, nsEditor *aEditor);
+extern nsresult NS_NewEditorKeyListener(nsIDOMEventListener ** aInstancePtrResult, nsEditor *aEditor);
 
 /** factory for the editor mouse listener
  */
-extern nsresult NS_NewnsEditorMouseListener(nsIDOMEventListener ** aInstancePtrResult, nsEditor *aEditor);
+extern nsresult NS_NewEditorMouseListener(nsIDOMEventListener ** aInstancePtrResult, nsEditor *aEditor);
 
 #endif //editorInterfaces_h__
 

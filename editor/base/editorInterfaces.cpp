@@ -104,24 +104,28 @@ nsEditorKeyListener::GetCharFromKeyCode(PRUint32 aKeyCode, PRBool aIsShift, char
 nsresult
 nsEditorKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
 {
-  PRUint32 mKeyCode;
-  PRBool mIsShift;
-  char mChar;
+  PRUint32 keyCode;
+  PRBool isShift;
+  PRBool ctrlKey;
+  char character;
   
-  if (NS_OK == aKeyEvent->GetKeyCode(&mKeyCode) && 
-      NS_OK == aKeyEvent->GetShiftKey(&mIsShift)) {
-    switch(mKeyCode) {
+  if (NS_SUCCEEDED(aKeyEvent->GetKeyCode(&keyCode)) && 
+      NS_SUCCEEDED(aKeyEvent->GetShiftKey(&isShift)) &&
+      NS_SUCCEEDED(aKeyEvent->GetCtrlKey(&ctrlKey))
+      ) {
+    switch(keyCode) {
     case nsIDOMEvent::VK_BACK:
       break;
     case nsIDOMEvent::VK_RETURN:
       // Need to implement creation of either <P> or <BR> nodes.
+      mEditor->Commit(ctrlKey);
       break;
     default:
       // XXX Replace with x-platform NS-virtkeycode transform.
-      if (NS_OK == GetCharFromKeyCode(mKeyCode, mIsShift, &mChar)) {
+      if (NS_OK == GetCharFromKeyCode(keyCode, isShift, & character)) {
         nsString* key = new nsString();
-        *key += mChar;
-        if (!mIsShift) {
+        *key += character;
+        if (!isShift) {
           key->ToLowerCase();
         }
         mEditor->InsertString(key);
