@@ -2640,8 +2640,9 @@ RDFElementImpl::ElementIsInDocument()
     if (! root)
         return PR_FALSE;
 
-    nsCOMPtr<nsIContent> node =
-        do_QueryInterface(NS_STATIC_CAST(nsIStyledContent*, this));
+    // Hack to get off scc's evil-use-of-do_QueryInterface() radar.
+    nsIStyledContent* p = NS_STATIC_CAST(nsIStyledContent*, this);
+    nsCOMPtr<nsIContent> node = do_QueryInterface(p);
 
     while (node) {
         if (node == root)
