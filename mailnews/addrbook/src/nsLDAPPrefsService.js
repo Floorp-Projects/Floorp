@@ -26,14 +26,13 @@ const NS_LDAPPREFSSERVICE_CONTRACTID =
     "@mozilla.org/ldapprefs-service;1";
 const NS_LDAPPREFSSERVICE_CID =
     Components.ID("{5a4911e0-44cd-11d5-9074-0010a4b26cda}");
-const NS_LDAPPREFSSERVICE_IID = Components.interfaces.nsILDAPPrefsService;
 
 /* interfaces used in this file */
 const nsISupports        = Components.interfaces.nsISupports;
 const nsISupportsString  = Components.interfaces.nsISupportsString;
 const nsIPrefBranch      = Components.interfaces.nsIPrefBranch;
 const nsILDAPURL         = Components.interfaces.nsILDAPURL;
-
+const nsILDAPPrefsService = Components.interfaces.nsILDAPPrefsService;
 const kDefaultLDAPPort = 389;
 const kDefaultSecureLDAPPort = 636;
 
@@ -275,7 +274,7 @@ function (outer, iid) {
     if (outer != null)
         throw Components.results.NS_ERROR_NO_AGGREGATION;
 
-    if (!iid.equals(nsISupports))
+    if (!iid.equals(nsISupports) && !iid.equals(nsILDAPPrefsService))
         throw Components.results.NS_ERROR_INVALID_ARG;
 
     return new nsLDAPPrefsService();
@@ -304,7 +303,7 @@ function(compMgr, fileSpec, location)
 
 nsLDAPPrefsModule.getClassObject =
 function (compMgr, cid, iid) {
-    if (cid.equals(NS_LDAPPREFSSERVICE_CID))
+    if (cid.equals(nsILDAPPrefsService))
         return nsLDAPPrefsFactory;
     throw Components.results.NS_ERROR_NO_INTERFACE;  
 }

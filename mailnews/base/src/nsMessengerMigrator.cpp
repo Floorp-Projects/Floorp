@@ -83,7 +83,7 @@
 #include "nsIAbUpgrader.h"
 #include "nsIAddressBook.h"
 #include "nsAbBaseCID.h"
-
+#include "nsILDAPPrefsService.h"
 #include "nsIMsgFilterService.h"
 #include "nsIMsgFilterList.h"
 
@@ -734,6 +734,9 @@ nsMessengerMigrator::UpgradePrefs()
 
     rv = MigrateAddressBooks();
     if (NS_FAILED(rv)) return rv;
+
+    // this will upgrade the ldap prefs
+    nsCOMPtr <nsILDAPPrefsService> ldapPrefsService = do_GetService("@mozilla.org/ldapprefs-service;1", &rv);
     
     // we're done migrating, let's save the prefs
     rv = m_prefs->SavePrefFile(nsnull);
