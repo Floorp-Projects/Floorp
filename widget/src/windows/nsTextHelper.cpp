@@ -82,6 +82,13 @@ PRBool  nsTextHelper::SetReadOnly(PRBool aReadOnlyFlag)
   return(oldSetting);
 }
 
+  
+void nsTextHelper::SelectAll()
+{
+  ::SendMessage(mWnd, EM_SETSEL, (WPARAM) 0, (LPARAM)-1);
+}
+
+
 void  nsTextHelper::SetSelection(PRUint32 aStartSel, PRUint32 aEndSel)
 {
   ::SendMessage(mWnd, EM_SETSEL, (WPARAM) (INT)aStartSel, (INT) (LPDWORD)aEndSel); 

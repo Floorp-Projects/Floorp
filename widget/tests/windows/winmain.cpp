@@ -77,7 +77,7 @@ char * gFailedMsg = NULL;
 #define WIDGET_DLL "raptorwidget.dll"
 #define GFXWIN_DLL "raptorgfxwin.dll"
 
-#define DEBUG_MOUSE 0
+#define DEBUG_MOUSE 1
 
 #define NUM_COMBOBOX_ITEMS 8
 #define kSetCaret        "Set Caret"
@@ -699,6 +699,12 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
     nsEventStatus result = nsEventStatus_eIgnore;
     switch(aEvent->message) {
 
+        case NS_MOVE:
+            char str[256];
+            sprintf(str, "Moved window to %d,%d", aEvent->point.x, aEvent->point.y);
+            statusText->SetText(str);
+            break;
+
         case NS_MOUSE_ENTER:
             if (DEBUG_MOUSE) printf("NS_MOUSE_ENTER 0x%X\n", aEvent->widget);
             break;
@@ -995,6 +1001,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
     nsString initialText("0123456789");
     textWidget->SetText(initialText);
     textWidget->SetMaxTextLength(12);
+    textWidget->SelectAll();
 
     NS_RELEASE(textWidget); 
     y += rect.height + 5;

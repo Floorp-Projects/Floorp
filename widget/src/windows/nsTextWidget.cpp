@@ -24,23 +24,6 @@
 #include <windows.h>
 
 
-void  nsTextWidget::SetSelection(PRUint32 aStartSel, PRUint32 aEndSel)
-{
-}
-
-void  nsTextWidget::GetSelection(PRUint32 *aStartSel, PRUint32 *aEndSel)
-{
-}
-
-void  nsTextWidget::SetCaretPosition(PRUint32 aPosition)
-{
-}
-
-PRUint32  nsTextWidget::GetCaretPosition()
-{
-  return(0);
-}
-
 //-------------------------------------------------------------------------
 //
 // nsTextWidget constructor
@@ -51,7 +34,6 @@ nsTextWidget::nsTextWidget(nsISupports *aOuter) : nsTextHelper(aOuter)
   mBackground = NS_RGB(124, 124, 124);
 }
 
-
 //-------------------------------------------------------------------------
 //
 // nsTextWidget destructor
@@ -60,7 +42,6 @@ nsTextWidget::nsTextWidget(nsISupports *aOuter) : nsTextHelper(aOuter)
 nsTextWidget::~nsTextWidget()
 {
 }
-
 
 //-------------------------------------------------------------------------
 //
