@@ -20,48 +20,49 @@ DEPTH		= ..
 
 include $(DEPTH)/config/config.mk
 
-DIRS = \
-	libhook \
-	libreg \
-	libpref \
-	libutil \
-	libimg \
-	libfont \
-	rdf \
-	xml \
-	schedulr \
-	li \
-	progress \
-	plugin \
-	$(NULL)
+DIRS		= \
+		  libhook \
+		  libreg \
+		  libpref \
+		  libutil \
+		  libimg \
+		  libfont \
+		  rdf \
+		  xml \
+		  schedulr \
+		  li \
+		  progress \
+		  plugin \
+		  $(NULL)
 
 ifndef MOZ_NATIVE_ZLIB
-DIRS += zlib
+DIRS		+= zlib
 endif
 
 ifndef MOZ_SECURITY
-DIRS +=	security
+DIRS		+= security
 endif
 
 ifdef MOZ_SMARTUPDATE
 DIRS		+= softupdt
-endif # MOZ_SMARTUPDATE
+endif
 
 ifdef MOZ_OJI
 DIRS		+= oji
 endif
 
-ifdef EDITOR
+ifdef MOZ_EDITOR
 
 ifdef JAVA_OR_NSJVM	# change later to JAVA_OR_OJI
-DIRS            += edtplug
-endif # JAVA_OR_NSJVM
+DIRS		+= edtplug
+endif
 
 DIRS		+= spellchk
-endif # EDITOR
 
-ifeq ($(subst /,_,$(shell uname -s)),OS2)
-DIRS	+= spellchk
+endif # MOZ_EDITOR
+
+ifeq ($(OS_ARCH),OS2)
+DIRS		+= spellchk
 endif
 
 include $(DEPTH)/config/rules.mk
