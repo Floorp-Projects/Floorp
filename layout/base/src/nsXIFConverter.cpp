@@ -488,7 +488,7 @@ void nsXIFConverter::WriteDebugFile()
   out << s;
   out.close();
   delete[] s;
-#elif defined(XP_UNIX)
+#elif defined(XP_UNIX) || defined(XP_BEOS)
   const char* filename="/tmp/xif.html";
   ofstream out(filename);
 
