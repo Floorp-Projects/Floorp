@@ -24,7 +24,7 @@
 #include "nsStyleConsts.h"
 #include "nsIContent.h"
 #include "nsIContentDelegate.h"
-
+#include "nsIView.h"
 
 #ifdef NS_DEBUG
 static PRBool gsDebug1 = PR_FALSE;
@@ -127,20 +127,25 @@ void nsTableRowGroupFrame::PaintChildren(nsIPresContext&      aPresContext,
 {
   nsIFrame* kid = mFirstChild;
   while (nsnull != kid) {
-    nsRect kidRect;
-    kid->GetRect(kidRect);
-    nsRect damageArea(aDirtyRect);
-    // Translate damage area into kid's coordinate system
-    nsRect kidDamageArea(damageArea.x - kidRect.x, damageArea.y - kidRect.y,
-                         damageArea.width, damageArea.height);
-    aRenderingContext.PushState();
-    aRenderingContext.Translate(kidRect.x, kidRect.y);
-    kid->Paint(aPresContext, aRenderingContext, kidDamageArea);
-    if (nsIFrame::GetShowFrameBorders()) {
-      aRenderingContext.SetColor(NS_RGB(255,0,0));
-      aRenderingContext.DrawRect(0, 0, kidRect.width, kidRect.height);
+    nsIView *pView = kid->GetView();
+    if (nsnull == pView) {
+      nsRect kidRect;
+      kid->GetRect(kidRect);
+      nsRect damageArea(aDirtyRect);
+      // Translate damage area into kid's coordinate system
+      nsRect kidDamageArea(damageArea.x - kidRect.x, damageArea.y - kidRect.y,
+                           damageArea.width, damageArea.height);
+      aRenderingContext.PushState();
+      aRenderingContext.Translate(kidRect.x, kidRect.y);
+      kid->Paint(aPresContext, aRenderingContext, kidDamageArea);
+      if (nsIFrame::GetShowFrameBorders()) {
+        aRenderingContext.SetColor(NS_RGB(255,0,0));
+        aRenderingContext.DrawRect(0, 0, kidRect.width, kidRect.height);
+      }
+      aRenderingContext.PopState();
     }
-    aRenderingContext.PopState();
+    else
+      NS_RELEASE(pView);
     kid = kid->GetNextSibling();
   }
 }
