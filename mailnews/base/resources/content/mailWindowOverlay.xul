@@ -1065,6 +1065,7 @@ Rights Reserved.
                             <menupopup/>
                         </menu>
       <menuitem id="menu_getnextnmsg" label="&getNextNMsgCmd.label;"
+       accesskey="&getNextNMsgCmd.accesskey;"
        observes="cmd_getNextNMessages"/>
       <menuitem id="menu_sendunsentmsgs" label="&sendUnsentCmd.label;"
        accesskey="&sendUnsentCmd.accesskey;"
