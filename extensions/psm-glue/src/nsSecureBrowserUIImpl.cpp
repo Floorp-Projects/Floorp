@@ -44,6 +44,7 @@
 #include "nsIDOMXULDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMWindow.h"
+#include "nsIContent.h"
 #include "nsIWebProgress.h"
 #include "nsIChannel.h"
 #include "nsIPSMSocketInfo.h"
@@ -214,17 +215,53 @@ nsSecureBrowserUIImpl::Observe(nsISupports*, const PRUnichar*, const PRUnichar*)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+
+static nsresult IsChildOfDomWindow(nsIDOMWindow *parent, nsIDOMWindow *child, PRBool* value)
+{
+    *value = PR_FALSE;
+
+    if (parent == child)
+    {
+        *value = PR_TRUE;
+        return NS_OK;
+    }
+
+    nsCOMPtr<nsIDOMWindow> childsParent;
+    child->GetParent(getter_AddRefs(childsParent));
+        
+    if (parent)
+        IsChildOfDomWindow(parent, childsParent, value);
+    
+    return NS_OK;
+}
+
+
 NS_IMETHODIMP 
 nsSecureBrowserUIImpl::Notify(nsIContent* formNode, nsIDOMWindow* window, nsIURI* actionURL)
 {
     // Return NS_OK unless we want to prevent this form from submitting.
-    if (!window || (mWindow.get() != window) || !actionURL) {
+
+    if (!window || !actionURL || !formNode) {
       return NS_OK;
     }
+    
+    nsCOMPtr<nsIDocument> document; 
+    formNode->GetDocument(*getter_AddRefs(document)); 
+    if (!document) return NS_OK; 
+
+    nsCOMPtr<nsIScriptGlobalObject> globalObject; 
+    document->GetScriptGlobalObject(getter_AddRefs(globalObject)); 
+    nsCOMPtr<nsIDOMWindow> postingWindow = do_QueryInterface(globalObject); 
+    
+    PRBool isChild;
+    IsChildOfDomWindow(mWindow, postingWindow, &isChild);
+
+    if (!isChild)
+        return NS_OK;
+
     PRBool okayToPost;
     nsresult res = CheckPost(actionURL, &okayToPost);
 
-    // Return NS_OK unless we want to prevent this form from submitting.
     if (NS_SUCCEEDED(res) && okayToPost)
         return NS_OK;
     
@@ -254,7 +291,7 @@ NS_IMETHODIMP
 nsSecureBrowserUIImpl::OnStatusChange(nsIChannel* aChannel, 
                                       PRInt32 aProgressStatusFlags)
 {
-    nsresult res;
+    nsresult res = NS_OK;
 
     if (aChannel == nsnull || !mSecurityButton || !mPref)
         return NS_ERROR_NULL_POINTER;
@@ -276,9 +313,10 @@ nsSecureBrowserUIImpl::OnStatusChange(nsIChannel* aChannel,
         mIsSecureDocument = mMixContentAlertShown = mIsDocumentBroken = PR_FALSE;
         
         res = CheckProtocolContextSwitch( loadingURI, mCurrentURI);    
-
+        return res;
     } 
-    else if ((aProgressStatusFlags & nsIWebProgress::flag_net_stop)  && mIsSecureDocument)
+    
+    if ((aProgressStatusFlags & nsIWebProgress::flag_net_stop)  && mIsSecureDocument)
     {
         if (!mIsDocumentBroken) // and status is okay  FIX
         {
@@ -296,22 +334,22 @@ nsSecureBrowserUIImpl::OnStatusChange(nsIChannel* aChannel,
                 {
                     PR_LOG(gSecureDocLog, PR_LOG_DEBUG, ("SecureUI:%p: Icon set to lock\n", this));
                     res = mSecurityButton->SetAttribute( NS_ConvertASCIItoUCS2("level"), NS_ConvertASCIItoUCS2("high") );
+                    return res;
                 }
 	        }
         }
-        else
-        {
-
-            PR_LOG(gSecureDocLog, PR_LOG_DEBUG, ("SecureUI:%p: Icon set to broken\n", this));
-            mIsDocumentBroken = PR_TRUE;
-            res = mSecurityButton->SetAttribute( NS_ConvertASCIItoUCS2("level"), NS_ConvertASCIItoUCS2("broken") );
-        }
+        
+        PR_LOG(gSecureDocLog, PR_LOG_DEBUG, ("SecureUI:%p: Icon set to broken\n", this));
+        mIsDocumentBroken = PR_TRUE;
+        res = mSecurityButton->SetAttribute( NS_ConvertASCIItoUCS2("level"), NS_ConvertASCIItoUCS2("broken"));
+        return res;
     }
-    else // if (aProgressStatusFlags == nsIWebProgress::flag_net_redirecting)
-    {
-        res = NS_ERROR_NOT_IMPLEMENTED;
-        // xxx need to fix.
-    }
+    
+    // if (aProgressStatusFlags == nsIWebProgress::flag_net_redirecting)
+    //{
+    //    res = NS_ERROR_NOT_IMPLEMENTED;
+    //    xxx need to fix.
+    //}
 
     return res;
 }
@@ -574,44 +612,56 @@ nsSecureBrowserUIImpl::CheckPost(nsIURI *actionURL, PRBool *okayToPost)
     if (NS_FAILED(rv))
 	    return rv;
     
-    if (!secure  && mIsSecureDocument)
-    {
-        PRBool boolpref;    
+    // if we are posting to a secure link from a secure page, all is okay.
+    if (secure  && mIsSecureDocument)
+        return NS_OK;
 
-        // posting to a non https URL.
-        if ((mPref->GetBoolPref(INSECURE_SUBMIT_PREF, &boolpref) != 0))
-			boolpref = PR_TRUE;
-		
-		if (boolpref) 
-		{
-            NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &rv);
-			if (NS_FAILED(rv)) 
-				return rv;
 
-            nsAutoString windowTitle, message, dontShowAgain;
-            
-            GetBundleString(NS_ConvertASCIItoUCS2("Title"), windowTitle);
+    PRBool boolpref;    
+
+    // posting to a non https URL.
+    if ((mPref->GetBoolPref(INSECURE_SUBMIT_PREF, &boolpref) != 0))
+		boolpref = PR_TRUE;
+	
+	if (boolpref) 
+	{
+        NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &rv);
+		if (NS_FAILED(rv)) 
+			return rv;
+
+        nsAutoString windowTitle, message, dontShowAgain;
+        
+        GetBundleString(NS_ConvertASCIItoUCS2("Title"), windowTitle);
+        GetBundleString(NS_ConvertASCIItoUCS2("DontShowAgain"), dontShowAgain);
+
+        // posting to insecure webpage from a secure webpage.
+        if (!secure  && mIsSecureDocument)
+        {
             GetBundleString(NS_ConvertASCIItoUCS2("PostToInsecure"), message);
-            GetBundleString(NS_ConvertASCIItoUCS2("DontShowAgain"), dontShowAgain);
+        }
+        else  // anything else, post generic warning
+        {
+            GetBundleString(NS_ConvertASCIItoUCS2("PostToInsecureFromInsecure"), message);
+        }
 
-            PRBool outCheckValue = PR_TRUE;
-			dialog->ConfirmCheck(mWindow, 
-                                 windowTitle.GetUnicode(), 
-                                 message.GetUnicode(), 
-                                 dontShowAgain.GetUnicode(), 
-                                 &outCheckValue, 
-                                 okayToPost);
-            
-            if (!outCheckValue)
-            {
-                mPref->SetBoolPref(INSECURE_SUBMIT_PREF, PR_FALSE);
-                NS_WITH_SERVICE(nsIPSMComponent, psm, PSM_COMPONENT_PROGID, &rv);
-            	if (NS_FAILED(rv)) 
-		            return rv;
-                psm->PassPrefs();
-            }
+        PRBool outCheckValue = PR_TRUE;
+		dialog->ConfirmCheck(mWindow, 
+                             windowTitle.GetUnicode(), 
+                             message.GetUnicode(), 
+                             dontShowAgain.GetUnicode(), 
+                             &outCheckValue, 
+                             okayToPost);
+        
+        if (!outCheckValue)
+        {
+            mPref->SetBoolPref(INSECURE_SUBMIT_PREF, PR_FALSE);
+            NS_WITH_SERVICE(nsIPSMComponent, psm, PSM_COMPONENT_PROGID, &rv);
+            if (NS_FAILED(rv)) 
+		        return rv;
+            psm->PassPrefs();
         }
     }
+
     return NS_OK;
 }
 
