@@ -43,6 +43,18 @@
 #include "nsIURI.h"
 #include "nsIContent.h"
 
-nsresult NS_NewSVGGradient(nsISVGGradient **result, nsIURI *uri, nsIContent *aContent);
+nsresult NS_GetSVGGradient(nsISVGGradient**        result, 
+                           nsIURI*                 aURI, 
+                           nsIContent*             aContent,
+                           nsIPresShell*           aPresShell);
+
+nsresult NS_NewSVGLinearGradientFrame(nsIPresShell* aPresShell, 
+                                      nsIContent*   aContent, 
+                                      nsIFrame**    aNewFrame);
+
+nsresult NS_NewSVGRadialGradientFrame(nsIPresShell* aPresShell, 
+                                      nsIContent*   aContent, 
+                                      nsIFrame**    aNewFrame);
+
 #endif // __NS_SVGGRADIENT_H__
 

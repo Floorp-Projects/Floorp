@@ -39,9 +39,9 @@
 #ifndef __NS_SVGGRADIENTFRAME_H__
 #define __NS_SVGGRADIENTFRAME_H__
 
-#include "nsISVGGradient.h"
-#include "nsIURI.h"
+#include "nsIFrame.h"
 #include "nsIContent.h"
+#include "nsIPresShell.h"
 
 nsresult NS_NewSVGLinearGradientFrame(nsIPresShell* aPresShell, 
                                       nsIContent*   aContent, 
@@ -50,15 +50,5 @@ nsresult NS_NewSVGLinearGradientFrame(nsIPresShell* aPresShell,
 nsresult NS_NewSVGRadialGradientFrame(nsIPresShell* aPresShell, 
                                       nsIContent*   aContent, 
                                       nsIFrame**    aNewFrame);
-
-nsresult NS_NewSVGStopFrame(nsIPresShell* aPresShell, 
-                            nsIContent*   aContent, 
-                            nsIFrame*     aParentFrame, 
-                            nsIFrame**    aNewFrame);
-
-nsresult NS_GetSVGGradient(nsISVGGradient**  result, 
-                           nsIURI*           aURI, 
-                           nsIContent*       aContent,
-                           nsIPresShell*     aPresShell);
 #endif // __NS_SVGGRADIENTFRAME_H__
 

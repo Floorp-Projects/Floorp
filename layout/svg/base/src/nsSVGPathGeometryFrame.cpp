@@ -47,7 +47,6 @@
 #include "nsIDOMSVGAnimTransformList.h"
 #include "nsIDOMSVGTransformList.h"
 #include "nsISVGContainerFrame.h"
-#include "nsSVGGradientFrame.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsSVGAtoms.h"
@@ -66,7 +65,8 @@
 // nsSVGPathGeometryFrame
 
 nsSVGPathGeometryFrame::nsSVGPathGeometryFrame()
-  : mUpdateFlags(0), mPropagateTransform(PR_TRUE)
+  : mUpdateFlags(0), mPropagateTransform(PR_TRUE),
+    mFillGradient(nsnull), mStrokeGradient(nsnull)
 {
 #ifdef DEBUG
 //  printf("nsSVGPathGeometryFrame %p CTOR\n", this);
@@ -83,8 +83,13 @@ nsSVGPathGeometryFrame::~nsSVGPathGeometryFrame()
   NS_ASSERTION(transformable, "wrong content element");
   nsCOMPtr<nsIDOMSVGAnimatedTransformList> transforms;
   transformable->GetTransform(getter_AddRefs(transforms));
-  nsCOMPtr<nsISVGValue> value = do_QueryInterface(transforms);
   NS_REMOVE_SVGVALUE_OBSERVER(transforms);
+  if (mFillGradient) {
+    NS_REMOVE_SVGVALUE_OBSERVER(mFillGradient);
+  }
+  if (mStrokeGradient) {
+    NS_REMOVE_SVGVALUE_OBSERVER(mStrokeGradient);
+  }
 }
 
 //----------------------------------------------------------------------
@@ -108,9 +113,6 @@ nsSVGPathGeometryFrame::Init(nsPresContext*  aPresContext,
                              nsStyleContext*  aContext,
                              nsIFrame*        aPrevInFlow)
 {
-//  rv = nsSVGPathGeometryFrameBase::Init(aPresContext, aContent, aParent,
-//                                        aContext, aPrevInFlow);
-
   mContent = aContent;
   NS_IF_ADDREF(mContent);
   mParent = aParent;
@@ -147,6 +149,17 @@ nsSVGPathGeometryFrame::AttributeChanged(nsIContent*     aChild,
 NS_IMETHODIMP
 nsSVGPathGeometryFrame::DidSetStyleContext(nsPresContext* aPresContext)
 {
+  // One of the styles that might have been changed are the urls that
+  // point to gradients, etc.  Drop our cached values to those
+  if (mFillGradient) {
+    NS_REMOVE_SVGVALUE_OBSERVER(mFillGradient);
+    mFillGradient = nsnull;
+  }
+  if (mStrokeGradient) {
+    NS_REMOVE_SVGVALUE_OBSERVER(mStrokeGradient);
+    mStrokeGradient = nsnull;
+  }
+
   // XXX: we'd like to use the style_hint mechanism and the
   // ContentStateChanged/AttributeChanged functions for style changes
   // to get slightly finer granularity, but unfortunately the
@@ -407,11 +420,27 @@ NS_IMETHODIMP
 nsSVGPathGeometryFrame::DidModifySVGObservable (nsISVGValue* observable,
                                                 nsISVGValue::modificationType aModType)
 {
-  // the observables we're listening in on affect the canvastm by
-  // default. We can specialize in the subclasses when needed.
-  
-  UpdateGraphic(nsISVGGeometrySource::UPDATEMASK_CANVAS_TM);
-  
+  // Is this a gradient?
+  nsCOMPtr<nsISVGGradient>val = do_QueryInterface(observable);
+  if (val) {
+    // Yes, we need to handle this differently
+    nsCOMPtr<nsISVGGradient>fill = do_QueryInterface(mFillGradient);
+    if (fill == val) {
+      if (aModType == nsISVGValue::mod_die) {
+        mFillGradient = nsnull;
+      }
+      UpdateGraphic(nsISVGGeometrySource::UPDATEMASK_FILL_PAINT);
+    } else {
+      // No real harm in assuming a stroke gradient at this point
+      if (aModType == nsISVGValue::mod_die) {
+        mStrokeGradient = nsnull;
+      }
+      UpdateGraphic(nsISVGGeometrySource::UPDATEMASK_STROKE_PAINT);
+    }
+  } else {
+    // No, all of our other observables update the canvastm by default
+    UpdateGraphic(nsISVGGeometrySource::UPDATEMASK_CANVAS_TM);
+  }
   return NS_OK;
 }
 
@@ -586,12 +615,19 @@ nsSVGPathGeometryFrame::GetStrokePaint(nscolor *aStrokePaint)
 NS_IMETHODIMP
 nsSVGPathGeometryFrame::GetStrokeGradient(nsISVGGradient **aGrad)
 {
-  nsIURI *aServer;
-  aServer = GetStyleSVG()->mStroke.mPaint.mPaintServer;
-  if (aServer == nsnull)
-    return NS_ERROR_FAILURE;
-  // Now have the URI.  Get the gradient 
-  return NS_GetSVGGradient(aGrad, aServer, mContent, nsSVGPathGeometryFrameBase::GetPresContext()->PresShell());
+  nsresult rv = NS_OK;
+  if (!mStrokeGradient) {
+    nsIURI *aServer;
+    aServer = GetStyleSVG()->mStroke.mPaint.mPaintServer;
+    if (aServer == nsnull)
+      return NS_ERROR_FAILURE;
+    // Now have the URI.  Get the gradient 
+    rv = NS_GetSVGGradient(getter_AddRefs(mStrokeGradient), aServer, mContent, 
+                           nsSVGPathGeometryFrameBase::GetPresContext()->PresShell());
+    NS_ADD_SVGVALUE_OBSERVER(mStrokeGradient);
+  }
+  *aGrad = mStrokeGradient;
+  return rv;
 }
 
 /* readonly attribute unsigned short fillPaintType; */
@@ -614,12 +650,19 @@ nsSVGPathGeometryFrame::GetFillPaint(nscolor *aFillPaint)
 NS_IMETHODIMP
 nsSVGPathGeometryFrame::GetFillGradient(nsISVGGradient **aGrad)
 {
-  nsIURI *aServer;
-  aServer = GetStyleSVG()->mFill.mPaint.mPaintServer;
-  if (aServer == nsnull)
-    return NS_ERROR_FAILURE;
-  // Now have the URI.  Get the gradient 
-  return NS_GetSVGGradient(aGrad, aServer, mContent, nsSVGPathGeometryFrameBase::GetPresContext()->PresShell());
+  nsresult rv = NS_OK;
+  if (!mFillGradient) {
+    nsIURI *aServer;
+    aServer = GetStyleSVG()->mFill.mPaint.mPaintServer;
+    if (aServer == nsnull)
+      return NS_ERROR_FAILURE;
+    // Now have the URI.  Get the gradient 
+    rv = NS_GetSVGGradient(getter_AddRefs(mFillGradient), aServer, mContent, 
+                           nsSVGPathGeometryFrameBase::GetPresContext()->PresShell());
+    NS_ADD_SVGVALUE_OBSERVER(mFillGradient);
+  }
+  *aGrad = mFillGradient;
+  return rv;
 }
 
 /* [noscript] boolean isClipChild; */
@@ -712,9 +755,6 @@ nsSVGPathGeometryFrame::GetShapeRendering(PRUint16 *aShapeRendering)
 nsresult
 nsSVGPathGeometryFrame::Init()
 {
-//  nsresult rv = nsSVGPathGeometryFrameBase::Init();
-//  if (NS_FAILED(rv)) return rv;
-
   // all path geometry frames listen in on changes to their
   // corresponding content element's transform attribute:
   nsCOMPtr<nsIDOMSVGTransformable> transformable = do_QueryInterface(mContent);
