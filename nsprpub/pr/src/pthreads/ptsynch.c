@@ -57,7 +57,6 @@ void _PR_InitLocks(void)
 
     rv = PTHREAD_CONDATTR_INIT(&_pt_cvar_attr);
     PR_ASSERT(0 == rv);
-    _PR_MD_INIT_LOCKS();
 }
 
 static void pt_PostNotifies(PRLock *lock, PRBool unlock)

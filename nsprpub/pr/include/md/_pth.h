@@ -226,6 +226,4 @@ extern int (*_PT_aix_yield_fcn)();
 #error "Need to define PTHREAD_YIELD for this platform"
 #endif
 
-#define _MD_INIT_LOCKS()
-
 #endif /* nspr_pth_defs_h_ */
