@@ -6159,6 +6159,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresShell*            aPre
   PRBool    addToHashTable = PR_TRUE;
   PRBool    pseudoParent = PR_FALSE; // is the new frame's parent anonymous
   nsresult  rv = NS_OK;
+  PRBool    addNewFrameToChildList = PR_TRUE; 
 
   // The frame is also a block if it's an inline frame that's floated or
   // absolutely positioned
@@ -6171,7 +6172,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresShell*            aPre
   }
 
   nsIFrame* adjParentFrame = aParentFrame;
-  // if the new frame is not table related and the parent is table related (excluding table cell)
+  // if the new frame is not table related and the parent is a table, row group, or row,
   // then we need to get or create the pseudo table cell frame and use it as the parent.
   if (adjParentFrame) {
     nsCOMPtr<nsIAtom> parentType;
@@ -6522,6 +6523,8 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresShell*            aPre
       rv = ConstructTableFrame(aPresShell, aPresContext, aState, aContent, 
                                geometricParent, aStyleContext, tableCreator, 
                                PR_FALSE, aFrameItems, newFrame, innerTable, pseudoParent);
+      // if there is a pseudoParent, then newFrame was added to the pseudo cell's child list
+      addNewFrameToChildList = !pseudoParent;
       // Note: table construction function takes care of initializing
       // the frame, processing children, and setting the initial child
       // list
@@ -6596,9 +6599,9 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresShell*            aPre
         rv = ConstructTableCellFrame(aPresShell, aPresContext, aState, aContent, 
                                      adjParentFrame, aStyleContext, tableCreator, 
                                      PR_FALSE, aFrameItems, newFrame, innerTable, pseudoParent);
-      if (!pseudoParent) {
-        aFrameItems.AddChild(newFrame);
-      }
+        if (!pseudoParent) {
+          aFrameItems.AddChild(newFrame);
+        }
         return rv;
       }
   
@@ -6641,7 +6644,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresShell*            aPre
 
     // Add the placeholder frame to the flow
     frameItems.AddChild(placeholderFrame);
-  } else if (nsnull != newFrame && !pseudoParent) {
+  } else if (newFrame && addNewFrameToChildList) {
     // Add the frame we just created to the flowed list
     frameItems.AddChild(newFrame);
     if (newBlock) {
