@@ -689,13 +689,14 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
 
     *registered = PR_FALSE;
 
-    // Ensure we are dealing with a file as opposed to a dir
-    PRBool b = PR_FALSE;
-
 #if 0
     // This is a performance hit on mac. Since we have already checked
     // this; plus is we dont, load will fail anyway later on, this
     // is being commented out.
+
+    // Ensure we are dealing with a file as opposed to a dir
+    PRBool b = PR_FALSE;
+
     rv = component->IsFile(&b);
     if (NS_FAILED(rv) || !b)
         return rv;
