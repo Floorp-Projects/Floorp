@@ -192,7 +192,6 @@ function Startup()
       {
         // Use just the first 40 characters and add "..."
         dialog.linkTextMessage.setAttribute("value",TruncateStringAtWordEnd(selectedText, 40, true));
-dump("**** Truncated string? selectedText = "+selectedText+"\n");
       } else {
         dialog.linkTextMessage.setAttribute("value",GetString("MixedSelection"));
       }
