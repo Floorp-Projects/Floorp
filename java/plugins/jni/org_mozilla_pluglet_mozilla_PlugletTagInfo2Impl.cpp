@@ -23,8 +23,8 @@
 #include "PlugletLog.h"
 
 static jfieldID peerFID = NULL;
-static jclass DOMAccessorImpl = NULL;
-static jmethodID getElementByHandle = NULL;
+static jclass DOMAccessor = NULL;
+static jmethodID getNodeByHandle = NULL;
 
 /*
  * Class:     org_mozilla_pluglet_mozilla_PlugletTagInfo2Impl
@@ -108,18 +108,18 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_pluglet_mozilla_PlugletTagInfo2Impl_g
 (JNIEnv *env, jobject jthis) {
     PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
            ("PlugletTagInfo2Impl.getDOMElement\n"));
-    if ( !DOMAccessorImpl ) {
-        DOMAccessorImpl = env->FindClass("org/mozilla/dom/DOMAccessorImpl");
-        if (!DOMAccessorImpl) {
+    if ( !DOMAccessor ) {
+        DOMAccessor = env->FindClass("org/mozilla/dom/DOMAccessor");
+        if (!DOMAccessor) {
             return NULL;
         }
-        DOMAccessorImpl = (jclass) env->NewGlobalRef(DOMAccessorImpl); // nb who is going to Delete this ref
-        if (!DOMAccessorImpl) {
+        DOMAccessor = (jclass) env->NewGlobalRef(DOMAccessor); // nb who is going to Delete this ref
+        if (!DOMAccessor) {
             return NULL;
         }
-        getElementByHandle = env->GetStaticMethodID(DOMAccessorImpl,"getElementByHandle","(J)Lorg/w3c/dom/Element;");
-        if (!getElementByHandle) {
-            DOMAccessorImpl = NULL;
+        getNodeByHandle = env->GetStaticMethodID(DOMAccessor,"getNodeByHandle","(J)Lorg/w3c/dom/Node;");
+        if (!getNodeByHandle) {
+            DOMAccessor = NULL;
             return NULL;
         }
     }
@@ -129,7 +129,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_pluglet_mozilla_PlugletTagInfo2Impl_g
         || NS_FAILED(info->GetDOMElement(&elem))) {
         return NULL;
     }
-    return env->CallStaticObjectMethod(DOMAccessorImpl,getElementByHandle,(jlong) elem);
+    return env->CallStaticObjectMethod(DOMAccessor,getNodeByHandle,(jlong) elem);
 }
 
 
