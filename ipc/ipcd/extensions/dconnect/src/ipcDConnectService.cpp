@@ -909,10 +909,11 @@ DConnectStub::~DConnectStub()
   if (NS_FAILED(rv))
     NS_WARNING("failed to send RELEASE event");
 
-  if (mMaster)
+  if (!mMaster)
   {
-    mMaster->mChildren.RemoveElement(this);
-    NS_RELEASE(mMaster);
+    // delete each child stub
+    for (PRInt32 i=0; i<mChildren.Count(); ++i)
+      delete (DConnectStub *) mChildren[i];
   }
 }
 
@@ -952,8 +953,35 @@ DConnectStub::FindStubSupportingIID(const nsID &iid)
   return nsnull;
 }
 
-NS_IMPL_ADDREF(DConnectStub)
-NS_IMPL_RELEASE(DConnectStub)
+NS_IMETHODIMP_(nsrefcnt)
+DConnectStub::AddRef()
+{
+  if (mMaster)
+    return mMaster->AddRef();
+
+  NS_ASSERT_OWNINGTHREAD("DConnectStub");
+  ++mRefCnt;
+  NS_LOG_ADDREF(this, mRefCnt, "DConnectStub", sizeof(*this));
+  return mRefCnt;
+}
+
+NS_IMETHODIMP_(nsrefcnt)
+DConnectStub::Release()
+{
+  if (mMaster)
+    return mMaster->Release();
+
+  NS_ASSERT_OWNINGTHREAD("DConnectStub");
+  --mRefCnt;
+  NS_LOG_RELEASE(this, mRefCnt, "DConnectStub");
+  if (mRefCnt == 0)
+  {
+    mRefCnt = 1; /* stabilize */
+    delete this;
+    return 0;
+  }                                                                           \
+  return mRefCnt;        
+}
 
 NS_IMETHODIMP
 DConnectStub::QueryInterface(const nsID &aIID, void **aInstancePtr)
@@ -1015,10 +1043,26 @@ DConnectStub::QueryInterface(const nsID &aIID, void **aInstancePtr)
   stub = (DConnectStub *) result;
 
   // add stub to the master's list of children, so we can preserve
-  // symmetry in future QI calls.  each child owns his master, but
-  // the master only keeps weak references to its children.  the
-  // children are responsible for removing themselves as they die.
-  NS_ADDREF(master);
+  // symmetry in future QI calls.  the master will delete each child
+  // when it is destroyed.  the refcount of each child is bound to
+  // the refcount of the master.  this is done to deal with code
+  // like this:
+  //
+  //   nsCOMPtr<nsIBar> bar = ...;
+  //   nsIFoo *foo;
+  //   {
+  //     nsCOMPtr<nsIFoo> temp = do_QueryInterface(bar);
+  //     foo = temp;
+  //   }
+  //   foo->DoStuff();
+  //
+  // while this code is not valid XPCOM (since it is using |foo|
+  // after having called Release on it), such code is unfortunately
+  // very common in the mozilla codebase.  the assumption this code
+  // is making is that so long as |bar| is alive, it should be valid
+  // to access |foo| even if the code doesn't own a strong reference
+  // to |foo|!  clearly wrong, but we need to support it anyways.
+
   stub->mMaster = master;
   master->mChildren.AppendElement(stub);
 
