@@ -48,10 +48,10 @@ public:
     NS_DECL_ISUPPORTS
 
     // This class implements the nsIAppShellComponent interface functions.
-    NS_DECL_IAPPSHELLCOMPONENT
+    NS_DECL_NSIAPPSHELLCOMPONENT
 
     // This class implements the nsIUnknownContentTypeHandler interface functions.
-    NS_DECL_IUNKNOWNCONTENTTYPEHANDLER
+    NS_DECL_NSIUNKNOWNCONTENTTYPEHANDLER
 
 private:
     nsInstanceCounter            mInstanceCounter;

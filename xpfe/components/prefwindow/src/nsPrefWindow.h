@@ -26,16 +26,8 @@ class nsPrefWindow
     // This class implements the nsISupports interface functions.
     NS_DECL_ISUPPORTS
 
-    // This class implements the nsIFindComponent interface functions.
-	NS_IMETHOD showWindow(
-		const PRUnichar *id,
-		nsIDOMWindow *currentFrontWin,
-		const PRUnichar* panelURL);
-	NS_IMETHOD changePanel(const PRUnichar *url);
-	NS_IMETHOD panelLoaded(nsIDOMWindow *win);
-	NS_IMETHOD savePrefs();
-	NS_IMETHOD cancelPrefs();
-	NS_IMETHOD setSubstitutionVar(PRUint32 stringnum, const char *val);
+    // This class implements the nsIPrefWindow interface functions.
+    NS_DECL_NSIPREFWINDOW
     
 	enum TypeOfPref
 	{
