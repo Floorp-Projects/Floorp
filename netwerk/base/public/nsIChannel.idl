@@ -121,6 +121,10 @@ interface nsIChannel : nsIRequest
                                                    * completing the nsILoadGroup it may belong to */
 
     const unsigned long LOAD_DOCUMENT_URI = 1 << 1;
+	const unsigned long LOAD_RETARGETED_DOCUMENT_URI = 1 << 2; /* if the end consumer for this
+																  load has been retargeted after 
+																  discovering it's content, this flag
+																  will be set */
     //
     // The following flags control caching behavior.  Not all protocols pay
     // attention to all these flags, but they are applicable to more than one
