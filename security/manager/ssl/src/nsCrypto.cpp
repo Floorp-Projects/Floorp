@@ -118,9 +118,9 @@ typedef struct nsKeyPairInfoStr {
 // This is the class we'll use to run the keygen done code
 // as an nsIRunnable object;
 //
-struct RunnableEvent : PLEvent {
-  RunnableEvent(nsIRunnable* runnable);
-  ~RunnableEvent();
+struct CryptoRunnableEvent : PLEvent {
+  CryptoRunnableEvent(nsIRunnable* runnable);
+  ~CryptoRunnableEvent();
 
    nsIRunnable* mRunnable;
 };
@@ -1553,7 +1553,7 @@ nsCrypto::GenerateCRMFRequest(nsIDOMCRMFObject** aReturn)
   if (!cryptoRunnable)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  RunnableEvent *runnable = new RunnableEvent(cryptoRunnable);
+  CryptoRunnableEvent *runnable = new CryptoRunnableEvent(cryptoRunnable);
   if (!runnable) {
     delete cryptoRunnable;
     return NS_ERROR_OUT_OF_MEMORY;
@@ -1566,26 +1566,26 @@ nsCrypto::GenerateCRMFRequest(nsIDOMCRMFObject** aReturn)
 //A wrapper for PLEvent that we can use to post
 //our nsIRunnable Events.
 static void PR_CALLBACK
-handleRunnableEvent(RunnableEvent* aEvent)
+handleCryptoRunnableEvent(CryptoRunnableEvent* aEvent)
 {
   aEvent->mRunnable->Run();
 }
 
 static void PR_CALLBACK
-destroyRunnableEvent(RunnableEvent* aEvent)
+destroyCryptoRunnableEvent(CryptoRunnableEvent* aEvent)
 {
   delete aEvent;
 }
 
-RunnableEvent::RunnableEvent(nsIRunnable* runnable)
+CryptoRunnableEvent::CryptoRunnableEvent(nsIRunnable* runnable)
   :  mRunnable(runnable)
 {
   NS_ADDREF(mRunnable);
-  PL_InitEvent(this, nsnull, PLHandleEventProc(handleRunnableEvent),
-               PLDestroyEventProc(&destroyRunnableEvent));
+  PL_InitEvent(this, nsnull, PLHandleEventProc(handleCryptoRunnableEvent),
+               PLDestroyEventProc(&destroyCryptoRunnableEvent));
 }
 
-RunnableEvent::~RunnableEvent()
+CryptoRunnableEvent::~CryptoRunnableEvent()
 {
   NS_RELEASE(mRunnable);
 }
@@ -1894,7 +1894,7 @@ nsCrypto::ImportUserCertificates(const nsAReadableString& aNickname,
     // so I'll just post an event on the UI queue to do the backups
     // later.
     nsCOMPtr<nsIRunnable> p12Runnable = new nsP12Runnable(certArr, numResponses);
-    RunnableEvent *runnable;
+    CryptoRunnableEvent *runnable;
     if (!p12Runnable) {
       rv = NS_ERROR_FAILURE;
       goto loser;
@@ -1905,7 +1905,7 @@ nsCrypto::ImportUserCertificates(const nsAReadableString& aNickname,
     // memory on the way out.
     certArr = nsnull;
 
-    runnable = new RunnableEvent(p12Runnable);
+    runnable = new CryptoRunnableEvent(p12Runnable);
     if (!runnable) {
       rv = NS_ERROR_FAILURE;
       goto loser;
