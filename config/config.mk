@@ -305,7 +305,9 @@ LIBMMEDIA	= $(DIST)/lib/libmmedia.$(LIB_SUFFIX)
 #
 ifndef NSPR10
 NSPR20		= 1
+ifndef USE_AUTOCONF
 NSPRDIR		= nsprpub
+endif
 DEFINES		+= -DNSPR20
 INCLUDES	+= -I$(DIST)/include
 LIBNSPR		= $(DIST)/lib/libplds21.$(LIB_SUFFIX) \
@@ -462,6 +464,7 @@ ifndef MODULAR_NETLIB
 MOZ_COOKIEMANAGE	= 1
 endif
 
+ifndef USE_AUTOCONF
 ifdef MOZ_LITE
 NO_EDITOR	= 1
 NO_UNIX_LDAP	= 1
@@ -478,6 +481,7 @@ MOZ_EDITOR	= 1
 EDITOR		= 1
 endif
 endif
+endif # ! USE_AUTOCONF
 
 ifdef MOZ_MEDIUM
 ifndef MODULAR_NETLIB
@@ -626,7 +630,9 @@ endif
 # This compiles in heap dumping utilities and other good stuff 
 # for developers -- maybe we only want it in for a special SDK 
 # nspr/java runtime(?):
+ifndef USE_AUTOCONF
 DEFINES		+= -DDEVELOPER_DEBUG
+endif
 
 #
 # For the standalone image lib
