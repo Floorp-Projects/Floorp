@@ -2195,7 +2195,7 @@ SetUpFontCharSetInfo(nsFontCharSetInfo* aSelf)
       if (mapper) {
         aSelf->mCCMap = MapperToCCMap(mapper);
         if (aSelf->mCCMap) {
-#ifdef DEBUG
+#ifdef DEBUG_bzbarsky
           char* atomname = atomToName(charset);
           if (atomname) {
             NS_WARNING(nsPrintfCString("\n\ncharset = %s", atomname).get());
