@@ -37,7 +37,6 @@ Contributor(s):
         >
 
     <script src="chrome://communicator/content/xpinstall/institems.js"/>
-    <keyset id="dialogKeys"/>
     <stringbundle id="xpinstallBundle" src="chrome://communicator/locale/xpinstall/xpinstall.properties"/>
 
     <hbox flex="1" align="center">

@@ -19,7 +19,7 @@
  */
 
 // dialog param block
-var gParams;
+var gParam;
 
 function addTreeItem(num, aName, aUrl)
 {
@@ -66,9 +66,10 @@ function onLoad()
     addTreeItem(row++, moduleName, URL);
   }
 
-  var bundle = document.getElementById("xpinstallBundle");
-  var okButton = bundle.getString("OK");
-  document.getElementById("ok").label = okButton;
+  var okText = document.getElementById("xpinstallBundle").getString("OK");
+  var okButton = document.getElementById("ok")
+  okButton.label = okText;
+  okButton.focus();
 }
 
 function onOk()
