@@ -75,6 +75,7 @@ LongRect		destRect,viewRect;
 PRUint32		teFlags=0;
 GrafPtr			curport;
 PRInt32			offx,offy;
+nsWindow		*thewindow;
 
 
   mParent = aParent;
@@ -85,7 +86,11 @@ PRInt32			offx,offy;
 	WindowPtr window = nsnull;
 
   if (aParent) 
+  	{
     window = (WindowPtr) aParent->GetNativeData(NS_NATIVE_WIDGET);
+    //window = thewindow->GetWindowPtr();
+    //window = 
+    }
 	else 
 		if (aAppShell)
     	window = (WindowPtr) aAppShell->GetNativeData(NS_NATIVE_SHELL);
