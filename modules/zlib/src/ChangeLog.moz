@@ -13,3 +13,6 @@ Mozilla.org changes:
 
 - 24 June 2004
   do not prototype strerror for VMS in zutil.h
+
+- 25 June 2004
+  define NO_vsnprintf for VMS in zutil.h
