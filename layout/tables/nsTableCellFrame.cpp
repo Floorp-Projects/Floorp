@@ -222,17 +222,14 @@ void nsTableCellFrame::SetPass1MaxElementWidth(nscoord aMaxWidth,
                                                nscoord aMaxElementWidth)
 { 
   nscoord maxElemWidth = aMaxElementWidth;
-  // check for fixed width and not nowrap and not pre
-  const nsStylePosition* stylePosition = GetStylePosition();
-  const nsStyleText* styleText = GetStyleText();
-  if (stylePosition->mWidth.GetUnit() == eStyleUnit_Coord &&
-      styleText->mWhiteSpace != NS_STYLE_WHITESPACE_NOWRAP &&
-      styleText->mWhiteSpace != NS_STYLE_WHITESPACE_PRE) {
-    // has fixed width, check the content for nowrap
-    if (GetContent()->HasAttr(kNameSpaceID_None, nsHTMLAtoms::nowrap)) {
-      // content has nowrap (is not mapped to style be cause it has width)
-      // set the max element size to the value of the fixed width (NAV/IE quirk)
-      maxElemWidth = NS_MAX(maxElemWidth, stylePosition->mWidth.GetCoordValue());
+  if (eCompatibility_NavQuirks == GetPresContext()->CompatibilityMode()) {
+    // check for fixed width and not nowrap and not pre
+    const nsStylePosition* stylePosition = GetStylePosition();
+    if (stylePosition->mWidth.GetUnit() == eStyleUnit_Coord) {
+      if (GetContent()->HasAttr(kNameSpaceID_None, nsHTMLAtoms::nowrap)) {
+        // set the max element size to the value of the fixed width (NAV/IE quirk)
+        maxElemWidth = NS_MAX(maxElemWidth, stylePosition->mWidth.GetCoordValue());
+      }
     }
   }
   mPass1MaxElementWidth = maxElemWidth;
