@@ -114,6 +114,7 @@ public class ScriptRuntime {
     };
 
     private static final Object LIBRARY_SCOPE_KEY = new Object();
+    private static final Object CONTEXT_FACTORY_KEY = new Object();
 
     public static ScriptableObject initStandardObjects(Context cx,
                                                        ScriptableObject scope,
@@ -122,7 +123,7 @@ public class ScriptRuntime {
         if (scope == null) {
             scope = new NativeObject();
         }
-        scope.associateValue(LIBRARY_SCOPE_KEY, LIBRARY_SCOPE_KEY);
+        scope.associateValue(LIBRARY_SCOPE_KEY, scope);
 
         (new ClassCache()).associate(scope);
 
@@ -170,17 +171,13 @@ public class ScriptRuntime {
 
     public static ScriptableObject getLibraryScope(Scriptable scope)
     {
-        scope = ScriptableObject.getTopLevelScope(scope);
-        do {
-            if (scope instanceof ScriptableObject) {
-                ScriptableObject so = (ScriptableObject)scope;
-                if (null != so.getAssociatedValue(LIBRARY_SCOPE_KEY)) {
-                    return so;
-                }
-            }
-            scope = scope.getPrototype();
-        } while (scope != null);
-        throw new IllegalStateException("Failed to find library scope");
+        ScriptableObject libScope;
+        libScope = (ScriptableObject)ScriptableObject.
+                       getTopScopeValue(scope, LIBRARY_SCOPE_KEY);
+        if (libScope == null) {
+            throw new IllegalStateException("Failed to find library scope");
+        }
+        return libScope;
     }
 
     public static Boolean wrapBoolean(boolean b)

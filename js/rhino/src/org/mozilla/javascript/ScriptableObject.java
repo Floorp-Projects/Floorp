@@ -1552,6 +1552,35 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
     }
 
     /**
+     * Get arbitrary application-specific value associated with the top scope
+     * of the given scope.
+     * The method first calls {@link #getTopLevelScope(Scriptable scope)}
+     * and then searches the prototype chain of the top scope for the first
+     * object containing the associated value with the given key.
+     *
+     * @param scope the starting scope.
+     * @param key key object to select particular value.
+     * @see #getAssociatedValue(Object key)
+     */
+    public static Object getTopScopeValue(Scriptable scope, Object key)
+    {
+        scope = ScriptableObject.getTopLevelScope(scope);
+        for (;;) {
+            if (scope instanceof ScriptableObject) {
+                ScriptableObject so = (ScriptableObject)scope;
+                Object value = so.getAssociatedValue(key);
+                if (value != null) {
+                    return value;
+                }
+            }
+            scope = scope.getPrototype();
+            if (scope == null) {
+                return null;
+            }
+        }
+    }
+
+    /**
      * Associate arbitrary application-specific value with this object.
      * Value can only be associated with the given object and key only once.
      * The method ignores any subsequent attempts to change the already

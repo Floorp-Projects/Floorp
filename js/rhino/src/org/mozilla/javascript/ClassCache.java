@@ -81,21 +81,13 @@ public class ClassCache
      */
     public static ClassCache get(Scriptable scope)
     {
-        scope = ScriptableObject.getTopLevelScope(scope);
-        Scriptable obj = scope;
-        do {
-            if (obj instanceof ScriptableObject) {
-                ScriptableObject so = (ScriptableObject)obj;
-                ClassCache lc = (ClassCache)so.getAssociatedValue(AKEY);
-                if (lc != null) {
-                    return lc;
-                }
-            }
-            obj = obj.getPrototype();
-        } while (obj != null);
-
-        // ALERT: warn somehow about wrong cache usage ?
-        return new ClassCache();
+        ClassCache cache;
+        cache = (ClassCache)ScriptableObject.getTopScopeValue(scope, AKEY);
+        if (cache == null) {
+            // XXX warn somehow about wrong cache usage ?
+            cache = new ClassCache();
+        }
+        return cache;
     }
 
     /**
