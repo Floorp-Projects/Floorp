@@ -369,6 +369,9 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
       }
     } // end rowIndex for loop
 
+    // adjust the "fixed" width for content that is too wide
+    if (minColWidth>specifiedFixedColWidth)
+      specifiedFixedColWidth=minColWidth;
     // do all the global bookkeeping, factoring in margins
     nscoord colInset = mTableFrame->GetCellSpacing();
     // keep a running total of the amount of space taken up by all fixed-width columns
