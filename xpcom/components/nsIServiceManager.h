@@ -204,90 +204,44 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsService: Template to make using services easier. Now you can replace this:
-//
+// NS_WITH_SERVICE: macro to make using services easier. 
+// Now you can replace this:
+//  {
 //      nsIMyService* service;
-//      rv = nsServiceManager::GetService(cid, iid, &service);
-//      if (NS_SUCCEEDED(rv)) {
-//              service->Doit(...);     // use my service
-//              rv = nsServiceManager::ReleaseService(cid, service);
-//      }
-//
+//      rv = nsServiceManager::GetService(kMyServiceCID, nsIMyService::GetIID(),
+//                                        &service);
+//      if (NS_FAILED(rv)) return rv;
+//      service->Doit(...);     // use my service
+//      rv = nsServiceManager::ReleaseService(kMyServiceCID, service);
+//  }
 // with this:
-//
-//      nsService<nsIMyService> service(cid, &rv);
-//      if (NS_SUCCEEDED(rv)) {
-//              service->Doit(...);     // use my service
-//      }
-//
-// and the automatic destructor will take care of releasing the service.
+//  {
+//      NS_WITH_SERVICE(nsIMyService, service, kMyServiceCID, &rv);
+//      if (NS_FAILED(rv)) return rv;
+//      service->Doit(...);     // use my service
+//  }
+// and the automatic destructor will take care of releasing the service. 
+// 
+// Note that this macro requires you to link with the xpcom DLL to pick up the
+// static member functions from nsServiceManager. For situations where you're 
+// passed an nsISupports that is an nsIComponentManager (such as in a DLL's 
+// NSRegisterSelf or NSUnregisterSelf entry points) you can use the following
+// macro instead:
+// 
+//   NSRegisterSelf(nsISupports* servMgr, const char* path) {
+//      NS_WITH_SERVICE1(nsIComponentManager, compMgr, servMgr,
+//                       kComponentManagerCID, &rv);
+//      if (NS_FAILED(rv)) return rv;
+//      compMgr->RegisterComponent(...);     // use the service
+//  }
 
-#if 0   // sorry the T::GetIID() construct doesn't work with egcs
+#define NS_WITH_SERVICE(T, var, cid, rvAddr)      \
+  nsService _serv##var(cid, T::GetIID(), rvAddr); \
+  T* var = (T*)(nsISupports*)_serv##var;
 
-template<class T> class nsService {
-protected:
-  nsCID mCID;
-  T* mService;
-
-public:
-  nsService(nsISupports* aServMgr, const nsCID& aClass, nsresult *rv)
-    : mCID(aClass), mService(0)
-  {
-    nsIServiceManager* servMgr;
-    *rv = aServMgr->QueryInterface(nsIServiceManager::GetIID(), (void**)&servMgr);
-    if (NS_SUCCEEDED(*rv)) {
-      *rv = servMgr->GetService(mCID, T::GetIID(), (nsISupports**)&mService);
-      NS_RELEASE(servMgr);
-    }
-    NS_ASSERTION(NS_SUCCEEDED(*rv), "Couldn't get service.");
-  }
-
-  nsService(nsISupports* aServMgr, const char* aProgID, nsresult *rv)
-    : mService(0)
-  {
-    *rv = nsComponentManager::ProgIDToCLSID(aProgID, &mCID);
-    NS_ASSERTION(NS_SUCCEEDED(*rv), "Couldn't get CLSID.");
-    if (NS_FAILED(*rv)) return;
-  
-    nsIServiceManager* servMgr;
-    *rv = aServMgr->QueryInterface(nsIServiceManager::GetIID(), (void**)&servMgr);
-    if (NS_SUCCEEDED(*rv)) {
-      *rv = servMgr->GetService(mCID, T::GetIID(), (nsISupports**)&mService);
-      NS_RELEASE(servMgr);
-    }
-    NS_ASSERTION(NS_SUCCEEDED(*rv), "Couldn't get service.");
-  }
-
-  nsService(const nsCID& aClass, nsresult *rv)
-    : mCID(aClass), mService(0) {
-    *rv = nsServiceManager::GetService(aClass, T::GetIID(),
-                                       (nsISupports**)&mService);
-    NS_ASSERTION(NS_SUCCEEDED(*rv), "Couldn't get service.");
-  }
-
-  ~nsService() {
-    if (mService) {       // mService could be null if the constructor fails
-      nsresult rv = nsServiceManager::ReleaseService(mCID, mService);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't release service.");
-    }
-  }
-
-  T* operator->() const {
-    NS_PRECONDITION(mService != 0, "Your code should test the error result from the constructor.");
-    return mService;
-  }
-
-  PRBool operator==(const T* other) {
-    return mService == other;
-  }
-
-  operator T*() const {
-    return mService;
-  }
-
-};
-
-#else
+#define NS_WITH_SERVICE1(T, var, isupports, cid, rvAddr)     \
+  nsService _serv##var(isupports, cid, T::GetIID(), rvAddr); \
+  T* var = (T*)(nsISupports*)_serv##var;
 
 class nsService {
 protected:
@@ -352,16 +306,6 @@ public:
   }
 
 };
-
-#define NS_WITH_SERVICE(T, var, cid, rvAddr)      \
-  nsService _serv##var(cid, T::GetIID(), rvAddr); \
-  T* var = (T*)(nsISupports*)_serv##var;
-
-#define NS_WITH_SERVICE1(T, var, isupports, cid, rvAddr)     \
-  nsService _serv##var(isupports, cid, T::GetIID(), rvAddr); \
-  T* var = (T*)(nsISupports*)_serv##var;
-
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 // NS_NewServiceManager: For when you want to create a service manager
