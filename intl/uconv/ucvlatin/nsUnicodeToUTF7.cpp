@@ -57,6 +57,8 @@ nsresult nsBasicUTF7Encoder::ShiftEncoding(PRInt32 aEncoding,
   if (mEncStep != 0) {
     if (dest >= destEnd) return NS_OK_UENC_MOREOUTPUT;
     *(dest++)=ValueToChar(mEncBits);
+    mEncStep = 0;
+    mEncBits = 0;
   }
 
   if (dest >= destEnd) {
@@ -65,6 +67,8 @@ nsresult nsBasicUTF7Encoder::ShiftEncoding(PRInt32 aEncoding,
     switch (aEncoding) {
       case 0:
         *(dest++) = '-';
+        mEncStep = 0;
+        mEncBits = 0;
         break;
       case 1:
         *(dest++) = mEscChar;
