@@ -206,7 +206,7 @@ function createShortcuts()
 
       /* create the shortcuts in the new sub folder */
       File.windowsShortcut(filePalmSyncInstallExe, fStartMenuPalmSync, scDescPalmSyncInstall, fProgram, "", filePalmSyncInstallExe, 0);
-      File.windowsShortcut(filePalmSyncInstallExe, fStartMenuPalmSync, scDescPalmSyncUninstall, fProgram, "/u", filePalmSyncInstallExe, 0);
+      File.windowsShortcut(filePalmSyncInstallExe, fStartMenuPalmSync, scDescPalmSyncUninstall, fProgram, "/u", filePalmSyncInstallExe, 1);
 
       // only create the palm sync readme shortcut if the file exist
       if(File.exists(filePalmSyncReadme))
