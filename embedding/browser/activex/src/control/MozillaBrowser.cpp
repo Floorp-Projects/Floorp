@@ -1383,13 +1383,15 @@ HRESULT CMozillaBrowser::LoadBrowserHelpers()
         {
             NG_TRACE(_T("Registered browser helper object cannot be created\n"));;
         }
+        else
+        {
+            // Set the object to point at the browser
+            cpObjectWithSite->SetSite((IWebBrowser2 *) this);
 
-        // Set the object to point at the browser
-        cpObjectWithSite->SetSite((IWebBrowser2 *) this);
-
-        // Store in the list
-        CComUnkPtr cpUnk = cpObjectWithSite;
-        mBrowserHelperList[mBrowserHelperListCount++] = cpUnk;
+            // Store in the list
+            CComUnkPtr cpUnk = cpObjectWithSite;
+            mBrowserHelperList[mBrowserHelperListCount++] = cpUnk;
+        }
     }
 
     delete []pClassList;
