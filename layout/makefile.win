@@ -17,13 +17,13 @@
 
 DEPTH=..
 
-DIRS=base html xml xul events build \
+DIRS=base html xml xul \
 !if defined(MOZ_XSL)
-xsl                                 \
+xsl    \
 !endif
 !ifdef MOZ_MATHML
 mathml \
 !endif
-
+events build
 
 include <$(DEPTH)\config\rules.mak>
