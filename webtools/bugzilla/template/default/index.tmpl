@@ -1,0 +1,83 @@
+[%# -*- mode: html -*- %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Terry Weissman <terry@mozilla.org>
+  #                 Jacob Steenhagen <jake@acutex.net>
+  #%]
+
+[% INCLUDE global/header
+  title = 'Bugzilla Main Page'
+%]
+
+<script type="text/javascript" language="JavaScript">
+<!--
+function addSidebar() {
+      if ((typeof window.sidebar == "object") && (typeof window.sidebar.addPanel == "function"))
+      {
+         window.sidebar.addPanel ("Bugzilla", "[% Param('urlbase') %]sidebar.cgi", "");
+      }
+      else
+      {
+         var rv = window.confirm ("This page is enhanced for use with Netscape 6.  " + "Would you like to upgrade now?");
+         if (rv)
+            document.location.href = "http://home.netscape.com/download/index.html";
+      }
+   }
+//-->
+</script>
+
+
+<table width="100%"><tr>
+ <td>
+  <p>This is where we put in lots of nifty words explaining all about Bugzilla.</p>
+
+  But it all boils down to a choice of:
+  <p>
+  <a href="query.cgi">Query existing bug reports</a><br>
+  <a href="enter_bug.cgi">Enter a new bug report</a><br>
+  <a href="reports.cgi">Get summary reports</a><br>
+  </p><p>
+[% IF username %]
+  <a href="[% PerformSubsts(Param('mybugstemplate'), subst) %]">My Bugs</a><br>
+  <a href="userprefs.cgi">Change password or user preferences</a><br>
+  <a href="relogin.cgi">Logout [% username %]</a><br>
+[% ELSE %]
+  <a href="query.cgi?GoAheadAndLogIn=1">Log in to an existing account</a><br>
+  <a href="createaccount.cgi">Open a new Bugzilla account</a><br>
+[% END %]
+  </p><p>
+  <a href="javascript:addSidebar()">Add to Sidebar</a> (Requires Mozilla or Netscape 6)<br>
+  </p>
+  <form name="f" action="show_bug.cgi" method="get"
+      onsubmit="QuickSearch(f.id.value); return false;"> 
+  <p>
+  Enter a bug # or some search terms:<br>
+  <input type="text" name="id">
+  <input type="submit" value="Show">
+  <a href="quicksearch.html">[Help]</a>
+  </p>
+  </form>
+ </td>
+ <td align="right"><img src="ant.jpg" width=329 height=220 border=2 alt="ant.jpg [8.5k]"></td>
+</tr></table>
+
+<script type="text/javascript" language="JavaScript" src="localconfig.js"></script>
+<script type="text/javascript" language="JavaScript" src="quicksearch.js"></script>
+
+
+[% INCLUDE global/footer %]

@@ -282,6 +282,21 @@ sub LocalVar ($$)
 # Set up the defaults for the --LOCAL-- variables below:
 #
 
+LocalVar('index_html', <<'END');
+#
+# With the introduction of a configurable index page using the
+# template toolkit, Bugzilla's main index page is now index.cgi.
+# Most web servers will allow you to use index.cgi as a directory
+# index and many come preconfigured that way, however if yours
+# doesn't you'll need an index.html file that provides redirection
+# to index.cgi. Setting $index_html to 1 below will allow
+# checksetup.pl to create one for you if it doesn't exist.
+# NOTE: checksetup.pl will not replace an existing file, so if you
+#       wish to have checksetup.pl create one for you, you must
+#       make sure that there isn't already an index.html
+$index_html = 0;
+END
+
 my $mysql_binaries = `which mysql`;
 if ($mysql_binaries =~ /no mysql/) {
     # If which didn't find it, just provide a reasonable default
@@ -473,6 +488,7 @@ my $my_db_port = ${*{$main::{'db_port'}}{SCALAR}};
 my $my_db_name = ${*{$main::{'db_name'}}{SCALAR}};
 my $my_db_user = ${*{$main::{'db_user'}}{SCALAR}};
 my $my_db_pass = ${*{$main::{'db_pass'}}{SCALAR}};
+my $my_index_html = ${*{$main::{'index_html'}}{SCALAR}};
 my $my_create_htaccess = ${*{$main::{'create_htaccess'}}{SCALAR}};
 my $my_webservergroup = ${*{$main::{'webservergroup'}}{SCALAR}};
 my @my_severities = @{*{$main::{'severities'}}{ARRAY}};
@@ -635,6 +651,35 @@ END
     chmod $fileperm, "data/webdot/.htaccess";
   }
 
+}
+
+if ($my_index_html) {
+    if (!-e "index.html") {
+        print "Creating index.html...\n";
+        open HTML, ">index.html";
+        print HTML <<'END';
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="REFRESH" CONTENT="0; URL=index.cgi">
+</HEAD>
+<BODY>
+<H1>I think you are looking for <a href="index.cgi">index.cgi</a></H1>
+</BODY>
+</HTML>
+END
+        close HTML;
+    }
+    else {
+        open HTML, "index.html";
+        if (! grep /index\.cgi/, <HTML>) {
+            print "\n\n";
+            print "*** It appears that you still have an old index.html hanging\n";
+            print "    around.  The contents of this file should be moved into a\n";
+            print "    template and placed in the 'template/custom' directory.\n\n";
+        }
+        close HTML;
+    }
 }
 
 

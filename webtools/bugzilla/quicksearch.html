@@ -18,10 +18,8 @@ you may prefer <a href="quicksearchhack.html">this form</a>.
 
 Type in one or more words (or word fragments) to search for:
 
-<!-- The name of the form must be "f" (used in "quicksearch.js"). -->
-
 <form name="f" action="show_bug.cgi" method="get"
-      onsubmit="QuickSearch(); return false;">
+      onsubmit="QuickSearch(f.id.value); return false;">
   <table>
     <tr>
       <td><input type="text" size="40" name="id"/></td>

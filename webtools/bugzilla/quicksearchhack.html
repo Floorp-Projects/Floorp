@@ -12,16 +12,14 @@
 
 Type in one or more words (or word fragments) to search for:
 
-<!-- The name of the form must be "f" (used in "quicksearch.js"). -->
-
 <form name="f" action="show_bug.cgi" method="get"
-      onsubmit="QuickSearch(); return false;">
+      onsubmit="QuickSearch(f.id.value); return false;">
   <table>
     <tr>
       <td><input type="text" size="40" name="id"/></td>
       <td align=left><input type="submit" name="run"  value="Search"/></td>
       <td align=left><input type="button" name="load" value="Load Query"
-                      onclick="LoadQuery();" />
+                      onclick="LoadQuery(f.id.value);" />
       </td>
     </tr>
   </table>
