@@ -70,6 +70,9 @@
   
   <binding id="toolbar" extends="chrome://global/content/widgets/toolbar.xml#toolbar-base">
     <implementation>
+      <field name="firstPermanentChild">
+        null
+      </field>
       <field name="lastPermanentChild">
         null
       </field>
@@ -80,6 +83,7 @@
       
       <constructor>
         <![CDATA[
+          this.firstPermanentChild = this.firstChild;
           this.lastPermanentChild = this.lastChild;
           
           // Searching for the toolbox palette in the toolbar binding because
@@ -146,7 +150,7 @@
         
         <setter>
           <![CDATA[
-            // Remove all items after the last permanent child.
+            // Remove all items before the first permanent child and after the last permanent child.
             while (this.lastChild) {
               if (this.lastChild == this.lastPermanentChild ||
                   (this.lastChild.localName == "toolbarpaletteitem" &&
@@ -155,13 +159,29 @@
               this.removeChild(this.lastChild);
             }
 
+            while (this.firstChild) {
+              if (this.firstChild == this.firstPermanentChild ||
+                  (this.firstChild.localName == "toolbarpaletteitem" &&
+                  this.firstChild.firstChild == this.firstPermanentChild))
+                break;
+              this.removeChild(this.firstChild);
+            }
+
+            var firstChildID = this.firstPermanentChild ? this.firstPermanentChild.id : "";
+            var lastChildID = this.lastPermanentChild ? this.lastPermanentChild.id : "";
+
             if (val == "__empty")
               return;
 
             if (val) {
               var itemIds = val.split(",");
-              for (var i = 0; i < itemIds.length; i++)
-                this.insertItem(itemIds[i], null);
+              var before = true;
+              for (var i = 0; i < itemIds.length; i++) {
+                if (itemIds[i] == firstChildID || itemIds[i] == lastChildID)
+                  before = false;
+                else
+                  this.insertItem(itemIds[i], null, null, before);
+              }
             }
           ]]>
         </setter>
@@ -171,6 +191,7 @@
         <parameter name="aId"/>
         <parameter name="aBeforeElt"/>
         <parameter name="aWrapper"/>
+        <parameter name="aBeforePermanent"/>
         <body>
           <![CDATA[
             var newItem = null;
@@ -219,8 +240,10 @@
             // Insert the palette item into the toolbar.
             if (aBeforeElt)
               this.insertBefore(insertItem, aBeforeElt);
+            else if (aBeforePermanent && this.firstPermanentChild)
+                this.insertBefore(insertItem, this.firstPermanentChild);
             else
-              this.appendChild(insertItem);
+                this.appendChild(insertItem);
                
             return newItem;
           ]]>
