@@ -90,14 +90,10 @@
   mDecArray[i++].mCID  = &kObsEUCJPToUnicodeCID;
   mDecArray[i++].mCID  = &kObsISO2022JPToUnicodeCID;
 
-  mEncSize           = 73;
+  mEncSize           = 74;
   mEncArray          = new ConverterInfo [mEncSize];
 
   i = 0;
-
-
-
-
 
 
 
@@ -175,4 +171,5 @@
   mEncArray[i++].mCID  = &kUnicodeToCNS11643p7CID;
   mEncArray[i++].mCID  = &kUnicodeToSymbolCID;
   mEncArray[i++].mCID  = &kUnicodeToZapfDingbatsCID;
+  mEncArray[i++].mCID  = &kUnicodeToX11JohabCID;
 
