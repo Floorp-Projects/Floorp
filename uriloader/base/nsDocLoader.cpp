@@ -66,20 +66,13 @@ PRLogModuleInfo* gDocLoaderLog = nsnull;
 #if defined(DEBUG)
 void GetURIStringFromRequest(nsIRequest* request, nsXPIDLCString &aStr)
 {
-  nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
+    nsXPIDLString name;
+    request->GetName(getter_Copies(name));
 
-  if (!channel) {
-      aStr = "???";
-      return;
-  }
-
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = channel->GetURI(getter_AddRefs(uri));
-
-  if (NS_SUCCEEDED(rv) && uri)
-    rv = uri->GetSpec(getter_Copies(aStr));
-  else 
-    aStr = "???";
+    if (name)
+        *getter_Copies(aStr) = ToNewUTF8String(name);
+    else
+        *getter_Shares(aStr) = "???";
 }
 #endif /* DEBUG */
 
@@ -451,16 +444,30 @@ nsDocLoaderImpl::OnStartRequest(nsIRequest *request, nsISupports *aCtxt)
 {
     // called each time a request is added to the group.
     nsresult rv;
-    
-    nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(request);
 
-    if (!mIsLoadingDocument) {
-        PRUint32 loadFlags = 0;
-        aChannel->GetLoadFlags(&loadFlags);
-        if (loadFlags & nsIRequest::LOAD_DOCUMENT_URI) {
-            mIsLoadingDocument = PR_TRUE;
-            ClearInternalProgress(); // only clear our progress if we are starting a new load....
-        }
+#ifdef PR_LOGGING
+    if (PR_LOG_TEST(gDocLoaderLog, PR_LOG_DEBUG)) {
+        nsXPIDLString name;
+        request->GetName(getter_Copies(name));
+
+        PRUint32 count = 0;
+        if (mLoadGroup)
+            mLoadGroup->GetActiveCount(&count);
+
+        PR_LOG(gDocLoaderLog, PR_LOG_DEBUG,
+               ("DocLoader:%p: OnStartRequest[%p](%s) mIsLoadingDocument=%s, %u active URLs",
+                this, request, NS_ConvertUCS2toUTF8(name).get(),
+                (mIsLoadingDocument ? "true" : "false"),
+                count));
+    }
+#endif
+    
+    PRUint32 loadFlags = 0;
+    request->GetLoadFlags(&loadFlags);
+
+    if (!mIsLoadingDocument && (loadFlags & nsIRequest::LOAD_DOCUMENT_URI)) {
+        mIsLoadingDocument = PR_TRUE;
+        ClearInternalProgress(); // only clear our progress if we are starting a new load....
     }
 
     //
@@ -479,7 +486,7 @@ nsDocLoaderImpl::OnStartRequest(nsIRequest *request, nsISupports *aCtxt)
         //
         AddRequestInfo(request);
 
-        if (1 == count) {
+        if ((1 == count) && (loadFlags & nsIRequest::LOAD_DOCUMENT_URI)) {
             // This request is associated with the entire document...
             mDocumentRequest = do_QueryInterface(request);
             mLoadGroup->SetDefaultLoadRequest(mDocumentRequest); 
@@ -511,6 +518,23 @@ nsDocLoaderImpl::OnStopRequest(nsIRequest *aRequest,
 {
   nsresult rv = NS_OK;
 
+#ifdef PR_LOGGING
+    if (PR_LOG_TEST(gDocLoaderLog, PR_LOG_DEBUG)) {
+        nsXPIDLString name;
+        aRequest->GetName(getter_Copies(name));
+
+        PRUint32 count = 0;
+        if (mLoadGroup)
+            mLoadGroup->GetActiveCount(&count);
+
+        PR_LOG(gDocLoaderLog, PR_LOG_DEBUG,
+               ("DocLoader:%p: OnStopRequest[%p](%s) status=%x mIsLoadingDocument=%s, %u active URLs",
+                this, aRequest, NS_ConvertUCS2toUTF8(name).get(),
+                aStatus, (mIsLoadingDocument ? "true" : "false"),
+                count));
+    }
+#endif
+    
   //
   // Only fire the OnEndDocumentLoad(...) if the document loader 
   // has initiated a load...
@@ -740,9 +764,9 @@ void nsDocLoaderImpl::FireOnStartDocumentLoad(nsDocLoaderImpl* aLoadInitiator,
   PRInt32 count;
 
   nsCOMPtr<nsIURI> uri;
-  nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(aDocRequest);
-
-  aChannel->GetURI(getter_AddRefs(uri));
+  nsCOMPtr<nsIChannel> channel = do_QueryInterface(aDocRequest);
+  if (channel)
+      channel->GetURI(getter_AddRefs(uri));
 
 #if defined(DEBUG)
   nsXPIDLCString buffer;
