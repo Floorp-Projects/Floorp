@@ -316,6 +316,7 @@ private:
   PRInt32           mTransCnt;
   PRBool            mRefreshEnabled;
   PRBool            mPainting;
+  PRBool            mRecursiveRefreshPending;
   nsIView           *mMouseGrabber;
   nsIView           *mKeyGrabber;
   PRInt32           mUpdateCnt;
