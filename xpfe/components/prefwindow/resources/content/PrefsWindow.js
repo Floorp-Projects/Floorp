@@ -89,9 +89,11 @@ function openit()  {
          toolkit.CloseWindow( window );
  }
  
- function SetHomePageToCurrentPage()
+ function SetPrefToCurrentPage(prefID)
  {
- 	dump("SetHomePageToCurrentPage() \n ");
+ 	dump("SetPrefToCurrentPage("+ prefID +") \n ");
+	if ((prefID == null) || (prefID == "")) return;
+	
  	var windowManager = Components.classes['component://netscape/rdf/datasource?name=window-mediator'].getService();
 	var	windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
 
@@ -99,7 +101,7 @@ function openit()  {
 	var topWindowOfType = windowManagerInterface.GetMostRecentWindow( "navigator:browser" );
 	if ( topWindowOfType )
 	{
-		var inputfield = document.getElementById("pref:string:browser.startup.homepage");
+		var inputfield = document.getElementById(prefID);
 		dump( "window found "+inputfield+"\n");
 		if ( inputfield )
 		{
@@ -118,12 +120,12 @@ function createInstance( progid, iidName ) {
   return Components.classes[ progid ].createInstance( iid );
 }
 
-function PrefNavSelectFile() {
+function PrefNavSelectFile(prefID) {
     // Get filespecwithui component.            
     var fileSpec = createInstance( "component://netscape/filespecwithui", "nsIFileSpecWithUI" );
     try {
         var url = fileSpec.chooseFile( "" );
-        var field = document.getElementById( "pref:string:browser.startup.homepage" );
+        var field = document.getElementById(prefID);
         field.setAttribute( "value", fileSpec.nativePath );
     }
     catch( exception ) {
