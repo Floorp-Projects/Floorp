@@ -45,6 +45,8 @@
 #include "nsIDOMDocumentEvent.h"
 #include "nsISupportsArray.h"
 #include "nsHashtable.h"
+#include "nsIWordBreakerFactory.h"
+#include "nsILineBreakerFactory.h"
 
 class nsIEventListenerManager;
 class nsDOMStyleSheetList;
@@ -475,9 +477,9 @@ protected:
   nsDOMStyleSheetList *mDOMStyleSheets;
   nsINameSpaceManager* mNameSpaceManager;
   nsDocHeaderData* mHeaderData;
-  nsILineBreaker* mLineBreaker;
+  nsCOMPtr<nsILineBreaker> mLineBreaker;
+  nsCOMPtr<nsIWordBreaker> mWordBreaker;
   nsDocumentChildNodes* mChildNodes;
-  nsIWordBreaker* mWordBreaker;
   // A content ID counter used to give a monotonically increasing ID to the content
   // objects in the document's content model
   PRInt32 mNextContentID;
