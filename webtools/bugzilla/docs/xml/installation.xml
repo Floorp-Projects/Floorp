@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.60 2004/02/02 16:33:36 jocuri%softhome.net Exp $ -->
+<!-- $Id: installation.xml,v 1.61 2004/02/05 01:12:27 justdave%syndicomm.com Exp $ -->
 <chapter id="installing-bugzilla">
   <title>Installing Bugzilla</title>
 
@@ -1490,18 +1490,18 @@ $smtp->quit;
         <para>To prevent creating conflicts with the software that Apple
         installs by default, Fink creates its own directory tree at 
         <filename class="directory">/sw</filename> where it installs most of
-        the software that it installs. This means your libraries and headers be
-        at <filename class="directory">/sw/lib</filename> and
+        the software that it installs. This means your libraries and headers
+        will be at <filename class="directory">/sw/lib</filename> and
         <filename class="directory">/sw/include</filename> instead of
         <filename class="directory">/usr/lib</filename> and
-        <filename class="directory">/usr/local/include</filename>. When the
+        <filename class="directory">/usr/include</filename>. When the
         Perl module config script asks where your libgd is, be sure to tell it
         <filename class="directory">/sw/lib</filename>.
         </para>
       </note>
 
-      <para>Also available via Fink is expat. After using fink to
-      install the expat package you will be able to install
+      <para>Also available via Fink is <filename>expat</filename>. After using
+      fink to install the expat package you will be able to install
       XML::Parser using CPAN. There is one caveat. Unlike recent versions of
       the GD module, XML::Parser doesn't prompt for the location of the
       required libraries. When using CPAN, you will need to use the following
