@@ -237,7 +237,15 @@ my $platform_popup = make_popup('rep_platform', \@::legal_platform,
                                 pickplatform(), 0);
 my $opsys_popup = make_popup('op_sys', \@::legal_opsys, pickos(), 0);
 
-if (1 == @{$::components{$product}}) {
+if (0 == $::components{$product}) {
+	print "<H1>Permission Denied</H1>\n";
+	print "Sorry.  You need to have at least one component for this product\n";
+	print "in order to create a new bug.  Go to the \"Components\" link to create\n";
+	print "a new component\n";
+	print "<P>\n";
+	PutFooter();
+	exit;
+} elsif (1 == @{$::components{$product}}) {
     # Only one component; just pick it.
     $::FORM{'component'} = $::components{$product}->[0];
 }
