@@ -65,7 +65,7 @@ NS_METHOD nsMenuBar::Create(nsIWidget *aParent)
 
   Widget mainWindow = XtParent(parentWidget);
 
-  mMenu = ::XmCreateMenuBar(mainWindow, "menubar", nsnull, 0);
+  mMenu = XmCreateMenuBar(mainWindow, "menubar", nsnull, 0);
   XtManageChild(mMenu);
 
   return NS_OK;
