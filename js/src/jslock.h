@@ -159,8 +159,7 @@ extern JSBool js_IsScopeLocked(JSScope *scope);
 	JS_LOCK_RUNTIME_VOID(_rt, e);                                         \
     JS_END_MACRO
 
-#if defined(JS_USE_ONLY_NSPR_LOCKS) || \
-    !( (defined(_WIN32) && defined(_M_IX86)) || defined(SOLARIS) || defined(AIX) || (defined(__GNUC__) && defined(__i386__)) )
+#if defined(JS_USE_ONLY_NSPR_LOCKS) || !(defined(_WIN32) || defined(SOLARIS) || defined(AIX))
 
 #undef JS_LOCK0
 #undef JS_UNLOCK0
