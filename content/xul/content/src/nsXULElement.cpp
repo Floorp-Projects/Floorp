@@ -22,7 +22,7 @@
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Peter Annema <disttsc@bart.nl>
  *   Brendan Eich <brendan@mozilla.org>
- *
+ *   Mike Shaver <shaver@mozilla.org>
  *
  * This Original Code has been modified by IBM Corporation.
  * Modifications made by IBM described herein are
@@ -4890,6 +4890,10 @@ nsXULElement::IsAncestor(nsIDOMNode* aParentNode, nsIDOMNode* aChildNode)
 NS_IMETHODIMP
 nsXULElement::Focus()
 {
+  // What kind of crazy tries to focus an element without a doc?
+  if (!mDocument)
+      return NS_OK;
+
   // Obtain a presentation context and then call SetFocus.
   PRInt32 count = mDocument->GetNumberOfShells();
   if (count == 0)
@@ -4909,6 +4913,10 @@ nsXULElement::Focus()
 NS_IMETHODIMP
 nsXULElement::Blur()
 {
+  // What kind of crazy tries to blur an element without a doc?
+  if (!mDocument)
+      return NS_OK;
+
   // Obtain a presentation context and then call SetFocus.
   PRInt32 count = mDocument->GetNumberOfShells();
   if (count == 0)
