@@ -27,8 +27,13 @@
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 #include "nsXIFConverter.h"
+#include "nsIDOMText.h"
+#include "nsIDocument.h"
+#include "nsIHTMLDocument.h"
 
 static NS_DEFINE_IID(kIDOMHTMLTitleElementIID, NS_IDOMHTMLTITLEELEMENT_IID);
+static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
+static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
 
 class nsHTMLTitleElement : public nsIDOMHTMLTitleElement,
                            public nsIScriptObjectOwner,
@@ -123,8 +128,6 @@ nsHTMLTitleElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 
-NS_IMPL_STRING_ATTR(nsHTMLTitleElement, Text, text)
-
 NS_IMETHODIMP
 nsHTMLTitleElement::StringToAttribute(nsIAtom* aAttribute,
                                       const nsString& aValue,
@@ -157,6 +160,59 @@ nsHTMLTitleElement::GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) c
 }
 
 
+NS_IMETHODIMP 
+nsHTMLTitleElement::GetText(nsString& aTitle)
+{
+  nsresult result = NS_OK;
+  nsIDOMNode* child;
+
+  result = GetFirstChild(&child);
+  if ((NS_OK == result) && (nsnull != child)) {
+    nsIDOMText* text;
+    
+    result = child->QueryInterface(kIDOMTextIID, (void**)&text);
+    if (NS_OK == result) {
+      text->GetData(aTitle);
+      NS_RELEASE(text);
+    }
+    NS_RELEASE(child);
+  }
+
+  return result;
+}
+
+NS_IMETHODIMP 
+nsHTMLTitleElement::SetText(const nsString& aTitle)
+{
+  nsresult result = NS_OK;
+  nsIDOMNode* child;
+  nsIDocument* document;
+
+  result = GetDocument(document);
+  if (NS_OK == result) {
+    nsIHTMLDocument* htmlDoc;
+    result = document->QueryInterface(kIHTMLDocumentIID, (void**)&htmlDoc);
+    if (NS_OK == result) {
+      htmlDoc->SetTitle(aTitle);
+      NS_RELEASE(htmlDoc);
+    }   
+    NS_RELEASE(document);
+  }
+
+  result = GetFirstChild(&child);
+  if ((NS_OK == result) && (nsnull != child)) {
+    nsIDOMText* text;
+    
+    result = child->QueryInterface(kIDOMTextIID, (void**)&text);
+    if (NS_OK == result) {
+      text->SetData(aTitle);
+      NS_RELEASE(text);
+    }
+    NS_RELEASE(child);
+  }
+
+  return result;
+}
 
 NS_IMETHODIMP
 nsHTMLTitleElement::HandleDOMEvent(nsIPresContext& aPresContext,

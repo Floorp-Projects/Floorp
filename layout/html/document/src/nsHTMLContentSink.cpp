@@ -1603,11 +1603,18 @@ HTMLContentSink::SetTitle(const nsString& aValue)
   nsIHTMLContent* it = nsnull;
   nsresult rv = NS_NewHTMLTitleElement(&it, atom);
   if (NS_OK == rv) {
-    nsIDOMHTMLTitleElement* domtitle = nsnull;
-    it->QueryInterface(kIDOMHTMLTitleElementIID, (void**) &domtitle);
-    if (nsnull != domtitle) {
-      domtitle->SetText(aValue);
-      NS_RELEASE(domtitle);
+    nsIContent* text;
+    rv = NS_NewTextNode(&text);
+    if (NS_OK == rv) {
+      nsIDOMText* tc;
+      rv = text->QueryInterface(kIDOMTextIID, (void**)&tc);
+      if (NS_OK == rv) {
+        tc->SetData(aValue);
+        NS_RELEASE(tc);
+      }
+      it->AppendChildTo(text, PR_FALSE);
+      text->SetDocument(mDocument, PR_FALSE);
+      NS_RELEASE(text);
     }
     mHead->AppendChildTo(it, PR_FALSE);
     NS_RELEASE(it);
