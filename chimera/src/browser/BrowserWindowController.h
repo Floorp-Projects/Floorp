@@ -246,7 +246,7 @@ class nsIDOMNode;
 
 - (IBAction)viewOnlyThisImage:(id)aSender;
 
-- (NSView*) bookmarksToolbar;
+- (CHBookmarksToolbar*) bookmarksToolbar;
 
 // Called to get cached versions of our security icons
 + (NSImage*) insecureIcon;
