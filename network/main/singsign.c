@@ -684,7 +684,7 @@ si_GetUserForChangeForm(MWContext *context, char* URLName, int messageNumber)
  * This routine is called only if signon pref is enabled!!!
  */
 PRIVATE si_SignonUserStruct*
-si_GetURLAndUserForChangeForm(MWContext *context)
+si_GetURLAndUserForChangeForm(MWContext *context, char* password)
 {
     si_SignonURLStruct* url;
     si_SignonUserStruct* user;
@@ -696,11 +696,11 @@ si_GetURLAndUserForChangeForm(MWContext *context)
     int16 user_count;
 
     char ** list;
-    char ** list0;
+    char ** list2;
     si_SignonUserStruct** users;
-    si_SignonUserStruct** users0;
+    si_SignonUserStruct** users2;
     si_SignonURLStruct** urls;
-    si_SignonURLStruct** urls0;
+    si_SignonURLStruct** urls2;
 
     /* get count of total number of user nodes at all url nodes */
     user_count = 0;
@@ -712,40 +712,50 @@ si_GetURLAndUserForChangeForm(MWContext *context)
       }
     }
 
-    /* allocate lists for url and user names */
-    list0 = XP_ALLOC(user_count*sizeof(char*));
-    users0 = XP_ALLOC(user_count*sizeof(si_SignonUserStruct*));
-    urls0 = XP_ALLOC(user_count*sizeof(si_SignonUserStruct*));
-    list = list0;
-    users = users0;
-    urls = urls0;
+    /* allocate lists for maximumum possible url and user names */
+    list = XP_ALLOC(user_count*sizeof(char*));
+    users = XP_ALLOC(user_count*sizeof(si_SignonUserStruct*));
+    urls = XP_ALLOC(user_count*sizeof(si_SignonUserStruct*));
+    list2 = list;
+    users2 = users;
+    urls2 = urls;
     
     /* step through set of URLs and users and create list of each */
+    user_count = 0;
     url_ptr = si_signon_list;
     while((url = (si_SignonURLStruct *) XP_ListNextObject(url_ptr))!=0) {
-      user_ptr = url->signonUser_list;
-      while((user = (si_SignonUserStruct *) XP_ListNextObject(user_ptr))!=0) {
-          data_ptr = user->signonData_list;
-          /* consider first data node to be the identifying item */
-          data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr);
-          *list = 0;
-          StrAllocCopy(*list, url->URLName);
-          StrAllocCat(*list,": ");
-          StrAllocCat(*list, data->value);
-          list++;
-          *(users++) = user;
-          *(urls++) = url;
-      }
+        user_ptr = url->signonUser_list;
+        while((user = (si_SignonUserStruct *) XP_ListNextObject(user_ptr))!=0) {
+            data_ptr = user->signonData_list;
+            /* find saved password and see if it matches password user just entered */
+            while((data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr))!=0) {
+                if (data->isPassword && !PL_strcmp(data->value, password)) {
+                    /* passwords match so add entry to list */
+                    /* consider first data node to be the identifying item */
+                    data_ptr = user->signonData_list;
+                    data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr);
+                    *list2 = 0;
+                    StrAllocCopy(*list2, url->URLName);
+                    StrAllocCat(*list2,": ");
+                    StrAllocCat(*list2, data->value);
+                    list2++;
+                    *(users2++) = user;
+                    *(urls2++) = url;
+                    user_count++;
+                    break;
+                }
+            }
+        }
     }
 
     /* query user */
-    if (FE_SelectDialog
+    if (user_count && FE_SelectDialog
             (context,
             "Is this a change of password for one of the following?",
-            list0,
+            list,
             &user_count)) {
-        user = users0[user_count];
-        url = urls0[user_count];
+        user = users[user_count];
+        url = urls[user_count];
         /*
          * since this user node is now the most-recently-used one, move it
          * to the head of the user list so that it can be favored for
@@ -760,12 +770,12 @@ si_GetURLAndUserForChangeForm(MWContext *context)
     }
 
     /* free allocated strings */
-    while (--list > list0) {
-      XP_FREE(*list);
+    while (--list2 > list) {
+      XP_FREE(*list2);
     }
-    XP_FREE(list0);
-    XP_FREE(users0);
-    XP_FREE(urls0);
+    XP_FREE(list);
+    XP_FREE(users);
+    XP_FREE(urls);
 
     return user;
 
@@ -1940,7 +1950,8 @@ SI_RememberSignonData(char* URLName, LO_FormSubmitData * submit)
 
         /* ask user if this is a password change */
         si_lock_signon_list();
-        user = si_GetURLAndUserForChangeForm(context);
+        user = si_GetURLAndUserForChangeForm
+            (context, ((char **)submit->value_array)[pswd[0]]);
 
         /* return if user said no */
         if (!user) {
