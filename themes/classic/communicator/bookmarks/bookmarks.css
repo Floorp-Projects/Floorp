@@ -78,14 +78,26 @@
       -moz-binding        : url("chrome://global/skin/classicBindings.xml#toolbarbutton-left");
       border              : none;      
       vertical-align      : middle;
+    }
+    
+  .button-toolbar.bookmarkitem,
+  .button-toolbar.bookmarkfolder
+    {
       max-width           : 10em;
     }
     
-    .toolbarbutton-top-icon {
+  .button-toolbar.bookmarkfolder > box > text 
+    {
+      max-width: 8em  !important;
+    }
+    
+  .toolbarbutton-top-icon 
+    {
       max-width           : 2em;
     }
     
-    .toolbarbutton-left-text {
+  .toolbarbutton-left-text 
+    {
       max-width           : 8em;
     }
     

@@ -20,6 +20,7 @@
  * Contributor(s): 
  */
 
+    
 .bookmarkitem
   {
     list-style-image      : url("chrome://communicator/skin/bookmarks/bookmark-item.png");
@@ -34,6 +35,11 @@
 .bookmarkfolder
   {
     list-style-image      : url("chrome://communicator/skin/bookmarks/bookmark-folder-closed.png");
+  }
+
+.bookmarkfolder > box > text 
+  {
+    max-width: 8em;
   }
 
 .bookmarkfolder[menuactive="true"]
