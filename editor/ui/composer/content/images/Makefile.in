@@ -31,7 +31,7 @@ CHROME_CONTENT_DIR = content/images
 
 CHROME_CONTENT = \
 		tag-anchor.gif  \
-		tag-unknown.gif  \
+		tag-userdefined.gif  \
 		tag-abr.gif  \
 		tag-acr.gif  \
 		tag-adr.gif  \
