@@ -1448,7 +1448,7 @@ nsXULElement::IsFocusable(PRInt32 *aTabIndex)
     *aTabIndex = tabIndex;
   }
 
-  return tabIndex >= 0;
+  return tabIndex >= 0 || (!disabled && HasAttr(kNameSpaceID_None, nsHTMLAtoms::tabindex));
 }
 
 

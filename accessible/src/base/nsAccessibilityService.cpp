@@ -448,16 +448,11 @@ nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsISupports *aFrame,
     *aAccessible = new nsHTMLLinkAccessible(node, weakShell, frame);
   }
 #endif
+  else if (content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::tabindex)) {
+    *aAccessible = new nsGenericAccessible(node, weakShell);
+  }
   else {
-    nsAutoString tabIndex;
-    content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::tabindex, tabIndex);
-    PRInt32 rv, tabIndexVal = tabIndex.ToInteger(&rv);
-    if (NS_SUCCEEDED(rv) && tabIndexVal >= 0) {
-      *aAccessible = new nsGenericAccessible(node, weakShell);
-    }
-    else {
-      return NS_ERROR_FAILURE;
-    }
+    return NS_ERROR_FAILURE;
   }
 
   NS_ENSURE_TRUE(aAccessible, NS_ERROR_OUT_OF_MEMORY);

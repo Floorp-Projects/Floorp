@@ -2359,17 +2359,8 @@ void
 nsGenericElement::SetFocus(nsIPresContext* aPresContext)
 {
   // Traditionally focusable elements can take focus as long as they don't set
-  // the disabled attribute or set tabindex < 0
-  nsAutoString tabIndexStr;
-  GetAttr(kNameSpaceID_None, nsHTMLAtoms::tabindex, tabIndexStr);
-  if (!tabIndexStr.IsEmpty()) {
-    PRInt32 rv, tabIndexVal = tabIndexStr.ToInteger(&rv);
-    if (NS_SUCCEEDED(rv) && tabIndexVal < 0) {
-      return;
-    }
-  }
-
-  if (!HasAttr(kNameSpaceID_None, nsHTMLAtoms::disabled)) {
+  // the disabled attribute
+  if (IsFocusable()) {
     aPresContext->EventStateManager()->SetContentState(this,
                                                        NS_EVENT_STATE_FOCUS);
   }

@@ -3629,11 +3629,10 @@ nsGenericHTMLElement::Blur()
 nsresult
 nsGenericHTMLElement::Focus()
 {
-  // Generic HTML elements are focusable only if 
-  // tabindex explicitly set and tabindex >= 0
-  if (IsFocusable()) {
-    SetElementFocus(PR_TRUE);
-  }
+  // Generic HTML elements are focusable only if tabindex explicitly set.
+  // SetFocus() will check to see if we're focusable and then
+  // call into esm to do the work of focusing.
+  SetElementFocus(PR_TRUE);
 
   return NS_OK;
 }
@@ -3662,8 +3661,10 @@ nsGenericHTMLElement::IsFocusable(PRInt32 *aTabIndex)
 {
   PRInt32 tabIndex = 0;   // Default value for non HTML elements with -moz-user-focus
   GetTabIndex(&tabIndex);
+
   // Just check for disabled attribute on all HTML elements
-  if (HasAttr(kNameSpaceID_None, nsHTMLAtoms::disabled)) {
+  PRBool disabled = HasAttr(kNameSpaceID_None, nsHTMLAtoms::disabled);
+  if (disabled) {
     tabIndex = -1;
   }
 
@@ -3671,7 +3672,8 @@ nsGenericHTMLElement::IsFocusable(PRInt32 *aTabIndex)
     *aTabIndex = tabIndex;
   }
 
-  return tabIndex >= 0;
+  // If a tabindex is specified at all, or the default tabindex is 0, we're focusable
+  return tabIndex >= 0 || (!disabled && HasAttr(kNameSpaceID_None, nsHTMLAtoms::tabindex));
 }
 
 void
