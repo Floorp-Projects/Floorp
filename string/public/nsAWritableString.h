@@ -321,7 +321,6 @@ class basic_nsAWritableString
         }
   };
 
-NS_DEF_STRING_COMPARISONS(basic_nsAWritableString<CharT>)
 
 template <class CharT>
 typename basic_nsAWritableString<CharT>::WritingIterator

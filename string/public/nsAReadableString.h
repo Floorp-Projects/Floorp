@@ -38,7 +38,8 @@
 #include <iterator>
   // for |bidirectional_iterator_tag|
 
-#include <algorithm.h>
+#include <algorithm>
+  // for |min|, |copy|
 
 
 /*

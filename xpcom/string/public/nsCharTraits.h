@@ -24,7 +24,8 @@
 #ifndef _nsCharTraits_h__
 #define _nsCharTraits_h__
 
-#include <eof.h>
+#include <ctype.h>
+  // for |EOF|, |WEOF|
 
 #include <string.h>
   // for |memcpy|, et al
@@ -330,6 +331,7 @@ struct nsCharTraits<char>
 #endif
   };
 
+#if 0
 NS_SPECIALIZE_TEMPLATE
 struct nsCharTraits<wchar_t>
   {
@@ -454,5 +456,6 @@ struct nsCharTraits<wchar_t>
     // static state_type get_state( pos_type );
 #endif
   };
+#endif
 
 #endif // !defined(_nsCharTraits_h__)

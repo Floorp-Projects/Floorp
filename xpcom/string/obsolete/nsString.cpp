@@ -898,6 +898,7 @@ nsCString& nsCString::Assign(char aChar) {
   return Append(aChar);
 }
 
+#ifndef NEW_STRING_APIS
 /**
  * WARNING! THIS IS A VERY SPECIAL METHOD. 
  * This method "steals" the contents of aSource and hands it to aDest.
@@ -916,7 +917,7 @@ nsCString& nsCString::operator=(nsSubsumeCStr& aSubsumeString) {
 #endif // AIX
   return *this;
 }
-
+#endif
 
 /**
  * append given string to this string
