@@ -617,7 +617,7 @@ static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
   PRBool loadInBackground;
   nsCOMPtr<nsIPrefBranch> pref(do_GetService("@mozilla.org/preferences-service;1"));
   pref->GetBoolPref("browser.tabs.loadInBackground", &loadInBackground);
-  [self openNewTabWithURL: urlStr loadInBackground: loadInBackground];
+  [self openNewTabWithURL: viewSource loadInBackground: loadInBackground];
 }
 
 - (void)printDocument
