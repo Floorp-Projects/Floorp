@@ -151,11 +151,11 @@ public:
                           PRUint32 aFlags,
                           nsEventStatus& aEventStatus);
 
-  NS_IMETHOD GetContentID(PRUint32* aID) {
+  nsresult GetContentID(PRUint32* aID) {
     *aID = mContentID;
     return NS_OK;
   }
-  NS_IMETHOD SetContentID(PRUint32 aID) {
+  nsresult SetContentID(PRUint32 aID) {
     mContentID = aID;
     return NS_OK;
   }
