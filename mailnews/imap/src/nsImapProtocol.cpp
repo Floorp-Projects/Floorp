@@ -620,15 +620,16 @@ void nsImapProtocol::ReleaseUrlState()
   m_imapMessageSink = null_nsCOMPtr();
   m_imapExtensionSink = null_nsCOMPtr();
   m_imapMiscellaneousSink = null_nsCOMPtr();
-    m_channelListener = null_nsCOMPtr();
-    m_channelContext = null_nsCOMPtr();
-    if (m_mockChannel)
-    {
-        m_mockChannel->Close();
-        m_mockChannel = null_nsCOMPtr();
-    }
-    m_channelInputStream = null_nsCOMPtr();
-    m_channelOutputStream = null_nsCOMPtr();
+  m_channelListener = null_nsCOMPtr();
+  m_channelContext = null_nsCOMPtr();
+  if (m_mockChannel)
+  {
+     m_mockChannel->Close();
+     m_mockChannel = null_nsCOMPtr();
+  }
+  
+  m_channelInputStream = null_nsCOMPtr();
+  m_channelOutputStream = null_nsCOMPtr();
 
   // mscott - do we need to release all of our sinks here? will we re-use them on the next
   // url request? I'm guessing we need to release them even though we'll just re-acquire
@@ -2659,22 +2660,23 @@ nsImapProtocol::PostLineDownLoadEvent(msg_line_info *downloadLineDontDelete)
       m_imapMailFolderSink->ParseAdoptedHeaderLine(this, downloadLineDontDelete);
     }
   }
-    // if we have a channel listener, then just spool the message
-    // directory to the listener
-    else if (m_channelListener)
-    {
-       PRUint32 count = 0;
-       char * line = downloadLineDontDelete->adoptedMessageLine;
-     m_channelOutputStream->Write(line, PL_strlen(line), &count);
-    }
+
+  // if we have a channel listener, then just spool the message
+  // directory to the listener
+  else if (m_channelListener)
+  {
+    PRUint32 count = 0;
+    char * line = downloadLineDontDelete->adoptedMessageLine;
+    nsresult rv = m_channelOutputStream->Write(line, PL_strlen(line), &count);
+    if (NS_SUCCEEDED(rv))
+      m_channelListener->OnDataAvailable(m_mockChannel, m_channelContext, m_channelInputStream, 0, count);   
+  }
   else if (m_imapMessageSink && downloadLineDontDelete)
   {
     m_imapMessageSink->ParseAdoptedMsgLine(downloadLineDontDelete->adoptedMessageLine, 
-      downloadLineDontDelete->uidOfMessage);
+    downloadLineDontDelete->uidOfMessage);
   }
-
-
-    // ***** We need to handle the psuedo interrupt here *****
+  // ***** We need to handle the psuedo interrupt here *****
 }
 
 // well, this is what the old code used to look like to handle a line seen by the parser.
@@ -2767,6 +2769,7 @@ void nsImapProtocol::HandleMessageDownLoadLine(const char *line, PRBool chunkEnd
     if (!m_downloadLineCache.CacheEmpty())
     {
       msg_line_info *downloadLineDontDelete = m_downloadLineCache.GetCurrentLineInfo();
+      // post ODA lines....
       PostLineDownLoadEvent(downloadLineDontDelete);
     }
     m_downloadLineCache.ResetCache();
@@ -2776,7 +2779,7 @@ void nsImapProtocol::HandleMessageDownLoadLine(const char *line, PRBool chunkEnd
     if (m_downloadLineCache.SpaceAvailable() < (PL_strlen(localMessageLine) + 1) )
     {
         // has to be dynamic to pass to other win16 thread
-    msg_line_info *downLoadInfo = (msg_line_info *) PR_CALLOC(sizeof(msg_line_info));
+        msg_line_info *downLoadInfo = (msg_line_info *) PR_CALLOC(sizeof(msg_line_info));
         if (downLoadInfo)
         {
             downLoadInfo->adoptedMessageLine = localMessageLine;
@@ -2787,14 +2790,13 @@ void nsImapProtocol::HandleMessageDownLoadLine(const char *line, PRBool chunkEnd
             else
             {
               // this is very rare, interrupt while waiting to display a huge single line
-              // Net_InterruptIMAP will read this line so leak the downLoadInfo
-              
+              // Net_InterruptIMAP will read this line so leak the downLoadInfo              
               // set localMessageLine to NULL so the FREEIF( localMessageLine) leaks also
               localMessageLine = NULL;
             }
         }
   }
-    else
+  else
     m_downloadLineCache.CacheLine(localMessageLine, GetServerStateParser().CurrentResponseUID());
 
   PR_FREEIF( localMessageLine);
@@ -2820,21 +2822,20 @@ void nsImapProtocol::NormalMessageEndDownload()
     if (m_imapMailFolderSink)
       m_imapMailFolderSink->NormalEndHeaderParseStream(this);
   }
-    else 
+  else 
+  {
+    if (m_channelListener)
     {
-        if (m_channelListener)
-        {
-            PRUint32 inlength = 0;
-        m_channelInputStream->Available(&inlength);
-        if (inlength > 0) // broadcast our batched up ODA changes
-          m_channelListener->OnDataAvailable(m_mockChannel, m_channelContext, m_channelInputStream, 0, inlength);   
-        }
+//      PRUint32 inlength = 0;
+//      m_channelInputStream->Available(&inlength);
+      //if (inlength > 0) // broadcast our batched up ODA changes
+//        m_channelListener->OnDataAvailable(m_mockChannel, m_channelContext, m_channelInputStream, 0, inlength);   
+    }
 
     // need to know if we're downloading for display or not.
     if (m_imapMessageSink)
       m_imapMessageSink->NormalEndMsgWriteStream(m_downloadLineCache.CurrentUID());
-    }
-
+  }
 }
 
 void nsImapProtocol::AbortMessageDownLoad()
