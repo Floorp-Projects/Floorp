@@ -29,7 +29,7 @@
 !  may use your version of this file under either the MPL or the
 !  GPL.
 !  
-!   $Id: montmulfv8.s,v 1.3 2001/10/17 20:35:04 nelsonb%netscape.com Exp $
+!   $Id: montmulfv8.s,v 1.4 2002/02/08 00:43:17 sonja.mirtitsch%sun.com Exp $
 !  
 
 	.section	".text",#alloc,#execinstr
@@ -1845,12 +1845,3 @@ TwoToMinus32:
 /* 0x0b4c	   0 */		.type	mont_mulf_noconv,2
 /* 0x0b4c	     */		.size	mont_mulf_noconv,(.-mont_mulf_noconv)
 
-! Begin Disassembling Stabs
-	.xstabs	".stab.index","Xa ; O ; P ; V=3.1 ; R=WorkShop Compilers 5.0 98/12/15 C 5.0",60,0,0,0	! (/usr/tmp/acompAAA7YaaOM:1)
-	.xstabs	".stab.index","/h/interzone/d3/nelsonb/nss_tip/mozilla/security/nss/lib/freebl/mpi32; /tools/ns/workshop-5.0/bin/../SC5.0/bin/cc -fast -xtarget=ultra -xarch=v8plus -xO5 -xstrconst -xdepend -Xa -Wc,-Qrm-Qd -Wc,-Qrm-Qf -Wc,-assembly -V -W0,-xp -KPIC -mt -o montmulf.o -c montmulf.il  montmulf.c -W0,-xp",52,0,0,0	! (/usr/tmp/acompAAA7YaaOM:2)
-! End Disassembling Stabs
-
-! Begin Disassembling Ident
-	.ident	"cg: WorkShop Compilers 5.0 99/08/12 Compiler Common 5.0 Patch 107357-05"	! (NO SOURCE LINE)
-	.ident	"acomp: WorkShop Compilers 5.0 98/12/15 C 5.0"	! (/usr/tmp/acompAAA7YaaOM:36)
-! End Disassembling Ident

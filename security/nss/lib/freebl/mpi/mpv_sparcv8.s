@@ -28,7 +28,7 @@
 ! * the GPL.  If you do not delete the provisions above, a recipient
 ! * may use your version of this file under either the MPL or the
 ! * GPL.
-! *  $Id: mpv_sparcv8.s,v 1.2 2000/12/29 00:36:30 nelsonb%netscape.com Exp $
+! *  $Id: mpv_sparcv8.s,v 1.3 2002/02/08 00:43:12 sonja.mirtitsch%sun.com Exp $
 ! */
 
 
@@ -1639,13 +1639,3 @@
 /* 0x11e0	  10 ( 0  0) */		.type	mask_cnst,#object
 /* 0x11e0	  11 ( 0  0) */		.size	mask_cnst,8
 
-! Begin Disassembling Stabs
-	.xstabs	".stab.index","Xa ; O ; P ; V=3.1 ; R=WorkShop Compilers 5.0 99/02/25 C 5.0 patch 107289-01",60,0,0,0	! (mpv_sparc.s:1476)
-	.xstabs	".stab.index","/home/ferenc/ssl/vis-code; /usr/dist/pkgs/devpro,v5.0/5.x-sparc/bin/../SC5.0/bin/cc -fast -xO4 -xrestrict -xarch=v8plusa -xchip=ultra3 -xdepend -KPIC -mt -S vis_32.il  mpv_sparc.c -W0,-xp",52,0,0,0	! (mpv_sparc.s:1477)
-! End Disassembling Stabs
-
-! Begin Disassembling Ident
-	.ident	"cg: WorkShop Compilers 5.0 99/04/15 Compiler Common 5.0 Patch 107357-02"	! (mpv_sparc.s:1481)
-	.ident	"@(#)vis_proto.h        1.3     97/03/30 SMI"	! (mpv_sparc.s:1482)
-	.ident	"acomp: WorkShop Compilers 5.0 99/02/25 C 5.0 patch 107289-01"	! (mpv_sparc.s:1483)
-! End Disassembling Ident
