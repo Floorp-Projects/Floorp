@@ -21,7 +21,7 @@
   <titledbutton class="sidebartitle" value="&sidebar.title.label;"/>
   <spring flex="100%"/>
   <titledbutton value="&sidebar.reload.label;"
-                onclick="window.location.reload"/>
+                onclick="window.location.reload()"/>
   <titledbutton value="&sidebar.customize.label;"/>
  </box>
 </box>
