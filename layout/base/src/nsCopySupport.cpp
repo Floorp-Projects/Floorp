@@ -210,11 +210,18 @@ nsresult nsCopySupport::HTMLCopy(nsISelection *aSel, nsIDocument *aDoc, PRInt16 
       }
       
       // populate the strings
-      dataWrapper->SetData ( NS_CONST_CAST(PRUnichar*,buffer.get()) );
+      nsresult data_rv = NS_OK, context_rv = NS_OK, info_rv = NS_OK;
+      data_rv =
+        dataWrapper->SetDataWithLength(buffer.Length(),
+                                       NS_CONST_CAST(PRUnichar*, buffer.get()));
       if (bIsHTMLCopy)
       {
-        contextWrapper->SetData ( NS_CONST_CAST(PRUnichar*,parents.get()) );
-        infoWrapper->SetData ( NS_CONST_CAST(PRUnichar*,info.get()) );
+        context_rv =
+          contextWrapper->SetDataWithLength(parents.Length(),
+                                            NS_CONST_CAST(PRUnichar*, parents.get()));
+        info_rv =
+          infoWrapper->SetDataWithLength(info.Length(),
+                                         NS_CONST_CAST(PRUnichar*, info.get()));
       }
       
       // QI the data object an |nsISupports| so that when the transferable holds
@@ -222,20 +229,20 @@ nsresult nsCopySupport::HTMLCopy(nsISelection *aSel, nsIDocument *aDoc, PRInt16 
       nsCOMPtr<nsISupports> genericDataObj ( do_QueryInterface(dataWrapper) );
       if (bIsHTMLCopy)
       {
-        if (buffer.Length())
+        if (!buffer.IsEmpty() && NS_SUCCEEDED(data_rv))
         {
           // Add the html DataFlavor to the transferable
           trans->AddDataFlavor(kHTMLMime);
           trans->SetTransferData(kHTMLMime, genericDataObj, buffer.Length()*2);
         }
-        if (parents.Length())
+        if (!parents.IsEmpty() && NS_SUCCEEDED(context_rv))
         {
           // Add the htmlcontext DataFlavor to the transferable
           trans->AddDataFlavor(kHTMLContext);
           genericDataObj = do_QueryInterface(contextWrapper);
           trans->SetTransferData(kHTMLContext, genericDataObj, parents.Length()*2);
         }
-        if (info.Length())
+        if (!info.IsEmpty() && NS_SUCCEEDED(info_rv))
         {
           // Add the htmlinfo DataFlavor to the transferable
           trans->AddDataFlavor(kHTMLInfo);
@@ -245,7 +252,7 @@ nsresult nsCopySupport::HTMLCopy(nsISelection *aSel, nsIDocument *aDoc, PRInt16 
       }
       else
       {
-        if (buffer.Length())
+        if (!buffer.IsEmpty() && NS_SUCCEEDED(data_rv))
         {
          // Add the unicode DataFlavor to the transferable
           trans->AddDataFlavor(kUnicodeMime);
