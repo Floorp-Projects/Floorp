@@ -30,7 +30,10 @@ typedef PRBool (*nsContentListMatchFunc)(nsIContent *aContent);
 
 class nsIDocument;
 
-class nsContentList : public nsIDOMNodeList, public nsIDOMHTMLCollection, public nsIScriptObjectOwner, public nsIDocumentObserver {
+class nsContentList : public nsIDOMNodeList, 
+                      public nsIDOMHTMLCollection, 
+                      public nsIScriptObjectOwner, 
+                      public nsIDocumentObserver {
 protected:
   nsContentList(nsIDocument *aDocument);
 public:

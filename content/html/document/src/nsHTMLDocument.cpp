@@ -50,6 +50,7 @@
 #include "nsIDOMHTMLElement.h"
 #include "nsIDOMHTMLMapElement.h"
 #include "nsINameSpaceManager.h"
+#include "nsGenericDOMNodeList.h"
 
 #ifdef PCB_USE_PROTOCOL_CONNECTION
 // beard: how else would we get the referrer to a URL?
@@ -82,6 +83,63 @@ static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIHTMLContentContainerIID, NS_IHTMLCONTENTCONTAINER_IID);
 static NS_DEFINE_IID(kIDOMHTMLElementIID, NS_IDOMHTMLELEMENT_IID);
 
+// ==================================================================
+// =
+// ==================================================================
+class nsHTMLDocumentChildNodes : public nsGenericDOMNodeList
+{
+public:
+  nsHTMLDocumentChildNodes(nsIDOMDocument* aDocument);
+  ~nsHTMLDocumentChildNodes();
+
+  NS_IMETHOD    GetLength(PRUint32* aLength);
+  NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMNode** aReturn);
+
+protected:
+  nsIDOMDocument* mDocument;
+};
+
+nsHTMLDocumentChildNodes::nsHTMLDocumentChildNodes(nsIDOMDocument* aDocument)
+{
+  mDocument = aDocument;
+  NS_ADDREF(mDocument);
+}
+
+nsHTMLDocumentChildNodes::~nsHTMLDocumentChildNodes()
+{
+  NS_RELEASE(mDocument);
+}
+
+NS_IMETHODIMP    
+nsHTMLDocumentChildNodes::GetLength(PRUint32* aLength)
+{
+  *aLength = 1;
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsHTMLDocumentChildNodes::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
+{
+  nsresult result = NS_OK;
+  if (0 == aIndex) {
+    nsIDOMElement* root;
+    
+    result = mDocument->GetDocumentElement(&root);
+    if (NS_OK == result) {
+      result = root->QueryInterface(kIDOMNodeIID, (void**)aReturn);
+      NS_RELEASE(root);
+    }
+  }
+  else {
+    *aReturn = nsnull;
+  }
+  
+  return result;
+}
+
+// ==================================================================
+// =
+// ==================================================================
 NS_LAYOUT nsresult
 NS_NewHTMLDocument(nsIDocument** aInstancePtrResult)
 {
@@ -639,6 +697,181 @@ nsHTMLDocument::GetDoctype(nsIDOMDocumentType** aDocumentType)
   *aDocumentType = nsnull;
   return NS_OK;
 }
+
+NS_IMETHODIMP    
+nsHTMLDocument::GetImplementation(nsIDOMDOMImplementation** aImplementation)
+{ 
+  return nsDocument::GetImplementation(aImplementation); 
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::GetDocumentElement(nsIDOMElement** aDocumentElement)
+{ 
+  return nsDocument::GetDocumentElement(aDocumentElement); 
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::CreateDocumentFragment(nsIDOMDocumentFragment** aReturn)
+{ 
+  return nsDocument::CreateDocumentFragment(aReturn); 
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::CreateComment(const nsString& aData, nsIDOMComment** aReturn)
+{ 
+  return nsDocument::CreateComment(aData, aReturn); 
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::CreateAttribute(const nsString& aName, nsIDOMAttr** aReturn)
+{ 
+  return nsDocument::CreateAttribute(aName, aReturn); 
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::CreateTextNode(const nsString& aData, nsIDOMText** aReturn)
+{ 
+  return nsDocument::CreateTextNode(aData, aReturn); 
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::GetElementsByTagName(const nsString& aTagname, nsIDOMNodeList** aReturn)
+{ 
+  return nsDocument::GetElementsByTagName(aTagname, aReturn); 
+}
+
+//
+// nsIDOMNode interface implementation
+//
+NS_IMETHODIMP    
+nsHTMLDocument::GetChildNodes(nsIDOMNodeList** aChildNodes)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::GetFirstChild(nsIDOMNode** aFirstChild)
+{
+  if (nsnull != mRootContent) {
+    return mRootContent->QueryInterface(kIDOMNodeIID, (void**)aFirstChild);
+  }
+  else {
+    *aFirstChild = nsnull;
+    return NS_OK;
+  }
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::GetLastChild(nsIDOMNode** aLastChild)
+{
+  if (nsnull != mRootContent) {
+    return mRootContent->QueryInterface(kIDOMNodeIID, (void**)aLastChild);
+  }
+  else {
+    *aLastChild = nsnull;
+    return NS_OK;
+  }
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::InsertBefore(nsIDOMNode* aNewChild, 
+                             nsIDOMNode* aRefChild, 
+                             nsIDOMNode** aReturn)
+{
+  *aReturn = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::ReplaceChild(nsIDOMNode* aNewChild, 
+                             nsIDOMNode* aOldChild, 
+                             nsIDOMNode** aReturn)
+{
+  *aReturn = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
+{
+  *aReturn = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
+{
+  *aReturn = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::HasChildNodes(PRBool* aReturn)
+{
+  *aReturn = PR_TRUE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::GetNodeName(nsString& aNodeName)
+{ 
+  return nsDocument::GetNodeName(aNodeName); 
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::GetNodeValue(nsString& aNodeValue)
+{ 
+  return nsDocument::GetNodeValue(aNodeValue); 
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::SetNodeValue(const nsString& aNodeValue)
+{ 
+  return nsDocument::SetNodeValue(aNodeValue); 
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::GetNodeType(PRUint16* aNodeType)
+{ 
+  return nsDocument::GetNodeType(aNodeType); 
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::GetParentNode(nsIDOMNode** aParentNode)
+{ 
+  return nsDocument::GetParentNode(aParentNode); 
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::GetPreviousSibling(nsIDOMNode** aPreviousSibling)
+{ 
+  return nsDocument::GetPreviousSibling(aPreviousSibling); 
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::GetNextSibling(nsIDOMNode** aNextSibling)
+{ 
+  return nsDocument::GetNextSibling(aNextSibling); 
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
+{ 
+  return nsDocument::GetAttributes(aAttributes); 
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
+{ 
+  return nsDocument::GetOwnerDocument(aOwnerDocument); 
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
+{ 
+  return nsDocument::CloneNode(aDeep, aReturn);
+}
+
 
 //
 // nsIDOMHTMLDocument interface implementation

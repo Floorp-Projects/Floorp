@@ -50,11 +50,14 @@
 #include "nsIFrame.h"
 
 #include "nsIWebShell.h"
+#include "nsIDocument.h"
 #include "nsIHTMLDocument.h"
-#include "nsHTMLDocument.h"
 #include "nsStyleConsts.h"
 #include "nsINameSpaceManager.h"
 #include "nsIDOMHTMLMapElement.h"
+
+#include "nsVoidArray.h"
+#include "nsIScriptContextOwner.h"
 
 // XXX Go through a factory for this one
 #include "nsICSSParser.h"
@@ -180,7 +183,6 @@ public:
 
   nsIDocument* mDocument;
   nsIHTMLDocument* mHTMLDocument;
-  nsIScriptObjectOwner* mDocumentScript;
   nsIURL* mDocumentURL;
   nsIURL* mDocumentBaseURL;
   nsIWebShell* mWebShell;

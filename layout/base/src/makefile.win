@@ -27,6 +27,7 @@ CPPSRCS =				\
 	nsCommentNode.cpp		\
 	nsGenericElement.cpp		\
 	nsGenericDOMDataNode.cpp	\
+	nsGenericDOMNodeList.cpp	\
 	nsContentList.cpp		\
 	nsContentIterator.cpp		\
 	nsDocument.cpp			\
@@ -59,6 +60,7 @@ EXPORTS=nsSelectionRange.h nsSelectionPoint.h
 CPP_OBJS=					\
 	.\$(OBJDIR)\nsCommentNode.obj		\
 	.\$(OBJDIR)\nsGenericDOMDataNode.obj	\
+	.\$(OBJDIR)\nsGenericDOMNodeList.obj	\
 	.\$(OBJDIR)\nsGenericElement.obj 	\
 	.\$(OBJDIR)\nsContentList.obj 	 	\
 	.\$(OBJDIR)\nsContentIterator.obj 	\

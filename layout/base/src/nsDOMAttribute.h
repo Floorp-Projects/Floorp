@@ -23,6 +23,7 @@
 #include "nsIDOMText.h"
 #include "nsIDOMNodeList.h"
 #include "nsIScriptObjectOwner.h"
+#include "nsGenericDOMNodeList.h"
 #include "nsString.h"
 
 class nsIContent;
@@ -40,28 +41,20 @@ public:
 };
 
 // bogus child list for an attribute
-class nsAttributeChildList : public nsIDOMNodeList,
-                             public nsIScriptObjectOwner
+class nsAttributeChildList : public nsGenericDOMNodeList
 {
 public:
   nsAttributeChildList(nsDOMAttribute* aAttribute);
   ~nsAttributeChildList();
 
-  NS_DECL_ISUPPORTS
-
   // interface nsIDOMNodeList
   NS_IMETHOD    GetLength(PRUint32* aLength);
   NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMNode** aReturn);
-
-  // interface nsIScriptObjectOwner
-  NS_IMETHOD GetScriptObject(nsIScriptContext* aContext, void** aScriptObject);
-  NS_IMETHOD SetScriptObject(void *aScriptObject);
 
   void DropReference();
 
 protected:
   nsDOMAttribute* mAttribute;
-  void *mScriptObject;
 };
 
 // Attribute helper class used to wrap up an attribute with a dom

@@ -28,14 +28,14 @@
  * This is a base class for a generic HTML collection. The base class
  * provides implementations for nsISupports and nsIScriptObjectOwner,
  * but it is up to the subclass to implement the core HTML collection
- * method:
+ * methods:
  *   GetLength
  *   Item
- *   NameItem
+ *   NamedItem
  *
  */
 class nsGenericDOMHTMLCollection : public nsIDOMHTMLCollection, 
-				   public nsIScriptObjectOwner 
+                                   public nsIScriptObjectOwner 
 {
 public:
   nsGenericDOMHTMLCollection();
@@ -46,7 +46,7 @@ public:
   NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
   NS_IMETHOD SetScriptObject(void *aScriptObject);
 
-  // The following need to be defined in the base class
+  // The following need to be defined in the subclass
   // nsIDOMHTMLCollection interface
   NS_IMETHOD    GetLength(PRUint32* aLength)=0;
   NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMNode** aReturn)=0;

@@ -31,6 +31,7 @@ CPPSRCS =				\
 	nsCommentNode.cpp		\
 	nsGenericElement.cpp		\
 	nsGenericDOMDataNode.cpp	\
+	nsGenericDOMNodeList.cpp	\
 	nsContentList.cpp		\
 	nsDocument.cpp			\
 	nsDocumentFragment.cpp		\

@@ -1274,22 +1274,21 @@ nsDocument::GetStyleSheets(nsIDOMStyleSheetCollection** aStyleSheets)
 NS_IMETHODIMP    
 nsDocument::GetNodeName(nsString& aNodeName)
 {
-  // XXX TBI
-  return NS_ERROR_NOT_IMPLEMENTED;
+  aNodeName.SetString("#document");
+  return NS_OK;
 }
 
 NS_IMETHODIMP    
 nsDocument::GetNodeValue(nsString& aNodeValue)
 {
-  // XXX TBI
-  return NS_ERROR_NOT_IMPLEMENTED;
+  aNodeValue.Truncate();
+  return NS_OK;
 }
 
 NS_IMETHODIMP    
 nsDocument::SetNodeValue(const nsString& aNodeValue)
 {
-  // XXX TBI
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_OK;
 }
 
 NS_IMETHODIMP    
@@ -1300,86 +1299,86 @@ nsDocument::GetNodeType(PRUint16* aNodeType)
 }
 
 NS_IMETHODIMP    
-nsDocument::GetParentNode(nsIDOMNode** aParentNode)
+nsDocument::GetParentNode(nsIDOMNode** aParentNode) 
 {
-  // XXX TBI
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *aParentNode = nsnull;
+  return NS_OK;
 }
 
 NS_IMETHODIMP    
 nsDocument::GetChildNodes(nsIDOMNodeList** aChildNodes)
 {
-  // XXX TBI
+  // Should be implemented by subclass
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP    
 nsDocument::HasChildNodes(PRBool* aHasChildNodes)
 {
-  // XXX TBI
+  // Should be implemented by subclass
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP    
 nsDocument::GetFirstChild(nsIDOMNode** aFirstChild)
 {
-  // XXX TBI
+  // Should be implemented by subclass
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP    
 nsDocument::GetLastChild(nsIDOMNode** aLastChild)
 {
-  // XXX TBI
+  // Should be implemented by subclass
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP    
 nsDocument::GetPreviousSibling(nsIDOMNode** aPreviousSibling)
 {
-  // XXX TBI
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *aPreviousSibling = nsnull;
+  return NS_OK;
 }
 
 NS_IMETHODIMP    
 nsDocument::GetNextSibling(nsIDOMNode** aNextSibling)
 {
-  // XXX TBI
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *aNextSibling = nsnull;
+  return NS_OK;
 }
 
 NS_IMETHODIMP    
 nsDocument::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
 {
-  // XXX TBI
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *aAttributes = nsnull;
+  return NS_OK;
 }
 
 NS_IMETHODIMP    
 nsDocument::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNode** aReturn)
 {
-  // XXX TBI
+  // Should be implemented by subclass
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP    
 nsDocument::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
 {
-  // XXX TBI
+  // Should be implemented by subclass
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP    
 nsDocument::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
 {
-  // XXX TBI
+  // Should be implemented by subclass
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP    
 nsDocument::AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
 {
-  // XXX TBI
+  // Should be implemented by subclass
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
