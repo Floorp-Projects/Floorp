@@ -903,6 +903,7 @@
   border            : 2px solid #990000;
   /* !important to prevent calendar-specific color setting from overriding this */
   background-color  : #D5E3F2 !important;
+  color             : #000000 !important;
   /* set margins to prevent jittering when border width is changed */
   margin-top        : -1px;
   margin-left       : -1px;
@@ -941,6 +942,7 @@
   padding-top       : 0px;
   /* !important to prevent calendar-specific color setting from overriding this */
   background-color  : #D5E3F2 !important;
+  color             : #000000 !important;
 }
  
 /*--------------------------------------------------------------------
@@ -1004,7 +1006,6 @@
   cursor               : pointer;
   font-size            : 8pt;
   font-family          : Arial, Helvetica;
-  color                : #000000;
 }
 
 .day-view-event-title-label-class
@@ -1012,15 +1013,13 @@
   cursor               : pointer;
   font-size            : 10pt;
   font-family          : Arial, Helvetica;
-  color                : #000000;
 }
 
 .day-view-event-description-class
 {
-  cursor            : pointer;
+  cursor               : pointer;
   font-size            : 8pt;
   font-family          : Arial, Helvetica;
-  color                : grey;
 }
 
 /*--------------------------------------------------------------------
