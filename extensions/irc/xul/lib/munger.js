@@ -10,15 +10,12 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  *
- * The Original Code is JSIRC Test Client #3
+ * The Original Code is ChatZilla
  *
  * The Initial Developer of the Original Code is New Dimensions Consulting,
  * Inc. Portions created by New Dimensions Consulting, Inc. are
  * Copyright (C) 1999 New Dimenstions Consulting, Inc. All
  * Rights Reserved.
- *
- * Contributor(s): 
- *
  *
  * Contributor(s):
  *  Robert Ginda, rginda@ndcico.com, original author
@@ -68,7 +65,7 @@ function mng_delrule (name)
 }
 
 CMunger.prototype.munge =
-function mng_munge (text, containerTag, eventDetails)
+function mng_munge (text, containerTag, data)
 {
     var entry;
     var ary;
@@ -87,7 +84,7 @@ function mng_munge (text, containerTag, eventDetails)
                 var rval;
                 
                 rval = this.entries[entry].lambdaMatch(text, containerTag,
-                                                       eventDetails,
+                                                       data,
                                                        this.entries[entry]);
                 if (rval)
                     ary = [(void 0), rval];
@@ -104,31 +101,40 @@ function mng_munge (text, containerTag, eventDetails)
                 if (typeof this.entries[entry].lambdaReplace == "function")
                 {
                     this.munge (text.substr(0,startPos), containerTag,
-                                eventDetails);
+                                data);
                     this.entries[entry].lambdaReplace (ary[1], containerTag,
-                                                       eventDetails,
+                                                       data,
                                                        this.entries[entry]);
                     this.munge (text.substr (startPos + ary[1].length,
                                              text.length), containerTag,
-                                eventDetails);
+                                data);
                 
                     return containerTag;
                 }
                 else
                 {
                     this.munge (text.substr(0,startPos), containerTag,
-                                eventDetails);
+                                data);
                     
                     var subTag = document.createElementNS
                         ("http://www.w3.org/1999/xhtml",
                          this.entries[entry].tagName);
 
-                    subTag.setAttribute ("class", this.entries[entry].className);
-                    subTag.appendChild (document.createTextNode (ary[1]));
+                    subTag.setAttribute ("class",
+                                         this.entries[entry].className);
+                    var wordParts = splitLongWord (ary[1],
+                                                   client.MAX_WORD_DISPLAY);
+                    for (var i in wordParts)
+                    {
+                        subTag.appendChild (document.createTextNode (wordParts[i]));
+                        var img = document.createElementNS ("http://www.w3.org/1999/xhtml",
+                                                            "html:img");
+                        subTag.appendChild (img);
+                    }
+                    
                     containerTag.appendChild (subTag);
                     this.munge (text.substr (startPos + ary[1].length,
-                                             text.length), containerTag,
-                                eventDetails);
+                                             text.length), containerTag, data);
 
                     return containerTag;
                 }

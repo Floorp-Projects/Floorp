@@ -9,307 +9,407 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  *
- * The Original Code is Mozilla JSIRC Library.
+ * The Original Code is Chatzilla.
  *
  * The Initial Developer of the Original Code is New Dimensions Consulting,
  * Inc. Portions created by New Dimensions Consulting, Inc. are
  * Copyright (C) 1999 New Dimenstions Consulting, Inc. All
  * Rights Reserved.
  *
- * Contributor(s): 
- *
- *
  * Contributor(s):
  *  Robert Ginda, rginda@ndcico.com, original author
  * 
- * Styles for output window, See test3.css for UI styles
+ * Styles for output window
  *
  */
 
-body {
+/* 
+ * This file contains the CSS rules for the output window in ChatZilla.
+ * The output window is layed out as a table with two columns.  The first
+ * column holds a message type or a nickname, depending on what view the
+ * message is contained by, and what kind of message it is.  The second column
+ * contains the text of the message.  For most message types, ChatZilla displays
+ * ascii-art instead of the actual code.  For example, messages of type "JOIN"
+ * are displayed as "-->|", and most unclassified message types are displayed
+ * as "===".  If you turn on debug messages (using the options->debug messages
+ * menuitem) ChatZilla will always show the actual message type.  This can be
+ * helpful when styling a particular response from the IRC server.  See the
+ * description of the msg-type attribute below.
+ *
+ * You can modify these styles on your local system by placing your desired
+ * styles in a file called chatzilla.css in your <profile>/chrome directory.
+ * (the file won't be there already, you have to create it.)  Add the line
+ *
+ *     @import url(chatzilla.css);
+ *
+ * to the to your userContent.css (also in your <profile>/chrome directory, and
+ * also not there unless you created it already.)  End all CSS rules in your
+ * new chatzilla.css with !important to override any styles declared here.
+ * For example, on a Linux system, you would create a file called
+ * /home/<username>/.mozilla/<username>/chrome/userContent.css (if it
+ * doesn't already exist), and add the line @import url(chatzilla.css) to it.
+ * Next, create /home/<username>/.mozilla/<username>/chrome/chatzilla.css, and
+ * add the text:
+ *
+ *   .msg {
+ *     font-size: 14pt !important;
+ *   }
+ *
+ *   body.chatzilla-body {
+ *     background: green !important;
+ *   }
+ *
+ * Close your browser and restart.  When you bring up ChatZilla, it should have
+ * a 14pt font and a green background.
+ *
+ * To learn how to make more useful changes to the ChatZilla output style, read
+ * on.
+ *
+ * All of the output in the message window is contained in an html <TABLE>.
+ * New messages are composed of <TR> and <TD> elements inside this <TABLE>.
+ * The message table and it's children have the following CSS classes assigned
+ * to them:
+ *
+ *  + .msg-table is used as the class for the surrounding <TABLE>.
+ *    Styles applied to this class will affect all parts of all messages.
+ *
+ *  + .msg-nested-table  is used as the class for the surrounding <TABLE> for
+ *     messages sent from users with long nicknames.  A new table is created, and
+ *     nested inside a <TR colspan="2"> of the .msg-table.  The rows of this
+ *     table have their classes set as if they were direct children of the 
+ *     .msg-table.  Placing messages from users with long nicknames in a nested
+ *      table keeps the nickname column from getting too wide.
+ *
+ *  + .msg is used as the class for the surrounding <TR>.  This means that
+ *    any styles applied here will affect the entire message.
+ *
+ *  + .msg-type is used as the class for the <TD> surrounding the message type
+ *    portion of messages.  Styles applied here will only affect message
+ *    types.  ie. "-->|", or "[HELP]".
+ *
+ *  + .msg-user is used as the class for the <TD> surrounding the nickname
+ *    portion of messages.  ChatZilla makes use of the :before and :after
+ *    pseudoclasses to decorate nicknames with different characters depending
+ *    on their message type.  For example, when a user performs a /me, their
+ *    nickname may be surrounded by asterisks.
+ *
+ *  + .msg-data is used as the class for the <TD> surrounding the actual text
+ *    of the message.
+ *
+ * In addition to CSS class properties, portions of a message may have one
+ * or mode of the following attributes set:
+ *
+ *   + view-type is the type of view the message is contained in.  The types
+ *     are:
+ *          "IRCClient" for the *client* view
+ *          "IRCNetwork" for network and server views
+ *          "IRCChannel" for channel views
+ *          "IRCUser" for query views
+ *
+ *   + msg-type is the message type described above.  There are too many types
+ *     to list here.  Turn on debug messages to force message types to print
+ *     in the left column of the output.
+ *
+ *   + msg-user is the nickname (in lowercase) of the nickname who sent the
+ *     message.  If you sent the message, msg-user will be set to "ME!", so
+ *     that you can style your messages regardless of your nickname.
+ *
+ *   + msg-dest is the name of the object that the message is directed to.  It
+ *     could be a channel name, or a nickname (both in lowercase.)
+ *  
+ *   + dest-type is the type of object the message is directed to.  The types
+ *     are:
+ *          "IRCChannel" for messages sent to a channel.
+ *          "IRCUser" for messages sent directly to another user, including
+ *           private messages that appear in a network or channel view (when
+ *           a dedicated query view does not exist.)
+ *
+ *   + mark is either the text "even" or "odd".  When the first user speaks on 
+ *     a channel, that message is marked as "even".  Messages will continue to
+ *     be marked "even" until a different user speaks, when the mark switches
+ *     to "odd".  Each view maintains it's own mark state.  An example of how
+ *     ChatZilla marks messages would be:
+ *
+ *            EVEN:   <moe> this deep fat fry-o-later is great.
+ *            EVEN:   <moe> It'll deep fat fry a whole buffalo in 30 seconds.
+ *             ODD: <homer> but I'm hungry *now*!
+ *
+ *   + important is either the text "true", or it is not set at all.  If
+ *     important is true, then the message triggered ChatZilla /stalk function.
+ *     This occurs when someone with a nickname matching a pattern in your
+ *     /stalk list speaks, when someone says a word that matches a pattern in
+ *     your /stalk list, or when someone says your nickname.
+ *
+ * 
+ */
 
-    margin: 0px 0px 0px 0px;
-/*    background: url(chrome://chatzilla/skin/images/blue_rock.gif);*/
+/******************************************************************************
+ * basic classes                                                              *
+ ******************************************************************************/
+
+body.chatzilla-body {               /* The topmost container in the ChatZilla */
+    margin: 0px 0px 0px 0px;        /* output window. */
     background: black;
-
 }
 
-a {
-
-    color: cyan;
-
+.spacer-image {                     /* this image is inserted between the     */
+    border: none;                   /* characters in long words, in order to  */
+    height: 0px;                    /* break them up to allow word wrapping   */
+    width: 0px;
 }
 
-.bold {
-
-    font-weight: bold;
-
+.smiley-image {                     /* smiley face img tag                    */
+    margin-left: 3px;
+    margin-right: 3px;
 }
 
-.italic {
-
-    font-style: italic;
-
+/* links */
+a.chatzilla-link {
+    color: #7083ff;
+    text-decoration: none;
 }
 
-.underline {
-
+/* link hover effect */
+a.chatzilla-link:hover {
     text-decoration: underline;
-
 }
 
-.strikethrough {
-
-    text-decoration: line-through;
-
-}
-
-.teletype {
-
-    font-family: monospace;
-
-}
-
-.smallcap {
-
-    font-variant: small-caps;
-
-}
-
-.rheet {
-
-    font-size: 14pt;
+/* basic styles */
+.chatzilla-bold {
     font-weight: bold;
-    color: magenta;
-
 }
 
-/* output from a chat session (contains msgs) */
-.chat-view {
-
-    vertical-align: text-bottom;
-
+.chatzilla-italic {
+    font-style: italic;
 }
 
-/* common container for all portions of a message
- * (contains msg-*s) */
-.msg {
+.chatzilla-underline {
+    text-decoration: underline;
+}
 
+.chatzilla-strikethrough {
+    text-decoration: line-through;
+}
+
+.chatzilla-teletype {
+    font-family: monospace;
+}
+
+.chatzilla-smallcap {
+    font-variant: small-caps;
+}
+
+.chatzilla-rheet {
+    font-weight: bold;
+    color: magenta !important;
+}
+
+/******************************************************************************
+ * message class base definitions                                             *
+ ******************************************************************************/
+
+.msg-table {                                /* <TABLE> containing all of the  */
+    width: 100%;                            /* messages.                      */
+}
+
+.msg-nested-table {                         /* <TABLE> nested inside          */
+    width: 100%;                            /* .msg-table for users with long */
+    margin: 0px 0px 0px 0px;                /* nicknames.                     */
+    padding: 0px 0px 0px 0px;
+}
+
+.msg {                                      /* .msg = a single message in the */
+    width: 100%;                            /* output window                  */
+    font-size: 10pt;
     font-family: sans-serif;
 
 }
 
-.msg[user="!ME"] {
-
-    background: lightgrey;
-
-}
-
-/* message data in output window */
-.msg-data {
-
-    padding: 2px;
-    color: white;
-
-}
-
-.msg-data[msgtype="311"] {
-
-    border: none;
-    border-top: 1 cyan solid;
-    border-right: 1 cyan solid;
-
-}
-
-.msg-data[msgtype="319"],
-.msg-data[msgtype="312"],
-.msg-data[msgtype="317"] {
-
-    margin-top: 0px;
-    border: none;
-    border-right: 1 cyan solid;
-
-}
-
-.msg-data[msgtype="318"] {
-
-    border: none;
-    border-right: 1 cyan solid;
-    border-bottom: 1 cyan solid;
-    margin-top: 0px;
-
-}
-
-/* message data in output window */
-
-.msg-data[user="!ME"]{
-
-
-}
-
-.msg-data[mark="odd"]{
-
-    color: lightgrey;
-
-}
-
-.msg-data[directedToMe="true"] {
-
-    color: orange;
-
-}
-
-.msg-data[msgtype="EVAL"] {
-
-    font-family: monospace;
-
-}
-
-.msg-data[msgtype="JOIN"],
-.msg-data[msgtype="PART"] {
-
-    width: 100%;
-    font-variant: small-caps;
-    color: lightblue;
-
-}
-
-.msg-data[msgtype="HELLO"] {
-
-    border: 1 white solid;
-    color: yellow;
-
-}
-
-.msg-data[msgtype="ERROR"] {
-
-    background: red;
-    color: white;
-
-}
-
-.msg-data[msgtype="USAGE"] {
-
-    font-style: italic;
-    color: white;
-
-}
-
-.msg-data[msgtype="HELP"] {
-
-    font-weight: normal;
-
-}
-
-.msg-data[msgtype="ACTION"] {
-
-    color: #6ac9ee;
-
-}
-
-.msg-data[msgtype="NICK"] {
-
-    color: #96fa94;
-
-}
-
-.msg-data[msgtype="NOTICE"],
-.msg-data[msgtype="MODE"] {
-
-    color: yellow;
-
-}
-
-.msg-data[msgtype="KICK"] {
-
-    background: orange;
-    color: yellow;
-
-}
-
-.msg-data[msgtype="QUIT"] {
-
-    background: #222222;
-    color: brown;
-
-}
-
-/* nickname field in output */
-.msg-user {
-	
-    text-align: center;
-    vertical-align: middle;
-    color: white;
-    font-weight: bold;
-    border: 1 white solid;
-
-}
-
-.msg-user[user="!ME"] {
-
-    color : yellow;
-
-}
-
-.msg-user[msgtype="ACTION"] {
-
-    font-style: italic;
-
-}
-
-.msg-user[msgtype="PRIVMSG"],
-.msg-user[msgtype="ACTION"] {
-
-    border: none;
-    padding-right: 2px;
-    text-align: right;
-    vertical-align: middle;
-    font-weight: bold;
-
-}
-
-/* Message type indicator in output window */
-.msg-type {
-
+.msg-type {                                 /* .msg-type = message type       */
+    font-variant: small-caps;               /* indicator                      */
+    font-size: 9pt;
     text-align: center;
     vertical-align: middle;
     color: silver;
-    border: 1 white solid;
+}
+
+.msg-user {                                 /* msg-user = nickname portion of */
+    text-align: right;                      /* a message (channel and query   */
+    vertical-align: middle;                 /* views)                         */
+    color: white;
+}
+
+.msg-data {                                 /* .msg-data = the text portion   */
+    padding: 1px 1px 1px 3px;               /* of a message                   */
+    color: white;
+    width: 100%;
+}
+
+
+/******************************************************************************
+ * message class specific definitions                                         *
+ ******************************************************************************/
+
+.msg-data[mark="even"] {                    /* use even/odd marks to create a */
+    color: #FFFFFF;                         /* subtle brightness change when  */
+}                                           /* the speaker changes.           */
+.msg-data[mark="odd"] {
+    color: lightgrey;
+}
+
+/* msg-user is the nickname of the person who spoke, or "ME!" if you said it.
+ * msg-type is the type of the message, taken from the irc message.  If you 
+ * turn on debug messages (options->debug messages), the msg-types will be
+ * displayed to the left of the messages for all messages except:
+ * PRIVMSG: when a user sends you, or a channel you are on a message.
+ * ACTION: when a user performs a /me.
+ * NOTIFY: when a server or user sends you a notification.
+ */
+.msg-data[msg-user="|"],                     /* messages from common "bulk    */
+.msg-data[msg-user="||"],                    /* paste" nicks                  */
+.msg-data[msg-user="|||"],
+.msg-data[msg-type="372"],                   /* MOTD                          */
+.msg-data[msg-type="EVAL-IN"],               /* /eval results                 */
+.msg-data[msg-type="EVAL-OUT"] {
+    font-size: 9pt;
+    whitespace: pre; /* XXX why doesn't this take? */
+    font-family: monospace;
+}
+
+.msg-data[msg-type="JOIN"],
+.msg-data[msg-type="PART"] {
+    color: lightblue;
+}
+
+.msg-data[msg-type="HELLO"] {
+    color: yellow;
+}
+
+.msg-data[msg-type="ERROR"] {
+    background: red;
+    color: white;
+}
+
+.msg-data[msg-type="USAGE"] {
+    font-style: italic;
+    color: white;
+}
+
+.msg-data[msg-type="HELP"] {
+    font-weight: normal;
+}
+
+.msg-user[msg-type="ACTION"] {
+    font-style: italic;
+}
+.msg-data[msg-type="ACTION"] {
+    color: #6ac9ee;
+}
+
+.msg-data[msg-type="NICK"] {
+    color: #96fa94;
+}
+
+.msg-data[msg-type="NOTICE"],
+.msg-data[msg-type="MODE"] {
+    color: #6afc73;
+}
+
+.msg-data[msg-type="KICK"] {
+    color: #ff5700;
+}
+
+.msg-data[msg-type="QUIT"] {
+    color: #f7b183;
+}
+
+/* important="true" means that the message has text from your /stalk list in
+ * it, has your nickname in it, or was spoken by someone in your /stalk list.
+ */
+.msg[important="true"] {
+    background: #333333;
+}
+
+.msg-user[important="true"] {
     font-weight: bold;
-
 }
 
-.msg-type[msgtype="311"] {
+/******************************************************************************
+ * nickname decorations                                                       *
+ ******************************************************************************/
 
-    border: none;
-    border-top: 1 cyan solid;
-    border-left: 1 cyan solid;
-
+/* :before and :after pseudoclasses form the decorations around nicknames */
+.msg-user:before {
+    color: blue;
+    content: "<";
+}
+.msg-user:after {
+    color: blue;
+    content: ">";
+}
+.msg-user[important="true"]:before {
+    font-weight: bold;
+}
+.msg-user[important="true"]:after {
+    font-weight: bold;
+}
+.msg-user[msg-user="ME!"]:before {
+    color: #6afc73;
+    content: "<";
+}
+.msg-user[msg-user="ME!"]:after {
+    color: #6afc73;
+    content: ">";
+}
+.msg-user[msg-type="ACTION"]:before {
+    color: cyan;
+    content: "*";
+}
+.msg-user[msg-type="ACTION"]:after {
+    color: cyan;
+    content: "*";
+}
+.msg-user[msg-type="NOTICE"]:before {
+    color: #6afc73;
+    content: "[";
+}
+.msg-user[msg-type="NOTICE"]:after {
+    color: #6afc73;
+    content: "]";
 }
 
-.msg-type[msgtype="319"],
-.msg-type[msgtype="312"],
-.msg-type[msgtype="317"] {
-
-    margin-top: 0px;
-    border: none;
-    border-left: 1 cyan solid;
-
+/* private messages *not* in a query window */
+.msg-user[dest-type="IRCUser"]:before {
+    color: #6afc73;
+    content: "to(";
+}
+.msg-user[dest-type="IRCUser"]:after {
+    color: #6afc73;
+    content: ")";
+}
+.msg-user[msg-dest="ME!"]:before {
+    color: magenta;
+    content: "from(";
+}
+.msg-user[msg-dest="ME!"]:after {
+    color: magenta;
+    content: ")";
 }
 
-.msg-type[msgtype="318"] {
-
-    border: none;
-    border-left: 1 cyan solid;
-    border-bottom: 1 cyan solid;
-    margin-top: 0px;
-
+/* private messages in a query window */
+.msg-user[view-type="IRCUser"]:before {
+    color: white;
+    content: "{";
 }
-
-
-.msg-type[user="!ME"] {
-
-    background: slategrey;
-
+.msg-user[view-type="IRCUser"]:after {
+    color: white;
+    content: "}";
 }
-
+.msg-user[view-type="IRCUser"][msg-user="ME!"]:before {
+    color: #6afc73;
+    content: "{";
+}
+.msg-user[view-type="IRCUser"][msg-user="ME!"]:after {
+    color: #6afc73;
+    content: "}";
+}

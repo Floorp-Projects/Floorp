@@ -89,6 +89,7 @@ function CIRCNetwork (name, serverList, eventPump)
     this.name = name;
     this.serverList = serverList;
     this.eventPump = eventPump;
+    this.servers = new Object();
 
 }
 
@@ -99,7 +100,7 @@ CIRCNetwork.prototype.INITIAL_DESC = "INITIAL_DESC";
 CIRCNetwork.prototype.INITIAL_CHANNEL = "#jsbot"; 
 /* set INITIAL_CHANNEL to "" if you don't want a primary channel */
 
-CIRCNetwork.prototype.MAX_CONNECT_ATTEMPTS = 5000;
+CIRCNetwork.prototype.MAX_CONNECT_ATTEMPTS = 20;
 CIRCNetwork.prototype.stayingPower = false; 
 
 CIRCNetwork.prototype.TYPE = "IRCNetwork";
@@ -108,6 +109,8 @@ CIRCNetwork.prototype.connect =
 function net_conenct(pass)
 {
 
+    this.connectAttempt = 0;
+    this.nextHost = 0;
     var ev = new CEvent ("network", "do-connect", this, "onDoConnect");
     ev.password = pass;
     this.eventPump.addEvent (ev);
@@ -135,12 +138,18 @@ function net_doconnect(e)
     if ((this.primServ) && (this.primServ.connection.isConnected))
         return true;
 
-    var attempt = (typeof e.attempt == "undefined") ? 1 : e.attempt + 1;
-    var host = (typeof e.lastHost == "undefined") ? 0 : e.lastHost + 1;
+    this.connecting = true; /* connection is considered "made" when server
+                             * sends a 001 message (see server.on001 */
+
     var ev;
 
-    if (attempt > this.MAX_CONNECT_ATTEMPTS)
-        return false;	
+    if (this.connectAttempt++ >= this.MAX_CONNECT_ATTEMPTS)
+    {
+        ev = new CEvent ("network", "info", this, "onInfo");
+        ev.msg = "Connection attempts exhausted, giving up.";
+        this.eventPump.addEvent (ev);        
+        return false;
+    }
 
     try
     {
@@ -156,21 +165,48 @@ function net_doconnect(e)
         return false;
     }
 
+    host = this.nextHost++;
     if (host >= this.serverList.length)
+    {
+        this.nextHost = 1;
         host = 0;
+    }
 
+    ev = new CEvent ("network", "info", this, "onInfo");
+    ev.msg = "Connecting to " + this.serverList[host].name + ":" +    
+        this.serverList[host].port + ", attempt " + this.connectAttempt +
+        " of " + this.MAX_CONNECT_ATTEMPTS + "...";
+    this.eventPump.addEvent (ev);
+
+    var connected = false;
+    
     if (c.connect (this.serverList[host].name, this.serverList[host].port,
                    (void 0), true))
     {
+        var ex;
         ev = new CEvent ("network", "connect", this, "onConnect");
-        ev.server = this.primServ = new CIRCServer (this, c);
-        this.eventPump.addEvent (ev);
+        try
+        {
+            ev.server = this.primServ = new CIRCServer (this, c);
+            this.eventPump.addEvent (ev);
+            connected = true;
+        }
+        catch (ex)
+        {
+            dd ("Caught following exception creating new CIRCServer in " +
+                "CIRCNetwork::onDoConnect().\n" + dumpObjectTree(ex));
+        }
     }
-    else
+    
+
+    if (!connected)
     { /* connect failed, try again  */
+        ev = new CEvent ("network", "info", this, "onInfo");
+        ev.msg = "Couldn't connect to " + this.serverList[host].name + ":" +    
+            this.serverList[host].port + ", trying next server in list...";
+        this.eventPump.addEvent (ev);
+        
         ev = new CEvent ("network", "do-connect", this, "onDoConnect");
-        ev.lastHost = host;
-        ev.attempt = attempt;
         this.eventPump.addEvent (ev);
     }
 
@@ -195,9 +231,7 @@ function net_connect (e)
 CIRCNetwork.prototype.isConnected = 
 function net_connected (e)
 {
-
-    return (this.primServ && this.primServ.connection.isConnected);
-    
+    return (this.primServ && this.primServ.connection.isConnected);   
 }
 
 /*
@@ -205,23 +239,32 @@ function net_connected (e)
  */ 
 function CIRCServer (parent, connection)
 {
-
-    this.parent = parent;
-    this.connection = connection;
-    this.channels = new Object();
-    this.users = new Object();
-    this.sendQueue = new Array();
-    this.lastSend = new Date("1/1/1980");
-    this.sendsThisRound = 0;
-    this.savedLine = "";
-    this.lag = -1;    
-    this.usersStable = true;
+    var serverName = connection.host + ":" + connection.port;
+    var s = parent.servers[serverName];
+    if (!s)
+    {
+        s = this;
+        s.channels = new Object();
+        s.users = new Object();
+    }
+    
+    s.parent = parent;
+    s.connection = connection;
+    s.sendQueue = new Array();
+    s.lastSend = new Date("1/1/1980");
+    s.sendsThisRound = 0;
+    s.savedLine = "";
+    s.lag = -1;    
+    s.usersStable = true;
 
     if (typeof connection.startAsyncRead == "function")
-        connection.startAsyncRead(this);
+        connection.startAsyncRead(s);
     else
-        this.parent.eventPump.addEvent(new CEvent ("server", "poll", this,
-                                                   "onPoll"));
+        s.parent.eventPump.addEvent(new CEvent ("server", "poll", s,
+                                                "onPoll"));
+
+    parent.servers[serverName] = s;
+    return s;
     
 }
 
@@ -301,7 +344,7 @@ CIRCServer.prototype.getUsersLength =
 function serv_chanlen()
 {
     var i = 0;
-
+    
     for (var p in this.users)
         i++;
 
@@ -431,14 +474,20 @@ CIRCServer.prototype.onDisconnect =
 function serv_disconnect(e)
 {
 
-  if ((this.parent.primServ == this) && (this.parent.stayingPower))
-  { /* fell off primary server, reconnect to any host in the serverList */
+    if ((this.parent.connecting) ||
+        /* fell off while connecting, try again */
+        (this.parent.primServ == this) && (this.parent.stayingPower))
+    { /* fell off primary server, reconnect to any host in the serverList */
 	var ev = new CEvent ("network", "do-connect", this.parent,
                              "onDoConnect");
 	this.parent.eventPump.addEvent (ev);
-  }
+    }
 
-  return true;
+    e.server = this;
+    e.set = "network";
+    e.destObject = this.parent;
+
+    return true;
 
 }
 
@@ -642,10 +691,18 @@ function serv_onParsedData(e)
 
     if (typeof this[e.destMethod] == "function")
         e.destObject = this;
+    else if (typeof this["onUnknown"] == "function")
+        e.destMethod = "onUnknown";
+    else if (typeof this.parent[e.destMethod] == "function")
+    {
+        e.set = "network";
+        e.destObject = this.parent;
+    }
     else
     {
         e.set = "network";
         e.destObject = this.parent;
+        e.destMethod = "onUnknown";
     }
 
     return true;
@@ -672,6 +729,8 @@ function serv_topic (e)
 CIRCServer.prototype.on001 =
 function serv_001 (e)
 {
+    this.parent.connectAttempt = 0;
+    this.parent.connecting = false;
 
     /* servers wont send a nick change notification if user was forced
      * to change nick while logging in (eg. nick already in use.)  We need
@@ -731,7 +790,10 @@ function serv_353 (e)
     
     e.channel = new CIRCChannel (this, e.params[3]);
     if (e.channel.usersStable)
+    {        
         e.channel.users = new Object();
+        e.channel.usersStable = false;
+    }
     
     e.destObject = e.channel;
     e.set = "channel";
@@ -1029,26 +1091,36 @@ function serv_nick (e)
     var newKey = newNick.toLowerCase();
     var oldKey = e.user.nick;
     
-    renameProperty (e.server.users, oldKey, newKey);
+    renameProperty (this.users, oldKey, newKey);
     e.oldNick = e.user.properNick;
     e.user.changeNick(newNick);
     
-    for (var c in e.server.channels)
+    for (var c in this.channels)
     {
-        var cuser = e.server.channels[c].users[oldKey];
+        var cuser = this.channels[c].users[oldKey];
 
         if (typeof cuser != "undefined")
         {
-            renameProperty (e.server.channels[c].users, oldKey, newKey);
-            var ev = new CEvent ("channel", "nick", e.server.channels[c],
+            renameProperty (this.channels[c].users, oldKey, newKey);
+            var ev = new CEvent ("channel", "nick", this.channels[c],
                                  "onNick");
-            ev.channel = e.server.channels[c];
+            ev.channel = this.channels[c];
             ev.user = cuser;
-            ev.server = ev.channel.parent;
+            ev.server = this;
             ev.oldNick = e.oldNick;
             this.parent.eventPump.addEvent(ev);
         }
         
+    }
+
+    if (e.user == this.me)
+    {
+        /* if it was me, tell the network about the nick change as well */
+        var ev = new CEvent ("network", "nick", this.parent, "onNick");
+        ev.user = e.user;
+        ev.server = this;
+        ev.oldNick = e.oldNick;
+        this.parent.eventPump.addEvent(ev);
     }
 
     e.destObject = e.user;
@@ -1155,7 +1227,7 @@ function serv_pong (e)
 {
 
     if (this.lastPingSent)
-        this.lag = (new Date() - this.lastPingSent) / 1000;
+        this.lag = roundTo ((new Date() - this.lastPingSent) / 1000, 1);
 
     delete this.lastPingSent;
     
@@ -1407,9 +1479,17 @@ CIRCChannel.prototype.getUsersLength =
 function chan_userslen ()
 {
     var i = 0;
-
+    this.opCount = 0;
+    this.voiceCount = 0;
+    
     for (var p in this.users)
+    {
+        if (this.users[p].isOp)
+            ++this.opCount;
+        else if (this.users[p].isVoice)
+            ++this.voiceCount;
         i++;
+    }
 
     return i;
     

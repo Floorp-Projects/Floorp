@@ -43,8 +43,6 @@
  *   |                      semicolon seperated (see the /stalk command)
  *   +- deleteOnPart (Boolean) Delete channel window automatically after a /part
  *   |
- *   +- toolbar
- *   |  +- icons (Boolean) display icons in toolbar buttons
  *   +- notify
  *   |  +- aggressive (Boolean) flash trayicon/ bring window to top when
  *   |                          your nickname is mentioned.
@@ -109,9 +107,6 @@ function readIRCPrefs (rootNode)
     client.smileyText =
         getBoolPref (pref, rootNode + "munger.smileyText", false);
 
-    client.ICONS_IN_TOOLBAR = 
-        getBoolPref (pref, rootNode + "toolbar.icons", false);
-
     client.FLASH_WINDOW =
         getBoolPref (pref, rootNode + "notify.aggressive", true);
 
@@ -140,7 +135,7 @@ function readIRCPrefs (rootNode)
                     CIRCChanUser.prototype.MAX_MESSAGES);
     
     var h = client.eventPump.getHook ("event-tracer");
-    h.enabled =
+    h.enabled = client.debugMode =
         getBoolPref (pref, rootNode + "debug.tracer", h.enabled);
     
 }
@@ -170,7 +165,6 @@ function writeIRCPrefs (rootNode)
                       client.stalkingVictims.join ("; "));
     pref.SetBoolPref (rootNode + "munger", client.munger.enabled);
     pref.SetBoolPref (rootNode + "munger.smileyText", client.smileyText);
-    pref.SetBoolPref (rootNode + "toolbar.icons", client.ICONS_IN_TOOLBAR);
     pref.SetBoolPref (rootNode + "notify.aggressive", client.FLASH_WINDOW);
     
     var h = client.eventPump.getHook ("event-tracer");

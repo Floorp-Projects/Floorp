@@ -128,10 +128,12 @@ function (aContentType, aCommand, aWindowTarget, aSourceContext, aRequest)
     }
     else
     {
-        var ass = Components.classes[ASS_CONTRACTID].getService(nsIAppShellService);
+        var ass =
+            Components.classes[ASS_CONTRACTID].getService(nsIAppShellService);
         w = ass.getHiddenDOMWindow();
-        w.open("chrome://chatzilla/content/chatzilla.xul?" + channel.URI.spec,
-               "_blank", "chrome,menubar,toolbar,resizable");
+        w.openDialog("chrome://chatzilla/content/chatzilla.xul?" + 
+                     channel.URI.spec, "_blank",
+                     "chrome,menubar,toolbar,resizable");
     }
     
 }

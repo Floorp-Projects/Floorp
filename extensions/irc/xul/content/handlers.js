@@ -10,15 +10,12 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  *
- * The Original Code is JSIRC Test Client #3
+ * The Original Code is ChatZilla
  *
  * The Initial Developer of the Original Code is New Dimensions Consulting,
  * Inc. Portions created by New Dimensions Consulting, Inc. are
  * Copyright (C) 1999 New Dimenstions Consulting, Inc. All
  * Rights Reserved.
- *
- * Contributor(s): 
- *
  *
  * Contributor(s):
  *  Robert Ginda, rginda@ndcico.com, original author
@@ -26,15 +23,12 @@
 
 function onLoad()
 {
-
+    
     initHost(client);
     readIRCPrefs();
-    setOutputStyle (client.DEFAULT_STYLE); 
-    /* 
-       Called in a callback once the document loads due to a current bug
-    */
+    setClientOutput();
+    initStatic();
     mainStep();
-
 }
 
 function onUnload()
@@ -43,14 +37,14 @@ function onUnload()
     if (client.SAVE_SETTINGS)
         writeIRCPrefs();
     
-    client.quit ("ChatZilla! [" + navigator.userAgent + "]");
+    client.quit ("ChatZilla 0.8 [" + navigator.userAgent + "]");
     
 }
 
 function onNotImplemented()
 {
 
-    alert ("'We're accepting patches'");
+    alert ("``We're accepting patches''");
     
 }
 
@@ -93,7 +87,7 @@ function onToggleTraceHook()
 {
     var h = client.eventPump.getHook ("event-tracer");
     
-    h.enabled = !h.enabled;
+    h.enabled = client.debugMode = !h.enabled;
     document.getElementById("menu-dmessages").setAttribute ("checked",
                                                             h.enabled);
     
@@ -110,18 +104,6 @@ function onToggleSaveOnExit()
 
     pref.SetBoolPref ("extensions.irc.settings.autoSave",
                       client.SAVE_SETTINGS);
-}
-
-function onToggleToolbarIcons()
-{
-    client.ICONS_IN_TOOLBAR = !client.ICONS_IN_TOOLBAR;
-    
-    var newclass = "menubutton " + ((client.ICONS_IN_TOOLBAR) ?
-        "activity-button-image" : "activity-button-text");
-
-    for (var i in client.viewsArray)
-        client.viewsArray[i].tb.setAttribute ("class", newclass);
-
 }
 
 function onToggleVisibility(thing)
@@ -144,8 +126,8 @@ function onToggleVisibility(thing)
             break;
 
         default:
-            dd ("** Unknown element '" + menuId + 
-                "' passed to onToggleVisibility. **");
+            dd ("** Unknown element ``" + menuId + 
+                "'' passed to onToggleVisibility. **");
             return;
     }
 
@@ -214,6 +196,11 @@ function onHideCurrentView()
 function onDeleteCurrentView()
 {
     var tb = getTBForObject(client.currentObject);
+    if (client.viewsArray.length < 2)
+    {
+        client.currentObject.display ("Cannot delete last view.", "ERROR");
+        return;
+    }
     
     if (tb)
     {
@@ -249,14 +236,20 @@ function onClearCurrentView()
 function onSortCol(sortColName)
 {
     const nsIXULSortService = Components.interfaces.nsIXULSortService;
-    const isupports_uri = "@mozilla.org/xul/xul-sort-service;1";
+   /* XXX remove the rdf version once 0.8 is a distant memory
+    * 2/22/2001
+    */
+    const isupports_uri =
+        (Components.classes["@mozilla.org/xul/xul-sort-service;1"]) ?
+         "@mozilla.org/xul/xul-sort-service;1" :
+         "@mozilla.org/rdf/xul-sort-service;1";
     
     var node = document.getElementById(sortColName);
-    // determine column resource to sort on
-    var sortResource = node.getAttribute('resource');
     if (!node)
         return false;
  
+    // determine column resource to sort on
+    var sortResource = node.getAttribute("resource");
     var sortDirection = "ascending";
         //node.setAttribute("sortActive", "true");
 
@@ -282,7 +275,7 @@ function onSortCol(sortColName)
             break;
     }
     
-    var currentDirection = node.getAttribute('sortDirection');
+    var currentDirection = node.getAttribute("sortDirection");
     
     if (currentDirection == "ascending")
         sortDirection = "descending";
@@ -318,6 +311,20 @@ function onToggleMunger()
 
 }
 
+function onMultilineInputKeyUp (e)
+{
+    if (e.ctrlKey && e.keyCode == 13)
+    {
+        /* ctrl-enter, execute buffer */
+        e.line = e.target.value;
+        onInputCompleteLine (e);
+    }
+    else
+        if (e.ctrlKey && e.keyCode == 40)
+            /* ctrl-down, switch to single line mode */
+            multilineInputMode (false);
+}
+
 function onInputKeyUp (e)
 {
     
@@ -326,11 +333,16 @@ function onInputKeyUp (e)
         case 13: /* CR */
             e.line = e.target.value;
             onInputCompleteLine (e);
+            e.target.value = "";            
             break;
 
         case 38: /* up */
-            if (client.lastHistoryReferenced < client.inputHistory.length - 1)
-                e.target.value =
+            if (e.ctrlKey)  /* ctrl-up, switch to multi line mode */
+                multilineInputMode (true);
+            else
+                if (client.lastHistoryReferenced <
+                    client.inputHistory.length - 1)
+                    e.target.value =
                     client.inputHistory[++client.lastHistoryReferenced];
             break;
 
@@ -353,7 +365,6 @@ function onInputKeyUp (e)
             
         default:
             client.incompleteLine = e.target.value;
-
             
     }
 
@@ -384,8 +395,13 @@ function onTabCompleteRequest (e)
         /* complete a command */                
         var partialCommand = v.substring(1, firstSpace).toLowerCase();
         var cmds = client.commands.listNames(partialCommand);
-            
-        if (cmds.length == 1)
+
+        if (!cmds)
+        {
+            client.currentObject.display ("No commands matching ``" +
+                                          partialCommand + "''", "ERROR");
+        }
+        else if (cmds.length == 1)
         {
             /* partial matched exactly one command */
             pfx = client.COMMAND_CHAR + cmds[0];
@@ -419,10 +435,7 @@ function onTabCompleteRequest (e)
             e.target.selectionStart = e.target.selectionEnd = pfx.length;
             
         }
-        else
-            client.currentObject.display ("No commands matching " +
-                                          partialCommand, "ERROR");
-        
+                
     }
     else if (client.currentObject.users)
     {
@@ -532,85 +545,74 @@ function onWindowKeyPress (e)
 function onInputCompleteLine(e)
 {
 
-    if (e.target.getAttribute ("expanded") != "YES")
-    {
-        e.line = e.line.replace (/\n/g, "");
-
-        if (client.inputHistory[0] != e.line)
-            client.inputHistory.unshift (e.line);
-
-        if (client.inputHistory.length > client.MAX_HISTORY)
-            client.inputHistory.pop();
-        
-        client.lastHistoryReferenced = -1;
-        client.incompleteLine = "";
-        
-        if (e.line[0] == client.COMMAND_CHAR)
-        {
-            var ary = e.line.substr(1, e.line.length).match (/(\S+)? ?(.*)/);
-            var command = ary[1];
-            
-            if (command[0].search (/[\[\{\(]/) == 0) /* request to expand */
-            {
-                e.target.setAttribute("expanded", "YES");
-                switch (command[0])
-                {
-                    case "[":
-                        e.target.setAttribute("collapseChar", "]");
-                        break;
-
-                    case "{":
-                        e.target.setAttribute("collapseChar", "}");
-                        break;
-                        
-                    case "(":
-                        e.target.setAttribute("collapseChar", ")");
-                        break;        
-                }
-                e.target.style.height = client.EXPAND_HEIGHT;
-            }
-            else /* normal command */
-            {
-                var ev = new CEvent ("client", "input-command", client,
-                                     "onInputCommand");
-                ev.command = command;
-                ev.inputData =  ary[2] ? stringTrim(ary[2]) : "";
-
-                ev.target = client.currentObject;
-                getObjectDetails (ev.target, ev);
-                client.eventPump.addEvent (ev);
-                e.target.value = "";            
-            }
-        }
-        else /* plain text */
-        {
-            client.sayToCurrentTarget (e.line);
-            e.target.value = "";            
-        }
-    }
-    else /* input-box is expanded */
-    {
-        var lines = e.target.value.split("\n");
-        for (i in lines)
-            if (lines[i] == "")
-                arrayRemoveAt (lines, i);
-        var lastLine = lines[lines.length - 1];
-
-        if (lastLine.replace(/s*$/,"") ==
-            e.target.getAttribute ("collapseChar"))
-        {
-            dd ("collapsing...");
-            
-            e.target.setAttribute("expanded", "NO");
-            e.target.style.height = client.COLLAPSE_HEIGHT;
-            e.target.value = "";
-            client.sayToCurrentTarget (lines[i]);
-            e.target.value = "";            
-        }
-    }
+    if (client.inputHistory[0] != e.line)
+        client.inputHistory.unshift (e.line);
     
+    if (client.inputHistory.length > client.MAX_HISTORY)
+        client.inputHistory.pop();
+    
+    client.lastHistoryReferenced = -1;
+    client.incompleteLine = "";
+    
+    if (e.line[0] == client.COMMAND_CHAR)
+    {
+        var ary = e.line.substr(1, e.line.length).match (/(\S+)? ?(.*)/);
+        var command = ary[1];
+        
+        var ev = new CEvent ("client", "input-command", client,
+                             "onInputCommand");
+        ev.command = command;
+        ev.inputData =  ary[2] ? stringTrim(ary[2]) : "";
+        ev.line = e.line;
+        
+        ev.target = client.currentObject;
+        getObjectDetails (ev.target, ev);
+        client.eventPump.addEvent (ev);
+    }
+    else /* plain text */
+    {
+        client.sayToCurrentTarget (e.line);
+    }
 }
 
+function onNotifyTimeout ()
+{
+    for (var n in client.networks)
+    {
+        var net = client.networks[n];
+        if (net.isConnected() && net.notifyList &&
+            net.notifyList.length > 0)
+            net.primServ.sendData ("ISON " +
+                                   client.networks[n].notifyList.join(" ")
+                                   + "\n");
+    }
+}
+    
+client.onInputCancel =
+function cli_icancel (e)
+{
+    if (client.currentObject.TYPE != "IRCNetwork")
+    {
+        client.currentObject.display ("/cancel cannot be used from this view.",
+                                      "ERROR");
+        return false;
+    }
+    
+    if (!client.currentObject.connecting)
+    {
+        client.currentObject.display ("No connection in progress, nothing to " +
+                                      "cancel.", "ERROR");
+        return false;
+    }
+    
+    client.currentObject.connectAttempt = 
+        client.currentObject.MAX_CONNECT_ATTEMPTS + 1;
+
+    client.currentObject.display ("Cancelling connection to ``" + 
+                                  client.currentObject.name + "''...", "INFO");
+
+    return true;
+}    
 
 client.onInputCommand = 
 function cli_icommand (e)
@@ -620,14 +622,22 @@ function cli_icommand (e)
     switch (ary.length)
     {        
         case 0:
-            client.currentObject.display ("Unknown command '" + e.command +
-                                          "'.", "ERROR");
+            var o = getObjectDetails(client.currentObject);
+            if (o.server)
+            {
+                client.currentObject.display ("Unknown command ``" + e.command +
+                                              "'', just guessing.", "WARNING");
+                o.server.sendData (e.command + " " + e.inputData + "\n");
+            }
+            else
+                client.currentObject.display ("Unknown command ``" + e.command +
+                                              "''.", "ERROR");
             break;
             
         case 1:
             if (typeof client[ary[0].func] == "undefined")        
-                client.currentObject.display ("Sorry, '" + ary[0].name +
-                                              "' has not been implemented.", 
+                client.currentObject.display ("Sorry, ``" + ary[0].name +
+                                              "'' has not been implemented.", 
                                               "ERROR");
             else
             {
@@ -639,8 +649,8 @@ function cli_icommand (e)
             break;
             
         default:
-            client.currentObject.display ("Ambiguous command: '" + e.command +
-                                          "'", "ERROR");
+            client.currentObject.display ("Ambiguous command: ``" + e.command +
+                                          "''", "ERROR");
             var str = "";
             for (var i in ary)
                 str += str ? ", " + ary[i].name : ary[i].name;
@@ -650,6 +660,122 @@ function cli_icommand (e)
 
 }
 
+client.onInputSimpleCommand =
+function cli_iscommand (e)
+{    
+    var o = getObjectDetails(client.currentObject);
+    
+    if (o.server)
+    {
+        o.server.sendData (e.command + " " + e.inputData + "\n");
+        return true;
+    }
+    else
+    {
+        client.currentObject.display ("``" + e.command +
+                                      "'' cannot be used from this view.",
+                                      "WARNING");
+        return false;
+    }
+}
+
+client.onInputStatus =
+function cli_istatus (e)
+{    
+    function serverStatus (s)
+    {
+        var rv;
+        var serverName = s.connection.host + ":" + s.connection.port;
+        
+        if (s.connection.isConnected)
+            rv = "User ``" + s.me.properNick + "'' Attached to ";
+        else
+            rv = "No longer attached to ";
+        if (s.parent.name !== s.connection.host)
+            rv += "``" + s.parent.name + "'' via ";
+        rv += serverName;
+        
+        if (s.parent.primServ == s)
+            rv += " (Primary Server.)\n";
+        else
+            rv += ".\n";
+                
+        if (s.connection.isConnected)
+            rv += "Connected for " +
+                formatDateOffset ((new Date() - s.connection.connectDate) /
+                                  1000);
+        if (s.lastPing)
+            rv += ", last ping was " +
+                formatDateOffset ((new Date() - s.lastPing) / 1000) + " ago";
+        if (s.lag != -1)
+            rv += ", server roundtrip (lag) is " + s.lag + " seconds.";
+
+        rv += ".";
+
+        client.currentObject.display(rv, "STATUS");
+    }
+
+    function channelStatus (c)
+    {
+        var rv = "";
+        var cu;
+        
+        if ((cu = c.users[c.parent.me.nick]))
+        {
+            if (cu.isOp)
+                rv = "Operator";
+            if (cu.isVoice)
+                rv = (rv) ? rv + " and voiced" : "Voiced";
+            if (rv)
+                rv += " m";
+            else
+                rv += "M";
+            rv += "ember of " + c.name + ", with " + c.getUsersLength() +
+                " users total, " + c.opCount + " operators, " + c.voiceCount +
+                " voiced.";
+            if (c.topic)
+                rv += "\n" + c.name + ": ``" + c.topic + "''.";
+        }
+        else
+            rv = "No longer a member of " + c.name;
+
+        client.currentObject.display(rv, "STATUS");
+    }
+        
+    var n, s, c;
+
+    switch (client.currentObject.TYPE)
+    {
+        case "IRCNetwork":
+            for (s in client.currentObject.servers)
+            {
+                serverStatus(client.currentObject.servers[s]);
+                for (var c in client.currentObject.servers[s].channels)
+                    channelStatus (client.currentObject.servers[s].channels[c]);
+            }
+            break;
+
+        case "IRCChannel":
+            serverStatus(client.currentObject.parent);
+            channelStatus(client.currentObject);
+            break;
+            
+        default:
+            for (n in client.networks)
+                for (s in client.networks[n].servers)
+                {
+                    serverStatus(client.networks[n].servers[s]);
+                    for (var c in client.networks[n].servers[s].channels)
+                        channelStatus (client.networks[n].servers[s].channels[c]);
+                }
+            break;
+    }
+
+    client.currentObject.display ("End of status.", "END_STATUS");
+    return true;
+    
+}            
+            
 client.onInputHelp =
 function cli_ihelp (e)
 {
@@ -657,8 +783,8 @@ function cli_ihelp (e)
  
     if (ary.length == 0)
     {
-        client.currentObject.display ("No such command, '" + e.inputData +
-                                      "'.", "ERROR");
+        client.currentObject.display ("No such command, ``" + e.inputData +
+                                      "''.", "ERROR");
         return false;
     }
 
@@ -681,31 +807,85 @@ function cli_ihelp (e)
 client.onInputTestDisplay =
 function cli_testdisplay (e)
 {
+    var o = getObjectDetails(client.currentObject);
+    
+    client.currentObject.display ("Sample HELLO message.", "HELLO");
+    client.currentObject.display ("Sample INFO message.", "INFO");
+    client.currentObject.display ("Sample ERROR message.", "ERROR");
+    client.currentObject.display ("Sample HELP message.", "HELP");
+    client.currentObject.display ("Sample USAGE message.", "USAGE");
+    client.currentObject.display ("Sample STATUS message.", "STATUS");
 
-    client.currentObject.display ("Hello World!", "HELLO");
-    client.currentObject.display ("Nothing is wrong.", "ERROR");
-    client.currentObject.display ("Use not, want not.", "USAGE");
-    client.currentObject.display ("Don't Panic", "HELP");
-    client.currentObject.display ("NOTICE this!", "NOTICE", "Mozilla");
-    client.currentObject.display ("And hear this.", "PRIVMSG", "Mozilla");
-    client.currentObject.display ("But dont do this?", "ACTION", "Mozilla");
-    client.currentObject.display ("or you'll get KICKed", "KICK", "Mozilla");
-    client.currentObject.display ("JOIN in the fun.", "JOIN", "Mozilla");
-    client.currentObject.display ("PART when you want.", "PART", "Mozilla");
-    client.currentObject.display ("But never QUIT", "QUIT", "Mozilla");
-
-    if (client.currentObject.TYPE == "IRCChannel")
+    if (o.server && o.server.me)
     {
-        var mynick = e.server.me.nick;
-        client.currentObject.display ("NOTICE this!", "NOTICE", "!ME");
-        client.currentObject.display ("And hear this.", "PRIVMSG", "!ME");
-        client.currentObject.display ("But dont do this?", "ACTION", "!ME");
-        client.currentObject.display ("or you'll get KICKed", "KICK", "!ME");
-        client.currentObject.display ("JOIN in the fun.", "JOIN", "!ME");
-        client.currentObject.display ("PART when you want.", "PART", "!ME");
-        client.currentObject.display ("But never QUIT", "QUIT", "!ME");
-    }
+        var me = o.server.me;
+        var viewType = client.currentObject.TYPE;
+        var sampleUser = {TYPE: "IRCUser", nick: "ircmonkey",
+                          name: "IRCMonkey", properNick: "IRCMonkey"};
+        var sampleChannel = {TYPE: "IRCChannel", name: "#mojo"};
 
+        function test (from, to, msg)
+        {
+            var fromText = (from != me) ? from.TYPE + " ``" + from.name + "''" :
+                "you";
+            var toText   = (to != me) ? to.TYPE + " ``" + to.name + "''" :
+                "you";
+            
+            client.currentObject.display ("Normal message from " + fromText +
+                                          " to " + toText + ((msg) ?
+                                                             ": " + msg : ""),
+                                          "PRIVMSG", from, to);
+            client.currentObject.display ("Action message from " + fromText +
+                                          " to " + toText + ((msg) ?
+                                                             ": " + msg : ""),
+                                          "ACTION", from, to);
+            client.currentObject.display ("Notice message from " + fromText +
+                                          " to " + toText + ((msg) ?
+                                                             ": " + msg : ""),
+                                          "NOTICE", from, to);
+        }
+        
+        test (sampleUser, me); /* from user to me */
+        test (me, sampleUser); /* me to user */
+
+        client.currentObject.display ("Sample URL <http://www.mozilla.org> " +
+                                      "message.",
+                                      "PRIVMSG", sampleUser, me);
+        client.currentObject.display ("Sample text styles *bold*, _underline_" +
+                                      ", /italic/, |teletype|, #SmallCap# " +
+                                      "message.",
+                                      "PRIVMSG", sampleUser, me);
+        client.currentObject.display ("Sample emoticon :) :( :~( :0 :/ :P " +
+                                      ":| (* message.",
+                                      "PRIVMSG", sampleUser, me);
+        client.currentObject.display ("Sample Rheeeeeeeeeet! message.",
+                                      "PRIVMSG", sampleUser, me);
+        
+
+        if (viewType == "IRCChannel")
+        {
+            test (sampleUser, sampleChannel); /* user to channel */
+            test (me, sampleChannel);         /* me to channel */
+            client.currentObject.display ("Sample Topic message", "TOPIC",
+                                          sampleUser, sampleChannel);
+            client.currentObject.display ("Sample Join message", "JOIN",
+                                          sampleUser, sampleChannel);
+            client.currentObject.display ("Sample Part message", "PART",
+                                          sampleUser, sampleChannel);
+            client.currentObject.display ("Sample Kick message", "KICK",
+                                          sampleUser, sampleChannel);
+            client.currentObject.display ("Sample Quit message", "QUIT",
+                                          sampleUser, sampleChannel);
+            client.currentObject.display (me.nick + ": Sample /stalk match.",
+                                          "PRIVMSG", sampleUser, sampleChannel);
+            client.currentObject.display ("Sample text styles *bold*, " +
+                                          "_underline_, /italic/, " +
+                                          "|teletype|, #SmallCap# message.",
+                                          "PRIVMSG", me, sampleChannel);
+        }        
+        
+    }
+    
     return true;
     
 }   
@@ -725,7 +905,7 @@ function cli_inetwork (e)
     }
     else
     {
-        client.currentObject.display ("Unknown network '" + e.inputData + "'",
+        client.currentObject.display ("Unknown network ``" + e.inputData + "''",
                                       "ERROR");
         return false;
     }
@@ -733,6 +913,37 @@ function cli_inetwork (e)
     return true;
     
 }
+
+client.onInputNetworks =
+function clie_ilistnets (e)
+{
+    var span = document.createElementNS("http://www.w3.org/1999/xhtml",
+                                        "html:span");
+    
+    span.appendChild (newInlineText("Available networks are ["));
+
+    var netnames = keys(client.networks).sort();
+    var lastname = netnames[netnames.length - 1];
+    
+    for (n in netnames)
+    {
+        var net = client.networks[netnames[n]];
+        var a = document.createElementNS("http://www.w3.org/1999/xhtml",
+                                         "html:a");
+        a.setAttribute ("class", "chatzilla-link");
+        a.setAttribute ("href", "irc://" + net.name);
+        var t = newInlineText (net.name);
+        a.appendChild (t);
+        span.appendChild (a);
+        if (netnames[n] != lastname)
+            span.appendChild (newInlineText (", "));
+    }
+
+    span.appendChild (newInlineText("]."));
+
+    client.currentObject.display (span, "INFO");
+    return true;
+}   
 
 client.onInputServer =
 function cli_iserver (e)
@@ -748,10 +959,29 @@ function cli_iserver (e)
 
     if (!ary[2])
         ary[2] = 6667;
+
+    var net = null;
     
-    client.networks[ary[1]] =
-        new CIRCNetwork (ary[1], [{name: ary[1], port: ary[2]}],
-                         client.eventPump);
+    for (var n in client.networks)
+        if (n == ary[1])
+            if (client.networks[n].isConnected())
+            {
+                client.currentObject.display ("Already connected to " + ary[1],
+                                              "ERROR");
+                return false;
+            }
+            else
+            {
+                net = client.networks[n];
+                break;
+            }
+
+    if (!net)
+        client.networks[ary[1]] =
+            new CIRCNetwork (ary[1], [{name: ary[1], port: ary[2]}],
+                             client.eventPump);
+    else
+        net.serverList = [{name: ary[1], port: ary[2]}];
     
     client.onInputAttach ({inputData: ary[1] + " " + pass});
     
@@ -794,7 +1024,8 @@ function cli_exit (e)
 client.onInputDelete =
 function cli_idelete (e)
 {
-    
+    if (e.inputData)
+        return false;
     onDeleteCurrentView();
     return true;
 
@@ -819,7 +1050,50 @@ function cli_iclear (e)
 }
 
 client.onInputNames =
-function cli_inames ()
+function cli_inames (e)
+{
+    var chan;
+    
+    if (!e.network)
+    {
+        client.currentObject.display ("/names cannot be used from this " +
+                                      "view.", "ERROR");
+        return false;
+    }
+
+    if (e.inputData)
+    {
+        if (!e.network.isConnected())
+        {
+            client.currentObject.display ("Network ``" + e.network.name +
+                                          "'' is not connected.", "ERROR");
+            return false;
+        }
+
+        chan = e.inputData;
+    }
+    else
+    {
+        if (client.currentObject.TYPE != "IRCChannel")
+        {
+            client.currentObject.display ("You must supply a channel name to " +
+                                          "use /names from this view.",
+                                          "ERROR");
+            return false;
+        }
+        
+        chan = e.channel.name;
+    }
+    
+    client.currentObject.pendingNamesReply = true;
+    e.server.sendData ("NAMES " + chan + "\n");
+    
+    return true;
+    
+}
+
+client.onInputInfobar =
+function cli_tinfo ()
 {
     
     onToggleVisibility ("info");
@@ -848,13 +1122,20 @@ function cli_isbar ()
 client.onInputCommands =
 function cli_icommands (e)
 {
+
+    client.currentObject.display ("Type /help <command-name> for " +
+                                  "information about a specific " +
+                                  "command.", "INFO");
     
     if (e && e.inputData)
         client.currentObject.display ("Currently implemented commands " +
                                       "matching the pattern ``" + e.inputData +
                                       "'' are ["  + 
                                       client.commands.listNames(e.inputData)
-                                      .join(", ") + "].", "INFO");
+                                      .join(", ") + "].\n" +
+                                      "Type /help <command-name> for " +
+                                      "information about a specific " +
+                                      "command.", "INFO");
     else
         client.currentObject.display ("Currently implemented commands are ["  + 
                                       client.commands.listNames().join(", ") +
@@ -873,8 +1154,8 @@ function cli_iattach (e)
         if (client.lastNetwork)
         {        
             client.currentObject.display ("No network specified network, " +
-                                          "Using '" + client.lastNetwork.name +
-                                          "'", "NOTICE");
+                                          "Using ``" + client.lastNetwork.name +
+                                          "''", "NOTICE");
             net = client.lastNetwork;
         }
         else
@@ -893,20 +1174,32 @@ function cli_iattach (e)
         
         if (!net)
         {
-            client.currentObject.display ("Unknown network '" +
-                                          e.inputData + "'", "ERROR");
+            client.currentObject.display ("Unknown network ``" +
+                                          e.inputData + "''", "ERROR");
             return false;
         }
         client.lastNetwork = net;
     }
 
+    if (!net.messages)
+        net.displayHere ("Network view for ``" + net.name + "'' opened.",
+                         "INFO");
+    setCurrentObject(net);
+
+    if (net.isConnected())
+    {
+        net.display ("You are already connected to ``" + net.name + "''.",
+                     "ERROR");
+        return true;
+    }
+    
     if (CIRCNetwork.prototype.INITIAL_NICK == client.defaultNick)
         CIRCNetwork.prototype.INITIAL_NICK =
             prompt ("Please select a nickname", client.defaultNick);
     
     net.connect(pass);
-    net.display ("Connecting...", "INFO");
-    setCurrentObject(net);
+    net.display ("Attempting to connect to ``" + net.name + 
+                 "''.  Use /cancel to abort.", "INFO");
     return true;
     
 }
@@ -914,15 +1207,51 @@ function cli_iattach (e)
 client.onInputMe =
 function cli_ime (e)
 {
-    if (!e.channel)
+    if (typeof client.currentObject.act != "function")
     {
-        client.currentObject.display ("Me can only be used from channels.",
+        client.currentObject.display ("Me cannot be used in this view.",
                                       "ERROR");
         return false;
     }
 
-    e.inputData = filterOutput (e.inputData, "ACTION", "!ME");
-    e.channel.act (e.inputData);
+    e.inputData = filterOutput (e.inputData, "ACTION", "ME!");
+    client.currentObject.display (e.inputData, "ACTION", "ME!",
+                                  client.currentObject);
+    client.currentObject.act (e.inputData);
+    
+    return true;
+}
+
+client.onInputQuery =
+function cli_imsg (e)
+{
+    if (!e.server.users)
+    {
+        client.currentObject.display ("/query cannot be used from this view.",
+                                      "ERROR");
+        return false;
+    }
+
+    var ary = e.inputData.match (/(\S+)\s*(.*)?/);
+    if (ary == null)
+    {
+        client.currentObject.display ("Missing parameter.", "ERROR");
+        return false;
+    }
+    
+    var usr = e.network.primServ.addUser(ary[1].toLowerCase());
+
+    if (!usr.messages)
+        usr.displayHere ("Query view for ``" + usr.properNick + "'' opened.",
+                         "INFO");
+    setCurrentObject (usr);
+    
+    if (ary[2])
+    {
+        var msg = filterOutput(ary[2], "PRIVMSG", "ME!");
+        usr.display (msg, "PRIVMSG", "ME!", usr);
+        usr.say (ary[2]);
+    }
     
     return true;
 }
@@ -944,10 +1273,8 @@ function cli_imsg (e)
 
     var usr = e.network.primServ.addUser(ary[1].toLowerCase());
 
-    if (!usr.messages)
-        usr.display ("Chat with " + usr.nick + " opened.", "INFO");
-    setCurrentObject (usr);
-    var msg = filterOutput(ary[2], "PRIVMSG", "!ME");
+    var msg = filterOutput(ary[2], "PRIVMSG", "ME!");
+    client.currentObject.display (msg, "PRIVMSG", "ME!", usr);
     usr.say (ary[2]);
 
     return true;
@@ -962,7 +1289,7 @@ function cli_inick (e)
         return false;
     
     if (e.server) 
-        e.server.sendData ('NICK ' + e.inputData + '\n');
+        e.server.sendData ("NICK " + e.inputData + "\n");
     else
         CIRCNetwork.prototype.INITIAL_NICK = e.inputData;
     
@@ -1024,15 +1351,13 @@ function cli_ieval (e)
     
     try
     {
-        client.currentObject.doEval = function (s) { return eval(s); }
+        client.currentObject.doEval = function (__s) { return eval(__s); }
+        client.currentObject.display (e.inputData, "EVAL-IN");
         
         rv = String(client.currentObject.doEval (e.inputData));
-        if (rv.indexOf ("\n") == -1)
-            client.currentObject.display ("{" + e.inputData + "} " + rv,
-                                          "EVAL");
-        else
-            client.currentObject.display ("{" + e.inputData + "}\n" + rv,
-                                          "EVAL");
+        
+        client.currentObject.display (rv, "EVAL-OUT");
+
     }
     catch (ex)
     {
@@ -1075,8 +1400,8 @@ function cli_ijoin (e)
         if (!e.network)
             client.currentObject.display ("No network selected.", "ERROR");
         else
-            client.currentObject.display ("Network '" + e.network.name +
-                                          " is not connected.", "ERROR");        
+            client.currentObject.display ("Network ``" + e.network.name +
+                                          "'' is not connected.", "ERROR");
         return false;
     }
     
@@ -1092,7 +1417,9 @@ function cli_ijoin (e)
 
     e.channel = e.server.addChannel (name);
     e.channel.join(key);
-    e.channel.display ("Joining...", "INFO");
+    if (!e.channel.messages)
+        e.channel.display ("Channel view for ``" + e.channel.name +
+                           "'' opened.", "INFO");
     setCurrentObject(e.channel);
     
     return true;
@@ -1135,7 +1462,7 @@ function cli_izoom (e)
     
     if (!cuser)
     {
-        client.currentObject.display ("User '" + e.inputData + "' not found.",
+        client.currentObject.display ("User ``" + e.inputData + "'' not found.",
                                       "ERROR");
         return false;
     }
@@ -1165,7 +1492,6 @@ function cli_whois (e)
  
         if (nicksAry)
         {
-            dd ("Sending [" + nicksAry.length + "] nicks the whois call\n");
             mapObjFunc(nicksAry, "whois", null);
             return true;
         }
@@ -1195,16 +1521,7 @@ function cli_itopic (e)
     
     if (!e.inputData)
     {
-        if (e.channel.topic)
-        {
-            client.currentObject.display ("Topic: " + e.channel.topic,
-                                          "TOPIC");
-            client.currentObject.display ("Set by " + e.channel.topicBy +
-                                          " on " + e.channel.topicDate + ".",
-                                          "TOPIC");
-        }
-        else
-            client.currentObject.display ("No topic.", "TOPIC");
+        e.server.sendData ("TOPIC " + e.channel.name + "\n");
     }
     else
     {
@@ -1274,7 +1591,7 @@ function cli_ideop (e)
     if (!cuser)
     {
         /* use e.inputData so the case is retained */
-        client.currentObject.display ("User '" + e.inputData + "' not found.",
+        client.currentObject.display ("User ``" + e.inputData + "'' not found.",
                                       "ERROR");
         return false;
     }
@@ -1330,7 +1647,7 @@ function cli_iop (e)
     
     if (!cuser)
     {
-        client.currentObject.display ("User '" + e.inputData + "' not found.",
+        client.currentObject.display ("User ``" + e.inputData + "'' not found.",
                                       "ERROR");
         return false;
     }
@@ -1373,7 +1690,7 @@ function cli_ivoice (e)
     
     if (!cuser)
     {
-        client.currentObject.display ("User '" + e.inputData + "' not found.",
+        client.currentObject.display ("User ``" + e.inputData + "'' not found.",
                                       "ERROR");
         return false;
     }
@@ -1415,7 +1732,7 @@ function cli_devoice (e)
     
     if (!cuser)
     {
-        client.currentObject.display ("User '" + e.inputData + "' not found.",
+        client.currentObject.display ("User ``" + e.inputData + "'' not found.",
                                       "ERROR");
         return false;
     }
@@ -1521,7 +1838,7 @@ function cli_ikick (e)
     
     if (!cuser)
     {    
-        client.currentObject.display ("User '" + e.inputData + "' not found.",
+        client.currentObject.display ("User ``" + e.inputData + "'' not found.",
                                       "ERROR");
         return false;
     }
@@ -1537,8 +1854,84 @@ function cli_ikick (e)
     return true;
 }
 
+client.onInputClient =
+function cli_iclient (e)
+{
+    if (!client.messages)
+        client.display ("JavaScript console for ``*client*'' opened.", "INFO");
+
+    setCurrentObject (client);
+    return true;
+}
+
+client.onInputNotify =
+function cli_inotify (e)
+{
+    if (!e.network)
+    {
+        client.currentObject.display ("/notify cannot be used from this view.",
+                                      "ERROR");
+        return false;
+    }
+
+    var net = e.network;
+    
+    if (!e.inputData)
+    {
+        if (net.notifyList && net.notifyList.length > 0)
+        {
+            /* delete the lists and force a ISON check, this will
+             * print the current online/offline status when the server
+             * responds */
+            delete net.onList;
+            delete net.offList;
+            onNotifyTimeout();
+        }
+        else
+            client.currentObject.display ("Your notify list is empty", "INFO");
+    }
+    else
+    {
+        var adds = new Array();
+        var subs = new Array();
+        
+        if (!net.notifyList)
+            net.notifyList = new Array();
+        var ary = e.inputData.toLowerCase().split(/\s+/);
+
+        for (var i in ary)
+        {
+            var idx = arrayIndexOf (net.notifyList, ary[i]);
+            if (idx == -1)
+            {
+                net.notifyList.push (ary[i]);
+                adds.push(ary[i]);
+            }
+            else
+            {
+                arrayRemoveAt (net.notifyList, idx);
+                subs.push(ary[i]);
+            }
+        }
+
+        if (adds.length > 0)
+            client.currentObject.display (arraySpeak(adds, "has", "have") +
+                                          " been added to your notify list.");
+        if (subs.length > 0)
+            client.currentObject.display (arraySpeak(subs, "has", "have") +
+                                          " been removed from your notify list.");
+        delete net.onList;
+        delete net.offList;
+        onNotifyTimeout();
+    }
+
+    return true;
+    
+}
+
+                
 client.onInputStalk =
-function cli_istalk ( e )
+function cli_istalk (e)
 {
     if (!e.inputData)
     {
@@ -1599,11 +1992,31 @@ function my_remfgraph (user)
     
 }
 
-CIRCNetwork.prototype.onNotice = 
+CIRCNetwork.prototype.onInfo =
+function my_netinfo (e)
+{
+    this.display (e.msg, "INFO");
+}
+
+CIRCNetwork.prototype.onUnknown =
+function my_unknown (e)
+{
+    e.params.shift(); /* remove the code */
+    e.params.shift(); /* and the dest. nick (always me) */
+        /* if it looks like some kind of "end of foo" code, and we don't
+         * already have a mapping for it, make one up */
+    if (!client.responseCodeMap[e.code] && e.meat.search (/^end of/i) != -1)
+        client.responseCodeMap[e.code] = "---";
+    
+    this.display (e.params.join(" ") + ": " + e.meat,
+                  e.code.toUpperCase());
+}
+
 CIRCNetwork.prototype.on001 = /* Welcome! */
 CIRCNetwork.prototype.on002 = /* your host is */
 CIRCNetwork.prototype.on003 = /* server born-on date */
 CIRCNetwork.prototype.on004 = /* server id */
+CIRCNetwork.prototype.on005 = /* server features */
 CIRCNetwork.prototype.on251 = /* users */
 CIRCNetwork.prototype.on252 = /* opers online (in params[2]) */
 CIRCNetwork.prototype.on254 = /* channels found (in params[2]) */
@@ -1652,10 +2065,84 @@ function my_showtonet (e)
             break;
     }
 
-    this.display (p + str, e.code.toUpperCase());
+    this.displayHere (p + str, e.code.toUpperCase());
     
 }
 
+CIRCNetwork.prototype.onNotice = 
+function my_notice (e)
+{
+    this.display (e.meat, "NOTICE", this, e.server.me);
+}
+
+CIRCNetwork.prototype.on303 = /* ISON (aka notify) reply */
+function my_303 (e)
+{
+    var onList = stringTrim(e.meat.toLowerCase()).split(/\s+/);
+    var offList = new Array();
+    var newArrivals = new Array();
+    var newDepartures = new Array();
+    var i;
+
+    for (i in this.notifyList)
+        if (!arrayContains(onList, this.notifyList[i]))
+            /* user is not on */
+            offList.push (this.notifyList[i]);
+        
+    if (this.onList)
+    {
+        for (i in onList)
+            if (!arrayContains(this.onList, onList[i]))
+                /* we didn't know this person was on */
+                newArrivals.push(onList[i]);
+    }
+    else
+        this.onList = newArrivals = onList;
+
+    if (this.offList)
+    {
+        for (i in offList)
+            if (!arrayContains(this.offList, offList[i]))
+                /* we didn't know this person was off */
+                newDepartures.push(offList[i]);
+    }
+    else
+        this.offList = newDepartures = offList;
+    
+    if (newArrivals.length > 0)
+        this.display (arraySpeak (newArrivals, "is", "are") +
+                      " online.", "NOTIFY-ON");
+    
+    if (newDepartures.length > 0)
+        this.display (arraySpeak (newDepartures, "is", "are") +
+                      " offline.", "NOTIFY-OFF");
+
+    this.onList = onList;
+    this.offList = offList;
+    
+}
+
+CIRCNetwork.prototype.on322 = /* LIST reply */
+function my_listrply (e)
+{
+    var span = document.createElementNS("http://www.w3.org/1999/xhtml",
+                                        "html:span");
+    var a = document.createElementNS ("http://www.w3.org/1999/xhtml",
+                                      "html:a");
+    a.setAttribute ("href", "irc://" + this.name + "/" + e.params[2]);
+    a.setAttribute ("class", "chatzilla-link");
+    var t = newInlineText (e.params[2]);
+    a.appendChild (t);
+
+    span.appendChild (a);
+
+    t = client.munger.munge (" " + e.params[3] + " " + e.meat);
+    
+    span.appendChild (t);
+    
+    this.displayHere (span, "LIST");
+}
+    
 CIRCNetwork.prototype.on311 = /* whois name */
 CIRCNetwork.prototype.on319 = /* whois channels */
 CIRCNetwork.prototype.on312 = /* whois server */
@@ -1673,21 +2160,23 @@ function my_whoisreply (e)
             break;
             
         case 319:
-            text = e.params[2] + " is a member of " + e.meat;
+            var ary = stringTrim(e.meat).split(" ");
+            text = e.params[2] + " is a member of " + arraySpeak(ary);
             break;
             
         case 312:
-            text = e.params[2] + " is attached to " + e.params[3]
+            text = e.params[2] + " is attached to " + e.params[3] + " ``" +
+                e.meat + "''";
             break;
             
         case 317:
-            text = e.params[2] + " has been idle for " + e.params[3] +
-                " seconds (on since " + new Date(Number(e.params[4]) * 1000) +
-                ")";
+            text = e.params[2] + " has been idle for " +
+                formatDateOffset(Number(e.params[3])) + " (on since " +
+                new Date(Number(e.params[4]) * 1000) + ")";
             break;
             
         case 318:
-            text = "End of whois information for " + e.params[2];
+            text = "End of WHOIS information for " + e.params[2];
             break;
             
     }
@@ -1700,8 +2189,8 @@ CIRCNetwork.prototype.on433 = /* nickname in use */
 function my_433 (e)
 {
 
-    e.server.parent.display ("The nickname '" + e.params[2] +
-                             "' is already in use.", e.code);
+    e.server.parent.display ("The nickname ``" + e.params[2] +
+                             "'' is already in use.", e.code);
     
 }
 
@@ -1711,6 +2200,35 @@ function my_neterror (e)
 
     e.server.parent.display (e.meat, "ERROR");
     
+}
+
+CIRCNetwork.prototype.onDisconnect =
+function my_neterror (e)
+{
+    var msg = (this.connecting) ? "Could not connect to " :
+        "You are no longer connected to ";
+
+    this.display (msg + this.name + " (" +
+                  e.server.connection.host + ").", "ERROR");
+    this.connecting = false;
+    updateTitle();
+}
+
+CIRCNetwork.prototype.onNick =
+function my_cnick (e)
+{
+
+    if (userIsMe (e.user))
+    {
+        if (client.currentObject == this)
+            this.displayHere ("YOU are now known as " + e.user.properNick, 
+                              "NICK", "ME!", e.user, this);
+        updateNetwork();
+    }
+    else
+        this.display (e.oldNick + " is now known as " + e.user.properNick,
+                      "NICK", e.user, this);
+
 }
 
 CIRCNetwork.prototype.onPing =
@@ -1733,7 +2251,7 @@ CIRCChannel.prototype.onPrivmsg =
 function my_cprivmsg (e)
 {
     
-    e.user.display (e.meat, "PRIVMSG");
+    this.display (e.meat, "PRIVMSG", e.user, this);
     
     if ((typeof client.prefix == "string") &&
         e.meat.indexOf (client.prefix) == 0)
@@ -1763,6 +2281,7 @@ function my_cprivmsg (e)
             else
                 rsp += " ";
             
+            this.display (rsp + v, "PRIVMSG", e.server.me, this);
             this.say (rsp + v);
         }
     }
@@ -1775,7 +2294,6 @@ function my_cprivmsg (e)
 CIRCChannel.prototype.on366 =
 function my_366 (e)
 {
-
     if (client.currentObject == this)    
         /* hide the tree while we add (possibly tons) of nodes */
         client.rdf.setTreeRoot("user-list", client.rdf.resNullChan);
@@ -1793,6 +2311,12 @@ function my_366 (e)
         /* redisplay the tree */
         client.rdf.setTreeRoot("user-list", this.getGraphResource());
     
+    if (e.channel.pendingNamesReply)
+    {       
+        e.channel.display (e.meat, "366");
+        e.channel.pendingNamesReply = false;
+    }
+    
 }    
 
 CIRCChannel.prototype.onTopic = /* user changed topic */
@@ -1801,28 +2325,53 @@ function my_topic (e)
 {
 
     if (e.code == "TOPIC")
-        e.channel.display (e.channel.topicBy + " has changed the topic to '" +
-                           e.channel.topic + "'", "TOPIC");
+        this.display (this.topicBy + " has changed the topic to ``" +
+                      this.topic + "''", "TOPIC");
     
-    updateChannel (e.channel);
-    updateTitle (e.channel);
+    if (e.code == "332")
+    {
+        if (this.topic)
+            this.display ("Topic for " + this.name + " is ``" +
+                          this.topic + "''", "TOPIC");
+        else
+            this.display ("No topic for channel " + this.name,
+                          "TOPIC");
+    }
     
+    updateChannel (this);
+    updateTitle (this);
+    
+}
+
+CIRCChannel.prototype.on333 = /* Topic setter information */
+function my_topicinfo (e)
+{
+    
+    this.display ("Topic for " + this.name + " was set by " +
+                  this.topicBy + " on " +
+                  this.topicDate, "TOPIC");
+    
+}
+
+CIRCChannel.prototype.on353 = /* names reply */
+function my_topic (e)
+{
+    if (e.channel.pendingNamesReply)
+        e.channel.display (e.meat, "NAMES");
 }
 
 
 CIRCChannel.prototype.onNotice =
 function my_notice (e)
 {
-
-    e.user.display (e.meat, "NOTICE", e.user.nick);
-    
+    this.display (e.meat, "NOTICE", e.user, this);   
 }
 
 CIRCChannel.prototype.onCTCPAction =
 function my_caction (e)
 {
 
-    e.user.display (e.CTCPData, "ACTION");
+    this.display (e.CTCPData, "ACTION", e.user, this);
 
 }
 
@@ -1831,7 +2380,7 @@ function my_unkctcp (e)
 {
 
     this.display ("Unknown CTCP " + e.CTCPCode + "(" + e.CTCPData +
-                  ") from " + e.user.properNick, "BAD-CTCP");
+                  ") from " + e.user.properNick, "BAD-CTCP", e.user, this);
     
 }   
 
@@ -1841,13 +2390,14 @@ function my_cjoin (e)
 
     if (userIsMe (e.user))
     {
-        this.display ("YOU have joined " + e.channel.name, "JOIN", "!ME");
+        this.display ("YOU have joined " + e.channel.name, "JOIN", e.server.me,
+                      this);
         setCurrentObject(this);
     }
     else
-        this.display(e.user.properNick + " (" + e.user.name + " @ " +
-                     hyphenateWord(e.user.host, client.MAX_WORD_DISPLAY) +
-                     ") has joined " + e.channel.name, "JOIN", e.user.nick);
+        this.display(e.user.properNick + " (" + e.user.name + "@" +
+                     e.user.host + ") has joined " + e.channel.name, "JOIN",
+                     e.user, this);
 
     this._addUserToGraph (e.user);
     
@@ -1863,7 +2413,7 @@ function my_cpart (e)
 
     if (userIsMe (e.user))
     {
-        this.display ("YOU have left " + e.channel.name, "PART", "!ME");
+        this.display ("YOU have left " + e.channel.name, "PART", e.user, this);
         if (client.currentObject == this)    
             /* hide the tree while we remove (possibly tons) of nodes */
             client.rdf.setTreeRoot("user-list", client.rdf.resNullChan);
@@ -1880,7 +2430,7 @@ function my_cpart (e)
     }
     else
         this.display (e.user.properNick + " has left " + e.channel.name,
-                      "PART");
+                      "PART", e.user, this);
 
 
     updateChannel (e.channel);
@@ -1894,14 +2444,14 @@ function my_ckick (e)
     if (userIsMe (e.lamer))
         this.display ("YOU have been booted from " + e.channel.name +
                       " by " + e.user.properNick + " (" + e.reason + ")",
-                      "KICK", e.user.nick);
+                      "KICK", e.user, this);
     else
     {
         var enforcerProper, enforcerNick;
         if (userIsMe (e.user))
         {
             enforcerProper = "YOU";
-            enforcerNick = "!ME";
+            enforcerNick = "ME!";
         }
         else
         {
@@ -1911,7 +2461,7 @@ function my_ckick (e)
         
         this.display (e.lamer.properNick + " was booted from " +
                       e.channel.name + " by " + enforcerProper + " (" +
-                      e.reason + ")", "KICK", enforcerNick);
+                      e.reason + ")", "KICK", e.user, this);
     }
     
     this._removeUserFromGraph(e.lamer);
@@ -1926,7 +2476,7 @@ function my_cmode (e)
 
     if (e.user)
         this.display ("Mode " + e.params.slice(1).join(" ") + " by " +
-                      e.user.nick, "MODE");
+                      e.user.properNick, "MODE", e.user, this);
 
     for (var u in e.usersAffected)
         e.usersAffected[u].updateGraphResource();
@@ -1945,12 +2495,12 @@ function my_cnick (e)
     if (userIsMe (e.user))
     {
         this.display ("YOU are now known as " + e.user.properNick, "NICK",
-                      "!ME");
+                      "ME!", e.user, this);
         updateNetwork();
     }
     else
         this.display (e.oldNick + " is now known as " + e.user.properNick,
-                      "NICK");
+                      "NICK", e.user, this);
 
     /*
       dd ("updating resource " + e.user.getGraphResource().Value +
@@ -1961,17 +2511,16 @@ function my_cnick (e)
     
 }
 
-
 CIRCChannel.prototype.onQuit =
 function my_cquit (e)
 {
 
     if (userIsMe(e.user)) /* I dont think this can happen */
         this.display ("YOU have left " + e.server.parent.name +
-                      " (" + e.reason + ")", "QUIT", "!ME");
+                      " (" + e.reason + ")", "QUIT", e.user, this);
     else
         this.display (e.user.properNick + " has left " + e.server.parent.name +
-                      " (" + e.reason + ")", "QUIT");
+                      " (" + e.reason + ")", "QUIT", e.user, this);
 
     this._removeUserFromGraph(e.user);
 
@@ -1982,9 +2531,13 @@ function my_cquit (e)
 CIRCUser.prototype.onPrivmsg =
 function my_cprivmsg (e)
 {
-    
-    this.display (e.meat, "PRIVMSG");
-    
+    this.display (e.meat, "PRIVMSG", e.user, e.server.me);
+    if (client.sound)
+        if (client.BEEP_URL)
+            client.sound.play (client.BEEP_URL);
+        else
+            client.sound.beep ();
+
 }
 
 CIRCUser.prototype.onNick =
@@ -2002,9 +2555,15 @@ function my_unick (e)
 CIRCUser.prototype.onNotice =
 function my_notice (e)
 {
+    this.display (e.meat, "NOTICE", this, e.server.me);   
+}
 
-    this.display (e.meat, "NOTICE");
-    
+CIRCUser.prototype.onCTCPAction =
+function my_uaction (e)
+{
+
+    e.user.display (e.CTCPData, "ACTION", this, e.server.me);
+
 }
 
 CIRCUser.prototype.onUnknownCTCP =
@@ -2013,6 +2572,6 @@ function my_unkctcp (e)
 
     this.parent.parent.display ("Unknown CTCP " + e.CTCPCode + "(" +
                                 e.CTCPData + ") from " + e.user.properNick,
-                                "BAD-CTCP");
+                                "BAD-CTCP", this, e.server.me);
     
 }

@@ -191,7 +191,7 @@ function ep_routeevent (e)
                     catch (ex)
                     {
                         dd ("Error routing event: " + ex + " in " +
-                            e.destMethod);
+                            e.destMethod + "\n" + dumpObjectTree(ex));
                     }
                 else
                     destObject[e.destMethod] (e);

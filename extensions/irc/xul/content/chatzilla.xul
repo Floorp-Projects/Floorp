@@ -1,30 +1,27 @@
 <?xml version="1.0"?>
 
 <!--
-  The contents of this file are subject to the Mozilla Public
-  License Version 1.1 (the "License"); you may not use this file
-  except in compliance with the License. You may obtain a copy of
-  the License at http://www.mozilla.org/MPL/
- 
-  Software distributed under the License is distributed on an "AS
-  IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
-  implied. See the License for the specific language governing
-  rights and limitations under the License.
- 
-  The Original Code is JSIRC Test Client #3
- 
-  The Initial Developer of the Original Code is New Dimensions Consulting,
-  Inc. Portions created by New Dimensions Consulting, Inc. are
-  Copyright (C) 1999 New Dimenstions Consulting, Inc. All
-  Rights Reserved.
- 
-  Contributor(s): 
- 
- 
-  Contributor(s):
-   Robert Ginda, rginda@ndcico.com, original author
-   Josh Soref, timeless@mac.com, international support
--->
+   - The contents of this file are subject to the Mozilla Public
+   - License Version 1.1 (the "License"); you may not use this file
+   - except in compliance with the License. You may obtain a copy of
+   - the License at http://www.mozilla.org/MPL/
+   -  
+   - Software distributed under the License is distributed on an "AS
+   - IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   - implied. See the License for the specific language governing
+   - rights and limitations under the License.
+   - 
+   - The Original Code is JSIRC Test Client #3
+   - 
+   - The Initial Developer of the Original Code is New Dimensions Consulting,
+   - Inc. Portions created by New Dimensions Consulting, Inc. are
+   - Copyright (C) 1999 New Dimenstions Consulting, Inc. All
+   - Rights Reserved.
+   - 
+   - Contributor(s):
+   -  Robert Ginda, rginda@ndcico.com, original author
+   -  Josh Soref, timeless@mac.com, international support
+  -->
 
 <!DOCTYPE window SYSTEM "chrome://chatzilla/locale/chatzilla.dtd">
 
@@ -54,7 +51,15 @@
 <script src="chrome://chatzilla/content/handlers.js"/>
 <script src="chrome://chatzilla/content/rdf.js"/>
 
-<broadcasterset id="broadcasterset"/>
+<broadcasterset id="broadcasterset">
+  <broadcaster id="cmd_close" oncommand="window.close();"/>
+  <broadcaster id="cmd_quit"/>
+</broadcasterset>
+
+<keyset id="keyset">
+  <key id="key_close"/>
+  <key id="key_quit"/>
+</keyset>
 
 <popupset>
     <popup id="userlistPopup" oncommand="onUserListPopupClick(event)">
@@ -77,54 +82,40 @@
 
 <toolbox>
   <menubar id="main-menubar" persist="collapsed">
-    <menu value="Options">
-      <menupopup>
-
-        <menuitem id="menu-view-toolbar" value="Show Toolbar" 
-          type="checkbox" oncommand="onToggleVisibility('toolbar');"/>
-        <menuitem id="menu-view-info" value="Show Userlist" 
-          type="checkbox" oncommand="onToggleVisibility('info');"/>
-        <menuitem id="menu-view-status" value="Show Statusbar" 
-          type="checkbox" oncommand="onToggleVisibility('status');"/>
-
-        <menuseparator/>
-
-        <menuitem id="menu-viewicons" value="LEDs in View Buttons" 
-          type="checkbox" oncommand="onToggleToolbarIcons();"/>
-
-        <menuitem id="menu-munger" value="Enable Smileys"
-          oncommand="onToggleMunger()" type="checkbox"/>
-
-        <menuseparator/>
-
-        <menuitem id="menu-dmessages" value="Debug Messages"
-          oncommand="onToggleTraceHook()" type="checkbox"/>
-
-        <menuseparator/>
-
-        <menuitem id="menu-settings-save-now" value="Save Settings Now"
-          oncommand="writeIRCPrefs()"/>
-        <menuitem id="menu-settings-autosave" value="Save Settings On Exit"
-          oncommand="onToggleSaveOnExit()" type="checkbox"/>
-
-    <!--
-        <menuitem value="Logging..." enabled="false"
-                  oncommand="onNotImplemented();"/>
-
-        <menu value="Style">
+    <menu id="menu_File">
+      <menupopup id="menu_FilePopup">
+        <menu value="Options">
           <menupopup>
-           <menuitem value="Default"
-                     oncommand="onDoStyleChange('output-default.css')"/>
-           <menuitem value="Marble"
-                     oncommand="onDoStyleChange('output-marble.css')"/>
-           <menuitem value="Loud"
-                     oncommand="onDoStyleChange('output-loud.css')"/>
-           <menuseparator/>
-           <menuitem value="Other..."
-                     oncommand="onDoStyleChange('other')"/>
+
+            <menuitem id="menu-view-toolbar" value="Show Toolbar" 
+              type="checkbox" oncommand="onToggleVisibility('toolbar');"/>
+            <menuitem id="menu-view-info" value="Show Userlist" 
+              type="checkbox" oncommand="onToggleVisibility('info');"/>
+            <menuitem id="menu-view-status" value="Show Statusbar" 
+              type="checkbox" oncommand="onToggleVisibility('status');"/>
+
+            <menuseparator/>
+
+            <menuitem id="menu-munger" value="Enable Smileys"
+              oncommand="onToggleMunger()" type="checkbox"/>
+
+            <menuseparator/>
+
+            <menuitem id="menu-dmessages" value="Debug Messages"
+              oncommand="onToggleTraceHook()" type="checkbox"/>
+
+            <menuseparator/>
+
+            <menuitem id="menu-settings-save-now" value="Save Settings Now"
+              oncommand="writeIRCPrefs()"/>
+            <menuitem id="menu-settings-autosave" value="Save Settings On Exit"
+              oncommand="onToggleSaveOnExit()" type="checkbox"/>
+
           </menupopup>
         </menu>
-     -->
+
+        <menuseparator/>
+        <menuitem id="menu_close"/>
       </menupopup>
     </menu>
     <menu value="View">
@@ -141,140 +132,173 @@
     <menu id="tasksMenu"/>
   </menubar>
   
-  <toolbar id="views-tbar" class="toolbar-primary chromeclass-toolbar"
-    persist="collapsed">
-    <box id="views-tbar-inner"/>
-  </toolbar>
 </toolbox>
 
-<box id="outer-box" align="vertical" flex="1">
-  <box id="inner-box" align="horizontal" flex="1">
-    <box id="user-list-box" flex="30%" persist="collapsed">
-    <tree id="user-list" container="true" datasources="rdf:null"
-     style="width:0px" flex="1"
-     containment="http://home.netscape.com/NC-irc#chanuser"
-     multiple="true"
-     context="userlistPopup">
+<vbox id="outer-box" flex="1">
+  <vbox id="upper-box" flex="1">
+    <hbox id="tabpanel-contents-box" flex="1">
+      <vbox id="user-list-box" flex="1" width="20%" persist="collapsed width">
+  
+        <tree id="user-list" container="true" datasources="rdf:null" flex="1"
+         containment="http://home.netscape.com/NC-irc#chanuser"
+         multiple="true" context="userlistPopup">
 
-      <template>
-        <treechildren flex="1">
-          <treeitem uri="...">
-            <treerow>
-                <treecell>
-                  <image class="op-image"
-                    state="rdf:http://home.netscape.com/NC-irc#op"/>
-                </treecell>
-                <treecell>
-                  <image class="voice-image"
-                    state="rdf:http://home.netscape.com/NC-irc#voice"/>
-                </treecell>
-                <treecell>
-                  <text value="rdf:http://home.netscape.com/NC-irc#nick"/>
-                </treecell>
+          <template>
+            <treechildren flex="1">
+              <treeitem uri="..." flex="1">
+                <treerow crop="right">
+                    <treecell>
+                      <image class="op-image"
+                        state="rdf:http://home.netscape.com/NC-irc#op"/>
+                    </treecell>
+                    <treecell>
+                      <image class="voice-image"
+                        state="rdf:http://home.netscape.com/NC-irc#voice"/>
+                    </treecell>
+                    <treecell flex="1">
+                      <text value="rdf:http://home.netscape.com/NC-irc#nick"
+                        flex="1" crop="right"/>
+                    </treecell>
+                </treerow>
+              </treeitem>
+            </treechildren>
+          </template>
+  
+          <treecolgroup flex="1">
+            <treecol
+              resource="http://home.netscape.com/NC-irc#op" wwidth="15"/>
+            <splitter class="tree-splitter"/>
+            <treecol
+              resource="http://home.netscape.com/NC-irc#voice" wwidth="15"/>
+            <splitter class="tree-splitter"/>
+            <treecol flex="1"
+              resource="http://home.netscape.com/NC-irc#nick"/>
+          </treecolgroup>
+  
+          <treehead>
+            <treerow crop="right">
+              <treecell id="usercol-op"
+                resource="http://home.netscape.com/NC-irc#op"
+                class="treecell-header sortDirectionIndicator" value="O"
+                onclick="return onSortCol('usercol-op');"/>
+              <treecell id="usercol-voice"
+                resource="http://home.netscape.com/NC-irc#voice"
+                class="treecell-header sortDirectionIndicator" value="V"
+                onclick="return onSortCol('usercol-voice');"/>
+              <treecell id="usercol-nick"
+                resource="http://home.netscape.com/NC-irc#nick"
+                class="treecell-header sortDirectionIndicator" value="Nick"
+                onclick="return onSortCol('usercol-nick');"/>
             </treerow>
-          </treeitem>
-        </treechildren>
-      </template>
+          </treehead>
+  
+        </tree>
+  
+      </vbox> <!-- user-list-box -->
 
-      <treecolgroup>
-       <treecol
-        resource="http://home.netscape.com/NC-irc#op"
-        width="15"/>
-      <treecol
-       resource="http://home.netscape.com/NC-irc#voice"
-       width="15"/>
-      <treecol flex="1"
-        resource="http://home.netscape.com/NC-irc#nick"/>
-      </treecolgroup>
+      <splitter id="main-splitter" align="vertical" collapse="before"
+        persist="collapsed left">
+        <grippy/>
+      </splitter>
 
-      <treehead>
-        <treerow>
-          <treecell id="usercol-op"
-            resource="http://home.netscape.com/NC-irc#op"
-            class="treecell-header sortDirectionIndicator" value="O"
-            oncommand="return onSortCol('usercol-op');"/>
-          <treecell id="usercol-voice"
-            resource="http://home.netscape.com/NC-irc#voice"
-            class="treecell-header sortDirectionIndicator" value="V"
-            oncommand="return onSortCol('usercol-voice');"/>
-          <treecell id="usercol-nick"
-            resource="http://home.netscape.com/NC-irc#nick"
-            class="treecell-header sortDirectionIndicator" value="Nick"
-            oncommand="return onSortCol('usercol-nick');"/>
-        </treerow>
-      </treehead>
-    </tree>      
-    </box>
-    <splitter id="main-splitter" align="vertical" collapse="before"
-      persist="collapsed"/>
-    <box align="vertical" flex="60%">
-      <iframe id="it-doesnt-matter-anyway" class="output-container"
-       type="content" src="about:blank" flex="1"/>
-      <textfield id="input" class="input-window"/>
-    </box>
-  </box>
-</box>
+      <vbox flex="1" persist="width">
+        <iframe id="output-iframe" class="output-container" type="content"
+          flex="1" src="chrome://chatzilla/content/outputwindow.html"/>
+      </vbox>
 
-<toolbox id="status-bar-tbox">
-  <toolbar id="status-bar-tbar" class="chromeclass-status" persist="collapsed">
-    <box class="status-box" align="horizontal" flex="20%">
-      <box class="status-label" align="vertical">
-        <text value="&network.label;"/>
-        <text value="&channel.label;"/>
-        <text value="&topicBy.label;"/>
-      </box>
-      <box class="status-data" align="vertical">
-         <text id="net-name" value="(one)"/> 
-         <text id="channel-name" value="(none)"/>
-         <text id="channel-topicby" value="(nobody)"/>
-      </box>
+    </hbox> <!-- tabpanel-contents-box -->
+  
+    <hbox id="tabstrip-box" flex="0" crop="right">
+      <scrollbox id="views-tbar" persist="collapsed" orient="horizontal"
+        flex="1" onoverflow="dd('views-tbar overflow');"
+        onunderflow="dd('views-tbar underflow');">
+
+        <tabbox class="tabbox-bottom" id="views-tbar-inner" flex="1"
+          crop="right">
+          <tab collapsed="true"/> <!-- dummy tab to keep the freaking xbl from 
+                                       causing an exception -->
+        </tabbox>
+      </scrollbox>
+    </hbox>
+
+  </vbox> <!-- upper-box -->
+
+  <splitter id="input-splitter" orient="vertical" collapse="after"
+    collapsed="true"/>
+
+  <vbox id="input-widgets">
+    <textfield id="multiline-input" multiline="true" flex="1" height="100px"
+      class="multiline-input-widget" collapsed="true"/>
+    <textfield id="input" class="input-widget"/>
+  </vbox>
+
+</vbox> <!-- outer-box -->
+
+<toolbox id="status-bar-tbox" crop="right">
+  <toolbar id="status-bar-tbar" class="chromeclass-status" persist="collapsed"
+    crop="right">
+    <hbox class="status-box" flex="20%" crop="right">
+      <vbox class="status-label" crop="right">
+        <text value="&network.label;" crop="right"/>
+        <text value="&channel.label;" crop="right"/>
+        <text value="&topicBy.label;" crop="right"/>
+      </vbox>
+      <vbox class="status-data" crop="right">
+         <text id="net-name" value="(one)" crop="right"/> 
+         <text id="channel-name" value="(none)" crop="right"/>
+         <text id="channel-topicby" value="(nobody)" crop="right"/>
+      </vbox>
       <spring flex="20%"/>
-      <box class="status-label" align="vertical">
-         <text value="&server.label;"/>
-         <text value="&mode.label;"/>
-         <text value="&topic.label;"/>
-      </box>
-      <box align="vertical" flex="80%">
-        <box align="horizontal" flex="1">
-          <box class="status-data" align="vertical">
-            <text id="server-name" value="(none)"/>
-            <text id="channel-mode" value="(none)"/>
-          </box>
+      <vbox class="status-label" crop="right">
+         <text value="&server.label;" crop="right"/>
+         <text value="&mode.label;" crop="right"/>
+         <text value="&topic.label;" crop="right"/>
+      </vbox>
+      <vbox flex="80%" crop="right">
+        <hbox flex="1" crop="right">
+          <vbox class="status-data" crop="right">
+            <text id="server-name" value="(none)" crop="right"/>
+            <text id="channel-mode" value="(none)" crop="right"/>
+          </vbox>
           <spring flex="100%"/>
-          <box class="status-label" align="vertical">
-            <text value="&nickname.label;"/>
-            <text value="&users.label;"/>
-          </box>
-          <box class="status-data" align="vertical">
-            <text id="server-nick" value="(unknown)"/>
-            <text id="channel-users" value="(none)"/>
-          </box>
+          <vbox class="status-label" crop="right">
+            <text value="&nickname.label;" crop="right"/>
+            <text value="&users.label;" crop="right"/>
+          </vbox>
+          <vbox class="status-data" crop="right">
+            <text id="server-nick" value="(unknown)" crop="right"/>
+            <text id="channel-users" value="(none)" crop="right"/>
+          </vbox>
           <spring flex="100%"/>
-          <box class="status-label" align="vertical">
-            <text value="&lag.label;"/>
-            <text value="&limit.label;"/>
-          </box>
-          <box class="status-data" align="vertical">
-            <text id="server-lag" value="-1"/>
-            <text id="channel-limit" value="(none)"/>
-          </box>
+          <vbox class="status-label" crop="right">
+            <text value="&lag.label;" crop="right"/>
+            <text value="&limit.label;" crop="right"/>
+          </vbox>
+          <vbox class="status-data" crop="right">
+            <text id="server-lag" value="-1" crop="right"/>
+            <text id="channel-limit" value="(none)" crop="right"/>
+          </vbox>
           <spring flex="100%"/>
-          <box class="status-label" align="vertical">
-            <text value="&lastPing.label;"/>
-            <text value="&key.label;"/>
-          </box>
-          <box class="status-data" align="vertical">
-            <text id="last-ping" value="(never)"/>
-          <text id="channel-key" value="(none)"/>
-          </box>
-        </box>
-        <box align="horizontal" flex="1">
-          <box class="status-data" align="vertical" flex="1">
-            <text id="channel-topic" value="(none)"/>
-          </box>
-        </box>
-      </box>
-    </box>
+          <vbox class="status-label" crop="right"
+            collapsed="true">
+            <text value="&lastPing.label;" crop="right"/>
+            <text value="&key.label;" crop="right"/>
+          </vbox>
+          <vbox class="status-data" crop="right"
+            collapsed="true">
+            <text id="last-ping" value="(never)" crop="right"/>
+          <text id="channel-key" value="(none)" crop="right"/>
+          </vbox>
+        </hbox>
+        <hbox flex="1" crop="right">
+          <vbox class="status-data" flex="1" crop="right">
+            <text id="channel-topic" value="(none)" crop="right"/>
+          </vbox>
+        </hbox>
+      </vbox>
+    </hbox>
   </toolbar>
 </toolbox>
+
+
 </window>

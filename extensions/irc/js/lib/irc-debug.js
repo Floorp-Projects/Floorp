@@ -76,6 +76,9 @@ function event_tracer (e)
     if (name)
         name = "[" + name + "]";
 
+    if (e.type == "info")
+        data = "'" + e.msg + "'";
+    
     str = "Level " + e.level + ": '" + e.type + "', " +
         e.set + name + "." + e.destMethod;
 	if (data)

@@ -332,10 +332,10 @@ function getPriv (priv)
 
 function keys (o)
 {
-    var rv = "";
+    var rv = new Array();
     
     for (var p in o)
-        rv += rv ? ", " + p : p;
+        rv.push(p);
 
     return rv;
     
@@ -350,7 +350,90 @@ function stringTrim (s)
     
 }
 
+function formatDateOffset (seconds, format)
+{
+    seconds = parseInt(seconds);
+    var minutes = parseInt(seconds / 60);
+    seconds = seconds % 60;
+    var hours   = parseInt(minutes / 60);
+    minutes = minutes % 60;
+    var days    = parseInt(hours / 24);
+    hours = hours % 24;
 
+    if (!format)
+    {
+        var ary = new Array();
+        if (days > 0)
+            ary.push (days + " days");
+        if (hours > 0)
+            ary.push (hours + " hours");
+        if (minutes > 0)
+            ary.push (minutes + " minutes");
+        if (seconds > 0)
+            ary.push (seconds + " seconds");
+
+        format = ary.join(", ");
+    }
+    else
+    {
+        format = format.replace ("%d", days);
+        format = format.replace ("%h", hours);
+        format = format.replace ("%m", minutes);
+        format = format.replace ("%s", seconds);
+    }
+    
+    return format;
+}
+
+function arraySpeak (ary, single, plural)
+{
+    var rv = "";
+    
+    switch (ary.length)
+    {
+        case 0:
+            break;
+            
+        case 1:
+            rv = ary[0];
+            if (single)
+                rv += " " + single;            
+            break;
+
+        case 2:
+            rv = ary[0] + " and " + ary[1];
+            if (plural)
+                rv += " " + plural;
+            break;
+
+        default:
+            for (var i = 0; i < ary.length - 1; ++i)
+                rv += ary[i] + ", ";
+            rv += "and " + ary[ary.length - 1];
+            if (plural)
+                rv += " " + plural;
+            break;
+    }
+
+    return rv;
+    
+}
+
+
+function arrayContains (ary, elem)
+{
+    return (arrayIndexOf (ary, elem) != -1);
+}
+
+function arrayIndexOf (ary, elem)
+{
+    for (var i in ary)
+        if (ary[i] == elem)
+            return i;
+
+    return -1;
+}
+    
 function arrayInsertAt (ary, i, o)
 {
 
@@ -399,18 +482,58 @@ function abbreviateWord (str, length)
     return left + "..." + right;
 }
 
-function hyphenateWord (str, length, hyphen)
+/*
+ * Inserts the string |hyphen| into string |str| every |pos| characters.
+ * If there are any wordbreaking characters in |str| within -/+5 characters of
+ * of a |pos| then the hyphen is inserted there instead, in order to produce a
+ * "cleaner" break.
+ */
+function hyphenateWord (str, pos, hyphen)
 {
+    if (str.length <= pos)
+        return str;
     if (typeof hyphen == "undefined")
         hyphen = " ";
-    
-    if (str.length <= length)
-        return str;
 
-    var left = str.substr (0, (length));
-    var right = hyphenateWord(str.substr (length), length, hyphen);
+    /* search for a nice place to break the word, fuzzfactor of +/-5, centered
+     * around |pos| */
+    var splitPos =
+        str.substring(pos - 5, pos + 5).search(/[^A-Za-z0-9]/);
+
+    splitPos = (splitPos != -1) ? pos - 4 + splitPos : pos;
+    var left = str.substr (0, splitPos);
+    var right = hyphenateWord(str.substr (splitPos), pos, hyphen);
 
     return left + hyphen + right;
+}
+
+/*
+ * Like hyphenateWord, except individual chunks of the word are returned as
+ * elements of an array.
+ */
+function splitLongWord (str, pos)
+{
+    if (str.length <= pos)
+        return [str];
+
+    var ary = new Array();
+    var right = str;
+    
+    while (right.length > pos)
+    {
+        /* search for a nice place to break the word, fuzzfactor of +/-5, 
+         * centered around |pos| */
+        var splitPos =
+            right.substring(pos - 5, pos + 5).search(/[^A-Za-z0-9]/);
+
+        splitPos = (splitPos != -1) ? pos - 4 + splitPos : pos;
+        ary.push(right.substr (0, splitPos));
+        right = right.substr (splitPos);
+    }
+
+    ary.push (right);
+
+    return ary;
 }
 
 function getRandomElement (ary)
@@ -425,7 +548,7 @@ function getRandomElement (ary)
 function roundTo (num, prec)
 {
 
-    return parseInt (( Math.round(num) * Math.pow (10, prec))) /
+    return parseInt ( Math.round(num * Math.pow (10, prec))) /
         Math.pow (10, prec);   
 
 }

@@ -1,174 +1,71 @@
-JavaScript IRC library, bot (runs in xpcshell), and client (runs in Mozilla.)
 
-Files You'll find...
-**-------------------------------------------
-irc/bslib
+                                   Using ChatZilla
 
-basic-socket library.  NSPR socket functions wrapped in an object oriented
-C api.  Allows clients to connect to as many servers as desired, without
-having to worry about the messy details.
 
-**-------------------------------------------
-irc/js/lib
 
-JavaScript library files, including...
 
-utils.js
 
-Utility functions used throughout the other files.  Some are very useful,
-some are only slightly useful.
 
-events.js
 
-Event and EventPump classes.  Defines a common way to create and route
-events in JavaScript.  Used HEAVILY throughout the rest of the libs to
-perform asychronous tasks.  Check the code for more details.
 
-connection.js
 
-JavaScript wrapper around the bsIConnection component, (CBSConnection).
-This is intended to make it easier to port the library to other (read
-non-XPCOM) JavaScript platforms, or to dump bsIConnection all-together
-when the time is right.
 
-http.js 
 
-Retrieves documents using the HTTP protocol and a CBSConnection.  I've got
-the protocol all wrong here, but it will still retrieve the root document
-for a web site.  Needs more work.
+Table Of Contents
 
-irc.js
+Part 1: Introduction to ChatZilla.
 
-IRC Library.  Provides DOM like access to IRC.  This is what your looking
-for.
+  1.1: Introduction
+    1.1.1: What is IRC?
+    1.1.2: What is ChatZilla?
+    1.1.3: Where do I get more information on IRC?
 
-dcc.js
+  1.2: The User Interface.
+    1.2.1: Menu structure.
+    1.2.2: User list.
+    1.2.3: Output area.
+    1.2.4: View tabs.
+    1.2.5: Status bar.
 
-DCC Library.  DCC is a protocol initiated over irc, and then carried out
-over a Direct Client to Client (hence the name) connection.  Currently,
-only DCC-Chat is supported.  Adding the rest should be straightforward.
+  1.3: Features of the input area.
+    1.3.1: Responding to the last person who spoke to you.
+    1.3.2: Autocompleting nicknames.
+    1.3.3: Autocompleting commands.
+    1.3.4: Multiline input.
 
-**-------------------------------------------
-irc/js/tests
+Part 2: Navigating IRC with ChatZilla.
 
-Scripts to test the various libraries including...
+  2.1: Connecting to an IRC network.
+    2.1.1: Listing available networks.
+    2.1.2: Attaching to a network.
+    2.1.3: Canceling an attach that isn't going well.
+    2.1.4: Connecting to a specific server.
+    2.1.5: Disconnecting when you're finished.
 
-test_matchobject.js
+  2.2: Channels.
+    2.2.1: Finding a channel.
+    2.2.2: Joining.
+    2.2.3: Modes, Topics, and Kicks.
+    2.2.4: Parting.
 
-Tests the object pattern matching functionality of utils.js.  Also a good
-reference while learning the rules for matching an object against a group of
-pattern objects.  Object pattern matching is at the root of the hook
-functionality provided by events.js, so look here if you need a clue.
+  2.3: Private messages.
+    2.3.1: Receiving messages.
+    2.3.2: Sending messages.
+    2.3.3: Query windows.
 
-ircbot.js
+Part 3: Scripting ChatZilla.
 
-The sample bot I use to test the IRC library.  It's mostly functional,
-with a few mods you could even use it to secure a channel (if that's what
-you're into.)  This is a good place to look to get a feel for how the
-whole thing fits together.
+  3.1: Scripting basics.
+    3.1.1: The /eval command.
+    3.1.2: Writing text to the output window.
+    3.1.3: Writing DOM nodes to the output window.
+    3.1.1: Exploring objects with dumpObjectTree();
 
-**-------------------------------------------
-Misc. Notes...
+  3.2: More Scripting.
+    3.2.1: External scripts.
+    3.2.2: Hooking into IRC events.
 
-Events By object:
-
-The IRCServer object generates/ handles the following events.  It is generally
-not advisable to override an event handler defined on the server, unless you
-realize what your replacing.  Alternatley, You can hook any of these events
-through the normal event hooking facilities.
-
-onRawData:
-	name			value
-	set             "server"
-	type            "parsedata"
-	destMethod      "onParsedData"
-	destObject      server (this)
-	server          server (this)
-	connection      CBSConnection (this.connection)
-	source          the <prefix> of the message (if it exists)
-	user            user object initialized with data from the message <prefix>
-	params          array containing the <middle> parameters of the message
-	code            the first <middle> parameter (most messages have this)
-	meat            the <trailing> parameter of the message
-
-onParsedData:
-	type			<code>.toLowerCase();
-	destMethod		"on" + <Code>
-
-onTopic:
-	channel			new channel (params[1])
-
-on332: topic reply
-	channel
-	topic
-	destObject		e.channel
-	set				"channel"
-
-on333: topic info
-	channel
-	topicBy
-	topicDate
-	destObject		e.channel
-	set				"channel"
-
-on353:	name reply (also occurs on join)  If this.usersStable == true; clear
-		this.users, set usersStable = false.  Add all users in this message to
-		server.channel.users (which also adds to server.users), setting isOp
-		and isVoice, but not host information (because it isnt here.)
-	set				"channel"
-	destObject		e.channel
-	channel
-
-on366:	End of names.  set usersStable = true; so the next we see a name
-		reply, we know it starts
-a new list
-	set				"channel"
-	destObject		e.channel
-	channel
-
-on329:	/most likely/ the channel time stamp.  sent after a 366
-	on some (all?) servers, not in the rev of the RFC I saw.
-	set				"channel"
-	destObject		e.channel
-	channel
-	timeStamp		Date
-
-on324:	channel mode reply, happens in response to a /MODE <channel>.
-	type			"chanmode"
-	destMethod		"onChanMode"
-	channel
-	
-onMode:	Some user issued a /MODE command relative to some channel the lib
-		is active on, *OR* the client's user has changed modes.  This message
-		is just an incremental update if it	relates to the channel.
-	channel			IF this is in response to a USER mode change, ie, the user
-					representing the bot get's set +i or such, this property
-					will NOT be defined.
-	type			"chanmode" or "usermode"
-	destMethod		"onChanMode" or "onUserMode"
-	
-	
-onUserMode:	 User 'me' has changed mode.  Currently ignored.
-
-onChanMode:	User issued a MODE command in an active channel, or the client's
-			user requested a mode update/ joined a new channel.
-			When this event completes, the mode property of the channel in
-			question will be updated with the information in the event.
-
-			A channel.onBan event will be created for each ban that appears
-			in the new mode.
-	set				"channel"
-	destObject		channel
-
-onNick:	User in one of the active channels has changed their nickname.  <user>
-		will be renamed on the <server> and all <channel>s in which
-		they appear.
-	channel
-	user
-
-onQuit: User in one of the active channels has quit IRC.  <user> will be 
-		deleted from every <channel> they appear in.  <server>.<user>
-		lastQuitDate and lastQuitMessage will be set.
-	channel
-	user		previous CIRCUser will be upgraded to a CIRCChanUser
-	
+Appendix A:
+  A: Styling the output window.
+    (copy of the comment in output-window.css)
+    

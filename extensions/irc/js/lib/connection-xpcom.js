@@ -17,9 +17,6 @@
  * Copyright (C) 1999 New Dimenstions Consulting, Inc. All
  * Rights Reserved.
  *
- * Contributor(s): 
- *
- *
  * Contributor(s):
  *  Robert Ginda, rginda@ndcico.com, original author
  *  Peter Van der Beken, peter.vanderbeken@pandora.be, necko-only version
@@ -83,6 +80,7 @@ CBSConnection.prototype.connect = function(host, port, bind, tcp_flag)
     if (!this._outputStream)
         throw ("Error getting output stream.");
 
+    this.connectDate = new Date();
     this.isConnected = true;
 
     return this.isConnected;
@@ -95,7 +93,9 @@ CBSConnection.prototype.disconnect = function()
     if (this.isConnected) {
         this.isConnected = false;
         this._inputStream.close();
-        this._outputStream.close();
+        /* .close() not implemented for output streams
+          this._outputStream.close();
+        */
     }
 
 }
@@ -169,7 +169,6 @@ if (jsenv.HAS_DOCUMENT)
     function (server)
     {
         this._channel.asyncRead (new StreamListener (server), this, 0, -1, 0);
-        
     }
 }
 
@@ -187,8 +186,23 @@ function (request, ctxt)
 StreamListener.prototype.onStopRequest =
 function (request, ctxt, status, errorMsg)
 {
+    ctxt = ctxt.wrappedJSObject;
+    if (!ctxt)
+    {
+        dd ("*** Can't get wrappedJSObject from ctxt in " +
+            "StreamListener.onDataAvailable ***");
+        return;
+    }
+
+    ctxt.isConnected = false;
+
     dd ("onStopRequest: " + request + ", " + ctxt + ", " + status + ", " +
         errorMsg);
+
+    var ev = new CEvent ("server", "disconnect", this.server,
+                         "onDisconnect");
+    this.server.parent.eventPump.addEvent (ev);
+
 }
 
 StreamListener.prototype.onDataAvailable =

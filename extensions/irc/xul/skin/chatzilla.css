@@ -34,76 +34,29 @@ window {
 
 }
 
+#tabpanel-contents-box {
+    margin: 3px;
+}
+
 #outer-box {
-
     margin: 5px;
-
 }
 
-#main-splitter {
+#input-widget,
+#input-widget-multiline {
+    border: thin silver inset;
 }
 
-#views-tbar, #views-tbox {
-    height: 0px;
-}
-
-.activity-button-image {
-
+.view-button {
     color: black;
-    background: lightgrey;
-
 }
 
-.activity-button-image[state="normal"] {
-
-    list-style-image: url(chrome://chatzilla/skin/images/view-normal.gif);
-
+.view-button[state="activity"] {
+    color: green;
 }
 
-.activity-button-image[state="activity"] {
-
-    list-style-image: url(chrome://chatzilla/skin/images/view-activity.gif);
-}
-
-.activity-button-image[state="current"] {
-
-    list-style-image: url(chrome://chatzilla/skin/images/view-current.gif);
-
-}
-
-.activity-button-image[state="attention"] {
-
-    list-style-image: url(chrome://chatzilla/skin/images/view-attention.gif);
-
-}
-
-.activity-button-text {
-
-    color: black;
-    background: lightgrey;
-
-}
-
-.activity-button-text[state="normal"] {
-
-}
-
-.activity-button-text[state="activity"] {
-
-    color: darkgreen;
-
-}
-
-.activity-button-text[state="current"] {
-    
-    color: darkcyan;
-
-}
-
-.activity-button-text[state="attention"] {
-
+.view-button[state="attention"] {
     color: red;
-
 }
 
 .status-box {
@@ -129,17 +82,9 @@ window {
 
 }
 
-/* Activity indicator buttons */
-.activity-button {
-    
-    font-weight: bold;
-
-}
-
 .output-container {
 
     border: thin silver inset;
-    width: 100%;
 
 }
 
@@ -168,4 +113,3 @@ window {
     list-style-image: url(chrome://chatzilla/skin/images/isnt-voice.gif)
 
 }
-<
