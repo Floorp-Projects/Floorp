@@ -240,8 +240,8 @@ sub ValidateContent
   # by a line break, respectively, but "\\n" is a slash followed by
   # a literal "n".
   #
-  $content =~ s/(^|[^\\])((\\\\)*)\\r/\1\2\r/g;
-  $content =~ s/(^|[^\\])((\\\\)*)\\n/\1\2\n/g;
+  $content =~ s/(^|[^\\])((\\\\)*)\\r/$1$2\r/g;
+  $content =~ s/(^|[^\\])((\\\\)*)\\n/$1$2\n/g;
   $content =~ s/\\\\/\\/g;
 
   $request->param('content', $content);
