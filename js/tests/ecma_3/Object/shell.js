@@ -29,8 +29,8 @@
 * Invoking Number.prototype.toString() on this just returns 7.
 * Object.prototype.toString() on this returns '[object Number]'. 
 *
-* The getType() function below will return '[object Number]' for us.
-* The getClass() function returns 'Number', the [[Class]] property of obj.
+* The getJSType() function below will return '[object Number]' for us.
+* The getJSClass() function returns 'Number', the [[Class]] property of obj.
 * See ECMA-262 Edition 3,  13-Oct-1999,  Section 8.6.2  
 */
 //-------------------------------------------------------------------------------------------------
@@ -40,7 +40,7 @@ var cnObjectToString = Object.prototype.toString;
 
 
 // checks that it's safe to call findType()
-function getType(obj)
+function getJSType(obj)
 {
   if (isObject(obj))
     return findType(obj);
@@ -49,7 +49,7 @@ function getType(obj)
 
 
 // checks that it's safe to call findType()
-function getClass(obj)
+function getJSClass(obj)
 {
   if (isObject(obj))
     return findClass(findType(obj));

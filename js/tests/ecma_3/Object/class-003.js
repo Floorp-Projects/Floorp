@@ -29,7 +29,7 @@
 * See ECMA-262 Edition 3, Sections 15.11.1.1 and 15.11.7.2 for this.
 * See http://bugzilla.mozilla.org/show_bug.cgi?id=56868
 *
-* The getClass() function we use is in a utility file, e.g. "shell.js"
+* The getJSClass() function we use is in a utility file, e.g. "shell.js"
 */
 //-------------------------------------------------------------------------------------------------
 var i = 0;
@@ -46,37 +46,37 @@ var expect= ''; var expectedvalue = [ ];
  * We expect 'Error' every time; see discussion above -
  */
 status = 'new Error()';
-actual = getClass(new Error());
+actual = getJSClass(new Error());
 expect = 'Error';
 addThis();
 
 status = 'new EvalError()';
-actual = getClass(new EvalError());
+actual = getJSClass(new EvalError());
 expect = 'Error';
 addThis();
 
 status = 'new RangeError()';
-actual = getClass(new RangeError());
+actual = getJSClass(new RangeError());
 expect = 'Error';
 addThis();
 
 status = 'new ReferenceError()';
-actual = getClass(new ReferenceError());
+actual = getJSClass(new ReferenceError());
 expect = 'Error';
 addThis();
 
 status = 'new SyntaxError()';
-actual = getClass(new SyntaxError());
+actual = getJSClass(new SyntaxError());
 expect = 'Error';
 addThis();
 
 status = 'new TypeError()';
-actual = getClass(new TypeError());
+actual = getJSClass(new TypeError());
 expect = 'Error';
 addThis();
 
 status = 'new URIError()';
-actual = getClass(new URIError());
+actual = getJSClass(new URIError());
 expect = 'Error';
 addThis();
 

@@ -22,7 +22,7 @@
 * SUMMARY: Testing the internal [[Class]] property of objects
 * See ECMA-262 Edition 3 13-Oct-1999, Section 8.6.2
 *
-* The getClass() function we use is in a utility file, e.g. "shell.js".
+* The getJSClass() function we use is in a utility file, e.g. "shell.js".
 */
 //-------------------------------------------------------------------------------------------------
 var i = 0;
@@ -36,57 +36,57 @@ var expect= ''; var expectedvalue = [ ];
 
 
 status = 'the global object';
-actual = getClass(this);
+actual = getJSClass(this);
 expect = 'global';
 addThis();
 
 status = 'new Object()';
-actual = getClass(new Object());
+actual = getJSClass(new Object());
 expect = 'Object';
 addThis();
 
 status = 'new Function()';
-actual = getClass(new Function());
+actual = getJSClass(new Function());
 expect = 'Function';
 addThis();
 
 status = 'new Array()';
-actual = getClass(new Array());
+actual = getJSClass(new Array());
 expect = 'Array';
 addThis();
 
 status = 'new String()';
-actual = getClass(new String());
+actual = getJSClass(new String());
 expect = 'String';
 addThis();
 
 status = 'new Boolean()';
-actual = getClass(new Boolean());
+actual = getJSClass(new Boolean());
 expect = 'Boolean';
 addThis();
 
 status = 'new Number()';
-actual = getClass(new Number());
+actual = getJSClass(new Number());
 expect = 'Number';
 addThis();
 
 status = 'Math';
-actual = getClass(Math);  // can't use 'new' with the Math object (EMCA3, 15.8)
+actual = getJSClass(Math);  // can't use 'new' with the Math object (EMCA3, 15.8)
 expect = 'Math';
 addThis();
 
 status = 'new Date()';
-actual = getClass(new Date());
+actual = getJSClass(new Date());
 expect = 'Date';
 addThis();
 
 status = 'new RegExp()';
-actual = getClass(new RegExp());
+actual = getJSClass(new RegExp());
 expect = 'RegExp';
 addThis();
 
 status = 'new Error()';
-actual = getClass(new Error());
+actual = getJSClass(new Error());
 expect = 'Error';
 addThis();
 
