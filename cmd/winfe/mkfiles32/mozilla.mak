@@ -1784,6 +1784,23 @@ install:    \
 	    $(OUTDIR)\glowcode.dll    \
 !ENDIF
 !endif
+!ifdef MOZ_FULLCIRCLE
+!IF EXIST($(DIST)\bin\fullsoft.dll)
+            $(OUTDIR)\fullsoft.dll    \
+!ENDIF
+!IF EXIST($(DIST)\bin\talkback.cnt)
+            $(OUTDIR)\talkback.cnt    \
+!ENDIF
+!IF EXIST($(DIST)\bin\talkback.exe)
+            $(OUTDIR)\talkback.exe    \
+!ENDIF
+!IF EXIST($(DIST)\bin\talkback.hlp)
+            $(OUTDIR)\talkback.hlp    \
+!ENDIF
+!IF EXIST($(DIST)\lib\fulls32.lib)
+            $(OUTDIR)\fulls32.lib     \
+!ENDIF
+!endif
 !ELSE # MOZ_BITS==32 way above
 !IFDEF JAVA_OR_OJI
 !IF EXIST($(DIST)\bin\npj16$(VERSION_NUMBER).dll)
@@ -2113,6 +2130,19 @@ $(JAVABIN_DIR)\jit32$(VERSION_NUMBER).dll:   $(DIST)\bin\jit32$(VERSION_NUMBER).
 !if defined(MOZ_DEBUG) && defined(GLOWCODE)
 $(OUTDIR)\glowcode.dll:   $(DIST)\bin\glowcode.dll
     @IF EXIST $(DIST)\bin\glowcode.dll copy $(DIST)\bin\glowcode.dll $(OUTDIR)\glowcode.dll
+!endif
+
+!ifdef MOZ_FULLCIRCLE
+$(OUTDIR)\fullsoft.dll:   $(DIST)\bin\fullsoft.dll
+    @IF EXIST $(DIST)\bin\fullsoft.dll copy $(DIST)\bin\fullsoft.dll $(OUTDIR)\fullsoft.dll
+$(OUTDIR)\talkback.cnt:   $(DIST)\bin\talkback.cnt
+    @IF EXIST $(DIST)\bin\talkback.cnt copy $(DIST)\bin\talkback.cnt $(OUTDIR)\talkback.cnt
+$(OUTDIR)\talkback.exe:   $(DIST)\bin\talkback.exe
+    @IF EXIST $(DIST)\bin\talkback.exe copy $(DIST)\bin\talkback.exe $(OUTDIR)\talkback.exe
+$(OUTDIR)\talkback.hlp:   $(DIST)\bin\talkback.hlp
+    @IF EXIST $(DIST)\bin\talkback.hlp copy $(DIST)\bin\talkback.hlp $(OUTDIR)\talkback.hlp
+$(OUTDIR)\fulls32.lib:   $(DIST)\lib\fulls32.lib
+    @IF EXIST $(DIST)\lib\fulls32.lib copy $(DIST)\lib\fulls32.lib $(OUTDIR)\fulls32.lib
 !endif
 
 !ELSE # (MOZ_BITS==32)
