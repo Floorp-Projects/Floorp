@@ -44,6 +44,8 @@
 *   improve this to make it usable in general.
 */
 
+const UnifinderTreeName = "unifinder-search-results-listbox";
+
 function calendarUnifinderInit( )
 {
    var unifinderEventSelectionObserver = 
@@ -74,9 +76,6 @@ function calendarUnifinderInit( )
       
    gCalendarWindow.EventSelection.addObserver( unifinderEventSelectionObserver );
 }
-
-
-var gSearchEventTable = new Array();
 
 /**
 *   Observer for the calendar event data source. This keeps the unifinder
@@ -154,7 +153,7 @@ function prepareCalendarUnifinder( )
 *   Called when the calendar is unloaded
 */
 
-function finishCalendarUnifinder( eventSource )
+function finishCalendarUnifinder( )
 {
    gICalLib.removeObserver( unifinderEventDataSourceObserver  );
 }
@@ -176,9 +175,7 @@ function formatUnifinderEventDate( date )
 
 function formatUnifinderEventTime( time )
 {
-   var timeString = gCalendarWindow.dateFormater.getFormatedTime( time );
-   return timeString;
-   
+   return( gCalendarWindow.dateFormater.getFormatedTime( time ) );
 }
 
 /**
@@ -189,23 +186,7 @@ function unifinderRefesh()
 {
    gEventSource.onlyFutureEvents = (document.getElementById( 'unifinder-future-events' ).getAttribute( "checked" ) == "true" );
    
-   var eventTable = gEventSource.getCurrentEvents();
-   
-   refreshSearchTree( eventTable );
-
    unifinderSearchKeyPress( document.getElementById( 'unifinder-search-field' ), null );
-}
-
-
-/**
-*  Redraw the search tree
-*/
-
-function refreshSearchTree( SearchEventTable )
-{
-   gSearchEventTable = SearchEventTable;
-   
-   refreshEventTree( gSearchEventTable, "unifinder-search-results-listbox", false );
 }
 
 
@@ -224,7 +205,6 @@ function unifinderDoubleClickEvent( id )
       // go to day view, of the day of the event, select the event
       
       editEvent( calendarEvent );
-
    }
 }
 
@@ -235,26 +215,26 @@ function unifinderDoubleClickEvent( id )
 
 function unifinderClickEvent( CallingListBox )
 {
-   var ListBox = CallingListBox;
-   
    var ArrayOfEvents = new Array();
    
-   for( i = 0; i < ListBox.selectedItems.length; i++ )
+   for( i = 0; i < CallingListBox.selectedItems.length; i++ )
    {
-      var calendarEvent = ListBox.selectedItems[i].event;
+      var calendarEvent = CallingListBox.selectedItems[i].event;
             
       ArrayOfEvents[ ArrayOfEvents.length ] = calendarEvent;
    }
    
    gCalendarWindow.EventSelection.setArrayToSelection( ArrayOfEvents );
 
-   if( ListBox.selectedItems.length == 1 )
+   if( CallingListBox.selectedItems.length == 1 )
    {
-      //start date is either the next or last occurence, or the start date of the event
+      /*start date is either the next or last occurence, or the start date of the event */
       var eventStartDate = getNextOrPreviousRecurrence( calendarEvent );
       
+      /* you need this in case the current day is not visible. */
       gCalendarWindow.currentView.goToDay( eventStartDate, true);
-   } 
+   }
+   
 }
 
 /**
@@ -349,11 +329,13 @@ function unifinderDeleteCommand( DoNotConfirm )
 
 function unifinderSearchKeyPress( searchTextItem, event )
 {
+   var eventTable = new Array();
+
    var searchText = searchTextItem.value;
    
    if ( searchTextItem.value == '' ) 
    {
-      gSearchEventTable = gEventSource.getCurrentEvents();
+      eventTable = gEventSource.getCurrentEvents();
    }
    else if ( searchTextItem.value == " " ) 
    {
@@ -362,7 +344,7 @@ function unifinderSearchKeyPress( searchTextItem, event )
    else
    {
       var FieldsToSearch = new Array( "title", "description", "location" );
-      gSearchEventTable = gEventSource.search( searchText, FieldsToSearch );
+      eventTable = gEventSource.search( searchText, FieldsToSearch );
    }
    
    if( document.getElementById( "unifinder-clear-results-button" ) )
@@ -372,15 +354,16 @@ function unifinderSearchKeyPress( searchTextItem, event )
       else
          document.getElementById( "unifinder-clear-results-button" ).removeAttribute( "disabled" );
    }
-   refreshSearchTree( gSearchEventTable );
+   
+   refreshEventTree( eventTable );
 }
 
 
 function unifinderShowEventsWithAlarmsOnly()
 {
-   gSearchEventTable = gEventSource.getEventsWithAlarms();
+   var eventTable = gEventSource.getEventsWithAlarms();
 
-   refreshSearchTree( gSearchEventTable );
+   refreshEventTree( eventTable );
 }
 
 
@@ -388,9 +371,11 @@ function unifinderShowFutureEventsOnly( event )
 {
    gEventSource.onlyFutureEvents = (event.target.getAttribute( "checked" ) == "true" );
    
-   gSearchEventTable = gEventSource.getCurrentEvents();
+   var eventTable = gEventSource.getCurrentEvents();
 
-   refreshSearchTree( gSearchEventTable );
+   refreshEventTree( eventTable );
+
+   /* The following isn't exactly right. It should reload after the next event happens. */
 
    // get the current time
    var now = new Date();
@@ -399,18 +384,18 @@ function unifinderShowFutureEventsOnly( event )
    
    var milliSecsTillTomorrow = tomorrow.getTime() - now.getTime();
    
-   setTimeout( "refreshEventTree( gSearchEventTable )", milliSecsTillTomorrow );
+   setTimeout( "refreshEventTree( eventTable )", milliSecsTillTomorrow );
 }
 
 /**
 *  Redraw the categories unifinder tree
 */
 
-function refreshEventTree( eventArray, childrenName, Categories )
+function refreshEventTree( eventArray )
 {
    // get the old tree children item and remove it
    
-   var oldTreeChildren = document.getElementById( childrenName );
+   var oldTreeChildren = document.getElementById( UnifinderTreeName );
    
    while( oldTreeChildren.hasChildNodes() )
       oldTreeChildren.removeChild( oldTreeChildren.lastChild );
@@ -424,10 +409,7 @@ function refreshEventTree( eventArray, childrenName, Categories )
       
       var treeItem = document.createElement( "listitem" );
       
-      if( Categories != false )
-         treeItem.setAttribute( "id", "unifinder-treeitem-"+calendarEvent.id );
-      else
-         treeItem.setAttribute( "id", "search-unifinder-treeitem-"+calendarEvent.id );
+      treeItem.setAttribute( "id", "search-unifinder-treeitem-"+calendarEvent.id );
 
       treeItem.event = calendarEvent;
 
@@ -515,9 +497,9 @@ function unifinderClearSearchCommand()
 {
    document.getElementById( "unifinder-search-field" ).value = "";
 
-   gSearchEventTable = gEventSource.getCurrentEvents();
+   var eventTable = gEventSource.getCurrentEvents();
 
-   refreshSearchTree( gSearchEventTable );
+   refreshEventTree( eventTable );
 }
 
 

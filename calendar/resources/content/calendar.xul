@@ -82,6 +82,7 @@
  
 <commandset>
    <command id="new_command" oncommand="newEventCommand()"/>
+   <command id="new_todo_command" oncommand="newToDoCommand()"/>
    <command id="delete_command" oncommand="unifinderDeleteCommand( true )" disabled="true"/>
    <command id="modify_command" oncommand="unifinderEditCommand()" disabled="true"/>
    <command id="send_event_command" oncommand="sendEvent()" disabled="true"/>
@@ -234,6 +235,36 @@
             </box>
             <listbox id="unifinder-search-results-listbox" seltype="multiple" onselect="unifinderClickEvent( this )" 
                class="unifinder-tree-class" flex="1" ondragover="return( false );"/>
+         <splitter collapse="after" persist="state hidden collapsed"
+          class="chromeclass-extrachrome" orient="vertical">
+               <grippy/>
+            </splitter>
+            <vbox flex="1">
+               <box align="left">
+                  <label style="font-weight: bold" value="To Do Items"/>
+               </box>
+               <listbox allowevents="true" id="unifinder-todo-listbox" flex="1">
+                  <listcols>
+                     <listcol/>
+                     <listcol flex="1"/>
+                     <listcol flex="3"/>
+                  </listcols>
+                  <listitem id="sample-todo-listitem" allowevents="true">
+                     <listcell name="checkbox-listcell">
+                        <checkbox name="firstcheckbox"/>
+                     </listcell>
+                     <listcell name="priority-listcell">
+                        
+						   </listcell>
+                     <listcell name="title-listcell" onclick="switchDeck( this )">
+                        <deck name="editdeck" selectedIndex="0">
+                           <label name="title-label" />
+                           <textbox id="thistextbox" flex="1"/>
+                        </deck>
+                     </listcell>
+                  </listitem>
+               </listbox>
+            </vbox>
          </vbox>
        
    		<splitter id="calendar-splitter" collapse="before" persist="state hidden collapsed"

@@ -163,7 +163,7 @@ function calendarInit()
 // Set the date and time on the clock and set up a timeout to refresh the clock when the 
 // next minute ticks over
 
-function update_date( Refresh )
+function update_date( )
 {
    // get the current time
    var now = new Date();
@@ -183,7 +183,7 @@ function update_date( Refresh )
 
 function calendarFinish()
 {
-   finishCalendarUnifinder( gEventSource );
+   finishCalendarUnifinder( );
    
    gCalendarWindow.close( );
 }
@@ -417,10 +417,51 @@ function newEventCommand()
 }
 
 
+/** 
+* Called when the new event button is clicked
+*/
+
+function newToDoCommand()
+{
+   var calendarEvent = createToDo();
+
+   var dueDate = gCalendarWindow.currentView.getNewEventDate();
+   
+   
+   var Minutes = Math.ceil( dueDate.getMinutes() / 5 ) * 5 ;
+   
+   dueDate = new Date( dueDate.getFullYear(),
+                       dueDate.getMonth(),
+                       dueDate.getDate(),
+                       dueDate.getHours(),
+                       Minutes,
+                       0);
+   
+
+   calendarEvent.due.setTime( dueDate );
+   
+   var args = new Object();
+   args.mode = "new";
+   args.onOk =  self.addToDoDialogResponse;
+   args.calendarEvent = calendarEvent;
+
+   // open the dialog modally
+   openDialog("chrome://calendar/content/calendarToDoDialog.xul", "caEditEvent", "chrome,modal", args );
+}
+
+
 function createEvent ()
 {
-   var iCalEventComponent = Components.classes["@mozilla.org/icalevent;1"].createInstance();
-   var iCalEvent = iCalEventComponent.QueryInterface(Components.interfaces.oeIICalEvent);
+   var iCalToDoComponent = Components.classes["@mozilla.org/icalevent;1"].createInstance();
+   var iCalToDo = iCalToDoComponent.QueryInterface(Components.interfaces.oeIICalEvent);
+   return iCalToDo;
+}
+
+
+function createToDo ()
+{
+   var iCalEventComponent = Components.classes["@mozilla.org/icaltodo;1"].createInstance();
+   var iCalEvent = iCalEventComponent.QueryInterface(Components.interfaces.oeIICalTodo);
    return iCalEvent;
 }
 
@@ -493,6 +534,17 @@ function addEventDialogResponse( calendarEvent, ArrayOfExceptionDates )
 
 
 /** 
+* Called when the user clicks OK in the new to do item dialog
+*
+*/
+
+function addToDoDialogResponse( calendarToDo )
+{
+   gICalLib.addToDo( calendarToDo );
+}
+
+
+/** 
 * Helper function to launch the event composer to edit an event.
 * When the user clicks OK "modifyEventDialogResponse" is called
 */
@@ -509,6 +561,26 @@ function editEvent( calendarEvent )
    // open the dialog modally
    
    openDialog("chrome://calendar/content/calendarEventDialog.xul", "caEditEvent", "chrome,modal", args );
+}
+   
+
+/** 
+* Helper function to launch the event composer to edit an event.
+* When the user clicks OK "modifyEventDialogResponse" is called
+*/
+
+function editToDo( calendarToDo )
+{
+   // set up a bunch of args to pass to the dialog
+   
+   var args = new Object();
+   args.mode = "edit";
+   args.onOk = self.modifyToDoDialogResponse;           
+   args.calendarToDo = calendarToDo;
+
+   // open the dialog modally
+   
+   openDialog("chrome://calendar/content/calendarToDoDialog.xul", "caEditToDo", "chrome,modal", args );
 }
    
 
@@ -531,6 +603,19 @@ function modifyEventDialogResponse( calendarEvent, ArrayOfExceptionDates )
    }
 
    gICalLib.modifyEvent( calendarEvent );
+}
+
+
+/** 
+* Called when the user clicks OK in the edit event dialog
+*
+* Update the data source, the unifinder views and the calendar views will be
+* notified of the change through their respective observers
+*/
+
+function modifyToDoDialogResponse( calendarToDo )
+{
+   gICalLib.modifyToDo( calendarToDo );
 }
 
 
@@ -571,11 +656,6 @@ function alertCalendarVersion()
    window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", 'chrome://calendar/content/about.html' );
 }
 
-function reloadApplication()
-{
-	gCalendarWindow.currentView.refreshEvents( );
-}
-
 function playSound( ThisURL )
 {
    ThisURL = "chrome://calendar/content/sound.wav";
@@ -589,134 +669,6 @@ function playSound( ThisURL )
    sample = sample.QueryInterface(Components.interfaces.nsISound);
 
    sample.play( url );
-}
-
-/*
-**
-*/
-function openImportFileDialog()
-{
-   const nsIFilePicker = Components.interfaces.nsIFilePicker;
-
-   const nsILocalFile = Components.interfaces.nsILocalFile;
-   
-   var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
-   
-   // caller can force disable of sand box, even if ON globally
-   
-   fp.init(window, "Open File", nsIFilePicker.modeOpen);
-	
-   fp.defaultString = "My Mozilla Calendar.ics";
-   
-   fp.appendFilter( "Calendar Files", "*.ics" );
-   
-   /* 
-   * Setup the initial directory to be the home directory
-   */
-   const dirSvc = Components
-            .classes["@mozilla.org/file/directory_service;1"]
-            .getService(Components.interfaces.nsIProperties);
-   
-   var baseFile = dirSvc.get("Home", nsILocalFile);
-   
-   const dir = baseFile.clone().QueryInterface(nsILocalFile);
-
-   fp.displayDirectory = dir;
-
-   try {
-      fp.show();
-      /* need to handle cancel (uncaught exception at present) */
-    }
-   catch (ex) {
-     dump("filePicker.chooseInputFile threw an exception\n");
-   }
-   /* This checks for already open window and activates it... 
-   * note that we have to test the native path length
-   *  since fileURL.spec will be "file:///" if no filename picked (Cancel button used)
-   */
-   if (fp.file && fp.file.path.length > 0) 
-   {
-     doImportEvents( fp.file.path );
-   }
-   
-   return false;
-}
-
-
-function doImportEvents( FilePath )
-{
-   alert( "I should import files to "+FilePath );
-}
-
-function openExportFileDialog()
-{
-   const nsIFilePicker = Components.interfaces.nsIFilePicker;
-
-   const nsILocalFile = Components.interfaces.nsILocalFile;
-   
-   var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
-   
-   // caller can force disable of sand box, even if ON globally
-   
-   fp.init(window, "Open File", nsIFilePicker.modeSave);
-	
-   fp.defaultString = "My Mozilla Calendar.ics";
-   
-   fp.appendFilter( "Calendar Files", "*.ics" );
-   
-   /* 
-   * Setup the initial directory to be the home directory
-   */
-   const dirSvc = Components
-            .classes["@mozilla.org/file/directory_service;1"]
-            .getService(Components.interfaces.nsIProperties);
-   
-   var baseFile = dirSvc.get("Home", nsILocalFile);
-   
-   const dir = baseFile.clone().QueryInterface(nsILocalFile);
-
-   fp.displayDirectory = dir;
-
-   try {
-      fp.show();
-      /* need to handle cancel (uncaught exception at present) */
-    }
-   catch (ex) {
-     dump("filePicker.chooseInputFile threw an exception\n");
-   }
-   /* This checks for already open window and activates it... 
-   * note that we have to test the native path length
-   *  since fileURL.spec will be "file:///" if no filename picked (Cancel button used)
-   */
-   if (fp.file && fp.file.path.length > 0) 
-   {
-     doExportEvents( fp.file.path );
-   }
-   
-   return false;
-}
-
-
-function doExportEvents( FilePath )
-{
-   //get all the selected events;
-   var SelectedEvents = gCalendarWindow.EventSelection.selectedEvents;
-
-   //send this to the back end, it should return a string.
-
-
-   //write that string out to the new file with path 'FilePath';
-   var aFile = Components.classes["@mozilla.org/file/local;1"].createInstance();
-   
-   aLocalFile=aFile.QueryInterface(Components.interfaces.nsILocalFile);
-      
-   aLocalFile.initWithPath( FilePath );
-
-   aLocalFile.create( 0, 0755 );
-
-   //write to the file.
-      
-   alert( "I should export files to "+FilePath );
 }
 
 function selectAllEvents()
