@@ -1414,7 +1414,7 @@ nsFontXPNormal::GetBoundingMetrics (const PRUnichar*   aString,
     XChar2b buf[512]; // XXX watch buffer length !!!
     int len = mCharSetInfo->Convert(mCharSetInfo, aString, aLength,
                                     (char*) buf, sizeof(buf));
-    XFontStruct *font_struct = aFont->mFont;
+    XFontStruct *font_struct = mFont;
     XCharStruct overall;
     int direction, font_ascent, font_descent;
 
