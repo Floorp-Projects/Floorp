@@ -27,7 +27,7 @@ static NS_DEFINE_IID(kCScriptNameSetRegistryCID, NS_SCRIPT_NAMESET_REGISTRY_CID)
 class nsMessengerBootstrap : public nsIAppShellService {
   
 public:
-  nsMessengerBootstrap(nsIServiceManager *serviceManager);
+  nsMessengerBootstrap();
   virtual ~nsMessengerBootstrap();
   
   NS_DECL_ISUPPORTS
@@ -36,10 +36,6 @@ public:
   // Initialize() is the only one we care about
   NS_IMETHOD Initialize();
 
-private:
-  nsIServiceManager *mServiceManager;
-
-  
 private:
   NS_IMETHOD Run(void) { return NS_ERROR_NOT_IMPLEMENTED; }
   NS_IMETHOD GetNativeEvent(void *& aEvent,
@@ -80,18 +76,14 @@ private:
 
 NS_IMPL_ISUPPORTS(nsMessengerBootstrap, nsIAppShellService::GetIID())
 
-nsMessengerBootstrap::nsMessengerBootstrap(nsIServiceManager *serviceManager)
-  : mServiceManager(serviceManager)
+nsMessengerBootstrap::nsMessengerBootstrap()
 {
   NS_INIT_REFCNT();
   
-  if (mServiceManager) NS_ADDREF(mServiceManager);
 }
 
 nsMessengerBootstrap::~nsMessengerBootstrap()
 {
-  NS_IF_RELEASE(mServiceManager);
-
 }
 
 nsresult
@@ -118,14 +110,12 @@ nsMessengerBootstrap::Initialize()
 
 
 nsresult
-NS_NewMessengerBootstrap(const nsIID &aIID, void ** msgboot,
-                         nsIServiceManager *serviceManager)
+NS_NewMessengerBootstrap(const nsIID &aIID, void ** msgboot)
 {
   if (!msgboot) return NS_ERROR_NULL_POINTER;
-  if (!serviceManager) return NS_ERROR_NULL_POINTER;
   
   nsMessengerBootstrap *bootstrap =
-    new nsMessengerBootstrap(serviceManager);
+    new nsMessengerBootstrap();
 
   if (!bootstrap) return NS_ERROR_OUT_OF_MEMORY;
 

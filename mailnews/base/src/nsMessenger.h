@@ -40,7 +40,7 @@ NS_BEGIN_EXTERN_C
 
 nsresult NS_NewMessenger(const nsIID &aIID, void **inst);
 
-nsresult NS_NewMessengerBootstrap(const nsIID &aIID, void ** inst, nsIServiceManager* serviceManager);
+nsresult NS_NewMessengerBootstrap(const nsIID &aIID, void ** inst);
 
 NS_END_EXTERN_C
 
