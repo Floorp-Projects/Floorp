@@ -19,16 +19,12 @@ DEPTH = ..
 
 MODULE = necko
 
-include <$(DEPTH)\config\config.mak>
-
 DIRS=            \
 	base     \
 	dns      \
 	build    \
 	protocol \
-!ifdef NET_SOCKET_PROVIDER_BUILD
 	socket   \
-!endif
 	util     \
 	mime     \
 	streamconv \
