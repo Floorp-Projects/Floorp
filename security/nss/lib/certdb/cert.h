@@ -34,7 +34,7 @@
 /*
  * cert.h - public data structures and prototypes for the certificate library
  *
- * $Id: cert.h,v 1.19 2002/08/02 17:51:17 relyea%netscape.com Exp $
+ * $Id: cert.h,v 1.20 2002/08/07 03:42:45 jpierre%netscape.com Exp $
  */
 
 #ifndef _CERT_H_
@@ -393,7 +393,7 @@ CERT_DecodeDERCrl (PRArenaPool *arena, SECItem *derSignedCrl,int type);
  * same as CERT_DecodeDERCrl, plus allow options to be passed in
  */
 
-CERTSignedCrl *
+extern CERTSignedCrl *
 CERT_DecodeDERCrlEx(PRArenaPool *narena, SECItem *derSignedCrl, int type,
                           PRInt32 options);
 
@@ -407,7 +407,14 @@ CERT_DecodeDERCrlEx(PRArenaPool *narena, SECItem *derSignedCrl, int type,
    and pass that arena in as the first argument to CERT_DecodeDERCrlEx */
 
 #define CRL_DECODE_DONT_COPY_DER            0x00000001
+#define CRL_DECODE_SKIP_ENTRIES             0x00000002
 
+/* complete the decoding of a partially decoded CRL, ie. decode the
+   entries. Note that entries is an optional field in a CRL, so the
+   "entries" pointer in CERTCrlStr may still be NULL even after
+   function returns SECSuccess */
+
+extern SECStatus CERT_CompleteCRLDecodeEntries(CERTSignedCrl* crl);
 
 /* Validate CRL then import it to the dbase.  If there is already a CRL with the
  * same CA in the dbase, it will be replaced if derCRL is more up to date.  

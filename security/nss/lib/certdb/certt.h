@@ -33,7 +33,7 @@
 /*
  * certt.h - public data structures for the certificate library
  *
- * $Id: certt.h,v 1.19 2002/07/04 03:09:29 jpierre%netscape.com Exp $
+ * $Id: certt.h,v 1.20 2002/08/07 03:42:45 jpierre%netscape.com Exp $
  */
 #ifndef _CERTT_H_
 #define _CERTT_H_
@@ -384,6 +384,7 @@ struct CERTCrlStr {
     SECItem nextUpdate;				/* optional for x.509 CRL  */
     CERTCrlEntry **entries;
     CERTCertExtension **extensions;    
+    /* can't add anything there for binary backwards compatibility reasons */
 };
 
 struct CERTCrlKeyStr {
@@ -408,6 +409,7 @@ struct CERTSignedCrlStr {
     SECItem *derCrl;
     PK11SlotInfo *slot;
     CK_OBJECT_HANDLE pkcs11ID;
+    void* opaque; /* do not touch */
 };
 
 
