@@ -78,17 +78,23 @@
     </content>
   </binding>
 
-  <binding id="scrollbar">
+  <binding id="scrollbar" extends="chrome://global/content/scrollbarBindings.xml#scrollbar">
     <content>
-      <xul:scrollbarbutton type="decrement" inherits="sborient=align">
-          <xul:image inherits="src"/>
-	  </xul:scrollbarbutton>
+      <xul:scrollbarbutton sbattr="scrollbar-up-top" type="decrement" inherits="sborient=align">
+	      <xul:image inherits="src"/>
+	    </xul:scrollbarbutton>
+	    <xul:scrollbarbutton sbattr="scrollbar-down-top" type="increment" collapsed="true" inherits="sborient=align">
+	      <xul:image inherits="src"/>
+	    </xul:scrollbarbutton>
       <xul:slider flex="1" inherits="curpos,maxpos,pageincrement,increment,align">
-      	<xul:thumb inherits="align,src" flex="1"/>
+	      <xul:thumb sbattr="scrollbar-thumb" inherits="align,src" flex="1"/>
       </xul:slider>
-      <xul:scrollbarbutton type="increment" inherits="sborient=align">
-      	  <xul:image inherits="src"/>
-	  </xul:scrollbarbutton>
+      <xul:scrollbarbutton sbattr="scrollbar-up-bottom" type="decrement" collapsed="true" inherits="sborient=align">
+	      <xul:image inherits="src"/>
+	    </xul:scrollbarbutton>
+      <xul:scrollbarbutton sbattr="scrollbar-down-bottom" type="increment" inherits="sborient=align">
+	      <xul:image inherits="src"/>
+	    </xul:scrollbarbutton>
     </content>
   </binding>
   

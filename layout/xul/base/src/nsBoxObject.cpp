@@ -33,9 +33,13 @@
 #include "nsIStyleContext.h"
 #include "nsIFrame.h"
 #include "nsXPIDLString.h"
+#include "nsILookAndFeel.h"
+#include "nsWidgetsCID.h"
+#include "nsIServiceManager.h"
+
 
 // Static IIDs/CIDs. Try to minimize these.
-// None so far.
+static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 
 // Implementation /////////////////////////////////////////////////////////////////
 
@@ -262,6 +266,44 @@ nsBoxObject::GetHeight(PRInt32* aResult)
   nsRect rect;
   GetOffsetRect(rect);
   *aResult = rect.height;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBoxObject::GetLookAndFeelMetric(const PRUnichar* aPropertyName, 
+                                  PRUnichar** aResult)
+{
+  nsCOMPtr<nsILookAndFeel> lookAndFeel(do_GetService(kLookAndFeelCID));
+  if (!lookAndFeel)
+    return NS_ERROR_FAILURE;
+    
+  nsAutoString property(aPropertyName);
+  if (property.EqualsIgnoreCase("scrollbarStyle")) {
+    PRInt32 metricResult;
+    lookAndFeel->GetMetric(nsILookAndFeel::eMetric_ScrollArrowStyle, metricResult);
+    switch (metricResult) {
+      case nsILookAndFeel::eMetric_ScrollArrowStyleBothAtBottom:
+        *aResult = nsXPIDLString::Copy(NS_LITERAL_STRING("doublebottom"));
+        break;
+      case nsILookAndFeel::eMetric_ScrollArrowStyleBothAtEachEnd:
+        *aResult = nsXPIDLString::Copy(NS_LITERAL_STRING("double"));
+        break;
+      case nsILookAndFeel::eMetric_ScrollArrowStyleBothAtTop:
+        *aResult = nsXPIDLString::Copy(NS_LITERAL_STRING("doubletop"));
+        break;
+      default:
+        *aResult = nsXPIDLString::Copy(NS_LITERAL_STRING("single"));
+        break;   
+    } 
+  }
+  else if (property.EqualsIgnoreCase("thumbStyle")) {
+    PRInt32 metricResult;
+    lookAndFeel->GetMetric(nsILookAndFeel::eMetric_ScrollSliderStyle, metricResult);
+    if ( metricResult == nsILookAndFeel::eMetric_ScrollThumbStyleNormal )
+      *aResult = nsXPIDLString::Copy(NS_LITERAL_STRING("fixed"));
+    else
+      *aResult = nsXPIDLString::Copy(NS_LITERAL_STRING("proportional"));   
+  }
   return NS_OK;
 }
 
