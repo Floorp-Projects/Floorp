@@ -1034,9 +1034,9 @@ BookmarkParser::ParseBookmarkInfo(BookmarkField *fields, PRBool isBookmarkFlag,
     }
 
     // free up any allocated data in field table BEFORE processing
-    for (BookmarkField *field = fields; field->mName; ++field)
+    for (BookmarkField *preField = fields; preField->mName; ++preField)
     {
-        NS_IF_RELEASE(field->mValue);
+        NS_IF_RELEASE(preField->mValue);
     }
 
     // loop over attributes
@@ -1215,9 +1215,9 @@ BookmarkParser::ParseBookmarkInfo(BookmarkField *fields, PRBool isBookmarkFlag,
     }
 
     // free up any allocated data in field table AFTER processing
-    for (BookmarkField *field = fields; field->mName; ++field)
+    for (BookmarkField *postField = fields; postField->mName; ++postField)
     {
-        NS_IF_RELEASE(field->mValue);
+        NS_IF_RELEASE(postField->mValue);
     }
 
     return(NS_OK);
