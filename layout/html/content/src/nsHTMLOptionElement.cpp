@@ -17,6 +17,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 #include "nsIDOMHTMLOptionElement.h"
+#include "nsIDOMHTMLOptGroupElement.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
@@ -41,6 +42,7 @@
 
 static NS_DEFINE_IID(kIDOMHTMLSelectElementIID, NS_IDOMHTMLSELECTELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLOptionElementIID, NS_IDOMHTMLOPTIONELEMENT_IID);
+static NS_DEFINE_IID(kIDOMHTMLOptGroupElementIID, NS_IDOMHTMLOPTIONELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
 static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
@@ -318,43 +320,53 @@ nsHTMLOptionElement::GetStyleHintForAttributeChange(
   return NS_OK;
 }
 
-// Options don't have frames, so get the select frame.
+// Options don't have frames - get the select content node
+// then call nsGenericHTMLElement::GetPrimaryFrame()
 nsresult nsHTMLOptionElement::GetPrimaryFrame(nsIFormControlFrame *&aIFormControlFrame)
 {
-  // Get the containing element.
+  // Get the containing element (Either a select or an optGroup)
   nsresult res = NS_NOINTERFACE;
   nsIDOMNode* parentNode = nsnull;
   nsresult gotParent = this->GetParentNode(&parentNode);
   if (NS_OK == gotParent) {
     nsIDOMHTMLSelectElement* selectElement = nsnull;
-    // XXX Optgroups: if this is not NS_OK then we need to GetParentNode again.
     nsresult isSelect = parentNode->QueryInterface(kIDOMHTMLSelectElementIID, (void**)&selectElement);
-    if (NS_OK == isSelect) {
-      nsIContent* selectContent = nsnull;
-      nsresult gotContent = selectElement->QueryInterface(kIContentIID, (void**)&selectContent);
-      if (NS_OK == gotContent) {
 
-      nsIDocument* doc = nsnull;
-      // Get the document
-      if (NS_OK == GetDocument(doc)) {
-        // Get presentation shell 0
-        nsIPresShell* presShell = doc->GetShellAt(0);
-        if (nsnull != presShell) {
-          nsIFrame *frame = nsnull;
-          presShell->GetPrimaryFrameFor(selectContent, &frame);
-          if (nsnull != frame) {
-            res = frame->QueryInterface(kIFormControlFrameIID, (void**)&aIFormControlFrame);
+    // If we are in an OptGroup we need to GetParentNode again (at least once)
+    if (NS_OK != isSelect) {
+      nsIDOMHTMLOptGroupElement* optgroupElement = nsnull;
+      while (1) { // Be ready for nested OptGroups
+        nsresult isOptGroup = parentNode->QueryInterface(kIDOMHTMLOptGroupElementIID, (void**)&optgroupElement);
+        if (NS_OK == isOptGroup) {     // We don't really need the optgroup,
+          NS_RELEASE(optgroupElement); // just seeing if it IS one.
+          nsIDOMNode* grandParentNode = nsnull;
+          gotParent = parentNode->GetParentNode(&grandParentNode);
+          if (NS_OK == gotParent) {
+            NS_RELEASE(parentNode);
+            parentNode = grandParentNode;
+          } else {
+            break; // Break out if we can't get our parent (we're screwed)
           }
-          NS_RELEASE(presShell);
+        } else {
+          break; // Break out if not a OptGroup (hopefully we have a select)
         }
-        NS_RELEASE(doc);
-
       }
+      isSelect = parentNode->QueryInterface(kIDOMHTMLSelectElementIID, (void**)&selectElement);
+    }
+
+    // We have a select if we're gonna get one, so let go of the generic node
+    NS_RELEASE(parentNode);
+
+    if (NS_OK == isSelect) {
+      nsIHTMLContent* selectContent = nsnull;
+      nsresult gotContent = selectElement->QueryInterface(kIContentIID, (void**)&selectContent);
+      NS_RELEASE(selectElement);
+
+      if (NS_OK == gotContent) {
+        res = nsGenericHTMLElement::GetPrimaryFrame(selectContent, aIFormControlFrame);
         NS_RELEASE(selectContent);
       }
-      NS_RELEASE(selectElement);
     }
-    NS_RELEASE(parentNode);
   }
   return res;
 }
