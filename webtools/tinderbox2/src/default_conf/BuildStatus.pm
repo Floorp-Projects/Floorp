@@ -1,8 +1,8 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 
 
-# $Revision: 1.21 $ 
-# $Date: 2002/05/07 22:47:36 $ 
+# $Revision: 1.22 $ 
+# $Date: 2002/05/09 03:09:52 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/BuildStatus.pm,v $ 
 # $Name:  $ 
@@ -126,7 +126,7 @@ package BuildStatus;
                         # for the header of broken builds. If you
                         # don't want it then remove this line.
 
-                        'header_background_gif'=> 'flames.gif',  
+                        'header_background_gif'=> 'flames1.gif',  
                         'handler' => \&main::null,
                         'description' => 'Build failed',
                         'order' => 2
