@@ -1969,6 +1969,7 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 			// set new byte offset, since the offset in the old file is certainly wrong
 			newHdr->SetMessageKey (newMsgPos); 
 			newHdr->OrFlags(MSG_FLAG_NEW, &newFlags);
+      destIFolder->SetHasNewMessages(PR_TRUE);
 		}
 	}
 	else
