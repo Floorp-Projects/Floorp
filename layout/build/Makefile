@@ -29,13 +29,32 @@ REQUIRES=xpcom raptor
 
 CPPSRCS=dlldeps.cpp 
 
+#INCLUDES +=  -I../html/base/src -I../base/src -I../css/layout/src
+
+LD = $(CCC) -all
+
 LOBJS = \
 	$(DIST)/lib/libraptorlayout_s.a			\
 	$(DIST)/lib/libraptorhtmlbase_s.a		\
+	$(DIST)/lib/libnglcsslay_s.a			\
 	$(DIST)/lib/libraptorhtmldoc_s.a		\
 	$(DIST)/lib/libraptorhtmlforms_s.a		\
 	$(DIST)/lib/libraptorhtmlstyle_s.a		\
 	$(DIST)/lib/libraptorhtmltable_s.a		\
-	$(DIST)/lib/libraptorevents_s.a			\
+	$(DIST)/lib/libraptorevents_s.a
+
+
+EXTRA_DSO_LDOPTS = \
+	$(DIST)/bin/libraptorhtmlpars.so		\
+	$(DIST)/bin/libraptorgfx.so			\
+	$(DIST)/bin/libraptorbase.so			\
+	$(DIST)/bin/libgmbaseunix.so			\
+	$(DIST)/bin/libjsdom.so				\
+	$(DIST)/bin/libnetlib.so			\
+	$(DIST)/bin/libxpcom.so				\
+	$(DIST)/bin/libnspr21.so			\
+	$(DIST)/bin/libplds21.so			\
+	$(DIST)/bin/libplc21.so				\
+	-lm
 
 include $(DEPTH)/config/rules.mk
