@@ -21,39 +21,21 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/config/config.mk
+
+MODULE		= mozbrwsr
+LIBRARY_NAME	= mozbrwsr
+IS_COMPONENT	= 1
+
+CPPSRCS		= \
+		nsBrowserInstance.cpp \
+		$(NULL)
+
+EXTRA_DSO_LDOPTS = \
+		-L$(DIST)/bin \
+		-L$(DIST)/lib \
+		-lxpcom \
+		$(NSPR_LIBS) \
+		$(NULL)
+
 include $(topsrcdir)/config/rules.mk
-
-EXPORT_RESOURCE_SAMPLES = \
-	$(srcdir)/status.xul \
-	$(srcdir)/toolbar.xml \
-	$(srcdir)/downloadProgress.xul \
-	$(srcdir)/downloadProgress.css \
-	$(srcdir)/navigator-shiny.css \
-	$(srcdir)/navigator-mozillazine0.css \
-	$(srcdir)/navigator-goofy.css \
-	$(srcdir)/navigator-test1.xul \
-	$(srcdir)/raindrops_light.gif \
-	$(srcdir)/skindemo.xul \
-	$(srcdir)/onerror.js \
-	$(srcdir)/DumpDOM.js \
-	$(srcdir)/lessCols.gif \
-	$(srcdir)/lessCols_mo.gif \
-	$(srcdir)/lessCols_dis.gif \
-	$(srcdir)/moreCols.gif \
-	$(srcdir)/moreCols_mo.gif \
-	$(srcdir)/moreCols_dis.gif \
-	$(srcdir)/scrollUp.gif \
-	$(srcdir)/scrollUp_mo.gif \
-	$(srcdir)/scrollUp_dis.gif \
-	$(srcdir)/scrollDown.gif \
-	$(srcdir)/scrollDown_mo.gif \
-	$(srcdir)/scrollDown_dis.gif \
-	$(srcdir)/scrollThumb.gif \
-	$(srcdir)/scrollThumb_mo.gif \
-	$(srcdir)/scrollThumb_dis.gif \
-	$(NULL)
-
-install:: 
-	$(INSTALL) $(EXPORT_RESOURCE_SAMPLES) $(DIST)/bin/res/samples
 
