@@ -443,7 +443,8 @@ NS_IMETHODIMP
 nsJARChannel::GetContentLength(PRInt32* aContentLength)
 {
     NS_ENSURE_ARG_POINTER(aContentLength);
-    if (mContentLength == -1) {
+    if (mContentLength == -1 && mJAR) {
+        // ask the zip entry for the content length
         nsresult rv;
         nsCOMPtr<nsIZipEntry> entry;
         rv = mJAR->GetEntry(mJAREntry.get(), getter_AddRefs(entry));
@@ -657,23 +658,6 @@ nsJARChannel::Open()
 {
     return EnsureZipReader();
 }
-
-/*
-NS_IMETHODIMP
-nsJARChannel::GetContentLength(PRInt32 *length)
-{
-    nsCOMPtr<nsIZipEntry> entry;
-    rv = mJAR->GetEntry(mJAREntry.get(), getter_AddRefs(entry));
-    if (NS_FAILED(rv)) return rv;
-
-    if (contentLength) {
-        rv = entry->GetRealSize((PRUint32*)contentLength);
-        if (NS_FAILED(rv)) return rv;
-    }
-
-    return rv;
-}
-*/
 
 NS_IMETHODIMP
 nsJARChannel::Close(nsresult status) 
