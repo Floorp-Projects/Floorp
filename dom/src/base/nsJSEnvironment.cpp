@@ -557,8 +557,18 @@ nsJSContext::BindCompiledEventHandler(void *aObj, nsIAtom *aName, void *aFunObj)
   char charName[64];
   AtomToEventHandlerName(aName, charName, sizeof charName);
 
-  if (!::JS_DefineProperty(mContext, (JSObject *)aObj, charName,
-                           OBJECT_TO_JSVAL(aFunObj), nsnull, nsnull,
+  JSObject *funobj = (JSObject*) aFunObj;
+  JSObject *target = (JSObject*) aObj;
+
+  // Make sure the handler function is parented by its event target object
+  if (JS_GetParent(mContext, funobj) != target) {
+    funobj = JS_CloneFunctionObject(mContext, funobj, target);
+    if (!funobj)
+      return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  if (!::JS_DefineProperty(mContext, target, charName,
+                           OBJECT_TO_JSVAL(funobj), nsnull, nsnull,
                            JSPROP_ENUMERATE | JSPROP_PERMANENT)) {
     return NS_ERROR_FAILURE;
   }
