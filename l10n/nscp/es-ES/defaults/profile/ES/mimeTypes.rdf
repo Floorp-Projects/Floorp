@@ -1,0 +1,11 @@
+<?xml version="1.0"?>  
+
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:NC="http://home.netscape.com/NC-rdf#">
+
+  <Description about="urn:mimetypes"> 
+    <NC:MIME-types> 
+	    <Seq about="urn:mimetypes:root"> 
+	    </Seq> 
+    </NC:MIME-types> 
+  </Description> 
+</RDF>

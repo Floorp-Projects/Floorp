@@ -1,0 +1,4 @@
+<!ENTITY blockImageCmd.label "Grafiken von diesem Server zurückweisen">
+<!ENTITY blockImageCmd.accesskey "k">
+<!ENTITY unblockImageCmd.label "Bilder von diesem Server zulassen">
+<!ENTITY unblockImageCmd.accesskey "e">

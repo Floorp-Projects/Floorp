@@ -1,0 +1,28 @@
+<!ENTITY walletPasswordManager.label "Password Manager">
+<!ENTITY walletPasswordManager.accesskey "p">
+<!ENTITY walletSafeFillCmd.label "Prefill Form">
+<!ENTITY walletSafeFillCmd.accesskey "f">
+<!ENTITY walletQuickFillCmd.label "Prefill Form Quickly">
+<!ENTITY walletQuickFillCmd.accesskey "q">
+<!ENTITY walletRequestToCaptureCmd.label "Save Form Data">
+<!ENTITY walletRequestToCaptureCmd.accesskey "S">
+<!ENTITY walletDisplaySignonsCmd.label "Manage Stored Passwords">
+<!ENTITY walletDisplaySignonsCmd.accesskey "M">
+<!ENTITY walletInterviewCmd.label "Interview">
+<!ENTITY walletInterviewCmd.accesskey "i">
+<!ENTITY walletSamplesCmd.label "Demonstration">
+<!ENTITY walletSamplesCmd.accesskey "d">
+<!ENTITY walletChangePasswordCmd.label "Change Master Password...">
+<!ENTITY walletChangePasswordCmd.accesskey "c">
+<!ENTITY walletExpirePasswordCmd.label "Log Out">
+<!ENTITY walletExpirePasswordCmd.accesskey "l">
+<!ENTITY walletEncryptCmd.label "Encrypt Sensitive Information">
+<!ENTITY walletEncryptCmd.accesskey "E">
+<!ENTITY walletObscureCmd.label "Obscure Sensitive Information">
+<!ENTITY walletObscureCmd.accesskey "O">
+<!ENTITY walletClearCmd.label "Reset Master Password">
+<!ENTITY walletClearCmd.accesskey "R">
+
+<!ENTITY PasswordNotChanged "Unable to change your master password.">
+<!ENTITY PasswordExpired "You are now logged out.">
+<!ENTITY PasswordNotExpired "Unable to log out.">
