@@ -34,63 +34,157 @@
 #   gmake -f mozilla/client.mk build
 #
 
-DEPTH=mozilla
+# options:
+# MOZ_OBJDIR		 - destination Object Directory
+# MOZ_CVS_FLAGS 	 - flags to pass to CVS
+# MOZ_CHECKOUT_FLAGS - flags to pass after cvs co
+# MOZ_BRANCH		 - default branch to checkout
+# MOZ_TOOLKIT		 - toolkit for configure --enable-toolkit=
+# NSPR_INSTALL_DIR	 - nspr directory for configure --with-nspr=
 
-# Allow for cvs flags
-ifndef CVS_FLAGS
-CVS_CFLAGS = -q -z 3
-endif
-
-CVSCO		= cvs $(CVS_FLAGS) co -P
-#MAKE		= gmake
+#
+# basic static variables
+# 
+DEPTH		= mozilla
 AUTOCONF	= autoconf
 TARGETS		= export libs install
 MKDIR		= mkdir
 SH			= /bin/sh
+CWD			= $(shell pwd)
+SRCDIR		= $(CWD)/$(DEPTH)
 
-ifndef MOZ_TOOLKIT
-MOZ_TOOLKIT	= USE_DEFAULT
+ifndef MAKE
+MAKE		= gmake
 endif
 
-ifdef NSPR_INSTALL_DIR
-NSPR_CONFIG_FLAG = --with-nspr=$(NSPR_INSTALL_DIR)
+# default objdir, e.g. obj-sparc-sun-solaris2.5.1
+ifndef MOZ_OBJDIR
+  OBJDIR = $(CWD)/obj-$(shell $(SRCDIR)/build/autoconf/config.guess)
+else
+  OBJDIR = $(MOZ_OBJDIR)
 endif
+
+# 
+# Step 1: CVS
+#
+# add new cvs-related flags here in the form
+# ifdef MOZ_FLAGNAME
+# 	CVS_FLAGNAME = -option $(CVS_FLAGNAME)
+# else (optional)
+#   CVS_FLAGNAME = -some -defaults
+# endif
+# then:
+# - DOCUMENT THE NEW OPTION ABOVE!
+# - add $(CVS_FLAGNAME) to CVS_FLAGS at the bottom
+
+
+# basic CVS flags
+ifdef MOZ_CVS_FLAGS
+  CVS_CFLAGS = $(MOZ_CVS_FLAGS)
+else
+  CVS_CFLAGS = -q -z 3
+endif
+
+# anything that we should use on all checkouts
+ifdef MOZ_CHECKOUT_FLAGS
+  CVS_COFLAGS = $(MOZ_CHECKOUT_FLAGS)
+else
+  CVS_COFLAGS = -P
+endif
+
+# the default branch tag
+ifdef MOZ_BRANCH
+  CVS_BRANCH_FLAGS = -r $(MOZ_BRANCH_FLAGS)
+endif
+
+CVS			= cvs $(CVS_CFLAGS)
+CVSCO		= $(CVS) co $(CVS_COFLAGS) $(CVS_BRANCH_FLAGS)
+
+#
+# Step 2: NSPR
+#
+
+# these options can be overriden by the user
+ifndef NSPR_INSTALL_DIR
+NSPR_INSTALL_DIR = $(OBJDIR)/nspr
+endif
+
+ifndef NSPR_OPTIONS
+NSPR_OPTIONS = NS_USE_GCC=1 NS_USE_NATIVE=
+endif
+
+# these options are required to make this makefile build NSPR correctly
+NSPR_REQ_OPTIONS = MOZILLA_CLIENT=1 NO_MDUPDATE=1
+NSPR_DIST_OPTION = DIST=$(NSPR_INSTALL_DIR) NSDISTMODE=copy
+NSPR_TARGET = export
+
+NSPR_GMAKE_OPTIONS = $(NSPR_DIST_OPTION) $(NSPR_REQ_OPTIONS) $(NSPR_OPTIONS) $(NSPR_TARGET)
+
+#
+# Step 3: autoconf
+#
+# add new autoconf/configure flags here in the form:
+# ifdef MOZ_FLAGNAME
+#   CONFIG_FLAGNAME_FLAG = --some-config-option=$(MOZ_FLAGNAME)
+# endif
+# then:
+# - DOCUMENT THE NEW OPTION ABOVE!
+# - add $(CONFIG_FLAGNAME_FLAG) to CONFIG_FLAGS at the bottom
+
+# default object directory, e.g. obj-sparc-sun-solaris2.5.1
+
+ifdef MOZ_TOOLKIT
+  CONFIG_TOOLKIT_FLAG = --enable-toolkit=$(MOZ_TOOLKIT)
+endif
+
+CONFIG_NSPR_FLAG = --with-nspr=$(NSPR_INSTALL_DIR)
+
+CONFIG_FLAGS = $(CONFIG_TOOLKIT_FLAG) $(CONFIG_NSPR_FLAG)
+
+#
+# rules
+# 
 
 all: checkout
 
 .PHONY: checkout
 
-# List branches here.
 #
-
+# CVS checkout
+#
 checkout:
 # Pull the core layout stuff.
-	$(CVSCO) mozilla/nglayout.mk
-	(cd mozilla; $(MAKE) -f nglayout.mk pull_all)
+	$(CVSCO) $(DEPTH)/nglayout.mk
+	(cd $(SRCDIR); $(MAKE) -f nglayout.mk pull_all)
 
 # Pull xpfe
-	$(CVSCO) mozilla/xpfe
+	$(CVSCO) $(SRCDIR)/xpfe
 
-# Build with autoconf
-configure:	mozilla/configure.in
-	autoobjdir=obj-$(shell mozilla/build/autoconf/config.guess); \
-	echo autoobjdir = $$autoobjdir; \
-	(cd mozilla; $(AUTOCONF)); \
-	if test ! -d mozilla/$$autoobjdir; then $(MKDIR) mozilla/$$autoobjdir; fi; \
-	(cd mozilla/$$autoobjdir; LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(NSPR_INSTALL_DIR)/lib ../configure $(NSPR_CONFIG_FLAG) --enable-toolkit=$(MOZ_TOOLKIT)); \
 
-mozilla/configure: mozilla/configure.in
-	$(MAKE) -f mozilla/client.mk configure
+#
+# build it
+#
+# configure.in -> configure using autoconf
+$(SRCDIR)/configure: $(SRCDIR)/configure.in
+	@echo Generating $@ using autoconf
+	(cd $(SRCDIR); $(AUTOCONF))
 
-build:	mozilla/configure
-	autoobjdir=obj-$(shell mozilla/build/autoconf/config.guess); \
-	echo autoobjdir = $$autoobjdir; \
-	(cd mozilla/$$autoobjdir; $(MAKE)); \
-#	(cd mozilla/$$autoobjdir; $(MAKE) depend); \
+# configure -> Makefile by running 'configure'
+$(OBJDIR)/Makefile: $(SRCDIR)/configure
+	@echo Determining configuration to generate $@
+	-$(MKDIR) $(OBJDIR)
+	(cd $(OBJDIR) ; LD_LIBRARY_PATH=$(NSPR_INSTALL_DIR)/lib:$(LD_LIBRARY_PATH) $(SRCDIR)/configure $(CONFIG_FLAGS))
+
+build:	$(OBJDIR)/Makefile
+	(cd $(OBJDIR); $(MAKE));
+
 
 # Build & install nspr.  Classic build, no autoconf.
 # Linux/RPM available.
 nspr:	$(NSPR_INSTALL_DIR)/lib/libnspr21.so
+	@echo NSPR is ready and installed in $(NSPR_INSTALL_DIR)
+
 $(NSPR_INSTALL_DIR)/lib/libnspr21.so:
-	($(MAKE) -C mozilla/nsprpub DIST=$(NSPR_INSTALL_DIR) NSDISTMODE=copy NS_USE_GCC=1 MOZILLA_CLIENT=1 NO_MDUPDATE=1 NS_USE_NATIVE= )
+	@-$(MKDIR) -p $(NSPR_INSTALL_DIR)
+	($(MAKE) -C $(SRCDIR)/nsprpub $(NSPR_GMAKE_OPTIONS)) 
 
