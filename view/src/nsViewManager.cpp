@@ -46,11 +46,13 @@ static void vm_timer_callback(nsITimer *aTimer, void *aClosure)
 
   //restart the timer
   
-  PRUint32 fr;
-  vm->GetFrameRate(fr);
+  if (vm->mTrueFrameRate == vm->mFrameRate)
+  {
+    PRUint32 fr = vm->mFrameRate;
 
-  vm->mFrameRate = 0;
-  vm->SetFrameRate(fr);
+    vm->mFrameRate = 0;
+    vm->SetFrameRate(fr);
+  }
 //printf("timer composite...\n");
 #ifndef XP_MAC
 	//XXX temporary: The Mac doesn't need the timer to repaint but
@@ -190,6 +192,7 @@ NS_IMETHODIMP nsViewManager :: Init(nsIDeviceContext* aContext)
   mDSBounds.Empty();
   mTimer = nsnull;
   mFrameRate = 0;
+  mTrueFrameRate = 0;
   mTransCnt = 0;
 
   rv = SetFrameRate(UPDATE_QUANTUM);
@@ -228,7 +231,7 @@ NS_IMETHODIMP nsViewManager :: SetRootView(nsIView *aView)
 
 NS_IMETHODIMP nsViewManager :: GetFrameRate(PRUint32 &aRate)
 {
-  aRate = mFrameRate;
+  aRate = mTrueFrameRate;
   return NS_OK;
 }
 
@@ -241,6 +244,7 @@ NS_IMETHODIMP nsViewManager :: SetFrameRate(PRUint32 aFrameRate)
     NS_IF_RELEASE(mTimer);
 
     mFrameRate = aFrameRate;
+    mTrueFrameRate = aFrameRate;
 
     if (mFrameRate != 0)
     {
@@ -953,6 +957,7 @@ NS_IMETHODIMP nsViewManager :: Composite()
       mRootWindow->Update();
 
     mUpdateCnt = 0;
+    PauseTimer();
   }
 
   return NS_OK;
@@ -1016,6 +1021,9 @@ NS_IMETHODIMP nsViewManager :: UpdateView(nsIView *aView, const nsRect &aRect, P
 
   if (nsnull != widgetView)
   {
+    if (0 == mUpdateCnt)
+      RestartTimer();
+
     mUpdateCnt++;
 
     // Convert damage rect to coordinate space of containing view with
@@ -1046,14 +1054,14 @@ NS_IMETHODIMP nsViewManager :: UpdateView(nsIView *aView, const nsRect &aRect, P
     {
       Composite();
     }
-    else if ((mFrameRate > 0) && !(aUpdateFlags & NS_VMREFRESH_NO_SYNC))
+    else if ((mTrueFrameRate > 0) && !(aUpdateFlags & NS_VMREFRESH_NO_SYNC))
     {
       // or if a sync paint is allowed and it's time for the compositor to
       // do a refresh
 
       PRInt32 deltams = PR_IntervalToMilliseconds(PR_IntervalNow() - mLastRefresh);
 
-      if (deltams > (1000 / (PRInt32)mFrameRate))
+      if (deltams > (1000 / (PRInt32)mTrueFrameRate))
         Composite();
     }
   }
@@ -1875,11 +1883,11 @@ NS_IMETHODIMP nsViewManager :: EnableRefresh(void)
 {
   mRefreshEnabled = PR_TRUE;
 
-  if (mFrameRate > 0)
+  if (mTrueFrameRate > 0)
   {
     PRInt32 deltams = PR_IntervalToMilliseconds(PR_IntervalNow() - mLastRefresh);
 
-    if (deltams > (1000 / (PRInt32)mFrameRate))
+    if (deltams > (1000 / (PRInt32)mTrueFrameRate))
       Composite();
   }
 
@@ -2056,4 +2064,16 @@ PRBool nsViewManager :: DoesViewHaveNativeWidget(nsIView &aView)
   }
 
   return retval;
+}
+
+void nsViewManager :: PauseTimer(void)
+{
+  PRUint32 oldframerate = mTrueFrameRate;
+  SetFrameRate(0);
+  mTrueFrameRate = oldframerate;
+}
+
+void nsViewManager :: RestartTimer(void)
+{
+  SetFrameRate(mTrueFrameRate);
 }
