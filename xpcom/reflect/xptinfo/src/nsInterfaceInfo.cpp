@@ -16,7 +16,7 @@
  * Reserved.
  */
 
-/* Implementation of nsIInterfaceInfoManager. */
+/* Implementation of nsIInterfaceInfo. */
 
 #include "nscore.h"
 

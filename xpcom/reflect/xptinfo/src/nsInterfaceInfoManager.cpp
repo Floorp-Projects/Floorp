@@ -16,7 +16,7 @@
  * Reserved.
  */
 
-/* Implementation of nsIInterfaceInfo. */
+/* Implementation of nsIInterfaceInfoManager. */
 
 #ifdef XP_MAC
 #include <stat.h>
