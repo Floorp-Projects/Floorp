@@ -24,21 +24,16 @@
 #include "jsapi.h"
 #include "xp_core.h" /* Needed for XP_ defines */
 
-#define PREF_SUPPORT_OLD_PATH_STRINGS 1
-#ifdef PREF_SUPPORT_OLD_PATH_STRINGS
-    #if defined(XP_MAC)
-        #include <stat.h>
-    #else
-    #ifdef XP_OS2_EMX
-        #include <sys/types.h>
-    #endif
-        #include <sys/stat.h>
-    #endif
-    #include <errno.h>
-    #ifdef _WIN32
-        #include "windows.h"
-    #endif /* _WIN32 */
-#endif /* PREF_SUPPORT_OLD_PATH_STRINGS */
+#if defined(XP_MAC)
+  #include <stat.h>
+#else
+  #ifdef XP_OS2_EMX
+    #include <sys/types.h>
+  #endif
+#endif
+#ifdef _WIN32
+  #include "windows.h"
+#endif /* _WIN32 */
 
 #ifdef MOZ_ADMIN_LIB
 #include "prefldap.h"
@@ -53,10 +48,6 @@
 #include "prlog.h"
 #include "prmem.h"
 #include "prprf.h"
-#if 0
-#include "xpassert.h"
-#include "xp_str.h"
-#endif
 #include "nsQuickSort.h"
 
 #ifdef XP_OS2
@@ -179,10 +170,6 @@ JSFunctionSpec      autoconf_methods[] = {
                     { NULL,                 NULL,                   0,0,0 }
                     };
 
-#ifdef PREF_SUPPORT_OLD_PATH_STRINGS
-char *              gFileName = NULL;
-#endif /*PREF_SUPPORT_OLD_PATH_STRINGS*/
-
 struct CallbackNode*    gCallbacks = NULL;
 PRBool              gErrorOpeningUserPrefs = PR_FALSE;
 PRBool              gCallbacksEnabled = PR_FALSE;
@@ -222,16 +209,6 @@ struct CallbackNode {
 
 /* -- Prototypes */
 PrefResult pref_DoCallback(const char* changed_pref);
-#ifdef PREF_SUPPORT_OLD_PATH_STRINGS
-PrefResult pref_OpenFile(
-    const char* filename,
-    PRBool is_error_fatal,
-    PRBool verifyHash,
-    PRBool bGlobalContext,
-    PRBool skipFirstLine);
-PrefResult PREF_SavePrefFileWith(const char *filename, PLHashEnumerator heSaveProc);
-#endif /* PREF_SUPPORT_OLD_PATH_STRINGS */
-
 PRBool pref_VerifyLockFile(char* buf, long buflen);
 
 
@@ -239,70 +216,6 @@ JSBool PR_CALLBACK pref_BranchCallback(JSContext *cx, JSScript *script);
 void pref_ErrorReporter(JSContext *cx, const char *message,JSErrorReport *report);
 void pref_Alert(char* msg);
 PrefResult pref_HashPref(const char *key, PrefValue value, PrefType type, PrefAction action);
-
-#ifdef PREF_SUPPORT_OLD_PATH_STRINGS
-
-PrefResult pref_OpenFile(
-    const char* filename,
-    PRBool is_error_fatal,
-    PRBool verifyHash,
-    PRBool bGlobalContext,
-    PRBool skipFirstLine)
-{
-    PrefResult ok = PREF_ERROR;
-    FILE *fp;
-    struct stat stats;
-    size_t fileLength;
-
-    stats.st_size = 0;
-    if ( stat(filename, (struct stat *) &stats) == -1 )
-        return PREF_ERROR;
-
-    fileLength = stats.st_size;
-    if (fileLength <= 1)
-        return PREF_ERROR;
-    fp = fopen(filename, "r");
-
-    if (fp)
-    {   
-        char* readBuf = (char *) malloc(fileLength * sizeof(char));
-        if (readBuf)
-        {
-            fileLength = fread(readBuf, sizeof(char), fileLength, fp);
-            if (fileLength == 0)
-            {
-                ok = PREF_ERROR;
-            }
-            else
-            {
-
-                if ( verifyHash && !pref_VerifyLockFile(readBuf, (long) fileLength))
-                {
-                    ok = PREF_BAD_LOCKFILE;
-                }
-                else if (PREF_EvaluateConfigScript(readBuf, fileLength,
-                             filename, bGlobalContext, PR_FALSE, skipFirstLine ))
-                {
-                    ok = PREF_NOERROR;
-                }
-                free(readBuf);
-            }
-        }
-        fclose(fp);
-        
-        /* If the user prefs file exists but generates an error,
-           don't clobber the file when we try to save it. */
-        if ((!readBuf || ok != PREF_NOERROR) && is_error_fatal)
-            gErrorOpeningUserPrefs = PR_TRUE;
-#if defined(XP_WIN)
-        if (gErrorOpeningUserPrefs && is_error_fatal)
-            MessageBox(NULL,"Error in preference file (prefs.js).  Default preferences will be used.","Netscape - Warning", MB_OK);
-#endif
-    }
-    JS_GC(gMochaContext);
-    return ok;
-}
-#endif /* PREF_SUPPORT_OLD_PATH_STRINGS */
 
 /* Computes the MD5 hash of the given buffer (not including the first line)
    and verifies the first line of the buffer expresses the correct hash in the form:
@@ -357,16 +270,6 @@ PRBool pref_VerifyLockFile(char* buf, long buflen)
     return PR_TRUE;
 #endif
 }
-
-#ifdef PREF_SUPPORT_OLD_PATH_STRINGS
-PrefResult PREF_ReadUserJSFile(const char *filename)
-{
-    PrefResult ok = pref_OpenFile(filename, PR_FALSE, PR_FALSE, PR_TRUE, PR_FALSE);
-
-    return ok;
-}
-#endif /* PREF_SUPPORT_OLD_PATH_STRINGS */
-
 PRBool PREF_Init(const char *filename)
 {
     PRBool ok = PR_TRUE;
@@ -378,15 +281,6 @@ PRBool PREF_Init(const char *filename)
             PR_CompareValues, &pref_HashAllocOps, NULL);
     if (!gHashTable)
         return PR_FALSE;
-
-#ifdef PREF_SUPPORT_OLD_PATH_STRINGS
-    if (filename)
-    {
-        if (gFileName) /* happens if PREF_Init is called twice (it is) */
-            PL_strfree(gFileName);
-        gFileName = PL_strdup(filename);
-    }
-#endif /* PREF_SUPPORT_OLD_PATH_STRINGS */
 
     if (!gMochaTaskState)
         gMochaTaskState = PREF_GetJSRuntime();
@@ -434,12 +328,6 @@ PRBool PREF_Init(const char *filename)
 
         ok = pref_InitInitialObjects();
     }
-
-#ifdef PREF_SUPPORT_OLD_PATH_STRINGS
-    if (ok && gFileName)
-        ok = (PRBool)(pref_OpenFile(gFileName, PR_TRUE, PR_FALSE, PR_FALSE, PR_TRUE) == PREF_NOERROR);
-    else
-#endif /* PREF_SUPPORT_OLD_PATH_STRINGS */
     if (!ok)
         gErrorOpeningUserPrefs = PR_TRUE;
     return ok;
@@ -520,12 +408,6 @@ void PREF_CleanupPrefs()
     if (gSavedLine)
         free(gSavedLine);
     gSavedLine = NULL;
-
-#ifdef PREF_SUPPORT_OLD_PATH_STRINGS
-    if (gFileName)
-        PL_strfree(gFileName);
-    gFileName = NULL;
-#endif
 }
 
 PrefResult
@@ -610,55 +492,6 @@ PREF_EvaluateConfigScript(const char * js_buffer, size_t length,
     
     return ok;
 }
-
-#if 0 /* OBSOLETE */
-JSBool
-PREF_EvaluateJSBuffer(const char * js_buffer, size_t length)
-{
-/* old routine that no longer triggers callbacks */
-    JSBool ret;
-
-    ret = PREF_QuietEvaluateJSBuffer(js_buffer, length);
-    
-    return ret;
-}
-#endif /* OBSOLETE */
-
-#if 0 /* OBSOLETE */
-JSBool
-PREF_QuietEvaluateJSBuffer(const char * js_buffer, size_t length)
-{
-    JSBool ok = JS_FALSE;
-    jsval result;
-    
-    if (!gMochaContext || !gMochaPrefObject)
-        return JS_FALSE;
-
-    ok = JS_EvaluateScript(gMochaContext, gMochaPrefObject,
-            js_buffer, length, NULL, 0, &result);
-    
-    /* Hey, this really returns a JSBool */
-    return ok;
-}
-#endif /* OBSOLETE */
-
-#if 0 /* OBSOLETE */
-JSBool
-PREF_QuietEvaluateJSBufferWithGlobalScope(const char * js_buffer, size_t length)
-{
-    JSBool ok;
-    jsval result;
-    
-    if (!gMochaContext || !gGlobalConfigObject)
-        return JS_FALSE;
-    
-    ok = JS_EvaluateScript(gMochaContext, gGlobalConfigObject,
-            js_buffer, length, NULL, 0, &result);
-    
-    /* Hey, this really returns a JSBool */
-    return ok;
-}
-#endif /* OBSOLETE */
 
 static char * str_escape(const char * original)
 {
@@ -960,96 +793,6 @@ pref_useDefaultPrefFile(void)
 #endif /* PREF_BACKOUT */
 }
 
-
-/* LI_STUFF  
-this is new.  clients should use the old PREF_SavePrefFile or new PREF_SaveLIPrefFile.  
-This is called by them and does the right thing.  
-?? make this private to this file.
-*/
-
-#ifdef PREF_SUPPORT_OLD_PATH_STRINGS
-
-#define PREF_FILE_BANNER "/* Netscape User Preferences */" LINEBREAK \
-             "/* This is a generated file!  Do not edit. */" LINEBREAK LINEBREAK
-
-PrefResult
-PREF_SavePrefFileWith(const char *filename, PLHashEnumerator heSaveProc)
-{
-    PrefResult success = PREF_ERROR;
-    FILE * fp;
-    char **valueArray = NULL;
-
-    if (!gHashTable)
-        return PREF_NOT_INITIALIZED;
-
-    /* ?! Don't save (blank) user prefs if there was an error reading them */
-#if defined(XP_WIN) || defined(XP_OS2)
-    if (!filename)
-#else
-    if (!filename || gErrorOpeningUserPrefs)
-#endif
-        return PREF_NOERROR;
-
-    valueArray = (char**) PR_Calloc(sizeof(char*), gHashTable->nentries);
-    if (!valueArray)
-        return PREF_OUT_OF_MEMORY;
-
-    fp = fopen(filename, "w");
-    if (fp)
-    {
-        PRUint32 valueIdx;
-        fwrite(PREF_FILE_BANNER, sizeof(char), PL_strlen(PREF_FILE_BANNER), fp);
-        
-        /* LI_STUFF here we pass in the heSaveProc proc used so that li can do its own thing */
-        PR_HashTableEnumerateEntries(gHashTable, heSaveProc, valueArray);
-        
-        /* Sort the preferences to make a readable file on disk */
-        NS_QuickSort(valueArray, gHashTable->nentries, sizeof(char*), pref_CompareStrings, NULL);
-        for (valueIdx = 0; valueIdx < gHashTable->nentries; valueIdx++)
-        {
-            if (valueArray[valueIdx])
-            {
-                fwrite(valueArray[valueIdx], sizeof(char),
-                       PL_strlen(valueArray[valueIdx]), fp);
-                PR_Free(valueArray[valueIdx]);
-            }
-        }
-
-        fclose(fp);
-        success = PREF_NOERROR;
-    }
-    else 
-        success = (PrefResult)errno; /* Really? */
-
-    PR_Free(valueArray);
-
-    return success;
-}
-
-#endif /* PREF_SUPPORT_OLD_PATH_STRINGS */
-
-#ifdef PREF_SUPPORT_OLD_PATH_STRINGS
-PrefResult PREF_SavePrefFile()
-{
-#if 0 /* defined(XP_MAC) || defined(XP_WIN) || defined(XP_OS2) */
-    return (PrefResult)pref_SaveProfile();
-#else
-    if (!gHashTable)
-        return PREF_NOT_INITIALIZED;
-
-    return (PrefResult)PREF_SavePrefFileWith(gFileName, (PLHashEnumerator)pref_savePref);
-#endif
-}
-#endif /* PREF_SUPPORT_OLD_PATH_STRINGS */
-
-
-#ifdef PREF_SUPPORT_OLD_PATH_STRINGS
-PrefResult PREF_SavePrefFileAs(const char *filename) 
-{
-    return (PrefResult)PREF_SavePrefFileWith(filename, (PLHashEnumerator)pref_savePref);
-}
-#endif /* PREF_SUPPORT_OLD_PATH_STRINGS */
-
 PRBool PREF_HasUserPref(const char *pref_name)
 {
     PrefNode *pref;
@@ -1290,29 +1033,6 @@ PREF_SetPathPref(const char *pref_name, const char *path, PRBool set_default)
     return pref_HashPref(pref_name, pref, PREF_STRING, action);
 }
 #endif /* XP_MAC */
-
-
-#if 0
-PrefResult
-PREF_GetDefaultColorPref(const char *pref_name, PRUint8 *red, PRUint8 *green, PRUint8 *blue)
-{
-    char colstr[8];
-    int iSize = 8;
-
-    PrefResult result = PREF_GetDefaultCharPref(pref_name, colstr, &iSize);
-    
-    if (result == PREF_NOERROR)
-    {
-        int r, g, b;
-        sscanf(colstr, "#%02x%02x%02x", &r, &g, &b);
-        *red = r;
-        *green = g;
-        *blue = b;
-    }
-
-    return result;
-}
-#endif
 
 /* Delete a branch. Used for deleting mime types */
 int
@@ -2268,15 +1988,10 @@ void pref_Alert(char* msg)
 #if defined(XP_UNIX) || defined(XP_OS2)
     if ( getenv("NO_PREF_SPAM") == NULL )
 #endif
-      /* FE_Alert will eventually become something else */
-#if 0
-    FE_Alert(NULL, msg);
-#else
     fputs(msg, stderr);
 #endif
-#endif
 #if defined(XP_WIN)
-        MessageBox (NULL, msg, "Netscape -- JS Preference Warning", MB_OK);
+      MessageBox (NULL, msg, "Netscape -- JS Preference Warning", MB_OK);
 #elif defined(XP_OS2)
       WinMessageBox (HWND_DESKTOP, 0, msg, "Netscape -- JS Preference Warning", 0, MB_WARNING | MB_OK | MB_APPLMODAL | MB_MOVEABLE);
 #endif
