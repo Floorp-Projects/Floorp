@@ -981,9 +981,7 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext* aPresContext,
                            mComputedOffsets.right);
   }
 
-  // When the CSS2 spec refers to direction it means the containing block's
-  // direction and not the direction of the absolutely positioned element itself
-  PRUint8 direction = cbrs->mStyleVisibility->mDirection;
+  PRUint8 direction = mStyleVisibility->mDirection;
 
   // Initialize the 'width' computed value
   nsStyleUnit widthUnit = mStylePosition->mWidth.GetUnit();
