@@ -388,6 +388,7 @@ nsComponentManagerImpl::PlatformCreateDll(const char *fullname, nsDll* *result)
     err = NR_RegGetKeyRaw(hreg, xpcomKey, (char *)fullname, &key);
     if (err != REGERR_OK)
     {
+        NR_RegClose(hreg);
         return NS_ERROR_FAILURE;
     }
 
@@ -400,8 +401,12 @@ nsComponentManagerImpl::PlatformCreateDll(const char *fullname, nsDll* *result)
 
     nsDll *dll = new nsDll(fullname, lastModTime, fileSize);
     if (dll == NULL)
+    {
+        NR_RegClose(hreg);
         return NS_ERROR_OUT_OF_MEMORY;
+    }
 
+    NR_RegClose(hreg);
     *result = dll;
     return NS_OK;
 }
