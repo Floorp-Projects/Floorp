@@ -86,5 +86,6 @@
 		</treehead>
 	</tree>
 
+	<splitter id="searchHtmlAreaSplitter" persist="state" style="border-top:solid black 1px; border-bottom:solid black 1px; background-color:lightgray;" collapse="after" />
 	<html:iframe id="content" type="content-primary" style="height: 100; width: 100%;" flex="100%" src="resource:/res/samples/default.htm" />
 </window>
