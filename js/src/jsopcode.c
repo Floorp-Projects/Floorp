@@ -1457,9 +1457,9 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     if (!lval)
                         return JS_FALSE;
                     js_printf(jp, ".%s", lval);
+                } else if (xval) {
+                    js_printf(jp, "[%s]", xval);
                 }
-		else if (xval)
-		    js_printf(jp, "[%s]", xval);
                 rval = OFF2STR(&ss->sprinter, ss->offsets[ss->top-1]);
 		js_printf(jp, " in %s) {\n", rval);
 		jp->indent += 4;
@@ -1726,10 +1726,10 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 	      case JSOP_PROPINC:
 	      case JSOP_PROPDEC:
 		atom = GET_ATOM(cx, jp->script, pc);
-		lval = POP_STR();
                 rval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom), 0);
                 if (!rval)
                     return JS_FALSE;
+		lval = POP_STR();
 		todo = Sprint(&ss->sprinter, "%s.%s%s",
 			      lval, rval,
 			      js_incop_str[!(cs->format & JOF_INC)]);
@@ -1751,18 +1751,15 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 
 	      case JSOP_GETPROP:
 		atom = GET_ATOM(cx, jp->script, pc);
-		lval = POP_STR();
                 str = ATOM_TO_STRING(atom);
                 if (IsASCIIIdentifier(str)) {
+                    lval = POP_STR();
                     todo = Sprint(&ss->sprinter, "%s.%s",
                                   lval, JS_GetStringBytes(str));
                 } else {
-                    lval = JS_strdup(cx, lval);
-                    if (!lval)
-                        return JS_FALSE;
                     xval = QuoteString(&ss->sprinter, str, (jschar)'\'');
+                    lval = POP_STR();
                     todo = Sprint(&ss->sprinter, "%s[%s]", lval, xval);
-                    JS_free(cx, (char *)lval);
                 }
 		break;
 
@@ -2197,11 +2194,11 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 
 	      case JSOP_INITPROP:
               case JSOP_INITCATCHVAR:
-		rval = POP_STR();
 		atom = GET_ATOM(cx, jp->script, pc);
                 xval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom), 0);
                 if (!xval)
                     return JS_FALSE;
+		rval = POP_STR();
 		lval = POP_STR();
 	      do_initprop:
 #ifdef OLD_GETTER_SETTER
