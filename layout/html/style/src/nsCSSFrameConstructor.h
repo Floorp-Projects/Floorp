@@ -636,12 +636,6 @@ protected:
                                        nsIStyleContext*         aStyleContext,
                                        nsFrameItems&            aFrameItems);
 
-  nsresult GetAdjustedParentFrame(nsIPresContext* aPresContext,
-                                  nsIFrame*       aCurrentParentFrame, 
-                                  PRUint8         aChildDisplayType,
-                                  nsIFrame*&      aNewParentFrame);
-
-
   nsresult ProcessChildren(nsIPresShell*            aPresShell, 
                            nsIPresContext*          aPresContext,
                            nsFrameConstructorState& aState,
@@ -1022,6 +1016,7 @@ protected:
   // not null, make sure it passes the call to IsValidSibling
   nsIFrame* FindPreviousSibling(nsIPresShell*     aPresShell,
                                 nsIContent*       aContainer,
+                                nsIFrame*         aContainerFrame,
                                 PRInt32           aIndexInContainer,
                                 const nsIContent* aChild = nsnull);
 
@@ -1029,12 +1024,14 @@ protected:
   // If aChild is not null, make sure it passes the call to IsValidSibling
   nsIFrame* FindNextSibling(nsIPresShell*     aPresShell,
                             nsIContent*       aContainer,
+                            nsIFrame*         aContainerFrame,
                             PRInt32           aIndexInContainer,
                             const nsIContent* aChild = nsnull);
 
   // see if aContent and aSibling are legimiate siblings due to restrictions
   // imposed by table columns
   PRBool IsValidSibling(nsIPresShell&          aPresShell,
+                        nsIFrame*              aParentFrame,
                         const nsIFrame&        aSibling,
                         PRUint8                aSiblingDisplay,
                         nsIContent&            aContent,

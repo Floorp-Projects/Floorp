@@ -55,6 +55,7 @@
 #include "nsTableColGroupFrame.h"
 #include "nsTableColFrame.h"
 #include "nsIDOMHTMLTableColElement.h"
+#include "nsIDOMHTMLTableCaptionElem.h"
 #include "nsTableCellFrame.h" // to get IS_CELL_FRAME
 #include "nsIStyleFrameConstruction.h"
 #include "nsHTMLParts.h"
@@ -71,6 +72,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsLayoutAtoms.h"
 #include "nsIDOMHTMLSelectElement.h"
+#include "nsIDOMHTMLLegendElement.h"
 #include "nsIComboboxControlFrame.h"
 #include "nsIListControlFrame.h"
 #include "nsISelectControlFrame.h"
@@ -8069,10 +8071,12 @@ FindNextAnonymousSibling(nsIPresShell* aPresShell,
 #define UNSET_DISPLAY 255
 // This gets called to see if the frames corresponding to aSiblingDisplay and aDisplay
 // should be siblings in the frame tree. Although (1) rows and cols, (2) row groups 
-// and col groups, and (3) row groups and captions are siblings from a content perspective,
-// they are not considered siblings in the frame tree.
+// and col groups, (3) row groups and captions (4) legends and content inside fieldsets
+// are siblings from a content perspective, they are not considered siblings in the 
+// frame tree.
 PRBool
 nsCSSFrameConstructor::IsValidSibling(nsIPresShell&          aPresShell,
+                                      nsIFrame*              aParentFrame,
                                       const nsIFrame&        aSibling,
                                       PRUint8                aSiblingDisplay,
                                       nsIContent&            aContent,
@@ -8116,6 +8120,20 @@ nsCSSFrameConstructor::IsValidSibling(nsIPresShell&          aPresShell,
     // from a content perspective (they share the table content as parent)
     return PR_FALSE;
   }
+  else {
+    nsCOMPtr<nsIAtom> parentType;
+    aParentFrame->GetFrameType(getter_AddRefs(parentType));
+    if (nsLayoutAtoms::fieldSetFrame == parentType) {
+      // Legends can be sibling of legends but not of other content in the fieldset
+      nsCOMPtr<nsIAtom> sibType;
+      aSibling.GetFrameType(getter_AddRefs(sibType));
+      nsCOMPtr<nsIDOMHTMLLegendElement> legendContent(do_QueryInterface(&aContent));
+
+      if ((legendContent  && (nsLayoutAtoms::legendFrame != sibType)) ||
+          (!legendContent && (nsLayoutAtoms::legendFrame == sibType)))
+        return PR_FALSE;
+    }
+  }
 
   return PR_TRUE;
 }
@@ -8127,6 +8145,7 @@ nsCSSFrameConstructor::IsValidSibling(nsIPresShell&          aPresShell,
 nsIFrame*
 nsCSSFrameConstructor::FindPreviousSibling(nsIPresShell*     aPresShell,
                                            nsIContent*       aContainer,
+                                           nsIFrame*         aContainerFrame,
                                            PRInt32           aIndexInContainer,
                                            const nsIContent* aChild)
 {
@@ -8161,7 +8180,8 @@ nsCSSFrameConstructor::FindPreviousSibling(nsIPresShell*     aPresShell,
       prevSibling->GetStyleData(eStyleStruct_Display,
                                 (const nsStyleStruct*&)display);
   
-      if (aChild && !IsValidSibling(*aPresShell, *prevSibling, display->mDisplay, (nsIContent&)*aChild, childDisplay))
+      if (aChild && !IsValidSibling(*aPresShell, aContainerFrame, *prevSibling, 
+                                    display->mDisplay, (nsIContent&)*aChild, childDisplay))
         continue;
 
       if (display->mDisplay == NS_STYLE_DISPLAY_POPUP) {
@@ -8198,6 +8218,7 @@ nsCSSFrameConstructor::FindPreviousSibling(nsIPresShell*     aPresShell,
 nsIFrame*
 nsCSSFrameConstructor::FindNextSibling(nsIPresShell*     aPresShell,
                                        nsIContent*       aContainer,
+                                       nsIFrame*         aContainerFrame,
                                        PRInt32           aIndexInContainer,
                                        const nsIContent* aChild)
 {
@@ -8230,7 +8251,8 @@ nsCSSFrameConstructor::FindNextSibling(nsIPresShell*     aPresShell,
       nextSibling->GetStyleData(eStyleStruct_Display,
                                 (const nsStyleStruct*&)display);
 
-      if (aChild && !IsValidSibling(*aPresShell, *nextSibling, display->mDisplay, (nsIContent&)*aChild, childDisplay))
+      if (aChild && !IsValidSibling(*aPresShell, aContainerFrame, *nextSibling, 
+                                    display->mDisplay, (nsIContent&)*aChild, childDisplay))
         continue;
 
       if (display->IsFloating() || display->IsAbsolutelyPositioned()) {
@@ -8283,6 +8305,36 @@ ShouldIgnoreSelectChild(nsIContent* aContainer)
   }
 
   return PR_FALSE;
+}
+
+// For tables, returns the inner table, if the child is not a caption. 
+// For fieldsets, returns the area frame, if the child is not a legend. 
+static nsIFrame*
+GetAdjustedParentFrame(nsIPresContext* aPresContext,
+                       nsIFrame*       aParentFrame,
+                       nsIAtom*        aParentFrameType,
+                       nsIContent*     aParentContent,
+                       PRInt32         aChildIndex)
+{
+  nsCOMPtr<nsIContent> childContent;
+  aParentContent->ChildAt(aChildIndex, *getter_AddRefs(childContent));
+  nsIFrame* newParent = nsnull;
+
+  if (nsLayoutAtoms::tableOuterFrame == aParentFrameType) {
+    nsCOMPtr<nsIDOMHTMLTableCaptionElement> captionContent(do_QueryInterface(childContent));
+    // If the parent frame is an outer table, use the innner table
+    // as the parent unless the new content is a caption.
+    if (!captionContent) 
+      aParentFrame->FirstChild(aPresContext, nsnull, &newParent);
+  }
+  else if (nsLayoutAtoms::fieldSetFrame == aParentFrameType) {
+    // If the parent is a fieldSet, use the fieldSet's area frame as the
+    // parent unless the new content is a legend. 
+    nsCOMPtr<nsIDOMHTMLLegendElement> legendContent(do_QueryInterface(childContent));
+    if (!legendContent) 
+      aParentFrame->FirstChild(aPresContext, nsnull, &newParent);
+  }
+  return (newParent) ? newParent : aParentFrame;
 }
 
 
@@ -8496,21 +8548,9 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
     // This handles APPLET, EMBED, and OBJECT
     return NS_OK;
   }
-
-  // in case the parent frame is an outer table, use the innner table
-  // as the parent. If a new child frame is a caption then the outer
-  // table frame will be used (below) as the parent.
-  if (frameType.get() == nsLayoutAtoms::tableOuterFrame) {
-    nsIFrame* innerTable = nsnull;
-    parentFrame->FirstChild(aPresContext, nsnull, &innerTable);
-    if (innerTable) {
-      parentFrame = innerTable;
-    }
-    else { // should never happen
-      return NS_ERROR_FAILURE;
-    }
-  }
-
+  // Deal with inner/outer tables, fieldsets
+  parentFrame = ::GetAdjustedParentFrame(aPresContext, parentFrame, frameType,
+                                         aContainer, aNewIndexInContainer);
   // Create some new frames
   PRInt32                 count;
   nsIFrame*               firstAppendedFrame = nsnull;
@@ -8868,7 +8908,7 @@ nsCSSFrameConstructor::NeedSpecialFrameReframe(nsIPresShell*   aPresShell,
     }
     else {
       nsIFrame* nextSibling = (aIndexInContainer >= 0)
-                              ? FindNextSibling(aPresShell, aParent2, aIndexInContainer)
+                              ? FindNextSibling(aPresShell, aParent2, aParentFrame, aIndexInContainer)
                               : FindNextAnonymousSibling(aPresShell, mDocument, aParent1, aChild);
       if (nextSibling) {
         nextSibling->GetParent(&nextParent); 
@@ -8894,7 +8934,7 @@ nsCSSFrameConstructor::NeedSpecialFrameReframe(nsIPresShell*   aPresShell,
       }
       else { // prevParent is a block
         nsIFrame* nextSibling = (aIndexInContainer >= 0)
-                                ? FindNextSibling(aPresShell, aParent2, aIndexInContainer)
+                                ? FindNextSibling(aPresShell, aParent2, aParentFrame, aIndexInContainer)
                                 : FindNextAnonymousSibling(aPresShell, mDocument, aParent1, aChild);
         if (nextSibling) {
           nextSibling->GetParent(&nextParent);
@@ -9087,7 +9127,7 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext*        aPresContext,
   // with a lower index, and before any siblings with a higher
   // index. Same with FindNextSibling(), below.
   nsIFrame* prevSibling = (aIndexInContainer >= 0)
-    ? FindPreviousSibling(shell, container, aIndexInContainer, aChild)
+    ? FindPreviousSibling(shell, container, parentFrame, aIndexInContainer, aChild)
     : FindPreviousAnonymousSibling(shell, mDocument, aContainer, aChild);
 
   PRBool    isAppend = PR_FALSE;
@@ -9096,7 +9136,7 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext*        aPresContext,
   // If there is no previous sibling, then find the frame that follows
   if (! prevSibling) {
     nextSibling = (aIndexInContainer >= 0)
-      ? FindNextSibling(shell, container, aIndexInContainer, aChild)
+      ? FindNextSibling(shell, container, parentFrame, aIndexInContainer, aChild)
       : FindNextAnonymousSibling(shell, mDocument, aContainer, aChild);
   }
 
@@ -9125,6 +9165,9 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext*        aPresContext,
       // This handles APPLET, EMBED, and OBJECT
       return NS_OK;
     }
+    // Deal with inner/outer tables, fieldsets
+    parentFrame = ::GetAdjustedParentFrame(aPresContext, parentFrame, frameType,
+                                           aContainer, aIndexInContainer);
   }
 
   // If the frame we are manipulating is a special frame then see if we need to reframe 
@@ -13044,7 +13087,7 @@ nsCSSFrameConstructor::RemoveFloatingFirstLetterFrames(
   if (container.get() && textContent.get()) {
     PRInt32 ix = 0;
     container->IndexOf(textContent, ix);
-    prevSibling = FindPreviousSibling(aPresShell, container, ix);
+    prevSibling = FindPreviousSibling(aPresShell, container, aBlockFrame, ix);
   }
 
   // Now that everything is set...
