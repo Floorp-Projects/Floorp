@@ -120,7 +120,7 @@
 #include "nsContentUtils.h"
 #include "nsIDocumentCharsetInfo.h"
 #include "nsIDocumentEncoder.h" //for outputting selection
-#include "nsIBookmarksService.h"
+#include "nsICharsetResolver.h"
 #include "nsICachingChannel.h"
 #include "nsICacheEntryDescriptor.h"
 #include "nsIXMLContent.h" //for createelementNS
@@ -559,7 +559,8 @@ nsHTMLDocument::TryCacheCharset(nsICacheEntryDescriptor* aCacheDescriptor,
 }
 
 PRBool
-nsHTMLDocument::TryBookmarkCharset(nsAFlatCString* aUrlSpec,
+nsHTMLDocument::TryBookmarkCharset(nsIDocShell* aDocShell,
+                                   nsIChannel* aChannel,
                                    PRInt32& aCharsetSource,
                                    nsAString& aCharset)
 {
@@ -579,15 +580,21 @@ nsHTMLDocument::TryBookmarkCharset(nsAFlatCString* aUrlSpec,
     return PR_FALSE;
   }
 
-  nsCOMPtr<nsIBookmarksService> bookmarks(do_QueryInterface(datasource));
-  if (bookmarks && aUrlSpec) {
-    nsXPIDLString pBookmarkedCharset;
-    rv = bookmarks->GetLastCharset(aUrlSpec->get(),
-                                   getter_Copies(pBookmarkedCharset));
-    if (NS_SUCCEEDED(rv) && (rv != NS_RDF_NO_VALUE)) {
-      aCharset = pBookmarkedCharset;
-      aCharsetSource = kCharsetFromBookmarks;
+  nsCOMPtr<nsICharsetResolver> bookmarksResolver =
+    do_QueryInterface(datasource);
+  
+  if (bookmarksResolver && aDocShell && aChannel) {
 
+    PRBool wantCharset;         // ignored for now
+    nsCAutoString charset;
+    rv = bookmarksResolver->RequestCharset(aDocShell,
+                                           aChannel,
+                                           &aCharsetSource,
+                                           &wantCharset,
+                                           nsnull,
+                                           charset);
+    if (NS_SUCCEEDED(rv) && !charset.IsEmpty()) {
+      aCharset = NS_ConvertASCIItoUCS2(charset);
       return PR_TRUE;
     }
   }
@@ -904,7 +911,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
       // "Content-Type" header).
     }
     else if (!scheme.Equals(NS_LITERAL_CSTRING("about")) &&          // don't try to access bookmarks for about:blank
-             TryBookmarkCharset(&urlSpec, charsetSource, charset)) {
+             TryBookmarkCharset(docShell, aChannel, charsetSource, charset)) {
       // Use the bookmark's charset.
     }
     else if (cacheDescriptor && !urlSpec.IsEmpty() &&

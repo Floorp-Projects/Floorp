@@ -31,6 +31,7 @@ MODULE		= chardet
 XPIDLSRCS       = \
                 nsIDocumentCharsetInfo.idl \
                 nsIDocCharset.idl \
+                nsICharsetResolver.idl \
 		$(NULL)
 
 EXPORTS		= \
