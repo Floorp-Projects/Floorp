@@ -4,8 +4,8 @@
 
 
 
-# $Revision: 1.9 $ 
-# $Date: 2000/09/22 15:07:28 $ 
+# $Revision: 1.10 $ 
+# $Date: 2000/10/17 23:51:05 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Attic/TinderConfig.pm,v $ 
 # $Name:  $ 
@@ -109,10 +109,10 @@ $PopUpImpl = (
 #$DB_LEGEND_BORDER = "border rules=none";
 $DB_LEGEND_BORDER = "";
 
-# finest spacing on html page (in minutes), this resticts the
+# spacing on html page (in minutes), this resticts the
 # minimum time between builds (to this value plus 5 minutes).
 
-$DB_MIN_TABLE_SPACING = 5;
+$DB_TABLE_SPACING = 5;
 
 # number of times a database can be updated before its contents must
 # be trimmed of old data.  This scan of the database is used to
@@ -202,5 +202,11 @@ $DEFAULT_HTML_PAGE = 'status.html';
 
 $BRIEF_LOG_TRIM_DAYS = 1;
 $FULL_LOG_TRIM_DAYS = 7;
+
+# Should we write performance data to the log file?
+# zero means no, one means yes.
+
+$LOG_PERFORMANCE = 0;
+
 
 1;
