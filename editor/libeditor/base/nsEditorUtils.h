@@ -49,6 +49,7 @@
 #include "nsVoidArray.h"
 #include "nsEditor.h"
 #include "nsIContentIterator.h"
+#include "nsCOMArray.h"
 
 class nsPlaintextEditor;
 
@@ -211,9 +212,9 @@ class nsDOMIterator
     nsresult Init(nsIDOMNode* aNode);
     void ForEach(nsDomIterFunctor& functor) const;
     nsresult MakeList(nsBoolDomIterFunctor& functor,
-                      nsCOMPtr<nsISupportsArray> *outArrayOfNodes) const;
+                      nsCOMArray<nsIDOMNode>& outArrayOfNodes) const;
     nsresult AppendList(nsBoolDomIterFunctor& functor,
-                      nsCOMPtr<nsISupportsArray> arrayOfNodes) const;
+                        nsCOMArray<nsIDOMNode>& arrayOfNodes) const;
   protected:
     nsCOMPtr<nsIContentIterator> mIter;
 };

@@ -2550,8 +2550,8 @@ nsEditor::NotifyDocumentListeners(TDocumentListenerNotification aNotificationTyp
     case eDocumentCreated:
       for (i = 0; i < numListeners;i++)
       {
-        nsCOMPtr<nsISupports> iSupports = getter_AddRefs(mDocStateListeners->ElementAt(i));
-        nsCOMPtr<nsIDocumentStateListener> thisListener = do_QueryInterface(iSupports);
+        nsCOMPtr<nsIDocumentStateListener> thisListener =
+          do_QueryElementAt(mDocStateListeners, i);
         if (thisListener)
         {
           rv = thisListener->NotifyDocumentCreated();
@@ -2564,8 +2564,8 @@ nsEditor::NotifyDocumentListeners(TDocumentListenerNotification aNotificationTyp
     case eDocumentToBeDestroyed:
       for (i = 0; i < numListeners;i++)
       {
-        nsCOMPtr<nsISupports> iSupports = getter_AddRefs(mDocStateListeners->ElementAt(i));
-        nsCOMPtr<nsIDocumentStateListener> thisListener = do_QueryInterface(iSupports);
+        nsCOMPtr<nsIDocumentStateListener> thisListener =
+          do_QueryElementAt(mDocStateListeners, i);
         if (thisListener)
         {
           rv = thisListener->NotifyDocumentWillBeDestroyed();
@@ -2588,8 +2588,8 @@ nsEditor::NotifyDocumentListeners(TDocumentListenerNotification aNotificationTyp
         
         for (i = 0; i < numListeners;i++)
         {
-          nsCOMPtr<nsISupports> iSupports = getter_AddRefs(mDocStateListeners->ElementAt(i));
-          nsCOMPtr<nsIDocumentStateListener> thisListener = do_QueryInterface(iSupports);
+          nsCOMPtr<nsIDocumentStateListener> thisListener =
+            do_QueryElementAt(mDocStateListeners, i);
           if (thisListener)
           {
             rv = thisListener->NotifyDocumentStateChanged(mDocDirtyState);

@@ -138,27 +138,20 @@ nsDOMIterator::ForEach(nsDomIterFunctor& functor) const
   }
 }
 
-nsresult
+inline nsresult
 nsDOMIterator::MakeList(nsBoolDomIterFunctor& functor,
-                        nsCOMPtr<nsISupportsArray> *outArrayOfNodes) const
+                        nsCOMArray<nsIDOMNode>& outArrayOfNodes) const
 {
-  nsresult res;
-  
-  // make a array
-  res = NS_NewISupportsArray(getter_AddRefs(*outArrayOfNodes));
-  if (NS_FAILED(res)) return res;
-  
-  return AppendList(functor, *outArrayOfNodes);
+  NS_PRECONDITION(outArrayOfNodes.Count() == 0, "Calling MakeList on non-empty list!");
+  return AppendList(functor, outArrayOfNodes);
 }
 
 nsresult
 nsDOMIterator::AppendList(nsBoolDomIterFunctor& functor,
-                          nsCOMPtr<nsISupportsArray> arrayOfNodes) const
+                          nsCOMArray<nsIDOMNode>& arrayOfNodes) const
 {
-  if (!arrayOfNodes) return NS_ERROR_NULL_POINTER;
   nsCOMPtr<nsIContent> content;
   nsCOMPtr<nsIDOMNode> node;
-  nsCOMPtr<nsISupports> isupports;
   nsresult res;
   
   // iterate through dom and build list
@@ -170,8 +163,7 @@ nsDOMIterator::AppendList(nsBoolDomIterFunctor& functor,
     if (!node) return NS_ERROR_NULL_POINTER;
     if (functor(node))
     {
-      isupports = do_QueryInterface(node);
-      arrayOfNodes->AppendElement(isupports);
+      arrayOfNodes.AppendObject(node);
     }
     res = mIter->Next();
     if (NS_FAILED(res)) return res;

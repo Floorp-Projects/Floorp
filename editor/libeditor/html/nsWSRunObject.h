@@ -40,9 +40,8 @@
 #define __wsrunobject_h__
 
 #include "nsCOMPtr.h"
-#include "nsISupportsArray.h"
 #include "nsIDOMNode.h"
-#include "nsISupportsArray.h"
+#include "nsCOMArray.h"
 #include "nsITextContent.h"
 #include "nsIEditor.h"
 #include "nsEditorUtils.h"
@@ -318,7 +317,7 @@ class nsWSRunObject
     nsCOMPtr<nsIDOMNode> mLastNBSPNode;   // location of last nbsp in ws run, if any
     PRInt32 mLastNBSPOffset;              // ...
     
-    nsCOMPtr<nsISupportsArray> mNodeArray;//the list of nodes containing ws in this run
+    nsCOMArray<nsIDOMNode> mNodeArray;//the list of nodes containing ws in this run
     
     WSFragment *mStartRun;                // the first WSFragment in the run
     WSFragment *mEndRun;                  // the last WSFragment in the run, may be same as first
