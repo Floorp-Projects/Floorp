@@ -530,7 +530,7 @@ nsPresContext::GetDefaultFont(nsFont& aResult)
 }
 
 NS_IMETHODIMP
-nsPresContext::SetDefaultFont(nsFont& aFont)
+nsPresContext::SetDefaultFont(const nsFont& aFont)
 {
   mDefaultFont = aFont;
   return NS_OK;
@@ -544,7 +544,7 @@ nsPresContext::GetDefaultFixedFont(nsFont& aResult)
 }
 
 NS_IMETHODIMP
-nsPresContext::SetDefaultFixedFont(nsFont& aFont)
+nsPresContext::SetDefaultFixedFont(const nsFont& aFont)
 {
   mDefaultFixedFont = aFont;
   return NS_OK;

@@ -72,10 +72,10 @@ public:
                                   nsIStyleContext* aNewParentContext);
   NS_IMETHOD GetMetricsFor(const nsFont& aFont, nsIFontMetrics** aResult);
   NS_IMETHOD GetDefaultFont(nsFont& aResult);
-  NS_IMETHOD SetDefaultFont(nsFont& aFont);
+  NS_IMETHOD SetDefaultFont(const nsFont& aFont);
   virtual const nsFont& GetDefaultFontDeprecated();
   NS_IMETHOD GetDefaultFixedFont(nsFont& aResult);
-  NS_IMETHOD SetDefaultFixedFont(nsFont& aFont);
+  NS_IMETHOD SetDefaultFixedFont(const nsFont& aFont);
   virtual const nsFont& GetDefaultFixedFontDeprecated();
   NS_IMETHOD GetFontScaler(PRInt32* aResult);
   NS_IMETHOD SetFontScaler(PRInt32 aScaler);
