@@ -21,19 +21,20 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: CommandLineUtils.h,v 1.2 1999/11/15 07:12:39 nisheeth%netscape.com Exp $
+ * $Id: CommandLineUtils.h,v 1.3 2000/04/13 06:40:07 kvisco%ziplink.net Exp $
  */
 
 #include "baseutils.h"
 #include "StringList.h"
 #include "NamedMap.h"
+#include "TxString.h"
 
-#ifndef MITRE_COMMANDLINEUTILS_H
-#define MITRE_COMMANDLINEUTILS_H
+#ifndef TRANSFRMX_COMMANDLINEUTILS_H
+#define TRANSFRMX_COMMANDLINEUTILS_H
 
 /**
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.2 $ $Date: 1999/11/15 07:12:39 $
+ * @version $Revision: 1.3 $ $Date: 2000/04/13 06:40:07 $
 **/
 class CommandLineUtils {
 
