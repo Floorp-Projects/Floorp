@@ -26,6 +26,7 @@ include $(topsrcdir)/config/rules.mk
 
 FILES = \
 	Google.src				\
+	GoTo.com.src				\
 	Netscape_Open_Directory.src		\
 	$(NULL)
 
