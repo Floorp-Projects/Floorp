@@ -87,7 +87,7 @@ private:
     AggRadioButton();
     virtual ~AggRadioButton();
 
-    AGGRRGATE_METHOD_DEF
+    AGGREGATE_METHOD_DEF
 
     // nsIRadioButton
     virtual void   SetLabel(const nsString &aText);
@@ -97,7 +97,7 @@ private:
 
   };
   AggRadioButton mAggWidget;
-
+  friend class AggRadioButton;
 
 };
 

@@ -95,7 +95,7 @@ class nsFileWidget : public nsWindow
       AggFileWidget();
       virtual ~AggFileWidget();
   
-      AGGRRGATE_METHOD_DEF
+      AGGREGATE_METHOD_DEF
   
       // nsIFileWidget
       virtual void            Create( nsIWidget *aParent,
@@ -115,7 +115,7 @@ class nsFileWidget : public nsWindow
       virtual void            OnCancel();
     };
     AggFileWidget mAggWidget;
-
+    friend class AggFileWidget;
 
 };
 
