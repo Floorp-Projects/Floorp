@@ -203,7 +203,7 @@ nsImageDocument::CreateSyntheticDocument()
   }
 
   nsIHTMLContent* body;
-  rv = NS_NewBodyPart(&body, nsHTMLAtoms::body);
+  rv = NS_NewHTMLBodyElement(&body, nsHTMLAtoms::body);
   if (NS_OK != rv) {
     return rv;
   }
@@ -211,7 +211,7 @@ nsImageDocument::CreateSyntheticDocument()
 
   nsIHTMLContent* center;
   nsIAtom* centerAtom = NS_NewAtom("P");
-  rv = NS_NewHTMLContainer(&center, centerAtom);
+  rv = NS_NewHTMLParagraphElement(&center, centerAtom);
   NS_RELEASE(centerAtom);
   if (NS_OK != rv) {
     return rv;
@@ -220,7 +220,7 @@ nsImageDocument::CreateSyntheticDocument()
 
   nsIHTMLContent* image;
   nsIAtom* imgAtom = NS_NewAtom("IMG");
-  rv = NS_NewHTMLImage(&image, imgAtom);
+  rv = NS_NewHTMLImageElement(&image, imgAtom);
   NS_RELEASE(imgAtom);
   if (NS_OK != rv) {
     return rv;
