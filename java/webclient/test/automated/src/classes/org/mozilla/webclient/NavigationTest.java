@@ -1,5 +1,5 @@
 /*
- * $Id: NavigationTest.java,v 1.15 2004/06/22 19:23:23 edburns%acm.org Exp $
+ * $Id: NavigationTest.java,v 1.16 2004/06/23 17:08:23 edburns%acm.org Exp $
  */
 
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
@@ -57,6 +57,12 @@ public class NavigationTest extends WebclientTestCase {
     public static Test suite() {
 	TestSuite result = new TestSuite() {
 		public void run(TestResult result) {
+		    serverThread = 
+			new THTTPD.ServerThread("LocalHTTPD",
+						new File (getBrowserBinDir() +
+							  "/../../java/webclient/build.test"), -1);
+		    serverThread.start();
+		    serverThread.P();
 		    super.run(result);
 		    try {
 			BrowserControlFactory.appTerminate();
@@ -64,11 +70,14 @@ public class NavigationTest extends WebclientTestCase {
 		    catch (Exception e) {
 			fail();
 		    }
+		    serverThread.stopRunning();
 		}
 	    };
 	result.addTestSuite(NavigationTest.class);
 	return (result);
     }
+
+    static THTTPD.ServerThread serverThread;
 
     static EventRegistration2 eventRegistration;
 
@@ -248,6 +257,77 @@ public class NavigationTest extends WebclientTestCase {
 	BrowserControlFactory.deleteBrowserControl(firstBrowserControl);
     }
 
+    public void testRefresh() throws Exception {
+	BrowserControl firstBrowserControl = null;
+	DocumentListener listener = null;
+	Selection selection = null;
+	firstBrowserControl = BrowserControlFactory.newBrowserControl();
+	assertNotNull(firstBrowserControl);
+	BrowserControlCanvas canvas = (BrowserControlCanvas)
+	    firstBrowserControl.queryInterface(BrowserControl.BROWSER_CONTROL_CANVAS_NAME);
+	eventRegistration = (EventRegistration2)
+	    firstBrowserControl.queryInterface(BrowserControl.EVENT_REGISTRATION_NAME);
+
+	assertNotNull(canvas);
+	Frame frame = new Frame();
+	frame.setUndecorated(true);
+	frame.setBounds(0, 0, 640, 480);
+	frame.add(canvas, BorderLayout.CENTER);
+	frame.setVisible(true);
+	canvas.setVisible(true);
+	
+	Navigation2 nav = (Navigation2) 
+	    firstBrowserControl.queryInterface(BrowserControl.NAVIGATION_NAME);
+	assertNotNull(nav);
+	final CurrentPage2 currentPage = (CurrentPage2) 
+          firstBrowserControl.queryInterface(BrowserControl.CURRENT_PAGE_NAME);
+	
+	assertNotNull(currentPage);
+
+	//
+	// try loading a file over HTTP
+	//
+	
+	NavigationTest.keepWaiting = true;
+
+	listener = new DocumentListener() {
+		public void doEndCheck() {
+		    currentPage.selectAll();
+		    Selection selection = currentPage.getSelection();
+		    NavigationTest.keepWaiting = false;
+		    assertTrue(-1 != selection.toString().indexOf("This file was downloaded over HTTP."));
+		    System.out.println("Selection is: " + 
+				       selection.toString());
+		}
+	    };
+	    
+	eventRegistration.addDocumentLoadListener(listener);
+	
+	String url = "http://localhost:5243/HttpNavigationTest.txt";
+
+	Thread.currentThread().sleep(3000);
+	
+	nav.loadURL(url);
+	
+	// keep waiting until the previous load completes
+	while (NavigationTest.keepWaiting) {
+	    Thread.currentThread().sleep(1000);
+	}
+
+	NavigationTest.keepWaiting = true;
+	nav.refresh(Navigation.LOAD_FORCE_RELOAD);
+
+	// keep waiting until the re-load completes
+	while (NavigationTest.keepWaiting) {
+	    Thread.currentThread().sleep(1000);
+	}
+
+	eventRegistration.removeDocumentLoadListener(listener);
+
+	frame.setVisible(false);
+	BrowserControlFactory.deleteBrowserControl(firstBrowserControl);
+    }
+
     public void testHttpLoad() throws Exception {
 	BrowserControl firstBrowserControl = null;
 	DocumentListener listener = null;
@@ -281,20 +361,12 @@ public class NavigationTest extends WebclientTestCase {
 	
 	NavigationTest.keepWaiting = true;
 	
-	final THTTPD.ServerThread serverThread = 
-	    new THTTPD.ServerThread("LocalHTTPD",
-				    new File (getBrowserBinDir() +
-					      "/../../java/webclient/build.test"), 1);
-	serverThread.setSoTimeout(15000);
-	serverThread.start();
-	serverThread.P();
 
 	eventRegistration.addDocumentLoadListener(listener = new DocumentListener() {
 		public void doEndCheck() {
 		    currentPage.selectAll();
 		    Selection selection = currentPage.getSelection();
 		    NavigationTest.keepWaiting = false;
-		    serverThread.stopRunning();
 		    assertTrue(-1 != selection.toString().indexOf("This file was downloaded over HTTP."));
 		    System.out.println("Selection is: " + 
 				       selection.toString());

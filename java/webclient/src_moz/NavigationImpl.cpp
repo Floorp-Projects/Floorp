@@ -271,6 +271,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_Navigatio
         delete [] headersAndData;
     return;
 }
+*********************/
 
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_NavigationImpl_nativeRefresh
 (JNIEnv *env, jobject obj, jint nativeBCPtr, jlong loadFlags)
@@ -285,19 +286,15 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_Navigatio
 		return;
 	}
 
-	if (nativeBrowserControl->initComplete) {
-		wsRefreshEvent	* actionEvent = new wsRefreshEvent(nativeBrowserControl->webNavigation, (PRInt32) loadFlags);
-        PLEvent	   	* event       = (PLEvent*) *actionEvent;
-
-        ::util_PostEvent(nativeBrowserControl, event);
-
-		return;
-	}
+    nsresult rv = 
+        nativeBrowserControl->mNavigation->Reload(loadFlags);
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: Can't refresh");
+    }
 
 	return;
 }
 
-*********************/
 
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_NavigationImpl_nativeStop
 (JNIEnv *env, jobject obj, jint nativeBCPtr)

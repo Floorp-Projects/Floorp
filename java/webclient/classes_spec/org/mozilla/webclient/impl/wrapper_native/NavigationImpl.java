@@ -123,11 +123,17 @@ public void refresh(long loadFlags)
 {
     ParameterCheck.noLessThan(loadFlags, 0);
     getWrapperFactory().verifyInitialized();
+
+    final long finalLoadFlags = loadFlags;
     Assert.assert_it(-1 != getNativeBrowserControl());
     
-    synchronized(getBrowserControl()) {
-        nativeRefresh(getNativeBrowserControl(), loadFlags);
-    }
+    NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+	    public Object run() {
+		nativeRefresh(NavigationImpl.this.getNativeBrowserControl(), 
+			      finalLoadFlags);
+		return null;
+	    }
+	});
 }
 
 public void stop()
@@ -235,7 +241,7 @@ public static void main(String [] args)
 
     Log.setApplicationName("NavigationImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: NavigationImpl.java,v 1.9 2004/06/16 14:37:33 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: NavigationImpl.java,v 1.10 2004/06/23 17:08:14 edburns%acm.org Exp $");
 
     try {
         org.mozilla.webclient.BrowserControlFactory.setAppData(args[0]);

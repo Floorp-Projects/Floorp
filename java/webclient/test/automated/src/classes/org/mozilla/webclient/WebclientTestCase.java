@@ -1,5 +1,5 @@
 /*
- * $Id: WebclientTestCase.java,v 1.6 2004/06/18 13:53:13 edburns%acm.org Exp $
+ * $Id: WebclientTestCase.java,v 1.7 2004/06/23 17:08:23 edburns%acm.org Exp $
  */
 
 /* 
@@ -44,7 +44,7 @@ import junit.framework.TestCase;
  *
  * <B>Lifetime And Scope</B> <P>
  *
- * @version $Id: WebclientTestCase.java,v 1.6 2004/06/18 13:53:13 edburns%acm.org Exp $
+ * @version $Id: WebclientTestCase.java,v 1.7 2004/06/23 17:08:23 edburns%acm.org Exp $
  * 
  * @see	Blah
  * @see	Bloo
@@ -134,13 +134,13 @@ protected void verifyLogModuleValueIsAtLeastN(String logModuleName, int n)
 	
 }
 
-protected void verifyBinDirSet()
+protected static void verifyBinDirSet()
 {
     assertTrue("BROWSER_BIN_DIR is not set",
 	       null != System.getProperty("BROWSER_BIN_DIR"));
 }
 
-protected String getBrowserBinDir() {
+protected static String getBrowserBinDir() {
     return System.getProperty("BROWSER_BIN_DIR");
 }
 
