@@ -227,12 +227,12 @@
           <spacer class="spacer"/>
           <menulist id="alignTypeSelect" class="align-menu">
             <menupopup>
-              <menuitem class="align-menu" value="top" label="&topPopup.value;"/>
-              <menuitem class="align-menu" value="center" label="&centerPopup.value;"/>
+              <menuitem class="align-menu" value="top"    label="&topPopup.value;"/>
+              <menuitem class="align-menu" value="middle" label="&centerPopup.value;"/>
               <menuitem class="align-menu" value="bottom" label="&bottomPopup.value;"/>
               <!-- HTML attribute value is opposite of the button label on purpose -->
-              <menuitem class="align-menu" value="right" label="&wrapLeftPopup.value;"/>
-              <menuitem class="align-menu" value="left"  label="&wrapRightPopup.value;"/>
+              <menuitem class="align-menu" value="right"  label="&wrapLeftPopup.value;"/>
+              <menuitem class="align-menu" value="left"   label="&wrapRightPopup.value;"/>
             </menupopup>
           </menulist>
         </groupbox>

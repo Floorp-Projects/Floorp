@@ -198,7 +198,7 @@ function InitDialog()
   switch ( align )
   {
     case "top":
-    case "center":
+    case "middle":
     case "right":
     case "left":
       gDialog.alignTypeSelect.value = align;
@@ -572,7 +572,7 @@ function ValidateData()
   switch ( gDialog.alignTypeSelect.value )
   {
     case "top":
-    case "center":
+    case "middle":
     case "right":
     case "left":
       globalElement.setAttribute( "align", gDialog.alignTypeSelect.value );
