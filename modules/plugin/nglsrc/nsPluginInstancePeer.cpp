@@ -371,10 +371,10 @@ NS_IMETHODIMP nsPluginInstancePeerImpl::GetDOMElement(nsIDOMElement* *result)
     return NS_ERROR_FAILURE;
   }
 
-  nsIPluginTagInfo  *tinfo;
+  nsIPluginTagInfo2  *tinfo;
   nsresult          rv;
 
-  rv = mOwner->QueryInterface(kIPluginTagInfoIID, (void **)&tinfo);
+  rv = mOwner->QueryInterface(kIPluginTagInfo2IID, (void **)&tinfo);
 
   if (NS_OK == rv) 
   {
