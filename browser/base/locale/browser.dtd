@@ -158,6 +158,12 @@
 <!ENTITY showTaskbarCmd.label         "Status Bar">  
 <!ENTITY showTaskbarCmd.accesskey       "B"> 
 
+<!ENTITY goMenu.label "Go">
+<!ENTITY goMenu.accesskey "g">
+<!ENTITY goHomeCmd.label "Home">
+<!ENTITY goHomeCmd.accesskey "h">
+<!ENTITY earlierHistory.label "Earlier History">
+
 <!ENTITY helpMenu.label         "Help"> 
 <!ENTITY helpMenu.accesskey       "H"> 
 

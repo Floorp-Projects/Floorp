@@ -634,6 +634,17 @@ Contributor(s):
           </menupopup>
         </menu>
     
+        <menu label="&goMenu.label;" accesskey="&goMenu.accesskey;">
+          <menupopup onpopupshowing="updateGoMenu(event);">
+            <menuitem label="&backCmd.label;"    accesskey="&backCmd.accesskey;"    key="goBackKb"    command="Browser:Back"/>
+            <menuitem label="&forwardCmd.label;" accesskey="&forwardCmd.accesskey;" key="goForwardKb" command="Browser:Forward"/>
+            <menuitem label="&goHomeCmd.label;"    accesskey="&goHomeCmd.accesskey;"    command="Browser:Home" key="goHome"/>
+            <menuseparator/>
+            <menuitem accesskey="&historyCmd.accesskey;" command="viewHistorySidebar" key="key_gotoHistory"/>
+            <menuseparator hidden="true"/>
+          </menupopup>
+        </menu>
+
         <menu id="bookmarks-menu" label="&bookmarksMenu.label;" accesskey="&bookmarksMenu.accesskey;" 
               datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch" 
               ref="NC:BookmarksRoot" flags="dont-test-empty"

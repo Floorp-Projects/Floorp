@@ -519,6 +519,12 @@ function BrowserHome()
   loadURI(homePage);
 }
 
+function updateGoMenu(event)
+{
+  // XXX Write me - dwh
+
+}
+
 function addGroupmarkAs()
 {
   BookmarksUtils.addBookmarkForTabBrowser(gBrowser, true);
