@@ -42,7 +42,6 @@
 txResultTreeFragment::txResultTreeFragment(txResultBuffer* aBuffer)
     : mBuffer(aBuffer)
 {
-    NS_IF_ADDREF(mBuffer);
 }
 
 txResultTreeFragment::~txResultTreeFragment()
@@ -68,17 +67,17 @@ void txResultTreeFragment::stringValue(nsAString& aResult)
     aResult.Append(mBuffer->mStringValue);
 }
 
-MBool txResultTreeFragment::booleanValue()
+PRBool txResultTreeFragment::booleanValue()
 {
-    if (!mBuffer) {
-        return MB_FALSE;
-    }
-
-    return (mBuffer->getLastTransaction() != nsnull);
+    return PR_TRUE;
 }
 
 double txResultTreeFragment::numberValue()
 {
+    if (!mBuffer) {
+        return 0;
+    }
+
     return Double::toDouble(mBuffer->mStringValue);
 }
 
@@ -99,10 +98,9 @@ txRtfHandler::~txRtfHandler()
 {
 }
 
-txResultTreeFragment* txRtfHandler::getRTF()
+txResultTreeFragment* txRtfHandler::createRTF()
 {
-    mRTF = new txResultTreeFragment(mBuffer);
-    return mRTF;
+    return new txResultTreeFragment(mBuffer);
 }
 
 void txRtfHandler::endDocument()

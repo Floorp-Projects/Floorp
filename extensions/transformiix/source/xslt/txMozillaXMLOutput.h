@@ -40,6 +40,7 @@
 #define TRANSFRMX_MOZILLA_XML_OUTPUT_H
 
 #include "txXMLEventHandler.h"
+#include "nsAutoPtr.h"
 #include "nsIContent.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMHTMLTextAreaElement.h"
@@ -52,20 +53,34 @@
 #include "nsICSSLoaderObserver.h"
 #include "nsIDocumentTransformer.h"
 
-#define TX_ITRANSFORMNOTIFIER_IID \
-{ 0x6c94c701, 0x330d, 0x11d7, \
-  { 0xa7, 0xf2, 0x9a, 0x44, 0x5a, 0xec, 0x64, 0x3c } };
-
-class txITransformNotifier : public nsISupports
+class txTransformNotifier : public nsIScriptLoaderObserver,
+                            public nsICSSLoaderObserver
 {
 public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(TX_ITRANSFORMNOTIFIER_IID)
+    txTransformNotifier();
+    virtual ~txTransformNotifier();
 
-    NS_IMETHOD_(void) AddScriptElement(nsIDOMHTMLScriptElement* aElement) = 0;
-    NS_IMETHOD_(void) AddStyleSheet(nsIStyleSheet* aStyleSheet) = 0;
-    NS_IMETHOD_(void) OnTransformEnd() = 0;
-    NS_IMETHOD_(void) OnTransformStart() = 0;
-    NS_IMETHOD_(void) SetOutputDocument(nsIDOMDocument* aDocument) = 0;
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSISCRIPTLOADEROBSERVER
+    
+    // nsICSSLoaderObserver
+    NS_IMETHOD StyleSheetLoaded(nsICSSStyleSheet* aSheet, PRBool aNotify);
+
+    void Init(nsITransformObserver* aObserver);
+    void AddScriptElement(nsIDOMHTMLScriptElement* aElement);
+    void AddStyleSheet(nsIStyleSheet* aStyleSheet);
+    void OnTransformEnd();
+    void OnTransformStart();
+    void SetOutputDocument(nsIDOMDocument* aDocument);
+
+private:
+    void SignalTransformEnd();
+
+    nsCOMPtr<nsIDOMDocument> mDocument;
+    nsCOMPtr<nsITransformObserver> mObserver;
+    nsCOMArray<nsIDOMHTMLScriptElement> mScriptElements;
+    nsCOMArray<nsIStyleSheet> mStylesheets;
+    PRPackedBool mInTransform;
 };
 
 class txMozillaXMLOutput : public txAOutputXMLEventHandler
@@ -102,7 +117,7 @@ private:
     nsCOMPtr<nsIDOMNode> mNonAddedParent;
     nsCOMPtr<nsIDOMNode> mNonAddedNode;
 
-    nsCOMPtr<txITransformNotifier> mNotifier;
+    nsRefPtr<txTransformNotifier> mNotifier;
 
     PRUint32 mBadChildLevel;
     nsCString mRefreshString;
@@ -117,38 +132,9 @@ private:
     PRPackedBool mHaveBaseElement;
 
     PRPackedBool mDocumentIsHTML;
+    PRPackedBool mCreatingNewDocument;
 
     enum txAction { eCloseElement = 1, eFlushText = 2 };
-};
-
-class txTransformNotifier : public txITransformNotifier,
-                            public nsIScriptLoaderObserver,
-                            public nsICSSLoaderObserver
-{
-public:
-    txTransformNotifier(nsITransformObserver* aObserver);
-    virtual ~txTransformNotifier();
-
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSISCRIPTLOADEROBSERVER
-    
-    // nsICSSLoaderObserver
-    NS_IMETHOD StyleSheetLoaded(nsICSSStyleSheet* aSheet, PRBool aNotify);
-
-    NS_IMETHOD_(void) AddScriptElement(nsIDOMHTMLScriptElement* aElement);
-    NS_IMETHOD_(void) AddStyleSheet(nsIStyleSheet* aStyleSheet);
-    NS_IMETHOD_(void) OnTransformEnd();
-    NS_IMETHOD_(void) OnTransformStart();
-    NS_IMETHOD_(void) SetOutputDocument(nsIDOMDocument* aDocument);
-
-private:
-    void SignalTransformEnd();
-
-    nsCOMPtr<nsIDOMDocument> mDocument;
-    nsCOMPtr<nsITransformObserver> mObserver;
-    nsCOMArray<nsIDOMHTMLScriptElement> mScriptElements;
-    nsCOMArray<nsIStyleSheet> mStylesheets;
-    PRPackedBool mInTransform;
 };
 
 #endif

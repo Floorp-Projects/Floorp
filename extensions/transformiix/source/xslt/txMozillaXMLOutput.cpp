@@ -87,9 +87,15 @@ txMozillaXMLOutput::txMozillaXMLOutput(const nsAString& aRootName,
     : mBadChildLevel(0),
       mDontAddCurrent(PR_FALSE),
       mHaveTitleElement(PR_FALSE),
-      mHaveBaseElement(PR_FALSE)
+      mHaveBaseElement(PR_FALSE),
+      mCreatingNewDocument(PR_TRUE)
 {
-    mNotifier = new txTransformNotifier(aObserver);
+    if (aObserver) {
+        mNotifier = new txTransformNotifier();
+        if (mNotifier) {
+            mNotifier->Init(aObserver);
+        }
+    }
 
     mOutputFormat.merge(*aFormat);
     mOutputFormat.setFromDefaults();
@@ -99,16 +105,19 @@ txMozillaXMLOutput::txMozillaXMLOutput(const nsAString& aRootName,
 
 txMozillaXMLOutput::txMozillaXMLOutput(txOutputFormat* aFormat,
                                        nsIDOMDocumentFragment* aFragment)
-    : mNotifier(nsnull),
-      mBadChildLevel(0),
+    : mBadChildLevel(0),
       mDontAddCurrent(PR_FALSE),
       mHaveTitleElement(PR_FALSE),
-      mHaveBaseElement(PR_FALSE)
+      mHaveBaseElement(PR_FALSE),
+      mCreatingNewDocument(PR_FALSE)
 {
     mOutputFormat.merge(*aFormat);
     mOutputFormat.setFromDefaults();
 
     aFragment->GetOwnerDocument(getter_AddRefs(mDocument));
+
+    nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(mDocument);
+    mDocumentIsHTML = !!htmlDoc;
 
     mCurrentNode = aFragment;
 }
@@ -183,7 +192,7 @@ void txMozillaXMLOutput::endDocument()
 {
     closePrevious(eCloseElement | eFlushText);
     // This should really be handled by nsIDocument::Reset
-    if (mNotifier && !mHaveTitleElement) {
+    if (mCreatingNewDocument && !mHaveTitleElement) {
         nsCOMPtr<nsIDOMNSDocument> domDoc = do_QueryInterface(mDocument);
         if (domDoc) {
             domDoc->SetTitle(nsString());
@@ -206,7 +215,9 @@ void txMozillaXMLOutput::endDocument()
         }
     }
 
-    mNotifier->OnTransformEnd();
+    if (mNotifier) {
+        mNotifier->OnTransformEnd();
+    }
 }
 
 void txMozillaXMLOutput::endElement(const nsAString& aName, const PRInt32 aNsID)
@@ -288,7 +299,7 @@ void txMozillaXMLOutput::processingInstruction(const nsAString& aTarget, const n
         return;
 
     nsCOMPtr<nsIStyleSheetLinkingElement> ssle;
-    if (mNotifier) {
+    if (mCreatingNewDocument) {
         ssle = do_QueryInterface(pi);
         if (ssle) {
             ssle->InitStyleLinkElement(nsnull, PR_FALSE);
@@ -304,19 +315,22 @@ void txMozillaXMLOutput::processingInstruction(const nsAString& aTarget, const n
 
     if (ssle) {
         ssle->SetEnableUpdates(PR_TRUE);
-        nsCOMPtr<nsICSSLoaderObserver> observer = do_QueryInterface(mNotifier);
-        rv = ssle->UpdateStyleSheet(nsnull, observer);
+        rv = ssle->UpdateStyleSheet(nsnull, mNotifier);
         if (rv == NS_ERROR_HTMLPARSER_BLOCK) {
             nsCOMPtr<nsIStyleSheet> stylesheet;
             ssle->GetStyleSheet(*getter_AddRefs(stylesheet));
-            mNotifier->AddStyleSheet(stylesheet);
+            if (mNotifier) {
+                mNotifier->AddStyleSheet(stylesheet);
+            }
         }
     }
 }
 
 void txMozillaXMLOutput::startDocument()
 {
-    mNotifier->OnTransformStart();
+    if (mNotifier) {
+        mNotifier->OnTransformStart();
+    }
 }
 
 void txMozillaXMLOutput::startElement(const nsAString& aName,
@@ -378,7 +392,7 @@ void txMozillaXMLOutput::startElement(const nsAString& aName,
             startHTMLElement(element);
     }
 
-    if (mNotifier) {
+    if (mCreatingNewDocument) {
         nsCOMPtr<nsIContent> cont = do_QueryInterface(element);
         NS_ASSERTION(cont, "element doesn't implement nsIContent");
         nsCOMPtr<nsIDocument> doc = do_QueryInterface(mDocument);
@@ -502,7 +516,7 @@ void txMozillaXMLOutput::startHTMLElement(nsIDOMElement* aElement)
         rv = aElement->AppendChild(meta, getter_AddRefs(foo));
         NS_ASSERTION(NS_SUCCEEDED(rv), "Can't append meta");
     }
-    else if (mNotifier) {
+    else if (mCreatingNewDocument) {
         nsCOMPtr<nsIStyleSheetLinkingElement> ssle =
             do_QueryInterface(aElement);
         if (ssle) {
@@ -570,7 +584,8 @@ void txMozillaXMLOutput::endHTMLElement(nsIDOMElement* aElement,
         mNotifier->AddScriptElement(scriptElement);
     }
     // Set document title
-    else if (mNotifier && atom == txHTMLAtoms::title && !mHaveTitleElement) {
+    else if (mCreatingNewDocument &&
+             atom == txHTMLAtoms::title && !mHaveTitleElement) {
         // The first title wins
         mHaveTitleElement = PR_TRUE;
         nsCOMPtr<nsIDOMNSDocument> domDoc = do_QueryInterface(mDocument);
@@ -583,7 +598,8 @@ void txMozillaXMLOutput::endHTMLElement(nsIDOMElement* aElement,
             domDoc->SetTitle(text);
         }
     }
-    else if (mNotifier && atom == txHTMLAtoms::base && !mHaveBaseElement) {
+    else if (mCreatingNewDocument && atom == txHTMLAtoms::base &&
+             !mHaveBaseElement) {
         // The first base wins
         mHaveBaseElement = PR_TRUE;
 
@@ -600,7 +616,7 @@ void txMozillaXMLOutput::endHTMLElement(nsIDOMElement* aElement,
             return;
         doc->SetBaseURL(baseURI); // The document checks if it is legal to set this base
     }
-    else if (mNotifier && atom == txHTMLAtoms::meta) {
+    else if (mCreatingNewDocument && atom == txHTMLAtoms::meta) {
         // handle HTTP-EQUIV data
         nsAutoString httpEquiv;
         content->GetAttr(kNameSpaceID_None, txHTMLAtoms::httpEquiv, httpEquiv);
@@ -618,18 +634,18 @@ void txMozillaXMLOutput::endHTMLElement(nsIDOMElement* aElement,
     }
 
     // Handle all sorts of stylesheets
-    if (mNotifier) {
+    if (mCreatingNewDocument) {
         nsCOMPtr<nsIStyleSheetLinkingElement> ssle =
             do_QueryInterface(aElement);
         if (ssle) {
             ssle->SetEnableUpdates(PR_TRUE);
-            nsCOMPtr<nsICSSLoaderObserver> observer =
-                do_QueryInterface(mNotifier);
-            rv = ssle->UpdateStyleSheet(nsnull, observer);
+            rv = ssle->UpdateStyleSheet(nsnull, mNotifier);
             if (rv == NS_ERROR_HTMLPARSER_BLOCK) {
                 nsCOMPtr<nsIStyleSheet> stylesheet;
                 ssle->GetStyleSheet(*getter_AddRefs(stylesheet));
-                mNotifier->AddStyleSheet(stylesheet);
+                if (mNotifier) {
+                    mNotifier->AddStyleSheet(stylesheet);
+                }
             }
         }
     }
@@ -731,7 +747,22 @@ txMozillaXMLOutput::createResultDocument(const nsAString& aName, PRInt32 aNsID,
         doc->SetContentType(NS_LITERAL_STRING("text/xml"));
     }
 
-    mNotifier->SetOutputDocument(mDocument);
+    // Set up script loader of the result document.
+    nsCOMPtr<nsIScriptLoader> loader;
+    doc->GetScriptLoader(getter_AddRefs(loader));
+    if (loader) {
+        if (mNotifier) {
+            loader->AddObserver(mNotifier);
+        }
+        else {
+            // Don't load scripts, we can't notify the caller when they're loaded.
+            loader->SetEnabled(PR_FALSE);
+        }
+    }
+
+    if (mNotifier) {
+        mNotifier->SetOutputDocument(mDocument);
+    }
 
     // Do this after calling OnDocumentCreated to ensure that the
     // PresShell/PresContext has been hooked up and get notified.
@@ -765,9 +796,8 @@ txMozillaXMLOutput::createResultDocument(const nsAString& aName, PRInt32 aNsID,
     return NS_OK;
 }
 
-txTransformNotifier::txTransformNotifier(nsITransformObserver* aObserver)
-    : mObserver(aObserver),
-      mInTransform(PR_FALSE)
+txTransformNotifier::txTransformNotifier()
+    : mInTransform(PR_FALSE)
       
 {
 }
@@ -776,8 +806,7 @@ txTransformNotifier::~txTransformNotifier()
 {
 }
 
-NS_IMPL_ISUPPORTS3(txTransformNotifier,
-                   txITransformNotifier,
+NS_IMPL_ISUPPORTS2(txTransformNotifier,
                    nsIScriptLoaderObserver,
                    nsICSSLoaderObserver);
 
@@ -818,60 +847,50 @@ txTransformNotifier::StyleSheetLoaded(nsICSSStyleSheet* aSheet, PRBool aNotify)
     return NS_OK;
 }
 
-NS_IMETHODIMP_(void)
-txTransformNotifier::AddScriptElement(nsIDOMHTMLScriptElement* aElement)
+void
+txTransformNotifier::Init(nsITransformObserver* aObserver)
 {
+    mObserver = aObserver;
 }
 
-NS_IMETHODIMP_(void)
+void
+txTransformNotifier::AddScriptElement(nsIDOMHTMLScriptElement* aElement)
+{
+    mScriptElements.AppendObject(aElement);
+}
+
+void
 txTransformNotifier::AddStyleSheet(nsIStyleSheet* aStyleSheet)
 {
     mStylesheets.AppendObject(aStyleSheet);
 }
 
-NS_IMETHODIMP_(void)
+void
 txTransformNotifier::OnTransformEnd()
 {
     mInTransform = PR_FALSE;
     SignalTransformEnd();
 }
 
-NS_IMETHODIMP_(void)
+void
 txTransformNotifier::OnTransformStart()
 {
     mInTransform = PR_TRUE;
 }
 
-NS_IMETHODIMP_(void)
+void
 txTransformNotifier::SetOutputDocument(nsIDOMDocument* aDocument)
 {
     mDocument = aDocument;
 
-    nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDocument);
-
-    // Set up script loader of the result document.
-    nsCOMPtr<nsIScriptLoader> loader;
-    doc->GetScriptLoader(getter_AddRefs(loader));
-    if (loader) {
-        if (mObserver) {
-            loader->AddObserver(this);
-        }
-        else {
-            // Don't load scripts, we can't notify the caller when they're loaded.
-            loader->SetEnabled(PR_FALSE);
-        }
-    }
-
     // Notify the contentsink that the document is created
-    if (mObserver) {
-        mObserver->OnDocumentCreated(mDocument);
-    }
+    mObserver->OnDocumentCreated(mDocument);
 }
 
 void
 txTransformNotifier::SignalTransformEnd()
 {
-    if (mInTransform || !mObserver || mScriptElements.Count() > 0 ||
+    if (mInTransform || mScriptElements.Count() > 0 ||
         mStylesheets.Count() > 0) {
         return;
     }

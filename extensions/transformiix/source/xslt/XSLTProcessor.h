@@ -89,15 +89,6 @@ private:
     static void copyNode(Node* aSourceNode, ProcessorState* aPs);
 
     /**
-     * Create the document we will use to create result tree fragments.
-     *
-     * @param aMethod the output method indicating which type of 
-     *        document to create
-     * @returns a document to create RTF nodes
-     */
-    static Document* createRTFDocument(txOutputMethod aMethod);
-
-    /**
      * Log a message.
      *
      * @param aMessage the message to log
