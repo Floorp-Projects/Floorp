@@ -198,7 +198,7 @@ public:
     static void       SetCursorResource(short aCursorResourceNum);
 
     NS_IMETHOD        CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent);
-    NS_IMETHOD        SetTitle(const nsString& title);
+    NS_IMETHOD        SetTitle(const nsAString& title);
   
     NS_IMETHOD        GetAttention(PRInt32 aCycleCount);
 

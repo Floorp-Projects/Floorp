@@ -166,7 +166,7 @@ class nsWindow : public nsBaseWidget,
    NS_IMETHOD              SetColorMap( nsColorMap *aColorMap);
    NS_IMETHOD              SetCursor( nsCursor aCursor);
    NS_IMETHOD              HideWindowChrome(PRBool aShouldHide);
-   NS_IMETHOD              SetTitle( const nsString& aTitle); 
+   NS_IMETHOD              SetTitle( const nsAString& aTitle); 
    NS_IMETHOD              SetIcon(const nsAString& aIconSpec); 
    NS_IMETHOD              SetMenuBar(nsIMenuBar * aMenuBar) { return NS_ERROR_FAILURE; } 
    NS_IMETHOD              ShowMenuBar(PRBool aShow)         { return NS_ERROR_FAILURE; } 

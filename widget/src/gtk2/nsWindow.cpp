@@ -920,7 +920,7 @@ nsWindow::SetBorderStyle(nsBorderStyle aBorderStyle)
 }
 
 NS_IMETHODIMP
-nsWindow::SetTitle(const nsString& aTitle)
+nsWindow::SetTitle(const nsAString& aTitle)
 {
     if (!mShell)
         return NS_OK;

@@ -46,7 +46,6 @@
 
 #include "prthread.h"
 #include "nsEvent.h"
-#include "nsString.h"
 
 // forward declarations
 class   nsIAppShell;
@@ -809,7 +808,7 @@ class nsIWidget : public nsISupports {
      * @param aTitle string displayed as the title of the widget
      */
 
-    NS_IMETHOD SetTitle(const nsString& aTitle) = 0;
+    NS_IMETHOD SetTitle(const nsAString& aTitle) = 0;
 
     /**
      * Set the widget's icon.

@@ -124,7 +124,7 @@ public:
                                   PRInt32  aDy);
     virtual void*      GetNativeData(PRUint32 aDataType);
     NS_IMETHOD         SetBorderStyle(nsBorderStyle aBorderStyle);
-    NS_IMETHOD         SetTitle(const nsString& aTitle);
+    NS_IMETHOD         SetTitle(const nsAString& aTitle);
     NS_IMETHOD         SetIcon(const nsAString& aIconSpec);
     NS_IMETHOD         SetMenuBar(nsIMenuBar * aMenuBar);
     NS_IMETHOD         ShowMenuBar(PRBool aShow);

@@ -5453,29 +5453,10 @@ DWORD ChildWindow::WindowStyle()
   return WS_CHILD | WS_CLIPCHILDREN | nsWindow::WindowStyle();
 }
 
-
-static char* GetACPString(const nsString& aStr)
+NS_METHOD nsWindow::SetTitle(const nsAString& aTitle) 
 {
-   int acplen = aStr.Length() * 2 + 1;
-   char * acp = new char[acplen];
-   if(acp)
-   {
-      int outlen = ::WideCharToMultiByte( CP_ACP, 0, 
-                      aStr.get(), aStr.Length(),
-                      acp, acplen, NULL, NULL);
-      if ( outlen >= 0)
-         acp[outlen] = '\0';  // null terminate
-   }
-   return acp;
-}
-
-NS_METHOD nsWindow::SetTitle(const nsString& aTitle) 
-{
-  char* title = GetACPString(aTitle);
-  if (title) {
-    nsToolkit::mSendMessage(mWnd, WM_SETTEXT, (WPARAM)0, (LPARAM)(LPCWSTR)PromiseFlatString(aTitle).get());
-    delete [] title;
-  }
+  const nsString& strTitle = PromiseFlatString(aTitle);
+  nsToolkit::mSendMessage(mWnd, WM_SETTEXT, (WPARAM)0, (LPARAM)(LPCWSTR)strTitle.get());
   return NS_OK;
 } 
 

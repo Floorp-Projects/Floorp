@@ -2272,11 +2272,10 @@ NS_IMETHODIMP nsWindow::ScrollRect(nsRect &aSrcRect, PRInt32 aDx, PRInt32 aDy)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWindow::SetTitle(const nsString& aTitle)
+NS_IMETHODIMP nsWindow::SetTitle(const nsAString& aTitle)
 {
   if (!mShell)
     return NS_ERROR_FAILURE;
-
 
   nsresult rv;
   char *platformText = nsnull;
@@ -2318,14 +2317,16 @@ NS_IMETHODIMP nsWindow::SetTitle(const nsString& aTitle)
 
   // Estimate out length and allocate the buffer based on a worst-case estimate, then do
   // the conversion.
+  nsAString::const_iterator begin;
+  const PRUnichar *title = aTitle.BeginReading(begin).get();
   PRInt32 len = (PRInt32)aTitle.Length();
-  encoder->GetMaxLength(aTitle.get(), len, &platformLen);
+  encoder->GetMaxLength(title, len, &platformLen);
   if (platformLen) {
     platformText = NS_REINTERPRET_CAST(char*, nsMemory::Alloc(platformLen + sizeof(char)));
     if (platformText) {
       rv = encoder->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace, nsnull, '?');
       if (NS_SUCCEEDED(rv))
-        rv = encoder->Convert(aTitle.get(), &len, platformText, &platformLen);
+        rv = encoder->Convert(title, &len, platformText, &platformLen);
       (platformText)[platformLen] = '\0';  // null terminate. Convert() doesn't do it for us
     }
   } // if valid length

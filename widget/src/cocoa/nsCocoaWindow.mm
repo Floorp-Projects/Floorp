@@ -1460,9 +1460,10 @@ PRBool nsCocoaWindow::OnPaint(nsPaintEvent &event)
 // Set this window's title
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsCocoaWindow::SetTitle(const nsString& aTitle)
+NS_IMETHODIMP nsCocoaWindow::SetTitle(const nsAString& aTitle)
 {
-  NSString* title = [NSString stringWithCharacters:aTitle.get() length:aTitle.Length()];
+  const nsString& strTitle = PromiseFlatString(aTitle);
+  NSString* title = [NSString stringWithCharacters:strTitle.get() length:strTitle.Length()];
   [mWindow setTitle:title];
 
   return NS_OK;

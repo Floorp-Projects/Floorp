@@ -354,7 +354,7 @@ public:
     NS_IMETHOD              Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
     NS_IMETHOD              ScrollWidgets(PRInt32 aDx, PRInt32 aDy);
     NS_IMETHOD              ScrollRect(nsRect &aRect, PRInt32 aDx, PRInt32 aDy);
-    NS_IMETHOD              SetTitle(const nsString& aTitle); 
+    NS_IMETHOD              SetTitle(const nsAString& aTitle); 
     NS_IMETHOD              SetIcon(const nsAString& aIconSpec); 
     NS_IMETHOD              SetMenuBar(nsIMenuBar * aMenuBar) { return NS_ERROR_FAILURE; } 
     NS_IMETHOD              ShowMenuBar(PRBool aShow)         { return NS_ERROR_FAILURE; } 

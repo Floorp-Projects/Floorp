@@ -546,7 +546,7 @@ NS_METHOD nsWindow::ScrollWidgets( PRInt32 aDx, PRInt32 aDy ) {
 	return NS_OK;    
 	}
 
-NS_METHOD nsWindow::SetTitle( const nsString& aTitle ) {
+NS_METHOD nsWindow::SetTitle( const nsAString& aTitle ) {
   if( mWidget ) {
   	char * title = ToNewUTF8String(aTitle);
     PtSetResource( mWidget, Pt_ARG_WINDOW_TITLE, title, 0 );

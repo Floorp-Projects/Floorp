@@ -80,7 +80,7 @@ public:
 		return NS_OK;
 		}
 
-  NS_IMETHOD           SetTitle(const nsString& aTitle);
+  NS_IMETHOD           SetTitle(const nsAString& aTitle);
  
   NS_IMETHOD           Move(PRInt32 aX, PRInt32 aY);
 

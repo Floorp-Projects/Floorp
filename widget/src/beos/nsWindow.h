@@ -156,7 +156,7 @@ public:
 	virtual void*           GetNativeData(PRUint32 aDataType);
 	NS_IMETHOD              SetColorMap(nsColorMap *aColorMap);
 	NS_IMETHOD              Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
-	NS_IMETHOD              SetTitle(const nsString& aTitle);
+	NS_IMETHOD              SetTitle(const nsAString& aTitle);
 	NS_IMETHOD              SetMenuBar(nsIMenuBar * aMenuBar) { return NS_ERROR_FAILURE; }
 	NS_IMETHOD              ShowMenuBar(PRBool aShow) { return NS_ERROR_FAILURE; }
 	NS_IMETHOD              WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect);

@@ -2127,7 +2127,7 @@ BOOL nsWindow::CallMethod(MethodInfo *info)
 
         case nsWindow::SET_TITLE:
             NS_ASSERTION(info->nArgs == 1, "Wrong number of arguments to CallMethod SetTitle");
-            SetTitle( (const nsString &) info->args[0]);
+            SetTitle( (const nsAString &) info->args[0]);
             break;
 
         case nsWindow::GET_TITLE:
@@ -3324,7 +3324,7 @@ PRBool nsWindow::OnHScroll( MPARAM mp1, MPARAM mp2)
 /* We are going to limit our titlebars to 256 just to be on the safe side */
 #define MAX_TITLEBAR_LENGTH 256
 
-NS_METHOD nsWindow::SetTitle(const nsString& aTitle) 
+NS_METHOD nsWindow::SetTitle(const nsAString& aTitle) 
 {
    // Switch to the PM thread if necessary...
    if( mOS2Toolkit && !mOS2Toolkit->IsGuiThread())

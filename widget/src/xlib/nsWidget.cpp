@@ -1514,7 +1514,7 @@ NS_METHOD nsWidget::GetRequestedBounds(nsRect &aRect)
 }
 
 NS_IMETHODIMP
-nsWidget::SetTitle(const nsString& title)
+nsWidget::SetTitle(const nsAString& title)
 {
   return NS_OK;
 }
