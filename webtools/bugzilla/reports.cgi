@@ -96,7 +96,7 @@ else
 			print "<font color=blue>$_</font> : " . 
 				($::FORM{$_} ? $::FORM{$_} : "undef") . "<br>\n";
 			}
-                PutFooter();
+                PutFooter() if $::FORM{banner};
 		exit;
 		}
 
@@ -107,7 +107,8 @@ print <<FIN;
 <p>
 FIN
 
-PutFooter();
+PutFooter() if $::FORM{banner};
+
 
 ##################################
 # user came in with no form data #
@@ -171,6 +172,7 @@ FIN
 FIN
 #Add this above to get a control for showing the SQL query:
 #<input type=checkbox name=showsql value=1>&nbsp;Show SQL<br>
+        PutFooter();
 	}
 
 sub most_doomed
@@ -309,7 +311,7 @@ FIN
 	if ($bugs_count == 0)
 		{
 		print "No bugs found!\n";
-                PutFooter();
+                PutFooter() if $::FORM{banner};
 		exit;
 		}
 	
@@ -526,7 +528,7 @@ $msg
 <p>
 FIN
 	
-	PutFooter();
+	PutFooter() if $::FORM{banner};
 	exit;
 	}
 
