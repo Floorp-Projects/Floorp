@@ -201,12 +201,12 @@
     </content>
 
     <implementation>
-      <property name="internalScope">null</property>
-      <property readonly="true" name="validityManager">
+      <field name="internalScope">null</field>
+      <field readonly="true" name="validityManager">
         <![CDATA[
            Components.classes['@mozilla.org/mail/search/validityManager;1'].getService(Components.interfaces.nsIMsgSearchValidityManager);
         ]]>
-      </property>
+      </field>
       <property name="searchScope" onget="return this.internalScope;">
         <!-- scope ID - retrieve the table -->
         <setter>
@@ -375,11 +375,11 @@
   <binding id="searchattribute" name="searchAttribute"
            extends="chrome://messenger/content/mailWidgets.xml#search-menulist-abstract">
     <implementation>
-      <property name="stringBundle">
+      <field name="stringBundle">
           <![CDATA[
            srGetStrBundle("chrome://messenger/locale/search-attributes.properties");
           ]]>
-      </property>
+      </field>
       <property name="valueIds" readonly="true">
         <getter>
           <![CDATA[
@@ -400,12 +400,12 @@
   <binding id="searchoperator" name="searchOperator"
            extends="chrome://messenger/content/mailWidgets.xml#search-menulist-abstract">
     <implementation>
-      <property name="searchAttribute">null</property>
-      <property name="stringBundle">
+      <field name="searchAttribute">null</field>
+      <field name="stringBundle">
           <![CDATA[
             srGetStrBundle("chrome://messenger/locale/search-operators.properties");
           ]]>
-      </property>
+      </field>
       <property name="valueIds" readonly="true">
         <getter>
           <![CDATA[
@@ -465,8 +465,8 @@
       <xul:textbox flex="1" class="search-value-textbox"/>
     </content>
     <implementation>
-      <property name="internalAttribute">null</property>
-      <property name="internalValue">null</property>
+      <field name="internalAttribute">null</field>
+      <field name="internalValue">null</field>
       <!-- parentValue forwards to the attribute -->
       <property name="parentValue" onset="return this.searchAttribute=val;"
                                    onget="return this.searchAttribute;"/>
@@ -618,8 +618,8 @@
   </binding>
   <binding id="searchterm" name="searchTerm" extends="xul:box">
     <implementation>
-      <property name="internalSearchTerm">null</property>
-      <property name="internalBooleanAnd">null</property>
+      <field name="internalSearchTerm">null</field>
+      <field name="internalBooleanAnd">null</field>
       <!-- the actual nsIMsgSearchTerm object -->
       <property name="searchTerm" onget="return this.internalSearchTerm">
         <setter>
@@ -672,16 +672,16 @@
       <property name="searchvalue" 
                 onget="return document.getElementById(this.getAttribute('searchvalue'));"
                 onset="this.setAttribute('searchvalue',val.id)"/>
-      <property name="booleanNodes">
+      <field name="booleanNodes">
         <![CDATA[
           null;
         ]]>
-      </property>
-      <property name="stringBundle">
+      </field>
+      <field name="stringBundle">
           <![CDATA[
              srGetStrBundle("chrome://messenger/locale/search.properties");
           ]]>
-      </property>
+      </field>
       <property name="booleanAnd" onget="return this.internalBooleanAnd">
         <setter>
           <![CDATA[
