@@ -621,6 +621,12 @@ protected:
      */
     nsXULPrototypeScript* mCurrentScriptProto;
 
+	/**
+	 * A "dummy" channel that is used as a placeholder to signal document load
+	 * completion.
+	 */
+	nsCOMPtr<nsIChannel> mPlaceholderChannel;
+	
     /**
      * Create a XUL template builder on the specified node if a 'datasources'
      * attribute is present.
