@@ -4,6 +4,7 @@
 <!ENTITY mainWindow.titlemodifier "Mozilla"> 
 <!ENTITY mainWindow.titlemodifiermenuseparator " - ">
 <!ENTITY throbber.url "http://www.mozilla.org"> 
+<!ENTITY myNetscape.url "http://my.netscape.com">
 <!ENTITY fileMenu.label "File">
 <!ENTITY browserCmd.label "New Browser Window">
 <!ENTITY newMenu.label "New">
