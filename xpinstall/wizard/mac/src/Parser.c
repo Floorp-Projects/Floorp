@@ -233,6 +233,8 @@ PopulateCompWinKeys(char *cfgText)
 	Str255		pSName, pkey, pidx;
 	char		eof[1];
 	char 		*currDepNum;
+	long		randomPercent;
+	Boolean		bRandomSet;
 	
 	eof[0] = 0;
 	
@@ -313,6 +315,34 @@ PopulateCompWinKeys(char *cfgText)
 		DisposeHandle(sizeH);
 		DisposePtr(currKey);
 		
+		/* random install percentage */
+		GetIndString(pkey, rParseKeys, sRandomInstall);
+		currKey = PascalToC(pkey);
+		Handle randomH = NewHandleClear(4);
+		if (FillKeyValueUsingName(currSName, currKey, randomH, cfgText))
+		{
+			bRandomSet = true;
+			HLock(randomH);
+			randomPercent = atol(*randomH);
+			HUnlock(randomH);
+			
+			if (randomPercent != 0) /* idiot proof for those giving 0 as the rand percent */
+			{
+				if (RandomSelect(randomPercent))
+					gControls->cfg->comp[i].selected = true;
+				else
+					gControls->cfg->comp[i].selected = false;
+			}
+			else
+				bRandomSet = false;
+		}
+		else
+			bRandomSet = false;
+		if (randomH)
+			DisposeHandle(randomH);
+		if (currKey)
+			DisposePtr(currKey);
+		
 		/* attributes (SELECTED|INVISIBLE|LAUNCHAPP) */
 		GetIndString(pkey, rParseKeys, sAttributes);
 		currKey = PascalToC(pkey);
@@ -324,10 +354,13 @@ PopulateCompWinKeys(char *cfgText)
 			char *attrType = NULL;
 			GetIndString(pkey, rParseKeys, sSELECTED);
 			attrType = PascalToC(pkey);
-			if (NULL != strstr(*attrValH, attrType))
-				gControls->cfg->comp[i].selected = true;
-			else
-				gControls->cfg->comp[i].selected = false;
+			if (!bRandomSet) /* when random key specified then selected attr is overriden */
+			{
+				if (NULL != strstr(*attrValH, attrType))
+					gControls->cfg->comp[i].selected = true;
+				else
+					gControls->cfg->comp[i].selected = false;
+			}
 			if (attrType)
 				DisposePtr(attrType);
 		
@@ -608,6 +641,22 @@ MapDependencies()
 	}
 	
 	return err;
+}
+
+Boolean
+RandomSelect(long percent)
+{
+	Boolean bSelect = false;
+	int arbitrary = 0;
+	
+	srand(time(NULL));
+	arbitrary = rand();
+	arbitrary %= 100;
+	
+	if (arbitrary <= percent)
+		bSelect = true;
+		
+	return bSelect;
 }
 
 short

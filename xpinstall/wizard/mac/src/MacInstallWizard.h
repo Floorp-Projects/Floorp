@@ -27,6 +27,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <time.h>
 #include <Navigation.h>
 #include <MacTypes.h>
 #include <PLStringFuncs.h>
@@ -257,6 +258,7 @@ if (err) 								\
 #define sAttributes		25
 #define	sURL			26
 #define sDependency		31
+#define sRandomInstall	34
 
 #define sTermDlg		27
 		
@@ -460,6 +462,7 @@ OSErr		PopulateCompWinKeys(char *);
 OSErr		PopulateTermWinKeys(char *);
 OSErr		PopulateIDIKeys(char *);
 OSErr		MapDependencies(void);
+Boolean		RandomSelect(long);
 short		GetComponentIndex(Handle);
 Boolean 	FillKeyValueForIDIKey(short, Handle, char *);
 Boolean		FillKeyValueUsingResID(short, short, Handle, char *);
