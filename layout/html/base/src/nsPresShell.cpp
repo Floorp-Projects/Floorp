@@ -6083,6 +6083,9 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
 
     // 1. Give event to event manager for pre event state changes and
     //    generation of synthetic events.
+    nsEvent *managerOldEvent;
+    manager->GetCurrentEvent(&managerOldEvent);
+    manager->SetCurrentEvent(aEvent); // don't fail to restore this later
     rv = manager->PreHandleEvent(mPresContext, aEvent, mCurrentEventFrame,
                                  aStatus, aView);
 
@@ -6145,6 +6148,7 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
                                       aStatus, aView);
       }
     }
+    manager->SetCurrentEvent(managerOldEvent);
   }
   return rv;
 }
