@@ -43,6 +43,8 @@
 #include "nsMsgAccountManager.h"
 #include "nsMsgIdentity.h"
 #include "nsMessageViewDataSource.h"
+#include "nsMsgFolderDataSource.h"
+#include "nsMsgMessageDataSource.h"
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
@@ -58,6 +60,8 @@ static NS_DEFINE_CID(kCMsgFolderEventCID, NS_MSGFOLDEREVENT_CID);
 static NS_DEFINE_CID(kCMsgAppCoreCID, NS_MSGAPPCORE_CID);
 static NS_DEFINE_CID(kCMsgGroupRecordCID, NS_MSGGROUPRECORD_CID);
 
+static NS_DEFINE_CID(kMailNewsFolderDataSourceCID, NS_MAILNEWSFOLDERDATASOURCE_CID);
+static NS_DEFINE_CID(kMailNewsMessageDataSourceCID, NS_MAILNEWSMESSAGEDATASOURCE_CID);
 static NS_DEFINE_CID(kCMessageViewDataSourceCID, NS_MESSAGEVIEWDATASOURCE_CID);
 
 static NS_DEFINE_CID(kCMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
@@ -208,8 +212,34 @@ nsMsgFactory::CreateInstance(nsISupports *aOuter,
     nsMsgIdentity* identity = new nsMsgIdentity();
     return identity->QueryInterface(aIID, aResult);
   }
-  
-	else if (mClassID.Equals(kCMessageViewDataSourceCID))
+	else if (mClassID.Equals(kMailNewsFolderDataSourceCID)) 
+	{
+		nsresult rv;
+		nsMsgFolderDataSource * folderDataSource = new nsMsgFolderDataSource();
+		if (folderDataSource)
+			rv = folderDataSource->QueryInterface(aIID, aResult);
+		else
+			rv = NS_ERROR_OUT_OF_MEMORY;
+
+		if (NS_FAILED(rv) && folderDataSource)
+			delete folderDataSource;
+		return rv;
+	}
+	else if (mClassID.Equals(kMailNewsMessageDataSourceCID)) 
+	{
+		nsresult rv;
+		nsMsgMessageDataSource * messageDataSource = new nsMsgMessageDataSource();
+		if (messageDataSource)
+			rv = messageDataSource->QueryInterface(aIID, aResult);
+		else
+			rv = NS_ERROR_OUT_OF_MEMORY;
+
+		if (NS_FAILED(rv) && messageDataSource)
+			delete messageDataSource;
+			
+		return rv;
+	}
+ 	else if (mClassID.Equals(kCMessageViewDataSourceCID))
 	{
 		nsMessageViewDataSource * msgView = new nsMessageViewDataSource();
 		if (msgView)
@@ -342,6 +372,20 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
                                   PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) goto done;
 
+  // register our RDF datasources:
+  rv = compMgr->RegisterComponent(kMailNewsFolderDataSourceCID, 
+                                  "Mail/News Folder Data Source",
+                                  NS_RDF_DATASOURCE_PROGID_PREFIX "mailnewsfolders",
+                                  path, PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) goto done;
+
+  // register our RDF datasources:
+  rv = compMgr->RegisterComponent(kMailNewsMessageDataSourceCID, 
+                                  "Mail/News Message Data Source",
+                                  NS_RDF_DATASOURCE_PROGID_PREFIX "mailnewsmessages",
+                                  path, PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) goto done;
+
   rv = compMgr->RegisterComponent(kCMessageViewDataSourceCID, 
                                   "Mail/News Message View Data Source",
                                   NS_RDF_DATASOURCE_PROGID_PREFIX "mail-messageview",
@@ -385,6 +429,10 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* path)
   if (NS_FAILED(rv)) goto done;
   rv = compMgr->UnregisterComponent(kCMsgMailSessionCID, path);
   if(NS_FAILED(rv)) goto done;
+  rv = compMgr->UnregisterComponent(kMailNewsFolderDataSourceCID, path);
+  if (NS_FAILED(rv)) goto done;
+  rv = compMgr->UnregisterComponent(kMailNewsMessageDataSourceCID, path);
+  if (NS_FAILED(rv)) goto done;
   rv = compMgr->UnregisterComponent(kCMessageViewDataSourceCID, path);
   if(NS_FAILED(rv)) goto done;
 

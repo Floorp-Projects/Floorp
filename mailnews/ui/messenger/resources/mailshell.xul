@@ -359,10 +359,10 @@
       </menu>
       <menuitem name="&editMsgAsNewCmd.label;" onclick="MsgEditMessageAsNew();"/>
       <separator/>
-      <menu name="&moveMsgMenu.label;" datasources="rdf:mailnews" id="mailbox:/" open="true"
+      <menu name="&moveMsgMenu.label;" datasources="rdf:mailnewsfolders" id="mailbox:/" open="true"
 			onclick="MsgMoveMessage(event.target)">
       </menu>
-      <menu name="&copyMsgMenu.label;" datasources="rdf:mailnews" id="mailbox:/" open="true"
+      <menu name="&copyMsgMenu.label;" datasources="rdf:mailnewsfolders" id="mailbox:/" open="true"
 			onclick="MsgCopyMessage(event.target)">
       </menu>
       <separator/>

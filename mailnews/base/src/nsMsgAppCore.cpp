@@ -187,7 +187,7 @@ static nsresult AddView(nsIRDFCompositeDataSource *database, nsIMessageView **me
 	if(NS_SUCCEEDED(rv))
 	{
 		rv = gRDFService->GetDataSource("rdf:mail-messageview", &view);
-		rv = NS_SUCCEEDED(rv) && gRDFService->GetDataSource("rdf:mailnews", &datasource);
+		rv = NS_SUCCEEDED(rv) && gRDFService->GetDataSource("rdf:mailnewsfolders", &datasource);
 		nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
 	}
 

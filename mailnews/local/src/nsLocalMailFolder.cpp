@@ -65,7 +65,7 @@ nsMsgLocalMailFolder::nsMsgLocalMailFolder(void)
 												(nsISupports**) &rdfService);
 		if(NS_SUCCEEDED(rv))
 		{
-			if(NS_SUCCEEDED(rv = rdfService->GetDataSource("rdf:mailnews", &datasource)))
+			if(NS_SUCCEEDED(rv = rdfService->GetDataSource("rdf:mailnewsfolders", &datasource)))
 			{
 				nsIFolderListener *folderListener;
 				if(NS_SUCCEEDED(datasource->QueryInterface(nsIFolderListener::GetIID(), (void**)&folderListener)))

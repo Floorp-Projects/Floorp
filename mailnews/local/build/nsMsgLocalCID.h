@@ -23,14 +23,6 @@
 #include "nsIFactory.h"
 #include "nsIComponentManager.h"
 
-#define NS_MAILNEWSDATASOURCE_CID                    \
-{ /* ddd9d2b2-cd67-11d2-8cca-0060b0fc14a3 */         \
-    0xddd9d2b2,                                      \
-    0xcd67,                                          \
-    0x11d2,                                          \
-    {0x8c, 0xca, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
-}
-
 #define NS_MAILNEWSRESOURCE_CID                      \
 { /* e490d22c-cd67-11d2-8cca-0060b0fc14a3 */         \
 	0xe490d22c,										 \

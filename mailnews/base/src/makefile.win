@@ -40,6 +40,8 @@ CPPSRCS=                     \
 	nsMessageViewDataSource.cpp \
 	nsMsgAccountManager.cpp	\
 	nsMsgAccount.cpp		\
+	nsMsgFolderDataSource.cpp \
+	nsMsgMessageDataSource.cpp \
 	$(NULL)
 
 
@@ -58,6 +60,8 @@ CPP_OBJS=                               \
 	.\$(OBJDIR)\nsMessageViewDataSource.obj \
 	.\$(OBJDIR)\nsMsgAccountManager.obj	\
 	.\$(OBJDIR)\nsMsgAccount.obj		\
+	.\$(OBJDIR)\nsMsgFolderDataSource.obj \
+	.\$(OBJDIR)\nsMsgMessageDataSource.obj \
 	$(NULL)
 
 
@@ -67,6 +71,8 @@ EXPORTS=                \
 	nsUrlListenerManager.h \
 	nsMsgMailSession.h  \
 	nsMsgAppCore.h		\
+	nsMsgFolderDataSource.h \
+	nsMsgMessageDataSource.h \
 	nsMessageViewDataSource.h \
     nsMsgAccount.h      \
     nsMsgAccountManager.h   \
@@ -84,6 +90,7 @@ LINCS=                       \
 		-I$(PUBLIC)\dom		 \
 		-I$(PUBLIC)\appcores	\
 		-I$(PUBLIC)\security	\
+		-I$(PUBLIC)\mime \
 		$(NULL)
 
 LCFLAGS = \

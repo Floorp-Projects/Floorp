@@ -25,7 +25,6 @@ MODULE=localmailbase
 LIBRARY_NAME=localmailbase_s
 
 CPPSRCS = \
-	nsMSGFolderDataSource.cpp \
 	nsPop3Protocol.cpp \
 	nsPop3URL.cpp \
 	nsPop3Sink.cpp \
@@ -47,7 +46,6 @@ EXPORTS= \
 	nsMailboxProtocol.h \
 	nsMailboxService.h \
 	nsPop3Service.h \
-	nsMSGFolderDataSource.h	\
 	nsLocalMailFolder.h	\
 	nsPop3IncomingServer.h	\
 	$(NULL)

@@ -104,6 +104,7 @@ LINCS=$(LINCS) -I,							\
 			   -I$(PUBLIC)\netlib			\
 			   -I$(PUBLIC)\dom				\
 			   -I$(PUBLIC)\appcores			\
+			   -I$(PUBLIC)\mime			\
  			     $(NULL)
 
 #//------------------------------------------------------------------------

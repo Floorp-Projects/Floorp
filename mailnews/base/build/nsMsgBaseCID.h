@@ -33,6 +33,22 @@
  0xa8f54ee0, 0xd292, 0x11d2,                      \
  {0xb7, 0xf6, 0x00, 0x80, 0x5f, 0x05, 0xff, 0xa5}}
 
+#define NS_MAILNEWSFOLDERDATASOURCE_CID                    \
+{ /* 2B8ED4A4-F684-11d2-8A5D-0060B0FC04D2 */         \
+    0x2b8ed4a4,                                      \
+    0xf684,                                          \
+    0x11d2,                                          \
+    {0x8a, 0x5d, 0x0, 0x60, 0xb0, 0xfc, 0x4, 0xd2} \
+}
+
+#define NS_MAILNEWSMESSAGEDATASOURCE_CID                    \
+{ /* 2B8ED4A5-F684-11d2-8A5D-0060B0FC04D2 */         \
+    0x2b8ed4a5,                                      \
+    0xf684,                                          \
+    0x11d2,                                          \
+    {0x8a, 0x5d, 0x0, 0x60, 0xb0, 0xfc, 0x4, 0xd2} \
+}
+
 #define NS_MESSAGEVIEWDATASOURCE_CID				\
 { /* 14495573-E945-11d2-8A52-0060B0FC04D2 */		\
 0x14495573, 0xe945, 0x11d2,							\

@@ -23,7 +23,6 @@ srcdir		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 EXPORTS= \
-	nsIRDFMSGFolderDataSource.h \
 	nsIPop3Sink.h \
 	nsIPop3URL.h \
 	nsIMailboxUrl.h \
