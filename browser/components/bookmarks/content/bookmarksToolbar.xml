@@ -207,7 +207,7 @@
           else if (item == "NC:BookmarksRoot")
             parent = null;
           else if (this.isBTBookmark(item)) {
-            parent = aNode.parentNode.parentNode.id;
+            parent = aNode.parentNode.parentNode.parentNode.id;
             switch (parent) {
             case "bookmarks-toolbar":
               parent = "NC:PersonalToolbarFolder"
