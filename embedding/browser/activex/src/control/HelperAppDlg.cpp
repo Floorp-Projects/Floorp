@@ -41,6 +41,9 @@
 
 #include <commctrl.h>
 
+// commdlg.h is needed to build with WIN32_LEAN_AND_MEAN
+#include <commdlg.h>
+
 #include "HelperAppDlg.h"
 
 #include "nsCOMPtr.h"

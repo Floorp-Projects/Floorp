@@ -138,7 +138,6 @@ EXTRA_DSO_LDOPTS += -lbe
 endif
 
 ifeq ($(OS_ARCH),WINNT)
-DEFINES += -DWIN32_LEAN_AND_MEAN
 EXTRA_DSO_LDOPTS += shell32.lib ole32.lib
 ifneq (,$(MOZ_DEBUG)$(NS_TRACE_MALLOC))
 EXTRA_DSO_LDOPTS += imagehlp.lib

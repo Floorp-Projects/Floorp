@@ -77,5 +77,5 @@ EXTRA_DSO_LDOPTS += \
 include $(topsrcdir)/config/rules.mk
 
 ifeq ($(OS_ARCH),WINNT)
-DEFINES		+= -DWIN32_LEAN_AND_MEAN -D__STDC__
+DEFINES		+= -D__STDC__
 endif

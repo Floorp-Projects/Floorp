@@ -59,7 +59,6 @@ FORCE_STATIC_LIB = 1
 include $(topsrcdir)/config/rules.mk
 
 ifeq ($(OS_ARCH),WINNT)
-DEFINES		+= -DWIN32_LEAN_AND_MEAN
 ifndef MOZ_DEBUG
 ifndef NO_LOGGING
 DEFINES		+= -DFORCE_PR_LOG

@@ -170,7 +170,6 @@ endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 RCINCLUDE = splash.rc
-DEFINES	+= -DWIN32_LEAN_AND_MEAN
 CPPSRCS += nsNativeAppSupportWin.cpp nsNativeAppSupportBase.cpp
 OS_LIBS += comctl32.lib comdlg32.lib uuid.lib shell32.lib ole32.lib oleaut32.lib version.lib winspool.lib
 endif

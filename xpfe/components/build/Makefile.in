@@ -111,7 +111,6 @@ LOCAL_INCLUDES += \
 endif
 
 ifeq ($(OS_ARCH),WINNT)
-DEFINES		+= -DWIN32_LEAN_AND_MEAN
 
 SHARED_LIBRARY_LIBS += \
 	$(DIST)/lib/$(LIB_PREFIX)urlwidgt_s.$(LIB_SUFFIX) \

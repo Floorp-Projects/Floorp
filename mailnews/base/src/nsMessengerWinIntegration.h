@@ -43,6 +43,9 @@
 
 #include <windows.h>
 
+// shellapi.h is needed to build with WIN32_LEAN_AND_MEAN
+#include <shellapi.h>
+
 #include "nsIMessengerOSIntegration.h"
 #include "nsIFolderListener.h"
 #include "nsIAlertsService.h"

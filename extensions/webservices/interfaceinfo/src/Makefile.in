@@ -70,7 +70,3 @@ EXTRA_COMPONENTS = nsInterfaceInfoToIDL.js
 
 include $(topsrcdir)/config/rules.mk
 
-ifeq ($(OS_ARCH),WINNT)
-DEFINES		+= -DWIN32_LEAN_AND_MEAN
-endif
-

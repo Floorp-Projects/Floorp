@@ -169,7 +169,3 @@ EXPORTS		= nsUCvLatinCID.h
 LOCAL_INCLUDES = -I$(srcdir)/../util -I$(srcdir)/../src
 
 include $(topsrcdir)/config/rules.mk
-
-ifeq ($(OS_ARCH),WINNT)
-DEFINES		+= -DWIN32_LEAN_AND_MEAN
-endif

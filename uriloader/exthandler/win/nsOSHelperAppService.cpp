@@ -34,6 +34,9 @@
 // we need windows.h to read out registry information...
 #include <windows.h>
 
+// shellapi.h is needed to build with WIN32_LEAN_AND_MEAN
+#include <shellapi.h>
+
 // helper methods: forward declarations...
 BYTE * GetValueBytes( HKEY hKey, const char *pValueName, DWORD *pLen=0);
 nsresult GetExtensionFrom4xRegistryInfo(const char * aMimeType, nsCString& aFileExtension);

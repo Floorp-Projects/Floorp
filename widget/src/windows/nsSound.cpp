@@ -27,6 +27,9 @@
 
 #include <windows.h>
 
+// mmsystem.h is needed to build with WIN32_LEAN_AND_MEAN
+#include <mmsystem.h>
+
 #include "nsSound.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
