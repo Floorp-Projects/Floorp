@@ -100,7 +100,7 @@ nsresult imgRequest::AddObserver(imgIDecoderObserver *observer)
   if (mObservers.Count() == 1) {
     PRUint32 nframes;
     mImage->GetNumFrames(&nframes);
-    if (nframes > 0) {
+    if (nframes > 1) {
       PR_LOG(gImgLog, PR_LOG_DEBUG,
              ("[this=%p] imgRequest::AddObserver -- starting animation\n", this));
 
@@ -121,7 +121,7 @@ nsresult imgRequest::RemoveObserver(imgIDecoderObserver *observer, nsresult stat
     if (mImage) {
       PRUint32 nframes;
       mImage->GetNumFrames(&nframes);
-      if (nframes > 0) {
+      if (nframes > 1) {
         PR_LOG(gImgLog, PR_LOG_DEBUG,
                ("[this=%p] imgRequest::RemoveObserver -- stopping animation\n", this));
 
@@ -163,6 +163,17 @@ NS_IMETHODIMP imgRequest::Cancel(nsresult status)
 #endif
 
   ImageCache::Remove(mURI);
+
+  if (mImage) {
+    PRUint32 nframes;
+    mImage->GetNumFrames(&nframes);
+    if (nframes > 1) {
+      PR_LOG(gImgLog, PR_LOG_DEBUG,
+             ("[this=%p] imgRequest::RemoveObserver -- stopping animation\n", this));
+
+      mImage->StopAnimation();
+    }
+  }
 
   if (mChannel && mProcessing)
     return mChannel->Cancel(status);
