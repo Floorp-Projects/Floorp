@@ -169,22 +169,12 @@ if [ test "$GNU_CC" = 1]; then
     # Turn on GNU specific features
     _WARNINGS_CFLAGS="${_WARNINGS_CXXFLAGS} -Wall"
     #_WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -pedantic"
-
-    _DEFINES_CFLAGS='-include $(DEPTH)/config-defs.h'
-    _USE_CPP_INCLUDE_FLAG=1
-else
-    _DEFINES_CFLAGS='$(ACDEFINES)'
 fi
 
 if [ test "$GNU_CXX" = 1]; then
     # Turn on GNU specific features
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wall"
     #_WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -pedantic"
-
-    _DEFINES_CXXFLAGS='-include $(DEPTH)/config-defs.h'
-    _USE_CPP_INCLUDE_FLAG=1
-else
-    _DEFINES_CXXFLAGS='$(ACDEFINES)'
 fi
 
 dnl now the exceptions
@@ -686,6 +676,63 @@ ac_ext=c
 
 dnl End of C++ language/feature checks
 
+dnl Check cc for '-include' flag support (command-line include files)
+dnl =================================================================
+dnl This is a GNU feature, but not all GNU compilers support it.
+dnl For instance, BSD/OS 3.1 uses shlicc2 to compile. It sets $GNU_CC,
+dnl but it does not understand the '-include' flag. Therefore, we must
+dnl test for support.
+dnl =================================================================
+
+if test "$GNU_CC" = 1; then
+  AC_MSG_CHECKING($CC for \"-include <file>\" option)
+
+  AC_CACHE_VAL(ac_cv_cc_include_flag,
+   [_SAVE_CFLAGS=$CFLAGS ; CFLAGS="$CFLAGS -include conftest.h"
+    echo "#define HELLO 01134;" > conftest.h
+    AC_TRY_COMPILE([],
+                   [int salutation = HELLO;],
+                   [ac_cv_cc_include_flag=true],
+                   [ac_cv_cc_include_flag=false]);
+    rm -f conftest.h
+    CFLAGS=$_SAVE_CFLAGS])
+
+  if test "$ac_cv_cc_include_flag" = true ; then
+    AC_MSG_RESULT(yes)
+    _DEFINES_CFLAGS='-include $(DEPTH)/config-defs.h'
+    _USE_CPP_INCLUDE_FLAG=1
+  else
+    AC_MSG_RESULT(no)
+    _DEFINES_CFLAGS='$(ACDEFINES)'
+  fi  
+fi
+if test "$GNU_CXX" = 1; then
+  AC_MSG_CHECKING($CXX for \"-include <file>\" option)
+
+  if test "$CC" = "$CXX"; then
+    ac_cv_cxx_include_flag=$ac_cv_cc_include_flag;
+  else
+    AC_CACHE_VAL(ac_cv_cxx_include_flag,
+     [_SAVE_CFLAGS=$CFLAGS ; CFLAGS="$CFLAGS -include conftest.h"
+      _SAVE_CC=$CC         ; CC=$CXX
+      echo "#define FAST 299792458" > conftest.h
+      AC_TRY_COMPILE([],
+                     [int how_fast = FAST;],
+                     [ac_cv_cxx_include_flag=true],
+                     [ac_cv_cxx_include_flag=false]);
+      rm -f conftest.h
+      CC=$_SAVE_CC
+      CFLAGS=$_SAVE_CFLAGS])
+  fi
+  if test "$ac_cv_cxx_include_flag" = true ; then
+    AC_MSG_RESULT(yes)
+    _DEFINES_CXXFLAGS='-include $(DEPTH)/config-defs.h'
+    _USE_CPP_INCLUDE_FLAG=1
+  else
+    AC_MSG_RESULT(no)
+    _DEFINES_CXXFLAGS='$(ACDEFINES)'
+  fi  
+fi
 
 dnl Mozilla specific options
 dnl ========================================================
