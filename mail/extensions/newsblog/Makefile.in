@@ -52,7 +52,11 @@ libs::
 	$(INSTALL) $(addprefix $(srcdir)/, rss.rdf) $(EXPORT_DIR)
 	$(INSTALL) $(addprefix $(srcdir)/, rss.rdf) $(EXPORT_DIR_L10N)
 
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+	DIRS  += skin/mac
+else
 DIRS  += skin
+endif
 
 EXTRA_COMPONENTS = js/newsblog.js
 
