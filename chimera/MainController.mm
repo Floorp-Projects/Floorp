@@ -86,6 +86,9 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
             [NSApp terminate:self];
             return self;
         }
+
+        NSString* url = [defaults stringForKey:@"url"];
+        mStartURL = url ? [url retain] : nil;
         mSplashScreen = [[CHSplashScreenWindow alloc] splashImage:nil withFade:YES withStatusRect:NSMakeRect(0,0,0,0)];
         mFindDialog = nil;
         mMenuBookmarks = nil;
@@ -145,12 +148,19 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
     [[mainWindow windowController] autosaveWindowFrame];
 
   // Now open the new window.
-  NSString* homePage = [mPreferenceManager homePage:YES];
+  NSString* homePage = mStartURL ? mStartURL : [mPreferenceManager homePage:YES];
   BrowserWindowController* controller = [self openBrowserWindowWithURL:homePage];
+
   if ([homePage isEqualToString: @"about:blank"])
     [controller focusURLBar];
   else
     [[[controller getBrowserWrapper] getBrowserView] setActive: YES];
+
+  // Only load the command-line specified URL for the first window we open
+  if (mStartURL) {
+    [mStartURL release];
+    mStartURL = nil;
+  }
 }	
 
 -(IBAction)newTab:(id)aSender
