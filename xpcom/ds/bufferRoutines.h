@@ -260,7 +260,7 @@ void CopyChars1To2(char* aDest,PRInt32 anDestOffset,const char* aSource,PRUint32
   while(first<last) {
     *to=(PRUnichar)(*first);  
 #ifdef DEBUG_ILLEGAL_CAST_UP
-    if(track_illegal && track_latin1 && ( *to >= 0x80))
+    if(track_illegal && track_latin1 && ((*to)& 0x80))
       illegal= PR_TRUE;
 #endif
     to++;
@@ -295,7 +295,10 @@ void CopyChars2To1(char* aDest,PRInt32 anDestOffset,const char* aSource,PRUint32
   while(first<last) {
     if(*first<256)
       *to=(char)*first;  
-    else *to='.';
+    else { 
+      *to='.';
+      NS_ASSERTION( (*first < 256), "data in U+0100-U+FFFF will be lost");
+    }
 #ifdef DEBUG_ILLEGAL_CAST_DOWN
     if(track_illegal) {
       if(track_latin1) {
@@ -851,6 +854,7 @@ PRInt32 CompressChars1(char* aString,PRUint32 aLength,const char* aSet){
  * @param   aEliminateTrailing tells us whether to strip chars from the start of the buffer
  * @return  the new length of the given buffer
  */
+
 PRInt32 CompressChars2(char* aString,PRUint32 aLength,const char* aSet){ 
 
   PRUnichar*  from = (PRUnichar*)aString;
