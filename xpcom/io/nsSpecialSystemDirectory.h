@@ -64,6 +64,7 @@ class NS_COM nsSpecialSystemDirectory : public nsFileSpec
         ,   Mac_PreferencesDirectory  =   110
         ,   Mac_DocumentsDirectory    =   111
         ,   Mac_InternetSearchDirectory    =   112
+        ,   Mac_DefaultDownloadDirectory   =   113
         
         ,   Win_SystemDirectory       =   201
         ,   Win_WindowsDirectory      =   202
@@ -117,6 +118,9 @@ class NS_COM nsSpecialSystemDirectory : public nsFileSpec
 #ifdef XP_MAC
     void            operator = (OSType folderType);
                     nsSpecialSystemDirectory(OSType folderType);
+    enum {
+      kDefaultDownloadFolderType = FOUR_CHAR_CODE('DfDÄ')    /* Default Download Folder */
+    };              
 #endif
 
     /**
