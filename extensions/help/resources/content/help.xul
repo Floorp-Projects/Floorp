@@ -56,7 +56,11 @@
     <key id="key_close"/>
     <key id="printKb" key="&printCmd.commandkey;" oncommand="print();" modifiers="accel"/>
     <keyset id="viewZoomKeys"/>
-    <keyset id="navigationKeys"/>
+    <keyset id="navigationKeys">
+      <!-- The stop keybindings are navigator-only -->
+      <key id="key_stop" disabled="true"/>
+      <key id="key_stop2" disabled="true"/>
+    </keyset>
     <key id="key_find"
         key="&findOnCmd.commandkey;" oncommand="find(false, false);" modifiers="accel"/>
     <key id="key_findAgain"
