@@ -115,7 +115,13 @@ if (<data/duplicates/dupes$before*>)
 
 print Param("mostfreqhtml");
 
+my $commabugs = join(",", keys(%count));
+
 print "
+<p>
+<a href=\"buglist.cgi?bug_id=$commabugs\">Give me this list as a Bugzilla bug list.</a>
+</p>
+
 <table BORDER>
 <tr BGCOLOR=\"#CCCCCC\">
 
