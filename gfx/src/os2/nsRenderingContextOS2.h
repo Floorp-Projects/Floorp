@@ -247,6 +247,7 @@ protected:
    nsIFontMetrics      *mFontMetrics;     // current font
    nsIFontMetrics      *mCurrFontMetrics; // currently selected font
    nscolor              mCurrDrawingColor;// currently selected drawing color
+   PRBool               mAlreadySetDrawingColor;
   PRUint8           *mGammaTable;
    nscolor              mCurrTextColor;   // currently selected text color
    nsLineStyle          mCurrLineStyle;   // currently selected line style

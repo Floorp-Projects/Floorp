@@ -121,14 +121,6 @@ nsresult nsDeviceContextOS2::Init( nsNativeWidget aWidget)
 
   CommonInit(hdc);
 
-#ifdef XP_OS2 /* OS2TODO - Why are we doing this? These were set in CommonInit */
-  // Get size - don't know if this is needed for non-print DCs
-  long lCaps[2];
-  DevQueryCaps( hdc, CAPS_WIDTH, 2, lCaps);
-  mWidth = lCaps[0];  // these are in device units...
-  mHeight = lCaps[1];
-#endif
-
   return retval;
 }
 
@@ -189,7 +181,7 @@ void nsDeviceContextOS2 :: CommonInit(HDC aDC)
 
   DevQueryCaps(aDC, CAPS_FAMILY, CAPS_DEVICE_POLYSET_POINTS, alArray);
 
-  mTwipsToPixels = ((float)alArray[CAPS_VERTICAL_FONT_RES]) / (float)NSIntPointsToTwips(72);
+  mTwipsToPixels = (float)alArray [CAPS_VERTICAL_RESOLUTION] / (float)NS_METERS_TO_TWIPS (1);
   mPixelsToTwips = 1.0f / mTwipsToPixels;
 
   mDepth = alArray[CAPS_COLOR_BITCOUNT];
