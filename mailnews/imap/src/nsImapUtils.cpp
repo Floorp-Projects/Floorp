@@ -171,7 +171,7 @@ nsImapURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
 
 nsresult
 nsImapURI2FullName(const char* rootURI, const char* hostname, char* uriStr,
-                   nsString& name)
+                   char **name)
 {
     nsAutoString uri = uriStr;
     nsAutoString fullName;
@@ -184,7 +184,7 @@ nsImapURI2FullName(const char* rootURI, const char* hostname, char* uriStr,
     if (hostEnd <= 0) return NS_ERROR_FAILURE;
     uri.Right(fullName, uri.Length() - hostEnd - 1);
     if (fullName == "") return NS_ERROR_FAILURE;
-    name = fullName;
+    *name = fullName.ToNewCString();
     return NS_OK;
 }
 

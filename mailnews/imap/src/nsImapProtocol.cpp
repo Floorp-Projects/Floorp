@@ -3040,11 +3040,6 @@ void nsImapProtocol::WaitForPotentialListOfBodysToFetch(PRUint32 **msgIdList, PR
     PR_ExitMonitor(m_fetchBodyListMonitor);
 }
 
-#if 0
-
-void nsImapProtocol::NotifyKeyList(PRUint32 *keys, PRUint32 keyCount)
-#endif
-
 // libmsg uses this to notify a running imap url about the message headers it should
 // download while opening a folder. Generally, the imap thread will be blocked 
 // in WaitForPotentialListOfMsgsToFetch waiting for this notification.

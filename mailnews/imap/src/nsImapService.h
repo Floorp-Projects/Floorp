@@ -197,7 +197,7 @@ public:
 
 protected:
     nsresult GetFolderName(nsIMsgFolder* aImapFolder,
-                           nsCString& folderName);
+                           char **folderName);
 	nsresult CreateStartOfImapUrl(nsIImapUrl  **imapUrl,
                                   nsIMsgFolder* aImapFolder,
                                   nsIUrlListener * aUrlListener,

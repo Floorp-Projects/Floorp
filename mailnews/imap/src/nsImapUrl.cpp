@@ -1065,6 +1065,7 @@ void nsImapUrl::ParseFolderPath(char **resultingCanonicalPath)
 	char dirSeparator = *resultPath;
 
 	*resultingCanonicalPath = PL_strdup(resultPath + 1);
+	nsUnescape(*resultingCanonicalPath);
 	// The delimiter will be set for a given URL, but will not be statically available
 	// from an arbitrary URL.  It is the creator's responsibility to fill in the correct
 	// delimiter from the folder's namespace when creating the URL.

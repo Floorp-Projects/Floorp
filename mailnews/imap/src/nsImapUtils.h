@@ -40,7 +40,7 @@ nsImapURI2Path(const char* rootURI, const char* uriStr,
 
 extern nsresult
 nsImapURI2FullName(const char* rootURI, const char* hostname, char* uriStr,
-                   nsString& name);
+                   char **name);
 
 extern nsresult
 nsURI2ProtocolType(const char* uriStr, nsString& type);

@@ -76,9 +76,10 @@ nsImapService::~nsImapService()
 {
 }
 
+// N.B., this returns an escaped folder name, appropriate for putting in a url.
 nsresult
 nsImapService::GetFolderName(nsIMsgFolder* aImapFolder,
-                             nsCString& folderName)
+                             char **folderName)
 {
     nsresult rv;
     nsCOMPtr<nsIFolder> aFolder(do_QueryInterface(aImapFolder, &rv));
@@ -89,12 +90,12 @@ nsImapService::GetFolderName(nsIMsgFolder* aImapFolder,
     char * hostname = nsnull;
     rv = aImapFolder->GetHostname(&hostname);
     if (NS_FAILED(rv)) return rv;
-    nsString name;
-    rv = nsImapURI2FullName(kImapRootURI, hostname, uri, name);
+    nsXPIDLCString name;
+    rv = nsImapURI2FullName(kImapRootURI, hostname, uri, getter_Copies(name));
     PR_FREEIF(uri);
     PR_FREEIF(hostname);
     if (NS_SUCCEEDED(rv))
-        folderName = (const nsCString &) name;
+		*folderName = nsEscape((const char *) name, url_Path);
     return rv;
 }
 
@@ -134,10 +135,10 @@ nsImapService::SelectFolder(nsIEventQueue * aClientEventQueue,
 
 		if (NS_SUCCEEDED(rv))
 		{
-            nsCString folderName;
-            GetFolderName(aImapMailFolder, folderName);
+            nsXPIDLCString folderName;
+            GetFolderName(aImapMailFolder, getter_Copies(folderName));
 			urlSpec.Append("/select>/");
-            urlSpec.Append(folderName.GetBuffer());
+            urlSpec.Append((const char *) folderName);
 		    rv = mailNewsUrl->SetSpec((char *) urlSpec.GetBuffer());
             if (NS_SUCCEEDED(rv))
                 rv = GetImapConnectionAndLoadUrl(aClientEventQueue,
@@ -185,9 +186,9 @@ nsImapService::LiteSelectFolder(nsIEventQueue * aClientEventQueue,
 			urlSpec.Append("/liteselect>");
 			urlSpec.Append(hierarchySeparator);
 
-            nsCString folderName;
-            GetFolderName(aImapMailFolder, folderName);
-			urlSpec.Append(folderName.GetBuffer());
+            nsXPIDLCString folderName;
+            GetFolderName(aImapMailFolder, getter_Copies(folderName));
+			urlSpec.Append((const char *) folderName);
 			rv = uri->SetSpec((char *) urlSpec.GetBuffer());
             if (NS_SUCCEEDED(rv))
                 rv = GetImapConnectionAndLoadUrl(aClientEventQueue, imapUrl,
@@ -226,9 +227,9 @@ NS_IMETHODIMP nsImapService::GetUrlForUri(const char *aMessageURI, nsIURI **aURL
 		  urlSpec.Append(">");
 		  urlSpec.Append(hierarchySeparator);
 
-      nsCString folderName;
-      GetFolderName(folder, folderName);
-		  urlSpec.Append(folderName.GetBuffer());
+      nsXPIDLCString folderName;
+      GetFolderName(folder, getter_Copies(folderName));
+		  urlSpec.Append((const char *) folderName);
 		  urlSpec.Append(">");
 		  urlSpec.Append(msgKey);
 		  rv = url->SetSpec((char *) urlSpec.GetBuffer());
@@ -415,9 +416,9 @@ nsImapService::FetchMessage(nsIImapUrl * aImapUrl,
 		  urlSpec.Append(">");
 		  urlSpec.Append(hierarchySeparator);
 
-      nsCString folderName;
-      GetFolderName(aImapMailFolder, folderName);
-		  urlSpec.Append(folderName.GetBuffer());
+		  nsXPIDLCString folderName;
+		  GetFolderName(aImapMailFolder, getter_Copies(folderName));
+		  urlSpec.Append((const char *) folderName);
 		  urlSpec.Append(">");
 		  urlSpec.Append(messageIdentifierList);
 
@@ -579,10 +580,10 @@ nsImapService::GetHeaders(nsIEventQueue * aClientEventQueue,
 			urlSpec.Append(">");
 			urlSpec.Append(hierarchySeparator);
 
-            nsCString folderName;
+            nsXPIDLCString folderName;
 
-            GetFolderName(aImapMailFolder, folderName);
-			urlSpec.Append(folderName.GetBuffer());
+            GetFolderName(aImapMailFolder, getter_Copies(folderName));
+			urlSpec.Append((const char *) folderName);
             urlSpec.Append(">");
 			urlSpec.Append(messageIdentifierList);
 			rv = uri->SetSpec((char *) urlSpec.GetBuffer());
@@ -629,10 +630,10 @@ nsImapService::Noop(nsIEventQueue * aClientEventQueue,
 			urlSpec.Append("/selectnoop>");
 			urlSpec.Append(hierarchySeparator);
 
-            nsCString folderName;
+            nsXPIDLCString folderName;
 
-            GetFolderName(aImapMailFolder, folderName);
-			urlSpec.Append(folderName.GetBuffer());
+            GetFolderName(aImapMailFolder, getter_Copies(folderName));
+			urlSpec.Append((const char *) folderName);
 			rv = uri->SetSpec((char *) urlSpec.GetBuffer());
             if (NS_SUCCEEDED(rv))
                 rv = GetImapConnectionAndLoadUrl(aClientEventQueue, imapUrl,
@@ -675,10 +676,10 @@ nsImapService::Expunge(nsIEventQueue * aClientEventQueue,
 			urlSpec.Append("/Expunge>");
 			urlSpec.Append(hierarchySeparator);
 
-            nsCString folderName;
+            nsXPIDLCString folderName;
 
-            GetFolderName(aImapMailFolder, folderName);
-			urlSpec.Append(folderName.GetBuffer());
+            GetFolderName(aImapMailFolder, getter_Copies(folderName));
+			urlSpec.Append((const char *) folderName);
 			rv = uri->SetSpec((char *) urlSpec.GetBuffer());
             if (NS_SUCCEEDED(rv))
                 rv = GetImapConnectionAndLoadUrl(aClientEventQueue, imapUrl,
@@ -724,9 +725,9 @@ nsImapService::Biff(nsIEventQueue * aClientEventQueue,
 			urlSpec.Append("/Biff>");
 			urlSpec.Append(hierarchySeparator);
 
-            nsCString folderName;
-            GetFolderName(aImapMailFolder, folderName);
-            urlSpec.Append(folderName.GetBuffer());
+            nsXPIDLCString folderName;
+            GetFolderName(aImapMailFolder, getter_Copies(folderName));
+            urlSpec.Append((const char *) folderName);
 			urlSpec.Append(">");
 			urlSpec.Append(uidHighWater, 10);
 			rv = uri->SetSpec((char *) urlSpec.GetBuffer());
@@ -765,11 +766,11 @@ nsImapService::DeleteFolder(nsIEventQueue* eventQueue,
             urlSpec.Append("/delete>");
             urlSpec.Append(hierarchySeparator);
             
-            nsCString folderName;
-            rv = GetFolderName(folder, folderName);
+            nsXPIDLCString folderName;
+            rv = GetFolderName(folder, getter_Copies(folderName));
             if (NS_SUCCEEDED(rv))
             {
-                urlSpec.Append(folderName.GetBuffer());
+                urlSpec.Append((const char *) folderName);
                 rv = uri->SetSpec((char*) urlSpec.GetBuffer());
                 if (NS_SUCCEEDED(rv))
                     rv = GetImapConnectionAndLoadUrl(eventQueue, imapUrl,
@@ -819,10 +820,10 @@ nsImapService::DeleteMessages(nsIEventQueue * aClientEventQueue,
 			urlSpec.Append(">");
 			urlSpec.Append(hierarchySeparator);
 
-            nsCString folderName;
+            nsXPIDLCString folderName;
 
-            GetFolderName(aImapMailFolder, folderName);
-            urlSpec.Append(folderName.GetBuffer());
+            GetFolderName(aImapMailFolder, getter_Copies(folderName));
+            urlSpec.Append((const char *) folderName);
 			urlSpec.Append(">");
 			urlSpec.Append(messageIdentifierList);
 			rv = uri->SetSpec((char *) urlSpec.GetBuffer());
@@ -866,9 +867,9 @@ nsImapService::DeleteAllMessages(nsIEventQueue * aClientEventQueue,
 
 			urlSpec.Append("/deleteallmsgs>");
 			urlSpec.Append(hierarchySeparator);
-            nsCString folderName;
-            GetFolderName(aImapMailFolder, folderName);
-			urlSpec.Append(folderName.GetBuffer());
+            nsXPIDLCString folderName;
+            GetFolderName(aImapMailFolder, getter_Copies(folderName));
+			urlSpec.Append((const char *) folderName);
 			rv = uri->SetSpec((char *) urlSpec.GetBuffer());
             if (NS_SUCCEEDED(rv))
                 rv = GetImapConnectionAndLoadUrl(aClientEventQueue, imapUrl,
@@ -961,9 +962,9 @@ nsresult nsImapService::DiddleFlags(nsIEventQueue * aClientEventQueue,
 			urlSpec.Append(messageIdsAreUID ? uidString : sequenceString);
 			urlSpec.Append(">");
 			urlSpec.Append(hierarchySeparator);
-            nsCString folderName;
-            GetFolderName(aImapMailFolder, folderName);
-            urlSpec.Append(folderName.GetBuffer());
+            nsXPIDLCString folderName;
+            GetFolderName(aImapMailFolder, getter_Copies(folderName));
+            urlSpec.Append((const char *) folderName);
 			urlSpec.Append(">");
 			urlSpec.Append(messageIdentifierList);
 			urlSpec.Append('>');
@@ -1128,15 +1129,15 @@ nsImapService::DiscoverChildren(nsIEventQueue* aClientEventQueue,
 
         if (NS_SUCCEEDED(rv))
         {
-            nsCString folderName;
-            GetFolderName(aImapMailFolder, folderName);
-            if (folderName.Length() > 0)
+            nsXPIDLCString folderName;
+            GetFolderName(aImapMailFolder, getter_Copies(folderName));
+            if (nsCRT::strlen(folderName) > 0)
             {
                 nsCOMPtr<nsIURI> uri = do_QueryInterface(aImapUrl);
 
                 // **** fix me with host specific hierarchySeparator please
                 urlSpec.Append("/discoverchildren>/");
-                urlSpec.Append(folderName.GetBuffer());
+                urlSpec.Append((const char *) folderName);
     			// mscott - this cast to a char * is okay...there's a bug in the XPIDL
 				// compiler that is preventing in string parameters from showing up as
 				// const char *. hopefully they will fix it soon.
@@ -1178,16 +1179,16 @@ nsImapService::DiscoverLevelChildren(nsIEventQueue* aClientEventQueue,
 
         if (NS_SUCCEEDED(rv))
         {
-            nsCString folderName;
-            GetFolderName(aImapMailFolder, folderName);
-            if (folderName.Length() > 0)
+            nsXPIDLCString folderName;
+            GetFolderName(aImapMailFolder, getter_Copies(folderName));
+            if (nsCRT::strlen(folderName) > 0)
             {
                 nsCOMPtr<nsIURI> uri = do_QueryInterface(aImapUrl);
                 urlSpec.Append("/discoverlevelchildren>");
                 urlSpec.Append(level);
                 // **** fix me with host specific hierarchySeparator please
                 urlSpec.Append("/"); // hierarchySeparator "/"
-                urlSpec.Append(folderName.GetBuffer());
+                urlSpec.Append((const char *) folderName);
 
 				rv = uri->SetSpec((char *) urlSpec.GetBuffer());
                 if (NS_SUCCEEDED(rv))
@@ -1280,16 +1281,16 @@ nsImapService::OnlineMessageCopy(nsIEventQueue* aClientEventQueue,
         urlSpec.Append('>');
         urlSpec.Append(hierarchySeparator);
 
-        nsCString folderName;
-        GetFolderName(aSrcFolder, folderName);
-        urlSpec.Append(folderName.GetBuffer());
+        nsXPIDLCString folderName;
+        GetFolderName(aSrcFolder, getter_Copies(folderName));
+        urlSpec.Append((const char *) folderName);
         urlSpec.Append('>');
         urlSpec.Append(messageIds);
         urlSpec.Append('>');
         urlSpec.Append(hierarchySeparator);
         folderName = "";
-        GetFolderName(aDstFolder, folderName);
-        urlSpec.Append(folderName);
+        GetFolderName(aDstFolder, getter_Copies(folderName));
+        urlSpec.Append((const char *) folderName);
 
 		rv = uri->SetSpec((char *) urlSpec.GetBuffer());
         if (NS_SUCCEEDED(rv))
@@ -1342,8 +1343,8 @@ nsImapService::AppendMessageFromFile(nsIEventQueue* aClientEventQueue,
 
         urlSpec.Append(hierarchySeparator);
         
-        nsCString folderName;
-        GetFolderName(aDstFolder, folderName);
+        nsXPIDLCString folderName;
+        GetFolderName(aDstFolder, getter_Copies(folderName));
         urlSpec.Append(folderName);
 
         if (inSelectedState)
@@ -1416,18 +1417,18 @@ nsImapService::MoveFolder(nsIEventQueue* eventQueue, nsIMsgFolder* srcFolder,
         if (NS_SUCCEEDED(rv))
         {
             char hierarchySeparator = kOnlineHierarchySeparatorUnknown;
-            nsCString folderName;
+            nsXPIDLCString folderName;
             
             nsCOMPtr<nsIURI> uri = do_QueryInterface(imapUrl);
-            GetFolderName(srcFolder, folderName);
+            GetFolderName(srcFolder, getter_Copies(folderName));
             urlSpec.Append("/movefolderhierarchy>");
             urlSpec.Append(hierarchySeparator);
-            urlSpec.Append(folderName.GetBuffer());
+            urlSpec.Append((const char *) folderName);
             urlSpec.Append('>');
-            folderName.SetLength(0);
-            GetFolderName(dstFolder, folderName);
+            folderName = "";
+            GetFolderName(dstFolder, getter_Copies(folderName));
             urlSpec.Append(hierarchySeparator);
-            urlSpec.Append(folderName.GetBuffer());
+            urlSpec.Append((const char *) folderName);
             rv = uri->SetSpec((char*) urlSpec.GetBuffer());
             if (NS_SUCCEEDED(rv))
                 rv = GetImapConnectionAndLoadUrl(eventQueue, imapUrl,
@@ -1461,19 +1462,20 @@ nsImapService::RenameLeaf(nsIEventQueue* eventQueue, nsIMsgFolder* srcFolder,
             char hierarchySeparator = '/';
             nsCOMPtr<nsIURI> uri = do_QueryInterface(imapUrl);
 
-            nsCString folderName;
-            GetFolderName(srcFolder, folderName);
+            nsXPIDLCString folderName;
+            GetFolderName(srcFolder, getter_Copies(folderName));
             urlSpec.Append("/rename>");
             urlSpec.Append(hierarchySeparator);
-            urlSpec.Append(folderName.GetBuffer());
+            urlSpec.Append((const char *) folderName);
             urlSpec.Append('>');
             urlSpec.Append(hierarchySeparator);
+			nsCAutoString cStrFolderName = (const char *) folderName;
             PRInt32 leafNameStart = 
-                folderName.RFindChar('/'); // ** troublesome hierarchyseparator
+                cStrFolderName.RFindChar('/'); // ** troublesome hierarchyseparator
             if (leafNameStart != -1)
             {
-                folderName.SetLength(leafNameStart+1);
-                urlSpec.Append(folderName.GetBuffer());
+                cStrFolderName.SetLength(leafNameStart+1);
+                urlSpec.Append(cStrFolderName.GetBuffer());
             }
             urlSpec.Append(newLeafName);
             rv = uri->SetSpec((char*) urlSpec.GetBuffer());
@@ -1508,16 +1510,18 @@ nsImapService::CreateFolder(nsIEventQueue* eventQueue, nsIMsgFolder* parent,
             char hierarchySeparator = '/';
             nsCOMPtr<nsIURI> uri = do_QueryInterface(imapUrl);
 
-            nsCString folderName;
-            GetFolderName(parent, folderName);
+            nsXPIDLCString folderName;
+            GetFolderName(parent, getter_Copies(folderName));
             urlSpec.Append("/create>");
             urlSpec.Append(hierarchySeparator);
-            if (folderName.Length() > 0)
+            if (nsCRT::strlen(folderName) > 0)
             {
-                urlSpec.Append(folderName.GetBuffer());
+                urlSpec.Append((const char *) folderName);
                 urlSpec.Append(hierarchySeparator);
             }
-            urlSpec.Append(newFolderName);
+			char *escapedFolderName = nsEscape(newFolderName, url_Path);
+            urlSpec.Append(escapedFolderName);
+			nsCRT::free(escapedFolderName);
     
             rv = uri->SetSpec((char*) urlSpec.GetBuffer());
             if (NS_SUCCEEDED(rv))
