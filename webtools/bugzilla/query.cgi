@@ -20,6 +20,7 @@
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 #                 David Gardiner <david.gardiner@unisa.edu.au>
+#                 Matthias Radestock <matthias@sorted.org>
 
 use diagnostics;
 use strict;
@@ -278,16 +279,47 @@ my $emailinput2 = GenerateEmailInput(2);
 # have access to.  remove them from the list.
 
 @::product_list = ();
+my %component_set;
+my %version_set;
+my %milestone_set;
 foreach my $p (@::legal_product) {
-   if(Param("usebuggroupsentry")
-      && GroupExists($p)
-      && !UserInGroup($p)) {
-        # If we're using bug groups to restrict entry on products, and
-        # this product has a bug group, and the user is not in that
-        # group, we don't want to include that product in this list.
-        next;
-      }
-   push @::product_list, $p;
+  if(Param("usebuggroups")
+     && GroupExists($p)
+     && !UserInGroup($p)) {
+    # If we're using bug groups to restrict entry on products, and
+    # this product has a bug group, and the user is not in that
+    # group, we don't want to include that product in this list.
+    next;
+  }
+  push @::product_list, $p;
+  foreach my $c (@{$::components{$p}}) {
+    $component_set{$c} = 1;
+  }
+  foreach my $v (@{$::versions{$p}}) {
+    $version_set{$v} = 1;
+  }
+  foreach my $m (@{$::target_milestone{$p}}) {
+    $milestone_set{$m} = 1;
+  }
+}
+
+@::component_list = ();
+@::version_list = ();
+@::milestone_list = ();
+foreach my $c (@::legal_components) {
+  if ($component_set{$c}) {
+    push @::component_list, $c;
+  }
+}
+foreach my $v (@::legal_versions) {
+  if ($version_set{$v}) {
+    push @::version_list, $v;
+  }
+}
+foreach my $m (@::legal_target_milestone) {
+  if ($milestone_set{$m}) {
+    push @::milestone_list, $m;
+  }
 }
 
 # javascript
@@ -308,16 +340,16 @@ my $m;
 my $i = 0;
 my $j = 0;
 
-foreach $c (@::legal_components) {
+foreach $c (@::component_list) {
     $jscript .= "cpts['$c'] = new Array();\n";
 }
 
-foreach $v (@::legal_versions) {
+foreach $v (@::version_list) {
     $jscript .= "vers['$v'] = new Array();\n";
 }
 
 my $tm;
-foreach $tm (@::legal_target_milestone) {
+foreach $tm (@::milestone_list) {
     $jscript .= "tms['$tm'] = new Array();\n";
 }
 
@@ -629,13 +661,13 @@ print "
 
 <td align=left valign=top>
 <SELECT NAME=\"version\" MULTIPLE SIZE=5>
-@{[make_options(\@::legal_versions, $default{'version'}, $type{'version'})]}
+@{[make_options(\@::version_list, $default{'version'}, $type{'version'})]}
 </SELECT>
 </td>
 
 <td align=left valign=top>
 <SELECT NAME=\"component\" MULTIPLE SIZE=5>
-@{[make_options(\@::legal_components, $default{'component'}, $type{'component'})]}
+@{[make_options(\@::component_list, $default{'component'}, $type{'component'})]}
 </SELECT>
 </td>";
 
@@ -643,7 +675,7 @@ if (Param("usetargetmilestone")) {
     print "
 <td align=left valign=top>
 <SELECT NAME=\"target_milestone\" MULTIPLE SIZE=5>
-@{[make_options(\@::legal_target_milestone, $default{'target_milestone'}, $type{'target_milestone'})]}
+@{[make_options(\@::milestone_list, $default{'target_milestone'}, $type{'target_milestone'})]}
 </SELECT>
 </td>";
 }
