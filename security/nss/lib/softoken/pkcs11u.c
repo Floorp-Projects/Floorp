@@ -1000,7 +1000,7 @@ pk11_FindCrlAttribute(PK11TokenObject *object, CK_ATTRIBUTE_TYPE type)
     crl =  pk11_getCrl(object);
     switch (type) {
     case CKA_NETSCAPE_URL:
-	if (url == NULL) {
+	if (crl->url == NULL) {
 	    return (PK11Attribute *) &pk11_StaticNullAttr;
 	}
 	return pk11_NewTokenAttribute(type, crl->url, 
