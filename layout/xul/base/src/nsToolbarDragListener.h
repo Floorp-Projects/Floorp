@@ -50,7 +50,11 @@ public:
 
 protected:
 
-  PRBool IsOnToolbarItem(nsIDOMEvent* aDragEvent, nscoord& aXLoc, PRBool& aIsLegalChild);
+    // Figure out which child item mouse is over. |outIndex| is the index of the item the object 
+    // should be dropped _before_. Therefore if the item should be dropped at the end, the index 
+    // will be greater than the number of items in the list. |outOnChild| is true if the item
+    // is a container and the drop would be "on" that item.
+  void ItemMouseIsOver(nsIDOMEvent* aDragEvent, nscoord* outXLoc, PRUint32* outIndex, PRBool* outOnChild);
 
   nsToolbarFrame * mToolbar;         // toolbar owns me, don't be circular
   nsIPresContext * mPresContext;     // weak reference

@@ -76,6 +76,10 @@ public:
   NS_IMETHOD  HandleEvent(nsIPresContext& aPresContext, 
                           nsGUIEvent*     aEvent,
                           nsEventStatus&  aEventStatus);
+  NS_IMETHOD  AttributeChanged(nsIPresContext* aPresContext,
+                               nsIContent*     aChild,
+                               nsIAtom*        aAttribute,
+                               PRInt32         aHint) ;
 
 #if WTF_IS_THIS
     //еее not sure at all where this comes from. I asked rods, no reply yet.
@@ -85,7 +89,9 @@ public:
                                PRInt32* aLocalChange);
 #endif
 
+#if 0
   void SetDropfeedbackLocation(nscoord aX)  { mXDropLoc = aX; }
+#endif
 
 protected:
 
