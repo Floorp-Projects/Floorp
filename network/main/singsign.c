@@ -466,8 +466,8 @@ si_GetUser(MWContext *context, char* URLName, Bool pickFirstUser) {
 
 	    /* only one set of data exists for this URL so select it */
 	    user = (si_SignonUserStruct *) XP_ListNextObject(user_ptr);
-	    url->firsttime_chosing_user = FALSE;
 	    url->chosen_user = user;
+	    url->firsttime_chosing_user = FALSE;
 
 	} else if (pickFirstUser) {
 	    user = (si_SignonUserStruct *) XP_ListNextObject(user_ptr);
@@ -506,13 +506,13 @@ si_GetUser(MWContext *context, char* URLName, Bool pickFirstUser) {
                     user_count = 0; /* user didn't select, so use first one */
 		}
 		user = users[user_count]; /* this is the selected item */
-		url->chosen_user = user;
 		/* item selected is now most-recently used, put at head of list */
 		XP_ListRemoveObject(url->signonUser_list, user);
 		XP_ListAddObject(url->signonUser_list, user);
 	    } else {
 		user = NULL;
 	    }
+	    url->chosen_user = user;
 	    XP_FREE(list);
 	    XP_FREE(users);
 
@@ -852,8 +852,8 @@ si_PutData(char * URLName, LO_FormSubmitData * submit, Bool save) {
 #endif
 
     /* initialize state variables in URL node */
-    url->chosen_user = NULL;
     url->firsttime_chosing_user = TRUE;
+    url->chosen_user = NULL;
 
     /*
      * see if a user node with data list matching new data already exists
@@ -1440,11 +1440,8 @@ SI_RememberSignonData(MWContext *context, LO_FormSubmitData * submit)
 PUBLIC void
 SI_LogNewURL() {
     if (lastURL) {
-	si_lock_signon_list();
-	lastURL -> chosen_user = NULL;
 	lastURL -> firsttime_chosing_user = TRUE;
 	lastURL = NULL;
-	si_unlock_signon_list();
     }
 }
 
@@ -1506,7 +1503,7 @@ SI_RestoreOldSignonData
 
     /* get the data from previous time this URL was visited */
 
-    if (si_TagCount == 1) {
+    if ((si_TagCount == 1) || url->firsttime_chosing_user) {
 	user = si_GetUser(context, URLName, FALSE);
     } else {
 	if (url) {
