@@ -198,8 +198,8 @@ sub directive_ok {
     # Things which are already filtered
     # Note: If a single directive prints two things, and only one is 
     # filtered, we may not catch that case.
-    return 1 if $directive =~ /FILTER\ (html|csv|js|url_quote|quoteUrls|
-                                        time|uri|xml|lower)/x;
+    return 1 if $directive =~ /FILTER\ (html|csv|js|url_quote|css_class_quote|
+                                        quoteUrls|time|uri|xml|lower)/x;
 
     return 0;
 }

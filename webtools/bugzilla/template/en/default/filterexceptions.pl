@@ -251,11 +251,8 @@
 ],
 
 'list/table.html.tmpl' => [
-  'id', 
   'abbrev.$id.title || field_descs.$id || column.title', #
   'tableheader',
-  'bug.bug_severity', #
-  'bug.priority', #
   'bug.bug_id', 
 ],
 

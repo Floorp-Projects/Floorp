@@ -218,6 +218,10 @@ sub create {
             # a full URL that may have characters that need encoding.
             url_quote => \&Bugzilla::Util::url_quote ,
 
+            # This filter is similar to url_quote but used a \ instead of a %
+            # as prefix. In addition it replaces a ' ' by a '_'.
+            css_class_quote => \&Bugzilla::Util::css_class_quote ,
+
             quoteUrls => \&::quoteUrls ,
 
             bug_link => [ sub {

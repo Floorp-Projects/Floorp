@@ -30,6 +30,7 @@ use strict;
 use base qw(Exporter);
 @Bugzilla::Util::EXPORT = qw(is_tainted trick_taint detaint_natural
                              html_quote url_quote value_quote xml_quote
+                             css_class_quote
                              lsearch max min
                              trim format_time);
 
@@ -70,6 +71,13 @@ sub html_quote {
 sub url_quote {
     my ($toencode) = (@_);
     $toencode =~ s/([^a-zA-Z0-9_\-.])/uc sprintf("%%%02x",ord($1))/eg;
+    return $toencode;
+}
+
+sub css_class_quote {
+    my ($toencode) = (@_);
+    $toencode =~ s/ /_/g;
+    $toencode =~ s/([^a-zA-Z0-9_\-.])/uc sprintf("&#x%x;",ord($1))/eg;
     return $toencode;
 }
 
@@ -259,6 +267,11 @@ replaced with their appropriate HTML entities.
 =item C<url_quote($val)>
 
 Quotes characters so that they may be included as part of a url.
+
+=item C<css_class_quote($val)>
+
+Quotes characters so that they may be used as CSS class names. Spaces
+are replaced by underscores.
 
 =item C<value_quote($val)>
 

@@ -92,6 +92,7 @@ foreach my $include_path (@include_paths) {
             js        => sub { return $_ } ,
             strike    => sub { return $_ } ,
             url_quote => sub { return $_ } ,
+            css_class_quote => sub { return $_ } ,
             xml       => sub { return $_ } ,
             quoteUrls => sub { return $_ } ,
             bug_link => [ sub { return sub { return $_; } }, 1] ,

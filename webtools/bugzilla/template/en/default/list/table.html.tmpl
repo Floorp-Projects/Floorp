@@ -76,7 +76,7 @@
     <colgroup>
       <col class="bz_id_column">
       [% FOREACH id = displaycolumns %]
-      <col class="bz_[% id %]_column">
+      <col class="bz_[% id FILTER css_class_quote %]_column">
       [% END %]
     </colgroup>
 
@@ -136,7 +136,11 @@
     [% tableheader %]
   [% END %]
 
-  <tr class="bz_[% bug.bug_severity %] bz_[% bug.priority %] [%+ "bz_secure" IF bug.isingroups %]">
+  <tr class="bz_[% bug.bug_severity FILTER css_class_quote %]
+             bz_[% bug.priority FILTER css_class_quote %]
+             bz_[% bug.bug_status FILTER css_class_quote %]
+             bz_[% bug.resolution FILTER css_class_quote %]
+             [%+ "bz_secure" IF bug.isingroups %]">
 
     <td>
       [% IF dotweak %]<input type="checkbox" name="id_[% bug.bug_id %]">[% END %]
