@@ -1021,7 +1021,7 @@ nsStyleDisplay::nsStyleDisplay()
   mAppearance = 0;
   mDisplay = NS_STYLE_DISPLAY_INLINE;
   mOriginalDisplay = NS_STYLE_DISPLAY_NONE;
-  mPosition = NS_STYLE_POSITION_NORMAL;
+  mPosition = NS_STYLE_POSITION_STATIC;
   mFloats = NS_STYLE_FLOAT_NONE;
   mBreakType = NS_STYLE_CLEAR_NONE;
   mBreakBefore = PR_FALSE;

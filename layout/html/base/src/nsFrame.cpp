@@ -2630,7 +2630,7 @@ NS_IMETHODIMP nsFrame::IsPercentageBase(PRBool& aBase) const
   const nsStyleDisplay* display;
     GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
     
-  if (display->mPosition != NS_STYLE_POSITION_NORMAL) {
+  if (display->mPosition != NS_STYLE_POSITION_STATIC) {
     aBase = PR_TRUE;
   }
   else {

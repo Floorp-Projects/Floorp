@@ -2479,7 +2479,7 @@ nsComputedDOMStyle::GetPosition(nsIFrame *aFrame,
 
   if (display) {
     switch (display->mPosition) {
-      case NS_STYLE_POSITION_NORMAL:
+      case NS_STYLE_POSITION_STATIC:
         val->SetIdent(NS_LITERAL_STRING("static"));
         break;
       case NS_STYLE_POSITION_RELATIVE:
@@ -3067,7 +3067,7 @@ nsComputedDOMStyle::GetOffsetWidthFor(PRUint8 aSide, nsIFrame* aFrame,
   nsresult rv = NS_OK;
   if (display) {
     switch (display->mPosition) {
-      case NS_STYLE_POSITION_NORMAL:
+      case NS_STYLE_POSITION_STATIC:
         rv = GetStaticOffset(aSide, aFrame, aValue);
         break;
       case NS_STYLE_POSITION_RELATIVE:

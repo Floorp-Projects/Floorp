@@ -634,7 +634,7 @@ const PRInt32 nsCSSProps::kPlayDuringKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kPositionKTable[] = {
-  eCSSKeyword_static, NS_STYLE_POSITION_NORMAL,
+  eCSSKeyword_static, NS_STYLE_POSITION_STATIC,
   eCSSKeyword_relative, NS_STYLE_POSITION_RELATIVE,
   eCSSKeyword_absolute, NS_STYLE_POSITION_ABSOLUTE,
   eCSSKeyword_fixed, NS_STYLE_POSITION_FIXED,
