@@ -25,6 +25,7 @@
  */
 
 #include <CodeFragments.h>
+#include <stdio.h>
 
 extern char __code_start__[];				/*	(defined by linker)	*/
 extern char	__code_end__[];					/*	(defined by linker)	*/
@@ -58,8 +59,13 @@ pascal void __NSTerminate()
 }
 
 #ifndef GC_LEAK_DETECTOR
-// stub implementations, when GC leak detection isn't on.
+// stub implementations, when GC leak detection isn't on. these are needed so that
+// NSStdLib has something to export for these functions, even when the GC isn't used.
 void GC_add_roots(char *begin, char *end) {}
 void GC_remove_roots(char *begin, char *end) {}
+void GC_clear_roots() {}
+void GC_generic_init_threads() {}
+void GC_gcollect() {}
+FILE* gc_stdout = NULL;
+FILE* GC_stderr = NULL;
 #endif
-
