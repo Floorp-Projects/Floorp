@@ -305,6 +305,7 @@ nsXULContentUtils::~nsXULContentUtils()
         }
 
         NS_IF_RELEASE(gNameSpaceManager);
+        NS_IF_RELEASE(gFormat);
 
         NS_IF_RELEASE(kEventsAtom);
         NS_IF_RELEASE(kTargetsAtom);
