@@ -51,6 +51,10 @@
 #include "prtime.h"
 #include "prthread.h"
 
+#ifdef POLL_WITH_XCONNECTIONNUMBER
+#include <poll.h>
+#endif
+
 // unicode conversion
 #include "nsIPlatformCharset.h"
 #include "nsICharsetConverterManager.h"
@@ -1299,76 +1303,118 @@ void nsClipboard::SetCutBuffer()
 #endif
 }
 
-void nsClipboard::SendClipPing()
-{
-#ifdef DEBUG_CLIPBOARD
-  printf("nsClipboard::SendClipPing()\n");
-#endif
-  XClientMessageEvent send_event;
-  send_event.type = ClientMessage;
-  send_event.message_type = XInternAtom(GDK_DISPLAY(), "_MOZ_CLIP_PING", PR_FALSE);
-  send_event.format = 32;
-  send_event.data.l[0] = CurrentTime;
-  send_event.window = GDK_WINDOW_XWINDOW(sWidget->window);
-
-  XSendEvent(GDK_DISPLAY(), GDK_WINDOW_XWINDOW(sWidget->window), PR_FALSE, 0, (XEvent*)&send_event);
-  XSync(GDK_DISPLAY(), False);
-}
-
-static Bool
-find_clipboard_event (Display  *display,
-                      XEvent   *xevent,
-                      XPointer  arg)
-{
-
-  GtkWidget *widget = (GtkWidget*) arg;
-
-  g_return_val_if_fail (widget != NULL, False);
-
-  if (xevent->xany.window == GDK_WINDOW_XWINDOW(widget->window) &&
-      (xevent->xany.type == SelectionNotify ||
-       xevent->xany.type == ClientMessage))
-    return True;
-  else
-    return False;
-}
-
-void send_selection_notify_to_widget(XEvent *xevent, GtkWidget *widget)
+static void
+DispatchSelectionNotifyEvent(GtkWidget *widget, XEvent *xevent)
 {
   GdkEvent event;
   event.selection.type = GDK_SELECTION_NOTIFY;
-  event.any.window = gdk_window_lookup(xevent->xany.window);
-  event.any.send_event = xevent->xany.send_event ? TRUE : FALSE;
-  event.selection.window = event.any.window;
+  event.selection.window = widget->window;
   event.selection.selection = xevent->xselection.selection;
   event.selection.target = xevent->xselection.target;
   event.selection.property = xevent->xselection.property;
   event.selection.time = xevent->xselection.time;
-  
+
   gtk_widget_event(widget, &event);
 }
 
-/* Maximum time to wait for a SelectionNotify event, in microseconds */
-#define NS_CLIPBOARD_TIMEOUT 500000
+static void
+DispatchPropertyNotifyEvent(GtkWidget *widget, XEvent *xevent)
+{
+  if (gdk_window_get_events(widget->window) & GDK_PROPERTY_CHANGE_MASK) {
+    GdkEvent event;
+    event.property.type = GDK_PROPERTY_NOTIFY;
+    event.property.window = widget->window;
+    event.property.atom = xevent->xproperty.atom;
+    event.property.time = xevent->xproperty.time;
+    event.property.state = xevent->xproperty.state;
+
+    gtk_widget_event(widget, &event);
+  }
+}
+
+struct checkEventContext
+{
+  GtkWidget *cbWidget;
+  Atom       selAtom;
+};
+
+static Bool
+checkEventProc(Display *display, XEvent *event, XPointer arg)
+{
+  checkEventContext *context = (checkEventContext *) arg;
+
+  if (event->xany.type == SelectionNotify ||
+      (event->xany.type == PropertyNotify &&
+       event->xproperty.atom == context->selAtom)) {
+
+    GdkWindow *cbWindow = gdk_window_lookup(event->xany.window);
+    if (cbWindow) {
+      GtkWidget *cbWidget = NULL;
+      gdk_window_get_user_data(cbWindow, (gpointer *)&cbWidget);
+      if (cbWidget && GTK_IS_WIDGET(cbWidget)) {
+        context->cbWidget = cbWidget;
+        return True;
+      }
+    }
+  }
+
+  return False;
+}
+
+// Idle timeout for receiving selection and property notify events (microsec)
+static const int kClipboardTimeout = 500000;
 
 PRBool nsClipboard::FindSelectionNotifyEvent()
 {
-  PRTime entryTime=PR_Now();
-  XEvent xevent;
+  Display *xDisplay = GDK_DISPLAY();
+  checkEventContext context;
+  context.cbWidget = NULL;
+  context.selAtom = gdk_atom_intern("GDK_SELECTION", FALSE);
 
-  while (1) {
-    if (XCheckTypedWindowEvent(GDK_DISPLAY(),
-                               GDK_WINDOW_XWINDOW(sWidget->window),
-                               SelectionNotify,
-                               &xevent)) {
-      send_selection_notify_to_widget(&xevent, sWidget);
-      return PR_TRUE;
+  // Send X events which are relevant to the ongoing selection retrieval
+  // to the clipboard widget.  Wait until either the operation completes, or
+  // we hit our timeout.  All other X events remain queued.
+
+  int select_result;
+
+#ifdef POLL_WITH_XCONNECTIONNUMBER
+  struct pollfd fds[1];
+  fds[0].fd = XConnectionNumber(xDisplay);
+  fds[0].events = POLLIN;
+#else
+  int cnumber = ConnectionNumber(xDisplay);
+  fd_set select_set;
+  FD_ZERO(&select_set);
+  FD_SET(cnumber++, &select_set);
+  struct timeval tv;
+#endif
+
+  do {
+    XEvent xevent;
+
+    while (XCheckIfEvent(xDisplay, &xevent, checkEventProc,
+                         (XPointer) &context)) {
+
+      if (xevent.xany.type == SelectionNotify)
+        DispatchSelectionNotifyEvent(context.cbWidget, &xevent);
+      else
+        DispatchPropertyNotifyEvent(context.cbWidget, &xevent);
+
+      if (!mBlocking)
+        return PR_TRUE;
     }
-    PR_Sleep(20*PR_TicksPerSecond()/1000);  /* sleep for 20 ms/iteration */
-    if (PR_Now()-entryTime > NS_CLIPBOARD_TIMEOUT) break; 
-  } 
+
+#ifdef POLL_WITH_XCONNECTIONNUMBER
+    select_result = poll(fds, 1, kClipboardTimeout / 1000);
+#else
+    tv.tv_sec = 0;
+    tv.tv_usec = kClipboardTimeout;
+    select_result = select(cnumber, &select_set, NULL, NULL, &tv);
+#endif
+  } while (select_result == 1);
+
 #ifdef DEBUG_CLIPBOARD
-  printf("can't find a SelectionNotify event, giving up\n");
+  printf("exceeded clipboard timeout\n");
 #endif
   return PR_FALSE;
 }

@@ -144,7 +144,6 @@ private:
   
 
   /* functions to do blocking when trying to get info from another client */
-  void SendClipPing();
   PRBool FindSelectionNotifyEvent();
 
 
