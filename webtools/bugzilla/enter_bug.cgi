@@ -174,7 +174,7 @@ print "
 <FORM NAME=enterForm METHOD=POST ACTION=\"post_bug.cgi\">
 <INPUT TYPE=HIDDEN NAME=bug_status VALUE=NEW>
 <INPUT TYPE=HIDDEN NAME=reporter VALUE=$::COOKIE{'Bugzilla_login'}>
-<INPUT TYPE=HIDDEN NAME=product VALUE=$product>
+<INPUT TYPE=HIDDEN NAME=product VALUE=\""  . value_quote($product) . "\">
   <TABLE CELLSPACING=2 CELLPADDING=0 BORDER=0>
   <TR>
     <td ALIGN=right valign=top><B>Product:</B></td>
