@@ -399,15 +399,15 @@ function onOK()
   deletedSignons = goneSS.split(",");
   var signonCount;
   for (signonCount=0; signonCount<deletedSignons.length-1; signonCount++) {
-    passwordmanager.removeUser(signons[deletedSignons[signonCount]].host,
-                               signons[deletedSignons[signonCount]].rawuser);
+    var index = parseInt(deletedSignons[signonCount]);
+    passwordmanager.removeUser(signons[index].host, signons[index].rawuser);
   }
 
   var deletedRejects = [];
   deletedRejects = goneIS.split(",");
   var rejectCount;
   for (rejectCount=0; rejectCount<deletedRejects.length-1; rejectCount++) {
-    passwordmanager.removeReject(rejects[deletedRejects[rejectCount]].host);
+    passwordmanager.removeReject(rejects[parseInt(deletedRejects[rejectCount])].host);
   }
 
   var result = "|goneC|"+goneNC+"|goneP|"+goneNP+"|";
