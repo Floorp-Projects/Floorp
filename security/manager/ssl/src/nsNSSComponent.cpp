@@ -39,6 +39,7 @@
 #include "nsINSSDialogs.h"
 #include "nsIX509Cert.h"
 #include "nsIX509CertDB.h"
+#include "nsIProfileChangeStatus.h"
 #include "nsNSSCertificate.h"
 #include "nsNSSHelper.h"
 #include "prlog.h"
@@ -414,6 +415,7 @@ nsNSSComponent::Init()
   ConfigureInternalPKCS11Token();
   InstallLoadableRoots();
   RegisterCertContentListener();
+  RegisterProfileChangeObserver();
   return rv;
 }
 
@@ -511,6 +513,36 @@ nsNSSComponent::PrefChanged(const char* prefName)
     mPref->GetBoolPref("security.enable_tls", &enabled);
     SSL_OptionSetDefault(SSL_ENABLE_TLS, enabled);
   }
+}
+
+NS_IMETHODIMP
+nsNSSComponent::Observe(nsISupports *aSubject, const PRUnichar *aTopic, 
+                        const PRUnichar *someData)
+{
+  if (nsCRT::strcmp(aTopic, PROFILE_BEFORE_CHANGE_TOPIC) == 0) {
+    //The profile is about to change, shut down NSS
+    NSS_Shutdown();
+    mNSSInitialized = PR_FALSE;
+  }
+  return NS_OK;
+}
+
+nsresult
+nsNSSComponent::RegisterProfileChangeObserver()
+{
+  nsresult rv;
+  
+  NS_WITH_SERVICE(nsIObserverService, observerService, 
+                  NS_OBSERVERSERVICE_CONTRACTID, &rv);
+  NS_ASSERTION(observerService, "could not get observer service");
+  if (observerService) {
+    // Our refcnt must be > 0 when we call AddObserver or we'll
+    // get deleted.
+    ++mRefCnt;
+    observerService->AddObserver(this, PROFILE_BEFORE_CHANGE_TOPIC);
+    --mRefCnt;
+  }
+  return rv;
 }
 
 static const char *kNSSDialogsContractId = NS_NSSDIALOGS_CONTRACTID;

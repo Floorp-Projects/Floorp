@@ -34,6 +34,8 @@
 #include "nsString.h"
 #include "nsIStringBundle.h"
 #include "nsIPref.h"
+#include "nsIObserverService.h"
+#include "nsWeakReference.h"
 
 #include "nsNSSHelper.h"
 
@@ -73,7 +75,9 @@ class NS_NO_VTABLE nsINSSComponent : public nsISupports {
 class nsNSSComponent : public nsISecurityManagerComponent,
                        public nsISignatureVerifier,
                        public nsIEntropyCollector,
-                       public nsINSSComponent
+                       public nsINSSComponent,
+                       public nsIObserver,
+                       public nsSupportsWeakReference
 {
 public:
   NS_DEFINE_STATIC_CID_ACCESSOR( NS_NSSCOMPONENT_CID );
@@ -85,6 +89,7 @@ public:
   NS_DECL_NSISECURITYMANAGERCOMPONENT
   NS_DECL_NSISIGNATUREVERIFIER
   NS_DECL_NSIENTROPYCOLLECTOR
+  NS_DECL_NSIOBSERVER
 
   NS_METHOD Init();
 
@@ -103,6 +108,7 @@ private:
   nsresult ConfigureInternalPKCS11Token();
   char * GetPK11String(const PRUnichar *name, PRUint32 len);
   nsresult RegisterCertContentListener();
+  nsresult RegisterProfileChangeObserver();
   static int PrefChangedCallback(const char* aPrefName, void* data);
   void PrefChanged(const char* aPrefName);
 
