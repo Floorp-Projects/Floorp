@@ -323,10 +323,13 @@ nsFindAndReplace::Replace(const PRUnichar *aFindText, const PRUnichar *aReplaceT
 //  non whitespace and same char.
 // ----------------------------------------------------------------
 
+#define NBSP_CHARCODE ((PRUnichar)160)
+#define IS_SPACE_CHAR(c) (nsCRT::IsAsciiSpace(c) || (c) == NBSP_CHARCODE)
+
 inline static PRBool
 CharsMatch(PRUnichar c1, PRUnichar c2)
 {
-  return (nsCRT::IsAsciiSpace(c1) && nsCRT::IsAsciiSpace(c2)) || (c1 == c2);
+  return (c1 == c2) || (IS_SPACE_CHAR(c1) && IS_SPACE_CHAR(c2));
 }
 
 // ----------------------------------------------------------------
@@ -338,136 +341,126 @@ CharsMatch(PRUnichar c1, PRUnichar c2)
 //  This uses a brute-force algorithm, which should be sufficient
 //  for our purposes (text searching)
 // 
-//  searchStr contains the text from a content node, which can contain
+//  aSearchStr contains the text from a content node, which can contain
 //  extra white space between words, which we have to deal with.
-//  The offsets passed in and back are offsets into searchStr,
+//  The offsets passed in and back are offsets into aSearchStr,
 //  and thus include extra white space.
 //
 //  If we are ignoring case, the strings have already been lowercased
 //  at this point.
 //
-//  startOffset is the offset in the search string to start searching
+//  aStartOffset is the offset in the search string to start searching
 //  at. If -1, it means search from the start (forwards) or end (backwards).
 //
+//  aSkipTrailingSpaces adjusts the matching algorithm when dealing with
+//  adjacent white space. If true the algorithm matches the exact number
+//  of spaces in each consecutive run of spaces in the aPatternStr, and if
+//  the number of consecutive spaces for a given run in aSearchStr is longer,
+//  the trailing extra spaces are ignored/skipped, but included in the length
+//  of the string matched. If false, the matching algorithm will only match
+//  the number of spaces in each run contained in aPatternStr.
+//
+//  aFoundStrLen will contain the length of the string matching aPatternStr.
+//  It should be noted that aFoundStrLen can be greater than the length of
+//  aPatternStr since the matched string could contain extra whitespace.
+//
 //  Returns -1 if the string is not found, or if the pattern is an
-//  empty string, or if startOffset is off the end of the string.
+//  empty string, or if aStartOffset is off the end of the string.
 // ----------------------------------------------------------------
 
-static PRInt32 FindInString(const nsString &searchStr, const nsString &patternStr,
-                            PRInt32 startOffset, PRBool searchBackwards)
+static PRInt32 FindInString(const nsString &aSearchStr, const nsString &aPatternStr,
+                            PRInt32 aStartOffset, PRBool aSearchBackwards,
+                            PRBool aSkipTrailingSpaces, PRInt32 *aFoundStrLen)
 {
-  PRInt32 foundOffset = -1;
-  PRInt32 patternLen = patternStr.Length();
-  PRInt32 searchStrLen = searchStr.Length();
+  PRInt32 patternLen = aPatternStr.Length();
+  PRInt32 searchStrLen = aSearchStr.Length();
+
+  if (aFoundStrLen)
+    *aFoundStrLen = 0;
 
   if (patternLen == 0) // pattern is empty
     return -1;
 
-  if (startOffset < 0)
-    startOffset = (searchBackwards) ? searchStrLen : 0;
+  if (aStartOffset < 0)
+    aStartOffset = (aSearchBackwards) ? searchStrLen : 0;
 
-  if (startOffset > searchStrLen) // bad start offset
+  if (aStartOffset > searchStrLen) // bad start offset
     return -1;
 
   if (patternLen > searchStrLen) // pattern is longer than string to search
     return -1;
 
-  const PRUnichar *searchBuf = searchStr.get();
-  const PRUnichar *patternBuf = patternStr.get();
+  const PRUnichar *searchBuf = aSearchStr.get();
+  const PRUnichar *patternBuf = aPatternStr.get();
 
   const PRUnichar *searchEnd = searchBuf + searchStrLen;
   const PRUnichar *patEnd = patternBuf + patternLen;
 
-  if (searchBackwards)
+  const PRUnichar *s = searchBuf + aStartOffset;
+
+  if (aSearchBackwards)
+    s -= patternLen;
+
+  while ((!aSearchBackwards && s <  searchEnd) ||
+         ( aSearchBackwards && s >= searchBuf))
   {
-    // searching backwards
-    const PRUnichar *s = searchBuf + startOffset - patternLen;
-
-    while (s >= searchBuf)
+    if (CharsMatch(*patternBuf, *s)) // start potential match
     {
-      if (CharsMatch(*patternBuf, *s)) // start potential match
+      const PRUnichar *t = s;
+      const PRUnichar *p = patternBuf;
+      PRInt32 curMatchOffset = t - searchBuf;
+      PRInt32 curMatchLen = 0;
+
+      while (p < patEnd && t < searchEnd && CharsMatch(*p, *t))
       {
-        const PRUnichar *t = s;
-        const PRUnichar *p = patternBuf;
-        PRInt32 curMatchOffset = t - searchBuf;
-        PRBool inWhitespace = nsCRT::IsAsciiSpace(*p);
-  
-        while (p < patEnd && CharsMatch(*p, *t))
+        PRBool didProcessWhitespace = PR_FALSE;
+
+        while (t != searchEnd && p != patEnd && IS_SPACE_CHAR(*p))
         {
-          if (inWhitespace && !nsCRT::IsAsciiSpace(*p))
+          didProcessWhitespace = PR_TRUE;
+
+          if (!IS_SPACE_CHAR(*t))
+            break;
+
+          p++;
+          t++;
+          curMatchLen++;
+
+          if (aSkipTrailingSpaces && (p == patEnd || !IS_SPACE_CHAR(*p)))
           {
-            // leaving p whitespace. Eat up addition whitespace in s
-            while (t < searchEnd - 1 && nsCRT::IsAsciiSpace(*(t + 1)))
-              t ++;
-
-            inWhitespace = PR_FALSE;
+            // leaving p whitespace. Eat up additional whitespace in t
+            while (t < searchEnd && IS_SPACE_CHAR(*t))
+            {
+              t++;
+              curMatchLen++;
+            }
           }
-          else
-           inWhitespace = nsCRT::IsAsciiSpace(*p);
+        }
 
-          t ++;
-          p ++;
-        }
-  
-        if (p == patEnd)
+        if (!didProcessWhitespace)
         {
-          foundOffset = curMatchOffset;
-          goto done;
+          t++;
+          p++;
+          curMatchLen++;
         }
-  
-        // could be smart about decrementing s here
       }
 
-      s --;
-    }
-  }
-  else
-  {
-    // searching forwards
-
-    const PRUnichar *s = &searchBuf[startOffset];
-
-    while (s < searchEnd)
-    {
-      if (CharsMatch(*patternBuf, *s)) // start potential match
+      if (p == patEnd)
       {
-        const PRUnichar *t = s;
-        const PRUnichar *p = patternBuf;
-        PRInt32 curMatchOffset = t - searchBuf;
-        PRBool inWhitespace = nsCRT::IsAsciiSpace(*p);
+        if (aFoundStrLen)
+          *aFoundStrLen = curMatchLen;
 
-        while (p < patEnd && CharsMatch(*p, *t))
-        {
-          if (inWhitespace && !nsCRT::IsAsciiSpace(*p))
-          {
-            // leaving p whitespace. Eat up addition whitespace in s
-            while (t < searchEnd - 1 && nsCRT::IsAsciiSpace(*t))
-              t ++;
-
-            inWhitespace = PR_FALSE;
-          }
-          else
-            inWhitespace = nsCRT::IsAsciiSpace(*p);
-
-          t ++;
-          p ++;
-        }
-
-        if (p == patEnd)
-        {
-          foundOffset = curMatchOffset;
-          goto done;
-        }
-
-        // could be smart about incrementing s here
+        return curMatchOffset;
       }
-
-      s ++;
     }
+
+    if (aSearchBackwards)
+      s--;
+    else // searching forwards
+      s++;
   }
 
-done:
-  return foundOffset;
+  return -1;
 }
 
 // utility method to discover which block we're in. The TSDoc interface doesn't give
@@ -725,11 +718,12 @@ nsFindAndReplace::DoFind(nsITextServicesDocument *aTxtDoc, const nsString &aFind
         }
       }
 
-      PRInt32 foundOffset = FindInString(str, aFindString, mCurrentSelOffset, mFindBackwards);
+      PRInt32 foundLength = 0;
+      PRInt32 foundOffset = FindInString(str, aFindString, mCurrentSelOffset, mFindBackwards, PR_TRUE, &foundLength);
   
       if (mWrapFind && mWrappedOnce && (mCurrentBlockIndex == mStartBlockIndex))
       {
-        if ((mFindBackwards && ((foundOffset + aFindString.Length()) <= mStartSelOffset)) ||
+        if ((mFindBackwards && ((foundOffset + (PRInt32)aFindString.Length()) <= mStartSelOffset)) ||
             (!mFindBackwards && (foundOffset >= mStartSelOffset)))
         {
           done = PR_TRUE;
@@ -742,7 +736,7 @@ nsFindAndReplace::DoFind(nsITextServicesDocument *aTxtDoc, const nsString &aFind
         mCurrentSelOffset = foundOffset;  // reset for next call to DoFind().
 
         // Match found.  Select it, remember where it was, and quit.
-        aTxtDoc->SetSelection(foundOffset, aFindString.Length());
+        aTxtDoc->SetSelection(foundOffset, foundLength);
         aTxtDoc->ScrollSelectionIntoView();
         done = PR_TRUE;
         *aDidFind = PR_TRUE;
