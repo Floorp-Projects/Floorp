@@ -64,7 +64,7 @@
 #ifdef XP_MAC
 #include "nsILocalFileMac.h"
 #include "nsIInternetConfigService.h"
-#include "nsDecodeAppleFile.h"
+#include "nsIAppleFileDecoder.h"
 #endif // XP_MAC
 
 const char *FORCE_ALWAYS_ASK_PREF = "browser.helperApps.alwaysAsk.force";
@@ -797,12 +797,12 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
       (nsCRT::strcasecmp(contentType, APPLICATION_APPLEFILE) == 0) ||
       (nsCRT::strcasecmp(contentType, MULTIPART_APPLEDOUBLE) == 0))
     {
-      nsCOMPtr<nsIOutputStream> appleFileDecoder;
-      NS_NEWXPCOM(appleFileDecoder, nsDecodeAppleFile);
-      if (appleFileDecoder)
+      nsCOMPtr<nsIAppleFileDecoder> appleFileDecoder = do_CreateInstance(NS_IAPPLEFILEDECODER_CONTRACTID, &rv);
+      if (NS_SUCCEEDED(rv) && appleFileDecoder)
       {
-        NS_STATIC_CAST(nsDecodeAppleFile*, NS_STATIC_CAST(nsIOutputStream*, appleFileDecoder))->Initialize(mOutStream, mTempFile);
-        mOutStream = appleFileDecoder;
+        rv = appleFileDecoder->Initialize(mOutStream, mTempFile);
+        if (NS_SUCCEEDED(rv))
+          mOutStream = do_QueryInterface(appleFileDecoder, &rv);
       }
     }
 #endif

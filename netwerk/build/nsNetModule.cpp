@@ -53,6 +53,10 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "nsStreamConverterService.h"
+#if defined(XP_MAC)
+#include "nsAppleFileDecoder.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppleFileDecoder)
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -732,6 +736,14 @@ static nsModuleComponentInfo gNetModuleInfo[] = {
       RegisterStreamConverters,   // registers *all* converters
       UnregisterStreamConverters  // unregisters *all* converters
     },
+    
+#if defined(XP_MAC)
+    { NS_APPLEFILEDECODER_CLASSNAME, 
+      NS_APPLEFILEDECODER_CID,
+      NS_IAPPLEFILEDECODER_CONTRACTID, 
+      nsAppleFileDecoderConstructor
+    },
+#endif
 
     // from netwerk/streamconv/converters:
     { "FTPDirListingConverter", 
