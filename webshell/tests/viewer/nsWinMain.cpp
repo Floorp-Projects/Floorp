@@ -88,7 +88,6 @@ nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
 
 int main(int argc, char **argv)
 {
-  PL_InitializeEventsLib("");
   nsViewerApp* app = new nsNativeViewerApp();
   NS_ADDREF(app);
   app->Initialize(argc, argv);
@@ -104,7 +103,6 @@ WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdParam,
 {
   gInstance = instance;
   gPrevInstance = prevInstance;
-  PL_InitializeEventsLib("");
   nsViewerApp* app = new nsNativeViewerApp();
   app->Initialize(0, nsnull);
   int result = app->Run();
