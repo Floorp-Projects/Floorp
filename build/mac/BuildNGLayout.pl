@@ -33,29 +33,29 @@ $MOZ_FULLCIRCLE = 0;
 $CARBON = 0;				# turn on to build with TARGET_CARBON
 
 # The following two options will delete all files, but leave the directory structure intact.
-$CLOBBER_DIST_ALL = 0;      # turn on to clobber all files inside dist (headers, xsym and libs)
-$CLOBBER_DIST_LIBS = 0;     # turn on to clobber the aliases to libraries and sym files in dist
-$USE_XPIDL = 1;             # turn on to use the XPIDL plugin to generate files.
+$CLOBBER_DIST_ALL 	= 0;		# turn on to clobber all files inside dist (headers, xsym and libs)
+$CLOBBER_DIST_LIBS 	= 0;		# turn on to clobber the aliases to libraries and sym files in dist
+$USE_XPIDL 			= 1;		# turn on to use the XPIDL plugin to generate files.
 
-$pull{all} = 0;
-$pull{lizard} = 0;
-$pull{xpcom} = 0;
-$pull{imglib} = 0;
-$pull{netlib} = 0;
-$pull{nglayout} = 0;
-$pull{mac} = 0;
+$pull{all} 			= 0;
+$pull{lizard} 		= 0;
+$pull{xpcom} 		= 0;
+$pull{imglib} 		= 0;
+$pull{netlib} 		= 0;
+$pull{nglayout} 	= 0;
+$pull{mac} 			= 0;
 
-$build{all} = 1;				# turn off to do individual builds
-$build{dist} = 0;
-$build{stubs} = 0;
-$build{common} = 0;
-$build{intl} = 0;
-$build{nglayout} = 0;
-$build{resources} = 0;
-$build{editor} = 0;
-$build{mailnews} = 0;
-$build{viewer} = 0;
-$build{xpapp} = 0;
+$build{all} 		= 1;				# turn off to do individual builds
+$build{dist} 		= 0;
+$build{stubs} 		= 0;
+$build{common} 		= 0;
+$build{intl} 		= 0;
+$build{nglayout} 	= 0;
+$build{resources} 	= 0;
+$build{editor} 		= 0;
+$build{mailnews} 	= 0;
+$build{viewer} 		= 0;
+$build{xpapp} 		= 0;
 
 if ($pull{all})
 {
