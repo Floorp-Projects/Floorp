@@ -737,31 +737,19 @@ CSSLoaderImpl::Cleanup(URLKey& aKey, SheetLoadData* aLoadData)
 #ifdef INCLUDE_XUL
 static PRBool IsChromeURI(nsIURI* aURI)
 {
-  nsresult rv;
-  nsXPIDLCString protocol;
-  rv = aURI->GetScheme(getter_Copies(protocol));
-  if (NS_SUCCEEDED(rv)) {
-    if (PL_strcmp(protocol, "chrome") == 0) {
-        return PR_TRUE;
-    }
-  }
-
-  return PR_FALSE;
+  NS_ASSERTION(aURI, "bad caller");
+  PRBool isChrome = PR_FALSE;
+  aURI->SchemeIs("chrome", &isChrome);
+  return isChrome;
 }
 #endif
 
 static PRBool IsFileURI(nsIURI* aURI)
 {
-  nsresult rv;
-  nsXPIDLCString protocol;
-  rv = aURI->GetScheme(getter_Copies(protocol));
-  if (NS_SUCCEEDED(rv)) {
-    if (PL_strcmp(protocol, "file") == 0) {
-        return PR_TRUE;
-    }
-  }
-
-  return PR_FALSE;
+  NS_ASSERTION(aURI, "bad caller");
+  PRBool isFile = PR_FALSE;
+  aURI->SchemeIs("file", &isFile);
+  return isFile;
 }
 
 nsresult
@@ -1313,15 +1301,24 @@ CSSLoaderImpl::LoadStyleLink(nsIContent* aElement,
   }
 
   //-- Make sure this page is allowed to load this URL
-  nsresult rv;
-  NS_WITH_SERVICE(nsIScriptSecurityManager, secMan, NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) return rv;
-  nsIURI* docURI;
-  rv = mDocument->GetBaseURL(docURI);
-  if (NS_FAILED(rv) || !docURI) return NS_ERROR_FAILURE;
-  rv = secMan->CheckLoadURI(docURI, aURL, nsIScriptSecurityManager::ALLOW_CHROME);
-  NS_IF_RELEASE(docURI);
-  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+  // If we are doing view-source, no need to check...
+  PRBool isForViewSource = PR_FALSE;
+  if (aParserToUnblock) {
+    nsAutoString command;
+    aParserToUnblock->GetCommand(command);
+    isForViewSource = command.Equals(NS_LITERAL_STRING("view-source"));
+  }
+  if (!isForViewSource) {
+    nsresult rv;
+    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan, NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    nsIURI* docURI;
+    rv = mDocument->GetBaseURL(docURI);
+    if (NS_FAILED(rv) || !docURI) return NS_ERROR_FAILURE;
+    rv = secMan->CheckLoadURI(docURI, aURL, nsIScriptSecurityManager::ALLOW_CHROME);
+    NS_IF_RELEASE(docURI);
+    if (NS_FAILED(rv)) return rv;
+  }
 
   // XXX need to add code to cancel any pending sheets for element
   nsresult result = NS_ERROR_NULL_POINTER;

@@ -25,7 +25,6 @@
 #include "nslayout.h"
 #include "nsIModule.h"
 
-class nsIStyleSheet;
 class nsICSSStyleSheet;
 class nsIScriptNameSetRegistry;
 
@@ -59,7 +58,6 @@ protected:
 
 public:
   static nsICSSStyleSheet* gUAStyleSheet;
-  static nsIStyleSheet* gViewSourceStyleSheet;
 };
 
 //----------------------------------------------------------------------
