@@ -217,12 +217,14 @@ JMC_GEN_DIR		= $(XPDIST)/$(JMC_SUBDIR)
 JRI_GEN_DIR		= $(XPDIST)/_jri
 JNI_GEN_DIR		= $(XPDIST)/_jni
 JDK_STUB_DIR		= $(XPDIST)/_stubs
+XPIDL_GEN_DIR		= $(XPDIST)/_xpidlgen
 else
 JDK_GEN_DIR		= _gen
 JMC_GEN_DIR		= $(JMC_SUBDIR)
 JRI_GEN_DIR		= _jri
 JNI_GEN_DIR		= _jni
 JDK_STUB_DIR		= _stubs
+XPIDL_GEN_DIR		= _xpidlgen
 endif
 
 #
@@ -607,19 +609,6 @@ endif #STRICT_CPLUSPLUS_SUFFIX
 
 %: SCCS/s.%
 
-
-
-# these rules only apply when the XPIDL compiler is available
-ifdef USE_XPIDL
-%.h: %.idl $(IDL_COMPILE)
-	$(IDL_COMPILE) -m header -w -I $(DIST)/idl $<
-
-
-%.cpp: %.idl $(IDL_COMPILE)
-	$(IDL_COMPILE) -m stub -w -I $(DIST)/idl $<
-
-endif
-
 ifdef DIRS
 $(DIRS)::
 	@if test -d $@; then				\
@@ -895,15 +884,41 @@ export:: $(EXPORTS) $(XPDIST)/include
 endif
 
 ################################################################################
-# Copy each element of IDLSRCS to $(XPDIST)/idl
+# Export the elements of $(XPIDLSRCS), generating .h and .xpt files and
+# moving them to the appropriate places.
 
-ifneq ($(IDLSRCS),)
+ifneq ($(XPIDLSRCS),)
+ifneq ($(MODULE),) # we need $(MODULE) to make $(MODULE).xpt
+
+# export .idl files to $(XPDIST)/idl
 $(XPDIST)/idl::
 	@if test ! -d $@; then echo Creating $@; rm -rf $@; $(NSINSTALL) -D $@; else true; fi
 
-export:: $(IDLSRCS) $(XPDIST)/idl
+export:: $(XPIDLSRCS) $(XPDIST)/idl
 	$(INSTALL) -m 444 $^
 
+# generate .h files from into $(XPIDL_GEN_DIR), then export to $(XPDIST)/include
+$(XPIDL_GEN_DIR):
+	@if test ! -d $@; then echo Creating $@; rm -rf $@; mkdir $@; else true; fi
+
+# XXX add warning here for overriding existing .h file
+$(XPIDL_GEN_DIR)/%.h: %.idl $(IDL_COMPILE) $(XPIDL_GEN_DIR)
+	$(IDL_COMPILE) -m header -w -I $(XPDIST)/idl -o $(XPIDL_GEN_DIR)/$* $<
+
+export:: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.h, $(XPIDLSRCS)) $(XPDIST)/include
+	$(INSTALL) -m 444 $^
+
+# generate intermediate .xpt files into $(XPIDL_GEN_DIR), then link
+# into $(MODULE).xpt and export it to $(DIST)/bin/components.
+$(XPIDL_GEN_DIR)/%.xpt: %.idl $(IDL_COMPILE) $(XPIDL_GEN_DIR)
+	$(XPIDL_COMPILE) -m typelib -w -I $(XPDIST)/idl -o $(XPIDL_GEN_DIR)/$* $<
+
+$(XPIDL_GEN_DIR)/$(MODULE).xpt: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.xpt,$(XPIDLSRCS))
+	$(XPIDL_LINK) $(XPIDL_GEN_DIR)/$(MODULE).xpt $^
+
+install:: $(XPIDL_GEN_DIR)/$(MODULE).xpt
+	$(INSTALL) -m 444 $(XPIDL_GEN_DIR)/$(MODULE).xpt $(DIST)/bin/components
+endif
 endif
 
 ##############################################################################
