@@ -1,2 +1,2 @@
 cd Core
-NetscapeSetup.exe
+N6Setup.exe
