@@ -88,7 +88,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 
 // custom "contructor" methods
 
-static nsresult nsAppShellConstructor (nsISupports *aOuter, REFNSIID aIID, void **aResult)
+static NS_IMETHODIMP nsAppShellConstructor (nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
   nsresult rv;
   nsISupports *inst = nsnull;
@@ -122,7 +122,7 @@ static nsresult nsAppShellConstructor (nsISupports *aOuter, REFNSIID aIID, void 
   return rv;
 }
 
-static nsresult nsWidgetModuleDataConstructor (nsISupports *aOuter, REFNSIID aIID, void **aResult)
+static NS_IMETHODIMP nsWidgetModuleDataConstructor (nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
   nsresult rv;
   nsISupports *inst = nsnull;
@@ -158,7 +158,7 @@ static nsresult nsWidgetModuleDataConstructor (nsISupports *aOuter, REFNSIID aII
   return rv;
 }
 
-static nsresult nsHorizScrollbarConstructor (nsISupports *aOuter, REFNSIID aIID, void **aResult)
+static NS_IMETHODIMP nsHorizScrollbarConstructor (nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
   nsresult rv;
   nsISupports *inst = nsnull;
@@ -187,7 +187,7 @@ static nsresult nsHorizScrollbarConstructor (nsISupports *aOuter, REFNSIID aIID,
   return rv;
 }
 
-static nsresult nsVertScrollbarConstructor (nsISupports *aOuter, REFNSIID aIID, void **aResult)
+static NS_IMETHODIMP nsVertScrollbarConstructor (nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
   nsresult rv;
   nsISupports *inst = nsnull;

@@ -92,7 +92,7 @@ static NS_IMETHODIMP nsScriptableRegionConstructor(nsISupports *aOuter, REFNSIID
   return rv;
 }
 
-static nsresult nsImageManagerConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+static NS_IMETHODIMP nsImageManagerConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
     nsresult rv;
 

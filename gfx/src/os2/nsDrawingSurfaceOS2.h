@@ -71,7 +71,7 @@ class nsDrawingSurfaceOS2 : public nsIDrawingSurface
 
 
  public:
-   nsresult GetDimensions( PRUint32 *aWidth, PRUint32 *aHeight);
+   NS_IMETHOD GetDimensions( PRUint32 *aWidth, PRUint32 *aHeight);
 
    // os/2 methods
    HPS  GetPS () { return mPS; }
