@@ -19,8 +19,8 @@
 #       notice board display,  build display (colored squares)
 
 
-# $Revision: 1.15 $ 
-# $Date: 2002/05/10 21:38:02 $ 
+# $Revision: 1.16 $ 
+# $Date: 2003/02/03 18:16:00 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB.pm,v $ 
 # $Name:  $ 
@@ -106,6 +106,12 @@ sub strings2columns {
 
 main::require_modules(@IMPLS);
 @HTML_COLUMNS = strings2columns(@IMPLS);
+
+# We need to know if these columns are present or not.
+
+$IS_NOTICE_COLUMN = scalar(grep(/Notice/, @HTML_COLUMNS));
+$IS_VC_COLUMN = scalar(grep(/VC_/, @HTML_COLUMNS));
+$IS_BUILD = scalar(grep(/Build/, @HTML_COLUMNS));
 
 # now the notice column is special, it may not be a column but several
 # columns use it and it needs to have some column like behavior.
@@ -279,7 +285,7 @@ sub construct_build_event_times_vec {
       
       my ($build_obj) = TinderDB::Build->new();
       
-      @out= $build_obj->event_times_vec($start_time, $end_time, $tree);
+      @out= $build_obj->start_times_vec($start_time, $end_time, $tree);
   };
 
   @out = main::clean_times(@out);
@@ -330,7 +336,9 @@ sub loadtree_db {
   # Make sure the notice database is handled
   # even if notice is not a column.
 
-  $NOTICE->loadtree_db(@_);
+  if (!($IS_NOTICE_COLUMN)) {
+      $NOTICE->loadtree_db(@_);
+  }
 
   return ;
 }
@@ -353,7 +361,9 @@ sub apply_db_updates {
   # Make sure the notice database is handled
   # even if notice is not a column.
 
-  $NOTICE->apply_db_updates(@_);
+  if (!($IS_NOTICE_COLUMN)) {
+      $NOTICE->apply_db_updates(@_);
+  }
 
   return $out;
 }
@@ -378,7 +388,9 @@ sub trim_db_history {
   # Make sure the notice database is handled
   # even if notice is not a column.
 
-  $NOTICE->trim_db_history(@_);
+  if (!($IS_NOTICE_COLUMN)) {
+      $NOTICE->trim_db_history(@_);
+  }
 
   return ;
 
@@ -418,7 +430,9 @@ sub savetree_db {
   # Make sure the notice database is handled
   # even if notice is not a column.
 
-  $NOTICE->savetree_db(@_);
+  if (!($IS_NOTICE_COLUMN)) {
+      $NOTICE->savetree_db(@_);
+  }
 
   return ;
 }
@@ -431,6 +445,13 @@ sub status_table_legend {
   my (@outrow) = ();
   foreach $db (@{$DB}) {
     push @outrow, $db->status_table_legend(@_);
+  }
+
+  # Make sure the notice legend is included
+  # even if notice is not a column.
+
+  if (!($IS_NOTICE_COLUMN)) {
+      push @outrow, $NOTICE->status_table_legend(@_);
   }
 
   return (@outrow);
