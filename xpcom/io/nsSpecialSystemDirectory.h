@@ -99,6 +99,7 @@ class NS_COM nsSpecialSystemDirectory : public nsFileSpec
         ,   BeOS_SettingsDirectory    =   401
         ,   BeOS_HomeDirectory        =   402
         ,   BeOS_DesktopDirectory     =   403
+        ,   BeOS_SystemDirectory      =   404
         };
 
                     //nsSpecialSystemDirectory();

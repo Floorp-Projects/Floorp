@@ -82,6 +82,8 @@ nsResProtocolHandler::Init()
                        nsSpecialSystemDirectory::Mac_SystemDirectory
 #elif XP_PC
                        nsSpecialSystemDirectory::Win_SystemDirectory
+#elif XP_BEOS
+                       nsSpecialSystemDirectory::BeOS_SystemDirectory
 #else
                        nsSpecialSystemDirectory::Unix_LibDirectory  // XXX ???
 #endif
@@ -141,35 +143,8 @@ nsResProtocolHandler::Init()
 
 #elif defined(XP_BEOS)
 
-    // first add $MOZILLA_FIVE_HOME if it exists
-    const char *moz5 = getenv("MOZILLA_FIVE_HOME");
-    if (moz5) {
-        char* fileURL = PR_smprintf("file:///%s", moz5);
-        rv = AppendSubstitution("Resource", fileURL);
-        PR_Free(fileURL);
-        if (NS_FAILED(rv)) return rv;
-    }
-
-    // then add pwd
-    static char buf[MAXPATHLEN];
-    int32 cookie = 0;
-    image_info info;
-    char *p;
-    *buf = 0;
-    if (get_next_image_info(0, &cookie, &info) != B_OK) {
-        NS_WARNING("res protocol: get_next_image_info failed");
-        return NS_ERROR_FAILURE;
-    }
-    strcpy(buf, info.name);
-    if ((p = strrchr(buf, '/')) == 0) {
-        NS_WARNING("res protocol: no slash in working dir");
-        return NS_ERROR_FAILURE;
-    }
-    *p = 0;
-    char* fileURL = PR_smprintf("file:///%s", buf);
-    rv = AppendSubstitution("Resource", fileURL);
+    rv = SetSpecialDir("Resource", nsSpecialSystemDirectory::XPCOM_CurrentProcessComponentRegistry);
     if (NS_FAILED(rv)) return rv;
-    PR_Free(fileURL);
 
 #endif
 

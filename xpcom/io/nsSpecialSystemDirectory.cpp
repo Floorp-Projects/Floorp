@@ -691,31 +691,58 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
 #ifdef XP_BEOS
         case BeOS_SettingsDirectory:
 		{
-			BPath p;
-			if(find_directory(B_USER_SETTINGS_DIRECTORY, &p) == B_OK)
-				*this = p.Path();
-			else
-	            *this = "/boot/home/config/settings";
+            char path[MAXPATHLEN];
+			find_directory(B_USER_SETTINGS_DIRECTORY, 0, 0, path, MAXPATHLEN);
+            // Need enough space to add the trailing backslash
+			int len = strlen(path);
+            if (len > MAXPATHLEN-2)
+                break;
+            path[len]   = '/';
+            path[len+1] = '\0';
+			*this = path;
             break;
 		}
 
         case BeOS_HomeDirectory:
 		{
-			BPath p;
-			if(find_directory(B_USER_DIRECTORY, &p) == B_OK)
-				*this = p.Path();
-			else
-	            *this = "/boot/home";
+            char path[MAXPATHLEN];
+			find_directory(B_USER_DIRECTORY, 0, 0, path, MAXPATHLEN);
+            // Need enough space to add the trailing backslash
+			int len = strlen(path);
+            if (len > MAXPATHLEN-2)
+                break;
+            path[len]   = '/';
+            path[len+1] = '\0';
+			*this = path;
             break;
 		}
 
         case BeOS_DesktopDirectory:
 		{
-			BPath p;
-			if(find_directory(B_DESKTOP_DIRECTORY, &p) == B_OK)
-				*this = p.Path();
-			else
-	            *this = "/boot/home/Desktop";
+            char path[MAXPATHLEN];
+			find_directory(B_DESKTOP_DIRECTORY, 0, 0, path, MAXPATHLEN);
+            // Need enough space to add the trailing backslash
+			int len = strlen(path);
+            if (len > MAXPATHLEN-2)
+                break;
+            path[len]   = '/';
+            path[len+1] = '\0';
+			*this = path;
+            break;
+		}
+
+        case BeOS_SystemDirectory:
+		{
+            char path[MAXPATHLEN];
+			find_directory(B_BEOS_DIRECTORY, 0, 0, path, MAXPATHLEN);
+            // Need enough space to add the trailing backslash
+			int len = strlen(path);
+            if (len > MAXPATHLEN-2)
+                break;
+            path[len]   = '/';
+            path[len+1] = '\0';
+			*this = path;
+            break;
 		}
 #endif        
 
