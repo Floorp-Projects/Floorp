@@ -768,8 +768,28 @@ static nsresult InitializeProfileService(nsICmdLineService *cmdLineArgs)
         NS_ENSURE_TRUE(fileLocProvider, NS_ERROR_OUT_OF_MEMORY); 
         // Specify the dir that standalone app will use for its "profile" dir 
         nsCOMPtr<nsIFile> parentDir; 
-        rv = NS_GetSpecialDirectory(NS_OS_CURRENT_PROCESS_DIR, getter_AddRefs(parentDir)); 
-        if (NS_FAILED(rv)) return rv; 
+
+        PRBool exists = PR_FALSE;
+#ifdef XP_PC
+        rv = NS_GetSpecialDirectory(NS_WIN_APPDATA_DIR, getter_AddRefs(parentDir)); 
+        if (NS_SUCCEEDED(rv))
+          rv = parentDir->Exists(&exists);
+        if (NS_FAILED(rv) || !exists)
+          {
+            parentDir = nsnull;
+            rv = NS_GetSpecialDirectory(NS_WIN_WINDOWS_DIR, getter_AddRefs(parentDir));
+          }
+        
+        if (NS_FAILED(rv)) 
+          return rv;
+#else
+      rv = NS_GetSpecialDirectory(NS_OS_HOME_DIR, getter_AddRefs(parentDir)); 
+      
+      if (NS_SUCCEEDED(rv))
+        rv = parentDir->Exists(&exists);
+      if (NS_FAILED(rv) || !exists)
+        return rv;
+#endif
 
         // Get standalone app dir name from prefs and initialize mpfilelocprovider
         nsXPIDLCString appDir;

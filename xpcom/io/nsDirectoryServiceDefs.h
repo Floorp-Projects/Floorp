@@ -43,6 +43,7 @@
 #define NS_XPCOM_APPLICATION_REGISTRY_FILE      "AppRegF"
 #define NS_XPCOM_APPLICATION_REGISTRY_DIR       "AppRegD"
 
+#define NS_OS_HOME_DIR                          "Home"
 #define NS_OS_DRIVE_DIR                         "DrvD"
 #define NS_OS_TEMP_DIR                          "TmpD"
 #define NS_OS_CURRENT_PROCESS_DIR               "CurProcD"
