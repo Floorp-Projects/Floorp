@@ -65,6 +65,7 @@
     <key id="findprevkb"        key="&editfindprev.keybinding;"        observes="cmd_findPrev"  modifiers="accel,shift"/>
     <key keycode="&editfindnext.keybinding2;" observes="cmd_findNext"/>
     <key keycode="&editfindprev.keybinding2;" observes="cmd_findPrev" modifiers="shift"/>
+    <key keycode="&editfind.keybinding2;" observes="cmd_find"/>
     <key id="checkspellingkb"
          key="&editcheckspelling.keybinding;"
          observes="cmd_spelling"
