@@ -27,7 +27,9 @@
   # rankdir: string. "TB" if we are ranking top-to-bottom, 
                      "LR" if left-to-right.
   # image_url: string. The URL of the graphic showing the dependencies.
-  # map_url: string. The URL of the map file for the image.                   
+  # map_url: string. The URL of the map file for the image.  (Optional)
+  # image_map: string. The image map for the graphic showing the 
+                       dependencies. (Optional)
   #%]
 
 [% title = "Dependency Graph"
@@ -42,13 +44,19 @@
 
 [% PROCESS global/header.html.tmpl %]
 
+[% image_map %]
+
 <p>
   Green circles represent open bugs.
 </p>
 
-<a href="[% map_url %]">
-  <img src="[% image_url %]" ismap> 
-</a>
+[% IF image_map %]
+  <img src="[% image_url %]" usemap="#imagemap"> 
+[% ELSE %]
+  <a href="[% map_url %]">
+    <img src="[% image_url %]" ismap> 
+  </a>
+[% END %]
 
 <hr>
 

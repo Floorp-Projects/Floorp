@@ -37,6 +37,26 @@ use vars qw($template $vars $userid $usergroupset);
 my %seen;
 my %edgesdone;
 
+sub CreateImagemap {
+    my $mapfilename = shift;
+    my $map = "<map name=\"imagemap\">\n";
+    my $default;
+
+    open MAP, "<$mapfilename";
+    while(my $line = <MAP>) {
+        if($line =~ /^default ([^ ]*)(.*)$/) {
+            $default = qq{<area shape="default" href="$1">\n};
+        }
+        if ($line =~ /^rectangle \((.*),(.*)\) \((.*),(.*)\) (http[^ ]*)(.*)?$/) {
+            $map .= qq{<area name="bug$6" shape="rect" href="$5" coords="$1,$4,$3,$2">\n};
+        }
+    }
+    close MAP;
+
+    $map .= "$default</map>";
+    return $map;
+}
+
 sub AddLink {
     my ($blocked, $dependson) = (@_);
     my $key = "$blocked,$dependson";
@@ -162,9 +182,9 @@ if ($webdotbase =~ /^https?:/) {
     my $pngfilename = "data/webdot/$$.png";
     my $mapfilename = "data/webdot/$$.map";
     system("$webdotbase","-Tpng","-o","$pngfilename","$filename");
-    system("$webdotbase","-Timap","-o","$mapfilename","$filename");
     $vars->{'image_url'} = $pngfilename;
-    $vars->{'map_url'} = $mapfilename;
+    system("$webdotbase","-Tismap","-o","$mapfilename","$filename");
+    $vars->{'image_map'} = CreateImagemap($mapfilename);
 }
 
 # Cleanup any old .dot files created from previous runs.
