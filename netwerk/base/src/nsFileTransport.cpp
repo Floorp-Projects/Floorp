@@ -595,7 +595,7 @@ nsFileTransport::Process(void)
 {
     LOG(("nsFileTransport: Inside Process [this=%x state=%x status=%x]\n",
         this, mXferState, mStatus));
-    
+
     switch (mXferState) {
       case OPEN_FOR_READ: { 
         mStatus = mStreamIO->Open(&mContentType, &mTotalAmount);
@@ -968,6 +968,7 @@ nsFileTransport::DoClose(void)
     LOG(("nsFileTransport: CLOSING [this=%x %s] status=%x\n",
         this, mStreamName.get(), mStatus));
 
+    // XXX closing the stream io prevents this file transport from being reused
     if (mStreamIO) {
         nsresult rv = mStreamIO->Close(mStatus);
         NS_ASSERTION(NS_SUCCEEDED(rv), "unexpected Close failure");
