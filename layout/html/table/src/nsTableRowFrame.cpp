@@ -1373,6 +1373,12 @@ nsTableRowFrame::Reflow(nsIPresContext*          aPresContext,
   rv = nsTableFrame::GetTableFrame(this, tableFrame);
   if (!tableFrame) return NS_ERROR_NULL_POINTER;
 
+  const nsStyleVisibility* rowVis = GetStyleVisibility();
+  PRBool collapseRow = (NS_STYLE_VISIBILITY_COLLAPSE == rowVis->mVisible);
+  if (collapseRow) {
+    tableFrame->SetNeedToCollapseRows(PR_TRUE);
+  }
+
   // see if a special height reflow needs to occur due to having a pct height
   if (!NeedSpecialReflow()) 
     nsTableFrame::CheckRequestSpecialHeightReflow(aReflowState);

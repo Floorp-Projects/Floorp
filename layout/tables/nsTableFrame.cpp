@@ -1905,7 +1905,6 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext*          aPresContext,
     GET_TWIPS_TO_PIXELS(aPresContext, p2t);
     CalcBCBorders(*aPresContext);
   }
-  PRBool doCollapse = PR_FALSE; // collapsing rows, cols, etc.
 
   aDesiredSize.width = aReflowState.availableWidth;
 
@@ -2004,7 +2003,7 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext*          aPresContext,
                             ? NS_UNCONSTRAINEDSIZE : aReflowState.availableHeight;
 
       ReflowTable(aPresContext, aDesiredSize, aReflowState, availHeight, nextReason, 
-                  lastChildReflowed, doCollapse, balanced, aStatus);
+                  lastChildReflowed, balanced, aStatus);
       reflowedChildren = PR_TRUE;
     }
     if (willInitiateSpecialReflow && NS_FRAME_IS_COMPLETE(aStatus)) {
@@ -2017,7 +2016,7 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext*          aPresContext,
 
       ((nsHTMLReflowState::ReflowStateFlags&)aReflowState.mFlags).mSpecialHeightReflow = PR_TRUE;
       ReflowTable(aPresContext, aDesiredSize, aReflowState, aReflowState.availableHeight, 
-                  nextReason, lastChildReflowed, doCollapse, balanced, aStatus);
+                  nextReason, lastChildReflowed, balanced, aStatus);
       // restore the previous special height reflow initiator
       ((nsHTMLReflowState&)aReflowState).mPercentHeightReflowInitiator = specialReflowInitiator;
       // XXX We should call SetInitiatedSpecialReflow(PR_FALSE) at some point, but it is difficult to tell when
@@ -2054,8 +2053,10 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext*          aPresContext,
 
   nsMargin borderPadding = GetChildAreaOffset(&aReflowState);
   SetColumnDimensions(aDesiredSize.height, borderPadding);
-  if (doCollapse) {
+  if (NeedToCollapseRows()) {
     AdjustForCollapsingRows(aPresContext, aDesiredSize.height);
+  }
+  if (NeedToCollapseColumns()) {
     AdjustForCollapsingCols(aPresContext, aDesiredSize.width);
   }
 
@@ -2133,12 +2134,10 @@ nsTableFrame::ReflowTable(nsIPresContext*          aPresContext,
                           nscoord                  aAvailHeight,
                           nsReflowReason           aReason,
                           nsIFrame*&               aLastChildReflowed,
-                          PRBool&                  aDoCollapse,
                           PRBool&                  aDidBalance,
                           nsReflowStatus&          aStatus)
 {
   nsresult rv = NS_OK;
-  aDoCollapse = PR_FALSE;
   aDidBalance = PR_FALSE;
   aLastChildReflowed = nsnull;
 
@@ -2165,8 +2164,6 @@ nsTableFrame::ReflowTable(nsIPresContext*          aPresContext,
 
   if (eReflowReason_Resize == aReflowState.reason) {
     if (!DidResizeReflow()) {
-      // XXX we need to do this in other cases as well, but it needs to be made more incremental
-      aDoCollapse = PR_TRUE;
       SetResizeReflow(PR_TRUE);
     }
   }  
@@ -2292,14 +2289,21 @@ nsTableFrame::CollapseRowGroupIfNecessary(nsIPresContext* aPresContext,
   const nsStyleVisibility* groupVis = aRowGroupFrame->GetStyleVisibility();
   
   PRBool collapseGroup = (NS_STYLE_VISIBILITY_COLLAPSE == groupVis->mVisible);
+  if (collapseGroup) {
+    SetNeedToCollapseRows(PR_TRUE);
+  }
   nsIFrame* rowFrame = aRowGroupFrame->GetFirstChild(nsnull);
 
   while (nsnull != rowFrame) {
     const nsStyleDisplay* rowDisplay = rowFrame->GetStyleDisplay();
     if (NS_STYLE_DISPLAY_TABLE_ROW == rowDisplay->mDisplay) {
       const nsStyleVisibility* rowVis = rowFrame->GetStyleVisibility();
+      PRBool collapseRow = (NS_STYLE_VISIBILITY_COLLAPSE == rowVis->mVisible);
+      if (collapseRow) {
+        SetNeedToCollapseRows(PR_TRUE);
+      }
       nsRect rowRect = rowFrame->GetRect();
-      if (collapseGroup || (NS_STYLE_VISIBILITY_COLLAPSE == rowVis->mVisible)) {
+      if (collapseGroup || collapseRow) {
         aYGroupOffset += rowRect.height;
         rowRect.height = 0;
         rowFrame->SetRect(rowRect);
@@ -2362,7 +2366,9 @@ NS_METHOD nsTableFrame::AdjustForCollapsingRows(nsIPresContext* aPresContext,
   nscoord yGroupOffset = 0; // total offset among rows within a single row group
   nscoord yTotalOffset = 0; // total offset among all rows in all row groups
   PRInt32 rowIndex = 0;
-
+  // reset the bit, it will be set again if row/rowgroup is collapsed
+  SetNeedToCollapseRows(PR_FALSE); 
+                                   
   // collapse the rows and/or row groups as necessary
   while (nsnull != groupFrame) {
     if (IsRowGroup(groupFrame->GetStyleDisplay()->mDisplay)) {
@@ -2383,7 +2389,9 @@ NS_METHOD nsTableFrame::AdjustForCollapsingCols(nsIPresContext* aPresContext,
 {
   nsTableCellMap* cellMap = GetCellMap();
   if (!cellMap) return NS_OK;
-
+   // reset the bit, it will be set again if col/colgroup is collapsed
+  SetNeedToCollapseColumns(PR_FALSE);
+ 
   PRInt32 numRows = cellMap->GetRowCount();
   nsTableIterator groupIter(mColGroups, eTableDIR);
   nsIFrame* groupFrame = groupIter.First(); 
@@ -2396,6 +2404,9 @@ NS_METHOD nsTableFrame::AdjustForCollapsingCols(nsIPresContext* aPresContext,
     const nsStyleVisibility* groupVis = groupFrame->GetStyleVisibility();
     
     PRBool collapseGroup = (NS_STYLE_VISIBILITY_COLLAPSE == groupVis->mVisible);
+    if (collapseGroup) {
+      SetNeedToCollapseColumns(PR_TRUE);
+    }
     nsTableIterator colIter(*groupFrame, eTableDIR);
     nsIFrame* colFrame = colIter.First();
     // iterate over the cols in the col group
@@ -2404,6 +2415,9 @@ NS_METHOD nsTableFrame::AdjustForCollapsingCols(nsIPresContext* aPresContext,
       if (NS_STYLE_DISPLAY_TABLE_COLUMN == colDisplay->mDisplay) {
         const nsStyleVisibility* colVis = colFrame->GetStyleVisibility();
         PRBool collapseCol = (NS_STYLE_VISIBILITY_COLLAPSE == colVis->mVisible);
+        if (collapseCol) {
+          SetNeedToCollapseColumns(PR_TRUE);
+        }
         PRInt32 colWidth = GetColumnWidth(colX);
         if (collapseGroup || collapseCol) {
           xOffset += colWidth + cellSpacingX;

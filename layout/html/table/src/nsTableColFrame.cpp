@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsCOMPtr.h"
 #include "nsTableColFrame.h"
+#include "nsTableFrame.h"
 #include "nsContainerFrame.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
@@ -176,6 +177,15 @@ NS_METHOD nsTableColFrame::Reflow(nsIPresContext*          aPresContext,
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
   aDesiredSize.width=0;
   aDesiredSize.height=0;
+  const nsStyleVisibility* colVis = GetStyleVisibility();
+  PRBool collapseCol = (NS_STYLE_VISIBILITY_COLLAPSE == colVis->mVisible);
+  if (collapseCol) {
+    nsTableFrame* tableFrame = nsnull;
+    nsTableFrame::GetTableFrame(this, tableFrame);
+    if (tableFrame)  {
+      tableFrame->SetNeedToCollapseColumns(PR_TRUE);
+    }    
+  }
   if (aDesiredSize.mComputeMEW)
   {
     aDesiredSize.mMaxElementWidth=0;
