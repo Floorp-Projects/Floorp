@@ -313,3 +313,10 @@
 
 <!ENTITY allDayEvents.label "All Day Events">
 
+
+<!-- Calendar Wizard Dialog -->
+<!ENTITY calendar.wizard.import.label              "Import: Import events from a local file into an existing calendar.">
+<!ENTITY calendar.wizard.export.label              "Export: Export events from an existing calendar to a local file.">
+<!ENTITY calendar.wizard.subscribe.label           "Subscribe: Subscribe to a calendar file on a remote machine (ie. on the Internet)">
+<!ENTITY calendar.wizard.publish.label             "Publish: Publish events to a remote machine (ie. on the Internet) for others to subscribe to.">
+

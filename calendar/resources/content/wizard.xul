@@ -68,10 +68,10 @@
 
    <wizardpage pageid="initialPage" description="Choose An Action" onpagehide="checkInitialPage()" next="import">
       <radiogroup id="initial-radiogroup">
-         <radio value="import"    label="Import" selected="true"/>
-         <radio value="export"    label="Export"/>
-         <radio value="subscribe" label="Subscribe"/>
-         <radio value="publish"   label="Publish"/>
+         <radio value="import"    label="&calendar.wizard.import.label;" selected="true"/>
+         <radio value="export"    label="&calendar.wizard.export.label;"/>
+         <radio value="subscribe" label="&calendar.wizard.subscribe.label;"/>
+         <radio value="publish"   label="&calendar.wizard.publish.label;"/>
       </radiogroup>
    </wizardpage>
    
