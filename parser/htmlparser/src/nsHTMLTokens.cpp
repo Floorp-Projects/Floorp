@@ -745,12 +745,28 @@ nsresult CCDATASectionToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt3
         if (NS_OK==result &&
             (!inCDATA || kGreaterThan == aChar)) {
           result=aScanner.GetChar(aChar); //strip off the >
+
+          // XXX take me out when view source isn't stupid anymore
+          if (aFlag & NS_IPARSER_FLAG_VIEW_SOURCE) {
+            mTextValue.Append(aChar);
+          }
           done=PR_TRUE;
         }
       }
       else done=PR_TRUE;
     }
   }
+
+  if (kEOF == result && !aScanner.IsIncremental()) {
+    // We ran out of space looking for the end of this CDATA section.
+    // In order to not completely lose the entire section, treat everything
+    // until the end of the document as part of the CDATA section and let
+    // the DTD handle it.
+    // XXX when view source actually displays errors, we'll need to propagate
+    // the EOF down to it (i.e., not do this if we're viewing source).
+    result = NS_OK;
+  }
+
   return result;
 }
 
