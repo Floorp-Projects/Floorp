@@ -18,7 +18,7 @@ static void raw_draw_container_dflts( PtWidget_t *widget )
 	PtContainerWidget_t		  *container = ( PtContainerWidget_t * ) widget;
 	PtBasicWidget_t		      *basic = ( PtBasicWidget_t * ) widget;
 //  basic->flags |= Pt_OPAQUE;
-  widget->flags |= Pt_OPAQUE;
+  widget->flags |= ( Pt_OPAQUE | Pt_RECTANGULAR );
 	rdc->draw_f = NULL;
 }
 
@@ -70,7 +70,7 @@ PtWidgetClass_t *CreateRawDrawContainerClass( void )
 		{ Pt_SET_STATE_LEN, sizeof( RawDrawContainerWidget ) },
 		{ Pt_SET_DFLTS_F, (long)raw_draw_container_dflts },
 		{ Pt_SET_DRAW_F, (long)raw_draw_container_draw },
-		{ Pt_SET_FLAGS, 0, Pt_RECTANGULAR },
+		{ Pt_SET_FLAGS, Pt_RECTANGULAR | Pt_OPAQUE, Pt_RECTANGULAR | Pt_OPAQUE },
 		{ Pt_SET_NUM_RESOURCES, sizeof( resources ) / sizeof( resources[0] ) },
 		{ Pt_SET_RESOURCES, (long)resources, sizeof( resources ) / sizeof( resources[0] ) },
 		};
