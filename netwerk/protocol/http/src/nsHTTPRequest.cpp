@@ -569,10 +569,6 @@ nsHTTPPipelinedRequest::WriteRequest(nsIInputStream* iRequestStream)
     if (!mOnStopDone)
         return NS_OK;
 
-    if (!mInputStream)
-        mInputStream = iRequestStream;
-
-
     mRequests->Count(&count);
 
     if (count == 0 || mTotalWritten - mTotalProcessed >= count)
@@ -582,6 +578,11 @@ nsHTTPPipelinedRequest::WriteRequest(nsIInputStream* iRequestStream)
         return NS_ERROR_FAILURE;
 
     nsHTTPRequest * req = (nsHTTPRequest *) mRequests->ElementAt(0);
+
+    req -> GetUploadStream (getter_AddRefs (mInputStream));
+
+    if (iRequestStream && !mInputStream)
+        mInputStream = iRequestStream;
 
     if (!mTransport)
     {
@@ -1095,6 +1096,9 @@ nsHTTPRequest::GetUploadStream(nsIInputStream** o_UploadStream)
     if (!o_UploadStream)
         return NS_ERROR_NULL_POINTER;
     *o_UploadStream = mInputStream;
+    
+    NS_IF_ADDREF (*o_UploadStream);
+
     return NS_OK;
 
 }
