@@ -37,7 +37,7 @@
 	  <titledbutton class="right-header-text" value="&rHeader;"/>
 	</box>
 
-<titledbox orient="vertical">
+<titledbox orient="vertical" id="generalStartupPreferences">
   <title><text value="&onStartLegend.label;"/></title>
   	<html:div>
   		<html:input type="checkbox" pref="true" preftype="bool"
