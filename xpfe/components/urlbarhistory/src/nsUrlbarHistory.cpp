@@ -24,6 +24,7 @@
 // Local Includes 
 #include "nsString.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 #include "nsUrlbarHistory.h"
 
 // Helper Classes
@@ -332,7 +333,10 @@ nsUrlbarHistory::SearchPreviousResults(const PRUnichar *searchStr, nsIAutoComple
         return NS_ERROR_FAILURE;
     
     PRUint32 prevSearchStrLen = nsCRT::strlen(prevSearchString);
-    if (searchStrLen < prevSearchStrLen || nsCRT::strncasecmp(searchStr, prevSearchString, prevSearchStrLen != 0))
+    if (searchStrLen < prevSearchStrLen ||
+        Compare(nsDependentString(searchStr),
+                nsDependentString(prevSearchString, prevSearchStrLen),
+                nsCaseInsensitiveStringComparator())!= 0)
         return NS_ERROR_ABORT;
 
     nsCOMPtr<nsISupportsArray> array;
@@ -361,7 +365,9 @@ nsUrlbarHistory::SearchPreviousResults(const PRUnichar *searchStr, nsIAutoComple
 
 			if (itemValue.IsEmpty())
 				continue;
-		    if (nsCRT::strncasecmp(searchStr, itemValue.get(), searchStrLen) == 0)
+		    if (Compare(nsDependentString(searchStr, searchStrLen),
+                        itemValue,
+                        nsCaseInsensitiveStringComparator()) == 0)
 			    continue;
 			
 	    }
@@ -617,7 +623,8 @@ nsUrlbarHistory::CheckItemAvailability(const PRUnichar * aItem, nsIAutoCompleteR
             resultItem->GetValue(itemValue);
             // Using nsIURI to do comparisons didn't quite work out.
             // So use nsCRT methods
-            if (nsCRT::strcasecmp(itemValue.get(), aItem) == 0)
+            if (Compare(itemValue, nsDependentString(aItem),
+                        nsCaseInsensitiveStringComparator()) == 0)
             {
                 //printf("In CheckItemAvailability. Item already found\n");
                 *aResult = PR_TRUE;

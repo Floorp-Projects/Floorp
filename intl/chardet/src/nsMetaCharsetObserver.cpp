@@ -54,6 +54,7 @@
 #include "nsIParserService.h"
 #include "nsParserCIID.h"
 #include "nsMetaCharsetCID.h"
+#include "nsUnicharUtils.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kParserServiceCID, NS_PARSERSERVICE_CID);
@@ -104,7 +105,8 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
                      const PRUnichar* nameArray[], 
                      const PRUnichar* valueArray[])
 {
-    if(0 != nsCRT::strcasecmp(aTag, NS_LITERAL_STRING("META").get())) 
+  
+    if(0 != Compare(nsDependentString(aTag), NS_LITERAL_STRING("META"), nsCaseInsensitiveStringComparator())) 
         return NS_ERROR_ILLEGAL_VALUE;
     else
         return Notify(aDocumentID, numOfAttributes, nameArray, valueArray);
@@ -145,7 +147,8 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
                      const PRUnichar* aTag, 
                      const nsStringArray* keys, const nsStringArray* values)
 {
-    if(0 != nsCRT::strcasecmp(aTag, NS_LITERAL_STRING("META").get())) 
+    if(0 != Compare(nsDependentString(aTag), NS_LITERAL_STRING("META"),
+                    nsCaseInsensitiveStringComparator())) 
         return NS_ERROR_ILLEGAL_VALUE;
     else
         return Notify(aWebShell, aChannel, keys, values);
@@ -212,12 +215,18 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
         while(IS_SPACE_CHARS(*keyStr)) 
           keyStr++;
 
-        if(0 == nsCRT::strncasecmp(keyStr, NS_LITERAL_STRING("HTTP-EQUIV").get(), 10))
-              httpEquivValue=((values->StringAt(i))->get());
-        else if(0 == nsCRT::strncasecmp(keyStr, NS_LITERAL_STRING("content").get(), 7))
-              contentValue=(values->StringAt(i))->get();
-        else if (0 == nsCRT::strncasecmp(keyStr, NS_LITERAL_STRING("charset").get(), 7))
-              charsetValue =(values->StringAt(i))->get();
+        if(0 == Compare(nsDependentString(keyStr, 10),
+                        NS_LITERAL_STRING("HTTP-EQUIV"),
+                        nsCaseInsensitiveStringComparator()))
+              httpEquivValue = values->StringAt(i)->get();
+        else if(0 == Compare(nsDependentString(keyStr, 7),
+                             NS_LITERAL_STRING("content"),
+                             nsCaseInsensitiveStringComparator()))
+              contentValue = values->StringAt(i)->get();
+        else if (0 == Compare(nsDependentString(keyStr, 7),
+                              NS_LITERAL_STRING("charset"),
+                              nsCaseInsensitiveStringComparator()))
+              charsetValue = values->StringAt(i)->get();
       }
       NS_NAMED_LITERAL_STRING(contenttype, "Content-Type");
       NS_NAMED_LITERAL_STRING(texthtml, "text/html");
@@ -225,25 +234,33 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
       if(nsnull == httpEquivValue || nsnull == contentValue)
         return NS_OK;
 
-      while(IS_SPACE_CHARS(*httpEquivValue)) 
+      while(IS_SPACE_CHARS(*httpEquivValue))
         httpEquivValue++;
-      while(IS_SPACE_CHARS(*contentValue)) 
+      while(IS_SPACE_CHARS(*contentValue))
         contentValue++;
 
       if(
-         ((0==nsCRT::strcasecmp(httpEquivValue,contenttype.get())) ||
+          // first try unquoted strings
+         ((0==Compare(nsDependentString(httpEquivValue,contenttype.Length()),
+                      contenttype,
+                      nsCaseInsensitiveStringComparator())) ||
+          // now try "quoted" or 'quoted' strings
           (( (httpEquivValue[0]=='\'') ||
              (httpEquivValue[0]=='\"') ) && 
-           (0==nsCRT::strncasecmp(httpEquivValue+1,
-                      contenttype.get(),
-                      contenttype.Length()))
+           (0==Compare(nsDependentString(httpEquivValue+1, contenttype.Length()),
+                       contenttype,
+                       nsCaseInsensitiveStringComparator()))
           )) &&
-         ((0==nsCRT::strncasecmp(contentValue,texthtml.get(),texthtml.Length())) ||
+          // first try unquoted strings
+         ((0==Compare(nsDependentString(contentValue,texthtml.Length()),
+                      texthtml,
+                      nsCaseInsensitiveStringComparator())) ||
+          // now try "quoted" or 'quoted' strings
           (((contentValue[0]=='\'') ||
             (contentValue[0]=='\"'))&&
-           (0==nsCRT::strncasecmp(contentValue+1,
-                      texthtml.get(),
-                      texthtml.Length()))
+           (0==Compare(nsDependentString(contentValue+1, texthtml.Length()),
+                       texthtml,
+                       nsCaseInsensitiveStringComparator()))
           ))
         )
       {
@@ -335,7 +352,8 @@ NS_IMETHODIMP nsMetaCharsetObserver::GetCharsetFromCompatibilityTag(
     // e.g. <META charset="ISO-8859-1">
     PRInt32 numOfAttributes = keys->Count();
     if ((numOfAttributes >= 3) &&
-        (0 == nsCRT::strcasecmp((keys->StringAt(0))->get(), NS_LITERAL_STRING("charset").get())))
+        (0 == Compare(*keys->StringAt(0), NS_LITERAL_STRING("charset"),
+                      nsCaseInsensitiveStringComparator())))
     {
       nsAutoString srcStr((values->StringAt(numOfAttributes-2))->get());
       PRInt32 err;

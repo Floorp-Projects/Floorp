@@ -48,7 +48,7 @@
 
 #include "nsUConvDll.h"
 #include "nsReadableUtils.h"
-
+#include "nsUnicharUtils.h"
 #include "nsURLProperties.h"
 //==============================================================
 class nsCharsetAlias2 : public nsICharsetAlias

@@ -63,6 +63,7 @@
 #include "nsIFrame.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 #include "nsVoidArray.h"
 #include "nsIUnicharInputStream.h"
 #include "nsHTMLIIDs.h"
@@ -186,6 +187,10 @@ PRBool AtomKey_base::Equals(const nsHashKey* aKey) const
     return PRBool (((AtomKey_base*)aKey)->mAtom == mAtom);
   }
 
+  // first try case-sensitive match
+  if (((AtomKey_base*)aKey)->mAtom == mAtom)
+    return PR_TRUE;
+  
 #ifdef DEBUG_HASH
   DebugHashCount(PR_FALSE);
 #endif
@@ -197,7 +202,9 @@ PRBool AtomKey_base::Equals(const nsHashKey* aKey) const
   const PRUnichar *theirStr = nsnull;
   theirAtom->GetUnicode(&theirStr);
 
-  return nsCRT::strcasecmp(myStr, theirStr) == 0;
+  return Compare(nsDependentString(myStr),
+                 nsDependentString(theirStr),
+                 nsCaseInsensitiveStringComparator()) == 0;
 }
 
 
@@ -3367,7 +3374,9 @@ static PRBool ValueIncludes(const nsString& aValueList, const nsString& aValue, 
         }
       }
       else {
-        if (!nsCRT::strcasecmp(value, start)) {
+        if (!Compare(nsDependentString(value),
+                     nsDependentString(start),
+                     nsCaseInsensitiveStringComparator())) {
           return PR_TRUE;
         }
       }

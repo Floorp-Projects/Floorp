@@ -26,6 +26,7 @@ LCFLAGS=
 MODULE=rdf
 LIBRARY_NAME=rdfbase_s
 REQUIRES	= xpcom \
+		  unicharutil \
 		  string \
 		  rdfutil \
 		  htmlparser \

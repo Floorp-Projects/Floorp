@@ -38,6 +38,7 @@
 #include "nsICaret.h"
 
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 
 #include "nsHTMLEditor.h"
 #include "nsHTMLEditRules.h"
@@ -645,7 +646,7 @@ nsHTMLEditor::HasMatchingAttributes(nsIDOMNode *aNode1,
     attrName->ToString(attrString);
     // if it's a special _moz... attribute, keep going
     attrString.Left(tmp,4);
-    if (tmp.EqualsWithConversion("_moz")) continue;
+    if (tmp.Equals(NS_LITERAL_STRING("_moz"))) continue;
     // otherwise, it's another attribute, so count it
     realCount1++;
     // and compare it to element2's attributes
@@ -664,7 +665,7 @@ nsHTMLEditor::HasMatchingAttributes(nsIDOMNode *aNode1,
     attrName->ToString(attrString);
     // if it's a special _moz... attribute, keep going
     attrString.Left(tmp,4);
-    if (tmp.EqualsWithConversion("_moz")) continue;
+    if (tmp.Equals(NS_LITERAL_STRING("_moz"))) continue;
     // otherwise, it's another attribute, so count it
     realCount2++;
   }
@@ -1444,8 +1445,8 @@ nsHTMLEditor::RelativeFontChangeOnNode( PRInt32 aSizeChange,
   nsresult res = NS_OK;
   nsCOMPtr<nsIDOMNode> tmp;
   nsAutoString tag;
-  if (aSizeChange == 1) tag.AssignWithConversion("big");
-  else tag.AssignWithConversion("small");
+  if (aSizeChange == 1) tag.Assign(NS_LITERAL_STRING("big"));
+  else tag.Assign(NS_LITERAL_STRING("small"));
   
   // is this node a text node?
   if (IsTextNode(aNode))
@@ -1500,12 +1501,12 @@ nsHTMLEditor::GetFontFaceState(PRBool *aMixed, nsAWritableString &outFace)
   if (!aMixed)
       return NS_ERROR_FAILURE;
   *aMixed = PR_TRUE;
-  //outFace.AssignWithConversion("");
+  //outFace.Assign(NS_LITERAL_STRING(""));
   outFace.SetLength(0);
 
   nsresult res;
   nsAutoString faceStr;
-  faceStr.AssignWithConversion("face");
+  faceStr.Assign(NS_LITERAL_STRING("face"));
   PRBool first, any, all;
   
   
@@ -1545,7 +1546,7 @@ nsHTMLEditor::GetFontColorState(PRBool *aMixed, nsAWritableString &aOutColor)
   aOutColor.SetLength(0);
   
   nsresult res;
-  nsAutoString colorStr; colorStr.AssignWithConversion("color");
+  nsAutoString colorStr; colorStr.Assign(NS_LITERAL_STRING("color"));
   PRBool first, any, all;
   
   res = GetInlinePropertyBase(nsIEditProperty::font, &colorStr, nsnull, &first, &any, &all, &aOutColor);

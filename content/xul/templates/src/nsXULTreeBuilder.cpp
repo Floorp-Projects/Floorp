@@ -63,6 +63,7 @@
 #include "nsXULContentUtils.h"
 #include "nsXULTemplateBuilder.h"
 #include "nsVoidArray.h"
+#include "nsUnicharUtils.h"
 
 // For security check
 #include "nsIDocument.h"
@@ -1821,7 +1822,9 @@ nsXULOutlinerBuilder::CompareMatches(nsTemplateMatch* aLeft, nsTemplateMatch* aR
                                                         &result);
                 }
                 else
-                    result = nsCRT::strcasecmp(lstr, rstr);
+                    result = ::Compare(nsDependentString(lstr),
+                                       nsDependentString(rstr),
+                                       nsCaseInsensitiveStringComparator());
 
                 return result * mSortDirection;
             }

@@ -34,6 +34,7 @@ REQUIRES        = xpcom \
                   dom \
                   layout \
                   locale \
+				  unicharutil \
                   content \
                   txmgr \
                   htmlparser \

@@ -51,6 +51,7 @@
 #include "nsObserverBase.h"
 #include "nsWeakReference.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
@@ -93,7 +94,8 @@ NS_IMETHODIMP nsXMLEncodingObserver::Notify(
                      const PRUnichar* nameArray[], 
                      const PRUnichar* valueArray[])
 {
-    if(0 != nsCRT::strcasecmp(aTag, NS_LITERAL_STRING("?XML").get())) 
+    if(0 != Compare(nsDependentString(aTag), NS_LITERAL_STRING("?XML"),
+                    nsCaseInsensitiveStringComparator())) 
         return NS_ERROR_ILLEGAL_VALUE;
     else
         return Notify(aDocumentID, numOfAttributes, nameArray, valueArray);
@@ -141,7 +143,8 @@ NS_IMETHODIMP nsXMLEncodingObserver::Notify(
          } else if(0==nsCRT::strcmp(nameArray[i], NS_LITERAL_STRING("charsetSource").get())) {
            bGotCurrentCharsetSource = PR_TRUE;
            charsetSourceStr = valueArray[i];
-         } else if(0==nsCRT::strcasecmp(nameArray[i], NS_LITERAL_STRING("encoding").get())) { 
+         } else if(0==Compare(nsDependentString(nameArray[i]), NS_LITERAL_STRING("encoding"),
+                              nsCaseInsensitiveStringComparator())) { 
            bGotEncoding = PR_TRUE;
            encoding = valueArray[i];
          }

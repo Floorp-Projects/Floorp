@@ -26,6 +26,7 @@ REQUIRES	= xpcom \
 		  pref \
 		  necko \
 		  appcomps \
+		  unicharutil \
 		  $(NULL)
 LIBRARY_NAME=urlbarhistory_s
 

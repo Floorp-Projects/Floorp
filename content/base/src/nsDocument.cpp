@@ -49,6 +49,7 @@
 #include "nsILoadGroup.h"
 #include "nsIChannel.h"
 #include "nsString.h"
+#include "nsUnicharUtils.h"
 #include "nsIContent.h"
 #include "nsIStyleSet.h"
 #include "nsIStyleSheet.h"
@@ -450,7 +451,7 @@ nsDocument::nsDocument() : mIsGoingAway(PR_FALSE),
 
   mArena = nsnull;
   mDocumentURL = nsnull;
-  mCharacterSet.AssignWithConversion("ISO-8859-1");
+  mCharacterSet.Assign(NS_LITERAL_STRING("ISO-8859-1"));
   mParentDocument = nsnull;
   mRootContent = nsnull;
   mListenerManager = nsnull;
@@ -3330,7 +3331,7 @@ nsDocument::SaveFile( nsIFile*          aFile,
   {
     rv = GetDocumentCharacterSet(charsetStr);
     if(NS_FAILED(rv)) {
-       charsetStr.AssignWithConversion("ISO-8859-1"); 
+       charsetStr.Assign(NS_LITERAL_STRING("ISO-8859-1")); 
     }
   }
   encoder->SetCharset(charsetStr);

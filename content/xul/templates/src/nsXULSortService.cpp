@@ -66,13 +66,13 @@
 #include "nsXULContentUtils.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
+#include "nsUnicharUtils.h"
 #include "rdf.h"
 #include "nsRDFSort.h"
 #include "nsVoidArray.h"
 #include "nsQuickSort.h"
 #include "nsIAtom.h"
 #include "nsIXULSortService.h"
-#include "nsString.h"
 #include "plhash.h"
 #include "plstr.h"
 #include "prlong.h"
@@ -938,7 +938,9 @@ XULSortServiceImpl::CompareNodes(nsIRDFNode *cellNode1, PRBool isCollationKey1,
 						v1,v2,&sortOrder);
 				}
 				if (NS_FAILED(rv)) {
-					sortOrder = nsCRT::strcasecmp(uni1, uni2);
+				    sortOrder = Compare(nsDependentString(uni1),
+							nsDependentString(uni2),
+							nsCaseInsensitiveStringComparator());
 				}
 			}
 			else if (*uni1)	sortOrder = -1;
@@ -1383,7 +1385,7 @@ XULSortServiceImpl::GetNodeValue(nsIContent *node1, sortPtr sortInfo, PRBool fir
 							cellPosVal1.Cut(0, sizeof(kRDFNameSpace_Seq_Prefix)-1);
 
 							// hack: assume that its a number, so pad out a bit
-					                nsAutoString	zero; zero.AssignWithConversion("000000");
+					                nsAutoString	zero; zero.Assign(NS_LITERAL_STRING("000000"));
 					                if (cellPosVal1.Length() < zero.Length())
 					                {
 								cellPosVal1.Insert(zero.get(), 0, PRInt32(zero.Length() - cellPosVal1.Length()));
@@ -1554,7 +1556,7 @@ XULSortServiceImpl::GetNodeValue(contentSortInfo *info1, sortPtr sortInfo, PRBoo
 							cellPosVal1.Cut(0, sizeof(kRDFNameSpace_Seq_Prefix)-1);
 
 							// hack: assume that its a number, so pad out a bit
-					                nsAutoString	zero; zero.AssignWithConversion("000000");
+					                nsAutoString	zero; zero.Assign(NS_LITERAL_STRING("000000"));
 					                if (cellPosVal1.Length() < zero.Length())
 					                {
 								cellPosVal1.Insert(zero.get(), 0, zero.Length() - cellPosVal1.Length());
@@ -2044,13 +2046,13 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsRDFSort
 			sortState->sortProperty = sortInfo.sortProperty;
 			
 			temp = sortResource;
-			temp.AppendWithConversion("?collation=true");
+			temp.Append(NS_LITERAL_STRING("?collation=true"));
 			rv = gRDFService->GetUnicodeResource(temp.get(), getter_AddRefs(sortInfo.sortPropertyColl));
 			if (NS_FAILED(rv))	return(rv);
 			sortState->sortPropertyColl = sortInfo.sortPropertyColl;
 
 			temp = sortResource;
-			temp.AppendWithConversion("?sort=true");
+			temp.Append(NS_LITERAL_STRING("?sort=true"));
 			rv = gRDFService->GetUnicodeResource(temp.get(), getter_AddRefs(sortInfo.sortPropertySort));
 			if (NS_FAILED(rv))	return(rv);
 			sortState->sortPropertySort = sortInfo.sortPropertySort;
@@ -2063,13 +2065,13 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsRDFSort
 				sortState->sortProperty2 = sortInfo.sortProperty2;
 
 				temp = sortResource2;
-				temp.AppendWithConversion("?collation=true");
+				temp.Append(NS_LITERAL_STRING("?collation=true"));
 				rv = gRDFService->GetUnicodeResource(temp.get(), getter_AddRefs(sortInfo.sortPropertyColl2));
 				if (NS_FAILED(rv))	return(rv);
 				sortState->sortPropertyColl2 = sortInfo.sortPropertyColl2;
 
 				temp = sortResource2;
-				temp.AppendWithConversion("?sort=true");
+				temp.Append(NS_LITERAL_STRING("?sort=true"));
 				rv = gRDFService->GetUnicodeResource(temp.get(), getter_AddRefs(sortInfo.sortPropertySort2));
 				if (NS_FAILED(rv))	return(rv);
 				sortState->sortPropertySort2 = sortInfo.sortPropertySort2;
@@ -2400,12 +2402,12 @@ XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource,
 
 	nsAutoString	temp;
 	temp.Assign(sortResource);
-	temp.AppendWithConversion("?collation=true");
+	temp.Append(NS_LITERAL_STRING("?collation=true"));
 	rv = gRDFService->GetUnicodeResource(temp.get(), getter_AddRefs(sortInfo.sortPropertyColl));
 	if (NS_FAILED(rv))	return(rv);
 
 	temp.Assign(sortResource);
-	temp.AppendWithConversion("?sort=true");
+	temp.Append(NS_LITERAL_STRING("?sort=true"));
 	rv = gRDFService->GetUnicodeResource(temp.get(), getter_AddRefs(sortInfo.sortPropertySort));
 	if (NS_FAILED(rv))	return(rv);
 
@@ -2415,12 +2417,12 @@ XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource,
 		if (NS_FAILED(rv))	return(rv);
 
 		temp = sortResource2;
-		temp.AppendWithConversion("?collation=true");
+		temp.Append(NS_LITERAL_STRING("?collation=true"));
 		rv = gRDFService->GetUnicodeResource(temp.get(), getter_AddRefs(sortInfo.sortPropertyColl2));
 		if (NS_FAILED(rv))	return(rv);
 
 		temp = sortResource2;
-		temp.AppendWithConversion("?sort=true");
+		temp.Append(NS_LITERAL_STRING("?sort=true"));
 		rv = gRDFService->GetUnicodeResource(temp.get(), getter_AddRefs(sortInfo.sortPropertySort2));
 		if (NS_FAILED(rv))	return(rv);
 	}

@@ -34,6 +34,7 @@ REQUIRES	= xpcom \
 		  rdf \
 		  necko \
 		  locale \
+		  unicharutil \
 		  layout \
 		  gfx \
 		  layout_xul \
