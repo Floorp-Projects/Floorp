@@ -1152,7 +1152,7 @@ function EditorSetDefaultPrefs()
     domdoc.insertBefore(newdoctype, domdoc.firstChild);
   }
   else
-    dump("doctype not added");
+    domdoc.insertBefore(newdoctype, domdoc.doctype);
   
   // search for head; we'll need this for meta tag additions
   var headelement = 0;
