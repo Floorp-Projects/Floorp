@@ -421,8 +421,6 @@ NS_IMETHODIMP nsScrollingView :: SetDimensions(nscoord width, nscoord height, PR
   if (nsnull != mClipView)
     mClipView->SetBounds(clipRect, aPaint);
 
-  UpdateScrollControls(aPaint);
-
   //this will fix the size of the thumb when we resize the root window,
   //but unfortunately it will also cause scrollbar flashing. so long as
   //all resize operations happen through the viewmanager, this is not
