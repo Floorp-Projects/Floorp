@@ -840,8 +840,8 @@ void nsImageMac::CopyBitsWithMask(const BitMap* srcBits, const BitMap* maskBits,
       // and this image (which, most of the time, will be rectangular). See bug 137295.
       
       StRegionFromPool newClip;
-      ::CopyRgn(origClipRegion, newClip);
-      ::SetRectRgn(newClip, destRect.left, destRect.top, destRect.right, destRect.bottom);
+      ::RectRgn(newClip, &destRect);
+      ::SectRgn(newClip, origClipRegion, newClip);
       ::SetClip(newClip);
     }
 
