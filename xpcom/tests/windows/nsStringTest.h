@@ -525,7 +525,7 @@ int CStringTester::TestSearching(){
 
         //now try substringsearching with RFind() using offset and count...
   {
-    nsString2 s1("abcdefghijklmnopqrstuvwxyz");
+    nsString s1("abcdefghijklmnopqrstuvwxyz");
 
     PRInt32 pos= s1.RFind("ghi"); //first search from end using count
     NS_ASSERTION(pos==6,"Error: RFind() with offset and count");  //THIS WILL SUCCEED!
