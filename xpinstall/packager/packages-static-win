@@ -47,21 +47,25 @@ bin\nsreg.dll
 bin\nspr4.dll
 bin\components\xpinstal.dll
 bin\components\jar50.dll
+bin\components\ucharuti.dll
 install\ren8dot3.exe,bin\ren8dot3.exe
 
 [browser]
+bin\README.txt,bin\readme.txt
+bin\LICENSE,bin\license.txt
 bin\mozilla.exe
-bin\components\nslocale.dll
 bin\plugins\npnul32.dll
 bin\res\cmessage.txt
 bin\regxpcom.exe
 bin\xpicleanup.exe
-bin\components\AcctIdl.dll
+bin\components\accessibility.xpt
 bin\components\AcctIdl.xpt
 bin\components\appshell.xpt
 bin\components\autocomplete.xpt
 bin\components\bookmarks.xpt
+bin\components\crypto.dll
 bin\components\directory.xpt
+bin\components\commandhandler.xpt
 bin\components\history.xpt
 bin\components\winhooks.xpt
 bin\components\related.xpt
@@ -69,10 +73,13 @@ bin\components\search.xpt
 bin\components\timebomb.xpt
 bin\components\urlbarhistory.xpt
 bin\components\urlwidgt.xpt
+bin\components\universalchardet.dll
 bin\components\caps.xpt
 bin\components\chrome.xpt
 bin\components\cookie.xpt
 bin\components\docshell_base.xpt
+bin\components\jsd3250.dll
+bin\components\jsdservice.xpt
 bin\components\dom.xpt
 bin\components\dom_base.xpt
 bin\components\dom_core.xpt
@@ -90,6 +97,7 @@ bin\components\find.xpt
 bin\components\gfx.xpt
 bin\components\gfx2.xpt
 bin\components\content_base.xpt
+bin\components\content_html.xpt
 bin\components\content_xsl.xpt
 bin\components\xuldoc.xpt
 bin\components\xultmpl.xpt
@@ -120,11 +128,9 @@ bin\components\necko_ftp.xpt
 bin\components\necko_http.xpt
 bin\components\necko_jar.xpt
 bin\components\necko_res.xpt
-
 bin\components\nsSidebar.js
 bin\components\oji.xpt
 bin\components\pref.xpt
-bin\components\autoconfig.xpt
 bin\components\prefmigr.xpt
 bin\components\profile.xpt
 bin\components\proxyObject.xpt
@@ -142,9 +148,9 @@ bin\components\util.xpt
 bin\components\wallet.xpt
 bin\components\walleteditor.xpt
 bin\components\walletpreview.xpt
+bin\components\webBrowser_core.xpt
 bin\components\webbrowserpersist.xpt
 bin\components\embed_base.xpt
-bin\components\commandhandler.xpt
 bin\components\webshell_idls.xpt
 bin\components\widget.xpt
 bin\components\windowwatcher.xpt
@@ -159,6 +165,7 @@ bin\components\xpcom_thread.xpt
 bin\components\xpcom_xpti.xpt
 bin\components\xpconnect.xpt
 bin\components\xpinstall.xpt
+bin\components\autoconfig.xpt
 bin\components\xml-rpc.xpt
 bin\components\nsDictionary.js
 bin\components\nsProxyAutoConfig.js
@@ -174,12 +181,14 @@ bin\chrome\help.jar
 bin\chrome\comm.jar
 bin\chrome\content-packs.jar
 bin\chrome\toolkit.jar
+bin\chrome\forms.jar
 bin\chrome\modern.jar
 bin\chrome\classic.jar
 bin\chrome\comm\*
 bin\chrome\toolkit\*
 bin\chrome\modern\*
 bin\chrome\classic\*
+bin\chrome\chromelist.txt
 ;-bin\chrome\comm\content\editor\EditorInitPage.html
 ;-bin\chrome\comm\editor\content\EditorInitPagePlain.html
 ;Include this for "debug" testing - remove for actual beta release:
@@ -221,7 +230,6 @@ bin\res\wincharset.properties
 bin\res\charsetalias.properties
 bin\res\charsetData.properties
 bin\res\langGroups.properties
-bin\res\acceptlanguage.properties
 bin\res\language.properties
 bin\res\entityTables\*
 bin\res\rdf\article.gif
@@ -250,7 +258,11 @@ bin\components\msgnews.xpt
 bin\components\msgsearch.xpt
 bin\components\import.xpt
 bin\components\absync.xpt
+bin\components\nsLDAPPrefsService.js
 bin\components\mozldap.xpt
+bin\components\msgsmime.xpt
+bin\components\smime-service.js
+bin\components\mapihook.xpt
 bin\chrome\messenger.jar
 bin\chrome\messenger\*
 
@@ -259,13 +271,17 @@ bin\components\chatzilla-service.js
 bin\chrome\chatzilla.jar
 bin\chrome\chatzilla\*
 
+[venkman]
+bin\components\venkman-service.js
+bin\chrome\venkman.jar
+
 [psm]
 bin\nssckbi.dll
-;bin\components\pipboot.dll
+bin\components\pipboot.dll
 bin\components\pipboot.xpt
-;bin\components\pipnss.dll
+bin\components\pipnss.dll
 bin\components\pipnss.xpt
-;bin\components\pippki.dll
+bin\components\pippki.dll
 bin\components\pippki.xpt
 bin\nss3.dll
 bin\smime3.dll
