@@ -35,7 +35,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslsock.c,v 1.15 2001/04/11 00:29:18 nelsonb%netscape.com Exp $
+ * $Id: sslsock.c,v 1.16 2001/04/26 21:53:11 nelsonb%netscape.com Exp $
  */
 #include "seccomon.h"
 #include "cert.h"
@@ -155,6 +155,8 @@ static PRStatus   ssl_PushIOLayer(sslSocket *ns, PRFileDesc *stack,
 
 /*
 ** Lookup a socket structure from a file descriptor.
+** Only functions called through the PRIOMethods table should use this.
+** Other app-callable functions should use ssl_FindSocket.
 */
 static sslSocket *
 ssl_GetPrivate(PRFileDesc *fd)
@@ -1281,7 +1283,7 @@ SSL_SetSockPeerID(PRFileDesc *fd, char *peerID)
 {
     sslSocket *ss;
 
-    ss = ssl_GetPrivate(fd);
+    ss = ssl_FindSocket(fd);
     if (!ss) {
 	SSL_DBG(("%d: SSL[%d]: bad socket in SSL_SetCacheIndex",
 		 SSL_GETPID(), fd));
