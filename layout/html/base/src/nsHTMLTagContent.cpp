@@ -26,6 +26,7 @@
 #include "nsString.h"
 #include "prprf.h"
 #include "nsDOMAttributes.h"
+#include "nsICSSParser.h"
 
 static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
 static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
@@ -171,7 +172,9 @@ nsContentAttr nsHTMLTagContent::AttributeToString(nsIAtom* aAttribute,
   return eContentAttr_NotThere;
 }
 
-// XXX subclasses should override to parse the value string
+// Note: Subclasses should override to parse the value string; in
+// addition, when they see an unknown attribute they should call this
+// so that global attributes are handled (like CLASS, ID, STYLE, etc.)
 void nsHTMLTagContent::SetAttribute(nsIAtom* aAttribute,
                                     const nsString& aValue)
 {
@@ -179,7 +182,27 @@ void nsHTMLTagContent::SetAttribute(nsIAtom* aAttribute,
     NS_NewHTMLAttributes(&mAttributes, this);
   }
   if (nsnull != mAttributes) {
-    mAttributes->SetAttribute(aAttribute, aValue);
+    if (nsHTMLAtoms::style == aAttribute) {
+      // XXX the style sheet language is a document property that
+      // should be used to lookup the style sheet parser to parse the
+      // attribute.
+      nsICSSParser* css;
+      nsresult rv = NS_NewCSSParser(&css);
+      if (NS_OK != rv) {
+        return;
+      }
+      nsIStyleRule* rule;
+      rv = css->ParseDeclarations(aValue, nsnull, rule);
+      if ((NS_OK == rv) && (nsnull != rule)) {
+        printf("XXX STYLE= discarded: ");
+        rule->List();
+        NS_RELEASE(rule);
+      }
+      NS_RELEASE(css);
+    }
+    else {
+      mAttributes->SetAttribute(aAttribute, aValue);
+    }
   }
 }
 
