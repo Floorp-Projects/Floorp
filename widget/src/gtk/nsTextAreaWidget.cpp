@@ -59,16 +59,15 @@ NS_METHOD nsTextAreaWidget::Create(nsIWidget *aParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
-#if 0
   aParent->AddChild(this);
-  Widget parentWidget = nsnull;
+  GtkWidget *parentWidget = nsnull;
 
   if (DBG) fprintf(stderr, "aParent 0x%x\n", aParent);
 
   if (aParent) {
-    parentWidget = (Widget) aParent->GetNativeData(NS_NATIVE_WIDGET);
+    parentWidget = GTK_WIDGET(aParent->GetNativeData(NS_NATIVE_WIDGET));
   } else {
-    parentWidget = (Widget) aAppShell->GetNativeData(NS_NATIVE_SHELL);
+    parentWidget = GTK_WIDGET(aAppShell->GetNativeData(NS_NATIVE_SHELL));
   }
 
   InitToolkit(aToolkit, aParent);
@@ -76,19 +75,27 @@ NS_METHOD nsTextAreaWidget::Create(nsIWidget *aParent,
 
   if (DBG) fprintf(stderr, "Parent 0x%x\n", parentWidget);
 
+  mWidget = gtk_text_new(FALSE, FALSE);
+
+  gtk_layout_put(GTK_LAYOUT(parentWidget), mWidget, aRect.x, aRect.y);
+  gtk_widget_set_usize(mWidget, aRect.width, aRect.height);
+
+  gtk_widget_show(mWidget);
+
+/*
   mWidget = ::XtVaCreateManagedWidget("button",
                                     xmTextWidgetClass,
                                     parentWidget,
                                     XmNwidth, aRect.width,
                                     XmNheight, aRect.height,
-                                    XmNrecomputeSize, False,
-                                    XmNhighlightOnEnter, False,
+                                    XmNrecomputeSize, PR_FALSE,
+                                    XmNhighlightOnEnter, PR_FALSE,
                                     XmNeditMode, XmMULTI_LINE_EDIT,
-                                    XmNeditable, mMakeReadOnly?False:True,
+                                    XmNeditable, mMakeReadOnly?PR_FALSE:PR_TRUE,
 		                    XmNx, aRect.x,
 		                    XmNy, aRect.y,
                                     nsnull);
-
+*/
   // save the event callback function
   mEventCallback = aHandleEventFunction;
 
@@ -98,7 +105,6 @@ NS_METHOD nsTextAreaWidget::Create(nsIWidget *aParent,
     PRBool oldReadOnly;
     SetReadOnly(PR_TRUE, oldReadOnly);
   }
-#endif
   return NS_OK;
 }
 
