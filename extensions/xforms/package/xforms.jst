@@ -7,12 +7,14 @@ var srComponents = $SpaceRequired$:components;
 
 if (verifyDiskSpace(fProgram, srChrome + srComponents))
 {
-  err = addFile("", "0.1", "components", fProgram, "", true);
+  err = addDirectory("", "0.1", "components", fProgram, "components", true);
   logComment("addDirectory components: " + err);
-  err = addDirectory("", "0.1", "chrome", fProgram, "", true);
+  err = addDirectory("", "0.1", "chrome", fProgram, "chrome", true);
   logComment("addDirectory chrome: " + err);
 
-  registerChrome(PACKAGE | DELAYED_CHROME, 
+  registerChrome(PACKAGE | DELAYED_CHROME, getFolder("Chrome", "xforms.jar"),
+                 "content/xforms/");
+
   if (err == SUCCESS)
   {
     err = performInstall();
