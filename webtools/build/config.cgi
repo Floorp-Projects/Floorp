@@ -91,7 +91,7 @@ sub print_script_preview {
     </HEAD>
     <body BGCOLOR="#FFFFFF" TEXT="#000000"LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000">
 
-	<form action='config.cgi' method='get'>
+	<form action='.mozconfig.sh' method='get'>
         <input type='hidden' name='saveas' value='1'>);
 
     foreach $param ($query->param()) {
@@ -198,8 +198,10 @@ sub print_script {
 
 sub print_configure_form {
   mkdir 'configure-mirror', 0777 if not -d 'configure-mirror';
+  system 'echo :pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot Ay=0=a%0bZ | cat > configure-mirror/.cvspass' if not -f 'configure-miror/.cvspass';
+  link 'config.cgi', '.mozconfig.sh' if not -f '.mozconfig.sh';
   # Set the HOME variable to pick up '.cvspass' for cvs login
-  system "cd configure-mirror && HOME=.. cvs -d $CVSROOT co mozilla/configure.in";
+  system "cd configure-mirror && HOME=. cvs -d $CVSROOT co mozilla/configure.in > /dev/null 2>&1";
 
   print qq(
     <HTML>
