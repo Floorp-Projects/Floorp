@@ -76,7 +76,7 @@ struct AtkPropertyChange {
 };
 
 struct AtkChildrenChange {
-  PRUint32      index;  // index of child in parent 
+  PRInt32      index;  // index of child in parent 
   nsIAccessible *child;   
   PRBool        add;    // true for add, false for delete
 };

@@ -53,7 +53,8 @@
 #include <gtk/gtkwindow.h>
 
 #ifdef ACCESSIBILITY
-#include "nsAccessibilityInterface.h"
+#include "nsIAccessNode.h"
+#include "nsIAccessible.h"
 #endif
 
 #ifdef USE_XIM
@@ -283,8 +284,8 @@ private:
     PRInt32             mSizeState;
 
 #ifdef ACCESSIBILITY
-    nsCOMPtr<nsIAccessible> mTopLevelAccessible;
-    void                CreateTopLevelAccessible();
+    nsCOMPtr<nsIAccessible> mRootAccessible;
+    void                CreateRootAccessible();
     NS_IMETHOD_(PRBool) DispatchAccessibleEvent(nsIAccessible** aAccessible);
 #endif
 

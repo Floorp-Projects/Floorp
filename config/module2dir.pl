@@ -92,7 +92,6 @@ my %map = (
   'liveconnect',        'js/src/liveconnect',
   'locale',             'intl/locale',
   'lwbrk',              'intl/lwbrk',
-  'mai',                'widget/src/gtk2/mai',
   'mailnews',           'mailnews',
   'MapiProxy',          'mailnews/mapi/mapihook/build',
   'mfcEmbed',           'embedding/tests/winEmbed',

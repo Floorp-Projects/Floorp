@@ -69,6 +69,7 @@ CPPSRCS = \
   nsAccessibleWrap.cpp \
   nsDocAccessibleWrap.cpp \
   nsRootAccessibleWrap.cpp \
+  nsAppRootAccessible.cpp \
   nsAccessibleText.cpp \
   nsAccessibleHyperText.cpp \
   nsHTMLFormControlAccessibleWrap.cpp \
@@ -91,10 +92,15 @@ EXPORTS = \
   nsRootAccessibleWrap.h \
   $(NULL)
 
-# we don't want the shared lib, but we want to force the creation of a static lib.
+# we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1
 
+EXTRA_DSO_LDOPTS += $(MOZ_GTK2_LIBS)
+
 include $(topsrcdir)/config/rules.mk
+
+CFLAGS		+= $(MOZ_GTK2_CFLAGS)
+CXXFLAGS	+= $(MOZ_GTK2_CFLAGS)
 
 LOCAL_INCLUDES += \
   -I$(srcdir) \
@@ -102,4 +108,3 @@ LOCAL_INCLUDES += \
   -I$(srcdir)/../html \
   -I$(srcdir)/../xul \
   $(NULL)
-
