@@ -194,7 +194,6 @@ protected:
   nsXPrintContext     	*mPrintContext;
   nsIFontMetrics    	*mFontMetrics;
   nsRegionXP            *mClipRegion;
-  nsTransform2D		*mTMatrix;
   float               	mP2T;
   nscolor             	mCurrentColor;
  
