@@ -49,6 +49,9 @@ PRIVATE_CLASSES = 											\
                     KeyWrapping                             \
                     ListCerts                               \
                     socketTest                             \
+                    org.mozilla.jss.tests.SetupDBs          \
+                    org.mozilla.jss.tests.TestKeyGen        \
+                    org.mozilla.jss.tests.SigTest           \
 			        $(NULL)
 
 JSRCS = 											\
@@ -61,4 +64,7 @@ JSRCS = 											\
                     KeyWrapping.java                        \
                     ListCerts.java                           \
                     socketTest.java                           \
+                    SetupDBs.java                           \
+                    TestKeyGen.java                           \
+                    SigTest.java                           \
 			        $(NULL)
