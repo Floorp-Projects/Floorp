@@ -3922,7 +3922,8 @@ nsTableFrame::IsAutoHeight()
 }
 
 nscoord 
-nsTableFrame::CalcBorderBoxWidth(const nsHTMLReflowState& aState)
+nsTableFrame::CalcBorderBoxWidth(nsIPresContext*          aPresContext,
+                                 const nsHTMLReflowState& aState)
 {
   nscoord width = aState.mComputedWidth;
 
@@ -3939,6 +3940,12 @@ nsTableFrame::CalcBorderBoxWidth(const nsHTMLReflowState& aState)
     width += borderPadding.left + borderPadding.right;
   }
   width = PR_MAX(width, 0);
+
+  if (NS_UNCONSTRAINEDSIZE != width) {
+    float p2t;
+    aPresContext->GetPixelsToTwips(&p2t);
+    width = RoundToPixel(width, p2t);
+  }
 
   return width;
 }
@@ -4028,7 +4035,7 @@ nsTableFrame::CalcMinAndPreferredWidths(nsIPresContext* aPresContext,
     if (HasPctCol() && aCalcPrefWidthIfAutoWithPctCol && 
         (NS_UNCONSTRAINEDSIZE != aReflowState.availableWidth)) {
       // for an auto table with a pct cell, use the strategy's CalcPctAdjTableWidth
-      nscoord availWidth = CalcBorderBoxWidth(aReflowState);
+      nscoord availWidth = CalcBorderBoxWidth(aPresContext, aReflowState);
       availWidth = PR_MIN(availWidth, aReflowState.availableWidth);
       if (mTableLayoutStrategy && IsAutoLayout()) {
         float p2t;
