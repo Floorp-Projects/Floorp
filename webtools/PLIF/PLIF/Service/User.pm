@@ -128,8 +128,8 @@ sub objectInit {
     my $groupsByID = {};
     my $groupsByName = {};
     foreach my $group (@$groups) {
-        $groupsByID->{$group->[0]} = [$group->[1], $group->[2]]; # id => name, level
-        $groupsByID->{$group->[1]} = [$group->[0], $group->[2]]; # name => id, level
+        $groupsByID->{$group->[0]} = {'name' => $group->[1], 'level' => $group->[2], }; # id => name, level
+        $groupsByName->{$group->[1]} = {'groupID' => $group->[0], 'level' => $group->[2], }; # name => id, level
     }
     $self->groupsByID($groupsByID); # authoritative version
     $self->originalGroupsByID($groupsByID); # a backup used to make a comparison when saving the groups
@@ -320,8 +320,8 @@ sub joinGroup {
     my($groupID, $level) = @_;
     if ($level > 0) {
         my $groupName = $self->app->getService('dataSource.user')->getGroupName($self->app, $groupID);
-        $self->{'groupsByID'}->{$groupID} = [$groupName, $level];
-        $self->{'groupsByName'}->{$groupName} = [$groupID, $level];
+        $self->{'groupsByID'}->{$groupID} = {'name' => $groupName, 'level' => $level, };
+        $self->{'groupsByName'}->{$groupName} = {'groupID' => $groupID, 'level' => $level, };
         $self->invalidateRights();
         $self->{'_DIRTY'}->{'groups'} = 1;
     } else {
@@ -333,9 +333,8 @@ sub leaveGroup {
     my $self = shift;
     my($groupID) = @_;
     if (defined($self->{'groupsByID'}->{$groupID})) {
-        my $groupName = $self->app->getService('dataSource.user')->getGroupName($self->app, $groupID);
+        delete($self->{'groupsByName'}->{$self->{'groupsByID'}->{$groupID}->{'name'}});
         delete($self->{'groupsByID'}->{$groupID});
-        delete($self->{'groupsByID'}->{$groupName});
         $self->invalidateRights();
         $self->{'_DIRTY'}->{'groups'} = 1;
     }
@@ -345,7 +344,7 @@ sub levelInGroup {
     my $self = shift;
     my($groupID) = @_;
     if (defined($self->{'groupsByID'}->{$groupID})) {
-        return $self->{'groupsByID'}->{$groupID}->[1];
+        return $self->{'groupsByID'}->{$groupID}->{'level'};
     } else {
         return 0;
     }
@@ -396,8 +395,8 @@ sub propertySet {
 sub propertyGet {
     my $self = shift;
     my($name) = @_;
-    if ($name eq 'groupByID') {
-        return {%{$self->{'groupByID'}}};
+    if ($name eq 'groupsByID') {
+        return {%{$self->{'groupsByID'}}};
         # Create new hash so that they can't edit ours. This ensures
         # that they can't inadvertently bypass the DIRTY flagging by
         # propertySet(), above. This does mean that internally we have
@@ -434,8 +433,8 @@ sub writeGroups {
     my $dataSource = $self->app->getService('dataSource.user');
     foreach my $group (keys(%{$self->{'groupsByID'}})) {
         if ((not defined($self->{'originalGroupsByID'}->{$group})) or
-            ($self->{'groupsByID'}->{$group}->[1] != $self->{'originalGroupsByID'}->{$group}->[1])) {
-            $dataSource->addUserGroup($self->app, $self->userID, $group, $self->{'groupsByID'}->{$group}->[1]);
+            ($self->{'groupsByID'}->{$group}->{'level'} != $self->{'originalGroupsByID'}->{$group}->{'level'})) {
+            $dataSource->addUserGroup($self->app, $self->userID, $group, $self->{'groupsByID'}->{$group}->{'level'});
         }
     }
     foreach my $group (keys(%{$self->{'originalGroupsByID'}})) {
