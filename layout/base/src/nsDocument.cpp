@@ -1545,9 +1545,12 @@ nsIContent* nsDocument::GetNextContent(const nsIContent *aContent) const
       if (index+1 < count) {
         parent->ChildAt(index+1, result);
         // Get first child down the tree
-        PRInt32 n;
-        result->ChildCount(n);
-        while (n > 0) {
+        for (;;) {
+          PRInt32 n;
+          result->ChildCount(n);
+          if (n <= 0) {
+            break;
+          }
           nsIContent * old = result;
           old->ChildAt(0, result);
           NS_RELEASE(old);
