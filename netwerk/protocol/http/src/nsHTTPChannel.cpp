@@ -52,7 +52,8 @@ nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL,
     m_pEventSink(dont_QueryInterface(i_HTTPEventSink)),
     m_pResponse(nsnull),
     m_pEventQ(dont_QueryInterface(i_EQ)),
-    m_pResponseDataListener(nsnull)
+    m_pResponseDataListener(nsnull),
+    mLoadAttributes(LOAD_NORMAL)
 {
     NS_INIT_REFCNT();
 }
@@ -216,16 +217,16 @@ nsHTTPChannel::AsyncWrite(nsIInputStream *fromStream,
 }
 
 NS_IMETHODIMP
-nsHTTPChannel::GetLoadQuiet(PRBool *aLoadQuiet)
+nsHTTPChannel::GetLoadAttributes(PRUint32 *aLoadAttributes)
 {
-    *aLoadQuiet = mLoadQuiet;
+    *aLoadAttributes = mLoadAttributes;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTTPChannel::SetLoadQuiet(PRBool aLoadQuiet)
+nsHTTPChannel::SetLoadAttributes(PRUint32 aLoadAttributes)
 {
-    mLoadQuiet = aLoadQuiet;
+    mLoadAttributes = aLoadAttributes;
     return NS_OK;
 }
 
@@ -327,34 +328,6 @@ nsHTTPChannel::GetResponseDataListener(nsIStreamListener* *aListener)
     }
 
     return rv;
-}
-
-NS_IMETHODIMP
-nsHTTPChannel::GetBypassCache(PRBool *aBypassCache)
-{
-    *aBypassCache = mBypassCache;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTTPChannel::SetBypassCache(PRBool aBypassCache)
-{
-    mBypassCache = aBypassCache;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTTPChannel::GetBypassProxy(PRBool *aBypassProxy)
-{
-    *aBypassProxy = mBypassProxy;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTTPChannel::SetBypassProxy(PRBool aBypassProxy)
-{
-    mBypassProxy = aBypassProxy;
-    return NS_OK;
 }
 
 static NS_DEFINE_IID(kProxyObjectManagerIID, NS_IPROXYEVENT_MANAGER_IID);

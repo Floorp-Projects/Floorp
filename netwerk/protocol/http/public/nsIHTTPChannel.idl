@@ -24,6 +24,12 @@ interface nsIStreamListener;
 [scriptable, uuid(35c00430-1938-11d3-933a-000064657374)]
 interface nsIHTTPChannel : nsIChannel
 {
+    /**
+     * More load attributes for http.
+     */
+    const unsigned long BYPASS_CACHE    = 1 << 1;
+    const unsigned long BYPASS_PROXY    = 1 << 2;
+
     /*
         Request functions-
         These functions set/get parameters on the outbound request and may only
@@ -49,10 +55,6 @@ interface nsIHTTPChannel : nsIChannel
     readonly attribute nsIHTTPEventSink EventSink;
     
     readonly attribute nsIStreamListener ResponseDataListener;
-
-    attribute boolean BypassCache;
-
-    attribute boolean BypassProxy;
 };
 
 

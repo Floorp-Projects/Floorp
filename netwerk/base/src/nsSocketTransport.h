@@ -91,8 +91,8 @@ public:
                         nsISupports *ctxt,
                         nsIEventQueue *eventQueue,
                         nsIStreamObserver *observer);
-  NS_IMETHOD GetLoadQuiet(PRBool *aLoadQuiet);
-  NS_IMETHOD SetLoadQuiet(PRBool aLoadQuiet);
+  NS_IMETHOD GetLoadAttributes(PRUint32 *aLoadAttributes);
+  NS_IMETHOD SetLoadAttributes(PRUint32 aLoadAttributes);
   NS_IMETHOD GetContentType(char * *aContentType);
 
   // nsIBufferObserver methods:
@@ -153,7 +153,7 @@ protected:
   PRUint32 mSourceOffset;
 
   nsSocketTransportService* mService;
-  PRBool                    mLoadQuiet;
+  PRUint32                  mLoadAttributes;
 };
 
 

@@ -36,6 +36,7 @@ CPP_OBJS =                                         \
         .\$(OBJDIR)\nsStandardUrl.obj              \
         .\$(OBJDIR)\nsNetModuleMgr.obj             \
         .\$(OBJDIR)\nsNetModRegEntry.obj           \
+        .\$(OBJDIR)\nsLoadGroup.obj                \
         $(NULL)
 
 INCS = $(INCS)                  \

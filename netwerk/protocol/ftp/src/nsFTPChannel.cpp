@@ -41,7 +41,9 @@ static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 // Client initiation is the most command case and is attempted first.
 
 nsFTPChannel::nsFTPChannel()
-    : mUrl(nsnull), mConnected(PR_FALSE), mListener(nsnull) {
+    : mUrl(nsnull), mConnected(PR_FALSE), mListener(nsnull),
+      mLoadAttributes(LOAD_NORMAL)
+{
 
     nsresult rv;
     
@@ -187,16 +189,16 @@ nsFTPChannel::AsyncWrite(nsIInputStream *fromStream,
 }
 
 NS_IMETHODIMP
-nsFTPChannel::GetLoadQuiet(PRBool *aLoadQuiet)
+nsFTPChannel::GetLoadAttributes(PRUint32 *aLoadAttributes)
 {
-    *aLoadQuiet = mLoadQuiet;
+    *aLoadAttributes = mLoadAttributes;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFTPChannel::SetLoadQuiet(PRBool aLoadQuiet)
+nsFTPChannel::SetLoadAttributes(PRUint32 aLoadAttributes)
 {
-    mLoadQuiet = aLoadQuiet;
+    mLoadAttributes = aLoadAttributes;
     return NS_OK;
 }
 

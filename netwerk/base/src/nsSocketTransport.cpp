@@ -147,6 +147,7 @@ nsSocketTransport::nsSocketTransport()
   mWriteCount     = 0;
   mSourceOffset   = 0;
   mService        = nsnull;
+  mLoadAttributes = LOAD_NORMAL;
 
   //
   // Set up Internet defaults...
@@ -1241,16 +1242,16 @@ nsSocketTransport::OpenOutputStream(PRUint32 startPosition, nsIOutputStream* *re
 }
 
 NS_IMETHODIMP
-nsSocketTransport::GetLoadQuiet(PRBool *aLoadQuiet)
+nsSocketTransport::GetLoadAttributes(PRUint32 *aLoadAttributes)
 {
-  *aLoadQuiet = mLoadQuiet;
+  *aLoadAttributes = mLoadAttributes;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSocketTransport::SetLoadQuiet(PRBool aLoadQuiet)
+nsSocketTransport::SetLoadAttributes(PRUint32 aLoadAttributes)
 {
-  mLoadQuiet = aLoadQuiet;
+  mLoadAttributes = aLoadAttributes;
   return NS_OK;
 }
 

@@ -88,10 +88,22 @@ interface nsIChannel : nsIRequest
                     in nsIStreamObserver observer);
 
     /**
-     * Setting this attribute causes the loading process to not deliver status
-     * notifications to the program performing the load.
+     * Load attribute flags. These may be or'd together.
+     *
+     * Note that more will follow for each protocol's implementation of a channel, 
+     * although channel writers have to be careful to not let the flag bits 
+     * overlap. Otherwise, users won't be able to create a single flag word
+     * of load attributes that applies to a number of different channel types.
      */
-    attribute boolean LoadQuiet;
+    const unsigned long LOAD_NORMAL     = 0;            /* no special load attributes -- use defaults */
+    const unsigned long LOAD_QUIET      = 1 << 0;       /* don't deliver status notifications to the nsIProgressEventSink */
+
+    /**
+     * Accesses the load attributes for the channel. E.g. setting the load 
+     * attributes with the LOAD_QUIET bit set causes the loading process to
+     * not deliver status notifications to the program performing the load.
+     */
+    attribute unsigned long LoadAttributes;
 
     /**
      * Returns the content MIME type of the channel if available. Note that the 

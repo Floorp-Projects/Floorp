@@ -48,6 +48,7 @@ XPIDLSRCS =                        \
 	.\nsINetModRegEntry.idl    \
 	.\nsINetModuleMgr.idl      \
 	.\nsINetNotify.idl         \
+	.\nsILoadGroup.idl         \
         $(NULL)
 
 include <$(DEPTH)/config/rules.mak>
