@@ -1593,6 +1593,9 @@ SECU_PrintCertNickname(CERTCertificate *cert, void *data)
 	if ( name == NULL ) {
 	    name = cert->emailAddr;
 	}
+	if ( name == NULL ) {
+	    name = "(NULL)";
+	}
 	
         trust = cert->trust;
 	if (trust) {
