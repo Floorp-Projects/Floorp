@@ -86,9 +86,16 @@ public:
 	NS_IMETHOD DeleteCard(nsIAbCard *newCard, PRBool notify);
 	NS_IMETHOD EditCard(nsIAbCard *card, PRBool notify);
 	NS_IMETHOD ContainsCard(nsIAbCard *card, PRBool *hasCard);
-	NS_IMETHOD SetAnonymousAttribute(const char *attrname, const char *value);
-	NS_IMETHOD GetAnonymousAttribute(const char *attrname, char** value);
+	NS_IMETHOD SetAnonymousStringAttribute(const char *attrname, const char *value);
+	NS_IMETHOD GetAnonymousStringAttribute(const char *attrname, char** value);
+	NS_IMETHOD SetAnonymousIntAttribute(const char *attrname, PRUint32 value);
+	NS_IMETHOD GetAnonymousIntAttribute(const char *attrname, PRUint32* value);
+	NS_IMETHOD SetAnonymousBoolAttribute(const char *attrname, PRBool value);
+	NS_IMETHOD GetAnonymousBoolAttribute(const char *attrname, PRBool* value);
 	NS_IMETHOD AddAnonymousAttributesToDB();
+	NS_IMETHOD RemoveAnonymousAttributesFromDB();
+	NS_IMETHOD AddAnonymousAttributesFromCard(nsIAbCard *card);
+	NS_IMETHOD RemoveAnonymousAttributesFromCard(nsIAbCard *card);
 
 	//////////////////////////////////////////////////////////////////////////////
 	// nsAddrDatabase methods:
@@ -105,19 +112,6 @@ public:
 	nsIMdbTable		*GetAnonymousTable() {return m_mdbAnonymousTable;}
 
 	static nsAddrDatabase*	FindInCache(nsFileSpec *dbName);
-
-	//helper function to fill in nsStrings from hdr row cell contents.
-	nsresult				RowCellColumnTonsString(nsIMdbRow *row, mdb_token columnToken, nsString &resultStr);
-	nsresult				RowCellColumnToUInt32(nsIMdbRow *row, mdb_token columnToken, PRUint32 *uint32Result);
-	nsresult				RowCellColumnToUInt32(nsIMdbRow *row, mdb_token columnToken, PRUint32 &uint32Result);
-	nsresult				RowCellColumnToMime2EncodedString(nsIMdbRow *row, mdb_token columnToken, nsString &resultStr);
-	nsresult				RowCellColumnToCollationKey(nsIMdbRow *row, mdb_token columnToken, nsString &resultStr);
-
-	// helper functions to put values in cells for the passed-in row
-	nsresult				UInt32ToRowCellColumn(nsIMdbRow *row, mdb_token columnToken, PRUint32 value);
-	// helper functions to copy an nsString to a yarn, int32 to yarn, and vice versa.
-	static	void			YarnTonsString(struct mdbYarn *yarn, nsString *str);
-	static	void			YarnToUInt32(struct mdbYarn *yarn, PRUint32 *i);
 
 	static void		CleanupCache();
 
@@ -139,14 +133,20 @@ protected:
 #endif
 
 
-	mdb_err AddCardColumn(nsIMdbRow* cardRow, mdb_column inColumn, char* str);
+	void YarnToUInt32(struct mdbYarn *yarn, PRUint32 *pResult);
+	mdb_err AddStringColumn(nsIMdbRow* cardRow, mdb_column inColumn, char* str);
+	mdb_err AddIntColumn(nsIMdbRow* cardRow, mdb_column inColumn, PRUint32 nValue);
 	nsresult GetStringColumn(nsIMdbRow *cardRow, mdb_token outToken, nsString& str);
+	nsresult GetIntColumn(nsIMdbRow *cardRow, mdb_token outToken, 
+							PRUint32* pValue, PRUint32 defaultValue);
+	nsresult GetBoolColumn(nsIMdbRow *cardRow, mdb_token outToken, PRBool* pValue);
 	nsresult GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow);
 	nsresult GetAnonymousAttributesFromDB();
 	nsresult AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *cardRow);
-	nsresult RemoveAnonymousAttrubutesList();
-	nsresult RemoveAnonymousValuesList();
-
+	nsresult RemoveAnonymousList(nsVoidArray* pArray);
+	nsresult SetAnonymousAttribute(nsVoidArray** pAttrAray, 
+							nsVoidArray** pValueArray, void *attrname, void *value);
+	nsresult DoAnonymousAttributesTransaction(PRBool bAdd);
 
 	static nsVoidArray/*<nsAddrDatabase>*/* GetDBCache();
 	static nsVoidArray/*<nsAddrDatabase>*/* m_dbCache;
@@ -168,8 +168,12 @@ protected:
 
 	nsIMdbTable		    *m_mdbAnonymousTable;
 	mdb_kind			m_AnonymousTableKind;
-	nsVoidArray*		m_pAnonymousAttributes;
-	nsVoidArray*		m_pAnonymousValues;
+	nsVoidArray*		m_pAnonymousStrAttributes;
+	nsVoidArray*		m_pAnonymousStrValues;
+	nsVoidArray*		m_pAnonymousIntAttributes;
+	nsVoidArray*		m_pAnonymousIntValues;
+	nsVoidArray*		m_pAnonymousBoolAttributes;
+	nsVoidArray*		m_pAnonymousBoolValues;
 
 	mdb_kind			m_PabTableKind;
  	mdb_kind			m_HistoryTableKind;

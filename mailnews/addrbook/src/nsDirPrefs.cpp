@@ -1187,7 +1187,7 @@ static PRBool dir_ValidateAndAddNewServer(nsVoidArray *wholeList, const char *fu
 {
 	PRBool rc = PR_FALSE;
 
-	char *endname = XP_STRCHR(&fullprefname[PL_strlen(PREF_LDAP_SERVER_TREE_NAME) + 1], '.');
+	const char *endname = XP_STRCHR(&fullprefname[PL_strlen(PREF_LDAP_SERVER_TREE_NAME) + 1], '.');
 	if (endname)
 	{
 		char *prefname = (char *)PR_Malloc(endname - fullprefname + 1);

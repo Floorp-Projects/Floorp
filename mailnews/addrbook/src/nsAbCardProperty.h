@@ -131,11 +131,19 @@ public:
 
 	NS_IMETHOD GetCardValue(const char *attrname, char **value);
 	NS_IMETHOD SetCardValue(const char *attrname, const char *value);
-	NS_IMETHOD GetAnonymousAttrubutesList(nsVoidArray **attrlist);
-	NS_IMETHOD GetAnonymousValuesList(nsVoidArray **valuelist);
-	NS_IMETHOD SetAnonymousAttrubutesList(nsVoidArray *pAttrlist);
-	NS_IMETHOD SetAnonymousValuesList(nsVoidArray *pValuelist);
-	NS_IMETHOD SetAnonymousAttribute(const char *attrname, const char *value);
+
+	NS_IMETHOD GetAnonymousStrAttrubutesList(nsVoidArray **attrlist);
+	NS_IMETHOD GetAnonymousStrValuesList(nsVoidArray **valuelist);
+	NS_IMETHOD GetAnonymousIntAttrubutesList(nsVoidArray **attrlist);
+	NS_IMETHOD GetAnonymousIntValuesList(nsVoidArray **valuelist);
+	NS_IMETHOD GetAnonymousBoolAttrubutesList(nsVoidArray **attrlist);
+	NS_IMETHOD GetAnonymousBoolValuesList(nsVoidArray **valuelist);
+
+	NS_IMETHOD SetAnonymousStringAttribute(const char *attrname, const char *value);
+	NS_IMETHOD SetAnonymousIntAttribute(const char *attrname, PRUint32 value);
+	NS_IMETHOD SetAnonymousBoolAttribute(const char *attrname, PRBool value);
+	NS_IMETHOD AddAnonymousAttributesToDB();
+
 	NS_IMETHOD GetCardURI(char **uri);
 	NS_IMETHOD AddCardToDatabase(const char *uri);
 	NS_IMETHOD EditCardToDatabase(const char *uri);
@@ -147,8 +155,9 @@ protected:
 	nsresult GetCardDatabase(const char *uri);
 	nsresult GetAttributeName(char **aName, char* pValue);
 	nsresult SetAttributeName(char *aName, char** arrtibute);
-	nsresult RemoveAnonymousAttrubutesList();
-	nsresult RemoveAnonymousValuesList();
+	nsresult RemoveAnonymousList(nsVoidArray* pArray);
+	nsresult SetAnonymousAttribute(nsVoidArray** pAttrAray, 
+					nsVoidArray** pValueArray, void *attrname, void *value);
 
 	char* m_pFirstName;
 	char* m_pLastName;
@@ -194,8 +203,12 @@ protected:
 	PRUint32 m_dbRowID;
 
 	nsCOMPtr<nsIAddrDatabase> mDatabase;  
-	nsVoidArray* m_pAnonymousAttributes;
-	nsVoidArray* m_pAnonymousValues;
+	nsVoidArray* m_pAnonymousStrAttributes;
+	nsVoidArray* m_pAnonymousStrValues;
+	nsVoidArray* m_pAnonymousIntAttributes;
+	nsVoidArray* m_pAnonymousIntValues;
+	nsVoidArray* m_pAnonymousBoolAttributes;
+	nsVoidArray* m_pAnonymousBoolValues;
 
 };
 

@@ -129,9 +129,12 @@ nsAbCardProperty::nsAbCardProperty(void)
 	m_dbTableID = 0;
 	m_dbRowID = 0;
 
-	m_pAnonymousAttributes = nsnull;
-	m_pAnonymousValues = nsnull;
-
+	m_pAnonymousStrAttributes = nsnull;
+	m_pAnonymousStrValues = nsnull;
+	m_pAnonymousIntAttributes = nsnull;
+	m_pAnonymousIntValues = nsnull;
+	m_pAnonymousBoolAttributes = nsnull;
+	m_pAnonymousBoolValues = nsnull;
 }
 
 nsAbCardProperty::~nsAbCardProperty(void)
@@ -174,42 +177,33 @@ nsAbCardProperty::~nsAbCardProperty(void)
 	PR_FREEIF(m_pNote);
 	PR_FREEIF(m_pLastModDate);
 
-	RemoveAnonymousAttrubutesList();
+	if (m_pAnonymousStrAttributes)
+		RemoveAnonymousList(m_pAnonymousStrAttributes);
+	if (m_pAnonymousIntAttributes)
+		RemoveAnonymousList(m_pAnonymousIntAttributes);
+	if (m_pAnonymousBoolAttributes)
+		RemoveAnonymousList(m_pAnonymousBoolAttributes);
 
-	RemoveAnonymousValuesList();
-
+	if (m_pAnonymousStrValues)
+		RemoveAnonymousList(m_pAnonymousStrValues);
+	if (m_pAnonymousIntValues)
+		RemoveAnonymousList(m_pAnonymousIntValues);
+	if (m_pAnonymousBoolValues)
+		RemoveAnonymousList(m_pAnonymousBoolValues);
 }
 
-nsresult nsAbCardProperty::RemoveAnonymousAttrubutesList()
+nsresult nsAbCardProperty::RemoveAnonymousList(nsVoidArray* pArray)
 {
-	if (m_pAnonymousAttributes)
+	if (pArray)
 	{
-		PRUint32 count = m_pAnonymousAttributes->Count();
+		PRUint32 count = pArray->Count();
 		for (int i = count - 1; i >= 0; i--)
 		{
-			char* pStr = (char*)m_pAnonymousAttributes->ElementAt(i);
-			PR_FREEIF(pStr);
-			m_pAnonymousAttributes->RemoveElementAt(i);
+			void* pPtr = pArray->ElementAt(i);
+			PR_FREEIF(pPtr);
+			pArray->RemoveElementAt(i);
 		}
-		delete m_pAnonymousAttributes;
-		m_pAnonymousAttributes = nsnull;
-	}
-	return NS_OK;
-}
-
-nsresult nsAbCardProperty::RemoveAnonymousValuesList()
-{
-	if (m_pAnonymousValues)
-	{
-		PRUint32 count = m_pAnonymousValues->Count();
-		for (int i = count - 1; i >= 0; i--)
-		{
-			char* pStr = (char*)m_pAnonymousValues->ElementAt(i);
-			PR_FREEIF(pStr);
-			m_pAnonymousValues->RemoveElementAt(i);
-		}
-		delete m_pAnonymousValues;
-		m_pAnonymousValues = nsnull;
+		delete pArray;
 	}
 	return NS_OK;
 }
@@ -444,76 +438,99 @@ NS_IMETHODIMP nsAbCardProperty::SetCardValue(const char *attrname, const char *v
     else if (!PL_strcmp(attrname, kNotesColumn))
 		rv = SetNotes(valueStr);
 	else
-		rv = SetAnonymousAttribute(attrname, value);
+		rv = SetAnonymousStringAttribute(attrname, value);
 
 	delete[] valueStr;
 
 	return rv;
 }
 
-NS_IMETHODIMP nsAbCardProperty::GetAnonymousAttrubutesList(nsVoidArray **attrlist)
+NS_IMETHODIMP nsAbCardProperty::GetAnonymousStrAttrubutesList(nsVoidArray **attrlist)
 {
-	if (attrlist && m_pAnonymousAttributes)
+	if (attrlist && m_pAnonymousStrAttributes)
 	{
-		*attrlist = m_pAnonymousAttributes;
+		*attrlist = m_pAnonymousStrAttributes;
 		return NS_OK;
 	}
 	else
 		return NS_ERROR_NULL_POINTER;
 }
 
-NS_IMETHODIMP nsAbCardProperty::GetAnonymousValuesList(nsVoidArray **valuelist)
+NS_IMETHODIMP nsAbCardProperty::GetAnonymousStrValuesList(nsVoidArray **valuelist)
 {
-	if (valuelist && m_pAnonymousValues)
+	if (valuelist && m_pAnonymousStrValues)
 	{
-		*valuelist = m_pAnonymousValues;
+		*valuelist = m_pAnonymousStrValues;
 		return NS_OK;
 	}
 	else
 		return NS_ERROR_NULL_POINTER;
 }
 
-NS_IMETHODIMP nsAbCardProperty::SetAnonymousAttrubutesList(nsVoidArray *pAttrlist)
+NS_IMETHODIMP nsAbCardProperty::GetAnonymousIntAttrubutesList(nsVoidArray **attrlist)
 {
-	if (m_pAnonymousAttributes)
-		RemoveAnonymousAttrubutesList();
-	m_pAnonymousAttributes = pAttrlist;
-	return NS_OK;
+	if (attrlist && m_pAnonymousIntAttributes)
+	{
+		*attrlist = m_pAnonymousIntAttributes;
+		return NS_OK;
+	}
+	else
+		return NS_ERROR_NULL_POINTER;
 }
 
-NS_IMETHODIMP nsAbCardProperty::SetAnonymousValuesList(nsVoidArray *pValuelist)
+NS_IMETHODIMP nsAbCardProperty::GetAnonymousIntValuesList(nsVoidArray **valuelist)
 {
-	if (m_pAnonymousValues)
-		RemoveAnonymousValuesList();
-	m_pAnonymousValues = pValuelist;
-	return NS_OK;
+	if (valuelist && m_pAnonymousIntValues)
+	{
+		*valuelist = m_pAnonymousIntValues;
+		return NS_OK;
+	}
+	else
+		return NS_ERROR_NULL_POINTER;
 }
 
-NS_IMETHODIMP nsAbCardProperty::SetAnonymousAttribute(const char *attrname, const char *value)
+NS_IMETHODIMP nsAbCardProperty::GetAnonymousBoolAttrubutesList(nsVoidArray **attrlist)
+{
+	if (attrlist && m_pAnonymousBoolAttributes)
+	{
+		*attrlist = m_pAnonymousBoolAttributes;
+		return NS_OK;
+	}
+	else
+		return NS_ERROR_NULL_POINTER;
+}
+
+NS_IMETHODIMP nsAbCardProperty::GetAnonymousBoolValuesList(nsVoidArray **valuelist)
+{
+	if (valuelist && m_pAnonymousBoolValues)
+	{
+		*valuelist = m_pAnonymousBoolValues;
+		return NS_OK;
+	}
+	else
+		return NS_ERROR_NULL_POINTER;
+}
+
+nsresult nsAbCardProperty::SetAnonymousAttribute
+(nsVoidArray** pAttrAray, nsVoidArray** pValueArray, void *attrname, void *value)
 {
 	nsresult rv = NS_OK;
+	nsVoidArray* pAttributes = *pAttrAray;
+	nsVoidArray* pValues = *pValueArray; 
 
-	if (!m_pAnonymousAttributes && !m_pAnonymousValues)
+	if (!pAttributes && !pValues)
 	{
-		m_pAnonymousAttributes = new nsVoidArray();
-		m_pAnonymousValues = new nsVoidArray();
+		pAttributes = new nsVoidArray();
+		pValues = new nsVoidArray();
+		*pAttrAray = pAttributes;
+		*pValueArray = pValues;
 	}
-	if (m_pAnonymousAttributes && m_pAnonymousValues)
+	if (pAttributes && pValues)
 	{
-		char* pAttribute = nsnull;
-		char* pValue = nsnull;
-		pAttribute = PL_strdup(attrname);
-		pValue = PL_strdup(value);
-		if (pAttribute && pValue)
+		if (attrname && value)
 		{
-			m_pAnonymousAttributes->AppendElement(pAttribute);
-			m_pAnonymousValues->AppendElement(pValue);
-		}
-		else
-		{
-			PR_FREEIF(pAttribute);
-			PR_FREEIF(pValue);
-			rv = NS_ERROR_NULL_POINTER;
+			pAttributes->AppendElement(attrname);
+			pValues->AppendElement(value);
 		}
 	}
 	else
@@ -523,6 +540,83 @@ NS_IMETHODIMP nsAbCardProperty::SetAnonymousAttribute(const char *attrname, cons
 
 	return rv;
 }	
+
+
+NS_IMETHODIMP nsAbCardProperty::SetAnonymousStringAttribute
+(const char *attrname, const char *value)
+{
+	nsresult rv = NS_OK;
+
+	char* pAttribute = PL_strdup(attrname);
+	char* pValue = PL_strdup(value);
+	if (pAttribute && pValue)
+	{
+		rv = SetAnonymousAttribute(&m_pAnonymousStrAttributes, 
+			&m_pAnonymousStrValues, pAttribute, pValue);
+	}
+	else
+	{
+		PR_FREEIF(pAttribute);
+		PR_FREEIF(pValue);
+		rv = NS_ERROR_NULL_POINTER;
+	}
+	return rv;
+}	
+
+NS_IMETHODIMP nsAbCardProperty::SetAnonymousIntAttribute
+(const char *attrname, PRUint32 value)
+{
+	nsresult rv = NS_OK;
+
+	char* pAttribute = PL_strdup(attrname);
+	PRUint32* pValue = (PRUint32 *)PR_Calloc(1, sizeof(PRUint32));
+	*pValue = value;
+	if (pAttribute && pValue)
+	{
+		rv = SetAnonymousAttribute(&m_pAnonymousIntAttributes, 
+			&m_pAnonymousIntValues, pAttribute, pValue);
+	}
+	else
+	{
+		PR_FREEIF(pAttribute);
+		PR_FREEIF(pValue);
+		rv = NS_ERROR_NULL_POINTER;
+	}
+	return rv;
+}	
+
+NS_IMETHODIMP nsAbCardProperty::SetAnonymousBoolAttribute
+(const char *attrname, PRBool value)
+{
+	nsresult rv = NS_OK;
+
+	char* pAttribute = PL_strdup(attrname);
+	PRBool* pValue = (PRBool *)PR_Calloc(1, sizeof(PRBool));
+	*pValue = value;
+	if (pAttribute && pValue)
+	{
+		rv = SetAnonymousAttribute(&m_pAnonymousBoolAttributes, 
+			&m_pAnonymousBoolValues, pAttribute, pValue);
+	}
+	else
+	{
+		PR_FREEIF(pAttribute);
+		PR_FREEIF(pValue);
+		rv = NS_ERROR_NULL_POINTER;
+	}
+	return rv;
+}
+
+NS_IMETHODIMP nsAbCardProperty::AddAnonymousAttributesToDB()
+{
+	nsresult rv = NS_OK;
+	if (mDatabase)
+		mDatabase = null_nsCOMPtr();
+	rv = GetCardDatabase("abdirectory://abook.mab");
+	if (NS_SUCCEEDED(rv) && mDatabase)
+		rv = mDatabase->AddAnonymousAttributesFromCard(this);
+	return rv;
+}
 
 /* caller need to PR_smprintf_free *uri */
 NS_IMETHODIMP nsAbCardProperty::GetCardURI(char **uri)

@@ -51,7 +51,15 @@ interface nsIAddrDatabase : nsIAddrDBAnnouncer {
 	void DeleteCard(in nsIAbCard card, in boolean beNotify);
 	void EditCard(in nsIAbCard card, in boolean beNotify);
 	void ContainsCard(in nsIAbCard card, out boolean hasCard);
-	void SetAnonymousAttribute(in string attrname, in string value);
-	void GetAnonymousAttribute(in string attrname, out string value);
+
+	void SetAnonymousStringAttribute(in string attrname, in string value);
+	void GetAnonymousStringAttribute(in string attrname, out string value);
+	void SetAnonymousIntAttribute(in string attrname, in unsigned long value);
+	void GetAnonymousIntAttribute(in string attrname, out unsigned long value);
+	void SetAnonymousBoolAttribute(in string attrname, in boolean value);
+	void GetAnonymousBoolAttribute(in string attrname, out boolean value);
 	void AddAnonymousAttributesToDB();
+	void RemoveAnonymousAttributesFromDB();
+	void AddAnonymousAttributesFromCard(in nsIAbCard card);
+	void RemoveAnonymousAttributesFromCard(in nsIAbCard card);
 };

@@ -72,11 +72,19 @@ interface nsIAbCard : nsISupports {
 
 	void GetCardValue(in string attrname, out string value);
 	void SetCardValue(in string attrname, in string value);
-	void GetAnonymousAttrubutesList(out nsVoidArray attrlist);
-	void GetAnonymousValuesList(out nsVoidArray valuelist);
-	void SetAnonymousAttrubutesList(in nsVoidArray attrlist);
-	void SetAnonymousValuesList(in nsVoidArray valuelist);
-	void SetAnonymousAttribute(in string attrname, in string value);
+
+	void GetAnonymousStrAttrubutesList(out nsVoidArray attrlist);
+	void GetAnonymousStrValuesList(out nsVoidArray valuelist);
+	void GetAnonymousIntAttrubutesList(out nsVoidArray attrlist);
+	void GetAnonymousIntValuesList(out nsVoidArray valuelist);
+	void GetAnonymousBoolAttrubutesList(out nsVoidArray attrlist);
+	void GetAnonymousBoolValuesList(out nsVoidArray valuelist);
+
+	void SetAnonymousStringAttribute(in string attrname, in string value);
+	void SetAnonymousIntAttribute(in string attrname, in unsigned long value);
+	void SetAnonymousBoolAttribute(in string attrname, in boolean value);
+	void AddAnonymousAttributesToDB();
+
 	void GetCardURI(out string uri);
 	void AddCardToDatabase(in string uri);
 	void EditCardToDatabase(in string uri);
