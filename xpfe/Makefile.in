@@ -26,11 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= appshell browser components/shistory communicator global
-
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-DIRS		:= bootstrap/appleevents $(DIRS)
-endif
+DIRS		= browser components/shistory communicator global
 
 # Because of our great use of encapsulation, there are
 # some header file in xpfe/components that are required

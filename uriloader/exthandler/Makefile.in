@@ -63,10 +63,11 @@ REQUIRES	= xpcom \
 		  uconv \
 		  windowwatcher \
 		  appcomps \
+		  history \
 		  $(NULL)
 
 ifdef MOZ_PHOENIX
-REQUIRES	+= toolkitcomps history
+REQUIRES	+= toolkitcomps
 endif
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))

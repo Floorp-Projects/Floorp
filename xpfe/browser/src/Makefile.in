@@ -47,6 +47,7 @@ REQUIRES	= xpcom \
 		  appcomps \
 		  webbrwsr \
 		  windowwatcher \
+		  history \
 		  $(NULL)
 
 ifdef MOZ_PHOENIX

@@ -694,10 +694,14 @@ xpfe/components/console/Makefile
 xpfe/components/resetPref/Makefile
 xpfe/components/killAll/Makefile
 xpfe/components/build/Makefile
+xpfe/components/xremote/Makefile
+xpfe/components/xremote/public/Makefile
+xpfe/components/xremote/src/Makefile
 xpfe/appshell/Makefile
 xpfe/appshell/src/Makefile
 xpfe/appshell/public/Makefile
 xpfe/bootstrap/Makefile
+xpfe/bootstrap/appleevents/Makefile
 xpfe/browser/Makefile
 xpfe/browser/src/Makefile
 xpfe/browser/resources/Makefile

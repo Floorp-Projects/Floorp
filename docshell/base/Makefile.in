@@ -63,13 +63,8 @@ REQUIRES	= xpcom \
 		  composer \
 		  commandhandler \
 		  editor \
+		  history \
 		  $(NULL)
-
-ifdef MOZ_PHOENIX
-REQUIRES += history
-else
-REQUIRES += appcomps
-endif
 
 XPIDLSRCS	= \
 		nsCDocShell.idl			\
