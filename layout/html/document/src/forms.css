@@ -388,7 +388,7 @@ input[type="submit"] {
   /* The sum of border-top, border-bottom, padding-top, padding-bottom
      must be the same here, for text inputs, and for <select>.  For
      buttons, make sure to include the -moz-focus-inner border/padding. */
-  padding: 0px 8px 0px 8px;
+  padding: 0px 6px 0px 6px;
   border: 2px outset ButtonFace;
   background-color: ButtonFace;
   color: ButtonText; 
@@ -411,7 +411,7 @@ button:active:hover,
 input[type="reset"]:active:hover,
 input[type="button"]:active:hover,
 input[type="submit"]:active:hover {
-  padding: 0px 7px 0px 9px;
+  padding: 0px 5px 0px 7px;
   border-style: inset;
 }
 
@@ -443,7 +443,7 @@ input[type="submit"][disabled]:active,
 input[type="submit"][disabled] {
   /* The sum of border-top, border-bottom, padding-top, padding-bottom
      must be the same here and for text inputs */
-  padding: 1px 8px 1px 8px;
+  padding: 1px 6px 1px 6px;
   border: 1px outset ButtonShadow;
   color: GrayText;
 }
