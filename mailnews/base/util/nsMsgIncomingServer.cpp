@@ -233,7 +233,7 @@ nsMsgIncomingServer::getDefaultCharPref(const char *prefname,
   PR_Free(fullPrefName);
 
   if (NS_FAILED(rv)) {
-    *val = PL_strdup("");
+    *val = nsnull;              // null is ok to return here
     rv = NS_OK;
   }
   return rv;
@@ -260,9 +260,27 @@ nsMsgIncomingServer::setCharPref(const char *prefname,
   return rv;
 }
 
+// pretty name is the display name to show to the user
+NS_IMETHODIMP
+nsMsgIncomingServer::GetPrettyName(char **retval) {
+
+  char *val;
+  nsresult rv = getCharPref("name", &val);
+  if (NS_FAILED(rv)) return rv;
+
+  // if there's no pretty name, then just return the hostname
+  if (!val)
+    return GetHostName(retval);
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgIncomingServer::SetPrettyName(char *value) {
+  return setCharPref("name", value);
+}
 
 // use the convenience macros to implement the accessors
-NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, PrettyName, "name")
 NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, HostName, "hostname");
 NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, Username, "userName");
 NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, Password, "password");
