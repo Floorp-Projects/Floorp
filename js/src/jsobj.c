@@ -558,6 +558,7 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 #endif
     jsval val[2];
     JSString *gsop[2];
+    JSAtom *atom;
     JSString *idstr, *valstr, *str;
 
     /*
@@ -680,6 +681,7 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
             goto error;
 
         /* Convert id to a jsval and then to a string. */
+        atom = JSVAL_IS_INT(id) ? NULL : (JSAtom *)id;
         id = js_IdToValue(id);
         idstr = js_ValueToString(cx, id);
         if (!idstr) {
@@ -688,8 +690,11 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         }
         argv[0] = STRING_TO_JSVAL(idstr);
 
-        /* If id is a non-identifier string, it needs to be quoted. */
-        if (JSVAL_IS_STRING(id) && !js_IsIdentifier(idstr)) {
+        /*
+         * If id is a string that's a reserved identifier, or else id is not
+         * an identifier at all, then it needs to be quoted.
+         */
+        if (atom && (atom->kwindex >= 0 || !js_IsIdentifier(idstr))) {
             idstr = js_QuoteString(cx, idstr, (jschar)'\'');
             if (!idstr) {
                 ok = JS_FALSE;
