@@ -38,7 +38,7 @@
 #define NS_MSGCOMPOSESERVICE_PROGID			\
   "component://netscape/messengercompose"
 #define NS_MSGCOMPOSESTARTUPHANDLER_PROGID \
-  "component://netscape/commandlinehander/general-startup-compose"
+  "component://netscape/commandlinehandler/general-startup-compose"
 
 //
 // nsMsgCompose
