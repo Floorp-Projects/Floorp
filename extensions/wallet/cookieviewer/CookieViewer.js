@@ -97,14 +97,14 @@ function CreateCookieList()
   for(i = 1; i < cookieList.length; i+=8)
   {
     cookies[count] = new Cookie();
-    cookies[count].number     = cookieList[i+1];
-    cookies[count].name       = cookieList[i+2];
-    cookies[count].value      = cookieList[i+3];
-    cookies[count].domaintype = cookieList[i+4];
-    cookies[count].domain     = cookieList[i+5];
-    cookies[count].path       = cookieList[i+6];
-    cookies[count].secure     = cookieList[i+7];
-    cookies[count].expire     = cookieList[i];
+    cookies[count].number     = cookieList[i+0];
+    cookies[count].name       = cookieList[i+1];
+    cookies[count].value      = cookieList[i+2];
+    cookies[count].domaintype = cookieList[i+3];
+    cookies[count].domain     = cookieList[i+4];
+    cookies[count].path       = cookieList[i+5];
+    cookies[count].secure     = cookieList[i+6];
+    cookies[count].expire     = cookieList[i+7];
     count++;
   }  
 }
