@@ -4,7 +4,7 @@
     behavior              : url("chrome://global/content/xulBindings.xml#buttontop");
     border                : 1px solid threeddarkshadow;
     list-style-image      : url("chrome://global/skin/animthrob_single.gif");
-    margin                : 0px 2px 0px 10px;
+    margin                : 1px 2px 1px 10px;
     min-width             : 0px;
     cursor                : pointer;
   }  

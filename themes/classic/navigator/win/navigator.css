@@ -201,18 +201,21 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
   
 #search-button
   {
-    margin-right          : 1px;
+    margin                : 1px 3px 1px 2px !important;
     list-style-image      : url("chrome://communicator/skin/search.gif");
+    font-weight           : bold;
   }
 
 #search-button:hover
   {
     list-style-image      : url("chrome://communicator/skin/search-hover.gif");
+    margin                : 0px 2px 0px 1px !important;
   }
   
 #search-button:hover:active
   {
     list-style-image      : url("chrome://communicator/skin/search-active.gif");
+    margin                : 0px 2px 0px 1px !important;
   }
 
 .menuitem-iconic
