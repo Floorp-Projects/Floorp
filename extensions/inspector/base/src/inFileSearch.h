@@ -43,7 +43,8 @@
 
 #include "nsString.h"
 #include "nsVoidArray.h"
-#include "nsISupportsArray.h"
+#include "nsISimpleEnumerator.h"
+#include "nsCOMArray.h"
 #include "inISearchObserver.h"
 #include "nsIFile.h"
 #include "inSearchLoop.h"
@@ -60,8 +61,8 @@ public:
 
 protected:
   nsCOMPtr<inISearchObserver> mObserver;
-  nsCOMPtr<nsISupportsArray> mResults;
-  nsCOMPtr<nsISupportsArray> mDirStack;
+  nsCOMArray<nsIFile> mResults;
+  nsCOMArray<nsISimpleEnumerator> mDirStack;
   nsCOMPtr<nsIFile> mLastResult;
   nsCOMPtr<nsIFile> mSearchPath;
   inSearchLoop* mSearchLoop;
@@ -87,7 +88,7 @@ protected:
   nsresult InitSubDirectoryStack();
   PRBool GetNextSubDirectory(nsIFile** aDir);
   nsresult PushSubDirectoryOnStack(nsIFile* aDir);
-  nsIFile* GetNextDirectory(nsISimpleEnumerator* aEnum);
+  already_AddRefed<nsIFile> GetNextDirectory(nsISimpleEnumerator* aEnum);
 
   // pattern matching
   PRBool MatchFile(nsIFile* aFile);

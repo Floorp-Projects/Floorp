@@ -56,7 +56,7 @@ public:
   static nsIDOMWindowInternal* GetWindowFor(nsIDOMDocument* aDoc);
   static nsIPresShell* GetPresShellFor(nsISupports* aThing);
   static nsIFrame* GetFrameFor(nsIDOMElement* aElement, nsIPresShell* aShell);
-  static nsIRenderingContext* GetRenderingContextFor(nsIPresShell* aShell);
+  static already_AddRefed<nsIRenderingContext> GetRenderingContextFor(nsIPresShell* aShell);
   static nsIEventStateManager* GetEventStateManagerFor(nsIDOMElement *aElement);
   static nsIBindingManager* GetBindingManagerFor(nsIDOMNode* aNode);
   static nsIDOMDocument* GetSubDocumentFor(nsIDOMNode* aNode);
