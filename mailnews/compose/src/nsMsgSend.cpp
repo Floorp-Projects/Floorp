@@ -736,7 +736,11 @@ nsMsgComposeAndSend::GatherMimeAttachments ()
 	}
 	  
 	if (mCompFields->GetMessageId() == nsnull || *mCompFields->GetMessageId() == 0)
-		mCompFields->SetMessageId(msg_generate_message_id (), nsnull);
+	{
+		char * msgID = msg_generate_message_id ();
+		mCompFields->SetMessageId(msgID, nsnull);
+		PR_FREEIF(msgID);
+	}
 
 	mainbody = new nsMsgSendPart(this, mCompFields->GetCharacterSet());
 	if (!mainbody)
@@ -3364,8 +3368,6 @@ nsMsgComposeAndSend::CreateAndSendMessage(
               void                              *tagData)
 {
   nsresult      rv;
-
-
   // Make sure the completion callback is setup first...
   mSendCompleteCallback = completionCallback;
 
