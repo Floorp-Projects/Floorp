@@ -43,6 +43,9 @@
 *
 * But SpiderMonkey has decided NOT to follow this; it's a bug in the spec.
 * See http://bugzilla.mozilla.org/show_bug.cgi?id=131348
+*
+* Update: Rhino has also decided not to follow the spec on this
+* See http://bugzilla.mozilla.org/show_bug.cgi?id=136893
 */
 //-----------------------------------------------------------------------------
 var UBound = 0;
@@ -57,11 +60,6 @@ var actualvalues = [];
 var expect= '';
 var expectedvalues = [];
 
-/*
- * As of 10 Apr 2002, we only want to run this test in SpiderMonkey
- */
-if (inRhino())
-  quit();
 
 
 status = inSection(1);
