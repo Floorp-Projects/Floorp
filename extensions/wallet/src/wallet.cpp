@@ -1548,27 +1548,32 @@ wallet_GetLine(nsInputFileStream& strm, nsString& line)
   line.SetCapacity(stringCap);
   
   PRUnichar c;
+  static PRUnichar lastC = '\0';
   for (;;) {
     c = Wallet_UTF8Get(strm);
-    if (c == '\n') {
-      break;
-    }
 
     /* note that eof is not set until we read past the end of the file */
     if (strm.eof()) {
       return -1;
     }
 
-    if (c != '\r') {
-      stringLen ++;
-      // buffer string grows
-      if (stringLen == stringCap)
-      {
-        stringCap += stringCap;   // double buffer len
-        line.SetCapacity(stringCap);
-      }
-      line += c;
+    /* check for line terminator (mac=CR, unix=LF, win32=CR+LF */
+    if (c == '\n' && lastC == '\r') {
+        continue; /* ignore LF if preceded by a CR */
     }
+    lastC = c;
+    if (c == '\n' || c == '\r') {
+      break;
+    }
+
+    stringLen ++;
+    // buffer string grows
+    if (stringLen == stringCap)
+    {
+      stringCap += stringCap;   // double buffer len
+      line.SetCapacity(stringCap);
+    }
+    line += c;
   }
 
   return NS_OK;
