@@ -34,7 +34,6 @@
 #include "nsINetDataDiskCache.h"
 #include "nsNetDiskCacheCID.h"
 #include "nsCOMPtr.h"
-#include "nsIPref.h"
 #include "nsDBAccessor.h"
 
 class nsIURI; /* forward decl */
