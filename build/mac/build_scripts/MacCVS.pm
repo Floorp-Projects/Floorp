@@ -20,6 +20,8 @@ use File::Basename;
 @EXPORT			= qw( new print checkout);
 $VERSION = "1.00";
 
+my($last_error) = 0;
+
 # Architecture:
 # cvs session object:
 # name - session name
@@ -39,14 +41,25 @@ sub _myDoAppleScript($)
 {
 	my($script) = @_;
 	my $asresult = MacPerl::DoAppleScript($script);
+
 	if ($asresult eq "0")
 	{
 		return 1;
 	}
 	else
 	{
-		print STDERR "AppleScript error: $asresult\n";
-		print STDERR "AppleScript was: \n $script \n";
+		my($error_string) = "Unknown error";
+		my($error_code) = 0;
+
+		if ($asresult =~ /^\"(.*)\.([0-9]+)\"$/)
+		{
+			$error_string = $1;
+			$error_code = $2;
+		}
+
+		print STDERR "Error. Script returned '$error_string (error $error_code)\n";
+		# print STDERR "AppleScript was: \n $script \n";
+		$last_error = $error_code;
 		return 0;
 	}
 }
@@ -95,7 +108,8 @@ sub _useMacCVSLib()
 # Session object methods
 #
 
-sub new		{
+sub new
+{
 	my ( $proto, $session_file) = @_;
 	my $class = ref($proto) || $proto;
 	my $self = {};
@@ -116,10 +130,14 @@ sub new		{
 
 # makes sure that the session is open
 # assertSessionOpen()
-# returns 1 on failure
-sub assertSessionOpen()	{
+# returns 1 on success
+sub assertSessionOpen()
+{
 	my ($self) = shift;
 	_useMacCVSLib() || die "Could not load MacCVSLib\n";
+
+    $last_error = 0;
+
 	my $script = <<END_OF_APPLESCRIPT;
 	tell (load script file "$MacCVSLib") to OpenSession("$self->{session_file}")
 END_OF_APPLESCRIPT
@@ -127,21 +145,25 @@ END_OF_APPLESCRIPT
 }
 
 # prints the cvs object, used mostly for debugging
-sub print {
+sub print
+{
 	my($self) = shift;
+    $last_error = 0;
 	print "MacCVS:: name: ", $self->{name}, " session file: ", $self->{session_file}, "\n";
 }
 
 # checkout( self, module, revision, date)
 # MacCVS checkout command
-# returns 1 on failure
-sub checkout
+# returns 1 on success.
+sub checkout()
 {
 	my($self, $module, $revision, $date ) = @_;
 	unless( defined ($module) ) { $module = ""; }	# get rid of the pesky undefined warnings
 	unless( defined ($revision) ) { $revision = ""; }
 	unless( defined ($date) ) { $date = ""; }
 
+    $last_error = 0;
+    
 	$self->assertSessionOpen() || return 1;
 	
 	my($revstring) = ($revision ne "") ? $revision : "(none)";
@@ -153,6 +175,11 @@ sub checkout
 	tell (load script file "$MacCVSLib") to Checkout given sessionName:"$self->{name}", module:"$module", revision:"$revision", date:"$date"
 END_OF_APPLESCRIPT
 	return _myDoAppleScript($script);
+}
+
+sub getLastError()
+{
+	return $last_error;
 }
 
 1;

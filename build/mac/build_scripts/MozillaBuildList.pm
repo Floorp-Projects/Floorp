@@ -8,7 +8,6 @@ use strict;
 use vars qw( @ISA @EXPORT );
 
 # perl includes
-use Mac::StandardFile;
 use Mac::Processes;
 use Mac::Events;
 use Mac::Files;
@@ -52,96 +51,9 @@ sub assertRightDirectory()
     unless (-e ":mozilla")
     {
         my($dir) = cwd();
-        print STDERR "NGLayoutBuildList called from incorrect directory: $dir";
+        print STDERR "MozillaBuildList called from incorrect directory: $dir";
     } 
 }
-
-#//--------------------------------------------------------------------------------------------------
-#// InstallManifestRDF
-#//--------------------------------------------------------------------------------------------------
-
-sub InstallManifestRDF($$$$)
-{
-    my($src, $manifest_subdir, $type, $building_jars) = @_;
-    
-    my($dist_dir) = getDistDirectory();
-    my $chrome_subdir = "Chrome:";
-    my $chrome_dir = "$dist_dir" . $chrome_subdir;
-
-    my($manifest_path) = $chrome_dir.$manifest_subdir;
-    
-    print "Installing manifest.rdf file in ".$manifest_path."\n";
-    
-    MakeAlias($src, "$manifest_path");
-    
-    open(CHROMEFILE, ">>${chrome_dir}installed-chrome.txt");
-
-    $manifest_subdir =~ tr(:)(/);
-
-    if ($building_jars)
-    {
-        # remove trailing / from subdir
-        $manifest_subdir =~ s/\/$//;    
-        print(CHROMEFILE "${type},install,url,jar:resource:/Chrome/${manifest_subdir}.jar!/\n");     
-    }
-    else
-    {
-        print(CHROMEFILE "${type},install,url,resource:/Chrome/${manifest_subdir}\n");
-    }
-
-    close(CHROMEFILE);
-}
-
-
-#//--------------------------------------------------------------------------------------------------
-#// InstallManifestRDFFiles Install manifest.rdf files and build installed_chrome.txt
-#//--------------------------------------------------------------------------------------------------
-
-sub InstallManifestRDFFiles()
-{
-    unless( $main::build{resources} ) { return; }
-
-    my($dist_dir) = getDistDirectory();
-
-    my $chrome_subdir = "Chrome:";
-    my $chrome_dir = "$dist_dir" . $chrome_subdir;
-
-    my($building_jars) = $main::options{jars};
-
-    # nuke installed-chrome.txt
-    unlink ${chrome_dir}."installed-chrome.txt";
-
-    # install manifest RDF files
-    InstallManifestRDF(":mozilla:extensions:irc:xul:manifest.rdf", "packages:chatzilla:", "content", $building_jars);
-    InstallManifestRDF(":mozilla:extensions:irc:xul:manifest.rdf", "packages:chatzilla:", "locale", $building_jars);
-    InstallManifestRDF(":mozilla:extensions:irc:xul:manifest.rdf", "packages:chatzilla:", "skin", $building_jars);
-    
-    InstallManifestRDF(":mozilla:extensions:cview:resources:manifest.rdf", "packages:cview:", "content", $building_jars);
-    InstallManifestRDF(":mozilla:extensions:cview:resources:manifest.rdf", "packages:cview:", "locale", $building_jars);
-    InstallManifestRDF(":mozilla:extensions:cview:resources:manifest.rdf", "packages:cview:", "skin", $building_jars);
-    
-    if ($main::options{transformiix})
-    {
-        my($transformiix_manifest) = ":mozilla:extensions:transformiix:source:examples:mozilla:transformiix:manifest.rdf";
-        InstallManifestRDF($transformiix_manifest, "packages:transformiix:", "content", $building_jars);
-        InstallManifestRDF($transformiix_manifest, "packages:transformiix:", "locale", $building_jars);
-        InstallManifestRDF($transformiix_manifest, "packages:transformiix:", "skin", $building_jars);
-    }
-
-    InstallManifestRDF(":mozilla:themes:classic:manifest.rdf", "skins:classic:", "skin", $building_jars);
-    InstallManifestRDF(":mozilla:themes:blue:manifest.rdf", "skins:blue:", "skin", $building_jars);
-    InstallManifestRDF(":mozilla:themes:modern:manifest.rdf", "skins:modern:", "skin", $building_jars);
-
-    InstallManifestRDF(":mozilla:xpfe:communicator:resources:content:manifest.rdf", "packages:core:", "content", $building_jars);
-    InstallManifestRDF(":mozilla:xpfe:global:resources:content:manifest.rdf", "packages:widget-toolkit:", "content", $building_jars);
-    InstallManifestRDF(":mozilla:mailnews:base:resources:content:manifest.rdf", "packages:messenger:", "content", $building_jars);
-
-    InstallManifestRDF(":mozilla:xpfe:communicator:resources:locale:en-US:manifest.rdf", "locales:en-US:", "locale", $building_jars);
-    
-    InstallManifestRDF(":mozilla:l10n:langpacks:en-DE:chrome:en-DE:manifest.rdf", "locales:en-DE:", "locale", $building_jars);
-
-}
-
 
 #//--------------------------------------------------------------------------------------------------
 #// Configure Build System
@@ -150,7 +62,7 @@ sub InstallManifestRDFFiles()
 my($UNIVERSAL_INTERFACES_VERSION) = 0x0320;
 
 
-sub _genBuildSystemInfo()
+sub GenBuildSystemInfo()
 {
     # always rebuild the configuration program.
     BuildProjectClean(":mozilla:build:mac:tools:BuildSystemInfo:BuildSystemInfo.mcp", "BuildSystemInfo");
@@ -181,20 +93,25 @@ sub _genBuildSystemInfo()
 sub ConfigureBuildSystem()
 {
     #// In the future, we may want to do configurations based on the actual build system itself.
-    #// _genBuildSystemInfo();
+    #// GenBuildSystemInfo();
 
+    # launch codewarrior and write idepath.txt. This is required for getCodeWarriorPath() to work.
+    LaunchCodeWarrior();
+    
+    SanityCheckJarOptions();
+    
     #// For now, if we discover a newer header file than existed in Universal Interfaces 3.2,
     #// we'll assume that 3.3 or later is in use.
-    my($universal_interfaces) = getCodeWarriorPath("MacOS Support:Universal:Interfaces:CIncludes:");
+    my($universal_interfaces) = CodeWarriorLib::getCodeWarriorPath("MacOS Support:Universal:Interfaces:CIncludes:");
     if (-e ($universal_interfaces . "ControlDefinitions.h")) {
         $UNIVERSAL_INTERFACES_VERSION = 0x0330;
     }
 
     #// Rename IC SDK folder in the Mac OS Support folder
-    my($ic_sdk_folder) = getCodeWarriorPath("MacOS Support:ICProgKit2.0.2");
+    my($ic_sdk_folder) = CodeWarriorLib::getCodeWarriorPath("MacOS Support:ICProgKit2.0.2");
     if( -e $ic_sdk_folder)
     {
-        my($new_ic_folder_name) = getCodeWarriorPath("MacOS Support:(ICProgKit2.0.2)");
+        my($new_ic_folder_name) = CodeWarriorLib::getCodeWarriorPath("MacOS Support:(ICProgKit2.0.2)");
         rename ($ic_sdk_folder, $new_ic_folder_name);
         # note that CodeWarrior doesn't descnet into folders with () the name
         print "Mozilla no longer needs the Internet Config SDK to build:\n  Renaming the 'ICProgKit2.0.2' folder to '(ICProgKit2.0.2)'\n";
@@ -255,121 +172,6 @@ sub ConfigureBuildSystem()
     }
 }
 
-
-#-----------------------------------------------
-# SetupBuildLog
-#-----------------------------------------------
-sub SetupBuildLog($)
-{
-  my($timestamped_log) = @_;
-  
-  if ($timestamped_log)
-  {
-  	#Use time-stamped names so that you don't clobber your previous log file!
-  	my $now = localtime();
-  	while ($now =~ s@:@.@) {} # replace all colons by periods
-  	my $logdir = ":Build Logs:";
-  	if (!stat($logdir))
-  	{
-  	        print "Creating directory $logdir\n";
-  	        mkdir $logdir, 0777 || die "Couldn't create directory $logdir";
-  	}
-  	OpenErrorLog("$logdir$now");
-  }
-  else
-  {
-  	OpenErrorLog("NGLayoutBuildLog");		# Release build
-  	#OpenErrorLog("Mozilla.BuildLog");		# Tinderbox requires that name
-  }
-}
-
-#//--------------------------------------------------------------------------------------------------
-#// Check out everything
-#//--------------------------------------------------------------------------------------------------
-sub Checkout()
-{
-    unless ( $main::pull{all} || $main::pull{moz} || $main::pull{runtime} ) { return;}
-
-    # give application activation a chance to happen
-    WaitNextEvent();
-    WaitNextEvent();
-    WaitNextEvent();
-    
-    assertRightDirectory();
-    my($cvsfile) = AskAndPersistFile("::nglayout.cvsloc");
-    my($session) = MacCVS->new( $cvsfile );
-    unless (defined($session)) { die "Checkout aborted. Cannot create session file: $session" }
-
-    # activate MacCVS
-    ActivateApplication('Mcvs');
-
-    my($nsprpub_tag) = "NSPRPUB_CLIENT_BRANCH";
-    my($nss_tab) = "NSS_30_BRANCH";
-    my($psm_tag) = "SECURITY_MAC_BRANCH";
-    my($secbase_tag) = "SECURITY_CLIENT_BRANCH";
-    my($ldapsdk_tag) = "LDAPCSDK_40_BRANCH"; 
-    
-    #//
-    #// Checkout commands
-    #//
-    if ($main::pull{moz})
-    {
-        $session->checkout("mozilla/nsprpub", $nsprpub_tag)            || print "checkout of nsprpub failed\n";        
-        $session->checkout("mozilla/security/nss", $nss_tab)           || print "checkout of security/nss failed\n";
-        $session->checkout("mozilla/security/psm", $psm_tag)           || print "checkout of security/psm failed\n";
-        $session->checkout("mozilla/security/base", $secbase_tag)      || print "checkout of security/base failed\n";
-        $session->checkout("DirectorySDKSourceC", $ldapsdk_tag)        || print "checkout of LDAP C SDK failed\n";
-        $session->checkout("SeaMonkeyAll")                             || 
-            print "MacCVS reported some errors checking out SeaMonkeyAll, but these are probably not serious.\n";
-    }
-    elsif ($main::pull{runtime})
-    {
-        $session->checkout("mozilla/build/mac")                     || print "checkout failure\n";
-        $session->checkout("mozilla/lib/mac/InterfaceLib")          || print "checkout failure\n";
-        $session->checkout("mozilla/config/mac")                    || print "checkout failure\n";
-        $session->checkout("mozilla/gc")                            || print "checkout failure\n";
-        $session->checkout("mozilla/lib/mac/NSStartup")             || print "checkout failure\n";
-        $session->checkout("mozilla/lib/mac/NSStdLib")              || print "checkout failure\n";
-        $session->checkout("mozilla/lib/mac/NSRuntime")             || print "checkout failure\n";
-        $session->checkout("mozilla/lib/mac/MoreFiles")             || print "checkout failure\n";
-        $session->checkout("mozilla/lib/mac/MacMemoryAllocator")    || print "checkout failure\n";
-        $session->checkout("mozilla/nsprpub", $nsprpub_tag)         || print "checkout failure\n";
-    }
-}
-
-
-#//--------------------------------------------------------------------------------------------------
-#// Make resource aliases for one directory
-#//--------------------------------------------------------------------------------------------------
-
-sub BuildFolderResourceAliases($$)
-{
-    my($src_dir, $dest_dir) = @_;
-    
-    unless ($src_dir =~ m/^$main::BUILD_ROOT.+/) { return; }
-    
-    # get a list of all the resource files
-    opendir(SRCDIR, $src_dir) || die("can't open $src_dir");
-    my(@resource_files) = readdir(SRCDIR);
-    closedir(SRCDIR);
-    
-    # make aliases for each one into the dest directory
-    print("Placing aliases to all files from $src_dir in $dest_dir\n");
-    for ( @resource_files )
-    {
-        next if $_ eq "CVS";
-        #print("    Doing $_\n");
-        if (-l $src_dir.$_)
-        {
-            print("     $_ is an alias\n");
-            next;
-        }
-        my($file_name) = $src_dir . $_; 
-        MakeAlias($file_name, $dest_dir);
-    }
-}
-
-
 #//--------------------------------------------------------------------------------------------------
 #// Recurse into the skin directories
 #//--------------------------------------------------------------------------------------------------
@@ -426,7 +228,7 @@ sub InstallSkinFiles($)
     unless( $main::build{resources} ) { return; }
     assertRightDirectory();
 
-    my($dist_dir) = GetDistDirectory();
+    my($dist_dir) = GetBinDirectory();
     my($themes_dir) = ":mozilla:themes:".$theme_name;
 
     print "Installing skin files from $themes_dir\n";
@@ -443,153 +245,14 @@ sub SetDefaultSkin($)
 
     assertRightDirectory();
 
-    my($dist_dir) = GetDistDirectory();
+    my($dist_dir) = GetBinDirectory();
     my($chrome_subdir) = $dist_dir."Chrome";
+    
+    print "Setting default skin to $skin\n";
     
     open(CHROMEFILE, ">>${chrome_subdir}:installed-chrome.txt") || die "Failed to open installed_chrome.txt\n";
     print(CHROMEFILE "skin,install,select,$skin\n");
     close(CHROMEFILE);
-}
-
-#//--------------------------------------------------------------------------------------------------
-#// Recurse into the provider directories
-#//--------------------------------------------------------------------------------------------------
-
-sub ProScanForManifestFiles($$$$$)
-{
-       ## diff from ScanForManifestFiles()
-       my($dir, $theme_root, $provider, $theme_name, $dist_dir) = @_;
-
-       opendir(DIR, $dir) or die "Cannot open dir $dir\n";
-       my @files = readdir(DIR);
-       closedir DIR;
-
-       my $file;
-
-       foreach $file (@files)
-       {        
-               my $filepath = $dir.":".$file;
-
-               if (-d $filepath)
-               {
-                       # print "Looking for MANIFEST files in $filepath\n";            
-                       ## diff from ScanForManifestFiles()
-                       ProScanForManifestFiles($filepath, $theme_root, $provider, $theme_name, $dist_dir);
-               }
-               elsif ($file eq "MANIFEST")
-               {
-                       # print "Doing manifest file $filepath\n";
-
-                       # Get the dest path from the first line of the file
-
-                       open(MANIFEST, $filepath) || die "Could not open file $file";
-                       # Read in the path if available
-                       my($dest_line) = <MANIFEST>;
-                       chomp $dest_line;
-                       close MANIFEST;
-
-                       $dest_line =~ s|^#!dest[\t ]+|| || die "No destination line found in $filepath\n";
-
-                       ## diff from ScanForManifestFiles()
-                       my($dest_path) = $dist_dir."chrome:$provider:$theme_name:$dest_line";
-                       # print " Destination is $dest_path\n";
-                       
-                       InstallResources($filepath, "$dest_path", 0);
-               }
-       }
-}
-
-#//--------------------------------------------------------------------------------------------------
-#// Install Provider files
-#//--------------------------------------------------------------------------------------------------
-
-sub InstallProviderFiles($$)
-{
-       ## diff from InstallSkinFiles() - new arg: provider
-       my($provider, $theme_name) = @_;
-
-       # unless( $main::build{resources} ) { return; }
-       assertRightDirectory();
-
-       my($dist_dir) = GetDistDirectory();
-
-       ## diff from InstallSkinFiles()
-       my($themes_dir) = ":mozilla:l10n:langpacks:".$theme_name.":chrome:".$theme_name;
-
-       print "Installing $provider files from $themes_dir\n";
-
-       ## diff from InstallSkinFiles()
-       ProScanForManifestFiles($themes_dir, $themes_dir, $provider, $theme_name, $dist_dir);
-}
-
-### defaults
-#//--------------------------------------------------------------------------------------------------
-#// Recurse into the defaults directories
-#//--------------------------------------------------------------------------------------------------
-
-sub DefScanForManifestFiles($$$$)
-{
-       my($dir, $theme_root, $theme_name, $dist_dir) = @_;
-
-       opendir(DIR, $dir) or die "Cannot open dir $dir\n";
-       my @files = readdir(DIR);
-       closedir DIR;
-
-       my $file;
-
-       foreach $file (@files)
-       {        
-               my $filepath = $dir.":".$file;
-
-               if (-d $filepath)
-               {
-                       # print "Looking for MANIFEST files in $filepath\n";            
-                       ## diff from ScanForManifestFiles()
-                       DefScanForManifestFiles($filepath, $theme_root, $theme_name, $dist_dir);
-                                      }
-               elsif ($file eq "MANIFEST")
-               {
-                       # print "Doing manifest file $filepath\n";
-
-                       # Get the dest path from the first line of the file
-
-                       open(MANIFEST, $filepath) || die "Could not open file $file";
-                       # Read in the path if available
-                       my($dest_line) = <MANIFEST>;
-                       chomp $dest_line;
-                       close MANIFEST;
-
-                       $dest_line =~ s|^#!dest[\t ]+|| || die "No destination line found in $filepath\n";
-
-                       ## diff from ScanForManifestFiles()
-                       my($dest_path) = $dist_dir."defaults:$dest_line:$theme_name";
-                       # print " Destination is $dest_path\n";
-
-                       InstallResources($filepath, "$dest_path", 0);
-               }
-       }
-}
-
-#//--------------------------------------------------------------------------------------------------
-#// InstallLangPackFiles
-#//--------------------------------------------------------------------------------------------------
-
-sub InstallLangPackFiles($)
-{
-       my($theme_name) = @_;
-       
-       # unless( $main::build{resources} ) { return; }
-       assertRightDirectory();
-
-       my($dist_dir) = GetDistDirectory();
-
-       ## diff from InstallSkinFiles()
-       my($themes_dir) = ":mozilla:l10n:langpacks:".$theme_name.":defaults";
-
-       print "Installing default files from $themes_dir\n";
-
-       ## diff from InstallSkinFiles()
-       DefScanForManifestFiles($themes_dir, $themes_dir, $theme_name, $dist_dir);
 }
 
 #//--------------------------------------------------------------------------------------------------
@@ -603,7 +266,7 @@ sub InstallDefaultsFiles()
 
     # $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
     my($D) = $main::DEBUG ? "Debug" : "";
-    my($dist_dir) = GetDistDirectory();
+    my($dist_dir) = GetBinDirectory();
 
     print("--- Starting Defaults copying ----\n");
 
@@ -663,7 +326,7 @@ sub InstallNonChromeResources()
 
     # $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
     my($D) = $main::DEBUG ? "Debug" : "";
-    my($dist_dir) = GetDistDirectory();
+    my($dist_dir) = GetBinDirectory();
 
     print("--- Starting Resource copying ----\n");
 
@@ -725,6 +388,11 @@ sub InstallNonChromeResources()
     my($domds_dir) = "$samples_dir" . "rdf:";
     InstallResources(":mozilla:rdf:tests:domds:resources:MANIFEST",                    "$domds_dir");
 
+    # Search - make copies (not aliases) of the various search files
+    my($searchPlugins) = "${dist_dir}Search Plugins";
+    print("--- Starting Search Plugins copying: $searchPlugins\n");
+    InstallResources(":mozilla:xpfe:components:search:datasets:MANIFEST",              "$searchPlugins", 1);
+
     # QA Menu
     InstallResources(":mozilla:intl:strres:tests:MANIFEST",            "$resource_dir");
 
@@ -743,7 +411,7 @@ sub InstallComponentFiles()
 
     # $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
     my($D) = $main::DEBUG ? "Debug" : "";
-    my($dist_dir) = GetDistDirectory();
+    my($dist_dir) = GetBinDirectory();
 
     print("--- Starting Text Components copying ----\n");
 
@@ -757,343 +425,6 @@ sub InstallComponentFiles()
 
     print("--- Done Text Components copying ----\n");
 }
-
-
-#//--------------------------------------------------------------------------------------------------
-#// InstallChromeFiles
-#//--------------------------------------------------------------------------------------------------
-
-sub InstallChromeFiles()
-{
-    unless( $main::build{resources} ) { return; }
-    assertRightDirectory();
-
-    # $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
-    my($D) = $main::DEBUG ? "Debug" : "";
-    my($dist_dir) = GetDistDirectory();
-
-    print("--- Starting Chrome copying ----\n");
-
-    #//
-    #// Most resources should all go into the chrome dir eventually
-    #//
-    my $chrome_subdir = "Chrome:";
-    my $chrome_dir = "$dist_dir" . $chrome_subdir;
-
-    my($packages_chrome_dir) = "$chrome_dir" . "packages:";
-    my($locales_chrome_dir) = "$chrome_dir" . "locales:";
-
-    # Second level chrome directories
-
-    my($core_packages_chrome_dir) = "$packages_chrome_dir" . "core:";
-    my($messenger_packages_chrome_dir) = "$packages_chrome_dir" . "messenger:";
-    my($widgettoolkit_packages_chrome_dir) = "$packages_chrome_dir" . "widget-toolkit:";
-     
-    my($enUS_locales_chrome_dir) = "$locales_chrome_dir" . "en-US:";
-
-    # Third level chrome directories
-
-    # navigator
-    my($navigator_core_packages_chrome_dir) = "$core_packages_chrome_dir" . "navigator:";
-    my($navigatorContent) = "$navigator_core_packages_chrome_dir" . "content:";
-
-    my($navigator_enUS_locales_chrome_dir) = "$enUS_locales_chrome_dir" . "navigator:";
-    my($navigatorLocale) = "$navigator_enUS_locales_chrome_dir" . "locale:";
-    
-    # global
-    my($global_widgettoolkit_packages_chrome_dir) = "$widgettoolkit_packages_chrome_dir" . "global:";
-    my($globalContent) = "$global_widgettoolkit_packages_chrome_dir" . "content:";
-
-    my($global_enUS_locales_chrome_dir) = "$enUS_locales_chrome_dir" . "global:";
-    my($globalLocale) = "$global_enUS_locales_chrome_dir" . "locale:";
-
-    # communicator
-    my($communicator_core_packages_chrome_dir) = "$core_packages_chrome_dir" . "communicator:";
-    my($communicatorContent) = "$communicator_core_packages_chrome_dir" . "content:";
-
-    my($communicator_enUS_locales_chrome_dir) = "$enUS_locales_chrome_dir" . "communicator:";
-    my($communicatorLocale) = "$communicator_enUS_locales_chrome_dir" . "locale:";
-
-    # copy the chrome registry (don't alias it)
-    copy( ":mozilla:rdf:chrome:build:registry.rdf", "$chrome_dir" . "registry.rdf" );
-            
-    MakeAlias(":mozilla:xpcom:base:xpcom.properties",      "$globalLocale");   
-
-    MakeAlias(":mozilla:intl:uconv:src:charsetTitles.properties","$globalLocale");
-
-    InstallResources(":mozilla:xpfe:browser:resources:content:MANIFEST",               "$navigatorContent");
-    InstallResources(":mozilla:xpfe:browser:resources:content:mac:MANIFEST",               "$navigatorContent");
-    InstallResources(":mozilla:xpfe:browser:resources:locale:en-US:MANIFEST",          "$navigatorLocale", 0);
-
-    # find
-    InstallResources(":mozilla:xpfe:components:find:resources:MANIFEST",                   "$globalContent");
-    InstallResources(":mozilla:xpfe:components:find:resources:locale:en-US:MANIFEST",      "$globalLocale");   
-
-    # ucth
-    InstallResources(":mozilla:xpfe:components:ucth:resources:MANIFEST",                   "$globalContent");
-    InstallResources(":mozilla:xpfe:components:ucth:resources:locale:en-US:MANIFEST",      "$globalLocale");
-    InstallResources(":mozilla:xpfe:components:xfer:resources:MANIFEST",                   "$globalContent");
-    InstallResources(":mozilla:xpfe:components:xfer:resources:locale:en-US:MANIFEST",      "$globalLocale");
-
-    #file picker
-    InstallResources(":mozilla:xpfe:components:filepicker:res:locale:en-US:MANIFEST",      "$globalLocale");
-    
-    # console
-    InstallResources(":mozilla:xpfe:components:console:resources:content:MANIFEST",        "$globalContent", 0);
-    InstallResources(":mozilla:xpfe:components:console:resources:locale:en-US:MANIFEST",   "$globalLocale", 0);
-
-    # autocomplete
-    InstallResources(":mozilla:xpfe:components:autocomplete:resources:content:MANIFEST",   "$globalContent", 0);
-
-    # security
-    InstallResources(":mozilla:security:base:res:content:MANIFEST",                    "$communicatorContent");
-    InstallResources(":mozilla:security:base:res:locale:en-us:MANIFEST",               "$communicatorLocale");
-
-    # widget-toolkit
-    InstallResources(":mozilla:xpfe:global:resources:content:MANIFEST",                "$globalContent");
-    InstallResources(":mozilla:xpfe:global:resources:content:mac:MANIFEST",            "$globalContent");
-    InstallResources(":mozilla:xpfe:global:resources:locale:en-US:MANIFEST",           "$globalLocale", 0);
-    InstallResources(":mozilla:xpfe:global:resources:locale:en-US:mac:MANIFEST",       "$globalLocale", 0);
-
-    # communicator
-    InstallResources(":mozilla:xpfe:communicator:resources:content:MANIFEST",          "$communicatorContent");
-    InstallResources(":mozilla:xpfe:communicator:resources:content:mac:MANIFEST",      "$communicatorContent");
-    InstallResources(":mozilla:xpfe:communicator:resources:locale:en-US:MANIFEST",     "$communicatorLocale", 0);
-
-    InstallResources(":mozilla:docshell:base:MANIFEST",                                "$globalLocale", 0);
-
-    # xpinstall
-    {
-    my($xpinstallContent) = "$communicatorContent" . "xpinstall:";
-    my($xpinstallLocale) = "$communicatorLocale" . "xpinstall:";
-
-    InstallResources(":mozilla:xpinstall:res:content:MANIFEST","$xpinstallContent", 0);        
-    #XXX these InstallResources calls should be down below with the rest of the calls
-    InstallResources(":mozilla:xpinstall:res:locale:en-US:MANIFEST","$xpinstallLocale", 0);
-    InstallResources(":mozilla:xpinstall:res:content:MANIFEST","$xpinstallContent", 0);
-    }
-    
-    # profile
-    {
-    my($profileContent) = "$communicatorContent" . "profile:";
-    my($profileLocale) = "$communicatorLocale" . "profile:";
-
-    #XXX these InstallResourses calls should be down below with the rest of the calls
-    InstallResources(":mozilla:profile:resources:content:MANIFEST", "$profileContent", 0);
-    InstallResources(":mozilla:profile:resources:locale:en-US:MANIFEST", "$profileLocale", 0);
-    InstallResources(":mozilla:profile:pref-migrator:resources:content:MANIFEST", "$profileContent", 0);
-    InstallResources(":mozilla:profile:pref-migrator:resources:locale:en-US:MANIFEST", "$profileLocale", 0);
-    }
-    
-    
-    #NECKO
-    {
-    my($necko_chrome_dir) = "$chrome_dir" . "necko:";
-    my($necko_content_chrome_dir) = "$necko_chrome_dir" . "content:";
-    my($necko_locale_chrome_dir) = "$necko_chrome_dir" . "locale:";
-    InstallResources(":mozilla:netwerk:resources:content:MANIFEST",                    "$necko_content_chrome_dir");
-    InstallResources(":mozilla:netwerk:resources:locale:en-US:MANIFEST",               "$necko_locale_chrome_dir", 0);
-    }
-    
-    # layout locale hack
-    {
-    my($layout_locale_hack_dir) = "$communicatorLocale"."layout:";
-    mkdir($layout_locale_hack_dir, 0);
-    InstallResources(":mozilla:layout:html:forms:src:MANIFEST_PROPERTIES",             "$layout_locale_hack_dir", 0);
-    }
-    
-    # editor
-    {
-    my($editor_core_packages_chrome_dir) = "$core_packages_chrome_dir" . "editor:";
-    my($editorContent) = "$editor_core_packages_chrome_dir" . "content:";
-
-    my($editor_enUS_locales_chrome_dir) = "$enUS_locales_chrome_dir" . "editor:";
-    my($editorLocale) = "$editor_enUS_locales_chrome_dir" . "locale:";
-
-    InstallResources(":mozilla:editor:ui:composer:content:MANIFEST",               "$editorContent", 0);
-    InstallResources(":mozilla:editor:ui:composer:locale:en-US:MANIFEST",          "$editorLocale", 0);
-    InstallResources(":mozilla:editor:ui:dialogs:content:MANIFEST",                "$editorContent", 0);
-    InstallResources(":mozilla:editor:ui:dialogs:locale:en-US:MANIFEST",           "$editorLocale", 0);
-    }
-    
-    # mailnews
-    {
-    # Messenger is a top level component
-    my($messenger_chrome_dir) = "$chrome_dir" . "messenger:";
-
-    my($messenger_packages_chrome_dir) = "$packages_chrome_dir" . "messenger:";
-    my($messenger_messenger_packages_chrome_dir) = "$messenger_packages_chrome_dir" . "messenger:";
-    my($messengerContent) = "$messenger_messenger_packages_chrome_dir" . "content:";
-
-    my($messenger_enUS_locales_chrome_dir) = "$enUS_locales_chrome_dir" . "messenger:";
-    my($messengerLocale) = "$messenger_enUS_locales_chrome_dir" . "locale:";
-
-    InstallResources(":mozilla:mailnews:base:resources:content:MANIFEST",                  "$messengerContent", 0);
-    InstallResources(":mozilla:mailnews:base:resources:content:mac:MANIFEST",              "$messengerContent", 0);
-    InstallResources(":mozilla:mailnews:base:resources:locale:en-US:MANIFEST",             "$messengerLocale", 0);
-    InstallResources(":mozilla:mailnews:base:prefs:resources:content:MANIFEST",            "$messengerContent", 0);
-    InstallResources(":mozilla:mailnews:base:prefs:resources:locale:en-US:MANIFEST",       "$messengerLocale", 0);
-    InstallResources(":mozilla:mailnews:base:search:resources:content:MANIFEST",           "$messengerContent", 0);
-    InstallResources(":mozilla:mailnews:base:search:resources:locale:en-US:MANIFEST",      "$messengerLocale", 0);
-    InstallResources(":mozilla:mailnews:mime:resources:content:MANIFEST",                  "$messengerContent", 0);
-    InstallResources(":mozilla:mailnews:mime:emitters:resources:content:MANIFEST",         "$messengerContent", 0);
-    InstallResources(":mozilla:mailnews:local:resources:locale:en-US:MANIFEST",            "$messengerLocale", 0);
-    InstallResources(":mozilla:mailnews:news:resources:content:MANIFEST",                  "$messengerContent", 0);
-    InstallResources(":mozilla:mailnews:news:resources:locale:en-US:MANIFEST",             "$messengerLocale", 0);
-
-    InstallResources(":mozilla:mailnews:imap:resources:locale:en-US:MANIFEST",             "$messengerLocale", 0);
-
-    InstallResources(":mozilla:mailnews:mime:resources:MANIFEST",                          "$messengerLocale", 0);
-    InstallResources(":mozilla:mailnews:mime:cthandlers:resources:MANIFEST",               "$messengerLocale", 0);
-
-    # messenger compose resides within messenger
-    my($messengercomposeContent) = "$messengerContent" . "messengercompose:";
-    my($messengercomposeLocale) = "$messengerLocale" . "messengercompose:";
-    InstallResources(":mozilla:mailnews:compose:resources:content:MANIFEST",               "$messengercomposeContent", 0);
-    InstallResources(":mozilla:mailnews:compose:resources:locale:en-US:MANIFEST",          "$messengercomposeLocale", 0);
-    InstallResources(":mozilla:mailnews:compose:prefs:resources:content:MANIFEST",         "$messengercomposeContent", 0);
-    InstallResources(":mozilla:mailnews:compose:prefs:resources:locale:en-US:MANIFEST",    "$messengercomposeLocale", 0);
-
-    # addressbook resides within messenger
-    my($addressbookContent) = "$messengerContent" . "addressbook:";
-    my($addressbookLocale) = "$messengerLocale" . "addressbook:";
-    InstallResources(":mozilla:mailnews:addrbook:resources:content:MANIFEST",              "$addressbookContent", 0);
-    InstallResources(":mozilla:mailnews:addrbook:resources:locale:en-US:MANIFEST",         "$addressbookLocale", 0);
-    InstallResources(":mozilla:mailnews:addrbook:prefs:resources:content:MANIFEST",        "$addressbookContent", 0);
-    InstallResources(":mozilla:mailnews:addrbook:prefs:resources:locale:en-US:MANIFEST",   "$addressbookLocale", 0);
-    InstallResources(":mozilla:mailnews:absync:resources:locale:en-US:MANIFEST","$addressbookLocale", 0);
-    
-    # import
-    InstallResources(":mozilla:mailnews:import:resources:content:MANIFEST",                "$messengerContent", 0);
-    InstallResources(":mozilla:mailnews:import:resources:locale:en-US:MANIFEST",           "$messengerLocale", 0);
-    InstallResources(":mozilla:mailnews:import:eudora:resources:locale:en-US:MANIFEST",    "$messengerLocale", 0);
-    InstallResources(":mozilla:mailnews:import:text:resources:locale:en-US:MANIFEST",      "$messengerLocale", 0);
-    }
-    
-    # bookmarks
-    {
-    my($bookmarksContent) = "$communicatorContent"."bookmarks:";
-    my($bookmarksLocale) = "$communicatorLocale"."bookmarks:";
-
-    InstallResources(":mozilla:xpfe:components:bookmarks:resources:MANIFEST-content",      "$bookmarksContent");
-    InstallResources(":mozilla:xpfe:components:bookmarks:resources:locale:en-US:MANIFEST", "$bookmarksLocale");
-    }
-    
-    # directory
-    {
-    my($directoryContent) = "$communicatorContent"."directory:";
-    my($directoryLocale) = "$communicatorLocale"."directory:";
-        
-    InstallResources(":mozilla:xpfe:components:directory:MANIFEST-content",        "$directoryContent");
-    InstallResources(":mozilla:xpfe:components:directory:locale:en-US:MANIFEST",   "$directoryLocale");
-    }
-    
-    # regViewer
-    {
-    my($regviewerContent) = "$communicatorContent"."regviewer:";
-    my($regviewerLocale) = "$communicatorLocale"."regviewer:";
-
-    InstallResources(":mozilla:xpfe:components:regviewer:MANIFEST-content",        "$regviewerContent");
-    InstallResources(":mozilla:xpfe:components:regviewer:locale:en-US:MANIFEST",   "$regviewerLocale");
-    }
-    
-    # history
-    {
-    my($historyContent) = "$communicatorContent"."history:";
-    my($historyLocale) = "$communicatorLocale"."history:";
-
-    InstallResources(":mozilla:xpfe:components:history:resources:MANIFEST-content",        "$historyContent");
-    InstallResources(":mozilla:xpfe:components:history:resources:locale:en-US:MANIFEST",   "$historyLocale");
-    }
-    
-    # related
-    {
-    my($relatedContent) = "$communicatorContent"."related:";
-    my($relatedLocale) = "$communicatorLocale"."related:";
-
-    InstallResources(":mozilla:xpfe:components:related:resources:MANIFEST-content",        "$relatedContent");
-    InstallResources(":mozilla:xpfe:components:related:resources:locale:en-US:MANIFEST",   "$relatedLocale");
-    }
-    
-    # search
-    {
-    my($searchContent) = "$communicatorContent"."search:";
-    my($searchLocale) = "$communicatorLocale"."search:";
-    my($searchPlugins) = "${dist_dir}Search Plugins";
-    
-    InstallResources(":mozilla:xpfe:components:search:resources:MANIFEST-content",         "$searchContent");
-    InstallResources(":mozilla:xpfe:components:search:resources:locale:en-US:MANIFEST",    "$searchLocale");
-
-    # Make copies (not aliases) of the various search files
-    InstallResources(":mozilla:xpfe:components:search:datasets:MANIFEST",                  "$searchPlugins", 1);
-    }
-    
-    # sidebar
-    {
-    my($sidebarContent) = "$communicatorContent"."sidebar:";
-    my($sidebarLocale) = "$communicatorLocale"."sidebar:";
-
-    InstallResources(":mozilla:xpfe:components:sidebar:resources:MANIFEST-content",        "$sidebarContent");
-    InstallResources(":mozilla:xpfe:components:sidebar:resources:locale:en-US:MANIFEST",   "$sidebarLocale");
-    }
-    
-    # timebomb (aka tmbmb)
-    {
-    my($timebombContent) = "$communicatorContent"."timebomb:";
-    my($timebombLocale) = "$communicatorLocale"."timebomb:";
-
-    InstallResources(":mozilla:xpfe:components:timebomb:resources:content:MANIFEST",       "$timebombContent");
-    InstallResources(":mozilla:xpfe:components:timebomb:resources:locale:en-US:MANIFEST",  "$timebombLocale");
-    }
-
-    # prefs
-    {
-    my($prefContent) = "$communicatorContent"."pref:";
-    my($prefLocale) = "$communicatorLocale"."pref:";
-
-    InstallResources(":mozilla:xpfe:components:prefwindow:resources:content:MANIFEST",         "$prefContent", 0);
-    InstallResources(":mozilla:xpfe:components:prefwindow:resources:content:mac:MANIFEST",     "$prefContent", 0);
-    InstallResources(":mozilla:xpfe:components:prefwindow:resources:locale:en-US:MANIFEST",    "$prefLocale", 0);
-    }
-    
-    # wallet                         
-    {
-    my($walletContent) = "$communicatorContent"."wallet:";
-    my($walletLocale) = "$communicatorLocale"."wallet:";
-
-    InstallResources(":mozilla:extensions:wallet:cookieviewer:MANIFEST",               "$walletContent", 0);
-    InstallResources(":mozilla:extensions:wallet:signonviewer:MANIFEST",               "$walletContent", 0);
-    InstallResources(":mozilla:extensions:wallet:walletpreview:MANIFEST",              "$walletContent", 0);
-    InstallResources(":mozilla:extensions:wallet:editor:MANIFEST",                     "$walletContent", 0);
-
-    InstallResources(":mozilla:extensions:wallet:cookieviewer:MANIFEST_PROPERTIES",    "$walletLocale", 0);
-    InstallResources(":mozilla:extensions:wallet:signonviewer:MANIFEST_PROPERTIES",    "$walletLocale", 0);
-    InstallResources(":mozilla:extensions:wallet:walletpreview:MANIFEST_PROPERTIES",   "$walletLocale", 0);
-    InstallResources(":mozilla:extensions:wallet:editor:MANIFEST_PROPERTIES",          "$walletLocale", 0);
-    InstallResources(":mozilla:extensions:wallet:src:MANIFEST_PROPERTIES",             "$walletLocale", 0);
-    }
-    
-    # security
-    {
-    my($securityContent) = "$communicatorContent"."security:";
-    my($securityLocale) = "$communicatorLocale"."security:";
-
-    InstallResources(":mozilla:caps:src:MANIFEST_PROPERTIES",  "$securityLocale", 0);
-    }
-
-    # Install skin files
-   	InstallSkinFiles("classic"); # fix me
-    InstallSkinFiles("blue"); # fix me
-    InstallSkinFiles("modern"); # fix me
-
-    # install locale provider
-    InstallProviderFiles("locales", "en-DE");
-    # install defaults
-    InstallLangPackFiles("en-DE");
-
-    print("--- Chrome copying complete ----\n");
-}
-
 
 #//--------------------------------------------------------------------------------------------------
 #// MakeNonChromeAliases
@@ -1127,11 +458,18 @@ sub MakeResourceAliases()
 
 sub ProcessJarManifests()
 {
-    my($dist_dir) = GetDistDirectory();
+    my($dist_dir) = GetBinDirectory();
     my($chrome_dir) = "$dist_dir"."Chrome";
 
     # a hash of jars passed as context to the following calls
     my(%jars);
+    
+    if ($main::build{extensions})
+    {
+      MozJar::CreateJarFromManifest(":mozilla:extensions:irc:jar.mn", $chrome_dir, \%jars);
+      # cview needs a jar.mn file
+      # transformiix needs a jar.mn file
+    }
     
     MozJar::CreateJarFromManifest(":mozilla:caps:src:jar.mn", $chrome_dir, \%jars);
     MozJar::CreateJarFromManifest(":mozilla:docshell:base:jar.mn", $chrome_dir, \%jars);
@@ -1147,7 +485,6 @@ sub ProcessJarManifests()
     MozJar::CreateJarFromManifest(":mozilla:profile:pref-migrator:resources:jar.mn", $chrome_dir, \%jars);
     MozJar::CreateJarFromManifest(":mozilla:profile:resources:jar.mn", $chrome_dir, \%jars);
     MozJar::CreateJarFromManifest(":mozilla:rdf:tests:domds:resources:jar.mn", $chrome_dir, \%jars);
-    MozJar::CreateJarFromManifest(":mozilla:security:base:res:jar.mn", $chrome_dir, \%jars);
     MozJar::CreateJarFromManifest(":mozilla:themes:blue:jar.mn", $chrome_dir, \%jars);
     MozJar::CreateJarFromManifest(":mozilla:themes:classic:communicator:mac:jar.mn", $chrome_dir, \%jars);
     MozJar::CreateJarFromManifest(":mozilla:themes:classic:communicator:search:mac:jar.mn", $chrome_dir, \%jars);
@@ -1155,6 +492,10 @@ sub ProcessJarManifests()
     MozJar::CreateJarFromManifest(":mozilla:themes:classic:global:mac:jar.mn", $chrome_dir, \%jars);
     MozJar::CreateJarFromManifest(":mozilla:themes:classic:jar.mn", $chrome_dir, \%jars);
     MozJar::CreateJarFromManifest(":mozilla:themes:classic:navigator:mac:jar.mn", $chrome_dir, \%jars);
+    MozJar::CreateJarFromManifest(":mozilla:themes:classic:messenger:mac:jar.mn", $chrome_dir, \%jars);
+    MozJar::CreateJarFromManifest(":mozilla:themes:classic:messenger:addressbook:mac:jar.mn", $chrome_dir, \%jars);
+    MozJar::CreateJarFromManifest(":mozilla:themes:classic:editor:mac:jar.mn", $chrome_dir, \%jars);
+    MozJar::CreateJarFromManifest(":mozilla:themes:classic:preview:mac:jar.mn", $chrome_dir, \%jars);
     MozJar::CreateJarFromManifest(":mozilla:themes:modern:jar.mn", $chrome_dir, \%jars);
     MozJar::CreateJarFromManifest(":mozilla:xpcom:base:jar.mn", $chrome_dir, \%jars);
     MozJar::CreateJarFromManifest(":mozilla:xpfe:browser:jar.mn", $chrome_dir, \%jars);
@@ -1198,24 +539,13 @@ sub BuildJarFiles()
 
 sub MakeLibAliases()
 {
-    my($dist_dir) = GetDistDirectory();
+    my($dist_dir) = GetBinDirectory();
 
-    local(*F);
-    my($filepath, $appath, $psi) = (':mozilla:build:mac:idepath.txt');
-    if (open(F, $filepath)) {
-        $appath = <F>;
-        close(F);
-
-        #// ProfilerLib
-        if ($main::PROFILE)
-        {
-            my($profilerlibpath) = $appath;
-            $profilerlibpath =~ s/[^:]*$/MacOS Support:Profiler:Profiler Common:ProfilerLib/;
-            MakeAlias("$profilerlibpath", "$dist_dir"."Essential Files:");
-        }
-    }
-    else {
-        print STDERR "Can't find $filepath\n";
+    #// ProfilerLib
+    if ($main::PROFILE)
+    {
+        my($profilerlibpath) = CodeWarriorLib::getCodeWarriorPath("MacOS Support:Profiler:Profiler Common:ProfilerLib");
+        MakeAlias("$profilerlibpath", "$dist_dir"."Essential Files:");
     }
 }
 
@@ -1266,7 +596,7 @@ sub BuildClientDist()
     assertRightDirectory();
     
     my $distdirectory = ":mozilla:dist"; # the parent directory in dist, including all the headers
-    my $dist_dir = GetDistDirectory(); # the subdirectory with the libs and executable.
+    my $dist_dir = GetBinDirectory(); # the subdirectory with the libs and executable.
 
     print("--- Starting Client Dist export ----\n");
 
@@ -1349,8 +679,11 @@ sub BuildClientDist()
     #LIBUTIL
     InstallFromManifest(":mozilla:modules:libutil:public:MANIFEST",                "$distdirectory:libutil:");
 
-	# APPFILELOCPROVIDER
+    # APPFILELOCPROVIDER
     InstallFromManifest(":mozilla:modules:appfilelocprovider:public:MANIFEST",     "$distdirectory:appfilelocprovider:");
+
+    # MPFILELOCPROVIDER
+    InstallFromManifest(":mozilla:modules:mpfilelocprovider:public:MANIFEST",      "$distdirectory:mpfilelocprovider:");
 
     #SUN_JAVA
     InstallFromManifest(":mozilla:sun-java:stubs:include:MANIFEST",                "$distdirectory:sun-java:");
@@ -1420,8 +753,6 @@ sub BuildClientDist()
     #SECURITY
     InstallFromManifest(":mozilla:extensions:psm-glue:public:MANIFEST",            "$distdirectory:idl:");
     InstallFromManifest(":mozilla:extensions:psm-glue:src:MANIFEST",               "$distdirectory:include:");
-
-    InstallFromManifest(":mozilla:security:base:public:MANIFEST",                  "$distdirectory:idl:");
 
     InstallFromManifest(":mozilla:security:psm:lib:client:MANIFEST",               "$distdirectory:security:");
     InstallFromManifest(":mozilla:security:psm:lib:protocol:MANIFEST",             "$distdirectory:security:");
@@ -1620,14 +951,14 @@ sub BuildDist()
     ActivateApplication('McPL');
 
     my $distdirectory = ":mozilla:dist"; # the parent directory in dist, including all the headers
-    my $dist_dir = GetDistDirectory(); # the subdirectory with the libs and executable.
+    my $dist_dir = GetBinDirectory(); # the subdirectory with the libs and executable.
     if ($main::CLOBBER_DIST_ALL)
     {
         print "Clobbering dist in 5 seconds. Press command-. to stop\n";
         
         DelayFor(5);
         
-        print "Clobbering all files inside :mozilla:dist:\n";
+        print "\nClobbering all files inside :mozilla:dist:\n";
         EmptyTree($distdirectory.":");
     }
     else
@@ -1644,8 +975,8 @@ sub BuildDist()
     mkpath([ ":mozilla:dist:viewer:", ":mozilla:dist:viewer_debug:" ]);
     
     #make default plugins folder so that apprunner won't go looking for 3.0 and 4.0 plugins.
-    mkpath([ ":mozilla:dist:viewer:Plugins", ":mozilla:dist:viewer_debug:Plugins"]);
-    mkpath([ ":mozilla:dist:client:Plugins", ":mozilla:dist:client_debug:Plugins"]);
+    mkpath([ ":mozilla:dist:viewer:Plug-ins", ":mozilla:dist:viewer_debug:Plug-ins"]);
+    #mkpath([ ":mozilla:dist:client:Plugins", ":mozilla:dist:client_debug:Plugins"]);
     
     BuildRuntimeDist();
     BuildClientDist();
@@ -1680,47 +1011,6 @@ sub BuildStubs()
 #// Build IDL projects
 #//--------------------------------------------------------------------------------------------------
 
-sub getCodeWarriorPath($)
-{
-    my($subfolder)=@_;
-    my($filepath, $appath) = (':mozilla:build:mac:idepath.txt');
-    if (open(F, $filepath)) {
-        $appath = <F>;
-        close(F);
-
-        my($codewarrior_root) = $appath;
-        $codewarrior_root =~ s/[^:]*$//;
-        return ($codewarrior_root . $subfolder);
-    } else {
-        print("Can't locate CodeWarrior IDE.\n");
-        die;
-    }
-}
-
-sub getCodeWarriorIDEName()
-{
-     my($subfolder)=@_;
-     my($filepath, $appath) = (':mozilla:build:mac:idepath.txt');
-     if (open(F, $filepath)) {
-         $appath = <F>;
-         close(F);
-
-         my(@codewarrior_path) = split(/:/, $appath);
-         return pop(@codewarrior_path);
-     } else {
-         print("Can't locate CodeWarrior IDE.\n");
-         die;
-     }
-}
-
-sub getModificationDate($)
-{
-    my($filePath)=@_;
-    my($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,
-        $atime,$mtime,$ctime,$blksize,$blocks) = stat($filePath);
-    return $mtime;
-}
-
 sub BuildIDLProjects()
 {
     unless( $main::build{idl} ) { return; }
@@ -1731,17 +1021,17 @@ sub BuildIDLProjects()
     if ( $main::build{xpidl} )
     {
         #// see if the xpidl compiler/linker has been rebuilt by comparing modification dates.
-        my($codewarrior_plugins) = getCodeWarriorPath("CodeWarrior Plugins:");
+        my($codewarrior_plugins) = CodeWarriorLib::getCodeWarriorPath("CodeWarrior Plugins:");
         my($compiler_path) = $codewarrior_plugins . "Compilers:xpidl";
         my($linker_path) = $codewarrior_plugins . "Linkers:xpt Linker";
-        my($compiler_modtime) = (-e $compiler_path ? getModificationDate($compiler_path) : 0);
-        my($linker_modtime) = (-e $linker_path ? getModificationDate($linker_path) : 0);
+        my($compiler_modtime) = (-e $compiler_path ? GetFileModDate($compiler_path) : 0);
+        my($linker_modtime) = (-e $linker_path ? GetFileModDate($linker_path) : 0);
 
         #// build the IDL compiler itself.
         BuildProject(":mozilla:xpcom:typelib:xpidl:macbuild:xpidl.mcp", "build all");
 
         #// was the compiler/linker rebuilt? if so, then clobber IDL projects as we go.
-        if (getModificationDate($compiler_path) > $compiler_modtime || getModificationDate($linker_path) > $linker_modtime)
+        if (GetFileModDate($compiler_path) > $compiler_modtime || GetFileModDate($linker_path) > $linker_modtime)
         {
             $main::CLOBBER_IDL_PROJECTS = 1;
             print("XPIDL tools have been updated, will clobber all IDL data folders.\n");
@@ -1756,9 +1046,6 @@ sub BuildIDLProjects()
     }
 
     BuildIDLProject(":mozilla:xpcom:macbuild:XPCOMIDL.mcp",                         "xpcom");
-
-    # security base
-    BuildIDLProject(":mozilla:security:base:macbuild:securityBaseIDL.mcp",          "securityBase");
 
     # necko
     BuildIDLProject(":mozilla:netwerk:macbuild:netwerkIDL.mcp","necko");
@@ -1848,7 +1135,7 @@ sub BuildIDLProjects()
 	
     if ($main::build{xptlink})
     {
-        my($codewarrior_msl) = getCodeWarriorPath("MSL:MSL_C:MSL_MacOS:");
+        my($codewarrior_msl) = CodeWarriorLib::getCodeWarriorPath("MSL:MSL_C:MSL_MacOS:");
     	if ( ! -e $codewarrior_msl . "Lib:PPC:MSL C.PPC MPW(NL).Lib") {
         	print("MSL PPC MPW Lib not found... Let's build it.\n");
         	BuildProject($codewarrior_msl . "Project:PPC:MSL C.PPC MPW.mcp", "MSL C.PPC MPW");
@@ -2000,11 +1287,11 @@ sub BuildCommonProjects()
     BuildOneProject(":mozilla:dbm:macbuild:DBM.mcp",                            "DBM$D.o", 0, 0, 0);
 
     #// Static libraries
-    # Static Lib
+    # Static Libs
     BuildOneProject(":mozilla:modules:appfilelocprovider:macbuild:appfilelocprovider.mcp", "appfilelocprovider$D.o", 0, 0, 0);
     MakeAlias(":mozilla:modules:appfilelocprovider:macbuild:appfilelocprovider$D.o", ":mozilla:dist:appfilelocprovider:");
-
-
+    BuildOneProject(":mozilla:modules:mpfilelocprovider:macbuild:mpfilelocprovider.mcp", "mpfilelocprovider$D.o", 0, 0, 0);
+    MakeAlias(":mozilla:modules:mpfilelocprovider:macbuild:mpfilelocprovider$D.o", ":mozilla:dist:mpfilelocprovider:");
     
     print("--- Common projects complete ----\n");
 }
@@ -2122,7 +1409,7 @@ sub BuildSecurityProjects()
 
     # $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
     my($D) = $main::DEBUG ? "Debug" : "";
-    my $dist_dir = GetDistDirectory(); # the subdirectory with the libs and executable.
+    my $dist_dir = GetBinDirectory(); # the subdirectory with the libs and executable.
 
     print("--- Starting Security projects ----\n");
 
@@ -2191,7 +1478,7 @@ sub BuildBrowserUtilsProjects()
     BuildOneProject(":mozilla:rdf:tests:domds:macbuild:DOMDataSource.mcp",      "DOMDataSource$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
 
     print("--- Browser utils projects complete ----\n");
-} # browserutils
+}
 
 
 #//--------------------------------------------------------------------------------------------------
@@ -2205,7 +1492,7 @@ sub BuildLayoutProjects()
 
     # $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
     my($D) = $main::DEBUG ? "Debug" : "";
-    my($dist_dir) = GetDistDirectory();
+    my($dist_dir) = GetBinDirectory();
     
     print("--- Starting Layout projects ---\n");
 
@@ -2270,7 +1557,7 @@ sub BuildEditorProjects()
     
     # $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
     my($D) = $main::DEBUG ? "Debug" : "";
-    my($dist_dir) = GetDistDirectory();
+    my($dist_dir) = GetBinDirectory();
 
     print("--- Starting Editor projects ----\n");
 
@@ -2293,7 +1580,7 @@ sub BuildViewerProjects()
     
     # $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
     my($D) = $main::DEBUG ? "Debug" : "";
-    my($dist_dir) = GetDistDirectory();
+    my($dist_dir) = GetBinDirectory();
 
     print("--- Starting Viewer projects ----\n");
 
@@ -2315,7 +1602,7 @@ sub BuildXPAppProjects()
 
     # $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
     my($D) = $main::DEBUG ? "Debug" : "";
-    my($dist_dir) = GetDistDirectory();
+    my($dist_dir) = GetBinDirectory();
 
     print("--- Starting XPApp projects ----\n");
 
@@ -2346,65 +1633,29 @@ sub BuildExtensionsProjects()
 
     # $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
     my($D) = $main::DEBUG ? "Debug" : "";
-    my($dist_dir) = GetDistDirectory();
+    my($dist_dir) = GetBinDirectory();
 
     print("--- Starting Extensions projects ----\n");
 
     my($chrome_subdir) = "Chrome:";
     my($chrome_dir) = "$dist_dir"."$chrome_subdir";
+    my($packages_chrome_dir) = "$chrome_dir" . "packages:";
 
     # Chatzilla
-    my($packages_chrome_dir) = "$chrome_dir" . "packages:";
-    my($chatzilla_packages_chrome_dir) = "$packages_chrome_dir"."chatzilla:";
-    my($chatzilla_chatzilla_packages_chrome_dir) = "$chatzilla_packages_chrome_dir"."chatzilla:";
-    
-    my($chatzillaContent) = "$chatzilla_chatzilla_packages_chrome_dir"."content:";
-    
-    my($chatzillaLocale) = "$chatzilla_chatzilla_packages_chrome_dir"."locale:";
-    
-    my($chatzillaSkin) = "$chatzilla_chatzilla_packages_chrome_dir"."skin:";
-    
-    
-    my($chatzillaContentLibJS) = "$chatzillaContent"."lib:js:";
-    my($chatzillaContentLibXul) = "$chatzillaContent"."lib:xul:";
-    InstallResources(":mozilla:extensions:irc:js:lib:MANIFEST",            "$chatzillaContentLibJS");
     InstallResources(":mozilla:extensions:irc:js:lib:MANIFEST_COMPONENTS",     "${dist_dir}Components");
-    InstallResources(":mozilla:extensions:irc:xul:lib:MANIFEST",           "$chatzillaContentLibXul");
-    InstallResources(":mozilla:extensions:irc:xul:content:MANIFEST",       "$chatzillaContent");
-    InstallResources(":mozilla:extensions:irc:xul:skin:MANIFEST",          "$chatzillaSkin");
     
-    my($chatzillaSkinImages) = "$chatzillaSkin"."images:";
-    InstallResources(":mozilla:extensions:irc:xul:skin:images:MANIFEST",       "$chatzillaSkinImages");
-    InstallResources(":mozilla:extensions:irc:xul:locale:en-US:MANIFEST",      "$chatzillaLocale", 0);
-
-    # XML-RPC (whatever that is)
+    # XML-RPC
     InstallFromManifest(":mozilla:extensions:xml-rpc:src:MANIFEST_COMPONENTS", "${dist_dir}Components");
     
     # Component viewer
-    my($cview_cview_packages_chrome_dir) = "$packages_chrome_dir"."cview:cview:";
-
-    my($cviewContent) = "$cview_cview_packages_chrome_dir"."content:";
-    my($cviewLocale) = "$cview_cview_packages_chrome_dir"."locale:";
-    my($cviewSkin) = "$cview_cview_packages_chrome_dir"."skin:";
-
-    InstallResources(":mozilla:extensions:cview:resources:content:MANIFEST", "$cviewContent");
-    InstallResources(":mozilla:extensions:cview:resources:skin:MANIFEST", "$cviewSkin");
-    InstallResources(":mozilla:extensions:cview:resources:locale:en-US:MANIFEST", "$cviewLocale", 0);
+    print "Need to make jar.mn file for cview\n";
 
     # Transformiix
     if ($main::options{transformiix})
     {
         BuildOneProject(":mozilla:extensions:transformiix:macbuild:transformiix.mcp", "transformiix$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
 
-        my($transformiix_transformiix_packages_chrome_dir) = "$packages_chrome_dir"."transformiix:transformiix:";
-
-        my($transformiixContent) = "$transformiix_transformiix_packages_chrome_dir"."content:";
-        my($transformiixLocale) = "$transformiix_transformiix_packages_chrome_dir"."locale:";
-        my($transformiixSkin) = "$transformiix_transformiix_packages_chrome_dir"."skin:";
-
-        InstallResources(":mozilla:extensions:transformiix:source:examples:mozilla:transformiix:content:MANIFEST", "$transformiixContent");
-        InstallResources(":mozilla:extensions:transformiix:source:examples:mozilla:transformiix:skin:MANIFEST", "$transformiixSkin");
-        InstallResources(":mozilla:extensions:transformiix:source:examples:mozilla:transformiix:locale:en-US:MANIFEST", "$transformiixLocale", 0);
+        print "Need to make a jar.mn file for transformiix\n";
     }
     
     # LDAP Client
@@ -2430,7 +1681,7 @@ sub BuildExtensionsProjects()
 sub ImportXMLProject($$)
 {
     my ($xml_path, $project_path) = @_;
-    my ($codewarrior_ide_name) = getCodeWarriorIDEName();
+    my ($codewarrior_ide_name) = CodeWarriorLib::getCodeWarriorIDEName();
     my $ascript = <<EOS;
     tell application "$codewarrior_ide_name"
         make new (project document) as ("$project_path") with data ("$xml_path")
@@ -2446,13 +1697,13 @@ sub BuildPluginsProjects()
 
     # as a temporary measure, make sure that the folder "MacOS Support:JNIHeaders" exists,
     # before we attempt to build the MRJ plugin. This will allow a gradual transition.
-    unless( -e getCodeWarriorPath("MacOS Support:JNIHeaders")) { return; }
+    unless( -e CodeWarriorLib::getCodeWarriorPath("MacOS Support:JNIHeaders")) { return; }
 
     my($plugin_path) = ":mozilla:plugin:oji:MRJ:plugin:";
     my($project_path) = $plugin_path . "MRJPlugin.mcp";
     my($xml_path) = $plugin_path . "MRJPlugin.xml";
-    my($project_modtime) = (-e $project_path ? getModificationDate($project_path) : 0);
-    my($xml_modtime) = (-e $xml_path ? getModificationDate($xml_path) : 0);
+    my($project_modtime) = (-e $project_path ? GetFileModDate($project_path) : 0);
+    my($xml_modtime) = (-e $xml_path ? GetFileModDate($xml_path) : 0);
 
     if ($xml_modtime > $project_modtime) {
         print("MRJPlugin.mcp is out of date, reimporting from MRJPlugin.xml.\n");
@@ -2465,13 +1716,13 @@ sub BuildPluginsProjects()
     # Build MRJPlugin
     BuildProject($project_path, "MRJPlugin");
     # Build MRJPlugin.jar (if Java tools exist)
-    my($linker_path) = getCodeWarriorPath("CodeWarrior Plugins:Linkers:Java Linker");
+    my($linker_path) = CodeWarriorLib::getCodeWarriorPath("CodeWarrior Plugins:Linkers:Java Linker");
     if (-e $linker_path) {
         print("CodeWarrior Java tools detected, building MRJPlugin.jar.\n");
         BuildProject($project_path, "MRJPlugin.jar");
     }
     # Copy MRJPlugin, MRJPlugin.jar to appropriate plugins folder.
-    my($plugin_dist) = GetDistDirectory() . "Plugins:";
+    my($plugin_dist) = GetBinDirectory() . "Plug-ins:";
     MakeAlias($plugin_path . "MRJPlugin", $plugin_dist);
     MakeAlias($plugin_path . "MRJPlugin.jar", $plugin_dist);
 }
@@ -2487,7 +1738,6 @@ sub BuildMailNewsProjects()
 
     # $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
     my($D) = $main::DEBUG ? "Debug" : "";
-    my($dist_dir) = GetDistDirectory();
 
     print("--- Starting MailNews projects ----\n");
 
@@ -2499,15 +1749,15 @@ sub BuildMailNewsProjects()
     BuildOneProject(":mozilla:mailnews:imap:macbuild:msgimap.mcp",                      "MsgImap$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:mailnews:news:macbuild:msgnews.mcp",                      "MsgNews$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:mailnews:addrbook:macbuild:msgAddrbook.mcp",              "MsgAddrbook$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:mailnews:absync:macbuild:AbSync.mcp",                 "AbSyncSvc$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:mailnews:absync:macbuild:AbSync.mcp",                     "AbSyncSvc$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:mailnews:mime:macbuild:mime.mcp",                         "Mime$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:mailnews:mime:emitters:macbuild:mimeEmitter.mcp",         "mimeEmitter$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:mailnews:mime:cthandlers:vcard:macbuild:vcard.mcp",       "vcard$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:mailnews:mime:cthandlers:smimestub:macbuild:smime.mcp", "smime$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:mailnews:mime:cthandlers:signstub:macbuild:signed.mcp", "signed$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:mailnews:mime:cthandlers:smimestub:macbuild:smime.mcp",   "smime$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:mailnews:mime:cthandlers:signstub:macbuild:signed.mcp",   "signed$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
 #   BuildOneProject(":mozilla:mailnews:mime:cthandlers:calendar:macbuild:calendar.mcp", "calendar$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:mailnews:import:macbuild:msgImport.mcp",                  "msgImport$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:mailnews:import:text:macbuild:msgImportText.mcp",     "msgImportText$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:mailnews:import:text:macbuild:msgImportText.mcp",         "msgImportText$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:mailnews:import:eudora:macbuild:msgImportEudora.mcp",     "msgImportEudora$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
 
     print("--- MailNews projects complete ----\n");
@@ -2533,7 +1783,7 @@ sub BuildMozilla()
     }
     
     # copy command line documents into the Apprunner folder and set correctly the signature
-    my($dist_dir) = GetDistDirectory();
+    my($dist_dir) = GetBinDirectory();
     my($cmd_file_path) = ":mozilla:xpfe:bootstrap:";
     my($cmd_file) = "";
 
@@ -2622,22 +1872,80 @@ sub BuildProjects()
     # activate CodeWarrior
     ActivateApplication('McPL');
     
-    if ($main::options{jar_manifests})
-    {
-      MakeNonChromeAliases();   # Defaults, JS components etc.
-      
-      BuildJarFiles();    
-    }
-    else
-    {
-      MakeResourceAliases();
-      # this builds installed_chrome.txt
-      InstallManifestRDFFiles();
-    }
+    MakeNonChromeAliases();   # Defaults, JS components etc.      
+    BuildJarFiles();    
 
     # Set the default skin to be classic
     SetDefaultSkin("classic/1.0"); 
 }
+
+
+#//--------------------------------------------------------------------------------------------------
+#// checkOutModule. Takes variable number of args; first two are required
+#//--------------------------------------------------------------------------------------------------
+sub checkOutModule
+{
+	my($session, $module, $revision, $date) = @_;
+
+    my($result) = $session->checkout($module, $revision, $date);
+    
+    # result of 1 is success
+    if ($result) { return; }
+    
+    my($checkout_err) = $session->getLastError();
+    if ($checkout_err == 708) {
+        die "Checkout was cancelled";
+    } elsif ($checkout_err == 711) {
+        print "Checkout of '$module' failed\n";
+    }
+}
+
+#//--------------------------------------------------------------------------------------------------
+#// Check out everything
+#//--------------------------------------------------------------------------------------------------
+sub Checkout()
+{
+    unless ( $main::pull{all} || $main::pull{moz} || $main::pull{runtime} ) { return;}
+
+    assertRightDirectory();
+    my($cvsfile) = AskAndPersistFile("::mozilla_session_path.txt");
+    my($session) = MacCVS->new( $cvsfile );
+    unless (defined($session)) { die "Checkout aborted. Cannot create session file: $session" }
+
+    # activate MacCVS
+    ActivateApplication('Mcvs');
+
+    my($nsprpub_tag) = "NSPRPUB_CLIENT_BRANCH";
+    my($nss_tab) = "NSS_30_BRANCH";
+    my($psm_tag) = "SECURITY_MAC_BRANCH";
+    my($ldapsdk_tag) = "LDAPCSDK_40_BRANCH"; 
+    
+    #//
+    #// Checkout commands
+    #//
+    if ($main::pull{moz})
+    {
+        checkOutModule($session, "mozilla/nsprpub", $nsprpub_tag);
+        #checkOutModule($session, "mozilla/security/nss", $nss_tab);
+        #checkOutModule($session, "mozilla/security/psm", $psm_tag);
+        #checkOutModule($session, "DirectorySDKSourceC", $ldapsdk_tag);
+        #checkOutModule($session, "SeaMonkeyAll");
+    }
+    elsif ($main::pull{runtime})
+    {
+        checkOutModule($session, "mozilla/build/mac");
+        checkOutModule($session, "mozilla/lib/mac/InterfaceLib");
+        checkOutModule($session, "mozilla/config/mac");
+        checkOutModule($session, "mozilla/gc");
+        checkOutModule($session, "mozilla/lib/mac/NSStartup");
+        checkOutModule($session, "mozilla/lib/mac/NSStdLib");
+        checkOutModule($session, "mozilla/lib/mac/NSRuntime");
+        checkOutModule($session, "mozilla/lib/mac/MoreFiles");
+        checkOutModule($session, "mozilla/lib/mac/MacMemoryAllocator");
+        checkOutModule($session, "mozilla/nsprpub", $nsprpub_tag);
+    }
+}
+
 
 #//--------------------------------------------------------------------------------------------------
 #// RunBuild
@@ -2661,8 +1969,13 @@ sub RunBuild($$)
     
     unless ($do_build) { return; }
     
-    if (!$main::DEBUG) {
-        SetBuildNumber();
+    if (!$main::DEBUG)
+    {
+        my(@gen_files) = (
+            ":mozilla:xpfe:appshell:public:nsBuildID.h",
+            ":mozilla:xpfe:browser:resources:locale:en-US:navigator.dtd"
+        );
+        SetBuildNumber(":mozilla:config:build_number", ":mozilla:config:aboutime.pl", \@gen_files);
     }
     
     chdir($main::MOZ_SRC);

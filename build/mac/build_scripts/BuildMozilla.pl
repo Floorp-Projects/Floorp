@@ -44,14 +44,13 @@ $DEBUG                  = 0;
 $CARBON                 = 0;    # turn on to build with TARGET_CARBON
 $PROFILE                = 0;
 $GC_LEAK_DETECTOR       = 0;    # turn on to use GC leak detection
-$INCLUDE_CLASSIC_SKIN   = 1;
 
 #-----------------------------------------------
 # configuration variables that affect the manner
 # of building, but possibly affecting
 # the outcome.
 #-----------------------------------------------
-$DIST_DIRECTORY         = ":mozilla:dist:viewer:";
+$BIN_DIRECTORY          = ":mozilla:dist:viewer:";
 
 $ALIAS_SYM_FILES        = $DEBUG;
 $CLOBBER_LIBS           = 1;    # turn on to clobber existing libs and .xSYM files before

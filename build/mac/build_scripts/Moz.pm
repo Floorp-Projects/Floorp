@@ -37,7 +37,7 @@ use Mac::Processes;
 use File::Copy;
 
 @ISA				= qw(Exporter);
-@EXPORT			= qw(current_directory full_path_to BuildProject BuildProjectClean OpenErrorLog MakeAlias StopForErrors DontStopForErrors InstallFromManifest InstallResources SetBuildNumber SetAgentString SetTimeBomb Delay ActivateApplication IsProcessRunning);
+@EXPORT			= qw(LaunchCodeWarrior current_directory full_path_to BuildProject BuildProjectClean OpenErrorLog MakeAlias StopForErrors DontStopForErrors InstallFromManifest InstallResources SetBuildNumber SetAgentString SetTimeBomb Delay ActivateApplication IsProcessRunning);
 @EXPORT_OK	= qw(CloseErrorLog UseCodeWarriorLib QUIET);
 
 	use Cwd;
@@ -402,10 +402,11 @@ sub InstallResources($;$;$)
 	}
 
  
- sub SetBuildNumber
- {
-
-   open (OUTPUT, ">:mozilla:config:build_number") || die "could not open buildnumber";
+sub SetBuildNumber($$$)
+{
+    my($build_num_file, $build_gen_script, $files_to_touch) = @_;
+    
+    open (OUTPUT, ">$build_num_file") || die "could not open buildnumber";
 
    open (BDATE, "perl :mozilla:config:bdate.pl|");
    
@@ -416,10 +417,12 @@ sub InstallResources($;$;$)
    close (BDATE);
    close (OUTPUT);
 
-
-
-   	   system ("perl :mozilla:config:aboutime.pl :mozilla:xpfe:appshell:public:nsBuildID.h :mozilla:config:build_number");
-	   system ("perl :mozilla:config:aboutime.pl :mozilla:xpfe:browser:resources:locale:en-US:navigator.dtd :mozilla:config:build_number");
+    my($file);
+    foreach $file (@$files_to_touch)
+    {
+        print "Writing build number to $file\n";
+        system ("perl $build_gen_script $file $build_num_file");    
+    }
  }
 
 sub SetAgentString
@@ -478,6 +481,20 @@ sub Delay($)
 	
 }
 
+sub GetFileModDate($)
+{
+    my($filePath)=@_;
+    my($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,
+        $atime,$mtime,$ctime,$blksize,$blocks) = stat($filePath);
+    return $mtime;
+}
+
+
+sub LaunchCodeWarrior()
+{
+  # this both launches and writes idepath.txt
+  CodeWarriorLib::activate();
+}
 
 #//--------------------------------------------------------------------------------------------------
 #// ActivateApplication
@@ -490,29 +507,28 @@ sub ActivateApplication($)
 	my ($appPSN);
 	
 	$found = 0;
-	
+		
 	foreach $psi (values(%Process))
 	{
 		if ($psi->processSignature() eq $appSignature)
 		{
 			$appPSN = $psi->processNumber();
 			$found = 1;
-      last;
+            last;
 		}
 	}
 
-	if ($found == 0)
+	if ($found == 0 || SameProcess($appPSN, GetFrontProcess()))
 	{
 		return;
 	}
-		
+
 	SetFrontProcess($appPSN);
 
 	while (GetFrontProcess() != $appPSN)
 	{
 		WaitNextEvent();
 	}
-
 }
 
 #//--------------------------------------------------------------------------------------------------
