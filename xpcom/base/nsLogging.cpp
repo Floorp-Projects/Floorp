@@ -62,7 +62,9 @@ nsLoggingService::nsLoggingService()
 
 nsLoggingService::~nsLoggingService()
 {
+#ifdef DEBUG_warren
     DescribeLogs(LogInfo);
+#endif
 }
 
 NS_IMPL_QUERY_INTERFACE1(nsLoggingService, nsILoggingService)
@@ -380,7 +382,33 @@ nsLog::~nsLog()
     if (mName) nsCRT::free(mName);
 }
 
-NS_IMPL_ISUPPORTS1(nsLog, nsILog)
+// !!! We don't use NS_IMPL_ISUPPORTS for nsLog because logs always appear to 
+// leak due to the way NS_IMPL_LOG works.
+
+NS_IMETHODIMP_(nsrefcnt)
+nsLog::AddRef(void)
+{
+  NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");
+  NS_ASSERT_OWNINGTHREAD(nsLog);
+  ++mRefCnt;
+  return mRefCnt;
+}
+
+NS_IMETHODIMP_(nsrefcnt)
+nsLog::Release(void)
+{
+  NS_PRECONDITION(0 != mRefCnt, "dup release");
+  NS_ASSERT_OWNINGTHREAD(nsLog);
+  --mRefCnt;
+  if (mRefCnt == 0) {
+    mRefCnt = 1; /* stabilize */
+    NS_DELETEXPCOM(this);
+    return 0;
+  }
+  return mRefCnt;
+}
+
+NS_IMPL_QUERY_INTERFACE1(nsLog, nsILog)
 
 nsresult
 nsLog::Init(const char* name, PRUint32 controlFlags, nsILogEventSink* sink)
