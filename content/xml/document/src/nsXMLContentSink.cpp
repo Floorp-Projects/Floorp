@@ -1138,15 +1138,12 @@ nsXMLContentSink::ProcessHeaderData(nsIAtom* aHeader,const nsAString& aValue,nsI
       }
     }
     
-    nsCOMPtr<nsIHttpChannel> httpChannel;
+    nsCOMPtr<nsIChannel> channel;
     if (mParser) {
-      nsCOMPtr<nsIChannel> channel;
-      if (NS_SUCCEEDED(mParser->GetChannel(getter_AddRefs(channel)))) {
-        httpChannel = do_QueryInterface(channel);
-      }
+      mParser->GetChannel(getter_AddRefs(channel));
     }
 
-    rv = cookieServ->SetCookieString(codebaseURI, prompt, NS_ConvertUCS2toUTF8(aValue).get(), httpChannel);
+    rv = cookieServ->SetCookieString(codebaseURI, prompt, NS_ConvertUCS2toUTF8(aValue).get(), channel);
 
     if (NS_FAILED(rv)) return rv;
   } // END set-cookie

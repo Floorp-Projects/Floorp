@@ -64,6 +64,9 @@
 // until this point, we have an evil hack:
 #include "nsIHttpChannelInternal.h"  
 
+#include "nsIDocShell.h"
+#include "nsIDocShellTreeItem.h"
+
 /******************************************************************************
  * gCookiePrefObserver
  * This is instanced as a global variable in nsCookieService.cpp.
@@ -1243,10 +1246,10 @@ cookie_ParseAttributes(nsDependentCString  &aCookieHeader,
  *****************************************************************************/
 
 PRIVATE nsCookieStatus
-cookie_CheckPrefs(nsIURI         *aHostURI,
-                  nsIURI         *aFirstURI,
-                  nsIHttpChannel *aHttpChannel,
-                  const char     *aCookieHeader)
+cookie_CheckPrefs(nsIURI     *aHostURI,
+                  nsIURI     *aFirstURI,
+                  nsIChannel *aChannel,
+                  const char *aCookieHeader)
 {
   // pref tree:
   // 0) get the scheme strings from the two URI's
@@ -1288,11 +1291,51 @@ cookie_CheckPrefs(nsIURI         *aHostURI,
   // in all cases.
   // XXX removed the aFirstURI check, to make cookies from javascript work
   // bug 198870
-  if (gCookiePrefObserver->mCookiesDisabledForMailNews &&
-      ((aFirstURI && cookie_IsFromMailNews(firstURIScheme)) ||
-       cookie_IsFromMailNews(currentURIScheme))) {
-    COOKIE_LOGFAILURE(aCookieHeader ? SET_COOKIE : GET_COOKIE, aHostURI, aCookieHeader ? "" : aCookieHeader, "cookies disabled for mailnews");
-    return nsICookie::STATUS_REJECTED;
+  if (gCookiePrefObserver->mCookiesDisabledForMailNews) {
+    //
+    // try to examine the "app type" of the docshell owning this request.  if
+    // we find a docshell in the heirarchy of type APP_TYPE_MAIL, then assume
+    // this URI is being loaded from within mailnews.
+    //
+    // XXX this is a pretty ugly hack at the moment since cookies really
+    // shouldn't have to talk to the docshell directly.  ultimately, we want
+    // to talk to some more generic interface, which the docshell would also
+    // implement.  but, the basic mechanism here of leveraging the channel's
+    // (or loadgroup's) notification callbacks attribute seems ideal as it
+    // avoids the problem of having to modify all places in the code which
+    // kick off network requests.
+    //
+    PRUint32 appType = nsIDocShell::APP_TYPE_UNKNOWN;
+    if (aChannel) {
+      nsCOMPtr<nsIInterfaceRequestor> req;
+      aChannel->GetNotificationCallbacks(getter_AddRefs(req));
+      if (!req) {
+        // check the load group's notification callbacks...
+        nsCOMPtr<nsILoadGroup> group;
+        aChannel->GetLoadGroup(getter_AddRefs(group));
+        if (group)
+          group->GetNotificationCallbacks(getter_AddRefs(req));
+      }
+      if (req) {
+        nsCOMPtr<nsIDocShellTreeItem> item, parent = do_GetInterface(req);
+        if (parent) {
+          do {
+              item = parent;
+              nsCOMPtr<nsIDocShell> docshell = do_QueryInterface(item);
+              if (docshell)
+                docshell->GetAppType(&appType);
+          } while (appType != nsIDocShell::APP_TYPE_MAIL &&
+                   NS_SUCCEEDED(item->GetParent(getter_AddRefs(parent))) &&
+                   parent);
+        }
+      }
+    }
+    if ((appType == nsIDocShell::APP_TYPE_MAIL) ||
+        (aFirstURI && cookie_IsFromMailNews(firstURIScheme)) ||
+        cookie_IsFromMailNews(currentURIScheme)) {
+      COOKIE_LOGFAILURE(aCookieHeader ? SET_COOKIE : GET_COOKIE, aHostURI, aCookieHeader ? "" : aCookieHeader, "cookies disabled for mailnews");
+      return nsICookie::STATUS_REJECTED;
+    }
   }
 
   // check default prefs - go thru enumerated permissions
@@ -1324,7 +1367,8 @@ cookie_CheckPrefs(nsIURI         *aHostURI,
     // to do this, at the moment, we need an httpChannel, but we can live without
     // the two URI's (as long as no foreign checks are required).
     // if the channel is null, we can fall back on "no p3p policy" prefs.
-    nsCookieStatus p3pStatus = cookie_P3PDecision(aHostURI, aFirstURI, aHttpChannel);
+    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
+    nsCookieStatus p3pStatus = cookie_P3PDecision(aHostURI, aFirstURI, httpChannel);
     if (p3pStatus == nsICookie::STATUS_REJECTED) {
       COOKIE_LOGFAILURE(aCookieHeader ? SET_COOKIE : GET_COOKIE, aHostURI, aCookieHeader ? "" : aCookieHeader, "P3P test failed");
     }
@@ -1339,8 +1383,9 @@ cookie_CheckPrefs(nsIURI         *aHostURI,
 PRIVATE inline PRBool ispathdelimiter(char c) { return c == '/' || c == '?' || c == '#' || c == ';'; }
 
 PUBLIC char *
-COOKIE_GetCookie(nsIURI *aHostURI,
-                 nsIURI *aFirstURI)
+COOKIE_GetCookie(nsIURI     *aHostURI,
+                 nsIURI     *aFirstURI,
+                 nsIChannel *aChannel)
 {
   if (!aHostURI) {
     COOKIE_LOGFAILURE(GET_COOKIE, nsnull, "", "host URI is null");
@@ -1348,7 +1393,7 @@ COOKIE_GetCookie(nsIURI *aHostURI,
   }
 
   // check default prefs
-  nsCookieStatus cookieStatus = cookie_CheckPrefs(aHostURI, aFirstURI, nsnull, nsnull);
+  nsCookieStatus cookieStatus = cookie_CheckPrefs(aHostURI, aFirstURI, aChannel, nsnull);
   // for GetCookie(), we don't update the UI icon if cookie was rejected.
   if (cookieStatus == nsICookie::STATUS_REJECTED) {
     return nsnull;
@@ -1823,12 +1868,12 @@ cookie_SetCookieInternal(nsIURI             *aHostURI,
 // performs functions common to all cookies (checking user prefs and processing
 // the time string from the server), and processes each cookie in the header.
 PUBLIC void
-COOKIE_SetCookie(nsIURI         *aHostURI,
-                 nsIURI         *aFirstURI,
-                 nsIPrompt      *aPrompt,
-                 const char     *aCookieHeader,
-                 const char     *aServerTime,
-                 nsIHttpChannel *aHttpChannel)
+COOKIE_SetCookie(nsIURI     *aHostURI,
+                 nsIURI     *aFirstURI,
+                 nsIPrompt  *aPrompt,
+                 const char *aCookieHeader,
+                 const char *aServerTime,
+                 nsIChannel *aChannel)
 {
   if (!aHostURI) {
     COOKIE_LOGFAILURE(SET_COOKIE, nsnull, aCookieHeader, "host URI is null");
@@ -1836,7 +1881,7 @@ COOKIE_SetCookie(nsIURI         *aHostURI,
   }
 
   // check default prefs
-  nsCookieStatus cookieStatus = cookie_CheckPrefs(aHostURI, aFirstURI, aHttpChannel, aCookieHeader);
+  nsCookieStatus cookieStatus = cookie_CheckPrefs(aHostURI, aFirstURI, aChannel, aCookieHeader);
   // update UI icon, and return, if cookie was rejected.
   // should we be doing this just for p3p?
   if (cookieStatus == nsICookie::STATUS_REJECTED) {
@@ -1846,8 +1891,9 @@ COOKIE_SetCookie(nsIURI         *aHostURI,
     }
     return;
   }
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
   // get the site's p3p policy now (common to all cookies)
-  nsCookiePolicy cookiePolicy = cookie_GetPolicy(P3P_SitePolicy(aHostURI, aHttpChannel));
+  nsCookiePolicy cookiePolicy = cookie_GetPolicy(P3P_SitePolicy(aHostURI, httpChannel));
 
   // parse server local time. this is not just done here for efficiency
   // reasons - if there's an error parsing it, and we need to default it

@@ -187,7 +187,7 @@ nsCookieHTTPNotify::OnModifyRequest(nsIHttpChannel *aHttpChannel)
 
     // Get the cookies
     char * cookie;
-    rv = mCookieService->GetCookieStringFromHttp(pURL, pFirstURL, &cookie);
+    rv = mCookieService->GetCookieStringFromHttp(pURL, pFirstURL, aHttpChannel, &cookie);
     if (NS_FAILED(rv)) return rv;
 
     const char *headerVal = "";

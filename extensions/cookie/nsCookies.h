@@ -102,8 +102,8 @@ extern void cookie_LogSuccess(PRBool aSetCookie, nsIURI *aHostURI, const nsAFlat
 extern nsresult COOKIE_Read();
 extern nsresult COOKIE_Write();
 extern void COOKIE_RemoveExpiredCookies(nsInt64 aCurrentTime, PRInt32 &aOldestPosition);
-extern char * COOKIE_GetCookie(nsIURI *aHostURI, nsIURI *aFirstURI);
-extern void COOKIE_SetCookie(nsIURI *aHostURI, nsIURI *aFirstURI, nsIPrompt *aPrompt, const char *aCookieHeader, const char *aServerTime, nsIHttpChannel *aHttpChannel);
+extern char * COOKIE_GetCookie(nsIURI *aHostURI, nsIURI *aFirstURI, nsIChannel *aChannel);
+extern void COOKIE_SetCookie(nsIURI *aHostURI, nsIURI *aFirstURI, nsIPrompt *aPrompt, const char *aCookieHeader, const char *aServerTime, nsIChannel *aChannel);
 extern void COOKIE_RemoveAll();
 extern void COOKIE_Remove(const nsACString &host, const nsACString &name, const nsACString &path, PRBool blocked);
 extern nsresult COOKIE_Add(cookie_CookieStruct *aCookie, nsInt64 aCurrentTime, nsIURI *aHostURI, const char *aCookieHeader);

@@ -6022,7 +6022,7 @@ NS_IMETHODIMP nsPluginHostImpl::GetCookie(const char* inCookieURL, void* inOutCo
     return rv;
   }
 
-  rv = cookieService->GetCookieString(uriIn, getter_Copies(cookieString));
+  rv = cookieService->GetCookieString(uriIn, nsnull, getter_Copies(cookieString));
   
   if (NS_FAILED(rv) || (!cookieString) ||
       (inOutCookieSize <= (cookieStringLen = PL_strlen(cookieString.get())))) {
@@ -6073,7 +6073,7 @@ NS_IMETHODIMP nsPluginHostImpl::SetCookie(const char* inCookieURL, const void* i
   char * cookie = (char *)inCookieBuffer;
   char c = cookie[inCookieSize];
   cookie[inCookieSize] = '\0';
-  rv = cookieService->SetCookieString(uriIn, prompt, cookie,0);
+  rv = cookieService->SetCookieString(uriIn, prompt, cookie, nsnull);
   cookie[inCookieSize] = c;
   
   return rv;

@@ -21,7 +21,6 @@
  *
  * Contributor(s):
  *
- *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
@@ -36,69 +35,122 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/*
-
-  This file contains an interface to the Cookie Service.
-
- */
-
 #include "nsISupports.idl"
-#include "nsIURI.idl"
-#include "nsIPrompt.idl"
 
-interface nsIHttpChannel;
+interface nsIURI;
+interface nsIPrompt;
+interface nsIChannel;
 
+/**
+ * nsICookieService
+ *
+ * Provides methods for setting and getting cookies in the context of a
+ * page load.  See nsICookieManager for methods to manipulate the cookie
+ * database directly.  This separation of interface is mainly historical.
+ */
 [scriptable, uuid(011C3190-1434-11d6-A618-0010A401EB10)]
 interface nsICookieService : nsISupports
 {
   /*
-   * Get the complete cookie string associated with the URL
+   * Get the complete cookie string associated with the URI.
    *
-   * @param aURL The URL for which to get the cookie string
-   * @param aCookie The string object which will hold the result
-   * @return Returns NS_OK if successful, or NS_FALSE if an error occurred.
+   * @param aURI
+   *        the URI of the document for which cookies are being queried.
+   * @param aChannel
+   *        the channel used to load the document.  this parameter may be null,
+   *        but it is strongly recommended that a non-null value be provided to
+   *        ensure that the cookie privacy preferences are honored.
+   *
+   * @return the resulting cookie string
    */
-  string getCookieString(in nsIURI aURL);
+  string getCookieString(in nsIURI aURI, in nsIChannel aChannel);
 
   /*
-   * Get the complete cookie string associated with the URL
+   * Get the complete cookie string associated with the URI.
    *
-   * @param aURL The URL for which to get the cookie string
-   * @param aFirstURL The URL which the user typed in or clicked on
-   * @param aCookie The string object which will hold the result
-   * @return Returns NS_OK if successful, or NS_FALSE if an error occurred.
+   * XXX this function is redundant and will most likely be removed in a future
+   * revision of this interface.  GetCookieString will query the documentURI
+   * property off of nsIHttpChannelInternal if supported, so GetCookieString
+   * can be used in place of this method.
+   *
+   * @param aURI
+   *        the URI of the document for which cookies are being queried.
+   * @param aFirstURI
+   *        the URI that the user originally typed in or clicked on to initiate
+   *        the load of the document referenced by aURI.
+   * @param aChannel
+   *        the channel used to load the document.  this parameter may be null,
+   *        but it is strongly recommended that a non-null value be provided to
+   *        ensure that the cookie privacy preferences are honored.
+   *
+   * @return the resulting cookie string
    */
-  string getCookieStringFromHttp(in nsIURI aURL, in nsIURI aFirstURL);
+  string getCookieStringFromHttp(in nsIURI aURI, in nsIURI aFirstURI, in nsIChannel aChannel);
 
   /*
-   * Set the cookie string associated with the URL
+   * Set the cookie string associated with the URI.
    *
-   * @param aURL The URL for which to set the cookie string
-   * @param aCookie The string to set
-   * @return Returns NS_OK if successful, or NS_FALSE if an error occurred.
+   * @param aURI
+   *        the URI of the document for which cookies are being set.
+   * @param aPrompt
+   *        the prompt to use for all user-level cookie notifications.
+   * @param aCookie
+   *        the cookie string to set.
+   * @param aChannel
+   *        the channel used to load the document.  this parameter may be null,
+   *        but it is strongly recommended that a non-null value be provided to
+   *        ensure that the cookie privacy preferences are honored.
+   *
+   * XXX should be able to allow null aPrompt, since nsIPrompt can be queryied
+   * from aChannel.
    */
-  void setCookieString(in nsIURI aURL, in nsIPrompt aPrompt, in string aCookie, in nsIHttpChannel aHttpChannel);
+  void setCookieString(in nsIURI aURI, in nsIPrompt aPrompt, in string aCookie, in nsIChannel aChannel);
 
   /*
-   * Set the cookie string and expires associated with the URL
+   * Set the cookie string and expires associated with the URI.
    *
-   * @param aURL The URL for which to set the cookie string
-   * @param aFirstURL The URL which the user typed in or clicked on
-   * @param aPrompter The nsIPrompt implementation to use. If null, a default
-   *                  will be used.
-   * @param aCookie The char * string to set
-   * @param aExpires The expiry information of the cookie
-   * @return Returns NS_OK if successful, or NS_FALSE if an error occurred.
+   * XXX this function is redundant and will most likely be removed in a future
+   * revision of this interface.  SetCookieString will query the documentURI
+   * property off of nsIHttpChannelInternal if supported, and SetCookieString
+   * could also query the Date header from the channel if aChannel supports
+   * nsIHttpChannel.
+   *
+   * @param aURI
+   *        the URI of the document for which cookies are being set.
+   * @param aFirstURI
+   *        the URI that the user originally typed in or clicked on to initiate
+   *        the load of the document referenced by aURI.
+   * @param aPrompt
+   *        the prompt to use for all user-level cookie notifications.
+   * @param aCookie
+   *        the cookie string to set.
+   * @param aServerTime
+   *        the expiry information of the cookie (the Date header from the HTTP
+   *        response).
+   * @param aChannel
+   *        the channel used to load the document.  this parameter may be null,
+   *        but it is strongly recommended that a non-null value be provided to
+   *        ensure that the cookie privacy preferences are honored.
    */
-  void setCookieStringFromHttp(in nsIURI aURL, in nsIURI aFirstURL, in nsIPrompt aPrompter, in string aCookie, in string aExpires, in nsIHttpChannel aHttpChannel);
+  void setCookieStringFromHttp(in nsIURI aURI, in nsIURI aFirstURI, in nsIPrompt aPrompt, in string aCookie, in string aServerTime, in nsIChannel aChannel);
 
+  /**
+   * This attribute really doesn't belong on this interface.  CVS blame will
+   * tell you why it is here.  It remains until we can find a better home for
+   * it.  Read the source if you want to know what it does :-(
+   */
   readonly attribute boolean cookieIconIsVisible;
-
 };
 
 %{ C++
-// {011C3190-1434-11d6-A618-0010A401EB10}
+// nsCookieService CID and ContractID:
 #define NS_COOKIESERVICE_CID \
-{ 0xc375fa80, 0x150f, 0x11d6, { 0xa6, 0x18, 0x0, 0x10, 0xa4, 0x1, 0xeb, 0x10 } }
-#define NS_COOKIESERVICE_CONTRACTID "@mozilla.org/cookieService;1"
+{ /* 011C3190-1434-11d6-A618-0010A401EB10 */       \
+    0xc375fa80,                                    \
+    0x150f,                                        \
+    0x11d6,                                        \
+    {0xa6, 0x18, 0x0, 0x10, 0xa4, 0x1, 0xeb, 0x10} \
+}
+#define NS_COOKIESERVICE_CONTRACTID \
+    "@mozilla.org/cookieService;1"
 %}

@@ -756,6 +756,7 @@ nsHTMLDocument::StartAutodetection(nsIDocShell *aDocShell, nsAString& aCharset,
 void
 nsHTMLDocument::RetrieveRelevantHeaders(nsIChannel *aChannel)
 {
+  mChannel = aChannel;
   mHttpChannel = do_QueryInterface(aChannel);
 
   nsDocument::RetrieveRelevantHeaders(aChannel);
@@ -2286,7 +2287,7 @@ nsHTMLDocument::GetCookie(nsAString& aCookie)
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsXPIDLCString cookie;
-      rv = service->GetCookieString(codebaseURI, getter_Copies(cookie));
+      rv = service->GetCookieString(codebaseURI, mChannel, getter_Copies(cookie));
     if (NS_SUCCEEDED(rv) && cookie)
       CopyASCIItoUCS2(nsDependentCString(cookie), aCookie);
   }
@@ -2342,8 +2343,7 @@ nsHTMLDocument::SetCookie(const nsAString& aCookie)
     rv = NS_ERROR_OUT_OF_MEMORY;
     char* cookie = ToNewCString(aCookie);
     if (cookie) {
-      rv = service->SetCookieString(codebaseURI, prompt, cookie,
-                                        mHttpChannel);
+      rv = service->SetCookieString(codebaseURI, prompt, cookie, mChannel);
       nsCRT::free(cookie);
     }
   }
