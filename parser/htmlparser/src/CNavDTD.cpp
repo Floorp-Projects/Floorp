@@ -943,9 +943,8 @@ nsresult CNavDTD::HandleEntityToken(CToken* aToken) {
 
   CEntityToken* et = (CEntityToken*)(aToken);
   nsresult      result=NS_OK;
-  eHTMLTags     tokenTagType=(eHTMLTags)et->GetTypeID();
 
-  if(PR_FALSE==CanOmit(GetTopNode(),tokenTagType)) {
+  if(PR_FALSE==CanOmit(GetTopNode(),eHTMLTag_entity)) {
     nsCParserNode aNode((CHTMLToken*)aToken,mLineNumber);
     result=AddLeaf(aNode);
   }
@@ -3175,11 +3174,11 @@ CNavDTD::ConsumeEntity(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
 
    if(NS_OK==result) {
      if(nsString::IsAlpha(ch)) { //handle common enity references &xxx; or &#000.
-       aToken = gTokenRecycler.CreateTokenOfType(eToken_entity,eHTMLTag_unknown,gEmpty);
+       aToken = gTokenRecycler.CreateTokenOfType(eToken_entity,eHTMLTag_entity,gEmpty);
        result = aToken->Consume(ch,aScanner);  //tell new token to finish consuming text...    
      }
      else if(kHashsign==ch) {
-       aToken = gTokenRecycler.CreateTokenOfType(eToken_entity,eHTMLTag_unknown,gEmpty);
+       aToken = gTokenRecycler.CreateTokenOfType(eToken_entity,eHTMLTag_entity,gEmpty);
        result=aToken->Consume(0,aScanner);
      }
      else {
@@ -3225,7 +3224,7 @@ CNavDTD::ConsumeWhitespace(PRUnichar aChar,
  *  @return new token or null 
  */
 nsresult CNavDTD::ConsumeComment(PRUnichar aChar,CScanner& aScanner,CToken*& aToken){
-  aToken = gTokenRecycler.CreateTokenOfType(eToken_comment,eHTMLTag_unknown,gEmpty);
+  aToken = gTokenRecycler.CreateTokenOfType(eToken_comment,eHTMLTag_comment,gEmpty);
   nsresult result=NS_OK;
   if(aToken) {
      result=aToken->Consume(aChar,aScanner);

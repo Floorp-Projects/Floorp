@@ -205,7 +205,7 @@ PRInt32 nsCParserNode::GetNodeType(void) const{
 
 /**
  *  Gets the token type, which corresponds to a value from
- *  eHTMLTags_xxx.
+ *  eHTMLTokens_xxx.
  *  
  *  @update  gess 3/25/98
  *  @param   

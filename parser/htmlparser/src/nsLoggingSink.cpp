@@ -41,7 +41,7 @@ static char gSkippedContentTags[] = {
  * @param 
  * @return
  */
-ostream& operator<<(ostream& os,nsAutoString& aString){
+ostream& operator<<(ostream& os, nsAutoString& aString) {
 	const PRUnichar* uc=aString.GetUnicode();
 	int len=aString.Length();
 	for(int i=0;i<len;i++)
@@ -49,6 +49,19 @@ ostream& operator<<(ostream& os,nsAutoString& aString){
 	return os;
 }
 
+/**
+ * 
+ * @update	gess8/8/98
+ * @param 
+ * @return
+ */
+ostream& operator<<(ostream& os,const nsString& aString) {
+	const PRUnichar* uc=aString.GetUnicode();
+	int len=aString.Length();
+	for(int i=0;i<len;i++)
+		os<<(char)uc[i];
+	return os;
+}
 
 class nsLoggingSink : public nsILoggingSink {
 public:
@@ -420,12 +433,16 @@ nsresult
 nsLoggingSink::LeafNode(const nsIParserNode& aNode)
 {
  	WriteTabs(*mOutput,1+mLevel);
-	nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
+	nsHTMLTag				nodeType  = nsHTMLTag(aNode.GetNodeType());
+
   if ((nodeType >= eHTMLTag_unknown) &&
       (nodeType <= nsHTMLTag(NS_HTML_TAG_MAX))) {
     const char* tag = NS_EnumToTag(nodeType);
 
-		(*mOutput) << "<leaf tag=\"" << tag << "\"";
+		if(tag)
+			(*mOutput) << "<leaf tag=\"" << tag << "\"";
+		else (*mOutput) << "<leaf tag=\"???\"";
+
     if (WillWriteAttributes(aNode)) {
 			(*mOutput) << ">" << endl;
       WriteAttributes(aNode);
@@ -439,29 +456,29 @@ nsLoggingSink::LeafNode(const nsIParserNode& aNode)
     PRInt32 pos;
     nsAutoString tmp;
     switch (nodeType) {
-    case eHTMLTag_whitespace:
-    case eHTMLTag_text:
-      QuoteText(aNode.GetText(), tmp);
-			(*mOutput) << "<text value=\"" << tmp << "\"/>" << endl;
-      break;
+			case eHTMLTag_whitespace:
+			case eHTMLTag_text:
+				QuoteText(aNode.GetText(), tmp);
+				(*mOutput) << "<text value=\"" << tmp << "\"/>" << endl;
+				break;
 
-    case eHTMLTag_newline:
-			(*mOutput) << "<newline/>" << endl;
-      break;
+			case eHTMLTag_newline:
+				(*mOutput) << "<newline/>" << endl;
+				break;
 
-    case eHTMLTag_entity:
-      tmp.Append(aNode.GetText());
-      tmp.Cut(0, 1);
-      pos = tmp.Length() - 1;
-      if (pos >= 0) {
-        tmp.Cut(pos, 1);
-      }
-			(*mOutput) << "<entity value=\"" << tmp << "\"/>" << endl;
-      break;
+			case eHTMLTag_entity:
+				tmp.Append(aNode.GetText());
+				tmp.Cut(0, 1);
+				pos = tmp.Length() - 1;
+				if (pos >= 0) {
+					tmp.Cut(pos, 1);
+				}
+				(*mOutput) << "<entity value=\"" << tmp << "\"/>" << endl;
+				break;
 
-    default:
-      NS_NOTREACHED("unsupported leaf node type");
-    }
+			default:
+				NS_NOTREACHED("unsupported leaf node type");
+		}//switch
   }
   return NS_OK;
 }
