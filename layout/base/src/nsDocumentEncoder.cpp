@@ -97,7 +97,7 @@ nsHTMLEncoder::nsHTMLEncoder() : mMimeType("text/html")
 nsHTMLEncoder::~nsHTMLEncoder()
 {
   NS_IF_RELEASE(mDocument); 
-  NS_IF_RELEASE(mSelection);
+  //NS_IF_RELEASE(mSelection);		// no. we never addref'd it.
   NS_IF_RELEASE(mPresShell);
 }
 
@@ -339,7 +339,7 @@ nsTextEncoder::nsTextEncoder() : mMimeType("text/plain")
 nsTextEncoder::~nsTextEncoder()
 {
   NS_IF_RELEASE(mDocument);
-  NS_IF_RELEASE(mSelection);
+  //NS_IF_RELEASE(mSelection);		// no. we never addref'd it.
   NS_IF_RELEASE(mPresShell);
 }
 
