@@ -374,7 +374,7 @@ LPSTR CPlugin::createURLString()
         return NULL;
       lstrcpy(szAddress, urlToOpen);
 
-      m_szURLString = new char[lstrlen(szAddress) + 1 + 
+      m_szURLString = new char[lstrlen(szAddress) + 10 + 
                                lstrlen((LPSTR)m_pNPMIMEType) + 1];
 
       if(m_szURLString == NULL)
