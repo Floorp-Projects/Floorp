@@ -35,7 +35,7 @@
 #define DEV_H
 
 #ifdef DEBUG
-static const char DEV_CVS_ID[] = "@(#) $RCSfile: dev.h,v $ $Revision: 1.5 $ $Date: 2001/09/19 21:47:23 $ $Name:  $";
+static const char DEV_CVS_ID[] = "@(#) $RCSfile: dev.h,v $ $Revision: 1.6 $ $Date: 2001/09/20 20:38:07 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEVT_H
@@ -49,6 +49,10 @@ static const char DEV_CVS_ID[] = "@(#) $RCSfile: dev.h,v $ $Revision: 1.5 $ $Dat
 #ifndef NSSPKIT_H
 #include "nsspkit.h"
 #endif /* NSSPKIT_H */
+
+#ifndef BASET_H
+#include "baset.h"
+#endif /* BASET_H */
 
 /*
  * nssdev.h
@@ -274,12 +278,12 @@ nssToken_DeleteStoredObject
   CK_OBJECT_HANDLE object
 );
 
-NSS_EXTERN NSSCertificate **
+NSS_EXTERN PRStatus
 nssToken_FindCertificatesByTemplate
 (
   NSSToken *tok,
   nssSession *sessionOpt,
-  NSSCertificate *rvOpt[],
+  nssList *certList,
   PRUint32 maximumOpt,
   NSSArena *arenaOpt,
   CK_ATTRIBUTE_PTR cktemplate,

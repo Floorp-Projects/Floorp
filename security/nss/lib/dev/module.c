@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: module.c,v $ $Revision: 1.3 $ $Date: 2001/09/19 21:47:23 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: module.c,v $ $Revision: 1.4 $ $Date: 2001/09/20 20:38:07 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -222,8 +222,12 @@ nssModule_Destroy
   NSSModule *mod
 )
 {
+    PRUint32 i;
     if (--mod->refCount == 0) {
 	/* Ignore any failure here.  */
+	for (i=0; i<mod->numSlots; i++) {
+	    nssSlot_Destroy(mod->slots[i]);
+	}
 	(void)nssModule_Unload(mod);
 	return NSSArena_Destroy(mod->arena);
     }
