@@ -325,4 +325,8 @@
 #define NS_SYNCLOADDOMSERVICE_CONTRACTID            \
 "@mozilla.org/content/syncload-dom-service;1"
 
+// {f96f5ec9-755b-447e-b1f3-717d1a84bb41}
+#define NS_PLUGINDOCUMENT_CID \
+{ 0xf96f5ec9, 0x755b, 0x447e, { 0xb1, 0xf3, 0x71, 0x7d, 0x1a, 0x84, 0xbb, 0x41 } }
+
 #endif /* nsContentCID_h__ */

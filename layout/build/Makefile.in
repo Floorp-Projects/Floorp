@@ -66,6 +66,7 @@ REQUIRES	= xpcom \
 		  xul \
 		  xultmpl \
 		  lwbrk \
+		  plugin \
 		  $(NULL)
 
 CPPSRCS		= \

@@ -73,6 +73,7 @@ XPIDLSRCS 	= \
 		nsPIPluginHost.idl \
 		nsPIPluginInstancePeer.idl \
 		nsIPluginHost.idl \
+		nsIPluginDocument.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
