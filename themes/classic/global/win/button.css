@@ -111,7 +111,7 @@
   
 /** plain (raw) buttons, class="plain" **/
   button.plain, button.plain:hover, button.plain:hover:active,
-  button:hover:active > .button-internal-box,
+  button.plain:hover:active > .button-internal-box,
   button.plain > .button-internal-box, 
   button.plain > .button-internal-box:hover:active,
   button.plain > .button-internal-box > .button-text-container, 
