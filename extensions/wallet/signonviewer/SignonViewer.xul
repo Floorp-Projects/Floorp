@@ -30,7 +30,7 @@
 <!DOCTYPE window SYSTEM "chrome://wallet/locale/SignonViewer.dtd" >
 
 <window id="signonviewer"
-        width="400" height="420"
+        width="410" height="440"
         title="&windowtitle.label;"
         xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -68,7 +68,7 @@
         </html:div>
         <spring style="height: 5px;"/>
         <box align="horizontal">
-          <titledbutton value="&remove.label;" onclick="goneSS += DeleteItemSelected('signonstree','signon_','savesignonlist');"/>
+          <titledbutton class="dialog push" value="&remove.label;" onclick="goneSS += DeleteItemSelected('signonstree','signon_','savesignonlist');"/>
         </box>
         <spring style="height: 5px;"/>
       </box>
@@ -91,7 +91,7 @@
         </html:div>
         <spring style="height: 5px;"/>
         <box align="horizontal">
-          <titledbutton value="&remove.label;" onclick="goneIS += DeleteItemSelected('ignoretree','reject_','ignoredlist');"/>
+          <titledbutton class="dialog push" value="&remove.label;" onclick="goneIS += DeleteItemSelected('ignoretree','reject_','ignoredlist');"/>
         </box>
         <spring style="height: 5px;"/>
       </box>
@@ -111,7 +111,7 @@
         </html:div>
         <spring style="height: 5px;"/>
         <box align="horizontal">
-          <titledbutton value="&remove.label;" onclick="goneFR += DeleteItemSelected('nopreviewtree','nopreview_','nopreviewlist');"/>
+          <titledbutton class="dialog push" value="&remove.label;" onclick="goneFR += DeleteItemSelected('nopreviewtree','nopreview_','nopreviewlist');"/>
         </box>
         <spring style="height: 5px;"/>
       </box>
