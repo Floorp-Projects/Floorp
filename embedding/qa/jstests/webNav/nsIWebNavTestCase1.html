@@ -1,13 +1,39 @@
 <html>
+<title> nsIAccessible Interface Test Case </title>
+<!-- Descrpt: Test nsIAccessible Interface attributes and methods
+     for HTML ANCHOR Node
+     Author: depstein@netscape.com
+     Last Updated:09.18.02.
+
+   - The contents of this file are subject to the Mozilla Public
+   - License Version 1.1 (the "License"); you may not use this file
+   - except in compliance with the License. You may obtain a copy of
+   - the License at http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS
+   - IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   - implied. See the License for the specific language governing
+   - rights and limitations under the License.
+   -
+   - The Original Code is Mozilla Communicator Test Cases.
+   -
+   - The Initial Developer of the Original Code is Netscape Communications
+   - Corp.  Portions created by Netscape Communications Corp. are
+   - Copyright (C) 1999 Netscape Communications Corp.  All
+   - Rights Reserved.
+   -
+   - Contributor(s):
+  -->
 <head>
 <script TYPE="text/javascript" SRC="nsIWebNavTestLib.js"></script>
 <script TYPE="text/javascript">
+
 // This script tests out the methods and attributes in nsIWebNavigation.
 // It uses the nsIWebNavTestLib.js test library.
 var interfaceName = "nsIWebNavigation";
-var testWin = window.open("about:blank");
-  // Calls the webNavInit() function to create nsIWebNav object
-var webNav  = webNavInit(testWin);
+var testWin = null;
+
+var webNav = null;
 var goBack = 0;
 var goForward = 0;
 var index = 0;
@@ -15,16 +41,36 @@ var cnt = 0;
 var indexCnt = 0;
 var reloadCnt = 0;
 
-var urlList = ["http://www.intel.com",
+var urlList;
+var loadFlagList;
+var urlTotal;
+var loadFlagTotal;
+var urlElement;
+var flagElement;
+var referrer;
+var postData;
+var headers;
+
+testWin = window.open('about:blank');
+
+setTimeout("loadURITests();", 2000);
+
+function loadURITests()
+{
+  var initTime = 10000;
+
+  callNavInit(cnt);
+
+  urlList = ["http://www.intel.com",
 			 "http://www.yahoo.com",
 			 "http://www.mozilla.org",
 			 "ftp://ftp.mozilla.org",
 			 "http://www.mozilla.org/newsbot",
-			 "http://www.sun.com",
-			 "http://www.cisco.com"
-		   ];
+			 "https://www.sun.com",
+			 "http://www.oracle.com"
+		   		];
 
-var loadFlagList = [webNav.LOAD_FLAGS_NONE,
+  loadFlagList = [webNav.LOAD_FLAGS_NONE,
 				  webNav.LOAD_FLAGS_IS_REFRESH,
 				  webNav.LOAD_FLAGS_IS_LINK,
 				  webNav.LOAD_FLAGS_BYPASS_HISTORY,
@@ -35,12 +81,12 @@ var loadFlagList = [webNav.LOAD_FLAGS_NONE,
 				  webNav.LOAD_FLAGS_CHARSET_CHANGE
 				  ];
 
-var urlTotal  	  = urlList.length;
-var loadFlagTotal = loadFlagList.length;
+  urlTotal  	  = urlList.length;
+  loadFlagTotal = loadFlagList.length;
 
-function loadURITests()
-{
-  var initTime = 10000;
+  referrer = null;
+  postData = null;
+  headers  = null;
 
    if (!testWin) {
        alert("didn't get test window");
@@ -56,15 +102,22 @@ function loadURITests()
 
   // Load pages sequentially in the child window
 
-   testLoadURI(webNav, urlList[cnt++], loadFlagList[0], null, null, null);
+   testLoadURI(webNav, urlList[cnt++], loadFlagList[0], referrer, postData, headers);
 
    if (cnt == urlTotal)
-     setTimeout("nsIWebNavTests()", 10000);
+     setTimeout("nsIWebNavTests(webNav, urlTotal, loadFlagTotal)", 10000);
    else
-     setTimeout("loadURITests()", 10000);
+     setTimeout("loadURITests(webNav)", 10000);
 }
 
-function nsIWebNavTests()
+function callNavInit(cnt)
+{
+  // Calls the webNavInit() function to create nsIWebNav object
+  if (cnt == 0)
+ 	webNav = webNavInit(testWin);
+}
+
+function nsIWebNavTests(webNav, urlTotal, loadFlagTotal)
 {
   // Test cases for nsIWebNavigation
 
@@ -96,10 +149,10 @@ function nsIWebNavTests()
   netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserAccess");
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
-  doWebNavigation(webNav);
+  doWebNavigation(webNav, urlTotal, loadFlagTotal);
 }
 
-function doWebNavigation(webNav)
+function doWebNavigation(webNav, urlTotal, loadFlagTotal)
 {
   if (!webNav)
     return;
@@ -107,37 +160,37 @@ function doWebNavigation(webNav)
   netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserAccess");
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
-  setTimeout("doCanGoBack(webNav)", 10000);	 // canGoBack()
+  setTimeout("doCanGoBack(webNav, urlTotal, loadFlagTotal)", 10000);	 // canGoBack()
 }
 
-function doCanGoBack(webNav)
+function doCanGoBack(webNav, urlTotal, loadFlagTotal)
 {
 	var goBack = testCanGoBack(webNav, 0);
 	dump("goBack = " + goBack + "\n");
-	setTimeout("doGoBack(webNav)", 10000);
+	setTimeout("doGoBack(webNav, urlTotal, loadFlagTotal)", 10000);
 }
 
-function doGoBack(webNav)
+function doGoBack(webNav, urlTotal, loadFlagTotal)
 {
 	testGoBack(webNav);
-	setTimeout("doCanGoForward(webNav)", 10000);
+	setTimeout("doCanGoForward(webNav, urlTotal, loadFlagTotal)", 10000);
 }
 
-function doCanGoForward(webNav)
+function doCanGoForward(webNav, urlTotal, loadFlagTotal)
 {
 	var goForward = testCanGoForward(webNav, 0);
 	dump("goForward = " + goForward + "\n");
-	setTimeout("doGoForward(webNav)", 10000);
+	setTimeout("doGoForward(webNav, urlTotal, loadFlagTotal)", 10000);
 }
 
-function doGoForward(webNav)
+function doGoForward(webNav, urlTotal, loadFlagTotal)
 {
 	testGoForward(webNav);
 	indexCnt = 0;
-	setTimeout("recurseIndex(webNav, indexCnt)", 10000);
+	setTimeout("recurseIndex(webNav, indexCnt, urlTotal, loadFlagTotal)", 10000);
 }
 
-function recurseIndex(webNav, indexCnt)
+function recurseIndex(webNav, indexCnt, urlTotal, loadFlagTotal)
 {
   if (!webNav)
 	return;
@@ -148,15 +201,15 @@ function recurseIndex(webNav, indexCnt)
   dump("indexCnt = " + indexCnt + "\n");
   if (indexCnt < urlTotal) {
     testGotoIndex(webNav, indexCnt);		// gotoIndex()
-	setTimeout("recurseIndex(webNav, ++indexCnt)", 10000);
+	setTimeout("recurseIndex(webNav, ++indexCnt, urlTotal, loadFlagTotal)", 10000);
   }
   else {
     reloadCnt = 0;
-    setTimeout("recurseReload(webNav, reloadCnt)", 10000);
+    setTimeout("recurseReload(webNav, reloadCnt, loadFlagTotal)", 10000);
   }
 }
 
-function recurseReload(webNav, reloadCnt)
+function recurseReload(webNav, reloadCnt, loadFlagTotal)
 {
   if (!webNav)
 	return;
@@ -168,19 +221,16 @@ function recurseReload(webNav, reloadCnt)
   if (reloadCnt < loadFlagTotal) {
     testReload(webNav, loadFlagList[reloadCnt]);	// reload()
 	dump("loadFlag = " + loadFlagList[reloadCnt] + "\n");
-	setTimeout("recurseReload(webNav, ++reloadCnt)", 10000);
+	setTimeout("recurseReload(webNav, ++reloadCnt, urlTotal, loadFlagTotal)", 10000);
   }
   else {
     webNav.loadURI("http://www.microsoft.com", loadFlagList[0], null, null, null);
-    testStop(webNav, loadFlagList[0]);
+    testStop(webNav, webNav.STOP_CONTENT);
   }
 }
 
 </script>
 </head>
 <body>
-<script TYPE="text/javascript">
-  loadURITests();
-</script>
 </body>
 </html>
