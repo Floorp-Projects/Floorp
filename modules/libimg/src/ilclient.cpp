@@ -20,7 +20,7 @@
  *   ilclient.c --- Management of imagelib client data structures,
  *                  including image cache.
  *
- *   $Id: ilclient.cpp,v 3.14 1999/10/21 22:17:16 pnunn%netscape.com Exp $
+ *   $Id: ilclient.cpp,v 3.15 1999/10/29 02:17:55 kipp%netscape.com Exp $
  */
 
 
@@ -606,7 +606,7 @@ il_delete_container(il_container *ic)
          * of the container until then.
          */
         if (ic->is_url_loading) {
-#ifdef DEBUG_kipp
+#if 0
             printf("il_delete_container: bad: can't delete ic=%p '%s'\n",
                    ic, ic->url_address ? ic->url_address : "(null)");
 #endif
@@ -626,7 +626,7 @@ il_delete_container(il_container *ic)
     
         /* delete the image */
         if (!(ic->image || ic->mask)) {
-#ifdef DEBUG_kipp
+#if 0
             printf("il_delete_container: bad: ic=%p '%s' image=%p mask=%p\n",
                    ic, ic->url_address ? ic->url_address : "(null)",
                    ic->image, ic->mask);
@@ -810,7 +810,7 @@ IL_FlushCache(void)
     while (ic)
 	{
         if (ic->is_in_use) {
-#ifdef DEBUG_kipp
+#if 0
             printf("IL_FlushCache: il_container %p in use '%s'\n",
                    ic, ic->url_address ? ic->url_address : "(null)");
 #endif
