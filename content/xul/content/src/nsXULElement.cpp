@@ -3285,6 +3285,9 @@ nsXULElement::HandleDOMEvent(nsIPresContext* aPresContext,
             else return NS_ERROR_FAILURE;
         }
     }
+    else if (aEvent->message == NS_IMAGE_LOAD)
+      return NS_OK; // Don't let these events bubble or be captured.  Just allow them
+                    // on the target image.
 
     // Find out if we're anonymous.
     nsCOMPtr<nsIContent> bindingParent;
