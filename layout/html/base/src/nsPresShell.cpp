@@ -1031,11 +1031,12 @@ ReflowCommandHashHashKey(PLDHashTable *table, const void *key)
   const nsHTMLReflowCommand* command =
     NS_STATIC_CAST(const nsHTMLReflowCommand*, key);
   
-  // The target is going to be reasonbly unique, the type comes from an enum
-  // and we just don't have that many types, and the child list name is either
-  // null or has the same high-order bits as all the other child list names.
+  // The target is going to be reasonably unique, if we shift out the
+  // always-zero low-order bits, the type comes from an enum and we just don't
+  // have that many types, and the child list name is either null or has the
+  // same high-order bits as all the other child list names.
   return
-    NS_PTR_TO_INT32(command->GetTarget()) ^
+    (NS_PTR_TO_INT32(command->GetTarget()) >> 2) ^
     (command->GetType() << 17) ^
     (NS_PTR_TO_INT32(command->GetChildListName()) << 20);
 }
