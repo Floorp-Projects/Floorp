@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: API.xs,v 1.12 1998/08/03 19:25:03 leif Exp $
+ * $Id: API.xs,v 1.13 1998/08/04 02:28:12 clayton Exp $
  *
  * The contents of this file are subject to the Mozilla Public License
  * Version 1.0 (the "License"); you may not use this file except in
@@ -109,8 +109,9 @@ char ** avref2charptrptr(SV *avref)
 struct berval ** avref2berptrptr(SV *avref)
 {
    I32 avref_arraylen;
-   int ix_av;
+   int ix_av,val_len;
    SV **current_val;
+   char *tmp_char;
    struct berval **tmp_ber;
 
    if (SvTYPE(SvRV(avref)) != SVt_PVAV || 
@@ -122,11 +123,14 @@ struct berval ** avref2berptrptr(SV *avref)
    Newz(1,tmp_ber,avref_arraylen+2,struct berval *);
    for (ix_av = 0;ix_av <= avref_arraylen;ix_av++)
    {
+      New(1,tmp_ber[ix_av],1,struct berval);
       current_val = av_fetch((AV *)SvRV(avref),ix_av,0);
-      tmp_ber[ix_av]->bv_val = strdup(SvPV(*current_val,na));
-      /* tmp_ber[ix_av]->bv_val = malloc(na+1); */
-      /* Copy(tmp_ber[ix_av]->bv_val,current_val,na); */
-      tmp_ber[ix_av]->bv_len = na;
+      val_len = SvCUR(*current_val);
+
+      Newz(1,tmp_char,val_len+1,char);
+      Copy(SvPV(*current_val,na),tmp_char,val_len,char);
+      tmp_ber[ix_av]->bv_val = tmp_char;
+      tmp_ber[ix_av]->bv_len = val_len;
    }
    tmp_ber[ix_av] = NULL;
 
