@@ -41,7 +41,9 @@ MODULE = mfcEmbed
 
 # comment this out if for some reason you want to link against xpcom
 # directly instead of using the standalone glue
+ifndef BUILD_STATIC_LIBS
 GRE_BUILD = 1
+endif
 
 ifdef GRE_BUILD
 DEFINES   += -DXPCOM_GLUE
@@ -115,7 +117,6 @@ endif
 LIBS		= \
 		$(EXTRA_DSO_LIBS) \
 		$(MOZ_UNICHARUTIL_LIBS) \
-		$(NSPR_LIBS) \
 		$(NULL)
 
 ifdef GRE_BUILD
@@ -127,7 +128,12 @@ LIBS += \
 		 $(NULL)
 else
 LIBS += $(XPCOM_LIBS)
+ifdef BUILD_STATIC_LIBS
+LIBS += $(MOZ_JS_LIBS)
 endif
+endif
+
+LIBS += $(NSPR_LIBS)
 
 OS_LIBS		+= \
 		ole32.lib \
