@@ -98,5 +98,10 @@
       padding             : 0px !important;
     }
     
-    
+/* autocomplete text field */
+    .textfield-popup > menuitem
+    {
+        max-width         : none !important;
+    }
+
     
