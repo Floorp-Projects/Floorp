@@ -35,6 +35,7 @@ CPPSRCS		= \
 	nsServiceManager.cpp \
 	nsSupportsArray.cpp \
 	nsSupportsArrayEnumerator.cpp \
+	nsConjoiningEnumerator.cpp	\
 	nsRepository.cpp \
 	nsTraceRefcnt.cpp \
 	nsProxyEvent.cpp \
@@ -43,6 +44,9 @@ CPPSRCS		= \
 	xcDll.cpp \
 	xcDllStore.cpp \
 	$(NULL)
+
+# XXX temporary, until I fix the RDF cursor/enumerator conspiracy
+EXPORTS = nsSupportsArrayEnumerator.h
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
