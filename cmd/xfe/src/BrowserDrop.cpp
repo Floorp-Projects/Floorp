@@ -216,7 +216,7 @@ void XFE_BrowserDrop::loadURL(const char *url,int newFrame)
         fe_UserActivity(_browserFrame->getContext());
     }
     else {
-        XFE_BrowserFrame *newFrame=new XFE_BrowserFrame(XtParent(_browserFrame->getBaseWidget()), _browserFrame, NULL);
+        XFE_BrowserFrame *newFrame=new XFE_BrowserFrame(XtParent(_browserFrame->getBaseWidget()), _browserFrame, (Chrome *)NULL);
         newFrame->show();
         newFrame->getURL(urlStruct);
         fe_UserActivity(newFrame->getContext());

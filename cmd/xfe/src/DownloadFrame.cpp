@@ -277,7 +277,7 @@ XFE_DownloadFrame::XFE_DownloadFrame(Widget toplevel, XFE_Frame *parent_frame)
 
 	XFE_DownloadView *v = new XFE_DownloadView(this, 
                                                getChromeParent(),
-											   NULL, 
+											   (XFE_View *) NULL, 
                                                m_context);
 
 	ac = 0;

@@ -935,7 +935,7 @@ XFE_Frame::XFE_Frame(char *name,
 
 	if (haveMenuBar)
 		{
-			m_menubar = new XFE_MenuBar(this, NULL);
+			m_menubar = new XFE_MenuBar(this, (MenuSpec *)NULL);
 			
 			if (!chromespec || (chromespec && chromespec->show_menu))
 				m_menubar->show();
@@ -1969,7 +1969,7 @@ XFE_Frame::setToolbar(ToolbarSpec *toolbar_spec)
     }
 
     // Create the toolbar 
-    m_toolbar = new XFE_Toolbar(this,m_toolbox,NULL);
+    m_toolbar = new XFE_Toolbar(this, m_toolbox, (ToolbarSpec *)NULL);
 	m_toolbar->setToolbarSpec(toolbar_spec);
 
     m_toolbar->registerInterest(Command::doCommandCallback,
@@ -3831,7 +3831,7 @@ char *XFE_Frame::getDocString(CommandType cmd)
 	//    For now impliment info = NULL, because only composer
 	//    plugins are using this, but, really need info..
 	if (handler != NULL)
-		doc_string = handler->getDocString(this, NULL);
+		doc_string = handler->getDocString(this, (XFE_CommandInfo*)NULL);
 
 	if (doc_string == NULL) 
 	{
