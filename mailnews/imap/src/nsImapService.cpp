@@ -2754,20 +2754,31 @@ nsImapService::GetDefaultCopiesAndFoldersPrefsToServer(PRBool *aDefaultCopiesAnd
 NS_IMETHODIMP
 nsImapService::BuildSubscribeDatasource(nsIImapIncomingServer *aServer, nsIMsgWindow *aMsgWindow)
 {
-	NS_ASSERTION(PR_FALSE,"imap subscribe doesn't work yet.");
 	nsresult rv;
 
-    nsCOMPtr<nsISubscribeListener> listener;
-	nsCOMPtr<nsISubscribableServer> server = do_QueryInterface(aServer,&rv);
-	if (NS_FAILED(rv)) return rv;
+        nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(aServer);
 	if (!server) return NS_ERROR_FAILURE;
 
-	rv = server->GetSubscribeListener(getter_AddRefs(listener));
+	nsCOMPtr<nsIFolder> rootFolder;
+        rv = server->GetRootFolder(getter_AddRefs(rootFolder));
 	if (NS_FAILED(rv)) return rv;
+
+        nsCOMPtr<nsIMsgFolder> rootMsgFolder = do_QueryInterface(rootFolder);
+	if (!rootMsgFolder) return NS_ERROR_FAILURE;
+
+	nsCOMPtr<nsIUrlListener> listener = do_QueryInterface(aServer);
 	if (!listener) return NS_ERROR_FAILURE;
-	
-	rv = listener->OnStopPopulating();
-	if (NS_FAILED(rv)) return rv;
+
+	nsCOMPtr<nsIEventQueue> queue;
+        // get the Event Queue for this thread...
+        NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(queue));
+        if (NS_FAILED(rv)) return rv;
+
+	rv = DiscoverAllAndSubscribedFolders(queue, rootMsgFolder, listener, nsnull);
+        if (NS_FAILED(rv)) return rv;
 
 	return NS_OK;
 } 

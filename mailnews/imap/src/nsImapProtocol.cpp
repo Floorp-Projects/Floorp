@@ -2144,7 +2144,6 @@ nsresult nsImapProtocol::BeginMessageDownLoad(
     {
      // create a pipe to pump the message into...the output will go to whoever
      // is consuming the message display
-      nsresult rv;
         rv = NS_NewPipe(getter_AddRefs(m_channelInputStream), getter_AddRefs(m_channelOutputStream));
         NS_ASSERTION(NS_SUCCEEDED(rv), "NS_NewPipe failed!");
     }
@@ -5256,6 +5255,11 @@ void nsImapProtocol::FindMailboxesIfNecessary()
     //PR_ExitMonitor(fFindingMailboxesMonitor);
 }
 
+void nsImapProtocol::DiscoverAllAndSubscribedBoxes()
+{
+	printf("jefft fix DiscoverAllAndSubscribedBoxes() to be like 4.x\n");
+	DiscoverMailboxList();
+}
 
 // DiscoverMailboxList() is used to actually do the discovery of folders
 // for a host.  This is used both when we initially start up (and re-sync)
@@ -5826,11 +5830,7 @@ void nsImapProtocol::ProcessAuthenticatedStateURL()
       DiscoverMailboxList();
       break;
     case nsIImapUrl::nsImapDiscoverAllAndSubscribedBoxesUrl:
-      NS_ASSERTION (GetSubscribingNow(), 
-                          "Oops ... should not get here");
-#if NOT_YET
       DiscoverAllAndSubscribedBoxes();
-#endif
       break;
     case nsIImapUrl::nsImapCreateFolder:
       sourceMailbox = OnCreateServerSourceFolderPathString();
@@ -6770,7 +6770,6 @@ nsImapMockChannel::GetNotificationCallbacks(nsIInterfaceRequestor* *aNotificatio
 NS_IMETHODIMP
 nsImapMockChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCallbacks)
 {
-  nsresult rv = NS_OK;
   mCallbacks = aNotificationCallbacks;
 
   // Verify that the event sink is http

@@ -31,13 +31,15 @@
 #include "nsIStringBundle.h"
 #include "nsIMsgLogonRedirector.h"
 #include "nsISubscribableServer.h"
+#include "nsIUrlListener.h"
 
 /* get some implementation from nsMsgIncomingServer */
 class nsImapIncomingServer : public nsMsgIncomingServer,
                              public nsIImapIncomingServer,
 							              public nsIImapServerSink,
 							              public nsIMsgLogonRedirectionRequester,
-										  public nsISubscribableServer
+										  public nsISubscribableServer,
+										  public nsIUrlListener
                              
 {
 public:
@@ -54,6 +56,7 @@ public:
 	NS_DECL_NSIIMAPSERVERSINK
 	NS_DECL_NSIMSGLOGONREDIRECTIONREQUESTER
     NS_DECL_NSISUBSCRIBABLESERVER
+	NS_DECL_NSIURLLISTENER
 
 	NS_IMETHOD PerformBiff();
 	NS_IMETHOD CloseCachedConnections();
@@ -85,7 +88,11 @@ private:
 	PRBool						m_waitingForConnectionInfo;
 	PRInt32						m_redirectedLogonRetries;
 	nsCOMPtr<nsIMsgLogonRedirector> m_logonRedirector;
-    nsCOMPtr <nsISubscribeListener> mSubscribeListener;	
+	
+	// subscribe dialog stuff
+    	nsCOMPtr <nsISubscribeListener> mSubscribeListener;	
+	PRBool	mDoingSubscribeDialog;
+	nsresult AddFolderToSubscribeDialog(const char *parentUri, const char *uri,const char *folderName);
 };
 
 

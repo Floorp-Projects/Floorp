@@ -77,6 +77,7 @@ NS_INTERFACE_MAP_BEGIN(nsImapIncomingServer)
 	NS_INTERFACE_MAP_ENTRY(nsIImapIncomingServer)
 	NS_INTERFACE_MAP_ENTRY(nsIMsgLogonRedirectionRequester)
 	NS_INTERFACE_MAP_ENTRY(nsISubscribableServer)
+	NS_INTERFACE_MAP_ENTRY(nsIUrlListener)
 NS_INTERFACE_MAP_END_INHERITING(nsMsgIncomingServer)
 
 nsImapIncomingServer::nsImapIncomingServer()
@@ -88,6 +89,7 @@ nsImapIncomingServer::nsImapIncomingServer()
 	m_capability = kCapabilityUndefined;
 	m_waitingForConnectionInfo = PR_FALSE;
 	m_redirectedLogonRetries = 0;
+	mDoingSubscribeDialog = PR_FALSE;
 }
 
 nsImapIncomingServer::~nsImapIncomingServer()
@@ -678,6 +680,7 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
     PRBool explicitlyVerify = PR_FALSE;
     
     if (!folderPath || !*folderPath) return NS_ERROR_NULL_POINTER;
+
     nsCAutoString dupFolderPath = folderPath;
     if (dupFolderPath.Last() == '/')
     {
@@ -712,6 +715,7 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
 		folderName.Cut(0, leafPos + 1);	// get rid of the parent name
 	}
 
+
 	nsCOMPtr<nsIFolder> rootFolder;
     rv = GetRootFolder(getter_AddRefs(rootFolder));
 
@@ -739,6 +743,11 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
 
 	uri.Append('/');
 	uri.Append(dupFolderPath);
+
+	if (mDoingSubscribeDialog) {
+		rv = AddFolderToSubscribeDialog((const char *)parentUri, (const char *)uri,(const char *)folderName);
+		return rv;
+	}
 
 	a_nsIFolder->GetChildWithURI(uri, PR_TRUE, getter_AddRefs(child));
 
@@ -1817,6 +1826,7 @@ nsImapIncomingServer::PopulateSubscribeDatasource(nsIMsgWindow *aMsgWindow)
 #ifdef DEBUG_sspitzer
 	printf("in PopulateSubscribeDatasource()\n");
 #endif
+	mDoingSubscribeDialog = PR_TRUE;
 
 	nsCOMPtr<nsIImapService> imapService = do_GetService(kImapServiceCID, &rv);
 	if (NS_FAILED(rv)) return rv;
@@ -1844,5 +1854,38 @@ nsImapIncomingServer::GetSubscribeListener(nsISubscribeListener **aListener)
 			*aListener = mSubscribeListener;
 			NS_ADDREF(*aListener);
 	}
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImapIncomingServer::OnStartRunningUrl(nsIURI *url)
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImapIncomingServer::OnStopRunningUrl(nsIURI *url, nsresult exitCode)
+{
+    nsresult rv;
+
+    mDoingSubscribeDialog = PR_FALSE;
+
+    nsCOMPtr<nsISubscribeListener> listener;
+    rv = GetSubscribeListener(getter_AddRefs(listener));
+    if (NS_FAILED(rv)) return rv;
+    if (!listener) return NS_ERROR_FAILURE;
+
+    printf("set all the subscribed folders as subscribed\n");
+
+    rv = listener->OnStopPopulating();
+    if (NS_FAILED(rv)) return rv;
+
+    return NS_OK;
+}
+
+nsresult
+nsImapIncomingServer::AddFolderToSubscribeDialog(const char *parentUri, const char *uri,const char *folderName)
+{
+	printf("AddFolderToSubscribeDialog(%s,%s,%s)\n",parentUri,uri,folderName);
 	return NS_OK;
 }
