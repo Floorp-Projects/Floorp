@@ -455,7 +455,7 @@ LocationImpl::SetPathname(const nsString& aPathname)
 #endif
       SetURL(url);
       delete[] buf;
-      NS_IF_RELEASE(url);      
+      NS_RELEASE(url);      
     }
   }
 
@@ -594,7 +594,7 @@ LocationImpl::SetProtocol(const nsString& aProtocol)
 #endif
       SetURL(url);
       delete[] buf;
-      NS_IF_RELEASE(url);      
+      NS_RELEASE(url);      
     }
   }
 

@@ -837,6 +837,7 @@ FTPDataSource::GetFTPListing(nsIRDFResource *source, nsISimpleEnumerator** aResu
 			{
 				rv = NS_OpenURI(NS_STATIC_CAST(nsIStreamListener *, callback), nsnull, url);
 			}
+            NS_RELEASE(url);
 		}
 #endif // NECKO
 	}

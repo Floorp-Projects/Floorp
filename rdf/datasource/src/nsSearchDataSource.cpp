@@ -1050,6 +1050,9 @@ SearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engine, nsStr
 		}
 		delete [] searchURL;
 		searchURL = nsnull;
+#ifdef NECKO
+        NS_RELEASE(url);
+#endif // NECKO
 	}
 	return(NS_OK);
 }
