@@ -4254,7 +4254,7 @@ if ($sth->rows == 0) {
     foreach my $group ( @groups ) {
         $dbh->do("INSERT INTO group_group_map
             (member_id, grantor_id, grant_type)
-            VALUES ($id, $group, 1, " . GROUP_BLESS . ")");
+            VALUES ($id, $group, " . GROUP_BLESS . ")");
     }
 
   print "\n$login is now set up as an administrator account.\n";
