@@ -66,7 +66,6 @@ class NS_COM nsFileSpecImpl
 
 	nsFileSpecImpl();
 	nsFileSpecImpl(const nsFileSpec& inSpec);
-	virtual ~nsFileSpecImpl();
 	static nsresult MakeInterface(const nsFileSpec& inSpec, nsIFileSpec** outSpec);
 
 	//----------------------
@@ -77,6 +76,8 @@ class NS_COM nsFileSpecImpl
 	nsIInputStream*					mInputStream;
 	nsIOutputStream*				mOutputStream;
 
+private:
+	~nsFileSpecImpl();
 }; // class nsFileSpecImpl
 
 //========================================================================================
@@ -88,7 +89,6 @@ class NS_COM nsDirectoryIteratorImpl
 public:
 
 	nsDirectoryIteratorImpl();
-	virtual ~nsDirectoryIteratorImpl();
 
 	NS_DECL_ISUPPORTS
 
@@ -106,8 +106,10 @@ public:
 
 	static NS_METHOD Create(nsISupports* outer, const nsIID& aIID, void* *aIFileSpec);
 
-protected:
+private:
+	~nsDirectoryIteratorImpl();
 
+protected:
 	nsDirectoryIterator*					mDirectoryIterator;
 }; // class nsDirectoryIteratorImpl
 

@@ -98,7 +98,6 @@ nsDirEnumeratorUnix : public nsISimpleEnumerator
 {
     public:
     nsDirEnumeratorUnix();
-    virtual ~nsDirEnumeratorUnix();
 
     // nsISupports interface
     NS_DECL_ISUPPORTS
@@ -107,6 +106,9 @@ nsDirEnumeratorUnix : public nsISimpleEnumerator
     NS_DECL_NSISIMPLEENUMERATOR
 
     NS_IMETHOD Init(nsLocalFile *parent, PRBool ignored);
+
+    private:
+    ~nsDirEnumeratorUnix();
 
     protected:
     NS_IMETHOD GetNextEntry();
@@ -205,10 +207,6 @@ nsLocalFile::nsLocalFile(const nsLocalFile& other)
   : mCachedStat(other.mCachedStat)
   , mPath(other.mPath)
   , mHaveCachedStat(other.mHaveCachedStat)
-{
-}
-
-nsLocalFile::~nsLocalFile()
 {
 }
 

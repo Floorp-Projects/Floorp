@@ -43,7 +43,6 @@
 class ByteBufferImpl : public nsIByteBuffer {
 public:
   ByteBufferImpl(void);
-  virtual ~ByteBufferImpl();
 
   NS_DECL_ISUPPORTS
 
@@ -61,6 +60,8 @@ public:
   char* mBuffer;
   PRUint32 mSpace;
   PRUint32 mLength;
+private:
+  ~ByteBufferImpl();
 };
 
 #endif // nsByteBuffer_h__

@@ -73,7 +73,6 @@ public:
   NS_DECL_NSIEXCEPTIONMANAGER
 
   nsExceptionManager(nsExceptionService *svc);
-  virtual ~nsExceptionManager();
   /* additional members */
   nsCOMPtr<nsIException> mCurrentException;
   nsExceptionManager *mNextThread; // not ref-counted.
@@ -81,6 +80,9 @@ public:
 #ifdef NS_DEBUG
   static PRInt32 totalInstances;
 #endif
+
+private:
+  ~nsExceptionManager();
 };
 
 

@@ -543,11 +543,6 @@ nsTimelineService::nsTimelineService()
   /* member initializers and constructor code */
 }
 
-nsTimelineService::~nsTimelineService()
-{
-  /* destructor code */
-}
-
 /* void mark (in string text); */
 NS_IMETHODIMP nsTimelineService::Mark(const char *text)
 {

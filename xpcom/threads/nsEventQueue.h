@@ -45,7 +45,6 @@ class nsEventQueueImpl : public nsIEventQueue,
 {
 public:
     nsEventQueueImpl();
-    virtual ~nsEventQueueImpl();
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIEVENTTARGET
@@ -67,6 +66,8 @@ public:
     NS_IMETHOD GetElder(nsIEventQueue **aQueue);
 
 private:
+    ~nsEventQueueImpl();
+
   PLEventQueue  *mEventQueue;
   PRBool        mAcceptingEvents, // accept new events or pass them on?
                 mCouldHaveEvents; // accepting new ones, or still have old ones?

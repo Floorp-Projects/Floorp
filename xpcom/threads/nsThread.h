@@ -47,7 +47,6 @@ public:
  
     // nsThread methods:
     nsThread();
-    virtual ~nsThread();
 
     nsresult RegisterThreadSelf();
     void SetPRThread(PRThread* thread) { mThread = thread; }
@@ -61,6 +60,9 @@ public:
 
     static NS_METHOD
     Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
+
+private:
+    ~nsThread();
 
 protected:
     PRThread*                   mThread;

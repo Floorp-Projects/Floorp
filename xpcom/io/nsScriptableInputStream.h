@@ -58,11 +58,13 @@ public:
 
     // nsScriptableInputStream methods
     nsScriptableInputStream() {};
-    virtual ~nsScriptableInputStream() {};
 
     static NS_METHOD
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+
 private:
+    ~nsScriptableInputStream() {};
+
     nsCOMPtr<nsIInputStream> mInputStream;
 };
 

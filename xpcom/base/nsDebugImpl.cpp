@@ -148,10 +148,6 @@ nsDebugImpl::nsDebugImpl()
 {
 }
 
-nsDebugImpl::~nsDebugImpl()
-{
-}
-
 /**
  * Implementation of the nsDebug methods. Note that this code is
  * always compiled in, in case some other module that uses it is

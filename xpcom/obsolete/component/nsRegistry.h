@@ -55,11 +55,13 @@ struct nsRegistry : public nsIRegistry, nsIRegistryGetter {
     // Fast registry getters
     NS_DECL_NSIREGISTRYGETTER
 
+    int SetBufferSize( int bufsize );  // changes the file buffer size for this registry
+
     // ctor/dtor
     nsRegistry();
-    virtual ~nsRegistry();
 
-    int SetBufferSize( int bufsize );  // changes the file buffer size for this registry
+private:
+    ~nsRegistry();
 
 protected:
     HREG   mReg; // Registry handle.

@@ -112,10 +112,6 @@ nsAppFileLocationProvider::nsAppFileLocationProvider()
 {
 }
 
-nsAppFileLocationProvider::~nsAppFileLocationProvider()
-{
-}
-
 //*****************************************************************************
 // nsAppFileLocationProvider::nsISupports
 //*****************************************************************************

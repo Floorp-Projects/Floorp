@@ -223,7 +223,8 @@ class nsDirEnumerator : public nsISimpleEnumerator
             return NS_OK;
         }
 
-        virtual ~nsDirEnumerator() 
+    private:
+        ~nsDirEnumerator() 
         {
             if (mDir) 
             {
@@ -250,10 +251,6 @@ nsLocalFile::nsLocalFile(const nsLocalFile& other)
   : mDirty(other.mDirty)
   , mWorkingPath(other.mWorkingPath)
   , mFileInfo64(other.mFileInfo64)
-{
-}
-
-nsLocalFile::~nsLocalFile()
 {
 }
 

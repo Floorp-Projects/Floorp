@@ -62,10 +62,12 @@ public:
     NS_DECL_NSIERRORSERVICE
 
     nsErrorService() {}
-    virtual ~nsErrorService() {}
 
     static NS_METHOD
     Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
+
+private:
+    ~nsErrorService() {}
 
 protected:
     nsInt2StrHashtable mErrorStringBundleURLMap;

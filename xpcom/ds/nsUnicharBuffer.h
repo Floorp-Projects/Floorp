@@ -43,7 +43,6 @@
 class UnicharBufferImpl : public nsIUnicharBuffer {
 public:
   UnicharBufferImpl();
-  virtual ~UnicharBufferImpl();
 
   static NS_METHOD
   Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
@@ -58,6 +57,9 @@ public:
   PRUnichar* mBuffer;
   PRUint32 mSpace;
   PRUint32 mLength;
+
+private:
+  ~UnicharBufferImpl();
 };
 
 #endif // nsUnicharBuffer_h__

@@ -52,12 +52,13 @@ class nsConsoleService : public nsIConsoleService
 {
 public:
     nsConsoleService();
-    virtual ~nsConsoleService();
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSICONSOLESERVICE
 
 private:
+    ~nsConsoleService();
+
     // build (or find) a proxy for the listener
     nsresult GetProxyForListener(nsIConsoleListener* aListener,
                                  nsIConsoleListener** aProxy);

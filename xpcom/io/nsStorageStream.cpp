@@ -321,17 +321,17 @@ public:
         NS_ADDREF(mStorageStream);
 	}
 
-    virtual ~nsStorageInputStream()
-    {
-        NS_IF_RELEASE(mStorageStream);
-    }
-
     NS_DECL_ISUPPORTS
     NS_DECL_NSIINPUTSTREAM
     NS_DECL_NSISEEKABLESTREAM
 
+private:
+    ~nsStorageInputStream()
+    {
+        NS_IF_RELEASE(mStorageStream);
+    }
+
 protected:
-    
     NS_METHOD Seek(PRUint32 aPosition);
 
     friend class nsStorageStream;

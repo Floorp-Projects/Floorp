@@ -50,7 +50,6 @@ class EmptyEnumeratorImpl : public nsISimpleEnumerator
 {
 public:
     EmptyEnumeratorImpl(void);
-    virtual ~EmptyEnumeratorImpl(void);
 
     // nsISupports interface
     NS_DECL_ISUPPORTS_INHERITED  // not really inherited, but no mRefCnt
@@ -59,4 +58,7 @@ public:
     NS_DECL_NSISIMPLEENUMERATOR
 
     static void Shutdown();
+
+private:
+    ~EmptyEnumeratorImpl(void);
 };

@@ -45,10 +45,12 @@ class nsAtomService : public nsIAtomService
 {
  public:
   nsAtomService();
-  virtual ~nsAtomService();
   NS_DECL_ISUPPORTS
     
   NS_DECL_NSIATOMSERVICE
+
+ private:
+  ~nsAtomService() {}
 };
 
 #endif

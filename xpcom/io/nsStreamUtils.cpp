@@ -56,7 +56,8 @@ public:
     {
     }
 
-    virtual ~nsInputStreamReadyEvent()
+private:
+    ~nsInputStreamReadyEvent()
     {
         if (mCallback) {
             nsresult rv;
@@ -85,6 +86,7 @@ public:
         }
     }
 
+public:
     NS_IMETHOD OnInputStreamReady(nsIAsyncInputStream *stream)
     {
         mStream = stream;
@@ -143,7 +145,8 @@ public:
     {
     }
 
-    virtual ~nsOutputStreamReadyEvent()
+private:
+    ~nsOutputStreamReadyEvent()
     {
         if (mCallback) {
             nsresult rv;
@@ -172,6 +175,7 @@ public:
         }
     }
 
+public:
     void Init(nsIOutputStreamCallback *callback, nsIEventTarget *target)
     {
         mCallback = callback;

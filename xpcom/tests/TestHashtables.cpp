@@ -229,7 +229,6 @@ class IFoo : public nsISupports
 
 		public:
       IFoo();
-      virtual ~IFoo();
 
       NS_IMETHOD_(nsrefcnt) AddRef();
       NS_IMETHOD_(nsrefcnt) Release();
@@ -241,6 +240,8 @@ class IFoo : public nsISupports
       static void print_totals();
 
     private:
+      ~IFoo();
+
       unsigned int refcount_;
 
       static unsigned int total_constructions_;

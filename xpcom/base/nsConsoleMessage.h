@@ -46,12 +46,12 @@ public:
     nsConsoleMessage();
     nsConsoleMessage(const PRUnichar *message);
 
-    virtual ~nsConsoleMessage();
-
     NS_DECL_ISUPPORTS
     NS_DECL_NSICONSOLEMESSAGE
 
 private:
+    ~nsConsoleMessage() {}
+
     nsString mMessage;
 };
 

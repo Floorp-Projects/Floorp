@@ -50,10 +50,10 @@ public:
     Doit(void);
 
     MyService();
-    virtual ~MyService();
-
     NS_DECL_ISUPPORTS
 
+private:
+    ~MyService();
 };
 
 ////////////////////////////////////////////////////////////////////////////////

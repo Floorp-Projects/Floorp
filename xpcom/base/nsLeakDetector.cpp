@@ -75,17 +75,17 @@ static FILE* openTraceFile()
 class nsLeakDetector : public nsILeakDetector {
 public:
 	nsLeakDetector();
-	virtual ~nsLeakDetector();
 	
 	NS_DECL_ISUPPORTS	
 	NS_DECL_NSILEAKDETECTOR
+private:
+	~nsLeakDetector() {}
 };
 
 NS_IMPL_ISUPPORTS1(nsLeakDetector, nsILeakDetector)
 
 nsLeakDetector::nsLeakDetector() {
    }
-nsLeakDetector::~nsLeakDetector() {}
 
 NS_METHOD nsLeakDetector::DumpLeaks()
 {

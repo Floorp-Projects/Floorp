@@ -134,7 +134,6 @@ public:
 
     // nsComponentManagerImpl methods:
     nsComponentManagerImpl();
-    virtual ~nsComponentManagerImpl();
 
     static nsComponentManagerImpl* gComponentManager;
     nsresult Init(void);
@@ -240,6 +239,8 @@ public:
     nsVoidArray         mPendingCIDs;
 #endif
 
+private:
+    ~nsComponentManagerImpl();
 };
 
 

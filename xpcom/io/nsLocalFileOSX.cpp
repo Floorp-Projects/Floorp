@@ -202,7 +202,8 @@ class nsDirEnumerator : public nsISimpleEnumerator
             return NS_OK;
         }
 
-        virtual ~nsDirEnumerator() 
+    private:
+        ~nsDirEnumerator() 
         {
           if (mIterator)
             ::FSCloseIterator(mIterator);

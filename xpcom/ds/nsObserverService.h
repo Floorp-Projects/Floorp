@@ -55,7 +55,6 @@ public:
   NS_DEFINE_STATIC_CID_ACCESSOR( NS_OBSERVERSERVICE_CID )
 
   nsObserverService();
-  virtual ~nsObserverService(void);
      
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVERSERVICE
@@ -64,6 +63,8 @@ public:
   Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
 
 private:
+  ~nsObserverService(void);
+
   nsObjectHashtable* mObserverTopicTable;
 
   nsresult GetObserverList(const char* aTopic, nsObserverList** anObserverList);

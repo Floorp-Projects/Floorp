@@ -406,10 +406,6 @@ nsLocalFile::nsLocalFile()
     MakeDirty();
 }
 
-nsLocalFile::~nsLocalFile()
-{
-}
-
 NS_METHOD
 nsLocalFile::nsLocalFileConstructor(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
 {

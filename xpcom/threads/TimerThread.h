@@ -57,7 +57,6 @@ class TimerThread : public nsSupportsWeakReference,
 {
 public:
   TimerThread();
-  virtual ~TimerThread();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIRUNNABLE
@@ -83,6 +82,8 @@ public:
   void DoAfterSleep();
 
 private:
+  ~TimerThread();
+
   // These two internal helper methods must be called while mLock is held.
   // AddTimerInternal returns the position where the timer was added in the
   // list, or -1 if it failed.

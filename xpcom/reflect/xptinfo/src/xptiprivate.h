@@ -721,8 +721,6 @@ public:
 public:
     xptiInterfaceInfo(xptiInterfaceEntry* entry);
 
-    virtual ~xptiInterfaceInfo() ;
-
     void Invalidate() 
         {NS_IF_RELEASE(mParent); mEntry = nsnull;}
 
@@ -731,6 +729,8 @@ public:
 #endif
 
 private:
+
+    ~xptiInterfaceInfo();
 
     // Note that mParent might still end up as nsnull if we don't have one.
     PRBool EnsureParent(xptiWorkingSet* aWorkingSet = nsnull)
@@ -788,12 +788,13 @@ public:
                       xptiWorkingSet* aWorkingSet) :
         mManager(aMgr),
         mWorkingSet(aWorkingSet) {}
-    virtual ~xptiZipLoaderSink() {};
     
     NS_DECL_ISUPPORTS
     NS_DECL_NSIXPTLOADERSINK
     
 private:
+    ~xptiZipLoaderSink() {}
+
     xptiInterfaceInfoManager* mManager;
     xptiWorkingSet* mWorkingSet;
 
@@ -871,7 +872,6 @@ class xptiInterfaceInfoManager
                   xptiWorkingSet* aWorkingSet);
 
 public:
-    virtual ~xptiInterfaceInfoManager();
     static xptiInterfaceInfoManager* GetInterfaceInfoManagerNoAddRef();
     static void FreeInterfaceInfoManager();
 
@@ -907,6 +907,7 @@ public:
     static void WriteToLog(const char *fmt, ...);
 
 private:
+    ~xptiInterfaceInfoManager();
     xptiInterfaceInfoManager(); // not implmented
     xptiInterfaceInfoManager(nsISupportsArray* aSearchPath);
 

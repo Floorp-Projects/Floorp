@@ -75,13 +75,13 @@ public:
     nsArray(const nsCOMArray_base& aBaseArray) : mArray(aBaseArray)
     { }
     
-    virtual ~nsArray();
-
     NS_DECL_ISUPPORTS
     NS_DECL_NSIARRAY
     NS_DECL_NSIMUTABLEARRAY
 
 private:
+    ~nsArray();
+
     nsCOMArray_base mArray;
 };
 

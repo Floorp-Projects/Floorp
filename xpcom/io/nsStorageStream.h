@@ -41,7 +41,6 @@ class nsStorageStream : public nsIStorageStream,
 {
 public:
     nsStorageStream();
-    virtual ~nsStorageStream();
     
     NS_METHOD Init(PRUint32 segmentSize, PRUint32 maxSize, nsIMemory *segmentAllocator = 0);
 
@@ -52,6 +51,8 @@ public:
     friend class nsStorageInputStream;
 
 private:
+    ~nsStorageStream();
+
     nsSegmentedBuffer* mSegmentedBuffer;
     PRUint32           mSegmentSize;       // All segments, except possibly the last, are of this size
                                            //   Must be power-of-2

@@ -319,8 +319,7 @@ nsDirectoryService::GetCurrentProcessDirectory(nsILocalFile** aFile)
 
 #endif
     
-    if (localFile)
-       delete localFile;
+    NS_RELEASE(localFile);
 
     NS_ERROR("unable to get current process directory");
     return NS_ERROR_FAILURE;

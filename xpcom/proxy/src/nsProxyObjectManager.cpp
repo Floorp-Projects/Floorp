@@ -74,17 +74,11 @@ class nsProxyCreateInstance : public nsIProxyCreateInstance
     NS_IMETHOD CreateInstanceByIID(const nsIID & cid, nsISupports *aOuter, const nsIID & iid, void * *result);
     NS_IMETHOD CreateInstanceByContractID(const char *aContractID, nsISupports *aOuter, const nsIID & iid, void * *result);
 
-    nsProxyCreateInstance();
-    virtual ~nsProxyCreateInstance();
+    nsProxyCreateInstance() {}
+
+private:
+    ~nsProxyCreateInstance() {}
 };
-
-nsProxyCreateInstance::nsProxyCreateInstance()
-{
-}
-
-nsProxyCreateInstance::~nsProxyCreateInstance()
-{
-}
 
 NS_IMPL_ISUPPORTS1(nsProxyCreateInstance, nsIProxyCreateInstance)
 

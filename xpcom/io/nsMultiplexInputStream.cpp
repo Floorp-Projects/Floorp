@@ -51,7 +51,6 @@ class nsMultiplexInputStream : public nsIMultiplexInputStream,
 {
 public:
     nsMultiplexInputStream();
-    virtual ~nsMultiplexInputStream();
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIINPUTSTREAM
@@ -61,6 +60,8 @@ public:
     static NS_METHOD Create(nsISupports *outer, REFNSIID iid, void **result);
 
 private:
+    ~nsMultiplexInputStream() {}
+
 
     struct ReadSegmentsState {
         nsIInputStream* mThisStream;
@@ -88,10 +89,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(nsMultiplexInputStream,
 nsMultiplexInputStream::nsMultiplexInputStream()
     : mCurrentStream(0),
       mStartedReadingCurrent(PR_FALSE)
-{
-}
-
-nsMultiplexInputStream::~nsMultiplexInputStream()
 {
 }
 

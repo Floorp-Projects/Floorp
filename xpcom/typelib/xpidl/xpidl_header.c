@@ -507,8 +507,12 @@ interface(TreeState *state)
     fputs("\n", state->file);
     write_indent(state->file);
     fprintf(state->file, "%s();\n", classNameImpl);
+    fputs("\n"
+          "private:\n", state->file);
     write_indent(state->file);
-    fprintf(state->file, "virtual ~%s();\n", classNameImpl);
+    fprintf(state->file, "~%s();\n", classNameImpl);
+    fputs("\n"
+          "protected:\n", state->file);
     write_indent(state->file);
     fputs("/* additional members */\n", state->file);
     fputs("};\n\n", state->file);

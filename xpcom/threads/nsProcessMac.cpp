@@ -59,10 +59,6 @@ nsProcess::nsProcess()
 {
 }
 
-nsProcess::~nsProcess()
-{
-}
-
 NS_IMETHODIMP
 nsProcess::Init(nsIFile* executable)
 {

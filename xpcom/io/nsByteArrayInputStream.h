@@ -32,9 +32,10 @@ class nsByteArrayInputStream : public nsIByteArrayInputStream
     
 public:
     nsByteArrayInputStream (char *buffer, PRUint32 nbytes);
-    virtual ~nsByteArrayInputStream ();
 
 private:
+    ~nsByteArrayInputStream ();
+
     char        *_buffer;
     PRUint32     _nbytes;
     PRUint32     _pos;

@@ -111,11 +111,12 @@ public:
         NS_ADDREF(in);
     }
 
-    virtual ~nsReceiver() {
+    PRUint32 GetBytesRead() { return mCount; }
+
+private:
+    ~nsReceiver() {
         NS_RELEASE(mIn);
     }
-
-    PRUint32 GetBytesRead() { return mCount; }
 
 protected:
     nsIInputStream*     mIn;
@@ -207,10 +208,6 @@ public:
         NS_ADDREF(in);
     }
 
-    virtual ~nsShortReader() {
-        NS_RELEASE(mIn);
-    }
-
     void Received(PRUint32 count) {
         nsAutoCMonitor mon(this);
         mReceived += count;
@@ -227,6 +224,11 @@ public:
         }
         mReceived = 0;
         return result;
+    }
+
+private:
+    ~nsShortReader() {
+        NS_RELEASE(mIn);
     }
 
 protected:
@@ -312,7 +314,9 @@ public:
     }
 
     nsPipeObserver() { }
-    virtual ~nsPipeObserver() {}
+
+private:
+    ~nsPipeObserver() {}
 };
 
 NS_IMPL_ISUPPORTS2(nsPipeObserver, nsIInputStreamObserver, nsIOutputStreamObserver)
@@ -435,8 +439,8 @@ public:
         : mIn(in), mOut(out), mCount(0) {
     }
 
-    virtual ~nsPump() {
-    }
+private:
+    ~nsPump() {}
 
 protected:
     nsCOMPtr<nsIInputStream>      mIn;

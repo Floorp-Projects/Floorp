@@ -110,13 +110,15 @@ public:
     // nsSimpleArrayEnumerator methods
     nsCOMArrayEnumerator() : mIndex(0) {
     }
-    virtual ~nsCOMArrayEnumerator(void);
 
     // specialized operator to make sure we make room for mValues
     void* operator new (size_t size, const nsCOMArray_base& aArray) CPP_THROW_NEW;
     void operator delete(void* ptr) {
         ::operator delete(ptr);
     }
+
+private:
+    ~nsCOMArrayEnumerator(void);
 
 protected:
     PRUint32 mIndex;            // current position

@@ -52,9 +52,10 @@ public:
     NS_DECL_NSISUPPORTSID
 
     nsSupportsIDImpl();
-    virtual ~nsSupportsIDImpl();
 
 private:
+    ~nsSupportsIDImpl() { }
+
     nsID *mData;
 };
 
@@ -68,9 +69,9 @@ public:
     NS_DECL_NSISUPPORTSCSTRING
 
     nsSupportsCStringImpl() {}
-    virtual ~nsSupportsCStringImpl() {}
 
 private:
+    ~nsSupportsCStringImpl() {}
     
     nsCString mData;
 };
@@ -85,9 +86,9 @@ public:
     NS_DECL_NSISUPPORTSSTRING
 
     nsSupportsStringImpl() {}
-    virtual ~nsSupportsStringImpl() {}
 
 private:
+    ~nsSupportsStringImpl() {}
     
     nsString mData;
 };
@@ -102,9 +103,10 @@ public:
     NS_DECL_NSISUPPORTSPRBOOL
 
     nsSupportsPRBoolImpl();
-    virtual ~nsSupportsPRBoolImpl();
 
 private:
+    ~nsSupportsPRBoolImpl() {}
+
     PRBool mData;
 };
 
@@ -118,9 +120,10 @@ public:
     NS_DECL_NSISUPPORTSPRUINT8
 
     nsSupportsPRUint8Impl();
-    virtual ~nsSupportsPRUint8Impl();
 
 private:
+    ~nsSupportsPRUint8Impl() {}
+
     PRUint8 mData;
 };
 
@@ -134,9 +137,10 @@ public:
     NS_DECL_NSISUPPORTSPRUINT16
 
     nsSupportsPRUint16Impl();
-    virtual ~nsSupportsPRUint16Impl();
 
 private:
+    ~nsSupportsPRUint16Impl() {}
+
     PRUint16 mData;
 };
 
@@ -150,9 +154,10 @@ public:
     NS_DECL_NSISUPPORTSPRUINT32
 
     nsSupportsPRUint32Impl();
-    virtual ~nsSupportsPRUint32Impl();
 
 private:
+    ~nsSupportsPRUint32Impl() {}
+
     PRUint32 mData;
 };
 
@@ -166,9 +171,10 @@ public:
     NS_DECL_NSISUPPORTSPRUINT64
 
     nsSupportsPRUint64Impl();
-    virtual ~nsSupportsPRUint64Impl();
 
 private:
+    ~nsSupportsPRUint64Impl() {}
+
     PRUint64 mData;
 };
 
@@ -182,9 +188,10 @@ public:
     NS_DECL_NSISUPPORTSPRTIME
 
     nsSupportsPRTimeImpl();
-    virtual ~nsSupportsPRTimeImpl();
 
 private:
+    ~nsSupportsPRTimeImpl() {}
+
     PRTime mData;
 };
 
@@ -198,9 +205,10 @@ public:
     NS_DECL_NSISUPPORTSCHAR
 
     nsSupportsCharImpl();
-    virtual ~nsSupportsCharImpl();
 
 private:
+    ~nsSupportsCharImpl() {}
+
     char mData;
 };
 
@@ -214,9 +222,10 @@ public:
     NS_DECL_NSISUPPORTSPRINT16
 
     nsSupportsPRInt16Impl();
-    virtual ~nsSupportsPRInt16Impl();
 
 private:
+    ~nsSupportsPRInt16Impl() {}
+
     PRInt16 mData;
 };
 
@@ -230,9 +239,10 @@ public:
     NS_DECL_NSISUPPORTSPRINT32
 
     nsSupportsPRInt32Impl();
-    virtual ~nsSupportsPRInt32Impl();
 
 private:
+    ~nsSupportsPRInt32Impl() {}
+
     PRInt32 mData;
 };
 
@@ -246,9 +256,10 @@ public:
     NS_DECL_NSISUPPORTSPRINT64
 
     nsSupportsPRInt64Impl();
-    virtual ~nsSupportsPRInt64Impl();
 
 private:
+    ~nsSupportsPRInt64Impl() {}
+
     PRInt64 mData;
 };
 
@@ -262,9 +273,10 @@ public:
     NS_DECL_NSISUPPORTSFLOAT
 
     nsSupportsFloatImpl();
-    virtual ~nsSupportsFloatImpl();
 
 private:
+    ~nsSupportsFloatImpl() {}
+
     float mData;
 };
 
@@ -278,9 +290,10 @@ public:
     NS_DECL_NSISUPPORTSDOUBLE
 
     nsSupportsDoubleImpl();
-    virtual ~nsSupportsDoubleImpl();
 
 private:
+    ~nsSupportsDoubleImpl() {}
+
     double mData;
 };
 
@@ -294,9 +307,10 @@ public:
     NS_DECL_NSISUPPORTSVOID
 
     nsSupportsVoidImpl();
-    virtual ~nsSupportsVoidImpl();
 
 private:
+    ~nsSupportsVoidImpl() {}
+
     void* mData;
 };
 
@@ -310,9 +324,10 @@ public:
     NS_DECL_NSISUPPORTSINTERFACEPOINTER
 
     nsSupportsInterfacePointerImpl();
-    virtual ~nsSupportsInterfacePointerImpl();
 
 private:
+    ~nsSupportsInterfacePointerImpl();
+
     nsCOMPtr<nsISupports> mData;
     nsID *mIID;
 };
@@ -333,8 +348,10 @@ public:
   NS_DECL_NSISUPPORTSCSTRING
 
   nsSupportsDependentCString(const char* aStr);
-  virtual ~nsSupportsDependentCString();
+
 private:
+  ~nsSupportsDependentCString() {}
+
   nsDependentCString mData;
 };
 

@@ -67,7 +67,6 @@ class FileImpl
                                         FileImpl(PRFileDesc* inDesc);
                                         FileImpl(const nsFileSpec& inFile, int nsprMode, PRIntn accessMode);
 
-        virtual                         ~FileImpl();        
         // nsISupports interface
                                         NS_DECL_ISUPPORTS
 
@@ -92,6 +91,10 @@ class FileImpl
         NS_DECL_NSISEEKABLESTREAM
         NS_IMETHOD                      GetAtEOF(PRBool* outAtEOF);
         NS_IMETHOD                      SetAtEOF(PRBool inAtEOF);
+
+    private:
+
+                                        ~FileImpl();        
 
     protected:
     
@@ -706,18 +709,16 @@ NS_COM nsresult NS_NewIOFileStream(
     FileImpl* stream = new FileImpl(inFile, nsprMode, accessMode);
     if (! stream)
         return NS_ERROR_OUT_OF_MEMORY;
-    else 
-    {
-        PRBool isOpened = PR_FALSE;
-        stream->GetIsOpen(&isOpened);
-        if (!isOpened)
-        {
-            delete stream;
-            return NS_ERROR_FAILURE;
-        }
-    }
 
     NS_ADDREF(stream);
+    PRBool isOpened = PR_FALSE;
+    stream->GetIsOpen(&isOpened);
+    if (!isOpened)
+    {
+        NS_RELEASE(stream);
+        return NS_ERROR_FAILURE;
+    }
+
     *aResult = (nsISupports*)(void*)stream;
     return NS_OK;
 }

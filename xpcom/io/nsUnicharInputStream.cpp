@@ -53,7 +53,6 @@
 class StringUnicharInputStream : public nsIUnicharInputStream {
 public:
   StringUnicharInputStream(nsString* aString);
-  virtual ~StringUnicharInputStream();
 
   NS_DECL_ISUPPORTS
 
@@ -68,6 +67,9 @@ public:
   nsString* mString;
   PRUint32 mPos;
   PRUint32 mLen;
+
+private:
+  ~StringUnicharInputStream();
 };
 
 StringUnicharInputStream::StringUnicharInputStream(nsString* aString)
@@ -171,7 +173,6 @@ NS_NewStringUnicharInputStream(nsIUnicharInputStream** aInstancePtrResult,
 class UTF8InputStream : public nsIUnicharInputStream {
 public:
   UTF8InputStream();
-  virtual ~UTF8InputStream();
   nsresult Init(nsIInputStream* aStream, PRUint32 aBufSize);
 
   NS_DECL_ISUPPORTS
@@ -183,6 +184,9 @@ public:
                           PRUint32 aCount,
                           PRUint32 *aReadCount);
   NS_IMETHOD Close();
+
+private:
+  ~UTF8InputStream();
 
 protected:
   PRInt32 Fill(nsresult * aErrorCode);

@@ -34,7 +34,8 @@ public:
         mAutoRegistered(PR_FALSE), mLoadedInfo(PR_FALSE) {
 	}
 
-    virtual ~nsStaticComponentLoader() {
+private:
+    ~nsStaticComponentLoader() {
         if (mInfoHash.ops)
             PL_DHashTableFinish(&mInfoHash);
     }

@@ -51,7 +51,9 @@ public:
     NS_DECL_NSISIMPLEENUMERATOR
 
     ObserverListEnumerator(nsISupportsArray* aValueArray);
-    virtual ~ObserverListEnumerator(void);
+
+private:
+    ~ObserverListEnumerator(void);
 
 protected:
     nsISupportsArray* mValueArray;

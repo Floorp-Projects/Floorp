@@ -47,13 +47,15 @@ public:
   NS_DECL_ISUPPORTS
 
   nsSupportsArrayEnumerator(nsISupportsArray* array);
-  virtual ~nsSupportsArrayEnumerator();
 
   // nsIEnumerator methods:
   NS_DECL_NSIENUMERATOR
 
   // nsIBidirectionalEnumerator methods:
   NS_DECL_NSIBIDIRECTIONALENUMERATOR
+
+private:
+  ~nsSupportsArrayEnumerator();
 
 protected:
   nsISupportsArray*     mArray;

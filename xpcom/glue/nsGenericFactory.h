@@ -51,7 +51,6 @@ public:
     NS_DEFINE_STATIC_CID_ACCESSOR(NS_GENERICFACTORY_CID);
 
     nsGenericFactory(const nsModuleComponentInfo *info = NULL);
-    virtual ~nsGenericFactory();
     
     NS_DECL_ISUPPORTS
     NS_DECL_NSICLASSINFO
@@ -66,6 +65,8 @@ public:
 
     static NS_METHOD Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
 private:
+    ~nsGenericFactory();
+
     const nsModuleComponentInfo *mInfo;
 };
 

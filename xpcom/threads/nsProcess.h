@@ -42,9 +42,10 @@ public:
   NS_DECL_NSIPROCESS
 
   nsProcess();
-  virtual ~nsProcess();
 
 private:
+  ~nsProcess() {}
+
   nsCOMPtr<nsIFile> mExecutable;
   PRInt32 mExitValue;
   nsCString mTargetPath;
