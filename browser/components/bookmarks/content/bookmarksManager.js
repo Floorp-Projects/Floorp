@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *   Ben Goodger <ben@netscape.com> (Original Author, v3.0)
+ *   Pierre Chanial <chanial@noos.fr>
  */
 
 var gSearchBox;
@@ -37,20 +38,17 @@ function Startup()
     var title;
     var uri = window.arguments[0];
     bookmarksView.tree.setAttribute("ref", uri);
+    document.getElementById("bookmarks-search").setAttribute("hidden","true")
     if (uri.substring(0,5) == "find:") {
-      title = bookmarksView._bundle.GetStringFromName("search_results_title");
+      title = BookmarksUtils.getLocaleString("search_results_title");
       // Update the windowtype so that future searches are directed 
       // there and the window is not re-used for bookmarks. 
       windowNode.setAttribute("windowtype", "bookmarks:searchresults");
     }
-    else {
-      const krNameArc = bookmarksView.rdf.GetResource(NC_NS + "Name");
-      const krRoot = bookmarksView.rdf.GetResource(window.arguments[0]);
-      var rName = bookmarksView.db.GetTarget(krRoot, krNameArc, true);
-      title = rName.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
-    }
-    titleString = bookmarksView._bundle.GetStringFromName("window_title");
-    titleString = titleString.replace(/%folder_name%/gi, title);
+    else
+      title = BookmarksUtils.getProperty(window.arguments[0], NC_NS+"Name");
+    
+    titleString = BookmarksUtils.getLocaleString("window_title", title);
     windowNode.setAttribute("title", titleString);
   }
   else {
@@ -63,11 +61,13 @@ function Startup()
     // or if he/she has changed the name of the default one.
     // the profile "default" is not localizable.
     if (length.value > 1 || kProfile.currentProfile.toLowerCase() != "default") {
-      titleString = bookmarksView._bundle.GetStringFromName("bookmarks_root");
-      titleString = titleString.replace(/%user_name%/, kProfile.currentProfile);
+      titleString = BookmarksUtils.getLocaleString("bookmarks_root", kProfile.currentProfile);
       windowNode.setAttribute("title", titleString);
     }
   }
+  gBMtxmgr = BookmarksUtils.getTransactionManager();
+  gBMtxmgr.AddListener(BookmarkMenuTransactionListener);
+  BookmarkMenuTransactionListener.updateMenuItem(gBMtxmgr);
  
   bookmarksView.treeBoxObject.selection.select(0);
   bookmarksView.tree.focus();
@@ -75,15 +75,17 @@ function Startup()
 
 function Shutdown ()
 {
+
+  // Remove the transaction listeneer
+  gBMtxmgr.RemoveListener(BookmarkMenuTransactionListener);
+
   // Store current window position and size in window attributes (for persistence).
   var win = document.getElementById("bookmark-window");
   win.setAttribute("x", screenX);
   win.setAttribute("y", screenY);
+  dump('outerh'+outerHeight+"\n")
   win.setAttribute("height", outerHeight);
   win.setAttribute("width", outerWidth);
-
-  var bookmarksView = document.getElementById("bookmarks-view");
-  bookmarksView.flushBMDatasource();
 }
 
 var gConstructedViewMenuSortItems = false;
@@ -101,8 +103,7 @@ function fillViewMenu(aEvent)
       var accesskey = columns[i].accesskey;
       
       var menuitem = document.createElement("menuitem");
-      var nameTemplate = bookmarksView._bundle.GetStringFromName("SortMenuItem");
-      name = nameTemplate.replace(/%NAME%/g, columns[i].label);
+      var name = BookmarksUtils.getLocaleString("SortMenuItem", columns[i].label);
       menuitem.setAttribute("label", name);
       menuitem.setAttribute("accesskey", columns[i].accesskey);
       menuitem.setAttribute("resource", columns[i].resource);

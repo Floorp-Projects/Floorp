@@ -47,7 +47,7 @@ function Startup()
 }
 
 function manageBookmarks() {
-  openDialog("chrome://communicator/content/bookmarks/bookmarks.xul", "", "chrome,dialog=no,resizable=yes");
+  openDialog("chrome://communicator/content/bookmarks/bookmarksManager.xul", "", "chrome,dialog=no,resizable=yes");
 }
 
 function addBookmark() {

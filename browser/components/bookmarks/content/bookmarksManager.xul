@@ -24,14 +24,13 @@
     Ben Goodger <ben@netscape.com>
     Blake Ross <blakeross@telocity.com>
     Dean Tessman <dean_tessman@hotmail.com>
+    Pierre Chanial <chanial@noos.fr>
 
 -->
 
-<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://communicator/skin/bookmarks/bookmarksWindow.css" type="text/css"?>
-<?xml-stylesheet href="chrome://communicator/content/bookmarks/bookmarks.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/content/bookmarks/bookmarks.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
-<?xul-overlay href="chrome://browser/content/bookmarks/bookmarksOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 
 <!DOCTYPE window [
@@ -60,15 +59,12 @@
   
   <!-- Shared Bookmarks Utility Library -->
   <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarksOverlay.js"/>
-  <!-- Tree-based Bookmarks UI Utility Library -->
-  <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarksTree.js"/>
   <!-- Bookmarks Window -->
-  <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarks.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarksManager.js"/>
 
   <!-- Bookmarks Window Drag & Drop -->
   <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
-  <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarksDD.js"/>
 
   <popupset id="bookmarksPopupset"/>
 
@@ -79,12 +75,38 @@
                 oncommandupdate="document.getElementById('bookmarks-view').onCommandUpdate();">
     </commandset>                
 
+    <commandset id="selectEditMenuItems"/>
+    <commandset id="globalEditMenuItems"/>
     <commandset id="tasksCommands"/> 
 
     <!-- File Menu -->
     <command id="cmd_close" oncommand="close()"/>
     <!-- Edit Menu -->
     <command id="cmd_undo"/>
+    <command id="cmd_redo"/>
+
+    <commandset id="bookmarksItems">
+      <command id="cmd_bm_open"                      oncommand="goDoCommand('cmd_bm_open');"/>
+      <command id="cmd_bm_openinnewwindow"           oncommand="goDoCommand('cmd_bm_openinnewwindow');"/>
+      <command id="cmd_bm_openinnewtab"              oncommand="goDoCommand('cmd_bm_openinnewtab');"/>
+      <command id="cmd_bm_newfolder"                 oncommand="goDoCommand('cmd_bm_newfolder');"/>
+      <command id="cmd_bm_newbookmark"               oncommand="goDoCommand('cmd_bm_newbookmark');"/>
+      <command id="cmd_bm_newseparator"              oncommand="goDoCommand('cmd_bm_newseparator');"/>
+      <command id="cmd_bm_find"                      oncommand="goDoCommand('cmd_bm_find');"/>
+      <command id="cmd_bm_setnewbookmarkfolder"      oncommand="goDoCommand('cmd_bm_setnewbookmarkfolder');"/>
+      <command id="cmd_bm_setpersonaltoolbarfolder"  oncommand="goDoCommand('cmd_bm_setpersonaltoolbarfolder');"/>
+      <command id="cmd_bm_setnewsearchfolder"        oncommand="goDoCommand('cmd_bm_setnewsearchfolder');"/>
+      <command id="cmd_bm_properties"                oncommand="goDoCommand('cmd_bm_properties');"/>
+      <command id="cmd_bm_rename"                    oncommand="goDoCommand('cmd_bm_rename');"/>
+      <command id="cmd_bm_import"                    oncommand="goDoCommand('cmd_bm_import');"/>
+      <command id="cmd_bm_export"                    oncommand="goDoCommand('cmd_bm_export');"/>
+      <command id="cmd_bm_cut"                       oncommand="goDoCommand('cmd_bm_cut');"/>
+      <command id="cmd_bm_copy"                      oncommand="goDoCommand('cmd_bm_copy');"/>
+      <command id="cmd_bm_paste"                     oncommand="goDoCommand('cmd_bm_paste');"/>
+      <command id="cmd_bm_delete"                    oncommand="goDoCommand('cmd_bm_delete');"/>
+      <command id="cmd_bm_movebookmark"              oncommand="goDoCommand('cmd_bm_movebookmark');"/>
+      <command id="cmd_bm_selectAll"                 oncommand="goDoCommand('cmd_bm_selectAll');"/>
+    </commandset>
   </commands>
 
   <stringbundleset id="stringbundleset"/>
@@ -95,6 +117,7 @@
     <key id="key_quit"/>
     <!-- Edit Menu -->
     <key id="key_undo"/>
+    <key id="key_redo"/>
 
     <!-- These keybindings do not have a command specified in the overlay, 
          which is good, but we need to specify it ourselves here -->
@@ -143,6 +166,7 @@
       <menu id="menu_Edit">
         <menupopup>
           <menuitem id="menu_undo" disabled="true"/>
+          <menuitem id="menu_redo" disabled="true"/>
           <menuseparator/>
           <menuitem id="menu_bm_cut"    
                     label="&cutCmd.label;" accesskey="&cutCmd.accesskey;" 
@@ -158,12 +182,12 @@
                     key="key_bm_delete" command="cmd_bm_delete"/>
           <menuseparator/>
           <menuitem id="menu_bm_selectAll" 
-                label="&selectAllCmd.label;" accesskey="&selectAllCmd.accesskey;"
+                    label="&selectAllCmd.label;" accesskey="&selectAllCmd.accesskey;"
                     key="key_selectAll" command="cmd_bm_selectAll"/>
           <menuseparator/>
-          <menuitem label="&command.fileBookmark.label;"
-                    accesskey="&command.fileBookmark.accesskey;"
-                    command="cmd_bm_fileBookmark"/>
+          <menuitem label="&command.moveBookmark.label;"
+                    accesskey="&command.moveBookmark.accesskey;"
+                    command="cmd_bm_movebookmark"/>
           <menuseparator/>
             <menuitem observes="cmd_bm_properties" key="bm_key_properties" 
                       label="&command.properties.label;" 
@@ -220,8 +244,8 @@
       <toolbarbutton id="newseparator" label="&button.newSeparator.label;" 
                      command="cmd_bm_newseparator"/>
       <toolbarseparator/>
-      <toolbarbutton id="fileBookmark" label="&command.fileBookmark.label;"
-                     command="cmd_bm_fileBookmark"/>
+      <toolbarbutton id="moveBookmark" label="&command.moveBookmark.label;"
+                     command="cmd_bm_movebookmark"/>
       <toolbarseparator/>
       <toolbarbutton id="properties" label="&command.properties.label;"
                      command="cmd_bm_properties"/>
@@ -230,12 +254,14 @@
       <toolbarbutton id="delete" label="&command.delete.label;"
                      command="cmd_bm_delete"/>
     </toolbar>
-    <toolbar align="center" pack="center">
+
+    <toolbar id="bookmarks-search" align="center" pack="center">
       <label value="&find.label;" accesskey="&find.accesskey;" control="search-box"/>
       <textbox id="search-box" flex="1"
                type="timed" timeout="500"
                callback="searchBookmarks(gSearchBox.value);"/>
     </toolbar>
+
   </toolbox>
   
   <bookmarks-tree id="bookmarks-view" flex="1"/>

@@ -35,7 +35,7 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-// The history window uses JavaScript in bookmarks.js too.
+// The history window uses JavaScript in bookmarksManager.js too.
 
 var gHistoryTree;
 var gLastHostname;
