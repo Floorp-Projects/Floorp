@@ -10,7 +10,7 @@
 <!ENTITY accOrgCookiesRadio.label       "Enable cookies for the originating web site only">
 <!ENTITY accOrgCookiesRadio.accesskey   "o">
 
-<!ENTITY accP3PCookiesRadio.label       "Enable cookies based on privacy levels">
+<!ENTITY accP3PCookiesRadio.label       "Enable cookies based on privacy settings">
 <!ENTITY accP3PCookiesRadio.accesskey   "p">
 
 <!ENTITY disableCookies.label           "Disable cookies">
