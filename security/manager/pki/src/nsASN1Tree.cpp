@@ -40,12 +40,106 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsNSSASN1Tree, nsIASN1Tree,
                                                  nsITreeView);
 
 nsNSSASN1Tree::nsNSSASN1Tree() 
+:mTopNode(nsnull)
 {
   NS_INIT_ISUPPORTS();
 }
 
 nsNSSASN1Tree::~nsNSSASN1Tree()
 {
+  ClearNodes();
+}
+
+void nsNSSASN1Tree::ClearNodesRecursively(myNode *n)
+{
+  myNode *walk = n;
+  while (walk) {
+    myNode *kill = walk;
+
+    if (walk->child) {
+      ClearNodesRecursively(walk->child);
+    }
+    
+    walk = walk->next;
+    delete kill;
+  }
+}
+
+void nsNSSASN1Tree::ClearNodes()
+{
+  ClearNodesRecursively(mTopNode);
+  mTopNode = nsnull;
+}
+
+void nsNSSASN1Tree::InitChildsRecursively(myNode *n)
+{
+  if (!n->obj)
+    return;
+
+  n->seq = do_QueryInterface(n->obj);
+  if (!n->seq)
+    return;
+
+  // If the object is a sequence, there might still be a reason
+  // why it should not be displayed as a container.
+  // If we decide that it has all the properties to justify
+  // displaying as a container, we will create a new child chain.
+  // If we decide, it does not make sense to display as a container,
+  // we forget that it is a sequence by erasing n->seq.
+  // That way, n->seq and n->child will be either both set or both null.
+
+  PRBool isContainer;
+  n->seq->GetProcessObjects(&isContainer);
+  if (!isContainer) {
+    n->seq = nsnull;
+    return;
+  }
+
+  nsCOMPtr<nsISupportsArray> asn1Objects;
+  n->seq->GetASN1Objects(getter_AddRefs(asn1Objects));
+  PRUint32 numObjects;
+  asn1Objects->Count(&numObjects);
+  
+  if (!numObjects) {
+    n->seq = nsnull;
+    return;
+  }
+  
+  myNode *walk = nsnull;
+  myNode *prev = nsnull;
+  
+  PRUint32 i;
+  nsCOMPtr<nsISupports> isupports;
+  for (i=0; i<numObjects; i++) {
+    if (0 == i) {
+      n->child = walk = new myNode;
+    }
+    else {
+      walk = new myNode;
+    }
+
+    walk->parent = n;
+    if (prev) {
+      prev->next = walk;
+    }
+  
+    isupports = dont_AddRef(asn1Objects->ElementAt(i));
+    walk->obj = do_QueryInterface(isupports);
+
+    InitChildsRecursively(walk);
+
+    prev = walk;
+  }
+}
+
+void nsNSSASN1Tree::InitNodes()
+{
+  ClearNodes();
+
+  mTopNode = new myNode;
+  mTopNode->obj = mASN1Object;
+
+  InitChildsRecursively(mTopNode);
 }
 
 /* void loadASN1Structure (in nsIASN1Object asn1Object); */
@@ -64,113 +158,22 @@ nsNSSASN1Tree::LoadASN1Structure(nsIASN1Object *asn1Object)
   if (redraw) {
     // This is the number of rows we will be deleting after
     // the contents have changed.
-    rowsToDelete = 0-CountNumberOfVisibleRows(mASN1Object);
+    rowsToDelete = 0-CountVisibleNodes(mTopNode);
   }
+
   mASN1Object = asn1Object;
+  InitNodes();
+
   if (redraw) {
     // The number of rows in the new content.
-    PRInt32 newRows = CountNumberOfVisibleRows(mASN1Object);
+    PRInt32 newRows = CountVisibleNodes(mTopNode);
     // Erase all of the old rows.
     mTree->RowCountChanged(0, rowsToDelete);
     // Replace them with the new contents
     mTree->RowCountChanged(0, newRows);
   }
+
   return NS_OK;
-}
-
-/* wstring getDisplayData (in unsigned long index); */
-NS_IMETHODIMP 
-nsNSSASN1Tree::GetDisplayData(PRUint32 index, PRUnichar **_retval)
-{
-  nsCOMPtr<nsIASN1Object> object;
-  GetASN1ObjectAtIndex(index, mASN1Object, getter_AddRefs(object));
-  if (object) {
-    object->GetDisplayValue(_retval);
-  } else {
-    *_retval = nsnull;
-  }
-  return NS_OK;
-}
-
-nsresult
-nsNSSASN1Tree::GetASN1ObjectAtIndex(PRUint32 index, 
-                                        nsIASN1Object *sourceObject,
-                                        nsIASN1Object **retval)
-{
-  if (mASN1Object == nsnull) {
-    *retval = nsnull;
-  } else {
-    if (index == 0) {
-      *retval =  sourceObject;
-      NS_IF_ADDREF(*retval);
-      return NS_OK;
-    }
-    // the source object better be an nsIASN1Sequence, otherwise,
-    // the index better be 1.  If neither of these is ture, then
-    // someting bad has happened.
-    nsCOMPtr<nsIASN1Sequence> sequence = do_QueryInterface(sourceObject);
-    if (sequence == nsnull) {
-        //Something really bad has happened. bail out.
-        *retval = nsnull;
-        return NS_ERROR_FAILURE;
-    } else {
-      PRBool showObjects;
-      sequence->GetShowObjects(&showObjects);
-      if (!showObjects) {
-        *retval = nsnull;
-        return NS_OK;
-      }
-      nsCOMPtr<nsISupportsArray>asn1Objects;
-      sequence->GetASN1Objects(getter_AddRefs(asn1Objects));
-      PRUint32 numObjects;
-      asn1Objects->Count(&numObjects);
-      PRUint32 i;
-      nsCOMPtr<nsISupports>isupports;
-      nsCOMPtr<nsIASN1Object>currObject;
-      PRUint32 numObjectsCounted = 0;
-      PRUint32 numObjToDisplay;
-      for (i=0; i<numObjects; i++) {
-        isupports = dont_AddRef(asn1Objects->ElementAt(i));
-        currObject = do_QueryInterface(isupports);
-        numObjToDisplay = CountNumberOfVisibleRows(currObject);
-        if ((numObjectsCounted+numObjToDisplay) >= index) {
-         return GetASN1ObjectAtIndex(index-numObjectsCounted-1,
-                                     currObject, retval);
-        }
-        numObjectsCounted += numObjToDisplay;
-      } 
-    }
-  }
-  // We should never get here.
-  return NS_ERROR_FAILURE;
-}
-
-PRUint32
-nsNSSASN1Tree::CountNumberOfVisibleRows(nsIASN1Object *asn1Object)
-{
-  nsCOMPtr<nsIASN1Sequence> sequence;
-  PRUint32 count = 1;
-  
-  sequence = do_QueryInterface(asn1Object);
-  if (sequence) {
-    PRBool showObjects;
-    sequence->GetShowObjects(&showObjects);
-    if (showObjects) {
-      nsCOMPtr<nsISupportsArray> asn1Objects;
-      sequence->GetASN1Objects(getter_AddRefs(asn1Objects));
-      PRUint32 numObjects;
-      asn1Objects->Count(&numObjects);
-      PRUint32 i;
-      nsCOMPtr<nsISupports> isupports;
-      nsCOMPtr<nsIASN1Object> currObject;
-      for (i=0; i<numObjects; i++) {
-        isupports = dont_AddRef(asn1Objects->ElementAt(i));
-        currObject = do_QueryInterface(isupports);
-        count += CountNumberOfVisibleRows(currObject);
-      }
-    }
-  }
-  return count;
 }
 
 /* readonly attribute long rowCount; */
@@ -178,7 +181,7 @@ NS_IMETHODIMP
 nsNSSASN1Tree::GetRowCount(PRInt32 *aRowCount)
 {
   if (mASN1Object) {
-    *aRowCount = CountNumberOfVisibleRows(mASN1Object);
+    *aRowCount = CountVisibleNodes(mTopNode);
   } else {
     *aRowCount = 0;
   }
@@ -231,20 +234,11 @@ nsNSSASN1Tree::GetColumnProperties(const PRUnichar *colID,
 NS_IMETHODIMP 
 nsNSSASN1Tree::IsContainer(PRInt32 index, PRBool *_retval)
 {
-  nsCOMPtr<nsIASN1Object> object;
-  nsCOMPtr<nsIASN1Sequence> sequence;
+  myNode *n = FindNodeFromIndex(index);
+  if (!n)
+    return NS_ERROR_FAILURE;
 
-  nsresult rv = GetASN1ObjectAtIndex(index, mASN1Object, 
-                                     getter_AddRefs(object));
-  if (NS_FAILED(rv))
-    return rv;
-
-  sequence = do_QueryInterface(object);
-  if (sequence != nsnull) {
-    sequence->GetProcessObjects(_retval);
-  } else {
-    *_retval =  PR_FALSE;
-  }
+  *_retval = (n->seq != nsnull);
   return NS_OK; 
 }
 
@@ -252,20 +246,11 @@ nsNSSASN1Tree::IsContainer(PRInt32 index, PRBool *_retval)
 NS_IMETHODIMP 
 nsNSSASN1Tree::IsContainerOpen(PRInt32 index, PRBool *_retval)
 {
-  nsCOMPtr<nsIASN1Object> object;
-  nsCOMPtr<nsIASN1Sequence> sequence;
+  myNode *n = FindNodeFromIndex(index);
+  if (!n || !n->seq)
+    return NS_ERROR_FAILURE;
 
-  nsresult rv = GetASN1ObjectAtIndex(index, mASN1Object,
-                                     getter_AddRefs(object));
-  if (NS_FAILED(rv))
-    return rv;
-
-  sequence = do_QueryInterface(object);
-  if (sequence == nsnull) {
-    *_retval = PR_FALSE;
-  } else {
-    sequence->GetShowObjects(_retval);
-  }
+  n->seq->GetShowObjects(_retval);
   return NS_OK;
 }
 
@@ -285,116 +270,19 @@ nsNSSASN1Tree::IsSeparator(PRInt32 index, PRBool *_retval)
   return NS_OK; 
 }
 
-PRInt32
-nsNSSASN1Tree::GetParentOfObjectAtIndex(PRUint32 index,
-                                            nsIASN1Object *sourceObject)
-{
-  if (index == 0) {
-    return -1;
-  } else {
-    PRUint32 numVisibleRows = CountNumberOfVisibleRows(sourceObject);
-    if (numVisibleRows > index) {
-      nsCOMPtr<nsIASN1Sequence>sequence(do_QueryInterface(sourceObject));
-      if (sequence == nsnull)
-        return -2;
-      nsCOMPtr<nsISupportsArray>asn1Objects;
-      nsCOMPtr<nsISupports>isupports;
-      nsCOMPtr<nsIASN1Object>currObject;
-      sequence->GetASN1Objects(getter_AddRefs(asn1Objects));
-      PRUint32 indexCnt = 0;
-      PRUint32 i,numObjects;
-      asn1Objects->Count(&numObjects);
-      for (i=0; i<numObjects; i++) {
-        isupports = dont_AddRef(asn1Objects->ElementAt(i));
-        currObject = do_QueryInterface(isupports);
-        numVisibleRows = CountNumberOfVisibleRows(currObject);
-        if (numVisibleRows+indexCnt > index) {
-          //We're dealing with a sequence with visible elements
-          //that has the desired element.
-          PRInt32 subIndex = GetParentOfObjectAtIndex(index-indexCnt+1,
-                                                      currObject);
-          if (subIndex == -1) {
-            return indexCnt+1;  
-          } else if (subIndex == -2) {
-            return -2;
-          } else {
-            // This is a case where a subIndex was returned.
-            return indexCnt+1+subIndex;
-          }
-        } 
-        indexCnt+=numVisibleRows;
-        if (indexCnt == index) {
-          // The passed in source object is the parent.
-          return -1; 
-        }
-      }
-    }// the else case is an error, just let it fall through.
-  }
-  return -2;
-}
-
-/* long getParentIndex (in long rowIndex); */
-NS_IMETHODIMP 
-nsNSSASN1Tree::GetParentIndex(PRInt32 rowIndex, PRInt32 *_retval)
-{
-  *_retval = GetParentOfObjectAtIndex(rowIndex, mASN1Object);
-  return NS_OK;
-}
-
-/* boolean hasNextSibling (in long rowIndex, in long afterIndex); */
-NS_IMETHODIMP 
-nsNSSASN1Tree::HasNextSibling(PRInt32 rowIndex, PRInt32 afterIndex, 
-                                  PRBool *_retval)
-{
-  *_retval = PR_FALSE;
-  return NS_OK;
-}
-
-PRInt32
-nsNSSASN1Tree::GetLevelsTilIndex(PRUint32 index, 
-                                     nsIASN1Object *sourceObject)
-{
-  if (index == 0) {
-    return 0;
-  } else {
-    nsCOMPtr<nsIASN1Sequence> sequence(do_QueryInterface(sourceObject));
-    nsCOMPtr<nsISupportsArray>asn1Objects;
-    if (sequence == nsnull)
-      return -1;
-    sequence->GetASN1Objects(getter_AddRefs(asn1Objects));
-    PRUint32 numObjects,i,indexCnt=0,numVisibleRows;
-    asn1Objects->Count(&numObjects);
-    nsCOMPtr<nsISupports> isupports;
-    nsCOMPtr<nsIASN1Object> currObject;
-    for (i=0; i<numObjects; i++) {
-      isupports = dont_AddRef(asn1Objects->ElementAt(i));
-      currObject = do_QueryInterface(isupports);
-      numVisibleRows = CountNumberOfVisibleRows(currObject);
-      if ((numVisibleRows+indexCnt)>=index) {
-        PRInt32 numSubLayers;
-        numSubLayers = GetLevelsTilIndex(index-indexCnt-1,
-                                         currObject);
-        if (numSubLayers == -1) {
-          // This return value means the parent is not a child
-          // object, we're not adding any more layers to the nested
-          // levels.
-          return -1;
-        } else {
-          return 1+numSubLayers;
-        }
-      }
-      indexCnt += numVisibleRows;
-    }
-  }
-  return -2;
-}
-
 /* long getLevel (in long index); */
 NS_IMETHODIMP 
 nsNSSASN1Tree::GetLevel(PRInt32 index, PRInt32 *_retval)
 {
-  *_retval = GetLevelsTilIndex(index, mASN1Object);
-  return NS_OK;
+  PRInt32 parentIndex;
+  PRInt32 nodeLevel;
+
+  myNode *n = FindNodeFromIndex(index, &parentIndex, &nodeLevel);
+  if (!n)
+    return NS_ERROR_FAILURE;
+
+  *_retval = nodeLevel;
+  return NS_OK; 
 }
 
 /* Astring getImageSrc (in long row, in wstring colID); */
@@ -431,18 +319,29 @@ nsNSSASN1Tree::GetCellText(PRInt32 row, const PRUnichar *colID,
   const char *col = aUtf8ColID.get();
   nsresult rv = NS_OK;
   if (strcmp(col, "certDataCol") == 0) {
-    rv = GetASN1ObjectAtIndex(row, mASN1Object,
-                                     getter_AddRefs(object));
-    if (NS_FAILED(rv))
-      return rv;
+    myNode *n = FindNodeFromIndex(row);
+    if (!n)
+      return NS_ERROR_FAILURE;
 
     //There's only one column for ASN1 dump.
     PRUnichar* displayName = nsnull;
-    rv = object->GetDisplayName(&displayName); // copies
+    rv = n->obj->GetDisplayName(&displayName); // copies
     _retval = displayName; // copies again!
     nsCRT::free(displayName);
   }
   return rv;
+}
+
+/* wstring getDisplayData (in unsigned long index); */
+NS_IMETHODIMP 
+nsNSSASN1Tree::GetDisplayData(PRUint32 index, PRUnichar **_retval)
+{
+  myNode *n = FindNodeFromIndex(index);
+  if (!n)
+    return NS_ERROR_FAILURE;
+
+  n->obj->GetDisplayValue(_retval);
+  return NS_OK;
 }
 
 /* void setTree (in nsITreeBoxObject tree); */
@@ -457,26 +356,22 @@ nsNSSASN1Tree::SetTree(nsITreeBoxObject *tree)
 NS_IMETHODIMP 
 nsNSSASN1Tree::ToggleOpenState(PRInt32 index)
 {
-  nsCOMPtr<nsIASN1Object> object;
+  myNode *n = FindNodeFromIndex(index);
+  if (!n)
+    return NS_ERROR_FAILURE;
 
-  nsresult rv = GetASN1ObjectAtIndex(index, mASN1Object,
-                                     getter_AddRefs(object));
-  if (NS_FAILED(rv))
-    return rv;
-
-  nsCOMPtr<nsIASN1Sequence> sequence(do_QueryInterface(object));
-  if (sequence == nsnull)
+  if (!n->seq)
     return NS_ERROR_FAILURE;
 
   PRBool showObjects;
-  sequence->GetShowObjects(&showObjects);
+  n->seq->GetShowObjects(&showObjects);
   PRInt32 rowCountChange;
   if (showObjects) {
-    rowCountChange = 1-CountNumberOfVisibleRows(object);
-    sequence->SetShowObjects(PR_FALSE);
+    rowCountChange = 1-CountVisibleNodes(n);
+    n->seq->SetShowObjects(PR_FALSE);
   } else {
-    sequence->SetShowObjects(PR_TRUE);
-    rowCountChange = CountNumberOfVisibleRows(object)-1;
+    n->seq->SetShowObjects(PR_TRUE);
+    rowCountChange = CountVisibleNodes(n)-1;
   }
   if (mTree)
     mTree->RowCountChanged(index, rowCountChange);
@@ -590,5 +485,137 @@ NS_IMETHODIMP nsNSSASN1Tree::IsSorted(PRBool *_retval)
 {
   *_retval = PR_FALSE;
   return NS_OK;
+}
+
+
+/* long getParentIndex (in long rowIndex); */
+NS_IMETHODIMP 
+nsNSSASN1Tree::GetParentIndex(PRInt32 rowIndex, PRInt32 *_retval)
+{
+  PRInt32 parentIndex = -1;
+
+  myNode *n = FindNodeFromIndex(rowIndex, &parentIndex);
+  if (!n)
+    return NS_ERROR_FAILURE;
+
+  *_retval = parentIndex;
+  return NS_OK; 
+}
+
+/* boolean hasNextSibling (in long rowIndex, in long afterIndex); */
+NS_IMETHODIMP 
+nsNSSASN1Tree::HasNextSibling(PRInt32 rowIndex, PRInt32 afterIndex, 
+                              PRBool *_retval)
+{
+  myNode *n = FindNodeFromIndex(rowIndex);
+  if (!n)
+    return NS_ERROR_FAILURE;
+
+  if (!n->next) {
+    *_retval = PR_FALSE;
+  }
+  else {
+    PRInt32 nTotalSize = CountVisibleNodes(n);
+    PRInt32 nLastChildPos = rowIndex + nTotalSize -1;
+    PRInt32 nextSiblingPos = nLastChildPos +1;
+    *_retval = (nextSiblingPos > afterIndex);
+  }
+
+  return NS_OK; 
+}
+
+PRInt32 nsNSSASN1Tree::CountVisibleNodes(myNode *n)
+{
+  if (!n)
+    return 0;
+
+  myNode *walk = n;
+  PRInt32 count = 0;
+  
+  while (walk) {
+    ++count;
+
+    if (walk->seq) {
+      PRBool showObjects;
+      walk->seq->GetShowObjects(&showObjects);
+      if (showObjects) {
+        count += CountVisibleNodes(walk->child);
+      }
+    }
+
+    walk = walk->next;
+  }
+
+  return count;
+}
+
+// Entry point for find
+nsNSSASN1Tree::myNode *
+nsNSSASN1Tree::FindNodeFromIndex(PRInt32 wantedIndex, 
+                                 PRInt32 *optionalOutParentIndex, PRInt32 *optionalOutLevel)
+{
+  if (0 == wantedIndex) {
+    if (optionalOutLevel) {
+      *optionalOutLevel = 0;
+    }
+    if (optionalOutParentIndex) {
+      *optionalOutParentIndex = -1;
+    }
+    return mTopNode;
+  }
+  else {
+    PRInt32 index = 0;
+    PRInt32 level = 0;
+    return FindNodeFromIndex(mTopNode, wantedIndex, index, level, 
+                             optionalOutParentIndex, optionalOutLevel);
+  }
+}
+
+// Internal recursive helper function
+nsNSSASN1Tree::myNode *
+nsNSSASN1Tree::FindNodeFromIndex(myNode *n, PRInt32 wantedIndex,
+                                 PRInt32 &index_counter, PRInt32 &level_counter,
+                                 PRInt32 *optionalOutParentIndex, PRInt32 *optionalOutLevel)
+{
+  if (!n)
+    return nsnull;
+
+  myNode *walk = n;
+  PRInt32 parentIndex = index_counter-1;
+  
+  while (walk) {
+    if (index_counter == wantedIndex) {
+      if (optionalOutLevel) {
+        *optionalOutLevel = level_counter;
+      }
+      if (optionalOutParentIndex) {
+        *optionalOutParentIndex = parentIndex;
+      }
+      return walk;
+    }
+
+    if (walk->seq) {
+      PRBool showObjects;
+      walk->seq->GetShowObjects(&showObjects);
+      if (showObjects) {
+        ++index_counter; // set to walk->child
+
+        ++level_counter;
+        myNode *found = FindNodeFromIndex(walk->child, wantedIndex, index_counter, level_counter,
+                                          optionalOutParentIndex, optionalOutLevel);
+        --level_counter;
+
+        if (found)
+          return found;
+      }
+    }
+
+    walk = walk->next;
+    if (walk) {
+      ++index_counter;
+    }
+  }
+
+  return nsnull;
 }
 
