@@ -31,7 +31,6 @@ static NS_DEFINE_IID(kIMenuBarIID,  NS_IMENUBAR_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIPopUpMenuIID, NS_IPOPUPMENU_IID);
 static NS_DEFINE_IID(kIMenuItemIID, NS_IMENUITEM_IID);
-//NS_IMPL_ISUPPORTS(nsMenuItem, kIMenuItemIID)
 
 nsresult nsMenuItem::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
 {                                                                        
@@ -85,8 +84,6 @@ nsMenuItem::nsMenuItem() : nsIMenuItem()
 //-------------------------------------------------------------------------
 nsMenuItem::~nsMenuItem()
 {
-  NS_IF_RELEASE(mMenuParent);
-  NS_IF_RELEASE(mPopUpParent);
   NS_IF_RELEASE(mTarget);
   NS_IF_RELEASE(mXULCommandListener);
 }
@@ -192,24 +189,7 @@ NS_METHOD nsMenuItem::Create(nsIMenu        *aParent,
                              PRBool         aIsSeparator)
                             
 {
-/*
-  if (nsnull == aParent) {
-    return NS_ERROR_FAILURE;
-  }
-
-  mMenuParent = aParent;
-  NS_ADDREF(mMenuParent);
-
-  nsIWidget   * widget  = nsnull; // MenuBar's Parent
-  nsISupports * sups;
-  if (NS_OK == aParent->QueryInterface(kISupportsIID,(void**)&sups)) {
-    widget = GetMenuBarParent(sups);
-    NS_RELEASE(sups);
-  }
-
- // Create(widget, GetNativeParent(), aLabel, aCommand);
-  aParent->AddMenuItem(this);
-*/
+  mIsSeparator = aIsSeparator;
   SetLabel(NS_CONST_CAST(nsString&, aLabel));
   return NS_OK;
 }
@@ -221,16 +201,10 @@ NS_METHOD nsMenuItem::Create(nsIPopUpMenu   *aParent,
 {
   mPopUpParent = aParent;
   if ( mPopUpParent ) {
-  	
-    NS_ADDREF(mPopUpParent);
 
     nsIWidget * widget = nsnull;
-    /*if (NS_OK != aParent->GetParent(widget)) {
-      widget = nsnull;
-    }*/
 
-    //Create(widget, GetNativeParent(), aLabel, aCommand);
-    aParent->AddItem(this);
+    mPopUpParent->AddItem(this);
   }
   
   return NS_OK;
@@ -339,6 +313,7 @@ nsEventStatus nsMenuItem::MenuItemSelected(const nsMenuEvent & aMenuEvent)
   	return nsEventStatus_eIgnore;
 }
 
+//-------------------------------------------------------------------------
 nsEventStatus nsMenuItem::MenuSelected(const nsMenuEvent & aMenuEvent)
 {
 	if(mXULCommandListener)
@@ -355,6 +330,7 @@ nsEventStatus nsMenuItem::MenuDeselected(const nsMenuEvent & aMenuEvent)
   	return nsEventStatus_eIgnore;
 }
 
+//-------------------------------------------------------------------------
 nsEventStatus nsMenuItem::MenuConstruct(
     const nsMenuEvent & aMenuEvent,
     nsIWidget         * aParentWindow, 
@@ -364,6 +340,7 @@ nsEventStatus nsMenuItem::MenuConstruct(
   	return nsEventStatus_eIgnore;
 }
 
+//-------------------------------------------------------------------------
 nsEventStatus nsMenuItem::MenuDestruct(const nsMenuEvent & aMenuEvent)
 {
   	return nsEventStatus_eIgnore;

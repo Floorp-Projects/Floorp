@@ -31,7 +31,7 @@
 
 static NS_DEFINE_IID(kIMenuBarIID, NS_IMENUBAR_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-//NS_IMPL_ISUPPORTS(nsMenuBar, kMenuBarIID)
+
 nsresult nsMenuBar::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
 {                                                                        
   if (NULL == aInstancePtr) {                                            
@@ -77,20 +77,17 @@ nsEventStatus nsMenuBar::MenuSelected(const nsMenuEvent & aMenuEvent)
 {
   // Dispatch menu event
   nsEventStatus eventStatus = nsEventStatus_eIgnore;
-  
-  //if( mMenuVoidArray )
+
+  for (int i = mMenuVoidArray.Count(); i > 0; --i)
   {
-	  for (int i = mMenuVoidArray.Count(); i > 0; i--)
-	  {
-	    nsIMenuListener * menuListener = nsnull;
-	    ((nsIMenu*)mMenuVoidArray[i-1])->QueryInterface(kIMenuListenerIID, &menuListener);
-	    if(menuListener){
-	      eventStatus = menuListener->MenuSelected(aMenuEvent);
-	      NS_IF_RELEASE(menuListener);
-	      if(nsEventStatus_eIgnore != eventStatus)
-	        return eventStatus;
-	    }
-	  }
+    nsIMenuListener * menuListener = nsnull;
+    ((nsISupports*)mMenuVoidArray[i-1])->QueryInterface(kIMenuListenerIID, &menuListener);
+    if(menuListener){
+      eventStatus = menuListener->MenuSelected(aMenuEvent);
+      NS_RELEASE(menuListener);
+      if(nsEventStatus_eIgnore != eventStatus)
+        return eventStatus;
+    }
   }
   
   return nsEventStatus_eIgnore;
@@ -143,12 +140,12 @@ nsMenuBar::nsMenuBar() : nsIMenuBar(), nsIMenuListener()
 //-------------------------------------------------------------------------
 nsMenuBar::~nsMenuBar()
 {
-  NS_IF_RELEASE(mParent);
+  //NS_IF_RELEASE(mParent);
 
   while(mNumMenus)
   {
     --mNumMenus;
-    nsIMenu* menu = (nsIMenu*)mMenuVoidArray[mNumMenus];
+    nsISupports* menu = (nsISupports*)mMenuVoidArray[mNumMenus];
     NS_IF_RELEASE( menu );
   }
 }
@@ -162,23 +159,13 @@ NS_METHOD nsMenuBar::Create(nsIWidget *aParent)
 {
   SetParent(aParent);
 
-  //Widget parentWidget = (Widget)mParent->GetNativeData(NS_NATIVE_WIDGET);
-
-  //Widget mainWindow = XtParent(parentWidget);
-
-  //mMenu = XmCreateMenuBar(mainWindow, "menubar", nsnull, 0);
-  //XtManageChild(mMenu);
-
   return NS_OK;
-
 }
 
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuBar::GetParent(nsIWidget *&aParent)
 {
-
   aParent = mParent;
-  NS_IF_ADDREF(aParent);
 
   return NS_OK;
 }
@@ -187,21 +174,21 @@ NS_METHOD nsMenuBar::GetParent(nsIWidget *&aParent)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuBar::SetParent(nsIWidget *aParent)
 {
-
-  NS_IF_RELEASE(mParent);
   mParent = aParent;
-  NS_IF_ADDREF(mParent);
+  
   return NS_OK;
 }
 
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuBar::AddMenu(nsIMenu * aMenu)
 {
-
   // XXX add to internal data structure
-  NS_IF_ADDREF(aMenu);
-  mMenuVoidArray.AppendElement( aMenu );
-  
+  nsISupports * supports = nsnull;
+  aMenu->QueryInterface(kISupportsIID, (void**)&supports);
+  if(supports){
+    mMenuVoidArray.AppendElement( supports );
+  }
+
   MenuHandle menuHandle = nsnull;
   aMenu->GetNativeData(&menuHandle);
   

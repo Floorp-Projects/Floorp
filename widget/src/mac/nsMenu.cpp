@@ -91,32 +91,32 @@ nsMenu::nsMenu() : nsIMenu()
 //-------------------------------------------------------------------------
 nsMenu::~nsMenu()
 {
-  NS_IF_RELEASE(mMenuBarParent);
-  NS_IF_RELEASE(mMenuParent);
   NS_IF_RELEASE(mListener);
 
   while(mNumMenuItems)
   {
     --mNumMenuItems;
     
-    // Figure out what we're releasing
-    nsIMenuItem * menuitem = nsnull;
-    ((nsISupports*)mMenuItemVoidArray[mNumMenuItems])->QueryInterface(kIMenuItemIID, (void**) &menuitem);  
-    if(menuitem)
-    {
-      // case menuitem
-      NS_RELEASE(menuitem); // Release our hold
-      NS_RELEASE(menuitem); // Balance QI
-    }
-    else
-    {
-	  nsIMenu * menu = nsnull;
-	  ((nsISupports*)mMenuItemVoidArray[mNumMenuItems])->QueryInterface(kIMenuIID, (void**) &menu);
-	  if(menu)
-	  {
-	    // case menu
-	    NS_RELEASE(menu); // Release our hold 
-	    NS_RELEASE(menu); // Balance QI
+    if(mMenuItemVoidArray[mNumMenuItems]) {
+      // Figure out what we're releasing
+      nsIMenuItem * menuitem = nsnull;
+      ((nsISupports*)mMenuItemVoidArray[mNumMenuItems])->QueryInterface(kIMenuItemIID, (void**) &menuitem);  
+      if(menuitem)
+      {
+        // case menuitem
+        menuitem->Release(); // Release our hold
+        NS_IF_RELEASE(menuitem); // Balance QI
+      }
+      else
+      {
+	    nsIMenu * menu = nsnull;
+	    ((nsISupports*)mMenuItemVoidArray[mNumMenuItems])->QueryInterface(kIMenuIID, (void**) &menu);
+	    if(menu)
+	    {
+	      // case menu
+	      menu->Release(); // Release our hold 
+	      NS_IF_RELEASE(menu); // Balance QI
+	    }
 	  }
 	}
   }
@@ -135,8 +135,7 @@ NS_METHOD nsMenu::Create(nsISupports *aParent, const nsString &aLabel)
     aParent->QueryInterface(kIMenuBarIID, (void**) &menubar);
     if(menubar)
     {
-      mMenuBarParent = menubar;
-      NS_ADDREF(mMenuBarParent);
+      mMenuBarParent = menubar;;
       NS_RELEASE(menubar); // Balance the QI
     }
     else
@@ -145,7 +144,6 @@ NS_METHOD nsMenu::Create(nsISupports *aParent, const nsString &aLabel)
       aParent->QueryInterface(kIMenuIID, (void**) &menu);
       {
       	mMenuParent = menu;
-      	NS_ADDREF(mMenuParent);
       	NS_RELEASE(menu); // Balance the QI
       }
     }
@@ -222,16 +220,20 @@ NS_METHOD nsMenu::AddItem(nsISupports* aItem)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenu::AddMenuItem(nsIMenuItem * aMenuItem)
 {
-  NS_IF_ADDREF(aMenuItem);
-  mMenuItemVoidArray.AppendElement(aMenuItem);
-  
-  nsString label;
-  aMenuItem->GetLabel(label);
-  char* menuLabel = label.ToNewCString();
-  mNumMenuItems++;
-  ::InsertMenuItem(mMacMenuHandle, c2pstr(menuLabel), mNumMenuItems);
-  delete[] menuLabel;
-
+  if(aMenuItem) {
+    nsISupports * supports = nsnull;
+    aMenuItem->QueryInterface(kISupportsIID, (void**)&supports);
+    if(supports) {
+	  mMenuItemVoidArray.AppendElement(supports);
+      
+	  nsString label;
+	  aMenuItem->GetLabel(label);
+	  char* menuLabel = label.ToNewCString();
+	  mNumMenuItems++;
+	  ::InsertMenuItem(mMacMenuHandle, c2pstr(menuLabel), mNumMenuItems);
+	  delete[] menuLabel;
+	}
+  }
   return NS_OK;
 }
 
@@ -239,24 +241,28 @@ NS_METHOD nsMenu::AddMenuItem(nsIMenuItem * aMenuItem)
 NS_METHOD nsMenu::AddMenu(nsIMenu * aMenu)
 {
   // Add a submenu
-  NS_IF_ADDREF(aMenu);
-  mMenuItemVoidArray.AppendElement(aMenu);
+  if(aMenu) {
+    nsISupports * supports = nsnull;
+    aMenu->QueryInterface(kISupportsIID, (void**)&supports);
+    if(supports) {
+      mMenuItemVoidArray.AppendElement(supports);
   
-  // We have to add it as a menu item and then associate it with the item
-  nsString label;
-  aMenu->GetLabel(label);
-  char* menuLabel = label.ToNewCString();
-  mNumMenuItems++;
-  ::InsertMenuItem(mMacMenuHandle, "\p ", mNumMenuItems);
-  ::SetMenuItemText(mMacMenuHandle, mNumMenuItems, c2pstr(menuLabel));
-  delete[] menuLabel;
+      // We have to add it as a menu item and then associate it with the item
+      nsString label;
+      aMenu->GetLabel(label);
+      char* menuLabel = label.ToNewCString();
+      mNumMenuItems++;
+      ::InsertMenuItem(mMacMenuHandle, "\p ", mNumMenuItems);
+      ::SetMenuItemText(mMacMenuHandle, mNumMenuItems, c2pstr(menuLabel));
+      delete[] menuLabel;
   
-  MenuHandle menuHandle;
-  aMenu->GetNativeData((void**)&menuHandle);
-  ::InsertMenu(menuHandle, hierMenu);
-  PRInt16 temp = mMacMenuIDCount;
-  ::SetMenuItemHierarchicalID((MenuHandle) mMacMenuHandle, mNumMenuItems, --temp);
- 
+      MenuHandle menuHandle;
+      aMenu->GetNativeData((void**)&menuHandle);
+      ::InsertMenu(menuHandle, hierMenu);
+      PRInt16 temp = mMacMenuIDCount;
+      ::SetMenuItemHierarchicalID((MenuHandle) mMacMenuHandle, mNumMenuItems, --temp);
+    }
+  }
   return NS_OK;
 }
 
@@ -312,7 +318,7 @@ NS_METHOD nsMenu::GetNativeData(void ** aData)
 NS_METHOD nsMenu::AddMenuListener(nsIMenuListener * aMenuListener)
 {
   mListener = aMenuListener;
-  NS_ADDREF(mListener);
+  //NS_ADDREF(mListener);
   return NS_OK;
 }
 
@@ -320,7 +326,7 @@ NS_METHOD nsMenu::AddMenuListener(nsIMenuListener * aMenuListener)
 NS_METHOD nsMenu::RemoveMenuListener(nsIMenuListener * aMenuListener)
 {
   if (aMenuListener == mListener) {
-    NS_IF_RELEASE(mListener);
+    //NS_IF_RELEASE(mListener);
   }
   return NS_OK;
 }

@@ -61,13 +61,9 @@ public:
   virtual nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent);
   virtual nsEventStatus MenuDeselected(const nsMenuEvent & aMenuEvent) ;
   virtual nsEventStatus MenuConstruct(
-
     const nsMenuEvent & aMenuEvent,
-
     nsIWidget         * aParentWindow, 
-
     void              * menubarNode,
-
 	void              * aWebShell);
 
   virtual nsEventStatus MenuDestruct(const nsMenuEvent & aMenuEvent);
@@ -75,12 +71,10 @@ public:
 protected:
   NS_IMETHOD ExecuteJavaScriptString(nsIWebShell* aWebShell, nsString& aJavaScript);
 
-  nsString                 mCommandStr;
-  nsCOMPtr<nsIWebShell>    mWebShell;
-  nsCOMPtr<nsIDOMElement>  mDOMElement;
-
-  nsIMenuItem *            mMenuItem;
-
+  nsString        mCommandStr;
+  nsIWebShell   * mWebShell;
+  nsIDOMElement * mDOMElement;
+  nsIMenuItem   * mMenuItem;
 };
 
 
