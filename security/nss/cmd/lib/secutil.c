@@ -1031,6 +1031,7 @@ SECU_FileToItem(SECItem *dst, PRFileDesc *src)
     PRFileInfo info;
     PRInt32 numBytes;
     PRStatus prStatus;
+    unsigned char *buf;
 
     if (src == PR_STDIN)
 	return secu_StdinToItem(dst);
@@ -1042,19 +1043,30 @@ SECU_FileToItem(SECItem *dst, PRFileDesc *src)
 	return SECFailure;
     }
 
-    dst->len = info.size;
-    dst->data = (unsigned char*) PORT_Alloc(dst->len);
-    if (!dst->data) {
-      return SECFailure;
-    }
-
-    numBytes = PR_Read(src, dst->data, dst->len);
-    if (numBytes != dst->len) {
-	PORT_SetError(SEC_ERROR_IO);
+    buf = (unsigned char*)PORT_Alloc(info.size);
+    if (!buf)
 	return SECFailure;
+
+    numBytes = PR_Read(src, buf, info.size);
+    if (numBytes != info.size) {
+	PORT_SetError(SEC_ERROR_IO);
+	goto loser;
     }
 
+    while (buf[numBytes-1] == '\r' || 
+           buf[numBytes-1] == '\n' ||
+           buf[numBytes-1] == '\0') numBytes--;
+
+    if (!SECITEM_AllocItem(NULL, dst, numBytes))
+	goto loser;
+
+    memcpy(dst->data, buf, numBytes);
+
+    PORT_Free(buf);
     return SECSuccess;
+loser:
+    PORT_Free(buf);
+    return SECFailure;
 }
 
 SECStatus
