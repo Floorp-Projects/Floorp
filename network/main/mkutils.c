@@ -684,8 +684,7 @@ NET_WritePostData(MWContext  *context,
 
 		int type = NET_URL_Type (URL_s->address);
 		XP_Bool quote_lines_p = (type == MAILTO_TYPE_URL ||
-								 type == NEWS_TYPE_URL ||
-								 type == INTERNAL_NEWS_TYPE_URL);
+								 type == NEWS_TYPE_URL);
 
         /* do file based operations
          */
