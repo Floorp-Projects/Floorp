@@ -79,24 +79,23 @@ AC_PATH_PROG(ZIP, zip, :)
 
 AC_PATH_XTRA
 
-dnl CFLAGS="$CFLAGS $X_CFLAGS"
-dnl LDFLAGS="$LDFLAGS $XLDFLAGS"
-dnl LIBS="$X_PRE_LIBS $X_EXTRA_LIBS $LIBS"
 XLDFLAGS="$X_LIBS"
 XLIBS="$X_EXTRA_LIBS"
 
-if [ test ! -z "$x_includes" ]; then
-    MOTIF_XINCS="-xif -I$x_includes"
+if [ test "$no_x" != "yes" ]; then
+    if [ test ! -z "$x_includes" ]; then
+	MOTIF_XINCS="-xif -I$x_includes"
+    fi
+
+    MOTIF_VERSION=`${srcdir}/config/mkdetect/detect_motif.sh -cc $CC $MOTIF_XINCS`
+    MOTIF_INCLUDES=`${srcdir}/config/mkdetect/detect_motif.sh -cc $CC $MOTIF_XINCS -if`
+    MOTIF_STATIC_FLAGS=`${srcdir}/config/mkdetect/detect_motif.sh -cc $CC $MOTIF_XINCS -sf`
+    MOTIF_DYNAMIC_FLAGS=`${srcdir}/config/mkdetect/detect_motif.sh -cc $CC $MOTIF_XINCS -df`
+    MOTIF_DYNAMIC_PATHS=`${srcdir}/config/mkdetect/detect_motif.sh -cc $CC $MOTIF_XINCS -dp`
+    MOTIF_REQUIRES_XPM=`${srcdir}/config/mkdetect/detect_motif.sh -cc $CC $MOTIF_XINCS -xpm`
+
+    ${srcdir}/config/mkdetect/detect_motif.sh --cleanup
 fi
-
-MOTIF_VERSION=`${srcdir}/config/mkdetect/detect_motif.sh -cc $CC $MOTIF_XINCS`
-MOTIF_INCLUDES=`${srcdir}/config/mkdetect/detect_motif.sh -cc $CC $MOTIF_XINCS -if`
-MOTIF_STATIC_FLAGS=`${srcdir}/config/mkdetect/detect_motif.sh -cc $CC $MOTIF_XINCS -sf`
-MOTIF_DYNAMIC_FLAGS=`${srcdir}/config/mkdetect/detect_motif.sh -cc $CC $MOTIF_XINCS -df`
-MOTIF_DYNAMIC_PATHS=`${srcdir}/config/mkdetect/detect_motif.sh -cc $CC $MOTIF_XINCS -dp`
-MOTIF_REQUIRES_XPM=`${srcdir}/config/mkdetect/detect_motif.sh -cc $CC $MOTIF_XINCS -xpm`
-
-${srcdir}/config/mkdetect/detect_motif.sh --cleanup
 
 if [ test "$GCC" = "yes" ]; then
     GNU_CC=1
@@ -530,6 +529,7 @@ dnl Checks for X libraries.
 dnl Ordering is important.
 dnl Xt is dependent upon SM as of X11R6
 dnl ========================================================
+if [ test "$no_x" != "yes" ]; then
 _SAVE_LDFLAGS="$LDFLAGS"
 LDFLAGS="$XLDFLAGS $LDFLAGS"
 AC_CHECK_LIB(X11, XDrawLines, [XLIBS="-lX11 $XLIBS"],
@@ -655,6 +655,8 @@ if [ test $res != 0 ]; then
     CFLAGS=$_SAVE_CFLAGS
     AC_MSG_RESULT("$result")
 fi
+
+fi # $no_x
 
 AC_SUBST(GTK_CONFIG)
 AC_SUBST(TK_GTK_CFLAGS)
@@ -890,6 +892,7 @@ AC_SUBST(DSO_LDOPTS)
 AC_SUBST(DLL_SUFFIX)
 
 dnl Check for missing components
+if [ test "$no_x" != "yes" ]; then
 if [ test -n "$MISSING_X" ]; then
    AC_MSG_ERROR([ Could not find the following X libraries: $MISSING_X ]);
 fi
@@ -901,6 +904,7 @@ fi
 if [ test -n "$MISSING_MOTIF" ]; then
    AC_MSG_ERROR([ Could not find the following motif libraries: $MISSING_MOTIF ]);
 fi
+fi # $no_x
 
 if [ test -n "$MISSING_NSPR" ]; then
     AC_MSG_ERROR([Could not find the following nspr libraries or could not run sample program: $MISSING_NSPR]);
