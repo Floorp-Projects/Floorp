@@ -55,7 +55,6 @@ class nsSafeSaveFile {
 
     private:
         nsCOMPtr<nsIFile> mTempFile;
-        nsCAutoString     fileName;
         nsXPIDLCString    mTargetFileName;
         PRInt32           mTargetNameLen;
         PRInt32           mBackupCount;
