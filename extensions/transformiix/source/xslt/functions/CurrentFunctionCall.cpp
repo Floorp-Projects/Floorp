@@ -21,9 +21,9 @@ CurrentFunctionCall::CurrentFunctionCall() :
  * @see FunctionCall.h
 **/
 ExprResult* CurrentFunctionCall::evaluate(Node* context, ContextState* cs) {
-//    NodeSet* result = new NodeSet(0);
-//    result->add(cs->getCurrentNode);
-//    return result;
-    return new StringResult("function not yet implemented: current");
-}
+
+    NodeSet* result = new NodeSet(1);
+    result->add(context);
+    return result;
+} //-- evaluate
 
