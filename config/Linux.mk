@@ -31,8 +31,16 @@ CPU_ARCH		:= $(OS_TEST)
 endif
 GFX_ARCH		:= x
 
-OS_INCLUDES		= -I/usr/X11R6/include
+# Include the automagically generated makefile.  This generated makefile
+# should contain lots of magic paths and flags.
+-include $(MOZILLA_DETECT_GEN)
+
+OS_INCLUDES		=\
+			$(MOZILLA_XFE_MOTIF_INCLUDE_FLAGS) \
+			$(MOZILLA_XFE_X11_INCLUDE_FLAGS)
+
 G++INCLUDES		= -I/usr/include/g++
+
 LOC_LIB_DIR		= /usr/lib/X11
 MOTIF			=
 MOTIFLIB		=
