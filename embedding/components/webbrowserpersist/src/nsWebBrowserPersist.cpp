@@ -412,6 +412,14 @@ NS_IMETHODIMP nsWebBrowserPersist::SaveDocument(
                     NS_OK);
             }
         }
+    } else if (mProgressListener) {
+        // tell the listener we're done
+        mProgressListener->OnStateChange(nsnull, nsnull,
+                                         nsIWebProgressListener::STATE_START,
+                                         NS_OK);
+        mProgressListener->OnStateChange(nsnull, nsnull,
+                                         nsIWebProgressListener::STATE_STOP,
+                                         NS_OK);
     }
 
     return rv;
