@@ -19,7 +19,9 @@ DEPTH=..\..\..\..
 
 FILES=\
         related-panel.xul       \
+        related-panel.css       \
         related-panel.js        \
+        sitemap.gif             \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
