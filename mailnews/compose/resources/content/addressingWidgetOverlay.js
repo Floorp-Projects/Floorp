@@ -682,6 +682,23 @@ function awTabFromRecipient(element, event)
   //If we are le last element in the listbox, we don't want to create a new row.
   if (element == awGetInputElement(top.MAX_RECIPIENTS))
     top.doNotCreateANewRow = true;
+
+  var row = awGetRowByInputElement(element);
+  if (!event.shiftKey && row < top.MAX_RECIPIENTS) {
+    var listBoxRow = row - 1; // listbox row indices are 0-based, ours are 1-based.
+    var listBox = document.getElementById("addressingWidget");
+    listBox.listBoxObject.ensureIndexIsVisible(listBoxRow + 1);
+  }
+}
+
+function awTabFromMenulist(element, event)
+{
+  var row = awGetRowByInputElement(element);
+  if (event.shiftKey && row > 1) {
+    var listBoxRow = row - 1; // listbox row indices are 0-based, ours are 1-based.
+    var listBox = document.getElementById("addressingWidget");
+    listBox.listBoxObject.ensureIndexIsVisible(listBoxRow - 1);
+  }
 }
 
 function awGetNumberOfRecipients()
@@ -847,6 +864,15 @@ function awKeyDown(event, listboxElement)
   }
 }
 
+function awMenulistKeyPress(event, element)
+{
+  switch(event.keyCode) {
+  case 9:
+    awTabFromMenulist(element, event);
+    break;
+  }
+}
+
 /* ::::::::::: addressing widget dummy rows ::::::::::::::::: */
 
 var gAWContentHeight = 0;
@@ -955,3 +981,11 @@ function awSizerMouseUp()
   document.removeEventListener("mouseup", awSizerMouseUp, false);
 }
 
+function awDocumentKeyPress(event)
+{
+  try {
+    var id = event.target.getAttribute('id');
+    if (id.substr(0, 11) == 'addressCol1')
+      awMenulistKeyPress(event, event.target);
+  } catch (e) { }
+}

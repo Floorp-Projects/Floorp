@@ -239,6 +239,8 @@ function OnLoadNewMailList()
   AppendNewRowAndSetFocus();
   awFitDummyRows(1);
 
+  document.addEventListener("keypress", awDocumentKeyPress, true);
+
   // focus on first name
   var listName = document.getElementById('ListName');
   if ( listName )
@@ -312,6 +314,8 @@ function OnLoadEditList()
       parent.replaceChild(newListBoxNode, listbox);
     }
   }
+
+  document.addEventListener("keypress", awDocumentKeyPress, true);
 
   // workaround for bug 118337 - for mailing lists that have more rows than fits inside
   // the display, the value of the textbox inside the new row isn't inherited into the input -
