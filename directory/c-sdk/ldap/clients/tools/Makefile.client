@@ -92,7 +92,7 @@ LDAPMODIFY_OBJ		= $(addprefix $(OBJDEST)/, ldapmodify.o)
 LDAPSEARCH_OBJ		= $(addprefix $(OBJDEST)/, ldapsearch.o)
 LDAPCOMPARE_OBJ         = $(addprefix $(OBJDEST)/, ldapcompare.o)
 LDAPCMP_OBJ     	= $(addprefix $(OBJDEST)/, ldapcmp.o)
-ifeq ($(OS_ARCH), HP-UX)
+ifeq ($(OS_ARCH), used-to-use-this-on-HP-UX)
 LDAPTOOLCOMMON_OBJ	= $(addprefix $(OBJDEST)/, common.o) \
 			  $(addprefix $(OBJDEST)/, fileurl.o) 
 else
@@ -106,7 +106,7 @@ LDAPTOOLCOMMON_OBJ	+= $(addprefix $(OBJDEST)/, argpin.o) \
 endif
 endif
 
-ifeq ($(OS_ARCH), HP-UX)
+ifeq ($(OS_ARCH), used-to-use-this-on-HP-UX)
 LDAPTOOLCPPCOMMON_OBJ   = $(addprefix $(OBJDEST)/, convutf8.o)
 endif
 
@@ -238,7 +238,7 @@ LIBLOCATION   = $(NSCP_DISTDIR)/$(OBJDIR_NAME)/lib
 
 ###########################################################################
 
-all::	$(BINS) $(OBJDEST) linklibnls libdir $(BINS)
+all::	$(OBJDEST) linklibnls libdir $(BINS)
 
 libdir: linklibnls
 ifeq ($(OS_ARCH), WINNT)
@@ -324,7 +324,7 @@ endif
 
 $(LDAPTOOLCOMMON_OBJ):
 
-ifeq ($(OS_ARCH), HP-UX)
+ifeq ($(OS_ARCH), used-to-use-this-on-HP-UX)
 $(LDAPTOOLCPPCOMMON_OBJ): convutf8.cpp
 ifneq ($(USE_64), 1)
 	/opt/aCC/bin/aCC -ext -DHPUX_ACC -D__STDC_EXT__ -D_POSIX_C_SOURCE=199506L -c -DHPUX11 -DHPUX11_00 +DAportable +DS1.1 -D_LARGEFILE64_SOURCE -D_PR_HAVE_OFF64_T -DNO_NODELOCK -DNO_LIBLCACHE -DXP_UNIX -DHPUX -DMCC_HTTPD -DNS_DOMESTIC -DNET_SSL -DCLIENT_AUTH -DNSPR20 -D_PR_NTHREAD -D_PR_USECPU -D_REENTRANT -DNS_DS -DSPAPI20 -DBUILD_NUM=\"01.081.1519\" -DCPU_hppa -DOS_hpux -D_NO_THREADS_ -Dhpux -Dhpux -D_HPUX_SOURCE -D_REENTRANT -Aa -DLDAP_REFERRALS -DLDAP_LDBM -DLDAP_LDIF -DLDBM_USE_DBBTREE -DSLAPD_PASSWD_SHA1 -D__DBINTERFACE_PRIVATE -DNO_LIBLCACHE -DNS_DIRECTORY -DNET_SSL -DUSE_NSPR_MT -O $(INCLUDES) convutf8.cpp -o $(OBJDIR_NAME)/convutf8.o

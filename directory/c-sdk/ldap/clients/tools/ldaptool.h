@@ -157,7 +157,7 @@ LDAPControl *ldaptool_create_proxyauth_control( LDAP *ld );
 void ldaptool_add_control_to_array( LDAPControl *ctrl, LDAPControl **array);
 void ldaptool_reset_control_array( LDAPControl **array );
 char *ldaptool_get_tmp_dir( void );
-char *ldaptool_local2UTF8( const char * );
+char *ldaptool_local2UTF8( const char *s, const char *desc );
 int ldaptool_berval_is_ascii( const struct berval *bvp );
 int ldaptool_sasl_bind_s( LDAP *ld, const char *dn, const char *mechanism,
         const struct berval *cred, LDAPControl **serverctrls,

@@ -175,7 +175,7 @@ main( int argc, char **argv )
 	filtpattern = "%s";
     } else {	/* there are additional args (filter + attrs) */
 	if ( ldaptool_fp == NULL || strstr( argv[ optind ], "%s" ) != NULL ) {
-	    filtpattern = ldaptool_local2UTF8( argv[ optind ] );
+	    filtpattern = ldaptool_local2UTF8( argv[ optind ], "filter" );
 	    ++optind;
 	} else {
 	    filtpattern = "%s";
@@ -232,7 +232,7 @@ main( int argc, char **argv )
     if ( ldaptool_fp == NULL ) {
 	char *conv;
 
-	conv = ldaptool_local2UTF8( base );
+	conv = ldaptool_local2UTF8( base, "base DN" );
 	rc = dosearch( ld, conv, scope, attrs, attrsonly, filtpattern, "" );
 	if( conv != NULL )
             free( conv );

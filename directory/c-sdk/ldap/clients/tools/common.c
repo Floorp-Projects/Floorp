@@ -140,7 +140,8 @@ ldaptool_common_usage( int two_hosts )
 }
 
 /* globals */
-char			*ldaptool_charset = "";
+char			*ldaptool_charset = NULL;
+char			*ldaptool_convdir = NULL;
 char			*ldaptool_host = LDAPTOOL_DEFHOST;
 char			*ldaptool_host2 = LDAPTOOL_DEFHOST;
 int			ldaptool_port = LDAP_PORT;
@@ -383,8 +384,13 @@ ldaptool_process_args( int argc, char **argv, char *extra_opts,
 	case 'h':	/* ldap host */
 	    if ( hostnum == 0 ) {
 		ldaptool_host = strdup( optarg );
-	    } else {
+	    } else if ( two_hosts ) {
 		ldaptool_host2 = strdup( optarg );
+	    } else {
+		fprintf( stderr,
+			"%s: only one host (-h option) should be specified\n",
+			ldaptool_progname );
+		return(-1);	/* usage error */
 	    }
 	    ++hostnum;
 	    break;
@@ -400,10 +406,16 @@ ldaptool_process_args( int argc, char **argv, char *extra_opts,
 	    if ( !user_specified_port ) {
 		++user_specified_port;
 		ldaptool_port = atoi( optarg );
-	    } else {
+	    } else if ( two_hosts ) {
 		++user_specified_port2;
 		ldaptool_port2 = atoi( optarg );
+	    } else {
+		fprintf( stderr,
+			"%s: only one port (-p option) should be specified\n",
+			ldaptool_progname );
+		return(-1);	/* usage error */
 	    }
+		
 	    break;
 #if defined(NET_SSL)
 	case 'P':	/* path to security database */
@@ -1026,7 +1038,7 @@ ldaptool_bind( LDAP *ld )
     /*
      * do the bind, backing off one LDAP version if necessary
      */
-    conv = ldaptool_local2UTF8( binddn );
+    conv = ldaptool_local2UTF8( binddn, "bind DN" );
 
     /*
      * if using LDAPv3 and client auth., try a SASL EXTERNAL bind

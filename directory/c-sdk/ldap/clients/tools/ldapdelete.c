@@ -89,7 +89,7 @@ main( int argc, char **argv )
 	for ( ; optind < argc; ++optind ) {
             char *conv;
 
-            conv = ldaptool_local2UTF8( argv[ optind ] );
+            conv = ldaptool_local2UTF8( argv[ optind ], "DN" );
 	    rc = dodelete( ld, conv, ldaptool_request_ctrls );
             if( conv != NULL )
                 free( conv );

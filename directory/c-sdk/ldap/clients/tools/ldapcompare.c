@@ -91,7 +91,7 @@ main( int argc, char **argv )
 	usage( LDAP_PARAM_ERROR );
     }
 
-    typeval = ldaptool_local2UTF8( argv[optind] );
+    typeval = ldaptool_local2UTF8( argv[optind], "type and value" );
     if (( rc = typeval2berval( typeval, &type, &bv )) != LDAP_SUCCESS ) {
 	fprintf( stderr, "%s: unable to parse \"%s\"\n",
 		    ldaptool_progname, argv[optind] );
@@ -107,7 +107,7 @@ main( int argc, char **argv )
 		++optind ) {
             char *conv;
 
-            conv = ldaptool_local2UTF8( argv[ optind ] );
+            conv = ldaptool_local2UTF8( argv[ optind ], "DN" );
 	    rc = docompare( ld, conv, type, &bv, ldaptool_request_ctrls );
             if ( conv != NULL ) {
                 free( conv );
