@@ -408,6 +408,7 @@ nsHeaderSniffer.prototype = {
         this.contentType = channel.contentType;
         try {
           var httpChannel = channel.QueryInterface(Components.interfaces.nsIHttpChannel);
+          var encodedChannel = channel.QueryInterface(Components.interfaces.nsIEncodedChannel);
           this.contentEncodingType = null;
           // There may be content-encodings on the channel.  Multiple content
           // encodings are allowed, eg "Content-Encoding: gzip, uuencode".  This
@@ -415,7 +416,7 @@ nsHeaderSniffer.prototype = {
           // uuencoded.  The encoding enumerator returns MIME types
           // corresponding to each encoding starting from the end, so the first
           // thing it returns corresponds to the outermost encoding.
-          var encodingEnumerator = httpChannel.contentEncodings;
+          var encodingEnumerator = encodedChannel.contentEncodings;
           if (encodingEnumerator && encodingEnumerator.hasMoreElements()) {
             try {
               this.contentEncodingType =
