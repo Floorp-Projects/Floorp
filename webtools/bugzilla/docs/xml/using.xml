@@ -812,6 +812,56 @@
     
   </section>
   
+  <section id="flags">
+    <title>Flags</title>
+    
+    <para>
+      A flag is a kind of status that can be set on bugs or attachments
+      to indicate that the bugs/attachments are in a certain state.
+      Each installation can define its own set of flags that can be set
+      on bugs or attachments.
+    </para>
+    
+    <para>
+      If your installation has defined a flag, you can set or unset that flag,
+      and if your administrator has enabled requesting of flags, you can submit
+      a request for another user to set the flag.
+    </para>
+    
+    <para>
+      To set a flag, select either "+" or "-" from the drop-down menu next to
+      the name of the flag in the "Flags" list.  The meaning of these values are
+      flag-specific and thus cannot be described in this documentation,
+      but by way of example, setting a flag named "review" to "+" may indicate
+      that the bug/attachment has passed review, while setting it to "-"
+      may indicate that the bug/attachment has failed review.
+    </para>
+    
+    <para>
+      To unset a flag, click its drop-down menu and select the blank value.
+    </para>
+    
+    <para>
+      If your administrator has enabled requests for a flag, request a flag
+      by selecting "?" from the drop-down menu and then entering the username
+      of the user you want to set the flag in the text field next to the menu.
+    </para>
+    
+    <para>
+      A set flag appears in bug reports and on "edit attachment" pages with the
+      abbreviated username of the user who set the flag prepended to the
+      flag name. For example, if Jack sets a "review" flag to "+", it appears
+      as Jack: review [ + ]
+    </para>
+  
+    <para>
+      A requested flag appears with the user who requested the flag prepended
+      to the flag name and the user who has been requested to set the flag
+      appended to the flag name within parentheses.  For example, if Jack
+      asks Jill for review, it appears as Jack: review [ ? ] (Jill).
+    </para>
+  </section>
+
 </chapter>
 
 <!-- Keep this comment at the end of the file
