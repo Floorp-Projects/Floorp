@@ -49,6 +49,7 @@ EXTRA_DSO_LDOPTS = 	\
 	-lxpcom					\
 	-lxp					\
 	-lmsgbaseutil			\
+	-lmsgmork					\
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
