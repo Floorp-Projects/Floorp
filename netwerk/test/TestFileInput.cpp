@@ -22,7 +22,6 @@
 #include "nsIStreamListener.h"
 #include "nsIServiceManager.h"
 #include "nsIInputStream.h"
-#include "nsIThread.h"
 #include "nsIEventQueue.h"
 #include "nsIEventQueueService.h"
 #include "prinrval.h"
@@ -38,6 +37,7 @@
 #include "nsIBufferOutputStream.h"
 #endif
 #include "nsIBufferInputStream.h"
+#include "nsIRunnable.h"
 #include "nsIThread.h"
 #include "nsISupportsArray.h"
 #include "nsIChannel.h"

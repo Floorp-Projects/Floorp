@@ -40,6 +40,7 @@
 #include "nsIMsgIncomingServer.h"
 #include "nsISupportsArray.h"
 #include "nsIThread.h"
+#include "nsIRunnable.h"
 #include "nsIImapMockChannel.h"
 #include "nsILoadGroup.h"
 #include "nsCOMPtr.h"

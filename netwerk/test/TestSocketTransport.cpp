@@ -39,6 +39,7 @@
 #endif
 #include "nsIBufferInputStream.h"
 #include "nsIBufferOutputStream.h"
+#include "nsIRunnable.h"
 #include "nsIThread.h"
 #include "nsITimer.h"
 

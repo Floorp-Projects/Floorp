@@ -19,6 +19,7 @@
 #include "nsIServiceManager.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
+#include "nsIRunnable.h"
 #include "nsIThread.h"
 #include "nsISupportsArray.h"
 #include "prinrval.h"
