@@ -171,8 +171,9 @@ public:
    *    TABLESELECTION_COLUMN    We should select a row (content points to first cell in column)
    *    TABLESELECTION_TABLE     We should select a table (content points to the table)
    *    TABLESELECTION_ALLCELLS  We should select all cells (content points to first cell in table)
+   *  @param aMouseEvent         passed in so we we can get where event occured and what keys are pressed
    */
-  NS_IMETHOD HandleTableSelection(nsIContent *aParentContent, PRInt32 aContentOffset, PRUint32 aTarget) = 0;
+  NS_IMETHOD HandleTableSelection(nsIContent *aParentContent, PRInt32 aContentOffset, PRUint32 aTarget, nsMouseEvent *aMouseEvent) = 0;
 
   /** StartAutoScrollTimer is responsible for scrolling the view so that aPoint is always
    *  visible, and for selecting any frame that contains aPoint. The timer will also reset

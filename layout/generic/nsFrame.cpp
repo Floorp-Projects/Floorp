@@ -795,7 +795,8 @@ nsFrame::HandleEvent(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsFrame::GetDataForTableSelection(nsMouseEvent *aMouseEvent, nsIContent **aParentContent, PRInt32 *aContentOffset, PRUint32 *aTarget)
+nsFrame::GetDataForTableSelection(nsMouseEvent *aMouseEvent, nsIContent **aParentContent,
+                                  PRInt32 *aContentOffset, PRUint32 *aTarget)
 {
   if (!aMouseEvent || !aParentContent || !aContentOffset || !aTarget)
     return NS_ERROR_NULL_POINTER;
@@ -820,12 +821,7 @@ nsFrame::GetDataForTableSelection(nsMouseEvent *aMouseEvent, nsIContent **aParen
   nsresult result = NS_OK;
   PRBool foundCell = PR_FALSE;
   PRBool foundTable = PR_FALSE;
-
-#ifdef DEBUG_cmanske
-// Exploring how to get location info for doing table/row/column selection
-//printf("*** Mouse event at origin: x=%d, y=%d\n", aMouseEvent->point.x, aMouseEvent->point.y);
-//printf("*** Frame rect origin: x=%d, y=%d\n", this->mRect.x, this->mRect.y);
-#endif
+  nsRect rect;
 
   while (frame && NS_SUCCEEDED(result))
   {
@@ -848,9 +844,9 @@ nsFrame::GetDataForTableSelection(nsMouseEvent *aMouseEvent, nsIContent **aParen
       {
         foundTable = PR_TRUE;
         break;
+      } else {
+        result = frame->GetParent(&frame);
       }
-      else
-        result = (frame)->GetParent(&frame);
     }
   }
   // We aren't in a cell or table
@@ -927,7 +923,7 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
         PRUint32 target;
         nsresult result = GetDataForTableSelection(me, getter_AddRefs(parentContent), &contentOffset, &target);
         if (NS_SUCCEEDED(result) && parentContent)
-          frameselection->HandleTableSelection(parentContent, contentOffset, target);
+          frameselection->HandleTableSelection(parentContent, contentOffset, target, me);
         else
           frameselection->HandleClick(newContent, startPos , contentOffsetEnd , me->isShift, PR_FALSE, beginContent);
       }
@@ -1056,7 +1052,7 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsIPresContext* aPresContext,
     nsMouseEvent *me = (nsMouseEvent *)aEvent;
     result = GetDataForTableSelection(me, getter_AddRefs(parentContent), &contentOffset, &target);
     if (NS_SUCCEEDED(result) && parentContent)
-      frameselection->HandleTableSelection(parentContent, contentOffset, target);
+      frameselection->HandleTableSelection(parentContent, contentOffset, target, me);
     else
       frameselection->HandleDrag(aPresContext, this, aEvent->point);
 
