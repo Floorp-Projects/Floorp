@@ -19,7 +19,7 @@
   # Contributor(s): Gervase Markham <gerv@gerv.net>
   #%]
 
-[% INCLUDE global/header.html.tmpl 
+[% PROCESS global/header.html.tmpl 
   title = "Bug $bug_id Submitted"
 %]
 
@@ -42,6 +42,6 @@
   Attach a file to this bug</a>.
 </p>
 
-[% INCLUDE bug/navigate.html.tmpl %]
+[% PROCESS bug/navigate.html.tmpl %]
 
-[% INCLUDE global/footer.html.tmpl %]
+[% PROCESS global/footer.html.tmpl %]

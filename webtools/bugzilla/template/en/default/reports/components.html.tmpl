@@ -20,7 +20,7 @@
   #%]
 
 [% filtered_product = product FILTER html %]
-[% INCLUDE global/header.html.tmpl 
+[% PROCESS global/header.html.tmpl 
   title = "Components for $product"
   h2 = filtered_product %]
 
@@ -53,7 +53,7 @@
   </table>
 [% END %]
 
-[% INCLUDE global/footer.html.tmpl %]
+[% PROCESS global/footer.html.tmpl %]
 
 [%############################################################################%]
 [%# BLOCK for components                                                      %]

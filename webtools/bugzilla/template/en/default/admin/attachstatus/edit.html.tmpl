@@ -19,7 +19,7 @@
   # Contributor(s): Myk Melez <myk@mozilla.org>
   #%]
 
-[% INCLUDE global/header.html.tmpl 
+[% PROCESS global/header.html.tmpl 
   title = "Edit Attachment Status"
   style = "
     th { text-align: right; vertical-align: top; }
@@ -70,4 +70,4 @@
   </table>
 </form>
 
-[% INCLUDE global/footer.html.tmpl %]
+[% PROCESS global/footer.html.tmpl %]

@@ -23,7 +23,7 @@
 [%# Filter off the name here to be used multiple times below %]
 [% name = name FILTER html %]
 
-[% INCLUDE global/header.html.tmpl 
+[% PROCESS global/header.html.tmpl 
   title = "Confirm Delete of Attachment Status '$name'" 
 %]
 
@@ -52,4 +52,4 @@
    </tr>
 </table>
 
-[% INCLUDE global/footer.html.tmpl %]
+[% PROCESS global/footer.html.tmpl %]

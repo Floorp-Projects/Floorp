@@ -20,7 +20,7 @@
   #                 Gervase Markham <gerv@gerv.net>
   #%]
 
-[% INCLUDE global/header.html.tmpl 
+[% PROCESS global/header.html.tmpl 
   title = "Full Text Bug Listing"
 %]
 
@@ -34,7 +34,7 @@
   </p>
 [% END %]
 
-[% INCLUDE global/footer %]
+[% PROCESS global/footer.html.tmpl %]
 
 
 [%###########################################################################%]

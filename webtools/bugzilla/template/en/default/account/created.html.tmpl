@@ -19,7 +19,7 @@
   # Contributor(s): Gervase Markham <gerv@gerv.net>
   #%]
 
-[% INCLUDE global/header.html.tmpl 
+[% PROCESS global/header.html.tmpl 
   title = "Account Created"
 %]
 
@@ -35,4 +35,4 @@
   <a href="query.cgi?GoAheadAndLogIn=1">log in here</a>.
 </p>
 
-[% INCLUDE global/footer.html.tmpl %] 
+[% PROCESS global/footer.html.tmpl %] 

@@ -20,7 +20,7 @@
   #%]
 
 [% UNLESS header_done %]
-  [% INCLUDE global/header.html.tmpl 
+  [% PROCESS global/header.html.tmpl 
      title = "Search by bug number"
    %]
 [% END %]
@@ -33,4 +33,4 @@
   </p>
 </form>
 
-[% INCLUDE global/footer.html.tmpl %]
+[% PROCESS global/footer.html.tmpl %]

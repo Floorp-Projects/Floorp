@@ -21,7 +21,7 @@
 
 [% filtered_desc = bug.short_desc FILTER html %]
 [% UNLESS header_done %]
-  [% INCLUDE global/header.html.tmpl 
+  [% PROCESS global/header.html.tmpl 
     title = "Bug $bug.bug_id - $bug.short_desc"
     h1 = "Bugzilla Bug $bug.bug_id"
     h2 = filtered_desc
@@ -250,7 +250,7 @@
   
 [%# *** Attachments *** %]
 
-  [% INCLUDE attachment/list.html.tmpl 
+  [% PROCESS attachment/list.html.tmpl 
      attachments = bug.attachments 
      bugid = bug.bug_id %]
 
@@ -501,7 +501,7 @@
 
 <br>
 
-[% INCLUDE global/footer.html.tmpl %]
+[% PROCESS global/footer.html.tmpl %]
 
 
 [%############################################################################%]

@@ -20,7 +20,7 @@
   #%]
 
 [% filtered_summary = bugsummary FILTER html %]
-[% INCLUDE global/header.html.tmpl 
+[% PROCESS global/header.html.tmpl 
   title = "View All Attachments for Bug #$bugid"
   h1 = "View All Attachments for <a href=\"show_bug.cgi?id=$bugid\">Bug #$bugid</a>"
   h2 = filtered_summary
@@ -95,4 +95,4 @@
 
 [% END %]
 
-[% INCLUDE global/footer.html.tmpl %]
+[% PROCESS global/footer.html.tmpl %]

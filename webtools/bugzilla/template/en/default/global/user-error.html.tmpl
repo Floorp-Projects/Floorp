@@ -20,7 +20,7 @@
   #%]
 
 [% UNLESS header_done %]
-  [% INCLUDE global/header.html.tmpl %]
+  [% PROCESS global/header.html.tmpl %]
 [% END %]
 
 <table cellpadding="20">
@@ -37,4 +37,4 @@
   Please press <b>Back</b> and try again.
 </p>
 
-[% INCLUDE global/footer.html.tmpl %]
+[% PROCESS global/footer.html.tmpl %]

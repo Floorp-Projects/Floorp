@@ -19,7 +19,7 @@
   # Contributor(s): Gervase Markham <gerv@gerv.net>
   #%]
 
-[% INCLUDE global/header.html.tmpl 
+[% PROCESS global/header.html.tmpl 
   title = "Bookmarks are your friend"
   h1 = "Template constructed"
 %]
@@ -30,4 +30,4 @@ going to the bookmark will bring up the enter bug page with the fields
 initialized as you've requested.
 </p>
 
-[% INCLUDE global/footer.html.tmpl %]
+[% PROCESS global/footer.html.tmpl %]

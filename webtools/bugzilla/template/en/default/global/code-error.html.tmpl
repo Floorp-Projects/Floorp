@@ -20,7 +20,7 @@
   #%]
 
 [% UNLESS header_done %]
-  [% INCLUDE global/header.html.tmpl %]
+  [% PROCESS global/header.html.tmpl %]
 [% END %]
 
 <tt>
@@ -54,4 +54,4 @@ Variables:
   </pre>
 [% END %]
 
-[% INCLUDE global/footer.html.tmpl %]
+[% PROCESS global/footer.html.tmpl %]

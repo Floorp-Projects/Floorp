@@ -20,7 +20,7 @@
   #                 Ville Skyttä <ville.skytta@iki.fi>
   #%]
 
-[% INCLUDE global/header.html.tmpl
+[% PROCESS global/header.html.tmpl
   title = "Enter Bug"
   h2 = "This page lets you enter a new bug into Bugzilla."
 %]
@@ -230,7 +230,7 @@
   <input type="hidden" name="form_name" value="enter_bug">
 </form>
 
-[% INCLUDE global/footer.html.tmpl %]
+[% PROCESS global/footer.html.tmpl %]
 
 [%############################################################################%]
 [%# Block for SELECT fields                                                  #%]
