@@ -64,6 +64,7 @@ endif
 
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) \
 		-lgkgfx \
+		$(MOZ_JS_LIBS) \
 		$(NULL)
 
 DEFINES		+= -D_IMPL_NS_GFXNONXP
