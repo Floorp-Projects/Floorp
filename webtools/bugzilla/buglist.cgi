@@ -23,18 +23,6 @@ puts "Content-type: multipart/x-mixed-replace;boundary=ThisRandomString"
 puts ""
 puts "--ThisRandomString"
 
-proc InitMessage {str} {
-    global initstr
-    append initstr "$str\n"
-    puts "Content-type: text/plain"
-    puts ""
-    puts $initstr
-    puts ""
-    puts "--ThisRandomString"
-    flush stdout
-}
-
-
 # The below "if catch" stuff, if uncommented, will trap any error, and
 # mail the error messages to terry.  What a hideous, horrible
 # debugging hack.
@@ -147,7 +135,6 @@ DefCol component "substring(bugs.component, 1, 8)" Comp bugs.component
 DefCol product "substring(bugs.product, 1, 8)" Product bugs.product
 DefCol version "substring(bugs.version, 1, 5)" Vers bugs.version
 DefCol os "substring(bugs.op_sys, 1, 4)" OS bugs.op_sys
-DefCol status_summary "bugs.status_summary" Status_Summary {} 1
 
 if {[info exists COOKIE(COLUMNLIST)]} {
     set collist $COOKIE(COLUMNLIST)
@@ -162,7 +149,7 @@ if {$dotweak} {
 }
 
 
-puts "Content-type: text/plain\n"
+puts "Content-type: text/html\n"
 
 set query "
 select
@@ -199,16 +186,15 @@ if {[info exists FORM(sql)]} {
 
   set legal_fields { bug_id product version rep_platform op_sys bug_status
                      resolution priority bug_severity assigned_to reporter
-                     bug_file_loc short_desc component
-                     status_summary resolved_ts verified_ts}
+                     bug_file_loc component resolved_ts verified_ts}
 
   foreach field [array names FORM] {
     if { [ lsearch $legal_fields $field ] != -1 && ![cequal $FORM($field) ""]} {
       qadd "\tand (\n"
       set or ""
-      if { $field == "assigned_to" || $field == "reporter" || $field == "qa_assigned_to"} {
+      if { $field == "assigned_to" || $field == "reporter"} {
         foreach p [split $FORM($field) ","] {
-          qadd "\t\t${or}bugs.$field = [DBname_to_id $p]\n"
+          qadd "\t\t${or}bugs.$field = [DBNameToIdAndCheck $p]\n"
           set or "or "
         }
       } elseif { $field == "resolved_ts"} {
@@ -244,13 +230,26 @@ if {[info exists FORM(sql)]} {
               puts "
 The 'changed in last ___ days' field must be a simple number.  You entered 
 \"$c\", which doesn't cut it.
-
-Click the Back button and try again."
+<P>
+Click the <B>Back</B> button and try again."
               exit
           }
           qadd "and to_days(now()) - to_days(bugs.delta_ts) <= $FORM(changedin) "
       }
   }
+
+  foreach f {short_desc long_desc} {
+      set s [SqlQuote [string trim [lookup FORM $f]]]
+      if {$s != ""} {
+          if {[lookup FORM [set f]_type] == "regexp"} {
+              qadd "and $f regexp '$s' "
+          } else {
+              qadd "and instr($f, '$s') "
+          }
+      }
+  }
+
+
 }
 
 if {[info exists FORM(order)]} {
@@ -277,25 +276,12 @@ if {[info exists FORM(order)]} {
     qadd $FORM(order)
 }
 
-puts "Please stand by ..."
+puts "Please stand by ... <p>"
 if {[info exists FORM(debug)]} {
-    puts $query
+    puts "<pre>$query</pre>"
 }
 flush stdout
-set child 0
-if {[info exists FORM(keepalive)]} {
-  set child [fork]
-  if {$child == 0} {
-    while 1 {
-      puts "Still waiting ..."
-      flush stdout
-      sleep 10
-    }
-    puts "Child process died, what's up?"
-    flush stdout
-    exit 0
-  }
-}
+
 SendSQL $query
 
 set count 0
@@ -411,9 +397,7 @@ while { $p_true } {
         }
     }
 }
-if {$child != 0} {
-  kill $child
-}
+
 puts ""
 puts "--ThisRandomString"
 
@@ -421,14 +405,14 @@ set toolong 0
 puts "Content-type: text/html"
 if { [info exists buglist] } {
     if {[clength $buglist] < 4000} {
-        puts "Set-Cookie: BUGLIST=$buglist\n"
+        puts "Set-Cookie: BUGLIST=$buglist"
     } else {
-        puts "Set-Cookie: BUGLIST=\n"
+        puts "Set-Cookie: BUGLIST="
         set toolong 1
     }
-} else {
-  puts ""
 }
+puts ""
+
 set env(TZ) PST8PDT
 
 PutHeader "Bug List" "Bug List"
@@ -624,7 +608,7 @@ flush stdout
 #
 # 
 # }]} {
-#     exec /usr/lib/sendmail -t << "To: terry
+#     exec /usr/lib/sendmail -t << "To: terry@mozilla.org
 # 
 # 
 # $query

@@ -185,6 +185,20 @@ puts "
 </tr>
 </table>
 
+<table border=0>
+<tr>
+<td align=right>Summary:</td>
+<td><input name=short_desc size=30></td>
+<td><input type=radio name=short_desc_type value=substr checked>Substring</td>
+<td><input type=radio name=short_desc_type value=regexp>Regexp</td>
+</tr>
+<tr>
+<td align=right>Description:</td>
+<td><input name=long_desc size=30></td>
+<td><input type=radio name=long_desc_type value=substr checked>Substring</td>
+<td><input type=radio name=long_desc_type value=regexp>Regexp</td>
+</tr>
+</table>
 <p>
 
 

@@ -115,7 +115,7 @@ proc ChangeResolution {str} {
 
 foreach field {rep_platform priority bug_severity url summary \
                    component bug_file_loc short_desc \
-                   status_summary product version component} {
+                   product version component} {
     if {[info exists FORM($field)]} {
         if {![cequal $FORM($field) $dontchange]} {
             DoComma

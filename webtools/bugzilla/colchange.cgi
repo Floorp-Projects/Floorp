@@ -27,7 +27,7 @@ puts "Content-type: text/html"
 # they get displayed in.
 
 set masterlist {opendate changeddate severity priority platform owner reporter status
-    resolution component product version project os summary summaryfull status_summary resolved_ts verified_ts}
+    resolution component product version project os summary summaryfull resolved_ts verified_ts}
 
 
 if {[info exists FORM(rememberedquery)]} {
