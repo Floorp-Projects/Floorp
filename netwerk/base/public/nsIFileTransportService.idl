@@ -44,7 +44,8 @@ interface nsIFileTransportService : nsISupports
     nsITransport createTransportFromStream(in string name,
                                            in nsIInputStream fromStream,
                                            in string contentType,
-                                           in long contentLength);
+                                           in long contentLength,
+                                           in boolean closeStreamWhenDone);
 
     nsITransport createTransportFromStreamIO(in nsIStreamIO io);
 

@@ -76,7 +76,8 @@ public:
     nsresult Init(nsFileTransportService *aService, const char* name, 
                   nsIInputStream* fromStream,
                   const char* contentType,
-                  PRInt32 contentLength);
+                  PRInt32 contentLength,
+                  PRBool closeStreamWhenDone);
     nsresult Init(nsFileTransportService *aService, nsIStreamIO* io);
 
     void Process(void);
@@ -124,6 +125,8 @@ protected:
     // The transport is active if it is currently being processed by a thread.
     PRBool                              mActive;
 
+    // If FALSE, then the caller can reuse the file transport
+    PRBool                              mCloseStreamWhenDone;
     // state variables:
     nsresult                            mStatus;
     PRUint32                            mOffset;
