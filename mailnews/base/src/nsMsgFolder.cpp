@@ -20,6 +20,7 @@
 #include "nsISupports.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFResourceFactory.h"
+#include "nsMsgFolderFlags.h"
 
 /* use these macros to define a class IID for our component. */
 static NS_DEFINE_IID(kIMsgFolderIID, NS_IMSGFOLDER_IID);
@@ -1049,59 +1050,143 @@ NS_IMETHODIMP nsMsgFolder::GetLastMessageLoaded()
 
 #endif
 
-NS_IMETHODIMP nsMsgFolder::SetFlag (PRInt32 which)
+NS_IMETHODIMP nsMsgFolder::SetFlag(PRInt32 flag)
 {
+	// OnFlagChange can be expensive, so don't call it if we don't need to
+	PRBool flagSet;
+	nsresult rv;
+
+	if(!NS_SUCCEEDED(rv = GetFlag(flag, &flagSet)))
+		return rv;
+
+	if (!flagSet)
+	{
+		mFlags |= flag;
+		OnFlagChange(flag);
+	}
+
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFolder::ClearFlag (PRInt32 which)
+NS_IMETHODIMP nsMsgFolder::ClearFlag(PRInt32 flag)
 {
+	// OnFlagChange can be expensive, so don't call it if we don't need to
+	PRBool flagSet;
+	nsresult rv;
+
+	if(!NS_SUCCEEDED(rv = GetFlag(flag, &flagSet)))
+		return rv;
+
+	if (!flagSet)
+	{
+		mFlags &= ~flag;
+		OnFlagChange (flag);
+	}
+
 	return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgFolder::GetFlag(PRInt32 flag, PRBool *_retval)
 {
+	*_retval = ((mFlags & flag) != 0);
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgFolder::ToggleFlag(PRInt32 flag)
+{
+  mFlags ^= flag;
+	OnFlagChange (flag);
+
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgFolder::OnFlagChange(PRInt32 flag)
+{
+	//Still need to implement
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgFolder::GetFlags(PRInt32 *_retval)
+{
+	*_retval = mFlags;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgFolder::GetFoldersWithFlag(PRInt32 flags, nsIMsgFolder **result,
+																							PRInt32 resultsize,	PRInt32 *numFolders)
+{
+	int num = 0;
+	if ((flags & mFlags) == flags) {
+		if (result && (num < resultsize)) {
+			result[num] = this;
+		}
+		num++;
+  }
+
+	nsIMsgFolder *folder = nsnull;
+	for (int i=0; i < mSubFolders->Count(); i++) {
+		nsISupports *supports = mSubFolders->ElementAt(i);
+		if(NS_SUCCEEDED(supports->QueryInterface(kIMsgFolderIID, (void**)&folder)))
+		{
+			// CAREFUL! if NULL ise passed in for result then the caller
+			// still wants the full count!  Otherwise, the result should be at most the
+			// number that the caller asked for.
+			int numSubFolders;
+
+			if (!result)
+			{
+				folder->GetFoldersWithFlag(flags, NULL, 0, &numSubFolders);
+				num += numSubFolders;
+			}
+			else if (num < resultsize)
+			{
+				folder->GetFoldersWithFlag(flags, result + num, resultsize - num, &numSubFolders);
+				num += numSubFolders;
+			}
+			else
+			{
+				NS_RELEASE(folder);
+				NS_RELEASE(supports);
+				break;
+			}
+			NS_RELEASE(folder);
+		}
+		NS_RELEASE(supports);
+	}
+
+  *numFolders = num;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgFolder::GetExpansionArray(const nsISupportsArray *expansionArray)
+{
+  // the application of flags in GetExpansionArray is subtly different
+  // than in GetFoldersWithFlag 
+
+	for (int i = 0; i < mSubFolders->Count(); i++)
+	{
+		nsISupports *supports = mSubFolders->ElementAt(i);
+		nsIMsgFolder *folder = nsnull;
+
+		if(NS_SUCCEEDED(supports->QueryInterface(kIMsgFolderIID, (void**)&folder)))
+		{
+			((nsISupportsArray*)expansionArray)->InsertElementAt(folder, expansionArray->Count());
+			PRInt32 flags;
+			folder->GetFlags(&flags);
+			if (!(flags & MSG_FOLDER_FLAG_ELIDED))
+				folder->GetExpansionArray(expansionArray);
+		}
+  }
+
 	return NS_OK;
 }
 
 #ifdef HAVE_FLAGS
-NS_IMETHODIMP nsMsgFolder::GetFlags(PRUint32 *flags) const
-{
-
-}
-
-NS_IMETHODIMP nsMsgFolder::ToggleFlag (PRUint32 which)
-{
-
-}
-
-NS_IMETHODIMP nsMsgFolder::OnFlagChange (PRUint32 which)
-{
-
-}
-
 NS_IMETHODIMP nsMsgFolder::SetFlagInAllFolderPanes(PRUInt32 which)
 {
 
 }
 
-NS_IMETHODIMP nsMsgFolder::TestFlag (PRUint32 which, PRBool *result)
-{
-	
-}
-
-NS_IMETHODIMP nsMsgFolder::GetFoldersWithFlag(PRUint32 flags, nsIMsgFolder** result,
-                           PRInt32 resultsize, PRInt32 *numFolders)
-{
-
-}
-
-
-
-NS_IMETHODIMP nsMsgFolder::GetExpansionArray (nsISupportsArray ** expansionArray )
-{
-
-}
 #endif
 
 #ifdef HAVE_NET

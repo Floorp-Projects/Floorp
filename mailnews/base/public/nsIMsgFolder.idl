@@ -103,6 +103,16 @@ interface nsIMsgFolder : nsIRDFResource {
   void SetFlag(in long flag);
   void ClearFlag(in long flag);
   boolean GetFlag(in long flag);
+
+	void ToggleFlag (in long flag);
+	void OnFlagChange (in long flag);
+	long GetFlags();
+
+	void GetFoldersWithFlag(in long flags, out nsIMsgFolder result,
+                         in long resultsize, out long numFolders);
+
+	void GetExpansionArray(in nsISupportsArray expansionArray);
+
 };
 
 

@@ -15,8 +15,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-
-/*
+ 
+ /*
  * DO NOT EDIT.  THIS FILE IS GENERATED FROM nsIMsgFolder.idl
  */
 
@@ -212,6 +212,21 @@ class nsIMsgFolder : public nsIRDFResource {
 
   /*  <IDL>  */
   NS_IMETHOD GetFlag(PRInt32 flag, PRBool *_retval) = 0;
+
+  /*  <IDL>  */
+  NS_IMETHOD ToggleFlag(PRInt32 flag) = 0;
+
+  /*  <IDL>  */
+  NS_IMETHOD OnFlagChange(PRInt32 flag) = 0;
+
+  /*  <IDL>  */
+  NS_IMETHOD GetFlags(PRInt32 *_retval) = 0;
+
+  /*  <IDL>  */
+  NS_IMETHOD GetFoldersWithFlag(PRInt32 flags, nsIMsgFolder **result, PRInt32 resultsize, PRInt32 *numFolders) = 0;
+
+  /*  <IDL>  */
+  NS_IMETHOD GetExpansionArray(const nsISupportsArray *expansionArray) = 0;
 };
 
 #endif /* __gen_nsIMsgFolder_h__ */

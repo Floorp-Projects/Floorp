@@ -198,22 +198,18 @@ public:
   NS_IMETHOD ClearFlag (PRInt32 which);
   NS_IMETHOD GetFlag(PRInt32 flag, PRBool *_retval);
 
-#ifdef HAVE_FLAGS
-  NS_IMETHOD  ToggleFlag (PRUint32 which);
-	NS_IMETHOD OnFlagChange (PRUint32 which);
-  NS_IMETHOD GetFlags(PRUint32 *flags) const;
+  NS_IMETHOD ToggleFlag (PRInt32 which);
+	NS_IMETHOD OnFlagChange (PRInt32 which);
+  NS_IMETHOD GetFlags(PRInt32 *flags);
 
-	NS_IMETHOD SetFlagInAllFolderPanes(PRUInt32 which);
+#ifdef HAVE_PANE
+	NS_IMETHOD SetFlagInAllFolderPanes(PRInt32 which);
+#endif
 
-
-	NS_IMETHOD TestFlag (PRUint32 which, PRBool *result){ return (mFlags & which) != 0; } // Type conversion to char-sized XP_Bool
-
-  NS_IMETHOD GetFoldersWithFlag(PRUint32 flags, nsIMsgFolder** result,
+  NS_IMETHOD GetFoldersWithFlag(PRInt32 flags, nsIMsgFolder** result,
                          PRInt32 resultsize, PRInt32 *numFolders);
 
-    // for everyone else...
-  NS_IMETHOD GetExpansionArray (nsISupportsArray ** expansionArray );
-#endif
+  NS_IMETHOD GetExpansionArray(const nsISupportsArray *expansionArray);
 
 #ifdef HAVE_NET
   NS_IMETHOD EscapeMessageId(const char *messageId, const char **escapeMessageID);
