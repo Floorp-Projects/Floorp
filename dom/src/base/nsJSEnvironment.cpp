@@ -1049,12 +1049,27 @@ TraceMallocCloseLogFD(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
     return JS_TRUE;
 }
 
+static JSBool
+TraceMallocLogTimestamp(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    JSString *str;
+    const char *caption;
+
+    str = JS_ValueToString(cx, argv[0]);
+    if (!str)
+        return JS_FALSE;
+    caption = JS_GetStringBytes(str);
+    NS_TraceMallocLogTimestamp(caption);
+    return JS_TRUE;
+}
+
 static JSFunctionSpec TraceMallocFunctions[] = {
     {"TraceMallocDisable",        TraceMallocDisable,       0, 0, 0},
     {"TraceMallocEnable",         TraceMallocEnable,        0, 0, 0},
     {"TraceMallocOpenLogFile",    TraceMallocOpenLogFile,   1, 0, 0},
     {"TraceMallocChangeLogFD",    TraceMallocChangeLogFD,   1, 0, 0},
     {"TraceMallocCloseLogFD",     TraceMallocCloseLogFD,    1, 0, 0},
+    {"TraceMallocLogTimestamp",   TraceMallocLogTimestamp,  1, 0, 0},
     {NULL,                        NULL,                     0, 0, 0}
 };
 
