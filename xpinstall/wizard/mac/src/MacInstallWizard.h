@@ -72,7 +72,7 @@ err = _funcCall;                \
 if (err)                        \
 {                               \
     ErrorHandler(err, _msg);            \
-	return;						\
+	return _rv;						\
 }
 										
 #define ERR_CHECK_RET(_funcCall, _rv)	\

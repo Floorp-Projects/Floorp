@@ -407,12 +407,12 @@ static void Validate(Handle original, Handle current, Boolean *recompile, Boolea
  */
 static short GetPref(AEKeyword keyword, AEDesc *prefsDesc, Handle settings)
 {
+#if 0	
 	XPIDLSettings	prefsData	= ** (XPIDLSettingsHandle) settings;
 	DescType	anEnum;
 	OSErr		err;
 
 	switch (keyword)  {
-#if 0	
 	case prefsLN_GenerateSymFile:
 		err = AECreateDesc(typeBoolean, &prefsData.linksym, sizeof(Boolean), prefsDesc);
 		break;
@@ -433,7 +433,6 @@ static short GetPref(AEKeyword keyword, AEDesc *prefsDesc, Handle settings)
 	case prefsPR_FileName:
 		err = AECreateDesc(typeChar, prefsData.outfile+1, StrLength(prefsData.outfile), prefsDesc);
 		break;
-#endif
 
 	default:
 		err = errAECantHandleClass;
@@ -441,6 +440,9 @@ static short GetPref(AEKeyword keyword, AEDesc *prefsDesc, Handle settings)
 	}
 	
 	return (err);
+#else
+	return (errAECantHandleClass);
+#endif
 }
 
 /*
@@ -450,6 +452,7 @@ static short GetPref(AEKeyword keyword, AEDesc *prefsDesc, Handle settings)
 
 static short SetPref(AEKeyword keyword, const AEDesc *prefsDesc, Handle settings)
 {
+#if 0
 	XPIDLSettings	prefsData	= ** (XPIDLSettingsHandle) settings;
 	AEDesc			toDesc	= { typeNull, NULL };
 	OSErr			err		= noErr;
@@ -459,7 +462,6 @@ static short SetPref(AEKeyword keyword, const AEDesc *prefsDesc, Handle settings
 	
 	switch (keyword)
 	{
-#if 0
 	case prefsLN_GenerateSymFile:
 		if (prefsDesc->descriptorType == typeBoolean)
 		{
@@ -517,7 +519,6 @@ static short SetPref(AEKeyword keyword, const AEDesc *prefsDesc, Handle settings
 			prefsData.outfile[0] = textLength;
 		}
 		break;
-#endif
 
 	default:
 		err = errAECantHandleClass;
@@ -532,6 +533,9 @@ static short SetPref(AEKeyword keyword, const AEDesc *prefsDesc, Handle settings
 	AEDisposeDesc(&toDesc);
 	
 	return (err);
+#else
+	return (errAECantHandleClass);
+#endif
 }
 
 /*
@@ -634,10 +638,12 @@ static void	OutlineRect(const Rect* focusRect, Boolean outlineOn)
  */
 static OSErr	DragEnter(PanelParameterBlock *pb)
 {
+#if 0
 	short			theItem	= pb->itemHit - pb->baseItems;
 	unsigned short	itemCount;
 	Rect			itemRect;
 	OSErr			err;
+#endif
 	
 	/* Return paramErr if the user is on a item that can't be dropped on */
 	return (paramErr);
@@ -679,7 +685,9 @@ static void	DragExit(PanelParameterBlock *pb)
  */
 static void	DragDrop(PanelParameterBlock *pb)
 {
+#if 0
 	Rect	itemRect;
+#endif
 	
 ///	SysBreakStr("\preqDragDrop");
 	

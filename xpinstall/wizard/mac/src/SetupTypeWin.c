@@ -50,8 +50,6 @@ ShowSetupTypeWin(void)
 	long				txtSize;
 	Str255				instLocTitle, selectFolder;
 	GrafPtr				oldPort;
-	ProcessSerialNumber thePSN;
-	FSSpec				theSpec;
 	
 	GetPort(&oldPort);
 	

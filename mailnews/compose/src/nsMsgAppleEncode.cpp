@@ -137,12 +137,9 @@ int ap_encode_file_infor(
 	ap_entry 	entries[NUM_ENTRIES];
 	ap_dates 	dates;
 	short 		i;
-	long 		comlen, procID;
+	long 		comlen;
 	DateTimeRec cur_time;
 	unsigned 	long cur_secs;
-	IOParam 	vinfo;
-	GetVolParmsInfoBuffer vp;
-	DTPBRec 	dtp;
 	char 		comment[256];
 	Str63		fname;
 	int	 		status;
@@ -164,9 +161,12 @@ int ap_encode_file_infor(
     // not sure why working directories are needed here...
     comlen = 0;
 #else
+	long 		procID;
 	procID = 0;
 	GetWDInfo(p_ap_encode_obj->vRefNum, &fpb->ioVRefNum, &fpb->ioDirID, &procID);
+	IOParam 	vinfo;
 	memset((void *) &vinfo, '\0', sizeof (vinfo));
+	GetVolParmsInfoBuffer vp;
 	vinfo.ioCompletion  = nil;
 	vinfo.ioVRefNum 	= fpb->ioVRefNum;
 	vinfo.ioBuffer 		= (Ptr) &vp;
@@ -175,6 +175,7 @@ int ap_encode_file_infor(
 	if (PBHGetVolParmsSync((HParmBlkPtr) &vinfo) == noErr &&
 		((vp.vMAttrib >> bHasDesktopMgr) & 1)) 
 	{
+		DTPBRec 	dtp;
 		memset((void *) &dtp, '\0', sizeof (dtp));
 		dtp.ioVRefNum = fpb->ioVRefNum;
 		if (PBDTGetPath(&dtp) == noErr) 

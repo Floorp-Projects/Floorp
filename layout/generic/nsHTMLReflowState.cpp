@@ -2275,10 +2275,9 @@ GetNormalLineHeight(nsIFontMetrics* aFontMetrics)
   NS_PRECONDITION(nsnull != aFontMetrics, "no font metrics");
 
   nscoord normalLineHeight;
-  nscoord emHeight;
 
 #ifdef FONT_LEADING_APIS_V2
-  nscoord externalLeading, internalLeading;
+  nscoord externalLeading, internalLeading, emHeight;
   aFontMetrics->GetExternalLeading(externalLeading);
   aFontMetrics->GetInternalLeading(internalLeading);
   aFontMetrics->GetEmHeight(emHeight);
