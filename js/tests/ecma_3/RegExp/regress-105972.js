@@ -45,8 +45,8 @@ var expectedmatches = new Array();
  * The bug: this match was coming up null in Rhino and SpiderMonkey.
  * It should match the whole string. The reason:
  *
- * The * operator is greedy, but *? is non-greedy: it will bail out
- * on the simplest match it can find. But the pattern here asks us
+ * The * operator is greedy, but *? is non-greedy: it will stop
+ * at the simplest match it can find. But the pattern here asks us
  * to match till the end of the string. So the simplest match must
  * go all the way out to the end, and *? has no choice but to do it.
  */
@@ -69,6 +69,43 @@ string = 'Hello World';
 actualmatch = string.match(pattern);
 expectedmatch = Array(cnEmptyString);
 addThis();
+
+
+/*
+ * Try '$' combined with an 'or' operator.
+ *
+ * The operator *? will consume the string from left to right,
+ * attempting to satisfy the condition (:|$). When it hits ':',
+ * the match will stop because the operator *? is non-greedy.
+ *
+ * The submatch $1 = (:|$) will contain the ':'
+ */
+status = inSection(3);
+pattern = /^.*?(:|$)/;
+string = 'Hello: World';
+actualmatch = string.match(pattern);
+expectedmatch = Array('Hello:', ':');
+addThis();
+
+
+/*
+ * Again, '$' combined with an 'or' operator.
+ * 
+ * The operator * will consume the string from left to right,
+ * attempting to satisfy the condition (:|$). When it hits ':',
+ * the match will not stop since * is greedy. The match will
+ * continue until it hits $, the end-of-string boundary. 
+ *
+ * The submatch $1 = (:|$) will contain the empty string
+ * conceived to exist at the end-of-string boundary.
+ */
+status = inSection(4);
+pattern = /^.*(:|$)/;
+string = 'Hello: World';
+actualmatch = string.match(pattern);
+expectedmatch = Array(string, cnEmptyString);
+addThis();
+
 
 
 
