@@ -68,16 +68,6 @@ extern const char *
 NET_IpString (struct sockaddr_in* sin);
 #endif
 
-/* return the local hostname
-*/
-#ifdef XP_WIN
-extern char *CONST
-NET_HostName (void);
-#else
-extern CONST char * 
-NET_HostName (void);
-#endif
-
 /* free left over tcp connection data if there is any
  */
 extern void NET_FreeTCPConData(TCP_ConData * data);

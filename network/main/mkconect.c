@@ -157,7 +157,6 @@ typedef struct _DNSEntry {
 	time_t     expirationTime;
 } DNSEntry;
    
-PRIVATE char   *  net_local_hostname=0;     /* The name of this host */
 PRIVATE XP_List * dns_list=0;
 
 PRIVATE int32 dnsCacheExpiration=0;
@@ -855,27 +854,6 @@ net_FindAddress (const char *host_ptr,
 
 	PR_Free(host_port);
     return(0);   /* OK, we found an address */
-}
-
-/*  Find out what host this is that we are running on
- */
-#ifdef XP_WIN
-MODULE_PRIVATE char *CONST NET_HostName ()
-#else
-MODULE_PRIVATE const char * NET_HostName ()
-#endif
-{
-	if(!net_local_hostname)
-	  {
-        char tmp_local_hostname[256];
-
-		if (PR_GetSystemInfo(PR_SI_HOSTNAME, tmp_local_hostname, 254) == PR_FAILURE) /* Error, just get an empty string */
-        	tmp_local_hostname[0] = 0;
-	    StrAllocCopy(net_local_hostname, tmp_local_hostname);
-			
-        TRACEMSG(("TCP.c: Found local host name: %s", net_local_hostname));
-	  }
-    return net_local_hostname;
 }
 
 /* FREE left over tcp connection data if there is any
@@ -1644,8 +1622,5 @@ NET_CleanupTCP(void)
 	/* we really should free the socket_buffer but
 	 * that is in the other module as a private :(
 	 */
-
-    FREE_AND_CLEAR(net_local_hostname);
-
     return;
 }
