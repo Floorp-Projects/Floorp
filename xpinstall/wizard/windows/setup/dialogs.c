@@ -958,19 +958,6 @@ void InvalidateLBCheckbox(HWND hwndListBox)
   InvalidateRect(hwndListBox, &rcCheckArea, TRUE);
 }
   
-void SunJavaDependencyHack(DWORD dwIndex, BOOL bSelected, DWORD dwACFlag)
-{
-  DWORD dwPatchIndex;
-  siC   *siCTemp = NULL;
-
-  siCTemp = SiCNodeGetObject(dwIndex, FALSE, dwACFlag);
-  if(lstrcmpi("Sun Java 2", siCTemp->szDescriptionShort) == 0)
-  {
-    if((dwPatchIndex = SiCNodeGetIndexDS("Sun Java 2 Patch")) != -1)
-      SiCNodeSetAttributes(dwPatchIndex, SIC_SELECTED, bSelected, TRUE, AC_ALL);
-  }
-}
-
 void ToggleCheck(HWND hwndListBox, DWORD dwIndex, DWORD dwACFlag)
 {
   BOOL  bMoreToResolve;
@@ -987,7 +974,6 @@ void ToggleCheck(HWND hwndListBox, DWORD dwIndex, DWORD dwACFlag)
       SiCNodeSetAttributes(dwIndex, SIC_SELECTED, FALSE, FALSE, dwACFlag);
       szToggledDescriptionShort = SiCNodeGetDescriptionShort(dwIndex, FALSE, dwACFlag);
       ResolveDependees(szToggledDescriptionShort);
-      SunJavaDependencyHack(dwIndex, FALSE, dwACFlag);
     }
     else
     {
@@ -999,7 +985,6 @@ void ToggleCheck(HWND hwndListBox, DWORD dwIndex, DWORD dwACFlag)
 
       szToggledDescriptionShort = SiCNodeGetDescriptionShort(dwIndex, FALSE, dwACFlag);
       ResolveDependees(szToggledDescriptionShort);
-      SunJavaDependencyHack(dwIndex, TRUE, dwACFlag);
     }
 
     InvalidateLBCheckbox(hwndListBox);
