@@ -427,12 +427,13 @@ nsTransportWrapper::EnsureTransportWithAccess(nsCacheAccessMode  mode)
 }
 
 
-static nsresult NS_NewOutputStreamWrapper(nsIOutputStream **       result,
-                                          nsCacheEntryDescriptor * descriptor,
-                                          nsIOutputStream *        output)
+nsresult 
+nsCacheEntryDescriptor::NewOutputStreamWrapper(nsIOutputStream **       result,
+                                               nsCacheEntryDescriptor * descriptor,
+                                               nsIOutputStream *        output)
 {
-    nsCacheEntryDescriptor::nsOutputStreamWrapper* cacheOutput =
-        new nsCacheEntryDescriptor::nsOutputStreamWrapper(descriptor, output);
+    nsOutputStreamWrapper* cacheOutput =
+        new nsOutputStreamWrapper(descriptor, output);
     if (!cacheOutput) return NS_ERROR_OUT_OF_MEMORY;
 
     nsCOMPtr<nsISupports> ref(cacheOutput);
@@ -509,7 +510,7 @@ nsTransportWrapper::OpenOutputStream(PRUint32            offset,
     // this mechanism will provide a way for the cache device to enforce space limits,
     // and to drive cache entry eviction.
     nsCacheEntryDescriptor * descriptor = GET_DESCRIPTOR_FROM_TRANSPORT_WRAPPER(this);
-    return NS_NewOutputStreamWrapper(result, descriptor, output);
+    return NewOutputStreamWrapper(result, descriptor, output);
 }
 
 
