@@ -112,12 +112,12 @@ public class Codegen extends Interpreter {
                             if (classLoader == null)
                                 classLoader = new JavaScriptClassLoader();
                             clazz = classLoader.defineClass(name, classFile);
+                            ClassLoader loader = clazz.getClassLoader();
+                            clazz = loader.loadClass(name);
                         } else {
                             clazz = securitySupport.defineClass(name, classFile, 
                                                                 securityDomain);
                         }
-                        ClassLoader loader = clazz.getClassLoader();
-                        clazz = loader.loadClass(name);
                         if (name.equals(generatedName))
                             result = clazz;
                     } catch (ClassFormatError ex) {
