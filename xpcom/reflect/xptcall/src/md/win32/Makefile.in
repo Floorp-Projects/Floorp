@@ -74,6 +74,11 @@ AS		:= asaxp
 ASFLAGS		+= /I../../..public
 endif
 
+ifeq ($(TARGET_CPU),x86_64)
+CPPSRCS 	:= xptcinvoke_x86_64.cpp xptcstubs_x86_64.cpp
+ASFILES		:= xptcinvoke_asm_x86_64.asm xptcstubs_asm_x86_64.asm
+endif
+
 ifeq ($(OS_ARCH),WINCE)
 ifeq ($(TARGET_CPU),arm)
 CPPSRCS 	= xptcinvokece.cpp xptcstubsce.cpp
