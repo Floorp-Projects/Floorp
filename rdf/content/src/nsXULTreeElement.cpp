@@ -450,10 +450,29 @@ nsXULTreeElement::GetRowIndexOf(nsIDOMXULElement *aElement, PRInt32 *aReturn)
       elementTag.get() == kTreeChildrenAtom ||
       elementTag.get() == kTreeItemAtom)
     descendIntoRows = PR_FALSE;
+
+  // now begin with the first <treechildren> child of this node
+  PRInt32 i;
+  PRInt32 treeChildCount;
+  nsCOMPtr<nsIContent> treeChildren;
+  treeContent->ChildCount(treeChildCount);
+  for (i=0; i<treeChildCount; i++) {
+    treeChildren = null_nsCOMPtr();
+    treeContent->ChildAt(i, *getter_AddRefs(treeChildren));
+    
+    nsCOMPtr<nsIAtom> tag;
+    treeChildren->GetTag(*getter_AddRefs(tag));
+    if (tag.get() == kTreeChildrenAtom)
+      break;
+  }
+
+  if (treeChildren)
+    return IndexOfContent(treeChildren, elementContent,
+                          descendIntoRows, PR_TRUE /* aParentIsOpen */,
+                          aReturn);
   
-  return IndexOfContent(treeContent, elementContent,
-                        descendIntoRows, PR_TRUE /* aParentIsOpen */,
-                        aReturn);
+  NS_WARNING("EnsureContentVisible: tree has no <treechildren>");
+  return NS_ERROR_FAILURE;
 }
 
 
