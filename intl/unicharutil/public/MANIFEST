@@ -1,3 +1,4 @@
 nsICaseConversion.h
+nsIUGenCategory.h
+nsIUGenDetailCategory.h
 nsUnicharUtilCIID.h
-

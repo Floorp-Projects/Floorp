@@ -38,13 +38,13 @@ public:
     *  for the detail defintation of the following categories
     */
    typedef enum {
-     kUGenCategory_Mark         = 0; // Mn, Mc, and Me
-     kUGenCategory_Number       = 1; // Nd, Nl, and No 
-     kUGenCategory_Separator    = 2; // Zs, Zl, and Zp
-     kUGenCategory_Other        = 3; // Cc, Cf, Cs, Co, and Cn
-     kUGenCategory_Letter       = 4; // Lu, Ll, Lt, Lm, and Lo
-     kUGenCategory_Punctuation  = 5; // Pc, Pd, Ps, Pe, Pi, Pf, and Po
-     kUGenCategory_Symbol       = 6; // Sm, Sc, Sk, and So
+     kUGenCategory_Mark         = 1, // Mn, Mc, and Me
+     kUGenCategory_Number       = 2, // Nd, Nl, and No 
+     kUGenCategory_Separator    = 3, // Zs, Zl, and Zp
+     kUGenCategory_Other        = 4, // Cc, Cf, Cs, Co, and Cn
+     kUGenCategory_Letter       = 5, // Lu, Ll, Lt, Lm, and Lo
+     kUGenCategory_Punctuation  = 6, // Pc, Pd, Ps, Pe, Pi, Pf, and Po
+     kUGenCategory_Symbol       = 7  // Sm, Sc, Sk, and So
    } nsUGenCategory;
 
    /**
