@@ -65,7 +65,7 @@ public:
   il_container *SetContainer(il_container *ic) {mContainer=ic; return ic;};
 
   ImgDecoder(il_container *aContainer){ NS_INIT_ISUPPORTS(); mContainer=aContainer;};
-  ~ImgDecoder() { }; // XXX Pam needs to fix this
+  ~ImgDecoder(); // XXX Pam needs to fix this
 
 private:
   il_container* mContainer;
@@ -73,6 +73,10 @@ private:
 
 NS_IMPL_ISUPPORTS(ImgDecoder, kImgDecoderIID)
 
+ImgDecoder:: ~ImgDecoder()
+{
+    return;
+}
 /*-----------------------------------------*/
 /*-----------------------------------------*/
 NS_IMETHODIMP ImgDCallbk::ImgDCBSetupColorspaceConverter()
@@ -323,16 +327,13 @@ il_image_complete_notify(il_container *ic)
     
     XP_BZERO(&message_data, sizeof(IL_MessageData));
 
-#if !defined(STANDALONE_IMAGE_LIB)
-	PR_ASSERT(ic->clients);
-#endif
     for (image_req = ic->clients; image_req; image_req = image_req->next) {
         message_data.image_instance = image_req;
         XP_NotifyObservers(image_req->obs_list, IL_IMAGE_COMPLETE,
                            &message_data);
     }
 }
-#if 1
+
 /* Notify observers that a frame of an image animation has finished
    decoding. */
 void
@@ -343,16 +344,12 @@ il_frame_complete_notify(il_container *ic)
     
     XP_BZERO(&message_data, sizeof(IL_MessageData));
 
-#if !defined(STANDALONE_IMAGE_LIB)
-	PR_ASSERT(ic->clients);
-#endif
     for (image_req = ic->clients; image_req; image_req = image_req->next) {
         message_data.image_instance = image_req;
         XP_NotifyObservers(image_req->obs_list, IL_FRAME_COMPLETE,
                            &message_data);
     }
 }
-#endif
 
 int
 il_compute_percentage_complete(int row, il_container *ic)
@@ -522,13 +519,8 @@ il_icon_notify(IL_ImageReq *image_req, int icon_number,
     XP_BZERO(&message_data, sizeof(IL_MessageData));
   
     /* Obtain the dimensions of the icon. */
-#ifdef STANDALONE_IMAGE_LIB
     img_cx->img_cb->GetIconDimensions(img_cx->dpy_cx, &icon_width,
                                       &icon_height, icon_number);
-#else
-    IMGCBIF_GetIconDimensions(img_cx->img_cb, img_cx->dpy_cx, &icon_width,
-                              &icon_height, icon_number);
-#endif /* STANDALONE_IMAGE_LIB */
 
     /* Fill in the message data and notify observers. */
     message_data.image_instance = image_req;
@@ -786,13 +778,8 @@ il_size(il_container *ic)
 
     /* If the display front-end doesn't support scaling, IMGCBIF_NewPixmap will
        set the image and mask dimensions to scaled_width and scaled_height. */
-#ifdef STANDALONE_IMAGE_LIB
     img_cx->img_cb->NewPixmap(img_cx->dpy_cx, ic->dest_width,
                               ic->dest_height, ic->image, ic->mask);
-#else
-    IMGCBIF_NewPixmap(img_cx->img_cb, img_cx->dpy_cx, ic->dest_width,
-                      ic->dest_height, ic->image, ic->mask);
-#endif /* STANDALONE_IMAGE_LIB */
     
 	if (!ic->image->bits)
 		return MK_OUT_OF_MEMORY;
@@ -811,23 +798,12 @@ il_size(il_container *ic)
         NI_PixmapHeader *mask_header = &ic->mask->header;
         uint32 mask_size = mask_header->widthBytes * mask_header->height;
 
-#ifdef STANDALONE_IMAGE_LIB
         img_cx->img_cb->ControlPixmapBits(img_cx->dpy_cx, ic->mask,
                                           IL_LOCK_BITS);
-#else
-        IMGCBIF_ControlPixmapBits(img_cx->img_cb, img_cx->dpy_cx, ic->mask,
-                                  IL_LOCK_BITS);
-#endif /* STANDALONE_IMAGE_LIB */
                                 
         memset (ic->mask->bits, ~0, mask_size);
-        
-#ifdef STANDALONE_IMAGE_LIB
         img_cx->img_cb->ControlPixmapBits(img_cx->dpy_cx, ic->mask,
                                           IL_UNLOCK_BITS);
-#else
-        IMGCBIF_ControlPixmapBits(img_cx->img_cb, img_cx->dpy_cx, ic->mask,
-                                  IL_UNLOCK_BITS);
-#endif /* STANDALONE_IMAGE_LIB */
     }
     
     if ((status = il_init_scaling(ic)) < 0)
@@ -881,8 +857,7 @@ IL_StreamWriteReady(il_container *ic)
     uint request_size = 1;
 
     if (ic->imgdec)
-  //      request_size = (*ic->write_ready)();
-    request_size = ic->imgdec->ImgDWriteReady();
+      request_size = ic->imgdec->ImgDWriteReady();
 
     if (!request_size)
         return 0;
@@ -990,21 +965,16 @@ IL_StreamWrite(il_container *ic, const unsigned char *str, int32 len)
 
     ic->bytes_consumed += len;
     
-	if (len)
-
-	//	err = (*ic->write)(ic, (unsigned char *)str, len);
-
-		err = ic->imgdec->ImgDWrite(str,  len);
-
-
+	  if (len)
+		   err = ic->imgdec->ImgDWrite(str,  len);
 
       /* Notify observers of image progress. */
     il_progress_notify(ic);
 
-	if (err < 0)
-		return err;
-	else
-		return len;
+	  if (err < 0)
+		  return err;
+	  else
+	   	return len;
 }
 
 
@@ -1365,23 +1335,12 @@ il_container_complete(il_container *ic)
     il_flush_image_data(ic);
 
     /* Tell the Front Ends that we will not modify the bits any further. */
-#ifdef STANDALONE_IMAGE_LIB
     img_cx->img_cb->ControlPixmapBits(img_cx->dpy_cx, ic->image,
                                       IL_RELEASE_BITS);
-#else
-    IMGCBIF_ControlPixmapBits(img_cx->img_cb, img_cx->dpy_cx, ic->image,
-                              IL_RELEASE_BITS);
-#endif /* STANDALONE_IMAGE_LIB */
-
     if (ic->mask) {
-#ifdef STANDALONE_IMAGE_LIB
         img_cx->img_cb->ControlPixmapBits(img_cx->dpy_cx, ic->mask,
                                           IL_RELEASE_BITS);
-#else
-        IMGCBIF_ControlPixmapBits(img_cx->img_cb, img_cx->dpy_cx, ic->mask,
-                                  IL_RELEASE_BITS);
-#endif /* STANDALONE_IMAGE_LIB */
-	}
+    }
 
     if (!ic->is_looping) {
         /* Tell the client contexts that the container has finished
@@ -1467,7 +1426,7 @@ il_image_complete(il_container *ic)
 
                 FREE_IF_NOT_NULL(src_header->color_space->cmap.map);
                 FREE_IF_NOT_NULL(src_header->transparent_pixel);
-			    il_destroy_image_transparent_pixel(ic);
+			          il_destroy_image_transparent_pixel(ic);
                 FREE_IF_NOT_NULL(ic->comment);
                 ic->comment_length = 0;
 
@@ -1533,8 +1492,9 @@ il_image_complete(il_container *ic)
                         ic->is_url_loading = PR_TRUE;
 
                         /* Suppress thermo & progress bar */
-					    netRequest->SetBackgroundLoad(PR_TRUE);
-					    reader = IL_NewNetReader(ic);
+                        /* Call to netlib for net cache data happens here. */
+					              netRequest->SetBackgroundLoad(PR_TRUE);
+					              reader = IL_NewNetReader(ic);
                         (void) ic->net_cx->GetURL(ic->url, NET_DONT_RELOAD, 
 											      reader);
                         /* Release reader, GetURL will keep a ref to it. */
@@ -1546,9 +1506,9 @@ il_image_complete(il_container *ic)
                     }
                 }
                 else if (ic->is_multipart) {
-				    ic->multi++;
-				    ic->state = IC_MULTI;
-			    }
+				           ic->multi++;
+				           ic->state = IC_MULTI;
+                }
             }
 		    break;
         
@@ -1863,13 +1823,10 @@ IL_GetImage(const char* image_url,
     ilIURL *url = NULL;
 
     IL_ImageReq *image_req;
-	ilINetReader *reader;
-	il_container *ic = NULL;
+	  ilINetReader *reader;
+	  il_container *ic = NULL;
     int req_depth = img_cx->color_space->pixmap_depth;
-	int err;
-#ifndef STANDALONE_IMAGE_LIB
-    int is_internal_external_reconnect = FALSE;
-#endif /* STANDALONE_IMAGE_LIB */
+	  int err;
     int is_view_image;
     int is_internal_external_reconnect = FALSE;
 
@@ -1887,34 +1844,34 @@ IL_GetImage(const char* image_url,
      * handle on this backup net context.
      */
     image_req->net_cx = net_cx->Clone();
-	if (!image_req->net_cx) {
-		PR_FREEIF(image_req);
-		return NULL;
-	}
+	  if (!image_req->net_cx) {
+		  PR_FREEIF(image_req);
+		  return NULL;
+    }
     image_req->obs_list = obs_list;
     XP_SetObserverListObservable(obs_list, (void *)image_req);
     
     ILTRACE(1, ("il: IL_GetImage, url=%s\n", image_url));
 
-	if (!image_url)
-	{
-		ILTRACE(0,("il: no url, sending delayed icon"));
+	  if (!image_url)
+    {
+		    ILTRACE(0,("il: no url, sending delayed icon"));
         il_icon_notify(image_req, IL_IMAGE_DELAYED, IL_ERROR_NO_DATA);
         return image_req;
-	}
+    }
 
     /* Check for any special internal-use URLs */
-	if (*image_url == 'i'                  ||
+	  if (*image_url == 'i'                  ||
         !PL_strncmp(image_url, "/mc-", 4)  ||
         !PL_strncmp(image_url, "/ns-", 4))
-	{
-		uint32 icon;
+    {
+		    uint32 icon;
 
         /* A built-in icon ? */
         icon = il_internal_image(image_url);
-		if (icon)
-		{
-			ILTRACE(4,("il: internal icon %d", icon));
+		    if (icon)
+        {
+			      ILTRACE(4,("il: internal icon %d", icon));
 
             /* XXXM12N In response to this notification, layout should set
                lo_image->image_attr->attrmask |= LO_ATTR_INTERNAL_IMAGE; */
@@ -1923,15 +1880,6 @@ IL_GetImage(const char* image_url,
             return image_req;
 		}
 
-#ifndef STANDALONE_IMAGE_LIB
-        /* Image viewer URLs look like "internal-external-reconnect:REALURL.gif"
-         * Strip off the prefix to get the real URL name.
-         */
-		if (!PL_strncmp(image_url, "internal-external-reconnect:", 28)) {
-            image_url += 28;
-			is_internal_external_reconnect = TRUE;
-        }
-#endif /* STANDALONE_IMAGE_LIB */
 	}
 
     ic = il_get_container(img_cx, cache_reload_policy, image_url,
@@ -1941,41 +1889,22 @@ IL_GetImage(const char* image_url,
     {
         ILTRACE(0,("il: MEM il_container"));
         il_icon_notify(image_req, IL_IMAGE_DELAYED, IL_ERROR_INTERNAL);
-#ifndef STANDALONE_IMAGE_LIB
-        if (is_internal_external_reconnect)
-            il_abort_reconnect();
-#endif /* STANDALONE_IMAGE_LIB */
         return image_req;
     }
      
     /* Give the client a handle into the imagelib world. */
     image_req->ic = ic;
 
-    /* Is this a call to the image viewer ? */
-#ifndef STANDALONE_IMAGE_LIB
-#ifndef M12N /* XXXM12N fix me. */
-    is_view_image = is_internal_external_reconnect &&
-        (cx->type != MWContextNews) && (cx->type != MWContextMail);
-#else
-    is_view_image = is_internal_external_reconnect;
-#endif /* M12N */
-#else
     is_view_image = FALSE;
   
-#endif /* STANDALONE_IMAGE_LIB */
-
     if (!il_add_client(img_cx, ic, image_req, is_view_image))
     {
         il_icon_notify(image_req, IL_IMAGE_DELAYED, IL_ERROR_INTERNAL);
-#ifndef STANDALONE_IMAGE_LIB
-        if (is_internal_external_reconnect)
-            il_abort_reconnect();
-#endif /* STANDALONE_IMAGE_LIB */
         return image_req;
     }
 
     /* If the image is already in memory ... */
-	if (ic->state != IC_VIRGIN) {
+	  if (ic->state != IC_VIRGIN) {
         switch (ic->state) {
         case IC_BAD:
             il_icon_notify(image_req, IL_IMAGE_BAD_DATA,
@@ -1984,9 +1913,6 @@ IL_GetImage(const char* image_url,
 
         case IC_MISSING:
             il_icon_notify(image_req, IL_IMAGE_NOT_FOUND, IL_ERROR_NO_DATA);
-#ifndef STANDALONE_IMAGE_LIB
-            PR_ASSERT(! is_internal_external_reconnect);
-#endif /* STANDALONE_IMAGE_LIB */
             break;
 
         case IC_INCOMPLETE:
@@ -2024,24 +1950,15 @@ IL_GetImage(const char* image_url,
             return NULL;
         }
 
-#ifndef STANDALONE_IMAGE_LIB
-        if (is_internal_external_reconnect) {
-            /* Since we found the image in the cache, we don't
-             * need any of the data now streaming into the image viewer.
-             */
-            il_abort_reconnect();
-        }
-#endif /* STANDALONE_IMAGE_LIB */
-
-		/* NOCACHE falls through to be tried again */
+		    /* NOCACHE falls through to be tried again */
         if (ic->state != IC_NOCACHE)
              return image_req;
     }
 
     /* This is a virgin (never-used) image container. */
-	else
+	  else
     {
-		ic->forced = FORCE_RELOAD(cache_reload_policy);
+		   ic->forced = FORCE_RELOAD(cache_reload_policy);
 	}
 
 	ic->state = IC_START;
@@ -2052,16 +1969,6 @@ IL_GetImage(const char* image_url,
 
     /* Record the context that actually initiates and controls the transfer. */
     ic->net_cx = net_cx->Clone();
- 
-#ifndef STANDALONE_IMAGE_LIB
-	if (is_internal_external_reconnect)
-	{
-        /* "Reconnect" to the stream feeding IL_ViewStream(), already
-           created. */
-        il_reconnect(ic);
-        return image_req;
-    }
-#endif /* STANDALONE_IMAGE_LIB */
         
     /* need to make a net request */
     ILTRACE(1,("il: net request for %s, %s", image_url,
@@ -2202,11 +2109,7 @@ il_image_stopped(il_container *ic)
    all of the callbacks in the IMGCBIF interface. */
 IL_IMPLEMENT(IL_GroupContext*)
 IL_NewGroupContext(void *dpy_cx, 
-#ifdef STANDALONE_IMAGE_LIB
                    ilIImageRenderer *img_cb)
-#else
-                   IMGCBIF *img_cb)
-#endif /* STANDALONE_IMAGE_LIB */
 {
     IL_GroupContext *img_cx;
     
@@ -2278,14 +2181,8 @@ IL_DestroyGroupContext(IL_GroupContext *img_cx)
             img_cx->color_space = NULL;
         }
 
-        /* Release the JMC callback interface. */
-#ifdef STANDALONE_IMAGE_LIB
+        /* Release the img context callback interface. */
         NS_RELEASE(img_cx->img_cb);
-#else
-        IMGCBIF_release(img_cx->img_cb, NULL); /* XXXM12N Need to use
-                                                  exceptions. */
-#endif /* STANDALONE_IMAGE_LIB */
-
         PR_FREEIF(img_cx);
     }
 }
@@ -2351,7 +2248,7 @@ IL_DisplaySubImage(IL_ImageReq *image_req, int x, int y, int x_offset,
     ic = image_req->ic;
 	
     if (!ic )
-	return;
+	     return;
 
     /* Perform the drawing operation, but only do so for displayable areas
        of the image pixmap. */
@@ -2384,15 +2281,10 @@ IL_DisplaySubImage(IL_ImageReq *image_req, int x, int y, int x_offset,
         /* Draw the intersection of the requested area and the displayable
            area. */
         if ((display_width > 0) && (display_height > 0)) {
-#ifdef STANDALONE_IMAGE_LIB
             img_cx->img_cb->DisplayPixmap(dpy_cx, ic->image, ic->mask,
                                           x, y, display_left, display_top,
                                           display_width, display_height);
-#else
-            IMGCBIF_DisplayPixmap(img_cx->img_cb, dpy_cx, ic->image, ic->mask,
-                                  x, y, display_left, display_top,
-                                  display_width, display_height, ic->dest_width, ic->dest_height);
-#endif /* STANDALONE_IMAGE_LIB */
+
         }
     }
     else {
@@ -2402,15 +2294,10 @@ IL_DisplaySubImage(IL_ImageReq *image_req, int x, int y, int x_offset,
            area extends beyond the bounds of the image pixmap, tiling will
            be performed. */
         if (width && height) {
-#ifdef STANDALONE_IMAGE_LIB
             img_cx->img_cb->DisplayPixmap(dpy_cx, ic->image, ic->mask,
                                           x, y, x_offset, y_offset, 
                                           width, height);
-#else
-            IMGCBIF_DisplayPixmap(img_cx->img_cb, dpy_cx, ic->image, ic->mask,
-                                  x, y, x_offset, y_offset, width, height, 
-                                  ic->dest_width, ic->dest_height);
-#endif /* STANDALONE_IMAGE_LIB */
+
         }
     }
 }
@@ -2427,11 +2314,8 @@ IL_DisplayIcon(IL_GroupContext *img_cx, int icon_number, int x, int y)
         return;
 
     /* Ask the Front End to display the icon. */
-#ifdef STANDALONE_IMAGE_LIB
     img_cx->img_cb->DisplayIcon(img_cx->dpy_cx, x, y, icon_number);
-#else
-    IMGCBIF_DisplayIcon(img_cx->img_cb, img_cx->dpy_cx, x, y, icon_number);
-#endif /* STANDALONE_IMAGE_LIB */
+
 }
 
 
@@ -2445,13 +2329,8 @@ IL_GetIconDimensions(IL_GroupContext *img_cx, int icon_number, int *width,
         return;
 
     /* Obtain the dimensions of the icon. */
-#ifdef STANDALONE_IMAGE_LIB
     img_cx->img_cb->GetIconDimensions(img_cx->dpy_cx, width, height,
                                       icon_number);
-#else
-    IMGCBIF_GetIconDimensions(img_cx->img_cb, img_cx->dpy_cx, width, height,
-                              icon_number);
-#endif /* STANDALONE_IMAGE_LIB */
 }
 
 
