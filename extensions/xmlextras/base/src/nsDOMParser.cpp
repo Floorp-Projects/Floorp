@@ -63,6 +63,9 @@
 #include "nsCRT.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsLoadListenerProxy.h"
+#include "nsStreamUtils.h"
+#include "nsNetCID.h"
+
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 static const char* kLoadAsData = "loadAsData";
@@ -487,7 +490,17 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
       (nsCRT::strcmp(contentType, "application/xhtml+xml") != 0))
     return NS_ERROR_NOT_IMPLEMENTED;
 
+  // Put the nsCOMPtr out here so we hold a ref to the stream as needed
   nsresult rv;
+  nsCOMPtr<nsIBufferedInputStream> bufferedStream;
+  if (!NS_InputStreamIsBuffered(stream)) {
+    bufferedStream = do_CreateInstance(NS_BUFFEREDINPUTSTREAM_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = bufferedStream->Init(stream, 4096);
+    NS_ENSURE_SUCCESS(rv, rv);
+    stream = bufferedStream;
+  }
+  
   nsCOMPtr<nsIPrincipal> principal;
   nsCOMPtr<nsIScriptSecurityManager> secMan = 
     do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
