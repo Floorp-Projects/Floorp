@@ -94,6 +94,7 @@
         }, 
         {
             ACTIONS = {
+                addToAddressBook = id; 
                 back = id; 
                 biggerTextSize = id; 
                 bookmarkLink = id; 
@@ -105,6 +106,7 @@
                 closeOtherTabs = id; 
                 closeSendersTab = id; 
                 configurePopupBlocking = id; 
+                copyAddressToClipboard = id; 
                 copyImage = id; 
                 copyImageLocation = id; 
                 copyLinkLocation = id; 
@@ -155,6 +157,8 @@
                 mAddBookmarkFolderField = NSPopUpButton; 
                 mAddBookmarkSheetWindow = NSWindow; 
                 mAddBookmarkTitleField = NSTextField; 
+                mAddToAddressBook = NSMenuItem; 
+                mAddToAddressBook2 = NSMenuItem; 
                 mBackItem = NSMenuItem; 
                 mBookmarkViewController = BookmarkViewController; 
                 mContentView = BrowserContentView; 
@@ -162,6 +166,7 @@
                 mForwardItem = NSMenuItem; 
                 mHistoryDataSource = HistoryDataSource; 
                 mImageLinkMenu = NSMenu; 
+                mImageMailToLinkMenu = NSMenu; 
                 mImageMenu = NSMenu; 
                 mInputMenu = NSMenu; 
                 mLinkMenu = NSMenu; 
@@ -169,6 +174,7 @@
                 mLocationSheetWindow = NSWindow; 
                 mLocationToolbarView = NSView; 
                 mLock = NSImageView; 
+                mMailToLinkMenu = NSMenu; 
                 mPageMenu = NSMenu; 
                 mPersonalToolbar = BookmarkToolbar; 
                 mPopupBlocked = NSButton; 

@@ -222,7 +222,7 @@
 		};
 		03C5AB1107722DFD00EAF77D = {
 			isa = PBXFileReference;
-			lastKnownFileType = text.xml;
+			lastKnownFileType = text.plist.xml;
 			path = "Info-DownloadsPrefPane.plist";
 			refType = 4;
 			sourceTree = "<group>";
@@ -419,7 +419,7 @@
 		};
 		03E2D8540771F73F00BD2443 = {
 			isa = PBXFileReference;
-			lastKnownFileType = text.xml;
+			lastKnownFileType = text.plist.xml;
 			path = "Info-TabsPrefPane.plist";
 			refType = 4;
 			sourceTree = "<group>";
@@ -811,6 +811,7 @@
 //104
 		1058C7A0FEA54F0111CA2CBB = {
 			children = (
+				34884A35074F7C5D000EA76B,
 				F55A4DED0380705A01A80166,
 				1058C7A1FEA54F0111CA2CBB,
 				F557193A022B4102010001CA,
@@ -1207,6 +1208,78 @@
 //302
 //303
 //304
+//340
+//341
+//342
+//343
+//344
+		34884A35074F7C5D000EA76B = {
+			isa = PBXFileReference;
+			lastKnownFileType = wrapper.framework;
+			name = AddressBook.framework;
+			path = /System/Library/Frameworks/AddressBook.framework;
+			refType = 0;
+			sourceTree = "<absolute>";
+		};
+		34884A36074F7C5D000EA76B = {
+			fileRef = 34884A35074F7C5D000EA76B;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		34884A37074F7C5D000EA76B = {
+			fileRef = 34884A35074F7C5D000EA76B;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3489ADC90753B717005ADF6C = {
+			fileEncoding = 4;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
+			name = "ABAddressBook+Utils.h";
+			path = "src/extensions/ABAddressBook+Utils.h";
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		3489ADCA0753B717005ADF6C = {
+			fileEncoding = 4;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.cpp.objcpp;
+			name = "ABAddressBook+Utils.mm";
+			path = "src/extensions/ABAddressBook+Utils.mm";
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		3489ADCB0753B717005ADF6C = {
+			fileRef = 3489ADC90753B717005ADF6C;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3489ADCC0753B717005ADF6C = {
+			fileRef = 3489ADCA0753B717005ADF6C;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3489ADCD0753B717005ADF6C = {
+			fileRef = 3489ADC90753B717005ADF6C;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3489ADCE0753B717005ADF6C = {
+			fileRef = 3489ADCA0753B717005ADF6C;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+//340
+//341
+//342
+//343
+//344
 //3F0
 //3F1
 //3F2
@@ -1715,6 +1788,7 @@
 				3FF08F0906E7CF9C001C9B19,
 				3FF08F0A06E7CF9C001C9B19,
 				3FF08F0B06E7CF9C001C9B19,
+				3489ADCB0753B717005ADF6C,
 			);
 			isa = PBXHeadersBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2872,6 +2946,7 @@
 				3FF08F0006E7CF86001C9B19,
 				3FF08F0106E7CF86001C9B19,
 				3FF08F0206E7CF86001C9B19,
+				3489ADCC0753B717005ADF6C,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -4547,6 +4622,7 @@
 				3F44AD8405BDFB9F00CB4B08,
 				3F44AD8505BDFB9F00CB4B08,
 				3FECC8E605D1FE800068E7ED,
+				34884A36074F7C5D000EA76B,
 			);
 			isa = PBXFrameworksBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -5701,6 +5777,7 @@
 				3FF08F0C06E7CF9C001C9B19,
 				3FF08F0D06E7CF9C001C9B19,
 				3FF08F0E06E7CF9C001C9B19,
+				3489ADCD0753B717005ADF6C,
 			);
 			isa = PBXHeadersBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -6858,6 +6935,7 @@
 				3FF08F0306E7CF86001C9B19,
 				3FF08F0406E7CF86001C9B19,
 				3FF08F0506E7CF86001C9B19,
+				3489ADCE0753B717005ADF6C,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -8349,6 +8427,7 @@
 				82C39664065B156600A82035,
 				3FE5BA0C068A1A140001CECD,
 				82CE286E0736605800B4DE07,
+				34884A37074F7C5D000EA76B,
 			);
 			isa = PBXFrameworksBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -14017,6 +14096,7 @@
 		};
 		F5B950BA030C833301A96654 = {
 			children = (
+				3489ADC90753B717005ADF6C,
 				3F27D94A05DB2600007B543D,
 				3FB2BA960545EA80002B9691,
 				3FB2BA920545EA80002B9691,
@@ -14043,6 +14123,7 @@
 		};
 		F5B950BB030C833301A96654 = {
 			children = (
+				3489ADCA0753B717005ADF6C,
 				3F27D94B05DB2600007B543D,
 				3FB2BA970545EA80002B9691,
 				3FB2BA930545EA80002B9691,

@@ -127,13 +127,17 @@ typedef enum
   IBOutlet NSMenu*              mImageMenu;
   IBOutlet NSMenu*              mInputMenu;
   IBOutlet NSMenu*              mLinkMenu;
+  IBOutlet NSMenu*              mMailToLinkMenu;
   IBOutlet NSMenu*              mImageLinkMenu;
+  IBOutlet NSMenu*              mImageMailToLinkMenu;
   IBOutlet NSMenu*              mTabMenu;
 
   // Context menu item outlets
   IBOutlet NSMenuItem*          mBackItem;
   IBOutlet NSMenuItem*          mForwardItem;
   IBOutlet NSMenuItem*          mCopyItem;
+  IBOutlet NSMenuItem*          mAddToAddressBook;
+  IBOutlet NSMenuItem*          mAddToAddressBook2; // From the mailto link + image menu
   
   NSToolbarItem*                mSidebarToolbarItem;
   NSToolbarItem*                mBookmarkToolbarItem;
@@ -307,12 +311,17 @@ typedef enum
 
 // Called when a context menu should be shown.
 - (void)onShowContextMenu:(int)flags domEvent:(nsIDOMEvent*)aEvent domNode:(nsIDOMNode*)aNode;
+- (void)prepareAddToAddressBookMenuItem:(NSMenuItem*)addToAddressBookItem address:(NSString*)emailAddress;
 - (NSMenu*)getContextMenu;
+- (NSString*)getMailAddressFromContextMenuLinkNode;
+- (NSString*)getContextMenuNodeHrefText;
 
 // Context menu methods
 - (IBAction)openLinkInNewWindow:(id)aSender;
 - (IBAction)openLinkInNewTab:(id)aSender;
 - (void)openLinkInNewWindowOrTab: (BOOL)aUseWindow;
+- (IBAction)addToAddressBook:(id)aSender;
+- (IBAction)copyAddressToClipboard:(id)aSender;
 
 - (IBAction)savePageAs:(id)aSender;
 - (IBAction)saveFrameAs:(id)aSender;

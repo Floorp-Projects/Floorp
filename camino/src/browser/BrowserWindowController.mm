@@ -95,6 +95,9 @@
 #include "nsIFocusController.h"
 
 #include <QuickTime/QuickTime.h>
+#include <AppKit/NSPasteboard.h>
+#import <AddressBook/AddressBook.h>
+#import "ABAddressBook+Utils.h"
 
 #include "nsAppDirectoryServiceDefs.h"
 
@@ -2500,16 +2503,117 @@ enum BWCOpenDest {
   mContextMenuEvent = aEvent;
 }
 
+// Returns the text of the href attribute for the link the context menu is
+// currently on. Returns an empty string if the context menu is not on a
+// link or we couldn't work out the href for some other reason.
+- (NSString*)getContextMenuNodeHrefText
+{
+  if (mContextMenuNode) {
+    nsCOMPtr<nsIDOMElement> linkContent;
+    nsAutoString href;
+    GeckoUtils::GetEnclosingLinkElementAndHref(mContextMenuNode, getter_AddRefs(linkContent), href);
+
+    // XXXdwh Handle simple XLINKs if we want to be compatible with Mozilla, but who
+    // really uses these anyway? :)
+    if (linkContent && !href.IsEmpty())
+      return [NSString stringWith_nsAString:href];
+  }
+  
+  // Not on a link or a link we don't understand
+  return @"";
+}
+
+// Determine if the node the context menu has been invoked for is an <a> node
+// indicating a mailto: link. If so return the indicated e-mail address
+// otherwise return nil
+- (NSString*)getMailAddressFromContextMenuLinkNode
+{
+  NSString* hrefStr = [self getContextMenuNodeHrefText];
+  
+  if ([hrefStr hasPrefix:@"mailto:"]) {
+    NSString* linkTargetText = [hrefStr substringFromIndex:7];
+    
+    // mailto: links can contain arguments (after '?') and/or multiple e-mail
+    // addresses (comma separated). We want just the first e-mail address.
+    NSRange separatorRange = [linkTargetText rangeOfCharacterFromSet:[NSCharacterSet characterSetWithCharactersInString:@",?"]];
+    
+    if (separatorRange.length != 0)
+      linkTargetText = [linkTargetText substringToIndex:separatorRange.location];
+      
+    return linkTargetText;
+  }
+  
+  return nil;
+}
+
+// Add the e-mail address from the mailto: link of the context menu node
+// to the user's address book. If the address already exists we just
+// open the address book at the record containing it.
+- (IBAction)addToAddressBook:(id)aSender
+{
+  NSString* emailAddress = [self getMailAddressFromContextMenuLinkNode];
+  if (emailAddress) {
+    ABAddressBook* abook = [ABAddressBook sharedAddressBook];
+    if ([abook emailAddressExistsInAddressBook:emailAddress] )
+      [abook openAddressBookForRecordWithEmail:emailAddress];
+    else
+      [abook addNewPersonFromEmail:emailAddress];
+  }
+}
+
+// Copy the e-mail address from the mailto: link of the context menu node
+// onto the clipboard.
+- (IBAction)copyAddressToClipboard:(id)aSender
+{
+  NSString* emailAddress = [self getMailAddressFromContextMenuLinkNode];
+  
+  if (emailAddress) {
+    NSPasteboard* clipboard = [NSPasteboard generalPasteboard];
+    
+    NSArray* types = [NSArray arrayWithObject:NSStringPboardType];
+    
+    [clipboard declareTypes:types owner:nil];
+    [clipboard setString:emailAddress forType:NSStringPboardType];
+  }
+}
+
+- (void)prepareAddToAddressBookMenuItem:(NSMenuItem*)addToAddressBookItem address:(NSString*)emailAddress
+{
+  if ([[ABAddressBook sharedAddressBook] emailAddressExistsInAddressBook:emailAddress]) {
+    NSString* realName = [[ABAddressBook sharedAddressBook] getRealNameForEmailAddress:[self getMailAddressFromContextMenuLinkNode]];
+    [addToAddressBookItem setTitle:[NSString stringWithFormat:NSLocalizedString(@"Open %@ in Address Book", @"Open %@ in Address Book"), realName != nil ? realName : @""]];
+    [addToAddressBookItem setEnabled:YES];
+  } else {
+    [addToAddressBookItem setTitle:NSLocalizedString(@"Add to Address Book", @"Add to Address Book")];
+    [addToAddressBookItem setEnabled:([emailAddress length] > 0) ];
+  }
+}
+
 - (NSMenu*)getContextMenu
 {
   BOOL showFrameItems = NO;
   
   NSMenu* menuPrototype = nil;
-  if ((mContextMenuFlags & nsIContextMenuListener::CONTEXT_LINK) != 0) {
-    if ((mContextMenuFlags & nsIContextMenuListener::CONTEXT_IMAGE) != 0)
-      menuPrototype = mImageLinkMenu;
-    else
-      menuPrototype = mLinkMenu;
+  if ((mContextMenuFlags & nsIContextMenuListener::CONTEXT_LINK) != 0)
+  {
+    NSString* emailAddress = [self getMailAddressFromContextMenuLinkNode];
+    
+    if ((mContextMenuFlags & nsIContextMenuListener::CONTEXT_IMAGE) != 0) {
+      if (emailAddress) {
+        [self prepareAddToAddressBookMenuItem:mAddToAddressBook2 address:emailAddress];
+        menuPrototype = mImageMailToLinkMenu;
+      } 
+      else
+        menuPrototype = mImageLinkMenu;
+    } 
+    else {
+      if (emailAddress) {
+        [self prepareAddToAddressBookMenuItem:mAddToAddressBook address:emailAddress];
+        menuPrototype = mMailToLinkMenu;
+      } 
+      else
+        menuPrototype = mLinkMenu;
+    }
   }
   else if ((mContextMenuFlags & nsIContextMenuListener::CONTEXT_INPUT) != 0 ||
            (mContextMenuFlags & nsIContextMenuListener::CONTEXT_TEXT) != 0) {
@@ -2575,20 +2679,14 @@ enum BWCOpenDest {
 
 -(void)openLinkInNewWindowOrTab: (BOOL)aUseWindow
 {
-  nsCOMPtr<nsIDOMElement> linkContent;
-  nsAutoString href;
-  GeckoUtils::GetEnclosingLinkElementAndHref(mContextMenuNode, getter_AddRefs(linkContent), href);
+  NSString* hrefStr = [self getContextMenuNodeHrefText];
 
-  // XXXdwh Handle simple XLINKs if we want to be compatible with Mozilla, but who
-  // really uses these anyway? :)
-  if (!linkContent || href.IsEmpty())
+  if ([hrefStr length] == 0)
     return;
 
   nsCOMPtr<nsIPrefBranch> pref(do_GetService("@mozilla.org/preferences-service;1"));
   if (!pref)
     return; // Something bad happened if we can't get prefs.
-
-  NSString* hrefStr = [NSString stringWith_nsAString:href];
 
   PRBool loadInBackground;
   pref->GetBoolPref("browser.tabs.loadInBackground", &loadInBackground);
@@ -2615,16 +2713,10 @@ enum BWCOpenDest {
 
 - (IBAction)saveLinkAs:(id)aSender
 {
-  nsCOMPtr<nsIDOMElement> linkContent;
-  nsAutoString href;
-  GeckoUtils::GetEnclosingLinkElementAndHref(mContextMenuNode, getter_AddRefs(linkContent), href);
-
-  // XXXdwh Handle simple XLINKs if we want to be compatible with Mozilla, but who
-  // really uses these anyway? :)
-  if (!linkContent || href.IsEmpty())
+  NSString* hrefStr = [self getContextMenuNodeHrefText];
+  
+  if ([hrefStr length] == 0)
     return;
-
-  NSString* hrefStr = [NSString stringWith_nsAString: href];
 
   // The user wants to save this link.
   nsAutoString text;
