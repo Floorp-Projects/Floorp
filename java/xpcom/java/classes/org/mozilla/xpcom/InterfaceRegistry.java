@@ -22,6 +22,7 @@
 
 package org.mozilla.xpcom;
 
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.lang.reflect.*;
 
@@ -30,7 +31,7 @@ public class InterfaceRegistry {
     private static String IID_STRING = "IID";
     private static Hashtable interfaces = null;
     private static Hashtable iMethods = null;
-    private static Hashtable keywords = null;
+    private static HashSet keywords = null;
     private static boolean debug = true;
     
     private InterfaceRegistry() {
@@ -63,9 +64,9 @@ public class InterfaceRegistry {
             iMethods = new Hashtable();
         }
         if (keywords == null) {
-            keywords = new Hashtable(javaKeywords.length);
+            keywords = new HashSet(javaKeywords.length);
             for (int i = 0; i < javaKeywords.length; i++) {
-                keywords.put(javaKeywords[i], javaKeywords[i]);
+                keywords.add(javaKeywords[i]);
             }
         }
         if (!cl.isInterface()) {
@@ -178,7 +179,7 @@ public class InterfaceRegistry {
     }
 
     private static String subscriptMethodName(String str) {
-        if (keywords.get(str) != null) {
+        if (keywords.contains(str)) {
             return str + "_";
         }
         return str;
