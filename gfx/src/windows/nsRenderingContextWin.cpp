@@ -2313,6 +2313,7 @@ nsRenderingContextWin::GetWidth(const PRUnichar *aString,
         // Advance to the next character
         if (++i >= aLength) {
           allDone = PR_TRUE;
+		  goto MeasureText;
         }
       }
     }
