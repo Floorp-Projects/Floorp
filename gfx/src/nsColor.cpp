@@ -454,7 +454,7 @@ extern "C" NS_GFX_(nscolor) NS_DarkenColor(nscolor inColor)
 // Saturation is defined from 0 to 255.  The higher the number.. the deeper the color
 // Value is the brightness of the color. 0 is black, 255 is white.  
 extern "C" NS_GFX_(void)
-RGB2HSV(nscolor aColor,PRUint16 &aHue,PRUint16 &aSat,PRUint16 &aValue)
+NS_RGB2HSV(nscolor aColor,PRUint16 &aHue,PRUint16 &aSat,PRUint16 &aValue)
 {
 PRUint16  r,g,b,max,min,delta;
 float     hue;
@@ -513,7 +513,7 @@ float     hue;
 // Saturation is defined from 0 to 255.  The higher the number.. the deeper the color
 // Value is the brightness of the color. 0 is black, 255 is white.  
 extern "C" NS_GFX_(void)
-HSV2RGB(nscolor &aColor,PRUint16 aHue,PRUint16 aSat,PRUint16 aValue)
+NS_HSV2RGB(nscolor &aColor,PRUint16 aHue,PRUint16 aSat,PRUint16 aValue)
 {
 PRUint16  r,g,b;
 PRUint16  i,p,q,t;
