@@ -1,0 +1,778 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta name="generator"
+
+content="HTML Tidy for Mac OS, see www.w3.org" />
+
+<title>td_bgcolor_name</title>
+
+<!-- Modified: Changed doctype to xhtml 1.0 transitional Author: Chris Petersen Date: 1/31/01 -->
+
+<!-- 
+
+   - The contents of this file are subject to the Mozilla Public
+
+   - License Version 1.1 (the "License"); you may not use this file
+
+   - except in compliance with the License. You may obtain a copy of
+
+   - the License at http://www.mozilla.org/MPL/
+
+   - 
+
+   - Software distributed under the License is distributed on an "AS
+
+   - IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+
+   - implied. See the License for the specific language governing
+
+   - rights and limitations under the License.
+
+   - 
+
+   - The Original Code is Mozilla Communicator Test Cases.
+
+   - 
+
+   - The Initial Developer of the Original Code is Netscape Communications
+
+   - Corp.  Portions created by Netscape Communications Corp. are 
+
+   - Copyright (C) 1999 Netscape Communications Corp.  All
+
+   - Rights Reserved.
+
+   - 
+
+   - Contributor(s):Christine Dreckman   Date: 4/20/99
+
+
+
+            Chris Petersen   Date: 5/19/99
+
+
+
+            Christine Dreckman   Date: 9/6/2000 
+
+
+
+  -->
+
+</head>
+
+<body bgcolor="#FFFFFF">
+
+<p>Black table with a white body background</p>
+
+
+
+<table border="1">
+
+<tr>
+
+<td bgcolor="black">
+
+table table table table</td>
+
+<td bgcolor="black">
+
+table table table table</td>
+
+<td bgcolor="black">
+
+table table table table</td>
+
+</tr>
+
+
+
+<tr>
+
+<td bgcolor="black">
+
+table table table table</td>
+
+<td bgcolor="black">
+
+table table table table</td>
+
+<td bgcolor="black">
+
+table table table table</td>
+
+</tr>
+
+</table>
+
+
+
+<p>Silver table with a white body background</p>
+
+
+
+<table border="1">
+
+<tr>
+
+<td bgcolor="silver">
+
+table table table table</td>
+
+<td bgcolor="silver">
+
+table table table table</td>
+
+<td bgcolor="silver">
+
+table table table table</td>
+
+</tr>
+
+
+
+<tr>
+
+<td bgcolor="silver">
+
+table table table table</td>
+
+<td bgcolor="silver">
+
+table table table table</td>
+
+<td bgcolor="silver">
+
+table table table table</td>
+
+</tr>
+
+</table>
+
+
+
+<p>Gray table with a white body background</p>
+
+
+
+<table border="1">
+
+<tr>
+
+<td bgcolor="gray">
+
+table table table table</td>
+
+<td bgcolor="gray">
+
+table table table table</td>
+
+<td bgcolor="gray">
+
+table table table table</td>
+
+</tr>
+
+
+
+<tr>
+
+<td bgcolor="gray">
+
+table table table table</td>
+
+<td bgcolor="gray">
+
+table table table table</td>
+
+<td bgcolor="gray">
+
+table table table table</td>
+
+</tr>
+
+</table>
+
+
+
+<p>White table with a white body background</p>
+
+
+
+<table border="1">
+
+<tr>
+
+<td bgcolor="white">
+
+table table table table</td>
+
+<td bgcolor="white">
+
+table table table table</td>
+
+<td bgcolor="white">
+
+table table table table</td>
+
+</tr>
+
+
+
+<tr>
+
+<td bgcolor="white">
+
+table table table table</td>
+
+<td bgcolor="white">
+
+table table table table</td>
+
+<td bgcolor="white">
+
+table table table table</td>
+
+</tr>
+
+</table>
+
+
+
+<p>Maroon table with a white body background</p>
+
+
+
+<table border="1">
+
+<tr>
+
+<td bgcolor="maroon">
+
+table table table table</td>
+
+<td bgcolor="maroon">
+
+table table table table</td>
+
+<td bgcolor="maroon">
+
+table table table table</td>
+
+</tr>
+
+
+
+<tr>
+
+<td bgcolor="maroon">
+
+table table table table</td>
+
+<td bgcolor="maroon">
+
+table table table table</td>
+
+<td bgcolor="maroon">
+
+table table table table</td>
+
+</tr>
+
+</table>
+
+
+
+<p>Red table with a white body background</p>
+
+
+
+<table border="1">
+
+<tr>
+
+<td bgcolor="red">
+
+table table table table</td>
+
+<td bgcolor="red">
+
+table table table table</td>
+
+<td bgcolor="red">
+
+table table table table</td>
+
+</tr>
+
+
+
+<tr>
+
+<td bgcolor="red">
+
+table table table table</td>
+
+<td bgcolor="red">
+
+table table table table</td>
+
+<td bgcolor="red">
+
+table table table table</td>
+
+</tr>
+
+</table>
+
+
+
+<p>Purple table with a white body background</p>
+
+
+
+<table border="1">
+
+<tr>
+
+<td bgcolor="purple">
+
+table table table table</td>
+
+<td bgcolor="purple">
+
+table table table table</td>
+
+<td bgcolor="purple">
+
+table table table table</td>
+
+</tr>
+
+
+
+<tr>
+
+<td bgcolor="purple">
+
+table table table table</td>
+
+<td bgcolor="purple">
+
+table table table table</td>
+
+<td bgcolor="purple">
+
+table table table table</td>
+
+</tr>
+
+</table>
+
+
+
+<p>Fuchsia table with a white body background</p>
+
+
+
+<table border="1">
+
+<tr>
+
+<td bgcolor="fuchsia">
+
+table table table table</td>
+
+<td bgcolor="fuchsia">
+
+table table table table</td>
+
+<td bgcolor="fuchsia">
+
+table table table table</td>
+
+</tr>
+
+
+
+<tr>
+
+<td bgcolor="fuchsia">
+
+table table table table</td>
+
+<td bgcolor="fuchsia">
+
+table table table table</td>
+
+<td bgcolor="fuchsia">
+
+table table table table</td>
+
+</tr>
+
+</table>
+
+
+
+<p>Green table with a white body background</p>
+
+
+
+<table border="1">
+
+<tr>
+
+<td bgcolor="green">
+
+table table table table</td>
+
+<td bgcolor="green">
+
+table table table table</td>
+
+<td bgcolor="green">
+
+table table table table</td>
+
+</tr>
+
+
+
+<tr>
+
+<td bgcolor="green">
+
+table table table table</td>
+
+<td bgcolor="green">
+
+table table table table</td>
+
+<td bgcolor="green">
+
+table table table table</td>
+
+</tr>
+
+</table>
+
+
+
+<p>Lime table with a white body background</p>
+
+
+
+<table border="1">
+
+<tr>
+
+<td bgcolor="lime">
+
+table table table table</td>
+
+<td bgcolor="lime">
+
+table table table table</td>
+
+<td bgcolor="lime">
+
+table table table table</td>
+
+</tr>
+
+
+
+<tr>
+
+<td bgcolor="lime">
+
+table table table table</td>
+
+<td bgcolor="lime">
+
+table table table table</td>
+
+<td bgcolor="lime">
+
+table table table table</td>
+
+</tr>
+
+</table>
+
+
+
+<p>Olive table with a white body background</p>
+
+
+
+<table border="1">
+
+<tr>
+
+<td bgcolor="olive">
+
+table table table table</td>
+
+<td bgcolor="olive">
+
+table table table table</td>
+
+<td bgcolor="olive">
+
+table table table table</td>
+
+</tr>
+
+
+
+<tr>
+
+<td bgcolor="olive">
+
+table table table table</td>
+
+<td bgcolor="olive">
+
+table table table table</td>
+
+<td bgcolor="olive">
+
+table table table table</td>
+
+</tr>
+
+</table>
+
+
+
+<p>Yellow table with a white body background</p>
+
+
+
+<table border="1">
+
+<tr>
+
+<td bgcolor="yellow">
+
+table table table table</td>
+
+<td bgcolor="yellow">
+
+table table table table</td>
+
+<td bgcolor="yellow">
+
+table table table table</td>
+
+</tr>
+
+
+
+<tr>
+
+<td bgcolor="yellow">
+
+table table table table</td>
+
+<td bgcolor="yellow">
+
+table table table table</td>
+
+<td bgcolor="yellow">
+
+table table table table</td>
+
+</tr>
+
+</table>
+
+
+
+<p>Navy table with a white body background</p>
+
+
+
+<table border="1">
+
+<tr>
+
+<td bgcolor="navy">
+
+table table table table</td>
+
+<td bgcolor="navy">
+
+table table table table</td>
+
+<td bgcolor="navy">
+
+table table table table</td>
+
+</tr>
+
+
+
+<tr>
+
+<td bgcolor="navy">
+
+table table table table</td>
+
+<td bgcolor="navy">
+
+table table table table</td>
+
+<td bgcolor="navy">
+
+table table table table</td>
+
+</tr>
+
+</table>
+
+
+
+<p>Blue table with a white body background</p>
+
+
+
+<table border="1">
+
+<tr>
+
+<td bgcolor="blue">
+
+table table table table</td>
+
+<td bgcolor="blue">
+
+table table table table</td>
+
+<td bgcolor="blue">
+
+table table table table</td>
+
+</tr>
+
+
+
+<tr>
+
+<td bgcolor="blue">
+
+table table table table</td>
+
+<td bgcolor="blue">
+
+table table table table</td>
+
+<td bgcolor="blue">
+
+table table table table</td>
+
+</tr>
+
+</table>
+
+
+
+<p>Teal table with a white body background</p>
+
+
+
+<table>
+
+<tr>
+
+<td bgcolor="teal">
+
+table table table table</td>
+
+<td bgcolor="teal">
+
+table table table table</td>
+
+<td bgcolor="teal">
+
+table table table table</td>
+
+</tr>
+
+
+
+<tr>
+
+<td bgcolor="teal">
+
+table table table table</td>
+
+<td bgcolor="teal">
+
+table table table table</td>
+
+<td bgcolor="teal">
+
+table table table table</td>
+
+</tr>
+
+</table>
+
+
+
+<p>Aqua table with a white body background</p>
+
+
+
+<table border="1">
+
+<tr>
+
+<td bgcolor="aqua">
+
+table table table table</td>
+
+<td bgcolor="aqua">
+
+table table table table</td>
+
+<td bgcolor="aqua">
+
+table table table table</td>
+
+</tr>
+
+
+
+<tr>
+
+<td bgcolor="aqua">
+
+table table table table</td>
+
+<td bgcolor="aqua">
+
+table table table table</td>
+
+<td bgcolor="aqua">
+
+table table table table</td>
+
+</tr>
+
+</table>
+
+</body>
+
+</html>
+
+
+
