@@ -611,8 +611,10 @@ BookmarkParser::ProcessLine(nsIRDFContainer *container, nsIRDFResource *nodeType
 			nsIRDFResource **bookmarkNode, nsString &line,
 			nsString &description, PRBool &inDescription, PRBool &isActiveFlag)
 {
-	nsresult	rv;
+	nsresult	rv = NS_OK;
 	PRInt32		offset;
+
+	if (*bookmarkNode)	*bookmarkNode = nsnull;
 
 	if (inDescription == PR_TRUE)
 	{
@@ -742,8 +744,9 @@ BookmarkParser::Parse(nsIRDFResource *aContainer, nsIRDFResource *nodeType)
 			line.Truncate();
 			DecodeBuffer(line, linePtr, aLength);
 
-			ProcessLine(container, nodeType, getter_AddRefs(bookmarkNode),
+			rv = ProcessLine(container, nodeType, getter_AddRefs(bookmarkNode),
 				line, description, inDescriptionFlag, isActiveFlag);
+			if (NS_FAILED(rv))	break;
 		}
 	}
 	else if (mInputStream)
@@ -780,7 +783,7 @@ BookmarkParser::Parse(nsIRDFResource *aContainer, nsIRDFResource *nodeType)
 			}
 			if (NS_SUCCEEDED(rv))
 			{
-				ProcessLine(container, nodeType, getter_AddRefs(bookmarkNode),
+				rv = ProcessLine(container, nodeType, getter_AddRefs(bookmarkNode),
 					line, description, inDescriptionFlag, isActiveFlag);
 			}
 		}
