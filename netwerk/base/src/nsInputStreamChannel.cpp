@@ -118,8 +118,12 @@ nsInputStreamChannel::GetStatus(nsresult *status)
 NS_IMETHODIMP
 nsInputStreamChannel::Cancel(nsresult status)
 {
-    NS_ENSURE_TRUE(mPump, NS_ERROR_NOT_INITIALIZED);
-    return mPump->Cancel(status);
+    mStatus = status;
+
+    if (mPump)
+        mPump->Cancel(status);
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
