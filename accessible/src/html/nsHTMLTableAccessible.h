@@ -47,7 +47,7 @@ class nsHTMLTableCellAccessible : public nsBlockAccessible
 {
 public:
   nsHTMLTableCellAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetAccRole(PRUint32 *_retval); 
+  NS_IMETHOD GetAccRole(PRUint32 *aResult); 
 };
 
 
@@ -55,7 +55,9 @@ class nsHTMLTableAccessible : public nsBlockAccessible
 {
 public:
   nsHTMLTableAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetAccRole(PRUint32 *_retval); 
+  NS_IMETHOD GetAccRole(PRUint32 *aResult); 
+  NS_IMETHOD GetAccState(PRUint32 *aResult); 
+  NS_IMETHOD GetAccName(nsAWritableString& aResult);
 };
 
 #endif  
