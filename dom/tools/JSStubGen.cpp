@@ -1078,7 +1078,11 @@ static const char kMethodIntParamStr[] =
     sprintf(buffer, kMethodIntParamStr, paramNum, paramNum)
 
 static const char kMethodFuncParamStr[] =
-"    if (!nsJSUtils::nsConvertJSValToFunc(&b%d,\n"
+#ifdef USE_COMPTR
+"    if (!nsJSUtils::nsConvertJSValToFunc(getter_AddRefs(b%d),\n"
+#else
+"    if (!nsJSUtils::nsConvertJSValToFunc((nsIDOMEventListener**)(nsISupports**) &b%d,\n"
+#endif
 "                                         cx,\n"
 "                                         obj,\n"
 "                                         argv[%d])) {\n"

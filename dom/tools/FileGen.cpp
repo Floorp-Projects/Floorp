@@ -36,20 +36,25 @@
 
 static const char *kNPLStr =  \
 "/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-\n"
-" *\n"" * The contents of this file are subject to the Netscape Public License\n"
-" * Version 1.0 (the \"NPL\"); you may not use this file except in\n" 
-" * compliance with the NPL.  You may obtain a copy of the NPL at\n"
-" * http://www.mozilla.org/NPL/\n"
 " *\n"
-" * Software distributed under the NPL is distributed on an \"AS IS\" basis,\n"
-" * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL\n"
-" * for the specific language governing rights and limitations under the\n"
-" * NPL.\n"
+" * The contents of this file are subject to the Netscape Public\n"
+" * License Version 1.1 (the \"License\"); you may not use this file\n"
+" * except in compliance with the License. You may obtain a copy of\n"
+" * the License at http://www.mozilla.org/NPL/\n"
 " *\n"
-" * The Initial Developer of this code under the NPL is Netscape\n"
+" * Software distributed under the License is distributed on an \"AS\n"
+" * IS\" basis, WITHOUT WARRANTY OF ANY KIND, either express or\n"
+" * implied. See the License for the specific language governing\n"
+" * rights and limitations under the License.\n"
+" *\n"
+" * The Original Code is mozilla.org code.\n"
+" *\n"
+" * The Initial Developer of the Original Code is Netscape\n"
 " * Communications Corporation.  Portions created by Netscape are\n"
-" * Copyright (C) 1998 Netscape Communications Corporation.  All Rights\n"
-" * Reserved.\n"
+" * Copyright (C) 1998 Netscape Communications Corporation. All\n"
+" * Rights Reserved.\n"
+" *\n"
+" * Contributor(s): \n"
 " */\n";
 static const char *kDisclaimerStr = "/* AUTO-GENERATED. DO NOT EDIT!!! */\n";
 static const char *kObjTypeStr = "nsIDOM%s*";
@@ -148,7 +153,7 @@ FileGen::GetVariableTypeForMethodLocal(char *aBuffer, IdlVariable &aVariable)
         sprintf(aBuffer, kXPIDLObjTypePtrStr, aVariable.GetTypeName());
         break;
       case TYPE_FUNC:
-        sprintf(aBuffer, kObjTypeStr, aVariable.GetTypeName());
+        sprintf(aBuffer, kObjTypePtrStr, aVariable.GetTypeName());
         break;
       case TYPE_JSVAL:
         strcpy(aBuffer, "jsval");
