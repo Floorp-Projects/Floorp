@@ -1170,21 +1170,17 @@ nsXMLContentSink::FlushText(PRBool aCreateTextNode, PRBool* aDidFlush)
   PRBool didFlush = PR_FALSE;
   if (0 != mTextLength) {
     if (aCreateTextNode) {
-      nsIContent* content;
-      rv = NS_NewTextNode(&content);
+      nsCOMPtr<nsITextContent> content;
+      rv = NS_NewTextNode(getter_AddRefs(content));
       if (NS_OK == rv) {
         // Set the content's document
         content->SetDocument(mDocument, PR_FALSE, PR_TRUE);
 
         // Set the text in the text node
-        nsITextContent* text = nsnull;
-        content->QueryInterface(NS_GET_IID(nsITextContent), (void**) &text);
-        text->SetText(mText, mTextLength, PR_FALSE);
-        NS_RELEASE(text);
+        content->SetText(mText, mTextLength, PR_FALSE);
 
         // Add text to its parent
         AddContentAsLeaf(content);
-        NS_RELEASE(content);
       }
     }
     mTextLength = 0;

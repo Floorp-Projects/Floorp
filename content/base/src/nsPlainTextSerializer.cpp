@@ -897,7 +897,7 @@ nsPlainTextSerializer::DoCloseContainer(PRInt32 aTag)
     FlushLine();    // Is this needed?
 
     nsAutoString value;
-    nsresult rv = GetAttributeValue(nsHTMLAtoms::type, value);
+    GetAttributeValue(nsHTMLAtoms::type, value);
 
     if (mCiteQuoteLevel) {
       mCiteQuoteLevel--;

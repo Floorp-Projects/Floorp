@@ -4160,14 +4160,13 @@ nsGenericHTMLContainerElement::ReplaceContentsWithText(const nsAString& aText,
   for (i = children - 1; i >= lastChild; --i) {
     RemoveChildAt(i, aNotify);
   }
-    
+
   if (!textChild) {
-    nsCOMPtr<nsIContent> text;
+    nsCOMPtr<nsITextContent> text;
     rv = NS_NewTextNode(getter_AddRefs(text));
     NS_ENSURE_SUCCESS(rv, rv);
-    textChild = do_QueryInterface(text);
-    NS_ASSERTION(textChild, "NS_NewTextNode returned something not implementing nsIDOMText!");
-    rv = textChild->SetData(aText);
+
+    rv = text->SetText(aText, PR_TRUE);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = InsertChildAt(text, 0, aNotify, PR_FALSE);
   } else {

@@ -74,7 +74,7 @@ public:
 };
 
 nsresult
-NS_NewTextNode(nsIContent** aInstancePtrResult)
+NS_NewTextNode(nsITextContent** aInstancePtrResult)
 {
   *aInstancePtrResult = new nsTextNode();
   NS_ENSURE_TRUE(*aInstancePtrResult, NS_ERROR_OUT_OF_MEMORY);
