@@ -615,6 +615,9 @@ nsFilePath::nsFilePath(const char* inString, PRBool inCreateDirs)
 //----------------------------------------------------------------------------------------
 :    mPath(inString)
 {
+    if (mPath.IsEmpty())
+    	return;
+    	
     NS_ASSERTION(strstr(inString, kFileURLPrefix) != inString, "URL passed as path");
 
 #ifdef XP_PC
@@ -635,8 +638,10 @@ nsFilePath::nsFilePath(const nsString& inString, PRBool inCreateDirs)
 //----------------------------------------------------------------------------------------
 :    mPath(inString)
 {
-    NS_ASSERTION(strstr((const char*)mPath, kFileURLPrefix) != (const char*)mPath, "URL passed as path");
+    if (mPath.IsEmpty())
+    	return;
 
+    NS_ASSERTION(strstr((const char*)mPath, kFileURLPrefix) != (const char*)mPath, "URL passed as path");
 #ifdef XP_PC
     nsFileSpecHelpers::UnixToNative(mPath);
 #endif
@@ -688,8 +693,11 @@ void nsFilePath::operator = (const nsFileSpec& inOther)
 void nsFilePath::operator = (const char* inString)
 //----------------------------------------------------------------------------------------
 {
+
     NS_ASSERTION(strstr(inString, kFileURLPrefix) != inString, "URL passed as path");
     mPath = inString;
+    if (mPath.IsEmpty())
+    	return;
 #ifdef XP_PC
     nsFileSpecHelpers::UnixToNative(mPath);
 #endif
