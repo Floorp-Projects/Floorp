@@ -31,7 +31,7 @@
 
 #define	kWhitespace	" \t\b\r\n"
 
-const char *eudoraFromLine = "From ????@???? 1 Jan 1965 00:00:00\x0D\x0A";
+const char *eudoraFromLine = "From - Mon Jan 1 00:00:00 1965\x0D\x0A";
 
 #ifdef IMPORT_DEBUG
 void DUMP_FILENAME( nsIFileSpec *pSpec, PRBool endLine);

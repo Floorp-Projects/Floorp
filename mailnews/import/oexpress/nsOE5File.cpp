@@ -219,7 +219,7 @@ PRBool nsOE5File::IsFromLine( char *pLine, PRUint32 len)
 
 // Anything over 16K will be assumed BAD, BAD, BAD!
 #define	kMailboxBufferSize	0x4000
-const char *nsOE5File::m_pFromLineSep = "From ????@???? 1 Jan 1965 00:00:00\x0D\x0A";
+const char *nsOE5File::m_pFromLineSep = "From - Jan 1965 00:00:00\x0D\x0A";
 
 nsresult nsOE5File::ImportMailbox( PRUint32 *pBytesDone, PRBool *pAbort, nsString& name, nsIFileSpec *inFile, nsIFileSpec *pDestination, PRUint32 *pCount)
 {

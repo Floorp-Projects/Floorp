@@ -34,13 +34,13 @@
 extern LPMAPIALLOCATEBUFFER	gpMapiAllocateBuffer;
 extern LPMAPIFREEBUFFER		gpMapiFreeBuffer;
 
-// Sample From line: From ????@???? 1 Jan 1965 00:00:00
+// Sample From line: From - 1 Jan 1965 00:00:00
 
 typedef const char * PC_S8;
 
 static const char *	kWhitespace = "\b\t\r\n ";
-static const char *	sFromLine = "From ????@???? ";
-static const char *	sFromDate = "1 Jan 1965 00:00:00";
+static const char *	sFromLine = "From - ";
+static const char *	sFromDate = "Mon Jan 1 00:00:00 1965";
 static const char *	sDaysOfWeek[7] = {
 	"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
 };

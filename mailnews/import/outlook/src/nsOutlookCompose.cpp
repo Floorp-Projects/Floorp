@@ -722,8 +722,6 @@ PRBool SimpleBuffer::SpecialMemCpy( PRInt32 offset, const char *pData, PRInt32 l
 		len--;
 	}
 	
-	m_pBuffer[offset] = *pData;
-	
 	return( PR_TRUE);
 }
 
