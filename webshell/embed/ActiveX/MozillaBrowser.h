@@ -24,32 +24,6 @@
 // so don't edit it!
 #include "CPMozillaControl.h"
 
-// DEVNOTE: Property and PropertyList should be defined inside CMozillaBrowser
-//          but were moved outside due to a bug with templates on nested classes
-//          in VC++ 5.0 which is not at SP3 level.
-
-// Property is a name,variant pair held by the browser. In IE, properties
-// offer a primitive way for DHTML elements to talk back and forth with
-// the host app. The Mozilla app currently just implements them for
-// compatibility reasons
-struct Property
-{
-  CComBSTR szName;
-  CComVariant vValue;
-};
-
-// A list of properties
-typedef std::vector<Property> PropertyList;
-
-
-// DEVNOTE: These operators are required since the unpatched VC++ 5.0
-//          generates code even for unreferenced template methods in
-//          the file <vector>  and will give compiler errors without
-//          them. Service Pack 1 and above fixes this problem
-
-int operator <(const Property&, const Property&);
-int operator ==(const Property&, const Property&); 
-
 class CWebShellContainer;
 
 // Commands sent via WM_COMMAND
