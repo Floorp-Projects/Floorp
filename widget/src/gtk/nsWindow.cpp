@@ -2226,6 +2226,8 @@ NS_IMETHODIMP nsWindow::SetTitle(const nsString& aTitle)
   nsCOMPtr <nsIPlatformCharset> platformCharsetService = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv))
     rv = platformCharsetService->GetCharset(kPlatformCharsetSel_Menu, platformCharset);
+
+  // This is broken, it's just a random guess
   if (NS_FAILED(rv))
     platformCharset.AssignWithConversion("ISO-8859-1");
 
@@ -2249,43 +2251,12 @@ NS_IMETHODIMP nsWindow::SetTitle(const nsString& aTitle)
   } // if valid length
 
   if (platformLen > 0) {
-    int status = 0;
-    XTextProperty prop;
-
-#ifdef DEBUG_TITLE
-    g_print("\nConverted text from unicode to platform locale\n");
-    g_print("platformText is %s\n", platformText);
-    g_print("platformLen is %d\n", platformLen);
-#endif
-
-    // Use XStdICCTextStyle for 41786(a.k.a TWM sucks) and 43108(JA text title)
-    prop.value = 0;
-    status = XmbTextListToTextProperty(GDK_DISPLAY(), &platformText, 1, XStdICCTextStyle,
-                                       &prop);
-    if (status == Success) {
-
-#ifdef DEBUG_TITLE
-      g_print("\nXmbTextListToTextProperty succeeded\n  text is %s\n  length is %d\n", prop.value,
-              prop.nitems);
-#endif
-      XSetWMProperties(GDK_DISPLAY(), GDK_WINDOW_XWINDOW(mShell->window),
-                       &prop, &prop, NULL, 0, NULL, NULL, NULL);
-      if (prop.value)
-        XFree(prop.value);
-
-      nsMemory::Free(platformText);
-      // free properties list?
-      return NS_OK;
-    } else {                    // status != Success
-      if (prop.value)
-        XFree(prop.value);
-      nsMemory::Free(platformText);
-      // free properties list?
-    }
+    gtk_window_set_title(GTK_WINDOW(mShell), platformText);
+  }
+  else {
+    gtk_window_set_title(GTK_WINDOW(mShell), "");
   }
 
-  // fallback to use bad conversion
-  gtk_window_set_title(GTK_WINDOW(mShell), NS_LossyConvertUCS2toASCII(aTitle).get());
   return NS_OK;
 }
 
