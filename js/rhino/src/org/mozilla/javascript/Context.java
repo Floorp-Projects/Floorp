@@ -106,14 +106,6 @@ public class Context {
         }
     }
 
-/**
-@deprecated The {@link SecuritySupport} class is deprecated. See its documentation for the upgrade path.
-*/
-    public Context(SecuritySupport x) {
-        this();
-        setClassShutter(x);
-    }
-
     /**
      * Get a context associated with the current thread, creating
      * one if need be.
@@ -768,7 +760,7 @@ public class Context {
      * @return the result of evaluating the string
      * @exception JavaScriptException if an uncaught JavaScript exception
      *            occurred while evaluating the source string
-     * @see org.mozilla.javascript.SecuritySupport
+     * @see org.mozilla.javascript.SecurityController
      */
     public Object evaluateString(Scriptable scope, String source,
                                  String sourceName, int lineno,
@@ -1491,13 +1483,6 @@ public class Context {
                                         "SecurityController object");
         }
         securityController = controller;
-    }
-
-/**
-@deprecated The {@link SecuritySupport} class is deprecated. See its documentation for the upgrade path.
-*/
-    public void setSecuritySupport(SecuritySupport x) {
-        setClassShutter(x);
     }
 
     /**
