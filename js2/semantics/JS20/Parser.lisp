@@ -102,8 +102,8 @@
        (production :full-postfix-expression (:full-new-expression) full-postfix-expression-full-new-expression)
        (production :full-postfix-expression (:full-postfix-expression :member-operator) full-postfix-expression-member-operator)
        (production :full-postfix-expression (:full-postfix-expression :arguments) full-postfix-expression-call)
-       (production :full-postfix-expression (:postfix-expression ++) full-postfix-expression-increment)
-       (production :full-postfix-expression (:postfix-expression --) full-postfix-expression-decrement)
+       (production :full-postfix-expression (:postfix-expression :~ ++) full-postfix-expression-increment)
+       (production :full-postfix-expression (:postfix-expression :~ --) full-postfix-expression-decrement)
        
        (production :full-new-expression (new :full-new-subexpression :arguments) full-new-expression-new)
        
@@ -363,20 +363,20 @@
        
        
        (%subsection "Continue and Break Statements")
-       (production :continue-statement (continue :optional-label) continue-statement-optional-label)
+       (production :continue-statement (continue :~ :optional-label) continue-statement-optional-label)
        
-       (production :break-statement (break :optional-label) break-statement-optional-label)
+       (production :break-statement (break :~ :optional-label) break-statement-optional-label)
        
        (production :optional-label () optional-label-default)
        (production :optional-label (:identifier) optional-label-identifier)
        
        
        (%subsection "Return Statement")
-       (production :return-statement (return :optional-expression) return-statement-optional-expression)
+       (production :return-statement (return :~ :optional-expression) return-statement-optional-expression)
        
        
        (%subsection "Throw Statement")
-       (production :throw-statement (throw (:expression allow-in)) throw-statement-throw)
+       (production :throw-statement (throw :~ (:expression allow-in)) throw-statement-throw)
        
        
        (%subsection "Try Statement")
@@ -425,6 +425,7 @@
        (production :visibility (local) visibility-local)
        (production :visibility (private) visibility-private)
        (production :visibility (package) visibility-package)
+       ;(production :visibility ($identifier) visibility-identifier)
        (production :visibility (public :versions-and-renames) visibility-public)
        
        (production :versions-and-renames () versions-and-renames-none)
