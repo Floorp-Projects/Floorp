@@ -151,9 +151,6 @@ toolbarbutton[open="true"] > stack > .toolbarbutton-menubutton-dropmarker {
   -moz-image-region: rect(0 14px 15px 0px) !important;
   margin-left: 38px;
   margin-top: 8px;
-#ifdef XP_UNIX
-  -moz-appearance: dualbutton-dropdown;
-#endif
 }
 
 toolbar[mode="icons"] .toolbarbutton-menubutton-dropmarker {
