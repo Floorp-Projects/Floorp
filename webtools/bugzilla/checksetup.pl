@@ -302,6 +302,8 @@ sub install_command {
     }    
 }
 
+$::root = ($^O =~ /MSWin32/i ? 'Administrator' : 'root');
+
 my %missing = ();
 
 foreach my $module (@{$modules}) {
@@ -321,11 +323,10 @@ my $patchreader = have_vers("PatchReader","0.9.4");
 print "\n" unless $silent;
 
 if ($^O =~ /MSWin32/i && !$silent) {
-    print "Most ActivePerl modules are available at Apache's ppm repository.\n";
-    print "A list of mirrors is available at\n";
-    print "    http://www.apache.org/dyn/closer.cgi/perl/win32-bin/ppms/\n";
+    print "All the required modules are available at:\n";
+    print "    http://landfill.bugzilla.org/ppm/\n";
     print "You can add the repository with the following command:\n";
-    print "    ppm rep add apache http://www.apache.org/dist/perl/win32-bin/ppms/\n\n";
+    print "    ppm rep add bugzilla http://landfill.bugzilla.org/ppm/\n\n";
 }
 
 if ((!$gd || !$chartbase) && !$silent) {
@@ -338,7 +339,7 @@ if ((!$gd || !$chartbase) && !$silent) {
 if (!$xmlparser && !$silent) {
     print "If you want to use the bug import/export feature to move bugs to or from\n",
     "other bugzilla installations, you will need to install the XML::Parser module by\n",
-    "running (as root):\n\n",
+    "running (as $::root):\n\n",
     "   " . install_command("XML::Parser") . "\n\n";
 }
 if ((!$gd || !$gdgraph || !$gdtextalign) && !$silent) {
@@ -362,7 +363,7 @@ if (%missing) {
     print "\n\n";
     print "Bugzilla requires some Perl modules which are either missing from your\n",
     "system, or the version on your system is too old.\n",
-    "They can be installed by running (as root) the following:\n";
+    "They can be installed by running (as $::root) the following:\n";
     foreach my $module (keys %missing) {
         print "   " . install_command("$module") . "\n";
         if ($missing{$module} > 0) {
@@ -604,7 +605,7 @@ LocalVar('webservergroup', <<"END");
 # want. You should only have this set to "" if this is a testing installation
 # and you cannot set this up any other way. YOU HAVE BEEN WARNED.
 # If you set this to anything besides "", you will need to run checksetup.pl
-# as root, or as a user who is a member of the specified group.
+# as $::root, or as a user who is a member of the specified group.
 \$webservergroup = "$webservergroup_default";
 END
 
@@ -778,9 +779,9 @@ if ($my_webservergroup && !$silent) {
         print <<EOF;
 
 Warning: you have entered a value for the "webservergroup" parameter
-in localconfig, but you are not running this script as root.
+in localconfig, but you are not running this script as $::root.
 This can cause permissions problems and decreased security.  If you
-experience problems running Bugzilla scripts, log in as root and re-run
+experience problems running Bugzilla scripts, log in as $::root and re-run
 this script, or remove the value of the "webservergroup" parameter.
 Note that any warnings about "uninitialized values" that you may
 see below are caused by this.
