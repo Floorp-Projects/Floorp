@@ -26,9 +26,6 @@
 #include "nsIMsgHdr.h"
 #include "nsString.h"
 #include "MailNewsTypes.h"
-#if 0
-#include "xp.h"
-#endif
 #include "mdb.h"
 
 class nsMsgDatabase;

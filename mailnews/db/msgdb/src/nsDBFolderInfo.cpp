@@ -595,18 +595,7 @@ PRBool nsDBFolderInfo::TestFlag(PRInt32 flags)
 }
 
 NS_IMETHODIMP
-nsDBFolderInfo::GetCharacterSet(nsString *result) 
-{
-	nsresult rv = GetProperty(kCharacterSetColumnName, result);
-
-	if (NS_SUCCEEDED(rv) && result->IsEmpty())
-		result->Assign(gDefaultCharacterSet.GetUnicode());
-
-	return rv;
-}
-
-NS_IMETHODIMP
-nsDBFolderInfo::GetCharacterSet2(nsString *result, PRBool *usedDefault) 
+nsDBFolderInfo::GetCharacterSet(nsString *result, PRBool *usedDefault) 
 {
 	nsresult rv = GetProperty(kCharacterSetColumnName, result);
 	
@@ -733,96 +722,34 @@ NS_IMETHODIMP nsDBFolderInfo::GetKnownArtsSet(nsString *newsArtSet)
 
 NS_IMETHODIMP	nsDBFolderInfo::GetProperty(const char *propertyName, nsString *resultProperty)
 {
-	nsresult err = NS_OK;
-	mdb_token	property_token;
-
-    if (!resultProperty) 
-		return NS_ERROR_NULL_POINTER;
-	err = m_mdb->GetStore()->StringToToken(m_mdb->GetEnv(),  propertyName, &property_token);
-	if (err == NS_OK)
-		err = m_mdb->RowCellColumnTonsString(m_mdbRow, property_token, *resultProperty);
-
-	return err;
+  return m_mdb->GetPropertyAsNSString(m_mdbRow, propertyName, resultProperty);
 }
 
 // Caller must PR_FREEIF resultProperty.
 NS_IMETHODIMP	nsDBFolderInfo::GetCharPtrProperty(const char *propertyName, char **resultProperty)
 {
-	nsresult err = NS_OK;
-	mdb_token	property_token;
-
-    if (!resultProperty) 
-		return NS_ERROR_NULL_POINTER;
-	err = m_mdb->GetStore()->StringToToken(m_mdb->GetEnv(),  propertyName, &property_token);
-	if (err == NS_OK)
-		err = m_mdb->RowCellColumnToCharPtr(m_mdbRow, property_token, resultProperty);
-
-	return err;
+  return m_mdb->GetProperty(m_mdbRow, propertyName, resultProperty);
 }
 
 
 NS_IMETHODIMP	nsDBFolderInfo::SetUint32Property(const char *propertyName, PRUint32 propertyValue)
 {
-	struct mdbYarn yarn;
-	char	int32StrBuf[20];
-	yarn.mYarn_Buf = int32StrBuf;
-	yarn.mYarn_Size = sizeof(int32StrBuf);
-	yarn.mYarn_Fill = sizeof(int32StrBuf);
-
-	mdb_token	property_token;
-
-	nsresult err = m_mdb->GetStore()->StringToToken(m_mdb->GetEnv(),  propertyName, &property_token);
-	if (err == NS_OK)
-	{
-		nsMsgDatabase::UInt32ToYarn(&yarn, propertyValue);
-		err = m_mdbRow->AddColumn(m_mdb->GetEnv(), property_token, &yarn);
-	}
-	return err;
+  return m_mdb->SetUint32Property(m_mdbRow, propertyName, propertyValue);
 }
 
 NS_IMETHODIMP	nsDBFolderInfo::SetProperty(const char *propertyName, nsString *propertyStr)
 {
-	nsresult err = NS_OK;
-	mdb_token	property_token;
-
-	err = m_mdb->GetStore()->StringToToken(m_mdb->GetEnv(),  propertyName, &property_token);
-	if (err == NS_OK)
-		return SetPropertyWithToken(property_token, propertyStr);
-
-	return err;
+  return m_mdb->SetPropertyFromNSString(m_mdbRow, propertyName, propertyStr);
 }
 
 nsresult nsDBFolderInfo::SetPropertyWithToken(mdb_token aProperty, nsString *propertyStr)
 {
-	struct mdbYarn yarn;
-
-	yarn.mYarn_Grow = NULL;
-	if (m_mdbRow)
-	{
-		nsresult err = m_mdbRow->AddColumn(m_mdb->GetEnv(), aProperty, m_mdb->nsStringToYarn(&yarn, propertyStr));
-		nsMemory::Free((char *)yarn.mYarn_Buf);	// won't need this when we have nsCString
-		return err;
-	}
-	else
-	{
-		NS_ASSERTION(PR_FALSE, "missing row in dbfolderinfo");
-		return NS_ERROR_NULL_POINTER;
-	}
+  return m_mdb->SetNSStringPropertyWithToken(m_mdbRow, aProperty, propertyStr);
 }
 
 nsresult	nsDBFolderInfo::SetUint32PropertyWithToken(mdb_token aProperty, PRUint32 propertyValue)
 {
-	struct mdbYarn yarn;
-	char	int32StrBuf[20];
-	yarn.mYarn_Buf = int32StrBuf;
-	yarn.mYarn_Size = sizeof(int32StrBuf);
-	yarn.mYarn_Fill = sizeof(int32StrBuf);
-
-	nsMsgDatabase::UInt32ToYarn(&yarn, propertyValue);
-	if (m_mdbRow)
-		return m_mdbRow->AddColumn(m_mdb->GetEnv(), aProperty, &yarn);
-	else
-		return NS_ERROR_FAILURE;
+  return m_mdb->UInt32ToRowCellColumn(m_mdbRow, aProperty, propertyValue);
 }
 
 nsresult	nsDBFolderInfo::SetInt32PropertyWithToken(mdb_token aProperty, PRInt32 propertyValue)
@@ -851,15 +778,7 @@ nsresult nsDBFolderInfo::GetInt32PropertyWithToken(mdb_token aProperty, PRInt32 
 
 NS_IMETHODIMP nsDBFolderInfo::GetUint32Property(const char *propertyName, PRUint32 *propertyValue, PRUint32 defaultValue)
 {
-	nsresult err = NS_OK;
-	mdb_token	property_token;
-
-    if (!propertyValue)
-		return NS_ERROR_NULL_POINTER;
-	err = m_mdb->GetStore()->StringToToken(m_mdb->GetEnv(),  propertyName, &property_token);
-	if (err == NS_OK)
-		return GetUint32PropertyWithToken(property_token, *propertyValue, defaultValue);
-	return err;
+  return m_mdb->GetUint32Property(m_mdbRow, propertyName, propertyValue, defaultValue);
 }
 
 class nsTransferDBFolderInfo : public nsDBFolderInfo

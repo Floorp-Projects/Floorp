@@ -8,7 +8,7 @@
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
- * rights and limitations under the License.
+   * rights and limitations under the License.
  *
  * The Original Code is mozilla.org code.
  *
@@ -41,7 +41,7 @@ static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
 
 nsMsgHdr::nsMsgHdr(nsMsgDatabase *db, nsIMdbRow *dbRow)
 {
-    NS_INIT_REFCNT();
+  NS_INIT_REFCNT();
 	m_mdb = db;
 	Init();
 	m_mdbRow = dbRow;
@@ -254,51 +254,22 @@ NS_IMETHODIMP nsMsgHdr::MarkFlagged(PRBool bFlagged)
 
 NS_IMETHODIMP nsMsgHdr::GetProperty(const char *propertyName, nsString &resultProperty)
 {
-	nsresult err = NS_OK;
-	mdb_token	property_token;
-
-	if (m_mdb->GetStore())
-		err = m_mdb->GetStore()->StringToToken(m_mdb->GetEnv(),  propertyName, &property_token);
-	else
-		err = NS_ERROR_NULL_POINTER;
-	if (err == NS_OK)
-		err = m_mdb->RowCellColumnTonsString(GetMDBRow(), property_token, resultProperty);
-
-	return err;
+  return m_mdb->GetPropertyAsNSString(GetMDBRow(), propertyName, &resultProperty);
 }
 
 NS_IMETHODIMP nsMsgHdr::SetProperty(const char *propertyName, nsString &propertyStr)
 {
-	nsresult err = NS_OK;
-	mdb_token	property_token;
-
-	err = m_mdb->GetStore()->StringToToken(m_mdb->GetEnv(),  propertyName, &property_token);
-	if (err == NS_OK)
-	{
-		struct mdbYarn yarn;
-
-		yarn.mYarn_Grow = NULL;
-		err = m_mdbRow->AddColumn(m_mdb->GetEnv(), property_token, m_mdb->nsStringToYarn(&yarn, &propertyStr));
-		delete[] (char *)yarn.mYarn_Buf;	// won't need this when we have nsCString
-	}
-	return err;
+  return m_mdb->SetPropertyFromNSString(m_mdbRow, propertyName, &propertyStr);
 }
 
 NS_IMETHODIMP nsMsgHdr::GetUint32Property(const char *propertyName, PRUint32 *pResult)
 {
-	nsresult err = NS_OK;
-	mdb_token	property_token;
-
-	err = m_mdb->GetStore()->StringToToken(m_mdb->GetEnv(),  propertyName, &property_token);
-	if (err == NS_OK)
-		err = m_mdb->RowCellColumnToUInt32(GetMDBRow(), property_token, pResult);
-
-	return err;
+  return m_mdb->GetUint32Property(GetMDBRow(), propertyName, pResult);
 }
 
 NS_IMETHODIMP nsMsgHdr::SetUint32Property(const char *propertyName, PRUint32 value)
 {
-	return NS_ERROR_NOT_IMPLEMENTED;
+  return m_mdb->SetUint32Property(GetMDBRow(), propertyName, value);
 }
 
 
@@ -734,26 +705,12 @@ NS_IMETHODIMP nsMsgHdr::GetThreadParent(nsMsgKey *result)
 
 nsresult nsMsgHdr::SetStringColumn(const char *str, mdb_token token)
 {
-	struct mdbYarn yarn;
-	yarn.mYarn_Buf = (void *) (str ? str : "");
-	yarn.mYarn_Size = PL_strlen((const char *) yarn.mYarn_Buf) + 1;
-	yarn.mYarn_Fill = yarn.mYarn_Size - 1;
-	yarn.mYarn_Form = 0;
-	yarn.mYarn_Grow = NULL;
-	return m_mdbRow->AddColumn(m_mdb->GetEnv(), token, &yarn);
+  return m_mdb->CharPtrToRowCellColumn(m_mdbRow, token, str);
 }
 
 nsresult nsMsgHdr::SetUInt32Column(PRUint32 value, mdb_token token)
 {
-	char	yarnBuf[100];
-
-	struct mdbYarn yarn;
-	yarn.mYarn_Buf = (void *) yarnBuf;
-	yarn.mYarn_Size = sizeof(yarnBuf);
-	yarn.mYarn_Fill = yarn.mYarn_Size;
-	yarn.mYarn_Form = 0;
-	yarn.mYarn_Grow = NULL;
-	return m_mdbRow->AddColumn(m_mdb->GetEnv(),  token, nsMsgDatabase::UInt32ToYarn(&yarn, value));
+  return m_mdb->UInt32ToRowCellColumn(m_mdbRow, token, value);
 }
 
 nsresult nsMsgHdr::GetUInt32Column(mdb_token token, PRUint32 *pvalue, PRUint32 defaultValue)

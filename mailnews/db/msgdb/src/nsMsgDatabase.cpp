@@ -1562,7 +1562,6 @@ nsresult nsMsgDatabase::MarkHdrReadInDB(nsIMsgDBHdr *msgHdr, PRBool bRead,
 	PRUint32 oldFlags;
     (void)msgHdr->GetMessageKey(&key);
 	msgHdr->GetFlags(&oldFlags);
-    SetHdrReadFlag(msgHdr, bRead);
 
 	if (m_newSet)
 		m_newSet->Remove(key);
@@ -1575,6 +1574,8 @@ nsresult nsMsgDatabase::MarkHdrReadInDB(nsIMsgDBHdr *msgHdr, PRBool bRead,
 			m_dbFolderInfo->ChangeNumNewMessages(1);
 	}
 
+    SetHdrReadFlag(msgHdr, bRead); // this will cause a commit, at least for local mail, so do it after we change
+                                   // the folder counts above, so they will get committed too.
     PRUint32 flags;
     rv = msgHdr->GetFlags(&flags);
     flags &= ~MSG_FLAG_NEW;
@@ -2647,7 +2648,8 @@ nsresult nsMsgDatabase::RowCellColumnToMime2DecodedString(nsIMdbRow *row, mdb_to
 		{
 			nsAutoString charset;
 			nsAutoString decodedStr;
-			m_dbFolderInfo->GetCharacterSet(&charset);
+      PRBool usedDefault;
+			m_dbFolderInfo->GetCharacterSet(&charset, &usedDefault);
 			err = m_mimeConverter->DecodeMimePartIIStr(nakedString, charset, resultStr);
 		}
 	}
@@ -2901,6 +2903,101 @@ nsresult nsMsgDatabase::RowCellColumnToCharPtr(nsIMdbRow *row, mdb_token columnT
 	LL_I2L(microSecondsPerSecond, PR_USEC_PER_SEC);
     LL_UI2L(intermediateResult, seconds);
 	LL_MUL((*prTime), intermediateResult, microSecondsPerSecond);
+}
+
+
+nsresult nsMsgDatabase::GetProperty(nsIMdbRow *row, const char *propertyName, char **result)
+{
+	nsresult err = NS_OK;
+	mdb_token	property_token;
+
+	if (m_mdbStore)
+		err = m_mdbStore->StringToToken(GetEnv(),  propertyName, &property_token);
+	else
+		err = NS_ERROR_NULL_POINTER;
+	if (err == NS_OK)
+		err = RowCellColumnToCharPtr(row, property_token, result);
+
+	return err;
+}
+
+nsresult nsMsgDatabase::SetProperty(nsIMdbRow *row, const char *propertyName, char *propertyVal)
+{
+	nsresult err = NS_OK;
+	mdb_token	property_token;
+
+	err = m_mdbStore->StringToToken(GetEnv(),  propertyName, &property_token);
+	if (err == NS_OK)
+    CharPtrToRowCellColumn(row, property_token, propertyVal);
+	return err;
+}
+
+nsresult nsMsgDatabase::GetPropertyAsNSString(nsIMdbRow *row, const char *propertyName, nsString *result)
+{
+	nsresult err = NS_OK;
+	mdb_token	property_token;
+
+  NS_ENSURE_ARG(result);
+	err = m_mdbStore->StringToToken(GetEnv(),  propertyName, &property_token);
+	if (err == NS_OK)
+		err = RowCellColumnTonsString(row, property_token, *result);
+
+	return err;
+}
+
+nsresult nsMsgDatabase::SetPropertyFromNSString(nsIMdbRow *row, const char *propertyName, nsString *propertyVal)
+{
+	nsresult err = NS_OK;
+	mdb_token	property_token;
+
+	err = m_mdbStore->StringToToken(GetEnv(),  propertyName, &property_token);
+	if (err == NS_OK)
+		return SetNSStringPropertyWithToken(row, property_token, propertyVal);
+
+	return err;
+}
+
+
+nsresult nsMsgDatabase::GetUint32Property(nsIMdbRow *row, const char *propertyName, PRUint32 *result, PRUint32 defaultValue)
+{
+	nsresult err = NS_OK;
+	mdb_token	property_token;
+
+	err = m_mdbStore->StringToToken(GetEnv(),  propertyName, &property_token);
+	if (err == NS_OK)
+		err = RowCellColumnToUInt32(row, property_token, result, defaultValue);
+
+	return err;
+}
+
+nsresult nsMsgDatabase::SetUint32Property(nsIMdbRow *row, const char *propertyName, PRUint32 propertyVal)
+{
+	struct mdbYarn yarn;
+	char	int32StrBuf[20];
+	yarn.mYarn_Buf = int32StrBuf;
+	yarn.mYarn_Size = sizeof(int32StrBuf);
+	yarn.mYarn_Fill = sizeof(int32StrBuf);
+
+	mdb_token	property_token;
+
+	nsresult err = m_mdbStore->StringToToken(GetEnv(),  propertyName, &property_token);
+	if (err == NS_OK)
+	{
+		UInt32ToYarn(&yarn, propertyVal);
+		err = row->AddColumn(GetEnv(), property_token, &yarn);
+	}
+	return err;
+}
+
+nsresult nsMsgDatabase::SetNSStringPropertyWithToken(nsIMdbRow *row, mdb_token aProperty, nsString *propertyStr)
+{
+  NS_ENSURE_ARG(row);
+	struct mdbYarn yarn;
+
+	yarn.mYarn_Grow = NULL;
+	nsresult err = row->AddColumn(GetEnv(), aProperty, nsStringToYarn(&yarn, propertyStr));
+	nsMemory::Free((char *)yarn.mYarn_Buf);	// won't need this when we have nsCString
+	return err;
 }
 
 

@@ -62,8 +62,7 @@ interface  nsIDBFolderInfo : nsISupports {
 	void	GetTransferInfo(out nsIDBFolderInfo transferInfo);
 	void	InitFromTransferInfo(in nsIDBFolderInfo transferInfo);
 
-	[noscript] void GetCharacterSet(in nsString result);
-	[noscript] void GetCharacterSet2(in nsString result, out boolean usedDefault);
+	[noscript] void GetCharacterSet(in nsString result, out boolean usedDefault);
 	[noscript] void SetCharacterSet(in nsString result);
 	void GetCharacterSetOverride(out boolean characterSetOverride);
 	void SetCharacterSetOverride(in boolean characterSetOverride);
