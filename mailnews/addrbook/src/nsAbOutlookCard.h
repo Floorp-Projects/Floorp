@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Created by Cyrille Moureaux <Cyrille.Moureaux@sun.com>
+ *   Cyrille Moureaux <Cyrille.Moureaux@sun.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),

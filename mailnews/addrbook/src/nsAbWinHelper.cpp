@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Created by Cyrille Moureaux <Cyrille.Moureaux@sun.com>
+ *   Seth Spitzer <sspitzer@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),

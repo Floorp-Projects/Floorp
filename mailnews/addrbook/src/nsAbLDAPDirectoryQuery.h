@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Created by: Paul Sandoz   <paul.sandoz@sun.com>
+ *   Paul Sandoz <paul.sandoz@sun.com>
  *   Dan Mosedale <dmose@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
