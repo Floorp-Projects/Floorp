@@ -321,9 +321,7 @@ nsJISx4501LineBreaker::~nsJISx4501LineBreaker()
   PR_AtomicDecrement(&g_InstanceCount);
 }
 
-NS_DEFINE_IID(kILineBreakerIID, NS_ILINEBREAKER_IID);
-
-NS_IMPL_ISUPPORTS(nsJISx4501LineBreaker, kILineBreakerIID);
+NS_IMPL_ISUPPORTS1(nsJISx4501LineBreaker, nsILineBreaker);
 
 #define U_PERIOD ((PRUnichar) '.')
 #define U_COMMA ((PRUnichar) ',')

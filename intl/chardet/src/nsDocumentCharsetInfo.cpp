@@ -124,7 +124,7 @@ NS_IMETHODIMP nsDocumentCharsetInfo::GetParentCharset(nsIAtom ** aResult)
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS(nsDocumentCharsetInfoFactory, NS_GET_IID(nsIFactory));
+NS_IMPL_ISUPPORTS1(nsDocumentCharsetInfoFactory, nsIFactory)
 
 NS_IMETHODIMP nsDocumentCharsetInfoFactory::CreateInstance(
                                             nsISupports* aDelegate, 

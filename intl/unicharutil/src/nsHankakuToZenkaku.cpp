@@ -27,7 +27,6 @@
 #include "nsTextTransformFactory.h"
 
 NS_DEFINE_CID(kHankakuToZenkakuCID, NS_HANKAKUTOZENKAKU_CID);
-NS_DEFINE_IID(kITextTransformIID, NS_ITEXTTRANSFORM_IID);
 
 // Basic mapping from Hankaku to Zenkaku
 // Nigori and Maru is take care out side this basic mapping
@@ -125,7 +124,7 @@ public:
 
 };
 
-NS_IMPL_ISUPPORTS(nsHankakuToZenkaku, kITextTransformIID);
+NS_IMPL_ISUPPORTS1(nsHankakuToZenkaku, nsITextTransform)
 
 nsHankakuToZenkaku::nsHankakuToZenkaku()
 {

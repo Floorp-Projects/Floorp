@@ -137,7 +137,7 @@ NS_IMETHODIMP nsMyObserver::Init( nsIWebShellServices* aWebShellSvc,
     return NS_ERROR_ILLEGAL_VALUE;
 }
 //--------------------------------------------------------------
-NS_IMPL_ISUPPORTS ( nsMyObserver ,NS_GET_IID(nsICharsetDetectionObserver));
+NS_IMPL_ISUPPORTS1 ( nsMyObserver ,nsICharsetDetectionObserver);
 //--------------------------------------------------------------
 
 class nsDetectionAdaptor : 
@@ -309,8 +309,7 @@ public:
 };
 
 //--------------------------------------------------------------
-NS_DEFINE_IID( kIFactoryIID, NS_IFACTORY_IID);
-NS_IMPL_ISUPPORTS( nsDetectionAdaptorFactory , kIFactoryIID);
+NS_IMPL_ISUPPORTS1( nsDetectionAdaptorFactory , nsIFactory);
 
 //--------------------------------------------------------------
 NS_IMETHODIMP nsDetectionAdaptorFactory::CreateInstance(

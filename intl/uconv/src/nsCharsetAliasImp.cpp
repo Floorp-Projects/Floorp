@@ -57,7 +57,7 @@ private:
 };
 
 //--------------------------------------------------------------
-NS_IMPL_ISUPPORTS(nsCharsetAlias2, kICharsetAliasIID);
+NS_IMPL_ISUPPORTS1(nsCharsetAlias2, nsICharsetAlias);
 
 //--------------------------------------------------------------
 nsCharsetAlias2::nsCharsetAlias2()

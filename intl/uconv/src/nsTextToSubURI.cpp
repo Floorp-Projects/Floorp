@@ -50,7 +50,7 @@ nsTextToSubURI::~nsTextToSubURI()
     PR_AtomicDecrement(&g_InstanceCount);
 }
 
-NS_IMPL_ISUPPORTS(nsTextToSubURI, kITextToSubURIIID)
+NS_IMPL_ISUPPORTS1(nsTextToSubURI, nsITextToSubURI)
 
 NS_IMETHODIMP  nsTextToSubURI::ConvertAndEscape(
   const char *charset, const PRUnichar *text, char **_retval) 

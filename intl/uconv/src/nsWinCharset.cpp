@@ -51,7 +51,7 @@ private:
   nsString mCharset;
 };
 
-NS_IMPL_ISUPPORTS(nsWinCharset, kIPlatformCharsetIID);
+NS_IMPL_ISUPPORTS1(nsWinCharset, nsIPlatformCharset)
 
 nsWinCharset::nsWinCharset()
 {

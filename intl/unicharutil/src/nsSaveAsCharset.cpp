@@ -35,7 +35,6 @@
 //
 // guids
 //
-static NS_DEFINE_IID(kISaveAsCharsetIID, NS_ISAVEASCHARSET_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_CID(kEntityConverterCID, NS_ENTITYCONVERTER_CID);
@@ -44,7 +43,7 @@ static NS_DEFINE_CID(kEntityConverterCID, NS_ENTITYCONVERTER_CID);
 //
 // nsISupports methods
 //
-NS_IMPL_ISUPPORTS(nsSaveAsCharset, kISaveAsCharsetIID)
+NS_IMPL_ISUPPORTS1(nsSaveAsCharset, nsISaveAsCharset)
 
 
 //

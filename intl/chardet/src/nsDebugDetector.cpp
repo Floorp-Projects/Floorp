@@ -129,7 +129,7 @@ void nsDebugDetector::Report()
 }
 
 
-NS_IMPL_ISUPPORTS(nsDebugDetector, NS_GET_IID(nsICharsetDetector));
+NS_IMPL_ISUPPORTS1(nsDebugDetector, nsICharsetDetector)
 
 //--------------------------------------------------------------
 class nsDebugDetectorFactory : public nsIFactory {
@@ -154,8 +154,7 @@ private:
 };
 
 //--------------------------------------------------------------
-NS_DEFINE_IID( kIFactoryIID, NS_IFACTORY_IID);
-NS_IMPL_ISUPPORTS( nsDebugDetectorFactory , kIFactoryIID);
+NS_IMPL_ISUPPORTS1( nsDebugDetectorFactory , nsIFactory);
 
 NS_IMETHODIMP nsDebugDetectorFactory::CreateInstance(
     nsISupports* aDelegate, const nsIID &aIID, void** aResult)

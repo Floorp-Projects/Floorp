@@ -29,7 +29,6 @@
 #include "prprf.h"
 #include <Windows.h>
 
-NS_DEFINE_IID(kIWin32LocaleIID, NS_IWIN32LOCALE_IID);
 NS_DEFINE_IID(kIWin32LocaleImplCID, NS_WIN32LOCALE_CID);
 
 #define USER_DEFINED_PRIMARYLANG	0x0200
@@ -389,7 +388,7 @@ iso_pair dbg_list[LENGTH_MAPPING_LIST+1] =
 #endif
 
 /* nsIWin32LocaleImpl */
-NS_IMPL_ISUPPORTS(nsIWin32LocaleImpl,kIWin32LocaleIID)
+NS_IMPL_ISUPPORTS1(nsIWin32LocaleImpl,nsIWin32Locale)
 
 nsIWin32LocaleImpl::nsIWin32LocaleImpl(void)
 {

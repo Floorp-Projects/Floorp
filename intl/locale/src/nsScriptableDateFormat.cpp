@@ -72,7 +72,7 @@ private:
   nsString mStringOut;   
 };
 
-NS_IMPL_ISUPPORTS(nsScriptableDateFormat, NS_GET_IID(nsIScriptableDateFormat));
+NS_IMPL_ISUPPORTS1(nsScriptableDateFormat, nsIScriptableDateFormat)
 
 NS_IMETHODIMP nsScriptableDateFormat::FormatDateTime(
                             const PRUnichar *locale, 

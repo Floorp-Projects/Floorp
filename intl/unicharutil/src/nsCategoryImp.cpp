@@ -27,9 +27,7 @@
 #include "nsCategoryImp.h"
 #include "cattable.h"
 
-NS_DEFINE_IID(kIUGenCategoryIID, NS_IUGENCATEGORY_IID);
-
-NS_IMPL_ISUPPORTS(nsCategoryImp, kIUGenCategoryIID);
+NS_IMPL_ISUPPORTS1(nsCategoryImp, nsIUGenCategory);
 
 
 nsCategoryImp::nsCategoryImp()

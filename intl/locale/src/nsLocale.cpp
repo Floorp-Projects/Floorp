@@ -36,7 +36,7 @@ NS_DEFINE_IID(kILocaleIID, NS_ILOCALE_IID);
 NS_DEFINE_IID(kLocaleCID, NS_LOCALE_CID);
 
 /* nsILocale */
-NS_IMPL_THREADSAFE_ISUPPORTS(nsLocale,kILocaleIID)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsLocale,nsILocale)
 
 nsLocale::nsLocale(void)
 :	fHashtable(nsnull), fCategoryCount(0)

@@ -51,7 +51,7 @@ class nsI18nCompatibility : public nsII18nCompatibility {
   virtual ~nsI18nCompatibility() {}
 };
 
-NS_IMPL_ISUPPORTS(nsI18nCompatibility, NS_GET_IID(nsII18nCompatibility));
+NS_IMPL_ISUPPORTS1(nsI18nCompatibility, nsII18nCompatibility)
 
 NS_IMETHODIMP nsI18nCompatibility::CSIDtoCharsetName(PRUint16 csid, PRUnichar **_retval)
 {

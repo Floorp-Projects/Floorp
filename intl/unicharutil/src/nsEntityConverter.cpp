@@ -30,7 +30,6 @@
 //
 // guids
 //
-NS_DEFINE_IID(kIEntityConverterIID,NS_IENTITYCONVERTER_IID);
 NS_DEFINE_IID(kIFactoryIID,NS_IFACTORY_IID);
 NS_DEFINE_IID(kIPersistentPropertiesIID,NS_IPERSISTENTPROPERTIES_IID);
 
@@ -182,7 +181,7 @@ nsEntityConverter:: GetVersionPropertyInst(PRUint32 versionNumber)
 //
 // nsISupports methods
 //
-NS_IMPL_ISUPPORTS(nsEntityConverter,kIEntityConverterIID)
+NS_IMPL_ISUPPORTS1(nsEntityConverter,nsIEntityConverter)
 
 
 //

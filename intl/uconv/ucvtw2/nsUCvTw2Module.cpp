@@ -280,7 +280,7 @@ extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager * compMgr,
 //----------------------------------------------------------------------------
 // Class nsConverterFactory [implementation]
 
-NS_IMPL_ISUPPORTS(nsConverterFactory, NS_GET_IID(nsIFactory));
+NS_IMPL_ISUPPORTS1(nsConverterFactory, nsIFactory)
 
 nsConverterFactory::nsConverterFactory(FactoryData * aData) 
 {
@@ -329,7 +329,7 @@ NS_IMETHODIMP nsConverterFactory::LockFactory(PRBool aLock)
 //----------------------------------------------------------------------------
 // Class nsConverterModule [implementation]
 
-NS_IMPL_ISUPPORTS(nsConverterModule, NS_GET_IID(nsIModule))
+NS_IMPL_ISUPPORTS1(nsConverterModule, nsIModule)
 
 nsConverterModule::nsConverterModule()
 : mInitialized(PR_FALSE)
