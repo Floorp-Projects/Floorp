@@ -205,8 +205,9 @@ components\pref.xpt
 components\xppref32.dll
 
 ; profile
-components\profile.dll                  
 components\profile.xpt
+components\profilemigration.dll
+components\toolkitprofile.xpt
 
 ; rdf
 components\rdf.dll

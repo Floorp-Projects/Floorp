@@ -1564,6 +1564,13 @@
       <!-- Tasks -->
       <menu id="tasksMenu" label="&tasksMenu.label;" accesskey="&tasksMenu.accesskey;">
         <menupopup id="taskPopup" onpopupshowing="document.commandDispatcher.updateCommands('create-menu-tasks')">
+              
+        <menuitem id="extensionsManager" label="&extensions.label;" accesskey="&extensions.accesskey;" 
+                  oncommand="openExtensions('extensions');"/>
+        <menuitem id="themesManager" label="&themes.label;" accesskey="&themes.accesskey;" 
+                  oncommand="openExtensions('themes');"/>
+        <menuseparator id="devToolsSeparator"/>
+
         <menuitem id="filtersCmd" label="&filtersCmd.label;"
                   accesskey="&filtersCmd.accesskey;"
                   oncommand="MsgFilters(null);"/>

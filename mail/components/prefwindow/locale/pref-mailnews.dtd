@@ -30,3 +30,8 @@
 <!ENTITY reuseExpRadio1.accesskey         "e">
 <!ENTITY reuseExpRadio2.label             "A tab in an existing message window">
 <!ENTITY reuseExpRadio2.accesskey         "t">
+
+<!ENTITY setDefaultMailClient.label             "Use &vendorShortName; as the default mail application">
+<!ENTITY setDefaultMailClient.accesskey         "u">
+<!ENTITY setDefaultNewsClient.label             "Use &vendorShortName; as the default news application">
+<!ENTITY setDefaultNewsClient.accesskey         "n">

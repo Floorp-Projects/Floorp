@@ -76,8 +76,6 @@
       <button id="mailcomposepref" orient="vertical" class="buttonBoxButton" type="radio" group="categories" url="chrome://messenger/content/messengercompose/pref-composing_messages.xul" label="&composingMessages.label;"/>
       <button id="attachments"     orient="vertical" class="buttonBoxButton" type="radio" group="categories" url="chrome://mozapps/content/downloads/pref-downloads.xul" label="&attachments.label;"/>
       <button id="fonts" orient="vertical" class="buttonBoxButton" type="radio" group="categories" url="chrome://communicator/content/pref/pref-fonts.xul" label="&fonts.label;"/>
-      <button id="themes" orient="vertical" class="buttonBoxButton" type="radio" group="categories" url="chrome://communicator/content/pref/pref-themes.xul" label="&themes.label;"/>
-      <button id="extensions" orient="vertical" class="buttonBoxButton" type="radio" group="categories" url="chrome://communicator/content/pref/pref-extensions.xul" label="&extensions.label;"/>
       <button id="advanced" orient="vertical" class="buttonBoxButton" type="radio" group="categories" url="chrome://messenger/content/pref-advanced.xul" label="&advanced.label;"/>
     </vbox>
 

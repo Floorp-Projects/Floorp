@@ -236,8 +236,10 @@ components/pref.xpt
 components/libpref.so
 
 ; profile
-components/libprofile.so                  
 components/profile.xpt
+components/libprofileimport.so
+components/libprofilemigration.so
+components/toolkitprofile.xpt
 
 ; rdf
 components/librdf.so

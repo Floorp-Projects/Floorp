@@ -70,27 +70,24 @@ ifdef BUILD_STATIC_LIBS
 STATIC_COMPONENTS_LINKER_PATH = -L$(DIST)/lib/components
 endif
 
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+TK_LIBS := -framework Cocoa $(TK_LIBS)
+endif
+
 LIBS = \
-	$(STATIC_COMPONENTS_LINKER_PATH) \
-	$(EXTRA_DSO_LIBS) \
+  	$(STATIC_COMPONENTS_LINKER_PATH) \
 	$(DIST)/lib/$(LIB_PREFIX)xulapp_s.$(LIB_SUFFIX) \
 	$(MOZ_JS_LIBS) \
 	$(TK_LIBS) \
+	$(EXTRA_DSO_LIBS) \
 	$(XPCOM_LIBS) \
 	$(NSPR_LIBS) \
 	$(NULL)
-
-ifdef MOZ_JPROF
-LIBS += -ljprof
-endif
 
 # Add explicit X11 dependency when building against X11 toolkits
 ifneq (,$(filter gtk gtk2 xlib,$(MOZ_WIDGET_TOOLKIT)))
 LIBS += $(XLDFLAGS) $(XLIBS)
 endif
-
-# This code removes the console from release builds
-# (unless you've set MOZ_WINCONSOLE=1).
 
 ifndef MOZ_WINCONSOLE
 ifdef MOZ_DEBUG

@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+
+  <Description about="urn:mozilla:install-manifest">
+    <em:id>{972ce4c6-7e08-4474-a285-3208198ce6fd}</em:id>
+    <em:version>2.0</em:version>
+    
+    <!-- Target Application this theme can install into, 
+        with minimum and maximum supported versions. --> 
+    <em:targetApplication>
+      <Description>
+        <em:id>{3550f703-e582-4d05-9a08-453d09bdfdc6}</em:id>
+        <em:minVersion>0.7</em:minVersion>
+        <em:maxVersion>0.7+</em:maxVersion>
+      </Description>
+    </em:targetApplication>
+    
+    <!-- Front End MetaData -->
+    <em:name>Thunderbird (default)</em:name>
+    <em:description>The default theme</em:description>
+
+    <em:locked>true</em:locked>
+
+    <!-- Front End Integration Hooks (used by Theme Manager)-->
+    <!-- XXXben - preprocess this file to use different info for mac version -->
+#ifdef XP_MACOSX
+    <em:creator>Keving Gerich and Stephen Horlander</em:creator>
+#else
+    <em:creator>Arvid Axelsson</em:creator>
+#endif
+    <em:contributor>Mozilla Contributors</em:contributor>
+
+    <em:internalName>classic/1.0</em:internalName>
+  </Description>      
+
+</RDF>

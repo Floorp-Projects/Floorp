@@ -374,6 +374,12 @@
 <!-- Tools Menu -->
 <!ENTITY tasksMenu.label "Tools">
 <!ENTITY tasksMenu.accesskey "T">
+<!ENTITY extensions.label             "Extensions">
+<!ENTITY extensions.tooltip           "Show and Manage installed Extensions">
+<!ENTITY extensions.accesskey         "E">
+<!ENTITY themes.label                 "Themes">
+<!ENTITY themes.tooltip               "Change the Theme">
+<!ENTITY themes.accesskey             "T">
 <!ENTITY messengerCmd.label "Mail &amp; Newsgroups">
 <!ENTITY messengerCmd.accesskey "m">
 <!ENTITY messengerCmd.commandkey "1">
@@ -390,7 +396,7 @@
 <!ENTITY runJunkControls.label "Run Junk Mail Controls on Folder">
 <!ENTITY runJunkControls.accesskey "u">
 <!ENTITY deleteJunk.label "Delete Mail Marked as Junk in Folder">
-<!ENTITY deleteJunk.accesskey "e">
+<!ENTITY deleteJunk.accesskey "l">
 <!ENTITY javaScriptConsoleCmd.label "JavaScript Console">
 <!ENTITY javaScriptConsoleCmd.accesskey "C">
 

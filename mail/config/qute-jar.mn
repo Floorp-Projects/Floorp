@@ -56,6 +56,10 @@ skin/classic/communicator/xpinstall/xpinstall.css,   classic/skin/classic/commun
 skin/classic/mozapps/pref,                            classic/skin/classic/mozapps/pref
 skin/classic/mozapps/contents.rdf,                    classic/skin/classic/mozapps/contents.rdf
 skin/classic/mozapps/downloads,                       classic/skin/classic/mozapps/downloads
+skin/classic/mozapps/profile,                         classic/skin/classic/mozapps/profile
+skin/classic/mozapps/extensions,                      classic/skin/classic/mozapps/extensions
+skin/classic/mozapps/update,                          classic/skin/classic/mozapps/update
+skin/classic/mozapps/shared,                          classic/skin/classic/mozapps/shared
 
 #################################################################################################
 # Global

@@ -26,6 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+DIRS = extensions
 
 include $(topsrcdir)/config/rules.mk
 

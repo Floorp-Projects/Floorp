@@ -11,10 +11,6 @@ messenger.jar:
 comm.jar:
 +   content/communicator/pref/pref.xul                                 (content/pref.xul)
 *+  content/communicator/pref/nsPrefWindow.js                          (content/nsPrefWindow.js)
-*+  content/communicator/pref/pref-themes.xul                          (content/pref-themes.xul)
-*+  content/communicator/pref/pref-themes.js                           (content/pref-themes.js)
-*   content/communicator/pref/pref-extensions.xul                      (content/pref-extensions.xul)
-*   content/communicator/pref/pref-extensions.js                       (content/pref-extensions.js)
 *+  content/communicator/pref/pref-fonts.xul                           (content/pref-fonts.xul)
 *+  content/communicator/pref/pref-fonts.js                            (content/pref-fonts.js)
 *   content/communicator/pref/pref-calibrate-screen.xul                (content/pref-calibrate-screen.xul)
@@ -22,7 +18,6 @@ comm.jar:
 en-US.jar:
 +   locale/en-US/communicator/pref/prefutilities.properties            (locale/prefutilities.properties)
 +   locale/en-US/communicator/pref/pref-fonts.dtd                      (locale/pref-fonts.dtd)
-+   locale/en-US/communicator/pref/pref-themes.dtd                     (locale/pref-themes.dtd)
 +   locale/en-US/messenger/messengercompose/pref-composing_messages.dtd (locale/pref-composing_messages.dtd)
     locale/en-US/messenger/messengercompose/pref-composing_html.dtd    (locale/pref-composing_html.dtd)
     locale/en-US/messenger/messengercompose/pref-sendOptions.dtd       (locale/pref-sendOptions.dtd)
@@ -31,8 +26,6 @@ en-US.jar:
 +   locale/en-US/messenger/pref-viewing_messages.dtd                   (locale/pref-viewing_messages.dtd)
 +   locale/en-US/messenger/AccountManager.dtd                          (locale/AccountManager.dtd)
 +   locale/en-US/messenger/pref-advanced.dtd                           (locale/pref-advanced.dtd)
-+   locale/en-US/communicator/pref/pref-themes.dtd                     (locale/pref-themes.dtd)
-+   locale/en-US/communicator/pref/pref-extensions.dtd                 (locale/pref-extensions.dtd)
 +   locale/en-US/mozapps/downloads/pref-downloads.dtd                  (locale/pref-downloads.dtd)
 
 en-win.jar:

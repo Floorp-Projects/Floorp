@@ -132,14 +132,6 @@ page button {
   -moz-image-region: rect(0px 160px 32px 128px);
 }
 
-#themes {
-  -moz-image-region: rect(0px, 192px, 32px, 160px)
-}
-
-#extensions {
-  -moz-image-region: rect(0px, 224px, 32px, 192px)
-}
-
 #advanced {
   -moz-image-region: rect(0px, 256px, 32px, 224px)
 }
@@ -190,39 +182,28 @@ expander {
 	margin: 6px;
 }
 
-/* Themes/Extensions Items */
-.themesLink {
-  margin-left: 5px;
-  text-decoration: underline;
-  color: blue;
-  cursor: pointer;
-}
-
-.themesLink:active {
-  color: red;
-}
-
-#previewImageContainer {
-  height: 93px;
-  padding: 1px;
-}
-
-#previewImage {
-  max-width: 355px;
-  min-width: 355px;
-  max-height: 85px;
-  min-height: 85px;
-}
-
-.extensionInfoArea {
-  background-color: -moz-Field !important;
-  height: 10em;
-}
-
 button  {
   -moz-appearance: button-small;
 }
 
 /* :::::: layout preference icons ::::: */
- 
- .mailPaneConfigIcon  {   list-style-image : url("chrome://messenger/skin/icons/mailPaneConfig.png"); }  #classic  {	 -moz-image-region: rect(0px, 32px, 32px, 0px) }  #wide  {	 -moz-image-region: rect(0px, 64px, 32px, 32px) }  #vertical {	 -moz-image-region: rect(0px, 96px, 32px, 64px) }
+
+ .mailPaneConfigIcon 
+ {
+   list-style-image : url("chrome://messenger/skin/icons/mailPaneConfig.png");
+}
+
+ #classic 
+ {
+	 -moz-image-region: rect(0px, 32px, 32px, 0px)
+}
+
+ #wide 
+ {
+	 -moz-image-region: rect(0px, 64px, 32px, 32px)
+}
+
+ #vertical
+ {
+	 -moz-image-region: rect(0px, 96px, 32px, 64px)
+}

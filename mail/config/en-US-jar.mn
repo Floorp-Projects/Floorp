@@ -20,6 +20,9 @@ locale/en-US/messenger-smime,                             en-US/locale/en-US/mes
 locale/en-US/mozldap,                                     en-US/locale/en-US/mozldap
 locale/en-US/necko,                                       en-US/locale/en-US/necko
 locale/en-US/mozapps/downloads,                           en-US/locale/en-US/mozapps/downloads
+locale/en-US/mozapps/profile,                             en-US/locale/en-US/mozapps/profile
+locale/en-US/mozapps/extensions,                          en-US/locale/en-US/mozapps/extensions
+locale/en-US/mozapps/update,                              en-US/locale/en-US/mozapps/update
 locale/en-US/mozapps/contents.rdf,                        en-US/locale/en-US/mozapps/contents.rdf
 
 locale/en-US/navigator/contents.rdf,                      en-US/locale/en-US/navigator/contents.rdf

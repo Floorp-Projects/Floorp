@@ -198,8 +198,9 @@ components\pref.xpt
 components\pref.dll
 
 ; profile
-components\profile.dll                  
 components\profile.xpt
+components\profilemigration.dll
+components\toolkitprofile.xpt
 
 ; rdf
 components\rdf.dll
