@@ -91,7 +91,7 @@ function onOK()
   var isFile = file.isFile();
 
   switch(filePickerMode) {
-  case nsIFilePicker.modeLoad:
+  case nsIFilePicker.modeOpen:
     if (isFile) {
       retvals.directory = file.parent.path;
       ret = nsIFilePicker.returnOK;
