@@ -1,0 +1,69 @@
+1999-03-03  Sebastian Wilhelmi  <wilhelmi@ira.uka.de>
+
+	* gthread-posix.c: Fixed broken mutex_trylock and slightly broken
+	cond_timed_wait functions.
+
+1999-02-15  Sebastian Wilhelmi  <wilhelmi@ira.uka.de>
+
+	* testgthread.c (test_mutexes): Use new signature of
+	g_static_mutex* functions.
+
+1999-02-08  Sebastian Wilhelmi  <wilhelmi@ira.uka.de>
+
+	* gthread-posix.c (g_private_get_posix_impl): Use the
+	HAVE_PTHREAD_GETSPECIFIC_POSIX macro to determine, which signature
+	to use for pthread_getspecific.
+
+Tue Jan 19 20:56:02 1999  Tor Lillqvist  <tml@iki.fi>
+
+	* Makefile.am (EXTRA_DIST): Added gthread.def.
+
+Sun Jan 17 10:58:19 1999  Tor Lillqvist  <tml@iki.fi>
+
+	* gthread.def: New file.
+
+1999-01-16 1999  Tor Lillqvist  <tml@iki.fi>
+
+	* gthread-posix.c: Conditionalize <sys/time.h> inclusion.
+
+1999-01-07  Sebastian Wilhelmi  <wilhelmi@ira.uka.de>
+
+	* testgthread.c: conditionally compile according to the
+	G_THREADS_IMPL_??? macros.
+	(test_private_func): use rand_r instead of rand to make it
+	thread safe.
+
+1998-12-18  Sebastian Wilhelmi  <wilhelmi@ira.uka.de>
+
+	* testgthread.c (new_thread): As a joinable thread seems to be the
+	default on posix, leave the explicit setting out, as it causes
+	problems on some older platforms.
+
+Wed Dec 16 22:21:33 CST 1998 Shawn T. Amundson <amundson@gtk.org>
+
+	* gthread-posix.c: use g_free in mutex_free (from Tim Janik)
+
+Thu Dec 17 03:38:57 1998  Tim Janik  <timj@gtk.org>
+
+	* Makefile.am: -DG_LOG_DOMAIN="GThread", we don't need an extern
+	variable for that (noticed by Joel Becker <jlbec@ocala.cs.miami.edu>)
+
+Wed Dec 16 03:16:16 1998  Tim Janik  <timj@gtk.org>
+
+	* testgthread.c: s/g_thread_supported/g_thread_supported ()/
+	* gthread.c: s/g_thread_supported/g_threads_got_initialized/
+	(g_thread_init): bail out if G_THREADS_ENABLED is not defined.
+
+1998-12-15  Sebastian Wilhelmi  <wilhelmi@ira.uka.de>
+
+	* Makefile.am (EXTRA_DIST): updated.
+
+	* testgthread.c, gthread-*.c: Changed private to private_key to
+	avoid problems when compiling with under C++.
+
+	* gthread-none.c: 
+	s/g_mutex_functions_for_glib_use/g_thread_functions_for_glib_use/
+
+	* ChangeLog: from now on there is an extra ChangeLog for gthread
+	
+
