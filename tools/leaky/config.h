@@ -16,7 +16,7 @@
 
 #include <malloc.h>
 
-#ifdef linux
+#if defined(linux) || defined(NTO)
 #define USE_BFD
 #undef NEED_WRAPPERS
 
