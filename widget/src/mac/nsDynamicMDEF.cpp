@@ -166,10 +166,11 @@ pascal void nsDynamicMDEFMain(
   
   // Force a size message next time we draw this menu
   if(message == kMenuDrawMsg) {
+    SInt8 state = ::HGetState((Handle)theMenu);
     HLock((Handle)theMenu);
     (**theMenu).menuWidth = -1;
 	(**theMenu).menuHeight = -1;
-    HUnlock((Handle)theMenu);  
+    HSetState((Handle)theMenu, state);  
   }
 }  
 

@@ -129,6 +129,12 @@ class nsIMenu : public nsISupports {
     NS_IMETHOD  GetNativeData(void** aData) = 0;
 
    /**
+    * Sets Native MenuHandle
+    *
+    */
+    NS_IMETHOD  SetNativeData(void* aData) = 0;
+    
+   /**
     * Adds menu listener for dynamic construction
     *
     */

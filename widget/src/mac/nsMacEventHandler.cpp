@@ -735,8 +735,8 @@ PRBool nsMacEventHandler::HandleActivateEvent(EventRecord& aOSEvent)
 			{
 			  MenuHandle menuHandle = nsnull;
 
-			  menuBar->GetNativeData((void *)menuHandle);
-			  ::SetMenuBar((Handle)menuHandle);
+			  //menuBar->GetNativeData((void *)menuHandle);
+			  //::SetMenuBar((Handle)menuHandle);
 			  menuBar->Paint();
 			}
 			else
