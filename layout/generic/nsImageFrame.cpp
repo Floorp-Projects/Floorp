@@ -745,6 +745,11 @@ nsImageFrame::Paint(nsIPresContext& aPresContext,
   const nsStyleDisplay* disp = (const nsStyleDisplay*)
     mStyleContext->GetStyleData(eStyleStruct_Display);
   if (disp->mVisible) {
+    if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
+      aRenderingContext.PushState();
+      SetClipRect(aRenderingContext);
+    }
+
     // First paint background and borders
     nsLeafFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
                        aWhichLayer);
@@ -759,39 +764,45 @@ nsImageFrame::Paint(nsIPresContext& aPresContext,
                            ? NS_ICON_BROKEN_IMAGE
                            : NS_ICON_LOADING_IMAGE);
       }
-      return NS_OK;
     }
-
-    if ((NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer)
+    else {
+      if ((NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer)
 #ifdef LET_IMAGE_LIBRARY_SCALE_ASPECT_IMAGES
-        && mImageLoader.HaveImageSize()
+          && mImageLoader.HaveImageSize()
 #endif
-      ) {
-      // Now render the image into our content area (the area inside the
-      // borders and padding)
-      nsRect inner;
-      GetInnerArea(&aPresContext, inner);
-      if (mImageLoader.GetLoadImageFailed()) {
-        float p2t;
-        aPresContext.GetScaledPixelsToTwips(&p2t);
-        inner.width = NSIntPixelsToTwips(image->GetWidth(), p2t);
-        inner.height = NSIntPixelsToTwips(image->GetHeight(), p2t);
-      }
-      aRenderingContext.DrawImage(image, inner);
-    }
-
-    if ((NS_FRAME_PAINT_LAYER_DEBUG == aWhichLayer) && GetShowFrameBorders()) {
-      nsImageMap* map = GetImageMap();
-      if (nsnull != map) {
+        ) {
+        // Now render the image into our content area (the area inside the
+        // borders and padding)
         nsRect inner;
         GetInnerArea(&aPresContext, inner);
-        PRBool clipState;
-        aRenderingContext.SetColor(NS_RGB(0, 0, 0));
-        aRenderingContext.PushState();
-        aRenderingContext.Translate(inner.x, inner.y);
-        map->Draw(aPresContext, aRenderingContext);
-        aRenderingContext.PopState(clipState);
+        if (mImageLoader.GetLoadImageFailed()) {
+          float p2t;
+          aPresContext.GetScaledPixelsToTwips(&p2t);
+          inner.width = NSIntPixelsToTwips(image->GetWidth(), p2t);
+          inner.height = NSIntPixelsToTwips(image->GetHeight(), p2t);
+        }
+        aRenderingContext.DrawImage(image, inner);
       }
+
+      if ((NS_FRAME_PAINT_LAYER_DEBUG == aWhichLayer) &&
+          GetShowFrameBorders()) {
+        nsImageMap* map = GetImageMap();
+        if (nsnull != map) {
+          nsRect inner;
+          GetInnerArea(&aPresContext, inner);
+          PRBool clipState;
+          aRenderingContext.SetColor(NS_RGB(0, 0, 0));
+          aRenderingContext.PushState();
+          aRenderingContext.Translate(inner.x, inner.y);
+          map->Draw(aPresContext, aRenderingContext);
+          aRenderingContext.PopState(clipState);
+        }
+      }
+    }
+
+    if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
+      PRBool clipState;
+      aRenderingContext.PopState(clipState);
     }
   }
 
