@@ -15,13 +15,57 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH = ../../..
+DEPTH=../../..
 topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
 srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+PROGRAM	= nntpTest
+
+CPPSRCS = \
+	nntpTest.cpp		   \
+	nsNNTPCategoryContainerStub.cpp \
+	nsNNTPHostStub.cpp	    \
+	nsNNTPNewsgroupListStub.cpp \
+	nsNNTPNewsgroupStub.cpp	    \
+	$(NULL)
+
+ifdef MOZ_OJI
+	JSJ_LIB = -ljsj
+endif
+
+LIBS = \
+	-labouturl \
+	-lfileurl \
+	-lftpurl \
+	-lgophurl \
+	-lremoturl \
+	-lhttpurl \
+	-lsockstuburl \
+	-lnetcache \
+	-lmimetype \
+	-lnetcnvts \
+	-lnetwork \
+	-lnetlib \
+	-lnetutil \
+	-lnntp	\
+	-lmailnewsbase \
+	-lreg	\
+	-lxpcom	\
+	-lpwcac \
+	-lmozdbm	\
+	-lxp	\
+	-lpref	\
+	-ljs	\
+	-lraptorbase \
+	-lgmbase$(MOZ_TOOLKIT) \
+	-lsecfree \
+	-lz \
+	$(NSPR_LIBS) \
+	$(TK_LIBS) \
+	$(NULL)
 
 include $(topsrcdir)/config/config.mk
 
