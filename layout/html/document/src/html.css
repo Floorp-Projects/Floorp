@@ -271,6 +271,11 @@ nobr {
   white-space: nowrap;
 }
 
+/* titles */
+abbr[title], acronym[title] {
+  border-bottom: dotted 1px;
+  cursor: help;
+}
 
 /* lists */
 
