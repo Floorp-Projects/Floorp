@@ -198,17 +198,7 @@ NS_IMETHODIMP nsMsgBiffManager::OnServerLoaded(nsIMsgIncomingServer *server)
 
 NS_IMETHODIMP nsMsgBiffManager::OnServerUnloaded(nsIMsgIncomingServer *server)
 {
-	nsresult rv;
-	PRBool doBiff = PR_FALSE;
-
-    rv = server->GetDoBiff(&doBiff);
-
-	if(NS_SUCCEEDED(rv) && doBiff)
-	{
-		rv = RemoveServerBiff(server);
-	}
-
-	return rv;
+  return RemoveServerBiff(server);
 }
 
 NS_IMETHODIMP nsMsgBiffManager::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
