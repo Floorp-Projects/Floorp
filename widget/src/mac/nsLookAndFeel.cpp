@@ -352,7 +352,7 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         // xul popups are not allowed to overlap the menubar.
         aMetric = 0;
         break;
-    case eMetric_DisplayFullWindow:
+    case eMetric_DragFullWindow:
         aMetric = 0;
         break;
     default:
