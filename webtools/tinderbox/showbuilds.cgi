@@ -526,77 +526,165 @@ sub tree_open {
 sub print_javascript {
   my $script;
   ($script = <<"__ENDJS") =~ s/^    //gm;
+    <style type="text/css">
+    #popup {
+      position: absolute;
+      height: 10em;
+      margin: -5em 0 0 -5em;
+      }
+    .who#popup{
+      width: 20em;
+      }
+    .note#popup {
+      width: 25em;
+      height: 20em;
+      }
+    .log#popup {
+      width: 15em;
+      }
+    .note#popup, .log#popup {
+      border: 2px solid black;
+      background: white;
+      color: black;
+      padding: 0.5em;
+      }
+    </style>
     <script>
+    var noDHTML = false;
     if (parseInt(navigator.appVersion) < 4) {
       window.event = 0;
+      noDHTML = true;
+    } else if (navigator.userAgent.indexOf("MSIE") > 0 ) {
+      noDHTML = true;
     }
-
+    if (document.body && document.body.addEventListener) {
+      document.body.addEventListener("click",maybeclosepopup,false);
+    }
+    function nodewrite(n,t) {
+      var r = document.createRange();
+      r.setStart(n,0);
+      n.appendChild(r.createContextualFragment(t));
+    }
+    function closepopup() {
+      var p = document.getElementById("popup");
+      if (p && p.parentNode) {
+        p.parentNode.removeChild(p);
+      }
+    }
+    function maybeclosepopup(e) {
+      var n = e.target;
+      var close = true;
+      while(close && n && (n != document)) {
+        close = (n.id != "popup") && !(n.tagName && (n.tagName.toLowerCase() == "a"));
+        n = n.parentNode;
+      }
+      if (close) closepopup();
+    }
     function who(d) {
-      var version = parseInt(navigator.appVersion);
-      if (version < 4 || version >= 5) {
+      if (noDHTML) {
         return true;
       }
-      var l  = document.layers['popup'];
-      l.src  = d.target.href;
-      l.top  = d.target.y - 6;
-      l.left = d.target.x - 6;
-      if (l.left + l.clipWidth > window.width) {
-        l.left = window.width - l.clipWidth;
+      if (document.layers) {
+        var l  = document.layers['popup'];
+        l.src  = d.target.href;
+        l.top  = d.target.y - 6;
+        l.left = d.target.x - 6;
+        if (l.left + l.clipWidth > window.width) {
+          l.left = window.width - l.clipWidth;
+        }
+        l.visibility="show";
+      } else {
+        var t = d.target;
+        while (t.nodeType != 1) {
+          t = t.parentNode;
+        }
+        closepopup()
+        var l = document.createElement("iframe");
+        l.setAttribute("src", t.href);
+        l.setAttribute("id", "popup");
+        l.className = "who";
+        t.appendChild(l);
       }
-      l.visibility="show";
       return false;
     }
     function log_url(logfile) {
       return "${rel_path}showlog.cgi?log=" + buildtree + "/" + logfile;
     }
     function note(d,noteid,logfile) {
-      var version = parseInt(navigator.appVersion);
-      if (version < 4 || version >= 5) {
+      if (noDHTML) {
         document.location = log_url(logfile);
         return false;
       }
-      var l = document.layers['popup'];
-      l.document.write("<table border=1 cellspacing=1><tr><td>"
-                       + notes[noteid] + "</tr></table>");
-      l.document.close();
-
-      l.top = d.y-10;
-      var zz = d.x;
-      if (zz + l.clip.right > window.innerWidth) {
-        zz = (window.innerWidth-30) - l.clip.right;
-        if (zz < 0) { zz = 0; }
+      if (document.layers) {
+        var l = document.layers['popup'];
+        l.document.write("<table border=1 cellspacing=1><tr><td>"
+                         + notes[noteid] + "</tr></table>");
+        l.document.close();
+        l.top = d.y-10;
+        var zz = d.x;
+        if (zz + l.clip.right > window.innerWidth) {
+          zz = (window.innerWidth-30) - l.clip.right;
+          if (zz < 0) { zz = 0; }
+        }
+        l.left = zz;
+        l.visibility="show";
+      } else {
+        var t = d.target;
+        while (t.nodeType != 1) {
+          t = t.parentNode;
+        }
+        closepopup()
+        var l = document.createElement("div");
+        nodewrite(l,notes[noteid]);
+        l.setAttribute("id", "popup");
+        l.style.position = "absolute";
+        l.className = "note";
+        t.parentNode.parentNode.appendChild(l);
       }
-      l.left = zz;
-      l.visibility="show";
       return false;
     }
     function log(e,buildindex,logfile)
     {
       var logurl = log_url(logfile);
       var commenturl = "${rel_path}addnote.cgi?log=" + buildtree + "/" + logfile;
-      var version = parseInt(navigator.appVersion);
 
-      if (version < 4 || version >= 5) {
+      if (noDHTML) {
         document.location = logurl;
         return false;
       }
-      var q = document.layers["logpopup"];
-      q.top = e.target.y - 6;
+      if (document.layers) {
+        var q = document.layers["logpopup"];
+        q.top = e.target.y - 6;
 
-      var yy = e.target.x;
-      if ( yy + q.clip.right > window.innerWidth) {
-        yy = (window.innerWidth-30) - q.clip.right;
-        if (yy < 0) { yy = 0; }
+        var yy = e.target.x;
+        if ( yy + q.clip.right > window.innerWidth) {
+          yy = (window.innerWidth-30) - q.clip.right;
+          if (yy < 0) { yy = 0; }
+        }
+        q.left = yy;
+        q.visibility="show"; 
+        q.document.write("<TABLE BORDER=1><TR><TD><B>"
+          + builds[buildindex] + "</B><BR>"
+          + "<A HREF=" + logurl + ">View Brief Log</A><BR>"
+          + "<A HREF=" + logurl + "&fulltext=1"+">View Full Log</A><BR>"
+          + "<A HREF=" + commenturl + ">Add a Comment</A>"
+          + "</TD></TR></TABLE>");
+        q.document.close();
+      } else {
+        var t = e.target;
+        while (t.nodeType != 1) {
+          t = t.parentNode;
+        }
+        closepopup();
+        var l = document.createElement("div");
+        nodewrite(l,"<B>" + builds[buildindex] + "</B><BR>"
+          + "<A HREF=" + logurl + ">View Brief Log</A><BR>"
+          + "<A HREF=" + logurl + "&fulltext=1"+">View Full Log</A><BR>"
+          + "<A HREF=" + commenturl + ">Add a Comment</A><BR>");
+        l.setAttribute("id", "popup");
+        l.className = "log";
+        t.parentNode.appendChild(l);
       }
-      q.left = yy;
-      q.visibility="show"; 
-      q.document.write("<TABLE BORDER=1><TR><TD><B>"
-        + builds[buildindex] + "</B><BR>"
-        + "<A HREF=" + logurl + ">View Brief Log</A><BR>"
-        + "<A HREF=" + logurl + "&fulltext=1"+">View Full Log</A><BR>"
-        + "<A HREF=" + commenturl + ">Add a Comment</A>"
-	+ "</TD></TR></TABLE>");
-      q.document.close();
       return false;
     }
 
