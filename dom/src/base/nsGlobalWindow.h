@@ -256,7 +256,8 @@ protected:
   nsresult CheckSecurityLeftAndTop(PRInt32* left, PRInt32* top);
   static PRBool CanSetProperty(const char *aPrefName);
 
-  void MakeScriptDialogTitle(const nsAString &aInTitle, nsAString &aOutTitle);
+  static void MakeScriptDialogTitle(const nsAString &aInTitle,
+                                    nsAString &aOutTitle);
 
   // Helper for window.find()
   nsresult FindInternal(const nsAString& aStr, PRBool caseSensitive,
@@ -278,6 +279,12 @@ protected:
   // objects will keep the global object (this object) alive.  To prevent
   // these cycles, ownership of such members must be released in
   // |CleanUp| and |SetDocShell|.
+  PRPackedBool                  mFirstDocumentLoad;
+  PRPackedBool                  mIsScopeClear;
+  PRPackedBool                  mFullScreen;
+  PRPackedBool                  mIsClosed;
+  PRPackedBool                  mOpenerWasCleared;
+  PRPackedBool                  mIsPopupSpam;
   nsCOMPtr<nsIScriptContext>    mContext;
   nsCOMPtr<nsIDOMWindowInternal> mOpener;
   nsCOMPtr<nsIControllers>      mControllers;
@@ -299,12 +306,6 @@ protected:
   nsTimeoutImpl**               mTimeoutInsertionPoint;
   PRUint32                      mTimeoutPublicIdCounter;
   PRUint32                      mTimeoutFiringDepth;
-  PRPackedBool                  mFirstDocumentLoad;
-  PRPackedBool                  mIsScopeClear;
-  PRPackedBool                  mFullScreen;
-  PRPackedBool                  mIsClosed;
-  PRPackedBool                  mOpenerWasCleared;
-  PRPackedBool                  mIsPopupSpam;
   PRTime                        mLastMouseButtonAction;
   nsString                      mStatus;
   nsString                      mDefaultStatus;

@@ -2293,13 +2293,7 @@ GlobalWindowImpl::Confirm(const nsAString& aString, PRBool* aReturn)
 {
   NS_ENSURE_STATE(mDocShell);
 
-  nsAutoString str;
-
   *aReturn = PR_FALSE;
-
-  str.Assign(aString);
-
-  // XXX: Concatenation of optional args?
 
   // Test whether title needs to prefixed with [script]
   nsAutoString newTitle;
@@ -2320,7 +2314,7 @@ GlobalWindowImpl::Confirm(const nsAString& aString, PRBool* aReturn)
   // pending reflows.
   EnsureReflowFlushAndPaint();
 
-  return prompter->Confirm(title, str.get(), aReturn);
+  return prompter->Confirm(title, PromiseFlatString(aString).get(), aReturn);
 }
 
 NS_IMETHODIMP
