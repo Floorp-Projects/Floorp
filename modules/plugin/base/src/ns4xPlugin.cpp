@@ -933,7 +933,7 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
 {
   nsresult res;
 
-  if(!npp)
+  if(!npp || !npp->ndata)
 		return NPERR_INVALID_INSTANCE_ERROR;
 
   switch(variable)
@@ -945,7 +945,20 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
 #endif
 
 #ifdef XP_PC
-  case NPNVnetscapeWindow : return NPERR_GENERIC_ERROR;
+  case NPNVnetscapeWindow :
+  {
+     ns4xPluginInstance *inst = (ns4xPluginInstance *) npp->ndata;
+     nsIPluginInstancePeer *peer;
+               
+     if (NS_SUCCEEDED(inst->GetPeer(&peer)) && peer)
+     {
+       res = peer->GetValue(nsPluginInstancePeerVariable_NetscapeWindow, result);
+       NS_RELEASE(peer);
+       return res;
+     }
+               
+     return NPERR_GENERIC_ERROR;
+  }
 #endif
 
   case NPNVjavascriptEnabledBool: 
