@@ -463,7 +463,6 @@ listboxbody {
 listcol {
   -moz-box-orient: vertical;
   min-width: 16px;
-  width: 16px;
 }
 
 listcell {
