@@ -83,6 +83,33 @@ function getOSKey()
 #endif
 }
 
+function stackTraceFunctionFormat(aFunctionName)
+{
+  var classDelimiter = aFunctionName.indexOf("_");
+  var className = aFunctionName.substr(0, classDelimiter);
+  if (!className)
+    className == "<global>";
+  var functionName = aFunctionName.substr(classDelimiter + 1, aFunctionName.length);
+  if (!functionName) 
+    functionName == "<anonymous>";
+  return className + "::" + functionName;
+}
+
+function stackTrace(aArguments, aMaxCount)
+{
+  dump("=[STACKTRACE]=====================================================\n");
+  dump("*** at: " + stackTraceFunctionFormat(aArguments.callee.name) + "()\n");
+  var temp = aArguments.callee.caller;
+  var count = 0;
+  while (temp) {
+    dump("***     " + stackTraceFunctionFormat(temp.name) + ")\n");
+    temp = temp.arguments.callee.caller;
+    if (aMaxCount > 0 && ++count == aMaxCount)
+      break;
+  }
+  dump("==================================================================\n");
+}
+
 var gPref   = null;
 var gOS     = null;
 var gRDF    = null;
@@ -139,7 +166,6 @@ nsUpdateService.prototype = {
     switch (aSourceEvent) {
     case nsIUpdateService.SOURCE_EVENT_MISMATCH:
     case nsIUpdateService.SOURCE_EVENT_USER:
-    
       if (aSourceEvent == nsIUpdateService.SOURCE_EVENT_USER && 
           gPref.getBoolPref(PREF_UPDATE_APP_PERFORMED)) {
         var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
@@ -328,7 +354,7 @@ nsUpdateService.prototype = {
                            PREF_UPDATE_APP_LASTUPDATEDATE)) {
       types |= nsIUpdateItem.TYPE_APP;         
     }
-    if (types) 
+    if (types)
       this.checkForUpdatesInternal([], 0, types, 
                                    nsIUpdateService.SOURCE_EVENT_BACKGROUND);
   },
@@ -702,7 +728,11 @@ nsAppUpdater.prototype = {
     try {
       updatesResource = updatesResource.QueryInterface(Components.interfaces.nsIRDFResource);
     }
-    catch (e) { return; }
+    catch (e) { 
+      gOS.notifyObservers(null, "Update:App:Error", "");
+      gOS.notifyObservers(null, "Update:App:Ended", "");
+      return; 
+    }
     
     var cu = Components.classes["@mozilla.org/rdf/container-utils;1"]
                        .getService(Components.interfaces.nsIRDFContainerUtils);
