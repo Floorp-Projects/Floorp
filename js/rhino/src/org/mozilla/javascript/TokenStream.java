@@ -751,82 +751,78 @@ public class TokenStream {
 
         // identifier/keyword/instanceof?
         // watch out for starting with a <backslash>
+        boolean identifierStart;
         boolean isUnicodeEscapeStart = false;
         if (c == '\\') {
             c = in.read();
-            if (c == 'u')
+            if (c == 'u') {
+                identifierStart = true;
                 isUnicodeEscapeStart = true;
-            else
+                stringBufferTop = 0;
+            } else {
+                identifierStart = false;
                 c = '\\';
-            // always unread the 'u' or whatever, we need
-            // to start the string below at the <backslash>.
-            in.unread();
+                in.unread();
+            }
+        } else {
+            identifierStart = Character.isJavaIdentifierStart((char)c);
+            if (identifierStart) {
+                stringBufferTop = 0;
+                addToString(c);
+            }
         }
-        if (isUnicodeEscapeStart ||
-                    Character.isJavaIdentifierStart((char)c)) {
-            in.startString();
 
+        if (identifierStart) {
             boolean containsEscape = isUnicodeEscapeStart;
-            do {
-                c = in.read();
-                if (c == '\\') {
+            for (;;) {
+                if (isUnicodeEscapeStart) {
+                    // strictly speaking we should probably push-back
+                    // all the bad characters if the <backslash>uXXXX
+                    // sequence is malformed. But since there isn't a
+                    // correct context(is there?) for a bad Unicode
+                    // escape sequence in an identifier, we can report
+                    // an error here.
+                    int escapeVal = 0;
+                    for (int i = 0; i != 4; ++i) {
+                        c = in.read();
+                        escapeVal = (escapeVal << 4) | xDigitToInt(c);
+                        // Next check takes care about c < 0 and bad escape
+                        if (escapeVal < 0) { break; }
+                    }
+                    if (escapeVal < 0) {
+                        reportSyntaxError("msg.invalid.escape", null);
+                        return ERROR;
+                    }
+                    addToString(escapeVal);
+                    isUnicodeEscapeStart = false;
+                } else {
                     c = in.read();
-                    containsEscape = (c == 'u');
-                }
-            } while (Character.isJavaIdentifierPart((char)c));
-            in.unread();
-
-            int result;
-
-            String str = in.getString();
-            // OPT we shouldn't have to make a string (object!) to
-            // check if it's a keyword.
-
-            // strictly speaking we should probably push-back
-            // all the bad characters if the <backslash>uXXXX
-            // sequence is malformed. But since there isn't a
-            // correct context(is there?) for a bad Unicode
-            // escape sequence after an identifier, we can report
-            // an error here.
-            if (containsEscape) {
-                char ca[] = str.toCharArray();
-                int L = str.length();
-                int destination = 0;
-                for (int i = 0; i != L;) {
-                    c = ca[i];
-                    ++i;
-                    if (c == '\\' && i != L && ca[i] == 'u') {
-                        boolean goodEscape = false;
-                        if (i + 4 < L) {
-                            int val = xDigitToInt(ca[i + 1]);
-                            if (val >= 0) {
-                                val = (val << 4) | xDigitToInt(ca[i + 2]);
-                                if (val >= 0) {
-                                    val = (val << 4) | xDigitToInt(ca[i + 3]);
-                                    if (val >= 0) {
-                                        val = (val << 4) | xDigitToInt(ca[i + 4]);
-                                        if (val >= 0) {
-                                            c = (char)val;
-                                            i += 5;
-                                            goodEscape = true;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        if (!goodEscape) {
-                            reportSyntaxError("msg.invalid.escape", null);
+                    if (c == '\\') {
+                        c = in.read();
+                        if (c == 'u') {
+                            isUnicodeEscapeStart = true;
+                            containsEscape = true;
+                        } else {
+                            reportSyntaxError("msg.illegal.character", null);
                             return ERROR;
                         }
+                    } else {
+                        if (!Character.isJavaIdentifierPart((char)c)) {
+                            break;
+                        }
+                        addToString(c);
                     }
-                    ca[destination] = (char)c;
-                    ++destination;
                 }
-                str = new String(ca, 0, destination);
             }
-            else {
+            in.unread();
+
+               String str = getStringFromBuffer();
+            if (!containsEscape) {
+                // OPT we shouldn't have to make a string (object!) to
+                // check if it's a keyword.
+
                 // Return the corresponding token if it's a keyword
-                result = stringToKeyword(str);
+                int result = stringToKeyword(str);
                 if (result != EOF) {
                     if (result != RESERVED) {
                         return result;
@@ -842,36 +838,38 @@ public class TokenStream {
                         // treat it as name but issue warning
                         Object[] errArgs = { str };
                         reportSyntaxWarning("msg.reserved.keyword", errArgs);
-                        result = EOF;
                     }
                 }
             }
-
             this.string = str;
             return NAME;
         }
 
         // is it a number?
         if (isDigit(c) || (c == '.' && isDigit(in.peek()))) {
+
+            stringBufferTop = 0;
             int base = 10;
-            in.startString();
 
             if (c == '0') {
                 c = in.read();
                 if (c == 'x' || c == 'X') {
-                    c = in.read();
                     base = 16;
-                    // restart the string, losing leading 0x
-                    in.startString();
+                    c = in.read();
                 } else if (isDigit(c)) {
                     base = 8;
+                } else {
+                    addToString('0');
                 }
             }
 
-            while (0 <= xDigitToInt(c)) {
-                if (base < 16) {
-                    if (isAlpha(c))
-                        break;
+            if (base == 16) {
+                while (0 <= xDigitToInt(c)) {
+                    addToString(c);
+                    c = in.read();
+                }
+            } else {
+                while ('0' <= c && c <= '9') {
                     /*
                      * We permit 08 and 09 as decimal numbers, which
                      * makes our behavior a superset of the ECMA
@@ -883,8 +881,9 @@ public class TokenStream {
                         reportSyntaxWarning("msg.bad.octal.literal", errArgs);
                         base = 10;
                     }
+                    addToString(c);
+                    c = in.read();
                 }
-                c = in.read();
             }
 
             boolean isInteger = true;
@@ -893,27 +892,29 @@ public class TokenStream {
                 isInteger = false;
                 if (c == '.') {
                     do {
+                        addToString(c);
                         c = in.read();
                     } while (isDigit(c));
                 }
-
                 if (c == 'e' || c == 'E') {
+                    addToString(c);
                     c = in.read();
                     if (c == '+' || c == '-') {
+                        addToString(c);
                         c = in.read();
                     }
                     if (!isDigit(c)) {
-                        in.getString(); // throw away string in progress
                         reportSyntaxError("msg.missing.exponent", null);
                         return ERROR;
                     }
                     do {
+                        addToString(c);
                         c = in.read();
                     } while (isDigit(c));
                 }
             }
             in.unread();
-            String numString = in.getString();
+            String numString = getStringFromBuffer();
 
             double dval;
             if (base == 10 && !isInteger) {
@@ -941,43 +942,81 @@ public class TokenStream {
             // are any escaped characters in the string, we revert to
             // building it out of a StringBuffer.
 
-            StringBuffer stringBuf = null;
-
             int quoteChar = c;
             int val = 0;
+            stringBufferTop = 0;
 
             c = in.read();
-            in.startString(); // start after the first "
-            while(c != quoteChar) {
+        strLoop: while (c != quoteChar) {
                 if (c == '\n' || c == EOF_CHAR) {
                     in.unread();
-                    in.getString(); // throw away the string in progress
                     reportSyntaxError("msg.unterminated.string.lit", null);
                     return ERROR;
                 }
 
                 if (c == '\\') {
-                    // We've hit an escaped character; revert to the
-                    // slow method of building a string.
-                    if (stringBuf == null) {
-                        // Don't include the backslash
-                        in.unread();
-                        stringBuf = new StringBuffer(in.getString());
-                        in.read();
-                    }
+                    // We've hit an escaped character
 
-                    switch (c = in.read()) {
-                    case 'b': c = '\b'; break;
-                    case 'f': c = '\f'; break;
-                    case 'n': c = '\n'; break;
-                    case 'r': c = '\r'; break;
-                    case 't': c = '\t'; break;
-                    case 'v': c = '\u000B'; break;
-                        // \v a late addition to the ECMA spec.
-                        // '\v' doesn't seem to be valid Java.
+                    c = in.read();
+                    switch (c) {
+                        case 'b': c = '\b'; break;
+                        case 'f': c = '\f'; break;
+                        case 'n': c = '\n'; break;
+                        case 'r': c = '\r'; break;
+                        case 't': c = '\t'; break;
 
-                    default:
-                        if (isDigit(c) && c < '8') {
+                        // \v a late addition to the ECMA spec,
+                        // it is not in Java, so use 0xb
+                        case 'v': c = 0xb; break;
+
+                        case 'u': {
+                            /*
+                             * Get 4 hex digits; if the u escape is not
+                             * followed by 4 hex digits, use 'u' + the literal
+                             * character sequence that follows.
+                             */
+                            int escapeStart = stringBufferTop;
+                            addToString('u');
+                            int escapeVal = 0;
+                            for (int i = 0; i != 4; ++i) {
+                                c = in.read();
+                                escapeVal = (escapeVal << 4) | xDigitToInt(c);
+                                if (escapeVal < 0) {
+                                    continue strLoop;
+                                }
+                                addToString(c);
+                            }
+                            // prepare for replace of stored 'u' sequence
+                            // by escape value
+                            stringBufferTop = escapeStart;
+                            c = escapeVal;
+                        } break;
+
+                        case 'x': {
+                            /* Get 2 hex digits, defaulting to 'x' + literal
+                             * sequence, as above.
+                             */
+                            c = in.read();
+                            int escapeVal = xDigitToInt(c);
+                            if (escapeVal < 0) {
+                                addToString('x');
+                                continue strLoop;
+                            } else {
+                                int c1 = c;
+                                c = in.read();
+                                escapeVal = (escapeVal << 4) | xDigitToInt(c);
+                                if (escapeVal < 0) {
+                                    addToString('x');
+                                    addToString(c1);
+                                    continue strLoop;
+                                } else {
+                                    // got 2 hex digits
+                                    c = escapeVal;
+                                }
+                            }
+                        } break;
+
+                        default: if (isDigit(c) && c < '8') {
                             val = c - '0';
                             c = in.read();
                             if (isDigit(c) && c < '8') {
@@ -990,89 +1029,19 @@ public class TokenStream {
                             }
                             in.unread();
                             if (val > 0377) {
-                                reportSyntaxError("msg.oct.esc.too.large", null);
+                                reportSyntaxError("msg.oct.esc.too.large",
+                                                  null);
                                 return ERROR;
                             }
                             c = val;
-                        } else if (c == 'u') {
-                            /*
-                             * Get 4 hex digits; if the u escape is not
-                             * followed by 4 hex digits, use 'u' + the literal
-                             * character sequence that follows.  Do some manual
-                             * match (OK because we're in a string) to avoid
-                             * multi-char match on the underlying stream.
-                             */
-                            int c1 = in.read();
-                            c = xDigitToInt(c1);
-                            if (c < 0) {
-                                in.unread();
-                                c = 'u';
-                            } else {
-                                int c2 = in.read();
-                                c = (c << 4) | xDigitToInt(c2);
-                                if (c < 0) {
-                                    in.unread();
-                                    stringBuf.append('u');
-                                    c = c1;
-                                } else {
-                                    int c3 = in.read();
-                                    c = (c << 4) | xDigitToInt(c3);
-                                    if (c < 0) {
-                                        in.unread();
-                                        stringBuf.append('u');
-                                        stringBuf.append((char)c1);
-                                        c = c2;
-                                    } else {
-                                        int c4 = in.read();
-                                        c = (c << 4) | xDigitToInt(c4);
-                                        if (c < 0) {
-                                            in.unread();
-                                            stringBuf.append('u');
-                                            stringBuf.append((char)c1);
-                                            stringBuf.append((char)c2);
-                                            c = c3;
-                                        } else {
-                                            // got 4 hex digits! Woo Hoo!
-                                        }
-                                    }
-                                }
-                            }
-                        } else if (c == 'x') {
-                            /* Get 2 hex digits, defaulting to 'x' + literal
-                             * sequence, as above.
-                             */
-                            int c1 = in.read();
-                            c = xDigitToInt(c1);
-                            if (c < 0) {
-                                in.unread();
-                                c = 'x';
-                            } else {
-                                int c2 = in.read();
-                                c = (c << 4) | xDigitToInt(c2);
-                                if (c < 0) {
-                                    in.unread();
-                                    stringBuf.append('x');
-                                    c = c1;
-                                } else {
-                                    // got 2 hex digits
-                                }
-                            }
                         }
                     }
                 }
-
-                if (stringBuf != null)
-                    stringBuf.append((char) c);
+                addToString(c);
                 c = in.read();
             }
 
-            if (stringBuf != null)
-                this.string = stringBuf.toString();
-            else {
-                in.unread(); // miss the trailing "
-                this.string = in.getString();
-                in.read();
-            }
+            this.string = getStringFromBuffer();
             return STRING;
         }
 
@@ -1234,10 +1203,7 @@ public class TokenStream {
 
             // is it a regexp?
             if ((flags & TSF_REGEXP) != 0) {
-                // We don't try to use the in.startString/in.getString
-                // approach, because escaped characters (which break it)
-                // seem likely to be common.
-                StringBuffer re = new StringBuffer();
+                stringBufferTop = 0;
                 while ((c = in.read()) != '/') {
                     if (c == '\n' || c == EOF_CHAR) {
                         in.unread();
@@ -1245,21 +1211,21 @@ public class TokenStream {
                         return ERROR;
                     }
                     if (c == '\\') {
-                        re.append((char) c);
+                        addToString(c);
                         c = in.read();
                     }
 
-                    re.append((char) c);
+                    addToString(c);
                 }
+                int reEnd = stringBufferTop;
 
-                StringBuffer flagsBuf = new StringBuffer();
                 while (true) {
                     if (in.match('g'))
-                        flagsBuf.append('g');
+                        addToString('g');
                     else if (in.match('i'))
-                        flagsBuf.append('i');
+                        addToString('i');
                     else if (in.match('m'))
-                        flagsBuf.append('m');
+                        addToString('m');
                     else
                         break;
                 }
@@ -1269,8 +1235,9 @@ public class TokenStream {
                     return ERROR;
                 }
 
-                this.string = re.toString();
-                this.regExpFlags = flagsBuf.toString();
+                this.string = new String(stringBuffer, 0, reEnd);
+                this.regExpFlags = new String(stringBuffer, reEnd,
+                                              stringBufferTop - reEnd);
                 return OBJECT;
             }
 
@@ -1320,6 +1287,19 @@ public class TokenStream {
             reportSyntaxError("msg.illegal.character", null);
             return ERROR;
         }
+    }
+
+    private String getStringFromBuffer() {
+        return new String(stringBuffer, 0, stringBufferTop);
+    }
+
+    private void addToString(int c) {
+        if (stringBufferTop == stringBuffer.length) {
+            char[] tmp = new char[stringBuffer.length * 2];
+            System.arraycopy(stringBuffer, 0, tmp, 0, stringBufferTop);
+            stringBuffer = tmp;
+        }
+        stringBuffer[stringBufferTop++] = (char)c;
     }
 
     public void reportSyntaxError(String messageProperty, Object[] args) {
@@ -1377,4 +1357,9 @@ public class TokenStream {
     // code.
     private String string = "";
     private double number;
+
+    private char[] stringBuffer = new char[128];
+    private int stringBufferTop;
+
+    private static final boolean checkSelf = Context.check && true;
 }
