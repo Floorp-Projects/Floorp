@@ -26,7 +26,12 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= public idl txtsvc libeditor composer txmgr
+DIRS		= public idl txtsvc libeditor txmgr composer
+
+# We need to export headers from composer/ even if we're not building composer.
+ifdef MOZ_COMPOSER
+DIRS		+= ui
+endif
 
 include $(topsrcdir)/config/rules.mk
 

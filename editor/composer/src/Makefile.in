@@ -58,6 +58,7 @@ REQUIRES	= xpcom \
 		  unicharutil \
 		  commandhandler \
 		  composer \
+		  appshell \
 		  $(NULL)
 
 CPPSRCS  = \
@@ -69,6 +70,7 @@ CPPSRCS  = \
            nsComposerRegistration.cpp     \
            nsEditingSession.cpp		\
            nsComposerCommandsUpdater.cpp	\
+	   nsEditorService.cpp		  \
            $(NULL)
 
 include $(topsrcdir)/config/rules.mk

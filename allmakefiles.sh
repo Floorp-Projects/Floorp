@@ -54,6 +54,13 @@ config/doxygen.cfg
 include/Makefile
 "
 
+if [ "$MOZ_COMPOSER" ]; then
+MAKEFILES_composer="
+editor/composer/Makefile
+editor/ui/Makefile
+"
+fi
+
 MAKEFILES_db="
 db/Makefile
 db/mdb/Makefile
@@ -1204,6 +1211,7 @@ $MAKEFILES_dbm
 $MAKEFILES_docshell
 $MAKEFILES_dom
 $MAKEFILES_editor
+$MAKEFILES_composer
 $MAKEFILES_embedding
 $MAKEFILES_expat
 $MAKEFILES_extensions

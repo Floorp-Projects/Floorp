@@ -26,7 +26,11 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= src public
+DIRS		= public
+
+ifdef MOZ_COMPOSER
+DIRS		+= src
+endif
 
 # Enable Editor API Logging!
 ENABLE_EDITOR_API_LOG=1
