@@ -275,6 +275,9 @@ input_callback(IDL_input_reason reason, union IDL_input_data *cb_data,
                     fprintf(stderr, "leaving %s, returning to %s\n",
                             data->filename, data->next->filename);
 #endif
+                    /* beard: what about closing the file? */
+                    fclose(data->input);
+                    data->input = NULL;
                     data = data->next;
                     stack->top = data;
                     IDL_file_set(data->filename, ++data->lineno);
