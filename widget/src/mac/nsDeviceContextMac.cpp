@@ -325,9 +325,13 @@ NS_IMETHODIMP nsDeviceContextMac::GetDeviceSurfaceDimensions(PRInt32 &aWidth, PR
 	// FIXME:  could just union all of the GDevice rectangles together.
 	RgnHandle grayRgn = ::GetGrayRgn();
 	Rect bounds = (**grayRgn).rgnBBox;
-	aWidth = bounds.right - bounds.left;
-	aHeight = bounds.bottom - bounds.top;
-	return NS_OK;
+	//aWidth = bounds.right - bounds.left;
+	//aHeight = bounds.bottom - bounds.top;
+	
+	aHeight = NSToIntRound((bounds.bottom - bounds.top)*mDevUnitsToAppUnits);
+	aWidth = NSToIntRound((bounds.right - bounds.left) * mDevUnitsToAppUnits);
+	
+	return NS_OK;	
 }
 
 
