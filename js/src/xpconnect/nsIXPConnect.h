@@ -81,18 +81,12 @@ public:
 { 0x215dbe03, 0x94a7, 0x11d2,           \
   { 0xba, 0x58, 0x0, 0x80, 0x5f, 0x8a, 0x5d, 0xd7 } }
 
-class nsIXPConnectWrappedJS : public nsISupports
-{
-public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXPCONNECT_WRAPPED_JS_IID)
-    // no methods allowed since this has a shared vtbl!
-    //
-    // To manipulate this wrapper (as opposed to manipulating the wrapped
-    // JSObject via this wrapper) do a QueryInterface for the
-    // nsIXPConnectWrappedJSMethods interface 
-    // i.e. 'nsIXPConnectWrappedJSMethods::GetIID()'
-    // and use the methods on that interface. (see below)
-};
+// wrappers around JSObject are passed around as plain nsISupports pointers.
+// To manipulate such a wrapper (as opposed to manipulating the wrapped
+// JSObject via the wrapper) do a QueryInterface for the
+// nsIXPConnectWrappedJSMethods interface 
+// i.e. 'nsIXPConnectWrappedJSMethods::GetIID()'
+// and use the methods on that interface. (see below)
 
 /******************************************/
 
@@ -142,7 +136,7 @@ public:
     NS_IMETHOD WrapJS(JSContext* aJSContext,
                       JSObject* aJSObj,
                       REFNSIID aIID,
-                      nsIXPConnectWrappedJS** aWrapper) = 0;
+                      nsISupports** aWrapper) = 0;
 
     NS_IMETHOD GetWrappedNativeOfJSObject(JSContext* aJSContext,
                                     JSObject* aJSObj,
@@ -169,15 +163,5 @@ XPC_Dump(nsISupports* p, int depth);
 #endif
 
 JS_END_EXTERN_C
-
-#ifdef DEBUG
-JS_BEGIN_EXTERN_C
-// XXX temporary forward declaration
-struct nsXPCVariant;
-XPC_PUBLIC_API(nsresult)
-XPC_TestInvoke(void* that, PRUint32 index,
-               uint32 paramCount, nsXPCVariant* params);
-JS_END_EXTERN_C
-#endif
 
 #endif /* nsIXPConnect_h___ */

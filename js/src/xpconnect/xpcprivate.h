@@ -32,12 +32,12 @@
 #include "nsIInterfaceInfo.h"
 #include "nsIInterfaceInfoManager.h"
 #include "nsIXPCScriptable.h"
+#include "xptcall.h"
 #include "jsapi.h"
 #include "jshash.h"
 #include "jsprf.h"
 #include "xpt_cpp.h"
 #include "xpcforwards.h"
-#include "xpcvariant.h"
 #include "xpclog.h"
 #include "xpccomponents.h"
 #include "xpcjsid.h"
@@ -67,7 +67,7 @@ class nsXPConnect : public nsIXPConnect
     NS_IMETHOD WrapJS(JSContext* aJSContext,
                       JSObject* aJSObj,
                       REFNSIID aIID,
-                      nsIXPConnectWrappedJS** aWrapper);
+                      nsISupports** aWrapper);
 
     NS_IMETHOD GetWrappedNativeOfJSObject(JSContext* aJSContext,
                                     JSObject* aJSObj,
@@ -251,7 +251,7 @@ public:
 
     NS_IMETHOD CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
                         const nsXPTMethodInfo* info,
-                        nsXPCMiniVariant* params);
+                        nsXPTCMiniVariant* params);
 
     virtual ~nsXPCWrappedJSClass();
 private:
@@ -280,12 +280,16 @@ private:
 
 /*************************/
 
-class nsXPCWrappedJS : public nsIXPConnectWrappedJS
+class nsXPCWrappedJS : public nsXPTCStubBase
 {
 public:
     NS_DECL_ISUPPORTS;
-    // include our generated vtbl stub declarations
-#include "xpcstubsdecl.inc"
+
+    NS_IMETHOD GetInterfaceInfo(nsIInterfaceInfo** info);
+
+    NS_IMETHOD CallMethod(PRUint16 methodIndex,
+                          const nsXPTMethodInfo* info,
+                          nsXPTCMiniVariant* params);
 
     static nsXPCWrappedJS* GetNewOrUsedWrapper(XPCContext* xpcc,
                                                JSObject* aJSObj,
@@ -722,12 +726,6 @@ private:
     nsXPCInterfaces* mInterfaces;
     nsXPCClasses*    mClasses;
 };
-
-/***************************************************************************/
-// platform specific method invoker
-nsresult
-xpc_InvokeNativeMethod(void* that, PRUint32 index,
-                       uint32 paramCount, nsXPCVariant* params);
 
 /***************************************************************************/
 // module level stuff
