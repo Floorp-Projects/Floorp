@@ -83,9 +83,7 @@ public:
   NS_IMETHOD    Load(const nsAReadableString& aUrl);
 
   // nsIXMLDocument interface
-#ifdef MOZ_XSL
-  NS_IMETHOD SetTransformMediator(nsITransformMediator* aMediator);
-#endif
+  NS_IMETHOD SetDefaultStylesheets(nsIURI* aUrl);
 
   // nsIHTMLContentContainer
   NS_IMETHOD GetAttributeStyleSheet(nsIHTMLStyleSheet** aResult);
@@ -103,9 +101,6 @@ protected:
 
   nsIParser *mParser;
   nsICSSLoader* mCSSLoader;
-#ifdef MOZ_XSL
-  nsITransformMediator* mTransformMediator;
-#endif
 };
 
 

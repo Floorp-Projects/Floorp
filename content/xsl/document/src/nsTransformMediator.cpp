@@ -23,8 +23,6 @@
 #include "nsTransformMediator.h"
 #include "nsIComponentManager.h"
 
-static NS_DEFINE_IID(kITransformMediatorIID, NS_ITRANSFORM_MEDIATOR_IID);
-
 const char* kTransformerProgIDPrefix = "component://netscape/document-transformer?type=";
 
 nsresult
@@ -45,27 +43,17 @@ NS_NewTransformMediator(nsITransformMediator** aResult,
     delete it;
     return rv;
   }
-  return it->QueryInterface(kITransformMediatorIID, (void **)aResult);
+  return it->QueryInterface(NS_GET_IID(nsITransformMediator), (void **)aResult);
 }
 
 nsTransformMediator::nsTransformMediator()
 {
   NS_INIT_REFCNT();
   mEnabled = PR_FALSE;
-  mTransformer = nsnull;
-  mSourceDOM = nsnull;
-  mStyleDOM = nsnull;
-  mCurrentDoc = nsnull;
-  mObserver = nsnull;
 }
 
 nsTransformMediator::~nsTransformMediator()
 {
-  NS_IF_RELEASE(mTransformer);
-  NS_IF_RELEASE(mSourceDOM);
-  NS_IF_RELEASE(mStyleDOM);
-  mCurrentDoc = nsnull;
-  NS_IF_RELEASE(mObserver);
 }
 
 static
@@ -101,19 +89,19 @@ nsTransformMediator::Init(const nsString& aMimeType)
 }
 
 // nsISupports
-NS_IMPL_ISUPPORTS(nsTransformMediator, kITransformMediatorIID)
+NS_IMPL_ISUPPORTS(nsTransformMediator, NS_GET_IID(nsITransformMediator))
 
 
 void
 nsTransformMediator::TryToTransform()
 {
   if (mEnabled && mSourceDOM && 
-      mStyleDOM && mCurrentDoc && 
+      mStyleDOM && mResultDoc && 
       mObserver && mTransformer) 
   {
     mTransformer->TransformDocument(mSourceDOM, 
                                          mStyleDOM,
-                                         mCurrentDoc,
+                                         mResultDoc,
                                          mObserver);
   }
 }
@@ -128,39 +116,41 @@ nsTransformMediator::SetEnabled(PRBool aValue)
 }
 
 NS_IMETHODIMP
-nsTransformMediator::SetSourceContentModel(nsIDOMElement* aSource)
+nsTransformMediator::SetSourceContentModel(nsIDOMNode* aSource)
 {
-  NS_IF_RELEASE(mSourceDOM);
   mSourceDOM = aSource;
-  NS_IF_ADDREF(mSourceDOM);
   TryToTransform();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsTransformMediator::SetStyleSheetContentModel(nsIDOMElement* aStyle)
+nsTransformMediator::SetStyleSheetContentModel(nsIDOMNode* aStyle)
 {
-  NS_IF_RELEASE(mStyleDOM);
   mStyleDOM = aStyle;
-  NS_IF_ADDREF(mStyleDOM);
   TryToTransform();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsTransformMediator::SetCurrentDocument(nsIDOMDocument* aDoc)
+nsTransformMediator::SetResultDocument(nsIDOMDocument* aDoc)
 {
-  mCurrentDoc = aDoc;
+  mResultDoc = aDoc;
   TryToTransform();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTransformMediator::GetResultDocument(nsIDOMDocument** aDoc)
+{
+  *aDoc = mResultDoc;
+  NS_IF_ADDREF(*aDoc);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsTransformMediator::SetTransformObserver(nsIObserver* aObserver)
 {
-  NS_IF_RELEASE(mObserver);
   mObserver = aObserver;
-  NS_IF_ADDREF(mObserver);
   TryToTransform();
   return NS_OK;
 }

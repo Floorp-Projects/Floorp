@@ -21,12 +21,10 @@
  */
 
 #include "nsXSLContentSink.h"
-#include "nsIDOMElement.h"
-#include "nsIContent.h"
+#include "nsIDocument.h"
+#include "nsIDOMNode.h"
 #include "nsITransformMediator.h"
-
-static NS_DEFINE_IID(kIXMLContentSinkIID, NS_IXMLCONTENT_SINK_IID);
-static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
+#include "nsIParser.h"
 
 nsresult
 NS_NewXSLContentSink(nsIXMLContentSink** aResult,
@@ -49,7 +47,7 @@ NS_NewXSLContentSink(nsIXMLContentSink** aResult,
     delete it;
     return rv;
   }
-  return it->QueryInterface(kIXMLContentSinkIID, (void **)aResult);
+  return it->QueryInterface(NS_GET_IID(nsIXMLContentSink), (void **)aResult);
 }
 
 nsXSLContentSink::nsXSLContentSink()
@@ -86,144 +84,19 @@ nsXSLContentSink::WillBuildModel(void)
 NS_IMETHODIMP 
 nsXSLContentSink::DidBuildModel(PRInt32 aQualityLevel)
 {  
-  nsIDOMElement* style;
+  nsCOMPtr<nsIDOMNode> styleDoc;
   nsresult rv;
 
-  rv = mDocElement->QueryInterface(kIDOMElementIID, (void **) &style);
+  mDocument->SetRootContent(mDocElement);
+  styleDoc = do_QueryInterface(mDocument, &rv);
   if (NS_SUCCEEDED(rv) && mXSLTransformMediator) {
     // Pass the style content model to the tranform mediator.
-    mXSLTransformMediator->SetStyleSheetContentModel(style);
-    NS_RELEASE(style);
+    mXSLTransformMediator->SetStyleSheetContentModel(styleDoc);
   }
   
+  // Drop our reference to the parser to get rid of a circular
+  // reference.
+  NS_IF_RELEASE(mParser);
+
   return NS_OK;
 }
-
-/*
-NS_IMETHODIMP 
-nsXSLContentSink::WillInterrupt(void)
-{
-  // We'll use nsXMLContentSink::SetParser() for now...
-}
-*/
-
-/*
-NS_IMETHODIMP 
-nsXSLContentSink::WillResume(void)
-{
-  // We'll use nsXMLContentSink::SetParser() for now...
-}
-*/
-
-/*
-NS_IMETHODIMP
-nsXSLContentSink::SetParser(nsIParser* aParser)
-{
-  // We'll use nsXMLContentSink::SetParser() for now...
-}
-*/
-
-NS_IMETHODIMP 
-nsXSLContentSink::OpenContainer(const nsIParserNode& aNode)
-{
-  nsresult result = NS_OK;
-
-  result = nsXMLContentSink::OpenContainer(aNode);
-  return result;
-}
-
-NS_IMETHODIMP 
-nsXSLContentSink::CloseContainer(const nsIParserNode& aNode)
-{
-  nsresult result = NS_OK;
-
-  result = nsXMLContentSink::CloseContainer(aNode);
-  return result;
-}
-
-NS_IMETHODIMP 
-nsXSLContentSink::AddLeaf(const nsIParserNode& aNode)
-{
-  nsresult result = NS_OK;
-
-  result = nsXMLContentSink::AddLeaf(aNode);
-  return result;
-}
-
-NS_IMETHODIMP 
-nsXSLContentSink::AddComment(const nsIParserNode& aNode)
-{
-  nsresult result = NS_OK;
-
-  result = nsXMLContentSink::AddComment(aNode);
-  return result;
-}
- 
-NS_IMETHODIMP 
-nsXSLContentSink::AddProcessingInstruction(const nsIParserNode& aNode)
-{
-  nsresult result = NS_OK;
-
-  result = nsXMLContentSink::AddProcessingInstruction(aNode);
-  return result;
-}
-
-NS_IMETHODIMP
-nsXSLContentSink::NotifyError(const nsParserError* aError)
-{
-  nsresult result = NS_OK;
-  result = nsXMLContentSink::NotifyError(aError);
-  return result;
-}
-
-/*
-NS_IMETHODIMP 
-nsXSLContentSink::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode)
-{
-  // We'll use nsXMLContentSink::AddDocTypeDecl() for now...
-}
-*/
-
-
-// nsIXMLContentSink
-
-/*
-NS_IMETHODIMP 
-nsXSLContentSink::AddXMLDecl(const nsIParserNode& aNode)
-{
-  // We'll use nsXMLContentSink::AddXMLDecl() for now...
-}
-*/
-
-/*
-NS_IMETHODIMP 
-nsXSLContentSink::AddCharacterData(const nsIParserNode& aNode)
-{
-  // We'll use nsXMLContentSink::AddCharacterData() for now...
-}
-*/
-
-/*
-NS_IMETHODIMP 
-nsXSLContentSink::AddUnparsedEntity(const nsIParserNode& aNode)
-{
-  // We'll use nsXMLContentSink::AddUnparsedEntity() for now...
-}
-*/
-
-/*
-NS_IMETHODIMP 
-nsXSLContentSink::AddNotation(const nsIParserNode& aNode)
-{
-  // We'll use nsXMLContentSink::AddNotation() for now...
-}
-*/
-
-/*
-NS_IMETHODIMP 
-nsXSLContentSink::AddEntityReference(const nsIParserNode& aNode)
-{
-  // We'll use nsXMLContentSink::AddEntityReference() for now...
-}
-*/
-

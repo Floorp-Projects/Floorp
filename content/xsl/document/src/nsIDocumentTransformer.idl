@@ -22,7 +22,7 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMElement;
+interface nsIDOMNode;
 interface nsIDOMDocument;
 interface nsIObserver;
 
@@ -36,8 +36,8 @@ interface nsIObserver;
 [scriptable, uuid(3fbff728-2d20-11d3-aef3-00108300ff91)]
 interface nsIDocumentTransformer : nsISupports
 {
-    void TransformDocument(in nsIDOMElement aSourceDOM,
-	                       in nsIDOMElement aStyleDOM,
+    void transformDocument(in nsIDOMNode aSourceDOM,
+	                       in nsIDOMNode aStyleDOM,
 						   in nsIDOMDocument aOutputDOC,
 						   in nsIObserver aObserver);						  
 };

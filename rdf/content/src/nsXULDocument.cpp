@@ -2155,15 +2155,13 @@ nsXULDocument::HandleDOMEvent(nsIPresContext* aPresContext,
 // nsIXMLDocument interface
 //
 
-#ifdef MOZ_XSL
 NS_IMETHODIMP
-nsXULDocument::SetTransformMediator(nsITransformMediator* aMediator)
+nsXULDocument::SetDefaultStylesheets(nsIURI* aUrl)
 {
     NS_ASSERTION(0,"not implemented");
-    NS_NOTREACHED("nsXULDocument::SetTransformMediator");
+    NS_NOTREACHED("nsXULDocument::SetDefaultStylesheets");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
-#endif
 
 //----------------------------------------------------------------------
 //

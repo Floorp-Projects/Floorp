@@ -43,9 +43,7 @@ class nsIXMLDocument : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IXMLDOCUMENT_IID; return iid; }
 
-#ifdef MOZ_XSL
-  NS_IMETHOD SetTransformMediator(nsITransformMediator* aMediator)=0;
-#endif
+  NS_IMETHOD SetDefaultStylesheets(nsIURI* aUrl)=0;
 };
 
 #endif // nsIXMLDocument_h___
