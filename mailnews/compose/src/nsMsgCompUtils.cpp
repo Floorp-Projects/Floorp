@@ -2025,38 +2025,31 @@ mime_gen_content_id(PRUint32 aPartNum, const char *aEmailAddress)
 
 char *
 GetFolderURIFromUserPrefs(nsMsgDeliverMode   aMode,
-                          PRBool             aNewsMessage)
+                          nsIMsgIdentity* identity)
 {
   nsresult      rv = NS_OK;
   char          *uri = nsnull;
 
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
-  if (NS_FAILED(rv) || !prefs) 
-    return nsnull;
+  if (!identity) return nsnull;
 
   if (aMode == nsMsgQueueForLater)       // QueueForLater (Outbox)
   {
+    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+    if (NS_FAILED(rv) || !prefs) 
+      return nsnull;
     rv = prefs->CopyCharPref("mail.default_sendlater_uri", &uri);
   }
   else if (aMode == nsMsgSaveAsDraft)    // SaveAsDraft (Drafts)
   {
-    rv = prefs->CopyCharPref("mail.default_drafts_uri", &uri);
+    rv = identity->GetDraftFolder(&uri);
   }
   else if (aMode == nsMsgSaveAsTemplate) // SaveAsTemplate (Templates)
   {
-    rv = prefs->CopyCharPref("mail.default_templates_uri", &uri);
+    rv = identity->GetStationaryFolder(&uri);
   }
   else 
   {
-    //
-    // RICHIE SHERRY - Currently, I am always passing in PR_FALSE for 
-    // the aNewsMessage .... need to do something more intelligent!!!
-    //
-    // This is an FCC operation for a mail message OR a news message 
-    if (aNewsMessage)
-      rv = prefs->CopyCharPref("mail.default_newsfcc_uri", &uri);
-    else
-      rv = prefs->CopyCharPref("mail.default_fcc_uri", &uri);
+    rv = identity->GetFccFolder(&uri);
   }
 
   return uri;

@@ -2140,7 +2140,7 @@ nsMsgComposeAndSend::InitCompositionFields(nsMsgCompFields *fields)
   else
   {
     // RICHIE SHERRY - need to deal with news FCC's also!
-    char *uri = GetFolderURIFromUserPrefs(nsMsgDeliverNow, PR_FALSE);
+    char *uri = GetFolderURIFromUserPrefs(nsMsgDeliverNow, mUserIdentity);
     if ( (uri) && (*uri) )
     {
       if (PL_strcasecmp(uri, "nocopy://") == 0)
@@ -3320,7 +3320,7 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
   // First, we we need to put a Berkely "From - " delimiter at the head of 
   // the file for parsing...
   //
-  turi = GetFolderURIFromUserPrefs(mode, PR_FALSE);
+  turi = GetFolderURIFromUserPrefs(mode, mUserIdentity);
   folderIsLocal = MessageFolderIsLocal(mUserIdentity, mode, turi);
   PR_FREEIF(turi);
 
@@ -3611,9 +3611,8 @@ nsMsgComposeAndSend::StartMessageCopyOperation(nsIFileSpec        *aFileSpec,
   // default to the default "Flagged" folder choices
   //
   nsresult    rv;
-  
-  // RICHIE SHERRY - Need to deal with News! FCC's also
-  uri = GetFolderURIFromUserPrefs(mode, PR_FALSE);
+
+  uri = GetFolderURIFromUserPrefs(mode, mUserIdentity);
   rv = mCopyObj->StartCopyOperation(mUserIdentity, aFileSpec, mode, 
                                     this, uri, mMsgToReplace);
   PR_FREEIF(uri);

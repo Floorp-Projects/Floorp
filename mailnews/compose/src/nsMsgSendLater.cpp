@@ -653,7 +653,7 @@ nsMsgSendLater::GetUnsentMessagesFolder(nsIMsgIdentity *userIdentity)
   nsIMsgFolder    *retFolder = nsnull;
   char            *uri = nsnull;
 
-  uri = GetFolderURIFromUserPrefs(nsMsgQueueForLater, PR_FALSE);
+  uri = GetFolderURIFromUserPrefs(nsMsgQueueForLater, userIdentity);
   retFolder = LocateMessageFolder(userIdentity, nsMsgQueueForLater, uri);
   PR_FREEIF(uri);
   return retFolder;

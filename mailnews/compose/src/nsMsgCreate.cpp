@@ -406,9 +406,7 @@ HackUpAURIToPlayWith(void)
   // 
   // Find the users drafts folder...
   //
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
-  if (NS_SUCCEEDED(rv) && prefs)
-    prefs->CopyCharPref("mail.default_drafts_uri", &folderURI);
+  identity->GetDraftFolder(&folderURI);
 
   // 
   // Now, get the drafts folder...

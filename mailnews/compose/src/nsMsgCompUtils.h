@@ -122,7 +122,8 @@ char        *nsMsgGetExtensionFromFileURL(nsString aUrl);
 // Folder calls...
 //
 char        *GetFolderURIFromUserPrefs(nsMsgDeliverMode   aMode,
-                                       PRBool             aNewsMessage);
+                                       nsIMsgIdentity *identity);
+                                       
 
 NS_END_EXTERN_C
 
