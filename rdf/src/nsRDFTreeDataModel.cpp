@@ -58,7 +58,7 @@ nsRDFTreeDataModel::QueryInterface(const nsIID& iid, void** result)
 
 
 NS_IMETHODIMP
-nsRDFTreeDataModel::GetVisibleColumnCount(int& count) const
+nsRDFTreeDataModel::GetVisibleColumnCount(PRUint32& count) const
 {
     count = 0;
     for (PRInt32 i = mColumns.GetUpperBound(); i >= 0; --i) {
@@ -71,7 +71,7 @@ nsRDFTreeDataModel::GetVisibleColumnCount(int& count) const
 
 
 NS_IMETHODIMP
-nsRDFTreeDataModel::GetNthColumn(nsITreeColumn*& pColumn, int n) const
+nsRDFTreeDataModel::GetNthColumn(nsITreeColumn*& pColumn, PRUint32 n) const
 {
     if (n < 0 || n > mColumns.GetUpperBound()) {
         PR_ASSERT(0);
@@ -84,13 +84,13 @@ nsRDFTreeDataModel::GetNthColumn(nsITreeColumn*& pColumn, int n) const
 	
 
 NS_IMETHODIMP
-nsRDFTreeDataModel::GetFirstVisibleItemIndex(int& index) const
+nsRDFTreeDataModel::GetFirstVisibleItemIndex(PRUint32& index) const
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsRDFTreeDataModel::GetNthTreeItem(nsITreeItem*& pItem, int n) const
+nsRDFTreeDataModel::GetNthTreeItem(nsITreeDMItem*& pItem, PRUint32 n) const
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -98,7 +98,7 @@ nsRDFTreeDataModel::GetNthTreeItem(nsITreeItem*& pItem, int n) const
 
 NS_IMETHODIMP
 nsRDFTreeDataModel::GetItemTextForColumn(nsString& nodeText,
-                                         nsITreeItem* pItem,
+                                         nsITreeDMItem* pItem,
                                          nsITreeColumn* pColumn) const
 {
     return NS_ERROR_NOT_IMPLEMENTED;
