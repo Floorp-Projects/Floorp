@@ -72,9 +72,7 @@ nsHTMLEditor::ShowInlineTableEditingUI(nsIDOMElement * aCell)
     return NS_OK;
 
   // the resizers and the shadow will be anonymous children of the body
-  nsCOMPtr<nsIDOMElement> bodyElement;
-  nsresult res = nsEditor::GetRootElement(getter_AddRefs(bodyElement));
-  if (NS_FAILED(res)) return res;
+  nsIDOMElement *bodyElement = GetRoot();
   if (!bodyElement)   return NS_ERROR_NULL_POINTER;
 
   CreateAnonymousElement(NS_LITERAL_STRING("a"), bodyElement,
@@ -129,9 +127,7 @@ nsHTMLEditor::HideInlineTableEditingUI()
 
   // get the root content node.
 
-  nsCOMPtr<nsIDOMElement> bodyElement;
-  nsresult res = nsEditor::GetRootElement(getter_AddRefs(bodyElement));
-  if (NS_FAILED(res)) return res;
+  nsIDOMElement *bodyElement = GetRoot();
 
   nsCOMPtr<nsIContent> bodyContent( do_QueryInterface(bodyElement) );
   if (!bodyContent) return NS_ERROR_FAILURE;

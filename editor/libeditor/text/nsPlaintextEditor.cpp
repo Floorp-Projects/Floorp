@@ -105,14 +105,13 @@ nsPlaintextEditor::~nsPlaintextEditor()
   
   // Remove event listeners. Note that if we had an HTML editor,
   //  it installed its own instead of these
-  nsCOMPtr<nsIDOMEventReceiver> erP;
-  nsresult result = GetDOMEventReceiver(getter_AddRefs(erP));
-  if (NS_SUCCEEDED(result) && erP) 
+  nsCOMPtr<nsIDOMEventReceiver> erP = GetDOMEventReceiver();
+  if (erP) 
   {
     nsCOMPtr<nsIDOM3EventTarget> dom3Targ(do_QueryInterface(erP));
     nsCOMPtr<nsIDOMEventGroup> sysGroup;
     if (NS_SUCCEEDED(erP->GetSystemEventGroup(getter_AddRefs(sysGroup)))) {
-      result = dom3Targ->RemoveGroupedEventListener(NS_LITERAL_STRING("keypress"), mKeyListenerP, PR_FALSE, sysGroup);
+      dom3Targ->RemoveGroupedEventListener(NS_LITERAL_STRING("keypress"), mKeyListenerP, PR_FALSE, sysGroup);
     }
 
     if (mMouseListenerP) {
@@ -277,119 +276,46 @@ nsPlaintextEditor::SetDocumentCharacterSet(const nsACString & characterSet)
   return result; 
 } 
 
-NS_IMETHODIMP 
-nsPlaintextEditor::PostCreate()
+nsresult
+nsPlaintextEditor::CreateEventListeners()
 {
-  nsresult result = InstallEventListeners();
-  if (NS_FAILED(result)) return result;
+  nsresult rv = NS_OK;
 
-  return nsEditor::PostCreate();
-}
-
-NS_IMETHODIMP 
-nsPlaintextEditor::InstallEventListeners()
-{
-  NS_ASSERTION(mDocWeak, "no document set on this editor");
-  if (!mDocWeak) return NS_ERROR_NOT_INITIALIZED;
-
-  if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
-
-  nsresult result;
-  // get a key listener
-  result = NS_NewEditorKeyListener(getter_AddRefs(mKeyListenerP), this);
-  if (NS_FAILED(result)) {
-    HandleEventListenerError();
-    return result;
-  }
-  
-  // get a mouse listener
-  result = NS_NewEditorMouseListener(getter_AddRefs(mMouseListenerP), this);
-  if (NS_FAILED(result)) {
-    HandleEventListenerError();
-    return result;
+  if (!mMouseListenerP) {
+    // get a mouse listener
+    rv |= NS_NewEditorMouseListener(getter_AddRefs(mMouseListenerP), this);
   }
 
-  // get a text listener
-  result = NS_NewEditorTextListener(getter_AddRefs(mTextListenerP),this);
-  if (NS_FAILED(result)) { 
-#ifdef DEBUG_TAGUE
-printf("nsTextEditor.cpp: failed to get TextEvent Listener\n");
-#endif
-    HandleEventListenerError();
-    return result;
+  if (!mKeyListenerP) {
+    // get a key listener
+    rv |= NS_NewEditorKeyListener(getter_AddRefs(mKeyListenerP), this);
   }
 
-  // get a composition listener
-  result = NS_NewEditorCompositionListener(getter_AddRefs(mCompositionListenerP),this);
-  if (NS_FAILED(result)) { 
-#ifdef DEBUG_TAGUE
-printf("nsTextEditor.cpp: failed to get TextEvent Listener\n");
-#endif
-    HandleEventListenerError();
-    return result;
+  if (!mTextListenerP) {
+    // get a text listener
+    rv |= NS_NewEditorTextListener(getter_AddRefs(mTextListenerP), this);
   }
 
-  // get a drag listener
-  nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShellWeak);
-  result = NS_NewEditorDragListener(getter_AddRefs(mDragListenerP), presShell, this);
-  if (NS_FAILED(result)) {
-    HandleEventListenerError();
-    return result;
+  if (!mCompositionListenerP) {
+    // get a composition listener
+    rv |=
+      NS_NewEditorCompositionListener(getter_AddRefs(mCompositionListenerP),
+                                      this);
   }
 
-  // get a focus listener
-  result = NS_NewEditorFocusListener(getter_AddRefs(mFocusListenerP), this);
-  if (NS_FAILED(result)) {
-    HandleEventListenerError();
-    return result;
+  if (!mDragListenerP) {
+    // get a drag listener
+    nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShellWeak);
+    rv |= NS_NewEditorDragListener(getter_AddRefs(mDragListenerP), presShell,
+                                   this);
   }
 
-  nsCOMPtr<nsIDOMEventReceiver> erP;
-  result = GetDOMEventReceiver(getter_AddRefs(erP));
-
-  //end hack
-  if (NS_FAILED(result)) {
-    HandleEventListenerError();
-    return result;
+  if (!mFocusListenerP) {
+    // get a focus listener
+    rv |= NS_NewEditorFocusListener(getter_AddRefs(mFocusListenerP), this);
   }
 
-  // register the event listeners with the DOM event reveiver
-  nsCOMPtr<nsIDOM3EventTarget> dom3Targ(do_QueryInterface(erP));
-  nsCOMPtr<nsIDOMEventGroup> sysGroup;
-  if (NS_SUCCEEDED(erP->GetSystemEventGroup(getter_AddRefs(sysGroup)))) {
-    result = dom3Targ->AddGroupedEventListener(NS_LITERAL_STRING("keypress"), mKeyListenerP, PR_FALSE, sysGroup);
-    NS_ASSERTION(NS_SUCCEEDED(result), "failed to register key listener in system group");
-  }
-
-  if (NS_SUCCEEDED(result))
-  {
-    result = erP->AddEventListenerByIID(mMouseListenerP, NS_GET_IID(nsIDOMMouseListener));
-    NS_ASSERTION(NS_SUCCEEDED(result), "failed to register mouse listener");
-    if (NS_SUCCEEDED(result))
-    {
-      result = erP->AddEventListenerByIID(mFocusListenerP, NS_GET_IID(nsIDOMFocusListener));
-      NS_ASSERTION(NS_SUCCEEDED(result), "failed to register focus listener");
-      if (NS_SUCCEEDED(result))
-      {
-        result = erP->AddEventListenerByIID(mTextListenerP, NS_GET_IID(nsIDOMTextListener));
-        NS_ASSERTION(NS_SUCCEEDED(result), "failed to register text listener");
-        if (NS_SUCCEEDED(result))
-        {
-          result = erP->AddEventListenerByIID(mCompositionListenerP, NS_GET_IID(nsIDOMCompositionListener));
-          NS_ASSERTION(NS_SUCCEEDED(result), "failed to register composition listener");
-          if (NS_SUCCEEDED(result))
-          {
-            result = erP->AddEventListenerByIID(mDragListenerP, NS_GET_IID(nsIDOMDragListener));
-            NS_ASSERTION(NS_SUCCEEDED(result), "failed to register drag listener");
-          }
-        }
-      }
-    }
-  }
-  if (NS_FAILED(result)) {
-    HandleEventListenerError();
-  }
-  return result;
+  return rv;
 }
 
 NS_IMETHODIMP 
@@ -738,59 +664,6 @@ nsPlaintextEditor::GetAbsoluteOffsetsForPoints(nsIDOMNode *aInStartNode,
   return result;
 }
 
-nsresult 
-nsPlaintextEditor::GetDOMEventReceiver(nsIDOMEventReceiver **aEventReceiver) 
-{ 
-  if (!aEventReceiver) 
-    return NS_ERROR_NULL_POINTER; 
-
-  *aEventReceiver = 0; 
-
-  nsCOMPtr<nsIDOMElement> rootElement; 
-  nsresult result = GetRootElement(getter_AddRefs(rootElement)); 
-  if (NS_FAILED(result)) 
-    return result; 
-
-  if (!rootElement) 
-    return NS_ERROR_FAILURE; 
-
-  // Now hack to make sure we are not anonymous content. 
-  // If we are grab the parent of root element for our observer. 
-
-  nsCOMPtr<nsIContent> content = do_QueryInterface(rootElement); 
-  if (content) 
-  { 
-    nsCOMPtr<nsIContent> parent = content->GetParent();
-    if (parent)
-    { 
-      if (parent->IndexOf(content) < 0 ) 
-      { 
-        rootElement = do_QueryInterface(parent); //this will put listener on the form element basically 
-        result = CallQueryInterface(rootElement, aEventReceiver);
-      } 
-      else 
-        rootElement = 0; // Let the event receiver work on the document instead of the root element 
-    } 
-  } 
-  else 
-    rootElement = 0; 
-
-  if (!rootElement && mDocWeak) 
-  { 
-    // Don't use getDocument here, because we have no way of knowing if 
-    // Init() was ever called.  So we need to get the document ourselves, 
-    // if it exists. 
-
-    nsCOMPtr<nsIDOMDocument> domdoc = do_QueryReferent(mDocWeak); 
-    if (!domdoc) 
-      return NS_ERROR_FAILURE; 
-
-    result = domdoc->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), (void **)aEventReceiver); 
-  } 
-
-  return result; 
-} 
-
 NS_IMETHODIMP nsPlaintextEditor::DeleteSelection(nsIEditor::EDirection aAction)
 {
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
@@ -1051,26 +924,27 @@ nsPlaintextEditor::GetTextLength(PRInt32 *aCount)
   if (docEmpty)
     return NS_OK;
   
-  // get the body node
-  nsCOMPtr<nsIDOMElement> bodyElement;
-  result = GetRootElement(getter_AddRefs(bodyElement));
-  if (NS_FAILED(result)) { return result; }
-  if (!bodyElement) { return NS_ERROR_NULL_POINTER; }
+  // get the root node
+  nsIDOMElement *rootElement = GetRoot();
+  if (!rootElement)
+  {
+    return NS_ERROR_NULL_POINTER;
+  }
 
   // get the offsets of the first and last children of the body node
   nsCOMPtr<nsIDOMNode>lastChild;
-  result = bodyElement->GetLastChild(getter_AddRefs(lastChild));
+  result = rootElement->GetLastChild(getter_AddRefs(lastChild));
   if (NS_FAILED(result)) { return result; }
   if (!lastChild) { return NS_ERROR_NULL_POINTER; }
   PRInt32 numBodyChildren = 0;
-  result = GetChildOffset(lastChild, bodyElement, numBodyChildren);
+  result = GetChildOffset(lastChild, rootElement, numBodyChildren);
   if (NS_FAILED(result)) { return result; }
 
   // count
   PRInt32 start, end;
-  result = GetAbsoluteOffsetsForPoints(bodyElement, 0, 
-                                       bodyElement, numBodyChildren, 
-                                       bodyElement, start, end);
+  result = GetAbsoluteOffsetsForPoints(rootElement, 0, 
+                                       rootElement, numBodyChildren, 
+                                       rootElement, start, end);
   if (NS_SUCCEEDED(result))
   {
     NS_ASSERTION(0==start, "GetAbsoluteOffsetsForPoints failed to set start correctly.");
@@ -1146,15 +1020,14 @@ nsPlaintextEditor::SetWrapWidth(PRInt32 aWrapColumn)
 
   // Ought to set a style sheet here ...
   // Probably should keep around an mPlaintextStyleSheet for this purpose.
-  nsCOMPtr<nsIDOMElement> bodyElement;
-  nsresult res = GetRootElement(getter_AddRefs(bodyElement));
-  if (NS_FAILED(res)) return res;
-  if (!bodyElement) return NS_ERROR_NULL_POINTER;
+  nsIDOMElement *rootElement = GetRoot();
+  if (!rootElement)
+    return NS_ERROR_NULL_POINTER;
 
-  // Get the current style for this body element:
+  // Get the current style for this root element:
   NS_NAMED_LITERAL_STRING(styleName, "style");
   nsAutoString styleValue;
-  res = bodyElement->GetAttribute(styleName, styleValue);
+  nsresult res = rootElement->GetAttribute(styleName, styleValue);
   if (NS_FAILED(res)) return res;
 
   // We'll replace styles for these values:
@@ -1202,7 +1075,7 @@ nsPlaintextEditor::SetWrapWidth(PRInt32 aWrapColumn)
   else
     styleValue.AppendLiteral("white-space: pre;");
 
-  return bodyElement->SetAttribute(styleName, styleValue);
+  return rootElement->SetAttribute(styleName, styleValue);
 }
 
 
@@ -1359,8 +1232,7 @@ nsPlaintextEditor::GetAndInitDocEncoder(const nsAString& aFormatType,
   // in which case we set the selection to encompass the root.
   else
   {
-    nsCOMPtr<nsIDOMElement> rootElement;
-    GetRootElement(getter_AddRefs(rootElement));
+    nsIDOMElement *rootElement = GetRoot();
     NS_ENSURE_TRUE(rootElement, NS_ERROR_FAILURE);
     if (!nsTextEditUtils::IsBody(rootElement))
     {
@@ -1880,19 +1752,18 @@ NS_IMETHODIMP
 nsPlaintextEditor::SelectEntireDocument(nsISelection *aSelection)
 {
   if (!aSelection || !mRules) { return NS_ERROR_NULL_POINTER; }
-  
+
   // is doc empty?
   PRBool bDocIsEmpty;
   if (NS_SUCCEEDED(mRules->DocumentIsEmpty(&bDocIsEmpty)) && bDocIsEmpty)
   {
-    // get body node
-    nsCOMPtr<nsIDOMElement>bodyElement;
-    nsresult res = GetRootElement(getter_AddRefs(bodyElement));
-    if (NS_FAILED(res)) return res;
-    if (!bodyElement) return NS_ERROR_FAILURE;
+    // get root node
+    nsIDOMElement *rootElement = GetRoot();
+    if (!rootElement)
+      return NS_ERROR_FAILURE;
 
     // if it's empty don't select entire doc - that would select the bogus node
-    return aSelection->Collapse(bodyElement, 0);
+    return aSelection->Collapse(rootElement, 0);
   }
 
   return nsEditor::SelectEntireDocument(aSelection);
@@ -1925,21 +1796,6 @@ NS_IMETHODIMP nsPlaintextEditor::GetLayoutObject(nsIDOMNode *aNode, nsISupports 
   }
 
   return result;
-}
-
-#ifdef XP_MAC
-#pragma mark -
-#endif
-
-void nsPlaintextEditor::HandleEventListenerError()
-{
-  // null out the nsCOMPtrs
-  mKeyListenerP = nsnull;
-  mMouseListenerP = nsnull;
-  mTextListenerP = nsnull;
-  mDragListenerP = nsnull;
-  mCompositionListenerP = nsnull;
-  mFocusListenerP = nsnull;
 }
 
 #ifdef XP_MAC

@@ -41,6 +41,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMHTMLElement.h"
+#include "nsIDOMEventReceiver.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsUnicharUtils.h"
@@ -54,6 +55,14 @@
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMRange.h"
+#include "nsIDOM3EventTarget.h"
+#include "nsIDOMEventListener.h"
+#include "nsIDOMEventGroup.h"
+#include "nsIDOMMouseListener.h"
+#include "nsIDOMFocusListener.h"
+#include "nsIDOMTextListener.h"
+#include "nsIDOMCompositionListener.h"
+#include "nsIDOMDragListener.h"
 #include "nsIDocument.h"
 #include "nsITransactionManager.h"
 #include "nsIAbsorbingTransaction.h"
@@ -142,7 +151,6 @@ nsEditor::nsEditor()
 ,  mSavedSel()
 ,  mRangeUpdater()
 ,  mShouldTxnSetSelection(PR_TRUE)
-,  mBodyElement(nsnull)
 ,  mAction(nsnull)
 ,  mDirection(eNone)
 ,  mInIMEMode(PR_FALSE)
@@ -269,11 +277,9 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell, nsIContent *aRoot
   nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
   if (!ps) return NS_ERROR_NOT_INITIALIZED;
   
-  //set up body element if we are passed one.  
+  //set up root element if we are passed one.  
   if (aRoot)
-    mBodyElement = do_QueryInterface(aRoot);
-
-
+    mRootElement = do_QueryInterface(aRoot);
 
   // Set up the DTD
   // XXX - in the long run we want to get this from the document, but there
@@ -331,6 +337,17 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell, nsIContent *aRoot
 NS_IMETHODIMP
 nsEditor::PostCreate()
 {
+  nsresult rv = CreateEventListeners();
+  if (NS_FAILED(rv))
+  {
+    RemoveEventListeners();
+
+    return rv;
+  }
+
+  rv = InstallEventListeners();
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // nuke the modification count, so the doc appears unmodified
   // do this before we notify listeners
   ResetModificationCount();
@@ -345,12 +362,132 @@ nsEditor::PostCreate()
   return NS_OK;
 }
 
+nsresult
+nsEditor::InstallEventListeners()
+{
+  NS_ENSURE_TRUE(mDocWeak && mPresShellWeak && mKeyListenerP &&
+                 mMouseListenerP && mFocusListenerP && mTextListenerP &&
+                 mCompositionListenerP && mDragListenerP,
+                 NS_ERROR_NOT_INITIALIZED);
+
+  nsCOMPtr<nsIDOMEventReceiver> erP = GetDOMEventReceiver();
+
+  if (!erP) {
+    RemoveEventListeners();
+    return NS_ERROR_FAILURE;
+  }
+
+  nsresult rv = NS_OK;
+
+  // register the event listeners with the DOM event reveiver
+  nsCOMPtr<nsIDOM3EventTarget> dom3Targ(do_QueryInterface(erP));
+  nsCOMPtr<nsIDOMEventGroup> sysGroup;
+  erP->GetSystemEventGroup(getter_AddRefs(sysGroup));
+
+  if (sysGroup)
+  {
+    rv = dom3Targ->AddGroupedEventListener(NS_LITERAL_STRING("keypress"),
+                                           mKeyListenerP, PR_FALSE, sysGroup);
+    NS_ASSERTION(NS_SUCCEEDED(rv),
+                 "failed to register key listener in system group");
+  }
+
+  rv |= erP->AddEventListenerByIID(mMouseListenerP,
+                                   NS_GET_IID(nsIDOMMouseListener));
+
+  rv |= erP->AddEventListenerByIID(mFocusListenerP,
+                                   NS_GET_IID(nsIDOMFocusListener));
+
+  rv |= erP->AddEventListenerByIID(mTextListenerP,
+                                   NS_GET_IID(nsIDOMTextListener));
+
+  rv |= erP->AddEventListenerByIID(mCompositionListenerP,
+                                   NS_GET_IID(nsIDOMCompositionListener));
+
+  rv |= erP->AddEventListenerByIID(mDragListenerP,
+                                   NS_GET_IID(nsIDOMDragListener));
+
+  if (NS_FAILED(rv))
+  {
+    NS_ERROR("failed to register some event listeners");
+
+    RemoveEventListeners();
+  }
+
+  return rv;
+}
+
+void
+nsEditor::RemoveEventListeners()
+{
+  nsCOMPtr<nsIDOMEventReceiver> erP = GetDOMEventReceiver();
+
+  if (erP)
+  {
+    // unregister the event listeners with the DOM event reveiver
+
+    if (mKeyListenerP)
+    {
+      nsCOMPtr<nsIDOMEventGroup> sysGroup;
+      erP->GetSystemEventGroup(getter_AddRefs(sysGroup));
+      if (sysGroup)
+      {
+        nsCOMPtr<nsIDOM3EventTarget> dom3Targ(do_QueryInterface(erP));
+
+        dom3Targ->RemoveGroupedEventListener(NS_LITERAL_STRING("keypress"),
+                                             mKeyListenerP, PR_FALSE,
+                                             sysGroup);
+      }
+    }
+
+    if (mMouseListenerP)
+    {
+      erP->RemoveEventListenerByIID(mMouseListenerP,
+                                    NS_GET_IID(nsIDOMMouseListener));
+    }
+
+    if (mFocusListenerP)
+    {
+      erP->RemoveEventListenerByIID(mFocusListenerP,
+                                    NS_GET_IID(nsIDOMFocusListener));
+    }
+
+    if (mTextListenerP)
+    {
+      erP->RemoveEventListenerByIID(mTextListenerP,
+                                    NS_GET_IID(nsIDOMTextListener));
+    }
+
+    if (mCompositionListenerP)
+    {
+      erP->RemoveEventListenerByIID(mCompositionListenerP,
+                                    NS_GET_IID(nsIDOMCompositionListener));
+    }
+
+    if (mDragListenerP)
+    {
+      erP->RemoveEventListenerByIID(mDragListenerP,
+                                    NS_GET_IID(nsIDOMDragListener));
+    }
+  }
+
+  mKeyListenerP = nsnull;
+  mMouseListenerP = nsnull;
+  mFocusListenerP = nsnull;
+  mTextListenerP = nsnull;
+  mCompositionListenerP = nsnull;
+  mDragListenerP = nsnull;
+}
 
 NS_IMETHODIMP
 nsEditor::PreDestroy()
 {
   // tell our listeners that the doc is going away
   NotifyDocumentListeners(eDocumentToBeDestroyed);
+
+  // Unregister event listeners
+  RemoveEventListeners();
+
   return NS_OK;
 }
 
@@ -854,15 +991,17 @@ nsEditor::SetShouldTxnSetSelection(PRBool aShould)
 NS_IMETHODIMP
 nsEditor::GetDocumentIsEmpty(PRBool *aDocumentIsEmpty)
 {
-  nsCOMPtr<nsIDOMElement> rootElement; 
-  nsresult res = GetRootElement(getter_AddRefs(rootElement)); 
-  if (NS_FAILED(res)) return res; 
-  if (!rootElement)   return NS_ERROR_NULL_POINTER; 
-  nsCOMPtr<nsIDOMNode> rootNode = do_QueryInterface(rootElement);
-  nsCOMPtr<nsIDOMNode> firstChild;
-  res = rootNode->GetFirstChild(getter_AddRefs(firstChild));
+  *aDocumentIsEmpty = PR_TRUE;
 
-  *aDocumentIsEmpty = NS_SUCCEEDED(res) && firstChild;
+  nsIDOMElement *rootElement = GetRoot(); 
+  if (!rootElement)
+    return NS_ERROR_NULL_POINTER; 
+
+  PRBool hasChildNodes;
+  nsresult res = rootElement->HasChildNodes(&hasChildNodes);
+
+  *aDocumentIsEmpty = !hasChildNodes;
+
   return res;
 }
 
@@ -897,10 +1036,9 @@ NS_IMETHODIMP nsEditor::BeginningOfDocument()
     return NS_ERROR_NOT_INITIALIZED;
     
   // get the root element 
-  nsCOMPtr<nsIDOMElement> rootElement; 
-  result = GetRootElement(getter_AddRefs(rootElement)); 
-  if (NS_FAILED(result)) return result; 
-  if (!rootElement)   return NS_ERROR_NULL_POINTER; 
+  nsIDOMElement *rootElement = GetRoot(); 
+  if (!rootElement)
+    return NS_ERROR_NULL_POINTER; 
   
   // find first editable thingy
   nsCOMPtr<nsIDOMNode> firstNode;
@@ -926,7 +1064,7 @@ NS_IMETHODIMP nsEditor::BeginningOfDocument()
   }
   else
   {
-    // just the body node, set selection to inside the body
+    // just the root node, set selection to inside the root
     result = selection->Collapse(rootElement, 0);
   }
   return result;
@@ -937,7 +1075,7 @@ nsEditor::EndOfDocument()
 { 
   if (!mDocWeak || !mPresShellWeak) { return NS_ERROR_NOT_INITIALIZED; } 
   nsresult res; 
-  
+
   // get selection 
   nsCOMPtr<nsISelection> selection; 
   res = GetSelection(getter_AddRefs(selection)); 
@@ -945,19 +1083,17 @@ nsEditor::EndOfDocument()
   if (!selection)   return NS_ERROR_NULL_POINTER; 
   
   // get the root element 
-  nsCOMPtr<nsIDOMElement> rootElement; 
-  res = GetRootElement(getter_AddRefs(rootElement)); 
-  if (NS_FAILED(res)) return res; 
-  if (!rootElement)   return NS_ERROR_NULL_POINTER; 
-  nsCOMPtr<nsIDOMNode> rootNode = do_QueryInterface(rootElement); 
-  
+  nsIDOMElement *rootElement = GetRoot(); 
+  if (!rootElement)
+    return NS_ERROR_NULL_POINTER; 
+
   // get the length of the rot element 
   PRUint32 len; 
-  res = GetLengthOfDOMNode(rootNode, len); 
-  if (NS_FAILED(res)) return res; 
-  
+  res = GetLengthOfDOMNode(rootElement, len); 
+  if (NS_FAILED(res)) return res;
+
   // set the selection to after the last child of the root element 
-  return selection->Collapse(rootNode, (PRInt32)len); 
+  return selection->Collapse(rootElement, (PRInt32)len); 
 } 
   
 NS_IMETHODIMP
@@ -1798,7 +1934,7 @@ NS_IMETHODIMP
 nsEditor::DumpContentTree()
 {
 #ifdef DEBUG
-  nsCOMPtr<nsIContent> root = do_QueryInterface(mBodyElement);
+  nsCOMPtr<nsIContent> root = do_QueryInterface(mRootElement);
   if (root)  root->List(stdout);
 #endif
   return NS_OK;
@@ -2073,7 +2209,7 @@ nsEditor::GetKBStateControl(nsIKBStateControl **aKBSC)
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIWidget> widget;
-  res = GetEditorContentWindow(shell, mBodyElement, getter_AddRefs(widget));
+  res = GetEditorContentWindow(shell, GetRoot(), getter_AddRefs(widget));
   if (NS_FAILED(res))
     return res;
 
@@ -2224,40 +2360,40 @@ nsEditor::GetQueryCaretRect(nsQueryCaretRectEventReply* aReply)
 /* Non-interface, public methods */
 
 
-// This seems like too much work! There should be a "nsDOMDocument::GetBody()"
-// Have a look in nsHTMLDocument. Maybe add it to nsIHTMLDocument.
 NS_IMETHODIMP 
-nsEditor::GetRootElement(nsIDOMElement **aBodyElement)
+nsEditor::GetRootElement(nsIDOMElement **aRootElement)
 {
-  if (!aBodyElement)
+  if (!aRootElement)
     return NS_ERROR_NULL_POINTER;
 
-  *aBodyElement = 0;
-
-  if (mBodyElement)
+  if (mRootElement)
   {
     // if we have cached the body element, use that
-    *aBodyElement = mBodyElement;
-    NS_ADDREF(*aBodyElement);
+    *aRootElement = mRootElement;
+    NS_ADDREF(*aRootElement);
     return NS_OK;
   }
-  
+
+  *aRootElement = 0;
+
   NS_PRECONDITION(mDocWeak, "bad state, null mDocWeak");
   nsCOMPtr<nsIDOMHTMLDocument> doc = do_QueryReferent(mDocWeak);
   if (!doc) return NS_ERROR_NOT_INITIALIZED;
 
-  nsCOMPtr<nsIDOMHTMLElement>bodyElement; 
+  // Use the documents body element as the editor root if we didn't
+  // get a root element during initialization.
+
+  nsCOMPtr<nsIDOMHTMLElement> bodyElement; 
   nsresult result = doc->GetBody(getter_AddRefs(bodyElement));
   if (NS_FAILED(result))
     return result;
-  
+
   if (!bodyElement)
     return NS_ERROR_NULL_POINTER;
 
-  // Use the first body node in the list:
-  mBodyElement = do_QueryInterface(bodyElement);
-  *aBodyElement = bodyElement;
-  NS_ADDREF(*aBodyElement);
+  mRootElement = bodyElement;
+  *aRootElement = bodyElement;
+  NS_ADDREF(*aRootElement);
 
   return NS_OK;
 }
@@ -2335,15 +2471,14 @@ nsEditor::CloneAttributes(nsIDOMNode *aDestNode, nsIDOMNode *aSourceNode)
 
   // Use transaction system for undo only if destination
   //   is already in the document
-  nsCOMPtr<nsIDOMElement> bodyElement;
-  nsresult result = GetRootElement(getter_AddRefs(bodyElement));
-  if (NS_FAILED(result)) return result;
-  if (!bodyElement)   return NS_ERROR_NULL_POINTER;
+  nsIDOMElement *rootElement = GetRoot();
+  if (!rootElement)
+    return NS_ERROR_NULL_POINTER;
 
   PRBool destInBody = PR_TRUE;
-  nsCOMPtr<nsIDOMNode> bodyNode = do_QueryInterface(bodyElement);
+  nsCOMPtr<nsIDOMNode> rootNode = do_QueryInterface(rootElement);
   nsCOMPtr<nsIDOMNode> p = aDestNode;
-  while (p && p!= bodyNode)
+  while (p && p != rootNode)
   {
     nsCOMPtr<nsIDOMNode> tmp;
     if (NS_FAILED(p->GetParentNode(getter_AddRefs(tmp))) || !tmp)
@@ -2380,6 +2515,9 @@ nsEditor::CloneAttributes(nsIDOMNode *aDestNode, nsIDOMNode *aSourceNode)
       }
     }
   }
+
+  nsresult result = NS_OK;
+
   // Set just the attributes that the source element has
   for (i = 0; i < sourceCount; i++)
   {
@@ -2653,20 +2791,11 @@ NS_IMETHODIMP nsEditor::InsertTextIntoTextNodeImpl(const nsAString& aStringToIns
 NS_IMETHODIMP nsEditor::SelectEntireDocument(nsISelection *aSelection)
 {
   if (!aSelection) { return NS_ERROR_NULL_POINTER; }
-  nsCOMPtr<nsIDOMElement>bodyElement;
-  nsresult result = GetRootElement(getter_AddRefs(bodyElement));
-  if (NS_SUCCEEDED(result))
-  {
-    nsCOMPtr<nsIDOMNode>bodyNode = do_QueryInterface(bodyElement);
-    if (bodyNode)
-    {
-      result = aSelection->SelectAllChildren(bodyNode);
-    }
-    else {
-      return NS_ERROR_NO_INTERFACE;
-    }
-  }
-  return result;
+
+  nsIDOMElement *rootElement = GetRoot();
+  if (!rootElement) { return NS_ERROR_NOT_INITIALIZED; }
+
+  return aSelection->SelectAllChildren(rootElement);
 }
 
 
@@ -3737,27 +3866,21 @@ nsEditor::IsRootNode(nsIDOMNode *inNode)
   if (!inNode)
     return PR_FALSE;
 
-  nsCOMPtr<nsIDOMElement> rootElement;
-
-  nsresult result = GetRootElement(getter_AddRefs(rootElement));
-
-  if (NS_FAILED(result) || !rootElement)
-    return PR_FALSE;
+  nsIDOMElement *rootElement = GetRoot();
 
   nsCOMPtr<nsIDOMNode> rootNode = do_QueryInterface(rootElement);
-  
-  return inNode == rootNode.get();
+
+  return inNode == rootNode;
 }
 
 PRBool 
 nsEditor::IsDescendantOfBody(nsIDOMNode *inNode) 
 {
   if (!inNode) return PR_FALSE;
-  nsCOMPtr<nsIDOMElement> junk;
-  if (!mBodyElement) GetRootElement(getter_AddRefs(junk));
-  if (!mBodyElement) return PR_FALSE;
-  nsCOMPtr<nsIDOMNode> root = do_QueryInterface(mBodyElement);
-  
+  nsIDOMElement *rootElement = GetRoot();
+  if (!rootElement) return PR_FALSE;
+  nsCOMPtr<nsIDOMNode> root = do_QueryInterface(rootElement);
+
   if (inNode == root.get()) return PR_TRUE;
   
   nsCOMPtr<nsIDOMNode> parent, node = do_QueryInterface(inNode);
@@ -5275,15 +5398,68 @@ nsEditor::HandleInlineSpellCheck(PRInt32 action,
                                                        aEndOffset) : NS_OK;
 }
 
+already_AddRefed<nsIDOMEventReceiver>
+nsEditor::GetDOMEventReceiver()
+{
+  nsIDOMEventReceiver *erp = nsnull;
+
+  nsIDOMElement *rootElement = GetRoot();
+
+  // Now hack to make sure we are not anonymous content.
+  // If we are grab the parent of root element for our observer.
+
+  nsCOMPtr<nsIContent> content = do_QueryInterface(rootElement);
+
+  if (content)
+  {
+    nsIContent* parent = content->GetParent();
+    if (parent)
+    {
+      if (parent->IndexOf(content) < 0)
+      {
+        // this will put listener on the form element basically
+        CallQueryInterface(parent, &erp);
+      }
+    }
+  }
+
+  if (!erp)
+  {
+    // Don't use getDocument here, because we have no way of knowing
+    // if Init() was ever called.  So we need to get the document
+    // ourselves, if it exists.
+
+    nsCOMPtr<nsIDOMDocument> domdoc = do_QueryReferent(mDocWeak);
+    if (domdoc)
+    {
+      CallQueryInterface(domdoc, &erp);
+    }
+  }
+
+  return erp;
+}
+
+nsIDOMElement *
+nsEditor::GetRoot()
+{
+  if (!mRootElement)
+  {
+    nsCOMPtr<nsIDOMElement> root;
+
+    // Let GetRootElement() do the work
+    GetRootElement(getter_AddRefs(root));
+  }
+
+  return mRootElement;
+}
+
 NS_IMETHODIMP
 nsEditor::SwitchTextDirection()
 {
-  // Get the current body direction from its frame
-  nsCOMPtr<nsIDOMElement> rootElement;
-  nsresult rv = GetRootElement(getter_AddRefs(rootElement));
-  if (NS_FAILED(rv))
-    return rv;
+  // Get the current root direction from its frame
+  nsIDOMElement *rootElement = GetRoot();
 
+  nsresult rv;
   nsCOMPtr<nsIContent> content = do_QueryInterface(rootElement, &rv);
   if (NS_FAILED(rv))
     return rv;

@@ -274,11 +274,8 @@ nsHTMLEditRules::Init(nsPlaintextEditor *aEditor, PRUint32 aFlags)
   if (!mUtilRange) return NS_ERROR_NULL_POINTER;
    
   // set up mDocChangeRange to be whole doc
-  nsCOMPtr<nsIDOMElement> bodyElem;
-  nsCOMPtr<nsIDOMNode> bodyNode;
-  mHTMLEditor->GetRootElement(getter_AddRefs(bodyElem));
-  bodyNode = do_QueryInterface(bodyElem);
-  if (bodyNode)
+  nsIDOMElement *rootElem = mHTMLEditor->GetRoot();
+  if (rootElem)
   {
     // temporarily turn off rules sniffing
     nsAutoLockRulesSniffing lockIt((nsTextEditRules*)this);
@@ -287,7 +284,7 @@ nsHTMLEditRules::Init(nsPlaintextEditor *aEditor, PRUint32 aFlags)
       mDocChangeRange = do_CreateInstance("@mozilla.org/content/range;1");
       if (!mDocChangeRange) return NS_ERROR_NULL_POINTER;
     }
-    mDocChangeRange->SelectNode(bodyNode);
+    mDocChangeRange->SelectNode(rootElem);
     res = AdjustSpecialBreaks();
     if (NS_FAILED(res)) return res;
   }
@@ -792,10 +789,11 @@ nsHTMLEditRules::GetAlignment(PRBool *aMixed, nsIHTMLEditor::EAlignment *aAlign)
 
   // get selection location
   nsCOMPtr<nsIDOMNode> parent;
-  nsCOMPtr<nsIDOMElement> rootElem;
+  nsIDOMElement *rootElem = mHTMLEditor->GetRoot();
+  if (!rootElem)
+    return NS_ERROR_FAILURE;
+
   PRInt32 offset, rootOffset;
-  res = mHTMLEditor->GetRootElement(getter_AddRefs(rootElem));
-  if (NS_FAILED(res)) return res;
   res = nsEditor::GetNodeLocation(rootElem, address_of(parent), &rootOffset);
   if (NS_FAILED(res)) return res;
   res = mHTMLEditor->GetStartNodeAndOffset(selection, address_of(parent), &offset);
@@ -994,12 +992,10 @@ nsHTMLEditRules::GetIndentState(PRBool *aCanIndent, PRBool *aCanOutdent)
     
     // gather up info we need for test
     nsCOMPtr<nsIDOMNode> parent, tmp, root;
-    nsCOMPtr<nsIDOMElement> rootElem;
+    nsIDOMElement *rootElem = mHTMLEditor->GetRoot();
+    if (!rootElem) return NS_ERROR_NULL_POINTER;
     nsCOMPtr<nsISelection> selection;
     PRInt32 selOffset;
-    res = mHTMLEditor->GetRootElement(getter_AddRefs(rootElem));
-    if (NS_FAILED(res)) return res;
-    if (!rootElem) return NS_ERROR_NULL_POINTER;
     root = do_QueryInterface(rootElem);
     if (!root) return NS_ERROR_NO_INTERFACE;
     res = mHTMLEditor->GetSelection(getter_AddRefs(selection));
@@ -1092,9 +1088,7 @@ nsHTMLEditRules::GetParagraphState(PRBool *aMixed, nsAString &outFormat)
   }
 
   // remember root node
-  nsCOMPtr<nsIDOMElement> rootElem;
-  res = mHTMLEditor->GetRootElement(getter_AddRefs(rootElem));
-  if (NS_FAILED(res)) return res;
+  nsIDOMElement *rootElem = mHTMLEditor->GetRoot();
   if (!rootElem) return NS_ERROR_NULL_POINTER;
 
   // loop through the nodes in selection and examine their paragraph format
@@ -1869,17 +1863,13 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
   if (!startNode) return NS_ERROR_FAILURE;
     
   // get the root element  
-  nsCOMPtr<nsIDOMElement> bodyNode; 
-  {
-    res = mHTMLEditor->GetRootElement(getter_AddRefs(bodyNode));
-    if (NS_FAILED(res)) return res;
-    if (!bodyNode) return NS_ERROR_UNEXPECTED;
-  }
+  nsIDOMElement *rootNode = mHTMLEditor->GetRoot();
+  if (!rootNode) return NS_ERROR_UNEXPECTED;
 
   if (bCollapsed)
   {
     // if we are inside an empty block, delete it.
-    res = CheckForEmptyBlock(startNode, bodyNode, aSelection, aHandled);
+    res = CheckForEmptyBlock(startNode, rootNode, aSelection, aHandled);
     if (NS_FAILED(res)) return res;
     if (*aHandled) return NS_OK;
         
@@ -3313,7 +3303,7 @@ nsHTMLEditRules::WillMakeBasicBlock(nsISelection *aSelection,
     res = mHTMLEditor->GetStartNodeAndOffset(aSelection, address_of(parent), &offset);
     if (NS_FAILED(res)) return res;
     if (tString.EqualsLiteral("normal") ||
-             tString.IsEmpty() ) // we are removing blocks (going to "body text")
+        tString.IsEmpty() ) // we are removing blocks (going to "body text")
     {
       nsCOMPtr<nsIDOMNode> curBlock = parent;
       if (!IsBlockNode(curBlock))
@@ -3822,7 +3812,7 @@ nsHTMLEditRules::WillOutdent(nsISelection *aSelection, PRBool *aCancel, PRBool *
     // or whatever is appropriate.  Wohoo!
 
     nsCOMPtr<nsIDOMNode> curBlockQuote, firstBQChild, lastBQChild;
-    PRBool curBlockQuoteIsIndentedWithCSS;
+    PRBool curBlockQuoteIsIndentedWithCSS = PR_FALSE;
     PRInt32 listCount = arrayOfNodes.Count();
     PRInt32 i;
     nsCOMPtr<nsIDOMNode> curParent;
@@ -4921,9 +4911,10 @@ nsHTMLEditRules::ExpandSelectionForDeletion(nsISelection *aSelection)
   nsCOMPtr<nsIDOMNode> visNode, firstBRParent;
   PRInt32 visOffset=0, firstBROffset=0;
   PRInt16 wsType;
-  nsCOMPtr<nsIDOMElement> rootElement;
-  res = mHTMLEditor->GetRootElement(getter_AddRefs(rootElement));
-  
+  nsIDOMElement *rootElement = mHTMLEditor->GetRoot();
+  if (!rootElement)
+    return NS_ERROR_FAILURE;
+
   // find previous visible thingy before start of selection
   if ((selStartNode!=selCommon) && (selStartNode!=rootElement))
   {
@@ -5507,13 +5498,10 @@ nsHTMLEditRules::PromoteRange(nsIDOMRange *inRange,
     {
       PRBool bIsEmptyNode = PR_FALSE;
       // check for body
-      nsCOMPtr<nsIDOMElement> bodyElement;
-      nsCOMPtr<nsIDOMNode> bodyNode;
-      res = mHTMLEditor->GetRootElement(getter_AddRefs(bodyElement));
-      if (NS_FAILED(res)) return res;
-      if (!bodyElement) return NS_ERROR_UNEXPECTED;
-      bodyNode = do_QueryInterface(bodyElement);
-      if (block != bodyNode)
+      nsIDOMElement *rootElement = mHTMLEditor->GetRoot();
+      if (!rootElement) return NS_ERROR_UNEXPECTED;
+      nsCOMPtr<nsIDOMNode> rootNode = do_QueryInterface(rootElement);
+      if (block != rootNode)
       {
         // ok, not body, check if empty
         res = mHTMLEditor->IsEmptyNode(block, &bIsEmptyNode, PR_TRUE, PR_FALSE);
@@ -7423,9 +7411,7 @@ nsHTMLEditRules::AdjustSelection(nsISelection *aSelection, nsIEditor::EDirection
   // check if br can go into the destination node
   if (bIsEmptyNode && mHTMLEditor->CanContainTag(selNode, NS_LITERAL_STRING("br")))
   {
-    nsCOMPtr<nsIDOMElement> rootElement;
-    res = mHTMLEditor->GetRootElement(getter_AddRefs(rootElement));
-    if (NS_FAILED(res)) return res;
+    nsIDOMElement *rootElement = mHTMLEditor->GetRoot();
     if (!rootElement) return NS_ERROR_FAILURE;
     nsCOMPtr<nsIDOMNode> rootNode(do_QueryInterface(rootElement));
     if (selNode == rootNode)
@@ -8003,14 +7989,10 @@ nsresult
 nsHTMLEditRules::ConfirmSelectionInBody()
 {
   nsresult res = NS_OK;
-  nsCOMPtr<nsIDOMElement> bodyElement;   
-  nsCOMPtr<nsIDOMNode> bodyNode; 
-  
+
   // get the body  
-  res = mHTMLEditor->GetRootElement(getter_AddRefs(bodyElement));
-  if (NS_FAILED(res)) return res;
-  if (!bodyElement) return NS_ERROR_UNEXPECTED;
-  bodyNode = do_QueryInterface(bodyElement);
+  nsIDOMElement *rootElement = mHTMLEditor->GetRoot();
+  if (!rootElement) return NS_ERROR_UNEXPECTED;
 
   // get the selection
   nsCOMPtr<nsISelection>selection;
@@ -8036,7 +8018,7 @@ nsHTMLEditRules::ConfirmSelectionInBody()
   {
 //    uncomment this to see when we get bad selections
 //    NS_NOTREACHED("selection not in body");
-    selection->Collapse(bodyNode,0);
+    selection->Collapse(rootElement, 0);
   }
   
   // get the selection end location
@@ -8056,7 +8038,7 @@ nsHTMLEditRules::ConfirmSelectionInBody()
   {
 //    uncomment this to see when we get bad selections
 //    NS_NOTREACHED("selection not in body");
-    selection->Collapse(bodyNode,0);
+    selection->Collapse(rootElement, 0);
   }
   
   return res;

@@ -327,10 +327,6 @@ public:
   /** Internal, static version */
   static nsresult NodeIsBlockStatic(nsIDOMNode *aNode, PRBool *aIsBlock);
 
-
-  /** we override this here to install event listeners */
-  NS_IMETHOD PostCreate();
-
   NS_IMETHOD GetFlags(PRUint32 *aFlags);
   NS_IMETHOD SetFlags(PRUint32 aFlags);
 
@@ -444,12 +440,10 @@ protected:
 
   NS_IMETHOD  InitRules();
 
-  /** install the event listeners for the editor 
-    * used to be part of Init, but now broken out into a separate method
-    * called by PostCreate, giving the caller the chance to interpose
-    * their own listeners before we install our own backstops.
-    */
-  NS_IMETHOD InstallEventListeners();
+  // Create the event listeners for the editor to install
+  virtual nsresult CreateEventListeners();
+
+  virtual void RemoveEventListeners();
 
   /** returns the layout object (nsIFrame in the real world) for aNode
     * @param aNode          the content to get a frame for
@@ -659,9 +653,6 @@ protected:
                                      PRInt32 aHighWaterMark);
   nsIDOMNode* GetArrayEndpoint(PRBool aEnd, nsCOMArray<nsIDOMNode>& aNodeArray);
 
-  /** simple utility to handle any error with event listener allocation or registration */
-  void HandleEventListenerError();
-
   /* small utility routine to test if a break node is visible to user */
   PRBool   IsVisBreak(nsIDOMNode *aNode);
 
@@ -745,8 +736,6 @@ protected:
 
   nsresult GetFirstEditableLeaf( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutFirstLeaf);
   nsresult GetLastEditableLeaf( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutLastLeaf);
-
-  nsresult GetDOMEventReceiver(nsIDOMEventReceiver **aEventReceiver);
 
   //XXX Kludge: Used to suppress spurious drag/drop events (bug 50703)
   PRBool   mIgnoreSpuriousDragEvent;
@@ -857,7 +846,6 @@ protected:
   nsCOMPtr<nsIDOMElement> mResizedObject;
 
   nsCOMPtr<nsIDOMEventListener>  mMouseMotionListenerP;
-  nsCOMPtr<nsIDOMEventListener>  mMutationListenerP;
   nsCOMPtr<nsISelectionListener> mSelectionListenerP;
   nsCOMPtr<nsIDOMEventListener>  mResizeEventListenerP;
 

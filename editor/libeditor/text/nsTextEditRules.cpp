@@ -93,8 +93,6 @@ nsTextEditRules::nsTextEditRules()
 , mPasswordText()
 , mPasswordIMEText()
 , mPasswordIMEIndex(0)
-, mBogusNode(nsnull)
-, mBody(nsnull)
 , mFlags(0) // initialized to 0 ("no flags set").  Real initial value is given in Init()
 , mActionNesting(0)
 , mLockRulesSniffing(PR_FALSE)
@@ -131,16 +129,12 @@ nsTextEditRules::Init(nsPlaintextEditor *aEditor, PRUint32 aFlags)
   mEditor->GetSelection(getter_AddRefs(selection));
   NS_ASSERTION(selection, "editor cannot get selection");
 
-  // remember our root node
-  nsCOMPtr<nsIDOMElement> bodyElement;
-  nsresult res = mEditor->GetRootElement(getter_AddRefs(bodyElement));
-  if (NS_FAILED(res)) return res;
-  if (!bodyElement) return NS_ERROR_NULL_POINTER;
-  mBody = do_QueryInterface(bodyElement);
-  if (!mBody) return NS_ERROR_FAILURE;
+  // Cache our body node, if available.
+  GetBody();
 
-  // put in a magic br if needed
-  res = CreateBogusNodeIfNeeded(selection);   // this method handles null selection, which should never happen anyway
+  // Put in a magic br if needed. This method handles null selection,
+  // which should never happen anyway
+  nsresult res = CreateBogusNodeIfNeeded(selection);
   if (NS_FAILED(res)) return res;
 
   if (mFlags & nsIPlaintextEditor::eEditorPlaintextMask)
@@ -149,25 +143,31 @@ nsTextEditRules::Init(nsPlaintextEditor *aEditor, PRUint32 aFlags)
     res = CreateTrailingBRIfNeeded();
     if (NS_FAILED(res)) return res;
   }
-  
-  // create a range that is the entire body contents
-  nsCOMPtr<nsIDOMRange> wholeDoc = do_CreateInstance("@mozilla.org/content/range;1");
-  if (!wholeDoc) return NS_ERROR_NULL_POINTER;
-  wholeDoc->SetStart(mBody,0);
-  nsCOMPtr<nsIDOMNodeList> list;
-  res = mBody->GetChildNodes(getter_AddRefs(list));
-  if (NS_FAILED(res)) return res;
-  if (!list) return NS_ERROR_FAILURE;
 
-  PRUint32 listCount;
-  res = list->GetLength(&listCount);
-  if (NS_FAILED(res)) return res;
+  if (mBody)
+  {
+    // create a range that is the entire body contents
+    nsCOMPtr<nsIDOMRange> wholeDoc =
+      do_CreateInstance("@mozilla.org/content/range;1");
+    if (!wholeDoc) return NS_ERROR_NULL_POINTER;
+    wholeDoc->SetStart(mBody,0);
+    nsCOMPtr<nsIDOMNodeList> list;
+    res = mBody->GetChildNodes(getter_AddRefs(list));
+    if (NS_FAILED(res)) return res;
+    if (!list) return NS_ERROR_FAILURE;
 
-  res = wholeDoc->SetEnd(mBody, listCount);
-  if (NS_FAILED(res)) return res;
+    PRUint32 listCount;
+    res = list->GetLength(&listCount);
+    if (NS_FAILED(res)) return res;
 
-  // replace newlines in that range with breaks
-  return ReplaceNewlines(wholeDoc);
+    res = wholeDoc->SetEnd(mBody, listCount);
+    if (NS_FAILED(res)) return res;
+
+    // replace newlines in that range with breaks
+    res = ReplaceNewlines(wholeDoc);
+  }
+
+  return res;
 }
 
 NS_IMETHODIMP
@@ -368,7 +368,7 @@ nsTextEditRules::DocumentIsEmpty(PRBool *aDocumentIsEmpty)
   if (!aDocumentIsEmpty)
     return NS_ERROR_NULL_POINTER;
   
-  *aDocumentIsEmpty = (mBogusNode.get() != nsnull);
+  *aDocumentIsEmpty = (mBogusNode != nsnull);
   return NS_OK;
 }
 
@@ -392,7 +392,7 @@ nsTextEditRules::WillInsert(nsISelection *aSelection, PRBool *aCancel)
   if (mBogusNode)
   {
     mEditor->DeleteNode(mBogusNode);
-    mBogusNode = do_QueryInterface(nsnull);
+    mBogusNode = nsnull;
   }
 
   return NS_OK;
@@ -455,9 +455,7 @@ nsTextEditRules::DidInsertBreak(nsISelection *aSelection, nsresult aResult)
   if (NS_FAILED(res)) return res;
   // confirm we are at end of document
   if (selOffset == 0) return NS_OK;  // cant be after a br if we are at offset 0
-  nsCOMPtr<nsIDOMElement> rootElem;
-  res = mEditor->GetRootElement(getter_AddRefs(rootElem));
-  if (NS_FAILED(res)) return res;
+  nsIDOMElement *rootElem = mEditor->GetRoot();
 
   nsCOMPtr<nsIDOMNode> root = do_QueryInterface(rootElem);
   if (!root) return NS_ERROR_NULL_POINTER;
@@ -950,7 +948,7 @@ nsTextEditRules::WillDeleteSelection(nsISelection *aSelection,
       // make sure it is not last node in editfield.  If it is, cancel deletion.
       if (nextNode && (aCollapsedAction == nsIEditor::eNext) && nsTextEditUtils::IsBreak(nextNode))
       {
-        if (!mBody) return NS_ERROR_NULL_POINTER;
+        if (!GetBody()) return NS_ERROR_NULL_POINTER;
         nsCOMPtr<nsIDOMNode> lastChild;
         res = mBody->GetLastChild(getter_AddRefs(lastChild));
         if (lastChild == nextNode)
@@ -1025,17 +1023,15 @@ nsTextEditRules:: DidUndo(nsISelection *aSelection, nsresult aResult)
   if (NS_SUCCEEDED(res)) 
   {
     if (mBogusNode) {
-      mBogusNode = do_QueryInterface(nsnull);
+      mBogusNode = nsnull;
     }
     else
     {
-      nsCOMPtr<nsIDOMElement> theBody;
-      res = mEditor->GetRootElement(getter_AddRefs(theBody));
-      if (NS_FAILED(res)) return res;
-      if (!theBody) return NS_ERROR_FAILURE;
-      nsCOMPtr<nsIDOMNode> node = mEditor->GetLeftmostChild(theBody);
+      nsIDOMElement *theRoot = mEditor->GetRoot();
+      if (!theRoot) return NS_ERROR_FAILURE;
+      nsCOMPtr<nsIDOMNode> node = mEditor->GetLeftmostChild(theRoot);
       if (node && mEditor->IsMozEditorBogusNode(node))
-        mBogusNode = do_QueryInterface(node);
+        mBogusNode = node;
     }
   }
   return res;
@@ -1060,17 +1056,16 @@ nsTextEditRules::DidRedo(nsISelection *aSelection, nsresult aResult)
   if (NS_SUCCEEDED(res)) 
   {
     if (mBogusNode) {
-      mBogusNode = do_QueryInterface(nsnull);
+      mBogusNode = nsnull;
     }
     else
     {
-      nsCOMPtr<nsIDOMElement> theBody;
-      res = mEditor->GetRootElement(getter_AddRefs(theBody));
-      if (NS_FAILED(res)) return res;
-      if (!theBody) return NS_ERROR_FAILURE;
+      nsIDOMElement *theRoot = mEditor->GetRoot();
+      if (!theRoot) return NS_ERROR_FAILURE;
       
       nsCOMPtr<nsIDOMNodeList> nodeList;
-      res = theBody->GetElementsByTagName(NS_LITERAL_STRING("div"), getter_AddRefs(nodeList));
+      res = theRoot->GetElementsByTagName(NS_LITERAL_STRING("div"),
+                                          getter_AddRefs(nodeList));
       if (NS_FAILED(res)) return res;
       if (nodeList)
       {
@@ -1078,11 +1073,11 @@ nsTextEditRules::DidRedo(nsISelection *aSelection, nsresult aResult)
         nodeList->GetLength(&len);
         
         if (len != 1) return NS_OK;  // only in the case of one div could there be the bogus node
-        nsCOMPtr<nsIDOMNode>node;
+        nsCOMPtr<nsIDOMNode> node;
         nodeList->Item(0, getter_AddRefs(node));
         if (!node) return NS_ERROR_NULL_POINTER;
         if (mEditor->IsMozEditorBogusNode(node))
-          mBogusNode = do_QueryInterface(node);
+          mBogusNode = node;
       }
     }
   }
@@ -1213,7 +1208,7 @@ nsTextEditRules::CreateTrailingBRIfNeeded()
   // but only if we aren't a single line edit field
   if (mFlags & nsIPlaintextEditor::eEditorSingleLineMask)
     return NS_OK;
-  if (!mBody) return NS_ERROR_NULL_POINTER;
+  if (!GetBody()) return NS_ERROR_NULL_POINTER;
   nsCOMPtr<nsIDOMNode> lastChild;
   nsresult res = mBody->GetLastChild(getter_AddRefs(lastChild));
   // assuming CreateBogusNodeIfNeeded() has been called first
@@ -1242,13 +1237,19 @@ nsTextEditRules::CreateBogusNodeIfNeeded(nsISelection *aSelection)
   // tell rules system to not do any post-processing
   nsAutoRules beginRulesSniffing(mEditor, nsEditor::kOpIgnore, nsIEditor::eNone);
   
-  if (!mBody) return NS_ERROR_NULL_POINTER;
+  if (!GetBody())
+  {
+    // we don't even have a body yet, don't insert any bogus nodes at
+    // this point.
+
+    return NS_OK;
+  }
 
   // now we've got the body tag.
   // iterate the body tag, looking for editable content
   // if no editable content is found, insert the bogus node
   PRBool needsBogusContent=PR_TRUE;
-  nsCOMPtr<nsIDOMNode>bodyChild;
+  nsCOMPtr<nsIDOMNode> bodyChild;
   nsresult res = mBody->GetFirstChild(getter_AddRefs(bodyChild));        
   while ((NS_SUCCEEDED(res)) && bodyChild)
   { 
@@ -1270,7 +1271,7 @@ nsTextEditRules::CreateBogusNodeIfNeeded(nsISelection *aSelection)
     nsCOMPtr<nsIDOMElement>brElement = do_QueryInterface(newContent);
 
     // set mBogusNode to be the newly created <br>
-    mBogusNode = do_QueryInterface(brElement);
+    mBogusNode = brElement;
     if (!mBogusNode) return NS_ERROR_NULL_POINTER;
 
     // give it a special attribute
@@ -1411,4 +1412,16 @@ nsTextEditRules::CreateMozBR(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<ns
     if (NS_FAILED(res)) return res;
   }
   return res;
+}
+
+nsIDOMNode *
+nsTextEditRules::GetBody()
+{
+  if (!mBody)
+  {
+    // remember our body node
+    mBody = mEditor->GetRoot();
+  }
+
+  return mBody;
 }
