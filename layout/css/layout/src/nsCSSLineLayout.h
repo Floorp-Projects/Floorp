@@ -28,7 +28,7 @@ struct nsStylePosition;
 // This structure represents a run of text. In mText are the
 // nsIFrame's that are considered text frames.
 struct nsCSSTextRun {
-  nsCSSTextRun() : mArray(10) {
+  nsCSSTextRun() {
     mNext = nsnull;
   }
 
