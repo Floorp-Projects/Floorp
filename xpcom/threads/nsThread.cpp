@@ -458,10 +458,10 @@ nsThreadPool::~nsThreadPool()
         PR_DestroyLock(mLock);
     if (mThreadExit)
         PR_DestroyCondVar(mThreadExit);
-    if (mRequestAdded)
-        PR_DestroyCondVar(mRequestAdded);
-    if (mRequestsAtZero)
-        PR_DestroyCondVar(mRequestsAtZero);
+    if (mPendingRequestAdded)
+        PR_DestroyCondVar(mPendingRequestAdded);
+    if (mPendingRequestsAtZero)
+        PR_DestroyCondVar(mPendingRequestsAtZero);
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsThreadPool, nsIThreadPool)
@@ -484,7 +484,7 @@ nsThreadPool::DispatchRequest(nsIRunnable* runnable)
     else {
         PRUint32 requestCnt, threadCount;
 
-        rv = mRequests->Count(&requestCnt);
+        rv = mPendingRequests->Count(&requestCnt);
         if (NS_FAILED(rv)) goto exit;
 
         rv = mThreads->Count(&threadCount);
@@ -499,9 +499,9 @@ nsThreadPool::DispatchRequest(nsIRunnable* runnable)
         }
 
         // XXX for now AppendElement returns a PRBool
-        rv = ((PRBool) mRequests->AppendElement(runnable)) ? NS_OK : NS_ERROR_FAILURE;
+        rv = ((PRBool) mPendingRequests->AppendElement(runnable)) ? NS_OK : NS_ERROR_FAILURE;
         if (NS_SUCCEEDED(rv)) {
-            if (PR_FAILURE == PR_NotifyCondVar(mRequestAdded))
+            if (PR_FAILURE == PR_NotifyCondVar(mPendingRequestAdded))
                 goto exit;
         }
     }
@@ -525,6 +525,13 @@ nsThreadPool::RemoveThread(nsIThread* currentThread)
     return rv;
 }
 
+void
+nsThreadPool::RequestDone(nsIRunnable* request)
+{
+    nsAutoLock lock(mLock);
+    mRunningRequests->RemoveElement(request);
+}
+
 nsIRunnable*
 nsThreadPool::GetRequest(nsIThread* currentThread)
 {
@@ -535,29 +542,51 @@ nsThreadPool::GetRequest(nsIThread* currentThread)
     PRUint32 requestCnt;
     while (PR_TRUE) {
         requestCnt = 0;
-        rv  = mRequests->Count(&requestCnt);
+        rv  = mPendingRequests->Count(&requestCnt);
         
         if (NS_FAILED(rv)) {
             return nsnull;
         }
-
+        
         if (requestCnt > 0) {
-            request = (nsIRunnable*)mRequests->ElementAt(0);
-            NS_ASSERTION(request != nsnull, "null runnable");
+            PRInt32 pendingThread = 0;
+            PRInt32 runningPos;
+            while (PR_TRUE) {
+                request = (nsIRunnable*)mPendingRequests->ElementAt(pendingThread);
 
-            PRBool removed = mRequests->RemoveElementAt(0);
-            NS_ASSERTION(removed, "nsISupportsArray broken");
-            PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
-                   ("nsIThreadPool thread %p got request %p\n", 
-                    currentThread, request));
-    
-            if (removed && requestCnt == 1)
-                PR_NotifyCondVar(mRequestsAtZero); 
+                // if we are breaking here, it means that either we have a bad 
+                // request in our list, or all pending requests are being run on
+                // another worker thread.  
+                if (request == nsnull) {
+                    pendingThread = -1;
+                    break;  
+                }
 
-            PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
-                   ("nsIThreadPool thread %p got request %p\n", 
-                    currentThread, request));
-            return request;
+                // check to see if the request is not running.                
+                mRunningRequests->GetIndexOf(request, &runningPos);
+                if (runningPos == -1)
+                    break;
+
+                pendingThread++;
+            }
+            
+            if (pendingThread != -1) {
+                PRBool removed = mPendingRequests->RemoveElementAt(pendingThread);
+                NS_ASSERTION(removed, "nsISupportsArray broken");
+                PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
+                       ("nsIThreadPool thread %p got request %p\n", 
+                        currentThread, request));
+                
+                if (removed && requestCnt == 1)
+                    PR_NotifyCondVar(mPendingRequestsAtZero); 
+                
+                PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
+                       ("nsIThreadPool thread %p got request %p\n", 
+                        currentThread, request));
+                
+                mRunningRequests->AppendElement(request);
+                return request;
+            }
         }
     
         if (mShuttingDown)
@@ -584,25 +613,25 @@ nsThreadPool::GetRequest(nsIThread* currentThread)
                   ("nsIThreadPool thread %p waiting for %d seconds before exiting (%d threads in pool)\n",
                     currentThread, interval, threadCnt));
 
-            (void) PR_WaitCondVar( mRequestAdded, interval);  
+            (void) PR_WaitCondVar( mPendingRequestAdded, interval);  
             
-            rv = mRequests->Count(&requestCnt);
+            rv = mPendingRequests->Count(&requestCnt);
             if (NS_FAILED(rv) || requestCnt == 0) {
                 PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
                    ("nsIThreadPool thread %p: %d threads in pool, min = %d, exiting...\n",
                     currentThread, threadCnt, mMinThreads));
-            RemoveThread(currentThread);
-            return nsnull;   // causes nsThreadPoolRunnable::Run to quit
-        }
+                RemoveThread(currentThread);
+                return nsnull;   // causes nsThreadPoolRunnable::Run to quit
+            }
         }
         else
         {
-        PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
-               ("nsIThreadPool thread %p waiting (%d threads in pool)\n",
-                currentThread, threadCnt));
-        
-        (void)PR_WaitCondVar(mRequestAdded, PR_INTERVAL_NO_TIMEOUT);
-    }
+            PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
+                   ("nsIThreadPool thread %p waiting (%d threads in pool)\n",
+                    currentThread, threadCnt));
+            
+            (void)PR_WaitCondVar(mPendingRequestAdded, PR_INTERVAL_NO_TIMEOUT);
+        }
     }
     // no requests, we are going to dump the thread.
     PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
@@ -628,14 +657,14 @@ nsThreadPool::ProcessPendingRequests()
     nsresult rv;
     while (PR_TRUE) {
         PRUint32 cnt;
-        rv = mRequests->Count(&cnt);
+        rv = mPendingRequests->Count(&cnt);
         if (NS_FAILED(rv) || cnt == 0)
             break;
-        (void)PR_WaitCondVar(mRequestsAtZero, PR_INTERVAL_NO_TIMEOUT);
+        (void)PR_WaitCondVar(mPendingRequestsAtZero, PR_INTERVAL_NO_TIMEOUT);
     }
 #ifdef DEBUG
     PRUint32 requestCount;
-    (void)mRequests->Count(&requestCount);
+    (void)mPendingRequests->Count(&requestCount);
     NS_ASSERTION(requestCount == 0, "not all requests processed");
 #endif
     return rv;
@@ -709,23 +738,26 @@ nsThreadPool::Init(PRUint32 minThreadCount,
     rv = NS_NewISupportsArray(getter_AddRefs(mThreads));
     if (NS_FAILED(rv)) return rv;
     
-    rv = NS_NewISupportsArray(getter_AddRefs(mRequests));
+    rv = NS_NewISupportsArray(getter_AddRefs(mPendingRequests));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = NS_NewISupportsArray(getter_AddRefs(mRunningRequests));
     if (NS_FAILED(rv)) return rv;
 
     mLock = PR_NewLock();
     if (mLock == nsnull)
         goto cleanup;
     
-    mRequestAdded = PR_NewCondVar(mLock);    
-    if (mRequestAdded == nsnull)
+    mPendingRequestAdded = PR_NewCondVar(mLock);    
+    if (mPendingRequestAdded == nsnull)
         goto cleanup;
 
     mThreadExit = PR_NewCondVar(mLock);
     if (mThreadExit == nsnull)
         goto cleanup;
     
-    mRequestsAtZero = PR_NewCondVar(mLock);
-    if (mRequestsAtZero == nsnull)
+    mPendingRequestsAtZero = PR_NewCondVar(mLock);
+    if (mPendingRequestsAtZero == nsnull)
         goto cleanup;
     
     return NS_OK;
@@ -735,10 +767,10 @@ nsThreadPool::Init(PRUint32 minThreadCount,
         PR_DestroyLock(mLock);
     if (mThreadExit)
         PR_DestroyCondVar(mThreadExit);
-    if (mRequestAdded)
-        PR_DestroyCondVar(mRequestAdded);
-    if (mRequestsAtZero)
-        PR_DestroyCondVar(mRequestsAtZero);
+    if (mPendingRequestAdded)
+        PR_DestroyCondVar(mPendingRequestAdded);
+    if (mPendingRequestsAtZero)
+        PR_DestroyCondVar(mPendingRequestsAtZero);
         
     return NS_ERROR_OUT_OF_MEMORY;
 }
@@ -837,6 +869,9 @@ nsThreadPoolRunnable::Run()
         nsThreadPoolBusyBody bumpBusyCount(mPool);
         rv = request->Run();
         NS_ASSERTION(NS_SUCCEEDED(rv), "runnable failed");
+
+        // let the pool know that the request has finished running.
+        mPool->RequestDone(request);
 
         PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
                ("nsIThreadPool thread %p completed %p status=%x\n",
