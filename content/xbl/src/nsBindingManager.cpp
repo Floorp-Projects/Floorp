@@ -579,8 +579,7 @@ nsBindingManager::ChangeDocumentFor(nsIContent* aContent, nsIDocument* aOldDocum
       anonymousElements->Count(&count);
 
       while (PRInt32(--count) >= 0) {
-        nsCOMPtr<nsISupports> isupports( getter_AddRefs(anonymousElements->ElementAt(count)) );
-        nsCOMPtr<nsIContent> content( do_QueryInterface(isupports) );
+        nsCOMPtr<nsIContent> content( do_QueryElementAt(anonymousElements, count));
         NS_ASSERTION(content != nsnull, "not an nsIContent");
         if (! content)
           continue;

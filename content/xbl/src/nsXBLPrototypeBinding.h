@@ -120,11 +120,13 @@ public:
   void SetInitialAttributes(nsIContent* aBoundElement, nsIContent* aAnonymousContent);
 
   nsCOMArray<nsIStyleRuleProcessor>* GetRuleProcessors();
-  already_AddRefed<nsISupportsArray> GetStyleSheets();
+  nsCOMArray<nsICSSStyleSheet>* GetStyleSheets();
 
   PRBool HasInsertionPoints() { return mInsertionPointTable != nsnull; }
   
-  PRBool HasStyleSheets() { return mResources && mResources->mStyleSheetList; }
+  PRBool HasStyleSheets() {
+    return mResources && mResources->mStyleSheetList.Count() > 0;
+  }
 
   nsresult FlushSkinSheets();
 

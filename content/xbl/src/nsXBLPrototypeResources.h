@@ -53,6 +53,7 @@ class nsIScriptContext;
 class nsSupportsHashtable;
 class nsXBLResourceLoader;
 class nsXBLPrototypeBinding;
+class nsICSSStyleSheet;
 
 // *********************************************************************/
 // The XBLPrototypeResources class
@@ -70,7 +71,7 @@ public:
 
 // MEMBER VARIABLES
   nsXBLResourceLoader* mLoader; // A loader object. Exists only long enough to load resources, and then it dies.
-  nsCOMPtr<nsISupportsArray> mStyleSheetList; // A list of loaded stylesheets for this binding.
+  nsCOMArray<nsICSSStyleSheet> mStyleSheetList; // A list of loaded stylesheets for this binding.
   nsCOMArray<nsIStyleRuleProcessor> mRuleProcessors; // The list of stylesheets converted to rule processors.
 };
 

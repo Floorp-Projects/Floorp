@@ -930,24 +930,21 @@ nsXBLPrototypeBinding::SetInitialAttributes(nsIContent* aBoundElement, nsIConten
 nsCOMArray<nsIStyleRuleProcessor>*
 nsXBLPrototypeBinding::GetRuleProcessors()
 {
-  nsCOMArray<nsIStyleRuleProcessor> *result;
-  if (mResources)
-    result = &mResources->mRuleProcessors;
-  else
-    result = nsnull;
-  return result;
+  if (mResources) {
+    return &mResources->mRuleProcessors;
+  }
+  
+  return nsnull;
 }
 
-already_AddRefed<nsISupportsArray>
+nsCOMArray<nsICSSStyleSheet>*
 nsXBLPrototypeBinding::GetStyleSheets()
 {
-  nsISupportsArray* result;
   if (mResources) {
-    result = mResources->mStyleSheetList;
-    NS_IF_ADDREF(result);
-  } else
-    result = nsnull;
-  return result;
+    return &mResources->mStyleSheetList;
+  }
+
+  return nsnull;
 }
 
 PRBool

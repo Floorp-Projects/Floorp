@@ -186,14 +186,8 @@ nsXBLResourceLoader::StyleSheetLoaded(nsICSSStyleSheet* aSheet, PRBool aNotify)
     // Our resources got destroyed -- just bail out
     return NS_OK;
   }
-  
-  if (!mResources->mStyleSheetList) {
-    NS_NewISupportsArray(getter_AddRefs(mResources->mStyleSheetList));
-    if (!mResources->mStyleSheetList)
-      return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  mResources->mStyleSheetList->AppendElement(aSheet);
+   
+  mResources->mStyleSheetList.AppendObject(aSheet);
 
   if (!mInLoadResourcesFunc)
     mPendingSheets--;
@@ -202,11 +196,9 @@ nsXBLResourceLoader::StyleSheetLoaded(nsICSSStyleSheet* aSheet, PRBool aNotify)
     // All stylesheets are loaded.  
     nsCOMPtr<nsIStyleRuleProcessor> prevProcessor;
     mResources->mRuleProcessors.Clear();
-    PRUint32 count;
-    mResources->mStyleSheetList->Count(&count);
-    for (PRUint32 i = 0; i < count; i++) {
-      nsCOMPtr<nsISupports> supp = getter_AddRefs(mResources->mStyleSheetList->ElementAt(i));
-      nsCOMPtr<nsICSSStyleSheet> sheet(do_QueryInterface(supp));
+    PRInt32 count = mResources->mStyleSheetList.Count();
+    for (PRInt32 i = 0; i < count; i++) {
+      nsICSSStyleSheet* sheet = mResources->mStyleSheetList[i];
 
       nsCOMPtr<nsIStyleRuleProcessor> processor;
       sheet->GetStyleRuleProcessor(*getter_AddRefs(processor), prevProcessor);
@@ -259,8 +251,7 @@ nsXBLResourceLoader::NotifyBoundElements()
   PRUint32 eltCount;
   mBoundElements->Count(&eltCount);
   for (PRUint32 j = 0; j < eltCount; j++) {
-    nsCOMPtr<nsISupports> supp = getter_AddRefs(mBoundElements->ElementAt(j));
-    nsCOMPtr<nsIContent> content(do_QueryInterface(supp));
+    nsCOMPtr<nsIContent> content(do_QueryElementAt(mBoundElements, j));
     
     PRBool ready = PR_FALSE;
     xblService->BindingReady(content, bindingURI, &ready);
