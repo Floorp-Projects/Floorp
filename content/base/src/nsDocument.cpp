@@ -2088,6 +2088,14 @@ nsDocument::GetElementById(const nsAReadableString & elementId,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+nsDocument::Load(const nsAReadableString& aUrl)
+{
+  NS_ERROR("nsDocument::Load() should be overriden by subclass!");
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP    
 nsDocument::GetStyleSheets(nsIDOMStyleSheetList** aStyleSheets)
 {
