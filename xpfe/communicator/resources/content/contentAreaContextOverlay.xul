@@ -47,15 +47,10 @@
                 label="&openLinkCmd.label;"
                 accesskey="&openLinkCmd.accesskey;"
                 oncommand="gContextMenu.openLink();"/>
-		<menuitem id="context-openlinkintab"
+		  <menuitem id="context-openlinkintab"
                 label="&openLinkCmdInTab.label;"
                 accesskey="&openLinkCmdInTab.accesskey;"
                 oncommand="gContextMenu.openLinkInTab();"/>
-      <!-- XXX - DEPENDENT ON PRESENCE OF EDITOR!! - XXX -->
-      <menuitem id="context-editlink"
-                label="&editLinkCmd.label;"
-                accesskey="&editLinkCmd.accesskey;"
-                oncommand="gContextMenu.editLink();"/>
       <menuitem id="context-openframe"
                 label="&openFrameCmd.label;"
                 accesskey="&openFrameCmd.accesskey;"
