@@ -80,6 +80,7 @@ DIRS = \
   silentdl                      \
   webshell			\
   xpfe				\
+  mailnews			\
   $(NULL)
 
 
