@@ -40,10 +40,6 @@ struct RowReflowState {
   // the running x-offset
   nscoord x;
 
-  // Height of tallest cell (excluding cells with rowspan > 1)
-  nscoord maxCellHeight;    // just the height of the cell frame
-  nscoord maxCellVertSpace; // the maximum MAX(cellheight + topMargin + bottomMargin)
-  
   nsTableFrame *tableFrame;
 
   RowReflowState(const nsHTMLReflowState& aReflowState,
@@ -52,8 +48,6 @@ struct RowReflowState {
   {
     availSize.width = reflowState.availableWidth;
     availSize.height = reflowState.availableHeight;
-    maxCellHeight = 0;
-    maxCellVertSpace = 0;
     tableFrame = aTableFrame;
     x=0;
   }
@@ -159,15 +153,18 @@ public:
   NS_IMETHOD GetFrameName(nsString& aResult) const;
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 #endif
-  
-  /** set mTallestCell to 0 in anticipation of recalculating it */
-  void ResetMaxChildHeight();
+ 
+  void SetTallestCell(nscoord           aHeight,
+                      nsTableFrame*     aTableFrame = nsnull,
+                      nsTableCellFrame* aCellFrame  = nsnull);
 
-  /** set mTallestCell to max(mTallestCell, aChildHeight) */ 
-  void SetMaxChildHeight(nscoord aChildHeight);
+  void ResetTallestCell();
+
+  // calculate the tallest child when the previous tallest child gets shorter
+  void CalcTallestCell();
 
   /** returns the tallest child in this row (ignoring any cell with rowspans) */
-  nscoord GetTallestChild() const;
+  nscoord GetTallestCell() const;
 
   /** returns the ordinal position of this row in its table */
   virtual PRInt32 GetRowIndex() const;

@@ -266,7 +266,9 @@ struct nsHTMLReflowMetrics {
   nsRect mOverflowArea;
 
   PRUint32 mFlags;
-  
+ 
+  // used by tables to optimize common cases
+  PRBool mNothingChanged;
 
   nsHTMLReflowMetrics(nsSize* aMaxElementSize, PRUint32 aFlags = 0) {
     maxElementSize = aMaxElementSize;
@@ -277,6 +279,7 @@ struct nsHTMLReflowMetrics {
     mOverflowArea.y = 0;
     mOverflowArea.width = 0;
     mOverflowArea.height = 0;
+    mNothingChanged = PR_FALSE;
 #ifdef MOZ_MATHML
     mBoundingMetrics.Clear();
 #endif

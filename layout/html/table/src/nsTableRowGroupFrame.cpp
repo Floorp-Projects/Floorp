@@ -604,7 +604,7 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext*          aPresCon
         startRowIndex = ((nsTableRowFrame*)rowFrame)->GetRowIndex();
       }
       // get the height of the tallest cell in the row (excluding cells that span rows)
-      rowHeights[rowIndex] = ((nsTableRowFrame*)rowFrame)->GetTallestChild();
+      rowHeights[rowIndex] = ((nsTableRowFrame*)rowFrame)->GetTallestCell();
       // See if a cell spans into the row. If so we'll have to do step 2
       if (!hasRowSpanningCell) {
         if (tableFrame->RowIsSpannedInto(rowIndex + startRowIndex)) {
@@ -1488,6 +1488,14 @@ nsTableRowGroupFrame::IsSimpleRowFrame(nsTableFrame* aTableFrame,
   return PR_FALSE;
 }
 
+nscoord
+GetFrameYMost(nsIFrame* aFrame)
+{
+  nsRect rect;
+  aFrame->GetRect(rect);
+  return rect.YMost();
+}
+
 NS_METHOD nsTableRowGroupFrame::IR_TargetIsChild(nsIPresContext*      aPresContext,
                                                  nsHTMLReflowMetrics& aDesiredSize,
                                                  RowGroupReflowState& aReflowState,
@@ -1530,23 +1538,13 @@ NS_METHOD nsTableRowGroupFrame::IR_TargetIsChild(nsIPresContext*      aPresConte
     // If the row has no cells that span into or across the row, then we
     // don't have to call CalculateRowHeights() which is quite expensive
     if (IsSimpleRowFrame(aReflowState.tableFrame, aNextFrame)) {
-      // XXX This optimization isn't ready to be enabled yet, because the
-      // row frame code needs to change to size the cell frame and vertically
-      // align it and either bitblt it into its new position or repaint
-#if 0
       // See if the row changed height
       if (oldKidRect.height == desiredSize.height) {
         // We don't need to do any painting. The row frame has made sure that
         // the cell is properly positioned, and done any necessary repainting.
         // Just calculate our desired height
-        nsIFrame* lastKidFrame = mFrames.LastChild();
-        nsRect    lastKidRect;
-
-        lastKidFrame->GetRect(lastKidRect);
-        aDesiredSize.height = lastKidRect.YMost();
-
+        aDesiredSize.height = GetFrameYMost(mFrames.LastChild());
       } else {
-#endif
         // Inform the row of its new height.
         ((nsTableRowFrame*)aNextFrame)->DidResize(aPresContext, aReflowState.reflowState);
 
@@ -1571,24 +1569,26 @@ NS_METHOD nsTableRowGroupFrame::IR_TargetIsChild(nsIPresContext*      aPresConte
                                   aDesiredSize.maxElementSize,
                                   desiredSize.height - oldKidRect.height);
         aDesiredSize.height = aReflowState.y;
-#if 0
       }
-#endif
-    
     } else {
-      // Adjust the frames that follow...
-      AdjustSiblingsAfterReflow(aPresContext, aReflowState, aNextFrame,
+      if (desiredSize.mNothingChanged) { // mNothingChanges currently only works when a cell is the target
+        // the cell frame did not change size. Just calculate our desired height
+        aDesiredSize.height = GetFrameYMost(mFrames.LastChild());
+      } else {
+        // Adjust the frames that follow...
+        AdjustSiblingsAfterReflow(aPresContext, aReflowState, aNextFrame,
                                   aDesiredSize.maxElementSize,
                                   desiredSize.height - oldKidRect.height);
     
-      // Now recalculate the row heights
-      CalculateRowHeights(aPresContext, aDesiredSize, aReflowState.reflowState);
+        // Now recalculate the row heights
+        CalculateRowHeights(aPresContext, aDesiredSize, aReflowState.reflowState);
       
-      // Because we don't know what changed repaint everything.
-      // XXX We should change CalculateRowHeights() to return the bounding
-      // rect of what changed. Or whether anything moved or changed size...
-      nsRect  dirtyRect(0, 0, mRect.width, mRect.height);
-      Invalidate(aPresContext, dirtyRect);
+        // Because we don't know what changed repaint everything.
+        // XXX We should change CalculateRowHeights() to return the bounding
+        // rect of what changed. Or whether anything moved or changed size...
+        nsRect  dirtyRect(0, 0, mRect.width, mRect.height);
+        Invalidate(aPresContext, dirtyRect);
+      }
     }
   }
   
@@ -1814,7 +1814,6 @@ nsTableRowGroupFrame::GetNextSibling(nsIFrame*& aFrame, PRInt32 aLineNumber)
   if(NS_FAILED(result) || !cellFrame)
     return result?result:NS_ERROR_FAILURE;
   
-  nsIFrame* tempFrame;
   nsTableFrame* parentFrame = nsnull;
   result = nsTableFrame::GetTableFrame(this, parentFrame);
   nsTableCellMap* cellMap = parentFrame->GetCellMap();

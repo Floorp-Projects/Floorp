@@ -1393,6 +1393,7 @@ nsresult nsTableFrame::AdjustSiblingsAfterReflow(nsIPresContext*        aPresCon
   NS_PRECONDITION(NS_UNCONSTRAINEDSIZE == aReflowState.reflowState.availableHeight,
                   "we're not in galley mode");
 
+  nscoord yInvalid = NS_UNCONSTRAINEDSIZE;
   // If it's the footer that was reflowed, then we don't need to adjust any of
   // the frames, because the footer is the bottom most frame
   if (aKidFrame != aReflowState.footerFrame) {
@@ -1413,6 +1414,7 @@ nsresult nsTableFrame::AdjustSiblingsAfterReflow(nsIPresContext*        aPresCon
   
       // Get the frame's bounding rect
       kidFrame->GetRect(kidRect);
+      yInvalid = PR_MIN(yInvalid, kidRect.y);
   
       // Adjust the running y-offset
       aReflowState.y += kidRect.height;
@@ -1455,13 +1457,10 @@ nsresult nsTableFrame::AdjustSiblingsAfterReflow(nsIPresContext*        aPresCon
     }
 
     // Invalidate the area we offset. Note that we only repaint within
-    // our existing frame bounds.
     // XXX It would be better to bitblt the row frames and not repaint,
     // but we don't have such a view manager function yet...
-    aKidFrame->GetRect(kidRect);
-    if (kidRect.YMost() < mRect.height) {
-      nsRect  dirtyRect(0, kidRect.YMost(),
-                        mRect.width, mRect.height - kidRect.YMost());
+    if (NS_UNCONSTRAINEDSIZE != yInvalid) {
+      nsRect  dirtyRect(0, yInvalid, mRect.width, mRect.height - yInvalid);
       Invalidate(aPresContext, dirtyRect);
     }
   }
@@ -3380,7 +3379,7 @@ void nsTableFrame::DistributeSpaceToRows(nsIPresContext*   aPresContext,
   nscoord cellSpacingY = GetCellSpacingY();
   nsTableRowGroupFrame* rowGroupFrame = (nsTableRowGroupFrame*)aRowGroupFrame;
   nsIFrame* rowFrame = rowGroupFrame->GetFirstFrame();
-  nscoord y = cellSpacingY;
+  nscoord y = 0;
   while (rowFrame) {
     const nsStyleDisplay *rowDisplay;
     rowFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)rowDisplay));
@@ -3444,6 +3443,7 @@ nscoord nsTableFrame::ComputeDesiredHeight(nsIPresContext*          aPresContext
     return 0;
   }
   nscoord result = aDefaultHeight;
+  nscoord cellSpacingY = GetCellSpacingY();
 
   nscoord tableSpecifiedHeight = CalcBorderBoxHeight(aPresContext, aReflowState);
   if ((tableSpecifiedHeight > 0) && (tableSpecifiedHeight != NS_UNCONSTRAINEDSIZE)) {
@@ -3455,7 +3455,7 @@ nscoord nsTableFrame::ComputeDesiredHeight(nsIPresContext*          aPresContext
         // don't need to do this if it's an unconstrained reflow
         nscoord excess = tableSpecifiedHeight - aDefaultHeight;
         nscoord sumOfRowHeights = 0;
-        nscoord rowGroupYPos = 0;
+        nscoord rowGroupYPos = aReflowState.mComputedBorderPadding.top + cellSpacingY;
         nsIFrame* childFrame = mFrames.FirstChild();
         nsIFrame* firstRowGroupFrame = nsnull;
         while (nsnull != childFrame) {
@@ -3465,8 +3465,6 @@ nscoord nsTableFrame::ComputeDesiredHeight(nsIPresContext*          aPresContext
               ((nsTableRowGroupFrame*)rgFrame)->GetHeightOfRows(aPresContext, sumOfRowHeights);
             }
             if (!firstRowGroupFrame) {
-              nsMargin borderPadding = aReflowState.mComputedBorderPadding;
-              rowGroupYPos = borderPadding.top;
               firstRowGroupFrame = childFrame;
             }
           }
@@ -3499,6 +3497,7 @@ nscoord nsTableFrame::ComputeDesiredHeight(nsIPresContext*          aPresContext
               rgFrame->GetRect(rowGroupRect);
               rowGroupYPos += rowGroupRect.height;
             }
+            rowGroupYPos += cellSpacingY;
           }
           childFrame->GetNextSibling(&childFrame);
         }
