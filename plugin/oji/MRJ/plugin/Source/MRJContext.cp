@@ -934,12 +934,11 @@ void MRJContext::setStatusMessage(JMAppletViewerRef viewer, JMTextRef statusMsg)
 	MRJContext* thisContext;
 	OSStatus status = ::JMGetAppletViewerData(viewer, (JMClientData*)&thisContext);
 	if (status == noErr) {
-		Handle messageHandle = ::JMTextToMacOSCStringHandle(statusMsg);
-		if (messageHandle != NULL) {
-			::HLock(messageHandle);
-			const char* message = *messageHandle;
+		TextEncoding utf8 = CreateTextEncoding(kTextEncodingUnicodeDefault, kTextEncodingDefaultVariant, kUnicodeUTF8Format);
+		char* message = JMTextToEncoding(statusMsg, utf8);
+		if (message) {
 			thisContext->showStatus(message);
-			::DisposeHandle(messageHandle);
+			delete[] message;
 		}
 	}
 }
