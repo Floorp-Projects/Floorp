@@ -121,9 +121,9 @@ nsMathMLmstyleFrame::Init(nsIPresContext*  aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLmstyleFrame::UpdatePresentationData(PRInt32 aScriptLevelIncrement, 
-                                            PRBool  aDisplayStyle,
-                                            PRBool  aCompressed)
+nsMathMLmstyleFrame::UpdatePresentationData(PRInt32  aScriptLevelIncrement,
+                                            PRUint32 aFlagsValues,
+                                            PRUint32 aFlagsToUpdate)
 {
   // mstyle is special...
   // Since UpdatePresentationData() can be called by a parent frame, the
@@ -131,46 +131,74 @@ nsMathMLmstyleFrame::UpdatePresentationData(PRInt32 aScriptLevelIncrement,
   // Update only if attributes are not there
 
   if (!NS_MATHML_IS_MSTYLE_WITH_DISPLAYSTYLE(mPresentationData.flags)) {
-    if (aDisplayStyle)
-      mPresentationData.flags |= NS_MATHML_DISPLAYSTYLE;
-    else
-      mPresentationData.flags &= ~NS_MATHML_DISPLAYSTYLE;
+    // update the flag if it is relevant to this call
+    if (NS_MATHML_IS_DISPLAYSTYLE(aFlagsToUpdate)) {
+      // updating the displaystyle flag is allowed
+      if (NS_MATHML_IS_DISPLAYSTYLE(aFlagsValues)) {
+        mPresentationData.flags |= NS_MATHML_DISPLAYSTYLE;
+      }
+      else {
+        mPresentationData.flags &= ~NS_MATHML_DISPLAYSTYLE;
+      }
+    }
   }
+
   if (!NS_MATHML_IS_MSTYLE_WITH_EXPLICIT_SCRIPTLEVEL(mPresentationData.flags)) {
     mPresentationData.scriptLevel += aScriptLevelIncrement;
   }
-  if (aCompressed)
-    mPresentationData.flags |= NS_MATHML_COMPRESSED;
-  else
-    mPresentationData.flags &= ~NS_MATHML_COMPRESSED;
+
+  if (NS_MATHML_IS_COMPRESSED(aFlagsToUpdate)) {
+    // updating the compression flag is allowed
+    if (NS_MATHML_IS_COMPRESSED(aFlagsValues)) {
+      // 'compressed' means 'prime' style in App. G, TeXbook
+      mPresentationData.flags |= NS_MATHML_COMPRESSED;
+    }
+    // no else. the flag is sticky. it retains its value once it is set
+  }
   
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsMathMLmstyleFrame::UpdatePresentationDataFromChildAt(PRInt32 aIndex, 
-                                                       PRInt32 aScriptLevelIncrement,
-                                                       PRBool  aDisplayStyle,
-                                                       PRBool  aCompressed)
+nsMathMLmstyleFrame::UpdatePresentationDataFromChildAt(PRInt32  aFirstIndex,
+                                                       PRInt32  aLastIndex,
+                                                       PRInt32  aScriptLevelIncrement,
+                                                       PRUint32 aFlagsValues,
+                                                       PRUint32 aFlagsToUpdate)
 {
   // mstyle is special...
   // Since UpdatePresentationDataFromChildAt() can be called by a parent frame,
   // wee need to ensure that the attributes of mstyle take precedence
 
-  PRBool compressed = NS_MATHML_IS_COMPRESSED(mPresentationData.flags);
-  PRBool displayStyle = NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags);
-  if (NS_MATHML_IS_MSTYLE_WITH_DISPLAYSTYLE(mPresentationData.flags)) {
-    aDisplayStyle = displayStyle;
+  // see if the caller cares about the displaystyle flag
+  PRBool displaystyleChanged = PR_FALSE;
+  if (NS_MATHML_IS_DISPLAYSTYLE(aFlagsToUpdate)) {
+    if (!NS_MATHML_IS_MSTYLE_WITH_DISPLAYSTYLE(mPresentationData.flags)) {
+      // updating the displaystyle flag is allowed
+      displaystyleChanged = PR_TRUE;
+    }
+    else {
+      // our value takes precedence, updating is not allowed
+      aFlagsToUpdate &= ~NS_MATHML_DISPLAYSTYLE;
+    }
   }
+
+  // see if the caller cares about the compression flag
+  PRBool compressionChanged = PR_FALSE;
+  if (NS_MATHML_IS_COMPRESSED(aFlagsToUpdate)) {
+    compressionChanged = PR_TRUE;
+  }
+
   if (NS_MATHML_IS_MSTYLE_WITH_EXPLICIT_SCRIPTLEVEL(mPresentationData.flags)) {
     aScriptLevelIncrement = 0;
   }
-  if (0 == aScriptLevelIncrement &&
-      aDisplayStyle == displayStyle && 
-      aCompressed == compressed)
+
+  if (!aScriptLevelIncrement && !displaystyleChanged && !compressionChanged)
     return NS_OK;  // quick return, there is nothing to change
  
   // let the base class worry about the update
-  return nsMathMLContainerFrame::UpdatePresentationDataFromChildAt(aIndex,
-                                 aScriptLevelIncrement, aDisplayStyle, aCompressed);
+  return
+    nsMathMLContainerFrame::UpdatePresentationDataFromChildAt(
+      aFirstIndex, aLastIndex, aScriptLevelIncrement,
+      aFlagsValues, aFlagsToUpdate); 
 }

@@ -42,15 +42,16 @@ public:
        nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD
-  UpdatePresentationData(PRInt32 aScriptLevel,
-                         PRBool  aDisplayStyle,
-                         PRBool  aCompressed);
+  UpdatePresentationData(PRInt32  aScriptLevelIncrement,
+                         PRUint32 aFlagsValues,
+                         PRUint32 aFlagsToUpdate);
 
   NS_IMETHOD
-  UpdatePresentationDataFromChildAt(PRInt32 aIndex,
-                                    PRInt32 aScriptLevelIncrement,
-                                    PRBool  aDisplayStyle,
-                                    PRBool  aCompressed);
+  UpdatePresentationDataFromChildAt(PRInt32  aFirstIndex,
+                                    PRInt32  aLastIndex,
+                                    PRInt32  aScriptLevelIncrement,
+                                    PRUint32 aFlagsValues,
+                                    PRUint32 aFlagsToUpdate);
 
   NS_IMETHOD
   SetInitialChildList(nsIPresContext* aPresContext,
@@ -59,8 +60,10 @@ public:
   {
     nsresult rv;
     rv = nsMathMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
-    UpdatePresentationDataFromChildAt(0, mInnerScriptLevelIncrement,
-       NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags), PR_FALSE);
+    // This call is peculiar to <mstyle> and will quickly return if nothing to update
+    UpdatePresentationDataFromChildAt(0, -1, mInnerScriptLevelIncrement,
+       NS_MATHML_DISPLAYSTYLE & mPresentationData.flags,
+       NS_MATHML_DISPLAYSTYLE);
     InsertScriptLevelStyleContext(aPresContext);
     return rv;
   }

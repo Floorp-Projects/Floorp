@@ -195,44 +195,6 @@ nsMathMLmfracFrame::Paint(nsIPresContext*      aPresContext,
                                        aDirtyRect, aWhichLayer);
 }
 
-// over-ride the default method to update presentation parameters
-// Rule 15a, App. G, TeXbook
-NS_IMETHODIMP
-nsMathMLmfracFrame::UpdatePresentationDataFromChildAt(PRInt32 aIndex,
-                                                      PRInt32 aScriptLevelIncrement,
-                                                      PRBool  aDisplayStyle,
-                                                      PRBool  aCompressed)
-{
-  PRBool compressed;
-  nsIFrame* childFrame = mFrames.FirstChild();
-  while (nsnull != childFrame) {
-    if (!IsOnlyWhitespace(childFrame)) {
-      nsIMathMLFrame* aMathMLFrame = nsnull;
-      nsresult rv = childFrame->QueryInterface
-        (NS_GET_IID(nsIMathMLFrame), (void**)&aMathMLFrame);
-      if (NS_SUCCEEDED(rv) && nsnull != aMathMLFrame) {
-        if (0 == aIndex++) {
-          // numerator uses default compression
-          compressed = aCompressed;
-        }
-        else {
-          // denominator is 'compressed' (means 'prime' style in App. G, TeXbook)
-          compressed = PR_TRUE;
-        }
-        // update
-        aMathMLFrame->UpdatePresentationData
-          (aScriptLevelIncrement, aDisplayStyle, compressed);
-        // propagate down the subtrees
-        aMathMLFrame->UpdatePresentationDataFromChildAt
-          (0, aScriptLevelIncrement, aDisplayStyle, compressed);
-      }
-    }
-    childFrame->GetNextSibling(&childFrame);
-  }
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsMathMLmfracFrame::Place(nsIPresContext*      aPresContext,
 			  nsIRenderingContext& aRenderingContext,
@@ -269,7 +231,7 @@ nsMathMLmfracFrame::Place(nsIPresContext*      aPresContext,
     rv = childFrame->GetNextSibling(&childFrame);
   }
 #ifdef NS_DEBUG
-  if (2 != count) printf("mfrac: invalid markup");
+  if (2 != count) printf("mfrac: invalid markup\n");
 #endif
   if ((2 != count) || !frameNum || !frameDen) {
     // report an error, encourage people to get their markups in order
@@ -320,7 +282,7 @@ nsMathMLmfracFrame::Place(nsIPresContext*      aPresContext,
   nscoord actualClearance = 0;
   nscoord axisHeight = 0;
 
-  nscoord actualRuleThickness =  (0 < mLineRect.height) ? mLineRect.height : 0;
+  nscoord actualRuleThickness =  mLineRect.height;
 
   if (0 == actualRuleThickness) {
     // Rule 15c, App. G, TeXbook
@@ -345,14 +307,15 @@ nsMathMLmfracFrame::Place(nsIPresContext*      aPresContext,
 
     // TeX has a different interpretation of the thickeness.
     // Try $a \above10pt b$ to see. Here is what TeX does:
-    // minClearance = (NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags)) ?
-    //  3 * actualRuleThickness : actualRuleThickness;
+//     minClearance = (NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags)) ?
+//      3 * actualRuleThickness : actualRuleThickness;
  
-    // we don't follow TeX here, we use a modified version of Rule 15c in which
-    // one defaultRuleThickness is replaced by one actualRuleThickness
-    minClearance = actualRuleThickness +
-      (NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags)) ?
-          6 * defaultRuleThickness : 2 * defaultRuleThickness;
+    // we slightly depart from TeX here. We use the defaultRuleThickness instead
+    // of the value coming from the linethickness attribute, i.e., we recover what
+    // TeX does if the user hasn't set linethickness. But when the linethickness
+    // is set, we avoid the wide gap problem.
+     minClearance = (NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags)) ?
+      3 * defaultRuleThickness : defaultRuleThickness + onePixel;
 
     // adjust numShift to maintain minClearance if needed
     actualClearance =
@@ -372,6 +335,8 @@ nsMathMLmfracFrame::Place(nsIPresContext*      aPresContext,
   // Place Children
 
   // there is 1 pixel padding at either end of the fraction
+  // XXX Need revisiting the width. TeX uses the exact width
+  // e.g. in $$\huge\frac{\displaystyle\int}{i}$$
   nscoord width = 2*onePixel + PR_MAX(bmNum.width, bmDen.width);
   nscoord dxNum = (width - sizeNum.width)/2;
   nscoord dxDen = (width - sizeDen.width)/2;

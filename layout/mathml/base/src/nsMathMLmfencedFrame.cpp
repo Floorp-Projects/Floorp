@@ -458,7 +458,7 @@ nsMathMLmfencedFrame::ReflowChar(nsIPresContext*      aPresContext,
  
     nsAutoString aData;
     aMathMLChar->GetData(aData);
-    aMathMLChar->SetData(aPresContext, aData); // XXX hack to reset the enum, bug 45010
+    aMathMLChar->SetData(aPresContext, aData); // XXX hack to reset, bug 45010
     PRBool found = nsMathMLOperators::LookupOperator(aData, aForm,              
                                            &aFlags, &aLeftSpace, &aRightSpace);
 
@@ -470,12 +470,11 @@ nsMathMLmfencedFrame::ReflowChar(nsIPresContext*      aPresContext,
 
     // stretch the char to the appropriate height if it is not big enough.
     nsBoundingMetrics charSize;
-    charSize.Clear(); // this will tell stretch that we don't know the default size
     nsresult res = aMathMLChar->Stretch(aPresContext, aRenderingContext,
                                         NS_STRETCH_DIRECTION_VERTICAL,
                                         aContainerSize, charSize);
 
-    if (eMathMLChar_DONT_STRETCH != aMathMLChar->GetEnum())
+    if (NS_STRETCH_DIRECTION_UNSUPPORTED != aMathMLChar->GetStretchDirection())
     {
       // has changed... so center the char around the axis
       nscoord height = charSize.ascent + charSize.descent;
@@ -526,7 +525,7 @@ nsMathMLmfencedFrame::PlaceChar(nsMathMLChar*      aMathMLChar,
   aMathMLChar->GetRect(rect);
  
   nscoord dy = aDesiredAscent - rect.y;
-  if (aMathMLChar->GetEnum() == eMathMLChar_DONT_STRETCH)
+  if (aMathMLChar->GetStretchDirection() == NS_STRETCH_DIRECTION_UNSUPPORTED)
   {
     // normal char, nsMathMLChar::Paint() will substract this later
     dy += (aFontAscent - bm.ascent);

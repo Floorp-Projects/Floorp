@@ -83,13 +83,6 @@ public:
         nsIRenderingContext& aRenderingContext,
         PRBool               aPlaceOrigin,
         nsHTMLReflowMetrics& aDesiredSize);
-#if 0
-  NS_IMETHOD
-  Reflow(nsIPresContext*          aPresContext,
-         nsHTMLReflowMetrics&     aDesiredSize,
-         const nsHTMLReflowState& aReflowState,
-         nsReflowStatus&          aStatus);
-#endif
 
   NS_IMETHOD 
   Paint(nsIPresContext*      aPresContext,
@@ -98,20 +91,29 @@ public:
         nsFramePaintLayer    aWhichLayer);
 
   NS_IMETHOD
-  UpdatePresentationDataFromChildAt(PRInt32 aIndex, 
-                                    PRInt32 aScriptLevelIncrement,
-                                    PRBool  aDisplayStyle,
-				    PRBool  aCompressed);
-
-  NS_IMETHOD
   SetInitialChildList(nsIPresContext* aPresContext,
                       nsIAtom*        aListName,
                       nsIFrame*       aChildList)
   {
     nsresult rv;
     rv = nsMathMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
-    UpdatePresentationDataFromChildAt(0, 1, PR_FALSE, PR_FALSE);
+    // 1. The REC says:
+    //    The <mfrac> element sets displaystyle to "false", or if it was already
+    //    false increments scriptlevel by 1, within numerator and denominator.
+    // 2. The TeXbook (Ch 17. p.141) says the numerator inherits the compression
+    //    while the denominator is compressed
+    PRInt32 increment =
+       NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags) ? 0 : 1;
+    UpdatePresentationDataFromChildAt(0, -1, increment,
+      ~NS_MATHML_DISPLAYSTYLE,
+       NS_MATHML_DISPLAYSTYLE);
+    UpdatePresentationDataFromChildAt(1,  1, 0,
+       NS_MATHML_COMPRESSED,
+       NS_MATHML_COMPRESSED);
+    // switch the style of the numerator and denominator if necessary
     InsertScriptLevelStyleContext(aPresContext);
+    // check whether or not this is an embellished operator
+    EmbellishOperator();
     return rv;
   }
 
