@@ -2933,8 +2933,7 @@ void
 nsComputedDOMStyle::FlushPendingReflows()
 {
   // Flush all pending notifications so that our frames are up to date
-  nsCOMPtr<nsIDocument> document;
-  mContent->GetDocument(getter_AddRefs(document));
+  nsIDocument* document = mContent->GetDocument();
   if (document) {
     document->FlushPendingNotifications();
   }

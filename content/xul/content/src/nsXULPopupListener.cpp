@@ -245,17 +245,11 @@ XULPopupListenerImpl::PreLaunchPopup(nsIDOMEvent* aMouseEvent)
   }
 
   // Get the document with the popup.
-  nsCOMPtr<nsIDocument> document;
   nsCOMPtr<nsIContent> content = do_QueryInterface(mElement);
-  nsresult rv;
-  if (NS_FAILED(rv = content->GetDocument(getter_AddRefs(document)))) {
-    NS_ERROR("Unable to retrieve the document.");
-    return rv;
-  }
 
   // Turn the document into a XUL document so we can use SetPopupNode.
-  nsCOMPtr<nsIDOMXULDocument> xulDocument = do_QueryInterface(document);
-  if (xulDocument == nsnull) {
+  nsCOMPtr<nsIDOMXULDocument> xulDocument = do_QueryInterface(content->GetDocument());
+  if (!xulDocument) {
     NS_ERROR("Popup attached to an element that isn't in XUL!");
     return NS_ERROR_FAILURE;
   }
@@ -512,12 +506,8 @@ XULPopupListenerImpl::LaunchPopup(PRInt32 aClientX, PRInt32 aClientY)
   }
 
   // Try to find the popup content and the document.
-  nsCOMPtr<nsIDocument> document;
   nsCOMPtr<nsIContent> content = do_QueryInterface(mElement);
-  if (NS_FAILED(rv = content->GetDocument(getter_AddRefs(document)))) {
-    NS_ERROR("Unable to retrieve the document.");
-    return rv;
-  }
+  nsCOMPtr<nsIDocument> document = content->GetDocument();
 
   // Turn the document into a DOM document so we can use getElementById
   nsCOMPtr<nsIDOMDocument> domDocument = do_QueryInterface(document);

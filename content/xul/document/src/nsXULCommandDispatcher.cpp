@@ -351,10 +351,7 @@ nsXULCommandDispatcher::UpdateCommands(const nsAString& aEventName)
     if (! content)
       return NS_ERROR_UNEXPECTED;
 
-    nsCOMPtr<nsIDocument> document;
-    rv = content->GetDocument(getter_AddRefs(document));
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get document");
-    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIDocument> document = content->GetDocument();
 
     NS_ASSERTION(document != nsnull, "element has no document");
     if (! document)

@@ -428,7 +428,7 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
     nsCOMPtr<nsIDocument> document;
     nsCOMPtr<nsIContent> content(do_QueryInterface(mTarget));
     if (content)
-      content->GetDocument(getter_AddRefs(document));
+      document = content->GetDocument();
     else document = do_QueryInterface(mTarget);
     if (document)
       document->GetScriptGlobalObject(getter_AddRefs(global));
@@ -2668,8 +2668,7 @@ nsEventListenerManager::DispatchEvent(nsIDOMEvent* aEvent, PRBool *_retval)
     return NS_ERROR_FAILURE;
   }
   
-  nsCOMPtr<nsIDocument> document;
-  targetContent->GetDocument(getter_AddRefs(document));
+  nsCOMPtr<nsIDocument> document = targetContent->GetDocument();
 
   if (!document) {
     // XXXbz GetOwnerDocument

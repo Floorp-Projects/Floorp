@@ -206,9 +206,7 @@ nsDOMEvent::nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
       if (content->IsNativeAnonymous()) {
         mExplicitOriginalTarget = nsnull;
       }
-      nsCOMPtr<nsIContent> bindingParent;
-      content->GetBindingParent(getter_AddRefs(bindingParent));
-      if (bindingParent) {
+      if (content->GetBindingParent()) {
         mExplicitOriginalTarget = nsnull;
       }
     }

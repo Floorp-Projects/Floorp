@@ -3202,7 +3202,7 @@ RuleProcessorData::RuleProcessorData(nsIPresContext* aPresContext,
 
     // get the tag and parent
     aContent->GetTag(&mContentTag);
-    aContent->GetParent(&mParentContent);
+    mParentContent = aContent->GetParent();
 
     // get the event state
     nsIEventStateManager* eventStateManager = nsnull;
@@ -3268,7 +3268,6 @@ RuleProcessorData::~RuleProcessorData()
   if (mParentData)
     mParentData->Destroy(mPresContext);
 
-  NS_IF_RELEASE(mParentContent);
   NS_IF_RELEASE(mContentTag);
   NS_IF_RELEASE(mContentID);
   NS_IF_RELEASE(mStyledContent);
@@ -3282,8 +3281,8 @@ const nsString* RuleProcessorData::GetLang(void)
     mLanguage = new nsAutoString();
     if (!mLanguage)
       return nsnull;
-    nsCOMPtr<nsIContent> content = mContent;
-    while (content) {
+    for (nsIContent* content = mContent; content;
+         content = content->GetParent()) {
       PRInt32 attrCount = 0;
       content->GetAttrCount(attrCount);
       if (attrCount > 0) {
@@ -3302,10 +3301,6 @@ const nsString* RuleProcessorData::GetLang(void)
           break;
         }
       }
-
-      nsCOMPtr<nsIContent> parent;
-      content->GetParent(getter_AddRefs(parent));
-      content = parent;
     }
   }
   return mLanguage;
@@ -3609,8 +3604,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
                             nsDependentString(pseudoClass->mString), PR_FALSE);
           }
           else {
-            nsCOMPtr<nsIDocument> doc;
-            data.mContent->GetDocument(getter_AddRefs(doc));
+            nsIDocument* doc = data.mContent->GetDocument();
             if (doc) {
               // Try to get the language from the HTTP header or if this
               // is missing as well from the preferences.
@@ -3888,9 +3882,8 @@ static PRBool SelectorMatchesTree(RuleProcessorData &data,
       if (PRUnichar('+') == selector->mOperator) {
         newdata = curdata->mPreviousSiblingData;
         if (!newdata) {
-          nsCOMPtr<nsIContent> parent;
+          nsIContent* parent = lastContent->GetParent();
           PRInt32 index;
-          lastContent->GetParent(getter_AddRefs(parent));
           if (parent) {
             parent->IndexOf(lastContent, index);
             while (0 <= --index) {  // skip text & comment nodes
@@ -3918,8 +3911,9 @@ static PRBool SelectorMatchesTree(RuleProcessorData &data,
       else {
         newdata = curdata->mParentData;
         if (!newdata) {
-          lastContent->GetParent(&content);
+          content = lastContent->GetParent();
           if (content) {
+            NS_ADDREF(content);
             newdata = new (curdata->mPresContext) RuleProcessorData(curdata->mPresContext, content,
                                                                       curdata->mRuleWalker, &compat);
             curdata->mParentData = newdata;    

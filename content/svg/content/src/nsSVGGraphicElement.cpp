@@ -160,7 +160,7 @@ NS_IMETHODIMP nsSVGGraphicElement::GetCTM(nsIDOMSVGMatrix **_retval)
 
     if (!next) {
       // no anonymous parent, so use explicit one
-      parent->GetParent(getter_AddRefs(next));
+      next = parent->GetParent();
     }
 
     parent = next;
@@ -239,7 +239,7 @@ NS_IMETHODIMP nsSVGGraphicElement::GetScreenCTM(nsIDOMSVGMatrix **_retval)
 
     if (!next) {
       // no anonymous parent, so use explicit one
-      parent->GetParent(getter_AddRefs(next));
+      next = parent->GetParent();
     }
 
     parent = next;

@@ -456,8 +456,7 @@ nsXULTreeBuilder::Sort(nsIDOMElement* aElement)
     header->SetAttr(kNameSpaceID_None, nsXULAtoms::sortActive, NS_LITERAL_STRING("true"), PR_TRUE);
 
     // Unset sort attribute(s) on the other columns
-    nsCOMPtr<nsIContent> parentContent;
-    header->GetParent(getter_AddRefs(parentContent));
+    nsIContent* parentContent = header->GetParent();
     if (parentContent) {
         nsCOMPtr<nsIAtom> parentTag;
         parentContent->GetTag(getter_AddRefs(parentTag));
@@ -812,8 +811,7 @@ nsXULTreeBuilder::SetTree(nsITreeBoxObject* tree)
     if (! mBoxObject)
         return NS_OK;
 
-    nsCOMPtr<nsIDocument> doc;
-    mRoot->GetDocument(getter_AddRefs(doc));
+    nsCOMPtr<nsIDocument> doc = mRoot->GetDocument();
     NS_ASSERTION(doc, "element has no document");
     if (!doc)
         return NS_ERROR_UNEXPECTED;
@@ -1346,9 +1344,7 @@ nsXULTreeBuilder::RebuildAll()
     if (! mRoot)
         return NS_ERROR_NOT_INITIALIZED;
 
-    nsCOMPtr<nsIDocument> doc;
-    nsresult rv = mRoot->GetDocument(getter_AddRefs(doc));
-    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIDocument> doc = mRoot->GetDocument();
 
     // Bail out early if we are being torn down.
     if (!doc)
@@ -1361,7 +1357,7 @@ nsXULTreeBuilder::RebuildAll()
     mRows.Clear();
     mConflictSet.Clear();
 
-    rv = CompileRules();
+    nsresult rv = CompileRules();
     if (NS_FAILED(rv)) return rv;
 
     // Seed the rule network with assignments for the tree row

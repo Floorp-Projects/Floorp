@@ -718,7 +718,7 @@ nsSVGElement::GetOwnerSVGElement(nsIDOMSVGSVGElement * *aOwnerSVGElement)
 
     if (!next) {
       // no anonymous parent, so use explicit one
-      parent->GetParent(getter_AddRefs(next));
+      next = parent->GetParent();
     }
     
     parent = next;

@@ -208,11 +208,8 @@ nsXULContentUtils::GetElementResource(nsIContent* aElement, nsIRDFResource** aRe
 
     // Since the element will store its ID attribute as a document-relative value,
     // we may need to qualify it first...
-    nsCOMPtr<nsIDocument> doc;
-    rv = aElement->GetDocument(getter_AddRefs(doc));
-    if (NS_FAILED(rv)) return rv;
-
-    NS_ASSERTION(doc != nsnull, "element is not in any document");
+    nsCOMPtr<nsIDocument> doc = aElement->GetDocument();
+    NS_ASSERTION(doc, "element is not in any document");
     if (! doc)
         return NS_ERROR_FAILURE;
 
@@ -240,9 +237,7 @@ nsXULContentUtils::GetElementRefResource(nsIContent* aElement, nsIRDFResource** 
 
     if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
         // We'll use rdf_MakeAbsolute() to translate this to a URL.
-        nsCOMPtr<nsIDocument> doc;
-        rv = aElement->GetDocument(getter_AddRefs(doc));
-        if (NS_FAILED(rv)) return rv;
+        nsCOMPtr<nsIDocument> doc = aElement->GetDocument();
 
         nsCOMPtr<nsIURI> url;
         doc->GetDocumentURL(getter_AddRefs(url));

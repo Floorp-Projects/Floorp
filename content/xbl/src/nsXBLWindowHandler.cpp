@@ -291,9 +291,7 @@ nsXBLWindowHandler::WalkHandlersInternal(nsIDOMEvent* aEvent,
         elt->GetAttr(kNameSpaceID_None, nsXULAtoms::command, command);
         if (!command.IsEmpty()) {
           // Locate the command element in question.
-          nsCOMPtr<nsIDocument> doc;
-          elt->GetDocument(getter_AddRefs(doc));
-          nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(doc));
+          nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(elt->GetDocument()));
           if (domDoc)
             domDoc->GetElementById(command, getter_AddRefs(commandElt));
 

@@ -266,20 +266,14 @@ XULSortServiceImpl::FindDatabaseElement(nsIContent *aElement, nsIContent **aData
   *aDatabaseElement = nsnull;
 
   // so look from the current node upwards until we find a node with a database
-  nsCOMPtr<nsIContent> content(do_QueryInterface(aElement));
-  while (content) {
+  for (nsIContent* content = aElement; content; content = content->GetParent()) {
     nsCOMPtr<nsIDOMXULElement> element = do_QueryInterface(content);
     nsCOMPtr<nsIRDFCompositeDataSource> db;
     element->GetDatabase(getter_AddRefs(db));
     if (db) {
-      *aDatabaseElement = content;
-      NS_ADDREF(*aDatabaseElement);
+      NS_ADDREF(*aDatabaseElement = content);
       return NS_OK;
     }
-    
-    nsCOMPtr<nsIContent> parent;
-    content->GetParent(getter_AddRefs(parent));
-    content = parent;
   }
 
   return NS_ERROR_FAILURE;
@@ -1090,8 +1084,7 @@ XULSortServiceImpl::SortContainer(nsIContent *container, sortPtr sortInfo, PRBoo
   if (NS_FAILED(rv = container->ChildCount(numChildren))) return rv;
   if (numChildren < 1) return NS_OK;
 
-  nsCOMPtr<nsIDocument> doc;
-  container->GetDocument(getter_AddRefs(doc));
+  nsCOMPtr<nsIDocument> doc = container->GetDocument();
   if (!doc) return NS_ERROR_UNEXPECTED;
 
   // Note: This is a straight allocation (not a COMPtr) so we
@@ -1370,7 +1363,7 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsRDFSort
 
     nsCOMPtr<nsIDocument> doc;
     if (NS_SUCCEEDED(rv) && parent) {
-      rv = parent->GetDocument(getter_AddRefs(doc));
+      doc = parent->GetDocument();
       if (!doc)
         parent = nsnull;
     }
@@ -1636,8 +1629,7 @@ XULSortServiceImpl::Sort(nsIDOMNode* node, const nsAString& sortResource, const 
   SortContainer(container, &sortInfo, invertTreeFlag);
   
   // Now remove the db node and re-insert it to force the frames to be rebuilt.
-  nsCOMPtr<nsIContent> containerParent;
-  if (NS_FAILED(rv = container->GetParent(getter_AddRefs(containerParent))))  return rv;
+  nsCOMPtr<nsIContent> containerParent = container->GetParent();
   PRInt32 containerIndex;
   if (NS_FAILED(rv = containerParent->IndexOf(container, containerIndex)))  return rv;
   PRInt32 childCount;
