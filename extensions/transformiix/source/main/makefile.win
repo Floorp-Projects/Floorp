@@ -59,19 +59,13 @@ CPP_OBJS=                                       \
   ../xml/dom/standalone/$(OBJDIR)/ProcessingInstruction.obj \
   ../xml/dom/standalone/$(OBJDIR)/Text.obj \
   ../xpath/$(OBJDIR)/AdditiveExpr.obj \
-  ../xpath/$(OBJDIR)/AttributeExpr.obj \
   ../xpath/$(OBJDIR)/AttributeValueTemplate.obj \
-  ../xpath/$(OBJDIR)/BasicNodeExpr.obj \
   ../xpath/$(OBJDIR)/BooleanExpr.obj \
   ../xpath/$(OBJDIR)/BooleanFunctionCall.obj \
   ../xpath/$(OBJDIR)/BooleanResult.obj \
-  ../xpath/$(OBJDIR)/ElementExpr.obj \
-  ../xpath/$(OBJDIR)/ErrorFunctionCall.obj \
-  ../xpath/$(OBJDIR)/Expr.obj \
   ../xpath/$(OBJDIR)/ExprLexer.obj \
   ../xpath/$(OBJDIR)/ExprLexerChars.obj \
   ../xpath/$(OBJDIR)/ExprParser.obj \
-  ../xpath/$(OBJDIR)/ExtensionFunctionCall.obj \
   ../xpath/$(OBJDIR)/FilterExpr.obj \
   ../xpath/$(OBJDIR)/FunctionCall.obj \
   ../xpath/$(OBJDIR)/LocationStep.obj \
@@ -88,7 +82,10 @@ CPP_OBJS=                                       \
   ../xpath/$(OBJDIR)/StringExpr.obj \
   ../xpath/$(OBJDIR)/StringFunctionCall.obj \
   ../xpath/$(OBJDIR)/StringResult.obj \
-  ../xpath/$(OBJDIR)/TextExpr.obj \
+  ../xpath/$(OBJDIR)/txNameTest.obj \
+  ../xpath/$(OBJDIR)/txNodeTypeTest.obj \
+  ../xpath/$(OBJDIR)/txForwardContext.obj \
+  ../xpath/$(OBJDIR)/txNodeSetContext.obj \
   ../xpath/$(OBJDIR)/UnionExpr.obj \
   ../xpath/$(OBJDIR)/UnaryExpr.obj \
   ../xpath/$(OBJDIR)/VariableRefExpr.obj \
@@ -105,6 +102,8 @@ CPP_OBJS=                                       \
   ../xslt/$(OBJDIR)/txTextHandler.obj \
   ../xslt/$(OBJDIR)/txTextOutput.obj \
   ../xslt/$(OBJDIR)/txXMLOutput.obj \
+  ../xslt/$(OBJDIR)/txXSLTPatterns.obj \
+  ../xslt/$(OBJDIR)/txPatternParser.obj \
   ../xslt/$(OBJDIR)/VariableBinding.obj \
   ../xslt/$(OBJDIR)/XSLTProcessor.obj \
   ../xslt/functions/$(OBJDIR)/CurrentFunctionCall.obj \

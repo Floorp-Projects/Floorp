@@ -275,21 +275,6 @@ private:
     **/
     short getElementType(Element* aElement, ProcessorState* aPs);
 
-    /**
-     * Notifies all registered ErrorObservers of the given error
-    **/
-    void notifyError(const char* errorMessage);
-
-    /**
-     * Notifies all registered ErrorObservers of the given error
-    **/
-    void notifyError(String& errorMessage);
-
-    /**
-     * Notifies all registered ErrorObservers of the given error
-    **/
-    void notifyError(String& errorMessage, ErrorObserver::ErrorLevel level);
-
 #ifdef TX_EXE
     /**
      * Parses the contents of data, and returns the type and href psuedo attributes

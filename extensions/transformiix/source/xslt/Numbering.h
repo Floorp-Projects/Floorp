@@ -33,7 +33,7 @@
 #include "baseutils.h"
 #include "TxString.h"
 #include "ProcessorState.h"
-#include "Expr.h"
+#include "txXSLTPatterns.h"
 #include "primitives.h"
 #include "ExprResult.h"
 
@@ -41,19 +41,19 @@ class Numbering {
 
 public:
 
-    static void doNumbering
-        (Element* xslNumber, String& dest, Node* context, ProcessorState* ps);
+    static void doNumbering(Element* xslNumber, String& dest,
+                            ProcessorState* ps);
 
 private:
     static int countPreceedingSiblings
-        (PatternExpr* patternExpr, Node* context, ProcessorState* ps);
+        (txPattern* patternExpr, Node* context, ProcessorState* ps);
 
     static NodeSet* getAncestorsOrSelf
-        ( PatternExpr* countExpr,
-          PatternExpr* from,
-          Node* context,
-          ProcessorState* ps,
-          MBool findNearest );
+        (txPattern* countExpr,
+         txPattern* from,
+         Node* context,
+         ProcessorState* ps,
+         MBool findNearest );
 };
 #endif
 

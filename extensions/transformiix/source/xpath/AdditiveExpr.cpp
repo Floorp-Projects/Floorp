@@ -53,21 +53,20 @@ AdditiveExpr::~AdditiveExpr() {
  * for evaluation
  * @return the result of the evaluation
 **/
-ExprResult* AdditiveExpr::evaluate(Node* context, ContextState* cs) {
-
-
+ExprResult* AdditiveExpr::evaluate(txIEvalContext* aContext)
+{
     double rightDbl = Double::NaN;
     ExprResult* exprRes = 0;
 
     if ( rightExpr ) {
-        exprRes = rightExpr->evaluate(context, cs);
+        exprRes = rightExpr->evaluate(aContext);
         if ( exprRes ) rightDbl = exprRes->numberValue();
         delete exprRes;
     }
 
     double leftDbl = Double::NaN;
     if ( leftExpr ) {
-        exprRes = leftExpr->evaluate(context, cs);
+        exprRes = leftExpr->evaluate(aContext);
         if ( exprRes ) leftDbl = exprRes->numberValue();
         delete exprRes;
     }

@@ -33,11 +33,17 @@
 
 #include "Expr.h"
 #include "XMLUtils.h"
+#include "txNodeSetContext.h"
+#include "txSingleNodeContext.h"
 
   //------------/
  //- PathExpr -/
 //------------/
 
+const String PathExpr::RTF_INVALID_OP = 
+    "Result tree fragments don't allow location steps";
+const String PathExpr::NODESET_EXPECTED = 
+    "Filter expression must evaluate to a NodeSet";
 
 /**
  * Creates a new PathExpr
@@ -94,12 +100,14 @@ void PathExpr::addExpr(Expr* expr, PathOperator pathOp)
  * for evaluation
  * @return the result of the evaluation
 **/
-ExprResult* PathExpr::evaluate(Node* context, ContextState* cs)
+ExprResult* PathExpr::evaluate(txIEvalContext* aContext)
 {
-    if (!context || !expressions.getLength())
+    if (!aContext || (expressions.getLength() == 0)) {
+        NS_ASSERTION(0, "internal error");
         return new StringResult("error");
+    }
 
-    NodeSet* nodes = new NodeSet(context);
+    NodeSet* nodes = new NodeSet(aContext->getContextNode());
     if (!nodes) {
         // XXX ErrorReport: out of memory
         NS_ASSERTION(0, "out of memory");
@@ -111,16 +119,18 @@ ExprResult* PathExpr::evaluate(Node* context, ContextState* cs)
 
     while ((pxi = (PathExprItem*)iter.next())) {
         NodeSet* tmpNodes = 0;
-        for (int i = 0; i < nodes->size(); i++) {
-            Node* node = nodes->get(i);
+        txNodeSetContext eContext(nodes, aContext);
+        while (eContext.hasNext()) {
+            eContext.next();
+            Node* node = eContext.getContextNode();
             
             NodeSet* resNodes;
             if (pxi->pathOp == DESCENDANT_OP) {
                 resNodes = new NodeSet;
-                evalDescendants(pxi->expr, node, cs, resNodes);
+                evalDescendants(pxi->expr, node, &eContext, resNodes);
             }
             else {
-                ExprResult *res = pxi->expr->evaluate(node, cs);
+                ExprResult *res = pxi->expr->evaluate(&eContext);
                 if (!res || (res->getResultType() != ExprResult::NODESET)) {
                     //XXX ErrorReport: report nonnodeset error
                     delete res;
@@ -147,12 +157,13 @@ ExprResult* PathExpr::evaluate(Node* context, ContextState* cs)
 /**
  * Selects from the descendants of the context node
  * all nodes that match the Expr
- * -- this will be moving to a Utility class
 **/
-void PathExpr::evalDescendants (Expr* expr, Node* context,
-                                ContextState* cs, NodeSet* resNodes)
+void PathExpr::evalDescendants (Expr* aStep, Node* aNode, 
+                                txIMatchContext* aContext,
+                                NodeSet* resNodes)
 {
-    ExprResult *res = expr->evaluate(context, cs);
+    txSingleNodeContext eContext(aNode, aContext);
+    ExprResult *res = aStep->evaluate(&eContext);
     if (!res || (res->getResultType() != ExprResult::NODESET)) {
         //XXX ErrorReport: report nonnodeset error
     }
@@ -161,106 +172,18 @@ void PathExpr::evalDescendants (Expr* expr, Node* context,
     }
     delete res;
 
-    MBool filterWS = cs->isStripSpaceAllowed(context);
+    MBool filterWS = aContext->isStripSpaceAllowed(aNode);
     
-    Node* child = context->getFirstChild();
+    Node* child = aNode->getFirstChild();
     while (child) {
         if (!(filterWS &&
               (child->getNodeType() == Node::TEXT_NODE ||
                child->getNodeType() == Node::CDATA_SECTION_NODE) &&
               XMLUtils::shouldStripTextnode(child->getNodeValue())))
-            evalDescendants(expr, child, cs, resNodes);
+            evalDescendants(aStep, child, aContext, resNodes);
         child = child->getNextSibling();
     }
 } //-- evalDescendants
-
-/**
- * Returns the default priority of this Pattern based on the given Node,
- * context Node, and ContextState.
-**/
-double PathExpr::getDefaultPriority(Node* node, Node* context,
-                                    ContextState* cs)
-{
-    int size = expressions.getLength();
-    if (size > 1)
-        return 0.5;
-
-    return ((PathExprItem*)expressions.get(0))->
-        expr->getDefaultPriority(node, context, cs);
-} //-- getDefaultPriority
-
-/**
- * Determines whether this Expr matches the given node within
- * the given context
-**/
-MBool PathExpr::matches(Node* node, Node* context, ContextState* cs)
-{
-    /*
-     * The idea is to split up a path into blocks separated by descendant
-     * operators. For example "foo/bar//baz/bop//ying/yang" is split up into
-     * three blocks. The "ying/yang" block is handled by the first while-loop
-     * and the "foo/bar" and "baz/bop" blocks are handled by the second
-     * while-loop.
-     * A block is considered matched when we find a list of ancestors that
-     * match the block. If there are more than one list of ancestors that
-     * match a block we only need to find the one furthermost down in the
-     * tree.
-     */
-
-    if (!node || (expressions.getLength() == 0))
-       return MB_FALSE;
-
-    ListIterator iter(&expressions);
-    iter.resetToEnd();
-
-    PathExprItem* pxi;
-    PathOperator pathOp = RELATIVE_OP;
-    
-    while (pathOp == RELATIVE_OP) {
-
-        pxi = (PathExprItem*)iter.previous();
-        if (!pxi)
-            return MB_TRUE; // We've stepped through the entire list
-
-        if (!node || !pxi->expr->matches(node, 0, cs))
-            return MB_FALSE;
-        
-        node = node->getXPathParent();
-        pathOp = pxi->pathOp;
-    }
-    
-    // We have at least one DESCENDANT_OP
-    
-    Node* blockStart = node;
-    ListIterator blockIter(iter);
-
-    while ((pxi = (PathExprItem*)iter.previous())) {
-
-        if (!node)
-            return MB_FALSE; // There are more steps in the current block 
-                             // then ancestors of the tested node
-
-        if (!pxi->expr->matches(node, 0, cs)) {
-            // Didn't match. We restart at beginning of block using a new
-            // start node
-            iter = blockIter;
-            blockStart = blockStart->getXPathParent();
-            node = blockStart;
-        }
-        else {
-            node = node->getXPathParent();
-            if (pxi->pathOp == DESCENDANT_OP) {
-                // We've matched an entire block. Set new start iter and start node
-                blockIter = iter;
-                blockStart = node;
-            }
-        }
-    }
-    
-    return MB_TRUE;
-
-} //-- matches
-
 
 /**
  * Returns the String representation of this Expr.

@@ -37,19 +37,13 @@ DEFINES=$(DEFINES) -DTX_EXE
 
 CPP_OBJS=						\
 	.\$(OBJDIR)\AdditiveExpr.obj			\
-	.\$(OBJDIR)\AttributeExpr.obj			\
 	.\$(OBJDIR)\AttributeValueTemplate.obj		\
-	.\$(OBJDIR)\BasicNodeExpr.obj			\
 	.\$(OBJDIR)\BooleanExpr.obj			\
 	.\$(OBJDIR)\BooleanFunctionCall.obj		\
 	.\$(OBJDIR)\BooleanResult.obj			\
-	.\$(OBJDIR)\ElementExpr.obj			\
-	.\$(OBJDIR)\ErrorFunctionCall.obj		\
-	.\$(OBJDIR)\Expr.obj				\
 	.\$(OBJDIR)\ExprLexer.obj			\
 	.\$(OBJDIR)\ExprLexerChars.obj			\
 	.\$(OBJDIR)\ExprParser.obj			\
-	.\$(OBJDIR)\ExtensionFunctionCall.obj		\
 	.\$(OBJDIR)\FilterExpr.obj			\
 	.\$(OBJDIR)\FunctionCall.obj			\
 	.\$(OBJDIR)\LocationStep.obj			\
@@ -66,7 +60,10 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\StringExpr.obj			\
 	.\$(OBJDIR)\StringFunctionCall.obj		\
 	.\$(OBJDIR)\StringResult.obj			\
-	.\$(OBJDIR)\TextExpr.obj			\
+	.\$(OBJDIR)\txNameTest.obj			\
+	.\$(OBJDIR)\txNodeTypeTest.obj			\
+	.\$(OBJDIR)\txForwardContext.obj			\
+	.\$(OBJDIR)\txNodeSetContext.obj			\
 	.\$(OBJDIR)\UnionExpr.obj			\
 	.\$(OBJDIR)\UnaryExpr.obj			\
 	.\$(OBJDIR)\VariableRefExpr.obj			\

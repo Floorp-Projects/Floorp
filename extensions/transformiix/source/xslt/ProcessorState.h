@@ -33,11 +33,12 @@
 #include "Stack.h"
 #include "ErrorObserver.h"
 #include "NamedMap.h"
-#include "ExprParser.h"
+#include "txPatternParser.h"
 #include "Expr.h"
 #include "StringList.h"
 #include "txOutputFormat.h"
 #include "Map.h"
+#include "txIXPathContext.h"
 
 class txXSLKey;
 class txDecimalFormat;
@@ -45,7 +46,7 @@ class txDecimalFormat;
 /**
  * Class used for keeping the current state of the XSL Processor
 **/
-class ProcessorState : public ContextState {
+class ProcessorState : public txIMatchContext {
 
 public:
     /**
@@ -146,14 +147,6 @@ public:
     Element* getNamedTemplate(String& aName);
 
     /**
-     * Returns the NodeStack which keeps track of where we are in the
-     * result tree
-     * @return the NodeStack which keeps track of where we are in the
-     * result tree
-    **/
-    NodeStack* getNodeStack();
-
-    /**
      * Returns the OutputFormat which contains information on how
      * to serialize the output. I will be removing this soon, when
      * change to an event based printer, so that I can serialize
@@ -176,7 +169,7 @@ public:
     };
 
     Expr* getExpr(Element* aElem, ExprAttr aAttr);
-    Pattern* getPattern(Element* aElem, PatternAttr aAttr);
+    txPattern* getPattern(Element* aElem, PatternAttr aAttr);
 
     /**
      * Returns a pointer to the result document
@@ -263,28 +256,17 @@ public:
     **/
     void preserveSpace(String& names);
 
-    /**
-     * Removes and returns the current node being processed from the stack
-     * @return the current node
-    **/
-    Node* popCurrentNode();
-
     void processAttrValueTemplate(const String& aAttValue,
-                                  Node* aContext,
+                                  Element* aContext,
                                   String& aResult);
-
-    /**
-     * Sets the given source node as the "current node" being processed
-     * @param node the source node currently being processed
-    **/
-    void pushCurrentNode(Node* node);
 
     /**
      * Adds the set of names to the Whitespace stripping handling list.
      * xsl:strip-space calls this with MB_TRUE, xsl:preserve-space 
      * with MB_FALSE
+     * aElement is used to resolve QNames
      */
-    void shouldStripSpace(String& aNames,
+    void shouldStripSpace(String& aNames, Element* aElement,
                           MBool aShouldStrip,
                           ImportFrame* aImportFrame);
 
@@ -310,64 +292,61 @@ public:
     **/
     txDecimalFormat* getDecimalFormat(String& name);
 
-    //-------------------------------------/
-    //- Virtual Methods from ContextState -/
-    //-------------------------------------/
+    /*
+     * Virtual methods from txIEvalContext
+     */
+
+    TX_DECL_MATCH_CONTEXT;
+
+    /*
+     * Set the current txIEvalContext and get the prior one
+     */
+    txIEvalContext* setEvalContext(txIEvalContext* aEContext)
+    {
+        txIEvalContext* tmp = mEvalContext;
+        mEvalContext = aEContext;
+        return tmp;
+    }
+
+    /*
+     * Get the current txIEvalContext
+     */
+    txIEvalContext* getEvalContext()
+    {
+        return mEvalContext;
+    }
+
+
+    /*
+     * More other functions
+     */
+    void receiveError(String& errorMessage)
+    {
+        receiveError(errorMessage, NS_ERROR_FAILURE);
+    }
 
     /**
-     * Returns the value of a given variable binding within the current scope
-     * @param the name to which the desired variable value has been bound
-     * @return the ExprResult which has been bound to the variable with
-     *  the given name
-    **/
-    virtual ExprResult* getVariable(String& name);
-
-    /**
-     * Returns the Stack of context NodeSets
-     * @return the Stack of context NodeSets
-    **/
-    virtual Stack* getNodeSetStack();
-
-    /**
-     * Determines if the given XML node allows Whitespace stripping
-    **/
-    virtual MBool isStripSpaceAllowed(Node* node);
-
-    /**
-     *  Notifies this Error observer of a new error, with default
-     *  level of NORMAL
-    **/
-    virtual void recieveError(String& errorMessage);
-
-    /**
-     *  Notifies this Error observer of a new error using the given error level
-    **/
-    virtual void recieveError(String& errorMessage, ErrorLevel level);
-
-    /**
-     * Returns a call to the function that has the given name.
-     * This method is used for XPath Extension Functions.
+     * Returns a FunctionCall which has the given name.
      * @return the FunctionCall for the function with the given name.
     **/
-    virtual FunctionCall* resolveFunctionCall(const String& name);
-
-    /**
-     * Returns the namespace URI for the given namespace prefix. This method
-     * should only be called to get a namespace declared within the
-     * context (ie. the stylesheet).
-    **/
-    void getNameSpaceURIFromPrefix(const String& aPrefix, String& aNamespaceURI);
+    nsresult resolveFunctionCall(txAtom* aName, PRInt32 aID,
+                                 Element* aElem, FunctionCall*& aFunction);
 
 private:
 
     enum XMLSpaceMode {STRIP = 0, DEFAULT, PRESERVE};
 
-    struct MatchableTemplate {
+    class MatchableTemplate {
+    public:
+        MatchableTemplate(Node* aTemplate, txPattern* aPattern,
+                          double aPriority)
+            : mTemplate(aTemplate), mMatch(aPattern), mPriority(aPriority)
+        {
+        }
         Node* mTemplate;
-        Pattern* mMatch;
+        txPattern* mMatch;
+        double mPriority;
     };
-
-    NodeStack currentNodeStack;
 
     /**
      * The list of ErrorObservers registered with this ProcessorState
@@ -424,17 +403,19 @@ private:
     Map            mPatternHashes[2];
 
     /*
+     * Current txIEvalContext*
+     */
+    txIEvalContext* mEvalContext;
+
+    /*
      * Current template rule
      */
     TemplateRule*  mCurrentTemplateRule;
 
-    Element*       mXPathParseContext;
-    Stack          nodeSetStack;
     Document*      mSourceDocument;
     Document*      xslDocument;
     Document*      resultDocument;
     Stack          variableSets;
-    ExprParser     exprParser;
 
     /**
      * Returns the closest xml:space value for the given node
@@ -454,11 +435,15 @@ private:
 **/
 class txNameTestItem {
 public:
-    txNameTestItem(String& aName, MBool stripSpace):
-        mNameTest(aName),mStrips(stripSpace) {}
+    txNameTestItem(txAtom* aPrefix, txAtom* aLocalName, PRUint32 aNSID,
+                   MBool stripSpace)
+        : mNameTest(aPrefix, aLocalName, aNSID, Node::ELEMENT_NODE),
+          mStrips(stripSpace)
+    {
+    }
 
-    MBool matches(Node* aNode, ContextState* aCS) {
-        return mNameTest.matches(aNode, 0, aCS);
+    MBool matches(Node* aNode, txIMatchContext* aContext) {
+        return mNameTest.matches(aNode, aContext);
     }
 
     MBool stripsSpace() {
@@ -466,12 +451,38 @@ public:
     }
 
     double getDefaultPriority() {
-        return mNameTest.getDefaultPriority(0, 0, 0);
+        return mNameTest.getDefaultPriority();
     }
 
 protected:
-    ElementExpr mNameTest;
+    txNameTest mNameTest;
     MBool mStrips;
+};
+
+/*
+ * txPSParseContext
+ * a txIParseContext forwarding all but resolveNamespacePrefix
+ * to a ProcessorState
+ */
+class txPSParseContext : public txIParseContext {
+public:
+    txPSParseContext(ProcessorState* aPS, Element* aStyleNode)
+        : mPS(aPS), mStyle(aStyleNode)
+    {
+    }
+
+    ~txPSParseContext()
+    {
+    }
+
+    nsresult resolveNamespacePrefix(txAtom* aPrefix, PRInt32& aID);
+    nsresult resolveFunctionCall(txAtom* aName, PRInt32 aID,
+                                 FunctionCall*& aFunction);
+    void receiveError(const String& aMsg, nsresult aRes);
+
+protected:
+    ProcessorState* mPS;
+    Element* mStyle;
 };
 
 #endif

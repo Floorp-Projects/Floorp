@@ -28,15 +28,17 @@
 */
 
 #include "Expr.h"
+#include "txIXPathContext.h"
 
 /**
  * Creates a new LocationStep using the given NodeExpr and Axis Identifier
  * @param nodeExpr the NodeExpr to use when matching Nodes
  * @param axisIdentifier the Axis Identifier in which to search for nodes
 **/
-LocationStep::LocationStep(NodeExpr* nodeExpr, short axisIdentifier) : PredicateList() {
-    this->nodeExpr = nodeExpr;
-    this->axisIdentifier = axisIdentifier;
+LocationStep::LocationStep(txNodeTest* aNodeTest,
+                           LocationStepType aAxisIdentifier)
+    : mNodeTest(aNodeTest), mAxisIdentifier(aAxisIdentifier)
+{
 } //-- LocationStep
 
 /**
@@ -45,7 +47,7 @@ LocationStep::LocationStep(NodeExpr* nodeExpr, short axisIdentifier) : Predicate
  * The NodeExpr will be deleted
 **/
 LocationStep::~LocationStep() {
-    delete nodeExpr;
+    delete mNodeTest;
 } //-- ~LocationStep
 
   //-----------------------------/
@@ -60,23 +62,25 @@ LocationStep::~LocationStep() {
  * @return the result of the evaluation
  * @see Expr
 **/
-ExprResult* LocationStep::evaluate(Node* context, ContextState* cs) {
+ExprResult* LocationStep::evaluate(txIEvalContext* aContext)
+{
+    NS_ASSERTION(aContext, "internal error");
 
     NodeSet* nodes = new NodeSet();
-    if (!context || !nodeExpr || !nodes)
-        return nodes;
+    if (!nodes)
+        return 0;
 
     MBool reverse = MB_FALSE;
 
-    Node* node = context;
-    switch (axisIdentifier) {
+    Node* node = aContext->getContextNode();
+    switch (mAxisIdentifier) {
         case ANCESTOR_AXIS :
-            node = context->getXPathParent();
+            node = node->getXPathParent();
             //-- do not break here
         case ANCESTOR_OR_SELF_AXIS :
             reverse = MB_TRUE;
             while (node) {
-                if (nodeExpr->matches(node, context, cs)) {
+                if (mNodeTest->matches(node, aContext)) {
                     nodes->append(node);
                 }
                 node = node->getXPathParent();
@@ -84,28 +88,28 @@ ExprResult* LocationStep::evaluate(Node* context, ContextState* cs) {
             break;
         case ATTRIBUTE_AXIS :
         {
-            NamedNodeMap* atts = context->getAttributes();
+            NamedNodeMap* atts = node->getAttributes();
             if (atts) {
                 for (PRUint32 i = 0; i < atts->getLength(); i++) {
                     Node* attr = atts->item(i);
-                    if (nodeExpr->matches(attr, context, cs))
+                    if (mNodeTest->matches(attr, aContext))
                         nodes->append(attr);
                 }
             }
             break;
         }
         case DESCENDANT_OR_SELF_AXIS :
-            if (nodeExpr->matches(context, context, cs))
-                nodes->append(context);
+            if (mNodeTest->matches(node, aContext))
+                nodes->append(node);
             //-- do not break here
         case DESCENDANT_AXIS :
-            fromDescendants(context, cs, nodes);
+            fromDescendants(node, aContext, nodes);
             break;
         case FOLLOWING_AXIS :
         {
             if ( node->getNodeType() == Node::ATTRIBUTE_NODE) {
                 node = node->getXPathParent();
-                fromDescendants(node, cs, nodes);
+                fromDescendants(node, aContext, nodes);
             }
             while (node && !node->getNextSibling()) {
                 node = node->getXPathParent();
@@ -113,11 +117,11 @@ ExprResult* LocationStep::evaluate(Node* context, ContextState* cs) {
             while (node) {
                 node = node->getNextSibling();
 
-                if (nodeExpr->matches(node, context, cs))
+                if (mNodeTest->matches(node, aContext))
                     nodes->append(node);
 
                 if (node->hasChildNodes())
-                    fromDescendants(node, cs, nodes);
+                    fromDescendants(node, aContext, nodes);
 
                 while (node && !node->getNextSibling()) {
                     node = node->getParentNode();
@@ -126,9 +130,9 @@ ExprResult* LocationStep::evaluate(Node* context, ContextState* cs) {
             break;
         }
         case FOLLOWING_SIBLING_AXIS :
-            node = context->getNextSibling();
+            node = node->getNextSibling();
             while (node) {
-                if (nodeExpr->matches(node, context, cs))
+                if (mNodeTest->matches(node, aContext))
                     nodes->append(node);
                 node = node->getNextSibling();
             }
@@ -141,8 +145,8 @@ ExprResult* LocationStep::evaluate(Node* context, ContextState* cs) {
             break;
         case PARENT_AXIS :
         {
-            Node* parent = context->getXPathParent();
-            if ( nodeExpr->matches(parent, context, cs) )
+            Node* parent = node->getXPathParent();
+            if (mNodeTest->matches(parent, aContext))
                     nodes->append(parent);
             break;
         }
@@ -155,9 +159,9 @@ ExprResult* LocationStep::evaluate(Node* context, ContextState* cs) {
                 node = node->getPreviousSibling();
 
                 if (node->hasChildNodes())
-                    fromDescendantsRev(node, cs, nodes);
+                    fromDescendantsRev(node, aContext, nodes);
 
-                if (nodeExpr->matches(node, context, cs))
+                if (mNodeTest->matches(node, aContext))
                     nodes->append(node);
 
                 while (node && !node->getPreviousSibling()) {
@@ -167,56 +171,48 @@ ExprResult* LocationStep::evaluate(Node* context, ContextState* cs) {
             break;
         case PRECEDING_SIBLING_AXIS:
             reverse = MB_TRUE;
-            node = context->getPreviousSibling();
+            node = node->getPreviousSibling();
             while (node) {
-                if (nodeExpr->matches(node, context, cs))
+                if (mNodeTest->matches(node, aContext))
                     nodes->append(node);
                 node = node->getPreviousSibling();
             }
             break;
         case SELF_AXIS :
-            if (nodeExpr->matches(context, context, cs))
-                    nodes->append(context);
+            if (mNodeTest->matches(node, aContext))
+                nodes->append(node);
             break;
         default: //-- Children Axis
         {
-            Node* tmpNode = context->getFirstChild();
-            while (tmpNode) {
-                if (nodeExpr->matches(tmpNode, context, cs))
-                    nodes->append(tmpNode);
-                tmpNode = tmpNode->getNextSibling();
+            node = node->getFirstChild();
+            while (node) {
+                if (mNodeTest->matches(node, aContext))
+                    nodes->append(node);
+                node = node->getNextSibling();
             }
             break;
         }
     } //-- switch
 
     //-- apply predicates
-    evaluatePredicates(nodes, cs);
+    if (!isEmpty())
+        evaluatePredicates(nodes, aContext);
 
     if (reverse)
         nodes->reverse();
 
     return nodes;
-} //-- evaluate
+}
 
-/**
- * Returns the default priority of this Pattern based on the given Node,
- * context Node, and ContextState.
-**/
-double LocationStep::getDefaultPriority(Node* node, Node* context, ContextState* cs) {
-    if (isEmpty())
-        return nodeExpr->getDefaultPriority(node, context, cs);
-    return 0.5;
-} //-- getDefaultPriority
+void LocationStep::fromDescendants(Node* node, txIMatchContext* cs,
+                                   NodeSet* nodes)
+{
+    if (!node)
+        return;
 
-
-void LocationStep::fromDescendants(Node* context, ContextState* cs, NodeSet* nodes) {
-
-    if ( !context || !nodeExpr ) return;
-
-    Node* child = context->getFirstChild();
+    Node* child = node->getFirstChild();
     while (child) {
-        if (nodeExpr->matches(child, context, cs))
+        if (mNodeTest->matches(child, cs))
             nodes->append(child);
         //-- check childs descendants
         if (child->hasChildNodes())
@@ -227,17 +223,19 @@ void LocationStep::fromDescendants(Node* context, ContextState* cs, NodeSet* nod
 
 } //-- fromDescendants
 
-void LocationStep::fromDescendantsRev(Node* context, ContextState* cs, NodeSet* nodes) {
+void LocationStep::fromDescendantsRev(Node* node, txIMatchContext* cs,
+                                      NodeSet* nodes)
+{
+    if (!node)
+        return;
 
-    if ( !context || !nodeExpr ) return;
-
-    Node* child = context->getLastChild();
+    Node* child = node->getLastChild();
     while (child) {
         //-- check childs descendants
         if (child->hasChildNodes())
             fromDescendantsRev(child, cs, nodes);
 
-        if (nodeExpr->matches(child, context, cs))
+        if (mNodeTest->matches(child, cs))
             nodes->append(child);
 
         child = child->getPreviousSibling();
@@ -246,39 +244,12 @@ void LocationStep::fromDescendantsRev(Node* context, ContextState* cs, NodeSet* 
 } //-- fromDescendantsRev
 
 /**
- * Determines whether this Expr matches the given node within
- * the given context
-**/
-MBool LocationStep::matches(Node* node, Node* context, ContextState* cs) {
-
-    if (!nodeExpr || !node)
-        return MB_FALSE;
-
-    if (!nodeExpr->matches(node, context, cs))
-        return MB_FALSE;
-
-    MBool result = MB_TRUE;
-    if (!isEmpty()) {
-        NodeSet* nodes = (NodeSet*)evaluate(node->getXPathParent(),cs);
-        result = nodes->contains(node);
-        delete nodes;
-    }
-    else if (axisIdentifier == CHILD_AXIS ) {
-        if (!node->getParentNode())
-            result = MB_FALSE;
-    }
-
-    return result;
-
-} //-- matches
-
-/**
  * Creates a String representation of this Expr
  * @param str the destination String to append to
  * @see Expr
 **/
 void LocationStep::toString(String& str) {
-    switch (axisIdentifier) {
+    switch (mAxisIdentifier) {
         case ANCESTOR_AXIS :
             str.append("ancestor::");
             break;
@@ -318,8 +289,9 @@ void LocationStep::toString(String& str) {
         default:
             break;
     }
-    if ( nodeExpr ) nodeExpr->toString(str);
-    else str.append("null");
+    NS_ASSERTION(mNodeTest, "mNodeTest is null, that's verboten");
+    mNodeTest->toString(str);
+
     PredicateList::toString(str);
-} //-- toString
+} // toString
 

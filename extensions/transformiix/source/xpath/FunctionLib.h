@@ -125,14 +125,7 @@ public:
     **/
     BooleanFunctionCall(BooleanFunctions aType);
 
-    /**
-     * Evaluates this Expr based on the given context node and processor state
-     * @param context the context node for evaluation of this Expr
-     * @param ps the ContextState containing the stack information needed
-     * for evaluation
-     * @return the result of the evaluation
-    **/
-    ExprResult* evaluate(Node* aContext, ContextState* aCs);
+    TX_DECL_EVALUATE;
 
 private:
     BooleanFunctions mType;
@@ -148,14 +141,7 @@ public:
     ErrorFunctionCall();
     ErrorFunctionCall(const String& errorMsg);
 
-    /**
-     * Evaluates this Expr based on the given context node and processor state
-     * @param context the context node for evaluation of this Expr
-     * @param ps the ContextState containing the stack information needed
-     * for evaluation
-     * @return the result of the evaluation
-    **/
-    virtual ExprResult* evaluate(Node* context, ContextState* cs);
+    TX_DECL_EVALUATE;
 
     void setErrorMessage(String& errorMsg);
 
@@ -164,89 +150,6 @@ private:
     String errorMessage;
 
 }; //-- ErrorFunctionCall
-
-
-/**
- * Used for extension functions
-**/
-class ExtensionFunctionCall : public FunctionCall {
-
-public:
-
-    static const String UNDEFINED_FUNCTION;
-
-    /**
-     * Creates a new ExtensionFunctionCall with the given function name
-     * @param name the name of the extension function
-    **/
-    ExtensionFunctionCall(const String& name);
-
-    /**
-     * Destructor for extension function call
-    **/
-    virtual ~ExtensionFunctionCall();
-
-    /**
-     * Evaluates this Expr based on the given context node and processor state
-     * @param context the context node for evaluation of this Expr
-     * @param ps the ContextState containing the stack information needed
-     * for evaluation
-     * @return the result of the evaluation
-    **/
-    virtual ExprResult* evaluate(Node* context, ContextState* cs);
-
-private:
-
-    String fname;
-    FunctionCall* fnCall;
-
-};
-
-/**
- * This class is used by ExtensionFunctionCall, to prevent deletion
- * of the parameter expressions, by the resolved function call. The implementation
- * for this class is in ExtensionFunctionCall.cpp
-**/
-class ExprWrapper : public Expr {
-
-public:
-
-    /**
-     * Creates a new ExprWrapper for the given Expr
-    **/
-    ExprWrapper(Expr* expr);
-
-    /**
-     * Destructor for ExprWrapper
-    **/
-    virtual ~ExprWrapper();
-
-    /**
-     * Evaluates this Expr based on the given context node and processor state
-     * @param context the context node for evaluation of this Expr
-     * @param ps the ContextState containing the stack information needed
-     * for evaluation
-     * @return the result of the evaluation
-    **/
-    virtual ExprResult* evaluate(Node* context, ContextState* cs);
-
-    /**
-     * Returns the String representation of this Expr.
-     * @param dest the String to use when creating the String
-     * representation. The String representation will be appended to
-     * any data in the destination String, to allow cascading calls to
-     * other #toString() methods for Expressions.
-     * @return the String representation of this Expr.
-    **/
-    virtual void toString(String& str);
-
-private:
-
-    Expr* expr;
-
-}; //-- ExprWrapper
-
-
 
 /*
  * A representation of the XPath NodeSet funtions
@@ -270,14 +173,7 @@ public:
      */
     NodeSetFunctionCall(NodeSetFunctions aType);
 
-    /*
-     * Evaluates this Expr based on the given context node and processor state
-     * @param context the context node for evaluation of this Expr
-     * @param ps the ContextState containing the stack information needed
-     * for evaluation
-     * @return the result of the evaluation
-     */
-    ExprResult* evaluate(Node* aContext, ContextState* aCs);
+    TX_DECL_EVALUATE;
 
 private:
     NodeSetFunctions mType;
@@ -309,14 +205,7 @@ public:
     **/
     StringFunctionCall(StringFunctions aType);
 
-    /**
-     * Evaluates this Expr based on the given context node and processor state
-     * @param context the context node for evaluation of this Expr
-     * @param ps the ContextState containing the stack information needed
-     * for evaluation
-     * @return the result of the evaluation
-    **/
-    ExprResult* evaluate(Node* aContext, ContextState* aCs);
+    TX_DECL_EVALUATE;
 
 private:
     StringFunctions mType;
@@ -343,14 +232,7 @@ public:
      */
     NumberFunctionCall(NumberFunctions aType);
 
-    /*
-     * Evaluates this Expr based on the given context node and processor state
-     * @param context the context node for evaluation of this Expr
-     * @param ps the ContextState containing the stack information needed
-     * for evaluation
-     * @return the result of the evaluation
-     */
-    ExprResult* evaluate(Node* aContext, ContextState* aCs);
+    TX_DECL_EVALUATE;
 
 private:
     NumberFunctions mType;

@@ -24,6 +24,7 @@
  */
 
 #include "Expr.h"
+#include "txNodeSetContext.h"
 
 /*
  * Represents an ordered list of Predicates,
@@ -56,38 +57,39 @@ void PredicateList::add(Expr* expr)
     predicates.add(expr);
 } // add
 
-void PredicateList::evaluatePredicates(NodeSet* nodes, ContextState* cs)
+void PredicateList::evaluatePredicates(NodeSet* nodes,
+                                       txIMatchContext* aContext)
 {
     NS_ASSERTION(nodes, "called evaluatePredicates with NULL NodeSet");
     if (!nodes)
         return;
 
-    cs->getNodeSetStack()->push(nodes);
     NodeSet newNodes;
     txListIterator iter(&predicates);
-    while (iter.hasNext()) {
+    while (iter.hasNext() && !nodes->isEmpty()) {
         Expr* expr = (Expr*)iter.next();
+        txNodeSetContext predContext(nodes, aContext);
         /*
          * add nodes to newNodes that match the expression
          * or, if the result is a number, add the node with the right
          * position
          */
         newNodes.clear();
-        int nIdx;
-        for (nIdx = 0; nIdx < nodes->size(); nIdx++) {
-            Node* node = nodes->get(nIdx);
-            ExprResult* exprResult = expr->evaluate(node, cs);
+        while (predContext.hasNext()) {
+            predContext.next();
+            ExprResult* exprResult = expr->evaluate(&predContext);
             if (!exprResult)
                 break;
             switch(exprResult->getResultType()) {
                 case ExprResult::NUMBER :
                     // handle default, [position() == numberValue()]
-                    if ((double)(nIdx+1) == exprResult->numberValue())
-                        newNodes.append(node);
+                    if ((double)predContext.position() ==
+                        exprResult->numberValue())
+                        newNodes.append(predContext.getContextNode());
                     break;
                 default:
                     if (exprResult->booleanValue())
-                        newNodes.append(node);
+                        newNodes.append(predContext.getContextNode());
                     break;
             }
             delete exprResult;
@@ -96,7 +98,6 @@ void PredicateList::evaluatePredicates(NodeSet* nodes, ContextState* cs)
         nodes->clear();
         nodes->append(&newNodes);
     }
-    cs->getNodeSetStack()->pop();
 }
 
 /*

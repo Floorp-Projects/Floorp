@@ -1,6 +1,7 @@
 #include "XSLTFunctions.h"
 #include "XMLUtils.h"
 #include "Names.h"
+#include "txIXPathContext.h"
 
 const String XSL_VERSION_PROPERTY    = "version";
 const String XSL_VENDOR_PROPERTY     = "vendor";
@@ -12,9 +13,11 @@ const String XSL_VENDOR_URL_PROPERTY = "vendor-url";
 
 /**
  * Creates a new system-property function call
+ * aNode is the Element in the stylesheet containing the 
+ * Expr and is used for namespaceID resolution
 **/
-SystemPropertyFunctionCall::SystemPropertyFunctionCall() :
-        FunctionCall(SYSTEM_PROPERTY_FN)
+SystemPropertyFunctionCall::SystemPropertyFunctionCall(Element* aNode) :
+    mStylesheetNode(aNode), FunctionCall(SYSTEM_PROPERTY_FN)
 {
 }
 
@@ -26,22 +29,29 @@ SystemPropertyFunctionCall::SystemPropertyFunctionCall() :
  * @return the result of the evaluation
  * @see FunctionCall.h
 **/
-ExprResult* SystemPropertyFunctionCall::evaluate(Node* context, ContextState* cs) {
+ExprResult* SystemPropertyFunctionCall::evaluate(txIEvalContext* aContext)
+{
     ExprResult* result = NULL;
 
-    if ( requireParams(1,1,cs) ) {
+    if (requireParams(1, 1, aContext)) {
         ListIterator* iter = params.iterator();
         Expr* param = (Expr*) iter->next();
         delete iter;
-        ExprResult* exprResult = param->evaluate(context, cs);
+        ExprResult* exprResult = param->evaluate(aContext);
         if (exprResult->getResultType() == ExprResult::STRING) {
             String property;
             exprResult->stringValue(property);
             if (XMLUtils::isValidQName(property)) {
-                String propertyNsURI, prefix;
+                String prefix;
+                PRInt32 namespaceID = kNameSpaceID_None;
                 XMLUtils::getPrefix(property, prefix);
-                cs->getNameSpaceURIFromPrefix(prefix, propertyNsURI);
-                if (propertyNsURI.isEqual(XSLT_NS)) {
+                if (!prefix.isEmpty()) {
+                    txAtom* prefixAtom = TX_GET_ATOM(prefix);
+                    namespaceID =
+                        mStylesheetNode->lookupNamespaceID(prefixAtom);
+                    TX_IF_RELEASE_ATOM(prefixAtom);
+                }
+                if (namespaceID == kNameSpaceID_XSLT) {
                     String localName;
                     XMLUtils::getLocalPart(property, localName);
                     if (localName.isEqual(XSL_VERSION_PROPERTY))
@@ -55,6 +65,7 @@ ExprResult* SystemPropertyFunctionCall::evaluate(Node* context, ContextState* cs
         }
         else {
             String err("Invalid argument passed to system-property(), expecting String");
+            aContext->receiveError(err, NS_ERROR_XPATH_INVALID_ARG);
             result = new StringResult(err);
         }
     }

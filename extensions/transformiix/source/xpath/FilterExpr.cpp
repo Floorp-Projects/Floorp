@@ -26,6 +26,7 @@
  */
 
 #include "Expr.h"
+#include "txIXPathContext.h"
 
 //-- Implementation of FilterExpr --/
 
@@ -56,64 +57,30 @@ FilterExpr::~FilterExpr() {
  * @return the result of the evaluation
  * @see Expr
 **/
-ExprResult* FilterExpr::evaluate(Node* context, ContextState* cs) {
-
-    if (!context || !expr)
+ExprResult* FilterExpr::evaluate(txIEvalContext* aContext)
+{
+    if (!aContext || !expr)
         return new NodeSet;
 
-    ExprResult* exprResult = expr->evaluate(context, cs);
+    ExprResult* exprResult = expr->evaluate(aContext);
     if (!exprResult)
         return 0;
     
     if (exprResult->getResultType() == ExprResult::NODESET) {
         // Result is a nodeset, filter it.
-        evaluatePredicates((NodeSet*)exprResult, cs);
+        evaluatePredicates((NodeSet*)exprResult, aContext);
     }
     else if(!isEmpty()) {
         // We can't filter a non-nodeset
         String err("Expecting nodeset as result of: ");
         expr->toString(err);
-        cs->recieveError(err);
+        aContext->receiveError(err, NS_ERROR_XPATH_EVAL_FAILED);
         delete exprResult;
         return new NodeSet;
     }
 
     return exprResult;
 } //-- evaluate
-
-/**
- * Returns the default priority of this Pattern based on the given Node,
- * context Node, and ContextState.
-**/
-double FilterExpr::getDefaultPriority(Node* node, Node* context, ContextState* cs) {
-    NS_ASSERTION(0, "FilterExpr is not allowed in Patterns");
-
-    if (isEmpty())
-        return expr->getDefaultPriority(node, context, cs);
-    return 0.5;
-} //-- getDefaultPriority
-
-/**
- * Determines whether this Expr matches the given node within
- * the given context
-**/
-MBool FilterExpr::matches(Node* node, Node* context, ContextState* cs) {
-
-    if (!expr)
-        return MB_FALSE;
-        
-    ExprResult* exprResult = evaluate(node, cs);
-    if (!exprResult)
-        return MB_FALSE;
-
-    MBool result = MB_FALSE;
-    if(exprResult->getResultType() == ExprResult::NODESET)
-        result = ((NodeSet*)exprResult)->contains(node);
-
-    delete exprResult;
-    return result;
-
-} //-- matches
 
 /**
  * Creates a String representation of this Expr

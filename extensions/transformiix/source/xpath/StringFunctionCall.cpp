@@ -31,6 +31,7 @@
 
 #include "FunctionLib.h"
 #include "XMLDOMUtils.h"
+#include "txIXPathContext.h"
 #include <math.h>
 
 /**
@@ -76,41 +77,42 @@ StringFunctionCall::StringFunctionCall(StringFunctions aType) : mType(aType)
  * for evaluation
  * @return the result of the evaluation
 **/
-ExprResult* StringFunctionCall::evaluate(Node* aContext, ContextState* aCs)
+ExprResult* StringFunctionCall::evaluate(txIEvalContext* aContext)
 {
     ListIterator iter(&params);
     switch (mType) {
         case CONCAT:
         {
-            if (!requireParams(2, aCs))
+            if (!requireParams(2, aContext))
                 return new StringResult("error");
                 
             String resultStr;
             while (iter.hasNext()) {
-                evaluateToString((Expr*)iter.next(), aContext, aCs, resultStr);
+                evaluateToString((Expr*)iter.next(), aContext, resultStr);
             }
             return new StringResult(resultStr);
         }
         case CONTAINS:
         {
-            if (!requireParams(2, 2, aCs))
+            if (!requireParams(2, 2, aContext))
                 return new StringResult("error");
 
             String arg1, arg2;
-            evaluateToString((Expr*)iter.next(), aContext, aCs, arg1);
-            evaluateToString((Expr*)iter.next(), aContext, aCs, arg2);
+            evaluateToString((Expr*)iter.next(), aContext, arg1);
+            evaluateToString((Expr*)iter.next(), aContext, arg2);
             return new BooleanResult(arg1.indexOf(arg2) >= 0);
         }
         case NORMALIZE_SPACE:
         {
-            if (!requireParams(0, 1, aCs))
+            if (!requireParams(0, 1, aContext))
                 return new StringResult("error");
 
             String resultStr;
             if (iter.hasNext())
-                evaluateToString((Expr*)iter.next(), aContext, aCs, resultStr);
+                evaluateToString((Expr*)iter.next(), aContext, resultStr);
             else
-                XMLDOMUtils::getNodeValue(aContext, resultStr);
+                XMLDOMUtils::getNodeValue(aContext->getContextNode(),
+                                          resultStr);
 
             MBool addSpace = MB_FALSE;
             MBool first = MB_TRUE;
@@ -136,35 +138,36 @@ ExprResult* StringFunctionCall::evaluate(Node* aContext, ContextState* aCs)
         }
         case STARTS_WITH:
         {
-            if (!requireParams(2, 2, aCs))
+            if (!requireParams(2, 2, aContext))
                 return new StringResult("error");
 
             String arg1, arg2;
-            evaluateToString((Expr*)iter.next(), aContext, aCs, arg1);
-            evaluateToString((Expr*)iter.next(), aContext, aCs, arg2);
+            evaluateToString((Expr*)iter.next(), aContext, arg1);
+            evaluateToString((Expr*)iter.next(), aContext, arg2);
             return new BooleanResult(arg1.indexOf(arg2) == 0);
         }
         case STRING_LENGTH:
         {
-            if (!requireParams(0, 1, aCs))
+            if (!requireParams(0, 1, aContext))
                 return new StringResult("error");
 
             String resultStr;
             if (iter.hasNext())
-                evaluateToString((Expr*)iter.next(), aContext, aCs, resultStr);
+                evaluateToString((Expr*)iter.next(), aContext, resultStr);
             else
-                XMLDOMUtils::getNodeValue(aContext, resultStr);
+                XMLDOMUtils::getNodeValue(aContext->getContextNode(),
+                                          resultStr);
             return new NumberResult(resultStr.length());
         }
         case SUBSTRING:
         {
-            if (!requireParams(2, 3, aCs))
+            if (!requireParams(2, 3, aContext))
                 return new StringResult("error");
 
             String src;
             double start, end;
-            evaluateToString((Expr*)iter.next(), aContext, aCs, src);
-            start = evaluateToNumber((Expr*)iter.next(), aContext, aCs);
+            evaluateToString((Expr*)iter.next(), aContext, src);
+            start = evaluateToNumber((Expr*)iter.next(), aContext);
 
             // check for NaN or +/-Inf
             if (Double::isNaN(start) ||
@@ -175,8 +178,7 @@ ExprResult* StringFunctionCall::evaluate(Node* aContext, ContextState* aCs)
             start = floor(start + 0.5) - 1;
             if (iter.hasNext()) {
                 end = start + evaluateToNumber((Expr*)iter.next(),
-                                               aContext,
-                                               aCs);
+                                               aContext);
                 if (Double::isNaN(end) || end < 0)
                     return new StringResult();
                 
@@ -201,12 +203,12 @@ ExprResult* StringFunctionCall::evaluate(Node* aContext, ContextState* aCs)
         }
         case SUBSTRING_AFTER:
         {
-            if (!requireParams(2, 2, aCs))
+            if (!requireParams(2, 2, aContext))
                 return new StringResult("error");
 
             String arg1, arg2;
-            evaluateToString((Expr*)iter.next(), aContext, aCs, arg1);
-            evaluateToString((Expr*)iter.next(), aContext, aCs, arg2);
+            evaluateToString((Expr*)iter.next(), aContext, arg1);
+            evaluateToString((Expr*)iter.next(), aContext, arg2);
             PRInt32 idx = arg1.indexOf(arg2);
             if (idx >= 0) {
                 PRInt32 len = arg2.length();
@@ -217,12 +219,12 @@ ExprResult* StringFunctionCall::evaluate(Node* aContext, ContextState* aCs)
         }
         case SUBSTRING_BEFORE:
         {
-            if (!requireParams(2, 2, aCs))
+            if (!requireParams(2, 2, aContext))
                 return new StringResult("error");
 
             String arg1, arg2;
-            evaluateToString((Expr*)iter.next(), aContext, aCs, arg1);
-            evaluateToString((Expr*)iter.next(), aContext, aCs, arg2);
+            evaluateToString((Expr*)iter.next(), aContext, arg1);
+            evaluateToString((Expr*)iter.next(), aContext, arg2);
             PRInt32 idx = arg1.indexOf(arg2);
             if (idx >= 0) {
                 arg2.clear();
@@ -233,17 +235,17 @@ ExprResult* StringFunctionCall::evaluate(Node* aContext, ContextState* aCs)
         }
         case TRANSLATE:
         {
-            if (!requireParams(3, 3, aCs))
+            if (!requireParams(3, 3, aContext))
                 return new StringResult("error");
 
             String src;
-            evaluateToString((Expr*)iter.next(), aContext, aCs, src);
+            evaluateToString((Expr*)iter.next(), aContext, src);
             if (src.isEmpty())
                 return new StringResult();
             
             String oldChars, newChars, dest;
-            evaluateToString((Expr*)iter.next(), aContext, aCs, oldChars);
-            evaluateToString((Expr*)iter.next(), aContext, aCs, newChars);
+            evaluateToString((Expr*)iter.next(), aContext, oldChars);
+            evaluateToString((Expr*)iter.next(), aContext, newChars);
             PRInt32 i;
             for (i = 0; i < src.length(); i++) {
                 PRInt32 idx = oldChars.indexOf(src.charAt(i));
@@ -259,19 +261,20 @@ ExprResult* StringFunctionCall::evaluate(Node* aContext, ContextState* aCs)
         }
         case STRING:
         {
-            if (!requireParams(0, 1, aCs))
+            if (!requireParams(0, 1, aContext))
                 return new StringResult("error");
 
             String resultStr;
             if (iter.hasNext())
-                evaluateToString((Expr*)iter.next(), aContext, aCs, resultStr);
+                evaluateToString((Expr*)iter.next(), aContext, resultStr);
             else
-                XMLDOMUtils::getNodeValue(aContext, resultStr);
+                XMLDOMUtils::getNodeValue(aContext->getContextNode(),
+                                          resultStr);
             return new StringResult(resultStr);
         }
     }
 
     String err("Internal error");
-    aCs->recieveError(err);
+    aContext->receiveError(err, NS_ERROR_UNEXPECTED);
     return new StringResult("error");
 }
