@@ -319,9 +319,9 @@ static nsCOMPtr<nsIFileTransportService> gFileTransportService;
 #endif
 
 nsDiskCacheDevice::nsDiskCacheDevice()
-    : mDeviceLock(nsnull)
-    , mCacheCapacity(0)
+    : mCacheCapacity(0)
     , mCacheMap(nsnull)
+    , mInitialized(PR_FALSE)
 {
 }
 
@@ -370,13 +370,7 @@ nsDiskCacheDevice::Init()
         if (NS_FAILED(rv))  goto error_exit;
     }
     
-    mDeviceLock = nsCacheLock::Create();
-    if (mDeviceLock == nsnull) {
-        rv = NS_ERROR_OUT_OF_MEMORY;
-        goto error_exit;
-    }
-    // creation of lock indicates successful initialization
-    
+    mInitialized = PR_TRUE;
     return NS_OK;
 
 error_exit:
@@ -392,25 +386,24 @@ error_exit:
 }
 
 
+/**
+ *  NOTE: called while holding the cache service lock
+ */
 nsresult
 nsDiskCacheDevice::Shutdown()
 {
     if (Initialized()) {
-        {   // code block for nsAutoLock
-            nsAutoLock lock(mDeviceLock->GetPRLock());
-            // check cache limits in case we need to evict.
-            EvictDiskCacheEntries((PRInt32)mCacheCapacity);
+        // check cache limits in case we need to evict.
+        EvictDiskCacheEntries((PRInt32)mCacheCapacity);
 
-            // write out persistent information about the cache.
-            (void) mCacheMap->Close();
-            delete mCacheMap;
-            mCacheMap = nsnull;
+        // write out persistent information about the cache.
+        (void) mCacheMap->Close();
+        delete mCacheMap;
+        mCacheMap = nsnull;
 
-            mBindery.Reset();
-        }
+        mBindery.Reset();
 
-        // no longer initialized.
-        mDeviceLock = nsnull;
+        mInitialized = PR_FALSE;
     }
 
     // release the reference to the cached file transport service.
@@ -449,6 +442,8 @@ nsDiskCacheDevice::GetDeviceID()
  *      cases:  key not in disk cache, hash number free
  *              key not in disk cache, hash number used
  *              key in disk cache
+ *
+ *  NOTE: called while holding the cache service lock
  */
 nsCacheEntry *
 nsDiskCacheDevice::FindEntry(nsCString * key)
@@ -459,8 +454,6 @@ nsDiskCacheDevice::FindEntry(nsCString * key)
     nsDiskCacheBinding *    binding = nsnull;
     PLDHashNumber           hashNumber = nsDiskCache::Hash(key->get());
 
-    nsAutoLock  lock(mDeviceLock->GetPRLock());     // grab device lock
-    
 #if DEBUG  /*because we shouldn't be called for active entries */
     binding = mBindery.FindActiveBinding(hashNumber);
     NS_ASSERTION(!binding, "### FindEntry() called for a bound entry.");
@@ -494,11 +487,12 @@ nsDiskCacheDevice::FindEntry(nsCString * key)
 }
 
 
+/**
+ *  NOTE: called while holding the cache service lock
+ */
 nsresult
 nsDiskCacheDevice::DeactivateEntry(nsCacheEntry * entry)
 {
-    nsAutoLock  lock(mDeviceLock->GetPRLock());     // grab device lock
-
     nsresult              rv = NS_OK;
     nsDiskCacheBinding * binding = GetCacheEntryBinding(entry);
     NS_ASSERTION(binding, "DeactivateEntry: binding == nsnull");
@@ -536,13 +530,14 @@ nsDiskCacheDevice::DeactivateEntry(nsCacheEntry * entry)
  *              walk matching hashnumber list to find lowest generation number
  *              take generation number from other (data/meta) location,
  *                  or walk active list
+ *
+ *  NOTE: called while holding the cache service lock
  */
 nsresult
 nsDiskCacheDevice::BindEntry(nsCacheEntry * entry)
 {
     nsresult rv = NS_OK;
     nsDiskCacheRecord record, oldRecord;
-    nsAutoLock        lock(mDeviceLock->GetPRLock());     // grab device lock
     
     // create a new record for this entry
     record.SetHashNumber(nsDiskCache::Hash(entry->Key()->get()));
@@ -584,10 +579,12 @@ nsDiskCacheDevice::BindEntry(nsCacheEntry * entry)
 }
 
 
+/**
+ *  NOTE: called while holding the cache service lock
+ */
 void
 nsDiskCacheDevice::DoomEntry(nsCacheEntry * entry)
 {
-    nsAutoLock           lock(mDeviceLock->GetPRLock());     // grab device lock
     nsDiskCacheBinding * binding = GetCacheEntryBinding(entry);
     NS_ASSERTION(binding, "DoomEntry: binding == nsnull");
     if (!binding)  return;
@@ -601,6 +598,9 @@ nsDiskCacheDevice::DoomEntry(nsCacheEntry * entry)
 }
 
 
+/**
+ *  NOTE: called while holding the cache service lock
+ */
 nsresult
 nsDiskCacheDevice::GetTransportForEntry(nsCacheEntry *      entry,
                                         nsCacheAccessMode   mode, 
@@ -609,7 +609,6 @@ nsDiskCacheDevice::GetTransportForEntry(nsCacheEntry *      entry,
     NS_ENSURE_ARG_POINTER(entry);
     NS_ENSURE_ARG_POINTER(result);
 
-    nsAutoLock           lock(mDeviceLock->GetPRLock());     // grab device lock
     nsresult             rv;
     nsDiskCacheBinding * binding = GetCacheEntryBinding(entry);
     NS_ASSERTION(binding, "GetTransportForEntry: binding == nsnull");
@@ -628,6 +627,9 @@ nsDiskCacheDevice::GetTransportForEntry(nsCacheEntry *      entry,
 }
 
 
+/**
+ *  NOTE: called while holding the cache service lock
+ */
 nsresult
 nsDiskCacheDevice::GetFileForEntry(nsCacheEntry *    entry,
                                    nsIFile **        result)
@@ -635,7 +637,6 @@ nsDiskCacheDevice::GetFileForEntry(nsCacheEntry *    entry,
     NS_ENSURE_ARG_POINTER(result);
     *result = nsnull;
 
-    nsAutoLock           lock(mDeviceLock->GetPRLock());     // grab device lock
     nsresult             rv;
         
     nsDiskCacheBinding * binding = GetCacheEntryBinding(entry);
@@ -672,12 +673,13 @@ nsDiskCacheDevice::GetFileForEntry(nsCacheEntry *    entry,
 
 
 /**
- * This routine will get called every time an open descriptor is written to.
+ *  This routine will get called every time an open descriptor is written to.
+ *
+ *  NOTE: called while holding the cache service lock
  */
 nsresult
 nsDiskCacheDevice::OnDataSizeChange(nsCacheEntry * entry, PRInt32 deltaSize)
 {
-    nsAutoLock           lock(mDeviceLock->GetPRLock());     // grab device lock
     nsDiskCacheBinding * binding = GetCacheEntryBinding(entry);
     NS_ASSERTION(binding, "OnDataSizeChange: binding == nsnull");
     if (!binding)  return NS_ERROR_UNEXPECTED;
@@ -945,12 +947,14 @@ nsDiskCacheDevice::getCacheDirectory(nsILocalFile ** result)
 }
 
 
+/**
+ *  NOTE: called while holding the cache service lock
+ */
 void
 nsDiskCacheDevice::SetCapacity(PRUint32  capacity)
 {
     mCacheCapacity = capacity * 1024;
     if (Initialized()) {
-        nsAutoLock  lock(mDeviceLock->GetPRLock());     // grab device lock
         // start evicting entries if the new size is smaller!
         EvictDiskCacheEntries((PRInt32)mCacheCapacity);
     }

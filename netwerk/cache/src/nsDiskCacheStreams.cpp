@@ -25,6 +25,7 @@
 #include "nsDiskCache.h"
 #include "nsDiskCacheDevice.h"
 #include "nsDiskCacheStreams.h"
+#include "nsCacheService.h"
 
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
@@ -327,13 +328,20 @@ nsDiskCacheStreamIO::nsDiskCacheStreamIO(nsDiskCacheBinding *   binding)
 {
     NS_INIT_ISUPPORTS();
     mDevice = (nsDiskCacheDevice *)mBinding->mCacheEntry->CacheDevice();
-    mDeviceLock = mDevice->DeviceLock();
+
+    // acquire "death grip" on cache service
+    nsCacheService *service = nsCacheService::GlobalInstance();
+    NS_ADDREF(service);
 }
 
 
 nsDiskCacheStreamIO::~nsDiskCacheStreamIO()
 {
     (void) Close(NS_OK);
+
+    // release "death grip" on cache service
+    nsCacheService *service = nsCacheService::GlobalInstance();
+    NS_RELEASE(service);
 }
 
 
@@ -367,7 +375,7 @@ nsDiskCacheStreamIO::GetInputStream(nsIInputStream ** inputStream)
     NS_ENSURE_ARG_POINTER(inputStream);
     *inputStream = nsnull;
     
-    nsAutoLock lock(mDeviceLock->GetPRLock()); // grab device lock
+    nsAutoLock lock(nsCacheService::ServiceLock()); // grab service lock
     if (!mBinding)  return NS_ERROR_NOT_AVAILABLE;
 
     if (mOutStream) {
@@ -411,7 +419,7 @@ nsDiskCacheStreamIO::GetOutputStream(nsIOutputStream ** outputStream)
     NS_ENSURE_ARG_POINTER(outputStream);
     *outputStream = nsnull;
 
-    nsAutoLock lock(mDeviceLock->GetPRLock()); // grab device lock
+    nsAutoLock lock(nsCacheService::ServiceLock()); // grab service lock
     if (!mBinding)  return NS_ERROR_NOT_AVAILABLE;
         
     NS_ASSERTION(!mOutStream, "already have an output stream open");
@@ -468,7 +476,7 @@ nsDiskCacheStreamIO::GetContentLength(PRInt32 *contentLength)
 nsresult
 nsDiskCacheStreamIO::CloseOutputStream(nsDiskCacheOutputStream *  outputStream)
 {
-    nsAutoLock lock(mDeviceLock->GetPRLock()); // grab device lock
+    nsAutoLock lock(nsCacheService::ServiceLock()); // grab service lock
     nsresult   rv;
 
     if (outputStream != mOutStream) {
@@ -556,7 +564,7 @@ nsDiskCacheStreamIO::Write( const char * buffer,
                             PRUint32 *   bytesWritten)
 {
     nsresult    rv = NS_OK;
-    nsAutoLock lock(mDeviceLock->GetPRLock()); // grab device lock
+    nsAutoLock lock(nsCacheService::ServiceLock()); // grab service lock
     if (!mBinding)  return NS_ERROR_NOT_AVAILABLE;
 
     if (mInStreamCount) {
@@ -774,12 +782,11 @@ nsresult
 nsDiskCacheStreamIO::Seek(PRInt32 whence, PRInt32 offset)
 {
     PRInt32  newPos;
-    nsAutoLock lock(mDeviceLock->GetPRLock()); // grab device lock
+    nsAutoLock lock(nsCacheService::ServiceLock()); // grab service lock
     if (!mBinding)  return NS_ERROR_NOT_AVAILABLE;
 
     if (PRUint32(offset) > mStreamEnd)  return NS_ERROR_FAILURE;
 
-    
     if (mFD) {
         
         // do we have data in the buffer that needs to be flushed?
@@ -878,7 +885,7 @@ nsDiskCacheStreamIO::SetEOF()
 {
     nsresult    rv;
     NS_ASSERTION(mStreamPos <= mStreamEnd, "bad stream");
-    nsAutoLock lock(mDeviceLock->GetPRLock()); // grab device lock
+    nsAutoLock lock(nsCacheService::ServiceLock()); // grab service lock
     if (!mBinding)  return NS_ERROR_NOT_AVAILABLE;
     
     if (mBinding->mRecord.DataLocationInitialized()) {

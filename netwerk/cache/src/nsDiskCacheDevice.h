@@ -79,8 +79,7 @@ public:
     PRUint32                getCacheSize();
     PRUint32                getEntryCount();
     
-    nsCacheLock *           DeviceLock()  { return mDeviceLock; }
-    PRBool                  Initialized() { return (mDeviceLock != nsnull); }
+    PRBool                  Initialized() { return mInitialized; }
     nsDiskCacheMap *        CacheMap()    { return mCacheMap; }
     
 private:    
@@ -94,11 +93,11 @@ private:
     /**
      *  Member variables
      */
-    nsCOMPtr<nsCacheLock>   mDeviceLock;
     nsCOMPtr<nsILocalFile>  mCacheDirectory;
     nsDiskCacheBindery      mBindery;
     PRUint32                mCacheCapacity;     // XXX need soft/hard limits, currentTotal
     nsDiskCacheMap *        mCacheMap;
+    PRPackedBool            mInitialized;
 };
 
 #endif // _nsDiskCacheDevice_h_
