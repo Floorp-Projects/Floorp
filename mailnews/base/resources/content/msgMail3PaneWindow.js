@@ -64,7 +64,7 @@ var folderListener = {
 		{
 			if(property.GetUnicode() == "TotalMessages" || property.GetUnicode() == "TotalUnreadMessages")
 			{
-				folder = item.QueryInterface(Components.interfaces.nsIMsgFolder);
+				var folder = item.QueryInterface(Components.interfaces.nsIMsgFolder);
 				if(folder)
 				{
 					var folderResource = folder.QueryInterface(Components.interfaces.nsIRDFResource);
@@ -176,7 +176,7 @@ function HandleDeleteOrMoveMsgCompleted(folder)
 
 function IsCurrentLoadedFolder(folder)
 {
-	msgfolder = folder.QueryInterface(Components.interfaces.nsIMsgFolder);
+	var msgfolder = folder.QueryInterface(Components.interfaces.nsIMsgFolder);
 	if(msgfolder)
 	{
 		var folderResource = msgfolder.QueryInterface(Components.interfaces.nsIRDFResource);

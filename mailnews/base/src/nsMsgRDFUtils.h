@@ -54,6 +54,7 @@ typedef struct _nsMsgRDFNotification {
 #define NC_RDF_ORDERRECEIVED		NC_NAMESPACE_URI "OrderReceived"
 #define NC_RDF_HASATTACHMENT		NC_NAMESPACE_URI "HasAttachment"
 #define NC_RDF_MESSAGETYPE			NC_NAMESPACE_URI "MessageType"
+#define NC_RDF_THREADSTATE			NC_NAMESPACE_URI "ThreadState"
 
 #define NC_RDF_CHILD				NC_NAMESPACE_URI "child"
 #define NC_RDF_MESSAGECHILD			NC_NAMESPACE_URI "MessageChild"

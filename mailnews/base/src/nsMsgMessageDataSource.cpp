@@ -75,6 +75,7 @@ nsIRDFResource* nsMsgMessageDataSource::kNC_IsImapDeleted = nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_MessageType = nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_OrderReceived = nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_OrderReceivedSort = nsnull;
+nsIRDFResource* nsMsgMessageDataSource::kNC_ThreadState = nsnull;
 
 
 //commands
@@ -127,6 +128,7 @@ nsMsgMessageDataSource::nsMsgMessageDataSource()
 		rdf->GetResource(NC_RDF_MESSAGETYPE, &kNC_MessageType);
 		rdf->GetResource(NC_RDF_ORDERRECEIVED, &kNC_OrderReceived);
 		rdf->GetResource(NC_RDF_ORDERRECEIVED_SORT, &kNC_OrderReceivedSort);
+		rdf->GetResource(NC_RDF_THREADSTATE, &kNC_ThreadState);
 
 		rdf->GetResource(NC_RDF_MARKREAD, &kNC_MarkRead);
 		rdf->GetResource(NC_RDF_MARKUNREAD, &kNC_MarkUnread);
@@ -176,6 +178,7 @@ nsMsgMessageDataSource::~nsMsgMessageDataSource (void)
 		NS_RELEASE2(kNC_MessageType, refcnt);
 		NS_RELEASE2(kNC_OrderReceived, refcnt);
 		NS_RELEASE2(kNC_OrderReceivedSort, refcnt);
+		NS_RELEASE2(kNC_ThreadState, refcnt);
 
 		NS_RELEASE2(kNC_MarkRead, refcnt);
 		NS_RELEASE2(kNC_MarkUnread, refcnt);
@@ -254,6 +257,10 @@ nsresult nsMsgMessageDataSource::CreateLiterals(nsIRDFService *rdf)
 	createNode((const PRUnichar*)NS_LITERAL_STRING("news"), getter_AddRefs(kNewsLiteral), rdf);
 	createNode((const PRUnichar*)NS_LITERAL_STRING("mail"), getter_AddRefs(kMailLiteral), rdf);
 
+	//strings for the thread column.
+	createNode((const PRUnichar*)NS_LITERAL_STRING("noThread"), getter_AddRefs(kNoThreadLiteral), rdf);
+	createNode((const PRUnichar*)NS_LITERAL_STRING("thread"), getter_AddRefs(kThreadLiteral), rdf);
+	createNode((const PRUnichar*)NS_LITERAL_STRING("threadWithUnread"), getter_AddRefs(kThreadWithUnreadLiteral), rdf);
   //
   // localized strings - some of the above strings need to be displayed
   // to the user
@@ -451,7 +458,7 @@ NS_IMETHODIMP nsMsgMessageDataSource::GetTargets(nsIRDFResource* source,
 				(kNC_Priority == property) || (kNC_Size == property) ||
 				(kNC_IsUnread == property) || (kNC_IsImapDeleted == property) || 
 				(kNC_OrderReceived == property) || (kNC_HasAttachment == property) ||
-				(kNC_MessageType == property))
+				(kNC_MessageType == property) || (kNC_ThreadState == property))
 		{
       rv = NS_NewSingletonEnumerator(targets, source);
 		}
@@ -514,7 +521,8 @@ nsMsgMessageDataSource::HasArcOut(nsIRDFResource *source, nsIRDFResource *aArc, 
     if (NS_SUCCEEDED(rv) && showThreads) {
       *result = (aArc == kNC_Total ||
                  aArc == kNC_Unread ||
-                 aArc == kNC_MessageChild);
+                 aArc == kNC_MessageChild ||
+				 aArc == kNC_ThreadState);
     }
     *result = (*result ||
                aArc == kNC_Subject ||
@@ -607,6 +615,7 @@ nsMsgMessageDataSource::getMessageArcLabelsOut(PRBool showThreads,
 		(*arcs)->AppendElement(kNC_Total);
 		(*arcs)->AppendElement(kNC_Unread);
 		(*arcs)->AppendElement(kNC_MessageChild);
+		(*arcs)->AppendElement(kNC_ThreadState);
 	}
 
 	(*arcs)->AppendElement(kNC_Subject);
@@ -785,6 +794,7 @@ nsresult nsMsgMessageDataSource::OnItemAddedOrRemovedFromMessage(nsIMessage *par
 					OnChangeUnreadMessageCount(parentMessage);
 			}
 			OnChangeTotalMessageCount(parentMessage);
+			OnChangeThreadState(parentMessage);
 		}
 	}
 	return NS_OK;
@@ -919,7 +929,10 @@ nsresult nsMsgMessageDataSource::OnChangeStatus(nsIRDFResource *resource, PRUint
 		{
 			nsCOMPtr<nsIMessage> message = do_QueryInterface(resource);
 			if(message)
+			{
 				OnChangeUnreadMessageCount(message);
+				OnChangeThreadState(message);
+			}
 		}
 
 	}
@@ -1042,6 +1055,41 @@ nsresult nsMsgMessageDataSource::OnChangeTotalMessageCount(nsIMessage *message)
 	return rv;
 
 }
+
+nsresult nsMsgMessageDataSource::OnChangeThreadState(nsIMessage *message)
+{
+	nsresult rv;
+	nsCOMPtr<nsIMsgFolder> folder;
+	nsCOMPtr<nsIMsgThread> thread;
+
+	rv = message->GetMsgFolder(getter_AddRefs(folder));
+	if(NS_FAILED(rv))
+		return rv;
+
+	rv = folder->GetThreadForMessage(message, getter_AddRefs(thread));
+	if(NS_FAILED(rv))
+		return rv;
+
+	nsCOMPtr<nsIRDFNode> threadStateNode;
+	rv = GetThreadStateNode(thread, getter_AddRefs(threadStateNode));
+	if(NS_FAILED(rv))
+		return rv;
+
+	nsCOMPtr<nsIMessage> firstMessage;
+	rv = GetThreadsFirstMessage(thread, folder, getter_AddRefs(firstMessage));
+	if(NS_FAILED(rv))
+		return rv;
+
+	nsCOMPtr<nsIRDFResource> firstMessageResource = do_QueryInterface(firstMessage);
+	if(firstMessageResource)
+		rv = NotifyPropertyChanged(firstMessageResource, kNC_ThreadState, threadStateNode);
+	else
+		return NS_ERROR_FAILURE;
+
+	return rv;
+
+}
+
 nsresult
 nsMsgMessageDataSource::createMessageNode(nsIMessage *message,
                                          nsIRDFResource *property,
@@ -1101,6 +1149,8 @@ nsMsgMessageDataSource::createMessageNode(nsIMessage *message,
     rv = createMessageOrderReceivedNode(message, target);
   else if ((kNC_OrderReceivedSort == property))
     rv = createMessageOrderReceivedSortNode(message, target);
+  else if ((kNC_ThreadState == property))
+    rv = createMessageThreadStateNode(message, target);
 
   if (NS_FAILED(rv))
     return NS_RDF_NO_VALUE;
@@ -1341,6 +1391,74 @@ nsMsgMessageDataSource::createMessageOrderReceivedSortNode(nsIMessage *message, 
 
 	createIntNode(msgKey, target, getRDFService());
 	return NS_OK;
+}
+
+nsresult
+nsMsgMessageDataSource::createMessageThreadStateNode(nsIMessage *message, nsIRDFNode **target)
+{
+	nsCOMPtr<nsIMsgFolder> folder;
+	nsCOMPtr<nsIMsgThread> thread;
+	nsresult rv = NS_OK;
+
+	PRBool showThreads;
+
+	GetIsThreaded(&showThreads);
+
+
+	if(showThreads)
+	{
+		rv = GetMessageFolderAndThread(message, getter_AddRefs(folder), getter_AddRefs(thread));
+		if(NS_SUCCEEDED(rv) && thread)
+		{
+			if(IsThreadsFirstMessage(thread, message))
+			{
+				rv = GetThreadStateNode(thread, target);
+			}
+		}
+	}
+	else
+	{
+		*target = kNoThreadLiteral;
+		NS_IF_ADDREF(*target);
+	}
+
+	if(NS_FAILED(rv))
+		return NS_RDF_NO_VALUE;
+
+	return rv;
+
+}
+
+nsresult nsMsgMessageDataSource::GetThreadStateNode(nsIMsgThread *thread, nsIRDFNode **target)
+{
+	nsresult rv;
+	PRUint32 numUnread, numChildren;
+
+	*target = kNoThreadLiteral;
+
+	rv = thread->GetNumUnreadChildren(&numUnread);
+	if(NS_SUCCEEDED(rv))
+	{
+		rv = thread->GetNumChildren(&numChildren);
+		if(NS_SUCCEEDED(rv))
+		{
+			//We need to have more than one child to show thread state.
+			if(numChildren > 1)
+			{
+				//If we have at least one unread and two children then we should show the thread with unread
+				//icon
+				if(numUnread > 0)
+					*target = kThreadWithUnreadLiteral;
+				//otherwise just show the regular thread icon.
+				else
+					*target = kThreadLiteral;
+
+			}
+		}
+	}
+
+	NS_IF_ADDREF(*target);
+	return rv;
 }
 
 nsresult

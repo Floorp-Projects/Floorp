@@ -50,7 +50,7 @@ Rights Reserved.
         <treeitem uri="..." id="threadTreeTemplateTreeItem">
 
               <treerow class="tree-thread-row" IsUnread="rdf:http://home.netscape.com/NC-rdf#IsUnread" >
-                <treecell class="treecell-text" value="rdf:http://home.netscape.com/NC-rdf#Thread"/>
+                <treecell class="treecell-image threadcol" value="rdf:http://home.netscape.com/NC-rdf#ThreadState"/>
                 <treecell class="treecell-indent tree-cell-threadpane-icon"
                   indent="true"
                   value="rdf:http://home.netscape.com/NC-rdf#Subject"

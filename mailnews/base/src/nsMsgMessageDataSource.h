@@ -164,6 +164,7 @@ protected:
 	nsresult createMessageMessageTypeNode(nsIMessage *message, nsIRDFNode **target);
 	nsresult createMessageOrderReceivedNode(nsIMessage *message, nsIRDFNode **target);
 	nsresult createMessageOrderReceivedSortNode(nsIMessage *message, nsIRDFNode **target);
+	nsresult createMessageThreadStateNode(nsIMessage *message, nsIRDFNode **target);
 
 	nsresult createMessageUnreadNode(nsIMessage *message, nsIRDFNode **target);
 	nsresult createMessageTotalNode(nsIMessage *message, nsIRDFNode **target);
@@ -212,9 +213,11 @@ protected:
 	nsresult OnChangeIsImapDeleted(nsIRDFResource *resource, PRUint32 oldFlag, PRUint32 newFlag);
 	nsresult OnChangeUnreadMessageCount(nsIMessage *message);
 	nsresult OnChangeTotalMessageCount(nsIMessage *message);
+	nsresult OnChangeThreadState(nsIMessage *message);
 
 	nsresult GetUnreadChildrenNode(nsIMsgThread *thread, nsIRDFNode **target);
 	nsresult GetTotalChildrenNode(nsIMsgThread *thread, nsIRDFNode **target);
+	nsresult GetThreadStateNode(nsIMsgThread *thread, nsIRDFNode **target);
 
   virtual void Cleanup();
   
@@ -244,6 +247,7 @@ protected:
 	static nsIRDFResource* kNC_MessageType;
 	static nsIRDFResource* kNC_OrderReceived;
 	static nsIRDFResource* kNC_OrderReceivedSort;
+	static nsIRDFResource* kNC_ThreadState;
 
 
 	// commands
@@ -286,6 +290,11 @@ protected:
 	nsCOMPtr<nsIRDFNode> kFalseLiteral;
 	nsCOMPtr<nsIRDFNode> kNewsLiteral;
 	nsCOMPtr<nsIRDFNode> kMailLiteral;
+
+	nsCOMPtr<nsIRDFNode> kNoThreadLiteral;
+	nsCOMPtr<nsIRDFNode> kThreadLiteral;
+	nsCOMPtr<nsIRDFNode> kThreadWithUnreadLiteral;
+
 
   // message properties
   static nsIAtom *kStatusAtom;
