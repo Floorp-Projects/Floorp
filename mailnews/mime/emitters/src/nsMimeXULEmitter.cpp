@@ -99,6 +99,7 @@ nsMimeXULEmitter::~nsMimeXULEmitter(void)
       PR_FREEIF(attachInfo->contentType);
       PR_FREEIF(attachInfo->displayName);
       PR_FREEIF(attachInfo->urlSpec);
+	  delete attachInfo;
     }
     delete mAttachArray;
   }
@@ -113,6 +114,7 @@ nsMimeXULEmitter::~nsMimeXULEmitter(void)
     
       PR_FREEIF(headerInfo->name);
       PR_FREEIF(headerInfo->value);
+	  delete headerInfo;
     }
     delete mHeaderArray;
   }
@@ -126,6 +128,7 @@ nsMimeXULEmitter::~nsMimeXULEmitter(void)
         continue;
     
       NS_IF_RELEASE(statusInfo->obj);
+	  delete statusInfo;
     }
 
     delete mMiscStatusArray;
