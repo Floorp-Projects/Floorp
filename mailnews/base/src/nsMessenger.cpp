@@ -36,6 +36,8 @@
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
 #include "nsIDocumentViewer.h"
+#include "nsIMarkupDocumentViewer.h"
+#include "nsIContentViewerFile.h"
 #include "nsIDOMXULDocument.h"
 
 #include "nsIMsgMailSession.h"
@@ -340,7 +342,15 @@ nsMessenger::SetWindow(nsIDOMWindow *aWin, nsIMsgWindow *aMsgWindow)
   if (nsnull != mWebShell) 
   {
 	  nsAutoString aForceCharacterSet("UTF-8");
-	  mWebShell->SetForceCharacterSet(aForceCharacterSet.GetUnicode());
+    nsCOMPtr<nsIContentViewer> cv;
+    mWebShell->GetContentViewer(getter_AddRefs(cv));
+    if (cv) 
+    {
+      nsCOMPtr<nsIMarkupDocumentViewer> muDV = do_QueryInterface(cv);
+      if (muDV) {
+        muDV->SetForceCharacterSet(aForceCharacterSet.GetUnicode());
+      }
+    }
   }
 
   return NS_OK;
@@ -1232,7 +1242,15 @@ NS_IMETHODIMP nsMessenger::SetDocumentCharset(const PRUnichar *characterSet)
 {
 	// Set a default charset of the webshell. 
 	if (nsnull != mWebShell) {
-		mWebShell->SetDefaultCharacterSet(characterSet);
+    nsCOMPtr<nsIContentViewer> cv;
+    mWebShell->GetContentViewer(getter_AddRefs(cv));
+    if (cv) 
+    {
+      nsCOMPtr<nsIMarkupDocumentViewer> muDV = do_QueryInterface(cv);
+      if (muDV) {
+		    muDV->SetDefaultCharacterSet(characterSet);
+      }
+    }
 	}
     return NS_OK;
 }
@@ -1376,8 +1394,17 @@ NS_IMETHODIMP nsMessenger::DoPrint()
 
   mWebShell->GetContentViewer(getter_AddRefs(viewer));
 
-  if (viewer) {
-    rv = viewer->Print();
+  if (viewer) 
+  {
+    nsCOMPtr<nsIContentViewerFile> viewerFile = do_QueryInterface(viewer);
+    if (viewerFile) {
+      rv = viewerFile->Print();
+    }
+#ifdef DEBUG_MESSENGER
+    else {
+	    printf("the content viewer does not support printing\n");
+    }
+#endif
   }
 #ifdef DEBUG_MESSENGER
   else {

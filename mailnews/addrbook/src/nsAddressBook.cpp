@@ -46,6 +46,7 @@
 #include "nsIAppShellService.h"
 #include "nsIDOMWindow.h"
 #include "nsIContentViewer.h"
+#include "nsIContentViewerFile.h"
 
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
@@ -276,12 +277,21 @@ NS_IMETHODIMP nsAddressBook::PrintCard()
 
   mWebShell->GetContentViewer(getter_AddRefs(viewer));
 
-  if (viewer) {
-    rv = viewer->Print();
+  if (viewer) 
+  {
+    nsCOMPtr<nsIContentViewerFile> viewerFile = do_QueryInterface(viewer);
+    if (viewerFile) {
+      rv = viewerFile->Print();
+    }
+#ifdef DEBUG_seth
+    else {
+      printf("content viewer does not support printing\n");
+    }
+#endif
   }
 #ifdef DEBUG_seth
   else {
-        printf("failed to get the viewer for printing\n");
+    printf("failed to get the viewer for printing\n");
   }
 #endif
 
