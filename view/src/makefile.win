@@ -54,6 +54,7 @@ LLIBS=				\
  $(DIST)\lib\xpcom.lib	\
  $(DIST)\lib\gkgfxwin.lib	\
  $(DIST)\lib\timer_s.lib \
+ $(DIST)\lib\util.lib \
  $(LIBNSPR)  
 
 include <$(DEPTH)\config\rules.mak>

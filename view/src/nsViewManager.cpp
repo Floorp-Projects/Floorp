@@ -64,6 +64,11 @@ struct DisplayListElement {
   PRUint32	mFlags;
 };
 
+#ifdef NS_VM_PERF_METRICS
+#include "nsITimeRecorder.h"
+#endif
+
+
 #ifdef NS_VIEWMANAGER_NEEDS_TIMER
 
 static void vm_timer_callback(nsITimer *aTimer, void *aClosure)
@@ -426,6 +431,14 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsI
   if (PR_FALSE == mRefreshEnabled)
     return;
 
+#ifdef NS_VM_PERF_METRICS
+  MOZ_TIMER_DEBUGLOG(("Reset nsViewManager::Refresh(region), this=%p\n", this));
+  MOZ_TIMER_RESET(mWatch);
+
+  MOZ_TIMER_DEBUGLOG(("Start: nsViewManager::Refresh(region)\n"));
+  MOZ_TIMER_START(mWatch);
+#endif
+
   NS_ASSERTION(!(PR_TRUE == mPainting), "recursive painting not permitted");
 
   mPainting = PR_TRUE;
@@ -532,6 +545,13 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsI
       }
     }
   }
+
+#ifdef NS_VM_PERF_METRICS
+  MOZ_TIMER_DEBUGLOG(("Stop: nsViewManager::Refresh(region), this=%p\n", this));
+  MOZ_TIMER_STOP(mWatch);
+  MOZ_TIMER_LOG(("vm1 Paint time (this=%p): ", this));
+  MOZ_TIMER_PRINT(mWatch);
+#endif
 }
 
 void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, const nsRect *rect, PRUint32 aUpdateFlags)
@@ -540,8 +560,16 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, con
   nsIRenderingContext *localcx = nsnull;
   nsDrawingSurface    ds = nsnull;
 
-  if (PR_FALSE == mRefreshEnabled)
+   if (PR_FALSE == mRefreshEnabled)
     return;
+
+#ifdef NS_VM_PERF_METRICS
+  MOZ_TIMER_DEBUGLOG(("Reset nsViewManager::Refresh(region), this=%p\n", this));
+  MOZ_TIMER_RESET(mWatch);
+
+  MOZ_TIMER_DEBUGLOG(("Start: nsViewManager::Refresh(region)\n"));
+  MOZ_TIMER_START(mWatch);
+#endif
 
   NS_ASSERTION(!(PR_TRUE == mPainting), "recursive painting not permitted");
 
@@ -666,6 +694,13 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, con
       }
     }
   }
+
+#ifdef NS_VM_PERF_METRICS
+  MOZ_TIMER_DEBUGLOG(("Stop: nsViewManager::Refresh(region), this=%p\n", this));
+  MOZ_TIMER_STOP(mWatch);
+  MOZ_TIMER_LOG(("vm1 Paint time (this=%p): ", this));
+  MOZ_TIMER_PRINT(mWatch);
+#endif
 }
 
 //states
