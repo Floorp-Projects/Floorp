@@ -388,6 +388,10 @@ nsTypeAheadFind::Observe(nsISupports *aSubject, const char *aTopic,
   // -- Attach/Remove window listeners --
   nsCOMPtr<nsIDOMWindow> topLevelWindow(do_QueryInterface(aSubject));
   NS_ENSURE_TRUE(topLevelWindow, NS_OK);
+  nsCOMPtr<nsPIDOMWindow> privateWindow = do_QueryInterface(aSubject);
+  nsIFocusController *focusController =
+    privateWindow->GetRootFocusController();
+  NS_ENSURE_TRUE(focusController, NS_ERROR_FAILURE);
 
   if (isOpening) {
     if (mAutoStartPref) {
@@ -396,15 +400,10 @@ nsTypeAheadFind::Observe(nsISupports *aSubject, const char *aTopic,
 
     // Attach nsTypeAheadController to window
     // so it can handle / and ' shortcuts to start text and link search
-    nsCOMPtr<nsPIDOMWindow> privateWindow = do_QueryInterface(aSubject);
     if (privateWindow) {
       nsCOMPtr<nsIControllers> controllers;
       privateWindow->GetControllers(getter_AddRefs(controllers));
       NS_ENSURE_TRUE(controllers, NS_ERROR_FAILURE);
-
-      nsIFocusController *focusController =
-        privateWindow->GetRootFocusController();
-      NS_ENSURE_TRUE(focusController, NS_ERROR_FAILURE);
 
       nsCOMPtr<nsIController> controller = 
         new nsTypeAheadController(focusController);
@@ -415,6 +414,10 @@ nsTypeAheadFind::Observe(nsISupports *aSubject, const char *aTopic,
  
     return NS_OK;
   }
+
+  nsCOMPtr<nsIDOMWindowInternal> activeWindowInternal;
+  focusController->GetFocusedWindow(getter_AddRefs(activeWindowInternal));
+  nsCOMPtr<nsIDOMWindow> activeWindow = do_QueryInterface(activeWindowInternal);
 
   RemoveWindowListeners(topLevelWindow);
 
@@ -459,6 +462,11 @@ nsTypeAheadFind::Observe(nsISupports *aSubject, const char *aTopic,
       if (domWin == mFocusedWindow) {
         RemoveDocListeners();
         CancelFind();
+      }
+      if (domWin == activeWindow) {
+        // If popup was still open as its parent window closes, don't stay in
+        // menu active state which prevents us from operating
+        mIsMenuBarActive = mIsMenuPopupActive = PR_FALSE;
       }
     }
   }
