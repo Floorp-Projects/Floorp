@@ -871,8 +871,13 @@ nsFindComponent::FindNext(nsISupports *aContext, PRBool *aDidFind)
 		if (!aContext)
 			return NS_ERROR_NULL_POINTER;
 			
-		// For now, just record request to console.
 		Context *context = (Context*)aContext;
+
+        // If we haven't searched yet, put up dialog (via Find).
+        if ( context->mSearchString.IsEmpty() ) {
+            return this->Find( aContext, aDidFind );
+        }
+
 		context->DoFind(aDidFind);
 
 		// Record this for out-of-the-blue FindNext calls.
