@@ -1355,8 +1355,10 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      *
      * @since 1.4R3
      */
-    public void sealObject() {
-        count = -1;
+    public synchronized void sealObject() {
+        if (count >= 0) {
+            count = -1 - count;
+        }
     }
 
     /**
@@ -1369,7 +1371,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      * @since 1.4R3
      */
     public boolean isSealed() {
-        return count == -1;
+        return count < 0;
     }
 
     /**
@@ -1565,9 +1567,10 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
             Object fun = getProperty(obj, methodName);
             if (fun == NOT_FOUND)
                 fun = methodName;
-            return ScriptRuntime.call(cx, fun, obj, args, getTopLevelScope(obj));
+            return ScriptRuntime.call(cx, fun, obj, args,
+                                      getTopLevelScope(obj));
         } finally {
-          Context.exit();
+            Context.exit();
         }
     }
 
@@ -1597,7 +1600,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
     synchronized void addPropertyAttribute(int attribute) {
         if (slots == null)
             return;
-        for (int i=0; i < slots.length; i++) {
+        for (int i = 0; i < slots.length; i++) {
             Slot slot = slots[i];
             if (slot == null || slot == REMOVED)
                 continue;
@@ -1684,7 +1687,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      * caused the table to grow while this thread was searching.
      */
     private synchronized Slot addSlot(String id, int index, Slot newSlot) {
-        if (count == -1)
+        if (count < 0)
             throw Context.reportRuntimeError0("msg.add.sealed");
 
         if (slots == null) { slots = new Slot[5]; }
@@ -1732,7 +1735,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      * deletes are not common.
      */
     private synchronized void removeSlot(String name, int index) {
-        if (count == -1)
+        if (count < 0)
             throw Context.reportRuntimeError0("msg.remove.sealed");
         getSlot(name, index, true);
     }
@@ -1800,11 +1803,53 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
         return result;
     }
 
+    private synchronized void writeObject(ObjectOutputStream out)
+        throws IOException
+    {
+        out.defaultWriteObject();
+        int N = count;
+        if (N < 0) {
+            N = -1 - count;
+        }
+        Slot[] s = slots;
+        if (s == null) {
+            if (N != 0) Context.codeBug();
+            out.writeInt(0);
+        } else {
+            out.writeInt(s.length);
+            for (int i = 0; N != 0; ++i) {
+                Slot slot = s[i];
+                if (slot != null && slot != REMOVED) {
+                    --N;
+                    out.writeObject(slot);
+                }
+            }
+        }
+    }
+
     private void readObject(ObjectInputStream in)
         throws IOException, ClassNotFoundException
     {
         in.defaultReadObject();
         lastAccess = REMOVED;
+
+        int capacity = in.readInt();
+        if (capacity != 0) {
+            slots = new Slot[capacity];
+            int N = count;
+            boolean wasSealed = false;
+            if (N < 0) {
+                N = -1 - N; wasSealed = true;
+            }
+            count = 0;
+            for (int i = 0; i != N; ++i) {
+                Slot s = (Slot)in.readObject();
+                addSlotImpl(s.stringKey, s.intKey, s);
+            }
+            if (wasSealed) {
+                count = - 1 - count;
+            }
+        }
     }
 
     /**
@@ -1821,22 +1866,35 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
     private static final Slot REMOVED = new Slot();
     private static Hashtable exclusionList = null;
 
-    private Slot[] slots;
+    private transient Slot[] slots;
+    // If count >= 0, it gives number of keys or if count < 0,
+    // it indicates sealed object where -1 - count gives number of keys
     private int count;
 
     // cache; may be removed for smaller memory footprint
-    transient private Slot lastAccess = REMOVED;
+    private transient Slot lastAccess = REMOVED;
 
     private static class Slot implements Serializable {
         static final int HAS_GETTER  = 0x01;
         static final int HAS_SETTER  = 0x02;
+
+        private void readObject(ObjectInputStream in)
+            throws IOException, ClassNotFoundException
+        {
+            in.defaultReadObject();
+            if (stringKey != null) {
+                intKey = stringKey.hashCode();
+            }
+        }
+
+        static final long serialVersionUID = -2158009919774350004L;
 
         int intKey;
         String stringKey;
         Object value;
         short attributes;
         byte flags;
-        byte wasDeleted;
+        transient byte wasDeleted;
     }
 
     static class GetterSlot extends Slot implements Serializable {
