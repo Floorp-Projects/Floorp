@@ -34,7 +34,7 @@
 /*
  * Moved from secpkcs7.c
  *
- * $Id: crl.c,v 1.19 2002/09/06 00:27:29 wtc%netscape.com Exp $
+ * $Id: crl.c,v 1.20 2002/09/06 06:53:03 jpierre%netscape.com Exp $
  */
  
 #include "cert.h"
@@ -1270,6 +1270,13 @@ SECStatus DPCache_Lookup(CRLDPCache* cache, SECItem* sn, CERTCrlEntry** returned
     CERTCrlEntry* acrlEntry = NULL;
     if (!cache || !sn) {
         /* no cache or SN to look up, this is bad */
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+    if (PR_TRUE == cache->invalid) {
+        /* the cache contains a bad CRL, consider all certs revoked
+           as a security measure */
+        PORT_SetError(SEC_ERROR_CRL_INVALID);
         return SECFailure;
     }
     if (!cache->full) {
