@@ -3,7 +3,7 @@
   FILE: icalparser.c
   CREATOR: eric 04 August 1999
   
-  $Id: icalparser.c,v 1.47 2004/05/10 22:36:49 acampi Exp $
+  $Id: icalparser.c,v 1.1.1.1 2005/01/05 20:09:15 mvl%exedo.nl Exp $
   $Locker:  $
     
  The contents of this file are subject to the Mozilla Public License
@@ -827,6 +827,13 @@ icalcomponent* icalparser_add_line(icalparser* parser,
 	    } else {
 		/* Error. Failed to parse the parameter*/
 		/* 'tail' defined above */
+
+                /* Change for mozilla */
+                /* have the option of being flexible towards unsupported parameters */
+                #ifndef ICAL_ERRORS_ARE_FATAL
+                continue;
+                #endif
+
 		insert_error(tail, str, "Cant parse parameter name",
 			     ICAL_XLICERRORTYPE_PARAMETERNAMEPARSEERROR);
 		tail = 0;
