@@ -663,7 +663,7 @@ dnl [ NO_UNIX_LDAP=1 ])
 
 MOZ_ARG_ENABLE_BOOL(mailnews,
 [  --enable-mailnews       Enable Mail & News],
-  [ MOZ_MAIL_NEWS=1 AC_DEFINE(MOZ_MAIL_NEWS) ] )
+  [ MOZ_MAIL_NEWS=1 ] )
 
 dnl Note: This conflicts with --disable-shared
 MOZ_ARG_ENABLE_BOOL(oji,
