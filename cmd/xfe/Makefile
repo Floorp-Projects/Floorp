@@ -228,7 +228,9 @@ XFE_WIDGETS_LIB		= $(DIST)/lib/libXfeWidgets.a
 XFE_WIDGETS_BM_LIB	= $(DIST)/lib/libXfeBm.a
 
 ifneq ($(OS_ARCH),IRIX) 
+ifneq ($(OS_ARCH,FreeBSD)
 DYNAMIC_SYMBOLS_F	= -rdynamic # default
+endif
 endif
 ifeq ($(OS_ARCH),SunOS) 
 ifdef NS_USE_NATIVE
