@@ -1033,9 +1033,10 @@ static JSBool
 obj_defineGetter(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                  jsval *rval)
 {
-    jsval fval;
+    jsval fval, junk;
     jsid id;
     JSBool found;
+    uintN attrs;
 
     fval = argv[1];
     if (JS_TypeOfValue(cx, fval) != JSTYPE_FUNCTION) {
@@ -1049,6 +1050,12 @@ obj_defineGetter(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 	return JS_FALSE;
     if (!js_CheckRedeclaration(cx, obj, id, JSPROP_GETTER, &found))
         return JS_FALSE;
+    /*
+     * Getters and setters are just like watchpoints from an access
+     * control point of view.
+     */
+    if (!OBJ_CHECK_ACCESS(cx, obj, id, JSACC_WATCH, &junk, &attrs))
+        return JS_FALSE;
     return OBJ_DEFINE_PROPERTY(cx, obj, id, JSVAL_VOID,
                                (JSPropertyOp) JSVAL_TO_OBJECT(fval), NULL,
                                JSPROP_GETTER, NULL);
@@ -1058,9 +1065,10 @@ static JSBool
 obj_defineSetter(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                  jsval *rval)
 {
-    jsval fval;
+    jsval fval, junk;
     jsid id;
     JSBool found;
+    uintN attrs;
 
     fval = argv[1];
     if (JS_TypeOfValue(cx, fval) != JSTYPE_FUNCTION) {
@@ -1073,6 +1081,12 @@ obj_defineSetter(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     if (!JS_ValueToId(cx, argv[0], &id))
 	return JS_FALSE;
     if (!js_CheckRedeclaration(cx, obj, id, JSPROP_SETTER, &found))
+        return JS_FALSE;
+    /*
+     * Getters and setters are just like watchpoints from an access
+     * control point of view.
+     */
+    if (!OBJ_CHECK_ACCESS(cx, obj, id, JSACC_WATCH, &junk, &attrs))
         return JS_FALSE;
     return OBJ_DEFINE_PROPERTY(cx, obj, id, JSVAL_VOID,
                                NULL, (JSPropertyOp) JSVAL_TO_OBJECT(fval),
