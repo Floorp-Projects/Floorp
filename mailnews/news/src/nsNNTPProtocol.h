@@ -25,6 +25,10 @@
 
 #include "nsMsgProtocol.h"
 
+#include "nsCOMPtr.h"
+#include "nsIEventQueue.h"
+#include "nsIEventQueueService.h"
+#include "nsIInputStream.h"
 #include "nsIOutputStream.h"
 #include "nsIBufferInputStream.h"
 #include "nsIBufferOutputStream.h"
@@ -44,7 +48,6 @@
 
 #include "nsMsgLineBuffer.h"
 #include "nsSpecialSystemDirectory.h"
-#include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
 #include "nsIStringBundle.h"
 // this is only needed as long as our libmime hack is in place
@@ -244,6 +247,9 @@ private:
 	PRInt32   m_newsRCListIndex;
 	PRInt32   m_newsRCListCount;
 
+	// variable for ReadNewsList
+	PRInt32   m_readNewsListCount;
+
 	// Per news article state information. (article number, author, subject, id, etc
 	char	 *m_messageID;
     PRInt32   m_articleNumber;   /* current article number */
@@ -387,7 +393,19 @@ private:
 
 	void SetProgressBarPercent(PRUint32 aProgress, PRUint32 aProgressMax);
 	void SetProgressStatus(char * message);
-  nsresult InitializeNewsFolderFromUri(const char *uri);
+	nsresult InitializeNewsFolderFromUri(const char *uri);
+
+protected:
+    struct ReadNewsListEvent {
+        PLEvent                mEvent;
+        nsNNTPProtocol * mNNTPProtocol;
+		nsIInputStream * mInputStream;
+    };
+    static nsresult
+    PostReadNewsListEvent(nsNNTPProtocol* aNNTPProtocol, nsIInputStream * aInputStream, PLHandleEventProc aHandler);
+
+    static void* HandleReadNewsListEvent(PLEvent* aEvent);
+    static void DestroyReadNewsListEvent(PLEvent* aEvent);	
 };
 
 NS_BEGIN_EXTERN_C

@@ -36,7 +36,6 @@
 #include "nsNNTPProtocol.h"
 #include "nsINNTPArticleList.h"
 #include "nsIOutputStream.h"
-#include "nsIInputStream.h"
 #include "nsFileStream.h"
 #include "nsIAllocator.h"
 #include "nsIPipe.h"
@@ -96,6 +95,7 @@
 #define PREF_NEWS_CANCEL_CONFIRM	"news.cancel.confirm"
 #define PREF_NEWS_CANCEL_ALERT_ON_SUCCESS "news.cancel.alert_on_success"
 #define DEFAULT_NEWS_CHUNK_SIZE -1
+#define READ_NEWS_LIST_COUNT_MAX 20 /* number of groups to process at a time when reading the list from the server */
 
 // ***jt -- the following were pirated from xpcom/io/nsByteBufferInputStream
 // which is not currently in the build system
@@ -153,6 +153,7 @@ static NS_DEFINE_CID(kCMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kPrefServiceCID,NS_PREF_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
+static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 typedef struct _cancelInfoEntry {
     char *from;
@@ -2820,6 +2821,7 @@ PRInt32 nsNNTPProtocol::ProcessNewsgroups(nsIInputStream * inputStream, PRUint32
 	 
 PRInt32 nsNNTPProtocol::BeginReadNewsList()
 {
+	m_readNewsListCount = 0;
     m_nextState = NNTP_READ_LIST;
 	PRInt32 status = 0;
 #ifdef UNREADY_CODE
@@ -2901,6 +2903,7 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
 #else
 	NS_ASSERTION(m_nntpServer, "no nntp incoming server");
 	if (m_nntpServer) {
+		m_readNewsListCount++;
 		rv = m_nntpServer->AddNewNewsgroup(line);
 	}
 	else {
@@ -2909,11 +2912,97 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
 #endif
 	PR_FREEIF(line);
 
+	if (m_readNewsListCount == READ_NEWS_LIST_COUNT_MAX) {
+		m_readNewsListCount = 0;
+		rv = PostReadNewsListEvent(this, inputStream, HandleReadNewsListEvent); 
+		if (NS_FAILED(rv)) {
+			NS_ASSERTION(0,"failed to post ReadNewsListEvent");
+		}
+		else {
+			m_nextState = NEWS_FINISHED;
+		}
+    }
+
 	if (NS_FAILED(rv)) {
 		return -1;
 	}
     return(status);
 }
+
+nsresult
+nsNNTPProtocol::PostReadNewsListEvent(nsNNTPProtocol * aNNTPProtocol, nsIInputStream *aInputStream, PLHandleEventProc aHandler)
+{
+#ifdef DEBUG_sspitzer
+	printf("PostReadNewsListEvent()\n");
+#endif
+    nsresult rv;
+
+    nsCOMPtr<nsIEventQueueService> svc = do_GetService(kEventQueueServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    if (!svc) return NS_ERROR_UNEXPECTED;
+
+    nsCOMPtr<nsIEventQueue> queue;
+    rv = svc->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(queue));
+    if (NS_FAILED(rv)) return rv;
+
+    if (!queue) return NS_ERROR_UNEXPECTED;
+
+    ReadNewsListEvent* event = new ReadNewsListEvent;
+    if (!event) return NS_ERROR_OUT_OF_MEMORY;
+
+    PL_InitEvent(NS_REINTERPRET_CAST(PLEvent*, event),
+                 nsnull,
+                 aHandler,
+                 DestroyReadNewsListEvent);
+
+    event->mNNTPProtocol = aNNTPProtocol;
+    NS_ADDREF(event->mNNTPProtocol);
+
+    event->mInputStream = aInputStream;
+    NS_ADDREF(event->mInputStream);
+
+    rv = queue->EnterMonitor();
+    if (NS_SUCCEEDED(rv)) {
+        (void) queue->PostEvent(NS_REINTERPRET_CAST(PLEvent*, event));
+        (void) queue->ExitMonitor();
+        return NS_OK;
+    }
+
+    // If we get here, something bad happened. Clean up.
+    NS_RELEASE(event->mNNTPProtocol);
+    NS_RELEASE(event->mInputStream);
+    delete event;
+    return rv;
+}
+
+void*
+nsNNTPProtocol::HandleReadNewsListEvent(PLEvent* aEvent)
+{
+#ifdef DEBUG_sspitzer
+	printf("HandleReadNewsListEvent()\n");
+#endif
+    ReadNewsListEvent* event = NS_REINTERPRET_CAST(ReadNewsListEvent*, aEvent);
+    nsNNTPProtocol* aNNTPProtocol = event->mNNTPProtocol;
+
+	aNNTPProtocol->m_nextState = NNTP_READ_LIST;
+	aNNTPProtocol->ProcessProtocolState(nsnull, event->mInputStream, 0,0); 
+
+    return nsnull;
+}
+
+void
+nsNNTPProtocol::DestroyReadNewsListEvent(PLEvent* aEvent)
+{
+#ifdef DEBUG_sspitzer
+	printf("DestroyReadNewsListEvent()\n");
+#endif
+    ReadNewsListEvent* event = NS_REINTERPRET_CAST(ReadNewsListEvent*, aEvent);
+    NS_RELEASE(event->mNNTPProtocol);
+    NS_RELEASE(event->mInputStream);
+    delete event;
+}
+
 
 /* start the xover command
  */
@@ -3518,8 +3607,6 @@ PRInt32 nsNNTPProtocol::DisplayNewsRC()
     {
 		/* send group command to server
 		 */
-		PRInt32 percent;
-
 		char outputBuffer[OUTPUT_BUFFER_SIZE];
 
 		PR_snprintf(outputBuffer, OUTPUT_BUFFER_SIZE, "GROUP %.512s" CRLF, (const char *)m_currentGroup);
