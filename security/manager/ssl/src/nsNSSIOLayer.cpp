@@ -800,14 +800,36 @@ nsSSLIOLayerConnect(PRFileDesc* fd, const PRNetAddr* addr,
     return PR_FAILURE;
   
   PRStatus status = PR_SUCCESS;
+
+#if defined(XP_BEOS)
+  // Due to BeOS net_server's lack of support for nonblocking sockets,
+  // we must execute this entire connect as a blocking operation - bug 70217
+ 
+  PRSocketOptionData sockopt;
+  sockopt.option = PR_SockOpt_Nonblocking;
+  PR_GetSocketOption(fd, &sockopt);
+  PRBool oldBlockVal = sockopt.value.non_blocking;
+  sockopt.option = PR_SockOpt_Nonblocking;
+  sockopt.value.non_blocking = PR_FALSE;
+  PR_SetSocketOption(fd, &sockopt);
+#endif
   
   nsNSSSocketInfo *infoObject = (nsNSSSocketInfo*)fd->secret;
   
-  status = fd->lower->methods->connect(fd->lower, addr, timeout);
+  status = fd->lower->methods->connect(fd->lower, addr, 
+#if defined(XP_BEOS)  // bug 70217
+                                       PR_INTERVAL_NO_TIMEOUT);
+#else
+                                       timeout);
+#endif
   if (status != PR_SUCCESS) {
     PR_LOG(gPIPNSSLog, PR_LOG_ERROR, ("[%p] Lower layer connect error: %d\n",
                                       (void*)fd, PR_GetError()));
+#if defined(XP_BEOS)  // bug 70217
+    goto loser;
+#else
     return status;
+#endif
   }
   
   PRBool forceHandshake, forTLSStepUp;
@@ -827,6 +849,16 @@ nsSSLIOLayerConnect(PRFileDesc* fd, const PRNetAddr* addr,
       status = PR_FAILURE;
     }
   }
+
+#if defined(XP_BEOS)  // bug 70217
+ loser:
+  // We put the Nonblocking bit back to the value it was when 
+  // we entered this function.
+  NS_ASSERTION(sockopt.option == PR_SockOpt_Nonblocking,
+               "sockopt.option was re-set to an unexpected value");
+  sockopt.value.non_blocking = oldBlockVal;
+  PR_SetSocketOption(fd, &sockopt);
+#endif
 
   return status;
 }
