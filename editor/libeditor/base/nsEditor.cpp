@@ -2826,6 +2826,13 @@ nsEditor::IsEditable(nsIDOMNode *aNode)
       return PR_FALSE;
     }
   }
+
+  // this next block testing for char data is ifdef'd out
+  // because it's unclear what whitespace constitutes "not editable"
+  // it's just an optimization, which makes the assumption that
+  // scanning the text is faster than asking layout if the text has a frame
+  // the last block will do this for all content, including text
+#ifdef BUSTER_PERFORMANCE
   // it's not the bogus node, so see if it is an irrelevant text node
   if (PR_TRUE==IsTextNode(aNode))
   {
@@ -2844,13 +2851,15 @@ nsEditor::IsEditable(nsIDOMNode *aNode)
       PRUint32 i;
       for (i=0; i<length; i++)
       {
-        if ('\n'!=data.CharAt(i)) {
+        PRUnichar character = data.CharAt(i);
+        if (('\n'!=character) && ('\r'!=character)) {
           return PR_TRUE;
         }
       }
       return PR_FALSE;
     }
   }
+#endif
   
   // we got this far, so see if it has a frame.  If so, we'll edit it.
   nsIFrame *resultFrame;
