@@ -68,7 +68,7 @@ $source_root_pat = '^.*/mozilla/';
   'declaration of \`y0\' shadows global', # from mathcalls.h
   'declaration of \`y1\' shadows global', # from mathcalls.h
   'by \`nsHTML(?:Anchor|[^:]*Element)::(?:Set|Get)Attribute', # kipp says this is bogus
-  'is not (any longer) pertinent', # cvs warning we can safely ignore
+  'is not \(any longer\) pertinent', # cvs warning we can safely ignore
 );
 @ignore_match = (
   { warning=>'statement with no effect', source=>'(?:JS_|PR_)?ASSERT'},
