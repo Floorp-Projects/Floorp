@@ -38,7 +38,7 @@ CPPSRCS		= \
 EXPORTS		= \
 		nsComponentManagerUtils.h \
 		nsIGenericFactory.h \
-		nsIRegistry.h \
+		nsIRegistryUtils.h \
 		nsIServiceManager.h \
 		nsIServiceProvider.h \
 		nsRepository.h \
@@ -46,10 +46,13 @@ EXPORTS		= \
 		$(NULL)
 
 XPIDLSRCS	= \
+		nsICategoryHandler.idl \
+		nsICategoryManager.idl \
 		nsIComponentLoader.idl \
 		nsIComponentManager.idl \
 		nsIFactory.idl \
 		nsIModule.idl \
+		nsIRegistry.idl \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
@@ -64,3 +67,6 @@ include $(topsrcdir)/config/rules.mk
 
 DEFINES		+= -DUSE_NSREG -D_IMPL_NS_COM -D_IMPL_NS_BASE
 
+# XXX need common install rule!
+install:: $(TARGETS)
+	$(INSTALL) $(srcdir)/nsCategoryManager.js $(DIST)/bin/components

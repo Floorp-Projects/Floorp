@@ -26,7 +26,7 @@ MODULE = xpcom_components
 EXPORTS =                     \
 	nsComponentManagerUtils.h \
         nsIGenericFactory.h   \
-        nsIRegistry.h         \
+        nsIRegistryUtils.h         \
         nsIServiceManager.h   \
         nsIServiceProvider.h  \
         nsRepository.h        \
@@ -34,10 +34,13 @@ EXPORTS =                     \
         $(NULL)			
 
 XPIDLSRCS =               \
+	.\nsICategoryHandler.idl \
+	.\nsICategoryManager.idl \
         .\nsIComponentLoader.idl \
 	.\nsIComponentManager.idl \
 	.\nsIFactory.idl	\
         .\nsIModule.idl	  \
+	.\nsIRegistry.idl \
         $(NULL)
 
 ################################################################################

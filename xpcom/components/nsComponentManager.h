@@ -97,11 +97,11 @@ protected:
     nsSupportsHashtable*  mLoaders;
     PRMonitor*          mMon;
     nsIRegistry*        mRegistry;
-    nsIRegistry::Key    mXPCOMKey;
-    nsIRegistry::Key    mClassesKey;
-    nsIRegistry::Key    mCLSIDKey;
+    nsRegistryKey       mXPCOMKey;
+    nsRegistryKey       mClassesKey;
+    nsRegistryKey       mCLSIDKey;
     PRBool              mPrePopulationDone;
-    nsIRegistry::Key    mLoadersKey;
+    nsRegistryKey       mLoadersKey;
     nsNativeComponentLoader *mNativeComponentLoader;
     nsSpecialSystemDirectory *mComponentsDir;
     PRUint32 mComponentsDirLen;
