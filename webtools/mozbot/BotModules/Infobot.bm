@@ -105,7 +105,6 @@ sub unload {
 sub Told {
     my $self = shift;
     my ($event, $message) = @_;
-    return 10 unless $event->{level} >= 10; # make this module a very low priority
     if ($message =~ /^\s*status[?\s]*$/osi) {
         my $sum = $self->countFactoids();
         my $questions = $self->{'questions'} == 1 ? "$self->{'questions'} question" : "$self->{'questions'} questions";
@@ -122,6 +121,9 @@ sub Told {
         $self->ReceivedReply($event, $3, $2, $1, $4);
     } elsif ($message =~ /^\s*literal\s+(.+?)\s*$/) {
         $self->Literal($event, $1);
+    } elsif ($event->{level} < 10) {
+        # make this module a very low priority
+        return 10;
     } elsif (not $self->DoFactoidCheck($event, $message, 1)) {
         return $self->SUPER::Told(@_);
     }
