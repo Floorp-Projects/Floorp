@@ -162,6 +162,7 @@ protected:
 	PRPackedBool                    mZoomOnShow;
 	PRPackedBool                    mZooming;
 	PRPackedBool                    mResizeIsFromUs;    // we originated the resize, prevent infinite recursion
+  PRBool                          mShown;             // whether the window was actually shown on screen
 	Point                           mBoundsOffset;      // offset from window structure to content
 	auto_ptr<nsMacEventHandler>     mMacEventHandler;
 	nsIWidget                      *mOffsetParent;
