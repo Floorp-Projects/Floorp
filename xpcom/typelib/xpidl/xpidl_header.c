@@ -470,6 +470,12 @@ op_dcl(TreeState *state)
     gboolean op_notxpcom =
         (IDL_tree_property_get(op->ident, "notxpcom") != NULL);
     IDL_tree iter;
+    
+    if (op->f_varargs) {
+        /* We don't currently support varargs. */
+        IDL_tree_error(state->tree, "varargs are not currently supported\n");
+        return FALSE;
+    }
 
     xpidl_write_comment(state, 2);
 
