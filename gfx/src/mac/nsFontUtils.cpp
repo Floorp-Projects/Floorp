@@ -82,13 +82,7 @@ nsFontUtils::GetNativeTextStyle(nsIFontMetrics& inMetrics,
 		case NS_FONT_STYLE_ITALIC: 		textFace |= italic;		break;
 		case NS_FONT_STYLE_OBLIQUE: 	textFace |= italic;		break;	//XXX
 	}
-#if 0
-	switch (aFont->variant)
-	{
-		case NS_FONT_VARIANT_NORMAL: 							break;
-		case NS_FONT_VARIANT_SMALL_CAPS: 						break;
-	}
-#endif
+
 	PRInt32 offset = aFont->weight % 100;
 	PRInt32 baseWeight = aFont->weight / 100;
 	NS_ASSERTION((offset < 10) || (offset > 90), "Invalid bolder or lighter value");
@@ -99,13 +93,6 @@ nsFontUtils::GetNativeTextStyle(nsIFontMetrics& inMetrics,
 		if (offset < 10)
 			textFace |= bold;
 	}
-
-	if ( aFont->decorations & NS_FONT_DECORATION_UNDERLINE )
-		textFace |= underline;
-	if ( aFont->decorations & NS_FONT_DECORATION_OVERLINE )
-		textFace |= underline;  // THIS IS WRONG, BUT HERE FOR COMPLETENESS
-	if ( aFont->decorations & NS_FONT_DECORATION_LINE_THROUGH )
-		textFace |= underline;  // THIS IS WRONG, BUT HERE FOR COMPLETENESS
 
 	RGBColor	black = {0};
 
