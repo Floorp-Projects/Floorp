@@ -176,9 +176,21 @@ void nsScrollbar::SetMaxRange(PRUint32 aEndRange)
 //-------------------------------------------------------------------------
 PRUint32 nsScrollbar::GetMaxRange()
 {
+    /*int value = 0;
+    int slider_size = 0;
+    int increment = 0;
+    int page_increment = 0;
+    XmScrollBarGetValues(mWidget,
+                        &value,
+                        &slider_size,
+                        &increment,
+                        &page_increment) ;
+    printf("%d %d %d %d\n", value, slider_size, increment, page_increment);
+    return (PRUint32)slider_size;*/
+
     int maxRange = 0;
     XtVaGetValues(mWidget, XmNmaximum, &maxRange, nsnull);
-
+    printf("Got Range %d\n", maxRange);
     return (PRUint32)maxRange;
 }
 
@@ -190,12 +202,12 @@ PRUint32 nsScrollbar::GetMaxRange()
 //-------------------------------------------------------------------------
 void nsScrollbar::SetPosition(PRUint32 aPos)
 {
-    fprintf(stderr, "Setting SetPosition to %d 0x%x\n", aPos, mWidget);
-    int pos = aPos;
-    XtVaGetValues(mWidget, XmNvalue, &pos);
-    fprintf(stderr, "pos is %d\n", pos);
+    //fprintf(stderr, "Setting SetPosition to %d 0x%x\n", aPos, mWidget);
+    //int pos = aPos;
+    //XtVaGetValues(mWidget, XmNvalue, &pos, nsnull);
+    //fprintf(stderr, "pos is %d\n", pos);
 
-    pos = aPos;
+    int pos = aPos;
     XtVaSetValues(mWidget, XmNvalue, pos, nsnull);
 }
 
@@ -233,7 +245,7 @@ void nsScrollbar::SetThumbSize(PRUint32 aSize)
 PRUint32 nsScrollbar::GetThumbSize()
 {
     int pageSize = 0;
-    XtVaGetValues(mWidget, XmNpageIncrement, &pageSize);
+    XtVaGetValues(mWidget, XmNpageIncrement, &pageSize, nsnull);
 
     return (PRUint32)pageSize;
 }
@@ -308,15 +320,13 @@ PRBool nsScrollbar::OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos)
     PRBool result = PR_TRUE;
     int newPosition;
     fprintf(stderr, "Scrollbar %d pos %d\n", aEvent.message, cPos);
-#if 0
-    switch (scrollCode) {
+
+    switch (aEvent.message) {
 
         // scroll one line right or down
-        // SB_LINERIGHT and SB_LINEDOWN are actually the same value
-        //case SB_LINERIGHT: 
-        case SB_LINEDOWN: 
+        case NS_SCROLLBAR_LINE_NEXT: 
         {
-            XtVaGetValues(mWidget, XmNvalue, &newPosition);
+            XtVaGetValues(mWidget, XmNvalue, &newPosition, nsnull);
             newPosition += mLineIncrement;
             PRUint32 max = GetMaxRange() - GetThumbSize();
             if (newPosition > (int)max) 
@@ -325,72 +335,42 @@ PRBool nsScrollbar::OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos)
             // if an event callback is registered, give it the chance
             // to change the increment
             if (mEventCallback) {
-                nsScrollbarEvent event;
-                event.message = NS_SCROLLBAR_LINE_NEXT;
-                event.widget = (nsWindow*)this;
-                DWORD pos = ::GetMessagePos();
-                POINT cpos;
-                cpos.x = LOWORD(pos);
-                cpos.y = HIWORD(pos);
-                ::ScreenToClient(mWnd, &cpos);
-                event.point.x = cpos.x;
-                event.point.y = cpos.y;
-                event.time = ::GetMessageTime();
-                event.position = (PRUint32)NS_TO_INT_ROUND(newPosition * mScaleFactor);
-
-                result = ConvertStatus((*mEventCallback)(&event));
-                newPosition = NS_TO_INT_ROUND(event.position / mScaleFactor);
+                aEvent.position = newPosition;
+                result = ConvertStatus((*mEventCallback)(&aEvent));
+                newPosition = aEvent.position;
             }
-
-            ::SetScrollPos(mWnd, SB_CTL, newPosition, TRUE);
-
+            XtVaSetValues(mWidget, XmNvalue, newPosition, nsnull);
             break;
         }
 
 
         // scroll one line left or up
-        //case SB_LINELEFT:
-        case SB_LINEUP: 
+        case NS_SCROLLBAR_LINE_PREV: 
         {
-            newPosition = ::GetScrollPos(mWnd, SB_CTL) - mLineIncrement;
+            XtVaGetValues(mWidget, XmNvalue, &newPosition, nsnull);
+            
+            newPosition -= mLineIncrement;
             if (newPosition < 0) 
                 newPosition = 0;
 
             // if an event callback is registered, give it the chance
             // to change the decrement
             if (mEventCallback) {
-                nsScrollbarEvent event;
-                event.message = NS_SCROLLBAR_LINE_PREV;
-                event.widget = (nsWindow*)this;
-                DWORD pos = ::GetMessagePos();
-                POINT cpos;
-                cpos.x = LOWORD(pos);
-                cpos.y = HIWORD(pos);
-                ::ScreenToClient(mWnd, &cpos);
-                event.point.x = cpos.x;
-                event.point.y = cpos.y;
-                event.time = ::GetMessageTime();
-                event.position = (PRUint32)NS_TO_INT_ROUND(newPosition * mScaleFactor);
+                aEvent.position = newPosition;
 
-                result = ConvertStatus((*mEventCallback)(&event));
-                newPosition = NS_TO_INT_ROUND(event.position / mScaleFactor);
+                result = ConvertStatus((*mEventCallback)(&aEvent));
+                newPosition = aEvent.position;
             }
 
-            ::SetScrollPos(mWnd, SB_CTL, newPosition, TRUE);
+            XtVaSetValues(mWidget, XmNvalue, newPosition, nsnull);
 
             break;
         }
 
         // Scrolls one page right or down
-        // case SB_PAGERIGHT:
-        case SB_PAGEDOWN: 
+        case NS_SCROLLBAR_PAGE_NEXT: 
         {
-            SCROLLINFO si;
-            si.cbSize = sizeof(SCROLLINFO);
-            si.fMask = SIF_PAGE;
-            VERIFY(::GetScrollInfo(mWnd, SB_CTL, &si));
-
-            newPosition = ::GetScrollPos(mWnd, SB_CTL)  + si.nPage;
+            XtVaGetValues(mWidget, XmNvalue, &newPosition, nsnull);
             PRUint32 max = GetMaxRange() - GetThumbSize();
             if (newPosition > (int)max) 
                 newPosition = (int)max;
@@ -398,100 +378,53 @@ PRBool nsScrollbar::OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos)
             // if an event callback is registered, give it the chance
             // to change the increment
             if (mEventCallback) {
-                nsScrollbarEvent event;
-                event.message = NS_SCROLLBAR_PAGE_NEXT;
-                event.widget = (nsWindow*)this;
-                DWORD pos = ::GetMessagePos();
-                POINT cpos;
-                cpos.x = LOWORD(pos);
-                cpos.y = HIWORD(pos);
-                ::ScreenToClient(mWnd, &cpos);
-                event.point.x = cpos.x;
-                event.point.y = cpos.y;
-                event.time = ::GetMessageTime();
-                event.position = (PRUint32)NS_TO_INT_ROUND(newPosition * mScaleFactor);;
-
-
-                result = ConvertStatus((*mEventCallback)(&event));
-                newPosition = NS_TO_INT_ROUND(event.position / mScaleFactor);
+                aEvent.position = newPosition;
+                result = ConvertStatus((*mEventCallback)(&aEvent));
+                newPosition = aEvent.position;
             }
-
-            ::SetScrollPos(mWnd, SB_CTL, newPosition, TRUE);
-
+            XtVaSetValues(mWidget, XmNvalue, newPosition + 10, nsnull);
             break;
         }
 
         // Scrolls one page left or up.
-        //case SB_PAGELEFT:
-        case SB_PAGEUP: 
+        case NS_SCROLLBAR_PAGE_PREV: 
         {
-            SCROLLINFO si;
-            si.cbSize = sizeof(SCROLLINFO);
-            si.fMask = SIF_PAGE;
-            VERIFY(::GetScrollInfo(mWnd, SB_CTL, &si));
-
-            newPosition = ::GetScrollPos(mWnd, SB_CTL)  - si.nPage;
+            XtVaGetValues(mWidget, XmNvalue, &newPosition, nsnull);
             if (newPosition < 0) 
                 newPosition = 0;
 
             // if an event callback is registered, give it the chance
             // to change the increment
             if (mEventCallback) {
-                nsScrollbarEvent event;
-                event.message = NS_SCROLLBAR_PAGE_PREV;
-                event.widget = (nsWindow*)this;
-                DWORD pos = ::GetMessagePos();
-                POINT cpos;
-                cpos.x = LOWORD(pos);
-                cpos.y = HIWORD(pos);
-                ::ScreenToClient(mWnd, &cpos);
-                event.point.x = cpos.x;
-                event.point.y = cpos.y;
-                event.time = ::GetMessageTime();
-                event.position = (PRUint32)NS_TO_INT_ROUND(newPosition * mScaleFactor);
-
-                result = ConvertStatus((*mEventCallback)(&event));
-                newPosition = NS_TO_INT_ROUND(event.position / mScaleFactor);
+                aEvent.position = newPosition;
+                result = ConvertStatus((*mEventCallback)(&aEvent));
+                newPosition = aEvent.position;
             }
 
-            ::SetScrollPos(mWnd, SB_CTL, newPosition - 10, TRUE);
-
+            XtVaSetValues(mWidget, XmNvalue, newPosition - 10, nsnull);
             break;
         }
 
+
         // Scrolls to the absolute position. The current position is specified by 
         // the cPos parameter.
-        case SB_THUMBPOSITION: 
-        case SB_THUMBTRACK: 
+        case NS_SCROLLBAR_POS: 
         {
             newPosition = cPos;
 
             // if an event callback is registered, give it the chance
             // to change the increment
             if (mEventCallback) {
-                nsScrollbarEvent event;
-                event.message = NS_SCROLLBAR_POS;
-                event.widget = (nsWindow*)this;
-                DWORD pos = ::GetMessagePos();
-                POINT cpos;
-                cpos.x = LOWORD(pos);
-                cpos.y = HIWORD(pos);
-                ::ScreenToClient(mWnd, &cpos);
-                event.point.x = cpos.x;
-                event.point.y = cpos.y;
-                event.time = ::GetMessageTime();
-                event.position = (PRUint32)NS_TO_INT_ROUND(newPosition * mScaleFactor);
-
-                result = ConvertStatus((*mEventCallback)(&event));
-                newPosition = NS_TO_INT_ROUND(event.position * mScaleFactor);
+                aEvent.position = newPosition;
+                result = ConvertStatus((*mEventCallback)(&aEvent));
+                newPosition = aEvent.position;
             }
 
-            ::SetScrollPos(mWnd, SB_CTL, newPosition, TRUE);
+            XtVaSetValues(mWidget, XmNvalue, newPosition, nsnull);
 
             break;
         }
     }
-#endif
     return result;
 }
 
