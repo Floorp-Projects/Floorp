@@ -37,16 +37,13 @@ MOZ_ACTIVEX_CONTROL_SUPPORT = 1
 MAKE_OBJ_TYPE = DLL
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 RESFILE = MozillaControl.res
-!ifdef MOZ_ACTIVEX_PLUGIN_SUPPORT
 DEFFILE = npmozctl.def
-!else
-DEFFILE = MozillaControl.def
-!endif
 
 OBJS =                                 \
 	.\$(OBJDIR)\StdAfx.obj             \
 	.\$(OBJDIR)\ControlSite.obj        \
 	.\$(OBJDIR)\ControlSiteIPFrame.obj \
+	.\$(OBJDIR)\ItemContainer.obj      \
 	.\$(OBJDIR)\PropertyBag.obj        \
 	.\$(OBJDIR)\MozillaControl.obj     \
 !ifdef MOZ_ACTIVEX_CONTROL_SUPPORT
@@ -134,6 +131,9 @@ install:: $(DLL)
 	$(MAKE_INSTALL) MozillaControl.html $(DIST)\bin\res
 	regsvr32 /s /c $(DIST)\bin\$(DLLNAME).dll
 
+$(DEFFILE) : mkctldef.bat
+	mkctldef.bat > $(DEFFILE)
+
 MozillaControl_i.c MozillaControl.h: MozillaControl.idl
 	midl /Oicf /h MozillaControl.h /iid MozillaControl_i.c MozillaControl.idl
 
@@ -151,6 +151,8 @@ npwin.cpp: $(MOZ_PLUGINSDK)/common/npwin.cpp
 ControlSite.cpp \
 ControlSiteIPFrame.cpp \
 PropertyBag.cpp : StdAfx.h PropertyBag.h ControlSite.h ControlSiteIPFrame.h
+
+ItemContainer.cpp : StdAfx.h ItemContainer.h
 
 MozillaControl.cpp \
 StdAfx.cpp: StdAfx.h MozillaControl.h MozillaBrowser.h WebShellContainer.h
@@ -172,7 +174,17 @@ StdAfx.cpp: StdAfx.h MozillaControl.h MozillaBrowser.h WebShellContainer.h
 
 guids.cpp: StdAfx.h guids.h
 
+control_and_plugin:
+	nmake /f makefile.win MOZ_ACTIVEX_PLUGIN_SUPPORT=1 MOZ_ACTIVEX_CONTROL_SUPPORT=1
+
+plugin_only::
+	nmake /f makefile.win MOZ_ACTIVEX_PLUGIN_SUPPORT=1 MOZ_ACTIVEX_NO_CONTROL_SUPPORT=1
+
+control_only::
+	nmake /f makefile.win MOZ_ACTIVEX_CONTROL_SUPPORT=1 MOZ_ACTIVEX_NO_PLUGIN_SUPPORT=1
+
 clobber::
 	-regsvr32 /s /c /u $(DIST)\bin\$(DLLNAME).dll
+	-del $(DEFFILE)
 
 !endif
