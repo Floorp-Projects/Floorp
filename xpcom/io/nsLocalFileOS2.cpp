@@ -624,13 +624,10 @@ NS_IMETHODIMP
 nsLocalFile::Clone(nsIFile **file)
 {
     nsresult rv;
-    char * aFilePath;
-    GetPath(&aFilePath);
 
     nsCOMPtr<nsILocalFile> localFile;
 
-    rv = NS_NewLocalFile(aFilePath, mFollowSymlinks, getter_AddRefs(localFile));
-    nsMemory::Free(aFilePath);
+    rv = NS_NewNativeLocalFile(mWorkingPath, mFollowSymlinks, getter_AddRefs(localFile));
     
     if (NS_SUCCEEDED(rv) && localFile)
     {
