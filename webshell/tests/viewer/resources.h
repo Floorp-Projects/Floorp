@@ -66,6 +66,8 @@
 #define VIEWER_EDIT_SELECTALL   40204
 #define VIEWER_EDIT_FINDINPAGE  40205
 
+#define VIEWER_RL_BASE          41000
+
 #define VIEWER_TOP100           40300
 /* Debug Robot dialog setup */
 

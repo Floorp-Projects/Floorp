@@ -151,6 +151,9 @@ nsViewer* gTheViewer = nsnull;
 WindowData * gMainWindowData = nsnull;
 nsIAppShell *gAppShell= nsnull;
 nsIPref *gPrefs;
+#define MAX_RL 15
+static char* gRLList[MAX_RL];
+static int gRLPos = 0;
 static char* startURL;
 static nsVoidArray* gWindows;
 static PRBool gDoPurify;          // run in Purify auto mode
@@ -378,6 +381,21 @@ DocObserver::LoadURL(const nsString& aURLSpec,
                      nsIStreamObserver* anObserver)
 {
   mURL = aURLSpec;
+  for (int i = 0; i < MAX_RL; i++) {
+     if (gRLList[i])
+        PL_strfree(gRLList[i]);
+  }
+  gRLPos = 0;
+
+    mViewer->ResetRelatedLinks();
+    if (mViewer->mRelatedLinks) {
+       char * pStr = aURLSpec.ToNewCString();
+       mViewer->mRelatedLinks->SetRLWindowURL(mViewer->mRLWindow, pStr);
+       if (pStr)
+          free(pStr);
+       mViewer->mRelatedLinks->WindowItems(mViewer->mRLWindow);
+    }
+
   return mDocLoader->LoadURL(aURLSpec, aCommand, aContainer,
                              aPostData, aExtraInfo, anObserver);
 }
@@ -1475,6 +1493,22 @@ nsEventStatus nsViewer::ProcessMenu(PRUint32 aId, WindowData* wd)
       DoDebugSave(wd);
       break;
 
+    case VIEWER_RL_BASE:
+    case VIEWER_RL_BASE+1:
+    case VIEWER_RL_BASE+2:
+    case VIEWER_RL_BASE+3:
+    case VIEWER_RL_BASE+4:
+    case VIEWER_RL_BASE+5:
+    case VIEWER_RL_BASE+6:
+    case VIEWER_RL_BASE+7:
+    case VIEWER_RL_BASE+8:
+    case VIEWER_RL_BASE+9:
+    case VIEWER_RL_BASE+10:
+      if (wd) {
+         wd->mViewer->GoTo(gRLList[aId-VIEWER_RL_BASE]);
+      }
+      break;
+
   }
 
   return(result);
@@ -1586,7 +1620,8 @@ nsViewer::GoTo(const nsString& aURLSpec,
     printf("goto: ");
     fputs(aURLSpec, stdout);
     printf("\n");
-
+    mLocation->RemoveText();
+    mLocation->SetText(aURLSpec);
     rv = mWD->observer->LoadURL(aURLSpec,       // URL string
                                 aCommand,       // Command
                                 aContainer,     // Container
@@ -1618,6 +1653,25 @@ nsViewer::GoingTo(const nsString& aURL)
   printf("GoingTo: new history=\n");
   ShowHistory();
 #endif
+}
+
+static nsIRelatedLinks * gRelatedLinks = 0;
+static void DumpRLValues(void* pdata, RL_Window win)
+{
+   nsViewer * pIViewer = (nsViewer *)pdata;
+   if (pIViewer) {
+      RL_Item nextItem = gRelatedLinks->WindowItems(win);
+      do {
+         char * pname = gRelatedLinks->ItemName(nextItem);
+         char * purl = gRelatedLinks->ItemUrl(nextItem);
+         if (pname) {
+            if (gRLPos < MAX_RL)
+               gRLList[gRLPos++] = PL_strdup(purl);
+            pIViewer->AddRelatedLink(pname, purl);
+         }
+   
+      } while ((nextItem = gRelatedLinks->NextItem(nextItem))!=0);
+   }
 }
 
 nsDocLoader* nsViewer::SetupViewer(nsIWidget **aMainWindow, int argc, char **argv)
@@ -1661,6 +1715,14 @@ nsDocLoader* nsViewer::SetupViewer(nsIWidget **aMainWindow, int argc, char **arg
   }
 
   NS_InitINetService(this);
+
+  for (int i=0; i<MAX_RL; i++)
+     gRLList[i] = nsnull;
+  mRelatedLinks = NS_NewRelatedLinks();
+  gRelatedLinks = mRelatedLinks;
+  if (mRelatedLinks) {
+     mRLWindow = mRelatedLinks->MakeRLWindowWithCallback(DumpRLValues, this);
+  }
 
   // Create an application shell
   res=NSRepository::CreateInstance(kCAppShellCID, nsnull, kIAppShellIID, (void**)&gAppShell);
@@ -1825,6 +1887,16 @@ void nsViewer::AddMenu(nsIWidget* aMainWindow, PRBool aForPrintPreview)
 void nsViewer::ShowConsole(WindowData* aWindata)
 {
   printf("ShowConsole not implemented\n");
+}
+
+void nsViewer::AddRelatedLink(char * name, char * url)
+{
+  printf("AddRelatedLink not implemented\n");
+}
+
+void nsViewer::ResetRelatedLinks()
+{
+  printf("ResetRelatedLinks not implemented\n");
 }
 
 void nsViewer::CloseConsole() 

@@ -20,6 +20,7 @@
 
 #include "nsIWebWidget.h"
 #include "nsIDocumentObserver.h"
+#include "nsIRelatedLinks.h"
 #include "nsIStreamListener.h"
 #include "nsILinkHandler.h"
 #include "nsIDocumentLoader.h"
@@ -190,6 +191,8 @@ class nsViewer : public nsINetContainerApplication, public nsDispatchListener {
     virtual void DoDebugSave(WindowData* aWindata);
     virtual void DoSiteWalker(WindowData* aWindata);
     virtual void CopySelection(WindowData* aWindata);
+    virtual void AddRelatedLink(char * name, char * url);
+    virtual void ResetRelatedLinks();
     virtual nsresult Run();
     virtual void Destroy(WindowData* wd);
     virtual void Stop();
@@ -256,6 +259,8 @@ class nsViewer : public nsINetContainerApplication, public nsDispatchListener {
   WindowData* mWD;
   nsVoidArray mHistory;
   PRInt32 mHistoryIndex;
+  nsIRelatedLinks * mRelatedLinks;
+  RL_Window mRLWindow;
 };
 
   // Set the single viewer.

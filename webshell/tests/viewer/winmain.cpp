@@ -20,6 +20,7 @@
 
 #include <windows.h>
 #include <crtdbg.h>
+#include <stdio.h>
 #include "resources.h"
 #include "jsconsres.h"
 #include "JSConsole.h"
@@ -74,6 +75,9 @@ class nsWin32Viewer : public nsViewer {
     virtual void CloseConsole();
     virtual void Stop();
     virtual void CrtSetDebug(PRUint32 aNewFlags);
+    virtual void AddRelatedLink(char * name, char * url);
+    virtual void ResetRelatedLinks();
+
       // Utilities
     virtual void CopyTextContent(WindowData* wd, HWND aHWnd);
 };
@@ -97,6 +101,27 @@ void DestroyConsole()
     delete gConsole;
     gConsole = NULL;
   }
+}
+
+HWND ghWnd = 0;
+#define RL_MENU_POS 4
+
+void nsWin32Viewer::AddRelatedLink(char * name, char * url)
+{
+   if (name) {
+      HMENU hMenu = GetMenu(ghWnd);
+      HMENU hDropDown = GetSubMenu(hMenu,RL_MENU_POS);
+      int i = GetMenuItemCount(hDropDown);
+      AppendMenu(hDropDown, MF_STRING, VIEWER_RL_BASE+i, (LPCSTR)name);
+   }
+}
+
+void nsWin32Viewer::ResetRelatedLinks()
+{
+   HMENU hMenu = GetMenu(ghWnd);
+   HMENU hDropDown = GetSubMenu(hMenu,RL_MENU_POS);
+   while (DeleteMenu(hDropDown,0,MF_BYPOSITION))
+      ;
 }
 
 //-----------------------------------------------------------------
@@ -187,6 +212,7 @@ void AddViewerMenu(HINSTANCE hInstance, nsIWidget* aWidget, LPCTSTR lpMenuName)
 {
   HMENU menu = ::LoadMenu(hInstance,lpMenuName);
   HWND hwnd = aWidget->GetNativeData(NS_NATIVE_WIDGET);
+  ghWnd = hwnd;
   ::SetMenu(hwnd, menu);
 }
 
