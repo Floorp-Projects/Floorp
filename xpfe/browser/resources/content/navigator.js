@@ -44,6 +44,7 @@ var gURLBar = null;
 var gProxyButton = null;
 var gProxyFavIcon = null;
 var gProxyDeck = null;
+var gBookmarksService = null;
 var gNavigatorBundle;
 var gBrandBundle;
 var gNavigatorRegionBundle;
@@ -62,6 +63,7 @@ var gBrowser = null;
 
 // focused frame URL
 var gFocusedURL = null;
+var gFocusedDocument = null;
 
 /**
 * We can avoid adding multiple load event listeners and save some time by adding
@@ -75,7 +77,6 @@ function loadEventHandlers(event)
     UpdateBookmarksLastVisitedDate(event);
     UpdateInternetSearchResults(event);
     checkForDirectoryListing();
-    getContentAreaFrameCount();
     postURLToNativeWidget();
   }
 }
@@ -99,8 +100,7 @@ function contentAreaFrameFocus()
   var focusedWindow = document.commandDispatcher.focusedWindow;
   if (isDocumentFrame(focusedWindow)) {
     gFocusedURL = focusedWindow.location.href;
-    var saveFrameItem = document.getElementById("savepage");
-    saveFrameItem.removeAttribute("hidden");
+    gFocusedDocument = focusedWindow.document;
   }
 }
 
@@ -114,10 +114,11 @@ function UpdateBookmarksLastVisitedDate(event)
   var url = _content.location.href;
   if (url) {
     // if the URL is bookmarked, update its "Last Visited" date
-    var bmks = Components.classes["@mozilla.org/browser/bookmarks-service;1"]
-                         .getService(Components.interfaces.nsIBookmarksService);
+    if (!gBookmarksService)
+      gBookmarksService = Components.classes["@mozilla.org/browser/bookmarks-service;1"]
+                                    .getService(Components.interfaces.nsIBookmarksService);
 
-    bmks.UpdateBookmarkLastVisitedDate(url, _content.document.characterSet);
+    gBookmarksService.UpdateBookmarkLastVisitedDate(url, _content.document.characterSet);
   }
 }
 
@@ -134,11 +135,11 @@ function UpdateInternetSearchResults(event)
 
       if (autoOpenSearchPanel || isSearchPanelOpen())
       {
-        var search = Components.
-          classes["@mozilla.org/rdf/datasource;1?name=internetsearch"].
-          getService(Components.interfaces.nsIInternetSearchService);
+        if (!gSearchService)
+          gSearchService = Components.classes["@mozilla.org/rdf/datasource;1?name=internetsearch"]
+                                         .getService(Components.interfaces.nsIInternetSearchService);
 
-        var searchInProgressFlag = search.FindInternetSearchResults(url);
+        var searchInProgressFlag = gSearchService.FindInternetSearchResults(url);
 
         if (searchInProgressFlag) {
           if (autoOpenSearchPanel)
@@ -148,10 +149,10 @@ function UpdateInternetSearchResults(event)
     } catch (ex) {
     }
   }
-
   if (document.getElementById("main-window").getAttribute("fullScreen") == "true") {
     BrowserFullScreenEnter();
   }
+
 }
 
 function getBrowser()
@@ -411,9 +412,10 @@ function Startup()
 function LoadBookmarksCallback()
 {
   try {
-    var bmservice = Components.classes["@mozilla.org/browser/bookmarks-service;1"]
-                       .getService(Components.interfaces.nsIBookmarksService);
-    bmservice.ReadBookmarks();
+    if (!gBookmarksService)
+      gBookmarksService = Components.classes["@mozilla.org/browser/bookmarks-service;1"]
+                                    .getService(Components.interfaces.nsIBookmarksService);
+    gBookmarksService.ReadBookmarks();
     // tickle personal toolbar to load personal toolbar items
     var personalToolbar = document.getElementById("innermostBox");
     personalToolbar.builder.rebuild();
@@ -1024,10 +1026,11 @@ function getShortcutOrURI(url)
 {
   // rjc: added support for URL shortcuts (3/30/1999)
   try {
-    var bmks = Components.classes["@mozilla.org/browser/bookmarks-service;1"]
-                         .getService(Components.interfaces.nsIBookmarksService);
+    if (!gBookmarksService)
+      gBookmarksService = Components.classes["@mozilla.org/browser/bookmarks-service;1"]
+                                    .getService(Components.interfaces.nsIBookmarksService);
 
-    var shortcutURL = bmks.FindShortcut(url);
+    var shortcutURL = gBookmarksService.FindShortcut(url);
     if (!shortcutURL) {
       // rjc: add support for string substitution with shortcuts (4/4/2000)
       //      (see bug # 29871 for details)
@@ -1035,7 +1038,7 @@ function getShortcutOrURI(url)
       if (aOffset > 0) {
         var cmd = url.substr(0, aOffset);
         var text = url.substr(aOffset+1);
-        shortcutURL = bmks.FindShortcut(cmd);
+        shortcutURL = gBookmarksService.FindShortcut(cmd);
         if (shortcutURL && text) {
           aOffset = shortcutURL.indexOf("%s");
           if (aOffset >= 0)
@@ -1120,7 +1123,6 @@ function BrowserFullScreenToggle()
 
     next = next.nextSibling;
   }
-
   // toggle and save the fullScreen indicator
   gFullScreen = !gFullScreen;
   document.getElementById("main-window").setAttribute("fullScreen", gFullScreen?"true":"false");
@@ -1146,7 +1148,6 @@ function BrowserViewSource()
   if (focusedWindow == window)
     focusedWindow = _content;
 
-  dump("focusedWindow = " + focusedWindow + "\n");
   if (focusedWindow)
     var docCharset = "charset=" + focusedWindow.document.characterSet;
 
@@ -1424,7 +1425,7 @@ function stylesheetFillPopup(forDocument, menuPopup, itemNoOptStyles)
         currentStyleSheets[currentStyleSheet.title] = menuItem;
       } else {
         if (currentStyleSheet.disabled)
-          lastWithSameTitle.setAttribute("checked", false);
+          lastWithSameTitle.removeAttribute("checked");
       }
     }
   }
@@ -1447,7 +1448,8 @@ function stylesheetSwitch(forDocument, title)
 
 function applyTheme(themeName)
 {
-  if (themeName.getAttribute("name") == "")
+  var name = themeName.getAttribute("name");
+  if (!name)
     return;
 
   var chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
@@ -1455,7 +1457,7 @@ function applyTheme(themeName)
 
   var oldTheme = false;
   try {
-    oldTheme = !chromeRegistry.checkThemeVersion(themeName.getAttribute("name"));
+    oldTheme = !chromeRegistry.checkThemeVersion(name);
   }
   catch(e) {
   }

@@ -168,7 +168,7 @@
   <!-- Menu -->
   <menubar id="main-menubar" class="chromeclass-menubar">
     <menu id="menu_File">
-      <menupopup id="menu_FilePopup">
+      <menupopup id="menu_FilePopup" onpopupshowing="getContentAreaFrameCount();">
         <menuitem label="&browserCmd.label;" accesskey="&browserCmd.accesskey;" key="key_newNavigator" command="cmd_newNavigator"/>
         <menu id="menu_New">
           <menupopup id="menu_NewPopup">

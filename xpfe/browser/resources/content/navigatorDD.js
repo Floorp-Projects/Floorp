@@ -40,9 +40,6 @@
 var DROP_BEFORE = -1;
 var DROP_ON = 0;
 var DROP_AFTER = 1;
-var gRDFService = Components.classes["@mozilla.org/rdf/rdf-service;1"]
-                            .getService(Components.interfaces.nsIRDFService);
-
 function _RDF(aType)
   {
     return "http://www.w3.org/1999/02/22-rdf-syntax-ns#" + aType;
@@ -55,7 +52,7 @@ function NC_RDF(aType)
 var RDFUtils = {
   getResource: function(aString)
     {
-      return gRDFService.GetResource(aString, true);
+      return this.rdf.GetResource(aString, true);
     },
 
   getTarget: function(aDS, aSourceID, aPropertyID)
@@ -69,7 +66,15 @@ var RDFUtils = {
     {
       aResource = aResource.QueryInterface(Components.interfaces.nsIRDFResource);
       return aResource ? aResource.Value : null;
+    },
+  _rdf: null,
+  get rdf() {
+    if (!this._rdf) {
+      this._rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
+                            .getService(Components.interfaces.nsIRDFService);
     }
+    return this._rdf;
+  }
 };
 
 function isBookmark(aURI)
@@ -161,7 +166,7 @@ var personalToolbarObserver = {
       var linkTitle;
       
       // look it up in bookmarks
-      var bookmarksDS = gRDFService.GetDataSource("rdf:bookmarks");
+      var bookmarksDS = RDFUtils.rdf.GetDataSource("rdf:bookmarks");
       var nameRes = RDFUtils.getResource(NC_RDF("Name"));
       var nameFromBookmarks = bookmarksDS.GetTarget(elementRes, nameRes, true);
       if (nameFromBookmarks)
@@ -175,7 +180,7 @@ var personalToolbarObserver = {
         {
           // look up this URL's title in global history
           var potentialTitle = null;
-          var historyDS = gRDFService.GetDataSource("rdf:history");
+          var historyDS = RDFUtils.rdf.GetDataSource("rdf:history");
           var titlePropRes = RDFUtils.getResource(NC_RDF("Name"));
           var titleFromHistory = historyDS.GetTarget(elementRes, titlePropRes, true);
           if (titleFromHistory)
@@ -542,7 +547,7 @@ var menuDNDObserver = {
     var linkTitle;
       
     // look it up in bookmarks
-    var bookmarksDS = gRDFService.GetDataSource("rdf:bookmarks");
+    var bookmarksDS = RDFUtils.rdf.GetDataSource("rdf:bookmarks");
     var nameRes = RDFUtils.getResource(NC_RDF("Name"));
     var nameFromBookmarks = bookmarksDS.GetTarget(elementRes, nameRes, true);
     if (nameFromBookmarks)
@@ -554,7 +559,7 @@ var menuDNDObserver = {
       linkTitle = xferData[1]
     else {
       // look up this URL's title in global history
-      var historyDS = gRDFService.GetDataSource("rdf:history");
+      var historyDS = RDFUtils.rdf.GetDataSource("rdf:history");
       var titlePropRes = RDFUtils.getResource(NC_RDF("Name"));
       var titleFromHistory = historyDS.GetTarget(elementRes, titlePropRes, true);
       if (titleFromHistory)
