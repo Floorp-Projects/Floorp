@@ -1697,6 +1697,9 @@ function InitListMenu()
   // ..."noList" is returned if mixed selection, so remove checkmark
   if (mixedObj.value)
     menuItem.setAttribute("checked", "false");
+
+  // Set enable state for the "None" menuitem
+  goSetCommandEnabled("cmd_removeList", state);
 }
 
 function InitAlignMenu()
