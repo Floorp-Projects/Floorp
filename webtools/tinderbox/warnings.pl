@@ -438,11 +438,12 @@ __END_HEADER
     for $file (sort keys %{$warnings_by_who{$who}}) {
       for $linenum (sort keys %{$warnings_by_who{$who}{$file}}) {
         my $line_rec = $warnings_by_who{$who}{$file}{$linenum};
-        next if $line_rec->{ignorecount} == $line_rec->{count};
-        print_count($count, $line_rec->{count});
+        my $count_for_line = $line_rec->{count} - $line_rec->{ignorecount};
+        next if $count_for_line == 0;
+        print_count($count, $count_for_line);
         print_warning($tree, $br, $file, $linenum, $line_rec);
         print_source_code($linenum, $line_rec) unless $unblamed{$file};
-        $count += $line_rec->{count};
+        $count += $count_for_line;
       }
     }
     print "</table>\n";
@@ -509,11 +510,12 @@ __END_HEADER
     for $file (sort keys %{$warnings_by_who{$who}}) {
       for $linenum (sort keys %{$warnings_by_who{$who}{$file}}) {
         my $line_rec = $warnings_by_who{$who}{$file}{$linenum};
-        next if $line_rec->{ignorecount} == $line_rec->{count};
-        print_count($count, $line_rec->{count});
+        my $count_for_line = $line_rec->{count} - $line_rec->{ignorecount};
+        next if $count_for_line == 0;
+        print_count($count, $count_for_line);
         print_warning($tree, $br, $file, $linenum, $line_rec);
         print_source_code($linenum, $line_rec) unless $unblamed{$file};
-        $count += $line_rec->{count};
+        $count += $count_for_line;
       }
     }
     print "</table>\n";
@@ -533,7 +535,6 @@ __END_FOOTER
 
 sub print_count {
   my ($start, $count) = @_;
-
   print "<tr><td align=right>$start";
   print "-".($start+$count-1) if $count > 1;
   print ".</td>";
