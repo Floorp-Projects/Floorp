@@ -25,6 +25,7 @@
 #include "nsIFileLocator.h"
 #include "nsFileLocations.h"
 #include "nsFileSpec.h"
+#include "nsIFileSpec.h"
 #include "nsFileStream.h"
 #include "nsIBrowserWindow.h"
 #include "nsIWebShell.h"
@@ -378,16 +379,16 @@ nsresult nsPrefWindow::InitializeOneWidget(
             // Check the subtree first, then the real tree.
             // If the preference value is not set at all, let the HTML
             // determine the setting.
-            nsFileSpec *specVal;
+            nsIFileSpec *specVal;
             nsresult rv = mPrefs->GetFilePref(tempPrefName, &specVal);
             if (NS_FAILED(rv))
-              rv = mPrefs->GetFilePref(inPrefName, &specVal);
-            
-            if NS_SUCCEEDED(rv) {
-                nsString newValue = specVal->GetCString();
-                inElement->SetValue(newValue);
-                delete specVal;
-            } 
+                rv = mPrefs->GetFilePref(inPrefName, &specVal);            
+            if (NS_FAILED(rv))
+                return rv;
+            char* newValue;
+            specVal->GetNativePath(&newValue);
+            inElement->SetValue(newValue);
+            NS_RELEASE(specVal);
             break;
         }
     }
@@ -535,8 +536,13 @@ nsresult nsPrefWindow::FinalizeOneWidget(
             nsresult rv = inElement->GetValue(fieldValue);
             if (NS_FAILED(rv))
                 return rv;
-            nsFileSpec specValue(fieldValue);
-            mPrefs->SetFilePref(tempPrefName, &specValue, PR_TRUE);
+            nsIFileSpec* specValue = NS_CreateFileSpec();
+            if (!specValue)
+            	return NS_ERROR_FAILURE;
+            nsCAutoString str(fieldValue);
+            specValue->SetNativePath((char*)(const char*)str);
+            mPrefs->SetFilePref(tempPrefName, specValue, PR_TRUE);
+            NS_RELEASE(specValue);
             break;
         }
     }
