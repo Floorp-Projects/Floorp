@@ -840,15 +840,13 @@ nsProgressDialog.prototype = {
 var module = {
     // registerSelf: Register this component.
     registerSelf: function (compMgr, fileSpec, location, type) {
-        compMgr = compMgr.QueryInterface( Components.interfaces.nsIComponentManagerObsolete );
-        compMgr.registerComponentWithType( this.cid,
-                                           "Mozilla Download Progress Dialog",
-                                           this.contractId,
-                                           fileSpec,
-                                           location,
-                                           true,
-                                           true,
-                                           type );
+        var compReg = compMgr.QueryInterface( Components.interfaces.nsIComponentRegistrar );
+        compReg.registerFactoryLocation( this.cid,
+                                         "Mozilla Download Progress Dialog",
+                                         this.contractId,
+                                         fileSpec,
+                                         location,
+                                         type );
     },
 
     // getClassObject: Return this component's factory object.
