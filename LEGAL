@@ -38,3 +38,6 @@ Stac Patents").  The Netscape Communicator code  does not perform
 compression. If you modify the Netscape source code to perform
 compression, please take notice of the Stac Patents.
 
+D) Netscape Communications Corporation ("Netscape") does not guarantee
+that any source code or executable code available from the mozilla.org
+domain is Year 2000 compliant.
