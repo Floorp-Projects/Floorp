@@ -244,20 +244,6 @@ NS_IMETHODIMP nsOSHelperAppService::LoadUrl(nsIURI * aURL)
   return rv;
 }
 
-nsresult nsOSHelperAppService::GetFileTokenForPath(const PRUnichar * platformAppPath, nsIFile ** aFile)
-{
-  nsCOMPtr<nsILocalFile> localFile (do_CreateInstance(NS_LOCAL_FILE_CONTRACTID));
-
-  if (!localFile)
-    return NS_ERROR_FAILURE;
-
-  localFile->InitWithPath(nsDependentString(platformAppPath));
-  *aFile = localFile;
-  NS_IF_ADDREF(*aFile);
-
-  return NS_OK;
-}
-
 // GetMIMEInfoFromRegistry: This function obtains the values of some of the nsIMIMEInfo
 // attributes for the mimeType/extension associated with the input registry key.  The default
 // entry for that key is the name of a registry key under HKEY_CLASSES_ROOT.  The default
