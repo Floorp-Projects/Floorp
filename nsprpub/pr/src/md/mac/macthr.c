@@ -40,6 +40,9 @@ PR_IMPLEMENT(PRThread *) PR_GetPrimaryThread()
 #pragma mark -
 #pragma mark CREATING MACINTOSH THREAD STACKS
 
+#if defined(GC_LEAK_DETECTOR)
+extern void* GC_malloc_atomic(PRUint32 size);
+#endif
 
 /*
 **	Allocate a new memory segment.  We allocate it from our figment heap.  Currently,
@@ -58,7 +61,11 @@ PRStatus _MD_AllocSegment(PRSegment *seg, PRUint32 size, void *vaddr)
 	** Take the actual memory for the segment out of our Figment heap.
 	*/
 
+#if defined(GC_LEAK_DETECTOR)
+	seg->vaddr = (char *)GC_malloc_atomic(size);
+#else
 	seg->vaddr = (char *)malloc(size);
+#endif
 
 	if (seg->vaddr == NULL) {
 
