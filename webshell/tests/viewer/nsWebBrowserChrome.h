@@ -52,6 +52,9 @@ public:
    NS_IMETHOD ContentShellAdded(nsIDocShellTreeItem* aContentShell,
          PRBool aPrimary, const PRUnichar* aID);
    NS_IMETHOD GetPrimaryContentShell(nsIDocShellTreeItem** aShell);
+   NS_IMETHOD SizeShellTo(nsIDocShellTreeItem* aShell, PRInt32 aCX, PRInt32 aCY);
+   NS_IMETHOD ShowModal();
+
    NS_IMETHOD GetNewBrowserChrome(PRInt32 aChromeFlags,
          nsIWebBrowserChrome** aWebBrowserChrome);
 
