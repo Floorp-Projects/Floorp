@@ -92,12 +92,12 @@
     </td>
 
     <th>
-      <label for="severity">
+      <label for="bug_severity">
         <a href="bug_status.html#severity">Severity:</a>
       </label>
     </th>
     <td>
-      [% PROCESS selectmenu menuname = "severity" 
+      [% PROCESS selectmenu menuname = "bug_severity" 
                             menuitems = severities %]
     </td>
 
@@ -156,30 +156,6 @@
 
     </tr>
   [% END %]
-
-  <tr>
-    <th>Depends on:</th>
-    <td colspan="3">
-      <input id="dependson" name="dependson" size="32">
-      <select name="dependsonaction">
-        <option value="add">Add these dependencies</option>
-        <option value="delete">Remove these dependencies</option>
-        <option value="makeexact">Make the dependencies be exactly this list</option>
-      </select>
-    </td>
-  </tr>
-
-  <tr>
-    <th>Blocks:</th>
-    <td colspan="3">
-      <input id="blocked" name="blocked" size="32">
-      <select name="blockedaction">
-        <option value="add">Add these dependencies</option>
-        <option value="delete">Remove these dependencies</option>
-        <option value="makeexact">Make the dependencies be exactly this list</option>
-      </select>
-    </td>
-  </tr>
 
 </table>
 
@@ -244,7 +220,7 @@
 
 [% IF bugstatuses.size == 1 && bugstatuses.0 == unconfirmedstate %]
   [% knum = knum + 1 %]
-  <input id="knob-confirm" type="radio" name="knob" value="confirm>
+  <input id="knob-confirm" type="radio" name="knob" value="confirm">
   <label for="knob-confirm">
     Confirm bugs (change status to <b>NEW</b>)
   </label><br />
