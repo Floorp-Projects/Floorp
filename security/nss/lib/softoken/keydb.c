@@ -32,7 +32,7 @@
  *
  * Private Key Database code
  *
- * $Id: keydb.c,v 1.19 2002/05/16 20:39:02 relyea%netscape.com Exp $
+ * $Id: keydb.c,v 1.20 2002/06/01 00:37:00 rangansen%netscape.com Exp $
  */
 
 #include "lowkeyi.h"
@@ -2328,7 +2328,7 @@ ChangeKeyDBPasswordAlg(NSSLOWKEYDBHandle *handle,
 
 loser:
 
-    db_FinishTransaction(handle->db,rv == SECSuccess);
+    db_FinishTransaction(handle->db,rv != SECSuccess);
 
     /* free the arena */
     if ( keylist.arena ) {
