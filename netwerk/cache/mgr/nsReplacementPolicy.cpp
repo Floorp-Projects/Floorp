@@ -595,9 +595,14 @@ nsReplacementPolicy::DeleteAtleastOneEntry(nsINetDataCache *aCache,
     if (NS_FAILED(rv)) 
 		return rv;
 
-	if (targetNumEntries >= numRecordEntries)
-		return NS_ERROR_FAILURE;
-
+    /* Figure out if we are our end condition is number of entries or records */
+    if (targetNumEntries >= numRecordEntries) {
+        if (targetNumEntries < mNumEntries) {
+            numRecordEntries = mNumEntries;
+        }
+        else
+            return NS_ERROR_FAILURE;
+    }
 
     // It's not possible to rank cache entries by their profitability
     // until all of them are known to the replacement policy.
