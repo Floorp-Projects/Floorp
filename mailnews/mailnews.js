@@ -198,6 +198,7 @@ pref("mailnews.autolookup_unknown_mime_types",  true);
 pref("mailnews.send_default_charset",       "chrome://messenger/locale/messenger.properties");
 pref("mailnews.view_default_charset",       "chrome://messenger/locale/messenger.properties");
 pref("mailnews.force_charset_override",     false);
+pref("mailnews.reply_in_default_charset",   false);
 
 pref("mailnews.search_date_format",        "chrome://messenger/locale/messenger.properties");
 pref("mailnews.search_date_separator",     "chrome://messenger/locale/messenger.properties");

@@ -220,7 +220,6 @@ static void GetTopmostMsgWindowCharacterSet(nsXPIDLCString& charset, PRBool* cha
     mailSession->GetTopmostMsgWindow(getter_AddRefs(msgWindow));
     if (msgWindow)
     {
-      nsXPIDLString mailCharset;
       msgWindow->GetMailCharacterSet(getter_Copies(charset));
       msgWindow->GetCharsetOverride(charsetOverride);
     }
@@ -1524,6 +1523,10 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
     charsetOverride = PR_TRUE;
   }
 
+#ifdef DEBUG_jungshik
+  printf ("charset=%s\n", charset.get());
+#endif
+
   PRBool isFirstPass = PR_TRUE;
   char *uri = uriList;
   char *nextUri;
@@ -1558,6 +1561,29 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
         rv = msgHdr->GetCharset(getter_Copies(charset));
         if (NS_FAILED(rv)) return rv;
       }
+
+      // use send_default_charset if reply_in_default_charset is on.
+      nsCOMPtr<nsIPref> prefs (do_GetService(NS_PREF_CONTRACTID));
+      if (prefs)
+      {
+        PRBool replyInDefault = PR_FALSE;
+        prefs->GetBoolPref("mailnews.reply_in_default_charset",
+                           &replyInDefault);
+        if (replyInDefault) {
+          nsXPIDLString str;
+          rv = prefs->GetLocalizedUnicharPref("mailnews.send_default_charset",
+                                              getter_Copies(str));
+          if (NS_SUCCEEDED(rv) && !str.IsEmpty())
+            LossyCopyUTF16toASCII(str, charset);
+        }
+      }
+
+      // No matter what, we should block x-windows-949 (our internal name)
+      // from being used for outgoing emails (bug 234958)
+      if (charset.Equals("x-windows-949",
+            nsCaseInsensitiveCStringComparator()))
+        charset = "EUC-KR";
+
 
       // get an original charset, used for a label, UTF-8 is used for the internal processing
       if (isFirstPass && !charset.IsEmpty())
