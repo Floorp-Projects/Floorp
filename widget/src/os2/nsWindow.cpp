@@ -1415,12 +1415,11 @@ NS_METHOD nsWindow::SetFocus(PRBool aRaise)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::GetBounds(nsRect &aRect)
 {
-  if (mWnd) {
+  if (mFrameWnd) {
     SWP swp;
-    WinQueryWindowPos(mWnd, &swp);
+    WinQueryWindowPos(mFrameWnd, &swp);
     aRect.width = swp.cx;
     aRect.height = swp.cy;
-// Need to add code to convert coordinate if parent exists - see Windows
     aRect.x = swp.x;
     aRect.y = swp.y;
   } else {
@@ -1429,7 +1428,6 @@ NS_METHOD nsWindow::GetBounds(nsRect &aRect)
 
   return NS_OK;
 }
-
 
 //-------------------------------------------------------------------------
 //
