@@ -2649,8 +2649,6 @@ void
 RoundedRect::Set(nscoord aLeft,nscoord aTop,PRInt32  aWidth,PRInt32 aHeight,PRInt16 aRadius)
 {
 
-  printf("starting button\n");
-
   if( (aRadius) > (aWidth>>1) ){
     mRoundness = (aWidth>>1); 
   } else {
