@@ -455,8 +455,31 @@ char *mangleResourceIntoFileURL(const char* aResourceFileName)
       *cp = '|';
   }
 #endif
+
 #ifdef XP_UNIX
-  //  FIX ME: write me!;
+  // XXX For now, all resources are relative to the current working directory
+
+    FILE *pp;
+
+#define MAXPATHLEN 2000
+
+    resourceBase = (char *)PR_Malloc(MAXPATHLEN);;
+
+    if (!(pp = popen("pwd", "r"))) {
+      printf("RESOURCE protocol error in nsURL::mangeResourceIntoFileURL 1\n");
+      return(nsnull);
+    }
+    else {
+      if (fgets(resourceBase, MAXPATHLEN, pp)) {
+        resourceBase[strlen(resourceBase)-1] = 0;
+      }
+      else
+       printf("RESOURCE protocol error in nsURL::mangeResourceIntoFileURL 2\n");
+
+     return(nsnull);
+   }
+
+   printf("RESOURCE name %s\n", resourceBase);
 #endif
 
   // Join base path to resource name
@@ -477,9 +500,7 @@ char *mangleResourceIntoFileURL(const char* aResourceFileName)
   }
 #endif
 
-#ifdef XP_PC
   PR_Free(resourceBase);
-#endif
 
   return fileName;
 }
