@@ -64,6 +64,7 @@ nsPresContext::nsPresContext()
   NS_INIT_REFCNT();
   nsLayoutAtoms::AddrefAtoms();
   mCompatibilityMode = eCompatibility_NavQuirks;
+  mWidgetRenderingMode = eWidgetRendering_Native;  // to be changed to _Gfx soon!
 
 #ifdef _WIN32
   // XXX This needs to be elsewhere, e.g., part of nsIDeviceContext
@@ -73,6 +74,9 @@ nsPresContext::nsPresContext()
   mDefaultColor = NS_RGB(0x00, 0x00, 0x00);
   mDefaultBackgroundColor = NS_RGB(0xFF, 0xFF, 0xFF);
 #endif
+  mDefaultBackgroundImageAttachment = NS_STYLE_BG_ATTACHMENT_SCROLL;
+  mDefaultBackgroundImageRepeat = NS_STYLE_BG_REPEAT_XY;
+  mDefaultBackgroundImageOffsetX = mDefaultBackgroundImageOffsetY = 0;
 }
 
 nsPresContext::~nsPresContext()
@@ -449,9 +453,23 @@ nsPresContext::GetDefaultFont(nsFont& aResult)
 }
 
 NS_IMETHODIMP
+nsPresContext::SetDefaultFont(nsFont& aFont)
+{
+  mDefaultFont = aFont;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsPresContext::GetDefaultFixedFont(nsFont& aResult)
 {
   aResult = mDefaultFixedFont;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPresContext::SetDefaultFixedFont(nsFont& aFont)
+{
+  mDefaultFixedFont = aFont;
   return NS_OK;
 }
 
@@ -511,6 +529,41 @@ nsPresContext::GetDefaultBackgroundColor(nscolor* aResult)
 }
 
 NS_IMETHODIMP
+nsPresContext::GetDefaultBackgroundImage(nsString& aImage)
+{
+  aImage = mDefaultBackgroundImage;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPresContext::GetDefaultBackgroundImageRepeat(PRUint8* aRepeat)
+{
+  NS_PRECONDITION(nsnull != aRepeat, "null ptr");
+  if (nsnull == aRepeat) { return NS_ERROR_NULL_POINTER; }
+  *aRepeat = mDefaultBackgroundImageRepeat;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPresContext::GetDefaultBackgroundImageOffset(nscoord* aX, nscoord* aY)
+{
+  NS_PRECONDITION((nsnull != aX) && (nsnull != aY), "null ptr");
+  if (!aX || !aY) { return NS_ERROR_NULL_POINTER; }
+  *aX = mDefaultBackgroundImageOffsetX;
+  *aY = mDefaultBackgroundImageOffsetY;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPresContext::GetDefaultBackgroundImageAttachment(PRUint8* aAttachment)
+{
+  NS_PRECONDITION(nsnull != aAttachment, "null ptr");
+  if (nsnull == aAttachment) { return NS_ERROR_NULL_POINTER; }
+  *aAttachment = mDefaultBackgroundImageAttachment;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsPresContext::SetDefaultColor(nscolor aColor)
 {
   mDefaultColor = aColor;
@@ -521,6 +574,35 @@ NS_IMETHODIMP
 nsPresContext::SetDefaultBackgroundColor(nscolor aColor)
 {
   mDefaultBackgroundColor = aColor;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPresContext::SetDefaultBackgroundImage(const nsString& aImage)
+{
+  mDefaultBackgroundImage = aImage;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPresContext::SetDefaultBackgroundImageRepeat(PRUint8 aRepeat)
+{
+  mDefaultBackgroundImageRepeat = aRepeat;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPresContext::SetDefaultBackgroundImageOffset(nscoord aX, nscoord aY)
+{
+  mDefaultBackgroundImageOffsetX = aX;
+  mDefaultBackgroundImageOffsetY = aY;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPresContext::SetDefaultBackgroundImageAttachment(PRUint8 aAttachment)
+{
+  mDefaultBackgroundImageAttachment = aAttachment;
   return NS_OK;
 }
 
