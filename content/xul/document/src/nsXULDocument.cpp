@@ -3900,17 +3900,20 @@ XULDocumentImpl::Init(void)
     if (NS_FAILED(rv = nsComponentManager::CreateInstance(kNameSpaceManagerCID,
                                                     nsnull,
                                                     kINameSpaceManagerIID,
-                                                    (void**) &mNameSpaceManager)))
+                                                    getter_AddRefs(mNameSpaceManager))))
         return rv;
 
     // Create our focus tracker and hook it up.
+    nsCOMPtr<nsIXULCommandDispatcher> commandDis;
     if (NS_FAILED(rv = nsComponentManager::CreateInstance(kXULCommandDispatcherCID,
                                                     nsnull,
                                                     kIXULCommandDispatcherIID,
-                                                    (void**) &mCommandDispatcher))) {
+                                                    getter_AddRefs(commandDis)))) {
         NS_ERROR("unable to create a focus tracker");
         return rv;
     }
+
+    mCommandDispatcher = do_QueryInterface(commandDis);
 
     nsCOMPtr<nsIDOMEventListener> CommandDispatcher = do_QueryInterface(mCommandDispatcher);
     if (CommandDispatcher) {

@@ -451,7 +451,7 @@ NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
     if (NS_FAILED(rv)) goto done;
     rv = compMgr->RegisterComponent(kXULCommandDispatcherCID,
                                          "XUL CommandDispatcher",
-                                         NS_RDF_PROGID "/xul-focus-tracker",
+                                         NS_RDF_PROGID "/xul-command-dispatcher",
                                          aPath, PR_TRUE, PR_TRUE);
 
   done:
