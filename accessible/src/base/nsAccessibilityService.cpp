@@ -161,7 +161,9 @@ NS_IMETHODIMP nsAccessibilityService::OnStateChange(nsIWebProgress *aWebProgress
 
   nsCOMPtr<nsIDOMWindow> domWindow;
   aWebProgress->GetDOMWindow(getter_AddRefs(domWindow));
-  NS_ASSERTION(domWindow, "No dom window for nsIWebProgress::OnStateChange");
+  // Bug 214049 OnStateChange can come from non UI threads.
+  if (!domWindow)
+    return NS_OK;
 
   nsCOMPtr<nsIDOMDocument> domDoc;
   domWindow->GetDocument(getter_AddRefs(domDoc));
