@@ -512,13 +512,13 @@ PRUnichar* nsCRT::strdup(const PRUnichar* str)
 
 PRUnichar* nsCRT::strndup(const PRUnichar* str, PRUint32 len)
 {
-  len += 1;     // add one for the null
 	nsCppSharedAllocator<PRUnichar> shared_allocator;
-	PRUnichar* rslt = shared_allocator.allocate(len);
-  // PRUnichar* rslt = new PRUnichar[len];
+	PRUnichar* rslt = shared_allocator.allocate(len + 1); // add one for the null
+  // PRUnichar* rslt = new PRUnichar[len + 1];
 
   if (rslt == NULL) return NULL;
   nsCRT::memcpy(rslt, str, len * sizeof(PRUnichar));
+  rslt[len] = 0;
   return rslt;
 }
 
