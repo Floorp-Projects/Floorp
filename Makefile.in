@@ -325,6 +325,12 @@ endif # MOZ_COMPONENTLIB
 
 ifdef MOZ_PHOENIX
 tier_99_dirs	+= browser xpfe/bootstrap/init.d
+
+# Need to build here *again* _after_browser_ to ensure jar'ed chrome
+# is processed.
+ifdef MOZ_USE_OFFICIAL_BRANDING
+tier_99_dirs  += other-licenses/branding/firefox
+endif
 endif
 
 ifdef MOZ_THUNDERBIRD
