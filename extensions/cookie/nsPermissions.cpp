@@ -397,7 +397,7 @@ Permission_Save() {
   for (PRInt32 i = 0; i < hostCount; ++i) {
     hostStruct = NS_STATIC_CAST(permission_HostStruct*, permission_list->ElementAt(i));
     if (hostStruct) {
-      strm.write(hostStruct->host, nsCRT::strlen(hostStruct->host));
+      strm.write(hostStruct->host, strlen(hostStruct->host));
 
       PRInt32 typeCount = hostStruct->permissionList->Count();
       for (PRInt32 typeIndex=0; typeIndex<typeCount; typeIndex++) {

@@ -64,7 +64,7 @@ nsPermission::~nsPermission(void) {
 
 NS_IMETHODIMP nsPermission::GetHost(char * *aHost) {
   if (permissionHost) {
-    *aHost = (char *) nsMemory::Clone(permissionHost, nsCRT::strlen(permissionHost) + 1);
+    *aHost = (char *) nsMemory::Clone(permissionHost, strlen(permissionHost) + 1);
     return NS_OK;
   }
   return NS_ERROR_NULL_POINTER;

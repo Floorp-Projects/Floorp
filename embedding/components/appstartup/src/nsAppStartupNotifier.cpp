@@ -96,7 +96,7 @@ NS_IMETHODIMP nsAppStartupNotifier::Observe(nsISupports *aSubject, const char *a
 
                 nsCOMPtr<nsIObserver> startupObserver;
                 if (serviceIdx == 0)
-                    startupObserver = do_GetService(cid.get() + nsCRT::strlen(pServicePrefix), &rv);
+                    startupObserver = do_GetService(cid.get() + strlen(pServicePrefix), &rv);
                 else
                     startupObserver = do_CreateInstance(contractId, &rv);
 

@@ -79,7 +79,7 @@ nsCookie::~nsCookie(void) {
 
 NS_IMETHODIMP nsCookie::GetName(char * *aName) {
   if (cookieName) {
-    *aName = (char *) nsMemory::Clone(cookieName, nsCRT::strlen(cookieName) + 1);
+    *aName = (char *) nsMemory::Clone(cookieName, strlen(cookieName) + 1);
     return NS_OK;
   }
   return NS_ERROR_NULL_POINTER;
@@ -87,7 +87,7 @@ NS_IMETHODIMP nsCookie::GetName(char * *aName) {
 
 NS_IMETHODIMP nsCookie::GetValue(char * *aValue) {
   if (cookieValue) {
-    *aValue = (char *) nsMemory::Clone(cookieValue, nsCRT::strlen(cookieValue) + 1);
+    *aValue = (char *) nsMemory::Clone(cookieValue, strlen(cookieValue) + 1);
     return NS_OK;
   }
   return NS_ERROR_NULL_POINTER;
@@ -100,7 +100,7 @@ NS_IMETHODIMP nsCookie::GetIsDomain(PRBool *aIsDomain) {
 
 NS_IMETHODIMP nsCookie::GetHost(char * *aHost) {
   if (cookieHost) {
-    *aHost = (char *) nsMemory::Clone(cookieHost, nsCRT::strlen(cookieHost) + 1);
+    *aHost = (char *) nsMemory::Clone(cookieHost, strlen(cookieHost) + 1);
     return NS_OK;
   }
   return NS_ERROR_NULL_POINTER;
@@ -108,7 +108,7 @@ NS_IMETHODIMP nsCookie::GetHost(char * *aHost) {
 
 NS_IMETHODIMP nsCookie::GetPath(char * *aPath) {
   if (cookiePath) {
-    *aPath = (char *) nsMemory::Clone(cookiePath, nsCRT::strlen(cookiePath) + 1);
+    *aPath = (char *) nsMemory::Clone(cookiePath, strlen(cookiePath) + 1);
     return NS_OK;
   }
   return NS_ERROR_NULL_POINTER;

@@ -200,7 +200,7 @@ struct DomainEntry
 
     PRBool Matches(const char *anOrigin)
     {
-        int len = nsCRT::strlen(anOrigin);
+        int len = strlen(anOrigin);
         int thisLen = mOrigin.Length();
         if (len < thisLen)
             return PR_FALSE;

@@ -349,7 +349,7 @@ nsWyciwygChannel::WriteToCache(const char * aScript)
 {
   if (!mCacheEntry)
     return NS_ERROR_FAILURE;
-  PRUint32 len = nsCRT::strlen(aScript);
+  PRUint32 len = strlen(aScript);
   nsresult rv = NS_ERROR_FAILURE;
   PRUint32 out;
 
