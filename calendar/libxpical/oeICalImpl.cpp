@@ -723,8 +723,9 @@ oeICalImpl::SetServer( const char *str ) {
     
     nsresult rv;
     icalcomponent *vcalendar;
-    icalcomponent *vevent;
+    icalcomponent *vevent,*vtodo;
     oeICalEventImpl *icalevent;
+    oeICalTodoImpl *icaltodo;
     for( vcalendar = icalfileset_get_first_component( stream );
         vcalendar != 0;
         vcalendar = icalfileset_get_next_component( stream ) ) {
@@ -740,6 +741,19 @@ oeICalImpl::SetServer( const char *str ) {
                 m_eventlist.Add( icalevent );
             } else {
                 icalevent->Release();
+            }
+        }
+        for( vtodo = icalcomponent_get_first_component( vcalendar, ICAL_VTODO_COMPONENT );
+            vtodo != 0;
+            vtodo = icalcomponent_get_next_component( vcalendar, ICAL_VTODO_COMPONENT ) ) {
+
+            if( NS_FAILED( rv = NS_NewICalTodo((oeIICalTodo**) &icaltodo ))) {
+                return rv;
+            }
+            if( icaltodo->ParseIcalComponent( vtodo ) ) {
+                m_todolist.Add( icaltodo );
+            } else {
+                icaltodo->Release();
             }
         }
     }
