@@ -158,9 +158,7 @@
 #include "nsPlaceholderFrame.h"
 
 // Dummy layout request
-#include "nsIChannel.h"
-#include "nsILoadGroup.h"
-#include "nsNetUtil.h"
+#include "nsDummyLayoutRequest.h"
 
 // Content viewer interfaces
 #include "nsIContentViewer.h"
@@ -734,79 +732,18 @@ struct nsCallbackEventRequest
   nsCallbackEventRequest* next;
 };
 
-//----------------------------------------------------------------------
-//
-// DummyLayoutRequest
-//
-//   This is a dummy request implementation that we add to the document's load
-//   group. It ensures that EndDocumentLoad() in the docshell doesn't fire
-//   before we've finished all of layout.
-//
 
-class DummyLayoutRequest : public nsIChannel
-{
-protected:
-  DummyLayoutRequest(nsIPresShell* aPresShell);
-  virtual ~DummyLayoutRequest();
+PRInt32 nsDummyLayoutRequest::gRefCnt;
+nsIURI* nsDummyLayoutRequest::gURI;
 
-  static PRInt32 gRefCnt;
-  static nsIURI* gURI;
-
-  nsCOMPtr<nsILoadGroup> mLoadGroup;
-  nsWeakPtr mPresShell;
-
-public:
-  static nsresult
-  Create(nsIRequest** aResult, nsIPresShell* aPresShell);
-
-  NS_DECL_ISUPPORTS
-
-	// nsIRequest
-  NS_IMETHOD GetName(nsACString &result) { 
-    result = NS_LITERAL_CSTRING("about:layout-dummy-request");
-    return NS_OK;
-  }
-  NS_IMETHOD IsPending(PRBool *_retval) { *_retval = PR_TRUE; return NS_OK; }
-  NS_IMETHOD GetStatus(nsresult *status) { *status = NS_OK; return NS_OK; } 
-  NS_IMETHOD Cancel(nsresult status);
-  NS_IMETHOD Suspend(void) { return NS_OK; }
-  NS_IMETHOD Resume(void)  { return NS_OK; }
-  NS_IMETHOD GetLoadGroup(nsILoadGroup * *aLoadGroup) { *aLoadGroup = mLoadGroup; NS_IF_ADDREF(*aLoadGroup); return NS_OK; }
-  NS_IMETHOD SetLoadGroup(nsILoadGroup * aLoadGroup) { mLoadGroup = aLoadGroup; return NS_OK; }
-  NS_IMETHOD GetLoadFlags(nsLoadFlags *aLoadFlags) { *aLoadFlags = nsIRequest::LOAD_NORMAL; return NS_OK; }
-  NS_IMETHOD SetLoadFlags(nsLoadFlags aLoadFlags) { return NS_OK; }
-
- 	// nsIChannel
-  NS_IMETHOD GetOriginalURI(nsIURI* *aOriginalURI) { *aOriginalURI = gURI; NS_ADDREF(*aOriginalURI); return NS_OK; }
-  NS_IMETHOD SetOriginalURI(nsIURI* aOriginalURI) { gURI = aOriginalURI; NS_ADDREF(gURI); return NS_OK; }
-  NS_IMETHOD GetURI(nsIURI* *aURI) { *aURI = gURI; NS_ADDREF(*aURI); return NS_OK; }
-  NS_IMETHOD SetURI(nsIURI* aURI) { gURI = aURI; NS_ADDREF(gURI); return NS_OK; }
-  NS_IMETHOD Open(nsIInputStream **_retval) { *_retval = nsnull; return NS_OK; }
-  NS_IMETHOD AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt) { return NS_OK; }
-  NS_IMETHOD GetOwner(nsISupports * *aOwner) { *aOwner = nsnull; return NS_OK; }
-  NS_IMETHOD SetOwner(nsISupports * aOwner) { return NS_OK; }
-  NS_IMETHOD GetNotificationCallbacks(nsIInterfaceRequestor * *aNotificationCallbacks) { *aNotificationCallbacks = nsnull; return NS_OK; }
-  NS_IMETHOD SetNotificationCallbacks(nsIInterfaceRequestor * aNotificationCallbacks) { return NS_OK; }
-  NS_IMETHOD GetSecurityInfo(nsISupports * *aSecurityInfo) { *aSecurityInfo = nsnull; return NS_OK; } 
-  NS_IMETHOD GetContentType(nsACString &aContentType) { aContentType.Truncate(); return NS_OK; } 
-  NS_IMETHOD SetContentType(const nsACString &aContentType) { return NS_OK; } 
-  NS_IMETHOD GetContentCharset(nsACString &aContentCharset) { aContentCharset.Truncate(); return NS_OK; } 
-  NS_IMETHOD SetContentCharset(const nsACString &aContentCharset) { return NS_OK; } 
-  NS_IMETHOD GetContentLength(PRInt32 *aContentLength) { return NS_OK; }
-  NS_IMETHOD SetContentLength(PRInt32 aContentLength) { return NS_OK; }
-};
-
-PRInt32 DummyLayoutRequest::gRefCnt;
-nsIURI* DummyLayoutRequest::gURI;
-
-NS_IMPL_ADDREF(DummyLayoutRequest);
-NS_IMPL_RELEASE(DummyLayoutRequest);
-NS_IMPL_QUERY_INTERFACE2(DummyLayoutRequest, nsIRequest, nsIChannel);
+NS_IMPL_ADDREF(nsDummyLayoutRequest);
+NS_IMPL_RELEASE(nsDummyLayoutRequest);
+NS_IMPL_QUERY_INTERFACE2(nsDummyLayoutRequest, nsIRequest, nsIChannel);
 
 nsresult
-DummyLayoutRequest::Create(nsIRequest** aResult, nsIPresShell* aPresShell)
+nsDummyLayoutRequest::Create(nsIRequest** aResult, nsIPresShell* aPresShell)
 {
-  DummyLayoutRequest* request = new DummyLayoutRequest(aPresShell);
+  nsDummyLayoutRequest* request = new nsDummyLayoutRequest(aPresShell);
   if (!request)
       return NS_ERROR_OUT_OF_MEMORY;
 
@@ -814,7 +751,7 @@ DummyLayoutRequest::Create(nsIRequest** aResult, nsIPresShell* aPresShell)
 }
 
 
-DummyLayoutRequest::DummyLayoutRequest(nsIPresShell* aPresShell)
+nsDummyLayoutRequest::nsDummyLayoutRequest(nsIPresShell* aPresShell)
 {
   NS_INIT_REFCNT();
 
@@ -828,7 +765,7 @@ DummyLayoutRequest::DummyLayoutRequest(nsIPresShell* aPresShell)
 }
 
 
-DummyLayoutRequest::~DummyLayoutRequest()
+nsDummyLayoutRequest::~nsDummyLayoutRequest()
 {
   if (--gRefCnt == 0) {
       NS_IF_RELEASE(gURI);
@@ -836,7 +773,7 @@ DummyLayoutRequest::~DummyLayoutRequest()
 }
 
 NS_IMETHODIMP
-DummyLayoutRequest::Cancel(nsresult status)
+nsDummyLayoutRequest::Cancel(nsresult status)
 {
   // Cancel layout
   nsresult rv = NS_OK;
@@ -6661,7 +6598,7 @@ PresShell::AddDummyLayoutRequest(void)
   nsresult rv = NS_OK;
 
   if (gAsyncReflowDuringDocLoad && !mIsReflowing) {
-    rv = DummyLayoutRequest::Create(getter_AddRefs(mDummyLayoutRequest), this);
+    rv = nsDummyLayoutRequest::Create(getter_AddRefs(mDummyLayoutRequest), this);
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsILoadGroup> loadGroup;

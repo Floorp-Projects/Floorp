@@ -72,6 +72,7 @@
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsPrintfCString.h"
+#include "nsDummyLayoutRequest.h"
 
   #ifdef DEBUG
     //#define NOISY_DEBUG
@@ -248,10 +249,15 @@ class FrameManager;
   // The event queue owns the event and the FrameManager will delete
   // the event if it's going to go away.
 struct CantRenderReplacedElementEvent : public PLEvent {
-  CantRenderReplacedElementEvent(FrameManager* aFrameManager, nsIFrame* aFrame);
+  CantRenderReplacedElementEvent(FrameManager* aFrameManager, nsIFrame* aFrame, nsIPresShell* aPresShell);
+  ~CantRenderReplacedElementEvent();
+  nsresult AddLoadGroupRequest(nsIPresShell* aPresShell);
+  nsresult RemoveLoadGroupRequest();
 
   nsIFrame*  mFrame;                     // the frame that can't be rendered
   CantRenderReplacedElementEvent* mNext; // next event in the list
+  nsCOMPtr<nsIRequest> mDummyLayoutRequest; // load group request
+  nsWeakPtr mPresShell;                     // for removing load group request later
 };
 
 class FrameManager : public nsIFrameManager
@@ -1182,12 +1188,73 @@ FrameManager::DestroyPLEvent(CantRenderReplacedElementEvent* aEvent)
 }
 
 CantRenderReplacedElementEvent::CantRenderReplacedElementEvent(FrameManager* aFrameManager,
-                                                               nsIFrame*     aFrame)
+                                                               nsIFrame*     aFrame,
+                                                               nsIPresShell* aPresShell)
 {
   PL_InitEvent(this, aFrameManager,
                (PLHandleEventProc)&FrameManager::HandlePLEvent,
                (PLDestroyEventProc)&FrameManager::DestroyPLEvent);
   mFrame = aFrame;
+  
+  nsIAtom*  frameType;
+  aFrame->GetFrameType(&frameType);
+  if (nsLayoutAtoms::objectFrame == frameType) {
+    AddLoadGroupRequest(aPresShell);
+  }
+}
+
+CantRenderReplacedElementEvent::~CantRenderReplacedElementEvent()
+{
+  RemoveLoadGroupRequest();
+}
+
+// Add a load group request in order to delay the onLoad handler when we have
+// pending replacements
+nsresult CantRenderReplacedElementEvent::AddLoadGroupRequest(nsIPresShell* aPresShell)
+{
+  nsCOMPtr<nsIDocument> doc;
+  aPresShell->GetDocument(getter_AddRefs(doc));
+  if (!doc) return NS_ERROR_FAILURE;
+
+  nsresult rv = nsDummyLayoutRequest::Create(getter_AddRefs(mDummyLayoutRequest), aPresShell);
+  if (NS_FAILED(rv)) return rv;
+  if (!mDummyLayoutRequest) return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsILoadGroup> loadGroup;
+  doc->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
+  if (!loadGroup) return NS_ERROR_FAILURE;
+  
+  rv = mDummyLayoutRequest->SetLoadGroup(loadGroup);
+  if (NS_FAILED(rv)) return rv;
+  
+  mPresShell = getter_AddRefs(NS_GetWeakReference(aPresShell));
+
+  return loadGroup->AddRequest(mDummyLayoutRequest, nsnull);
+}
+
+// Remove the load group request added above
+nsresult CantRenderReplacedElementEvent::RemoveLoadGroupRequest()
+{
+  nsresult rv = NS_OK;
+
+  if (mDummyLayoutRequest) {
+    nsCOMPtr<nsIRequest> request = mDummyLayoutRequest;
+    mDummyLayoutRequest = nsnull;
+
+    nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
+    if (!presShell) return NS_ERROR_FAILURE;
+    
+    nsCOMPtr<nsIDocument> doc;
+    presShell->GetDocument(getter_AddRefs(doc));
+    if (!doc) return NS_ERROR_FAILURE;;
+
+    nsCOMPtr<nsILoadGroup> loadGroup;
+    doc->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
+    if (!loadGroup) return NS_ERROR_FAILURE;
+
+    rv = loadGroup->RemoveRequest(request, nsnull, NS_OK);
+  }
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -1218,7 +1285,7 @@ FrameManager::CantRenderReplacedElement(nsIPresContext* aPresContext,
       CantRenderReplacedElementEvent* ev;
 
       // Create a new event
-      ev = new CantRenderReplacedElementEvent(this, aFrame);
+      ev = new CantRenderReplacedElementEvent(this, aFrame, mPresShell);
 
       // Add the event to our linked list of posted events
       ev->mNext = mPostedEvents;
