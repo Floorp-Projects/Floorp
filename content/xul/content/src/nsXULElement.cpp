@@ -1599,22 +1599,48 @@ nsXULElement::CompileEventHandler(nsIScriptContext* aContext,
 
     XUL_PROTOTYPE_ATTRIBUTE_METER(gNumCacheSets);
 
+    nsCOMPtr<nsIScriptContext> context;
     if (mPrototype) {
         // It'll be shared among the instances of the prototype.
         // Use null for the scope object when precompiling shared
         // prototype scripts.
         scopeObject = nsnull;
+
+        // Use the prototype document's special context.  Because
+        // scopeObject is null, the JS engine has no other source of
+        // <the-new-shared-event-handler>.__proto__ than to look in
+        // cx->globalObject for Function.prototype.  That prototype
+        // keeps the global object alive, so if we use this document's
+        // global object, we'll be putting something in the prototype
+        // that protects this document's global object from GC.
+        nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(mDocument);
+        NS_ENSURE_TRUE(xuldoc, NS_ERROR_UNEXPECTED);
+
+        nsCOMPtr<nsIXULPrototypeDocument> protodoc;
+        rv = xuldoc->GetMasterPrototype(getter_AddRefs(protodoc));
+        NS_ENSURE_SUCCESS(rv, rv);
+        NS_ENSURE_TRUE(protodoc, NS_ERROR_UNEXPECTED);
+
+        nsCOMPtr<nsIScriptGlobalObjectOwner> globalOwner =
+            do_QueryInterface(protodoc);
+        nsCOMPtr<nsIScriptGlobalObject> global;
+        globalOwner->GetScriptGlobalObject(getter_AddRefs(global));
+        NS_ENSURE_TRUE(global, NS_ERROR_UNEXPECTED);
+
+        rv = global->GetContext(getter_AddRefs(context));
+        NS_ENSURE_SUCCESS(rv, rv);
     }
     else {
         // We don't have a prototype; do a one-off compile.
         NS_ASSERTION(aTarget != nsnull, "no prototype and no target?!");
         scopeObject = NS_REINTERPRET_CAST(JSObject*, aTarget);
+        context = aContext;
     }
 
     // Compile the event handler
-    rv = aContext->CompileEventHandler(scopeObject, aName, aBody,
-                                       aURL, aLineNo, !scopeObject,
-                                       aHandler);
+    rv = context->CompileEventHandler(scopeObject, aName, aBody,
+                                      aURL, aLineNo, !scopeObject,
+                                      aHandler);
     if (NS_FAILED(rv)) return rv;
 
     if (! scopeObject) {
@@ -1634,7 +1660,7 @@ nsXULElement::CompileEventHandler(nsIScriptContext* aContext,
                 attr->mEventHandler = *aHandler;
 
                 if (attr->mEventHandler) {
-                    JSContext *cx = (JSContext*) aContext->GetNativeContext();
+                    JSContext *cx = (JSContext*) context->GetNativeContext();
                     if (!cx)
                         return NS_ERROR_UNEXPECTED;
 
