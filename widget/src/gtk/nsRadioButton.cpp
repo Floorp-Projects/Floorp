@@ -90,7 +90,7 @@ NS_METHOD  nsRadioButton::CreateNative(GtkWidget *parentWindow)
 
   gtk_widget_set_name(mRadioButton, "nsRadioButton");
 
-  gtk_radio_button_set_group(GTK_RADIO_BUTTON(mRadioButton), NULL);
+  gtk_radio_button_set_group(GTK_RADIO_BUTTON(mRadioButton), nsnull);
 
   return NS_OK;
 }
