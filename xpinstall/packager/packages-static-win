@@ -41,6 +41,10 @@ bin\defaults\profile\localstore.rdf
 bin\defaults\profile\search.rdf
 bin\defaults\profile\mimeTypes.rdf
 bin\defaults\messenger\mailViews.dat
+bin\defaults\messenger\Habeas.sfd
+bin\defaults\messenger\SpamAssassin.sfd
+bin\defaults\messenger\SpamCatcher.sfd
+bin\defaults\messenger\SpamPal.sfd
 
 [xpcom]
 bin\js3250.dll
