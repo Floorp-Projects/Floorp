@@ -18,10 +18,10 @@
 	<html:script language="javascript" src="AccountManager.js"/>
 
 	<box align="horizontal" flex="100%">
-		<box align="vertical" flex="25%">
+		<box align="vertical" flex="20%">
 			<html:iframe flex="100%" name="accounttree" style="border:none; border-bottom:thin solid" src="chrome://messenger/content/accounttree.xul"/> 
 		</box>
-		<box align="vertical" flex="75%">
+		<box align="vertical" flex="80%">
 			<html:iframe flex="100%" name="prefframe" style="border:none; border-bottom:thin solid" src="chrome://messenger/content/am-main.xul"/> 
 		</box>
 	</box>
