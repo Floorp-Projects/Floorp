@@ -107,6 +107,15 @@ NS_IMETHODIMP nsMsgBiffManager::AddServerBiff(nsIMsgIncomingServer *server)
 
 NS_IMETHODIMP nsMsgBiffManager::RemoveServerBiff(nsIMsgIncomingServer *server)
 {
+	PRInt32 pos = FindServer(server);
+	if(pos != -1)
+	{
+		mBiffArray->RemoveElementAt(pos);
+		//Need to release mBiffArray's ref on server.
+		NS_IF_RELEASE(server);
+	}
+
+	//Should probably reset biff time if this was the server that gets biffed next.
 	return NS_OK;
 }
 
