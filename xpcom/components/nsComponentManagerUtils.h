@@ -281,6 +281,63 @@ do_CreateInstanceFromCategory( const char *aCategory, const char *aEntry,
     return nsCreateInstanceFromCategory(aCategory, aEntry, aOuter, aErrorPtr);
 }
 
+// type-safe shortcuts for calling |CreateInstance|
+template <class DestinationType>
+inline
+nsresult
+CallCreateInstance( const nsCID &aClass,
+                    nsISupports *aDelegate,
+                    DestinationType** aDestination )
+  {
+    NS_PRECONDITION(aDestination, "null parameter");
+
+    return nsComponentManager::CreateInstance(aClass, aDelegate,
+               NS_GET_IID(DestinationType),
+               NS_REINTERPRET_CAST(void**, aDestination));
+  }
+
+template <class DestinationType>
+inline
+nsresult
+CallCreateInstance( const nsCID &aClass,
+                    DestinationType** aDestination )
+  {
+    NS_PRECONDITION(aDestination, "null parameter");
+
+    return nsComponentManager::CreateInstance(aClass, nsnull,
+               NS_GET_IID(DestinationType),
+               NS_REINTERPRET_CAST(void**, aDestination));
+  }
+
+template <class DestinationType>
+inline
+nsresult
+CallCreateInstance( const char *aContractID,
+                    nsISupports *aDelegate,
+                    DestinationType** aDestination )
+  {
+    NS_PRECONDITION(aContractID, "null parameter");
+    NS_PRECONDITION(aDestination, "null parameter");
+
+    return nsComponentManager::CreateInstance(aContractID, aDelegate,
+               NS_GET_IID(DestinationType),
+               NS_REINTERPRET_CAST(void**, aDestination));
+  }
+
+template <class DestinationType>
+inline
+nsresult
+CallCreateInstance( const char *aContractID,
+                    DestinationType** aDestination )
+  {
+    NS_PRECONDITION(aContractID, "null parameter");
+    NS_PRECONDITION(aDestination, "null parameter");
+
+    return nsComponentManager::CreateInstance(aContractID, nsnull,
+               NS_GET_IID(DestinationType),
+               NS_REINTERPRET_CAST(void**, aDestination));
+  }
+
 /* keys for registry use */
 extern const char xpcomKeyName[];
 extern const char xpcomComponentsKeyName[];

@@ -318,6 +318,37 @@ do_GetServiceFromCategory( const char* category, const char* entry,
     return nsGetServiceFromCategory(category, entry, 0, error);
   }
 
+// type-safe shortcuts for calling |GetService|
+template <class DestinationType>
+inline
+nsresult
+CallGetService( const nsCID &aClass,
+                DestinationType** aDestination,
+                nsIShutdownListener* shutdownListener = nsnull)
+  {
+    NS_PRECONDITION(aDestination, "null parameter");
+
+    return nsServiceManager::GetService(aClass,
+               NS_GET_IID(DestinationType),
+               NS_REINTERPRET_CAST(nsISupports**, aDestination),
+               shutdownListener);
+  }
+
+template <class DestinationType>
+inline
+nsresult
+CallGetService( const char *aContractID,
+                DestinationType** aDestination,
+                nsIShutdownListener* shutdownListener = nsnull)
+  {
+    NS_PRECONDITION(aContractID, "null parameter");
+    NS_PRECONDITION(aDestination, "null parameter");
+
+    return nsServiceManager::GetService(aContractID,
+               NS_GET_IID(DestinationType),
+               NS_REINTERPRET_CAST(nsISupports**, aDestination),
+               shutdownListener);
+  }
 ////////////////////////////////////////////////////////////////////////////////
 // NS_WITH_SERVICE: macro to make using services easier. 
 // 
@@ -326,7 +357,15 @@ do_GetServiceFromCategory( const char* category, const char* entry,
 //
 // NOTE: ReleaseService() is OBSOLETE.
 //
-// Now you can replace this:
+// NOTE: NS_WITH_SERVICE is deprecated.  This:
+//  {
+//      nsCOMPtr<nsIMyService> service( do_GetService(NS_MYSERVICE_CONTRACTID, &rv) );
+//      if (NS_FAILED(rv)) return rv;
+//      service->Doit(...);     // use my service
+//  }
+// is preferred over either of the blocks of code below.
+//
+// Back when NS_WITH_SERVICE wasn't deprecated you could replace this:
 //  {
 //      nsIMyService* service;
 //      rv = nsServiceManager::GetService(kMyServiceCID, NS_GET_IID(nsIMyService),
