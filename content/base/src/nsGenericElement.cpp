@@ -843,7 +843,7 @@ PR_STATIC_CALLBACK(void)
 RangeListHashInitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
                        const void *key)
 {
-  // Inititlize the entry with placement new
+  // Initialize the entry with placement new
   new (entry) RangeListMapEntry(key);
 }
 
@@ -860,7 +860,7 @@ PR_STATIC_CALLBACK(void)
 EventListenerManagerHashInitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
                                   const void *key)
 {
-  // Inititlize the entry with placement new
+  // Initialize the entry with placement new
   new (entry) EventListenerManagerMapEntry(key);
 }
 
