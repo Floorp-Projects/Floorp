@@ -1370,8 +1370,11 @@ private:
     nsIXPCException*  mException;
     nsDeque*          mJSContextStack;
     JSContext*        mSafeJSContext;
+
+    // If if non-null, we own it; same as mSafeJSContext if SetSafeJSContext
+    // not called.
+    JSContext*        mOwnSafeJSContext;
     xpcPerThreadData* mNextThread;
-    PRBool            mSafeContextIsFromSetter;
 
     static PRLock*           gLock;
     static xpcPerThreadData* gThreads;

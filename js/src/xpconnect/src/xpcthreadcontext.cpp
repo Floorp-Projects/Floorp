@@ -198,8 +198,8 @@ xpcPerThreadData::xpcPerThreadData()
     :   mException(nsnull),
         mJSContextStack(new nsDeque(nsnull)),
         mSafeJSContext(nsnull),
-        mNextThread(nsnull),
-        mSafeContextIsFromSetter(PR_FALSE)
+        mOwnSafeJSContext(nsnull),
+        mNextThread(nsnull)
 {
     if(gLock)
     {
@@ -220,10 +220,10 @@ xpcPerThreadData::Cleanup()
         mJSContextStack = nsnull;
     }
 
-    if(mSafeJSContext && !mSafeContextIsFromSetter)
+    if(mOwnSafeJSContext)
     {
-        JS_DestroyContext(mSafeJSContext);
-        mSafeJSContext = nsnull;
+        JS_DestroyContext(mOwnSafeJSContext);
+        mOwnSafeJSContext = nsnull;
     }
 }
 
@@ -319,6 +319,13 @@ xpcPerThreadData::GetSafeJSContext()
                         JS_DestroyContext(mSafeJSContext);
                         mSafeJSContext = nsnull;
                     }
+                    // Save it off so we can destroy it later, even if
+                    // mSafeJSContext has been set to another context
+                    // via SetSafeJSContext.  If we don't get here,
+                    // then mSafeJSContext must have been set via
+                    // SetSafeJSContext, and we're not responsible for
+                    // destroying the passed-in context.
+                    mOwnSafeJSContext = mSafeJSContext;
                 }
             }
         }
@@ -329,8 +336,11 @@ xpcPerThreadData::GetSafeJSContext()
 nsresult
 xpcPerThreadData::SetSafeJSContext(JSContext *cx)
 {
+    NS_ASSERTION(cx, "SetSafeJSContext called with a null context");
+
+    if(!cx)
+        return NS_ERROR_INVALID_ARG;
     mSafeJSContext = cx;
-    mSafeContextIsFromSetter = PR_TRUE;
     return NS_OK;
 }
 
