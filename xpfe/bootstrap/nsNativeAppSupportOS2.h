@@ -324,3 +324,13 @@ BOOL (* APIENTRY WinDdeUninitialize)(HDDEINST);
 
 #endif /* _H_DDEML */
 
+typedef ULONG DWORD;
+typedef PBYTE LPBYTE;
+typedef HDATA HDDEDATA;
+
+#define CP_WINANSI    0  //  When 0 is specified for codepage on these
+                         //  dde functions, it will use the codepage
+                         //  that is associated with the current thread.
+                         //  CP_WINANSI in win32 means that the non
+                         //  unicode version of DdeCreateStringHandle
+                         //  was used.
