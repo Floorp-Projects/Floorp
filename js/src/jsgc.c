@@ -1106,7 +1106,7 @@ MARK_GC_THING(JSContext *cx, void *thing, uint8 *flagp, void *arg)
             goto out;
 
         /* Mark slots if they are small enough to be GC-allocated. */
-        if (vp[-1] * sizeof(jsval) <= GC_NBYTES_MAX)
+        if ((vp[-1] + 1) * sizeof(jsval) <= GC_NBYTES_MAX)
             GC_MARK(cx, vp - 1, "slots", arg);
 
         /* Switch to Deutsch-Schorr-Waite if we exhaust our stack quota. */
