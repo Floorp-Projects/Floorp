@@ -3752,7 +3752,7 @@ nsresult nsPluginHostImpl::RegisterPluginMimeTypesWithLayout(nsPluginTag * plugi
   if (!mOverrideInternalTypes) {
     loader = do_GetService("@mozilla.org/image/loader;1");
     if (!loader) {
-      NS_WARNING("get loader failed, falling back to mOverrideInternalTypes")
+      NS_WARNING("get loader failed, falling back to mOverrideInternalTypes");
       mOverrideInternalTypes=PR_TRUE;
     }
   }
