@@ -180,7 +180,6 @@ if (NNTP==NULL) \
     NNTP = PR_NewLogModule("NNTP"); \
 PR_LOG(NNTP, out, ("%s",buf)) ;
 
-#ifdef DEBUG
 char *stateLabels[] = {
 "NNTP_RESPONSE",
 #ifdef BLOCK_UNTIL_AVAILABLE_CONNECTION
@@ -259,7 +258,6 @@ char *stateLabels[] = {
 "NEWS_FREE",
 "NEWS_FINISHED"
 };
-#endif
 
 
 /* end logging */
