@@ -1692,7 +1692,7 @@ PRInt32 nsString::RFind(const char* anAsciiSet,PRBool aIgnoreCase) const{
  */
 PRInt32 nsString::RFind(PRUnichar aChar,PRBool aIgnoreCase) const{
   chartype uc=nsCRT::ToUpper(aChar);
-  for(PRInt32 offset=mLength-1;offset>0;offset--) 
+  for(PRInt32 offset=mLength-1;offset>=0;offset--) 
     if(aIgnoreCase) {
       if(nsCRT::ToUpper(mStr[offset])==uc)
         return offset;
