@@ -1320,7 +1320,8 @@ public:
 
   CScriptElement() : CTextContainer(eHTMLTag_script) {
     mGroup.mBits.mHeadMisc=1;
-    mGroup.mBits.mBlock=1;
+    mGroup.mBits.mInlineEntity=1;
+    mGroup.mBits.mSpecial=1;
     mProperties.mIsSinkContainer=PR_FALSE;
   }
 
@@ -1362,27 +1363,14 @@ public:
 /**********************************************************
   This defines the preformatted element group, (PRE).
  **********************************************************/
-class CPreformattedElement: public CTextContainer {
+class CPreformattedElement: public CInlineElement {
 public:
 
-  static CGroupMembers& GetGroup(void) {
-    static CGroupMembers theGroup={0};
-    theGroup.mBits.mPreformatted=1;
-    theGroup.mBits.mBlock=1;
-    return theGroup;
-  }
-
-  static CGroupMembers& GetContainedGroups(void) {
-    static CGroupMembers theGroups={0};
-    theGroups.mBits.mPreformatted=1;
-    return theGroups;
-  }
-
   static void Initialize(CElement& anElement,eHTMLTags aTag){
-    CElement::Initialize(anElement,aTag,GetGroup(),GetContainedGroups());
+    CInlineElement::Initialize(anElement,aTag);
   }
 
-  CPreformattedElement(eHTMLTags aTag) : CTextContainer(aTag) {
+  CPreformattedElement(eHTMLTags aTag) : CInlineElement(aTag) {
     mGroup=GetGroup();
     mContainsGroups=GetContainedGroups();
     mProperties.mIsContainer=1;
@@ -1392,69 +1380,16 @@ public:
     Pre handles the opening of it's own children
    **********************************************************/
   virtual nsresult HandleStartToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
-    nsresult result=NS_OK;
-
-    switch(aTag) {
-      case eHTMLTag_newline:
-        mText.Append(kNewLine);
-        break;
-
-      case eHTMLTag_whitespace:
-      case eHTMLTag_text:
-        mText.Append(aNode->GetText());
-        break;
-
-      default:        
-        {
-          nsCParserNode *theNode=(nsCParserNode*)aNode;
-          theNode->mToken->GetSource(mText);
-        }
-        break;
-    }
-
+    nsresult result=CElement::HandleStartToken(aNode,aTag,aContext,aSink);
     return result;
   }
 
-  /**********************************************************
-    Call this for each element as it get's closed
-   **********************************************************/
-  virtual nsresult  NotifyClose(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
-    nsresult result=NS_OK;
-    if(aNode) {
-
-      CTextToken theToken(mText);
-      PRInt32 theLineNumber=0;
-      nsCParserNode theNode(&theToken,theLineNumber);
-      result=aSink->AddLeaf(theNode);
-    }
-    mText.Truncate(0);
-    return result;
-  }
 
   /**********************************************************
     Pre handles the closing of it's own children
    **********************************************************/
   virtual nsresult HandleEndToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
-    nsresult result=NS_OK;
-
-    switch(aTag) {
-      case eHTMLTag_newline:
-        mText.Append(kNewLine);
-        break;
-
-      case eHTMLTag_whitespace:
-      case eHTMLTag_text:
-        mText.Append(aNode->GetText());
-        break;
-
-      default:        
-        {
-          nsCParserNode *theNode=(nsCParserNode*)aNode;
-          theNode->mToken->GetSource(mText);
-        }
-        break;
-    }
-
+    nsresult result=CElement::HandleEndToken(aNode,aTag,aContext,aSink);
     return result;
   }
 

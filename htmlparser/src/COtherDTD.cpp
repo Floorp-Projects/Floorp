@@ -24,7 +24,7 @@
 //#define RICKG_DEBUG          
      
         
-#include "nsDebug.h"  
+#include "nsDebug.h"   
 #include "nsIDTDDebug.h"    
 #include "COtherDTD.h" 
 #include "nsHTMLTokens.h"
@@ -663,7 +663,7 @@ nsresult COtherDTD::HandleToken(CToken* aToken,nsIParser* aParser){
   return result;
 }
 
- 
+  
 /**
  * This gets called after we've handled a given start tag.
  * It's a generic hook to let us to post processing.
@@ -842,7 +842,7 @@ nsresult COtherDTD::HandleStartToken(CToken* aToken) {
             theTagWasHandled=PR_TRUE;  
           }    
           break;   
-      }//switch         
+      }//switch          
        
       if(theTagWasHandled) {
         DidHandleStartTag(*theNode,theChildTag);  
