@@ -48,5 +48,6 @@ DIRS =	hclhacks\
 	pkix	\
 	pkcs7	\
 	pkcs12	\
+    ssl     \
 	tests	\
 	$(NULL)
