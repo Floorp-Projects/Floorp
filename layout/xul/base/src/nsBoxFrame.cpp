@@ -889,7 +889,6 @@ nsBoxFrame::FlowChildAt(nsIFrame* childFrame,
 
         nsMargin border(0,0,0,0);
         spacing->GetBorderPadding(border);
-        nsMargin total = margin + border;
 
         const nsStylePosition* position;
         rv = childFrame->GetStyleData(eStyleStruct_Position,

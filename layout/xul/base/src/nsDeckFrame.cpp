@@ -324,9 +324,6 @@ nsresult
 nsDeckFrame::PlaceChildren(nsRect& boxRect)
 {
   // ------- set the childs positions ---------
-  nscoord x = boxRect.x;
-  nscoord y = boxRect.y;
-
   nsIFrame* childFrame = mFrames.FirstChild(); 
   nscoord count = 0;
   while (nsnull != childFrame) 
