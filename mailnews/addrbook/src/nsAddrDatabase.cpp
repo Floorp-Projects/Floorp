@@ -2269,3 +2269,30 @@ nsresult nsAddrDatabase::CreateABCard(nsIMdbRow* cardRow, nsIAbCard **result)
 }
 
 
+NS_IMETHODIMP nsAddrDatabase::GetCardForEmailAddress(const char *emailAddress, nsIAbCard **cardResult)
+{
+	nsresult rv = NS_OK;
+	if (!cardResult)
+		return NS_ERROR_NULL_POINTER;
+
+	mdbYarn	emailAddressYarn;
+
+	emailAddressYarn.mYarn_Buf = (void *) emailAddress;
+	emailAddressYarn.mYarn_Fill = PL_strlen(emailAddress);
+	emailAddressYarn.mYarn_Form = 0;
+	emailAddressYarn.mYarn_Size = emailAddressYarn.mYarn_Fill;
+
+	nsIMdbRow	*cardRow;
+	mdbOid		outRowId;
+	mdb_err result = GetStore()->FindRow(GetEnv(), m_CardRowScopeToken,
+		m_PriEmailColumnToken, &emailAddressYarn,  &outRowId, 
+		&cardRow);
+	if (NS_SUCCEEDED(result) && cardRow)
+	{
+		rv = CreateABCard(cardRow, cardResult);
+	}
+	else
+		*cardResult = nsnull;
+	return rv;
+}
+

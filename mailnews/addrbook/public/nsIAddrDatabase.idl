@@ -52,6 +52,8 @@ interface nsIAddrDatabase : nsIAddrDBAnnouncer {
 	void EditCard(in nsIAbCard card, in boolean beNotify);
 	void ContainsCard(in nsIAbCard card, out boolean hasCard);
 
+	void GetCardForEmailAddress(in string emailAddress, out nsIAbCard card);
+
 	void SetAnonymousStringAttribute(in string attrname, in string value);
 	void GetAnonymousStringAttribute(in string attrname, out string value);
 	void SetAnonymousIntAttribute(in string attrname, in unsigned long value);
