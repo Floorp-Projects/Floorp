@@ -50,6 +50,7 @@ protected:
 
    PRUint32 mState;	// cached expected number of bytes per UTF8 character sequence
    PRUint32 mUcs4;	// cached Unicode character
+   PRUint32 mMinUcs4;  // minimum Ucs4 value
 
   //--------------------------------------------------------------------
   // Subclassing of nsDecoderSupport class [declaration]
