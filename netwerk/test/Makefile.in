@@ -50,6 +50,7 @@ CPPSRCS		= \
 		TestDBMAccess.cpp \
 		TestMCTransport.cpp \
 		TestPageLoad.cpp \
+		TestPerf.cpp \
 		TestIDN.cpp \
 		TestURLParser.cpp \
 		TestStandardURL.cpp \
