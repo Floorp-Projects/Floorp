@@ -2497,7 +2497,9 @@ GetFontNames(char* aPattern, nsFontNodeArray* aNodes)
         res = gCharSetManager->GetCharsetLangGroup(charset,
           &charSetInfo->mLangGroup);
         if (NS_FAILED(res)) {
+#ifdef NOISY_FONTS
           printf("=== cannot get lang group for %s\n", charSetInfo->mCharSet);
+#endif
         }
       }
     }
