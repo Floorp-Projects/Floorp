@@ -369,7 +369,7 @@ static REGERR nr_OpenFile(char *path, FILEHANDLE *fh)
     PR_ASSERT( fh != NULL );
 
 	/* Open the file for exclusive random read/write */
-	(*fh) = PR_Open(path, PR_RDWR, 00700);
+	(*fh) = PR_Open(path, PR_RDWR|PR_CREATE_FILE, 00700);
 	if ( !VALID_FILEHANDLE(*fh) )
 	{
 		switch (PR_GetError())
