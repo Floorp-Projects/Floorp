@@ -4755,7 +4755,8 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
         nsIFrame* parentFrame;
         childFrame->GetParent(&parentFrame);
         rv = parentFrame->RemoveFrame(*aPresContext, *shell,
-                                      nsLayoutAtoms::absoluteList, childFrame);
+          (NS_STYLE_POSITION_FIXED == position->mPosition) ?
+          nsLayoutAtoms::fixedList : nsLayoutAtoms::absoluteList, childFrame);
 
         // Now the placeholder frame
         if (nsnull != placeholderFrame) {
