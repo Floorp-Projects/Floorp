@@ -19,19 +19,23 @@ IMPLEMENT_DYNCREATE(CTabMessages, CPropertyPage)
 CTabMessages::CTabMessages() : CPropertyPage(CTabMessages::IDD, CTabMessages::IDD)
 {
 	//{{AFX_DATA_INIT(CTabMessages)
-		// NOTE: the ClassWizard will add member initialization here
+	m_szStatus = _T("");
 	//}}AFX_DATA_INIT
 }
+
 
 CTabMessages::~CTabMessages()
 {
 }
 
+
 void CTabMessages::DoDataExchange(CDataExchange* pDX)
 {
 	CPropertyPage::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CTabMessages)
+	DDX_Control(pDX, IDC_PROGRESS, m_pcProgress);
 	DDX_Control(pDX, IDC_OUTPUT, m_lbMessages);
+	DDX_Text(pDX, IDC_STATUS, m_szStatus);
 	//}}AFX_DATA_MAP
 }
 

@@ -24,9 +24,11 @@ CTabDOM::CTabDOM() : CPropertyPage(CTabDOM::IDD, CTabDOM::IDD)
 	//}}AFX_DATA_INIT
 }
 
+
 CTabDOM::~CTabDOM()
 {
 }
+
 
 void CTabDOM::DoDataExchange(CDataExchange* pDX)
 {
@@ -53,6 +55,7 @@ void CTabDOM::OnRefreshDOM()
 		m_pBrowseDlg->OnRefreshDOM();
 	}
 }
+
 
 BOOL CTabDOM::OnInitDialog() 
 {

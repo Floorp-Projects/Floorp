@@ -24,9 +24,11 @@ CTabTests::CTabTests() : CPropertyPage(CTabTests::IDD, CTabTests::IDD)
 	//}}AFX_DATA_INIT
 }
 
+
 CTabTests::~CTabTests()
 {
 }
+
 
 void CTabTests::DoDataExchange(CDataExchange* pDX)
 {
@@ -54,6 +56,7 @@ void CTabTests::OnRunTest()
 {
 	m_pBrowseDlg->OnRunTest();	
 }
+
 
 void CTabTests::OnSelchangedTestlist(NMHDR* pNMHDR, LRESULT* pResult) 
 {
@@ -98,6 +101,7 @@ void CTabTests::OnDblclkTestlist(NMHDR* pNMHDR, LRESULT* pResult)
 	OnRunTest();
 	*pResult = 0;
 }
+
 
 BOOL CTabTests::OnInitDialog() 
 {

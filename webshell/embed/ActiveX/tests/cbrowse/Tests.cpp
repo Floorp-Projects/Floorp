@@ -40,6 +40,7 @@ void BrowserInfo::OutputString(const TCHAR *szMessage, ...)
 	pBrowseDlg->OutputString(szOutput);
 }
 
+
 HRESULT BrowserInfo::GetWebBrowser(IWebBrowserApp **pWebBrowser)
 {
 	if (pIUnknown == NULL)
@@ -48,6 +49,7 @@ HRESULT BrowserInfo::GetWebBrowser(IWebBrowserApp **pWebBrowser)
 	}
 	return pIUnknown->QueryInterface(IID_IWebBrowserApp, (void **) pWebBrowser);
 }
+
 
 HRESULT BrowserInfo::GetDocument(IHTMLDocument2 **pDocument)
 {
@@ -74,6 +76,8 @@ struct InterfaceInfo
 	const IID *piid;
 	const TCHAR *szName;
 };
+
+
 static InterfaceInfo aDocIIDs[] = 
 {
 	{ &IID_IOleCommandTarget,		_T("IOleCommandTarget") },
@@ -111,6 +115,7 @@ TestResult __cdecl tstDocument(BrowserInfo &cInfo)
 
 	return trPassed;
 }
+
 
 TestResult __cdecl tstCollectionEnum(BrowserInfo &cInfo)
 {
@@ -153,6 +158,7 @@ TestResult __cdecl tstCollectionEnum(BrowserInfo &cInfo)
 
 	return trPassed;
 }
+
 
 void tstDrillerLevel(BrowserInfo &cInfo, IHTMLElementCollection *pCollection, int nLevel)
 {
@@ -248,6 +254,7 @@ void tstDrillerLevel(BrowserInfo &cInfo, IHTMLElementCollection *pCollection, in
 	cInfo.OutputString(_T("%sEnd collection"), szIndent);
 }
 
+
 TestResult __cdecl tstDriller(BrowserInfo &cInfo)
 {
 	CIPtr(IHTMLDocument2) cpDocElement;
@@ -268,11 +275,13 @@ TestResult __cdecl tstDriller(BrowserInfo &cInfo)
 	return trPassed;
 }
 
+
 TestResult __cdecl tstTesters(BrowserInfo &cInfo)
 {
 	cInfo.OutputString("Test architecture is reasonably sane!");
 	return trPassed;
 }
+
 
 TestResult __cdecl tstControlActive(BrowserInfo &cInfo)
 {
@@ -292,6 +301,7 @@ TestResult __cdecl tstControlActive(BrowserInfo &cInfo)
 	return trPassed;
 }
 
+
 TestResult __cdecl tstIWebBrowser(BrowserInfo &cInfo)
 {
 	if (cInfo.pIUnknown == NULL)
@@ -309,6 +319,7 @@ TestResult __cdecl tstIWebBrowser(BrowserInfo &cInfo)
 	cInfo.OutputString(_T("Error: No IWebBrowser"));
 	return trFailed;
 }
+
 
 TestResult __cdecl tstIWebBrowser2(BrowserInfo &cInfo)
 {
@@ -346,10 +357,12 @@ TestResult __cdecl tstIWebBrowserApp(BrowserInfo &cInfo)
 	return trFailed;
 }
 
+
 TestResult __cdecl tstNavigate2(BrowserInfo &cInfo)
 {
 	return trFailed;
 }
+
 
 TestResult __cdecl tstScriptTest(BrowserInfo &cInfo)
 {
@@ -381,6 +394,7 @@ TestResult __cdecl tstScriptTest(BrowserInfo &cInfo)
 
 	return cInfo.nResult;
 }
+
 
 Test aScripts[] =
 {
@@ -439,10 +453,12 @@ Test aBasic[] =
 	{ _T("IWebBrowserApp"), _T("Test if control has an IWebBrowserApp interface"), tstIWebBrowserApp, trNotRun }
 };
 
+
 Test aBrowsing[] =
 {
 	{ _T("IWebBrowser2::Navigate2"), _T("Test if browser can navigate to the test URL"), NULL }
 };
+
 
 Test aDHTML[] =
 {
@@ -451,10 +467,12 @@ Test aDHTML[] =
 	{ _T("Parse DOM"), _T("Parse the document DOM"), tstDriller }
 };
 
+
 Test aOther[] =
 {
 	{ _T("Print Page"), _T("Print the test URL page"), NULL }
 };
+
 
 TestSet aTestSets[] =
 {
@@ -464,5 +482,6 @@ TestSet aTestSets[] =
 	{ _T("Other"), _T("Other tests"), 1, aOther, NULL },
 	{ _T("Scripts"), _T("Script tests"), 0, NULL, ScriptSetPopulator }
 };
+
 
 int nTestSets = sizeof(aTestSets) / sizeof(aTestSets[0]);
