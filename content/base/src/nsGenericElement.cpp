@@ -761,25 +761,26 @@ nsGenericElement::HandleDOMEvent(nsIPresContext& aPresContext,
   if (NS_EVENT_FLAG_INIT == aFlags) {
     aDOMEvent = &domEvent;
     aEvent->flags = NS_EVENT_FLAG_NONE;
-
-    //Initiate capturing phase.  Special case first call to document
-    if (nsnull != mDocument) {
-      mDocument->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_CAPTURE, aEventStatus);
-    }
   }
   
   //Capturing stage evaluation
   //Always pass capturing up the tree before local evaulation
   if (NS_EVENT_FLAG_BUBBLE != aFlags) {
-    if (nsnull != mDOMSlots && nsnull != mDOMSlots->mCapturer) {
-      mDOMSlots->mCapturer->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_CAPTURE, aEventStatus);
-    } else {
+  // XXX: Bring on the more optimized version of capturing at some point
+    //if (nsnull != mDOMSlots && nsnull != mDOMSlots->mCapturer) {
+      //mDOMSlots->mCapturer->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_CAPTURE, aEventStatus);
+    //} else {
       // Node capturing stage
       if (mParent) {
         // Pass off to our parent.
         mParent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_CAPTURE, aEventStatus);
+      } else {
+        //Initiate capturing phase.  Special case first call to document
+        if (nsnull != mDocument) {
+          mDocument->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_CAPTURE, aEventStatus);
+        }
       }
-    }
+    //}
   }
   
   //Local handling stage
