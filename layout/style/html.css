@@ -143,8 +143,6 @@ multicol {
 
 table {
   display: table;
-/* border-style: outset; */
-  border-color: #c0c0c0;
   border-spacing: 2px; 
   border-collapse: separate;
   margin-top: 0;
@@ -161,8 +159,6 @@ table[align=right] {
 td, th {
   vertical-align: inherit;
   text-align: left; 
-/* border-style: inset; */
-  border-color: #c0c0c0;
   display: table-cell;
 }
 th {
