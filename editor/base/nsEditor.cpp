@@ -649,6 +649,25 @@ nsEditor::EndTransaction()
   return NS_OK;
 }
 
+nsresult nsEditor::ScrollIntoView(PRBool aScrollToBegin)
+{
+  nsresult result;
+  /*
+  if (mPresShell)
+  {
+    nsCOMPtr<nsIDOMSelection> selection;
+    result = mPresShell->GetSelection(getter_AddRefs(selection));
+    if (NS_SUCCEEDED(result) && selection)
+    {
+      // get the content of the start of the selection
+      // get its layout object
+      // get its frame
+      // scroll that frame into view
+      mPresShell->
+*/
+  return result;
+}
+
 
 nsresult nsEditor::CreateNode(const nsString& aTag,
                               nsIDOMNode *    aParent,

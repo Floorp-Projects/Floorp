@@ -160,6 +160,8 @@ public:
 
   virtual nsresult EndTransaction();
 
+  virtual nsresult ScrollIntoView(PRBool aScrollToBegin);
+
 /*END nsIEditor interfaces*/
 
 

@@ -370,7 +370,7 @@ nsresult nsTextEditor::ScrollIntoView(PRBool aScrollToBegin)
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
   {
-    result = NS_ERROR_NOT_IMPLEMENTED;
+    result = mEditor->ScrollIntoView(aScrollToBegin);
   }
   return result;
 }
