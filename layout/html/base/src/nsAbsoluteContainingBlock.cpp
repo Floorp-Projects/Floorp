@@ -46,6 +46,11 @@
 #include "nsIPresContext.h"
 #include "nsIFrameManager.h"
 
+#ifdef DEBUG
+#include "nsBlockFrame.h"
+#endif
+
+
 nsresult
 nsAbsoluteContainingBlock::FirstChild(const nsIFrame* aDelegatingFrame,
                                       nsIAtom*        aListName,
@@ -414,9 +419,47 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
                                                nsReflowReason           aReason,
                                                nsReflowStatus&          aStatus)
 {
+#ifdef DEBUG
+  if (nsBlockFrame::gNoisyReflow) {
+    nsFrame::IndentBy(stdout,nsBlockFrame::gNoiseIndent);
+    printf("abs pos ");
+    if (nsnull != aKidFrame) {
+      nsIFrameDebug*  frameDebug;
+      if (NS_SUCCEEDED(CallQueryInterface(aKidFrame, &frameDebug))) {
+        nsAutoString name;
+        frameDebug->GetFrameName(name);
+        printf("%s ", NS_LossyConvertUCS2toASCII(name).get());
+      }
+    }
+    printf("r=%d",aReflowState.reason);
+
+    if (aReflowState.reason == eReflowReason_Incremental) {
+      nsHTMLReflowCommand *command = aReflowState.path->mReflowCommand;
+
+      if (command) {
+        // We're the target.
+        nsReflowType type;
+        command->GetType(type);
+        printf("(%d)", type);      
+      }
+    }
+    char width[16];
+    char height[16];
+    PrettyUC(aReflowState.availableWidth, width);
+    PrettyUC(aReflowState.availableHeight, height);
+    printf(" a=%s,%s ", width, height);
+    PrettyUC(aReflowState.mComputedWidth, width);
+    PrettyUC(aReflowState.mComputedHeight, height);
+    printf("c=%s,%s \n", width, height);
+  }
+  if (nsBlockFrame::gNoisy) {
+    nsBlockFrame::gNoiseIndent++;
+  }
+#endif // DEBUG
+
+
   nsresult  rv;
   nsMargin  border;
-
   // Get the border values
   if (!aReflowState.mStyleBorder->GetBorder(border)) {
     NS_NOTYETIMPLEMENTED("percentage border");
@@ -511,6 +554,43 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
       *overflowArea = kidDesiredSize.mOverflowArea;
     }
   }
-
+#ifdef DEBUG
+  if (nsBlockFrame::gNoisy) {
+    nsBlockFrame::gNoiseIndent--;
+  }
+  if (nsBlockFrame::gNoisyReflow) {
+    nsFrame::IndentBy(stdout,nsBlockFrame::gNoiseIndent);
+    printf("abs pos ");
+    if (nsnull != aKidFrame) {
+      nsIFrameDebug*  frameDebug;
+      if (NS_SUCCEEDED(CallQueryInterface(aKidFrame, &frameDebug))) {
+        nsAutoString name;
+        frameDebug->GetFrameName(name);
+        printf("%s ", NS_LossyConvertUCS2toASCII(name).get());
+      }
+    }
+    printf("%p rect=%d,%d,%d,%d", aKidFrame, rect.x, rect.y, rect.width, rect.height);
+    printf("\n");
+  }
+#endif
   return rv;
 }
+
+#ifdef DEBUG
+ void nsAbsoluteContainingBlock::PrettyUC(nscoord aSize,
+                        char*   aBuf)
+{
+  if (NS_UNCONSTRAINEDSIZE == aSize) {
+    strcpy(aBuf, "UC");
+  }
+  else {
+    if(0xdeadbeef == aSize)
+    {
+      strcpy(aBuf, "deadbeef");
+    }
+    else {
+      sprintf(aBuf, "%d", aSize);
+    }
+  }
+}
+#endif
