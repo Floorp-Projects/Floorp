@@ -782,7 +782,20 @@ nsBlockReflowState::ComputeBlockAvailSpace(nsIFrame* aFrame,
 
   const nsMargin& borderPadding = BorderPadding();
 
-  if (NS_FRAME_SPLITTABLE_NON_RECTANGULAR == aSplitType) 
+  /* bug 18445: treat elements mapped to display: block such as text controls
+   * just like normal blocks   */
+  PRBool treatAsNotSplittable=PR_FALSE;
+  nsCOMPtr<nsIAtom>frameType;
+  aFrame->GetFrameType(getter_AddRefs(frameType));
+  if (frameType)
+  { // text controls are splittable, so make a special case here
+    if (nsLayoutAtoms::textInputFrame == frameType.get())
+      treatAsNotSplittable = PR_TRUE;
+  }
+
+  if (NS_FRAME_SPLITTABLE_NON_RECTANGULAR == aSplitType ||    // normal blocks 
+      NS_FRAME_NOT_SPLITTABLE == aSplitType ||                // things like images mapped to display: block
+      PR_TRUE == treatAsNotSplittable)                        // text input controls mapped to display: block (special case)
   {
     if (mBand.GetFloaterCount()) {
       // Use the float-edge property to determine how the child block
@@ -1489,12 +1502,12 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
                      const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&          aStatus)
 {
-  /*ListTag(stdout);
-  
+  /*
+  ListTag(stdout);
     printf(": begin reflow type %d availSize=%d,%d computedSize=%d,%d\n",
            aReflowState.reason, aReflowState.availableWidth, aReflowState.availableHeight,
-           aReflowState.mComputedWidth, aReflowState.mComputedHeight);*/
-
+           aReflowState.mComputedWidth, aReflowState.mComputedHeight);
+*/
   DO_GLOBAL_REFLOW_COUNT("nsBlockFrame", aReflowState.reason);
 
 #ifdef DEBUG
@@ -3273,8 +3286,9 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
       nsRect dirtyRect;
       dirtyRect.UnionRect(oldCombinedArea, combinedArea);
 #ifdef NOISY_BLOCK_INVALIDATE
-      printf("%p invalidate because aDamageDirtyArea is true (%d, %d, %d, %d)\n",
-             this, dirtyRect.x, dirtyRect.y, dirtyRect.width, dirtyRect.height);
+      printf("%p invalidate because %s is true (%d, %d, %d, %d)\n",
+             this, aDamageDirtyArea ? "aDamageDirtyArea" : "aLine->IsForceInvalidate",
+             dirtyRect.x, dirtyRect.y, dirtyRect.width, dirtyRect.height);
 #endif
       Invalidate(aState.mPresContext, dirtyRect);
     }
