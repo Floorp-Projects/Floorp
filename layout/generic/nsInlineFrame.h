@@ -25,6 +25,9 @@
 
 class nsAnonymousBlockFrame;
 
+#define NS_INLINE_FRAME_CID \
+ { 0xa6cf90e0, 0x15b3, 0x11d2,{0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
+
 #define nsInlineFrameSuper nsHTMLContainerFrame
 
 class nsInlineFrame : public nsInlineFrameSuper
@@ -69,6 +72,8 @@ public:
                                     nscoord& aDeltaWidth);
 #endif
 
+  static nsIID kInlineFrameCID;
+
 protected:
   // Additional reflow state used during our reflow methods
   struct InlineReflowState {
@@ -106,8 +111,6 @@ protected:
       ? nsLineLayout::TreatFrameAsBlock(mFrames.FirstChild())
       : PR_FALSE;
   }
-
-  static nsIID kInlineFrameCID;
 
   static PRBool ParentIsInlineFrame(nsIFrame* aFrame, nsIFrame** aParent) {
     void* tmp;
