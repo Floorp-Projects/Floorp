@@ -8608,7 +8608,7 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext*        aPresContext,
                                        nsIContent*            aChild,
                                        PRInt32                aIndexInContainer,
                                        nsILayoutHistoryState* aFrameState,
-                                       PRBool                 aInContentReplaced)
+                                       PRBool                 aInReinsertContent)
 {
   // XXXldb Do we need to re-resolve style to handle the CSS2 + combinator and
   // the :empty pseudo-class?
@@ -8733,7 +8733,7 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext*        aPresContext,
       : FindNextAnonymousSibling(shell, mDocument, aContainer, aChild);
   }
 
-  PRBool handleSpecialFrame = IsFrameSpecial(parentFrame) && !aInContentReplaced;
+  PRBool handleSpecialFrame = IsFrameSpecial(parentFrame) && !aInReinsertContent;
 
   // Now, find the geometric parent so that we can handle
   // continuations properly. Use the prev sibling if we have it;
@@ -8763,7 +8763,7 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext*        aPresContext,
   }
 
   // If the frame we are manipulating is a special frame then see if we need to reframe 
-  // NOTE: if we are in ContentReplaced, then don't reframe as we are already doing just that!
+  // NOTE: if we are in ReinsertContent, then don't reframe as we are already doing just that!
   if (handleSpecialFrame) {
     // a special inline frame has propagated some of its children upward to be children 
     // of the block and those frames may need to move around. Sometimes we may need to reframe
@@ -8848,8 +8848,7 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext*        aPresContext,
         }
 #endif
         if (parentContainer) {
-          PRInt32 ix = parentContainer->IndexOf(blockContent);
-          ContentReplaced(aPresContext, parentContainer, blockContent, blockContent, ix);
+          ReinsertContent(aPresContext, parentContainer, blockContent);
         }
         else {
           // XXX uh oh. the block that needs reworking has no parent...
@@ -8967,19 +8966,18 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext*        aPresContext,
 }
 
 nsresult
-nsCSSFrameConstructor::ContentReplaced(nsIPresContext* aPresContext,
+nsCSSFrameConstructor::ReinsertContent(nsIPresContext* aPresContext,
                                        nsIContent*     aContainer,
-                                       nsIContent*     aOldChild,
-                                       nsIContent*     aNewChild,
-                                       PRInt32         aIndexInContainer)
+                                       nsIContent*     aChild)
 {
+  PRInt32 ix = aContainer->IndexOf(aChild);
   // XXX For now, do a brute force remove and insert.
   nsresult res = ContentRemoved(aPresContext, aContainer, 
-                                aOldChild, aIndexInContainer, PR_TRUE);
+                                aChild, ix, PR_TRUE);
 
   if (NS_SUCCEEDED(res)) {
     res = ContentInserted(aPresContext, aContainer,  nsnull,
-                          aNewChild, aIndexInContainer, nsnull, PR_TRUE);
+                          aChild, ix, nsnull, PR_TRUE);
   }
 
   return res;
@@ -9183,7 +9181,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
                                       nsIContent*     aContainer,
                                       nsIContent*     aChild,
                                       PRInt32         aIndexInContainer,
-                                      PRBool          aInContentReplaced)
+                                      PRBool          aInReinsertContent)
 {
   // XXXldb Do we need to re-resolve style to handle the CSS2 + combinator and
   // the :empty pseudo-class?
@@ -9246,9 +9244,9 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
     // If the frame we are manipulating is a special frame then do
     // something different instead of just inserting newly created
     // frames.
-    // NOTE: if we are in ContentReplaced, 
+    // NOTE: if we are in ReinsertContent, 
     //       then do not reframe as we are already doing just that!
-    if (IsFrameSpecial(childFrame) && !aInContentReplaced) {
+    if (IsFrameSpecial(childFrame) && !aInReinsertContent) {
       // We are pretty harsh here (and definitely not optimal) -- we
       // wipe out the entire containing block and recreate it from
       // scratch. The reason is that because we know that a special
@@ -9704,7 +9702,7 @@ nsCSSFrameConstructor::CharacterDataChanged(nsIPresContext* aPresContext,
     // first-letter text but isn't currently).
     //
     // To deal with both of these we make a simple change: map a
-    // CharacterDataChanged into a ContentReplaced when we are changing text
+    // CharacterDataChanged into a ReinsertContent when we are changing text
     // that is part of a first-letter situation.
     PRBool doCharacterDataChanged = PR_TRUE;
     nsCOMPtr<nsITextContent> textContent(do_QueryInterface(aContent));
@@ -9722,10 +9720,8 @@ nsCSSFrameConstructor::CharacterDataChanged(nsIPresContext* aPresContext,
           // repair the blocks frame structure properly.
           nsCOMPtr<nsIContent> container = aContent->GetParent();
           if (container) {
-            PRInt32 ix = container->IndexOf(aContent);
             doCharacterDataChanged = PR_FALSE;
-            rv = ContentReplaced(aPresContext, container,
-                                 aContent, aContent, ix);
+            rv = ReinsertContent(aPresContext, container, aContent);
           }
         }
       }
@@ -12907,8 +12903,7 @@ nsCSSFrameConstructor::WipeContainingBlock(nsIPresContext* aPresContext,
       }
 #endif
       if (parentContainer) {
-        PRInt32 ix = parentContainer->IndexOf(aBlockContent);
-        ContentReplaced(aPresContext, parentContainer, aBlockContent, aBlockContent, ix);
+        ReinsertContent(aPresContext, parentContainer, aBlockContent);
       }
       else {
         NS_ERROR("uh oh. the block we need to reframe has no parent!");
@@ -13229,8 +13224,7 @@ nsCSSFrameConstructor::ReframeContainingBlock(nsIPresContext* aPresContext, nsIF
                  NS_STATIC_CAST(void*, parentContainer));
         }
 #endif
-        PRInt32 ix = parentContainer->IndexOf(blockContent);
-        return ContentReplaced(aPresContext, parentContainer, blockContent, blockContent, ix);
+        return ReinsertContent(aPresContext, parentContainer, blockContent);
       }
     }
   }

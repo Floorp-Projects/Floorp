@@ -203,26 +203,6 @@ public:
                                PRInt32 aIndexInContainer) = 0;
 
   /**
-   * Notification that content has been replaced. This method is called
-   * automatically by the content container objects when a content object
-   * is replaced in the container (therefore there is normally no need to
-   * invoke this method directly). The notification is passed on to all
-   * of the document observers.
-   *
-   * @param aDocument The document being observed
-   * @param aContainer the container that now contains aChild
-   * @param aOldChild the child that was replaced
-   * @param aNewChild the child that replaced aOldChild
-   * @param aIndexInContainer the index of the old and new child in the
-   *  container
-   */
-  virtual void ContentReplaced(nsIDocument *aDocument,
-                               nsIContent* aContainer,
-                               nsIContent* aOldChild,
-                               nsIContent* aNewChild,
-                               PRInt32 aIndexInContainer) = 0;
-
-  /**
    * Content has just been removed. This method is called automatically
    * by content container objects when a content object has just been
    * removed from the container (therefore there is normally no need to
@@ -376,11 +356,6 @@ public:
                                  nsIContent* aContainer,                     \
                                  nsIContent* aChild,                         \
                                  PRInt32 aIndexInContainer);                 \
-    virtual void ContentReplaced(nsIDocument* aDocument,                     \
-                                 nsIContent* aContainer,                     \
-                                 nsIContent* aOldChild,                      \
-                                 nsIContent* aNewChild,                      \
-                                 PRInt32 aIndexInContainer);                 \
     virtual void ContentRemoved(nsIDocument* aDocument,                      \
                                 nsIContent* aContainer,                      \
                                 nsIContent* aChild,                          \
@@ -475,14 +450,6 @@ void                                                                      \
 _class::ContentInserted(nsIDocument* aDocument,                           \
                         nsIContent* aContainer,                           \
                         nsIContent* aChild,                               \
-                        PRInt32 aIndexInContainer)                        \
-{                                                                         \
-}                                                                         \
-void                                                                      \
-_class::ContentReplaced(nsIDocument* aDocument,                           \
-                        nsIContent* aContainer,                           \
-                        nsIContent* aOldChild,                            \
-                        nsIContent* aNewChild,                            \
                         PRInt32 aIndexInContainer)                        \
 {                                                                         \
 }                                                                         \

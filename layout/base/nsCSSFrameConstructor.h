@@ -102,19 +102,13 @@ public:
                            nsIContent*            aChild,
                            PRInt32                aIndexInContainer,
                            nsILayoutHistoryState* aFrameState,
-                           PRBool                 aInContentReplaced);
-
-  nsresult ContentReplaced(nsIPresContext* aPresContext,
-                           nsIContent*     aContainer,
-                           nsIContent*     aOldChild,
-                           nsIContent*     aNewChild,
-                           PRInt32         aIndexInContainer);
+                           PRBool                 aInReinsertContent);
 
   nsresult ContentRemoved(nsIPresContext* aPresContext,
                           nsIContent*     aContainer,
                           nsIContent*     aChild,
                           PRInt32         aIndexInContainer,
-                          PRBool          aInContentReplaced);
+                          PRBool          aInReinsertContent);
 
   nsresult CharacterDataChanged(nsIPresContext* aPresContext,
                                 nsIContent*     aContent,
@@ -182,6 +176,10 @@ public:
                                          nsILayoutHistoryState* aFrameState);
 
 private:
+
+  nsresult ReinsertContent(nsIPresContext* aPresContext,
+                           nsIContent*     aContainer,
+                           nsIContent*     aChild);
 
   nsresult ConstructPageFrame(nsIPresShell*   aPresShell, 
                               nsIPresContext* aPresContext,

@@ -1946,23 +1946,6 @@ nsDocument::ContentInserted(nsIContent* aContainer, nsIContent* aChild,
 }
 
 void
-nsDocument::ContentReplaced(nsIContent* aContainer, nsIContent* aOldChild,
-                            nsIContent* aNewChild, PRInt32 aIndexInContainer)
-{
-  NS_ABORT_IF_FALSE(aOldChild && aNewChild, "Null old or new child child!");
-
-  PRInt32 i;
-  // XXXdwh There is a hacky ordering dependency between the binding
-  // manager and the frame constructor that forces us to walk the
-  // observer list in a reverse order
-  for (i = mObservers.Count() - 1; i >= 0; --i) {
-    nsIDocumentObserver* observer = (nsIDocumentObserver*)mObservers[i];
-    observer->ContentReplaced(this, aContainer, aOldChild, aNewChild,
-                              aIndexInContainer);
-  }
-}
-
-void
 nsDocument::ContentRemoved(nsIContent* aContainer, nsIContent* aChild,
                            PRInt32 aIndexInContainer)
 {

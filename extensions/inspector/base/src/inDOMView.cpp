@@ -842,37 +842,6 @@ inDOMView::ContentInserted(nsIDocument *aDocument, nsIContent* aContainer,
 }
 
 void
-inDOMView::ContentReplaced(nsIDocument *aDocument, nsIContent* aContainer, nsIContent* aOldChild, nsIContent* aNewChild, PRInt32 aIndexInContainer)
-{
-  if (!mTree)
-    return;
-
-  nsresult rv;
-
-  // find the inDOMViewNode for the old child
-  nsCOMPtr<nsIDOMNode> oldDOMNode(do_QueryInterface(aOldChild));
-  nsCOMPtr<nsIDOMNode> newDOMNode(do_QueryInterface(aNewChild));
-  PRInt32 row = 0;
-  if (NS_FAILED(rv = NodeToRow(oldDOMNode, &row)))
-    return;
-  inDOMViewNode* oldNode;
-  if (NS_FAILED(rv = RowToNode(row, &oldNode)))
-    return;
-
-  PRInt32 oldRowCount = GetRowCount();
-  if (oldNode->isOpen)
-    CollapseNode(row);
-
-  inDOMViewNode* newNode = CreateNode(newDOMNode, oldNode->parent);
-  ReplaceLink(newNode, oldNode);
-
-  ReplaceNode(newNode, row);
-
-  // XXX can this go into ReplaceNode?
-  mTree->InvalidateRange(row, oldRowCount-1);
-}
-
-void
 inDOMView::ContentRemoved(nsIDocument *aDocument, nsIContent* aContainer, nsIContent* aChild, PRInt32 aIndexInContainer)
 {
   if (!mTree)

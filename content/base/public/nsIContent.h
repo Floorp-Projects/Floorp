@@ -181,18 +181,6 @@ public:
                                  PRBool aNotify, PRBool aDeepSetDocument) = 0;
 
   /**
-   * Remove a child and replace it with another.
-   *
-   * @param aKid the content to replace with
-   * @param aIndex the index of the content to replace
-   * @param aNotify whether to notify the document that the replace has
-   *        occurred
-   * @param aDeepSetDocument whether to set document on all children of aKid
-   */
-  virtual nsresult ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex,
-                                  PRBool aNotify, PRBool aDeepSetDocument) = 0;
-
-  /**
    * Append a content node to the end of the child list.
    *
    * @param aKid the content to append

@@ -272,16 +272,6 @@ nsXMLPrettyPrinter::ContentInserted(nsIDocument* aDocument,
 }
 
 void
-nsXMLPrettyPrinter::ContentReplaced(nsIDocument* aDocument,
-                                    nsIContent* aContainer,
-                                    nsIContent* aOldChild,
-                                    nsIContent* aNewChild,
-                                    PRInt32 aIndexInContainer)
-{
-    MaybeUnhook(aContainer);
-}
-
-void
 nsXMLPrettyPrinter::ContentRemoved(nsIDocument* aDocument,
                                    nsIContent* aContainer,
                                    nsIContent* aChild,

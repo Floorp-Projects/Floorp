@@ -1235,29 +1235,6 @@ nsHTMLDocument::ContentInserted(nsIContent* aContainer, nsIContent* aContent,
 }
 
 void
-nsHTMLDocument::ContentReplaced(nsIContent* aContainer, nsIContent* aOldChild,
-                                nsIContent* aNewChild,
-                                PRInt32 aIndexInContainer)
-{
-  NS_ABORT_IF_FALSE(aOldChild && aNewChild, "Null new or old child!");
-
-  nsresult rv = UnregisterNamedItems(aOldChild);
-
-  if (NS_FAILED(rv)) {
-    return;
-  }
-
-  rv = RegisterNamedItems(aNewChild);
-
-  if (NS_FAILED(rv)) {
-    return;
-  }
-
-  nsDocument::ContentReplaced(aContainer, aOldChild,
-                              aNewChild, aIndexInContainer);
-}
-
-void
 nsHTMLDocument::ContentRemoved(nsIContent* aContainer, nsIContent* aContent,
                                PRInt32 aIndexInContainer)
 {

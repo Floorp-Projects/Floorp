@@ -1224,9 +1224,6 @@ public:
                                PRInt32 aNewIndexInContainer);
   virtual void ContentInserted(nsIDocument* aDocument, nsIContent* aContainer,
                                nsIContent* aChild, PRInt32 aIndexInContainer);
-  virtual void ContentReplaced(nsIDocument* aDocument, nsIContent* aContainer,
-                               nsIContent* aOldChild, nsIContent* aNewChild,
-                               PRInt32 aIndexInContainer);
   virtual void ContentRemoved(nsIDocument* aDocument, nsIContent* aContainer,
                               nsIContent* aChild, PRInt32 aIndexInContainer);
   virtual void StyleSheetAdded(nsIDocument* aDocument,
@@ -5229,24 +5226,6 @@ PresShell::ContentInserted(nsIDocument* aDocument,
   WillCauseReflow();
   mFrameConstructor->ContentInserted(mPresContext, aContainer, nsnull, aChild,
                                      aIndexInContainer, nsnull, PR_FALSE);
-  VERIFY_STYLE_TREE;
-  DidCauseReflow();
-}
-
-void
-PresShell::ContentReplaced(nsIDocument* aDocument,
-                           nsIContent*  aContainer,
-                           nsIContent*  aOldChild,
-                           nsIContent*  aNewChild,
-                           PRInt32      aIndexInContainer)
-{
-  // Notify the ESM that the content has been removed, so that
-  // it can clean up any state related to the content.
-  mPresContext->EventStateManager()->ContentRemoved(aOldChild);
-
-  WillCauseReflow();
-  mFrameConstructor->ContentReplaced(mPresContext, aContainer, aOldChild,
-                                     aNewChild, aIndexInContainer);
   VERIFY_STYLE_TREE;
   DidCauseReflow();
 }

@@ -124,8 +124,6 @@ public:
                            PRBool aNotify);
   virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
                                  PRBool aNotify, PRBool aDeepSetDocument);
-  virtual nsresult ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex,
-                                  PRBool aNotify, PRBool aDeepSetDocument);
   virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify,
                                  PRBool aDeepSetDocument);
   virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
@@ -528,16 +526,6 @@ nsHTMLOptionElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
 {
   nsresult rv = nsGenericHTMLElement::InsertChildAt(aKid, aIndex, aNotify,
                                                     aDeepSetDocument);
-  NotifyTextChanged();
-  return rv;
-}
-
-nsresult
-nsHTMLOptionElement::ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex,
-               PRBool aNotify, PRBool aDeepSetDocument)
-{
-  nsresult rv = nsGenericHTMLElement::ReplaceChildAt(aKid, aIndex, aNotify,
-                                                     aDeepSetDocument);
   NotifyTextChanged();
   return rv;
 }

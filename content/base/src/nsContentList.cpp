@@ -615,26 +615,6 @@ nsContentList::ContentInserted(nsIDocument *aDocument,
 }
  
 void
-nsContentList::ContentReplaced(nsIDocument *aDocument,
-                               nsIContent* aContainer,
-                               nsIContent* aOldChild,
-                               nsIContent* aNewChild,
-                               PRInt32 aIndexInContainer)
-{
-  if (mState == LIST_DIRTY)
-    return;
-  
-  if (IsDescendantOfRoot(aContainer)) {
-    if (MatchSelf(aOldChild) || MatchSelf(aNewChild)) {
-      mState = LIST_DIRTY;
-    }
-  }
-  else if (ContainsRoot(aOldChild)) {
-    DisconnectFromDocument();
-  }
-}
-
-void
 nsContentList::ContentRemoved(nsIDocument *aDocument,
                               nsIContent* aContainer,
                               nsIContent* aChild,

@@ -762,12 +762,6 @@ nsMenuBarX::ContentAppended( nsIDocument * aDocument, nsIContent  * aContainer,
 }
 
 void
-nsMenuBarX::ContentReplaced( nsIDocument * aDocument, nsIContent * aContainer, nsIContent * aOldChild,
-                          nsIContent * aNewChild, PRInt32 aIndexInContainer)
-{
-}
-
-void
 nsMenuBarX::DocumentWillBeDestroyed( nsIDocument * aDocument )
 {
   mDocument = nsnull;

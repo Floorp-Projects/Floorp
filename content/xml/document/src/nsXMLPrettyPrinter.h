@@ -63,10 +63,6 @@ public:
     virtual void ContentInserted(nsIDocument* aDocument,
                                  nsIContent* aContainer, nsIContent* aChild,
                                  PRInt32 aIndexInContainer);
-    virtual void ContentReplaced(nsIDocument* aDocument,
-                                 nsIContent* aContainer,
-                                 nsIContent* aOldChild, nsIContent* aNewChild,
-                                 PRInt32 aIndexInContainer);
     virtual void ContentRemoved(nsIDocument* aDocument, nsIContent* aContainer,
                                 nsIContent* aChild, PRInt32 aIndexInContainer);
     virtual void DocumentWillBeDestroyed(nsIDocument* aDocument);

@@ -119,11 +119,6 @@ public:
                                  nsIContent* aChild,
                                  PRInt32 aIndexInContainer);
 
-    virtual void ContentReplaced(nsIContent* aContainer,
-                                 nsIContent* aOldChild,
-                                 nsIContent* aNewChild,
-                                 PRInt32 aIndexInContainer);
-
     virtual void ContentRemoved(nsIContent* aContainer,
                                 nsIContent* aChild,
                                 PRInt32 aIndexInContainer);

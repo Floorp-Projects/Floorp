@@ -214,8 +214,6 @@ public:
   // nsIContent
   virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
                                  PRBool aNotify, PRBool aDeepSetDocument);
-  virtual nsresult ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex,
-                                  PRBool aNotify, PRBool aDeepSetDocument);
   virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify,
                                  PRBool aDeepSetDocument);
   virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
@@ -544,17 +542,6 @@ nsHTMLSelectElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
 
   return nsGenericHTMLFormElement::InsertChildAt(aKid, aIndex, aNotify,
                                                  aDeepSetDocument);
-}
-
-nsresult
-nsHTMLSelectElement::ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex,
-                                    PRBool aNotify, PRBool aDeepSetDocument)
-{
-  WillRemoveOptions(this, aIndex);
-  WillAddOptions(aKid, this, aIndex);
-
-  return nsGenericHTMLFormElement::ReplaceChildAt(aKid, aIndex, aNotify,
-                                                  aDeepSetDocument);
 }
 
 nsresult

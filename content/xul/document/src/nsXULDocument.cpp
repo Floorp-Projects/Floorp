@@ -1177,25 +1177,6 @@ nsXULDocument::ContentInserted(nsIContent* aContainer,
 }
 
 void
-nsXULDocument::ContentReplaced(nsIContent* aContainer,
-                               nsIContent* aOldChild,
-                               nsIContent* aNewChild,
-                               PRInt32 aIndexInContainer)
-{
-    nsresult rv;
-    rv = RemoveSubtreeFromDocument(aOldChild);
-    if (NS_FAILED(rv))
-        return;
-
-    rv = AddSubtreeToDocument(aNewChild);
-    if (NS_FAILED(rv))
-        return;
-
-    nsXMLDocument::ContentReplaced(aContainer, aOldChild, aNewChild,
-                                   aIndexInContainer);
-}
-
-void
 nsXULDocument::ContentRemoved(nsIContent* aContainer,
                               nsIContent* aChild,
                               PRInt32 aIndexInContainer)
