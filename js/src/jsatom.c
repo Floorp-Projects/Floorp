@@ -308,25 +308,45 @@ js_FreeAtomState(JSContext *cx, JSAtomState *state)
 #endif
 }
 
+typedef struct UninternArgs {
+    JSRuntime   *rt;
+    jsatomid    leaks;
+} UninternArgs;
+
 JS_STATIC_DLL_CALLBACK(intN)
 js_atom_uninterner(JSHashEntry *he, intN i, void *arg)
 {
     JSAtom *atom;
+    UninternArgs *args;
 
     atom = (JSAtom *)he;
-    JS_ASSERT(atom->flags & ATOM_INTERNED);
-    JS_ASSERT(ATOM_IS_STRING(atom));
-    js_FinalizeStringRT(arg, ATOM_TO_STRING(atom));
+    args = (UninternArgs *)arg;
+    if (!(atom->flags & ATOM_INTERNED) || !ATOM_IS_STRING(atom))
+        args->leaks++;
+    if (ATOM_IS_STRING(atom))
+        js_FinalizeStringRT(args->rt, ATOM_TO_STRING(atom));
     return HT_ENUMERATE_NEXT;
 }
 
 void
 js_FinishAtomState(JSAtomState *state)
 {
+    UninternArgs args;
+
     if (state->interns == 0)
         return;
-    JS_HashTableEnumerateEntries(state->table, js_atom_uninterner,
-                                 state->runtime);
+    args.rt = state->runtime;
+    args.leaks = 0;
+    JS_HashTableEnumerateEntries(state->table, js_atom_uninterner, &args);
+#ifdef DEBUG
+    if (args.leaks != 0) {
+        fprintf(stderr,
+"JS engine warning: %lu atoms remain after destroying the JSRuntime.\n"
+"                   These atoms may point to freed memory. Things reachable\n"
+"                   through them have not been finalized.\n",
+                (unsigned long) args.leaks);
+    }
+#endif
     state->interns = 0;
     js_FreeAtomState(NULL, state);
 }
@@ -345,7 +365,7 @@ js_atom_marker(JSHashEntry *he, intN i, void *arg)
     jsval key;
 
     atom = (JSAtom *)he;
-    args = (MarkArgs *) arg;
+    args = (MarkArgs *)arg;
     if ((atom->flags & (ATOM_PINNED | ATOM_INTERNED)) ||
         (args->gcflags & GC_KEEP_ATOMS)) {
 	atom->flags |= ATOM_MARK;
