@@ -22,10 +22,11 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+DIRS		= $(PNGDIR) public public_com src gifcom pngcom jpgcom
+
 ifndef MOZ_NATIVE_PNG
-DIRS = png
+PNGDIR		= png
 endif
 
-DIRS += public public_com src gifcom pngcom jpgcom
-
 include $(topsrcdir)/config/rules.mk
+

@@ -17,8 +17,8 @@
 
 DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
 srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -27,38 +27,29 @@ LIBRARY_NAME	= mozreg_s
 
 REQUIRES	= libreg pref js
 
-CSRCS		= reg.c VerReg.c vr_stubs.c 
+PROGRAM		= vreg
+
+CSRCS		= reg.c VerReg.c vr_stubs.c
 
 BIN_SRCS	= VerReg.c reg.c vr_stubs.c
 BIN_OBJS	= $(addprefix R_,$(BIN_SRCS:.c=.o))
-
-MKSHLIB :=
-
-include $(topsrcdir)/config/config.mk
-
-# Memory mapped files are not supported under QNX, Neutrino, HP-UX and BeOS
-ifeq (,$(filter BeOS HP-UX QNX,$(OS_ARCH)))
-DEFINES += -DUSE_MMAP_REGISTRY_IO
-CSRCS += mmapio.c
-endif
 
 # We don't want a shared lib.  Static lib only.
 override NO_SHARED_LIB=1
 override NO_STATIC_LIB=
 
-include $(topsrcdir)/config/rules.mk
+include $(topsrcdir)/config/config.mk
 
-# Override gtscc when building vreg on IRIX 5.3.
-ifeq ($(OS_ARCH)$(OS_RELEASE),IRIX5)
-ifneq ($(CC),gcc)
-CC		= cc
+# Memory mapped files are not supported under QNX, Neutrino, HP-UX and BeOS
+ifeq (,$(filter BeOS HP-UX QNX,$(OS_ARCH)))
+CSRCS		+= mmapio.c
+DEFINES		+= -DUSE_MMAP_REGISTRY_IO
 endif
-endif
+
+include $(topsrcdir)/config/rules.mk
 
 INCLUDES	+= -I$(topsrcdir)/include
 GARBAGE		+= $(PROGRAM) $(BIN_OBJS)
-
-PROGRAM		= vreg$(BIN_SUFFIX)
 
 $(PROGRAM): $(BIN_OBJS)
 ifeq ($(OS_ARCH), OS2)
@@ -99,5 +90,5 @@ endif
 $(BIN_OBJS): $(BIN_SRCS)
 
 install:: $(PROGRAM)
-	$(INSTALL) -m 444 $(PROGRAM) $(DIST)/bin
+	$(INSTALL) -m 444 $< $(DIST)/bin
 

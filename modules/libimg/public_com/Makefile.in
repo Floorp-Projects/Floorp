@@ -15,11 +15,6 @@
 # Reserved.
 #
 
-ifndef MOZ_JAVA
-LOCAL_JMC_SUBDIR = .
-endif
-
-
 DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
@@ -29,13 +24,22 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= img
 
-
 # XXX nsImgDCallbk.h should go into libimg/src instead of being here
-EXPORTS		=	il.h dllcompat.h if_struct.h il_utilp.h \
-			nsIImgDecoder.h nsIImgDCallbk.h \
-			nsImgDCallbk.h \
-			$(NULL)
+EXPORTS		= \
+		il.h \
+		dllcompat.h \
+		if_struct.h \
+		il_utilp.h \
+		nsIImgDecoder.h \
+		nsIImgDCallbk.h \
+		nsImgDCallbk.h \
+		$(NULL)
 
-EXPORTS         := $(addprefix $(srcdir)/, $(EXPORTS))
+EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
+
+ifndef MOZ_JAVA
+LOCAL_JMC_SUBDIR = .
+endif
 
 include $(topsrcdir)/config/rules.mk 
+

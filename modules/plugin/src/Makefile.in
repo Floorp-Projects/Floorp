@@ -42,5 +42,5 @@ REQUIRES	+= xp libfont os2font jtools
 INCLUDES	+= -I$(DEPTH)/cmd/os2fe/nfc/include -I$(DEPTH)/cmd/os2fe -I$(DEPTH)/cmd/winfe
 endif
 
-INCLUDES        += -I$(srcdir)/.
+INCLUDES	+= -I$(srcdir)
 
