@@ -29,7 +29,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the
  * GPL.
- *  $Id: mpmontg.c,v 1.8 2000/09/14 00:30:51 nelsonb%netscape.com Exp $
+ *  $Id: mpmontg.c,v 1.9 2000/12/02 02:37:22 nelsonb%netscape.com Exp $
  */
 
 /* This file implements moduluar exponentiation using Montgomery's
@@ -41,10 +41,14 @@
  * published by Springer Verlag.
  */
 
+/* #define MP_USING_MONT_MULF 1 */
 #include <string.h>
 #include "mpi-priv.h"
 #include "mplogic.h"
 #include "mpprime.h"
+#ifdef MP_USING_MONT_MULF
+#include "montmulf.h"
+#endif
 
 #define STATIC
 /* #define DEBUG 1  */
@@ -192,9 +196,21 @@ mp_err mp_exptmod(const mp_int *inBase, const mp_int *exponent,
   mp_size bits_in_exponent;
   mp_size i;
   mp_size window_bits, odd_ints;
-  mp_err res;
-  mp_int square, accum1, accum2, goodBase;
+  mp_err  res;
+  int     expOff, nLen;
+  mp_int  square, accum1, accum2, goodBase;
   mp_mont_modulus mmm;
+#ifdef MP_USING_MONT_MULF
+  int      dSize = 0, oddPowSize, dTmpSize, dSqrSize;
+  double   dn0;
+  double   *dBuf = 0; 
+  double   *dm1, *dn, *dSqr, *d16Tmp, *oddPowers[MAX_ODD_INTS], *dTmp;
+  mp_digit *mResult;
+#else
+  /* power2 = base ** 2; oddPowers[i] = base ** (2*i + 1); */
+  /* oddPowers[i] = base ** (2*i + 1); */
+  mp_int power2, oddPowers[MAX_ODD_INTS];
+#endif
 
   /* function for computing n0prime only works if n0 is odd */
   if (!mp_isodd(modulus))
@@ -204,6 +220,10 @@ mp_err mp_exptmod(const mp_int *inBase, const mp_int *exponent,
   MP_DIGITS(&accum1) = 0;
   MP_DIGITS(&accum2) = 0;
   MP_DIGITS(&goodBase) = 0;
+#ifdef MP_USING_MONT_MULF
+  for (i = 0; i < MAX_ODD_INTS; ++i)
+    oddPowers[i] = 0;
+#endif
 
   if (mp_cmp(inBase, modulus) < 0) {
     base = inBase;
@@ -213,10 +233,12 @@ mp_err mp_exptmod(const mp_int *inBase, const mp_int *exponent,
     MP_CHECKOK( mp_mod(inBase, modulus, &goodBase) );
   }
 
-  MP_CHECKOK( mp_init_size(&square, 2 * MP_USED(modulus) + 2) );
-  MP_CHECKOK( mp_init_size(&accum1, 3 * MP_USED(modulus) + 2) );
-  MP_CHECKOK( mp_init_size(&accum2, 3 * MP_USED(modulus) + 2) );
-
+  nLen  = MP_USED(modulus);
+  MP_CHECKOK( mp_init_size(&square, 2 * nLen + 2) );
+  MP_CHECKOK( mp_init_size(&accum1, 3 * nLen + 2) );
+#ifndef MP_USING_MONT_MULF
+  MP_CHECKOK( mp_init_size(&accum2, 3 * nLen + 2) );
+#endif
   mmm.N = *modulus;			/* a copy of the mp_int struct */
   i = mpl_significant_bits(modulus);
   i += MP_DIGIT_BIT - 1;
@@ -228,7 +250,12 @@ mp_err mp_exptmod(const mp_int *inBase, const mp_int *exponent,
   mmm.n0prime = 0 - s_mp_invmod_radix( MP_DIGIT(modulus, 0) );
 
   MP_CHECKOK( s_mp_to_mont(base, &mmm, &square) );
-
+#ifdef MP_USING_MONT_MULF
+  MP_CHECKOK( s_mp_pad(&square, nLen) );
+  mp_set(&accum1, 1);
+  MP_CHECKOK( s_mp_to_mont(&accum1, &mmm, &accum1) );
+  MP_CHECKOK( s_mp_pad(&accum1, nLen) );
+#endif
   bits_in_exponent = mpl_significant_bits(exponent);
   if (bits_in_exponent > 480)
     window_bits = 6;
@@ -242,19 +269,66 @@ mp_err mp_exptmod(const mp_int *inBase, const mp_int *exponent,
     bits_in_exponent += window_bits - i;
   } 
   {
-    /* oddPowers[i] = base ** (2*i + 1); */
-    int expOff;
-    /* power2 = base ** 2; oddPowers[i] = base ** (2*i + 1); */
-    mp_int power2, oddPowers[MAX_ODD_INTS];
+#ifdef MP_USING_MONT_MULF
+    oddPowSize = 2 * nLen + 1;
+    dTmpSize   = 2 * oddPowSize;
+    dSize = sizeof(double) * (nLen * 4 + 1 + 
+			      ((odd_ints + 1) * oddPowSize) + dTmpSize);
+    dBuf   = (double *)malloc(dSize);
+    dm1    = dBuf;		/* array of d32 */
+    dn     = dBuf   + nLen;	/* array of d32 */
+    dSqr   = dn     + nLen;    	/* array of d32 */
+    d16Tmp = dSqr   + nLen;	/* array of d16 */
+    dTmp   = d16Tmp + oddPowSize;
+
+    for (i = 0; i < odd_ints; ++i) {
+	oddPowers[i] = dTmp;
+	dTmp += oddPowSize;
+    }
+    mResult = (mp_digit *)(dTmp + dTmpSize);	/* size is nLen + 1 */
+
+    /* Make dn and dn0 */
+    conv_i32_to_d32(dn, MP_DIGITS(modulus), nLen);
+    dn0 = (double)(mmm.n0prime & 0xffff);
+
+    /* Make dSqr */
+    conv_i32_to_d32_and_d16(dm1, oddPowers[0], MP_DIGITS(&square), nLen);
+    mont_mulf_noconv(mResult, dm1, oddPowers[0], 
+		     dTmp, dn, MP_DIGITS(modulus), nLen, dn0);
+    conv_i32_to_d32(dSqr, mResult, nLen);
+
+    for (i = 1; i < odd_ints; ++i) {
+      mont_mulf_noconv(mResult, dSqr, oddPowers[i - 1], 
+		       dTmp, dn, MP_DIGITS(modulus), nLen, dn0);
+      conv_i32_to_d16(oddPowers[i], mResult, nLen);
+    }
+
+    s_mp_copy(MP_DIGITS(&accum1), mResult, nLen);
+
+#define SWAPPA 
+
+/* computes montgomery square of the integer in mResult */
+#define SQR(a,b) \
+    conv_i32_to_d32_and_d16(dm1, d16Tmp, mResult, nLen); \
+    mont_mulf_noconv(mResult, dm1, d16Tmp, \
+		     dTmp, dn, MP_DIGITS(modulus), nLen, dn0)
+
+/* computes montgomery product of x and the integer in mResult */
+#define MUL(x,a,b) \
+    conv_i32_to_d32(dm1, mResult, nLen); \
+    mont_mulf_noconv(mResult, dm1, oddPowers[x], \
+		     dTmp, dn, MP_DIGITS(modulus), nLen, dn0)
+
+#else
 
     MP_CHECKOK( mp_init_copy(oddPowers, &square) );
 
-    mp_init_size(&power2, MP_USED(modulus) + 2 * MP_USED(&square) + 2);
+    mp_init_size(&power2, nLen + 2 * MP_USED(&square) + 2);
     MP_CHECKOK( mp_sqr(&square, &power2) );	/* square = square ** 2 */
     MP_CHECKOK( s_mp_redc(&power2, &mmm) );
 
     for (i = 1; i < odd_ints; ++i) {
-      mp_init_size(oddPowers + i, MP_USED(modulus) + 2 * MP_USED(&power2) + 2);
+      mp_init_size(oddPowers + i, nLen + 2 * MP_USED(&power2) + 2);
       MP_CHECKOK( mp_mul(oddPowers + (i - 1), &power2, oddPowers + i) );
       MP_CHECKOK( s_mp_redc(oddPowers + i, &mmm) );
     }
@@ -277,6 +351,7 @@ mp_err mp_exptmod(const mp_int *inBase, const mp_int *exponent,
 #endif
 
 #define SWAPPA ptmp = pa1; pa1 = pa2; pa2 = ptmp
+#endif
 
     for (expOff = bits_in_exponent - window_bits; expOff >= 0; expOff -= window_bits) {
       mp_size smallExp;
@@ -354,18 +429,31 @@ mp_err mp_exptmod(const mp_int *inBase, const mp_int *exponent,
       }
     }
 
-    mp_clear(&power2);
-    for (i = 0; i < odd_ints; ++i) {
-      mp_clear(oddPowers + i);
-    }
+#ifdef MP_USING_MONT_MULF
+    s_mp_copy(mResult, MP_DIGITS(&square), nLen);
+    pa1 = &square;
+#endif
   }
   res = s_mp_redc(pa1, &mmm);
   mp_exch(pa1, result);
+
 CLEANUP:
   mp_clear(&square);
   mp_clear(&accum1);
-  mp_clear(&accum2);
   mp_clear(&goodBase);
+#ifdef MP_USING_MONT_MULF
+  if (dBuf) {
+    if (dSize)
+      memset(dBuf, 0, dSize);
+    free(dBuf);
+  }
+#else
+  mp_clear(&power2);
+  for (i = 0; i < odd_ints; ++i) {
+    mp_clear(oddPowers + i);
+  }
+  mp_clear(&accum2);
+#endif
   /* Don't mp_clear mmm.N because it is merely a copy of modulus.
   ** Just zap it.
   */
