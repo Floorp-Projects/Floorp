@@ -300,7 +300,7 @@ public class Codegen extends Interpreter {
             BodyCodegen bodygen = new BodyCodegen();
             bodygen.cfw = cfw;
             bodygen.codegen = this;
-			bodygen.compilerEnv = compilerEnv;
+            bodygen.compilerEnv = compilerEnv;
             bodygen.scriptOrFn = n;
 
             bodygen.generateBodyCode();
@@ -3881,7 +3881,7 @@ class BodyCodegen
 
     ClassFileWriter cfw;
     Codegen codegen;
-	CompilerEnvirons compilerEnv;
+    CompilerEnvirons compilerEnv;
     ScriptOrFnNode scriptOrFn;
 
     private OptFunctionNode fnCurrent;

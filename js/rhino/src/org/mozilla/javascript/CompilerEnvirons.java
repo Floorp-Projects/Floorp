@@ -40,31 +40,31 @@ package org.mozilla.javascript;
 
 public class CompilerEnvirons
 {
-	public void initFromContext(Context cx, ErrorReporter syntaxErrorReporter)
-	{
-		setSyntaxErrorReporter(syntaxErrorReporter);
-		this.languageVersion = cx.getLanguageVersion();
+    public void initFromContext(Context cx, ErrorReporter syntaxErrorReporter)
+    {
+        setSyntaxErrorReporter(syntaxErrorReporter);
+        this.languageVersion = cx.getLanguageVersion();
         useDynamicScope = cx.hasCompileFunctionsWithDynamicScope();
         generateDebugInfo = (!cx.isGeneratingDebugChanged()
                              || cx.isGeneratingDebug());
-		this.reservedKeywordAsIdentifier
-			= cx.hasFeature(Context.FEATURE_RESERVED_KEYWORD_AS_IDENTIFIER);	
-		this.allowMemberExprAsFunctionName
-			= cx.hasFeature(Context.FEATURE_MEMBER_EXPR_AS_FUNCTION_NAME);
-	}
+        this.reservedKeywordAsIdentifier
+            = cx.hasFeature(Context.FEATURE_RESERVED_KEYWORD_AS_IDENTIFIER);
+        this.allowMemberExprAsFunctionName
+            = cx.hasFeature(Context.FEATURE_MEMBER_EXPR_AS_FUNCTION_NAME);
+    }
 
     public final int getSyntaxErrorCount()
-	{
-		return syntaxErrorCount;
-	}
-	
-	public void setSyntaxErrorReporter(ErrorReporter syntaxErrorReporter)
-	{
-		if (syntaxErrorReporter == null) Kit.argBug();
-		this.syntaxErrorReporter = syntaxErrorReporter;
-	}
-	
-	public final void reportSyntaxError(boolean isError,
+    {
+        return syntaxErrorCount;
+    }
+
+    public void setSyntaxErrorReporter(ErrorReporter syntaxErrorReporter)
+    {
+        if (syntaxErrorReporter == null) Kit.argBug();
+        this.syntaxErrorReporter = syntaxErrorReporter;
+    }
+
+    public final void reportSyntaxError(boolean isError,
                                         String messageProperty, Object[] args,
                                         String sourceName, int lineno,
                                         String line, int lineOffset)
@@ -86,43 +86,43 @@ public class CompilerEnvirons
                                         lineno, line, lineOffset);
         }
     }
-	
-	public final boolean isFromEval()
-	{
-		return fromEval;
-	}
-	
-	public void setFromEval(boolean fromEval)
-	{
-		this.fromEval = fromEval;
-	}
 
-	public final int getLanguageVersion()
-	{
-		return languageVersion;
-	}
+    public final boolean isFromEval()
+    {
+        return fromEval;
+    }
 
-	public final boolean isGenerateDebugInfo()
-	{
-		return generateDebugInfo;
-	}
+    public void setFromEval(boolean fromEval)
+    {
+        this.fromEval = fromEval;
+    }
 
-	public final boolean isUseDynamicScope()
-	{
-		return useDynamicScope;
-	}
+    public final int getLanguageVersion()
+    {
+        return languageVersion;
+    }
+
+    public final boolean isGenerateDebugInfo()
+    {
+        return generateDebugInfo;
+    }
+
+    public final boolean isUseDynamicScope()
+    {
+        return useDynamicScope;
+    }
 
     private ErrorReporter syntaxErrorReporter;
     private int syntaxErrorCount;
 
     private boolean fromEval;
-	
-	int languageVersion = Context.VERSION_DEFAULT;
-	boolean generateDebugInfo;
-	boolean useDynamicScope;
-	boolean reservedKeywordAsIdentifier;
+
+    int languageVersion = Context.VERSION_DEFAULT;
+    boolean generateDebugInfo;
+    boolean useDynamicScope;
+    boolean reservedKeywordAsIdentifier;
     boolean allowMemberExprAsFunctionName;
-	
-	
+
+
 }
 

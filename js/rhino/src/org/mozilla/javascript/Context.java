@@ -977,12 +977,12 @@ public class Context
     public boolean stringIsCompilableUnit(String source)
     {
         boolean errorseen = false;
-		CompilerEnvirons compilerEnv = new CompilerEnvirons();
+        CompilerEnvirons compilerEnv = new CompilerEnvirons();
         compilerEnv.initFromContext(this, new DefaultErrorReporter());
         // no source name or source text manager, because we're just
         // going to throw away the result.
-        TokenStream ts = new TokenStream(compilerEnv, 
-		                                 null, source, null, 1);
+        TokenStream ts = new TokenStream(compilerEnv,
+                                         null, source, null, 1);
 
         Parser p = new Parser(compilerEnv);
         Decompiler decompiler = new Decompiler();
@@ -2014,10 +2014,10 @@ public class Context
         // scope should be given if and only if compiling function
         if (!(scope == null ^ returnFunction)) Kit.codeBug();
 
-		CompilerEnvirons compilerEnv = new CompilerEnvirons();
+        CompilerEnvirons compilerEnv = new CompilerEnvirons();
         ErrorReporter reporter = getErrorReporter();
         compilerEnv.initFromContext(this, reporter);
-		compilerEnv.setFromEval(fromEval);
+        compilerEnv.setFromEval(fromEval);
 
         if (debugger != null) {
             if (sourceReader != null) {
@@ -2033,15 +2033,15 @@ public class Context
         Decompiler decompiler = new Decompiler();
         ScriptOrFnNode tree = p.parse(ts, decompiler);
         int syntaxErrorCount = compilerEnv.getSyntaxErrorCount();
-		if (syntaxErrorCount == 0) {
-        	Interpreter compiler = createCompiler();
-			compiler.compilerEnv = compilerEnv;
-        	if (securityController != null) {
-            	securityDomain = securityController.
-                                	 getDynamicSecurityDomain(securityDomain);
-        	} else {
-            	securityDomain = null;
-        	}
+        if (syntaxErrorCount == 0) {
+            Interpreter compiler = createCompiler();
+            compiler.compilerEnv = compilerEnv;
+            if (securityController != null) {
+                securityDomain = securityController.
+                                     getDynamicSecurityDomain(securityDomain);
+            } else {
+                securityDomain = null;
+            }
 
             String encodedSource = null;
             if (isGeneratingSource()) {
@@ -2065,7 +2065,7 @@ public class Context
             Object result = compiler.compile(this, scope, tree,
                                              securityController, securityDomain,
                                              encodedSource);
-        	syntaxErrorCount = compilerEnv.getSyntaxErrorCount();
+            syntaxErrorCount = compilerEnv.getSyntaxErrorCount();
             if (syntaxErrorCount == 0) {
                 if (debugger != null) {
                     if (sourceString == null) Kit.codeBug();

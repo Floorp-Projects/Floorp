@@ -122,7 +122,7 @@ public class Interpreter
     {
         scriptOrFn = tree;
         itsData = new InterpreterData(securityDomain,
-		                              compilerEnv.getLanguageVersion());
+                                      compilerEnv.getLanguageVersion());
         itsData.itsSourceFile = scriptOrFn.getSourceName();
         itsData.encodedSource = encodedSource;
         itsData.topLevel = true;
@@ -260,7 +260,7 @@ public class Interpreter
         for (int i = 0; i != functionCount; i++) {
             FunctionNode def = scriptOrFn.getFunctionNode(i);
             Interpreter jsi = new Interpreter();
-			jsi.compilerEnv = compilerEnv;
+            jsi.compilerEnv = compilerEnv;
             jsi.scriptOrFn = def;
             jsi.itsData = new InterpreterData(itsData.securityDomain,
                                               itsData.languageVersion);
@@ -3283,8 +3283,8 @@ public class Interpreter
     }
 
     protected CompilerEnvirons compilerEnv;
-	
-	private boolean itsInFunctionFlag;
+
+    private boolean itsInFunctionFlag;
 
     private InterpreterData itsData;
     private ScriptOrFnNode scriptOrFn;

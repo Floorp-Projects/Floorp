@@ -53,10 +53,10 @@ import java.io.IOException;
 
 class Parser {
 
-    public Parser(CompilerEnvirons compilerEnv) 
-	{ 
-		this.compilerEnv = compilerEnv;
-	}
+    public Parser(CompilerEnvirons compilerEnv)
+    {
+        this.compilerEnv = compilerEnv;
+    }
 
     private void mustMatchToken(TokenStream ts, int toMatch, String messageId)
         throws IOException, ParserException
@@ -1478,8 +1478,8 @@ class Parser {
     }
 
     private CompilerEnvirons compilerEnv;
-	
-	private IRFactory nf;
+
+    private IRFactory nf;
 
     private boolean ok; // Did the parse encounter an error?
 

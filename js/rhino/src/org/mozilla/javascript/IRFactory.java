@@ -43,15 +43,15 @@ package org.mozilla.javascript;
  * @author Mike McCabe
  * @author Norris Boyd
  */
-class IRFactory 
+class IRFactory
 {
-    IRFactory(TokenStream ts) 
-	{
+    IRFactory(TokenStream ts)
+    {
         this.ts = ts;
     }
 
-    ScriptOrFnNode createScript() 
-	{
+    ScriptOrFnNode createScript()
+    {
         return new ScriptOrFnNode(Token.SCRIPT);
     }
 
@@ -67,13 +67,13 @@ class IRFactory
     /**
      * Leaf
      */
-    Object createLeaf(int nodeType) 
-	{
+    Object createLeaf(int nodeType)
+    {
         return new Node(nodeType);
     }
 
-    Object createLeaf(int nodeType, int nodeOp) 
-	{
+    Object createLeaf(int nodeType, int nodeOp)
+    {
         return new Node(nodeType, nodeOp);
     }
 
@@ -81,47 +81,47 @@ class IRFactory
      * Statement leaf nodes.
      */
 
-    Object createSwitch(int lineno) 
-	{
+    Object createSwitch(int lineno)
+    {
         return new Node.Jump(Token.SWITCH, lineno);
     }
 
-    Object createVariables(int lineno) 
-	{
+    Object createVariables(int lineno)
+    {
         return new Node(Token.VAR, lineno);
     }
 
-    Object createExprStatement(Object expr, int lineno) 
-	{
+    Object createExprStatement(Object expr, int lineno)
+    {
         return new Node(Token.EXPRSTMT, (Node) expr, lineno);
     }
 
-    Object createExprStatementNoReturn(Object expr, int lineno) 
-	{
+    Object createExprStatementNoReturn(Object expr, int lineno)
+    {
         return new Node(Token.POP, (Node) expr, lineno);
     }
 
     /**
      * Name
      */
-    Object createName(String name) 
-	{
+    Object createName(String name)
+    {
         return Node.newString(Token.NAME, name);
     }
 
     /**
      * String (for literals)
      */
-    Object createString(String string) 
-	{
+    Object createString(String string)
+    {
         return Node.newString(string);
     }
 
     /**
      * Number (for literals)
      */
-    Object createNumber(double number) 
-	{
+    Object createNumber(double number)
+    {
         return Node.newNumber(number);
     }
 
@@ -146,16 +146,16 @@ class IRFactory
     /**
      * Throw
      */
-    Object createThrow(Object expr, int lineno) 
-	{
+    Object createThrow(Object expr, int lineno)
+    {
         return new Node(Token.THROW, (Node)expr, lineno);
     }
 
     /**
      * Return
      */
-    Object createReturn(Object expr, int lineno) 
-	{
+    Object createReturn(Object expr, int lineno)
+    {
         return expr == null
             ? new Node(Token.RETURN, lineno)
             : new Node(Token.RETURN, (Node)expr, lineno);
@@ -270,16 +270,16 @@ class IRFactory
      * breaks the Factory abstraction, but it removes a requirement
      * from implementors of Node.
      */
-    void addChildToBack(Object parent, Object child) 
-	{
+    void addChildToBack(Object parent, Object child)
+    {
         ((Node)parent).addChildToBack((Node)child);
     }
 
     /**
      * While
      */
-    Object createWhile(Object cond, Object body, int lineno) 
-	{
+    Object createWhile(Object cond, Object body, int lineno)
+    {
         return createLoop(LOOP_WHILE, (Node)body, (Node)cond, null, null,
                           lineno);
     }
@@ -287,8 +287,8 @@ class IRFactory
     /**
      * DoWhile
      */
-    Object createDoWhile(Object body, Object cond, int lineno) 
-	{
+    Object createDoWhile(Object body, Object cond, int lineno)
+    {
         return createLoop(LOOP_DO_WHILE, (Node)body, (Node)cond, null, null,
                           lineno);
     }
@@ -296,8 +296,8 @@ class IRFactory
     /**
      * For
      */
-    Object createFor(Object init, Object test, Object incr, Object body, 
-	                 int lineno)
+    Object createFor(Object init, Object test, Object incr, Object body,
+                     int lineno)
     {
         return createLoop(LOOP_FOR, (Node)body, (Node)test,
                           (Node)init, (Node)incr, lineno);
@@ -361,8 +361,8 @@ class IRFactory
      * For .. In
      *
      */
-    Object createForIn(Object lhs, Object obj, Object body, int lineno) 
-	{
+    Object createForIn(Object lhs, Object obj, Object body, int lineno)
+    {
         String name;
         Node lhsNode = (Node) lhs;
         Node objNode = (Node) obj;
@@ -599,8 +599,8 @@ class IRFactory
     /**
      * With
      */
-    Object createWith(Object obj, Object body, int lineno) 
-	{
+    Object createWith(Object obj, Object body, int lineno)
+    {
         Node result = new Node(Token.BLOCK, lineno);
         result.addChildToBack(new Node(Token.ENTERWITH, (Node)obj));
         Node bodyNode = new Node(Token.WITH, (Node) body, lineno);
@@ -615,8 +615,8 @@ class IRFactory
      * plus a series of array element entries, so later compiler
      * stages don't need to know about array literals.
      */
-    Object createArrayLiteral(Object obj) 
-	{
+    Object createArrayLiteral(Object obj)
+    {
         Node array;
         array = new Node(Token.NEW, Node.newString(Token.NAME, "Array"));
         Node list = new Node(Token.INIT_LIST, array);
@@ -672,8 +672,8 @@ class IRFactory
      * creation plus object property entries, so later compiler
      * stages don't need to know about object literals.
      */
-    Object createObjectLiteral(Object obj) 
-	{
+    Object createObjectLiteral(Object obj)
+    {
         Node result = new Node(Token.NEW,
                                Node.newString(Token.NAME, "Object"));
         Node list = new Node(Token.INIT_LIST, result);
@@ -696,8 +696,8 @@ class IRFactory
     /**
      * Regular expressions
      */
-    Object createRegExp(int regexpIndex) 
-	{
+    Object createRegExp(int regexpIndex)
+    {
         Node n = new Node(Token.REGEXP);
         n.putIntProp(Node.REGEXP_PROP, regexpIndex);
         return n;
@@ -758,8 +758,8 @@ class IRFactory
     /**
      * Unary
      */
-    Object createUnary(int nodeType, Object child) 
-	{
+    Object createUnary(int nodeType, Object child)
+    {
         Node childNode = (Node) child;
         int childType = childNode.getType();
         switch (nodeType) {
@@ -1133,8 +1133,8 @@ class IRFactory
         }
     }
 
-    Node createUseLocal(Node localBlock) 
-	{
+    Node createUseLocal(Node localBlock)
+    {
         if (Token.LOCAL_BLOCK != localBlock.getType()) Kit.codeBug();
         Node result = new Node(Token.LOCAL_LOAD);
         result.putProp(Node.LOCAL_BLOCK_PROP, localBlock);
@@ -1163,8 +1163,8 @@ class IRFactory
         return 0;
     }
 
-    private static boolean hasSideEffects(Node exprTree) 
-	{
+    private static boolean hasSideEffects(Node exprTree)
+    {
         switch (exprTree.getType()) {
             case Token.INC:
             case Token.DEC:
