@@ -422,13 +422,15 @@ if (@badbugs) {
                     SqlQuote($k) .
                     " WHERE bug_id = $b");
         }
-        SendSQL("UNLOCK TABLES");
         Status("Keyword cache fixed.");
     } else {
         print qq{<a href="sanitycheck.cgi?rebuildkeywordcache=1">Click here to rebuild the keyword cache</a><p>\n};
     }
 }
 
+if (exists $::FORM{'rebuildkeywordcache'}) {
+    SendSQL("UNLOCK TABLES");
+}
 
 ###########################################################################
 # Perform duplicates table checks
