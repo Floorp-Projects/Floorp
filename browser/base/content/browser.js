@@ -466,6 +466,10 @@ function Shutdown()
   } catch (ex) {
   }
 
+  const service = Components.classes["@mozilla.org/observer-service;1"]
+                            .getService(Components.interfaces.nsIObserverService);
+  service.removeObserver(dlObserver, "dl-start");
+
   window.XULBrowserWindow.destroy();
   window.XULBrowserWindow = null;
 
