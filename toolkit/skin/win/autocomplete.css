@@ -115,6 +115,18 @@ treechildren.autocomplete-treebody::-moz-tree-cell-text(selected) {
   color: HighlightText !important;
 }
 
+/* thunderbird does not use the new autocomplete widget yet so we need a couple of the old styles rules for it */
+
+.autocomplete-treebody::-moz-tree-row(menuactive) {
+  background-color: Highlight;
+}
+
+.autocomplete-treebody::-moz-tree-cell-text(menuactive)  {
+  color: HighlightText !important;
+}
+
+/* end of thunderbird required autocomplete rules */
+
 /* ::::: textboxes inside toolbarpaletteitems ::::: */
 
 toolbarpaletteitem > toolbaritem > textbox > hbox > hbox > html|*.textbox-input {
