@@ -79,7 +79,6 @@ class JSSKeyPairGeneratorSpi
     }
         
     public KeyPair generateKeyPair() {
-        kpg.temporaryPairs(true);
       try {
         return kpg.genKeyPair();
       } catch(TokenException e) { 
