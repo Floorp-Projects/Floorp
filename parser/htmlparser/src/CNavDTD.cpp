@@ -1118,7 +1118,7 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNode
       CParserContext*   pc=mParser->PeekContext();
       void*             theDocID=(pc)? pc->mKey:0;
     
-      result=theService->Notify(aTag,aNode,(PRUint32)theDocID,kHTMLTextContentType,mParser);                            
+      result=theService->Notify(aTag,aNode,(PRUint32)theDocID,kHTMLTextContentType,mParser); 
     }
   }
 
@@ -1369,6 +1369,10 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
           aToken->SetTypeID(theChildTag=eHTMLTag_img);
           break;
 
+        case eHTMLTag_noscript:
+          isTokenHandled=PR_TRUE; // XXX - Throwing NOSCRIPT to the floor...yet another time..
+          break;
+
         case eHTMLTag_script:
           theHeadIsParent=((!mHasOpenBody) || mRequestedHead);
           mHasOpenScript=PR_TRUE;
@@ -1380,17 +1384,7 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
       if(!isTokenHandled) {
         if(theHeadIsParent || 
            (mHasOpenHead && ((eHTMLTag_newline==theChildTag) || (eHTMLTag_whitespace==theChildTag)))) {
-          //Ref. Bug 21008 -- Creating model for NOSCRIPT content
-          static eHTMLTags gNoXTags[]={eHTMLTag_noembed,eHTMLTag_noframes,eHTMLTag_nolayer,eHTMLTag_noscript};
-          if(FindTagInSet(theChildTag,gNoXTags,sizeof(gNoXTags)/sizeof(theChildTag))) {
-             result=OpenContainer(theNode,theChildTag,PR_TRUE);
-          }
-          else if(HasOpenContainer(gNoXTags,sizeof(gNoXTags)/sizeof(eHTMLTag_unknown))) {
-            result=AddLeaf(theNode);   
-          }
-          else {
             result=AddHeadLeaf(theNode);
-          }
         }
         else result=HandleDefaultStartToken(aToken,theChildTag,theNode); 
       }
@@ -3307,7 +3301,15 @@ nsresult CNavDTD::AddLeaf(const nsIParserNode *aNode){
 nsresult CNavDTD::AddHeadLeaf(nsIParserNode *aNode){
   nsresult result=NS_OK;
 
+  static eHTMLTags gNoXTags[]={eHTMLTag_noembed,eHTMLTag_noframes,eHTMLTag_nolayer,eHTMLTag_noscript};
+
   eHTMLTags theTag=(eHTMLTags)aNode->GetNodeType();
+  
+  if(eHTMLTag_meta==theTag) {
+    if(HasOpenContainer(gNoXTags,sizeof(gNoXTags)/sizeof(eHTMLTag_unknown))) {
+      return result;
+    }
+  }
 
   if(mSink) {
     result=OpenHead(aNode);
