@@ -179,6 +179,36 @@ function loadCookies()
   }
 }
 
+function CookieColumnSort(column) {
+  var number;
+  var cookietree = document.getElementById("cookietree");
+  var selected = cookietree.selectedIndex;
+  var cookielist = document.getElementById('cookieList');
+  var childnodes = cookielist.childNodes;
+
+  if (selected >= 0) {
+    var cookie = childnodes[selected];
+    var id = cookie.getAttribute("id");
+    number = parseInt(id.substring("cookietree_".length,id.length));
+  }
+
+  Wallet_ColumnSort(column, 'cookieList');
+
+  var length = childnodes.length;
+  if (selected >= 0) {
+    for (i=0; i<length; i++){
+      var cookie = childnodes[i];
+      var id = cookie.getAttribute("id");
+      var thisNumber = parseInt(id.substring("cookietree_".length,id.length));
+      if (thisNumber == number) {
+        cookietree.selectedIndex = i;
+        break;
+      }
+    }
+  }
+
+}
+
 // function : <CookieViewer.js>::ViewSelectedCookie();
 // purpose  : displays information about the selected cookie in the info fieldset
 function ViewCookieSelected( e ) 
