@@ -417,7 +417,9 @@ nsresult CreateApplication()
      // Create an application shell
     nsIAppShell *appShell;
     NSRepository::CreateInstance(kCAppShellCID, nsnull, kIAppShellIID, (void**)&appShell);
-    appShell->Create();
+    int     argc;
+    char ** argv = nsnull;
+    appShell->Create(&argc, argv);
    
     //
     // create the main window
@@ -438,17 +440,10 @@ nsresult CreateApplication()
     // Add the scribble/lines section
     //
 
-    //
-    // create a Radio Group
-    //
-    NSRepository::CreateInstance(kCRadioGroupCID, nsnull, kIRadioGroupIID, (LPVOID*)&(scribbleData.group));
-    scribbleData.group->SetName(nsString("Group1"));
-
     // create the "Scribble" check button
     rect.SetRect(50, 50, 100, 25);  
 
     NSRepository::CreateInstance(kCRadioButtonCID, nsnull, kIRadioButtonIID, (LPVOID*)&(scribbleData.scribble));
-    scribbleData.scribble->SetRadioGroup(scribbleData.group);
     scribbleData.scribble->Create(controlPane, rect, NULL, NULL);
     nsString cbLabel("Scribble");
     scribbleData.scribble->SetLabel(cbLabel);
@@ -460,7 +455,6 @@ nsresult CreateApplication()
     rect.SetRect(50, 75, 100, 25);  
 
     NSRepository::CreateInstance(kCRadioButtonCID, nsnull, kIRadioButtonIID, (LPVOID*)&(scribbleData.lines));
-    scribbleData.lines->SetRadioGroup(scribbleData.group);
     scribbleData.lines->Create(controlPane, rect, NULL, NULL);
     nsString cbLabel1("Lines");
     scribbleData.lines->SetLabel(cbLabel1);
