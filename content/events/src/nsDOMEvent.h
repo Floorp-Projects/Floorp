@@ -134,6 +134,7 @@ public:
   NS_IMETHOD    GetCancelBubble(PRBool* aCancelBubble);
   NS_IMETHOD    SetCancelBubble(PRBool aCancelBubble);
   NS_IMETHOD    GetIsChar(PRBool* aIsChar);
+  NS_IMETHOD    GetPreventDefault(PRBool* aReturn);
 
   // nsIPrivateDOMEvent interface
   NS_IMETHOD    DuplicatePrivateData();

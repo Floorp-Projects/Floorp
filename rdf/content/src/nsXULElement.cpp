@@ -2923,8 +2923,9 @@ nsXULElement::HandleDOMEvent(nsIPresContext* aPresContext,
 
     //Local handling stage
     if (mListenerManager && !(aEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH)) {
-        aEvent->flags = aFlags;
+        aEvent->flags |= aFlags;
         mListenerManager->HandleEvent(aPresContext, aEvent, aDOMEvent, aFlags, aEventStatus);
+        aEvent->flags &= ~aFlags;
     }
 
     //Bubbling stage

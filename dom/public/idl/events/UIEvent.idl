@@ -51,6 +51,8 @@
 	      const int SHIFT_MASK	= 0x00000004;
 	      const int META_MASK	= 0x00000008;
 
+		    boolean			getPreventDefault();
+
 	      readonly    attribute   int			      layerX;
 	      readonly    attribute   int			      layerY;
 	      readonly    attribute   int			      pageX;

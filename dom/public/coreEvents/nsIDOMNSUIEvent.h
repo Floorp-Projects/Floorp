@@ -93,6 +93,8 @@ public:
   NS_IMETHOD    SetCancelBubble(PRBool aCancelBubble)=0;
 
   NS_IMETHOD    GetIsChar(PRBool* aIsChar)=0;
+
+  NS_IMETHOD    GetPreventDefault(PRBool* aReturn)=0;
 };
 
 
@@ -107,6 +109,7 @@ public:
   NS_IMETHOD    GetCancelBubble(PRBool* aCancelBubble);  \
   NS_IMETHOD    SetCancelBubble(PRBool aCancelBubble);  \
   NS_IMETHOD    GetIsChar(PRBool* aIsChar);  \
+  NS_IMETHOD    GetPreventDefault(PRBool* aReturn);  \
 
 
 
@@ -121,6 +124,7 @@ public:
   NS_IMETHOD    GetCancelBubble(PRBool* aCancelBubble) { return _to GetCancelBubble(aCancelBubble); } \
   NS_IMETHOD    SetCancelBubble(PRBool aCancelBubble) { return _to SetCancelBubble(aCancelBubble); } \
   NS_IMETHOD    GetIsChar(PRBool* aIsChar) { return _to GetIsChar(aIsChar); } \
+  NS_IMETHOD    GetPreventDefault(PRBool* aReturn) { return _to GetPreventDefault(aReturn); }  \
 
 
 #endif // nsIDOMNSUIEvent_h__

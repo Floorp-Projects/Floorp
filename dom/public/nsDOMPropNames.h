@@ -709,6 +709,7 @@
     "nsrange.isvalidfragment", \
     "nsuievent.cancelbubble", \
     "nsuievent.ischar", \
+    "nsuievent.getpreventdefault", \
     "nsuievent.layerx", \
     "nsuievent.layery", \
     "nsuievent.pagex", \
