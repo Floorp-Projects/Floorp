@@ -2524,8 +2524,40 @@ nsHTMLEditRules::CreateStyleForInsertText(nsIDOMSelection *aSelection, nsIDOMDoc
   mEditor->mTypeInState->TakeClearProperty(&item);
   while (item)
   {
-    res = mEditor->SplitStyleAbovePoint(&node, &offset, item->tag, &item->attr);
+    nsCOMPtr<nsIDOMNode> leftNode, rightNode, secondSplitParent, newSelParent;
+    res = mEditor->SplitStyleAbovePoint(&node, &offset, item->tag, &item->attr, &leftNode, &rightNode);
     if (NS_FAILED(res)) return res;
+    if (rightNode)
+    {
+      res = mEditor->GetLeftmostChild(rightNode, getter_AddRefs(secondSplitParent));
+      if (NS_FAILED(res)) return res;
+      offset = 0;
+      res = mEditor->SplitStyleAbovePoint(&secondSplitParent, &offset, item->tag, &(item->attr), &leftNode, &rightNode);
+      if (NS_FAILED(res)) return res;
+      // should be impossible to not get a new leftnode here
+      if (!leftNode) return NS_ERROR_FAILURE;
+      res = mEditor->GetLeftmostChild(leftNode, getter_AddRefs(newSelParent));
+      if (NS_FAILED(res)) return res;
+      // register a rangeStore item that points at the new heirarchy.
+      // This is so we can know where to put the selection after we call
+      // RemoveStyleInside().  RemoveStyleInside() could remove any and all of those nodes,
+      // so I have to use the range tracking system to find the right spot to put selection.
+      nsRangeStore *rangeItem = new nsRangeStore();
+      if (!rangeItem) return NS_ERROR_NULL_POINTER;
+      rangeItem->startNode = newSelParent;
+      rangeItem->endNode = newSelParent;
+      rangeItem->startOffset = 0;
+      rangeItem->endOffset = 0;
+      mEditor->mRangeUpdater.RegisterRangeItem(rangeItem);
+      // remove the style on this new heirarchy
+      res = mEditor->RemoveStyleInside(leftNode, item->tag, &(item->attr));
+      if (NS_FAILED(res)) return res;
+      // reset our node offset values to the resulting new sel point
+      mEditor->mRangeUpdater.DropRangeItem(rangeItem);
+      node  = rangeItem->startNode;
+      offset = rangeItem->startOffset;
+      delete rangeItem;
+    }
     // we own item now (TakeClearProperty hands ownership to us)
     delete item;
     mEditor->mTypeInState->TakeClearProperty(&item);
@@ -3369,6 +3401,7 @@ nsHTMLEditRules::GetNodesForOperation(nsISupportsArray *inArrayOfRanges,
       mEditor->mRangeUpdater.DropRangeItem(item);
       res = item->GetRange(&opRange);
       if (NS_FAILED(res)) return res;
+      delete item;
       nsCOMPtr<nsISupports> isupports = do_QueryInterface(opRange);
       inArrayOfRanges->AppendElement(isupports);
     }    
