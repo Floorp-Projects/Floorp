@@ -1268,9 +1268,10 @@ nsDNSService::Run()
                               0, 0, 0, 10, 10, NULL, NULL, NULL, NULL);
 
     // sync with Create thread
-    nsAutoLock dnsLock(mDNSServiceLock);
+    Lock();
     PRStatus  status = PR_NotifyCondVar(mDNSCondVar);
     NS_ASSERTION(status == PR_SUCCESS, "PR_NotifyCondVar failed.");
+    Unlock();
 
     MSG msg;
     
