@@ -210,23 +210,25 @@ protected:
                                      nscoord  aWidthOfFixedTableColumns);
 
   /** starting with a partially balanced table, compute the amount
-    * of space to remove from each column to completely balance the table.
+    * of space to allocate to each column to completely balance the table.
     * set the column widths in mTableFrame based on these computations.
+    * assumes auto-width columns have been set to their minimum width.
+    * must be called with a PRInt32 variable initialized to 0 for aRecursionControl.
     *
     * @param aTableFixedWidth     the specified width of the table.  If there is none,
     *                             this param is 0
-    * @param aComputedTableWidth  the width of the table before this final step.
+    * @param aComputedTableWidth  IN: the width of the table before this step.
+    *                             OUT:the width of the table after this step.
+    * @param aTableIsAutoWidth    TRUE if the table style indicates it is autoWidth
+    * @param aRecursionControl    IN: must be a PRInt32 set to 0
+    *                             OUT: the number of iterations.  Not generally useful to the caller.
     *
     * @return void
     */
   virtual void DistributeRemainingSpace(nscoord  aTableFixedWidth,
-                                        nscoord  aComputedTableWidth, 
-                                        PRBool   aTableIsAutoWidth);
-
-  /** force all cells to be at least their minimum width, removing any excess space
-    * created in the process from fat cells that can afford to lose a little tonnage.
-    */
-  virtual void EnsureCellMinWidths(PRBool aShrinkFixedWidthCells);
+                                        nscoord &aComputedTableWidth, 
+                                        PRBool   aTableIsAutoWidth,
+                                        PRInt32 &aRecursionControl);
 
   virtual void AdjustTableThatIsTooWide(nscoord  aComputedWidth, 
                                         nscoord  aTableWidth, 
