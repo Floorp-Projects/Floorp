@@ -68,7 +68,6 @@ NS_IMETHODIMP nsSOAPBlock::Init(nsISOAPAttachments * aAttachments,
 /* attribute AString namespaceURI; */
 NS_IMETHODIMP nsSOAPBlock::GetNamespaceURI(nsAString & aNamespaceURI)
 {
-  NS_ENSURE_ARG_POINTER(&aNamespaceURI);
   if (mElement) {
     if (mEncoding) {
       nsAutoString temp;
@@ -86,7 +85,6 @@ NS_IMETHODIMP nsSOAPBlock::GetNamespaceURI(nsAString & aNamespaceURI)
 
 NS_IMETHODIMP nsSOAPBlock::SetNamespaceURI(const nsAString & aNamespaceURI)
 {
-  NS_ENSURE_ARG_POINTER(&aNamespaceURI);
   nsresult rc = SetElement(nsnull);
   if (NS_FAILED(rc))
     return rc;
@@ -97,7 +95,6 @@ NS_IMETHODIMP nsSOAPBlock::SetNamespaceURI(const nsAString & aNamespaceURI)
 /* attribute AString name; */
 NS_IMETHODIMP nsSOAPBlock::GetName(nsAString & aName)
 {
-  NS_ENSURE_ARG_POINTER(&aName);
   if (mElement) {
     return mElement->GetLocalName(aName);
   } else {
@@ -108,7 +105,6 @@ NS_IMETHODIMP nsSOAPBlock::GetName(nsAString & aName)
 
 NS_IMETHODIMP nsSOAPBlock::SetName(const nsAString & aName)
 {
-  NS_ENSURE_ARG_POINTER(&aName);
   nsresult rc = SetElement(nsnull);
   if (NS_FAILED(rc))
     return rc;

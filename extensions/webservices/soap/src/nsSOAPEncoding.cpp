@@ -214,7 +214,6 @@ nsresult
 /* readonly attribute AString styleURI; */
 NS_IMETHODIMP nsSOAPEncoding::GetStyleURI(nsAString & aStyleURI)
 {
-  NS_ENSURE_ARG_POINTER(&aStyleURI);
   aStyleURI.Assign(mStyleURI);
   return NS_OK;
 }
@@ -387,8 +386,6 @@ nsSOAPEncoding::MapSchemaURI(const nsAString & aExternalURI,
                              PRBool aOutput, 
                              PRBool *_retval)
 {
-  NS_ENSURE_ARG_POINTER(&aExternalURI);
-  NS_ENSURE_ARG_POINTER(&aInternalURI);
   if (aExternalURI.IsEmpty() || aInternalURI.IsEmpty())  //  Permit no empty URIs.
     return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_SCHEMA_URI_MAPPING", "No schema URI mapping possible of empty strings.");
   nsStringKey externalKey(aExternalURI);
@@ -429,7 +426,6 @@ nsSOAPEncoding::MapSchemaURI(const nsAString & aExternalURI,
 /* boolean unmapSchemaURI (in AString aExternalURI); */
 NS_IMETHODIMP nsSOAPEncoding::UnmapSchemaURI(const nsAString & aExternalURI, PRBool *_retval)
 {
-  NS_ENSURE_ARG_POINTER(&aExternalURI);
   nsStringKey externalKey(aExternalURI);
   nsCOMPtr<nsIVariant> internal = dont_AddRef(NS_STATIC_CAST(nsIVariant*,mMappedExternal.Get(&externalKey)));
   if (internal) {
@@ -453,8 +449,6 @@ NS_IMETHODIMP nsSOAPEncoding::UnmapSchemaURI(const nsAString & aExternalURI, PRB
 /* AString getInternalSchemaURI (in AString aExternalURI); */
 NS_IMETHODIMP nsSOAPEncoding::GetInternalSchemaURI(const nsAString & aExternalURI, nsAString & _retval)
 {
-  NS_ENSURE_ARG_POINTER(&aExternalURI);
-  NS_ENSURE_ARG_POINTER(&_retval);
   if (mMappedExternal.Count()) {
     nsStringKey externalKey(aExternalURI);
     nsCOMPtr<nsIVariant> internal = dont_AddRef(NS_STATIC_CAST(nsIVariant*,mMappedExternal.Get(&externalKey)));
@@ -472,8 +466,6 @@ NS_IMETHODIMP nsSOAPEncoding::GetInternalSchemaURI(const nsAString & aExternalUR
 /* AString getExternalSchemaURI (in AString aInternalURI); */
 NS_IMETHODIMP nsSOAPEncoding::GetExternalSchemaURI(const nsAString & aInternalURI, nsAString & _retval)
 {
-  NS_ENSURE_ARG_POINTER(&aInternalURI);
-  NS_ENSURE_ARG_POINTER(&_retval);
   if (mMappedInternal.Count()) {
     nsStringKey internalKey(aInternalURI);
     nsCOMPtr<nsIVariant> external = dont_AddRef(NS_STATIC_CAST(nsIVariant*,mMappedInternal.Get(&internalKey)));

@@ -91,7 +91,6 @@ NS_IMETHODIMP nsSOAPFault::GetElement(nsIDOMElement * *aElement)
 /* readonly attribute wstring faultCode; */
 NS_IMETHODIMP nsSOAPFault::GetFaultCode(nsAString & aFaultCode)
 {
-  NS_ENSURE_ARG_POINTER(&aFaultCode);
   if (!mFaultElement)
     return NS_ERROR_ILLEGAL_VALUE;
   aFaultCode.Truncate();
@@ -113,7 +112,6 @@ NS_IMETHODIMP nsSOAPFault::GetFaultCode(nsAString & aFaultCode)
 /* readonly attribute wstring faultNamespaceURI; */
 NS_IMETHODIMP nsSOAPFault::GetFaultNamespaceURI(nsAString & aNamespaceURI)
 {
-  NS_ENSURE_ARG_POINTER(&aNamespaceURI);
   if (!mFaultElement)
     return NS_ERROR_ILLEGAL_VALUE;
   aNamespaceURI.Truncate();
@@ -135,7 +133,6 @@ NS_IMETHODIMP nsSOAPFault::GetFaultNamespaceURI(nsAString & aNamespaceURI)
 /* readonly attribute wstring faultString; */
 NS_IMETHODIMP nsSOAPFault::GetFaultString(nsAString & aFaultString)
 {
-  NS_ENSURE_ARG_POINTER(&aFaultString);
   if (!mFaultElement)
     return NS_ERROR_ILLEGAL_VALUE;
 
@@ -156,7 +153,6 @@ NS_IMETHODIMP nsSOAPFault::GetFaultString(nsAString & aFaultString)
 /* readonly attribute wstring faultActor; */
 NS_IMETHODIMP nsSOAPFault::GetFaultActor(nsAString & aFaultActor)
 {
-  NS_ENSURE_ARG_POINTER(&aFaultActor);
   if (!mFaultElement)
     return NS_ERROR_ILLEGAL_VALUE;
 

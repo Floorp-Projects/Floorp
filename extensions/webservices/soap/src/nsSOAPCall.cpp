@@ -82,7 +82,6 @@ NS_IMETHODIMP nsSOAPCall::SetVerifySourceHeader(PRBool aVerifySourceHeader)
 /* attribute DOMString transportURI; */
 NS_IMETHODIMP nsSOAPCall::GetTransportURI(nsAString & aTransportURI)
 {
-  NS_ENSURE_ARG_POINTER(&aTransportURI);
   aTransportURI.Assign(mTransportURI);
   return NS_OK;
 }

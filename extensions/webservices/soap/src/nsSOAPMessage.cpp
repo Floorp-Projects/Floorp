@@ -210,14 +210,12 @@ NS_IMETHODIMP nsSOAPMessage::GetBody(nsIDOMElement * *aBody)
 /* attribute DOMString actionURI; */
 NS_IMETHODIMP nsSOAPMessage::GetActionURI(nsAString & aActionURI)
 {
-  NS_ENSURE_ARG_POINTER(&aActionURI);
   aActionURI.Assign(mActionURI);
   return NS_OK;
 }
 
 NS_IMETHODIMP nsSOAPMessage::SetActionURI(const nsAString & aActionURI)
 {
-  NS_ENSURE_ARG_POINTER(&aActionURI);
   mActionURI.Assign(aActionURI);
   return NS_OK;
 }
@@ -225,7 +223,6 @@ NS_IMETHODIMP nsSOAPMessage::SetActionURI(const nsAString & aActionURI)
 /* readonly attribute AString methodName; */
 NS_IMETHODIMP nsSOAPMessage::GetMethodName(nsAString & aMethodName)
 {
-  NS_ENSURE_ARG_POINTER(&aMethodName);
   nsCOMPtr<nsIDOMElement> body;
   GetBody(getter_AddRefs(body));
   if (body) {
@@ -244,7 +241,6 @@ NS_IMETHODIMP nsSOAPMessage::GetMethodName(nsAString & aMethodName)
 NS_IMETHODIMP nsSOAPMessage::
 GetTargetObjectURI(nsAString & aTargetObjectURI)
 {
-  NS_ENSURE_ARG_POINTER(&aTargetObjectURI);
   nsCOMPtr<nsIDOMElement> body;
   GetBody(getter_AddRefs(body));
   if (body) {
@@ -283,8 +279,6 @@ NS_IMETHODIMP
     &realEmptySOAPDocStr1, &realEmptySOAPDocStr2
   };
 
-  NS_ENSURE_ARG_POINTER(&aMethodName);
-  NS_ENSURE_ARG_POINTER(&aTargetObjectURI);
   if (aVersion != nsISOAPMessage::VERSION_1_1
       && aVersion != nsISOAPMessage::VERSION_1_2)
     return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_BAD_VALUE","Cannot encode message blocks without a valid SOAP version specified.");

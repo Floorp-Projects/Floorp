@@ -63,7 +63,6 @@ NS_IMPL_CI_INTERFACE_GETTER2(nsSOAPHeaderBlock, nsISOAPBlock,
 /* attribute AString actorURI; */
 NS_IMETHODIMP nsSOAPHeaderBlock::GetActorURI(nsAString & aActorURI)
 {
-  NS_ENSURE_ARG_POINTER(&aActorURI);
   if (mElement) {
     if (mVersion == nsISOAPMessage::VERSION_UNKNOWN)
       return SOAP_EXCEPTION(NS_ERROR_NOT_AVAILABLE,"SOAP_HEADER_INIT", "Header has not been properly initialized.");
@@ -89,7 +88,6 @@ NS_IMETHODIMP nsSOAPHeaderBlock::SetActorURI(const nsAString & aActorURI)
 NS_IMETHODIMP nsSOAPHeaderBlock::GetMustUnderstand(PRBool *
                                                    aMustUnderstand)
 {
-  NS_ENSURE_ARG_POINTER(&aMustUnderstand);
   if (mElement) {
     if (mVersion == nsISOAPMessage::VERSION_UNKNOWN)
       return SOAP_EXCEPTION(NS_ERROR_NOT_AVAILABLE,"SOAP_HEADER_INIT", "Header has not been properly initialized.");

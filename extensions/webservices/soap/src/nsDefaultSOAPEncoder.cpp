@@ -564,8 +564,6 @@ NS_IMETHODIMP
                              nsIDOMElement * *aReturnValue)
 {
   NS_ENSURE_ARG_POINTER(aEncoding);
-  NS_ENSURE_ARG_POINTER(&aNamespaceURI);
-  NS_ENSURE_ARG_POINTER(&aName);
   NS_ENSURE_ARG_POINTER(aDestination);
   NS_ENSURE_ARG_POINTER(aReturnValue);
   *aReturnValue = nsnull;
@@ -710,8 +708,6 @@ NS_IMETHODIMP
                              nsIDOMElement * *aReturnValue)
 {
   NS_ENSURE_ARG_POINTER(aEncoding);
-  NS_ENSURE_ARG_POINTER(&aNamespaceURI);
-  NS_ENSURE_ARG_POINTER(&aName);
   NS_ENSURE_ARG_POINTER(aDestination);
   NS_ENSURE_ARG_POINTER(aReturnValue);
   *aReturnValue = nsnull;
@@ -928,8 +924,6 @@ NS_IMETHODIMP
                              nsIDOMElement * *aReturnValue)
 {
   NS_ENSURE_ARG_POINTER(aEncoding);
-  NS_ENSURE_ARG_POINTER(&aNamespaceURI);
-  NS_ENSURE_ARG_POINTER(&aName);
   NS_ENSURE_ARG_POINTER(aDestination);
   NS_ENSURE_ARG_POINTER(aReturnValue);
   *aReturnValue = nsnull;
@@ -982,8 +976,6 @@ NS_IMETHODIMP
                                    nsIDOMElement * *aReturnValue)
 {
   NS_ENSURE_ARG_POINTER(aEncoding);
-  NS_ENSURE_ARG_POINTER(&aNamespaceURI);
-  NS_ENSURE_ARG_POINTER(&aName);
   NS_ENSURE_ARG_POINTER(aDestination);
   NS_ENSURE_ARG_POINTER(aReturnValue);
   *aReturnValue = nsnull;
@@ -1328,8 +1320,6 @@ NS_IMETHODIMP
                            nsIDOMElement * *aReturnValue)
 {
   NS_ENSURE_ARG_POINTER(aEncoding);
-  NS_ENSURE_ARG_POINTER(&aNamespaceURI);
-  NS_ENSURE_ARG_POINTER(&aName);
   NS_ENSURE_ARG_POINTER(aDestination);
   NS_ENSURE_ARG_POINTER(aReturnValue);
   *aReturnValue = nsnull;
@@ -1447,8 +1437,6 @@ NS_IMETHODIMP
                             nsIDOMElement * *aReturnValue)
 {
   NS_ENSURE_ARG_POINTER(aEncoding);
-  NS_ENSURE_ARG_POINTER(&aNamespaceURI);
-  NS_ENSURE_ARG_POINTER(&aName);
   NS_ENSURE_ARG_POINTER(aDestination);
   NS_ENSURE_ARG_POINTER(aReturnValue);
   *aReturnValue = nsnull;
@@ -1475,8 +1463,6 @@ NS_IMETHODIMP
                              nsIDOMElement * *aReturnValue)
 {
   NS_ENSURE_ARG_POINTER(aEncoding);
-  NS_ENSURE_ARG_POINTER(&aNamespaceURI);
-  NS_ENSURE_ARG_POINTER(&aName);
   NS_ENSURE_ARG_POINTER(aDestination);
   NS_ENSURE_ARG_POINTER(aReturnValue);
   *aReturnValue = nsnull;
@@ -1503,8 +1489,6 @@ NS_IMETHODIMP
                             nsIDOMElement * *aReturnValue)
 {
   NS_ENSURE_ARG_POINTER(aEncoding);
-  NS_ENSURE_ARG_POINTER(&aNamespaceURI);
-  NS_ENSURE_ARG_POINTER(&aName);
   NS_ENSURE_ARG_POINTER(aDestination);
   NS_ENSURE_ARG_POINTER(aReturnValue);
   *aReturnValue = nsnull;
@@ -1537,8 +1521,6 @@ NS_IMETHODIMP
                            nsIDOMElement * *aReturnValue)
 {
   NS_ENSURE_ARG_POINTER(aEncoding);
-  NS_ENSURE_ARG_POINTER(&aNamespaceURI);
-  NS_ENSURE_ARG_POINTER(&aName);
   NS_ENSURE_ARG_POINTER(aDestination);
   NS_ENSURE_ARG_POINTER(aReturnValue);
   *aReturnValue = nsnull;
@@ -1571,8 +1553,6 @@ NS_IMETHODIMP
                           nsIDOMElement * *aReturnValue)
 {
   NS_ENSURE_ARG_POINTER(aEncoding);
-  NS_ENSURE_ARG_POINTER(&aNamespaceURI);
-  NS_ENSURE_ARG_POINTER(&aName);
   NS_ENSURE_ARG_POINTER(aDestination);
   NS_ENSURE_ARG_POINTER(aReturnValue);
   *aReturnValue = nsnull;
@@ -1605,8 +1585,6 @@ NS_IMETHODIMP
                          nsIDOMElement * *aReturnValue)
 {
   NS_ENSURE_ARG_POINTER(aEncoding);
-  NS_ENSURE_ARG_POINTER(&aNamespaceURI);
-  NS_ENSURE_ARG_POINTER(&aName);
   NS_ENSURE_ARG_POINTER(aDestination);
   NS_ENSURE_ARG_POINTER(aReturnValue);
   *aReturnValue = nsnull;
@@ -1639,8 +1617,6 @@ NS_IMETHODIMP
                            nsIDOMElement * *aReturnValue)
 {
   NS_ENSURE_ARG_POINTER(aEncoding);
-  NS_ENSURE_ARG_POINTER(&aNamespaceURI);
-  NS_ENSURE_ARG_POINTER(&aName);
   NS_ENSURE_ARG_POINTER(aDestination);
   NS_ENSURE_ARG_POINTER(aReturnValue);
   *aReturnValue = nsnull;
@@ -1673,8 +1649,6 @@ NS_IMETHODIMP
                           nsIDOMElement * *aReturnValue)
 {
   NS_ENSURE_ARG_POINTER(aEncoding);
-  NS_ENSURE_ARG_POINTER(&aNamespaceURI);
-  NS_ENSURE_ARG_POINTER(&aName);
   NS_ENSURE_ARG_POINTER(aDestination);
   NS_ENSURE_ARG_POINTER(aReturnValue);
   *aReturnValue = nsnull;
@@ -1707,8 +1681,6 @@ NS_IMETHODIMP
                                   nsIDOMElement * *aReturnValue)
 {
   NS_ENSURE_ARG_POINTER(aEncoding);
-  NS_ENSURE_ARG_POINTER(&aNamespaceURI);
-  NS_ENSURE_ARG_POINTER(&aName);
   NS_ENSURE_ARG_POINTER(aDestination);
   NS_ENSURE_ARG_POINTER(aReturnValue);
   *aReturnValue = nsnull;
@@ -1741,8 +1713,6 @@ NS_IMETHODIMP
                                  nsIDOMElement * *aReturnValue)
 {
   NS_ENSURE_ARG_POINTER(aEncoding);
-  NS_ENSURE_ARG_POINTER(&aNamespaceURI);
-  NS_ENSURE_ARG_POINTER(&aName);
   NS_ENSURE_ARG_POINTER(aDestination);
   NS_ENSURE_ARG_POINTER(aReturnValue);
   *aReturnValue = nsnull;
@@ -1775,8 +1745,6 @@ NS_IMETHODIMP
                                    nsIDOMElement * *aReturnValue)
 {
   NS_ENSURE_ARG_POINTER(aEncoding);
-  NS_ENSURE_ARG_POINTER(&aNamespaceURI);
-  NS_ENSURE_ARG_POINTER(&aName);
   NS_ENSURE_ARG_POINTER(aDestination);
   NS_ENSURE_ARG_POINTER(aReturnValue);
   *aReturnValue = nsnull;
@@ -1809,8 +1777,6 @@ NS_IMETHODIMP
                                   nsIDOMElement * *aReturnValue)
 {
   NS_ENSURE_ARG_POINTER(aEncoding);
-  NS_ENSURE_ARG_POINTER(&aNamespaceURI);
-  NS_ENSURE_ARG_POINTER(&aName);
   NS_ENSURE_ARG_POINTER(aDestination);
   NS_ENSURE_ARG_POINTER(aReturnValue);
   *aReturnValue = nsnull;
