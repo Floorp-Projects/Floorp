@@ -116,6 +116,9 @@ nsXULTreeElement::~nsXULTreeElement()
     fprintf(stdout, "%d - RDF: nsXULTreeElement\n", gInstanceCount);
 #endif
 
+  if (mSelectTimer)
+    mSelectTimer->Cancel();
+
   NS_IF_RELEASE(mSelectedItems);
   NS_IF_RELEASE(mCurrentItem);
   
