@@ -50,7 +50,10 @@ static NS_DEFINE_IID(kIDocumentTypeIID, NS_IDOMDOCUMENTTYPE_IID);
 enum DocumentType_slots {
   DOCUMENTTYPE_NAME = -1,
   DOCUMENTTYPE_ENTITIES = -2,
-  DOCUMENTTYPE_NOTATIONS = -3
+  DOCUMENTTYPE_NOTATIONS = -3,
+  DOCUMENTTYPE_PUBLICID = -4,
+  DOCUMENTTYPE_SYSTEMID = -5,
+  DOCUMENTTYPE_INTERNALSUBSET = -6
 };
 
 /***********************************************************************/
@@ -107,6 +110,42 @@ GetDocumentTypeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           if (NS_SUCCEEDED(rv)) {
             // get the js object
             nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+          }
+        }
+        break;
+      }
+      case DOCUMENTTYPE_PUBLICID:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_DOCUMENTTYPE_PUBLICID, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->GetPublicId(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
+        }
+        break;
+      }
+      case DOCUMENTTYPE_SYSTEMID:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_DOCUMENTTYPE_SYSTEMID, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->GetSystemId(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
+        }
+        break;
+      }
+      case DOCUMENTTYPE_INTERNALSUBSET:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_DOCUMENTTYPE_INTERNALSUBSET, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->GetInternalSubset(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
           }
         }
         break;
@@ -217,6 +256,9 @@ static JSPropertySpec DocumentTypeProperties[] =
   {"name",    DOCUMENTTYPE_NAME,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"entities",    DOCUMENTTYPE_ENTITIES,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"notations",    DOCUMENTTYPE_NOTATIONS,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"publicId",    DOCUMENTTYPE_PUBLICID,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"systemId",    DOCUMENTTYPE_SYSTEMID,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"internalSubset",    DOCUMENTTYPE_INTERNALSUBSET,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 

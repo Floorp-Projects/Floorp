@@ -28,6 +28,8 @@
 #include "nsString.h"
 #include "nsIScriptContext.h"
 
+class nsIDOMDocument;
+class nsIDOMDocumentType;
 
 #define NS_IDOMDOMIMPLEMENTATION_IID \
  { 0xa6cf9074, 0x15b3, 0x11d2, \
@@ -38,16 +40,24 @@ public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMDOMIMPLEMENTATION_IID; return iid; }
 
   NS_IMETHOD    HasFeature(const nsString& aFeature, const nsString& aVersion, PRBool* aReturn)=0;
+
+  NS_IMETHOD    CreateDocumentType(const nsString& aQualifiedName, const nsString& aPublicId, const nsString& aSystemId, nsIDOMDocumentType** aReturn)=0;
+
+  NS_IMETHOD    CreateDocument(const nsString& aNamespaceURI, const nsString& aQualifiedName, nsIDOMDocumentType* aDoctype, nsIDOMDocument** aReturn)=0;
 };
 
 
 #define NS_DECL_IDOMDOMIMPLEMENTATION   \
   NS_IMETHOD    HasFeature(const nsString& aFeature, const nsString& aVersion, PRBool* aReturn);  \
+  NS_IMETHOD    CreateDocumentType(const nsString& aQualifiedName, const nsString& aPublicId, const nsString& aSystemId, nsIDOMDocumentType** aReturn);  \
+  NS_IMETHOD    CreateDocument(const nsString& aNamespaceURI, const nsString& aQualifiedName, nsIDOMDocumentType* aDoctype, nsIDOMDocument** aReturn);  \
 
 
 
 #define NS_FORWARD_IDOMDOMIMPLEMENTATION(_to)  \
   NS_IMETHOD    HasFeature(const nsString& aFeature, const nsString& aVersion, PRBool* aReturn) { return _to HasFeature(aFeature, aVersion, aReturn); }  \
+  NS_IMETHOD    CreateDocumentType(const nsString& aQualifiedName, const nsString& aPublicId, const nsString& aSystemId, nsIDOMDocumentType** aReturn) { return _to CreateDocumentType(aQualifiedName, aPublicId, aSystemId, aReturn); }  \
+  NS_IMETHOD    CreateDocument(const nsString& aNamespaceURI, const nsString& aQualifiedName, nsIDOMDocumentType* aDoctype, nsIDOMDocument** aReturn) { return _to CreateDocument(aNamespaceURI, aQualifiedName, aDoctype, aReturn); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitDOMImplementationClass(nsIScriptContext *aContext, void **aPrototype);
