@@ -57,7 +57,8 @@ static ipcClient ipcClientArray[IPC_MAX_CLIENTS];
 static HWND ipcHwnd;
 
 #define IPC_PURGE_TIMER_ID 1
-#define IPC_WM_SHUTDOWN (WM_USER + 1)
+#define IPC_WM_SENDMSG  (WM_USER + 1)
+#define IPC_WM_SHUTDOWN (WM_USER + 2)
 
 //-----------------------------------------------------------------------------
 // client array manipulation
@@ -195,22 +196,19 @@ ProcessMsg(HWND hwnd, PRUint32 pid, const ipcMessage *msg)
 PRStatus
 IPC_PlatformSendMsg(ipcClient  *client, ipcMessage *msg)
 {
-    LOG(("IPC_SendMessageNow [clientID=%u clientPID=%u]\n",
+    LOG(("IPC_PlatformSendMsg [clientID=%u clientPID=%u]\n",
         client->ID(), client->PID()));
 
-    // XXX use PostMessage to make this asynchronous; otherwise we might get
+    // use PostMessage to make this asynchronous; otherwise we might get
     // some wierd SendMessage recursion between processes.
 
-    COPYDATASTRUCT cd;
-    cd.dwData = GetCurrentProcessId();
-    cd.cbData = (DWORD) msg->MsgLen();
-    cd.lpData = (PVOID) msg->MsgBuf();
-
-    LOG(("calling SendMessage...\n"));
-    SendMessage(client->Hwnd(), WM_COPYDATA, 0, (LPARAM) &cd);
-    LOG(("  done.\n"));
-
-    delete msg;
+    WPARAM wParam = (WPARAM) client->Hwnd();
+    LPARAM lParam = (LPARAM) msg;
+    if (!PostMessage(ipcHwnd, IPC_WM_SENDMSG, wParam, lParam)) {
+        LOG(("PostMessage failed\n"));
+        delete msg;
+        return PR_FAILURE;
+    }
     return PR_SUCCESS;
 }
 
@@ -246,6 +244,22 @@ WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     if (uMsg == WM_TIMER && wParam == IPC_PURGE_TIMER_ID) {
         PurgeStaleClients();
         return 0;
+    }
+
+    if (uMsg == IPC_WM_SENDMSG) {
+        HWND hWndDest = (HWND) wParam;
+        ipcMessage *msg = (ipcMessage *) lParam;
+
+        COPYDATASTRUCT cd;
+        cd.dwData = GetCurrentProcessId();
+        cd.cbData = (DWORD) msg->MsgLen();
+        cd.lpData = (PVOID) msg->MsgBuf();
+
+        LOG(("calling SendMessage...\n"));
+        SendMessage(hWndDest, WM_COPYDATA, (WPARAM) hWnd, (LPARAM) &cd);
+        LOG(("  done.\n"));
+
+        delete msg;
     }
 
     if (uMsg == IPC_WM_SHUTDOWN) {
