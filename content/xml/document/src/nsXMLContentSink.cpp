@@ -1266,22 +1266,23 @@ nsXMLContentSink::FlushText(PRBool aCreateTextNode, PRBool* aDidFlush)
   PRBool didFlush = PR_FALSE;
   if (0 != mTextLength) {
     if (aCreateTextNode) {
-      nsCOMPtr<nsITextContent> content;
-      rv = NS_NewTextNode(getter_AddRefs(content));
-      if (NS_OK == rv) {
-        // Set the content's document
-        content->SetDocument(mDocument, PR_FALSE, PR_TRUE);
+      nsCOMPtr<nsITextContent> textContent;
+      rv = NS_NewTextNode(getter_AddRefs(textContent));
+      NS_ENSURE_SUCCESS(rv, rv);
 
-        // Set the text in the text node
-        content->SetText(mText, mTextLength, PR_FALSE);
+      // Set the content's document
+      textContent->SetDocument(mDocument, PR_FALSE, PR_TRUE);
 
-        // Add text to its parent
-        AddContentAsLeaf(content);
-      }
+      // Set the text in the text node
+      textContent->SetText(mText, mTextLength, PR_FALSE);
+
+      // Add text to its parent
+      AddContentAsLeaf(textContent);
     }
     mTextLength = 0;
     didFlush = PR_TRUE;
   }
+
   if (nsnull != aDidFlush) {
     *aDidFlush = didFlush;
   }

@@ -66,6 +66,7 @@
 #include "nsIFormControl.h"
 #include "nsIHTMLContent.h"
 #include "nsIHTMLContentContainer.h"
+#include "nsIHTMLStyleSheet.h"
 #include "nsINameSpace.h"
 #include "nsINameSpaceManager.h"
 #include "nsINodeInfo.h"

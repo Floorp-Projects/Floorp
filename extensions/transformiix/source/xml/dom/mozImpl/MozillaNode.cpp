@@ -36,6 +36,7 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
 #include "txAtoms.h"
+#include "nsString.h"
 
 MOZ_DECL_CTOR_COUNTER(Node)
 

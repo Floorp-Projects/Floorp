@@ -90,7 +90,7 @@
 
 #include "nsXULAtoms.h"
 #include "nsIDOMXULElement.h"
-#include "nsIDOMXULDocument.h"
+#include "nsIDOMDocument.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIObserverService.h"
 #include "nsIDocShell.h"
@@ -641,7 +641,6 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
       nsCOMPtr<nsIFocusController> focusController;
       nsCOMPtr<nsIDOMElement> focusedElement;
       nsCOMPtr<nsIDOMWindowInternal> focusedWindow;
-      nsCOMPtr<nsIDOMXULDocument> xulDoc = do_QueryInterface(mDocument);
 
       nsCOMPtr<nsIScriptGlobalObject> globalObj;
       mDocument->GetScriptGlobalObject(getter_AddRefs(globalObj));
@@ -4479,7 +4478,7 @@ nsEventStateManager::DispatchNewEvent(nsISupports* aTarget, nsIDOMEvent* aEvent,
         }
       }
 
-      *aPreventDefault = status == nsEventStatus_eConsumeNoDefault ? PR_FALSE : PR_TRUE;
+      *aPreventDefault = status != nsEventStatus_eConsumeNoDefault;
     }
   }
 

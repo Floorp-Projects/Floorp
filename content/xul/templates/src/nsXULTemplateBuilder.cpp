@@ -69,7 +69,7 @@
 #include "nsIContent.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNode.h"
-#include "nsIDOMXULDocument.h"
+#include "nsIDOMDocument.h"
 #include "nsIDOMXULElement.h"
 #include "nsIDocument.h"
 #include "nsIBindingManager.h"
@@ -1408,13 +1408,13 @@ nsXULTemplateBuilder::GetTemplateRoot(nsIContent** aResult)
         if (! doc)
             return NS_ERROR_FAILURE;
 
-        nsCOMPtr<nsIDOMXULDocument> xulDoc = do_QueryInterface(doc);
-        NS_ASSERTION(xulDoc != nsnull, "expected a XUL document");
-        if (! xulDoc)
+        nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(doc);
+        NS_ASSERTION(domDoc, "expected a XUL document");
+        if (! domDoc)
             return NS_ERROR_FAILURE;
 
         nsCOMPtr<nsIDOMElement> domElement;
-        xulDoc->GetElementById(templateID, getter_AddRefs(domElement));
+        domDoc->GetElementById(templateID, getter_AddRefs(domElement));
 
         if (domElement)
             return CallQueryInterface(domElement, aResult);

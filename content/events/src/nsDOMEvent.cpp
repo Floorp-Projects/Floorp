@@ -1529,10 +1529,10 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
   return nsnull;
 }
 
-nsresult NS_NewDOMUIEvent(nsIDOMEvent** aInstancePtrResult,
-                          nsIPresContext* aPresContext,
-                          const nsAString& aEventType,
-                          nsEvent *aEvent) 
+nsresult
+NS_NewDOMUIEvent(nsIDOMEvent** aInstancePtrResult,
+                 nsIPresContext* aPresContext, const nsAString& aEventType,
+                 nsEvent *aEvent)
 {
   nsDOMEvent* it = new nsDOMEvent(aPresContext, aEvent, aEventType);
 
@@ -1543,7 +1543,9 @@ nsresult NS_NewDOMUIEvent(nsIDOMEvent** aInstancePtrResult,
   return CallQueryInterface(it, aInstancePtrResult);
 }
 
-nsresult NS_NewDOMEvent(nsIDOMEvent** aInstancePtrResult, nsIPresContext* aPresContext, nsEvent *aEvent) 
+nsresult
+NS_NewDOMEvent(nsIDOMEvent** aInstancePtrResult, nsIPresContext* aPresContext,
+               nsEvent *aEvent) 
 {
   return NS_ERROR_FAILURE;
 }

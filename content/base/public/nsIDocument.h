@@ -41,7 +41,6 @@
 #include "nsISupports.h"
 #include "nsEvent.h"
 #include "nsAString.h"
-#include "nsString.h"
 #include "nsChangeHint.h"
 #include "nsCOMArray.h"
 
@@ -78,7 +77,6 @@ class nsIBindingManager;
 class nsIObserver;
 class nsISupportsArray;
 class nsIScriptLoader;
-class nsString;
 class nsIContentSink;
 class nsIScriptEventManager;
 
@@ -118,7 +116,7 @@ public:
   /**
    * Return the title of the document. May return null.
    */
-  virtual const nsString* GetDocumentTitle() const = 0;
+  NS_IMETHOD GetDocumentTitle(nsAString& aTitle) const = 0;
 
   /**
    * Return the URL for the document. May return null.
@@ -143,7 +141,8 @@ public:
   NS_IMETHOD GetDocumentLoadGroup(nsILoadGroup** aGroup) const = 0;
 
   /**
-   * Return the base URL for relative URLs in the document. May return null (or the document URL).
+   * Return the base URL for relative URLs in the document. May return
+   * null (or the document URL).
    */
   NS_IMETHOD GetBaseURL(nsIURI*& aURL) const = 0;
   NS_IMETHOD SetBaseURL(nsIURI* aURL) = 0;
@@ -155,8 +154,9 @@ public:
   NS_IMETHOD SetBaseTarget(const nsAString &aBaseTarget)=0;
 
   /**
-   * Return a standard name for the document's character set. This will
-   * trigger a startDocumentLoad if necessary to answer the question.
+   * Return a standard name for the document's character set. This
+   * will trigger a startDocumentLoad if necessary to answer the
+   * question.
    */
   NS_IMETHOD GetDocumentCharacterSet(nsAString& oCharSetID) = 0;
   NS_IMETHOD SetDocumentCharacterSet(const nsAString& aCharSetID) = 0;
@@ -188,8 +188,8 @@ public:
    */
   NS_IMETHOD GetContentLanguage(nsAString& aContentLanguage) const = 0;
 
-  // The state BidiEnabled should persist across multiple views (screen, print)
-  // of the same document.
+  // The state BidiEnabled should persist across multiple views
+  // (screen, print) of the same document.
 
   /**
    * Check if the document contains bidi data.
@@ -214,15 +214,15 @@ public:
   NS_IMETHOD SetWordBreaker(nsIWordBreaker* aWordBreaker) = 0;
 
   /**
-   * Access HTTP header data (this may also get set from other sources, like
-   * HTML META tags).
+   * Access HTTP header data (this may also get set from other
+   * sources, like HTML META tags).
    */
   NS_IMETHOD GetHeaderData(nsIAtom* aHeaderField, nsAString& aData) const = 0;
   NS_IMETHOD SetHeaderData(nsIAtom* aheaderField, const nsAString& aData) = 0;
 
   /**
-   * Create a new presentation shell that will use aContext for
-   * it's presentation context (presentation context's <b>must not</b> be
+   * Create a new presentation shell that will use aContext for it's
+   * presentation context (presentation context's <b>must not</b> be
    * shared among multiple presentation shell's).
    */
   NS_IMETHOD CreateShell(nsIPresContext* aContext,
@@ -431,8 +431,6 @@ public:
                             PRUint32 aFlags,
                             nsEventStatus* aEventStatus) = 0;
 
-  NS_IMETHOD_(PRBool) EventCaptureRegistration(PRInt32 aCapturerIncrement) = 0;
-  
   NS_IMETHOD FlushPendingNotifications(PRBool aFlushReflows=PR_TRUE,
                                        PRBool aUpdateViews=PR_FALSE) = 0;
 

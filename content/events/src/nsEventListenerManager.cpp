@@ -493,19 +493,6 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
       listeners->AppendElement((void*)ls);
       NS_ADDREF(aListener);
     }
-
-    if (aFlags & NS_EVENT_FLAG_CAPTURE) {
-      //If a capturer is set up on a content object it must register that with its doc
-      nsCOMPtr<nsIDocument> document;
-      nsCOMPtr<nsIContent> content(do_QueryInterface(mTarget));
-      if (content) {
-        content->GetDocument(*getter_AddRefs(document));
-        if (document) {
-          //Increment capturers by 1
-          document->EventCaptureRegistration(1);
-        }
-      }
-    }
   }
 
   return NS_OK;
@@ -557,19 +544,6 @@ nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListener,
             break; // otherwise we'd need to adjust loop count...
           }
         }
-      }
-    }
-  }
-
-  if (listenerRemoved && aFlags & NS_EVENT_FLAG_CAPTURE) {
-    //If a capturer is set up on a content object it must register that with its doc
-    nsCOMPtr<nsIDocument> document;
-    nsCOMPtr<nsIContent> content(do_QueryInterface(mTarget));
-    if (content) {
-      content->GetDocument(*getter_AddRefs(document));
-      if (document) {
-        //Decrement capturers by 1
-        document->EventCaptureRegistration(-1);
       }
     }
   }

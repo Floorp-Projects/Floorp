@@ -1166,7 +1166,7 @@ NS_IMETHODIMP
 DocumentViewerImpl::GetDOMDocument(nsIDOMDocument **aResult)
 {
   NS_ENSURE_TRUE(mDocument, NS_ERROR_NOT_AVAILABLE);
-  return CallQueryInterface(mDocument.get(), aResult);
+  return CallQueryInterface(mDocument, aResult);
 }
 
 NS_IMETHODIMP

@@ -57,7 +57,7 @@
 
 #include "nsWidgetAtoms.h"
 
-#include "nsIDOMXULDocument.h"
+#include "nsIDOMDocument.h"
 
 #include <Menus.h>
 #include <TextUtils.h>

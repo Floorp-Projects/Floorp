@@ -56,7 +56,7 @@ class nsILineBreakerFactory : public nsISupports
 public:
 
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ILINEBREAKERFACTORY_IID)
-  NS_IMETHOD GetBreaker(nsString& aParam, nsILineBreaker** breaker) = 0;
+  NS_IMETHOD GetBreaker(const nsAString& aParam, nsILineBreaker** breaker) = 0;
 };
 
 

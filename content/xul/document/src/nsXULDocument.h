@@ -42,61 +42,22 @@
 #define nsXULDocument_h__
 
 #include "nsCOMPtr.h"
+#include "nsXMLDocument.h"
 #include "nsElementMap.h"
 #include "nsForwardReference.h"
-#include "nsIArena.h"
-#include "nsICSSLoader.h"
 #include "nsIContent.h"
 #include "nsIDOMEventReceiver.h"
-#include "nsIDOM3EventTarget.h"
-#include "nsIDOMNSDocument.h"
-#include "nsIDOMDocumentStyle.h"
-#include "nsIDOMDocumentView.h"
-#include "nsIDOMDocumentXBL.h"
-#include "nsIDOMDocumentRange.h"
-#include "nsIDOMDocumentTraversal.h"
-#include "nsIDOMStyleSheetList.h"
-#include "nsISelection.h"
 #include "nsIDOMXULCommandDispatcher.h"
 #include "nsIDOMXULDocument.h"
-#include "nsIDocument.h"
-#include "nsIEventListenerManager.h"
-#include "nsIHTMLCSSStyleSheet.h"
-#include "nsIHTMLContentContainer.h"
-#include "nsIHTMLStyleSheet.h"
-#include "nsILineBreakerFactory.h"
-#include "nsIParser.h"
-#include "nsIPrincipal.h"
-#include "nsIRDFDataSource.h"
-#include "nsIScriptGlobalObject.h"
-#include "nsIScriptSecurityManager.h"
 #include "nsISupportsArray.h"
 #include "nsCOMArray.h"
 #include "nsIURI.h"
-#include "nsIWordBreakerFactory.h"
 #include "nsIXULDocument.h"
 #include "nsIXULPrototypeDocument.h"
-#include "nsRDFDOMNodeList.h"
-#include "nsTime.h"
-#include "nsVoidArray.h"
-#include "nsWeakPtr.h"
-#include "nsWeakReference.h"
-#include "nsIStreamLoader.h"
-#include "nsIBindingManager.h"
-#include "nsINodeInfo.h"
-#include "nsIDOMDocumentEvent.h"
-#include "nsIDOM3DocumentEvent.h"
 #include "nsScriptLoader.h"
-#include "pldhash.h"
 
-class nsIAtom;
-class nsIElementFactory;
-class nsIFile;
-class nsILoadGroup;
 class nsIRDFResource;
 class nsIRDFService;
-class nsITimer;
-class nsIXULContentUtils;
 class nsIXULPrototypeCache;
 class nsIFocusController;
 #if 0 // XXXbe save me, scc (need NSCAP_FORWARD_DECL(nsXULPrototypeScript))
@@ -117,35 +78,20 @@ struct PRLogModuleInfo;
 /**
  * The XUL document class
  */
-class nsXULDocument : public nsIDocument,
+class nsXULDocument : public nsXMLDocument,
                       public nsIXULDocument,
                       public nsIDOMXULDocument,
-                      public nsIDOMDocumentEvent,
-                      public nsIDOM3DocumentEvent,
-                      public nsIDOMDocumentView,
-                      public nsIDOMDocumentXBL,
-                      public nsIDOMDocumentRange,
-                      public nsIDOMDocumentTraversal,
-                      public nsIDOMNSDocument,
-                      public nsIDOM3Node,
-                      public nsIDOMDocumentStyle,
-                      public nsIDOMEventReceiver,
-                      public nsIDOM3EventTarget,
-                      public nsIHTMLContentContainer,
-                      public nsIStreamLoaderObserver,
-                      public nsSupportsWeakReference
+                      public nsIStreamLoaderObserver
 {
 public:
     nsXULDocument();
     virtual ~nsXULDocument();
 
     // nsISupports interface
-    NS_DECL_ISUPPORTS
+    NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSISTREAMLOADEROBSERVER
 
     // nsIDocument interface
-    NS_IMETHOD GetArena(nsIArena** aArena);
-
     NS_IMETHOD Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup);
     NS_IMETHOD ResetToURI(nsIURI *aURI, nsILoadGroup* aLoadGroup);
 
@@ -157,143 +103,13 @@ public:
                                  PRBool aReset = PR_TRUE,
                                  nsIContentSink* aSink = nsnull);
 
-    NS_IMETHOD StopDocumentLoad();
-
-    virtual const nsString* GetDocumentTitle() const;
-
-    NS_IMETHOD GetDocumentURL(nsIURI** aURI) const;
-
     NS_IMETHOD GetPrincipal(nsIPrincipal **aPrincipal);
 
     NS_IMETHOD AddPrincipal(nsIPrincipal *aPrincipal);
 
-    NS_IMETHOD GetDocumentLoadGroup(nsILoadGroup **aGroup) const;
-
-    NS_IMETHOD GetBaseURL(nsIURI*& aURL) const;
-
-    NS_IMETHOD SetBaseURL(nsIURI *aURI);
-    
-    NS_IMETHOD GetBaseTarget(nsAString &aBaseTarget);
-
-    NS_IMETHOD SetBaseTarget(const nsAString &aBaseTarget);
-
-    NS_IMETHOD GetStyleSheets(nsIDOMStyleSheetList** aStyleSheets);
-
-    NS_IMETHOD GetDocumentCharacterSet(nsAString& oCharSetID);
-
-    NS_IMETHOD SetDocumentCharacterSet(const nsAString& aCharSetID);
-
-    NS_IMETHOD GetDocumentCharacterSetSource(PRInt32* aCharsetSource);
-    
-    NS_IMETHOD SetDocumentCharacterSetSource(PRInt32 aCharsetSource);
-
-    // NS_IMETHOD GetContentType(nsAString& aContentType);
-    // Already declared in nsIDOMNSDocument
-
     NS_IMETHOD SetContentType(const nsAString& aContentType);
 
-    NS_IMETHOD GetContentLanguage(nsAString& aContentLanguage) const;
-
-    /**
-     *  Retrieve and get bidi state of the document 
-     *  (set depending on presence of bidi data).
-     */
-    NS_IMETHOD GetBidiEnabled(PRBool* aBidiEnabled) const;
-    NS_IMETHOD SetBidiEnabled(PRBool aBidiEnabled);
-
-    NS_IMETHOD AddCharSetObserver(nsIObserver* aObserver);
-    NS_IMETHOD RemoveCharSetObserver(nsIObserver* aObserver);
-
-    NS_IMETHOD GetLineBreaker(nsILineBreaker** aResult) ;
-    NS_IMETHOD SetLineBreaker(nsILineBreaker* aLineBreaker) ;
-    NS_IMETHOD GetWordBreaker(nsIWordBreaker** aResult) ;
-    NS_IMETHOD SetWordBreaker(nsIWordBreaker* aWordBreaker) ;
-
-    NS_IMETHOD GetHeaderData(nsIAtom* aHeaderField,
-                             nsAString& aData) const;
-    NS_IMETHOD SetHeaderData(nsIAtom* aheaderField,
-                             const nsAString& aData);
-
-    NS_IMETHOD CreateShell(nsIPresContext* aContext,
-                           nsIViewManager* aViewManager,
-                           nsIStyleSet* aStyleSet,
-                           nsIPresShell** aInstancePtrResult);
-
-    virtual PRBool DeleteShell(nsIPresShell* aShell);
-
-    virtual PRInt32 GetNumberOfShells();
-
-    NS_IMETHOD GetShellAt(PRInt32 aIndex, nsIPresShell** aShell);
-
-    NS_IMETHOD GetParentDocument(nsIDocument** aParent);
-
-    NS_IMETHOD SetParentDocument(nsIDocument* aParent);
-
-    NS_IMETHOD SetSubDocumentFor(nsIContent *aContent, nsIDocument* aSubDoc);
-
-    NS_IMETHOD GetSubDocumentFor(nsIContent *aContent, nsIDocument** aSubDoc);
-
-    NS_IMETHOD FindContentForSubDocument(nsIDocument *aDocument,
-                                         nsIContent **aContent);
-
-    NS_IMETHOD GetRootContent(nsIContent** aRoot);
-
-    NS_IMETHOD SetRootContent(nsIContent* aRoot);
-
-    NS_IMETHOD ChildAt(PRInt32 aIndex, nsIContent*& aResult) const;
-    NS_IMETHOD IndexOf(nsIContent* aPossibleChild, PRInt32& aIndex) const;
-    NS_IMETHOD GetChildCount(PRInt32& aCount);
-
-    NS_IMETHOD GetNumberOfStyleSheets(PRBool aIncludeSpecialSheets,
-                                      PRInt32* aCount);
-    NS_IMETHOD GetStyleSheetAt(PRInt32 aIndex, PRBool aIncludeSpecialSheets,
-                               nsIStyleSheet** aSheet);
-    NS_IMETHOD GetIndexOfStyleSheet(nsIStyleSheet* aSheet, PRInt32* aIndex);
-
-    virtual void AddStyleSheet(nsIStyleSheet* aSheet, PRUint32 aFlags);
-    virtual void RemoveStyleSheet(nsIStyleSheet* aSheet);
-    NS_IMETHOD UpdateStyleSheets(nsCOMArray<nsIStyleSheet>& aOldSheets,
-                                 nsCOMArray<nsIStyleSheet>& aNewSheets);
-    void AddStyleSheetToStyleSets(nsIStyleSheet* aSheet);
-    void RemoveStyleSheetFromStyleSets(nsIStyleSheet* aSheet);
-
-    NS_IMETHOD InsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex);
-
-    virtual void SetStyleSheetApplicableState(nsIStyleSheet* aSheet,
-                                              PRBool aApplicable);
-
-    NS_IMETHOD GetCSSLoader(nsICSSLoader*& aLoader);
-
-    NS_IMETHOD GetScriptGlobalObject(nsIScriptGlobalObject** aScriptGlobalObject);
-
-    NS_IMETHOD SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject);
-
-    NS_IMETHOD GetScriptLoader(nsIScriptLoader** aScriptLoader);
-
-    virtual void AddObserver(nsIDocumentObserver* aObserver);
-
-    virtual PRBool RemoveObserver(nsIDocumentObserver* aObserver);
-
-    NS_IMETHOD BeginUpdate();
-
-    NS_IMETHOD EndUpdate();
-
-    NS_IMETHOD BeginLoad();
-
     NS_IMETHOD EndLoad();
-
-    NS_IMETHOD ContentChanged(nsIContent* aContent,
-                              nsISupports* aSubContent);
-
-    NS_IMETHOD ContentStatesChanged(nsIContent* aContent1,
-                                    nsIContent* aContent2,
-                                    PRInt32 aStateMask);
-
-    NS_IMETHOD AttributeChanged(nsIContent* aChild,
-                                PRInt32 aNameSpaceID,
-                                nsIAtom* aAttribute,
-                                PRInt32 aModType, 
-                                nsChangeHint aHint);
 
     NS_IMETHOD ContentAppended(nsIContent* aContainer,
                                PRInt32 aNewIndexInContainer);
@@ -310,54 +126,19 @@ public:
     NS_IMETHOD ContentRemoved(nsIContent* aContainer,
                               nsIContent* aChild,
                               PRInt32 aIndexInContainer);
-    NS_IMETHOD AttributeWillChange(nsIContent* aChild,
-                                   PRInt32 aNameSpaceID,
-                                   nsIAtom* aAttribute);
 
-    NS_IMETHOD StyleRuleChanged(nsIStyleSheet* aStyleSheet,
-                                nsIStyleRule* aStyleRule,
+    NS_IMETHOD AttributeChanged(nsIContent* aElement, PRInt32 aNameSpaceID,
+                                nsIAtom* aAttribute, PRInt32 aModType, 
                                 nsChangeHint aHint);
-
-    NS_IMETHOD StyleRuleAdded(nsIStyleSheet* aStyleSheet,
-                              nsIStyleRule* aStyleRule);
-
-    NS_IMETHOD StyleRuleRemoved(nsIStyleSheet* aStyleSheet,
-                                nsIStyleRule* aStyleRule);
-
-    NS_IMETHOD GetSelection(nsISelection** aSelection);
-
-    NS_IMETHOD SelectAll();
-
-    NS_IMETHOD FindNext(const nsAString &aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound);
-
-    NS_IMETHOD FlushPendingNotifications(PRBool aFlushReflows = PR_TRUE, PRBool aUpdateViews = PR_FALSE);
-
-    NS_IMETHOD GetAndIncrementContentID(PRInt32* aID);
-
-    NS_IMETHOD GetBindingManager(nsIBindingManager** aResult);
-
-    NS_IMETHOD GetNodeInfoManager(class nsINodeInfoManager *&aNodeInfoManager);
-
-    NS_IMETHOD AddReference(void *aKey, nsISupports *aReference);
-    NS_IMETHOD RemoveReference(void *aKey, nsISupports **aOldReference);
-    NS_IMETHOD SetContainer(nsISupports *aContainer);
-    NS_IMETHOD GetContainer(nsISupports **aContainer);
-    NS_IMETHOD GetScriptEventManager(nsIScriptEventManager **aResult);
-
-    virtual void SetDisplaySelection(PRInt8 aToggle);
-
-    virtual PRInt8 GetDisplaySelection() const;
 
     NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext,
                               nsEvent* aEvent,
                               nsIDOMEvent** aDOMEvent,
                               PRUint32 aFlags,
                               nsEventStatus* aEventStatus);
-    NS_IMETHOD_(PRBool) EventCaptureRegistration(PRInt32 aCapturerIncrement);
 
     // nsIXMLDocument interface
     NS_IMETHOD SetDefaultStylesheets(nsIURI* aUrl);
-    NS_IMETHOD SetTitle(const PRUnichar *aTitle);
     NS_IMETHOD SetXMLDeclaration(const nsAString& aVersion,
                                  const nsAString& aEncoding,
                                  const nsAString& Standalone);
@@ -368,66 +149,37 @@ public:
     // nsIXULDocument interface
     NS_IMETHOD AddElementForID(const nsAString& aID, nsIContent* aElement);
     NS_IMETHOD RemoveElementForID(const nsAString& aID, nsIContent* aElement);
-    NS_IMETHOD GetElementsForID(const nsAString& aID, nsISupportsArray* aElements);
+    NS_IMETHOD GetElementsForID(const nsAString& aID,
+                                nsISupportsArray* aElements);
     NS_IMETHOD AddForwardReference(nsForwardReference* aRef);
     NS_IMETHOD ResolveForwardReferences();
     NS_IMETHOD SetMasterPrototype(nsIXULPrototypeDocument* aDocument);
     NS_IMETHOD GetMasterPrototype(nsIXULPrototypeDocument** aDocument);
     NS_IMETHOD SetCurrentPrototype(nsIXULPrototypeDocument* aDocument);
-    NS_IMETHOD SetDocumentURL(nsIURI* anURL);
     NS_IMETHOD PrepareStyleSheets(nsIURI* anURL);
     NS_IMETHOD AddSubtreeToDocument(nsIContent* aElement);
     NS_IMETHOD RemoveSubtreeFromDocument(nsIContent* aElement);
-    NS_IMETHOD SetTemplateBuilderFor(nsIContent* aContent, nsIXULTemplateBuilder* aBuilder);
-    NS_IMETHOD GetTemplateBuilderFor(nsIContent* aContent, nsIXULTemplateBuilder** aResult);
+    NS_IMETHOD SetTemplateBuilderFor(nsIContent* aContent,
+                                     nsIXULTemplateBuilder* aBuilder);
+    NS_IMETHOD GetTemplateBuilderFor(nsIContent* aContent,
+                                     nsIXULTemplateBuilder** aResult);
     NS_IMETHOD OnPrototypeLoadDone();
     NS_IMETHOD OnHide();
 
-    // nsIDOMEventReceiver interface
-    NS_IMETHOD AddEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID);
-    NS_IMETHOD RemoveEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID);
-    NS_IMETHOD GetListenerManager(nsIEventListenerManager** aInstancePtrResult);
-    NS_IMETHOD HandleEvent(nsIDOMEvent *aEvent);
-    NS_IMETHOD GetSystemEventGroup(nsIDOMEventGroup** aGroup);
+    // nsIDOMNode interface overrides
+    NS_IMETHOD CloneNode(PRBool deep, nsIDOMNode **_retval);
 
-    // nsIDOMEventTarget interface
-    NS_DECL_NSIDOMEVENTTARGET
-
-    // nsIDOM3EventTarget interface
-    NS_DECL_NSIDOM3EVENTTARGET
-
-    // nsIDOMDocument interface
-    NS_DECL_NSIDOMDOCUMENT
-
-    // nsIDOMDocumentEvent interface
-    NS_DECL_NSIDOMDOCUMENTEVENT
-
-    // nsIDOM3DocumentEvent interface
-    NS_DECL_NSIDOM3DOCUMENTEVENT
-
-    // nsIDOMDocumentView interface
-    NS_DECL_NSIDOMDOCUMENTVIEW
-
-    // nsIDOMDocumentXBL interface
-    NS_DECL_NSIDOMDOCUMENTXBL
-
-    // nsIDOMDocumentRange interface
-    NS_DECL_NSIDOMDOCUMENTRANGE
-
-    // nsIDOMDocumentTraversal interface
-    NS_DECL_NSIDOMDOCUMENTTRAVERSAL
-
-    // nsIDOMNSDocument interface
-    NS_DECL_NSIDOMNSDOCUMENT
+    // nsIDOMDocument interface overrides
+    NS_IMETHOD CreateElement(const nsAString & tagName,
+                             nsIDOMElement **_retval);
+    NS_IMETHOD GetElementById(const nsAString & elementId,
+                              nsIDOMElement **_retval); 
 
     // nsIDOMXULDocument interface
     NS_DECL_NSIDOMXULDOCUMENT
 
-    // nsIDOMNode interface
-    NS_DECL_NSIDOMNODE
-
-    // nsIDOM3Node interface
-    NS_DECL_NSIDOM3NODE
+    // nsIDOMNSDocument
+    NS_IMETHOD GetContentType(nsAString& aContentType);
 
     // nsIHTMLContentContainer interface
     NS_IMETHOD GetAttributeStyleSheet(nsIHTMLStyleSheet** aResult);
@@ -461,10 +213,6 @@ protected:
                            const nsAString& aValue,
                            nsRDFDOMNodeList* aElements);
 
-    nsresult
-    ParseTagString(const nsAString& aTagName, nsIAtom*& aName,
-                   nsIAtom*& aPrefix);
-
     void SetIsPopup(PRBool isPopup) { mIsPopup = isPopup; };
 
     nsresult CreateElement(nsINodeInfo *aNodeInfo, nsIContent** aResult);
@@ -482,7 +230,8 @@ protected:
                            nsIParser** aResult);
 
     nsresult ApplyPersistentAttributes();
-    nsresult ApplyPersistentAttributesToElements(nsIRDFResource* aResource, nsISupportsArray* aElements);
+    nsresult ApplyPersistentAttributesToElements(nsIRDFResource* aResource,
+                                                 nsISupportsArray* aElements);
 
     nsresult
     AddElementToDocumentPre(nsIContent* aElement);
@@ -511,12 +260,12 @@ protected:
     static nsIElementFactory* gHTMLElementFactory;
     static nsIElementFactory* gXMLElementFactory;
 
-    static nsIXULContentUtils* gXULUtils;
     static nsIXULPrototypeCache* gXULCache;
 
     static PRLogModuleInfo* gXULLog;
 
-    static void GetElementFactory(PRInt32 aNameSpaceID, nsIElementFactory** aResult);
+    static void GetElementFactory(PRInt32 aNameSpaceID,
+                                  nsIElementFactory** aResult);
 
     nsresult
     Persist(nsIContent* aElement, PRInt32 aNameSpaceID, nsIAtom* aAttribute);
@@ -524,56 +273,23 @@ protected:
     nsresult
     DestroyForwardReferences();
 
-    // IMPORTANT: The ownership implicit in the following member variables has been
-    // explicitly checked and set using nsCOMPtr for owning pointers and raw COM interface
-    // pointers for weak (ie, non owning) references. If you add any members to this
+    // IMPORTANT: The ownership implicit in the following member
+    // variables has been explicitly checked and set using nsCOMPtr
+    // for owning pointers and raw COM interface pointers for weak
+    // (ie, non owning) references. If you add any members to this
     // class, please make the ownership explicit (pinkerton, scc).
-    // NOTE, THIS IS STILL IN PROGRESS, TALK TO PINK OR SCC BEFORE CHANGING
+    // NOTE, THIS IS STILL IN PROGRESS, TALK TO PINK OR SCC BEFORE
+    // CHANGING
 
-    nsCOMPtr<nsIArena>         mArena;
-    // This always has at least one observer
-    nsAutoVoidArray            mObservers;
-    nsString                   mDocumentTitle;
-    nsCOMPtr<nsIURI>           mDocumentURL;        // [OWNER] ??? compare with loader
-    nsCOMPtr<nsIURI>           mDocumentBaseURL;
-    nsWeakPtr                  mDocumentLoadGroup;  // [WEAK] leads to loader
-    nsWeakPtr                  mDocumentContainer;  // [WEAK] leads to container
-    nsCOMPtr<nsIPrincipal>     mDocumentPrincipal;  // [OWNER]
-    nsCOMPtr<nsIContent>       mRootContent;        // [OWNER]
-    nsIDocument*               mParentDocument;     // [WEAK]
-    nsCOMPtr<nsIDOMStyleSheetList>          mDOMStyleSheets;      // [OWNER]
-    nsIScriptGlobalObject*     mScriptGlobalObject; // [WEAK]
     nsXULDocument*             mNextSrcLoadWaiter;  // [OWNER] but not COMPtr
-    nsString                   mCharSetID;
-    PRInt32                    mCharacterSetSource;
 
-    // This is set in nsPresContext::Init, which calls SetShell.
-    // Since I think this is almost always done, take the 32-byte hit for
-    // an nsAutoVoidArray instead of having it be a separate allocation.
-    nsAutoVoidArray            mCharSetObservers;
-    nsVoidArray                mStyleSheets;
-    nsCOMPtr<nsISelection>  mSelection;          // [OWNER]
-    PRInt8                     mDisplaySelection;
-    // if we're attached to a DocumentViewImpl, we have a presshell
-    nsAutoVoidArray            mPresShells;
-    nsCOMPtr<nsIEventListenerManager> mListenerManager;   // [OWNER]
-    nsCOMPtr<nsIHTMLStyleSheet>       mAttrStyleSheet;    // [OWNER]
-    nsCOMPtr<nsIHTMLCSSStyleSheet>    mInlineStyleSheet;  // [OWNER]
-    nsCOMPtr<nsICSSLoader>            mCSSLoader;         // [OWNER]
-    nsCOMPtr<nsIScriptLoader>         mScriptLoader;      // [OWNER]
     nsElementMap               mElementMap;
-    nsCOMPtr<nsIRDFDataSource>          mLocalStore;
-    nsCOMPtr<nsILineBreaker>            mLineBreaker;    // [OWNER] 
-    nsCOMPtr<nsIWordBreaker>            mWordBreaker;    // [OWNER] 
-    PLDHashTable              *mSubDocuments;     // [OWNER] of subelements
+    nsCOMPtr<nsIRDFDataSource> mLocalStore;
     PRPackedBool               mIsPopup;
     PRPackedBool               mIsFastLoad;
     PRPackedBool               mApplyingPersistedAttrs;
     PRPackedBool               mIsWritingFastLoad;
     nsCOMPtr<nsIDOMXULCommandDispatcher>     mCommandDispatcher; // [OWNER] of the focus tracker
-
-    nsCOMPtr<nsIBindingManager> mBindingManager; // [OWNER] of all bindings
-    nsSupportsHashtable* mBoxObjectTable; // Box objects for content nodes. 
 
     // Maintains the template builders that have been attached to
     // content elements
@@ -581,10 +297,6 @@ protected:
     
     nsVoidArray mForwardReferences;
     nsForwardReference::Phase mResolutionPhase;
-    PRInt32 mNextContentID;
-    PRInt32 mNumCapturers; //Number of capturing event handlers in doc.  Used to optimize event delivery.
-
-    PRBool mBidiEnabled;
 
     /*
      * XXX dr
@@ -604,7 +316,6 @@ protected:
      */
 
     nsCOMPtr<nsIDOMNode>    mTooltipNode;          // [OWNER] element triggering the tooltip
-    nsCOMPtr<nsINodeInfoManager> mNodeInfoManager; // [OWNER] list of names in the document
 
     /**
      * Context stack, which maintains the state of the Builder and allows
@@ -722,10 +433,13 @@ protected:
         PRBool mResolved;
 
     public:
-        BroadcasterHookup(nsXULDocument* aDocument, nsIContent* aObservesElement) :
-            mDocument(aDocument),
-            mObservesElement(aObservesElement),
-            mResolved(PR_FALSE) {}
+        BroadcasterHookup(nsXULDocument* aDocument,
+                          nsIContent* aObservesElement)
+            : mDocument(aDocument),
+              mObservesElement(aObservesElement),
+              mResolved(PR_FALSE)
+        {
+        }
 
         virtual ~BroadcasterHookup();
 
@@ -797,7 +511,7 @@ protected:
      * Owning references to all of the prototype documents that were
      * used to construct this document.
      */
-    nsCOMPtr<nsISupportsArray> mPrototypes;
+    nsCOMArray<nsIXULPrototypeDocument> mPrototypes;
 
     /**
      * Prepare to walk the current prototype.
@@ -829,7 +543,8 @@ protected:
         virtual ~CachedChromeStreamListener();
 
     public:
-        CachedChromeStreamListener(nsXULDocument* aDocument, PRBool aProtoLoaded);
+        CachedChromeStreamListener(nsXULDocument* aDocument,
+                                   PRBool aProtoLoaded);
 
         NS_DECL_ISUPPORTS
         NS_DECL_NSIREQUESTOBSERVER
@@ -853,8 +568,6 @@ protected:
 
     friend class ParserObserver;
 
-    nsSupportsHashtable mContentWrapperHash;
-
     /**
      * A map from a broadcaster element to a list of listener elements.
      */
@@ -864,7 +577,5 @@ private:
     // helpers
 
 };
-
-
 
 #endif // nsXULDocument_h__

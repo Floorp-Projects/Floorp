@@ -43,7 +43,6 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIDOMScreen.h"
-#include "nsIDOMXULDocument.h"
 #include "nsIEmbeddingSiteWindow.h"
 #include "nsIEmbeddingSiteWindow2.h"
 #include "nsIInterfaceRequestor.h"
@@ -1414,7 +1413,7 @@ NS_IMETHODIMP nsXULWindow::GetDOMElementById(char* aID, nsIDOMElement** aDOMElem
 
    nsCOMPtr<nsIDocument> doc;
    docv->GetDocument(*getter_AddRefs(doc));
-   nsCOMPtr<nsIDOMXULDocument> domdoc(do_QueryInterface(doc));
+   nsCOMPtr<nsIDOMDocument> domdoc(do_QueryInterface(doc));
    if(!domdoc) 
       return NS_ERROR_FAILURE;
    

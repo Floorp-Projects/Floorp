@@ -51,7 +51,7 @@
 
 class nsIContent; // XXX nsIXMLDocument.h is bad and doesn't declare this class...
 
-#include "nsIXMLDocument.h"
+#include "nsISupports.h"
 #include "nsString.h"
 
 class nsForwardReference;
@@ -65,7 +65,7 @@ class nsIXULTemplateBuilder;
 class nsIURI;
 
 // {954F0811-81DC-11d2-B52A-000000000000}
-#define NS_IRDFDOCUMENT_IID \
+#define NS_IXULDOCUMENT_IID \
 { 0x954f0811, 0x81dc, 0x11d2, { 0xb5, 0x2a, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 } }
 
 /**
@@ -75,10 +75,10 @@ class nsIURI;
 class nsIRDFDataSource;
 class nsIXULPrototypeDocument;
 
-class nsIXULDocument : public nsIXMLDocument
+class nsIXULDocument : public nsISupports
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IRDFDOCUMENT_IID)
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXULDOCUMENT_IID)
 
   // The resource-to-element map is a one-to-many mapping of RDF
   // resources to content elements.

@@ -50,6 +50,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMXULElement.h"
 #include "nsIDOMNodeList.h"
+#include "nsIDOMDocument.h"
 #include "nsIDOMDocumentXBL.h"
 #include "nsIXULPopupListener.h"
 #include "nsIDOMMouseListener.h"
@@ -520,9 +521,9 @@ XULPopupListenerImpl::LaunchPopup(PRInt32 aClientX, PRInt32 aClientY)
     return rv;
   }
 
-  // Turn the document into a XUL document so we can use getElementById
-  nsCOMPtr<nsIDOMXULDocument> xulDocument = do_QueryInterface(document);
-  if (xulDocument == nsnull) {
+  // Turn the document into a DOM document so we can use getElementById
+  nsCOMPtr<nsIDOMDocument> domDocument = do_QueryInterface(document);
+  if (!domDocument) {
     NS_ERROR("Popup attached to an element that isn't in XUL!");
     return NS_ERROR_FAILURE;
   }
@@ -539,7 +540,7 @@ XULPopupListenerImpl::LaunchPopup(PRInt32 aClientX, PRInt32 aClientY)
     if (popup)
       popupContent = do_QueryInterface(popup);
     else {
-      nsCOMPtr<nsIDOMDocumentXBL> nsDoc(do_QueryInterface(xulDocument));
+      nsCOMPtr<nsIDOMDocumentXBL> nsDoc(do_QueryInterface(domDocument));
       nsCOMPtr<nsIDOMNodeList> list;
       nsDoc->GetAnonymousNodes(mElement, getter_AddRefs(list));
       if (list) {
@@ -559,7 +560,8 @@ XULPopupListenerImpl::LaunchPopup(PRInt32 aClientX, PRInt32 aClientY)
       }
     }
   }
-  else if (NS_FAILED(rv = xulDocument->GetElementById(identifier, getter_AddRefs(popupContent)))) {
+  else if (NS_FAILED(rv = domDocument->GetElementById(identifier,
+                                              getter_AddRefs(popupContent)))) {
     // Use getElementById to obtain the popup content and gracefully fail if 
     // we didn't find any popup content in the document. 
     NS_ERROR("GetElementById had some kind of spasm.");

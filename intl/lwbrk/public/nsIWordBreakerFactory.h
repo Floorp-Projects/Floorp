@@ -56,7 +56,7 @@ class nsIWordBreakerFactory : public nsISupports
 public:
 
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IWORDBREAKERFACTORY_IID)
-  NS_IMETHOD GetBreaker(nsString& aParam, nsIWordBreaker** breaker) = 0;
+  NS_IMETHOD GetBreaker(const nsAString& aParam, nsIWordBreaker** breaker) = 0;
 };
 
 

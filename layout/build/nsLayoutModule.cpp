@@ -155,7 +155,6 @@ class nsIDocumentLoaderFactory;
 
 
 #ifdef MOZ_XUL
-#include "nsIXULContentSink.h"
 #include "nsIXULDocument.h"
 #include "nsIXULPopupListener.h"
 #include "nsIXULPrototypeCache.h"
@@ -521,7 +520,6 @@ MAKE_CTOR(CreateComputedDOMStyle,         nsIComputedDOMStyle,         NS_NewCom
 MAKE_CTOR(CreateXULSortService,           nsIXULSortService,           NS_NewXULSortService)
 // NS_NewXULContentBuilder
 // NS_NewXULTreeBuilder
-MAKE_CTOR(CreateXULContentSink,           nsIXULContentSink,           NS_NewXULContentSink)
 MAKE_CTOR(CreateXULDocument,              nsIXULDocument,              NS_NewXULDocument)
 MAKE_CTOR(CreateXULPopupListener,         nsIXULPopupListener,         NS_NewXULPopupListener)
 // NS_NewXULControllers
@@ -1128,11 +1126,6 @@ static const nsModuleComponentInfo gComponents[] = {
     NS_XULTREEBUILDER_CID,
     "@mozilla.org/xul/xul-tree-builder;1",
     NS_NewXULTreeBuilder },
-
-  { "XUL Content Sink",
-    NS_XULCONTENTSINK_CID,
-    "@mozilla.org/xul/xul-content-sink;1",
-    CreateXULContentSink },
 
   { "XUL Document",
     NS_XULDOCUMENT_CID,

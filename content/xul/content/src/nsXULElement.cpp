@@ -2850,7 +2850,7 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID,
         if (xuldoc) {
             // Do a getElementById to retrieve the broadcaster
             nsCOMPtr<nsIDOMElement> broadcaster;
-            nsCOMPtr<nsIDOMXULDocument> domDoc = do_QueryInterface(mDocument);
+            nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(mDocument);
             domDoc->GetElementById(oldValue, getter_AddRefs(broadcaster));
             if (broadcaster) {
                 xuldoc->RemoveBroadcastListenerFor(broadcaster,
@@ -4498,6 +4498,8 @@ nsXULElement::EnsureSlots()
         return NS_OK;
 
     NS_ASSERTION(mPrototype->mNodeInfo, "prototype has null nodeinfo!");
+    // XXX this is broken, we need to get a new nodeinfo from the
+    // document's nodeinfo manager!!!
     mSlots->mNodeInfo        = mPrototype->mNodeInfo;
 
     return NS_OK;

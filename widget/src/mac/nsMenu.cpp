@@ -38,7 +38,7 @@
 #include "nsCOMPtr.h"
 #include "nsIDocument.h"
 #include "nsIContent.h"
-#include "nsIDOMXULDocument.h"
+#include "nsIDOMDocument.h"
 #include "nsIDocumentViewer.h"
 #include "nsIDocumentObserver.h"
 #include "nsIComponentManager.h"
@@ -559,9 +559,9 @@ nsEventStatus nsMenu::MenuItemSelected(const nsMenuEvent & aMenuEvent)
 	    mMenuContent->GetDocument(*getter_AddRefs(doc));
 	    if (!doc)
       	return nsEventStatus_eConsumeNoDefault;
-	    nsCOMPtr<nsIDOMXULDocument> xulDoc = do_QueryInterface(doc);
-	    if (!xulDoc) {
-      	NS_ERROR("nsIDOMDocument to nsIDOMXULDocument QI failed.");
+	    nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(doc);
+	    if (!domDoc) {
+      	NS_ERROR("nsIDocument to nsIDOMDocument QI failed.");
       	return nsEventStatus_eConsumeNoDefault;
 	  	}
 	    
@@ -569,7 +569,8 @@ nsEventStatus nsMenu::MenuItemSelected(const nsMenuEvent & aMenuEvent)
 	    // <menuitem/>. This is the glue code which causes any script code
 	    // in the <menuitem/> to be executed.
 	    nsCOMPtr<nsIDOMElement> domElement;
-	    xulDoc->GetElementById(NS_LITERAL_STRING("aboutName"), getter_AddRefs(domElement));
+	    domDoc->GetElementById(NS_LITERAL_STRING("aboutName"),
+                             getter_AddRefs(domElement));
 	    if (!domElement)
 	      	return nsEventStatus_eConsumeNoDefault;
 	    
@@ -1067,13 +1068,13 @@ nsMenu::LoadMenuItem( nsIMenu* inParentMenu, nsIContent* inMenuItemContent )
     inMenuItemContent->GetDocument(*getter_AddRefs(document));
     if ( !document ) 
       return;
-    nsCOMPtr<nsIDOMXULDocument> xulDocument = do_QueryInterface(document);
-    if ( !xulDocument )
+    nsCOMPtr<nsIDOMDocument> domDocument = do_QueryInterface(document);
+    if ( !domDocument )
       return;
   
     nsCOMPtr<nsIDOMElement> keyElement;
     if (!keyValue.IsEmpty())
-      xulDocument->GetElementById(keyValue, getter_AddRefs(keyElement));
+      domDocument->GetElementById(keyValue, getter_AddRefs(keyElement));
     if ( keyElement ) {
       nsCOMPtr<nsIContent> keyContent ( do_QueryInterface(keyElement) );
       nsAutoString keyChar(NS_LITERAL_STRING(" "));

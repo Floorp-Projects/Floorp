@@ -60,7 +60,8 @@ NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 NS_IMPL_ADDREF  (  nsLWBreakerFImp );
 NS_IMPL_RELEASE (  nsLWBreakerFImp );
 
-nsresult nsLWBreakerFImp::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+nsresult
+nsLWBreakerFImp::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   
   if( NULL == aInstancePtr) {
@@ -119,7 +120,8 @@ static const PRUnichar gCnNoEnd[] =
 {
   0xfffd // to be changed
 };
-nsresult nsLWBreakerFImp::GetBreaker(nsString& aParam, nsILineBreaker** oResult)
+nsresult
+nsLWBreakerFImp::GetBreaker(const nsAString& aParam, nsILineBreaker** oResult)
 {
   if( NULL == oResult) {
     return NS_ERROR_NULL_POINTER;
@@ -158,7 +160,8 @@ nsresult nsLWBreakerFImp::GetBreaker(nsString& aParam, nsILineBreaker** oResult)
   return NS_OK;
 }
 
-nsresult nsLWBreakerFImp::GetBreaker(nsString& aParam, nsIWordBreaker** oResult)
+nsresult
+nsLWBreakerFImp::GetBreaker(const nsAString& aParam, nsIWordBreaker** oResult)
 {
   if( NULL == oResult) {
     return NS_ERROR_NULL_POINTER;
