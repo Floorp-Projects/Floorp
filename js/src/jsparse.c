@@ -953,35 +953,40 @@ Condition(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_AFTER_COND);
 
     /*
-     * Check for (a = b) and "correct" it to (a == b).
-     * XXX not ECMA, but documented in several books -- need a compile option
+     * Check for (a = b) and "correct" it to (a == b) iff b's operator has
+     * greater precedence than ==.
+     * XXX not ECMA, but documented in several books -- now a strict warning.
      */
-    if (!JSVERSION_IS_ECMA(cx->version) &&
-        pn->pn_type == TOK_ASSIGN &&
-        pn->pn_op == JSOP_NOP) {
+    if (pn->pn_type == TOK_ASSIGN &&
+        pn->pn_op == JSOP_NOP &&
+        pn->pn_right->pn_type > TOK_EQOP)
+    {
+        JSBool rewrite = !JSVERSION_IS_ECMA(cx->version);
         if (!js_ReportCompileErrorNumber(cx, ts, NULL,
                                          JSREPORT_WARNING | JSREPORT_STRICT,
                                          JSMSG_EQUAL_AS_ASSIGN,
-                                         (!JS_HAS_WERROR_OPTION(cx))
+                                         rewrite
                                          ? "\nAssuming equality test"
                                          : "")) {
             return NULL;
         }
-        pn->pn_type = TOK_EQOP;
-        pn->pn_op = (JSOp)cx->jsop_eq;
-        pn2 = pn->pn_left;
-        switch (pn2->pn_op) {
-          case JSOP_SETNAME:
-            pn2->pn_op = JSOP_NAME;
-            break;
-          case JSOP_SETPROP:
-            pn2->pn_op = JSOP_GETPROP;
-            break;
-          case JSOP_SETELEM:
-            pn2->pn_op = JSOP_GETELEM;
-            break;
-          default:
-            JS_ASSERT(0);
+        if (rewrite) {
+            pn->pn_type = TOK_EQOP;
+            pn->pn_op = (JSOp)cx->jsop_eq;
+            pn2 = pn->pn_left;
+            switch (pn2->pn_op) {
+              case JSOP_SETNAME:
+                pn2->pn_op = JSOP_NAME;
+                break;
+              case JSOP_SETPROP:
+                pn2->pn_op = JSOP_GETPROP;
+                break;
+              case JSOP_SETELEM:
+                pn2->pn_op = JSOP_GETELEM;
+                break;
+              default:
+                JS_ASSERT(0);
+            }
         }
     }
     return pn;
