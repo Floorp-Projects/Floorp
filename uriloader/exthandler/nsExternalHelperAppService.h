@@ -147,12 +147,15 @@ public:
    */
   virtual already_AddRefed<nsIMIMEInfo> GetMIMEInfoFromOS(const char * aMIMEType,
                                                           const char * aFileExt,
-                                                          PRBool     * aFound);
+                                                          PRBool     * aFound) = 0;
 
   /**
    * Given a string identifying an application, create an nsIFile representing
    * it. This function should look in $PATH for the application.
-   * GetFileTokenForPath must be implemented by each platform. 
+   * The base class implementation will first try to interpret platformAppPath
+   * as an absolute path, and if that fails it will look for a file next to the
+   * mozilla executable. Subclasses can override this method if they want a
+   * different behaviour.
    * @param platformAppPath A platform specific path to an application that we
    *                        got out of the rdf data source. This can be a mac
    *                        file spec, a unix path or a windows path depending
@@ -161,7 +164,7 @@ public:
    *                        application path.
    */
   virtual nsresult GetFileTokenForPath(const PRUnichar * platformAppPath,
-                                       nsIFile ** aFile) = 0;
+                                       nsIFile ** aFile);
 
   /**
    * Helper routine used to test whether a given mime type is in our

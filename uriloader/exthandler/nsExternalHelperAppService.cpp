@@ -44,6 +44,8 @@
 #include "nsIDownload.h"
 #include "nsReadableUtils.h"
 #include "nsIRequest.h"
+#include "nsDirectoryServiceDefs.h"
+
 
 // used to manage our in memory data source of helper applications
 #include "nsRDFCID.h"
@@ -917,10 +919,40 @@ nsresult nsExternalHelperAppService::GetMIMEInfoForExtensionFromDS(const char * 
   return rv;
 }
 
-already_AddRefed<nsIMIMEInfo> nsExternalHelperAppService::GetMIMEInfoFromOS(const char * aContentType, const char * aFileExt, PRBool* aFound)
+
+nsresult nsExternalHelperAppService::GetFileTokenForPath(const PRUnichar * aPlatformAppPath,
+                                                         nsIFile ** aFile)
 {
-  NS_NOTREACHED("Should be implemented by per-platform derived classes");
-  return nsnull;
+  nsDependentString platformAppPath(aPlatformAppPath);
+  // First, check if we have an absolute path
+  nsILocalFile* localFile = nsnull;
+  nsresult rv = NS_NewLocalFile(platformAppPath, PR_TRUE, &localFile);
+  if (NS_SUCCEEDED(rv)) {
+    *aFile = localFile;
+    PRBool exists;
+    if (NS_FAILED((*aFile)->Exists(&exists)) || !exists) {
+      NS_RELEASE(*aFile);
+      return NS_ERROR_FILE_NOT_FOUND;
+    }
+    return NS_OK;
+  }
+
+
+  // Second, check if file exists in mozilla program directory
+  rv = NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR, aFile);
+  if (NS_SUCCEEDED(rv)) {
+    rv = (*aFile)->Append(platformAppPath);
+    if (NS_SUCCEEDED(rv)) {
+      PRBool exists = PR_FALSE;
+      rv = (*aFile)->Exists(&exists);
+      if (NS_SUCCEEDED(rv) && exists)
+        return NS_OK;
+    }
+    NS_RELEASE(*aFile);
+  }
+
+
+  return NS_ERROR_FILE_NOT_FOUND;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////

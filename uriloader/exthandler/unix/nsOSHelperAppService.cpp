@@ -1287,42 +1287,39 @@ nsresult nsOSHelperAppService::GetFileTokenForPath(const PRUnichar * platformApp
     NS_WARNING("Empty filename passed in.");
     return NS_ERROR_INVALID_ARG;
   }
+ 
+  // first check if the base class implementation finds anything
+  nsresult rv = nsExternalHelperAppService::GetFileTokenForPath(platformAppPath, aFile);
+  if (NS_SUCCEEDED(rv))
+    return rv;
+
   nsCOMPtr<nsILocalFile> localFile (do_CreateInstance(NS_LOCAL_FILE_CONTRACTID));
-  nsresult rv;
 
   if (!localFile) return NS_ERROR_NOT_INITIALIZED;
-  
-  // first check if this is a full path
+ 
   PRBool exists = PR_FALSE;
-  if (*platformAppPath == '/') {
-    localFile->InitWithPath(nsDependentString(platformAppPath));
-    localFile->Exists(&exists);
-  } else {
+  // ugly hack.  Walk the PATH variable...
+  char* unixpath = PR_GetEnv("PATH");
+  nsCAutoString path(unixpath);
 
-    // ugly hack.  Walk the PATH variable...
-    char* unixpath = PR_GetEnv("PATH");
-    nsCAutoString path(unixpath);
-    nsACString::const_iterator start_iter, end_iter, colon_iter;
+  const char* start_iter = path.BeginReading(start_iter);
+  const char* colon_iter = start_iter;
+  const char* end_iter = path.EndReading(end_iter);
 
-    path.BeginReading(start_iter);
-    colon_iter = start_iter;
-    path.EndReading(end_iter);
-
-    while (start_iter != end_iter && !exists) {
-      while (colon_iter != end_iter && *colon_iter != ':') {
-        ++colon_iter;
-      }
-      localFile->InitWithNativePath(Substring(start_iter, colon_iter));
-      rv = localFile->AppendRelativePath(nsDependentString(platformAppPath));
-      if (NS_SUCCEEDED(rv)) {
-        localFile->Exists(&exists);
-        if (!exists) {
-          if (colon_iter == end_iter) {
-            break;
-          }
-          ++colon_iter;
-          start_iter = colon_iter;
+  while (start_iter != end_iter && !exists) {
+    while (colon_iter != end_iter && *colon_iter != ':') {
+      ++colon_iter;
+    }
+    localFile->InitWithNativePath(Substring(start_iter, colon_iter));
+    rv = localFile->AppendRelativePath(nsDependentString(platformAppPath));
+    if (NS_SUCCEEDED(rv)) {
+      localFile->Exists(&exists);
+      if (!exists) {
+        if (colon_iter == end_iter) {
+          break;
         }
+        ++colon_iter;
+        start_iter = colon_iter;
       }
     }
   }

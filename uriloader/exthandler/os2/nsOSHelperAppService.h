@@ -50,12 +50,6 @@ public:
   NS_IMETHOD ExternalProtocolHandlerExists(const char * aProtocolScheme, PRBool * aHandlerExists);
   NS_IMETHOD LoadUrl(nsIURI * aURL);
 
-  // GetFileTokenForPath must be implemented by each platform. 
-  // platformAppPath --> a platform specific path to an application that we got out of the 
-  //                     rdf data source. This can be a mac file spec, a unix path or a windows path depending on the platform
-  // aFile --> an nsIFile representation of that platform application path.
-  virtual nsresult GetFileTokenForPath(const PRUnichar * platformAppPath, nsIFile ** aFile);
-  
 protected:
   already_AddRefed<nsMIMEInfoOS2> GetFromType(const char *aMimeType);
   already_AddRefed<nsMIMEInfoOS2> GetFromExtension(const char *aFileExt);
