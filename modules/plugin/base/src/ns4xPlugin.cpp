@@ -909,41 +909,27 @@ _newstream(NPP npp, NPMIMEType type, const char* window, NPStream* *result)
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
   ("NPN_NewStream: npp=%p, type=%s, window=%s\n", (void*)npp, (const char *)type, window));
 
-  if(!npp)
-    return NPERR_INVALID_INSTANCE_ERROR;
-
-  nsIPluginInstance *inst = (nsIPluginInstance *) npp->ndata;
-
-  NS_ASSERTION(inst != NULL, "null instance");
-
-  if (inst == NULL)
-    return NPERR_INVALID_INSTANCE_ERROR;
-
-  nsIOutputStream* stream;
-  nsIPluginInstancePeer *peer;
-
-  if (NS_OK == inst->GetPeer(&peer)) {
-    if (peer->NewStream((const char*) type, window, &stream) != NS_OK) {
-      NS_RELEASE(peer);
-      return NPERR_GENERIC_ERROR;
+  NPError err = NPERR_INVALID_INSTANCE_ERROR;
+  if(npp && npp->ndata) {
+    nsIPluginInstance *inst = (nsIPluginInstance *) npp->ndata;
+    nsCOMPtr<nsIOutputStream> stream;
+    nsCOMPtr<nsIPluginInstancePeer> peer;
+    if (NS_SUCCEEDED(inst->GetPeer(getter_AddRefs(peer))) && 
+      peer &&
+      NS_SUCCEEDED(peer->NewStream((const char*) type, window, getter_AddRefs(stream))))
+    {
+      ns4xStreamWrapper* wrapper = new ns4xStreamWrapper(stream);
+      if (wrapper) {
+        (*result) = wrapper->GetNPStream();
+        err = NPERR_NO_ERROR;
+      } else {
+        err = NPERR_OUT_OF_MEMORY_ERROR;
+      }
+    } else {
+      err = NPERR_GENERIC_ERROR;
     }
-
-    ns4xStreamWrapper* wrapper = new ns4xStreamWrapper(stream);
-
-    if (wrapper == NULL) {
-      NS_RELEASE(peer);
-      NS_RELEASE(stream);
-      return NPERR_OUT_OF_MEMORY_ERROR;
-    }
-
-    (*result) = wrapper->GetNPStream();
-
-    NS_RELEASE(peer);
-
-    return NPERR_NO_ERROR;
   }
-  else
-    return NPERR_GENERIC_ERROR;
+  return err;
 }
 
 
@@ -1018,20 +1004,16 @@ _status(NPP npp, const char *message)
 {
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("NPN_Status: npp=%p, message=%s\n", (void*)npp, message));
 
-  if(!npp)
+  if(!npp || !npp->ndata) {
+    NS_WARNING("_status: npp or npp->ndata == 0");
     return;
+  }
 
   nsIPluginInstance *inst = (nsIPluginInstance *) npp->ndata;
-  NS_ASSERTION(inst != NULL, "null instance");
 
-  if (inst == NULL)
-    return;
-
-  nsIPluginInstancePeer *peer;
-
-  if (NS_OK == inst->GetPeer(&peer)){
+  nsCOMPtr<nsIPluginInstancePeer> peer;
+  if (NS_SUCCEEDED(inst->GetPeer(getter_AddRefs(peer))) && peer) {
     peer->ShowStatus(message);
-    NS_RELEASE(peer);
   }
 }
 
@@ -1085,26 +1067,20 @@ _invalidaterect(NPP npp, NPRect *invalidRect)
   ("NPN_InvalidateRect: npp=%p, top=%d, left=%d, bottom=%d, right=%d\n",
   (void *)npp, invalidRect->top, invalidRect->left, invalidRect->bottom, invalidRect->right));
 
-  if(!npp)
+  if(!npp || !npp->ndata) {
+    NS_WARNING("_invalidaterect: npp or npp->ndata == 0");
     return;
+  }
 
   nsIPluginInstance *inst = (nsIPluginInstance *) npp->ndata;
 
-  NS_ASSERTION(inst != NULL, "null instance");
-
-  if (inst == NULL)
-    return;
-
-  nsIPluginInstancePeer *peer;
-  nsIWindowlessPluginInstancePeer *wpeer;
-
-  if (NS_OK == inst->GetPeer(&peer)) {
-    if (NS_OK == peer->QueryInterface(kIWindowlessPluginInstancePeerIID, (void **)&wpeer)) {
+  nsCOMPtr<nsIPluginInstancePeer> peer;
+  if (NS_SUCCEEDED(inst->GetPeer(getter_AddRefs(peer))) && peer) {
+    nsCOMPtr<nsIWindowlessPluginInstancePeer> wpeer(do_QueryInterface(peer));
+    if (wpeer) {
       // XXX nsRect & NPRect are structurally equivalent
       wpeer->InvalidateRect((nsPluginRect *)invalidRect);
-      NS_RELEASE(wpeer);
     }
-    NS_RELEASE(peer);
   }
 }
 
@@ -1116,26 +1092,20 @@ _invalidateregion(NPP npp, NPRegion invalidRegion)
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
   ("NPN_InvalidateRegion: npp=%p, region=%p\n", (void*)npp, (void*)invalidRegion));
 
-  if(!npp)
+  if(!npp || !npp->ndata) {
+    NS_WARNING("_invalidateregion: npp or npp->ndata == 0");
     return;
+  }
 
   nsIPluginInstance *inst = (nsIPluginInstance *) npp->ndata;
-  NS_ASSERTION(inst != NULL, "null instance");
 
-  if (inst == NULL)
-    return;
-
-  nsIPluginInstancePeer *peer;
-  nsIWindowlessPluginInstancePeer *wpeer;
-
-  if (NS_OK == inst->GetPeer(&peer)) {
-    if (NS_OK == peer->QueryInterface(kIWindowlessPluginInstancePeerIID, (void **)&wpeer)) {
+  nsCOMPtr<nsIPluginInstancePeer> peer;
+  if (NS_SUCCEEDED(inst->GetPeer(getter_AddRefs(peer))) && peer) {
+    nsCOMPtr<nsIWindowlessPluginInstancePeer> wpeer(do_QueryInterface(peer));
+    if (wpeer) {
       // XXX nsRegion & NPRegion are typedef'd to the same thing
       wpeer->InvalidateRegion((nsPluginRegion)invalidRegion);
-      NS_RELEASE(wpeer);
     }
-
-    NS_RELEASE(peer);
   }
 }
 
@@ -1146,24 +1116,19 @@ _forceredraw(NPP npp)
 {
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("NPN_ForceDraw: npp=%p\n", (void*)npp));
 
-  if(!npp)
+  if(!npp || !npp->ndata) {
+    NS_WARNING("_forceredraw: npp or npp->ndata == 0");
     return;
+  }
 
   nsIPluginInstance *inst = (nsIPluginInstance *) npp->ndata;
-  NS_ASSERTION(inst != NULL, "null instance");
 
-  if (inst == NULL)
-    return;
-
-  nsIPluginInstancePeer *peer;
-  nsIWindowlessPluginInstancePeer *wpeer;
-
-  if (NS_OK == inst->GetPeer(&peer)) {
-    if (NS_OK == peer->QueryInterface(kIWindowlessPluginInstancePeerIID, (void **)&wpeer)) {
+  nsCOMPtr<nsIPluginInstancePeer> peer;
+  if (NS_SUCCEEDED(inst->GetPeer(getter_AddRefs(peer))) && peer) {
+    nsCOMPtr<nsIWindowlessPluginInstancePeer> wpeer(do_QueryInterface(peer));
+    if (wpeer) {
       wpeer->ForceRedraw();
-      NS_RELEASE(wpeer);
     }
-    NS_RELEASE(peer);
   }
 }
 
@@ -1205,23 +1170,23 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
       return NPERR_INVALID_INSTANCE_ERROR;
 
     ns4xPluginInstance *inst = (ns4xPluginInstance *) npp->ndata;
-    nsIPluginInstancePeer *peer;
 
-    if (NS_SUCCEEDED(inst->GetPeer(&peer)) && peer) {
-      res = peer->GetValue(nsPluginInstancePeerVariable_NetscapeWindow, result);
-      NS_RELEASE(peer);
-      return res;
+    nsCOMPtr<nsIPluginInstancePeer> peer;
+    if (NS_SUCCEEDED(inst->GetPeer(getter_AddRefs(peer))) &&
+        peer && 
+        NS_SUCCEEDED(peer->GetValue(nsPluginInstancePeerVariable_NetscapeWindow, result)))
+    {
+      return NPERR_NO_ERROR;
     }
     return NPERR_GENERIC_ERROR;
   }
 #endif
 
   case NPNVjavascriptEnabledBool: {
-    *(NPBool*)result = PR_TRUE; 
-
-    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &res));
-    if(NS_SUCCEEDED(res) && (nsnull != prefs)) {
-      PRBool js;
+    *(NPBool*)result = PR_FALSE; 
+    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID));
+    if(prefs) {
+      PRBool js = PR_FALSE;;
       res = prefs->GetBoolPref("javascript.enabled", &js);
       if(NS_SUCCEEDED(res))
         *(NPBool*)result = js; 
@@ -1249,29 +1214,6 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
 
   default : return NPERR_GENERIC_ERROR;
   }
-
-#if 0
-  nsIPluginInstance *inst = (nsIPluginInstance *) npp->ndata;
-
-  NS_ASSERTION(inst != NULL, "null instance");
-
-  if (inst == NULL)
-    return NPERR_INVALID_INSTANCE_ERROR;
-
-  nsIPluginInstancePeer *peer;
-
-  if (NS_OK == inst->GetPeer(&peer)) {
-    nsresult rv;
-
-    // XXX Note that for backwards compatibility, the old NPNVariables
-    // map correctly to NPPluginManagerVariables.
-    rv = peer->GetValue((nsPluginInstancePeerVariable)variable, result);
-    NS_RELEASE(peer);
-    return rv;
-  }
-  else
-    return NPERR_GENERIC_ERROR;
-#endif
 }
 
 
@@ -1314,8 +1256,7 @@ _setvalue(NPP npp, NPPVariable variable, void *result)
           NPBool bPushCaller = (result != nsnull);
           if (bPushCaller) {
             nsCOMPtr<nsIPluginInstancePeer> peer;
-            rv = inst->GetPeer(getter_AddRefs(peer));
-            if (NS_SUCCEEDED(rv)) {
+            if (NS_SUCCEEDED(inst->GetPeer(getter_AddRefs(peer))) && peer) {
               nsCOMPtr<nsIPluginInstancePeer2> peer2 = do_QueryInterface(peer, &rv);
               if (NS_SUCCEEDED(rv) && peer2) {
                 JSContext *cx;
@@ -1340,22 +1281,6 @@ _setvalue(NPP npp, NPPVariable variable, void *result)
     default:
       return NPERR_NO_ERROR;
   }
-
-#if 0
-  nsIPluginInstancePeer *peer;
-  
-  if (NS_OK == inst->GetPeer(&peer)) {
-    nsresult rv;
-    
-    // XXX Note that for backwards compatibility, the old NPPVariables
-    // map correctly to NPPluginVariables.
-    rv = peer->SetValue((nsPluginInstancePeerVariable)variable, result);
-    NS_RELEASE(peer);
-    return rv;
-  }
-  else
-    return NS_ERROR_UNEXPECTED;
-#endif
 }
 
 ////////////////////////////////////////////////////////////////////////
