@@ -1,0 +1,72 @@
+#!nmake
+#
+# The contents of this file are subject to the Netscape Public License
+# Version 1.0 (the "NPL"); you may not use this file except in
+# compliance with the NPL.  You may obtain a copy of the NPL at
+# http://www.mozilla.org/NPL/
+#
+# Software distributed under the NPL is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+# for the specific language governing rights and limitations under the
+# NPL.
+#
+# The Initial Developer of this code under the NPL is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+# Reserved.
+
+DEPTH=..\..\..
+
+CHROME_DIR         = directory
+CHROME_CONTENT_DIR = content\default
+CHROME_SKIN_DIR    = skin\default
+
+CHROME_CONTENT = \
+        .\directory.xul \
+        .\directory.js  \
+        $(NULL)
+
+CHROME_SKIN = \
+        .\directory.css \
+        $(NULL)
+
+CHROME_L10N = \
+        .\locale\en-US\directory.dtd    \
+        $(NULL)
+
+MODULE=directory
+
+XPIDLSRCS =                             \
+        .\nsIHTTPIndex.idl              \
+        $(NULL)
+
+CPPSRCS=                                \
+ nsDirectoryViewer.cpp                  \
+ $(NULL)
+
+CPP_OBJS=                               \
+ .\$(OBJDIR)\nsDirectoryViewer.obj      \
+ $(NULL)
+
+MAKE_OBJ_TYPE=DLL
+DLLNAME = directory
+DLL=.\$(OBJDIR)\$(DLLNAME).dll
+
+LCFLAGS = \
+        $(LCFLAGS) \
+        $(DEFINES) \
+        $(NULL)
+
+# These are the libraries we need to link with to create the DLL
+LLIBS=                          \
+ $(DIST)\lib\js3250.lib         \
+ $(DIST)\lib\neckoutil_s.lib    \
+ $(DIST)\lib\xpcom.lib          \
+ $(LIBNSPR)                     \
+ $(NULL)
+
+include <$(DEPTH)\config\rules.mak>
+
+install:: $(DLL)
+	$(MAKE_INSTALL) $(DLL) $(DIST)\bin\components
+

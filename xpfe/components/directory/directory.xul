@@ -1,0 +1,55 @@
+<?xml version="1.0"?> <!-- -*- Mode: SGML -*- -->
+<!--
+
+  The contents of this file are subject to the Netscape Public License
+  Version 1.0 (the "NPL"); you may not use this file except in
+  compliance with the NPL.  You may obtain a copy of the NPL at
+  http://www.mozilla.org/NPL/
+
+  Software distributed under the NPL is distributed on an "AS IS" basis,
+  WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+  for the specific language governing rights and limitations under the
+  NPL.
+
+  The Initial Developer of this code under the NPL is Netscape
+  Communications Corporation.  Portions created by Netscape are
+  Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+  Reserved.
+
+-->
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://directory/skin/" type="text/css"?>
+
+<!DOCTYPE window SYSTEM "chrome://directory/locale/directory.dtd">
+
+<window 
+  title="&directoryWindowTitle.label;"
+  xmlns:html="http://www.w3.org/TR/REC-html40"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  align="vertical">
+
+  <html:script src="directory.js" />
+
+  <tree id="tree" datasources="rdf:null" flex="1">
+    <template>
+      <treechildren>
+        <treeitem uri="...">
+          <treerow>
+            <treecell><text value="rdf:urn:http-index-format:Filename"/></treecell>
+            <treecell><text value="rdf:urn:http-index-format:Content-Length"/></treecell>
+            <treecell><text value="rdf:urn:http-index-format:Last-Modified"/></treecell>
+          </treerow>
+        </treeitem>
+      </treechildren>
+    </template>
+
+    <treehead>
+      <treerow>
+        <treecell>&directoryWindow.filename.label;</treecell>
+        <treecell>&directoryWindow.contentlength.label;</treecell>
+        <treecell>&directoryWindow.lastmodified.label;</treecell>
+      </treerow>
+    </treehead>
+  </tree>
+</window>
