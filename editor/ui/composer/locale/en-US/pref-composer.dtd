@@ -9,19 +9,19 @@
 
 <!ENTITY  tableEditing.label                    "Table Editing">
 
-<!ENTITY  maintainTableStructure.label          "Always maintain table layout">
+<!ENTITY  maintainTableStructure.label          "Maintain table layout when inserting or deleting cells">
 <!ENTITY  maintainTableStructure.tooltip        "Prevents cell borders from collapsing when you delete one or more cells">
 <!ENTITY  maintainStructure.accesskey           "m">
 <!-- LOCALIZATION NOTE (pressingTheDeleteKey.label): Don't translate "Delete" -->
 <!ENTITY  pressingTheDeleteKey.label            "Delete key:">
 <!ENTITY  pressingTheDeleteKey.tooltip          "Assign an action to the Delete key for table editing purposes">
-<!ENTITY  deleteCell.label                      "Erases the cell's content and border">
-<!ENTITY  deleteCell.accesskey                  "s">
-<!ENTITY  deleteContent.label                   "Erases the cell's content only">
+<!ENTITY  deleteCell.label                      "Removes the entire cell">
+<!ENTITY  deleteCell.accesskey                  "r">
+<!ENTITY  deleteContent.label                   "Removes the cells' contents">
 <!ENTITY  deleteContent.accesskey               "c">
 
 <!ENTITY  savingFiles.title           "When Saving Files">
-<!ENTITY  preserveExistingFormatting  "Retain HTML framework">
+<!ENTITY  preserveExistingFormatting  "Maintain source formatting">
 <!ENTITY  preserveExistingFormatting.tooltip    "Preserves line breaks and page's original structure ">
 
 <!ENTITY  saving                    "Saving">
@@ -34,4 +34,4 @@
 <!ENTITY  chooseButton.label        "Choose">
 
 <!ENTITY  recentFiles.title         "Recent Pages Menu">
-<!ENTITY  documentsInMenu           "Max number of pages listed:">
+<!ENTITY  documentsInMenu           "Maximum number of pages listed:">
