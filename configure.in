@@ -235,6 +235,27 @@ else
   AC_MSG_RESULT(no)
 fi  
 
+dnl Checks for c++ features
+dnl Is there a way to make AC_TRY_COMPILE use CXX instead of CC?
+_SAVE_CC=$CC
+CC=$CXX
+AC_MSG_CHECKING(for ios::binary)
+AC_CACHE_VAL(ac_cv_ios_binary,
+ [AC_TRY_COMPILE([#include <fstream>],
+                 [char *buffer = "config.log";
+		  fstream *mFileStream=new fstream(buffer, ios::binary);],
+                 [ac_ios_binary=true],
+                 [ac_ios_binary=false])
+  ac_cv_ios_binary=$ac_ios_binary])
+ac_syserrlist=$ac_cv_ios_binary
+if test $ac_ios_binary = true ; then
+  AC_DEFINE(HAVE_IOS_BINARY)
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi  
+CC=$_SAVE_CC
+
 dnl Checks for libraries.
 dnl ========================================================
 AC_CHECK_LIB(c_r, gethostbyname_r)

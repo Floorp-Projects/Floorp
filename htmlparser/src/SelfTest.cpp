@@ -45,8 +45,14 @@ PRBool compareFiles(const char* file1,const char* file2,int& failpos) {
   char ch1,ch2;
   int  eof1,eof2;
 
+#if defined(HAVE_IOS_BINARY) || !defined(XP_UNIX)
+  /* HAVE_IOS_BINARY needs to be set for mac & win */
   ifstream  input1(file1,ios::in && ios::binary,filebuf::openprot);
   ifstream  input2(file2,ios::in && ios::binary,filebuf::openprot);
+#else
+  ifstream  input1(file1,ios::in && ios::bin,filebuf::openprot);
+  ifstream  input2(file2,ios::in && ios::bin,filebuf::openprot);
+#endif
   input1.setmode(filebuf::binary);
   input2.setmode(filebuf::binary);
   failpos=-1;
