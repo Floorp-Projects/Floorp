@@ -897,18 +897,14 @@ pref_addChild(PLHashEntry *he, int i, void *arg)
 			/* Find the next delimiter if any and truncate the string there */
 			nextdelim = strstr(nextdelim, ".");
 			if (nextdelim)
-				*nextdelim = '\0';
+			{
+				*nextdelim = ';';
+				*(nextdelim + 1) = '\0';
+			}
 		}
 
 		substring = strstr(pcs->childList, buf);
-		if (substring)
-		{
-			int buflen = strlen(buf);
-			PR_ASSERT(substring[buflen] > 0);
-			substringBordersSeparator = (substring[buflen] == '\0' || substring[buflen] == ';');
-		}
-
-		if (!substring || !substringBordersSeparator)
+		if (!substring)
 		{
 			unsigned int newsize = strlen(pcs->childList) + strlen(buf) + 2;
 			if (newsize > pcs->bufsize)
@@ -919,7 +915,6 @@ pref_addChild(PLHashEntry *he, int i, void *arg)
 					return HT_ENUMERATE_STOP;
 			}
 			PL_strcat(pcs->childList, buf);
-			PL_strcat(pcs->childList, ";");
 		}
 	}
 	return 0;
