@@ -44,9 +44,9 @@ interface nsIMAPNamespace;
 interface nsIMailboxSpec : nsISupports
 {
   attribute long folder_UIDVALIDITY;
-  attribute long number_of_messages;
-  attribute long number_of_unseen_messages;
-  attribute long number_of_recent_messages;
+  attribute long numMessages;
+  attribute long numUnseenMessages;
+  attribute long numRecentMessages;
 	
   attribute unsigned long	box_flags;
   attribute unsigned long supportedUserFlags;

@@ -74,12 +74,7 @@ public:
     enum eIMAPstate {
         kNonAuthenticated,
         kAuthenticated,
-#if 0
-        kFolderSelected,
-        kWaitingForMoreClientInput	// This shouldn't be a server state. It should only be a status.
-#else
-		kFolderSelected
-#endif
+        kFolderSelected
     } ;
 
   virtual eIMAPstate GetIMAPstate();
@@ -87,8 +82,8 @@ public:
     
   const char *GetSelectedMailboxName();   // can be NULL
 
-	// if we get a PREAUTH greeting from the server, initialize the parser to begin in
-	// the kAuthenticated state
+  // if we get a PREAUTH greeting from the server, initialize the parser to begin in
+  // the kAuthenticated state
   void		PreauthSetAuthenticatedState();
 
   // these functions represent the state of the currently selected
@@ -97,23 +92,23 @@ public:
   PRInt32    NumberOfMessages();
   PRInt32    NumberOfRecentMessages();
   PRInt32    NumberOfUnseenMessages();
-  PRInt32       FolderUID();
-  PRUint32      CurrentResponseUID();
-  PRUint32      HighestRecordedUID();
-  void          SetCurrentResponseUID(PRUint32 uid);
-  void          CopyResponseUID(nsMsgKeyArray& keyArray);
-  void          ClearCopyResponseUID();
-	PRBool		IsNumericString(const char *string);
-  PRInt32       SizeOfMostRecentMessage();
-	void		SetTotalDownloadSize(PRInt32 newSize) { fTotalDownloadSize = newSize; }
-  void    SetFetchingEverythingRFC822(PRBool fetchingEverythingRFC822) { fFetchEverythingRFC822 = fetchingEverythingRFC822;}
+  PRInt32    FolderUID();
+  PRUint32   CurrentResponseUID();
+  PRUint32   HighestRecordedUID();
+  void       SetCurrentResponseUID(PRUint32 uid);
+  void       CopyResponseUID(nsMsgKeyArray& keyArray);
+  void       ClearCopyResponseUID();
+  PRBool     IsNumericString(const char *string);
+  PRInt32    SizeOfMostRecentMessage();
+  void       SetTotalDownloadSize(PRInt32 newSize) { fTotalDownloadSize = newSize; }
+  void       SetFetchingEverythingRFC822(PRBool fetchingEverythingRFC822) { fFetchEverythingRFC822 = fetchingEverythingRFC822;}
   
   nsImapSearchResultIterator *CreateSearchResultIterator();
   void ResetSearchResultSequence() {fSearchResults->ResetSequence();}
   
   // create a struct mailbox_spec from our info, used in
   // libmsg c interface
-  nsImapMailboxSpec *CreateCurrentMailboxSpec(const char *mailboxName = NULL);
+  nsImapMailboxSpec *CreateCurrentMailboxSpec(const char *mailboxName = nsnull);
   
   // zero stops a list recording of flags and causes the flags for
   // each individual message to be sent back to libmsg 
@@ -246,7 +241,12 @@ private:
   PRUint32          fHighestRecordedUID;
   PRInt32           fSizeOfMostRecentMessage;
   PRInt32           fTotalDownloadSize;
-    
+  
+  PRInt32           fStatusUnseenMessages;
+  PRInt32           fStatusRecentMessages;
+  PRUint32          fStatusNextUID;
+  PRUint32          fStatusExistingMessages;
+
   int               fNumberOfTaggedResponsesExpected;
 
   char              *fCurrentCommandTag;

@@ -167,53 +167,53 @@ PRBool nsIMAPGenericParser::LastCommandSuccessful()
 
 void nsIMAPGenericParser::SetSyntaxError(PRBool error)
 {
-	fSyntaxError = error;
-	PR_FREEIF( fSyntaxErrorLine );
-	if (error)
-	{
-		NS_ASSERTION(PR_FALSE, "syntax error in generic parser");	
-		fSyntaxErrorLine = PL_strdup(fCurrentLine);
-	}
-	else
-		fSyntaxErrorLine = NULL;
+  fSyntaxError = error;
+  PR_FREEIF( fSyntaxErrorLine );
+  if (error)
+  {
+    NS_ASSERTION(PR_FALSE, "syntax error in generic parser");	
+    fSyntaxErrorLine = PL_strdup(fCurrentLine);
+  }
+  else
+    fSyntaxErrorLine = NULL;
 }
 
 char *nsIMAPGenericParser::CreateSyntaxErrorLine()
 {
-	return PL_strdup(fSyntaxErrorLine);
+  return PL_strdup(fSyntaxErrorLine);
 }
 
 
 PRBool nsIMAPGenericParser::SyntaxError()
 {
-	return fSyntaxError;
+  return fSyntaxError;
 }
 
 void nsIMAPGenericParser::SetConnected(PRBool connected)
 {
-	fDisconnected = !connected;
+  fDisconnected = !connected;
 }
 
 PRBool nsIMAPGenericParser::Connected()
 {
-	return !fDisconnected;
+  return !fDisconnected;
 }
 
 PRBool nsIMAPGenericParser::ContinueParse()
 {
-	return !fSyntaxError && !fDisconnected;
+  return !fSyntaxError && !fDisconnected;
 }
 
 
 PRBool nsIMAPGenericParser::at_end_of_line()
 {
-	return (fAtEndOfLine || (nsCRT::strcmp(fNextToken, CRLF) == 0));
+  return (fAtEndOfLine || (nsCRT::strcmp(fNextToken, CRLF) == 0));
 }
 
 void nsIMAPGenericParser::skip_to_CRLF()
 {
-	while (Connected() && !at_end_of_line())
-		fNextToken = GetNextToken();
+  while (Connected() && !at_end_of_line())
+    fNextToken = GetNextToken();
 }
 
 // fNextToken initially should point to
@@ -224,131 +224,131 @@ void nsIMAPGenericParser::skip_to_CRLF()
 // token after the one returned in fNextToken.
 void nsIMAPGenericParser::skip_to_close_paren()
 {
-	int numberOfCloseParensNeeded = 1;
-	if (fNextToken && *fNextToken == ')')
-	{
-		numberOfCloseParensNeeded--;
-		fNextToken++;
-		if (!fNextToken || !*fNextToken)
-			fNextToken = GetNextToken();
-	}
-
-	while (ContinueParse() && numberOfCloseParensNeeded > 0)
-	{
-		// go through fNextToken, count the number
-		// of open and close parens, to account
-		// for nested parens which might come in
-		// the response
-		char *loc = 0;
-		for (loc = fNextToken; loc && *loc; loc++)
-		{
-			if (*loc == '(')
-				numberOfCloseParensNeeded++;
-			else if (*loc == ')')
-				numberOfCloseParensNeeded--;
-			if (numberOfCloseParensNeeded == 0)
-			{
-				fNextToken = loc + 1;
-				if (!fNextToken || !*fNextToken)
-					fNextToken = GetNextToken();
-				break;	// exit the loop
-			}
-		}
-
-		if (numberOfCloseParensNeeded > 0)
-			fNextToken = GetNextToken();
-	}
+  int numberOfCloseParensNeeded = 1;
+  if (fNextToken && *fNextToken == ')')
+  {
+    numberOfCloseParensNeeded--;
+    fNextToken++;
+    if (!fNextToken || !*fNextToken)
+      fNextToken = GetNextToken();
+  }
+  
+  while (ContinueParse() && numberOfCloseParensNeeded > 0)
+  {
+    // go through fNextToken, count the number
+    // of open and close parens, to account
+    // for nested parens which might come in
+    // the response
+    char *loc = 0;
+    for (loc = fNextToken; loc && *loc; loc++)
+    {
+      if (*loc == '(')
+        numberOfCloseParensNeeded++;
+      else if (*loc == ')')
+        numberOfCloseParensNeeded--;
+      if (numberOfCloseParensNeeded == 0)
+      {
+        fNextToken = loc + 1;
+        if (!fNextToken || !*fNextToken)
+          fNextToken = GetNextToken();
+        break;	// exit the loop
+      }
+    }
+    
+    if (numberOfCloseParensNeeded > 0)
+      fNextToken = GetNextToken();
+  }
 }
 
 char *nsIMAPGenericParser::GetNextToken()
 {
-	if (!fCurrentLine || fAtEndOfLine)
-		AdvanceToNextLine();
-	else if (Connected())
-	{
-		if (fTokenizerAdvanced)
-		{
-			fNextToken = Imapstrtok_r(fLineOfTokens, WHITESPACE, &fCurrentTokenPlaceHolder);
-			fTokenizerAdvanced = PR_FALSE;
-		}
-		else
-		{
-			fNextToken = Imapstrtok_r(nsnull, WHITESPACE, &fCurrentTokenPlaceHolder);
-		}
-		if (!fNextToken)
-		{
-			fAtEndOfLine = PR_TRUE;
-			fNextToken = CRLF;
-		}
-	}
-	
-	return fNextToken;
+  if (!fCurrentLine || fAtEndOfLine)
+    AdvanceToNextLine();
+  else if (Connected())
+  {
+    if (fTokenizerAdvanced)
+    {
+      fNextToken = Imapstrtok_r(fLineOfTokens, WHITESPACE, &fCurrentTokenPlaceHolder);
+      fTokenizerAdvanced = PR_FALSE;
+    }
+    else
+    {
+      fNextToken = Imapstrtok_r(nsnull, WHITESPACE, &fCurrentTokenPlaceHolder);
+    }
+    if (!fNextToken)
+    {
+      fAtEndOfLine = PR_TRUE;
+      fNextToken = CRLF;
+    }
+  }
+  
+  return fNextToken;
 }
 
 void nsIMAPGenericParser::AdvanceToNextLine()
 {
-	PR_FREEIF( fCurrentLine );
-	PR_FREEIF( fStartOfLineOfTokens);
-	fTokenizerAdvanced = PR_FALSE;
-	
-	PRBool ok = GetNextLineForParser(&fCurrentLine);
-	if (!ok)
-	{
-		SetConnected(PR_FALSE);
-		fStartOfLineOfTokens = nsnull;
-		fLineOfTokens = nsnull;
-		fCurrentTokenPlaceHolder = nsnull;
-		fNextToken = CRLF;
-	}
-	else if (fCurrentLine)	// might be NULL if we are would_block ?
-	{
-		fStartOfLineOfTokens = PL_strdup(fCurrentLine);
-		if (fStartOfLineOfTokens)
-		{
-			fLineOfTokens = fStartOfLineOfTokens;
-			fNextToken = Imapstrtok_r(fLineOfTokens, WHITESPACE, &fCurrentTokenPlaceHolder);
-			if (!fNextToken)
-			{
-				fAtEndOfLine = PR_TRUE;
-				fNextToken = CRLF;
-			}
-			else
-				fAtEndOfLine = PR_FALSE;
-		}
-		else
-			HandleMemoryFailure();
-	}
-	else
-		HandleMemoryFailure();
+  PR_FREEIF( fCurrentLine );
+  PR_FREEIF( fStartOfLineOfTokens);
+  fTokenizerAdvanced = PR_FALSE;
+  
+  PRBool ok = GetNextLineForParser(&fCurrentLine);
+  if (!ok)
+  {
+    SetConnected(PR_FALSE);
+    fStartOfLineOfTokens = nsnull;
+    fLineOfTokens = nsnull;
+    fCurrentTokenPlaceHolder = nsnull;
+    fNextToken = CRLF;
+  }
+  else if (fCurrentLine)	// might be NULL if we are would_block ?
+  {
+    fStartOfLineOfTokens = PL_strdup(fCurrentLine);
+    if (fStartOfLineOfTokens)
+    {
+      fLineOfTokens = fStartOfLineOfTokens;
+      fNextToken = Imapstrtok_r(fLineOfTokens, WHITESPACE, &fCurrentTokenPlaceHolder);
+      if (!fNextToken)
+      {
+        fAtEndOfLine = PR_TRUE;
+        fNextToken = CRLF;
+      }
+      else
+        fAtEndOfLine = PR_FALSE;
+    }
+    else
+      HandleMemoryFailure();
+  }
+  else
+    HandleMemoryFailure();
 }
 
 void nsIMAPGenericParser::AdvanceTokenizerStartingPoint(int32 bytesToAdvance)
 {
-	PRInt32 startingDiff = fLineOfTokens - fStartOfLineOfTokens;
+  PRInt32 startingDiff = fLineOfTokens - fStartOfLineOfTokens;
   PRInt32 nextTokenOffset;
-
+  
   // save off offset into fStartOfLineOfTokens of fNextToken so we can set it appropriately
   // when we destroy the current line and create a new one. I'm pretty sure fNextToken must
   // point somewhere in the current line.
   nextTokenOffset = fNextToken - fStartOfLineOfTokens;
-
-	PR_FREEIF(fStartOfLineOfTokens);
-	if (fCurrentLine)
-	{
-		fStartOfLineOfTokens = PL_strdup(fCurrentLine);
+  
+  PR_FREEIF(fStartOfLineOfTokens);
+  if (fCurrentLine)
+  {
+    fStartOfLineOfTokens = PL_strdup(fCurrentLine);
     fNextToken = fStartOfLineOfTokens + nextTokenOffset;
-
-		if (fStartOfLineOfTokens && ((int32) strlen(fStartOfLineOfTokens) >= bytesToAdvance))
-		{
-			fLineOfTokens = fStartOfLineOfTokens + bytesToAdvance  + startingDiff;
-			fCurrentTokenPlaceHolder = fLineOfTokens;
-			fTokenizerAdvanced = PR_TRUE;
-		}
-		else
-			HandleMemoryFailure();
-	}
-	else
-		HandleMemoryFailure();
+    
+    if (fStartOfLineOfTokens && ((int32) strlen(fStartOfLineOfTokens) >= bytesToAdvance))
+    {
+      fLineOfTokens = fStartOfLineOfTokens + bytesToAdvance  + startingDiff;
+      fCurrentTokenPlaceHolder = fLineOfTokens;
+      fTokenizerAdvanced = PR_TRUE;
+    }
+    else
+      HandleMemoryFailure();
+  }
+  else
+    HandleMemoryFailure();
 }
 
 // Lots of things in the IMAP protocol are defined as an "astring."

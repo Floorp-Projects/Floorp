@@ -101,6 +101,7 @@ interface nsIMsgImapMailFolder : nsISupports {
   void addFolderRights(in string userName, in string rights);
   void refreshFolderRights();
 
+  void updateStatus(in nsIUrlListener aListener, in nsIMsgWindow aMsgWindow);
   // this is used to issue an arbitrary imap command on the passed in msgs.
   // It assumes the command needs to be run in the selected state.
   nsIURI issueCommandOnMsgs(in string command, in string uids, in nsIMsgWindow aWindow);

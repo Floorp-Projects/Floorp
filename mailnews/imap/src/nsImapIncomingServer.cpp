@@ -3585,6 +3585,11 @@ nsImapIncomingServer::GetNewMessagesForNonInboxFolders(nsIMsgFolder *aRootFolder
         imapFolder->SetPerformingBiff(PR_TRUE);
     }
     aRootFolder->UpdateFolder(aWindow);
+#if 0 // we need to control this with a pref until we're sure it works.
+    nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(aRootFolder);
+    if (imapFolder)
+      imapFolder->UpdateStatus(nsnull, aWindow);
+#endif
   }
 
   // Loop through all subfolders to get new messages for them.

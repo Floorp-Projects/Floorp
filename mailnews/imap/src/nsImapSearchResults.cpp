@@ -39,7 +39,7 @@
 
 #include "nsImapCore.h"
 #include "nsImapSearchResults.h"
-
+#include "prmem.h"
 
 nsImapSearchResultSequence::nsImapSearchResultSequence()
 {
@@ -58,7 +58,7 @@ void nsImapSearchResultSequence::Clear(void)
     while (0 <= --i) 
     {
       char* string = (char*)mImpl->mArray[i];
-      delete string;
+      PR_Free(string);
     }
     nsVoidArray::Clear();
   }

@@ -223,6 +223,8 @@ nsImapMailFolder::nsImapMailFolder() :
   m_moveCoalescer = nsnull;
   m_boxFlags = 0;
   m_uidValidity = 0;
+  m_numStatusRecentMessages = 0;
+  m_numStatusUnseenMessages = 0;
   m_hierarchyDelimiter = kOnlineHierarchySeparatorUnknown;
   m_pathName = nsnull;
   m_folderACL = nsnull;
@@ -1141,6 +1143,15 @@ NS_IMETHODIMP nsImapMailFolder::CompactAll(nsIUrlListener *aListener,  nsIMsgWin
   return Compact(aListener, aMsgWindow);  //for now
 }
 
+NS_IMETHODIMP nsImapMailFolder::UpdateStatus(nsIUrlListener *aListener, nsIMsgWindow *aMsgWindow)
+{
+  nsresult rv;
+  nsCOMPtr<nsIImapService> imapService = do_GetService(NS_IMAPSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  return imapService->UpdateFolderStatus(m_eventQueue, this, aListener, nsnull);
+}
+
 NS_IMETHODIMP nsImapMailFolder::EmptyTrash(nsIMsgWindow *msgWindow,
                                            nsIUrlListener *aListener)
 {
@@ -1494,7 +1505,7 @@ NS_IMETHODIMP nsImapMailFolder::UpdateSummaryTotals(PRBool force)
   }
 
   FlushToFolderCache();
-    return rv;
+  return rv;
 }
     
 NS_IMETHODIMP nsImapMailFolder::GetDeletable (PRBool *deletable)
@@ -2292,6 +2303,8 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
   nsresult rv = NS_ERROR_FAILURE;
   ChangeNumPendingTotalMessages(-GetNumPendingTotalMessages());
   ChangeNumPendingUnread(-GetNumPendingUnread());
+  m_numStatusRecentMessages = 0; // clear this since we selected the folder.
+
   
   if (!mDatabase)
     GetDatabase(nsnull);
@@ -2332,6 +2345,7 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
     SetSupportedUserFlags(supportedUserFlags);
 
     m_uidValidity = folderValidity;
+
     if ((imapUIDValidity != folderValidity) /* && // if UIDVALIDITY Changed 
       !NET_IsOffline() */)
     {
@@ -2477,8 +2491,29 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
 NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxStatus(
   nsIImapProtocol* aProtocol, nsIMailboxSpec* aSpec)
 {
-  nsresult rv = NS_ERROR_FAILURE;
-  return rv;
+  NS_ENSURE_ARG_POINTER(aSpec);
+  PRInt32 numRecent, numUnread;
+  aSpec->GetNumRecentMessages(&numRecent);
+  aSpec->GetNumUnseenMessages(&numUnread);
+  // If m_numStatusUnseenMessages is 0, it means
+  // this is the first time we've done a Status.
+  // In that case, we count all the previous pending unread messages we know about
+  // as unread messages. 
+  // We may want to do similar things with total messages, but the total messages
+  // include deleted messages if the folder hasn't been expunged.
+  PRInt32 previousUnreadMessages = (m_numStatusUnseenMessages) 
+    ? m_numStatusUnseenMessages : GetNumPendingUnread() + mNumUnreadMessages;
+  if (numUnread != previousUnreadMessages)
+  {
+    // we're going to assume that recent messages are unread.
+    ChangeNumPendingUnread(numUnread - previousUnreadMessages);
+    ChangeNumPendingTotalMessages(numUnread - previousUnreadMessages);
+    if (numUnread > previousUnreadMessages)
+      SetHasNewMessages(PR_TRUE);
+    SummaryChanged();
+  }
+  m_numStatusUnseenMessages = numUnread;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsImapMailFolder::ParseMsgHdrs(nsIImapProtocol *aProtocol, nsIImapHeaderXferInfo *aHdrXferInfo)

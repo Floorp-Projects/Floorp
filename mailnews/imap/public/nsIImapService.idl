@@ -104,6 +104,10 @@ interface nsIImapService : nsISupports
                in nsIUrlListener aUrlListener,
                out nsIURI aURL);
   
+  nsIURI updateFolderStatus(in nsIEventQueue aClientEventQueue, 
+               in nsIMsgFolder aImapMailFolder,
+               in nsIUrlListener aUrlListener);
+
   void biff(in nsIEventQueue aClientEventQueue, 
             in nsIMsgFolder aImapMailFolder,
             in nsIUrlListener aUrlListener,
