@@ -33,7 +33,6 @@
 #include "nsIDocument.h"
 #include "nsIHTMLTableCellElement.h"
 #include "nsTableColFrame.h"
-#include "nsTableFrame.h"
 #include "nsHTMLIIDs.h"
 #include "nsIStyleFrameConstruction.h"
 #include "nsHTMLParts.h"
