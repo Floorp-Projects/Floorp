@@ -231,9 +231,9 @@ nsJVMManager::ShowJavaConsole(void)
 // nsIThreadManager:
 
 NS_METHOD
-nsJVMManager::GetCurrentThread(nsPluginThread* *threadID)
+nsJVMManager::GetCurrentThread(PRThread* *threadID)
 {
-	*threadID = (nsPluginThread *) PR_GetCurrentThread();
+	*threadID = PR_GetCurrentThread();
 	return NS_OK;
 }
 
