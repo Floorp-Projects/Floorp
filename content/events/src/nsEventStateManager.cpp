@@ -1796,16 +1796,17 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aParent, nsIContent* aCh
         }
         disabled = PR_FALSE;
       }
-      else if (nsXULAtoms::titledbutton == tag.get()) {
-        nsAutoString value;
-        child->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, value);
-        if (value != "true")
-          disabled = PR_FALSE;
+      else {
+        // QI to nsIFocusableContent
+        nsCOMPtr<nsIFocusableContent> focusable(do_QueryInterface(child));
+        if (focusable) {
+          nsAutoString value;
+          child->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, value);
+          if (value != "true")
+            disabled = PR_FALSE;
+        }
       }
-      else if (nsXULAtoms::tree == tag.get()) {
-        disabled = PR_FALSE;
-      }
-
+      
       // Get the primary frame for the widget.  We don't tab into anything
       // that doesn't have a frame.
       nsCOMPtr<nsIPresShell> shell;
