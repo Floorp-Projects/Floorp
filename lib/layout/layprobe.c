@@ -2214,6 +2214,11 @@ Bool LAPILoadTestLib(char* szLibName)
 	TEST_LIB_INIT_PROC *proc = NULL;
 	PRLibrary* hLib = NULL;
 	Bool bInit = FALSE;
+#ifdef XP_MAC
+	const char *libPath = PR_GetLibraryPath();
+	char *libDir = XP_STRDUP(szLibName);
+	char *libName = strrchr(libDir, '/');
+#endif
 
 	if (!szLibName)
 	{
@@ -2222,9 +2227,6 @@ Bool LAPILoadTestLib(char* szLibName)
 	}
 
 #ifdef XP_MAC
-		const char *libPath = PR_GetLibraryPath();
-		char *libDir = CopyString(szLibName);
-		char *libName = strrchr(libDir, '/');
 		
 		if (libName != NULL)
 		{
@@ -2237,7 +2239,7 @@ Bool LAPILoadTestLib(char* szLibName)
 		if (libName != NULL)
 			PR_SetLibraryPath(libPath);
 		
-		delete[] libDir;
+		XP_FREE(libDir);
 
 #else
 		hLib = PR_LoadLibrary(szLibName);
