@@ -51,8 +51,8 @@ pippki.jar:
     content/pippki/crlManager.js             (content/crlManager.js)
     content/pippki/pref-masterpass.js        (content/pref-masterpass.js)
     content/pippki/pref-masterpass.xul       (content/pref-masterpass.xul)
-    content/pippki/serverCrlExpired.js       (content/serverCrlExpired.js)
-    content/pippki/serverCrlExpired.xul      (content/serverCrlExpired.xul)
+    content/pippki/serverCrlNextupdate.js    (content/serverCrlNextupdate.js)
+    content/pippki/serverCrlNextupdate.xul   (content/serverCrlNextupdate.xul)
     content/pippki/createCertInfo.xul        (content/createCertInfo.xul)
     content/pippki/createCertInfo.js         (content/createCertInfo.js)
 

@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsNSSCertificate.cpp,v 1.47 2001/08/22 04:05:42 javi%netscape.com Exp $
+ * $Id: nsNSSCertificate.cpp,v 1.48 2001/08/28 05:13:23 ddrinan%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -55,6 +55,8 @@
 #include "nsDateTimeFormatCID.h"
 #include "nsILocaleService.h"
 #include "nsIURI.h"
+#include "nsIWindowWatcher.h"
+#include "nsIPrompt.h"
 
 #include "nspr.h"
 extern "C" {
@@ -3426,6 +3428,7 @@ nsNSSCertificateDB::getCertType(CERTCertificate *cert)
 NS_IMETHODIMP 
 nsNSSCertificateDB::ImportCrl (char *aData, PRUint32 aLength, nsIURI * aURI, PRUint32 aType)
 {
+  nsresult rv;
   PRArenaPool *arena = NULL;
   CERTCertificate *caCert;
   SECItem derName = { siBuffer, NULL, 0 };
@@ -3434,6 +3437,15 @@ nsNSSCertificateDB::ImportCrl (char *aData, PRUint32 aLength, nsIURI * aURI, PRU
   SECStatus sec_rv;
   CERTSignedCrl *crl;
   nsXPIDLCString url;
+  nsString message;
+  nsString temp;
+  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+  nsCOMPtr<nsIPrompt> prompter;
+  if (wwatch)
+    wwatch->GetNewPrompter(0, getter_AddRefs(prompter));
+  nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
+  if (NS_FAILED(rv)) return rv;
+
   aURI->GetSpec(getter_Copies(url));
   arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
   if (!arena) {
@@ -3474,9 +3486,26 @@ nsNSSCertificateDB::ImportCrl (char *aData, PRUint32 aLength, nsIURI * aURI, PRU
   }
   SSL_ClearSessionCache();
   SEC_DestroyCrl(crl);
-  return NS_OK;
+
+  nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CrlImportSuccess").get(), message);
+  rv = NS_OK;
+  goto done;
 loser:
-  return NS_ERROR_FAILURE;;
+  rv = nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CrlImportFailure1").get(), message);
+  if (PR_GetError() == SEC_ERROR_CRL_EXPIRED) {
+    nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CrlImportFailure2").get(), temp);
+    message.Append(NS_LITERAL_STRING("\n").get());
+    message.Append(temp);
+    nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CrlImportFailure3").get(), temp);
+    message.Append(NS_LITERAL_STRING("\n").get());
+    message.Append(temp);
+  }
+  rv = NS_ERROR_FAILURE;
+done:
+  if (prompter) {
+    prompter->Alert(0, message.get());
+  }
+  return rv;
 }
 
 /* Header file */
