@@ -1535,7 +1535,7 @@ nsresult nsCharsetMenu::UpdateCachePrefs(const char * aCacheKey,
   nsresult res = NS_OK;
   char * cachePrefValue = NULL;
   char * staticPrefValue = NULL;
-  const char * currentCharset = NS_ConvertUCS2toUTF8(aCharset).get();
+  NS_ConvertUCS2toUTF8 currentCharset(aCharset);
   PRInt32 cacheSize = 0;
 
   res = mPrefs->GetCharPref(aCacheKey, &cachePrefValue);
