@@ -505,7 +505,7 @@ nsresult nsImapMailFolder::CreateSubFolders(nsFileSpec &path)
       continue;
     }
 
-       // OK, here we need to get the online name from the folder cache if we can.
+    // OK, here we need to get the online name from the folder cache if we can.
     // If we can, use that to create the sub-folder
 
     nsCOMPtr <nsIMsgFolderCacheElement> cacheElement;
@@ -529,6 +529,14 @@ nsresult nsImapMailFolder::CreateSubFolders(nsFileSpec &path)
         nsXPIDLString unicodeName;
         nsXPIDLCString onlineFullUtf7Name;
 
+        PRUint32 folderFlags;
+        rv = cacheElement->GetInt32Property("flags", (PRInt32 *) &folderFlags);
+        if (NS_SUCCEEDED(rv) && folderFlags & MSG_FOLDER_FLAG_VIRTUAL) //ignore virtual folders
+          continue;
+        PRInt32 hierarchyDelimiter;
+        rv = cacheElement->GetInt32Property("hierDelim", &hierarchyDelimiter);
+        if (NS_SUCCEEDED(rv) && hierarchyDelimiter == kOnlineHierarchySeparatorUnknown)
+          continue; // ignore .msf files for folders with unknown delimiter.
         rv = cacheElement->GetStringProperty("onlineName", getter_Copies(onlineFullUtf7Name));
         if (NS_SUCCEEDED(rv) && onlineFullUtf7Name.get() && strlen(onlineFullUtf7Name.get()))
         {
@@ -590,7 +598,7 @@ nsresult nsImapMailFolder::CreateSubFolders(nsFileSpec &path)
 
     }
     PL_strfree(folderName);
-    }
+  }
   return rv;
 }
 
