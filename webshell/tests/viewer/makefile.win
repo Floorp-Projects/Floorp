@@ -52,6 +52,7 @@ MYLIBS=                         \
  $(LIBNSPR)                     \
  $(DIST)\lib\libplc21.lib       \
  $(DIST)\lib\netlib.lib \
+ $(DIST)\lib\jsdom.lib          \
  comdlg32.lib                   \
  $(NULL)
 

@@ -50,6 +50,9 @@
 #include "plevent.h"
 #include "prenv.h"
 #include "nsIScriptContext.h"
+#include "nsIScriptContextOwner.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIDOMDocument.h"
 #include "nsDocLoader.h"
 #include "nsIFileWidget.h"
 #include "nsIDOMDocument.h"
@@ -99,6 +102,7 @@ static NS_DEFINE_IID(kCDocumentLoaderCID, NS_DOCUMENTLOADER_CID);
 static NS_DEFINE_IID(kIButtonIID, NS_IBUTTON_IID);
 static NS_DEFINE_IID(kITextWidgetIID, NS_ITEXTWIDGET_IID);
 static NS_DEFINE_IID(kIDocumentLoaderIID, NS_IDOCUMENTLOADER_IID);
+static NS_DEFINE_IID(kIScriptContextOwnerIID, NS_ISCRIPTCONTEXTOWNER_IID);
 
 #define VIEWER_UI
 #define VIEWER_UI
@@ -300,12 +304,17 @@ DocObserver::DocObserver(nsIWidget* aWindow, nsIWebWidget* aWebWidget) {
   NS_ADDREF(aWindow);
 
   NSRepository::CreateInstance(kCDocumentLoaderCID, nsnull, kIDocumentLoaderIID, (void**)&mDocLoader);
+  
+  mScriptContext = nsnull;
+  mScriptGlobal = nsnull;
 }
 
 DocObserver::~DocObserver() {
   NS_RELEASE(mWindowWidget);
   NS_RELEASE(mWebWidget);
   NS_RELEASE(mDocLoader);
+  NS_IF_RELEASE(mScriptContext);
+  NS_IF_RELEASE(mScriptGlobal);
 }
 
 
@@ -327,6 +336,11 @@ DocObserver::QueryInterface(const nsIID& aIID,
   }
   if (aIID.Equals(kIStreamObserverIID)) {
     *aInstancePtrResult = (void*) ((nsIStreamObserver*)this);
+    AddRef();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIScriptContextOwnerIID)) {
+    *aInstancePtrResult = (void*)(nsIScriptContextOwner*)this;
     AddRef();
     return NS_OK;
   }
@@ -484,6 +498,22 @@ DocObserver::Embed(nsIDocumentWidget* aDocViewer,
   mWebWidget->SetContainer((nsIDocumentObserver*)this);
   rv = mWebWidget->Init(mWindowWidget->GetNativeData(NS_NATIVE_WIDGET), rr);
 
+  // Associate a new document with our script global
+  if (nsnull != mScriptGlobal) {
+    nsIDOMDocument *domdoc;
+    mWebWidget->GetDOMDocument(&domdoc);
+    mScriptGlobal->SetNewDocument(domdoc);
+    NS_IF_RELEASE(domdoc);
+  }
+
+  // Let the document know that it can come to us for a script context
+  // (for script evaluation during document loading)
+  nsIDocument *doc = mWebWidget->GetDocument();
+  if (nsnull != doc) {
+    doc->SetScriptContextOwner(this);
+    NS_IF_RELEASE(doc);
+  }
+
   mWebWidget->SetLinkHandler((nsILinkHandler*)this);
 
 ///  nsIURL* aURL = aDoc->GetDocumentURL();
@@ -573,6 +603,46 @@ DocObserver:: GetLinkState(const nsString& aURLSpec, nsLinkState& aState)
     aState = eLinkState_Hover;
   }
 #endif
+  return NS_OK;
+}
+
+nsresult 
+DocObserver::GetScriptContext(nsIScriptContext **aContext)
+{
+  NS_PRECONDITION(nsnull != aContext, "null arg");
+  nsresult res = NS_OK;
+
+  if (nsnull == mScriptGlobal) {
+    res = NS_NewScriptGlobalObject(&mScriptGlobal);
+    if (NS_OK != res) {
+      return res;
+    }
+
+    res = NS_CreateContext(mScriptGlobal, &mScriptContext);
+    if (NS_OK != res) {
+      return res;
+    }
+
+    nsIDOMDocument *document;
+    res = mWebWidget->GetDOMDocument(&document);
+    if (NS_OK != res) {
+      return res;
+    }
+    mScriptGlobal->SetNewDocument(document);
+    NS_RELEASE(document);
+  }
+
+  *aContext = mScriptContext;
+  NS_ADDREF(mScriptContext);
+
+  return res;
+}
+
+nsresult 
+DocObserver::ReleaseScriptContext(nsIScriptContext *aContext)
+{
+  NS_IF_RELEASE(aContext);
+
   return NS_OK;
 }
 
