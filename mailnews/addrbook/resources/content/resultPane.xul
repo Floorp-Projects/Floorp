@@ -22,7 +22,7 @@
 
 	<tree class="abResults" flex="100%" id="resultTree"
 			rdf:datasources="rdf:addressdirectory rdf:addresscard"
-			onchange="ResultsPaneSelectionChange(event.target.parentNode)">
+			onchange="ResultsPaneSelectionChange()">
 		<treecol style="width:13%" id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#PersonName"/>
 		<treecol style="width:21%" id="EmailColumn" rdf:resource="http://home.netscape.com/NC-rdf#Email"/>
 		<treecol style="width:13%" id="WorkPhoneColumn" rdf:resource="http://home.netscape.com/NC-rdf#WorkPhone"/>

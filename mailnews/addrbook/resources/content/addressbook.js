@@ -114,17 +114,7 @@ function EditCardCancelButton()
 }
 
 
-function TestSelectionChange(abNode)
-{
-	var selArray = document.getElementsByAttribute('selected', 'true');
-	if ( selArray && (selArray.length == 2) )
-	{
-		var uri = selArray[1].getAttribute('id');
-		dump("Clicked on = " + uri + "\n");
-	}
-}
-
-function ResultsPaneSelectionChange(abNode)
+function ResultsPaneSelectionChange()
 {
 	// not in ab window if no parent.parent.rdf
 	if ( parent.parent.rdf )
