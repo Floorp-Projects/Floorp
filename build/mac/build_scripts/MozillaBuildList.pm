@@ -1583,7 +1583,12 @@ sub BuildLayoutProjects()
 
     BuildProject(":mozilla:expat:macbuild:expat.mcp",                           "expat$D.o");
     BuildOneProject(":mozilla:htmlparser:macbuild:htmlparser.mcp",              "htmlparser$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProjectWithOutput(":mozilla:gfx:macbuild:gfx.mcp",                  "gfx$C$D.$S", "gfx$D.$S", 1, $main::ALIAS_SYM_FILES, 0);
+
+    BuildOneProject(":mozilla:gfx:macbuild:gfx.mcp",                            "gfx$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
+
+    my($dbg) = $main::DEBUG ? "Dbg" : "";
+    BuildOneProjectWithOutput(":mozilla:gfx:macbuild:gfxComponent.mcp",         "gfxComponent$C$dbg.$S", "gfxComponent$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
+
     BuildOneProject(":mozilla:dom:macbuild:dom.mcp",                            "dom$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:modules:plugin:base:macbuild:plugin.mcp",          "plugin$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
 
@@ -1610,9 +1615,9 @@ sub BuildLayoutProjects()
     }
     BuildOneProject(":mozilla:layout:macbuild:layout.mcp",                      "layout$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:view:macbuild:view.mcp",                          "view$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProjectWithOutput(":mozilla:widget:macbuild:widget.mcp",            "widget$C$D.$S", "widget$D.$S", 1, $main::ALIAS_SYM_FILES, 0);
+    BuildOneProject(":mozilla:widget:macbuild:WidgetSupport.mcp",               "WidgetSupport$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
+    BuildOneProjectWithOutput(":mozilla:widget:macbuild:widget.mcp",            "widget$C$D.$S", "widget$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:docshell:macbuild:docshell.mcp",                  "docshell$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:webshell:embed:mac:RaptorShell.mcp",              "RaptorShell$D.$S", 1, $main::ALIAS_SYM_FILES, 0);
 
     BuildOneProject(":mozilla:rdf:macbuild:rdf.mcp",                            "RDFLibrary$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
 

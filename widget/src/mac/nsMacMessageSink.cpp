@@ -46,7 +46,7 @@
 //	Return PR_TRUE if the event was handled
 //
 //-------------------------------------------------------------------------
-NS_EXPORT PRBool nsMacMessageSink::DispatchOSEvent(
+PRBool nsMacMessageSink::DispatchOSEvent(
 													EventRecord 	&anEvent,
 													WindowPtr			aWindow)
 {
@@ -70,7 +70,7 @@ NS_EXPORT PRBool nsMacMessageSink::DispatchOSEvent(
 // DispatchMenuCommand
 //
 //-------------------------------------------------------------------------
-NS_EXPORT PRBool nsMacMessageSink::DispatchMenuCommand(
+PRBool nsMacMessageSink::DispatchMenuCommand(
 													EventRecord 	&anEvent,
 													long					menuResult,
 													WindowPtr     aWindow)
@@ -96,7 +96,7 @@ NS_EXPORT PRBool nsMacMessageSink::DispatchMenuCommand(
 // GetNSWindowFromWindow
 //
 //-------------------------------------------------------------------------
-NS_EXPORT nsMacWindow *nsMacMessageSink::GetNSWindowFromMacWindow(WindowPtr inWindow)
+nsMacWindow *nsMacMessageSink::GetNSWindowFromMacWindow(WindowPtr inWindow)
 {
 	if (!inWindow) return nsnull;
 	
@@ -122,7 +122,7 @@ NS_EXPORT nsMacWindow *nsMacMessageSink::GetNSWindowFromMacWindow(WindowPtr inWi
 // IsRaptorWindow
 //
 //-------------------------------------------------------------------------
-NS_EXPORT PRBool nsMacMessageSink::IsRaptorWindow(WindowPtr inWindow)
+PRBool nsMacMessageSink::IsRaptorWindow(WindowPtr inWindow)
 {
 	if (!inWindow) return PR_FALSE;
 	return (GetRaptorWindowList()[inWindow] != nsnull);

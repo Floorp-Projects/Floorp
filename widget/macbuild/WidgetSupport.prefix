@@ -1,0 +1,8 @@
+//
+// Widget.Prefix
+//
+// Global prefix file for the Widget project.
+//
+
+#include "WidgetSupportConfig.h"
+#include "MacPrefix.h"

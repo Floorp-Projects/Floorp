@@ -41,6 +41,7 @@
 #include "nsRegionMac.h"
 #include "nsIFontMetrics.h"
 #include "nsCarbonHelpers.h"
+#include "nsRegionPool.h"
 
 nsGraphicStatePool sGraphicStatePool;
 

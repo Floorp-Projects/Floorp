@@ -104,6 +104,7 @@ nsPrintOptionsMac::ShowNativeDialog(void)
   NS_ASSERTION(::PrError() == noErr, "Printing error");
 
   nsWatchTask::GetTask().Suspend();
+  ::InitCursor();
   Boolean   dialogOK = ::PrStlDialog(mPrintRecord);		// open up and process the style record
   nsWatchTask::GetTask().Resume();
   

@@ -61,11 +61,8 @@
 #include "nsCOMPtr.h"
 #include "nsPrintOptionsMac.h"
 
-#ifdef XP_MACOSX
-
 #include "nsIGenericFactory.h"
 
-// XXX Implement the GFX module using NS_GENERIC_FACTORY_CONSTRUCTOR / NS_IMPL_NSGETMODULE
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontMetricsMac)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextMac)
@@ -74,8 +71,13 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsImageMac)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsRegionMac)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBlender)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDrawingSurfaceMac)
+#if TARGET_CARBON
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecX)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrintOptionsX)
+#else
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecMac)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrintOptionsMac)
+#endif
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecFactoryMac)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontEnumeratorMac)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontList)
@@ -116,6 +118,10 @@ static nsModuleComponentInfo components[] =
     NS_REGION_CID,
     "@mozilla.org/gfx/unscriptable-region;1",
     nsRegionMacConstructor },
+  { "nsScriptableRegion",
+    NS_SCRIPTABLE_REGION_CID,
+    "@mozilla.org/gfx/region;1",
+    nsScriptableRegionConstructor },
   { "nsBlender",
     NS_BLENDER_CID,
     "@mozilla.org/gfx/blender;1",
@@ -124,22 +130,32 @@ static nsModuleComponentInfo components[] =
     NS_DRAWING_SURFACE_CID,
     "@mozilla.org/gfx/drawing-surface;1",
     nsDrawingSurfaceMacConstructor },
+#if TARGET_CARBON
   { "nsDeviceContextSpec",
     NS_DEVICE_CONTEXT_SPEC_CID,
     "@mozilla.org/gfx/devicecontextspec;1",
     nsDeviceContextSpecXConstructor },
+#else
+  { "nsDeviceContextSpec",
+    NS_DEVICE_CONTEXT_SPEC_CID,
+    "@mozilla.org/gfx/devicecontextspec;1",
+    nsDeviceContextSpecMacConstructor },
+#endif
   { "nsDeviceContextSpecFactory",
     NS_DEVICE_CONTEXT_SPEC_FACTORY_CID,
     "@mozilla.org/gfx/devicecontextspecfactory;1",
     nsDeviceContextSpecFactoryMacConstructor },
-  { "nsScriptableRegion",
-    NS_SCRIPTABLE_REGION_CID,
-    "@mozilla.org/gfx/region;1",
-    nsScriptableRegionConstructor },
+#if TARGET_CARBON
   { "nsPrintOptions",
     NS_PRINTOPTIONS_CID,
     "@mozilla.org/gfx/printoptions;1",
     nsPrintOptionsXConstructor },
+#else
+  { "Print Options",
+    NS_PRINTOPTIONS_CID,
+    "@mozilla.org/gfx/printoptions;1",
+    nsPrintOptionsMacConstructor },
+#endif
   { "nsFontEnumerator",
     NS_FONT_ENUMERATOR_CID,
     "@mozilla.org/gfx/fontenumerator;1",
@@ -156,158 +172,4 @@ static nsModuleComponentInfo components[] =
 
 NS_IMPL_NSGETMODULE(nsGfxModule, components)
 
-#else
 
-static NS_DEFINE_IID(kCFontMetrics, NS_FONT_METRICS_CID);
-static NS_DEFINE_IID(kCFontEnumerator, NS_FONT_ENUMERATOR_CID);
-static NS_DEFINE_IID(kCFontList, NS_FONTLIST_CID);
-static NS_DEFINE_IID(kCRenderingContext, NS_RENDERING_CONTEXT_CID);
-static NS_DEFINE_IID(kCImage, NS_IMAGE_CID);
-static NS_DEFINE_IID(kCDeviceContext, NS_DEVICE_CONTEXT_CID);
-static NS_DEFINE_IID(kCRegion, NS_REGION_CID);
-static NS_DEFINE_IID(kCScriptableRegion, NS_SCRIPTABLE_REGION_CID);
-static NS_DEFINE_IID(kCDeviceContextSpec, NS_DEVICE_CONTEXT_SPEC_CID);
-static NS_DEFINE_IID(kCDeviceContextSpecFactory, NS_DEVICE_CONTEXT_SPEC_FACTORY_CID);
-static NS_DEFINE_IID(kCBlender, NS_BLENDER_CID);
-static NS_DEFINE_IID(kCScreenManager, NS_SCREENMANAGER_CID);
-static NS_DEFINE_IID(kCPrintOptions, NS_PRINTOPTIONS_CID);
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
-
-class nsGfxFactoryMac : public nsIFactory {
-public:   
-	// nsISupports methods
-	NS_DECL_ISUPPORTS
-
-	// nsIFactory methods   
-	NS_IMETHOD CreateInstance(nsISupports *aOuter,   
-	                          const nsIID &aIID,   
-	                          void **aResult);
-
-	NS_IMETHOD LockFactory(PRBool aLock);   
-
-	nsGfxFactoryMac(const nsCID &aClass);   
-	~nsGfxFactoryMac();   
-
-private:   
-	nsCID     mClassID;
-};   
-
-nsGfxFactoryMac::nsGfxFactoryMac(const nsCID &aClass)   
-{
-	NS_INIT_ISUPPORTS();
-	mClassID = aClass;
-}   
-
-nsGfxFactoryMac::~nsGfxFactoryMac()   
-{   
-}   
-
-NS_IMPL_ISUPPORTS1(nsGfxFactoryMac, nsIFactory)
-
-nsresult nsGfxFactoryMac::CreateInstance(nsISupports *aOuter,  
-                                          const nsIID &aIID,  
-                                          void **aResult)  
-{  
-	if (aResult == NULL) {  
-		return NS_ERROR_NULL_POINTER;  
-	}  
-
-	*aResult = NULL;  
-
-	nsCOMPtr<nsISupports> inst;
-
-	if (mClassID.Equals(kCFontMetrics)) {
-		NS_NEWXPCOM(inst, nsFontMetricsMac);
-	}
-	else if (mClassID.Equals(kCDeviceContext)) {
-		NS_NEWXPCOM(inst, nsDeviceContextMac);
-	}
-	else if (mClassID.Equals(kCRenderingContext)) {
-		NS_NEWXPCOM(inst, nsRenderingContextMac);
-	}
-	else if (mClassID.Equals(kCImage)) {
-	  inst = NS_STATIC_CAST(nsIImage*, new nsImageMac());
-	}
-	else if (mClassID.Equals(kCRegion)) {
-		NS_NEWXPCOM(inst, nsRegionMac);
-	}
-    else if (mClassID.Equals(kCBlender)) {
-        NS_NEWXPCOM(inst, nsBlender);
-    }
-	else if (mClassID.Equals(kCScriptableRegion)) {
-		nsCOMPtr<nsIRegion> rgn;
-		NS_NEWXPCOM(rgn, nsRegionMac);
-		if (rgn != nsnull) {
-			nsCOMPtr<nsIScriptableRegion> scriptableRgn = new nsScriptableRegion(rgn);
-			inst = scriptableRgn;
-		}
-	}
-	else if (mClassID.Equals(kCDeviceContextSpec)) {
-	    nsCOMPtr<nsIDeviceContextSpec> dcSpec;
-#if TARGET_CARBON
-	    NS_NEWXPCOM(dcSpec, nsDeviceContextSpecX);
-#else
-	    NS_NEWXPCOM(dcSpec, nsDeviceContextSpecMac);
-#endif
-        inst = dcSpec;
-	}
-  else if (mClassID.Equals(kCPrintOptions)) {
-#if TARGET_CARBON
-    NS_NEWXPCOM(inst, nsPrintOptionsX);
-#else
-    NS_NEWXPCOM(inst, nsPrintOptionsMac);
-#endif
-  }
- 	else if (mClassID.Equals(kCDeviceContextSpecFactory)) {
-		NS_NEWXPCOM(inst, nsDeviceContextSpecFactoryMac);
-	}
-	else if (mClassID.Equals(kCFontEnumerator)) {
-    nsFontEnumeratorMac* fe;
-    NS_NEWXPCOM(fe, nsFontEnumeratorMac);
-    inst = (nsISupports *)fe;
-  } 
-	else if (mClassID.Equals(kCFontList)) {
-    nsFontList* fl;
-    NS_NEWXPCOM(fl, nsFontList);
-    inst = (nsISupports *)fl;
-  } 
-	else if (mClassID.Equals(kCScreenManager)) {
-		NS_NEWXPCOM(inst, nsScreenManagerMac);
-  } 
-
-
-	if (inst == NULL) {  
-		return NS_ERROR_OUT_OF_MEMORY;  
-	}  
-
-	return inst->QueryInterface(aIID, aResult);
-}
-
-nsresult nsGfxFactoryMac::LockFactory(PRBool aLock)  
-{  
-  // Not implemented in simplest case.  
-  return NS_OK;
-}  
-
-// return the proper factory to the caller
-
-extern "C" NS_GFX nsresult NSGetFactory(nsISupports* servMgr,
-                                        const nsCID &aClass,
-                                        const char *aClassName,
-                                        const char *aContractID,
-                                        nsIFactory **aFactory)
-{
-	if (nsnull == aFactory) {
-		return NS_ERROR_NULL_POINTER;
-	}
-
-	nsCOMPtr<nsIFactory> factory = new nsGfxFactoryMac(aClass);
-	if (nsnull == factory) {
-		return NS_ERROR_OUT_OF_MEMORY;
-	}
-	
-	return factory->QueryInterface(kIFactoryIID, (void**)aFactory);
-}
-
-#endif

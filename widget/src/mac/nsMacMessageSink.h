@@ -39,6 +39,7 @@
 #define nsMacMessageSink_h__
 
 #include "prtypes.h"
+#include "nscore.h"
 
 #include <map>
 
@@ -66,7 +67,7 @@ to a nsMacWindow *.
 ================================================*/
 
 // Macintosh Message Sink Class
-class nsMacMessageSink
+class NS_WIDGET nsMacMessageSink
 {		    	    
 private:
 	

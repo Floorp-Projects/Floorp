@@ -38,6 +38,7 @@
 #include "nsIFontMetrics.h"
 #include "nsIDeviceContext.h"
 #include "nsFont.h"
+#include "nsFontUtils.h"
 #include "nsToolkit.h"
 
 #include "nsMacControl.h"
@@ -382,7 +383,7 @@ void nsMacControl::SetupMacControlFont()
 	
 	TextStyle		theStyle;
 #if !TARGET_CARBON
-	nsFontMetricsMac::GetNativeTextStyle(*mFontMetrics, *mContext, theStyle);
+	nsFontUtils::GetNativeTextStyle(*mFontMetrics, *mContext, theStyle);
 #endif
 	// if needed, impose a min size of 9pt on the control font
 	if (theStyle.tsSize < 9)
@@ -510,7 +511,7 @@ void nsMacControl::NSStringSetControlTitle(ControlHandle theControl, nsString ti
 	// determine the script of the font that the control is supposed to be drawn in
 	//
 #if !TARGET_CARBON
-	nsFontMetricsMac::GetNativeTextStyle(*mFontMetrics, *mContext, theStyle);
+	nsFontUtils::GetNativeTextStyle(*mFontMetrics, *mContext, theStyle);
 #endif
 	fontScript = ::FontToScript(theStyle.tsFont);
 	
@@ -592,7 +593,7 @@ void nsMacControl::SetupMacControlFontForScript(short theScript)
 	NS_PRECONDITION(mFontMetrics != nsnull, "No font metrics in SetupMacControlFont");
 	NS_PRECONDITION(mContext != nsnull, "No context metrics in SetupMacControlFont");
 #if !TARGET_CARBON
-	nsFontMetricsMac::GetNativeTextStyle(*mFontMetrics, *mContext, theStyle);
+	nsFontUtils::GetNativeTextStyle(*mFontMetrics, *mContext, theStyle);
 #endif
 
 	//

@@ -20,6 +20,10 @@
  * Contributor(s): 
  */
 
-#define GFX_STATIC 1
+#include "WidgetComponentConfig.h"
+#include "MacPrefix_debug.h"
 
-#include "MacPrefix.h"
+#if !TARGET_CARBON
+#define USE_MENUSELECT 1
+#endif
+

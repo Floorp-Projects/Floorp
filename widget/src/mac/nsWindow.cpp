@@ -66,6 +66,7 @@
 
 #include "nsCarbonHelpers.h"
 #include "nsGfxUtils.h"
+#include "nsRegionPool.h"
 
 #if PINK_PROFILING
 #include "profilerutils.h"

@@ -19,105 +19,117 @@
 # Contributor(s): 
 #
 
-DEPTH		= ../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH       = ../..
+topsrcdir   = @top_srcdir@
+srcdir      = @srcdir@
+VPATH       = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= gfx
+MODULE      = gfx
 EXPORTS         = nsFontList.h
-LIBRARY_NAME	= gkgfx
+LIBRARY_NAME    = gkgfx
 EXPORT_LIBRARY = 1
-REQUIRES	= xpcom \
-		  string \
-		  widget \
-		  locale \
-		  view \
-		  pref \
-		  gfx2 \
-		  imglib2 \
-		  uconv \
-		  unicharutil \
-		  $(NULL)
+REQUIRES    = xpcom \
+          string \
+          widget \
+          locale \
+          view \
+          pref \
+          gfx2 \
+          imglib2 \
+          uconv \
+          unicharutil \
+          $(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
-DIRS		=
+DIRS        =
 else
-DIRS		= ps
+DIRS        = ps
 endif
 
 ifneq (,$(filter beos os2 mac,$(MOZ_GFX_TOOLKIT)))
-DIRS		+= $(MOZ_GFX_TOOLKIT)
+DIRS        += $(MOZ_GFX_TOOLKIT)
 endif
 
 # Build xlibrgb only for X toolkits and/or Xprint
 ifneq (,$(filter xlib,$(MOZ_WIDGET_TOOLKIT))$(MOZ_ENABLE_XLIB)$(MOZ_ENABLE_XPRINT))
-DIRS		+= xlibrgb
+DIRS        += xlibrgb
 endif
 
 ifdef MOZ_ENABLE_GTK
-DIRS		+= gtk
+DIRS        += gtk
 endif
 ifdef MOZ_ENABLE_GTK2
-DIRS		+= gtk2
+DIRS        += gtk2
 endif
 ifdef MOZ_ENABLE_QT
-DIRS		+= qt
+DIRS        += qt
 endif
 ifdef MOZ_ENABLE_XLIB
-DIRS		+= xlib
+DIRS        += xlib
 endif
 
 ifdef MOZ_ENABLE_PHOTON
-DIRS		+= photon
+DIRS        += photon
 endif
 
 ifdef MOZ_ENABLE_XPRINT
-DIRS		+= xprint 
+DIRS        += xprint 
 endif
 
-CPPSRCS		= \
-		nsBlender.cpp \
-		nsColor.cpp \
-		nsColorNames.cpp \
-		nsCompressedCharMap.cpp \
-		nsDeviceContext.cpp \
-		nsFont.cpp \
-		nsFontList.cpp \
-	        nsRenderingContextImpl.cpp \
-		nsRect.cpp \
-		nsTransform2D.cpp \
-		nsScriptableRegion.cpp \
-		nsGraphicsImpl.cpp \
-		nsPrintOptionsImpl.cpp \
-		$(NULL)
+CPPSRCS = \
+        nsBlender.cpp \
+        nsColor.cpp \
+        nsColorNames.cpp \
+        nsCompressedCharMap.cpp \
+        nsDeviceContext.cpp \
+        nsFont.cpp \
+        nsFontList.cpp \
+        nsRenderingContextImpl.cpp \
+        nsRect.cpp \
+        nsTransform2D.cpp \
+        nsScriptableRegion.cpp \
+        nsGraphicsImpl.cpp \
+        nsPrintOptionsImpl.cpp \
+        $(NULL)
 
 ifneq (,$(filter gtk xlib os2,$(MOZ_WIDGET_TOOLKIT)))
-CPPSRCS	+= \
-		nsRegion.cpp \
-		nsRegionImpl.cpp \
-		$(NULL)
+CPPSRCS += \
+        nsRegion.cpp \
+        nsRegionImpl.cpp \
+        $(NULL)
 endif
 
 ifneq (,$(filter gtk xlib beos,$(MOZ_WIDGET_TOOLKIT)))
-CPPSRCS		+= imgScaler.cpp
+CPPSRCS += imgScaler.cpp
+endif
+
+ifeq (mac, $(MOZ_WIDGET_TOOLKIT))
+CPPSRCS += \
+        mac/nsRegionPool.cpp \
+        $(NULL)
 endif
 
 SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/libmozutil_s.$(LIB_SUFFIX) \
-		$(NULL)
+        $(DIST)/lib/libmozutil_s.$(LIB_SUFFIX) \
+        $(NULL)
 
 EXTRA_DSO_LDOPTS = \
-		$(MOZ_UNICHARUTIL_LIBS) \
-		$(MOZ_COMPONENT_LIBS) \
-		$(NULL)
+        $(MOZ_UNICHARUTIL_LIBS) \
+        $(MOZ_COMPONENT_LIBS) \
+        $(NULL)
+
+ifeq (mac, $(MOZ_WIDGET_TOOLKIT))
+EXTRA_DSO_LDOPTS += \
+        $(TK_LIBS) \
+        $(NULL)
+endif
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES		+= -D_IMPL_NS_GFX
+DEFINES     += -D_IMPL_NS_GFX
 
 install:: icon_0.gif icon_1.gif
-	$(INSTALL) -m 555 $^ $(DIST)/bin/res/gfx
+    $(INSTALL) -m 555 $^ $(DIST)/bin/res/gfx
 

@@ -36,53 +36,89 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsRegionMac_h___
-#define nsRegionMac_h___
+#include "nsRegionPool.h"
 
-#include "nsIRegion.h"
-#include <QuickDraw.h>
+
+NS_EXPORT nsNativeRegionPool sNativeRegionPool;
 
 //------------------------------------------------------------------------
 
-class nsRegionMac : public nsIRegion
+nsNativeRegionPool::nsNativeRegionPool()
 {
-public:
-  nsRegionMac();
-  virtual ~nsRegionMac();
+	mRegionSlots = nsnull;
+	mEmptySlots = nsnull;
+}
 
-  NS_DECL_ISUPPORTS
+//------------------------------------------------------------------------
 
-  virtual nsresult Init();
+nsNativeRegionPool::~nsNativeRegionPool()
+{
+	// Release all of the regions.
+	if (mRegionSlots != nsnull) {
+		nsRegionSlot* slot = mRegionSlots;
+		while (slot != nsnull) {
+			::DisposeRgn(slot->mRegion);
+			nsRegionSlot* next = slot->mNext;
+			delete slot;
+			slot = next;
+		}
+	}
+	
+	// Release all empty slots.
+	if (mEmptySlots != nsnull) {
+		nsRegionSlot* slot = mEmptySlots;
+		while (slot != nsnull) {
+			nsRegionSlot* next = slot->mNext;
+			delete slot;
+			slot = next;
+		}
+	}
+}
 
-  virtual void SetTo(const nsIRegion &aRegion);
-  virtual void SetTo(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
-  virtual void Intersect(const nsIRegion &aRegion);
-  virtual void Intersect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
-  virtual void Union(const nsIRegion &aRegion);
-  virtual void Union(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
-  virtual void Subtract(const nsIRegion &aRegion);
-  virtual void Subtract(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
-  virtual PRBool IsEmpty(void);
-  virtual PRBool IsEqual(const nsIRegion &aRegion);
-  virtual void GetBoundingBox(PRInt32 *aX, PRInt32 *aY, PRInt32 *aWidth, PRInt32 *aHeight);
-  virtual void Offset(PRInt32 aXOffset, PRInt32 aYOffset);
-  virtual PRBool ContainsRect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
-  NS_IMETHOD GetRects(nsRegionRectSet **aRects);
-  NS_IMETHOD FreeRects(nsRegionRectSet *aRects);
-  NS_IMETHOD GetNativeRegion(void *&aRegion) const;
-  virtual nsresult SetNativeRegion(void *aRegion);
-  NS_IMETHOD GetRegionComplexity(nsRegionComplexity &aComplexity) const;
-  NS_IMETHOD GetNumRects(PRUint32 *aRects) const { *aRects = 0; return NS_OK; }
+//------------------------------------------------------------------------
 
-private:
-	RgnHandle			      mRegion;
-  nsRegionComplexity  mRegionType;
+RgnHandle nsNativeRegionPool::GetNewRegion()
+{
+	nsRegionSlot* slot = mRegionSlots;
+	if (slot != nsnull) {
+		RgnHandle region = slot->mRegion;
 
-private:
-  virtual void SetRegionType();
-  virtual void SetRegionEmpty();
-  virtual RgnHandle CreateRectRegion(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
+		// remove this slot from the free list.
+		mRegionSlots = slot->mNext;
+		
+		// transfer this slot to the empty slot list for reuse.
+		slot->mRegion = nsnull;
+		slot->mNext = mEmptySlots;
+		mEmptySlots = slot;
+		
+		// initialize the region. 
+		::SetEmptyRgn(region);
+		return region;
+	}
+	
+	// return a fresh new region. a slot will be created to hold it
+	// if and when the region is released.
+	return (::NewRgn());
+}
 
-};
+//------------------------------------------------------------------------
 
-#endif  // nsRegionMac_h___ 
+void nsNativeRegionPool::ReleaseRegion(RgnHandle aRgnHandle)
+{
+	nsRegionSlot* slot = mEmptySlots;
+	if (slot != nsnull)
+		mEmptySlots = slot->mNext;
+	else
+		slot = new nsRegionSlot;
+	
+	if (slot != nsnull) {
+		// put this region on the region list.
+		slot->mRegion = aRgnHandle;
+		slot->mNext = mRegionSlots;
+		mRegionSlots = slot;
+	} else {
+		// couldn't allocate a slot, toss the region.
+		::DisposeRgn(aRgnHandle);
+	}
+}
+
