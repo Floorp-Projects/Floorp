@@ -81,10 +81,8 @@ typedef struct _XfeTempTwoPart
 
     Dimension			spacing;				/* Spacing				*/
 
-    Dimension			separator_height;		/* Separator height		*/
     int					separator_thickness;	/* Separator thickness	*/
     unsigned char		separator_type;			/* Separator type		*/
-    Dimension			separator_width;		/* Separator width		*/
 
     unsigned char		orientation;			/* Orientation			*/
     unsigned char		button_layout;			/* Button layout		*/

@@ -135,16 +135,6 @@ static XtResource resources[] =
 		(XtPointer) _XfeCallProcCopyForeground
 	},
 
-
-    { 
-		XmNseparatorHeight,
-		XmCSeparatorHeight,
-		XmRVerticalDimension,
-		sizeof(Dimension),
-		XtOffsetOf(XfeTempTwoRec , xfe_temp_two . separator_height),
-		XmRImmediate, 
-		(XtPointer) 4
-    },
     { 
 		XmNseparatorThickness,
 		XmCSeparatorThickness,
@@ -162,15 +152,6 @@ static XtResource resources[] =
 		XtOffsetOf(XfeTempTwoRec , xfe_temp_two . separator_type),
 		XmRImmediate, 
 		(XtPointer) XmSHADOW_ETCHED_IN
-    },
-    { 
-		XmNseparatorWidth,
-		XmCSeparatorWidth,
-		XmRHorizontalDimension,
-		sizeof(Dimension),
-		XtOffsetOf(XfeTempTwoRec , xfe_temp_two . separator_width),
-		XmRImmediate, 
-		(XtPointer) 4
     },
     { 
 		XmNspacing,
@@ -298,20 +279,6 @@ static XmSyntheticResource synthetic_resources[] =
 		_XmFromHorizontalPixels,
 		_XmToHorizontalPixels 
     },
-	{ 
-		XmNseparatorHeight,
-		sizeof(Dimension),
-		XtOffsetOf(XfeTempTwoRec , xfe_temp_two . separator_height),
-		_XmFromVerticalPixels,
-		_XmToVerticalPixels 
-	},
-	{ 
-		XmNseparatorWidth,
-		sizeof(Dimension),
-		XtOffsetOf(XfeTempTwoRec , xfe_temp_two . separator_width),
-		_XmFromHorizontalPixels,
-		_XmToHorizontalPixels 
-	},
 };
 
 /*----------------------------------------------------------------------*/
@@ -460,8 +427,8 @@ _XFE_WIDGET_CLASS_RECORD(temptwo,TempTwo) =
 
     /* Constraint Part */
     {
-		constraint_resources,					/* syn resources		*/
-		XtNumber(constraint_resources),			/* num syn_resources	*/
+		constraint_resources,					/* constraint res		*/
+		XtNumber(constraint_resources),			/* num constraint res	*/
 		sizeof(XfeTempTwoConstraintRec),		/* constraint size		*/
 		ConstraintInitialize,					/* init proc			*/
 		ConstraintDestroy,						/* destroy proc			*/

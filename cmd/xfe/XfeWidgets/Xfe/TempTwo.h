@@ -27,7 +27,6 @@
 #ifndef _XfeTempTwo_h_							/* start TempTwo.h		*/
 #define _XfeTempTwo_h_
 
-#include <Xfe/Xfe.h>
 #include <Xfe/Manager.h>
 
 #ifdef __cplusplus								/* start C++			*/
