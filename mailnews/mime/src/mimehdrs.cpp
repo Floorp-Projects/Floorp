@@ -769,6 +769,8 @@ MimeHeaders_write_all_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt, PRBoo
 	  if (status < 0) return 0;
 	}
 
+  char *c2;
+
   for (i = 0; i < hdrs->heads_size; i++)
   {
     char *head = hdrs->heads[i];
@@ -776,9 +778,9 @@ MimeHeaders_write_all_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt, PRBoo
                       ? hdrs->all_headers + hdrs->all_headers_fp
                       : hdrs->heads[i+1]);
     char *colon, *ocolon;
-    char *contents;
+    char *contents = end;
     char *name = 0;
-    char *c2 = 0;
+    c2 = 0;
     
     /* Hack for BSD Mailbox delimiter. */
     if (i == 0 && head[0] == 'F' && !nsCRT::strncmp(head, "From ", 5))
@@ -805,7 +807,7 @@ MimeHeaders_write_all_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt, PRBoo
     }
     
     /* Skip over whitespace after colon. */
-    while (contents <= end && nsCRT::IsAsciiSpace(*contents))
+    while (contents < end && nsCRT::IsAsciiSpace(*contents))
       contents++;
     
     /* Take off trailing whitespace... */
@@ -816,15 +818,18 @@ MimeHeaders_write_all_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt, PRBoo
     if (!name) return MIME_OUT_OF_MEMORY;
     nsCRT::memcpy(name, head, colon - head);
     name[colon - head] = 0;
-    
-    c2 = (char *)PR_MALLOC(end - contents + 1);
-    if (!c2)
+  
+    if ( (end - contents) > 0 )
     {
-      PR_Free(name);
-      return MIME_OUT_OF_MEMORY;
+      c2 = (char *)PR_MALLOC(end - contents + 1);
+      if (!c2)
+      {
+        PR_Free(name);
+        return MIME_OUT_OF_MEMORY;
+      }
+      nsCRT::memcpy(c2, contents, end - contents);
+      c2[end - contents] = 0;
     }
-    nsCRT::memcpy(c2, contents, end - contents);
-    c2[end - contents] = 0;
     
     if (attachment)
       status = mimeEmitterAddAttachmentField(opt, name, 
@@ -834,7 +839,7 @@ MimeHeaders_write_all_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt, PRBoo
                                 MimeHeaders_convert_header_value(opt, &c2));
 
     PR_Free(name);
-    PR_Free(c2);
+    PR_FREEIF(c2);
     
     if (status < 0) return status;
     if (!wrote_any_p) 
