@@ -375,6 +375,7 @@ IterateScripts(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
 
     /* We pass along any additional args, so patch and leverage argv */
     argv0 = argv[0];
+    JSD_LockScriptSubsystem(data->jsdcTarget);
     while(NULL != (script = JSD_IterateScripts(data->jsdcTarget, &iterp)))
     {
         jsval retval;
@@ -387,6 +388,7 @@ IterateScripts(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
         if(!JS_ValueToBoolean(cx, retval, &another) || !another)
             break;
     }
+    JSD_UnlockScriptSubsystem(data->jsdcTarget);
     argv[0] = argv0;
 
     *rval = INT_TO_JSVAL(count);
@@ -398,6 +400,8 @@ IsActiveScript(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
 {
     JSDScript *jsdscript;
     JSDB_Data* data = (JSDB_Data*) JS_GetContextPrivate(cx);
+    JSBool active;
+
     JS_ASSERT(data);
 
     if(argc < 1 || !(jsdscript = H2P_SCRIPT(cx, argv[0])))
@@ -405,8 +409,12 @@ IsActiveScript(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
         JS_ReportError(cx, "IsActiveScript requires script handle");
         return JS_FALSE;
     }
-    *rval = JSD_IsActiveScript(data->jsdcTarget, jsdscript)
-                ? JSVAL_TRUE : JSVAL_FALSE;
+
+    JSD_LockScriptSubsystem(data->jsdcTarget);
+    active = JSD_IsActiveScript(data->jsdcTarget, jsdscript);
+    JSD_UnlockScriptSubsystem(data->jsdcTarget);
+
+    *rval = active ? JSVAL_TRUE : JSVAL_FALSE;
     return JS_TRUE;
 }
 
@@ -415,6 +423,8 @@ GetScriptFilename(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
 {
     JSDScript *jsdscript;
     JSDB_Data* data = (JSDB_Data*) JS_GetContextPrivate(cx);
+    JSBool active;
+
     JS_ASSERT(data);
 
     if(argc < 1 || !(jsdscript = H2P_SCRIPT(cx, argv[0])))
@@ -422,7 +432,11 @@ GetScriptFilename(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
         JS_ReportError(cx, "GetScriptFilename requires script handle");
         return JS_FALSE;
     }
-    if(! JSD_IsActiveScript(data->jsdcTarget, jsdscript))
+
+    JSD_LockScriptSubsystem(data->jsdcTarget);
+    active = JSD_IsActiveScript(data->jsdcTarget, jsdscript);
+    JSD_UnlockScriptSubsystem(data->jsdcTarget);
+    if(! active )
     {
         printf("%d\n", (int)jsdscript);
         JS_ReportError(cx, "GetScriptFilename passed inactive script");
@@ -439,6 +453,8 @@ GetScriptFunctionName(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 {
     JSDScript *jsdscript;
     JSDB_Data* data = (JSDB_Data*) JS_GetContextPrivate(cx);
+    JSBool active;
+
     JS_ASSERT(data);
 
     if(argc < 1 || !(jsdscript = H2P_SCRIPT(cx, argv[0])))
@@ -446,7 +462,11 @@ GetScriptFunctionName(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
         JS_ReportError(cx, "GetScriptFunctionName requires script handle");
         return JS_FALSE;
     }
-    if(! JSD_IsActiveScript(data->jsdcTarget, jsdscript))
+
+    JSD_LockScriptSubsystem(data->jsdcTarget);
+    active = JSD_IsActiveScript(data->jsdcTarget, jsdscript);
+    JSD_UnlockScriptSubsystem(data->jsdcTarget);
+    if(! active )
     {
         JS_ReportError(cx, "GetScriptFunctionName passed inactive script");
         return JS_FALSE;
@@ -462,6 +482,8 @@ GetScriptBaseLineNumber(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 {
     JSDScript *jsdscript;
     JSDB_Data* data = (JSDB_Data*) JS_GetContextPrivate(cx);
+    JSBool active;
+
     JS_ASSERT(data);
 
     if(argc < 1 || !(jsdscript = H2P_SCRIPT(cx, argv[0])))
@@ -469,7 +491,11 @@ GetScriptBaseLineNumber(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
         JS_ReportError(cx, "GetScriptBaseLineNumber requires script handle");
         return JS_FALSE;
     }
-    if(! JSD_IsActiveScript(data->jsdcTarget, jsdscript))
+
+    JSD_LockScriptSubsystem(data->jsdcTarget);
+    active = JSD_IsActiveScript(data->jsdcTarget, jsdscript);
+    JSD_UnlockScriptSubsystem(data->jsdcTarget);
+    if(! active )
     {
         JS_ReportError(cx, "GetScriptBaseLineNumber passed inactive script");
         return JS_FALSE;
@@ -484,6 +510,8 @@ GetScriptLineExtent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
 {
     JSDScript *jsdscript;
     JSDB_Data* data = (JSDB_Data*) JS_GetContextPrivate(cx);
+    JSBool active;
+
     JS_ASSERT(data);
 
     if(argc < 1 || !(jsdscript = H2P_SCRIPT(cx, argv[0])))
@@ -491,7 +519,11 @@ GetScriptLineExtent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
         JS_ReportError(cx, "GetScriptLineExtent requires script handle");
         return JS_FALSE;
     }
-    if(! JSD_IsActiveScript(data->jsdcTarget, jsdscript))
+
+    JSD_LockScriptSubsystem(data->jsdcTarget);
+    active = JSD_IsActiveScript(data->jsdcTarget, jsdscript);
+    JSD_UnlockScriptSubsystem(data->jsdcTarget);
+    if(! active )
     {
         JS_ReportError(cx, "GetScriptLineExtent passed inactive script");
         return JS_FALSE;
@@ -539,6 +571,8 @@ GetClosestPC(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     int32 line;
     JSDScript *jsdscript;
     JSDB_Data* data = (JSDB_Data*) JS_GetContextPrivate(cx);
+    JSBool active;
+
     JS_ASSERT(data);
 
     if(argc < 2 || !(jsdscript = H2P_SCRIPT(cx, argv[0])) ||
@@ -547,7 +581,11 @@ GetClosestPC(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         JS_ReportError(cx, "GetClosestPC requires script handle and a line number");
         return JS_FALSE;
     }
-    if(! JSD_IsActiveScript(data->jsdcTarget, jsdscript))
+
+    JSD_LockScriptSubsystem(data->jsdcTarget);
+    active = JSD_IsActiveScript(data->jsdcTarget, jsdscript);
+    JSD_UnlockScriptSubsystem(data->jsdcTarget);
+    if(! active )
     {
         JS_ReportError(cx, "GetClosestPC passed inactive script");
         return JS_FALSE;
@@ -563,6 +601,8 @@ GetClosestLine(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
 {
     JSDScript *jsdscript;
     JSDB_Data* data = (JSDB_Data*) JS_GetContextPrivate(cx);
+    JSBool active;
+
     JS_ASSERT(data);
 
     if(argc < 2 || !(jsdscript = H2P_SCRIPT(cx, argv[0])))
@@ -570,7 +610,11 @@ GetClosestLine(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
         JS_ReportError(cx, "GetClosestLine requires script handle and a line number");
         return JS_FALSE;
     }
-    if(! JSD_IsActiveScript(data->jsdcTarget, jsdscript))
+
+    JSD_LockScriptSubsystem(data->jsdcTarget);
+    active = JSD_IsActiveScript(data->jsdcTarget, jsdscript);
+    JSD_UnlockScriptSubsystem(data->jsdcTarget);
+    if(! active );
     {
         JS_ReportError(cx, "GetClosestLine passed inactive script");
         return JS_FALSE;
@@ -876,6 +920,8 @@ SetTrap(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     jsuword pc;
     JSBool success;
     JSDB_Data* data = (JSDB_Data*) JS_GetContextPrivate(cx);
+    JSBool active;
+
     JS_ASSERT(data);
 
     if(argc < 1 || !(jsdscript = H2P_SCRIPT(cx, argv[0])))
@@ -883,7 +929,11 @@ SetTrap(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         JS_ReportError(cx, "SetTrap requires script handle as first arg");
         return JS_FALSE;
     }
-    if(! JSD_IsActiveScript(data->jsdcTarget, jsdscript))
+
+    JSD_LockScriptSubsystem(data->jsdcTarget);
+    active = JSD_IsActiveScript(data->jsdcTarget, jsdscript);
+    JSD_UnlockScriptSubsystem(data->jsdcTarget);
+    if(! active )
     {
         JS_ReportError(cx, "SetTrap passed inactive script");
         return JS_FALSE;
@@ -908,6 +958,8 @@ ClearTrap(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     jsuword pc;
     JSBool success;
     JSDB_Data* data = (JSDB_Data*) JS_GetContextPrivate(cx);
+    JSBool active;
+
     JS_ASSERT(data);
 
     if(argc < 1 || !(jsdscript = H2P_SCRIPT(cx, argv[0])))
@@ -915,7 +967,11 @@ ClearTrap(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         JS_ReportError(cx, "ClearTrap requires script handle as first arg");
         return JS_FALSE;
     }
-    if(! JSD_IsActiveScript(data->jsdcTarget, jsdscript))
+
+    JSD_LockScriptSubsystem(data->jsdcTarget);
+    active = JSD_IsActiveScript(data->jsdcTarget, jsdscript);
+    JSD_UnlockScriptSubsystem(data->jsdcTarget);
+    if(! active )
     {
         JS_ReportError(cx, "ClearTrap passed inactive script");
         return JS_FALSE;
@@ -938,6 +994,8 @@ ClearAllTrapsForScript(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
     JSDScript *jsdscript;
     JSBool success;
     JSDB_Data* data = (JSDB_Data*) JS_GetContextPrivate(cx);
+    JSBool active;
+
     JS_ASSERT(data);
 
     if(argc < 1 || !(jsdscript = H2P_SCRIPT(cx, argv[0])))
@@ -945,7 +1003,11 @@ ClearAllTrapsForScript(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
         JS_ReportError(cx, "ClearAllTrapsForScript script handle as first arg");
         return JS_FALSE;
     }
-    if(! JSD_IsActiveScript(data->jsdcTarget, jsdscript))
+
+    JSD_LockScriptSubsystem(data->jsdcTarget);
+    active = JSD_IsActiveScript(data->jsdcTarget, jsdscript);
+    JSD_UnlockScriptSubsystem(data->jsdcTarget);
+    if(! active )
     {
         JS_ReportError(cx, "GetClosestLine passed inactive script");
         return JS_FALSE;
