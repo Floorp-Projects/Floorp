@@ -23,6 +23,10 @@ from xpcom import xpt, COMException, nsError
 from xpcom._xpcom import IID_nsISupports, IID_nsIClassInfo, IID_nsISupportsString, IID_nsISupportsWeakReference, \
         IID_nsIWeakReference, XPTI_GetInterfaceInfoManager, NS_GetGlobalComponentManager, XPTC_InvokeByIndex
 
+# Attribute names we may be __getattr__'d for, but know we don't want to delegate
+# Could maybe just look for startswith("__") but this may screw things for some objects.
+_special_getattr_names = ["__del__", "__len__", "__nonzero__"]
+
 _just_int_interfaces = ["nsISupportsPRInt32", "nsISupportsPRInt16", "nsISupportsPRUint32", "nsISupportsPRUint16", "nsISupportsPRUint8", "nsISupportsPRBool"]
 _just_long_interfaces = ["nsISupportsPRInt64", "nsISupportsPRUint64"]
 _just_float_interfaces = ["nsISupportsDouble", "nsISupportsFloat"]
@@ -215,7 +219,9 @@ class Component(_XPCOMBase):
             if real_cid is not None:
                 self.__dict__['_object_name_'] = real_cid
             for nominated_iid in classinfo.getInterfaces():
-                self._remember_interface_info(nominated_iid)
+                # Interface may appear twice in the class info list, so check this here.
+                if not self.__dict__['_interface_infos_'].has_key(nominated_iid):
+                    self._remember_interface_info(nominated_iid)
         self.__dict__['_com_classinfo_'] = classinfo
 
     def _remember_interface_info(self, iid):
@@ -256,6 +262,8 @@ class Component(_XPCOMBase):
     queryInterface = QueryInterface # Alternate name.
 
     def __getattr__(self, attr):
+        if attr in _special_getattr_names:
+            raise AttributeError, attr
         # First allow the interface name to return the "raw" interface
         interface = self.__dict__['_interface_names_'].get(attr, None)
         if interface is not None:
@@ -311,6 +319,9 @@ class _Interface(_XPCOMBase):
 
     def __getattr__(self, attr):
         # Allow the underlying interface to provide a better implementation if desired.
+        if attr in _special_getattr_names:
+            raise AttributeError, attr
+
         ret = getattr(self.__dict__['_comobj_'], attr, None)
         if ret is not None:
             return ret
