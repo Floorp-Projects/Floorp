@@ -26,9 +26,18 @@
 #define NSEMBEDAPI_H
 
 #include "nsILocalFile.h"
+#include "nsIDirectoryService.h"
 
-extern nsresult NS_InitEmbedding(const char *aPath);
-extern nsresult NS_InitEmbedding(nsILocalFile *aPath);
+/*
+    aPath       -> the mozilla bin directory. If nsnull, the default is used
+    aProvider   -> the application directory service provider. If nsnull, the
+                   default (nsAppFileLocationProvider) is constructed and used.
+                   If not nsnull, the arg must be AddRef'd already and ownership
+                   is taken by this function.
+*/
+
+extern nsresult NS_InitEmbedding(nsILocalFile *mozBinDirectory,
+                                 nsIDirectoryServiceProvider *appFileLocProvider);
 extern nsresult NS_TermEmbedding();
 
 #endif
