@@ -96,16 +96,12 @@ BOOL CInterpret::NewConfig(WIDGET *curWidget, CString globalsName)
 	if (!tmpWidget)
 		return FALSE;
 
-	/*
-	CString tmpFunction = tmpWidget->action.function;
-	CString params = replaceVars(tmpWidget->action.parameters,NULL);
-	theApp.GenerateList(tmpFunction, tmpWidget, params);	
-	*/
 	if (!tmpWidget->action.onInit.IsEmpty())
 		interpret(tmpWidget->action.onInit, tmpWidget);
 					
-	((CComboBox*)tmpWidget->control)->SelectString(0, configField);
-
+	if (!configField.IsEmpty())
+		((CComboBox*)tmpWidget->control)->SelectString(0, configField);
+	
 	theApp.SetGlobal(globalsName, configField);
 
 	return TRUE;
