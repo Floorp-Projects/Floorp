@@ -285,11 +285,13 @@ void nsDoMagic(MenuHandle theMenu)
   // ask if this is a child of the previous menu
   PRBool isChild = PR_FALSE;
   
-  if(gPreviousMenuStack[gPreviousMenuStack.Count() - 1]) {
-    if(nsIsHierChild(theMenu)) {
-      isChild = PR_TRUE;
-    } 
-  } 
+  if(gPreviousMenuStack.Count() > 0) {
+    if(gPreviousMenuStack[gPreviousMenuStack.Count() - 1]) {
+      if(nsIsHierChild(theMenu)) {
+        isChild = PR_TRUE;
+      }  
+    }
+  }
   
   if(theMenu == gLevel2HierMenu) {
     gCurrentMenuDepth = 2;
@@ -360,18 +362,20 @@ void nsBuildMenu(MenuHandle theMenu, PRBool isChild)
         nsISupports * supports = nsnull;
         //printf("gCurrentMenuItem = %d \n", gCurrentMenuItem);
         if(gCurrentMenuItem) {
-            nsIMenu * prevMenu = (nsIMenu *) gPreviousMenuStack[gPreviousMenuStack.Count() - 1];
-            //printf("gPreviousMenuStack.Count() = %d \n", gPreviousMenuStack.Count() );
-            
-            if(prevMenu) {
-		        prevMenu->GetItemAt(gCurrentMenuItem - 1, supports);
-		        nsCOMPtr<nsIMenu> menu(do_QueryInterface(supports));
-		        if(menu) {
-		          nsCOMPtr<nsIMenuListener> menulistener(do_QueryInterface(supports));
-		          menulistener->MenuSelected(mevent);
-		          nsPostBuild(menu, theMenu, isChild);
-		        }
-	        } 
+        	if(gPreviousMenuStack.Count() > 0) {
+	            nsIMenu * prevMenu = (nsIMenu *) gPreviousMenuStack[gPreviousMenuStack.Count() - 1];
+	            //printf("gPreviousMenuStack.Count() = %d \n", gPreviousMenuStack.Count() );
+	            
+	            if(prevMenu) {
+			        prevMenu->GetItemAt(gCurrentMenuItem - 1, supports);
+			        nsCOMPtr<nsIMenu> menu(do_QueryInterface(supports));
+			        if(menu) {
+			          nsCOMPtr<nsIMenuListener> menulistener(do_QueryInterface(supports));
+			          menulistener->MenuSelected(mevent);
+			          nsPostBuild(menu, theMenu, isChild);
+			        }
+		        } 
+			}
 	    }
   }
   //printf("exit BuildMenu \n");
@@ -427,8 +431,11 @@ void nsPushMenu(nsIMenu * aMenu)
 //------------------------------------------------------------------------------
 void nsPopMenu(nsIMenu ** aMenu)
 {
-  *aMenu = (nsIMenu *) gPreviousMenuStack[gPreviousMenuStack.Count() - 1];
-  gPreviousMenuStack.RemoveElementAt(gPreviousMenuStack.Count() - 1);
+  if(gPreviousMenuStack.Count() > 0) {
+    *aMenu = (nsIMenu *) gPreviousMenuStack[gPreviousMenuStack.Count() - 1];
+    gPreviousMenuStack.RemoveElementAt(gPreviousMenuStack.Count() - 1);
+  } else
+    *aMenu = nsnull;
 }
 
 //------------------------------------------------------------------------------
