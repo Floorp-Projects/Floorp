@@ -131,12 +131,12 @@ NS_METHOD nsAppShell::Create(int* argc, char ** argv)
     exit(1);
   }
   _Xdebug = 1;
-  gScreenNum = DefaultScreen(gDisplay);
   gScreen = DefaultScreenOfDisplay(gDisplay);
   // init the rgb layer.  this will provide
   // the visual information for us.
   xlib_rgb_init(gDisplay, gScreen);
   gVisual = xlib_rgb_get_visual();
+
   // set the static vars for this class so we can find our
   // way around...
   vis_template.visualid = XVisualIDFromVisual(gVisual);
