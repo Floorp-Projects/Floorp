@@ -44,7 +44,7 @@ Rights Reserved.
     </title>
     <text value="&conditionDesc.label;"/>
     <radiogroup>
-      <radio value="&matchAll.label;"/>
+      <radio value="&matchAll.label;" checked="true"/>
       <radio value="&matchAny.label;"/>
     </radiogroup>
 
@@ -61,13 +61,13 @@ Rights Reserved.
         <treeitem>
           <treerow>
             <treecell allowevents="true">
-              <searchattribute id="searchAttr" for="searchOp" flex="1"/>
+              <searchattribute id="searchAttr" for="searchOp,searchValue" flex="1"/>
             </treecell>
             <treecell allowevents="true">
-              <searchoperator id="searchOp" for="searchValue" flex="1"/>
+              <searchoperator id="searchOp" flex="1"/>
             </treecell>
-            <treecell allowevents="true">
-              <textfield id="searchValue" flex="1"/>
+            <treecell allowevents="true" >
+              <searchvalue id="searchValue" flex="1"/>
             </treecell>
           </treerow>
         </treeitem>
@@ -88,7 +88,7 @@ Rights Reserved.
     <title>
       <text value="&filterAction.label;"/>
     </title>
-    <menulist id="actionMenu">
+    <menulist id="actionMenu" flex="1">
       <menupopup>
         <menuitem value="&moveToFolder.label;"/>
         <menuitem value="&changePriority.label;"/>
@@ -98,6 +98,7 @@ Rights Reserved.
         <menuitem value="&watchThread.label;"/>
       </menupopup>
     </menulist>
+    <spring flex="2"/>
   </titledbox>
   <separator class="groove"/>
   <box id="okCancelButtons"/>
