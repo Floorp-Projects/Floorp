@@ -2496,9 +2496,16 @@ PRInt32 nsNNTPProtocol::BeginArticle()
   // if we have a channel listener,
   // create a pipe to pump the message into...the output will go to whoever
   // is consuming the message display
+  //
+  // the pipe must have an unlimited length since we are going to be filling
+  // it on the main thread while reading it from the main thread.  iow, the
+  // write must not block!! (see bug 190988)
+  //
   if (m_channelListener) {
       nsresult rv;
-      rv = NS_NewPipe(getter_AddRefs(mDisplayInputStream), getter_AddRefs(mDisplayOutputStream));
+      rv = NS_NewPipe(getter_AddRefs(mDisplayInputStream),
+                      getter_AddRefs(mDisplayOutputStream),
+                      4096, PRUint32(-1));
       NS_ASSERTION(NS_SUCCEEDED(rv), "failed to create pipe");
       // TODO: return on failure?
   }
