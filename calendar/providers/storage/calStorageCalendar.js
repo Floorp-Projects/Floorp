@@ -67,7 +67,11 @@ const CalItemOccurrence = new Components.Constructor(kCalItemOccurrenceContractI
 
 const kMozStorageStatementWrapperContractID = "@mozilla.org/storage/statement-wrapper;1";
 const kMozStorageStatementWrapperIID = Components.interfaces.mozIStorageStatementWrapper;
-const MozStorageStatementWrapper = new Components.Constructor(kMozStorageStatementWrapperContractID, kMozStorageStatementWrapperIID);
+if (kMozStorageStatementWrapperIID) {
+    const MozStorageStatementWrapper = new Components.Constructor(kMozStorageStatementWrapperContractID, kMozStorageStatementWrapperIID);
+ } else {
+    dump("*** mozStorage not available, calendar/storage provider will not function\n");
+ }
 
 const CAL_ITEM_TYPE_EVENT = 0;
 const CAL_ITEM_TYPE_TODO = 1;
@@ -840,6 +844,9 @@ var calStorageCalendarModule = {
 
         if (!iid.equals(Components.interfaces.nsIFactory))
             throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+
+        if (!kStorageServiceIID)
+            throw Components.results.NS_ERROR_NOT_INITIALIZED;
 
         return this.mFactory;
     },
