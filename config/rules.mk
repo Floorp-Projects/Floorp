@@ -157,10 +157,6 @@ endif
 SHARED_LIBRARY		:= $(LIBRARY:.$(LIB_SUFFIX)=$(DLL_SUFFIX))
 
 ifeq ($(OS_ARCH),OS2)
-DEF_OBJS		= $(OBJS)
-ifneq ($(EXPORT_OBJS),1)
-DEF_OBJS		+= $(SHARED_LIBRARY_LIBS)
-endif
 DEF_FILE		:= $(SHARED_LIBRARY:.dll=.def)
 endif
 
@@ -258,7 +254,7 @@ ifndef HOST_OBJS
 HOST_OBJS		= $(addprefix host_,$(HOST_CSRCS:.c=.o))
 endif
 
-ifeq ($(OS_ARCH),OS2)
+ifeq ($(MOZ_OS2_TOOLS),VACPP)
 LIBOBJS			:= $(OBJS)
 else
 LIBOBJS			:= $(addprefix \", $(OBJS))
@@ -810,9 +806,9 @@ ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
 	$(LD) /NOLOGO /OUT:$@ /PDB:$(PDBFILE) $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(PROGOBJS) $(RESFILE) $(LIBS) $(EXTRA_LIBS) $(OS_LIBS)
 else
 ifeq ($(CPP_PROG_LINK),1)
-	$(CCC) -o $@ $(CXXFLAGS) $(WRAP_MALLOC_CFLAGS) $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(BIN_FLAGS) $(WRAP_MALLOC_LIB) $(PROFILER_LIBS)
+	$(CCC) -o $@ $(CXXFLAGS) $(WRAP_MALLOC_CFLAGS) $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(BIN_FLAGS) $(WRAP_MALLOC_LIB) $(PROFILER_LIBS) $(EXE_DEF_FILE)
 else # ! CPP_PROG_LINK
-	$(CC) -o $@ $(CFLAGS) $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(BIN_FLAGS)
+	$(CC) -o $@ $(CFLAGS) $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(BIN_FLAGS) $(EXE_DEF_FILE)
 endif # CPP_PROG_LINK
 endif # WINNT && !GNU_CC
 endif # OS2
@@ -902,13 +898,12 @@ ifndef NO_DIST_INSTALL
 	$(INSTALL) $(IFLAGS2) $^.quantify $(DIST)/bin
 endif
 
-ifneq ($(OS_ARCH),OS2)
 #
 # This allows us to create static versions of the shared libraries
 # that are built using other static libraries.  Confused...?
 #
 ifdef SHARED_LIBRARY_LIBS
-ifeq ($(OS_ARCH),WINNT)
+ifeq (,$(filter-out OS2 WINNT, $(OS_ARCH)))
 ifneq (,$(BUILD_STATIC_LIBS)$(FORCE_STATIC_LIB))
 LOBJS	+= $(SHARED_LIBRARY_LIBS)
 endif
@@ -925,7 +920,7 @@ endif
 
 $(LIBRARY): $(OBJS) $(LOBJS) $(SHARED_LIBRARY_LIBS) $(EXTRA_DEPS) Makefile Makefile.in
 	rm -f $@
-ifneq ($(OS_ARCH),WINNT)
+ifneq (,$(filter-out OS2 WINNT, $(OS_ARCH)))
 ifdef SHARED_LIBRARY_LIBS
 	@rm -f $(SUB_LOBJS)
 	@for lib in $(SHARED_LIBRARY_LIBS); do $(AR_EXTRACT) $${lib}; $(CLEANUP2); done
@@ -939,37 +934,28 @@ ifeq ($(OS_ARCH),WINNT)
 $(IMPORT_LIBRARY): $(SHARED_LIBRARY)
 endif
 
-else # OS2
-ifdef SHARED_LIBRARY_LIBS
-SUB_LOBJS	= $(SHARED_LIBRARY_LIBS)
-endif
-
-$(DEF_FILE): $(DEF_OBJS)
+ifeq ($(OS_ARCH),OS2)
+$(DEF_FILE): $(OBJS) $(SHARED_LIBRARY_LIBS)
 	rm -f $@
-	echo LIBRARY $(LIBRARY_NAME) INITINSTANCE TERMINSTANCE > $(DEF_FILE)
-	echo PROTMODE >> $(DEF_FILE)
-	echo CODE    LOADONCALL MOVEABLE DISCARDABLE >> $(DEF_FILE)
-	echo DATA    PRELOAD MOVEABLE MULTIPLE NONSHARED >> $(DEF_FILE)
-	echo EXPORTS >> $(DEF_FILE)
+	echo LIBRARY $(LIBRARY_NAME) INITINSTANCE TERMINSTANCE > $@
+	echo PROTMODE >> $@
+	echo CODE    LOADONCALL MOVEABLE DISCARDABLE >> $@
+	echo DATA    PRELOAD MOVEABLE MULTIPLE NONSHARED >> $@
+	echo EXPORTS >> $@
 ifeq ($(IS_COMPONENT),1)
 ifeq ($(HAS_EXTRAEXPORTS),1)
-	$(FILTER) $(DEF_OBJS) >> $(DEF_FILE)
+	$(FILTER) $(OBJS) $(SHARED_LIBRARY_LIBS) >> $@
 else
-	echo    NSGetModule >> $(DEF_FILE)
+	echo    NSGetModule >> $@
 endif
 else
-	$(FILTER) $(DEF_OBJS) >> $(DEF_FILE)
+	$(FILTER) $(OBJS) $(SHARED_LIBRARY_LIBS) >> $@
 endif
 	$(ADD_TO_DEF_FILE)
 
-$(IMPORT_LIBRARY): $(OBJS) $(SHARED_LIBRARY)
+$(IMPORT_LIBRARY): $(DEF_FILE)
 	rm -f $@
-	$(IMPLIB) $@ $(SHARED_LIBRARY)
-	$(RANLIB) $@
-
-$(LIBRARY): $(OBJS) $(LOBJS) $(SHARED_LIBRARY_LIBS) $(EXTRA_DEPS) Makefile Makefile.in
-	rm -f $@
-	$(AR) $(AR_FLAGS) $(OBJS) $(LOBJS) $(SUB_LOBJS)
+	$(IMPLIB) $@ $(DEF_FILE)
 	$(RANLIB) $@
 endif # OS/2
 
@@ -984,7 +970,7 @@ endif
 
 $(SHARED_LIBRARY): $(OBJS) $(LOBJS) $(DEF_FILE) $(RESFILE) $(SHARED_LIBRARY_LIBS) $(EXTRA_DEPS) Makefile Makefile.in
 	rm -f $@
-ifneq ($(OS_ARCH),OS2)
+ifneq ($(MOZ_OS2_TOOLS),VACPP)
 ifeq ($(OS_ARCH),OpenVMS)
 	@if test ! -f $(VMS_SYMVEC_FILE); then \
 	  if test -f $(VMS_SYMVEC_FILE_MODULE); then \
@@ -1007,12 +993,10 @@ endif # SHARED_LIBRARY_LIBS
 endif # NO_LD_ARCHIVE_FLAGS
 	$(MKSHLIB) $(SHLIB_LDSTARTFILE) $(OBJS) $(LOBJS) $(SUB_SHLOBJS) $(RESFILE) $(LDFLAGS) $(EXTRA_DSO_LDOPTS) $(OS_LIBS) $(EXTRA_LIBS) $(DEF_FILE) $(SHLIB_LDENDFILE)
 	@rm -f foodummyfilefoo $(SUB_SHLOBJS)
-else # OS2
-ifeq ($(MOZ_OS2_TOOLS),VACPP)
+else # os2 vacpp
 	$(MKSHLIB) /O:$@ /DLL /INC:_dllentry $(LDFLAGS) $(OBJS) $(LOBJS) $(EXTRA_DSO_LDOPTS) $(OS_LIBS) $(EXTRA_LIBS) $(DEF_FILE)
-else
-	$(MKSHLIB) -o $@ $(OBJS) $(LOBJS) $(EXTRA_DSO_LDOPTS) $(OS_LIBS) $(EXTRA_LIBS) $(DEF_FILE)
-endif
+endif # !os2 vacpp
+ifeq ($(OS_ARCH),OS2)
 ifdef RESFILE
 	$(RC) $(RCFLAGS) $(RESFILE) $@
 endif
@@ -1032,12 +1016,6 @@ ifdef ENABLE_STRIP
 endif
 ifdef MOZ_POST_DSO_LIB_COMMAND
 	$(MOZ_POST_DSO_LIB_COMMAND) $@
-endif
-
-ifeq ($(OS_ARCH),OS2)
-$(DLL): $(OBJS) $(EXTRA_LIBS)
-	rm -f $@
-	$(MKSHLIB) -o $@ $(OBJS) $(EXTRA_LIBS) $(OS_LIBS)
 endif
 
 ifdef MOZ_AUTO_DEPS
@@ -1720,7 +1698,6 @@ ifneq (,$(filter $(PROGRAM) $(HOST_PROGRAM) $(SIMPLE_PROGRAMS) $(HOST_LIBRARY) $
 	@echo "SHARED_LIBRARY_LIBS = $(SHARED_LIBRARY_LIBS)"
 	@echo "LIBS                = $(LIBS)"
 	@echo "DEF_FILE            = $(DEF_FILE)"
-	@echo "DEF_OBJS            = $(DEF_OBJS)"
 	@echo "IMPORT_LIBRARY      = $(IMPORT_LIBRARY)"
 	@echo "STATIC_LIBS         = $(STATIC_LIBS)"
 	@echo "SHARED_LIBS         = $(SHARED_LIBS)"
