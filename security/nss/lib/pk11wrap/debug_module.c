@@ -258,7 +258,7 @@ static void print_mechanism(CK_MECHANISM_PTR m)
 
 
 static PRInt32 counter_C_Initialize = 0;
-static PRUint32 calls_C_Initialize = 0;
+static PRInt32 calls_C_Initialize = 0;
 CK_RV NSSDBGC_Initialize(
   CK_VOID_PTR pInitArgs
 )
@@ -277,7 +277,7 @@ CK_RV NSSDBGC_Initialize(
 }
 
 static PRInt32 counter_C_Finalize = 0;
-static PRUint32 calls_C_Finalize = 0;
+static PRInt32 calls_C_Finalize = 0;
 CK_RV NSSDBGC_Finalize(
   CK_VOID_PTR pReserved
 )
@@ -296,7 +296,7 @@ CK_RV NSSDBGC_Finalize(
 }
 
 static PRInt32 counter_C_GetInfo = 0;
-static PRUint32 calls_C_GetInfo = 0;
+static PRInt32 calls_C_GetInfo = 0;
 CK_RV NSSDBGC_GetInfo(
   CK_INFO_PTR pInfo
 )
@@ -315,7 +315,7 @@ CK_RV NSSDBGC_GetInfo(
 }
 
 static PRInt32 counter_C_GetFunctionList = 0;
-static PRUint32 calls_C_GetFunctionList = 0;
+static PRInt32 calls_C_GetFunctionList = 0;
 CK_RV NSSDBGC_GetFunctionList(
   CK_FUNCTION_LIST_PTR_PTR ppFunctionList
 )
@@ -334,7 +334,7 @@ CK_RV NSSDBGC_GetFunctionList(
 }
 
 static PRInt32 counter_C_GetSlotList = 0;
-static PRUint32 calls_C_GetSlotList = 0;
+static PRInt32 calls_C_GetSlotList = 0;
 CK_RV NSSDBGC_GetSlotList(
   CK_BBOOL       tokenPresent,
   CK_SLOT_ID_PTR pSlotList,
@@ -366,7 +366,7 @@ CK_RV NSSDBGC_GetSlotList(
 }
 
 static PRInt32 counter_C_GetSlotInfo = 0;
-static PRUint32 calls_C_GetSlotInfo = 0;
+static PRInt32 calls_C_GetSlotInfo = 0;
 CK_RV NSSDBGC_GetSlotInfo(
   CK_SLOT_ID       slotID,
   CK_SLOT_INFO_PTR pInfo
@@ -388,7 +388,7 @@ CK_RV NSSDBGC_GetSlotInfo(
 }
 
 static PRInt32 counter_C_GetTokenInfo = 0;
-static PRUint32 calls_C_GetTokenInfo = 0;
+static PRInt32 calls_C_GetTokenInfo = 0;
 CK_RV NSSDBGC_GetTokenInfo(
   CK_SLOT_ID        slotID,
   CK_TOKEN_INFO_PTR pInfo
@@ -410,7 +410,7 @@ CK_RV NSSDBGC_GetTokenInfo(
 }
 
 static PRInt32 counter_C_GetMechanismList = 0;
-static PRUint32 calls_C_GetMechanismList = 0;
+static PRInt32 calls_C_GetMechanismList = 0;
 CK_RV NSSDBGC_GetMechanismList(
   CK_SLOT_ID            slotID,
   CK_MECHANISM_TYPE_PTR pMechanismList,
@@ -436,7 +436,7 @@ CK_RV NSSDBGC_GetMechanismList(
 }
 
 static PRInt32 counter_C_GetMechanismInfo = 0;
-static PRUint32 calls_C_GetMechanismInfo = 0;
+static PRInt32 calls_C_GetMechanismInfo = 0;
 CK_RV NSSDBGC_GetMechanismInfo(
   CK_SLOT_ID            slotID,
   CK_MECHANISM_TYPE     type,
@@ -461,7 +461,7 @@ CK_RV NSSDBGC_GetMechanismInfo(
 }
 
 static PRInt32 counter_C_InitToken = 0;
-static PRUint32 calls_C_InitToken = 0;
+static PRInt32 calls_C_InitToken = 0;
 CK_RV NSSDBGC_InitToken(
   CK_SLOT_ID  slotID,
   CK_CHAR_PTR pPin,
@@ -489,7 +489,7 @@ CK_RV NSSDBGC_InitToken(
 }
 
 static PRInt32 counter_C_InitPIN = 0;
-static PRUint32 calls_C_InitPIN = 0;
+static PRInt32 calls_C_InitPIN = 0;
 CK_RV NSSDBGC_InitPIN(
   CK_SESSION_HANDLE hSession,
   CK_CHAR_PTR       pPin,
@@ -514,7 +514,7 @@ CK_RV NSSDBGC_InitPIN(
 }
 
 static PRInt32 counter_C_SetPIN = 0;
-static PRUint32 calls_C_SetPIN = 0;
+static PRInt32 calls_C_SetPIN = 0;
 CK_RV NSSDBGC_SetPIN(
   CK_SESSION_HANDLE hSession,
   CK_CHAR_PTR       pOldPin,
@@ -545,9 +545,9 @@ CK_RV NSSDBGC_SetPIN(
 }
 
 static PRInt32 counter_C_OpenSession = 0;
-static PRUint32 calls_C_OpenSession = 0;
-static PRUint32 numOpenSessions = 0;
-static PRUint32 maxOpenSessions = 0;
+static PRInt32 calls_C_OpenSession = 0;
+static PRInt32 numOpenSessions = 0;
+static PRInt32 maxOpenSessions = 0;
 CK_RV NSSDBGC_OpenSession(
   CK_SLOT_ID            slotID,
   CK_FLAGS              flags,
@@ -581,7 +581,7 @@ CK_RV NSSDBGC_OpenSession(
 }
 
 static PRInt32 counter_C_CloseSession = 0;
-static PRUint32 calls_C_CloseSession = 0;
+static PRInt32 calls_C_CloseSession = 0;
 CK_RV NSSDBGC_CloseSession(
   CK_SESSION_HANDLE hSession
 )
@@ -601,7 +601,7 @@ CK_RV NSSDBGC_CloseSession(
 }
 
 static PRInt32 counter_C_CloseAllSessions = 0;
-static PRUint32 calls_C_CloseAllSessions = 0;
+static PRInt32 calls_C_CloseAllSessions = 0;
 CK_RV NSSDBGC_CloseAllSessions(
   CK_SLOT_ID slotID
 )
@@ -620,7 +620,7 @@ CK_RV NSSDBGC_CloseAllSessions(
 }
 
 static PRInt32 counter_C_GetSessionInfo = 0;
-static PRUint32 calls_C_GetSessionInfo = 0;
+static PRInt32 calls_C_GetSessionInfo = 0;
 CK_RV NSSDBGC_GetSessionInfo(
   CK_SESSION_HANDLE   hSession,
   CK_SESSION_INFO_PTR pInfo
@@ -642,7 +642,7 @@ CK_RV NSSDBGC_GetSessionInfo(
 }
 
 static PRInt32 counter_C_GetOperationState = 0;
-static PRUint32 calls_C_GetOperationState = 0;
+static PRInt32 calls_C_GetOperationState = 0;
 CK_RV NSSDBGC_GetOperationState(
   CK_SESSION_HANDLE hSession,
   CK_BYTE_PTR       pOperationState,
@@ -668,7 +668,7 @@ CK_RV NSSDBGC_GetOperationState(
 }
 
 static PRInt32 counter_C_SetOperationState = 0;
-static PRUint32 calls_C_SetOperationState = 0;
+static PRInt32 calls_C_SetOperationState = 0;
 CK_RV NSSDBGC_SetOperationState(
   CK_SESSION_HANDLE hSession,
   CK_BYTE_PTR      pOperationState,
@@ -699,7 +699,7 @@ CK_RV NSSDBGC_SetOperationState(
 }
 
 static PRInt32 counter_C_Login = 0;
-static PRUint32 calls_C_Login = 0;
+static PRInt32 calls_C_Login = 0;
 CK_RV NSSDBGC_Login(
   CK_SESSION_HANDLE hSession,
   CK_USER_TYPE      userType,
@@ -727,7 +727,7 @@ CK_RV NSSDBGC_Login(
 }
 
 static PRInt32 counter_C_Logout = 0;
-static PRUint32 calls_C_Logout = 0;
+static PRInt32 calls_C_Logout = 0;
 CK_RV NSSDBGC_Logout(
   CK_SESSION_HANDLE hSession
 )
@@ -746,7 +746,7 @@ CK_RV NSSDBGC_Logout(
 }
 
 static PRInt32 counter_C_CreateObject = 0;
-static PRUint32 calls_C_CreateObject = 0;
+static PRInt32 calls_C_CreateObject = 0;
 CK_RV NSSDBGC_CreateObject(
   CK_SESSION_HANDLE    hSession,
   CK_ATTRIBUTE_PTR     pTemplate,
@@ -775,7 +775,7 @@ CK_RV NSSDBGC_CreateObject(
 }
 
 static PRInt32 counter_C_CopyObject = 0;
-static PRUint32 calls_C_CopyObject = 0;
+static PRInt32 calls_C_CopyObject = 0;
 CK_RV NSSDBGC_CopyObject(
   CK_SESSION_HANDLE    hSession,
   CK_OBJECT_HANDLE     hObject,
@@ -807,7 +807,7 @@ CK_RV NSSDBGC_CopyObject(
 }
 
 static PRInt32 counter_C_DestroyObject = 0;
-static PRUint32 calls_C_DestroyObject = 0;
+static PRInt32 calls_C_DestroyObject = 0;
 CK_RV NSSDBGC_DestroyObject(
   CK_SESSION_HANDLE hSession,
   CK_OBJECT_HANDLE  hObject
@@ -829,7 +829,7 @@ CK_RV NSSDBGC_DestroyObject(
 }
 
 static PRInt32 counter_C_GetObjectSize = 0;
-static PRUint32 calls_C_GetObjectSize = 0;
+static PRInt32 calls_C_GetObjectSize = 0;
 CK_RV NSSDBGC_GetObjectSize(
   CK_SESSION_HANDLE hSession,
   CK_OBJECT_HANDLE  hObject,
@@ -855,7 +855,7 @@ CK_RV NSSDBGC_GetObjectSize(
 }
 
 static PRInt32 counter_C_GetAttributeValue = 0;
-static PRUint32 calls_C_GetAttributeValue = 0;
+static PRInt32 calls_C_GetAttributeValue = 0;
 CK_RV NSSDBGC_GetAttributeValue(
   CK_SESSION_HANDLE hSession,
   CK_OBJECT_HANDLE  hObject,
@@ -884,7 +884,7 @@ CK_RV NSSDBGC_GetAttributeValue(
 }
 
 static PRInt32 counter_C_SetAttributeValue = 0;
-static PRUint32 calls_C_SetAttributeValue = 0;
+static PRInt32 calls_C_SetAttributeValue = 0;
 CK_RV NSSDBGC_SetAttributeValue(
   CK_SESSION_HANDLE hSession,
   CK_OBJECT_HANDLE  hObject,
@@ -913,7 +913,7 @@ CK_RV NSSDBGC_SetAttributeValue(
 }
 
 static PRInt32 counter_C_FindObjectsInit = 0;
-static PRUint32 calls_C_FindObjectsInit = 0;
+static PRInt32 calls_C_FindObjectsInit = 0;
 CK_RV NSSDBGC_FindObjectsInit(
   CK_SESSION_HANDLE hSession,
   CK_ATTRIBUTE_PTR  pTemplate,
@@ -939,7 +939,7 @@ CK_RV NSSDBGC_FindObjectsInit(
 }
 
 static PRInt32 counter_C_FindObjects = 0;
-static PRUint32 calls_C_FindObjects = 0;
+static PRInt32 calls_C_FindObjects = 0;
 CK_RV NSSDBGC_FindObjects(
   CK_SESSION_HANDLE    hSession,
   CK_OBJECT_HANDLE_PTR phObject,
@@ -972,7 +972,7 @@ CK_RV NSSDBGC_FindObjects(
 }
 
 static PRInt32 counter_C_FindObjectsFinal = 0;
-static PRUint32 calls_C_FindObjectsFinal = 0;
+static PRInt32 calls_C_FindObjectsFinal = 0;
 CK_RV NSSDBGC_FindObjectsFinal(
   CK_SESSION_HANDLE hSession
 )
@@ -991,7 +991,7 @@ CK_RV NSSDBGC_FindObjectsFinal(
 }
 
 static PRInt32 counter_C_EncryptInit = 0;
-static PRUint32 calls_C_EncryptInit = 0;
+static PRInt32 calls_C_EncryptInit = 0;
 CK_RV NSSDBGC_EncryptInit(
   CK_SESSION_HANDLE hSession,
   CK_MECHANISM_PTR  pMechanism,
@@ -1017,7 +1017,7 @@ CK_RV NSSDBGC_EncryptInit(
 }
 
 static PRInt32 counter_C_Encrypt = 0;
-static PRUint32 calls_C_Encrypt = 0;
+static PRInt32 calls_C_Encrypt = 0;
 CK_RV NSSDBGC_Encrypt(
   CK_SESSION_HANDLE hSession,
   CK_BYTE_PTR       pData,
@@ -1049,7 +1049,7 @@ CK_RV NSSDBGC_Encrypt(
 }
 
 static PRInt32 counter_C_EncryptUpdate = 0;
-static PRUint32 calls_C_EncryptUpdate = 0;
+static PRInt32 calls_C_EncryptUpdate = 0;
 CK_RV NSSDBGC_EncryptUpdate(
   CK_SESSION_HANDLE hSession,
   CK_BYTE_PTR       pPart,
@@ -1081,7 +1081,7 @@ CK_RV NSSDBGC_EncryptUpdate(
 }
 
 static PRInt32 counter_C_EncryptFinal = 0;
-static PRUint32 calls_C_EncryptFinal = 0;
+static PRInt32 calls_C_EncryptFinal = 0;
 CK_RV NSSDBGC_EncryptFinal(
   CK_SESSION_HANDLE hSession,
   CK_BYTE_PTR       pLastEncryptedPart,
@@ -1107,7 +1107,7 @@ CK_RV NSSDBGC_EncryptFinal(
 }
 
 static PRInt32 counter_C_DecryptInit = 0;
-static PRUint32 calls_C_DecryptInit = 0;
+static PRInt32 calls_C_DecryptInit = 0;
 CK_RV NSSDBGC_DecryptInit(
   CK_SESSION_HANDLE hSession,
   CK_MECHANISM_PTR  pMechanism,
@@ -1133,7 +1133,7 @@ CK_RV NSSDBGC_DecryptInit(
 }
 
 static PRInt32 counter_C_Decrypt = 0;
-static PRUint32 calls_C_Decrypt = 0;
+static PRInt32 calls_C_Decrypt = 0;
 CK_RV NSSDBGC_Decrypt(
   CK_SESSION_HANDLE hSession,
   CK_BYTE_PTR       pEncryptedData,
@@ -1165,7 +1165,7 @@ CK_RV NSSDBGC_Decrypt(
 }
 
 static PRInt32 counter_C_DecryptUpdate = 0;
-static PRUint32 calls_C_DecryptUpdate = 0;
+static PRInt32 calls_C_DecryptUpdate = 0;
 CK_RV NSSDBGC_DecryptUpdate(
   CK_SESSION_HANDLE hSession,
   CK_BYTE_PTR       pEncryptedPart,
@@ -1197,7 +1197,7 @@ CK_RV NSSDBGC_DecryptUpdate(
 }
 
 static PRInt32 counter_C_DecryptFinal = 0;
-static PRUint32 calls_C_DecryptFinal = 0;
+static PRInt32 calls_C_DecryptFinal = 0;
 CK_RV NSSDBGC_DecryptFinal(
   CK_SESSION_HANDLE hSession,
   CK_BYTE_PTR       pLastPart,
@@ -1223,7 +1223,7 @@ CK_RV NSSDBGC_DecryptFinal(
 }
 
 static PRInt32 counter_C_DigestInit = 0;
-static PRUint32 calls_C_DigestInit = 0;
+static PRInt32 calls_C_DigestInit = 0;
 CK_RV NSSDBGC_DigestInit(
   CK_SESSION_HANDLE hSession,
   CK_MECHANISM_PTR  pMechanism
@@ -1246,7 +1246,7 @@ CK_RV NSSDBGC_DigestInit(
 }
 
 static PRInt32 counter_C_Digest = 0;
-static PRUint32 calls_C_Digest = 0;
+static PRInt32 calls_C_Digest = 0;
 CK_RV NSSDBGC_Digest(
   CK_SESSION_HANDLE hSession,
   CK_BYTE_PTR       pData,
@@ -1278,7 +1278,7 @@ CK_RV NSSDBGC_Digest(
 }
 
 static PRInt32 counter_C_DigestUpdate = 0;
-static PRUint32 calls_C_DigestUpdate = 0;
+static PRInt32 calls_C_DigestUpdate = 0;
 CK_RV NSSDBGC_DigestUpdate(
   CK_SESSION_HANDLE hSession,
   CK_BYTE_PTR       pPart,
@@ -1303,7 +1303,7 @@ CK_RV NSSDBGC_DigestUpdate(
 }
 
 static PRInt32 counter_C_DigestKey = 0;
-static PRUint32 calls_C_DigestKey = 0;
+static PRInt32 calls_C_DigestKey = 0;
 CK_RV NSSDBGC_DigestKey(
   CK_SESSION_HANDLE hSession,
   CK_OBJECT_HANDLE  hKey
@@ -1325,7 +1325,7 @@ CK_RV NSSDBGC_DigestKey(
 }
 
 static PRInt32 counter_C_DigestFinal = 0;
-static PRUint32 calls_C_DigestFinal = 0;
+static PRInt32 calls_C_DigestFinal = 0;
 CK_RV NSSDBGC_DigestFinal(
   CK_SESSION_HANDLE hSession,
   CK_BYTE_PTR       pDigest,
@@ -1351,7 +1351,7 @@ CK_RV NSSDBGC_DigestFinal(
 }
 
 static PRInt32 counter_C_SignInit = 0;
-static PRUint32 calls_C_SignInit = 0;
+static PRInt32 calls_C_SignInit = 0;
 CK_RV NSSDBGC_SignInit(
   CK_SESSION_HANDLE hSession,
   CK_MECHANISM_PTR  pMechanism,
@@ -1377,7 +1377,7 @@ CK_RV NSSDBGC_SignInit(
 }
 
 static PRInt32 counter_C_Sign = 0;
-static PRUint32 calls_C_Sign = 0;
+static PRInt32 calls_C_Sign = 0;
 CK_RV NSSDBGC_Sign(
   CK_SESSION_HANDLE hSession,
   CK_BYTE_PTR       pData,
@@ -1409,7 +1409,7 @@ CK_RV NSSDBGC_Sign(
 }
 
 static PRInt32 counter_C_SignUpdate = 0;
-static PRUint32 calls_C_SignUpdate = 0;
+static PRInt32 calls_C_SignUpdate = 0;
 CK_RV NSSDBGC_SignUpdate(
   CK_SESSION_HANDLE hSession,
   CK_BYTE_PTR       pPart,
@@ -1434,7 +1434,7 @@ CK_RV NSSDBGC_SignUpdate(
 }
 
 static PRInt32 counter_C_SignFinal = 0;
-static PRUint32 calls_C_SignFinal = 0;
+static PRInt32 calls_C_SignFinal = 0;
 CK_RV NSSDBGC_SignFinal(
   CK_SESSION_HANDLE hSession,
   CK_BYTE_PTR       pSignature,
@@ -1460,7 +1460,7 @@ CK_RV NSSDBGC_SignFinal(
 }
 
 static PRInt32 counter_C_SignRecoverInit = 0;
-static PRUint32 calls_C_SignRecoverInit = 0;
+static PRInt32 calls_C_SignRecoverInit = 0;
 CK_RV NSSDBGC_SignRecoverInit(
   CK_SESSION_HANDLE hSession,
   CK_MECHANISM_PTR  pMechanism,
@@ -1486,7 +1486,7 @@ CK_RV NSSDBGC_SignRecoverInit(
 }
 
 static PRInt32 counter_C_SignRecover = 0;
-static PRUint32 calls_C_SignRecover = 0;
+static PRInt32 calls_C_SignRecover = 0;
 CK_RV NSSDBGC_SignRecover(
   CK_SESSION_HANDLE hSession,
   CK_BYTE_PTR       pData,
@@ -1518,7 +1518,7 @@ CK_RV NSSDBGC_SignRecover(
 }
 
 static PRInt32 counter_C_VerifyInit = 0;
-static PRUint32 calls_C_VerifyInit = 0;
+static PRInt32 calls_C_VerifyInit = 0;
 CK_RV NSSDBGC_VerifyInit(
   CK_SESSION_HANDLE hSession,
   CK_MECHANISM_PTR  pMechanism,
@@ -1544,7 +1544,7 @@ CK_RV NSSDBGC_VerifyInit(
 }
 
 static PRInt32 counter_C_Verify = 0;
-static PRUint32 calls_C_Verify = 0;
+static PRInt32 calls_C_Verify = 0;
 CK_RV NSSDBGC_Verify(
   CK_SESSION_HANDLE hSession,
   CK_BYTE_PTR       pData,
@@ -1575,7 +1575,7 @@ CK_RV NSSDBGC_Verify(
 }
 
 static PRInt32 counter_C_VerifyUpdate = 0;
-static PRUint32 calls_C_VerifyUpdate = 0;
+static PRInt32 calls_C_VerifyUpdate = 0;
 CK_RV NSSDBGC_VerifyUpdate(
   CK_SESSION_HANDLE hSession,
   CK_BYTE_PTR       pPart,
@@ -1600,7 +1600,7 @@ CK_RV NSSDBGC_VerifyUpdate(
 }
 
 static PRInt32 counter_C_VerifyFinal = 0;
-static PRUint32 calls_C_VerifyFinal = 0;
+static PRInt32 calls_C_VerifyFinal = 0;
 CK_RV NSSDBGC_VerifyFinal(
   CK_SESSION_HANDLE hSession,
   CK_BYTE_PTR       pSignature,
@@ -1625,7 +1625,7 @@ CK_RV NSSDBGC_VerifyFinal(
 }
 
 static PRInt32 counter_C_VerifyRecoverInit = 0;
-static PRUint32 calls_C_VerifyRecoverInit = 0;
+static PRInt32 calls_C_VerifyRecoverInit = 0;
 CK_RV NSSDBGC_VerifyRecoverInit(
   CK_SESSION_HANDLE hSession,
   CK_MECHANISM_PTR  pMechanism,
@@ -1651,7 +1651,7 @@ CK_RV NSSDBGC_VerifyRecoverInit(
 }
 
 static PRInt32 counter_C_VerifyRecover = 0;
-static PRUint32 calls_C_VerifyRecover = 0;
+static PRInt32 calls_C_VerifyRecover = 0;
 CK_RV NSSDBGC_VerifyRecover(
   CK_SESSION_HANDLE hSession,
   CK_BYTE_PTR       pSignature,
@@ -1683,7 +1683,7 @@ CK_RV NSSDBGC_VerifyRecover(
 }
 
 static PRInt32 counter_C_DigestEncryptUpdate = 0;
-static PRUint32 calls_C_DigestEncryptUpdate = 0;
+static PRInt32 calls_C_DigestEncryptUpdate = 0;
 CK_RV NSSDBGC_DigestEncryptUpdate(
   CK_SESSION_HANDLE hSession,
   CK_BYTE_PTR       pPart,
@@ -1715,7 +1715,7 @@ CK_RV NSSDBGC_DigestEncryptUpdate(
 }
 
 static PRInt32 counter_C_DecryptDigestUpdate = 0;
-static PRUint32 calls_C_DecryptDigestUpdate = 0;
+static PRInt32 calls_C_DecryptDigestUpdate = 0;
 CK_RV NSSDBGC_DecryptDigestUpdate(
   CK_SESSION_HANDLE hSession,
   CK_BYTE_PTR       pEncryptedPart,
@@ -1747,7 +1747,7 @@ CK_RV NSSDBGC_DecryptDigestUpdate(
 }
 
 static PRInt32 counter_C_SignEncryptUpdate = 0;
-static PRUint32 calls_C_SignEncryptUpdate = 0;
+static PRInt32 calls_C_SignEncryptUpdate = 0;
 CK_RV NSSDBGC_SignEncryptUpdate(
   CK_SESSION_HANDLE hSession,
   CK_BYTE_PTR       pPart,
@@ -1779,7 +1779,7 @@ CK_RV NSSDBGC_SignEncryptUpdate(
 }
 
 static PRInt32 counter_C_DecryptVerifyUpdate = 0;
-static PRUint32 calls_C_DecryptVerifyUpdate = 0;
+static PRInt32 calls_C_DecryptVerifyUpdate = 0;
 CK_RV NSSDBGC_DecryptVerifyUpdate(
   CK_SESSION_HANDLE hSession,
   CK_BYTE_PTR       pEncryptedPart,
@@ -1811,7 +1811,7 @@ CK_RV NSSDBGC_DecryptVerifyUpdate(
 }
 
 static PRInt32 counter_C_GenerateKey = 0;
-static PRUint32 calls_C_GenerateKey = 0;
+static PRInt32 calls_C_GenerateKey = 0;
 CK_RV NSSDBGC_GenerateKey(
   CK_SESSION_HANDLE    hSession,
   CK_MECHANISM_PTR     pMechanism,
@@ -1845,7 +1845,7 @@ CK_RV NSSDBGC_GenerateKey(
 }
 
 static PRInt32 counter_C_GenerateKeyPair = 0;
-static PRUint32 calls_C_GenerateKeyPair = 0;
+static PRInt32 calls_C_GenerateKeyPair = 0;
 CK_RV NSSDBGC_GenerateKeyPair(
   CK_SESSION_HANDLE    hSession,
   CK_MECHANISM_PTR     pMechanism,
@@ -1890,7 +1890,7 @@ CK_RV NSSDBGC_GenerateKeyPair(
 }
 
 static PRInt32 counter_C_WrapKey = 0;
-static PRUint32 calls_C_WrapKey = 0;
+static PRInt32 calls_C_WrapKey = 0;
 CK_RV NSSDBGC_WrapKey(
   CK_SESSION_HANDLE hSession,
   CK_MECHANISM_PTR  pMechanism,
@@ -1926,7 +1926,7 @@ CK_RV NSSDBGC_WrapKey(
 }
 
 static PRInt32 counter_C_UnwrapKey = 0;
-static PRUint32 calls_C_UnwrapKey = 0;
+static PRInt32 calls_C_UnwrapKey = 0;
 CK_RV NSSDBGC_UnwrapKey(
   CK_SESSION_HANDLE    hSession,
   CK_MECHANISM_PTR     pMechanism,
@@ -1969,7 +1969,7 @@ CK_RV NSSDBGC_UnwrapKey(
 }
 
 static PRInt32 counter_C_DeriveKey = 0;
-static PRUint32 calls_C_DeriveKey = 0;
+static PRInt32 calls_C_DeriveKey = 0;
 CK_RV NSSDBGC_DeriveKey(
   CK_SESSION_HANDLE    hSession,
   CK_MECHANISM_PTR     pMechanism,
@@ -2006,7 +2006,7 @@ CK_RV NSSDBGC_DeriveKey(
 }
 
 static PRInt32 counter_C_SeedRandom = 0;
-static PRUint32 calls_C_SeedRandom = 0;
+static PRInt32 calls_C_SeedRandom = 0;
 CK_RV NSSDBGC_SeedRandom(
   CK_SESSION_HANDLE hSession,
   CK_BYTE_PTR       pSeed,
@@ -2031,7 +2031,7 @@ CK_RV NSSDBGC_SeedRandom(
 }
 
 static PRInt32 counter_C_GenerateRandom = 0;
-static PRUint32 calls_C_GenerateRandom = 0;
+static PRInt32 calls_C_GenerateRandom = 0;
 CK_RV NSSDBGC_GenerateRandom(
   CK_SESSION_HANDLE hSession,
   CK_BYTE_PTR       RandomData,
@@ -2056,7 +2056,7 @@ CK_RV NSSDBGC_GenerateRandom(
 }
 
 static PRInt32 counter_C_GetFunctionStatus = 0;
-static PRUint32 calls_C_GetFunctionStatus = 0;
+static PRInt32 calls_C_GetFunctionStatus = 0;
 CK_RV NSSDBGC_GetFunctionStatus(
   CK_SESSION_HANDLE hSession
 )
@@ -2075,7 +2075,7 @@ CK_RV NSSDBGC_GetFunctionStatus(
 }
 
 static PRInt32 counter_C_CancelFunction = 0;
-static PRUint32 calls_C_CancelFunction = 0;
+static PRInt32 calls_C_CancelFunction = 0;
 CK_RV NSSDBGC_CancelFunction(
   CK_SESSION_HANDLE hSession
 )
@@ -2094,7 +2094,7 @@ CK_RV NSSDBGC_CancelFunction(
 }
 
 static PRInt32 counter_C_WaitForSlotEvent = 0;
-static PRUint32 calls_C_WaitForSlotEvent = 0;
+static PRInt32 calls_C_WaitForSlotEvent = 0;
 CK_RV NSSDBGC_WaitForSlotEvent(
   CK_FLAGS       flags,
   CK_SLOT_ID_PTR pSlot,
