@@ -535,7 +535,8 @@ void nsRenderingContextGTK::UpdateGC()
                        rgn);
 
   if (mDashes)
-    ::gdk_gc_set_dashes(mGC, 0, mDashList, mDashes);
+    ::XSetDashes(GDK_DISPLAY(), GDK_GC_XGC(mGC),
+                 0, mDashList, mDashes);
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::SetClipRegion(const nsIRegion& aRegion,
