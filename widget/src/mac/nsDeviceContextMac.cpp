@@ -32,8 +32,8 @@
 #include "nsIServiceManager.h"
 
 
-PRUint32 nsDeviceContextMac::mPixelsPerInch = 72;
-PRBool nsDeviceContextMac::mDisplayVerySmallFonts = false;
+PRUint32 nsDeviceContextMac::mPixelsPerInch = 96;
+PRBool nsDeviceContextMac::mDisplayVerySmallFonts = true;
 
 
 static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
