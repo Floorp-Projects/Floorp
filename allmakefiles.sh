@@ -571,6 +571,8 @@ xpfe/components/find/resources/Makefile
 xpfe/components/filepicker/src/Makefile
 xpfe/components/filepicker/res/content/Makefile
 xpfe/components/filepicker/res/skin/Makefile
+xpfe/components/filepicker/res/locale/Makefile
+xpfe/components/filepicker/res/locale/en-US/Makefile
 xpfe/components/filepicker/res/Makefile
 xpfe/components/filepicker/Makefile
 xpfe/components/history/Makefile
