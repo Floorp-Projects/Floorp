@@ -265,12 +265,12 @@ treechildren::-moz-tree-column(insertafter) {
 treechildren::-moz-tree-twisty {
   padding-right: 2px;
   width: 10px; /* The image's width is 9 pixels */
-  list-style-image: url("chrome://messenger/skin/icons/twisty-clsd.gif");
+  list-style-image: url("chrome://global/skin/tree/twisty-clsd.gif");
 }
 
 treechildren::-moz-tree-twisty(open) {
   width: 10px; /* The image's width is 9 pixels */
-  list-style-image: url("chrome://messenger/skin/icons/twisty-open.gif");
+  list-style-image: url("chrome://global/skin/tree/twisty-open.gif");
 }
 
 treechildren::-moz-tree-indentation {
