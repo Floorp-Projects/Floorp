@@ -5248,6 +5248,8 @@ fi
 _EGREP_PATTERN="${_EGREP_PATTERN}dummy_never_defined)"
  
   sort confdefs.h | egrep -v "$_EGREP_PATTERN" >> $_CONFIG_TMP
+  sort confdefs.h | egrep -v "$_EGREP_PATTERN" > confdefs.h.new
+  mv confdefs.h.new confdefs.h && rm -f confdefs.h.new
 
   cat >> $_CONFIG_TMP <<\EOF
 
@@ -5266,6 +5268,9 @@ EOF
     cat $_CONFIG_DEFS_H
   fi
 
+dnl Probably shouldn't call this manually but we always want the output of DEFS
+AC_OUTPUT_MAKE_DEFS()
+MOZ_DEFINES=$DEFS
 AC_SUBST(MOZ_DEFINES)
 
 dnl Load the list of Makefiles to generate.
