@@ -69,6 +69,26 @@ function DayView( calendarWindow )
    
    this.superConstructor( calendarWindow );
    
+   //set the time on the left hand side labels
+   //need to do this in JavaScript to preserve formatting
+   for( var i = 0; i < 24; i++ )
+   {
+      /*
+      ** FOR SOME REASON, THIS IS NOT WORKING FOR MIDNIGHT
+      */ 
+      var TimeToFormat = new Date();
+
+      TimeToFormat.setHours( i );
+
+      TimeToFormat.setMinutes( "0" );
+
+      var FormattedTime = calendarWindow.dateFormater.getFormatedTime( TimeToFormat );
+
+      var Label = document.getElementById( "day-view-hour-"+i );
+      
+      Label.setAttribute( "value", FormattedTime );
+   }
+   
    var dayViewEventSelectionObserver =
    {
       onSelectionChanged : function( EventSelectionArray )

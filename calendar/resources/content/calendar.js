@@ -78,7 +78,7 @@
 */
 
 //the next line needs XX-DATE-XY but last X instead of Y
-var gDateMade = "Monday, May 6th, 2002";
+var gDateMade = "2002050710-cal"
 
 // turn on debuging
 
@@ -185,7 +185,7 @@ function calendarFinish()
 {
    finishCalendarUnifinder( gEventSource );
    
-   finishCalendarEmail( gEventSource );
+   //finishCalendarEmail( gEventSource );
 
    gCalendarWindow.close( );
 }

@@ -174,144 +174,144 @@
                    <!-- HOURS -->
                    <box class="week-view-hours-only-box-class" id="week-tree-hour-0">
                       <box class="week-time-class" flex="1">
-				 <label class="week-time-class-text" id="week-view-hour-0" value="&time.midnight; " />
+				            <label class="week-time-class-text" id="week-view-hour-0" value="&time.midnight;"/>
                       </box>
                    </box>
                    
 			   <box class="week-view-hours-only-box-class" id="week-tree-hour-1">
                       <box class="week-time-class" flex="1">
-				 <label class="week-time-class-text" id="week-view-hour-1" value="&time.1; " />
+				            <label class="week-time-class-text" id="week-view-hour-1"/>
                       </box>
                    </box>
                    
-			   <box class="week-view-hours-only-box-class" id="week-tree-hour-2">
+			          <box class="week-view-hours-only-box-class" id="week-tree-hour-2">
                       <box class="week-time-class" flex="1">
-				 <label class="week-time-class-text" id="week-view-hour-2" value="&time.2; " />
+				            <label class="week-time-class-text" id="week-view-hour-2"/>
                       </box>
                    </box>
                    
-			   <box class="week-view-hours-only-box-class" id="week-tree-hour-3">
+			          <box class="week-view-hours-only-box-class" id="week-tree-hour-3">
                       <box class="week-time-class" flex="1">
-				 <label class="week-time-class-text" id="week-view-hour-3" value="&time.3; " />
+				            <label class="week-time-class-text" id="week-view-hour-3"/>
                       </box>
                    </box>
                    
                    <box class="week-view-hours-only-box-class" id="week-tree-hour-4">
                       <box class="week-time-class" flex="1">
-				 <label class="week-time-class-text" id="week-view-hour-4" value="&time.4; " />
+				            <label class="week-time-class-text" id="week-view-hour-4"/>
                       </box>
                    </box>
                    
                    <box class="week-view-hours-only-box-class" id="week-tree-hour-5">
                       <box class="week-time-class" flex="1">
-				 <label class="week-time-class-text" id="week-view-hour-5" value="&time.5; " />
+				            <label class="week-time-class-text" id="week-view-hour-5"/>
                       </box>
                    </box>
                    <box class="week-view-hours-only-box-class" id="week-tree-hour-6">
                       <box class="week-time-class" flex="1">
-				 <label class="week-time-class-text" id="week-view-hour-6" value="&time.6; " />
+				            <label class="week-time-class-text" id="week-view-hour-6"/>
                       </box>
                    </box>
                    
                    <box class="week-view-hours-only-box-class" id="week-tree-hour-7">
                       <box class="week-time-class" flex="1">
-				 <label class="week-time-class-text" id="week-view-hour-7" value="&time.7; " />
+				            <label class="week-time-class-text" id="week-view-hour-7"/>
                       </box>
                    </box>
                    
                    <box class="week-view-hours-only-box-class" id="week-tree-hour-8">
                       <box class="week-time-class" flex="1">
-				 <label class="week-time-class-text" id="week-view-hour-8" value="&time.8; " />
+				            <label class="week-time-class-text" id="week-view-hour-8"/>
                       </box>
                    </box>
                    
                    <box class="week-view-hours-only-box-class" id="week-tree-hour-9">
                       <box class="week-time-class" flex="1">
-				 <label class="week-time-class-text" id="week-view-hour-9" value="&time.9; " />
+				            <label class="week-time-class-text" id="week-view-hour-9"/>
                       </box>
                    </box>
                    
                    <box class="week-view-hours-only-box-class" id="week-tree-hour-10">
                       <box class="week-time-class" flex="1">
-				 <label class="week-time-class-text" id="week-view-hour-10" value="&time.10; " />
+				            <label class="week-time-class-text" id="week-view-hour-10"/>
                       </box>
                    </box>
                    
                    <box class="week-view-hours-only-box-class" id="week-tree-hour-11">
                       <box class="week-time-class" flex="1">
-				 <label class="week-time-class-text" id="week-view-hour-11" value="&time.11; " />
+				            <label class="week-time-class-text" id="week-view-hour-11"/>
                       </box>
                    </box>
                    
                    <box class="week-view-hours-only-box-class" id="week-tree-hour-12">
                       <box class="week-time-class" flex="1">
-				 <label class="week-time-class-text" id="week-view-hour-12" value="&time.noon; " />
+				            <label class="week-time-class-text" id="week-view-hour-12"/>
                       </box>
                    </box>
                    
                    <box class="week-view-hours-only-box-class" id="week-tree-hour-13">
                       <box class="week-time-class" flex="1">
-				 <label class="week-time-class-text" id="week-view-hour-13" value="&time.13; " />
+				            <label class="week-time-class-text" id="week-view-hour-13"/>
                       </box>
                    </box>
                    
                    <box class="week-view-hours-only-box-class" id="week-tree-hour-14">
                       <box class="week-time-class" flex="1">
-				 <label class="week-time-class-text" id="week-view-hour-14" value="&time.14; " />
+				            <label class="week-time-class-text" id="week-view-hour-14"/>
                       </box>
                    </box>
                    
                    <box class="week-view-hours-only-box-class" id="week-tree-hour-15">
                       <box class="week-time-class" flex="1">
-				 <label class="week-time-class-text" id="week-view-hour-15" value="&time.15; " />
+				            <label class="week-time-class-text" id="week-view-hour-15"/>
                       </box>
                    </box>
                    
                    <box class="week-view-hours-only-box-class" id="week-tree-hour-16">
                       <box class="week-time-class" flex="1">
-				 <label class="week-time-class-text" id="week-view-hour-16" value="&time.16; " />
+				            <label class="week-time-class-text" id="week-view-hour-16"/>
                       </box>
                    </box>
                    
                    <box class="week-view-hours-only-box-class" id="week-tree-hour-17">
                       <box class="week-time-class" flex="1">
-				 <label class="week-time-class-text" id="week-view-hour-17" value="&time.17; " />
+				            <label class="week-time-class-text" id="week-view-hour-17"/>
                       </box>
                    </box>
                    
                    <box class="week-view-hours-only-box-class" id="week-tree-hour-18">
                       <box class="week-time-class" flex="1">
-				 <label class="week-time-class-text" id="week-view-hour-18" value="&time.18; " />
+				            <label class="week-time-class-text" id="week-view-hour-18"/>
                       </box>
                    </box>
                    
                    <box class="week-view-hours-only-box-class" id="week-tree-hour-19">
                       <box class="week-time-class" flex="1">
-				 <label class="week-time-class-text" id="week-view-hour-19" value="&time.19; " />
+				            <label class="week-time-class-text" id="week-view-hour-19"/>
                       </box>
                    </box>
                    
                    <box class="week-view-hours-only-box-class" id="week-tree-hour-20">
                       <box class="week-time-class" flex="1">
-				 <label class="week-time-class-text" id="week-view-hour-20" value="&time.20; " />
+				            <label class="week-time-class-text" id="week-view-hour-20"/>
                       </box>
                    </box>
                    
                    <box class="week-view-hours-only-box-class" id="week-tree-hour-21">
                       <box class="week-time-class" flex="1">
-				 <label class="week-time-class-text" id="week-view-hour-21" value="&time.21; " />
+				            <label class="week-time-class-text" id="week-view-hour-21"/>
                       </box>
                    </box>
                    
                    <box class="week-view-hours-only-box-class" id="week-tree-hour-22">
                       <box class="week-time-class" flex="1">
-				 <label class="week-time-class-text" id="week-view-hour-22" value="&time.22; " />
+				            <label class="week-time-class-text" id="week-view-hour-22"/>
                       </box>
                    </box>
                    
                    <box class="week-view-hours-only-box-class" id="week-tree-hour-23">
                       <box class="week-time-class" flex="1">
-				 <label class="week-time-class-text" id="week-view-hour-23" value="&time.23; " />
+				            <label class="week-time-class-text" id="week-view-hour-23"/>
                       </box>
                    </box>
                    <!-- / HOURS -->
