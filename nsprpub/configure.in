@@ -936,6 +936,12 @@ case "$target" in
     AC_DEFINE(HPUX)
     AC_DEFINE(_HPUX_SOURCE)
     AC_DEFINE(hppa)
+    # OSF1 and HPUX report the POLLHUP event for a socket when the
+    # shutdown(SHUT_WR) operation is called for the remote end, even though
+    # the socket is still writeable. Use select(), instead of poll(), to
+    # workaround this problem.
+    AC_DEFINE(_PR_POLL_WITH_SELECT)
+    AC_DEFINE(_USE_BIG_FDS)
     DLL_SUFFIX=sl
     DSO_LDOPTS='-b +h $(notdir $@)'
     PR_MD_CSRCS=hpux.c
@@ -1498,6 +1504,11 @@ mips-sony-newsos*)
     AC_DEFINE(XP_UNIX)
     AC_DEFINE(OSF1)
     AC_DEFINE(_REENTRANT)
+    # OSF1 and HPUX report the POLLHUP event for a socket when the
+    # shutdown(SHUT_WR) operation is called for the remote end, even though
+    # the socket is still writeable. Use select(), instead of poll(), to
+    # workaround this problem.
+    AC_DEFINE(_PR_POLL_WITH_SELECT)
 
     if echo "$OS_RELEASE" | egrep -c '(V2.0|V3.2)' 2>/dev/null ; then
         USE_NSPR_THREADS=1
