@@ -69,6 +69,7 @@ static int signon_lock_count = 0;
 
 static PRBool si_PartiallyLoaded = PR_FALSE;
 static PRBool si_FullyLoaded = PR_FALSE;
+static PRBool si_UserHasBeenSelected = PR_FALSE;
 
 /* apple keychain stuff */
 
@@ -116,38 +117,34 @@ si_3ButtonConfirm(PRUnichar * szMessage) {
   return Wallet_3ButtonConfirm(szMessage);
 }
 
+// This will go away once select is passed a prompter interface
+#include "nsAppShellCIDs.h" // TODO remove later
+#include "nsIAppShellService.h" // TODO remove later
+#include "nsIWebShellWindow.h" // TODO remove later
+static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
+
 PRIVATE PRBool
 si_SelectDialog(const PRUnichar* szMessage, char** pList, PRInt32* pCount) {
-  PRBool retval = PR_TRUE; /* default value */
-  nsresult res;  
-  NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
-  if (NS_FAILED(res)) {
-    return PR_FALSE; /* failure value */
+  if (si_UserHasBeenSelected) {
+    /* a user was already selected for this form, use same one again */
+    *pCount = 0; /* last user selected is now at head of list */
+    return PR_TRUE;
   }
-  const nsString message = szMessage;
-#ifdef xxx
-  nsString users[10]; // need to make this dynamic ?????
-  for (int i=0; i<*pCount; i++) {
-    users[i] = pList[i];
+
+  nsresult rv;
+  NS_WITH_SERVICE(nsIAppShellService, appshellservice, kAppShellServiceCID, &rv);
+  if(NS_FAILED(rv)) {
+    return PR_FALSE;
   }
-  dialog->Select(message, users, pCount, &retval);
-#else
-  for (int i=0; i<*pCount; i++) {
-    nsString msg = "user = ";
-    msg += pList[i];
-    msg += "?";
-#ifdef YN_DIALOGS_FIXED
-    res = dialog->ConfirmYN(msg.GetUnicode(), &retval);
-#else
-    res = dialog->Confirm(msg.GetUnicode(), &retval);
-#endif
-    if (NS_SUCCEEDED(res) && retval) {
-      *pCount = i;
-      break;
-    }
-  }
-#endif
-  return retval;
+  nsCOMPtr<nsIWebShellWindow> webshellwindow;
+  appshellservice->GetHiddenWindow(getter_AddRefs(webshellwindow));
+  nsCOMPtr<nsIPrompt> prompter(do_QueryInterface(webshellwindow));
+  PRInt32 selectedIndex;
+  PRBool rtnValue;
+  rv = prompter->Select( NULL, szMessage, *pCount, (const char **)pList, &selectedIndex, &rtnValue );
+  *pCount = selectedIndex;
+  si_UserHasBeenSelected = PR_TRUE;
+  return rtnValue;  
 }
 
 
@@ -2044,7 +2041,7 @@ SINGSIGN_RememberSignonData
 }
 
 PUBLIC void
-SINGSIGN_RestoreSignonData (char* URLName, char* name, char** value) {
+SINGSIGN_RestoreSignonData (char* URLName, char* name, char** value, PRUint32 elementNumber) {
   si_SignonUserStruct* user;
   si_SignonDataStruct* data;
 
@@ -2054,6 +2051,9 @@ SINGSIGN_RestoreSignonData (char* URLName, char* name, char** value) {
   }
 
   si_lock_signon_list();
+  if (elementNumber == 0) {
+    si_UserHasBeenSelected = PR_FALSE;
+  }
 
   /* determine if name has been saved (avoids unlocking the database if not) */
   PRBool nameFound = PR_FALSE;

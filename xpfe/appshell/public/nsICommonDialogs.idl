@@ -86,6 +86,16 @@ enum { eButtonPressed = 0, eCheckboxState = 1, eNumberButtons = 2, eNumberEditfi
     						in wstring inDialogTitle,
     						in wstring inMsg, 
                            out wstring outPassword);
+     /*
+     	Puts up a dialog box which has a list box of strings. return true/false for OK/Cancel
+     */                      
+                           
+    boolean Select( in nsIDOMWindow inParent,
+    				in wstring inDialogTitle,
+    				in wstring inMsg,
+    				 in  PRUint32 inCount,
+    				 [array,size_is(inCount) ] in string inList, 
+                     out long outSelection );                       
    /*
    	Core Dialog function
    */

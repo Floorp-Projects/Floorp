@@ -3034,7 +3034,24 @@ NS_IMETHODIMP nsWebShellWindow::ConfirmCheckYN(const PRUnichar *text, const PRUn
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-
+NS_IMETHODIMP nsWebShellWindow::Select( const PRUnichar *inDialogTitle, const PRUnichar* inMsg, PRUint32 inCount, const char **inList, PRInt32 *outSelection, PRBool *_retval)
+{
+  nsresult rv; 
+  nsCOMPtr<nsIDOMWindow> domWindow;
+  nsIWebShell* tempWebShell;
+  GetWebShell(tempWebShell  );
+  nsCOMPtr<nsIWebShell> webShell( dont_AddRef(tempWebShell) );
+  if (NS_FAILED(rv = ConvertWebShellToDOMWindow(webShell, getter_AddRefs(domWindow))))
+  {
+    NS_ERROR("Unable to retrieve the DOM window from the new web shell.");
+    return rv;
+  }
+ 
+ NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &rv);
+ if ( NS_SUCCEEDED( rv ) )
+ 	rv = dialog->Select(domWindow, inDialogTitle, inMsg, inCount,inList, outSelection, _retval);
+  return rv;
+}
 
 NS_IMETHODIMP nsWebShellWindow::Alert(const char *url, const PRUnichar *title, const PRUnichar *text)
 {

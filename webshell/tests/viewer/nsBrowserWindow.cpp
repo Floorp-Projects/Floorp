@@ -2293,6 +2293,10 @@ nsBrowserWindow::PromptPassword(const PRUnichar *text,
   return NS_OK;
 }
 
+nsresult nsBrowserWindow::Select(const PRUnichar *, const PRUnichar *, PRUint32 , const char **, PRInt32 *, PRBool *_retval)
+{
+	return NS_OK;
+}
 
 //----------------------------------------
 

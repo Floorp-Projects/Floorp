@@ -44,7 +44,7 @@ extern void
 SINGSIGN_SignonViewerReturn(nsAutoString results);
 
 extern void
-SINGSIGN_RestoreSignonData(char* URLName, char* name, char** value);
+SINGSIGN_RestoreSignonData(char* URLName, char* name, char** value, PRUint32 elementNumber);
 
 extern nsresult
 SINGSIGN_PromptUsernameAndPassword

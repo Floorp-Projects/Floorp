@@ -30,7 +30,6 @@
 #include "nsIDeviceContext.h"
 #include "nsILinkHandler.h"
 #include "nsIStreamListener.h"
-#include "nsIPrompt.h"
 #include "nsNetUtil.h"
 #include "nsIProtocolHandler.h"
 #include "nsIDNSService.h"
@@ -167,7 +166,6 @@ class nsWebShell : public nsDocShell,
                    public nsILinkHandler,
                    public nsIDocumentLoaderObserver,
                    public nsIProgressEventSink, // should go away (nsIDocLoaderObs)
-                   public nsIPrompt,
                    public nsIRefreshURI,
                    public nsIURIContentListener,
                    public nsIClipboardCommands
@@ -338,9 +336,6 @@ public:
   // nsIRefreshURL interface methods...
   NS_IMETHOD RefreshURI(nsIURI* aURI, PRInt32 aMillis, PRBool aRepeat);
   NS_IMETHOD CancelRefreshURITimers(void);
-
-  // nsIPrompt
-  NS_DECL_NSIPROMPT
 
   // nsIProgressEventSink
   NS_DECL_NSIPROGRESSEVENTSINK
@@ -751,7 +746,6 @@ NS_INTERFACE_MAP_BEGIN(nsWebShell)
    NS_INTERFACE_MAP_ENTRY(nsIProgressEventSink)
    NS_INTERFACE_MAP_ENTRY(nsIWebShellContainer)
    NS_INTERFACE_MAP_ENTRY(nsILinkHandler)
-   NS_INTERFACE_MAP_ENTRY(nsIPrompt)
    NS_INTERFACE_MAP_ENTRY(nsIRefreshURI)
    NS_INTERFACE_MAP_ENTRY(nsIClipboardCommands)
    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
@@ -3121,7 +3115,7 @@ nsWebShell::OnEndURLLoad(nsIDocumentLoader* loader,
                          nsresult aStatus)
 {
 #if 0
-  const char* spec; 
+  const char* spec;
   aURL->GetSpec(&spec);
   printf("nsWebShell::OnEndURLLoad:%p: loader=%p url=%s status=%d\n", this, loader, spec, aStatus);
 #endif
@@ -3132,6 +3126,11 @@ nsWebShell::OnEndURLLoad(nsIDocumentLoader* loader,
   {
       mDocLoaderObserver->OnEndURLLoad(mDocLoader, channel, aStatus);
   }
+  if(eCharsetReloadRequested == mCharsetReloadState)
+      mCharsetReloadState = eCharsetReloadStopOrigional;
+  else 
+      mCharsetReloadState = eCharsetReloadInit;
+
   return NS_OK;
 }
 
@@ -3310,152 +3309,6 @@ nsresult nsWebShell::CheckForTrailingSlash(nsIURI* aURL)
 
 
   return NS_OK;
-}
-
-//----------------------------------------------------------------------
-
-NS_IMETHODIMP
-nsWebShell::Alert(const PRUnichar *text)
-{
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIPrompt> prompter;
-
-  if (mContainer) {
-    prompter = do_QueryInterface(mContainer);
-    if (prompter) {
-      rv = prompter->Alert(text);
-    }
-  }
-  
-  return rv;
-}
-
-NS_IMETHODIMP
-nsWebShell::Confirm(const PRUnichar *text,
-                    PRBool *result)
-{
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIPrompt> prompter;
-
-  if (mContainer) {
-    prompter = do_QueryInterface(mContainer);
-    if (prompter) {
-      rv = prompter->Confirm(text, result);
-    }
-  }
-  
-  return rv;
-}
-
-NS_IMETHODIMP
-nsWebShell::ConfirmYN(const PRUnichar *text,
-                    PRBool *result)
-{
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIPrompt> prompter;
-
-  if (mContainer) {
-    prompter = do_QueryInterface(mContainer);
-    if (prompter) {
-      rv = prompter->ConfirmYN(text, result);
-    }
-  }
-  
-  return rv;
-}
-
-NS_IMETHODIMP
-nsWebShell::ConfirmCheck(const PRUnichar *text,
-                         const PRUnichar *checkMsg,
-                         PRBool *checkValue,
-                         PRBool *result)
-{
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIPrompt> prompter;
-
-  if (mContainer) {
-    prompter = do_QueryInterface(mContainer);
-    if (prompter) {
-      rv = prompter->ConfirmCheck(text, checkMsg, checkValue, result);
-    }
-  }
-  
-  return rv;
-}
-
-NS_IMETHODIMP
-nsWebShell::ConfirmCheckYN(const PRUnichar *text,
-                         const PRUnichar *checkMsg,
-                         PRBool *checkValue,
-                         PRBool *result)
-{
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIPrompt> prompter;
-
-  if (mContainer) {
-    prompter = do_QueryInterface(mContainer);
-    if (prompter) {
-      rv = prompter->ConfirmCheckYN(text, checkMsg, checkValue, result);
-    }
-  }
-  
-  return rv;
-}
-
-NS_IMETHODIMP
-nsWebShell::Prompt(const PRUnichar *text,
-                   const PRUnichar *defaultText,
-                   PRUnichar **result,
-                   PRBool *_retval)
-{
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIPrompt> prompter;
-
-  if (mContainer) {
-    prompter = do_QueryInterface(mContainer);
-    if (prompter) {
-      rv = prompter->Prompt(text, defaultText, result, _retval);
-    }
-  }
-  
-  return rv;
-}
-
-NS_IMETHODIMP
-nsWebShell::PromptUsernameAndPassword(const PRUnichar *text,
-                                      PRUnichar **user,
-                                      PRUnichar **pwd,
-                                      PRBool *_retval)
-{
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIPrompt> prompter;
-
-  if (mContainer) {
-    prompter = do_QueryInterface(mContainer);
-    if (prompter) {
-      rv = prompter->PromptUsernameAndPassword(text, user, pwd, _retval);
-    }
-  }
-  
-  return rv;
-}
-
-NS_IMETHODIMP
-nsWebShell::PromptPassword(const PRUnichar *text,
-                           PRUnichar **pwd,
-                           PRBool *_retval)
-{
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIPrompt> prompter;
-
-  if (mContainer) {
-    prompter = do_QueryInterface(mContainer);
-    if (prompter) {
-      rv = prompter->PromptPassword(text, pwd, _retval);
-    }
-  }
-  
-  return rv;
 }
 
 //----------------------------------------------------

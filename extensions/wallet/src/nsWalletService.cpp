@@ -272,6 +272,7 @@ nsWalletlibService::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* ch
     return rv;
   }
 
+  PRUint32 elementNumber = 0;
   PRUint32 numForms;
   forms->GetLength(&numForms);
   for (PRUint32 formX = 0; formX < numForms; formX++) {
@@ -303,7 +304,7 @@ nsWalletlibService::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* ch
                       char* nameString = field.ToNewCString();
                       if (nameString) {
                         char* valueString = NULL;
-                        SINGSIGN_RestoreSignonData(URLName, nameString, &valueString);
+                        SINGSIGN_RestoreSignonData(URLName, nameString, &valueString, elementNumber++);
                         if (valueString) {
                           nsAutoString value(valueString);                                    
                           rv = inputElement->SetValue(value);

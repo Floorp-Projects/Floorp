@@ -48,6 +48,8 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/about.html \
 		$(srcdir)/charsetDetectorsOverlay.js \
 		$(srcdir)/charsetDetectorsOverlay.xul \
+		$(srcdir)/selectDialog.js \
+		$(srcdir)/selectDialog.xul \
     $(srcdir)/widgetStateManager.js \
     $(srcdir)/wizardHandlerSet.js \
     $(srcdir)/wizardManager.js \

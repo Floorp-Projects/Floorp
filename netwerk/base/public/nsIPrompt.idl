@@ -82,4 +82,13 @@ interface nsIPrompt : nsISupports
      */
     boolean promptPassword(in wstring text, 
                            out wstring pwd);
+    
+    /*
+     	Puts up a dialog box which has a list box of strings
+     */                                               
+    boolean Select( in wstring inDialogTitle,
+    				in wstring inMsg,
+    				 in  PRUint32 inCount,
+    				 [array,size_is(inCount) ] in string inList, 
+                     out long outSelection );    
 };

@@ -17,12 +17,11 @@ charsetOverlay.xul
 charsetOverlay.js
 charsetDetectorsOverlay.js
 charsetDetectorsOverlay.xul
+selectDialog.js
+selectDialog.xul
 widgetStateManager.js
 wizardHandlerSet.js
 wizardManager.js
 wizardOverlay.js
 wizardOverlay.xul
 treePopups.js
-
-
-
