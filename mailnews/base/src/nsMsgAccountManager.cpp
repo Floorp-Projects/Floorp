@@ -34,6 +34,7 @@
 #include "nsIProfile.h"
 #include "nsCRT.h"  // for nsCRT::strtok
 #include "prprf.h"
+#include "nsINetSupportDialogService.h"
 
 // this should eventually be moved to the pop3 server for upgrading
 #include "nsIPop3IncomingServer.h"
@@ -51,7 +52,7 @@ static NS_DEFINE_CID(kMsgIdentityCID, NS_MSGIDENTITY_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kMsgBiffManagerCID, NS_MSGBIFFMANAGER_CID);
 static NS_DEFINE_CID(kProfileCID, NS_PROFILE_CID);
-
+static NS_DEFINE_CID(kCNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 
 // use this to search all accounts for the given account and store the
 // resulting key in hashKey
@@ -194,7 +195,7 @@ private:
   nsresult MigrateImapAccount(nsIMsgIdentity *identity, const char *hostname, PRInt32 accountNum);
   PRInt32 MigratePopAccounts(nsIMsgIdentity *identity);
   nsIMsgAccount *LoadAccount(nsString& accountKey);
-  
+  nsresult SetPasswordForServer(nsIMsgIncomingServer * server);
   nsIPref *m_prefs;
 };
 
@@ -919,6 +920,43 @@ nsMsgAccountManager::upgradePrefs()
     return NS_OK;
 }
 
+nsresult
+nsMsgAccountManager::SetPasswordForServer(nsIMsgIncomingServer * server)
+{
+  PRBool retval = PR_FALSE;
+  nsString password;
+
+#ifdef PROMPTPASSWORDWORKS 
+  nsresult rv;
+  NS_WITH_SERVICE(nsINetSupportDialogService,dialog,kCNetSupportDialogCID,&rv);
+  if (NS_FAILED(rv)) return rv;
+
+  if (dialog) {
+    nsString message("", eOneByte);
+
+    nsXPIDLCString thisHostname;
+    rv = server->GetHostName(getter_Copies(thisHostname));
+    if (NS_FAILED(rv)) return rv;
+    
+    message = "We can't migrate 4.5 prefs yet.  Enter password for the server at ";
+    message += thisHostname;
+    message += ".  Keep in mind, it will be stored in the clear in your prefs50.js file";
+    
+    dialog->PromptPassword(message, password, &retval);
+  }
+#endif /* PROMPTPASSWORDWORKS */
+
+  if (retval) {
+    printf("password = %s\n", password.GetBuffer());
+    server->SetPassword((char *)(password.GetBuffer()));        
+  }
+  else {
+    server->SetPassword("enter your clear text password here");
+  }
+  
+  return NS_OK;
+}
+
 PRInt32
 nsMsgAccountManager::MigratePopAccounts(nsIMsgIdentity *identity)
 {
@@ -982,7 +1020,8 @@ nsMsgAccountManager::MigratePopAccounts(nsIMsgIdentity *identity)
       oldstr = nsnull;
     }
 #else
-    server->SetPassword("enter your clear text password here");
+    rv = SetPasswordForServer(server);
+    if (NS_FAILED(rv)) return rv;
 #endif /* CAN_UPGRADE_4x_PASSWORDS */
 
     char *hostname=nsnull;
@@ -1191,7 +1230,8 @@ nsMsgAccountManager::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
     oldstr = nsnull;
   }
 #else
-  server->SetPassword("enter your clear text password here");
+  rv = SetPasswordForServer(server);
+  if (NS_FAILED(rv)) return rv;
 #endif /* CAN_UPGRADE_4x_PASSWORDS */
 
   // upgrade the biff prefs
