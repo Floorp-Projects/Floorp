@@ -215,6 +215,11 @@ nsMsgCopyService::ClearRequest(nsCopyRequest* aRequest, nsresult rv)
 
     if (aRequest)
     {
+        // undo stuff
+        if (aRequest->m_copySourceArray.Count() > 1 && 
+            aRequest->m_txnMgr)
+            aRequest->m_txnMgr->EndBatch();
+            
         m_copyRequests.RemoveElement(aRequest);
         if (aRequest->m_listener)
             aRequest->m_listener->OnStopCopy(rv, aRequest->m_listenerData);
@@ -312,6 +317,8 @@ nsMsgCopyService::DoNextCopy()
     }
     
     PR_CExitMonitor(this);
+    if (NS_FAILED(rv))
+        ClearRequest(copyRequest, rv);
     return rv;
 }
 
@@ -408,17 +415,17 @@ nsMsgCopyService::CopyMessages(nsIMsgFolder* srcFolder, /* UI src foler */
         }
     }
 
+    // undo stuff
+    if (NS_SUCCEEDED(rv) && copyRequest->m_copySourceArray.Count() > 1 &&
+        copyRequest->m_txnMgr)
+        copyRequest->m_txnMgr->BeginBatch();
+
 done:
     
     if (NS_FAILED(rv))
-    {
         delete copyRequest;
-    }
     else
-    {
         rv = DoCopy(copyRequest);
-        if (NS_FAILED(rv)) delete copyRequest;
-    }
     
     cnt = msgArray.Count();
     while(cnt-- > 0)
@@ -486,10 +493,10 @@ nsMsgCopyService::NotifyCompletion(nsISupports* aSupport,
                                    nsresult result)
 {
     nsresult rv;
-    nsCopyRequest* copyRequest = FindRequest(aSupport, dstFolder);
-    if (copyRequest)
-        ClearRequest(copyRequest, result);
     rv = DoNextCopy();
+    nsCopyRequest* copyRequest = FindRequest(aSupport, dstFolder);
+    if (copyRequest && copyRequest->m_processed)
+        ClearRequest(copyRequest, result);
     return rv;
 }
 

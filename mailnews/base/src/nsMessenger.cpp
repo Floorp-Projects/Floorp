@@ -545,7 +545,7 @@ NS_IMETHODIMP
 nsMessenger::CopyMessages(nsIRDFCompositeDataSource *database, nsIDOMXULElement *srcFolderElement,
 						  nsIDOMXULElement *dstFolderElement, nsIDOMNodeList *messages, PRBool isMove)
 {
-#if 0
+#if 1
 	nsresult rv;
 
 	if(!srcFolderElement || !dstFolderElement || !messages)
