@@ -47,10 +47,10 @@ Rights Reserved.
 				<treecell value="rdf:http://home.netscape.com/NC-rdf#Thread"/>
 				<treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#Subject"/>
 				<treecell value="rdf:http://home.netscape.com/NC-rdf#Sender"/>
-				<treecell treeallowevents="true" class="unreadcol" onclick="return top.ToggleMessageRead(event.target.parentNode.parentNode.parentNode)"/>
+				<treecell treeallowevents="true" class="unreadcol image" onclick="return top.ToggleMessageRead(event.target.parentNode.parentNode.parentNode)"/>
 				<treecell value="rdf:http://home.netscape.com/NC-rdf#Date"/>
 				<treecell class="prioritycol" value="rdf:http://home.netscape.com/NC-rdf#Priority"/>
-				<treecell treeallowevents="true" class="flagcol" onclick="return top.ToggleMessageFlagged(event.target.parentNode.parentNode.parentNode)" />
+				<treecell treeallowevents="true" class="flagcol image" onclick="return top.ToggleMessageFlagged(event.target.parentNode.parentNode.parentNode)" />
 				<treecell value="rdf:http://home.netscape.com/NC-rdf#Status"/>
 				<treecell value="rdf:http://home.netscape.com/NC-rdf#Size"/>
 				<treecell value="rdf:http://home.netscape.com/NC-rdf#TotalUnreadMessages"/>
