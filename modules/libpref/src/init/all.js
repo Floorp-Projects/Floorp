@@ -389,114 +389,12 @@ pref("security.xpconnect.plugin.unrestricted", true);
 
 pref("security.policy.default.barprop.visible.write", "UniversalBrowserWrite");
 
-pref("security.policy.default.document.createattribute", "sameOrigin");
-pref("security.policy.default.document.createattributens", "sameOrigin");
-pref("security.policy.default.document.createcdatasection", "sameOrigin");
-pref("security.policy.default.document.createcomment", "sameOrigin");
-pref("security.policy.default.document.createdocumentfragment", "sameOrigin");
-pref("security.policy.default.document.createelement", "sameOrigin");
-pref("security.policy.default.document.createelementns", "sameOrigin");
-pref("security.policy.default.document.createentityreference", "sameOrigin");
-pref("security.policy.default.document.createprocessinginstruction", "sameOrigin");
-pref("security.policy.default.document.createtextnode", "sameOrigin");
-pref("security.policy.default.document.doctype", "sameOrigin");
-pref("security.policy.default.document.documentelement", "sameOrigin");
-pref("security.policy.default.document.getelementbyid", "sameOrigin");
-pref("security.policy.default.document.getelementsbytagname", "sameOrigin");
-pref("security.policy.default.document.getelementsbytagnamens", "sameOrigin");
-pref("security.policy.default.document.implementation", "sameOrigin");
-pref("security.policy.default.document.importnode", "sameOrigin");
-pref("security.policy.default.htmldocument.anchors", "sameOrigin");
-pref("security.policy.default.htmldocument.applets", "sameOrigin");
-pref("security.policy.default.htmldocument.body", "sameOrigin");
-pref("security.policy.default.htmldocument.cookie", "sameOrigin");
-pref("security.policy.default.htmldocument.domain", "sameOrigin");
-pref("security.policy.default.htmldocument.forms", "sameOrigin");
-pref("security.policy.default.htmldocument.getelementsbyname", "sameOrigin");
-pref("security.policy.default.htmldocument.links", "sameOrigin");
-pref("security.policy.default.htmldocument.referrer", "sameOrigin");
-pref("security.policy.default.htmldocument.title", "sameOrigin");
-pref("security.policy.default.htmldocument.url", "sameOrigin");
-pref("security.policy.default.nshtmldocument.alinkcolor.write", "sameOrigin");
-pref("security.policy.default.nshtmldocument.bgcolor.write", "sameOrigin");
-pref("security.policy.default.nshtmldocument.captureevents", "sameOrigin");
-pref("security.policy.default.nshtmldocument.embeds", "sameOrigin");
-pref("security.policy.default.nshtmldocument.fgcolor.write", "sameOrigin");
-pref("security.policy.default.nshtmldocument.getselection", "sameOrigin");
-pref("security.policy.default.nshtmldocument.lastmodified", "sameOrigin");
-pref("security.policy.default.nshtmldocument.layers.write", "sameOrigin");
-pref("security.policy.default.nshtmldocument.linkcolor.write", "sameOrigin");
-pref("security.policy.default.nshtmldocument.nameditem", "sameOrigin");
-pref("security.policy.default.nshtmldocument.open", "sameOrigin");
-pref("security.policy.default.nshtmldocument.plugins", "sameOrigin");
-pref("security.policy.default.nshtmldocument.releaseevents", "sameOrigin");
-pref("security.policy.default.nshtmldocument.routeevent", "sameOrigin");
-pref("security.policy.default.nshtmldocument.vlinkcolor.write", "sameOrigin");
-pref("security.policy.default.nshtmldocument.write", "sameOrigin");
-pref("security.policy.default.nshtmldocument.writeln", "sameOrigin");
-
-pref("security.policy.default.eventtarget.addeventlistener", "sameOrigin");
-
-pref("security.policy.default.element.getattribute", "sameOrigin");
-pref("security.policy.default.element.getattributenode", "sameOrigin");
-pref("security.policy.default.element.getelementsbytagname", "sameOrigin");
-pref("security.policy.default.element.removeattribute", "sameOrigin");
-pref("security.policy.default.element.removeattributenode", "sameOrigin");
-pref("security.policy.default.element.setattribute", "sameOrigin");
-pref("security.policy.default.element.setattributenode", "sameOrigin");
-pref("security.policy.default.element.tagname", "sameOrigin");
-
-pref("security.policy.default.htmlelement.innerhtml", "sameOrigin");
-
-pref("security.policy.default.nshtmlformelement.nameditem", "sameOrigin");
-
 pref("security.policy.default.history.current.read", "UniversalBrowserRead");
 pref("security.policy.default.history.next.read", "UniversalBrowserRead");
 pref("security.policy.default.history.previous.read", "UniversalBrowserRead");
 
-pref("security.policy.default.htmlinputelement.value", "sameOrigin");
-
-pref("security.policy.default.htmlimageelement.src", "sameOrigin");
-pref("security.policy.default.htmlimageelement.lowsrc", "sameOrigin");
-
-pref("security.policy.default.location.hash.read", "sameOrigin");
-pref("security.policy.default.location.host.read", "sameOrigin");
-pref("security.policy.default.location.hostname.read", "sameOrigin");
-pref("security.policy.default.location.href.read", "sameOrigin");
-pref("security.policy.default.location.pathname.read", "sameOrigin");
-pref("security.policy.default.location.port.read", "sameOrigin");
-pref("security.policy.default.location.protocol.read", "sameOrigin");
-pref("security.policy.default.location.search.read", "sameOrigin");
-pref("security.policy.default.location.tostring.read", "sameOrigin");
-
 pref("security.policy.default.navigator.preference.read", "UniversalPreferencesRead");
 pref("security.policy.default.navigator.preference.write", "UniversalPreferencesWrite");
-
-pref("security.policy.default.node.appendchild", "sameOrigin");
-pref("security.policy.default.node.attributes", "sameOrigin");
-pref("security.policy.default.node.childnodes", "sameOrigin");
-pref("security.policy.default.node.clonenode", "sameOrigin");
-pref("security.policy.default.node.firstchild", "sameOrigin");
-pref("security.policy.default.node.haschildnodes", "sameOrigin");
-pref("security.policy.default.node.insertbefore", "sameOrigin");
-pref("security.policy.default.node.lastchild", "sameOrigin");
-pref("security.policy.default.node.localname", "sameOrigin");
-pref("security.policy.default.node.namespaceuri", "sameOrigin");
-pref("security.policy.default.node.nextsibling", "sameOrigin");
-pref("security.policy.default.node.nodename", "sameOrigin");
-pref("security.policy.default.node.nodetype", "sameOrigin");
-pref("security.policy.default.node.nodevalue", "sameOrigin");
-pref("security.policy.default.node.normalize", "sameOrigin");
-pref("security.policy.default.node.ownerdocument", "sameOrigin");
-pref("security.policy.default.node.parentnode", "sameOrigin");
-pref("security.policy.default.node.prefix", "sameOrigin");
-pref("security.policy.default.node.previoussibling", "sameOrigin");
-pref("security.policy.default.node.removechild", "sameOrigin");
-pref("security.policy.default.node.replacechild", "sameOrigin");
-pref("security.policy.default.node.supports", "sameOrigin");
-
-pref("security.policy.default.window.status", "sameOrigin");
-pref("security.policy.default.window.scriptglobals", "sameOrigin");
 
 // Middle-mouse handling
 pref("middlemouse.paste", false);

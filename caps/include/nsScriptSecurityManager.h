@@ -170,7 +170,6 @@ private:
     PRBool mIsJavaScriptEnabled;
     PRBool mIsMailJavaScriptEnabled;
     PRBool mIsAccessingPrefs;
-    unsigned char hasPolicyVector[(NS_DOM_PROP_MAX >> 3) + 1];
     unsigned char hasDomainPolicyVector[(NS_DOM_PROP_MAX >> 3) + 1];
 };
 

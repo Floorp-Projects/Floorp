@@ -383,11 +383,7 @@ nsScriptSecurityManager::CheckScriptAccess(JSContext *cx,
                                            void *aObj, PRInt32 domPropInt, 
                                            PRBool isWrite)
 {
-    nsDOMProp domProp = (nsDOMProp) domPropInt;
-    if (!GetBit(hasPolicyVector, domPropInt)) {
-        // No policy for this DOM property, so just allow access.
-        return NS_OK;
-    }
+
     nsCOMPtr<nsIPrincipal> principal;
     if (NS_FAILED(GetSubjectPrincipal(cx, getter_AddRefs(principal)))) {
         return NS_ERROR_FAILURE;
@@ -400,16 +396,13 @@ nsScriptSecurityManager::CheckScriptAccess(JSContext *cx,
         return NS_OK;
     }
     nsCAutoString capability;
+    nsDOMProp domProp = (nsDOMProp) domPropInt;
     PRInt32 secLevel = GetSecurityLevel(principal, domProp, isWrite,
                                         capability);
     switch (secLevel) {
-      case SCRIPT_SECURITY_UNDEFINED_ACCESS:
-        // If no preference is defined for this property, allow access. 
-        // This violates the rule of a safe default, but means we don't have
-        // to specify the large majority of unchecked properties, only the
-        // minority of checked ones.
       case SCRIPT_SECURITY_ALL_ACCESS:
         return NS_OK;
+      case SCRIPT_SECURITY_UNDEFINED_ACCESS:
       case SCRIPT_SECURITY_SAME_DOMAIN_ACCESS: {
         const char *cap = isWrite  
                           ? "UniversalBrowserWrite" 
@@ -1417,7 +1410,6 @@ nsScriptSecurityManager::nsScriptSecurityManager(void)
       mIsAccessingPrefs(PR_FALSE)
 {
     NS_INIT_REFCNT();
-    memset(hasPolicyVector, 0, sizeof(hasPolicyVector));
     memset(hasDomainPolicyVector, 0, sizeof(hasDomainPolicyVector));
     InitFromPrefs();
 }
@@ -1903,8 +1895,7 @@ nsScriptSecurityManager::EnumeratePolicyCallback(const char *prefName,
         int domPropLength = dots[4] - domPropName;
         nsDOMProp domProp = findDomProp(domPropName, domPropLength);
         if (domProp < NS_DOM_PROP_MAX) {
-            SetBit(mgr->hasPolicyVector, domProp);
-            if (!isDefault)
+             if (!isDefault)
                 SetBit(mgr->hasDomainPolicyVector, domProp);
             return;
         }
