@@ -506,19 +506,28 @@ PresShell::~PresShell()
 
   mIsDestroying = PR_TRUE;
 
+  // Clobber weak leaks in case of re-entrancy during tear down
+  mHistoryState = nsnull;
+
   NS_IF_RELEASE(mCurrentEventContent);
+
   if (mViewManager) {
     // Disable paints during tear down of the frame tree
     mViewManager->DisableRefresh();
+    mViewManager = nsnull;
   }
+
   // Destroy the frame manager before destroying the frame hierarchy. That way
   // we won't waste time removing content->frame mappings for frames being
   // destroyed
   NS_IF_RELEASE(mFrameManager);
-  if (mRootFrame)
+  if (mRootFrame) {
     mRootFrame->Destroy(*mPresContext);
-  if (mDocument)
+  }
+
+  if (mDocument) {
     mDocument->DeleteShell(this);
+  }
   mRefCnt = 0;
 }
 
