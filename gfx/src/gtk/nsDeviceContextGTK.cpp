@@ -966,7 +966,7 @@ nsSystemFontsGTK::GetSystemFontInfo(GtkWidget *aWidget, nsFont* aFont,
   if (NS_IsXftEnabled()) {
     aFont->name.Assign(PRUnichar('"'));
     aFont->name.AppendWithConversion(pango_font_description_get_family(desc));
-    aFont->name.Assign(PRUnichar('"'));
+    aFont->name.Append(PRUnichar('"'));
   }
 #endif /* MOZ_ENABLE_XFT */
 
