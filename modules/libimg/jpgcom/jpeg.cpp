@@ -18,7 +18,7 @@
 
 /*
  *	  jpeg.c --- Glue code to Independent JPEG Group decoder library
- *    $Id: jpeg.cpp,v 1.5 1999/08/10 22:39:49 dp%netscape.com Exp $
+ *    $Id: jpeg.cpp,v 1.6 1999/09/30 21:17:40 kipp%netscape.com Exp $
  */
 
 
@@ -201,14 +201,14 @@ boolean PR_CALLBACK
 fill_input_buffer (j_decompress_ptr jd)
 {
 	il_source_mgr *src = (il_source_mgr *)jd->src;
-	enum data_source_state data_source_state = src->state;
+	enum data_source_state src_state = src->state;
     uint32 bytesToSkip, new_backtrack_buflen, new_buflen, roundup_buflen;
 	unsigned char *new_buffer;
 
-	ILTRACE(5,("il:jpeg: fill, state=%d, nib=0x%x, bib=%d", data_source_state,
+	ILTRACE(5,("il:jpeg: fill, state=%d, nib=0x%x, bib=%d", src_state,
                src->pub.next_input_byte, src->pub.bytes_in_buffer));
 
-	switch (data_source_state) {
+	switch (src_state) {
 
 	/* Decompressor reached end of backtrack buffer. Return netlib buffer.*/
 	case dss_consuming_backtrack_buffer:

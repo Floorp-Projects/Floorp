@@ -30,7 +30,7 @@ REQUIRES	= util png zlib xpcom img
 CPPSRCS		= \
 		ipng.cpp \
 		nsPNGDecoder.cpp \
-		nsPNGCallback.cpp \
+		nsPNGModule.cpp \
 		dllcompat.cpp \
 		$(NULL)
 

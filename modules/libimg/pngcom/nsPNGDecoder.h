@@ -15,12 +15,10 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+#ifndef nsPNGDecoder_h___
+#define nsPNGDecoder_h___
 
-/* -*- Mode: C; tab-width: 4 -*-
- *   nsPNGDecoder.cpp --- interface to png decoder
- */
-#ifndef _nsPNGDec_h
-#define _nsPNGDec_h
+#include "nsIImgDecoder.h"
 
 /* 573010b0-de61-11d2-802c-0060088f91a3 */
 #define NS_PNGDECODER_CID \
@@ -32,9 +30,28 @@
 { 0x789d4ab0, 0xde61, 0x11d2, \
 { 0x80, 0x2c, 0x00, 0x60, 0x08, 0x8f, 0x91, 0xa3 } }
 
+class PNGDecoder : public nsIImgDecoder   
+{
+public:
+  PNGDecoder(il_container* aContainer);
+  virtual ~PNGDecoder();
+ 
+  NS_DECL_ISUPPORTS
 
-static NS_DEFINE_IID(kPNGDecoderIID, NS_PNGDECODER_IID);
-static NS_DEFINE_CID(kPNGDecoderCID, NS_PNGDECODER_CID);
+  /* stream */
+  NS_IMETHOD ImgDInit();
 
+  NS_IMETHOD ImgDWriteReady(PRUint32 *max_read);
+  NS_IMETHOD ImgDWrite(const unsigned char *buf, int32 len);
+  NS_IMETHOD ImgDComplete();
+  NS_IMETHOD ImgDAbort();
 
-#endif
+  NS_IMETHOD_(il_container *) SetContainer(il_container *ic){ilContainer = ic; return ic;}
+  NS_IMETHOD_(il_container *) GetContainer() {return ilContainer;}
+
+  
+private:
+  il_container* ilContainer;
+};
+
+#endif /* nsPNGDecoder_h___ */
