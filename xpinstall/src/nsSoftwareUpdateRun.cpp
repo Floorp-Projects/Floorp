@@ -427,7 +427,8 @@ extern "C" void RunInstallOnThread(void *data)
                 // Go ahead and run!!
                 jsval rval;
                 jsval installedFiles;
-
+                JS_BeginRequest(cx); //Increment JS thread counter associated 
+                                     //with this context
                 PRBool ok = JS_EvaluateScript(  cx,
                                                 glob,
                                                 scriptBuffer,
@@ -470,7 +471,7 @@ extern "C" void RunInstallOnThread(void *data)
                     else
                         finalStatus = nsInstall::MALFORMED_INSTALL;
                 }
-
+                JS_EndRequest(cx); //Decrement JS thread counter
                 JS_DestroyContextMaybeGC(cx);
             }
             else

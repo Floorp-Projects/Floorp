@@ -62,8 +62,7 @@ enum Install_slots
   INSTALL_FLAGS           = -7,
   INSTALL_STATUSSENT      = -8,
   INSTALL_INSTALL         = -9,
-  INSTALL_FILEOP          = -10,
-  INSTALL_INSTALLED_FILES = -11
+  INSTALL_INSTALLED_FILES = -10
 };
 
 // prototype for fileOp object
@@ -156,10 +155,6 @@ GetInstallProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           *vp = OBJECT_TO_JSVAL(obj);
           break;
         
-      case INSTALL_FILEOP:
-          *vp = OBJECT_TO_JSVAL(gFileOpObject);
-          break;
-
       case INSTALL_INSTALLED_FILES:
           *vp = BOOLEAN_TO_JSVAL( a->InInstallTransaction() );
           break;
@@ -836,12 +831,13 @@ InstallFinalizeInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 
   if(argc >= 0)
   {
+    jsrefcount saveDepth;
+    saveDepth = JS_SuspendRequest(cx);//Need to suspend use of thread or deadlock occurs
     //  public int FinalizeInstall (void);
-
-    if(NS_OK != nativeThis->FinalizeInstall(&nativeRet))
-    {
-      return JS_FALSE;
-    }
+    nsresult rv = nativeThis->FinalizeInstall(&nativeRet);
+    JS_ResumeRequest(cx, saveDepth);
+    if (NS_FAILED(rv)) 
+        return JS_FALSE;
 
     *rval = INT_TO_JSVAL(nativeRet);
   }
@@ -1499,11 +1495,16 @@ InstallStartInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
     ConvertJSValToStr(b1, cx, argv[1]);
     ConvertJSvalToVersionString(b2, cx, argv[2]);
 
-    if(NS_OK != nativeThis->StartInstall(b0, b1, b2, &nativeRet))
+    jsrefcount saveDepth;
+    saveDepth = JS_SuspendRequest(cx);//Need to suspend use of thread or deadlock occurs
+
+    nsresult rv = nativeThis->StartInstall(b0, b1, b2, &nativeRet);
+
+    JS_ResumeRequest(cx, saveDepth); //Resume the suspened thread
+    if (NS_FAILED(rv))
     {
         return JS_FALSE;
     }
-
 
     *rval = INT_TO_JSVAL(nativeRet);
   }
@@ -1713,7 +1714,6 @@ static JSPropertySpec InstallProperties[] =
   {"flags",             INSTALL_FLAGS,              JSPROP_ENUMERATE | JSPROP_READONLY},
   {"_statusSent",       INSTALL_STATUSSENT,         JSPROP_READONLY},
   {"Install",           INSTALL_INSTALL,            JSPROP_READONLY},
-  {"File",              INSTALL_FILEOP,             JSPROP_READONLY},
   {"_installedFiles",   INSTALL_INSTALLED_FILES,    JSPROP_READONLY},
   {0}
 };
@@ -1918,6 +1918,9 @@ JSObject * InitXPInstallObjects(JSContext *jscontext,
       return nsnull;
   
   JS_SetPrivate(jscontext, gFileOpObject, nativeInstallObject);
+
+  JS_DefineProperty (jscontext, installObject, "File", OBJECT_TO_JSVAL(gFileOpObject),
+                     JS_PropertyStub, JS_PropertyStub, JSPROP_READONLY | JSPROP_PERMANENT);
  
 
   //
@@ -1942,7 +1945,7 @@ JSObject * InitXPInstallObjects(JSContext *jscontext,
   }
   nativeInstallObject->SaveWinRegPrototype(winRegPrototype);
 
-  if(NS_OK != InitWinProfilePrototype(jscontext, global, &winRegPrototype))
+  if(NS_OK != InitWinProfilePrototype(jscontext, global, &winProfilePrototype))
   {
       return nsnull;
   }
