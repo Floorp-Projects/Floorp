@@ -83,6 +83,10 @@ struct PK11SlotInfoStr {
      * still in use */
     int refCount;
     PRLock *refLock;
+    PRLock *freeListLock;
+    PK11SymKey *freeSymKeysHead;
+    int keyCount;
+    int maxKeyCount;
     /* Password control functions for this slot. many of these are only
      * active if the appropriate flag is on in defaultFlags */
     int askpw;		/* what our password options are */
@@ -133,6 +137,7 @@ struct PK11SymKeyStr {
     CK_OBJECT_HANDLE  objectID; /* object id of this key in the slot */
     PK11SlotInfo      *slot;    /* Slot this key is loaded into */
     void	      *cx;	/* window context in case we need to loggin */
+    PK11SymKey		*next;
     PRBool	owner;
     SECItem	data;		/* raw key data if available */
     CK_SESSION_HANDLE session;

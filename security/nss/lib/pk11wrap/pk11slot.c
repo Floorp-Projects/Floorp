@@ -385,10 +385,21 @@ PK11_NewSlotInfo(void)
 	PORT_Free(slot);
 	return slot;
     }
+    slot->freeListLock = PR_NewLock();
+    if (slot->freeListLock == NULL) {
+	PR_DestroyLock(slot->sessionLock);
+	PR_DestroyLock(slot->refLock);
+	PORT_Free(slot);
+	return slot;
+    }
 #else
     slot->sessionLock = NULL;
     slot->refLock = NULL;
+    slot->freeListLock = NULL;
 #endif
+    slot->freeSymKeysHead = NULL;
+    slot->keyCount = 0;
+    slot->maxKeyCount = 0;
     slot->functionList = NULL;
     slot->needTest = PR_TRUE;
     slot->isPerm = PR_FALSE;
@@ -449,6 +460,9 @@ PK11_DestroySlot(PK11SlotInfo *slot)
    /* now free up all the certificates we grabbed on this slot */
    PK11_FreeSlotCerts(slot);
 
+   /* free up the cached keys and sessions */
+   PK11_CleanKeyList(slot);
+
    /* finally Tell our parent module that we've gone away so it can unload */
    if (slot->module) {
 	SECMOD_SlotDestroyModule(slot->module,PR_TRUE);
@@ -461,6 +475,10 @@ PK11_DestroySlot(PK11SlotInfo *slot)
    if (slot->sessionLock) {
 	PR_DestroyLock(slot->sessionLock);
 	slot->sessionLock = NULL;
+   }
+   if (slot->freeListLock) {
+	PR_DestroyLock(slot->freeListLock);
+	slot->freeListLock = NULL;
    }
 #endif
 
@@ -1586,6 +1604,16 @@ PK11_InitToken(PK11SlotInfo *slot, PRBool loadCerts)
 
     slot->hasRSAInfo = PR_FALSE;
     slot->RSAInfoFlags = 0;
+
+    /* initialize the maxKeyCount value */
+    if (tokenInfo.ulMaxSessionCount == 0) {
+	slot->maxKeyCount = 300; /* should be #define or a config param */
+    } else if (tokenInfo.ulMaxSessionCount < 20) {
+	/* don't have enough sessions to keep that many keys around */
+	slot->maxKeyCount = 0;
+    } else {
+	slot->maxKeyCount = tokenInfo.ulMaxSessionCount/2;
+    }
 
     /* Make sure our session handle is valid */
     if (slot->session == CK_INVALID_SESSION) {
