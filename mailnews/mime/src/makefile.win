@@ -100,7 +100,8 @@ OBJS=											\
 		.\$(OBJDIR)\nsMsgHeaderParser.obj	\
 		.\$(OBJDIR)\nsMimeURLUtils.obj		\
 		.\$(OBJDIR)\nsStreamConverter.obj	\
-		.\$(OBJDIR)\mimedrft.obj		\
+		.\$(OBJDIR)\mimedrft.obj			\
+		.\$(OBJDIR)\nsMimeHeaders.obj		\
 # XP-COM BRIDGES
 		.\$(OBJDIR)\comi18n.obj				\
 # EXTERNAL (OLD) DEPENDENCIES - SHOULD EVENTUALLY BE REMOVED 
