@@ -1181,6 +1181,7 @@ nsLocalFile::Create(PRUint32 type, PRUint32 attributes)
 			// !!!!! Danger Will Robinson !!!!!
 			// we really shouldn't get here
 			NS_NOTREACHED("Unknown nsLocalFileMac init type");
+			return NS_ERROR_UNEXPECTED;
 			break;
 	}
 	
@@ -1190,26 +1191,29 @@ nsLocalFile::Create(PRUint32 type, PRUint32 attributes)
 	switch (type)
 	{
 		case NORMAL_FILE_TYPE:
-		    SetOSTypeAndCreatorFromExtension();
+		  SetOSTypeAndCreatorFromExtension();
 			err = ::FSpCreate(&mResolvedSpec, mCreator, mType, smCurrentScript);
-			return (MacErrorMapper(err));
 			break;
 
 		case DIRECTORY_TYPE:
-			err = ::FSpDirCreate(&mResolvedSpec, smCurrentScript, &mResolvedSpec.parID);
-			// For some reason, this usually returns fnfErr, even though it works.
-			if (err == fnfErr)
-				err = noErr;
-			return (MacErrorMapper(err));
+		  {
+		    long newDirID;
+			  err = ::FSpDirCreate(&mResolvedSpec, smCurrentScript, &newDirID);
+			  // For some reason, this usually returns fnfErr, even though it works.
+			  if (err == fnfErr)
+				  err = noErr;
+			}
 			break;
 		
 		default:
-			// For now just fall out of the switch into the default return NS_ERROR_FILE_UNKNOWN_TYPE
+			return NS_ERROR_FILE_UNKNOWN_TYPE;
 			break;
-
 	}
 
-	return NS_ERROR_FILE_UNKNOWN_TYPE;
+  if (err == noErr)
+    mTargetSpec = mResolvedSpec;
+    
+	return (MacErrorMapper(err));
 }
 
 NS_IMETHODIMP  
