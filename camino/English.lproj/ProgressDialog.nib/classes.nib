@@ -1,0 +1,24 @@
+{
+    IBClasses = (
+        {CLASS = FirstResponder; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
+        {
+            CLASS = ProgressDlgController; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {
+                mCancelButton = id; 
+                mElapsedTimeLabel = id; 
+                mFromField = id; 
+                mKeepOpenCheckbox = id; 
+                mLaunchButton = id; 
+                mPauseResumeButton = id; 
+                mProgressBar = id; 
+                mRevealFolderButton = id; 
+                mStatusLabel = id; 
+                mTimeLeftLabel = id; 
+                mToField = id; 
+            }; 
+            SUPERCLASS = NSWindowController; 
+        }
+    ); 
+    IBVersion = 1; 
+}
