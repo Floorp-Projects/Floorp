@@ -98,7 +98,7 @@ nsMIMEInfoImpl::ExtensionExists(const char *aExtension, PRBool *_retval) {
     NS_ASSERTION(aExtension, "no extension");
     PRBool found = PR_FALSE;
     PRUint32 extCount = mExtensions.Count();
-    if (extCount < 1) return NS_ERROR_NOT_INITIALIZED;
+    if (extCount < 1) return NS_OK;
 
     if (!aExtension) return NS_ERROR_NULL_POINTER;
 
