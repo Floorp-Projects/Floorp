@@ -36,6 +36,9 @@ CPP_OBJS=   .\$(OBJDIR)\nsMsgRFC822Parser.obj  \
 
 
 EXPORTS= nsMsgRFC822Parser.h \
+		 nsMsgGroupRecord.h  \
+		 nsMsgPtrArray.h	 \
+		 $(NULL)
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\mailnews -I$(PUBLIC)\raptor -I$(PUBLIC)\rdf
 
