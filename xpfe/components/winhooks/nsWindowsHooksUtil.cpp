@@ -281,7 +281,7 @@ nsresult ProtocolRegistryEntry::set() {
         // then it will reset lots of registry entries, "stealing" them from us.
         SavedRegistryEntry special( HKEY_LOCAL_MACHINE, "Software\\Classes\\http\\shell\\open\\ddeexec\\Application", NULL, NULL );
         nsCString specialVal = special.currentSetting();
-        if ( specialVal == "NSShell" || specialVal == "Netscape" ) {
+        if ( specialVal.Equals( "NSShell" ) || specialVal.Equals( "Netscape" ) ) {
             // Reset this so Communicator will at least prompt the user.
             special.set();
         }
@@ -392,7 +392,10 @@ nsresult FileTypeRegistryEntry::set() {
             nsCString iconKey = "Software\\Classes\\";
             iconKey += protocol;
             iconKey += "\\DefaultIcon";
-            RegistryEntry iconEntry( HKEY_LOCAL_MACHINE, iconKey, NULL, thisApplication()+",1" );
+
+            RegistryEntry iconEntry( HKEY_LOCAL_MACHINE, iconKey, NULL,
+                                     nsCAutoString( thisApplication() + NS_LITERAL_CSTRING(",1") ) );
+
             if ( iconEntry.currentSetting().IsEmpty() ) {
                 iconEntry.set();
             }
@@ -438,5 +441,5 @@ nsresult EditableFileTypeRegistryEntry::set() {
 
 // Convert current registry setting to boolean.
 BoolRegistryEntry::operator void*() {
-    return (void*)( currentSetting() == "1" ? PR_TRUE : PR_FALSE );
+    return (void*)( currentSetting().Equals( "1" ) ? PR_TRUE : PR_FALSE );
 }
