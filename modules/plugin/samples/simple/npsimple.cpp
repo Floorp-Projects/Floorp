@@ -88,19 +88,18 @@
  * Windows PlatformInstance
  *----------------------------------------------------------------------------*/
 
-#ifdef XP_PC
+#if defined(XP_PC)
 typedef struct _PlatformInstance
 {
     HWND		fhWnd;
     WNDPROC		fDefaultWindowProc;
 } PlatformInstance;
-#endif /* XP_PC */
 
 /*------------------------------------------------------------------------------
  * UNIX PlatformInstance
  *----------------------------------------------------------------------------*/
 
-#ifdef XP_UNIX
+#elif defined(XP_UNIX)
 typedef struct _PlatformInstance
 {
     Window 		       window;
@@ -110,18 +109,27 @@ typedef struct _PlatformInstance
     uint32 		       x, y;
     uint32 		       width, height;
 } PlatformInstance;
-#endif /* XP_UNIX */
 
 /*------------------------------------------------------------------------------
  * Macintosh PlatformInstance
  *----------------------------------------------------------------------------*/
 
-#ifdef XP_MAC
+#elif defined(XP_MAC)
 typedef struct _PlatformInstance
 {
     int			placeholder;
 } PlatformInstance;
-#endif /* macintosh */
+
+/*------------------------------------------------------------------------------
+ * Stub PlatformInstance
+ *----------------------------------------------------------------------------*/
+
+#else
+typedef struct _PlatformInstance
+{
+    int			placeholder;
+} PlatformInstance;
+#endif /* end Section 2 */
 
 
 // Define constants for easy use
@@ -1113,7 +1121,7 @@ SimplePluginStreamListener::GetStreamType(nsPluginStreamType *result)
  * UNIX Implementations
  *----------------------------------------------------------------------------*/
 
-#ifdef XP_UNIX
+#if defined(XP_UNIX)
 
 /*+++++++++++++++++++++++++++++++++++++++++++++++++
  * PlatformNew
@@ -1182,13 +1190,12 @@ SimplePluginInstance::PlatformHandleEvent(nsPluginEvent* event)
     /* UNIX Plugins do not use HandleEvent */
     return 0;
 }
-#endif /* XP_UNIX */
 
 /*------------------------------------------------------------------------------
  * Windows Implementations
  *----------------------------------------------------------------------------*/
 
-#ifdef XP_PC
+#elif defined(XP_PC)
 const char* gInstanceLookupString = "instance->pdata";
 
 /*+++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1325,7 +1332,6 @@ SimplePluginInstance::PluginWindowProc( HWND hWnd, UINT Msg, WPARAM wParam, LPAR
     }
     return 0;
 }
-#endif /* XP_PC */
 
 
 
@@ -1333,7 +1339,7 @@ SimplePluginInstance::PluginWindowProc( HWND hWnd, UINT Msg, WPARAM wParam, LPAR
  * Macintosh Implementations
  *----------------------------------------------------------------------------*/
 
-#ifdef macintosh
+#elif defined(XP_MAC)
 
 PRBool	StartDraw(nsPluginWindow* window);
 void 	EndDraw(nsPluginWindow* window);
@@ -1500,6 +1506,38 @@ SimplePluginInstance::DoDraw(void)
     DrawString("\pHello, World!");
 }
 
-#endif /* macintosh */
+
+
+/*------------------------------------------------------------------------------
+ * Stub Implementations
+ *----------------------------------------------------------------------------*/
+
+#else
+
+void
+SimplePluginInstance::PlatformNew(void)
+{
+}
+
+nsresult
+SimplePluginInstance::PlatformDestroy(void)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+SimplePluginInstance::PlatformSetWindow(nsPluginWindow* window)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+int16
+SimplePluginInstance::PlatformHandleEvent(nsPluginEvent* event)
+{
+    int16 eventHandled = FALSE;
+    return eventHandled;
+}
+
+#endif /* end Section 5 */
 
 /******************************************************************************/
