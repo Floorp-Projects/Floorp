@@ -40,12 +40,19 @@
 #include "nsContainerFrame.h"
 #include "nsIPrintOptions.h"
 
+class nsSharedPageData;
+
 // Page frame class used by the simple page sequence frame
 class nsPageFrame : public nsContainerFrame {
+
 public:
   friend nsresult NS_NewPageFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
 
   // nsIFrame
+  NS_IMETHOD  SetInitialChildList(nsIPresContext* aPresContext,
+                                  nsIAtom*        aListName,
+                                  nsIFrame*       aChildList);
+
   NS_IMETHOD  Reflow(nsIPresContext*      aPresContext,
                      nsHTMLReflowMetrics& aDesiredSize,
                      const nsHTMLReflowState& aMaxSize,
@@ -77,19 +84,13 @@ public:
   // For Printing
   //////////////////
 
-  // Set the print options object into the page for printing
-  virtual void  SetPrintOptions(nsIPrintOptions * aPrintOptions);
-
   // Tell the page which page number it is out of how many
   virtual void  SetPageNumInfo(PRInt32 aPageNumber, PRInt32 aTotalPages);
 
   virtual void  SuppressHeadersAndFooters(PRBool aDoSup) { mSupressHF = aDoSup; }
   virtual void  SetClipRect(nsRect* aClipRect)           { mClipRect = *aClipRect; }
 
-  static void SetDateTimeStr(PRUnichar * aDateTimeStr);
-
-  // This is class is now responsible for freeing the memory
-  static void SetPageNumberFormat(PRUnichar * aFormatStr, PRBool aForPageNumOnly);
+  virtual SetSharedPageData(nsSharedPageData* aPD) { mPD = aPD; }
 
 protected:
   nsPageFrame();
@@ -136,10 +137,7 @@ protected:
   PRPackedBool mSupressHF;
   nsRect       mClipRect;
 
-  static PRUnichar * mDateTimeStr;
-  static nsFont *    mHeadFootFont;
-  static PRUnichar * mPageNumFormat;
-  static PRUnichar * mPageNumAndTotalsFormat;
+  nsSharedPageData* mPD;
 
 };
 

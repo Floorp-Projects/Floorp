@@ -133,6 +133,7 @@ nsresult nsDeviceContextWin :: Init(nsNativeDeviceContext aContext, nsIDeviceCon
 
   CommonInit(mDC);
 
+
   GetTwipsToDevUnits(newscale);
   aOrigContext->GetTwipsToDevUnits(origscale);
 
@@ -273,6 +274,13 @@ static NS_DEFINE_CID(kRCCID,NS_RENDERING_CONTEXT_CID);
 
 NS_IMETHODIMP nsDeviceContextWin :: CreateRenderingContext(nsIRenderingContext *&aContext)
 {
+#ifdef NS_PRINT_PREVIEW
+  // Defer to Alt when there is one
+  if (mAltDC && (mUseAltDC & kUseAltDCFor_CREATE_RC)) {
+    return mAltDC->CreateRenderingContext(aContext);
+  }
+#endif
+
   nsIRenderingContext *pContext;
   nsresult             rv;
   nsDrawingSurfaceWin  *surf;
@@ -577,13 +585,21 @@ NS_IMETHODIMP nsDeviceContextWin :: ConvertPixel(nscolor aColor, PRUint32 & aPix
 
 NS_IMETHODIMP nsDeviceContextWin :: GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight)
 {
+#ifdef NS_PRINT_PREVIEW
+  // Defer to Alt when there is one
+  if (mAltDC && (mUseAltDC & kUseAltDCFor_SURFACE_DIM)) {
+    return mAltDC->GetDeviceSurfaceDimensions(aWidth, aHeight);
+  }
+#endif
+
   if ( mSpec )
   {
     // we have a printer device
     aWidth = NSToIntRound(mWidth * mDevUnitsToAppUnits);
     aHeight = NSToIntRound(mHeight * mDevUnitsToAppUnits);
-  }
-  else {
+  } 
+  else 
+  {
     nsRect area;
     ComputeFullAreaUsingScreen ( &area );
     aWidth = area.width;

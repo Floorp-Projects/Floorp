@@ -53,6 +53,7 @@ class nsIWidget;
 class nsICompositeListener;
 struct nsRect;
 class nsIDeviceContext;
+class nsIEventProcessor;
 
 enum nsContentQuality {
   nsContentQuality_kGood = 0,
@@ -438,7 +439,7 @@ public:
   /**
    * Display the specified view. Used when printing.
    */
-  NS_IMETHOD Display(nsIView *aView, nscoord aX, nscoord aY) = 0;
+  NS_IMETHOD Display(nsIView *aView, nscoord aX, nscoord aY, const nsRect& aClipRect) = 0;
 
   /**
    * Add a listener to the view manager's composite listener list.
@@ -561,6 +562,14 @@ public:
    * @returns PR_TRUE if the rect is visible, PR_FALSE otherwise.
 	 */
   NS_IMETHOD IsRectVisible(nsIView *aView, const nsRect &aRect, PRBool aMustBeFullyVisible, PRBool *isVisible)=0;
+
+  /**
+	 * Installs an event process that indicates whether the event should be disacrded or not
+   * (see nsIEventProcessor.h)
+   * @param aEventProcessor The event process to be installed and addref'ed, 
+   * pass in nsnull to clear it
+	 */
+  NS_IMETHOD SetEventProcessor(nsIEventProcessor* aEventProcessor)=0;
 };
 
 //when the refresh happens, should it be double buffered?

@@ -26,6 +26,7 @@ nsIPresContext.h
 nsIPresShell.h
 nsIPresState.h
 nsIPrintContext.h
+nsIPrintPreviewContext.h
 nsIReflowCallback.h
 nsIReflowCommand.h
 nsIScrollableFrame.h

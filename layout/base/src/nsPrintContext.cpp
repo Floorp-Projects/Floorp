@@ -60,6 +60,8 @@ public:
   NS_IMETHOD GetImageLoadFlags(nsLoadFlags& aLoadFlags);
   NS_IMETHOD GetMedium(nsIAtom** aMedium);
   NS_IMETHOD IsPaginated(PRBool* aResult);
+  NS_IMETHOD SetPaginatedScrolling(PRBool aResult)  { return NS_ERROR_FAILURE; }
+  NS_IMETHOD GetPaginatedScrolling(PRBool* aResult);
   NS_IMETHOD GetPageDim(nsRect* aActualRect, nsRect* aAdjRect);
   NS_IMETHOD SetPageDim(nsRect* aRect);
 protected:
@@ -119,6 +121,14 @@ PrintContext::IsPaginated(PRBool* aResult)
 }
 
 NS_IMETHODIMP
+PrintContext::GetPaginatedScrolling(PRBool* aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 PrintContext::GetPageDim(nsRect* aActualRect, nsRect* aAdjRect)
 {
   NS_ENSURE_ARG_POINTER(aActualRect);
@@ -144,6 +154,7 @@ PrintContext::SetPageDim(nsRect* aPageDim)
 NS_EXPORT nsresult
 NS_NewPrintContext(nsIPrintContext** aInstancePtrResult)
 {
+  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
 
   if (aInstancePtrResult == nsnull) {
     return NS_ERROR_NULL_POINTER;

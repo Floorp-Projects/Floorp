@@ -124,6 +124,7 @@
 #include "nsIDOMWindowInternal.h"
 #include "nsPIDOMWindow.h"
 #include "nsIFocusController.h"
+#include "nsIPrintPreviewContext.h"
 
 // Drag & Drop, Clipboard
 #include "nsWidgetsCID.h"
@@ -3444,6 +3445,11 @@ PresShell::GetPageSequenceFrame(nsIPageSequenceFrame** aResult) const
       if (NS_SUCCEEDED(rv) && (nsnull != scrollable)) {
           // if it is then get the scrolled frame
           scrollable->GetScrolledFrame(nsnull, child);
+      } else {
+        nsCOMPtr<nsIPrintPreviewContext> ppContext = do_QueryInterface(mPresContext);
+        if (ppContext) {
+          child->FirstChild(mPresContext, nsnull, &child);
+        }
       }
 
       // make sure the child is a pageSequence

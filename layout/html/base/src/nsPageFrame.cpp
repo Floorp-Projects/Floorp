@@ -48,6 +48,13 @@
 #include "nsIPresShell.h"
 #include "nsIDeviceContext.h"
 #include "nsReadableUtils.h"
+#include "nsIPrintPreviewContext.h"
+
+#include "nsIView.h" // view flags for clipping
+
+#include "nsHTMLContainerFrame.h" // view creation
+
+#include "nsSimplePageSequence.h" // for nsSharedPageData
 
 // for page number localization formatting
 #include "nsTextFormatter.h"
@@ -61,14 +68,8 @@
 #include "nsIServiceManager.h"
 static NS_DEFINE_CID(kPrintOptionsCID, NS_PRINTOPTIONS_CID);
 
-// static data members
-PRUnichar * nsPageFrame::mDateTimeStr   = nsnull;
-nsFont *    nsPageFrame::mHeadFootFont  = nsnull;
-PRUnichar * nsPageFrame::mPageNumFormat = nsnull;
-PRUnichar * nsPageFrame::mPageNumAndTotalsFormat = nsnull;
-
 #if defined(DEBUG_rods) || defined(DEBUG_dcone)
-#define DEBUG_PRINTING
+//#define DEBUG_PRINTING
 #endif
 
 #ifdef DEBUG_PRINTING
@@ -84,6 +85,7 @@ PRUnichar * nsPageFrame::mPageNumAndTotalsFormat = nsnull;
 #define PRINT_DEBUG_MSG4(_msg1, _msg2, _msg3, _msg4) 
 #define PRINT_DEBUG_MSG5(_msg1, _msg2, _msg3, _msg4, _msg5) 
 #endif
+
 
 nsresult
 NS_NewPageFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
@@ -103,49 +105,50 @@ NS_NewPageFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 nsPageFrame::nsPageFrame() :
   mSupressHF(PR_FALSE),
   mClipRect(-1, -1, -1, -1)
-
 {
 #ifdef NS_DEBUG
   mDebugFD = stdout;
 #endif
-  nsresult rv;
-  mPrintOptions = do_GetService(kPrintOptionsCID, &rv);
-
-  if (mHeadFootFont == nsnull) {
-    mHeadFootFont = new nsFont("serif", NS_FONT_STYLE_NORMAL,NS_FONT_VARIANT_NORMAL,
-                               NS_FONT_WEIGHT_NORMAL,0,NSIntPointsToTwips(10));
-  }
-  // now get the default font form the print options
-  mPrintOptions->GetDefaultFont(*mHeadFootFont);
 }
 
 nsPageFrame::~nsPageFrame()
 {
-  if (mHeadFootFont != nsnull) {
-    delete mHeadFootFont;
-    mHeadFootFont = nsnull;
-  }
-
-  if (mDateTimeStr) {
-    nsMemory::Free(mDateTimeStr);
-    mDateTimeStr = nsnull;
-  }
-
-  if (mPageNumFormat) {
-    nsMemory::Free(mPageNumFormat);
-    mPageNumFormat = nsnull;
-  }
-
-  if (mPageNumAndTotalsFormat) {
-    nsMemory::Free(mPageNumAndTotalsFormat);
-    mPageNumAndTotalsFormat = nsnull;
-  }
 }
 
-NS_METHOD nsPageFrame::Reflow(nsIPresContext*          aPresContext,
-                              nsHTMLReflowMetrics&     aDesiredSize,
-                              const nsHTMLReflowState& aReflowState,
-                              nsReflowStatus&          aStatus)
+NS_IMETHODIMP
+nsPageFrame::SetInitialChildList(nsIPresContext* aPresContext,
+                                      nsIAtom*        aListName,
+                                      nsIFrame*       aChildList)
+{
+  // only create a view for the area frame if we are printing the selection
+  // (Also skip it if we are doing PrintPreview)
+  nsCOMPtr<nsIPrintPreviewContext> ppContext = do_QueryInterface(aPresContext);
+  if (!ppContext) {
+    nsresult rv;
+    nsCOMPtr<nsIPrintOptions> printService = do_GetService(kPrintOptionsCID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      PRInt16 printRangeType = nsIPrintOptions::kRangeAllPages; 
+      printService->GetPrintRange(&printRangeType);
+      // make sure we are printing the selection
+      if (printRangeType == nsIPrintOptions::kRangeSelection) {
+        nsIView* view;
+        aChildList->GetView(aPresContext, &view);
+        if (view == nsnull) {
+          nsCOMPtr<nsIStyleContext> styleContext;
+          aChildList->GetStyleContext(getter_AddRefs(styleContext));
+          nsHTMLContainerFrame::CreateViewForFrame(aPresContext, aChildList,
+                                                   styleContext, nsnull, PR_TRUE);
+        }
+      }
+    }
+  }
+  return nsContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
+}
+
+NS_IMETHODIMP nsPageFrame::Reflow(nsIPresContext*          aPresContext,
+                                  nsHTMLReflowMetrics&     aDesiredSize,
+                                  const nsHTMLReflowState& aReflowState,
+                                  nsReflowStatus&          aStatus)
 {
   DO_GLOBAL_REFLOW_COUNT("nsPageFrame", aReflowState.reason);
   DISPLAY_REFLOW(this, aReflowState, aDesiredSize, aStatus);
@@ -209,13 +212,15 @@ NS_METHOD nsPageFrame::Reflow(nsIPresContext*          aPresContext,
     // XXX Pay attention to the page's border and padding...
     if (mFrames.NotEmpty()) {
       nsIFrame* frame = mFrames.FirstChild();
-      nsSize  maxSize(aReflowState.availableWidth, aReflowState.availableHeight);
-      nsHTMLReflowState kidReflowState(aPresContext, aReflowState, frame,
-                                       maxSize);
+      nsSize  maxSize(mPD->mReflowRect.width - mPD->mReflowMargin.right - mPD->mReflowMargin.left, 
+                      mPD->mReflowRect.height - mPD->mReflowMargin.top - mPD->mReflowMargin.bottom);
+      nsHTMLReflowState kidReflowState(aPresContext, aReflowState, frame, maxSize);
       kidReflowState.isTopOfPage = PR_TRUE;
+      kidReflowState.availableWidth  = maxSize.width;
+      kidReflowState.availableHeight = maxSize.height;
 
       // Get the child's desired size
-      ReflowChild(frame, aPresContext, aDesiredSize, kidReflowState, 0, 0, 0, aStatus);
+      ReflowChild(frame, aPresContext, aDesiredSize, kidReflowState, mPD->mReflowMargin.left, mPD->mReflowMargin.top, 0, aStatus);
 
       // Make sure the child is at least as tall as our max size (the containing window)
       if (aDesiredSize.height < aReflowState.availableHeight) {
@@ -223,7 +228,7 @@ NS_METHOD nsPageFrame::Reflow(nsIPresContext*          aPresContext,
       }
 
       // Place and size the child
-      FinishReflowChild(frame, aPresContext, aDesiredSize, 0, 0, 0);
+      FinishReflowChild(frame, aPresContext, aDesiredSize, mPD->mReflowMargin.left, mPD->mReflowMargin.top, 0);
 
       // Is the frame complete?
       if (NS_FRAME_IS_COMPLETE(aStatus)) {
@@ -306,8 +311,8 @@ nsPageFrame::ProcessSpecialCodes(const nsString& aStr, nsString& aNewStr)
   PRUnichar * kDate = GetUStr("&D");
   if (kDate != nsnull) {
     if (aStr.Find(kDate) > -1) {
-      if (mDateTimeStr != nsnull) {
-        aNewStr.ReplaceSubstring(kDate, mDateTimeStr);
+      if (mPD->mDateTimeStr != nsnull) {
+        aNewStr.ReplaceSubstring(kDate, mPD->mDateTimeStr);
       } else {
         aNewStr.ReplaceSubstring(kDate, NS_LITERAL_STRING("").get());
       }
@@ -324,7 +329,7 @@ nsPageFrame::ProcessSpecialCodes(const nsString& aStr, nsString& aNewStr)
   PRUnichar * kPage = GetUStr("&PT");
   if (kPage != nsnull) {
     if (aStr.Find(kPage) > -1) {
-      PRUnichar * uStr = nsTextFormatter::smprintf(mPageNumAndTotalsFormat, mPageNum, mTotNumPages);
+      PRUnichar * uStr = nsTextFormatter::smprintf(mPD->mPageNumAndTotalsFormat, mPageNum, mTotNumPages);
       aNewStr.ReplaceSubstring(kPage, uStr);
       nsMemory::Free(uStr);
       nsMemory::Free(kPage);
@@ -338,7 +343,7 @@ nsPageFrame::ProcessSpecialCodes(const nsString& aStr, nsString& aNewStr)
   kPage = GetUStr("&P");
   if (kPage != nsnull) {
     if (aStr.Find(kPage) > -1) {
-      PRUnichar * uStr = nsTextFormatter::smprintf(mPageNumFormat, mPageNum);
+      PRUnichar * uStr = nsTextFormatter::smprintf(mPD->mPageNumFormat, mPageNum);
       aNewStr.ReplaceSubstring(kPage, uStr);
       nsMemory::Free(uStr);
       nsMemory::Free(kPage);
@@ -351,7 +356,7 @@ nsPageFrame::ProcessSpecialCodes(const nsString& aStr, nsString& aNewStr)
   if (kTitle != nsnull) {
     if (aStr.Find(kTitle) > -1) {
       PRUnichar * uTitle;
-      mPrintOptions->GetTitle(&uTitle);   // creates memory
+      mPD->mPrintOptions->GetTitle(&uTitle);   // creates memory
       SubstValueForCode(aNewStr, kTitle, uTitle);
       nsMemory::Free(uTitle);
       nsMemory::Free(kTitle);
@@ -364,7 +369,7 @@ nsPageFrame::ProcessSpecialCodes(const nsString& aStr, nsString& aNewStr)
   if (kDocURL != nsnull) {
     if (aStr.Find(kDocURL) > -1) {
       PRUnichar * uDocURL;
-      mPrintOptions->GetDocURL(&uDocURL);   // creates memory
+      mPD->mPrintOptions->GetDocURL(&uDocURL);   // creates memory
       SubstValueForCode(aNewStr, kDocURL, uDocURL);
       nsMemory::Free(uDocURL);
       nsMemory::Free(kDocURL);
@@ -491,23 +496,18 @@ nsPageFrame::DrawHeaderFooter(nsIRenderingContext& aRenderingContext,
 
     // cacl the x and y positions of the text
     nsRect rect(aRect);
-    nscoord quarterInch = NS_INCHES_TO_TWIPS(0.25);
-    rect.Deflate(quarterInch,0);
     nscoord x = GetXPosition(aRenderingContext, rect, aJust, str);
     nscoord y;
     if (aHeaderFooter == eHeader) {
-      nscoord offset = ((mMargin.top - aHeight) / 2);
-      y = rect.y - offset - aHeight;
-      rect.Inflate(0, offset + aHeight);
+      y = rect.y;
     } else {
-      nscoord offset = ((mMargin.bottom - aHeight) / 2);
-      y = rect.y + rect.height + offset;
-      rect.height += offset + aHeight;
+      y = rect.y + rect.height - aHeight;
     }
 
     // set up new clip and draw the text
     PRBool clipEmpty;
     aRenderingContext.PushState();
+    aRenderingContext.SetColor(NS_RGB(0,0,0));
     aRenderingContext.SetClipRect(rect, nsClipCombine_kReplace, clipEmpty);
     aRenderingContext.DrawString(str, x, y + aAscent);
     aRenderingContext.PopState(clipEmpty);
@@ -545,7 +545,9 @@ nsPageFrame::Paint(nsIPresContext*      aPresContext,
 
   nsRect rect;
   PRBool clipEmpty;
-  if (mClipRect.width != -1 || mClipRect.height != -1) {
+  PRBool specialClipIsSet = mClipRect.width != -1 || mClipRect.height != -1;
+
+  if (specialClipIsSet) {
 #ifdef DEBUG_PRINTING
     if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
       printf("*** ClipRect: %5d,%5d,%5d,%5d\n", mClipRect.x, mClipRect.y, mClipRect.width, mClipRect.height);
@@ -559,12 +561,85 @@ nsPageFrame::Paint(nsIPresContext*      aPresContext,
     rect = mRect;
   }
 
+#ifdef DEBUG_PRINTING
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
-    aRenderingContext.SetColor(NS_RGB(255,255,255));
-    rect.x = 0;
-    rect.y = 0;
-    aRenderingContext.FillRect(rect);
+    nsRect pr = rect;
+    pr.x = 0;
+    pr.y = 0;
+    nsCOMPtr<nsIPrintPreviewContext> ppContext = do_QueryInterface(aPresContext);
+    nsRect  pageSize;
+    nsRect  adjSize;
+    aPresContext->GetPageDim(&pageSize, &adjSize);
+    if (ppContext && pageSize == adjSize) {
+      pr.width  -= mPD->mShadowSize.width;
+      pr.height -= mPD->mShadowSize.height;
+
+      // paint just the page
+      aRenderingContext.SetColor(NS_RGB(192,208,240));
+      aRenderingContext.FillRect(pr);
+      pr.Deflate(mPD->mReflowMargin);
+      aRenderingContext.SetColor(NS_RGB(255,255,255));
+      aRenderingContext.FillRect(pr);
+    } else {
+      nsRect pr = rect;
+      aRenderingContext.SetColor(NS_RGB(255,255,255));
+      pr.x = 0;
+      pr.y = 0;
+      aRenderingContext.FillRect(rect);
+      aRenderingContext.SetColor(NS_RGB(0,0,0));
+      mPD->mPrintOptions->GetMarginInTwips(mMargin);
+      rect.Deflate(mMargin);
+      aRenderingContext.DrawRect(mRect);
+    }
+    
+    if (mPD->mShadowSize.width > 0 && mPD->mShadowSize.height > 0) {
+      aRenderingContext.SetColor(NS_RGB(0,0,0));
+      nsRect r(0,0, mRect.width, mRect.height);
+      nsRect shadowRect;
+      shadowRect.x = r.x + r.width - mPD->mShadowSize.width;
+      shadowRect.y = r.y + mPD->mShadowSize.height;
+      shadowRect.width  = mPD->mShadowSize.width;
+      shadowRect.height = r.height - mPD->mShadowSize.height;
+      aRenderingContext.FillRect(shadowRect);
+
+      shadowRect.x = r.x + mPD->mShadowSize.width;
+      shadowRect.y = r.y + r.height - mPD->mShadowSize.height;
+      shadowRect.width  = r.width - mPD->mShadowSize.width;
+      shadowRect.height = mPD->mShadowSize.height;
+      aRenderingContext.FillRect(shadowRect);
+    }
+
   }
+#else
+  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
+    nsCOMPtr<nsIPrintPreviewContext> ppContext = do_QueryInterface(aPresContext);
+    if (ppContext) {
+      aRenderingContext.SetColor(NS_RGB(255,255,255));
+      rect.x = 0;
+      rect.y = 0;
+      rect.width  -= mPD->mShadowSize.width;
+      rect.height -= mPD->mShadowSize.height;
+      aRenderingContext.FillRect(rect);
+
+      if (mPD->mShadowSize.width > 0 && mPD->mShadowSize.height > 0) {
+        aRenderingContext.SetColor(NS_RGB(0,0,0));
+        nsRect r(0,0, mRect.width, mRect.height);
+        nsRect shadowRect;
+        shadowRect.x = r.x + r.width - mPD->mShadowSize.width;
+        shadowRect.y = r.y + mPD->mShadowSize.height;
+        shadowRect.width  = mPD->mShadowSize.width;
+        shadowRect.height = r.height - mPD->mShadowSize.height;
+        aRenderingContext.FillRect(shadowRect);
+
+        shadowRect.x = r.x + mPD->mShadowSize.width;
+        shadowRect.y = r.y + r.height - mPD->mShadowSize.height;
+        shadowRect.width  = r.width - mPD->mShadowSize.width;
+        shadowRect.height = mPD->mShadowSize.height;
+        aRenderingContext.FillRect(shadowRect);
+      }
+    }
+  }
+#endif
 
   nsresult rv = nsContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
 
@@ -573,32 +648,35 @@ nsPageFrame::Paint(nsIPresContext*      aPresContext,
     nsRect r;
     fprintf(mDebugFD, "PF::Paint    -> %p  SupHF: %s  Rect: [%5d,%5d,%5d,%5d]\n", this, 
             mSupressHF?"Yes":"No", mRect.x, mRect.y, mRect.width, mRect.height);
+    fprintf(stdout, "PF::Paint    -> %p  SupHF: %s  Rect: [%5d,%5d,%5d,%5d]\n", this, 
+            mSupressHF?"Yes":"No", mRect.x, mRect.y, mRect.width, mRect.height);
   }
 #endif
 
   if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer && !mSupressHF) {
     // get the current margin
-    mPrintOptions->GetMarginInTwips(mMargin);
+    mPD->mPrintOptions->GetMarginInTwips(mMargin);
 
-    nsRect rect(0,0,mRect.width, mRect.height);
+    rect.SetRect(0, 0, mRect.width - mPD->mShadowSize.width, mRect.height - mPD->mShadowSize.height);
 
 #if defined(DEBUG_rods) || defined(DEBUG_dcone)
+    {
+    nsRect rct(0, 0, mRect.width, mRect.height);
     // XXX Paint a one-pixel border around the page so it's easy to see where
     // each page begins and ends when we're
-    float   p2t;
-    aPresContext->GetPixelsToTwips(&p2t);
-    rect.Deflate(NSToCoordRound(p2t), NSToCoordRound(p2t));
+    rct.Deflate(mMargin);
+    //float   p2t;
+    //aPresContext->GetPixelsToTwips(&p2t);
+    //rect.Deflate(NSToCoordRound(p2t), NSToCoordRound(p2t));
     aRenderingContext.SetColor(NS_RGB(0, 0, 0));
-    aRenderingContext.DrawRect(rect);
-    rect.Inflate(NSToCoordRound(p2t), NSToCoordRound(p2t));
+    aRenderingContext.DrawRect(rct);
+    //rect.Inflate(NSToCoordRound(p2t), NSToCoordRound(p2t));
     fprintf(mDebugFD, "PageFr::PaintChild -> Painting Frame %p Page No: %d\n", this, mPageNum);
+    }
 #endif
 
-    // use the whole page
-    rect.width  += mMargin.left + mMargin.right;
-    rect.x      -= mMargin.left;
-    
-    aRenderingContext.SetFont(*mHeadFootFont);
+   
+    aRenderingContext.SetFont(*mPD->mHeadFootFont);
     aRenderingContext.SetColor(NS_RGB(0,0,0));
 
     // Get the FontMetrics to determine width.height of strings
@@ -606,7 +684,7 @@ nsPageFrame::Paint(nsIPresContext*      aPresContext,
     aPresContext->GetDeviceContext(getter_AddRefs(deviceContext));
     NS_ASSERTION(deviceContext, "Couldn't get the device context"); 
     nsCOMPtr<nsIFontMetrics> fontMet;
-    deviceContext->GetMetricsFor(*mHeadFootFont, *getter_AddRefs(fontMet));
+    deviceContext->GetMetricsFor(*mPD->mHeadFootFont, *getter_AddRefs(fontMet));
     nscoord ascent = 0;
     nscoord visibleHeight = 0;
     if (fontMet) {
@@ -616,9 +694,9 @@ nsPageFrame::Paint(nsIPresContext*      aPresContext,
 
     // print document headers and footers
     PRUnichar * headers[3];
-    mPrintOptions->GetHeaderStrLeft(&headers[0]);   // creates memory
-    mPrintOptions->GetHeaderStrCenter(&headers[1]); // creates memory
-    mPrintOptions->GetHeaderStrRight(&headers[2]);  // creates memory
+    mPD->mPrintOptions->GetHeaderStrLeft(&headers[0]);   // creates memory
+    mPD->mPrintOptions->GetHeaderStrCenter(&headers[1]); // creates memory
+    mPD->mPrintOptions->GetHeaderStrRight(&headers[2]);  // creates memory
     DrawHeaderFooter(aRenderingContext, this, eHeader, nsIPrintOptions::kJustLeft, 
                      nsAutoString(headers[0]), nsAutoString(headers[1]), nsAutoString(headers[2]), 
                      rect, ascent, visibleHeight);
@@ -626,9 +704,9 @@ nsPageFrame::Paint(nsIPresContext*      aPresContext,
     for (i=0;i<3;i++) nsMemory::Free(headers[i]);
 
     PRUnichar * footers[3];
-    mPrintOptions->GetFooterStrLeft(&footers[0]);   // creates memory
-    mPrintOptions->GetFooterStrCenter(&footers[1]); // creates memory
-    mPrintOptions->GetFooterStrRight(&footers[2]);  // creates memory
+    mPD->mPrintOptions->GetFooterStrLeft(&footers[0]);   // creates memory
+    mPD->mPrintOptions->GetFooterStrCenter(&footers[1]); // creates memory
+    mPD->mPrintOptions->GetFooterStrRight(&footers[2]);  // creates memory
     DrawHeaderFooter(aRenderingContext, this, eFooter, nsIPrintOptions::kJustRight, 
                      nsAutoString(footers[0]), nsAutoString(footers[1]), nsAutoString(footers[2]), 
                      rect, ascent, visibleHeight);
@@ -637,21 +715,8 @@ nsPageFrame::Paint(nsIPresContext*      aPresContext,
   }
 
   aRenderingContext.PopState(clipEmpty);
+
   return rv;
-}
-
-//------------------------------------------------------------------------------
-void
-nsPageFrame::SetPrintOptions(nsIPrintOptions * aPrintOptions) 
-{ 
-  NS_ASSERTION(aPrintOptions != nsnull, "Print Options can not be null!");
-
-  mPrintOptions = aPrintOptions;
-  // create a default font
-  mHeadFootFont = new nsFont("serif", NS_FONT_STYLE_NORMAL,NS_FONT_VARIANT_NORMAL,
-                             NS_FONT_WEIGHT_NORMAL,0,NSIntPointsToTwips(10));
-  // now get the default font form the print options
-  mPrintOptions->GetDefaultFont(*mHeadFootFont);
 }
 
 //------------------------------------------------------------------------------
@@ -663,33 +728,3 @@ nsPageFrame::SetPageNumInfo(PRInt32 aPageNumber, PRInt32 aTotalPages)
 }
 
 
-//------------------------------------------------------------------------------
-void
-nsPageFrame::SetPageNumberFormat(PRUnichar * aFormatStr, PRBool aForPageNumOnly)
-{ 
-  NS_ASSERTION(aFormatStr != nsnull, "Format string cannot be null!");
-
-  if (aForPageNumOnly) {
-    if (mPageNumFormat != nsnull) {
-      nsMemory::Free(mPageNumFormat);
-    }
-    mPageNumFormat = aFormatStr;
-  } else {
-    if (mPageNumAndTotalsFormat != nsnull) {
-      nsMemory::Free(mPageNumAndTotalsFormat);
-    }
-    mPageNumAndTotalsFormat = aFormatStr;
-  }
-}
-
-//------------------------------------------------------------------------------
-void
-nsPageFrame::SetDateTimeStr(PRUnichar * aDateTimeStr)
-{ 
-  NS_ASSERTION(aDateTimeStr != nsnull, "DateTime string cannot be null!");
-
-  if (mDateTimeStr != nsnull) {
-    nsMemory::Free(mDateTimeStr);
-  }
-  mDateTimeStr = aDateTimeStr;
-}

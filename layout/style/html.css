@@ -478,13 +478,25 @@ noembed, noscript, param {
 
 @media print {
  
- /* undo floats on aligned tables since we cannot print them correctly: see bug 74738 and bug 85768 */
- table[align="left"] {
-   float: none;
- }
+  /* undo floats on aligned tables since we cannot print them correctly: see bug 74738 and bug 85768 */
+  table[align="left"] {
+    float: none;
+  }
 
- table[align="right"] {
-   float: none;
- }
+  table[align="right"] {
+    float: none;
+  }
 
+  * {
+    cursor: default !important;
+  }
+
+  *|*:viewport, *|*:viewport-scroll, *|*:canvas {
+    background-color: #A0A0A0 !important;
+  }
+
+  *|*:-moz-any-link, *|*:-moz-any-link img, img[usemap], object[usemap],
+  img[usemap], object[usemap], object, embed, applet, iframe {
+    -moz-user-focus: none !important;
+  }
 }

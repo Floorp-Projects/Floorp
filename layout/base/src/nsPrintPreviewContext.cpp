@@ -35,6 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "nsPresContext.h"
+#include "nsIPrintPreviewContext.h"
 #include "nsIDeviceContext.h"
 #include "nsUnitConversion.h"
 #include "nsIView.h"
@@ -54,41 +55,48 @@ public:
   PrintPreviewContext();
   ~PrintPreviewContext();
 
+//Interfaces for addref and release and queryinterface
+//NOTE macro used is for classes that inherit from 
+// another class. Only the base class should use NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
+
   NS_IMETHOD GetMedium(nsIAtom** aMedium);
   NS_IMETHOD IsPaginated(PRBool* aResult);
+  NS_IMETHOD SetPaginatedScrolling(PRBool aResult) { mCanPaginatedScroll = aResult; return NS_OK; }
+  NS_IMETHOD GetPaginatedScrolling(PRBool* aResult);
   NS_IMETHOD GetPageDim(nsRect* aActualRect, nsRect* aAdjRect);
   NS_IMETHOD SetPageDim(nsRect* aRect);
 
-#ifdef NS_DEBUG
-  static PRBool UseFakePageSize();
-#endif
 protected:
   nsRect mPageDim;
+  PRBool mCanPaginatedScroll;
 };
 
-#ifdef NS_DEBUG
-PRBool
-PrintPreviewContext::UseFakePageSize()
-{
-  static PRLogModuleInfo* pageSizeLM;
-  static PRBool useFakePageSize = PR_FALSE;
-  if (nsnull == pageSizeLM) {
-    pageSizeLM = PR_NewLogModule("pagesize");
-    if (nsnull != pageSizeLM) {
-      useFakePageSize = 0 != pageSizeLM->level;
-    }
-  }
-  return useFakePageSize;
-}
-#endif
-
 PrintPreviewContext::PrintPreviewContext() :
-  mPageDim(-1,-1,-1,-1)
+  mPageDim(-1,-1,-1,-1),
+  mCanPaginatedScroll(PR_TRUE)
 {
 }
 
 PrintPreviewContext::~PrintPreviewContext()
 {
+}
+
+NS_IMPL_ADDREF_INHERITED(PrintPreviewContext,nsPresContext)
+NS_IMPL_RELEASE_INHERITED(PrintPreviewContext,nsPresContext)
+
+//---------------------------------------------------------
+NS_IMETHODIMP
+PrintPreviewContext::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+ 
+  if (aIID.Equals(NS_GET_IID(nsIPrintPreviewContext))) {
+    *aInstancePtr = (void *)((nsIPrintPreviewContext*)this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+
+  return nsPresContext::QueryInterface(aIID, aInstancePtr);
 }
 
 NS_IMETHODIMP
@@ -109,67 +117,24 @@ PrintPreviewContext::IsPaginated(PRBool* aResult)
 }
 
 NS_IMETHODIMP
+PrintPreviewContext::GetPaginatedScrolling(PRBool* aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = mCanPaginatedScroll;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 PrintPreviewContext::GetPageDim(nsRect* aActualRect, nsRect* aAdjRect)
 {
   NS_ENSURE_ARG_POINTER(aActualRect);
   NS_ENSURE_ARG_POINTER(aAdjRect);
 
-  // XXX maybe we get the size of the default printer instead
-  nsresult rv;
-  nsCOMPtr<nsIPrintOptions> printService = 
-           do_GetService(kPrintOptionsCID, &rv);
-  // Setting what would be the "default" case here, because
-  // getting the PrintService could fail
-  aActualRect->width  = (nscoord) NS_INCHES_TO_TWIPS(8.5);
-  aActualRect->height = (nscoord) NS_INCHES_TO_TWIPS(11);
-  if (NS_SUCCEEDED(rv) && printService) {
-    PRInt32 paperSize = nsIPrintOptions::kLetterPaperSize; 
-    printService->GetPaperSize(&paperSize);
-    switch (paperSize) {
-      case nsIPrintOptions::kLegalPaperSize :
-        aActualRect->width  = (nscoord) NS_INCHES_TO_TWIPS(8.5);
-        aActualRect->height = (nscoord) NS_INCHES_TO_TWIPS(14);
-        break;
-
-      case nsIPrintOptions::kExecutivePaperSize :
-        aActualRect->width  = (nscoord) NS_INCHES_TO_TWIPS(7.5);
-        aActualRect->height = (nscoord) NS_INCHES_TO_TWIPS(10.5);
-        break;
-
-      case nsIPrintOptions::kA3PaperSize :
-        aActualRect->width  = (nscoord) NS_MILLIMETERS_TO_TWIPS(297);
-        aActualRect->height = (nscoord) NS_MILLIMETERS_TO_TWIPS(420);
-        break;
-
-      case nsIPrintOptions::kA4PaperSize :
-        aActualRect->width  = (nscoord) NS_MILLIMETERS_TO_TWIPS(210);
-        aActualRect->height = (nscoord) NS_MILLIMETERS_TO_TWIPS(297);
-        break;
-
-    } // switch 
-    PRInt32 orientation = nsIPrintOptions::kPortraitOrientation;
-    printService->GetOrientation(&orientation);
-    if (orientation == nsIPrintOptions::kLandscapeOrientation) {
-      // swap
-      nscoord temp;
-      temp = aActualRect->width;
-      aActualRect->width = aActualRect->height;
-      aActualRect->height = temp;
-    }
+  PRInt32 width,height;
+  if (NS_SUCCEEDED(mDeviceContext->GetDeviceSurfaceDimensions(width, height))) {
+    aActualRect->SetRect(0, 0, width, height);
   }
-
-#ifdef NS_DEBUG
-  if (UseFakePageSize()) {
-    // For testing purposes make the page width smaller than the visible area
-    float sbWidth, sbHeight;
-    mDeviceContext->GetScrollBarDimensions(sbWidth, sbHeight);
-    nscoord sbar = NSToCoordRound(sbWidth);
-    aActualRect->width  = mVisibleArea.width - sbar - 2*100;
-    aActualRect->height = mVisibleArea.height * 60 / 100;
-  }
-#endif
   *aAdjRect = mPageDim;
-
   return NS_OK;
 }
 

@@ -41,6 +41,28 @@
 #include "nsContainerFrame.h"
 #include "nsIPrintOptions.h"
 
+//-----------------------------------------------
+// This class maintains all the data that 
+// is used by all the page frame
+// It lives while the nsSimplePageSequenceFrame lives
+class nsSharedPageData {
+public:
+  nsSharedPageData();
+  ~nsSharedPageData();
+
+  PRUnichar * mDateTimeStr;
+  nsFont *    mHeadFootFont;
+  PRUnichar * mPageNumFormat;
+  PRUnichar * mPageNumAndTotalsFormat;
+
+  nsRect      mReflowRect;
+  nsMargin    mReflowMargin;
+  nsSize      mShadowSize;
+  nsMargin    mExtraMargin;
+
+  nsCOMPtr<nsIPrintOptions> mPrintOptions;
+};
+
 // Simple page sequence frame class. Used when we're in paginated mode
 class nsSimplePageSequenceFrame : public nsContainerFrame,
                                   public nsIPageSequenceFrame {
@@ -67,6 +89,7 @@ public:
                     nsIPrintStatusCallback* aStatusCallback);
   NS_IMETHOD SetOffsets(nscoord aStartOffset, nscoord aEndOffset);
   NS_IMETHOD SetPageNo(PRInt32 aPageNo) { return NS_OK;}
+  NS_IMETHOD SetSelectionHeight(nscoord aYOffset, nscoord aHeight) { mYSelOffset = aYOffset; mSelectionHeight = aHeight; return NS_OK; }
 
   // Async Printing
   NS_IMETHOD StartPrint(nsIPresContext*  aPresContext,
@@ -85,6 +108,9 @@ public:
   NS_IMETHOD SuppressHeadersAndFooters(PRBool aDoSup);
   NS_IMETHOD SetClipRect(nsIPresContext* aPresContext, nsRect* aSize);
 
+  NS_IMETHOD  SizeTo(nsIPresContext* aPresContext,
+                     nscoord         aWidth,
+                     nscoord         aHeight);
 #ifdef NS_DEBUG
   // Debugging
   NS_IMETHOD  GetFrameName(nsString& aResult) const;
@@ -107,6 +133,11 @@ protected:
                                      nsIFrame**      aContinuingFrame);
 
   void SetPageNumberFormat(const char* aPropName, const char* aDefPropVal, PRBool aPageNumOnly);
+
+  // SharedPageData Helper methods
+  void SetDateTimeStr(PRUnichar * aDateTimeStr);
+  void SetPageNumberFormat(PRUnichar * aFormatStr, PRBool aForPageNumOnly);
+  void SetPageSizes(const nsRect& aRect, const nsMargin& aMarginRect);
 
   NS_IMETHOD_(nsrefcnt) AddRef(void) {return nsContainerFrame::AddRef();}
   NS_IMETHOD_(nsrefcnt) Release(void) {return nsContainerFrame::Release();}
@@ -133,6 +164,14 @@ protected:
   PRPackedBool mSupressHF;
   nscoord      mOffsetX;
   nscoord      mOffsetY;
+
+  nsSize       mSize;
+  nsSharedPageData* mPageData; // data shared by all the nsPageFrames
+
+  // Selection Printing Info
+  nscoord      mSelectionHeight;
+  nscoord      mYSelOffset;
+
 
 };
 

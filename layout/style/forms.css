@@ -395,4 +395,10 @@ input[type="submit"][disabled] {
   color: GrayText;
 }
 
+@media print {
+  input, textarea, select, button {
+    -moz-user-focus: none !important;
+  }
+
+}
 

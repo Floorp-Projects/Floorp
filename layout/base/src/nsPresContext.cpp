@@ -1312,6 +1312,38 @@ nsPresContext::GetTwipsToPixels(float* aResult) const
 }
 
 NS_IMETHODIMP
+nsPresContext::GetTwipsToPixelsForFonts(float* aResult) const
+{
+  NS_PRECONDITION(nsnull != aResult, "null ptr");
+  if (nsnull == aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  float app2dev = 1.0f;
+  if (mDeviceContext) {
+#ifdef NS_PRINT_PREVIEW
+    // If an alternative DC is available we want to use
+    // it to get the scaling factor for fonts. Usually, the AltDC
+    // is a printing DC so therefore we need to get the printers
+    // scaling values for calculating the font heights
+    nsCOMPtr<nsIDeviceContext> altDC;
+    mDeviceContext->GetAltDevice(getter_AddRefs(altDC));
+    if (altDC) {
+      altDC->GetAppUnitsToDevUnits(app2dev);
+    } else {
+      mDeviceContext->GetAppUnitsToDevUnits(app2dev);
+    }
+#else
+    mDeviceContext->GetAppUnitsToDevUnits(app2dev);
+#endif
+  }
+  *aResult = app2dev;
+  return NS_OK;
+}
+
+
+
+NS_IMETHODIMP
 nsPresContext::GetScaledPixelsToTwips(float* aResult) const
 {
   NS_PRECONDITION(aResult, "null out param");

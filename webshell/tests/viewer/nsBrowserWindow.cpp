@@ -2193,43 +2193,15 @@ nsBrowserWindow::DoPaste()
 void
 nsBrowserWindow::ShowPrintPreview(PRInt32 aID)
 {
-  static NS_DEFINE_CID(kPrintPreviewContextCID, NS_PRINT_PREVIEW_CONTEXT_CID);
-  static NS_DEFINE_IID(kIPresContextIID, NS_IPRESCONTEXT_IID);
-  nsIContentViewer* cv = nsnull;
-  if (nsnull != mDocShell) {
-    if ((NS_OK == mDocShell->GetContentViewer(&cv)) && (nsnull != cv)) {
-      nsIDocumentViewer* docv = nsnull;
-      if (NS_OK == cv->QueryInterface(kIDocumentViewerIID, (void**)&docv)) {
-        nsIPresContext* printContext;
-        nsresult rv =
-          nsComponentManager::CreateInstance(kPrintPreviewContextCID,
-                                             nsnull,
-                                             kIPresContextIID,
-                                             (void **)&printContext);
-        if (NS_SUCCEEDED(rv)) {
-          // Prepare new printContext for print-preview
-          nsCOMPtr<nsIDeviceContext> dc;
-          nsIPresContext* presContext;
-          docv->GetPresContext(presContext);
-          presContext->GetDeviceContext(getter_AddRefs(dc));
-          printContext->Init(dc);
-          NS_RELEASE(presContext);
+  nsCOMPtr <nsIContentViewer> viewer;
 
-          // Make a window using that content viewer
-          // XXX Some piece of code needs to properly hold the reference to this
-          // browser window. For the time being the reference is released by the
-          // browser event handling code during processing of the NS_DESTROY event...
-          nsBrowserWindow* bw = new nsNativeBrowserWindow;
-          bw->SetApp(mApp);
-          bw->Init(mAppShell, nsRect(0, 0, 600, 400),
-                   nsIWebBrowserChrome::CHROME_MENUBAR, PR_TRUE, docv, printContext);
-          bw->SetVisibility(PR_TRUE);
+  mDocShell->GetContentViewer(getter_AddRefs(viewer));
 
-          NS_RELEASE(printContext);
-        }
-        NS_RELEASE(docv);
-      }
-      NS_RELEASE(cv);
+  if (viewer)
+  {
+    nsCOMPtr<nsIContentViewerFile> viewerFile = do_QueryInterface(viewer);
+    if (viewerFile) {
+      viewerFile->PrintPreview();
     }
   }
 }

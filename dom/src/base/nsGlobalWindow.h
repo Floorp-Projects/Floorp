@@ -236,6 +236,8 @@ protected:
   nsresult CheckSecurityWidthAndHeight(PRInt32* width, PRInt32* height);
   nsresult CheckSecurityLeftAndTop(PRInt32* left, PRInt32* top);
 
+  nsresult DoPrint(PRBool aDoPreview);
+
   // Helper for window.find()
   nsresult FindInternal(nsAReadableString& aStr, PRBool caseSensitive,
                        PRBool backwards, PRBool wrapAround, PRBool wholeWord, 

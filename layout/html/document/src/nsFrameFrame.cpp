@@ -79,6 +79,7 @@
 #include "nsIScrollable.h"
 #include "nsINameSpaceManager.h"
 #include "nsIPrintContext.h"
+#include "nsIPrintPreviewContext.h"
 #include "nsIWidget.h"
 #include "nsIWebProgress.h"
 #include "nsIWebProgressListener.h"
@@ -260,6 +261,8 @@ friend class nsHTMLFrameOuterFrame;
 protected:
   nsresult CreateDocShell(nsIPresContext* aPresContext);
   nsresult DoLoadURL(nsIPresContext* aPresContext);
+  nsresult CreateViewAndWidget(nsIPresContext* aPresContext,
+                               nsIWidget*&     aWidget);
 
   virtual ~nsHTMLFrameInnerFrame();
 
@@ -1131,44 +1134,11 @@ nsHTMLFrameInnerFrame::CreateDocShell(nsIPresContext* aPresContext)
     }
   }
 
-  float t2p;
-  aPresContext->GetTwipsToPixels(&t2p);
-
-  // create, init, set the parent of the view
-  nsIView* view;
-  rv = nsComponentManager::CreateInstance(kCViewCID, nsnull, NS_GET_IID(nsIView),
-                                        (void **)&view);
-  if (NS_OK != rv) {
-    NS_ASSERTION(0, "Could not create view for nsHTMLFrame");
+  nsIWidget* widget;
+  rv = CreateViewAndWidget(aPresContext, widget);
+  if (NS_FAILED(rv)) {
     return rv;
   }
-
-  nsIView* parView;
-  nsPoint origin;
-  GetOffsetFromView(aPresContext, origin, &parView);  
-  nsRect viewBounds(origin.x, origin.y, 10, 10);
-
-  nsCOMPtr<nsIViewManager> viewMan;
-  presShell->GetViewManager(getter_AddRefs(viewMan));  
-  rv = view->Init(viewMan, viewBounds, parView);
-  viewMan->InsertChild(parView, view, 0);
-
-  nsWidgetInitData initData;
-  initData.clipChildren = PR_TRUE;
-  initData.clipSiblings = PR_TRUE;
-
-  rv = view->CreateWidget(kCChildCID, &initData);
-  SetView(aPresContext, view);
-
-  // if the visibility is hidden, reflect that in the view
-  const nsStyleVisibility* vis;
-  GetStyleData(eStyleStruct_Visibility, ((const nsStyleStruct *&)vis));
-  if (!vis->IsVisible()) {
-    view->SetVisibility(nsViewVisibility_kHide);
-  }
-
-  nsCOMPtr<nsIWidget> widget;
-  view->GetWidget(*getter_AddRefs(widget));
 
   mSubShell->InitWindow(nsnull, widget, 0, 0, 10, 10);
   mSubShell->Create();
@@ -1350,6 +1320,57 @@ nsHTMLFrameInnerFrame::DoLoadURL(nsIPresContext* aPresContext)
   return rv;
 }
 
+
+nsresult
+nsHTMLFrameInnerFrame::CreateViewAndWidget(nsIPresContext* aPresContext,
+                                           nsIWidget*&     aWidget)
+{
+  NS_ENSURE_ARG_POINTER(aPresContext);
+  NS_ENSURE_ARG_POINTER(aWidget);
+
+  nsCOMPtr<nsIPresShell> presShell;
+  aPresContext->GetShell(getter_AddRefs(presShell));
+  if (!presShell) return NS_ERROR_FAILURE;
+
+  float t2p;
+  aPresContext->GetTwipsToPixels(&t2p);
+
+  // create, init, set the parent of the view
+  nsIView* view;
+  nsresult rv = nsComponentManager::CreateInstance(kCViewCID, nsnull, NS_GET_IID(nsIView),
+                                        (void **)&view);
+  if (NS_OK != rv) {
+    NS_ASSERTION(0, "Could not create view for nsHTMLFrame");
+    return rv;
+  }
+
+  nsIView* parView;
+  nsPoint origin;
+  GetOffsetFromView(aPresContext, origin, &parView);  
+  nsRect viewBounds(origin.x, origin.y, 10, 10);
+
+  nsCOMPtr<nsIViewManager> viewMan;
+  presShell->GetViewManager(getter_AddRefs(viewMan));  
+  rv = view->Init(viewMan, viewBounds, parView);
+  viewMan->InsertChild(parView, view, 0);
+
+  nsWidgetInitData initData;
+  initData.clipChildren = PR_TRUE;
+  initData.clipSiblings = PR_TRUE;
+
+  rv = view->CreateWidget(kCChildCID, &initData);
+  SetView(aPresContext, view);
+
+  // if the visibility is hidden, reflect that in the view
+  const nsStyleVisibility* vis;
+  GetStyleData(eStyleStruct_Visibility, ((const nsStyleStruct *&)vis));
+  if (!vis->IsVisible()) {
+    view->SetVisibility(nsViewVisibility_kHide);
+  }
+  view->GetWidget(aWidget);
+  return rv;
+}
+
 NS_IMETHODIMP
 nsHTMLFrameInnerFrame::Init(nsIPresContext*  aPresContext,
                             nsIContent*      aContent,
@@ -1366,6 +1387,20 @@ nsHTMLFrameInnerFrame::Init(nsIPresContext*  aPresContext,
   nsCOMPtr<nsIPrintContext> thePrinterContext = do_QueryInterface(aPresContext);
   if  (thePrinterContext) {
     // we are printing
+    shouldCreateDoc = PR_FALSE;
+  }
+
+  // for print preview we want to create the view and widget but 
+  // we do not want to load the document, it is alerady loaded.
+  nsCOMPtr<nsIPrintPreviewContext> thePrintPreviewContext = do_QueryInterface(aPresContext);
+  if  (thePrintPreviewContext) {
+    nsIWidget* widget;
+    rv = CreateViewAndWidget(aPresContext, widget);
+    NS_IF_RELEASE(widget);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    // we are in PrintPreview
     shouldCreateDoc = PR_FALSE;
   }
   

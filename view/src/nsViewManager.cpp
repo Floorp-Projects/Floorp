@@ -1861,6 +1861,27 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
 {
   *aStatus = nsEventStatus_eIgnore;
 
+  if (mEventProcessor) {
+    // For mouse event we see if the event is in 
+    // the content area (not the scrollbars), 
+    // for other events we just pass true
+    PRBool isInRect = PR_TRUE;
+    if (NS_IS_MOUSE_EVENT(aEvent)) {
+      nsRect visRect;
+      GetVisibleRect(visRect);
+      float p2t;
+      mContext->GetDevUnitsToAppUnits(p2t);
+      nsPoint pnt(NSIntPixelsToTwips(aEvent->point.x, p2t),
+                  NSIntPixelsToTwips(aEvent->point.y, p2t));
+      isInRect = visRect.Contains(pnt);
+    }
+
+    if (NS_FAILED(mEventProcessor->ProcessEvent(aEvent, isInRect, aStatus))) {
+      // means we should discard event
+      return NS_OK;
+    }
+  }
+
   switch(aEvent->message)
     {
     case NS_SIZE:
@@ -2992,7 +3013,7 @@ NS_IMETHODIMP nsViewManager::GetRootScrollableView(nsIScrollableView **aScrollab
   return NS_OK;
 }
 
-NS_IMETHODIMP nsViewManager::Display(nsIView* aView, nscoord aX, nscoord aY)
+NS_IMETHODIMP nsViewManager::Display(nsIView* aView, nscoord aX, nscoord aY, const nsRect& aClipRect)
 {
   nsIRenderingContext *localcx = nsnull;
   nsRect              trect;
@@ -3020,7 +3041,7 @@ NS_IMETHODIMP nsViewManager::Display(nsIView* aView, nscoord aX, nscoord aY)
   PRBool  result;
 
   trect.x = trect.y = 0;
-  localcx->SetClipRect(trect, nsClipCombine_kReplace, result);
+  localcx->SetClipRect(aClipRect, nsClipCombine_kReplace, result);
 
   // Paint the view. The clipping rect was set above set don't clip again.
   //aView->Paint(*localcx, trect, NS_VIEW_FLAG_CLIP_SET, result);
