@@ -1,3 +1,5 @@
+# bug 83051
+ecma_3/Function/scope-001.js
 # bug 59861
 ecma/Date/15.9.4.3.js
 # fails due to bad java implementation of number formatting on 
