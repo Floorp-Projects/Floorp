@@ -1929,7 +1929,8 @@ public class Interpreter extends LabelTable {
                         stack[stackTop] = ScriptRuntime.call(cx, lhs, rhs, 
                                                              outArgs, 
                                                              calleeScope);
-                        pc += 4;                                                                         instructionCount = cx.instructionCount;
+                        pc += 4;
+                        instructionCount = cx.instructionCount;
                         break;
                     case TokenStream.NEW :
                         if (instructionThreshold != 0) {
