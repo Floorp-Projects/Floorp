@@ -381,7 +381,7 @@ nsresult        rv;
   // First check our cache
   n = mFontMetrics.Count();
 
-  for (PRInt32 cnt = 0; cnt < n; cnt++)
+  for (cnt = 0; cnt < n; cnt++)
   {
     aMetrics = (nsIFontMetrics*) mFontMetrics.ElementAt(cnt);
 
