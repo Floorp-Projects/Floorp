@@ -338,7 +338,8 @@ function formatArguments (v)
     {
         if (p[i].flags & jsdIProperty.FLAG_ARGUMENT)
             ary.push (getMsg(MSN_FMT_ARGUMENT,
-                             [p[i].name.stringValue, formatValue(v, true)]));
+                             [p[i].name.stringValue,
+                              formatValue(p[i].value, true)]));
     }
     
     return ary.join (MSG_COMMASP); 
@@ -421,11 +422,16 @@ function formatValue (v, summary)
             value = MSG_TYPE_NULL;
             break;
         case jsdIValue.TYPE_OBJECT:
-            type = MSG_TYPE_OBJECT;
             if (!summary)
+            {
+                type = MSG_TYPE_OBJECT;
                 value = getMsg(MSN_FMT_OBJECT, String(v.propertyCount));
+            }
             else
+            {
+                type = (v.jsClassName) ? v.jsClassName : MSG_TYPE_OBJECT;
                 value = "{" + String(v.propertyCount) + "}";
+            }
             break;
         case jsdIValue.TYPE_STRING:
             type = MSG_TYPE_STRING;
