@@ -435,6 +435,11 @@ nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result,
 nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
 {
     NS_RELEASE(nsServiceManager::mGlobalServiceManager);
+    // We may have AddRef'd for the caller of NS_InitXPCOM, so release it 
+    // here again:
+    NS_IF_RELEASE(servMgr);
+    // Finally, release the component manager last because it unloads the
+    // libraries:
     NS_RELEASE(nsComponentManagerImpl::gComponentManager);
 #ifdef DEBUG
     extern void _FreeAutoLockStatics();
