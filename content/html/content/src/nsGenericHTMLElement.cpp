@@ -4095,6 +4095,20 @@ nsGenericHTMLContainerFormElement::SetDocument(nsIDocument* aDocument,
 
   if (aDocument && mParent && !mForm) {
     rv = FindAndSetForm(this);
+  } else if (!aDocument && mForm) {
+    // We got removed from document.  We have a parent form.  Check
+    // that the form is still in the document, and if so remove
+    // ourselves from the form.  This keeps ghosts from appearing in
+    // the form's |elements| array
+    nsCOMPtr<nsIContent> formContent(do_QueryInterface(mForm, &rv));
+    if (formContent) {
+      nsCOMPtr<nsIDocument> doc;
+      rv = formContent->GetDocument(*getter_AddRefs(doc));
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (doc) {
+        SetForm(nsnull);
+      }
+    }
   }
 
   if (NS_SUCCEEDED(rv)) {
@@ -4335,6 +4349,20 @@ nsGenericHTMLLeafFormElement::SetDocument(nsIDocument* aDocument,
 
   if (aDocument && mParent && !mForm) {
     rv = FindAndSetForm(this);
+  } else if (!aDocument && mForm) {
+    // We got removed from document.  We have a parent form.  Check
+    // that the form is still in the document, and if so remove
+    // ourselves from the form.  This keeps ghosts from appearing in
+    // the form's |elements| array
+    nsCOMPtr<nsIContent> formContent(do_QueryInterface(mForm, &rv));
+    if (formContent) {
+      nsCOMPtr<nsIDocument> doc;
+      rv = formContent->GetDocument(*getter_AddRefs(doc));
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (doc) {
+        SetForm(nsnull);
+      }
+    }
   }
 
   if (NS_SUCCEEDED(rv)) {
