@@ -291,6 +291,7 @@ function ContinueImport( info) {
   var isMail = info.importType == 'mail' ? true : false;
   var clear = true;
   var deck;
+  var pcnt;
 
   if (info.importInterface) {
     if (!info.importInterface.ContinueImport()) {
