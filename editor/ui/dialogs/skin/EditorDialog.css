@@ -35,16 +35,6 @@ tab {
     padding: 0px 3px;
 }
 
-/*
-titledbutton[class=~spaced] { 
-    margin-left:  5px;
-    margin-right: 5px;
-}
-
-titledbutton {
-    padding: 2px 5px;
-}
-*/
 titledbutton#MoreFewerButton {
   list-style-image: url(chrome://global/skin/scroll-down.gif)
 }

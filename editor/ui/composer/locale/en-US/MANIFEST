@@ -22,7 +22,7 @@
 
 # composer:locale:en-US directory
 
-EditorAppShell.dtd
+editor.dtd
 sidebar-editor-rdf.dtd
 sidebar-editor.dtd
 viewSource.dtd

@@ -187,6 +187,7 @@
 			</menu>
       <menuitem accesskey="&fileopen.accesskey;"            key="openeditorkb"   observes="Editor:Open"/>
       <menuseparator />
+      <menuitem accesskey="&fileclose.accesskey;"           key="closekb"        observes="Editor:Close"/>
       <menuitem accesskey="&filesave.accesskey;"            key="savekb"         observes="Editor:Save"/>
       <menuitem accesskey="&filesaveas.accesskey;"                               observes="Editor:SaveAs"/>
       <menuseparator />
@@ -194,7 +195,6 @@
       <menuitem accesskey="&fileprintpreview.accesskey;"                         observes="Editor:PrintPreview"/>
       <menuitem accesskey="&fileprint.accesskey;"           key="printkb"        observes="Editor:Print"/>
       <menuseparator />
-      <menuitem accesskey="&fileclose.accesskey;"           key="closekb"        observes="Editor:Close"/>
       <menuitem accesskey="&fileexit.accesskey;"            key="exitkb"         observes="Editor:Exit"/>
     </menupopup>
     </menu>
@@ -637,7 +637,7 @@
     <!-- end DEBUG only -->
 
     <!-- Window bottom -->
-    <box align="horizontal" id="EditorStatusBar">
+    <box align="horizontal" id="status-bar">
       <titledbutton value="&tempNotification.label;" onclick="doTests()"/>
       <box id="EditorProgressBox" align="vertical" flex="100%">
         <spring flex="100%"/>
@@ -648,5 +648,4 @@
       <titledbutton id="statusText" align="right" flex="100%" value="&tempDoneLoading.label;" style="font-family:sans-serif;font-size:2.5mm">
       </titledbutton>
     </box>
-
 </overlay>

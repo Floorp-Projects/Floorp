@@ -25,7 +25,7 @@
 
 var insertNew                           = true;
 var imageElement;
-var doSeeAll                            = true;
+var SeeMore                            = true;
 var wasEnableAll                        = false;
 var oldSourceInt                        = 0;
 
@@ -60,15 +60,11 @@ function Startup()
   dialog.imagetbInput                   = document.getElementById( "imagetopbottomInput" );
   dialog.imageborderInput               = document.getElementById( "imageborderInput" );
 
-  // Start in the mode initialized in the "doSeeAll" var above
-  // THIS IS NOT WORKING NOW - After switching to "basic" mode,
-  // then back to 
-
-  if (doSeeAll) {
-    dialog.MoreRow.style.visibility     = "inherit"; // visible
-  } else {
-    dialog.MoreRow.style.visibility     = "collapse"; // use "hidden" if still too many problems
-  }
+  // Start in the mode initialized in the "SeeMore" var above
+  //TODO; We should get the current state of the "More" area from a pref
+  // Initialize to true, but calling this will toggle to "collapsed"
+  SeeMore = true;
+  onMoreFewer();
 
   if (null == dialog.srcInput || 
       null == dialog.altTextInput )
@@ -216,19 +212,23 @@ function chooseFile()
 
 function onMoreFewer()
 {
-  if (doSeeAll)
+  if (SeeMore)
   {
-    void(null);    
-    doSeeAll                            = false;
-    dialog.MoreRow.style.visibility     = "collapse"; // use "hidden" if still too many problems
+    SeeMore = false;
+    dialog.MoreFewerButton.setAttribute("value",GetString("MoreAttributes"));
+// This has too many bugs to use now (10/22/99)
+    dialog.MoreRow.style.visibility     = "collapse";
+//    dialog.MoreRow.setAttribute("style","display: none");
+    dialog.MoreFewerButton.removeAttribute("more");
   }
   else
   {
-    doSeeAll                            = true;
-    dialog.MoreRow.style.visibility     = "inherit"; // was visible; show doesn't seem to work
+    SeeMore = true;
+    dialog.MoreFewerButton.setAttribute("value",GetString("FewerAttributes"));
+    dialog.MoreRow.style.visibility     = "inherit";
+//    dialog.MoreRow.setAttribute("style","display: inherit");
+    dialog.MoreFewerButton.setAttribute("more","1");
   }
-  // When visibility = "collapse" works,
-  // Use this to resize dialog:
   window.sizeToContent();
 }
 
@@ -572,7 +572,7 @@ function setPopup(dim)
       else
         dialog.imageheightSelect.setAttribute("value",GetString("PercentOfCell"));
     
-    else
+    } else 
     {
       if (dim == "w")
         dialog.imagewidthSelect.setAttribute("value",GetString("PercentOfWindow"));

@@ -32,7 +32,7 @@
 <?xul-overlay href="chrome://global/content/tasksOverlay.xul"?>
 <?xul-overlay href="chrome://sidebar/content/sidebarOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://editor/locale/EditorAppShell.dtd"> 
+<!DOCTYPE window SYSTEM "chrome://editor/locale/editor.dtd"> 
 
 <window id="main-window" xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -61,16 +61,7 @@
 	<!-- keys are appended from the overlay -->
   <keyset id="defaultKeySet"/>
 
-<!-- sidebar/toolbar/content/status -->
-<box id="sidebar-parent" align="horizontal" flex="100%">
-  <!-- toolbar/content/status -->
-
-  <box id="sidebar-box" chromeclass="extrachrome" style="display:none"/>
-  <splitter id="sidebar-splitter" chromeclass="extrachrome" style="display:none"/>
-  
-  <box id="appcontent" align="vertical" flex="100%">
-  <toolbox id="EditorToolbars">
-    <menubar>
+  <menubar id="main-menubar" chromeclass="menubar">
     <menu id="fileMenu"/>
     <menu id="editMenu"/>
 
@@ -136,8 +127,10 @@
     <spring flex="100%"/>
   </menubar>
 
+<toolbox>
    <!-- toolbar filled out from editorOverlay -->
-   <toolbar id="EditToolbar">
+   <!-- add  class="standard" for dark blue background (icons need rework first) -->
+   <toolbar id="EditToolbar" persist="collapsed">
       <titledbutton id="newButton"/>
       <titledbutton id="openButton"/>
       <titledbutton id="saveButton"/>
@@ -163,7 +156,7 @@
       <spring flex="100%"/>
     </toolbar>
     
-    <toolbar id="FormatToolbar">
+    <toolbar id="FormatToolbar" persist="collapsed">
       <!-- buttons are filled out from editorOverlay -->
       <menu>
       	<titledbutton id="ParagraphPopupButton"/>
@@ -210,6 +203,14 @@
     </toolbar>
     </toolbox>
 
+<!-- sidebar/toolbar/content/status -->
+<box id="sidebar-parent" align="horizontal" flex="100%">
+  <!-- toolbar/content/status -->
+
+  <box id="sidebar-box" chromeclass="extrachrome" style="display:none"/>
+  <splitter id="sidebar-splitter" chromeclass="extrachrome" style="display:none"/>
+  
+  <box id="appcontent" align="vertical" flex="100%">
     <editor type="content-primary" id="content-frame" src="about:blank" flex="100%"/>
 
     <box align="horizontal" id="DisplayModeBar" style="padding-top: 0px;">
@@ -228,7 +229,7 @@
     </box>
 
     <!-- status bar, from editorOverlay.xul -->
-    <box id="EditorStatusBar" />
+    <box id="status-bar" />
   </box>
 </box>
 

@@ -20,7 +20,7 @@ DEPTH=..\..\..\..\..
 include <$(DEPTH)\config\rules.mak>
 
 install::
-	$(MAKE_INSTALL) EditorAppShell.dtd        $(DIST)\bin\chrome\editor\locale\en-US
+	$(MAKE_INSTALL) editor.dtd                $(DIST)\bin\chrome\editor\locale\en-US
 	$(MAKE_INSTALL) sidebar-editor-rdf.dtd    $(DIST)\bin\chrome\editor\locale\en-US
 	$(MAKE_INSTALL) sidebar-editor.dtd        $(DIST)\bin\chrome\editor\locale\en-US
 	$(MAKE_INSTALL) viewSource.dtd            $(DIST)\bin\chrome\editor\locale\en-US
@@ -28,7 +28,7 @@ install::
 	$(MAKE_INSTALL) editor.properties         $(DIST)\bin\chrome\editor\locale\en-US
 
 clobber::
-  rm -f $(DIST)\bin\chrome\editor\locale\en-US\EditorAppShell.dtd 
+  rm -f $(DIST)\bin\chrome\editor\locale\en-US\editor.dtd 
   rm -f $(DIST)\bin\chrome\editor\locale\en-US\sidebar-editor-rdf.dtd 
   rm -f $(DIST)\bin\chrome\editor\locale\en-US\sidebar-editor.dtd 
   rm -f $(DIST)\bin\chrome\editor\locale\en-US\viewSource.dtd 

@@ -28,7 +28,7 @@
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/tasksOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://editor/locale/EditorAppShell.dtd"> 
+<!DOCTYPE window SYSTEM "chrome://editor/locale/editor.dtd"> 
 
 <!-- NOTE: If we don't have "title" set, text editor doesn't work! -->
 <window id="main-window" xmlns:html="http://www.w3.org/TR/REC-html40"
@@ -57,8 +57,7 @@
 	<!-- keys are appended from the overlay -->
   <keyset id="defaultKeySet"/>
 
-  <toolbox id="EditorToolbars">
-    <menubar>
+<menubar>
     <menu id="fileMenu"/>
     <menu id="editMenu"/>
 
@@ -120,8 +119,9 @@
     <menu accesskey="h" id="menu_Help"/>
 
   <spring flex="100%"/>
-  </menubar>
+</menubar>
 
+<toolbox>
    <!-- toolbar filled out from editorOverlay -->
    <toolbar id="EditToolbar">
       <titledbutton id="newButton"/>
@@ -141,6 +141,6 @@
     <editor type="content-primary" id="content-frame" src="about:blank" flex="100%"/>
 
     <!-- status bar, from editorOverlay.xul -->
-    <box id="EditorStatusBar" />
+    <box id="status-bar" />
 
 </window>
