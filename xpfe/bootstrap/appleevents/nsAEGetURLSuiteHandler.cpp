@@ -169,9 +169,7 @@ void AEGetURLSuiteHandler::HandleGetURLEvent(const AppleEvent *appleEvent, Apple
   if ( !targetWindow )
   {
     if ( sReuseWindow ) {
-//    nsCOMPtr<nsIWindowMediator> mediator ( do_GetService(NS_WINDOWMEDIATOR_CONTRACTID) );
-static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
-      nsCOMPtr<nsIWindowMediator> mediator ( do_GetService(kWindowMediatorCID) );
+      nsCOMPtr<nsIWindowMediator> mediator ( do_GetService(NS_WINDOWMEDIATOR_CONTRACTID) );
       if ( mediator ) {
         nsCOMPtr<nsISimpleEnumerator> windowEnum;
         mediator->GetZOrderXULWindowEnumerator(NS_LITERAL_STRING("navigator:browser").get(), PR_TRUE, getter_AddRefs(windowEnum));
