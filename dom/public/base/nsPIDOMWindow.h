@@ -168,7 +168,7 @@ PopPopupControlState(PopupControlState aState);
 #define NS_AUTO_POPUP_STATE_PUSHER nsAutoPopupStatePusherExternal
 #endif
 
-// Helper class that helps with pushing and poping popup control
+// Helper class that helps with pushing and popping popup control
 // state. Note that this class looks different from within code that's
 // part of the layout library than it does in code outside the layout
 // library.  We give the two object layouts different names so the symbols
