@@ -101,6 +101,8 @@ nsBaseWidget::nsBaseWidget() :
     mContext       = nsnull;
     mCursor        = eCursor_standard;
     mBorderStyle   = eBorderStyle_none;
+    mVScrollbar    = nsnull;
+
     NS_INIT_REFCNT();
 }
 
@@ -113,6 +115,7 @@ nsBaseWidget::nsBaseWidget() :
 nsBaseWidget::~nsBaseWidget()
 {
 	NS_IF_RELEASE(mMenuListener);
+	NS_IF_RELEASE(mVScrollbar);
 }
 
 //-------------------------------------------------------------------------
@@ -790,6 +793,9 @@ NS_METHOD nsBaseWidget::Paint(nsIRenderingContext& aRenderingContext,
 NS_METHOD nsBaseWidget::SetVerticalScrollbar(nsIWidget * aWidget)
 {
   mVScrollbar = aWidget;
+  if (nsnull != mVScrollbar) {
+    NS_ADDREF(mVScrollbar);
+  }
   return NS_OK;
 }
 
