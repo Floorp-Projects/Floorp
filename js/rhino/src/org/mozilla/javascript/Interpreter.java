@@ -189,6 +189,10 @@ public class Interpreter {
         if (itsData.itsFunctionType == 0) {
             theICodeTop = addByte(END_ICODE, theICodeTop);
         }
+        // Add special CATCH to simplify Interpreter.interpret logic
+        // and workaround lack of goto in Java
+        theICodeTop = addByte(TokenStream.CATCH, theICodeTop);
+
         itsData.itsICodeTop = theICodeTop;
 
         if (itsData.itsICode.length != theICodeTop) {
@@ -869,7 +873,6 @@ public class Interpreter {
                     if (child == catchTarget) {
                         int catchOffset = iCodeTop - tryStart;
                         recordJumpOffset(tryStart + 1, catchOffset);
-                        iCodeTop = addByte(TokenStream.CATCH, iCodeTop);
                     }
                     iCodeTop = generateICode(child, iCodeTop);
                     lastChild = child;
@@ -1660,6 +1663,9 @@ public class Interpreter {
         }
 
         Object result = undefined;
+        // If javaException != null on exit, it will be throw instead of
+        // normal return
+        Throwable javaException = null;
 
         byte[] iCode = idata.itsICode;
         String[] strings = idata.itsStringTable;
@@ -1674,13 +1680,14 @@ public class Interpreter {
         // other functions
         final int INVOCATION_COST = 100;
 
-        Loop: while (true) {
+        Loop: for (;;) {
             try {
                 switch (iCode[pc] & 0xff) {
     // Back indent to ease imlementation reading
 
     case TokenStream.ENDTRY :
         tryStackTop--;
+        stack[TRY_STACK_SHFT + tryStackTop] = null;
         break;
     case TokenStream.TRY :
         stack[TRY_STACK_SHFT + tryStackTop] = scope;
@@ -1690,28 +1697,123 @@ public class Interpreter {
         pc += 4;
         break;
     case TokenStream.CATCH: {
-        Throwable ex = (Throwable)stack[stackTop];
-        Object catchObj;
-        for (;;) {
-            if (ex instanceof JavaScriptException) {
-                catchObj = ScriptRuntime.unwrapJavaScriptException(
-                               (JavaScriptException)ex);
-            } else if (ex instanceof EcmaError) {
-                // an offical ECMA error object,
-                catchObj = ((EcmaError)ex).getErrorObject();
-            } else if (ex instanceof WrappedException) {
-                WrappedException wex = (WrappedException)ex;
-                ex = wex.getWrappedException();
-                continue;
-            } else {
-                // catch can not be called with any other exceptions
-                Context.codeBug();
-                catchObj = null;
+        // See comments in generateICodeFromTree: the following code should
+        // be executed inside try/catch inside main loop, not in the loop catch
+        // block itself
+        if (javaException == null) Context.codeBug();
+
+        int pcNew = -1;
+        boolean doCatch = false;
+        if (tryStackTop > 0) {
+            // Decrease tryStackTop even if catch or finally would not
+            // be processed to properly deal with exceptions thrown
+            // by debuggerFrame.onExceptionThrown or cx.observeInstructionCount
+            --tryStackTop;
+
+            final int SCRIPT_CAN_CATCH = 0, ONLY_FINALLY = 1, OTHER = 2;
+            int exType;
+            for (;;) {
+                if (javaException instanceof JavaScriptException) {
+                    exType = SCRIPT_CAN_CATCH;
+                } else if (javaException instanceof EcmaError) {
+                    // an offical ECMA error object,
+                    exType = SCRIPT_CAN_CATCH;
+                } else if (javaException instanceof WrappedException) {
+                    WrappedException wex = (WrappedException)javaException;
+                    javaException = wex.getWrappedException();
+                    continue;
+                } else if (javaException instanceof RuntimeException) {
+                    exType = ONLY_FINALLY;
+                } else {
+                    // Error instance
+                    exType = OTHER;
+                }
+                break;
             }
-            break;
+
+            if (exType != OTHER) {
+                // Do not allow for JS to interfere with Error instances
+                // (exType == OTHER), as they can be used to terminate
+                // long running script
+                int pcTry = (int)sDbl[TRY_STACK_SHFT + tryStackTop];
+                if (exType == SCRIPT_CAN_CATCH) {
+                    // Allow JS to catch only JavaScriptException and
+                    // EcmaError
+                    int catch_offset = getShort(iCode, pcTry + 1);
+                    if (catch_offset != 0) {
+                        // Has catch block
+                        doCatch = true;
+                        pcNew = pcTry + catch_offset;
+                    }
+                }
+                if (pcNew < 0) {
+                    int finally_offset = getShort(iCode, pcTry + 3);
+                    if (finally_offset != 0) {
+                        // has finally block
+                        pcNew = pcTry + finally_offset;
+                    }
+                }
+            }
         }
-        stack[stackTop] = catchObj;
-        break;
+
+        if (debuggerFrame != null && !(javaException instanceof Error)) {
+            debuggerFrame.onExceptionThrown(cx, javaException);
+        }
+
+        if (pcNew < 0) {
+            break Loop;
+        }
+
+        // We caught an exception,
+
+        // restore scope at try point
+        scope = (Scriptable)stack[TRY_STACK_SHFT + tryStackTop];
+        stack[TRY_STACK_SHFT + tryStackTop] = null;
+
+        // make stack to contain single exception object
+        stackTop = STACK_SHFT;
+        if (doCatch) {
+            stack[stackTop] = ScriptRuntime.getCatchObject(cx, scope,
+                                                           javaException);
+        } else {
+            stack[stackTop] = javaException;
+        }
+        // clear exception
+        javaException = null;
+
+        // Notify instruction observer if necessary
+        // and point pc and pcPrevBranch to start of catch/finally block
+        if (instructionThreshold != 0) {
+            if (instructionCount > instructionThreshold) {
+                // Note: this can throw Error
+                cx.observeInstructionCount(instructionCount);
+                instructionCount = 0;
+            }
+        }
+        pcPrevBranch = pc = pcNew;
+        continue Loop;
+    }
+    case TokenStream.THROW:
+    case TokenStream.JTHROW: {
+        if ((iCode[pc] & 0xff) == TokenStream.THROW) {
+            Object value = stack[stackTop];
+            if (value == DBL_MRK) value = doubleWrap(sDbl[stackTop]);
+            javaException = new JavaScriptException(value);
+        } else {
+            // No need to check for DBL_MRK: stack[stackTop] must be Throwable
+            javaException = (Throwable)stack[stackTop];
+        }
+        --stackTop;
+
+        if (instructionThreshold != 0) {
+            instructionCount += pc + 1 - pcPrevBranch;
+            if (instructionCount > instructionThreshold) {
+                cx.observeInstructionCount(instructionCount);
+                instructionCount = 0;
+            }
+        }
+        pcPrevBranch = pc = getJavaCatchPC(iCode);
+        continue Loop;
     }
     case TokenStream.GE : {
         --stackTop;
@@ -1836,7 +1938,7 @@ public class Interpreter {
                 }
             }
             pcPrevBranch = pc = getTarget(iCode, pc + 1);
-            continue;
+            continue Loop;
         }
         pc += 2;
         break;
@@ -1860,7 +1962,7 @@ public class Interpreter {
                 }
             }
             pcPrevBranch = pc = getTarget(iCode, pc + 1);
-            continue;
+            continue Loop;
         }
         pc += 2;
         break;
@@ -1874,7 +1976,7 @@ public class Interpreter {
             }
         }
         pcPrevBranch = pc = getTarget(iCode, pc + 1);
-        continue;
+        continue Loop;
     case TokenStream.GOSUB :
         sDbl[++stackTop] = pc + 3;
         if (instructionThreshold != 0) {
@@ -1884,7 +1986,7 @@ public class Interpreter {
                 instructionCount = 0;
             }
         }
-        pcPrevBranch = pc = getTarget(iCode, pc + 1);                                    continue;
+        pcPrevBranch = pc = getTarget(iCode, pc + 1);                                    continue Loop;
     case TokenStream.RETSUB : {
         int slot = (iCode[pc + 1] & 0xFF);
         if (instructionThreshold != 0) {
@@ -1895,9 +1997,10 @@ public class Interpreter {
             }
         }
         pcPrevBranch = pc = (int)sDbl[LOCAL_SHFT + slot];
-        continue;
+        continue Loop;
     }
     case TokenStream.POP :
+        stack[stackTop] = null;
         stackTop--;
         break;
     case TokenStream.DUP :
@@ -1908,6 +2011,7 @@ public class Interpreter {
     case TokenStream.POPV :
         result = stack[stackTop];
         if (result == DBL_MRK) result = doubleWrap(sDbl[stackTop]);
+        stack[stackTop] = null;
         --stackTop;
         break;
     case TokenStream.RETURN :
@@ -2399,19 +2503,6 @@ public class Interpreter {
     case TokenStream.UNDEFINED :
         stack[++stackTop] = Undefined.instance;
         break;
-    case TokenStream.THROW : {
-        Object exception = stack[stackTop];
-        if (exception == DBL_MRK) exception = doubleWrap(sDbl[stackTop]);
-        --stackTop;
-        throw new JavaScriptException(exception);
-    }
-    case TokenStream.JTHROW : {
-        // No need to check for DBL_MRK: stack[stackTop] must be Throwable
-        Throwable ex = (Throwable)stack[stackTop];
-        --stackTop;
-        throwJavaOrJSException(ex);
-        break; // unreachable
-    }
     case TokenStream.ENTERWITH : {
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
@@ -2526,92 +2617,18 @@ public class Interpreter {
                     }
                 }
 
-                final int SCRIPT_CAN_CATCH = 0, ONLY_FINALLY = 1, OTHER = 2;
-                int exType;
-                for (;;) {
-                    if (ex instanceof JavaScriptException) {
-                        exType = SCRIPT_CAN_CATCH;
-                    } else if (ex instanceof EcmaError) {
-                        // an offical ECMA error object,
-                        exType = SCRIPT_CAN_CATCH;
-                    } else if (ex instanceof WrappedException) {
-                        WrappedException wex = (WrappedException)ex;
-                        ex = wex.getWrappedException();
-                        continue;
-                    } else if (ex instanceof RuntimeException) {
-                        exType = ONLY_FINALLY;
-                    } else {
-                        // Error instance
-                        exType = OTHER;
-                    }
-                    break;
-                }
-
-                if (exType != OTHER && debuggerFrame != null) {
-                    debuggerFrame.onExceptionThrown(cx, ex);
-                }
-
-                boolean rethrow = true;
-                if (exType != OTHER && tryStackTop > 0) {
-                    // Do not allow for JS to interfere with Error instances
-                    // (exType == OTHER), as they can be used to terminate
-                    // long running script
-                    --tryStackTop;
-                    int try_pc = (int)sDbl[TRY_STACK_SHFT + tryStackTop];
-                    if (exType == SCRIPT_CAN_CATCH) {
-                        // Allow JS to catch only JavaScriptException and
-                        // EcmaError
-                        int catch_offset = getShort(iCode, try_pc + 1);
-                        if (catch_offset != 0) {
-                            // Has catch block
-                            rethrow = false;
-                            pc = try_pc + catch_offset;
-                            stackTop = STACK_SHFT;
-                            stack[stackTop] = ex;
-                        }
-                    }
-                    if (rethrow) {
-                        int finally_offset = getShort(iCode, try_pc + 3);
-                        if (finally_offset != 0) {
-                            // has finally block
-                            rethrow = false;
-                            pc = try_pc + finally_offset;
-                            stackTop = STACK_SHFT;
-                            stack[stackTop] = ex;
-                        }
-                    }
-                }
-
-                if (rethrow) {
-                    if (debuggerFrame != null) {
-                        debuggerFrame.onExit(cx, true, ex);
-                    }
-                    if (idata.itsNeedsActivation) {
-                        ScriptRuntime.popActivation(cx);
-                    }
-
-                    throwJavaOrJSException(ex);
-                }
-
-                // We caught an exception,
-
-                // Notify instruction observer if necessary
-                // and point pcPrevBranch to start of catch/finally block
-                if (instructionThreshold != 0) {
-                    if (instructionCount > instructionThreshold) {
-                        // Note: this can throw Error
-                        cx.observeInstructionCount(instructionCount);
-                        instructionCount = 0;
-                    }
-                }
-                pcPrevBranch = pc;
-
-                // restore scope at try point
-                scope = (Scriptable)stack[TRY_STACK_SHFT + tryStackTop];
+                pc = getJavaCatchPC(iCode);
+                javaException = ex;
+                continue Loop;
             }
         }
+
         if (debuggerFrame != null) {
-            debuggerFrame.onExit(cx, false, result);
+            if (javaException != null) {
+                    debuggerFrame.onExit(cx, true, javaException);
+            } else {
+                    debuggerFrame.onExit(cx, false, result);
+            }
         }
         if (idata.itsNeedsActivation) {
             ScriptRuntime.popActivation(cx);
@@ -2623,6 +2640,17 @@ public class Interpreter {
                 instructionCount = 0;
             }
             cx.instructionCount = instructionCount;
+        }
+
+        if (javaException != null) {
+            if (javaException instanceof JavaScriptException) {
+                throw (JavaScriptException)javaException;
+            } else if (javaException instanceof RuntimeException) {
+                throw (RuntimeException)javaException;
+            } else {
+                // Must be instance of Error or code bug
+                throw (Error)javaException;
+            }
         }
         return result;
     }
@@ -2911,24 +2939,17 @@ public class Interpreter {
         try {
             return cx.getSecurityController().
                     execWithDomain(cx, scope, code, idata.securityDomain);
-        }finally {
+        } finally {
             cx.interpreterSecurityDomain = savedDomain;
         }
     }
 
-    private static void throwJavaOrJSException(Throwable ex)
-        throws JavaScriptException
+    private static int getJavaCatchPC(byte[] iCode)
     {
-        if (ex instanceof JavaScriptException) {
-            throw (JavaScriptException)ex;
-        } else if (ex instanceof RuntimeException) {
-            throw (RuntimeException)ex;
-        } else {
-            // Must be instance of Error or code bug
-            throw (Error)ex;
-        }
+        int pc = iCode.length - 1;
+        if ((iCode[pc] & 0xFF) != TokenStream.CATCH) Context.codeBug();
+        return pc;
     }
-
 
     private boolean itsInFunctionFlag;
 
@@ -2942,7 +2963,6 @@ public class Interpreter {
     private int itsDoubleTableTop;
     private ObjToIntMap itsStrings = new ObjToIntMap(20);
     private String lastAddString;
-
 
     private int version;
     private boolean inLineStepMode;
