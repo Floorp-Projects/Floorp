@@ -6236,15 +6236,14 @@ nsBlockFrame::HandleEvent(nsPresContext* aPresContext,
       }
       else
         result = resultFrame->HandleEvent(aPresContext, aEvent, aEventStatus);//else let the frame/container do what it needs
+      /* Note that the above call to HandleEvent may capture the
+         mouse. If so, don't try to capture again. */
       if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN && !IsMouseCaptured(aPresContext))
           CaptureMouse(aPresContext, PR_TRUE);
       return result;
     }
     else
     {
-      /*we have to add this because any frame that overrides nsFrame::HandleEvent for mouse down MUST capture the mouse events!!
-      if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN && !IsMouseCaptured(aPresContext))
-          CaptureMouse(aPresContext, PR_TRUE);*/
       return NS_OK; //just stop it
     }
   }

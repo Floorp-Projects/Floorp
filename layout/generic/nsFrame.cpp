@@ -61,6 +61,7 @@
 #include <stdarg.h>
 #include "nsFrameManager.h"
 #include "nsCSSRendering.h"
+#include "nsLayoutUtils.h"
 #ifdef ACCESSIBILITY
 #include "nsIAccessible.h"
 #endif
@@ -733,6 +734,21 @@ nsIFrame*
 nsFrame::GetFirstChild(nsIAtom* aListName) const
 {
   return nsnull;
+}
+
+static nsIFrame*
+GetActiveSelectionFrame(nsIFrame* aFrame)
+{
+  nsIView* mouseGrabber;
+  aFrame->GetPresContext()->GetViewManager()->GetMouseEventGrabber(mouseGrabber);
+  if (mouseGrabber) {
+    nsIFrame* activeFrame = nsLayoutUtils::GetFrameFor(mouseGrabber);
+    if (activeFrame) {
+      return activeFrame;
+    }
+  }
+    
+  return aFrame;
 }
 
 PRInt16
@@ -1742,12 +1758,40 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsPresContext* aPresContext,
   return NS_OK;
 }
 
+static void
+GetFrameSelectionFor(nsIFrame* aFrame, nsIFrameSelection** aFrameSel, nsISelectionController** aSelCon)
+{
+  *aSelCon = nsnull;
+  *aFrameSel = nsnull;
+  nsresult result = aFrame->GetSelectionController(aFrame->GetPresContext(), aSelCon);
+  if (NS_SUCCEEDED(result) && *aSelCon)
+    CallQueryInterface(*aSelCon, aFrameSel);
+  if (!*aFrameSel)
+    NS_IF_ADDREF(*aFrameSel = aFrame->GetPresContext()->GetPresShell()->FrameSelection());
+}
+
 NS_IMETHODIMP nsFrame::HandleRelease(nsPresContext* aPresContext, 
                                      nsGUIEvent*     aEvent,
                                      nsEventStatus*  aEventStatus)
 {
-  if (IsMouseCaptured(aPresContext))
-    CaptureMouse(aPresContext, PR_FALSE);
+  nsIFrame* activeFrame = GetActiveSelectionFrame(this);
+
+  // We can unconditionally stop capturing because
+  // we should never be capturing when the mouse button is up
+  CaptureMouse(aPresContext, PR_FALSE);
+
+  nsCOMPtr<nsIFrameSelection> frameselection;
+  nsCOMPtr<nsISelectionController> selCon;
+  
+  // We might be capturing in some other document and the event just happened to
+  // trickle down here. Make sure that document's frame selection is notified.
+  if (activeFrame != this &&
+      NS_STATIC_CAST(nsFrame*, activeFrame)->DisplaySelection(activeFrame->GetPresContext())
+        != nsISelectionController::SELECTION_OFF) {
+    GetFrameSelectionFor(activeFrame, getter_AddRefs(frameselection), getter_AddRefs(selCon));
+    frameselection->SetMouseDownState( PR_FALSE );
+    frameselection->StopAutoScrollTimer();
+  }
 
   if (DisplaySelection(aPresContext) == nsISelectionController::SELECTION_OFF)
     return NS_OK;
@@ -1757,16 +1801,9 @@ NS_IMETHODIMP nsFrame::HandleRelease(nsPresContext* aPresContext,
   if (!presShell)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIFrameSelection> frameselection;
-  nsCOMPtr<nsISelectionController> selCon;
-  
-  nsresult result = GetSelectionController(aPresContext,
-                                           getter_AddRefs(selCon));
-    
-  if (NS_SUCCEEDED(result) && selCon)
-    frameselection = do_QueryInterface(selCon); //this MAY implement
-  if (!frameselection)
-    frameselection = presShell->FrameSelection();
+  GetFrameSelectionFor(this, getter_AddRefs(frameselection), getter_AddRefs(selCon));
+
+  nsresult result = NS_OK;
 
   NS_ENSURE_ARG_POINTER(aEventStatus);
   if (nsEventStatus_eConsumeNoDefault != *aEventStatus) {
