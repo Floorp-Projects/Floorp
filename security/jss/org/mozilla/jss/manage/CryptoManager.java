@@ -51,10 +51,11 @@ import org.mozilla.jss.CRLImportException;
  * Initialization is done with static methods, and must be done before
  * an instance can be created.  All other operations are done with instance
  * methods.
- * @version $Revision: 1.10 $ $Date: 2002/01/08 20:10:48 $ 
+ * @version $Revision: 1.11 $ $Date: 2002/01/24 01:24:01 $ 
  */
 public final class CryptoManager implements TokenSupplier
 {
+
     public final static class NotInitializedException extends Exception {}
     public final static class NicknameConflictException extends Exception {}
     public final static class UserCertConflictException extends Exception {}
@@ -419,9 +420,9 @@ public final class CryptoManager implements TokenSupplier
         public boolean installJSSProvider = true;
 
         /**
-         * Remove the Sun crypto provider. Default is true.
+         * Remove the Sun crypto provider. Default is false.
          */
-        public boolean removeSunProvider = true;
+        public boolean removeSunProvider = false;
     }
 
     ////////////////////////////////////////////////////
