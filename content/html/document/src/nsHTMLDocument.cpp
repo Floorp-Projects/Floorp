@@ -2327,7 +2327,7 @@ nsHTMLDocument::RemoveStrings(PLHashEntry *he, PRIntn i, void *arg)
 {
   char *str = (char *)he->key;
 
-  delete [] str;
+  Recycle(str);
   return HT_ENUMERATE_REMOVE;
 }
 
@@ -2380,7 +2380,7 @@ nsHTMLDocument::UnregisterNamedItems(nsIContent *aContent, PRBool aInForm)
       char *nameStr = value.ToNewCString();
       // XXX What about the string held in the hash table entry
       PL_HashTableRemove(mNamedItems, nameStr);
-      delete [] nameStr;
+      Recycle(nameStr);
   }
   
   inForm = aInForm || (tag == nsHTMLAtoms::form);
@@ -2481,7 +2481,7 @@ nsHTMLDocument::NamedItem(const nsString& aName, nsIDOMElement** aReturn)
 
     char *str = aName.ToNewCString();
     content = (nsIContent *)PL_HashTableLookup(mNamedItems, str);
-    delete [] str;
+    Recycle(str);
   }
 
   if (nsnull != content) {
