@@ -190,7 +190,7 @@ nsCacheEntryChannel::AsyncRead(PRUint32 aStartPosition, PRInt32 aReadCount,
     CacheManagerStreamListener* cacheManagerStreamListener;
     nsIChannel *channelForListener;
 
-    channelForListener = mProxyChannel ? mProxyChannel : this;
+    channelForListener = mProxyChannel ? mProxyChannel.get() : NS_STATIC_CAST(nsIChannel*, this);
     cacheManagerStreamListener =
         new CacheManagerStreamListener(headListener, mLoadGroup, channelForListener);
     if (!cacheManagerStreamListener) return NS_ERROR_OUT_OF_MEMORY;
