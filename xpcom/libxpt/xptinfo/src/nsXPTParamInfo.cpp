@@ -26,6 +26,7 @@
 #include "nsInterfaceInfoManager.h"
 
 #include "xpt_cpp.h"
+#include "xptinfo.h"
 
 // Placeholder - this implementation just returns NULL.
 
@@ -38,11 +39,12 @@ nsXPTParamInfo::GetInterface() const
     if(!(mgr = nsInterfaceInfoManager::GetInterfaceInfoManager()))
         return NULL;
 
-    nsIInterfaceInfo* info;
+//    nsIInterfaceInfo* info;
 //      mgr->GetInfoForIID(&InterfaceDirectoryEntryTable[type.type.interface].iid,
 //                         &info);
     NS_RELEASE(mgr);
-    return info;
+//    return info;
+    return NULL;
 }
 
 const nsIID*

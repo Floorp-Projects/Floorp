@@ -25,11 +25,12 @@ PROGRAMS = $(PROG1)
 
 LCFLAGS=-DUSE_NSREG
 
-DEFINES=-DWIN32_LEAN_AND_MEAN -DDEBUG
+DEFINES=-DWIN32_LEAN_AND_MEAN
 
 REQUIRES=xpcom libxpt xptinfo
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\libxpt -I$(PUBLIC)\xptinfo
+LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \
+      -I$(PUBLIC)\libxpt -I$(PUBLIC)\xptinfo
 
 LLIBS=					\
  $(DIST)\lib\xpcom32.lib		\
@@ -47,7 +48,7 @@ install:: $(PROGRAMS)
 	-for %p in ($(TESTCASES)) do $(MAKE_INSTALL) %p $(DIST)\bin
 
 # Move this into config/obj.inc when it's allowed
-.c{.\$(OBJDIR)\}.exe:
+.cpp{.\$(OBJDIR)\}.exe:
     $(CC) @<<$(CFGFILE)
         $(CFLAGS)
         $(LCFLAGS)
@@ -59,7 +60,7 @@ install:: $(PROGRAMS)
         -Fd$(PBDFILE)
         -Fe.\$(OBJDIR)\
         -Fo.\$(OBJDIR)\
-        $(CURDIR)$(*B).c
+        $(CURDIR)$(*B).cpp
 <<KEEP
 
 clean :: clobber

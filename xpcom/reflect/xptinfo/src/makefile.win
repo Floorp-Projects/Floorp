@@ -21,19 +21,22 @@ MAKE_OBJ_TYPE	= DLL
 
 DEPTH=..\..\..\..
 
-LIBNAME = .\$(OBJDIR)\xptinfo$(MOZ_BITS)
-DLL = $(LIBNAME).dll
+DLLNAME = xptinfo$(MOZ_BITS)
+DLL		=.\$(OBJDIR)\$(DLLNAME).dll
 
-LCFLAGS = -DEXPORT_XPT_API -DWIN32_LEAN_AND_MEAN
+LCFLAGS = -DEXPORT_XPTI_API -DWIN32_LEAN_AND_MEAN
 
 LINCS = 	\
+		-I$(PUBLIC)\xpcom \
+		-I$(PUBLIC)\raptor \
 		-I$(PUBLIC)\libxpt	\
 		-I$(PUBLIC)\xptinfo	\
 		$(NULL)
 
 LLIBS	=	\
+		$(DIST)\lib\libxpt$(MOZ_BITS).lib	\
+		$(DIST)\lib\xpcom$(MOZ_BITS).lib	\
 		$(LIBNSPR)		\
-		$(DIST)\lib\libxpt.lib	\
 		$(NULL)
 
 CSRCS	=	\
@@ -59,5 +62,5 @@ MODULE	= 	xptinfo
 include <$(DEPTH)\config\rules.mak>
 
 libs:: $(DLL)
-	$(MAKE_INSTALL) $(LIBNAME).$(DLL_SUFFIX) $(DIST)\bin
-	$(MAKE_INSTALL) $(LIBNAME).$(LIB_SUFFIX) $(DIST)\lib
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib

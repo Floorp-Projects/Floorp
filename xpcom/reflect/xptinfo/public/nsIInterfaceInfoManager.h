@@ -48,16 +48,6 @@ public:
 
 };
 
-// this is just for XPT_PUBLIC_API...
-// should be removed with below.
-#include "xpt_struct.h"
-
-PR_BEGIN_EXTERN_C
-// XXX remove this and use ServiceManager instead
-XPT_PUBLIC_API(nsIInterfaceInfoManager*)
-XPT_GetInterfaceInfoManager();
-PR_END_EXTERN_C
-
 #endif /* nsIInterfaceInfoManager_h___ */
 
 

@@ -23,7 +23,10 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xptinfo
 
+CFLAGS	+= -DEXPORT_XPCI_API
+
 EXPORTS		= xpt_cpp.h		\
+		  xptinfo.h \
 		  nsIInterfaceInfoManager.h \
 		  nsIInterfaceInfo.h \
 		  $(NULL)
