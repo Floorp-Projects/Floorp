@@ -1,13 +1,31 @@
-<?xml version="1.0"?> 
+<?xml version="1.0"?>
+<!-- The contents of this file are subject to the Netscape Public
+   - License Version 1.1 (the "License"); you may not use this file
+   - except in compliance with the License. You may obtain a copy of
+   - the License at http://www.mozilla.org/NPL/
+   - 
+   - Software distributed under the License is distributed on an "AS
+   - IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   - implied. See the License for the specific language governing
+   - rights and limitations under the License.
+   - 
+   - The Original Code is Mozilla Communicator client code, released
+   - March 31, 1998.
+   - 
+   - The Initial Developer of the Original Code is Netscape
+   - Communications Corporation. Portions created by Netscape are
+   - Copyright (C) 1998-1999 Netscape Communications Corporation. All
+   - Rights Reserved.
+   - 
+   - Contributor(s):
+   -->
 <!-- os2 version of platformDialogOverlay.xul -->
 
 <!DOCTYPE window SYSTEM "chrome://global/locale/platformDialogOverlay.dtd">
 
-
-
 <overlay id="platformDialogOverlay"
-		 xmlns:html="http://www.w3.org/1999/xhtml"
-		 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+             xmlns:html="http://www.w3.org/1999/xhtml"
+             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <box id="okCancelButtons">
     <spring flex="1"/>
@@ -26,10 +44,10 @@
     <button class="exit-dialog" id="cancel" value="&cancelButton.label;" oncommand="doCancelButton();"/>
   </box>
 	
-	<keyset id="keyset">
-		<key keycode="VK_ENTER" oncommand="doOKButton();"/>
-		<key keycode="VK_RETURN" oncommand="doOKButton();"/>
-		<key keycode="VK_ESCAPE" oncommand="doCancelButton();"/>
-	</keyset>
+  <keyset id="keyset">
+    <key keycode="VK_ENTER" oncommand="if (!document.getElementById('ok').disabled) doOKButton();"/>
+    <key keycode="VK_RETURN" oncommand="if (!document.getElementById('ok').disabled) doOKButton();"/>
+    <key keycode="VK_ESCAPE" oncommand="doCancelButton();"/>
+ </keyset>
 
 </overlay>		
