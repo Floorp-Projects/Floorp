@@ -127,22 +127,16 @@ static NS_DEFINE_CID(kLayoutDocumentLoaderFactoryCID, NS_LAYOUT_DOCUMENT_LOADER_
 
 /* Define Interface IDs */
 static NS_DEFINE_IID(kISupportsIID,           NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIWebShellWindowIID,     NS_IWEBSHELL_WINDOW_IID);
 static NS_DEFINE_IID(kIWidgetIID,             NS_IWIDGET_IID);
 static NS_DEFINE_IID(kIWebShellIID,           NS_IWEB_SHELL_IID);
-static NS_DEFINE_IID(kIWebShellContainerIID,  NS_IWEB_SHELL_CONTAINER_IID);
-static NS_DEFINE_IID(kIBrowserWindowIID,      NS_IBROWSER_WINDOW_IID);
 
 static NS_DEFINE_IID(kIAppShellServiceIID,    NS_IAPPSHELL_SERVICE_IID);
 static NS_DEFINE_IID(kIAppShellIID,           NS_IAPPSHELL_IID);
-static NS_DEFINE_IID(kIDocumentLoaderObserverIID, NS_IDOCUMENT_LOADER_OBSERVER_IID);
 static NS_DEFINE_IID(kIDocumentViewerIID,     NS_IDOCUMENT_VIEWER_IID);
 static NS_DEFINE_IID(kIDOMDocumentIID,        NS_IDOMDOCUMENT_IID);
 static NS_DEFINE_IID(kIDOMNodeIID,            NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kIDOMElementIID,         NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIDOMCharacterDataIID,   NS_IDOMCHARACTERDATA_IID);
-//static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
-//static NS_DEFINE_IID(kIDOMHTMLImageElementIID, NS_IDOMHTMLIMAGEELEMENT_IID);
 
 static NS_DEFINE_IID(kIMenuIID,        NS_IMENU_IID);
 static NS_DEFINE_IID(kIMenuBarIID,     NS_IMENUBAR_IID);
@@ -156,7 +150,6 @@ static NS_DEFINE_IID(kIWindowMediatorIID,NS_IWINDOWMEDIATOR_IID);
 
 static NS_DEFINE_IID(kIXULPopupListenerIID, NS_IXULPOPUPLISTENER_IID);
 static NS_DEFINE_CID(kXULPopupListenerCID, NS_XULPOPUPLISTENER_CID);
-static NS_DEFINE_IID(kIUrlDispatcherIID,     NS_IURLDISPATCHER_IID);
 
 #ifdef DEBUG_rods
 #define DEBUG_MENUSDEL 1
@@ -164,8 +157,6 @@ static NS_DEFINE_IID(kIUrlDispatcherIID,     NS_IURLDISPATCHER_IID);
 #include "nsICommonDialogs.h"
 
 static NS_DEFINE_CID(	kCommonDialogsCID, NS_CommonDialog_CID );
-static NS_DEFINE_IID( kIPromptIID, NS_IPROMPT_IID );
-static NS_DEFINE_IID( kINetPromptIID, NS_INETPROMPT_IID );
 #include "nsIWalletService.h"
 static NS_DEFINE_CID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 #include "nsIWebShell.h"
@@ -279,62 +270,16 @@ nsWebShellWindow::~nsWebShellWindow()
 NS_IMPL_ADDREF(nsWebShellWindow);
 NS_IMPL_RELEASE(nsWebShellWindow);
 
-nsresult
-nsWebShellWindow::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  nsresult rv = NS_NOINTERFACE;
-
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if ( aIID.Equals(kIWebShellWindowIID) ) {
-    *aInstancePtr = (void*) ((nsIWebShellWindow*)this);
-    NS_ADDREF_THIS();  
-    return NS_OK;
-  }
-  if (aIID.Equals(kIWebShellContainerIID)) {
-    *aInstancePtr = (void*)(nsIWebShellContainer*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIDocumentLoaderObserverIID)) {
-    *aInstancePtr = (void*) ((nsIDocumentLoaderObserver*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIBrowserWindowIID)) {
-    *aInstancePtr = (void*) (nsIBrowserWindow*) this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIUrlDispatcherIID)) {
-     *aInstancePtr = (void*) (nsIUrlDispatcher*) this;
-     NS_ADDREF_THIS();
-     return NS_OK;
-  }	
-  if (aIID.Equals(kIPromptIID )) {
-    *aInstancePtr = (void*)(nsIPrompt*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kINetPromptIID )) {
-    *aInstancePtr = (void*)(nsINetPrompt*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(nsISupportsWeakReference::GetIID())) {
-    *aInstancePtr = (void*)NS_STATIC_CAST(nsISupportsWeakReference *, this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtr = (void*)(nsISupports*)(nsIWebShellContainer*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return rv;
-}
-
+NS_INTERFACE_MAP_BEGIN(nsWebShellWindow)
+   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebShellContainer)
+   NS_INTERFACE_MAP_ENTRY(nsIWebShellWindow)
+   NS_INTERFACE_MAP_ENTRY(nsIWebShellContainer)
+   NS_INTERFACE_MAP_ENTRY(nsIDocumentLoaderObserver)
+   NS_INTERFACE_MAP_ENTRY(nsIBrowserWindow)
+   NS_INTERFACE_MAP_ENTRY(nsIPrompt)
+   NS_INTERFACE_MAP_ENTRY(nsINetPrompt)
+   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+NS_INTERFACE_MAP_END
 
 nsresult nsWebShellWindow::Initialize(nsIWebShellWindow* aParent,
                                       nsIAppShell* aShell, nsIURI* aUrl, 
@@ -2880,86 +2825,6 @@ nsWebShellWindow::ShowMenuBar(PRBool aShow)
   else
     mChromeMask &= ~NS_CHROME_MENU_BAR_ON;
   return mWindow->ShowMenuBar(aShow);
-}
-
-//nsIUrlDispatcher methods
-
-NS_IMETHODIMP
-nsWebShellWindow::HandleUrl(const PRUnichar * aCommand, 
-                            const PRUnichar * aURLSpec, 
-                            nsIInputStream * aPostDataStream)
-{  
-  /* Make the topic to observe. The topic will be of the format 
-   * linkclick:<prototocol>. Note that this is a totally made up thing.
-   * Things are going to change later
-   */
-  nsAutoString topic(aCommand);
-  topic += ":";
-  nsAutoString url(aURLSpec);
-  PRInt32 urllen = url.Length();
-  nsresult rv;
-
-  PRInt32 offset = url.FindChar(':');
-  if (offset <= 0)
-     return NS_ERROR_FAILURE;
-
-  PRInt32 offset2= url.Find("mailto:", PR_TRUE);
-  if (offset2 == 0) {
-    topic += "mailto";
-
-	  /* I know about all that is going on regarding using window.open
-     * instead of showWindowWithArgs(). But, I really don't have another
-     * option in this case to invoke the messenger compose window.
-     * This piece of code will eventually go away when I start using the 
-     * protocol registries in NECKO
-     */
-
-    /* Messenger doesn't understand to:xyz@domain.com,subject="xyz" yet.
-     * So, just pass the type and mode info
-     */
-	 nsCAutoString urlcstr(url);
-   urlcstr.ReplaceChar('&', ',');
-	 urlcstr.ReplaceChar('?', ',');
-
-   nsAutoString args("format=0,");
-	 nsCAutoString tailpiece;
-	 urlcstr.Right(tailpiece, urllen-7); 
-	 args += "to=";
-	 args += tailpiece;
-     NS_WITH_SERVICE(nsIAppShellService, appShellService, kAppShellServiceCID, &rv)
-     if ( NS_SUCCEEDED( rv ) ) {
-         nsCOMPtr<nsIDOMWindow> hiddenWindow;
-         JSContext *jsContext;
-         rv = appShellService->GetHiddenWindowAndJSContext( getter_AddRefs( hiddenWindow ),
-                                                            &jsContext );
-         if ( NS_SUCCEEDED( rv ) ) {
-             void *stackPtr;
-             jsval *argv = JS_PushArguments( jsContext,
-                                             &stackPtr,
-                                             "sssW",
-                                             "chrome://messengercompose/content",
-                                             "_blank",
-                                             "chrome,dialog=no,all",
-                                             (const PRUnichar*)args.GetUnicode() );
-             if( argv ) {
-                 nsCOMPtr<nsIDOMWindow> newWindow;
-                 rv = hiddenWindow->OpenDialog( jsContext,
-                                                argv,
-                                                4,
-                                                getter_AddRefs( newWindow ) );
-                 JS_PopArguments( jsContext, stackPtr );
-             }
-         }
-     }
-	if (NS_FAILED(rv))
-		return rv;
-  }
-  else {
-    topic += "browser";
-  }
-
-  return NS_OK;
-  
 }
 
 NS_IMETHODIMP

@@ -32,7 +32,6 @@
 #include "nsIDocumentObserver.h"
 #include "nsVoidArray.h"
 #include "nsIMenu.h"
-#include "nsIUrlDispatcher.h"
 
 #include "nsIPrompt.h"
 #include "nsINetPrompt.h"
@@ -65,7 +64,6 @@ class nsWebShellWindow : public nsIWebShellWindow,
                          public nsIBrowserWindow,
                          public nsIDocumentLoaderObserver,
                          public nsIDocumentObserver,
-                         public nsIUrlDispatcher,
                          public nsIPrompt,
                          public nsINetPrompt,
                          public nsSupportsWeakReference
@@ -240,8 +238,6 @@ public:
   NS_IMETHOD GetDefaultStatus(const PRUnichar** aResult);
   NS_IMETHOD SetProgress(PRInt32 aProgress, PRInt32 aProgressMax);
   NS_IMETHOD ShowMenuBar(PRBool aShow);
-
-  NS_DECL_IURLDISPATCHER
 
   // nsINetSupport
 
