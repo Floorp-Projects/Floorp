@@ -17,135 +17,135 @@
 ! These are installed on every widget which is a child of our Shell,
 ! and are not installed on popups/transients.
 !
-*globalTranslations:			#override					\n\
-											\
-	Meta ~Ctrl<Key>A:		xfeDoCommand(selectAll)				\n\
-	 Alt ~Ctrl<Key>A:		xfeDoCommand(selectAll)				\n\
-	Meta ~Ctrl<Key>B:		xfeDoCommand(openBookmarks)			\n\
-	 Alt ~Ctrl<Key>B:		xfeDoCommand(openBookmarks)			\n\
-	Meta ~Ctrl<Key>C:		xfeDoCommand(copy)					\n\
-	 Alt ~Ctrl<Key>C:		xfeDoCommand(copy)					\n\
-		Meta ~Ctrl<Key>D:		undefined-key()				\n\
-         Alt ~Ctrl<Key>D:		undefined-key()				\n\
-		Meta ~Ctrl<Key>E:		undefined-key()				\n\
-         Alt ~Ctrl<Key>E:		undefined-key()				\n\
-		Meta ~Ctrl<Key>F:		undefined-key()				\n\
-		 Alt ~Ctrl<Key>F:		undefined-key()				\n\
-		Meta ~Ctrl<Key>G:		undefined-key()				\n\
-		 Alt ~Ctrl<Key>G:		undefined-key()				\n\
-	Meta ~Ctrl<Key>H:		xfeDoCommand(openHistory)			\n\
-	 Alt ~Ctrl<Key>H:		xfeDoCommand(openHistory)			\n\
-		Meta ~Ctrl<Key>I:		undefined-key()				\n\
-		 Alt ~Ctrl<Key>I:		undefined-key()				\n\
-		Meta ~Ctrl<Key>J:		undefined-key()				\n\
-		 Alt ~Ctrl<Key>J:		undefined-key()				\n\
-	Meta ~Ctrl<Key>K:		xfeDoCommand(addBookmark)			\n\
-	 Alt ~Ctrl<Key>K:		xfeDoCommand(addBookmark)			\n\
-		Meta ~Ctrl<Key>L:		undefined-key()				\n\
-		 Alt ~Ctrl<Key>L:		undefined-key()				\n\
-	Meta ~Ctrl<Key>m:		xfeDoCommand(composeMessage)		\n\
-	 Alt ~Ctrl<Key>m:		xfeDoCommand(composeMessage)		\n\
-	Meta ~Ctrl ~Shift<Key>n: xfeDoCommand(openBrowser)			\n\
-	 Alt ~Ctrl ~Shift<Key>n: xfeDoCommand(openBrowser)			\n\
-	Meta ~Ctrl  Shift<Key>n: xfeDoCommand(newBlank)				\n\
-	 Alt ~Ctrl  Shift<Key>n: xfeDoCommand(newBlank)				\n\
-		Meta ~Ctrl<Key>O:		undefined-key()				\n\
-		 Alt ~Ctrl<Key>O:		undefined-key()				\n\
-		Meta ~Ctrl<Key>P:		undefined-key()				\n\
-		 Alt ~Ctrl<Key>P:		undefined-key()				\n\
-	Meta ~Ctrl<Key>Q:		xfeDoCommand(exit)					\n\
-	 Alt ~Ctrl<Key>Q:		xfeDoCommand(exit)					\n\
-		Meta ~Ctrl<Key>R:		undefined-key()				\n\
-		 Alt ~Ctrl<Key>R:		undefined-key()				\n\
-	Meta ~Ctrl<Key>S:		xfeDoCommand(saveAs)				\n\
-	 Alt ~Ctrl<Key>S:		xfeDoCommand(saveAs)				\n\
-		Meta ~Ctrl<Key>T:		undefined-key()				\n\
-		 Alt ~Ctrl<Key>T:		undefined-key()				\n\
-		Meta ~Ctrl<Key>U:		undefined-key()				\n\
-		 Alt ~Ctrl<Key>U:		undefined-key()				\n\
-	Meta ~Ctrl<Key>V:		xfeDoCommand(paste)					\n\
-	 Alt ~Ctrl<Key>V:		xfeDoCommand(paste)					\n\
-	Meta ~Ctrl<Key>W:		xfeDoCommand(close)					\n\
-	 Alt ~Ctrl<Key>W:		xfeDoCommand(close)					\n\
-	Meta ~Ctrl<Key>X:		xfeDoCommand(cut)					\n\
-	 Alt ~Ctrl<Key>X:		xfeDoCommand(cut)					\n\
-	Meta ~Ctrl<Key>Y:		xfeDoCommand(paste)					\n\
-	 Alt ~Ctrl<Key>Y:		xfeDoCommand(paste)					\n\
-		Meta ~Ctrl<Key>Z:		undefined-key()				\n\
-		 Alt ~Ctrl<Key>Z:		undefined-key()				\n\
-											\
- Meta ~Ctrl ~Shift<Key>1:	xfeDoCommand(openOrBringUpBrowser)	\n\
-  Alt ~Ctrl ~Shift<Key>1:	xfeDoCommand(openOrBringUpBrowser)	\n\
- Meta ~Ctrl  Shift<Key>1:	xfeDoCommand(openFolders)			\n\
-  Alt ~Ctrl  Shift<Key>1:	xfeDoCommand(openFolders)			\n\
- Meta ~Ctrl ~Shift<Key>2:	xfeDoCommand(openInbox)				\n\
-  Alt ~Ctrl ~Shift<Key>2:	xfeDoCommand(openInbox)				\n\
- Meta ~Ctrl  Shift<Key>2:	xfeDoCommand(openAddrBook)			\n\
-  Alt ~Ctrl  Shift<Key>2:	xfeDoCommand(openAddrBook)			\n\
-	Meta ~Ctrl<Key>3:		xfeDoCommand(openNewsgroups)		\n\
-	 Alt ~Ctrl<Key>3:		xfeDoCommand(openNewsgroups)		\n\
-	Meta ~Ctrl<Key>4:		xfeDoCommand(openEditor)			\n\
-	 Alt ~Ctrl<Key>4:		xfeDoCommand(openEditor)			\n\
-	Meta ~Ctrl<Key>5:		xfeDoCommand(openConference)		\n\
-	 Alt ~Ctrl<Key>5:		xfeDoCommand(openConference)		\n\
-	Meta ~Ctrl<Key>6:		xfeDoCommand(openCalendar)			\n\
-	 Alt ~Ctrl<Key>6:		xfeDoCommand(openCalendar)			\n\
-	Meta ~Ctrl<Key>7:		xfeDoCommand(openHostOnDemand)		\n\
-	 Alt ~Ctrl<Key>7:		xfeDoCommand(openHostOnDemand)		\n\
-	Meta ~Ctrl<Key>8:		xfeDoCommand(openNetcaster)			\n\
-	 Alt ~Ctrl<Key>8:		xfeDoCommand(openNetcaster)			\n\
-											\
-	~Meta ~Alt ~Ctrl<Key>Prior:		PageUp()					\n\
-	~Meta ~Alt ~Ctrl<Key>Next:		PageDown()					\n\
-	~Meta ~Alt ~Ctrl<Key>osfPageUp:		PageUp()				\n\
-	~Meta ~Alt ~Ctrl<Key>osfPageDown:	PageDown()				\n\
-											\
-	~Meta ~Alt ~Ctrl<Key>SunCopy:   xfeDoCommand(copy)			\n\
-	~Meta ~Alt ~Ctrl<Key>SunPaste:  xfeDoCommand(paste)			\n\
-	~Meta ~Alt ~Ctrl<Key>SunCut:    xfeDoCommand(cut)			\n\
-											\
-	~Meta ~Alt ~Ctrl ~Shift<Key>osfHelp:		xfeDoCommand(manual)	\n
+*globalTranslations:                    #override                             \
+                                                                              \
+     m    ~c <Key>A:            xfeDoCommand(selectAll)                     \n\
+        a ~c <Key>A:            xfeDoCommand(selectAll)                     \n\
+     m    ~c <Key>B:            xfeDoCommand(openBookmarks)                 \n\
+        a ~c <Key>B:            xfeDoCommand(openBookmarks)                 \n\
+     m    ~c <Key>C:            xfeDoCommand(copy)                          \n\
+        a ~c <Key>C:            xfeDoCommand(copy)                          \n\
+     m    ~c <Key>D:                    undefined-key()                     \n\
+        a ~c <Key>D:                    undefined-key()                     \n\
+     m    ~c <Key>E:                    undefined-key()                     \n\
+        a ~c <Key>E:                    undefined-key()                     \n\
+     m    ~c <Key>F:                    undefined-key()                     \n\
+        a ~c <Key>F:                    undefined-key()                     \n\
+     m    ~c <Key>G:                    undefined-key()                     \n\
+        a ~c <Key>G:                    undefined-key()                     \n\
+     m    ~c <Key>H:            xfeDoCommand(openHistory)                   \n\
+        a ~c <Key>H:            xfeDoCommand(openHistory)                   \n\
+     m    ~c <Key>I:                    undefined-key()                     \n\
+        a ~c <Key>I:                    undefined-key()                     \n\
+     m    ~c <Key>J:                    undefined-key()                     \n\
+        a ~c <Key>J:                    undefined-key()                     \n\
+     m    ~c <Key>K:            xfeDoCommand(addBookmark)                   \n\
+        a ~c <Key>K:            xfeDoCommand(addBookmark)                   \n\
+     m    ~c <Key>L:                    undefined-key()                     \n\
+        a ~c <Key>L:                    undefined-key()                     \n\
+     m    ~c <Key>m:            xfeDoCommand(composeMessage)                \n\
+        a ~c <Key>m:            xfeDoCommand(composeMessage)                \n\
+ ~s  m    ~c <Key>n:            xfeDoCommand(openBrowser)                   \n\
+ ~s     a ~c <Key>n:            xfeDoCommand(openBrowser)                   \n\
+  s  m    ~c <Key>n:            xfeDoCommand(newBlank)                      \n\
+  s     a ~c <Key>n:            xfeDoCommand(newBlank)                      \n\
+     m    ~c <Key>O:                    undefined-key()                     \n\
+        a ~c <Key>O:                    undefined-key()                     \n\
+     m    ~c <Key>P:                    undefined-key()                     \n\
+        a ~c <Key>P:                    undefined-key()                     \n\
+     m    ~c <Key>Q:            xfeDoCommand(exit)                          \n\
+        a ~c <Key>Q:            xfeDoCommand(exit)                          \n\
+     m    ~c <Key>R:                    undefined-key()                     \n\
+        a ~c <Key>R:                    undefined-key()                     \n\
+     m    ~c <Key>S:            xfeDoCommand(saveAs)                        \n\
+        a ~c <Key>S:            xfeDoCommand(saveAs)                        \n\
+     m    ~c <Key>T:                    undefined-key()                     \n\
+        a ~c <Key>T:                    undefined-key()                     \n\
+     m    ~c <Key>U:                    undefined-key()                     \n\
+        a ~c <Key>U:                    undefined-key()                     \n\
+     m    ~c <Key>V:            xfeDoCommand(paste)                         \n\
+        a ~c <Key>V:            xfeDoCommand(paste)                         \n\
+     m    ~c <Key>W:            xfeDoCommand(close)                         \n\
+        a ~c <Key>W:            xfeDoCommand(close)                         \n\
+     m    ~c <Key>X:            xfeDoCommand(cut)                           \n\
+        a ~c <Key>X:            xfeDoCommand(cut)                           \n\
+     m    ~c <Key>Y:            xfeDoCommand(paste)                         \n\
+        a ~c <Key>Y:            xfeDoCommand(paste)                         \n\
+     m    ~c <Key>Z:                    undefined-key()                     \n\
+        a ~c <Key>Z:                    undefined-key()                     \n\
+                                                                              \
+ ~s  m    ~c <Key>1:            xfeDoCommand(openOrBringUpBrowser)          \n\
+ ~s     a ~c <Key>1:            xfeDoCommand(openOrBringUpBrowser)          \n\
+  s  m    ~c <Key>1:            xfeDoCommand(openFolders)                   \n\
+  s     a ~c <Key>1:            xfeDoCommand(openFolders)                   \n\
+ ~s  m    ~c <Key>2:            xfeDoCommand(openInbox)                     \n\
+ ~s     a ~c <Key>2:            xfeDoCommand(openInbox)                     \n\
+  s  m    ~c <Key>2:            xfeDoCommand(openAddrBook)                  \n\
+  s     a ~c <Key>2:            xfeDoCommand(openAddrBook)                  \n\
+     m    ~c <Key>3:            xfeDoCommand(openNewsgroups)                \n\
+        a ~c <Key>3:            xfeDoCommand(openNewsgroups)                \n\
+     m    ~c <Key>4:            xfeDoCommand(openEditor)                    \n\
+        a ~c <Key>4:            xfeDoCommand(openEditor)                    \n\
+     m    ~c <Key>5:            xfeDoCommand(openConference)                \n\
+        a ~c <Key>5:            xfeDoCommand(openConference)                \n\
+     m    ~c <Key>6:            xfeDoCommand(openCalendar)                  \n\
+        a ~c <Key>6:            xfeDoCommand(openCalendar)                  \n\
+     m    ~c <Key>7:            xfeDoCommand(openHostOnDemand)              \n\
+        a ~c <Key>7:            xfeDoCommand(openHostOnDemand)              \n\
+     m    ~c <Key>8:            xfeDoCommand(openNetcaster)                 \n\
+        a ~c <Key>8:            xfeDoCommand(openNetcaster)                 \n\
+                                                                              \
+    ~m ~a ~c <Key>Prior:        PageUp()                                    \n\
+    ~m ~a ~c <Key>Next:         PageDown()                                  \n\
+    ~m ~a ~c <Key>osfPageUp:    PageUp()                                    \n\
+    ~m ~a ~c <Key>osfPageDown:  PageDown()                                  \n\
+                                                                              \
+    ~m ~a ~c <Key>SunCopy:      xfeDoCommand(copy)                          \n\
+    ~m ~a ~c <Key>SunPaste:     xfeDoCommand(paste)                         \n\
+    ~m ~a ~c <Key>SunCut:       xfeDoCommand(cut)                           \n\
+                                                                              \
+ ~s ~m ~a ~c <Key>osfHelp:      xfeDoCommand(manual)                        \n
 
 ! These used to be up above.
-!	Meta ~Ctrl<Key>Z:		undo()						\n\
-!	 Alt ~Ctrl<Key>Z:		undo()						\n\
+!    Meta ~Ctrl<Key>Z:        undo()                        \n\
+!     Alt ~Ctrl<Key>Z:        undo()                        \n\
 
 
 ! These keysyms are apparently an R6ism.
-!	~Meta ~Alt ~Ctrl<Key>KP_Prior:		PageUp()				\n\
-!	~Meta ~Alt ~Ctrl<Key>KP_Next:		PageDown()				\n\
+!    ~Meta ~Alt ~Ctrl<Key>KP_Prior:        PageUp()                \n\
+!    ~Meta ~Alt ~Ctrl<Key>KP_Next:        PageDown()                \n\
 
 ! Translations in the Navigator window.
-*browserGlobalTranslations:		#override			\n\
-	Meta ~Ctrl<Key>F:		xfeDoCommand(findInObject)			\n\
-	 Alt ~Ctrl<Key>F:		xfeDoCommand(findInObject)			\n\
-	Meta ~Ctrl<Key>G:		xfeDoCommand(findAgain)				\n\
-	 Alt ~Ctrl<Key>G:		xfeDoCommand(findAgain)				\n\
-    Meta ~Ctrl ~Shift<Key>i: xfeDoCommand(showImages)			\n\
-	 Alt ~Ctrl ~Shift<Key>i: xfeDoCommand(showImages)			\n\
-	Meta ~Ctrl  Shift<Key>i: xfeDoCommand(viewSecurity)			\n\
-	 Alt ~Ctrl  Shift<Key>i: xfeDoCommand(viewSecurity)			\n\
-	Meta ~Ctrl<Key>L:		xfeDoCommand(openPage)				\n\
-	 Alt ~Ctrl<Key>L:		xfeDoCommand(openPage)				\n\
-	Meta ~Ctrl ~Shift<Key>o: xfeDoCommand(openPage)				\n\
-	 Alt ~Ctrl ~Shift<Key>o: xfeDoCommand(openPage)				\n\
-	Meta ~Ctrl  Shift<Key>o: xfeDoCommand(openPageChooseFile)	\n\
-	 Alt ~Ctrl  Shift<Key>o: xfeDoCommand(openPageChooseFile)	\n\
-	Meta ~Ctrl<Key>P:		xfeDoCommand(print)					\n\
-	 Alt ~Ctrl<Key>P:		xfeDoCommand(print)					\n\
-	Meta ~Ctrl<Key>R:		xfeDoCommand(reload)				\n\
-	 Alt ~Ctrl<Key>R:		xfeDoCommand(reload)				\n\
-	Meta ~Ctrl<Key>minus:		xfeDoCommand(decreaseFont)		\n\
-	 Alt ~Ctrl<Key>minus:		xfeDoCommand(decreaseFont)		\n\
- 	Meta ~Ctrl<Key>plus:		xfeDoCommand(increaseFont)		\n\
-	 Alt ~Ctrl<Key>plus:		xfeDoCommand(increaseFont)		\n\
-											\
-	Meta ~Ctrl<Key>osfLeft:		xfeDoCommand(back)				\n\
-	 Alt ~Ctrl<Key>osfLeft:		xfeDoCommand(back)				\n\
-	Meta ~Ctrl<Key>osfRight:	xfeDoCommand(forward)			\n\
-	 Alt ~Ctrl<Key>osfRight:	xfeDoCommand(forward)			\n\
-	          <Key>Escape:		xfeDoCommand(stopLoading)		\n\
-	          <Key>osfCancel:	xfeDoCommand(stopLoading)		\n
+*browserGlobalTranslations:             #override                             \
+     m    ~c <Key>F:            xfeDoCommand(findInObject)                  \n\
+        a ~c <Key>F:            xfeDoCommand(findInObject)                  \n\
+     m    ~c <Key>G:            xfeDoCommand(findAgain)                     \n\
+        a ~c <Key>G:            xfeDoCommand(findAgain)                     \n\
+ ~s  m    ~c <Key>i:            xfeDoCommand(showImages)                    \n\
+ ~s     a ~c <Key>i:            xfeDoCommand(showImages)                    \n\
+  s  m    ~c <Key>i:            xfeDoCommand(viewSecurity)                  \n\
+  s     a ~c <Key>i:            xfeDoCommand(viewSecurity)                  \n\
+     m    ~c <Key>L:            xfeDoCommand(openPage)                      \n\
+        a ~c <Key>L:            xfeDoCommand(openPage)                      \n\
+ ~s  m    ~c <Key>o:            xfeDoCommand(openPage)                      \n\
+ ~s     a ~c <Key>o:            xfeDoCommand(openPage)                      \n\
+  s  m    ~c <Key>o:            xfeDoCommand(openPageChooseFile)            \n\
+  s     a ~c <Key>o:            xfeDoCommand(openPageChooseFile)            \n\
+     m    ~c <Key>P:            xfeDoCommand(print)                         \n\
+        a ~c <Key>P:            xfeDoCommand(print)                         \n\
+     m    ~c <Key>R:            xfeDoCommand(reload)                        \n\
+        a ~c <Key>R:            xfeDoCommand(reload)                        \n\
+     m    ~c <Key>minus:        xfeDoCommand(decreaseFont)                  \n\
+        a ~c <Key>minus:        xfeDoCommand(decreaseFont)                  \n\
+     m    ~c <Key>plus:         xfeDoCommand(increaseFont)                  \n\
+        a ~c <Key>plus:         xfeDoCommand(increaseFont)                  \n\
+                                                                              \
+     m    ~c <Key>osfLeft:      xfeDoCommand(back)                          \n\
+        a ~c <Key>osfLeft:      xfeDoCommand(back)                          \n\
+     m    ~c <Key>osfRight:     xfeDoCommand(forward)                       \n\
+        a ~c <Key>osfRight:     xfeDoCommand(forward)                       \n\
+             <Key>Escape:       xfeDoCommand(stopLoading)                   \n\
+             <Key>osfCancel:    xfeDoCommand(stopLoading)                   \n
 
 ! Translations in the Mail & News window.
 ! Things here override the global translations (which are loaded first.)
@@ -167,274 +167,271 @@
 ! Alt+Shift arrow keys select previous/next unread.
 ! Meta+Shift arrow keys select previous/next marked.
 !
-*mailnewsGlobalTranslations:		#override			\n\
-	<Btn3Down>:				xfeDoPopup()					\n\
-	Meta ~Ctrl<Key>D:		xfeDoCommand(deleteFolder)				\n\
-	 Alt ~Ctrl<Key>D:		xfeDoCommand(deleteFolder)				\n\
-	Meta ~Ctrl<Key>H:		xfeDoCommand(deliverQueuedMessages)		\n\
-	 Alt ~Ctrl<Key>H:		xfeDoCommand(deliverQueuedMessages)		\n\
-	Meta ~Ctrl<Key>K:		xfeDoCommand(compressFolders)		\n\
-	 Alt ~Ctrl<Key>K:		xfeDoCommand(compressFolders)		\n\
-	Meta ~Ctrl Shift <Key>f:	xfeDoCommand(search)	   	\n\
-	 Alt ~Ctrl Shift <Key>f:	xfeDoCommand(search)	   	\n\
-	Meta ~Ctrl Shift<Key>i: xfeDoCommand(viewSecurity)			\n\
-	 Alt ~Ctrl Shift<Key>i: xfeDoCommand(viewSecurity)			\n\
-	Meta ~Ctrl<Key>O:		xfeDoCommand(openSelected)			\n\
-	 Alt ~Ctrl<Key>O:		xfeDoCommand(openSelected)			\n\
- ~Meta ~Alt ~Ctrl ~Shift<Key>Return:     xfeDoCommand(openSelected) \n\
- ~Meta ~Alt ~Ctrl ~Shift<Key>osfActivate:xfeDoCommand(openSelected) \n\
-	Meta ~Ctrl<Key>T:		xfeDoCommand(getNewMessages)	\n\
-	 Alt ~Ctrl<Key>T:		xfeDoCommand(getNewMessages)	\n\
-	Meta ~Ctrl<Key>Z:		xfeDoCommand(undo)					\n\
-         <Key>Escape:		xfeDoCommand(stopLoading)		\n
+*mailnewsGlobalTranslations:            #override                             \
+             <Btn3Down>:        xfeDoPopup()                                \n\
+     m    ~c <Key>D:            xfeDoCommand(deleteFolder)                  \n\
+        a ~c <Key>D:            xfeDoCommand(deleteFolder)                  \n\
+     m    ~c <Key>H:            xfeDoCommand(deliverQueuedMessages)         \n\
+        a ~c <Key>H:            xfeDoCommand(deliverQueuedMessages)         \n\
+     m    ~c <Key>K:            xfeDoCommand(compressFolders)               \n\
+        a ~c <Key>K:            xfeDoCommand(compressFolders)               \n\
+  s  m    ~c <Key>f:            xfeDoCommand(search)                        \n\
+  s     a ~c <Key>f:            xfeDoCommand(search)                        \n\
+  s  m    ~c <Key>i:            xfeDoCommand(viewSecurity)                  \n\
+  s     a ~c <Key>i:            xfeDoCommand(viewSecurity)                  \n\
+     m    ~c <Key>O:            xfeDoCommand(openSelected)                  \n\
+        a ~c <Key>O:            xfeDoCommand(openSelected)                  \n\
+ ~s ~m ~a ~c <Key>Return:       xfeDoCommand(openSelected)                  \n\
+ ~s ~m ~a ~c <Key>osfActivate:  xfeDoCommand(openSelected)                  \n\
+     m    ~c <Key>T:            xfeDoCommand(getNewMessages)                \n\
+        a ~c <Key>T:            xfeDoCommand(getNewMessages)                \n\
+     m    ~c <Key>Z:            xfeDoCommand(undo)                          \n\
+             <Key>Escape:       xfeDoCommand(stopLoading)                   \n
 
 ! Translations in the MailNews message and threads windows
 ! These override globalTranslations.
-*messagewinGlobalTranslations:		#override			   	\n\
-	<Btn3Down>:			xfeDoPopup()					\n\
-	Meta ~Ctrl<Key>D:	xfeDoCommand(deleteMessage)				\n\
-	 Alt ~Ctrl<Key>D:	xfeDoCommand(deleteMessage)				\n\
-	Meta ~Ctrl Shift<Key>i: xfeDoCommand(viewSecurity)			\n\
-	 Alt ~Ctrl Shift<Key>i: xfeDoCommand(viewSecurity)			\n\
-	Meta ~Ctrl<Key>F:		xfeDoCommand(findInObject)			\n\
-	 Alt ~Ctrl<Key>F:		xfeDoCommand(findInObject)			\n\
-	Meta ~Ctrl<Key>G:		xfeDoCommand(findAgain)				\n\
-	 Alt ~Ctrl<Key>G:		xfeDoCommand(findAgain)				\n\
-	Meta ~Ctrl<Key>K:		xfeDoCommand(compressFolders)		\n\
-	 Alt ~Ctrl<Key>K:		xfeDoCommand(compressFolders)		\n\
-	Meta ~Ctrl<Key>L:		xfeDoCommand(forwardMessage)       	\n\
-	 Alt ~Ctrl<Key>L:		xfeDoCommand(forwardMessage)	   	\n\
-	Meta ~Ctrl<Key>O:		xfeDoCommand(openSelected)			\n\
-	 Alt ~Ctrl<Key>O:		xfeDoCommand(openSelected)			\n\
-	Meta ~Ctrl<Key>P:		xfeDoCommand(print)					\n\
-	 Alt ~Ctrl<Key>P:		xfeDoCommand(print)					\n\
-	Meta ~Ctrl ~Shift <Key>r:	xfeDoCommand(replyToSender)	   	\n\
-	 Alt ~Ctrl ~Shift <Key>r:	xfeDoCommand(replyToSender)	   	\n\
-	Meta ~Ctrl Shift <Key>r:	xfeDoCommand(replyToAll)	   	\n\
-	 Alt ~Ctrl Shift <Key>r:	xfeDoCommand(replyToAll)	   	\n\
-	Meta ~Ctrl<Key>S:		xfeDoCommand(saveMessagesAs)	   	\n\
-	 Alt ~Ctrl<Key>S:		xfeDoCommand(saveMessagesAs)	   	\n\
-	Meta ~Ctrl<Key>T:		xfeDoCommand(getNewMessages)	   	\n\
-	 Alt ~Ctrl<Key>T:		xfeDoCommand(getNewMessages)	   	\n\
-	Meta ~Ctrl<Key>Y:		xfeDoCommand(redo)					\n\
-	 Alt ~Ctrl<Key>Y:		xfeDoCommand(redo)					\n\
-	Meta ~Ctrl<Key>Z:		xfeDoCommand(undo)					\n\
-	 Alt ~Ctrl<Key>Z:		xfeDoCommand(undo)					\n\
-									   	\
-	Meta ~Ctrl ~Shift <Key>Up:	xfeDoCommand(previousMessage)	   	\n\
-	 Alt ~Ctrl ~Shift <Key>Up:	xfeDoCommand(previousMessage)		\n\
-	Meta ~Ctrl ~Shift <Key>osfUp:	xfeDoCommand(previousMessage)		\n\
-	 Alt ~Ctrl ~Shift <Key>osfUp:	xfeDoCommand(previousMessage)		\n\
-	Meta ~Ctrl ~Shift <Key>Down:	xfeDoCommand(nextMessage)		\n\
-	 Alt ~Ctrl ~Shift <Key>Down:	xfeDoCommand(nextMessage)		\n\
-	Meta ~Ctrl ~Shift <Key>osfDown:	xfeDoCommand(nextMessage)		\n\
-	 Alt ~Ctrl ~Shift <Key>osfDown:	xfeDoCommand(nextMessage)		\n\
-	Meta ~Ctrl ~Shift <Key>[:	xfeDoCommand(back)		\n\
-	 Alt ~Ctrl ~Shift <Key>[:	xfeDoCommand(back)		\n\
-	Meta ~Ctrl ~Shift <Key>]:	xfeDoCommand(forward)		\n\
-	 Alt ~Ctrl ~Shift <Key>]:	xfeDoCommand(forward)		\n\
-										\
-	Meta ~Ctrl Shift <Key>Up:	xfeDoCommand(previousUnreadMessage)	\n\
-	 Alt ~Ctrl Shift <Key>Up:	xfeDoCommand(previousUnreadMessage)	\n\
-	Meta ~Ctrl Shift <Key>osfUp:	xfeDoCommand(previousUnreadMessage)	\n\
-	 Alt ~Ctrl Shift <Key>osfUp:	xfeDoCommand(previousUnreadMessage)	\n\
-	Meta ~Ctrl Shift <Key>Down:	xfeDoCommand(nextUnreadMessage)		\n\
-	 Alt ~Ctrl Shift <Key>Down:	xfeDoCommand(nextUnreadMessage)		\n\
-	Meta ~Ctrl Shift <Key>osfDown:	xfeDoCommand(nextUnreadMessage)		\n\
-	 Alt ~Ctrl Shift <Key>osfDown:	xfeDoCommand(nextUnreadMessage)		\n\
-										\
-	Ctrl Shift <Key>Up:		xfeDoCommand(previousFlaggedMessage)	\n\
-	Ctrl Shift <Key>osfUp:		xfeDoCommand(previousFlaggedMessage)	\n\
-	Ctrl Shift <Key>Down:		xfeDoCommand(nextFlaggedMessage)	\n\
-	Ctrl Shift <Key>osfDown:	xfeDoCommand(nextFlaggedMessage)	\n\
-										\
- ~Meta ~Alt ~Ctrl ~Shift<Key>Return:             xfeDoCommand(openSelected)              \n\
- ~Meta ~Alt ~Ctrl ~Shift<Key>osfActivate:                xfeDoCommand(openSelected)              \n\
-										\
-   ~Meta ~Alt ~Ctrl Shift<Key>8:		xfeDoCommand(expandAll)			\n\
-   ~Meta ~Alt ~Ctrl <Key>plus:			xfeDoCommand(expand)			\n\
-   ~Meta ~Alt ~Ctrl ~Shift<Key>slash:		xfeDoCommand(collapseAll)		\n\
-   ~Meta ~Alt ~Ctrl ~Shift<Key>minus:		xfeDoCommand(collapse)			\n\
-										\
-   ~Meta ~Alt <Key>M:			xfeDoCommand(markMessageRead) \n\
-   ~Meta ~Alt <Key>U:			xfeDoCommand(markMessageUnread) \n\
-   ~Meta ~Alt <Key>T:			xfeDoCommand(markThreadRead) \n\
-   ~Meta ~Alt <Key>G:			xfeDoCommand(markAllMessagesRead) \n\
-   ~Meta ~Alt <Key>D:			xfeDoCommand(markMessageByDate) \n\
-   ~Meta ~Alt <Key>L:			xfeDoCommand(markMessageForLater) \n\
-   ~Meta ~Alt <Key>K:			xfeDoCommand(ignoreThread) \n\
-   ~Meta ~Alt <Key>W:			xfeDoCommand(watchThread) \n\
-    Alt ~Ctrl ~Shift <Key>BackSpace:  	xfeDoCommand(deleteMessage) \n\
-    Meta ~Ctrl ~Shift <Key>BackSpace:  	xfeDoCommand(deleteMessage)  \n\
-    Alt ~Ctrl ~Shift <Key>osfBackSpace:	xfeDoCommand(deleteMessage)   \n\
-    Meta ~Ctrl ~Shift <Key>osfBackSpace:	xfeDoCommand(deleteMessage) \n
+*messagewinGlobalTranslations:          #override                             \
+             <Btn3Down>:        xfeDoPopup()                                \n\
+     m    ~c <Key>D:            xfeDoCommand(deleteMessage)                 \n\
+        a ~c <Key>D:            xfeDoCommand(deleteMessage)                 \n\
+  s  m    ~c <Key>i:            xfeDoCommand(viewSecurity)                  \n\
+  s     a ~c <Key>i:            xfeDoCommand(viewSecurity)                  \n\
+     m    ~c <Key>F:            xfeDoCommand(findInObject)                  \n\
+        a ~c <Key>F:            xfeDoCommand(findInObject)                  \n\
+     m    ~c <Key>G:            xfeDoCommand(findAgain)                     \n\
+        a ~c <Key>G:            xfeDoCommand(findAgain)                     \n\
+     m    ~c <Key>K:            xfeDoCommand(compressFolders)               \n\
+        a ~c <Key>K:            xfeDoCommand(compressFolders)               \n\
+     m    ~c <Key>L:            xfeDoCommand(forwardMessage)                \n\
+        a ~c <Key>L:            xfeDoCommand(forwardMessage)                \n\
+     m    ~c <Key>O:            xfeDoCommand(openSelected)                  \n\
+        a ~c <Key>O:            xfeDoCommand(openSelected)                  \n\
+     m    ~c <Key>P:            xfeDoCommand(print)                         \n\
+        a ~c <Key>P:            xfeDoCommand(print)                         \n\
+ ~s  m    ~c <Key>r:            xfeDoCommand(replyToSender)                 \n\
+ ~s     a ~c <Key>r:            xfeDoCommand(replyToSender)                 \n\
+  s  m    ~c <Key>r:            xfeDoCommand(replyToAll)                    \n\
+  s     a ~c <Key>r:            xfeDoCommand(replyToAll)                    \n\
+     m    ~c <Key>S:            xfeDoCommand(saveMessagesAs)                \n\
+        a ~c <Key>S:            xfeDoCommand(saveMessagesAs)                \n\
+     m    ~c <Key>T:            xfeDoCommand(getNewMessages)                \n\
+        a ~c <Key>T:            xfeDoCommand(getNewMessages)                \n\
+     m    ~c <Key>Y:            xfeDoCommand(redo)                          \n\
+        a ~c <Key>Y:            xfeDoCommand(redo)                          \n\
+     m    ~c <Key>Z:            xfeDoCommand(undo)                          \n\
+        a ~c <Key>Z:            xfeDoCommand(undo)                          \n\
+                                                                              \
+ ~s  m    ~c <Key>Up:           xfeDoCommand(previousMessage)               \n\
+ ~s     a ~c <Key>Up:           xfeDoCommand(previousMessage)               \n\
+ ~s  m    ~c <Key>osfUp:        xfeDoCommand(previousMessage)               \n\
+ ~s     a ~c <Key>osfUp:        xfeDoCommand(previousMessage)               \n\
+ ~s  m    ~c <Key>Down:         xfeDoCommand(nextMessage)                   \n\
+ ~s     a ~c <Key>Down:         xfeDoCommand(nextMessage)                   \n\
+ ~s  m    ~c <Key>osfDown:      xfeDoCommand(nextMessage)                   \n\
+ ~s     a ~c <Key>osfDown:      xfeDoCommand(nextMessage)                   \n\
+ ~s  m    ~c <Key>[:            xfeDoCommand(back)                          \n\
+ ~s     a ~c <Key>[:            xfeDoCommand(back)                          \n\
+ ~s  m    ~c <Key>]:            xfeDoCommand(forward)                       \n\
+ ~s     a ~c <Key>]:            xfeDoCommand(forward)                       \n\
+                                                                              \
+  s  m    ~c <Key>Up:           xfeDoCommand(previousUnreadMessage)         \n\
+  s     a ~c <Key>Up:           xfeDoCommand(previousUnreadMessage)         \n\
+  s  m    ~c <Key>osfUp:        xfeDoCommand(previousUnreadMessage)         \n\
+  s     a ~c <Key>osfUp:        xfeDoCommand(previousUnreadMessage)         \n\
+  s  m    ~c <Key>Down:         xfeDoCommand(nextUnreadMessage)             \n\
+  s     a ~c <Key>Down:         xfeDoCommand(nextUnreadMessage)             \n\
+  s  m    ~c <Key>osfDown:      xfeDoCommand(nextUnreadMessage)             \n\
+  s     a ~c <Key>osfDown:      xfeDoCommand(nextUnreadMessage)             \n\
+                                                                              \
+  s        c <Key>Up:           xfeDoCommand(previousFlaggedMessage)        \n\
+  s        c <Key>osfUp:        xfeDoCommand(previousFlaggedMessage)        \n\
+  s        c <Key>Down:         xfeDoCommand(nextFlaggedMessage)            \n\
+  s        c <Key>osfDown:      xfeDoCommand(nextFlaggedMessage)            \n\
+                                                                              \
+ ~s ~m ~a ~c <Key>Return:       xfeDoCommand(openSelected)                  \n\
+ ~s ~m ~a ~c <Key>osfActivate:  xfeDoCommand(openSelected)                  \n\
+                                                                              \
+  s ~m ~a ~c <Key>8:            xfeDoCommand(expandAll)                     \n\
+    ~m ~a ~c <Key>plus:         xfeDoCommand(expand)                        \n\
+ ~s ~m ~a ~c <Key>slash:        xfeDoCommand(collapseAll)                   \n\
+ ~s ~m ~a ~c <Key>minus:        xfeDoCommand(collapse)                      \n\
+                                                                              \
+    ~m ~a    <Key>M:            xfeDoCommand(markMessageRead)               \n\
+    ~m ~a    <Key>U:            xfeDoCommand(markMessageUnread)             \n\
+    ~m ~a    <Key>T:            xfeDoCommand(markThreadRead)                \n\
+    ~m ~a    <Key>G:            xfeDoCommand(markAllMessagesRead)           \n\
+    ~m ~a    <Key>D:            xfeDoCommand(markMessageByDate)             \n\
+    ~m ~a    <Key>L:            xfeDoCommand(markMessageForLater)           \n\
+    ~m ~a    <Key>K:            xfeDoCommand(ignoreThread)                  \n\
+    ~m ~a    <Key>W:            xfeDoCommand(watchThread)                   \n\
+ ~s     a ~c <Key>BackSpace:    xfeDoCommand(deleteMessage)                 \n\
+ ~s  m    ~c <Key>BackSpace:    xfeDoCommand(deleteMessage)                 \n\
+ ~s     a ~c <Key>osfBackSpace: xfeDoCommand(deleteMessage)                 \n\
+ ~s  m    ~c <Key>osfBackSpace: xfeDoCommand(deleteMessage)                 \n
 
 
 
 ! Translations in the MailCompose window.
 ! These are used instead of globalTranslations.
 !
-*mailcomposeGlobalTranslations:		#override			\n\
-									\
-	<Btn3Down>:			xfeDoPopup()			\n\
-	Meta ~Ctrl<Key>D:		xfeDoCommand(delete)				\n\
-	 Alt ~Ctrl<Key>D:		xfeDoCommand(delete)				\n\
-	Meta ~Ctrl  Shift<Key>i: xfeDoCommand(viewSecurity)			\n\
-	 Alt ~Ctrl  Shift<Key>i: xfeDoCommand(viewSecurity)			\n\
-	Meta ~Ctrl<Key>Return:		xfeDoCommand(sendMessageNow)	\n\
-	 Alt ~Ctrl<Key>Return:		xfeDoCommand(sendMessageNow)	\n
+*mailcomposeGlobalTranslations:         #override                             \
+                                                                              \
+             <Btn3Down>:        xfeDoPopup()                                \n\
+     m    ~c <Key>D:            xfeDoCommand(delete)                        \n\
+        a ~c <Key>D:            xfeDoCommand(delete)                        \n\
+  s  m    ~c <Key>i:            xfeDoCommand(viewSecurity)                  \n\
+  s     a ~c <Key>i:            xfeDoCommand(viewSecurity)                  \n\
+     m    ~c <Key>Return:       xfeDoCommand(sendMessageNow)                \n\
+        a ~c <Key>Return:       xfeDoCommand(sendMessageNow)                \n
 
 ! Translations in the AddressOutliner portion of the compose window:
 !
 ! TraverseTranslations are for the recipient text field:
-*addressOutlinerTraverseTranslations:	#override	\n\
-:~Ctrl ~Shift <Key>osfDelete: 	TableTraverse(DELETE)	\n\
-:~Ctrl ~Shift <Key>Delete:	TableTraverse(DELETE)	\n\
-:~Ctrl ~Shift <Key>BackSpace:  TableTraverse(BACKSPACE)        \n\
-:~Ctrl ~Shift <Key>osfBackSpace:       TableTraverse(BACKSPACE)        \n\
-~Ctrl ~Shift <Key>osfRight:	TableTraverse(RIGHT)	\n\
-~Ctrl ~Shift <Key>osfLeft:	TableTraverse(LEFT)	\n\
-<Key>osfInsert:			TableTraverse(INSERT)	\n\
-~Ctrl ~Shift <Key>Insert:	TableTraverse(INSERT)	\n\
-~Ctrl ~Shift <Key>osfBeginLine: TableTraverse(HOME)	\n\
-~Ctrl ~Shift <Key>Home:		TableTraverse(HOME)	\n\
-~Ctrl ~Shift <Key>End:		TableTraverse(END)	\n\
-~Ctrl ~Shift <Key>osfEndLine: 	TableTraverse(END)	\n\
-~Ctrl ~Shift <Key>osfUp:       	TableTraverse(UP)	\n\
-~Ctrl ~Shift <Key>osfDown:      TableTraverse(DOWN)	\n\
-~Ctrl ~Shift <Key>Tab:          TableTraverse(NEXT)	\n\
-~Ctrl Shift <Key>Tab:          	TableTraverse(PREVIOUS)	\n
+*addressOutlinerTraverseTranslations:   #override                             \
+:~s       ~c <Key>osfDelete:    TableTraverse(DELETE)                       \n\
+:~s       ~c <Key>Delete:       TableTraverse(DELETE)                       \n\
+:~s       ~c <Key>BackSpace:    TableTraverse(BACKSPACE)                    \n\
+:~s       ~c <Key>osfBackSpace: TableTraverse(BACKSPACE)                    \n\
+ ~s       ~c <Key>osfRight:     TableTraverse(RIGHT)                        \n\
+ ~s       ~c <Key>osfLeft:      TableTraverse(LEFT)                         \n\
+             <Key>osfInsert:    TableTraverse(INSERT)                       \n\
+ ~s       ~c <Key>Insert:       TableTraverse(INSERT)                       \n\
+ ~s       ~c <Key>osfBeginLine: TableTraverse(HOME)                         \n\
+ ~s       ~c <Key>Home:         TableTraverse(HOME)                         \n\
+ ~s       ~c <Key>End:          TableTraverse(END)                          \n\
+ ~s       ~c <Key>osfEndLine:   TableTraverse(END)                          \n\
+ ~s       ~c <Key>osfUp:        TableTraverse(UP)                           \n\
+ ~s       ~c <Key>osfDown:      TableTraverse(DOWN)                         \n\
+ ~s       ~c <Key>Tab:          TableTraverse(NEXT)                         \n\
+  s       ~c <Key>Tab:          TableTraverse(PREVIOUS)                     \n
 
 ! KeyTranslations are for the To/Cc/etc. field:
-*addressOutlinerKeyTranslations:		#override	\n\
- ~Ctrl ~Shift <Key>osfRight:	TableTraverse(RIGHT)	\n\
-~Ctrl ~Shift <Key>osfLeft:	TableTraverse(LEFT)	\n\
-~Ctrl ~Shift <Key>osfDelete:	TableTraverse(DELETE)	\n\
-~Ctrl ~Shift <Key>Delete:	TableTraverse(DELETE)	\n\
-<Key>osfInsert:			TableTraverse(INSERT)	\n\
-~Ctrl ~Shift <Key>Insert:	TableTraverse(INSERT)	\n\
-~Ctrl ~Shift <Key>osfBeginLine:	TableTraverse(HOME)	\n\
-~Ctrl ~Shift <Key>Home:		TableTraverse(HOME)	\n\
-~Ctrl ~Shift <Key>End:		TableTraverse(END)	\n\
-~Ctrl ~Shift <Key>osfEndLine:	TableTraverse(END)	\n\
-~Ctrl ~Shift <Key>osfUp:	TableTraverse(UP)	\n\
-~Ctrl ~Shift <Key>osfDown:	TableTraverse(DOWN)	\n\
-~Ctrl ~Shift <Key>Tab:		TableTraverse(NEXT)	\n\
-~Ctrl Shift <Key>Tab:		TableTraverse(PREVIOUS)	\n\
-~Ctrl ~Shift <Key>t:		KeyIn(To:)		\n\
-~Ctrl Shift <Key>t:		KeyIn(To:)		\n\
-~Ctrl ~Shift <Key>c:		KeyIn(Cc:)		\n\
-~Ctrl Shift <Key>c:		KeyIn(Cc:)		\n\
-~Ctrl ~Shift <Key>b:		KeyIn(Bcc:)		\n\
-~Ctrl Shift <Key>b:		KeyIn(Bcc:)		\n\
-~Ctrl ~Shift <Key>n:		KeyIn(Newsgroup:)	\n\
-~Ctrl Shift <Key>n:		KeyIn(Newsgroup:)	\n\
-~Ctrl ~Shift <Key>f:		KeyIn(Followup To:)	\n\
-~Ctrl Shift <Key>f:		KeyIn(Followup To:)	\n\
-~Ctrl ~Shift <Key>r:		KeyIn(Reply To:)	\n\
-~Ctrl Shift <Key>r:		KeyIn(Reply To:)	\n
+*addressOutlinerKeyTranslations:        #override                             \
+ ~s       ~c <Key>osfRight:     TableTraverse(RIGHT)                        \n\
+ ~s       ~c <Key>osfLeft:      TableTraverse(LEFT)                         \n\
+ ~s       ~c <Key>osfDelete:    TableTraverse(DELETE)                       \n\
+ ~s       ~c <Key>Delete:       TableTraverse(DELETE)                       \n\
+             <Key>osfInsert:    TableTraverse(INSERT)                       \n\
+ ~s       ~c <Key>Insert:       TableTraverse(INSERT)                       \n\
+ ~s       ~c <Key>osfBeginLine: TableTraverse(HOME)                         \n\
+ ~s       ~c <Key>Home:         TableTraverse(HOME)                         \n\
+ ~s       ~c <Key>End:          TableTraverse(END)                          \n\
+ ~s       ~c <Key>osfEndLine:   TableTraverse(END)                          \n\
+ ~s       ~c <Key>osfUp:        TableTraverse(UP)                           \n\
+ ~s       ~c <Key>osfDown:      TableTraverse(DOWN)                         \n\
+ ~s       ~c <Key>Tab:          TableTraverse(NEXT)                         \n\
+  s       ~c <Key>Tab:          TableTraverse(PREVIOUS)                     \n\
+ ~s       ~c <Key>t:            KeyIn(To:)                                  \n\
+  s       ~c <Key>t:            KeyIn(To:)                                  \n\
+ ~s       ~c <Key>c:            KeyIn(Cc:)                                  \n\
+  s       ~c <Key>c:            KeyIn(Cc:)                                  \n\
+ ~s       ~c <Key>b:            KeyIn(Bcc:)                                 \n\
+  s       ~c <Key>b:            KeyIn(Bcc:)                                 \n\
+ ~s       ~c <Key>n:            KeyIn(Newsgroup:)                           \n\
+  s       ~c <Key>n:            KeyIn(Newsgroup:)                           \n\
+ ~s       ~c <Key>f:            KeyIn(Followup To:)                         \n\
+  s       ~c <Key>f:            KeyIn(Followup To:)                         \n\
+ ~s       ~c <Key>r:            KeyIn(Reply To:)                            \n\
+  s       ~c <Key>r:            KeyIn(Reply To:)                            \n
 
 ! Translations in the MailNews Search window.
 ! These are used instead of globalTranslations.
 !
-*mnsearchGlobalTranslations:          #override                       \n\
-      <Btn3Down>:                     xfeDoPopup()                    \n\
-      Meta ~Ctrl<Key>D:               xfeDoCommand(deleteMessage)     \n\
-       Alt ~Ctrl<Key>D:               xfeDoCommand(deleteMessage)     \n
+*mnsearchGlobalTranslations:            #override                             \
+             <Btn3Down>:        xfeDoPopup()                                \n\
+     m    ~c <Key>D:            xfeDoCommand(deleteMessage)                 \n\
+        a ~c <Key>D:            xfeDoCommand(deleteMessage)                 \n
 
 ! Translations in the Bookmarks and Adderssbook window.
 ! These translations are used instead of globalTranslations.
 ! None of the key *semantics* of globalTranslations are changed here,
 ! only the actions bound.  (And inapplicable actions are not present.)
 !
-*bmGlobalTranslations:			#override			\n\
-	<Btn3Down>:				xfeDoPopup()					\n\
-   ~Meta ~Alt ~Ctrl<Key>space:	PageDown()					\n\
-	Meta ~Ctrl<Key>D:		xfeDoCommand(delete)			\n\
-	 Alt ~Ctrl<Key>D:		xfeDoCommand(delete)			\n\
-	Meta ~Ctrl<Key>F:		xfeDoCommand(findInObject)		\n\
-	 Alt ~Ctrl<Key>F:		xfeDoCommand(findInObject)		\n\
-	Meta ~Ctrl<Key>G:		xfeDoCommand(findAgain)			\n\
-	 Alt ~Ctrl<Key>G:		xfeDoCommand(findAgain)			\n\
-	Meta ~Ctrl<Key>O:		xfeDoCommand(openSelected)			\n\
-	 Alt ~Ctrl<Key>O:		xfeDoCommand(openSelected)			\n\
-~Meta ~Alt ~Ctrl  Shift <Key>Up:   xfeDoCommand(moveBookmarkUp) \n\
-~Meta ~Alt ~Ctrl  Shift <Key>Down: xfeDoCommand(moveBookmarkDown) \n\
-~Meta ~Alt ~Ctrl  Shift <Key>osfUp:   xfeDoCommand(moveBookmarkUp) \n\
-~Meta ~Alt ~Ctrl  Shift <Key>osfDown: xfeDoCommand(moveBookmarkDown) \n\
-~Meta ~Alt ~Ctrl ~Shift <Key>Up:        LineUp()	\n\
-~Meta ~Alt ~Ctrl ~Shift <Key>Down:      LineDown()	\n\
-~Meta ~Alt ~Ctrl ~Shift <Key>osfUp:        LineUp()	\n\
-~Meta ~Alt ~Ctrl ~Shift <Key>osfDown:      LineDown()	\n\
-	~Meta ~Alt ~Ctrl<Key>Prior:		PageUp()					\n\
-	~Meta ~Alt ~Ctrl<Key>Next:		PageDown()					\n\
-	~Meta ~Alt ~Ctrl<Key>osfPageUp:		PageUp()				\n\
-	~Meta ~Alt ~Ctrl<Key>osfPageDown:	PageDown()				\n
+*bmGlobalTranslations:                  #override                             \
+             <Btn3Down>:        xfeDoPopup()                                \n\
+    ~m ~a ~c <Key>space:        PageDown()                                  \n\
+     m    ~c <Key>D:            xfeDoCommand(delete)                        \n\
+        a ~c <Key>D:            xfeDoCommand(delete)                        \n\
+     m    ~c <Key>F:            xfeDoCommand(findInObject)                  \n\
+        a ~c <Key>F:            xfeDoCommand(findInObject)                  \n\
+     m    ~c <Key>G:            xfeDoCommand(findAgain)                     \n\
+        a ~c <Key>G:            xfeDoCommand(findAgain)                     \n\
+     m    ~c <Key>O:            xfeDoCommand(openSelected)                  \n\
+        a ~c <Key>O:            xfeDoCommand(openSelected)                  \n\
+  s ~m ~a ~c <Key>Up:           xfeDoCommand(moveBookmarkUp)                \n\
+  s ~m ~a ~c <Key>Down:         xfeDoCommand(moveBookmarkDown)              \n\
+  s ~m ~a ~c <Key>osfUp:        xfeDoCommand(moveBookmarkUp)                \n\
+  s ~m ~a ~c <Key>osfDown:      xfeDoCommand(moveBookmarkDown)              \n\
+ ~s ~m ~a ~c <Key>Up:           LineUp()                                    \n\
+ ~s ~m ~a ~c <Key>Down:         LineDown()                                  \n\
+ ~s ~m ~a ~c <Key>osfUp:        LineUp()                                    \n\
+ ~s ~m ~a ~c <Key>osfDown:      LineDown()                                  \n\
+    ~m ~a ~c <Key>Prior:        PageUp()                                    \n\
+    ~m ~a ~c <Key>Next:         PageDown()                                  \n\
+    ~m ~a ~c <Key>osfPageUp:    PageUp()                                    \n\
+    ~m ~a ~c <Key>osfPageDown:  PageDown()                                  \n
 
-*abGlobalTranslations:			#override			\n\
-	<Btn3Down>:				xfeDoPopup()			\n\
-	Meta ~Ctrl<Key>D:		xfeDoCommand(abDeleteEntry)	\n\
-	 Alt ~Ctrl<Key>D:		xfeDoCommand(abDeleteEntry)	\n\
-	Meta ~Ctrl<Key>Y:		xfeDoCommand(redo)					\n\
-	 Alt ~Ctrl<Key>Y:		xfeDoCommand(redo)					\n\
-	Meta ~Ctrl<Key>Z:		xfeDoCommand(undo)					\n\
-	 Alt ~Ctrl<Key>Z:		xfeDoCommand(undo)					\n
+*abGlobalTranslations:                  #override                             \
+             <Btn3Down>:        xfeDoPopup()                                \n\
+     m    ~c <Key>D:            xfeDoCommand(abDeleteEntry)                 \n\
+        a ~c <Key>D:            xfeDoCommand(abDeleteEntry)                 \n\
+     m    ~c <Key>Y:            xfeDoCommand(redo)                          \n\
+        a ~c <Key>Y:            xfeDoCommand(redo)                          \n\
+     m    ~c <Key>Z:            xfeDoCommand(undo)                          \n\
+        a ~c <Key>Z:            xfeDoCommand(undo)                          \n
 
-! Translations in the textfield portion of the mailing list view 
+! Translations in the textfield portion of the mailing list view
 !
 ! TraverseTranslations are for the text field:
-*abmlistTraverseTranslations:	#override	\n\
-~Ctrl ~Shift <Key>BackSpace:  TableTraverse(BACKSPACE)        \n\
-~Ctrl ~Shift <Key>Tab:          TableTraverse(NEXT)	\n\
-~Ctrl Shift <Key>Tab:          	TableTraverse(PREVIOUS)	\n
+*abmlistTraverseTranslations:           #override                             \
+ ~s       ~c <Key>BackSpace:    TableTraverse(BACKSPACE)                    \n\
+ ~s       ~c <Key>Tab:          TableTraverse(NEXT)                         \n\
+  s       ~c <Key>Tab:          TableTraverse(PREVIOUS)                     \n
 
 ! Translations in the History window.
 ! These translations are used instead of globalTranslations.
 ! None of the key *semantics* of globalTranslations are changed here,
 ! only the actions bound.  (And inapplicable actions are not present.)
 !
-!	<Btn3Down>:			xfeDoPopup()			\n\
-*ghGlobalTranslations:			#override			\n\
- Meta ~Ctrl<Key>D:		xfeDoCommand(delete)	\n\
-  Alt ~Ctrl<Key>D:		xfeDoCommand(delete)	\n\
- Meta ~Ctrl<Key>O:		xfeDoCommand(openSelected)			\n\
-  Alt ~Ctrl<Key>O:		xfeDoCommand(openSelected)			\n\
-~Meta ~Alt ~Ctrl<Key>space:	PageDown()		\n\
-~Meta ~Alt ~Ctrl ~Shift <Key>Up:        LineUp()	\n\
-~Meta ~Alt ~Ctrl ~Shift <Key>Down:      LineDown()	\n\
-~Meta ~Alt ~Ctrl ~Shift <Key>osfUp:        LineUp()	\n\
-~Meta ~Alt ~Ctrl ~Shift <Key>osfDown:      LineDown()	\n\
-	~Meta ~Alt ~Ctrl<Key>Prior:		PageUp()					\n\
-	~Meta ~Alt ~Ctrl<Key>Next:		PageDown()					\n\
-	~Meta ~Alt ~Ctrl<Key>osfPageUp:		PageUp()				\n\
-	~Meta ~Alt ~Ctrl<Key>osfPageDown:	PageDown()				\n
+!    <Btn3Down>:            xfeDoPopup()            \n\
+*ghGlobalTranslations:                  #override                             \
+     m    ~c <Key>D:            xfeDoCommand(delete)                        \n\
+        a ~c <Key>D:            xfeDoCommand(delete)                        \n\
+     m    ~c <Key>O:            xfeDoCommand(openSelected)                  \n\
+        a ~c <Key>O:            xfeDoCommand(openSelected)                  \n\
+    ~m ~a ~c <Key>space:        PageDown()                                  \n\
+ ~s ~m ~a ~c <Key>Up:           LineUp()                                    \n\
+ ~s ~m ~a ~c <Key>Down:         LineDown()                                  \n\
+ ~s ~m ~a ~c <Key>osfUp:        LineUp()                                    \n\
+ ~s ~m ~a ~c <Key>osfDown:      LineDown()                                  \n\
+    ~m ~a ~c <Key>Prior:        PageUp()                                    \n\
+    ~m ~a ~c <Key>Next:         PageDown()                                  \n\
+    ~m ~a ~c <Key>osfPageUp:    PageUp()                                    \n\
+    ~m ~a ~c <Key>osfPageDown:  PageDown()                                  \n
 
 !
 ! Translations for document source window
-*dialogGlobalTranslations:		#override			\n\
-									\
-	Meta ~Ctrl<Key>W:		xfeDoCommand(close)			\n\
-	 Alt ~Ctrl<Key>W:		xfeDoCommand(close)			\n
+*dialogGlobalTranslations:              #override                             \
+                                                                              \
+     m    ~c <Key>W:            xfeDoCommand(close)                         \n\
+        a ~c <Key>W:            xfeDoCommand(close)                         \n
 
 
 
 ! Mouse bindings in the HTML display area.
-! 
-*drawingArea.translations:		#replace			\n\
-	<Btn1Down>:			ArmLink()			\n\
-	<Btn2Down>:			ArmLink()			\n\
-	~Shift<Btn1Up>:			ActivateLink()			\n\
-	~Shift<Btn2Up>:			ActivateLink(new-window)	\
-					DisarmLink()			\n\
-	Shift<Btn1Up>:			ActivateLink(save-only)		\
-					DisarmLink()			\n\
-	Shift<Btn2Up>:			ActivateLink(save-only)		\
-					DisarmLink()			\n\
-	<Btn1Motion>:			DisarmLinkIfMoved()		\n\
-	<Btn2Motion>:			DisarmLinkIfMoved()		\n\
-	<Btn3Motion>:			DisarmLinkIfMoved()		\n\
-	<Motion>:			DescribeLink()			\n\
-	<Btn3Down>:			xfeDoPopup()			\n
+!
+*drawingArea.translations:              #replace                              \
+             <Btn1Down>:        ArmLink()                                   \n\
+             <Btn2Down>:        ArmLink()                                   \n\
+ ~s          <Btn1Up>:          ActivateLink()                              \n\
+ ~s          <Btn2Up>:          ActivateLink(new-window) DisarmLink()       \n\
+  s          <Btn1Up>:          ActivateLink(save-only) DisarmLink()        \n\
+  s          <Btn2Up>:          ActivateLink(save-only) DisarmLink()        \n\
+             <Btn1Motion>:      DisarmLinkIfMoved()                         \n\
+             <Btn2Motion>:      DisarmLinkIfMoved()                         \n\
+             <Btn3Motion>:      DisarmLinkIfMoved()                         \n\
+             <Motion>:          DescribeLink()                              \n\
+             <Btn3Down>:        xfeDoPopup()                                \n
 
 
 ! Some basic emacs-like bindings for text fields.
@@ -458,40 +455,40 @@
 !        page for VirtualBindings(1).  For details, see the @NAME@ FAQ
 !        (available from the Help menu.)
 !
-*editingTranslations:			#override			\n\
-	Meta ~Ctrl<Key>A:		select-all()				\n\
-	 Alt ~Ctrl<Key>A:		select-all()				\n\
-	~Meta ~Alt Ctrl<Key>a:		beginning-of-line()		\n\
-	~Meta ~Alt  Shift Ctrl<Key>a:	beginning-of-line(extend)	\n\
-	~Meta ~Alt ~Shift Ctrl<Key>b:	backward-character()		\n\
-	~Meta ~Alt  Shift Ctrl<Key>b:	backward-character(extend)	\n\
-	~Meta ~Alt        Ctrl<Key>d:	delete-next-character()		\n\
-	~Meta ~Alt ~Shift Ctrl<Key>e:	end-of-line()			\n\
-	~Meta ~Alt  Shift Ctrl<Key>e:	end-of-line(extend)		\n\
-	~Meta ~Alt ~Shift Ctrl<Key>f:	forward-character()		\n\
-	~Meta ~Alt  Shift Ctrl<Key>f:	forward-character(extend)	\n\
-	~Meta ~Alt        Ctrl<Key>g:	process-cancel()		\n\
-	~Meta ~Alt        Ctrl<Key>h:	delete-previous-character()	\n\
-	~Meta ~Alt        Ctrl<Key>space: set-anchor()			\n\
-	~Meta ~Alt        Ctrl<Key>2:	set-anchor()			\n\
-	~Meta ~Alt        Ctrl<Key>@:	set-anchor()			\n\
-									\
-	Meta ~Ctrl ~Shift<Key>b:	backward-word()			\n\
-	 Alt ~Ctrl ~Shift<Key>b:	backward-word()			\n\
-	Meta ~Ctrl  Shift<Key>b:	backward-word(extend)		\n\
-	 Alt ~Ctrl  Shift<Key>b:	backward-word(extend)		\n\
-	Meta ~Ctrl ~Shift<Key>f:	forward-word()			\n\
-	 Alt ~Ctrl ~Shift<Key>f:	forward-word()			\n\
-	Meta ~Ctrl  Shift<Key>f:	forward-word(extend)		\n\
-	 Alt ~Ctrl  Shift<Key>f:	forward-word(extend)		\n\
-	Meta ~Ctrl ~Shift<Key>osfLeft:	backward-word()			\n\
-	 Alt ~Ctrl ~Shift<Key>osfLeft:	backward-word()			\n\
-	Meta ~Ctrl  Shift<Key>osfLeft:	backward-word(extend)		\n\
-	 Alt ~Ctrl  Shift<Key>osfLeft:	backward-word(extend)		\n\
-	Meta ~Ctrl ~Shift<Key>osfRight:forward-word()			\n\
-	 Alt ~Ctrl ~Shift<Key>osfRight:forward-word()			\n\
-	Meta ~Ctrl  Shift<Key>osfRight:forward-word(extend)		\n\
-         Alt ~Ctrl  Shift<Key>osfRight:forward-word(extend)             \n
+*editingTranslations:                   #override                             \
+     m    ~c <Key>A:            select-all()                                \n\
+        a ~c <Key>A:            select-all()                                \n\
+    ~m ~a  c <Key>a:            beginning-of-line()                         \n\
+  s ~m ~a  c <Key>a:            beginning-of-line(extend)                   \n\
+ ~s ~m ~a  c <Key>b:            backward-character()                        \n\
+  s ~m ~a  c <Key>b:            backward-character(extend)                  \n\
+    ~m ~a  c <Key>d:            delete-next-character()                     \n\
+ ~s ~m ~a  c <Key>e:            end-of-line()                               \n\
+  s ~m ~a  c <Key>e:            end-of-line(extend)                         \n\
+ ~s ~m ~a  c <Key>f:            forward-character()                         \n\
+  s ~m ~a  c <Key>f:            forward-character(extend)                   \n\
+    ~m ~a  c <Key>g:            process-cancel()                            \n\
+    ~m ~a  c <Key>h:            delete-previous-character()                 \n\
+    ~m ~a  c <Key>space:        set-anchor()                                \n\
+    ~m ~a  c <Key>2:            set-anchor()                                \n\
+    ~m ~a  c <Key>@:            set-anchor()                                \n\
+                                                                              \
+ ~s  m    ~c <Key>b:            backward-word()                             \n\
+ ~s     a ~c <Key>b:            backward-word()                             \n\
+  s  m    ~c <Key>b:            backward-word(extend)                       \n\
+  s     a ~c <Key>b:            backward-word(extend)                       \n\
+ ~s  m    ~c <Key>f:            forward-word()                              \n\
+ ~s     a ~c <Key>f:            forward-word()                              \n\
+  s  m    ~c <Key>f:            forward-word(extend)                        \n\
+  s     a ~c <Key>f:            forward-word(extend)                        \n\
+ ~s  m    ~c <Key>osfLeft:      backward-word()                             \n\
+ ~s     a ~c <Key>osfLeft:      backward-word()                             \n\
+  s  m    ~c <Key>osfLeft:      backward-word(extend)                       \n\
+  s     a ~c <Key>osfLeft:      backward-word(extend)                       \n\
+ ~s  m    ~c <Key>osfRight:     forward-word()                              \n\
+ ~s     a ~c <Key>osfRight:     forward-word()                              \n\
+  s  m    ~c <Key>osfRight:     forward-word(extend)                        \n\
+  s     a ~c <Key>osfRight:     forward-word(extend)                        \n
 
 !                       <KeyUp>: KeyUpInText() \n
 !       Meta ~Ctrl       <Key>w:        copy-clipboard()                \n\
@@ -502,8 +499,8 @@
 ! script page.
 ! SHOULD NOT apply this translation to any regular motif text field.
 ! because it will trigger the javascript layout stuff and introduce crash.
-*formElemEditingTranslations:            #override                       \n\
-			<KeyUp>: KeyUpInText() \n
+*formElemEditingTranslations:           #override                             \
+             <KeyUp>:           KeyUpInText()                               \n
 
 ! Translations that apply only to single-line fields; see above.
 !
@@ -530,56 +527,44 @@
 ! type C-k at Mozilla; Click middle to paste.  The paste would be impossible
 ! because C-k would have cleared the selection.
 !
-*singleLineEditingTranslations:		#override			\n\
-	Meta ~Alt ~Ctrl<Key>x:		xfeDoText(cut)	\n\
-	Meta ~Alt ~Ctrl<Key>c:		xfeDoText(copy)	\n\
-	Meta ~Alt ~Ctrl<Key>v:		xfeDoText(paste)	\n\
-	Meta ~Alt ~Ctrl<Key>y:		xfeDoText(paste)	\n\
-									\
-	~Meta Alt ~Ctrl<Key>x:		xfeDoText(cut)	\n\
-	~Meta Alt ~Ctrl<Key>c:		xfeDoText(copy)	\n\
-	~Meta Alt ~Ctrl<Key>v:		xfeDoText(paste)	\n\
-	~Meta Alt ~Ctrl<Key>y:		xfeDoText(paste)	\n\
-                                    \
-	~Meta ~Alt Ctrl<Key>y:		xfeDoText(paste)	\n\
-                                    \
-	~Meta ~Alt ~Ctrl<Key>SunCopy:   xfeDoText(copy)		\n\
-	~Meta ~Alt ~Ctrl<Key>SunPaste:  xfeDoText(paste)	\n\
-	~Meta ~Alt ~Ctrl<Key>SunCut:    xfeDoText(cut)		\n\
-                                    \
-	~Meta ~Alt Ctrl<Key>u:		beginning-of-line()		\
-					delete-to-end-of-line()		\n\
-	~Meta ~Alt Ctrl<Key>k:		delete-to-end-of-line()		\n\
-	~Meta ~Alt Ctrl<Key>l:		xfeDoCommand(refresh)			\n\
-	~Meta ~Alt Ctrl<Key>w:		key-select()			\
-					delete-selection()		\n\
-	Meta ~Ctrl       <Key>d:	delete-next-word()		\n\
-	 Alt ~Ctrl       <Key>d:	delete-next-word()		\n\
-	 Alt ~Ctrl       <Key><:	set-anchor()			\
-					beginning-of-line()		\n\
-	Meta ~Ctrl       <Key><:	set-anchor()			\
-					beginning-of-line()		\n\
- 	 Alt ~Ctrl       <Key>>:	set-anchor()			\
-					end-of-line()			\n\
-	Meta ~Ctrl       <Key>>:	set-anchor()			\
-					end-of-line()			\n\
-	~Alt  Ctrl       <Key><:	set-anchor()			\
-					beginning-of-line(extend)	\n\
-   ~Meta  Ctrl       <Key><:	set-anchor()			\
-					beginning-of-line(extend)	\n\
-	~Alt  Ctrl       <Key>>:	set-anchor()			\
-					end-of-line(extend)		\n\
-   ~Meta  Ctrl       <Key>>:	set-anchor()			\
-					end-of-line(extend)		\n\
-	Meta ~Ctrl<Key>osfBackSpace:	delete-previous-word()		\n\
-	 Alt ~Ctrl<Key>osfBackSpace:	delete-previous-word()		\n\
-	Meta ~Ctrl<Key>osfDelete:	delete-next-word()		\n\
-	 Alt ~Ctrl<Key>osfDelete:	delete-next-word()		\n\
-									\
-	~Meta ~Alt ~Ctrl<Key>osfLeft:	deselect-all()			\
-					backward-character()		\n\
-	~Meta ~Alt ~Ctrl<Key>osfRight:	deselect-all()			\
-					forward-character()		\n
+*singleLineEditingTranslations:         #override                             \
+     m ~a ~c <Key>x:            xfeDoText(cut)                              \n\
+     m ~a ~c <Key>c:            xfeDoText(copy)                             \n\
+     m ~a ~c <Key>v:            xfeDoText(paste)                            \n\
+     m ~a ~c <Key>y:            xfeDoText(paste)                            \n\
+                                                                              \
+    ~m  a ~c <Key>x:            xfeDoText(cut)                              \n\
+    ~m  a ~c <Key>c:            xfeDoText(copy)                             \n\
+    ~m  a ~c <Key>v:            xfeDoText(paste)                            \n\
+    ~m  a ~c <Key>y:            xfeDoText(paste)                            \n\
+                                                                              \
+    ~m ~a  c <Key>y:            xfeDoText(paste)                            \n\
+                                                                              \
+    ~m ~a ~c <Key>SunCopy:      xfeDoText(copy)                             \n\
+    ~m ~a ~c <Key>SunPaste:     xfeDoText(paste)                            \n\
+    ~m ~a ~c <Key>SunCut:       xfeDoText(cut)                              \n\
+                                                                              \
+    ~m ~a  c <Key>u:            beginning-of-line() delete-to-end-of-line() \n\
+    ~m ~a  c <Key>k:            delete-to-end-of-line()                     \n\
+    ~m ~a  c <Key>l:            xfeDoCommand(refresh)                       \n\
+    ~m ~a  c <Key>w:            key-select() delete-selection()             \n\
+     m    ~c <Key>d:            delete-next-word()                          \n\
+        a ~c <Key>d:            delete-next-word()                          \n\
+        a ~c <Key><:            set-anchor() beginning-of-line()            \n\
+     m    ~c <Key><:            set-anchor() beginning-of-line()            \n\
+        a ~c <Key>>:            set-anchor() end-of-line()                  \n\
+     m    ~c <Key>>:            set-anchor() end-of-line()                  \n\
+       ~a  c <Key><:            set-anchor() beginning-of-line(extend)      \n\
+    ~m     c <Key><:            set-anchor() beginning-of-line(extend)      \n\
+       ~a  c <Key>>:            set-anchor() end-of-line(extend)            \n\
+    ~m     c <Key>>:            set-anchor() end-of-line(extend)            \n\
+     m    ~c <Key>osfBackSpace: delete-previous-word()                      \n\
+        a ~c <Key>osfBackSpace: delete-previous-word()                      \n\
+     m    ~c <Key>osfDelete:    delete-next-word()                          \n\
+        a ~c <Key>osfDelete:    delete-next-word()                          \n\
+                                                                              \
+    ~m ~a ~c <Key>osfLeft:      deselect-all() backward-character()         \n\
+    ~m ~a ~c <Key>osfRight:     deselect-all() forward-character()          \n
 
 ! Translations that apply only to multi-line fields; see above.
 ! Most of these are here because they are commands that only apply when
@@ -588,90 +573,82 @@
 !
 ! NOTE... [ had to modify the following to prevent overriding paste ]
 !
-!	Meta ~Ctrl ~Shift<Key>v:	previous-page()			\n\
-!	 Alt ~Ctrl ~Shift<Key>v:	previous-page()			\n\
+!    Meta ~Ctrl ~Shift<Key>v:    previous-page()            \n\
+!     Alt ~Ctrl ~Shift<Key>v:    previous-page()            \n\
 !
-*multiLineEditingTranslations:		#override			\n\
-	Meta ~Alt ~Ctrl<Key>x:		xfeDoText(cut)	\n\
-	Meta ~Alt ~Ctrl<Key>c:		xfeDoText(copy)	\n\
-	Meta ~Alt ~Ctrl<Key>v:		xfeDoText(paste)	\n\
-	Meta ~Alt ~Ctrl<Key>y:		xfeDoText(paste)	\n\
-									\
-	~Meta Alt ~Ctrl<Key>x:		xfeDoText(cut)	\n\
-	~Meta Alt ~Ctrl<Key>c:		xfeDoText(copy)	\n\
-	~Meta Alt ~Ctrl<Key>v:		xfeDoText(paste)	\n\
-	~Meta Alt ~Ctrl<Key>y:		xfeDoText(paste)	\n\
-									\
-	~Meta ~Alt Ctrl<Key>y:		xfeDoText(paste)	\n\
-                                    \
-	~Meta ~Alt ~Ctrl<Key>SunCopy:   xfeDoText(copy)		\n\
-	~Meta ~Alt ~Ctrl<Key>SunPaste:  xfeDoText(paste)	\n\
-	~Meta ~Alt ~Ctrl<Key>SunCut:    xfeDoText(cut)		\n\
-                                    \
-	~Meta ~Alt Ctrl<Key>k:		kill-to-end-of-line()		\n\
-	~Meta ~Alt Ctrl<Key>w:		key-select() kill-selection()	\n\
-	~Meta ~Alt Ctrl<Key>y:		unkill()			\n\
-	Meta ~Ctrl       <Key>d:	kill-next-word()		\n\
-	 Alt ~Ctrl       <Key>d:	kill-next-word()		\n\
-	~Meta ~Alt        Ctrl<Key>l:	redraw-display() xfeDoCommand(refresh)	\n\
-	Meta ~Ctrl<Key>osfBackSpace:	kill-previous-word()		\n\
-	 Alt ~Ctrl<Key>osfBackSpace:	kill-previous-word()		\n\
-	Meta ~Ctrl<Key>osfDelete:	kill-next-word()		\n\
-	 Alt ~Ctrl<Key>osfDelete:	kill-next-word()		\n\
-									\
-	~Meta ~Alt Ctrl<Key>j:		newline-and-indent()		\n\
-	~Meta ~Alt Ctrl<Key>o:		newline-and-backup()		\n\
-	~Meta ~Alt ~Shift Ctrl<Key>n:	next-line()			\n\
-	~Meta ~Alt  Shift Ctrl<Key>n:	next-line(extend)		\n\
-	~Meta ~Alt ~Shift Ctrl<Key>p:	previous-line()			\n\
-	~Meta ~Alt  Shift Ctrl<Key>p:	previous-line(extend)		\n\
-	~Meta ~Alt ~Shift Ctrl<Key>v:	next-page()			\n\
-	~Meta ~Alt  Shift Ctrl<Key>v:	next-page(extend)		\n\
-	Meta  Ctrl ~Shift<Key>v:	previous-page()			\n\
-	 Alt  Ctrl ~Shift<Key>v:	previous-page()			\n\
-	Meta ~Ctrl  Shift<Key>v:	previous-page(extend)		\n\
-	 Alt ~Ctrl  Shift<Key>v:	previous-page(extend)		\n\
-	 Alt ~Ctrl ~Shift<Key>[:	backward-paragraph()		\n\
-	Meta ~Ctrl ~Shift<Key>[:	backward-paragraph()		\n\
-	 Alt ~Ctrl  Shift<Key>[:	backward-paragraph(extend)	\n\
-	Meta ~Ctrl  Shift<Key>[:	backward-paragraph(extend)	\n\
-	 Alt ~Ctrl ~Shift<Key>]:	forward-paragraph()		\n\
-	Meta ~Ctrl ~Shift<Key>]:	forward-paragraph()		\n\
-	 Alt ~Ctrl  Shift<Key>]:	forward-paragraph(extend)	\n\
-	Meta ~Ctrl  Shift<Key>[:	forward-paragraph(extend)	\n\
-	 Alt ~Ctrl       <Key><:	set-anchor()			\
-					beginning-of-file()		\n\
-	Meta ~Ctrl       <Key><:	set-anchor()			\
-					beginning-of-file()		\n\
- 	 Alt ~Ctrl       <Key>>:	set-anchor()			\
-					end-of-file()			\n\
-	Meta ~Ctrl       <Key>>:	set-anchor()			\
-					end-of-file()			\n\
-	~Alt  Ctrl       <Key><:	set-anchor()			\
-					beginning-of-file(extend)	\n\
-       ~Meta  Ctrl       <Key><:	set-anchor()			\
-					beginning-of-file(extend)	\n\
-	~Alt  Ctrl       <Key>>:	set-anchor()			\
-					end-of-file(extend)		\n\
-       ~Meta  Ctrl       <Key>>:	set-anchor()			\
-					end-of-file(extend)		\n\
-	~Meta ~Alt ~Ctrl<Key>Prior:	previous-page()			\n\
-	~Meta ~Alt ~Ctrl<Key>Next:	next-page()			\n\
-	~Meta ~Alt ~Ctrl<Key>osfPageUp:	previous-page()			\n\
-	~Meta ~Alt ~Ctrl<Key>osfPageDown: next-page()			\n\
-	Ctrl  <Key>/:			undefined-key()			\n
+*multiLineEditingTranslations:          #override                             \
+     m ~a ~c <Key>x:            xfeDoText(cut)                              \n\
+     m ~a ~c <Key>c:            xfeDoText(copy)                             \n\
+     m ~a ~c <Key>v:            xfeDoText(paste)                            \n\
+     m ~a ~c <Key>y:            xfeDoText(paste)                            \n\
+                                                                              \
+    ~m  a ~c <Key>x:            xfeDoText(cut)                              \n\
+    ~m  a ~c <Key>c:            xfeDoText(copy)                             \n\
+    ~m  a ~c <Key>v:            xfeDoText(paste)                            \n\
+    ~m  a ~c <Key>y:            xfeDoText(paste)                            \n\
+                                                                              \
+    ~m ~a  c <Key>y:            xfeDoText(paste)                            \n\
+                                                                              \
+    ~m ~a ~c <Key>SunCopy:      xfeDoText(copy)                             \n\
+    ~m ~a ~c <Key>SunPaste:     xfeDoText(paste)                            \n\
+    ~m ~a ~c <Key>SunCut:       xfeDoText(cut)                              \n\
+                                                                              \
+    ~m ~a  c <Key>k:            kill-to-end-of-line()                       \n\
+    ~m ~a  c <Key>w:            key-select() kill-selection()               \n\
+    ~m ~a  c <Key>y:            unkill()                                    \n\
+     m    ~c <Key>d:            kill-next-word()                            \n\
+        a ~c <Key>d:            kill-next-word()                            \n\
+    ~m ~a  c <Key>l:            redraw-display() xfeDoCommand(refresh)      \n\
+     m    ~c <Key>osfBackSpace: kill-previous-word()                        \n\
+        a ~c <Key>osfBackSpace: kill-previous-word()                        \n\
+     m    ~c <Key>osfDelete:    kill-next-word()                            \n\
+        a ~c <Key>osfDelete:    kill-next-word()                            \n\
+                                                                              \
+    ~m ~a  c <Key>j:            newline-and-indent()                        \n\
+    ~m ~a  c <Key>o:            newline-and-backup()                        \n\
+ ~s ~m ~a  c <Key>n:            next-line()                                 \n\
+  s ~m ~a  c <Key>n:            next-line(extend)                           \n\
+ ~s ~m ~a  c <Key>p:            previous-line()                             \n\
+  s ~m ~a  c <Key>p:            previous-line(extend)                       \n\
+ ~s ~m ~a  c <Key>v:            next-page()                                 \n\
+  s ~m ~a  c <Key>v:            next-page(extend)                           \n\
+ ~s  m     c <Key>v:            previous-page()                             \n\
+ ~s     a  c <Key>v:            previous-page()                             \n\
+  s  m    ~c <Key>v:            previous-page(extend)                       \n\
+  s     a ~c <Key>v:            previous-page(extend)                       \n\
+ ~s     a ~c <Key>[:            backward-paragraph()                        \n\
+ ~s  m    ~c <Key>[:            backward-paragraph()                        \n\
+  s     a ~c <Key>[:            backward-paragraph(extend)                  \n\
+  s  m    ~c <Key>[:            backward-paragraph(extend)                  \n\
+ ~s     a ~c <Key>]:            forward-paragraph()                         \n\
+ ~s  m    ~c <Key>]:            forward-paragraph()                         \n\
+  s     a ~c <Key>]:            forward-paragraph(extend)                   \n\
+  s  m    ~c <Key>[:            forward-paragraph(extend)                   \n\
+        a ~c <Key><:            set-anchor() beginning-of-file()            \n\
+     m    ~c <Key><:            set-anchor() beginning-of-file()            \n\
+        a ~c <Key>>:            set-anchor() end-of-file()                  \n\
+     m    ~c <Key>>:            set-anchor() end-of-file()                  \n\
+       ~a  c <Key><:            set-anchor() beginning-of-file(extend)      \n\
+    ~m     c <Key><:            set-anchor() beginning-of-file(extend)      \n\
+       ~a  c <Key>>:            set-anchor() end-of-file(extend)            \n\
+    ~m     c <Key>>:            set-anchor() end-of-file(extend)            \n\
+    ~m ~a ~c <Key>Prior:        previous-page()                             \n\
+    ~m ~a ~c <Key>Next:         next-page()                                 \n\
+    ~m ~a ~c <Key>osfPageUp:    previous-page()                             \n\
+    ~m ~a ~c <Key>osfPageDown:  next-page()                                 \n\
+           c <Key>/:                    undefined-key()                     \n
 
 ! Since these get merged in first, all the other bindings override them.
 ! This is just so that undefined non-self-inserting keys beep.
 ! (Except that this doesn't really work that well, so nevermind.)
-!*XmText.translations:		#override				\n\
-!			Ctrl <Key>:	undefined-key()			\n\
-!			Meta <Key>:	undefined-key()			\n\
-!			 Alt <Key>:	undefined-key()			\n
-!*XmTextField.translations:	#override				\n\
-!			Ctrl <Key>:	undefined-key()			\n\
-!			Meta <Key>:	undefined-key()			\n\
-!			 Alt <Key>:	undefined-key()			\n
+!*XmText.translations:        #override                \n\
+!            Ctrl <Key>:    undefined-key()            \n\
+!            Meta <Key>:    undefined-key()            \n\
+!             Alt <Key>:    undefined-key()            \n
+!*XmTextField.translations:    #override                \n\
+!            Ctrl <Key>:    undefined-key()            \n\
+!            Meta <Key>:    undefined-key()            \n\
+!             Alt <Key>:    undefined-key()            \n
 
 
 ! We merge these translations into all text fields which are not the
@@ -679,30 +656,30 @@
 ! hitting `return' in a text field will select the next text field if there
 ! is one, and will select the "OK" button if there are no more.
 !
-*nonterminalTextTranslations:	#override				\n\
-	<Key>Return:		next-tab-group()			\n\
-	<Key>Linefeed:		next-tab-group()			\n
+*nonterminalTextTranslations:           #override                             \
+             <Key>Return:       next-tab-group()                            \n\
+             <Key>Linefeed:     next-tab-group()                            \n
 
 ! This is used for self-submitting text fields in HTML forms (not popups.)
 ! We don't need to store these in to dialog box text fields, since in that
 ! case we are able to simply avoid storing in the above ones, but we don't
 ! know that until too late with forms.
-*terminalTextTranslations:	#override				\n\
-	<Key>Return:		activate()				\n\
-	<Key>Linefeed:		activate()				\n
+*terminalTextTranslations:              #override                             \
+             <Key>Return:       activate()                                  \n\
+             <Key>Linefeed:     activate()                                  \n
 
 ! These translations are installed on every TextField widget in the main tree,
 ! but *not* on text fields in dialogs, or in the mail composition window
 ! (that's the difference between this and singleLineEditingTranslations.)
-*globalTextFieldTranslations:		#override			\n\
-	~Meta ~Alt ~Ctrl<Key>Up:	LineUp()			\n\
-	~Meta ~Alt ~Ctrl<Key>Down:	LineDown()			\n\
-	~Meta ~Alt ~Ctrl<Key>osfUp:	LineUp()			\n\
-	~Meta ~Alt ~Ctrl<Key>osfDown:	LineDown()			\n
+*globalTextFieldTranslations:           #override                             \
+    ~m ~a ~c <Key>Up:           LineUp()                                    \n\
+    ~m ~a ~c <Key>Down:         LineDown()                                  \n\
+    ~m ~a ~c <Key>osfUp:        LineUp()                                    \n\
+    ~m ~a ~c <Key>osfDown:      LineDown()                                  \n
 
 ! These keysyms are apparently an R6ism.
-!	~Meta ~Alt ~Ctrl<Key>KP_Up:	LineUp()			\n\
-!	~Meta ~Alt ~Ctrl<Key>KP_Down:	LineDown()			\n\
+!    ~Meta ~Alt ~Ctrl<Key>KP_Up:    LineUp()            \n\
+!    ~Meta ~Alt ~Ctrl<Key>KP_Down:    LineDown()            \n\
 
 
 ! We install these on every widget in the main tree (but not popups) that isn't
@@ -710,223 +687,222 @@
 ! to apply to the HTML display area unless some text field or List has focus,
 ! in which case they ought to apply to the text in that text field instead.
 ! Doesn't all this crap just make you want to hurl?
-*globalNonTextTranslations:		#override			\n\
-	~Meta ~Alt ~Ctrl<Key>space:	xfeDoCommand(spacebar)		\n\
-									  \
-	~Meta ~Alt ~Ctrl<Key>Delete:	PageUp()			\n\
-	~Meta ~Alt ~Ctrl<Key>BackSpace:	PageUp()			\n\
-	~Meta ~Alt ~Ctrl<Key>Up:	LineUp()			\n\
-	~Meta ~Alt ~Ctrl<Key>Down:	LineDown()			\n\
-	~Meta ~Alt ~Ctrl<Key>Left:	ColumnLeft()			\n\
-	~Meta ~Alt ~Ctrl<Key>Right:	ColumnRight()			\n\
-									  \
-	~Meta ~Alt ~Ctrl<Key>osfDelete:	PageUp()			\n\
-	~Meta ~Alt ~Ctrl<Key>osfBackSpace:PageUp()			\n\
-	 Meta  Ctrl<Key>g:		fishcam()			\n\
-	  Alt  Ctrl<Key>g:		fishcam()			\n\
-	 Meta  Ctrl<Key>t:		net_showstatus()		\n\
-	  Alt  Ctrl<Key>t:		net_showstatus()		\n\
-	~Meta ~Alt ~Ctrl<Key>osfUp:	LineUp()			\n\
-	~Meta ~Alt ~Ctrl<Key>osfDown:	LineDown()			\n\
-	~Meta ~Alt ~Ctrl<Key>osfLeft:	ColumnLeft()			\n\
-	~Meta ~Alt ~Ctrl<Key>osfRight:	ColumnRight()			\n\
-									  \
-	~Meta ~Alt ~Ctrl<Key>Prior:		PageUp()		\n\
-	~Meta ~Alt ~Ctrl<Key>Next:		PageDown()		\n\
-	~Meta ~Alt ~Ctrl<Key>osfPageUp:		PageUp()		\n\
-	~Meta ~Alt ~Ctrl<Key>osfPageDown:	PageDown()		\n
+*globalNonTextTranslations:             #override                             \
+    ~m ~a ~c <Key>space:        xfeDoCommand(spacebar)                      \n\
+                                                                              \
+    ~m ~a ~c <Key>Delete:       PageUp()                                    \n\
+    ~m ~a ~c <Key>BackSpace:    PageUp()                                    \n\
+    ~m ~a ~c <Key>Up:           LineUp()                                    \n\
+    ~m ~a ~c <Key>Down:         LineDown()                                  \n\
+    ~m ~a ~c <Key>Left:         ColumnLeft()                                \n\
+    ~m ~a ~c <Key>Right:        ColumnRight()                               \n\
+                                                                              \
+    ~m ~a ~c <Key>osfDelete:    PageUp()                                    \n\
+    ~m ~a ~c <Key>osfBackSpace: PageUp()                                    \n\
+     m     c <Key>g:            fishcam()                                   \n\
+        a  c <Key>g:            fishcam()                                   \n\
+     m     c <Key>t:            net_showstatus()                            \n\
+        a  c <Key>t:            net_showstatus()                            \n\
+    ~m ~a ~c <Key>osfUp:        LineUp()                                    \n\
+    ~m ~a ~c <Key>osfDown:      LineDown()                                  \n\
+    ~m ~a ~c <Key>osfLeft:      ColumnLeft()                                \n\
+    ~m ~a ~c <Key>osfRight:     ColumnRight()                               \n\
+                                                                              \
+    ~m ~a ~c <Key>Prior:        PageUp()                                    \n\
+    ~m ~a ~c <Key>Next:         PageDown()                                  \n\
+    ~m ~a ~c <Key>osfPageUp:    PageUp()                                    \n\
+    ~m ~a ~c <Key>osfPageDown:  PageDown()                                  \n
 
 ! These keysyms are apparently an R6ism.
-!	~Meta ~Alt ~Ctrl<Key>KP_Up:	LineUp()			\n\
-!	~Meta ~Alt ~Ctrl<Key>KP_Down:	LineDown()			\n\
-!	~Meta ~Alt ~Ctrl<Key>KP_Left:	ColumnLeft()			\n\
-!	~Meta ~Alt ~Ctrl<Key>KP_Right:	ColumnRight()			\n\
-!	~Meta ~Alt ~Ctrl<Key>KP_Prior:	PageUp()			\n\
-!	~Meta ~Alt ~Ctrl<Key>KP_Next:	PageDown()			\n\
+!    ~Meta ~Alt ~Ctrl<Key>KP_Up:    LineUp()            \n\
+!    ~Meta ~Alt ~Ctrl<Key>KP_Down:    LineDown()            \n\
+!    ~Meta ~Alt ~Ctrl<Key>KP_Left:    ColumnLeft()            \n\
+!    ~Meta ~Alt ~Ctrl<Key>KP_Right:    ColumnRight()            \n\
+!    ~Meta ~Alt ~Ctrl<Key>KP_Prior:    PageUp()            \n\
+!    ~Meta ~Alt ~Ctrl<Key>KP_Next:    PageDown()            \n\
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ! Editor mouse translations
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*editorDrawingArea.translations: #replace \n\
-	<Btn3Down>:  xfeDoCommand(showPopup)               \n\
-	Shift<Btn1Down>:  xfeDoCommand(select,extend)   \n\
-	<Btn1Down>:  xfeDoClick(single,{,select,grab,}, \
-                            double,{,objectIs,\
-                                    text,  {,select,word,}, \
-                                    image, {,dialog,image,}, \
-                                    hrule, {,dialog,hrule,}, \
-                                    table, {,dialog,table,}, \
-                                    target,{,dialog,target,}, \
-                                    tag,   {,dialog,tag,},})\n\
-	<Btn1Motion>:			xfeDoCommand(select,extend)\n\
-	<Btn1Up>:				xfeDoCommand(select,end)		\n\
-	<Btn2Down>:				xfeDoCommand(paste,selection)\n\
-	<Btn2Motion>:			\n\
-	<Btn2Up>:				\n\
-	<Motion>:     editor-motion()                   \n
+*editorDrawingArea.translations:        #replace                              \
+             <Btn3Down>:        xfeDoCommand(showPopup)                     \n\
+  s          <Btn1Down>:        xfeDoCommand(select,extend)                 \n\
+             <Btn1Down>:        xfeDoClick(single,{,select,grab,},            \
+                                double,{,objectIs, text,  {,select,word,},    \
+                                image, {,dialog,image,},                      \
+                                hrule, {,dialog,hrule,},                      \
+                                table, {,dialog,table,},                      \
+                                target,{,dialog,target,},                     \
+                                tag,   {,dialog,tag,},})                    \n\
+             <Btn1Motion>:      xfeDoCommand(select,extend)                 \n\
+             <Btn1Up>:          xfeDoCommand(select,end)                    \n\
+             <Btn2Down>:        xfeDoCommand(paste,selection)               \n\
+             <Btn2Motion>:                                                  \n\
+             <Btn2Up>:                                                      \n\
+             <Motion>:          editor-motion()                             \n
 
 ! Editor keyboard translations.
-*editorTranslations:			#override			\n\
-									\
-	Meta ~Ctrl ~Shift<Key>o: xfeDoCommand(openPage)				\n\
-	 Alt ~Ctrl ~Shift<Key>o: xfeDoCommand(openPage)				\n\
-	Meta ~Ctrl  Shift<Key>o: xfeDoCommand(openPageChooseFile)	\n\
-	 Alt ~Ctrl  Shift<Key>o: xfeDoCommand(openPageChooseFile)	\n\
-	Meta ~Ctrl<Key>s:		xfeDoCommand(save)			\n\
-	 Alt ~Ctrl<Key>s:		xfeDoCommand(save)			\n\
-	Meta ~Ctrl<Key>r:		xfeDoCommand(reload)			\n\
-	 Alt ~Ctrl<Key>r:		xfeDoCommand(reload)			\n\
-	Meta ~Ctrl Shift<Key>r:	xfeDoCommand(reload,super)			\n\
-	 Alt ~Ctrl Shift<Key>r:	xfeDoCommand(reload,super)			\n\
-	Meta ~Ctrl<Key>P:		xfeDoCommand(print)				\n\
-	 Alt ~Ctrl<Key>P:		xfeDoCommand(print)				\n\
-									\
-	~Meta ~Alt Ctrl<Key>h:		xfeDoCommand(deleteItem,previous)\n\
-	 Meta ~Ctrl<Key>Return:		xfeDoCommand(sendMessageNow)	\n\
-	 Alt ~Ctrl<Key>Return:		xfeDoCommand(sendMessageNow)	\n\
-	~Meta ~Alt ~Ctrl<Key>Up:	xfeDoCommand(moveCursor,up)		\n\
-	~Meta ~Alt ~Ctrl<Key>Down:	xfeDoCommand(moveCursor,down)		\n\
-	~Meta ~Alt ~Ctrl<Key>osfUp:	xfeDoCommand(moveCursor,up)		\n\
-	~Meta ~Alt ~Ctrl<Key>osfDown:	xfeDoCommand(moveCursor,down)		\n\
-	~Meta ~Alt ~Ctrl<Key>osfLeft:	xfeDoCommand(moveCursor,previous)	\n\
-	~Meta ~Alt ~Ctrl<Key>osfRight:	xfeDoCommand(moveCursor,next)	\n\
-	~Meta ~Alt Ctrl<Key>osfLeft:	xfeDoCommand(moveCursor,previousWord)	\n\
-	~Meta ~Alt Ctrl<Key>osfRight:	xfeDoCommand(moveCursor,nextWord)	\n\
-									\
-	:~Meta ~Alt ~Ctrl<Key>Delete:	xfeDoCommand(deleteItem,next)\n\
-	:~Meta ~Alt ~Ctrl<Key>BackSpace:	xfeDoCommand(deleteItem,previous)\n\
-	:~Meta ~Alt ~Ctrl<Key>osfDelete:	xfeDoCommand(deleteItem,next)\n\
-	:~Meta ~Alt ~Ctrl<Key>osfBackSpace:xfeDoCommand(deleteItem,previous)\n\
-									\
-    ~Meta ~Alt Ctrl <Key>Home: xfeDoCommand(moveCursor,beginningOfPage) \n\
-    ~Meta ~Alt Ctrl <Key>End: xfeDoCommand(moveCursor,endOfPage)	\n\
-	~Meta ~Alt Ctrl <Key>osfBeginLine: xfeDoCommand(moveCursor,beginningOfPage) \n\
-	~Meta ~Alt Ctrl <Key>osfEndLine: xfeDoCommand(moveCursor,endOfPage) \n\
-    ~Meta ~Alt ~Ctrl <Key>Home: xfeDoCommand(moveCursor,beginningOfLine) \n\
-    ~Meta ~Alt ~Ctrl <Key>End: xfeDoCommand(moveCursor,endOfLine)	\n\
-	~Meta ~Alt ~Ctrl <Key>osfBeginLine: xfeDoCommand(moveCursor,beginOfLine) \n\
-	~Meta ~Alt ~Ctrl <Key>osfEndLine: xfeDoCommand(moveCursor,endOfLine) \n\
-	~Meta ~Alt ~Ctrl Shift<Key>Return:	xfeDoCommand(insertLineBreak,normal)\n\
-	~Meta ~Alt ~Ctrl<Key>Return:	xfeDoCommand(insertReturn)\n\
-	~Meta ~Alt ~Ctrl Shift<Key>space: xfeDoCommand(insertNonBreakingSpace)\n\
-	~Meta ~Alt ~Ctrl <Key>space:	xfeDoCommand(insertKey)		\n\
-	~Meta Alt ~Ctrl <Key>-:   xfeDoCommand(outdent)		\n\
-	~Meta Alt ~Ctrl <Key>=:	  xfeDoCommand(indent)		\n\
-	Meta ~Alt ~Ctrl <Key>-:   xfeDoCommand(outdent)		\n\
-	Meta ~Alt ~Ctrl <Key>=:	  xfeDoCommand(indent)		\n\
-									\
-	Ctrl ~Shift <Key>Tab:	xfeDoCommand(tab,insert) \n\
-	~Ctrl ~Shift<Key>Tab:	xfeDoCommand(tab,forward) \n\
-	~Ctrl Shift<Key>Tab:	xfeDoCommand(tab,backward) \n\
-									\
-	~Meta ~Alt Ctrl<Key>a:	xfeDoCommand(moveCursor,beginningOfLine) \n\
-	~Meta ~Alt Ctrl<Key>e:	xfeDoCommand(moveCursor,endOfLine) \n\
-	~Meta ~Alt Ctrl<Key>p:	xfeDoCommand(moveCursor,up)			\n\
-	~Meta ~Alt Ctrl<Key>n:	xfeDoCommand(moveCursor,down)			\n\
-	~Meta ~Alt Ctrl<Key>b:	xfeDoCommand(moveCursor,previous)		\n\
-	~Meta ~Alt Ctrl<Key>f:	xfeDoCommand(moveCursor,next)		\n\
-	~Meta ~Alt Ctrl<Key>d:	xfeDoCommand(deleteItem,next)	\n\
-	~Meta ~Alt Ctrl<Key>k:	xfeDoCommand(deleteItem,endOfLine)\n\
-	Meta ~Alt ~Ctrl<Key><:	xfeDoCommand(moveCursor,beginningOfPage)\n\
-	Meta ~Alt ~Ctrl<Key>>:	xfeDoCommand(moveCursor,endOfPage)\n\
-	~Meta Alt ~Ctrl<Key><:	xfeDoCommand(moveCursor,beginningOfPage)\n\
-	~Meta Alt ~Ctrl<Key>>:	xfeDoCommand(moveCursor,endOfPage)\n\
-									\
-	Meta Shift ~Ctrl<Key>z:	xfeDoCommand(redo)		\n\
-	 Alt Shift ~Ctrl<Key>z:	xfeDoCommand(redo)		\n\
-	Meta ~Ctrl<Key>z:		xfeDoCommand(undo)		\n\
-	 Alt ~Ctrl<Key>z:		xfeDoCommand(undo)		\n\
-									\
-	Meta ~Alt ~Ctrl<Key>b:	xfeDoCommand(toggleCharacterStyle,bold)   \n\
-	 ~Meta Alt ~Ctrl<Key>b:	xfeDoCommand(toggleCharacterStyle,bold)   \n\
-	Meta ~Alt ~Ctrl<Key>i:	xfeDoCommand(toggleCharacterStyle,italic) \n\
-	 ~Meta Alt ~Ctrl<Key>i:	xfeDoCommand(toggleCharacterStyle,italic) \n\
-	 Meta ~Alt ~Ctrl<Key>u:	xfeDoCommand(toggleCharacterStyle,underline) \n\
-	 ~Meta Alt ~Ctrl<Key>u:	xfeDoCommand(toggleCharacterStyle,underline) \n\
-	Meta ~Alt ~Ctrl<Key>t:	xfeDoCommand(toggleCharacterStyle,fixed)  \n\
-	 ~Meta Alt ~Ctrl<Key>t:	xfeDoCommand(toggleCharacterStyle,fixed)  \n\
-	Meta ~Alt ~Ctrl<Key>k:	xfeDoCommand(setCharacterStyle,none)      \n\
-	 ~Meta Alt ~Ctrl<Key>k:	xfeDoCommand(setCharacterStyle,none)	   \n\
-									\
-	~Meta ~Alt Ctrl<Key>l:	xfeDoCommand(refresh)			\n\
-									\
-	Meta ~Alt ~Ctrl ~Shift<Key>Up:		xfeDoCommand(setFontSize,increase)\n\
-	Meta ~Alt ~Ctrl ~Shift<Key>osfUp:	xfeDoCommand(setFontSize,increase)\n\
-	Meta ~Alt ~Ctrl ~Shift<Key>Down:	xfeDoCommand(setFontSize,decrease)\n\
-	Meta ~Alt ~Ctrl ~Shift<Key>osfDown:	xfeDoCommand(setFontSize,decrease)\n\
-									\
-	~Meta ~Alt ~Ctrl<Key>SunCopy:   xfeDoCommand(copy)			\n\
-	~Meta ~Alt ~Ctrl<Key>SunPaste:  xfeDoCommand(paste)			\n\
-	~Meta ~Alt ~Ctrl<Key>SunCut:    xfeDoCommand(cut)			\n\
-									\
-	Meta ~Alt ~Ctrl ~Shift<Key>d:	xfeDoCommand(deleteItem)	\n\
-	~Meta Alt ~Ctrl ~Shift<Key>d:	xfeDoCommand(deleteItem)	\n\
-										\
-	Meta ~Alt ~Ctrl ~Shift<Key>f:	xfeDoCommand(findInObject)		\n\
-	Meta ~Alt ~Ctrl ~Shift<Key>g:	xfeDoCommand(findAgain)			\n\
-	~Meta Alt ~Ctrl ~Shift<Key>f:	xfeDoCommand(findInObject)		\n\
-	~Meta Alt ~Ctrl ~Shift<Key>g:	xfeDoCommand(findAgain)			\n\
-									\
-	Meta ~Ctrl<Key>A:		xfeDoCommand(selectAll)				\n\
-	 Alt ~Ctrl<Key>A:		xfeDoCommand(selectAll)				\n\
-	Meta ~Ctrl<Key>C:		xfeDoCommand(copy)					\n\
-	 Alt ~Ctrl<Key>C:		xfeDoCommand(copy)					\n\
-	Meta ~Ctrl<Key>H:		xfeDoCommand(openHistory)			\n\
-	 Alt ~Ctrl<Key>H:		xfeDoCommand(openHistory)			\n\
-	Meta ~Ctrl<Key>m:		xfeDoCommand(composeMessage)		\n\
-	 Alt ~Ctrl<Key>m:		xfeDoCommand(composeMessage)		\n\
-	Meta ~Ctrl ~Shift<Key>n: xfeDoCommand(openBrowser)			\n\
-	 Alt ~Ctrl ~Shift<Key>n: xfeDoCommand(openBrowser)			\n\
-	Meta ~Ctrl  Shift<Key>n: xfeDoCommand(newBlank)				\n\
-	 Alt ~Ctrl  Shift<Key>n: xfeDoCommand(newBlank)				\n\
-	Meta ~Ctrl<Key>Q:		xfeDoCommand(exit)					\n\
-	 Alt ~Ctrl<Key>Q:		xfeDoCommand(exit)					\n\
-		Meta ~Ctrl<Key>R:		undefined-key()				\n\
-		 Alt ~Ctrl<Key>R:		undefined-key()				\n\
-	Meta ~Ctrl<Key>V:		xfeDoCommand(paste)					\n\
-	 Alt ~Ctrl<Key>V:		xfeDoCommand(paste)					\n\
-	Meta ~Ctrl<Key>W:		xfeDoCommand(close)					\n\
-	 Alt ~Ctrl<Key>W:		xfeDoCommand(close)					\n\
-	Meta ~Ctrl<Key>X:		xfeDoCommand(cut)					\n\
-	 Alt ~Ctrl<Key>X:		xfeDoCommand(cut)					\n\
-	Meta ~Ctrl<Key>Y:		xfeDoCommand(paste)					\n\
-	 Alt ~Ctrl<Key>Y:		xfeDoCommand(paste)					\n\
-											\
- Meta ~Ctrl ~Shift<Key>1:	xfeDoCommand(openOrBringUpBrowser)	\n\
-  Alt ~Ctrl ~Shift<Key>1:	xfeDoCommand(openOrBringUpBrowser)	\n\
- Meta ~Ctrl  Shift<Key>1:	xfeDoCommand(openFolders)			\n\
-  Alt ~Ctrl  Shift<Key>1:	xfeDoCommand(openFolders)			\n\
- Meta ~Ctrl ~Shift<Key>2:	xfeDoCommand(openInbox)				\n\
-  Alt ~Ctrl ~Shift<Key>2:	xfeDoCommand(openInbox)				\n\
- Meta ~Ctrl  Shift<Key>2:	xfeDoCommand(openAddrBook)			\n\
-  Alt ~Ctrl  Shift<Key>2:	xfeDoCommand(openAddrBook)			\n\
-	Meta ~Ctrl<Key>3:		xfeDoCommand(openNewsgroups)		\n\
-	 Alt ~Ctrl<Key>3:		xfeDoCommand(openNewsgroups)		\n\
-	Meta ~Ctrl<Key>4:		xfeDoCommand(openEditor)			\n\
-	 Alt ~Ctrl<Key>4:		xfeDoCommand(openEditor)			\n\
-	Meta ~Ctrl<Key>5:		xfeDoCommand(openConference)		\n\
-	 Alt ~Ctrl<Key>5:		xfeDoCommand(openConference)		\n\
-	Meta ~Ctrl<Key>6:		xfeDoCommand(openCalendar)			\n\
-	 Alt ~Ctrl<Key>6:		xfeDoCommand(openCalendar)			\n\
-	Meta ~Ctrl<Key>7:		xfeDoCommand(openHostOnDemand)		\n\
-	 Alt ~Ctrl<Key>7:		xfeDoCommand(openHostOnDemand)		\n\
-	Meta ~Ctrl<Key>8:		xfeDoCommand(openNetcaster)			\n\
-	 Alt ~Ctrl<Key>8:		xfeDoCommand(openNetcaster)			\n\
-											\
-	~Meta ~Alt ~Ctrl<Key>Prior:		PageUp()					\n\
-	~Meta ~Alt ~Ctrl<Key>Next:		PageDown()					\n\
-	~Meta ~Alt ~Ctrl<Key>osfPageUp:		PageUp()				\n\
-	~Meta ~Alt ~Ctrl<Key>osfPageDown:	PageDown()				\n\
-											\
-	~Meta ~Alt ~Ctrl ~Shift<Key>osfHelp:		xfeDoCommand(manual)	\n\
-										\
-	~Meta ~Alt ~Ctrl ~Shift<Key>F10:			\n\
-	~Meta ~Alt ~Ctrl ~Shift<Key>osfMenuBar:			\n\
-								\
-	<KeyRelease>:							\n\
-	<Key>:			xfeDoCommand(insertKey)			\n\
-	<KeyPress>:		xfeDoCommand(insertKey)			\n\
-	<KeyUp>:							\n\
-	<KeyDown>:		xfeDoCommand(insertKey)			\n
+*editorTranslations:                    #override                             \
+                                                                              \
+ ~s  m    ~c <Key>o:            xfeDoCommand(openPage)                      \n\
+ ~s     a ~c <Key>o:            xfeDoCommand(openPage)                      \n\
+  s  m    ~c <Key>o:            xfeDoCommand(openPageChooseFile)            \n\
+  s     a ~c <Key>o:            xfeDoCommand(openPageChooseFile)            \n\
+     m    ~c <Key>s:            xfeDoCommand(save)                          \n\
+        a ~c <Key>s:            xfeDoCommand(save)                          \n\
+     m    ~c <Key>r:            xfeDoCommand(reload)                        \n\
+        a ~c <Key>r:            xfeDoCommand(reload)                        \n\
+  s  m    ~c <Key>r:            xfeDoCommand(reload,super)                  \n\
+  s     a ~c <Key>r:            xfeDoCommand(reload,super)                  \n\
+     m    ~c <Key>P:            xfeDoCommand(print)                         \n\
+        a ~c <Key>P:            xfeDoCommand(print)                         \n\
+                                                                              \
+    ~m ~a  c <Key>h:            xfeDoCommand(deleteItem,previous)           \n\
+     m    ~c <Key>Return:       xfeDoCommand(sendMessageNow)                \n\
+        a ~c <Key>Return:       xfeDoCommand(sendMessageNow)                \n\
+    ~m ~a ~c <Key>Up:           xfeDoCommand(moveCursor,up)                 \n\
+    ~m ~a ~c <Key>Down:         xfeDoCommand(moveCursor,down)               \n\
+    ~m ~a ~c <Key>osfUp:        xfeDoCommand(moveCursor,up)                 \n\
+    ~m ~a ~c <Key>osfDown:      xfeDoCommand(moveCursor,down)               \n\
+    ~m ~a ~c <Key>osfLeft:      xfeDoCommand(moveCursor,previous)           \n\
+    ~m ~a ~c <Key>osfRight:     xfeDoCommand(moveCursor,next)               \n\
+    ~m ~a  c <Key>osfLeft:      xfeDoCommand(moveCursor,previousWord)       \n\
+    ~m ~a  c <Key>osfRight:     xfeDoCommand(moveCursor,nextWord)           \n\
+                                                                              \
+:   ~m ~a ~c <Key>Delete:       xfeDoCommand(deleteItem,next)               \n\
+:   ~m ~a ~c <Key>BackSpace:    xfeDoCommand(deleteItem,previous)           \n\
+:   ~m ~a ~c <Key>osfDelete:    xfeDoCommand(deleteItem,next)               \n\
+:   ~m ~a ~c <Key>osfBackSpace: xfeDoCommand(deleteItem,previous)           \n\
+                                                                              \
+    ~m ~a  c <Key>Home:         xfeDoCommand(moveCursor,beginningOfPage)    \n\
+    ~m ~a  c <Key>End:          xfeDoCommand(moveCursor,endOfPage)          \n\
+    ~m ~a  c <Key>osfBeginLine: xfeDoCommand(moveCursor,beginningOfPage)    \n\
+    ~m ~a  c <Key>osfEndLine:   xfeDoCommand(moveCursor,endOfPage)          \n\
+    ~m ~a ~c <Key>Home:         xfeDoCommand(moveCursor,beginningOfLine)    \n\
+    ~m ~a ~c <Key>End:          xfeDoCommand(moveCursor,endOfLine)          \n\
+    ~m ~a ~c <Key>osfBeginLine: xfeDoCommand(moveCursor,beginOfLine)        \n\
+    ~m ~a ~c <Key>osfEndLine:   xfeDoCommand(moveCursor,endOfLine)          \n\
+  s ~m ~a ~c <Key>Return:       xfeDoCommand(insertLineBreak,normal)        \n\
+    ~m ~a ~c <Key>Return:       xfeDoCommand(insertReturn)                  \n\
+  s ~m ~a ~c <Key>space:        xfeDoCommand(insertNonBreakingSpace)        \n\
+    ~m ~a ~c <Key>space:        xfeDoCommand(insertKey)                     \n\
+    ~m  a ~c <Key>-:            xfeDoCommand(outdent)                       \n\
+    ~m  a ~c <Key>=:            xfeDoCommand(indent)                        \n\
+     m ~a ~c <Key>-:            xfeDoCommand(outdent)                       \n\
+     m ~a ~c <Key>=:            xfeDoCommand(indent)                        \n\
+                                                                              \
+ ~s        c <Key>Tab:          xfeDoCommand(tab,insert)                    \n\
+ ~s       ~c <Key>Tab:          xfeDoCommand(tab,forward)                   \n\
+  s       ~c <Key>Tab:          xfeDoCommand(tab,backward)                  \n\
+                                                                              \
+    ~m ~a  c <Key>a:            xfeDoCommand(moveCursor,beginningOfLine)    \n\
+    ~m ~a  c <Key>e:            xfeDoCommand(moveCursor,endOfLine)          \n\
+    ~m ~a  c <Key>p:            xfeDoCommand(moveCursor,up)                 \n\
+    ~m ~a  c <Key>n:            xfeDoCommand(moveCursor,down)               \n\
+    ~m ~a  c <Key>b:            xfeDoCommand(moveCursor,previous)           \n\
+    ~m ~a  c <Key>f:            xfeDoCommand(moveCursor,next)               \n\
+    ~m ~a  c <Key>d:            xfeDoCommand(deleteItem,next)               \n\
+    ~m ~a  c <Key>k:            xfeDoCommand(deleteItem,endOfLine)          \n\
+     m ~a ~c <Key><:            xfeDoCommand(moveCursor,beginningOfPage)    \n\
+     m ~a ~c <Key>>:            xfeDoCommand(moveCursor,endOfPage)          \n\
+    ~m  a ~c <Key><:            xfeDoCommand(moveCursor,beginningOfPage)    \n\
+    ~m  a ~c <Key>>:            xfeDoCommand(moveCursor,endOfPage)          \n\
+                                                                              \
+  s  m    ~c <Key>z:            xfeDoCommand(redo)                          \n\
+  s     a ~c <Key>z:            xfeDoCommand(redo)                          \n\
+     m    ~c <Key>z:            xfeDoCommand(undo)                          \n\
+        a ~c <Key>z:            xfeDoCommand(undo)                          \n\
+                                                                              \
+     m ~a ~c <Key>b:            xfeDoCommand(toggleCharacterStyle,bold)     \n\
+    ~m  a ~c <Key>b:            xfeDoCommand(toggleCharacterStyle,bold)     \n\
+     m ~a ~c <Key>i:            xfeDoCommand(toggleCharacterStyle,italic)   \n\
+    ~m  a ~c <Key>i:            xfeDoCommand(toggleCharacterStyle,italic)   \n\
+     m ~a ~c <Key>u:            xfeDoCommand(toggleCharacterStyle,underline)\n\
+    ~m  a ~c <Key>u:            xfeDoCommand(toggleCharacterStyle,underline)\n\
+     m ~a ~c <Key>t:            xfeDoCommand(toggleCharacterStyle,fixed)    \n\
+    ~m  a ~c <Key>t:            xfeDoCommand(toggleCharacterStyle,fixed)    \n\
+     m ~a ~c <Key>k:            xfeDoCommand(setCharacterStyle,none)        \n\
+    ~m  a ~c <Key>k:            xfeDoCommand(setCharacterStyle,none)        \n\
+                                                                              \
+    ~m ~a  c <Key>l:            xfeDoCommand(refresh)                       \n\
+                                                                              \
+ ~s  m ~a ~c <Key>Up:           xfeDoCommand(setFontSize,increase)          \n\
+ ~s  m ~a ~c <Key>osfUp:        xfeDoCommand(setFontSize,increase)          \n\
+ ~s  m ~a ~c <Key>Down:         xfeDoCommand(setFontSize,decrease)          \n\
+ ~s  m ~a ~c <Key>osfDown:      xfeDoCommand(setFontSize,decrease)          \n\
+                                                                              \
+    ~m ~a ~c <Key>SunCopy:      xfeDoCommand(copy)                          \n\
+    ~m ~a ~c <Key>SunPaste:     xfeDoCommand(paste)                         \n\
+    ~m ~a ~c <Key>SunCut:       xfeDoCommand(cut)                           \n\
+                                                                              \
+ ~s  m ~a ~c <Key>d:            xfeDoCommand(deleteItem)                    \n\
+ ~s ~m  a ~c <Key>d:            xfeDoCommand(deleteItem)                    \n\
+                                                                              \
+ ~s  m ~a ~c <Key>f:            xfeDoCommand(findInObject)                  \n\
+ ~s  m ~a ~c <Key>g:            xfeDoCommand(findAgain)                     \n\
+ ~s ~m  a ~c <Key>f:            xfeDoCommand(findInObject)                  \n\
+ ~s ~m  a ~c <Key>g:            xfeDoCommand(findAgain)                     \n\
+                                                                              \
+     m    ~c <Key>A:            xfeDoCommand(selectAll)                     \n\
+        a ~c <Key>A:            xfeDoCommand(selectAll)                     \n\
+     m    ~c <Key>C:            xfeDoCommand(copy)                          \n\
+        a ~c <Key>C:            xfeDoCommand(copy)                          \n\
+     m    ~c <Key>H:            xfeDoCommand(openHistory)                   \n\
+        a ~c <Key>H:            xfeDoCommand(openHistory)                   \n\
+     m    ~c <Key>m:            xfeDoCommand(composeMessage)                \n\
+        a ~c <Key>m:            xfeDoCommand(composeMessage)                \n\
+ ~s  m    ~c <Key>n:            xfeDoCommand(openBrowser)                   \n\
+ ~s     a ~c <Key>n:            xfeDoCommand(openBrowser)                   \n\
+  s  m    ~c <Key>n:            xfeDoCommand(newBlank)                      \n\
+  s     a ~c <Key>n:            xfeDoCommand(newBlank)                      \n\
+     m    ~c <Key>Q:            xfeDoCommand(exit)                          \n\
+        a ~c <Key>Q:            xfeDoCommand(exit)                          \n\
+     m    ~c <Key>R:                    undefined-key()                     \n\
+        a ~c <Key>R:                    undefined-key()                     \n\
+     m    ~c <Key>V:            xfeDoCommand(paste)                         \n\
+        a ~c <Key>V:            xfeDoCommand(paste)                         \n\
+     m    ~c <Key>W:            xfeDoCommand(close)                         \n\
+        a ~c <Key>W:            xfeDoCommand(close)                         \n\
+     m    ~c <Key>X:            xfeDoCommand(cut)                           \n\
+        a ~c <Key>X:            xfeDoCommand(cut)                           \n\
+     m    ~c <Key>Y:            xfeDoCommand(paste)                         \n\
+        a ~c <Key>Y:            xfeDoCommand(paste)                         \n\
+                                                                              \
+ ~s  m    ~c <Key>1:            xfeDoCommand(openOrBringUpBrowser)          \n\
+ ~s     a ~c <Key>1:            xfeDoCommand(openOrBringUpBrowser)          \n\
+  s  m    ~c <Key>1:            xfeDoCommand(openFolders)                   \n\
+  s     a ~c <Key>1:            xfeDoCommand(openFolders)                   \n\
+ ~s  m    ~c <Key>2:            xfeDoCommand(openInbox)                     \n\
+ ~s     a ~c <Key>2:            xfeDoCommand(openInbox)                     \n\
+  s  m    ~c <Key>2:            xfeDoCommand(openAddrBook)                  \n\
+  s     a ~c <Key>2:            xfeDoCommand(openAddrBook)                  \n\
+     m    ~c <Key>3:            xfeDoCommand(openNewsgroups)                \n\
+        a ~c <Key>3:            xfeDoCommand(openNewsgroups)                \n\
+     m    ~c <Key>4:            xfeDoCommand(openEditor)                    \n\
+        a ~c <Key>4:            xfeDoCommand(openEditor)                    \n\
+     m    ~c <Key>5:            xfeDoCommand(openConference)                \n\
+        a ~c <Key>5:            xfeDoCommand(openConference)                \n\
+     m    ~c <Key>6:            xfeDoCommand(openCalendar)                  \n\
+        a ~c <Key>6:            xfeDoCommand(openCalendar)                  \n\
+     m    ~c <Key>7:            xfeDoCommand(openHostOnDemand)              \n\
+        a ~c <Key>7:            xfeDoCommand(openHostOnDemand)              \n\
+     m    ~c <Key>8:            xfeDoCommand(openNetcaster)                 \n\
+        a ~c <Key>8:            xfeDoCommand(openNetcaster)                 \n\
+                                                                              \
+    ~m ~a ~c <Key>Prior:        PageUp()                                    \n\
+    ~m ~a ~c <Key>Next:         PageDown()                                  \n\
+    ~m ~a ~c <Key>osfPageUp:    PageUp()                                    \n\
+    ~m ~a ~c <Key>osfPageDown:  PageDown()                                  \n\
+                                                                              \
+ ~s ~m ~a ~c <Key>osfHelp:      xfeDoCommand(manual)                        \n\
+                                                                              \
+ ~s ~m ~a ~c <Key>F10:                                                      \n\
+ ~s ~m ~a ~c <Key>osfMenuBar:                                               \n\
+                                                                              \
+             <KeyRelease>:                                                  \n\
+             <Key>:             xfeDoCommand(insertKey)                     \n\
+             <KeyPress>:        xfeDoCommand(insertKey)                     \n\
+             <KeyUp>:                                                       \n\
+             <KeyDown>:         xfeDoCommand(insertKey)                     \n
 
 !=============================================================================
