@@ -1,0 +1,142 @@
+#!/bin/bash
+
+#
+#   Assumed to be run from the parent directory of the mozilla source tree.
+#
+
+
+#
+#   A little help for my friends.
+#
+if [ "-h" == "$1" ];then 
+    SHOWHELP="1"
+fi
+if [ "--help" == "$1" ];then 
+    SHOWHELP="1"
+fi
+if [ "" == "$1" ]; then
+    SHOWHELP="1"
+fi
+if [ "" == "$2" ]; then
+    SHOWHELP="1"
+fi
+if [ "" == "$3" ]; then
+    SHOWHELP="1"
+fi
+
+
+#
+#   Show the help if required.
+#
+if [ $SHOWHELP ]; then
+    echo "usage: $0 <save_results> <old_results> <summary>"
+    echo "  <save_results> is a file that will receive the results of this run."
+    echo "    This file can be used in a future run as the old results."
+    echo "  <old_results> is a results file from a previous run."
+    echo "    It is used to diff with current results and come up with a summary"
+    echo "      of changes."
+    echo "    It is OK if the file does not exist, just supply the argument."
+    echo "  <summary> is a file which will contain a human readable report."
+    echo "    This file is most useful by providing more information than the"
+    echo "      normally single digit output of this script."
+    echo ""
+    echo "Run this command from the parent directory of the mozilla tree."
+    echo ""
+    echo "This command will output two numbers to stdout that will represent"
+    echo "  the total size of all code and data, and a delta from the prior."
+    echo "  the old results."
+    echo "For much more detail to size drifts refer to the summary report."
+    exit
+fi
+
+
+#
+#   Exclude certain path patterns.
+#   Be sure to modify the grep command below as well.
+#
+EXCLUDE_PATH_01="/test/"
+EXCLUDE_PATH_02="/tests/"
+EXCLUDE_PATH_03="/tools/"
+EXCLUDE_PATH_04="/config/"
+EXCLUDE_PATH_05="IBMNEC.map"
+
+
+#
+#   Stash our arguments away.
+#
+COPYSORTTSV="$1"
+OLDTSVFILE="$2"
+SUMMARYFILE="$3"
+
+
+#
+#   Create our temporary directory.
+#
+TMPDIR="$TMP/codesighs.$PPID"
+mkdir -p $TMPDIR
+
+
+#
+#   Find all map files.
+#
+ALLMAPSFILE="$TMPDIR/allmaps.list"
+find ./mozilla -type f -name *.map > $ALLMAPSFILE
+
+
+#
+#   Reduce the map files to a revelant set.
+#
+MAPSFILE="$TMPDIR/maps.list"
+grep -v $EXCLUDE_PATH_01 < $ALLMAPSFILE | grep -v $EXCLUDE_PATH_02 | grep -v $EXCLUDE_PATH_03 | grep -v $EXCLUDE_PATH_04 | grep -v $EXCLUDE_PATH_05 > $MAPSFILE
+
+
+#
+#   Produce the TSV output.
+#
+RAWTSVFILE="$TMPDIR/raw.tsv"
+xargs -n 1 ./mozilla/dist/bin/msmap2tsv --input < $MAPSFILE > $RAWTSVFILE
+
+
+#
+#   Sort the TSV output for useful diffing and eyeballing in general.
+#
+sort -r $RAWTSVFILE > $COPYSORTTSV
+
+
+#
+#   If a historical file was specified, diff it with our sorted tsv values.
+#   Run it through a tool to summaries the diffs to the module
+#       level report.
+#
+rm -f $SUMMARYFILE
+DIFFFILE="$TMPDIR/diff.txt"
+if [ -e $OLDTSVFILE ]; then
+  diff $OLDTSVFILE $COPYSORTTSV > $DIFFFILE
+  ./mozilla/dist/bin/maptsvdifftool --input $DIFFFILE >> $SUMMARYFILE
+  echo "" >>  $SUMMARYFILE
+  echo "" >>  $SUMMARYFILE
+fi
+
+
+#
+#   Generate the module level report from our new data.
+#
+./mozilla/dist/bin/codesighs --modules --input $COPYSORTTSV >> $SUMMARYFILE
+
+
+#
+#   Output our numbers, that will let tinderbox specify everything all
+#       at once.
+#   First number is in fact the total size of all code and data in the map
+#       files parsed.
+#   Second number, if present, is growth/shrinkage.
+#
+./mozilla/dist/bin/codesighs --totalonly --input $COPYSORTTSV
+if [ -e $DIFFFILE ]; then
+    ./mozilla/dist/bin/maptsvdifftool --totalonly --input $DIFFFILE
+fi
+
+#
+#   Remove our temporary directory.
+#
+rm -rf $TMPDIR
