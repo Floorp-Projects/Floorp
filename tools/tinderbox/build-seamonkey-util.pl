@@ -18,11 +18,11 @@ use strict;
 use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
-use File::Path; # for rmtree();
-use Config; # for $Config{sig_name} and $Config{sig_num}
+use File::Path;     # for rmtree();
+use Config;         # for $Config{sig_name} and $Config{sig_num}
 
 
-$::UtilsVersion = '$Revision: 1.145 $ ';
+$::UtilsVersion = '$Revision: 1.146 $ ';
 
 package TinderUtils;
 
