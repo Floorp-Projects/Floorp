@@ -54,10 +54,12 @@ DLLFLAGS += -DEF:smime.def
 
 SHARED_LIBRARY_LIBS = \
 	$(DIST)/lib/pkcs12.lib \
+	$(DIST)/lib/pkcs7.lib \
 	$(NULL)
 
 SHARED_LIBRARY_DIRS = \
 	../pkcs12 \
+	../pkcs7 \
 	$(NULL)
 
 EXTRA_SHARED_LIBS += \
@@ -73,10 +75,12 @@ else
 # $(EXTRA_SHARED_LIBS) come before $(OS_LIBS), except on AIX.
 SHARED_LIBRARY_LIBS = \
 	$(DIST)/lib/libpkcs12.${LIB_SUFFIX} \
+	$(DIST)/lib/libpkcs7.${LIB_SUFFIX} \
 	$(NULL)
 
 SHARED_LIBRARY_DIRS = \
 	../pkcs12 \
+	../pkcs7 \
 	$(NULL)
 
 EXTRA_SHARED_LIBS += \

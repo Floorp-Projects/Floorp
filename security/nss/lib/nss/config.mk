@@ -60,7 +60,6 @@ ifdef MOZILLA_SECURITY_BUILD
 endif
 
 SHARED_LIBRARY_LIBS = \
-	$(DIST)/lib/pkcs7.lib \
 	$(DIST)/lib/certhi.lib \
 	$(DIST)/lib/cryptohi.lib \
 	$(DIST)/lib/pk11wrap.lib \
@@ -71,7 +70,6 @@ SHARED_LIBRARY_LIBS = \
 	$(NULL)
 
 SHARED_LIBRARY_DIRS = \
-	../pkcs7 \
 	../certhigh \
 	../cryptohi \
 	../pk11wrap \
@@ -110,7 +108,6 @@ ifdef MOZILLA_SECURITY_BUILD
 	CRYPTODIR=../crypto
 endif
 SHARED_LIBRARY_LIBS = \
-	$(DIST)/lib/libpkcs7.$(LIB_SUFFIX) \
 	$(DIST)/lib/libcerthi.$(LIB_SUFFIX) \
 	$(DIST)/lib/libpk11wrap.$(LIB_SUFFIX) \
 	$(DIST)/lib/libcryptohi.$(LIB_SUFFIX) \
@@ -126,7 +123,6 @@ ifdef MOZILLA_BSAFE_BUILD
 	EXTRA_LIBS+=$(DIST)/lib/libbsafe.$(LIB_SUFFIX)
 endif
 SHARED_LIBRARY_DIRS = \
-	../pkcs7 \
 	../certhigh \
 	../pk11wrap \
 	../cryptohi \
