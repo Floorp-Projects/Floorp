@@ -275,8 +275,10 @@ function MsgMoveMessage(destFolder)
 		//Get the selected messages to copy
 		var messageList = tree.selectedItems;
 		//get the current folder
+		var nextMessage = GetNextMessageAfterDelete(messageList);
 		var srcFolder = GetThreadTreeFolder();
 		messenger.CopyMessages(tree.database, srcFolder, destFolder, messageList, true);
+		SelectNextMessage(nextMessage);
 	}	
 }
 
