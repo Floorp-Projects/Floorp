@@ -116,6 +116,28 @@ public class ObjArray implements Serializable {
 
     }
 
+    public int indexOf(Object obj) {
+        int N = size;
+        for (int i = 0; i != N; ++i) {
+            Object current = getImpl(i);
+            if (current == obj || (current != null && current.equals(obj))) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    public int lastIndexOf(Object obj) {
+        for (int i = size; i != 0;) {
+            --i;
+            Object current = getImpl(i);
+            if (current == obj || (current != null && current.equals(obj))) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
     public final Object peek() {
         int N = size;
         if (N == 0) throw invalidEmptyStackAccess();
