@@ -232,6 +232,12 @@ nsStackLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
         child->GetMargin(margin);
         nsRect childRect(clientRect);
         childRect.Deflate(margin);
+
+        if (childRect.width < 0)
+          childRect.width = 0;
+        if (childRect.height < 0)
+          childRect.height = 0;
+
         child->SetBounds(aState, childRect);
         child->Layout(aState);
         child->GetBounds(childRect);
