@@ -27,6 +27,25 @@
 #include "mimecth.h"
 #include "mimeobj.h"
 #include "nsCRT.h"
+#include "prprf.h"
+
+#include "nsIStringBundle.h"
+#include "nsIPref.h"
+
+#define SIGNED_NOT_SUPPORTED          1100
+
+// String bundles...
+#ifndef XP_MAC
+nsCOMPtr<nsIStringBundle>   stringBundle = nsnull;
+#endif
+
+/* This is the next generation string retrieval call */
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
+
+extern "C" char *SignedGetStringByID(PRInt32 aMsgId);
+
+#define     SIGNED_PROP_URL     "chrome://messenger/locale/mime.properties"
 
 static int MimeInlineTextSIGNEDStub_parse_line (char *, PRInt32, MimeObject *);
 static int MimeInlineTextSIGNEDStub_parse_eof (MimeObject *, PRBool);
@@ -75,12 +94,27 @@ MimeInlineTextSIGNEDStubClassInitialize(MimeInlineTextSIGNEDStubClass *clazz)
 int
 GenerateMessage(char** html) 
 {
-  *html = nsCRT::strdup("\
+  char  *msg = nsnull;
+  char  *wrapper = "\
 <BR><text=\"#000000\" bgcolor=\"#FFFFFF\" link=\"#FF0000\" vlink=\"#800080\" alink=\"#0000FF\">\
 <center><table BORDER=1 ><tr>\
-<td><CENTER>This message is possibly signed and/or encrypted. This application does not currently support signed or encrypted messages.</CENTER></td>\
+<td><CENTER>\
+%s\
+</CENTER></td>\
 </tr>\
-</table></center><BR>");
+</table></center><BR>";
+
+
+  msg = SignedGetStringByID(SIGNED_NOT_SUPPORTED);
+  if (!msg)
+  {
+    *html = PR_smprintf(wrapper, "This message is possibly signed and/or encrypted. This application does not currently support signed or encrypted messages.");
+  }
+  else
+  {  
+    *html = PR_smprintf(wrapper, msg);
+    PR_FREEIF(msg);
+  }
 
   return 0;
 }
@@ -156,4 +190,53 @@ MimeInlineTextSIGNEDStub_parse_eof (MimeObject *obj, PRBool abort_p)
     return status;
  
   return 0;
+}
+
+//
+// This is the next generation string retrieval call 
+//
+extern "C" 
+char *
+SignedGetStringByID(PRInt32 aMsgId)
+{
+  char          *tempString = nsnull;
+	nsresult res = NS_OK;
+
+#ifdef XP_MAC
+nsCOMPtr<nsIStringBundle>   stringBundle = nsnull;
+#endif
+
+	if (!stringBundle)
+	{
+		char*       propertyURL = NULL;
+
+		propertyURL = SIGNED_PROP_URL;
+
+		NS_WITH_SERVICE(nsIStringBundleService, sBundleService, kStringBundleServiceCID, &res); 
+		if (NS_SUCCEEDED(res) && (nsnull != sBundleService)) 
+		{
+			res = sBundleService->CreateBundle(propertyURL, nsnull, getter_AddRefs(stringBundle));
+		}
+	}
+
+	if (stringBundle)
+	{
+		PRUnichar *ptrv = nsnull;
+		res = stringBundle->GetStringFromID(aMsgId, &ptrv);
+
+		if (NS_FAILED(res)) 
+      return nsCRT::strdup("???");
+		else
+    {
+      nsAutoString v;
+      v.Append(ptrv);
+      tempString = v.ToNewUTF8String();
+	    PR_FREEIF(ptrv);      
+    }
+	}
+
+  if (!tempString)
+    return nsCRT::strdup("???");
+  else
+    return tempString;
 }
