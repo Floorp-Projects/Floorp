@@ -1305,10 +1305,10 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *vevent )
         SetRecurUnits( "weeks" );
 
     //recur exceptions
-    for( prop = icalcomponent_get_first_property( vevent, ICAL_RECURRENCEID_PROPERTY );
+    for( prop = icalcomponent_get_first_property( vevent, ICAL_EXDATE_PROPERTY );
             prop != 0 ;
-            prop = icalcomponent_get_next_property( vevent, ICAL_RECURRENCEID_PROPERTY ) ) {
-        icaltimetype exdate = icalproperty_get_recurrenceid( prop );
+            prop = icalcomponent_get_next_property( vevent, ICAL_EXDATE_PROPERTY ) ) {
+        icaltimetype exdate = icalproperty_get_exdate( prop );
         PRTime exdateinms = ConvertToPrtime( exdate );
         m_exceptiondates.push_back( exdateinms );
     }
@@ -1604,7 +1604,7 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
         //exceptions
         for( unsigned int i=0; i<m_exceptiondates.size(); i++ ) {
             icaltimetype exdate = ConvertFromPrtime( m_exceptiondates[i] );
-            prop = icalproperty_new_recurrenceid( exdate );
+            prop = icalproperty_new_exdate( exdate );
             icalcomponent_add_property( vevent, prop );
         }
     }
