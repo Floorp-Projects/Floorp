@@ -336,21 +336,17 @@ nsInlineFrame::ReflowMappedChildrenFrom(nsIPresContext* aPresContext,
     // If the frame being reflowed is not appropriate (e.g. a block
     // frame) then we should stop! This can only happen when a
     // prev-in-flow has pushed some junk into this frame.
-    nsIStyleContext* kidSC;
-    kidFrame->GetStyleContext(aPresContext, kidSC);
-    const nsStyleDisplay* kidDisplay = (const nsStyleDisplay*)
-      kidSC->GetStyleData(eStyleStruct_Display);
+    const nsStyleDisplay* kidDisplay;
+    kidFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)kidDisplay);
     if ((NS_STYLE_DISPLAY_BLOCK == kidDisplay->mDisplay) ||
         (NS_STYLE_DISPLAY_LIST_ITEM == kidDisplay->mDisplay)) {
       if (mFirstChild != kidFrame) {
         PushChildren(kidFrame, prevKidFrame, originalLastContentIsComplete);
         SetLastContentOffset(prevKidFrame);
         result = PR_FALSE;
-        NS_RELEASE(kidSC);
         break;
       }
     }
-    NS_RELEASE(kidSC);
 
     nsReflowMetrics kidSize(pKidMaxElementSize);
     nsReflowState   kidReflowState(kidFrame, aState.reflowState, aState.availSize,
@@ -521,17 +517,13 @@ PRBool nsInlineFrame::PullUpChildren(nsIPresContext* aPresContext,
 
     // If the frame being pulled up is not appropriate (e.g. a block
     // frame) then we should stop!
-    nsIStyleContext* kidSC;
-    kidFrame->GetStyleContext(aPresContext, kidSC);
-    const nsStyleDisplay* kidDisplay = (const nsStyleDisplay*)
-      kidSC->GetStyleData(eStyleStruct_Display);
+    const nsStyleDisplay* kidDisplay;
+    kidFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)kidDisplay);
     if ((NS_STYLE_DISPLAY_BLOCK == kidDisplay->mDisplay) ||
         (NS_STYLE_DISPLAY_LIST_ITEM == kidDisplay->mDisplay)) {
       result = PR_FALSE;
-      NS_RELEASE(kidSC);
       break;
     }
-    NS_RELEASE(kidSC);
 
     // If there is no room, stop pulling up
     if (!CanFitChild(aPresContext, aState, kidFrame)) {
