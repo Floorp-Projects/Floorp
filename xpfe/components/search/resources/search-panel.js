@@ -286,7 +286,6 @@ function chooseCategory( aNode )
 {
   var category = !aNode.id ? "NC:SearchEngineRoot" : 
                   "NC:SearchCategory?category=" + aNode.getAttribute("id");
-
   nsPreferences.setUnicharPref("browser.search.last_search_category", category);
 
   var treeNode = document.getElementById("searchengines");
@@ -829,7 +828,6 @@ function switchTab( aPageIndex )
 		if (target)	target = target.Value;
 		if (target) haveSearchRef = true;
 	}
-
   saveQueryButton.disabled = haveSearchRef ? false : true;
 
   return(true);
@@ -903,6 +901,9 @@ function saveSearch()
 
 function doCustomize()
 {
+    //Switching form Edit Categories back to All Engines then launching customize window
+	var category = document.getElementById("categoryList")
+	category.selectedIndex = 0;
 	window.openDialog("chrome://communicator/content/search/search-editor.xul", "_blank", "centerscreen,chrome,resizable");
 }
 
