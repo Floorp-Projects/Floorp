@@ -1039,6 +1039,9 @@ function BrowserPageInfo(doc)
 
 function hiddenWindowStartup()
 {
+  // focus the hidden window
+  window.focus();
+
   // Disable menus which are not appropriate
   var disabledItems = ['cmd_close', 'Browser:SendPage', 'Browser:EditPage', /*'Browser:PrintSetup', 'Browser:PrintPreview',*/
                        'Browser:Print', 'canGoBack', 'canGoForward', 'Browser:Home', 'Browser:AddBookmark', 'cmd_undo',
