@@ -28,7 +28,7 @@
 #include "nsIStreamListener.h"
 #include "nsIEventQueueService.h"
 #include "nsIURI.h"
-
+#include "nsCRT.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 

@@ -30,7 +30,7 @@
 #include "nsINetDataCacheManager.h"
 #include "nsICachedNetData.h"
 
-
+#include "nsCRT.h"
 // Number of test entries to be placed in the cache
 // FIXME - temporary
 #define NUM_CACHE_ENTRIES  25
