@@ -914,6 +914,9 @@ nsMenuPopupFrame::CreateDismissalListener()
 NS_IMETHODIMP
 nsMenuPopupFrame::InstallKeyboardNavigator()
 {
+  if (mKeyboardNavigator)
+    return NS_OK;
+
   nsCOMPtr<nsIDocument> doc;
   mContent->GetDocument(*getter_AddRefs(doc));
   nsCOMPtr<nsIDOMEventReceiver> target = do_QueryInterface(doc);
@@ -932,6 +935,9 @@ nsMenuPopupFrame::InstallKeyboardNavigator()
 NS_IMETHODIMP
 nsMenuPopupFrame::RemoveKeyboardNavigator()
 {
+  if (!mKeyboardNavigator)
+    return NS_OK;
+
   mTarget->RemoveEventListener("keypress", (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);
   mTarget->RemoveEventListener("keydown", (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);
   mTarget->RemoveEventListener("keyup", (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);
