@@ -588,6 +588,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateSubfolder(const char *folderName)
 			//Now let's create the actual new folder
 			rv = AddSubfolder(folderNameStr, &child);
             unusedDB->SetSummaryValid(PR_TRUE);
+			unusedDB->Commit(kLargeCommit);
             unusedDB->Close(PR_TRUE);
         }
 
