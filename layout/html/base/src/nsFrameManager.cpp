@@ -2012,7 +2012,7 @@ FrameManager::ComputeStyleChangeFor(nsIPresContext* aPresContext,
                                     nsChangeHint& aTopLevelChange)
 {
   NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
-  aTopLevelChange = NS_STYLE_HINT_NONE;
+  aTopLevelChange = aMinChange;
   nsIFrame* frame = aFrame;
   nsIFrame* frame2 = aFrame;
 
@@ -2035,7 +2035,7 @@ FrameManager::ComputeStyleChangeFor(nsIPresContext* aPresContext,
       nsChangeHint frameChange;
       ReResolveStyleContext(aPresContext, frame, nsnull,
                             aAttrNameSpaceID, aAttribute,
-                            aChangeList, aMinChange, frameChange);
+                            aChangeList, aTopLevelChange, frameChange);
       NS_UpdateHint(aTopLevelChange, frameChange);
 
       if (aTopLevelChange & (nsChangeHint_ReconstructDoc | nsChangeHint_ReconstructFrame)) {
