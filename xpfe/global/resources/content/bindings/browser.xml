@@ -300,7 +300,7 @@
           }
           try {
             this.mDragDropHandler = Components.classes["@mozilla.org:/content/content-area-dragdrop;1"].createInstance(Components.interfaces.nsIDragDropHandler);
-            this.mDragDropHandler.hookupTo(this, null, null, null);
+            this.mDragDropHandler.hookupTo(this, null);
           }
           catch (e) {
           }
