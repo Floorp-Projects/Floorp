@@ -353,8 +353,7 @@ LDAPConn *
 nsldapi_new_connection( LDAP *ld, LDAPServer **srvlistp, int use_ldsb,
 	int connect, int bind )
 {
-    int	rc;
-    
+	int		rc = -1;
 	LDAPConn	*lc;
 	LDAPServer	*prevsrv, *srv;
 	Sockbuf		*sb = NULL;
@@ -886,7 +885,8 @@ int
 nsldapi_chase_v3_refs( LDAP *ld, LDAPRequest *lr, char **v3refs,
     int is_reference, int *totalcountp, int *chasingcountp )
 {
-	int		i, rc, unknown;
+   	int		rc = LDAP_SUCCESS;
+	int		i, unknown;
 	LDAPRequest	*origreq;
 
 	*totalcountp = *chasingcountp = 0;

@@ -654,7 +654,7 @@ ldapssl_get_option( LDAP *ld, int option, int *onp )
 	ldap_set_lderrno( ld, LDAP_PARAM_ERROR, NULL, NULL );
 	rc = -1; 
     } else {
-	int		rv, set_rv = 0;
+	int		rv = 0, set_rv = 0;
 
 	if ( NULL == ld ) {
 	     /* return default options for new LDAP sessions */

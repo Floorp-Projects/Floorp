@@ -81,7 +81,7 @@ static char ptokDes[34] = "Internal (Software) Token        ";
 static int
 splitpath(char *string, char *dir, char *prefix, char *key) {
         char *k;
-        char *s;
+        char *s = NULL;
         char *d = string;
         char *l;
         int  len = 0;
@@ -234,6 +234,7 @@ ldapssl_basic_init( const char *certdbpath, const char *keydbpath,
  * compatible with the NSS libraries (they seem to use the C runtime
  * library malloc/free so these functions are quite simple right now).
  */
+#if 0	/* we do not use ldapssl_malloc() yet */
 static void *
 ldapssl_malloc( size_t size )
 {
@@ -242,8 +243,10 @@ ldapssl_malloc( size_t size )
     p = malloc( size );
     return p;
 }
+#endif /* 0 */
 
 
+#if 0	/* we do not use ldapssl_calloc() yet */
 static void *
 ldapssl_calloc( int nelem, size_t elsize )
 {
@@ -252,6 +255,7 @@ ldapssl_calloc( int nelem, size_t elsize )
     p = calloc( nelem, elsize );
     return p;
 }
+#endif /* 0 */
 
 
 static char *
@@ -277,100 +281,6 @@ ldapssl_free( void **pp )
     }
 }
 
-
-static char *
-buildDBName(const char *basename, const char *dbname)
-{
-	char		*result;
-	PRUint32	len, pathlen, addslash;
-
-	if (basename)
-	{
-	    if (( len = PL_strlen( basename )) > 3
-		&& PL_strcasecmp( ".db", basename + len - 3 ) == 0 ) {
-		return (ldapssl_strdup(basename));
-	    }
-	    
-	    pathlen = len;
-	    len = pathlen + PL_strlen(dbname) + 1;
-	    addslash = ( pathlen > 0 &&
-		(( *(basename + pathlen - 1) != FILE_PATHSEP ) || 
-		( *(basename + pathlen - 1) != '\\'  )));
-
-	    if ( addslash ) {
-		++len;
-	    }
-	    if (( result = ldapssl_malloc( len )) != NULL ) {
-		PL_strcpy( result, basename );
-		if ( addslash ) {
-		    *(result+pathlen) = FILE_PATHSEP;  /* replaces '\0' */
-		    ++pathlen;
-		}
-		PL_strcpy(result+pathlen, dbname);
-	    }
-	    
-	}
-
-
-	return result;
-}
-
-char *
-GetCertDBName(void *alias, int dbVersion)
-{
-    char		*source;
-    char dbname[128];
-    
-    source = (char *)alias;
-    
-    if (!source)
-    {
-	source = "";
-    }
-    
-    sprintf(dbname, "cert%d.db",dbVersion);
-    return(buildDBName(source, dbname));
-
-
-}
-
-/*
- * return database name by appending "dbname" to "path".
- * this code doesn't need to be terribly efficient (not called often).
- */
-/* XXXceb this is the old function.  To be removed eventually */
-static char *
-GetDBName(const char *dbname, const char *path)
-{
-    char		*result;
-    PRUint32	len, pathlen;
-    int		addslash;
-    
-    if ( dbname == NULL ) {
-	dbname = "";
-    }
-    
-    if ((path == NULL) || (*path == 0)) {
-	result = ldapssl_strdup(dbname);
-    } else {
-	pathlen = PL_strlen(path);
-	len = pathlen + PL_strlen(dbname) + 1;
-	addslash = ( path[pathlen - 1] != '/' );
-	if ( addslash ) {
-	    ++len;
-	}
-	if (( result = ldapssl_malloc( len )) != NULL ) {
-	    PL_strcpy( result, path );
-	    if ( addslash ) {
-		*(result+pathlen) = '/';  /* replaces '\0' */
-		++pathlen;
-	    }
-	    PL_strcpy(result+pathlen, dbname);
-	}
-    }
-    
-    return result;
-}
 
 /*
  * Initialize ns/security so it can be used for SSL client authentication.

@@ -539,11 +539,13 @@ nsldapi_try_each_host( LDAP *ld, const char *hostlist,
 #ifdef NSLDAPI_AVOID_OS_SOCKETS
 	return -1;
 #else /* NSLDAPI_AVOID_OS_SOCKETS */
-	int			rc, i, s, err, connected, use_hp;
+	int			rc = -1;
+	int			s = 0;
+	int			i, err, connected, use_hp;
 	int			parse_err, port;
 	struct sockaddr_in	sin;
 	nsldapi_in_addr_t	address;
-	char			**addrlist, *ldhpbuf, *ldhpbuf_allocd;
+	char			**addrlist, *ldhpbuf, *ldhpbuf_allocd = NULL;
 	char			*host;
 	LDAPHostEnt		ldhent, *ldhp;
 	struct hostent		*hp;

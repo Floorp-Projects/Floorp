@@ -115,7 +115,7 @@ nsldapi_add_result_to_cache( LDAP *ld, LDAPMessage *m )
 	mods[i] = (LDAPMod *)NSLDAPI_CALLOC( 1, sizeof(LDAPMod) );
 	mods[i]->mod_op = LDAP_MOD_BVALUES;
 	mods[i]->mod_type = "cachedtime";
-	sprintf( buf, "%d", time( NULL ) );
+	sprintf( buf, "%ld", time( NULL ) );
 	bv.bv_val = buf;
 	bv.bv_len = strlen( buf );
 	bvp[0] = &bv;

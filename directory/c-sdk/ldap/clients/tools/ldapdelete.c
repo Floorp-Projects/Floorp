@@ -47,7 +47,8 @@ int
 main( int argc, char **argv )
 {
     char	buf[ 4096 ];
-    int		rc, deref, optind;
+    int		rc = 0;
+    int		deref, optind;
     LDAPControl	*ldctrl;
 
 #ifdef notdef
@@ -95,7 +96,6 @@ main( int argc, char **argv )
                 free( conv );
 	}
     } else {
-	rc = 0;
 	while ((rc == 0 || contoper) &&
 		fgets(buf, sizeof(buf), ldaptool_fp) != NULL) {
 	    buf[ strlen( buf ) - 1 ] = '\0';	/* remove trailing newline */

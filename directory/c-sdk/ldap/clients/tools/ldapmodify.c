@@ -617,7 +617,7 @@ static int
 process_ldapmod_rec( char *rbuf )
 {
     char	*line, *dn, *p, *q, *attr, *value;
-    int		rc, linenum, modop;
+    int		rc, linenum;
     LDAPMod	**pmods;
 
     pmods = NULL;
@@ -681,7 +681,8 @@ process_ldapmod_rec( char *rbuf )
 			ldaptool_progname, linenum, attr );
 		rc = LDAP_PARAM_ERROR;
 	    } else {
-		 switch ( *attr ) {
+		int modop = -1;	/* an invalid value */
+		switch ( *attr ) {
 		case '-':
 		    modop = LDAP_MOD_DELETE;
 		    ++attr;
@@ -697,8 +698,10 @@ process_ldapmod_rec( char *rbuf )
 		      rc = LDAP_PARAM_ERROR;
 		}
 
-		addmodifyop( &pmods, modop, attr, value,
-			( value == NULL ) ? 0 : strlen( value ));
+		if ( rc == 0 && modop != -1 ) {
+		    addmodifyop( &pmods, modop, attr, value,
+			    ( value == NULL ) ? 0 : strlen( value ));
+		}
 	    }
 	}
 

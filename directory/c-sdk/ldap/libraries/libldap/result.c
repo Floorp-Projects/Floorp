@@ -267,7 +267,7 @@ wait4msg( LDAP *ld, int msgid, int all, int unlock_permitted,
 	struct timeval	tv, *tvp;
 	long		start_time = 0, tmp_time;
 	LDAPConn	*lc, *nextlc;
-	LDAPRequest	*lr;
+	LDAPRequest	*lr = NULL;
 
 #ifdef LDAP_DEBUG
 	if ( timeout == NULL ) {

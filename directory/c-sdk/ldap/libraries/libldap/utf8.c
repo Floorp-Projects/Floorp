@@ -109,7 +109,7 @@ ldap_utf8characters (const char* src)
 unsigned long LDAP_CALL
 ldap_utf8getcc( const char** src )
 {
-    register unsigned long c;
+    register unsigned long c = 0;
     register const unsigned char* s = (const unsigned char*)*src;
     switch (UTF8len [(*s >> 2) & 0x3F]) {
       case 0: /* erroneous: s points to the middle of a character. */

@@ -295,7 +295,8 @@ main( int argc, char **argv )
 static void
 options_callback( int option, char *optarg )
 {
-    char *s, *temp_arg, *ps_ptr, *ps_arg;
+    char *s, *ps_ptr, *ps_arg;
+    char *temp_arg = NULL;
 
     switch( option ) {
     case 'u':	/* include UFN */
