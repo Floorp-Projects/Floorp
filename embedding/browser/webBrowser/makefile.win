@@ -44,9 +44,14 @@ REQUIRES	= xpcom \
 		  history \
 		  $(NULL)
 
+EXPORTS =                  \
+        nsCTooltipTextProvider.h \
+        $(NULL)		
+
 XPIDLSRCS=                        \
     .\nsIContextMenuListener.idl   \
     .\nsITooltipListener.idl       \
+    .\nsITooltipTextProvider.idl   \
     .\nsCWebBrowser.idl            \
     .\nsIWebBrowser.idl            \
     .\nsIWebBrowserChrome.idl      \

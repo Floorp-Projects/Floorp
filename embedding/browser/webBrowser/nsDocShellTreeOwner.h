@@ -47,6 +47,8 @@
 #include "nsIPrompt.h"
 #include "nsIAuthPrompt.h"
 #include "nsITooltipListener.h"
+#include "nsITooltipTextProvider.h"
+#include "nsCTooltipTextProvider.h"
 
 #include "nsCommandHandler.h"
 

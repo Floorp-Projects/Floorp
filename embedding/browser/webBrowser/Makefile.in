@@ -49,6 +49,10 @@ REQUIRES	= xpcom \
 
 include $(DEPTH)/config/autoconf.mk
 
+EXPORTS         = \
+                nsCTooltipTextProvider.h \
+                $(NULL)
+
 XPIDLSRCS	= \
 		nsCWebBrowser.idl			\
 		nsIWebBrowser.idl			\
@@ -59,6 +63,7 @@ XPIDLSRCS	= \
 		nsIContextMenuListener.idl		\
 		nsIEmbeddingSiteWindow.idl  \
 		nsITooltipListener.idl		\
+		nsITooltipTextProvider.idl	\
 		nsIWebBrowserPersist.idl		\
 		nsIWebBrowserFocus.idl		\
 		nsIWebBrowserPrint.idl       \
