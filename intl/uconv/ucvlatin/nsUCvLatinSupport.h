@@ -234,6 +234,9 @@ public:
    */
   virtual ~nsDecoderSupport();
 
+  NS_IMETHOD GetMaxLength(const char * aSrc, PRInt32 aSrcLength, 
+      PRInt32 * aDestLength) = 0;
+
   //--------------------------------------------------------------------
   // Interface nsIUnicodeDecoder [declaration]
 
@@ -242,6 +245,8 @@ public:
       PRInt32 * aSrcLength);
   NS_IMETHOD Finish(PRUnichar * aDest, PRInt32 aDestOffset, 
       PRInt32 * aDestLength);
+  NS_IMETHOD Length(const char * aSrc, PRInt32 aSrcOffset, 
+      PRInt32 aSrcLength, PRInt32 * aDestLength);
   NS_IMETHOD Reset();
   NS_IMETHOD SetInputErrorBehavior(PRInt32 aBehavior);
 };
