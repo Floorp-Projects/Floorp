@@ -308,9 +308,6 @@ namespace JavaScript {
         explicit IdentifierExprNode(const Token &t): ExprNode(t.getPos(), identifier), name(t.getIdentifier()) {}
 
         void print(PrettyPrinter &f) const;
-#ifdef EPIMETHEUS
-        MetaData::Context *cxt;
-#endif
     };
 
     struct QualifyExprNode: IdentifierExprNode {

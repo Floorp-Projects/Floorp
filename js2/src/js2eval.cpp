@@ -121,15 +121,14 @@ namespace MetaData {
     {
         JS2Metadata *meta = static_cast<JS2Metadata *>(JS_GetContextPrivate(cx));
 
-        ASSERT(argc == 2);
-        ASSERT(JSVAL_IS_BOOLEAN(argv[0]));  // the 'strict' flag (XXX what's that for?)
-        ASSERT(JSVAL_IS_OBJECT(argv[1]));   // the multiname object
-        
-        JSObject *multiNameObj = JSVAL_TO_OBJECT(argv[1]);
-        ASSERT(OBJ_GET_CLASS(cx, multiNameObj) == &gMonkeyMultinameClass); 
-        Multiname *mName = static_cast<Multiname *>(JS_GetPrivate(cx, multiNameObj));
+        ASSERT(argc == 1);                  // just the base name
+        ASSERT(JSVAL_IS_STRING(argv[0]));
 
-        if (!JS_SetPrivate(cx, obj, new LexicalReference(mName, &meta->env, (JSVAL_TO_BOOLEAN(argv[0])) == JS_TRUE) ))
+        JSString *str = JSVAL_TO_STRING(argv[0]);
+        Multiname *mName = new Multiname(meta->world.identifiers[String(JS_GetStringChars(str), JS_GetStringLength(str))]);
+        mName->addNamespace(&meta->cxt);
+
+        if (!JS_SetPrivate(cx, obj, new LexicalReference(mName, &meta->env, meta->cxt.strict)))
             return JS_FALSE;
 
         return JS_TRUE;
@@ -152,6 +151,8 @@ namespace MetaData {
         JS2Metadata *meta = static_cast<JS2Metadata *>(JS_GetContextPrivate(cx));
         LexicalReference *lRef = static_cast<LexicalReference *>(JS_GetPrivate(cx, obj));
 
+        ASSERT(argc == 0);
+
         meta->env.lexicalRead(meta, lRef->variableMultiname, RunPhase);
         return JS_TRUE;
     }
@@ -164,7 +165,9 @@ namespace MetaData {
         JS2Metadata *meta = static_cast<JS2Metadata *>(JS_GetContextPrivate(cx));
         LexicalReference *lRef = static_cast<LexicalReference *>(JS_GetPrivate(cx, obj));
 
+        ASSERT(argc == 1);
 
+        meta->env.lexicalWrite(meta, lRef->variableMultiname, argv[0], !meta->cxt.strict, RunPhase);
         return JS_TRUE;
     }
 
@@ -188,8 +191,7 @@ namespace MetaData {
     {
         JS2Metadata *meta = static_cast<JS2Metadata *>(JS_GetContextPrivate(cx));
 
-        ASSERT(argc >= 1);      // could be just the base name
-        ASSERT(OBJ_GET_CLASS(cx, obj) == &gMonkeyMultinameClass);
+        ASSERT(argc == 1);              // just the base name
 
         ASSERT(JSVAL_IS_STRING(argv[0]));
         JSString *str = JSVAL_TO_STRING(argv[0]);
@@ -197,14 +199,7 @@ namespace MetaData {
         Multiname *mName = new Multiname(meta->world.identifiers[String(JS_GetStringChars(str), JS_GetStringLength(str))]);
         if (!JS_SetPrivate(cx, obj, mName))
             return JS_FALSE;
-
-        for (uintN i = 1; i < argc; i++) {
-            ASSERT(JSVAL_IS_OBJECT(argv[i]));
-            JSObject *obj = JSVAL_TO_OBJECT(argv[i]);
-            ASSERT(OBJ_GET_CLASS(cx, obj) == &gMonkeyNamespaceClass);
-            Namespace *ns = static_cast<Namespace *>(JS_GetPrivate(cx, obj));
-            mName->addNamespace(ns);
-        }
+        mName->addNamespace(&meta->cxt);
 
         return JS_TRUE;
     }

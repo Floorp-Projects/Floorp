@@ -424,12 +424,7 @@ namespace MetaData {
             break;
         case ExprNode::identifier:
             {
-                IdentifierExprNode *i = checked_cast<IdentifierExprNode *>(p);
-                // Just cloning the context here, rather than constructing a multiname
-                // since this way is cheaper. 
-                // XXX - Additionally we can reuse pointers to duplicate
-                // contexts rather than having to have many of them.
-                i->cxt = new Context(cxt);
+//                IdentifierExprNode *i = checked_cast<IdentifierExprNode *>(p);
             }
             break;
         } // switch (p->getKind())
@@ -522,16 +517,7 @@ namespace MetaData {
         case ExprNode::identifier:
             {
                 IdentifierExprNode *i = checked_cast<IdentifierExprNode *>(p);
-                s += "new LexicalReference(";
-                s += (i->cxt->strict) ? "true, " : "false, ";
-                s += "new Multiname(\"" + i->name + "\"";
-                for (NamespaceListIterator nli = i->cxt->openNamespaces.begin(), end = i->cxt->openNamespaces.end();
-                        (nli != end); nli++) {
-                    s += ", new Namespace(\""
-                    s += (*nli)->name;
-                    s += "\")";
-                }
-                s += "))";
+                s += "new LexicalReference(\"" + i->name + "\")";
                 returningRef = true;
             }
             break;
@@ -581,6 +567,16 @@ namespace MetaData {
         return pf;
     }
 
+    // XXX makes the argument for vector instead of linked list...
+    // Returns the penultimate frame, either Package or Global
+    Frame *Environment::getPackageOrGlobalFrame()
+    {
+        Frame *pf = firstFrame;
+        while (pf && (pf->nextFrame) && (pf->nextFrame->nextFrame))
+            pf = pf->nextFrame;
+        return pf;
+    }
+
     // findThis returns the value of this. If allowPrototypeThis is true, allow this to be defined 
     // by either an instance member of a class or a prototype function. If allowPrototypeThis is 
     // false, allow this to be defined only by an instance member of a class.
@@ -616,6 +612,26 @@ namespace MetaData {
         return JSVAL_VOID;
     }
 
+    void Environment::lexicalWrite(JS2Metadata *meta, Multiname *multiname, jsval newValue, bool createIfMissing, Phase phase)
+    {
+        LookupKind lookup(true, findThis(false));
+        Frame *pf = firstFrame;
+        while (pf) {
+            // have to wrap the frame in a Monkey object in order
+            // to have readProperty handle it...
+            if (meta->writeProperty(pf, multiname, &lookup, false, newValue, phase))
+                return;
+            pf = pf->nextFrame;
+        }
+        if (createIfMissing) {
+            pf = getPackageOrGlobalFrame();
+            if (pf->kind == Frame::GlobalObject) {
+                if (meta->writeProperty(pf, multiname, &lookup, true, newValue, phase))
+                    return;
+            }
+        }
+        meta->reportError(Exception::referenceError, "{0} is undefined", meta->errorPos, multiname->name);
+    }
 
 
 /************************************************************************************
@@ -642,6 +658,13 @@ namespace MetaData {
                 return true;
         }
         return false;
+    }
+
+    void Multiname::addNamespace(Context *cxt)
+    {
+        for (NamespaceListIterator nli = cxt->openNamespaces.begin(), end = cxt->openNamespaces.end();
+                (nli != end); nli++)
+            nsList.push_back(*nli);
     }
 
 /************************************************************************************
@@ -740,14 +763,57 @@ namespace MetaData {
 */
     }
 
-    bool JS2Metadata::readDynamicProperty(Frame *container, Multiname *multiname, LookupKind *lookupKind, Phase phase)
+    bool JS2Metadata::readDynamicProperty(Frame *container, Multiname *multiname, LookupKind *lookupKind, Phase phase, jsval *rval)
     {
         return true;
     }
 
-    bool JS2Metadata::readStaticMember(StaticMember *m, Phase phase)
+    bool JS2Metadata::writeDynamicProperty(Frame *container, Multiname *multiname, bool createIfMissing, jsval newValue, Phase phase)
     {
         return true;
+    }
+
+    bool JS2Metadata::readStaticMember(StaticMember *m, Phase phase, jsval *rval)
+    {
+        if (m == NULL)
+            return false;   // 'None'
+        switch (m->kind) {
+        case StaticMember::Forbidden:
+            reportError(Exception::propertyAccessError, "Forbidden access", errorPos);
+            break;
+        case StaticMember::Variable:
+            break;
+        case StaticMember::HoistedVariable:
+            *rval = (checked_cast<HoistedVar *>(m))->value;
+            return true;
+        case StaticMember::ConstructorMethod:
+            break;
+        case StaticMember::Accessor:
+            break;
+        }
+        NOT_REACHED("Bad member kind");
+        return false;
+    }
+
+    bool JS2Metadata::writeStaticMember(StaticMember *m, jsval newValue, Phase phase)
+    {
+        if (m == NULL)
+            return false;   // 'None'
+        switch (m->kind) {
+        case StaticMember::Forbidden:
+        case StaticMember::ConstructorMethod:
+            reportError(Exception::propertyAccessError, "Forbidden access", errorPos);
+            break;
+        case StaticMember::Variable:
+            break;
+        case StaticMember::HoistedVariable:
+            (checked_cast<HoistedVar *>(m))->value = newValue;
+            return true;
+        case StaticMember::Accessor:
+            break;
+        }
+        NOT_REACHED("Bad member kind");
+        return false;
     }
 
     // Read the value of a property in the container. Return true/false if that container has
@@ -763,9 +829,20 @@ namespace MetaData {
     {
         StaticMember *m = findFlatMember(container, multiname, ReadAccess, phase);
         if (!m && (container->kind == Frame::GlobalObject))
-            return readDynamicProperty(container, multiname, lookupKind, phase);
+            return readDynamicProperty(container, multiname, lookupKind, phase, rval);
         else
-            return readStaticMember(m, phase);
+            return readStaticMember(m, phase, rval);
+    }
+
+    // Write the value of a property in the frame. Return true/false if that frame has
+    // the property or not.
+    bool JS2Metadata::writeProperty(Frame *container, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, jsval newValue, Phase phase)
+    {
+        StaticMember *m = findFlatMember(container, multiname, WriteAccess, phase);
+        if (!m && (container->kind == Frame::GlobalObject))
+            return writeDynamicProperty(container, multiname, createIfMissing, newValue, phase);
+        else
+            return writeStaticMember(m, newValue, phase);
     }
 
     // Find a binding in the frame that matches the multiname and access

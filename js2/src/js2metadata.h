@@ -113,6 +113,7 @@ public:
     
     Multiname(StringAtom &name) : name(name) { }
     void addNamespace(Namespace *ns)    { nsList.push_back(ns); }
+    void addNamespace(Context *cxt);
 
     bool matches(QualifiedName &q)      { return (name == q.id) && onList(q.nameSpace); }
     bool onList(Namespace *nameSpace);
@@ -148,11 +149,20 @@ class Signature {
 // A static member is either forbidden, a variable, a hoisted variable, a constructor method, or an accessor:
 class StaticMember {
 public:
-    enum StaticMemberKind { Forbidden, Variable, HoistedVariable, ConstructorMethod, Accessor } kind;
+    enum StaticMemberKind { Forbidden, Variable, HoistedVariable, ConstructorMethod, Accessor };
+
+    StaticMember(StaticMemberKind kind) : kind(kind) { }
+
+    StaticMemberKind kind;
+#ifdef DEBUG
+    virtual void uselessVirtual()   { } // want the checked_cast stuff to work, so need a virtual function
+#endif
 };
 
 class Variable : public StaticMember {
 public:
+    Variable() : StaticMember(StaticMember::Variable), type(NULL), value(JSVAL_VOID), immutable(false) { }
+
     JS2Class *type;                 // Type of values that may be stored in this variable
     js2val value;                   // This variable's current value; future if the variable has not been declared yet;
                                     // uninitialised if the variable must be written before it can be read
@@ -161,25 +171,37 @@ public:
 
 class HoistedVar : public StaticMember {
 public:
-    HoistedVar() : value(JSVAL_VOID), hasFunctionInitializer(false) { }
+    HoistedVar() : StaticMember(StaticMember::HoistedVariable), value(JSVAL_VOID), hasFunctionInitializer(false) { }
     js2val value;                   // This variable's current value
     bool hasFunctionInitializer;    // true if this variable was created by a function statement
 };
 
+class ConstructorMethod : public StaticMember {
+public:
+    ConstructorMethod() : StaticMember(StaticMember::ConstructorMethod), code(NULL) { }
+
+    Invokable *code;        // This function itself (a callable object)
+};
+
+class Accessor : public StaticMember {
+public:
+    Accessor() : StaticMember(StaticMember::Accessor), type(NULL), code(NULL) { }
+
+    JS2Class *type;         // The type of the value read from the getter or written into the setter
+    Invokable *code;        // calling this object does the read or write
+};
+
+/*
 class StaticMethod : public StaticMember {
 public:
+    StaticMethod() : StaticMember(
+
     Signature type;         // This function's signature
     Invokable *code;        // This function itself (a callable object)
     enum { Static, Constructor }
         modifier;           // static if this is a function or a static method; constructor if this is a constructor for a class
 };
-
-class Accessor : public StaticMember {
-public:
-    JS2Class *type;         // The type of the value read from the getter or written into the setter
-    Invokable *code;        // calling this object does the read or write
-};
-
+*/
 
 // DYNAMICPROPERTY record describes one dynamic property of one (prototype or class) instance.
 typedef std::map<String, js2val> DynamicPropertyMap;
@@ -330,6 +352,7 @@ class LexicalReference : public JS2Object {
 // q::a.
 public:
     LexicalReference(Multiname *vm, Environment *env, bool strict) : variableMultiname(vm), env(env), strict(strict) { }
+    
     Multiname *variableMultiname;   // A nonempty set of qualified names to which this reference can refer
     Environment *env;               // The environment in which the reference was created.
     bool strict;                    // The strict setting from the context in effect at the point where the reference was created
@@ -423,10 +446,12 @@ public:
 
     JS2Class *getEnclosingClass();
     Frame *getRegionalFrame();
-    Frame *getTopFrame()            { return firstFrame; }
+    Frame *getTopFrame()                { return firstFrame; }
+    Frame *getPackageOrGlobalFrame();
 
     jsval findThis(bool allowPrototypeThis);
     jsval lexicalRead(JS2Metadata *meta, Multiname *multiname, Phase phase);
+    void lexicalWrite(JS2Metadata *meta, Multiname *multiname, jsval newValue, bool createIfMissing, Phase phase);
 
 
 private:
@@ -502,13 +527,18 @@ public:
 
     JS2Class *objectType(jsval obj);
 
-    bool readProperty(jsval container, Multiname *multiname, LookupKind *lookupKind, Phase phase, jsval *rval);
-    bool readProperty(Frame *pf, Multiname *multiname, LookupKind *lookupKind, Phase phase, jsval *rval);
     StaticMember *findFlatMember(Frame *container, Multiname *multiname, Access access, Phase phase);
 
-    bool readDynamicProperty(Frame *container, Multiname *multiname, LookupKind *lookupKind, Phase phase);
-    bool readStaticMember(StaticMember *m, Phase phase);
 
+    bool readProperty(jsval container, Multiname *multiname, LookupKind *lookupKind, Phase phase, jsval *rval);
+    bool readProperty(Frame *pf, Multiname *multiname, LookupKind *lookupKind, Phase phase, jsval *rval);
+    bool readDynamicProperty(Frame *container, Multiname *multiname, LookupKind *lookupKind, Phase phase, jsval *rval);
+    bool readStaticMember(StaticMember *m, Phase phase, jsval *rval);
+
+
+    bool writeProperty(Frame *container, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, jsval newValue, Phase phase);
+    bool writeDynamicProperty(Frame *container, Multiname *multiname, bool createIfMissing, jsval newValue, Phase phase);
+    bool writeStaticMember(StaticMember *m, jsval newValue, Phase phase);
 
 
     void reportError(Exception::Kind kind, const char *message, size_t pos, const char *arg = NULL);
