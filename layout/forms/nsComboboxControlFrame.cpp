@@ -94,6 +94,7 @@ nsComboboxControlFrame::nsComboboxControlFrame()
   mButtonFrame                 = nsnull;
   mDropdownFrame               = nsnull;
   mIgnoreFocus                 = PR_FALSE;
+  mSelectedIndex               = -1;
 
    //Shrink the area around it's contents
   SetFlags(NS_BLOCK_SHRINK_WRAP);
@@ -190,6 +191,7 @@ nsComboboxControlFrame::InitTextStr(PRBool aUpdate)
       if (length > 0) {
          // Set listbox selection to first item in the list box
         fcFrame->SetProperty(nsHTMLAtoms::selectedindex, "0");
+        mSelectedIndex = 0;
          // Get the listbox selection as a string
         mListControlFrame->GetSelectedItem(mTextStr);
       }
@@ -198,6 +200,8 @@ nsComboboxControlFrame::InitTextStr(PRBool aUpdate)
 
    // Update the display by setting the value attribute
   mDisplayContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, mTextStr, aUpdate);
+  //nsIFrame* buttonFrame = GetDisplayFrame(aPresContext);
+  //nsFormControlHelper::ForceDrawFrame(buttonFrame);
 }
 
 //--------------------------------------------------------------
@@ -569,9 +573,7 @@ nsComboboxControlFrame::GetAbsoluteFramePosition(nsIPresContext& aPresContext,
       parent->GetWidget(widget);
       if (nsnull != widget) {
         // Add in the absolute offset of the widget.
-        nsRect absBounds2;
         nsRect absBounds;
-        //widget->GetAbsoluteBounds(absBounds2);
         nsRect lc;
         widget->WidgetToScreen(lc, absBounds);
         // Convert widget coordinates to twips   
@@ -931,6 +933,8 @@ nsComboboxControlFrame::SelectionChanged()
 {
   if (nsnull != mDisplayContent) {
     mDisplayContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, mTextStr, PR_TRUE);
+    nsIFrame* displayFrame = GetDisplayFrame(*mPresContext);
+    nsFormControlHelper::ForceDrawFrame(displayFrame);
   }
 
    // Dispatch the NS_FORM_CHANGE event
@@ -974,12 +978,13 @@ nsComboboxControlFrame::ListWasSelected(nsIPresContext* aPresContext)
   ShowList(aPresContext, PR_FALSE);
   mListControlFrame->CaptureMouseEvents(PR_FALSE);
 
-  nsString str;
   if (nsnull != mListControlFrame) {
-    mListControlFrame->GetSelectedItem(str);
+    PRInt32 index;
+    mListControlFrame->GetSelectedIndex(&index);
      // Check to see if the selection changed
-    if (PR_FALSE == str.Equals(mTextStr)) {
-      mTextStr = str;
+    if (mSelectedIndex != index) {
+      mListControlFrame->GetSelectedItem(mTextStr);
+      mSelectedIndex = index;
       //XXX:TODO look at the ordinal position of the selected content in the listbox to tell
       // if the selection has changed, rather than looking at the text string.
       // There may be more than one item in the dropdown list with the same label. 
@@ -1050,10 +1055,12 @@ nsComboboxControlFrame::CreateAnonymousContent(nsISupportsArray& aChildList)
   NS_NewHTMLInputElement(&mDisplayContent, tag);
   NS_ADDREF(mDisplayContent);
   mDisplayContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, nsAutoString("button"), PR_FALSE);
+  //mDisplayContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::readonly, nsAutoString("true"), PR_FALSE);
+
     //XXX: Do not use nsHTMLAtoms::id use nsHTMLAtoms::kClass instead. There will end up being multiple
     //ids set to the same value which is illegal.
   mDisplayContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, nsAutoString("-moz-display"), PR_FALSE);
-  //mDisplayContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, nsAutoString("X"), PR_TRUE);
+  mDisplayContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, nsAutoString("X"), PR_TRUE);
   aChildList.AppendElement(mDisplayContent);
 
   // create button which drops the list down
