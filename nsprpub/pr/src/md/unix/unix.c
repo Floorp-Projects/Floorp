@@ -2804,6 +2804,14 @@ from_heap:
 	}
 
 	prot = PROT_READ|PROT_WRITE;
+	/*
+	 * On Alpha Linux, the user-level thread stack needs
+	 * to be made executable because longjmp/signal seem
+	 * to put machine instructions on the stack.
+	 */
+#if defined(LINUX) && defined(__alpha)
+	prot |= PROT_EXEC;
+#endif
 	rv = mmap((vaddr != 0) ? vaddr : lastaddr, size, prot,
 	    _MD_MMAP_FLAGS,
 	    _pr_zero_fd, 0);
