@@ -21,6 +21,7 @@ DEPTH = ..\..\..
 
 EXPORTS =                           \
         netCore.h                   \
+	nsNetModuleMgr.h	    \
         nsIFileTransportService.h   \
         nsISocketTransportService.h \
         nsIHeader.h                 \
