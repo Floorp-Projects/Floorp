@@ -1145,10 +1145,17 @@ nsSVGSVGElement::DidModifySVGObservable (nsISVGValue* observable)
   if (frame) {
     nsISVGSVGFrame* svgframe;
     CallQueryInterface(frame, &svgframe);
-    NS_ASSERTION(svgframe, "wrong frame type");
     if (svgframe) {
       svgframe->NotifyViewportChange();
     }
+#ifdef DEBUG
+    else {
+      // XXX we get here during nsSVGOuterSVGFrame::Init() since that
+      // function is called before the presshell association between us
+      // and our frame is established.
+      NS_WARNING("wrong frame type");
+    }
+#endif
   }
   
   
