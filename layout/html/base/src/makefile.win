@@ -48,11 +48,6 @@ CPPSRCS=				\
 	nsSpacerFrame.cpp		\
 	nsTextFrame.cpp			\
 	nsWBRFrame.cpp			\
-	nsDOMNodeList.cpp		\
-	nsDOMAttributes.cpp		\
-	nsHTMLContainer.cpp		\
-	nsHTMLContent.cpp		\
-	nsHTMLTagContent.cpp		\
 	$(NULL)
 
 CPP_OBJS=					\
@@ -64,13 +59,10 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsGlobalVariables.obj	\
 	.\$(OBJDIR)\nsHRFrame.obj		\
 	.\$(OBJDIR)\nsHTMLAtoms.obj		\
-	.\$(OBJDIR)\nsHTMLContainer.obj		\
 	.\$(OBJDIR)\nsHTMLContainerFrame.obj	\
-	.\$(OBJDIR)\nsHTMLContent.obj		\
 	.\$(OBJDIR)\nsHTMLFrame.obj		\
 	.\$(OBJDIR)\nsHTMLIIDs.obj		\
 	.\$(OBJDIR)\nsHTMLReflowCommand.obj	\
-	.\$(OBJDIR)\nsHTMLTagContent.obj	\
 	.\$(OBJDIR)\nsImageFrame.obj		\
 	.\$(OBJDIR)\nsImageMap.obj		\
 	.\$(OBJDIR)\nsInlineFrame.obj		\
@@ -84,8 +76,6 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsSpacerFrame.obj		\
 	.\$(OBJDIR)\nsTextFrame.obj		\
 	.\$(OBJDIR)\nsWBRFrame.obj		\
-	.\$(OBJDIR)\nsDOMNodeList.obj		\
-	.\$(OBJDIR)\nsDOMAttributes.obj		\
 	$(NULL)
 
 EXPORTS=nsGlobalVariables.h
