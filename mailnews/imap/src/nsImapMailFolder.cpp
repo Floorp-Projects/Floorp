@@ -723,8 +723,8 @@ NS_IMETHODIMP nsImapMailFolder::UpdateSummaryTotals(PRBool force)
 	// with the pending imap counts?
 	nsresult rv = NS_OK;
 
-	PRInt32 oldUnreadMessages = mNumUnreadMessages;
-	PRInt32 oldTotalMessages = mNumTotalMessages;
+	PRInt32 oldUnreadMessages = mNumUnreadMessages + mNumPendingUnreadMessages;
+	PRInt32 oldTotalMessages = mNumTotalMessages + mNumPendingTotalMessages;
 	//We need to read this info from the database
 	ReadDBFolderInfo(force);
 
@@ -732,20 +732,23 @@ NS_IMETHODIMP nsImapMailFolder::UpdateSummaryTotals(PRBool force)
 	if (mNumUnreadMessages == -1)
 		mNumUnreadMessages = -2;
 
+	PRInt32 newUnreadMessages = mNumUnreadMessages + mNumPendingUnreadMessages;
+	PRInt32 newTotalMessages = mNumTotalMessages + mNumPendingTotalMessages;
+
 	//Need to notify listeners that total count changed.
-	if(oldTotalMessages != mNumTotalMessages)
+	if(oldTotalMessages != newTotalMessages)
 	{
 		char *oldTotalMessagesStr = PR_smprintf("%d", oldTotalMessages);
-		char *totalMessagesStr = PR_smprintf("%d",mNumTotalMessages);
+		char *totalMessagesStr = PR_smprintf("%d",newTotalMessages);
 		NotifyPropertyChanged("TotalMessages", oldTotalMessagesStr, totalMessagesStr);
 		PR_smprintf_free(totalMessagesStr);
 		PR_smprintf_free(oldTotalMessagesStr);
 	}
 
-	if(oldUnreadMessages != mNumUnreadMessages)
+	if(oldUnreadMessages != newUnreadMessages)
 	{
 		char *oldUnreadMessagesStr = PR_smprintf("%d", oldUnreadMessages);
-		char *totalUnreadMessages = PR_smprintf("%d",mNumUnreadMessages);
+		char *totalUnreadMessages = PR_smprintf("%d",newUnreadMessages);
 		NotifyPropertyChanged("TotalUnreadMessages", oldUnreadMessagesStr, totalUnreadMessages);
 		PR_smprintf_free(totalUnreadMessages);
 		PR_smprintf_free(oldUnreadMessagesStr);
@@ -1206,6 +1209,9 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
                                             nsIMsgDatabase::GetIID(),
                                             (void **) getter_AddRefs(mailDBFactory));
     if (NS_FAILED(rv)) return rv;
+
+	ChangeNumPendingTotalMessages(-GetNumPendingTotalMessages());
+	ChangeNumPendingUnread(-GetNumPendingUnread());
 
     if (!mDatabase)
     {
@@ -2518,8 +2524,12 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
 		nsCOMPtr<nsIMsgWindow> aWindow;
 		nsCOMPtr<nsIMsgMailNewsUrl> mailUrl = do_QueryInterface(aUrl);
         nsCOMPtr<nsIImapUrl> imapUrl = do_QueryInterface(aUrl);
+		PRBool folderOpen = PR_FALSE;
 		if (mailUrl)
 			mailUrl->GetMsgWindow(getter_AddRefs(aWindow));
+		if (session)
+			session->IsFolderOpenInWindow(this, &folderOpen);
+
         if (imapUrl)
         {
             nsIImapUrl::nsImapAction imapAction = nsIImapUrl::nsImapTest;
@@ -2557,22 +2567,21 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
                         if (m_transactionManager)
                             m_transactionManager->Do(m_copyState->m_undoMsgTxn);
                     }
-                    ClearCopyState(aExitCode);
-                }
-				if (session)
-				{
-					PRBool folderOpen = PR_FALSE;
-					session->IsFolderOpenInWindow(this, &folderOpen);
 					if (folderOpen)
 						UpdateFolder(aWindow);
 					else
 						UpdatePendingCounts(PR_TRUE, PR_FALSE);
-				}
+                    ClearCopyState(aExitCode);
+                }
                 break;
             case nsIImapUrl::nsImapAppendMsgFromFile:
             case nsIImapUrl::nsImapAppendDraftFromFile:
                 if (m_copyState)
                 {
+					if (folderOpen)
+						UpdateFolder(aWindow);
+					else
+						UpdatePendingCounts(PR_TRUE, PR_FALSE);
                     m_copyState->m_curIndex++;
                     if (m_copyState->m_curIndex >= m_copyState->m_totalCount)
                     {
@@ -2581,7 +2590,6 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
                         ClearCopyState(aExitCode);
                     }
                 }
-                UpdateFolder(aWindow);
                 break;
             default:
                 break;
@@ -3196,8 +3204,6 @@ nsImapMailFolder::CopyFileMessage(nsIFileSpec* fileSpec,
                                             PR_TRUE, isDraftOrTemplate,
                                             urlListener, nsnull,
                                             copySupport);
-    if (NS_SUCCEEDED(rv))
-        imapService->SelectFolder(m_eventQueue, this, this, nsnull, nsnull);
 
     return rv;
 }
