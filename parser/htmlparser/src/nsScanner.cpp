@@ -51,7 +51,7 @@ nsScanner::nsScanner(nsString& anHTMLString, const nsString& aCharset, nsCharset
   mBuffer(anHTMLString), mFilename("")
 {
   mTotalRead=mBuffer.Length();
-  mIncremental=PR_TRUE;
+  mIncremental=PR_FALSE;
   mOwnsStream=PR_FALSE;
   mOffset=0;
   mMarkPos=0;
@@ -99,14 +99,14 @@ nsScanner::nsScanner(nsString& aFilename,PRBool aCreateStream, const nsString& a
  *  @param   aFilename --
  *  @return  
  */
-nsScanner::nsScanner(nsString& aFilename,nsInputStream& aStream,const nsString& aCharset, nsCharsetSource aSource, PRBool assumeOwnership) :
+nsScanner::nsScanner(nsString& aFilename,nsInputStream& aStream,const nsString& aCharset, nsCharsetSource aSource) :
     mBuffer(""), mFilename(aFilename) 
 {    
-  mIncremental=PR_TRUE;
+  mIncremental=PR_FALSE;
   mOffset=0;
   mMarkPos=0;
   mTotalRead=0;
-  mOwnsStream=assumeOwnership;
+  mOwnsStream=PR_FALSE;
   mInputStream=&aStream;
   mUnicodeDecoder = 0;
   mCharset = "";
@@ -114,8 +114,8 @@ nsScanner::nsScanner(nsString& aFilename,nsInputStream& aStream,const nsString& 
   SetDocumentCharset(aCharset, aSource);
 }
 
-nsresult nsScanner::SetDocumentCharset(const nsString& aCharset , nsCharsetSource aSource)
-{
+
+nsresult nsScanner::SetDocumentCharset(const nsString& aCharset , nsCharsetSource aSource) {
 
   nsresult res = NS_OK;
 
@@ -212,12 +212,15 @@ PRUint32 nsScanner::RewindToMark(void){
  *  @param   
  *  @return  
  */
-PRUint32 nsScanner::Mark(void){
-  if((mOffset>0) && (mOffset>eBufferSizeThreshold)) {
-    mBuffer.Cut(0,mOffset);   //delete chars up to mark position
-    mOffset=0;
+PRUint32 nsScanner::Mark(PRInt32 anIndex){
+  if(kNotFound==anIndex) {
+    if((mOffset>0) && (mOffset>eBufferSizeThreshold)) {
+      mBuffer.Cut(0,mOffset);   //delete chars up to mark position
+      mOffset=0;
+    }
+    mMarkPos=mOffset;
   }
-  mMarkPos=mOffset;
+  else mOffset=(PRUint32)anIndex;
   return 0;
 }
  
@@ -229,7 +232,7 @@ PRUint32 nsScanner::Mark(void){
  * @update  gess4/3/98
  * @return  error code 
  */
-PRBool nsScanner::Append(nsString& aBuffer) {
+PRBool nsScanner::Append(const nsString& aBuffer) {
   mBuffer.Append(aBuffer);
   mTotalRead+=aBuffer.Length();
   return PR_TRUE;

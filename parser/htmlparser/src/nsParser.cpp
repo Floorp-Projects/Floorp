@@ -644,7 +644,7 @@ nsParser::IsParserEnabled()
  *  @param   aFilename -- const char* containing file to be parsed.
  *  @return  error code -- 0 if ok, non-zero if error.
  */
-nsresult nsParser::Parse(nsIURI* aURL,nsIStreamObserver* aListener,PRBool aVerifyEnabled, void* aKey) {
+nsresult nsParser::Parse(nsIURI* aURL,nsIStreamObserver* aListener,PRBool aVerifyEnabled, void* aKey,eParseMode aMode) {
   NS_PRECONDITION(0!=aURL,kNullURL);
 
   nsresult result=kBadURL;
@@ -683,7 +683,7 @@ nsresult nsParser::Parse(nsIURI* aURL,nsIStreamObserver* aListener,PRBool aVerif
  * @param   aStream is the i/o source
  * @return  error code -- 0 if ok, non-zero if error.
  */
-nsresult nsParser::Parse(nsIInputStream& aStream,PRBool aVerifyEnabled, void* aKey){
+nsresult nsParser::Parse(nsIInputStream& aStream,PRBool aVerifyEnabled, void* aKey,eParseMode aMode){
 
   mDTDVerification=aVerifyEnabled;
   nsresult  result=NS_ERROR_OUT_OF_MEMORY;
@@ -692,7 +692,7 @@ nsresult nsParser::Parse(nsIInputStream& aStream,PRBool aVerifyEnabled, void* aK
   nsAutoString theUnknownFilename("unknown");
 
   nsInputStream input(&aStream);
-  CParserContext* pc=new CParserContext(new nsScanner(theUnknownFilename, input, mCharset, mCharsetSource,PR_FALSE),aKey,0);
+  CParserContext* pc=new CParserContext(new nsScanner(theUnknownFilename, input, mCharset, mCharsetSource),aKey,0);
   if(pc) {
     PushContext(*pc);
     pc->mSourceType=kHTMLTextContentType;
@@ -721,7 +721,7 @@ nsresult nsParser::Parse(nsIInputStream& aStream,PRBool aVerifyEnabled, void* aK
  * @param   aContentType tells us what type of content to expect in the given string
  * @return  error code -- 0 if ok, non-zero if error.
  */
-nsresult nsParser::Parse(nsString& aSourceBuffer,void* aKey,const nsString& aContentType,PRBool aVerifyEnabled,PRBool aLastCall){
+nsresult nsParser::Parse(const nsString& aSourceBuffer,void* aKey,const nsString& aContentType,PRBool aVerifyEnabled,PRBool aLastCall,eParseMode aMode){
  
   //NOTE: Make sure that updates to this method don't cause 
   //      bug #2361 to break again!
@@ -780,7 +780,7 @@ nsresult nsParser::Parse(nsString& aSourceBuffer,void* aKey,const nsString& aCon
  *  @param   aContentType tells us what kind of stuff you're inserting
  *  @return  TRUE if valid, otherwise FALSE
  */
-PRBool nsParser::IsValidFragment(const nsString& aSourceBuffer,nsITagStack& aStack,PRUint32 anInsertPos,const nsString& aContentType){
+PRBool nsParser::IsValidFragment(const nsString& aSourceBuffer,nsITagStack& aStack,PRUint32 anInsertPos,const nsString& aContentType,eParseMode aMode){
 
   /************************************************************************************
     This method works like this:
@@ -833,7 +833,7 @@ PRBool nsParser::IsValidFragment(const nsString& aSourceBuffer,nsITagStack& aSta
  *  @param   
  *  @return  
  */
-nsresult nsParser::ParseFragment(const nsString& aSourceBuffer,void* aKey,nsITagStack& aStack,PRUint32 anInsertPos,const nsString& aContentType){
+nsresult nsParser::ParseFragment(const nsString& aSourceBuffer,void* aKey,nsITagStack& aStack,PRUint32 anInsertPos,const nsString& aContentType,eParseMode aMode){
 
   nsresult result=NS_OK;
   nsAutoString  theContext;
@@ -1140,7 +1140,7 @@ nsresult nsParser::OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream, PRUin
 
       mParserContext->mScanner->Append(mParserContext->mTransferBuffer,theNumRead);
       nsString& theBuffer=mParserContext->mScanner->GetBuffer();
-      theBuffer.ToUCS2(theStartPos);
+      // theBuffer.ToUCS2(theStartPos);
 
 #ifdef rickgdebug
       (*gDumpFile) << mParserContext->mTransferBuffer;
@@ -1175,6 +1175,7 @@ nsresult nsParser::OnStopRequest(nsIURI* aURL, nsresult status, const PRUnichar*
   if(mParserFilter)
      mParserFilter->Finish();
 
+  mParserContext->mScanner->SetIncremental(PR_FALSE);
   nsresult result=ResumeParse(nsnull, PR_TRUE);
   // If the parser isn't enabled, we don't finish parsing till
   // it is reenabled.

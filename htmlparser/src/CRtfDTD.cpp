@@ -65,7 +65,7 @@ struct RTFEntry {
   eRTFTags  mTagID;
 };
 
-
+#if 0
 static RTFEntry gRTFTable[] = {
 
   {"$",eRTFCtrl_unknown},
@@ -127,7 +127,7 @@ static const char* GetTagName(eRTFTags aTag) {
   }
   return "";
 }
-
+#endif
 
 /**
  *  This method gets called as part of our COM-like interfaces.

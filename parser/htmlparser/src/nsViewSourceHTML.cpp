@@ -883,7 +883,9 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
         nsString& theText=aToken->GetStringValueXXX();
 
         //if the comment has had it's markup stripped, then write it out seperately...
-        if(0!=theText.Find("<!"))
+        nsAutoString theLeft("");
+        theText.Left(theLeft,2);
+        if(theLeft!="<!")
           ::WriteText(nsAutoString("<!"),*mSink,PR_TRUE,mIsPlaintext,theContext);
         ::WriteText(theText,*mSink,PR_TRUE,mIsPlaintext,theContext);
         if(kGreaterThan!=theText.Last())

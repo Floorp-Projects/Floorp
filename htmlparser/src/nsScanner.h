@@ -76,7 +76,7 @@ class nsScanner {
        *  @param   aMode represents the parser mode (nav, other)
        *  @return  
        */
-      nsScanner(nsString& aFilename, nsInputStream& aStream, const nsString& aCharset, nsCharsetSource aSource,PRBool assumeOwnership=PR_TRUE);
+      nsScanner(nsString& aFilename, nsInputStream& aStream, const nsString& aCharset, nsCharsetSource aSource);
 
 
       ~nsScanner();
@@ -206,7 +206,7 @@ class nsScanner {
        *  @param   
        *  @return  
        */
-      PRUint32 Mark(void);
+      PRUint32 Mark(PRInt32 anIndex=-1);
 
       /**
        *  Resets current offset position of input stream to marked position. 
@@ -228,7 +228,7 @@ class nsScanner {
        *  @param   
        *  @return  
        */
-      PRBool Append(nsString& aBuffer);
+      PRBool Append(const nsString& aBuffer);
 
       /**
        *  
@@ -281,6 +281,17 @@ class nsScanner {
        *  @return  
        */
       nsresult SetDocumentCharset(const nsString& aCharset, nsCharsetSource aSource);
+
+      /**
+       * Internal method used to cause the internal buffer to
+       * be filled with data. 
+       *
+       * @update  gess4/3/98
+       */
+      PRBool    IsIncremental(void) {return mIncremental;}
+      void      SetIncremental(PRBool anIncrValue) {mIncremental=anIncrValue;}
+
+      PRUint32  GetOffset(void) {return mOffset;}
 
   protected:
 
