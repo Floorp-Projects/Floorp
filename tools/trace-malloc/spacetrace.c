@@ -69,7 +69,7 @@
 ** Ugh, MSVC6's qsort is too slow...
 */
 #include "nsQuickSort.h"
-
+#include "prlong.h"
 /*
 **  strcasecmp API please.
 */
@@ -4581,6 +4581,107 @@ void fillOptions(STOptions* outOptions, const FormData* inFormData)
     }
 }
 
+/* no bool options yet */
+#if 0
+void displayOptionBool(const char* option_name, option_genre, option_help)
+{
+PR_fprintf(inRequest->mFD, "<input type=submit value=%s>\n", #option_name); \
+    PR_fprintf(inRequest->mFD, "<input type=radio name=%s value=%d%s>Disabled</input>\n", #option_name, PR_FALSE, PR_FALSE == inRequest->mOptions.m##option_name ? " checked" : ""); \
+    PR_fprintf(inRequest->mFD, "<input type=radio name=%s value=%d%s>Enabled</input>\n", #option_name, PR_TRUE, PR_FALSE != inRequest->mOptions.m##option_name ? " checked" : ""); \
+    PR_fprintf(inRequest->mFD, "Disabled by default.\n%s\n", option_help);
+}
+#endif
+
+void displayOptionString(STRequest* inRequest,
+                         const char* option_name,
+                         const char* option_genre,
+                         const char* default_value,
+                         const char* option_help,
+                         const char* value)
+{
+#if 0
+    PR_fprintf(inRequest->mFD, "<input type=submit value=%s>\n", option_name);
+#endif
+    PR_fprintf(inRequest->mFD, "<div class=option-box>\n");
+    PR_fprintf(inRequest->mFD, "<p class=option-name>%s</p>\n", option_name);
+    PR_fprintf(inRequest->mFD, "<input type=text name=\"%s\" value=\"%s\">\n", option_name, value); 
+    PR_fprintf(inRequest->mFD, "<p class=option-default>Default value is \"%s\".</p>\n<p class=option-help>%s</p>\n", default_value, option_help);
+    PR_fprintf(inRequest->mFD, "</div>\n");
+};
+
+static void
+displayOptionStringArray(STRequest* inRequest,
+                         const char* option_name,
+                         const char* option_genre,
+                         PRUint32 array_size,
+                         const char* option_help,
+                         const char values[5][ST_OPTION_STRING_MAX])
+{
+    // values should not be a fixed length!
+    PR_ASSERT(array_size==5);
+
+#if 0
+    PR_fprintf(inRequest->mFD, "<input type=submit value=%s>\n", option_name);
+#endif
+    PR_fprintf(inRequest->mFD, "<div class=\"option-box\">\n");
+    PR_fprintf(inRequest->mFD, "<p class=option-name>%s</p>\n", option_name);
+    {
+        PRUint32 loop = 0;
+       
+        for(loop = 0; loop < array_size; loop++)
+        {
+            PR_fprintf(inRequest->mFD, "<input type=text name=\"%s\" value=\"%s\"><br>\n", option_name, values[loop]);
+        }
+    }
+    PR_fprintf(inRequest->mFD, "<p class=option-default>Up to %u occurrences allowed.</p>\n<p class=option-help>%s</p>\n", array_size, option_help);
+    PR_fprintf(inRequest->mFD, "</div>\n");
+}
+
+static void
+displayOptionInt(STRequest *inRequest,
+                 const char* option_name,
+                 const char* option_genre,
+                 PRUint32 default_value,
+                 PRUint32 multiplier,
+                 const char* option_help,
+                 PRUint32 value)
+{
+#if 0
+    PR_fprintf(inRequest->mFD, "<input type=submit value=%s>\n", option_name);
+#endif
+    PR_fprintf(inRequest->mFD, "<div class=\"option-box\">\n");
+    PR_fprintf(inRequest->mFD, "<p class=option-name>%s</p>\n", option_name);
+    PR_fprintf(inRequest->mFD, "<input type=text name=%s value=%u>\n", option_name, value / multiplier);
+    PR_fprintf(inRequest->mFD, "<p class=option-default>Default value is %u.</p>\n<p class=option-help>%s</p>\n", default_value, option_help);
+    PR_fprintf(inRequest->mFD, "</div>\n");
+}
+
+static void
+displayOptionInt64(STRequest* inRequest,
+                   const char* option_name,
+                   const char* option_genre,
+                   PRUint64 default_value,
+                   PRUint64 multiplier,
+                   const char* option_help,
+                   PRUint64 value)
+{
+#if 0
+    PR_fprintf(inRequest->mFD, "<input type=submit value=%s>\n", option_name);
+#endif
+    
+    PR_fprintf(inRequest->mFD, "<div class=\"option-box\">\n");
+    PR_fprintf(inRequest->mFD, "<p class=option-name>%s</p>\n", option_name);
+    {
+        PRUint64 def64 = default_value;
+        PRUint64 mul64 = multiplier;
+        PRUint64 div64;
+
+        LL_DIV(div64, value, mul64);
+        PR_fprintf(inRequest->mFD, "<input type=text name=%s value=%llu>\n", option_name, div64);
+        PR_fprintf(inRequest->mFD, "<p class=option-default>Default value is %llu.</p>\n<p class=option-help>%s</p>\n", def64, option_help);
+    }
+    PR_fprintf(inRequest->mFD, "</div>\n");
+}
 
 /*
 **  displaySettings
@@ -4599,44 +4700,27 @@ void displaySettings(STRequest* inRequest)
     /*
     **  Respect newlines in help text.
     */
+#if 0
     PR_fprintf(inRequest->mFD, "<pre>\n");
+#endif
 
 #define ST_WEB_OPTION_BOOL(option_name, option_genre, option_help) \
-    PR_fprintf(inRequest->mFD, "<input type=submit value=%s>\n", #option_name); \
-    PR_fprintf(inRequest->mFD, "<input type=radio name=%s value=%d%s>Disabled</input>\n", #option_name, PR_FALSE, PR_FALSE == inRequest->mOptions.m##option_name ? " checked" : ""); \
-    PR_fprintf(inRequest->mFD, "<input type=radio name=%s value=%d%s>Enabled</input>\n", #option_name, PR_TRUE, PR_FALSE != inRequest->mOptions.m##option_name ? " checked" : ""); \
-    PR_fprintf(inRequest->mFD, "Disabled by default.\n%s\n", option_help);
+    displayOptionBool(option_name, option_genre, option_help)
+    
 #define ST_WEB_OPTION_STRING(option_name, option_genre, default_value, option_help) \
-    PR_fprintf(inRequest->mFD, "<input type=submit value=%s>\n", #option_name); \
-    PR_fprintf(inRequest->mFD, "<input type=text name=%s value=%s>\n", #option_name, inRequest->mOptions.m##option_name); \
-    PR_fprintf(inRequest->mFD, "Default value is \"%s\".\n%s\n", default_value, option_help);
+    displayOptionString(inRequest, #option_name, #option_genre, default_value, option_help, inRequest->mOptions.m##option_name);
+
 #define ST_WEB_OPTION_STRING_ARRAY(option_name, option_genre, array_size, option_help) \
-    PR_fprintf(inRequest->mFD, "<input type=submit value=%s>\n", #option_name); \
-    { \
-        PRUint32 loop = 0; \
-        \
-        for(loop = 0; loop < array_size; loop++) \
-        { \
-            PR_fprintf(inRequest->mFD, "<input type=text name=%s value=%s>\n", #option_name, inRequest->mOptions.m##option_name[loop]); \
-        } \
-    } \
-    PR_fprintf(inRequest->mFD, "Up to %u occurrences allowed.\n%s\n", array_size, option_help);
+    displayOptionStringArray(inRequest, #option_name, #option_genre, array_size, option_help, inRequest->mOptions.m##option_name);
+    
 #define ST_WEB_OPTION_STRING_PTR_ARRAY(option_name, option_genre, option_help) /* no implementation */
+    
 #define ST_WEB_OPTION_UINT32(option_name, option_genre, default_value, multiplier, option_help) \
-    PR_fprintf(inRequest->mFD, "<input type=submit value=%s>\n", #option_name); \
-    PR_fprintf(inRequest->mFD, "<input type=text name=%s value=%u>\n", #option_name, inRequest->mOptions.m##option_name / multiplier); \
-    PR_fprintf(inRequest->mFD, "Default value is %u.\n%s\n", default_value, option_help);
+    displayOptionInt(inRequest, #option_name, #option_genre, default_value, multiplier, option_help, inRequest->mOptions.m##option_name);
+
 #define ST_WEB_OPTION_UINT64(option_name, option_genre, default_value, multiplier, option_help) \
-    PR_fprintf(inRequest->mFD, "<input type=submit value=%s>\n", #option_name); \
-    { \
-        PRUint64 def64 = default_value; \
-        PRUint64 mul64 = multiplier; \
-        PRUint64 div64; \
-        \
-        LL_DIV(div64, inRequest->mOptions.m##option_name##64, mul64); \
-        PR_fprintf(inRequest->mFD, "<input type=text name=%s value=%llu>\n", #option_name, div64); \
-        PR_fprintf(inRequest->mFD, "Default value is %llu.\n%s\n", def64, option_help); \
-    }
+    displayOptionInt64(inRequest, #option_name, #option_genre, default_value, multiplier, option_help, inRequest->mOptions.m##option_name##64);
+    
 
 #include "stoptions.h"
 
@@ -4644,8 +4728,10 @@ void displaySettings(STRequest* inRequest)
     **  Give a submit/reset button, obligatory.
     **  Done respecting newlines in help text.
     */
-    PR_fprintf(inRequest->mFD, "<input type=submit> <input type=reset>\n");
+    PR_fprintf(inRequest->mFD, "<input type=submit value=\"Save Options\"> <input type=reset>\n");
+#if 0
     PR_fprintf(inRequest->mFD, "</pre>\n");
+#endif
 
     /*
     ** Done with form.
@@ -5262,7 +5348,8 @@ int handleRequest(tmreader* aTMR, PRFileDesc* aFD, const char* aFileName, const 
                 
                 htmlFooter(&request);
             }
-            else if(0 == strcmp("settings.html", aFileName) || 0 == strcmp("options.html", aFileName))
+            else if(0 == strcmp("settings.html", aFileName) ||
+                    0 == strcmp("options.html", aFileName))
             {
                 htmlHeader(&request, "SpaceTrace Options");
                 
@@ -5684,7 +5771,7 @@ void handleClient(void* inArg)
                 **      mime type, otherwise, say it is text/html. 
                 */
                 PR_fprintf(aFD, "HTTP/1.1 200 OK%s", crlf);
-                PR_fprintf(aFD, "Server: %s%s", "$Id: spacetrace.c,v 1.43 2003/06/04 20:15:07 alecf%flett.org Exp $", crlf);
+                PR_fprintf(aFD, "Server: %s%s", "$Id: spacetrace.c,v 1.44 2003/06/05 19:56:05 alecf%flett.org Exp $", crlf);
                 PR_fprintf(aFD, "Content-type: ");
                 if(NULL != strstr(start, ".png"))
                 {
