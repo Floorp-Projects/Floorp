@@ -89,8 +89,17 @@ nsTreeLayout::GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSiz
 {
   nsresult rv = nsTempleLayout::GetPrefSize(aBox, aBoxLayoutState, aSize);
   nsXULTreeOuterGroupFrame* frame = GetOuterFrame(aBox);
-  if (frame)
-    aSize.height = frame->GetRowCount() * frame->GetRowHeightTwips();
+  if (frame) {
+    nscoord rowheight = frame->GetRowHeightTwips();
+    aSize.height = frame->GetRowCount() * rowheight;
+    // Pad the height.
+    nscoord y = frame->GetAvailableHeight();
+    if (y > 0 && rowheight > 0) {
+      nscoord m = (aSize.height-y)%rowheight;
+      nscoord remainder = m == 0 ? 0 : rowheight - m;
+      aSize.height += remainder;
+    }
+  }
   return rv;
 }
 
@@ -99,8 +108,17 @@ nsTreeLayout::GetMinSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize
 {
   nsresult rv = nsTempleLayout::GetMinSize(aBox, aBoxLayoutState, aSize);
   nsXULTreeOuterGroupFrame* frame = GetOuterFrame(aBox);
-  if (frame)
-    aSize.height = frame->GetRowCount() * frame->GetRowHeightTwips();
+  if (frame) {
+    nscoord rowheight = frame->GetRowHeightTwips();
+    aSize.height = frame->GetRowCount() * rowheight;
+    // Pad the height.
+    nscoord y = frame->GetAvailableHeight();
+    if (y > 0 && rowheight > 0) {
+      nscoord m = (aSize.height-y)%rowheight;
+      nscoord remainder = m == 0 ? 0 : rowheight - m;
+      aSize.height += remainder;
+    }
+  }
   return rv;
 }
 
@@ -109,8 +127,17 @@ nsTreeLayout::GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize
 {
   nsresult rv = nsTempleLayout::GetMaxSize(aBox, aBoxLayoutState, aSize);
   nsXULTreeOuterGroupFrame* frame = GetOuterFrame(aBox);
-  if (frame)
-    aSize.height = frame->GetRowCount() * frame->GetRowHeightTwips();
+  if (frame) {
+    nscoord rowheight = frame->GetRowHeightTwips();
+    aSize.height = frame->GetRowCount() * rowheight;
+    // Pad the height.
+    nscoord y = frame->GetAvailableHeight();
+    if (y > 0 && rowheight > 0) {
+      nscoord m = (aSize.height-y)%rowheight;
+      nscoord remainder = m == 0 ? 0 : rowheight - m;
+      aSize.height += remainder;
+    }
+  }
   return rv;
 }
 
