@@ -45,3 +45,8 @@ Rights Reserved.
 <!ENTITY emoticonsAndStructs.label "Emoticons And Structs">
 <!ENTITY convertEmoticons.label "When viewing a text message, convert emoticons to glyphs.">
 <!ENTITY convertStructs.label "When viewing a text message, convert structs to styles.">
+<!ENTITY to.label " to ">
+<!ENTITY example1.label "For example, convert ">
+<!ENTITY example2.label ":)">
+<!ENTITY example3.label "*">
+<!ENTITY example4.label "text">

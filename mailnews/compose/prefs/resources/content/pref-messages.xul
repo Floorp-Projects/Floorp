@@ -95,11 +95,11 @@
                 </html:legend>
 		<html:div>
 			<html:input id="pref:0:bool:mail.convert_emoticons" type="checkbox"/>
-			<html:label for="pref:0:bool:mail.convert_emoticons">&convertEmoticons.label;</html:label>
+			<html:label for="pref:0:bool:mail.convert_emoticons">&convertEmoticons.label;&example1.label;&example2.label;&to.label;<html:img src="chrome://messenger/skin/smile.gif"/></html:label>
 		</html:div>
 		<html:div>
 			<html:input id="pref:0:bool:mail.convert_structs" type="checkbox"/>
-			<html:label for="pref:0:bool:mail.convert_structs">&convertStructs.label;</html:label>
+			<html:label for="pref:0:bool:mail.convert_structs">&convertStructs.label;&example1.label;&example3.label;&example4.label;&example3.label;&to.label;<html:b>&example4.label;</html:b></html:label>
 		</html:div>
 	</html:fieldset>
 
