@@ -19,7 +19,7 @@
   
     <command id="cmdShowPrefsDialog" oncommand="inspector.showPrefsDialog()"/>
   
-    <command id="cmdToggleBrowser" oncommand="inspector.toggleBrowser()"/>
+    <command id="cmdToggleBrowser" oncommand="inspector.toggleBrowser(true)"/>
 
     <command id="cmdEditUndo" global="true" oncommand="inspector.doViewerCommand('cmdEditUndo');"/>
     <command id="cmdEditRedo" global="true" oncommand="inspector.doViewerCommand('cmdEditRedo');"/>
@@ -32,7 +32,7 @@
 
     <!--
     <command id="cmdRunSearch" oncommand="inspector.runSearch()"/>
-    <command id="cmdToggleSearch" oncommand="inspector.toggleSearch()"/>
+    <command id="cmdToggleSearch" oncommand="inspector.toggleSearch(true)"/>
     <command id="cmdViewSearchItem" oncommand="inspector.viewSearchItem()"/>
     <command id="cmdEditSearchItem" oncommand="inspector.editSearchItem()"/>
     <command id="cmdCopySearchItemLine" oncommand="inspector.copySearchItemLine()"/>

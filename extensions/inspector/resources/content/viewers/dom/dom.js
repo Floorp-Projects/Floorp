@@ -125,11 +125,11 @@ DOMViewer.prototype =
     this.mPanel = aPane;
     aPane.notifyViewerReady(this);
 
-    this._toggleAnonContent(true, PrefUtils.getPref("inspector.dom.showAnon"));
+    this.setAnonContent(PrefUtils.getPref("inspector.dom.showAnon"), false);
     this.setWhitespaceNodes(PrefUtils.getPref("inspector.dom.showWhitespaceNodes"));
     this.setFlashSelected(PrefUtils.getPref("inspector.blink.on"));
   },
-  
+
   destroy: function()
   {
     this.mDOMTree.treeBoxObject.view = null;
@@ -185,23 +185,25 @@ DOMViewer.prototype =
                          "_blank", "chrome,dependent", this.mFindType, this.mFindDir, this.mFindParams);
   },
 
-  toggleAnonContent: function(aExplicit, aValue)
+  toggleAnonContent: function(aRebuild)
   {
-    this._toggleAnonContent(aExplicit, aValue);
-    this.rebuild();
+    this.setAnonContent(!this.mDOMView.showAnonymousContent, aRebuild);
   },
   
-  _toggleAnonContent: function(aExplicit, aValue)
+  setAnonContent: function(aValue, aRebuild)
   {
-    var val = aExplicit ? aValue : !this.mDOMView.showAnonymousContent;
-    this.mDOMView.showAnonymousContent = val;
-    this.mPanel.panelset.setCommandAttribute("cmd:toggleAnon", "checked", val);
-    PrefUtils.setPref("inspector.dom.showAnon", val);
+    this.mDOMView.showAnonymousContent = aValue;
+    this.mPanel.panelset.setCommandAttribute("cmd:toggleAnon", "checked", aValue);
+    PrefUtils.setPref("inspector.dom.showAnon", aValue);
+
+    if (aRebuild) {
+      this.rebuild();
+    }
   },
-  
-  toggleSubDocs: function(aExplicit, aValue)
+
+  toggleSubDocs: function()
   {
-    var val = aExplicit ? aValue : !this.mDOMView.showSubDocuments;
+    var val = !this.mDOMView.showSubDocuments;
     this.mDOMView.showSubDocuments = val;
     this.mPanel.panelset.setCommandAttribute("cmd:toggleSubDocs", "checked", val);
   },
@@ -228,7 +230,7 @@ DOMViewer.prototype =
     this.setWhitespaceNodes(!this.mDOMView.showWhitespaceNodes);
   },
 
-  toggleAttributes: function(aExplicit, aValue)
+  toggleAttributes: function()
   {
     alert("NOT YET IMPLEMENTED");
   },
@@ -694,10 +696,9 @@ DOMViewer.prototype =
     }
   },
 
-  toggleFlashSelected: function(aExplicit, aValue)
+  toggleFlashSelected: function()
   {
-    var val = aExplicit ? aValue : !this.mFlashSelected;
-    this.setFlashSelected(val);
+    this.setFlashSelected(!this.mFlashSelected);
   },
 
   setFlashSelected: function(aValue)

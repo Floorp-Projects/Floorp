@@ -18,7 +18,7 @@
              oncommand="inspector.getViewer('dom').findNext()"/>
 
     <command id="cmd:toggleAnon" viewer="dom"
-             oncommand="inspector.getViewer('dom').toggleAnonContent()"/>
+             oncommand="inspector.getViewer('dom').toggleAnonContent(true)"/>
 
     <command id="cmd:toggleSubDocs" viewer="dom"
              oncommand="inspector.getViewer('dom').toggleSubDocs()"/>

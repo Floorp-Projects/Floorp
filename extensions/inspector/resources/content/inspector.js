@@ -98,8 +98,8 @@ InspectorApp.prototype =
     var el = document.getElementById("bxBrowser");
     el.addEventListener("load", BrowserLoadListener, true);
 
-    this.toggleBrowser(true, false);
-    //this.toggleSearch(true, false);
+    this.setBrowser(false, true);
+    //this.setSearch(false, true);
 
     this.mClipboardHelper = XPCU.getService(kClipboardHelperCID, "nsIClipboardHelper");
 
@@ -182,25 +182,33 @@ InspectorApp.prototype =
       this.startSearchModule(url);
     }
   },
-  
-  toggleBrowser: function(aExplicit, aValue, aSetOnly)
+
+  toggleBrowser: function(aToggleSplitter)
   {
-    var val = aExplicit ? aValue : !this.mShowBrowser;
-    this.mShowBrowser = val;
-    if (!aSetOnly)
-      this.openSplitter("Browser", val);
-    var cmd = document.getElementById("cmdToggleBrowser");
-    cmd.setAttribute("checked", val);
+    this.setBrowser(!this.mShowBrowser, aToggleSplitter)
   },
 
-  toggleSearch: function(aExplicit, aValue, aSetOnly)
+  setBrowser: function(aValue, aToggleSplitter)
   {
-    var val = aExplicit ? aValue : !this.mShowSearch;
-    this.mShowSearch = val;
-    if (!aSetOnly)
-      this.openSplitter("Search", val);
+    this.mShowBrowser = aValue;
+    if (aToggleSplitter)
+      this.openSplitter("Browser", aValue);
+    var cmd = document.getElementById("cmdToggleBrowser");
+    cmd.setAttribute("checked", aValue);
+  },
+
+  toggleSearch: function(aToggleSplitter)
+  {
+    this.setSearch(!this.mShowSearch, aToggleSplitter);
+  },
+
+  setSearch: function(aValue, aToggleSplitter)
+  {
+    this.mShowSearch = aValue;
+    if (aToggleSplitter)
+      this.openSplitter("Search", aValue);
     var cmd = document.getElementById("cmdToggleSearch");
-    cmd.setAttribute("checked", val);
+    cmd.setAttribute("checked", aValue);
   },
 
   openSplitter: function(aName, aTruth)
@@ -298,7 +306,7 @@ InspectorApp.prototype =
     this.mPendingURL = aURL;
     this.mPendingNoSave = aNoSaveHistory;
     this.browseToURL(aURL);
-    this.toggleBrowser(true, true);
+    this.setBrowser(true, true);
   },
 
   browseToURL: function(aURL)
@@ -318,7 +326,7 @@ InspectorApp.prototype =
 
     if (win) {
       this.setTargetWindow(win);
-      this.toggleBrowser(true, false);
+      this.setBrowser(false, true);
     } else
       alert("Unable to switch to window.");
   },
@@ -503,9 +511,9 @@ InspectorApp.prototype =
   onSplitterOpen: function(aSplitter)
   {
     if (aSplitter.id == "splBrowser") {
-      this.toggleBrowser(true, aSplitter.isOpened, true);
+      this.setBrowser(aSplitter.isOpened, false);
     } else if (aSplitter.id == "splSearch") {
-      this.toggleSearch(true, aSplitter.isOpened, true);
+      this.setSearch(aSplitter.isOpened, false);
     }
   },
   
