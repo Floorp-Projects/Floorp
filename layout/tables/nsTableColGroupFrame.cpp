@@ -217,6 +217,8 @@ NS_METHOD nsTableColGroupFrame::Reflow(nsIPresContext&          aPresContext,
 
   aDesiredSize.width=0;
   aDesiredSize.height=0;
+  aDesiredSize.ascent=aDesiredSize.height;
+  aDesiredSize.descent=0;
   if (nsnull!=aDesiredSize.maxElementSize)
   {
     aDesiredSize.maxElementSize->width=0;

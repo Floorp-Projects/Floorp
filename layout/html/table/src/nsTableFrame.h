@@ -474,6 +474,12 @@ public: /* ----- Cell Map public methods ----- */
   /** return the minimum width of the table caption.  Return 0 if there is no caption. */
   nscoord GetMinCaptionWidth();
 
+  /** return the minimum width of the table.  Return 0 if the min width is unknown. */
+  nscoord GetMinTableWidth();
+
+  /** return the maximum width of the table caption.  Return 0 if the max width is unknown. */
+  nscoord GetMaxTableWidth();
+
 private:
   void DebugPrintCount() const; // Debugging routine
 

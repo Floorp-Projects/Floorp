@@ -3265,6 +3265,24 @@ nscoord nsTableFrame::GetMinCaptionWidth()
   return (((nsTableOuterFrame *)outerTableFrame)->GetMinCaptionWidth());
 }
 
+/** return the minimum width of the table.  Return 0 if the min width is unknown. */
+nscoord nsTableFrame::GetMinTableWidth()
+{
+  nscoord result = 0;
+  if (nsnull!=mTableLayoutStrategy)
+    result = mTableLayoutStrategy->GetTableMinWidth();
+  return result;
+}
+
+/** return the maximum width of the table caption.  Return 0 if the max width is unknown. */
+nscoord nsTableFrame::GetMaxTableWidth()
+{
+  nscoord result = 0;
+  if (nsnull!=mTableLayoutStrategy)
+    result = mTableLayoutStrategy->GetTableMaxWidth();
+  return result;
+}
+
 
 /* ----- debugging methods ----- */
 NS_METHOD nsTableFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) const
