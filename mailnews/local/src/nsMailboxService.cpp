@@ -272,12 +272,6 @@ NS_IMETHODIMP nsMailboxService::GetDefaultPort(PRInt32 *aDefaultPort)
 	return rv; 	
 }
 
-NS_IMETHODIMP nsMailboxService::MakeAbsolute(const char *aRelativeSpec, nsIURI *aBaseURI, char **_retval)
-{
-	// no such thing as relative urls for smtp.....
-	return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 NS_IMETHODIMP nsMailboxService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI **_retval)
 {
 	nsCOMPtr<nsIMailboxUrl> aMsgUrl;

@@ -214,12 +214,6 @@ NS_IMETHODIMP nsSmtpService::GetDefaultPort(PRInt32 *aDefaultPort)
 	return rv; 	
 }
 
-NS_IMETHODIMP nsSmtpService::MakeAbsolute(const char *aRelativeSpec, nsIURI *aBaseURI, char **_retval)
-{
-	// no such thing as relative urls for smtp.....
-	return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 NS_IMETHODIMP nsSmtpService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI **_retval)
 {
 	// i just haven't implemented this yet...I will be though....

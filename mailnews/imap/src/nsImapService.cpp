@@ -2122,12 +2122,6 @@ NS_IMETHODIMP nsImapService::GetDefaultPort(PRInt32 *aDefaultPort)
 	return rv; 	
 }
 
-NS_IMETHODIMP nsImapService::MakeAbsolute(const char *aRelativeSpec, nsIURI *aBaseURI, char **_retval)
-{
-	// no such thing as relative urls for smtp.....
-	return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 NS_IMETHODIMP nsImapService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI **_retval)
 {
     nsCOMPtr<nsIImapUrl> aImapUrl;

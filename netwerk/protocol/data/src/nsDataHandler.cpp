@@ -69,16 +69,6 @@ nsDataHandler::GetDefaultPort(PRInt32 *result) {
 }
 
 NS_IMETHODIMP
-nsDataHandler::MakeAbsolute(const char* aSpec,
-                            nsIURI* aBaseURI,
-                            char* *result) {
-    // no concept of a relative data url
-    *result = nsCRT::strdup(aSpec);
-    if (!*result) return NS_ERROR_OUT_OF_MEMORY;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDataHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
                              nsIURI **result) {
     nsresult rv;

@@ -385,6 +385,11 @@ NS_IMETHODIMP nsMsgMailNewsUrl::SetRelativePath(const char *i_RelativePath)
 	return m_baseURL->SetRelativePath(i_RelativePath);
 }
 
+NS_IMETHODIMP nsMsgMailNewsUrl::Resolve(const char *relativePath, char **result) 
+{
+	return m_baseURL->Resolve(relativePath, result);
+}
+
 NS_IMETHODIMP nsMsgMailNewsUrl::GetDirectory(char * *aDirectory)
 {
 	return m_baseURL->GetDirectory(aDirectory);

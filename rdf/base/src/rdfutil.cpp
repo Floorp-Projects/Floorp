@@ -47,6 +47,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsXPIDLString.h"
 #include "prtime.h"
 #include "rdfutil.h"
+#include "nsNeckoUtil.h"
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -90,29 +91,13 @@ rdf_MakeAbsoluteURI(const nsString& aBaseURI, nsString& aURI)
     nsresult rv;
     nsAutoString result;
 
-    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+    nsCOMPtr<nsIURI> base;
+    rv = NS_NewURI(getter_AddRefs(base), aBaseURI);
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIURI> baseUri;
-
-    char *uriStr = aBaseURI.ToNewCString();
-    if (! uriStr)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    rv = service->NewURI(uriStr, nsnull, getter_AddRefs(baseUri));
-    nsCRT::free(uriStr);
-
+    rv = NS_MakeAbsoluteURI(aURI, base, result);
     if (NS_FAILED(rv)) return rv;
 
-    nsXPIDLCString absUrlStr;
-    char *urlSpec = aURI.ToNewCString();
-    if (! urlSpec)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    rv = service->MakeAbsolute(urlSpec, baseUri, getter_Copies(absUrlStr));
-    nsCRT::free(urlSpec);
-
-    result = (const char*) absUrlStr;
     if (NS_SUCCEEDED(rv)) {
         aURI = result;
     }
@@ -132,18 +117,8 @@ rdf_MakeAbsoluteURI(nsIURI* aURL, nsString& aURI)
     nsresult rv;
     nsAutoString result;
 
-    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
+    rv = NS_MakeAbsoluteURI(aURI, aURL, result);
 
-    nsIURI *baseUri = nsnull;
-    rv = aURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
-    if (NS_FAILED(rv)) return rv;
-
-    char *absUrlStr = nsnull;
-    rv = service->MakeAbsolute(nsCAutoString(aURI), baseUri, &absUrlStr);
-    NS_RELEASE(baseUri);
-    result = absUrlStr;
-    nsCRT::free(absUrlStr);
     if (NS_SUCCEEDED(rv)) {
         aURI = result;
     }

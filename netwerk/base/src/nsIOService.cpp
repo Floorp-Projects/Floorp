@@ -252,38 +252,6 @@ nsIOService::NewChannel(const char* verb, const char *aSpec,
 }
 
 NS_IMETHODIMP
-nsIOService::MakeAbsolute(const char *aSpec,
-                          nsIURI *aBaseURI,
-                          char **result)
-{
-    nsresult rv;
-    NS_ASSERTION(aBaseURI, "It doesn't make sense to not supply a base URI");
-
-    if (aSpec == nsnull)
-        return aBaseURI->GetSpec(result);
-    
-    char* scheme;
-    rv = GetScheme(aSpec, &scheme);
-    if (NS_SUCCEEDED(rv)) {
-        nsAllocator::Free(scheme);
-        // if aSpec has a scheme, then it's already absolute
-        *result = nsCRT::strdup(aSpec);
-        return (*result == nsnull) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-    }
-
-    // else ask the protocol handler for the base URI to deal with it
-    rv = aBaseURI->GetScheme(&scheme);
-    if (NS_FAILED(rv)) return rv;
-    
-    nsCOMPtr<nsIProtocolHandler> handler;
-    rv = GetProtocolHandler(scheme, getter_AddRefs(handler));
-    nsCRT::free(scheme);
-    if (NS_FAILED(rv)) return rv;
-
-    return handler->MakeAbsolute(aSpec, aBaseURI, result);
-}
-
-NS_IMETHODIMP
 nsIOService::GetAppCodeName(PRUnichar* *aAppCodeName)
 {
     *aAppCodeName = mAppCodeName->ToNewUnicode();
@@ -392,26 +360,6 @@ nsIOService::NewChannelFromNativePath(const char *nativePath, nsIFileChannel **r
     if (NS_FAILED(rv)) return rv;
     
     *result = channel;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsIOService::NewLoadGroup(nsISupports* outer, nsIStreamObserver* observer,
-                          nsILoadGroup* parent, nsILoadGroup **result)
-{
-    nsresult rv;
-    nsILoadGroup* group;
-    rv = nsLoadGroup::Create(outer, NS_GET_IID(nsILoadGroup), 
-                             (void**)&group);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = group->Init(observer, parent);
-    if (NS_FAILED(rv)) {
-        NS_RELEASE(group);
-        return rv;
-    }
-
-    *result = group;
     return NS_OK;
 }
 

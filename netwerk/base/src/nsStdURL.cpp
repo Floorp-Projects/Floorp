@@ -23,6 +23,7 @@
 #include "prmem.h"
 #include "prprf.h"
 #include "nsXPIDLString.h"
+#include "nsCOMPtr.h"
 
 static NS_DEFINE_CID(kStdURLCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kThisStdURLImplementationCID,
@@ -877,6 +878,21 @@ nsStdURL::SetRelativePath(const char* i_Relative)
         default:
             return SetFileName((char*)i_Relative);
     }
+}
+
+NS_IMETHODIMP
+nsStdURL::Resolve(const char *relativePath, char **result) 
+{
+    // XXX Judson: optimize this
+    nsresult rv;
+    nsCOMPtr<nsIURI> uri;
+    rv = Clone(getter_AddRefs(uri));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = uri->SetRelativePath(relativePath);
+    if (NS_FAILED(rv)) return rv;
+
+    return uri->GetSpec(result);
 }
 
 nsresult

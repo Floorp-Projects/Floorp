@@ -25,6 +25,7 @@
 #include "nsIHTTPProtocolHandler.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+static NS_DEFINE_CID(kLoadGroupCID, NS_LOADGROUP_CID);
 
 NECKO_EXPORT(nsresult)
 NS_NewURI(nsIURI* *result, const char* spec, nsIURI* baseURI)
@@ -101,14 +102,58 @@ NS_OpenURI(nsIStreamListener* aConsumer, nsISupports* context, nsIURI* uri,
     return rv;
 }
 
+// XXX copied from nsIOService.cpp (for now):
+static nsresult
+GetScheme(const char* inURI, char* *scheme)
+{
+    // search for something up to a colon, and call it the scheme
+    NS_ASSERTION(inURI, "null pointer");
+    if (!inURI) return NS_ERROR_NULL_POINTER;
+    char c;
+    const char* URI = inURI;
+    PRUint8 length = 0;
+    // skip leading white space
+    while (nsString::IsSpace(*URI))
+        URI++;
+    while ((c = *URI++) != '\0') {
+        if (c == ':') {
+            char* newScheme = (char *)nsAllocator::Alloc(length+1);
+            if (newScheme == nsnull)
+                return NS_ERROR_OUT_OF_MEMORY;
+
+            nsCRT::memcpy(newScheme, inURI, length);
+            newScheme[length] = '\0';
+            *scheme = newScheme;
+            return NS_OK;
+        }
+        else if (nsString::IsAlpha(c)) {
+            length++;
+        }
+        else 
+            break;
+    }
+    return NS_ERROR_MALFORMED_URI;
+}
+
 NECKO_EXPORT(nsresult)
-NS_MakeAbsoluteURI(const char* spec, nsIURI* baseURI, char* *result)
+NS_MakeAbsoluteURI(const char* aSpec, nsIURI* aBaseURI, char* *result)
 {
     nsresult rv;
-    NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-    
-    return serv->MakeAbsolute(spec, baseURI, result);
+    NS_ASSERTION(aBaseURI, "It doesn't make sense to not supply a base URI");
+ 
+    if (aSpec == nsnull)
+        return aBaseURI->GetSpec(result);
+     
+    char* scheme;
+    rv = GetScheme(aSpec, &scheme);
+    if (NS_SUCCEEDED(rv)) {
+        nsAllocator::Free(scheme);
+        // if aSpec has a scheme, then it's already absolute
+        *result = nsCRT::strdup(aSpec);
+        return (*result == nsnull) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+    }
+     
+    return aBaseURI->Resolve(aSpec, result);
 }
 
 NECKO_EXPORT(nsresult)
@@ -133,10 +178,19 @@ NS_NewLoadGroup(nsISupports* outer, nsIStreamObserver* observer,
                 nsILoadGroup* parent, nsILoadGroup* *result)
 {
     nsresult rv;
-    NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
+    nsILoadGroup* group;
+    rv = nsComponentManager::CreateInstance(kLoadGroupCID, outer,
+                                            NS_GET_IID(nsILoadGroup), 
+                                            (void**)&group);
     if (NS_FAILED(rv)) return rv;
-    
-    return serv->NewLoadGroup(outer, observer, parent, result);
+
+    rv = group->Init(observer, parent);
+    if (NS_FAILED(rv)) {
+        NS_RELEASE(group);
+        return rv;
+    }
+    *result = group;    
+    return rv;
 }
 
 NECKO_EXPORT(nsresult)
