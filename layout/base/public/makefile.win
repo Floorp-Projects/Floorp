@@ -41,6 +41,7 @@ EXPORTS =				\
 	nsStyleCoord.h			\
 	nsStyleStruct.h			\
 	nsTextFragment.h		\
+	nsIRangeList.h		\
         $(NULL)
 
 MODULE=raptor 
