@@ -424,7 +424,7 @@ nsMovemailService::GetNewMail(nsIMsgWindow *aMsgWindow,
         outFileStream << buffer.get();
 
         // 'From' lines delimit messages
-        if (isMore && !PL_strncasecmp(buffer.get(), "From ", 5)) {
+        if (isMore && !strncmp(buffer.get(), "From ", 5)) {
             buffer.AssignLiteral("X-Mozilla-Status: 8000" MSG_LINEBREAK);
             newMailParser->HandleLine(buffer.BeginWriting(), buffer.Length());
             outFileStream << buffer.get();
