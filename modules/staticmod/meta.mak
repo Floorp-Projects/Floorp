@@ -56,13 +56,13 @@ include <$(DEPTH)/config/rules.mak>
 $(SEDCMDS): $(LINK_COMP_NAMES)
         echo +++make: Creating $@
         rm -f $@
-        echo s/@COMPONENT_NS_GET_MODULE@/\>> $@
+        echo s/%COMPONENT_NS_GET_MODULE%/\>> $@
         sed -e "s/\(.*\)/REGISTER_MODULE_USING(\1_NSGetModule);\\\/" $(LINK_COMP_NAMES) >> $@
         echo />> $@
-        echo s/@COMPONENT_LIST@/\>> $@
+        echo s/%COMPONENT_LIST%/\>> $@
         sed -e "s/\(.*\)/{ \1_NSGM_comps, \1_NSGM_comp_count },\\\/" $(LINK_COMP_NAMES) >> $@
         echo />> $@
-        echo s/@DECLARE_COMPONENT_LIST@/\>> $@
+        echo s/%DECLARE_COMPONENT_LIST%/\>> $@
         sed -e "s/\(.*\)/extern \"C\" nsresult \1_NSGetModule(nsIComponentManager*, nsIFile*, nsIModule**); extern nsModuleComponentInfo* \1_NSGM_comps; extern PRUint32 \1_NSGM_comp_count;\\\/" $(LINK_COMP_NAMES) >> $@
         echo />> $@
 
