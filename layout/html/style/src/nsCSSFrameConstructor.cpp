@@ -2943,6 +2943,9 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
         InitAndRestoreFrame(aPresContext, aState, aContent, 
                             geometricParent, aStyleContext, nsnull, comboboxFrame);
 
+        nsHTMLContainerFrame::CreateViewForFrame(aPresContext, comboboxFrame,
+                                                 aStyleContext, PR_FALSE);
+
         nsIComboboxControlFrame* comboBox = nsnull;
         if (NS_SUCCEEDED(comboboxFrame->QueryInterface(kIComboboxControlFrameIID, (void**)&comboBox))) {
             // Create a listbox
