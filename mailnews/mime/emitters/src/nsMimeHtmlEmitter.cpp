@@ -35,146 +35,6 @@
 #include "nsMimeTypes.h"
 
 
-nsresult NS_NewMimeHtmlEmitter(const nsIID& iid, void **result)
-{
-	nsMimeHtmlEmitter *obj = new nsMimeHtmlEmitter();
-	if (obj)
-		return obj->QueryInterface(iid, result);
-	else
-		return NS_ERROR_OUT_OF_MEMORY;
-}
-
-/*
- * nsMimeHtmlEmitter definitions....
- */
-nsMimeHtmlEmitter::nsMimeHtmlEmitter()
-{
-  mFormat = nsMimeOutput::nsMimeMessageBodyQuoting;
-  mFirst = PR_TRUE;
-  mSkipAttachment = PR_FALSE;
-}
-
-nsMimeHtmlEmitter::~nsMimeHtmlEmitter(void)
-{
-}
-
-nsresult
-nsMimeHtmlEmitter::EndHeader()
-{
-  if (mDocHeader)
-  {
-    // Stylesheet info!
-    UtilityWriteCRLF("<LINK REL=\"STYLESHEET\" HREF=\"chrome://messenger/skin/mailheader.css\">");
-
-    // Make it look consistent...
-    UtilityWriteCRLF("<LINK REL=\"STYLESHEET\" HREF=\"chrome://global/skin\">");
-  }
- 
-  WriteHTMLHeaders();
-  return NS_OK;
-}
-
-// Attachment handling routines
-// Ok, we are changing the way we handle these now...It used to be that we output 
-// HTML to make a clickable link, etc... but now, this should just be informational
-// and only show up in quoting
-//
-nsresult
-nsMimeHtmlEmitter::StartAttachment(const char *name, const char *contentType, const char *url)
-{
-  if ( (contentType) &&
-        ((!nsCRT::strcmp(contentType, APPLICATION_XPKCS7_MIME)) ||
-         (!nsCRT::strcmp(contentType, APPLICATION_XPKCS7_SIGNATURE)) ||
-         (!nsCRT::strcmp(contentType, TEXT_VCARD))
-        )
-     )
-  {
-    mSkipAttachment = PR_TRUE;
-    return NS_OK;
-  }
-  else
-    mSkipAttachment = PR_FALSE;
-
-  if (mFirst)
-    UtilityWrite("<HR WIDTH=\"90%\" SIZE=4>");
-
-  mFirst = PR_FALSE;
-
-  UtilityWrite("<CENTER>");
-  UtilityWrite("<TABLE BORDER>");
-  UtilityWrite("<tr>");
-  UtilityWrite("<TD>");
-
-  UtilityWrite("<CENTER>");
-  UtilityWrite("<DIV align=right CLASS=\"headerdisplayname\">");
-
-  UtilityWrite(name);
-
-  UtilityWrite("</DIV>");
-  UtilityWrite("</CENTER>");
-
-  UtilityWrite("</TD>");
-  UtilityWrite("<TD>");
-  UtilityWrite("<TABLE BORDER=0>");
-  return NS_OK;
-}
-
-nsresult
-nsMimeHtmlEmitter::AddAttachmentField(const char *field, const char *value)
-{
-  // Don't let bad things happen
-  if ( (!value) || (!*value) )
-    return NS_OK;
-
-  // Don't output this ugly header...
-  if (!nsCRT::strcmp(field, HEADER_X_MOZILLA_PART_URL))
-    return NS_OK;
-
-  char  *newValue = nsEscapeHTML(value);
-
-  UtilityWrite("<TR>");
-
-  UtilityWrite("<TD>");
-  UtilityWrite("<DIV align=right CLASS=\"headerdisplayname\">");
-
-  UtilityWrite(field);
-  UtilityWrite(":");
-  UtilityWrite("</DIV>");
-  UtilityWrite("</TD>");
-  UtilityWrite("<TD>");
-
-  UtilityWrite(newValue);
-
-  UtilityWrite("</TD>");
-  UtilityWrite("</TR>");
-
-  PR_FREEIF(newValue);
-  return NS_OK;
-}
-
-nsresult
-nsMimeHtmlEmitter::EndAttachment()
-{
-  UtilityWrite("</TABLE>");
-  UtilityWrite("</TD>");
-  UtilityWrite("</tr>");
-
-  UtilityWrite("</TABLE>");
-  UtilityWrite("</CENTER>");
-  UtilityWrite("<BR>");
-  return NS_OK;
-}
-
-nsresult
-nsMimeHtmlEmitter::WriteBody(const char *buf, PRUint32 size, PRUint32 *amountWritten)
-{
-  Write(buf, size, amountWritten);
-  return NS_OK;
-}
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////
-
 nsresult NS_NewMimeHtmlDisplayEmitter(const nsIID& iid, void **result)
 {
 	nsMimeHtmlDisplayEmitter *obj = new nsMimeHtmlDisplayEmitter();
@@ -192,28 +52,49 @@ nsMimeHtmlDisplayEmitter::nsMimeHtmlDisplayEmitter()
 {
   mFormat = nsMimeOutput::nsMimeMessageBodyQuoting;
   mFirst = PR_TRUE;
+  mSkipAttachment = PR_FALSE; 
 }
 
 nsMimeHtmlDisplayEmitter::~nsMimeHtmlDisplayEmitter(void)
 {
 }
 
+PRBool nsMimeHtmlDisplayEmitter::BroadCastHeadersAndAttachments()
+{
+  // try to get a header sink if there is one....
+  nsCOMPtr<nsIMsgHeaderSink> headerSink; 
+  nsresult rv = GetHeaderSink(getter_AddRefs(headerSink));
+  if (headerSink && mDocHeader)
+    return PR_TRUE;
+  else
+    return PR_FALSE;
+}
+
 nsresult 
 nsMimeHtmlDisplayEmitter::WriteHeaderFieldHTMLPrefix()
 {
-  return NS_OK;
+  if (!BroadCastHeadersAndAttachments())
+    return nsMimeBaseEmitter::WriteHeaderFieldHTMLPrefix();
+  else
+    return NS_OK;
 }
 
 nsresult
 nsMimeHtmlDisplayEmitter::WriteHeaderFieldHTML(const char *field, const char *value)
 {
-  return NS_OK;
+  if (!BroadCastHeadersAndAttachments())
+    return nsMimeBaseEmitter::WriteHeaderFieldHTML(field, value);
+  else
+    return NS_OK;
 }
 
 nsresult
 nsMimeHtmlDisplayEmitter::WriteHeaderFieldHTMLPostfix()
 {
-  return NS_OK;
+  if (!BroadCastHeadersAndAttachments())
+    return nsMimeBaseEmitter::WriteHeaderFieldHTMLPostfix();
+  else
+    return NS_OK;
 }
 
 
@@ -245,6 +126,22 @@ nsMimeHtmlDisplayEmitter::GetHeaderSink(nsIMsgHeaderSink ** aHeaderSink)
 
 nsresult nsMimeHtmlDisplayEmitter::WriteHTMLHeaders()
 {
+  if (mDocHeader)
+  {
+    // mscott --> we should refer to the style sheet used in msg display...this one is wrong i think.
+    // Stylesheet info!
+    UtilityWriteCRLF("<LINK REL=\"STYLESHEET\" HREF=\"chrome://messenger/skin/mailheader.css\">");
+    // Make it look consistent...
+    UtilityWriteCRLF("<LINK REL=\"STYLESHEET\" HREF=\"chrome://global/skin\">");
+  }
+
+  // if we aren't broadcasting headers...just do whatever
+  // our base class does...
+  if (!BroadCastHeadersAndAttachments() || !mDocHeader)
+  {
+     return nsMimeBaseEmitter::WriteHTMLHeaders();
+  }
+
   // try to get a header sink if there is one....
   nsCOMPtr<nsIMsgHeaderSink> headerSink; 
   nsresult rv = GetHeaderSink(getter_AddRefs(headerSink));
@@ -260,7 +157,11 @@ nsresult nsMimeHtmlDisplayEmitter::WriteHTMLHeaders()
       continue;
 
     if (headerSink)
-      headerSink->HandleHeader(headerInfo->name, headerInfo->value);
+    {
+      char * escapedValue = nsEscapeHTML(headerInfo->value);
+      headerSink->HandleHeader(headerInfo->name, escapedValue);
+      nsCRT::free(escapedValue);
+    }
   }
 
   DumpAttachmentMenu();
@@ -319,11 +220,6 @@ nsMimeHtmlDisplayEmitter::DumpAttachmentMenu()
   return NS_OK;
 }
 
-// Attachment handling routines
-// Ok, we are changing the way we handle these now...It used to be that we output 
-// HTML to make a clickable link, etc... but now, this should just be informational
-// and only show up in quoting
-//
 nsresult
 nsMimeHtmlDisplayEmitter::StartAttachment(const char *name, const char *contentType, const char *url)
 {
@@ -342,36 +238,110 @@ nsMimeHtmlDisplayEmitter::StartAttachment(const char *name, const char *contentT
     if (NS_SUCCEEDED(rv))
       rv = messageUrl->GetURI(getter_Copies(uriString));
     headerSink->HandleAttachment(escapedUrl, name, uriString);
+    mSkipAttachment = PR_TRUE;
   }
+  else
+    // then we need to deal with the attachments in the body by inserting them into a table..
+    return StartAttachmentInBody(name, contentType, url);
 
-  if (  (contentType) &&
-        ( (!nsCRT::strcmp(contentType, APPLICATION_XPKCS7_MIME)) ||
-          (!nsCRT::strcmp(contentType, APPLICATION_XPKCS7_SIGNATURE)) ||
-          (!nsCRT::strcmp(contentType, TEXT_VCARD))
+  return rv;
+}
+
+// Attachment handling routines
+// Ok, we are changing the way we handle these now...It used to be that we output 
+// HTML to make a clickable link, etc... but now, this should just be informational
+// and only show up in quoting
+//
+nsresult
+nsMimeHtmlDisplayEmitter::StartAttachmentInBody(const char *name, const char *contentType, const char *url)
+{
+  if ( (contentType) &&
+        ((!nsCRT::strcmp(contentType, APPLICATION_XPKCS7_MIME)) ||
+         (!nsCRT::strcmp(contentType, APPLICATION_XPKCS7_SIGNATURE)) ||
+         (!nsCRT::strcmp(contentType, TEXT_VCARD))
         )
      )
   {
     mSkipAttachment = PR_TRUE;
     return NS_OK;
   }
+  else
+    mSkipAttachment = PR_FALSE;
 
+  if (mFirst)
+    UtilityWrite("<HR WIDTH=\"90%\" SIZE=4>");
+
+  mFirst = PR_FALSE;
+
+  UtilityWrite("<CENTER>");
+  UtilityWrite("<TABLE BORDER>");
+  UtilityWrite("<tr>");
+  UtilityWrite("<TD>");
+
+  UtilityWrite("<CENTER>");
+  UtilityWrite("<DIV align=right CLASS=\"headerdisplayname\">");
+
+  UtilityWrite(name);
+
+  UtilityWrite("</DIV>");
+  UtilityWrite("</CENTER>");
+
+  UtilityWrite("</TD>");
+  UtilityWrite("<TD>");
+  UtilityWrite("<TABLE BORDER=0>");
   return NS_OK;
 }
 
 nsresult
 nsMimeHtmlDisplayEmitter::AddAttachmentField(const char *field, const char *value)
 {
-  if (mSkipAttachment)
+  if (mSkipAttachment || BroadCastHeadersAndAttachments())
     return NS_OK;
+
+  // Don't let bad things happen
+  if ( (!value) || (!*value) )
+    return NS_OK;
+
+  // Don't output this ugly header...
+  if (!nsCRT::strcmp(field, HEADER_X_MOZILLA_PART_URL))
+    return NS_OK;
+
+  char  *newValue = nsEscapeHTML(value);
+
+  UtilityWrite("<TR>");
+
+  UtilityWrite("<TD>");
+  UtilityWrite("<DIV align=right CLASS=\"headerdisplayname\">");
+
+  UtilityWrite(field);
+  UtilityWrite(":");
+  UtilityWrite("</DIV>");
+  UtilityWrite("</TD>");
+  UtilityWrite("<TD>");
+
+  UtilityWrite(newValue);
+
+  UtilityWrite("</TD>");
+  UtilityWrite("</TR>");
+
+  PR_FREEIF(newValue);
   return NS_OK;
 }
 
 nsresult
 nsMimeHtmlDisplayEmitter::EndAttachment()
 {
-  if (mSkipAttachment)
+  if (BroadCastHeadersAndAttachments())
     return NS_OK;
-   return NS_OK;
+  
+  UtilityWrite("</TABLE>");
+  UtilityWrite("</TD>");
+  UtilityWrite("</tr>");
+
+  UtilityWrite("</TABLE>");
+  UtilityWrite("</CENTER>");
+  UtilityWrite("<BR>");
+  return NS_OK;
 }
 
 nsresult

@@ -34,27 +34,6 @@
 #include "nsIChannel.h"
 #include "nsIMimeMiscStatus.h"
 
-class nsMimeHtmlEmitter : public nsMimeBaseEmitter {
-public: 
-    nsMimeHtmlEmitter ();
-    virtual       ~nsMimeHtmlEmitter (void);
-
-    // Header handling routines.
-    NS_IMETHOD    EndHeader();
-
-    // Attachment handling routines
-    NS_IMETHOD    StartAttachment(const char *name, const char *contentType, const char *url);
-    NS_IMETHOD    AddAttachmentField(const char *field, const char *value);
-    NS_IMETHOD    EndAttachment();
-
-    // Body handling routines
-    NS_IMETHOD    WriteBody(const char *buf, PRUint32 size, PRUint32 *amountWritten);
-
-protected:
-    PRBool        mFirst;           // Attachment flag...
-    PRBool        mSkipAttachment;  // attachments we shouldn't show...
-};
-
 class nsMimeHtmlDisplayEmitter : public nsMimeBaseEmitter {
 public: 
     nsMimeHtmlDisplayEmitter ();
@@ -82,7 +61,9 @@ protected:
 
     nsCOMPtr<nsIMsgHeaderSink> mHeaderSink;
     nsresult GetHeaderSink(nsIMsgHeaderSink ** aHeaderSink);
+    PRBool BroadCastHeadersAndAttachments();
     nsresult DumpAttachmentMenu();
+    nsresult StartAttachmentInBody(const char *name, const char *contentType, const char *url);
 };
 
 
