@@ -1,4 +1,34 @@
-#!/perl/bin/perl
+#!/usr/bin/perl
+
+$viewer_path = &ParseArgs();
+
+if (defined($OSNAME)) {
+   $ostype = 'unix';
+}
+else {
+   $ostype = 'win32';
+}
+
+#FOR WINDOWS 32 PLEASE UNCOMMENT TILL ===
+#system ('c:\x86rel\viewer.exe -v -d 15 -f Url.txt > result.txt');
+#=================================================================
+
+#Linux Autoconfig
+
+if ($ostype == 'unix') {
+
+    $viewer = $viewer_path . "/viewer";
+    if (-e $viewer_path . "/viewer") {
+        $ENV{'MOZILLA_HOME'}=$viewer_path;
+        $ENV{'LD_LIBRARY_PATH'}=$viewer_path;
+        system ($viewer_path . '/viewer -v -d 9 -f ./url.txt > result.txt');
+    }
+    else {
+       die $viewer_path . "/viewer doesn't exist! Check your path.\n";
+   }
+}
+#=================================================================
+
 open (ANALYSIS_FILE, '>analysis.html');
 ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst)=localtime(time);
 %weekday= (
@@ -33,16 +63,6 @@ print (ANALYSIS_FILE "</B></CENTER>\n");
 print (ANALYSIS_FILE "<BR>\n");
 print (ANALYSIS_FILE "<BR>\n");
 print (ANALYSIS_FILE "<HR>\n");
-
-#FOR WINDOWS 32 PLEASE UNCOMMENT TILL ===
-system ('c:\x86rel\viewer.exe -v -d 15 -f Url.txt > result.txt');
-#=================================================================
-
-#FOR LINUX PLEASE UNCOMMENT TILL ===
-#$ENV{'MOZILLA_HOME'}='/u/phillip/seamonkey/linux/package';
-#$ENV{'LD_LIBRARY_PATH'}='/u/phillip/seamonkey/linux/package';
-#system ('/u/phillip/seamonkey/linux/package/viewer -v -d 9 -f /tmp/bindu/Url.txt > result.txt');
-#=================================================================
 
 open (IN_FILE, '<result.txt');
 open (OUT_FILE, '>loaded.txt');
@@ -190,3 +210,20 @@ close (IN_FILE);
 close (OUT_FILE);
 close (NOMATCH_FILE);
 close (ANALYSIS_FILE);
+
+sub ParseArgs {
+    my($i);
+
+    if( (@ARGV == 0) || (@ARGV > 1) ) {
+        &PrintUsage;
+    }
+    else {
+       $viewer_path = $ARGV[0];
+    }
+    return $viewer_path;
+}
+
+sub PrintUsage {
+   die "usage: LoadUrl.pl <directory containing viewer app>";
+}
+
