@@ -215,7 +215,7 @@ js_ForceGC(JSContext *cx, uintN gcflags);
 extern void
 js_GC(JSContext *cx, uintN gcflags);
 
-#ifdef DEBUG_brendan
+#ifdef DEBUG_notme
 #define JS_GCMETER 1
 #endif
 

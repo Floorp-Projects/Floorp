@@ -1635,7 +1635,7 @@ js_GC(JSContext *cx, uintN gcflags)
     /* Drop atoms held by the property cache, and clear property weak links. */
     js_DisablePropertyCache(cx);
     js_FlushPropertyCache(cx);
-#ifdef DEBUG_brendan
+#ifdef DEBUG_notme
   { extern void js_DumpScopeMeters(JSRuntime *rt);
     js_DumpScopeMeters(rt);
   }
@@ -1858,7 +1858,7 @@ restart:
 
     if (rt->gcCallback)
         (void) rt->gcCallback(cx, JSGC_FINALIZE_END);
-#ifdef DEBUG_brendan
+#ifdef DEBUG_notme
   { extern void DumpSrcNoteSizeHist();
     DumpSrcNoteSizeHist();
     printf("GC HEAP SIZE %lu (%lu)\n",
