@@ -25,7 +25,7 @@
 #include "nsIContent.h"
 #include "nsIPresContext.h"
 
-#include "nsMenu.h"         // for MenuHelpers namespace
+#include "nsMenuBar.h"         // for MenuHelpers namespace
 #include "nsMenuItem.h"
 #include "nsIMenu.h"
 #include "nsIMenuBar.h"

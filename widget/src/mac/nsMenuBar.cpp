@@ -485,7 +485,7 @@ NS_METHOD nsMenuBar::AddMenu(nsIMenu * aMenu)
 		  nsCRT::free(ptrv);
 
       ::AppendMenu(appleMenu, "\pa");
-      NSStringSetMenuItemText(appleMenu, 1, label);
+      MenuHelpers::SetMenuItemText(appleMenu, 1, label, mUnicodeTextRunConverter);
       ::AppendMenu(appleMenu, "\p-");
 	    ::AppendResMenu(appleMenu, 'DRVR');
       ::InsertMenu(appleMenu, 0);
@@ -512,60 +512,7 @@ NS_METHOD nsMenuBar::AddMenu(nsIMenu * aMenu)
   return NS_OK;
 }
 
-
-void 
-nsMenuBar::NSStringSetMenuItemText(MenuHandle macMenuHandle, short menuItem, nsString& menuString)
-{
-	OSErr					err;
-	const PRUnichar*		unicodeText;
-	char*					scriptRunText;
-	size_t					unicodeTextLengthInBytes, unicdeTextReadInBytes,
-							scriptRunTextSizeInBytes, scriptRunTextLengthInBytes,
-							scriptCodeRunListLength;
-	ScriptCodeRun			convertedTextScript;
-	short					themeFontID;
-	Str255					themeFontName;
-	SInt16					themeFontSize;
-	Style					themeFontStyle;
-	
-	//
-	// extract the Unicode text from the nsString and convert it into a single script run
-	//
-	unicodeText = menuString.GetUnicode();
-	unicodeTextLengthInBytes = menuString.Length() * sizeof(PRUnichar);
-	scriptRunTextSizeInBytes = unicodeTextLengthInBytes * 2;
-	scriptRunText = new char[scriptRunTextSizeInBytes + 1];
-	
-	err = ::ConvertFromUnicodeToScriptCodeRun(mUnicodeTextRunConverter,
-				unicodeTextLengthInBytes,NS_REINTERPRET_CAST(const PRUint16*, unicodeText),
-				0, /* no flags*/
-				0,NULL,NULL,NULL, /* no offset arrays */
-				scriptRunTextSizeInBytes,&unicdeTextReadInBytes,&scriptRunTextLengthInBytes,
-				scriptRunText,
-				1 /* count of script runs*/,&scriptCodeRunListLength,&convertedTextScript);
-	NS_ASSERTION(err==noErr,"nsMenu::NSStringSetMenuItemText: ConvertFromUnicodeToScriptCodeRun failed.");
-	if (err!=noErr) { delete [] scriptRunText; return; }
-	scriptRunText[scriptRunTextLengthInBytes] = 0;	// null terminate
-	
-	//
-	// get a font from the script code
-	//
-	err = ::GetThemeFont(kThemeSystemFont,convertedTextScript.script,themeFontName,&themeFontSize,&themeFontStyle);
-	NS_ASSERTION(err==noErr,"nsMenu::NSStringSetMenuItemText: GetThemeFont failed.");
-	if (err!=noErr) { delete [] scriptRunText; return; }
-	::GetFNum(themeFontName,&themeFontID);
-
-	::SetMenuItemText(macMenuHandle,menuItem,c2pstr(scriptRunText));
-	err = ::SetMenuItemFontID(macMenuHandle,menuItem,themeFontID);	
-	
-	//
-	// clean up and exit
-	//
-	delete [] scriptRunText;
-			
-}
-
-
+                                
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuBar::GetMenuCount(PRUint32 &aCount)
 {
@@ -891,6 +838,133 @@ nsMenuBar :: Lookup ( nsIContent *aContent, nsIChangeObserver **_retval )
   
   return NS_OK;
 }
+
+
+#pragma mark -
+
+
+//
+// SetMenuItemText
+//
+// A utility routine for handling unicode->OS text conversions for setting the item
+// text in a menu.
+//
+void 
+MenuHelpers :: SetMenuItemText ( MenuHandle inMacMenuHandle, short inMenuItem, const nsString& inMenuString,
+                                   const UnicodeToTextRunInfo inConverter )
+{
+  // ::TruncString() doesn't take the number of characters to truncate to, it takes a pixel with
+  // to fit the string in. Ugh. I talked it over with sfraser and we couldn't come up with an 
+  // easy way to compute what this should be given the system font, etc, so we're just going
+  // to hard code it to something reasonable and bigger fonts will just have to deal.
+  const short kMaxItemPixelWidth = 300;
+  
+	short themeFontID;
+	SInt16 themeFontSize;
+	Style themeFontStyle;
+  char* scriptRunText = ConvertToScriptRun ( inMenuString, inConverter, &themeFontID,
+                                               &themeFontSize, &themeFontStyle );
+  if ( scriptRunText ) {    
+    // convert it to a pascal string
+    Str255 menuTitle;
+    short scriptRunTextLength = strlen(scriptRunText);
+    if (scriptRunTextLength > 255)
+      scriptRunTextLength = 255;
+    BlockMoveData(scriptRunText, &menuTitle[1], scriptRunTextLength);
+    menuTitle[0] = scriptRunTextLength;
+    
+    // if the item text is too long, truncate it.
+    ::TruncString ( kMaxItemPixelWidth, menuTitle, truncMiddle );
+	  ::SetMenuItemText(inMacMenuHandle, inMenuItem, menuTitle);
+	  OSErr err = ::SetMenuItemFontID(inMacMenuHandle, inMenuItem, themeFontID);	
+
+  	nsMemory::Free(scriptRunText);
+  }
+  		
+} // SetMenuItemText
+
+
+//
+// ConvertToScriptRun
+//
+// Converts unicode to a single script run and extract the relevant font information. The
+// caller is responsible for deleting the memory allocated by this call with |nsMemory::Free()|.
+// Returns |nsnull| if an error occurred.
+//
+char*
+MenuHelpers :: ConvertToScriptRun ( const nsString & inStr, const UnicodeToTextRunInfo inConverter,
+                                    short* outFontID, SInt16* outFontSize, Style* outFontStyle )
+{
+  //
+  // extract the Unicode text from the nsString and convert it into a single script run
+  //
+  const PRUnichar* unicodeText = inStr.GetUnicode();
+  size_t unicodeTextLengthInBytes = inStr.Length() * sizeof(PRUnichar);
+  size_t scriptRunTextSizeInBytes = unicodeTextLengthInBytes * 2;
+  char* scriptRunText = NS_REINTERPRET_CAST(char*, nsMemory::Alloc(scriptRunTextSizeInBytes + sizeof(char)));
+  if ( !scriptRunText )
+    return nsnull;
+    
+  ScriptCodeRun convertedTextScript;
+  size_t unicdeTextReadInBytes, scriptRunTextLengthInBytes, scriptCodeRunListLength;
+  OSErr err = ::ConvertFromUnicodeToScriptCodeRun(inConverter, unicodeTextLengthInBytes,
+                  NS_REINTERPRET_CAST(const PRUint16*, unicodeText),
+                  0, /* no flags*/
+                  0,NULL,NULL,NULL, /* no offset arrays */
+                  scriptRunTextSizeInBytes,&unicdeTextReadInBytes,&scriptRunTextLengthInBytes,
+                  scriptRunText,
+                  1 /* count of script runs*/,&scriptCodeRunListLength,&convertedTextScript);
+  NS_ASSERTION(err==noErr,"nsMenu::NSStringSetMenuItemText: ConvertFromUnicodeToScriptCodeRun failed.");
+  if ( err ) { nsMemory::Free(scriptRunText); return nsnull; }
+  scriptRunText[scriptRunTextLengthInBytes] = '\0';	// null terminate
+	
+  //
+  // get a font from the script code
+  //
+  Str255 themeFontName;
+  err = ::GetThemeFont(kThemeSystemFont, convertedTextScript.script, themeFontName, outFontSize, outFontStyle);
+  NS_ASSERTION(err==noErr,"nsMenu::NSStringSetMenuItemText: GetThemeFont failed.");
+  if ( err ) { nsMemory::Free(scriptRunText); return nsnull; }
+  ::GetFNum(themeFontName, outFontID);
+
+  return scriptRunText;
+                              
+} // ConvertToScriptRun
+
+
+//
+// WebShellToPresContext
+//
+// Helper to dig out a pres context from a webshell. A common thing to do before
+// sending an event into the dom.
+//
+nsresult
+MenuHelpers :: WebShellToPresContext (nsIWebShell* inWebShell, nsIPresContext** outContext )
+{
+  NS_ENSURE_ARG_POINTER(outContext);
+  *outContext = nsnull;
+  if (!inWebShell)
+    return NS_ERROR_INVALID_ARG;
+  
+  nsresult retval = NS_OK;
+  
+  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(inWebShell));
+
+  nsCOMPtr<nsIContentViewer> contentViewer;
+  docShell->GetContentViewer(getter_AddRefs(contentViewer));
+  if ( contentViewer ) {
+    nsCOMPtr<nsIDocumentViewer> docViewer ( do_QueryInterface(contentViewer) );
+    if ( docViewer )
+      docViewer->GetPresContext(*outContext);     // AddRefs for us
+    else
+      retval = NS_ERROR_FAILURE;
+  }
+  else
+    retval = NS_ERROR_FAILURE;
+  
+  return retval;
+  
+} // WebShellToPresContext
 
 
 
