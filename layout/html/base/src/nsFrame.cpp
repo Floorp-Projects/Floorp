@@ -3381,6 +3381,63 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
   return NS_OK;
 }
 
+nsPeekOffsetStruct nsIFrame::GetExtremeCaretPosition(PRBool aStart)
+{
+  nsPeekOffsetStruct result;
+
+  result.mResultContent = this->GetContent();
+  result.mContentOffset = 0;
+
+  nsIFrame *resultFrame = this;
+
+  if (aStart)
+    nsFrame::GetFirstLeaf(GetPresContext(), &resultFrame);
+  else
+    nsFrame::GetLastLeaf(GetPresContext(), &resultFrame);
+
+  NS_ASSERTION(resultFrame,"result frame for carent positioning is Null!");
+
+  if (!resultFrame)
+    return result;
+
+  // there should be some more validity checks here, or earlier in the code,
+  // in case we get to to some 'dummy' frames at the end of the content
+    
+  nsIContent* content = resultFrame->GetContent();
+
+  NS_ASSERTION(resultFrame,"result frame content for carent positioning is Null!");
+
+  if (!content)
+    return result;
+  
+  // special case: if this is a br element, position the caret before it,
+  // not after it (perhaps the same exception should be made for some
+  // other elements?)
+
+  nsIAtom* tag = content->Tag();
+  if (tag == nsHTMLAtoms::br) {
+    // special case in effect
+    nsIContent* parent = content->GetParent();
+    NS_ASSERTION(parent,"<br> element has no parent!");
+    if (parent) {
+      result.mResultContent = parent;
+      result.mContentOffset = parent->IndexOf(content);
+      return result;
+    }
+  }
+
+  result.mResultContent = content;
+
+  PRInt32 start, end;
+  nsresult rv;
+  rv = GetOffsets(start,end);
+  if (NS_SUCCEEDED(rv)) {
+    result.mContentOffset = aStart ? start : end;
+  }
+
+  return result;
+}
+
 // Get a frame which can contain a line iterator
 // (which generally means it's a block frame).
 static nsILineIterator*
