@@ -1,3 +1,26 @@
+1998-07-29  Leif Hedstrom  <leif@netscape.com>
+
+	* Conn.pm (new): Added support for passing a hash array of all the
+	parameters, as returned by the ldapArgs() function.
+
+	* Utils.pm (str2Scope): New function, for converting strings
+	(subtree) to a numerical scope value (2).
+	(askPassword): Dito, ask for a password, interactively.
+	(ldapArgs): Dito, handle common LDAP command line arguments.
+
+	* Makefile.PL: Minor change, to do regex match on OS version for
+	MSWin.
+
+	* Entry.pm: Changed all _XXX hash values to also end with a _,
+	hence making it easier to isolate them (/^_.*_$/).
+
+	* Conn.pm (nextEntry): Changed to accept that the attributes are
+	now arrays, not pointers to arrays. We still consider them as
+	pointers internally though, it's cleaner API.
+
+	* API.pm: Changed to use the native Exporter function to export
+	tags into EXPORT_OK.
+
 1998-07-22  Leif Hedstrom  <leif@netscape.com>
 
 	* LDIF.pm (readEntry): Moved from my LdapUtils.pm package.
