@@ -47,6 +47,12 @@ template <class T> struct gc_types {
 	typedef std::vector<T, JS::gc_allocator<T> > vector;
 };
 
+template <class T>
+void* operator new(std::size_t, const JS::gc_allocator<T>& alloc)
+{
+	return alloc.allocate(1);
+}
+
 /**
  * Define a C++ class that is garbage collectable, and wants to have its destructor
  * called when it is finalized.
@@ -57,34 +63,44 @@ public:
 	typedef JS::gc_allocator<A, traits> allocator;
 	friend struct traits;
 	
+	static int instances;
+	
 	void* operator new(std::size_t)
 	{
 		return allocator::allocate(1);
 	}
 	
-	void operator delete(void*) {}
-
 	A()
 	{
+		++instances;
 		std::cout << "A::A() here." << std::endl;
 	}
 
-private:	
+protected:	
 	~A()
 	{
+		--instances;
 		std::cout << "A::~A() here." << std::endl;
 	}
+
+private:
+	void operator delete(void*) {}
 };
+
+int A::instances = 0;
 
 void main(int /* argc */, char* /* argv[] */)
 {
 	using namespace std;
-	using namespace JavaScript;
+	using namespace JS;
 
 	cout << "testing the GC allocator." << endl;
 
+	// allocate a string, using the GC, and owned by an auto_ptr, that knows how to correctly destroy the string.
 	typedef gc_types<char>::string char_string;
-	char_string str("This is a garbage collectable string.");
+	typedef gc_allocator<char_string> char_string_alloc;
+	auto_ptr<char_string, char_string_alloc> ptr(new(char_string_alloc()) char_string("This is a garbage collectable string."));
+	const char_string& str = *ptr;
 	cout << str << endl;
 	
 	// question, how can we partially evaluate a template?
@@ -106,6 +122,9 @@ void main(int /* argc */, char* /* argv[] */)
 
 	// run a collection.
 	gc_allocator<void>::collect();
+
+	// print out instance count.
+	cout << "A::instances = " << A::instances << endl;
 	
 	// sort the values.
 	sort(values.begin(), values.end());
