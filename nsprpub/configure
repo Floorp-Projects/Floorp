@@ -2823,7 +2823,7 @@ EOF
 #define SYSV 1
 EOF
 
-    DSO_LDOPTS='-brtl -bM:SRE -bnoentry -bexpall'
+    DSO_LDOPTS='-brtl -bM:SRE -bnoentry -bexpall -blibpath:/usr/lib:/lib'
     ac_safe=`echo "sys/atomic_op.h" | sed 'y%./+-%__p_%'`
 echo $ac_n "checking for sys/atomic_op.h""... $ac_c" 1>&6
 echo "configure:2830: checking for sys/atomic_op.h" >&5
