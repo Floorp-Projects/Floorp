@@ -386,7 +386,7 @@ nsContentAreaDragDrop::ExtractURLFromData(const nsACString & inFlavor, nsISuppor
     if ( file ) {
       nsCAutoString url;
       NS_GetURLSpecFromFile(file, url);
-      outURL = NS_ConvertUTF8toUCS2(url);
+      CopyUTF8toUTF16(url, outURL);
     } 
   }
 }

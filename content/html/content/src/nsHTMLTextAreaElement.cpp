@@ -452,7 +452,7 @@ nsHTMLTextAreaElement::GetValueInternal(nsAString& aValue, PRBool aIgnoreWrap)
     if (!mValueChanged || !mValue) {
       GetDefaultValue(aValue);
     } else {
-      aValue = NS_ConvertUTF8toUCS2(mValue);
+      CopyUTF8toUTF16(mValue, aValue);
     }
   }
 }

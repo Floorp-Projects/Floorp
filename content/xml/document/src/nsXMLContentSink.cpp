@@ -1094,7 +1094,8 @@ nsXMLContentSink::ProcessHeaderData(nsIAtom* aHeader,const nsAString& aValue,nsI
 
     nsCOMPtr<nsIRefreshURI> reefer = do_QueryInterface(mDocShell);
     if (reefer) {
-      rv = reefer->SetupRefreshURIFromHeader(baseURI, NS_ConvertUCS2toUTF8(aValue));
+      rv = reefer->SetupRefreshURIFromHeader(baseURI,
+                                             NS_ConvertUCS2toUTF8(aValue));
       if (NS_FAILED(rv)) return rv;
     }
   } // END refresh
@@ -1141,7 +1142,9 @@ nsXMLContentSink::ProcessHeaderData(nsIAtom* aHeader,const nsAString& aValue,nsI
       mParser->GetChannel(getter_AddRefs(channel));
     }
 
-    rv = cookieServ->SetCookieString(codebaseURI, prompt, NS_ConvertUCS2toUTF8(aValue).get(), channel);
+    rv = cookieServ->SetCookieString(codebaseURI, prompt,
+                                     NS_ConvertUCS2toUTF8(aValue).get(),
+                                     channel);
 
     if (NS_FAILED(rv)) return rv;
   } // END set-cookie

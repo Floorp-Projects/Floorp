@@ -344,7 +344,7 @@ nsXULContentUtils::MakeElementURI(nsIDocument* aDocument, const nsAString& aElem
 
     if (aElementID.FindChar(':') > 0) {
         // Assume it's absolute already. Use as is.
-        aURI.Assign(NS_ConvertUCS2toUTF8(aElementID));
+        CopyUTF16toUTF8(aElementID, aURI);
     }
     else {
         nsresult rv;
@@ -364,7 +364,7 @@ nsXULContentUtils::MakeElementURI(nsIDocument* aDocument, const nsAString& aElem
         if (aElementID.First() != '#') {
             aURI.Append('#');
         }
-        aURI.Append(NS_ConvertUCS2toUTF8(aElementID));
+        AppendUTF16toUTF8(aElementID, aURI);
 #else
         nsXPIDLCString spec;
         rv = NS_MakeAbsoluteURI(nsCAutoString(aElementID), docURL, getter_Copies(spec));

@@ -191,10 +191,7 @@ nsNode3Tearoff::GetBaseURI(nsAString& aURI)
   nsCOMPtr<nsIURI> uri;
 
   nsCOMPtr<nsIDocument> doc;
-
   mContent->GetDocument(getter_AddRefs(doc));
-
-  aURI.Truncate();
 
   // XML content can use the XML Base (W3C spec) way of setting the
   // base per element. We look at this node and its ancestors until we
@@ -226,11 +223,13 @@ nsNode3Tearoff::GetBaseURI(nsAString& aURI)
     }
   }
 
+  nsCAutoString spec;
+
   if (uri) {
-    nsCAutoString spec;
     uri->GetSpec(spec);
-    aURI = NS_ConvertUTF8toUCS2(spec);
   }
+
+  CopyUTF8toUTF16(spec, aURI);
   
   return NS_OK;
 }
@@ -1689,7 +1688,7 @@ nsGenericElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
     mDocument = aDocument;
   }
 
-  if (PR_TRUE == aDeep) {
+  if (aDeep) {
     SetDocumentInChildrenOf(this, aDocument, aCompileEventHandlers);
   }
 
@@ -3120,11 +3119,14 @@ nsresult
 nsGenericContainerElement::NormalizeAttrString(const nsAString& aStr,
                                                nsINodeInfo** aNodeInfo)
 {
-  NS_ConvertUCS2toUTF8 utf8String(aStr);
   if (mAttributes) {
+    NS_ConvertUCS2toUTF8 utf8String(aStr);
+
     PRInt32 indx, count = mAttributes->Count();
     for (indx = 0; indx < count; indx++) {
-      nsGenericAttribute* attr = (nsGenericAttribute*)mAttributes->ElementAt(indx);
+      nsGenericAttribute* attr =
+        (nsGenericAttribute*)mAttributes->ElementAt(indx);
+
       if (attr->mNodeInfo->QualifiedNameEquals(utf8String)) {
         NS_ADDREF(*aNodeInfo = attr->mNodeInfo);
 

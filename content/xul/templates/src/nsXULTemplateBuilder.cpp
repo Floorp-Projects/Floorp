@@ -1034,7 +1034,9 @@ nsXULTemplateBuilder::SubstituteText(nsTemplateMatch& aMatch,
 
         const char *uri = nsnull;
         member->GetValueConst(&uri);
-        aResult = NS_ConvertUTF8toUCS2(uri);
+
+        CopyUTF8toUTF16(uri, aResult);
+
         return NS_OK;
     }
 

@@ -357,13 +357,12 @@ nsHTMLAnchorElement::HandleDOMEvent(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 nsHTMLAnchorElement::GetHref(nsAString& aValue)
 {
-  char *buf;
-  nsresult rv = GetHrefUTF8(&buf);
+  nsXPIDLCString buf;
+  nsresult rv = GetHrefUTF8(getter_Copies(buf));
   if (NS_FAILED(rv)) return rv;
-  if (buf) {
-    aValue.Assign(NS_ConvertUTF8toUCS2(buf));
-    nsCRT::free(buf);
-  }
+
+  CopyUTF8toUTF16(buf, aValue);
+
   // NS_IMPL_STRING_ATTR does nothing where we have (buf == null)
   return NS_OK;
 }

@@ -4338,7 +4338,8 @@ HTMLContentSink::ScrollToRef(PRBool aReallyScroll)
   nsresult rv = NS_ERROR_FAILURE;
   // We assume that the bytes are in UTF-8, as it says in the spec:
   // http://www.w3.org/TR/html4/appendix/notes.html#h-B.2.1
-  nsAutoString ref = NS_ConvertUTF8toUCS2(unescapedRef);
+  nsAutoString ref;
+  CopyUTF8toUTF16(unescapedRef, ref);
 
   PRInt32 i, ns = mDocument->GetNumberOfShells();
   for (i = 0; i < ns; i++) {

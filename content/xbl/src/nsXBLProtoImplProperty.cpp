@@ -215,20 +215,16 @@ nsXBLProtoImplProperty::CompileMember(nsIScriptContext* aContext, const nsCStrin
   nsresult rv = NS_OK;
 
   // Do we have a getter?
-  nsAutoString getter(mGetterText);
-  nsMemory::Free(mGetterText);
-  mGetterText = nsnull;
   nsCAutoString functionUri;
-  if (!getter.IsEmpty() && aClassObject) {
-    functionUri = aClassStr;
-    functionUri += NS_LITERAL_CSTRING(".");
-    functionUri += NS_ConvertUCS2toUTF8(mName);
+  if (*mGetterText && aClassObject) {
+    functionUri = aClassStr + NS_LITERAL_CSTRING(".");
+    AppendUTF16toUTF8(mName, functionUri);
     functionUri += NS_LITERAL_CSTRING(" (getter)");
     rv = aContext->CompileFunction(aClassObject,
                                    nsCAutoString("onget"),
                                    0,
                                    nsnull,
-                                   getter, 
+                                   nsDependentString(mGetterText),
                                    functionUri.get(),
                                    0,
                                    PR_FALSE,
@@ -248,22 +244,22 @@ nsXBLProtoImplProperty::CompileMember(nsIScriptContext* aContext, const nsCStrin
       /*chaining to return failure*/
     }
   } // if getter is not empty
+
+  nsMemory::Free(mGetterText);
+  mGetterText = nsnull;
+
   nsresult rvG=rv;
 
   // Do we have a setter?
-  nsAutoString setter(mSetterText);
-  nsMemory::Free(mSetterText);
-  mSetterText = nsnull;
-  if (!setter.IsEmpty() && aClassObject) {
-    functionUri = aClassStr;
-    functionUri += NS_LITERAL_CSTRING(".");
-    functionUri += NS_ConvertUCS2toUTF8(mName);
+  if (*mSetterText && aClassObject) {
+    functionUri = aClassStr + NS_LITERAL_CSTRING(".");
+    AppendUTF16toUTF8(mName, functionUri);
     functionUri += NS_LITERAL_CSTRING(" (setter)");
     rv = aContext->CompileFunction(aClassObject,
                                    nsCAutoString("onset"),
                                    1,
                                    gPropertyArgs,
-                                   setter, 
+                                   nsDependentString(mSetterText),
                                    functionUri.get(),
                                    0,
                                    PR_FALSE,
@@ -283,6 +279,9 @@ nsXBLProtoImplProperty::CompileMember(nsIScriptContext* aContext, const nsCStrin
       /*chaining to return failure*/
     }
   } // if setter wasn't empty....
+
+  nsMemory::Free(mSetterText);
+  mSetterText = nsnull;
 
   return NS_SUCCEEDED(rv) ? rvG : rv;
 }
