@@ -39,6 +39,8 @@ function refreshConfigFrame(fileName)
 			parent.parent.nci.setNCIList(fileName);
 	
 	}
+	if (fileName != null)
+		setGlobal("NciFileName", fileName);
 }
 
 //THE FOLLOWING FUNCTION IS LOCATION DEPENDANT
@@ -436,17 +438,12 @@ function askNCIFileNameAndSave()
 
 			var fName = prompt("Enter the file name for this configuration (must end with .NCI)", sgName);
 
+			//if they entered an improper suffix or path, prompt again, and again
 			//NCI files are to be saved only in the config folder. 
-			while ((fName != null) && pathMentioned(fName))			
-			{
-				fName = prompt("Please enter file name only. This file will be saved by default to " + top.globals.getConfigFolder(top.globals), sgName);
-			}
-
-			//if they entered an improper suffix, prompt again, and again
-			while ((fName != null) && ((fName.substring(fName.length-4, fName.length)  != ".NCI") && (fName.substring(fName.length-4, fName.length)  != ".nci")))
+			while ((fName != null) && (((fName.substring(fName.length-4, fName.length)  != ".NCI") && (fName.substring(fName.length-4, fName.length)  != ".nci")) || (pathMentioned(fName))))
 			{
 				sgName = suggestNCIFileName(fName);
-				fName = prompt("Enter the fileName for this configuration (must end with .NCI)", sgName);
+				fName = prompt("Please enter file name only (must end with .NCI). This file will be saved by default to " + top.globals.getConfigFolder(top.globals), sgName);
 			}
 			
 			// if the name exists, prompt to replace
@@ -495,7 +492,6 @@ function askNCIFileNameAndSave()
 // Checks if user mentioned path name in the filename field.
 function pathMentioned(fileName)
 {
-	debug("In pathMentioned");
 
 	var isAPath = false;
 

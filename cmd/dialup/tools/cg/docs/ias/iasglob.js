@@ -49,6 +49,8 @@ function refreshConfigFrame(fileName)
 			debug("parent.parent: " + parent.parent + " ["+parent.parent.name+"]: " + parent.parent.ias);
 			debug("this document: " + document.location + document.name + document.ias);
 	}
+	if (fileName != null)
+		setGlobal("IASFileName", fileName);
 }
 
 
@@ -410,17 +412,12 @@ function askIASFileNameAndSave()
 			
 			var fName = prompt("Enter the file name for this configuration (must end with .IAS)", sgName);
 			
+			//if they entered an improper suffix or path, prompt again, and again
 			//IAS files are to be saved only in the config folder. 
-			while ((fName != null) && pathMentioned(fName))			
-			{
-				fName = prompt("Please enter file name only. This file will be saved by default to " + top.globals.getConfigFolder(top.globals), sgName);
-			}
-
-			//if they entered an improper suffix, prompt again, and again
-			while ((fName != null) && ((fName.substring(fName.length-4, fName.length)  != ".IAS") && (fName.substring(fName.length-4, fName.length)  != ".ias")))
+			while ((fName != null) && (((fName.substring(fName.length-4, fName.length)  != ".IAS") && (fName.substring(fName.length-4, fName.length)  != ".ias")) || pathMentioned(fName)))
 			{
 				sgName = suggestIASFileName(fName);
-				fName = prompt("Enter the fileName for this configuration (must end with .IAS)", sgName);
+				fName = prompt("Please enter file name only (must end with .IAS). This file will be saved by default to " + top.globals.getConfigFolder(top.globals), sgName);
 			}
 			
 			// if the name exists, prompt to replace
