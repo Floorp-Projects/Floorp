@@ -28,19 +28,19 @@ titledbutton {
 }
 
 treeitem > treerow > treecell > titledbutton[value="AOL Netfind"] {
-	list-style-image: url("resource:/res/samples/AOL_NetFind.gif");
+	list-style-image: url("resource:/res/rdf/datasets/AOL_NetFind.gif");
 }
 
 treeitem > treerow > treecell > titledbutton[value="GoTo.com"] {
-	list-style-image: url("resource:/res/samples/GoTo.com.gif");
+	list-style-image: url("resource:/res/rdf/datasets/GoTo.com.gif");
 }
 
 treeitem > treerow > treecell > titledbutton[value="Netscape Open Directory"] {
-	list-style-image: url("resource:/res/samples/Netscape_Open_Directory.gif");
+	list-style-image: url("resource:/res/rdf/datasets/Netscape_Open_Directory.gif");
 }
 
 treeitem > treerow > treecell > titledbutton[value="Snap.com"] {
-	list-style-image: url("resource:/res/samples/Snap.com.gif");
+	list-style-image: url("resource:/res/rdf/datasets/Snap.com.gif");
 }
 
 treeitem > treerow > treecell > titledbutton {
