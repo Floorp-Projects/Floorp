@@ -73,9 +73,19 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 #######################################################################
 
 moz_import::
+ifeq ($(OS_ARCH),WINNT)
+	cp $(DIST)/../include/* $(DIST)/include
+ifdef BUILD_OPT
+	cp $(DIST)/../WIN32_O.OBJ/lib/* $(DIST)/lib
+else
+	cp $(DIST)/../WIN32_D.OBJ/lib/* $(DIST)/lib
+endif
+	mv $(DIST)/lib/dbm32.lib $(DIST)/lib/dbm.lib
+else
 	$(NSINSTALL) -L ../../dist include $(DIST)
 	$(NSINSTALL) -L ../../dist lib $(DIST)
 	cp $(DIST)/lib/libmozdbm_s.a $(DIST)/lib/libdbm.a
+endif
 
 nsm:: all 
 	cd ssm/lib/protocol; gmake
