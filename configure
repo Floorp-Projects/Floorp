@@ -7939,6 +7939,7 @@ mailnews/local/Makefile
 mailnews/local/public/Makefile
 mailnews/local/src/Makefile
 mailnews/local/tests/Makefile
+mailnews/local/tests/pop3/Makefile
 mailnews/imap/Makefile
 mailnews/imap/public/Makefile
 mailnews/imap/src/Makefile
