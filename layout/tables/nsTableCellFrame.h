@@ -91,18 +91,31 @@ public:
 
   virtual void VerticallyAlignChild();
 
-  /** return the mapped cell's row span.  Always >= 1. */
+  /**
+   * return the cell's specified row span. this is what was specified in the
+   * content model or in the style info, and is always >= 1.
+   * to get the effective row span (the actual value that applies), use GetEffectiveRowSpan()
+   * @see nsTableFrame::GetEffectiveRowSpan()
+   */
   virtual PRInt32 GetRowSpan();
 
   // there is no set row index because row index depends on the cell's parent row only
 
-  /** return the mapped cell's row index (starting at 0 for the first row) */
+  /**
+   * return the cell's starting row index (starting at 0 for the first row).
+   * for continued cell frames the row index is that of the cell's first-in-flow
+   */
   virtual nsresult GetRowIndex(PRInt32 &aRowIndex);
 
-  /** return the mapped cell's col span.  Always >= 1. */
+  /**
+   * return the cell's specified col span. this is what was specified in the
+   * content model or in the style info, and is always >= 1.
+   * to get the effective col span (the actual value that applies), use GetEffectiveColSpan()
+   * @see nsTableFrame::GetEffectiveColSpan()
+   */
   virtual PRInt32 GetColSpan();
   
-  /** return the mapped cell's column index (starting at 0 for the first column) */
+  /** return the cell's column index (starting at 0 for the first column) */
   virtual nsresult GetColIndex(PRInt32 &aColIndex);
 
   /** return the available width given to this frame during its last reflow */
@@ -227,9 +240,10 @@ public:
 
 inline nsresult nsTableCellFrame::GetRowIndex(PRInt32 &aRowIndex)
 {
+  nsTableCellFrame* cell = (nsTableCellFrame*)GetFirstInFlow();
   nsresult result;
   nsTableRowFrame * row;
-  GetParent((nsIFrame **)&row);
+  cell->GetParent((nsIFrame **)&row);
   if (nsnull!=row)
   {
     aRowIndex = row->GetRowIndex();
