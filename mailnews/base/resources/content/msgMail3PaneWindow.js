@@ -52,7 +52,7 @@ var gNextMessageViewIndexAfterDelete = -2;
 var gCurrentlyDisplayedMessage=nsMsgViewIndex_None;
 var gStartFolderUri = null;
 var gStartMsgKey = -1;
-
+var gRightMouseButtonDown = false;
 // Global var to keep track of which row in the thread pane has been selected
 // This is used to make sure that the row with the currentIndex has the selection
 // after a Delete or Move of a message that has a row index less than currentIndex.
@@ -922,7 +922,12 @@ function TreeOnMouseDown(event)
     // where the click happened without loading the message headers in
     // the Folder or Thread Pane.
     if (event.button == 2)
+    {
+      gRightMouseButtonDown = true;
       ChangeSelectionWithoutContentLoad(event, event.target.parentNode);
+    }
+    else
+      gRightMouseButtonDown = false;
 }
 
 function FolderPaneOnClick(event)

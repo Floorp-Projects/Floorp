@@ -330,8 +330,7 @@ function ThreadPaneSelectionChanged()
 {
   var treeBoxObj = GetThreadTree().treeBoxObject;
   var treeSelection = treeBoxObj.selection;
-
-  if (treeSelection.isSelected(treeSelection.currentIndex))
+  if (!gRightMouseButtonDown)
     treeBoxObj.view.selectionChanged();
 }
 
