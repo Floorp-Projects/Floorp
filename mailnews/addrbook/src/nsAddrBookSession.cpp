@@ -86,38 +86,39 @@ NS_IMETHODIMP nsAddrBookSession::NotifyItemPropertyChanged
 
 NS_IMETHODIMP nsAddrBookSession::NotifyDirectoryItemAdded(nsIAbDirectory *directory, nsISupports *item)
 {
-  NS_ENSURE_TRUE(mListeners, NS_ERROR_NULL_POINTER);
-
-  PRUint32 count = 0;
-  PRUint32 i;
-  nsresult rv = mListeners->Count(&count);
-  NS_ENSURE_SUCCESS(rv, rv);
-  for(i = 0; i < count; i++)
+  if (mListeners)
   {
-    nsCOMPtr<nsIAbListener> listener = getter_AddRefs((nsIAbListener*)mListeners->ElementAt(i));
-    NS_ASSERTION(listener, "listener is null");
-    if (listener)
-      listener->OnItemAdded(directory, item);
+    PRUint32 count = 0;
+    PRUint32 i;
+    nsresult rv = mListeners->Count(&count);
+    NS_ENSURE_SUCCESS(rv, rv);
+    for(i = 0; i < count; i++)
+    {
+      nsCOMPtr<nsIAbListener> listener = getter_AddRefs((nsIAbListener*)mListeners->ElementAt(i));
+      NS_ASSERTION(listener, "listener is null");
+      if (listener)
+        listener->OnItemAdded(directory, item);
+    }
   }
-
   return NS_OK;
 
 }
 
 NS_IMETHODIMP nsAddrBookSession::NotifyDirectoryItemDeleted(nsIAbDirectory *directory, nsISupports *item)
 {
-  NS_ENSURE_TRUE(mListeners, NS_ERROR_NULL_POINTER);
-
-  PRUint32 count = 0;
-  PRUint32 i;
-  nsresult rv = mListeners->Count(&count);
-  NS_ENSURE_SUCCESS(rv, rv);
-  for(i = 0; i < count; i++)
+  if (mListeners)
   {
-    nsCOMPtr<nsIAbListener> listener = getter_AddRefs((nsIAbListener*)mListeners->ElementAt(i));
-    NS_ASSERTION(listener, "listener is null");
-    if (listener)
-      listener->OnItemRemoved(directory, item);
+    PRUint32 count = 0;
+    PRUint32 i;
+    nsresult rv = mListeners->Count(&count);
+    NS_ENSURE_SUCCESS(rv, rv);
+    for(i = 0; i < count; i++)
+    {
+      nsCOMPtr<nsIAbListener> listener = getter_AddRefs((nsIAbListener*)mListeners->ElementAt(i));
+      NS_ASSERTION(listener, "listener is null");
+      if (listener)
+        listener->OnItemRemoved(directory, item);
+    }
   }
   return NS_OK;
 
