@@ -25,6 +25,8 @@ AC_ISC_POSIX
 
 dnl Checks for libraries.
 AM_PATH_GTK(1.2.0)
+AC_CHECK_LIB(pthread, pthread_attr_init, 
+	USE_PTHREADS=1 LIBPTHREAD="-lpthread")
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -106,10 +108,22 @@ AC_ARG_ENABLE(cpp-exceptions,
 	_MOZ_EXCEPTIONS_FLAGS=${_COMPILER_PREFIX}-fexceptions
     fi])
 
+AC_ARG_WITH(pthreads,
+[  --with-pthreads          use system pthread library ],
+	[if test "$withval" = "yes"; then
+	    if test -z "$USE_PTHREADS"; then
+		AC_MSG_ERROR([ --with-pthreads specified for a system without pthread support]);
+	    fi
+	 else
+	    USE_PTHREADS=
+	    LIBPTHREAD=
+         fi])
+
 CXXFLAGS="$CXXFLAGS $_MOZ_RTTI_FLAGS $_MOZ_EXCEPTIONS_FLAGS"
 
 AC_SUBST(MOZILLA_DIR)
 AC_SUBST(NSPR_DIR)
+AC_SUBST(LIBPTHREAD)
 
 AC_OUTPUT(
 Makefile
