@@ -303,7 +303,7 @@ BaseAppCore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 //
 // BaseAppCore class initialization
 //
-extern "C" NS_EXPORT nsresult NS_InitBaseAppCoreClass(nsIScriptContext *aContext, void **aPrototype)
+nsresult NS_InitBaseAppCoreClass(nsIScriptContext *aContext, void **aPrototype)
 {
   JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
   JSObject *proto = nsnull;
