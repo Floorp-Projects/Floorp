@@ -1677,7 +1677,7 @@ PRBool BasicTableLayoutStrategy::ColumnsCanBeInvalidatedBy(nsStyleCoord*        
   PRInt32 colIndex;
   aCellFrame.GetColIndex(colIndex);
   nsTableColFrame* colFrame = mTableFrame->GetColFrame(colIndex);
-  nscoord colSpan = mTableFrame->GetEffectiveColSpan(&aCellFrame);
+  nscoord colSpan = mTableFrame->GetEffectiveColSpan(aCellFrame);
 
   if (aPrevStyleWidth) {
     nsTableColFrame* colSpanFrame = colFrame;
@@ -1745,7 +1745,7 @@ PRBool BasicTableLayoutStrategy::ColumnsCanBeInvalidatedBy(const nsTableCellFram
   PRInt32 colIndex;
   aCellFrame.GetColIndex(colIndex);
   nsTableColFrame* colFrame = mTableFrame->GetColFrame(colIndex);
-  nscoord colSpan = mTableFrame->GetEffectiveColSpan(&aCellFrame);
+  nscoord colSpan = mTableFrame->GetEffectiveColSpan(aCellFrame);
 
   // check to see if DES_CON can affect columns
   nsTableColFrame* spanFrame = colFrame;
@@ -1776,7 +1776,7 @@ PRBool BasicTableLayoutStrategy::ColumnsAreValidFor(const nsTableCellFrame& aCel
   PRInt32 colIndex;
   aCellFrame.GetColIndex(colIndex);
   nsTableColFrame* colFrame = mTableFrame->GetColFrame(colIndex);
-  nscoord colSpan = mTableFrame->GetEffectiveColSpan(&aCellFrame);
+  nscoord colSpan = mTableFrame->GetEffectiveColSpan(aCellFrame);
 
   nscoord cellMin = aCellFrame.GetPass1MaxElementSize().width;
   nscoord cellDes = aCellFrame.GetMaximumWidth();

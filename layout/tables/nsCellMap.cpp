@@ -186,10 +186,11 @@ nsTableCellMap::GetColSpan(PRInt32 aRowIndex,
   return nsnull;
 }
 
-nsTableCellFrame* nsTableCellMap::GetCellFrame(PRInt32   aRowIndex,
-                                               PRInt32   aColIndex,
-                                               CellData& aData,
-                                               PRBool    aUseRowIfOverlap) const
+nsTableCellFrame* 
+nsTableCellMap::GetCellFrame(PRInt32   aRowIndex,
+                             PRInt32   aColIndex,
+                             CellData& aData,
+                             PRBool    aUseRowIfOverlap) const
 {
   nsCellMap* map = mFirstMap;
   while (map) {
@@ -289,10 +290,11 @@ nsTableCellMap::RemoveRows(PRInt32 aFirstRowIndex,
 }
 
 PRInt32 
-nsTableCellMap::AppendCell(nsTableCellFrame&     aCellFrame,
-                           PRInt32               aRowIndex,
-                           PRBool                aRebuildIfNecessary)
+nsTableCellMap::AppendCell(nsTableCellFrame& aCellFrame,
+                           PRInt32           aRowIndex,
+                           PRBool            aRebuildIfNecessary)
 {
+  NS_ASSERTION(&aCellFrame == aCellFrame.GetFirstInFlow(), "invalid call on continuing frame");
   PRInt32 rowIndex = aRowIndex;
   nsCellMap* cellMap = mFirstMap;
   while (cellMap) {
@@ -358,6 +360,8 @@ void
 nsTableCellMap::RemoveCell(nsTableCellFrame* aCellFrame,
                            PRInt32           aRowIndex)
 {
+  NS_ASSERTION(aCellFrame == (nsTableCellFrame *)aCellFrame->GetFirstInFlow(),
+               "invalid call on continuing frame");
   PRInt32 rowIndex = aRowIndex;
   nsCellMap* cellMap = mFirstMap;
   while (cellMap) {
@@ -387,30 +391,30 @@ nsTableCellMap::GetNumCellsOriginatingInCol(PRInt32 aColIndex) const
 void 
 nsTableCellMap::Dump() const
 {
-  printf("***** START TABLE CELL MAP DUMP *****\n");
+  printf("***** START TABLE CELL MAP DUMP ***** %p\n", this);
   // output col info
   PRInt32 colCount = mCols.Count();
-	printf ("\ncols array orig/span-> ");
+	printf ("cols array orig/span-> ", this);
 	for (PRInt32 colX = 0; colX < colCount; colX++) {
     nsColInfo* colInfo = (nsColInfo *)mCols.ElementAt(colX);
-		printf ("%d=%d/%d ", colX, colInfo->mNumCellsOrig, colInfo->mNumCellsSpan);
+		printf ("%d=%d/%d", colX, colInfo->mNumCellsOrig, colInfo->mNumCellsSpan);
 	}
   nsCellMap* cellMap = mFirstMap;
   while (cellMap) {
     cellMap->Dump();
     cellMap = cellMap->GetNextSibling();
   }
-  printf("\n***** END TABLE CELL MAP DUMP *****\n");
+  printf("***** END TABLE CELL MAP DUMP *****\n");
 }
 #endif
 
 PRInt32 
 nsTableCellMap::GetEffectiveColSpan(PRInt32                 aColIndex, 
-                                    const nsTableCellFrame* aCell)
+                                    const nsTableCellFrame& aCellFrameIn)
 {
-  nsTableCellFrame* cellFrame = (nsTableCellFrame*)aCell->GetFirstInFlow();
+  nsTableCellFrame& cellFrame = (nsTableCellFrame &)*(aCellFrameIn.GetFirstInFlow());
   PRInt32 rowIndex;
-  cellFrame->GetRowIndex(rowIndex);
+  cellFrame.GetRowIndex(rowIndex);
   nsCellMap* cellMap = mFirstMap;
   while (cellMap) {
     if (cellMap->GetRowCount() > rowIndex) {
@@ -554,10 +558,11 @@ nsCellMap::~nsCellMap()
   }
 }
 
-nsTableCellFrame* nsCellMap::GetCellFrame(PRInt32   aRowIndexIn,
-                                          PRInt32   aColIndexIn,
-                                          CellData& aData,
-                                          PRBool    aUseRowIfOverlap) const
+nsTableCellFrame* 
+nsCellMap::GetCellFrame(PRInt32   aRowIndexIn,
+                        PRInt32   aColIndexIn,
+                        CellData& aData,
+                        PRBool    aUseRowIfOverlap) const
 {
   PRInt32 rowIndex = aRowIndexIn - aData.GetRowSpanOffset();
   PRInt32 colIndex = aColIndexIn - aData.GetColSpanOffset();
@@ -675,10 +680,11 @@ nsCellMap::RemoveRows(nsTableCellMap& aMap,
   }
 }
 
-PRInt32 nsCellMap::AppendCell(nsTableCellMap&   aMap,
-                              nsTableCellFrame& aCellFrame, 
-                              PRInt32           aRowIndex,
-                              PRBool            aRebuildIfNecessary)
+PRInt32 
+nsCellMap::AppendCell(nsTableCellMap&   aMap,
+                      nsTableCellFrame& aCellFrame, 
+                      PRInt32           aRowIndex,
+                      PRBool            aRebuildIfNecessary)
 {
   PRInt32 origNumMapRows = mRows.Count();
   PRInt32 origNumCols    = aMap.GetColCount();
@@ -788,7 +794,7 @@ PRInt32 nsCellMap::AppendCell(nsTableCellMap&   aMap,
       }
     }
   }
-  //printf("appended cell=%p row=%d \n", aCellFrame, aRowIndex);
+  //printf("appended cell=%p row=%d \n", &aCellFrame, aRowIndex);
   //aMap.Dump();
   return startColIndex;
 }
@@ -1502,14 +1508,14 @@ void nsCellMap::RemoveCell(nsTableCellMap&   aMap,
 #ifdef NS_DEBUG
 void nsCellMap::Dump() const
 {
-  printf("***** START GROUP CELL MAP DUMP *****\n");
+  printf("\n  ***** START GROUP CELL MAP DUMP ***** %p\n", this);
   PRInt32 mapRowCount = mRows.Count();
-  printf("mapRowCount=%d tableRowCount=%d \n", mapRowCount, mRowCount);
+  printf("  mapRowCount=%d tableRowCount=%d \n", mapRowCount, mRowCount);
 
   PRInt32 rowIndex, colIndex;
   for (rowIndex = 0; rowIndex < mapRowCount; rowIndex++) {
     nsVoidArray* row = (nsVoidArray *)mRows.ElementAt(rowIndex);
-    printf("row %d : ", rowIndex);
+    printf("  row %d : ", rowIndex);
     PRInt32 colCount = row->Count();
     for (colIndex = 0; colIndex < colCount; colIndex++) {
       CellData* cd = (CellData *)row->ElementAt(colIndex);
@@ -1520,21 +1526,10 @@ void nsCellMap::Dump() const
           nsTableCellFrame* cell = nsnull;
           if (cd->IsRowSpan()) {
             cell = GetCellFrame(rowIndex, colIndex, *cd, PR_TRUE);
-            // check the validity of the cell map
-            nsVoidArray* rowAbove = (nsVoidArray *)mRows.ElementAt(rowIndex - 1);
-            CellData* cdAbove = (CellData *)rowAbove->ElementAt(colIndex);
-            if (GetCellFrame(rowIndex - 1, colIndex, *cdAbove, PR_TRUE) != cell) {
-              NS_ASSERTION(PR_FALSE, "bad row span data");
-            }
             printf("R ");
           }
           if (cd->IsColSpan()) {
             cell = GetCellFrame(rowIndex, colIndex, *cd, PR_FALSE);
-            // check the validity of the cell map
-            CellData* cdBefore = (CellData *)row->ElementAt(colIndex - 1);
-            if (GetCellFrame(rowIndex, colIndex - 1, *cdBefore, PR_FALSE) != cell) {
-              NS_ASSERTION(PR_FALSE, "bad col span data");
-            }
             printf("C ");
           }
           if (!(cd->IsRowSpan() && cd->IsColSpan())) {
@@ -1554,6 +1549,7 @@ void nsCellMap::Dump() const
   for (PRInt32 rIndex = 0; rIndex < mapRowCount; rIndex++) {
     nsVoidArray* row = (nsVoidArray *)mRows.ElementAt(rIndex);
     PRInt32 colCount = row->Count();
+    printf("  ");
     for (colIndex = 0; colIndex < colCount; colIndex++) {
       CellData* cd = (CellData *)row->ElementAt(colIndex);
       if (cd) {
@@ -1569,7 +1565,7 @@ void nsCellMap::Dump() const
     printf("\n");
   }
 
-  printf("\n***** END GROUP CELL MAP DUMP *****\n");
+  printf("  ***** END GROUP CELL MAP DUMP *****\n");
 }
 #endif
 
@@ -1733,7 +1729,7 @@ void nsCellMap::SetMapCellAt(nsTableCellMap& aMap,
 PRInt32 nsCellMap::GetEffectiveColSpan(PRInt32                 aRowIndex,
                                        PRInt32                 aColIndex,
                                        PRInt32                 aNumColsInTable,
-                                       const nsTableCellFrame* aCell)
+                                       const nsTableCellFrame& aCell)
 {
   PRInt32 effColSpan = 0;
   for (PRInt32 colX = aColIndex; colX < aNumColsInTable; colX++) {
@@ -1741,12 +1737,12 @@ PRInt32 nsCellMap::GetEffectiveColSpan(PRInt32                 aRowIndex,
     CellData* cellData = GetCellAt(aRowIndex, colX, aNumColsInTable);
     if (cellData) {
       if (cellData->IsOrig()) {
-        if (cellData->GetCellFrame() == aCell) {
+        if (cellData->GetCellFrame() == &aCell) {
           found = PR_TRUE;
         }
       }
       else if (cellData->IsColSpan() && 
-              (GetCellFrame(aRowIndex, colX, *cellData, PR_FALSE) == aCell)) {
+              (GetCellFrame(aRowIndex, colX, *cellData, PR_FALSE) == &aCell)) {
         found = PR_TRUE;
       }
     }
@@ -1791,10 +1787,10 @@ nsCellMap::GetCellInfoAt(PRInt32  aRowX,
       cellFrame = data->GetCellFrame();
       if (aOriginates)
         *aOriginates = PR_TRUE;
-      if (aColSpan) {
+      if (cellFrame && aColSpan) {
         PRInt32 initialColIndex;
         cellFrame->GetColIndex(initialColIndex);
-        *aColSpan = GetEffectiveColSpan(aRowX, initialColIndex, aNumColsInTable, cellFrame);
+        *aColSpan = GetEffectiveColSpan(aRowX, initialColIndex, aNumColsInTable, *cellFrame);
       }
     }
     else {

@@ -732,7 +732,7 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext*      aPresContext,
         PRInt32 cellColIndex;
         ((nsTableCellFrame *)kidFrame)->GetColIndex(cellColIndex);
         cellColSpan = aReflowState.tableFrame->GetEffectiveColSpan(cellColIndex,
-                                                                   ((nsTableCellFrame *)kidFrame));
+                                                                   ((nsTableCellFrame &)*kidFrame));
    
         // Compute the x-origin for the child, taking into account straddlers (cells from prior
         // rows with rowspans > 1)
@@ -1206,7 +1206,7 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext*      aPresContext,
     PRInt32 cellColIndex;
     ((nsTableCellFrame *)aNextFrame)->GetColIndex(cellColIndex);
     PRInt32 cellColSpan = aReflowState.tableFrame->GetEffectiveColSpan(cellColIndex,
-                                                                       ((nsTableCellFrame *)aNextFrame));
+                                                                       ((nsTableCellFrame &)*aNextFrame));
     nscoord cellSpacingX = aReflowState.tableFrame->GetCellSpacingX();
 
     nscoord cellAvailWidth = CalculateCellAvailableWidth(aReflowState.tableFrame, aNextFrame,

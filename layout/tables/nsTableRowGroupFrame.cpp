@@ -1237,7 +1237,7 @@ nsTableRowGroupFrame::InsertFrames(nsIPresContext* aPresContext,
     nsTableFrame::GetTableFrame(this, tableFrame);
     if (tableFrame) {
       nsTableRowFrame* prevRow = (nsTableRowFrame *)nsTableFrame::GetFrameAtOrBefore(this, aPrevFrame, nsLayoutAtoms::tableRowFrame);
-      PRInt32 rowIndex = (prevRow) ? prevRow->GetRowIndex() : 0;
+      PRInt32 rowIndex = (prevRow) ? prevRow->GetRowIndex() + 1 : 0;
       tableFrame->InsertRows(*aPresContext, *this, rows, rowIndex, PR_TRUE);
 
       // Reflow the new frames. They're already marked dirty, so generate a reflow
