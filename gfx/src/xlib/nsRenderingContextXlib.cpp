@@ -513,12 +513,9 @@ nsRenderingContextXlib::SetColor(nscolor aColor)
     return NS_ERROR_FAILURE;
 
   mCurrentColor = aColor;
-  xlib_rgb_gc_set_foreground(mRenderingSurface->GetGC(), NS_RGB(NS_GET_R(aColor),
+  xlib_rgb_gc_set_foreground(mRenderingSurface->GetGC(), NS_RGB(NS_GET_B(aColor),
                                                                 NS_GET_G(aColor),
-                                                                NS_GET_B(aColor)));
-  xlib_rgb_gc_set_background(mRenderingSurface->GetGC(), NS_RGB(NS_GET_R(aColor),
-                                                                NS_GET_G(aColor),
-                                                                NS_GET_B(aColor)));
+                                                                NS_GET_R(aColor)));
   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("Setting color to %d %d %d\n", NS_GET_R(aColor), NS_GET_G(aColor), NS_GET_B(aColor)));
   return NS_OK;
 }
