@@ -125,23 +125,13 @@ PRInt32 MIME_ConvertFromUnicode(const char* to_charset, const void* uniBuffer, c
 
 /**
  * Get a next character position in an UTF-8 string.
- * Example: s += NextChar_UTF8(s);  // advance a pointer for one character
+ * Example: s = NextChar_UTF8(s);  // get a pointer for the next character
  *
  *
  * @param str          [IN] An input C string (UTF-8).
  * @return             A pointer to the next character.
  */
 char * NextChar_UTF8(char *str);
-
-/**
- * Find a substring (UTF-8: us-ascii is a sub set of UTF-8).
- *
- *
- * @param s1          [IN] A C string (UTF-8) to search.
- * @param s2          [IN] A C string (UTF-8) to search for.
- * @return            The first occurrence of s2 in s1, or NULL if s2 does not appear in s1.
- */
-char * Strstr_UTF8(const char *s1, const char *s2);
 
 /*
  * To be removed. Existing for the backword compatibility. 

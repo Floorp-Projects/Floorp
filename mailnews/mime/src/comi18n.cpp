@@ -551,10 +551,7 @@ static PRBool intlmime_only_ascii_str(const char *s)
 static unsigned char * utf8_nextchar(unsigned char *str)
 {
   int len = PL_strlen((char *) str);
-  if (len == 0) {
-    return str;
-  }
-  else if (*str < 128) {
+  if (*str < 128) {
     return (str+1);
   }
   // RFC 2279 defines more than 3 bytes sequences (0xF0, 0xF8, 0xFC),
@@ -1188,6 +1185,11 @@ static PRInt32 INTL_ConvertCharset(const char* from_charset, const char* to_char
   nsICharsetConverterManager * ccm = nsnull;
   nsresult res;
 
+  if (nsnull == from_charset || nsnull == to_charset || 
+      '\0' == *from_charset || '\0' == *to_charset || nsnull == inBuffer) {
+    return -1;
+  }
+
   res = nsServiceManager::GetService(kCharsetConverterManagerCID, 
                                      kICharsetConverterManagerIID, 
                                      (nsISupports**)&ccm);
@@ -1256,6 +1258,10 @@ static PRInt32 INTL_ConvertToUnicode(const char* from_charset, const char* aBuff
   nsICharsetConverterManager * ccm = nsnull;
   nsresult res;
 
+  if (nsnull == from_charset || '\0' == *from_charset|| nsnull == aBuffer) {
+    return -1;
+  }
+
   res = nsServiceManager::GetService(kCharsetConverterManagerCID, 
                                      kICharsetConverterManagerIID, 
                                      (nsISupports**)&ccm);
@@ -1292,6 +1298,10 @@ static PRInt32 INTL_ConvertFromUnicode(const char* to_charset, const void* uniBu
 {
   nsICharsetConverterManager * ccm = nsnull;
   nsresult res;
+
+  if (nsnull == to_charset || '\0' == *to_charset|| nsnull == uniBuffer) {
+    return -1;
+  }
 
   res = nsServiceManager::GetService(kCharsetConverterManagerCID, 
                                      kICharsetConverterManagerIID, 
@@ -1432,19 +1442,6 @@ char *MIME_EncodeMimePartIIStr(const char* header, const char* mailCharset, cons
 char * NextChar_UTF8(char *str)
 {
   return (char *) utf8_nextchar((unsigned char *) str);
-}
-
-char * Strstr_UTF8(const char *s1, const char *s2)
-{
-  char *str = (char *) s1;
-  int len = PL_strlen(s2);
-  do {
-    if (!PL_strncmp(str, s2, len)) {
-      return str;
-    }
-    str = NextChar_UTF8(str);
-  } while (*str);
-  return NULL;
 }
 
 } /* end of extern "C" */
