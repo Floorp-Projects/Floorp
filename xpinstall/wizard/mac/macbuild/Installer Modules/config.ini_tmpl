@@ -30,8 +30,8 @@ C2=Component2
 Message0=Please select the components you wish to install:
 
 [Component0]
-Description Short=XPInstall Engine
-Description Long=The "core file" with xpinstall, xpcom, nspr20, etc.
+Description Short= XPInstall Engine
+Description Long=Installer technology software
 Archive=install.xpi
 URL0=http://sweetlou.mcom.com/products/client/seamonkey/macos/8.x/ppc/<#buildID>/
 URL1=http://dolfin.mcom.com/nsinstall/mac/xpiengine/debug/
@@ -39,16 +39,16 @@ Install Size=<#install_size>
 Attributes=SELECTED|INVISIBLE
 
 [Component1]
-Description Short= Browser
-Description Long=Apprunner & Editor (<#buildID>)
+Description Short= Navigator
+Description Long=Web browser software
 Archive=browser.xpi
 Install Size=<#browser_size>
 URL0=ftp://sweetlou.mcom.com/products/client/seamonkey/macos/8.x/ppc/<#buildID>/
 Attributes=SELECTED
 
 [Component2]
-Description Short= Mail-News
-Description Long=Mail & News component (<#buildID>)
+Description Short= Mail & News
+Description Long=Email and Newsgroup software
 Archive=mail.xpi
 Install Size=<#mail_size>
 URL0=ftp://sweetlou.mcom.com/products/client/seamonkey/macos/8.x/ppc/<#buildID>/
