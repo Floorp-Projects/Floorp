@@ -32,9 +32,11 @@ ifneq ($(MOZ_OS2_TOOLS),VACPP)
 OMF_FLAG	= -Zomf
 endif
 
-export:
+include $(topsrcdir)/config/rules.mk
 
-install: $(DLL)
+export::
+
+install:: $(DLL)
 	$(INSTALL) -m 444 $(DLL) $(DIST)/bin
 
 # XXX Have to copy files because rc and link386 are too stupid for a mirror tree build
@@ -47,17 +49,11 @@ endif
 	rc $(RCOPTS) wdgtres.res $@
 
 wdgtres.res: wdgtres.rc
-	cp $(topsrcdir)/widget/src/os2/resID.h ./resID.h
-	cp $(srcdir)/frame.ico ./frame.ico
-	cp $(srcdir)/folder.ico ./folder.ico
-	cp $(srcdir)/dragitem.ico ./dragitem.ico
-	cp $(srcdir)/select.ptr ./select.ptr
-	cp $(srcdir)/wdgtres.def ./wdgtres.def
-	rc $(RCOPTS) -r $(srcdir)/wdgtres.rc $@
+	rc $(RCOPTS) -r -I $(srcdir) -I $(topsrcdir)/widget/src/os2 $(srcdir)/wdgtres.rc $@
 
 wdgtres.obj: wdgtres.C
 	$(CC) -o $@ -s -c $(CFLAGS) $(OMF_FLAG) $<
 
-realclean clean:
-	rm -rf $(DLL) *.res *.obj *.ico *.h *.def
+realclean clean::
+	rm -rf $(DLL) *.res *.obj
 
