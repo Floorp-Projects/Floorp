@@ -64,7 +64,7 @@ $source_root_pat = '^.*/mozilla/';
   'location of the previous definition',
   '\' was hidden',
   'declaration of \`index\' shadows global',
-  'Aggregate has a partly bracketed initializer', # mailnews guys say this has to stay
+  'aggregate has a partly bracketed initializer', # mailnews guys say this has to stay
   'declaration of \`ws\' shadows global', # from istream
   'declaration of \`y0\' shadows global', # from mathcalls.h
   'declaration of \`y1\' shadows global', # from mathcalls.h
