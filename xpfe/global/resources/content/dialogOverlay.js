@@ -27,7 +27,7 @@ function doOKButton()
 	if ( doOKFunction )
 		close = doOKFunction();
 	
-	if ( close )
+	if (close && top)
 		top.window.close();
 }
 
@@ -38,7 +38,7 @@ function doCancelButton()
 	if ( doCancelFunction )
 		close = doCancelFunction();
 	
-	if ( close )
+	if (close && top)
 		top.window.close();
 }
 
@@ -49,7 +49,7 @@ function doButton2()
 	if ( doButton2Function )
 		close = doButton2Function();
 	
-	if ( close )
+	if (close && top)
 		top.window.close();
 }
 
@@ -60,7 +60,7 @@ function doButton3()
 	if ( doButton3Function )
 		close = doButton3Function();
 	
-	if ( close )
+	if (close && top)
 		top.window.close();
 }
 
@@ -76,8 +76,6 @@ function moveToAlertPosition()
             yOffset = screen.availHeight - window.outerHeight - opener.screenY;
     xOffset = ( xOffset > 0 ) ? xOffset : 0;
     yOffset = ( yOffset > 0 ) ? yOffset : 0;
-	dump( "Move window by " + xOffset + ","+yOffset+"\n");
-	dump( "screen x "+ opener.screenX +"screen y "+ opener.screenY +"\n");
 	window.moveTo( opener.screenX + xOffset, opener.screenY + yOffset );
 
 }
@@ -89,6 +87,5 @@ function centerWindowOnScreen()
 	
 	xOffset = ( xOffset > 0 ) ? xOffset : 0;
   yOffset = ( yOffset > 0 ) ? yOffset : 0;
-	dump( "Move window by " + xOffset + ","+yOffset+"\n");
 	window.moveTo( xOffset, yOffset);
 }
