@@ -106,5 +106,14 @@ interface mozITXTToHTMLConv : nsIStreamConverter {
   unsigned long   citeLevelTXT([const] in wstring line,
                                out unsigned long logLineStart);
 
+/** 
+ @param a wide string to scan for the presence of a URL.
+ @param aLength --> the length of the buffer to be scanned
+ @param aPos --> the position in the buffer to start scanning for a url
+
+ aStartPos --> index into the start of a url (-1 if no url found)
+ aEndPos --> index of the last character in the url (-1 if no url found)
+ */
+
   void findURLInPlaintext([const] in wstring text, in long aLength, in long aPos, out long aStartPos, out long aEndPos);
 };
