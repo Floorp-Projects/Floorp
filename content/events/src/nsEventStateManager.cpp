@@ -490,19 +490,21 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
           gLastFocusedContent->GetDocument(*getter_AddRefs(doc));
           if (doc) {
             nsCOMPtr<nsIPresShell> shell = getter_AddRefs(doc->GetShellAt(0));
-            nsCOMPtr<nsIPresContext> oldPresContext;
-            shell->GetPresContext(getter_AddRefs(oldPresContext));
+            if (shell) {
+              nsCOMPtr<nsIPresContext> oldPresContext;
+              shell->GetPresContext(getter_AddRefs(oldPresContext));
 
-            nsEventStatus status = nsEventStatus_eIgnore;
-            nsEvent event;
-            event.eventStructType = NS_EVENT;
-            event.message = NS_BLUR_CONTENT;
-            nsCOMPtr<nsIEventStateManager> esm;
-            oldPresContext->GetEventStateManager(getter_AddRefs(esm));
-            esm->SetFocusedContent(gLastFocusedContent);
-            gLastFocusedContent->HandleDOMEvent(oldPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
-            esm->SetFocusedContent(nsnull);
-            NS_IF_RELEASE(gLastFocusedContent);
+              nsEventStatus status = nsEventStatus_eIgnore;
+              nsEvent event;
+              event.eventStructType = NS_EVENT;
+              event.message = NS_BLUR_CONTENT;
+              nsCOMPtr<nsIEventStateManager> esm;
+              oldPresContext->GetEventStateManager(getter_AddRefs(esm));
+              esm->SetFocusedContent(gLastFocusedContent);
+              gLastFocusedContent->HandleDOMEvent(oldPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
+              esm->SetFocusedContent(nsnull);
+              NS_IF_RELEASE(gLastFocusedContent);
+            }
           }
         }
 
@@ -2060,23 +2062,25 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
       gLastFocusedContent->GetDocument(*getter_AddRefs(doc));
       if (doc) {
         nsCOMPtr<nsIPresShell> shell = getter_AddRefs(doc->GetShellAt(0));
-        nsCOMPtr<nsIPresContext> oldPresContext;
-        shell->GetPresContext(getter_AddRefs(oldPresContext));
+        if (shell) {
+          nsCOMPtr<nsIPresContext> oldPresContext;
+          shell->GetPresContext(getter_AddRefs(oldPresContext));
 
-        //fire blur
-        nsEventStatus status = nsEventStatus_eIgnore;
-        nsEvent event;
-        event.eventStructType = NS_EVENT;
-        event.message = NS_BLUR_CONTENT;
+          //fire blur
+          nsEventStatus status = nsEventStatus_eIgnore;
+          nsEvent event;
+          event.eventStructType = NS_EVENT;
+          event.message = NS_BLUR_CONTENT;
 
-        nsCOMPtr<nsIEventStateManager> esm;
-        oldPresContext->GetEventStateManager(getter_AddRefs(esm));
-        esm->SetFocusedContent(gLastFocusedContent);
-        nsCOMPtr<nsIContent> temp = gLastFocusedContent;
-        NS_RELEASE(gLastFocusedContent);
-        gLastFocusedContent = nsnull;
-        temp->HandleDOMEvent(oldPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
-        esm->SetFocusedContent(nsnull);
+          nsCOMPtr<nsIEventStateManager> esm;
+          oldPresContext->GetEventStateManager(getter_AddRefs(esm));
+          esm->SetFocusedContent(gLastFocusedContent);
+          nsCOMPtr<nsIContent> temp = gLastFocusedContent;
+          NS_RELEASE(gLastFocusedContent);
+          gLastFocusedContent = nsnull;
+          temp->HandleDOMEvent(oldPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
+          esm->SetFocusedContent(nsnull);
+        }
       }
 
       if (clearFirstBlurEvent) {
