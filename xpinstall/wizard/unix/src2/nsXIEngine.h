@@ -128,12 +128,11 @@ private:
     int     UnloadXPIStub(xpistub_t *aStub);
     int     GetFileSize(char *aPath);
     int     SetDLMarker(char *aCompName);
-    int     GetDLMarkedComp(nsComponentList *aComps, int aCustom,
-                            nsComponent **aOutComp, int *aOutCompNum);
+    int     GetDLMarkedComp(nsComponentList *aComps, nsComponent **aOutComp);
     int     DelDLMarker();
     int     TotalToDownload(int aCustom, nsComponentList *aComps);
     PRBool  CRCCheckDownloadedArchives(char *dlPath, short dlPathLen, 
-              nsComponent *currComp, int count, int aCustom);
+              nsComponentList *aComps, int aCustom);
     PRBool  IsArchiveFile(char *path);
     int     VerifyArchive(char *szArchive);
     PRBool  CheckConn( char *URL, int type, CONN *myConn, PRBool force );

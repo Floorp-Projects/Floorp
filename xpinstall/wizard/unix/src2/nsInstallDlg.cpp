@@ -1446,7 +1446,7 @@ nsInstallDlg::TotalDLSize()
                 total += (archiveSize - currentSize);
             }
         }
-        currComp = currComp->GetNext();
+        currComp = comps->GetNext();
     }
 
     return total;

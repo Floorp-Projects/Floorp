@@ -355,7 +355,7 @@ nsComponentsDlg::Show()
                 currRow++;
             }
 
-            currComp = currComp->GetNext();
+            currComp = sCustomST->GetComponents()->GetNext();
         }
 
         // by default, first row selected upon Show()
@@ -556,7 +556,7 @@ nsComponentsDlg::ToggleRowSelection(GtkWidget *aWidget, gint aRow,
             }
             currRow++;
         }
-        currComp = currComp->GetNext();
+        currComp = sCustomST->GetComponents()->GetNext();
     }
 
     // after resolving dependees redraw all checkboxes in one fell swoop
@@ -578,6 +578,6 @@ nsComponentsDlg::ToggleRowSelection(GtkWidget *aWidget, gint aRow,
             }
             currRow++;
         }
-        currComp = currComp->GetNext();
+        currComp = sCustomST->GetComponents()->GetNext();
     }
 }
