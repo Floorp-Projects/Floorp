@@ -469,7 +469,7 @@ Contributor(s): ______________________________________. -->
         </rule>
     </template>
 
-            <titledbutton id="home-button" align="left" value="&homeButton.label;" 
+            <titledbutton id="home-button" align="left" value="&homeButton.label;" defaultURL="&defaultHomepage.url;"
             onclick="BrowserHome()"/>
         <titledbutton id="netscape-button" align="left" value="&netscapeButton.label;" 
             onclick="window.content.location.href='&myNetscape.url;'"/>
