@@ -871,7 +871,7 @@ NS_METHOD nsWindow::SetMenuBar(nsIMenuBar * aMenuBar)
   aMenuBar->GetNativeData(voidData);
   menubar = GTK_WIDGET(voidData);
 
-  // gtk_menu_bar_set_shadow_type (GTK_MENU_BAR(menubar), GTK_SHADOW_NONE);
+  gtk_menu_bar_set_shadow_type (GTK_MENU_BAR(menubar), GTK_SHADOW_NONE);
 
   gtk_box_pack_start(GTK_BOX(mVBox), menubar, FALSE, FALSE, 0);
   gtk_box_reorder_child(GTK_BOX(mVBox), menubar, 0);
