@@ -7,14 +7,19 @@ License File=License
 
 
 [Dialog Welcome]
+; *** LOCALIZE ME BABY ***
 Message0=                      Welcome to the Mozilla Installer
+; *** LOCALIZE ME BABY ***
 Message1=It is strongly recommended that you quit all applications before running this installer.
+; *** LOCALIZE ME BABY ***
 Message2=Click Continue to proceed with this installation.
 
 [Dialog Setup Type]
 
 [Setup Type0]
+; *** LOCALIZE ME BABY ***
 Description Short=Typical Install
+; *** LOCALIZE ME BABY ***
 Description Long=Click Continue to install the following components:
 C0=Component0
 C1=Component1
@@ -24,7 +29,9 @@ C4=Component4
 C5=Component5
 
 [Setup Type1]
+; *** LOCALIZE ME BABY ***
 Description Short=Custom Install
+; *** LOCALIZE ME BABY ***
 Description Long=Click Continue to select the component(s) to install.
 C0=Component0
 C1=Component1
@@ -34,10 +41,12 @@ C4=Component4
 C5=Component5
 
 [Dialog Select Components]
+; *** LOCALIZE ME BABY ***
 Message0=Please select the components you wish to install:
 
 [Component0]
 Description Short=XPCOM
+; *** LOCALIZE ME BABY ***
 Description Long=Installer technology software
 Archive=xpcom.xpi
 Install Size=<#xpcom_size>
@@ -47,6 +56,7 @@ Attributes=SELECTED|INVISIBLE
 
 [Component1]
 Description Short=Navigator
+; *** LOCALIZE ME BABY ***
 Description Long=Web browser software
 Archive=browser.xpi
 Install Size=<#browser_size>
@@ -56,6 +66,7 @@ Attributes=SELECTED
 
 [Component2]
 Description Short=Mail & News
+; *** LOCALIZE ME BABY ***
 Description Long=Email and Newsgroup software
 Archive=mail.xpi
 Install Size=<#mail_size>
@@ -65,6 +76,7 @@ Attributes=SELECTED
 
 [Component3]
 Description Short=Chatzilla
+; *** LOCALIZE ME BABY ***
 Description Long=Chatzilla IRC client
 Archive=chatzilla.xpi
 Install Size=(#chatzilla_size)
@@ -74,6 +86,7 @@ Attributes=SELECTED
 
 [Component4]
 Description Short=English US Language Pack
+; *** LOCALIZE ME BABY ***
 Description Long=English US Language Pack
 Archive=deflenus.xpi
 Install Size=(#deflenus_size)
@@ -83,6 +96,7 @@ Attributes=SELECTED|INVISIBLE
 
 [Component5]
 Description Short=English US Language Pack
+; *** LOCALIZE ME BABY ***
 Description Long=English US Language Pack
 Archive=langenus.xpi
 Install Size=(#langenus_size)
@@ -92,6 +106,7 @@ Attributes=SELECTED|INVISIBLE
 
 [Component6]
 Description Short=English German Language Pack
+; *** LOCALIZE ME BABY ***
 Description Long=English German Language Pack
 Archive=langende.xpi
 Install Size=(#langende_size)
@@ -101,7 +116,9 @@ Attributes=SELECTED|INVISIBLE
 
 
 [Dialog Start Install]
+; *** LOCALIZE ME BABY ***
 Message0=Click the Install button to download and install the selected components.  
+; *** LOCALIZE ME BABY ***
 Message1=Save installer modules upon download
 
 
@@ -121,4 +138,5 @@ Target Document=:Mozilla Folder:Mozilla Installer
 Filename=Mozilla
 Subfolder=Mozilla Folder
 Version=5.0.0a.18
+; *** LOCALIZE ME BABY ***
 Message=An older installation of Mozilla was detected.  Please choose to delete the directory contents of your current Mozilla installation by hitting the 'Delete' button.  Alternatively, please hit the 'Cancel' button and choose a different destination directory.  
