@@ -48,7 +48,7 @@ public:
   void            selectHTView             (HT_View view);
 #ifdef MOZ_SELECTOR_BAR
   void            addHTView                (HT_View view);
-  Widget          getSelector              () { return m_selector; }
+  Widget          getSelector              ();
   static void     selector_activate_cb     (Widget,XtPointer,XtPointer);
 #endif /*MOZ_SELECTORY_BAR*/
 

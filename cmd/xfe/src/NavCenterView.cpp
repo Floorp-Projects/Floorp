@@ -285,8 +285,8 @@ XFE_NavCenterView::addHTView(HT_View htview)
   else {
     //  Create  the image object and register callback
 
-    rdfImage = new XFE_RDFImage(_toplevel, (void *) this, imageURL,
-                                CONTEXT_DATA(_contextData)->colormap,
+    rdfImage = new XFE_RDFImage(m_toplevel, (void *) this, imageURL,
+                                CONTEXT_DATA(m_contextData)->colormap,
                                 button);
     rdfImage->setCompleteCallback((completeCallbackPtr)image_complete_cb,
                                   (void *) button);
@@ -308,12 +308,12 @@ XFE_NavCenterView::selector_activate_cb(Widget		/* w */,
                                         XtPointer	clientData, 
                                         XtPointer	/* callData */)
 {	
-  HT_View htView = (HT_View)clientData;
-  HT_Pane htPane = HT_GetPane(htView);
+//   HT_View htView = (HT_View)clientData;
+//   HT_Pane htPane = HT_GetPane(htView);
 
-  XFE_NavCenterView * nc = (XFE_NavCenterView *)HT_GetPaneFEData(htPane);
+//  XFE_NavCenterView * nc = (XFE_NavCenterView *)HT_GetPaneFEData(htPane);
 
-  nc->setRdftree(htView);
+//  nc->setRdftree(htView);
 }
 //////////////////////////////////////////////////////////////////////
 Widget 
@@ -403,7 +403,7 @@ XFE_NavCenterView::createSelectorBar()
 {
   _selector = XtVaCreateManagedWidget("selector",
                    xfeToolScrollWidgetClass,
-                   navCenterMainForm,
+                   getBaseWidget(),
                    XmNtopOffset,        0,
                    XmNbottomOffset,     0,
                    XmNleftOffset,       0,
