@@ -251,10 +251,10 @@ nsCommandManager::DoCommand(const char *aCommandName,
 	  return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsICommandController>  commandController = do_QueryInterface(controller);
-  if (commandController)
-	  rv = commandController->DoCommandWithParams(aCommandName, aCommandParams);
+  if (commandController && aCommandParams)
+    rv = commandController->DoCommandWithParams(aCommandName, aCommandParams);
   else
-	  rv = controller->DoCommand(aCommandName);
+    rv = controller->DoCommand(aCommandName);
   return rv;
 }
 
