@@ -34,6 +34,9 @@ interface nsIWebBrowserSetup : nsISupports
 {
 	const unsigned long SETUP_ALLOW_PLUGINS         = 1;
 	const unsigned long SETUP_ALLOW_JAVASCRIPT      = 2;
+  const unsigned long SETUP_ALLOW_META_REDIRECTS  =3;
+ 
+
 
 	void setProperty(in unsigned long aId, in unsigned long aValue);
 };

@@ -289,6 +289,7 @@ protected:
    PRBool                     mInitialPageLoad;
    PRBool                     mAllowPlugins;
    PRBool                     mAllowJavascript;
+   PRBool                     mAllowMetaRedirects;
    PRUint32                   mAppType;
    PRInt32                    mViewMode;
    PRInt32                    mLastViewMode;
