@@ -411,32 +411,35 @@ nsHTMLSharedLeafElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
                                                   nsChangeHint& aHint) const
 {
   if (mNodeInfo->Equals(nsHTMLAtoms::embed)) {
-    if (!GetCommonMappedAttributesImpact(aAttribute, aHint)) {
-      if (!GetImageMappedAttributesImpact(aAttribute, aHint)) {
-        if (!GetImageAlignAttributeImpact(aAttribute, aHint)) {
-          if (!GetImageBorderAttributeImpact(aAttribute, aHint)) {
-            aHint = NS_STYLE_HINT_CONTENT;
-          }
-        }
-      }
-    }
-
+    static const AttributeImpactEntry* const map[] = {
+      sCommonAttributeMap,
+      sImageAttributeMap,
+      sImageAlignAttributeMap,
+      sImageBorderAttributeMap
+    };
+    
+    FindAttributeImpact(aAttribute, aHint, map, NS_ARRAY_LENGTH(map));
     return NS_OK;
   }
 
   if (mNodeInfo->Equals(nsHTMLAtoms::spacer)) {
-    if ((aAttribute == nsHTMLAtoms::usemap) ||
-        (aAttribute == nsHTMLAtoms::ismap)) {
-      aHint = NS_STYLE_HINT_FRAMECHANGE;
-    } else if (aAttribute == nsHTMLAtoms::align) {
-      aHint = NS_STYLE_HINT_REFLOW;
-    } else if (!GetCommonMappedAttributesImpact(aAttribute, aHint)) {
-      if (!GetImageMappedAttributesImpact(aAttribute, aHint)) {
-        if (!GetImageBorderAttributeImpact(aAttribute, aHint)) {
-          aHint = NS_STYLE_HINT_CONTENT;
-        }
-      }
-    }
+    static const AttributeImpactEntry attributes[] = {
+      { &nsHTMLAtoms::usemap, NS_STYLE_HINT_FRAMECHANGE },
+      { &nsHTMLAtoms::ismap, NS_STYLE_HINT_FRAMECHANGE },
+      { &nsHTMLAtoms::align, NS_STYLE_HINT_REFLOW },
+      { nsnull, NS_STYLE_HINT_NONE }
+    };
+
+    static const AttributeImpactEntry* const map[] = {
+      attributes,
+      sCommonAttributeMap,
+      sImageAttributeMap,
+      sImageBorderAttributeMap,
+    };
+    
+    FindAttributeImpact(aAttribute, aHint, map, NS_ARRAY_LENGTH(map));
+    
+    return NS_OK;
   }
 
   return nsGenericHTMLLeafElement::GetMappedAttributeImpact(aAttribute,

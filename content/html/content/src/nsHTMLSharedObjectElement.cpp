@@ -299,16 +299,15 @@ NS_IMETHODIMP
 nsHTMLObjectElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
                                               nsChangeHint& aHint) const
 {
-  if (!GetCommonMappedAttributesImpact(aAttribute, aHint)) {
-    if (!GetImageBorderAttributeImpact(aAttribute, aHint)) {
-      if (!GetImageMappedAttributesImpact(aAttribute, aHint)) {
-        if (!GetImageAlignAttributeImpact(aAttribute, aHint)) {
-          aHint = NS_STYLE_HINT_CONTENT;
-        }
-      }
-    }
-  }
+  static const AttributeImpactEntry* const map[] = {
+    sCommonAttributeMap,
+    sImageAttributeMap,
+    sImageBorderAttributeMap,
+    sImageAlignAttributeMap,
+  };
 
+  FindAttributeImpact(aAttribute, aHint, map, NS_ARRAY_LENGTH(map));
+  
   return NS_OK;
 }
 
