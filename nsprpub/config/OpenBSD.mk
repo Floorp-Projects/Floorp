@@ -32,8 +32,7 @@ else
 CPU_ARCH               = $(OS_TEST)
 endif
 
-OS_CFLAGS              = $(DSO_CFLAGS) $(OS_REL_CFLAGS) -ansi -Wall -pipe -DOPENBSD
-DHAVE_STRERROR -DHAVE_BSD_FLOCK
+OS_CFLAGS              = $(DSO_CFLAGS) $(OS_REL_CFLAGS) -ansi -Wall -pipe -DOPENBSD -DHAVE_STRERROR -DHAVE_BSD_FLOCK
 
 ifeq ($(USE_PTHREADS),1)
 OS_LIBS                        = -lc_r
