@@ -232,7 +232,7 @@
                 id="releaseUrl"
                 oncommand="openTopWin('&releaseURL;');"/>
 
-      <menuseparator/>
+      <menuseparator id="menu_HelpAboutSeparator"/>
 
       <menuitem class="about"
                 accesskey="&aboutCommPluginsCmd.accesskey;"
