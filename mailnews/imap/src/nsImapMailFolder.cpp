@@ -6657,6 +6657,95 @@ nsImapMailFolder::CopyFolder(nsIMsgFolder* srcFolder,
 
   if (isMoveFolder)   //move folder permitted when dstFolder and the srcFolder are on same server
   {
+    PRUint32 folderFlags = 0;    
+    if (srcFolder)
+      srcFolder->GetFlags(&folderFlags);
+    
+    // if our source folder is a virtual folder
+    if (folderFlags & MSG_FOLDER_FLAG_VIRTUAL) 
+    {
+      nsCOMPtr<nsIMsgFolder> newMsgFolder;
+      nsXPIDLString folderName;
+      srcFolder->GetName(getter_Copies(folderName));
+      
+      nsCAutoString tempSafeFolderName;
+      tempSafeFolderName.AssignWithConversion(folderName.get());
+      NS_MsgHashIfNecessary(tempSafeFolderName);
+      
+      nsAutoString safeFolderName;
+      safeFolderName.AssignWithConversion(tempSafeFolderName);  
+      srcFolder->ForceDBClosed();   
+  
+      nsCOMPtr<nsIFileSpec> oldPathSpec;
+      rv = srcFolder->GetPath(getter_AddRefs(oldPathSpec));
+      NS_ENSURE_SUCCESS(rv,rv);
+  
+      nsFileSpec oldPath;
+      rv = oldPathSpec->GetFileSpec(&oldPath);
+      NS_ENSURE_SUCCESS(rv,rv);
+  
+      nsLocalFolderSummarySpec  summarySpec(oldPath);
+  
+      nsCOMPtr<nsIFileSpec> newPathSpec;
+      rv = GetPath(getter_AddRefs(newPathSpec));
+      NS_ENSURE_SUCCESS(rv,rv);
+  
+      nsFileSpec newPath;
+      rv = newPathSpec->GetFileSpec(&newPath);
+      NS_ENSURE_SUCCESS(rv,rv);
+  
+      if (!newPath.IsDirectory())
+      {
+        AddDirectorySeparator(newPath);
+        newPath.CreateDirectory();
+      }
+  
+      rv = CheckIfFolderExists(folderName.get(), this, msgWindow);
+      if(NS_FAILED(rv)) 
+        return rv;
+  
+      rv = summarySpec.CopyToDir(newPath);
+      NS_ENSURE_SUCCESS(rv, rv);
+  
+      rv = AddSubfolder(safeFolderName, getter_AddRefs(newMsgFolder));  
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      newMsgFolder->SetPrettyName(folderName.get());
+  
+      PRUint32 flags;
+      srcFolder->GetFlags(&flags);
+      newMsgFolder->SetFlags(flags);
+      
+      NotifyItemAdded(newMsgFolder);
+
+      // now remove the old folder
+      nsCOMPtr<nsIMsgFolder> msgParent;
+      srcFolder->GetParentMsgFolder(getter_AddRefs(msgParent));
+      srcFolder->SetParent(nsnull);
+      if (msgParent) 
+      {
+        msgParent->PropagateDelete(srcFolder, PR_FALSE, msgWindow);  // The files have already been moved, so delete storage PR_FALSE 
+        oldPath.Delete(PR_FALSE);  //berkeley mailbox
+        nsCOMPtr <nsIMsgDatabase> srcDB; // we need to force closed the source db
+        srcFolder->Delete();
+
+        nsCOMPtr<nsIFileSpec> parentPathSpec;
+        rv = msgParent->GetPath(getter_AddRefs(parentPathSpec));
+        NS_ENSURE_SUCCESS(rv,rv);
+  
+        nsFileSpec parentPath;
+        rv = parentPathSpec->GetFileSpec(&parentPath);
+        NS_ENSURE_SUCCESS(rv,rv);
+
+        AddDirectorySeparator(parentPath); 
+        nsDirectoryIterator i(parentPath, PR_FALSE);
+        // i.Exists() checks if the directory is empty or not 
+        if (parentPath.IsDirectory() && !i.Exists())
+          parentPath.Delete(PR_TRUE);
+      }
+    }
+    else
+    {
     nsCOMPtr <nsIImapService> imapService = do_GetService (NS_IMAPSERVICE_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv))
     {
@@ -6679,7 +6768,7 @@ nsImapMailFolder::CopyFolder(nsIMsgFolder* srcFolder,
                                    msgWindow,
                                    nsnull);
     }
-
+    }
   }
   else
 	  NS_ASSERTION(0,"isMoveFolder is false. Trying to copy to a different server.");
