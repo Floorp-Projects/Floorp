@@ -992,10 +992,9 @@ nsMsgNewsFolder::AddNewsgroupToNewsrcFile(const char *newsgroupname)
 	rv = mNewsrcFilePath->GetFileSpec(&newsrcFile);
 	if (NS_FAILED(rv)) return rv;
 
-	nsOutputFileStream newsrcStream(newsrcFile, (PR_WRONLY | PR_CREATE_FILE | PR_APPEND));
-	if (!newsrcStream.is_open()) {
-		return NS_ERROR_FAILURE;
-	}
+	nsIOFileStream	newsrcStream(newsrcFile /*, PR_CREATE_FILE */ );
+	newsrcStream.seek(newsrcFile.GetFileSize());
+
 	newsrcStream << newsgroupname;
 	newsrcStream << ":";
 	newsrcStream << nsEndl;
