@@ -37,7 +37,9 @@ use PLIF::Database::ResultsFrame::DBI;
 sub provides {
     my $class = shift;
     my($service) = @_;
-    return ($service eq 'setup.configure' or $class->SUPER::provides($service));
+    return ($service eq 'setup.configure' or 
+            $service eq 'dataSource.configuration.client' or
+            $class->SUPER::provides($service));
 }
 
 # the name used to identify this database in the configuration
@@ -135,7 +137,7 @@ sub createResultsFrame {
 sub getConfig {
     my $self = shift;
     my($app) = @_;
-    $app->getService('dataSource.configuration')->getDBIDatabaseSettings($app, $self);
+    $app->getService('dataSource.configuration')->getSettings($app, $self, 'database.'.$self->class);
 }
 
 sub propertyGetUndefined {
@@ -149,6 +151,7 @@ sub propertyGetUndefined {
     return $self->SUPER::propertyGetUndefined(@_);
 }
 
+# dataSource.configuration.client
 sub settings {
     # if you change this, check out setupConfigure to make sure it is still up to date
     return qw(host port type name username password);
@@ -177,7 +180,7 @@ sub setupConfigure {
     $data{'name'} =~ s/[^a-z]//gos;
     $data{'name'} = $self->setupConfigurePrompt($app, $prefix, 'name', $data{'name'});
     $data{'username'} = $self->setupConfigurePrompt($app, $prefix, 'username', $data{'name'}); # default username to the same thing
-    $data{'password'} = $self->setupConfigurePrompt($app, $prefix, 'password');
+    $data{'password'} = $self->setupConfigurePrompt($app, $prefix, 'password', '');
 
     $self->dump(9, "got values, now sanity checking them.");
 
@@ -194,7 +197,7 @@ sub setupConfigure {
 
     # save settings
     $app->output->setupProgress("$prefix.settings.saving");
-    $app->getService('dataSource.configuration')->setDBIDatabaseSettings($app, $self);
+    $app->getService('dataSource.configuration')->setSettings($app, $self, 'database.'.$self->class);
 
     $self->dump(9, "checking to see if we can connect to the database.");
 
@@ -231,7 +234,11 @@ sub setupConfigurePrompt {
     if (not defined($value)) {
         $value = $default;
     }
-    return $app->input->getArgument("$prefix.$property", $value);
+    if (defined($value)) {
+        return $app->input->getArgument("$prefix.$property", $value);
+    } else {
+        return $app->input->getArgument("$prefix.$property");
+    }
 }
 
 # you should close the database handle before calling setupConfigureDatabase

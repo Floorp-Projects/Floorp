@@ -87,28 +87,6 @@ sub setInstalledModules {
     $self->database($app)->propertySet('PLIF.modulesList', $value);
 }
 
-sub getDBIDatabaseSettings {
-    my $self = shift;
-    my($app, $database) = @_;
-    my $configuration = $self->database($app);
-    my $prefix = 'database.'.$database->class;
-    foreach my $property ($database->settings) {
-        my $value = $configuration->propertyGet("$prefix.$property");
-        $self->assert($value, 1, "The configuration is missing a valid value for '$prefix.$property'");
-        $database->propertySet($property, $value);
-    }
-}
-
-sub setDBIDatabaseSettings {
-    my $self = shift;
-    my($app, $database) = @_;
-    my $configuration = $self->database($app);
-    my $prefix = 'database.'.$database->class;
-    foreach my $property ($database->settings) {
-        $configuration->propertySet("$prefix.$property", $database->propertyGet($property));
-    }
-}
-
 # this takes an object supporting the dataSource.configuration.client
 # service and retrieves its settings.
 sub getSettings {
@@ -117,7 +95,7 @@ sub getSettings {
     my $configuration = $self->database($app);
     foreach my $property ($object->settings) {
         my $value = $configuration->propertyGet("$prefix.$property");
-        $self->assert($value, 1, "The configuration is missing a valid value for '$prefix.$property'");
+        $self->assert(defined($value), 1, "The configuration is missing a valid value for '$prefix.$property'");
         $object->propertySet($property, $value);
     }
 }
