@@ -1,62 +1,61 @@
 <?xml version="1.0"?> 
-<window xmlns:html="http://www.w3.org/TR/REC-html40">
-<window xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"> 
 <?xml-stylesheet href="xul.css" type="text/css"?> 
 <!DOCTYPE window> 
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
+        xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"> 
 
-<html:script>
-function StartUp()
-{
-  appCore = AppCoresManager.Find("BrowserAppCore");  
-  if (appCore==null) {
-    appCore = new BrowserAppCore();
-    if (appCore != null) {
-      appCore.Init("BrowserAppCore");
-	    appCore.setToolbarWindow(window);
-	    appCore.setContentWindow(window.parent.frames[1]);
-	    appCore.setWebShellWindow(window.parent);
-        appCore.setDisableCallback("DoDisableButtons();");
-        appCore.setEnableCallback("DoEnableButtons();");
+  <html:script>
+  function StartUp()
+  {
+    appCore = AppCoresManager.Find("BrowserAppCore");  
+    if (appCore==null) {
+      appCore = new BrowserAppCore();
+      if (appCore != null) {
+        appCore.Init("BrowserAppCore");
+	      appCore.setToolbarWindow(window);
+	      appCore.setContentWindow(window.parent.frames[1]);
+	      appCore.setWebShellWindow(window.parent);
+          appCore.setDisableCallback("DoDisableButtons();");
+          appCore.setEnableCallback("DoEnableButtons();");
+      }
     }
   }
-}
 
-function DoDisableButtons()
-{
-  // Find buttons in the UI and disable them
-  dump("Browser disabling buttons\n");
-}
-
-function DoEnableButtons()
-{
-  // Find buttons in the UI and enable them
-  dump("Browser enabling buttons\n");
-}
-
-function BrowserBack()
-{
-  appCore = AppCoresManager.Find("BrowserAppCore");  
-  if (appCore != null) {
-    appCore.back();
-  } else {
-    dump("BrowserAppCore has not ben created!\n");
+  function DoDisableButtons()
+  {
+    // Find buttons in the UI and disable them
+    dump("Browser disabling buttons\n");
   }
-}
 
-function BrowserForward()
-{
-  appCore = AppCoresManager.Find("BrowserAppCore");  
-  if (appCore != null) {
-    appCore.forward();
-  } else {
-    dump("BrowserAppCore has not ben created!\n");
+  function DoEnableButtons()
+  {
+    // Find buttons in the UI and enable them
+    dump("Browser enabling buttons\n");
   }
-}
 
-</html:script>
+  function BrowserBack()
+  {
+    appCore = AppCoresManager.Find("BrowserAppCore");  
+    if (appCore != null) {
+      appCore.back();
+    } else {
+      dump("BrowserAppCore has not ben created!\n");
+    }
+  }
+
+  function BrowserForward()
+  {
+    appCore = AppCoresManager.Find("BrowserAppCore");  
+    if (appCore != null) {
+      appCore.forward();
+    } else {
+      dump("BrowserAppCore has not ben created!\n");
+    }
+  }
+
+  </html:script>
 
 
-<window>
   <xul:commands>
     <xul:command name="nsCmd:StartUp" onCommand="StartUp();"/>
     <xul:command name="nsCmd:BrowserBack" onCommand="BrowserBack();"/>
@@ -87,43 +86,43 @@ function BrowserForward()
   
     <xul:toolbar>
           <html:button cmd="nsCmd:BrowserBack" style="background-color:rgb(192,192,192);">
-                          <html:img src="resource:/res/toolbar/TB_Back.gif"/><html:BR/>Back
+                          <html:img src="resource:/res/toolbar/TB_Back.gif"/><html:br/>Back
           </html:button>
           <html:button cmd="nsCmd:BrowserForward" style="background-color:rgb(192,192,192);">
-                          <html:img src="resource:/res/toolbar/TB_Forward.gif"/><html:BR/>Forward
+                          <html:img src="resource:/res/toolbar/TB_Forward.gif"/><html:br/>Forward
           </html:button>
           <html:button cmd="nsCmd:BrowserReload" style="background-color:rgb(192,192,192);">
-                          <html:img src="resource:/res/toolbar/TB_Reload.gif"/><html:BR/>Reload
+                          <html:img src="resource:/res/toolbar/TB_Reload.gif"/><html:br/>Reload
           </html:button>
           <html:button cmd="nsCmd:BrowserStop" style="background-color:rgb(192,192,192);">
-                          <html:img src="resource:/res/toolbar/TB_Stop.gif"/><html:BR/>Stop
+                          <html:img src="resource:/res/toolbar/TB_Stop.gif"/><html:br/>Stop
           </html:button>
           <html:button cmd="nsCmd:BrowserHome" style="background-color:rgb(192,192,192);">
-                          <html:img src="resource:/res/toolbar/TB_Home.gif"/><html:BR/>Home
+                          <html:img src="resource:/res/toolbar/TB_Home.gif"/><html:br/>Home
           </html:button>
           <html:button cmd="nsCmd:BrowserPrint" style="background-color:rgb(192,192,192);">
-                          <html:img src="resource:/res/toolbar/TB_Print.gif"/><html:BR/>Print
+                          <html:img src="resource:/res/toolbar/TB_Print.gif"/><html:br/>Print
           </html:button>
           
-		  <html:input style="width:325px;"></html:input>   
-    	<html:button cmd="nsCmd:BrowserHome">
+		      <html:input style="width:325px;"/>   
+    	    <html:button cmd="nsCmd:BrowserHome">
              <html:img src="resource:/res/throbber/anims00.gif"/>
-        </html:button>	      
+          </html:button>	      
     </xul:toolbar>
     
     <xul:toolbar>
     	<html:button cmd="nsCmd:BrowserHome">
              <html:img src="resource:/res/toolbar/TB_Location.gif"/>Mozilla.org
-        </html:button>
+      </html:button>
     	<html:button cmd="nsCmd:BrowserHome">
              <html:img src="resource:/res/toolbar/TB_Location.gif"/>Mozilla.org
-        </html:button>
+      </html:button>
     	<html:button cmd="nsCmd:BrowserHome">
              <html:img src="resource:/res/toolbar/TB_Location.gif"/>Mozilla.org
-        </html:button>
-    </xul:toolbox>
+      </html:button>
+    </xul:toolbar>
     
   </xul:toolbox>
   
-</window>
+</xul:window>
 
