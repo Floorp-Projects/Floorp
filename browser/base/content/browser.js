@@ -3819,13 +3819,14 @@ function asyncOpenWebPanel(event)
    }
    if (linkNode) {
      if (fieldNormalClicks && event.button == 0 && !event.ctrlKey && !event.shiftKey && 
-         !event.altKey && !event.metaKey && !linkNode.getAttribute("target")) {
+         !event.altKey && !event.metaKey && 
+         (!linkNode.getAttribute("target") || linkNode.getAttribute("target") == "_content")) {
        var url = getShortcutOrURI(linkNode.href);
        if (!url)
          return false;
+       markLinkVisited(linkNode.href, linkNode);
        loadURI(url);
        event.preventDefault();
-       markLinkVisited(linkNode.href, linkNode);
        return false;
      }
      else
