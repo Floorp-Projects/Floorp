@@ -174,6 +174,7 @@ protected:
 
     PRBool                              mPipeliningAllowed;
     nsHTTPPipelinedRequest*             mPipelinedRequest;
+    nsCOMPtr<nsISupports>               mSecurityInfo;
 };
 
 #endif /* _nsHTTPChannel_h_ */
