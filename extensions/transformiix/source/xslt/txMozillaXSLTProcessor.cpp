@@ -40,10 +40,17 @@
 #include "txMozillaXSLTProcessor.h"
 #include "nsContentCID.h"
 #include "nsDOMError.h"
+#include "nsIChannel.h"
 #include "nsIContent.h"
+#include "nsIDOMText.h"
 #include "nsIDocument.h"
 #include "nsIDOMClassInfo.h"
+#include "nsIIOService.h"
+#include "nsILoadGroup.h"
 #include "nsIScriptLoader.h"
+#include "nsIStringBundle.h"
+#include "nsIURI.h"
+#include "nsNetUtil.h"
 #include "txExecutionState.h"
 #include "txMozillaTextOutput.h"
 #include "txMozillaXMLOutput.h"
@@ -52,6 +59,8 @@
 #include "XMLUtils.h"
 #include "txUnknownHandler.h"
 #include "txXSLTProcessor.h"
+
+static NS_DEFINE_CID(kXMLDocumentCID, NS_XMLDOCUMENT_CID);
 
 /**
  * Output Handler Factories
@@ -238,7 +247,8 @@ NS_INTERFACE_MAP_BEGIN(txMozillaXSLTProcessor)
     NS_INTERFACE_MAP_ENTRY_EXTERNAL_DOM_CLASSINFO(XSLTProcessor)
 NS_INTERFACE_MAP_END
 
-txMozillaXSLTProcessor::txMozillaXSLTProcessor() : mVariables(PR_TRUE)
+txMozillaXSLTProcessor::txMozillaXSLTProcessor() : mTransformResult(NS_OK),
+                                                   mVariables(PR_TRUE)
 {
 }
 
@@ -307,10 +317,17 @@ txMozillaXSLTProcessor::SetTransformObserver(nsITransformObserver* aObserver)
 nsresult
 txMozillaXSLTProcessor::SetSourceContentModel(nsIDOMNode* aSourceDOM)
 {
+    if (NS_FAILED(mTransformResult)) {
+        notifyError();
+        return NS_OK;
+    }
+
     mSource = aSourceDOM;
+
     if (mStylesheet) {
         return DoTransform();
     }
+
     return NS_OK;
 }
 
@@ -363,10 +380,7 @@ txMozillaXSLTProcessor::ImportStylesheet(nsIDOMNode *aStyle)
                    type == nsIDOMNode::DOCUMENT_NODE,
                    NS_ERROR_INVALID_ARG);
 
-    nsresult rv = TX_CompileStylesheet(aStyle, getter_AddRefs(mStylesheet));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    return NS_OK;
+    return TX_CompileStylesheet(aStyle, getter_AddRefs(mStylesheet));
 }
 
 NS_IMETHODIMP
@@ -591,6 +605,148 @@ txMozillaXSLTProcessor::setStylesheet(txStylesheet* aStylesheet)
         return DoTransform();
     }
     return NS_OK;
+}
+
+void
+txMozillaXSLTProcessor::reportError(nsresult aResult,
+                                    const PRUnichar *aErrorText,
+                                    const PRUnichar *aSourceText)
+{
+    if (!mObserver) {
+        return;
+    }
+
+    mTransformResult = aResult;
+
+    if (aErrorText) {
+        mErrorText.Assign(aErrorText);
+    }
+    else {
+        nsCOMPtr<nsIStringBundleService> sbs =
+            do_GetService(NS_STRINGBUNDLE_CONTRACTID);
+        if (sbs) {
+            nsXPIDLString errorText;
+            sbs->FormatStatusMessage(aResult, nsString().get(),
+                                     getter_Copies(errorText));
+
+            nsXPIDLString errorMessage;
+            nsCOMPtr<nsIStringBundle> bundle;
+            sbs->CreateBundle(XSLT_MSGS_URL, getter_AddRefs(bundle));
+
+            if (bundle) {
+                const PRUnichar* error[] = { errorText.get() };
+                bundle->FormatStringFromName(NS_LITERAL_STRING("LoadingError").get(),
+                                             error, 1,
+                                             getter_Copies(errorMessage));
+            }
+            mErrorText.Assign(errorMessage);
+        }
+    }
+
+    if (aSourceText) {
+        mSourceText.Assign(aSourceText);
+    }
+
+    if (mSource) {
+        notifyError();
+    }
+}
+
+void
+txMozillaXSLTProcessor::notifyError()
+{
+    nsresult rv;
+    nsCOMPtr<nsIDOMDocument> errorDocument = do_CreateInstance(kXMLDocumentCID,
+                                                               &rv);
+    if (NS_FAILED(rv)) {
+        return;
+    }
+
+    nsCOMPtr<nsIDOMDocument> sourceDOMDocument;
+    mSource->GetOwnerDocument(getter_AddRefs(sourceDOMDocument));
+    if (!sourceDOMDocument) {
+        sourceDOMDocument = do_QueryInterface(mSource);
+    }
+    nsCOMPtr<nsIDocument> sourceDoc = do_QueryInterface(sourceDOMDocument);
+
+    // Set up the document
+    nsCOMPtr<nsIDocument> document = do_QueryInterface(errorDocument);
+    if (!document) {
+        return;
+    }
+
+    nsCOMPtr<nsILoadGroup> loadGroup;
+    nsCOMPtr<nsIChannel> channel;
+    sourceDoc->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
+    nsCOMPtr<nsIIOService> serv = do_GetService(NS_IOSERVICE_CONTRACTID);
+    if (serv) {
+        // Create a temporary channel to get nsIDocument->Reset to
+        // do the right thing. We want the output document to get
+        // much of the input document's characteristics.
+        nsCOMPtr<nsIURI> docURL;
+        sourceDoc->GetDocumentURL(getter_AddRefs(docURL));
+        serv->NewChannelFromURI(docURL, getter_AddRefs(channel));
+    }
+    document->Reset(channel, loadGroup);
+    nsCOMPtr<nsIURI> baseURL;
+    sourceDoc->GetBaseURL(*getter_AddRefs(baseURL));
+    document->SetBaseURL(baseURL);
+
+    NS_NAMED_LITERAL_STRING(ns, "http://www.mozilla.org/newlayout/xml/parsererror.xml");
+
+    nsCOMPtr<nsIDOMElement> element;
+    rv = errorDocument->CreateElementNS(ns, NS_LITERAL_STRING("parsererror"),
+                                        getter_AddRefs(element));
+    if (NS_FAILED(rv)) {
+        return;
+    }
+
+    nsCOMPtr<nsIContent> rootContent = do_QueryInterface(element);
+    if (!rootContent) {
+        return;
+    }
+
+    rootContent->SetDocument(document, PR_FALSE, PR_TRUE);
+    document->SetRootContent(rootContent);
+
+    nsCOMPtr<nsIDOMText> text;
+    rv = errorDocument->CreateTextNode(mErrorText, getter_AddRefs(text));
+    if (NS_FAILED(rv)) {
+        return;
+    }
+
+    nsCOMPtr<nsIDOMNode> resultNode;
+    rv = element->AppendChild(text, getter_AddRefs(resultNode));
+    if (NS_FAILED(rv)) {
+        return;
+    }
+
+    if (!mSourceText.IsEmpty()) {
+        nsCOMPtr<nsIDOMElement> sourceElement;
+        rv = errorDocument->CreateElementNS(ns,
+                                            NS_LITERAL_STRING("sourcetext"),
+                                            getter_AddRefs(sourceElement));
+        if (NS_FAILED(rv)) {
+            return;
+        }
+    
+        rv = element->AppendChild(sourceElement, getter_AddRefs(resultNode));
+        if (NS_FAILED(rv)) {
+            return;
+        }
+
+        rv = errorDocument->CreateTextNode(mSourceText, getter_AddRefs(text));
+        if (NS_FAILED(rv)) {
+            return;
+        }
+    
+        rv = sourceElement->AppendChild(text, getter_AddRefs(resultNode));
+        if (NS_FAILED(rv)) {
+            return;
+        }
+    }
+
+    mObserver->OnTransformDone(mTransformResult, errorDocument);
 }
 
 /* static*/

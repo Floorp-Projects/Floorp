@@ -26,6 +26,7 @@
 
 #include "nsICategoryManager.h"
 #include "nsIDOMClassInfo.h"
+#include "nsIErrorService.h"
 #include "nsIExceptionService.h"
 #include "nsIGenericFactory.h"
 #include "nsIScriptNameSpaceManager.h"
@@ -218,6 +219,13 @@ Initialize(nsIModule* aSelf)
     if (NS_FAILED(rv)) {
         gTxNameSpaceManager = nsnull;
         return rv;
+    }
+
+    nsCOMPtr<nsIErrorService> errorService =
+        do_GetService(NS_ERRORSERVICE_CONTRACTID);
+    if (errorService) {
+        errorService->RegisterErrorStringBundle(NS_ERROR_MODULE_XSLT,
+                                                XSLT_MSGS_URL);
     }
 
     return NS_OK;
