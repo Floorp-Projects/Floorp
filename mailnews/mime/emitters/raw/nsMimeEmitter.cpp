@@ -117,7 +117,7 @@ nsMimeEmitter::Initialize(nsINetOStream *outStream)
   mTotalWritten = 0;
   mTotalRead = 0;
 
-#ifdef DEBUG
+#ifdef DEBUG_rhp
   PR_Delete("C:\\mail.raw");
   mLogFile = PR_Open("C:\\mail.raw", PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE, 493);
 #endif /* DEBUG */
@@ -131,7 +131,7 @@ nsMimeEmitter::Initialize(nsINetOStream *outStream)
 nsresult
 nsMimeEmitter::Complete()
 {
-#ifdef DEBUG
+#ifdef DEBUG_rhp
   mReallyOutput = PR_TRUE;
 #endif
 
@@ -145,7 +145,7 @@ nsMimeEmitter::Complete()
   printf("TOTAL WRITTEN = %d\n", mTotalWritten);
   printf("LEFTOVERS     = %d\n", mBufferMgr->GetSize());
 
-#ifdef DEBUG
+#ifdef DEBUG_rhp
   if (mLogFile) 
     PR_Close(mLogFile);
 #endif
@@ -157,7 +157,7 @@ nsMimeEmitter::Complete()
 nsresult
 nsMimeEmitter::StartHeader(PRBool rootMailHeader, PRBool headerOnly, const char *msgID)
 {
-#ifdef DEBUG
+#ifdef DEBUG_rhp
   mReallyOutput = PR_TRUE;
 #endif
 
@@ -167,7 +167,7 @@ nsMimeEmitter::StartHeader(PRBool rootMailHeader, PRBool headerOnly, const char 
 nsresult
 nsMimeEmitter::AddHeaderField(const char *field, const char *value)
 {
-#ifdef DEBUG
+#ifdef DEBUG_rhp
   mReallyOutput = PR_TRUE;
 #endif
 
@@ -177,7 +177,7 @@ nsMimeEmitter::AddHeaderField(const char *field, const char *value)
 nsresult
 nsMimeEmitter::EndHeader()
 {
-#ifdef DEBUG
+#ifdef DEBUG_rhp
   mReallyOutput = PR_TRUE;
 #endif
 
@@ -188,7 +188,7 @@ nsMimeEmitter::EndHeader()
 nsresult
 nsMimeEmitter::StartAttachment(const char *name, const char *contentType, const char *url)
 {
-#ifdef DEBUG
+#ifdef DEBUG_rhp
   mReallyOutput = PR_TRUE;
 #endif
 
@@ -198,7 +198,7 @@ nsMimeEmitter::StartAttachment(const char *name, const char *contentType, const 
 nsresult
 nsMimeEmitter::AddAttachmentField(const char *field, const char *value)
 {
-#ifdef DEBUG
+#ifdef DEBUG_rhp
   mReallyOutput = PR_TRUE;
 #endif
 
@@ -208,7 +208,7 @@ nsMimeEmitter::AddAttachmentField(const char *field, const char *value)
 nsresult
 nsMimeEmitter::EndAttachment()
 {
-#ifdef DEBUG
+#ifdef DEBUG_rhp
   mReallyOutput = PR_TRUE;
 #endif
 
@@ -219,7 +219,7 @@ nsMimeEmitter::EndAttachment()
 nsresult
 nsMimeEmitter::StartBody(PRBool bodyOnly, const char *msgID)
 {
-#ifdef DEBUG
+#ifdef DEBUG_rhp
   mReallyOutput = PR_TRUE;
 #endif
 
@@ -229,7 +229,7 @@ nsMimeEmitter::StartBody(PRBool bodyOnly, const char *msgID)
 nsresult
 nsMimeEmitter::WriteBody(const char *buf, PRUint32 size, PRUint32 *amountWritten)
 {
-#ifdef DEBUG
+#ifdef DEBUG_rhp
   mReallyOutput = PR_TRUE;
 #endif
 
@@ -240,7 +240,7 @@ nsMimeEmitter::WriteBody(const char *buf, PRUint32 size, PRUint32 *amountWritten
 nsresult
 nsMimeEmitter::EndBody()
 {
-#ifdef DEBUG
+#ifdef DEBUG_rhp
   mReallyOutput = PR_TRUE;
 #endif
 
@@ -257,7 +257,7 @@ nsMimeEmitter::Write(const char *buf, PRUint32 size, PRUint32 *amountWritten)
   unsigned int        written = 0;
   PRUint32            rc, aReadyCount = 0;
 
-#ifdef DEBUG
+#ifdef DEBUG_rhp
   if ((mLogFile) && (mReallyOutput))
     PR_Write(mLogFile, buf, size);
 #endif
