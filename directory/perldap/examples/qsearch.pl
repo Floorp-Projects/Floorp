@@ -1,0 +1,97 @@
+#!/usr/bin/perl5
+#############################################################################
+# $Id: qsearch.pl,v 1.1 1998/07/29 08:59:14 leif Exp $
+#
+# The contents of this file are subject to the Mozilla Public License
+# Version 1.0 (the "License"); you may not use this file except in
+# compliance with the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+# License for the specific language governing rights and limitations
+# under the License.
+#
+# The Original Code is PerlDAP. The Initial Developer of the Original
+# Code is Netscape Communications Corp. and Clayton Donley. Portions
+# created by Netscape are Copyright (C) Netscape Communications
+# Corp., portions created by Clayton Donley are Copyright (C) Clayton
+# Donley. All Rights Reserved.
+#
+# Contributor(s):
+#
+# DESCRIPTION
+#    "finger" version using LDAP information (using RFC 2307 objectclass).
+#
+#############################################################################
+
+use Getopt::Std;			# To parse command line arguments.
+use Mozilla::LDAP::Conn;		# Main "OO" layer for LDAP
+use Mozilla::LDAP::Utils;		# LULU, utilities.
+
+
+#################################################################################
+# Constants, shouldn't have to edit these...
+#
+$APPNAM	= "qsearch";
+$USAGE	= "$APPNAM -b base -h host -D bind -w pswd -P cert filter [attr...]";
+
+
+#################################################################################
+# Check arguments, and configure some parameters accordingly..
+#
+if (!getopts('b:h:D:p:s:w:P:'))
+{
+   print "usage: $APPNAM $USAGE\n";
+   exit;
+}
+%ld = Mozilla::LDAP::Utils::ldapArgs();
+
+
+#################################################################################
+# Instantiate an LDAP object, which also binds to the LDAP server.
+#
+$conn = new Mozilla::LDAP::Conn(\%ld);
+die "Could't connect to LDAP server $ld{host}" unless $conn;
+
+
+#################################################################################
+# Now do all the searches, one by one.
+#
+foreach (@ARGV)
+{
+  if (/\=/)
+    {
+      push(@srch, $_);
+    }
+  else
+    {
+      push(@attr, $_);
+    }
+}
+
+foreach $search (@srch)
+{
+  if ($#attr >= $[)
+    {
+      $entry = $conn->search($ld{root}, $ld{scope}, $search, 0, @attr);
+    }
+  else
+    {
+      $entry = $conn->search($ld{root}, $ld{scope}, "$search");
+    }
+
+  print "Searched for `$search':\n\n";
+  while($entry)
+    {
+      Mozilla::LDAP::Utils::printEntry($entry);
+      $entry = $conn->entry;
+    }
+  print "\n";
+}
+
+
+#################################################################################
+# Close the connection.
+#
+$conn->close if $conn;
