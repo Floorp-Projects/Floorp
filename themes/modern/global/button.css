@@ -445,12 +445,10 @@ button.plain > .button-internal-box > .button.icon:hover:active
 
 .reorder-up {
   min-width: 0px;
-  list-style-image: url("chrome://global/skin/arrow/arrow-up.gif");
 }
 
 .reorder-down {
   min-width: 0px;
-  list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
 }
 
 .reorder-up > .button-internal-box > .button-icon,
