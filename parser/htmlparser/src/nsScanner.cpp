@@ -119,7 +119,8 @@ void nsScanner::InitUnicodeDecoder()
   nsAutoString defaultCharset("ISO-8859-1");
   SetDocumentCharset(defaultCharset);
 }
-nsresult nsScanner::SetDocumentCharset(nsString& aCharset )
+
+nsresult nsScanner::SetDocumentCharset(const nsString& aCharset )
 {
   nsresult res = NS_OK;
   if(! mCharset.EqualsIgnoreCase(aCharset)) // see do we need to change a converter.
@@ -372,7 +373,7 @@ nsresult nsScanner::PutBack(PRUnichar aChar) {
  *  @return  error status
  */
 nsresult nsScanner::SkipWhitespace(void) {
-  static nsAutoString chars(" \n\r\t");
+  static nsAutoString chars(" \n\r\t\b");
   return SkipOver(chars);
 }
 

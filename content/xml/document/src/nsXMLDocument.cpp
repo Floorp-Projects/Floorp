@@ -307,7 +307,7 @@ nsXMLDocument::StartDocumentLoad(nsIURL *aUrl,
       }
       NS_RELEASE(sink); 
     }
-  }
+  } 
 
   return rv;
 }

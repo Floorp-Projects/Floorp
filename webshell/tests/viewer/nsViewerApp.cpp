@@ -21,7 +21,7 @@
 #define INITGUID
 #endif
 #include "nsCOMPtr.h"
-#include "nsXPBaseWindow.h"
+#include "nsXPBaseWindow.h" 
 #include "nsViewerApp.h"
 #include "nsBrowserWindow.h"
 #include "nsWidgetsCID.h"

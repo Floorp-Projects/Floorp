@@ -16,7 +16,7 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation.  All Rights Reserved.
  */
-#include "nsIPref.h"
+#include "nsIPref.h" 
 #include "prmem.h"
 
 #ifdef XP_MAC
@@ -2219,7 +2219,7 @@ nsBrowserWindow::DoCopy()
             parser->RegisterDTD(dtd);
             //dtd->SetContentSink(sink);
             //dtd->SetParser(parser);
-            parser->Parse(buffer, 0, PR_FALSE,PR_FALSE,PR_TRUE);           
+            parser->Parse(buffer, 0, "text/xif",PR_FALSE,PR_TRUE);           
           }
           NS_IF_RELEASE(dtd);
           NS_IF_RELEASE(sink);
@@ -2889,7 +2889,7 @@ nsBrowserWindow::DoDebugSave()
             parser->RegisterDTD(dtd);
             //dtd->SetContentSink(sink);
             //dtd->SetParser(parser);
-            parser->Parse(buffer, 0, PR_FALSE,PR_FALSE,PR_TRUE);           
+            parser->Parse(buffer, 0, "text/xif",PR_FALSE,PR_TRUE);           
           }
           out.close();
 

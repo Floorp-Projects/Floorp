@@ -52,6 +52,7 @@
 
 void DebugDumpContainmentRules(nsIDTD& theDTD,const char* aFilename,const char* aTitle);
 void DebugDumpContainmentRules2(nsIDTD& theDTD,const char* aFilename,const char* aTitle);
+PRUint32 AccumulateCRC(PRUint32 crc_accum, char *data_blk_ptr, int data_blk_size);
 
 
 class nsTagStack {
@@ -206,11 +207,25 @@ inline PRBool BufferContainsHTML(nsString& aBuffer){
   nsString temp;
   aBuffer.Left(temp,200);
   temp.ToLowerCase();
-  if((-1<temp.Find("<html") || (-1<temp.Find("!doctype html public \"-//w3c//dtd html")))) {
+  if((-1<temp.Find("<html ") || (-1<temp.Find("!doctype html public")))) {
     result=PR_TRUE;
   }
   return result;
 }
+
+
+#ifdef  NS_DEBUG
+/******************************************************************************
+  This little structure is used to compute CRC32 values for our debug validator
+ ******************************************************************************/
+
+struct CRCStruct {
+  CRCStruct(eHTMLTags aTag,PRInt32 anOp) {mTag=aTag; mOperation=anOp;}
+  eHTMLTags mTag; 
+  PRInt32   mOperation; //usually open or close
+};
+
+#endif 
 
 #endif
 

@@ -677,6 +677,7 @@ nsresult ConsumeStrictComment(PRUnichar aChar, nsScanner& aScanner,nsString& aSt
  *  @return  
  */
 nsresult ConsumeComment(PRUnichar aChar, nsScanner& aScanner,nsString& aString) {
+  static    nsAutoString gEdibles("!-");
   static    nsAutoString gMinus("-");
   nsresult  result=NS_OK;
  
@@ -699,14 +700,16 @@ nsresult ConsumeComment(PRUnichar aChar, nsScanner& aScanner,nsString& aString) 
           PRBool done=PR_FALSE;
           PRInt32 findpos=kNotFound;
           result=aScanner.ReadWhile(aString,gMinus,PR_TRUE,PR_TRUE);  //get all available '---'
-          findpos=aString.RFind("->");
+          findpos=aString.RFind("-->");
           nsAutoString temp("");
           while((kNotFound==findpos) && (NS_OK==result)) {
             result=aScanner.ReadUntil(temp,kMinus,PR_TRUE);
             if(NS_OK==result) {
-              result=aScanner.ReadWhile(temp,gMinus,PR_TRUE,PR_TRUE);  //get all available '---'
+              result=aScanner.ReadWhile(temp,gEdibles,PR_TRUE,PR_TRUE);  //get all available '---'
             }
-            findpos=temp.RFind("->");
+            findpos=temp.RFind("-->");
+            if(kNotFound==findpos)
+              findpos=temp.RFind("!>");
             aString+=temp;
             temp="";
           } //while
@@ -964,7 +967,8 @@ nsresult ConsumeQuotedString(PRUnichar aChar,nsString& aString,nsScanner& aScann
   PRUnichar ch=aString.Last();
   if(ch!=aChar)
     aString+=aChar;
-  aString.StripChars("\r\n");
+  aString.ReplaceChar(PRUnichar('\n'),PRUnichar(' '));
+  aString.StripChars("\r"); //per the HTML spec, ignore linefeeds...
   return result;
 }
 

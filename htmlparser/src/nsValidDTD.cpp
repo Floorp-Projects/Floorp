@@ -60,7 +60,6 @@ static NS_DEFINE_IID(kClassIID,     NS_VALID_DTD_IID);
 //static const char* kNullTokenizer = "Error: Unable to construct tokenizer";
 //static const char* kNullToken = "Error: Null token given";
 //static const char* kInvalidTagStackPos = "Error: invalid tag stack position";
-static const char* kXMLTextContentType = "text/xml";
 
 static nsAutoString gEmpty;
 

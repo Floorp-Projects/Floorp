@@ -28,7 +28,7 @@
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
 #include "nsIViewManager.h"
-#include "nsHTMLTokens.h" 
+#include "nsHTMLTokens.h"  
 #include "nsHTMLEntities.h" 
 #include "nsCRT.h"
 #include "prtime.h"
@@ -1456,7 +1456,7 @@ HTMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
     mHTMLDocument->SetTitle("");
   }
 
-  // XXX this is silly; who cares?
+  // XXX this is silly; who cares? RickG cares. It's part of the regression test. So don't bug me. 
   PRInt32 i, ns = mDocument->GetNumberOfShells();
   for (i = 0; i < ns; i++) {
     nsCOMPtr<nsIPresShell> shell(dont_AddRef(mDocument->GetShellAt(i)));

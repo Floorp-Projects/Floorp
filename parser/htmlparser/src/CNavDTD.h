@@ -538,6 +538,10 @@ protected:
     PRInt32             mLineNumber;
     nsParser*           mParser;
     nsITokenizer*       mTokenizer;
+#ifdef  NS_DEBUG
+    PRUint32            mComputedCRC32;
+    PRUint32            mExpectedCRC32;
+#endif
 };
 
 extern NS_HTMLPARS nsresult NS_NewNavHTMLDTD(nsIDTD** aInstancePtrResult);

@@ -59,6 +59,12 @@ enum  eParseMode {
   eParseMode_autodetect
 };
 
+enum eCRCQuality {
+  eCRCGood = 0,
+  eCRCFair,
+  eCRCPoor
+};
+
 enum eStreamState {eNone,eOnStart,eOnDataAvail,eOnStop};
 
 /**
@@ -128,7 +134,7 @@ class nsIParser : public nsISupports {
     virtual PRBool    EnableParser(PRBool aState) = 0;
     virtual nsresult  Parse(nsIURL* aURL,nsIStreamObserver* aListener = nsnull,PRBool aEnableVerify=PR_FALSE) = 0;
     virtual nsresult  Parse(fstream& aStream,PRBool aEnableVerify=PR_FALSE) = 0;
-    virtual nsresult  Parse(nsString& aSourceBuffer,void* aKey,PRBool anHTMLString,PRBool aEnableVerify,PRBool aLastCall) = 0;
+    virtual nsresult  Parse(nsString& aSourceBuffer,void* aKey,const nsString& aContentType,PRBool aEnableVerify,PRBool aLastCall) = 0;
 
     /**
      * This method gets called when the tokens have been consumed, and it's time
@@ -167,6 +173,7 @@ class nsIParser : public nsISupports {
 #define NS_ERROR_HTMLPARSER_INTERRUPTED           NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_HTMLPARSER,1007)
 #define NS_ERROR_HTMLPARSER_BADTOKENIZER          NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_HTMLPARSER,1008)
 #define NS_ERROR_HTMLPARSER_BADATTRIBUTE          NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_HTMLPARSER,1009)
+#define NS_ERROR_HTMLPARSER_UNRESOLVEDDTD         NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_HTMLPARSER,1010)
 
 /**
  * Return codes for parsing routines.
@@ -220,5 +227,12 @@ const PRUint32  kQuestionMark     = '?';
 const PRUint32  kLeftSquareBracket  = '[';
 const PRUint32  kRightSquareBracket = ']';
 const PRUnichar kNullCh           = '\0';
+
+#define kHTMLTextContentType  "text/html"
+#define kXMLTextContentType   "text/xml"
+#define kXULTextContentType   "text/xul"
+#define kRDFTextContentType   "text/rdf"
+#define kXIFTextContentType   "text/xif"
+#define kPlainTextContentType "text/plain"
 
 #endif 
