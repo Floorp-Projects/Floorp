@@ -34,14 +34,12 @@
 #include "nsCOMPtr.h"
 #include "nsDOMPropEnums.h"
 #include "nsString.h"
-#include "nsIDOMNode.h"
 #include "nsIDOMSelectionListener.h"
 
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
-static NS_DEFINE_IID(kINodeIID, NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kISelectionListenerIID, NS_IDOMSELECTIONLISTENER_IID);
 
 
@@ -179,57 +177,6 @@ SelectionListenerNotifySelectionChanged(JSContext *cx, JSObject *obj, uintN argc
 }
 
 
-//
-// Native method TableCellNotification
-//
-PR_STATIC_CALLBACK(JSBool)
-SelectionListenerTableCellNotification(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMSelectionListener *nativeThis = (nsIDOMSelectionListener*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
-  nsCOMPtr<nsIDOMNode> b0;
-  PRInt32 b1;
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  {
-    *rval = JSVAL_NULL;
-    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
-    if (!secMan)
-        return PR_FALSE;
-    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_SELECTIONLISTENER_TABLECELLNOTIFICATION, PR_FALSE);
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-    if (argc < 2) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
-    }
-
-    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b0),
-                                           kINodeIID,
-                                           "Node",
-                                           cx,
-                                           argv[0])) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
-    }
-    if (!JS_ValueToInt32(cx, argv[1], (int32 *)&b1)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_NUMBER_ERR);
-    }
-
-    result = nativeThis->TableCellNotification(b0, b1);
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-
-    *rval = JSVAL_VOID;
-  }
-
-  return JS_TRUE;
-}
-
-
 /***********************************************************************/
 //
 // class for SelectionListener
@@ -265,7 +212,6 @@ static JSPropertySpec SelectionListenerProperties[] =
 static JSFunctionSpec SelectionListenerMethods[] = 
 {
   {"notifySelectionChanged",          SelectionListenerNotifySelectionChanged,     0},
-  {"tableCellNotification",          SelectionListenerTableCellNotification,     2},
   {0}
 };
 

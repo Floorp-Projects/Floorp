@@ -104,10 +104,10 @@ GetMimeTypeArrayProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
     JSString *jsstring = JS_ValueToString(cx, id);
     if (nsnull != jsstring) {
-      name.Assign(JS_GetStringChars(jsstring));
+      name.SetString(JS_GetStringChars(jsstring));
     }
     else {
-      name.Assign("");
+      name.SetString("");
     }
 
     result = a->NamedItem(name, &prop);

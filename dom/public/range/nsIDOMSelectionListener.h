@@ -28,7 +28,6 @@
 #include "nsString.h"
 #include "nsIScriptContext.h"
 
-class nsIDOMNode;
 
 #define NS_IDOMSELECTIONLISTENER_IID \
  { 0xa6cf90e2, 0x15b3, 0x11d2,             \
@@ -39,20 +38,16 @@ public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMSELECTIONLISTENER_IID; return iid; }
 
   NS_IMETHOD    NotifySelectionChanged()=0;
-
-  NS_IMETHOD    TableCellNotification(nsIDOMNode* aParent, PRInt32 aOffset)=0;
 };
 
 
 #define NS_DECL_IDOMSELECTIONLISTENER   \
   NS_IMETHOD    NotifySelectionChanged();  \
-  NS_IMETHOD    TableCellNotification(nsIDOMNode* aParent, PRInt32 aOffset);  \
 
 
 
 #define NS_FORWARD_IDOMSELECTIONLISTENER(_to)  \
   NS_IMETHOD    NotifySelectionChanged() { return _to NotifySelectionChanged(); }  \
-  NS_IMETHOD    TableCellNotification(nsIDOMNode* aParent, PRInt32 aOffset) { return _to TableCellNotification(aParent, aOffset); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitSelectionListenerClass(nsIScriptContext *aContext, void **aPrototype);

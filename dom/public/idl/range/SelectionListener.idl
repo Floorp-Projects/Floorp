@@ -3,10 +3,4 @@
         { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} }		*/
 
 	void			notifySelectionChanged();
-      /* tableCellNotification is a call back for when a cell is trying to be
-         selected.  No selection action will take place. only this notification.
-         currently CTRL-LEFTMOUSEBUTTON in a table cell is the event that will
-         trigger this call.*/
-	void			tableCellNotification(in Node parent, in long offset);
-		
 };
