@@ -246,7 +246,7 @@ void nsClipboard::SetClipboardData(const char *aFlavor)
         memcpy( pUnicodeMem, pMozData, NumOfBytes );    // Copy text string
         pUnicodeMem[NumOfChars] = L'\0';                // Append terminator
 
-        WinSetClipbrdData( 0, NS_STATIC_CAST(ULONG, pUnicodeMem), ulFormatID, CFI_POINTER );
+        WinSetClipbrdData( 0, NS_REINTERPRET_CAST(ULONG, pUnicodeMem), ulFormatID, CFI_POINTER );
       }
 
       // If the flavor is unicode, we also put it on the clipboard as CF_TEXT
