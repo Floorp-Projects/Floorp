@@ -2620,7 +2620,6 @@ void CEditTableElement::FixupColumnsAndRows()
         int32 iCellX = pCell->GetX();
         int32 iCellY = pCell->GetY();
         XP_Bool bFoundX = FALSE;
-        XP_Bool bFoundY = FALSE;
 
         // See if cell's X was already found
         intn iSize = X_Array.Size();
@@ -3248,7 +3247,6 @@ void CEditTableElement::DeleteColumns(int32 X, intn number, CEditTableCellElemen
     CEditTableCellElement *pCellForInsertPoint = NULL;
 
     CEditTableRowElement* pRow = GetFirstRow();
-    CEditTableRowElement *pFirstRow = pRow;
     
     while( pRow )
     {
@@ -5944,7 +5942,6 @@ CEditTableCellElement* CEditTableCellElement::GetNextCellInColumn(CEditTableCell
 XP_Bool CEditTableCellElement::AllCellsInColumnAreSelected()
 {
     CEditTableCellElement *pCell = GetFirstCellInColumn();
-    XP_Bool bAllSelected = TRUE;
     while( pCell )
     {
         if( !pCell->IsSelected() )
@@ -5958,7 +5955,6 @@ XP_Bool CEditTableCellElement::AllCellsInColumnAreSelected()
 XP_Bool CEditTableCellElement::AllCellsInRowAreSelected()
 {
     CEditTableCellElement *pCell = GetFirstCellInRow();
-    XP_Bool bAllSelected = TRUE;
     while( pCell )
     {
         if( !pCell->IsSelected() )
@@ -8093,7 +8089,7 @@ void CEditTextElement::SetColor( ED_Color iColor ){
 #define ED_MAX_POINT_SIZE 104
 
 // Boost the size changes when increasing or decreasing point sizes
-void static AdjustPointSizeChange( int& iChange, int iPointSize )
+static void AdjustPointSizeChange( int& iChange, int iPointSize )
 {
     if( iChange == 1 )
     {
