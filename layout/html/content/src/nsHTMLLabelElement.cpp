@@ -134,11 +134,13 @@ NS_IMETHODIMP_(nsrefcnt)
 nsHTMLLabelElement::Release()
 {
   --mRefCnt;
+  NS_LOG_RELEASE(this, mRefCnt, "nsHTMLLabelElement");
 	if (mRefCnt <= 0) {
     delete this;                                       
     return 0;                                          
   } else if ((1 == mRefCnt) && mForm) { 
     mRefCnt = 0;
+    NS_LOG_RELEASE(this, mRefCnt, "nsHTMLLabelElement");
     delete this;
     return 0;
   } else {

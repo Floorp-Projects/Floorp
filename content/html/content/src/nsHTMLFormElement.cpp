@@ -253,7 +253,14 @@ nsHTMLFormElement::Release()
   PRUint32 numChildren;
   GetElementCount(&numChildren);
   if (mRefCnt == nsrefcnt(numChildren)) {
+#ifdef NS_BUILD_REFCNT_LOGGING
+    while(mRefCnt > 0) {
+      --mRefCnt;
+      NS_LOG_RELEASE(this, mRefCnt, "nsHTMLFormElement");
+    }
+#else
     mRefCnt = 0;
+#endif
     delete this; 
     return 0;
   } 
