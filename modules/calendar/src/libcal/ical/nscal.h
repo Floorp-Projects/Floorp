@@ -177,6 +177,15 @@ public:
     void addXTokens(UnicodeString s);
     JulianPtrArray * getXTokens() const { return m_XTokensVctr; }
 
+    /** getter and setter for when events were last updated from server */
+    void setEventsLastUpdatedFromServer(DateTime d) { m_EventsLastUpdatedFromServer = d; }
+    DateTime getEventsLastUpdatedFromServer() { return m_EventsLastUpdatedFromServer; }
+
+    /** getter for when events span */
+    DateTime getEventsSpanStart() { return m_EventsSpanStart; }
+    DateTime getEventsSpanEnd() { return m_EventsSpanEnd; }
+
+
     /**
      * Given an ICalReader object, parse the stream to populate this NSCalendar.
      * In the process of parsing, the NSCalendar may create subcomponents
@@ -738,6 +747,12 @@ private:
      */
     void createVFreebusyHelper(Freebusy * f, DateTime start, DateTime end);
 
+    /**
+     *  update the m_EventsSpanStart and m_EventsSpanEnd members
+     *  taking into account new VEvent.
+     */ 
+    void updateEventsRange(VEvent * v);
+
 
     /* -- private data members -- */
 
@@ -772,6 +787,18 @@ private:
     /* log file pointer */
     JLog * m_Log;
 
+
+    /** 
+     * the timestamp of the last time these events were updated 
+     */
+    DateTime m_EventsLastUpdatedFromServer;
+
+    /**
+     * the start of end time range of events.  
+     */
+    DateTime m_EventsSpanStart;
+    DateTime m_EventsSpanEnd;
+   
     JulianString m_sCurl;   /* cal url to calendar store for this calendar */
 };
 
