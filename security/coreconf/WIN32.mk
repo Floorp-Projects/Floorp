@@ -73,6 +73,13 @@ ifdef BUILD_OPT
 	OPTIMIZER  += -O2
 	DEFINES    += -UDEBUG -U_DEBUG -DNDEBUG
 	DLLFLAGS   += -OUT:"$@"
+	#
+	# Add symbolic information for a profiler
+	#
+	ifdef MOZ_PROFILE
+		OPTIMIZER += -Z7
+		DLLFLAGS += -DEBUG -DEBUGTYPE:CV
+	endif
 else
 	#
 	# Define USE_DEBUG_RTL if you want to use the debug runtime library
