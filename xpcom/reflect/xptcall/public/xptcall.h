@@ -122,32 +122,32 @@ struct nsXPTCVariant : public nsXPTCMiniVariant
         else
         {
             ptr = nsnull;
-        switch(t.TagPart()) {
-          case nsXPTType::T_I8:                val.i8  = mv.val.i8;  break;
-          case nsXPTType::T_I16:               val.i16 = mv.val.i16; break;
-          case nsXPTType::T_I32:               val.i32 = mv.val.i32; break;
-          case nsXPTType::T_I64:               val.i64 = mv.val.i64; break;
-          case nsXPTType::T_U8:                val.u8  = mv.val.u8;  break;
-          case nsXPTType::T_U16:               val.u16 = mv.val.u16; break;
-          case nsXPTType::T_U32:               val.u32 = mv.val.u32; break;
-          case nsXPTType::T_U64:               val.u64 = mv.val.u64; break;
-          case nsXPTType::T_FLOAT:             val.f   = mv.val.f;   break;
-          case nsXPTType::T_DOUBLE:            val.d   = mv.val.d;   break;
-          case nsXPTType::T_BOOL:              val.b   = mv.val.b;   break;
-          case nsXPTType::T_CHAR:              val.c   = mv.val.c;   break;
-          case nsXPTType::T_WCHAR:             val.wc  = mv.val.wc;  break;
-          case nsXPTType::T_VOID:              /* fall through */
-          case nsXPTType::T_IID:               /* fall through */
-          case nsXPTType::T_BSTR:              /* fall through */
-          case nsXPTType::T_CHAR_STR:          /* fall through */
-          case nsXPTType::T_WCHAR_STR:         /* fall through */
-          case nsXPTType::T_INTERFACE:         /* fall through */
-          case nsXPTType::T_INTERFACE_IS:      /* fall through */
-          case nsXPTType::T_ARRAY:             /* fall through */
-          case nsXPTType::T_PSTRING_SIZE_IS:   /* fall through */
-          case nsXPTType::T_PWSTRING_SIZE_IS:  /* fall through */
-          default:                             val.p   = mv.val.p;   break;
-        }
+            switch(t.TagPart()) {
+              case nsXPTType::T_I8:                val.i8  = mv.val.i8;  break;
+              case nsXPTType::T_I16:               val.i16 = mv.val.i16; break;
+              case nsXPTType::T_I32:               val.i32 = mv.val.i32; break;
+              case nsXPTType::T_I64:               val.i64 = mv.val.i64; break;
+              case nsXPTType::T_U8:                val.u8  = mv.val.u8;  break;
+              case nsXPTType::T_U16:               val.u16 = mv.val.u16; break;
+              case nsXPTType::T_U32:               val.u32 = mv.val.u32; break;
+              case nsXPTType::T_U64:               val.u64 = mv.val.u64; break;
+              case nsXPTType::T_FLOAT:             val.f   = mv.val.f;   break;
+              case nsXPTType::T_DOUBLE:            val.d   = mv.val.d;   break;
+              case nsXPTType::T_BOOL:              val.b   = mv.val.b;   break;
+              case nsXPTType::T_CHAR:              val.c   = mv.val.c;   break;
+              case nsXPTType::T_WCHAR:             val.wc  = mv.val.wc;  break;
+              case nsXPTType::T_VOID:              /* fall through */
+              case nsXPTType::T_IID:               /* fall through */
+              case nsXPTType::T_BSTR:              /* fall through */
+              case nsXPTType::T_CHAR_STR:          /* fall through */
+              case nsXPTType::T_WCHAR_STR:         /* fall through */
+              case nsXPTType::T_INTERFACE:         /* fall through */
+              case nsXPTType::T_INTERFACE_IS:      /* fall through */
+              case nsXPTType::T_ARRAY:             /* fall through */
+              case nsXPTType::T_PSTRING_SIZE_IS:   /* fall through */
+              case nsXPTType::T_PWSTRING_SIZE_IS:  /* fall through */
+              default:                             val.p   = mv.val.p;   break;
+            }
         }
     }
 };
