@@ -3474,7 +3474,7 @@ dnl [ Location of the mozilla user directory (default is ~/.mozilla).],
   [if echo "$enableval" | grep "\/" >/dev/null; then
     AC_MSG_ERROR("Homedir must be single relative path.")
   else 
-    AC_DEFINE(MOZ_USER_DIR,"$enableval")
+    AC_DEFINE_UNQUOTED(MOZ_USER_DIR,"$enableval")
   fi], 
   AC_DEFINE(MOZ_USER_DIR,".mozilla") )
 
