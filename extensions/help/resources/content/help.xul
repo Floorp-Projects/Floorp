@@ -84,7 +84,7 @@
     <!-- button bar -->
     <toolbox id="help-toolbox" class="toolbox-top" deferattached="true">
       <toolbar id="helpToolbar" class="toolbar-primary" 
-            	grippytooltip="aTooltip" grippytooltiptext="The Help Toolbar"
+            	grippytooltip="aTooltip" grippytooltiptext="&toolbar.tooltip;"
               tbalign="stretch" persist="collapsed">
 
         <toolbarbutton id="helpBackButton" type="menu-button" class="toolbarbutton-1"

@@ -1,16 +1,17 @@
-<!ENTITY helpWin.ttl       "&brandShortName; Help" >
+<!ENTITY helpWin.ttl        "&brandShortName; Help" >
 
-<!ENTITY backBtn.label       "Back" >
+<!ENTITY toolbar.tooltip    "Help Toolbar" >
+<!ENTITY backBtn.label      "Back" >
 <!ENTITY fwdBtn.label       "Forward" >
-<!ENTITY homeBtn.label       "Home" >
+<!ENTITY homeBtn.label      "Home" >
 
 <!ENTITY backBtn.tooltip    "Back" >
 <!ENTITY fwdBtn.tooltip     "Forward" >
 <!ENTITY homeBtn.tooltip    "Help Home Page" >
 
-<!ENTITY t1.label       "What part of &brandShortName;" >
-<!ENTITY t2.label       "do you need help with?" >
-<!ENTITY t3.label       "Click one:" >
+<!ENTITY t1.label           "What part of &brandShortName;" >
+<!ENTITY t2.label           "do you need help with?" >
+<!ENTITY t3.label           "Click one:" >
 
-<!ENTITY tab1.label       "Contents">
-<!ENTITY tab2.label       "Index">
+<!ENTITY tab1.label         "Contents">
+<!ENTITY tab2.label         "Index">
