@@ -81,9 +81,6 @@ protected:
   nsresult GetProfileDataFromRegistry(nsILocalFile* aRegistryFile,
                                       nsISupportsArray* aProfileNames,
                                       nsISupportsArray* aProfileLocations);
-  void     GetTargetProfile(const PRUnichar* aSuggestedName, PRBool aReplace);
-  void     CreateTemplateProfile(const PRUnichar* aSuggestedName);
-  void     GetUniqueProfileName(nsIFile* aProfilesDir, const PRUnichar* aSuggestedName, PRUnichar** aUniqueName);
 
   nsresult CopyFile(const nsAString& aSourceFileName, const nsAString& aTargetFileName);
 
@@ -97,7 +94,7 @@ protected:
 
 protected:
   nsCOMPtr<nsILocalFile> mSourceProfile;
-  nsCOMPtr<nsILocalFile> mTargetProfile;
+  nsCOMPtr<nsIFile> mTargetProfile;
 
   nsCOMPtr<nsIStringBundle> mBundle;
 };

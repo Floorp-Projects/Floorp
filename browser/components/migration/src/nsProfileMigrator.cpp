@@ -35,22 +35,41 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsCOMPtr.h"
-#include "nsCRT.h"
-#include "nsBrowserCompsCID.h"
+#include "nsProfileMigrator.h"
+
 #include "nsIBookmarksService.h"
 #include "nsIBrowserProfileMigrator.h"
 #include "nsIComponentManager.h"
 #include "nsIDOMWindowInternal.h"
+#include "nsILocalFile.h"
 #include "nsIObserverService.h"
 #include "nsIServiceManager.h"
+#include "nsISupportsPrimitives.h"
 #include "nsISupportsArray.h"
+#include "nsIToolkitProfile.h"
+#include "nsIToolkitProfileService.h"
 #include "nsIWindowWatcher.h"
-#include "nsProfileMigrator.h"
+
+#include "nsCOMPtr.h"
+#include "nsBrowserCompsCID.h"
+#include "nsDirectoryServiceDefs.h"
+
+#include "nsCRT.h"
+#include "NSReg.h"
 #include "nsReadableUtils.h"
 #include "nsString.h"
 #ifdef XP_WIN
 #include <windows.h>
+#endif
+
+#ifndef MAXPATHLEN
+#ifdef _MAX_PATH
+#define MAXPATHLEN _MAX_PATH
+#elif defined(CCHMAXPATH)
+#define MAXPATHLEN CCHMAXPATH
+#else
+#define MAXPATHLEN 1024
+#endif
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -60,82 +79,67 @@
 #define MIGRATION_WIZARD_FE_FEATURES "chrome,dialog,modal,centerscreen"
 
 NS_IMETHODIMP
-nsProfileMigrator::Migrate()
+nsProfileMigrator::Migrate(nsIProfileStartup* aStartup)
 {
-  PRBool needsActiveProfile = PR_TRUE;
-  GetDefaultBrowserMigratorKey(getter_AddRefs(mMigrator), 
-                               getter_AddRefs(mSourceKey),
-                               &needsActiveProfile);
+  nsresult rv;
 
-  nsresult rv = NS_ERROR_FILE_NOT_FOUND; // No migrator, or data could be 
-                                         // found for the migrator
-  if (mMigrator && mSourceKey) {
-    PRBool sourceExists;
-    mMigrator->GetSourceExists(&sourceExists);
+  nsCAutoString key;
+  nsCOMPtr<nsIBrowserProfileMigrator> bpm;
 
-    if (sourceExists) {
-      if (!needsActiveProfile)
-        rv = OpenMigrationWizard();
-      else {
-        nsCOMPtr<nsIObserverService> obs(do_GetService("@mozilla.org/observer-service;1"));
-        rv = obs->AddObserver(this, "browser-window-before-show", PR_FALSE);
-      }
-    }
+  rv = GetDefaultBrowserMigratorKey(key, bpm);
+  if (NS_FAILED(rv)) return rv;
+
+  if (!bpm) {
+    nsCAutoString contractID =
+      NS_LITERAL_CSTRING(NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX) + key;
+
+    bpm = do_CreateInstance(contractID.get());
+    if (!bpm) return NS_ERROR_FAILURE;
   }
 
-  return rv;
+  PRBool sourceExists;
+  rv = bpm->GetSourceExists(&sourceExists);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!sourceExists) return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsISupportsCString> cstr
+    (do_CreateInstance("@mozilla.org/supports-cstring;1"));
+  if (!cstr) return NS_ERROR_OUT_OF_MEMORY;
+  cstr->SetData(key);
+
+  // By opening the Migration FE with a supplied bpm, it will automatically
+  // migrate from it. 
+  nsCOMPtr<nsIWindowWatcher> ww(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
+  nsCOMPtr<nsISupportsArray> params;
+  NS_NewISupportsArray(getter_AddRefs(params));
+  if (!ww || !params) return NS_ERROR_FAILURE;
+
+  params->AppendElement(cstr);
+  params->AppendElement(bpm);
+  params->AppendElement(aStartup);
+
+  nsCOMPtr<nsIDOMWindow> migrateWizard;
+  return ww->OpenWindow(nsnull, 
+                        MIGRATION_WIZARD_FE_URL,
+                        "_blank",
+                        MIGRATION_WIZARD_FE_FEATURES,
+                        params,
+                        getter_AddRefs(migrateWizard));
 }
 
-///////////////////////////////////////////////////////////////////////////////
-// nsIObserver
-
 NS_IMETHODIMP
-nsProfileMigrator::Observe(nsISupports* aSubject, const char* aTopic, const PRUnichar* aData)
+nsProfileMigrator::Import()
 {
-  if (nsCRT::strcmp(aTopic, "browser-window-before-show") == 0) {
-    // Remove ourselves so we only run the migration wizard once. 
-    nsCOMPtr<nsIObserverService> obs(do_GetService("@mozilla.org/observer-service;1"));
-    obs->RemoveObserver(this, "browser-window-before-show");
+  if (ImportRegistryProfiles(NS_LITERAL_CSTRING("Firefox")))
+    return NS_OK;
 
-    // Spin up Bookmarks
-    nsCOMPtr<nsIBookmarksService> bms(do_GetService("@mozilla.org/browser/bookmarks-service;1"));
-    if (bms) {
-      PRBool loaded;
-      bms->ReadBookmarks(&loaded);
-    }
-
-    return OpenMigrationWizard();
-  }
-
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsProfileMigrator
 
-NS_IMPL_ISUPPORTS2(nsProfileMigrator, nsIProfileMigrator, nsIObserver)
-
-nsresult
-nsProfileMigrator::OpenMigrationWizard()
-{
-  if (mSourceKey && mMigrator) {
-    // By opening the Migration FE with a supplied bpm, it will automatically
-    // migrate from it. 
-    nsCOMPtr<nsIWindowWatcher> ww(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
-    nsCOMPtr<nsISupportsArray> params;
-    NS_NewISupportsArray(getter_AddRefs(params));
-    params->AppendElement(mSourceKey);
-    params->AppendElement(mMigrator);
-    nsCOMPtr<nsIDOMWindow> migrateWizard;
-    return ww->OpenWindow(nsnull, 
-                          MIGRATION_WIZARD_FE_URL,
-                          "_blank",
-                          MIGRATION_WIZARD_FE_FEATURES,
-                          params,
-                          getter_AddRefs(migrateWizard));
-  }
-  return NS_OK;
-}
+NS_IMPL_ISUPPORTS1(nsProfileMigrator, nsIProfileMigrator)
 
 #ifdef XP_WIN
 typedef struct {
@@ -153,13 +157,9 @@ typedef struct {
 #endif
 
 nsresult
-nsProfileMigrator::GetDefaultBrowserMigratorKey(nsIBrowserProfileMigrator** aMigrator, 
-                                                nsISupportsString** aKey,
-                                                PRBool* aNeedsActiveProfile)
+nsProfileMigrator::GetDefaultBrowserMigratorKey(nsACString& aKey,
+                                                nsCOMPtr<nsIBrowserProfileMigrator>& bpm)
 {
-  *aMigrator = nsnull;
-  *aKey = nsnull;
-
 #if XP_WIN
   HKEY hkey;
 
@@ -221,39 +221,29 @@ nsProfileMigrator::GetDefaultBrowserMigratorKey(nsIBrowserProfileMigrator** aMig
             UINT size;
             ::VerQueryValue(ver, subBlock, (void**)&internalName, &size);
 
-            nsCOMPtr<nsISupportsString> key(do_CreateInstance("@mozilla.org/supports-string;1"));
-            nsCOMPtr<nsIBrowserProfileMigrator> bpm;
             if (!nsCRT::strcasecmp((char*)internalName, INTERNAL_NAME_IEXPLORE)) {
-              *aNeedsActiveProfile = PR_TRUE;
-              key->SetData(NS_LITERAL_STRING("ie"));
-              bpm = do_CreateInstance(NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX "ie");
+              aKey = "ie";
+              return NS_OK;
             }
-            else if (!nsCRT::strcasecmp((char*)internalName, INTERNAL_NAME_SEAMONKEY)) {
-              *aNeedsActiveProfile = PR_FALSE;
-              key->SetData(NS_LITERAL_STRING("seamonkey"));
-              bpm = do_CreateInstance(NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX "seamonkey");
+            if (!nsCRT::strcasecmp((char*)internalName, INTERNAL_NAME_SEAMONKEY)) {
+              aKey = "seamonkey";
+              return NS_OK;
             }
-            else if (!nsCRT::strcasecmp((char*)internalName, INTERNAL_NAME_DOGBERT)) {
-              *aNeedsActiveProfile = PR_FALSE;
-              key->SetData(NS_LITERAL_STRING("dogbert"));
-              bpm = do_CreateInstance(NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX "dogbert");
+            if (!nsCRT::strcasecmp((char*)internalName, INTERNAL_NAME_DOGBERT)) {
+              aKey = "dogbert";
+              return NS_OK;
             }
-            else if (!nsCRT::strcasecmp((char*)internalName, INTERNAL_NAME_OPERA)) {
-              *aNeedsActiveProfile = PR_TRUE;
-              key->SetData(NS_LITERAL_STRING("opera"));
-              bpm = do_CreateInstance(NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX "opera");
+            if (!nsCRT::strcasecmp((char*)internalName, INTERNAL_NAME_OPERA)) {
+              aKey = "opera";
+              return NS_OK;
             }
             // Migrate data from any existing Application Data\Phoenix\* installations.
-            else if (!nsCRT::strcasecmp((char*)internalName, INTERNAL_NAME_FIREBIRD) || 
-                     !nsCRT::strcasecmp((char*)internalName, INTERNAL_NAME_FIREFOX) ||
-                     !nsCRT::strcasecmp((char*)internalName, INTERNAL_NAME_PHOENIX)) {
-              *aNeedsActiveProfile = PR_FALSE;
-              key->SetData(NS_LITERAL_STRING("phoenix"));
-              bpm = do_CreateInstance(NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX "phoenix");
+            if (!nsCRT::strcasecmp((char*)internalName, INTERNAL_NAME_FIREBIRD) || 
+                !nsCRT::strcasecmp((char*)internalName, INTERNAL_NAME_FIREFOX) ||
+                !nsCRT::strcasecmp((char*)internalName, INTERNAL_NAME_PHOENIX)) {
+              aKey = "phoenix";
+              return NS_OK;
             }
-
-            NS_IF_ADDREF(*aKey = key);
-            NS_IF_ADDREF(*aMigrator = bpm);
           }
         }
       }
@@ -261,28 +251,125 @@ nsProfileMigrator::GetDefaultBrowserMigratorKey(nsIBrowserProfileMigrator** aMig
   }
 #else
   // XXXben - until we figure out what to do here with default browsers on MacOS and
-  // GNOME, simply copy data from a previous Phoenix or Seamonkey install. 
-  *aNeedsActiveProfile = PR_FALSE;
-  nsCOMPtr<nsISupportsString> key(do_CreateInstance("@mozilla.org/supports-string;1"));
-  key->SetData(NS_LITERAL_STRING("phoenix"));
-  nsCOMPtr<nsIBrowserProfileMigrator> bpm(do_CreateInstance(NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX "phoenix"));
-  PRBool exists;
-  bpm->GetSourceExists(&exists);
-  if (!exists) {
-    bpm = do_CreateInstance(NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX "seamonkey");
-    key->SetData(NS_LITERAL_STRING("seamonkey"));
+  // GNOME, simply copy data from a previous Seamonkey install. 
+  PRBool exists = PR_FALSE;
+  bpm = do_CreateInstance(NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX "phoenix");
+  if (bpm)
     bpm->GetSourceExists(&exists);
-    if (!exists) {
-      bpm = nsnull; 
-      key = nsnull;
-    }
+  if (exists) {
+    aKey = "phoenix";
+    return NS_OK;
   }
-  
-  NS_IF_ADDREF(*aKey = key);
-  NS_IF_ADDREF(*aMigrator = bpm);
+
+  bpm = do_CreateInstance(NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX "seamonkey");
+  if (bpm)
+    bpm->GetSourceExists(&exists);
+  if (exists) {
+    aKey = "seamonkey";
+    return NS_OK;
+  }
 #endif
 
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }
 
+PRBool
+nsProfileMigrator::ImportRegistryProfiles(const nsACString& aAppName)
+{
+  nsresult rv;
 
+  nsCOMPtr<nsIToolkitProfileService> profileSvc
+    (do_GetService(NS_PROFILESERVICE_CONTRACTID));
+  NS_ENSURE_TRUE(profileSvc, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIProperties> dirService
+    (do_GetService("@mozilla.org/file/directory_service;1"));
+  NS_ENSURE_TRUE(dirService, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsILocalFile> regFile;
+#ifdef XP_WIN
+  rv = dirService->Get(NS_WIN_APPDATA_DIR, NS_GET_IID(nsILocalFile),
+                       getter_AddRefs(regFile));
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+  regFile->AppendNative(aAppName);
+  regFile->AppendNative(NS_LITERAL_CSTRING("registry.dat"));
+#elif defined(XP_MACOSX)
+  rv = dirService->Get(NS_MAC_USER_LIB_DIR, NS_GET_IID(nsILocalFile),
+                       getter_AddRefs(regFile));
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+  regFile->AppendNative(aAppName);
+  regFile->AppendNative(NS_LITERAL_CSTRING("Application Registry"));
+#elif defined(XP_OS2)
+  rv = dirService->Get(NS_OS2_HOME_DIR, NS_GET_IID(nsILocalFile),
+                       getter_AddRefs(regFile));
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+  regFile->AppendNative(aAppName);
+  regFile->AppendNative(NS_LITERAL_CSTRING("registry.dat"));
+#else
+  rv = dirService->Get(NS_UNIX_HOME_DIR, NS_GET_IID(nsILocalFile),
+                       getter_AddRefs(regFile));
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+  nsCAutoString dotAppName;
+  ToLowerCase(aAppName, dotAppName);
+  dotAppName.Insert('.', 0);
+  
+  regFile->AppendNative(dotAppName);
+  regFile->AppendNative(NS_LITERAL_CSTRING("appreg"));
+#endif
+
+  nsCAutoString path;
+  rv = regFile->GetNativePath(path);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
+  if (NR_StartupRegistry())
+    return PR_FALSE;
+
+  PRBool migrated = PR_FALSE;
+  HREG reg = nsnull;
+  RKEY profiles = 0;
+  REGENUM enumstate = 0;
+  char profileName[MAXREGNAMELEN];
+
+  if (NR_RegOpen(path.get(), &reg))
+    goto cleanup;
+
+  if (NR_RegGetKey(reg, ROOTKEY_COMMON, "Profiles", &profiles))
+    goto cleanup;
+
+  while (!NR_RegEnumSubkeys(reg, profiles, &enumstate,
+                            profileName, MAXREGNAMELEN, REGENUM_CHILDREN)) {
+#ifdef DEBUG_bsmedberg
+    printf("Found profile %s.\n", profileName);
+#endif
+
+    RKEY profile = 0;
+    if (NR_RegGetKey(reg, profiles, profileName, &profile)) {
+      NS_ERROR("Could not get the key that was enumerated.");
+      continue;
+    }
+
+    char profilePath[MAXPATHLEN];
+    if (NR_RegGetEntryString(reg, profile, "directory",
+                             profilePath, MAXPATHLEN))
+      continue;
+
+    nsCOMPtr<nsILocalFile> profileFile
+      (do_CreateInstance("@mozilla.org/file/local;1"));
+    if (!profileFile)
+      continue;
+
+    rv = profileFile->InitWithNativePath(nsDependentCString(profilePath));
+    if (NS_FAILED(rv)) continue;
+
+    nsCOMPtr<nsIToolkitProfile> tprofile;
+    profileSvc->CreateProfile(profileFile, nsDependentCString(profileName),
+                              getter_AddRefs(tprofile));
+    migrated = PR_TRUE;
+  }
+
+cleanup:
+  if (reg)
+    NR_RegClose(reg);
+  NR_ShutdownRegistry();
+  return migrated;
+}

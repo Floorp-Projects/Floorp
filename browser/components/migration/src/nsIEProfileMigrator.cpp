@@ -63,6 +63,7 @@
 #include "nsIServiceManagerUtils.h"
 #include "nsISimpleEnumerator.h"
 #include "nsISupportsArray.h"
+#include "nsIProfileMigrator.h"
 #include "nsIBrowserProfileMigrator.h"
 #include "nsIObserverService.h"
 
@@ -427,9 +428,17 @@ user_pref("font.size.variable.x-western", 15);
 ///////////////////////////////////////////////////////////////////////////////
 // nsIBrowserProfileMigrator
 NS_IMETHODIMP
-nsIEProfileMigrator::Migrate(PRUint16 aItems, PRBool aReplace, const PRUnichar* aProfile) 
+nsIEProfileMigrator::Migrate(PRUint16 aItems, nsIProfileStartup* aStartup, const PRUnichar* aProfile)
 {
   nsresult rv = NS_OK;
+
+  PRBool aReplace = PR_FALSE;
+
+  if (aStartup) {
+    aReplace = PR_TRUE;
+    rv = aStartup->DoStartup();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   NOTIFY_OBSERVERS(MIGRATION_STARTED, nsnull);
 
@@ -1031,6 +1040,10 @@ nsIEProfileMigrator::CopyFavorites(PRBool aReplace) {
   rdf->GetResource(NS_LITERAL_CSTRING("NC:BookmarksRoot"), getter_AddRefs(root));
 
   nsCOMPtr<nsIBookmarksService> bms(do_GetService("@mozilla.org/browser/bookmarks-service;1"));
+  NS_ENSURE_TRUE(bms, NS_ERROR_FAILURE);
+  PRBool dummy;
+  bms->ReadBookmarks(&dummy);
+
   nsAutoString personalToolbarFolderName;
 
   nsCOMPtr<nsIRDFResource> folder;

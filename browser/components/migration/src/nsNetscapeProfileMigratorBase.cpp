@@ -46,8 +46,6 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefLocalizedString.h"
 #include "nsIPrefService.h"
-#include "nsIProfile.h"
-#include "nsIProfileInternal.h"
 #include "nsIRDFService.h"
 #include "nsIRegistry.h"
 #include "nsIServiceManager.h"
@@ -78,75 +76,6 @@ nsNetscapeProfileMigratorBase::nsNetscapeProfileMigratorBase()
 {
   nsCOMPtr<nsIStringBundleService> bundleService(do_GetService(kStringBundleServiceCID));
   bundleService->CreateBundle(MIGRATION_BUNDLE, getter_AddRefs(mBundle));
-}
-
-void
-nsNetscapeProfileMigratorBase::GetTargetProfile(const PRUnichar* aSuggestedName, PRBool aReplace)
-{
-  if (aReplace)
-    CreateTemplateProfile(aSuggestedName);
-  else {
-    nsCOMPtr<nsIProfileInternal> pmi(do_GetService("@mozilla.org/profile/manager;1"));
-    nsXPIDLString currProfile;
-    pmi->GetCurrentProfile(getter_Copies(currProfile));
-    nsCOMPtr<nsIFile> dir;
-    pmi->GetProfileDir(currProfile.get(), getter_AddRefs(dir));
-    mTargetProfile = do_QueryInterface(dir);
-  }
-}
-
-void
-nsNetscapeProfileMigratorBase::CreateTemplateProfile(const PRUnichar* aSuggestedName)
-{
-  nsCOMPtr<nsIFile> profilesDir;
-  NS_GetSpecialDirectory(NS_APP_USER_PROFILES_ROOT_DIR, getter_AddRefs(profilesDir));
-
-  nsXPIDLString profileName;
-  GetUniqueProfileName(profilesDir, aSuggestedName, getter_Copies(profileName));
-
-  nsAutoString profilesDirPath;
-  profilesDir->GetPath(profilesDirPath);
-
-  nsCOMPtr<nsIProfile> pm(do_GetService("@mozilla.org/profile/manager;1"));
-  pm->CreateNewProfile(profileName.get(), profilesDirPath.get(), nsnull, PR_TRUE);
-
-  nsCOMPtr<nsIProfileInternal> pmi(do_QueryInterface(pm));
-  nsCOMPtr<nsIFile> target;
-  pmi->GetProfileDir(profileName.get(), getter_AddRefs(target));
-  mTargetProfile = do_QueryInterface(target);
-}
-
-void
-nsNetscapeProfileMigratorBase::GetUniqueProfileName(nsIFile* aProfilesDir, 
-                                                    const PRUnichar* aSuggestedName,
-                                                    PRUnichar** aUniqueName)
-{
-  PRBool exists = PR_FALSE;
-  PRUint32 count = 1;
-  nsXPIDLString profileName;
-  nsAutoString profileNameStr(aSuggestedName);
-  
-  nsCOMPtr<nsIFile> newProfileDir;
-  aProfilesDir->Clone(getter_AddRefs(newProfileDir));
-  newProfileDir->Append(profileNameStr);
-  newProfileDir->Exists(&exists);
-
-  while (exists) {
-    nsAutoString countString;
-    countString.AppendInt(count);
-    const PRUnichar* strings[2] = { aSuggestedName, countString.get() };
-    mBundle->FormatStringFromName(NS_LITERAL_STRING("profileName_format").get(), strings, 2, getter_Copies(profileName));
-
-    nsCOMPtr<nsIFile> newProfileDir;
-    aProfilesDir->Clone(getter_AddRefs(newProfileDir));
-    newProfileDir->Append(profileName);
-    newProfileDir->Exists(&exists);
-
-    profileNameStr = profileName.get();
-    ++count;
-  }
-
-  *aUniqueName = ToNewUnicode(profileNameStr);
 }
 
 nsresult

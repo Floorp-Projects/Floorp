@@ -54,8 +54,10 @@ REQUIRES = \
 	dom \
 	embed_base \
 	embedcomponents \
+	extensions \
 	gfx \
 	intl \
+	js \
 	locale \
 	necko \
 	pref \
@@ -68,6 +70,7 @@ REQUIRES = \
 	widget \
 	windowwatcher \
   winhooks \
+	xulapp \
 	xpcom \
 	xpconnect \
 	xpinstall \
@@ -87,47 +90,31 @@ FORCE_STATIC_LIB = 1
 EXPORTS = nsXULAppAPI.h
 
 SHAREDCPPSRCS = \
-	nsNativeAppSupportBase.cpp \
 	nsWindowCreator.cpp \
 	showOSAlert.cpp \
 	$(NULL)
-
-ifneq (,$(filter gtk gtk2,$(MOZ_WIDGET_TOOLKIT)))
-SHAREDCPPSRCS += nsNativeAppSupportGtk.cpp
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
-SHAREDCPPSRCS += nsNativeAppSupportOS2.cpp
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
-SHAREDCPPSRCS += nsNativeAppSupportBeOS.cpp
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
-SHAREDCPPSRCS += nsNativeAppSupportMac.cpp
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-SHAREDCMMSRCS += nsNativeAppSupportForCocoa.mm
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),photon)
-SHAREDCPPSRCS += nsNativeAppSupportPh.cpp
-endif
 
 CPPSRCS = \
 	$(SHAREDCPPSRCS) \
 	nsAppRunner.cpp \
 	nsXREDirProvider.cpp \
+	nsNativeAppSupportBase.cpp \
 	$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 CPPSRCS += nsNativeAppSupportWin.cpp
 DEFINES += -DWIN32_LEAN_AND_MEAN
+else
+ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
+CPPSRCS += nsNativeAppSupportMac.cpp
+else
+CPPSRCS += nsNativeAppSupportDefault.cpp
+endif
 endif
 
-CMMSRCS = $(SHAREDCMMSRCS)
+ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
+CMSRCS = MacLaunchHelper.m
+endif
 
 ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
 STACKWALK_SRC_LCSRCS =               \
@@ -148,9 +135,11 @@ ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
 GARBAGE += $(STACKWALK_SRC_LCSRCS)
 endif
 
+SHARED_LIBRARY_LIBS += ../profile/src/$(LIB_PREFIX)profile_s.$(LIB_SUFFIX)
+
 include $(topsrcdir)/config/rules.mk
 
-LOCAL_INCLUDES += -I$(topsrcdir)/xpfe/bootstrap -I.
+LOCAL_INCLUDES +=  -I$(topsrcdir)/xpfe/bootstrap -I$(srcdir)/../profile/src
 CXXFLAGS += $(TK_CFLAGS)
 
 ifdef BUILD_STATIC_LIBS

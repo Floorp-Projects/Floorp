@@ -40,6 +40,47 @@ pref("general.useragent.vendorSub",
 #expand __APP_VERSION__
 );
 
+// This is this application's unique identifier used by the Extension System to identify
+// this application as an extension target, and by the SmartUpdate system to identify
+// this application to the Update server.
+pref("app.id", "{3550f703-e582-4d05-9a08-453d09bdfdc6}");
+pref("app.version", 
+#expand __APP_VERSION__
+);
+pref("app.build_id", 
+#expand __BUILD_ID__
+);
+
+#ifdef XP_MACOSX
+pref("mail.biff.animate_dock_icon", false);
+#endif
+
+pref("update.app.enabled", true);
+pref("update.app.url", "chrome://mozapps/locale/update/update.properties");
+pref("update.app.updatesAvailable", false);
+pref("update.app.updateVersion", "");
+pref("update.app.updateDescription", "");
+pref("update.app.updateURL", "");
+pref("update.extensions.enabled", true);
+pref("update.extensions.wsdl", "chrome://mozapps/locale/extensions/extensions.properties");
+pref("extensions.getMoreExtensionsURL", "chrome://mozapps/locale/extensions/extensions.properties");
+pref("extensions.getMoreThemesURL", "chrome://mozapps/locale/extensions/extensions.properties");
+// Automatically download and install updates to themes and extensions.
+pref("update.extensions.autoUpdate", false);
+
+pref("update.interval", 604800000); // every 7 days
+pref("update.lastUpdateDate", 0); // UTC offset when last update was performed. 
+
+// These prefs relate to the number and severity of updates available. This is a 
+// cache that the browser notification mechanism uses to determine if it should show
+// status bar UI if updates are detected and the app is shut down before installing
+// them.
+// 0 = low (extension/theme updates), 1 = medium (app minor version), 2 = high (major version)
+pref("update.severity", 0); 
+// The number of extension/theme/etc updates available
+pref("update.extensions.count", 0);
+
+
 /////////////////////////////////////////////////////////////////
 // Overrides of the seamonkey suite mailnews.js prefs
 ///////////////////////////////////////////////////////////////// 
@@ -130,8 +171,10 @@ pref("network.hosts.pop_server",            "mail");
 pref("general.config.obscure_value", 0); // for MCD .cfg files
 
 pref("xpinstall.dialog.confirm", "chrome://communicator/content/xpinstall/institems.xul");
-pref("xpinstall.dialog.progress", "chrome://communicator/content/xpinstall/xpistatus.xul");
-pref("xpinstall.dialog.progress.type", "");
+pref("xpinstall.dialog.progress.skin", "chrome://mozapps/content/extensions/extensions.xul?type=themes");
+pref("xpinstall.dialog.progress.chrome", "chrome://mozapps/content/extensions/extensions.xul?type=extensions");
+pref("xpinstall.dialog.progress.type.skin", "Extension:Manager-themes"); 
+pref("xpinstall.dialog.progress.type.chrome", "Extension:Manager-extensions");
 
 /////////////////////////////////////////////////////////////////
 // End seamonkey suite all.js pref overrides

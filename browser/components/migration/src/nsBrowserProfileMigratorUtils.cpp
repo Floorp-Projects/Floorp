@@ -36,7 +36,13 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsBrowserProfileMigratorUtils.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
+#include "nsIProperties.h"
+#include "nsIProfileMigrator.h"
+
+#include "nsIServiceManagerUtils.h"
+#include "nsAppDirectoryServiceDefs.h"
+#include "nsXPCOMCID.h"
 #include "nsCRT.h"
 
 void SetProxyPref(const nsACString& aHostPort, const char* aPref, 
@@ -81,7 +87,7 @@ void ParseOverrideServers(const char* aServers, nsIPrefBranch* aBranch)
 }
 
 void GetMigrateDataFromArray(MigrationData* aDataArray, PRInt32 aDataArrayLength, 
-                             PRBool aReplace, nsILocalFile* aSourceProfile, 
+                             PRBool aReplace, nsIFile* aSourceProfile, 
                              PRUint16* aResult)
 {
   nsCOMPtr<nsIFile> sourceFile; 
@@ -101,5 +107,21 @@ void GetMigrateDataFromArray(MigrationData* aDataArray, PRInt32 aDataArrayLength
     }
     nsCRT::free(cursor->fileName);
     cursor->fileName = nsnull;
+  }
+}
+
+void
+GetProfilePath(nsIProfileStartup* aStartup, nsCOMPtr<nsIFile>& aProfileDir)
+{
+  if (aStartup) {
+    aStartup->GetDirectory(getter_AddRefs(aProfileDir));
+  }
+  else {
+    nsCOMPtr<nsIProperties> dirSvc
+      (do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID));
+    if (dirSvc) {
+      dirSvc->Get(NS_APP_USER_PROFILE_50_DIR, NS_GET_IID(nsIFile),
+                  (void**) getter_AddRefs(aProfileDir));
+    }
   }
 }

@@ -85,9 +85,6 @@ static PRBool OnMacOSX();
 
 #include "nsAppShellService.h"
 #include "nsIProfileInternal.h"
-#ifdef MOZ_PHOENIX
-#include "nsIProfileMigrator.h"
-#endif
 #include "nsIProfileChangeStatus.h"
 #include "nsICloseAllWindows.h"
 #include "nsISupportsPrimitives.h"
@@ -122,17 +119,6 @@ nsAppShellService::nsAppShellService() :
 
 nsAppShellService::~nsAppShellService()
 {
-  mDeleteCalled = PR_TRUE;
-  nsCOMPtr<nsIWebShellWindow> hiddenWin(do_QueryInterface(mHiddenWindow));
-  if(hiddenWin) {
-    ClearXPConnectSafeContext();
-    hiddenWin->Close();
-  }
-  /* Note we don't unregister with the observer service
-     (RegisterObserver(PR_FALSE)) because, being refcounted, we can't have
-     reached our own destructor until after the ObserverService has shut down
-     and released us. This means we leak until the end of the application, but
-     so what; this is the appshell service. */
 }
 
 
@@ -162,9 +148,11 @@ nsAppShellService::Initialize( nsICmdLineService *aCmdLineService,
   // Remember where the native app support lives.
   mNativeAppSupport = do_QueryInterface(aNativeAppSupportOrSplashScreen);
 
+#ifndef MOZ_XUL_APP
   // Or, remember the splash screen (for backward compatibility).
   if (!mNativeAppSupport)
     mSplashScreen = do_QueryInterface(aNativeAppSupportOrSplashScreen);
+#endif
 
   NS_TIMELINE_ENTER("nsComponentManager::CreateInstance.");
   // Create widget application shell
@@ -217,8 +205,10 @@ nsresult nsAppShellService::ClearXPConnectSafeContext()
 
   nsCOMPtr<nsIThreadJSContextStack> cxstack =
     do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
-  if (NS_FAILED(rv))
+  if (NS_FAILED(rv)) {
+    NS_ERROR("XPConnect ContextStack gone before XPCOM shutdown?");
     return rv;
+  }
 
   nsCOMPtr<nsIDOMWindowInternal> junk;
   JSContext *cx;
@@ -260,6 +250,14 @@ nsAppShellService::AttemptingQuit(PRBool aAttempt)
 #endif
 }
 
+#ifdef MOZ_XUL_APP
+NS_IMETHODIMP
+nsAppShellService::DoProfileStartup(nsICmdLineService *aCmdLineService, PRBool canInteract)
+{
+  NS_NOTREACHED("Don't call me, I'm dead!");
+  return NS_ERROR_FAILURE;
+}
+#else
 NS_IMETHODIMP
 nsAppShellService::DoProfileStartup(nsICmdLineService *aCmdLineService, PRBool canInteract)
 {
@@ -270,38 +268,6 @@ nsAppShellService::DoProfileStartup(nsICmdLineService *aCmdLineService, PRBool c
 
     EnterLastWindowClosingSurvivalArea();
 
-#ifdef MOZ_PHOENIX
-    // This will eventually change to MOZ_XULAPP
-
-    // Profile Manager has a number of command line arguments... most of which relate to
-    // management UI or options for starting a specific profile. The migration code we're
-    // about to execute occurs ONLY in the situation when there are NO profiles. 
-    // 
-    // In this case there are only TWO profile manager flags that are of concern to us - 
-    // -CreateProfile (used by various automation processes) and -ProfileWizard - these
-    // are the only two commands valid in the no-profile case - users of these commands
-    // do NOT want the automigration UI to appear, so we explicitly check for these flags
-    // before invoking anything.
-    nsXPIDLCString isCreateProfile, isCreateProfileWizard;
-    aCmdLineService->GetCmdLineValue("-CreateProfile", getter_Copies(isCreateProfile));
-    aCmdLineService->GetCmdLineValue("-ProfileWizard", getter_Copies(isCreateProfileWizard));
-
-    if (isCreateProfile.IsEmpty() && isCreateProfileWizard.IsEmpty()) {
-      PRInt32 numProfiles = 0;
-      profileMgr->GetProfileCount(&numProfiles);
-
-      if (numProfiles == 0) {
-        nsCOMPtr<nsIProfileMigrator> pm(do_CreateInstance("@mozilla.org/profile/migrator;1", &rv));
-        if (NS_SUCCEEDED(rv))
-          rv = pm->Migrate();
-        if (NS_FAILED(rv)) {
-          // Migration failed for some reason, or there was no profile migrator. 
-          // Create a generic default profile. 
-          rv = profileMgr->CreateDefaultProfile();
-        }
-      }
-    }
-#endif
 
     // If we are being launched in turbo mode, profile mgr cannot show UI
     rv = profileMgr->StartupWithArgs(aCmdLineService, canInteract);
@@ -310,13 +276,11 @@ nsAppShellService::DoProfileStartup(nsICmdLineService *aCmdLineService, PRBool c
         rv = NS_OK;
     }
 
-#ifndef MOZ_PHOENIX
     if (NS_SUCCEEDED(rv)) {
         rv = CheckAndRemigrateDefunctProfile();
         NS_ASSERTION(NS_SUCCEEDED(rv), "failed to check and remigrate profile");
         rv = NS_OK;
     }
-#endif
 
     ExitLastWindowClosingSurvivalArea();
 
@@ -325,8 +289,9 @@ nsAppShellService::DoProfileStartup(nsICmdLineService *aCmdLineService, PRBool c
       return NS_ERROR_FAILURE;
     return rv;
 }
+#endif
 
-#ifndef MOZ_PHOENIX
+#ifndef MOZ_XUL_APP
 nsresult
 nsAppShellService::CheckAndRemigrateDefunctProfile()
 {
@@ -560,6 +525,7 @@ nsAppShellService::Quit(PRUint32 aFerocity)
     if (!windowsRemain) {
       aFerocity = eAttemptQuit;
 
+#ifndef MOZ_XUL_APP
       // Check to see if we should quit in this case.
       if (mNativeAppSupport) {
         PRBool serverMode = PR_FALSE;
@@ -571,6 +537,7 @@ nsAppShellService::Quit(PRUint32 aFerocity)
           return NS_OK;
         }
       }
+#endif
     }
   }
 
@@ -1231,6 +1198,7 @@ nsAppShellService::OpenWindow(const nsAFlatCString& aChromeURL,
   if (!wwatch || !sarg)
     return NS_ERROR_FAILURE;
 
+#ifndef MOZ_XUL_APP
   // Make sure a profile is selected.
 
   // We need the native app support object. If this fails, we still proceed.
@@ -1254,6 +1222,7 @@ nsAppShellService::OpenWindow(const nsAFlatCString& aChromeURL,
         return NS_ERROR_NOT_INITIALIZED;
     }
   }
+#endif
 
   sarg->SetData(aAppArgs);
 
@@ -1278,6 +1247,7 @@ nsAppShellService::Ensure1Window(nsICmdLineService *aCmdLineService)
 {
   nsresult rv;
 
+#ifndef MOZ_XUL_APP
   // If starting up in server mode, then we do things differently.
   nsCOMPtr<nsINativeAppSupport> nativeApp;
   rv = GetNativeAppSupport(getter_AddRefs(nativeApp));
@@ -1293,6 +1263,7 @@ nsAppShellService::Ensure1Window(nsICmdLineService *aCmdLineService)
           return NS_OK;
       }
   }
+#endif
   
   nsCOMPtr<nsIWindowMediator> windowMediator(do_GetService(kWindowMediatorCID, &rv));
   if (NS_FAILED(rv))
@@ -1431,11 +1402,13 @@ NS_IMETHODIMP nsAppShellService::Observe(nsISupports *aSubject,
       if (isNative)
         mAppShell->ListenToEventQueue(eq, PR_FALSE);
     }
+#ifndef MOZ_XUL_APP
   } else if (!strcmp(aTopic, gSkinSelectedTopic) ||
              !strcmp(aTopic, gLocaleSelectedTopic) ||
              !strcmp(aTopic, gInstallRestartTopic)) {
     if (mNativeAppSupport)
       mNativeAppSupport->SetIsServerMode(PR_FALSE);
+#endif
   } else if (!strcmp(aTopic, gProfileChangeTeardownTopic)) {
     nsresult rv;
     EnterLastWindowClosingSurvivalArea();
@@ -1460,6 +1433,13 @@ NS_IMETHODIMP nsAppShellService::Observe(nsISupports *aSubject,
     CreateStartupState(SIZE_TO_CONTENT, SIZE_TO_CONTENT, &openedWindow);
     if (!openedWindow)
       OpenBrowserWindow(SIZE_TO_CONTENT, SIZE_TO_CONTENT);
+  } else if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
+    mDeleteCalled = PR_TRUE;
+    nsCOMPtr<nsIWebShellWindow> hiddenWin(do_QueryInterface(mHiddenWindow));
+    if(hiddenWin) {
+      ClearXPConnectSafeContext();
+      hiddenWin->Close();
+    }
   }
   return NS_OK;
 }
@@ -1487,6 +1467,7 @@ void nsAppShellService::RegisterObserver(PRBool aRegister)
       os->AddObserver(weObserve, gInstallRestartTopic, PR_TRUE);
       os->AddObserver(weObserve, gProfileChangeTeardownTopic, PR_TRUE);
       os->AddObserver(weObserve, gProfileInitialStateTopic, PR_TRUE);
+      os->AddObserver(weObserve, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_TRUE);
     } else {
       os->RemoveObserver(weObserve, gEQActivatedNotification);
       os->RemoveObserver(weObserve, gEQDestroyedNotification);
@@ -1495,6 +1476,7 @@ void nsAppShellService::RegisterObserver(PRBool aRegister)
       os->RemoveObserver(weObserve, gInstallRestartTopic);
       os->RemoveObserver(weObserve, gProfileChangeTeardownTopic);
       os->RemoveObserver(weObserve, gProfileInitialStateTopic);
+      os->RemoveObserver(weObserve, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
     }
     NS_RELEASE(glop);
   }
@@ -1502,12 +1484,15 @@ void nsAppShellService::RegisterObserver(PRBool aRegister)
 
 NS_IMETHODIMP
 nsAppShellService::HideSplashScreen() {
+#ifndef MOZ_XUL_APP
     // Hide the splash screen.
     if ( mNativeAppSupport ) {
         mNativeAppSupport->HideSplashScreen();
-    } else if ( mSplashScreen ) {
+    }
+    else if ( mSplashScreen ) {
         mSplashScreen->Hide();
     }
+#endif
     return NS_OK;
 }
 

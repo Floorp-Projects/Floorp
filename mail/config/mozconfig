@@ -13,6 +13,7 @@ ac_add_options --disable-activex-scripting
 ac_add_options --disable-tests
 ac_add_options --disable-oji
 ac_add_options --disable-necko-disk-cache
+ac_add_options --enable-single-profile
 ac_add_options --disable-profilesharing
 ac_add_options --enable-extensions=wallet,spellcheck,xmlextras
 ac_add_options --enable-necko-protocols=http,file,jar,viewsource,res,data

@@ -55,10 +55,6 @@
   margin: 0px 5px 0px 0px !important;
 }
 
-#uninstallButton[disabled="true"] {
-  list-style-image: url("chrome://mozapps/skin/extensions/placeholder.gif");
-}
-
 .commandBarSeparator {
   margin-left: 5px;
 }

@@ -9,7 +9,13 @@
     
     <!-- Target Application this extension can install into, 
         with minimum and maximum supported versions. --> 
-    <em:targetApplication>{ec8030f7-c20a-464f-9b0e-13a3a9e97384},0.7,1.2</em:targetApplication>
+    <em:targetApplication>
+      <Description>
+        <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
+        <em:minVersion>0.8</em:minVersion>
+        <em:maxVersion>0.9</em:maxVersion>
+      </Description>
+    </em:targetApplication>
     
     <!-- Front End MetaData -->
     <em:name>DOM Inspector</em:name>

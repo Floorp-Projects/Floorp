@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *  Brian Ryner <bryner@brianryner.com>
+ *  Benjamin Smedberg <bsmedberg@covad.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -40,47 +41,60 @@
 #define _nsXULAppAPI_h__
 
 #include "prtypes.h"
-#include "nsCRT.h"
-#include "nsString.h"
+class nsILocalFile;
 
-// This class holds application-specific information used to
-// initialize the XUL environment.
+/**
+ * Application-specific data needed to start the apprunner.
+ */
 
-class nsXREAppData {
-public:
-  nsXREAppData()
-    : mUseSplash(PR_FALSE), mUseStartupPrefs(PR_FALSE) { }
+struct nsXREAppData
+{
+  /**
+   * The name of the application vendor. This must be ASCII, and is normally
+   * mixed-case, e.g. "Mozilla".
+   */
+  const char *appVendor;
 
-  // Set whether the application should use a splash screen.
-  // If set to true, the splash screen must be linked to the application as follows:
-  //   Windows: via an IDB_SPLASH bitmap resource
-  //   Unix: via an xpm named splash_xpm
-  void SetSplashEnabled(PRBool aEnabled) { mUseSplash = aEnabled; }
-  PRBool GetSplashEnabled() const { return mUseSplash; }
+  /**
+   * The name of the application. This must be ASCII, and is normally
+   * mixed-case, e.g. "Firefox".
+   */
+  const char *appName;
 
-  // Set the product name for this application.
-  // The product name is used for determining the profile location.
-  // On Windows, profiles will be in Documents and Settings\<user>\<ProductName>
-  // On Unix, profiles will be in ~/.<ProductName>
-  void SetProductName(const nsACString& aName) { mProductName.Assign(aName); }
-  const nsACString& GetProductName() const { return mProductName; }
+  /**
+   * The major version, e.g. "0.8.0+"
+   */
+  const char *appVersion;
 
-  // Set whether the "general.startup.*" prefs are processed if no
-  // command line arguments are given.
-  void SetUseStartupPrefs(PRBool aUsePrefs) { mUseStartupPrefs = aUsePrefs; }
-  PRBool GetUseStartupPrefs() const { return mUseStartupPrefs; }
+  /** 
+   * The application's build identifier, e.g. "2004051604"
+   */
+  const char *appBuildID;
 
-private:
-  PRPackedBool mUseSplash;
-  PRPackedBool mUseStartupPrefs;
-  nsCString mProductName;
+  /**
+   * The copyright information to print for the -h commandline flag,
+   * e.g. "Copyright (c) 2003 mozilla.org".
+   */
+  const char *copyright;
+
+  PRBool useStartupPrefs; // XXXbsmedberg this is going away
 };
 
-// Call this function to begin execution of the XUL application.
-// This function does not return until the user exits the application.
-// The return code is a native result code suitable for returning from
-// your main() function.
+/**
+ * Begin an XUL application. Does not return until the user exits the
+ * application.
+ * @param aAppData Information about the application being run.
+ * @return         A native result code suitable for returning from main().
+ *
+ * @note           If the binary is linked against the  standalone XPCOM glue,
+ *                 XPCOMGlueStartup() should be called before this method.
+ *
+ * @note           XXXbsmedberg Nobody uses the glue yet, but there is a
+ *                 potentital problem: on windows, the glue calls
+ *                 SetCurrentDirectory, and relative paths on the command line
+ *                 won't be correct.
+ */
 
-int xre_main(int argc, char* argv[], const nsXREAppData& aAppData);
+int xre_main(int argc, char* argv[], const nsXREAppData* aAppData);
 
 #endif // _nsXULAppAPI_h__

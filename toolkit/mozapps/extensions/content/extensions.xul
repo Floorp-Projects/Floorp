@@ -85,6 +85,9 @@
     <command id="cmd_options"/>
     <command id="cmd_about"/>
     <command id="cmd_homepage"/>
+#ifdef MOZ_THUNDERBIRD
+    <command id="cmd_install"/>
+#endif
     <command id="cmd_uninstall"/>
     <command id="cmd_update"/>
     <command id="cmd_enable"/>
@@ -246,6 +249,11 @@
   <hbox>
     <hbox id="commandBar" flex="1" align="center">
       <hbox>
+#ifdef MOZ_THUNDERBIRD
+        <button id="installButton"
+                label="&cmd.install.label;" accesskey="&cmd.install.accesskey;" tooltiptext="&cmd.install.tooltip;" 
+                command="cmd_install"/>
+#endif
         <button id="uninstallButton" 
                 label="&cmd.uninstall.label;" accesskey="&cmd.uninstall.accesskey;" tooltiptext="&cmd.uninstall.tooltip;" 
                 command="cmd_uninstall"/>

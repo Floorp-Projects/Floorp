@@ -26,7 +26,7 @@ VPATH   = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS    = compose prefwindow addrbook
+DIRS    = compose prefwindow addrbook migration
 
 include $(topsrcdir)/config/rules.mk
 

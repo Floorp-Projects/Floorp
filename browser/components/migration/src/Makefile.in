@@ -50,10 +50,9 @@ REQUIRES	= \
 		  string \
 		  necko \
 		  history \
+		  libreg \
 		  browsercomps \
 		  toolkitcomps \
-		  profile \
-		  profilemanager \
 		  pref \
 		  rdf \
 		  satchel \
@@ -64,16 +63,20 @@ REQUIRES	= \
 		  dom \
 		  docshell \
 		  cookie \
+		  xulapp \
 		  $(NULL)
 
 CPPSRCS  = nsProfileMigrator.cpp \
            nsBrowserProfileMigratorUtils.cpp \
            nsNetscapeProfileMigratorBase.cpp \
-           nsDogbertProfileMigrator.cpp \
            nsSeamonkeyProfileMigrator.cpp \
            nsPhoenixProfileMigrator.cpp \
            nsINIParser.cpp \
            $(NULL)
+
+ifneq ($(OS_ARCH),BeOS)
+CPPSRCS += nsDogbertProfileMigrator.cpp
+endif
 
 ifneq ($(OS_ARCH),OS2)
 CPPSRCS += nsOperaProfileMigrator.cpp
@@ -85,7 +88,7 @@ DEFINES += -DPSTOREC_DLL=\"$(subst \,\\,$(WINDIR))\\system32\\pstorec.dll\"
 CPPSRCS += nsIEProfileMigrator.cpp \
            $(NULL)
 endif
-            
+
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 CPPSRCS += nsSafariProfileMigrator.cpp \
            nsMacIEProfileMigrator.cpp \

@@ -82,7 +82,9 @@ protected:
   nsCOMPtr<nsPIWindowWatcher> mWindowWatcher;
   nsCOMPtr<nsIXULWindow>      mHiddenWindow;
   PRBool mDeleteCalled;
+#ifndef MOZ_XUL_APP
   nsCOMPtr<nsISplashScreen> mSplashScreen;
+#endif
   nsCOMPtr<nsINativeAppSupport> mNativeAppSupport;
 
   PRUint16     mModalWindowCount;
@@ -95,7 +97,7 @@ protected:
   PR_STATIC_CALLBACK(void) DestroyExitEvent(PLEvent* aEvent);
 
 private:
-#ifndef MOZ_PHOENIX  
+#ifndef MOZ_XUL_APP
   nsresult CheckAndRemigrateDefunctProfile();
 #endif
 

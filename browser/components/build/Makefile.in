@@ -17,8 +17,6 @@ REQUIRES = \
 	string \
 	autocomplete \
 	mork \
-	profile \
-	profilemanager \
 	pref \
 	rdf \
 	intl \
@@ -30,6 +28,7 @@ REQUIRES = \
 	bookmarks \
 	migration \
 	shellservice \
+	xulapp \
 	$(NULL)
 
 EXPORTS = nsBrowserCompsCID.h

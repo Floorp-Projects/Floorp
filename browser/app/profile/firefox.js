@@ -54,9 +54,13 @@ pref("app.id", "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}");
 pref("app.version", 
 #expand __APP_VERSION__
 );
+pref("app.build_id", 
+#expand __BUILD_ID__
+);
 
 pref("update.app.enabled", true);
 pref("update.app.url", "chrome://mozapps/locale/update/update.properties");
+pref("update.app.updatesAvailable", false);
 pref("update.app.updateVersion", "");
 pref("update.app.updateDescription", "");
 pref("update.app.updateURL", "");
