@@ -38,6 +38,7 @@ EXPORT_RESOURCE = \
 		$(srcdir)/toolbar.css \
 		$(srcdir)/dialogOverlay.css \
 		$(srcdir)/tasksOverlay.css \
+		$(srcdir)/search-widgets.css \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
