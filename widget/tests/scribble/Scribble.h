@@ -46,7 +46,7 @@ struct ScribbleApp {
 };
 
 
-nsresult CreateApplication();
+nsresult CreateApplication(int * argc, char ** argv);
 
 #endif
 
