@@ -516,13 +516,18 @@ NS_IMETHODIMP nsMailDatabase::GetOfflineOpForKey(nsMsgKey msgKey, PRBool create,
 		nsIMdbRow *offlineOpRow;
 		err = m_mdbStore->GetRow(GetEnv(), &rowObjectId, &offlineOpRow);
 
-    if (!offlineOpRow && create)
+    if (create)
     {
-      err  = m_mdbStore->NewRowWithOid(GetEnv(), &rowObjectId, &offlineOpRow);
-      NS_ENSURE_SUCCESS(err, err);
-      if (offlineOpRow)
+      if (!offlineOpRow)
+      {
+        err  = m_mdbStore->NewRowWithOid(GetEnv(), &rowObjectId, &offlineOpRow);
+        NS_ENSURE_SUCCESS(err, err);
+      }
+      if (offlineOpRow && !hasOid)
+      {
         m_mdbAllOfflineOpsTable->AddRow(GetEnv(), offlineOpRow);
-      newOp = PR_TRUE;
+        newOp = PR_TRUE;
+      }
     }
 
 		if (err == NS_OK && offlineOpRow)
