@@ -152,7 +152,10 @@ alpha-*-linux*)
 
 *-irix*)
     AC_DEFINE(IRIX6_3)
-
+    DSO_LDOPTS='-elf -shared -all'
+    LD_ALL='-all'
+    LD_NONE='-none'
+    CFLAGS="$CFLAGS -woff 3262" ;;
 
 esac
 
