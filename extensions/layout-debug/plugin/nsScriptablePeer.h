@@ -56,7 +56,6 @@
 #include "nsMemory.h"
 #include "nsNetUtil.h"
 #include "nsString.h"
-#include "nsIPref.h"
 
 
 class nsPluginInstance;

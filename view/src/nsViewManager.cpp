@@ -54,7 +54,8 @@
 #include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"
 #include "nsGUIEvent.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 #include "nsRegion.h"
 #include "nsInt64.h"
 
@@ -612,10 +613,10 @@ PRBool DoDoubleBuffering(void)
   static PRBool doDoublebuffering    = PR_TRUE;  /* Double-buffering is ON by default */
   
   if (!gotDoublebufferPrefs) {
-    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
-    if (prefs) {
+    nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    if (prefBranch) {
       PRBool val;
-      if (NS_SUCCEEDED(prefs->GetBoolPref("viewmanager.do_doublebuffering", &val))) {
+      if (NS_SUCCEEDED(prefBranch->GetBoolPref("viewmanager.do_doublebuffering", &val))) {
         doDoublebuffering = val;
       }
     }

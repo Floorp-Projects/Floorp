@@ -44,7 +44,7 @@
 #include "nsWebCrawler.h"
 
 class nsIEventQueueService;
-class nsIPref;
+class nsIPrefService;
 class nsBrowserWindow;
 
 class nsViewerApp : public nsISupports, public nsDispatchListener
@@ -84,7 +84,7 @@ protected:
   void Destroy();
 
   nsIAppShell* mAppShell;
-  nsIPref* mPrefs;
+  nsIPrefService* mPrefService;
   nsString mStartURL;
   PRBool mDoPurify;
   PRBool mLoadTestFromFile;

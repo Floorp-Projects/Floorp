@@ -119,7 +119,6 @@ extern nsresult NS_NewXPBaseWindowFactory(nsIFactory** aFactory);
 
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kAppShellCID, NS_APPSHELL_CID);
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_IID(kXPBaseWindowCID, NS_XPBASE_WINDOW_CID);
 static NS_DEFINE_IID(kCookieServiceCID, NS_COOKIESERVICE_CID);
 
@@ -210,9 +209,7 @@ nsViewerApp::Destroy()
     NS_RELEASE(mCrawler);
   }
 
-  if (nsnull != mPrefs) {
-    NS_RELEASE(mPrefs);
-  }
+  NS_IF_RELEASE(mPrefService);
 }
 
 class nsTestFormProcessor : public nsIFormProcessor {
@@ -326,12 +323,11 @@ nsViewerApp::Initialize(int argc, char** argv)
   mAppShell->SetDispatchListener((nsDispatchListener*) this);
 
   // Load preferences
-  rv = nsComponentManager::CreateInstance(kPrefCID, NULL, kIPrefIID,
-                                          (void **) &mPrefs);
+  rv = CallGetService(NS_PREFSERVICE_CONTRACTID, &mPrefService);
   if (NS_OK != rv) {
     return rv;
   }
-  mPrefs->ReadUserPrefs(nsnull);
+  mPrefService->ReadUserPrefs(nsnull);
 
   // Finally process our arguments
   rv = ProcessArguments(argc, argv);

@@ -26,7 +26,6 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "plstr.h"
-#include "nsIPref.h"
 #include "nsCRT.h"
 
 //////////////////////////

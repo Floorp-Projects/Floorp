@@ -48,7 +48,8 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptGlobalObjectOwner.h"
 
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
@@ -65,9 +66,6 @@ static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 
 static NS_DEFINE_IID(kIInstallTrigger_IID, NS_IDOMINSTALLTRIGGERGLOBAL_IID);
 static NS_DEFINE_IID(kIInstallTrigger_CID, NS_SoftwareUpdateInstallTrigger_CID);
-
-static NS_DEFINE_IID(kPrefsIID, NS_IPREF_IID);
-static NS_DEFINE_IID(kPrefsCID,  NS_PREF_CID);
 
 nsInstallTrigger::nsInstallTrigger()
 {
@@ -172,23 +170,16 @@ nsInstallTrigger::HandleContent(const char * aContentType,
 NS_IMETHODIMP
 nsInstallTrigger::UpdateEnabled(PRBool* aReturn)
 {
-    nsIPref * prefs;
+    nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
 
-    nsresult rv = nsServiceManager::GetService(kPrefsCID,
-                                               kPrefsIID,
-                                               (nsISupports**) &prefs);
-
-
-    if ( NS_SUCCEEDED(rv) )
+    if ( prefBranch )
     {
-        rv = prefs->GetBoolPref( (const char*) XPINSTALL_ENABLE_PREF, aReturn);
+        nsresult rv = prefBranch->GetBoolPref( (const char*) XPINSTALL_ENABLE_PREF, aReturn);
 
         if (NS_FAILED(rv))
         {
             *aReturn = PR_FALSE;
         }
-
-        NS_RELEASE(prefs);
     }
     else
     {

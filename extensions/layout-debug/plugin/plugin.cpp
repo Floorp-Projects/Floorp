@@ -46,7 +46,6 @@
 #include "nsMemory.h"
 #include "nsNetUtil.h"
 #include "nsString.h"
-#include "nsIPref.h"
 
 // service manager which will give the access to all public browser services
 // we will use memory service as an illustration

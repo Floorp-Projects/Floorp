@@ -45,7 +45,8 @@
 #include "nsIURL.h"
 #include "nsIJARURI.h"
 #include "nsCOMPtr.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
@@ -111,13 +112,12 @@ nsCodebasePrincipal::CanEnableCapability(const char *capability,
     if (!mTrusted)
     {
         static char pref[] = "signed.applets.codebase_principal_support";
-        nsresult rv;
-	    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-	    if (NS_FAILED(rv))
-		    return NS_ERROR_FAILURE;
-	    PRBool enabled;
-        if (NS_FAILED(prefs->GetBoolPref(pref, &enabled)) || !enabled) 
-	    {
+        nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
+        if (!prefBranch)
+            return NS_ERROR_FAILURE;
+        PRBool enabled;
+        if (NS_FAILED(prefBranch->GetBoolPref(pref, &enabled)) || !enabled) 
+        {
             // Deny unless subject is executing from file: or resource: 
             PRBool isFile = PR_FALSE;
             PRBool isRes = PR_FALSE;
