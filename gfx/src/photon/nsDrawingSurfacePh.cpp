@@ -37,6 +37,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsDrawingSurfacePh.h"
+#include "nsCOMPtr.h"
+#include "nsIPref.h"
+#include "nsIServiceManager.h"
 #include "prmem.h"
 
 #include "nsPhGfxLog.h"
@@ -44,10 +47,14 @@
 #include <Pt.h>
 #include <errno.h>
 
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 NS_IMPL_ISUPPORTS2( nsDrawingSurfacePh, nsIDrawingSurface, nsIDrawingSurfacePh )
 
-nsDrawingSurfacePh :: nsDrawingSurfacePh( ) {
+nsDrawingSurfacePh :: nsDrawingSurfacePh( ) 
+{
+	nsresult rv;
+	
 	NS_INIT_REFCNT();
 
 	mDrawContext = nsnull;
@@ -73,23 +80,32 @@ nsDrawingSurfacePh :: nsDrawingSurfacePh( ) {
 	mPixFormat.mGreenShift = 8;
 	mPixFormat.mBlueShift = 0;
 	mPixFormat.mAlphaShift = 0;
+	nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
+	if (NS_SUCCEEDED(rv)) {
+		prefs->RegisterCallback("browser.display.internaluse.graphics_changed", prefChanged, (void *)this);
 	}
+}
 
-nsDrawingSurfacePh :: ~nsDrawingSurfacePh( ) {
-
+nsDrawingSurfacePh :: ~nsDrawingSurfacePh( ) 
+{
 	if(mDrawContext) {
 		mDrawContext->gc = nsnull; /* because we do not own mGC and mDrawContext->gc, do not allow PhDCRelease to release this, as it belongs to upper classes */
 		PhDCRelease( mDrawContext ); /* the mDrawContext->gc will be free by the upper classes */
 		mDrawContext = nsnull;
-		}
-
+	}
+	
 	if( mLockDrawContext ) {
 		PhDCRelease(mLockDrawContext);
 		mLockDrawContext = nsnull;
-		}
-
-	mGC = nsnull; /* don't release the GC - it has not been allocated, it has only been instantiated to the current GC */
 	}
+	
+	mGC = nsnull; /* don't release the GC - it has not been allocated, it has only been instantiated to the current GC */
+	nsresult rv;
+	nsCOMPtr<nsIPref> prefs = do_GetService(kPrefCID, &rv);
+	if (NS_SUCCEEDED(rv)) {
+		prefs->UnregisterCallback("browser.display.internaluse.graphics_changed", prefChanged, (void *)this);
+	}
+}
 
   /**
    * Lock a rect of a drawing surface and return a
@@ -223,27 +239,65 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Init( PhGC_t * &aGC, PRUint32 aWidth, PRUint
 	mWidth = aWidth;
 	mHeight = aHeight;
 	mFlags = aFlags;
-
+	PhDrawContext_t *dc;
+	
 	// we can draw on this offscreen because it has no parent
 	mIsOffscreen = PR_TRUE;
 
 	// create an offscreen context with the current video modes image depth
 	mDrawContext = (PhDrawContext_t *)PdCreateOffscreenContext(0, mWidth, mHeight, 0);
 	if( !mDrawContext ) return NS_ERROR_FAILURE;
-
+	dc = PhDCSetCurrent(mDrawContext);
+	PgSetDrawBufferSize(65000);
+/// HACK HACK until photon lib is fixed
+	if (mDrawContext->gin.cmd_buffer_size < 12) {
+		mDrawContext->gin.cmd_buffer_size = 12;
+		mDrawContext->gin.cmd_ptr = mDrawContext->gin.cmd_buffer + 3;
+	}
+	PhDCSetCurrent(dc);
 	/* use the gc provided */
 	PgDestroyGC( mDrawContext->gc );
 	mDrawContext->gc = mGC;
-
+	
  	return NS_OK;
 	}
 
 NS_IMETHODIMP nsDrawingSurfacePh :: Select( void ) {
 	PhDCSetCurrent( mDrawContext );
 	PgSetGC( mGC );
+
 	return NS_OK;
 	}
 
+int nsDrawingSurfacePh::prefChanged(const char *aPref, void *aClosure)
+{
+	nsDrawingSurfacePh *surface = (nsDrawingSurfacePh*)aClosure;
+	
+	if( surface->mLockDrawContext ) {
+		PhDCRelease(surface->mLockDrawContext);
+		surface->mLockDrawContext = nsnull;
+	}
+	if(surface->mDrawContext) {
+		PhDrawContext_t *dc;
+		surface->mDrawContext->gc = nsnull; /* because we do not own mGC and mDrawContext->gc, do not allow PhDCRelease to release this, as it belongs to upper classes */
+		PhDCRelease( surface->mDrawContext ); /* the mDrawContext->gc will be free by the upper classes */
+		surface->mDrawContext = nsnull;
+		surface->mDrawContext = (PhDrawContext_t *)PdCreateOffscreenContext(0, surface->mWidth, surface->mHeight, 0);
+		if( !surface->mDrawContext ) return NS_ERROR_FAILURE;
+		dc = PhDCSetCurrent(surface->mDrawContext);
+		PgSetDrawBufferSize(65000);
+		/// HACK HACK until photon lib is fixed
+		if (surface->mDrawContext->gin.cmd_buffer_size < 12) {
+			surface->mDrawContext->gin.cmd_buffer_size = 12;
+			surface->mDrawContext->gin.cmd_ptr = surface->mDrawContext->gin.cmd_buffer + 3;
+		}
+		PhDCSetCurrent(dc);
+		/* use the gc provided */
+		PgDestroyGC( surface->mDrawContext->gc );
+		surface->mDrawContext->gc = surface->mGC;
+	}
+	return 0;
+}
 PhGC_t *nsDrawingSurfacePh::GetGC( void ) { return mGC; }
 PhDrawContext_t *nsDrawingSurfacePh::GetDC( void ) { return mDrawContext; }
 NS_IMETHODIMP nsDrawingSurfacePh::Flush(void) { return NS_OK; }

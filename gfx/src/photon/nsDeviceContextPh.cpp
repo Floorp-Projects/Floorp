@@ -291,6 +291,7 @@ NS_IMETHODIMP nsDeviceContextPh :: GetSystemFont( nsSystemFontID aID, nsFont *aF
 	  aFont->style       = NS_FONT_STYLE_NORMAL;
 	  aFont->weight      = NS_FONT_WEIGHT_NORMAL;
 	  aFont->decorations = NS_FONT_DECORATION_NONE;
+	  aFont->size = NSIntPointsToTwips(8);
 	  aFont->name.AssignWithConversion("TextFont");
 	  switch(aID) {
 		  case eSystemFont_MessageBox:
@@ -429,7 +430,6 @@ nsresult nsDeviceContextPh::SetDPI( PRInt32 aDpi ) {
   // make p2t a nice round number - this prevents rounding problems
   mPixelsToTwips = float(NSToIntRound(float(NSIntPointsToTwips(pt2t)) / float(aDpi)));
   mTwipsToPixels = 1.0f / mPixelsToTwips;
-
   // XXX need to reflow all documents
   return NS_OK;
 	}

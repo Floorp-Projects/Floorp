@@ -41,7 +41,142 @@
 #include "nsPhGfxLog.h"
 #include "nsDeviceContextPh.h"
 #include "nspr.h"
+#include "errno.h"
+#include <Pt.h>
+#include <photon/PxImage.h>
 #include "photon/PhRender.h"
+
+/*******************************************************************/
+#define GR_FPMUL(a,b)	((((uint64_t)(a)) * ((uint64_t)(b))) >> 16)
+#define GR_FPDIV(a,b)	((((uint64_t)(a)) << 16) / ((uint64_t)(b)))
+
+PhImage_t *MyPiResizeImage(PhImage_t *image,PhRect_t const *bounds,short w,short h,int flags)
+{
+	PhRect_t oldRect,newRect,srcRect;
+	PhPoint_t dst,src;
+	PhImage_t *newImage;
+	unsigned long value,xScale,yScale,xScaleInv = 0,yScaleInv = 0;
+	char *ptr,*new_mask_ptr;
+	char const *old_mask_ptr;
+	struct
+	{
+		unsigned short x,y;
+	} next;
+
+	if(bounds)
+		srcRect = *bounds;
+	else
+	{
+		srcRect.ul.x = srcRect.ul.y = 0;
+		srcRect.lr.x = image->size.w - 1;
+		srcRect.lr.y = image->size.h - 1;
+	}
+	
+	oldRect.ul.x = oldRect.ul.y = 0;
+	oldRect.lr.x = w - 1;
+	oldRect.lr.y = h - 1;
+			
+	if(!(newImage = PiInitImage(image,(PhRect_t const*)(&oldRect),&newRect,0,flags | Pi_USE_COLORS,image->colors)))
+		return(NULL);
+
+	if(image->mask_bm)
+	{
+		newImage->mask_bpl = (((newImage->size.w + 7) >> 3) + 3) & ~3;
+		if((newImage->mask_bm = (char *)malloc(newImage->size.h * newImage->mask_bpl)) != NULL)
+			memset(newImage->mask_bm,0xff,newImage->size.h * newImage->mask_bpl);
+		else
+			newImage->mask_bpl = 0;
+	}
+	
+	if((xScale = GR_FPDIV(newImage->size.w << 16,(srcRect.lr.x - srcRect.ul.x + 1) << 16)) <= 0x10000)
+		xScaleInv = GR_FPDIV((srcRect.lr.x - srcRect.ul.x + 1) << 16,newImage->size.w << 16);
+	if((yScale = GR_FPDIV(newImage->size.h << 16,(srcRect.lr.y - srcRect.ul.y + 1) << 16)) <= 0x10000)
+		yScaleInv = GR_FPDIV((srcRect.lr.y - srcRect.ul.y + 1) << 16,newImage->size.h << 16);
+
+	for(dst.y = 0,next.y = srcRect.ul.y << 16,src.y = srcRect.ul.y,ptr = newImage->image,old_mask_ptr = image->mask_bm,new_mask_ptr = newImage->mask_bm;
+	  dst.y < newImage->size.h;
+	  dst.y++,ptr += newImage->bpl,new_mask_ptr += newImage->mask_bpl)
+	{
+		if(yScaleInv)
+		{
+			src.y = next.y >> 16;
+			next.y += yScaleInv;
+		}
+		else
+		{
+			if(dst.y < (next.y >> 16) || src.y > srcRect.lr.y)
+			{
+				memcpy(ptr,ptr - newImage->bpl,newImage->bpl);
+				if(newImage->mask_bm)
+					memcpy(new_mask_ptr,new_mask_ptr - newImage->mask_bpl,newImage->mask_bpl);
+
+				continue;
+			}
+			else
+				next.y += yScale;
+		}
+
+		if(newImage->mask_bm)
+			old_mask_ptr = image->mask_bm + (src.y * image->mask_bpl);
+
+		if(xScaleInv)
+		{
+			for(dst.x = 0,next.x = srcRect.ul.x << 16,src.x = srcRect.ul.x;
+			  dst.x < newImage->size.w;dst.x++,next.x += xScaleInv)
+			{
+				src.x = next.x >> 16;
+				PiGetPixel(image,src.x,src.y,&value);
+				PiSetPixel(newImage,dst.x,dst.y,value);
+				
+				if(newImage->mask_bm && !PiGetPixelFromData((uint8_t*)old_mask_ptr,Pg_BITMAP_TRANSPARENT,src.x,&value))
+				{
+					if(!value)
+						PiSetPixelInData((uint8_t*)new_mask_ptr,Pg_BITMAP_TRANSPARENT,dst.x,0);
+				}
+			}
+		}
+		else
+		{
+			unsigned long color = 0;
+			
+			for(dst.x = 0,next.x = srcRect.ul.x << 16,src.x = srcRect.ul.x;
+			  dst.x < newImage->size.w;dst.x++)
+			{
+				if(dst.x == (next.x >> 16) && src.y <= srcRect.lr.y)
+				{
+					if(!PiGetPixel((const PhImage_t *)image,src.x,src.y,&color) && (!newImage->mask_bm || PiGetPixelFromData((const uint8_t *)old_mask_ptr,Pg_BITMAP_TRANSPARENT,src.x,&value)))
+						value = 1;
+
+					next.x += xScale;
+					
+					src.x++;
+				}
+					
+				PiSetPixel(newImage,dst.x,dst.y,color);
+				
+				if(!value)
+					PiSetPixelInData((uint8_t*)new_mask_ptr,Pg_BITMAP_TRANSPARENT,dst.x,0);
+			}
+		}
+		
+		if(!yScaleInv)
+			src.y++;
+	}
+
+	/* Calculate CRC tags for new image */
+
+	if(!(flags & Pi_SUPPRESS_CRC))
+		newImage->image_tag = PtCRC(newImage->image,newImage->bpl * newImage->size.h);
+
+	if(flags & Pi_FREE)
+	{
+		image->flags |= Ph_RELEASE_IMAGE | Ph_RELEASE_PALETTE | Ph_RELEASE_TRANSPARENCY_MASK | Ph_RELEASE_GHOST_BITMAP;
+		PhReleaseImage(image);
+	}
+
+	return(newImage);	
+}
+/*******************************************************************/
 
 //#define ALLOW_PHIMAGE_CACHEING
 #define IsFlagSet(a,b) (a & b)
@@ -106,7 +241,8 @@ nsImagePh :: ~nsImagePh()
   }
 
 	if( mPhImageZoom ) {
-		PgShmemDestroy( mPhImageZoom->image );
+		if ( PgShmemDestroy( mPhImageZoom->image ) == -1)
+			free(mPhImageZoom->image);
 		free( mPhImageZoom );
 		mPhImageZoom = NULL;
 		}
@@ -333,43 +469,6 @@ void nsImagePh :: ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRec
   	mFlags = aFlags; // this should be 0'd out by Draw()
 }
 
-
-
-
-/* set the mask_bm and mask_bpl to 0, replacing the transparency mask_bm based with the Ph_USE_TRANSPARENCY mechanism */
-static void convert_mask_bm_to_transparency( PhImage_t *image ) {
-	if( !image->mask_bpl || !image->mask_bm ) return;
-
-	int one = 0, x, y, b;
-	uchar_t bit;
-	char *ptr;
-	PgColor_t transparent = PgRGB( 255, 255, 0 ); /* Shawn's idea */
-
-  for( ptr = image->mask_bm,y = 0; y<image->size.h; y++ ) {
-    for( b=0; b<image->mask_bpl; b++ ) {
-
-			x = b * 8;
-			for( bit=0x1; bit; bit<<=1 ) {
-				if( !( (*ptr) & bit ) ) {
-					if( x<image->size.w ) PiSetPixel( image, x, y, transparent );
-					one++;
-					}
-				x++;
-				}
-
-      ptr++;
-    	}
-  	}
-
-	if( one ) {
-		image->flags |= Ph_USE_TRANSPARENCY;
-		image->transparent = transparent;
-//		free( image->mask_bm );
-		image->mask_bm = NULL;
-		image->mask_bpl = 0;
-		}
-	}
-
 /** ----------------------------------------------------------------
   * Draw the bitmap, this method has a source and destination coordinates
   * @update dc - 11/20/98
@@ -391,14 +490,13 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
 {
 	PhRect_t clip = { {aDX, aDY}, {aDX + aDWidth, aDY + aDHeight} };
 	PhPoint_t pos = { aDX - aSX, aDY - aSY};
-	PRBool 	aOffScreen;
-
-	nsDrawingSurfacePh* drawing = (nsDrawingSurfacePh*) aSurface;
 
 	if( !aSWidth || !aSHeight || !aDWidth || !aDHeight ) return NS_OK;
 
-
 #ifdef ALLOW_PHIMAGE_CACHEING
+  	PRBool 	aOffScreen;
+	nsDrawingSurfacePh* drawing = (nsDrawingSurfacePh*) aSurface;
+
 	drawing->IsOffscreen(&aOffScreen);
 	if (!mPhImage.mask_bm && mIsOptimized && mPhImageCache && aOffScreen)
 	{
@@ -417,19 +515,28 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
 	else
 #endif
 	{
-		PhImage_t *pimage = &mPhImage;
-
-		if( aSWidth != aDWidth || aSHeight != aDHeight ) {
-			if( !mPhImageZoom )  {
-				convert_mask_bm_to_transparency( &mPhImage );
-				mPhImageZoom = PiResizeImage( &mPhImage, NULL, aDWidth, aDHeight, Pi_USE_COLORS|Pi_SHMEM );
-				}
-			pimage = mPhImageZoom;
+		if( (aSWidth != aDWidth || aSHeight != aDHeight) && 
+		   (mPhImageZoom == NULL || mPhImageZoom->size.w != aDHeight || mPhImageZoom->size.h != aDHeight)) 
+		{
+			if ( mPhImageZoom ) {
+				if ( PgShmemDestroy( mPhImageZoom->image ) == -1 )
+					free(mPhImageZoom->image);
+				free( mPhImageZoom );
 			}
+			PhRect_t bounds = {{aSX, aSY}, {aSX + aSWidth, aSY + aSHeight}};
+			if ((aDHeight * mPhImage.bpl) < IMAGE_SHMEM_THRESHOLD)
+				mPhImageZoom = MyPiResizeImage(&mPhImage, &bounds, aDWidth, aDHeight, Pi_USE_COLORS);
+			else
+				mPhImageZoom = MyPiResizeImage(&mPhImage, &bounds, aDWidth, aDHeight, Pi_USE_COLORS|Pi_SHMEM);
+			if ( mPhImageZoom == NULL )
+				return NS_OK;
+			pos.x = aDX;
+			pos.y = aDY;
+		}
 
 		PgSetMultiClip( 1, &clip );
 		if ((mAlphaDepth == 1) || (mAlphaDepth == 0))
-			PgDrawPhImagemx( &pos, pimage, 0 );
+			PgDrawPhImagemx( &pos, mPhImageZoom ? mPhImageZoom : &mPhImage, 0 );
 		else
 			printf("DRAW IMAGE: with 8 bit alpha!!\n");
 		PgSetMultiClip( 0, NULL );
@@ -443,15 +550,14 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
 				 PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
   	PhPoint_t pos = { aX, aY };
-  	int       err;
-  	PRBool 	aOffScreen;
 
 	if (!aSurface || !mImageBits)
 		return (NS_ERROR_FAILURE);
-  
-  	nsDrawingSurfacePh* drawing = (nsDrawingSurfacePh*) aSurface;
 
 #ifdef ALLOW_PHIMAGE_CACHEING
+  	PRBool 	aOffScreen;
+  	nsDrawingSurfacePh* drawing = (nsDrawingSurfacePh*) aSurface;
+
 	drawing->IsOffscreen(&aOffScreen);
 	if (!mPhImage.mask_bm && mIsOptimized && mPhImageCache && aOffScreen)
 	{
@@ -489,7 +595,6 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
 /* New Tile code *********************************************************************/
 NS_IMETHODIMP nsImagePh::DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface, nsRect &aSrcRect, nsRect &aTileRect ) {
 	PhPoint_t pos, space, rep;
-  	PRBool 	aOffScreen;
 
 	pos.x = aTileRect.x;
 	pos.y = aTileRect.y;
@@ -498,12 +603,13 @@ NS_IMETHODIMP nsImagePh::DrawTile(nsIRenderingContext &aContext, nsDrawingSurfac
 	space.y = aSrcRect.height;
 	rep.x = ( aTileRect.width + space.x - 1 ) / space.x;
 	rep.y = ( aTileRect.height + space.y - 1 ) / space.y;
-	PhRect_t clip = { aTileRect.x, aTileRect.y, aTileRect.x + aTileRect.width, aTileRect.y + aTileRect.height };
+	PhRect_t clip = { {aTileRect.x, aTileRect.y}, {aTileRect.x + aTileRect.width, aTileRect.y + aTileRect.height} };
 	PgSetMultiClip( 1, &clip );
 
+#ifdef ALLOW_PHIMAGE_CACHEING
+  	PRBool 	aOffScreen;
  	nsDrawingSurfacePh* drawing = (nsDrawingSurfacePh*) aSurface;
 
-#ifdef ALLOW_PHIMAGE_CACHEING
 	drawing->IsOffscreen(&aOffScreen);
 	if (!mPhImage.mask_bm && mIsOptimized && mPhImageCache && aOffScreen)
 	{
@@ -537,12 +643,12 @@ NS_IMETHODIMP nsImagePh::DrawTile(nsIRenderingContext &aContext, nsDrawingSurfac
 	}
 
 	PgSetMultiClip( 0, NULL );
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsImagePh::DrawTile( nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aSXOffset, PRInt32 aSYOffset, const nsRect &aTileRect ) 
 {
 	PhPoint_t pos, space, rep;
-  	PRBool 	aOffScreen;
 
 	// since there is an offset into the image and I only want to draw full
 	// images, shift the position back and set clipping so that it looks right
@@ -554,13 +660,14 @@ NS_IMETHODIMP nsImagePh::DrawTile( nsIRenderingContext &aContext, nsDrawingSurfa
 	rep.x = ( aTileRect.width + aSXOffset + space.x - 1 ) / space.x;
 	rep.y = ( aTileRect.height + aSYOffset + space.y - 1 ) / space.y;
 
- 	nsDrawingSurfacePh* drawing = (nsDrawingSurfacePh*) aSurface;
-
 	/* not sure if cliping is necessary */
-	PhRect_t clip = { aTileRect.x, aTileRect.y, aTileRect.x + aTileRect.width, aTileRect.y + aTileRect.height };
+	PhRect_t clip = { {aTileRect.x, aTileRect.y}, {aTileRect.x + aTileRect.width, aTileRect.y + aTileRect.height} };
 	PgSetMultiClip( 1, &clip );
 
 #ifdef ALLOW_PHIMAGE_CACHEING
+  	PRBool 	aOffScreen;
+	nsDrawingSurfacePh* drawing = (nsDrawingSurfacePh*) aSurface;
+
 	drawing->IsOffscreen(&aOffScreen);
 	if (!mPhImage.mask_bm && mIsOptimized && mPhImageCache && aOffScreen)
 	{
@@ -603,9 +710,6 @@ NS_IMETHODIMP nsImagePh::DrawTile( nsIRenderingContext &aContext, nsDrawingSurfa
 //------------------------------------------------------------
 nsresult nsImagePh :: Optimize(nsIDeviceContext* aContext)
 {
-	PhPoint_t pos={0,0};
-	PhDrawContext_t *odc;
-
 	/* TODO: need to invalidate the caches if the graphics system has changed somehow (ie: mode switch, dragged to a remote
 			display, etc... */
 
@@ -613,6 +717,9 @@ nsresult nsImagePh :: Optimize(nsIDeviceContext* aContext)
 			the Draw code will need to be updated for this */
 
 #ifdef ALLOW_PHIMAGE_CACHEING
+	PhPoint_t pos={0,0};
+	PhDrawContext_t *odc;
+
 	if ((mSizeImage > IMAGE_SHMEM_THRESHOLD) && (mPhImage.mask_bm == NULL))
 	{
 		if (mPhImageCache == NULL)
@@ -794,32 +901,50 @@ NS_IMETHODIMP nsImagePh::DrawToImage(nsIImage* aDstImage,
 #endif
 	{
 		PhArea_t sarea, darea;
+		PhImage_t *pimage = NULL;
 		int start, x, y;
 		char mbit, mbyte;
-
+		int release = 0;
+		
 		sarea.pos.x = sarea.pos.y = 0;
 		darea.pos.x = aDX;
 		darea.pos.y = aDY;
 		darea.size.w = sarea.size.w = aDWidth;
 		darea.size.h = sarea.size.h = aDHeight;
-		start = (aDY * dest->mPhImage.bpl) + (aDX * mNumBytesPixel);
-		for (y = 0; y < mPhImage.size.h; y++)
+		if ((aDWidth != mPhImage.size.w) || (aDHeight != mPhImage.size.h))
 		{
-			for (x = 0; x < mPhImage.size.w; x++)
+			release = 1;
+			if ((aDHeight * mPhImage.bpl) < IMAGE_SHMEM_THRESHOLD)
+				pimage = MyPiResizeImage(&mPhImage, NULL, aDWidth, aDHeight, Pi_USE_COLORS);
+			else
+				pimage = MyPiResizeImage(&mPhImage, NULL, aDWidth, aDHeight, Pi_USE_COLORS|Pi_SHMEM);
+		}
+		else
+			pimage = &mPhImage;
+		if ( pimage == NULL )
+			return NS_OK;
+		start = (aDY * dest->mPhImage.bpl) + (aDX * mNumBytesPixel);
+		for (y = 0; y < pimage->size.h; y++)
+		{
+			for (x = 0; x < pimage->size.w; x++)
 			{
-				if (mPhImage.mask_bm)
+				if (pimage->mask_bm)
 				{
-					mbyte = *(mPhImage.mask_bm + (mPhImage.mask_bpl * y) + (x >> 3));
+					mbyte = *(pimage->mask_bm + (pimage->mask_bpl * y) + (x >> 3));
 					mbit = x & 7;
 					if (!(mbyte & (0x80 >> mbit)))
 						continue;
 				}
-				memcpy(dest->mPhImage.image + start + (dest->mPhImage.bpl * y) + (x*mNumBytesPixel), \
-					mPhImage.image + (mPhImage.bpl * y) + (x*mNumBytesPixel), mNumBytesPixel);
+				memcpy(dest->mPhImage.image + start + (dest->mPhImage.bpl * y) + (x*mNumBytesPixel), 
+					   pimage->image + (pimage->bpl * y) + (x*mNumBytesPixel), mNumBytesPixel);
 			}
 		}
+		if (release)
+			PhReleaseImage(pimage);
 	}
-
-  return NS_OK;
+	return NS_OK;
 }
 #endif
+
+
+
