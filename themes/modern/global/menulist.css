@@ -26,6 +26,7 @@
   ======================================================================= */
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+@namespace html url("http://www.w3.org/1999/xhtml"); /* namespace for HTML elements */
 
 /* :::::nine slice menulist ::::::::::
    :: This is the default style used for all menulists.
@@ -282,7 +283,7 @@ menulist[editable="true"] {
   border: 1px solid #5D616E;
 }
 
-.menulist-editable-text {
+html|*.menulist-editable-text {
   border: none !important;
   margin: 0px !important;
   padding: 0px !important;
