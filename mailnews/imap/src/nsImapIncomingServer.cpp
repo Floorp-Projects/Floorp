@@ -3705,7 +3705,7 @@ nsImapIncomingServer::GetUriWithNamespacePrefixIfNecessary(PRInt32 namespaceType
       nsCAutoString resultUri(originalUri);
       PRInt32 index = resultUri.Find("//");           // find scheme
       index = resultUri.Find("/", PR_FALSE, index+2); // find '/' after scheme
-      if (resultUri.Find(namespacePrefix.get()) != 0) // Necessary to insert namespace prefix
+      if (resultUri.Find(namespacePrefix.get(), PR_FALSE, index+1) != index+1) // Necessary to insert namespace prefix
         resultUri.Insert(namespacePrefix, index+1);   // insert namespace prefix
       *convertedUri = nsCRT::strdup(resultUri.get());
     }
