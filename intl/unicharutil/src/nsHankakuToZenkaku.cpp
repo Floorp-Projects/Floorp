@@ -22,9 +22,6 @@
 #include "nsHankakuToZenkakuCID.h"
 #include "nsTextTransformFactory.h"
 
-#include "nsIFactory.h"
-
-NS_DEFINE_IID(kFactoryIID, NS_IFACTORY_IID);
 NS_DEFINE_CID(kHankakuToZenkakuCID, NS_HANKAKUTOZENKAKU_CID);
 NS_DEFINE_IID(kITextTransformIID, NS_ITEXTTRANSFORM_IID);
 
@@ -150,57 +147,12 @@ NS_IMETHODIMP nsHankakuToZenkaku::Change( nsString& aText, nsString& aResult)
    return NS_OK;
 }
 
-class nsHankakuToZenkakuFactory : public nsIFactory {
-   NS_DECL_ISUPPORTS
-
-public:
-   nsHankakuToZenkakuFactory() {
-     NS_INIT_REFCNT();
-     PR_AtomicIncrement(&g_InstanceCount);
-   }
-   virtual ~nsHankakuToZenkakuFactory() {
-     PR_AtomicDecrement(&g_InstanceCount);
-   }
-
-   NS_IMETHOD CreateInstance(nsISupports* aDelegate, const nsIID& aIID, void** aResult);
-   NS_IMETHOD LockFactory(PRBool aLock);
- 
-};
-
-NS_DEFINE_IID( kIFactoryIID, NS_IFACTORY_IID);
-NS_IMPL_ISUPPORTS( nsHankakuToZenkakuFactory , kIFactoryIID);
-
-NS_IMETHODIMP nsHankakuToZenkakuFactory::CreateInstance(
-    nsISupports* aDelegate, const nsIID &aIID, void** aResult)
+nsresult NS_NewHankakuToZenkaku(nsISupports** oResult)
 {
-  if(NULL == aResult) 
-        return NS_ERROR_NULL_POINTER;
-  if(NULL != aDelegate) 
-        return NS_ERROR_NO_AGGREGATION;
-
-  *aResult = NULL;
-  nsISupports *inst = new nsHankakuToZenkaku();
-  if(NULL == inst) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  nsresult res =inst->QueryInterface(aIID, aResult);
-  if(NS_FAILED(res)) {
-     delete inst;
-  }
-  
-  return res;
+  if(!oResult)
+    return NS_ERROR_NULL_POINTER;
+  *oResult = new nsHankakuToZenkaku();
+  if(*oResult)
+     NS_ADDREF(*oResult);
+  return (*oResult) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
-NS_IMETHODIMP nsHankakuToZenkakuFactory::LockFactory(PRBool aLock)
-{
-  if(aLock)
-     PR_AtomicIncrement( &g_LockCount );
-  else
-     PR_AtomicDecrement( &g_LockCount );
-  return NS_OK;
-}
-
-nsIFactory* NEW_HANKAKU_TO_ZENKAKU_FACTORY()
-{
-  return new nsHankakuToZenkakuFactory();
-}
-

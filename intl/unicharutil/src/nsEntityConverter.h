@@ -20,6 +20,8 @@
 #include "nsIFactory.h"
 #include "nsIProperties.h"
 
+nsresult NS_NewEntityConverter(nsISupports** oResult);
+
 class nsEntityEntry
 {
 public:
@@ -57,25 +59,4 @@ protected:
 };
 
 
-class nsEntityConverterFactory: public nsIFactory
-{
-public:
-
-	//
-	// implementation methods
-	//
-	nsEntityConverterFactory();
-	virtual ~nsEntityConverterFactory();
-
-	//
-	// nsISupports methods
-	//
-	NS_DECL_ISUPPORTS
-
-	//
-	// nsIFactory methods
-	//
-	NS_IMETHOD CreateInstance(nsISupports* aOuter,REFNSIID aIID,void** aResult);
-	NS_IMETHOD LockFactory(PRBool aLock);
-};
 

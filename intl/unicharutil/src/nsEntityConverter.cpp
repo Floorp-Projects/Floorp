@@ -27,7 +27,6 @@
 // guids
 //
 NS_DEFINE_IID(kIEntityConverterIID,NS_IENTITYCONVERTER_IID);
-NS_DEFINE_IID(kIFactoryIID,NS_IFACTORY_IID);
 NS_DEFINE_IID(kIPersistentPropertiesIID,NS_IPERSISTENTPROPERTIES_IID);
 
 //
@@ -137,37 +136,13 @@ nsEntityConverter::ConvertToEntity(PRUnichar character, PRUnichar **_retval)
 }
 
 
-nsEntityConverterFactory::nsEntityConverterFactory()
+
+nsresult NS_NewEntityConverter(nsISupports** oResult)
 {
-  NS_INIT_REFCNT();
+   if(!oResult)
+      return NS_ERROR_NULL_POINTER;
+   *oResult = new nsEntityConverter();
+   if(*oResult)
+      NS_ADDREF(*oResult);
+   return (*oResult) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
-
-nsEntityConverterFactory::~nsEntityConverterFactory()
-{
-
-}
-
-NS_IMPL_ISUPPORTS(nsEntityConverterFactory,kIFactoryIID)
-
-//
-// nsIFactory methods
-//
-NS_IMETHODIMP
-nsEntityConverterFactory::CreateInstance(nsISupports* aOuter,REFNSIID aIID,void** aResult)
-{
-	nsEntityConverter*	entityConverter;
-
-	entityConverter = new nsEntityConverter();
-	if (entityConverter)
-		return entityConverter->QueryInterface(aIID,aResult);
-
-	*aResult=nsnull;
-	return NS_ERROR_OUT_OF_MEMORY;
-}
-
-NS_IMETHODIMP
-nsEntityConverterFactory::LockFactory(PRBool aLock)
-{
-	return NS_OK;
-}
-

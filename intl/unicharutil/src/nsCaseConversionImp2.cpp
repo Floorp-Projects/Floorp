@@ -332,3 +332,13 @@ nsCaseConversionImp2::~nsCaseConversionImp2()
     gLowerMap = nsnull;
   }
 }
+
+nsresult NS_NewCaseConversion(nsISupports** oResult)
+{
+  if(!oResult)
+    return NS_ERROR_NULL_POINTER;
+  *oResult = new nsCaseConversionImp2();
+  if(*oResult)
+    NS_ADDREF(*oResult);
+  return (*oResult) ? NS_OK : NS_ERROR_OUT_OF_MEMORY; 
+}
