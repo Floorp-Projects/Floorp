@@ -282,10 +282,14 @@ js_GetCallObject(JSContext *cx, JSStackFrame *fp, JSObject *parent,
 
     /* Splice callobj into the scope chain. */
     if (!withobj) {
-	for (obj = fp->scopeChain; obj; obj = OBJ_GET_PARENT(cx, obj)) {
+	for (obj = fp->scopeChain; obj; obj = parent) {
 	    if (OBJ_GET_CLASS(cx, obj) != &js_WithClass)
 	    	break;
-	    withobj = obj;
+	    parent = OBJ_GET_PARENT(cx, obj);
+	    if (parent == funobj) {
+		withobj = obj;
+		break;
+	    }
 	}
     }
     if (withobj)

@@ -65,6 +65,9 @@
 
 typedef JSParseNode *
 JSParser(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc);
+typedef JSParseNode *
+JSMemberParser(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
+	       JSBool allowCallSyntax);
 
 static JSParser FunctionStmt;
 #if JS_HAS_LEXICAL_CLOSURE
@@ -87,7 +90,7 @@ static JSParser ShiftExpr;
 static JSParser AddExpr;
 static JSParser MulExpr;
 static JSParser UnaryExpr;
-static JSParseNode *MemberExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc, JSBool allowCallSyntax);
+static JSMemberParser MemberExpr;
 static JSParser PrimaryExpr;
 
 /*
@@ -240,6 +243,8 @@ out:
     return ok;
 }
 
+#ifdef CHECK_RETURN_EXPR
+
 /*
  * Insist on a final return before control flows out of pn, but don't be too
  * smart about loops (do {...; return e2;} while(0) at the end of a function
@@ -281,6 +286,8 @@ CheckFinalReturn(JSParseNode *pn)
 }
 
 static char badreturn_str[] = "function does not always return a value";
+
+#endif /* CHECK_RETURN_EXPR */
 
 static JSParseNode *
 FunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun,
@@ -369,10 +376,10 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     JSAtom *funAtom, *argAtom;
     JSObject *parent;
     JSFunction *fun, *outerFun;
-    JSStmtInfo *topStmt;
     JSBool ok, named;
     JSObject *pobj;
     JSScopeProperty *sprop;
+    JSTreeContext funtc;
     jsval junk;
 
     /* Make a TOK_FUNCTION node. */
@@ -390,10 +397,6 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     parent = js_FindVariableScope(cx, &outerFun);
     if (!parent)
 	return NULL;
-
-    /* Clear tc->topStmt for semantic checking (restore at label out:). */
-    topStmt = tc->topStmt;
-    tc->topStmt = NULL;
 
 #if JS_HAS_LEXICAL_CLOSURE
     if (!funAtom || cx->fp->scopeChain != parent || InWithStatement(tc)) {
@@ -481,7 +484,8 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 			   ok = JS_FALSE; goto out);
     pn->pn_pos.begin = ts->token.pos.begin;
 
-    pn2 = FunctionBody(cx, ts, fun, tc);
+    INIT_TREE_CONTEXT(&funtc);
+    pn2 = FunctionBody(cx, ts, fun, &funtc);
     if (!pn2) {
     	ok = JS_FALSE;
     	goto out;
@@ -493,7 +497,7 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 
     pn->pn_fun = fun;
     pn->pn_body = pn2;
-    pn->pn_tryCount = tc->tryCount;
+    pn->pn_tryCount = funtc.tryCount;
 
 #if JS_HAS_LEXICAL_CLOSURE
     if (outerFun || cx->fp->scopeChain != parent || InWithStatement(tc))
@@ -506,7 +510,6 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 
     ok = JS_TRUE;
 out:
-    tc->topStmt = topStmt;
     if (!ok) {
 	if (named)
 	    (void) OBJ_DELETE_PROPERTY(cx, parent, (jsid)funAtom, &junk);
@@ -1001,7 +1004,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	 * with an 'in' expression as its initializer, leaving ts->pushback at
 	 * the right parenthesis.  This condition tests 1, then 3, then 2:
 	 */
-	if (pn1 && 
+	if (pn1 &&
 	    (pn1->pn_type == TOK_IN ||
 	     (pn1->pn_type == TOK_VAR && ts->pushback.type == TOK_RP) ||
 	     js_MatchToken(cx, ts, TOK_IN))) {
@@ -1156,7 +1159,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 		    PR_ASSERT(0);
 		}
 		break;
-	      case TOK_VAR: 
+	      case TOK_VAR:
 		PR_ASSERT(pn4->pn_head->pn_type == TOK_NAME);
 		switch(pn4->pn_head->pn_op) {
 		  case JSOP_GETVAR:
@@ -1179,7 +1182,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 		PR_ASSERT(0);
 	    }
 	    pn2->pn_left = pn4;
-	    
+
 	    /* (balance: */
 	    MUST_MATCH_TOKEN(TOK_RP, "missing ) after catch declaration");
 	    pn2->pn_right = Statement(cx, ts, tc);
@@ -1361,11 +1364,13 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	    pn->pn_kid = NULL;
 	}
 
+#ifdef CHECK_RETURN_EXPR
 	if ((tc->flags & (TCF_RETURN_EXPR | TCF_RETURN_VOID)) ==
 	    (TCF_RETURN_EXPR | TCF_RETURN_VOID)) {
 	    js_ReportCompileError(cx, ts, badreturn_str);
 	    return NULL;
 	}
+#endif
 	break;
 
       case TOK_LC:
@@ -1994,7 +1999,8 @@ UnaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 }
 
 static JSParseNode *
-ArgumentList(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc, JSParseNode *listNode)
+ArgumentList(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
+	     JSParseNode *listNode)
 {
     JSBool matched;
 
@@ -2016,17 +2022,18 @@ ArgumentList(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc, JSParseNode *l
 }
 
 static JSParseNode *
-MemberExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc, JSBool allowCallSyntax)
+MemberExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
+	   JSBool allowCallSyntax)
 {
     JSParseNode *pn, *pn2, *pn3;
     JSTokenType tt;
 
-    /* Check for new expressions */
+    /* Check for new expression first. */
     ts->flags |= TSF_REGEXP;
     tt = js_PeekToken(cx, ts);
     ts->flags &= ~TSF_REGEXP;
     if (tt == TOK_NEW) {
-	(void)js_GetToken(cx, ts);
+	(void) js_GetToken(cx, ts);
 
 	pn = NewParseNode(cx, &ts->token, PN_LIST);
 	if (!pn)
@@ -2046,7 +2053,6 @@ MemberExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc, JSBool allowCall
 	    return NULL;
 	}
 	pn->pn_pos.end = PN_LAST(pn)->pn_pos.end;
-
     } else {
 	pn = PrimaryExpr(cx, ts, tc);
 	if (!pn)
