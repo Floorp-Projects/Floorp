@@ -4832,7 +4832,8 @@ PresShell::UnsuppressAndInvalidate()
   if (focusController) // Unsuppress now that we've shown the new window and focused it.
     focusController->SetSuppressFocus(PR_FALSE, "PresShell suppression on Web page loads");
 
-  mViewManager->SynthesizeMouseMove(PR_FALSE);
+  if (mViewManager)
+    mViewManager->SynthesizeMouseMove(PR_FALSE);
 }
 
 NS_IMETHODIMP
