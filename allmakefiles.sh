@@ -1185,6 +1185,11 @@ for extension in $MOZ_EXTENSIONS; do
         irc ) MAKEFILES_extensions="$MAKEFILES_extensions
             extensions/irc/Makefile
             " ;;
+        layout-debug ) MAKEFILES_extensions="$MAKEFILES_extensions
+            extensions/layout-debug/Makefile
+            extensions/layout-debug/src/Makefile
+            extensions/layout-debug/ui/Makefile
+            " ;;
         p3p ) MAKEFILES_extensions="$MAKEFILES_extensions
             extensions/p3p/Makefile
             extensions/p3p/public/Makefile
