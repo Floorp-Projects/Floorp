@@ -399,7 +399,7 @@ BOOL fsTree::DeleteInstance()
 fsTree::~fsTree()
 {
    // Execute synchronously to prevent leaky pain
-   mDestructing = TRUE;   
+   mDestructing = TRUE;
    if( mRoot)
       DestroyNode( mRoot);
 
@@ -407,7 +407,11 @@ fsTree::~fsTree()
    mCBQueue.Close();
 
    if( mHEV)
+   {
+      if( mBuildMode != FS::Synchronous)
+         DosWaitEventSem( mHEV, SEM_INDEFINITE_WAIT); // Let async thread finish
       DosCloseEventSem( mHEV);
+   }
 
    if( mMutex)
       DosCloseMutexSem( mMutex);
@@ -515,6 +519,12 @@ void fsTree::Scan()
    // This lets the user thread go if we're synchronous.
    SendCompleteMsg();
 
+   if( mDestructing)
+   {
+      DosPostEventSem( mHEV);  // Just in case main thread is still waiting
+      return;
+   }
+
    // Process commands
    for(;;)
    {
@@ -589,6 +599,8 @@ void fsTree::CreateDrives()
    // go through the drives one by one
    for( UINT i = 0; i < ulDrives; i++)
    {
+      if( mDestructing) return;
+
       APIRET       rc;
       FILESTATUS3  fs3 = { { 0, 0, 0 } };
       FILEFINDBUF3 ffb3 = { 0 };
@@ -615,11 +627,13 @@ void fsTree::CreateDrives()
       SendMsg( pDrive, CBPacket::CreateNode);
    }
 
+
    // now scan for children.  Splitting the task up this way makes UIs more
    // responsive, as they can wap up the roots first before going digging.
    fsDir *pDir = mRoot->GetFirstChild();
    while( pDir)
    {
+      if( mDestructing) return;
       ScanForChildren( pDir);
       pDir = pDir->GetNextSibling();
    }
@@ -652,6 +666,8 @@ void fsTree::ScanForChildren( fsDir *aParent)
 
    while( !rc)
    {
+      if( mDestructing) break;
+
       if( strcmp( fb.achName, ".") && strcmp( fb.achName, ".."))
       {
          Lock();
@@ -755,6 +771,8 @@ void fsTree::Foliate( fsDir *aDir)
 
    while( !rc)
    {
+      if( mDestructing) break;
+
       Lock();
       fsFile *pFile = new fsFile( &fb, aDir);
       if( !pLast) aDir->SetFiles( pFile);
@@ -793,6 +811,8 @@ void fsTree::Notify()
          break;
       }
 
+      if( mDestructing) break;
+
       switch( pkt.mCmd)
       {
          case CBPacket::CreateRoot:
@@ -819,7 +839,7 @@ void fsTree::Notify()
 
          case CBPacket::ScanComplete:
             mCallbacks->InitialScanComplete();
-            if( mBuildMode == FS::Synchronous)
+//            if( mBuildMode == FS::Synchronous)
                DosPostEventSem( mHEV);
             break;
 
@@ -828,6 +848,8 @@ void fsTree::Notify()
             break;
       }
    }
+
+   DosPostEventSem( mHEV);  // Just in case the main thread is still waiting
 
    if( mNeedsPM)
    {

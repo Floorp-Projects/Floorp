@@ -134,6 +134,7 @@ struct DirPicker : public FS::ICallbacks
       // Create a new node
       PTREENODE pRec = (PTREENODE) WinSendMsg( hwndCnr, CM_ALLOCRECORD,
                                                MPFROMLONG(4), MPFROMLONG(1));
+      if( !pRec) return;
       // find some strings; note that fstree owns them
       pRec->m.pszIcon = (char*) aNewNode->GetFileInfo()->GetLeafName();
       if( aNewNode->AsDrive())
@@ -395,13 +396,6 @@ MRESULT EXPENTRY fndpDirPicker( HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2)
         }
         break;
 
-      case WM_DESTROY:
-      {
-         pData->fsTree->DeleteInstance();
-         delete pData;
-         break;
-      }
-
       case WM_COMMAND:
          switch( SHORT1FROMMP(mp1))
          {
@@ -440,11 +434,11 @@ MRESULT EXPENTRY fndpDirPicker( HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2)
                      }
                   }
                }
-
-               // break out, defdlgproc will close the window.
-               break;
+               // fall out, defdlgproc will close the window.
             }
          }
+         pData->fsTree->DeleteInstance();
+         delete pData;
          break;
 
       case WM_CLOSE:
