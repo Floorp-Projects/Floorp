@@ -242,8 +242,11 @@ nsresult nsRootAccessible::RemoveEventListeners()
 
 NS_IMETHODIMP nsRootAccessible::GetCaretAccessible(nsIAccessible **aCaretAccessible)
 {
-  *aCaretAccessible = (nsCOMPtr<nsIAccessible>)do_QueryInterface(mCaretAccessible);
-  NS_IF_ADDREF(*aCaretAccessible);
+  *aCaretAccessible = nsnull;
+  if (mCaretAccessible) {
+    CallQueryInterface(mCaretAccessible, aCaretAccessible);
+  }
+
   return NS_OK;
 }
 
@@ -258,7 +261,7 @@ void nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *focusAccessible, 
     if (role != ROLE_MENUITEM && role != ROLE_LISTITEM) {
       // It must report all focus events on menu and list items
       gLastFocusedNode = focusNode;
-      NS_IF_ADDREF(gLastFocusedNode);
+      NS_ADDREF(gLastFocusedNode);
     }
     if (mCaretAccessible)
       mCaretAccessible->AttachNewSelectionListener(focusNode);
@@ -498,13 +501,14 @@ void nsRootAccessible::GetTargetNode(nsIDOMEvent *aEvent, nsIDOMNode **aTargetNo
 {
   *aTargetNode = nsnull;
 
-  nsCOMPtr<nsIDOMEventTarget> domEventTarget;
   nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aEvent));
 
   if (nsevent) {
+    nsCOMPtr<nsIDOMEventTarget> domEventTarget;
     nsevent->GetOriginalTarget(getter_AddRefs(domEventTarget));
-    nsCOMPtr<nsIDOMNode> targetNode(do_QueryInterface(domEventTarget));
-    NS_IF_ADDREF(*aTargetNode = targetNode);
+    if (domEventTarget) {
+      CallQueryInterface(domEventTarget, aTargetNode);
+    }
   }
 }
 
