@@ -94,14 +94,16 @@ class nsSharedBufferHandle
       void
       AcquireReference() const
         {
-          set_refcount( get_refcount()+1 );
+          nsSharedBufferHandle<CharT>* mutable_this = NS_CONST_CAST(nsSharedBufferHandle<CharT>*, this);
+          mutable_this->set_refcount( get_refcount()+1 );
         }
 
       void
       ReleaseReference() const
         {
-          if ( !set_refcount( get_refcount()-1 ) )
-            delete this;
+          nsSharedBufferHandle<CharT>* mutable_this = NS_CONST_CAST(nsSharedBufferHandle<CharT>*, this);
+          if ( !mutable_this->set_refcount( get_refcount()-1 ) )
+            delete mutable_this;
         }
 
       PRBool
