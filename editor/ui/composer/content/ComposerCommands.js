@@ -23,6 +23,7 @@
  *    Simon Fraser (sfraser@netscape.com)
  *    Ryan Cassin (rcassin@supernova.org)
  *    Kathleen Brade (brade@netscape.com)
+ *    Daniel Glazman (glazman@netscape.com)
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -62,6 +63,7 @@ function SetupHTMLEditorCommands()
   controller.registerCommand("cmd_advancedProperties", nsAdvancedPropertiesCommand);
   controller.registerCommand("cmd_objectProperties",   nsObjectPropertiesCommand);
   controller.registerCommand("cmd_removeLinks",        nsRemoveLinksCommand);
+  controller.registerCommand("cmd_removeNamedAnchors", nsRemoveNamedAnchorsCommand);
   controller.registerCommand("cmd_editLink",        nsEditLinkCommand);
   
   controller.registerCommand("cmd_form",          nsFormCommand);
@@ -2709,6 +2711,22 @@ var nsRemoveLinksCommand =
   doCommand: function(aCommand)
   {
     window.editorShell.RemoveTextProperty("href", "");
+    window._content.focus();
+  }
+};
+
+
+//-----------------------------------------------------------------------------------
+var nsRemoveNamedAnchorsCommand =
+{
+  isCommandEnabled: function(aCommand, dummy)
+  {
+    // We could see if there's any link in selection, but it doesn't seem worth the work!
+    return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
+  },
+  doCommand: function(aCommand)
+  {
+    window.editorShell.RemoveTextProperty("name", "");
     window._content.focus();
   }
 };

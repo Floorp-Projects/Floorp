@@ -19,6 +19,7 @@
    - Rights Reserved.
    - 
    - Contributor(s):
+   -   Daniel Glazman (glazman@netscape.com)
   -->
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/editorOverlay.dtd">
@@ -53,6 +54,8 @@
           observes="cmd_link" />
     <!-- label and accesskey set at runtime from strings -->
     <menuitem id="removeLinksMenuitem_cm" observes="cmd_removeLinks"/>
+    <menuitem id="removeNamedAnchorsMenuitem_cm"  label="&formatRemoveNamedAnchors.label;"   
+          observes="cmd_removeNamedAnchors"/>
     <menuseparator id="styles-separator"/>
 
     <!-- label and accesskey are set in InitObjectProperties -->
