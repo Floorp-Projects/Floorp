@@ -280,7 +280,10 @@ sub BuildDist()
    InstallFromManifest(":mozilla:htmlparser:src:MANIFEST",							"$distdirectory:htmlparser:");
    
     #RDF
-     InstallFromManifest(":mozilla:rdf:include:MANIFEST",							"$distdirectory:rdf:");
+    InstallFromManifest(":mozilla:rdf:base:public:MANIFEST",						"$distdirectory:rdf:");
+    InstallFromManifest(":mozilla:rdf:content:public:MANIFEST",						"$distdirectory:rdf:");
+    InstallFromManifest(":mozilla:rdf:datasource:public:MANIFEST",					"$distdirectory:rdf:");
+    InstallFromManifest(":mozilla:rdf:build:MANIFEST",								"$distdirectory:rdf:");
 
 	#EDITOR
    InstallFromManifest(":mozilla:editor:public:MANIFEST",							"$distdirectory:editor:");
