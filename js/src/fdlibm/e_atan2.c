@@ -87,7 +87,7 @@ pi_lo   = 1.2246467991473531772E-16; /* 0x3CA1A626, 0x33145C07 */
 	if(((ix|((lx|-(int)lx)>>31))>0x7ff00000)||
 	   ((iy|((ly|-(int)ly)>>31))>0x7ff00000))	/* x or y is NaN */
 	   return x+y;
-	if((hx-0x3ff00000|lx)==0) return fd_atan(y);   /* x=1.0 */
+	if(((hx-0x3ff00000)|lx)==0) return fd_atan(y);   /* x=1.0 */
 	m = ((hy>>31)&1)|((hx>>30)&2);	/* 2*sign(x)+sign(y) */
 
     /* when y = 0 */
