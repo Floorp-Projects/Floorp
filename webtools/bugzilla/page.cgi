@@ -49,13 +49,13 @@ if ($::FORM{'id'}) {
     $::FORM{'id'} =~ s/[^\w\-\.]//g;
     $::FORM{'id'} =~ /(.*)\.(.*)/;
 
-    my $format = GetFormat($1, undef, $2);
+    my $format = GetFormat("pages/$1", undef, $2);
     
     $vars->{'form'} = \%::FORM; 
 
     print $cgi->header($format->{'ctype'});
 
-    $template->process("pages/$format->{'template'}", $vars)
+    $template->process("$format->{'template'}", $vars)
       || ThrowTemplateError($template->error());
 }
 else {
