@@ -38,6 +38,7 @@
 #include "msgCore.h"
 #include "mimemult.h"
 #include "mimemoz2.h"
+#include "mimeeobj.h"
 
 #include "prlog.h"
 #include "prmem.h"
@@ -72,6 +73,7 @@ extern "C" MimeObjectClass mimeMultipartAlternativeClass;
 extern "C" MimeObjectClass mimeMultipartRelatedClass;
 extern "C" MimeObjectClass mimeMultipartSignedClass;
 extern "C" MimeObjectClass mimeInlineTextVCardClass;
+extern "C" MimeExternalObjectClass mimeExternalObjectClass;
 
 #if defined(DEBUG) && defined(XP_UNIX)
 static int MimeMultipart_debug_print (MimeObject *, PRFileDesc *, PRInt32);
@@ -429,9 +431,7 @@ MimeMultipart_create_child(MimeObject *obj)
               part functions set correctly */
            !mime_typep(body, (MimeObjectClass*) &mimeMultipartClass)
 #endif
-#ifdef RICHIE_VCARD
-       && !mime_typep(body, (MimeObjectClass*)&mimeInlineTextVCardClass)
-#endif
+    &&        ! (mime_typep(body, (MimeObjectClass*)&mimeExternalObjectClass) && !strcmp(body->content_type, "text/x-vcard"))
        )
 	  {
 		status = obj->options->decompose_file_init_fn ( obj->options->stream_closure, mult->hdrs );
@@ -525,9 +525,7 @@ MimeMultipart_close_child(MimeObject *object)
                       part functions set correctly */
                    !mime_typep(kid,(MimeObjectClass*) &mimeMultipartClass)
 #endif
-#ifdef RICHIE_VCARD
-           && !mime_typep(kid, (MimeObjectClass*)&mimeInlineTextVCardClass)
-#endif
+                                  && !(mime_typep(kid, (MimeObjectClass*)&mimeExternalObjectClass) && !strcmp(kid->content_type, "text/x-vcard"))
            )
 				{
 					status = object->options->decompose_file_close_fn ( object->options->stream_closure );
@@ -581,9 +579,7 @@ MimeMultipart_parse_child_line (MimeObject *obj, char *line, PRInt32 length,
            part functions set correctly */
         !mime_typep(kid, (MimeObjectClass*) &mimeMultipartClass)
 #endif
-#ifdef RICHIE_VCARD
-    && !mime_typep(kid, (MimeObjectClass*)&mimeInlineTextVCardClass)
-#endif
+    && !(mime_typep(kid, (MimeObjectClass*)&mimeExternalObjectClass) && !strcmp(kid->content_type, "text/x-vcard"))
     )
 		return obj->options->decompose_file_output_fn (line, length, obj->options->stream_closure);
   }
