@@ -501,7 +501,8 @@ nsHTMLButtonElement::HandleDOMEvent(nsIPresContext* aPresContext,
 
     case NS_MOUSE_LEFT_CLICK:
       {
-        if (mType == NS_FORM_BUTTON_SUBMIT || mType == NS_FORM_BUTTON_RESET) {
+        if ((mType == NS_FORM_BUTTON_SUBMIT || mType == NS_FORM_BUTTON_RESET) &&
+            mForm) {
           nsFormEvent event;
           event.eventStructType = NS_FORM_EVENT;
           event.message         = (mType == NS_FORM_BUTTON_RESET)
