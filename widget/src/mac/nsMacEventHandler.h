@@ -48,7 +48,7 @@ public:
 		//
 		virtual long 	HandlePositionToOffset(Point aPoint,short* regionClass);
 		virtual PRBool 	HandleOffsetToPosition(long offset,Point* position);
-		virtual PRBool	HandleUpdate(Handle textHandle,ScriptCode script,long fixedLength);
+		virtual PRBool	HandleUpdateInputArea(char* text,Size text_size, ScriptCode textScript,long fixedLength,TextRangeArray* textRangeArray);
 		
 protected:
 #if 1
@@ -70,7 +70,7 @@ protected:
 									PRUint32		aMessage);
 		virtual PRBool	HandleStartComposition(void);
 		virtual PRBool	HandleEndComposition(void);
-		virtual PRBool  HandleTextEvent(void);
+		virtual PRBool  HandleTextEvent(PRUint32 textRangeCount, nsTextRangeArray textRangeArray);
 
 public:
 	virtual void	NotifyDelete(void* aDeletedObject);
