@@ -218,6 +218,13 @@ nsGridRowLeafLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, ns
      grid->GetMaxRowHeight(aState, i, max, !isHorizontal);   // GetMaxColumnWidth
      grid->GetRowFlex(aState, i, flex, !isHorizontal);       // GetColumnFlex
      grid->GetRowOffsets(aState, i, left, right, !isHorizontal); // GetColumnOffsets
+     nsIBox* box = column->GetBox();
+     nscoord collapsed = PR_FALSE;
+     nscoord topMargin = column->mTopMargin;
+     nscoord bottomMargin = column->mBottomMargin;
+
+     if (box) 
+       box->IsCollapsed(aState, collapsed);
 
      pref = pref - (left + right);
      if (pref < 0)
@@ -228,11 +235,17 @@ nsGridRowLeafLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, ns
      // padding from our columns. If the row has padding subtract it.
      // would should always be able to garentee that our margin is smaller
      // or equal to our left or right
-      if (i == 0 || i == count-1) {
+      PRInt32 firstIndex = 0;
+      PRInt32 lastIndex = 0;
+      nsGridRow* firstRow = nsnull;
+      nsGridRow* lastRow = nsnull;
+      grid->GetFirstAndLastRow(aState, firstIndex, lastIndex, firstRow, lastRow, !isHorizontal);
+
+      if (i == firstIndex || i == lastIndex) {
         nsMargin offset(0,0,0,0);
         GetTotalMargin(aBox, offset, isHorizontal);
         // subtract from out left and right
-        if (i == 0) 
+        if (i == firstIndex) 
         {
           if (isHorizontal)
            left -= offset.left;
@@ -240,7 +253,7 @@ nsGridRowLeafLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, ns
            left -= offset.top;
         }
 
-        if (i == count-1)
+        if (i == lastIndex)
         {
           if (isHorizontal)
            right -= offset.right;
@@ -248,18 +261,19 @@ nsGridRowLeafLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, ns
            right -= offset.bottom;
         }
       }
-      
+    
      // initialize the box size here 
      nsBox::BoundsCheck(min, pref, max);
-
+   
 
      current->pref = pref;
      current->min = min;
      current->max = max;
      current->flex = flex;
      current->bogus = column->mIsBogus;
-     current->left = left + column->mTopMargin;
-     current->right = right + column->mBottomMargin;
+     current->left = left + topMargin;
+     current->right = right + bottomMargin;
+     current->collapsed = collapsed;
 
      if (!start) {
         start = current;

@@ -101,14 +101,18 @@ nsGridRowLeafFrame::GetBorderAndPadding(nsMargin& aBorderAndPadding)
 
   nsBoxLayoutState state((nsIPresContext*)nsnull);
 
+  PRInt32 firstIndex = 0;
+  PRInt32 lastIndex = 0;
+  nsGridRow* firstRow = nsnull;
+  nsGridRow* lastRow = nsnull;
+  grid->GetFirstAndLastRow(state, firstIndex, lastIndex, firstRow, lastRow, isHorizontal);
+
   // only the first and last rows can be affected.
-  nsGridRow* row = grid->GetRowAt(0, isHorizontal);
-  if (row && row->GetBox() == this) {
+  if (firstRow && firstRow->GetBox() == this) {
     
     nscoord top = 0;
     nscoord bottom = 0;
-    //grid->GetRowTopBottomPadding(index, top, PR_TRUE, isHorizontal);
-    grid->GetRowOffsets(state, 0, top, bottom, isHorizontal);
+    grid->GetRowOffsets(state, firstIndex, top, bottom, isHorizontal);
 
     if (isHorizontal) {
       if (top > aBorderAndPadding.top)
@@ -119,17 +123,11 @@ nsGridRowLeafFrame::GetBorderAndPadding(nsMargin& aBorderAndPadding)
     } 
   }
 
-  nscoord count = grid->GetRowCount(isHorizontal);
-  if (count == 0)
-    return rv;
-
-  row = grid->GetRowAt(count-1, isHorizontal);
-  if (row && row->GetBox() == this) {
+  if (lastRow && lastRow->GetBox() == this) {
     
     nscoord top = 0;
     nscoord bottom = 0;
-    //grid->GetRowTopBottomPadding(index, bottom, PR_FALSE, isHorizontal);
-    grid->GetRowOffsets(state, count-1, top, bottom, isHorizontal);
+    grid->GetRowOffsets(state, lastIndex, top, bottom, isHorizontal);
 
     if (isHorizontal) {
       if (bottom > aBorderAndPadding.bottom)

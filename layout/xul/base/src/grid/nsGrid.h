@@ -100,10 +100,16 @@ public:
 
   static nsIBox* GetScrolledBox(nsIBox* aChild);
   static nsIBox* GetScrollBox(nsIBox* aChild);
-
+  void GetFirstAndLastRow(nsBoxLayoutState& aState, 
+                          PRInt32& aFirstIndex, 
+                          PRInt32& aLastIndex, 
+                          nsGridRow*& aFirstRow,
+                          nsGridRow*& aLastRow,
+                          PRBool aIsHorizontal);
 private:
   void GetPartFromBox(nsIBox* aBox, nsIGridPart** aPart);
   void GetBoxTotalMargin(nsIBox* aBox, nsMargin& aMargin, PRBool aIsHorizontal = PR_TRUE);
+  PRBool CheckCollapsed(nsBoxLayoutState& aState, nsGridRow* aRow, nscoord& aSize, nscoord& aNewSize);
 
   void FreeMap();
   void FindRowsAndColumns(nsIBox** aRows, nsIBox** aColumns);
