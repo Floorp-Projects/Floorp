@@ -540,12 +540,6 @@ protected:
     nsCOMPtr<nsIEventListenerManager>   mListenerManager;    // [OWNER]
 
     /**
-     * The state of our sloth for lazy content model construction via
-     * RDF; see nsIXULContent and nsRDFGenericBuilder.
-     */
-    PRInt32                             mLazyState;
-
-    /**
      * The nearest enclosing content node with a binding
      * that created us. [Weak]
      */
