@@ -1381,7 +1381,7 @@ nsLocalFile::Equals(nsIFile *inFile, PRBool *_retval)
 }
 
 NS_IMETHODIMP
-nsLocalFile::IsContainedIn(nsIFile *inFile, PRBool recur, PRBool *_retval)
+nsLocalFile::Contains(nsIFile *inFile, PRBool recur, PRBool *_retval)
 {
 	*_retval = PR_FALSE;
 	   
