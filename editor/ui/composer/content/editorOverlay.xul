@@ -384,7 +384,7 @@
       <menuitem id="menu_cut"/>
       <menuitem id="menu_copy"/>
       <menuitem id="menu_paste"/>
-      <menuitem id="menu_pasteNoFormatting" observes="cmd_pasteNoFormatting"/>"
+      <menuitem id="menu_pasteNoFormatting" observes="cmd_pasteNoFormatting"/>
 
 <!-- PasteAs not implemented yet
       <menu id="menu_pasteAs" label="&pasteAs.label;" accesskey="&pasteAs.accesskey;">
