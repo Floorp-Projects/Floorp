@@ -377,7 +377,7 @@ nsScriptSecurityManager::IsDOMClass(nsIClassInfo* aClassInfo)
         return PR_FALSE;
     PRUint32 classFlags;
     nsresult rv = aClassInfo->GetFlags(&classFlags);
-    return NS_SUCCEEDED(rv) && (classFlags | nsIClassInfo::DOM_OBJECT);
+    return NS_SUCCEEDED(rv) && (classFlags & nsIClassInfo::DOM_OBJECT);
 }
 
 PRInt32 
