@@ -50,7 +50,7 @@ NS_IMPL_ISUPPORTS3(nsLDAPAutoCompleteSession, nsIAutoCompleteSession,
                    nsILDAPMessageListener, nsILDAPAutoCompleteSession)
 
 nsLDAPAutoCompleteSession::nsLDAPAutoCompleteSession() :
-    mState(UNBOUND)
+    mState(UNBOUND), mMinStringLength(0)
 {
     NS_INIT_ISUPPORTS();
 }
@@ -89,11 +89,13 @@ nsLDAPAutoCompleteSession::OnStartLookup(const PRUnichar *searchString,
         mListener = listener;   // save it for later callbacks
     }
 
-    // ignore the empty string and strings with @ in them
+    // ignore the empty string, strings with @ in them, and strings
+    // that are too short
     //
-    if (searchString[0] == 0 || 
-        nsLiteralString(searchString).FindChar(PRUnichar('@'), 0) 
-        != kNotFound) {
+    if (searchString[0] == 0 ||
+        nsLiteralString(searchString).FindChar(PRUnichar('@'), 0) != 
+        kNotFound || 
+        mMinStringLength && nsCRT::strlen(searchString) < mMinStringLength)  {
 
         FinishAutoCompleteLookup(nsIAutoCompleteStatus::ignored);
         return NS_OK;
@@ -1027,5 +1029,25 @@ nsLDAPAutoCompleteSession::SetServerURL(nsILDAPURL * aServerURL)
 
     return NS_OK;
 }
+
+// attribute unsigned long minStringLength
+NS_IMETHODIMP
+nsLDAPAutoCompleteSession::GetMinStringLength(PRUint32 *aMinStringLength)
+{
+    if (!aMinStringLength) {
+        return NS_ERROR_NULL_POINTER;
+    }
+
+    *aMinStringLength = mMinStringLength;
+    return NS_OK;
+}
+NS_IMETHODIMP
+nsLDAPAutoCompleteSession::SetMinStringLength(PRUint32 aMinStringLength)
+{
+    mMinStringLength = aMinStringLength;
+
+    return NS_OK;
+}
+
 
 #endif

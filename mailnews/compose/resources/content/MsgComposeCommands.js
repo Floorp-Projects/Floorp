@@ -1866,8 +1866,19 @@ function LoadIdentity(startup)
             try {
               serverURL.spec = prefs.CopyCharPref(autocompleteDirectory + ".uri");
             } catch (ex) {dump("ERROR: " + ex + "\n");}
-            dump("url is " +  serverURL.spec +"\n");
             session2.serverURL = serverURL;
+
+            // don't search on strings shorter than this
+            //
+            try { 
+                session2.minStringLength = 
+                    prefs.GetIntPref(autocompleteDirectory + 
+                                     ".autoComplete.minStringLength");
+            } catch (ex) {
+                // if this pref isn't there, no big deal.  just let
+                // nsLDAPAutoCompleteSession use its default.
+            }
+
             session2.filterTemplate = "cn=";
             session2.outputFormat = "cn <mail>";
             session2.sizeLimit = 10;
