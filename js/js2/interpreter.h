@@ -44,7 +44,7 @@ namespace JavaScript {
 	
 	typedef vector<JSValue> JSValues;
 
-	JSValue interpret(InstructionStream& iCode, LabelList& labels, const JSValues& args);
+	JSValue interpret(InstructionStream& iCode, const JSValues& args);
 }
 
 #endif /* interpreter_h */
