@@ -248,7 +248,7 @@ NS_METHOD nsMenu::AddMenuItem(nsIMenuItem * aMenuItem)
 	  nsString label;
 	  aMenuItem->GetLabel(label);
 	  mNumMenuItems++;
-	  Str255 tmp = "a";
+	  Str255 tmp = "\pa";
 	  ::InsertMenuItem(mMacMenuHandle, tmp, mNumMenuItems);
 	  NSStringSetMenuItemText(mMacMenuHandle, mNumMenuItems,label);
 	}
