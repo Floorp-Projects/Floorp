@@ -5,10 +5,10 @@
 
   <keyset id="navigationKeys">
     <!-- proper arrow key navigation, 4.xP -->
-    <key id="goBackKb"  keycode="VK_LEFT" observes="canGoBack" modifiers="accel"/>
-    <key id="goForwardKb"  keycode="VK_RIGHT" observes="canGoForward" modifiers="accel"/>
-    <key key="[" observes="canGoBack" modifiers="accel"/>
-    <key key="]" observes="canGoForward" modifiers="accel"/>
+    <key id="goBackKb"  keycode="VK_LEFT" command="Browser:Back" modifiers="accel"/>
+    <key id="goForwardKb"  keycode="VK_RIGHT" command="Browser:Forward" modifiers="accel"/>
+    <key key="[" command="Browser:Back" modifiers="accel"/>
+    <key key="]" command="Browser:Forward" modifiers="accel"/>
     <key key="." oncommand="BrowserStop();" modifiers="accel"/>
     <key id="goHome" keycode="VK_HOME" command="Browser:Home" modifiers="meta"/>
   </keyset>  
