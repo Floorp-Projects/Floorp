@@ -34,6 +34,9 @@ nsIMsgWindow.idl
 nsIUrlListenerManager.idl
 nsIMsgProtocolInfo.idl
 nsIMsgRDFDataSource.idl
+nsIIncomingServerListener.idl
+
+
 
 
 
