@@ -35,7 +35,7 @@
 #include "nsString.h"
 #include "nsIParser.h"
 #include "nsHTMLEntities.h"
-
+#include "fe_proto.h"   // for LINEBREAK.  XXX fe_proto.h MUST DIE!
 
 
 #include "nsIUnicodeEncoder.h"
@@ -125,12 +125,6 @@ static struct { char* mEntity; PRInt32 mValue; } entityTable[258] = {
 };
 #define NS_HTML_ENTITY_MAX 258
 
-
-
-
-
-
-
 // XXX - WARNING, slow, we should have
 // a much faster routine instead of scanning
 // the entire list
@@ -196,7 +190,6 @@ public:
 
   PRBool      mAutowrapEnable;
   PRUint32    mAutoWrapColWidth;
-  nsString    mBreak;             // CRLF, CR, LF
 
   nsTagFormat mTagFormat[NS_HTML_TAG_MAX+1];
 };
@@ -211,7 +204,6 @@ void nsPrettyPrinter::Init(PRBool aIndentEnable, PRUint8 aColSize, PRUint8 aTabS
 
   mAutowrapEnable = PR_TRUE;
   mAutoWrapColWidth = 72;
-  mBreak = "\n";              // CRLF, CR, LF
 
   for (PRUint32 i = 0; i < NS_HTML_TAG_MAX; i++)
     mTagFormat[i].Init(PR_FALSE,PR_FALSE,PR_FALSE,PR_FALSE);
@@ -283,15 +275,17 @@ static PRInt32 BreakBeforeClose(eHTMLTags aTag);
 static PRInt32 BreakAfterClose(eHTMLTags aTag);
 static PRBool IndentChildren(eHTMLTags aTag);
 static PRBool PreformattedChildren(eHTMLTags aTag);
+static PRBool PermitWSBeforeOpen(eHTMLTags aTag);
+
+#ifdef OBSOLETE
 static PRBool EatOpen(eHTMLTags aTag);
 static PRBool EatClose(eHTMLTags aTag);
-static PRBool PermitWSBeforeOpen(eHTMLTags aTag);
 static PRBool PermitWSAfterOpen(eHTMLTags aTag);
 static PRBool PermitWSBeforeClose(eHTMLTags aTag);
 static PRBool PermitWSAfterClose(eHTMLTags aTag);
+#endif OBSOLETE
+
 static PRBool IgnoreWS(eHTMLTags aTag);
-
-
 
 
 /**
@@ -645,34 +639,36 @@ void nsHTMLContentSinkStream::WriteAttributes(const nsIParserNode& aNode) {
     for(i=0;i<theCount;i++){
       const nsString& temp=aNode.GetKeyAt(i);
       
-      if (!temp.Equals(nsString("Steve's unbelievable hack attribute")))
-      {      
-        nsString key = temp;
+      nsString key = temp;
 
-        if (mLowerCaseTags == PR_TRUE)
-          key.ToLowerCase();
-        else
-          key.ToUpperCase();
+      if (mLowerCaseTags == PR_TRUE)
+        key.ToLowerCase();
+      else
+        key.ToUpperCase();
 
-
-        EnsureBufferSize(key.Length());
-        key.ToCString(mBuffer,mBufferSize);
+      EnsureBufferSize(key.Length());
+      key.ToCString(mBuffer,mBufferSize);
 
         // send to ouput " [KEY]="
-        Write(' ');
-        Write(mBuffer);
+      Write(' ');
+      Write(mBuffer);
+      mColPos += 1 + strlen(mBuffer) + 1;
+      
+        // See if there's an attribute:
+      const nsString& value=aNode.GetValueAt(i);
+
+      if (value.Length() > 0)
+      {
         Write(char(kEqual));
         mColPos += 1 + strlen(mBuffer) + 1;
-      
-        const nsString& value=aNode.GetValueAt(i);
-        
-         // send to ouput "\"[VALUE]\""
+
+        // send to ouput "\"[VALUE]\""
         Write('\"');
         Write(value);
         Write('\"');
-
-        mColPos += 1 + strlen(mBuffer) + 1;
       }
+
+      mColPos += 1 + strlen(mBuffer) + 1;
     }
   }
 }
@@ -927,7 +923,7 @@ void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode)
   
   if (mColPos != 0 && BreakBeforeOpen(tag))
   {
-    Write('\n');
+    Write(LINEBREAK);
     mColPos = 0;
   }
 
@@ -944,7 +940,8 @@ void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode)
 
   if (tag == eHTMLTag_style)
   {
-    Write(">\n");
+    Write(">");
+    Write(LINEBREAK);
     const   nsString& data = aNode.GetSkippedContent();
     PRInt32 size = data.Length();
     char*   buffer = new char[size+1];
@@ -963,7 +960,7 @@ void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode)
 
   if (BreakAfterOpen(tag))
   {
-    Write('\n');
+    Write(LINEBREAK);
     mColPos = 0;
   }
 
@@ -1001,7 +998,7 @@ void nsHTMLContentSinkStream::AddEndTag(const nsIParserNode& aNode)
   {
     if (mColPos != 0)
     {
-      Write('\n');
+      Write(LINEBREAK);
       mColPos = 0;
     }
     AddIndent();
@@ -1019,7 +1016,7 @@ void nsHTMLContentSinkStream::AddEndTag(const nsIParserNode& aNode)
   
   if (BreakAfterClose(tag))
   {
-    Write('\n');
+    Write(LINEBREAK);
     mColPos = 0;
   }
   mHTMLTagStack[--mHTMLStackPos] = eHTMLTag_unknown;
@@ -1097,7 +1094,7 @@ nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode){
       {
         nsString  str = text;
         PRBool    done = PR_FALSE;
-        PRInt32   index = 0;
+        PRInt32   indx = 0;
         PRInt32   offset = mColPos;
 
         while (!done)
@@ -1107,10 +1104,10 @@ nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode){
           if (start < 0)
             start = 0;
           
-          index = str.Find(' ',start);
+          indx = str.Find(' ',start);
 
           // if there is no break than just add it
-          if (index == kNotFound)
+          if (indx == kNotFound)
           {
             Write(str);
             mColPos += str.Length();
@@ -1122,14 +1119,14 @@ nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode){
             // beginning to the index
             nsString  first = str;
 
-            first.Truncate(index);
+            first.Truncate(indx);
   
             Write(first);
-            Write('\n');
+            Write(LINEBREAK);
             mColPos = 0;
   
             // cut the string from the beginning to the index
-            str.Cut(0,index);
+            str.Cut(0,indx);
             offset = 0;
           }
         }
@@ -1261,9 +1258,9 @@ nsHTMLContentSinkStream::WillBuildModel(void){
   mTabLevel=-1;
   if(mDoHeader) {
     Write(gHeaderComment);
-    Write('\n');
+    Write(LINEBREAK);
     Write(gDocTypeHeader);
-    Write('\n');
+    Write(LINEBREAK);
    }
   return NS_OK;
 }
@@ -1504,6 +1501,20 @@ PRBool PreformattedChildren(eHTMLTags aTag)  {
 }
 
 /**
+  * Are we allowed to insert new white space before the open tag.
+  *
+  * Returning false does not prevent inserting WS
+  * before the tag if WS insertion is allowed for another reason,
+  * e.g. there is already WS there or we are after a tag that
+  * has PermitWSAfter*().
+  */
+PRBool PermitWSBeforeOpen(eHTMLTags aTag)  {
+  PRBool result = IsInline(aTag) == PR_FALSE;
+  return result;
+}
+
+#ifdef OBSOLETE
+/**
   * Eat the open tag.  Pretty much just for <P*>.
   */
 PRBool EatOpen(eHTMLTags aTag)  {
@@ -1515,19 +1526,6 @@ PRBool EatOpen(eHTMLTags aTag)  {
   */
 PRBool EatClose(eHTMLTags aTag)  {
   return PR_FALSE;
-}
-
-/**
-  * Are we allowed to insert new white space before the open tag.
-  *
-  * Returning false does not prevent inserting WS
-  * before the tag if WS insertion is allowed for another reason,
-  * e.g. there is already WS there or we are after a tag that
-  * has PermitWSAfter*().
-  */
-PRBool PermitWSBeforeOpen(eHTMLTags aTag)  {
-  PRBool result = IsInline(aTag) == PR_FALSE;
-  return result;
 }
 
 /** @see PermitWSBeforeOpen */
@@ -1553,6 +1551,7 @@ PRBool PermitWSAfterClose(eHTMLTags aTag)  {
   return PR_TRUE;
 }
 
+#endif /* OBSOLETE */
 
 /** @see PermitWSBeforeOpen */
 PRBool IgnoreWS(eHTMLTags aTag)  {
