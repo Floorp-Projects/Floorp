@@ -4181,7 +4181,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                                        0,
                                        nsnull,
                                        NS_LITERAL_STRING("return this.content;"),
-                                       "javascript:return this.content; // See " __FILE__,
+                                       "javascript:this.content; // See " __FILE__,
                                        1, // lineno
                                        PR_FALSE,
                                        (void **) &getterObj);
