@@ -54,7 +54,7 @@ CScanner::CScanner(nsIURL* aURL,eParseMode aMode) : mBuffer("") {
  */
 CScanner::~CScanner() {
   mStream->Close();
-  delete mStream;
+  mStream->Release();
 }
 
 
