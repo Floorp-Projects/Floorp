@@ -4324,23 +4324,27 @@ HTMLStyleSheetImpl::AttributeChanged(nsIPresContext* aPresContext,
       RecreateFramesOnAttributeChange(aPresContext, aContent, aAttribute);
   }
   else if (PR_TRUE == restyle) {
-    nsIStyleContext* frameContext;
-    frame->GetStyleContext(frameContext);
-    NS_ASSERTION(nsnull != frameContext, "frame must have style context");
-    if (nsnull != frameContext) {
-      nsIStyleContext*  parentContext = frameContext->GetParent();
-      frame->ReResolveStyleContext(aPresContext, parentContext);
-      NS_IF_RELEASE(parentContext);
-      NS_RELEASE(frameContext);
-    }    
-    if (PR_TRUE == reflow) {
-      StyleChangeReflow(aPresContext, frame, aAttribute);
-    }
-    else if (PR_TRUE == render) {
-      ApplyRenderingChangeToTree(aPresContext, frame);
-    }
-    else {  // let the frame deal with it, since we don't know how to
-      frame->AttributeChanged(aPresContext, aContent, aAttribute, aHint);
+    // If there is no frame then there is no point in re-styling it,
+    // is there?
+    if (nsnull != frame) {
+      nsIStyleContext* frameContext;
+      frame->GetStyleContext(frameContext);
+      NS_ASSERTION(nsnull != frameContext, "frame must have style context");
+      if (nsnull != frameContext) {
+        nsIStyleContext*  parentContext = frameContext->GetParent();
+        frame->ReResolveStyleContext(aPresContext, parentContext);
+        NS_IF_RELEASE(parentContext);
+        NS_RELEASE(frameContext);
+      }    
+      if (PR_TRUE == reflow) {
+        StyleChangeReflow(aPresContext, frame, aAttribute);
+      }
+      else if (PR_TRUE == render) {
+        ApplyRenderingChangeToTree(aPresContext, frame);
+      }
+      else {  // let the frame deal with it, since we don't know how to
+        frame->AttributeChanged(aPresContext, aContent, aAttribute, aHint);
+      }
     }
   }
 
