@@ -1301,12 +1301,6 @@ for extension in $MOZ_EXTENSIONS; do
             extensions/p3p/resources/content/contents.rdf
             extensions/p3p/resources/locale/en-US/contents.rdf
             " ;;
-        pics ) MAKEFILES_extensions="$MAKEFILES_extensions
-            extensions/pics/Makefile
-            extensions/pics/public/Makefile
-            extensions/pics/src/Makefile
-            extensions/pics/tests/Makefile
-            " ;;
         pref ) MAKEFILES_extensions="$MAKEFILES_extensions
             extensions/pref/Makefile
             extensions/pref/autoconfig/Makefile

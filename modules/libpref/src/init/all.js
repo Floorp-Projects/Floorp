@@ -122,14 +122,6 @@ pref("accessibility.typeaheadfind.enablesound", true);
 
 pref("browser.history_expire_days", 9);
 
-// Platform for Internet Content Selection
-pref("browser.PICS.ratings_enabled", false);
-pref("browser.PICS.pages_must_be_rated", false);
-pref("browser.PICS.disable_for_this_session", false);
-pref("browser.PICS.reenable_for_this_session", false);
-pref("browser.PICS.service.http___home_netscape_com_default_rating.service_enabled", true);
-pref("browser.PICS.service.http___home_netscape_com_default_rating.s", 0);
-
 // loading and rendering of framesets and iframes
 pref("browser.frames.enabled", true);
 
