@@ -28,8 +28,41 @@ use Moz;
 #-----------------------------------------------
 # configuration variables that globally affect what is built
 #-----------------------------------------------
+$BUILD_ROOT				= ":";
+								# $BUILD_ROOT = ":", the default, with $build{all}
+								# builds the whole tree. Leaving $BUILD_ROOT undefined
+								# will also have this effect.
+								#
+								# $BUILD_ROOT = ":mozilla:mailnews:" with $build{all}
+								# will "make everything in the mailnews directory".
+								#
+								# This is equivalent to the unix commands:
+								#   cd mozilla/mailnews
+								#   gmake
+								# or the windows commands:
+								#   cd mozilla\mailnews
+								#   nmake -f makefile.win
+								#
+								# In conjunction with build{all}, this will carry out
+								# all build phases (export, build, install...), but only
+								# using files inside $BUILD_ROOT. Replace $build{all}
+								# with specific component flags to build stuff from
+								# those components that happens to live inside
+								# $BUILD_ROOT.
+								#
+								# ":", and ":mozilla:" both have the same effect, because
+								# this works by checking that path strings begin with
+								# $BUILD_ROOT.
+								#
+								# $BUILD_ROOT affects only the build phase, not the pull
+								# phase. There is still no scriptable way to update-and-build
+								# a specific directory. In particular, $pull{all} will
+								# still pull the whole tree, irrespective of the
+								# setting of $BUILD_ROOT. To update and build a particular
+								# directory, use MacCVS Pro to update the directory,
+								# then turn off all $pull variables, and set $BUILD_ROOT.
 $DEBUG					= 1;
-$CARBON					= 0;	# turn on to build with TARGET_CARBON
+$CARBON					= 0;	# Turn on to build with TARGET_CARBON
 $MOZ_FULLCIRCLE			= 0;
 $PROFILE				= 0;
 
@@ -41,10 +74,10 @@ $pull{netlib} 			= 0;
 $pull{nglayout} 		= 0;
 $pull{mac} 				= 0;
 
-$build{all} 			= 1;			# turn off to do individual builds, or to do "most"
-$build{most} 			= 1;			# turn off to do individual builds
+$build{all} 			= 1;	# Turn off to do individual builds, or to do "most"
+$build{most} 			= 1;	# Turn off to do individual builds
 $build{dist} 			= 0;
-$build{dist_runtime}	= 0;			# implied by $build{dist}
+$build{dist_runtime}	= 0;	# Implied by $build{dist}
 $build{resources} 		= 0;
 $build{idl}             = 0;
 $build{stubs} 			= 0;

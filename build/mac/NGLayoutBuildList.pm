@@ -109,6 +109,64 @@ sub BuildIDLProject($$)
 	BuildOneProject($project_path,	$module_name.".xpt", "", 1, 0, 1);
 }
 
+#--------------------------------------------------------------------------------------------------
+# Support for BUILD_ROOT
+#
+# These underscore versions of functions in moz.pm check their first parameter to see if it is
+# a path whose initial string matches the BUILD_ROOT string. If so, the original function in moz.pm
+# is called with the same parameter list.
+#--------------------------------------------------------------------------------------------------
+
+sub _InstallFromManifest($;$$)
+{
+	if (!defined($main::BUILD_ROOT) || ($_[0] =~ m/^$main::BUILD_ROOT.+/))
+	{
+		&InstallFromManifest;
+	}
+}
+
+sub _InstallResources($;$;$)
+{
+	if (!defined($main::BUILD_ROOT) || ($_[0] =~ m/^$main::BUILD_ROOT.+/))
+	{
+		&InstallResources;
+	}
+}
+
+sub _MakeAlias($$;$)
+{
+	if (!defined($main::BUILD_ROOT) || ($_[0] =~ m/^$main::BUILD_ROOT.+/))
+	{
+		if ($_[2]) { print ("Making alias for $_[0]"); }
+		&MakeAlias;
+	}
+}
+
+sub _BuildProject($;$)
+{
+	if (!defined($main::BUILD_ROOT) || ($_[0] =~ m/^$main::BUILD_ROOT.+/))
+	{
+		&BuildProject;
+	}
+}
+
+sub _BuildProjectClean($;$)
+{
+	if (!defined($main::BUILD_ROOT) || ($_[0] =~ m/^$main::BUILD_ROOT.+/))
+	{
+		&BuildProjectClean;
+	}
+}
+
+sub _copy($$)
+{
+	if (!defined($main::BUILD_ROOT) || ($_[0] =~ m/^$main::BUILD_ROOT.+/))
+	{
+		print( "Copying $_[0] to $_[1]\n" );
+		&copy;
+	}
+}
+
 #//--------------------------------------------------------------------------------------------------
 #// Check out everything
 #//--------------------------------------------------------------------------------------------------
@@ -210,22 +268,22 @@ sub BuildRuntimeDist()
 	my $distdirectory = ":mozilla:dist"; # the parent directory in dist, including all the headers
 
 	#MAC_COMMON
-	InstallFromManifest(":mozilla:build:mac:MANIFEST",								"$distdirectory:mac:common:");
-	InstallFromManifest(":mozilla:lib:mac:NSRuntime:include:MANIFEST",				"$distdirectory:mac:common:");
-	InstallFromManifest(":mozilla:lib:mac:NSStdLib:include:MANIFEST",				"$distdirectory:mac:common:");
-	InstallFromManifest(":mozilla:lib:mac:MacMemoryAllocator:include:MANIFEST",		"$distdirectory:mac:common:");
-	InstallFromManifest(":mozilla:lib:mac:MoreFiles:MANIFEST",						"$distdirectory:mac:common:morefiles:");
+	_InstallFromManifest(":mozilla:build:mac:MANIFEST",								"$distdirectory:mac:common:");
+	_InstallFromManifest(":mozilla:lib:mac:NSRuntime:include:MANIFEST",				"$distdirectory:mac:common:");
+	_InstallFromManifest(":mozilla:lib:mac:NSStdLib:include:MANIFEST",				"$distdirectory:mac:common:");
+	_InstallFromManifest(":mozilla:lib:mac:MacMemoryAllocator:include:MANIFEST",		"$distdirectory:mac:common:");
+	_InstallFromManifest(":mozilla:lib:mac:MoreFiles:MANIFEST",						"$distdirectory:mac:common:morefiles:");
 
 	#INCLUDE
-	InstallFromManifest(":mozilla:config:mac:MANIFEST",								"$distdirectory:config:");
-	InstallFromManifest(":mozilla:config:mac:MANIFEST_config",						"$distdirectory:config:");
+	_InstallFromManifest(":mozilla:config:mac:MANIFEST",								"$distdirectory:config:");
+	_InstallFromManifest(":mozilla:config:mac:MANIFEST_config",						"$distdirectory:config:");
 	
 	#NSPR	
-    InstallFromManifest(":mozilla:nsprpub:pr:include:MANIFEST",						"$distdirectory:nspr:");		
-    InstallFromManifest(":mozilla:nsprpub:pr:src:md:mac:MANIFEST",					"$distdirectory:nspr:mac:");		
-    InstallFromManifest(":mozilla:nsprpub:lib:ds:MANIFEST",							"$distdirectory:nspr:");		
-    InstallFromManifest(":mozilla:nsprpub:lib:libc:include:MANIFEST",				"$distdirectory:nspr:");		
-    InstallFromManifest(":mozilla:nsprpub:lib:msgc:include:MANIFEST",				"$distdirectory:nspr:");
+    _InstallFromManifest(":mozilla:nsprpub:pr:include:MANIFEST",						"$distdirectory:nspr:");		
+    _InstallFromManifest(":mozilla:nsprpub:pr:src:md:mac:MANIFEST",					"$distdirectory:nspr:mac:");		
+    _InstallFromManifest(":mozilla:nsprpub:lib:ds:MANIFEST",							"$distdirectory:nspr:");		
+    _InstallFromManifest(":mozilla:nsprpub:lib:libc:include:MANIFEST",				"$distdirectory:nspr:");		
+    _InstallFromManifest(":mozilla:nsprpub:lib:msgc:include:MANIFEST",				"$distdirectory:nspr:");
 
 	print("--- Runtime Dist export complete ----\n")
 }
@@ -243,312 +301,312 @@ sub BuildClientDist()
 	my $distdirectory = ":mozilla:dist"; # the parent directory in dist, including all the headers
 	my $dist_dir = _getDistDirectory(); # the subdirectory with the libs and executable.
 
-	InstallFromManifest(":mozilla:lib:mac:Misc:MANIFEST",							"$distdirectory:mac:common:");
+	_InstallFromManifest(":mozilla:lib:mac:Misc:MANIFEST",							"$distdirectory:mac:common:");
 
 	#INCLUDE
 
 	#// To get out defines in all the project, dummy alias NGLayoutConfigInclude.h into MacConfigInclude.h
-	MakeAlias(":mozilla:config:mac:NGLayoutConfigInclude.h",	":mozilla:dist:config:MacConfigInclude.h");
+	_MakeAlias(":mozilla:config:mac:NGLayoutConfigInclude.h",	":mozilla:dist:config:MacConfigInclude.h");
 
-	InstallFromManifest(":mozilla:include:MANIFEST",								"$distdirectory:include:");		
-	InstallFromManifest(":mozilla:cmd:macfe:pch:MANIFEST",							"$distdirectory:include:");
-	InstallFromManifest(":mozilla:cmd:macfe:utility:MANIFEST",						"$distdirectory:include:");
+	_InstallFromManifest(":mozilla:include:MANIFEST",								"$distdirectory:include:");		
+	_InstallFromManifest(":mozilla:cmd:macfe:pch:MANIFEST",							"$distdirectory:include:");
+	_InstallFromManifest(":mozilla:cmd:macfe:utility:MANIFEST",						"$distdirectory:include:");
 
 	#INTL
 	#CHARDET
-	InstallFromManifest(":mozilla:intl:chardet:public:MANIFEST",				"$distdirectory:chardet");
+	_InstallFromManifest(":mozilla:intl:chardet:public:MANIFEST",				"$distdirectory:chardet");
 
 	#UCONV
-	InstallFromManifest(":mozilla:intl:uconv:public:MANIFEST",						"$distdirectory:uconv:");
-	InstallFromManifest(":mozilla:intl:uconv:ucvlatin:MANIFEST",					"$distdirectory:uconv:");
-	InstallFromManifest(":mozilla:intl:uconv:ucvja:MANIFEST",						"$distdirectory:uconv:");
-	InstallFromManifest(":mozilla:intl:uconv:ucvja2:MANIFEST",						"$distdirectory:uconv:");
-	InstallFromManifest(":mozilla:intl:uconv:ucvtw:MANIFEST",						"$distdirectory:uconv:");
-	InstallFromManifest(":mozilla:intl:uconv:ucvtw2:MANIFEST",						"$distdirectory:uconv:");
-	InstallFromManifest(":mozilla:intl:uconv:ucvcn:MANIFEST",						"$distdirectory:uconv:");
-	InstallFromManifest(":mozilla:intl:uconv:ucvko:MANIFEST",						"$distdirectory:uconv:");
-#	InstallFromManifest(":mozilla:intl:uconv:ucvth:MANIFEST",						"$distdirectory:uconv:");
-#	InstallFromManifest(":mozilla:intl:uconv:ucvvt:MANIFEST",						"$distdirectory:uconv:");
+	_InstallFromManifest(":mozilla:intl:uconv:public:MANIFEST",						"$distdirectory:uconv:");
+	_InstallFromManifest(":mozilla:intl:uconv:ucvlatin:MANIFEST",					"$distdirectory:uconv:");
+	_InstallFromManifest(":mozilla:intl:uconv:ucvja:MANIFEST",						"$distdirectory:uconv:");
+	_InstallFromManifest(":mozilla:intl:uconv:ucvja2:MANIFEST",						"$distdirectory:uconv:");
+	_InstallFromManifest(":mozilla:intl:uconv:ucvtw:MANIFEST",						"$distdirectory:uconv:");
+	_InstallFromManifest(":mozilla:intl:uconv:ucvtw2:MANIFEST",						"$distdirectory:uconv:");
+	_InstallFromManifest(":mozilla:intl:uconv:ucvcn:MANIFEST",						"$distdirectory:uconv:");
+	_InstallFromManifest(":mozilla:intl:uconv:ucvko:MANIFEST",						"$distdirectory:uconv:");
+#	_InstallFromManifest(":mozilla:intl:uconv:ucvth:MANIFEST",						"$distdirectory:uconv:");
+#	_InstallFromManifest(":mozilla:intl:uconv:ucvvt:MANIFEST",						"$distdirectory:uconv:");
 
 
 	#UNICHARUTIL
-	InstallFromManifest(":mozilla:intl:unicharutil:public:MANIFEST",				"$distdirectory:unicharutil");
+	_InstallFromManifest(":mozilla:intl:unicharutil:public:MANIFEST",				"$distdirectory:unicharutil");
 
 	#LOCALE
-	InstallFromManifest(":mozilla:intl:locale:public:MANIFEST",						"$distdirectory:locale:");
+	_InstallFromManifest(":mozilla:intl:locale:public:MANIFEST",						"$distdirectory:locale:");
 
 	#LWBRK
-	InstallFromManifest(":mozilla:intl:lwbrk:public:MANIFEST",						"$distdirectory:lwbrk:");
+	_InstallFromManifest(":mozilla:intl:lwbrk:public:MANIFEST",						"$distdirectory:lwbrk:");
 
 	#STRRES
-	InstallFromManifest(":mozilla:intl:strres:public:MANIFEST",						"$distdirectory:strres:");
+	_InstallFromManifest(":mozilla:intl:strres:public:MANIFEST",						"$distdirectory:strres:");
 
 	#JPEG
-    InstallFromManifest(":mozilla:jpeg:MANIFEST",									"$distdirectory:jpeg:");
+    _InstallFromManifest(":mozilla:jpeg:MANIFEST",									"$distdirectory:jpeg:");
 
 	#LIBREG
-    InstallFromManifest(":mozilla:modules:libreg:include:MANIFEST",					"$distdirectory:libreg:");
+    _InstallFromManifest(":mozilla:modules:libreg:include:MANIFEST",					"$distdirectory:libreg:");
 
 	#XPCOM
-	InstallFromManifest(":mozilla:xpcom:base:MANIFEST_IDL",							"$distdirectory:idl:");
-	InstallFromManifest(":mozilla:xpcom:io:MANIFEST_IDL",							"$distdirectory:idl:");
-	InstallFromManifest(":mozilla:xpcom:ds:MANIFEST_IDL",							"$distdirectory:idl:");
+	_InstallFromManifest(":mozilla:xpcom:base:MANIFEST_IDL",							"$distdirectory:idl:");
+	_InstallFromManifest(":mozilla:xpcom:io:MANIFEST_IDL",							"$distdirectory:idl:");
+	_InstallFromManifest(":mozilla:xpcom:ds:MANIFEST_IDL",							"$distdirectory:idl:");
 
-	InstallFromManifest(":mozilla:xpcom:base:MANIFEST",								"$distdirectory:xpcom:");
-	InstallFromManifest(":mozilla:xpcom:components:MANIFEST",						"$distdirectory:xpcom:");
-	InstallFromManifest(":mozilla:xpcom:ds:MANIFEST",								"$distdirectory:xpcom:");
-	InstallFromManifest(":mozilla:xpcom:io:MANIFEST",								"$distdirectory:xpcom:");
-	InstallFromManifest(":mozilla:xpcom:threads:MANIFEST",							"$distdirectory:xpcom:");
-	InstallFromManifest(":mozilla:xpcom:proxy:public:MANIFEST",						"$distdirectory:xpcom:");
+	_InstallFromManifest(":mozilla:xpcom:base:MANIFEST",								"$distdirectory:xpcom:");
+	_InstallFromManifest(":mozilla:xpcom:components:MANIFEST",						"$distdirectory:xpcom:");
+	_InstallFromManifest(":mozilla:xpcom:ds:MANIFEST",								"$distdirectory:xpcom:");
+	_InstallFromManifest(":mozilla:xpcom:io:MANIFEST",								"$distdirectory:xpcom:");
+	_InstallFromManifest(":mozilla:xpcom:threads:MANIFEST",							"$distdirectory:xpcom:");
+	_InstallFromManifest(":mozilla:xpcom:proxy:public:MANIFEST",						"$distdirectory:xpcom:");
 
-	InstallFromManifest(":mozilla:xpcom:reflect:xptinfo:public:MANIFEST",			"$distdirectory:xpcom:");
-	InstallFromManifest(":mozilla:xpcom:reflect:xptcall:public:MANIFEST",			"$distdirectory:xpcom:");
+	_InstallFromManifest(":mozilla:xpcom:reflect:xptinfo:public:MANIFEST",			"$distdirectory:xpcom:");
+	_InstallFromManifest(":mozilla:xpcom:reflect:xptcall:public:MANIFEST",			"$distdirectory:xpcom:");
 
-	InstallFromManifest(":mozilla:xpcom:typelib:xpt:public:MANIFEST",				"$distdirectory:xpcom:");
+	_InstallFromManifest(":mozilla:xpcom:typelib:xpt:public:MANIFEST",				"$distdirectory:xpcom:");
 	
 	#PREFS
-	InstallFromManifest(":mozilla:modules:libpref:src:MANIFEST_PREFS",				$dist_dir."Components:", 1);
+	_InstallFromManifest(":mozilla:modules:libpref:src:MANIFEST_PREFS",				$dist_dir."Components:", 1);
 
 	#ZLIB
-    InstallFromManifest(":mozilla:modules:zlib:src:MANIFEST",						"$distdirectory:zlib:");
+    _InstallFromManifest(":mozilla:modules:zlib:src:MANIFEST",						"$distdirectory:zlib:");
 
     #LIBJAR
-    InstallFromManifest(":mozilla:modules:libjar:MANIFEST",                         "$distdirectory:libjar:");
+    _InstallFromManifest(":mozilla:modules:libjar:MANIFEST",                         "$distdirectory:libjar:");
 
 	#LIBUTIL
-    InstallFromManifest(":mozilla:modules:libutil:public:MANIFEST",					"$distdirectory:libutil:");
+    _InstallFromManifest(":mozilla:modules:libutil:public:MANIFEST",					"$distdirectory:libutil:");
 
 	#SUN_JAVA
-    InstallFromManifest(":mozilla:sun-java:stubs:include:MANIFEST",					"$distdirectory:sun-java:");
-    InstallFromManifest(":mozilla:sun-java:stubs:macjri:MANIFEST",					"$distdirectory:sun-java:");
+    _InstallFromManifest(":mozilla:sun-java:stubs:include:MANIFEST",					"$distdirectory:sun-java:");
+    _InstallFromManifest(":mozilla:sun-java:stubs:macjri:MANIFEST",					"$distdirectory:sun-java:");
 
 	#NAV_JAVA
-    InstallFromManifest(":mozilla:nav-java:stubs:include:MANIFEST",					"$distdirectory:nav-java:");
-    InstallFromManifest(":mozilla:nav-java:stubs:macjri:MANIFEST",					"$distdirectory:nav-java:");
+    _InstallFromManifest(":mozilla:nav-java:stubs:include:MANIFEST",					"$distdirectory:nav-java:");
+    _InstallFromManifest(":mozilla:nav-java:stubs:macjri:MANIFEST",					"$distdirectory:nav-java:");
 
 	#JS
-    InstallFromManifest(":mozilla:js:src:MANIFEST",									"$distdirectory:js:");
+    _InstallFromManifest(":mozilla:js:src:MANIFEST",									"$distdirectory:js:");
 
 	#LIVECONNECT
-	InstallFromManifest(":mozilla:js:src:liveconnect:MANIFEST",						"$distdirectory:liveconnect:");
+	_InstallFromManifest(":mozilla:js:src:liveconnect:MANIFEST",						"$distdirectory:liveconnect:");
 	
 	#XPCONNECT	
-	InstallFromManifest(":mozilla:js:src:xpconnect:idl:MANIFEST",					"$distdirectory:idl:");
-	InstallFromManifest(":mozilla:js:src:xpconnect:public:MANIFEST",				"$distdirectory:xpconnect:");
+	_InstallFromManifest(":mozilla:js:src:xpconnect:idl:MANIFEST",					"$distdirectory:idl:");
+	_InstallFromManifest(":mozilla:js:src:xpconnect:public:MANIFEST",				"$distdirectory:xpconnect:");
 
 	#CAPS
-	InstallFromManifest(":mozilla:caps:public:MANIFEST",							"$distdirectory:caps:");
-	InstallFromManifest(":mozilla:caps:include:MANIFEST",							"$distdirectory:caps:");
+	_InstallFromManifest(":mozilla:caps:public:MANIFEST",							"$distdirectory:caps:");
+	_InstallFromManifest(":mozilla:caps:include:MANIFEST",							"$distdirectory:caps:");
 
 	#SECURITY_freenav
-    InstallFromManifest(":mozilla:modules:security:freenav:MANIFEST",				"$distdirectory:security:");
+    _InstallFromManifest(":mozilla:modules:security:freenav:MANIFEST",				"$distdirectory:security:");
 
 	#LIBPREF
-    InstallFromManifest(":mozilla:modules:libpref:public:MANIFEST",					"$distdirectory:libpref:");
+    _InstallFromManifest(":mozilla:modules:libpref:public:MANIFEST",					"$distdirectory:libpref:");
 
 	#PROFILE
-    InstallFromManifest(":mozilla:profile:public:MANIFEST",							"$distdirectory:profile:");
+    _InstallFromManifest(":mozilla:profile:public:MANIFEST",							"$distdirectory:profile:");
 
 	#LIBIMAGE
-    InstallFromManifest(":mozilla:modules:libimg:png:MANIFEST",						"$distdirectory:libimg:");
-    InstallFromManifest(":mozilla:modules:libimg:src:MANIFEST",						"$distdirectory:libimg:");
-    InstallFromManifest(":mozilla:modules:libimg:public:MANIFEST",					"$distdirectory:libimg:");
-    InstallFromManifest(":mozilla:modules:libimg:public_com:MANIFEST",				"$distdirectory:libimg:");
+    _InstallFromManifest(":mozilla:modules:libimg:png:MANIFEST",						"$distdirectory:libimg:");
+    _InstallFromManifest(":mozilla:modules:libimg:src:MANIFEST",						"$distdirectory:libimg:");
+    _InstallFromManifest(":mozilla:modules:libimg:public:MANIFEST",					"$distdirectory:libimg:");
+    _InstallFromManifest(":mozilla:modules:libimg:public_com:MANIFEST",				"$distdirectory:libimg:");
 
 	#PLUGIN
-    InstallFromManifest(":mozilla:modules:plugin:nglsrc:MANIFEST",					"$distdirectory:plugin:");
-    InstallFromManifest(":mozilla:modules:plugin:public:MANIFEST",					"$distdirectory:plugin:");
-    InstallFromManifest(":mozilla:modules:plugin:src:MANIFEST",						"$distdirectory:plugin:");
-    InstallFromManifest(":mozilla:modules:oji:src:MANIFEST",						"$distdirectory:oji:");
-    InstallFromManifest(":mozilla:modules:oji:public:MANIFEST",						"$distdirectory:oji:");
+    _InstallFromManifest(":mozilla:modules:plugin:nglsrc:MANIFEST",					"$distdirectory:plugin:");
+    _InstallFromManifest(":mozilla:modules:plugin:public:MANIFEST",					"$distdirectory:plugin:");
+    _InstallFromManifest(":mozilla:modules:plugin:src:MANIFEST",						"$distdirectory:plugin:");
+    _InstallFromManifest(":mozilla:modules:oji:src:MANIFEST",						"$distdirectory:oji:");
+    _InstallFromManifest(":mozilla:modules:oji:public:MANIFEST",						"$distdirectory:oji:");
 
 	#DBM
-    InstallFromManifest(":mozilla:dbm:include:MANIFEST",							"$distdirectory:dbm:");
+    _InstallFromManifest(":mozilla:dbm:include:MANIFEST",							"$distdirectory:dbm:");
 	
 	#LAYERS (IS THIS STILL NEEDED)
-	InstallFromManifest(":mozilla:lib:liblayer:include:MANIFEST",					"$distdirectory:layers:");
+	_InstallFromManifest(":mozilla:lib:liblayer:include:MANIFEST",					"$distdirectory:layers:");
 
 	#NETWORK
-    InstallFromManifest(":mozilla:network:public:MANIFEST",							"$distdirectory:network:");
-    InstallFromManifest(":mozilla:network:cache:MANIFEST",							"$distdirectory:network:");
-    InstallFromManifest(":mozilla:network:client:MANIFEST",							"$distdirectory:network:");
-    InstallFromManifest(":mozilla:network:cnvts:MANIFEST",							"$distdirectory:network:");
-    InstallFromManifest(":mozilla:network:cstream:MANIFEST",						"$distdirectory:network:");
-    InstallFromManifest(":mozilla:network:main:MANIFEST",							"$distdirectory:network:");
-    InstallFromManifest(":mozilla:network:mimetype:MANIFEST",						"$distdirectory:network:");
-    InstallFromManifest(":mozilla:network:util:MANIFEST",							"$distdirectory:network:");
-    InstallFromManifest(":mozilla:network:protocol:about:MANIFEST",					"$distdirectory:network:");
-    InstallFromManifest(":mozilla:network:protocol:certld:MANIFEST",				"$distdirectory:network:");
-    InstallFromManifest(":mozilla:network:protocol:dataurl:MANIFEST",				"$distdirectory:network:");
-    InstallFromManifest(":mozilla:network:protocol:file:MANIFEST",					"$distdirectory:network:");
-    InstallFromManifest(":mozilla:network:protocol:ftp:MANIFEST",					"$distdirectory:network:");
-    InstallFromManifest(":mozilla:network:protocol:gopher:MANIFEST",				"$distdirectory:network:");
-    InstallFromManifest(":mozilla:network:protocol:http:MANIFEST",					"$distdirectory:network:");
-    InstallFromManifest(":mozilla:network:protocol:js:MANIFEST",					"$distdirectory:network:");
-    InstallFromManifest(":mozilla:network:protocol:mailbox:MANIFEST",				"$distdirectory:network:");
-    InstallFromManifest(":mozilla:network:protocol:marimba:MANIFEST",				"$distdirectory:network:");
-    InstallFromManifest(":mozilla:network:protocol:nntp:MANIFEST",					"$distdirectory:network:");
-    InstallFromManifest(":mozilla:network:protocol:pop3:MANIFEST",					"$distdirectory:network:");
-    InstallFromManifest(":mozilla:network:protocol:remote:MANIFEST",				"$distdirectory:network:");
-    InstallFromManifest(":mozilla:network:protocol:smtp:MANIFEST",					"$distdirectory:network:");
-    InstallFromManifest(":mozilla:network:protocol:sockstub:MANIFEST",				"$distdirectory:network:");
-    InstallFromManifest(":mozilla:network:module:MANIFEST",							"$distdirectory:network:module");
+    _InstallFromManifest(":mozilla:network:public:MANIFEST",							"$distdirectory:network:");
+    _InstallFromManifest(":mozilla:network:cache:MANIFEST",							"$distdirectory:network:");
+    _InstallFromManifest(":mozilla:network:client:MANIFEST",							"$distdirectory:network:");
+    _InstallFromManifest(":mozilla:network:cnvts:MANIFEST",							"$distdirectory:network:");
+    _InstallFromManifest(":mozilla:network:cstream:MANIFEST",						"$distdirectory:network:");
+    _InstallFromManifest(":mozilla:network:main:MANIFEST",							"$distdirectory:network:");
+    _InstallFromManifest(":mozilla:network:mimetype:MANIFEST",						"$distdirectory:network:");
+    _InstallFromManifest(":mozilla:network:util:MANIFEST",							"$distdirectory:network:");
+    _InstallFromManifest(":mozilla:network:protocol:about:MANIFEST",					"$distdirectory:network:");
+    _InstallFromManifest(":mozilla:network:protocol:certld:MANIFEST",				"$distdirectory:network:");
+    _InstallFromManifest(":mozilla:network:protocol:dataurl:MANIFEST",				"$distdirectory:network:");
+    _InstallFromManifest(":mozilla:network:protocol:file:MANIFEST",					"$distdirectory:network:");
+    _InstallFromManifest(":mozilla:network:protocol:ftp:MANIFEST",					"$distdirectory:network:");
+    _InstallFromManifest(":mozilla:network:protocol:gopher:MANIFEST",				"$distdirectory:network:");
+    _InstallFromManifest(":mozilla:network:protocol:http:MANIFEST",					"$distdirectory:network:");
+    _InstallFromManifest(":mozilla:network:protocol:js:MANIFEST",					"$distdirectory:network:");
+    _InstallFromManifest(":mozilla:network:protocol:mailbox:MANIFEST",				"$distdirectory:network:");
+    _InstallFromManifest(":mozilla:network:protocol:marimba:MANIFEST",				"$distdirectory:network:");
+    _InstallFromManifest(":mozilla:network:protocol:nntp:MANIFEST",					"$distdirectory:network:");
+    _InstallFromManifest(":mozilla:network:protocol:pop3:MANIFEST",					"$distdirectory:network:");
+    _InstallFromManifest(":mozilla:network:protocol:remote:MANIFEST",				"$distdirectory:network:");
+    _InstallFromManifest(":mozilla:network:protocol:smtp:MANIFEST",					"$distdirectory:network:");
+    _InstallFromManifest(":mozilla:network:protocol:sockstub:MANIFEST",				"$distdirectory:network:");
+    _InstallFromManifest(":mozilla:network:module:MANIFEST",							"$distdirectory:network:module");
 
 	#WALLET
-    InstallFromManifest(":mozilla:extensions:wallet:public:MANIFEST",				"$distdirectory:wallet:");
+    _InstallFromManifest(":mozilla:extensions:wallet:public:MANIFEST",				"$distdirectory:wallet:");
 
 	#WEBSHELL
-    InstallFromManifest(":mozilla:webshell:public:MANIFEST",						"$distdirectory:webshell:");
-    InstallFromManifest(":mozilla:webshell:tests:viewer:public:MANIFEST",  			"$distdirectory:webshell:");
+    _InstallFromManifest(":mozilla:webshell:public:MANIFEST",						"$distdirectory:webshell:");
+    _InstallFromManifest(":mozilla:webshell:tests:viewer:public:MANIFEST",  			"$distdirectory:webshell:");
 
 	#LAYOUT
-    InstallFromManifest(":mozilla:layout:build:MANIFEST",							"$distdirectory:layout:");
-    InstallFromManifest(":mozilla:layout:base:public:MANIFEST",						"$distdirectory:layout:");
-	InstallFromManifest(":mozilla:layout:html:content:public:MANIFEST",				"$distdirectory:layout:");
-	InstallFromManifest(":mozilla:layout:html:document:src:MANIFEST",				"$distdirectory:layout:");
-	InstallFromManifest(":mozilla:layout:html:document:public:MANIFEST",			"$distdirectory:layout:");
-    InstallFromManifest(":mozilla:layout:html:style:public:MANIFEST",				"$distdirectory:layout:");
-    InstallFromManifest(":mozilla:layout:html:style:src:MANIFEST",					"$distdirectory:layout:");
-    InstallFromManifest(":mozilla:layout:html:base:src:MANIFEST",					"$distdirectory:layout:");
-	InstallFromManifest(":mozilla:layout:html:forms:public:MANIFEST",				"$distdirectory:layout:");
-    InstallFromManifest(":mozilla:layout:html:table:public:MANIFEST",				"$distdirectory:layout:");
-    InstallFromManifest(":mozilla:layout:base:src:MANIFEST",						"$distdirectory:layout:");
-	InstallFromManifest(":mozilla:layout:events:public:MANIFEST",					"$distdirectory:layout:");
-	InstallFromManifest(":mozilla:layout:events:src:MANIFEST",						"$distdirectory:layout:");
-	InstallFromManifest(":mozilla:layout:xml:document:public:MANIFEST",				"$distdirectory:layout:");
-	InstallFromManifest(":mozilla:layout:xml:content:public:MANIFEST",				"$distdirectory:layout:");
+    _InstallFromManifest(":mozilla:layout:build:MANIFEST",							"$distdirectory:layout:");
+    _InstallFromManifest(":mozilla:layout:base:public:MANIFEST",						"$distdirectory:layout:");
+	_InstallFromManifest(":mozilla:layout:html:content:public:MANIFEST",				"$distdirectory:layout:");
+	_InstallFromManifest(":mozilla:layout:html:document:src:MANIFEST",				"$distdirectory:layout:");
+	_InstallFromManifest(":mozilla:layout:html:document:public:MANIFEST",			"$distdirectory:layout:");
+    _InstallFromManifest(":mozilla:layout:html:style:public:MANIFEST",				"$distdirectory:layout:");
+    _InstallFromManifest(":mozilla:layout:html:style:src:MANIFEST",					"$distdirectory:layout:");
+    _InstallFromManifest(":mozilla:layout:html:base:src:MANIFEST",					"$distdirectory:layout:");
+	_InstallFromManifest(":mozilla:layout:html:forms:public:MANIFEST",				"$distdirectory:layout:");
+    _InstallFromManifest(":mozilla:layout:html:table:public:MANIFEST",				"$distdirectory:layout:");
+    _InstallFromManifest(":mozilla:layout:base:src:MANIFEST",						"$distdirectory:layout:");
+	_InstallFromManifest(":mozilla:layout:events:public:MANIFEST",					"$distdirectory:layout:");
+	_InstallFromManifest(":mozilla:layout:events:src:MANIFEST",						"$distdirectory:layout:");
+	_InstallFromManifest(":mozilla:layout:xml:document:public:MANIFEST",				"$distdirectory:layout:");
+	_InstallFromManifest(":mozilla:layout:xml:content:public:MANIFEST",				"$distdirectory:layout:");
 
 	#GFX
-    InstallFromManifest(":mozilla:gfx:public:MANIFEST",								"$distdirectory:gfx:");
+    _InstallFromManifest(":mozilla:gfx:public:MANIFEST",								"$distdirectory:gfx:");
 
 	#VIEW
-    InstallFromManifest(":mozilla:view:public:MANIFEST",							"$distdirectory:view:");
+    _InstallFromManifest(":mozilla:view:public:MANIFEST",							"$distdirectory:view:");
 
 	#DOM
-   InstallFromManifest(":mozilla:dom:public:MANIFEST",								"$distdirectory:dom:");
-   InstallFromManifest(":mozilla:dom:public:MANIFEST_IDL",							"$distdirectory:idl:");
-   InstallFromManifest(":mozilla:dom:public:base:MANIFEST",							"$distdirectory:dom:");
-   InstallFromManifest(":mozilla:dom:public:coreDom:MANIFEST",						"$distdirectory:dom:");
-   InstallFromManifest(":mozilla:dom:public:coreEvents:MANIFEST",					"$distdirectory:dom:");
-   InstallFromManifest(":mozilla:dom:public:events:MANIFEST",						"$distdirectory:dom:");
-   InstallFromManifest(":mozilla:dom:public:range:MANIFEST",						"$distdirectory:dom:");
-   InstallFromManifest(":mozilla:dom:public:html:MANIFEST",							"$distdirectory:dom:");
-   InstallFromManifest(":mozilla:dom:public:css:MANIFEST",							"$distdirectory:dom:");
-   InstallFromManifest(":mozilla:dom:src:jsurl:MANIFEST",							"$distdirectory:dom:");
-   InstallFromManifest(":mozilla:dom:src:base:MANIFEST",							"$distdirectory:dom:");
+   _InstallFromManifest(":mozilla:dom:public:MANIFEST",								"$distdirectory:dom:");
+   _InstallFromManifest(":mozilla:dom:public:MANIFEST_IDL",							"$distdirectory:idl:");
+   _InstallFromManifest(":mozilla:dom:public:base:MANIFEST",							"$distdirectory:dom:");
+   _InstallFromManifest(":mozilla:dom:public:coreDom:MANIFEST",						"$distdirectory:dom:");
+   _InstallFromManifest(":mozilla:dom:public:coreEvents:MANIFEST",					"$distdirectory:dom:");
+   _InstallFromManifest(":mozilla:dom:public:events:MANIFEST",						"$distdirectory:dom:");
+   _InstallFromManifest(":mozilla:dom:public:range:MANIFEST",						"$distdirectory:dom:");
+   _InstallFromManifest(":mozilla:dom:public:html:MANIFEST",							"$distdirectory:dom:");
+   _InstallFromManifest(":mozilla:dom:public:css:MANIFEST",							"$distdirectory:dom:");
+   _InstallFromManifest(":mozilla:dom:src:jsurl:MANIFEST",							"$distdirectory:dom:");
+   _InstallFromManifest(":mozilla:dom:src:base:MANIFEST",							"$distdirectory:dom:");
 
 	#HTMLPARSER
-	InstallFromManifest(":mozilla:htmlparser:src:MANIFEST",							"$distdirectory:htmlparser:");
+	_InstallFromManifest(":mozilla:htmlparser:src:MANIFEST",							"$distdirectory:htmlparser:");
 
 	#EXPAT
-	InstallFromManifest(":mozilla:expat:xmlparse:MANIFEST",							"$distdirectory:expat:");
+	_InstallFromManifest(":mozilla:expat:xmlparse:MANIFEST",							"$distdirectory:expat:");
       
 	#WIDGET
-    InstallFromManifest(":mozilla:widget:public:MANIFEST",							"$distdirectory:widget:");
-    InstallFromManifest(":mozilla:widget:public:MANIFEST_IDL",						"$distdirectory:idl:");
-    InstallFromManifest(":mozilla:widget:src:mac:MANIFEST",							"$distdirectory:widget:");
+    _InstallFromManifest(":mozilla:widget:public:MANIFEST",							"$distdirectory:widget:");
+    _InstallFromManifest(":mozilla:widget:public:MANIFEST_IDL",						"$distdirectory:idl:");
+    _InstallFromManifest(":mozilla:widget:src:mac:MANIFEST",							"$distdirectory:widget:");
 
     #RDF
-    InstallFromManifest(":mozilla:rdf:base:idl:MANIFEST",							"$distdirectory:idl:");
-    InstallFromManifest(":mozilla:rdf:base:public:MANIFEST",						"$distdirectory:rdf:");
-    InstallFromManifest(":mozilla:rdf:util:public:MANIFEST",						"$distdirectory:rdf:");
-    InstallFromManifest(":mozilla:rdf:content:public:MANIFEST",						"$distdirectory:rdf:");
-    InstallFromManifest(":mozilla:rdf:datasource:public:MANIFEST",					"$distdirectory:rdf:");
-    InstallFromManifest(":mozilla:rdf:build:MANIFEST",								"$distdirectory:rdf:");
+    _InstallFromManifest(":mozilla:rdf:base:idl:MANIFEST",							"$distdirectory:idl:");
+    _InstallFromManifest(":mozilla:rdf:base:public:MANIFEST",						"$distdirectory:rdf:");
+    _InstallFromManifest(":mozilla:rdf:util:public:MANIFEST",						"$distdirectory:rdf:");
+    _InstallFromManifest(":mozilla:rdf:content:public:MANIFEST",						"$distdirectory:rdf:");
+    _InstallFromManifest(":mozilla:rdf:datasource:public:MANIFEST",					"$distdirectory:rdf:");
+    _InstallFromManifest(":mozilla:rdf:build:MANIFEST",								"$distdirectory:rdf:");
     
     #BRPROF
-	InstallFromManifest(":mozilla:rdf:brprof:public:MANIFEST",						"$distdirectory:brprof:");
+	_InstallFromManifest(":mozilla:rdf:brprof:public:MANIFEST",						"$distdirectory:brprof:");
     
     #CHROME
-	InstallFromManifest(":mozilla:rdf:chrome:public:MANIFEST",                      "$distdirectory:chrome:");
+	_InstallFromManifest(":mozilla:rdf:chrome:public:MANIFEST",                      "$distdirectory:chrome:");
     
 	#EDITOR
-	InstallFromManifest(":mozilla:editor:idl:MANIFEST",								"$distdirectory:idl:");
-	InstallFromManifest(":mozilla:editor:public:MANIFEST",							"$distdirectory:editor:");
-	InstallFromManifest(":mozilla:editor:txmgr:public:MANIFEST",					"$distdirectory:editor:txmgr");
-	InstallFromManifest(":mozilla:editor:txtsvc:public:MANIFEST",					"$distdirectory:editor:txtsvc");
+	_InstallFromManifest(":mozilla:editor:idl:MANIFEST",								"$distdirectory:idl:");
+	_InstallFromManifest(":mozilla:editor:public:MANIFEST",							"$distdirectory:editor:");
+	_InstallFromManifest(":mozilla:editor:txmgr:public:MANIFEST",					"$distdirectory:editor:txmgr");
+	_InstallFromManifest(":mozilla:editor:txtsvc:public:MANIFEST",					"$distdirectory:editor:txtsvc");
   
     #SILENTDL
-    InstallFromManifest(":mozilla:silentdl:MANIFEST",								"$distdirectory:silentdl:");
+    _InstallFromManifest(":mozilla:silentdl:MANIFEST",								"$distdirectory:silentdl:");
 
     #XPINSTALL (the one and only!)
-    InstallFromManifest(":mozilla:xpinstall:public:MANIFEST",                       "$distdirectory:xpinstall:");
-    InstallFromManifest(":mozilla:xpinstall:public:MANIFEST_PREFS",				    $dist_dir."Components:", 1);
+    _InstallFromManifest(":mozilla:xpinstall:public:MANIFEST",                       "$distdirectory:xpinstall:");
+    _InstallFromManifest(":mozilla:xpinstall:public:MANIFEST_PREFS",				    $dist_dir."Components:", 1);
 
 	#FULL CIRCLE    
 	if ($main::MOZ_FULLCIRCLE)
 	{
-		InstallFromManifest(":ns:fullsoft:public:MANIFEST",							"$distdirectory");
+		_InstallFromManifest(":ns:fullsoft:public:MANIFEST",							"$distdirectory");
 	
 		if ($main::DEBUG)
 		{
-			#InstallFromManifest(":ns:fullsoft:public:MANIFEST",					"$distdirectory:viewer_debug:");
+			#_InstallFromManifest(":ns:fullsoft:public:MANIFEST",					"$distdirectory:viewer_debug:");
 		} 
 		else
 		{
-			#InstallFromManifest(":ns:fullsoft:public:MANIFEST",					"$distdirectory:viewer:");
-			InstallFromManifest(":ns:fullsoft:public:MANIFEST",						"$distdirectory");
+			#_InstallFromManifest(":ns:fullsoft:public:MANIFEST",					"$distdirectory:viewer:");
+			_InstallFromManifest(":ns:fullsoft:public:MANIFEST",						"$distdirectory");
 		}
 	}
 
 
 	# XPFE COMPONENTS
-   InstallFromManifest(":mozilla:xpfe:components:public:MANIFEST",					"$distdirectory:xpfe:components");
-   InstallFromManifest(":mozilla:xpfe:components:public:MANIFEST_IDL",				"$distdirectory:idl:");
+   _InstallFromManifest(":mozilla:xpfe:components:public:MANIFEST",					"$distdirectory:xpfe:components");
+   _InstallFromManifest(":mozilla:xpfe:components:public:MANIFEST_IDL",				"$distdirectory:idl:");
 
    # find
-   InstallFromManifest(":mozilla:xpfe:components:find:public:MANIFEST_IDL",			"$distdirectory:idl:");
+   _InstallFromManifest(":mozilla:xpfe:components:find:public:MANIFEST_IDL",			"$distdirectory:idl:");
 
    # bookmarks
-   InstallFromManifest(":mozilla:xpfe:components:bookmarks:public:MANIFEST_IDL",	"$distdirectory:idl:");
+   _InstallFromManifest(":mozilla:xpfe:components:bookmarks:public:MANIFEST_IDL",	"$distdirectory:idl:");
 
    # history
-   InstallFromManifest(":mozilla:xpfe:components:history:public:MANIFEST_IDL",		"$distdirectory:idl:");
+   _InstallFromManifest(":mozilla:xpfe:components:history:public:MANIFEST_IDL",		"$distdirectory:idl:");
    
    # related
-   InstallFromManifest(":mozilla:xpfe:components:related:public:MANIFEST_IDL",		"$distdirectory:idl:");
+   _InstallFromManifest(":mozilla:xpfe:components:related:public:MANIFEST_IDL",		"$distdirectory:idl:");
 
    # prefwindow
-   InstallFromManifest(":mozilla:xpfe:components:prefwindow:public:MANIFEST_IDL",	"$distdirectory:idl:");
+   _InstallFromManifest(":mozilla:xpfe:components:prefwindow:public:MANIFEST_IDL",	"$distdirectory:idl:");
 
    # sample
-   InstallFromManifest(":mozilla:xpfe:components:sample:public:MANIFEST_IDL",		"$distdirectory:idl:");
+   _InstallFromManifest(":mozilla:xpfe:components:sample:public:MANIFEST_IDL",		"$distdirectory:idl:");
    # ucth
-   InstallFromManifest(":mozilla:xpfe:components:ucth:public:MANIFEST_IDL",			"$distdirectory:idl:");
+   _InstallFromManifest(":mozilla:xpfe:components:ucth:public:MANIFEST_IDL",			"$distdirectory:idl:");
    # xfer
-   InstallFromManifest(":mozilla:xpfe:components:xfer:public:MANIFEST_IDL",			"$distdirectory:idl:");
+   _InstallFromManifest(":mozilla:xpfe:components:xfer:public:MANIFEST_IDL",			"$distdirectory:idl:");
 	
 	# XPAPPS
-	InstallFromManifest(":mozilla:xpfe:AppCores:public:MANIFEST",					"$distdirectory:xpfe:");
-	InstallFromManifest(":mozilla:xpfe:appshell:public:MANIFEST",					"$distdirectory:xpfe:");
-	InstallFromManifest(":mozilla:xpfe:appshell:public:MANIFEST_IDL",				"$distdirectory:idl:");
+	_InstallFromManifest(":mozilla:xpfe:AppCores:public:MANIFEST",					"$distdirectory:xpfe:");
+	_InstallFromManifest(":mozilla:xpfe:appshell:public:MANIFEST",					"$distdirectory:xpfe:");
+	_InstallFromManifest(":mozilla:xpfe:appshell:public:MANIFEST_IDL",				"$distdirectory:idl:");
 
 	# MAILNEWS
-   InstallFromManifest(":mozilla:mailnews:public:MANIFEST",							"$distdirectory:mailnews:");
-   InstallFromManifest(":mozilla:mailnews:public:MANIFEST_IDL",						"$distdirectory:idl:");
-   InstallFromManifest(":mozilla:mailnews:base:public:MANIFEST",					"$distdirectory:mailnews:");
-   InstallFromManifest(":mozilla:mailnews:base:public:MANIFEST_IDL",				"$distdirectory:idl:");
-   InstallFromManifest(":mozilla:mailnews:base:build:MANIFEST",						"$distdirectory:mailnews:");
-   InstallFromManifest(":mozilla:mailnews:base:src:MANIFEST",						"$distdirectory:mailnews:");
-   InstallFromManifest(":mozilla:mailnews:base:util:MANIFEST",						"$distdirectory:mailnews:");
-   InstallFromManifest(":mozilla:mailnews:base:search:public:MANIFEST",				"$distdirectory:mailnews:");
-   InstallFromManifest(":mozilla:mailnews:compose:public:MANIFEST",					"$distdirectory:mailnews:");
-   InstallFromManifest(":mozilla:mailnews:compose:build:MANIFEST",					"$distdirectory:mailnews:");
-   InstallFromManifest(":mozilla:mailnews:db:mdb:public:MANIFEST",					"$distdirectory:mailnews:");
-   InstallFromManifest(":mozilla:mailnews:db:mork:build:MANIFEST",					"$distdirectory:mailnews:");
-   InstallFromManifest(":mozilla:mailnews:db:msgdb:public:MANIFEST",				"$distdirectory:mailnews:");
-   InstallFromManifest(":mozilla:mailnews:db:msgdb:build:MANIFEST",					"$distdirectory:mailnews:");
-   InstallFromManifest(":mozilla:mailnews:local:public:MANIFEST",					"$distdirectory:mailnews:");
-   InstallFromManifest(":mozilla:mailnews:local:build:MANIFEST",					"$distdirectory:mailnews:");
-   InstallFromManifest(":mozilla:mailnews:local:src:MANIFEST",						"$distdirectory:mailnews:");
-   InstallFromManifest(":mozilla:mailnews:imap:public:MANIFEST",					"$distdirectory:mailnews:");
-   InstallFromManifest(":mozilla:mailnews:mime:public:MANIFEST",					"$distdirectory:mailnews:");
-   InstallFromManifest(":mozilla:mailnews:mime:src:MANIFEST",						"$distdirectory:mailnews:");
-   InstallFromManifest(":mozilla:mailnews:mime:emitters:src:MANIFEST",				"$distdirectory:mailnews:");
-   InstallFromManifest(":mozilla:mailnews:news:public:MANIFEST",					"$distdirectory:mailnews:");
-   InstallFromManifest(":mozilla:mailnews:news:build:MANIFEST",						"$distdirectory:mailnews:");
-   InstallFromManifest(":mozilla:mailnews:addrbook:public:MANIFEST",				"$distdirectory:mailnews:");
-   InstallFromManifest(":mozilla:mailnews:addrbook:build:MANIFEST",					"$distdirectory:mailnews:");
+   _InstallFromManifest(":mozilla:mailnews:public:MANIFEST",							"$distdirectory:mailnews:");
+   _InstallFromManifest(":mozilla:mailnews:public:MANIFEST_IDL",						"$distdirectory:idl:");
+   _InstallFromManifest(":mozilla:mailnews:base:public:MANIFEST",					"$distdirectory:mailnews:");
+   _InstallFromManifest(":mozilla:mailnews:base:public:MANIFEST_IDL",				"$distdirectory:idl:");
+   _InstallFromManifest(":mozilla:mailnews:base:build:MANIFEST",						"$distdirectory:mailnews:");
+   _InstallFromManifest(":mozilla:mailnews:base:src:MANIFEST",						"$distdirectory:mailnews:");
+   _InstallFromManifest(":mozilla:mailnews:base:util:MANIFEST",						"$distdirectory:mailnews:");
+   _InstallFromManifest(":mozilla:mailnews:base:search:public:MANIFEST",				"$distdirectory:mailnews:");
+   _InstallFromManifest(":mozilla:mailnews:compose:public:MANIFEST",					"$distdirectory:mailnews:");
+   _InstallFromManifest(":mozilla:mailnews:compose:build:MANIFEST",					"$distdirectory:mailnews:");
+   _InstallFromManifest(":mozilla:mailnews:db:mdb:public:MANIFEST",					"$distdirectory:mailnews:");
+   _InstallFromManifest(":mozilla:mailnews:db:mork:build:MANIFEST",					"$distdirectory:mailnews:");
+   _InstallFromManifest(":mozilla:mailnews:db:msgdb:public:MANIFEST",				"$distdirectory:mailnews:");
+   _InstallFromManifest(":mozilla:mailnews:db:msgdb:build:MANIFEST",					"$distdirectory:mailnews:");
+   _InstallFromManifest(":mozilla:mailnews:local:public:MANIFEST",					"$distdirectory:mailnews:");
+   _InstallFromManifest(":mozilla:mailnews:local:build:MANIFEST",					"$distdirectory:mailnews:");
+   _InstallFromManifest(":mozilla:mailnews:local:src:MANIFEST",						"$distdirectory:mailnews:");
+   _InstallFromManifest(":mozilla:mailnews:imap:public:MANIFEST",					"$distdirectory:mailnews:");
+   _InstallFromManifest(":mozilla:mailnews:mime:public:MANIFEST",					"$distdirectory:mailnews:");
+   _InstallFromManifest(":mozilla:mailnews:mime:src:MANIFEST",						"$distdirectory:mailnews:");
+   _InstallFromManifest(":mozilla:mailnews:mime:emitters:src:MANIFEST",				"$distdirectory:mailnews:");
+   _InstallFromManifest(":mozilla:mailnews:news:public:MANIFEST",					"$distdirectory:mailnews:");
+   _InstallFromManifest(":mozilla:mailnews:news:build:MANIFEST",						"$distdirectory:mailnews:");
+   _InstallFromManifest(":mozilla:mailnews:addrbook:public:MANIFEST",				"$distdirectory:mailnews:");
+   _InstallFromManifest(":mozilla:mailnews:addrbook:build:MANIFEST",					"$distdirectory:mailnews:");
    
    print("--- Client Dist export complete ----\n")
 }
@@ -611,7 +669,7 @@ sub BuildStubs()
 	#//
 	#// Clean projects
 	#//
-	BuildProjectClean(":mozilla:lib:mac:NSStdLib:NSStdLib.mcp",              	"Stubs");
+	_BuildProjectClean(":mozilla:lib:mac:NSStdLib:NSStdLib.mcp",              	"Stubs");
 
 	print("--- Stubs projects complete ----\n")
 }
@@ -629,6 +687,8 @@ sub BuildOneProject($$$$$$)
 {
 	my ($project_path, $target_name, $toc_file, $alias_shlb, $alias_xSYM, $component) = @_;
 
+	unless ($project_path =~ m/^$main::BUILD_ROOT.+/) { return; }
+	
 	# $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
 	my($D) = $main::DEBUG ? "Debug" : "";
 	my($dist_dir) = _getDistDirectory();
@@ -712,15 +772,15 @@ sub BuildRuntimeProjects()
 	if ( $main::CARBON )
 	{
 		if ( $main::CARBONLITE ) {
-			BuildProject(":mozilla:cmd:macfe:projects:interfaceLib:Interface.mcp",			"Carbon Interfaces (Lite)");
+			_BuildProject(":mozilla:cmd:macfe:projects:interfaceLib:Interface.mcp",			"Carbon Interfaces (Lite)");
 		}
 		else {
-			BuildProject(":mozilla:cmd:macfe:projects:interfaceLib:Interface.mcp",			"Carbon Interfaces");		
+			_BuildProject(":mozilla:cmd:macfe:projects:interfaceLib:Interface.mcp",			"Carbon Interfaces");		
 		}
 	}
 	else
 	{
-		BuildProject(":mozilla:cmd:macfe:projects:interfaceLib:Interface.mcp",			"MacOS Interfaces");
+		_BuildProject(":mozilla:cmd:macfe:projects:interfaceLib:Interface.mcp",			"MacOS Interfaces");
 	}
 	
 	#// for NSRuntime under Carbon, don't use BuildOneProject to alias the shlb or the xsym since the 
@@ -732,17 +792,17 @@ sub BuildRuntimeProjects()
 		else {
 			BuildOneProject(":mozilla:lib:mac:NSRuntime:NSRuntime.mcp",					"NSRuntimeCarbon$D.shlb", "", 0, 0, 0);
 		}
-		MakeAlias(":mozilla:lib:mac:NSRuntime:NSRuntime$D.shlb", ":mozilla:dist:viewer_debug:Essential Files:");
+		_MakeAlias(":mozilla:lib:mac:NSRuntime:NSRuntime$D.shlb", ":mozilla:dist:viewer_debug:Essential Files:");
 		if ( $main::ALIAS_SYM_FILES ) {
-			MakeAlias(":mozilla:lib:mac:NSRuntime:NSRuntime$D.shlb.xSYM", ":mozilla:dist:viewer_debug:Essential Files:");		
+			_MakeAlias(":mozilla:lib:mac:NSRuntime:NSRuntime$D.shlb.xSYM", ":mozilla:dist:viewer_debug:Essential Files:");		
 		}
 	}
 	else {
 		if ($main::PROFILE) {
 			BuildOneProject(":mozilla:lib:mac:NSRuntime:NSRuntime.mcp",					"NSRuntimeProfil.shlb", "", 0, 0, 0);
-			MakeAlias(":mozilla:lib:mac:NSRuntime:NSRuntime$D.shlb", ":mozilla:dist:viewer_debug:Essential Files:");
+			_MakeAlias(":mozilla:lib:mac:NSRuntime:NSRuntime$D.shlb", ":mozilla:dist:viewer_debug:Essential Files:");
 			if ( $main::ALIAS_SYM_FILES ) {
-				MakeAlias(":mozilla:lib:mac:NSRuntime:NSRuntime$D.shlb.xSYM", ":mozilla:dist:viewer_debug:Essential Files:");		
+				_MakeAlias(":mozilla:lib:mac:NSRuntime:NSRuntime$D.shlb.xSYM", ":mozilla:dist:viewer_debug:Essential Files:");		
 			}
 		}
 		else {
@@ -750,16 +810,16 @@ sub BuildRuntimeProjects()
 		}
 	}
 	
-	BuildProject(":mozilla:lib:mac:MoreFiles:build:MoreFilesPPC.mcp",			"MoreFiles.o");
+	_BuildProject(":mozilla:lib:mac:MoreFiles:build:MoreFilesPPC.mcp",			"MoreFiles.o");
 	
 	#// for MemAllocator under Carbon, right now we have to use the MSL allocators because sfraser's heap zones
 	#// don't exist in Carbon. Just use different targets. Since this is a static library, we don't have to fuss
 	#// with the aliases and target name mismatches like we did above.
 	if ( $main::CARBON ) {
-		BuildProject(":mozilla:lib:mac:MacMemoryAllocator:MemAllocator.mcp",		"MemAllocatorCarbon$D.o");	
+		_BuildProject(":mozilla:lib:mac:MacMemoryAllocator:MemAllocator.mcp",		"MemAllocatorCarbon$D.o");	
 	}
 	else {
-		BuildProject(":mozilla:lib:mac:MacMemoryAllocator:MemAllocator.mcp",		"MemAllocator$D.o");
+		_BuildProject(":mozilla:lib:mac:MacMemoryAllocator:MemAllocator.mcp",		"MemAllocator$D.o");
 	}
 
 	BuildOneProject(":mozilla:lib:mac:NSStdLib:NSStdLib.mcp",					"NSStdLib$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 0);
@@ -786,7 +846,7 @@ sub BuildCommonProjects()
 	#// Stub libraries
 	#//
 
-	BuildProject(":mozilla:modules:security:freenav:macbuild:NoSecurity.mcp",			"Security.o");
+	_BuildProject(":mozilla:modules:security:freenav:macbuild:NoSecurity.mcp",			"Security.o");
 	
 	#//
 	#// Shared libraries
@@ -819,7 +879,7 @@ sub BuildCommonProjects()
 	BuildOneProject(":mozilla:modules:libutil:macbuild:libutil.mcp",			"libutil$D.shlb", "libutil.toc", 1, $main::ALIAS_SYM_FILES, 0);
 
 	ReconcileProject(":mozilla:modules:libimg:macbuild:png.mcp", 				":mozilla:modules:libimg:macbuild:png.toc");
-	BuildProject(":mozilla:modules:libimg:macbuild:png.mcp",					"png$D.o");
+	_BuildProject(":mozilla:modules:libimg:macbuild:png.mcp",					"png$D.o");
 
 	BuildOneProject(":mozilla:modules:libimg:macbuild:libimg.mcp",				"libimg$D.shlb", "libimg.toc", 1, $main::ALIAS_SYM_FILES, 0);
 	BuildOneProject(":mozilla:modules:libimg:macbuild:gifdecoder.mcp",			"gifdecoder$D.shlb", "gifdecoder.toc", 1, $main::ALIAS_SYM_FILES, 1);
@@ -894,6 +954,8 @@ sub BuildFolderResourceAliases($$)
 {
 	my($src_dir, $dest_dir) = @_;
 	
+	unless ($src_dir =~ m/^$main::BUILD_ROOT.+/) { return; }
+	
 	# get a list of all the resource files
 	opendir(SRCDIR, $src_dir) || die("can't open $src_dir");
 	my(@resource_files) = readdir(SRCDIR);
@@ -941,16 +1003,16 @@ sub MakeResourceAliases()
 	#//
 	#// Make aliases of resource files
 	#//
-	MakeAlias(":mozilla:layout:html:document:src:ua.css",								"$resource_dir");
-	MakeAlias(":mozilla:webshell:tests:viewer:resources:viewer.properties",				"$resource_dir");
-	MakeAlias(":mozilla:intl:uconv:src:charsetalias.properties",						"$resource_dir");
-	MakeAlias(":mozilla:intl:uconv:src:maccharset.properties",							"$resource_dir");
+	_MakeAlias(":mozilla:layout:html:document:src:ua.css",								"$resource_dir");
+	_MakeAlias(":mozilla:webshell:tests:viewer:resources:viewer.properties",				"$resource_dir");
+	_MakeAlias(":mozilla:intl:uconv:src:charsetalias.properties",						"$resource_dir");
+	_MakeAlias(":mozilla:intl:uconv:src:maccharset.properties",							"$resource_dir");
 
-	MakeAlias(":mozilla:extensions:wallet:src:cookie.properties",						"$resource_dir");
-	MakeAlias(":mozilla:extensions:wallet:src:wallet.properties",						"$resource_dir");
+	_MakeAlias(":mozilla:extensions:wallet:src:cookie.properties",						"$resource_dir");
+	_MakeAlias(":mozilla:extensions:wallet:src:wallet.properties",						"$resource_dir");
 
 	my($html_dir) = "$resource_dir" . "html:";
-	MakeAlias(":mozilla:layout:html:base:src:broken-image.gif",							"$html_dir");
+	_MakeAlias(":mozilla:layout:html:base:src:broken-image.gif",							"$html_dir");
 
 	my($throbber_dir) = "$resource_dir" . "throbber:";
 	BuildFolderResourceAliases(":mozilla:webshell:tests:viewer:throbber:",				"$throbber_dir");
@@ -966,25 +1028,25 @@ sub MakeResourceAliases()
 	BuildFolderResourceAliases(":mozilla:profile:resources:",							"$profile_dir");
 	
 	# NOTE: this will change as we move the toolbar/appshell chrome files to a real place
-	InstallResources(":mozilla:xpfe:browser:src:MANIFEST",								"$samples_dir");
+	_InstallResources(":mozilla:xpfe:browser:src:MANIFEST",								"$samples_dir");
 
 	BuildFolderResourceAliases(":mozilla:xpfe:browser:samples:", 						"$samples_dir");
-	MakeAlias(":mozilla:xpfe:browser:samples:sampleimages:", 							"$samples_dir");
+	_MakeAlias(":mozilla:xpfe:browser:samples:sampleimages:", 							"$samples_dir");
 	BuildFolderResourceAliases(":mozilla:xpfe:AppCores:xul:",							"$samples_dir");
 
 	my($toolbar_dir) = "$resource_dir" . "toolbar:";
 	BuildFolderResourceAliases(":mozilla:xpfe:AppCores:xul:resources:",					"$toolbar_dir");
-	MakeAlias(":mozilla:xpfe:AppCores:xul:resources:throbbingN.gif",					"$throbber_dir");
+	_MakeAlias(":mozilla:xpfe:AppCores:xul:resources:throbbingN.gif",					"$throbber_dir");
 		
 	if ($main::build{editor})
 	{
 		my($editor_chrome_dir) = "$chrome_dir" . "Editor";
 
-		InstallResources(":mozilla:editor:ui:composer:content:MANIFEST",			"$editor_chrome_dir:composer:content:default:", 0);
-		InstallResources(":mozilla:editor:ui:composer:skin:MANIFEST",				"$editor_chrome_dir:composer:skin:default:", 0);
+		_InstallResources(":mozilla:editor:ui:composer:content:MANIFEST",			"$editor_chrome_dir:composer:content:default:", 0);
+		_InstallResources(":mozilla:editor:ui:composer:skin:MANIFEST",				"$editor_chrome_dir:composer:skin:default:", 0);
 
-		InstallResources(":mozilla:editor:ui:dialogs:content:MANIFEST",				"$editor_chrome_dir:dialogs:content:default:", 0);
-		InstallResources(":mozilla:editor:ui:dialogs:skin:MANIFEST",				"$editor_chrome_dir:dialogs:skin:default:", 0);
+		_InstallResources(":mozilla:editor:ui:dialogs:content:MANIFEST",				"$editor_chrome_dir:dialogs:content:default:", 0);
+		_InstallResources(":mozilla:editor:ui:dialogs:skin:MANIFEST",				"$editor_chrome_dir:dialogs:skin:default:", 0);
 	}
 
 	# if ($main::build{mailnews})
@@ -994,45 +1056,44 @@ sub MakeResourceAliases()
         my($messengercomposer_chrome_dir) = "$chrome_dir" . "messengercompose";
         my($addressbook_chrome_dir) = "$chrome_dir" . "addressbook";
         
-        InstallResources(":mozilla:mailnews:base:resources:content:MANIFEST",           "$messenger_chrome_dir:content:default:", 0);
-        InstallResources(":mozilla:mailnews:base:resources:skin:MANIFEST",              "$messenger_chrome_dir:skin:default:", 0);
-        InstallResources(":mozilla:mailnews:base:prefs:resources:content:MANIFEST",     "$messenger_chrome_dir:content:default:", 0);
-        InstallResources(":mozilla:mailnews:base:prefs:resources:skin:MANIFEST",        "$messenger_chrome_dir:skin:default:", 0);
-        InstallResources(":mozilla:mailnews:base:search:resources:content:MANIFEST",    "$messenger_chrome_dir:content:default:", 0);
-        InstallResources(":mozilla:mailnews:mime:resources:skin:MANIFEST",              "$messenger_chrome_dir:skin:default:", 0);
-        InstallResources(":mozilla:mailnews:mime:emitters:resources:skin:MANIFEST",     "$messenger_chrome_dir:skin:default:", 0);
-        InstallResources(":mozilla:mailnews:local:resources:skin:MANIFEST",             "$messenger_chrome_dir:skin:default:", 0);
-        InstallResources(":mozilla:mailnews:news:resources:skin:MANIFEST",              "$messenger_chrome_dir:skin:default:", 0);
+        _InstallResources(":mozilla:mailnews:base:resources:content:MANIFEST",           "$messenger_chrome_dir:content:default:", 0);
+        _InstallResources(":mozilla:mailnews:base:resources:skin:MANIFEST",              "$messenger_chrome_dir:skin:default:", 0);
+        _InstallResources(":mozilla:mailnews:base:prefs:resources:content:MANIFEST",     "$messenger_chrome_dir:content:default:", 0);
+        _InstallResources(":mozilla:mailnews:base:prefs:resources:skin:MANIFEST",        "$messenger_chrome_dir:skin:default:", 0);
+        _InstallResources(":mozilla:mailnews:base:search:resources:content:MANIFEST",    "$messenger_chrome_dir:content:default:", 0);
+        _InstallResources(":mozilla:mailnews:mime:resources:skin:MANIFEST",              "$messenger_chrome_dir:skin:default:", 0);
+        _InstallResources(":mozilla:mailnews:mime:emitters:resources:skin:MANIFEST",     "$messenger_chrome_dir:skin:default:", 0);
+        _InstallResources(":mozilla:mailnews:local:resources:skin:MANIFEST",             "$messenger_chrome_dir:skin:default:", 0);
+        _InstallResources(":mozilla:mailnews:news:resources:skin:MANIFEST",              "$messenger_chrome_dir:skin:default:", 0);
 
-        InstallResources(":mozilla:mailnews:mime:resources:MANIFEST",                   "$mailnews_dir:messenger:", 0); 
-		InstallResources(":mozilla:mailnews:mime:cthandlers:resources:MANIFEST",		"$mailnews_dir:messenger:", 0);	
+        _InstallResources(":mozilla:mailnews:mime:resources:MANIFEST",                   "$mailnews_dir:messenger:", 0); 
+		_InstallResources(":mozilla:mailnews:mime:cthandlers:resources:MANIFEST",		"$mailnews_dir:messenger:", 0);	
 
-        InstallResources(":mozilla:mailnews:compose:resources:content:MANIFEST",        "$messengercomposer_chrome_dir:content:default:", 0);
-        InstallResources(":mozilla:mailnews:compose:resources:skin:MANIFEST",           "$messengercomposer_chrome_dir:skin:default:", 0);
-        InstallResources(":mozilla:mailnews:compose:prefs:resources:content:MANIFEST",  "$messengercomposer_chrome_dir:content:default:", 0);
+        _InstallResources(":mozilla:mailnews:compose:resources:content:MANIFEST",        "$messengercomposer_chrome_dir:content:default:", 0);
+        _InstallResources(":mozilla:mailnews:compose:resources:skin:MANIFEST",           "$messengercomposer_chrome_dir:skin:default:", 0);
+        _InstallResources(":mozilla:mailnews:compose:prefs:resources:content:MANIFEST",  "$messengercomposer_chrome_dir:content:default:", 0);
 
-        InstallResources(":mozilla:mailnews:addrbook:resources:content:MANIFEST",       "$addressbook_chrome_dir:content:default:", 0);
-        InstallResources(":mozilla:mailnews:addrbook:resources:skin:MANIFEST",          "$addressbook_chrome_dir:skin:default:", 0);
-        InstallResources(":mozilla:mailnews:addrbook:prefs:resources:content:MANIFEST", "$addressbook_chrome_dir:content:default:", 0);
+        _InstallResources(":mozilla:mailnews:addrbook:resources:content:MANIFEST",       "$addressbook_chrome_dir:content:default:", 0);
+        _InstallResources(":mozilla:mailnews:addrbook:resources:skin:MANIFEST",          "$addressbook_chrome_dir:skin:default:", 0);
+        _InstallResources(":mozilla:mailnews:addrbook:prefs:resources:content:MANIFEST", "$addressbook_chrome_dir:content:default:", 0);
     }
 	
 	# copy the chrome registry. We want an actual copy so that changes for custom UI's
 	# don't accidentally get checked into the tree. (pinkerton, bug#5296).
-	copy( ":mozilla:rdf:chrome:build:registry.rdf", "$chrome_dir" . "registry.rdf" );
-	print( "copying mozilla:rdf:chrome:build:registry.rdf to $chrome_dir\n" );
+	_copy( ":mozilla:rdf:chrome:build:registry.rdf", "$chrome_dir" . "registry.rdf" );
 		
 	# Install XPFE component resources
-	InstallResources(":mozilla:xpfe:components:find:resources:MANIFEST",			"$samples_dir");
-	InstallResources(":mozilla:xpfe:components:bookmarks:resources:MANIFEST",		"$samples_dir");
-	InstallResources(":mozilla:xpfe:components:history:resources:MANIFEST",			"$samples_dir");
-	InstallResources(":mozilla:xpfe:components:related:resources:MANIFEST",			"$samples_dir");
-	InstallResources(":mozilla:xpfe:components:search:resources:MANIFEST",			"$samples_dir");
-	InstallResources(":mozilla:xpfe:components:ucth:resources:MANIFEST",			"$samples_dir");
-	InstallResources(":mozilla:xpfe:components:xfer:resources:MANIFEST",			"$samples_dir");
+	_InstallResources(":mozilla:xpfe:components:find:resources:MANIFEST",			"$samples_dir");
+	_InstallResources(":mozilla:xpfe:components:bookmarks:resources:MANIFEST",		"$samples_dir");
+	_InstallResources(":mozilla:xpfe:components:history:resources:MANIFEST",			"$samples_dir");
+	_InstallResources(":mozilla:xpfe:components:related:resources:MANIFEST",			"$samples_dir");
+	_InstallResources(":mozilla:xpfe:components:search:resources:MANIFEST",			"$samples_dir");
+	_InstallResources(":mozilla:xpfe:components:ucth:resources:MANIFEST",			"$samples_dir");
+	_InstallResources(":mozilla:xpfe:components:xfer:resources:MANIFEST",			"$samples_dir");
 	{
 		my($pref_chrome_dir) = "$chrome_dir" . "pref";
-		InstallResources(":mozilla:xpfe:components:prefwindow:resources:content:MANIFEST",	"$pref_chrome_dir:content:default:", 0);
-		InstallResources(":mozilla:xpfe:components:prefwindow:resources:skin:MANIFEST",		"$pref_chrome_dir:skin:default:", 0);
+		_InstallResources(":mozilla:xpfe:components:prefwindow:resources:content:MANIFEST",	"$pref_chrome_dir:content:default:", 0);
+		_InstallResources(":mozilla:xpfe:components:prefwindow:resources:skin:MANIFEST",		"$pref_chrome_dir:skin:default:", 0);
 	}
 
 	print("--- Resource copying complete ----\n")
@@ -1055,16 +1116,14 @@ sub MakeLibAliases()
 		#// WasteLib
 		my($wastelibpath) = $appath;
 		$wastelibpath =~ s/[^:]*$/MacOS Support:WASTE 1.3 Distribution:WASTELib/;
-		print ("Making alias for $wastelibpath\n");
-		MakeAlias("$wastelibpath", "$dist_dir"."Essential Files:");
+		_MakeAlias("$wastelibpath", "$dist_dir"."Essential Files:", 1);
 
 		#// ProfilerLib
 		if ($main::DEBUG)
 		{
 			my($profilerlibpath) = $appath;
 			$profilerlibpath =~ s/[^:]*$/MacOS Support:Libraries:Profiler Common:ProfilerLib/;
-			print ("Making alias for $profilerlibpath\n");
-			MakeAlias("$profilerlibpath", "$dist_dir"."Essential Files:");
+			_MakeAlias("$profilerlibpath", "$dist_dir"."Essential Files:", 1);
 		}
 	}
 	else {
@@ -1091,7 +1150,7 @@ sub BuildLayoutProjects()
 	#// Build Layout projects
 	#//
 
-	BuildProject(":mozilla:expat:macbuild:expat.mcp",						"expat$D.o");
+	_BuildProject(":mozilla:expat:macbuild:expat.mcp",						"expat$D.o");
 
 	BuildOneProject(":mozilla:htmlparser:macbuild:htmlparser.mcp",				"htmlparser$D.shlb", "htmlparser.toc", 1, $main::ALIAS_SYM_FILES, 0);
 
@@ -1116,7 +1175,7 @@ sub BuildLayoutProjects()
     
     BuildOneProject(":mozilla:xpinstall:macbuild:xpinstall.mcp",                "xpinstall$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 
-	print("---- Layout projects complete ----\n")
+	print("--- Layout projects complete ---\n")
 }
 
 
@@ -1242,6 +1301,7 @@ sub BuildMailNewsProjects()
 sub BuildAppRunner()
 {
 	unless( $main::build{apprunner} ) { return; }
+
 	_assertRightDirectory();
 	# $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
 	my($D) = $main::DEBUG ? "Debug" : "";
@@ -1253,23 +1313,23 @@ sub BuildAppRunner()
 	my($cmd_file) = "";
 
 	$cmd_file = "Mozilla Addressbook";
-	copy( $cmd_file_path . $cmd_file, $dist_dir . $cmd_file );
+	_copy( $cmd_file_path . $cmd_file, $dist_dir . $cmd_file );
 	MacPerl::SetFileInfo("MOZZ", "CMDL", $dist_dir . $cmd_file);
 
 	$cmd_file = "Mozilla Editor";
-	copy( $cmd_file_path . $cmd_file, $dist_dir . $cmd_file );
+	_copy( $cmd_file_path . $cmd_file, $dist_dir . $cmd_file );
 	MacPerl::SetFileInfo("MOZZ", "CMDL", $dist_dir . $cmd_file);
 
 	$cmd_file = "Mozilla Message Compose";
-	copy( $cmd_file_path . $cmd_file, $dist_dir . $cmd_file );
+	_copy( $cmd_file_path . $cmd_file, $dist_dir . $cmd_file );
 	MacPerl::SetFileInfo("MOZZ", "CMDL", $dist_dir . $cmd_file);
 
 	$cmd_file = "Mozilla Messenger";
-	copy( $cmd_file_path . $cmd_file, $dist_dir . $cmd_file );
+	_copy( $cmd_file_path . $cmd_file, $dist_dir . $cmd_file );
 	MacPerl::SetFileInfo("MOZZ", "CMDL", $dist_dir . $cmd_file);
 
 	$cmd_file = "Mozilla Preference";
-	copy( $cmd_file_path . $cmd_file, $dist_dir . $cmd_file );
+	_copy( $cmd_file_path . $cmd_file, $dist_dir . $cmd_file );
 	MacPerl::SetFileInfo("MOZZ", "CMDL", $dist_dir . $cmd_file);
 }
 
