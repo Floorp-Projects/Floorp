@@ -65,6 +65,8 @@ protected:
                           nsIContent*      aContent,
                           nsIStyleContext* aStyleContext,
                           nsIFrame*&       aResult);
+
+  nsresult ProcessInitialReflow(nsIPresContext* aPresContext);
 };
 
 #endif /* nsHTMLContainerFrame_h___ */
