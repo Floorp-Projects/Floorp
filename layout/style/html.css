@@ -364,7 +364,7 @@ hr {
   margin: 0 auto 0 auto;
 }
 
-:link img, :visited img, img[usemap], object[usemap] {
+:-moz-any-link img, img[usemap], object[usemap] {
   border: 2px solid;
   cursor: pointer;
 }
@@ -401,21 +401,16 @@ noframes {
 /* focusable content */
 
 /* links */
-:link {
+:-moz-any-link {
   cursor: pointer;
   -moz-user-focus: normal;
 }
 
-:visited {
-  cursor: pointer;
-  -moz-user-focus: normal;
-}
-
-:link:active, :visited:active {
+:-moz-any-link:active {
   color: red;
 }
 
-:link:focus, :visited:focus {
+:-moz-any-link:focus {
   -moz-outline: 1px dotted WindowText;
 }
 

@@ -41,6 +41,7 @@
 
 CSS_ATOM(activePseudo, ":active")
 CSS_ATOM(afterPseudo, ":after")
+CSS_ATOM(anyLinkPseudo, ":-moz-any-link")    // what matches :link or :visited
 
 CSS_ATOM(beforePseudo, ":before")
 
