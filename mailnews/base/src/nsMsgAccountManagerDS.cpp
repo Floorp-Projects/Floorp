@@ -384,9 +384,6 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
       rv = getServerForFolderNode(source, getter_AddRefs(server));
       if (NS_FAILED(rv) || !server) return NS_RDF_NO_VALUE;
 
-      nsCOMPtr<nsIMsgFilterList> filterList;
-      server->GetFilterList(getter_AddRefs(filterList));
-
       if (supportsFilters(server))
           str.AssignWithConversion("true");
   }
