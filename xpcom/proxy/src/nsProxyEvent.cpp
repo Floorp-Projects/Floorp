@@ -71,7 +71,7 @@ nsProxyObject::nsProxyObject()
 }
 
 
-nsProxyObject::nsProxyObject(nsIEventQueue *destQueue, PRInt32 proxyType, nsISupports *realObject)
+nsProxyObject::nsProxyObject(nsIEventQueue *destQueue, ProxyType proxyType, nsISupports *realObject)
 {
     NS_INIT_REFCNT();
     NS_ADDREF_THIS();
@@ -87,7 +87,7 @@ nsProxyObject::nsProxyObject(nsIEventQueue *destQueue, PRInt32 proxyType, nsISup
 }
 
 
-nsProxyObject::nsProxyObject(nsIEventQueue *destQueue, PRInt32  proxyType, const nsCID &aClass,  nsISupports *aDelegate,  const nsIID &aIID)
+nsProxyObject::nsProxyObject(nsIEventQueue *destQueue, ProxyType proxyType, const nsCID &aClass,  nsISupports *aDelegate,  const nsIID &aIID)
 {
     NS_INIT_REFCNT();
     NS_ADDREF_THIS();
@@ -187,7 +187,7 @@ nsProxyObject::Post( PRUint32 methodIndex, nsXPTMethodInfo *methodInfo, nsXPTCMi
                  EventHandler,
                  DestroyHandler);
    
-    if (mProxyType & PROXY_SYNC)
+    if (mProxyType == PROXY_SYNC)
     {
         mDestQueue->PostSynchronousEvent(event, nsnull);
         
@@ -203,7 +203,7 @@ nsProxyObject::Post( PRUint32 methodIndex, nsXPTMethodInfo *methodInfo, nsXPTCMi
         mDestQueue->ExitMonitor();
         return rv;
     }
-    else if (mProxyType & PROXY_ASYNC)
+    else if (mProxyType == PROXY_ASYNC)
     {
         mDestQueue->PostEvent(event);
         mDestQueue->ExitMonitor();
@@ -305,7 +305,7 @@ void DestroyHandler(PLEvent *self)
     nsProxyObjectCallInfo* owner = (nsProxyObjectCallInfo*)PL_GetEventOwner(self);
     nsProxyObject* proxyObject = owner->GetProxyObject();
 
-    if (proxyObject->GetProxyType() & PROXY_ASYNC)
+    if (proxyObject->GetProxyType() == PROXY_ASYNC)
     {        
         delete owner;
     }

@@ -28,9 +28,12 @@
 #include "xptcall.h"
 #include "xptinfo.h"
     
-#define PROXY_SYNC    0x0001  // act just like a function call.
-#define PROXY_ASYNC   0x0002  // fire and forget.  This will return immediately and you will lose all return information.
-#define PROXY_ALWAYS  0x0004   // ignore check to see if the eventQ is on the same thread as the caller, and alway return a proxied object.
+typedef enum 
+{
+    PROXY_SYNC = 0,  // act just like a function call.
+    PROXY_ASYNC      // fire and forget.  This will return immediately and you will lose all return information.
+
+} ProxyType;
 
 // WARNING about PROXY_ASYNC:  
 //
@@ -68,8 +71,8 @@ class nsProxyObject : public nsISupports
         NS_DECL_ISUPPORTS
 
                             nsProxyObject();
-                            nsProxyObject(nsIEventQueue *destQueue, PRInt32  proxyType, nsISupports *realObject);
-                            nsProxyObject(nsIEventQueue *destQueue, PRInt32  proxyType, const nsCID &aClass,  nsISupports *aDelegate,  const nsIID &aIID);
+                            nsProxyObject(nsIEventQueue *destQueue, ProxyType proxyType, nsISupports *realObject);
+                            nsProxyObject(nsIEventQueue *destQueue, ProxyType proxyType, const nsCID &aClass,  nsISupports *aDelegate,  const nsIID &aIID);
         
         virtual             ~nsProxyObject();
 
@@ -77,7 +80,7 @@ class nsProxyObject : public nsISupports
         
         nsISupports*        GetRealObject() const { return mRealObject; }
         nsIEventQueue*      GetQueue() const { return mDestQueue; }
-        PRInt32             GetProxyType() const { return mProxyType; }
+        ProxyType           GetProxyType() const { return mProxyType; }
 
         
 
@@ -98,7 +101,7 @@ class nsProxyObject : public nsISupports
         nsIEventQueue       *mDestQueue;                 /* destination queue */
         nsISupports         *mRealObject;                /* the non-proxy object that this event is referring to */
         PRBool              mRealObjectOwned;
-        PRInt32             mProxyType;
+        ProxyType           mProxyType;
 
         
  };

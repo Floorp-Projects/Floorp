@@ -89,7 +89,7 @@ public:
 
     
     static nsProxyEventObject* GetNewOrUsedProxy(nsIEventQueue *destQueue,
-                                                 PRInt32 proxyType,
+                                                 ProxyType proxyType,
                                                  nsISupports *aObj,
                                                  REFNSIID aIID);
 
@@ -109,7 +109,7 @@ public:
 private:
     nsProxyEventObject();   // not implemented
     nsProxyEventObject(nsIEventQueue *destQueue,
-                       PRInt32 proxyType,
+                       ProxyType proxyType,
                        nsISupports* aObj,
     				   nsProxyEventClass* aClass,
                        nsProxyEventObject* root);
@@ -139,14 +139,14 @@ public:
     NS_IMETHOD GetProxyObject(nsIEventQueue *destQueue, 
                               REFNSIID aIID, 
                               nsISupports* aObj, 
-                              PRInt32 proxyType,
+                              ProxyType proxyType,
                               void** aProxyObject);
     
     NS_IMETHOD GetProxyObject(nsIEventQueue *destQueue, 
                               const nsCID &aClass, 
                               nsISupports *aDelegate, 
                               const nsIID &aIID, 
-                              PRInt32 proxyType,
+                              ProxyType proxyType,
                               void** aProxyObject);
     
     
