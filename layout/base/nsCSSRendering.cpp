@@ -3878,10 +3878,14 @@ RoundIntToPixel(nscoord aValue,
                 nscoord aTwipsPerPixel,
                 PRBool  aRoundDown = PR_FALSE)
 {
+  if (aTwipsPerPixel <= 0) 
+    // We must be rendering to a device that has a resolution greater than Twips! 
+    // In that case, aValue is as accurate as it's going to get.
+    return aValue; 
+
   nscoord halfPixel = NSToCoordRound(aTwipsPerPixel / 2.0f);
   nscoord extra = aValue % aTwipsPerPixel;
   nscoord finalValue = (!aRoundDown && (extra >= halfPixel)) ? aValue + (aTwipsPerPixel - extra) : aValue - extra;
-
   return finalValue;
 }
 
