@@ -34,7 +34,7 @@
       <td><textarea rows=4 cols=64 name="description">[% description %]</textarea></TD>
     </tr>
     <tr valign=top>
-      <th align="right"><a href="editproducts.cgi?classification=[% classification FILTER html %]">Edit products</a></th>
+      <th align="right"><a href="editproducts.cgi?classification=[% classification FILTER url_quote %]">Edit products</a></th>
       <td>
         [% IF products AND products.size > 0 %]
           <table>

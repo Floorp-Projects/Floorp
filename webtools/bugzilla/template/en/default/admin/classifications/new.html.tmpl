@@ -26,7 +26,7 @@
 OK, done.
 
 <p>Back to the <a href="./">main [% terms.bugs %] page</a>,
-<a href="editproducts.cgi?action=add&amp;classification=[% classification FILTER html %]">add</a> products to this new classification, 
+<a href="editproducts.cgi?action=add&amp;classification=[% classification FILTER url_quote %]">add</a> products to this new classification, 
 or <a href="editclassifications.cgi"> edit</a> more classifications.
 
 [% PROCESS global/footer.html.tmpl %] 
