@@ -1231,7 +1231,7 @@ void nsChildView::RemovedFromWindow()
 {
   mInWindow = PR_FALSE;
 
-  if (mPluginPort)
+  if (mPluginPort && !mDestroyCalled)
   {
     // force a redraw, so that the plugin knows that it's view is being hidden
     Invalidate(PR_TRUE);
@@ -1666,7 +1666,7 @@ NS_IMETHODIMP nsChildView::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
       while (!selfLevel) {
         NSView* nextAncestorView;
         NSArray* subviews = [view subviews];
-        for (int i = 0; i < [subviews count]; ++i) {
+        for (unsigned int i = 0; i < [subviews count]; ++i) {
           NSView* subView = [subviews objectAtIndex: i];
           if (subView == mView)
             selfLevel = YES;
