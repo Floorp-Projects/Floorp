@@ -3661,17 +3661,8 @@ NS_IMETHODIMP NavigatorImpl::GetAppVersion(nsString& aAppVersion)
 
 NS_IMETHODIMP NavigatorImpl::GetAppName(nsString& aAppName)
 {
-   nsresult res;
-   nsCOMPtr<nsIHTTPProtocolHandler> service(do_GetService(kHTTPHandlerCID, &res));
-   if(NS_SUCCEEDED(res) && (nsnull != service))
-      {
-      PRUnichar *appName = nsnull;
-      res = service->GetAppName(&appName);
-      aAppName = appName;
-      Recycle(appName);
-      }
-
-   return res;
+   aAppName = "Netscape";
+   return NS_OK;
 }
 
 NS_IMETHODIMP NavigatorImpl::GetLanguage(nsString& aLanguage)
