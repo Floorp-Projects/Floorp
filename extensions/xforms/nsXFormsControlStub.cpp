@@ -171,8 +171,6 @@ nsXFormsControlStub::ProcessNodeBinding(const nsString          &aBindingAttr,
                                           aResult,
                                           mDependencies);
 
-  NS_ENSURE_SUCCESS(rv, rv);
-
   if (mModel) {
     mModel->AddFormControl(this);
     if (aModel) {
@@ -180,7 +178,7 @@ nsXFormsControlStub::ProcessNodeBinding(const nsString          &aBindingAttr,
     }
   }
 
-  return NS_OK;
+  return rv;
 }
 
 void
