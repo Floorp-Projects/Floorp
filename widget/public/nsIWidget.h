@@ -552,14 +552,6 @@ class nsIWidget : public nsISupports {
     NS_IMETHOD ShowMenuBar(PRBool aShow) = 0;
 
     /**
-     * Query whether the widget's MenuBar is visible
-     *
-     * @param aVisible PR_TRUE if currently visible, PR_FALSE if not
-     */
-
-    NS_IMETHOD IsMenuBarVisible(PRBool *aVisible) = 0;
-
-    /**
      * Set the collection of tooltip rectangles.
      * A NS_SHOW_TOOLTIP event is generated when the mouse hovers over one
      * of the rectangles. a NS_HIDE_TOOLTIP event is generated when the mouse

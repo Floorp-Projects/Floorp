@@ -59,7 +59,6 @@ public:
   NS_IMETHOD            SetTitle(const nsString& aTitle);
   NS_IMETHOD            SetMenuBar(nsIMenuBar * aMenuBar);
   NS_IMETHOD            ShowMenuBar(PRBool aShow);
-  NS_IMETHOD            IsMenuBarVisible(PRBool *aVisible);
   NS_IMETHOD            GetBounds( nsRect &aRect );
   NS_IMETHOD            GetClientBounds( nsRect &aRect );
   NS_IMETHOD            SetTooltips(PRUint32 aNumberOfTips,nsRect* aTooltipAreas[]);

@@ -90,7 +90,6 @@ public:
   NS_IMETHOD              Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
   NS_IMETHOD              SetMenuBar(nsIMenuBar * aMenuBar); 
   NS_IMETHOD              ShowMenuBar(PRBool aShow);
-  NS_IMETHOD              IsMenuBarVisible(PRBool *aVisible);
   NS_IMETHOD              SetTooltips(PRUint32 aNumberOfTips,nsRect* aTooltipAreas[]);   
   NS_IMETHOD              RemoveTooltips();
   NS_IMETHOD              UpdateTooltips(nsRect* aNewTips[]);

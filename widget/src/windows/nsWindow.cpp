@@ -3478,13 +3478,6 @@ NS_METHOD nsWindow::ShowMenuBar(PRBool aShow)
   return rv;
 }
 
-NS_METHOD nsWindow::IsMenuBarVisible(PRBool *aVisible)
-{
-  HMENU menu = ::GetMenu(mWnd);
-  *aVisible = menu ? PR_TRUE : PR_FALSE;
-  return NS_OK;
-}
-
 NS_METHOD nsWindow::GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight)
 {
   aWidth  = mPreferredWidth;

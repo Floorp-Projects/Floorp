@@ -767,13 +767,6 @@ NS_METHOD nsWidget::ShowMenuBar(PRBool aShow)
   return NS_OK;
 }
 
-NS_METHOD nsWidget::IsMenuBarVisible(PRBool *aVisible)
-{
-  g_print("bleh\n");
-  NS_NOTYETIMPLEMENTED("nsWidget::IsMenuBarvisible");
-  return NS_OK;
-}
-
 nsresult nsWidget::CreateWidget(nsIWidget *aParent,
                                 const nsRect &aRect,
                                 EVENT_CALLBACK aHandleEventFunction,

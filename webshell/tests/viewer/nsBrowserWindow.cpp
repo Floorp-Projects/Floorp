@@ -1689,13 +1689,6 @@ nsBrowserWindow::ShowMenuBar(PRBool aShow)
 }
 
 NS_IMETHODIMP
-nsBrowserWindow::IsMenuBarVisible(PRBool *aVisible)
-{
-  *aVisible = PR_TRUE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsBrowserWindow::WillLoadURL(nsIWebShell* aShell, const PRUnichar* aURL,
                              nsLoadType aReason)
 {

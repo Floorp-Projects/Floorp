@@ -104,7 +104,6 @@ public:
   NS_IMETHOD GetStatus(const PRUnichar** aResult);
   NS_IMETHOD SetProgress(PRInt32 aProgress, PRInt32 aProgressMax);
   NS_IMETHOD ShowMenuBar(PRBool aShow);
-  NS_IMETHOD IsMenuBarVisible(PRBool *aVisible);
   NS_IMETHOD GetWebShell(nsIWebShell*& aResult);
   NS_IMETHOD GetContentWebShell(nsIWebShell **aResult);
 

@@ -967,12 +967,6 @@ NS_METHOD nsWidget::ShowMenuBar( PRBool aShow)
   return NS_ERROR_FAILURE;
 }
 
-NS_METHOD nsWidget::IsMenuBarVisible( PRBool *aVisible )
-{
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::IsMenuBarVisible - Not Implemented \n"));
-  return NS_ERROR_FAILURE;
-}
-
 nsresult nsWidget::CreateWidget(nsIWidget *aParent,
                                 const nsRect &aRect,
                                 EVENT_CALLBACK aHandleEventFunction,

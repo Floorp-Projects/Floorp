@@ -2735,13 +2735,6 @@ nsWebShellWindow::ShowMenuBar(PRBool aShow)
   return mWindow->ShowMenuBar(aShow);
 }
 
-NS_IMETHODIMP
-nsWebShellWindow::IsMenuBarVisible(PRBool *aVisible)
-{
-  return mWindow->IsMenuBarVisible(aVisible);
-}
-
-
 //nsIUrlDispatcher methods
 
 NS_IMETHODIMP

@@ -118,7 +118,6 @@ public:
     NS_IMETHOD            EndResizingChildren(void);
     NS_IMETHOD            SetMenuBar(nsIMenuBar * aMenuBar);
     NS_IMETHOD            ShowMenuBar(PRBool aShow);
-    NS_IMETHOD            IsMenuBarVisible(PRBool *aVisible);
     NS_IMETHOD            GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight);
     NS_IMETHOD            SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight);
     NS_IMETHOD            DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus);

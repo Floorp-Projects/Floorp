@@ -122,7 +122,6 @@ public:
 
     NS_IMETHOD 							SetMenuBar(nsIMenuBar * aMenuBar);
     NS_IMETHOD							ShowMenuBar(PRBool aShow);
-    NS_IMETHOD              IsMenuBarVisible(PRBool *aVisible);
     virtual nsIMenuBar* 		GetMenuBar();
     NS_IMETHOD 							GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight);
     NS_IMETHOD 							SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight);

@@ -430,12 +430,6 @@ NS_IMETHODIMP nsWindow::ShowMenuBar(PRBool aShow)
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsWindow::IsMenuBarVisible(PRBool *aVisible)
-{
-  *aVisible = PR_TRUE; // likely to be true
-  return NS_OK;
-}
-
 //-------------------------------------------------------------------------
 //
 // Get the widget's MenuBar.
