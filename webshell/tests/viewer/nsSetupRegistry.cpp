@@ -69,7 +69,6 @@ static NS_DEFINE_IID(kCViewCID, NS_VIEW_CID);
 static NS_DEFINE_IID(kCScrollingViewCID, NS_SCROLLING_VIEW_CID);
 static NS_DEFINE_IID(kWebShellCID, NS_WEB_SHELL_CID);
 static NS_DEFINE_IID(kCDocumentLoaderCID, NS_DOCUMENTLOADER_CID);
-static NS_DEFINE_IID(kBrowserWindowCID, NS_BROWSER_WINDOW_CID);
 static NS_DEFINE_IID(kThrobberCID, NS_THROBBER_CID);
 
 #ifdef VIEWER_PLUGINS
@@ -79,7 +78,6 @@ static NS_DEFINE_IID(kCPluginHostCID, NS_PLUGIN_HOST_CID);
 extern "C" void
 NS_SetupRegistry()
 {
-  NSRepository::RegisterFactory(kBrowserWindowCID, WEB_DLL, PR_FALSE, PR_FALSE);
   NSRepository::RegisterFactory(kCWindowIID, WIDGET_DLL, PR_FALSE, PR_FALSE);
   NSRepository::RegisterFactory(kCScrollbarIID, WIDGET_DLL, PR_FALSE, PR_FALSE);
   NSRepository::RegisterFactory(kCHScrollbarIID, WIDGET_DLL, PR_FALSE, PR_FALSE);
