@@ -13,7 +13,7 @@
     onload="Startup()"
     orient="vertical"
     class="dialog"
-    style="user-input: ignore"
+    style="-moz-user-input: ignore"
     >
 
 <script language="JavaScript" src="chrome://messenger/content/messengercompose/askSendFormat.js"/>
