@@ -55,10 +55,10 @@ GetUnsentMessagesFolder(nsIMsgIdentity *userIdentity)
 		rv = mailSession->GetCurrentIdentity(getter_AddRefs(identity));
   if (NS_FAILED(rv)) 
     return nsnull;
-  //******************************************************************
+  //
   // This should really be passed in, but for now, we are going
   // to use this hack call...should go away!
-  //******************************************************************
+  //
 
   nsCOMPtr<nsIMsgAccountManager> accountManager;
   rv = mailSession->GetAccountManager(getter_AddRefs(accountManager));
@@ -183,8 +183,9 @@ SendUnsentMessages(nsIMsgIdentity *userIdentity)
 
         (void)pMessage->GetMessageKey(&key);
         pMessage->GetSubject(subject);
-        
-        printf("message in thread %u %s\n", key, (const char *) &nsAutoString(subject));
+
+        nsAutoString subStr(subject, eOneByte);
+        printf("message in thread %u %s\n", key, subStr.GetBuffer());
       }
 
       pMessage = nsnull;
