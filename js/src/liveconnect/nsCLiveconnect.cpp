@@ -53,6 +53,8 @@
 
 #include "netscape_javascript_JSObject.h"   /* javah-generated headers */
 #include "nsISecurityContext.h"
+#include "nsIServiceManager.h"
+#include "nsIJSContextStack.h"
 
 PR_BEGIN_EXTERN_C
 
@@ -67,6 +69,52 @@ struct CapturedJSError {
 PR_END_EXTERN_C
 
 #include "nsCLiveconnect.h"
+
+/***************************************************************************/
+// A class to put on the stack to manage JS contexts when we are entering JS.
+// This pushes and pops the given context
+// with the nsThreadJSContextStack service as this object goes into and out
+// of scope. It is optimized to not push/pop the cx if it is already on top
+// of the stack. We need to push the JSContext when we enter JS because the
+// JS security manager looks on the context stack for permissions information.
+
+class AutoPushJSContext
+{
+public:
+    AutoPushJSContext(JSContext *cx)
+    {
+        mContextStack = do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+
+        if(mContextStack)
+        {
+            JSContext* currentCX;
+            if(NS_SUCCEEDED(mContextStack->Peek(&currentCX)))
+            {
+                // Is the current context already on the stack?
+                if(cx == currentCX)
+                    mContextStack = null_nsCOMPtr();
+                else
+                {
+                    mContextStack->Push(cx);
+                    // Leave the reference to the mContextStack to
+                    // indicate that we need to pop it in our dtor.                                               
+                }
+            }
+        }
+    }
+
+    ~AutoPushJSContext()
+    {
+        if(mContextStack)
+        {
+            mContextStack->Pop(nsnull);
+            mContextStack = null_nsCOMPtr();
+        }
+    }
+
+private:
+    nsCOMPtr<nsIJSContextStack> mContextStack;
+};
 
 
 ////////////////////////////////////////////////////////////////////////////
@@ -134,12 +182,13 @@ nsCLiveconnect::GetMember(JNIEnv *jEnv, jsobject obj, const jchar *name, jsize l
     if (!jsj_env)
         return NS_ERROR_FAILURE;
 
+    AutoPushJSContext autopush(cx);
+
     if (!name) {
         JS_ReportError(cx, "illegal null member name");
         member = NULL;
         goto done;
     }
-
     
     if (!JS_GetUCProperty(cx, js_obj, name, length, &js_val))
         goto done;
@@ -188,6 +237,8 @@ nsCLiveconnect::GetSlot(JNIEnv *jEnv, jsobject obj, jint slot, void* principalsA
     jsj_env = jsj_enter_js(jEnv, NULL, NULL, &cx, NULL, &saved_state, principalsArray, numPrincipals, pNSISecurityContext);
     if (!jsj_env)
        return NS_ERROR_FAILURE;
+
+    AutoPushJSContext autopush(cx);
     
     // =-= sudu: check to see if slot can be passed in as is.
     //           Should it be converted to a jsint?
@@ -234,6 +285,8 @@ nsCLiveconnect::SetMember(JNIEnv *jEnv, jsobject obj, const jchar *name, jsize l
     jsj_env = jsj_enter_js(jEnv, NULL, NULL, &cx, NULL, &saved_state, principalsArray, numPrincipals, pNSISecurityContext);
     if (!jsj_env)
         return NS_ERROR_FAILURE;
+
+    AutoPushJSContext autopush(cx);
     
     if (!name) {
         JS_ReportError(cx, "illegal null member name");
@@ -280,6 +333,8 @@ nsCLiveconnect::SetSlot(JNIEnv *jEnv, jsobject obj, jint slot, jobject java_obj,
     jsj_env = jsj_enter_js(jEnv, NULL, NULL, &cx, NULL, &saved_state, principalsArray, numPrincipals, pNSISecurityContext);
     if (!jsj_env)
         return NS_ERROR_FAILURE;
+
+    AutoPushJSContext autopush(cx);
     
     if (!jsj_ConvertJavaObjectToJSValue(cx, jEnv, java_obj, &js_val))
         goto done;
@@ -317,11 +372,14 @@ nsCLiveconnect::RemoveMember(JNIEnv *jEnv, jsobject obj, const jchar *name, jsiz
     jsj_env = jsj_enter_js(jEnv, NULL, NULL, &cx, NULL, &saved_state, principalsArray, numPrincipals, pNSISecurityContext);
     if (!jsj_env)
         return NS_ERROR_FAILURE;
+
+    AutoPushJSContext autopush(cx);
     
     if (!name) {
         JS_ReportError(cx, "illegal null member name");
         goto done;
     }
+
     JS_DeleteUCProperty2(cx, js_obj, name, length, &js_val);
 
 done:
@@ -366,15 +424,14 @@ nsCLiveconnect::Call(JNIEnv *jEnv, jsobject obj, const jchar *name, jsize length
     jsj_env = jsj_enter_js(jEnv, NULL, NULL, &cx, NULL, &saved_state, principalsArray, numPrincipals, pNSISecurityContext);
     if (!jsj_env)
         return NS_ERROR_FAILURE;
+
+    AutoPushJSContext autopush(cx);
     
     result = NULL;
     if (!name) {
         JS_ReportError(cx, "illegal null JavaScript function name");
         goto done;
     }
-
-    
-    /* FIXME: What about security stuff ? Don't principals need to be set here ? */
 
     /* Allocate space for JS arguments */
     if (java_args) {
@@ -444,6 +501,8 @@ nsCLiveconnect::Eval(JNIEnv *jEnv, jsobject obj, const jchar *script, jsize leng
     jsj_env = jsj_enter_js(jEnv, NULL, NULL, &cx, NULL, &saved_state, principalsArray, numPrincipals, pNSISecurityContext);
     if (!jsj_env)
        return NS_ERROR_FAILURE;
+
+    AutoPushJSContext autopush(cx);
     
     result = NULL;
     if (!script) {
@@ -509,6 +568,8 @@ nsCLiveconnect::GetWindow(JNIEnv *jEnv, void *java_applet_obj,  void* principals
     jsj_env = jsj_enter_js(jEnv, java_applet_obj, NULL, &cx, NULL, &saved_state, principalsArray, numPrincipals, pNSISecurityContext);
     if (!jsj_env)
        return NS_ERROR_FAILURE;
+
+    AutoPushJSContext autopush(cx);
     
     err_msg = NULL;
     java_obj = NULL;
@@ -588,6 +649,8 @@ nsCLiveconnect::ToString(JNIEnv *jEnv, jsobject obj, jstring *pjstring)
     jsj_env = jsj_enter_js(jEnv, NULL, NULL, &cx, NULL, &saved_state, NULL, 0, NULL );
     if (!jsj_env)
        return NS_ERROR_FAILURE;
+
+    AutoPushJSContext autopush(cx);
     
     result = NULL;
     jsstr = JS_ValueToString(cx, OBJECT_TO_JSVAL(js_obj));
