@@ -150,6 +150,7 @@ out:
 static int
 usage(void)
 {
+    fprintf(stderr, "%s\n", JS_GetImplementationVersion());
     fprintf(stderr, "usage: js [-v version] [-f scriptfile] [scriptfile] [scriptarg...]\n");
     return 2;
 }
@@ -928,6 +929,7 @@ Help(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSString *str;
     const char *bytes;
 
+    printf("%s\n", JS_GetImplementationVersion());
     if (argc == 0) {
 	ShowHelpHeader();
 	for (i = 0; shell_functions[i].name; i++)
