@@ -16,7 +16,7 @@
  * Reserved.
  */
 
-#include "msgcore.h"
+#include "msgCore.h"
 #include "nsMsgLineBuffer.h"
 
 nsByteArray::nsByteArray()
