@@ -26,12 +26,14 @@
 #include "nsVoidArray.h"
 #include "nsString.h"
 #include "nsCRT.h"
+#include "nsIDOMElement.h"    // for some older c++ compilers.
+#include "nsIWebShell.h"      // for some older c++ compilers.
+#include "nsCOMPtr.h"
 
 // Forward Declarations
 class nsIDOMNode;
-class nsIDOMElement;
 class nsIDOMEvent;
-class nsIWebShell;
+
 
 //----------------------------------------------------------------------
 
@@ -43,12 +45,6 @@ class nsXULCommand : public nsIXULCommand,
 public:
   nsXULCommand();
   virtual ~nsXULCommand();
-
-  void* operator new(size_t sz) {
-    void* rv = new char[sz];
-    nsCRT::zero(rv, sz);
-    return rv;
-  }
 
   // nsISupports
   NS_DECL_ISUPPORTS
@@ -104,8 +100,8 @@ protected:
 
   nsVoidArray  mSrcWidgets;
 
-  nsIWebShell    * mWebShell;
-  nsIDOMElement  * mDOMElement;
+  nsCOMPtr<nsIWebShell>    mWebShell;
+  nsCOMPtr<nsIDOMElement>  mDOMElement;
 
 };
 

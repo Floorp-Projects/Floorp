@@ -17,7 +17,6 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 #include "nsIDOMNode.h"
-#include "nsIDOMElement.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMHTMLInputElement.h"
@@ -25,7 +24,6 @@
 
 // FOr JS Execution
 #include "nsIScriptContextOwner.h"
-#include "nsIWebShell.h"
 
 #include "nsRepository.h"
 
@@ -56,21 +54,15 @@ static NS_DEFINE_IID(kIScriptContextOwnerIID,  NS_ISCRIPTCONTEXTOWNER_IID);
 nsXULCommand::nsXULCommand()
 {
   NS_INIT_REFCNT();
-  mWebShell   = nsnull;
-  mDOMElement = nsnull;
-  mIsEnabled  = PR_FALSE;
+  mIsEnabled = PR_FALSE;
 }
 
 //----------------------------------------------------------------------
 nsXULCommand::~nsXULCommand()
 {
-  NS_IF_RELEASE(mWebShell);
-  NS_IF_RELEASE(mDOMElement);
-
   while (mSrcWidgets.Count() > 0) {
-    nsIDOMNode* node = (nsIDOMNode*) mSrcWidgets.ElementAt(0);
+    nsCOMPtr<nsIDOMNode> node = dont_AddRef(NS_STATIC_CAST(nsIDOMNode*,mSrcWidgets.ElementAt(0)));
     mSrcWidgets.RemoveElementAt(0);
-    NS_RELEASE(node);
   }
 }
 
@@ -130,16 +122,14 @@ NS_IMETHODIMP nsXULCommand::GetName(nsString &aName) const
 //----------------------------------------------------------------------
 NS_IMETHODIMP nsXULCommand::AddUINode(nsIDOMNode * aNode)
 {
-  nsIDOMEventReceiver * receiver;
-
   NS_PRECONDITION(nsnull != aNode, "adding event listener to null node");
 
-  if (NS_OK == aNode->QueryInterface(kIDOMEventReceiverIID, (void**) &receiver)) {
+  nsCOMPtr<nsIDOMEventReceiver> receiver ( aNode );
+  if ( receiver ) {
     receiver->AddEventListener((nsIDOMMouseListener*)this, kIDOMMouseListenerIID);
     receiver->AddEventListener((nsIDOMKeyListener*)this, kIDOMKeyListenerIID);
     mSrcWidgets.AppendElement(aNode);
     NS_ADDREF(aNode);
-    NS_RELEASE(receiver);
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
@@ -161,17 +151,14 @@ NS_IMETHODIMP nsXULCommand::SetEnabled(PRBool aIsEnabled)
   mIsEnabled = aIsEnabled;
   PRInt32 i, n = mSrcWidgets.Count();
   for (i = 0; i < n; i++) {
-    nsIDOMNode* node = (nsIDOMNode*) mSrcWidgets.ElementAt(i);
-    nsIDOMHTMLInputElement * input;
-    if (NS_OK == node->QueryInterface(kIDOMHTMLInputElementIID,(void**)&input)) {
+    nsCOMPtr<nsIDOMNode> node = dont_AddRef(NS_STATIC_CAST(nsIDOMNode*,mSrcWidgets.ElementAt(i)));
+    nsCOMPtr<nsIDOMHTMLInputElement> input ( node );
+    if ( input ) {
       input->SetDisabled(aIsEnabled);
-      NS_RELEASE(input);
     } else {
-      nsIDOMHTMLButtonElement * btn;
-      if (NS_OK == node->QueryInterface(kIDOMHTMLButtonElement,(void**)&btn)) {
+      nsCOMPtr<nsIDOMHTMLButtonElement> btn ( node );
+      if ( btn )
         btn->SetDisabled(!aIsEnabled);
-        NS_RELEASE(btn);
-      }
     }
   }
   
@@ -207,7 +194,6 @@ NS_IMETHODIMP nsXULCommand::DoCommand()
 NS_IMETHODIMP nsXULCommand::SetWebShell(nsIWebShell * aWebShell)
 {
   mWebShell = aWebShell;
-  NS_ADDREF(mWebShell);
   return NS_OK;
 }
 
@@ -215,7 +201,6 @@ NS_IMETHODIMP nsXULCommand::SetWebShell(nsIWebShell * aWebShell)
 NS_IMETHODIMP nsXULCommand::SetDOMElement(nsIDOMElement * aDOMElement)
 {
   mDOMElement = aDOMElement;
-  NS_ADDREF(mDOMElement);
   return NS_OK;
 }
 
@@ -230,22 +215,19 @@ NS_IMETHODIMP nsXULCommand::ExecuteJavaScriptString(nsIWebShell* aWebShell, nsSt
   NS_ASSERTION(nsnull != aWebShell, "null webshell passed to EvaluateJavaScriptString");
 
   // Get nsIScriptContextOwner
-  nsIScriptContextOwner* scriptContextOwner;
-  status = aWebShell->QueryInterface(kIScriptContextOwnerIID,(void**)&scriptContextOwner);
-	if (NS_OK == status) {
+  nsCOMPtr<nsIScriptContextOwner> scriptContextOwner ( aWebShell );
+  if ( scriptContextOwner ) {
     const char* url = "";
       // Get nsIScriptContext
-    nsIScriptContext* scriptContext;
-    status = scriptContextOwner->GetScriptContext(&scriptContext);
+    nsCOMPtr<nsIScriptContext> scriptContext;
+    status = scriptContextOwner->GetScriptContext(getter_AddRefs(scriptContext));
     if (NS_OK == status) {
       // Ask the script context to evalute the javascript string
       PRBool isUndefined = PR_FALSE;
       nsString rVal("xxx");
       scriptContext->EvaluateString(aJavaScript, url, 0, rVal, &isUndefined);
       if (DEBUGCMDS) printf("EvaluateString - %d [%s]\n", isUndefined, rVal.ToNewCString());
-
-      NS_RELEASE(scriptContext);
-    } 		NS_RELEASE(scriptContextOwner);
+    }
 
   }
   return status;
@@ -347,13 +329,12 @@ nsresult nsXULCommand::KeyUp(nsIDOMEvent* aKeyEvent)
   if (nsIDOMEvent::VK_RETURN != type) {
     return NS_OK;
   }
-  nsIDOMHTMLInputElement * input;
-  if (NS_OK == mDOMElement->QueryInterface(kIDOMHTMLInputElementIID,(void**)&input)) {
+  nsCOMPtr<nsIDOMHTMLInputElement> input ( mDOMElement );
+  if ( input ) {
     nsAutoString value;
     input->GetValue(value);
     //printf("Value [%s]\n", value.ToNewCString());
     mWebShell->LoadURL(value);
-    NS_RELEASE(input);
   }
   return NS_OK;
 }
