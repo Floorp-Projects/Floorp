@@ -108,6 +108,10 @@ public:
   static nsIAtom* disabled;
   static nsIAtom* div;
   static nsIAtom* dl;
+  static nsIAtom* dropDownVisible;
+  static nsIAtom* dropDownHidden;
+  static nsIAtom* dropDownBtnOut;
+  static nsIAtom* dropDownBtnPressed;
 
   static nsIAtom* embed;
   static nsIAtom* encoding;
