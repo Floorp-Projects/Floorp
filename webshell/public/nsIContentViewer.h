@@ -63,9 +63,9 @@ public:
 
   NS_IMETHOD BindToDocument(nsISupports* aDoc, const char* aCommand) = 0;
 
-  NS_IMETHOD SetContainer(nsIContentViewerContainer* aContainer) = 0;
+  NS_IMETHOD SetContainer(nsISupports* aContainer) = 0;
 
-  NS_IMETHOD GetContainer(nsIContentViewerContainer*& aContainerResult) = 0;
+  NS_IMETHOD GetContainer(nsISupports** aContainerResult) = 0;
 
   NS_IMETHOD Stop(void) = 0;
 
