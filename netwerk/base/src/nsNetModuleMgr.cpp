@@ -42,30 +42,28 @@ NS_IMPL_ISUPPORTS(nsNetModuleMgr, nsCOMTypeInfo<nsINetModuleMgr>::GetIID());
 ///////////////////////////////////
 
 NS_IMETHODIMP
-nsNetModuleMgr::RegisterModule(const char *aTopic, nsINetNotify *aNotify)
-{
+nsNetModuleMgr::RegisterModule(const char *aTopic, nsIEventQueue *aEventQueue, nsINetNotify *aNotify, const nsCID * aCID) {
     nsresult rv;
     PRUint32 cnt;
+
 
     // XXX before registering an object for a particular topic
     // XXX QI the nsINetNotify interface passed in for the interfaces
     // XXX supported by the topic.
 
     PR_Lock(mLock);
-    nsCOMPtr<nsINetModRegEntry> newEntryI;
-    nsNetModRegEntry *newEntry = new nsNetModRegEntry(aTopic, aNotify, &rv);
+    nsINetModRegEntry* newEntryI = nsnull;
+    nsNetModRegEntry *newEntry =
+        new nsNetModRegEntry(aTopic, aEventQueue, aNotify, *aCID);
     if (!newEntry)
         return NS_ERROR_OUT_OF_MEMORY;
-    
-    if (NS_FAILED(rv)) return rv;
-    
-    rv = newEntry->QueryInterface(nsCOMTypeInfo<nsINetModRegEntry>::GetIID(), getter_AddRefs(newEntryI));
+
+    rv = newEntry->QueryInterface(nsCOMTypeInfo<nsINetModRegEntry>::GetIID(), (void**)&newEntryI);
     if (NS_FAILED(rv)) return rv;
 
     // Check for a previous registration
     mEntries->Count(&cnt);
-    for (PRUint32 i = 0; i < cnt; i++) 
-    {
+    for (PRUint32 i = 0; i < cnt; i++) {
         nsINetModRegEntry* curEntry = NS_STATIC_CAST(nsINetModRegEntry*, mEntries->ElementAt(i));
         PRBool same = PR_FALSE;
         rv = newEntryI->Equals(curEntry, &same);
@@ -84,24 +82,24 @@ nsNetModuleMgr::RegisterModule(const char *aTopic, nsINetNotify *aNotify)
 
     mEntries->AppendElement(NS_STATIC_CAST(nsISupports*, newEntryI));
     PR_Unlock(mLock);
+    NS_RELEASE(newEntryI);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNetModuleMgr::UnregisterModule(const char *aTopic, nsINetNotify *aNotify) 
-{
+nsNetModuleMgr::UnregisterModule(const char *aTopic, nsIEventQueue *aEventQueue, nsINetNotify *aNotify, const nsCID * aCID) {
+
     PR_Lock(mLock);
     nsresult rv;
     PRUint32 cnt;
 
-    nsCOMPtr<nsINetModRegEntry> tmpEntryI;
-    nsNetModRegEntry *tmpEntry = new nsNetModRegEntry(aTopic, aNotify, &rv);
+    nsINetModRegEntry* tmpEntryI = nsnull;
+    nsNetModRegEntry *tmpEntry =
+        new nsNetModRegEntry(aTopic, aEventQueue, aNotify, *aCID);
     if (!tmpEntry)
         return NS_ERROR_OUT_OF_MEMORY;
-    
-    if (NS_FAILED(rv)) return rv;
 
-    rv = tmpEntry->QueryInterface(nsCOMTypeInfo<nsINetModRegEntry>::GetIID(), getter_AddRefs(tmpEntryI));
+    rv = tmpEntry->QueryInterface(nsCOMTypeInfo<nsINetModRegEntry>::GetIID(), (void**)&tmpEntryI);
     if (NS_FAILED(rv)) return rv;
 
     mEntries->Count(&cnt);
@@ -122,6 +120,7 @@ nsNetModuleMgr::UnregisterModule(const char *aTopic, nsINetNotify *aNotify)
         NS_RELEASE(curEntry); // ditch our ref to it
     }
     PR_Unlock(mLock);
+    NS_RELEASE(tmpEntryI);
     return NS_OK;
 }
 
@@ -147,7 +146,7 @@ nsNetModuleMgr::EnumerateModules(const char *aTopic, nsISimpleEnumerator **aEnum
     for (PRUint32 i = 0; i < cnt; i++) {
         nsINetModRegEntry *entry = NS_STATIC_CAST(nsINetModRegEntry*, mEntries->ElementAt(i));
 
-        rv = entry->GetTopic(&topic);
+        rv = entry->GetMTopic(&topic);
         if (NS_FAILED(rv)) {
             NS_RELEASE(topicEntries);
             NS_RELEASE(entry);

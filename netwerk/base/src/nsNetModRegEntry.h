@@ -21,7 +21,6 @@
 
 #include "nsINetModRegEntry.h"
 #include "nsIEventQueue.h"
-#include "nsCOMPtr.h"
 
 class nsNetModRegEntry : public nsINetModRegEntry {
 public:
@@ -29,20 +28,21 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsINetModRegEntry
-    NS_IMETHOD GetSyncProxy(nsINetNotify * *aSyncProxy);
-    NS_IMETHOD GetAsyncProxy(nsINetNotify * *aAsyncProxy);
-    NS_IMETHOD GetTopic(char * *aTopic);
+    NS_IMETHOD GetMNotify(nsINetNotify **aNotify);
+    NS_IMETHOD GetMEventQ(nsIEventQueue **aEventQ);
+    NS_IMETHOD GetMTopic(char **aTopic);
+    NS_IMETHOD GetMCID(nsCID **aCID);
+
     NS_IMETHOD Equals(nsINetModRegEntry* aEntry, PRBool *_retVal);
 
     // nsNetModRegEntry
-    nsNetModRegEntry(const char *aTopic, nsINetNotify *aNotify, nsresult *result);
+    nsNetModRegEntry(const char *aTopic, nsIEventQueue *aEventQ, nsINetNotify *aNotify, nsCID aCID);
     virtual ~nsNetModRegEntry();
 
-protected:
-    char                    *mTopic;
-    nsCOMPtr<nsINetNotify>  mSyncProxy;
-    nsCOMPtr<nsINetNotify>  mAsyncProxy;
-    nsCOMPtr<nsIEventQueue> mEventQ;
+    char                *mTopic;
+    nsIEventQueue       *mEventQ;
+    nsINetNotify        *mNotify;
+    nsCID               mCID;
 };
 
 #endif //___nsNetModRegEntry_h___

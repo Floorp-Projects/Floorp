@@ -28,7 +28,7 @@
 ///////////////////////////////////
 // nsISupports
 
-NS_IMPL_ISUPPORTS2(nsCookieHTTPNotify, nsIHTTPNotify, nsINetNotify);
+NS_IMPL_ISUPPORTS(nsCookieHTTPNotify, nsIHTTPNotify::GetIID());
 
 ///////////////////////////////////
 // nsCookieHTTPNotify Implementation

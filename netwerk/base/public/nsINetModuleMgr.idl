@@ -52,10 +52,11 @@ interface nsINetModuleMgr : nsISupports {
     // 
     // ARGUMENTS:
     // aTopic: The internal component that the external module wants to monitor.
+    // aEventQueue: The event queue to receive the events.
     // aNotify: The external module interface methods to be called when an event is fired.
     //
     // RETURNS: nsresult
-	void RegisterModule(in string aTopic, in nsINetNotify aNotify);
+	void RegisterModule(in string aTopic, in nsIEventQueue aEventQueue, in nsINetNotify aNotify, in nsCIDPtr aCID);
 
     // Unregister the external module. Removes the nsINetModuleMgr binding between
     // internal component and external module.
@@ -65,7 +66,7 @@ interface nsINetModuleMgr : nsISupports {
     // aNotify: The external modules notification module.
     //
     // RETURNS: nsresult
-    void UnregisterModule(in string aTopic, in nsINetNotify aNotify);
+    void UnregisterModule(in string aTopic, in nsIEventQueue aEventQueue, in nsINetNotify aNotify, in nsCIDPtr aCID);
 
     // Enumerates all the registered modules for the specified topic.
     //
