@@ -824,23 +824,8 @@ nsWebShell::DestroyChildren()
 }
 
 
-NS_IMETHODIMP_(nsrefcnt) nsWebShell::AddRef(void)
-{
-  NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");
-  ++mRefCnt;
-  return mRefCnt;
-}
-
-NS_IMETHODIMP_(nsrefcnt) nsWebShell::Release(void)
-{
-  NS_PRECONDITION(0 != mRefCnt, "dup release");
-  --mRefCnt;
-  if (mRefCnt == 0) {
-    NS_DELETEXPCOM(this);
-    return 0;
-  }
-  return mRefCnt;
-}
+NS_IMPL_ADDREF(nsWebShell)
+NS_IMPL_RELEASE(nsWebShell)
 
 nsresult
 nsWebShell::QueryInterface(REFNSIID aIID, void** aInstancePtr)
@@ -2296,20 +2281,20 @@ nsWebShell::LoadURI(nsIURI * aUri,
    * inside a *non-browser* window. Note this mechanism s'd go away once
    * we have the protocol registry and window manager available
    */
-  if (isMail) {
-    //Ask the container to load the appropriate component for the URL.
+  if (root) {
+    if (isMail) {
+      //Ask the container to load the appropriate component for the URL.
 
-    if (root) {
-       nsCOMPtr<nsIUrlDispatcher>  urlDispatcher;
-       rv = GetUrlDispatcher(*getter_AddRefs(urlDispatcher));
-       if (NS_SUCCEEDED(rv) && urlDispatcher) {
-          printf("calling HandleUrl\n");
-          urlDispatcher->HandleUrl(LinkCommand.GetUnicode(),
-                                   mURL.GetUnicode(), aPostDataStream);
-          return NS_OK;
-       }
-       NS_RELEASE(root);
+      nsCOMPtr<nsIUrlDispatcher>  urlDispatcher;
+      rv = GetUrlDispatcher(*getter_AddRefs(urlDispatcher));
+      if (NS_SUCCEEDED(rv) && urlDispatcher) {
+        printf("calling HandleUrl\n");
+        urlDispatcher->HandleUrl(LinkCommand.GetUnicode(),
+                                 mURL.GetUnicode(), aPostDataStream);
+        return NS_OK;
+      }
     }
+    NS_RELEASE(root);
   }
 
 
