@@ -675,7 +675,7 @@ nsGenericElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
     mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
     if (globalObject) {
       nsCOMPtr<nsIScriptContext> context;
-      if (NS_OK == globalObject->GetContext(getter_AddRefs(context))) {
+      if (NS_OK == globalObject->GetContext(getter_AddRefs(context)) && context) {
         context->RemoveReference((void *)&mDOMSlots->mScriptObject,
                                 mDOMSlots->mScriptObject);
       }
@@ -694,7 +694,7 @@ nsGenericElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
     mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
     if (globalObject) {
       nsCOMPtr<nsIScriptContext> context;
-      if (NS_OK == globalObject->GetContext(getter_AddRefs(context))) {
+      if (NS_OK == globalObject->GetContext(getter_AddRefs(context)) && context) {
         nsAutoString tag;
         char tagBuf[50];
         
