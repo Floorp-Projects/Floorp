@@ -36,6 +36,7 @@ public:
 
 
   virtual void BeginConvertToXIF(nsXIFConverter& aConverter) const;
+  virtual void ConvertContentToXIF(nsXIFConverter& aConverter) const;
   virtual void FinishConvertToXIF(nsXIFConverter& aConverter) const;
 
 protected:
@@ -113,7 +114,7 @@ NS_NewHTMLTitle(nsIHTMLContent** aInstancePtrResult,
  * These methods must be called in the following order:
    
       BeginConvertToXIF
-        DoConvertToXIF
+      ConvertContentToXIF
       EndConvertToXIF
  */
 
@@ -125,10 +126,13 @@ void nsHTMLTitle::BeginConvertToXIF(nsXIFConverter& aConverter) const
     mTag->ToString(name);
     aConverter.BeginContainer(name);
   }
-  aConverter.AddContent(mTitle);
 
 }
 
+void nsHTMLTitle::ConvertContentToXIF(nsXIFConverter& aConverter) const
+{
+  aConverter.AddContent(mTitle);
+}
 
 void nsHTMLTitle::FinishConvertToXIF(nsXIFConverter& aConverter) const
 {
