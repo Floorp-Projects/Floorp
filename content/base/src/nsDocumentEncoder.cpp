@@ -107,6 +107,7 @@ public:
   // Inherited methods from nsIDocumentEncoder
   NS_IMETHOD SetSelection(nsISelection* aSelection);
   NS_IMETHOD SetRange(nsIDOMRange* aRange);
+  NS_IMETHOD SetNode(nsIDOMNode* aNode);
   NS_IMETHOD SetWrapColumn(PRUint32 aWC);
   NS_IMETHOD SetCharset(const nsAString& aCharset);
   NS_IMETHOD GetMimeType(nsAString& aMimeType);
@@ -143,6 +144,7 @@ protected:
   nsCOMPtr<nsIDocument>          mDocument;
   nsCOMPtr<nsISelection>         mSelection;
   nsCOMPtr<nsIDOMRange>          mRange;
+  nsCOMPtr<nsIDOMNode>           mNode;
   nsCOMPtr<nsIOutputStream>      mStream;
   nsCOMPtr<nsIContentSerializer> mSerializer;
   nsCOMPtr<nsIUnicodeEncoder>    mUnicodeEncoder;
@@ -260,6 +262,13 @@ NS_IMETHODIMP
 nsDocumentEncoder::SetRange(nsIDOMRange* aRange)
 {
   mRange = aRange;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocumentEncoder::SetNode(nsIDOMNode* aNode)
+{
+  mNode = aNode;
   return NS_OK;
 }
 
@@ -941,6 +950,9 @@ nsDocumentEncoder::EncodeToString(nsAString& aOutputString)
       rv = SerializeRangeToString(mRange, aOutputString);
 
       mRange = nsnull;
+  } else if (mNode) {
+    rv = SerializeToStringRecursive(mNode, aOutputString);
+    mNode = nsnull;
   } else {
     nsCOMPtr<nsIDOMDocument> domdoc(do_QueryInterface(mDocument));
     rv = mSerializer->AppendDocumentStart(domdoc, aOutputString);
