@@ -39,6 +39,7 @@
 #include "nsIGenericFactory.h"
 
 #include "mozSpellChecker.h"
+#include "mozInlineSpellChecker.h"
 #include "nsTextServicesCID.h"
 #include "mozPersonalDictionary.h"
 #include "mozSpellI18NManager.h"
@@ -47,6 +48,11 @@
 { /* 8227f019-afc7-461e-b030-9f185d7a0e29 */    \
 0x8227F019, 0xAFC7, 0x461e,                     \
 { 0xB0, 0x30, 0x9F, 0x18, 0x5D, 0x7A, 0x0E, 0x29} }
+
+#define MOZ_INLINESPELLCHECKER_CID         \
+{ /* 9FE5D975-09BD-44aa-A01A-66402EA28657 */    \
+0x9fe5d975, 0x9bd, 0x44aa,                      \
+{ 0xa0, 0x1a, 0x66, 0x40, 0x2e, 0xa2, 0x86, 0x57} }
 
 ////////////////////////////////////////////////////////////////////////
 // Define the contructor function for the objects
@@ -57,6 +63,7 @@
 NS_GENERIC_FACTORY_CONSTRUCTOR(mozSpellChecker)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(mozPersonalDictionary, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(mozSpellI18NManager)
+NS_GENERIC_FACTORY_CONSTRUCTOR(mozInlineSpellChecker)
 
 ////////////////////////////////////////////////////////////////////////
 // Define a table of CIDs implemented by this module along with other
@@ -66,7 +73,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(mozSpellI18NManager)
 static nsModuleComponentInfo components[] = {
   { NULL, NS_SPELLCHECKER_CID, NS_SPELLCHECKER_CONTRACTID, mozSpellCheckerConstructor },
   { NULL, MOZ_PERSONALDICTIONARY_CID, MOZ_PERSONALDICTIONARY_CONTRACTID, mozPersonalDictionaryConstructor },
-  { NULL, MOZ_SPELLI18NMANAGER_CID, MOZ_SPELLI18NMANAGER_CONTRACTID, mozSpellI18NManagerConstructor }
+  { NULL, MOZ_SPELLI18NMANAGER_CID, MOZ_SPELLI18NMANAGER_CONTRACTID, mozSpellI18NManagerConstructor },
+  { NULL, MOZ_INLINESPELLCHECKER_CID, MOZ_INLINESPELLCHECKER_CONTRACTID, mozInlineSpellCheckerConstructor }
 };
 
 ////////////////////////////////////////////////////////////////////////
