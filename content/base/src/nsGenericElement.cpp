@@ -1640,6 +1640,33 @@ nsGenericElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
       }
     }
 
+    if (aDocument) {
+      // check the document on the nodeinfo to see whether we need a
+      // new nodeinfo
+      nsCOMPtr<nsIDocument> nodeinfoDoc;
+      mNodeInfo->GetDocument(*getter_AddRefs(nodeinfoDoc));
+      if (aDocument != nodeinfoDoc) {
+        // get a new nodeinfo
+        nsCOMPtr<nsIAtom> name;
+        mNodeInfo->GetNameAtom(*getter_AddRefs(name));
+        nsCOMPtr<nsIAtom> prefix;
+        mNodeInfo->GetPrefixAtom(*getter_AddRefs(prefix));
+        PRInt32 nameSpaceID;
+        mNodeInfo->GetNamespaceID(nameSpaceID);
+        nsCOMPtr<nsINodeInfoManager> nodeInfoManager;
+        aDocument->GetNodeInfoManager(*getter_AddRefs(nodeInfoManager));
+        if (nodeInfoManager) {
+          nsINodeInfo* newNodeInfo;
+          nodeInfoManager->GetNodeInfo(name, prefix, nameSpaceID,
+                                       newNodeInfo);
+          if (newNodeInfo) {
+            NS_RELEASE(mNodeInfo);
+            mNodeInfo = newNodeInfo;
+          }
+        }
+      }
+    }
+
     mDocument = aDocument;
   }
 
