@@ -112,11 +112,11 @@ struct nsXPTCVariant : public nsXPTCMiniVariant
     void SetValIsArray()     {flags |= VAL_IS_ARRAY;}
     void SetValIsDOMString() {flags |= VAL_IS_DOMSTR;}
 
-    PRBool IsPtrData()      const {return (PRBool) (flags & PTR_IS_DATA);}
-    PRBool IsValAllocated() const {return (PRBool) (flags & VAL_IS_ALLOCD);}
-    PRBool IsValInterface() const {return (PRBool) (flags & VAL_IS_IFACE);}
-    PRBool IsValArray()     const {return (PRBool) (flags & VAL_IS_ARRAY);}
-    PRBool IsValDOMString() const {return (PRBool) (flags & VAL_IS_DOMSTR);}
+    PRBool IsPtrData()      const {return 0 != (flags & PTR_IS_DATA);}
+    PRBool IsValAllocated() const {return 0 != (flags & VAL_IS_ALLOCD);}
+    PRBool IsValInterface() const {return 0 != (flags & VAL_IS_IFACE);}
+    PRBool IsValArray()     const {return 0 != (flags & VAL_IS_ARRAY);}
+    PRBool IsValDOMString() const {return 0 != (flags & VAL_IS_DOMSTR);}
 
     void Init(const nsXPTCMiniVariant& mv, const nsXPTType& t, PRUint8 f)
     {
