@@ -99,6 +99,11 @@ public:
   virtual nsIURLGroup* GetDocumentURLGroup() const = 0;
 
   /**
+   * Return the base URL for realtive URLs in the document. May return null (or the document URL).
+   */
+  NS_IMETHOD GetBaseURL(nsIURL*& aURL) const = 0;
+
+  /**
    * Return a standard name for the document's character set. This will
    * trigger a startDocumentLoad if necessary to answer the question.
    */

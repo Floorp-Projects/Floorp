@@ -143,6 +143,8 @@ public:
 
     virtual nsIURLGroup* GetDocumentURLGroup() const;
 
+    NS_IMETHOD GetBaseURL(nsIURL*& aURL) const;
+
     virtual nsCharSetID GetDocumentCharacterSet() const;
 
     virtual void SetDocumentCharacterSet(nsCharSetID aCharSetID);
@@ -735,6 +737,14 @@ RDFDocumentImpl::GetDocumentURLGroup() const
 {
     NS_IF_ADDREF(mDocumentURLGroup);
     return mDocumentURLGroup;
+}
+
+NS_IMETHODIMP 
+RDFDocumentImpl::GetBaseURL(nsIURL*& aURL) const
+{
+    NS_IF_ADDREF(mDocumentURL);
+    aURL = mDocumentURL;
+    return NS_OK;
 }
 
 nsCharSetID 
