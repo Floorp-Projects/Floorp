@@ -53,6 +53,7 @@ CPPSRCS		= \
 		TestBlockingSocket.cpp \
 		TestDNS.cpp \
 		TestIOThreads.cpp \
+		TestOpen.cpp \
 		TestCookie.cpp \
 		$(NULL)
 
