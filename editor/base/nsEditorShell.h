@@ -203,7 +203,11 @@ class nsEditorShell :   public nsIEditorShell,
     nsCOMPtr<nsISupportsArray> mDocStateListeners;		// contents are nsISupports
 
     // Get a string from the string bundle file
-    nsString        GetString(const nsString& name);
+    nsString   GetString(const nsString& name);
+
+    // Get the current document title an use it as part of the window title
+    // Uses "(Untitled)" for empty title
+    NS_IMETHOD UpdateWindowTitle();
 
 private:
     // Pointer to localized strings used for UI

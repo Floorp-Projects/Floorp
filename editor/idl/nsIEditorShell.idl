@@ -62,6 +62,7 @@ interface nsIEditorShell : nsISupports
   void SetToolbarWindow(in nsIDOMWindow win);
   void SetContentWindow(in nsIDOMWindow win);
   void SetWebShellWindow(in nsIDOMWindow win);
+  void SetTitle(in wstring title);
   void LoadUrl(in wstring url);
   
   /** Register a doc state listener. This gets added to a list of listeners
@@ -80,7 +81,6 @@ interface nsIEditorShell : nsISupports
   void Init();
   
   /* Commands */
-  void NewWindow();
   void Open();
 
   /** 
