@@ -19,6 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Lorenzo Colitti <lorenzo@colitti.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -130,4 +131,7 @@ NS_END_EXTERN_C
 #define IMAP_REDIRECT_LOGIN_FAILED                  5091
 #define IMAP_SUBSCRIBE_PROMPT                       5092
 #define IMAP_SERVER_DROPPED_CONNECTION              5093
+#define IMAP_QUOTA_STATUS_FOLDERNOTOPEN             5095
+#define IMAP_QUOTA_STATUS_NOTSUPPORTED              5096
+#define IMAP_QUOTA_STATUS_NOQUOTA                   5097
 #endif /* _nsImapStringBundle_H__ */

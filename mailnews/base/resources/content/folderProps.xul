@@ -20,6 +20,7 @@
  
    - Contributor(s): David Bienvenu          <bienvenu@netscape.com>
                      Doron Rosenberg         <doronr@naboonline.com> 
+                     Lorenzo Colitti         <lorenzo@colitti.com> 
 -->
 
 <?xml-stylesheet href="chrome://messenger/skin/dialogs.css" type="text/css"?>
@@ -34,6 +35,7 @@
   onload="folderPropsOnLoad()" style="width: 36em;"
   class="dialog">
  
+  <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"></script>
   <script type="application/x-javascript" src="chrome://messenger/content/folderProps.js"></script>
   <script type="application/x-javascript">
@@ -50,6 +52,7 @@
     <tab id="GeneralTab" label="&generalInfo.label;"/>
     <tab hidefor="movemail,pop3,none" hidable="true" id="OfflineTab" label="&folderOfflineTab.label;"/>
     <tab hidefor="movemail,pop3,none,nntp" hidable="true" id="SharingTab" label="&folderSharingTab.label;"/>
+    <tab hidefor="movemail,pop3,none,nntp" hidable="true" id="QuotaTab" label="&folderQuotaTab.label;"/>
   </tabs>
   <tabpanels id="folderPropTabPanel">
     <vbox>
@@ -106,6 +109,33 @@
               oncommand="onFolderPrivileges();" 
               id="imap.FolderPrivileges" hidefor="movemail,pop3,none,nntp" orient="right"/>
     </vbox>
+    <vbox hidable="true" hidefor="pop3,none,nntp" valign="top">
+      <label id="folderQuotaStatus" flex="1"/>
+
+      <grid id="folderQuotaData" hidden="true" flex="1">
+        <columns>
+          <column/>
+          <column flex="1"/>
+        </columns>
+        <rows>
+          <row align="center">
+            <label value="&folderQuotaRoot.label;"/>
+            <textbox id="quotaRoot" readonly="true"/>
+          </row>
+          <row>
+            <label value="&folderQuotaUsage.label;"/>
+            <description id="quotaUsedFree"/>
+          </row>
+          <row align="center">
+            <label value="&folderQuotaStatus.label;"/>
+            <hbox align="center">
+              <progressmeter id="quotaPercentageBar" mode="determined" value="0%"/>
+              <label id="quotaPercentUsed"/>
+            </hbox>
+          </row>
+        </rows>
+      </grid>
+     </vbox>
   </tabpanels>
 </tabbox>
 

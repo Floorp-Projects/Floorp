@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Henry Jia <Henry.Jia@sun.com>
+ *   Lorenzo Colitti <lorenzo@colitti.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -3410,6 +3411,16 @@ void nsImapProtocol::ProcessMailboxUpdate(PRBool handlePossibleUndo)
 {
   if (DeathSignalReceived())
     return;
+
+  // Update quota information
+  if (!DeathSignalReceived())
+  {
+    char *boxName;
+    GetSelectedMailboxName(&boxName);
+    GetQuotaDataIfSupported(boxName);
+    PR_Free(boxName);
+  }
+
     // fetch the flags and uids of all existing messages or new ones
     if (!DeathSignalReceived() && GetServerStateParser().NumberOfMessages())
     {
@@ -7362,6 +7373,38 @@ PRBool nsImapProtocol::TryToLogon()
   }
 
   return loginSucceeded;
+}
+
+void nsImapProtocol::UpdateFolderQuotaData(nsCString& aQuotaRoot, PRUint32 aUsed, PRUint32 aMax)
+{
+  NS_ASSERTION(m_imapMailFolderSink, "m_imapMailFolderSink is null!");
+
+  m_imapMailFolderSink->SetFolderQuotaDataIsValid(PR_TRUE);
+  m_imapMailFolderSink->SetFolderQuotaRoot(aQuotaRoot);
+  m_imapMailFolderSink->SetFolderQuotaUsedKB(aUsed);
+  m_imapMailFolderSink->SetFolderQuotaMaxKB(aMax);
+}
+
+void nsImapProtocol::GetQuotaDataIfSupported(const char *aBoxName)
+{
+  // If server doesn't have quota support, don't do anything
+  if (! (GetServerStateParser().GetCapabilityFlag() & kQuotaCapability))
+    return;
+
+  IncrementCommandTagNumber();
+
+  nsCAutoString quotacommand;
+  quotacommand = nsDependentCString(GetServerCommandTag())
+               + NS_LITERAL_CSTRING(" getquotaroot \"")
+               + nsDependentCString(aBoxName)
+               + NS_LITERAL_CSTRING("\"" CRLF);
+
+  NS_ASSERTION(m_imapMailFolderSink, "m_imapMailFolderSink is null!");
+  m_imapMailFolderSink->SetFolderQuotaCommandIssued(PR_TRUE);
+
+  nsresult quotarv = SendData(quotacommand.get());
+  if (NS_SUCCEEDED(quotarv))
+    ParseIMAPandCheckForNewMail();
 }
 
 PRBool

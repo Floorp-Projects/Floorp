@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Lorenzo Colitti <lorenzo@colitti.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -369,6 +370,9 @@ public:
   void SetCopyResponseUid(nsMsgKeyArray* aKeyArray,
                           const char* msgIdString);
 
+  // Quota support
+  void UpdateFolderQuotaData(nsCString& aQuotaRoot, PRUint32 aUsed, PRUint32 aMax);
+
 private:
 	// the following flag is used to determine when a url is currently being run. It is cleared when we 
 	// finish processng a url and it is set whenever we call Load on a url
@@ -596,6 +600,9 @@ private:
   nsresult GetMsgWindow(nsIMsgWindow ** aMsgWindow);
 	// End Process AuthenticatedState Url helper methods
 
+  // Quota support
+  void GetQuotaDataIfSupported(const char *aBoxName);
+  
   PRBool		m_trackingTime;
   PRTime		m_startTime;
   PRTime		m_endTime;

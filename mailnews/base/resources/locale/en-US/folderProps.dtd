@@ -18,14 +18,18 @@
    - 
    - Contributor(s): David Bienvenu <bienvenu@netscape.com>
    -                 Mohan Bhamidipati <mohanb@netscape.com>
+   -                 Lorenzo Colitti   <lorenzo@colitti.com>
   --> 
 
 <!ENTITY folderProps.windowtitle.label  "Properties">
+
 <!ENTITY generalInfo.label            "General Information">
+<!ENTITY generalInfo.accesskey        "G">
 <!ENTITY folderCharsetTab.label       "Default Character Coding:">
 <!ENTITY folderCharsetOverride.label  "Apply default to all messages in the folder (individual message character coding settings and auto-detection will be ignored)">
+
 <!ENTITY folderOfflineTab.label                             "Offline">
-<!ENTITY folderOfflineTab.accesskey                         "o">
+<!ENTITY folderOfflineTab.accesskey                         "O">
 <!ENTITY folderCheckForNewMessages.label                    "Check this folder for new messages">
 
 <!ENTITY offlineFolder.check.label                          "Select this folder for offline use">
@@ -39,8 +43,14 @@
 <!ENTITY folderProps.name.label	        "Name:">
 
 <!ENTITY folderSharingTab.label                             "Sharing">
-<!ENTITY folderSharingTab.accesskey                         "s">
+<!ENTITY folderSharingTab.accesskey                         "S">
 <!ENTITY privilegesDesc.label  "Share this and other folders with network users and display and set access privileges">
 <!ENTITY privileges.button.label                      "Privileges...">
 <!ENTITY permissionsDesc.label                            "You have the following permissions:">
 <!ENTITY folderType.label                             "Folder Type:">
+
+<!ENTITY folderQuotaTab.label                               "Quota">
+<!ENTITY folderQuotaTab.accesskey                           "Q">
+<!ENTITY folderQuotaRoot.label                              "Quota Root:">
+<!ENTITY folderQuotaUsage.label                             "Usage:">
+<!ENTITY folderQuotaStatus.label                            "Status:">

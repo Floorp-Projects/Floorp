@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Seth Spitzer <sspitzer@netscape.com>
+ *   Lorenzo Colitti <lorenzo@colitti.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -197,8 +198,12 @@ nsImapMailFolder::nsImapMailFolder() :
     m_folderNeedsAdded(PR_FALSE),
     m_folderNeedsACLListed(PR_TRUE),
     m_performingBiff(PR_FALSE),
+    m_folderQuotaCommandIssued(PR_FALSE),
+    m_folderQuotaDataIsValid(PR_FALSE),
     m_downloadMessageForOfflineUse(PR_FALSE),
-    m_downloadingFolderForOfflineUse(PR_FALSE)
+    m_downloadingFolderForOfflineUse(PR_FALSE),
+    m_folderQuotaUsedKB(0),
+    m_folderQuotaMaxKB(0)
 {
   MOZ_COUNT_CTOR(nsImapMailFolder); // double count these for now.
 
@@ -4998,15 +5003,15 @@ nsImapMailFolder::FillInFolderProps(nsIMsgImapFolderProps *aFolderProps)
   NS_ENSURE_ARG(aFolderProps);
   PRUint32 folderTypeStringID;
   PRUint32 folderTypeDescStringID = 0;
+  PRUint32 folderQuotaStatusStringID;
   nsXPIDLString folderType;
   nsXPIDLString folderTypeDesc;
+  nsXPIDLString folderQuotaStatusDesc;
   nsCOMPtr<nsIStringBundle> bundle;
   nsresult rv = IMAPGetStringBundle(getter_AddRefs(bundle));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // get the host session list and see if this server supports ACL.
-  // If not, just set the folder description to a string that says
-  // the server doesn't support sharing, and return.
+  // get the host session list and get server capabilities.
   PRUint32 capability = kCapabilityUndefined;
 
   nsCOMPtr<nsIImapHostSessionList> hostSession = do_GetService(kCImapHostSessionList, &rv);
@@ -5017,6 +5022,59 @@ nsImapMailFolder::FillInFolderProps(nsIMsgImapFolderProps *aFolderProps)
     GetServerKey(getter_Copies(serverKey));
     hostSession->GetCapabilityForHost(serverKey, capability);
 
+    // Figure out what to display in the Quota tab of the folder properties.
+    // Does the server support quotas?
+    if(capability & kQuotaCapability)
+    {
+      // Have we asked the server for quota information?
+      if(m_folderQuotaCommandIssued)
+      {
+        // Has the server replied with storage quota info?
+        if(m_folderQuotaDataIsValid)
+        {
+          // If so, set quota data
+          folderQuotaStatusStringID = 0;
+          aFolderProps->SetQuotaData(m_folderQuotaRoot, m_folderQuotaUsedKB, m_folderQuotaMaxKB);
+        }
+        else
+        {
+          // If not, there is no storage quota set on this folder
+          folderQuotaStatusStringID = IMAP_QUOTA_STATUS_NOQUOTA;
+        }
+      }
+      else
+      {
+        // The folder is not open, so no quota information is available
+        folderQuotaStatusStringID = IMAP_QUOTA_STATUS_FOLDERNOTOPEN;
+      }
+    }
+    else
+    {
+      // Either the server doesn't support quotas, or we don't know if it does
+      // (e.g., because we don't have a connection yet). If the latter, we fall back
+      // to saying that no information is available because the folder is not open.
+      folderQuotaStatusStringID = (capability == kCapabilityUndefined) ?
+        IMAP_QUOTA_STATUS_FOLDERNOTOPEN : IMAP_QUOTA_STATUS_NOTSUPPORTED;
+    }
+
+    if(folderQuotaStatusStringID == 0)
+    {
+      // Display quota data
+      aFolderProps->ShowQuotaData(PR_TRUE);
+    }
+    else
+    {
+      // Hide quota data and show reason why it is not available
+      aFolderProps->ShowQuotaData(PR_FALSE);
+
+      rv = IMAPGetStringByID(folderQuotaStatusStringID, getter_Copies(folderQuotaStatusDesc));
+      if (NS_SUCCEEDED(rv))
+        aFolderProps->SetQuotaStatus(folderQuotaStatusDesc);
+    }
+
+    // See if the server supports ACL.
+    // If not, just set the folder description to a string that says
+    // the server doesn't support sharing, and return.
     if (! (capability & kACLCapability))
     {
       rv = IMAPGetStringByID(IMAP_SERVER_DOESNT_SUPPORT_ACL, getter_Copies(folderTypeDesc));
@@ -6791,6 +6849,70 @@ NS_IMETHODIMP nsImapMailFolder::GetFolderVerifiedOnline(PRBool *bVal)
 NS_IMETHODIMP nsImapMailFolder::SetFolderVerifiedOnline(PRBool bVal)
 {
     m_verifiedAsOnlineFolder = bVal;
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsImapMailFolder::GetFolderQuotaCommandIssued(PRBool *aCmdIssued)
+{
+    NS_ENSURE_ARG_POINTER(aCmdIssued);
+    *aCmdIssued = m_folderQuotaCommandIssued;
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsImapMailFolder::SetFolderQuotaCommandIssued(PRBool aCmdIssued)
+{
+    m_folderQuotaCommandIssued = aCmdIssued;
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsImapMailFolder::GetFolderQuotaDataIsValid(PRBool *aIsValid)
+{
+    NS_ENSURE_ARG_POINTER(aIsValid);
+    *aIsValid = m_folderQuotaDataIsValid;
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsImapMailFolder::SetFolderQuotaDataIsValid(PRBool aIsValid)
+{
+    m_folderQuotaDataIsValid = aIsValid;
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsImapMailFolder::GetFolderQuotaRoot(nsACString &aQuotaRoot)
+{
+    aQuotaRoot = m_folderQuotaRoot;
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsImapMailFolder::SetFolderQuotaRoot(const nsACString &aQuotaRoot)
+{
+    m_folderQuotaRoot = aQuotaRoot;
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsImapMailFolder::GetFolderQuotaUsedKB(PRUint32 *aUsedKB)
+{
+    NS_ENSURE_ARG_POINTER(aUsedKB);
+    *aUsedKB = m_folderQuotaUsedKB;
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsImapMailFolder::SetFolderQuotaUsedKB(PRUint32 aUsedKB)
+{
+    m_folderQuotaUsedKB = aUsedKB;
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsImapMailFolder::GetFolderQuotaMaxKB(PRUint32 *aMaxKB)
+{
+    NS_ENSURE_ARG_POINTER(aMaxKB);
+    *aMaxKB = m_folderQuotaMaxKB;
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsImapMailFolder::SetFolderQuotaMaxKB(PRUint32 aMaxKB)
+{
+    m_folderQuotaMaxKB = aMaxKB;
     return NS_OK;
 }
 

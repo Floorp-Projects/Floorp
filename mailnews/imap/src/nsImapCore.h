@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Lorenzo Colitti <lorenzo@colitti.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -131,7 +132,8 @@ typedef enum {
 	kLiteralPlusCapability = 0x00004000, /* RFC 2088 LITERAL+ extension */
 	kAOLImapCapability = 0x00008000,     /* aol imap extensions */
   kHasLanguageCapability = 0x00010000, /* language extensions */
-  kHasCRAMCapability     = 0x00020000  /* CRAM auth extension */
+  kHasCRAMCapability     = 0x00020000, /* CRAM auth extension */
+  kQuotaCapability       = 0x00040000  /* RFC 2087 quota extension */
 } eIMAPCapabilityFlag;
 
 // this used to be part of the connection object class - maybe we should move it into 

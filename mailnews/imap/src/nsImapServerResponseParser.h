@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Lorenzo Colitti <lorenzo@colitti.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -192,6 +193,7 @@ protected:
   virtual void	  mime_data();
   virtual void	  mime_part_data();
   virtual void	  mime_header_data();
+  virtual void    quota_data();
   virtual void    msg_fetch();
   virtual void    msg_obsolete();
   virtual void	  msg_fetch_headers(const char *partNum);

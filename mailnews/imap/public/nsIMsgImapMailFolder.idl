@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Lorenzo Colitti <lorenzo@colitti.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -43,7 +44,7 @@ interface nsIImapIncomingServer;
 interface nsIMsgParseMailMsgState;
 
 // this is a simple interface which allows the imap folder to update some values
-// that the folder props js code will use to update the sharing tab in the folder props.
+// that the folder props js code will use to update the sharing and quota tabs in the folder props.
 
 [scriptable, uuid(239472a2-6e8f-46f0-9507-887998da49e5)] 
 interface nsIMsgImapFolderProps : nsISupports {
@@ -52,6 +53,26 @@ interface nsIMsgImapFolderProps : nsISupports {
     void setFolderTypeDescription(in wstring folderTypeDescription);
     void setFolderPermissions(in wstring permissions);
     void serverDoesntSupportACL();
+
+    /**
+     * Toggles the display of quota information in the Quota tab of the folder properties.
+     * If on, the quota root, usage, and percentage used are displayed.
+     * If off, a status message is displayed. The status message can be set with setQuotaStatus().
+     * @param showData If true, display the quota root, usage information and usage percentage bar.
+     * If false, display the status message.
+     */
+    void showQuotaData(in boolean showData);
+
+    /**
+     * Sets the status string displayed in the Quota tab of the folder properties if quota
+     * information is not visible.
+     */
+    void setQuotaStatus(in AString folderQuotaStatus);
+
+    /**
+     * Updates the quota data displayed in the Quota tab.
+     */
+    void setQuotaData(in ACString quotaroot, in unsigned long usedKB, in unsigned long maxKB);
 };
 
 

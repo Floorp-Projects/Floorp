@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Lorenzo Colitti <lorenzo@colitti.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -478,6 +479,8 @@ protected:
   PRPackedBool m_folderNeedsAdded;
   PRPackedBool m_folderNeedsACLListed;
   PRPackedBool m_performingBiff;
+  PRPackedBool m_folderQuotaCommandIssued;
+  PRPackedBool m_folderQuotaDataIsValid;
 
   nsMsgIMAPFolderACL *m_folderACL;
 
@@ -488,6 +491,11 @@ protected:
   // offline imap support
   PRBool m_downloadMessageForOfflineUse;
   PRBool m_downloadingFolderForOfflineUse;
+
+  // Quota support
+  nsCString m_folderQuotaRoot;
+  PRUint32 m_folderQuotaUsedKB;
+  PRUint32 m_folderQuotaMaxKB;
 };
 
 

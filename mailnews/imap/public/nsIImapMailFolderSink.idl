@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Lorenzo Colitti <lorenzo@colitti.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -69,6 +70,36 @@ interface nsIImapMailFolderSink : nsISupports {
   attribute boolean folderNeedsSubscribing;
   attribute boolean folderNeedsAdded;
   attribute boolean folderVerifiedOnline;
+
+  /**
+   * Whether we have asked the server for this folder's quota information.
+   * If the server supports quotas, this occurs when the folder is opened.
+   */
+  attribute boolean folderQuotaCommandIssued;
+
+  /**
+   * Indicates whether the server has provided quota information on this folder.
+   * This attribute can be false if the server does not supports quotas, if the folder
+   * has never been opened, or if there are no storage quotas on this folder.
+   * If it is true, the folder has a storage quota and the folderQuotaUsedKB and
+   * folderQuotaMaxKB attributes are set to the values provided by the server.
+   */
+  attribute boolean folderQuotaDataIsValid;
+
+  /**
+   * The IMAP quota root for this folder, as returned by the GETQUOTAROOT IMAP command.
+   */
+  attribute ACstring folderQuotaRoot;
+
+  /**
+   * Used space, in kilobytes, on this folder's quota root.
+   */
+  attribute unsigned long folderQuotaUsedKB;
+
+  /**
+   * Size, in kilobytes, of this folder's quota root.
+   */
+  attribute unsigned long folderQuotaMaxKB;
   readonly attribute boolean shouldDownloadAllHeaders;
   string GetOnlineDelimiter();
   // Tell mail master about the newly selected mailbox

@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Lorenzo Colitti <lorenzo@colitti.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -712,6 +713,12 @@ void nsImapServerResponseParser::response_data()
         else
           SetSyntaxError(PR_TRUE);
       }
+      break;
+    case 'Q':
+      if (!PL_strcasecmp(fNextToken, "QUOTAROOT")  || !PL_strcasecmp(fNextToken, "QUOTA"))
+        quota_data();
+      else
+        SetSyntaxError(PR_TRUE);
       break;
     default:
       if (IsNumericString(fNextToken))
@@ -2105,6 +2112,8 @@ void nsImapServerResponseParser::capability_data()
 				fCapabilityFlag |= kLiteralPlusCapability;
 			else if (! PL_strcasecmp(fNextToken, "XAOL-OPTION"))
 				fCapabilityFlag |= kAOLImapCapability;
+      else if (! PL_strcasecmp(fNextToken, "QUOTA"))
+        fCapabilityFlag |= kQuotaCapability;
       else if (! PL_strcasecmp(fNextToken, "LANGUAGE"))
         fCapabilityFlag |= kHasLanguageCapability;
 		}
@@ -2507,6 +2516,57 @@ void nsImapServerResponseParser::bodystructure_data()
 	}
 	else
 		SetSyntaxError(PR_TRUE);
+}
+
+void nsImapServerResponseParser::quota_data()
+{
+  if (!PL_strcasecmp(fNextToken, "QUOTAROOT"))
+    skip_to_CRLF();
+  else if(!PL_strcasecmp(fNextToken, "QUOTA"))
+  {
+    PRUint32 used, max;
+    nsCString quotaroot;
+    char *parengroup;
+
+    fNextToken = GetNextToken();
+    if (! fNextToken)
+      SetSyntaxError(PR_TRUE);
+    else
+    {
+      quotaroot = CreateAstring();
+
+      if(ContinueParse() && !at_end_of_line())
+      {
+        fNextToken = GetNextToken();
+        if(fNextToken)
+        {
+          if(!PL_strcasecmp(fNextToken, "(STORAGE"))
+          {
+            parengroup = CreateParenGroup();
+            if(parengroup && (PR_sscanf(parengroup, "(STORAGE %lu %lu)", &used, &max) == 2) )
+            {
+              fServerConnection.UpdateFolderQuotaData(quotaroot, used, max);
+              skip_to_CRLF();
+            }
+            else
+              SetSyntaxError(PR_TRUE);
+
+            if(parengroup)
+              PR_Free(parengroup);
+          }
+          else
+            // Ignore other limits, we just check STORAGE for now
+            skip_to_CRLF();
+        }
+        else
+          SetSyntaxError(PR_TRUE);
+      }
+      else
+        HandleMemoryFailure();
+    }
+  }
+  else
+    SetSyntaxError(PR_TRUE);
 }
 
 PRBool nsImapServerResponseParser::GetFillingInShell()
