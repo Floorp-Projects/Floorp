@@ -120,10 +120,18 @@ div.sidebartitlelabel
 {
   color: white;
   padding: 5px;
+  font: 3mm tahoma,arial,helvetica,sans-serif;
 }
 
-titledbutton[class~=paneltitle]
+titledbutton.paneltitle
 { 
   color: white;
+  font: 3mm tahoma,arial,helvetica,sans-serif;
 }
+
+treecell titledbutton
+{
+  color: inherit;
+}
+
 
