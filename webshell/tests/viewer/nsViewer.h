@@ -22,6 +22,7 @@
 #include "nsIDocumentObserver.h"
 #include "nsIStreamListener.h"
 #include "nsILinkHandler.h"
+#include "nsIDocumentLoader.h"
 #include "nsDocLoader.h"
 #include "nsIAppShell.h"
 #include "nsString.h"
@@ -42,15 +43,12 @@
 
 // XXX this is redundant with nsLinkHandler
 class DocObserver : public nsIDocumentObserver,
-                    public nsIStreamListener,
-                    public nsILinkHandler
+                    public nsIStreamObserver,
+                    public nsILinkHandler,
+                    public nsIViewerContainer
 {
 public:
-  DocObserver(nsIWebWidget* aWebWidget) {
-    NS_INIT_REFCNT();
-    mWebWidget = aWebWidget;
-    NS_ADDREF(aWebWidget);
-  }
+  DocObserver(nsIWidget* aWindow, nsIWebWidget* aWebWidget);
 
   // nsISupports
   NS_DECL_ISUPPORTS
@@ -81,12 +79,10 @@ public:
                                    PRInt32 aIndexInContainer);
   NS_IMETHOD StyleSheetAdded(nsIStyleSheet* aStyleSheet);
 
-  // nsIStreamListener
-  NS_IMETHOD GetBindInfo(void);
+  // nsIStreamObserver
+  NS_IMETHOD OnStartBinding(const char *aContentType);
   NS_IMETHOD OnProgress(PRInt32 aProgress, PRInt32 aProgressMax,
                         const nsString& aMsg);
-  NS_IMETHOD OnStartBinding(const char *aContentType);
-  NS_IMETHOD OnDataAvailable(nsIInputStream *pIStream, PRInt32 length);
   NS_IMETHOD OnStopBinding(PRInt32 status, const nsString& aMsg);
 
   // nsILinkHandler
@@ -101,30 +97,36 @@ public:
                         const nsString& aTargetSpec);
   NS_IMETHOD GetLinkState(const nsString& aURLSpec, nsLinkState& aState);
 
+  // nsIViewerContainer
+  NS_IMETHOD Embed(nsIDocumentWidget* aDocViewer, 
+                   const char* aCommand, 
+                   nsISupports* aExtraInfo);
+
   // DocObserver
   void LoadURL(const char* aURL);
   void HandleLinkClickEvent(const nsString& aURLSpec,
                             const nsString& aTargetSpec,
                             nsIPostData* aPostDat = 0);
 
-protected:
-  ~DocObserver() {
-    NS_RELEASE(mWebWidget);
-  }
-
   nsIWebWidget* mWebWidget;
+  nsIWidget *mWindowWidget;
+
+protected:
+  virtual ~DocObserver();
+
+  nsIDocumentLoader* mDocLoader;
   nsString mURL;
   nsString mOverURL;
   nsString mOverTarget;
 };
 
 struct WindowData {
-  nsIWebWidget* ww;
+///  nsIWebWidget* ww;
   DocObserver* observer;
   nsIWidget *windowWidget;
 
   WindowData() {
-    ww = nsnull;
+///    ww = nsnull;
   }
 
   void ShowContentSize();

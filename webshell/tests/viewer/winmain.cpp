@@ -203,7 +203,7 @@ void nsWin32Viewer::ShowConsole(WindowData* aWinData)
       
       nsIScriptContextOwner *owner = nsnull;
       nsIScriptContext *context = nsnull;        
-      if (NS_OK == aWinData->ww->QueryInterface(kIScriptContextOwnerIID, (void **)&owner)) {
+      if (NS_OK == aWinData->observer->mWebWidget->QueryInterface(kIScriptContextOwnerIID, (void **)&owner)) {
         if (NS_OK == owner->GetScriptContext(&context)) {
 
           // create the console
@@ -231,17 +231,17 @@ void nsWin32Viewer::CloseConsole()
 
 void nsWin32Viewer::DoDebugRobot(WindowData* aWindata)
 {
- if ((nsnull != aWindata) && (nsnull != aWindata->ww)) {
+ if ((nsnull != aWindata) && (nsnull != aWindata->observer)) {
              if (CreateRobotDialog(aWindata->windowWidget->GetNativeData(NS_NATIVE_WIDGET)))
              {
-                nsIDocument* doc = aWindata->ww->GetDocument();
+                nsIDocument* doc = aWindata->observer->mWebWidget->GetDocument();
                 if (nsnull!=doc) {
                    const char * str = doc->GetDocumentURL()->GetSpec();
                    nsVoidArray * gWorkList = new nsVoidArray();
                    gWorkList->AppendElement(new nsString(str));
                    DebugRobot( 
                       gWorkList, 
-                      gVisualDebug ? aWindata->ww : nsnull, 
+                      gVisualDebug ? aWindata->observer->mWebWidget : nsnull, 
                       gDebugRobotLoads, 
                       PL_strdup(gVerifyDir),
                       yieldProc);
@@ -257,8 +257,8 @@ void nsWin32Viewer::CopyTextContent(WindowData* wd, HWND aHWnd)
   HGLOBAL     hGlobalMemory;
   PSTR        pGlobalMemory;
 
-  if (wd->ww != nsnull) {
-    nsIDocument* doc = wd->ww->GetDocument();
+  if (wd->observer != nsnull) {
+    nsIDocument* doc = wd->observer->mWebWidget->GetDocument();
     if (doc != nsnull) {
       // Get Text from Selection
       nsString text;

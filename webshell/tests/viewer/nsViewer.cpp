@@ -88,7 +88,9 @@ static NS_DEFINE_IID(kCViewManagerCID, NS_VIEW_MANAGER_CID);
 static NS_DEFINE_IID(kCViewCID, NS_VIEW_CID);
 static NS_DEFINE_IID(kCScrollingViewCID, NS_SCROLLING_VIEW_CID);
 static NS_DEFINE_IID(kCWebWidgetCID, NS_WEBWIDGET_CID);
+static NS_DEFINE_IID(kCDocumentLoaderCID, NS_DOCUMENTLOADER_CID);
 
+static NS_DEFINE_IID(kIDocumentLoaderIID, NS_IDOCUMENTLOADER_IID);
 
 #define SAMPLES_BASE_URL "resource:/res/samples"
 #define DEFAULT_DOC "/test0.html"
@@ -118,7 +120,7 @@ extern int  NET_PollSockets();
 void
 WindowData::ShowContentSize()
 {
-  if (nsnull == ww) {
+  if (nsnull == observer) {
     return;
   }
   nsISizeOfHandler* szh;
@@ -127,7 +129,7 @@ WindowData::ShowContentSize()
   }
 
   nsIDocument* doc;
-  doc = ww->GetDocument();
+  doc = observer->mWebWidget->GetDocument();
   if (nsnull != doc) {
     nsIContent* content;
     content = doc->GetRootContent();
@@ -146,13 +148,13 @@ WindowData::ShowContentSize()
 void
 WindowData::ShowFrameSize()
 {
-  if (nsnull == ww) {
+  if (nsnull == observer) {
     return;
   }
 
   nsIDocument* doc;
 
-  doc = ww->GetDocument();
+  doc = observer->mWebWidget->GetDocument();
   if (nsnull != doc ){
     PRInt32 i, shells = doc->GetNumberOfShells();
     for (i = 0; i < shells; i++) {
@@ -182,7 +184,7 @@ WindowData::ShowFrameSize()
 void
 WindowData::ShowStyleSize()
 {
-  if (nsnull == ww) {
+  if (nsnull == observer) {
     return;
   }
 }
@@ -221,10 +223,8 @@ OnLinkClickEvent::OnLinkClickEvent(DocObserver* aHandler,
   NS_ADDREF(aHandler);
   mURLSpec = new nsString(aURLSpec);
   mTargetSpec = new nsString(aTargetSpec);
-  mPostData = nsnull;
-  if (aPostData) {
-    NS_NewPostData(aPostData, &mPostData);
-  }
+  mPostData = aPostData;
+  NS_IF_ADDREF(mPostData);
 
 #ifdef XP_PC
   PL_InitEvent(this, nsnull,
@@ -240,9 +240,9 @@ OnLinkClickEvent::OnLinkClickEvent(DocObserver* aHandler,
 OnLinkClickEvent::~OnLinkClickEvent()
 {
   NS_IF_RELEASE(mHandler);
+  NS_IF_RELEASE(mPostData);
   if (nsnull != mURLSpec) delete mURLSpec;
   if (nsnull != mTargetSpec) delete mTargetSpec;
-  if (nsnull != mPostData) delete mPostData;
 }
 
 void OnLinkClickEvent::HandleEventApp()
@@ -253,8 +253,29 @@ void OnLinkClickEvent::HandleEventApp()
 //----------------------------------------------------------------------
 
 static NS_DEFINE_IID(kIDocumentObserverIID, NS_IDOCUMENT_OBSERVER_IID);
-static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMNOTIFICATION_IID);
+static NS_DEFINE_IID(kIStreamObserverIID, NS_ISTREAMOBSERVER_IID);
+static NS_DEFINE_IID(kIWebWidgetIID, NS_IWEBWIDGET_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
+
+
+DocObserver::DocObserver(nsIWidget* aWindow, nsIWebWidget* aWebWidget) {
+  NS_INIT_REFCNT();
+  mWebWidget = aWebWidget;
+  NS_ADDREF(aWebWidget);
+
+  mWindowWidget = aWindow;
+  NS_ADDREF(aWindow);
+
+  NSRepository::CreateInstance(kCDocumentLoaderCID, nsnull, kIDocumentLoaderIID, (void**)&mDocLoader);
+}
+
+DocObserver::~DocObserver() {
+  NS_RELEASE(mWindowWidget);
+  NS_RELEASE(mWebWidget);
+  NS_RELEASE(mDocLoader);
+}
+
 
 NS_IMPL_ADDREF(DocObserver);
 NS_IMPL_RELEASE(DocObserver);
@@ -272,8 +293,8 @@ DocObserver::QueryInterface(const nsIID& aIID,
     AddRef();
     return NS_OK;
   }
-  if (aIID.Equals(kIStreamListenerIID)) {
-    *aInstancePtrResult = (void*) ((nsIStreamListener*)this);
+  if (aIID.Equals(kIStreamObserverIID)) {
+    *aInstancePtrResult = (void*) ((nsIStreamObserver*)this);
     AddRef();
     return NS_OK;
   }
@@ -289,13 +310,7 @@ DocObserver::QueryInterface(const nsIID& aIID,
 // belong to this document.
 NS_IMETHODIMP DocObserver::SetTitle(const nsString& aTitle)
 {
-  PRInt32 i, n = gWindows->Count();
-  for (i = 0; i < n; i++) {
-    WindowData* wd = (WindowData*) gWindows->ElementAt(i);
-    if (wd->ww == mWebWidget) {
-      wd->windowWidget->SetTitle(aTitle);
-    }
-  }
+  mWindowWidget->SetTitle(aTitle);
   return NS_OK;
 }
 
@@ -388,12 +403,6 @@ DocObserver::StyleSheetAdded(nsIStyleSheet* aStyleSheet)
 }
 
 NS_IMETHODIMP
-DocObserver::GetBindInfo(void)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 DocObserver::OnProgress(PRInt32 aProgress, PRInt32 aProgressMax,
                         const nsString& aMsg)
 {
@@ -415,12 +424,6 @@ DocObserver::OnStartBinding(const char *aContentType)
 }
 
 NS_IMETHODIMP
-DocObserver::OnDataAvailable(nsIInputStream *pIStream, PRInt32 length)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 DocObserver::OnStopBinding(PRInt32 status, const nsString& aMsg)
 {
   fputs("Done loading ", stdout);
@@ -429,11 +432,51 @@ DocObserver::OnStopBinding(PRInt32 status, const nsString& aMsg)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+DocObserver::Embed(nsIDocumentWidget* aDocViewer, 
+                   const char* aCommand, 
+                   nsISupports* aExtraInfo)
+{
+  nsresult rv;
+
+  mWebWidget->SetLinkHandler(nsnull);
+  mWebWidget->SetContainer(nsnull); // release the doc observer
+  NS_RELEASE(mWebWidget);
+
+  nsRect bounds;
+  mWindowWidget->GetBounds(bounds);
+  nsRect rr(0, 0, bounds.width, bounds.height);
+
+  aDocViewer->QueryInterface(kIWebWidgetIID, (void**)&mWebWidget);
+
+  mWebWidget->SetContainer((nsIDocumentObserver*)this);
+  rv = mWebWidget->Init(mWindowWidget->GetNativeData(NS_NATIVE_WIDGET), rr);
+
+  mWebWidget->SetLinkHandler((nsILinkHandler*)this);
+
+///  nsIURL* aURL = aDoc->GetDocumentURL();
+///  if (aURL) {
+///    mURL = aURL->GetSpec();
+///  }
+///  NS_IF_RELEASE(aURL);
+
+  mWebWidget->Show();
+
+  return NS_OK;
+}
+
+
 void
 DocObserver::LoadURL(const char* aURL)
 {
-  mURL = aURL;
-  mWebWidget->LoadURL(aURL, (nsIStreamListener*) this);
+  nsresult rv;
+
+  rv = mDocLoader->LoadURL(aURL,            // URL string
+                           nsnull,          // Command
+                           this,            // Container
+                           nsnull,          // Post Data
+                           nsnull,          // Extra Info...
+                           this);           // Observer
 }
 
 NS_IMETHODIMP
@@ -465,10 +508,19 @@ DocObserver::HandleLinkClickEvent(const nsString& aURLSpec,
                                   const nsString& aTargetSpec,
                                   nsIPostData* aPostData)
 {
-  if (nsnull != mWebWidget) {
-    nsIWebWidget* targetWidget = mWebWidget->GetTarget(aTargetSpec);
-    targetWidget->LoadURL(aURLSpec, (nsIStreamListener*)this, aPostData);
-    NS_RELEASE(targetWidget);
+  nsresult rv;
+
+  if (nsnull != mDocLoader) {
+    rv = mDocLoader->LoadURL(aURLSpec,        // URL string
+                             nsnull,          // Command
+                             this,            // Container
+                             aPostData,       // Post Data
+                             nsnull,          // Extra Info...
+                             this);           // Observer
+///  if (nsnull != mWebWidget) {
+///    nsIWebWidget* targetWidget = mWebWidget->GetTarget(aTargetSpec);
+///    targetWidget->LoadURL(aURLSpec, (nsIStreamListener*)this, aPostData);
+///    NS_RELEASE(targetWidget);
   }
 }
 
@@ -511,13 +563,13 @@ DocObserver:: GetLinkState(const nsString& aURLSpec, nsLinkState& aState)
   return NS_OK;
 }
 
-static DocObserver* NewObserver(nsIWebWidget* ww)
+static DocObserver* NewObserver(nsIWidget* aWindow, nsIWebWidget* ww)
 {
   nsISupports* oldContainer;
   nsresult rv = ww->GetContainer(&oldContainer);
   if (NS_OK == rv) {
     if (nsnull == oldContainer) {
-      DocObserver* it = new DocObserver(ww);
+      DocObserver* it = new DocObserver(aWindow, ww);
       NS_ADDREF(it);
       ww->SetLinkHandler((nsILinkHandler*) it);
       ww->SetContainer((nsIDocumentObserver*) it);
@@ -537,9 +589,9 @@ nsEventStatus PR_CALLBACK HandleEventApp(nsGUIEvent *aEvent)
         {
           struct WindowData *wd = gTheViewer->FindWindowData(aEvent->widget);
           nsSizeEvent* sizeEvent = (nsSizeEvent*)aEvent;  
-          if (wd->ww) {
+          if (wd->observer) {
             nsRect rr(0, 0, sizeEvent->windowSize->width, sizeEvent->windowSize->height);
-            wd->ww->SetBounds(rr);
+            wd->observer->mWebWidget->SetBounds(rr);
           }
         }
         return nsEventStatus_eConsumeNoDefault;
@@ -808,11 +860,11 @@ void nsViewer::OpenHTMLFile(WindowData* wd)
 // Selects all the Content
 void nsViewer::SelectAll(WindowData* wd)
 {
-  if (wd->ww != nsnull) {
-    nsIDocument* doc = wd->ww->GetDocument();
+  if (wd->observer != nsnull) {
+    nsIDocument* doc = wd->observer->mWebWidget->GetDocument();
     if (doc != nsnull) {
       doc->SelectAll();
-      wd->ww->ShowFrameBorders(PR_FALSE);
+      wd->observer->mWebWidget->ShowFrameBorders(PR_FALSE);
       /*PRInt32 numShells = doc->GetNumberOfShells();
       for (PRInt32 i=0;i<numShells;i++) {
         nsIPresShell   * shell   = doc->GetShellAt(i);
@@ -894,11 +946,12 @@ nsresult nsViewer::ShowPrintPreview(nsIWebWidget* web, PRIntn aColumns)
 
       cx->Init(dx);
   
+      nsIWebWidget* ww;
       nsRect bounds;
       wd->windowWidget->GetBounds(bounds);
       nsRect rr(0, 0, bounds.width, bounds.height);
 
-      rv = NS_NewWebWidget(&wd->ww);
+      rv = NS_NewWebWidget(&ww);
       AddMenu(wd->windowWidget, PR_TRUE);
 
       // XXX There is a chicken-and-egg bug here: the Init method goes
@@ -906,14 +959,15 @@ nsresult nsViewer::ShowPrintPreview(nsIWebWidget* web, PRIntn aColumns)
       // observer; adding the observer sets the link-handler. The
       // link-handler is needed to do the initial reflow properly. YIKES!
 
-      rv = wd->ww->Init(wd->windowWidget->GetNativeData(NS_NATIVE_WIDGET),
-                        rr, doc, cx);
-      wd->observer = NewObserver(wd->ww);
-      wd->ww->Show();
+      rv = ww->Init(wd->windowWidget->GetNativeData(NS_NATIVE_WIDGET),
+                    rr, doc, cx);
+      wd->observer = NewObserver(wd->windowWidget, ww);
+      ww->Show();
 
       NS_RELEASE(dx);
       NS_RELEASE(cx);
       NS_RELEASE(doc);
+      NS_RELEASE(ww);
     }
   }
   return NS_OK;
@@ -985,7 +1039,7 @@ nsEventStatus nsViewer::ProcessMenu(PRUint32 aId, WindowData* wd)
     case VIEWER_DEMO7:
     case VIEWER_DEMO8: 
     case VIEWER_DEMO9: 
-      if ((nsnull != wd) && (nsnull != wd->ww)) {
+      if ((nsnull != wd) && (nsnull != wd->observer)) {
         PRIntn ix = aId - VIEWER_DEMO0;
         char* url = new char[500];
         PR_snprintf(url, 500, "%s/test%d.html", GetBaseURL(), ix);
@@ -995,34 +1049,34 @@ nsEventStatus nsViewer::ProcessMenu(PRUint32 aId, WindowData* wd)
       break;
 
     case VIEWER_VISUAL_DEBUGGING:
-      if ((nsnull != wd) && (nsnull != wd->ww)) {
-        wd->ww->ShowFrameBorders(PRBool(!wd->ww->GetShowFrameBorders()));
+      if ((nsnull != wd) && (nsnull != wd->observer)) {
+        wd->observer->mWebWidget->ShowFrameBorders(PRBool(!wd->observer->mWebWidget->GetShowFrameBorders()));
       }
       break;
 
     case VIEWER_DUMP_CONTENT:
-      if ((nsnull != wd) && (nsnull != wd->ww)) {
-        wd->ww->DumpContent();
+      if ((nsnull != wd) && (nsnull != wd->observer)) {
+        wd->observer->mWebWidget->DumpContent();
       }
       break;
     case VIEWER_DUMP_FRAMES:
-      if ((nsnull != wd) && (nsnull != wd->ww)) {
-        wd->ww->DumpFrames();
+      if ((nsnull != wd) && (nsnull != wd->observer)) {
+        wd->observer->mWebWidget->DumpFrames();
       }
       break;
     case VIEWER_DUMP_VIEWS:
-      if ((nsnull != wd) && (nsnull != wd->ww)) {
-        wd->ww->DumpViews();
+      if ((nsnull != wd) && (nsnull != wd->observer)) {
+        wd->observer->mWebWidget->DumpViews();
       }
       break;
     case VIEWER_DUMP_STYLE_SHEETS:
-      if ((nsnull != wd) && (nsnull != wd->ww)) {
-        wd->ww->DumpStyleSheets();
+      if ((nsnull != wd) && (nsnull != wd->observer)) {
+        wd->observer->mWebWidget->DumpStyleSheets();
       }
       break;
     case VIEWER_DUMP_STYLE_CONTEXTS:
-      if ((nsnull != wd) && (nsnull != wd->ww)) {
-        wd->ww->DumpStyleContexts();
+      if ((nsnull != wd) && (nsnull != wd->observer)) {
+        wd->observer->mWebWidget->DumpStyleContexts();
       }
       break;
 
@@ -1049,8 +1103,8 @@ nsEventStatus nsViewer::ProcessMenu(PRUint32 aId, WindowData* wd)
       break;
 
     case VIEWER_SHOW_CONTENT_QUALITY:
-      if ((nsnull != wd) && (nsnull != wd->ww)) {
-        nsIPresContext *px = wd->ww->GetPresContext();
+      if ((nsnull != wd) && (nsnull != wd->observer)) {
+        nsIPresContext *px = wd->observer->mWebWidget->GetPresContext();
         nsIPresShell   *ps = px->GetShell();
         nsIViewManager *vm = ps->GetViewManager();
 
@@ -1065,8 +1119,8 @@ nsEventStatus nsViewer::ProcessMenu(PRUint32 aId, WindowData* wd)
     case VIEWER_ONE_COLUMN:
     case VIEWER_TWO_COLUMN:
     case VIEWER_THREE_COLUMN:
-      if ((nsnull != wd) && (nsnull != wd->ww)) {
-        ShowPrintPreview(wd->ww, aId - VIEWER_ONE_COLUMN + 1);
+      if ((nsnull != wd) && (nsnull != wd->observer)) {
+        ShowPrintPreview(wd->observer->mWebWidget, aId - VIEWER_ONE_COLUMN + 1);
       }
       break;
 
@@ -1075,9 +1129,9 @@ nsEventStatus nsViewer::ProcessMenu(PRUint32 aId, WindowData* wd)
       break;
 
     case EDITOR_MODE:
-      if ((nsnull != wd) && (nsnull != wd->ww)) {
+      if ((nsnull != wd) && (nsnull != wd->observer)) {
         nsIDOMDocument* domDoc = nsnull;
-        if (NS_OK == wd->ww->GetDOMDocument(&domDoc)) {
+        if (NS_OK == wd->observer->mWebWidget->GetDOMDocument(&domDoc)) {
           nsInitEditorMode(domDoc);
           domDoc->Release();
         }
@@ -1126,6 +1180,7 @@ nsDocLoader* nsViewer::SetupViewer(nsIWidget **aMainWindow, int argc, char **arg
   NSRepository::RegisterFactory(kCViewCID, VIEW_DLL, PR_FALSE, PR_FALSE);
   NSRepository::RegisterFactory(kCScrollingViewCID, VIEW_DLL, PR_FALSE, PR_FALSE);
   NSRepository::RegisterFactory(kCWebWidgetCID, WEB_DLL, PR_FALSE, PR_FALSE);
+  NSRepository::RegisterFactory(kCDocumentLoaderCID, WEB_DLL, PR_FALSE, PR_FALSE);
 
   // Create an application shell
   nsresult res;
@@ -1150,19 +1205,21 @@ nsDocLoader* nsViewer::SetupViewer(nsIWidget **aMainWindow, int argc, char **arg
   AddMenu(wd->windowWidget, PR_FALSE);
 
     // Now embed the web widget in it
-  nsresult rv = NS_NewWebWidget(&wd->ww);
+  nsIWebWidget* ww;
+  nsresult rv = NS_NewWebWidget(&ww);
   nsRect bounds;
   wd->windowWidget->GetBounds(bounds);
   nsRect rr(0, 0, bounds.width, bounds.height);
-  rv = wd->ww->Init(wd->windowWidget->GetNativeData(NS_NATIVE_WIDGET), rr);
-  wd->ww->Show();
-  wd->observer = NewObserver(wd->ww);
+  rv = ww->Init(wd->windowWidget->GetNativeData(NS_NATIVE_WIDGET), rr);
+///  ww->Show();
+  wd->observer = NewObserver(wd->windowWidget, ww);
+  NS_RELEASE(ww);
 
 
     // Determine if we should run the purify test
   nsDocLoader* dl = nsnull;
   if (gDoPurify) {
-    dl = new nsDocLoader(wd->ww, this, gDelay);
+    dl = new nsDocLoader(wd->observer->mWebWidget, this, gDelay);
 
       // Add the documents to the loader
     for (PRInt32 i=0; i<gRepeatCount; i++)
@@ -1172,7 +1229,7 @@ nsDocLoader* nsViewer::SetupViewer(nsIWidget **aMainWindow, int argc, char **arg
     dl->StartTimedLoading();
   }
   else if (gLoadTestFromFile) {
-    dl = new nsDocLoader(wd->ww, this, gDelay);
+    dl = new nsDocLoader(wd->observer->mWebWidget, this, gDelay);
     for (PRInt32 i=0; i<gRepeatCount; i++)
       AddTestDocsFromFile(dl, gInputFileName);
     dl->StartTimedLoading();
@@ -1185,14 +1242,14 @@ nsDocLoader* nsViewer::SetupViewer(nsIWidget **aMainWindow, int argc, char **arg
       // exit.
 #define kNumReflows 20
       for (PRIntn i = 0; i < kNumReflows; i++) {
-        nsRect r = wd->ww->GetBounds();
+        nsRect r = wd->observer->mWebWidget->GetBounds();
         if (i & 1) {
           r.width -= 10;
         }
         else {
           r.width += 10;
         }
-        wd->ww->SetBounds(r);
+        wd->observer->mWebWidget->SetBounds(r);
       }
       exit(0);
     }
@@ -1252,10 +1309,10 @@ void nsViewer::CrtSetDebug(PRUint32 aNewFlags)
 void nsViewer::Destroy(WindowData* aWinData)
 {
   if (nsnull != aWinData) {
-    if (nsnull != aWinData->ww) {
-      aWinData->ww->SetLinkHandler(nsnull);
-      aWinData->ww->SetContainer(nsnull); // release the doc observer
-      NS_RELEASE(aWinData->ww);
+    if (nsnull != aWinData->observer) {
+      aWinData->observer->mWebWidget->SetLinkHandler(nsnull);
+      aWinData->observer->mWebWidget->SetContainer(nsnull); // release the doc observer
+///   NS_RELEASE(aWinData->ww);
     }
     if (nsnull != aWinData->observer) {
       NS_RELEASE(aWinData->observer);
