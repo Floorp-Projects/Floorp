@@ -19,6 +19,7 @@
  *
  * Contributor(s): 
  *   Seth Spitzer <sspitzer@netscape.com>
+ *   Håkan Waara  <hwaara@chello.se>
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
@@ -860,6 +861,7 @@ nsMsgNewsFolder::UpdateSummaryFromNNTPInfo(PRInt32 oldest, PRInt32 youngest, PRI
 				NS_ASSERTION(NS_SUCCEEDED(rv),"SetNewsrcHasChanged() failed");
 			}
 		}
+    delete set; // If !mDatabase then we own set, thus we should delete it.
 	}
 	delete [] setStr;
 	setStr = nsnull;
