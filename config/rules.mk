@@ -1666,7 +1666,7 @@ ifeq ($(OS_TARGET),WIN95)
 _NO_FLOCK=-l
 endif
 
-libs:: $(CHROME_DEPS)
+libs chrome:: $(CHROME_DEPS)
 ifndef NO_DIST_INSTALL
 	@if test -f $(JAR_MANIFEST); then $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-jars.pl $(_NO_FLOCK) $(_JAR_AUTO_REG) -f $(MOZ_CHROME_FILE_FORMAT) -d $(DIST)/bin/chrome -s $(srcdir) < $(JAR_MANIFEST); fi
 	@if test -f $(JAR_MANIFEST); then $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-chromelist.pl $(DIST)/bin/chrome $(JAR_MANIFEST) $(_NO_FLOCK); fi
