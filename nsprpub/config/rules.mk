@@ -190,6 +190,22 @@ realclean clobber_all::
 	+$(LOOP_OVER_DIRS)
 
 release:: export
+ifdef RELEASE_BINS
+	@echo "Copying executable programs and scripts to release directory"
+	@if test -z "$(BUILD_NUMBER)"; then \
+		echo "BUILD_NUMBER must be defined"; \
+		false; \
+	else \
+		true; \
+	fi
+	@if test ! -d $(RELEASE_BIN_DIR); then \
+		rm -rf $(RELEASE_BIN_DIR); \
+		$(NSINSTALL) -D $(RELEASE_BIN_DIR);\
+	else \
+		true; \
+	fi
+	cp $(RELEASE_BINS) $(RELEASE_BIN_DIR)
+endif
 ifdef RELEASE_LIBS
 	@echo "Copying libraries to release directory"
 	@if test -z "$(BUILD_NUMBER)"; then \

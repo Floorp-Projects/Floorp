@@ -151,6 +151,73 @@ typedef PRUint32 PRLanguageCode;
 #define PR_LANGUAGE_I_DEFAULT 0 /* i-default, the default language */
 #define PR_LANGUAGE_EN 1 /* English, explicitly negotiated */
 
+/*
+ * struct PRErrorMessage --
+ *
+ *    An error message in an error table.
+ */
+struct PRErrorMessage {
+    const char * name;    /* Macro name for error */
+    const char * en_text; /* Default English text */
+};
+
+/*
+ * struct PRErrorTable --
+ *
+ *    An error table, provided by a library.
+ */
+struct PRErrorTable {
+    const struct PRErrorMessage * msgs; /* Array of error information */
+    const char *name; /* Name of error table source */
+    PRErrorCode base; /* Error code for first error in table */
+    int n_msgs; /* Number of codes in table */
+};
+
+/*
+ * struct PRErrorCallbackPrivate --
+ *
+ *    A private structure for the localization plugin 
+ */
+struct PRErrorCallbackPrivate;
+
+/*
+ * struct PRErrorCallbackTablePrivate --
+ *
+ *    A data structure under which the localization plugin may store information,
+ *    associated with an error table, that is private to itself.
+ */
+struct PRErrorCallbackTablePrivate;
+
+/*
+ * PRErrorCallbackLookupFn --
+ *
+ *    A function of PRErrorCallbackLookupFn type is a localization
+ *    plugin callback which converts an error code into a description
+ *    in the requested language.  The callback is provided the
+ *    appropriate error table, private data for the plugin and the table.
+ *    The callback returns the appropriate UTF-8 encoded description, or NULL
+ *    if no description can be found.
+ */
+typedef const char *
+PRErrorCallbackLookupFn(PRErrorCode code, PRLanguageCode language, 
+		   const struct PRErrorTable *table,
+		   struct PRErrorCallbackPrivate *cb_private,
+		   struct PRErrorCallbackTablePrivate *table_private);
+
+/*
+ * PRErrorCallbackNewTableFn --
+ *
+ *    A function PRErrorCallbackNewTableFn type is a localization plugin
+ *    callback which is called once with each error table registered
+ *    with NSPR.  The callback is provided with the error table and
+ *    the plugin's private structure.  The callback returns any table private
+ *    data it wishes to associate with the error table.  Does not need to be thread
+ *    safe.
+ */
+typedef struct PRErrorCallbackTablePrivate *
+PRErrorCallbackNewTableFn(const struct PRErrorTable *table,
+			struct PRErrorCallbackPrivate *cb_private);
+
 /**********************************************************************/
 /****************************** FUNCTIONS *****************************/
 /**********************************************************************/
@@ -193,10 +260,39 @@ PR_EXTERN(const char *) PR_ErrorToName(PRErrorCode code);
 **  with a null pointer.
 **
 ***********************************************************************/
-/*
- * Return the language codes for supported languages.
- */
 PR_EXTERN(const char * const *) PR_ErrorLanguages(void);
+
+
+/***********************************************************************
+** FUNCTION:    PR_ErrorInstallTable
+** DESCRIPTION:
+**  Registers an error table with NSPR.  Must be done exactly once per
+**  table.  Memory pointed to by `table' must remain valid for the life
+**  of the process.
+**
+**  NOT THREAD SAFE!
+**  
+***********************************************************************/
+PR_EXTERN(PRErrorCode) PR_ErrorInstallTable(const struct PRErrorTable *table);
+
+
+/***********************************************************************
+** FUNCTION:    PR_ErrorInstallCallback
+** DESCRIPTION:
+**  Registers an error localization plugin with NSPR.  May be called
+**  at most one time.  `languages' contains the language codes supported
+**  by this plugin.  Languages 0 and 1 must be "i-default" and "en"
+**  respectively.  `lookup' and `newtable' contain pointers to
+**  the plugin callback functions.  `cb_private' contains any information
+**  private to the plugin functions.
+**
+**  NOT THREAD SAFE!
+**
+***********************************************************************/
+PR_EXTERN(void) PR_ErrorInstallCallback(const char * const * languages,
+			      PRErrorCallbackLookupFn *lookup, 
+			      PRErrorCallbackNewTableFn *newtable,
+			      struct PRErrorCallbackPrivate *cb_private);
 
 PR_END_EXTERN_C
 

@@ -65,5 +65,15 @@ PR_IMPLEMENT(const PRVersionDescription*) libVersionPoint(void)
     return &prVersionDescription_libnsrp21;
 }  /* versionEntryPointType */
 
+#ifdef XP_UNIX
+
+/*
+ * Version information for the 'ident' and 'what commands
+ */
+static char rcsid[] = "$Version: NSPR " PR_VERSION "  " _BUILD_STRING " $";
+static char sccsid[] = "@(#)NSPR " PR_VERSION "  " _BUILD_STRING;
+
+#endif /* XP_UNIX */
+
 /* prvrsion.c */
 

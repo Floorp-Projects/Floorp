@@ -33,7 +33,6 @@
 #sproc_p	- obsolete; sproc-based tests for Irix
 #io_timeoutk - obsolete; subsumed in io_timeout
 #io_timeoutu - obsolete; subsumed in io_timeout
-#lockfile	- not meaningful; file locks are process-based in Unix
 #prftest1	- obsolete; subsumed by prftest
 #prftest2	- obsolete; subsumed by prftest
 #prselect	- obsolete; PR_Select is obsolete
@@ -78,6 +77,7 @@ cvar
 cvar2
 dlltest
 dtoa
+errcodes
 exit
 fileio
 foreign
@@ -99,6 +99,7 @@ layer
 lazyinit
 lltest
 lock
+lockfile
 logger
 many_cv
 multiwait
@@ -147,6 +148,7 @@ timemac
 timetest
 tpd
 udpsrv
+vercheck
 version
 writev
 xnotify"
