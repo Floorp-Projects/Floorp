@@ -1,0 +1,319 @@
+<?xml version="1.0"?> 
+#  The contents of this file are subject to the Netscape Public
+#  License Version 1.1 (the "License"); you may not use this file
+#  except in compliance with the License. You may obtain a copy of
+#  the License at http://www.mozilla.org/NPL/
+#  
+#  Software distributed under the License is distributed on an "AS
+#  IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+#  implied. See the License for the specific language governing
+#  rights and limitations under the License.
+#  
+#  The Original Code is Mozilla Communicator client code, released
+#  March 31, 1998.
+#  
+#  The Initial Developer of the Original Code is Netscape
+#  Communications Corporation. Portions created by Netscape are
+#  Copyright (C) 1998-1999 Netscape Communications Corporation. All
+#  Rights Reserved.
+#  
+#  Contributor(s): 
+#    Simeon Morrison <smorrison@gte.com>
+#    Chris McAfee <mcafee@netscape.com>
+#    Daniel Brooks <db48x@yahoo.com>
+#    Gervase Markham <gerv@gerv.net>
+
+<?xml-stylesheet href="chrome://navigator/skin/pageInfo.css" type="text/css"?>
+
+<!DOCTYPE window [
+  <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd">
+  %brandDTD;
+  <!ENTITY % navigatorDTD SYSTEM "chrome://navigator/locale/navigator.dtd">
+  %navigatorDTD;
+  <!ENTITY % pageInfoDTD SYSTEM "chrome://navigator/locale/pageInfo.dtd">
+  %pageInfoDTD;
+]>
+
+<window id="main-window"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  windowtype="Browser:page-info"
+  onload="onLoadPageInfo()"
+  align="stretch" class="dialog"
+  width="&pageInfoWindow.width;" height="&pageInfoWindow.height;"
+  screenX="10" screenY="10"
+  persist="screenX screenY width height sizemode">
+
+  <script type="application/x-javascript" src="chrome://browser/content/contentAreaUtils.js"/>
+  <script type="application/x-javascript" src="chrome://navigator/content/pageInfo.js"/>
+  <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
+
+  <keyset>
+    <key id="closeWindow" key="&closeWindow;" modifiers="accel" oncommand="window.close();"/>
+    <key keycode="VK_ESCAPE" oncommand="window.close();"/>
+    <key id="copy" key="c" modifiers="accel" oncommand="doCopy(event);"/>
+  </keyset>
+  <!-- keys are appended from the overlay -->
+  <keyset id="dialogKeys"/>
+
+  <stringbundle id="pageinfobundle" src="chrome://navigator/locale/pageInfo.properties"/>
+
+  <tabbox id="tabbox" flex="1">
+    <tabs id="tabs">
+      <tab id="generalTab" label="&generalTab;" 
+           accesskey="&generalAccesskey;"/>
+      <tab id="formsTab"   label="&formsTab;"   
+           accesskey="&formsAccesskey;" oncommand="makeTabs(theDocument, theWindow);"/>
+      <tab id="linksTab"   label="&linksTab;"   
+           accesskey="&linksAccesskey;" oncommand="makeTabs(theDocument, theWindow);"/>
+      <tab id="mediaTab"   label="&mediaTab;"  
+           accesskey="&mediaAccesskey;" oncommand="makeTabs(theDocument, theWindow);"/>
+      <!-- Others added by overlay -->
+    </tabs>
+    <tabpanels id="tabpanels" flex="1">
+
+      <!-- General page information -->
+      <vbox>
+        <textbox class="header" readonly="true" crop="right" id="titletext"/>
+        <grid>
+          <columns>
+            <column/>
+            <column style="width: .5em;"/>
+            <column flex="1"/>
+          </columns>
+          <rows>
+            <row>
+              <label value="&generalURL;"/>
+              <separator/>
+              <textbox readonly="true" crop="right" id="urltext" class="text-link"/>
+            </row>
+            <row>
+              <separator class="thin"/>
+            </row>
+            <row>
+              <label value="&generalType;"/>
+              <separator/>
+              <textbox readonly="true" crop="right" id="typetext"/>
+            </row>
+            <row>
+              <label value="&generalMode;"/>
+              <separator/>
+              <textbox readonly="true" crop="right" id="modetext"/>
+            </row>
+            <row>
+              <label value="&generalSource;"/>
+              <separator/>
+              <textbox readonly="true" crop="right" id="sourcetext"/>
+            </row>
+            <row>
+              <label value="&generalEncoding;"/>
+              <separator/>
+              <textbox readonly="true" crop="right" id="encodingtext"/>
+            </row>
+            <row>
+              <label value="&generalSize;"/>
+              <separator/>
+              <textbox readonly="true" crop="right" id="sizetext"/>
+            </row>
+            <row>
+              <label value="&generalReferrer;"/>
+              <separator/>
+              <textbox readonly="true" crop="right" id="refertext"/>
+            </row>
+            <row>
+              <separator class="thin"/>
+            </row>
+            <row>
+              <label value="&generalModified;"/>
+              <separator/>
+              <textbox readonly="true" crop="right" id="modifiedtext"/>
+            </row>
+            <row>
+              <label value="&generalExpires;"/>
+              <separator/>
+              <textbox readonly="true" crop="right" id="expirestext"/>
+            </row>
+          </rows>
+        </grid>
+        <separator class="thin"/>
+        <text id="metahead" class="header" value="&generalMeta;"/>
+        <tree id="metatree" flex="1" class="inset">
+          <treecols>
+            <treecol persist="hidden width" flex="1" id="meta-name"    label="&generalMetaName;"/>
+            <splitter class="tree-splitter"/>
+            <treecol persist="hidden width" flex="4" id="meta-content" label="&generalMetaContent;"/>
+          </treecols>
+          <treechildren flex="1"/>
+        </tree>
+      </vbox>
+
+      <!-- Form information -->
+      <vbox>
+        <tree id="formtree" class="inset fixedsize" onselect="onFormSelect();">
+          <treecols>
+            <splitter class="tree-splitter"/>
+            <treecol sortSeparators="true" persist="hidden width" flex="1" 
+                         width="1" id="form-name"   label="&formName;"/>
+            <splitter class="tree-splitter"/>
+            <treecol sortSeparators="true" persist="hidden width" flex="3" 
+                         width="3" id="form-method" label="&formMethod;"/>
+            <splitter class="tree-splitter"/>
+            <treecol sortSeparators="true" persist="hidden width" flex="2" 
+                         width="2" id="form-action" label="&formAction;"/>
+          </treecols>
+          <treechildren flex="1"/>
+        </tree>
+        <splitter orient="vertical" collapse="after"/>
+        <vbox flex="1">
+          <textbox class="header" id="formname"/>
+          <grid>
+            <columns>
+              <column/>
+              <column style="width: .5em;"/>
+              <column flex="1"/>
+            </columns>
+            <rows>
+              <row>
+                <label value="&formEncoding;"/>
+                <separator/>
+                <textbox readonly="true" crop="right" id="formenctype"/>
+              </row>
+              <row>
+                <label value="&formTarget;"/>
+                <separator/>
+                <textbox readonly="true" crop="right" class="label" id="formtarget"/>
+              </row>
+            </rows>
+          </grid>
+          <text class="header" value="&formFields;"/>
+          <tree id="formpreview" flex="1" class="inset">
+            <treecols>
+              <treecol sortSeparators="true" persist="hidden width" flex="3" 
+                           width="3" id="field-label"  label="&formLabel;"/>
+              <splitter class="tree-splitter"/>
+              <treecol sortSeparators="true" persist="hidden width" flex="3" 
+                           width="3" id="field-field"  label="&formFName;"/>
+              <splitter class="tree-splitter"/>
+              <treecol sortSeparators="true" persist="hidden width" flex="1" 
+                           width="1" id="field-type"   label="&formType;"/>
+              <splitter class="tree-splitter"/>
+              <treecol sortSeparators="true" persist="hidden width" flex="3" 
+                           width="3" id="field-value"  label="&formCValue;"/>
+            </treecols>
+            <treechildren flex="1"/>
+          </tree>
+        </vbox>
+      </vbox>
+
+      <!-- Link info -->
+      <vbox>
+        <tree id="linktree" flex="1" class="inset" ondraggesture="onBeginLinkDrag(event,'link-address','link-name')">
+          <treecols>
+            <treecol sortSeparators="true" persist="hidden width" flex="5" 
+                         width="5" id="link-name"    label="&linkName;"/>
+            <splitter class="tree-splitter"/>
+            <treecol sortSeparators="true" persist="hidden width" flex="7" 
+                         width="7" id="link-address" label="&linkAddress;"/>
+            <splitter class="tree-splitter"/>
+            <treecol sortSeparators="true" persist="hidden width" flex="2" 
+                         width="2" id="link-type"    label="&linkType;"/>
+            <splitter class="tree-splitter"/>
+            <treecol sortSeparators="true" persist="hidden width" flex="2"
+                         width="2" id="link-target"  label="&linkTarget;" hidden="true"/>
+          </treecols>
+          <treechildren flex="1"/>
+        </tree>
+      </vbox>
+
+      <!-- Media information -->
+      <vbox>
+        <tree id="imagetree" class="inset fixedsize" onselect="onImageSelect();" ondraggesture="onBeginLinkDrag(event,'image-address','image-alt')">
+          <treecols>
+            <treecol sortSeparators="true" persist="hidden width" flex="10" 
+                         width="10" id="image-address" label="&mediaAddress;"/>
+            <splitter class="tree-splitter"/>
+            <treecol sortSeparators="true" persist="hidden width" flex="2" 
+                         width="2"  id="image-type"    label="&mediaType;"/>
+            <splitter class="tree-splitter"/>
+            <treecol sortSeparators="true" hidden="true" persist="hidden width" flex="4" 
+                         width="4"  id="image-alt"    label="&mediaAltHeader;"/>
+          </treecols>
+          <treechildren flex="1"/>
+        </tree>
+        <splitter collapse="after" orient="vertical"/>
+        <vbox flex="1">
+          <grid>
+            <columns>
+              <column/>
+              <column style="width: .5em;"/>
+              <column flex="1"/>
+            </columns>
+            <rows>
+              <row>
+                <label value="&mediaURL;"/>
+                <separator/>
+                <textbox readonly="true" crop="right" id="imageurltext"/>
+              </row>
+              <row>
+                <label value="&mediaTitle;"/>
+                <separator/>
+                <textbox readonly="true" crop="right" id="imagetitletext"/>
+              </row>
+              <row>
+                <label value="&mediaAlt;"/>
+                <separator/>
+                <textbox readonly="true" crop="right" id="imagealttext"/>
+              </row>
+              <row>
+                <label value="&mediaLongdesc;"/>
+                <separator/>
+                <textbox readonly="true" crop="right" id="imagelongdesctext"/>
+              </row>
+              <row>
+                <label value="&generalType;"/>
+                <separator/>
+                <textbox readonly="true" crop="right" id="imagetypetext"/>
+              </row>
+              <row>
+                <label value="&generalSource;"/>
+                <separator/>
+                <textbox readonly="true" crop="right" id="imagesourcetext"/>
+              </row>
+              <row>
+                <label value="&generalSize;"/>
+                <separator/>
+                <textbox readonly="true" crop="right" id="imagesizetext"/>
+              </row>
+              <row>
+                <label value="&generalExpires;"/>
+                <separator/>
+                <textbox readonly="true" crop="right" id="imageexpirestext"/>
+              </row>
+              <row>
+                <label value="&mediaDimensions;"/>
+                <separator/>
+                <hbox>
+                  <textbox readonly="true" crop="right" id="imagewidth"/>
+                  <textbox readonly="true" crop="right" id="imageheight"/>
+                </hbox>
+              </row>
+            </rows>
+          </grid>
+          <hbox>
+            <button label="&mediaSaveAs;" accesskey="&mediaSaveAsAccesskey;" id="imagesaveasbutton" disabled="true" oncommand="saveMedia();"/>
+          </hbox>
+          <vbox class="inset iframe" flex="1" pack="center">
+            <hbox id="theimagecontainer" pack="center">
+              <image id="thepreviewimage"/>
+            </hbox>
+          </vbox>
+        </vbox>
+      </vbox>
+
+      <!-- Others added by overlay -->
+    </tabpanels>
+  </tabbox>
+  <box>
+    <spacer flex="1"/>
+    <button label="&helpButton;" oncommand="doHelpButton();" />
+  </box>
+</window>

@@ -2,7 +2,6 @@
 <!ENTITY tabDisplay.label "Tab Display">
 <!ENTITY autoHide.label "Hide the tab bar when only one tab is open">
 <!ENTITY background.label "Load links in the background">
-<!ENTITY openTabs.label "Open tabs instead of windows for">
-<!ENTITY middleClick.label "Middle-click of links in a Web page">
-<!ENTITY openFolder.label "When opening a bookmark folder in tabs">
-<!ENTITY openFolderReplace.label "Replace the current set of tabs">
+<!ENTITY openingTabs.label "Opening Tabs">
+<!ENTITY middleClick.label "Open a tab instead of a window when middle-clicking a link in a Web page">
+<!ENTITY openFolderReplace.label "Replace the current set of tabs when opening a bookmark folder in tabs">

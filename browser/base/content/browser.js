@@ -3679,17 +3679,17 @@ nsContextMenu.prototype = {
     // Open linked-to URL in a new window.
     openLink : function () {
         // Determine linked-to URL.
-        openNewWindowWith( this.linkURL() );
+        openNewWindowWith(this.linkURL(), this.link);
     },
     // Open linked-to URL in a new tab.
     openLinkInTab : function () {
         // Determine linked-to URL.
-        openNewTabWith( this.linkURL() );
+        openNewTabWith(this.linkURL(), this.link);
     },
     // Open frame in a new tab.
     openFrameInTab : function () {
         // Determine linked-to URL.
-        openNewTabWith( this.target.ownerDocument.location.href );
+        openNewTabWith(this.target.ownerDocument.location.href, null);
     },
     // Reload clicked-in frame.
     reloadFrame : function () {
@@ -3697,7 +3697,7 @@ nsContextMenu.prototype = {
     },
     // Open clicked-in frame in its own window.
     openFrame : function () {
-        openNewWindowWith( this.target.ownerDocument.location.href );
+        openNewWindowWith(this.target.ownerDocument.location.href, null);
     },
     // Open clicked-in frame in the same window
     showOnlyThisFrame : function () {
@@ -4118,14 +4118,6 @@ nsDefaultEngine.prototype =
        if (target.hasAttribute("href")) 
          linkNode = target;
        break;
-     case "input":
-       if ((event.target.type.toLowerCase() == "text" || event.target.type == "") // text field
-           && event.detail == 2 // double click
-           && event.button == 0 // left mouse button
-           && event.target.value.length == 0) { // no text has been entered
-         prefillTextBox(target); // prefill the empty text field if possible
-       }
-       break;
      default:
        linkNode = findParentNode(event.originalTarget, "a");
        // <a> cannot be nested.  So if we find an anchor without an
@@ -4154,7 +4146,7 @@ nsDefaultEngine.prototype =
        return true;
      }
    }
-   if (gPrefService && event.button == 1 &&
+   if (event.button == 1 &&
        !findParentNode(event.originalTarget, "scrollbar") &&
        gPrefService.getBoolPref("middlemouse.contentLoadURL")) {
      if (middleMousePaste(event)) {
@@ -4164,66 +4156,94 @@ nsDefaultEngine.prototype =
    return true;
  }
 
-function openNewTabOrWindow(event, href, linkNode, overrideVal)
+function openNewTabWith(href, linkNode)
 {
-  // should we open it in a new tab?
-  var result = false;
-  if (overrideVal == 1 || (overrideVal == 0 && gPrefService && gPrefService.getBoolPref("browser.tabs.opentabfor.middleclick") &&
-      ("getBrowser" in window) && getBrowser().localName == "tabbrowser")) {
-    var loadInBackground = gPrefService.getBoolPref("browser.tabs.loadInBackground");
-    if (event.shiftKey)
-      loadInBackground = !loadInBackground;
-    var theTab = getBrowser().addTab(href, getReferrer(document));
-    if (!loadInBackground)
-      getBrowser().selectedTab = theTab;
-    event.preventBubble();
-    result = true;
-  }
-  else
-  // should we open it in a new window?
-  if (gPrefService && gPrefService.getBoolPref("middlemouse.openNewWindow")) {
-    openNewWindowWith(href);
-    event.preventBubble();
-    result = true;
-  }
+  urlSecurityCheck(href, document); 
 
-  if (result && linkNode) {
-    var globalHistory = Components.classes["@mozilla.org/browser/global-history;1"]
-                                .getService(Components.interfaces.nsIGlobalHistory);
-    if (!globalHistory.isVisited(href)) {
-      globalHistory.addPage(href);
-      var oldHref = linkNode.href;
-      linkNode.href = "";
-      linkNode.href = oldHref;
-    }
+  // should we open it in a new tab?
+  var loadInBackground;
+  try {
+    loadInBackground = gPrefService.getBoolPref("browser.tabs.loadInBackground");
   }
-      
-  // let someone else deal with it
-  return result;
+  catch(ex) {
+    loadInBackground = true;
+  }
+  
+  var theTab = getBrowser().addTab(href, getReferrer(document));
+  if (!loadInBackground)
+    getBrowser().selectedTab = theTab;
+  
+  if (linkNode)
+    markLinkVisited(href, linkNode);
+}
+
+function openNewWindowWith(href, linkNode) 
+{
+  urlSecurityCheck(href, document);
+
+  // if and only if the current window is a browser window and it has a document with a character
+  // set, then extract the current charset menu setting from the current document and use it to
+  // initialize the new browser window...
+  var charsetArg = null;
+  var wintype = document.firstChild.getAttribute('windowtype');
+  if (wintype == "navigator:browser")
+    charsetArg = "charset=" + window._content.document.characterSet;
+
+  var referrer = getReferrer(document);
+  window.openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", href, charsetArg, referrer);
+  
+  if (linkNode)
+    markLinkVisited(href, linkNode);
+}
+
+function markLinkVisited(href, linkNode)
+{
+   var globalHistory = Components.classes["@mozilla.org/browser/global-history;1"]
+                               .getService(Components.interfaces.nsIGlobalHistory);
+   if (!globalHistory.isVisited(href)) {
+     globalHistory.addPage(href);
+     var oldHref = linkNode.href;
+     linkNode.href = "";
+     linkNode.href = oldHref;
+   }    
 }
 
 function handleLinkClick(event, href, linkNode)
 {
   switch (event.button) {                                   
     case 0:                                                         // if left button clicked
-      if (event.metaKey || event.shiftKey || event.ctrlKey) {       // and meta or ctrl or shift are down
-        var overrideVal = event.ctrlKey ? 1 : 2;
-        if (openNewTabOrWindow(event, href, linkNode, overrideVal))
-          return true;
+      if (event.shiftKey) {
+        openNewWindowWith(href, linkNode);
+        event.preventBubble();
+        return true;
+      }
+
+      if (event.ctrlKey) {
+        openNewTabWith(href, linkNode);
+        event.preventBubble();
+        return true;
       } 
-      var saveModifier = event.altKey;
-        
-      if (saveModifier) {                                           // if saveModifier is down
+
+      if (event.altKey) {
         saveURL(href, linkNode ? gatherTextUnder(linkNode) : "");
         return true;
       }
-      if (event.altKey)                                             // if alt is down
-        return true;                                                // do nothing
+ 
       return false;
     case 1:                                                         // if middle button clicked
-      if (openNewTabOrWindow(event, href, linkNode, 0))
-        return true;
-      break;
+      var tab;
+      try {
+        tab = gPrefService.getBoolPref("browser.tabs.opentabfor.middleclick")
+      }
+      catch(ex) {
+        tab = true;
+      }
+      if (tab)
+        openNewTabWith(href, linkNode);
+      else
+        openNewWindowWith(href, linkNode);
+      event.preventBubble();
+      return true;
   }
   return false;
 }
@@ -4239,7 +4259,7 @@ function middleMousePaste( event )
 
   // On ctrl-middleclick, open in new tab.
   if (event.ctrlKey)
-    return openNewTabOrWindow(event, url, null, 0);
+    openNewTabWith(url, null);
 
   // If ctrl wasn't down, then just load the url in the current win/tab.
   loadURI(url);
@@ -4255,6 +4275,58 @@ function makeURLAbsolute( base, url )
   var baseURI  = ioService.newURI(base, null, null);
 
   return ioService.newURI(baseURI.resolve(url), null, null).spec;
+}
+
+
+function isContentFrame(aFocusedWindow)
+{
+  var focusedTop = Components.lookupMethod(aFocusedWindow, 'top')
+                             .call(aFocusedWindow);
+
+  return (focusedTop == window.content);
+}
+
+function urlSecurityCheck(url, doc) 
+{
+  // URL Loading Security Check
+  var focusedWindow = doc.commandDispatcher.focusedWindow;
+  var sourceURL = getContentFrameURI(focusedWindow);
+  const nsIScriptSecurityManager = Components.interfaces.nsIScriptSecurityManager;
+  var secMan = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+                         .getService(nsIScriptSecurityManager);
+  try {
+    secMan.checkLoadURIStr(sourceURL, url, nsIScriptSecurityManager.STANDARD);
+  } catch (e) {
+    throw "Load of " + url + " denied.";
+  }
+}
+
+function findParentNode(node, parentNode)
+{
+  if (node && node.nodeType == Node.TEXT_NODE) {
+    node = node.parentNode;
+  }
+  while (node) {
+    var nodeName = node.localName;
+    if (!nodeName)
+      return null;
+    nodeName = nodeName.toLowerCase();
+    if (nodeName == "body" || nodeName == "html" ||
+        nodeName == "#document") {
+      return null;
+    }
+    if (nodeName == parentNode)
+      return node;
+    node = node.parentNode;
+  }
+  return null;
+}
+
+function saveFrameDocument()
+{
+  var focusedWindow = document.commandDispatcher.focusedWindow;
+  if (isContentFrame(focusedWindow))
+    saveDocument(focusedWindow.document);
 }
 
 function MultiplexHandler(event)
@@ -4431,4 +4503,3 @@ var contentAreaDNDObserver = {
     }
   
 };
-

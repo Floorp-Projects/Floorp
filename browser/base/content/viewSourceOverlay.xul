@@ -59,7 +59,7 @@
   <script type="application/x-javascript" src="chrome://navigator/content/browser.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/viewsource.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/findUtils.js"/>
-  <script type="application/x-javascript" src="chrome://communicator/content/contentAreaUtils.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/contentAreaUtils.js"/>
 
   <commandset id="commands">
     <commandset id="globalEditMenuItems"/>

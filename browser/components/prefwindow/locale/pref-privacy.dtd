@@ -21,3 +21,5 @@
 <!ENTITY clearHistory.accesskey            "H">
 <!ENTITY cacheExplanation.label            "Pages you view are stored in the cache for quicker viewing later on.">
 <!ENTITY cookieExplanation.label           "Cookies are delicious delicacies.">
+<!ENTITY butAskFirst.label                 "but ask before accepting">
+<!ENTITY butAskFirst.accesskey             "b">
