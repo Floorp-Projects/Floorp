@@ -106,7 +106,7 @@ var nsDragAndDrop = {
                 {
                   dragSession.canDrop = true;
                   if (aDragDropObserver.onDragOver)
-                    aDragDropObserver.onDragOver(flavour);
+                    aDragDropObserver.onDragOver(aEvent, flavour);
                   aEvent.preventBubble();
                   break;
                 }
@@ -141,6 +141,12 @@ var nsDragAndDrop = {
         }
     },
 
+  dragExit: function (aEvent, aDragDropObserver)
+    {
+      if (aDragDropObserver.onDragExit)
+        aDragDropObserver.onDragExit(aEvent);
+    },  
+    
   /** 
    * nsISupportsArray getDragData (Object aFlavourList)
    *

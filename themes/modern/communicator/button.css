@@ -17,7 +17,8 @@
       border                : 1px solid #FFFFFF;
     }
   
-  .button-toolbar:hover:active
+  .button-toolbar:hover:active,
+  .button-toolbar[home-dragover="true"]
     {
       border                : 1px solid #336699;
     }
@@ -39,6 +40,12 @@
   .button-toolbar:hover:active > .button-internal-box
     {
       padding               : 2px 2px 0px 4px;
+      border                : none;
+    }
+
+  .button-toolbar:hover:active[home-dragover="true"] > .button-internal-box
+    {
+      padding               : 1px 3px 1px 3px;
       border                : none;
     }
     
