@@ -28,8 +28,8 @@
 include $(MOD_DEPTH)/config/UNIX.mk
 
 ifeq (,$(filter-out 2.1,$(OS_RELEASE)))
-CC		= $(NSDEPTH)/build/hcc
-CCC		= $(NSDEPTH)/build/hcpp
+CC		= $(NSDEPTH)/build/hcc cc
+CCC		= $(NSDEPTH)/build/hcpp CC
 else
 CC		= cc
 CCC		= CC
