@@ -237,6 +237,7 @@ void UFormElementFactory::RegisterFormTypes()
 	RegisterClass_( CFormLittleText);
 	RegisterClass_( CFormBigText);
 	RegisterClass_( CFormHTMLArea);
+	RegisterClass_( CNonPrintingView);
 	RegisterClass_( CFormRadio);
 	RegisterClass_( CGAFormRadio);
 	RegisterClass_( CFormCheckbox);
@@ -489,7 +490,7 @@ LPane* UFormElementFactory::MakeTextArea(
 {
 	if (!formElem->element_data)
 		return nil;
-	CWhiteScroller * theScroller = NULL;
+	LView * theView = NULL;
 	CFormBigText * theTextView = NULL;
 	FontInfo fontInfo;
 	if (!HasFormWidget(formElem))				// If there is no form, create it
@@ -516,12 +517,12 @@ LPane* UFormElementFactory::MakeTextArea(
 				
 		} // case of wrap property
 				
-		theScroller = (CWhiteScroller *)UReanimator::ReadObjects('PPob', elementToRead);
-		ThrowIfNil_(theScroller);
-		theScroller->FinishCreate();
-		theScroller->PutInside(inHTMLView);
+		theView = (LView *)UReanimator::ReadObjects('PPob', elementToRead);
+		ThrowIfNil_(theView);
+		theView->FinishCreate();
+		theView->PutInside(inHTMLView);
 	
-		theTextView = (CFormBigText*)theScroller->FindPaneByID(formBigTextID);
+		theTextView = (CFormBigText*)theView->FindPaneByID(formBigTextID);
 		Assert_(theTextView != NULL);
 
 		LModelObject* theSuper = inHTMLView->GetFormElemBaseModel();
@@ -555,21 +556,21 @@ LPane* UFormElementFactory::MakeTextArea(
 		if ( textAreaData->auto_wrap == TEXTAREA_WRAP_OFF )
 			theTextView->ResizeImageTo(2000, 0, false);
 		
-		theScroller->ResizeFrameTo(wantedWidth + 16 + BigTextLeftIndent + BigTextRightIndent,
+		theView->ResizeFrameTo(wantedWidth + 16 + BigTextLeftIndent + BigTextRightIndent,
 								   wantedHeight + 16 + BigTextTopIndent + BigTextBottomIndent,
 								   FALSE);
 								   
 	// Set the default values.
-		ResetFormElement(formElem, FALSE, InitFE_Data((MWContext*)*inNSContext, formElem, theScroller, theTextView, theTextView));
+		ResetFormElement(formElem, FALSE, InitFE_Data((MWContext*)*inNSContext, formElem, theView, theTextView, theTextView));
 
-		theScroller->Show();
+		theView->Show();
 		}
 	else
 		{
-		theScroller = (CWhiteScroller*)FEDATAPANE;
-		if (!theScroller)
+		theView = (LView*)FEDATAPANE;
+		if (!theView)
 			return NULL;
-		theTextView = (CFormBigText*)theScroller->FindPaneByID(formBigTextID);
+		theTextView = (CFormBigText*)theView->FindPaneByID(formBigTextID);
 		theTextView->FocusDraw();
 		
 		//
@@ -583,12 +584,12 @@ LPane* UFormElementFactory::MakeTextArea(
 		}		
 	
 	SDimension16 size;
-	theScroller->GetFrameSize(size);
+	theView->GetFrameSize(size);
 	width = size.width + textLeftExtra + textRightExtra;;
 	height = size.height + textTopExtra + textBottomExtra;;
 	baseline = fontInfo.ascent + 2;
 	
-	return theScroller;
+	return theView;
 }
 
 // Creates an HTML area
@@ -605,7 +606,6 @@ LPane* UFormElementFactory::MakeHTMLArea(
 {
 	if (!formElem->element_data)
 		return nil;
-	CHyperScroller  *theScroller = NULL;
 	LView			*theView = NULL;
 	CFormHTMLArea   *theHTMLAreaView = NULL;
 	FontInfo fontInfo;
