@@ -30,6 +30,7 @@
 #include "rosetta.h"
 #include "mkutils.h"
 #include "net_xp_file.h"
+#include "mkprefs.h"
 #include "gui.h"
 #include "mkparse.h"
 #include "mkgeturl.h"
@@ -1792,14 +1793,14 @@ NET_ScanForURLs(MSG_Pane* pane, const char *input, int32 input_size,
 									net_citation_style_changed,
 									NULL);
 		  }
-          if ( (PREF_OK == PREF_GetIntPref("mail.quoted_style", &value)) ) {
+          if ( (PREF_OK == PREF_GetIntPref(pref_mailQuotedStyle, &value)) ) {
 		    CitationFont = (MSG_FONT) value;
           } else {
             CitationFont = MSG_ItalicFont;
           }
 		  
           CitationSize = 0;
-          if ( (PREF_OK != PREF_GetIntPref("mail.quoted_size", &CitationSize)) ) {
+          if ( (PREF_OK != PREF_GetIntPref(pref_mailQuotedStyle, &CitationSize)) ) {
               CitationSize = 0;
           }
 		  FREEIF(CitationColor);

@@ -22,6 +22,8 @@
 #include "nsNetService.h"
 #include "nsNetStream.h"
 #include "nsNetFile.h"
+#include "prefapi.h"
+#include "mkprefs.h"
 extern "C" {
 #include "mkutils.h"
 #include "mkgeturl.h"
@@ -107,6 +109,28 @@ nsNetlibService::nsNetlibService(nsINetContainerApplication *aContainerApp)
     if (nsnull != mNetlibThread) {
         mNetlibThread->Start();
     }
+
+    /* Setup our default prefs. Eventually these will come out of a default
+     * all.js file, but, for now each module needs to address their own 
+     * default settings. */
+
+    PREF_SetDefaultIntPref(pref_proxyType, 3);
+    PREF_SetDefaultCharPref(pref_proxyACUrl, "");
+    PREF_SetDefaultCharPref(pref_socksServer, "");
+    PREF_SetDefaultIntPref(pref_socksPort, 0);
+    PREF_SetDefaultCharPref(pref_proxyFtpServer, "");
+    PREF_SetDefaultIntPref(pref_proxyFtpPort, 0);
+    PREF_SetDefaultCharPref(pref_proxyGopherServer, "");
+    PREF_SetDefaultIntPref(pref_proxyGopherPort, 0);
+    PREF_SetDefaultCharPref(pref_proxyHttpServer, "");
+    PREF_SetDefaultIntPref(pref_proxyHttpPort, 0);
+    PREF_SetDefaultCharPref(pref_proxyNewsServer, "");
+    PREF_SetDefaultIntPref(pref_proxyNewsPort, 0);
+    PREF_SetDefaultCharPref(pref_proxyWaisServer, "");
+    PREF_SetDefaultIntPref(pref_proxyWaisPort, 0);
+    PREF_SetDefaultCharPref(pref_proxyNoProxiesOn, "");
+    PREF_SetDefaultCharPref(pref_padPacURL, "");
+    PREF_SetDefaultCharPref(pref_scriptName, "");
 
     if (NULL != aContainerApp) {
         XP_AppCodeName = NULL;
@@ -560,6 +584,77 @@ nsNetlibService::SetCookieString(nsIURL *aURL, const nsString& aCookie)
     delete []cookie;
     free_stub_context(stubContext);
     return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsNetlibService::GetProxyHTTP(nsString& aProxyHTTP) {
+    char *proxy = nsnull;
+    int32 port;
+    char outBuf[MAXHOSTNAMELEN + 8];
+    *outBuf = '\0';
+
+    if ( PREF_OK != PREF_CopyCharPref(pref_proxyHttpServer,&proxy) ) {
+        return NS_FALSE;
+    }
+
+    if ( PREF_OK != PREF_GetIntPref(pref_proxyHttpPort,&port) ) {
+        PR_FREEIF(proxy);
+        return NS_FALSE;
+    }
+
+    sprintf(outBuf,"%s:%d", proxy, port);
+    PR_FREEIF(proxy);
+    aProxyHTTP.SetString(outBuf);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNetlibService::SetProxyHTTP(nsString& aProxyHTTP) {
+    nsresult rv = NS_OK;
+    PRInt32 port;
+    nsString nsSPort;
+    char *csPort = nsnull;
+    char *proxy = nsnull;
+    nsString nsSProxy;
+    PRInt32 colonIdx;
+    PRUnichar colon = ':';
+
+    if (aProxyHTTP.Length() < 1) {
+        NET_SelectProxyStyle(PROXY_STYLE_NONE);
+        return NS_OK;
+    }
+
+    if ( (colonIdx = aProxyHTTP.Find(colon)) < 0 )
+        return NS_FALSE;
+
+    aProxyHTTP.Left(nsSProxy, colonIdx);
+    aProxyHTTP.Mid(nsSPort, colonIdx+1, aProxyHTTP.Length() - colonIdx);
+
+    proxy = nsSProxy.ToNewCString();
+    if (!proxy)
+        return NS_FALSE;
+    csPort = nsSPort.ToNewCString();
+    if (!csPort) {
+        delete proxy;
+        return NS_FALSE;
+    }
+
+    port = atoi(csPort);
+
+    if ( PREF_OK != PREF_SetCharPref(pref_proxyHttpServer, proxy) ) {
+        rv = NS_FALSE;
+    }
+    if ( PREF_OK != PREF_SetIntPref(pref_proxyHttpPort, port) ) {
+        rv = NS_FALSE;
+    }
+    delete proxy;
+    delete csPort;
+
+    NET_SelectProxyStyle(PROXY_STYLE_MANUAL);
+
+    return rv;
 }
 
 void nsNetlibService::SchedulePollingTimer()

@@ -30,6 +30,7 @@
 #include "libmocha.h"		/* For the onHelp handler */
 #include "prefapi.h"		/* For the onHelp handler */
 #include "fe_proto.h"
+#include "mkprefs.h"
 
 extern char * INTL_ResourceCharSet(void);
 
@@ -43,8 +44,6 @@ extern int MK_CANT_LOAD_HELP_TOPIC;
 #define DEFAULT_HELP_WINDOW_WIDTH  400
 
 #define PREF_NSCP_HELP_URL		   "http://help.netscape.com/nethelp/"	/* This must include the trailing slash */
-#define PREF_DEFAULT_HELP_LOC_ID   "general.help_source.site"	/* FIXME: Shouldn't this be defined somewhere else? */
-#define PREF_DEFAULT_HELP_URL_ID   "general.help_source.url"	/* FIXME: Shouldn't this be defined somewhere else? */
 
 /* Tokens within the .hpf file to parse for */
 
@@ -201,7 +200,7 @@ net_get_default_help_URL(char **pHelpBase)
 	int		success;
 	int32	helpType;
 	
-	if ((success = PREF_GetIntPref(PREF_DEFAULT_HELP_LOC_ID, &helpType))
+	if ((success = PREF_GetIntPref(pref_generalHelpSource, &helpType))
 		== PREF_NOERROR) {
 
 		switch (helpType) {
@@ -213,7 +212,7 @@ net_get_default_help_URL(char **pHelpBase)
 				*pHelpBase = FE_GetNetHelpDir();
 				break;
 			case 2:
-				success = PREF_CopyCharPref(PREF_DEFAULT_HELP_URL_ID, pHelpBase);
+				success = PREF_CopyCharPref(pref_generalHelpSourceUrl, pHelpBase);
 				break;
 			default:
 				success = PREF_ERROR;

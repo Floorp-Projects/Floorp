@@ -49,6 +49,9 @@ public:
     NS_IMETHOD GetCookieString(nsIURL *aURL, nsString& aCookie);
     NS_IMETHOD SetCookieString(nsIURL *aURL, const nsString& aCookie);
 
+    NS_IMETHOD GetProxyHTTP(nsString& aProxyHTTP);
+    NS_IMETHOD SetProxyHTTP(nsString& aProxyHTTP);
+
 protected:
     virtual ~nsNetlibService();
 

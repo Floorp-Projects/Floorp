@@ -43,10 +43,7 @@
 #define MKPADPAC_H
 
 #include "xp.h"
-
-/* Pad js pref names */
-#define pref_padPacURL "network.padPacURL"
-#define pref_enablePad "network.enablePad"
+#include "mkprefs.h"
 
 /* Global pad variables */
 extern PRBool foundPADPAC;

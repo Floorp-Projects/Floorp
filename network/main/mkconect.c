@@ -31,6 +31,7 @@
 #include "prsystem.h"
 #include "prefapi.h"
 #include "mkpadpac.h"
+#include "mkprefs.h"
 
 #if defined(XP_WIN)
 #define ASYNC_DNS
@@ -159,7 +160,6 @@ typedef struct _DNSEntry {
 PRIVATE char   *  net_local_hostname=0;     /* The name of this host */
 PRIVATE XP_List * dns_list=0;
 
-#define pref_dnsExpiration "network.dnsCacheExpiration"
 PRIVATE int32 dnsCacheExpiration=0;
 
 #define DEFAULT_TCP_CONNECT_TIMEOUT 35  /* seconds */
@@ -1098,11 +1098,11 @@ NET_BeginConnect (CONST char   *url,
 	if(!setupSocks) {
 		setupSocks=TRUE;
 		if (NET_GetProxyStyle() == PROXY_STYLE_MANUAL) {
-            if ( (PREF_OK != PREF_CopyCharPref("network.hosts.socks_server",&proxy))
+            if ( (PREF_OK != PREF_CopyCharPref(pref_socksServer,&proxy))
                 || !proxy || !*proxy ) {
                 NET_SetSocksHost(NULL); /* NULL is ok */
             } else {
-                if ( PREF_OK == PREF_GetIntPref("network.hosts.socks_serverport",&iPort) ) {
+                if ( PREF_OK == PREF_GetIntPref(pref_socksPort,&iPort) ) {
 				    PR_snprintf(text, sizeof(text), "%s:%d", proxy, iPort);  
 				    NET_SetSocksHost(text);
                 }
@@ -1187,7 +1187,7 @@ HG28879
 			/* Tell the FE about the failure */
             int32 len = PL_strlen(XP_GetString(XP_PROGRESS_UNABLELOCATE));
 			char * buf;
-			if( (PREF_OK == PREF_CopyCharPref("network.hosts.socks_server",&prefSocksHost))
+			if( (PREF_OK == PREF_CopyCharPref(pref_socksServer,&prefSocksHost))
                 && prefSocksHost)
 			{
 				len += PL_strlen(prefSocksHost);
