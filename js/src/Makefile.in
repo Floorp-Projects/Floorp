@@ -222,7 +222,11 @@ ifeq ($(OS_ARCH), OSF1)
 LDFLAGS		+= -lc_r
 endif
 ifeq ($(OS_ARCH), QNX)
+ifeq ($(OS_TARGET), NTO)
+DASH_R		= -r
+else
 DASH_R		=
+endif
 endif
 ifeq ($(OS_ARCH), SunOS)
 ifeq ($(OS_RELEASE),4.1)
