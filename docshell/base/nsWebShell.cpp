@@ -3014,6 +3014,11 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
   rv = channel->GetURI(getter_AddRefs(aURL));
   if (NS_FAILED(rv)) return rv;
 
+  /* one of many safeguards that prevent death and destruction if
+     someone is so very very rude as to bring this window down
+     during this load handler. */
+  nsCOMPtr<nsIWebShell> kungFuDeathGrip(this);
+
 //if (!mProcessedEndDocumentLoad) {
   if (loader == mDocLoader) {
     mProcessedEndDocumentLoad = PR_TRUE;
