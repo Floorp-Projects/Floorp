@@ -22,7 +22,7 @@ use File::Path;     # for rmtree();
 use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 
-$::UtilsVersion = '$Revision: 1.173 $ ';
+$::UtilsVersion = '$Revision: 1.174 $ ';
 
 package TinderUtils;
 
@@ -1042,7 +1042,7 @@ sub run_all_tests {
 
     # Mozilla alive test
     #
-    # Note: Bloat & MailNews tests depend this on working.
+    # Note: Bloat & other tests depend this on working.
     # Only disable this test if you know it passes and are
     # debugging another part of the test sequence.  -mcafee
     #
@@ -1087,33 +1087,6 @@ sub run_all_tests {
     # New and improved bloat/leak test (based on trace-malloc)
     if ($Settings::BloatTest2 and $test_result eq 'success') {
         $test_result = BloatTest2($binary, $build_dir, $Settings::BloatTestTimeout);
-    }
-
-    # MailNews test needs this preference set:
-    #   user_pref("signed.applets.codebase_principal_support",true);
-    # First run gives two dialogs; they set this preference:
-    #   user_pref("security.principal.X0","[Codebase http://www.mozilla.org/quality/mailnews/popTest.html] UniversalBrowserRead=4 UniversalXPConnect=4");
-    #
-    # Only do pop3 test now.
-    #
-    if ($Settings::MailNewsTest and $test_result eq 'success') {
-
-        my $mail_url = "http://www.mozilla.org/quality/mailnews/popTest.html";
-
-        my $cmd = "$binary_basename $mail_url";
-
-        # Stuff prefs in here.
-        if (system("\\grep -s signed.applets.codebase_principal_support $pref_file > /dev/null")) {
-            open PREFS, ">>$pref_file" or die "can't open $pref_file ($?)\n";
-            print PREFS "user_pref(\"signed.applets.codebase_principal_support\", true);\n";
-            print PREFS "user_pref(\"security.principal.X0\", \"[Codebase $mail_url] UniversalBrowserRead=4 UniversalXPConnect=4\");";
-            close PREFS;
-        }
-
-        $test_result = FileBasedTest("MailNewsTest", $build_dir, $binary_dir,
-                                     $cmd,  90,
-                                     "POP MAILNEWS TEST: Passed", 1,
-                                     1);  # Timeout is Ok.
     }
 
     # Mail bloat/leak test.
@@ -1166,9 +1139,7 @@ sub run_all_tests {
                           0);  # Timeout means failure.
     }
 
-    # Layout performance test.  URL is currently inside netscape.com,
-    # bug to push this out to mozilla.org is:
-    #   http://bugzilla.mozilla.org/show_bug.cgi?id=75073
+    # Layout performance test.
     if ($Settings::LayoutPerformanceTest and $test_result eq 'success') {
       my $layout_time;
       my $layout_time_details;
