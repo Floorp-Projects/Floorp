@@ -496,9 +496,9 @@ NS_IMETHODIMP nsMsgMessageDataSource::ArcLabelsOut(nsIRDFResource* source,
 
 		PRBool showThreads;
     rv = GetIsThreaded(&showThreads);
-		if(NS_FAILED(rv)) return rv;
-
-		if(showThreads)
+    // handle this failure gracefully - not all datasources have views.
+    
+		if(NS_SUCCEEDED(rv) && showThreads)
 		{
 			arcsArray = kThreadsArcsOutArray;
 		}
@@ -513,7 +513,7 @@ NS_IMETHODIMP nsMsgMessageDataSource::ArcLabelsOut(nsIRDFResource* source,
 	}
 
 	rv = NS_NewArrayEnumerator(labels, arcsArray);
-	if(NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
   
 	return NS_OK;
 }
