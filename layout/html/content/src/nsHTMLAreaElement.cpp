@@ -229,7 +229,8 @@ nsHTMLAreaElement::HandleDOMEvent(nsIPresContext* aPresContext,
                                   PRUint32 aFlags,
                                   nsEventStatus* aEventStatus)
 {
-  return mInner.HandleDOMEventForAnchors(aPresContext, 
+  return mInner.HandleDOMEventForAnchors(this,
+                                         aPresContext, 
                                          aEvent, 
                                          aDOMEvent, 
                                          aFlags, 

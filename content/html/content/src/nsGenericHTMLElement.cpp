@@ -32,6 +32,7 @@
 #include "nsIDOMDocumentFragment.h"
 #include "nsIDOMAttr.h"
 #include "nsIDOMEventReceiver.h"
+#include "nsIDOMHTMLAnchorElement.h"
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMDocumentFragment.h"
@@ -1074,7 +1075,8 @@ nsGenericHTMLElement::SetDocumentForFormControls(nsIDocument* aDocument,
 }
 
 nsresult
-nsGenericHTMLElement::HandleDOMEventForAnchors(nsIPresContext* aPresContext,
+nsGenericHTMLElement::HandleDOMEventForAnchors(nsIContent* aOuter,
+                                               nsIPresContext* aPresContext,
                                                nsEvent* aEvent,
                                                nsIDOMEvent** aDOMEvent,
                                                PRUint32 aFlags,
@@ -1093,6 +1095,12 @@ nsGenericHTMLElement::HandleDOMEventForAnchors(nsIPresContext* aPresContext,
     nsAutoString href;
     nsresult result = GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::href, href);
     if (NS_CONTENT_ATTR_HAS_VALUE == result) {
+      // XXXwaterson want a generic "anchor" interface here?
+      nsCOMPtr<nsIDOMHTMLAnchorElement> anchor = do_QueryInterface(aOuter);
+      if (anchor) {
+        anchor->GetHref(href);
+      }
+
       switch (aEvent->message) {
       case NS_MOUSE_LEFT_BUTTON_DOWN:
         {
