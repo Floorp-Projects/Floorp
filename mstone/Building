@@ -20,5 +20,21 @@ and optimized versions.  Perl must already be built and installed in \.
 
 Helper components
 
-Mstone can build and package perl, gnuplot, and gd.  This is currently
-being re-worked, but should be fixed soon.
+Mstone can build and package perl, gnuplot, and gd.  These will be
+automatically built and packaged if they are present.
+
+Unpack gd1.3 or later in the mstone directory.  You can probably find
+gd from here: http://www.boutell.com/gd/.  The directory should look
+like gd1.3.  Right now we need the (obsolete) version 1.3 to generate
+GIF files (without patented run-length coding).  The scripts need to
+be updated to be able to handle PNG files, too.
+
+Unpack gnuplot 3.7 or later in the mstone directory.  You can probably
+find gnuplot from http://www.cs.dartmouth.edu/gnuplot_info.html.  The
+directory should look like gnuplot-3.7 (the exact version should not
+matter).  Gnuplot requres gd to generate GIFs (which is what we need).
+
+Unpack perl 5.005 or later in the mstone directory.  You can probably
+find perl from http://www.perl.com/pub/language/info/software.html.
+The directory should look like perl5.005_03 (the exact version should
+not matter).

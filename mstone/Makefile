@@ -25,7 +25,9 @@ GNUPLOTFILES	= gnuplot gnuplot_x11 gnuplot.1 gnuplot.gih Copyright
 
 VERSION		= 4.2
 TARBALL		= mstone-$(VERSION)-$(NSARCH)$(OBJDIR_TAG).tar.gz
+ZIPFILE		= mstone-$(VERSION)-$(NSARCH)$(OBJDIR_TAG).zip
 TARBALL_ALL	= mstone-$(VERSION)-all-$(OBJDIR_TAG).tar.gz
+ZIPFILE_ALL	= mstone-$(VERSION)-all-$(OBJDIR_TAG).zip
 
 NTFILES		= mstone.bat process.bat setup.bat
 
@@ -59,13 +61,13 @@ mailclient::
 	cd src; $(MAKE) BUILD_VARIANT=$(BUILD_VARIANT) OBJDIR=../$(OBJDIR) PKGDIR=../$(PKGDIR) all
 
 # Use our top level makefiles to drive the component builds
-libgd::
+libgd $(OBJDIR)/gd/libgd.a::
 	$(MAKE) -f gd.mk LIBGD_DIR=$(LIBGD_DIR) libgd
 
-gnuplot::
+gnuplot $(OBJDIR)/gnuplot/gnuplot::
 	$(MAKE) -f gnuplot.mk LIBGD_DIR=$(LIBGD_DIR) GNUPLOT_DIR=$(GNUPLOT_DIR) gnuplot
 
-perl::
+perl $(OBJDIR)/perl/perl::
 	$(MAKE) -f perl.mk PERL_DIR=$(PERL_DIR) PERL_REV=$(PERL_REV) perl
 
 # Create packaging binary directories
@@ -90,14 +92,18 @@ $(PKGDIR)/gd:
 $(PKGDIR)/gnuplot:
 	mkdir -p $(PKGDIR)/gnuplot
 
+$(PKGDIR)/perl:
+	mkdir -p $(PKGDIR)/perl
+
 
 # operating system independent share-files (at least for Unix)
 pkg-share-files:: mkpkgdirs
 	@$(ECHO) "\n===== [`date`] making package share-files...\n"
 	$(CP) mstone setup process $(PKGDIR)
-	(cd $(PKGDIR); [ ! -f cleanup ] || rm -f cleanup; ln -s setup cleanup)
-	(cd $(PKGDIR); [ ! -f checktime ] || rm -f checktime; ln -s setup checktime)
-	(cd $(PKGDIR); [ ! -f timesync ] || rm -f timesync; ln -s setup timesync)
+	(cd $(PKGDIR); [ ! -f setup ] || rm -f setup; ln -s mstone setup)
+	(cd $(PKGDIR); [ ! -f cleanup ] || rm -f cleanup; ln -s mstone cleanup)
+	(cd $(PKGDIR); [ ! -f checktime ] || rm -f checktime; ln -s mstone checktime)
+	(cd $(PKGDIR); [ ! -f timesync ] || rm -f timesync; ln -s mstone timesync)
 	$(CP) nsarch bin/*.pl $(PKGDIR)/bin
 	$(CP) conf/*.wld conf/*.html $(PKGDIR)/conf
 	$(CP) data/*.msg $(PKGDIR)/data
@@ -130,16 +136,18 @@ pkg-arch-files::	$(PKGDIR)/bin $(OBJDIR)/mailclient
 	-$(STRIP) $(PKGDIR)/bin/mailclient
 	@$(ECHO) "\n===== [`date`] making package arch-files done.\n"
 
-pkg-perl-files:: $(OBJDIR)/perl/perl
+pkg-perl-files:: $(PKGDIR)/bin $(OBJDIR)/perl/perl
 	@$(ECHO) "\n===== [`date`] making package perl-files...\n"
-	@[ -d $(PKGDIR)/perl ] || mkdir -p $(PKGDIR)/perl
-	$(MAKE) -f perl.mk PERL_DIR=$(PERL_DIR) PERL_REV=$(PERL_REV) BUILD_VARIANT=$(BUILD_VARIANT) OBJDIR=$(OBJDIR) PKGDIR=$(PKGDIR) package-perl
+	$(MAKE) -f perl.mk PERL_DIR=$(PERL_DIR) PERL_REV=$(PERL_REV) \
+		BUILD_VARIANT=$(BUILD_VARIANT) \
+		OBJDIR=$(OBJDIR) PKGDIR=$(PKGDIR) package-perl
 	find $(PKGDIR)/perl/lib -name .packlist -exec rm {} \; -print
 	-$(STRIP) $(PKGDIR)/perl/bin/perl
 	-$(STRIP) $(PKGDIR)/perl/bin/a2p
 	@$(ECHO) "\n===== [`date`] making package perl-files done.\n"
 
-# for combined packaging, this shouldnt be part of pkg-arch-files (special case)
+# for combined packaging, this should not be part of pkg-arch-files
+# perl is handled seperately do to its size
 ifneq (,$(PERL_DIR))
 pkg::	pkg-perl-files
 endif
@@ -159,30 +167,38 @@ build/$(TARBALL):	 pkg-share-files pkg-arch-files
 # We have to nuke some old parts, because permissions wont allow overwrites
 # Finally, dont ship perl development headers and libraries
 all_DBG all_OPT::
-	@$(ECHO) "\n===== [`date`] unified packaging for $@...\n"
+	@$(ECHO) "===== [`date`] unified packaging for $@..."
 	$(MAKE) NSARCH=$@ OBJDIR_TAG='' PKGDIR=$(topsrcdir)/build/package/$@.OBJ/mstone pkg-share-files
 	./ospkg.sh $@.OBJ $(notdir $(shell ls -d build/package/[A-Z]*$(subst all,,$@.OBJ)))
 	[ -d $(topsrcdir)/build/package/$@.OBJ/mstone/bin/WINNT4.0 ] \
 		&& cp -p $(NTFILES) $(topsrcdir)/build/package/$@.OBJ/mstone; :
-	@$(ECHO) "\n===== [`date`] making unified compressed tar file...\n"
 	-rm -f ./build/mstone-$(VERSION)-$@.tar.gz
-	(cd ./build/package/$@.OBJ && tar cf - . \
-		| gzip > ../../mstone-$(VERSION)-$@.tar.gz)
-	@$(ECHO) "\n===== [`date`] making unified packaging for $@ done.\n"
+	cd ./build/package/$@.OBJ && tar cf - . \
+		| gzip > ../../mstone-$(VERSION)-$@.tar.gz
+	-rm -f ./build/mstone-$(VERSION)-$@.zip
+	cd ./build/package/$@.OBJ && zip -r -q ../../mstone-$(VERSION)-$@.zip .
+	@$(ECHO) "===== [`date`] unified packaging for $@ done."
 
 
 ########################################################################
-# Install and re-map short Linux name to standard Netscape convention
+# Copy all the packaged trees to the distribution site
+# Copy in the unified tarball and zip file
+# Link mstone to mailstone for Netscape back compatibility
+# Re-map short Linux name to standard Netscape convention
 dist::
 	@[ "$(DIST)" != "" ] || ($(MAKE) usage && /bin/false)
 	@[ ! -d "$(DIST)" ] || ($(ECHO) "Error: $(DIST) already exists" && \
 		$(MAKE) usage && /bin/false)
 	mkdir -p $(DIST)
-	cd build/package; $(CP) -R * $(DIST)
+	cp -p build/$(TARBALL_ALL) build/$(ZIPFILE_ALL) $(DIST)/
+	(cd build/package; tar cf - *.OBJ) | (cd $(DIST); tar xf - )
+	for l in $(DIST)/*_???.OBJ ; do \
+		(cd $$l; ln -s mstone mailstone); done
 	cd $(DIST); for l in Linux*_???.OBJ ; do \
 		nn=`echo $$l | sed -e 's/_OPT/_glibc_PTH_OPT/' | sed -e 's/_DBG/_glibc_PTH_DBG/'`; \
 		ln -s $$l $$nn; done
 
+# since the default is debug mode, start a make with the right mode
 release::
 	@$(ECHO) "\n===== [`date`] making release build...\n"
 	$(MAKE) BUILD_VARIANT=release OBJDIR_TAG=_OPT targets
@@ -193,11 +209,13 @@ rpackage:: release
 	$(MAKE) BUILD_VARIANT=release OBJDIR_TAG=_OPT pkg
 	@$(ECHO) "\n===== [`date`] making release package done.\n"
 
+# since the default is debug mode, this can just work off a dependency
 debug::	targets
 #	@$(ECHO) "\n===== [`date`] making debug build...\n"
 #	$(MAKE) BUILD_VARIANT=debug OBJDIR_TAG=_DBG targets
 #	@$(ECHO) "\n===== [`date`] making debug build done.\n"
 
+# since the default is debug mode, this can just work off a dependency
 dpackage:: pkg
 #dpackage:: debug
 #	@$(ECHO) "\n===== [`date`] making debug package...\n"

@@ -42,15 +42,18 @@ do
 	[ -d $pkgdir/perl ] || mkdir -p $pkgdir/perl
 	cp -pf $srcdir/perl/Artistic $pkgdir/perl/
 
+	# we dont pull everything in, just the potentially useful parts
 	for subdir in man/man1 \
 		lib/$perlver lib/$perlver/$perlarch \
-		lib/$perlver/Time lib/$perlver/Sys \
+		lib/$perlver/Time lib/$perlver/Term lib/$perlver/Class \
+		lib/$perlver/Sys lib/$perlver/Data lib/$perlver/Getopt \
+		lib/$perlver/Test lib/$perlver/Text \
 		lib/$perlver/File lib/$perlver/File/Spec \
 		lib/$perlver/CGI lib/$perlver/Net \
 		lib/$perlver/$perlarch/auto/DynaLoader \
 		lib/$perlver/$perlarch/auto/Socket \
 		lib/$perlver/$perlarch/auto/re \
-		lib/$perlver/$perlarch/auto/POSIX
+		lib/$perlver/$perlarch/auto/attrs
 	do
 	    [ -d $srcdir/perl/$subdir ] || continue;
 	    [ -d $pkgdir/perl/$subdir ] || mkdir -p $pkgdir/perl/$subdir
@@ -58,6 +61,7 @@ do
 	    cp -pf $srcdir/perl/$subdir/*.* $pkgdir/perl/$subdir
 	done
 
+	# where we put multi-os perl binaries
 	perlbin=$pkgdir/perl/arch/$arch
 	[ -d $perlbin ] || mkdir -p $perlbin
 	cp -p $srcdir/perl/bin/* $perlbin/

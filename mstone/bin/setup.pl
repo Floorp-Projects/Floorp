@@ -197,7 +197,7 @@ sub configWorkload {
 }
 
 # See if license file has been displayed
-unless (-f ".license" ) {
+if (($mode ne "cleanup") && (! -f ".license" )) {
     fileShow ("LICENSE");
     print "\nDo you agree to the terms of the license? (yes/no) ";
     my $ans = <STDIN>;
@@ -212,12 +212,12 @@ unless (-f ".license" ) {
     close (LIC);
 }
 
-if ($mode =~ /config$/) {	# re-run config
+if ($mode eq "config") {	# re-run config
     configWorkload ();
 
     print "\nMake any additional changes to $params{WORKLOAD} and then re-run 'setup'\n";
     exit 0;
-} else {			# check if configured
+} elsif ($mode ne "cleanup") {	# check if configured
     my $unconf = 0; # see if default values are in use
     foreach $section (@workload) {
 	($section->{SERVER})
@@ -246,7 +246,7 @@ if ($mode =~ /config$/) {	# re-run config
     }
 }
 
-if ($mode =~ /timesync$/) {
+if ($mode eq "timesync") {
     if ($params{NT}) {
 	print "Timesync has no effect on NT\n";
 	exit 0;
@@ -255,7 +255,7 @@ if ($mode =~ /timesync$/) {
     $mon += 1;			# adjust from 0 based to std
     $systime = sprintf ("%02d%02d%02d%02d%04d.%02d",
 		     $mon, $mday, $hour, $min, 1900+$year, $sec);
-} elsif ($mode =~ /checktime$/) {
+} elsif ($mode eq "checktime") {
     if ($params{NT}) {		# if running on NT, then only single client
 	print "Checktime not needed on NT\n";
 	exit 0;
@@ -271,7 +271,7 @@ if ($mode =~ /timesync$/) {
 	    close MAKEIT;
 	}
     }
-} elsif (($mode =~ /setup$/) || ($mode =~ /cleanup$/)) {
+} elsif (($mode eq "setup") || ($mode eq "cleanup")) {
     @msgs = <data/*.msg>;
     foreach (@files = @msgs) { s/data\/// }
     print "Found these message files:\n@files\n\n";
@@ -302,21 +302,21 @@ foreach $section (@workload) {
 	    $tempdir = $params{TEMPDIR};
 	}
 	# most time critical first
-	if ($mode =~ /timesync$/) {
+	if ($mode eq "timesync") {
 	    next if ($cli =~ /^localhost$/i); # dont reset our own time
 	    # run all these in parallel to minimize skew
 	    next if ($section->{ARCH} eq "NT4.0");
 	    forkproc ($rsh, $cli, "date $systime");
 	}
 
-	elsif ($mode =~ /checktime$/) {
+	elsif ($mode eq "checktime") {
 	    # run all these in parallel to minimize skew
 	    forkproc ($rsh, $cli, ($section->{ARCH} eq "NT4.0")
 		      ? "time" : "date",
 		      "/dev/null", "$tmpbase/$cli.tim");
 	}
 
-	elsif ($mode =~ /setup$/) {
+	elsif ($mode eq "setup") {
 	    my ($clibin) = split /\s/, (($section->{COMMAND})
 					? $section->{COMMAND}
 					: $params{CLIENTCOMMAND});
@@ -352,7 +352,7 @@ foreach $section (@workload) {
 	    print "\n";
 	}
 
-	elsif ($mode =~ /cleanup$/) {
+	elsif ($mode eq "cleanup") {
 	    if ($params{DEBUG}) {	# get debug files
 		print "Cleaning up debug files on $cli\n";
 		my $rcmd = ($section->{ARCH} eq "NT4.0") ? "DEL" : "$rmcmd";
@@ -389,7 +389,7 @@ foreach $section (@workload) {
 }
 
 # wait for children to finish
-if (($mode =~ /timesync$/) || ($mode =~ /checktime$/)) {
+if (($mode eq "timesync") || ($mode eq "checktime")) {
     $pid = wait();
     while ($pid != -1) {
 	$pid = wait();
@@ -397,7 +397,7 @@ if (($mode =~ /timesync$/) || ($mode =~ /checktime$/)) {
 }
 
 # Print the results of the time checks
-if ($mode =~ /checktime$/) {
+if ($mode eq "checktime") {
     print "Time from each client:\n";
     foreach $section (@workload) {
 	next unless ($section->{sectionTitle} =~ /CLIENT/o);
