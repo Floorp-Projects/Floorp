@@ -1402,27 +1402,35 @@ function toggleAffectedChrome(aHide)
   // chrome to toggle includes:
   //   (*) menubar
   //   (*) navigation bar
-  //   (*) personal toolbar
+  //   (*) bookmarks toolbar
   //   (*) tab browser ``strip''
+  //   (*) sidebar
 
   if (!gChromeState)
     gChromeState = new Object;
   var navToolbox = document.getElementById("navigator-toolbox");
   navToolbox.hidden = aHide;
-  var theTabbrowser = document.getElementById("content"); 
-
   if (aHide)
   {
     // going into print preview mode
     //deal with tab browser
-    gChromeState.hadTabStrip = theTabbrowser.getStripVisibility();
-    theTabbrowser.setStripVisibilityTo(false);
+    gChromeState.hadTabStrip = gBrowser.getStripVisibility();
+    gBrowser.setStripVisibilityTo(false);
+    
+    var sidebar = document.getElementById("sidebar-box");
+    gChromeState.sidebarOpen = !sidebar.hidden;
+    if (gChromeState.sidebarOpen) {
+      toggleSidebar();
+    }
   }
   else
   {
     // restoring normal mode (i.e., leaving print preview mode)
     //restore tab browser
-    theTabbrowser.setStripVisibilityTo(gChromeState.hadTabStrip);
+    gBrowser.setStripVisibilityTo(gChromeState.hadTabStrip);
+    if (gChromeState.sidebarOpen) {
+      toggleSidebar();
+    }
   }
 }
 
@@ -1564,8 +1572,6 @@ function BrowserPrintPreview()
 
 function FinishPrintPreview()
 {
-  gInPrintPreviewMode = true;
-
   var browser = getBrowser();
   try {
     var ifreq = _content.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
@@ -1597,6 +1603,7 @@ function FinishPrintPreview()
     // Unfortunately this will also consume helpful failures, so add a
     // dump(e); // if you need to debug
   }
+  gInPrintPreviewMode = true;
 }
 
 
@@ -3190,6 +3197,8 @@ nsBrowserContentListener.prototype =
 }
 
 function toggleSidebar(aCommandID) {
+  if (gInPrintPreviewMode)
+    return;
   var sidebarBox = document.getElementById("sidebar-box");
   if (!aCommandID)
     aCommandID = sidebarBox.getAttribute("sidebarcommand");
