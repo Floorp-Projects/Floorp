@@ -23,6 +23,7 @@ DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
+DIRS    = src public
 
 include $(DEPTH)/config/autoconf.mk
 
