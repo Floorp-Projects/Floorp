@@ -340,6 +340,14 @@ nsresult nsEventListenerManager::GetIdentifiersForType(const nsString& aType, ns
     aIID = kIDOMPaintListenerIID;
     *aFlags = NS_EVENT_BITS_PAINT_PAINT;
   } // extened this to handle IME related events
+  else if (aType == "construct") {
+    aIID = kIDOMLoadListenerIID;
+    *aFlags = NS_EVENT_BITS_LOAD_CONSTRUCT;
+  }
+  else if (aType == "destruct") {
+    aIID = kIDOMLoadListenerIID;
+    *aFlags = NS_EVENT_BITS_LOAD_DESTRUCT;
+  }
   else {
     return NS_ERROR_FAILURE;
   }
@@ -883,6 +891,8 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
 
     case NS_PAGE_LOAD:
     case NS_PAGE_UNLOAD:
+    case NS_POPUP_CONSTRUCT:
+    case NS_POPUP_DESTRUCT:
       if (nsnull != mLoadListeners) {
         if (nsnull == *aDOMEvent) {
           ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, aEvent);
@@ -918,6 +928,16 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
                     break;
                   case NS_PAGE_UNLOAD:
                     if (ls->mSubType & NS_EVENT_BITS_LOAD_UNLOAD) {
+                      correctSubType = PR_TRUE;
+                    }
+                    break;
+                  case NS_POPUP_CONSTRUCT:
+                    if (ls->mSubType & NS_EVENT_BITS_LOAD_CONSTRUCT) {
+                      correctSubType = PR_TRUE;
+                    }
+                    break;
+                  case NS_POPUP_DESTRUCT:
+                    if (ls->mSubType & NS_EVENT_BITS_LOAD_DESTRUCT) {
                       correctSubType = PR_TRUE;
                     }
                     break;
