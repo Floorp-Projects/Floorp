@@ -26,8 +26,6 @@ LIBRARY_NAME := widget$(MOZ_TOOLKIT)
 
 TOOLKIT_INCLUDES := -I$(srcdir)/../$(MOZ_TOOLKIT)
 
-#REQUIRES=util img xpcom raptor netlib
-
 LOCAL_INCLUDES := \
 	-I$(srcdir)/../xpwidgets \
 	$(TOOLKIT_INCLUDES) \
@@ -72,8 +70,6 @@ EXTRA_DSO_LDOPTS+=	       \
 
 EXTRA_DSO_LDOPTS += $(TOOLKIT_LIBS) $(XLDFLAGS) $(XLIBS)
 
-NO_STATIC_LIB=1
-
 include $(topsrcdir)/config/rules.mk
 
-$(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile
+$(LIBRARY) $(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile
