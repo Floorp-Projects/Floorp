@@ -38,6 +38,7 @@
 #include "nsIContentViewerFile.h"
 #include "nsIWebProgressListener.h"
 #include "nsWeakReference.h"
+#include "nsIPrintSettings.h"
 
 class nsMsgPrintEngine : public nsIMsgPrintEngine,
                          public nsIWebProgressListener,
@@ -75,4 +76,5 @@ protected:
   nsCOMPtr<nsIStringBundle>   mStringBundle;    // String bundles...
   nsCOMPtr<nsIMsgStatusFeedback> mFeedback;     // Tell the user something why don't ya'
   nsCOMPtr<nsIContentViewerFile> mViewerFile;
+  nsCOMPtr<nsIPrintSettings>     mPrintSettings;
 };
