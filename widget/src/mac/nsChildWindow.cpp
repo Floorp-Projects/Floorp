@@ -97,36 +97,33 @@ void nsChildWindow::CalcWindowRegions()
 	// clip the siblings out of the window region and visRegion 
 	if (mClipSiblings && mParent && !mIsTopWidgetWindow) {
 		// need to walk the siblings backwards, to get clipping right.
-		nsCOMPtr<nsIBidirectionalEnumerator> siblings = getter_AddRefs((nsIBidirectionalEnumerator*)mParent->GetChildren());
-		if (siblings && NS_SUCCEEDED(siblings->Last())) {
-			StRegionFromPool siblingRgn;
-			if (siblingRgn == nsnull)
-				return;
-			do {
-				// when we reach ourself, stop clipping.
-				nsCOMPtr<nsISupports> item;
-				if (NS_FAILED(siblings->CurrentItem(getter_AddRefs(item))) ||
-				    item == NS_STATIC_CAST(nsIWidget*, this))
-					break;
-				
-				nsCOMPtr<nsIWidget> sibling(do_QueryInterface(item));
-				PRBool visible;
-				sibling->IsVisible(visible);
-				if (visible) {	// don't clip if not visible.
-					// get sibling's bounds in parent's coordinate system.
-					nsRect siblingRect;
-					sibling->GetBounds(siblingRect);
-					
-					// transform from parent's coordinate system to widget coordinates.
-					siblingRect.MoveBy(-mBounds.x, -mBounds.y);
+		nsIWidget* sibling = mParent->GetLastChild();
+		NS_ASSERTION(sibling, "We're in the list, so it better have a last child!");
+		StRegionFromPool siblingRgn;
+		if (siblingRgn == nsnull)
+			return;
 
-					Rect macRect;
-					::SetRect(&macRect, siblingRect.x, siblingRect.y, siblingRect.XMost(), siblingRect.YMost());
-					::RectRgn(siblingRgn, &macRect);
-					::DiffRgn(mWindowRegion, siblingRgn, mWindowRegion);
-					::DiffRgn(mVisRegion, siblingRgn, mVisRegion);
-				}
-			} while (NS_SUCCEEDED(siblings->Prev()));
-		}
+		do {
+			if (sibling == NS_STATIC_CAST(nsIWidget*, this))
+				break;
+
+			PRBool visible;
+			sibling->IsVisible(visible);
+			if (visible) {	// don't clip if not visible.
+				// get sibling's bounds in parent's coordinate system.
+				nsRect siblingRect;
+				sibling->GetBounds(siblingRect);
+					
+				// transform from parent's coordinate system to widget coordinates.
+				siblingRect.MoveBy(-mBounds.x, -mBounds.y);
+
+				Rect macRect;
+				::SetRect(&macRect, siblingRect.x, siblingRect.y, siblingRect.XMost(), siblingRect.YMost());
+				::RectRgn(siblingRgn, &macRect);
+				::DiffRgn(mWindowRegion, siblingRgn, mWindowRegion);
+				::DiffRgn(mVisRegion, siblingRgn, mVisRegion);
+			}
+			sibling = sibling->GetPrevSibling();
+		} while (sibling);
 	}
 }

@@ -607,10 +607,8 @@ NS_IMETHODIMP nsWidget::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
     gtk_widget_set_usize(mWidget, aWidth, aHeight);
 
   ResetInternalVisibility();
-  PRInt32 childCount = mChildren.Count();
-  PRInt32 index;
-  for (index = 0; index < childCount; index++) {
-    NS_STATIC_CAST(nsWidget*, mChildren[index])->ResetInternalVisibility();
+  for (nsIWidget* kid = mFirstChild; kid; kid = kid->GetNextSibling()) {
+    NS_STATIC_CAST(nsWidget*, kid)->ResetInternalVisibility();
   }
 
   return NS_OK;
@@ -2243,19 +2241,8 @@ void
 nsWidget::ThemeChanged()
 {
   // Dispatch a NS_THEMECHANGED event for each of our children, recursively
-  nsCOMPtr<nsIEnumerator> children = dont_AddRef(GetChildren());
-  if (children) {
-    nsCOMPtr<nsISupports> isupp;
-
-    while (NS_SUCCEEDED(children->CurrentItem(getter_AddRefs(isupp))) && isupp) {
-
-      nsWidget* child = NS_REINTERPRET_CAST(nsWidget*, isupp.get());
-      child->ThemeChanged();
-
-      if (NS_FAILED(children->Next())) {
-        break;
-      }
-    }
+  for (nsIWidget* kid = mFirstChild; kid; kid = kid->GetNextSibling()) {
+    NS_STATIC_CAST(nsWidget*, kid)->ThemeChanged();
   }
 
   DispatchStandardEvent(NS_THEMECHANGED);
