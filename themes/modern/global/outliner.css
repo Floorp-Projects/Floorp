@@ -155,3 +155,16 @@ outlinercol:hover:active > .outlinercol-image-box {
 .outliner-colpicker-icon {
   list-style-image       : url("chrome://global/skin/tree/columnpicker.gif");
 }
+
+/* ::::: column picker :::::  */
+
+outlinerbody:-moz-outliner-twisty {
+  padding-right: 2px;
+  width: 10px; /* The image's width is 10 pixels */
+  list-style-image: url("chrome://global/skin/tree/twisty-clsd.gif");
+}
+
+outlinerbody:-moz-outliner-twisty(open) {
+  width: 10px; /* The image's width is 10 pixels */
+  list-style-image: url("chrome://global/skin/tree/twisty-open.gif");
+}
