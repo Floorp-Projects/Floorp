@@ -24,6 +24,7 @@
 #include "libimg.h"
 #include "nsCRT.h"
 #include "nsImageNet.h"
+#include "nsCOMPtr.h"
 
 static NS_DEFINE_IID(kIImageManagerIID, NS_IIMAGEMANAGER_IID);
 
@@ -45,18 +46,17 @@ public:
  // virtual nsImageType GetImageType(const char *buf, PRInt32 length);
 
 private:
-  ilISystemServices *mSS;
+  nsCOMPtr<ilISystemServices> mSS;
 };
 
 // The singleton image manager
 // This a service on XP_PC , mac and gtk. Need to convert 
 // it to a service on all the remaining platforms.
-static ImageManagerImpl*   gImageManager;
+static ImageManagerImpl*   gImageManager = nsnull;
 
 ImageManagerImpl::ImageManagerImpl()
 {
-  NS_NewImageSystemServices(&mSS);
-  NS_ADDREF(mSS);
+  NS_NewImageSystemServices(getter_AddRefs(mSS));
   IL_Init(mSS);
   IL_SetCacheSize(1024L * 1024L);
 }
@@ -64,7 +64,6 @@ ImageManagerImpl::ImageManagerImpl()
 ImageManagerImpl::~ImageManagerImpl()
 {
   IL_Shutdown();
-  NS_RELEASE(mSS);
   gImageManager = nsnull;
 }
 
