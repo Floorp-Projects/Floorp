@@ -29,10 +29,10 @@ Contributor(s): ______________________________________. -->
 		align="vertical"> 
  <toolbox>
    <xpmenubar chromeclass="menubar">
-	  <xpmenu value="File" shortcut="f">
+	  <xpmenu value="File" accesskey="f">
 	    <html:div><html:u>F</html:u>ile</html:div>
 		<xpmenuchildren> 
-		<xpmenu value="New" shortcut="n" key="newKey"> 
+		<xpmenu value="New" accesskey="n" key="newKey"> 
 		  <html:div><html:u>N</html:u>ew </html:div> 
 	      <spring flex="100%"/> 
 	      <html:div>Ctrl+N</html:div>
