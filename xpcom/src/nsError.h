@@ -19,6 +19,12 @@
 #ifndef nsError_h
 #define nsError_h
 
+/**
+ * Generic result data type
+ */
+
+typedef PRUint32 nsresult;
+
 /*
  * To add error code to your module, you need to do the following:
  *
@@ -47,6 +53,8 @@
 #define NS_ERROR_MODULE_GFX       3
 #define NS_ERROR_MODULE_WIDGET    4
 #define NS_ERROR_MODULE_CALENDAR  5
+#define NS_ERROR_MODULE_NETWORK   6
+#define NS_ERROR_MODULE_PLUGINS   7
 
 /**
  * @name Standard Error Handling Macros

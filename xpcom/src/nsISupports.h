@@ -59,12 +59,6 @@ typedef nsID nsIID;
   {0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46} }
 
 /**
- * Generic result data type
- */
-
-typedef PRUint32 nsresult;
-
-/**
  * Reference count values
  */
 typedef PRUint32 nsrefcnt;
