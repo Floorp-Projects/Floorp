@@ -44,7 +44,6 @@ final class InterpretedFunction extends NativeFunction implements Script
     SecurityController securityController;
     Object securityDomain;
     Scriptable[] functionRegExps;
-    boolean evalScriptFlag; // true if script corresponds to eval() code
 
     private InterpretedFunction(InterpreterData idata,
                                 Object staticSecurityDomain)

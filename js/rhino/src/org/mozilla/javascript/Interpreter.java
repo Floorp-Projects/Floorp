@@ -2134,7 +2134,7 @@ public class Interpreter
         InterpretedFunction fn;
         fn = InterpretedFunction.createFunction(cx, scope, parent, index);
         ScriptRuntime.initFunction(cx, scope, fn, fn.idata.itsFunctionType,
-                                   parent.evalScriptFlag);
+                                   parent.idata.evalScriptFlag);
     }
 
     static Object interpret(InterpretedFunction ifun,
@@ -3663,7 +3663,7 @@ switch (op) {
         } else {
             scope = callerScope;
             ScriptRuntime.initScript(fnOrScript, thisObj, cx, scope,
-                                     fnOrScript.evalScriptFlag);
+                                     fnOrScript.idata.evalScriptFlag);
         }
 
         if (idata.itsNestedFunctions != null) {

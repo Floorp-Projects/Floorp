@@ -118,6 +118,8 @@ final class InterpreterData implements Serializable, DebuggableScript
 
     InterpreterData parentData;
 
+    boolean evalScriptFlag; // true if script corresponds to eval() code
+
     public boolean isTopLevel()
     {
         return topLevel;

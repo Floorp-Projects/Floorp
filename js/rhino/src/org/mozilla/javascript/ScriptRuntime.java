@@ -2201,7 +2201,7 @@ public class ScriptRuntime {
         // mode.
         Script script = cx.compileString((String)x, new Interpreter(),
                                          reporter, sourceName, 1, null);
-        ((InterpretedFunction)script).evalScriptFlag = true;
+        ((InterpretedFunction)script).idata.evalScriptFlag = true;
 
         // if the compile fails, an error has been reported by the
         // compiler, but we need to stop execution to avoid
