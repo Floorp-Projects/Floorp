@@ -50,6 +50,7 @@ LINCS=-I$(PUBLIC)\raptor                \
       -I$(PUBLIC)\unicharutil           \
       -I$(PUBLIC)\intl                  \
       -I$(PUBLIC)\appcores				\
+      -I$(PUBLIC)\walletlib             \
       -I$(PUBLIC)\oji    
 #      -I..\browser
 
