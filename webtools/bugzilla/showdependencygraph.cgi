@@ -75,8 +75,6 @@ if (!defined($::FORM{'id'}) && !defined($::FORM{'doall'})) {
     exit;
 }    
 
-mkdir("data/webdot", 0777);
-
 my $filename = "data/webdot/$$.dot";
 my $urlbase = Param('urlbase');
 
@@ -189,10 +187,13 @@ if ($webdotbase =~ /^https?:/) {
 
 # Cleanup any old .dot files created from previous runs.
 my $since = time() - 24 * 60 * 60;
-foreach my $f (glob("data/webdot/*.dot 
-                     data/webdot/*.png 
-                     data/webdot/*.map"))
+# Can't use glob, since even calling that fails taint checks for perl < 5.6
+opendir(DIR, "data/webdot/");
+my @files = grep { /\.dot$|\.png$|\.map$/ && -f "data/webdot/$_" } readdir(DIR);
+closedir DIR;
+foreach my $f (@files)
 {
+    $f = "data/webdot/$f";
     # Here we are deleting all old files. All entries are from the
     # data/webdot/ directory. Since we're deleting the file (not following
     # symlinks), this can't escape to delete anything it shouldn't

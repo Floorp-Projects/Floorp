@@ -640,8 +640,8 @@ $::ENV{'PATH'} = $origPath;
 unless (-d 'data') {
     print "Creating data directory ...\n";
     # permissions for non-webservergroup are fixed later on
-    mkdir 'data', 0770; 
-    mkdir 'data/mimedump-tmp', 01777; 
+    mkdir 'data', 0770;
+    mkdir 'data/mimedump-tmp', 01777;
     open FILE, '>>data/comments'; close FILE;
     open FILE, '>>data/nomail'; close FILE;
     open FILE, '>>data/mail'; close FILE;
@@ -726,7 +726,16 @@ unless (-d 'graphs') {
 
         close(IN);
         close(OUT);
-    }    
+    }
+}
+
+unless (-d 'data/mining') {
+    mkdir 'data/mining', 0700;
+}
+
+unless (-d 'data/webdot') {
+    # perms/ownership are fixed up later
+    mkdir 'data/webdot', 0700;
 }
 
 if ($my_create_htaccess) {
@@ -771,10 +780,6 @@ END
     chmod $fileperm, "template/.htaccess";
   }
   if (!-e "data/webdot/.htaccess") {
-    if (!-d "data/webdot") {
-      mkdir "data/webdot", $dirperm;
-      chmod $dirperm, "data/webdot"; # the perms on mkdir don't seem to apply for some reason...
-    }
     print "Creating data/webdot/.htaccess...\n";
     open HTACCESS, ">data/webdot/.htaccess";
     print HTACCESS <<'END';
@@ -1073,7 +1078,10 @@ if ($my_webservergroup) {
     # userid.
     fixPerms('.htaccess', $<, $webservergid, 027); # glob('*') doesn't catch dotfiles
     fixPerms('data/.htaccess', $<, $webservergid, 027);
+    fixPerms('data/duplicates', $<, $webservergid, 027, 1);
+    fixPerms('data/mining', $<, $webservergid, 027, 1);
     fixPerms('data/template', $<, $webservergid, 007, 1); # webserver will write to these
+    fixPerms('data/webdot', $<, $webservergid, 007, 1);
     fixPerms('data/webdot/.htaccess', $<, $webservergid, 027);
     fixPerms('data/params', $<, $webservergid, 017);
     fixPerms('*', $<, $webservergid, 027);
@@ -1093,7 +1101,11 @@ if ($my_webservergroup) {
     my $gid = (split " ", $()[0];
     fixPerms('.htaccess', $<, $gid, 022); # glob('*') doesn't catch dotfiles
     fixPerms('data/.htaccess', $<, $gid, 022);
+    fixPerms('data/duplicates', $<, $gid, 022, 1);
+    fixPerms('data/mining', $<, $gid, 022, 1);
     fixPerms('data/template', $<, $gid, 000, 1); # webserver will write to these
+    fixPerms('data/webdot', $<, $gid, 000, 1);
+    chmod 01777, 'data/webdot';
     fixPerms('data/webdot/.htaccess', $<, $gid, 022);
     fixPerms('data/params', $<, $gid, 011);
     fixPerms('*', $<, $gid, 022);
