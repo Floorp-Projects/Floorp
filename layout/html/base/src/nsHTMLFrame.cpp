@@ -224,22 +224,6 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
       kidReflowState.reflowCommand = nsnull;
     }
 
-    // XXX TROY
-#if 0
-    // For a height that's 'auto', make the frame as big as the available space
-    // minus any top and bottom margins
-    if (NS_AUTOHEIGHT == kidReflowState.computedHeight) {
-      kidReflowState.computedHeight = aReflowState.availableHeight -
-        kidReflowState.computedMargin.top - kidReflowState.computedMargin.bottom;
-
-      // Computed height is for the content area so reduce it by the amount of
-      // space taken up by border and padding
-      nsMargin  borderPadding;
-      kidReflowState.ComputeBorderPaddingFor(myOnlyChild, &aReflowState, borderPadding);
-      kidReflowState.computedHeight -= borderPadding.top + borderPadding.bottom;
-    }
-#endif
-
     // Reflow the frame
     nsIHTMLReflow* htmlReflow;
     if (NS_OK == kidFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
