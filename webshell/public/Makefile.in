@@ -30,12 +30,11 @@ EXPORTS =					\
         nsIContentViewerContainer.h		\
         nsIDocumentLoader.h			\
 	nsIDocumentLoaderObserver.h		\
-        nsIDocumentViewer.h			\
 	nsILinkHandler.h			\
 	nsIThrobber.h				\
 	nsIWebShell.h				\
-	nsIWebShellServices.h		\
-    nsIClipboardCommands.h      \
+	nsIWebShellServices.h			\
+	nsIClipboardCommands.h			\
 	nsweb.h					\
 	nsIDocStreamLoaderFactory.h		\
 	$(NULL)
