@@ -63,7 +63,6 @@
 #include "nsHTMLAtoms.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIPrincipal.h"
-#include "nsIPrefBranch.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsNetCID.h"
@@ -278,60 +277,6 @@ nsContentSink::ScriptEvaluated(nsresult aResult,
   return NS_OK;
 }
 
-typedef PRBool (* PR_CALLBACK HeaderCallback)(nsIHttpChannel* aChannel);
-
-struct HeaderData {
-  char *name;
-  // The function returns true if and only if it's OK to process the header
-  HeaderCallback checkFunc;
-};
-
-PR_STATIC_CALLBACK(PRBool)
-ContentLocationOK(nsIHttpChannel* aChannel)
-{
-  // Some servers are known to send bogus content-location headers.
-  // We blacklist them here.  See bug 238654.
-  NS_PRECONDITION(aChannel, "Must have a channel");
-
-  nsCAutoString serverHeader;
-  nsresult rv =
-    aChannel->GetResponseHeader(NS_LITERAL_CSTRING("server"), serverHeader);
-  if (NS_FAILED(rv) || serverHeader.IsEmpty()) {
-    return PR_TRUE;
-  }
-  
-  nsCOMPtr<nsIPrefBranch> prefBranch =
-    do_GetService("@mozilla.org/preferences-service;1");
-  if (!prefBranch) {
-    return PR_TRUE;
-  }
-
-  nsXPIDLCString serverList;
-  rv = prefBranch->GetCharPref("browser.content-location.bogus-servers",
-                               getter_Copies(serverList));
-  if (NS_FAILED(rv) || serverList.IsEmpty()) {
-    return PR_TRUE;
-  }
-
-  // The server list is a comma-separated list; server names
-  // containing commas use periods instead.
-  serverHeader.ReplaceChar(',', '.');
-
-  PRUint32 cur = 0;
-  do {
-    PRInt32 comma = serverList.FindChar(',', cur);
-    if (comma == kNotFound) {
-      comma = serverList.Length();
-    }
-    if (StringBeginsWith(serverHeader, Substring(serverList, cur, comma-cur))) {
-      return PR_FALSE;
-    }
-    cur = comma + 1;
-  } while (cur < serverList.Length());
-  
-  return PR_TRUE;
-}
-
 nsresult
 nsContentSink::ProcessHTTPHeaders(nsIChannel* aChannel)
 {
@@ -340,29 +285,27 @@ nsContentSink::ProcessHTTPHeaders(nsIChannel* aChannel)
   if (!httpchannel) {
     return NS_OK;
   }
-  
-  static const HeaderData headers[] = {
-    { "link", nsnull },
-    { "default-style", nsnull }, 
-    { "content-style-type", nsnull },
-    { "content-location", ContentLocationOK },
+
+  static const char *const headers[] = {
+    "link",
+    "default-style",
+    "content-style-type",
     // add more http headers if you need
-    { 0, nsnull }
+    // XXXbz don't add content-location support without reading bug
+    // 238654 and its dependencies/dups first.
+    0
   };
   
-  const HeaderData *data = headers;
+  const char *const *name = headers;
   nsCAutoString tmp;
   
-  while (data->name) {
-    if (!data->checkFunc || data->checkFunc(httpchannel)) {
-      nsresult rv =
-        httpchannel->GetResponseHeader(nsDependentCString(data->name), tmp);
-      if (NS_SUCCEEDED(rv) && !tmp.IsEmpty()) {
-        nsCOMPtr<nsIAtom> key = do_GetAtom(data->name);
-        ProcessHeaderData(key, NS_ConvertASCIItoUCS2(tmp));
-      }
+  while (*name) {
+    nsresult rv = httpchannel->GetResponseHeader(nsDependentCString(*name), tmp);
+    if (NS_SUCCEEDED(rv) && !tmp.IsEmpty()) {
+      nsCOMPtr<nsIAtom> key = do_GetAtom(*name);
+      ProcessHeaderData(key, NS_ConvertASCIItoUCS2(tmp));
     }
-    ++data;
+    ++name;
   }
   
   return NS_OK;
@@ -459,16 +402,6 @@ nsContentSink::ProcessHeaderData(nsIAtom* aHeader, const nsAString& aValue,
       nsIPresShell* shell = mDocument->GetShellAt(0);
       if (shell) {
         shell->DisableThemeSupport();
-      }
-    }
-  }
-  else if (aHeader == nsHTMLAtoms::contentLocation) {
-    nsCOMPtr<nsIURI> newBase;
-    rv = NS_NewURI(getter_AddRefs(newBase), aValue, nsnull, mDocumentBaseURI);
-    if (NS_SUCCEEDED(rv)) {
-      rv = mDocument->SetBaseURI(newBase); // does security check
-      if (NS_SUCCEEDED(rv)) {
-        mDocumentBaseURI = mDocument->GetBaseURI();
       }
     }
   }
