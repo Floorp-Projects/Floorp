@@ -81,7 +81,6 @@
     <menupopup id="menu_View_Popup">
       <menu id="viewToolbar"/>
       <menuseparator/>
-      <!-- item with "disable=true" will be hidden -->
       <menuitem id="ShowExtraMarkup" value="&showExtraMarkup.label;" accesskey="&extraMarkup.accesskey;" oncommand="EditorSetDisplayStyle(0)" hidden="true"/>
       <menuitem id="HideExtraMarkup" value="&hideExtraMarkup.label;" accesskey="&extraMarkup.accesskey;" oncommand="EditorSetDisplayStyle(1)"/>
       <menuitem id="viewSourceMenuitem"/>
@@ -144,22 +143,6 @@
 				<observes element="Editor:Throbber" attribute="busy"/>
 			</titledbutton>
 		</box>
-  </toolbar>
-    
-  <toolbar id="TitleToolbar" persist="collapsed">
-    <box align="vertical">
-      <spring flex="1"/>
-      <html:label>Title:</html:label>
-      <spring flex="1"/>
-    </box>
-    <html:input type="text" id="PageTitleInput" flex="70%"/>
-    <box align="vertical">
-      <spring flex="3"/>
-      <html:label>Author:</html:label>
-      <spring flex="2"/>
-    </box>
-    <html:input type="text" id="PageAuthorInput" flex="30%"/>
-    <spring class="spacer-throbber" flex="5%"/>
   </toolbar>
   <toolbar id="FormatToolbar" persist="collapsed">
     <html:div>

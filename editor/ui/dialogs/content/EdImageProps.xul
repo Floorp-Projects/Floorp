@@ -50,7 +50,7 @@
   <xul:title
     class = "dialog"
     align = "left">
-    <xul:text value="&locationFieldset.label;"/>
+    <xul:text value="&locationBox.label;"/>
   </xul:title>
 
   <div style="width: 50px; height: 50px">
@@ -75,8 +75,8 @@
           onchange   = "doOverallEnabling()" />
       </td>  
       <td>  
-        <!-- from EdDialogOverlay.xul -->
-        <xul:titledbutton id="ChooseFile"/>
+        <!-- from EdDialogOverlay.xul - TEMP Style hack - use boxes -->
+        <xul:titledbutton id="ChooseFile" style="margin-left:5px;"/>
       </td>  
     </tr>  
     <tr>  
@@ -106,7 +106,7 @@
     class   = "push dialog" 
     id      = "MoreFewerButton" 
     align   = "left" 
-    onclick = "onMoreFewer()" 
+    onclick = "onMoreFewerImage()" 
     persist = "more"/>
   <xul:spring flex="100%"/>
   <!-- From EdDialogOverlay.xul -->
@@ -121,7 +121,7 @@
       <xul:title
         class="dialog"
         id="dimensionsLabel">
-        <xul:text value="&dimensionsFieldset.label;"/>
+        <xul:text value="&dimensionsBox.label;"/>
       </xul:title>
 	  <div>
       <!-- THIS NEEDS TO BE onchange RATHER THAN onclick -->
@@ -294,7 +294,7 @@
         <xul:title
           class = "dialog"
           id    = "spacingLabel"> 
-          <xul:text value="&spacingFieldset.label;"/>
+          <xul:text value="&spacingBox.label;"/>
         </xul:title>
         <!-- preferred width and height added to increase performance in boxes (otherwise buttons will jump!!) -evaughan -->
 	    <div style="width: 50px; height: 50px">

@@ -89,7 +89,7 @@ function AnchorNameExists(name)
 {
   anchorList = editorShell.editorDocument.anchors;
   if (anchorList) {
-    for (i=0; i < anchorList.length; i++) {
+    for (var i = 0; i < anchorList.length; i++) {
       if (anchorList[i].name == name)
         return true;
     }

@@ -43,7 +43,7 @@
   <html:script language="JavaScript" src="chrome://editor/content/EdHLineProps.js"/>
 
   <keyset id="keyset"/>
-  <html:fieldset><html:legend align="left">&dimensionsFieldset.label;</html:legend>
+  <titledbox><title><text align="left" value="&dimensionsBox.label;"/></title>
     <html:table>
       <html:tr>
         <html:td align="right">
@@ -69,14 +69,14 @@
         </html:td>
       </html:tr>
     </html:table>
-  </html:fieldset>
-  <html:fieldset><html:legend align="left">&alignmentFieldset.label;</html:legend>
+  </titledbox>
+  <titledbox><title><text align="left" value="&alignmentBox.label;"/></title>
     <box align="horizontal">
       <html:label><html:input type="radio" name="Align" id="leftAlign"/>&leftPopup.value;</html:label>
       <html:label><html:input type="radio" name="Align" id="centerAlign"/>&centerPopup.value;</html:label>
       <html:label><html:input type="radio" name="Align" id="rightAlign"/>&rightPopup.value;</html:label>
     </box>
-  </html:fieldset>
+  </titledbox>
   <box align="horizontal">
     <html:label><html:input type="checkbox" id="3dShading"/>&threeDShading.label;</html:label>
     <spring flex="100%"/>

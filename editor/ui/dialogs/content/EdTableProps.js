@@ -23,7 +23,14 @@
 
 //Cancel() is in EdDialogCommon.js
 var tagname = "table"
-var tableElement;
+var TableElement;
+var CellElement;
+var TabPanel;
+var TablePanel;
+var CellPanel;
+var dialog;
+var cellGlobalElement;
+var tableGlobalElement
 
 // dialog initialization code
 function Startup()
@@ -31,21 +38,81 @@ function Startup()
   if (!InitEditorShell())
     return;
 
-  doSetOKCancel(onOK, null);
+  dialog = new Object;
+  if (!dialog)
+  {
+    dump("Failed to create dialog object!!!\n");
+    window.close();
+  }
 
-  // Create dialog object to store controls for easy access
-  // GET EACH CONTROL -- E.G.:
-  //dialog.editBox = document.getElementById("editBox");
-
-  var table = editorShell.GetElementOrParentByTagName(tagname, null);
-  if(!tableElement)
+  TableElement = editorShell.GetElementOrParentByTagName("table", null);
+  CellElement = editorShell.GetElementOrParentByTagName("td", null);
+  // We allow a missing cell -- see below
+  if(!TableElement)
   {
     dump("Failed to get selected element or create a new one!\n");
     window.close();
   }
 
-  globalElement = tableElement.cloneNode(false);
+  var panelName;
+  TabPanel = document.getElementById("TabPanel");
+  TablePanel = document.getElementById("TablePanel");
+  CellPanel =  document.getElementById("CellPanel");
+  var TableTab = document.getElementById("TableTab");
+  var CellTab = document.getElementById("CellTab");
   
+  if (!TabPanel || !TablePanel || !CellPanel || !TableTab || !CellTab)
+  {
+    dump("Not all dialog controls were found!!!\n");
+    window.close;
+  }
+
+  // Get the starting TabPanel name
+  var StartPanelName = window.arguments[1];
+
+  tableGlobalElement = TableElement.cloneNode(false);
+  if (CellElement)
+    cellGlobalElement = CellElement.cloneNode(false);
+
+  // Activate the Cell Panel if requested
+  if (StartPanelName == "CellPanel")
+  {
+    // We must have a cell element to start in this panel
+    if(!CellElement)
+    {
+      dump("Failed to get selected element or create a new one!\n");
+      window.close();
+    }
+
+    //Set index for starting panel on the <tabpanel> element
+    TabPanel.setAttribute("index", 1);
+    
+    // Trigger setting of style for the tab widgets
+    CellTab.setAttribute("selected", "true");
+    TableTab.removeAttribute("selected");
+
+    // Start editing on the cell element
+    globalElement = cellGlobalElement;
+  }
+  else
+  {
+    // Start editing on the table element
+    globalElement = cellGlobalElement;
+  }
+
+  if(!CellElement)
+  {
+    // Disable the Cell Properties tab -- only allow table props
+    CellTab.setAttribute("disabled", "true");
+  }
+  
+  doSetOKCancel(onOK, null);
+
+  // Get widgets
+  dialog.BorderWidthCheck = document.getElementById("BorderWidthCheck");
+  dialog.BorderWidthInput = document.getElementById("BorderWidthInput");
+  
+    
   // This uses values set on globalElement
   InitDialog();
 
@@ -55,12 +122,40 @@ function Startup()
 
 function InitDialog()
 {
-  dump{"Table Editing:InitDialog()\n");
+  dump("Table Editing:InitDialog()\n");
+}
+
+function SelectTableTab()
+{
+  globalElement = tableGlobalElement;
+}
+
+function SelectCellTab()
+{
+  globalElement = cellGlobalElement;
+}
+
+function GetColorAndUpdate(ColorPickerID, ColorWellID, widget)
+{
+  // Close the colorpicker
+  widget.parentNode.closePopup();
+  SetColor(ColorWellID, getColor(ColorPickerID));
+}
+
+function SetColor(ColorWellID, color)
+{
+  // Save the color
+  if (ColorWellID == "cellBackgroundCW")
+    dialog.cellBackgroundColor = color;
+  else
+    dialog.tableBackgroundColor = color;
+    
+  setColorWell(ColorWellID, color); 
 }
 
 function ValidateData()
 {
-  dump{"Table Editing:ValidateData()\n");
+  dump("Table Editing:ValidateData()\n");
   return true;
 }
 
@@ -68,7 +163,7 @@ function onOK()
 {
   if (ValidateData())
   {
-    editorShell.CloneAttributes(tableElement, globalElement);
+    editorShell.CloneAttributes(TableElement, globalElement);
     return true;
   }
   return false;

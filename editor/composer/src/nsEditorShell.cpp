@@ -125,6 +125,7 @@ static NS_DEFINE_CID(kCStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kCommonDialogsCID,         NS_CommonDialog_CID );
 static NS_DEFINE_CID(kDialogParamBlockCID,      NS_DialogParamBlock_CID);
 static NS_DEFINE_CID(kEditorControllerCID,      NS_EDITORCONTROLLER_CID);
+static NS_DEFINE_CID(kPrefServiceCID,           NS_PREF_CID);
 
 /* Define Interface IDs */
 static NS_DEFINE_IID(kISupportsIID,             NS_ISUPPORTS_IID);
@@ -384,10 +385,10 @@ nsEditorShell::PrepareDocumentForEditing(nsIURI *aUrl)
     aUrl->GetScheme(&pageScheme);                                               
     aUrl->GetSpec(&pageURLString);
 
-    // only save the file spec if this is a local file, and is not              
-    // about:blank                                                              
-    if (nsCRT::strncmp(pageScheme, "file", 4) == 0 &&                           
-        nsCRT::strncmp(pageURLString,"about:blank", 11) != 0)                   
+     // only save the file spec if this is a local file, and is not              
+     // about:blank                                                              
+     if (nsCRT::strncmp(pageScheme, "file", 4) == 0 &&                           
+         nsCRT::strncmp(pageURLString,"about:blank", 11) != 0)                   
     {
       nsFileURL    pageURL(pageURLString);
       nsFileSpec   pageSpec(pageURL);
@@ -421,6 +422,15 @@ nsEditorShell::PrepareDocumentForEditing(nsIURI *aUrl)
   // Load the edit mode override style sheet
   // This will be remove for "Browser" mode
   SetDisplayMode(eDisplayModeEdit);
+
+#ifdef DEBUG
+  // Activate the debug menu only in debug builds
+  // by removing the "hidden" attribute set "true" in XUL
+  nsCOMPtr<nsIDOMElement> elem;
+  rv = xulDoc->GetElementById("debugMenu", getter_AddRefs(elem));
+  if (elem)
+    elem->RemoveAttribute("hidden");
+#endif
 
   // Force initial focus to the content window -- HOW?
 //  mWebShellWin->SetFocus();
@@ -1247,6 +1257,10 @@ nsEditorShell::CheckAndSaveDocument(const PRUnichar *reasonToSave, PRBool *_retv
         nsAutoString tmp2 = GetString("DontSave");
         nsAutoString title;
         GetDocumentTitleString(title);
+        // If title is empty, use "untitled"
+        if (title.Length() == 0)
+          title = GetString("untitled");
+
         nsAutoString saveMsg = ((GetString("SaveFilePrompt")).ReplaceSubstring("%title%",title)).ReplaceSubstring("%reason%",ReasonToSave);
 
         EConfirmResult result = ConfirmWithCancel(GetString("SaveDocument"), saveMsg,
@@ -1613,6 +1627,9 @@ nsEditorShell::UpdateWindowTitle()
 
   nsAutoString windowCaption;
   res = GetDocumentTitleString(windowCaption);
+  // If title is empty, use "untitled"
+  if (windowCaption.Length() == 0)
+    windowCaption = GetString("untitled");
 
   // Append just the 'leaf' filename to the Doc. Title for the window caption
   if (NS_SUCCEEDED(res))
@@ -1666,10 +1683,6 @@ nsEditorShell::GetDocumentTitleString(nsString& title)
     nsCOMPtr<nsIDOMHTMLDocument> HTMLDoc = do_QueryInterface(domDoc);
     if (HTMLDoc)
       res = HTMLDoc->GetTitle(title);
-
-    // If title is empty, use "untitled"
-    if (title.Length() == 0)
-      title = GetString("untitled");
   }
   return res;
 }
@@ -1745,7 +1758,7 @@ nsEditorShell::SetDocumentTitle(const PRUnichar *title)
 
           if (titleNode)
           {
-            //Delete existing children
+            //Delete existing children (text) of title node
             nsCOMPtr<nsIDOMNodeList> children;
             res = titleNode->GetChildNodes(getter_AddRefs(children));
             if(NS_SUCCEEDED(res) && children)
@@ -1766,7 +1779,8 @@ nsEditorShell::SetDocumentTitle(const PRUnichar *title)
       // Get the <HEAD> node, create a <TITLE> and insert it under the HEAD
       nsCOMPtr<nsIDOMNodeList> headList;
       res = domDoc->GetElementsByTagName("head",getter_AddRefs(headList));
-      if (NS_SUCCEEDED(res) && headList) 
+      if (NS_FAILED(res)) return res;
+      if (headList) 
       {
         headList->Item(0, getter_AddRefs(headNode));
         if (headNode) 
@@ -1785,8 +1799,7 @@ nsEditorShell::SetDocumentTitle(const PRUnichar *title)
             // Note: There should ALWAYS be a <title> in any HTML document,
             //       so we will insert the node and not make it undoable
             res = headNode->AppendChild(titleNode, getter_AddRefs(resultNode));
-            if (NS_FAILED(res))
-              return NS_ERROR_FAILURE;
+            if (NS_FAILED(res)) return res;
           }
           // Append a text node under the TITLE
           //  only if the title text isn't empty
@@ -1794,13 +1807,10 @@ nsEditorShell::SetDocumentTitle(const PRUnichar *title)
           {
             nsCOMPtr<nsIDOMText> textNode;
             res = domDoc->CreateTextNode(titleStr, getter_AddRefs(textNode));
-            if (NS_SUCCEEDED(res) && textNode)
-            {
-              // Go through the editor API so action is undoable
-              res = editor->InsertNode(textNode, titleNode, 0);
-              // This is the non-undoable code:
-              //res = titleNode->AppendChild(textNode,getter_AddRefs(resultNode));
-            }
+            if (NS_FAILED(res)) return res;
+            if (!textNode) return NS_ERROR_FAILURE;
+            // Go through the editor API so action is undoable
+            res = editor->InsertNode(textNode, titleNode, 0);
           }
         }
       }
@@ -3440,8 +3450,7 @@ nsEditorShell::GetSelectedOrParentTableElement(PRUnichar **aTagName, PRBool *aIs
         nsAutoString TagName(*aTagName);
         if (tableEditor)
           result = tableEditor->GetSelectedOrParentTableElement(*_retval, TagName, *aIsSelected);
-          // Need an ugly cast to get around "const" return value
-          *aTagName = (PRUnichar*)TagName.GetUnicode();
+          *aTagName = TagName.ToNewUnicode();
       }
       break;
     default:

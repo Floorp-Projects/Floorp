@@ -24,12 +24,12 @@
 <!-- Window title -->
 <!ENTITY windowTitle.label "Horizontal Line Properties">
 
-<!ENTITY dimensionsFieldset.label "Dimensions">
+<!ENTITY dimensionsBox.label "Dimensions">
 <!ENTITY heightEditField.label "Height">
 <!ENTITY widthEditField.label "Width">
 <!ENTITY pixelsPopup.value "pixels">
 <!ENTITY percentPopup.value "percent">
-<!ENTITY alignmentFieldset.label "Alignment">
+<!ENTITY alignmentBox.label "Alignment">
 <!ENTITY leftPopup.value "Left">
 <!ENTITY centerPopup.value "Center">
 <!ENTITY rightPopup.value "Right">

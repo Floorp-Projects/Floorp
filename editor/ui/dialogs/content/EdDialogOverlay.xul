@@ -37,9 +37,10 @@
   <html:div class="separator" align="horizontal"/>
 </box>
 
-<!-- Extra buttons to use in Image Properties Dialog,
-     which switches position between 2 locations
-     Placed here to use same attributes as regular button -->
+<!-- Extra buttons to use when just button is needed
+     E.g. Image Properties Dialog switches position between 2 locations
+     Placed here to use same attributes as AdvancedEditButton button
+-->
 <titledbutton
   id      = "AdvancedEditButton2"
   class   = "push dialog"

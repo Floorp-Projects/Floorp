@@ -29,6 +29,9 @@ var SelectionOnly = 1;
 var FormatedWithDoctype  = 2; 
 var FormatedWithoutDoctype = 6; 
 var maxPixels  = 10000;
+// For dialogs that expand in size. Default is smaller size see "onMoreFewer()" below
+var SeeMore = false;
+
 // The element being edited - so AdvancedEdit can have access to it
 var globalElement;
 
@@ -270,7 +273,7 @@ function GetAppropriatePercentString()
 {
   var selection = window.editorShell.editorSelection;
   if (selection) {
-    if (editorShell.GetElementOrParentByTagName("td",selection.focusNode))
+    if (editorShell.GetElementOrParentByTagName("td",selection.anchorNode))
       return GetString("PercentOfCell");
   }
   return GetString("PercentOfWindow");
@@ -464,22 +467,126 @@ function getContainer ()
      return null;
 }
 
-function getColorAndSetColorWell(ColorPickerID, ColorWellID)
+function getColor(ColorPickerID)
 {
-  var colorWell = document.getElementById(ColorWellID);
   var colorPicker = document.getElementById(ColorPickerID);
+  var color;
   if (colorPicker) 
   {
     // Extract color from colorPicker and assign to colorWell.
-    var color = colorPicker.getAttribute('color');
-    dump("setColor to: "+color+"\n");
+    color = colorPicker.getAttribute('color');
+    if (color && color == "")
+      return null;
+  }
+  return color;
+}
 
-    if (colorWell)
+function setColorWell(ColorWellID, color)
+{
+  var colorWell = document.getElementById(ColorWellID);
+  if (colorWell)
+  {
+    if (!color || color == "")
     {
+      // Don't set color (use default)
+      // Trigger change to not show color swatch
+      colorWell.setAttribute("default","true");
+    }
+    else
+    {
+      colorWell.removeAttribute("default");
       // Use setAttribute so colorwell can be a XUL element, such as titledbutton
-      colorWell.setAttribute("style", "background-color: " + color); 
+      colorWell.setAttribute("style", "background-color:"+color);
     }
   }
+}
 
+function getColorAndSetColorWell(ColorPickerID, ColorWellID)
+{
+  var color = getColor(ColorPickerID);
+  setColorWell(ColorWellID, color);
   return color;
+}
+
+// Test for valid image by sniffing out the extension
+function IsValidImage(imageName)
+{
+  image = imageName.trimString();
+  if ( !image )
+    return false;
+  
+  /* look for an extension */
+  var tailindex = image.lastIndexOf("."); 
+  if ( tailindex == 0 || tailindex == -1 ) /* -1 is not found */
+    return false; 
+  
+  /* move past period, get the substring from the first character after the '.' to the last character (length) */
+  tailindex = tailindex + 1;
+  var type = image.substring(tailindex,image.length);
+  
+  /* convert extension to lower case */
+  if (type)
+    type = type.toLowerCase();
+  
+  // TODO: Will we convert .BMPs to a web format?
+  switch( type )  {
+    case "gif":
+    case "jpg":
+    case "jpeg":
+    case "png":
+      return true;
+      break;
+    default :
+     return false;
+  }
+}
+
+function InitMoreFewer()
+{
+  // Set SeeMore bool to the OPPOSITE of the current state,
+  //   which is automatically saved by using the 'persist="more"' 
+  //   attribute on the dialog.MoreFewerButton button
+  //   onMoreFewer will toggle it and redraw the dialog
+  SeeMore = (dialog.MoreFewerButton.getAttribute("more") != "1");
+  onMoreFewer();
+}
+
+function onMoreFewer()
+{
+  if (SeeMore)
+  {
+    dialog.MoreSection.setAttribute("style","display: none");
+    window.sizeToContent();
+    dialog.MoreFewerButton.setAttribute("more","0");
+    dialog.MoreFewerButton.setAttribute("value",GetString("MoreProperties"));
+    SeeMore = false;
+  }
+  else
+  {
+    dialog.MoreSection.setAttribute("style","display: inherit");
+    window.sizeToContent();
+    dialog.MoreFewerButton.setAttribute("more","1");
+    dialog.MoreFewerButton.setAttribute("value",GetString("FewerProperties"));
+    SeeMore = true;
+  }
+}
+
+function GetPrefs()
+{
+  var prefs;
+  try {
+    prefs = Components.classes['component://netscape/preferences'];
+    if (prefs) prefs = prefs.getService();
+    if (prefs) prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
+    if (prefs)
+      return prefs;
+    else
+      dump("failed to get prefs service!\n");
+
+  }
+  catch(ex)
+  {
+	  dump("failed to get prefs service!\n");
+  }
+  return null;
 }

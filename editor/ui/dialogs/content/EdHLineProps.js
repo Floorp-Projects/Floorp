@@ -105,13 +105,7 @@ function onSaveDefault()
   // "false" means set attributes on the globalElement,
   //   not the real element being edited
   if (ValidateData()) {
-    var prefs = Components.classes['component://netscape/preferences'];
-    if (prefs) {
-      prefs = prefs.getService();
-    }
-    if (prefs) {
-      prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
-    }
+    var prefs = GetPrefs();
     if (prefs) {
       dump("Setting HLine prefs\n");
 
@@ -145,8 +139,8 @@ function onSaveDefault()
 
       // Write the prefs out NOW!
       prefs.SavePrefFile();
-    }    
-  }
+    }
+	}
 }
 
 // Get and validate data from widgets.

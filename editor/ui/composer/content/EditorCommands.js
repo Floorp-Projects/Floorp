@@ -34,7 +34,7 @@ var WebCompose = false;     // Set true for Web Composer, leave false for Messen
 // These must be kept in synch with the XUL <options> lists
 var gParagraphTagNames = new Array("","P","H1","H2","H3","H4","H5","H6","BLOCKQUOTE","ADDRESS","PRE","DT","DD");
 var gFontFaceNames = new Array("","tt","Arial, Helvetica","Times","Courier");
-var gFontSizeNames = new Array("-2","-1","0","+1","+2","+3","+4");
+var gFontSizeNames = new Array("xx-small","x-small","small","medium","large","x-large","xx-large");
 
 var gStyleTags = {
     "bold"       : "b",
@@ -629,14 +629,47 @@ function onFontSizeChange()
 function EditorSetFontSize(size)
 {
   if( size == "0" || size == "normal" || 
-      size == "+0" )
+      size == "medium" )
   {
     editorShell.RemoveTextProperty("font", size);
     dump("Removing font size\n");
   } else {
     dump("Setting font size\n");
+    // Temp: convert from new CSS size strings to old HTML size strings
+    switch (size)
+    {
+      case "xx-small":
+      case "x-small":
+        size = "-2";
+        break;
+      case "small":
+        size = "-1";
+        break;
+      case "large":
+        size = "+1";
+        break;
+      case "x-large":
+        size = "+2";
+        break;
+      case "xx-large":
+        size = "+3";
+        break;
+    }
     editorShell.SetTextProperty("font", "size", size);
   }
+/*
+  BIG BUG! Setting <span> tag is totally horked -- stick with <font size> for beta1
+  {
+    // XXX-THIS IS DEFINITELY WRONG! 
+    // We need to parse the style tag to set/remove only the "font-size"
+    // TODO: We need a general SetInlineStyle(), RemoveInlineStyle() interface
+    editorShell.RemoveTextProperty("span", "style");
+    dump("Removing font size\n");
+  } else {
+    dump("Setting font size to: "+size+"\n");
+    editorShell.SetTextProperty("span", "style", "font-size:"+size);
+  }
+*/
   contentWindow.focus();
 }
 
@@ -739,9 +772,20 @@ function EditorRemoveLinks()
         object-specific "Properties..." item
 */
 
-function EditorObjectProperties()
+// For property dialogs, we want the selected element,
+//  but will accept a parent table cell if inside one
+function GetSelectedElementOrParentCell()
 {
   var element = editorShell.GetSelectedElement("");
+  if (!element)
+    element = editorShell.GetElementOrParentByTagName("td",null);
+
+  return element;
+}
+
+function EditorObjectProperties()
+{
+  var element = GetSelectedElementOrParentCell();
   dump("EditorObjectProperties: element="+element+"\n");
   if (element)
   {
@@ -756,6 +800,9 @@ function EditorObjectProperties()
         break;
       case 'TABLE':
         EditorInsertOrEditTable(false);
+        break;
+      case 'TD':
+        EditorTableCellProperties();
         break;
       case 'A':
         if(element.href)
@@ -1054,9 +1101,30 @@ function CheckSpelling()
   contentWindow.focus();
 }
 
+function InitBackColorPopup()
+{
+  var caption = document.getElementById("BackColorCaption"); 
+  if (caption)
+  {
+    var captionStr;
+    var isSelectedObj = new Object();
+    var tagNameObj = new Object();
+    var element = editorShell.GetSelectedOrParentTableElement(tagNameObj, isSelectedObj);  
+
+    if (tagNameObj.value == "table")
+      captionStr = editorShell.GetString("TableBackColor");
+    else if (tagNameObj.value == "td")
+      captionStr = editorShell.GetString("CellBackColor");
+    else
+      captionStr = editorShell.GetString("PageBackColor");
+
+    caption.setAttribute("value",captionStr);
+  }
+}
+
 function EditorInitEditMenu()
 {
-  
+  // We will be modifying the Paste menuitem in the future  
 }
 
 function EditorInitFormatMenu()
@@ -1064,8 +1132,7 @@ function EditorInitFormatMenu()
   var propertiesMenu = document.getElementById("objectProperties");
   if (propertiesMenu)
   {
-    var element = editorShell.GetSelectedElement("");
-    dump("EditorObjectProperties: element="+element+"\n");
+    var element = GetSelectedElementOrParentCell();
     if (element)
     {
       dump("TagName="+element.nodeName+"\n");
@@ -1077,22 +1144,25 @@ function EditorInitFormatMenu()
         switch (element.nodeName)
         {
           case 'IMG':
-            objStr = "Image";
+            objStr = editorShell.GetString("Image");
             break;
           case 'HR':
-            objStr = "H.Line";
+            objStr = editorShell.GetString("HLine");
             break;
           case 'TABLE':
-            objStr = "Table";
+            objStr = editorShell.GetString("Table");
+            break;
+          case 'TD':
+            objStr = editorShell.GetString("TableCell");
             break;
           case 'A':
             if(element.href)
             {
-              objStr = "Link";
+              objStr = editorShell.GetString("Link");
               EditorInsertOrEditLink();  
             } else if (element.name)
             {
-              objStr = "Named Anchor";
+              objStr = editorShell.GetString("NamedAnchor");
               EditorInsertOrEditNamedAnchor();  
             }
             break;
@@ -1100,32 +1170,16 @@ function EditorInitFormatMenu()
         menuStr = menuStr.replace(/%obj%/,objStr);        
         propertiesMenu.setAttribute("value", menuStr)
       } else {
+        // No element to set properties on - hide menu item
         propertiesMenu.setAttribute("hidden","true");
       }
     }
   }
-  dump("Calling EditorInitViewMenu()\n");
 }
 
 function EditorInitToolbars()
 {
-  // Set title edit field
-  var domdoc;
-  try { domdoc = window.editorShell.editorDocument; } catch (e) { dump( e + "\n"); }
-  if ( !domdoc )
-  {
-    dump("EditorInitToolbars: EDITOR DOCUMENT NOT FOUND\n");
-    return;
-  }
-  var title = domdoc.title;
-  var titleInput = document.getElementById("PageTitleInput");
-  if (!title) title = "";
-  titleInput.setAttribute("value", title);
-
-  var authorInput = document.getElementById("AuthorInput");
-  if (authorInput)
-  {
-  }
+  // Nothing to do now, but we might want some state updating here
 }
 
 function EditorSetDefaultPrefs()
@@ -1445,10 +1499,20 @@ function EditorInsertOrEditTable(insertAllowed)
     // Edit properties of existing table
     dump("Existing table found ... Editing its properties\n");
 
-    window.openDialog("chrome://editor/content/EdTableProps.xul", "_blank", "chrome,close,titlebar,modal", "");
+    window.openDialog("chrome://editor/content/EdTableProps.xul", "_blank", "chrome,close,titlebar,modal", "","TablePanel");
     contentWindow.focus();
   } else if(insertAllowed) {
     EditorInsertTable();
+  }
+}
+
+function EditorTableCellProperties()
+{
+  var cell = editorShell.GetElementOrParentByTagName("td", null);
+  if (cell) {
+    // Start Table Properties dialog on the "Cell" panel
+    window.openDialog("chrome://editor/content/EdTableProps.xul", "_blank", "chrome,close,titlebar,modal", "", "CellPanel");
+    contentWindow.focus();
   }
 }
 

@@ -35,7 +35,7 @@
 <!ENTITY tableSpacing.label               "Spacing:">
 <!ENTITY tablePadding.label               "Padding:">
 <!ENTITY tablePxBetwCells.label           "pixels between cells">
-<!ENTITY tablePxBetwBrdrCellContent.label "pixels between border <html:br/> and cell content">
+<!ENTITY tablePxBetwBrdrCellContent.label "pixels between border<html:br/>and cell content">
 <!ENTITY tableBackground.label            "Background">
 <!ENTITY tableColor.label                 "Color:">
 <!ENTITY tableImage.label                 "Image:">
@@ -67,4 +67,5 @@
 <!ENTITY cellAlignCenter.label            "Center">
 <!ENTITY cellAlignBottom.label            "Bottom">
 <!ENTITY cellSpanRows.label               "rows">
-<!ENTITY cellSpanCells.label              "cells">
+<!ENTITY cellSpanCols.label               "columns">
+<!ENTITY defaultColor.label               "Don't specify color">

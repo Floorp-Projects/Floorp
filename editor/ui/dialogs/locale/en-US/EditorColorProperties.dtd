@@ -29,7 +29,10 @@
 <!ENTITY normalText.label "Normal text:">
 <!ENTITY linkText.label "Link text:">
 <!ENTITY activeLinkText.label "Active link text:">
-<!ENTITY followedLinkText.label "Followed link text:">
+<!ENTITY visitedLinkText.label "Visited link text:">
 <!ENTITY background.label "Background:">
-<!ENTITY backgroundImage.label "Background Image: ">
-<!ENTITY colorPicker.default.label "Don't Specify Color">
+<!ENTITY backgroundImage.label "Background Image  (Uncheck to edit without image): ">
+<!ENTITY colorPicker.default.label "Don't specify color">
+<!ENTITY saveImageMsg.label "Location will be saved so you can use it later.">
+
+

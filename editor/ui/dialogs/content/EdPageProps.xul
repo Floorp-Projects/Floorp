@@ -43,181 +43,54 @@
 
   <broadcaster id="args" value=""/>
   <keyset id="keyset"/>
-    <tabcontrol align="vertical">
-	    <tabbox align="horizontal" flex="100%">
-		    <tab id="GeneralTab">&generalTab.label;</tab>
-		    <tab id="ColorTab">&backgroundTab.label;</tab>
-		    <tab id="MetaTab">&metaTagsTab.label;</tab>
-	    </tabbox>
- 
-    	<tabpanel id="tabPanel" flex="100%">
-<!-- ***** general tab ***** -->
-    		<box id="panel1" align="vertical">
-          <html:table>
-            <html:tr>
-              <html:td>
-                &location.label;
-              </html:td>
-              <html:td id="location">
-                <!-- fill in URL at runtime -->
-              </html:td>
-            </html:tr>
-            <html:tr>
-              <html:td>
-                &lastModified.label;
-              </html:td>
-              <html:td id="lastModified">
-                <!-- fill in date at runtime -->
-              </html:td>
-            </html:tr>
-            <html:tr>
-              <html:td>
-                &titleInput.label;
-              </html:td>
-              <html:td id="titleInput">
-                <html:input type="text" id="titleInput"/>
-              </html:td>
-            </html:tr>
-            <html:tr>
-              <html:td>
-                &authorInput.label;
-              </html:td>
-              <html:td id="authorInput">
-                <html:input type="text" id="titleInput"/>
-              </html:td>
-            </html:tr>
-            <html:tr>
-              <html:td>
-                &descriptionInput.label;
-              </html:td>
-              <html:td id="title">
-                <html:input type="text" id="descriptionInput"/>
-              </html:td>
-            </html:tr>
-          </html:table>
-        </box>
-  
-<!-- **** colors/background tab **** -->
-    		<box id="panel2" align="vertical">
-          <html:fieldset><html:legend class = "dialog" align = "left">&pageColors.label;</html:legend>
-          <html:input type="radio" name="ColorMode" id="DefaultColorsRadio"/>
-          <html:label for="DefaultColorsRadio">&defaultColorsRadio.label;</html:label>
-          <html:br/>
-          <html:input type="radio" name="ColorMode" id="CustomColorsRadio"/>
-          <html:label for="CustomColorsRadio">&customColorsRadio.label;</html:label>
-          <html:br/>
-          <html:div>
-          <spring class="bigspacer"/>
-          <box flex="1">
-            <html:label> &colorScheme.label; 
-            <html:select id="ColorScheme" size="1" style="min-width: 10em">
-              <html:option> Black on White </html:option>
-              <html:option> Blue on White  </html:option>
-              <html:option> White on Black </html:option>
-            </html:select>
-            </html:label>
-          </box>
-          <!-- TODO: COLOR SCHEME SELECT LIST -->
-          </html:div>
-          <spring class="bigspacer"/>
-    	    <box align="horizontal">
-            <spring class="bigspacer"/>
-            <box align="vertical" flex="100%">
-              <box>
-                <html:label class="margin-both"> &normalText.label; </html:label>
-                <spring flex="100%"/>
-                <menu class="colorpicker">
-    	            <html:div id="textCW" class="color-well"/>
-    	            <titledbutton class="popup" align="right" flex="100%" onclick="GetColor('textCP','textCW');"/>
-    	            <menupopup id="normalMenuPopup">
-                    <colorpicker id="textCP" palettename="standard" onclick="GetColor('textCP','textCW');"/>
-                    <titledbutton class="push" value="&colorPicker.default.label;" onclick="GetColor('textCP','textCW');"/>
-    	            </menupopup>
-                </menu>
-              </box>
-              <spring class="spacer"/>
-              <box>
-                <html:label class="margin-both"> &linkText.label; </html:label>
-                <spring flex="100%"/>
-                <menu class="colorpicker">
-    	            <html:div id="linkCW" class="color-well"/>
-    	            <titledbutton class="popup" align="right" flex="100%"/>
-    	            <menupopup>
-                    <colorpicker id="linkCP" palettename="standard" onclick="GetColor('linkCP','linkCW');"/>
-                    <titledbutton class="push" value="&colorPicker.default.label;" onclick="RemoveColor('linkCW');"/>
-    	            </menupopup>
-                </menu>
-              </box>
-              <spring class="spacer"/>
-              <box>
-                <html:label class="margin-both"> &activeLinkText.label; </html:label>
-                <spring flex="100%"/>
-                <menu class="colorpicker">
-    	            <html:div id="activeCW" class="color-well"/>
-    	            <titledbutton class="popup" align="right" flex="100%"/>
-    	            <menupopup>
-                    <colorpicker id="activeCP" palettename="standard" onclick="GetColor('activeCP','activeCW');"/>
-                    <titledbutton class="push" value="&colorPicker.default.label;" onclick="RemoveColor('activeCW');"/>
-    	            </menupopup>
-                </menu>
-              </box>
-              <spring class="spacer"/>
-              <box>
-                <html:label class="margin-both"> &followedLinkText.label; </html:label>
-                <spring flex="100%"/>
-                <menu class="colorpicker">
-    	            <html:div id="followedCW" class="color-well"/>
-    	            <titledbutton class="popup" align="right" flex="100%"/>
-    	            <menupopup>
-                    <colorpicker id="followedCP" palettename="standard" onclick="GetColor('followedCP','followedCW');"/>
-                    <titledbutton class="push" value="&colorPicker.default.label;" onclick="RemoveColor('followedCW');"/>
-    	            </menupopup>
-                </menu>
-              </box>
-              <spring class="spacer"/>
-              <box>
-                <html:label class="margin-both"> &background.label; </html:label>
-                <spring flex="100%"/>
-                <menu class="colorpicker">
-    	            <html:div id="backgroundCW" class="color-well"/>
-    	            <titledbutton class="popup" align="right" flex="100%"/>
-    	            <menupopup>
-                    <colorpicker id="backgroundCP" palettename="standard" onclick="GetColor('backgroundCP','backgroundCW');"/>
-                    <titledbutton class="push" value="&colorPicker.default.label;" onclick="RemoveColor('backgroundCW');"/>
-    	            </menupopup>
-                </menu>
-              </box>
-            </box>
-            <spring class="bigspacer"/>
-            <box align="vertical" flex="100%" id="ColorPreview">
-               <!-- basestyle="min-height:50px; width: 100%; border: 1px inset #CCCCCC; padding: 5px; " style="min-height:50px; width: 100%; border: 1px inset #CCCCCC; padding: 5px; "-->
-              <html:div id="NormalText">&normalText.label;</html:div>
-              <spring class="spacer"/>
-              <html:div id="LinkText">&linkText.label;</html:div>
-              <spring class="spacer"/>
-              <html:div id="ActiveLinkText">&activeLinkText.label;</html:div>
-              <spring class="spacer"/>
-              <html:div id="FollowedLinkText">&followedLinkText.label;</html:div>
-            </box>
-          </box>
-          </html:fieldset>
-          <box align="horizontal">
-            <html:input type="checkbox" id="BackgroundImageCheckbox"/>
-            <html:label for="BackgroundImageCheckbox"> &backgroundImage.label; </html:label>
-          </box>
-          <box align="horizontal">
-            <html:input type="text" class="SizeToParent" id="BackgroundImageInput" size="20"/>
-            <spring class="spacer"/>
-            <!-- from EdDialogOverlay.xul -->
-            <titledbutton id="ChooseFile"/>
-          </box>
-        </box> <!-- end of colors tab -->
-
-<!-- **** meta tags tab **** -->
-    		<box id="panel3" align="vertical">
-        </box>
-    	</tabpanel> 
-    </tabcontrol>
-    <box id="okCancelButtons"/> 
-
+  <box>
+    <text value="&location.label;" flex ="1" align="left"/>
+    <spring class="spacer"/>
+    <spring flex="1"/>
+    <text class="MinWidth200" value="&locationNewPage.label;" id="PageLocation" align="left"/>
+  </box>  
+  <spring class="spacer"/>
+  <box>
+    <text value="&lastModified.label;" flex ="1" align="left"/>
+    <spring class="spacer"/>
+    <spring flex="1"/>
+    <text class="MinWidth200" value="[fill this in!]" id="PageModDate" align="left"/>
+  </box>  
+  <spring class="spacer"/>
+  <box>
+    <text value="&titleInput.label;" flex ="1" align="left"/>
+    <spring class="spacer"/>
+    <spring flex="1"/>
+    <html:input class="MinWidth200" type="text" id="TitleInput"/>
+  </box>  
+  <spring class="spacer"/>
+  <box>
+    <text value="&authorInput.label;" flex ="1" align="left"/>
+    <spring class="spacer"/>
+    <spring flex="1"/>
+    <html:input class="MinWidth200" type="text" id="AuthorInput"/>
+  </box>  
+  <spring class="spacer"/>
+  <box>
+    <text value="&descriptionInput.label;" flex ="1" align="left"/>
+    <spring flex="1"/>
+    <html:input class="MinWidth200" type="text" id="DescriptionInput"/>
+  </box>  
+  <spring class="bigspacer"/>
+  <box align="horizontal">
+    <titledbutton 
+      class   = "push dialog" 
+      id      = "MoreFewerButton"
+      align   = "left" 
+      onclick = "onMoreFewer()" 
+      persist = "more"/>
+    <spring flex="1"/>
+  </box>
+  <box id="MoreSection" align="vertical" flex="1">
+    <spring class="bigspacer"/>
+    <html:div> [Meta Tags editing widgets will go here] </html:div>
+    <spring class="bigspacer"/>
+  </box>
+  <html:div class="separator" align="horizontal"/>
+  <box id="okCancelButtons"/> 
 </window>

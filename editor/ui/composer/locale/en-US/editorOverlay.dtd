@@ -259,24 +259,29 @@
 <!ENTITY fontcourier.accesskey "c">
 
 <!-- Font Size SubMenu -->
+<!ENTITY decreaseFontSize.label "Decrease">
+<!ENTITY decreasefontsize.accesskey "d">
+<!ENTITY decreaseFontSize.keybinding "[">
+<!ENTITY increaseFontSize.label "Increase">
+<!ENTITY increasefontsize.accesskey "i">
+<!ENTITY increaseFontSize.keybinding "]">
+
 <!ENTITY fontsizeMenu.label "Size">
 <!ENTITY formatsizemenu.accesskey "s">
-<!ENTITY size-2Cmd.label " -2">
-<!ENTITY size-2.accesskey "-">
-<!ENTITY size-1Cmd.label " -1">
-<!ENTITY size-1.accesskey "s">
-<!ENTITY size0Cmd.label " 0">
-<!ENTITY size0.accesskey "n">
-<!ENTITY size1Cmd.label " +1">
-<!ENTITY size1.accesskey "1">
-<!ENTITY size2Cmd.label " +2">
-<!ENTITY size2.accesskey "2">
-<!ENTITY size3Cmd.label " +3">
-<!ENTITY size3.accesskey "3">
-<!ENTITY size4Cmd.label " +4">
-<!ENTITY size4.accesskey "4">
-<!ENTITY increaseFontSize.keybinding "]">
-<!ENTITY decreaseFontSize.keybinding "[">
+<!ENTITY size-xx-smallCmd.label "xx-small">
+<!ENTITY size-xx-small.accesskey "a">
+<!ENTITY size-x-smallCmd.label "x-small">
+<!ENTITY size-x-small.accesskey "m">
+<!ENTITY size-smallCmd.label "small">
+<!ENTITY size-small.accesskey "s">
+<!ENTITY size-mediumCmd.label "medium">
+<!ENTITY size-medium.accesskey "m">
+<!ENTITY size-largeCmd.label "large">
+<!ENTITY size-large.accesskey "l">
+<!ENTITY size-x-largeCmd.label "x-large">
+<!ENTITY size-x-large.accesskey "r">
+<!ENTITY size-xx-largeCmd.label "xx-large">
+<!ENTITY size-xx-large.accesskey "e">
 
 <!-- Font Style SubMenu -->
 <!ENTITY fontStyleMenu.label "Style">
@@ -296,8 +301,6 @@
 <!ENTITY stylesuperscript.accesskey "p">
 <!ENTITY styleSubscriptCmd.label "Subscript">
 <!ENTITY stylesubscript.accesskey "s">
-<!ENTITY styleBlinkCmd.label "Blink">
-<!ENTITY styleblink.accesskey "l">
 <!ENTITY styleNonbreakingCmd.label "Nonbreaking">
 <!ENTITY stylenonbreaking.accesskey "n">
 

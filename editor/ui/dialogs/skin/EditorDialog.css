@@ -27,14 +27,16 @@
 */
 
 
-/* HTML ELEMENTS */
-
 table { cell-spacing: 0px; }
 td, table { border: 0px;}
 
 /* Use to center vertically in a table cell */
 tr { 
   vertical-align: middle;
+}
+
+input.MinWidth200, text.MinWidth200, titledbutton.MinWidth200 {
+  min-width: 200px;
 }
 
 select.SpellCheckList, select.SpellCheckLanguage, input.SpellCheckWord {
@@ -68,17 +70,35 @@ div.color-well {
   width:20px; 
   border: 1px inset #CCCCCC;
   /* Background color is set at runtime */
-  background-color: red;
+}
+div.color-well[default="true"] {
+  border: 1px solid transparent;
+  background-color: inherit;
+}
+
+td#ColorPreview {
+  border:           1px inset #CCCCCC;
+  padding-left:     5px;
+  padding-right:    5px;
+  min-width:        100px;
+  min-height:       50px;
+}
+
+/* A line of text inside the preview cell */
+td#ColorPreview div {
+  margin-top:    5px;
+  margin-bottom: 5px;
 }
 
 /* XUL ELEMENTS */
-box#ColorPreview {
-  border:           1px inset #CCCCCC;
-  padding:          5px;
-  width:            100%; 
-  min-height:       50px;
-  height:           100px; 
-  background-color: white;
+
+/* SHOULD GO IN GLOBAL.CSS */
+text {
+  text-align: left;
+}
+
+text[hidden="true"], input[hidden="true"] {
+  display: none;
 }
 
 /* values = margin, padding. Padding doesn't work yet */
@@ -92,9 +112,8 @@ select#alignTypeSelect,label#alignLabel {
   margin-left: 5px;
 }
 
-/* For right-aligned buttons - TODO: RESOLVE PROBLEM WITH FIELDSET MARGINS */
+/* For right-aligned buttons */
 titledbutton#AdvancedEditButton,titledbutton#AdvancedEditExtraButton,titledbutton#SaveDefault {
-  margin-right: 6px;
   min-width: 8em;
 }
 
@@ -122,9 +141,26 @@ titledbutton#MisspelledWord {
   font-weight: bold;
 }
 
+text#linkTextCaption {
+  font-weight: bold;
+}
+
+/* For a column of right-aligned text before 
+   a column of input fields, e.g., InsertTable dialog
+*/
+text.right {
+  /* doesn't work yet! must use align="right" in <text> */
+  text-align:   right;
+  margin-right: 5px;
+  /* Kludge: this needs to be wide enoungh for longest string */
+  min-width:    10em;
+}
+
 /* need rule for outset shape */
 menu.colorpicker {
   border: 1px outset #CCCCCC;
+  /* For a little extra space between buttons */
+  margin-bottom: 2px;
 }
 
 titledbutton.color-well {
@@ -199,7 +235,12 @@ div.tagname {
 }
 
 div#tagLabel {
-    font-weight: bold;
+  font-weight: bold;
+}
+
+/* In Color Properties dialog */
+div#SaveImageMsg {
+  max-width: 150px;
 }
 
 /* styles for an attribute tree-table */

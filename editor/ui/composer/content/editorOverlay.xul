@@ -72,8 +72,8 @@
     <key id="outdentkb"     xulkey="true" key="&formatoutdent.keybinding;" onkeypress="EditorIndent('outdent')" />
 
     <key id="removestyleskb" shift="true" xulkey="true" key="&formatremovestyles.keybinding;" onkeypress="EditorRemoveStyle('all')" />
-    <key id="decreasefontsizekb" shift="true" xulkey="true" key="&decreaseFontSize.keybinding;" onkeypress="DecreaseFontSize()" />
-    <key id="increasefontsizekb" shift="true" xulkey="true" key="&increaseFontSize.keybinding;" onkeypress="IncreaseFontSize()" />
+    <key id="decreasefontsizekb" shift="true" xulkey="true" key="&decreaseFontSize.keybinding;" onkeypress="EditorDecreaseFontSize()" />
+    <key id="increasefontsizekb" shift="true" xulkey="true" key="&increaseFontSize.keybinding;" onkeypress="EditorIncreaseFontSize()" />
 
 <!-- how to handle return, enter, tab, function keys, arrow keys, others? saari working on solution -->
         <!-- scroll document/page/line and move caret -->
@@ -379,13 +379,16 @@
           accesskey="&formatsizemenu.accesskey;" 
           position="2">
     <menupopup>
-      <menuitem value="&size-2Cmd.label;" accesskey="&size-2.accesskey;" oncommand="EditorSetFontSize('-2')"/>
-      <menuitem value="&size-1Cmd.label;" accesskey="&size-1.accesskey;" oncommand="EditorSetFontSize('-1')"/>
-      <menuitem value="&size0Cmd.label;"  accesskey="&size0.accesskey;"  oncommand="EditorSetFontSize('0')"/>
-      <menuitem value="&size1Cmd.label;"  accesskey="&size1.accesskey;"  oncommand="EditorSetFontSize('+1')"/>
-      <menuitem value="&size2Cmd.label;"  accesskey="&size2.accesskey;"  oncommand="EditorSetFontSize('+2')"/>
-      <menuitem value="&size3Cmd.label;"  accesskey="&size3.accesskey;"  oncommand="EditorSetFontSize('+3')"/>
-      <menuitem value="&size4Cmd.label;"  accesskey="&size4.accesskey;"  oncommand="EditorSetFontSize('+4')"/>
+      <menuitem value="&decreaseFontSize.label;" accesskey="&decreasefontsize.accesskey;" oncommand="EditorDecreaseFontSize()"/>
+      <menuitem value="&increaseFontSize.label;" accesskey="&increasefontsize.accesskey;" oncommand="EditorIncreaseFontSize()"/>
+      <menuseparator/>
+      <menuitem value="&size-xx-smallCmd.label;" accesskey="&size-xx-small.accesskey;" oncommand="EditorSetFontSize('xx-small')"/>
+      <menuitem value="&size-x-smallCmd.label;"  accesskey="&size-x-small.accesskey;"  oncommand="EditorSetFontSize('x-small')"/>
+      <menuitem value="&size-smallCmd.label;"    accesskey="&size-small.accesskey;"    oncommand="EditorSetFontSize('small')"/>
+      <menuitem value="&size-mediumCmd.label;"   accesskey="&size-medium.accesskey;"   oncommand="EditorSetFontSize('medium')"/>
+      <menuitem value="&size-largeCmd.label;"    accesskey="&size-large.accesskey;"    oncommand="EditorSetFontSize('large')"/>
+      <menuitem value="&size-x-largeCmd.label;"  accesskey="&size-x-large.accesskey;"  oncommand="EditorSetFontSize('x-large')"/>
+      <menuitem value="&size-xx-largeCmd.label;" accesskey="&size-xx-large.accesskey;" oncommand="EditorSetFontSize('xx-large')"/>
     </menupopup>
     </menu>
 
@@ -400,7 +403,6 @@
       <menuitem value="&styleStrikeThruCmd.label;"  accesskey="&stylestrikethru.accesskey;"  oncommand="EditorApplyStyle('strike')"/>
       <menuitem value="&styleSuperscriptCmd.label;" accesskey="&stylesuperscript.accesskey;" oncommand="EditorApplyStyle('sup')"/>
       <menuitem value="&styleSubscriptCmd.label;"   accesskey="&stylesubscript.accesskey;"   oncommand="EditorApplyStyle('sub')"/>
-      <menuitem value="&styleBlinkCmd.label;"       accesskey="&styleblink.accesskey;"       oncommand="EditorApplyStyle('blink')"/>
       <menuitem value="&styleNonbreakingCmd.label;" accesskey="&stylenonbreaking.accesskey;" oncommand="EditorApplyStyle('nobr')"/>
     </menupopup>
     </menu>
@@ -580,16 +582,16 @@
   </menu>
 
     <popup id="TextColorPopup"  popupanchor="bottomleft">
-      <html:div id="TextColorCaption" class="color-caption" align="center">&textColorCaption.label;</html:div>
+      <titledbutton id="TextColorCaption" class="color-caption" value="&textColorCaption.label;" flex="1"/>
   		<!-- TODO: Add "Last color picked" button and text -->
       <colorpicker id="TextColorPicker" palettename="standard" onclick="EditorSelectTextColor('TextColorPicker','TextColorPopupButton'); parentNode.closePopup();"/>
       <titledbutton class="push" value="&formatToolbar.colorPicker.default.label;" onclick="EditorRemoveTextColor('TextColorPopupButton'); parentNode.closePopup();"/>
     </popup>
 
-    <popup id="BackColorPopup"  popupanchor="bottomleft">
-      <!-- Text Caption is filled in at runtime -->
+    <popup id="BackColorPopup" popupanchor="bottomleft" oncreate="InitBackColorPopup()">
+      <!-- Text is filled in at runtime according to what background element will be set -->
+      <titledbutton id="BackColorCaption" class="color-caption" value="Background Color" flex="1"/>
   		<!-- TODO: Add "Last color picked" button and text -->
-      <html:div id="BackColorCaption" class="color-caption" align="center">Background Color</html:div>
   		<colorpicker id="BackColorPicker" palettename="standard" onclick="EditorSelectBackColor('BackColorPicker','BackColorPopupButton'); parentNode.closePopup();"/>
       <titledbutton class="push" value="&formatToolbar.colorPicker.default.label;" onclick="EditorRemoveBackColor('BackColorPopupButton'); parentNode.closePopup();"/>
     </popup>
@@ -674,13 +676,13 @@
 
     <html:select class="toolbar" id="FontSizeSelect" size="1" onchange="EditorSelectFontSize()">
       <observes element="Editor:Font:Size" attribute="fontsize" onbroadcast="onFontSizeChange()"/>
-      <html:option>&size-2Cmd.label;</html:option>
-      <html:option>&size-1Cmd.label;</html:option>
-      <html:option>&size0Cmd.label;</html:option>
-      <html:option>&size1Cmd.label;</html:option>
-      <html:option>&size2Cmd.label;</html:option>
-      <html:option>&size3Cmd.label;</html:option>
-      <html:option>&size4Cmd.label;</html:option>
+      <html:option>&size-xx-smallCmd.label;</html:option>
+      <html:option>&size-x-smallCmd.label;</html:option>
+      <html:option>&size-smallCmd.label;</html:option>
+      <html:option>&size-mediumCmd.label;</html:option>
+      <html:option>&size-largeCmd.label;</html:option>
+      <html:option>&size-x-largeCmd.label;</html:option>
+      <html:option>&size-xx-largeCmd.label;</html:option>
     </html:select>
 
     <!-- The new Color Picker UI -->
@@ -719,7 +721,7 @@
 
 
     <!-- DEBUG only -->
-    <menu id="debugMenu" value="&debugMenu.label;">
+    <menu id="debugMenu" value="&debugMenu.label;" hidden="true">
     <menupopup>
       <menuitem value="&newEditorTestPage.label;" oncommand="window.openDialog('chrome://editor/content','_blank','chrome,all,dialog=no','chrome://editor/content/EditorInitPage.html')"/>
       <menuitem value="&textEditorCmd.label;"     oncommand="EditorNewPlaintext();" />

@@ -30,28 +30,26 @@
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EdNamedAnchorProperties.dtd">
 
-<xul:window class="dialog" title="&windowTitle.label;"
-    xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    xmlns="http://www.w3.org/TR/REC-html40"
+<window class="dialog" title="&windowTitle.label;"
+    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    xmlns:html="http://www.w3.org/TR/REC-html40"
     onload = "Startup()"
     align="vertical">
 
   <!-- Methods common to all editor dialogs -->
-  <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js">
-  </script>
-  <script language="JavaScript" src="chrome://editor/content/EdNamedAnchorProps.js">
-  </script>
-  <script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
+  <html:script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
+  <html:script language="JavaScript" src="chrome://editor/content/EdNamedAnchorProps.js"/>
+  <html:script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
 
-  <xul:keyset id="keyset"/>
+  <keyset id="keyset"/>
 
-  <label for="nameInput"> &anchorNameEditField.label; </label>
-  <input type="text" id="nameInput" size="30" maxlength="255" />
-  <div>&noSpacesMsg.label;</div>
-  <xul:spring class="spacer"/>
+  <text align="left" for="nameInput" value="&anchorNameEditField.label;"/>
+  <html:input type="text" class="MinWidth200" id="nameInput"/>
+  <text align="left" value="&noSpacesMsg.label;"/>
+  <spring class="spacer"/>
   <!-- from EdDialogOverlay -->
-  <xul:box id="AdvancedEdit"/>
+  <box id="AdvancedEdit"/>
   <!-- from global dialogOverlay -->
-  <xul:box id="okCancelButtons"/> 
+  <box id="okCancelButtons"/> 
 
-</xul:window>
+</window>

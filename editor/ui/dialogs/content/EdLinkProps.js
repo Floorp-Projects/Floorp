@@ -22,22 +22,14 @@
 
 var anchorElement = null;
 var imageElement = null;
-var insertNew = true;
+var insertNew = false;
+var insertLinkAtCaret;
 var needLinkText = false;
-var insertLinkAroundSelection = false;
-var linkTextInput;
-var hrefInput;
-var linkMessage;
 var href;
 var newLinkText;
-var NamedAnchorList = 0;
 var HNodeArray;
 var haveNamedAnchors = false;
 var haveHeadings = false;
-var MoreSection;
-var MoreFewerButton;
-var SeeMore = false;
-var AdvancedEditSection;
 
 // NOTE: Use "href" instead of "a" to distinguish from Named Anchor
 // The returned node is has an "a" tagName
@@ -50,20 +42,24 @@ function Startup()
     return;
 
   doSetOKCancel(onOK, null);
-  
-  // Message was wrapped in a <label> or <div>, so actual text is a child text node
-  linkCaption     = (document.getElementById("linkTextCaption")).firstChild;
-  linkMessage     = (document.getElementById("linkTextMessage")).firstChild;
-  linkTextInput   = document.getElementById("linkTextInput");
-  hrefInput       = document.getElementById("hrefInput");
-  NamedAnchorList = document.getElementById("NamedAnchorList");
-  HeadingsList    = document.getElementById("HeadingsList");
-  MoreSection     = document.getElementById("MoreSection");
-  MoreFewerButton  = document.getElementById("MoreFewerButton");
-  AdvancedEditSection = document.getElementById("AdvancedEdit");
 
-  // Get a single selected anchor element
-  anchorElement = editorShell.GetSelectedElement(tagName);
+  dialog = new Object;
+  if (!dialog)
+  {
+    dump("Failed to create dialog object!!!\n");
+    window.close();
+  }
+
+  // Message was wrapped in a <label> or <div>, so actual text is a child text node
+  dialog.linkTextCaption     = document.getElementById("linkTextCaption");
+  dialog.linkTextMessage     = document.getElementById("linkTextMessage");
+  dialog.linkTextInput       = document.getElementById("linkTextInput");
+  dialog.hrefInput           = document.getElementById("hrefInput");
+  dialog.NamedAnchorList     = document.getElementById("NamedAnchorList");
+  dialog.HeadingsList        = document.getElementById("HeadingsList");
+  dialog.MoreSection         = document.getElementById("MoreSection");
+  dialog.MoreFewerButton     = document.getElementById("MoreFewerButton");
+  dialog.AdvancedEditSection = document.getElementById("AdvancedEdit");
 
   var selection = editorShell.editorSelection;
   if (selection) {
@@ -72,78 +68,126 @@ function Startup()
     dump("Failed to get selection\n");
   }
 
-  if (anchorElement) {
-    // We found an element and don't need to insert one
-    dump("found anchor element\n");
-    insertNew = false;
-
-    // We get the anchor if any of the selection (or just caret)
-    //  is enclosed by the link. Select the entire link
-    //  so we can show the selection text
-    editorShell.SelectElement(anchorElement);
-    selection = editorShell.editorSelection;
-
-  } else {
-    // See if we have a selected image instead of text
-    imageElement = editorShell.GetSelectedElement("img");
-    if (imageElement) {
-      // See if the image is a child of a link
-      dump("Image element found - check if its a link...\n");
-      dump("Image Parent="+parent);
-      parent = imageElement.parentNode;
-        dump("Parent="+parent+" nodeName="+parent.nodeName+"\n");
-      if (parent) {
-        anchorElement = parent;
-        insertNew = false;
-        linkCaption.data = GetString("LinkImage");
-        // Link source string is the source URL of image
-        // TODO: THIS STILL DOESN'T HANDLE MULTIPLE SELECTED IMAGES!
-        linkMessage.data = imageElement.getAttribute("src");;
+  // See if we have a single selected image
+  imageElement = editorShell.GetSelectedElement("img");
+  
+  if (imageElement)
+  {
+    // Get the parent link if it exists -- more efficient than GetSelectedElement()
+    anchorElement = editorShell.GetElementOrParentByTagName("href", imageElement);
+    if (anchorElement)
+    {
+dump("Existing image link"+anchorElement+"\n");
+      if (anchorElement.childNodes.length > 1)
+      {
+dump("Copying existing image link\n");
+        // If there are other children, then we want to break
+        //  this image away by inserting a new link around it,
+        //  so make a new node and copy existing attributes
+        anchorElement = anchorElement.cloneNode(false);
+        insertNew = true;
       }
-    } else {
-      // We don't have an element selected, 
-      //  so create one with default attributes
-      dump("Element not selected - calling createElementWithDefaults\n");
-      anchorElement = editorShell.CreateElementWithDefaults(tagName);
-
-      // We will insert a new link at caret location if there's no selection
-      // TODO: This isn't entirely correct. If selection doesn't have any text
-      //   or an image, then shouldn't we clear the selection and insert new text?
-      insertNew = selection.isCollapsed;
-      dump("insertNew is " + insertNew + "\n");
-      linkCaption.data = GetString("EnterLinkText");
-      linkMessage.data = "";
     }
+  }
+  else
+  {
+    // Get an anchor element if caret or
+    //   entire selection is within the link.
+    anchorElement = editorShell.GetSelectedElement(tagName);
+
+    if (anchorElement)
+    {
+      // Select the entire link
+      editorShell.SelectElement(anchorElement);
+      selection = editorShell.editorSelection;
+    }
+    else
+    {
+      // If selection starts in a link, but extends beyond it,
+      //   the user probably wants to extend existing link to new selection,
+      //   so check if either end of selection is within a link
+      // POTENTIAL PROBLEM: This prevents user from selecting text in an existing
+      //   link and making 2 links. 
+      // Note that this isn't a problem with images, handled above
+
+      anchorElement = editorShell.GetElementOrParentByTagName("href", selection.anchorNode);
+      if (!anchorElement)
+        anchorElement = editorShell.GetElementOrParentByTagName("href", selection.focusNode);
+
+      if (anchorElement)
+      {
+        // But clone it for reinserting/merging around existing
+        //   link that only partially overlaps the selection
+        anchorElement = anchorElement.cloneNode(false);
+        insertNew = true;
+      }
+    }
+  }
+
+  if(!anchorElement)
+  {
+    // No existing link -- create a new one
+    anchorElement = editorShell.CreateElementWithDefaults(tagName);
+    insertNew = true;
   }
   if(!anchorElement)
   {
     dump("Failed to get selected element or create a new one!\n");
     window.close();
-  } else if (!insertNew && !imageElement) {
+  } 
 
-    // Replace the link message with the link source string
-    selectedText = GetSelectionAsText();
-    if (selectedText.length > 0) {
-      // Use just the first 50 characters and add "..."
-      selectedText = TruncateStringAtWordEnd(selectedText, 50, true);
-    } else {
-      dump("Selected text for link source not found. Non-text elements selected?\n");
-    }
-    linkMessage.data = selectedText;
-    // The label above the selected text:
-    linkCaption.data = GetString("LinkText");
-  }
-
-  if (!selection.isCollapsed)
+  // We insert at caret only when nothing is selected
+  insertLinkAtCaret = selection.isCollapsed;
+  
+  if (insertLinkAtCaret)
   {
-    // HREF is a weird case: If selection extends beyond
-    //   the link, user probably wants to extend link to 
-    //   entire selection.
-    // TODO: If there was already a link, 
-    //   we need to know if selection extends beyond existing
-    //   link text before we should do this
-    insertLinkAroundSelection = true;
-    dump("insertLinkAroundSelection is TRUE\n");
+    // Note: Use linkTextMessage for normal weight, 
+    //       because linkTextCaption is bold (set in EdDialog.css)
+    dialog.linkTextMessage.setAttribute("value",GetString("EnterLinkText"));
+    // Hide the other string 
+    dialog.linkTextCaption.setAttribute("hidden","true");
+  }
+  else
+  {
+    if (!imageElement)
+    {
+      // Don't think we can ever get here!
+
+      // Check if selection has some text - use that first
+      selectedText = GetSelectionAsText();
+      if (selectedText.length == 0) 
+      {
+        // No text, look for first image in the selection
+        var children = anchorElement.childNodes;
+        if (children)
+        {
+          for(i=0; i < children.length; i++) 
+          {
+            if (children.item(i) == "IMG")
+            {
+              imageElement = children.item(i);
+              break;
+            }
+          }
+        }
+      }
+    }
+    // Set "caption" for link source and the source text or image URL
+    if (imageElement)
+    {
+      dialog.linkTextCaption.setAttribute("value",GetString("LinkImage"));
+      // Link source string is the source URL of image
+      // TODO: THIS DOESN'T HANDLE MULTIPLE SELECTED IMAGES!
+      dialog.linkTextMessage.setAttribute("value",imageElement.src);
+    } else {
+      dialog.linkTextCaption.setAttribute("value",GetString("LinkText"));
+      if (selectedText.length > 0) {
+        // Use just the first 50 characters and add "..."
+        dialog.linkTextMessage.setAttribute("value",TruncateStringAtWordEnd(selectedText, 50, true));
+      } else {
+        dialog.linkTextMessage.setAttribute("value",GetString("MixedSelection"));
+      }
+    }
   }
 
   // Make a copy to use for AdvancedEdit and onSaveDefault
@@ -156,28 +200,19 @@ function Startup()
   InitDialog();
 
   // Set initial focus
-  if (insertNew) {
-    dump("Setting focus to linkTextInput\n");
+  if (insertLinkAtCaret) {
+    dump("Setting focus to dialog.linkTextInput\n");
     // We will be using the HREF inputbox, so text message
-    linkTextInput.focus();
+    dialog.linkTextInput.focus();
   } else {
-    dump("Setting focus to linkTextInput\n");
-    hrefInput.focus();
+    dump("Setting focus to dialog.linkTextInput\n");
+    dialog.hrefInput.focus();
 
     // We will not insert a new link at caret, so remove link text input field
-    parentNode = linkTextInput.parentNode;
-    if (parentNode) {
-      dump("Removing link text input field.\n");
-      parentNode.removeChild(linkTextInput);
-      linkTextInput = null;
-    }
+    dialog.linkTextInput.setAttribute("hidden","true");
+    dialog.linkTextInput = null;
   }
-  // Set SeeMore bool to the OPPOSITE of the current state,
-  //   which is automatically saved by using the 'persist="more"' 
-  //   attribute on the MoreFewerButton button
-  //   onMoreFewer will toggle it and redraw the dialog
-  SeeMore = (MoreFewerButton.getAttribute("more") != "1");
-  onMoreFewer();
+  InitMoreFewer();
 }
 
 // Set dialog widgets with attribute data
@@ -185,8 +220,7 @@ function Startup()
 //   by AdvancedEdit(), which is shared by all property dialogs
 function InitDialog()
 {
-  hrefInput.value = globalElement.getAttribute("href");
-  dump("Current HREF: "+hrefInput.value+"\n");
+  dialog.hrefInput.value = globalElement.href;
 }
 
 function chooseFile()
@@ -194,31 +228,31 @@ function chooseFile()
   // Get a local file, converted into URL format
   fileName = editorShell.GetLocalFileURL(window, "html");
   if (fileName) {
-    hrefInput.value = fileName;
+    dialog.hrefInput.value = fileName;
   }
   // Put focus into the input field
-  hrefInput.focus();
+  dialog.hrefInput.focus();
 }
 
 function RemoveLink()
 {
   // Simple clear the input field!
-  hrefInput.value = "";
+  dialog.hrefInput.value = "";
 }
 
 function FillListboxes()
 {
-  NamedAnchorNodeList = editorShell.editorDocument.anchors;
+  var NamedAnchorNodeList = editorShell.editorDocument.anchors;
   var NamedAnchorCount = NamedAnchorNodeList.length;
   if (NamedAnchorCount > 0) {
     for (var i = 0; i < NamedAnchorCount; i++) {
-      AppendStringToList(NamedAnchorList,NamedAnchorNodeList.item(i).name);
+      AppendStringToList(dialog.NamedAnchorList,NamedAnchorNodeList.item(i).name);
     }
     haveNamedAnchors = true;
   } else {
     // Message to tell user there are none
-    AppendStringToList(NamedAnchorList,GetString("NoNamedAnchors"));
-    NamedAnchorList.setAttribute("disabled", "true");
+    AppendStringToList(dialog.NamedAnchorList,GetString("NoNamedAnchors"));
+    dialog.NamedAnchorList.setAttribute("disabled", "true");
   }
   var firstHeading = true;
   for (var j = 1; j <= 6; j++) {
@@ -250,7 +284,7 @@ function FillListboxes()
         // Append "_" to any name already in the list
         if (GetExistingHeadingIndex(text) > -1)
           text += "_";
-        AppendStringToList(HeadingsList, text);
+        AppendStringToList(dialog.HeadingsList, text);
 
         // Save nodes in an array so we can create anchor node under it later
         if (!HNodeArray)
@@ -264,17 +298,17 @@ function FillListboxes()
     haveHeadings = true;
   } else {
     // Message to tell user there are none
-    AppendStringToList(HeadingsList,GetString("NoHeadings"));
-    HeadingsList.setAttribute("disabled", "true");
+    AppendStringToList(dialog.HeadingsList,GetString("NoHeadings"));
+    dialog.HeadingsList.setAttribute("disabled", "true");
   }
 }
 
 function GetExistingHeadingIndex(text)
 {
   dump("Heading text: "+text+"\n");
-  for (i=0; i < HeadingsList.length; i++) {
-    dump("HeadingListItem"+i+": "+HeadingsList.options[i].value+"\n");
-    if (HeadingsList.options[i].value == text)
+  for (var i=0; i < dialog.HeadingsList.length; i++) {
+    dump("HeadingListItem"+i+": "+dialog.HeadingsList.options[i].value+"\n");
+    if (dialog.HeadingsList.options[i].value == text)
       return i;
   }
   return -1;
@@ -283,43 +317,22 @@ function GetExistingHeadingIndex(text)
 function SelectNamedAnchor()
 {
   if (haveNamedAnchors) {
-    hrefInput.value = "#"+NamedAnchorList.options[NamedAnchorList.selectedIndex].value;
+    dialog.hrefInput.value = "#"+dialog.NamedAnchorList.options[dialog.NamedAnchorList.selectedIndex].value;
   }
 }
 
 function SelectHeading()
 {
   if (haveHeadings) {
-    hrefInput.value = "#"+HeadingsList.options[HeadingsList.selectedIndex].value;
+    dialog.hrefInput.value = "#"+dialog.HeadingsList.options[dialog.HeadingsList.selectedIndex].value;
   }
 }
-
-function onMoreFewer()
-{
-  if (SeeMore)
-  {
-    MoreSection.setAttribute("style","display: none");
-    window.sizeToContent();
-    MoreFewerButton.setAttribute("more","0");
-    MoreFewerButton.setAttribute("value",GetString("MoreProperties"));
-    SeeMore = false;
-  }
-  else
-  {
-    MoreSection.setAttribute("style","display: inherit");
-    window.sizeToContent();
-    MoreFewerButton.setAttribute("more","1");
-    MoreFewerButton.setAttribute("value",GetString("FewerProperties"));
-    SeeMore = true;
-  }
-}
-
 
 // Get and validate data from widgets.
 // Set attributes on globalElement so they can be accessed by AdvancedEdit()
 function ValidateData()
 {
-  href = hrefInput.value.trimString();
+  href = dialog.hrefInput.value.trimString();
   if (href.length > 0) {
     // Set the HREF directly on the editor document's anchor node
     //  or on the newly-created node if insertNew is true
@@ -327,18 +340,18 @@ function ValidateData()
     dump("HREF:"+href+"|\n");
   } else if (insertNew) {
     // We must have a URL to insert a new link
-    //NOTE: WE ACCEPT AN EMPTY HREF TO ALLOW REMOVING AN EXISTING LINK,
+    //NOTE: We accept an empty HREF on existing link to indicate removing the link
     dump("Empty HREF error\n");
     ShowInputErrorMessage(GetString("EmptyHREFError"));
     return false;
   }
-  if (linkTextInput) {
+  if (dialog.linkTextInput) {
     // The text we will insert isn't really an attribute,
     //  but it makes sense to validate it
-    newLinkText = TrimString(linkTextInput.value);
+    newLinkText = TrimString(dialog.linkTextInput.value);
     if (newLinkText.length == 0) {
       ShowInputErrorMessage(GetString("GetInputError"));
-      linkTextInput.focus();
+      dialog.linkTextInput.focus();
       return false;
     }
   }
@@ -358,7 +371,7 @@ function onOK()
       editorShell.BeginBatchChanges();
 
       // Get text to use for a new link
-      if (insertNew) {
+      if (insertLinkAtCaret) {
         // Append the link text as the last child node 
         //   of the anchor node
         textNode = editorShell.editorDocument.createTextNode(newLinkText);
@@ -371,10 +384,12 @@ function onOK()
           dump("Exception occured in InsertElementAtSelection\n");
           return true;
         }
-      } else if (insertLinkAroundSelection) {
-        // Text was supplied by the selection,
-        //  so insert a link node as parent of this text
+      } else if (insertNew) {
+        //  Link source was supplied by the selection,
+        //  so insert a link node as parent of this
+        //  (may be text, image, or other inline content)
         try {
+dump("InsertLink around selection\n");
           editorShell.InsertLinkAroundSelection(anchorElement);
         } catch (e) {
           dump("Exception occured in InsertElementAtSelection\n");
