@@ -33,6 +33,7 @@
 #include "nsScrollPortView.h"
 
 #include "nsIModule.h"
+#include "nsIPref.h"
 
 static NS_DEFINE_CID(kCViewManager, NS_VIEW_MANAGER_CID);
 static NS_DEFINE_CID(kCView, NS_VIEW_CID);
@@ -43,6 +44,7 @@ static NS_DEFINE_CID(kCComponentManager, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 
+static const char kUseNewViewManagerPref[] = "nglayout.debug.enable_scary_view_manager";
 
 
 class nsViewFactory : public nsIFactory
@@ -109,13 +111,22 @@ nsresult nsViewFactory::LockFactory(PRBool aLock)
   return NS_OK;
 }
 
+#include "nsViewManager.h"
 #include "nsViewManager2.h"
 
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsViewManager)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsViewManager2)
 
 static NS_IMETHODIMP ViewManagerConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
-  return nsViewManager2Constructor(aOuter, aIID, aResult);
+  PRBool useNewViewManager = PR_FALSE;
+
+  nsCOMPtr<nsIPref> prefs( do_GetService(NS_PREF_CONTRACTID) );
+  if (prefs)
+    prefs->GetBoolPref(kUseNewViewManagerPref, &useNewViewManager);
+
+  return useNewViewManager ? nsViewManagerConstructor(aOuter, aIID, aResult)
+                           : nsViewManager2Constructor(aOuter, aIID, aResult);
 }
 
 #define nsViewManagerConstructor ViewManagerConstructor
