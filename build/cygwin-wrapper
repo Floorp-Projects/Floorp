@@ -29,26 +29,38 @@ if test "${prog}" = "-up"; then
     shift
 fi
 
+process=1
+
 for i in "${@}"
 do
-    if test -n "${up}"; then
-        pathname=${i#-I[a-zA-Z]:/}
-        if ! test "${pathname}" = "${i}"; then
-            no_i=${i#-I}
-            driveletter=${no_i%%:*}
-            i=-I${mountpoint}/${driveletter}/${pathname}
-        fi
+    if test "${i}" = "-wrap"; then
+        process=1
     else
-        eval 'leader=${i%%'${mountpoint}'/[a-zA-Z]/*}'
-        if ! test "${leader}" = "${i}"; then
-            eval 'pathname=${i#'${leader}${mountpoint}'/[a-zA-Z]/}'
-            eval 'no_mountpoint=${i#'${leader}${mountpoint}'/}'
-            driveletter=${no_mountpoint%%/*}
-            i=${leader}${driveletter}:/${pathname}
+        if test "${i}" = "-nowrap"; then
+            process=
+        else
+            if test -n "${process}"; then
+                if test -n "${up}"; then
+                    pathname=${i#-I[a-zA-Z]:/}
+                    if ! test "${pathname}" = "${i}"; then
+                        no_i=${i#-I}
+                        driveletter=${no_i%%:*}
+                        i=-I${mountpoint}/${driveletter}/${pathname}
+                    fi
+                else
+                    eval 'leader=${i%%'${mountpoint}'/[a-zA-Z]/*}'
+                    if ! test "${leader}" = "${i}"; then
+                        eval 'pathname=${i#'${leader}${mountpoint}'/[a-zA-Z]/}'
+                        eval 'no_mountpoint=${i#'${leader}${mountpoint}'/}'
+                        driveletter=${no_mountpoint%%/*}
+                        i=${leader}${driveletter}:/${pathname}
+                    fi
+                fi
+            fi
+
+            args="${args} ${i}"
         fi
     fi
-
-    args="${args} ${i}"
 done
 
 exec $prog $args
