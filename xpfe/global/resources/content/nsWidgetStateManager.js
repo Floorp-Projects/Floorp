@@ -193,7 +193,7 @@ nsWidgetStateManager.prototype =
                 {
                   aElement.setAttribute( property, aDataObject[property] );
                 }
-              if (aElement.disabled!="true")
+              if ( !aElement.getAttribute("disabled","true") )
                 aElement.removeAttribute("disabled");
             }
         },
