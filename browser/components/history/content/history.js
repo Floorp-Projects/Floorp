@@ -229,7 +229,7 @@ function OpenURL(aInNewWindow)
 
 function SortBy(sortKey)
 {
-  // Welcome to the end of the world of Lame.
+  // XXXBlake Welcome to the end of the world of Lame.
   // You can go no further. You are standing on the edge -- teetering, even.
   // Look on the bright side: you can rest assured that no code you see in the future
   // will even come close to the lameness of the code below.
