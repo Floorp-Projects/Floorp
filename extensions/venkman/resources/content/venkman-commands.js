@@ -253,8 +253,8 @@ function cmdBreak (e)
     {
         bpr = setBreakpoint (matchingFiles[i], e.lineNumber);
         if (bpr)
-            feedback (getMsg(MSN_BP_CREATED, [bpr.fileName, bpr.lineNumber,
-                                              bpr.scriptMatches]));
+            feedback (e, getMsg(MSN_BP_CREATED, [bpr.fileName, bpr.line,
+                                                 bpr.scriptMatches]));
     }
     
     return true;

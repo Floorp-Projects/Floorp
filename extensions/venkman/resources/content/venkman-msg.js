@@ -178,7 +178,7 @@ const MSG_DOC_DESCRIPTION  = getMsg("msg.doc.description");
 const MSG_HELP_TITLE       = getMsg("msg.help.title");
 
 /* message names for parameterized messages */
-const MSN_ERR_INTERNAL_DSPATCH = getMsg("msg.err.internal.dispatch");
+const MSN_ERR_INTERNAL_DISPATCH = "msg.err.internal.dispatch";
 const MSN_CHROME_FILTER    = "msg.chrome.filter";
 const MSN_ERR_NO_SCRIPT    = "msg.err.noscript";
 const MSN_IASMODE          = "msg.iasmode";

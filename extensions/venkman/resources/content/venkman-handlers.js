@@ -367,19 +367,6 @@ function con_sourcesel (e)
     console.scriptsView.selectedIndex = -1;
     console.stackView.selectedIndex   = -1;
     console.projectView.selectedIndex = -1;
-
-    if (console.sourceView.outliner.selection.getRangeCount() > 1)
-    {
-        var row = new Object();
-        var colID = new Object();
-        var childElt = new Object();
-        
-        var outliner = console.sourceView.outliner;
-        outliner.getCellAt(e.clientX, e.clientY, row, colID, childElt);        
-        if (row.value == -1)
-          return;
-        console.sourceView.selectedIndex = row.value;
-    }
 }
 
 console.onSourceClick =

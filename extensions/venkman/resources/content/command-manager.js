@@ -240,7 +240,7 @@ function cmgr_showpop (id)
     var menuitem = popup.firstChild;
 
     do
-    {        
+    {
         /* should it be visible? */
         if (menuitem.hasAttribute("visibleif"))
         {

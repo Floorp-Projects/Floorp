@@ -218,8 +218,8 @@ function dispatchCommand (command, e, flags)
         {
             if ("dbgDispatch" in console)
             {
-                dd ("dispatching command ``" +
-                    dumpObjectTree(e.command.name) + "''\n");
+                dd ("dispatching command ``" + e.command.name+ "''\n" +
+                    dumpObjectTree(e));
                 e.returnValue = e.command.func(e);
                 console.lastEvent = e;
             }

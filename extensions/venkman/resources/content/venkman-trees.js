@@ -332,7 +332,7 @@ function sv_getcx(cx)
         for (row = min; row <= max; ++row)
         {
             cx.lineNumberList.push (row + 1);
-            if (range = 0 && row == min &&
+            if (range == 0 && row == min &&
                 "lineMap" in sourceText && sourceText.lineMap[row])
             {
                 cx.lineIsExecutable = true;
@@ -340,9 +340,13 @@ function sv_getcx(cx)
             if (typeof sourceText.lines[row] == "object" &&
                 "bpRecord" in sourceText.lines[row])
             {
+                var sourceLine = sourceText.lines[row];
                 if (!("breakpointRecList" in cx))
                     cx.breakpointRecList = new Array();
-                cx.breakpointRecList.push(sourceText[row]);
+                cx.breakpointRecList.push(sourceLine.bpRecord);
+                if (!("breakpointIndexList" in cx))
+                    cx.breakpointIndexList = new Array();
+                cx.breakpointIndexList.push(sourceLine.bpRecord.childIndex);
             }
         }
     }
@@ -1454,18 +1458,14 @@ function pv_getcx(cx)
         this.outliner.selection.getRangeAt(range, min, max);
         min = min.value;
         max = max.value;
-        dd ("range " + range + ", " + min + "..." + max);
         for (var i = min; i <= max; ++i)
         {
             rec = this.childData.locateChildByVisualRow(i);
             if (rec instanceof BPRecord)
             {
-                dd ("row " + i + " is a bprecord");
                 cx.breakpointRecList.push(rec);
                 cx.breakpointIndexList.push(rec.childIndex);
             }
-            else
-                dd ("row " + i + " is NOT a bprecord");
         }
     }
 
