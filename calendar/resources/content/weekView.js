@@ -105,20 +105,6 @@ function WeekView( calendarWindow )
       }
    }
     calendarWindow.EventSelection.addObserver( weekViewEventSelectionObserver );
-
-    var savedThis = this;
-    var calendarObserver = {
-        onStartBatch: function() { },
-        onEndBatch: function() { },
-        onLoad: function() { },
-        onAddItem: function(aItem) { savedThis.refreshEvents(); },
-        onModifyItem: function(aNewItem, aOldItem) { savedThis.refreshEvents(); },
-        onDeleteItem: function(aDeletedItem) { savedThis.refreshEvents(); },
-        onAlarm: function(aAlarmItem) {},
-        onError: function(aErrNo, aMessage) { }
-    }
-    var calendar = createCalendar();
-    calendar.addObserver(calendarObserver, calendar.ITEM_FILTER_TYPE_ALL);
 }
 
 /** PUBLIC

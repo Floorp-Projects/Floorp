@@ -137,7 +137,24 @@ function CalendarWindow( )
    // observer when things change in the data source.
    
    var calendarWindow = this;
-   
+
+
+    var savedThis = this;
+    var calendarObserver = {
+        onStartBatch: function() { },
+        onEndBatch: function() { },
+        onLoad: function() { },
+        onAddItem: function(aItem) { calendarWindow.currentView.refreshEvents(); },
+        onModifyItem: function(aNewItem, aOldItem) { calendarWindow.currentView.refreshEvents(); },
+        onDeleteItem: function(aDeletedItem) { calendarWindow.currentView.refreshEvents(); },
+        onAlarm: function(aAlarmItem) {},
+        onError: function(aErrNo, aMessage) { }
+    }
+    var calendar = createCalendar();
+    calendar.addObserver(calendarObserver, calendar.ITEM_FILTER_TYPE_ALL);
+
+
+/*
    this.calendarEventDataSourceObserver =
    {
       
@@ -213,6 +230,7 @@ function CalendarWindow( )
    // add the observer to the event source
    
    //gICalLib.addObserver( this.calendarEventDataSourceObserver );
+*/
 }
 
 

@@ -158,7 +158,7 @@ function MonthView( calendarWindow )
       }
    }
       
-   calendarWindow.EventSelection.addObserver( monthViewEventSelectionObserver );
+   //calendarWindow.EventSelection.addObserver( monthViewEventSelectionObserver );
    
    this.showingLastDay = false;
   
@@ -167,7 +167,7 @@ function MonthView( calendarWindow )
    this.dayNumberItemArray = new Array();
    this.dayBoxItemArray = new Array();
    this.weekNumberItemArray = new Array();
-   this.kungFooDeathGripOnEventBoxes = new Array();
+//   this.kungFooDeathGripOnEventBoxes = new Array();
    this.firstDateOfView = new Date();
    this.lastDateOfView = new Date();
 
@@ -216,9 +216,102 @@ function MonthView( calendarWindow )
 *   We create XUL boxes dynamically and insert them into the XUL. 
 *   To refresh the display we remove all the old boxes and make new ones.
 */
-MonthView.prototype.refreshEvents = function monthView_refreshEvents( )
+MonthView.prototype.refreshEvents = function()
 {
-  return;
+    // clear out the current events
+    this.removeElementsByAttribute("eventbox", "monthview");
+  
+    // Figure out the start and end days for the week we're currently viewing
+    var startDate = new Date(this.firstDateOfView);
+    var endDate = new Date(this.lastDateOfView);
+    endDate.setDate(endDate.getDate() + 1);
+    endDate.setSeconds(endDate.getSeconds() - 1);
+
+    // Save this off so we can get it again in onGetResult below
+    var savedThis = this;
+    var getListener = {
+        onOperationComplete: function(aCalendar, aStatus, aOperationType, aId, aDetail) {
+            dump("onOperationComplete\n");
+        },
+        onGetResult: function(aCalendar, aStatus, aItemType, aDetail, aCount, aItems) {
+            for (var i = 0; i < aCount; ++i) {
+                dump(aItems[i] + "\n");
+                var itemOccurrence = aItems[i];
+ 
+                var calEvent = itemOccurrence.item.QueryInterface(Components.interfaces.calIEvent);
+                var startDate = new Date(calEvent.startDate.jsDate);
+                dayBoxItem = savedThis.dayBoxItemArray[savedThis.indexOfDate(startDate)];
+
+                // XXX need to look at the number of children here and determine what we're supposed to do
+                var eventBox = savedThis.createEventBox(itemOccurrence);
+                dayBoxItem.appendChild(eventBox);
+ 
+            }
+        }
+    };
+
+    var ccalendar = createCalendar(); // XXX Should get the composite calendar here
+
+    dump("Fetching events from " + startDate.toString() + " to " + endDate.toString() + "\n");
+
+    ccalendar.getItems(ccalendar.ITEM_FILTER_TYPE_EVENT | ccalendar.ITEM_FILTER_CLASS_OCCURRENCES,
+                      0, jsDateToDateTime(startDate), jsDateToDateTime(endDate), getListener);
+}
+
+MonthView.prototype.createEventBox = function(itemOccurrence)
+{
+    var calEvent = itemOccurrence.item.QueryInterface(Components.interfaces.calIEvent);
+ 
+    // Make a box item to hold the event
+    eventBox = document.createElement("box");
+    eventBox.setAttribute("id", "month-view-event-box-" + itemOccurrence.id );
+    eventBox.setAttribute("name", "month-view-event-box-" + itemOccurrence.id );
+    //eventBox.setAttribute( "event"+toString(calendarEventDisplay.event.id), true );
+
+    //this.setEventboxClass(eventBox, calendarEventDisplay.event, "month-view");
+    eventBox.setAttribute("class", "month-view-event-class");
+    
+    eventBox.setAttribute("eventbox", "monthview" );
+    eventBox.setAttribute("onclick", "monthEventBoxClickEvent( this, event )" );
+    eventBox.setAttribute("ondblclick", "monthEventBoxDoubleClickEvent( this, event )" );
+    eventBox.setAttribute("onmouseover", "gCalendarWindow.changeMouseOverInfo( calendarEventDisplay, event )" );
+    eventBox.setAttribute("tooltip", "eventTooltip" );
+    eventBox.setAttribute("ondraggesture", "nsDragAndDrop.startDrag(event,monthViewEventDragAndDropObserver);" );
+    // add a property to the event box that holds the calendarEvent that the
+    // box represents
+
+    eventBox.event = calEvent;
+
+    // Make a text item to show the event title
+    var eventBoxText = document.createElement("label");
+    eventBoxText.setAttribute("crop", "end");
+    eventBoxText.setAttribute("class", "month-day-event-text-class");
+
+    if (itemOccurrence.isAllDay) {
+        eventBox.setAttribute("allday", "true");
+        eventBoxText.setAttribute("value", itemOccurrence.title );
+        // Create an image
+        var newImage = document.createElement("image");
+        newImage.setAttribute("class", "all-day-event-class");
+        eventBox.appendChild(newImage);
+    } else {
+        // To format the starting time of the event
+        var eventStartTime = new Date(calEvent.startDate.jsDate.getTime());
+        var StartFormattedTime = this.calendarWindow.dateFormater.getFormatedTime(eventStartTime);
+        // display as "12:15 titleevent"
+        eventBoxText.setAttribute("value", StartFormattedTime+' '+ calEvent.title);
+    }
+
+    eventBoxText.setAttribute("flex", "1");
+    eventBoxText.setAttribute("ondraggesture", "nsDragAndDrop.startDrag(event,monthViewEventDragAndDropObserver);");
+
+    // add the text to the event box and the event box to the day box
+
+    eventBox.appendChild(eventBoxText);        
+
+    return eventBox;
+
+
 
   // Set the numberOfEventsToShow
   if( this.numberOfEventsToShow == false )
@@ -287,7 +380,7 @@ MonthView.prototype.refreshEvents = function monthView_refreshEvents( )
          eventBox.calendarEventDisplay = calendarEventDisplay;
          
          this.kungFooDeathGripOnEventBoxes.push( eventBox );
-         
+
          // Make a text item to show the event title
          
          var eventBoxText = document.createElement( "label" );
@@ -428,7 +521,7 @@ MonthView.prototype.switchTo = function monthView_switchTo( )
 *   Redraw the display, but not the events
 */
 
-MonthView.prototype.refreshDisplay = function monthView_refreshDisplay( )
+MonthView.prototype.refreshDisplay = function()
 { 
    // set the month/year in the header
    

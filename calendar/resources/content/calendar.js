@@ -567,11 +567,11 @@ function monthEventBoxClickEvent( eventBox, event )
    //do this check, otherwise on double click you get into an infinite loop
    if( event.detail == 1 )
    {
-      gCalendarWindow.EventSelection.replaceSelection( eventBox.calendarEventDisplay.event );
+      gCalendarWindow.EventSelection.replaceSelection( eventBox.event );
       
       var newDate = gCalendarWindow.getSelectedDate();
 
-      newDate.setDate( eventBox.calendarEventDisplay.event.start.day );
+      newDate.setDate( eventBox.event.startDate.day );
 
       gCalendarWindow.setSelectedDate( newDate, false );
    }
@@ -598,7 +598,7 @@ function monthEventBoxDoubleClickEvent( eventBox, event )
    
    gCalendarWindow.monthView.clearSelectedDate();
    
-   editEvent( eventBox.calendarEventDisplay.event );
+   editEvent( eventBox.event );
 
    if ( event ) 
    {
