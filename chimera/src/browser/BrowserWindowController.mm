@@ -57,6 +57,10 @@
 #include "nsIWebProgressListener.h"
 #include "nsIWebBrowserChrome.h"
 
+#include "nsIClipboardCommands.h"
+#include "nsIWebBrowser.h"
+#include "nsIInterfaceRequestorUtils.h"
+
 static NSString *BrowserToolbarIdentifier	= @"Browser Window Toolbar";
 static NSString *BackToolbarItemIdentifier	= @"Back Toolbar Item";
 static NSString *ForwardToolbarItemIdentifier	= @"Forward Toolbar Item";
@@ -1059,7 +1063,15 @@ static NSString *PrintToolbarItemIdentifier	= @"Print Toolbar Item";
 
 - (IBAction)copyLinkLocation:(id)aSender
 {
-  NSLog(@"Copy Link Location not yet implemented");
+  CHBrowserView* view = [[self getBrowserWrapper] getBrowserView];
+  if (!view) return;
+
+  nsCOMPtr<nsIWebBrowser> webBrowser = getter_AddRefs([view getWebBrowser]);
+  if (!webBrowser) return;
+
+  nsCOMPtr<nsIClipboardCommands> clipboard(do_GetInterface(webBrowser));
+  if (clipboard)
+    clipboard->CopyLinkLocation();
 }
 
 
