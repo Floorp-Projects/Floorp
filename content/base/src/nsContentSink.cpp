@@ -288,6 +288,7 @@ nsContentSink::ProcessHTTPHeaders(nsIChannel* aChannel)
     "link",
     "default-style",
     "content-style-type",
+    "content-location",
     // add more http headers if you need
     0
   };
@@ -398,6 +399,16 @@ nsContentSink::ProcessHeaderData(nsIAtom* aHeader, const nsAString& aValue,
       nsIPresShell* shell = mDocument->GetShellAt(0);
       if (shell) {
         shell->DisableThemeSupport();
+      }
+    }
+  }
+  else if (aHeader == nsHTMLAtoms::contentLocation) {
+    nsCOMPtr<nsIURI> newBase;
+    rv = NS_NewURI(getter_AddRefs(newBase), aValue, nsnull, mDocumentBaseURL);
+    if (NS_SUCCEEDED(rv)) {
+      rv = mDocument->SetBaseURL(newBase); // does security check
+      if (NS_SUCCEEDED(rv)) {
+        mDocumentBaseURL = mDocument->GetBaseURL();
       }
     }
   }
