@@ -686,7 +686,9 @@ CERT_DecodeAVAValue(const SECItem *derAVAValue)
 		return NULL;
 	   }
 	   break;
-	case conv_none: ;
+	case conv_none:
+	   PORT_Assert(0); /* not reached */
+	   break;
 	}
 	  
 	avaValue.data = utf8Val;
