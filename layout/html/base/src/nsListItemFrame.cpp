@@ -31,6 +31,7 @@
 #include "nsHTMLIIDs.h"
 #include "nsIPresShell.h"
 #include "prprf.h"
+#include "nsIView.h"
 
 // XXX TODO:
 // 1. If container is RTL then place bullets on the right side
@@ -645,26 +646,31 @@ void nsListItemFrame::PaintChildren(nsIPresContext& aCX,
 {
   nsIFrame* kid = mFirstChild;
   while (nsnull != kid) {
-    nsRect kidRect;
-    kid->GetRect(kidRect);
-    nsRect damageArea;
-    PRBool overlap = damageArea.IntersectRect(aDirtyRect, kidRect);
-    // Note the special check here for our first child. We do this
-    // because we sometimes position bullets (our first child) outside
-    // of our frame.
-    if (overlap || (kid == mFirstChild)) {
-      // Translate damage area into kid's coordinate system
-      nsRect kidDamageArea(damageArea.x - kidRect.x, damageArea.y - kidRect.y,
-                           damageArea.width, damageArea.height);
-      aRenderingContext.PushState();
-      aRenderingContext.Translate(kidRect.x, kidRect.y);
-      kid->Paint(aCX, aRenderingContext, kidDamageArea);
-      if (nsIFrame::GetShowFrameBorders()) {
-        aRenderingContext.SetColor(NS_RGB(255,0,0));
-        aRenderingContext.DrawRect(0, 0, kidRect.width, kidRect.height);
+    nsIView *pView = kid->GetView();
+    if (nsnull == pView) {
+      nsRect kidRect;
+      kid->GetRect(kidRect);
+      nsRect damageArea;
+      PRBool overlap = damageArea.IntersectRect(aDirtyRect, kidRect);
+      // Note the special check here for our first child. We do this
+      // because we sometimes position bullets (our first child) outside
+      // of our frame.
+      if (overlap || (kid == mFirstChild)) {
+        // Translate damage area into kid's coordinate system
+        nsRect kidDamageArea(damageArea.x - kidRect.x, damageArea.y - kidRect.y,
+                             damageArea.width, damageArea.height);
+        aRenderingContext.PushState();
+        aRenderingContext.Translate(kidRect.x, kidRect.y);
+        kid->Paint(aCX, aRenderingContext, kidDamageArea);
+        if (nsIFrame::GetShowFrameBorders()) {
+          aRenderingContext.SetColor(NS_RGB(255,0,0));
+          aRenderingContext.DrawRect(0, 0, kidRect.width, kidRect.height);
+        }
+        aRenderingContext.PopState();
       }
-      aRenderingContext.PopState();
     }
+    else
+      NS_RELEASE(pView);
     kid = kid->GetNextSibling();
   }
 }
