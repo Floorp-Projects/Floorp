@@ -24,16 +24,17 @@
 #ifndef _nsCacheEntry_h_
 #define _nsCacheEntry_h_
 
+#include "nsICache.h"
+#include "nsICacheEntryDescriptor.h"
+#include "nsCacheMetaData.h"
+
 #include "nspr.h"
 #include "pldhash.h"
 #include "nscore.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsAReadableString.h"
-
-#include "nsICache.h"
-#include "nsICacheEntryDescriptor.h"
-#include "nsCacheMetaData.h"
+#include "nsIEventQueue.h"
 
 
 class nsCacheDevice;
@@ -79,13 +80,15 @@ public:
      * Data accessors
      */
     nsresult GetData( nsISupports ** result);
-    void     SetData( nsISupports *  data)        { mData = data; }
+    void     SetData( nsISupports *  data)        { mData = data;}
 
     PRUint32 DataSize()                           { return mDataSize;}
     void     SetDataSize( PRUint32  size)         { mDataSize = size;}
 
     void     TouchData();
-
+    
+    nsIEventQueue * GetEventQ()                         { return mEventQ;}
+    void            SetEventQ(nsIEventQueue * eventQ)   { mEventQ = dont_AddRef(eventQ);}
 
     /**
      * Meta data accessors
@@ -209,21 +212,22 @@ private:
     void MarkActive()          { mFlags |=  eActiveMask; }
     void MarkInactive()        { mFlags &= ~eActiveMask; }
 
-    nsCString *            mKey;            // 4  // XXX ask scc about const'ness
-    PRUint32               mFetchCount;     // 4
-    PRUint32               mLastFetched;    // 4
-    PRUint32               mLastModified;   // 4
-    PRUint32               mLastValidated;  // 4
-    PRUint32               mExpirationTime; // 4
-    PRUint32               mFlags;          // 4
-    PRUint32               mDataSize;       // 4
-    PRUint32               mMetaSize;       // 4
-    nsCacheDevice *        mCacheDevice;    // 4
-    nsCOMPtr<nsISupports>  mSecurityInfo;   // 
-    nsCOMPtr<nsISupports>  mData;           // 
-    nsCacheMetaData *      mMetaData;       // 4
-    PRCList                mRequestQ;       // 8
-    PRCList                mDescriptorQ;    // 8
+    nsCString *             mKey;            // 4  // XXX ask scc about const'ness
+    PRUint32                mFetchCount;     // 4
+    PRUint32                mLastFetched;    // 4
+    PRUint32                mLastModified;   // 4
+    PRUint32                mLastValidated;  // 4
+    PRUint32                mExpirationTime; // 4
+    PRUint32                mFlags;          // 4
+    PRUint32                mDataSize;       // 4
+    PRUint32                mMetaSize;       // 4
+    nsCacheDevice *         mCacheDevice;    // 4
+    nsCOMPtr<nsISupports>   mSecurityInfo;   // 
+    nsCOMPtr<nsISupports>   mData;           // 
+    nsCOMPtr<nsIEventQueue> mEventQ;         // event queue for mData (for mem object cache)
+    nsCacheMetaData *       mMetaData;       // 4
+    PRCList                 mRequestQ;       // 8
+    PRCList                 mDescriptorQ;    // 8
 };
 
 
@@ -265,6 +269,7 @@ public:
     ~nsCacheEntryHashTable();
 
     nsresult      Init();
+    void          Shutdown();
 
     nsCacheEntry *GetEntry( const nsCString * key);
     nsresult      AddEntry( nsCacheEntry *entry);

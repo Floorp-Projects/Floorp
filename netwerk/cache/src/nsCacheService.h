@@ -27,13 +27,16 @@
 #ifndef _nsCacheService_h_
 #define _nsCacheService_h_
 
-#include "nspr.h"
 #include "nsICacheService.h"
 #include "nsCacheSession.h"
 #include "nsCacheDevice.h"
 #include "nsCacheEntry.h"
+
+#include "nspr.h"
 #include "nsIObserver.h"
 #include "nsString.h"
+#include "nsIEventQueueService.h"
+#include "nsProxiedService.h"
 
 class nsCacheRequest;
 
@@ -74,6 +77,7 @@ public:
     /**
      * Methods called by nsCacheEntryDescriptor
      */
+    nsresult         SetCacheElement(nsCacheEntry * entry, nsISupports * element);
 
     nsresult         OnDataSizeChange(nsCacheEntry * entry, PRInt32 deltaSize);
 
@@ -157,8 +161,10 @@ private:
         cacheServiceActiveMask    = 1
     };
 
-    static nsCacheService * gService;  // there can be only one...
-
+    static nsCacheService *             gService;  // there can be only one...
+    nsCOMPtr<nsIEventQueueService>      mEventQService;
+    nsCOMPtr<nsIProxyObjectManager>     mProxyObjectManager;
+    
     PRLock*                 mCacheServiceLock;
     
     PRBool                  mEnableMemoryDevice;

@@ -51,17 +51,19 @@ nsMemoryCacheDevice::nsMemoryCacheDevice()
     PR_INIT_CLIST(&mEvictionList);
 }
 
+
 nsMemoryCacheDevice::~nsMemoryCacheDevice()
 {
 #if DEBUG
     printf("### starting ~nsMemoryCacheDevice()\n");
-#endif
-    // XXX dealloc all memory
+#endif    
     nsresult rv;
     NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
         prefs->UnregisterCallback(gMemoryCacheSizePref, MemoryCacheSizeChanged, this);
     }
+    
+    Shutdown();
 }
 
 
@@ -123,6 +125,34 @@ nsMemoryCacheDevice::Init()
 nsresult
 nsMemoryCacheDevice::Shutdown()
 {
+    mMemCacheEntries.Shutdown();
+
+    // evict all entries
+    nsCacheEntry * entry, * next;
+
+    entry = (nsCacheEntry *)PR_LIST_HEAD(&mEvictionList);
+    while (entry != &mEvictionList) {
+        NS_ASSERTION(entry->IsInUse() == PR_FALSE, "### shutting down with active entries.\n");
+        next = (nsCacheEntry *)PR_NEXT_LINK(entry);
+        PR_REMOVE_AND_INIT_LINK(entry);
+    
+        // update statistics
+        PRUint32 memoryRecovered = entry->Size();
+        mTotalSize    -= memoryRecovered;
+        mInactiveSize -= memoryRecovered;
+        --mEntryCount;
+
+        delete entry;
+        entry = next;
+    }
+
+/*
+ * we're not factoring in changes to meta data yet...    
+ *  NS_ASSERTION(mTotalSize == 0, "### mem cache leaking entries?\n");
+ */
+    NS_ASSERTION(mInactiveSize == 0, "### mem cache leaking entries?\n");
+    NS_ASSERTION(mEntryCount == 0, "### mem cache leaking entries?\n");
+    
     return NS_OK;
 }
 

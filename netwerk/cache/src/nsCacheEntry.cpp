@@ -56,10 +56,55 @@ nsCacheEntry::nsCacheEntry(nsCString *          key,
 }
 
 
+static void* PR_CALLBACK
+CacheElementReleaseEventHandler(PLEvent *self)
+{
+    nsISupports * element = (nsISupports *)PL_GetEventOwner(self);
+    NS_RELEASE(element);
+    return 0;
+}
+
+
+static void PR_CALLBACK
+CacheElementReleaseDestroyHandler(PLEvent *self)
+{
+    delete self;
+}
+
+
 nsCacheEntry::~nsCacheEntry()
 {
     delete mKey;
     delete mMetaData;
+    
+    if (IsStreamData()) return;
+
+    // proxy release of of memory cache nsISupports objects
+    if (!mData) {
+        NS_ASSERTION(!mEventQ, "### ~nsCacheEntry: mEventQ but no mData");
+        return;
+    }
+    
+    if (!mEventQ) {
+        NS_ASSERTION(!mData, "### ~nsCacheEntry: mData, but no eventQ");
+        return;
+    }
+    
+    PLEvent * event = new PLEvent;
+    if (!event) {
+        // XXX warning
+        return;
+    }
+    
+    nsISupports * data = mData;
+    NS_ADDREF(data);
+    
+    PL_InitEvent(event,
+                 data,
+                 CacheElementReleaseEventHandler,
+                 CacheElementReleaseDestroyHandler);
+    
+    mEventQ->PostEvent(event);
 }
 
 
@@ -87,6 +132,7 @@ nsCacheEntry::GetData(nsISupports **result)
     NS_IF_ADDREF(*result = mData);
     return NS_OK;
 }
+
 
 void
 nsCacheEntry::TouchData()
@@ -436,7 +482,7 @@ nsCacheEntryHashTable::ops =
     MatchEntry,
     MoveEntry,
     ClearEntry,
-    Finalize
+    PL_DHashFinalizeStub
 };
 
 
@@ -449,7 +495,7 @@ nsCacheEntryHashTable::nsCacheEntryHashTable()
 nsCacheEntryHashTable::~nsCacheEntryHashTable()
 {
     if (initialized)
-        PL_DHashTableFinish(&table);
+        Shutdown();
 }
 
 
@@ -463,6 +509,15 @@ nsCacheEntryHashTable::Init()
     if (!initialized) rv = NS_ERROR_OUT_OF_MEMORY;
     
     return rv;
+}
+
+void
+nsCacheEntryHashTable::Shutdown()
+{
+    if (initialized) {
+        PL_DHashTableFinish(&table);
+        initialized = PR_FALSE;
+    }
 }
 
 
@@ -584,23 +639,4 @@ nsCacheEntryHashTable::ClearEntry(PLDHashTable * /* table */,
                                   PLDHashEntryHdr * hashEntry)
 {
     ((nsCacheEntryHashTableEntry *)hashEntry)->cacheEntry = 0;
-}
-
-
-void
-nsCacheEntryHashTable::Finalize(PLDHashTable * table)
-{
-    (void) PL_DHashTableEnumerate(table, FreeCacheEntries, nsnull);
-}
-
-
-PLDHashOperator PR_CALLBACK
-nsCacheEntryHashTable::FreeCacheEntries(PLDHashTable *table,
-                              PLDHashEntryHdr *hdr,
-                              PRUint32 number,
-                              void *arg)
-{
-    nsCacheEntryHashTableEntry *entry = (nsCacheEntryHashTableEntry *)hdr;
-    delete entry->cacheEntry;
-    return PL_DHASH_NEXT;
 }

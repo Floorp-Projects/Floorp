@@ -133,7 +133,7 @@ private:
                 return NS_ERROR_OUT_OF_MEMORY;
             }
         }
-        PRStatus status;
+        PRStatus status = PR_SUCCESS;
         PR_Lock(mLock);
         while (WaitingForValidation() && (status == PR_SUCCESS) ) {
             status = PR_WaitCondVar(mCondVar, PR_INTERVAL_NO_TIMEOUT);
