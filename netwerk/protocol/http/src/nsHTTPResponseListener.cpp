@@ -37,6 +37,10 @@
 static const int kMAX_FIRST_LINE_SIZE= 256;
 static const int kMAX_BUFFER_SIZE = 1024;
 
+static const char* kCRLF = "\r\n";
+static const char kSP = ' ';
+static const char kHT = '\t';
+
 #define Skipln(p,max)   \
     PR_BEGIN_MACRO      \
     while ((*p != LF) && (max > p)) \
@@ -110,11 +114,11 @@ nsHTTPResponseListener::OnDataAvailable(nsISupports* context,
         }
         return rv;
     } 
-/*
+
     else if (!m_bFirstLineParsed) {
       rv = ParseStatusLine(i_pStream);
     }
-*/
+
     //Search for the end of the headers mark
     //Rick- Is this max correct? or should it be the same as transport's max? 
     char buffer[kMAX_BUFFER_SIZE];
@@ -172,7 +176,7 @@ nsHTTPResponseListener::OnDataAvailable(nsISupports* context,
         }
         // Skip to end of line;
         Skipln(p, buffer+lengthRead);
-
+/*
         if (!m_bFirstLineParsed)
         {
             char server_version[9]; // HTTP/1.1 
@@ -185,6 +189,7 @@ nsHTTPResponseListener::OnDataAvailable(nsISupports* context,
             m_bFirstLineParsed = PR_TRUE;
         }
         else 
+*/
         {
             char* header = lineStart;
             char* value = PL_strchr(lineStart, ':');
@@ -418,15 +423,15 @@ nsresult nsHTTPResponseListener::ParseStatusLine(nsIBufferInputStream* aStream)
   char *start, *end;
 
   PRBool bFoundString = PR_FALSE;
-  PRUint32 offset, bytesRead;
-  PRInt32 statusCode;
+  PRUint32 offset, length, bytesRead;
+  PRInt32 CRLFlength, statusCode;
 
   rv = aStream->GetBuffer(getter_AddRefs(pBuffer));
   if (NS_FAILED(rv)) return rv;
 
   // Look for the CRLF which ends the Status-Line.
   // If found, then offset will mark the beginning of the CRLF...
-  rv = pBuffer->Search("\r\n", PR_FALSE, &bFoundString, &offset);
+  rv = pBuffer->Search(kCRLF, PR_FALSE, &bFoundString, &offset);
   if (NS_FAILED(rv)) return rv;
 
   //
@@ -434,6 +439,10 @@ nsresult nsHTTPResponseListener::ParseStatusLine(nsIBufferInputStream* aStream)
   //    HTTP-Version SP Status-Code SP Reason-Phrase CRLF
   //
   if (bFoundString) {
+    // Include the CRLF as part of the line to read...
+    CRLFlength = PL_strlen(kCRLF);
+    length = offset + CRLFlength;
+
     //
     // Make sure the statusLineBuffer does not overflow.  This would only
     // happen if the Reason-Phrase returned from the server was large...
@@ -441,24 +450,29 @@ nsresult nsHTTPResponseListener::ParseStatusLine(nsIBufferInputStream* aStream)
     // If the Status-Line is too large, then limit it to the size of the 
     // buffer.  This will truncate the Reason-Phrase, but who really cares?
     //
-    NS_ASSERTION(offset < sizeof(statusLineBuffer), "Status Line is too long!");
-    if (offset >= sizeof(statusLineBuffer)) {
-      offset = sizeof(statusLineBuffer);
+    NS_ASSERTION(length < sizeof(statusLineBuffer), "Status Line is too long!");
+    if (length >= sizeof(statusLineBuffer)) {
+      length = sizeof(statusLineBuffer);
     }
 
     // Read the Status-Line out of the stream...
-    rv = aStream->Read(statusLineBuffer, offset, &bytesRead);
+    rv = aStream->Read(statusLineBuffer, length, &bytesRead);
     if (NS_FAILED(rv)) return rv;
 
-    // Null terminate the buffer...
-    statusLineBuffer[bytesRead] = '\0';
+    // Null terminate the buffer right before the CRLF...
+    // If the Status-Line was truncated then NULL terminate at the end...
+    if (bytesRead > offset) {
+      statusLineBuffer[bytesRead-CRLFlength] = '\0';
+    } else {
+      statusLineBuffer[bytesRead] = '\0';
+    }
 
     //
     // Parse the HTTP-Version -> "HTTP" "/" 1*DIGIT "." 1*DIGIT
     //
     start = EatWhiteSpace(statusLineBuffer); // Consume any leading whitespace
     // Find the next space character...
-    for (end=start; (*end && (*end != ' ') && (*end != '\t')); end++) {};
+    for (end=start; (*end && (*end != kSP) && (*end != kHT)); end++) {};
     if (! *end) {
       // The status line is bogus...
       return NS_ERROR_FAILURE;
@@ -470,11 +484,11 @@ nsresult nsHTTPResponseListener::ParseStatusLine(nsIBufferInputStream* aStream)
     // Parse the Status-Code -> 3DIGIT
     //
     start = EatWhiteSpace(end+1); // Consume any leading whitespace
-    end   = start+4;
+    end   = start+3;
 
     // Verify that the character after the 3 digits is whitespace...
     if ((bytesRead < (PRUint32)(end - statusLineBuffer)) || 
-        ((*end != ' ') && (*end != '\t'))) {
+        ((*end != kSP) && (*end != kHT))) {
       // The status line is bogus...
       return NS_ERROR_FAILURE;
     }
@@ -486,7 +500,6 @@ nsresult nsHTTPResponseListener::ParseStatusLine(nsIBufferInputStream* aStream)
     // Parse the Reason-Phrase -> *<TEXT excluding CR,LF>
     //
     start = EatWhiteSpace(end+1); // Consume any leading whitespace
-    statusLineBuffer[offset] = '\0';
     m_pResponse->SetStatusString(start);
 
     m_bFirstLineParsed = PR_TRUE;
