@@ -1389,9 +1389,6 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
   mStack[mStackPos].mInsertionPoint = -1;
   content->SetDocument(mSink->mDocument, PR_FALSE, PR_TRUE);
 
-  nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject;
-  mSink->mDocument->GetScriptGlobalObject(getter_AddRefs(scriptGlobalObject));
-
   rv = mSink->AddAttributes(aNode, content);
 
   if (mPreAppend) {
@@ -2356,14 +2353,25 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Make root part
-  rv = NS_NewHTMLHtmlElement(&mRoot, nodeInfo);
-  if (NS_OK != rv) {
-    MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::Init()\n"));
-    MOZ_TIMER_STOP(mWatch);
-    return rv;
+
+  nsCOMPtr<nsIContent> doc_root(dont_AddRef(mDocument->GetRootContent()));
+
+  if (doc_root) {
+    // If the document already has a root we'll use it. This will
+    // happen when we do document.open()/.write()/.close()...
+
+    CallQueryInterface(doc_root, &mRoot);
+  } else {
+    rv = NS_NewHTMLHtmlElement(&mRoot, nodeInfo);
+    if (NS_OK != rv) {
+      MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::Init()\n"));
+      MOZ_TIMER_STOP(mWatch);
+      return rv;
+    }
+
+    mRoot->SetDocument(mDocument, PR_FALSE, PR_TRUE);
+    mDocument->SetRootContent(mRoot);
   }
-  mRoot->SetDocument(mDocument, PR_FALSE, PR_TRUE);
-  mDocument->SetRootContent(mRoot);
 
   // Make head part
   rv = mNodeInfoManager->GetNodeInfo(NS_ConvertASCIItoUCS2("head"),
