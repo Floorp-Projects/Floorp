@@ -94,12 +94,9 @@ double txNodeTypeTest::getDefaultPriority()
     return mNodeName ? 0 : -0.5;
 }
 
-/*
- * Returns the String representation of this txNodeTest.
- * @param aDest the String to use when creating the string representation.
- *              The string representation will be appended to the string.
- */
-void txNodeTypeTest::toString(nsAString& aDest)
+#ifdef TX_TO_STRING
+void
+txNodeTypeTest::toString(nsAString& aDest)
 {
     switch (mNodeType) {
         case COMMENT_TYPE:
@@ -124,3 +121,4 @@ void txNodeTypeTest::toString(nsAString& aDest)
             break;
     }
 }
+#endif

@@ -250,14 +250,14 @@ void txStandaloneXSLTProcessor::getHrefFromStylesheetPI(Document& xmlDocument,
         if (node->getNodeType() == Node::PROCESSING_INSTRUCTION_NODE) {
             nsAutoString target;
             node->getNodeName(target);
-            if (target.Equals(NS_LITERAL_STRING("xml-stylesheet"))) {
+            if (target.EqualsLiteral("xml-stylesheet")) {
                 nsAutoString data;
                 node->getNodeValue(data);
                 type.Truncate();
                 tmpHref.Truncate();
                 parseStylesheetPI(data, type, tmpHref);
-                if (type.Equals(NS_LITERAL_STRING("text/xsl")) ||
-                    type.Equals(NS_LITERAL_STRING("text/xml"))) {
+                if (type.EqualsLiteral("text/xsl") ||
+                    type.EqualsLiteral("text/xml")) {
                     href = tmpHref;
                     return;
                 }
@@ -334,11 +334,11 @@ void txStandaloneXSLTProcessor::parseStylesheetPI(const nsAFlatString& aData,
     
     // At this point attrName holds the name of the "attribute" and
     // the value is between start and iter.
-    if (attrName.Equals(NS_LITERAL_STRING("type"))) {
+    if (attrName.EqualsLiteral("type")) {
       aType = Substring(start, iter);
       ++found;
     }
-    else if (attrName.Equals(NS_LITERAL_STRING("href"))) {
+    else if (attrName.EqualsLiteral("href")) {
       aHref = Substring(start, iter);
       ++found;
     }

@@ -218,15 +218,9 @@ PathExpr::evalDescendants(Expr* aStep, const txXPathNode& aNode,
     return NS_OK;
 } //-- evalDescendants
 
-/**
- * Returns the String representation of this Expr.
- * @param dest the String to use when creating the String
- * representation. The String representation will be appended to
- * any data in the destination String, to allow cascading calls to
- * other #toString() methods for Expressions.
- * @return the String representation of this Expr.
-**/
-void PathExpr::toString(nsAString& dest)
+#ifdef TX_TO_STRING
+void
+PathExpr::toString(nsAString& dest)
 {
     txListIterator iter(&expressions);
     
@@ -248,4 +242,5 @@ void PathExpr::toString(nsAString& dest)
         }
         pxi->expr->toString(dest);
     }
-} //-- toString
+}
+#endif

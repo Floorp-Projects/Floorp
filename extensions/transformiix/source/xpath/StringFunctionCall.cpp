@@ -349,7 +349,9 @@ StringFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
     return NS_ERROR_UNEXPECTED;
 }
 
-nsresult StringFunctionCall::getNameAtom(nsIAtom** aAtom)
+#ifdef TX_TO_STRING
+nsresult
+StringFunctionCall::getNameAtom(nsIAtom** aAtom)
 {
     switch (mType) {
         case CONCAT:
@@ -411,3 +413,4 @@ nsresult StringFunctionCall::getNameAtom(nsIAtom** aAtom)
     NS_ADDREF(*aAtom);
     return NS_OK;
 }
+#endif

@@ -792,7 +792,7 @@ txExprParser::createPathExpr(txExprLexer& lexer, txIParseContext* aContext,
     if (tok->mType == Token::PARENT_OP) {
         lexer.nextToken();
         if (!isLocationStepToken(lexer.peek())) {
-            *aResult = new RootExpr(MB_TRUE);
+            *aResult = new RootExpr();
             NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
             return NS_OK;
         }
@@ -820,8 +820,12 @@ txExprParser::createPathExpr(txExprLexer& lexer, txIParseContext* aContext,
         }
     }
     else {
-        expr = new RootExpr(MB_FALSE);
+        expr = new RootExpr();
         NS_ENSURE_TRUE(expr, NS_ERROR_OUT_OF_MEMORY);
+
+#ifdef TX_TO_STRING
+        NS_STATIC_CAST(RootExpr*, expr.get())->setSerialize(PR_FALSE);
+#endif
     }
     
     // We have a PathExpr containing several steps

@@ -129,9 +129,12 @@ ElementAvailableFunctionCall::evaluate(txIEvalContext* aContext,
     return NS_OK;
 }
 
-nsresult ElementAvailableFunctionCall::getNameAtom(nsIAtom** aAtom)
+#ifdef TX_TO_STRING
+nsresult
+ElementAvailableFunctionCall::getNameAtom(nsIAtom** aAtom)
 {
     *aAtom = txXSLTAtoms::elementAvailable;
     NS_ADDREF(*aAtom);
     return NS_OK;
 }
+#endif

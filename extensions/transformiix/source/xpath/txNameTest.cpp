@@ -90,12 +90,9 @@ double txNameTest::getDefaultPriority()
     return 0;
 }
 
-/*
- * Returns the String representation of this txNodeTest.
- * @param aDest the String to use when creating the string representation.
- *              The string representation will be appended to the string.
- */
-void txNameTest::toString(nsAString& aDest)
+#ifdef TX_TO_STRING
+void
+txNameTest::toString(nsAString& aDest)
 {
     if (mPrefix) {
         nsAutoString prefix;
@@ -107,3 +104,4 @@ void txNameTest::toString(nsAString& aDest)
     mLocalName->ToString(localName);
     aDest.Append(localName);
 }
+#endif
