@@ -565,7 +565,7 @@ nsCookieService::GetCookieStringFromHttp(nsIURI     *aHostURI,
     NS_ASSERTION(cookieInList, "corrupt cookie list");
 
     // if the cookie is secure and the host scheme isn't, we can't send it
-    if (cookieInList->IsSecure() & !isSecure) {
+    if (cookieInList->IsSecure() && !isSecure) {
       continue;
     }
 
