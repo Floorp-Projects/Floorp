@@ -410,14 +410,14 @@ char* nsInstallFileOpItem::toString()
 
     case NS_FOP_WIN_SHORTCUT:
       rsrcVal = mInstall->GetResourcedString(NS_LITERAL_STRING("WindowsShortcut"));
-      if(rsrcVal != nsnull)
+      if(rsrcVal && mShortcutPath)
       {
         mShortcutPath->GetPath(&temp);
         result.AssignWithConversion(temp);
         result.AppendWithConversion("\\");
         result.Append(*mDescription);
         dstPath = ToNewCString(result);
-        if(dstPath != nsnull)
+        if(dstPath)
         {
           PR_snprintf(resultCString, RESBUFSIZE, rsrcVal, dstPath );
           Recycle(dstPath);
