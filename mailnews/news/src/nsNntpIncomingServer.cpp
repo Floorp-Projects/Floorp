@@ -226,7 +226,7 @@ nsNntpIncomingServer::GetNewsrcRootPath(nsIFileSpec **aNewsrcRootPath)
         
     PRBool exists;
     rv = localFile->Exists(&exists);
-    if (NS_SUCCEEDED(rv) && !exists) return rv;
+    if (NS_SUCCEEDED(rv) && !exists)
         rv = localFile->Create(nsIFile::DIRECTORY_TYPE, 0775);
     if (NS_FAILED(rv)) return rv;
     
