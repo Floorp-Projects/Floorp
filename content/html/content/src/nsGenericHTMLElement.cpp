@@ -21,6 +21,8 @@
 #include "nsIAtom.h"
 #include "nsIContentDelegate.h"
 #include "nsICSSParser.h"
+#include "nsICSSStyleRule.h"
+#include "nsICSSDeclaration.h"
 #include "nsIDocument.h"
 #include "nsIDOMAttribute.h"
 #include "nsIDOMEventReceiver.h"
@@ -77,6 +79,7 @@ static NS_DEFINE_IID(kIDOMNamedNodeMapIID, NS_IDOMNAMEDNODEMAP_IID);
 static NS_DEFINE_IID(kIPrivateDOMEventIID, NS_IPRIVATEDOMEVENT_IID);
 static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
 static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
+static NS_DEFINE_IID(kICSSStyleRuleIID, NS_ICSS_STYLE_RULE_IID);
 static NS_DEFINE_IID(kIDOMNodeListIID, NS_IDOMNODELIST_IID);
 
 static nsIContentDelegate* gContentDelegate;
@@ -2083,8 +2086,17 @@ nsGenericHTMLElement::AttributeToString(nsIAtom* aAttribute,
   if (nsHTMLAtoms::style == aAttribute) {
     if (eHTMLUnit_ISupports == aValue.GetUnit()) {
       nsIStyleRule* rule = (nsIStyleRule*) aValue.GetISupportsValue();
-      // rule->ToString(str);
-      aResult = "XXX style rule ToString goes here";
+      nsICSSStyleRule*  cssRule;
+      if (NS_OK == rule->QueryInterface(kICSSStyleRuleIID, (void**)&cssRule)) {
+        nsICSSDeclaration* decl = cssRule->GetDeclaration();
+        if (nsnull != decl) {
+          decl->ToString(aResult);
+        }
+        NS_RELEASE(cssRule);
+      }
+      else {
+        aResult = "Unknown rule type";
+      }
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
