@@ -79,11 +79,7 @@
 #undef printf
 #undef fprintf
 
-#if defined(DEBUG_sspitzer) || defined(DEBUG_seth)
-NS_IMPL_LOG(nsAppRunnerLog, nsILog::DEFAULT_ENABLED)
-#else
 NS_IMPL_LOG(nsAppRunnerLog)
-#endif
 #define PRINTF NS_LOG_PRINTF(nsAppRunnerLog)
 #define FLUSH  NS_LOG_FLUSH(nsAppRunnerLog)
 
