@@ -38,7 +38,9 @@ public:
   // nsIBox frame interface
   NS_IMETHOD GetFrame(nsIFrame** aFrame);
 
+#ifdef DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const;
+#endif
 
   // nsIHTMLReflow overrides
   NS_IMETHOD Reflow(nsIPresContext*          aPresContext,

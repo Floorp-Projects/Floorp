@@ -42,8 +42,7 @@ public:
 #ifdef NS_DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const
   {
-      aResult.AssignWithConversion("Stack");
-      return NS_OK;
+    return MakeFrameName("Stack", aResult);
   }
 #endif
 

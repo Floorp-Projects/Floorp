@@ -79,7 +79,9 @@ public:
 
   NS_IMETHOD Destroy(nsIPresContext* aPresContext);
 
+#ifdef DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const;
+#endif
 
   virtual void UpdateAttributes(nsIPresContext*  aPresContext, nsIAtom* aAttribute, PRBool& aResize, PRBool& aRedraw);
   virtual void UpdateImage(nsIPresContext*  aPresContext, PRBool& aResize);

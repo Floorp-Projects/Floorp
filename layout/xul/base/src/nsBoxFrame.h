@@ -152,7 +152,9 @@ public:
                                   nsIAtom*        aListName,
                                   nsIFrame*       aChildList);
 
+#ifdef DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const;
+#endif
 
   NS_IMETHOD DidReflow(nsIPresContext* aPresContext,
                    nsDidReflowStatus aStatus);

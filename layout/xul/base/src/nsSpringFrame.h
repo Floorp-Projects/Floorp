@@ -46,11 +46,12 @@ public:
                               nsFramePaintLayer aWhichLayer,    
                               nsIFrame**     aFrame);
 
+#ifdef DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const
   {
-      aResult.AssignWithConversion("Spring");
-      return NS_OK;
+      return MakeFrameName("Spring", aResult);
   }
+#endif
 
   nsSpringFrame(nsIPresShell* aShell):nsLeafBoxFrame(aShell) {}
 }; // class nsSpringFrame

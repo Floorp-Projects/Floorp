@@ -106,11 +106,12 @@ public:
   void ActivatePopup(nsPopupFrameList* aEntry, PRBool aActivateFlag);
   void OpenPopup(nsPopupFrameList* aEntry, PRBool aOpenFlag);
 
+#ifdef DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const
   {
-      aResult.AssignWithConversion("PopupSet");
-      return NS_OK;
+      return MakeFrameName("PopupSet", aResult);
   }
+#endif
 
   void SetFrameConstructor(nsCSSFrameConstructor* aFC) {
     mFrameConstructor = aFC;
