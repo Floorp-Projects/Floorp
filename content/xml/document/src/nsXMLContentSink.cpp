@@ -1105,6 +1105,15 @@ nsXMLContentSink::HandleEndElement(const PRUnichar *aName)
 
   nsCOMPtr<nsIContent> content = PopContent();
   NS_ASSERTION(content, "failed to pop content");
+#ifdef DEBUG
+  // Check that we're closing the right thing
+  nsCOMPtr<nsIAtom> debugNameSpacePrefix, debugTagAtom;
+  SplitXMLName(nsDependentString(aName), getter_AddRefs(debugNameSpacePrefix),
+               getter_AddRefs(debugTagAtom));
+  PRInt32 debugNameSpaceID = GetNameSpaceId(debugNameSpacePrefix);
+  NS_ASSERTION(content->GetNodeInfo()->Equals(debugTagAtom, debugNameSpaceID),
+               "Wrong element being closed");
+#endif  
 
   result = CloseElement(content, &appendContent);
 

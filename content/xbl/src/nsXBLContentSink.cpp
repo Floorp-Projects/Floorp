@@ -304,7 +304,17 @@ nsXBLContentSink::HandleEndElement(const PRUnichar *aName)
 
     PRInt32 nameSpaceID = GetNameSpaceId(nameSpacePrefix);
     if (nameSpaceID == kNameSpaceID_XBL) {
-      if (mState == eXBL_InHandlers) {
+      if (mState == eXBL_Error) {
+        // Check whether we've opened this tag before; we may not have if
+        // it was a real XBL tag before the error occured.
+        if (!GetCurrentContent()->GetNodeInfo()->Equals(tagAtom,
+                                                        nameSpaceID)) {
+          // OK, this tag was never opened as far as the XML sink is
+          // concerned.  Just drop the HandleEndElement
+          return NS_OK;
+        }
+      }
+      else if (mState == eXBL_InHandlers) {
         if (tagAtom == nsXBLAtoms::handlers) {
           mState = eXBL_InBinding;
           mHandler = nsnull;
