@@ -199,7 +199,7 @@ NS_IMETHODIMP nsXULWindow::SetPersistence(PRBool aPersistX, PRBool aPersistY,
       return NS_ERROR_FAILURE;
 
    nsAutoString persistString;
-   docShellElement->GetAttribute("persist", persistString);
+   docShellElement->GetAttribute(NS_ConvertASCIItoUCS2("persist"), persistString);
 
    PRBool saveString = PR_FALSE;
    PRInt32 index;
@@ -213,7 +213,7 @@ NS_IMETHODIMP nsXULWindow::SetPersistence(PRBool aPersistX, PRBool aPersistY,
       }
    else if(aPersistX && (index < 0 ))
       {
-      persistString.Append(" screenX");
+      persistString.AppendWithConversion(" screenX");
       saveString = PR_TRUE;
       }
    // Set Y
@@ -225,7 +225,7 @@ NS_IMETHODIMP nsXULWindow::SetPersistence(PRBool aPersistX, PRBool aPersistY,
       }
    else if(aPersistY && (index < 0 ))
       {
-      persistString.Append(" screenY");
+      persistString.AppendWithConversion(" screenY");
       saveString = PR_TRUE;
       }
    // Set CX
@@ -237,7 +237,7 @@ NS_IMETHODIMP nsXULWindow::SetPersistence(PRBool aPersistX, PRBool aPersistY,
       }
    else if(aPersistCX && (index < 0 ))
       {
-      persistString.Append(" width");
+      persistString.AppendWithConversion(" width");
       saveString = PR_TRUE;
       }
    // Set CY
@@ -249,13 +249,13 @@ NS_IMETHODIMP nsXULWindow::SetPersistence(PRBool aPersistX, PRBool aPersistY,
       }
    else if(aPersistCY && (index < 0 ))
       {
-      persistString.Append(" height");
+      persistString.AppendWithConversion(" height");
       saveString = PR_TRUE;
       }
 
    index = persistString.Find("sizemode");
    if (!aPersistSizeMode && index >= 0) {
-      persistString.Append(" sizemode");
+      persistString.AppendWithConversion(" sizemode");
       saveString = PR_TRUE;
    } else if (aPersistSizeMode && index < 0) {
       persistString.Cut(index, 8);
@@ -263,7 +263,7 @@ NS_IMETHODIMP nsXULWindow::SetPersistence(PRBool aPersistX, PRBool aPersistY,
    }
 
    if(saveString) 
-      docShellElement->SetAttribute("persist", persistString);
+      docShellElement->SetAttribute(NS_ConvertASCIItoUCS2("persist"), persistString);
 
    return NS_OK;
 }
@@ -278,7 +278,7 @@ NS_IMETHODIMP nsXULWindow::GetPersistence(PRBool* aPersistX, PRBool* aPersistY,
       return NS_ERROR_FAILURE;
 
    nsAutoString persistString;
-   docShellElement->GetAttribute("persist", persistString);
+   docShellElement->GetAttribute(NS_ConvertASCIItoUCS2("persist"), persistString);
 
    if(aPersistX)
       *aPersistX = persistString.Find("screenX") >= 0 ? PR_TRUE : PR_FALSE;
@@ -779,13 +779,13 @@ NS_IMETHODIMP nsXULWindow::LoadPositionAndSizeFromXUL(PRBool aPosition,
       PRInt32 specY = curY;
       nsAutoString sizeString;
 
-      if(NS_SUCCEEDED(docShellElement->GetAttribute("screenX", sizeString)))
+      if(NS_SUCCEEDED(docShellElement->GetAttribute(NS_ConvertASCIItoUCS2("screenX"), sizeString)))
          {
          temp = sizeString.ToInteger(&errorCode);
          if(NS_SUCCEEDED(errorCode) && temp > 0)
             specX = temp;
          }
-      if(NS_SUCCEEDED(docShellElement->GetAttribute("screenY", sizeString)))
+      if(NS_SUCCEEDED(docShellElement->GetAttribute(NS_ConvertASCIItoUCS2("screenY"), sizeString)))
          {
          temp = sizeString.ToInteger(&errorCode);
          if(NS_SUCCEEDED(errorCode) && temp > 0)
@@ -802,7 +802,7 @@ NS_IMETHODIMP nsXULWindow::LoadPositionAndSizeFromXUL(PRBool aPosition,
       PRInt32 specCY = curCY;
       nsAutoString sizeString;
 
-      if(NS_SUCCEEDED(docShellElement->GetAttribute("width", sizeString)))
+      if(NS_SUCCEEDED(docShellElement->GetAttribute(NS_ConvertASCIItoUCS2("width"), sizeString)))
          {
          temp = sizeString.ToInteger(&errorCode);
          if(NS_SUCCEEDED(errorCode) && temp > 0)
@@ -811,7 +811,7 @@ NS_IMETHODIMP nsXULWindow::LoadPositionAndSizeFromXUL(PRBool aPosition,
             mIntrinsicallySized = PR_FALSE;
             }
          }
-      if(NS_SUCCEEDED(docShellElement->GetAttribute("height", sizeString)))
+      if(NS_SUCCEEDED(docShellElement->GetAttribute(NS_ConvertASCIItoUCS2("height"), sizeString)))
          {
          temp = sizeString.ToInteger(&errorCode);
          if(NS_SUCCEEDED(errorCode) && temp > 0)
@@ -835,7 +835,7 @@ NS_IMETHODIMP nsXULWindow::LoadTitleFromXUL()
    NS_ENSURE_TRUE(docShellElement, NS_ERROR_FAILURE);
 
    nsAutoString windowTitle;
-   docShellElement->GetAttribute("title", windowTitle);
+   docShellElement->GetAttribute(NS_ConvertASCIItoUCS2("title"), windowTitle);
    if(windowTitle.IsEmpty())
       return NS_OK;
 
@@ -871,7 +871,7 @@ NS_IMETHODIMP nsXULWindow::PersistPositionAndSize(PRBool aPosition, PRBool aSize
      difficult to distinguish between windows intrinsically sized
      and not. */
    nsAutoString   persistString;
-   docShellElement->GetAttribute("persist", persistString);
+   docShellElement->GetAttribute(NS_ConvertASCIItoUCS2("persist"), persistString);
 
    char           sizeBuf[10];
    nsAutoString   sizeString;
@@ -880,14 +880,14 @@ NS_IMETHODIMP nsXULWindow::PersistPositionAndSize(PRBool aPosition, PRBool aSize
       if(persistString.Find("screenX") >= 0)
          {
          PR_snprintf(sizeBuf, sizeof(sizeBuf), "%ld", (long)x);
-         sizeString = sizeBuf;
-         docShellElement->SetAttribute("screenX", sizeString);
+         sizeString.AssignWithConversion(sizeBuf);
+         docShellElement->SetAttribute(NS_ConvertASCIItoUCS2("screenX"), sizeString);
          }
       if(persistString.Find("screenY") >= 0)
          {
          PR_snprintf(sizeBuf, sizeof(sizeBuf), "%ld", (long)y);
-         sizeString = sizeBuf;
-         docShellElement->SetAttribute("screenY", sizeString);
+         sizeString.AssignWithConversion(sizeBuf);
+         docShellElement->SetAttribute(NS_ConvertASCIItoUCS2("screenY"), sizeString);
          }
       }
 
@@ -896,14 +896,14 @@ NS_IMETHODIMP nsXULWindow::PersistPositionAndSize(PRBool aPosition, PRBool aSize
       if(persistString.Find("width") >= 0)
          {
          PR_snprintf(sizeBuf, sizeof(sizeBuf), "%ld", (long)cx);
-         sizeString = sizeBuf;
-         docShellElement->SetAttribute("width", sizeString);
+         sizeString.AssignWithConversion(sizeBuf);
+         docShellElement->SetAttribute(NS_ConvertASCIItoUCS2("width"), sizeString);
          }
       if(persistString.Find("height") >= 0)
          {
          PR_snprintf(sizeBuf, sizeof(sizeBuf), "%ld", (long)cy);
-         sizeString = sizeBuf;
-         docShellElement->SetAttribute("height", sizeString);
+         sizeString.AssignWithConversion(sizeBuf);
+         docShellElement->SetAttribute(NS_ConvertASCIItoUCS2("height"), sizeString);
          }
       }
 
@@ -911,12 +911,12 @@ NS_IMETHODIMP nsXULWindow::PersistPositionAndSize(PRBool aPosition, PRBool aSize
       PRInt32 sizemode;
       if (NS_FAILED(mWindow->GetSizeMode(&sizemode)))
         sizemode = nsSizeMode_Normal;
-      sizeString = "n";
+      sizeString.AssignWithConversion("n");
       if (sizemode == nsSizeMode_Minimized)
-        sizeString = "m";
+        sizeString.AssignWithConversion("m");
       else if (sizemode == nsSizeMode_Maximized)
-        sizeString = "M";
-      docShellElement->SetAttribute("sizemode", sizeString);
+        sizeString.AssignWithConversion("M");
+      docShellElement->SetAttribute(NS_ConvertASCIItoUCS2("sizemode"), sizeString);
    }
 
    return NS_OK;
@@ -988,7 +988,7 @@ NS_IMETHODIMP nsXULWindow::GetDOMElementById(char* aID, nsIDOMElement** aDOMElem
    if(!domdoc) 
       return NS_ERROR_FAILURE;
    
-   NS_ENSURE_SUCCESS(domdoc->GetElementById(aID, aDOMElement), NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(domdoc->GetElementById(NS_ConvertASCIItoUCS2(aID), aDOMElement), NS_ERROR_FAILURE);
 
    return NS_OK;
 }
@@ -1202,8 +1202,8 @@ NS_IMETHODIMP nsXULWindow::NotifyObservers(const PRUnichar* aTopic,
    nsCOMPtr<nsIWebShellWindow> 
       removeme(do_QueryInterface(NS_STATIC_CAST(nsIXULWindow*, this)));
 
-   nsAutoString topic(prefix);
-   topic += ";";
+   nsAutoString topic; topic.AssignWithConversion(prefix);
+   topic.AppendWithConversion(";");
    topic += aTopic;
 
    NS_ENSURE_SUCCESS(service->Notify(removeme, topic.GetUnicode(), aData),

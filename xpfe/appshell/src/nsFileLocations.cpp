@@ -139,7 +139,8 @@ static PRBool GetProfileDirectory(nsFileSpec& outSpec)
         }    
 #if defined(NS_DEBUG)
     if (currProfileName) {
-        printf("ProfileName : %s\n", nsCAutoString(currProfileName).GetBuffer());
+        nsCAutoString currProfileNameCStr; currProfileNameCStr.AssignWithConversion(currProfileName);
+        printf("ProfileName : %s\n", currProfileNameCStr.GetBuffer());
         printf("ProfileDir  : %s\n", currProfileDirSpec.GetNativePathCString());
     }
 #endif /* NS_DEBUG */

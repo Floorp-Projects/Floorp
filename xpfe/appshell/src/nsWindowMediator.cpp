@@ -146,8 +146,7 @@ void GetAttribute( nsIXULWindow* inWindow, const nsAutoString& inAttribute, nsAu
 
 void GetWindowType( nsIXULWindow* inWindow, nsAutoString& outType )
 {
- 	nsAutoString typeAttrib("windowtype");
- 	GetAttribute( inWindow, typeAttrib, outType );
+ 	GetAttribute( inWindow, NS_ConvertASCIItoUCS2("windowtype"), outType );
 }
 
 /* return an integer corresponding to the relative z order of the window.
@@ -623,12 +622,12 @@ NS_IMETHODIMP  nsWindowMediator::UpdateWindowTitle( nsIXULWindow* inWindow, cons
 
     // Should this title be displayed
     PRBool display = PR_TRUE;
-    nsAutoString typeAttrib("intaskslist");
+    nsAutoString typeAttrib; typeAttrib.AssignWithConversion("intaskslist");
     nsAutoString displayString;
     GetAttribute( inWindow, typeAttrib, displayString );
     displayString.ToLowerCase();
 
-    if ( displayString.Equals("false") )
+    if ( displayString.EqualsWithConversion("false") )
       display=PR_FALSE;
 
     rv = Assert( window , kNC_Name, newTitle, display );
@@ -1035,9 +1034,9 @@ nsresult nsWindowMediator::AddWindowToRDF( nsWindowInfo* ioWindowInfo )
 	nsAutoString	windowTitle;
 	
 	// Make up a unique ID and create the RDF NODE
-	nsAutoString uniqueID = "window-";
+	nsAutoString uniqueID; uniqueID.AssignWithConversion("window-");
 	uniqueID.Append(windowTitle );
-	uniqueID.Append( mTimeStamp, 10 );
+	uniqueID.AppendInt( mTimeStamp, 10 );
 	char cID[ 256];
 	uniqueID.ToCString( cID, 256);
 	if (NS_FAILED(rv = gRDFService->GetResource(cID, getter_AddRefs(window) )))

@@ -65,7 +65,7 @@ nsAppShellNameSet::AddNameSet(nsIScriptContext* aScriptContext)
 
   rv = aScriptContext->GetNameSpaceManager(&manager);
   if (NS_SUCCEEDED(rv)) {
-    rv = manager->RegisterGlobalName("XPComFactory", 
+    rv = manager->RegisterGlobalName(NS_ConvertASCIItoUCS2("XPComFactory"), 
                                      kXPConnectFactoryCID, 
                                      PR_FALSE);
     NS_RELEASE(manager);

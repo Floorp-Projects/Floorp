@@ -345,7 +345,7 @@ nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
 
     rv = aUrl->GetSpec(&tmpStr);
     if (NS_FAILED(rv)) return rv;
-    urlString = tmpStr;
+    urlString.AssignWithConversion(tmpStr);
     nsCRT::free(tmpStr);
     nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
     NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
@@ -585,7 +585,7 @@ NS_IMETHODIMP nsWebShellWindow::CreateMenu(nsIMenuBar * aMenuBar,
     // Open the node so that the contents are visible.
     nsCOMPtr<nsIDOMElement> menuElement = do_QueryInterface(aMenuNode);
     if (menuElement)
-      menuElement->SetAttribute("open", "true");
+      menuElement->SetAttribute(NS_ConvertASCIItoUCS2("open"), NS_ConvertASCIItoUCS2("true"));
 
     // Begin menuitem inner loop
     
@@ -597,7 +597,7 @@ NS_IMETHODIMP nsWebShellWindow::CreateMenu(nsIMenuBar * aMenuBar,
       if (menuPopupElement) {
         nsString menuPopupNodeType;
         menuPopupElement->GetNodeName(menuPopupNodeType);
-        if (menuPopupNodeType.Equals("menupopup"))
+        if (menuPopupNodeType.EqualsWithConversion("menupopup"))
           break;
       }
       nsCOMPtr<nsIDOMNode> oldMenuPopupNode(menuPopupNode);
@@ -616,12 +616,12 @@ NS_IMETHODIMP nsWebShellWindow::CreateMenu(nsIMenuBar * aMenuBar,
         nsString menuitemNodeType;
         nsString menuitemName;
         menuitemElement->GetNodeName(menuitemNodeType);
-        if (menuitemNodeType.Equals("menuitem")) {
+        if (menuitemNodeType.EqualsWithConversion("menuitem")) {
           // LoadMenuItem
           LoadMenuItem(pnsMenu, menuitemElement, menuitemNode);
-        } else if (menuitemNodeType.Equals("menuseparator")) {
+        } else if (menuitemNodeType.EqualsWithConversion("menuseparator")) {
           pnsMenu->AddSeparator();
-        } else if (menuitemNodeType.Equals("menu")) {
+        } else if (menuitemNodeType.EqualsWithConversion("menu")) {
           // Load a submenu
           LoadSubMenu(pnsMenu, menuitemElement, menuitemNode);
         }
@@ -645,8 +645,8 @@ NS_IMETHODIMP nsWebShellWindow::LoadMenuItem(
   nsString menuitemName;
   nsString menuitemCmd;
 
-  menuitemElement->GetAttribute(nsAutoString("value"), menuitemName);
-  menuitemElement->GetAttribute(nsAutoString("cmd"), menuitemCmd);
+  menuitemElement->GetAttribute(NS_ConvertASCIItoUCS2("value"), menuitemName);
+  menuitemElement->GetAttribute(NS_ConvertASCIItoUCS2("cmd"), menuitemCmd);
   // Create nsMenuItem
   nsIMenuItem * pnsMenuItem = nsnull;
   nsresult rv = nsComponentManager::CreateInstance(kMenuItemCID, nsnull, NS_GET_IID(nsIMenuItem), (void**)&pnsMenuItem);
@@ -665,7 +665,7 @@ NS_IMETHODIMP nsWebShellWindow::LoadMenuItem(
     //pnsMenuItem->SetLabel(menuitemName);
     
     // Set key shortcut and modifiers
-    nsAutoString keyAtom("key");
+    nsAutoString keyAtom; keyAtom.AssignWithConversion("key");
     nsString keyValue;
     domElement->GetAttribute(keyAtom, keyValue);
     
@@ -689,29 +689,29 @@ NS_IMETHODIMP nsWebShellWindow::LoadMenuItem(
     
     if(keyElement){
         PRUint8 modifiers = knsMenuItemNoModifier;
-	    nsAutoString shiftAtom("shift");
-	    nsAutoString altAtom("alt");
-	    nsAutoString commandAtom("command");
+	    nsAutoString shiftAtom; shiftAtom.AssignWithConversion("shift");
+	    nsAutoString altAtom; altAtom.AssignWithConversion("alt");
+	    nsAutoString commandAtom; commandAtom.AssignWithConversion("command");
 	    nsString shiftValue;
 	    nsString altValue;
 	    nsString commandValue;
-	    nsString keyChar = " ";
+	    nsString keyChar; keyChar.AssignWithConversion(" ");
 	    
 	    keyElement->GetAttribute(keyAtom, keyChar);
 	    keyElement->GetAttribute(shiftAtom, shiftValue);
 	    keyElement->GetAttribute(altAtom, altValue);
 	    keyElement->GetAttribute(commandAtom, commandValue);
 	    
-	    if(!keyChar.Equals(" "))
+	    if(!keyChar.EqualsWithConversion(" "))
 	      pnsMenuItem->SetShortcutChar(keyChar);
 	      
-	    if(shiftValue.Equals("true"))
+	    if(shiftValue.EqualsWithConversion("true"))
 	      modifiers |= knsMenuItemShiftModifier;
 	    
-	    if(altValue.Equals("true"))
+	    if(altValue.EqualsWithConversion("true"))
 	      modifiers |= knsMenuItemAltModifier;
 	    
-	    if(commandValue.Equals("false"))
+	    if(commandValue.EqualsWithConversion("false"))
 	     modifiers |= knsMenuItemCommandModifier;
 	      
         pnsMenuItem->SetModifiers(modifiers);
@@ -725,7 +725,7 @@ NS_IMETHODIMP nsWebShellWindow::LoadMenuItem(
           
 
 
-    nsAutoString cmdAtom("onaction");
+    nsAutoString cmdAtom; cmdAtom.AssignWithConversion("onaction");
     nsString cmdName;
 
     domElement->GetAttribute(cmdAtom, cmdName);
@@ -775,7 +775,7 @@ void nsWebShellWindow::LoadSubMenu(
   nsIDOMNode *    menuNode)
 {
   nsString menuName;
-  menuElement->GetAttribute(nsAutoString("value"), menuName);
+  menuElement->GetAttribute(NS_ConvertASCIItoUCS2("value"), menuName);
   //printf("Creating Menu [%s] \n", menuName.ToNewCString()); // this leaks
 
   // Create nsMenu
@@ -789,7 +789,7 @@ void nsWebShellWindow::LoadSubMenu(
     NS_RELEASE(supports); // Balance QI
 
     // Open the node so that the contents are visible.
-    menuElement->SetAttribute("open", "true");
+    menuElement->SetAttribute(NS_ConvertASCIItoUCS2("open"), NS_ConvertASCIItoUCS2("true"));
       
     // Set nsMenu Name
     pnsMenu->SetLabel(menuName); 
@@ -810,7 +810,7 @@ void nsWebShellWindow::LoadSubMenu(
       if (menuPopupElement) {
         nsString menuPopupNodeType;
         menuPopupElement->GetNodeName(menuPopupNodeType);
-        if (menuPopupNodeType.Equals("menupopup"))
+        if (menuPopupNodeType.EqualsWithConversion("menupopup"))
           break;
       }
       nsCOMPtr<nsIDOMNode> oldMenuPopupNode(menuPopupNode);
@@ -833,12 +833,12 @@ void nsWebShellWindow::LoadSubMenu(
         printf("Type [%s] %d\n", menuitemNodeType.ToNewCString(), menuitemNodeType.Equals("menuseparator"));
 #endif
 
-        if (menuitemNodeType.Equals("menuitem")) {
+        if (menuitemNodeType.EqualsWithConversion("menuitem")) {
           // Load a menuitem
           LoadMenuItem(pnsMenu, menuitemElement, menuitemNode);
-        } else if (menuitemNodeType.Equals("menuseparator")) {
+        } else if (menuitemNodeType.EqualsWithConversion("menuseparator")) {
           pnsMenu->AddSeparator();
-        } else if (menuitemNodeType.Equals("menu")) {
+        } else if (menuitemNodeType.EqualsWithConversion("menu")) {
           // Add a submenu
           LoadSubMenu(pnsMenu, menuitemElement, menuitemNode);
         }
@@ -868,7 +868,7 @@ void nsWebShellWindow::DynamicLoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aP
 
   nsresult rv;
   int endCount = 0;
-  nsCOMPtr<nsIDOMNode> menubarNode(FindNamedDOMNode(nsAutoString("menubar"), window, endCount, 1));
+  nsCOMPtr<nsIDOMNode> menubarNode(FindNamedDOMNode(NS_ConvertASCIItoUCS2("menubar"), window, endCount, 1));
   if (menubarNode) {
     nsIMenuBar * pnsMenuBar = nsnull;
     rv = nsComponentManager::CreateInstance(kMenuBarCID, nsnull, NS_GET_IID(nsIMenuBar), (void**)&pnsMenuBar);
@@ -950,7 +950,7 @@ void nsWebShellWindow::LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWi
 
   nsresult rv;
   int endCount = 0;
-  nsCOMPtr<nsIDOMNode> menubarNode(FindNamedDOMNode(nsAutoString("menubar"), window, endCount, 1));
+  nsCOMPtr<nsIDOMNode> menubarNode(FindNamedDOMNode(NS_ConvertASCIItoUCS2("menubar"), window, endCount, 1));
   if (menubarNode) {
     nsIMenuBar * pnsMenuBar = nsnull;
     rv = nsComponentManager::CreateInstance(kMenuBarCID, nsnull, NS_GET_IID(nsIMenuBar), (void**)&pnsMenuBar);
@@ -971,8 +971,8 @@ void nsWebShellWindow::LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWi
             nsString menuNodeType;
             nsString menuName;
             menuElement->GetNodeName(menuNodeType);
-            if (menuNodeType.Equals("menu")) {
-              menuElement->GetAttribute(nsAutoString("value"), menuName);
+            if (menuNodeType.EqualsWithConversion("menu")) {
+              menuElement->GetAttribute(NS_ConvertASCIItoUCS2("value"), menuName);
 
 #ifdef DEBUG_rods
               printf("Creating Menu [%s] \n", menuName.ToNewCString()); // this leaks
@@ -1255,7 +1255,7 @@ nsWebShellWindow::OnEndDocumentLoad(nsIDocumentLoader* loader,
   ///////////////////////////////
   // Find the Menubar DOM  and Load the menus, hooking them up to the loaded commands
   ///////////////////////////////
-  nsCOMPtr<nsIDOMDocument> menubarDOMDoc(GetNamedDOMDoc(nsAutoString("this"))); // XXX "this" is a small kludge for code reused
+  nsCOMPtr<nsIDOMDocument> menubarDOMDoc(GetNamedDOMDoc(NS_ConvertASCIItoUCS2("this"))); // XXX "this" is a small kludge for code reused
   if (menubarDOMDoc)
   {
 #ifdef SOME_PLATFORM // Anyone using native non-dynamic menus should add themselves here.
@@ -1349,7 +1349,7 @@ nsCOMPtr<nsIDOMDocument> nsWebShellWindow::GetNamedDOMDoc(const nsString & aWebS
 
   // first get the toolbar child docShell
   nsCOMPtr<nsIDocShell> childDocShell;
-  if (aWebShellName.Equals("this")) { // XXX small kludge for code reused
+  if (aWebShellName.EqualsWithConversion("this")) { // XXX small kludge for code reused
     childDocShell = mDocShell;
   } else {
     nsCOMPtr<nsIDocShellTreeItem> docShellAsItem;
@@ -1415,7 +1415,7 @@ void nsWebShellWindow::LoadContentAreas() {
         nsCOMPtr<nsIURL> url = do_QueryInterface(mainURL);
         if (url)
           url->GetQuery(&search);
-        searchSpec = search;
+        searchSpec.AssignWithConversion(search);
         nsCRT::free(search);
       }
     }
@@ -1452,7 +1452,7 @@ void nsWebShellWindow::LoadContentAreas() {
         urlChar = contentURL.ToNewCString();
         if (urlChar) {
           nsUnescape(urlChar);
-          contentURL = urlChar;
+          contentURL.AssignWithConversion(urlChar);
           nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(contentShell));
           webNav->LoadURI(contentURL.GetUnicode());
           delete [] urlChar;
@@ -1695,8 +1695,8 @@ nsWebShellWindow::NotifyObservers( const nsString &aTopic, const nsString &someD
                                        (nsISupports**)&svc );
     if ( NS_SUCCEEDED( rv ) && svc ) {
         // Notify observers as instructed; the subject is "this" web shell window.
-        nsAutoString topic(prefix);
-        topic += ";";
+        nsAutoString topic; topic.AssignWithConversion(prefix);
+        topic.AppendWithConversion(";");
         topic += aTopic;
         rv = svc->Notify( (nsIWebShellWindow*)this, topic.GetUnicode(), someData.GetUnicode() );
         // Release the service.
@@ -1744,7 +1744,7 @@ NS_IMETHODIMP nsWebShellWindow::Alert(const PRUnichar *text)
  
  NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &rv);
  // todo, put that in a string bundle
- nsString defaultTitle("Alert");
+ nsString defaultTitle; defaultTitle.AssignWithConversion("Alert");
  if ( NS_SUCCEEDED( rv ) )
  	rv = dialog->Alert( domWindow, defaultTitle.GetUnicode(),text );
   return rv; 
@@ -1763,7 +1763,7 @@ NS_IMETHODIMP nsWebShellWindow::Confirm(const PRUnichar *text, PRBool *_retval)
     return rv;
   }
  
- nsString defaultTitle("Confirm");
+ nsString defaultTitle; defaultTitle.AssignWithConversion("Confirm");
  NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &rv);
  if ( NS_SUCCEEDED( rv ) )
  	rv = dialog->Confirm( domWindow, defaultTitle.GetUnicode(), text, _retval );
@@ -1784,7 +1784,7 @@ NS_IMETHODIMP nsWebShellWindow::ConfirmCheck(const PRUnichar *text, const PRUnic
   }
  
  // todo, put that in a string bundle
- nsString defaultTitle("Confirm");
+ nsString defaultTitle; defaultTitle.AssignWithConversion("Confirm");
  NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &rv);
  if ( NS_SUCCEEDED( rv ) )
  	rv =dialog->ConfirmCheck( domWindow,defaultTitle.GetUnicode(), text, checkMsg, checkValue, _retval );
@@ -1852,7 +1852,7 @@ NS_IMETHODIMP nsWebShellWindow::Prompt(const PRUnichar *text, const PRUnichar *d
     return rv;
   }
  // todo, put that in a string bundle
- nsString defaultTitle("Prompt");
+ nsString defaultTitle; defaultTitle.AssignWithConversion("Prompt");
  
  NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &rv);
  if ( NS_SUCCEEDED( rv ) )
@@ -1874,7 +1874,7 @@ NS_IMETHODIMP nsWebShellWindow::PromptUsernameAndPassword(const PRUnichar *text,
   }
  
 // todo, put that in a string bundle
-nsString defaultTitle("Prompt Username and Password");
+nsString defaultTitle; defaultTitle.AssignWithConversion("Prompt Username and Password");
                 
  NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &rv);
  if ( NS_SUCCEEDED( rv ) )

@@ -64,7 +64,7 @@ NS_IMETHODIMP nsCommonDialogs::Alert(nsIDOMWindow *inParent,  const PRUnichar *i
 	
 	block->SetString( eDialogTitle,inWindowTitle );
    
-	nsString url( kAlertIconURL );
+	nsString url; url.AssignWithConversion( kAlertIconURL );
 	block->SetString( eIconURL, url.GetUnicode());
 	
 	rv = DoDialog( inParent, block, kPromptURL );
@@ -92,7 +92,7 @@ NS_IMETHODIMP nsCommonDialogs::AlertCheck(nsIDOMWindow *inParent,  const PRUnich
 
 	block->SetString( eDialogTitle, inWindowTitle );
 
-	nsString url( kAlertIconURL );
+	nsString url; url.AssignWithConversion( kAlertIconURL );
 
 	block->SetString( eIconURL, url.GetUnicode());
 	block->SetString( eCheckboxMsg, inCheckMsg );
@@ -123,7 +123,7 @@ NS_IMETHODIMP nsCommonDialogs::Confirm(nsIDOMWindow *inParent, const PRUnichar *
 	
 	block->SetString( eDialogTitle, inWindowTitle );
    
-	nsString url( kQuestionIconURL );
+	nsString url; url.AssignWithConversion( kQuestionIconURL );
 	block->SetString( eIconURL, url.GetUnicode());
 	
 	rv = DoDialog( inParent, block, kPromptURL );
@@ -152,7 +152,7 @@ NS_IMETHODIMP nsCommonDialogs::ConfirmCheck(nsIDOMWindow *inParent,  const PRUni
 
 	block->SetString( eDialogTitle, inWindowTitle );
 
-	nsString url( kQuestionIconURL );
+	nsString url; url.AssignWithConversion( kQuestionIconURL );
 	block->SetString( eIconURL, url.GetUnicode());
 	block->SetString( eCheckboxMsg, inCheckMsg );
 	block->SetInt(eCheckboxState, *outCheckValue );
@@ -244,8 +244,7 @@ NS_IMETHODIMP nsCommonDialogs::UniversalDialog
 	if (inIConURL) {
 		block->SetString(eIconURL, inIConURL);
 	} else {
-		nsString url(kQuestionIconURL);
-		block->SetString(eIconURL, url.GetUnicode());
+		block->SetString(eIconURL, NS_ConvertASCIItoUCS2(kQuestionIconURL).GetUnicode());
 	}
 	if (inCheckboxMsg) {
 		block->SetInt(eCheckboxState, *inoutCheckboxState);
@@ -295,7 +294,7 @@ NS_IMETHODIMP nsCommonDialogs::Prompt(nsIDOMWindow *inParent, const PRUnichar *i
 	
 	block->SetString( eDialogTitle, inWindowTitle );
 	
-	nsString url( kQuestionIconURL );
+	nsString url; url.AssignWithConversion( kQuestionIconURL );
 	block->SetString( eIconURL, url.GetUnicode());
 	block->SetInt( eNumberEditfields, 1 );
 	block->SetString( eEditfield1Value, inDefaultText );
@@ -329,7 +328,7 @@ NS_IMETHODIMP nsCommonDialogs::PromptUsernameAndPassword(nsIDOMWindow *inParent,
 	
 	block->SetString( eDialogTitle, inWindowTitle );
 
-	nsString url( kQuestionIconURL );
+	nsString url; url.AssignWithConversion( kQuestionIconURL );
 	block->SetString( eIconURL, url.GetUnicode());
 	block->SetInt( eNumberEditfields, 2 );
 	block->SetString( eEditfield1Value, *outUser );
@@ -364,7 +363,7 @@ NS_IMETHODIMP nsCommonDialogs::PromptPassword(nsIDOMWindow *inParent,  const PRU
 	
 	block->SetString( eDialogTitle, inWindowTitle );
 	
-	nsString url( kQuestionIconURL );
+	nsString url; url.AssignWithConversion( kQuestionIconURL );
 	block->SetString( eIconURL, url.GetUnicode());
 	block->SetInt( eNumberEditfields, 1 );
 	block->SetInt( eEditField1Password, 1 );
