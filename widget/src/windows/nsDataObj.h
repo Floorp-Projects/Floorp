@@ -121,9 +121,9 @@ class nsDataObj : public IDataObject
 		virtual HRESULT AddSetFormat(FORMATETC&  FE);
 		virtual HRESULT AddGetFormat(FORMATETC&  FE);
 
-		virtual HRESULT GetText(nsCAutoString * aDF, FORMATETC&  FE, STGMEDIUM&  STM);
-		virtual HRESULT GetBitmap(FORMATETC&  FE, STGMEDIUM&  STM);
-		virtual HRESULT GetDib   (FORMATETC&  FE, STGMEDIUM&  STM);
+		virtual HRESULT GetText ( nsAReadableCString& aDF, FORMATETC& aFE, STGMEDIUM & aSTG );
+		virtual HRESULT GetBitmap ( nsAReadableCString& inFlavor, FORMATETC&  FE, STGMEDIUM&  STM);
+		virtual HRESULT GetDib ( nsAReadableCString& inFlavor, FORMATETC &, STGMEDIUM & aSTG );
 		virtual HRESULT GetMetafilePict(FORMATETC&  FE, STGMEDIUM&  STM);
 
     virtual HRESULT GetFileDescriptor ( FORMATETC& aFE, STGMEDIUM& aSTG ) ;

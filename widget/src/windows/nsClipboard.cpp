@@ -23,7 +23,6 @@
  */
 
 #include "nsClipboard.h"
-#include <windows.h>
 #include <OLE2.h>
 #include <SHLOBJ.H>
 #include <INTSHCUT.H>
@@ -39,6 +38,7 @@
 #include "nsXPIDLString.h"
 #include "nsPrimitiveHelpers.h"
 #include "nsIURL.h"
+#include "nsImageClipboard.h"
 
 #include "nsIWidget.h"
 #include "nsIComponentManager.h"
@@ -47,13 +47,8 @@
 #include "nsVoidArray.h"
 #include "nsFileSpec.h"
 
-#include "nsGfxCIID.h"
 #include "nsIImage.h"
 
-
-#define DEBUG_PINK 0
-
-static NS_DEFINE_IID(kCImageCID, NS_IMAGE_CID);
 
 //-------------------------------------------------------------------------
 //
@@ -95,9 +90,6 @@ UINT nsClipboard::GetFormat(const char* aMimeStr)
   else
     format = ::RegisterClipboardFormat(aMimeStr);
 
-#if DEBUG_PINK
-   printf("nsClipboard::GetFormat [%s] 0x%x\n", aMimeStr, format);
-#endif
   return format;
 }
 
@@ -155,13 +147,10 @@ nsresult nsClipboard::SetupNativeDataObject(nsITransferable * aTransferable, IDa
       currentFlavor->ToString(getter_Copies(flavorStr));
       UINT format = GetFormat(flavorStr);
 
-      // check here to see if we can the data back from global member
-      // XXX need IStream support, or file support
+      // Now tell the native IDataObject about both our mime type and 
+      // the native data format
       FORMATETC fe;
       SET_FORMATETC(fe, format, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL);
-
-      // Now tell the native IDataObject about both the DataFlavor and 
-      // the native data format
       dObj->AddDataFlavor(flavorStr, &fe);
       
       // Do various things internal to the implementation, like map one
@@ -170,23 +159,30 @@ nsresult nsClipboard::SetupNativeDataObject(nsITransferable * aTransferable, IDa
       if ( strcmp(flavorStr, kUnicodeMime) == 0 ) {
         // if we find text/unicode, also advertise text/plain (which we will convert
         // on our own in nsDataObj::GetText().
-        FORMATETC fe2;
-        SET_FORMATETC(fe2, CF_TEXT, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL);
-        dObj->AddDataFlavor(kTextMime, &fe2);
+        FORMATETC textFE;
+        SET_FORMATETC(textFE, CF_TEXT, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL);
+        dObj->AddDataFlavor(kTextMime, &textFE);
       }
-      if ( strcmp(flavorStr, kURLMime) == 0 ) {
+      else if ( strcmp(flavorStr, kURLMime) == 0 ) {
         // if we're a url, in addition to also being text, we need to register
         // the "file" flavors so that the win32 shell knows to create an internet
         // shortcut when it sees one of these beasts.
-        FORMATETC fe2;
-        SET_FORMATETC(fe2, ::RegisterClipboardFormat(CFSTR_FILEDESCRIPTOR), 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL)
-        dObj->AddDataFlavor(kURLMime, &fe2);      
-        SET_FORMATETC(fe2, ::RegisterClipboardFormat(CFSTR_FILECONTENTS), 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL)
-        dObj->AddDataFlavor(kURLMime, &fe2);  
+        FORMATETC shortcutFE;
+        SET_FORMATETC(shortcutFE, ::RegisterClipboardFormat(CFSTR_FILEDESCRIPTOR), 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL)
+        dObj->AddDataFlavor(kURLMime, &shortcutFE);      
+        SET_FORMATETC(shortcutFE, ::RegisterClipboardFormat(CFSTR_FILECONTENTS), 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL)
+        dObj->AddDataFlavor(kURLMime, &shortcutFE);  
 #ifdef CFSTR_SHELLURL
-        SET_FORMATETC(fe2, ::RegisterClipboardFormat(CFSTR_SHELLURL), 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL)
-        dObj->AddDataFlavor(kURLMime, &fe2);      
+        SET_FORMATETC(shortcutFE, ::RegisterClipboardFormat(CFSTR_SHELLURL), 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL)
+        dObj->AddDataFlavor(kURLMime, &shortcutFE);      
 #endif
+      }
+      else if ( strcmp(flavorStr, kPNGImageMime) == 0 || strcmp(flavorStr, kJPEGImageMime) == 0 ||
+                  strcmp(flavorStr, kGIFImageMime) == 0 ) {
+        // if we're an image, register the native bitmap flavor
+        FORMATETC imageFE;
+        SET_FORMATETC(imageFE, CF_DIB, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL)
+        dObj->AddDataFlavor(flavorStr, &imageFE);      
       }
     }
   }
@@ -339,59 +335,6 @@ static HRESULT FillSTGMedium(IDataObject * aDataObject, UINT aFormat, LPFORMATET
   return hres;
 }
 
-/*------------------------------------------------------------------
-   DibCopyFromPackedDib is generally used for pasting DIBs from the 
-     clipboard.
-  ------------------------------------------------------------------*/
-
-PRUint8 * GetDIBBits(BITMAPINFO * aBitmapInfo)
-{
-  BYTE  * bits ;     
-  DWORD   headerSize;
-  DWORD   maskSize;
-  DWORD   colorSize;
-
-  // Get the size of the information header
-     
-  headerSize = aBitmapInfo->bmiHeader.biSize ;
-
-  if (headerSize != sizeof (BITMAPCOREHEADER) &&
-      headerSize != sizeof (BITMAPINFOHEADER) &&
-      //headerSize != sizeof (BITMAPV5HEADER) &&
-      headerSize != sizeof (BITMAPV4HEADER)) {
-    return NULL ;
-  }
-
-  // Get the size of the color masks
-  if (headerSize == sizeof (BITMAPINFOHEADER) &&
-      aBitmapInfo->bmiHeader.biCompression == BI_BITFIELDS) {
-    maskSize = 3 * sizeof (DWORD);
-  } else {
-    maskSize = 0;
-  }
-
-  // Get the size of the color table
-  if (headerSize == sizeof (BITMAPCOREHEADER)) {
-    int iBitCount = ((BITMAPCOREHEADER *) aBitmapInfo)->bcBitCount;
-    if (iBitCount <= 8) {
-       colorSize = (1 << iBitCount) * sizeof (RGBTRIPLE);
-    } else {
-     colorSize = 0 ;
-    }
-  } else {         // All non-OS/2 compatible DIBs
-    if (aBitmapInfo->bmiHeader.biClrUsed > 0)      {
-      colorSize = aBitmapInfo->bmiHeader.biClrUsed * sizeof (RGBQUAD);
-    } else if (aBitmapInfo->bmiHeader.biBitCount <= 8) {
-      colorSize = (1 << aBitmapInfo->bmiHeader.biBitCount) * sizeof (RGBQUAD);
-    } else {
-      colorSize = 0;
-    }
-  }
-
-  bits = (BYTE *) aBitmapInfo + headerSize + maskSize + colorSize ;
-
-  return bits;
-}
 
 //-------------------------------------------------------------------------
 nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT aIndex, UINT aFormat, void ** aData, PRUint32 * aLen)
@@ -456,43 +399,20 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
 
             case CF_DIB :
               {
-                // This creates an nsIImage from 
-                // the DIB info on the clipboard
                 HGLOBAL hGlobal = stm.hGlobal;
                 BYTE  * pGlobal = (BYTE  *)::GlobalLock (hGlobal) ;
                 BITMAPV4HEADER * header = (BITMAPV4HEADER *)pGlobal;
 
-                nsIImage * image;
-                nsresult rv = nsComponentManager::CreateInstance(kCImageCID, nsnull, 
-                                          NS_GET_IID(nsIImage), 
-                                          (void**) &image);
-                if (NS_OK == rv) {
-                  // pull the size informat out of the BITMAPINFO header and
-                  // initializew the image
-                  PRInt32 width  = header->bV4Width;
-                  PRInt32 height = header->bV4Height;
-                  PRInt32 depth  = header->bV4BitCount;
-                  PRUint8 * bits = GetDIBBits((BITMAPINFO *)pGlobal);
-
-                  // BUG 44369 notes problems with the GFX image code handling
-                  // depths other than 8 or 24 bits. Ensure that's what we have
-                  // before we try to work with the image. (pinkerton)
-                  if ( depth == 24 || depth == 8 ) {
-                    image->Init(width, height, depth, nsMaskRequirements_kNoMask);
-
-                    // Now, copy the image bits from the Dib into the nsIImage's buffer
-                    PRUint8 * imageBits = image->GetBits();
-                    depth = (depth >> 3);
-                    PRUint32 size = width * height * depth;
-                    CopyMemory(imageBits, bits, size);
-
-                    // the data for this flavor is a ptr to the nsIImage
-                    *aData = image;
-                    *aLen = sizeof(nsIImage*);
-                    result = NS_OK;
-                  }
-                  ::GlobalUnlock (hGlobal) ;
+                nsImageFromClipboard converter ( header );
+                nsIImage* image;
+                converter.GetImage ( &image );   // addrefs for us, don't release
+                if ( image ) {
+                  *aData = image;
+                  *aLen = sizeof(nsIImage*);
+                  result = NS_OK;
                 }
+
+                ::GlobalUnlock (hGlobal) ;
               } break;
 
             case CF_HDROP : 
@@ -818,12 +738,12 @@ nsClipboard :: IsInternetShortcut ( const char* inFileName )
 
 
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsClipboard::GetNativeClipboardData ( nsITransferable * aTransferable, PRInt32 aWhichClipboard )
+NS_IMETHODIMP 
+nsClipboard::GetNativeClipboardData ( nsITransferable * aTransferable, PRInt32 aWhichClipboard )
 {
   // make sure we have a good transferable
-  if ( !aTransferable || aWhichClipboard != kGlobalClipboard ) {
+  if ( !aTransferable || aWhichClipboard != kGlobalClipboard )
     return NS_ERROR_FAILURE;
-  }
 
   nsresult res;
 
@@ -832,8 +752,10 @@ NS_IMETHODIMP nsClipboard::GetNativeClipboardData ( nsITransferable * aTransfera
   if (S_OK == ::OleGetClipboard(&dataObj)) {
     // Use OLE IDataObject for clipboard operations
     res = GetDataFromDataObject(dataObj, 0, nsnull, aTransferable);
-  } else {
-    // do it the old manula way
+    dataObj->Release();
+  } 
+  else {
+    // do it the old manual way
     res = GetDataFromDataObject(nsnull, 0, mWindow, aTransferable);
   }
   return res;

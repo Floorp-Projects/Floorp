@@ -30,6 +30,8 @@
 #include "nsIComponentManager.h"
 #include "nsPrimitiveHelpers.h"
 #include "nsXPIDLString.h"
+#include "nsIImage.h"
+#include "nsImageClipboard.h"
 
 #include "OLE2.h"
 #include "URLMON.h"
@@ -166,15 +168,20 @@ STDMETHODIMP nsDataObj::GetData(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
 			  pSTM->pUnkForRelease = NULL;
 			  CLIPFORMAT format = pFE->cfFormat;
 			  switch(format) {
+			    
+			    // Someone is asking for plain or unicode text
 				  case CF_TEXT:
 				  case CF_UNICODETEXT:
-					  return GetText(df, *pFE, *pSTM);
-					  break;					  			  
+					  return GetText(*df, *pFE, *pSTM);
+					  break;
+					  
+			    // Someone is asking for an image
+				  case CF_DIB:
+				  	return GetDib(*df, *pFE, *pSTM);
+					  				  			  
 				  // ... not yet implemented ...
 				  //case CF_BITMAP:
 				  //	return GetBitmap(*pFE, *pSTM);
-				  //case CF_DIB:
-				  //	return GetDib(*pFE, *pSTM);
 				  //case CF_METAFILEPICT:
 				  //	return GetMetafilePict(*pFE, *pSTM);
             
@@ -186,7 +193,7 @@ STDMETHODIMP nsDataObj::GetData(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
               return GetFileContents ( *pFE, *pSTM );
             else {
               PRNTDEBUG2("***** nsDataObj::GetData - Unknown format %x\n", format);
-					    return GetText(df, *pFE, *pSTM);
+					    return GetText(*df, *pFE, *pSTM);
             }
             break;
 
@@ -333,17 +340,47 @@ HRESULT nsDataObj::AddGetFormat(FORMATETC& aFE)
 }
 
 //-----------------------------------------------------
-HRESULT nsDataObj::GetBitmap(FORMATETC&, STGMEDIUM&)
+HRESULT 
+nsDataObj::GetBitmap ( nsAReadableCString& , FORMATETC&, STGMEDIUM& )
 {
   PRNTDEBUG("nsDataObj::GetBitmap\n");
 	return ResultFromScode(E_NOTIMPL);
 }
 
-//-----------------------------------------------------
-HRESULT nsDataObj::GetDib(FORMATETC&, STGMEDIUM&)
+
+//
+// GetDIB
+//
+// Someone is asking for a bitmap. The data in the transferable will be a straight
+// nsIImage, so just QI it.
+//
+HRESULT 
+nsDataObj :: GetDib ( nsAReadableCString& inFlavor, FORMATETC &, STGMEDIUM & aSTG )
 {
   PRNTDEBUG("nsDataObj::GetDib\n");
-	return E_NOTIMPL;
+  ULONG result = E_FAIL;
+  
+  PRUint32 len = 0;
+  nsCOMPtr<nsISupports> genericDataWrapper;
+  mTransferable->GetTransferData(nsPromiseFlatCString(inFlavor), getter_AddRefs(genericDataWrapper), &len);
+  nsCOMPtr<nsIImage> image ( do_QueryInterface(genericDataWrapper) );
+  if ( image ) {
+    // use a the helper class to build up a bitmap. The helper class owns the
+    // bits, so we don't want to free them. They'll be freed when it goes out
+    // of scope.
+    nsImageToClipboard converter ( image );
+    HANDLE bits = nsnull;
+    nsresult rv = converter.GetPicture ( &bits );
+    if ( NS_SUCCEEDED(rv) && bits ) {
+      aSTG.hGlobal = bits;
+      aSTG.tymed = TYMED_HGLOBAL;
+      result = S_OK;
+    }
+  } // if we have an image
+  else  
+    NS_WARNING ( "Definately not an image on clipboard" );
+  
+	return ResultFromScode(result);
 }
 
 
@@ -528,17 +565,17 @@ nsDataObj :: IsInternetShortcut ( )
 
 
 //-----------------------------------------------------
-HRESULT nsDataObj::GetText(nsCAutoString * aDataFlavor, FORMATETC& aFE, STGMEDIUM& aSTG)
+HRESULT nsDataObj::GetText(nsAReadableCString & aDataFlavor, FORMATETC& aFE, STGMEDIUM& aSTG)
 {
   void* data;
   PRUint32   len;
   
   // if someone asks for text/plain, look up text/unicode instead in the transferable.
-  char* flavorStr;
-  if ( aDataFlavor->Equals("text/plain") )
+  const char* flavorStr;
+  if ( aDataFlavor.Equals("text/plain") )
     flavorStr = kUnicodeMime;
   else
-    flavorStr = *aDataFlavor;
+    flavorStr = nsPromiseFlatCString(aDataFlavor);
 
   // NOTE: CreateDataFromPrimitive creates new memory, that needs to be deleted
   nsCOMPtr<nsISupports> genericDataWrapper;
@@ -546,7 +583,6 @@ HRESULT nsDataObj::GetText(nsCAutoString * aDataFlavor, FORMATETC& aFE, STGMEDIU
   if ( !len )
     return ResultFromScode(E_FAIL);
   nsPrimitiveHelpers::CreateDataFromPrimitive ( flavorStr, genericDataWrapper, &data, len );
-
   HGLOBAL     hGlobalMemory = NULL;
   PSTR        pGlobalMemory = NULL;
 
