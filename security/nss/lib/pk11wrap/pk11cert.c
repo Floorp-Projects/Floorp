@@ -1605,7 +1605,8 @@ extern const NSSError NSS_ERROR_INVALID_CERTIFICATE;
  */
 SECStatus
 PK11_ImportCert(PK11SlotInfo *slot, CERTCertificate *cert, 
-		CK_OBJECT_HANDLE key, char *nickname, PRBool includeTrust) {
+		CK_OBJECT_HANDLE key, char *nickname, PRBool includeTrust) 
+{
 #ifdef NSS_CLASSIC
     int len = 0;
     SECItem *keyID = pk11_mkcertKeyID(cert);
