@@ -39,6 +39,7 @@
 #include "pk12util.h"
 #include "nss.h"
 #include "secport.h"
+#include "certdb.h"
 
 #define PKCS12_IN_BUFFER_SIZE	200
 
@@ -551,6 +552,38 @@ p12u_WriteToExportFile(void *arg, const char *buf, unsigned long len)
     }
 }
 
+static SECStatus
+cert_UserCertsOnly(CERTCertList *certList)
+{
+    CERTCertListNode *node, *freenode;
+    CERTCertificate *cert;
+    PRUint32 numusercerts = 0;
+    
+    node = CERT_LIST_HEAD(certList);
+    
+    while ( ! CERT_LIST_END(node, certList) ) {
+	cert = node->cert;
+	if ( !( cert->trust->sslFlags & CERTDB_USER ) &&
+	     !( cert->trust->emailFlags & CERTDB_USER ) &&
+	     !( cert->trust->objectSigningFlags & CERTDB_USER ) ) {
+	    /* Not a User Cert, so remove this cert from the list */
+	    freenode = node;
+	    node = CERT_LIST_NEXT(node);
+	    CERT_RemoveCertListNode(freenode);
+	} else {
+	    /* Is a User cert, so leave it in the list */
+	    node = CERT_LIST_NEXT(node);
+            numusercerts ++;
+	}
+    }
+    
+    if (numusercerts) {
+        return(SECSuccess);
+    } else  {
+        return(SECFailure);
+    }
+}
+
 void
 P12U_ExportPKCS12Object(char *nn, char *outfile, PK11SlotInfo *inSlot,
 			secuPWData *slotPw, secuPWData *p12FilePw)
@@ -559,7 +592,9 @@ P12U_ExportPKCS12Object(char *nn, char *outfile, PK11SlotInfo *inSlot,
     SEC_PKCS12SafeInfo *keySafe = NULL, *certSafe = NULL;
     SECItem *pwitem = NULL;
     p12uContext *p12cxt = NULL;
-    CERTCertificate *cert = NULL;
+    CERTCertList* certlist = NULL;
+    CERTCertListNode* node = NULL;
+    PK11SlotInfo* slot = NULL;
 
     if (P12U_InitSlot(inSlot, slotPw) != SECSuccess) {
 	SECU_PrintError(progName,"Failed to authenticate to \"%s\"",
@@ -567,59 +602,22 @@ P12U_ExportPKCS12Object(char *nn, char *outfile, PK11SlotInfo *inSlot,
 	pk12uErrno = PK12UERR_PK11GETSLOT;
 	goto loser;
     }
-    cert = PK11_FindCertFromNickname(nn, slotPw);
-    if(!cert) {
-	SECU_PrintError(progName,"find cert by nickname failed");
+    certlist = PK11_FindCertsFromNickname(nn, slotPw);
+    if(!certlist) {
+	SECU_PrintError(progName,"find user certs from nickname failed");
 	pk12uErrno = PK12UERR_FINDCERTBYNN;
 	return;
     }
 
-    if (!cert->slot) {
-	SECU_PrintError(progName,"cert does not have a slot");
-	pk12uErrno = PK12UERR_FINDCERTBYNN;
-	goto loser;
+    if (SECSuccess != cert_UserCertsOnly(certlist)) {
+        SECU_PrintError(progName,"find user certs from nickname failed");
+        pk12uErrno = PK12UERR_FINDCERTBYNN;
+        return;
     }
 
     /*	Password to use for PKCS12 file.  */
     pwitem = P12U_GetP12FilePassword(PR_TRUE, p12FilePw);
     if(!pwitem) {
-	goto loser;
-    }
-
-    p12ecx = SEC_PKCS12CreateExportContext(NULL, NULL, cert->slot, slotPw);
-    if(!p12ecx) {
-	SECU_PrintError(progName,"export context creation failed");
-	pk12uErrno = PK12UERR_EXPORTCXCREATE;
-	goto loser;
-    }
-
-    if(SEC_PKCS12AddPasswordIntegrity(p12ecx, pwitem, SEC_OID_SHA1)
-       != SECSuccess) {
-	SECU_PrintError(progName,"PKCS12 add password integrity failed");
-	pk12uErrno = PK12UERR_PK12ADDPWDINTEG;
-	goto loser;
-    }
-
-    keySafe = SEC_PKCS12CreateUnencryptedSafe(p12ecx);
-    if(/*!SEC_PKCS12IsEncryptionAllowed() || */ PK11_IsFIPS()) {
-	certSafe = keySafe;
-    } else {
-	certSafe = SEC_PKCS12CreatePasswordPrivSafe(p12ecx, pwitem,
-			SEC_OID_PKCS12_V2_PBE_WITH_SHA1_AND_40_BIT_RC2_CBC);
-    }
-
-    if(!certSafe || !keySafe) {
-	SECU_PrintError(progName,"key or cert safe creation failed");
-	pk12uErrno = PK12UERR_CERTKEYSAFE;
-	goto loser;
-    }
-
-    if(SEC_PKCS12AddCertAndKey(p12ecx, certSafe, NULL, cert,
-			CERT_GetDefaultCertDB(), keySafe, NULL, PR_TRUE, pwitem,
-			SEC_OID_PKCS12_V2_PBE_WITH_SHA1_AND_3KEY_TRIPLE_DES_CBC)
-			!= SECSuccess) {
-	SECU_PrintError(progName,"add cert and key failed");
-	pk12uErrno = PK12UERR_ADDCERTKEY;
 	goto loser;
     }
 
@@ -630,17 +628,80 @@ P12U_ExportPKCS12Object(char *nn, char *outfile, PK11SlotInfo *inSlot,
 	goto loser;
     }
 
+    if (certlist) {
+        CERTCertificate* cert = NULL;
+        node = CERT_LIST_HEAD(certlist);
+        if (node) {
+            cert = node->cert;
+        }
+        if (cert) {
+            slot = cert->slot; /* use the slot from the first matching
+                certificate to create the context . This is for keygen */
+        }
+    }
+    if (!slot) {
+        SECU_PrintError(progName,"cert does not have a slot");
+        pk12uErrno = PK12UERR_FINDCERTBYNN;
+        goto loser;
+    }
+    p12ecx = SEC_PKCS12CreateExportContext(NULL, NULL, slot, slotPw);
+    if(!p12ecx) {
+        SECU_PrintError(progName,"export context creation failed");
+        pk12uErrno = PK12UERR_EXPORTCXCREATE;
+        goto loser;
+    }
+
+    if(SEC_PKCS12AddPasswordIntegrity(p12ecx, pwitem, SEC_OID_SHA1)
+       != SECSuccess) {
+        SECU_PrintError(progName,"PKCS12 add password integrity failed");
+        pk12uErrno = PK12UERR_PK12ADDPWDINTEG;
+        goto loser;
+    }
+
+    for (node = CERT_LIST_HEAD(certlist);!CERT_LIST_END(node,certlist);node=CERT_LIST_NEXT(node))
+    {
+        CERTCertificate* cert = node->cert;
+        if (!cert->slot) {
+            SECU_PrintError(progName,"cert does not have a slot");
+            pk12uErrno = PK12UERR_FINDCERTBYNN;
+            goto loser;
+        }
+    
+        keySafe = SEC_PKCS12CreateUnencryptedSafe(p12ecx);
+        if(/*!SEC_PKCS12IsEncryptionAllowed() || */ PK11_IsFIPS()) {
+            certSafe = keySafe;
+        } else {
+            certSafe = SEC_PKCS12CreatePasswordPrivSafe(p12ecx, pwitem,
+                SEC_OID_PKCS12_V2_PBE_WITH_SHA1_AND_40_BIT_RC2_CBC);
+        }
+    
+        if(!certSafe || !keySafe) {
+            SECU_PrintError(progName,"key or cert safe creation failed");
+            pk12uErrno = PK12UERR_CERTKEYSAFE;
+            goto loser;
+        }
+    
+        if(SEC_PKCS12AddCertAndKey(p12ecx, certSafe, NULL, cert,
+            CERT_GetDefaultCertDB(), keySafe, NULL, PR_TRUE, pwitem,
+            SEC_OID_PKCS12_V2_PBE_WITH_SHA1_AND_3KEY_TRIPLE_DES_CBC)
+            != SECSuccess) {
+                SECU_PrintError(progName,"add cert and key failed");
+                pk12uErrno = PK12UERR_ADDCERTKEY;
+                goto loser;
+        }
+        CERT_DestroyCertificate(cert);
+        node->cert = NULL;
+    }
+
     if(SEC_PKCS12Encode(p12ecx, p12u_WriteToExportFile, p12cxt)
-			!= SECSuccess) {
-	SECU_PrintError(progName,"PKCS12 encode failed");
-	pk12uErrno = PK12UERR_ENCODE;
-	goto loser;
+                        != SECSuccess) {
+        SECU_PrintError(progName,"PKCS12 encode failed");
+        pk12uErrno = PK12UERR_ENCODE;
+        goto loser;
     }
 
     p12u_DestroyExportFileInfo(&p12cxt, PR_FALSE);
     SECITEM_ZfreeItem(pwitem, PR_TRUE);
-    CERT_DestroyCertificate(cert);
-
     fprintf(stdout, "%s: PKCS12 EXPORT SUCCESSFUL\n", progName);
     SEC_PKCS12DestroyExportContext(p12ecx);
 
@@ -649,18 +710,27 @@ P12U_ExportPKCS12Object(char *nn, char *outfile, PK11SlotInfo *inSlot,
 loser:
     SEC_PKCS12DestroyExportContext(p12ecx);
 
+    for (node = CERT_LIST_HEAD(certlist);!CERT_LIST_END(node,certlist);node=CERT_LIST_NEXT(node))
+    {
+        CERTCertificate* cert = node->cert;
+        if (!node->cert) {
+            continue;
+        }
+
+        if(cert) {
+            CERT_DestroyCertificate(cert);
+        }
+    }
+
     if (slotPw)
-	PR_Free(slotPw->data);
+        PR_Free(slotPw->data);
 
     if (p12FilePw)
-	PR_Free(p12FilePw->data);
+        PR_Free(p12FilePw->data);
 
-    if(cert) {
-	CERT_DestroyCertificate(cert);
-    }
     p12u_DestroyExportFileInfo(&p12cxt, PR_TRUE);
     if(pwitem) {
-	SECITEM_ZfreeItem(pwitem, PR_TRUE);
+        SECITEM_ZfreeItem(pwitem, PR_TRUE);
     }
     p12u_DoPKCS12ExportErrors();
     return;
