@@ -147,6 +147,9 @@ public:
 	NS_IMETHOD DisplayMessage(const char* aMessageURI, nsISupports * aDisplayConsumer, 
 							  nsIUrlListener * aUrlListener, nsIURL ** aURL);
 
+	NS_IMETHOD SaveMessageToDisk(const char *aMessageURI, nsIFileSpec *aFile, PRBool aAppendToFile, 
+								 nsIUrlListener *aUrlListener, nsIURL **aURL);
+
 protected:
     nsresult GetFolderName(nsIMsgFolder* aImapFolder,
                            nsString2& folderName);

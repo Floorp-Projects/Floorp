@@ -222,13 +222,13 @@ NS_IMETHODIMP nsImapService::DisplayMessage(const char* aMessageURI, nsISupports
 
 	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv); 
 
-	nsString	folderURI;
+	nsString	folderURI ("",eOneByte);
 	nsMsgKey	msgKey;
 	rv = nsParseImapMessageURI(aMessageURI, folderURI, &msgKey);
 	if (NS_SUCCEEDED(rv))
 	{
 		nsIRDFResource* res;
-		rv = rdf->GetResource(nsAutoCString(folderURI), &res);
+		rv = rdf->GetResource(folderURI.GetBuffer(), &res);
 		if (NS_FAILED(rv))
 			return rv;
 		nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(res, &rv));
@@ -255,6 +255,16 @@ nsImapService::CopyMessage(const char * aSrcMailboxURI, nsIStreamListener * aMai
 						   nsIUrlListener * aUrlListener, nsIURL **aURL)
 {
 	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsImapService::SaveMessageToDisk(const char *aMessageURI, nsIFileSpec *aFile, 
+												  PRBool aAppendToFile, nsIUrlListener *aUrlListener, nsIURL **aURL)
+{
+	// unimplemented for imap right now....if we feel it would be useful to 
+	// be able to spool an imap message to disk then this is the method we need to implement.
+
+	nsresult rv = NS_OK;
+	return rv;
 }
 
 
