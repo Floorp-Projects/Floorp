@@ -18,6 +18,10 @@
  * Reserved.
  */
 
+/*
+ * Glue to connect lib/libdom to lib/layout.
+ */
+
 #include "lm.h"
 #include "lm_dom.h"
 #include "layout.h"
@@ -25,7 +29,33 @@
 #include "pa_parse.h"
 #include "intl_csi.h"
 
-JSObject *
+static JSBool
+lm_DOMInsertBefore(JSContext *cx, DOM_Node *node, DOM_Node *child,
+                   DOM_Node *ref)
+{
+    return JS_TRUE;
+}
+
+static JSBool
+lm_DOMReplaceChild(JSContext *cx, DOM_Node *node, DOM_Node *child,
+                   DOM_Node *old)
+{
+    return JS_TRUE;
+}
+
+static JSBool
+lm_DOMRemoveChild(JSContext *cx, DOM_Node *node, DOM_Node *ild)
+{
+    return JS_TRUE;
+}
+
+static JSBool
+lm_DOMAppendChild(JSContext *cx, DOM_Node *node, DOM_Node *child)
+{
+    return JS_TRUE;
+}
+
+static JSObject *
 lm_DOMReflectNode(JSContext *cx, DOM_Node *node)
 {
     MochaDecoder *decoder = JS_GetPrivate(cx, JS_GetGlobalObject(cx));
@@ -47,13 +77,19 @@ lm_DOMReflectNode(JSContext *cx, DOM_Node *node)
 }
 
 DOM_NodeOps lm_NodeOps = {
-    DOM_InsertBeforeStub, DOM_ReplaceChildStub, DOM_RemoveChildStub,
-    DOM_AppendChildStub, DOM_DestroyNodeStub, lm_DOMReflectNode
+    lm_DOMInsertBefore, lm_DOMReplaceChild, lm_DOMRemoveChild,
+    lm_DOMAppendChild, DOM_DestroyNodeStub, lm_DOMReflectNode
 };
 
 DOM_ElementOps lm_ElementOps = {
     DOM_SetAttributeStub, DOM_GetAttributeStub, DOM_GetNumAttrsStub
 };
+
+static JSBool
+lm_CDataOp(JSContext *cx, DOM_CharacterData *cdata, DOM_CDataOperationCode op)
+{
+    return JS_TRUE;
+}
 
 static DOM_Node *
 lm_NodeForTag(PA_Tag *tag, DOM_Node *current, MWContext *context, int16 csid)
@@ -68,13 +104,14 @@ lm_NodeForTag(PA_Tag *tag, DOM_Node *current, MWContext *context, int16 csid)
         if (current->type != NODE_TYPE_ELEMENT)
             return NULL;
         /* create Text node */
-        node = XP_NEW_ZAP(DOM_Node);
+        node = (DOM_Node *)XP_NEW_ZAP(DOM_Text);
         node->type = NODE_TYPE_TEXT;
         node->name = XP_STRDUP("#text");
         node->ops = &lm_NodeOps;
         cdata = (DOM_CharacterData *)node;
         cdata->len = tag->data_len;
         cdata->data = XP_ALLOC(tag->data_len);
+        cdata->notify = lm_CDataOp;
         if (!cdata->data) {
             XP_FREE(node);
             return NULL;
