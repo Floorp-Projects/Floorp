@@ -133,6 +133,7 @@ enum {
 
 enum {
   eParserSpecial_None,          // not parsing a special character
+  eParserSpecial_MultiLine,     // Have a multiline sequence
   eParserSpecial_Escaped,       // awaiting a special character
   eParserSpecial_Unicode        // parsing a \Uxxx value
 };
@@ -296,7 +297,8 @@ ParseValueCharacter(nsParserState& aState, PRUnichar c,
       break;
     }
     break;
-    
+
+
     // saw a \ character, so parse the character after that
   case eParserSpecial_Escaped:
     // probably want to start parsing at the next token
@@ -333,8 +335,9 @@ ParseValueCharacter(nsParserState& aState, PRUnichar c,
     case '\n':
       aState.mHaveMultiLine = PR_TRUE;
       aState.mSpecialState = eParserSpecial_None;
+      aState.mHaveMultiLine=PR_TRUE;
       break;
-      
+
     default:
       // don't recognize the character, so just append it
       aState.mValue += c;
@@ -346,12 +349,6 @@ ParseValueCharacter(nsParserState& aState, PRUnichar c,
     // like \u5f39
   case eParserSpecial_Unicode:
 
-    // first check if this is the last character or not
-    if (++aState.mUnicodeValuesRead >= 4) {
-      tokenStart = cur+1;
-      aState.mSpecialState = eParserSpecial_None;
-    }
-
     if(('0' <= c) && (c <= '9'))
       aState.mUnicodeValue =
         (aState.mUnicodeValue << 4) | (c - '0');
@@ -362,11 +359,21 @@ ParseValueCharacter(nsParserState& aState, PRUnichar c,
       aState.mUnicodeValue =
         (aState.mUnicodeValue << 4) | (c - 'A' + 0x0a);
     else {
-      // unrecognized character. Append what we have, and move on.
+      // non-hex character. Append what we have, and move on.
       aState.mValue += aState.mUnicodeValue;
       aState.mSpecialState = eParserSpecial_None;
-      // leave tokenStart at this unknown character
+
+      // leave tokenStart at this unknown character, so it gets appended
       tokenStart = cur;
+
+      // break out early from switch() so we don't process it anymore
+      break;
+    }
+
+    if (++aState.mUnicodeValuesRead >= 4) {
+      tokenStart = cur+1;
+      aState.mSpecialState = eParserSpecial_None;
+      aState.mValue += aState.mUnicodeValue;
     }
 
     break;
