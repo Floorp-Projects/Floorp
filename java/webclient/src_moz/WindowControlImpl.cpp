@@ -133,6 +133,44 @@ JNIEXPORT jint JNICALL Java_org_mozilla_webclient_wrapper_1native_WindowControlI
     return (jint) initContext;
 }
 
+JNIEXPORT void JNICALL 
+Java_org_mozilla_webclient_wrapper_1native_WindowControlImpl_nativeDestroyInitContext
+(JNIEnv *env, jobject obj, jint webShellPtr)
+{
+    WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
+    
+	if (initContext == nsnull) {
+		::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to nativeDestroyInitContext");
+		return;
+	}
+
+    initContext->parentHWnd = nsnull;
+    //    ((nsISupports *)initContext->docShell)->Release();
+    initContext->docShell = nsnull;
+    //    ((nsISupports *)initContext->webShell)->Release();
+    initContext->webShell = nsnull;
+
+    //NOTE we don't de-allocate the global session history here.
+    initContext->sessionHistory = nsnull;
+
+    // PENDING(edburns): not sure if these need to be deleted
+    initContext->actionQueue = nsnull;
+    initContext->embeddedThread = nsnull;
+    initContext->env = nsnull;
+    initContext->nativeEventThread = nsnull;
+    initContext->stopThread = -1;
+    initContext->initComplete = FALSE;
+    initContext->initFailCode = 0;
+    initContext->x = -1;
+    initContext->y = -1;
+    initContext->w = -1;
+    initContext->h = -1;    
+    initContext->gtkWinPtr = nsnull;
+
+    delete initContext;
+}
+
+
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_WindowControlImpl_nativeMoveWindowTo
 (JNIEnv *env, jobject obj, jint webShellPtr, jint x, jint y)
 {

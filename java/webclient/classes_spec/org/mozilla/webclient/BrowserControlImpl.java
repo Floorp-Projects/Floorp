@@ -82,12 +82,60 @@ public BrowserControlImpl(BrowserControlCanvas yourCanvas)
     myCanvas = yourCanvas;
 }
 
+/**
+
+ * Called from BrowserControlFactory.deleteBrowserControl() <P>
+
+ * The order of deletion of objects is very important! <P>
+
+ * We don't allow deletion if the Canvas is showing. <P>
+
+ */ 
+
+void delete()
+{
+    Assert.assert(null != myCanvas);
+    
+    // Make sure we're not showing.
+    if (myCanvas.isShowing()) {
+        throw new IllegalStateException("Can't delete a browser control while its canvas is showing");
+    }
+    myCanvas = null;
+
+    if (null != eventRegistration) {
+        ((ImplObject)eventRegistration).delete();
+        eventRegistration = null;
+    }
+
+    if (null != navigation) {
+        ((ImplObject)navigation).delete();
+        navigation = null;
+    }
+
+    if (null != history) {
+        ((ImplObject)history).delete();
+        history = null;
+    }
+
+    if (null != currentPage) {
+        ((ImplObject)currentPage).delete();
+        currentPage = null;
+    }
+
+    Assert.assert(null != windowControl);
+    ((ImplObject)windowControl).delete();
+    windowControl = null;
+
+    // since bookmarks is static, we must not deallocate it here.  That
+    // is done in the static method appTerminate
+
+}
 
 //
 // Class methods
 //
 
-static void initialize(String verifiedBinDirAbsolutePath) throws Exception 
+static void appInitialize(String verifiedBinDirAbsolutePath) throws Exception 
 {
     if (null == wrapperFactory) {
         wrapperFactory = createWrapperFactory();
@@ -95,9 +143,14 @@ static void initialize(String verifiedBinDirAbsolutePath) throws Exception
     wrapperFactory.initialize(verifiedBinDirAbsolutePath);
 }
 
-static void terminate() throws Exception
+static void appTerminate() throws Exception
 {
     Assert.assert(null != wrapperFactory);
+
+    if (null != bookmarks) {
+        ((ImplObject)bookmarks).delete();
+        bookmarks = null;
+    }
 
     wrapperFactory.terminate();
 }
@@ -230,7 +283,7 @@ public static void main(String [] args)
     Assert.setEnabled(true);
     Log.setApplicationName("BrowserControlImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: BrowserControlImpl.java,v 1.1 2000/03/04 01:10:51 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: BrowserControlImpl.java,v 1.2 2000/03/13 18:41:46 edburns%acm.org Exp $");
     
 }
 

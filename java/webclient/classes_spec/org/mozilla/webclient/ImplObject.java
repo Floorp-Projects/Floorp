@@ -110,4 +110,22 @@ public ImplObject(WrapperFactory yourFactory,
     myBrowserControl = yourBrowserControl;
 }
 
+/**
+
+ * I know Java has automatic garbage collection and all, but explicitly
+ * adding a delete method helps the gc algorithm out. <P>
+
+ * Subclasses should override this and call super.delete() at the end of
+ * their overridden delete() method.
+
+ * @see org.mozilla.webclient.wrapper_native.ImplObjectNative#delete
+
+ */
+
+public void delete()
+{
+    myFactory = null;
+    myBrowserControl = null;
+}
+
 } // end of class ImplObject

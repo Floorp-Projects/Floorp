@@ -62,6 +62,23 @@ public WindowControlImpl(WrapperFactory yourFactory,
     super(yourFactory, yourBrowserControl, false);
 }
 
+/**
+
+ * First, we delete our eventThread, which causes the eventThread to
+ * stop running.  Then we call nativeDestroyInitContext(), which
+ * deallocates native resources for this window.
+
+ */
+
+public void delete()
+{
+    Assert.assert(null != eventThread, "eventThread shouldn't be null at delete time");
+    eventThread.delete();
+    eventThread = null;
+    nativeDestroyInitContext(nativeWebShell);
+    nativeWebShell = -1;
+}
+
 //
 // Class methods
 //
@@ -201,6 +218,8 @@ public native void nativeSetBounds(int webShellPtr, int x, int y,
 public native int nativeCreateInitContext(int nativeWindow, 
                                           int x, int y, int width, int height, BrowserControl myBrowserControlImpl);
 
+public native void nativeDestroyInitContext(int nativeWindow);
+
 public native void nativeMoveWindowTo(int webShellPtr, int x, int y);
 
 public native void nativeRemoveFocus(int webShellPtr);
@@ -224,7 +243,7 @@ public static void main(String [] args)
 
     Log.setApplicationName("WindowControlImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: WindowControlImpl.java,v 1.3 2000/03/09 23:22:52 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: WindowControlImpl.java,v 1.4 2000/03/13 18:42:31 edburns%acm.org Exp $");
 
     try {
         org.mozilla.webclient.BrowserControlFactory.setAppData(args[0]);

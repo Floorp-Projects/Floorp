@@ -85,6 +85,16 @@ public EventRegistrationImpl(WrapperFactory yourFactory,
     }
 }
 
+public void delete()
+{
+    // PENDING(ashuk): remove all listeners, making sure to set
+    // references to null
+
+    nativeEventThread = null;
+    
+    super.delete();
+}
+
 //
 // Class methods
 //
@@ -117,14 +127,6 @@ public void removeDocumentLoadListener(DocumentLoadListener listener)
     }
 }
 
-public void testListenerSubclass(WebclientEventListener listener)
-{
-    if (listener instanceof DocumentLoadListener) {
-        System.out.println("debug: edburns: EventRegistrationImpl.testListenerSubclass: DocumentLoadListener");
-    }
-
-}
-
 // ----VERTIGO_TEST_START
 
 //
@@ -137,7 +139,7 @@ public static void main(String [] args)
 
     Log.setApplicationName("EventRegistrationImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: EventRegistrationImpl.java,v 1.2 2000/03/09 23:22:50 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: EventRegistrationImpl.java,v 1.3 2000/03/13 18:42:23 edburns%acm.org Exp $");
 
     try {
         org.mozilla.webclient.BrowserControlFactory.setAppData(args[0]);

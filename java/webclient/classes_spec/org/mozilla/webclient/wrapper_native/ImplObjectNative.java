@@ -76,7 +76,8 @@ public abstract class ImplObjectNative extends ImplObject
 
 /** 
       
- * a handle to the actual mozilla webShell, obtained from WindowControl
+ * a handle to the actual mozilla webShell, owned, allocated, and
+ * released by WindowControl
    
  */
   
@@ -120,5 +121,34 @@ public ImplObjectNative(WrapperFactory yourFactory,
 {
     super(yourFactory, yourBrowserControl);
 }
+
+/**
+
+ * Note how we call super.delete() at the end.  THIS IS VERY IMPORTANT. <P>
+
+ * Also, note how we don't de-allocate nativeWebShell, that is done in
+ * the class that owns the nativeWebShell reference, WindowControlImpl. <P>
+
+ * ImplObjectNative subclasses that further override delete() are <P>
+
+<CODE><PRE>
+BookmarksImpl.java
+EventRegistrationImpl.java
+NativeEventThread.java
+WindowControlImpl.java
+</PRE><CODE> <P>
+
+ * All other ImplObject subclasses don't have any local Ivars and thus
+ * don't need to override delete().
+
+ */
+
+public void delete()
+{
+    nativeWebShell = -1;
+    System.out.println("debug: edburns: ImplObjectNative.delete()");
+    super.delete();
+}
+
 
 } // end of class ImplObject

@@ -122,6 +122,32 @@ public NativeEventThread(String threadName, BrowserControl yourBrowserControl)
     }
 }
 
+/**
+
+ * This is a very delicate method, and possibly subject to race
+ * condition problems.  To combat this, our first step is to set our
+ * browserControlCanvas to null, within a synchronized block which
+ * synchronizes on the same object used in the run() method's event
+ * loop.  By setting the browserControlCanvas ivar to null, we cause the
+ * run method to return.
+
+ */
+
+public void delete()
+{
+    // setting this to null causes the run thread to exit
+    synchronized(this.browserControlCanvas.getTreeLock()) {
+        browserControlCanvas = null;
+    }
+    // PENDING(ashuk): do any necessary cleanup.
+    listenersToAdd = null;
+    listenersToRemove = null;
+    nativeWebShell = -1;
+    windowControl = null;
+    browserControl = null;
+    tempEnum = null;
+}
+
 //
 // Methods from Thread
 //
@@ -162,7 +188,7 @@ public void run()
         }
     }
 
-    while (true) {
+    while (null != this.browserControlCanvas) {
         synchronized (this.browserControlCanvas.getTreeLock()) {
             nativeProcessEvents(nativeWebShell);
 

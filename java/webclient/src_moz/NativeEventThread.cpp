@@ -387,7 +387,7 @@ nsresult InitMozillaStuff (WebShellInitContext * initContext)
 	printf("InitMozillaStuff(%lx): Create the WebShell...\n", initContext);
 #endif
     // Create the WebShell.
-    rv = nsRepository::CreateInstance(kWebShellCID, nsnull, kIWebShellIID, (void**)&initContext->webShell);
+    rv = nsRepository::CreateInstance(kWebShellCID, nsnull, kIWebShellIID, getter_AddRefs(initContext->webShell));
     if (NS_FAILED(rv)) {
         initContext->initFailCode = kCreateWebShellError;
         return rv;

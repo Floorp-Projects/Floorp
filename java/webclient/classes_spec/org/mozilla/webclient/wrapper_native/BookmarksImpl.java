@@ -73,6 +73,26 @@ public BookmarksImpl(WrapperFactory yourFactory,
     super(yourFactory, yourBrowserControl);
 }
 
+/**
+
+ * Since this class is a singleton, we don't expect this method to be
+ * called until the app is done with bookmarks for a considerable amount
+ * of time.
+
+// PENDING(): Write test case to see that a cycle of Bookmarks
+// allocation/destruction/new instance allocation works correctly.
+ 
+ */
+
+public void delete()
+{
+    // we rely on the individual BookmarkEntryImpl instances' finalize
+    // methods to be called to correctly de-allocate the native RDF
+    // references.
+
+    bookmarksTree = null;
+}
+
 //
 // Class methods
 //
@@ -199,7 +219,7 @@ public static void main(String [] args)
 
     Log.setApplicationName("BookmarksImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: BookmarksImpl.java,v 1.2 2000/03/09 23:22:50 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: BookmarksImpl.java,v 1.3 2000/03/13 18:42:08 edburns%acm.org Exp $");
 
     try {
         org.mozilla.webclient.BrowserControlFactory.setAppData(args[0]);

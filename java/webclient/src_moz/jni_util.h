@@ -65,7 +65,7 @@ struct WebShellInitContext {
     // PENDING(mark): Don't we need something for Mac?
     HWND				parentHWnd;
 #endif
-	nsIWebShell		*	webShell;
+	nsCOMPtr<nsIWebShell> webShell;
     nsCOMPtr<nsIDocShell> docShell;
 	nsISessionHistory*	sessionHistory;
 	PLEventQueue	*	actionQueue;

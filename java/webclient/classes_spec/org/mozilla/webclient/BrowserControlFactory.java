@@ -43,7 +43,7 @@ import java.io.FileNotFoundException;
  * This is a static class, it is neven instantiated.
 
  *
- * @version $Id: BrowserControlFactory.java,v 1.1 2000/03/04 01:10:51 edburns%acm.org Exp $
+ * @version $Id: BrowserControlFactory.java,v 1.2 2000/03/13 18:41:36 edburns%acm.org Exp $
  * 
  * @see	org.mozilla.webclient.test.EmbeddedMozilla
 
@@ -157,7 +157,7 @@ public static void setAppData(String absolutePathToNativeBrowserBinDir) throws F
         }
         
         try {
-            BrowserControlImpl.initialize(absolutePathToNativeBrowserBinDir);
+            BrowserControlImpl.appInitialize(absolutePathToNativeBrowserBinDir);
         }
         catch (Exception e) {
             throw new ClassNotFoundException("Can't initialize native browser: " + 
@@ -185,6 +185,25 @@ public static BrowserControl newBrowserControl() throws InstantiationException, 
     return result;
 }
 
+/**
+
+ * BrowserControlFactory.deleteBrowserControl is called with a
+ * BrowserControl instance obtained from
+ * BrowserControlFactory.newBrowserControl.  This method renders the
+ * argument instance completely un-usable.  It should be called when the
+ * BrowserControl instance is no longer needed.  This method simply
+ * calls through to the non-public BrowserControlImpl.delete() method.
+
+ * @see org.mozilla.webclient.ImplObject#delete
+
+ */
+
+public static void deleteBrowserControl(BrowserControl toDelete)
+{
+    ParameterCheck.nonNull(toDelete);
+    ((BrowserControlImpl)toDelete).delete();
+}
+
 //
 // General Methods
 //
@@ -201,7 +220,7 @@ public static void main(String [] args)
     Assert.setEnabled(true);
     Log.setApplicationName("BrowserControlFactory");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: BrowserControlFactory.java,v 1.1 2000/03/04 01:10:51 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: BrowserControlFactory.java,v 1.2 2000/03/13 18:41:36 edburns%acm.org Exp $");
 
     BrowserControlCanvas canvas = null;
     BrowserControl control = null;
