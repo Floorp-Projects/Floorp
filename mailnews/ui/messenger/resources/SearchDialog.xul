@@ -1,23 +1,63 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="resource:/res/samples/xul.css" type="text/css"?>
+<?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
+
 
 <xul:window id="account-manager" xmlns:html="http://www.w3.org/TR/REC-html40"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    onload="Startup()" title="Account Manager">
+    title="Account Manager">
 <box align="horizontal" style="width: 100%; height: 100%">
-  <box align="vertical">
+  <box flex="100%" align="vertical">
     <box align="horizontal">
       <html:div>
         Search for messages in:
       </html:div>
+      <html:select flex="100%">
+         <html:option>sample server 1</html:option>
+         <html:option>sample server 2</html:option>
+      </html:select>
+    </box>
+
+    <box align="vertical" class="bigbox">
+    <box align="vertical">
+       <html:div>
+         <html:input type="radio" name="andor" value="and"/>
+         Match all of the following
+       </html:div>
+       <html:div>
+         <html:input type="radio" name="andor" value="or"/>
+         Match any of the following
+       </html:div>
+    </box>
+
+    <box align="horizontal">
+    <html:select>
+      <html:option>subject</html:option>
+      <html:option>sender</html:option>
+      <html:option>date</html:option>
+      <html:option>any text</html:option>
+      <html:option>keyword</html:option>
+      <html:option>age in days</html:option>
+    </html:select>
+    <html:select>
+      <html:option>contains</html:option>
+      <html:option>doesn't contain</html:option>
+    </html:select>
+    <html:input type="text" flex="100%"/>
+    </box>
+    <spring class="spacer"/>
+    <box align="horizontal">
+      <html:input type="button" value="More"/>
+      <html:input type="button" value="Fewer"/>
+      <spring flex="100%"/>
+      <html:input type="button" value="Clear"/>
     </box>
   </box>
+  </box>
   <box align="vertical">
-    <html:input type="button" value="Ok"/>
-    <titlebutton class="push" value="Search?">Search</titlebutton>
-    <html:div>below the two buttons</html:div>
-    <titlebutton>Options...</titlebutton>
-    <titlebutton>Close</titlebutton>
+    <html:input type="button" value="Search"/>
+    <html:input type="button" value="Options"/>
+    <html:input type="button" value="Cancel"/>
   </box>
 </box>
 </xul:window>
