@@ -56,6 +56,7 @@ pref("app.version",
 );
 
 pref("update.app.enabled", true);
+pref("update.app.url", "chrome://mozapps/locale/update/update.properties");
 pref("update.extensions.enabled", true);
 // Automatically download and install updates to themes and extensions.
 pref("update.extensions.autoUpdate", false);
@@ -66,10 +67,10 @@ pref("update.lastUpdateDate", 0); // UTC offset when last update was performed.
 // cache that the browser notification mechanism uses to determine if it should show
 // status bar UI if updates are detected and the app is shut down before installing
 // them.
-pref("update.updatesAvailable", false);
 // 0 = low (extension/theme updates), 1 = medium (app minor version), 2 = high (major version)
 pref("update.severity", 0); 
-pref("update.count", 0);
+// The number of extension/theme/etc updates available
+pref("update.extensions.count", 0);
 
 pref("keyword.enabled", true);
 pref("keyword.URL", "http://www.google.com/search?btnI=I%27m+Feeling+Lucky&ie=UTF-8&oe=UTF-8&q=");

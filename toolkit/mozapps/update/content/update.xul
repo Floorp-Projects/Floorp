@@ -128,7 +128,7 @@
 
     <label id="updated">&finished.updated.label;</label>
     <separator/>
-    <hbox align="top">
+    <hbox id="incompatibleAlert" align="top" hidden="true">
       <image id="alert"/>
       <description id="incompatibleRemaining" flex="1">&finished.remaining.label;</description>
       <description id="incompatibleRemaining2" flex="1">&finished.remaining2.label;</description>
@@ -140,7 +140,6 @@
     <separator flex="1"/>
     <label id="finishedMismatch" hidden="true">&finished.mismatch.label;</label>
 
-    
   </wizardpage>
   
 </wizard>

@@ -167,8 +167,8 @@ function openDeviceManager()
 function checkForUpdates()
 {
   // XXXben - check for "all types" and the app itself here. 
-  var em = Components.classes["@mozilla.org/extension-manager;1"]
-                      .getService(Components.interfaces.nsIExtensionManager);
+  var em = Components.classes["@mozilla.org/extensions/manager;1"]
+                     .getService(Components.interfaces.nsIExtensionManager);
   em.update([], 0, Components.interfaces.nsIExtensionManager.UPDATE_TYPE_USERINVOKED);
 }
 

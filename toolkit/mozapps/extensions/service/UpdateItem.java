@@ -1,16 +1,16 @@
 package org.mozilla.update.extensions;
 
-public class ExtensionItem
+public class UpdateItem
 {
   private int row;
   private java.lang.String id;
   private java.lang.String version;
   private java.lang.String name;
-  private java.lang.String xpiURL;
+  private java.lang.String updateURL;
   private java.lang.String iconURL;
   private int type;
 
-  public ExtensionItem() 
+  public UpdateItem() 
   {
   }
 
@@ -54,14 +54,14 @@ public class ExtensionItem
     this.name = name;
   }
 
-  public java.lang.String getXpiURL() 
+  public java.lang.String getUpdateURL() 
   {
-    return xpiURL;
+    return updateURL;
   }
 
-  public void setXpiURL(java.lang.String xpiURL) 
+  public void setUpdateURL(java.lang.String updateURL) 
   {
-    this.xpiURL = xpiURL;
+    this.updateURL = updateURL;
   }
   
   public java.lang.String getIconURL() 
@@ -95,7 +95,8 @@ public class ExtensionItem
 //  public String id;
 //  public String version;
 //  public String name;
-//  public String xpiURL;
+//  public String updateURL;
+//  public String iconURL;
 //  public int type;
 //}
 

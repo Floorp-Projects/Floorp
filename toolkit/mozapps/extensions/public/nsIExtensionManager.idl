@@ -40,28 +40,7 @@
 
 interface nsIInputStream;
 interface nsIRDFDataSource;
-interface nsIVariant;
-
-[scriptable, uuid(37648f86-0f77-4007-929e-673a75d5438f)]
-interface nsIExtensionItem : nsISupports
-{
-  readonly attribute string   id;
-  readonly attribute string   version;
-  readonly attribute wstring  name;
-  readonly attribute long     row;
-  readonly attribute wstring  xpiURL;
-
-  const unsigned short TYPE_EXTENSION   = 0x01;
-  const unsigned short TYPE_THEME       = 0x02;
-  const unsigned short TYPE_LOCALE      = 0x04;
-
-  readonly attribute long     type;
-
-  void init(in string aID, in string aVersion, in wstring aName, 
-            in long aRow, in wstring aXPIURL, in long aType);
-
-  readonly attribute wstring objectSource;
-};
+interface nsIUpdateItem;
 
 [scriptable, uuid(c3515b0f-99f4-453b-805e-1fdf5724d6d9)]
 interface nsIExtensionManager : nsISupports
@@ -81,14 +60,14 @@ interface nsIExtensionManager : nsISupports
   const unsigned short UPDATE_RESULT_OK = 0x00;
   const unsigned short UPDATE_RESULT_RESTART = 0x01;
 
-  unsigned short update([array, size_is(aItemCount)] in nsIExtensionItem aItems,
+  unsigned short update([array, size_is(aItemCount)] in nsIUpdateItem aItems,
                         in unsigned long aItemCount,
                         in unsigned short aUpdateType);
 
   void getItemList(in string aItemID, 
                    in unsigned short aType, 
                    out unsigned long aItemCount,
-                   [retval, array, size_is(aItemCount)] out nsIExtensionItem aItems);
+                   [retval, array, size_is(aItemCount)] out nsIUpdateItem aItems);
 
   readonly attribute nsIRDFDataSource datasource;
 };

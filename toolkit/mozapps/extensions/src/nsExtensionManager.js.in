@@ -40,51 +40,7 @@ var gExtensionManager = null;
 const PREF_EM_APP_ID            = "app.id";
 const PREF_EM_APP_VERSION       = "app.version";
 const PREF_EM_LAST_APP_VERSION  = "extensions.lastAppVersion";
-const PREF_UPDATE_EXTENSIONS    = "update.extensions.enabled";
-const PREF_UPDATE_AUTOUPDATE    = "update.extensions.autoUpdate";
-const PREF_UPDATE_APP           = "update.app.enabled";
-
-function ExtensionItem ()
-{
-}
-
-ExtensionItem.prototype = {
-  init: function (aID, aVersion, aName, aRow, aXPIURL, aIconURL, aType)
-  {
-    this._id = aID;
-    this._version = aVersion;
-    this._name = aName;
-    this._row = aRow;
-    this._xpiURL = aXPIURL;
-    this._iconURL = aIconURL;
-    this._type = aType;
-  },
-  
-  get id()      { return this._id;      },
-  get version() { return this._version; },
-  get name()    { return this._name;    },
-  get row()     { return this._row;     },
-  get xpiURL()  { return this._xpiURL;  },
-  get iconURL() { return this._iconURL  },
-  get type()    { return this._type;    },
-
-  get objectSource()
-  {
-    return { id: this._id, version: this._version, name: this._name, 
-             row: this._row, xpiURL: this._xpiURL, iconURL: this._iconURL, 
-             type: this._type }.toSource();
-  },
-
-  /////////////////////////////////////////////////////////////////////////////
-  // nsISupports
-  QueryInterface: function (aIID) 
-  {
-    if (!aIID.equals(Components.interfaces.nsIExtensionItem) &&
-        !aIID.equals(Components.interfaces.nsISupports))
-      throw Components.results.NS_ERROR_NO_INTERFACE;
-    return this;
-  }
-};
+const PREF_UPDATE_COUNT         = "update.extensions.count";
 
 function VersionChecker(aExtensionResource, aAppID, aAppVersion, aDataSource)
 {
@@ -254,8 +210,12 @@ nsExtensionManager.prototype = {
     var appID = pref.getCharPref(PREF_EM_APP_ID);
     var appVersion = pref.getCharPref(PREF_EM_APP_VERSION);
 
+    if (aItems.length == 0) {
+      var itemType = Components.interfaces.nsIUpdateItem.TYPE_ANY;
+      aItems = this.getItemList(null, itemType, { });
+    }
     var updater = new nsExtensionItemUpdater(aUpdateType, aItems, appID, appVersion);
-    
+
     switch (aUpdateType) {
     case Components.interfaces.nsIExtensionManager.UPDATE_TYPE_MISMATCH:
     case Components.interfaces.nsIExtensionManager.UPDATE_TYPE_USERINVOKED:
@@ -337,6 +297,9 @@ function nsExtensionItemUpdater(aUpdateType, aItems, aTargetAppID, aTargetAppVer
 
   this._os = Components.classes["@mozilla.org/observer-service;1"]
                        .getService(Components.interfaces.nsIObserverService);
+
+  // This is the number of extensions/themes/etc that we found updates for.
+  this._updateCount = 0;
 }
 
 nsExtensionItemUpdater.prototype = {
@@ -344,7 +307,7 @@ nsExtensionItemUpdater.prototype = {
   // nsIExtensionItemUpdater
   checkForUpdates: function () 
   {
-    this._os.notifyObservers(null, "update-started", "");
+    this._os.notifyObservers(null, "Update:Extension:Started", "");
     var wspFactory = Components.classes["@mozilla.org/xmlextras/proxy/webserviceproxyfactory;1"]
                               .getService(Components.interfaces.nsIWebServiceProxyFactory);
     wspFactory.createProxyAsync("http://localhost:8080/axis/services/VersionCheck?wsdl", 
@@ -364,8 +327,7 @@ nsExtensionItemUpdater.prototype = {
   {
     for (var i = 0; i < this._items.length; ++i) {
       var e = this._items[i];
-      this._os.notifyObservers(null, "update-item-started", e.name + " " + e.version);
-      dump("*** obj = " + e.objectSource + "\n"); // goats
+      this._os.notifyObservers(null, "Update:Extension:Item-Started", e.name + " " + e.version);
       this._proxy.getNewestExtension(eval(e.objectSource), this._appID, this._appVersion);
     }
   },
@@ -381,7 +343,7 @@ nsExtensionItemUpdater.prototype = {
   
   onError: function (aStatus, aMessage)
   {
-    this._os.notifyObservers(aResult, "update-item-error", aMessage);
+    this._os.notifyObservers(aResult, "Update:Extension:Item-Error", aMessage);
   },
   
   getNewestExtensionCallback: function (aResult)
@@ -392,13 +354,19 @@ nsExtensionItemUpdater.prototype = {
                             // thrown for null values when there is no newer extension
                             // or something else bad happens on the server that we 
                             // don't recognize.
-      this._os.notifyObservers(aResult, "update-item-ended", "goat");
+      this._os.notifyObservers(aResult, "Update:Extension:Item-Ended", "goat");
+      ++this._updateCount;
     }
     catch (e) {
     }
     
-    if (--this._count == 0)
-      this._os.notifyObservers(null, "update-ended", "");
+    if (--this._count == 0) {
+      var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                            .getService(Components.interfaces.nsIPrefBranch);
+      pref.setIntPref(PREF_UPDATE_COUNT, this._updateCount); 
+    
+      this._os.notifyObservers(null, "Update:Extension:Ended", "");
+    }
   },
   
   /////////////////////////////////////////////////////////////////////////////
@@ -456,12 +424,12 @@ nsExtensionsDataSource.prototype = {
       var checker = new VersionChecker(e, aAppID, aAppVersion, this);
       if (!checker.isCompatible) {
         var id = this._stripPrefix(e.Value);
-        var item = Components.classes["@mozilla.org/extensions/item;1"]
-                             .createInstance(Components.interfaces.nsIExtensionItem);
+        var item = Components.classes["@mozilla.org/updates/item;1"]
+                             .createInstance(Components.interfaces.nsIUpdateItem);
         item.init(id, this.getExtensionProperty(id, "version"),
                   this.getExtensionProperty(id, "name"),
                   -1, "", "", 
-                  Components.interfaces.nsIExtensionItem.TYPE_EXTENSION);
+                  Components.interfaces.nsIUpdateItem.TYPE_EXTENSION); // XXXben
         items.push(item);
       }
     }
@@ -472,8 +440,8 @@ nsExtensionsDataSource.prototype = {
   {
     var items = [];
     if (aItemID) {
-      var item = Components.classes["@mozilla.org/extensions/item;1"]
-                            .createInstance(Components.interfaces.nsIExtensionItem);
+      var item = Components.classes["@mozilla.org/updates/item;1"]
+                            .createInstance(Components.interfaces.nsIUpdateItem);
       item.init(aItemID, this.getExtensionProperty(aItemID, "version"),
                 this.getExtensionProperty(aItemID, "name"),
                 -1, "", "", aType);
@@ -488,8 +456,8 @@ nsExtensionsDataSource.prototype = {
       while (elements.hasMoreElements()) {
         var e = elements.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
         var id = this._stripPrefix(e.Value);
-        var item = Components.classes["@mozilla.org/extensions/item;1"]
-                              .createInstance(Components.interfaces.nsIExtensionItem);
+        var item = Components.classes["@mozilla.org/updates/item;1"]
+                              .createInstance(Components.interfaces.nsIUpdateItem);
         item.init(id, this.getExtensionProperty(id, "version"),
                   this.getExtensionProperty(id, "name"),
                   -1, "", "", aType);
@@ -836,20 +804,7 @@ var gModule = {
                             return gExtensionManager.QueryInterface(aIID);
                           }
                         }
-             },
-    item:    { CID: Components.ID("{F3294B1C-89F4-46F8-98A0-44E1EAE92518}"),
-               contractID: "@mozilla.org/extensions/item;1",
-               className: "Extension Item",
-               factory: {
-                          createInstance: function (aOuter, aIID) 
-                          {
-                            if (aOuter != null)
-                              throw Components.results.NS_ERROR_NO_AGGREGATION;
-                            
-                            return new ExtensionItem().QueryInterface(aIID);
-                          }
-                        } 
-             }  
+             }
    },
   
   canUnload: function (aComponentManager) 

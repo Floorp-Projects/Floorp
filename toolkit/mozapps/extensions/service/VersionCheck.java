@@ -56,12 +56,12 @@ public class VersionCheck
   }
 */
 
-  public ExtensionItem[] getExtensionsToUpdate(ExtensionItem[] aExtensions, String aTargetApp, String aTargetAppVersion)
+  public UpdateItem[] getExtensionsToUpdate(UpdateItem[] aItems, String aTargetApp, String aTargetAppVersion)
   {
     Vector results = new Vector();
-    for (int i = 0; i < aExtensions.length; ++i) 
+    for (int i = 0; i < aItems.length; ++i) 
     {
-      ExtensionItem e = aExtensions[i];
+      UpdateItem e = aItems[i];
       int row = getNewestExtension(e.getId(), e.getVersion(), aTargetApp, aTargetAppVersion);
       if (row != -1) 
       {
@@ -69,24 +69,24 @@ public class VersionCheck
         e.setId(getProperty(row, "guid"));
         e.setName(getProperty(row, "name"));
         e.setVersion(getProperty(row, "version"));
-        e.setXpiURL(getProperty(row, "xpiurl"));
+        e.setUpdateURL(getProperty(row, "updateurl"));
         e.setIconURL(getProperty(row, "iconurl"));
         results.add(e);
       }
     }
 
-    return (ExtensionItem[])results.toArray();
+    return (UpdateItem[])results.toArray();
   }
 
   // This method is a temporary workaround until Mozilla's Web Services implementation 
   // supports passing Arrays of complex types.
-  public ExtensionItem getNewestExtension(ExtensionItem aExtension, 
-                                          String aTargetApp, 
-                                          String aTargetAppVersion)
+  public UpdateItem getNewestExtension(UpdateItem aItem, 
+                                       String aTargetApp, 
+                                       String aTargetAppVersion)
   {
-    ExtensionItem e = new ExtensionItem();
+    UpdateItem e = new UpdateItem();
 
-    int row = getNewestExtension(aExtension.getId(), aExtension.getVersion(), 
+    int row = getNewestExtension(aItem.getId(), aItem.getVersion(), 
                                  aTargetApp, aTargetAppVersion);
     if (row != -1) 
     {
@@ -94,7 +94,7 @@ public class VersionCheck
       e.setId(getProperty(row, "guid"));
       e.setName(getProperty(row, "name"));
       e.setVersion(getProperty(row, "version"));
-      e.setXpiURL(getProperty(row, "xpiurl"));
+      e.setUpdateURL(getProperty(row, "updateurl"));
       e.setIconURL(getProperty(row, "iconurl"));
     }
     return e;
