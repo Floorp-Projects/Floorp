@@ -597,7 +597,7 @@ nsHistoryDataSource::ReadOneHistoryFile(nsInputFileStream& aStream, nsFileSpec f
 			PRTime fileTime = LL_ZERO;
 
 			char *aLine = buffer.ToNewCString();
-			if (aLine)
+			if (aLine && PL_strlen(aLine)>0)
 			{
 				url = aLine;
 				title = strchr(aLine, '\t') + 1;
