@@ -38,6 +38,8 @@ public:
 
     NS_IMETHOD Init(nsIDocument* aDocument,
                     nsIRDFDataSource* aDataSource) = 0;
+
+	NS_IMETHOD UnblockNextOverlay() = 0;
 };
 
 

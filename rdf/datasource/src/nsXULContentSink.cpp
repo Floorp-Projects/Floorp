@@ -173,6 +173,7 @@ public:
 
     // nsIXULContentSink
     NS_IMETHOD Init(nsIDocument* aDocument, nsIRDFDataSource* aDataSource);
+    NS_IMETHOD UnblockNextOverlay();
 
 protected:
     static nsrefcnt             gRefCnt;
@@ -263,6 +264,7 @@ protected:
     nsIParser*   mParser;
     
 	nsVoidArray*       mOverlayArray;
+	PRInt32 		   mCurrentOverlay;
 	nsIXULContentSink* mParentContentSink;
 	
     nsString      mPreferredStyle;
@@ -296,6 +298,7 @@ XULContentSinkImpl::XULContentSinkImpl()
       mDocument(nsnull),
       mParser(nsnull),
       mOverlayArray(nsnull),
+	  mCurrentOverlay(0),
 	  mParentContentSink(nsnull),
       mStyleSheetCount(0),
       mCSSLoader(nsnull)
@@ -691,15 +694,19 @@ XULContentSinkImpl::CloseContainer(const nsIParserNode& aNode)
 		// of our child overlays.
 		PRInt32 count;
 		if (mOverlayArray && (count = mOverlayArray->Count())) {
-			for (PRInt32 i = 0; i < count; i++) {
-		        nsString* href = (nsString*)mOverlayArray->ElementAt(i);
-				ProcessOverlay(*href);
-			}
+			nsString* href = (nsString*)mOverlayArray->ElementAt(0);
+			ProcessOverlay(*href);
 			
 			// Block the parser. It will only be unblocked after all
 			// of our child overlays have finished parsing.
             rv = NS_ERROR_HTMLPARSER_BLOCK;
-		} 
+		}
+		
+		// Unblock the next sibling overlay. If there is no next sibling
+		// overlay, unblock our parent.
+		if (mParentContentSink) {
+			mParentContentSink->UnblockNextOverlay();
+		}
     }
 
     PopNameSpaces();
@@ -1871,6 +1878,27 @@ XULContentSinkImpl::PopNameSpaces(void)
         // reference is held on the namespace stack.
         NS_RELEASE(nameSpace);
     }
+}
+
+////////////////
+
+NS_IMETHODIMP
+XULContentSinkImpl::UnblockNextOverlay() {
+	if (!mOverlayArray)
+		return NS_OK;
+	
+	PRInt32 count = mOverlayArray->Count();
+	mCurrentOverlay++;
+	if (mCurrentOverlay == count) {
+		// Unblock ourselves
+		mParser->EnableParser(PR_TRUE);
+	}
+	else {
+		// Process the next overlay.
+		nsString* href = (nsString*)mOverlayArray->ElementAt(mCurrentOverlay);
+		ProcessOverlay(*href);
+	}
+	return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////
