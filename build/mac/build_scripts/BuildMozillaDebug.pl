@@ -26,7 +26,7 @@
 #
 
 use Cwd;
-use MozillaBuildCore;
+use Moz::BuildCore;
 
 #-------------------------------------------------------------
 # Where have the build options gone?
@@ -50,6 +50,14 @@ my(%build);
 my(%options);
 my(%filepaths);
 my(%optiondefines);
+
+# hash of input files for this build
+# eventually, there will be input files for manifests,
+# and projects too.
+my(%inputfiles) = (
+  "buildflags",     "MozillaBuildFlags.txt",
+  "checkoutdata",   "MozillaCheckoutList.txt"
+);
 
 #-------------------------------------------------------------
 # configuration variables that globally affect what is built
@@ -83,7 +91,7 @@ $UNIVERSAL_INTERFACES_VERSION = 0x0320;
 # configuration variables that are preferences for the build,
 # style and do not affect what is built.
 #-------------------------------------------------------------
-$CodeWarriorLib::CLOSE_PROJECTS_FIRST
+$Moz::CodeWarriorLib::CLOSE_PROJECTS_FIRST
                         = 1;
                                 # 1 = close then make (for development),
                                 # 0 = make then close (for tinderbox).
@@ -102,4 +110,4 @@ $MOZ_SRC = cwd();
 my($do_checkout)    = 0;
 my($do_build)       = 1;
 
-RunBuild($do_checkout, $do_build, "MozillaBuildFlags.txt", "Mozilla debug build prefs");
+RunBuild($do_checkout, $do_build, \%inputfiles, "Mozilla debug build prefs");

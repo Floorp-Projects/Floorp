@@ -17,15 +17,14 @@ use File::Path;
 use File::Copy;
 
 # homegrown
-use Moz;
-use MozBuildUtils;
-use MozJar;
-use MacCVS;
+use Moz::Moz;
+use Moz::BuildUtils;
+use Moz::Jar;
+use Moz::MacCVS;
 
 @ISA        = qw(Exporter);
 @EXPORT     = qw(
                     UpdateBuildNumberFiles
-                    Checkout
                     BuildDist
                     BuildProjects
                  );
@@ -1712,50 +1711,5 @@ sub BuildProjects()
     BuildResources();
 }
 
-#//--------------------------------------------------------------------------------------------------
-#// Check out everything
-#//--------------------------------------------------------------------------------------------------
-sub Checkout()
-{
-    unless ( $main::pull{all} ) { return; }
-
-    assertRightDirectory();
-    my($cvsfile) = AskAndPersistFile($main::filepaths{"sessionpath"});
-    my($session) = MacCVS->new( $cvsfile );
-    unless (defined($session)) { die "Error: Checkout aborted. Cannot create session file: $session" }
-
-    # activate MacCVS
-    ActivateApplication('Mcvs');
-
-    my($nsprpub_tag) = "NSPRPUB_CLIENT_BRANCH";
-    my($nss_tab) = "NSS_30_BRANCH";
-    my($psm_tag) = "SECURITY_MAC_BRANCH";
-    my($ldapsdk_tag) = "LDAPCSDK_40_BRANCH";
-
-    #//
-    #// Checkout commands
-    #//
-    if ($main::RUNTIME)
-    {
-        CheckOutModule($session, "mozilla/build/mac");
-        CheckOutModule($session, "mozilla/lib/mac/InterfaceLib");
-        CheckOutModule($session, "mozilla/config/mac");
-        CheckOutModule($session, "mozilla/gc");
-        CheckOutModule($session, "mozilla/lib/mac/NSStartup");
-        CheckOutModule($session, "mozilla/lib/mac/NSStdLib");
-        CheckOutModule($session, "mozilla/lib/mac/NSRuntime");
-        CheckOutModule($session, "mozilla/lib/mac/MoreFiles");
-        CheckOutModule($session, "mozilla/lib/mac/MacMemoryAllocator");
-        CheckOutModule($session, "mozilla/nsprpub", $nsprpub_tag);
-    }
-    else
-    {
-        CheckOutModule($session, "mozilla/nsprpub", $nsprpub_tag);
-        CheckOutModule($session, "mozilla/security/nss", $nss_tab);
-        CheckOutModule($session, "mozilla/security/psm", $psm_tag);
-        CheckOutModule($session, "DirectorySDKSourceC", $ldapsdk_tag);
-        CheckOutModule($session, "SeaMonkeyAll");
-    }
-}
 
 1;
