@@ -513,6 +513,7 @@ nsMathMLOperators::IsMutableOperator(const nsString& aOperator)
   return PR_FALSE;
 }
 
+PRInt32
 nsMathMLOperators::CountStretchyOperator()
 {
   if (!gInitialized) {
