@@ -57,7 +57,7 @@
   <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
   <script type="application/x-javascript" src="chrome://editor/content/EditorPublishProgress.js"/>
   <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
-  <script type="application/x-javascript" src="chrome://communicator/content/XPCNativeWrapper.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/XPCNativeWrapper.js"/>
 
   <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
   <broadcaster id="args" value=""/>
