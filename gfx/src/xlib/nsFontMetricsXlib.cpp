@@ -65,9 +65,11 @@ struct nsFontStyleXlib;
 struct nsFontWeightXlib;
 struct nsFontLangGroup;
 
-class nsFontNodeArrayXlib : public nsVoidArray
+class nsFontNodeArrayXlib : public nsAutoVoidArray
 {
 public:
+  nsFontNodeArrayXlib() {};
+  
   nsFontNodeXlib* GetElement(PRInt32 aIndex)
   {
     return (nsFontNodeXlib*) ElementAt(aIndex);
@@ -915,6 +917,11 @@ nsFontMetricsXlib::InitGlobals(void)
 
 // nsFontMetricsXlib Implementation
 nsFontMetricsXlib::nsFontMetricsXlib()
+  : mFonts() // I'm not sure what the common size is here - I generally
+  // see 2-5 entries.  For now, punt and let it be allocated later.  We can't
+  // make it an nsAutoVoidArray since it's a cString array.
+  // XXX mFontIsGeneric will generally need to be the same size; right now
+  // it's an nsAutoVoidArray.  If the average is under 8, that's ok.
 {
   NS_INIT_REFCNT();
   gFontMetricsXlibCount++;
@@ -3320,12 +3327,7 @@ GetFontNames(const char* aPattern, nsFontNodeArrayXlib* aNodes)
       found = 1;
     else
     {
-      PRInt32 n = aNodes->Count();
-      PRInt32 j;
-      for (j = 0; j < n; j++) {
-        if (aNodes->GetElement(j) == node)
-          found = 1;
-      }
+      found = (aNodes->IndexOf(node) >= 0);
     }
 
     previousNodeName = nodeName;
@@ -3485,7 +3487,9 @@ static nsresult
 GetAllFontNames(void)
 {
   if (!gGlobalList) {
-    gGlobalList = new nsFontNodeArrayXlib();
+    // This may well expand further (families * sizes * styles?), but it's
+    // only created once
+    gGlobalList = new nsFontNodeArrayXlib;
     if (!gGlobalList) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -3610,6 +3614,9 @@ nsFontMetricsXlib::TryNode(nsCString* aName, PRUnichar aChar)
     GetFontNames(pattern.get(), &nodes);
     // no need to call gNodes->Put() since GetFontNames already did
     if (nodes.Count() > 0) {
+      // XXX This assertion may be spurious; you can have more than
+      // -*-courier-iso8859-1 font, for example, from different
+      // foundries.    
       NS_ASSERTION((nodes.Count() == 1), "unexpected number of nodes");
       node = nodes.GetElement(0);
     }
@@ -3721,6 +3728,8 @@ nsFontMetricsXlib::FindStyleSheetSpecificFont(PRUnichar aChar)
 
     /*
      * count hyphens
+     * XXX It might be good to try to pre-cache this information instead
+     * XXX of recalculating it on every font access!
      */
     const char* str = familyName->get();
     PRUint32 len = familyName->Length();
