@@ -537,4 +537,6 @@ unsigned long _System _DLL_InitTerm( unsigned long mod_handle, unsigned long fla
 #define FreeLibrary(x) DosFreeModule((HMODULE)x)
 #define OutputDebugString(x)
                                
+extern int _MD_os2_get_nonblocking_connect_error(int osfd);
+
 #endif /* nspr_os2_defs_h___ */

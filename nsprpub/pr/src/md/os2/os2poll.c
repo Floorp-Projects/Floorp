@@ -37,54 +37,64 @@
  */
 
 #ifdef XP_OS2_EMX
-	#include <sys/time.h> /* For timeval. */
+ #include <sys/time.h> /* For timeval. */
 #endif
 
 #include "primpl.h"
 
-PRInt32 _PR_MD_PR_POLL(
-    PRPollDesc *pds, PRIntn npds, PRIntervalTime timeout)
+#ifndef BSD_SELECT
+/* Utility functions called when using OS/2 select */
+
+PRBool IsSocketSet( PRInt32 osfd, int* socks, int start, int count )
 {
-    PRInt32 osfd;
-    int maxfd = -1;
+  int i;
+  PRBool isSet = PR_FALSE;
+
+  for( i = start; i < start+count; i++ )
+  {
+    if( socks[i] == osfd )
+      isSet = PR_TRUE;
+  }
+  
+  return isSet; 
+}
+#endif
+
+PRInt32 _PR_MD_PR_POLL(PRPollDesc *pds, PRIntn npds, PRIntervalTime timeout)
+{
+#ifdef BSD_SELECT
     fd_set rd, wt, ex;
+#else
+    int rd, wt, ex;
+    int* socks;
+    unsigned long msecs;
+    int i, j;
+#endif
     PRFileDesc *bottom;
     PRPollDesc *pd, *epd;
-    PRInt32 ready, err;
-	PRThread *me = _PR_MD_CURRENT_THREAD();
+    PRInt32 maxfd = -1, ready, err;
+    PRIntervalTime remaining, elapsed, start;
+
+#ifdef BSD_SELECT
     struct timeval tv, *tvp = NULL;
 
-    /*
-     * For restarting _MD_SELECT() if it is interrupted by a signal.
-     * We use these variables to figure out how much time has elapsed
-     * and how much of the timeout still remains.
-     */
-    PRIntervalTime start, elapsed, remaining;
-
-    if (_PR_PENDING_INTERRUPT(me))
+    FD_ZERO(&rd);
+    FD_ZERO(&wt);
+    FD_ZERO(&ex);
+#else
+    rd = 0;
+    wt = 0;
+    ex = 0;
+    socks = (int) PR_MALLOC( npds * 3 * sizeof(int) );
+    
+    if (!socks)
     {
-        me->flags &= ~_PR_INTERRUPT;
-        PR_SetError(PR_PENDING_INTERRUPT_ERROR, 0);
+        PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
         return -1;
     }
+#endif
 
-    /*
-    ** Is it an empty set? If so, just sleep for the timeout and return
-    */
-    if (0 == npds)
-    {
-        PR_Sleep(timeout);
-        return 0;
-    }
-
-    remaining = timeout;
-    start = PR_IntervalNow();
-
-  	FD_ZERO(&rd);
-  	FD_ZERO(&wt);
-    FD_ZERO(&ex);
-
-	ready = 0;
+    ready = 0;
     for (pd = pds, epd = pd + npds; pd < epd; pd++)
     {
         PRInt16 in_flags_read = 0, in_flags_write = 0;
@@ -95,19 +105,17 @@ PRInt32 _PR_MD_PR_POLL(
             if (pd->in_flags & PR_POLL_READ)
             {
                 in_flags_read = (pd->fd->methods->poll)(
-                    pd->fd, (PRInt16)(pd->in_flags & ~PR_POLL_WRITE),
-                    &out_flags_read);
+                    pd->fd, pd->in_flags & ~PR_POLL_WRITE, &out_flags_read);
             }
             if (pd->in_flags & PR_POLL_WRITE)
             {
                 in_flags_write = (pd->fd->methods->poll)(
-                    pd->fd, (PRInt16)(pd->in_flags & ~PR_POLL_READ),
-                    &out_flags_write);
+                    pd->fd, pd->in_flags & ~PR_POLL_READ, &out_flags_write);
             }
-            if ((0 != (in_flags_read & out_flags_read))
-            || (0 != (in_flags_write & out_flags_write)))
+            if ((0 != (in_flags_read & out_flags_read)) ||
+                (0 != (in_flags_write & out_flags_write)))
             {
-                /* this one's ready right now (buffered input) */
+                /* this one's ready right now */
                 if (0 == ready)
                 {
                     /*
@@ -128,37 +136,67 @@ PRInt32 _PR_MD_PR_POLL(
             else
             {
                 pd->out_flags = 0;  /* pre-condition */
+
                 /* make sure this is an NSPR supported stack */
                 bottom = PR_GetIdentitiesLayer(pd->fd, PR_NSPR_IO_LAYER);
                 PR_ASSERT(NULL != bottom);  /* what to do about that? */
-                if ((NULL != bottom)
-                && (_PR_FILEDESC_OPEN == bottom->secret->state))
+                if ((NULL != bottom) &&
+                    (_PR_FILEDESC_OPEN == bottom->secret->state))
                 {
                     if (0 == ready)
                     {
-                        osfd = bottom->secret->md.osfd;
-    	                if (osfd > maxfd) maxfd = osfd;
+                        PRInt32 osfd = bottom->secret->md.osfd;
+                        if (osfd > maxfd) 
+                            maxfd = osfd;
                         if (in_flags_read & PR_POLL_READ)
                         {
                             pd->out_flags |= _PR_POLL_READ_SYS_READ;
+#ifdef BSD_SELECT
                             FD_SET(osfd, &rd);
+#else
+                            socks[rd] = osfd;
+                            rd++;              
+#endif
                         }
                         if (in_flags_read & PR_POLL_WRITE)
                         {
                             pd->out_flags |= _PR_POLL_READ_SYS_WRITE;
+#ifdef BSD_SELECT
                             FD_SET(osfd, &wt);
+#else
+                            socks[npds+wt] = osfd;
+                            wt++;              
+#endif
                         }
                         if (in_flags_write & PR_POLL_READ)
                         {
                             pd->out_flags |= _PR_POLL_WRITE_SYS_READ;
+#ifdef BSD_SELECT
                             FD_SET(osfd, &rd);
+#else
+                            socks[rd] = osfd;
+                            rd++;              
+#endif
                         }
                         if (in_flags_write & PR_POLL_WRITE)
                         {
                             pd->out_flags |= _PR_POLL_WRITE_SYS_WRITE;
+#ifdef BSD_SELECT
                             FD_SET(osfd, &wt);
+#else
+                            socks[npds+wt] = osfd;
+                            wt++;              
+#endif
                         }
-                        if (pd->in_flags & PR_POLL_EXCEPT) FD_SET(osfd, &ex);
+                        if (pd->in_flags & PR_POLL_EXCEPT)
+                        {
+#ifdef BSD_SELECT
+                            FD_SET(osfd, &ex);
+#else
+                            socks[npds*2+ex] = osfd;
+                            ex++;
+#endif
+                        }
                     }
                 }
                 else
@@ -178,9 +216,19 @@ PRInt32 _PR_MD_PR_POLL(
         }
     }
 
-    if (0 != ready) return ready;  /* no need to block */
+    if (0 != ready)
+    {
+#ifndef BSD_SELECT
+        free(socks);
+#endif
+        return ready;  /* no need to block */
+    }
+
+    remaining = timeout;
+    start = PR_IntervalNow();
 
 retry:
+#ifdef BSD_SELECT
     if (timeout != PR_INTERVAL_NO_TIMEOUT)
     {
         PRInt32 ticksPerSecond = PR_TicksPerSecond();
@@ -191,21 +239,50 @@ retry:
     }
 
     ready = _MD_SELECT(maxfd + 1, &rd, &wt, &ex, tvp);
-    if (ready == -1 && errno == EINTR)
+#else
+    switch (timeout)
     {
-        if (timeout == PR_INTERVAL_NO_TIMEOUT) goto retry;
-     	else
-        {
-     		elapsed = (PRIntervalTime) (PR_IntervalNow() - start);
-  	   	    if (elapsed > timeout) ready = 0;  /* timed out */
-     	    else
-            {
-        		remaining = timeout - elapsed;
-     	   	    goto retry;
-            }
-  	    }
+        case PR_INTERVAL_NO_WAIT:
+            msecs = 0;
+            break;
+        case PR_INTERVAL_NO_TIMEOUT:
+            msecs = -1;
+            break;
+        default:
+            msecs = PR_IntervalToMilliseconds(remaining);
     }
 
+     /* compact array */
+    for( i = rd, j = npds; j < npds+wt; i++,j++ )
+        socks[i] = socks[j];
+    for( i = rd+wt, j = npds*2; j < npds*2+ex; i++,j++ )
+        socks[i] = socks[j];
+    
+    ready = _MD_SELECT(socks, rd, wt, ex, msecs);
+#endif
+
+    if (ready == -1 && errno == SOCEINTR)
+    {
+        if (timeout == PR_INTERVAL_NO_TIMEOUT)
+            goto retry;
+        else
+        {
+            elapsed = (PRIntervalTime) (PR_IntervalNow() - start);
+            if (elapsed > timeout)
+                ready = 0;  /* timed out */
+            else
+            {
+                remaining = timeout - elapsed;
+                goto retry;
+            }
+        }
+    }
+
+    /*
+    ** Now to unravel the select sets back into the client's poll
+    ** descriptor list. Is this possibly an area for pissing away
+    ** a few cycles or what?
+    */
     if (ready > 0)
     {
         ready = 0;
@@ -214,26 +291,44 @@ retry:
             PRInt16 out_flags = 0;
             if ((NULL != pd->fd) && (0 != pd->in_flags))
             {
+                PRInt32 osfd;
                 bottom = PR_GetIdentitiesLayer(pd->fd, PR_NSPR_IO_LAYER);
                 PR_ASSERT(NULL != bottom);
 
                 osfd = bottom->secret->md.osfd;
 
+#ifdef BSD_SELECT
                 if (FD_ISSET(osfd, &rd))
+#else
+                if( IsSocketSet(osfd, socks, 0, rd) )        
+#endif
                 {
                     if (pd->out_flags & _PR_POLL_READ_SYS_READ)
                         out_flags |= PR_POLL_READ;
                     if (pd->out_flags & _PR_POLL_WRITE_SYS_READ)
                         out_flags |= PR_POLL_WRITE;
-                }
+                } 
+
+#ifdef BSD_SELECT
                 if (FD_ISSET(osfd, &wt))
+#else
+                if( IsSocketSet(osfd, socks, rd, wt) )        
+#endif
                 {
                     if (pd->out_flags & _PR_POLL_READ_SYS_WRITE)
                         out_flags |= PR_POLL_READ;
                     if (pd->out_flags & _PR_POLL_WRITE_SYS_WRITE)
                         out_flags |= PR_POLL_WRITE;
+                } 
+
+#ifdef BSD_SELECT
+                if (FD_ISSET(osfd, &ex))
+#else
+                if( IsSocketSet(osfd, socks, rd+wt, ex) )        
+#endif
+                {
+                    out_flags |= PR_POLL_EXCEPT;
                 }
-                if (FD_ISSET(osfd, &ex)) out_flags |= PR_POLL_EXCEPT;
             }
             pd->out_flags = out_flags;
             if (out_flags) ready++;
@@ -242,39 +337,42 @@ retry:
     }
     else if (ready < 0)
     {
-   	    err = _MD_ERRNO();
-   	    if (err == EBADF)
+        err = _MD_ERRNO();
+        if (err == EBADF)
         {
-   		    /* Find the bad fds */
-   		    ready = 0;
-   		    for (pd = pds, epd = pd + npds; pd < epd; pd++)
+            /* Find the bad fds */
+            int optval;
+            int optlen = sizeof(optval);
+            ready = 0;
+            for (pd = pds, epd = pd + npds; pd < epd; pd++)
             {
-                int optval;
-                int optlen = sizeof(optval);
-			    pd->out_flags = 0;
-   			    if ((NULL == pd->fd) || (pd->in_flags == 0)) continue;
-   			    bottom = PR_GetIdentitiesLayer(pd->fd, PR_NSPR_IO_LAYER);
-                if (getsockopt(bottom->secret->md.osfd, SOL_SOCKET,
-                    SO_TYPE, (char *) &optval, &optlen) == -1)
+                pd->out_flags = 0;
+                if ((NULL != pd->fd) && (0 != pd->in_flags))
                 {
-                    PR_ASSERT(_MD_ERRNO() == ENOTSOCK);
-                    if (_MD_ERRNO() == ENOTSOCK)
+                    bottom = PR_GetIdentitiesLayer(pd->fd, PR_NSPR_IO_LAYER);
+                    if (getsockopt(bottom->secret->md.osfd, SOL_SOCKET,
+                        SO_TYPE, (char *) &optval, &optlen) == -1)
                     {
-                        pd->out_flags = PR_POLL_NVAL;
-                        ready++;
+                        PR_ASSERT(sock_errno() == SOCENOTSOCK);
+                        if (sock_errno() == SOCENOTSOCK)
+                        {
+                            pd->out_flags = PR_POLL_NVAL;
+                            ready++;
+                        }
                     }
                 }
-   		    }
-   		    PR_ASSERT(ready > 0);
-   	    }
-        else
-        {
-   		    PR_ASSERT(err != EINTR);  /* should have been handled above */
-   		    _PR_MD_MAP_SELECT_ERROR(err);
+            }
+            PR_ASSERT(ready > 0);
         }
-   }
-   return ready;
- }
+        else
+            _PR_MD_MAP_SELECT_ERROR(err);
+    }
+
+#ifndef BSD_SELECT
+    free(socks);
+#endif
+    return ready;
+}
 
 #ifdef XP_OS2_EMX
 HMTX thread_select_mutex = 0;	/* because EMX's select is not thread safe - duh! */
