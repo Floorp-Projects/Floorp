@@ -38,7 +38,6 @@ CString nsinstallerDir;
 CString xpiDir;
 CString templinuxDir;
 CString tarfile;
-CString tarfile1;
 
 WIDGET *tempWidget;
 char buffer[50000];
@@ -1127,11 +1126,8 @@ void CreateLinuxInstaller()
 	templinuxPath.Replace("\\", "/");
 	templinuxPath.Replace(":","");
 	templinuxPath.Insert(0,"/cygdrive/");
-	DeleteFile(tarfile1);
 	DeleteFile(tarfile);
-	CString command = "tar -cvf " + tarfile1 + " -C " +quotes+ templinuxPath + "/" + templinuxDir +quotes+ spaces + nsinstallerDir;    
-	ExecuteCommand((char *)(LPCTSTR) command, SW_HIDE, INFINITE);
-	command = "gzip " + tarfile1;
+	CString command = "tar -zcvf " + tarfile + " -C " +quotes+ templinuxPath + "/" + templinuxDir +quotes+ spaces + nsinstallerDir;    
 	ExecuteCommand((char *)(LPCTSTR) command, SW_HIDE, INFINITE);
 	_chdir(currentdir);
 }
@@ -1166,7 +1162,6 @@ int StartIB(CString parms, WIDGET *curWidget)
 	xpiDir = "\\xpi";
 	templinuxDir = "tempLinux";
 	tarfile = "netscape-i686-pc-linux-gnu-sea.tar.gz";
-	tarfile1 = "netscape-i686-pc-linux-gnu-sea.tar";
 
 	if (SearchPath(workspacePath, "NSCPXPI", NULL, 0, NULL, NULL))
 		nscpxpiPath = workspacePath + "\\NSCPXPI";

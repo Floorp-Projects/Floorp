@@ -23,7 +23,6 @@ extern CString linuxDir;
 extern CString nsinstPath;
 extern CString xpiDir;
 extern CString tarfile;
-extern CString tarfile1;
 extern CString quotes;
 
 extern COMPONENT Components[100];
@@ -124,8 +123,6 @@ int GenerateComponentList(CString parms, WIDGET *curWidget)
 		pos += 1;
 		CString linuxinstDirPath = linuxblobPath.Left(pos);
 		tarfile = linuxblobPath.Right(pathlen-pos);
-		pos = tarfile.ReverseFind('.');
-		tarfile1 = tarfile.Left(pos);
 
 		int direxist = GetFileAttributes(nscpxpilinuxPath);
 		if ((direxist == -1) && (linuxblobPath != "")) 
@@ -140,13 +137,9 @@ int GenerateComponentList(CString parms, WIDGET *curWidget)
 			tnscpxpilinuxPath.Replace("\\","/");
 			tnscpxpilinuxPath.Replace(":","");
 			tnscpxpilinuxPath.Insert(0,"/cygdrive/");
-			CString command = "gzip -d " + tarfile;
+			CString command = "tar -zxvf " + tarfile + " -C " + quotes + tnscpxpilinuxPath + quotes;
 			ExecuteCommand((char *)(LPCTSTR) command, SW_HIDE, INFINITE);
-			command = "tar -xvf " + tarfile1 + " -C " + quotes + tnscpxpilinuxPath + quotes;
-			ExecuteCommand((char *)(LPCTSTR) command, SW_HIDE, INFINITE);
-			command = "gzip " + tarfile1;
-			ExecuteCommand((char *)(LPCTSTR) command, SW_HIDE, INFINITE);
-			
+
 			nscpxpiPath = nscpxpilinuxPath + nsinstPath;
 			CString tempxpiPath = nscpxpiPath;
 			tempxpiPath.Replace(xpiDir,"");
