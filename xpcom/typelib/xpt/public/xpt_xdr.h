@@ -63,6 +63,8 @@ extern XPT_PUBLIC_API(PRBool)
 XPT_Do8(XPTCursor *cursor, PRUint8 *u8p);
 
 extern XPT_PUBLIC_API(PRBool)
+XPT_DoHeaderPrologue(XPTArena *arena, XPTCursor *cursor, XPTHeader **headerp, PRUint32 * ide_offset);
+extern XPT_PUBLIC_API(PRBool)
 XPT_DoHeader(XPTArena *arena, XPTCursor *cursor, XPTHeader **headerp);
 
 typedef enum {
@@ -112,6 +114,10 @@ XPT_DestroyXDRState(XPTState *state);
 /* Set file_length based on the data used in the state.  (Only ENCODE.) */
 extern XPT_PUBLIC_API(PRBool)
 XPT_UpdateFileLength(XPTState *state);
+
+/* returns the length of the specified data block */
+extern XPT_PUBLIC_API(void)
+XPT_GetXDRDataLength(XPTState *state, XPTPool pool, PRUint32 *len);
 
 extern XPT_PUBLIC_API(void)
 XPT_GetXDRData(XPTState *state, XPTPool pool, char **data, PRUint32 *len);

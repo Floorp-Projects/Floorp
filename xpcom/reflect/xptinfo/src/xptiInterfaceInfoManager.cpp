@@ -850,7 +850,8 @@ xptiInterfaceInfoManager::DoFullValidationMergeFromFileList(nsISupportsArray* aF
             if(!header)
             {
                 // XXX do something!
-                NS_ASSERTION(0,"");    
+                NS_ASSERTION(0,"Unable to read an XPT file, turn logging on to see which file");    
+                LOG_AUTOREG(("      unable to read file\n"));
                 continue;
             }
     
