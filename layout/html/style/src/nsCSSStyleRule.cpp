@@ -1726,6 +1726,7 @@ MapDeclarationColorInto(nsICSSDeclaration* aDeclaration,
         color->mBackgroundFlags &= ~NS_STYLE_BG_COLOR_TRANSPARENT;
       }
       else if (eCSSUnit_Enumerated == ourColor->mBackColor.GetUnit()) {
+        color->mBackgroundColor = parentColor->mBackgroundColor;
         color->mBackgroundFlags |= NS_STYLE_BG_COLOR_TRANSPARENT;
       }
 
