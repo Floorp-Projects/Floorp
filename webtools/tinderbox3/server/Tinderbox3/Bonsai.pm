@@ -84,7 +84,7 @@ sub _grab_cache {
 ((?:.(?!</(font|td|tr)>))*) # 9=description
 \s*(?:</\w+[^>]*>\s*)*)?
 }mgxi) {
-      if (defined($8)) {
+      if (defined($9)) {
         if (defined($description)) {
           $insert_sth->execute($bonsai_id, $checkin_date, $who, $files,
                                $revisions, $size_plus, $size_minus,
