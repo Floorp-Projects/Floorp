@@ -84,7 +84,8 @@ nsresult NS_InitEmbedding(nsILocalFile *mozBinDirectory,
 #endif
     {
         // Initialise XPCOM
-        NS_InitXPCOM2(&sServiceManager, mozBinDirectory, appFileLocProvider);
+        rv = NS_InitXPCOM2(&sServiceManager, mozBinDirectory, appFileLocProvider);
+        NS_ENSURE_SUCCESS(rv, rv);
                 
 #ifdef HACK_AROUND_NONREENTRANT_INITXPCOM
         sXPCOMInitializedFlag = PR_TRUE;
@@ -169,7 +170,8 @@ nsresult NS_TermEmbedding()
 
     // Terminate XPCOM & cleanup
 #ifndef HACK_AROUND_NONREENTRANT_INITXPCOM
-    NS_ShutdownXPCOM(sServiceManager);
+    nsresult rv = NS_ShutdownXPCOM(sServiceManager);
+    NS_ENSURE_SUCCESS(rv, rv);
 #endif
 
     return NS_OK;
