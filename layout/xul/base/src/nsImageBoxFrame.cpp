@@ -639,6 +639,12 @@ NS_IMETHODIMP nsImageBoxFrame::OnStartContainer(imgIRequest *request, nsIPresCon
   nsCOMPtr<nsIPresShell> presShell;
   aPresContext->GetShell(getter_AddRefs(presShell));
 
+#ifdef DEBUG_pavlov
+  NS_ENSURE_ARG(image);
+#else
+  if (!image) return NS_ERROR_INVALID_ARG; 
+#endif  
+
   mHasImage = PR_TRUE;
   mSizeFrozen = PR_FALSE;
 
