@@ -112,7 +112,7 @@
       </menu>
     </menu>
     <menu name="Tools">
-      <menuitem name=".Spell Check" onclick=""/>
+      <menuitem name="Spell Check" onclick="CheckSpelling()"/>
     </menu>
     <menu name="Debug">
       <menuitem name="Output Text" onclick="EditorGetText()"/>
@@ -132,8 +132,8 @@
   <broadcaster id="Editor:Style:IsBold" bold="false"/>
   <broadcaster id="Editor:Style:IsItalic"/>
   <broadcaster id="Editor:Style:IsUnderline"/>
-  <box id="outer-box" align="vertical">
-  
+
+<box id="outer-box" align="vertical">
   <toolbox>
     <toolbar>
       <!-- Most of the message handlers don't work! -->
@@ -177,26 +177,24 @@
 	    <titledbutton src="chrome://editor/skin/images/ED_Left.gif" align="bottom" class="popup" onclick="EditorAlign('left')"/>
 	    <titledbutton src="chrome://editor/skin/images/ED_Link.gif" align="bottom" onclick="EditorInsertLink()"/>
 	    <titledbutton src="chrome://editor/skin/images/ED_Image.gif" align="bottom" onclick= "EditorInsertImage()"/>
+	    <titledbutton src="chrome://editor/skin/images/ED_Spell.gif" align="bottom" class="popup" onclick="CheckSpelling()"/>
     </toolbar>
   </toolbox>
 
   <html:iframe type="content" id="content-frame" src="about:blank" flex="100%"/>
 
-    <!-- Ripped off from navigator.xul; this should be a XUL fragment! -->
-    <box align="horizontal" id="status-bar">
- 
+  <!-- Ripped off from navigator.xul; this should be a XUL fragment! -->
+  <box align="horizontal" id="status-bar">
     <titledbutton value="[Notification Component]" onclick="doTests()"/>
-	<box align="vertical" style="width:100px">
-		<spring flex="100%"/>
-		<progressmeter mode="normal" value="0">
-		</progressmeter>
-		<spring flex="100%"/>
-	</box>
-
-	<titledbutton id="statusText" align="right" flex="100%" value="Document: Done" style="font-family:sans-serif;font-size:2.5mm">
-	</titledbutton>
-    </box>
-
+	  <box align="vertical" style="width:100px">
+		  <spring flex="100%"/>
+		  <progressmeter mode="normal" value="0">
+		  </progressmeter>
+		  <spring flex="100%"/>
+  	</box>
+    <titledbutton id="statusText" align="right" flex="100%" value="Document: Done" style="font-family:sans-serif;font-size:2.5mm">
+	  </titledbutton>
+  </box>
 </box>
 </window>
 

@@ -38,7 +38,7 @@
 #include "nsIDOMRange.h"
 #include "nsISupportsArray.h"
 #include "nsVoidArray.h"
-
+#include "nsFileSpec.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 
@@ -1544,6 +1544,20 @@ nsHTMLEditor::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection, ns
     {
       selection->ClearSelection();    
     }
+  }
+  nsAutoString tagName;
+
+  // MAJOR KLUDGE -- CONVERT THE PLATFORM-SPECIFIC FORMAT INTO URL FORMAT
+  // This should be done by the file-picker widget
+  nsCOMPtr<nsIDOMHTMLImageElement> image = (do_QueryInterface(aElement));
+  
+  if (image)
+  {
+    printf("INSERTING AN IMAGE\n");
+    nsAutoString src;
+    image->GetSrc(src);
+    nsFileSpec fileSpec(src);
+    nsFileURL fileURL(fileSpec);
   }
 
   DeleteSelectionAndPrepareToCreateNode(parentSelectedNode, offsetOfNewNode);

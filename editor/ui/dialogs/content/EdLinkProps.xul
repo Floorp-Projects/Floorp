@@ -21,7 +21,7 @@
       <td>
         <fieldset><legend align="left">Link source </legend>
           <p class="smallmargin" id="linkMessage">Enter text to display for a new link:</p>
-          <input type="text" size="25" length="25" maxlength="100" id="linkTextInput"></input>
+          <input type="text" size="25" length="25" id="linkTextInput"></input>
         </fieldset>
       </td>
     </tr>
@@ -30,7 +30,7 @@
         <fieldset><legend align="left">Link to </legend>
           <p class="smallmargin">Enter a web page location or local file: 
           <button class="ChooseFile" id="ChooseFile" align="top">Choose File</button></p>
-          <input type="text" size="25" length="25" maxlength="100" id="hrefInput"></input>
+          <input type="text" size="25" length="25" id="hrefInput"></input>
         </fieldset>
       </td>
     </tr>

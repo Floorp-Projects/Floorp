@@ -40,14 +40,6 @@ function Startup()
   dialog = new Object;
   // This is the "combined" widget:
   dialog.Src = document.getElementById("image.Src");
-  // Can we get at just the edit field?
-  fileChild = dialog.Src.firstChild;
-  if (fileChild)
-  {
-    dump("*** fileInput control has a child\n");
-  } else {
-    dump("*** fileInput control has  NO child\n");
-  }
 
   dialog.AltText = document.getElementById("image.AltText");
   if (null == dialog.Src || 
@@ -59,8 +51,6 @@ function Startup()
   initDialog();
   
   dialog.Src.focus();
-  if (fileChild)
-    fileChild.focus();
 }
 
 function initDialog() {
