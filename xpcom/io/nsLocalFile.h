@@ -20,6 +20,13 @@
  *
  * Contributor(s): 
  *     Doug Turner <dougt@netscape.com>
+ *
+ * This Original Code has been modified by IBM Corporation. Modifications made by IBM 
+ * described herein are Copyright (c) International Business Machines Corporation, 2000.
+ * Modifications to Mozilla code or documentation identified per MPL Section 3.3
+ *
+ * Date             Modified by     Description of modification
+ * 04/20/2000       IBM Corp.      OS/2 build.
  */
 
 #ifndef _NS_LOCAL_FILE_H_
@@ -31,6 +38,9 @@
 // so here we will export it.  Other users should not depend
 // on this.
 
+#ifdef XP_OS2
+#include "nsLocalFileOS2.h"
+#else
 #ifdef XP_PC
 #include "nsLocalFileWin.h"
 #else
@@ -44,6 +54,7 @@
 #endif /* XP_MAC */
 #endif /* XP_UNIX */
 #endif /* XP_PC */
+#endif /* XP_OS2 */
 #endif
 
 
