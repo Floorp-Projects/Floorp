@@ -32,6 +32,7 @@
 #include "nsImageOS2.h"
 #include "nsRenderingContextOS2.h"
 #include "nsDeviceContextOS2.h"
+#include "imgScaler.h"
 
 #define MAX_BUFFER_WIDTH        128
 #define MAX_BUFFER_HEIGHT       128
@@ -250,6 +251,31 @@ nsresult nsImageOS2::Draw( nsIRenderingContext &aContext,
                 aX, aY, aWidth, aHeight);
 }
 
+/** ---------------------------------------------------
+ *  This is a helper routine to do the blending for the Draw method
+ */
+void nsImageOS2 :: DrawComposited24(unsigned char *aBits,
+			     PRUint8 *aImageRGB, PRUint32 aStrideRGB,
+			     PRUint8 *aImageAlpha, PRUint32 aStrideAlpha,
+			     int aWidth, int aHeight)
+{
+  PRInt32 targetRowBytes = ((aWidth * 3) + 3) & ~3;
+
+  for (int y = 0; y < aHeight; y++) {
+    unsigned char *targetRow = aBits + y * targetRowBytes;
+    unsigned char *imageRow = aImageRGB + y * aStrideRGB;
+    unsigned char *alphaRow = aImageAlpha + y * aStrideAlpha;
+
+    for (int x = 0; x < aWidth;
+         x++, targetRow += 3, imageRow += 3, alphaRow++) {
+      unsigned alpha = *alphaRow;
+      MOZ_BLEND(targetRow[0], targetRow[0], imageRow[0], alpha);
+      MOZ_BLEND(targetRow[1], targetRow[1], imageRow[1], alpha);
+      MOZ_BLEND(targetRow[2], targetRow[2], imageRow[2], alpha);
+    }
+  }
+}
+
 NS_IMETHODIMP 
 nsImageOS2 :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
                   PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
@@ -454,8 +480,8 @@ nsImageOS2 :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
           BITMAPINFOHEADER2 bihMem = { 0 };
 
           bihMem.cbFix = sizeof (BITMAPINFOHEADER2);
-          bihMem.cx = aSWidth;
-          bihMem.cy = aSHeight;
+          bihMem.cx = aDWidth;
+          bihMem.cy = aDHeight;
           bihMem.cPlanes = 1;
           LONG lBitCount = 0;
           GFX (::DevQueryCaps( hdcCompat, CAPS_COLOR_BITCOUNT, 1, &lBitCount), FALSE);
@@ -499,51 +525,54 @@ nsImageOS2 :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
 
               if( rc != GPI_ALTERROR )
               {
-                // Do manual alpha blending
-                PRUint8* pDest  = pRawBitData;
-                PRUint8* pSrc;
-                PRUint8* pAlpha;
+		PRUint8 *imageRGB, *imageAlpha;
+		PRUint32 strideRGB, strideAlpha;
 
-                if (mInfo->cBitCount == 8)
-                {
-                  for (int y = mInfo->cy - aSY - aSHeight ; y < mInfo->cy - aSY ; y++)
-                  {
-                    pSrc   = mImageBits + (y * mRowBytes) + aSX;
-                    pAlpha = mAlphaBits + (y * mARowBytes) + aSX;
-                       
-                    for (int x = 0 ; x < bihDirect.cx ; x++)
-                    {
-                      pDest [0] = FAST_BLEND (mColorMap->Index [3 * (*pSrc) + 0], pDest [0], *pAlpha);
-                      pDest [1] = FAST_BLEND (mColorMap->Index [3 * (*pSrc) + 1], pDest [1], *pAlpha);
-                      pDest [2] = FAST_BLEND (mColorMap->Index [3 * (*pSrc) + 2], pDest [2], *pAlpha);
-                      pSrc++;
-                      pDest += 3;
-                      pAlpha++;
-                    }
-        
-                    pDest  = (PRUint8*) ((ULONG)(pDest + 3) & ~3);    // For next scanline align pointers on DWORD boundary
-                  }
-                }
-                else
-                {
-                  for (int y = mInfo->cy - aSY - aSHeight ; y < mInfo->cy - aSY ; y++)
-                  {
-                    pSrc   = mImageBits + (y * mRowBytes) + (aSX * 3);
-                    pAlpha = mAlphaBits + (y * mARowBytes) + aSX;
-                               
-                    for (int x = 0 ; x < bihDirect.cx ; x++)
-                    {
-                      pDest [0] = FAST_BLEND (pSrc [0], pDest [0], *pAlpha);
-                      pDest [1] = FAST_BLEND (pSrc [1], pDest [1], *pAlpha);
-                      pDest [2] = FAST_BLEND (pSrc [2], pDest [2], *pAlpha);
-                      pSrc  += 3;
-                      pDest += 3;
-                      pAlpha++;
-                    }
-        
-                    pDest  = (PRUint8*) ((ULONG)(pDest + 3) & ~3);    // For next scanline align pointers on DWORD boundary
-                  }
-                }
+		/* Both scaled and unscaled images come through this code - save
+		   work if not scaling */
+		if ((aSWidth != aDWidth) || (aSHeight != aDHeight)) {
+		  /* Scale our image to match */
+		  imageRGB = (PRUint8 *)nsMemory::Alloc(3*aDWidth*aDHeight);
+		  imageAlpha = (PRUint8 *)nsMemory::Alloc(aDWidth*aDHeight);
+		      
+		  if (!imageRGB || !imageAlpha) {
+		    if (imageRGB)
+		      nsMemory::Free(imageRGB);
+		    if (imageAlpha)
+		      nsMemory::Free(imageAlpha);
+
+		    free(pRawBitData);
+		    GFX (::GpiSetBitmap (MemPS, NULLHANDLE), HBM_ERROR);
+		    GFX (::GpiDeleteBitmap (hMemBmp), FALSE);
+		    GFX (::GpiDestroyPS (MemPS), FALSE);
+		    ::DevCloseDC (MemDC);
+
+		    return NS_ERROR_FAILURE;
+		  }
+		      
+		  strideRGB = 3 * aDWidth;
+		  strideAlpha = aDWidth;
+		  RectStretch(aSWidth, aSHeight, aDWidth, aDHeight, 0, 0, aDWidth-1, aDHeight-1,
+			      mImageBits, mRowBytes, imageRGB, strideRGB, 24);
+		  RectStretch(aSWidth, aSHeight, aDWidth, aDHeight, 0, 0, aDWidth-1, aDHeight-1,
+			      mAlphaBits, mARowBytes, imageAlpha, strideAlpha, 8);
+		} else {
+                  PRUint32 srcy = mInfo->cy - (aSY + aSHeight);
+		  imageRGB = mImageBits + srcy * mRowBytes + aSX * 3;
+		  imageAlpha = mAlphaBits + srcy * mARowBytes + aSX;
+		  strideRGB = mRowBytes;
+		  strideAlpha = mARowBytes;
+		}
+
+		/* Do composite */
+		DrawComposited24(pRawBitData, imageRGB, strideRGB, imageAlpha, strideAlpha,
+				 aDWidth, aDHeight);
+		  
+		if ((aSWidth != aDWidth) || (aSHeight != aDHeight)) {
+		  /* Free scaled images */
+		  nsMemory::Free(imageRGB);
+		  nsMemory::Free(imageAlpha);
+		}
         
                 // Copy modified memory back to memory bitmap
                 GFX (::GpiSetBitmapBits (MemPS, 0, bihMem.cy, (PBYTE)pRawBitData, (PBITMAPINFO2)&bihDirect), GPI_ALTERROR);

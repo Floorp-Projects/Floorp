@@ -130,6 +130,11 @@ public:
    */
   void CleanUp(PRBool aCleanUpAll);
 
+  void DrawComposited24(unsigned char *aBits,
+                        PRUint8 *aImageRGB, PRUint32 aStrideRGB,
+                        PRUint8 *aImageAlpha, PRUint32 aStrideAlpha,
+                        int aWidth, int aHeight);
+
 #ifdef OS2TODO
   /** 
    * Create a Device Dependent bitmap from a drawing surface
