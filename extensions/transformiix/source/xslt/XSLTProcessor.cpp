@@ -50,7 +50,7 @@
 #include "txNodeSorter.h"
 #include "Numbering.h"
 #include "Tokenizer.h"
-#include "URIUtils.h"
+#include "txURIUtils.h"
 #include "txAtoms.h"
 #include "TxLog.h"
 #include "txRtfHandler.h"

@@ -49,7 +49,7 @@ EXPORTS =	\
 
 LINCS= $(LINCS) -I$(PUBLIC)\xpcom -I..\..\base  \
        -I..\..\xml\dom   -I..\..\xpath -I..\..\xml -I.. \
-       -I..\..\net -I$(DEPTH)\expat -I..\..\xml\parser -I..\util
+       -I$(DEPTH)\expat -I..\..\xml\parser -I..\util
 
 LCFLAGS = \
         $(LCFLAGS) \

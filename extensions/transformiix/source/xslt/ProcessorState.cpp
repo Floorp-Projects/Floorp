@@ -35,7 +35,7 @@
 #include "ProcessorState.h"
 #include "XSLTFunctions.h"
 #include "FunctionLib.h"
-#include "URIUtils.h"
+#include "txURIUtils.h"
 #include "XMLUtils.h"
 #include "XMLDOMUtils.h"
 #include "Tokenizer.h"

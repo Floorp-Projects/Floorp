@@ -37,7 +37,7 @@
  */
 
 #include "XMLParser.h"
-#include "URIUtils.h"
+#include "txURIUtils.h"
 #ifndef TX_EXE
 #include "nsSyncLoader.h"
 #include "nsNetUtil.h"

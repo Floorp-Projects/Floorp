@@ -22,7 +22,7 @@
 DEPTH=..\..\..
 include <$(DEPTH)/config/config.mak>
 
-DIRS=base net xml xpath xslt
+DIRS=base xml xpath xslt
 
 !ifdef TX_EXE
 DIRS = $(DIRS) main

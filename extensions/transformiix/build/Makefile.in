@@ -57,7 +57,6 @@ CPPSRCS = XSLTProcessorModule.cpp
 LOBJS =../source/base/ArrayList.$(OBJ_SUFFIX) \
   ../source/base/Double.$(OBJ_SUFFIX) \
   ../source/base/List.$(OBJ_SUFFIX) \
-  ../source/base/TxObjectWrapper.$(OBJ_SUFFIX) \
   ../source/base/Map.$(OBJ_SUFFIX) \
   ../source/base/NamedMap.$(OBJ_SUFFIX) \
   ../source/base/SimpleErrorObserver.$(OBJ_SUFFIX) \
@@ -67,7 +66,7 @@ LOBJS =../source/base/ArrayList.$(OBJ_SUFFIX) \
   ../source/base/txAtoms.$(OBJ_SUFFIX) \
   ../source/base/txExpandedNameMap.$(OBJ_SUFFIX) \
   ../source/base/MozillaString.$(OBJ_SUFFIX) \
-  ../source/net/URIUtils.$(OBJ_SUFFIX) \
+  ../source/base/txURIUtils.$(OBJ_SUFFIX) \
   ../source/xml/dom/mozImpl/MozillaObjectWrapper.$(OBJ_SUFFIX) \
   ../source/xml/dom/mozImpl/MozillaAttr.$(OBJ_SUFFIX) \
   ../source/xml/dom/mozImpl/MozillaCDATASection.$(OBJ_SUFFIX) \
@@ -161,7 +160,6 @@ EXTRA_DSO_LDOPTS += \
 include $(topsrcdir)/config/rules.mk
 
 INCLUDES += -I$(srcdir)/../source/xslt -I$(srcdir)/../source/base \
-  -I$(srcdir)/../source/net \
   -I$(srcdir)/../source/xml -I$(srcdir)/../source/xml/dom \
   -I$(srcdir)/../source/xml/parser -I$(srcdir)/../source/xpath \
   -I$(srcdir)/../source/xslt/util -I$(srcdir)/../source/xslt/functions

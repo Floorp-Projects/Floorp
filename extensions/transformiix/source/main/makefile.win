@@ -30,7 +30,6 @@ CPP_OBJS=                                       \
   ../base/$(OBJDIR)/CommandLineUtils.obj \
   ../base/$(OBJDIR)/Double.obj \
   ../base/$(OBJDIR)/List.obj \
-  ../base/$(OBJDIR)/TxObjectWrapper.obj \
   ../base/$(OBJDIR)/Map.obj \
   ../base/$(OBJDIR)/NamedMap.obj \
   ../base/$(OBJDIR)/SimpleErrorObserver.obj \
@@ -40,7 +39,7 @@ CPP_OBJS=                                       \
   ../base/$(OBJDIR)/txAtoms.obj \
   ../base/$(OBJDIR)/txExpandedNameMap.obj \
   ../base/$(OBJDIR)/TxString.obj \
-  ../net/$(OBJDIR)/URIUtils.obj \
+  ../base/$(OBJDIR)/txURIUtils.obj \
   ../xml/dom/standalone/$(OBJDIR)/Attr.obj \
   ../xml/dom/standalone/$(OBJDIR)/CDATASection.obj \
   ../xml/dom/standalone/$(OBJDIR)/DocumentType.obj \

@@ -69,10 +69,9 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-INCLUDES += -I$(srcdir) -I$(srcdir)/../base -I$(srcdir)/../net \
+INCLUDES += -I$(srcdir) -I$(srcdir)/../base \
   -I$(srcdir)/../xml -I$(srcdir)/../xml/dom \
   -I$(srcdir)/../xml/parser -I$(srcdir)/../xml/parser/xmlparse \
-  -I$(srcdir)/../xml/printer -I$(srcdir)/../xpath -I$(srcdir)/../xslt/util \
-  -I$(srcdir)/../xslt/functions
+  -I$(srcdir)/../xpath -I$(srcdir)/util -I$(srcdir)/functions
 
 libs:: $(OBJS)
