@@ -687,7 +687,7 @@ CalcAvailWidth(nsTableFrame&     aTableFrame,
                nscoord&          aColAvailWidth,
                nscoord&          aCellAvailWidth)
 {
-  aColAvailWidth = aCellAvailWidth = 0;
+  aColAvailWidth = aCellAvailWidth = NS_UNCONSTRAINEDSIZE;
   PRInt32 colIndex;
   aCellFrame.GetColIndex(colIndex);
   PRInt32 colspan = aTableFrame.GetEffectiveColSpan(aCellFrame);
@@ -695,14 +695,19 @@ CalcAvailWidth(nsTableFrame&     aTableFrame,
 
   for (PRInt32 spanX = 0; spanX < colspan; spanX++) {
     nscoord colWidth = aTableFrame.GetColumnWidth(colIndex + spanX);
-    if (colWidth > 0) {
-      aColAvailWidth += colWidth;
+    if (colWidth != WIDTH_NOT_SET) {
+      if (NS_UNCONSTRAINEDSIZE == aColAvailWidth) {
+        aColAvailWidth = colWidth; 
+      }
+      else {
+        aColAvailWidth += colWidth;
+      }
     }
     if ((spanX > 0) && (aTableFrame.GetNumCellsOriginatingInCol(colIndex + spanX) > 0)) {
       cellSpacing += aCellSpacingX;
     }
   }
-  if (aColAvailWidth > 0) {
+  if (NS_UNCONSTRAINEDSIZE != aColAvailWidth) {
     aColAvailWidth += cellSpacing;
   } 
   aCellAvailWidth = aColAvailWidth;
@@ -721,7 +726,11 @@ CalcAvailWidth(nsTableFrame&     aTableFrame,
                                                        aPixelToTwips,  &aCellFrame);
       }
       nscoord fixWidth = cellPosition->mWidth.GetCoordValue() + borderPadding.left + borderPadding.right;
-      aCellAvailWidth = PR_MIN(aColAvailWidth, fixWidth);
+      if (NS_UNCONSTRAINEDSIZE != aColAvailWidth) {
+        aCellAvailWidth = PR_MIN(aColAvailWidth, fixWidth);
+      } else {
+        aCellAvailWidth = fixWidth;
+      }
     }
   }
 }
@@ -884,8 +893,6 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
         nscoord availColWidth, availCellWidth;
         CalcAvailWidth(aTableFrame, GetComputedWidth(aReflowState, aTableFrame), p2t,
                        *cellFrame, cellSpacingX, availColWidth, availCellWidth);
-        if (0 == availColWidth)  availColWidth  = NS_UNCONSTRAINEDSIZE;
-        if (0 == availCellWidth) availCellWidth = NS_UNCONSTRAINEDSIZE;
 
         // remember the rightmost (ltr) or leftmost (rtl) column this cell spans into
         prevColIndex = (iter.IsLeftToRight()) ? cellColIndex + (cellColSpan - 1) : cellColIndex;
