@@ -78,9 +78,10 @@ NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
   mWidget = aNativeWidget;
   
   // Calculate mTwipsToPixels as  (pixels/inch) / (twips/inch)
-  mTwipsToPixels = 
-    (float)(((::gdk_screen_width()/::gdk_screen_width_mm()) * 25.4) /
-            (float)NSIntPointsToTwips(72));
+  mTwipsToPixels = ((gdk_screen_width()/gdk_screen_width_mm()) * 25.4) / (float)NSIntPointsToTwips(72);
+ 
+  g_print("*********** *%f/%f)*25.4  /  %f  =  %f\n",gdk_screen_width(),
+  gdk_screen_width_mm(), NSIntPointsToTwips(72), mTwipsToPixels);
 
   mPixelsToTwips = 1.0f / mTwipsToPixels;
 
@@ -115,8 +116,8 @@ NS_IMETHODIMP nsDeviceContextGTK::SupportsNativeWidgets(PRBool &aSupportsWidgets
 NS_IMETHODIMP nsDeviceContextGTK::GetScrollBarDimensions(float &aWidth, float &aHeight) const
 {
   // how are we going to get this? Must be set by the widget library FRV
-  aWidth = 0.0;
-  aHeight = 0.0;
+  aWidth = 11.0 * mTwipsToPixels;
+  aHeight = 24.0 * mTwipsToPixels;
   return NS_OK;
 }
 

@@ -120,6 +120,100 @@ void nsImageGTK :: ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRe
 
 }
 
+// This is really ugly. Mozilla uses BGR image data, while
+// gdk_rgb uses RGB data. So before we draw an image
+// we copy it to a temp buffer and swap R and B.
+//
+// The code here comes from gdk_rgb_convert_888_lsb.
+//
+static void
+moz_gdk_draw_bgr_image (GdkDrawable *drawable,
+                    GdkGC *gc,
+                    gint x,
+                    gint y,
+                    gint width,
+                    gint height,
+                    GdkRgbDither dith,
+                    guchar *rgb_buf,
+                    gint rowstride)
+{
+  int tx, ty;
+
+  guchar *tmp_buf;
+  guchar *obuf, *obptr;
+  gint bpl;
+  guchar *bptr, *bp2;
+  int r, g, b;
+
+  bpl = (width * 3 + 3) & ~0x3;
+  tmp_buf = (guchar *)g_malloc (bpl * height);
+
+  bptr = rgb_buf;
+  obuf = tmp_buf;
+  for (ty = 0; ty < height; ty++)
+    {
+      bp2 = bptr;
+      obptr = obuf;
+      if (((unsigned long)obuf | (unsigned long) bp2) & 3)
+        {
+          for (tx = 0; tx < width; tx++)
+            {
+              r = bp2[0];
+              g = bp2[1];
+              b = bp2[2];
+              *obptr++ = b;
+              *obptr++ = g;
+              *obptr++ = r;
+              bp2 += 3;
+            }
+        }
+      else
+        {
+          for (tx = 0; tx < width - 3; tx += 4)
+            {
+              guint32 r1b0g0r0;
+              guint32 g2r2b1g1;
+              guint32 b3g3r3b2;
+              
+              r1b0g0r0 = ((guint32 *)bp2)[0];
+              g2r2b1g1 = ((guint32 *)bp2)[1];
+              b3g3r3b2 = ((guint32 *)bp2)[2];
+              ((guint32 *)obptr)[0] =
+                (r1b0g0r0 & 0xff00) |
+                ((r1b0g0r0 & 0xff0000) >> 16) |
+                (((g2r2b1g1 & 0xff00) | (r1b0g0r0 & 0xff)) << 16);
+              ((guint32 *)obptr)[1] =
+                (g2r2b1g1 & 0xff0000ff) |
+                ((r1b0g0r0 & 0xff000000) >> 16) |
+                ((b3g3r3b2 & 0xff) << 16);
+              ((guint32 *)obptr)[2] =
+                (((g2r2b1g1 & 0xff0000) | (b3g3r3b2 & 0xff000000)) >> 16) |
+                ((b3g3r3b2 & 0xff00) << 16) |
+                ((b3g3r3b2 & 0xff0000));
+              bp2 += 12;
+              obptr += 12;
+            }
+          for (; tx < width; tx++)
+            {
+              r = bp2[0];
+              g = bp2[1];
+              b = bp2[2];
+              *obptr++ = b;
+              *obptr++ = g;
+              *obptr++ = r;
+              bp2 += 3;
+            }
+        }
+      bptr += rowstride;
+      obuf += bpl;
+    }
+
+  gdk_draw_rgb_image (drawable, gc, x, y, width, height,
+                      dith, tmp_buf, bpl);
+
+  g_free (tmp_buf);
+}
+
 //------------------------------------------------------------
 
 // Draw the bitmap, this method has a source and destination coordinates
@@ -129,12 +223,12 @@ NS_IMETHODIMP nsImageGTK :: Draw(nsIRenderingContext &aContext, nsDrawingSurface
 {
   nsDrawingSurfaceGTK *drawing = (nsDrawingSurfaceGTK*)aSurface;
 
-  gdk_draw_rgb_image (drawing->drawable,
-                      drawing->gc,
-                      aDX, aDY, aDWidth, aDHeight,
-                      GDK_RGB_DITHER_MAX,
-                      mImageBits + mRowBytes * aSY + 3 * aDX,
-                      mRowBytes);
+  moz_gdk_draw_bgr_image (drawing->drawable,
+                          drawing->gc,
+                          aDX, aDY, aDWidth, aDHeight,
+                          GDK_RGB_DITHER_MAX,
+                          mImageBits + mRowBytes * aSY + 3 * aDX,
+                          mRowBytes);
 
   return NS_OK;
 }
@@ -149,11 +243,11 @@ NS_IMETHODIMP nsImageGTK :: Draw(nsIRenderingContext &aContext,
 {
   nsDrawingSurfaceGTK *drawing = (nsDrawingSurfaceGTK*) aSurface;
 
-  gdk_draw_rgb_image (drawing->drawable,
-                      drawing->gc,
-                      aX, aY, aWidth, aHeight,
-                      GDK_RGB_DITHER_MAX,
-                      mImageBits, mRowBytes);
+  moz_gdk_draw_bgr_image (drawing->drawable,
+                          drawing->gc,
+                          aX, aY, aWidth, aHeight,
+                          GDK_RGB_DITHER_MAX,
+                          mImageBits, mRowBytes);
 
   return NS_OK;
 }
