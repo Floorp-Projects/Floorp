@@ -1,0 +1,15 @@
+#include "nsISupports.idl"
+#include "nsIRDFNode.idl"
+#include "nsIRDFResource.idl"
+
+[uuid(3CC75360-484A-11D2-BC16-00805F912FE7)]
+
+interface nsIRDFObserver : nsISupports {
+    void OnAssert(in nsIRDFResource aSubject,
+                  in nsIRDFResource aPredicate,
+                  in nsIRDFNode     aObject);
+
+    void OnUnassert(in nsIRDFResource aSubject,
+                    in nsIRDFResource aPredicate,
+                    in nsIRDFNode     aObject);
+};

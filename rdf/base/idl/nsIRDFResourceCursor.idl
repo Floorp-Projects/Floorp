@@ -1,0 +1,8 @@
+#include "nsIRDFCursor.idl"
+#include "nsIRDFResource.idl"
+
+[uuid(C2850C10-B0CF-11d2-A684-00104BDE6048)]
+
+interface nsIRDFResourceCursor : nsIRDFCursor {
+    attribute readonly nsIRDFResource Resource;
+};
