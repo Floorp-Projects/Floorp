@@ -36,10 +36,6 @@ CHROME_CONTENT	= \
 		customize-panel.xul \
 		customize.js \
 		customize.xul \
-		dummy-flash.rdf \
-		flash-registry.rdf \
-		flash.js \
-		flash.xul \
 		panel-add-confirm.js \
 		panel-add-confirm.xul \
 		panel-exists.xul \
@@ -55,16 +51,13 @@ CHROME_CONTENT	= \
 CHROME_SKIN	= \
 		customize-panel.css \
 		customize.css \
-		flash.css \
 		sidebarOverlay.css \
-		flames.gif \
 		list-down-dis.gif \
 		list-down.gif \
 		list-up-dis.gif \
 		list-up.gif \
 		panel-expand.gif \
 		panel-collapse.gif \
-		alert.gif \
 		sidebar-bottomright-cap.gif \
 		sidebar-topright-cap.gif \
 		$(NULL)
