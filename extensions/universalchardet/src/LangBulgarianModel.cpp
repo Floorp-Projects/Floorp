@@ -231,6 +231,7 @@ SequenceModel Latin5BulgarianModel =
 {
   Latin5_BulgarianCharToOrderMap,
   BulgarianLangModel,
+  (float)0.969392,
   PR_FALSE,
   "ISO-8859-5"
 };
@@ -239,6 +240,7 @@ SequenceModel Win1251BulgarianModel =
 {
   win1251BulgarianCharToOrderMap,
   BulgarianLangModel,
+  (float)0.969392,
   PR_FALSE,
   "windows-1251"
 };

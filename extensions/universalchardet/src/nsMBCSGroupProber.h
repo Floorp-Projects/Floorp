@@ -60,6 +60,10 @@ public:
   float     GetConfidence(void);
   void      SetOpion() {};
 
+#ifdef DEBUG_chardet
+  void  DumpStatus();
+#endif
+
 protected:
   nsProbingState mState;
   nsCharSetProber* mProbers[NUM_OF_PROBERS];
