@@ -42,7 +42,6 @@
 #include "nsIXPConnect.h"
 #include "nsCRT.h"
 #include "nsMemory.h"
-#include "nsIRegistry.h"
 #include "nsXPIDLString.h"
 #include "nsIObserverService.h"
 #include "nsIXPCScriptable.h"
@@ -394,7 +393,6 @@ mozJSComponentLoader::mozJSComponentLoader()
     : mRuntime(nsnull),
       mModules(nsnull),
       mGlobals(nsnull),
-      mXPCOMKey(0),
       mInitialized(PR_FALSE)
 {
     NS_INIT_REFCNT();
@@ -486,15 +484,6 @@ mozJSComponentLoader::Init(nsIComponentManager *aCompMgr, nsISupports *aReg)
     if (NS_FAILED(rv))
         return rv;
 
-    /* initialize registry handles */
-    mRegistry = do_QueryInterface(aReg, &rv);
-    if (NS_SUCCEEDED(rv)) {
-        rv = mRegistry->GetSubtree(nsIRegistry::Common, JSxpcomKeyName,
-                                   &mXPCOMKey);
-        if (NS_FAILED(rv))
-            /* if we can't get the XPCOM key, just skip all registry ops */
-            mRegistry = nsnull;
-    }
     return NS_OK;
 }
 
@@ -627,7 +616,6 @@ mozJSComponentLoader::SetRegistryInfo(const char *registryLocation,
 nsresult
 mozJSComponentLoader::RemoveRegistryInfo(nsIFile *component, const char *registryLocation)
 {
-    nsresult rv;
     if (!mLoaderManager)
         return NS_ERROR_FAILURE;
     
@@ -639,7 +627,6 @@ PRBool
 mozJSComponentLoader::HasChanged(const char *registryLocation,
                                  nsIFile *component)
 {
-    nsresult rv;
     if (!mLoaderManager)
         return NS_ERROR_FAILURE;
     

@@ -825,7 +825,7 @@ mozSanitizingHTMLSerializer::ParseTagPref(const nsCAutoString& tagpref)
 #ifdef DEBUG_BenB
       printf(" Processing attr -%s-\n", iAttr);
 #endif
-      attr_bag->Define(iAttr, 0);
+      attr_bag->Set(iAttr, 0);
     }
 
     nsIProperties* attr_bag_raw = attr_bag;

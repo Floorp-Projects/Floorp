@@ -96,31 +96,6 @@ nsProperties::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
 }
 
 NS_IMETHODIMP
-nsProperties::Define(const char* prop, nsISupports* initialValue)
-{
-    nsCStringKey key(prop);
-    if (Exists(&key))
-        return NS_ERROR_FAILURE;
-
-    nsISupports* prevValue = (nsISupports*)Put(&key, initialValue);
-    NS_ASSERTION(prevValue == NULL, "hashtable error");
-    NS_IF_ADDREF(initialValue);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsProperties::Undefine(const char* prop)
-{
-    nsCStringKey key(prop);
-    if (!Exists(&key))
-        return NS_ERROR_FAILURE;
-
-    nsISupports* prevValue = (nsISupports*)Remove(&key);
-    NS_IF_RELEASE(prevValue);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsProperties::Get(const char* prop, const nsIID & uuid, void* *result)
 {
     nsresult rv;
@@ -149,11 +124,29 @@ nsProperties::Set(const char* prop, nsISupports* value)
 }
 
 NS_IMETHODIMP
+nsProperties::Undefine(const char* prop)
+{
+    nsCStringKey key(prop);
+    if (!Exists(&key))
+        return NS_ERROR_FAILURE;
+
+    nsISupports* prevValue = (nsISupports*)Remove(&key);
+    NS_IF_RELEASE(prevValue);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsProperties::Has(const char* prop, PRBool *result)
 {
     nsCStringKey key(prop);
     *result = nsHashtable::Exists(&key);
     return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsProperties::GetKeys(PRUint32 *count, char ***keys)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

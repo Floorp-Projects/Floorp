@@ -438,18 +438,6 @@ nsPersistentProperties::SkipLine(PRInt32 c)
 // nsIProperties, but until now...
 
 NS_IMETHODIMP 
-nsPersistentProperties::Define(const char* prop, nsISupports* initialValue)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP 
-nsPersistentProperties::Undefine(const char* prop)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP 
 nsPersistentProperties::Get(const char* prop, const nsIID & uuid, void* *result)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -460,11 +448,22 @@ nsPersistentProperties::Set(const char* prop, nsISupports* value)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
+NS_IMETHODIMP 
+nsPersistentProperties::Undefine(const char* prop)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 NS_IMETHODIMP 
 nsPersistentProperties::Has(const char* prop, PRBool *result)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+nsPersistentProperties::GetKeys(PRUint32 *count, char ***keys)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -22,7 +22,6 @@
 #include "nsIComponentLoaderManager.h"
 #include "nsIJSRuntimeService.h"
 #include "nsIJSContextStack.h"
-#include "nsIRegistry.h"
 #include "nsISupports.h"
 #include "nsIXPConnect.h"
 #include "nsIModule.h"
@@ -63,7 +62,6 @@ public:
 
     nsCOMPtr<nsIComponentManager> mCompMgr;
     nsCOMPtr<nsIComponentLoaderManager> mLoaderManager;
-    nsCOMPtr<nsIRegistry> mRegistry;
     nsCOMPtr<nsIJSRuntimeService> mRuntimeService;
 #ifndef XPCONNECT_STANDALONE
     nsCOMPtr<nsIPrincipal> mSystemPrincipal;
@@ -71,7 +69,6 @@ public:
     JSRuntime *mRuntime;
     PLHashTable *mModules;
     PLHashTable *mGlobals;
-    nsRegistryKey mXPCOMKey;
 
     PRBool mInitialized;
     nsSupportsArray mDeferredComponents;

@@ -604,12 +604,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS4(nsDirectoryService, nsIProperties, nsIDirectorySer
 
 
 NS_IMETHODIMP
-nsDirectoryService::Define(const char* prop, nsISupports* initialValue)
-{
-    return Set(prop, initialValue);
-}
-
-NS_IMETHODIMP
 nsDirectoryService::Undefine(const char* prop)
 {
     nsCStringKey key(prop);
@@ -618,6 +612,12 @@ nsDirectoryService::Undefine(const char* prop)
 
     mHashtable->Remove (&key);
     return NS_OK;
+ }
+
+NS_IMETHODIMP
+nsDirectoryService::GetKeys(PRUint32 *count, char ***keys)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 struct FileData

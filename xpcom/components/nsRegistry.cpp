@@ -529,28 +529,7 @@ NS_IMETHODIMP nsRegistry::OpenWellKnownRegistry( nsWellKnownRegistry regid )
     
     switch ( (nsWellKnownRegistry) regid ) {
       case ApplicationComponentRegistry:
-        {
-            // can't use NS_GetSpecialDirectory here.  Called before service manager is initialized.
-
-            nsCOMPtr<nsIProperties> directoryService;
-            rv = nsDirectoryService::Create(nsnull, 
-                                            NS_GET_IID(nsIProperties), 
-                                            getter_AddRefs(directoryService));
-            if (NS_FAILED(rv)) return rv;
-            directoryService->Get(NS_XPCOM_COMPONENT_REGISTRY_FILE, NS_GET_IID(nsIFile), 
-                                          getter_AddRefs(registryLocation));
-            
-            if (registryLocation)
-            {
-                foundReg = PR_TRUE;
-                rv = registryLocation->GetNativePath(regFile);  // dougt fix...
-                // dveditz needs to fix his registry so that I can pass an
-                // nsIFile interface and not hack 
-                if (NS_FAILED(rv))
-                  return rv;
-            }
-            
-        }
+        NS_WARNING("ApplicationComponentRegistry is unsupported!");
         break;
       case ApplicationRegistry:
         {
