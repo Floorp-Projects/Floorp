@@ -35,6 +35,9 @@ endif
 ifeq ($(OS_ARCH),OS2)
 DIRS		:= icon/os2 $(DIRS)
 endif
+ifeq ($(OS_ARCH),Darwin)
+DIRS		:= icon/mac $(DIRS)
+endif
 endif # icon
 
 include $(topsrcdir)/config/rules.mk
