@@ -52,6 +52,7 @@ CPPSRCS		= \
 		xpclog.cpp \
 		xpcmaps.cpp \
 		xpcmodule.cpp \
+		xpcnativecallcontext.cpp \
 		xpcruntimesvc.cpp \
 		xpcstack.cpp \
 		xpcthreadcontext.cpp \
