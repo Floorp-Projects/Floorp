@@ -115,10 +115,9 @@ public class Codegen extends Interpreter {
                      cursor = cursor.getNext())
                 {
                     if (cursor.getType() == TokenStream.FUNCTION) {
-                        OptFunctionNode fnNode
-                            = (OptFunctionNode)cursor.
-                                  getProp(Node.FUNCTION_PROP);
-                        obj.put(fnNode.getFunctionName(), obj, fnNode);
+                        FunctionNode fn
+                            = (FunctionNode)cursor.getProp(Node.FUNCTION_PROP);
+                        obj.put(fn.getFunctionName(), obj, fn);
                     }
                 }
                 if (superClass == null) {
@@ -186,8 +185,7 @@ public class Codegen extends Interpreter {
                 throw new RuntimeException
                     ("Unable to instantiate compiled class:"+ex.toString());
             }
-            OptFunctionNode fnNode = (OptFunctionNode)tree;
-            OptRuntime.initFunction(f, fnNode.getFunctionType(), scope, cx);
+            OptRuntime.initFunction(f, fnCurrent.getFunctionType(), scope, cx);
             return f;
         } else {
             NativeScript script;
@@ -304,7 +302,7 @@ public class Codegen extends Interpreter {
         return classFile.acquireLabel();
     }
 
-    public void emitDirectConstructor(OptFunctionNode fnNode)
+    public void emitDirectConstructor()
     {
 /*
     we generate ..
@@ -322,11 +320,11 @@ public class Codegen extends Interpreter {
         short flags = (short)(ClassFileWriter.ACC_PUBLIC
                             | ClassFileWriter.ACC_FINAL);
         classFile.startMethod("constructDirect",
-                        fnNode.getDirectCallParameterSignature()
-                            + "Ljava/lang/Object;",
-                        flags);
+                              fnCurrent.getDirectCallParameterSignature()
+                              + "Ljava/lang/Object;",
+                              flags);
 
-        int argCount = fnNode.getVariableTable().getParameterCount();
+        int argCount = fnCurrent.getParameterCount();
         int firstLocal = (4 + argCount * 3) + 1;
 
         aload((short)0); // this
@@ -350,7 +348,7 @@ public class Codegen extends Interpreter {
         aload((short)(4 + argCount * 3));
         addVirtualInvoke(this.name,
                             "callDirect",
-                            fnNode.getDirectCallParameterSignature(),
+                            fnCurrent.getDirectCallParameterSignature(),
                             "Ljava/lang/Object;");
         astore((short)(firstLocal + 1));
 
@@ -403,14 +401,14 @@ public class Codegen extends Interpreter {
 
         Node codegenBase;
         if (inFunction) {
-            OptFunctionNode fnNode = (OptFunctionNode) tree;
-            inDirectCallFunction = fnNode.isTargetOfDirectCall();
-            vars = fnNode.getVariableTable();
-            this.name = fnNode.getClassName();
+            fnCurrent = (OptFunctionNode)tree;
+            inDirectCallFunction = fnCurrent.isTargetOfDirectCall();
+            vars = fnCurrent.getVariableTable();
+            this.name = fnCurrent.getClassName();
             classFile = new ClassFileWriter(name, superClassName, itsSourceFile);
-            String name = fnNode.getFunctionName();
+            String name = fnCurrent.getFunctionName();
             generateInit(cx, "<init>", tree, name);
-            if (fnNode.isTargetOfDirectCall()) {
+            if (fnCurrent.isTargetOfDirectCall()) {
                 classFile.startMethod("call",
                                       "(Lorg/mozilla/javascript/Context;" +
                                       "Lorg/mozilla/javascript/Scriptable;" +
@@ -442,24 +440,24 @@ public class Codegen extends Interpreter {
                 addByteCode(ByteCode.ALOAD, 4);
                 addVirtualInvoke(this.name,
                                 "callDirect",
-                                fnNode.getDirectCallParameterSignature(),
+                                fnCurrent.getDirectCallParameterSignature(),
                                 "Ljava/lang/Object;");
                 addByteCode(ByteCode.ARETURN);
                 classFile.stopMethod((short)5, null);
                 // 1 for this, 1 for js this, 1 for args[]
 
-                emitDirectConstructor(fnNode);
+                emitDirectConstructor();
 
                 startNewMethod("callDirect",
-                               fnNode.getDirectCallParameterSignature() +
+                               fnCurrent.getDirectCallParameterSignature() +
                                 "Ljava/lang/Object;",
                                1, false, true);
-                assignParameterJRegs(vars);
-                if (!fnNode.getParameterNumberContext()) {
+                assignParameterJRegs(fnCurrent);
+                if (!fnCurrent.getParameterNumberContext()) {
                     // make sure that all parameters are objects
                     itsForcedObjectParameters = true;
-                    for (int i = 0; i < vars.getParameterCount(); i++) {
-                        OptLocalVariable lVar = OptLocalVariable.get(vars, i);
+                    for (int i = 0; i < fnCurrent.getParameterCount(); i++) {
+                        OptLocalVariable lVar = fnCurrent.getVar(i);
                         aload(lVar.getJRegister());
                         classFile.add(ByteCode.GETSTATIC,
                                       "java/lang/Void",
@@ -532,15 +530,15 @@ public class Codegen extends Interpreter {
         return name;
     }
 
-    private static void assignParameterJRegs(VariableTable vars) {
+    private static void assignParameterJRegs(OptFunctionNode fnCurrent) {
         // 0 is reserved for function Object 'this'
         // 1 is reserved for context
         // 2 is reserved for parentScope
         // 3 is reserved for script 'this'
         short jReg = 4;
-        int parameterCount = vars.getParameterCount();
+        int parameterCount = fnCurrent.getParameterCount();
         for (int i = 0; i < parameterCount; i++) {
-            OptLocalVariable lVar = OptLocalVariable.get(vars, i);
+            OptLocalVariable lVar = fnCurrent.getVar(i);
             lVar.assignJRegister(jReg);
             jReg += 3;  // 3 is 1 for Object parm and 2 for double parm
         }
@@ -1018,8 +1016,7 @@ public class Codegen extends Interpreter {
         classFile.startMethod(methodName, methodDesc, (short) flags);
     }
 
-    private void finishMethod(Context cx, VariableTable vars) {
-        OptLocalVariable[] array = OptLocalVariable.toArray(vars);
+    private void finishMethod(Context cx, OptLocalVariable[] array) {
         classFile.stopMethod((short)(localsMax + 1), array);
         contextLocal = -1;
     }
@@ -1155,7 +1152,7 @@ public class Codegen extends Interpreter {
                 for (int i = 0; i != N; i++) {
                     addByteCode(ByteCode.DUP);
                     push(i);
-                    push(OptLocalVariable.get(vars, i).getName());
+                    push(vars.getVariable(i));
                     addByteCode(ByteCode.AASTORE);
                 }
                 addByteCode(ByteCode.ALOAD_0);
@@ -1195,10 +1192,9 @@ public class Codegen extends Interpreter {
 
         if (tree instanceof OptFunctionNode) {
 
-            OptFunctionNode fnNode = (OptFunctionNode)tree;
-            if (fnNode.isTargetOfDirectCall()) {
+            if (fnCurrent.isTargetOfDirectCall()) {
                 setNonTrivialInit(methodName);
-                String className = fnNode.getClassName();
+                String className = fnCurrent.getClassName();
                 String fieldName = className.replace('.', '_');
                 String fieldType = 'L'+classFile.fullyQualifiedForm(className)
                                    +';';
@@ -1400,8 +1396,8 @@ public class Codegen extends Interpreter {
             // REMIND - only need to initialize the vars that don't get a value
             // before the next call and are used in the function
             short firstUndefVar = -1;
-            for (int i = 0; i < vars.size(); i++) {
-                OptLocalVariable lVar = OptLocalVariable.get(vars, i);
+            for (int i = 0; i < fnCurrent.getVarCount(); i++) {
+                OptLocalVariable lVar = fnCurrent.getVar(i);
                 if (lVar.isNumber()) {
                     lVar.assignJRegister(getNewWordPairLocal());
                     push(0.0);
@@ -1430,7 +1426,7 @@ public class Codegen extends Interpreter {
             // Indicate that we should generate debug information for
             // the variable table. (If we're generating debug info at
             // all.)
-            debugVars = vars;
+            debugVars = fnCurrent.getVarsArray();
 
             // Skip creating activation object.
             return;
@@ -1506,8 +1502,8 @@ public class Codegen extends Interpreter {
             lv.assignJRegister(variableObjectLocal);
             lv.setStartPC(classFile.getCurrentCodeOffset());
 
-            debugVars = new VariableTable();
-            debugVars.addLocal(debugVariableName, lv);
+            debugVars = new OptLocalVariable[1];
+            debugVars[0] = lv;
         }
 
         if (!inFunction) {
@@ -2399,7 +2395,7 @@ public class Codegen extends Interpreter {
         }
         String name = node.getString();
         if (hasVarsInRegs) {
-            OptLocalVariable lVar = OptLocalVariable.get(vars, name);
+            OptLocalVariable lVar = fnCurrent.getVar(name);
             if (lVar != null) {
                 if (lVar.isNumber()) {
                     push("number");
@@ -2437,7 +2433,7 @@ public class Codegen extends Interpreter {
             String routine = (isInc) ? "postIncrement" : "postDecrement";
             if (hasVarsInRegs && child.getType() == TokenStream.GETVAR) {
                 if (lVar == null)
-                    lVar = OptLocalVariable.get(vars, child.getString());
+                    lVar = fnCurrent.getVar(child.getString());
                 if (lVar.getJRegister() == -1)
                     lVar.assignJRegister(getNewWordLocal());
                 aload(lVar.getJRegister());
@@ -3201,7 +3197,7 @@ public class Codegen extends Interpreter {
     {
         // TODO: Clean up use of lVar here and in set.
         if (hasVarsInRegs && lVar == null)
-            lVar = OptLocalVariable.get(vars, name);
+            lVar = fnCurrent.getVar(name);
         if (lVar != null) {
             if (lVar.getJRegister() == -1)
                 if (lVar.isNumber())
@@ -3272,7 +3268,7 @@ public class Codegen extends Interpreter {
         OptLocalVariable lVar = (OptLocalVariable)(node.getProp(Node.VARIABLE_PROP));
         // XXX is this right? If so, clean up.
         if (hasVarsInRegs && lVar == null)
-            lVar = OptLocalVariable.get(vars, child.getString());
+            lVar = fnCurrent.getVar(child.getString());
         if (lVar != null) {
             generateCodeFromNode(child.getNext(), node, -1, -1);
             if (lVar.getJRegister() == -1) {
@@ -3768,13 +3764,14 @@ public class Codegen extends Interpreter {
     private short itsZeroArgArray;
     private short itsOneArgArray;
 
+    private OptFunctionNode fnCurrent;
     private boolean itsUseDynamicScope;
     private boolean hasVarsInRegs;
     private boolean itsForcedObjectParameters;
     private boolean trivialInit;
     private short itsLocalAllocationBase;
     private VariableTable vars;
-    private VariableTable debugVars;
+    private OptLocalVariable[] debugVars;
     private int epilogueLabel;
     private int optLevel;
 }

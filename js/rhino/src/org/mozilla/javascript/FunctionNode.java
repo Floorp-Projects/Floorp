@@ -43,7 +43,6 @@ public class FunctionNode extends Node {
     public FunctionNode(String name, Node statements) {
         super(TokenStream.FUNCTION, statements);
         functionName = name;
-        itsVariableTable = new VariableTable();
     }
 
     public String getFunctionName() {
@@ -52,6 +51,13 @@ public class FunctionNode extends Node {
 
     public VariableTable getVariableTable() {
         return itsVariableTable;
+    }
+
+    public void setVariableTable(VariableTable variableTable) {
+        // Can do it only once
+        if (variableTable == null) Context.codeBug();
+        if (itsVariableTable != null) Context.codeBug();
+        itsVariableTable = variableTable;
     }
 
     public boolean requiresActivation() {
@@ -95,6 +101,10 @@ public class FunctionNode extends Node {
 
     public void setFunctionType(int functionType) {
         itsFunctionType = functionType;
+    }
+
+    public int getParameterCount() {
+        return argNames.size();
     }
 
     protected VariableTable itsVariableTable;

@@ -193,14 +193,14 @@ public class Block {
 
     */
     void lookForVariablesAndCalls(Node n, boolean liveSet[],
-                                                VariableTable theVariables)
+                                  OptFunctionNode fn)
     {
         switch (n.getType()) {
             case TokenStream.SETVAR :
                 {
                     Node lhs = n.getFirstChild();
                     Node rhs = lhs.getNext();
-                    lookForVariablesAndCalls(rhs, liveSet, theVariables);
+                    lookForVariablesAndCalls(rhs, liveSet, fn);
                     Object theVarProp = n.getProp(Node.VARIABLE_PROP);
                     if (theVarProp != null) {
                         int theVarIndex = ((OptLocalVariable)theVarProp).getIndex();
@@ -211,12 +211,12 @@ public class Block {
             case TokenStream.CALL : {
                     Node child = n.getFirstChild();
                     while (child != null) {
-                        lookForVariablesAndCalls(child, liveSet, theVariables);
+                        lookForVariablesAndCalls(child, liveSet, fn);
                         child = child.getNext();
                     }
                     for (int i = 0; i < liveSet.length; i++) {
                         if (liveSet[i])
-                            OptLocalVariable.get(theVariables, i).markLiveAcrossCall();
+                            fn.getVar(i).markLiveAcrossCall();
                     }
                 }
                 break;
@@ -234,29 +234,29 @@ public class Block {
             default :
                 Node child = n.getFirstChild();
                 while (child != null) {
-                    lookForVariablesAndCalls(child, liveSet, theVariables);
+                    lookForVariablesAndCalls(child, liveSet, fn);
                     child = child.getNext();
                 }
                 break;
         }
     }
 
-    void markAnyTypeVariables(VariableTable theVariables)
+    void markAnyTypeVariables(OptFunctionNode fn)
     {
-        for (int i = 0; i < theVariables.size(); i++)
+        for (int i = 0; i < fn.getVarCount(); i++)
             if (itsLiveOnEntrySet.test(i))
-                OptLocalVariable.get(theVariables, i).assignType(TypeEvent.AnyType);
+                fn.getVar(i).assignType(TypeEvent.AnyType);
 
     }
 
-    void markVolatileVariables(VariableTable theVariables)
+    void markVolatileVariables(OptFunctionNode fn)
     {
-        boolean liveSet[] = new boolean[theVariables.size()];
+        boolean liveSet[] = new boolean[fn.getVarCount()];
         for (int i = 0; i < liveSet.length; i++)
             liveSet[i] = itsLiveOnEntrySet.test(i);
         for (int i = itsStartNodeIndex; i <= itsEndNodeIndex; i++) {
             Node n = itsStatementNodes[i];
-            lookForVariablesAndCalls(n, liveSet, theVariables);
+            lookForVariablesAndCalls(n, liveSet, fn);
         }
     }
 
@@ -327,9 +327,9 @@ public class Block {
         Then walk the trees looking for defs/uses of variables
         and build the def and useBeforeDef sets.
     */
-    public void initLiveOnEntrySets(VariableTable theVariables)
+    void initLiveOnEntrySets(OptFunctionNode fn)
     {
-        int listLength = theVariables.size();
+        int listLength = fn.getVarCount();
         Node lastUse[] = new Node[listLength];
         itsUseBeforeDefSet = new DataFlowBitSet(listLength);
         itsNotDefSet = new DataFlowBitSet(listLength);
@@ -630,7 +630,7 @@ public class Block {
         }
     }
 
-    public boolean doTypeFlow()
+    boolean doTypeFlow()
     {
         boolean changed = false;
 
@@ -643,15 +643,15 @@ public class Block {
         return changed;
     }
 
-    public boolean isLiveOnEntry(int index)
+    boolean isLiveOnEntry(int index)
     {
         return (itsLiveOnEntrySet != null) && (itsLiveOnEntrySet.test(index));
     }
 
-    public void printLiveOnEntrySet(PrintWriter pw, VariableTable theVariables)
+    void printLiveOnEntrySet(PrintWriter pw, OptFunctionNode fn)
     {
-        for (int i = 0; i < theVariables.size(); i++) {
-            String name = OptLocalVariable.get(theVariables, i).getName();
+        for (int i = 0; i < fn.getVarCount(); i++) {
+            String name = fn.getVar(i).getName();
             if (itsUseBeforeDefSet.test(i))
                 pw.println(name + " is used before def'd");
             if (itsNotDefSet.test(i))

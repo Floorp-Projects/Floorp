@@ -39,15 +39,26 @@ package org.mozilla.javascript.optimizer;
 import org.mozilla.javascript.*;
 import java.util.*;
 
-public class OptFunctionNode extends FunctionNode {
+class OptFunctionNode extends FunctionNode {
 
-    public OptFunctionNode(String name, Node statements, String className)
+    OptFunctionNode(String name, Node statements, String className)
     {
         super(name, statements);
         itsClassName = className;
     }
 
-    public String getDirectCallParameterSignature() {
+    public void setVariableTable(VariableTable variableTable) {
+        super.setVariableTable(variableTable);
+        int N = variableTable.size();
+        int parameterCount = variableTable.getParameterCount();
+        optVars = new OptLocalVariable[N];
+        for (int i = 0; i != N; ++i) {
+            String name = variableTable.getVariable(i);
+            optVars[i] = new OptLocalVariable(name, i < parameterCount);
+        }
+    }
+
+    String getDirectCallParameterSignature() {
         int pCount = itsVariableTable.getParameterCount();
         switch (pCount) {
             case 0: return ZERO_PARAM_SIG;
@@ -64,15 +75,15 @@ public class OptFunctionNode extends FunctionNode {
         return sb.toString();
     }
 
-    public String getClassName() {
+    String getClassName() {
         return itsClassName;
     }
 
-    public boolean isTargetOfDirectCall() {
+    boolean isTargetOfDirectCall() {
         return itsIsTargetOfDirectCall;
     }
 
-    public void addDirectCallTarget(FunctionNode target) {
+    void addDirectCallTarget(FunctionNode target) {
         if (itsDirectCallTargets == null)
             itsDirectCallTargets = new ObjArray();
         for (int i = 0; i < itsDirectCallTargets.size(); i++)   // OPT !!
@@ -81,38 +92,63 @@ public class OptFunctionNode extends FunctionNode {
         itsDirectCallTargets.add(target);
     }
 
-    public ObjArray getDirectCallTargets() {
+    ObjArray getDirectCallTargets() {
         return itsDirectCallTargets;
     }
 
-    public void setIsTargetOfDirectCall() {
+    void setIsTargetOfDirectCall() {
         itsIsTargetOfDirectCall = true;
     }
 
-    public void setParameterNumberContext(boolean b) {
+    void setParameterNumberContext(boolean b) {
         itsParameterNumberContext = b;
     }
 
-    public boolean getParameterNumberContext() {
+    boolean getParameterNumberContext() {
         return itsParameterNumberContext;
     }
 
-    public boolean containsCalls(int argCount) {
+    boolean containsCalls(int argCount) {
         if ((argCount < itsContainsCallsCount.length) && (argCount >= 0))
             return itsContainsCallsCount[argCount];
         else
             return itsContainsCalls;
     }
 
-    public void setContainsCalls(int argCount) {
+    void setContainsCalls(int argCount) {
         if (argCount < itsContainsCallsCount.length)
             itsContainsCallsCount[argCount] = true;
         itsContainsCalls = true;
     }
 
-    public void incrementLocalCount() {
+    void incrementLocalCount() {
         int localCount = getIntProp(Node.LOCALCOUNT_PROP, 0);
         putIntProp(Node.LOCALCOUNT_PROP, localCount + 1);
+    }
+
+    int getVarCount() {
+        return optVars.length;
+    }
+
+    OptLocalVariable getVar(int index) {
+        return optVars[index];
+    }
+
+    OptLocalVariable getVar(String name) {
+        int index = itsVariableTable.getOrdinal(name);
+        if (index < 0) { return null; }
+        return optVars[index];
+    }
+
+    void establishVarsIndices() {
+        int N = optVars.length;
+        for (int i = 0; i != N; i++) {
+            optVars[i].setIndex(i);
+        }
+    }
+
+    OptLocalVariable[] getVarsArray() {
+        return optVars;
     }
 
     private static final String
@@ -128,6 +164,7 @@ public class OptFunctionNode extends FunctionNode {
         TWO_PARAM_SIG  = BEFORE_DIRECT_SIG+DIRECT_ARG_SIG+DIRECT_ARG_SIG
                          +AFTER_DIRECT_SIG;
 
+    private OptLocalVariable[] optVars;
     private String itsClassName;
     private boolean itsIsTargetOfDirectCall;
     private boolean itsContainsCalls;

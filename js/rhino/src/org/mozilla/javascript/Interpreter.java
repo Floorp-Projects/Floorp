@@ -230,8 +230,7 @@ public class Interpreter {
                                    + itsData.itsMaxTryDepth
                                    + itsData.itsMaxStack;
 
-        itsData.argNames = new String[itsVariableTable.size()];
-        itsVariableTable.getAllVariables(itsData.argNames);
+        itsData.argNames = itsVariableTable.getAllVariables();
         itsData.argCount = itsVariableTable.getParameterCount();
     }
 

@@ -86,48 +86,44 @@ class Optimizer {
                 pw.println(Block.toString(theBlocks, theStatementNodes));
             }
 
-            VariableTable vars = theFunction.getVariableTable();
-            if (vars != null) {
-                OptLocalVariable.establishIndices(vars);
-                for (int i = 0; i < theStatementNodes.length; i++)
-                    replaceVariableAccess(theStatementNodes[i], vars);
+            theFunction.establishVarsIndices();
+            for (int i = 0; i < theStatementNodes.length; i++)
+                replaceVariableAccess(theStatementNodes[i], theFunction);
 
-                if(DO_CONSTANT_FOLDING){
-                    foldConstants(theFunction, null);
-                }
+            if(DO_CONSTANT_FOLDING){
+                foldConstants(theFunction, null);
+            }
 
-                reachingDefDataFlow(vars, theBlocks);
-                typeFlow(vars, theBlocks);
-                findSinglyTypedVars(vars, theBlocks);
-                localCSE(theBlocks, theFunction);
-                if (!theFunction.requiresActivation()) {
-                    /*
-                     * Now that we know which local vars are in fact always
-                     * Numbers, we re-write the tree to take advantage of
-                     * that. Any arithmetic or assignment op involving just
-                     * Number typed vars is marked so that the codegen will
-                     * generate non-object code.
-                     */
-                    parameterUsedInNumberContext = false;
-                    for (int i = 0; i < theStatementNodes.length; i++) {
-                        rewriteForNumberVariables(theStatementNodes[i]);
-                    }
-                    theFunction.setParameterNumberContext(parameterUsedInNumberContext);
-                    //System.out.println("Function " + theFunction.getFunctionName() + " has parameters in number contexts  : " + parameterUsedInNumberContext);
+            reachingDefDataFlow(theFunction, theBlocks);
+            typeFlow(theFunction, theBlocks);
+            findSinglyTypedVars(theFunction, theBlocks);
+            localCSE(theBlocks, theFunction);
+            if (!theFunction.requiresActivation()) {
+                /*
+                 * Now that we know which local vars are in fact always
+                 * Numbers, we re-write the tree to take advantage of
+                 * that. Any arithmetic or assignment op involving just
+                 * Number typed vars is marked so that the codegen will
+                 * generate non-object code.
+                 */
+                parameterUsedInNumberContext = false;
+                for (int i = 0; i < theStatementNodes.length; i++) {
+                    rewriteForNumberVariables(theStatementNodes[i]);
                 }
-                if (DEBUG_OPTIMIZER) {
-                    for (int i = 0; i < theBlocks.length; i++) {
-                        pw.println("For block " + theBlocks[i].getBlockID());
-                        theBlocks[i].printLiveOnEntrySet(pw, vars);
-                    }
-                    int N = vars.size();
-                    System.out.println("Variable Table, size = " + N);
-                    for (int i = 0; i != N; i++) {
-                        OptLocalVariable lVar = OptLocalVariable.get(vars, i);
-                        pw.println(lVar.toString());
-                    }
+                theFunction.setParameterNumberContext(parameterUsedInNumberContext);
+                //System.out.println("Function " + theFunction.getFunctionName() + " has parameters in number contexts  : " + parameterUsedInNumberContext);
+            }
+            if (DEBUG_OPTIMIZER) {
+                for (int i = 0; i < theBlocks.length; i++) {
+                    pw.println("For block " + theBlocks[i].getBlockID());
+                    theBlocks[i].printLiveOnEntrySet(pw, theFunction);
                 }
-
+                int N = theFunction.getVarCount();
+                System.out.println("Variable Table, size = " + N);
+                for (int i = 0; i != N; i++) {
+                    OptLocalVariable lVar = theFunction.getVar(i);
+                    pw.println(lVar.toString());
+                }
             }
             if (DEBUG_OPTIMIZER) pw.close();
         }
@@ -140,7 +136,7 @@ class Optimizer {
     }
 
     private static void
-    findSinglyTypedVars(VariableTable theVariables, Block theBlocks[])
+    findSinglyTypedVars(OptFunctionNode fn, Block theBlocks[])
     {
 /*
     discover the type events for each non-volatile variable (not live
@@ -158,8 +154,8 @@ class Optimizer {
                 theBlocks[i].findDefs();
             }
         }
-        for (int i = 0; i < theVariables.size(); i++) {
-            OptLocalVariable lVar = OptLocalVariable.get(theVariables, i);
+        for (int i = 0; i < fn.getVarCount(); i++) {
+            OptLocalVariable lVar = fn.getVar(i);
             if (!lVar.isParameter()) {
                 int theType = lVar.getTypeUnion();
                 if (theType == TypeEvent.NumberType) {
@@ -201,7 +197,7 @@ class Optimizer {
     }
 
     private static void
-    typeFlow(VariableTable theVariables, Block theBlocks[])
+    typeFlow(OptFunctionNode fn, Block theBlocks[])
     {
         boolean visit[] = new boolean[theBlocks.length];
         boolean doneOnce[] = new boolean[theBlocks.length];
@@ -237,7 +233,7 @@ class Optimizer {
     }
 
     private static void
-    reachingDefDataFlow(VariableTable theVariables, Block theBlocks[])
+    reachingDefDataFlow(OptFunctionNode fn, Block theBlocks[])
     {
 /*
     initialize the liveOnEntry and liveOnExit sets, then discover the variables
@@ -245,7 +241,7 @@ class Optimizer {
     (hence liveOnEntry)
 */
         for (int i = 0; i < theBlocks.length; i++) {
-            theBlocks[i].initLiveOnEntrySets(theVariables);
+            theBlocks[i].initLiveOnEntrySets(fn);
         }
 /*
     this visits every block starting at the last, re-adding the predecessors of
@@ -294,10 +290,10 @@ class Optimizer {
 */
 
         for (int i = 0; i < theBlocks.length; i++) {
-            theBlocks[i].markVolatileVariables(theVariables);
+            theBlocks[i].markVolatileVariables(fn);
         }
 
-        theBlocks[0].markAnyTypeVariables(theVariables);
+        theBlocks[0].markAnyTypeVariables(fn);
     }
 
 /*
@@ -989,23 +985,23 @@ class Optimizer {
     }
 
     private static void
-    replaceVariableAccess(Node n, VariableTable theVariables)
+    replaceVariableAccess(Node n, OptFunctionNode fn)
     {
         Node child = n.getFirstChild();
         while (child != null) {
-            replaceVariableAccess(child, theVariables);
+            replaceVariableAccess(child, fn);
             child = child.getNext();
         }
         int type = n.getType();
         if (type == TokenStream.SETVAR) {
             String name = n.getFirstChild().getString();
-            OptLocalVariable theVar = OptLocalVariable.get(theVariables, name);
+            OptLocalVariable theVar = fn.getVar(name);
             if (theVar != null) {
                 n.putProp(Node.VARIABLE_PROP, theVar);
             }
         } else if (type == TokenStream.GETVAR) {
             String name = n.getString();
-            OptLocalVariable theVar = OptLocalVariable.get(theVariables, name);
+            OptLocalVariable theVar = fn.getVar(name);
             if (theVar != null) {
                 n.putProp(Node.VARIABLE_PROP, theVar);
             }

@@ -64,8 +64,15 @@ public class NodeTransformer {
         loops = new ObjArray();
         loopEnds = new ObjArray();
         inFunction = tree.getType() == TokenStream.FUNCTION;
+        VariableTable vars = new VariableTable();
         if (!inFunction) {
-            addVariables(tree, getVariableTable(tree));
+            addVariables(tree, vars);
+            tree.putProp(Node.VARS_PROP, vars);
+        } else {
+            FunctionNode fnNode = (FunctionNode)tree;
+            addParameters(fnNode, vars);
+            addVariables(tree, vars);
+            fnNode.setVariableTable(vars);
         }
         irFactory = createIRFactory(ts, scope);
 
@@ -82,11 +89,6 @@ public class NodeTransformer {
 
               case TokenStream.FUNCTION:
                 if (node == tree) {
-                    // Add the variables to variable table, the
-                    // parameters were added earlier.
-                    VariableTable vars = getVariableTable(tree);
-                    addVariables(tree, vars);
-
                     // Add return to end if needed.
                     Node stmts = node.getLastChild();
                     Node lastStmt = stmts.getLastChild();
@@ -109,7 +111,6 @@ public class NodeTransformer {
                         //  see 10.1.6 Activation Object
                         fnNode.setCheckThis(true);
                     }
-                    addParameters(fnNode);
                     NodeTransformer inner = newInstance();
                     fnNode = (FunctionNode)
                             inner.transform(fnNode, tree, ts, scope);
@@ -435,7 +436,6 @@ public class NodeTransformer {
                     // use of "arguments" requires an activation object.
                     ((FunctionNode) tree).setRequiresActivation(true);
                 }
-                VariableTable vars = getVariableTable(tree);
                 if (vars.hasVariable(name)) {
                     if (type == TokenStream.SETNAME) {
                         node.setType(TokenStream.SETVAR);
@@ -477,7 +477,6 @@ public class NodeTransformer {
                     // Use of "arguments" requires an activation object.
                     ((FunctionNode) tree).setRequiresActivation(true);
                 }
-                VariableTable vars = getVariableTable(tree);
                 if (vars.hasVariable(name)) {
                     node.setType(TokenStream.GETVAR);
                 }
@@ -520,7 +519,7 @@ public class NodeTransformer {
             {
                 String name = cursor.getString();
                 if (fNames == null || !fNames.has(name))
-                    vars.addLocal(name, createVariableObject(name, false));
+                    vars.addLocal(name);
             }
         }
         if (inFunction) {
@@ -534,7 +533,7 @@ public class NodeTransformer {
                 // ECMA Ch. 13.  We add code to the beginning of the function
                 // to initialize a local variable of the function's name
                 // to the function value.
-                vars.addLocal(name, createVariableObject(name, false));
+                vars.addLocal(name);
                 Node block = tree.getLastChild();
                 Node setFn = new Node(TokenStream.POP,
                                 new Node(TokenStream.SETVAR,
@@ -546,20 +545,15 @@ public class NodeTransformer {
         }
     }
 
-    protected void addParameters(FunctionNode fnNode) {
-        VariableTable vars = fnNode.getVariableTable();
+    protected void addParameters(FunctionNode fnNode, VariableTable vars) {
         if (vars.getParameterCount() == 0) {
             ObjArray argNames = fnNode.argNames;
             // Add parameters
             for (int i = 0, N = argNames.size(); i != N; ++i) {
                 String arg = (String)argNames.get(i);
-                vars.addParameter(arg, createVariableObject(arg, true));
+                vars.addParameter(arg);
             }
         }
-    }
-
-    protected Object createVariableObject(String name, boolean isParameter) {
-        return name;
     }
 
     protected void visitNew(Node node, Node tree) {
@@ -679,20 +673,12 @@ public class NodeTransformer {
         return false;
     }
 
-    protected VariableTable createVariableTable() {
-        return new VariableTable();
-    }
-
     protected VariableTable getVariableTable(Node tree) {
         if (inFunction) {
             return ((FunctionNode)tree).getVariableTable();
+        } else {
+            return (VariableTable)(tree.getProp(Node.VARS_PROP));
         }
-        VariableTable result = (VariableTable)(tree.getProp(Node.VARS_PROP));
-        if (result == null) {
-            result = createVariableTable();
-            tree.putProp(Node.VARS_PROP, result);
-        }
-        return result;
     }
 
     protected void reportMessage(Context cx, String msg, Node stmt,

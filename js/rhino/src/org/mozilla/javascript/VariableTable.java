@@ -48,31 +48,25 @@ public class VariableTable {
         return varStart;
     }
 
-    public Object getVariable(int index) {
-        return itsVariables.get(index);
+    public String getVariable(int index) {
+        return (String)itsVariables.get(index);
     }
 
     public boolean hasVariable(String name) {
         return itsVariableNames.has(name);
     }
 
-    public Object getVariable(String name) {
-        int vIndex = itsVariableNames.get(name, -1);
-        if (vIndex != -1)
-            return itsVariables.get(vIndex);
-        else
-            return null;
-    }
-
     public int getOrdinal(String name) {
         return itsVariableNames.get(name, -1);
     }
 
-    public void getAllVariables(Object[] destination) {
-        itsVariables.toArray(destination);
+    public String[] getAllVariables() {
+        String[] array = new String[itsVariables.size()];
+        itsVariables.toArray(array);
+        return array;
     }
 
-    public void addParameter(String pName, Object paramObj) {
+    public void addParameter(String pName) {
         // Check addParameter is not called after addLocal
         if (varStart != itsVariables.size()) Context.codeBug();
         int pIndex = itsVariableNames.get(pName, -1);
@@ -81,18 +75,18 @@ public class VariableTable {
             Context.reportWarning(message, null, 0, null, 0);
         }
         int index = varStart++;
-        itsVariables.add(paramObj);
+        itsVariables.add(pName);
         itsVariableNames.put(pName, index);
     }
 
-    public void addLocal(String vName, Object varObj) {
+    public void addLocal(String vName) {
         int vIndex = itsVariableNames.get(vName, -1);
         if (vIndex != -1) {
             // There's already a variable or parameter with this name.
             return;
         }
         int index = itsVariables.size();
-        itsVariables.add(varObj);
+        itsVariables.add(vName);
         itsVariableNames.put(vName, index);
     }
 

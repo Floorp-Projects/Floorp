@@ -100,10 +100,6 @@ class OptTransformer extends NodeTransformer {
         return argCount;
     }
 
-    protected Object createVariableObject(String name, boolean isParameter) {
-        return new OptLocalVariable(name, isParameter);
-    }
-
     protected void visitNew(Node node, Node tree) {
         detectDirectCall(node, tree);
         super.visitNew(node, tree);
@@ -129,20 +125,20 @@ class OptTransformer extends NodeTransformer {
      *       else
      *           ScriptRuntime.Call(fn, tmp, b, c)
      */
-    void markDirectCall(Node containingTree, Node callNode, int argCount,
-                        String targetName)
+    private void markDirectCall(Node containingTree, Node callNode,
+                                int argCount, String targetName)
     {
         OptFunctionNode theFunction
                     = (OptFunctionNode)theFnClassNameList.get(targetName);
         if (theFunction != null) {
-            VariableTable varTable = theFunction.getVariableTable();
+            int N = theFunction.getParameterCount();
             // Refuse to directCall any function with more
             // than 32 parameters - prevent code explosion
             // for wacky test cases
-            if (varTable.getParameterCount() > 32)
+            if (N > 32)
                 return;
 
-            if (argCount == varTable.getParameterCount()) {
+            if (argCount == N) {
                 callNode.putProp(Node.DIRECTCALL_PROP, theFunction);
                 ((OptFunctionNode)containingTree)
                                         .addDirectCallTarget(theFunction);
@@ -180,7 +176,6 @@ class OptTransformer extends NodeTransformer {
                     */
                     theFnClassNameList.put(name, fnNode);
                 }
-                addParameters(fnNode);
             }
         }
     }

@@ -117,30 +117,6 @@ final class OptLocalVariable implements JavaVariable {
         return itsTypeUnion.getEvent();
     }
 
-    static OptLocalVariable get(VariableTable vars, int index) {
-        return (OptLocalVariable)(vars.getVariable(index));
-    }
-
-    static OptLocalVariable get(VariableTable vars, String name) {
-        return (OptLocalVariable)(vars.getVariable(name));
-    }
-
-    static void establishIndices(VariableTable vars) {
-        int N = vars.size();
-        for (int i = 0; i != N; i++) {
-            get(vars, i).itsIndex = i;
-        }
-    }
-
-    static OptLocalVariable[] toArray(VariableTable vars) {
-        OptLocalVariable[] array = null;
-        if (vars != null) {
-            array = new OptLocalVariable[vars.size()];
-            vars.getAllVariables(array);
-        }
-        return array;
-    }
-
     private String itsName;
     private boolean itsIsParameter;
     private int itsIndex = -1;
