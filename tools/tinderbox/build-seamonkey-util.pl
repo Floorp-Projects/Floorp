@@ -6,6 +6,15 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
+sub InitVars {
+  for (@ARGV) {
+    # Save DATA section for printing the example.
+    return if /^--example-config$/;
+  }
+  eval while <DATA>;  # See __END__ section below
+}
+
+
 sub GetSystemInfo {
   $OS        = `uname -s`;
   $OSVer     = `uname -r`;
@@ -93,6 +102,18 @@ sub GetSystemInfo {
       }
     }
   }
+}
+
+sub LoadConfig {
+  if (-r 'tinder-config.pl') {
+    require 'tinder-config.pl';
+  } else {
+    warn "Error: Need tinderbox config file, tinder-config.pl\n";
+    warn "       To get started, run the following,\n";
+    warn "          $0 --example-config > tinder-config.pl\n";
+    exit;
+  }
+
 }
 
 sub SetupEnv {

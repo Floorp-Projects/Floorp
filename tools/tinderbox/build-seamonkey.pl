@@ -10,7 +10,7 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = '$Revision: 1.40 $ ';
+$Version = '$Revision: 1.41 $ ';
 
 
 sub PrintUsage {
@@ -91,14 +91,6 @@ sub ParseArgs {
   &PrintUsage if $BuildTree =~ /^\s+$/i;
 }
 
-sub InitVars {
-  for (@ARGV) {
-    # Save DATA section for printing the example.
-    return if /^--example-config$/;
-  }
-  eval while <DATA>;  # See __END__ section below
-}
-
 sub PrintExampleConfig {
   print "#- tinder-config.pl - Tinderbox configuration file.\n";
   print "#-    Uncomment the variables you need to set.\n";
@@ -118,19 +110,6 @@ sub ConditionalArgs {
   $CVSCO      .= " -r $BuildTag" unless $BuildTag eq '';
 }
 
-
-
-sub LoadConfig {
-  if (-r 'tinder-config.pl') {
-    require 'tinder-config.pl';
-  } else {
-    warn "Error: Need tinderbox config file, tinder-config.pl\n";
-    warn "       To get started, run the following,\n";
-    warn "          $0 --example-config > tinder-config.pl\n";
-    exit;
-  }
-
-}
 
 sub BuildIt {
   my $EarlyExit, $LastTime, $SaveCVSCO, $comptmp;
