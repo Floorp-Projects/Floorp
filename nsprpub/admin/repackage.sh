@@ -63,7 +63,7 @@
 FROMTOP=/share/builds/components/nspr20/v4.3
 TOTOP=./v4.3
 NSPRDIR=nspr-4.3
-SOURCETAG=NSPR_4_3_RELEASE
+SOURCETAG=NSPR_4_3_RTM
 
 #
 # enumerate Unix object directories on /s/b/c
