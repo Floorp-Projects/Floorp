@@ -147,8 +147,8 @@ SSMSecurityAdvisorContext_Create(SSMControlConnection *ctrl,
     if (info) {
         ct->infoContext = info->infoContext;
         ct->resID = info->resID;
-        ct->hostname = info->hostname ? strdup(info->hostname) : NULL;
-		ct->senderAddr = info->senderAddr ? strdup(info->senderAddr) : NULL;
+        ct->hostname = info->hostname ? PL_strdup(info->hostname) : NULL;
+		ct->senderAddr = info->senderAddr ? PL_strdup(info->senderAddr) : NULL;
 		ct->encryptedP7CInfo = info->encryptedP7CInfo;
 		ct->signedP7CInfo = info->signedP7CInfo;
 		ct->decodeError = info->decodeError;
@@ -1861,7 +1861,7 @@ sa_get_algorithm_string(SEC_PKCS7ContentInfo *cinfo)
 		return PR_smprintf("%d-bits %s",
 			       key_size, alg_name);
 	else
-		return strdup(alg_name);
+		return PL_strdup(alg_name);
 }
 
 PRBool
@@ -2420,7 +2420,7 @@ SSMStatus sa_compose(SSMTextGenContext *cx)
 						for (i=0,numErrCerts=0; i<res->numRecipients; i++) {
 							cert = CERT_FindCertByEmailAddr(target->m_connection->m_certdb, res->recipients[i]);
 							if (!cert) {
-								errCerts[numErrCerts++] = strdup(res->recipients[i]);
+								errCerts[numErrCerts++] = PL_strdup(res->recipients[i]);
 								continue;
 							}
 							if (CERT_VerifyCertNow(target->m_connection->m_certdb,
@@ -2428,7 +2428,7 @@ SSMStatus sa_compose(SSMTextGenContext *cx)
 									   PR_TRUE,
 									   certUsageEmailRecipient,
 									   target->m_connection) == SECFailure) {
-								errCerts[numErrCerts++] = strdup(res->recipients[i]);
+								errCerts[numErrCerts++] = PL_strdup(res->recipients[i]);
 								continue;
 							}
 							CERT_DestroyCertificate(cert);
