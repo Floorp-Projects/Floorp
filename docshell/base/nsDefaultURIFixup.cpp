@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Adam Lock <adamlock@netscape.com>
+ *   Jeff Walden <jwalden+code@mit.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -695,44 +696,33 @@ nsresult nsDefaultURIFixup::KeywordURIFixup(const nsACString & aURIString,
     // These are keyword formatted strings
     // "what is mozilla"
     // "what is mozilla?"
-    // "?mozilla"
-    // "?What is mozilla"
+    // "docshell site:mozilla.org" - has no dot/colon in the first space-separated substring
+    // "?mozilla" - anything that begins with a question mark
+    // "?site:mozilla.org docshell"
 
     // These are not keyword formatted strings
-    // "www.blah.com" - anything with a dot in it 
-    // "nonQualifiedHost:80" - anything with a colon in it
+    // "www.blah.com" - first space-separated substring contains a dot, doesn't start with "?"
+    // "www.blah.com stuff"
+    // "nonQualifiedHost:80" - first space-separated substring contains a colon, doesn't start with "?"
+    // "nonQualifiedHost:80 args"
     // "nonQualifiedHost?"
     // "nonQualifiedHost?args"
     // "nonQualifiedHost?some args"
 
-    if(aURIString.FindChar('.') == -1 && aURIString.FindChar(':') == -1)
+    PRInt32 dotLoc   = aURIString.FindChar('.');
+    PRInt32 colonLoc = aURIString.FindChar(':');
+    PRInt32 spaceLoc = aURIString.FindChar(' ');
+    PRInt32 qMarkLoc = aURIString.FindChar('?');
+
+    if ((dotLoc == kNotFound || (spaceLoc > 0 && spaceLoc < dotLoc)) &&
+        (colonLoc == kNotFound || (spaceLoc > 0 && spaceLoc < colonLoc)) &&
+        (spaceLoc > 0 && (qMarkLoc == kNotFound || spaceLoc < qMarkLoc)) ||
+        qMarkLoc == 0)
     {
-        PRInt32 qMarkLoc = aURIString.FindChar('?');
-        PRInt32 spaceLoc = aURIString.FindChar(' ');
-
-        PRBool keyword = PR_FALSE;
-        if(qMarkLoc == 0)
-        keyword = PR_TRUE;
-        else if((spaceLoc > 0) && ((qMarkLoc == -1) || (spaceLoc < qMarkLoc)))
-        keyword = PR_TRUE;
-
-        if(keyword)
-        {
-            nsCAutoString keywordSpec("keyword:");
-            char *utf8Spec = ToNewCString(aURIString); // aURIString is UTF-8
-            if(utf8Spec)
-            {
-                char* escapedUTF8Spec = nsEscape(utf8Spec, url_Path);
-                if(escapedUTF8Spec) 
-                {
-                    keywordSpec.Append(escapedUTF8Spec);
-                    NS_NewURI(aURI, keywordSpec.get(), nsnull);
-                    nsMemory::Free(escapedUTF8Spec);
-                } // escapedUTF8Spec
-                nsMemory::Free(utf8Spec);
-            } // utf8Spec
-        } // keyword 
-    } // FindChar
+        nsCAutoString keywordSpec("keyword:");
+        keywordSpec.Append(aURIString);
+        NS_NewURI(aURI, keywordSpec);
+    }
 
     if(*aURI)
         return NS_OK;
