@@ -182,6 +182,11 @@ interface jsdIDebuggerService : nsISupports
      * If HIDE_DISABLED_FRAMES is set, this is effectively set as well.
      */
     const unsigned long MASK_TOP_FRAME_ONLY     = 0x20;
+    /**
+     * When this flag is set, object creation will not be tracked.  This will
+     * reduce the performance price you pay by enabling the debugger.
+     */
+    const unsigned long DISABLE_OBJECT_TRACE = 0x40;
     
     /**
      * Debugger service flags.
