@@ -262,6 +262,7 @@ class CAttributeToken: public CHTMLToken {
     virtual const char*   GetClassName(void);
     virtual PRInt32       GetTokenType(void);
     virtual nsString&     GetKey(void) {return mTextKey;}
+    virtual void          Sanitize(nsString& aString);
     virtual void          DebugDumpToken(ostream& out);
     virtual void          GetSource(nsString& anOutputString);
     virtual void          DebugDumpSource(ostream& out);

@@ -1047,6 +1047,27 @@ PRInt32 CAttributeToken::GetTokenType(void) {
 }
 
 /*
+ *  Removes non-alpha-non-digit characters from the end of the string
+ *  
+ *  @update harishd 07/15/99
+ *  @param  aString - The string might contain garbage at the end!!
+ *  @return  
+ */
+void CAttributeToken::Sanitize(nsString& aString) {
+  PRInt32   length=aString.Length();
+  if(length > 0) {
+    PRUnichar theChar=aString.Last();
+    while(!nsString::IsAlpha(theChar) && !nsString::IsDigit(theChar)) {
+      aString.Truncate(length-1);
+      length = aString.Length();
+      if(length <= 0) break;
+      theChar = aString.Last();
+    }
+  }
+  return;
+}
+
+/*
  *  Dump contents of this token to given output stream
  *  
  *  @update  gess 3/25/98
