@@ -419,14 +419,21 @@ nsresult nsMsgFilter::ConvertMoveToFolderValue(nsCString &moveValue)
       }
       if (NS_SUCCEEDED(rv) && localMailRoot)
       {
-        nsCOMPtr <nsIFolder> destIFolder;
-        localMailRoot->FindSubFolder (moveValue, getter_AddRefs(destIFolder));
+        nsXPIDLCString localRootURI;
+        nsCOMPtr <nsIMsgFolder> destIMsgFolder;
+        nsCOMPtr <nsIMsgFolder> localMailRootMsgFolder = do_QueryInterface(localMailRoot);
+        localMailRoot->GetURI(getter_Copies(localRootURI));
+        nsCString destFolderUri = localRootURI;
+        // need to remove ".sbd" from moveValue, and perhaps escape it.
+        moveValue.ReplaceSubstring(".sbd/", "/");
+        destFolderUri.Append('/');
+        destFolderUri.Append(moveValue);
 
-        if (destIFolder)
+        localMailRootMsgFolder->GetChildWithURI (destFolderUri, PR_TRUE, getter_AddRefs(destIMsgFolder));
+
+        if (destIMsgFolder)
         {
-          nsCOMPtr <nsIMsgFolder> msgFolder;
-          msgFolder = do_QueryInterface(destIFolder);	
-          destIFolder->GetURI(getter_Copies(folderUri));
+          destIMsgFolder->GetURI(getter_Copies(folderUri));
 		      m_action.m_folderUri.Assign(folderUri);
           moveValue.Assign(folderUri);
         }
