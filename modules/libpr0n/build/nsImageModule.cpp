@@ -129,6 +129,7 @@ static const char* gImageMimeTypes[] = {
 #endif
 #ifdef IMG_BUILD_bmp
   "image/x-icon",
+  "image/vnd.microsoft.icon",
   "image/bmp",
 #endif
 #ifdef IMG_BUILD_png
@@ -231,6 +232,10 @@ static const nsModuleComponentInfo components[] =
   { "ICO Decoder",
      NS_ICODECODER_CID,
      "@mozilla.org/image/decoder;2?type=image/x-icon",
+     nsICODecoderConstructor, },
+  { "ICO Decoder",
+     NS_ICODECODER_CID,
+     "@mozilla.org/image/decoder;2?type=image/vnd.microsoft.icon",
      nsICODecoderConstructor, },
   { "BMP Decoder",
      NS_BMPDECODER_CID,
