@@ -235,7 +235,7 @@ tab:hover:active[selected="true"] > box >  .tab-image-right-btm {
 
 .tab-bottom > .tab-image-mid {
   background: url("chrome://global/skin/tabcontrol/tab-bot-usel-mid-top.gif") repeat-x bottom;
-  background-color: #5D5F65;
+  background-color: #8B9AAD;
 }
 
 .tab-bottom > .tab-image-mid > .tab-image-mid-top {
