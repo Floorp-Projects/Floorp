@@ -198,21 +198,16 @@ nsDOMCSSDeclaration::SetProperty(const nsAReadableString& aPropertyName,
                                  const nsAReadableString& aValue, 
                                  const nsAReadableString& aPriority)
 {
-  if (!aValue.Length()) {
+  if (aValue.IsEmpty()) {
      // If the new value of the property is an empty string we remove the
      // property.
     nsAutoString tmp;
     return RemoveProperty(aPropertyName, tmp);
   }
 
-  nsAutoString declString;
-
-  declString.Assign(aPropertyName);
-  declString.Append(PRUnichar(':'));
-  declString.Append(aValue);
-  declString.Append(aPriority);
-
-  return ParseDeclaration(declString, PR_TRUE, PR_FALSE);
+  return ParseDeclaration(aPropertyName + NS_LITERAL_STRING(":") +
+                          aValue + aPriority,
+                          PR_TRUE, PR_FALSE);
 }
 
 /**
@@ -223,9 +218,14 @@ CallSetProperty(nsDOMCSSDeclaration* aDecl,
                 const nsAReadableString& aPropName,
                 const nsAReadableString& aValue)
 {
-  PRUnichar nullChar = PRUnichar('\0');
-  return aDecl->SetProperty(aPropName, aValue,
-                            nsDependentString(&nullChar, PRUint32(0)));
+  if (aValue.IsEmpty()) {
+    // If the new value of the property is an empty string we remove the
+     // property.
+    nsAutoString tmp;
+    return aDecl->RemoveProperty(aPropName, tmp);
+  }
+
+  return aDecl->ParsePropertyValue(aPropName, aValue);
 }
 
 #define IMPL_CSSPROP(attname_, propname_)                                     \

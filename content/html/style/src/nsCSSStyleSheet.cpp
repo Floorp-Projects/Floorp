@@ -2911,6 +2911,10 @@ CSSStyleSheetImpl::InsertRule(const nsAReadableString& aRule,
     result = mDocument->EndUpdate();
     NS_ENSURE_SUCCESS(result, result);
   }
+
+  if (loader) {
+    loader->RecycleParser(css);
+  }
   
   *aReturn = aIndex;
   return NS_OK;
@@ -3075,6 +3079,10 @@ CSSStyleSheetImpl::InsertRuleIntoGroup(nsAReadableString & aRule, nsICSSGroupRul
 
   result = mDocument->EndUpdate();
   NS_ENSURE_SUCCESS(result, result);
+
+  if (loader) {
+    loader->RecycleParser(css);
+  }
 
   *_retval = aIndex;
   return NS_OK;
