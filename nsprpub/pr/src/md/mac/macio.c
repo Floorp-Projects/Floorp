@@ -333,7 +333,7 @@ PRInt32 _MD_Open(const char *path, PRIntn oflag, int mode)
 #pragma unused (mode)
 
 	OSErr 				err;
- 	ParamBlockRec 		pb;
+ 	HParamBlockRec 		pb;
 	char	 			*macFileName = NULL;
 	Str255				pascalName;
 	PRInt8 				perm;
@@ -375,13 +375,13 @@ open:
 
 	pb.ioParam.ioMisc 			= NULL;
 	
-	err = PBOpenSync(&pb);
+	err = PBHOpenSync(&pb);
 	if (err == noErr)
 		return pb.ioParam.ioRefNum;
 	else if ((err != fnfErr) || ((oflag & O_CREAT) == 0))
 		goto ErrorExit;
 		
-	err = PBCreateSync(&pb);
+	err = PBHCreateSync(&pb);
 	if (err == noErr)
 		goto open;
 
