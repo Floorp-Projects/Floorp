@@ -29,7 +29,7 @@
 ##############################################################################
 
 require 'timelocal.pl';         # timestamps
-require 'ctime.pl';             # human-readable dates
+use Date::Format;               # human-readable dates
 
 $debug = 0;
 
@@ -283,11 +283,11 @@ sub parse_rcs_tree {
         $timestamp{$revision} = &timegm(@date_fields);
 
         # Compute date string;  Format it the way I like.
-        ($mon, $day, $hhmm, $year)
-            = &ctime($timestamp{$revision})
-                =~ /... (...) (..) (..:..):.. \S*(....)/;
+        
+        ($mon, $day, $hhmm, $year) = split(/#/,
+                                           time2str("%b#%e#%H:%M#%Y",
+                                                    $timestamp{$revision}));
         $revision_ctime{$revision} = "$day $mon $year $hhmm";
-#       $revision_ctime{$revision} = &ctime($timestamp{$revision});
 
         # Save age
         $revision_age{$revision} =
