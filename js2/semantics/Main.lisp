@@ -21,7 +21,7 @@
 
 
 (defparameter *semantic-engine-filenames*
-  '("Utilities" "Markup" "RTF" "HTML" "GrammarSymbol" "Grammar" "Parser" "Metaparser" "Lexer" "Calculus" "CalculusMarkup" "JS14" "ECMA Lexer" "ECMA Grammar"))
+  '("Utilities" "Markup" "RTF" "HTML" "GrammarSymbol" "Grammar" "Parser" "Metaparser" "Lexer" "Calculus" "CalculusMarkup" "JS20" "ECMALexer" "ECMAGrammar"))
 
 (defparameter *semantic-engine-directory*
   (make-pathname 

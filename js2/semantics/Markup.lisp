@@ -454,6 +454,26 @@
 
 
 ;;; ------------------------------------------------------------------------------------------------------
+;;; IDENTIFIER ABBREVIATIONS
+
+; Return a symbol with the same package as the given symbol but whose name omits everything
+; after the first underscore, if any, in the given symbol's name.  The returned symbol is eq
+; to the given symbol if its name contains no underscores.
+(defun symbol-to-abbreviation (symbol)
+  (let* ((name (symbol-name symbol))
+         (pos (position #\_ name)))
+    (if pos
+      (intern (subseq name 0 pos) (symbol-package symbol))
+      symbol)))
+
+
+; A caching version of symbol-to-abbreviation.
+(defun symbol-abbreviation (symbol)
+  (or (get symbol :abbreviation)
+      (setf (get symbol :abbreviation) (symbol-to-abbreviation symbol))))
+
+
+;;; ------------------------------------------------------------------------------------------------------
 ;;; MARKUP FOR IDENTIFIERS
 
 ; Return string converted from dash-separated-uppercase-words to mixed case,

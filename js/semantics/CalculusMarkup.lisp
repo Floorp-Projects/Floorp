@@ -54,6 +54,7 @@
 (defstruct depict-env
   (grammar-info nil :type (or null grammar-info))                ;The current grammar-info or nil if none
   (seen-nonterminals nil :type (or null hash-table))             ;Hash table (nonterminal -> t) of nonterminals already depicted
+  (seen-grammar-arguments nil :type (or null hash-table))        ;Hash table (grammar-argument -> t) of grammar-arguments already depicted
   (mode nil :type (member nil :syntax :semantics))               ;Current heading (:syntax or :semantics) or nil if none
   (pending-actions-reverse nil :type list))                      ;Reverse-order list of closures of actions pending for a %print-actions
 
@@ -777,17 +778,21 @@
 ; (grammar-argument <argument> <attribute> <attribute> ... <attribute>)
 (defun depict-grammar-argument (markup-stream world depict-env argument &rest attributes)
   (declare (ignore world))
-  (depict-mode markup-stream depict-env :syntax)
-  (depict-paragraph (markup-stream :grammar-argument)
-    (depict-nonterminal-argument markup-stream argument)
-    (depict markup-stream " " :member-10 " ")
-    (depict-list markup-stream
-                 #'(lambda (markup-stream attribute)
-                     (depict-nonterminal-attribute markup-stream attribute))
-                 attributes
-                 :prefix "{"
-                 :suffix "}"
-                 :separator ", ")))
+  (let ((seen-grammar-arguments (depict-env-seen-grammar-arguments depict-env))
+        (abbreviated-argument (symbol-abbreviation argument)))
+    (unless (gethash abbreviated-argument seen-grammar-arguments)
+      (depict-mode markup-stream depict-env :syntax)
+      (depict-paragraph (markup-stream :grammar-argument)
+        (depict-nonterminal-argument markup-stream argument)
+        (depict markup-stream " " :member-10 " ")
+        (depict-list markup-stream
+                     #'(lambda (markup-stream attribute)
+                         (depict-nonterminal-attribute markup-stream attribute))
+                     attributes
+                     :prefix "{"
+                     :suffix "}"
+                     :separator ", "))
+      (setf (gethash abbreviated-argument seen-grammar-arguments) t))))
 
 
 ; (%rule <general-nonterminal-source>)
@@ -891,7 +896,8 @@
     (unless grammar-info
       (error "Unknown grammar ~A" name))
     (setf (depict-env-grammar-info depict-env) grammar-info)
-    (setf (depict-env-seen-nonterminals depict-env) (make-hash-table :test #'eq))))
+    (setf (depict-env-seen-nonterminals depict-env) (make-hash-table :test #'eq))
+    (setf (depict-env-seen-grammar-arguments depict-env) (make-hash-table :test #'eq))))
 
 
 ; (clear-grammar)
@@ -909,7 +915,8 @@
         (when missed-nonterminals
           (warn "Nonterminals not printed: ~S" missed-nonterminals)))
       (setf (depict-env-grammar-info depict-env) nil)
-      (setf (depict-env-seen-nonterminals depict-env) nil))))
+      (setf (depict-env-seen-nonterminals depict-env) nil)
+      (setf (depict-env-seen-grammar-arguments depict-env) nil))))
 
 
 (defmacro depict-delayed-action ((markup-stream depict-env) &body depictor)
