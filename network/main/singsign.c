@@ -1960,7 +1960,7 @@ SI_RememberSignonData
             }
         }
 
-        if (si_OkToSave(URLName, /* urlname */
+        if ((j<submit.value_cnt) && si_OkToSave(URLName, /* urlname */
                 ((char **)submit.value_array)[j] /* username */)) {
             si_PutData(URLName, &submit, TRUE);
         }
