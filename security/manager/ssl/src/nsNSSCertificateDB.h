@@ -68,5 +68,11 @@ private:
                                 nsIInterfaceRequestor *ctx);
 };
 
+#define NS_X509CERTDB_CID { /* fb0bbc5c-452e-4783-b32c-80124693d871 */ \
+    0xfb0bbc5c,                                                        \
+    0x452e,                                                            \
+    0x4783,                                                            \
+    {0xb3, 0x2c, 0x80, 0x12, 0x46, 0x93, 0xd8, 0x71}                   \
+  }
 
 #endif
