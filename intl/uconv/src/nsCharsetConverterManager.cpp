@@ -252,18 +252,11 @@ nsresult nsCharsetConverterManager::LoadExtensibleBundle(
                                     nsIStringBundle ** aResult)
 {
   nsresult res = NS_OK;
-  nsCOMPtr<nsILocale> locale = nsnull;
 
   NS_WITH_SERVICE(nsIStringBundleService, sbServ, kStringBundleServiceCID, &res);
   if (NS_FAILED(res)) return res;
 
-  NS_WITH_SERVICE(nsILocaleService, localeServ, kLocaleServiceCID, &res);
-  if (NS_FAILED(res)) return res;
-
-  res = localeServ->GetApplicationLocale(getter_AddRefs(locale));
-  if (NS_FAILED(res)) return res;
-
-  res = sbServ->CreateExtensibleBundle(aRegistryKey, locale, aResult);
+  res = sbServ->CreateExtensibleBundle(aRegistryKey, aResult);
   if (NS_FAILED(res)) return res;
 
   return res;
