@@ -1112,6 +1112,7 @@ Usage(char *progName)
     FPS "\t%s -L [-n cert-name] [-X] [-d certdir] [-P dbprefix] [-r] [-a]\n", progName);
     FPS "\t%s -M -n cert-name -t trustargs [-d certdir] [-P dbprefix]\n",
 	progName);
+    FPS "\t%s -O -n cert-name [-X] [-d certdir] [-P dbprefix]\n", progName);
     FPS "\t%s -R -s subj -o cert-request-file [-d certdir] [-P dbprefix] [-p phone] [-a]\n"
 	"\t\t [-k key-type] [-h token-name] [-f pwfile] [-g key-size]\n",
 	progName);
@@ -1299,6 +1300,19 @@ static void LongUsage(char *progName)
 	"   -P dbprefix");
     FPS "%-20s Token to reset (default is internal)\n"
 	"   -h token-name");
+    FPS "\n");
+
+    FPS "\n");
+    FPS "%-15s Print the chain of a certificate\n",
+	"-O");
+    FPS "%-20s The nickname of the cert to modify\n",
+	"   -n cert-name");
+    FPS "%-20s Cert database directory (default is ~/.netscape)\n",
+	"   -d certdir");
+    FPS "%-20s Cert & Key database prefix\n",
+	"   -P dbprefix");
+    FPS "%-20s force the database to open R/W\n",
+	"   -X");
     FPS "\n");
 
     FPS "%-15s Generate a certificate request (stdout)\n",
