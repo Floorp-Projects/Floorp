@@ -43,7 +43,7 @@
 #+mcl (dolist (indent-spec '((? . 1) (apply . 1) (funcall . 1) (declare-action . 5) (production . 3) (rule . 2) (function . 2)
                              (define . 2) (deftag . 1) (defrecord . 1) (deftype . 1) (tag . 1) (%text . 1)
                              (var . 2) (const . 2) (rwhen . 1) (while . 1) (for-each . 2)
-                             (set-field . 1) (:narrow . 1) (:select . 1)
+                             (new . 1) (set-field . 1) (:narrow . 1) (:select . 1)
                              (let-local-var . 2)))
         (pushnew indent-spec ccl:*fred-special-indent-alist* :test #'equal))
 
@@ -2234,7 +2234,7 @@
   (unless (identifier? name)
     (error "~S should be an identifier" name))
   (let ((symbol (world-intern world name)))
-    (when (get-properties (symbol-plist symbol) '(:command :statement :special-form :condition :primitive :type-constructor))
+    (when (get-properties (symbol-plist symbol) '(:special-form :condition :primitive :type-constructor))
       (error "~A is reserved" symbol))
     symbol))
 
@@ -3344,6 +3344,10 @@
       (make-vector-expr world special-form element-type element-codes element-annotated-exprs))))
 
 
+; Same as nth, except that ensures that the element is actually present.
+(defun checked-nth (list n)
+  (car (non-empty-vector (nthcdr n list) "nth")))
+
 ; (nth <vector-expr> <n-expr>)
 ; Returns the nth element of the vector.  Throws an error if the vector's length is less than n.
 (defun scan-nth (world type-env special-form vector-expr n-expr)
@@ -3355,9 +3359,7 @@
          `(char ,vector-code ,n-code))
         ((eql n-code 0)
          `(car (non-empty-vector ,vector-code "first")))
-        (t (let ((n (gen-local-var n-code)))
-             (let-local-var n n-code
-               `(car (non-empty-vector (nthcdr ,n ,vector-code) "nth"))))))
+        (t `(checked-nth ,vector-code ,n-code)))
        (vector-element-type vector-type)
        (list 'expr-annotation:special-form special-form vector-annotated-expr n-annotated-expr)))))
 
@@ -3546,14 +3548,17 @@
 ; (set+ <set-expr> <set-expr>)
 ; Returns the union of the two sets, which must have the same kind.
 (defun scan-set+ (world type-env special-form set1-expr set2-expr)
-  (multiple-value-bind (set1-code set-type set1-annotated-expr) (scan-set-value world type-env set1-expr)
-    (multiple-value-bind (set2-code set2-annotated-expr) (scan-typed-value world type-env set2-expr set-type)
-      (values
-       (ecase (type-kind set-type)
-         (:list-set (list* 'union set1-code set2-code (element-test world (set-element-type set-type))))
-         (:range-set (list 'intset-union set1-code set2-code)))
-       set-type
-       (list 'expr-annotation:special-form special-form set1-annotated-expr set2-annotated-expr)))))
+  (multiple-value-bind (set1-code set1-type set1-annotated-expr) (scan-set-value world type-env set1-expr)
+    (multiple-value-bind (set2-code set2-type set2-annotated-expr) (scan-set-value world type-env set2-expr)
+      (let* ((set-type (type-union world set1-type set2-type))
+             (set1-coerced-code (widening-coercion-code world set-type set1-type set1-code set1-expr))
+             (set2-coerced-code (widening-coercion-code world set-type set2-type set2-code set2-expr)))
+        (values
+         (ecase (type-kind set-type)
+           (:list-set (list* 'union set1-coerced-code set2-coerced-code (element-test world (set-element-type set-type))))
+           (:range-set (list 'intset-union set1-coerced-code set2-coerced-code)))
+         set-type
+         (list 'expr-annotation:special-form special-form set1-annotated-expr set2-annotated-expr))))))
 
 
 ; (set- <set-expr> <set-expr>)
@@ -3620,7 +3625,7 @@
     (when (oddp set)
       (return-from bit-set-elt-of keyword))
     (setq set (ash set -1)))
-  (error "bit-set-elt-of called on empty set"))
+  (error "elt-of called on empty set"))
 
 ; (elt-of <elt-expr>)
 ; Returns any element of <set-expr>, which must be a nonempty set.
@@ -3632,6 +3637,35 @@
          (:list-set (list 'elt-of set-code))
          (:range-set (range-set-out-converter-expr elt-type (list 'range-set-elt-of set-code)))
          ((:bit-set :restricted-set) (list 'bit-set-elt-of set-code (list 'quote (set-type-keywords set-type)))))
+       elt-type
+       (list 'expr-annotation:special-form special-form set-annotated-expr)))))
+
+
+(defun unique-elt-of (set)
+  (if (and set (endp (cdr set)))
+    (car set)
+    (error "unique-elt-of called on a set with other than one element")))
+
+(defun range-set-unique-elt-of (set)
+  (unless (= (intset-length set) 1)
+    (error "unique-elt-of called on a set with other than one element"))
+  (intset-min set))
+
+(defun bit-set-unique-elt-of (set keywords)
+  (unless (= (logcount set) 1)
+    (error "unique-elt-of called on a set with other than one element"))
+  (assert-non-null (nth (integer-length set) keywords)))
+
+; (unique-elt-of <elt-expr>)
+; Returns any element of <set-expr>, which must be a nonempty set.
+(defun scan-unique-elt-of (world type-env special-form set-expr)
+  (multiple-value-bind (set-code set-type set-annotated-expr) (scan-set-value world type-env set-expr)
+    (let ((elt-type (set-element-type set-type)))
+      (values
+       (ecase (type-kind set-type)
+         (:list-set (list 'unique-elt-of set-code))
+         (:range-set (range-set-out-converter-expr elt-type (list 'range-set-unique-elt-of set-code)))
+         ((:bit-set :restricted-set) (list 'bit-set-unique-elt-of set-code (list 'quote (set-type-keywords set-type)))))
        elt-type
        (list 'expr-annotation:special-form special-form set-annotated-expr)))))
 
@@ -4943,6 +4977,7 @@
      (set-in scan-set-in depict-set-in)
      (set-not-in scan-set-not-in depict-set-in)
      (elt-of scan-elt-of depict-elt-of)
+     (unique-elt-of scan-unique-elt-of depict-unique-elt-of)
      
      ;;Vectors or Sets
      (empty scan-empty depict-empty)
@@ -5035,14 +5070,14 @@
 (def-partial-order-element *primitive-level* %primary%)                                          ;id, constant, (e), tag<...>, |e|, action
 (def-partial-order-element *primitive-level* %suffix% %primary%)                                 ;f(...), a[i], a[i...j], a[i<-v], a.l
 (def-partial-order-element *primitive-level* %prefix% %primary%)                                 ;-e, new tag<...>, a^b
-(def-partial-order-element *primitive-level* %min-max% %prefix%)                                 ;min, max, elt-of
+(def-partial-order-element *primitive-level* %min-max% %prefix%)                                 ;min, max
 (def-partial-order-element *primitive-level* %unary% %suffix% %prefix%)                          ;
 (def-partial-order-element *primitive-level* %not% %unary%)                                      ;not
 (def-partial-order-element *primitive-level* %factor% %unary%)                                   ;/, *, intersection
 (def-partial-order-element *primitive-level* %term% %factor%)                                    ;+, -, append, union, set difference
 (def-partial-order-element *primitive-level* %relational% %term% %min-max% %not%)                ;<, <=, >, >=, =, /=, is, member
 (def-partial-order-element *primitive-level* %logical% %relational%)                             ;and, or, xor
-(def-partial-order-element *primitive-level* %expr% %logical%)                                   ;?:, some, every
+(def-partial-order-element *primitive-level* %expr% %logical%)                                   ;?:, some, every, elt-of, unique-elt-of
 
 
 ; Return the tail end of the lambda list for make-primitive.  The returned list always starts with
