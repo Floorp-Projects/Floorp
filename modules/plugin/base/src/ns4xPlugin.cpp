@@ -112,18 +112,12 @@ static NS_DEFINE_IID(kIPluginStreamListenerIID, NS_IPLUGINSTREAMLISTENER_IID);
 
 ns4xPlugin::ns4xPlugin(NPPluginFuncs* callbacks, NP_PLUGINSHUTDOWN aShutdown, nsIServiceManager* serviceMgr)
 {
-  NS_INIT_REFCNT();
+	NS_INIT_REFCNT();
 
-  memcpy((void*) &fCallbacks, (void*) callbacks, sizeof(fCallbacks));
-  fShutdownEntry = aShutdown;
+	memcpy((void*) &fCallbacks, (void*) callbacks, sizeof(fCallbacks));
+	fShutdownEntry = aShutdown;
 
-  mServiceMgr = serviceMgr;
-
-  if(serviceMgr != nsnull)
-  {
-    if (nsnull == mMalloc)
-      serviceMgr->GetService(kMemoryCID, kIMemoryIID, (nsISupports**)&mMalloc);
-  }
+	mServiceMgr = serviceMgr;
 }
 
 
@@ -195,7 +189,13 @@ nsresult
 ns4xPlugin::CreatePlugin(nsPluginTag* pluginTag, nsIServiceManager* serviceMgr)
 {
     CheckClassInitialized();
-    
+
+	// set up the MemAllocator service now because it might be used by the plugin
+	if (serviceMgr != nsnull) {
+		if (nsnull == mMalloc)
+			serviceMgr->GetService(kMemoryCID, kIMemoryIID, (nsISupports**)&mMalloc);
+	}
+
 #ifdef NS_DEBUG
     printf("debug: edburns ns4xPlugin::CreatePlugin\n");
 #endif
