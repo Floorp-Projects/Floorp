@@ -97,6 +97,7 @@ Widget CreateSeparator(Widget aParent)
   Widget widget = XtVaCreateManagedWidget("__sep", xmSeparatorGadgetClass,
                                           aParent,
                                           NULL);
+  return widget;
 }
 
 typedef struct _menuBtns {
