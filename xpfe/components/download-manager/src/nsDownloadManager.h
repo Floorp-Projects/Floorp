@@ -78,6 +78,7 @@ public:
 protected:
   nsresult GetDownloadsContainer(nsIRDFContainer** aResult);
   nsresult GetProfileDownloadsFileURL(char** aDownloadsFileURL);
+  nsresult GetInternalListener(nsIDownloadProgressListener** aInternalListener);
   nsresult AssertProgressInfo();
   nsresult NotifyDownloadEnded(const char* aTargetPath);
   PRBool MustUpdateUI() { if (mDocument) return PR_TRUE; return PR_FALSE; }
@@ -100,14 +101,11 @@ public:
   NS_DECL_ISUPPORTS
 
   DownloadItem();
-  DownloadItem(const PRUnichar* aPrettyName, nsILocalFile* aTarget, nsIURI* aSource);
   virtual ~DownloadItem();
 
 protected:
   nsresult UpdateProgressInfo();
   nsresult SetDownloadManager(nsDownloadManager* aDownloadManager);
-  nsresult SetInternalListener(nsIDownloadProgressListener* aInternalListener);
-  nsresult GetInternalListener(nsIDownloadProgressListener** aInternalListener);
   nsresult SetDialogListener(nsIWebProgressListener* aInternalListener);
   nsresult GetDialogListener(nsIWebProgressListener** aInternalListener);
 private:
@@ -119,16 +117,13 @@ private:
   nsCOMPtr<nsILocalFile> mTarget;
   nsCOMPtr<nsIURI> mSource;
   nsCOMPtr<nsIWebProgressListener> mListener;
-  nsCOMPtr<nsIDownloadProgressListener> mInternalListener;
   nsCOMPtr<nsIWebProgressListener> mDialogListener;
   nsCOMPtr<nsIWebBrowserPersist> mPersist;
   nsCOMPtr<nsIRequest> mRequest;
   nsCOMPtr<nsIObserver> mObserver;
 
-  PRInt32 mCurTotalProgress;
-  PRInt32 mMaxTotalProgress;
   PRInt32 mPercentComplete;
-  PRInt64 mTimeStarted;
+  PRInt64 mStartTime;
 
   friend class nsDownloadManager;
 };

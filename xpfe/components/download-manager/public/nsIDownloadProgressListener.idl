@@ -37,17 +37,55 @@
  * ***** END LICENSE BLOCK ***** */
 
 /* A minimally extended progress listener used by download manager
- * to update its default UI.
+ * to update its default UI.  See nsIWebProgressListener for documentation,
+ * and use its constants.  This isn't pretty, but the alternative is having
+ * this extend nsIWebProgressListener and adding an |item| attribute, which
+ * would mean a separate nsIDownloadProgressListener for every nsIDownloadItem,
+ * which is a waste...
  */
 
 #include "nsISupports.idl"
-#include "nsIWebProgressListener.idl"
 
+interface nsIWebProgress;
+interface nsIRequest;
+interface nsIURI;
 interface nsIDownloadItem;
 interface nsIDOMDocument;
 
 [scriptable, uuid(09cddbea-1dd2-11b2-aa15-c41ffea19d79)]
-interface nsIDownloadProgressListener : nsIWebProgressListener {
-  attribute nsIDownloadItem downloadItem;
+interface nsIDownloadProgressListener : nsISupports {
+  
   attribute nsIDOMDocument document;
+
+
+  void onStateChange(in nsIWebProgress aWebProgress,
+                     in nsIRequest aRequest,
+                     in long aStateFlags,
+                     in unsigned long aStatus,
+                     in nsIDownloadItem aDownloadItem);
+
+  void onProgressChange(in nsIWebProgress aWebProgress,
+                        in nsIRequest aRequest,
+                        in long aCurSelfProgress,
+                        in long aMaxSelfProgress,
+                        in long aCurTotalProgress,
+                        in long aMaxTotalProgress,
+                        in nsIDownloadItem aDownloadItem);
+
+  void onStatusChange(in nsIWebProgress aWebProgress,
+                      in nsIRequest aRequest,
+                      in nsresult aStatus,
+                      in wstring aMessage,
+                      in nsIDownloadItem aDownloadItem);
+
+  void onLocationChange(in nsIWebProgress aWebProgress,
+                        in nsIRequest aRequest,
+                        in nsIURI location,
+                        in nsIDownloadItem aDownloadItem);
+
+  void onSecurityChange(in nsIWebProgress aWebProgress,
+                        in nsIRequest aRequest,
+                        in long state,
+                        in nsIDownloadItem aDownloadItem);
+
 };

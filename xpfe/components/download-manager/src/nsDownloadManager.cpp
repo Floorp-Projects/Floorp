@@ -75,7 +75,7 @@ nsIRDFService* gRDFService;
 
 NS_IMPL_ISUPPORTS3(nsDownloadManager, nsIDownloadManager, nsIRDFDataSource, nsIRDFRemoteDataSource)
 
-nsDownloadManager::nsDownloadManager() : mCurrDownloadItems(nsnull) 
+nsDownloadManager::nsDownloadManager() : mCurrDownloadItems(nsnull)
 {
   NS_INIT_ISUPPORTS();
   NS_INIT_REFCNT();
@@ -130,6 +130,9 @@ nsDownloadManager::Init()
   if (NS_FAILED(rv)) return rv;
 
   rv = remote->Refresh(PR_FALSE);
+  if (NS_FAILED(rv)) return rv;
+
+  mListener = do_CreateInstance("@mozilla.org/download-manager/listener;1", &rv);
   if (NS_FAILED(rv)) return rv;
 
   return gRDFService->RegisterDataSource(this, PR_FALSE);
@@ -211,6 +214,14 @@ nsDownloadManager::GetDownloadsContainer(nsIRDFContainer** aResult)
   NS_IF_ADDREF(*aResult);
 
   return rv;
+}
+
+nsresult
+nsDownloadManager::GetInternalListener(nsIDownloadProgressListener** aInternalListener)
+{
+  *aInternalListener = mListener;
+  NS_IF_ADDREF(*aInternalListener);
+  return NS_OK;
 }
 
 nsresult
@@ -338,14 +349,6 @@ nsDownloadManager::AddDownload(nsIDownloadItem* aDownloadItem)
   // NC:URL
   nsXPIDLCString spec;
   source->GetSpec(getter_Copies(spec));
-
-  nsCOMPtr<nsIDownloadProgressListener> listener(do_CreateInstance("@mozilla.org/download-manager/listener;1", &rv));
-  if (NS_FAILED(rv)) return rv;
-  item->SetInternalListener(listener);
-  if (mDocument) {
-    listener->SetDocument(mDocument);
-    listener->SetDownloadItem(aDownloadItem);
-  }
 
   nsCOMPtr<nsIRDFResource> urlResource;
   gRDFService->GetResource(spec, getter_AddRefs(urlResource));
@@ -482,15 +485,32 @@ nsDownloadManager::OpenProgressDialogFor(const char* aKey, nsIDOMWindow* aParent
   nsCStringKey key(aKey);
   if (!mCurrDownloadItems->Exists(&key))
     return NS_ERROR_FAILURE;
-    
-  DownloadItem* item = NS_STATIC_CAST(DownloadItem*, mCurrDownloadItems->Get(&key));
-  if (!item) return NS_ERROR_FAILURE;
 
+  nsIDownloadItem* item = NS_STATIC_CAST(nsIDownloadItem*, mCurrDownloadItems->Get(&key));
   nsCOMPtr<nsIProgressDialog> dialog(do_CreateInstance("@mozilla.org/progressdialog;1", &rv));
   if (NS_FAILED(rv)) return rv;
   
+  // now give the dialog the necessary context
+  
+  // start time...
+  PRInt64 startTime = 0;
+  item->GetStartTime(&startTime);
+  if (startTime)
+    dialog->SetStartTime(startTime);
+  
+  // source...
+  nsCOMPtr<nsIURI> uri;
+  item->GetSource(getter_AddRefs(uri));
+  dialog->SetSource(uri);
+  
+  // target...
+  nsCOMPtr<nsILocalFile> target;
+  item->GetTarget(getter_AddRefs(target));
+  dialog->SetTarget(target);
+
+  // now set the listener so we forward notifications to the dialog
   nsCOMPtr<nsIWebProgressListener> listener = do_QueryInterface(dialog);
-  item->SetDialogListener(listener);
+  (NS_STATIC_CAST(DownloadItem*, item))->SetDialogListener(listener);
   
   return dialog->Open(aParent, nsnull);
 }
@@ -499,6 +519,7 @@ NS_IMETHODIMP
 nsDownloadManager::OnClose()
 {
   mDocument = nsnull;
+  mListener->SetDocument(nsnull);
   return NS_OK;
 }
 
@@ -522,44 +543,8 @@ nsDownloadManager::HandleEvent(nsIDOMEvent* aEvent)
 
   nsCOMPtr<nsIDOMNode> targetNode(do_QueryInterface(target));
   mDocument = do_QueryInterface(targetNode);
-  if (!mDocument) return NS_ERROR_FAILURE;
+  mListener->SetDocument(mDocument);
 
-  // get the downloads container
-  nsCOMPtr<nsIRDFContainer> downloads;
-  rv = GetDownloadsContainer(getter_AddRefs(downloads));
-  if (NS_FAILED(rv)) return rv;
-
-  // get the container's elements (nsIRDFResource's)
-  nsCOMPtr<nsISimpleEnumerator> items;
-  rv = downloads->GetElements(getter_AddRefs(items));
-  if (NS_FAILED(rv)) return rv;
-
-  if (!mCurrDownloadItems)
-    mCurrDownloadItems = new nsHashtable();
-
-  nsCOMPtr<nsISupports> supports;
-  nsCOMPtr<nsIDownloadProgressListener> listener;
-  nsCOMPtr<nsIRDFResource> res;
-  char* id;
-
-  PRBool moreElements;
-  items->HasMoreElements(&moreElements);
-  for( ; moreElements; items->HasMoreElements(&moreElements)) {
-    items->GetNext(getter_AddRefs(supports));
-    res = do_QueryInterface(supports);
-    res->GetValue(&id);
-    nsCStringKey key(id);
-    if (mCurrDownloadItems->Exists(&key)) {
-      DownloadItem* downloadItem = NS_STATIC_CAST(DownloadItem*, mCurrDownloadItems->Get(&key));
-      if (!downloadItem) continue;
-
-      downloadItem->GetInternalListener(getter_AddRefs(listener));
-      if (listener) {
-        listener->SetDocument(mDocument);
-        listener->SetDownloadItem(NS_STATIC_CAST(nsIDownloadItem*, downloadItem));
-      }
-    }
-  }
   return NS_OK;
 }
 
@@ -766,15 +751,7 @@ nsDownloadManager::Flush()
 
 NS_IMPL_ISUPPORTS2(DownloadItem, nsIWebProgressListener, nsIDownloadItem)
 
-DownloadItem::DownloadItem()
-{
-  NS_INIT_ISUPPORTS();
-  NS_INIT_REFCNT();
-}
-
-// for convenience
-DownloadItem::DownloadItem(const PRUnichar* aPrettyName, nsILocalFile* aTarget, nsIURI* aSource)
-:mPrettyName(aPrettyName), mTarget(aTarget), mSource(aSource)
+DownloadItem::DownloadItem():mStartTime(0)
 {
   NS_INIT_ISUPPORTS();
   NS_INIT_REFCNT();
@@ -834,21 +811,6 @@ DownloadItem::GetDialogListener(nsIWebProgressListener** aDialogListener)
   return NS_OK;
 }
 
-nsresult
-DownloadItem::SetInternalListener(nsIDownloadProgressListener* aInternalListener)
-{
-  mInternalListener = aInternalListener;
-  return NS_OK;
-}
-
-nsresult
-DownloadItem::GetInternalListener(nsIDownloadProgressListener** aInternalListener)
-{
-  *aInternalListener = mInternalListener;
-  NS_IF_ADDREF(*aInternalListener);
-  return NS_OK;
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 // nsIWebProgressListener
 
@@ -867,9 +829,13 @@ DownloadItem::OnProgressChange(nsIWebProgress *aWebProgress,
                                 aCurTotalProgress, aMaxTotalProgress);
   }
 
-  if (mDownloadManager->MustUpdateUI() && mInternalListener) {
-    mInternalListener->OnProgressChange(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress,
-                                        aCurTotalProgress, aMaxTotalProgress);
+  if (mDownloadManager->MustUpdateUI()) {
+    nsCOMPtr<nsIDownloadProgressListener> internalListener;
+    mDownloadManager->GetInternalListener(getter_AddRefs(internalListener));
+    if (internalListener) {
+      internalListener->OnProgressChange(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress,
+                                          aCurTotalProgress, aMaxTotalProgress, this);
+    }
   }
 
   if (mDialogListener) {
@@ -887,8 +853,12 @@ DownloadItem::OnLocationChange(nsIWebProgress *aWebProgress,
   if (mListener)
     mListener->OnLocationChange(aWebProgress, aRequest, aLocation);
 
-  if (mDownloadManager->MustUpdateUI() && mInternalListener)
-    mInternalListener->OnLocationChange(aWebProgress, aRequest, aLocation);
+  if (mDownloadManager->MustUpdateUI()) {
+    nsCOMPtr<nsIDownloadProgressListener> internalListener;
+    mDownloadManager->GetInternalListener(getter_AddRefs(internalListener));
+    if (internalListener)
+      internalListener->OnLocationChange(aWebProgress, aRequest, aLocation, this);
+  }
 
   if (mDialogListener)
     mDialogListener->OnLocationChange(aWebProgress, aRequest, aLocation);
@@ -904,8 +874,12 @@ DownloadItem::OnStatusChange(nsIWebProgress *aWebProgress,
   if (mListener)
     mListener->OnStatusChange(aWebProgress, aRequest, aStatus, aMessage);
 
-  if (mDownloadManager->MustUpdateUI() && mInternalListener)
-    mInternalListener->OnStatusChange(aWebProgress, aRequest, aStatus, aMessage);
+  if (mDownloadManager->MustUpdateUI()) {
+    nsCOMPtr<nsIDownloadProgressListener> internalListener;
+    mDownloadManager->GetInternalListener(getter_AddRefs(internalListener));
+    if (internalListener)
+      internalListener->OnStatusChange(aWebProgress, aRequest, aStatus, aMessage, this);
+  }
 
   if (mDialogListener)
     mDialogListener->OnStatusChange(aWebProgress, aRequest, aStatus, aMessage);
@@ -919,7 +893,7 @@ DownloadItem::OnStateChange(nsIWebProgress* aWebProgress,
                             PRUint32 aStatus)
 {
   if (aStateFlags & STATE_START) {
-    mTimeStarted = PR_Now();
+    mStartTime = PR_Now();
     mRequest = aRequest;
   }
   else if (aStateFlags & STATE_STOP) {    
@@ -931,8 +905,12 @@ DownloadItem::OnStateChange(nsIWebProgress* aWebProgress,
   if (mListener)
     mListener->OnStateChange(aWebProgress, aRequest, aStateFlags, aStatus);
 
-  if (mDownloadManager->MustUpdateUI() && mInternalListener)
-    mInternalListener->OnStateChange(aWebProgress, aRequest, aStateFlags, aStatus);
+  if (mDownloadManager->MustUpdateUI()) {
+    nsCOMPtr<nsIDownloadProgressListener> internalListener;
+    mDownloadManager->GetInternalListener(getter_AddRefs(internalListener));
+    if (internalListener)
+      internalListener->OnStateChange(aWebProgress, aRequest, aStateFlags, aStatus, this);
+  }
 
   if (mDialogListener)
     mDialogListener->OnStateChange(aWebProgress, aRequest, aStateFlags, aStatus);
@@ -947,8 +925,12 @@ DownloadItem::OnSecurityChange(nsIWebProgress *aWebProgress,
   if (mListener)
     mListener->OnSecurityChange(aWebProgress, aRequest, aState);
 
-  if (mDownloadManager->MustUpdateUI() && mInternalListener)
-    mInternalListener->OnSecurityChange(aWebProgress, aRequest, aState);
+  if (mDownloadManager->MustUpdateUI()) {
+    nsCOMPtr<nsIDownloadProgressListener> internalListener;
+    mDownloadManager->GetInternalListener(getter_AddRefs(internalListener));
+    if (internalListener)
+      internalListener->OnSecurityChange(aWebProgress, aRequest, aState, this);
+  }
 
   if (mDialogListener)
     mDialogListener->OnSecurityChange(aWebProgress, aRequest, aState);
@@ -1004,9 +986,9 @@ DownloadItem::SetSource(nsIURI* aSource)
 }
 
 NS_IMETHODIMP
-DownloadItem::GetTimeStarted(PRInt64* aTimeStarted)
+DownloadItem::GetStartTime(PRInt64* aStartTime)
 {
-  *aTimeStarted = mTimeStarted;
+  *aStartTime = mStartTime;
   return NS_OK;
 }
 
