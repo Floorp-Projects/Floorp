@@ -1,14 +1,16 @@
-<!ENTITY printCmd.commandkey            "p" >
+<!ENTITY printCmd.commandkey            "p">
 
-<!ENTITY viewCustomizeToolbar.label     "Customize Toolbar..." >
-<!ENTITY viewCustomizeToolbar.accesskey "C" >
+<!ENTITY viewCustomizeToolbar.label     "Customize Toolbar...">
+<!ENTITY viewCustomizeToolbar.accesskey "C">
 
-<!ENTITY findOnCmd.commandkey           "F" >
-<!ENTITY findAgainCmd.commandkey        "G" >
+<!ENTITY findOnCmd.commandkey           "F">
+<!ENTITY findAgainCmd.commandkey        "G">
 
-<!ENTITY backButton.label               "Back" >
+<!ENTITY backButton.label               "Back">
+<!ENTITY backButton.accesskey           "B">
 <!ENTITY backButton.tooltip             "Go back one page">
-<!ENTITY forwardButton.label            "Forward" >
+<!ENTITY forwardButton.label            "Forward">
+<!ENTITY forwardButton.accesskey        "F">
 <!ENTITY forwardButton.tooltip          "Go forward one page">
 <!ENTITY homeButton.label               "Home">
 <!ENTITY homeButton.tooltip             "Go to the Help Start Page">
@@ -18,10 +20,14 @@
 <!ENTITY sidebarBtn.label               "Toggle Sidebar">
 <!ENTITY sidebarBtn.tooltip             "Show or Hide the Help Sidebar">
 <!ENTITY textZoomReduceBtn.label 	"Shrink Text">
+<!ENTITY textZoomReduceBtn.accesskey    "S">
 <!ENTITY textZoomReduceBtn.tooltip      "Decrease the size of the text in the Help documents.">
 <!ENTITY textZoomEnlargeBtn.label 	"Enlarge Text">
+<!ENTITY textZoomEnlargeBtn.accesskey   "E">
 <!ENTITY textZoomEnlargeBtn.tooltip     "Increase the size of the text in the Help documents.">
 <!ENTITY customizeButton.tooltip        "Customize which buttons are shown on the Help toolbar.">
+<!ENTITY reloadCmd.label                "Reload">
+<!ENTITY reloadCmd.accesskey            "R">
 
 <!ENTITY throbberItem.title             "Activity Indicator">
 <!ENTITY throbber.tooltip               "Go to the Help on Help section">
