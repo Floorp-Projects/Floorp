@@ -256,15 +256,6 @@ public:
   NS_IMETHOD  GetVisibility(nsViewVisibility &aVisibility) const = 0;
 
   /**
-   * Called to set the Z-order parent of the view. This is the
-   * parent from which we derive our Z-order grouping. It might not
-   * be the same as the geometric parent.
-   * @param aParent new parent
-   */
-  NS_IMETHOD  SetZParent(nsIView *aZParent) = 0;
-  NS_IMETHOD  GetZParent(nsIView *&aZParent) const = 0;
-
-  /**
    * Called to indicate that the z-index of a view has been changed.
    * The z-index is relative to all siblings of the view.
    * @param zindex new z depth
@@ -305,13 +296,6 @@ public:
   NS_IMETHOD GetFloating(PRBool &aFloatingView) const = 0;
 
   /**
-   * Called to set the parent of the view. This is the geometric parent
-   * (from which we derive our coordinate system).
-   * @param aParent new parent
-   */
-  NS_IMETHOD  SetParent(nsIView *aParent) = 0;
-
-  /**
    * Called to query the parent of the view.
    * @result view's parent
    */
@@ -322,43 +306,6 @@ public:
    * @result view's next sibling
    */
   NS_IMETHOD  GetNextSibling(nsIView *&aNextSibling) const = 0;
-
-  /**
-   * Called to set the next sibling of the view.
-   * @param aNextSibling new next sibling
-   */
-  NS_IMETHOD  SetNextSibling(nsIView* aNextSibling) = 0;
-
-  /**
-   * Used to insert a child after the specified sibling. In general,
-   * child insertion will happen through the view manager and it
-   * will determine the ordering of children in the child list.
-   * @param child to insert in this view's child list
-   * @param sibling view to set as previous sibling of child
-   *                if nsnull, then child is inserted at head of list
-   */
-  NS_IMETHOD  InsertChild(nsIView *aChild, nsIView *aSibling) = 0;
-
-  /**
-   * Remove a child from the child list. The removal will be driven
-   * through the view manager.
-   * @param child to remove
-   */
-  NS_IMETHOD  RemoveChild(nsIView *aChild) = 0;
-  
-  /**
-   * Get the number of children for this view.
-   * @result child count
-   */
-  NS_IMETHOD  GetChildCount(PRInt32 &aCount) const = 0;
-  
-  /**
-   * Get a child at a specific index. Could be replaced by some sort of
-   * enumeration API.
-   * @param index of desired child view
-   * @result the view at index or nsnull if there is no such child
-   */
-  NS_IMETHOD  GetChild(PRInt32 index, nsIView*& aChild) const = 0;
 
   /**
    * Note: This didn't exist in 4.0. Called to set the opacity of a view. 
@@ -499,14 +446,6 @@ public:
    */
   NS_IMETHOD SetCompositorFlags(PRUint32 aFlags) = 0;
   NS_IMETHOD GetCompositorFlags(PRUint32 *aFlags) = 0;
-
-  /**
-   * Get the extents of the view tree from 'this' down.
-   * 'this' is the coordinate system origin.
-   * @param aExtents out paramemter for extents
-   * @return error status
-   */
-  NS_IMETHOD GetExtents(nsRect *aExtents) = 0;
 
   // XXX Temporary for Bug #19416
   NS_IMETHOD IgnoreSetPosition(PRBool aShouldIgnore) = 0;

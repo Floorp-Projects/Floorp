@@ -98,24 +98,11 @@ public:
   NS_IMETHOD  AddScrollPositionListener(nsIScrollPositionListener* aListener);
   NS_IMETHOD  RemoveScrollPositionListener(nsIScrollPositionListener* aListener);
 
-  //locals
-  //void HandleScrollEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags);
- 
-   // Set the visibility of a nsScrollPortView's component
-   // @param aView nsScrollPortView component to set visibility for or nsnull.
-   // @param aViewVisibility new setting for the component view If not the same as the current setting 
-   // @returns the result of calling the SetVisibility on the component.
-  //nsresult SetComponentVisibility(nsIView* aView, nsViewVisibility aViewVisibility); 
-
-   // Update the visibility of the nsScrollPortView's components (ClipView, CornerView, ScrollBarView's)
-   // @param aScrollingViewVisibility Visibility setting of the ScrollingView to consider when
-   // setting the visibility of the components. If aScrollingViewVisibility == nsViewVisibility_kInherit then 
-   // UpdateComponent has no effect.
-   // @returns the result of calling SetComponentVisibility for each component.
-  //nsresult UpdateComponentVisibility(nsViewVisibility aScrollingViewVisibility);
-
+  // local to the view module
 
   NS_IMETHOD  Paint(nsIRenderingContext& rc, const nsRect& rect,
+                    PRUint32 aPaintFlags, PRBool &Result);
+  NS_IMETHOD  Paint(nsIRenderingContext& aRC, const nsIRegion& aRegion,
                     PRUint32 aPaintFlags, PRBool &Result);
 
 private:
@@ -129,22 +116,13 @@ protected:
   //NS_IMETHOD_(void) Notify(nsITimer *timer);
 
   //private
-  void AdjustChildWidgets(nsScrollPortView *aScrolling, nsIView *aView, nscoord aDx, nscoord aDy, float aScale);
-  //void UpdateScrollControls(PRBool aPaint);
-  void Scroll(nsIView *aScrolledView, PRInt32 aDx, PRInt32 aDy, float scale, PRUint32 aUpdateFlags);
-  PRBool CannotBitBlt(nsIView* aScrolledView);
+  nsView* GetScrolledView() const { return GetFirstChild(); }
+  void AdjustChildWidgets(nsScrollPortView *aScrolling, nsView *aView, nscoord aDx, nscoord aDy, float aScale);
+  void Scroll(nsView *aScrolledView, PRInt32 aDx, PRInt32 aDy, float scale, PRUint32 aUpdateFlags);
+  PRBool CannotBitBlt(nsView* aScrolledView);
 protected:
-  //nscoord             mSizeX, mSizeY;
   nscoord             mOffsetX, mOffsetY;
   nscoord             mOffsetXpx, mOffsetYpx;
-  //nsIView            *mClipView;
-  //nsIView            *mVScrollBarView;
-  //nsIView            *mHScrollBarView;
-  //nsIView            *mCornerView;
-  //nsScrollPreference  mScrollPref;
-  //nsMargin            mInsets;
-  //nsITimer           *mScrollingTimer;
-  //nscoord             mScrollingDelta;
   PRUint32            mScrollProperties;
   nscoord             mLineHeight;
   nsISupportsArray   *mListeners;

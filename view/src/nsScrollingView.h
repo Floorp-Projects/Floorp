@@ -102,14 +102,14 @@ public:
   NS_IMETHOD  AddScrollPositionListener(nsIScrollPositionListener* aListener);
   NS_IMETHOD  RemoveScrollPositionListener(nsIScrollPositionListener* aListener);
 
-  //locals
+  // local to view module
   void HandleScrollEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags);
  
    // Set the visibility of a nsScrollingView's component
    // @param aView nsScrollingView component to set visibility for or nsnull.
    // @param aViewVisibility new setting for the component view If not the same as the current setting 
    // @returns the result of calling the SetVisibility on the component.
-  nsresult SetComponentVisibility(nsIView* aView, nsViewVisibility aViewVisibility); 
+  nsresult SetComponentVisibility(nsView* aView, nsViewVisibility aViewVisibility); 
 
    // Update the visibility of the nsScrollingView's components (ClipView, CornerView, ScrollBarView's)
    // @param aScrollingViewVisibility Visibility setting of the ScrollingView to consider when
@@ -121,6 +121,7 @@ public:
   nsresult NotifyScrollPositionWillChange(nscoord aX, nscoord aY);
   nsresult NotifyScrollPositionDidChange(nscoord aX, nscoord aY);
 
+  nsView* GetScrolledView() const;
 
 private:
   NS_IMETHOD_(nsrefcnt) AddRef(void);
@@ -133,19 +134,18 @@ protected:
   NS_IMETHOD_(void) Notify(nsITimer *timer);
 
   //private
-  void AdjustChildWidgets(nsScrollingView *aScrolling, nsIView *aView, nscoord aDx, nscoord aDy, float aScale);
+  void AdjustChildWidgets(nsScrollingView *aScrolling, nsView *aView, nscoord aDx, nscoord aDy, float aScale);
   void UpdateScrollControls(PRBool aPaint);
-  void Scroll(nsIView *aScrolledView, PRInt32 aDx, PRInt32 aDy, float scale, PRUint32 aUpdateFlags);
-  PRBool CannotBitBlt(nsIView* aScrolledView);
-
+  void Scroll(nsView *aScrolledView, PRInt32 aDx, PRInt32 aDy, float scale, PRUint32 aUpdateFlags);
+  PRBool CannotBitBlt(nsView* aScrolledView);
 
 protected:
   nscoord             mSizeX, mSizeY;
   nscoord             mOffsetX, mOffsetY;
-  nsIView            *mClipView;
-  nsIView            *mVScrollBarView;
-  nsIView            *mHScrollBarView;
-  nsIView            *mCornerView;
+  nsView              *mClipView;
+  nsView              *mVScrollBarView;
+  nsView              *mHScrollBarView;
+  nsView              *mCornerView;
   nsScrollPreference  mScrollPref;
   nsMargin            mInsets;
   nsCOMPtr<nsITimer>  mScrollingTimer;

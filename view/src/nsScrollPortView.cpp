@@ -38,7 +38,6 @@
 #include "nsScrollPortView.h"
 #include "nsIWidget.h"
 #include "nsUnitConversion.h"
-#include "nsIViewManager.h"
 #include "nsIPresContext.h"
 #include "nsIScrollbar.h"
 #include "nsIDeviceContext.h"
@@ -52,6 +51,7 @@
 #include "nsISupportsArray.h"
 #include "nsIScrollPositionListener.h"
 #include "nsIRegion.h"
+#include "nsViewManager.h"
 
 static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
 static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
@@ -199,13 +199,8 @@ NS_IMETHODIMP nsScrollPortView::GetContainerSize(nscoord *aWidth, nscoord *aHeig
   *aWidth  = 0;
   *aHeight = 0;
 
-  nsIView *scrolledView = 0;
+  nsView *scrolledView = GetScrolledView();
 
-  nsresult result = GetScrolledView(scrolledView);
-
-  if (NS_FAILED(result))
-    return result;
-  
   if (!scrolledView)
     return NS_ERROR_FAILURE;
 
@@ -248,7 +243,6 @@ NS_IMETHODIMP nsScrollPortView::ScrollTo(nscoord aX, nscoord aY, PRUint32 aUpdat
     
 
 	PRInt32           dxPx = 0, dyPx = 0;
-    nsIView           *scrolledView;
 
     // convert to pixels
     nsIDeviceContext  *dev;
@@ -264,7 +258,7 @@ NS_IMETHODIMP nsScrollPortView::ScrollTo(nscoord aX, nscoord aY, PRUint32 aUpdat
 	// Update the scrolled view's position
 
     // make sure the new position in in bounds
-	GetScrolledView(scrolledView);
+	nsView* scrolledView = GetScrolledView();
 
 #ifdef DEBUG_pollmann
 	NS_ASSERTION(scrolledView, "no scrolled view");
@@ -374,7 +368,7 @@ NS_IMETHODIMP nsScrollPortView::GetScrollbarVisibility(PRBool *aVerticalVisible,
 }
 
 
-void nsScrollPortView::AdjustChildWidgets(nsScrollPortView *aScrolling, nsIView *aView, nscoord aDx, nscoord aDy, float scale)
+void nsScrollPortView::AdjustChildWidgets(nsScrollPortView *aScrolling, nsView *aView, nscoord aDx, nscoord aDy, float scale)
 {
 
   nscoord           offx, offy;
@@ -391,8 +385,8 @@ void nsScrollPortView::AdjustChildWidgets(nsScrollPortView *aScrolling, nsIView 
   aDx += offx;
   aDy += offy;
 
-  nsIView *kid;
-  for (aView->GetChild(0, kid); kid != nsnull; kid->GetNextSibling(kid))
+  nsView *kid;
+  for (kid = aView->GetFirstChild(); kid != nsnull; kid = kid->GetNextSibling())
   {
     nsIWidget *win;
     kid->GetWidget(win);
@@ -425,16 +419,14 @@ void nsScrollPortView::AdjustChildWidgets(nsScrollPortView *aScrolling, nsIView 
 
 NS_IMETHODIMP nsScrollPortView::SetScrolledView(nsIView *aScrolledView)
 {
-  PRInt32 count = 0;
-  GetChildCount(count);
+  PRInt32 count = GetChildCount();
 
   NS_ASSERTION(count <= 1,"Error scroll port has too many children");
 
   // if there is already a child so remove it
   if (count == 1)
   {
-     nsIView* child = nsnull;
-     GetChild(0, child);
+    nsView* child = GetFirstChild();
      mViewManager->RemoveChild(this, child);
   }
 
@@ -444,7 +436,8 @@ NS_IMETHODIMP nsScrollPortView::SetScrolledView(nsIView *aScrolledView)
 
 NS_IMETHODIMP nsScrollPortView::GetScrolledView(nsIView *&aScrolledView) const
 {
-  return GetChild(0, aScrolledView);
+  aScrolledView = GetScrolledView();
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsScrollPortView::GetScrollPosition(nscoord &aX, nscoord &aY) const
@@ -523,7 +516,7 @@ NS_IMETHODIMP nsScrollPortView::ScrollByWhole(PRBool aTop)
 	return NS_OK;
 }
 
-PRBool nsScrollPortView::CannotBitBlt(nsIView* aScrolledView)
+PRBool nsScrollPortView::CannotBitBlt(nsView* aScrolledView)
 {
   PRBool    trans;
   float     opacity;
@@ -539,7 +532,7 @@ PRBool nsScrollPortView::CannotBitBlt(nsIView* aScrolledView)
 }
 
 
-void nsScrollPortView::Scroll(nsIView *aScrolledView, PRInt32 aDx, PRInt32 aDy, float scale, PRUint32 aUpdateFlags)
+void nsScrollPortView::Scroll(nsView *aScrolledView, PRInt32 aDx, PRInt32 aDy, float scale, PRUint32 aUpdateFlags)
 {
   if ((aDx != 0) || (aDy != 0))
   {
@@ -587,4 +580,20 @@ NS_IMETHODIMP nsScrollPortView::Paint(nsIRenderingContext& rc, const nsRect& rec
 	rc.PopState(clipEmpty);
     
     return rv;
+}
+
+NS_IMETHODIMP nsScrollPortView::Paint(nsIRenderingContext& aRC, const nsIRegion& aRegion,
+                                      PRUint32 aPaintFlags, PRBool &aResult)
+{
+	PRBool clipEmpty;
+	aRC.PushState();
+	nsRect bounds = mBounds;
+	bounds.x = bounds.y = 0;
+	aRC.SetClipRect(bounds, nsClipCombine_kIntersect, clipEmpty);
+
+  nsresult rv = nsView::Paint(aRC, aRegion, aPaintFlags, aResult);
+
+	aRC.PopState(clipEmpty);
+    
+  return rv;
 }
