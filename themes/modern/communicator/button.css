@@ -13,6 +13,7 @@
       font                  : 11px arial;
       max-width             : 10em;
       min-width             : 0px;
+      height                : 1px;
       -moz-user-focus       : ignore !important;
     }
     
@@ -236,10 +237,11 @@
       background-color : transparent;
       border				: 0px;
       margin				: 3px 7px 2px 0px;
+      height        : 22px;
       -moz-user-focus       : ignore !important;
     }
 
-  .button-toolbar-3 > box > box > .button-text-mid
+  .button-toolbar-3 > stack > box > .button-text-mid
     {
       font-family   : Arial, sans-serif;
       font-weight           : bold;
@@ -300,6 +302,7 @@
     padding               : 1px;
     margin                : 0px;
     min-width			  : 0px;
+    height                : 1px;
     border				  : 0px;
     -moz-user-focus       : ignore !important;
   }

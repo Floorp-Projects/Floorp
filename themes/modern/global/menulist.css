@@ -9,6 +9,7 @@
     margin			      : 0px 1px 0px 1px;
     border            : 3px solid transparent;
     padding           : 0px;
+    min-height        : 19px;
   }
 
   .menulist-text-mid {
@@ -63,14 +64,18 @@
 
   .menulist-mid-mid {
   	background			  : url("chrome://global/skin/menulist-mid-mid.gif") repeat-x;
-  	text-align        : center;
-    vertical-align    : middle;
   }
 
   .menulist-mid-btm {
     background			  : url("chrome://global/skin/menulist-mid-btm.gif") repeat-x;
     height            : 4px;
     vertical-align    : bottom;
+  }
+
+  .menulist-text-box {
+    vertical-align    : middle;
+  	text-align        : left;
+    padding           : 1px 0px 2px 0px;
   }
 
   .menulist-box-right {
@@ -112,28 +117,28 @@
     background-image   : url("chrome://global/skin/menulist-active-left-btm.gif");
   }
 
-  menulist:hover:active > .menulist-box-mid,
-  menulist[open="true"] > .menulist-box-mid {
+  menulist:hover:active > .menulist-stack > .menulist-box-mid,
+  menulist[open="true"] > .menulist-stack > .menulist-box-mid {
     background-color  : #84969C;
   }
   
-  menulist:hover:active > .menulist-box-mid > .menulist-mid-top,
-  menulist[open="true"] > .menulist-box-mid > .menulist-mid-top {
+  menulist:hover:active > .menulist-stack > .menulist-box-mid > .menulist-mid-top,
+  menulist[open="true"] > .menulist-stack > .menulist-box-mid > .menulist-mid-top {
   	background-image  : url("chrome://global/skin/menulist-active-mid-top.gif");
   }
 
-  menulist:hover:active > .menulist-box-mid > .menulist-mid-mid,
-  menulist[open="true"] > .menulist-box-mid > .menulist-mid-mid {
+  menulist:hover:active > .menulist-stack > .menulist-box-mid > .menulist-mid-mid,
+  menulist[open="true"] > .menulist-stack > .menulist-box-mid > .menulist-mid-mid {
   	background-image  : url("chrome://global/skin/menulist-active-mid-mid.gif");
   }
 
-  menulist:hover:active > .menulist-box-mid > .menulist-mid-mid > .menulist-text-mid,
-  menulist[open="true"] > .menulist-box-mid > .menulist-mid-mid > .menulist-text-mid {
+  menulist:hover:active > .menulist-stack > .menulist-text-box > .menulist-text-mid,
+  menulist[open="true"] > .menulist-stack > .menulist-text-box > .menulist-text-mid {
     color: #ffffff;
   }
 
-  menulist:hover:active > .menulist-box-mid > .menulist-mid-btm,
-  menulist[open="true"] > .menulist-box-mid > .menulist-mid-btm {
+  menulist:hover:active > .menulist-stack > .menulist-box-mid > .menulist-mid-btm,
+  menulist[open="true"] > .menulist-stack > .menulist-box-mid > .menulist-mid-btm {
     background-image  : url("chrome://global/skin/menulist-active-mid-btm.gif");
   }
 
@@ -169,22 +174,22 @@
     background-image   : url("chrome://global/skin/menulist-dis-left-btm.gif");
   }
 
-  menulist:hover:active > .menulist-box-mid[disabled="true"],
-  .menulist-box-mid[disabled="true"] {
+  menulist:hover:active > .menulist-stack > .menulist-text-box > .menulist-text-mid[disabled="true"],
+  .menulist-text-mid[disabled="true"] {
     background-color  : #84969C;
   }
   
-  menulist:hover:active > .menulist-box-mid > .menulist-mid-top[disabled="true"],
+  menulist:hover:active > .menulist-stack > .menulist-box-mid > .menulist-mid-top[disabled="true"],
   .menulist-mid-top[disabled="true"] {
   	background-image  : url("chrome://global/skin/menulist-dis-mid-top.gif");
   }
 
-  menulist:hover:active > .menulist-box-mid > .menulist-mid-mid[disabled="true"],
+  menulist:hover:active > .menulist-stack > .menulist-box-mid > .menulist-mid-mid[disabled="true"],
   .menulist-mid-mid[disabled="true"] {
   	background-image  : url("chrome://global/skin/menulist-dis-mid-mid.gif");
   }
 
-  menulist:hover:active > .menulist-box-mid > .menulist-mid-btm[disabled="true"],
+  menulist:hover:active > .menulist-stack > .menulist-box-mid > .menulist-mid-btm[disabled="true"],
   .menulist-mid-btm[disabled="true"] {
     background-image  : url("chrome://global/skin/menulist-dis-mid-btm.gif");
   }

@@ -6,9 +6,10 @@
   
   button {
     -moz-binding			: url("chrome://global/skin/globalBindings.xml#nine-slice-button");
-    margin            : 2px;
+    margin            : 3px;
     border				    : 3px solid transparent;
     min-width				  : 60px;
+    height            : 26px;
     background-color  : transparent;
     color					    : #1C1D1F;
     -moz-user-focus   : normal !important;
@@ -18,8 +19,13 @@
     font-family			    : charcoal, ms sans serif;
     font-size 			    : 12px;
     font-weight			    : normal;
+    padding-right       : 2px;
   }
     
+  .button-icon-mid {
+    padding-right: 2px;
+  }
+
   /* .......... focused state .......... */
 
   button:focus {
@@ -54,23 +60,25 @@
   .button-mid-top {
   	background			: url("chrome://global/skin/button-mid-top.gif") repeat-x;
   	height          : 3px;
-    vertical-align  : top;
   }
 
   .button-mid-mid {
   	background			  : url("chrome://global/skin/button-mid-mid.gif") repeat-x;
-    vertical-align    : middle;
-  	text-align        : center;
   }
 
   .button-mid-btm {
     background			  : url("chrome://global/skin/button-mid-btm.gif") repeat-x;
     height            : 4px;
-    vertical-align    : bottom;
+  }
+
+  .button-text-box {
+    vertical-align    : middle;
+  	text-align        : center;
+    padding           : 1px 0px 1px 0px;
   }
 
   .button-box-right {
-    width           : 7px;
+    width           : 9px;
   }
   
   .button-right-top {
@@ -101,20 +109,23 @@
     background-image    : url("chrome://global/skin/button-active-left-btm.gif");
   }
 
-  button:hover:active > .button-box-mid {
+  button:hover:active > .button-stack > .button-box-mid {
     background-color    : #84969C;
   }
   
-  button:hover:active > .button-box-mid > .button-mid-top {
+  button:hover:active > .button-stack > .button-box-mid > .button-mid-top {
   	background-image    : url("chrome://global/skin/button-active-mid-top.gif");
   }
 
-  button:hover:active > .button-box-mid > .button-mid-mid {
+  button:hover:active > .button-stack > .button-box-mid > .button-mid-mid {
   	background-image    : url("chrome://global/skin/button-active-mid-mid.gif");
+  }
+
+  button:hover:active > .button-stack > .button-text-box > .button-text-mid {
     color               : #ffffff;
   }
 
-  button:hover:active > .button-box-mid > .button-mid-btm {
+  button:hover:active > .button-stack > .button-box-mid > .button-mid-btm {
     background-image    : url("chrome://global/skin/button-active-mid-btm.gif");
   }
 
@@ -132,13 +143,12 @@
 
   /* .......... disabled state .......... */
 
-  button[disabled="true"], 
-  button[disabled="true"]:hover, 
-  button[disabled="true"]:hover:active {
-    color					: #595F61;
+  button[disabled="true"] > .button-stack > .button-text-box > .button-text-mid, 
+  button[disabled="true"]:hover > .button-stack > .button-text-box > .button-text-mid, 
+  button[disabled="true"]:hover:active > .button-stack > .button-text-box > .button-text-mid {
+    color					: #7F8997;
   }
 
-  
   button:hover:active > .button-box-left > .button-left-top[disabled="true"],
   .button-left-top[disabled="true"] {
     background-image    : url("chrome://global/skin/button-dis-left-top.gif");
@@ -154,22 +164,22 @@
     background-image    : url("chrome://global/skin/button-dis-left-btm.gif");
   }
 
-  button:hover:active > .button-box-mid[disabled="true"],
+  button:hover:active > .button-stack > .button-box-mid[disabled="true"],
   .button-box-mid[disabled="true"] {
     background-color    : #ADBEC6;
   }
   
-  button:hover:active > .button-box-mid > .button-mid-top[disabled="true"],
+  button:hover:active > .button-stack > .button-box-mid > .button-mid-top[disabled="true"],
   .button-mid-top[disabled="true"] {
   	background-image    : url("chrome://global/skin/button-dis-mid-top.gif");
   }
 
-  button:hover:active > .button-box-mid > .button-mid-mid[disabled="true"],
+  button:hover:active > .button-stack > .button-box-mid > .button-mid-mid[disabled="true"],
   .button-mid-mid[disabled="true"] {
   	background-image    : url("chrome://global/skin/button-dis-mid-mid.gif");
   }
 
-  button:hover:active > .button-box-mid > .button-mid-btm[disabled="true"],
+  button:hover:active > .button-stack > .button-box-mid > .button-mid-btm[disabled="true"],
   .button-mid-btm[disabled="true"] {
     background-image    : url("chrome://global/skin/button-dis-mid-btm.gif");
   }
@@ -190,6 +200,10 @@
   }
   
   /* .......... default normal state .......... */
+
+  button[default="true"] {
+    margin          : 2px;
+  }
 
   .button-box-left[default="true"] {
     width           : 10px;
@@ -224,7 +238,7 @@
   }
 
   .button-box-right[default="true"] {
-    width             : 8px;
+    width             : 10px;
   }
   
   .button-right-top[default="true"] {
@@ -255,15 +269,15 @@
     background-image  : url("chrome://global/skin/button-def-active-left-btm.gif");
   }
 
-  :hover:active > .button-box-mid > .button-mid-top[default="true"] {
+  :hover:active > .button-stack > .button-box-mid > .button-mid-top[default="true"] {
   	background-image  : url("chrome://global/skin/button-def-active-mid-top.gif");
   }
 
-  :hover:active > .button-box-mid > .button-mid-mid[default="true"] {
+  :hover:active > .button-stack > .button-box-mid > .button-mid-mid[default="true"] {
   	background-image  : url("chrome://global/skin/button-def-active-mid-mid.gif");
   }
 
-  :hover:active > .button-box-mid > .button-mid-btm[default="true"] {
+  :hover:active > .button-stack > .button-box-mid > .button-mid-btm[default="true"] {
     background-image  : url("chrome://global/skin/button-def-active-mid-btm.gif");
   }
 
@@ -313,30 +327,30 @@
     height              : 8px;
   }
 
-  :hover:active > .button-box-mid[disabled="true"][default="true"],
+  :hover:active > .button-stack > .button-box-mid[disabled="true"][default="true"],
   .button-box-mid[disabled="true"][default="true"] {
     background-color    : #ADBEC6;
   }
 
-  :hover:active > .button-box-mid > .button-mid-top[disabled="true"][default="true"],
+  :hover:active > .button-stack > .button-box-mid > .button-mid-top[disabled="true"][default="true"],
   .button-mid-top[disabled="true"][default="true"] {
   	background-image    : url("chrome://global/skin/button-dis-mid-top.gif");
     height              : 3px;
   }
 
-  :hover:active > .button-box-mid > .button-mid-mid[disabled="true"][default="true"],
+  :hover:active > .button-stack > .button-box-mid > .button-mid-mid[disabled="true"][default="true"],
   .button-mid-mid[disabled="true"][default="true"] {
   	background-image    : url("chrome://global/skin/button-dis-mid-mid.gif");
   }
 
-  :hover:active > .button-box-mid > .button-mid-btm[disabled="true"][default="true"],
+  :hover:active > .button-stack > .button-box-mid > .button-mid-btm[disabled="true"][default="true"],
   .button-mid-btm[disabled="true"][default="true"] {
     background-image    : url("chrome://global/skin/button-dis-mid-btm.gif");
     height              : 4px;
   }
 
   .button-box-right[disabled="true"][default="true"] {
-    width               : 7px;
+    width               : 9px;
   }
 
   :hover:active > .button-box-right > .button-right-top[disabled="true"][default="true"],

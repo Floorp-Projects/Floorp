@@ -120,14 +120,18 @@
         <xul:spring class="button-left-btm" inherits="default,disabled"/>
       </xul:box>
       
-    	<xul:box class="button-box-mid" inherits="default,disabled" orient="vertical" flex="1">
-    	  <xul:spring class="button-mid-top" inherits="default,disabled"/>
-    	  <xul:box class="button-mid-mid" inherits="default,disabled" flex="1" autostretch="never">
-    	  	<xul:image class="button-icon" inherits="src"/>
-		      <xul:text class="button-text-mid" inherits="default,disabled,value,crop,accesskey"/>
-    	  </xul:box>
-    	  <xul:spring class="button-mid-btm" inherits="default,disabled"/>
-    	</xul:box>
+      <xul:stack class="button-stack" flex="1">
+        <xul:box class="button-box-mid" inherits="default,disabled" orient="vertical">
+           <xul:spring class="button-mid-top" inherits="default,disabled"/>
+           <xul:box class="button-mid-mid" inherits="default,disabled" flex="1"/>
+           <xul:spring class="button-mid-btm" inherits="default,disabled"/>
+        </xul:box>
+
+        <xul:box class="button-text-box" autostretch="never">
+         <xul:image class="button-icon-mid" inherits="src"/>
+         <xul:text class="button-text-mid" inherits="default,disabled,value,crop,accesskey"/>
+       </xul:box>
+     </xul:stack>
       
       <xul:box class="button-box-right" inherits="default,disabled" orient="vertical">
         <xul:spring class="button-right-top" inherits="default,disabled"/>
@@ -145,15 +149,19 @@
         <xul:spring class="menulist-left-btm" inherits="disabled"/>
       </xul:box>
 
-    	<xul:box class="menulist-box-mid" inherits="disabled" flex="1" orient="vertical">
-    	  <xul:spring class="menulist-mid-top" inherits="disabled"/>
-    		<xul:box class="menulist-mid-mid" inherits="disabled" flex="1" autostretch="never">
-        		<xul:image class="menulist-icon" inherits="src"/>
-		      	<xul:text class="menulist-text-mid" flex="1" inherits="disabled,value,crop,accesskey"/>
+      <xul:stack class="menulist-stack" flex="1">
+        <xul:box class="menulist-box-mid" inherits="disabled" orient="vertical">
+           <xul:spring class="menulist-mid-top" inherits="disabled"/>
+           <xul:box class="menulist-mid-mid" inherits="disabled" flex="1"/>
+           <xul:spring class="menulist-mid-btm" inherits="disabled"/>
         </xul:box>
-    	  <xul:spring class="menulist-mid-btm" inherits="disabled"/>
-    	</xul:box>
 
+        <xul:box class="menulist-text-box" autostretch="never">
+         <xul:image class="menulist-icon-mid" inherits="src"/>
+         <xul:text class="menulist-text-mid" inherits="disabled,value,crop,accesskey"/>
+       </xul:box>
+     </xul:stack>
+      
       <xul:box class="menulist-box-right" inherits="disabled" orient="vertical">
     		<xul:box class="menulist-right-mid" inherits="disabled" flex="1">
       		<xul:box class="menulist-right-mid2" inherits="disabled" flex="1" autostretch="never">
@@ -252,5 +260,5 @@
       </xul:box>
   	</content>
   </binding>
-
+  
 </bindings>
