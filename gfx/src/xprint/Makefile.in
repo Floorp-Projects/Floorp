@@ -1,0 +1,73 @@
+#
+# The contents of this file are subject to the Netscape Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/NPL/
+#
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation. All
+# Rights Reserved.
+#
+# Contributor(s): 
+#
+
+DEPTH		= ../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE		= raptor
+LIBRARY_NAME	= gfxxprt
+IS_COMPONENT	= 1
+
+CSRCS		= ../xlibrgb/xlibrgb.c \
+		$(NULL)
+
+CPPSRCS		= \
+		nsDeviceContextXP.cpp \
+		nsFontMetricsXP.cpp \
+		nsRenderingContextXP.cpp \
+		nsGfxFactoryXP.cpp \
+		nsXPrintContext.cpp \
+		nsRegionXP.cpp \
+		$(NULL)
+
+EXPORTS		= \
+		nsIDeviceContextXP.h \
+		nsGfxXPCID.h \
+		nsIDeviceContextSpecXP.h \
+		$(NULL)
+
+EXTRA_DSO_LDOPTS += $(MOZ_XPRINT_LDFLAGS)
+CXXFLAGS	 += $(MOZ_XPRINT_CFLAGS)
+
+EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) \
+		$(NULL)
+
+include $(topsrcdir)/config/rules.mk
+
+DEFINES		+= -D_IMPL_NS_GFXONXP
+ifeq ($(OS_ARCH), Linux)
+DEFINES         += -D_BSD_SOURCE
+endif
+CFLAGS		+= $(TK_CFLAGS)
+CXXFLAGS	+= $(TK_CFLAGS)
+
+LLIBS		+= $(DIST)/lib/libxpcom.a $(DIST)/lib/libraptorgfx.a
+
+EXTRA_DSO_LDOPTS += $(LIBIDL_LIBS)
+
+INCLUDES	+= \
+		-I$(srcdir)/../gtk \
+		-I$(srcdir)/../xlibrgb \
+		$(NULL)
