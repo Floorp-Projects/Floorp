@@ -49,6 +49,8 @@ LCFLAGS = \
         $(DEFINES) \
         $(NULL)
 
+DEFINES = $(DEFINES) -DNOT_PRODUCTION_CODE -DUSE_EXPERIMENTAL_SMART_POINTERS 
+
 # These are the libraries we need to link with to create the dll
 LLIBS=				\
  $(DIST)\lib\xpcom32.lib	\

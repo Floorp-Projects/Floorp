@@ -53,13 +53,13 @@ Editor::Init(nsIDOMDocument *aDomInterface)
   static NS_DEFINE_IID(kIDOMMouseListenerIID, NS_IDOMMOUSELISTENER_IID);
   static NS_DEFINE_IID(kIDOMKeyListenerIID, NS_IDOMKEYLISTENER_IID);
 
-  nsresult t_result = NS_NewEditorKeyListener(context_AddRefs(mKeyListenerP), this);
+  nsresult t_result = NS_NewEditorKeyListener(func_AddRefs(mKeyListenerP), this);
   if (NS_OK != t_result)
   {
     assert(0);
     return t_result;
   }
-  t_result = NS_NewEditorMouseListener(context_AddRefs(mMouseListenerP), this);
+  t_result = NS_NewEditorMouseListener(func_AddRefs(mMouseListenerP), this);
   if (NS_OK != t_result)
   {
     mKeyListenerP = 0; //dont keep the key listener if the mouse listener fails.
@@ -67,7 +67,7 @@ Editor::Init(nsIDOMDocument *aDomInterface)
     return t_result;
   }
   COM_auto_ptr<nsIDOMEventReceiver> erP;
-  t_result = mDomInterfaceP->QueryInterface(kIDOMEventReceiverIID, context_AddRefs(erP));
+  t_result = mDomInterfaceP->QueryInterface(kIDOMEventReceiverIID, func_AddRefs(erP));
   if (NS_OK != t_result) 
   {
     mKeyListenerP = 0;
