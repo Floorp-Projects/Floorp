@@ -11,7 +11,7 @@ import "docobj.idl";
 
 // See note below for why IWebBrowser is not imported this way
 // import "exdisp.idl";
-#include "exdispid.h"
+#include <exdispid.h>
 
 [
 	uuid(1339B53E-3453-11D2-93B9-000000000000),
@@ -136,7 +136,6 @@ library MOZILLACONTROLLib
         [id(212), propget, helpstring("Query to see if something is still in progress."), helpcontext(0x0000)]
         HRESULT Busy([out,retval] VARIANT_BOOL *pBool);
     }
-
 
     typedef
     [

@@ -98,6 +98,7 @@ NPP_New(NPMIMEType pluginType,
 	// Read the parameters
 	CLSID clsid = CLSID_NULL;
 	tstring szName;
+	tstring szCodebase;
 	PropertyList pl;
 
 	for (int16 i = 0; i < argc; i++)
@@ -105,6 +106,12 @@ NPP_New(NPMIMEType pluginType,
 		if (stricmp(argn[i], "CLSID") == 0 ||
 			stricmp(argn[i], "CLASSID") == 0)
 		{
+			// Accept CLSIDs specified in various ways
+			// e.g:
+            //   "C16DF970-D1BA-11d2-A252-000000000000"
+			//   "{C16DF970-D1BA-11d2-A252-000000000000}"
+            //   "CLSID:C16DF970-D1BA-11d2-A252-000000000000"
+
 			char szCLSID[256];
 			if (strnicmp(argv[i], "CLSID:", 6) == 0)
 			{
@@ -129,9 +136,16 @@ NPP_New(NPMIMEType pluginType,
 			USES_CONVERSION;
 			szName = tstring(A2T(argv[i]));
 		}
+		else if (stricmp(argn[i], "CODEBASE") == 0)
+		{
+			szCodebase = tstring(A2T(argv[i]));
+		}
 		else if (strnicmp(argn[i], "PARAM_", 6) == 0)
 		{
-			tstring szName(argn[i] + 6);
+			USES_CONVERSION;
+
+			std::wstring szName(A2W(argn[i] + 6));
+			std::wstring szParam(A2W(argv[i]));
 	
 			// Empty parameters are ignored
 			if (szName.empty())
@@ -139,9 +153,24 @@ NPP_New(NPMIMEType pluginType,
 				continue;
 			}
 
-			// TODO check for existing params with the same name
+			// Check for existing params with the same name
+			BOOL bFound = FALSE;
+			for (PropertyList::const_iterator i = pl.begin(); i != pl.end(); i++)
+			{
+				if (wcscmp((BSTR) (*i).szName, szName.c_str()) == 0)
+				{
+					bFound = TRUE;
+					break;
+				}
+			}
+			// If the parameter already exists, don't add it to the
+			// list again.
+			if (bFound)
+			{
+				continue;
+			}
 
-			CComVariant vsValue(argv[i]);
+			CComVariant vsValue(szParam.c_str());
 			CComVariant vIValue; // Value converted to int
 			CComVariant vRValue; // Value converted to real
 			CComVariant &vValue = vsValue;
@@ -172,6 +201,9 @@ NPP_New(NPMIMEType pluginType,
 		return NPERR_GENERIC_ERROR;
 	}
 	pSite->AddRef();
+
+	// TODO check the object is installed and at least as recent as
+	//      that specified in szCodebase
 
 	// Create the object
 	if (FAILED(pSite->Create(clsid, pl, szName)))

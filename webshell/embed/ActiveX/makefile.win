@@ -42,6 +42,9 @@ OBJS =                                 \
 	.\$(OBJDIR)\ControlSite.obj        \
 	.\$(OBJDIR)\ControlSiteIPFrame.obj \
 	.\$(OBJDIR)\PropertyBag.obj        \
+	.\$(OBJDIR)\IEHtmlElement.obj      \
+	.\$(OBJDIR)\IEHtmlElementCollection.obj \
+	.\$(OBJDIR)\IEHtmlDocument.obj     \
 !ifdef MOZ_ACTIVEX_PLUGIN_SUPPORT
 	.\$(OBJDIR)\ActiveXPlugin.obj      \
 	.\$(OBJDIR)\ActiveXPluginInstance.obj \
@@ -123,6 +126,12 @@ npwin.cpp: $(MOZ_PLUGINSDK)/common/npwin.cpp
 ControlSite.cpp \
 ControlSiteIPFrame.cpp \
 PropertyBag.cpp : StdAfx.h PropertyBag.h ControlSite.h ControlSiteIPFrame.h
+
+IEHtmlElement.cpp : StdAfx.h IEHtmlElement.h
+
+IEHtmlElementCollection.cpp : StdAfx.h IEHtmlElementCollection.h
+
+IEHtmlDocument.cpp : StdAfx.h IEHtmlDocument.h
 
 MozillaControl.cpp \
 MozillaBrowser.cpp \

@@ -95,6 +95,22 @@ SOURCE=.\ControlSite.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\ControlSiteIPFrame.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\IEHtmlDocument.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\IEHtmlElement.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\IEHtmlElementCollection.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\LegacyPlugin.cpp
 # End Source File
 # Begin Source File
@@ -116,6 +132,10 @@ SOURCE=.\MozillaControl.idl
 # Begin Source File
 
 SOURCE=.\MozillaControl.rc
+# End Source File
+# Begin Source File
+
+SOURCE=.\npmozctl.def
 # End Source File
 # Begin Source File
 
@@ -159,7 +179,23 @@ SOURCE=.\ControlSite.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\ControlSiteIPFrame.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\CPMozillaControl.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\IEHtmlDocument.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\IEHtmlElement.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\IEHtmlElementCollection.h
 # End Source File
 # Begin Source File
 

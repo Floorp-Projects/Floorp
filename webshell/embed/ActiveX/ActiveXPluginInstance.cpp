@@ -65,22 +65,7 @@ nsresult CActiveXPluginInstance::QueryInterface(const nsIID& aIID, void** aInsta
 		return NS_OK;
 	}
 
-//	if (aIID.Equals(kIEventHandlerIID))
-//	{
-//		*aInstancePtrResult = (void*) ((nsIPluginInstance*)this);
-//		AddRef();
-//		return NS_OK;
-//	}
-
 	return NS_NOINTERFACE;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// nsIEventHandler overrides
-
-NS_IMETHODIMP CActiveXPluginInstance::HandleEvent(nsPluginEvent* event, PRBool* handled)
-{
-	return NS_OK;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -120,32 +105,22 @@ NS_IMETHODIMP CActiveXPluginInstance::SetWindow(nsPluginWindow* window)
 	return NS_OK;
 }
 
-#ifdef NEW_PLUGIN_STREAM_API
 NS_IMETHODIMP CActiveXPluginInstance::NewStream(nsIPluginStreamListener** listener)
 {
 	return NS_OK;
 }
-#else
-NS_IMETHODIMP CActiveXPluginInstance::NewStream(nsIPluginStreamPeer* peer, nsIPluginStream* *result)
-{
-	return NS_OK;
-}
-#endif
 
 NS_IMETHODIMP CActiveXPluginInstance::Print(nsPluginPrint* platformPrint)
 {
 	return NS_OK;
 }
 
-#ifndef NEW_PLUGIN_STREAM_API
-NS_IMETHODIMP CActiveXPluginInstance::URLNotify(const char* url, const char* target, nsPluginReason reason, void* notifyData)
-{
-	return NS_OK;
-}
-#endif
-
 NS_IMETHODIMP CActiveXPluginInstance::GetValue(nsPluginInstanceVariable variable, void *value)
 {
 	return NS_OK;
 }
 
+NS_IMETHODIMP CActiveXPluginInstance::HandleEvent(nsPluginEvent* event, PRBool* handled)
+{
+	return NS_OK;
+}
