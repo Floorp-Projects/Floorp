@@ -61,6 +61,8 @@
 
 </commandset>
 
+<broadcaster id="Communicator:WorkMode"/>
+
 <keyset id="tasksKeys">
   <!-- File Menu -->
   <key id="key_close"/>
