@@ -33,7 +33,7 @@ $form{noignore} = 1;            # Force us to load all build info, not
                                 # paying any attention to ignore_builds stuff.
 $maxdate = time();
 $mindate = $maxdate - 24*60*60;
-&load_data;
+tb_load_data();
 
 if (defined($tree)) {
     if( -r "$tree/mod.pl" ){
@@ -108,7 +108,7 @@ the tinderbox URL.<br>
 <INPUT TYPE=HIDDEN NAME=command VALUE=disable_builds>
 ";
 
-    @names = sort (@$build_name_names) ;
+    @names = sort (@$build_names) ;
 
     for $i (@names){
         if( $i ne "" ){

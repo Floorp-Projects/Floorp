@@ -32,8 +32,6 @@ $|=1;
 
 print "Content-type: text/html\n\n<HTML>\n";
 
-# &load_data;
-
 EmitHtmlHeader("Statistics");
 
 my $tree = $form{'tree'};

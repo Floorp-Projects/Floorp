@@ -272,7 +272,7 @@ sub last_successful_builds {
   $mindate = $maxdate - 5*60*60; # Go back 5 hours
   
   print STDERR "Loading build data...";
-  &load_data;
+  tb_load_data();
   print STDERR "done\n";
   
   for (my $ii=1; $ii <= $name_count; $ii++) {

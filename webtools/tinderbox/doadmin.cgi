@@ -27,7 +27,7 @@ umask O666;
 
 $|=1;
 
-check_password();
+tb_check_password();
 
 print "Content-type: text/html\n\n<HTML>\n";
 

@@ -17,111 +17,118 @@
 # Corporation. Portions created by Netscape are Copyright (C) 1998
 # Netscape Communications Corporation. All Rights Reserved.
 
-use lib "../bonsai";
+use lib '../bonsai';
 use Fcntl;
 
-require "tbglobals.pl";
+require 'tbglobals.pl';
 require 'lloydcgi.pl';
 
+# Process the form arguments
+#
 if (defined($args = $form{log})) {
-
+  # Use simplified arguments that uses the logfile as a key.
   ($tree, $logfile) = split /\//, $args;
 
-  my $br = find_build_record($tree, $logfile);
+  my $br = tb_find_build_record($tree, $logfile);
   $errorparser = $br->{errorparser};
   $buildname   = $br->{buildname};
   $buildtime   = $br->{buildtime};
 } else {
-  $tree        = $form{'tree'};
-  $logfile     = $form{'logfile'};
-  $errorparser = $form{'errorparser'};
-  $buildname   = $form{'buildname'};
-  $buildtime   = $form{'buildtime'};
+  # Use old style arguments;
+  $tree        = $form{tree};
+  $logfile     = $form{logfile};
+  $errorparser = $form{errorparser};
+  $buildname   = $form{buildname};
+  $buildtime   = $form{buildtime};
 }
 
-$enc_buildname = &url_encode($buildname);
-
-$note = $form{'note'};
-$who  = $form{'who'};
-
-$now = time;
-$now_str = &print_time($now);
-
-$|=1;
-
-if( -r "$tree/ignorebuilds.pl" ){
-     require "$tree/ignorebuilds.pl";
- }
+require "$tree/ignorebuilds.pl" if -r "$tree/ignorebuilds.pl";
 
 print "Content-Type:text/html\n";
-if ($ENV{"REQUEST_METHOD"} eq 'POST' && defined($form{'note'})) {
+
+# Remember email address in cookie
+#
+if (defined $ENV{REQUEST_METHOD} and $ENV{REQUEST_METHOD} eq 'POST'
+    and defined $form{note}) {
     # Expire the cookie 5 months from now
     print "Set-Cookie: email=$form{who}; expires="
         . toGMTString(time + 86400 * 152) . "; path=/\n";
 }     
 print "\n<HTML>\n";
 
-if( $url = $form{"note"} ){
+if ($form{note}) {
+  # Form Submission.
+  # Add the comment.
 
-    $note =~ s/\&/&amp;/gi;
-    $note =~ s/\</&lt;/gi;
-    $note =~ s/\>/&gt;/gi;
-    $enc_note = url_encode( $note );
+  my $note = $form{note};
+  my $who  = $form{who};
 
-    open( NOTES,">>$tree/notes.txt");
-    flock(NOTES, LOCK_EX);
-    print NOTES "$buildtime|$buildname|$who|$now|$enc_note\n"; 
+  $note =~ s/\&/&amp;/gi;
+  $note =~ s/\</&lt;/gi;
+  $note =~ s/\>/&gt;/gi;
+  my $enc_note = url_encode($note);
 
-       &LoadBuildTable;
+  my $now = time;
 
-    foreach $element (keys %form) {
+  # Save comment to the notes.txt file.
+  #
+  flock NOTES, LOCK_EX;
+  open NOTES, ">>$tree/notes.txt";
+  open TEST, ">$tree/test.txt";
+  print NOTES "$buildtime|$buildname|$who|$now|$enc_note\n"; 
 
-          if(exists ${$build_name_index}{$element}) {
-             print NOTES "${$build_name_index}{$element}|$element|$who|$now|$enc_note\n"; 
-          } #EndIf
-    } #Endforeach
-    close(NOTES);
+  # Find the latest times for the "other" trees
+  my (%build_status, %build_times);
+  tb_loadquickparseinfo($tree, \%build_status, \%build_times, 1);
 
-    print "<H1>The following comment has been added to the log</h1>\n";
+  foreach my $element (keys %form) {
+    # The checkboxes for the builds have "NAME" set to the build name
+print TEST "element: $element\n";
+    if (defined $build_times{$element}) {
+      print NOTES "$build_times{$element}|$element|$who|$now|$enc_note\n"; 
+    }
+  }
+  close NOTES;
 
-    #print "$buildname \n $buildtime \n $errorparser \n $logfile \n  $tree \n $enc_buildname \n";
-    print "<pre>\n[<b>$who - $now_str</b>]\n$note\n</pre>";
+  # Give a confirmation
+  #
+  print "<H1>The following comment has been added to the log</h1>\n";
+  print "<pre>\n[<b>$who - ".print_time($now)."</b>]\n$note\n</pre>";
 
-    print"
-<p><a href=\"showlog.cgi?tree=$tree\&buildname=$enc_buildname\&buildtime=$buildtime\&logfile=$logfile\&errorparser=$errorparser\">
-Go back to the Error Log</a>
-<a href=\"showbuilds.cgi?tree=$tree\">
-<br>Go back to the build Page</a>";
+  my $enc_buildname = url_encode($buildname);
+  print "<p><a href='showlog.cgi?tree=$tree&buildname=$enc_buildname"
+    ."e&buildtime=$buildtime&logfile=$logfile&errorparser=$errorparser'>"
+    ."Go back to the Error Log</a><a href='showbuilds.cgi?tree=$tree'><br>"
+    ."Go back to the build Page</a>";
 
-  # Build tinderbox static pages
-  $ENV{QUERY_STRING}="tree=$tree&static=1";
-  $ENV{REQUEST_METHOD}="GET";
-  system './showbuilds.cgi >/dev/null';
+  # Rebuild the static tinderbox pages
+  tb_build_static();
 
 } else {
+  # Print the form to submit a comment
 
-  &GetBuildNameIndex;
-
-  @names = sort (keys %$build_name_index);
-
-  if ($buildname eq '' || $buildtime == 0) {
+  if ($buildname eq '' or $buildtime == 0) {
     print "<h1>Invalid parameters</h1>\n";
     die "\n";
   }
 
-#print "$buildname \n $buildtime \n $errorparser \n $logfile \n  $tree \n $enc_buildname \n";
+  # Retrieve the email address from the cookie jar.
+  #
+  $emailvalue = '';
+  $emailvalue = " value='$cookie_jar{email}'" if defined $cookie_jar{email};
 
-$emailvalue = '';
-$emailvalue = " value='$cookie_jar{email}'" if defined($cookie_jar{email});
-
-print qq(
+  print <<__END_FORM;
 <head><title>Add a Comment to $buildname log</title></head>
 <body BGCOLOR="#FFFFFF" TEXT="#000000"LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000">
 
 <table><tr><td>
-<b><font size="+2">Add a Log Comment</font></b>
+  <b><font size="+2">
+    Add a Log Comment
+  </font></b>
 </td></tr><tr><td>
-<b><code>$buildname</code></b>
+  <b><code>
+    $buildname
+  </code></b>
 </td></tr></table>
 
 <form action='addnote.cgi' METHOD='post'>
@@ -149,58 +156,21 @@ print qq(
 </table>
 <br><b><font size="+2">Addition Builds</font></b><br>
 (Comment will be added to the most recent cycle.)<br>
-);
+__END_FORM
 
-for $other_build (@names){
-    if( $other_build ne "" ){
-      
-      if (not exists ${$ignore_builds}{$other_build}) {
-        if( $other_build ne $buildname ){
-          print "<INPUT TYPE=checkbox NAME=\"$other_build\">";
-          print "$other_build<BR>\n";
-        }
-      } #EndIf
+  # Find the names of the "other" trees
+  my (%build_status, %build_times);
+  tb_loadquickparseinfo($tree, \%build_status, \%build_times);
+
+  # Add a checkbox for the each of the other builds
+  for my $other_build_name (sort keys %build_status) {
+    if ($other_build_name ne '' and $other_build_name ne $buildname
+        and not $ignore_builds->{$other_build_name}) {
+      print "<INPUT TYPE='checkbox' NAME='$other_build_name'>";
+      print "$other_build_name<BR>\n";
     }
-} #Endfor
+  }
 
-print "<INPUT Type='submit' name='submit' value='Add Comment'><BR>
-</form>\n</body>\n</html>";
+  print "<INPUT Type='submit' name='submit' value='Add Comment'><BR>";
+  print "</form>\n</body>\n</html>";
 }
-
-sub GetBuildNameIndex {
-local($mailtime, $buildtime, $buildname, $errorparser, $buildstatus, $logfile, $binaryname);
-
-open(BUILDLOG, "$tree/build.dat") or die "Couldn't open build.dat: $!\n";
-
-while(<BUILDLOG>) {
-    chomp;
-    ($mailtime, $buildtime, $buildname, $errorparser, $buildstatus, $logfile, $binaryname) = 
-         split( /\|/ );
-
-    $build_name_index->{$buildname} = 0;
-
-} #EndWhile
-close(BUILDLOG);
-
-}
-
-
-sub LoadBuildTable {
-local($mailtime, $buildtime, $buildname, $errorparser, $buildstatus, $logfile, $binaryname);
-
-open(BUILDLOG, "$tree/build.dat") or die "Couldn't open build.dat: $!\n";
-
-while(<BUILDLOG>) {
-    chomp;
-    ($mailtime, $buildtime, $buildname, $errorparser, $buildstatus, $logfile, $binaryname) = 
-         split( /\|/ );
-
-    if ($buildtime > $build_name_index->{$buildname} ) {
-    $build_name_index->{$buildname} = $buildtime;
-    }
-
-} #EndWhile
-close(BUILDLOG);
-
-}
-

@@ -27,7 +27,7 @@ require 'imagelog.pl';
 require 'lloydcgi.pl';
 require 'header.pl';
 
-check_password();
+tb_check_password();
 
 print "Content-type: text/html\n\n";
 

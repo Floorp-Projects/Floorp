@@ -173,7 +173,7 @@ information:
             $build_name_index->{$br->{buildname}} = 1;
             $build_time_index->{$br->{buildtime}} = 1;
         other access into $build_table:
-            $build_name_names->[$i] = $n;
+            $build_names->[$i] = $n;
             $build_time_times->[$i] = $n;
 
 

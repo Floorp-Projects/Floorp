@@ -32,7 +32,7 @@ sub usage {
 
 use FileHandle;
 
-# This is for gunzip (should add a configure script to handle this).
+# This is for gunzip (Should add a configure script to handle this).
 $ENV{PATH} .= ":/usr/local/bin";
 
 unless ($#ARGV == 1) {
@@ -49,17 +49,15 @@ require "$tree/treedata.pl";
 #
 $fh = new FileHandle "gunzip -c $tree/$logfile |" 
   or die "Unable to open $tree/$logfile\n";
-($leaks, $bloat) = find_bloat_data($fh);
+@leaks_n_bloat = find_bloat_data($fh);
 $fh->close;
 
-unless (defined $leaks and defined $bloat) {
-  die "No bloat data found in log.\n";
-}
+die "No bloat data found in log.\n" unless @leaks_n_bloat;
 
 # Save the bloat data to 'bloat.dat'
 #
 open BLOAT, ">>$tree/bloat.dat" or die "Unable to open $tree/bloat.dat";
-print BLOAT "$logfile|$leaks|$bloat\n";
+print BLOAT "$logfile|".join('|', @leaks_n_bloat)."\n";
 close BLOAT;
 
 
@@ -72,19 +70,15 @@ sub find_bloat_data {
   my $inBloatStats = 0;
 
   while (<$fh>) {
-    if ($inBloatStats) {
-      if (/^TOTAL/) {
-        chomp;
-        # 2,4 is percentage, 1,3 is absolute.
-        #my ($leaks, $bloat) = (split)[2,4];
-        my ($leaks, $bloat) = (split)[1,3];
-        #chop $leaks;
-        #chop $bloat;
-        return $leaks, $bloat;
-      }
-    } else {
-      $inBloatStats = 1 if /^\#* BLOAT STATISTICS/;
+    if ($inBloatStats and /^TOTAL/) {
+      # Line format:
+      #  TOTAL <absolute leaks> <% leaks delta> <absolute bloat> <% bloat delta>
+      chomp;
+      return (split)[1,3];
+    }
+    elsif (not $inBloatStats and /^\#* BLOAT STATISTICS/) {
+      $inBloatStats = 1;
     }
   }
-  return undef, undef;
+  return ();
 }

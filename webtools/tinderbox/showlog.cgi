@@ -303,7 +303,8 @@ sub output_log_line {
   my $has_warning = &has_warning($line);
 
   $line =~ s/&/&amp;/g;
-  $line =~ s/</&lt;/g;
+  $line =~ s/</&lt;/g unless $line =~ /^<a name=[^>]*>(?:<\/a>)?$/i or
+                             $line =~ /^<\/a>$/i;
 
   my $logline = '';
 
