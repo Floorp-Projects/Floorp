@@ -33,8 +33,6 @@ use strict;
 
 use base qw(Exporter);
 
-use Bugzilla::Util;
-
 # Under mod_perl, get this from a .htaccess config variable,
 # and/or default from the current 'real' dir
 # At some stage after this, it may be possible for these dir locations
@@ -307,7 +305,7 @@ sub check_multi {
     my ($value, $param) = (@_);
 
     if ($param->{'type'} eq "s") {
-        unless (lsearch($param->{'choices'}, $value) >= 0) {
+        unless (scalar(grep {$_ eq $value} (@{$param->{'choices'}}))) {
             return "Invalid choice '$value' for single-select list param '$param'";
         }
 
@@ -315,7 +313,7 @@ sub check_multi {
     }
     elsif ($param->{'type'} eq "m") {
         foreach my $chkParam (@$value) {
-            unless (lsearch($param->{'choices'}, $chkParam) >= 0) {
+            unless (scalar(grep {$_ eq $chkParam} (@{$param->{'choices'}}))) {
                 return "Invalid choice '$chkParam' for multi-select list param '$param'";
             }
         }
