@@ -79,24 +79,22 @@ pascal void __terminatePrefs(void)
 static JSBool pref_ReadResource(short id)
 //----------------------------------------------------------------------------------------
 {
-	JSBool ok = JS_FALSE;
-	Handle data;
-	UInt32 datasize;
-	data = GetResource('TEXT', id);
-	
-	if (data)
-	{
-		DetachResource( data );
-		HNoPurge( data );
-		MoveHHi( data );
-		datasize = GetHandleSize(data);
+	Handle data = GetResource('TEXT', id);	
+	if (!data)
+		return JS_FALSE;
 
-		HLock(data);
-		ok = (JSBool) PREF_QuietEvaluateJSBuffer((char*) *data, datasize);
-		HUnlock(data);
-		DisposeHandle(data);
-	}
+	HLock(data);
+	UInt32 datasize = GetHandleSize(data);
 
+//	JSBool ok = (JSBool) PREF_QuietEvaluateJSBuffer((char*)*data, datasize);
+	JSBool ok = PREF_EvaluateConfigScript(
+		(char*)*data, datasize,
+		NULL, // No file
+		PR_FALSE, // Don't global context
+		PR_FALSE, // No callbacks
+		PR_FALSE // Don't skip first line.
+		);
+	ReleaseResource(data);
 	return ok;
 }
 
@@ -106,7 +104,7 @@ JSBool pref_InitInitialObjects()
 // appropriate TEXT resources
 //----------------------------------------------------------------------------------------
 {
-#if 1
+#if 0
     return JS_TRUE; // for now.
 #else
 	if (gPrefResources <= 0)
@@ -129,7 +127,8 @@ JSBool pref_InitInitialObjects()
 		ok = pref_ReadResource(3015);			// macprefs.js
 	
 	::CloseResFile(gPrefResources);
-	::UseResFile(savedResFile);
+	if (savedResFile != gPrefResources)
+		::UseResFile(savedResFile);
 	gPrefResources = -1;
 	return ok;
 #endif
