@@ -63,7 +63,6 @@ EXPORTS		= \
 		nsIFontNameIterator.h \
 		nsIFontSizeIterator.h \
 		nsIFontRetrieverService.h \
-		nsIContextMenu.h \
 		nsIDragSessionGTK.h \
 		nsIDragSessionXlib.h \
 		nsIDragSessionMac.h \

@@ -95,15 +95,6 @@ public:
                       PRBool aIsHiddenWindow, nsWidgetInitData& widgetInitData);
   nsIWidget* GetWidget(void) { return mWindow; }
 
-  void DoContextMenu(
-	  nsMenuEvent * aMenuEvent,
-	  nsIDOMNode  * aMenuNode, 
-	  nsIWidget   * aParentWindow,
-	  PRInt32       aX,
-	  PRInt32       aY,
-    const nsString& aPopupAlignment,
-    const nsString& aAnchorAlignment);
-  
   // nsIWebProgressListener
   NS_DECL_NSIWEBPROGRESSLISTENER
   

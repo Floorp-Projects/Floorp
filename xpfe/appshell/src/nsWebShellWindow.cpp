@@ -68,7 +68,6 @@
 #include "nsIMenu.h"
 #include "nsIMenuItem.h"
 #include "nsIMenuListener.h"
-#include "nsIContextMenu.h"
 #include "nsITimer.h"
 
 // For JS Execution
@@ -989,48 +988,6 @@ void nsWebShellWindow::LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWi
   } // end if (menuBar)
 
 } // nsWebShellWindow::LoadMenus
-
-//------------------------------------------------------------------------------
-void nsWebShellWindow::DoContextMenu(
-  nsMenuEvent * aMenuEvent,
-  nsIDOMNode  * aMenuNode, 
-  nsIWidget   * aParentWindow,
-  PRInt32       aX,
-  PRInt32       aY,
-  const nsString& aPopupAlignment,
-  const nsString& aAnchorAlignment) 
-{
-  if (aMenuNode) {
-    nsIContextMenu * pnsContextMenu;
-    nsresult rv = nsComponentManager::CreateInstance(kContextMenuCID, nsnull, NS_GET_IID(nsIContextMenu), (void**)&pnsContextMenu);
-    if (NS_SUCCEEDED(rv) && pnsContextMenu) {
-        nsISupports * supports;
-        aParentWindow->QueryInterface(NS_GET_IID(nsISupports), (void**) &supports);
-        pnsContextMenu->Create(supports, aPopupAlignment, aAnchorAlignment);
-        NS_RELEASE(supports);
-        pnsContextMenu->SetLocation(aX,aY);
-        // Set webshell
-        pnsContextMenu->SetWebShell( mWebShell );
-        
-        // Set DOM node
-        pnsContextMenu->SetDOMNode( aMenuNode );
-        
-        // Construct and show menu
-        nsIMenuListener * listener;
-        pnsContextMenu->QueryInterface(NS_GET_IID(nsIMenuListener), (void**) &listener);
-        
-        // Dynamically construct and track the menu
-        listener->MenuSelected(*aMenuEvent);
-        
-        // Destroy the menu
-        listener->MenuDeselected(*aMenuEvent); 
-        
-        // The parent owns the context menu, so we can release it	
-        NS_RELEASE(listener);	
-		    NS_RELEASE(pnsContextMenu);
-    }
-  } // end if (aMenuNode)
-}
 #endif
 
 //------------------------------------------------------------------------------
