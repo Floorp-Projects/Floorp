@@ -21,7 +21,7 @@
 
 #include "nsIDOMUIEvent.idl"
 
-[scriptable, uuid(FF751EDC-8B02-AAE7-0010-8301838A3123)]
+[scriptable, uuid(ff751edc-8b02-aae7-0010-8301838a3123)]
 interface nsIDOMMouseEvent : nsIDOMUIEvent
 {
   readonly attribute long               screenX;
@@ -30,10 +30,10 @@ interface nsIDOMMouseEvent : nsIDOMUIEvent
   readonly attribute long               clientX;
   readonly attribute long               clientY;
 
-  [noscript] readonly attribute boolean altKey;
-  [noscript] readonly attribute boolean ctrlKey;
-  [noscript] readonly attribute boolean shiftKey;
-  [noscript] readonly attribute boolean metaKey;
+  readonly attribute boolean            altKey;
+  readonly attribute boolean            ctrlKey;
+  readonly attribute boolean            shiftKey;
+  readonly attribute boolean            metaKey;
 
   readonly attribute unsigned short     button;
   readonly attribute nsIDOMEventTarget  relatedTarget;

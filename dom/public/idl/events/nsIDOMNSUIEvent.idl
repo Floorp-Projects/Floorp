@@ -21,7 +21,7 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(A6CF90C4-15B3-11D2-932E-00805F8ADD32)]
+[scriptable, uuid(a6cf90c4-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMNSUIEvent : nsISupports
 {
   boolean                   getPreventDefault();
