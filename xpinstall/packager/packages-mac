@@ -52,7 +52,6 @@ viewer:Components:AppShell.shlb
 viewer:Components:appshell.xpt 
 viewer:Components:bookmarks.shlb 
 viewer:Components:bookmarks.xpt 
-viewer:Components:BrowsingProfile.shlb 
 viewer:Components:Caps.shlb 
 viewer:Components:caps.xpt 
 viewer:Components:chardet.shlb 
