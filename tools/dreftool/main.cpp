@@ -573,7 +573,7 @@ public:
       else
         filename = mFilename;
     }
-    pos=mFilename.RFind("/mozilla/")+1;
+    pos=filename.Find("mozilla/");
     const char* buf=filename.get();
 
     if(-1<pos) {
