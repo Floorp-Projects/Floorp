@@ -2760,7 +2760,7 @@ nsHTMLEditor::GetCellFromRange(nsIDOMRange *aRange, nsIDOMElement **aCell)
   *aCell = nsnull;
 
   nsCOMPtr<nsIDOMNode> startParent;
-  nsresult res = aRange->GetStartParent(getter_AddRefs(startParent));
+  nsresult res = aRange->GetStartContainer(getter_AddRefs(startParent));
   if (NS_FAILED(res)) return res;
   if (!startParent) return NS_ERROR_FAILURE;
 
@@ -2773,7 +2773,7 @@ nsHTMLEditor::GetCellFromRange(nsIDOMRange *aRange, nsIDOMElement **aCell)
   if (!childNode) return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIDOMNode> endParent;
-  res = aRange->GetEndParent(getter_AddRefs(endParent));
+  res = aRange->GetEndContainer(getter_AddRefs(endParent));
   if (NS_FAILED(res)) return res;
   if (!startParent) return NS_ERROR_FAILURE;
 

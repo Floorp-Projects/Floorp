@@ -627,7 +627,7 @@ nsTextServicesDocument::FirstSelectedBlock(TSDBlockSelectionStatus *aSelStatus, 
       return NS_ERROR_FAILURE;
     }
 
-    result = range->GetStartParent(getter_AddRefs(parent));
+    result = range->GetStartContainer(getter_AddRefs(parent));
 
     if (NS_FAILED(result))
     {
@@ -938,7 +938,7 @@ nsTextServicesDocument::FirstSelectedBlock(TSDBlockSelectionStatus *aSelStatus, 
     return NS_ERROR_FAILURE;
   }
 
-  result = range->GetStartParent(getter_AddRefs(parent));
+  result = range->GetStartContainer(getter_AddRefs(parent));
 
   if (NS_FAILED(result))
   {
@@ -968,7 +968,7 @@ nsTextServicesDocument::FirstSelectedBlock(TSDBlockSelectionStatus *aSelStatus, 
     return result;
   }
 
-  result = range->GetIsCollapsed(&isCollapsed);
+  result = range->GetCollapsed(&isCollapsed);
 
   if (NS_FAILED(result))
   {
@@ -1135,7 +1135,7 @@ nsTextServicesDocument::LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus, P
       return NS_ERROR_FAILURE;
     }
 
-    result = range->GetStartParent(getter_AddRefs(parent));
+    result = range->GetStartContainer(getter_AddRefs(parent));
 
     if (NS_FAILED(result))
     {
@@ -1445,7 +1445,7 @@ nsTextServicesDocument::LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus, P
     return NS_ERROR_FAILURE;
   }
 
-  result = range->GetEndParent(getter_AddRefs(parent));
+  result = range->GetEndContainer(getter_AddRefs(parent));
 
   if (NS_FAILED(result))
   {
@@ -1475,7 +1475,7 @@ nsTextServicesDocument::LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus, P
     return result;
   }
 
-  result = range->GetIsCollapsed(&isCollapsed);
+  result = range->GetCollapsed(&isCollapsed);
 
   if (NS_FAILED(result))
   {
@@ -3225,7 +3225,7 @@ nsTextServicesDocument::GetCollapsedSelection(nsITextServicesDocument::TSDBlockS
   if (NS_FAILED(result))
     return result;
 
-  result = range->GetStartParent(getter_AddRefs(parent));
+  result = range->GetStartContainer(getter_AddRefs(parent));
 
   if (NS_FAILED(result))
     return result;
@@ -3905,7 +3905,7 @@ nsTextServicesDocument::GetRangeEndPoints(nsIDOMRange *aRange,
   if (!aRange || !aStartParent || !aStartOffset || !aEndParent || !aEndOffset)
     return NS_ERROR_NULL_POINTER;
 
-  result = aRange->GetStartParent(aStartParent);
+  result = aRange->GetStartContainer(aStartParent);
 
   if (NS_FAILED(result))
     return result;
@@ -3918,7 +3918,7 @@ nsTextServicesDocument::GetRangeEndPoints(nsIDOMRange *aRange,
   if (NS_FAILED(result))
     return result;
 
-  result = aRange->GetEndParent(aEndParent);
+  result = aRange->GetEndContainer(aEndParent);
 
   if (NS_FAILED(result))
     return result;

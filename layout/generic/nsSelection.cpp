@@ -2404,7 +2404,7 @@ printf("HandleTableSelection: Unselecting mUnselectCellOnMouseUp; rangeCount=%d\
           if (!range) return NS_ERROR_NULL_POINTER;
 
           nsCOMPtr<nsIDOMNode> parent;
-          result = range->GetStartParent(getter_AddRefs(parent));
+          result = range->GetStartContainer(getter_AddRefs(parent));
           if (NS_FAILED(result)) return result;
           if (!parent) return NS_ERROR_NULL_POINTER;
 
@@ -2718,7 +2718,7 @@ nsSelection::GetFirstCellNodeInRange(nsIDOMRange *aRange, nsIDOMNode **aCellNode
   *aCellNode = nsnull;
 
   nsCOMPtr<nsIDOMNode> startParent;
-  nsresult result = aRange->GetStartParent(getter_AddRefs(startParent));
+  nsresult result = aRange->GetStartContainer(getter_AddRefs(startParent));
   if (NS_FAILED(result)) return result;
   if (!startParent) return NS_ERROR_FAILURE;
 
@@ -3260,10 +3260,10 @@ nsDOMSelection::GetAnchorNode(nsIDOMNode** aAnchorNode)
 		return NS_ERROR_NULL_POINTER;
   nsresult result;
   if (GetDirection() == eDirNext){
-    result = mAnchorFocusRange->GetStartParent(aAnchorNode);
+    result = mAnchorFocusRange->GetStartContainer(aAnchorNode);
   }
   else{
-    result = mAnchorFocusRange->GetEndParent(aAnchorNode);
+    result = mAnchorFocusRange->GetEndContainer(aAnchorNode);
   }
 	return result;
 }
@@ -3291,10 +3291,10 @@ nsDOMSelection::GetFocusNode(nsIDOMNode** aFocusNode)
 		return NS_ERROR_NULL_POINTER;
   nsresult result;
   if (GetDirection() == eDirNext){
-    result = mAnchorFocusRange->GetEndParent(aFocusNode);
+    result = mAnchorFocusRange->GetEndContainer(aFocusNode);
   }
   else{
-    result = mAnchorFocusRange->GetStartParent(aFocusNode);
+    result = mAnchorFocusRange->GetStartContainer(aFocusNode);
   }
 
 	return result;
@@ -3405,7 +3405,7 @@ nsDOMSelection::FetchStartParent(nsIDOMRange *aRange)   //skip all the com stuff
   if (!aRange)
     return nsnull;
   nsCOMPtr<nsIDOMNode> returnval;
-  aRange->GetStartParent(getter_AddRefs(returnval));
+  aRange->GetStartContainer(getter_AddRefs(returnval));
   return returnval;
 }
 
@@ -3430,7 +3430,7 @@ nsDOMSelection::FetchEndParent(nsIDOMRange *aRange)     //skip all the com stuff
   if (!aRange)
     return nsnull;
   nsCOMPtr<nsIDOMNode> returnval;
-  aRange->GetEndParent(getter_AddRefs(returnval));
+  aRange->GetEndContainer(getter_AddRefs(returnval));
   return returnval;
 }
 
@@ -3771,9 +3771,9 @@ nsDOMSelection::LookUpSelection(nsIContent *aContent, PRInt32 aContentOffset, PR
       nsCOMPtr<nsIDOMNode> endNode;
       PRInt32 startOffset;
       PRInt32 endOffset;
-      range->GetStartParent(getter_AddRefs(startNode));
+      range->GetStartContainer(getter_AddRefs(startNode));
       range->GetStartOffset(&startOffset);
-      range->GetEndParent(getter_AddRefs(endNode));
+      range->GetEndContainer(getter_AddRefs(endNode));
       range->GetEndOffset(&endOffset);
       if (passedInNode == startNode && passedInNode == endNode){
         if (startOffset < (aContentOffset + aContentLength)  &&
@@ -4216,11 +4216,11 @@ nsDOMSelection::AddRange(nsIDOMRange* aRange)
   if(mFrameSelection)// don't assume we have a FrameSelection
   {
     nsCOMPtr<nsIDOMNode> startNode;
-    result = aRange->GetStartParent(getter_AddRefs(startNode));
+    result = aRange->GetStartContainer(getter_AddRefs(startNode));
     if (NS_SUCCEEDED(result))
     {
       nsCOMPtr<nsIDOMNode> endNode;
-      result = aRange->GetEndParent(getter_AddRefs(endNode));
+      result = aRange->GetEndContainer(getter_AddRefs(endNode));
       if (NS_SUCCEEDED(result))
       {
         if (startNode == endNode)
@@ -4384,7 +4384,7 @@ nsDOMSelection::CollapseToStart()
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIDOMNode> parent;
-  rv = firstRange->GetStartParent(getter_AddRefs(parent));
+  rv = firstRange->GetStartContainer(getter_AddRefs(parent));
   if (NS_SUCCEEDED(rv))
   {
     if (parent)
@@ -4419,7 +4419,7 @@ nsDOMSelection::CollapseToEnd()
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIDOMNode> parent;
-  rv = lastRange->GetEndParent(getter_AddRefs(parent));
+  rv = lastRange->GetEndContainer(getter_AddRefs(parent));
   if (NS_SUCCEEDED(rv))
   {
     if (parent)
@@ -4470,7 +4470,7 @@ nsDOMSelection::GetIsCollapsed(PRBool* aIsCollapsed)
     return rv;
   }
                              
-  return (range->GetIsCollapsed(aIsCollapsed));
+  return (range->GetCollapsed(aIsCollapsed));
 }
 
 NS_IMETHODIMP
@@ -4790,7 +4790,7 @@ nsDOMSelection::GetOriginalAnchorPoint(nsIDOMNode **aNode, PRInt32 *aOffset)
   if (!aNode || !aOffset || !mOriginalAnchorRange)
     return NS_ERROR_NULL_POINTER;
   nsresult result;
-  result = mOriginalAnchorRange->GetStartParent(aNode);
+  result = mOriginalAnchorRange->GetStartContainer(aNode);
   if (NS_FAILED(result))
     return result;
   result = mOriginalAnchorRange->GetStartOffset(aOffset);
@@ -4808,8 +4808,8 @@ nsDOMSelection::CopyRangeToAnchorFocus(nsIDOMRange *aRange)
   nsCOMPtr<nsIDOMNode> endNode;
   PRInt32 startOffset;
   PRInt32 endOffset;
-  aRange->GetStartParent(getter_AddRefs(startNode));
-  aRange->GetEndParent(getter_AddRefs(endNode));
+  aRange->GetStartContainer(getter_AddRefs(startNode));
+  aRange->GetEndContainer(getter_AddRefs(endNode));
   aRange->GetStartOffset(&startOffset);
   aRange->GetEndOffset(&endOffset);
   if (NS_FAILED(mAnchorFocusRange->SetStart(startNode,startOffset)))
@@ -4871,7 +4871,7 @@ nsDOMSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
   if (FetchFocusNode() ==  aParentNode && FetchFocusOffset() == aOffset)
     return NS_ERROR_FAILURE;//same node nothing to do!
 
-  res = mAnchorFocusRange->Clone(getter_AddRefs(range));
+  res = mAnchorFocusRange->CloneRange(getter_AddRefs(range));
   //range = mAnchorFocusRange;
 
   nsCOMPtr<nsIDOMNode> startNode;
@@ -4879,8 +4879,8 @@ nsDOMSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
   PRInt32 startOffset;
   PRInt32 endOffset;
 
-  range->GetStartParent(getter_AddRefs(startNode));
-  range->GetEndParent(getter_AddRefs(endNode));
+  range->GetStartContainer(getter_AddRefs(startNode));
+  range->GetEndContainer(getter_AddRefs(endNode));
   range->GetStartOffset(&startOffset);
   range->GetEndOffset(&endOffset);
 

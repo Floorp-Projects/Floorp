@@ -299,12 +299,12 @@ nsresult nsGeneratedContentIterator::Init(nsIDOMRange* aRange)
   mIsDone = PR_FALSE;
 
   // get common content parent
-  if (NS_FAILED(aRange->GetCommonParent(getter_AddRefs(dN))) || !dN)
+  if (NS_FAILED(aRange->GetCommonAncestorContainer(getter_AddRefs(dN))) || !dN)
     return NS_ERROR_FAILURE;
   mCommonParent = do_QueryInterface(dN);
 
   // get the start node and offset, convert to nsIContent
-  aRange->GetStartParent(getter_AddRefs(startDOM));
+  aRange->GetStartContainer(getter_AddRefs(startDOM));
   if (!startDOM) 
     return NS_ERROR_ILLEGAL_VALUE;
   startCon = do_QueryInterface(startDOM);
@@ -314,7 +314,7 @@ nsresult nsGeneratedContentIterator::Init(nsIDOMRange* aRange)
   aRange->GetStartOffset(&startIndx);
   
   // get the end node and offset, convert to nsIContent
-  aRange->GetEndParent(getter_AddRefs(endDOM));
+  aRange->GetEndContainer(getter_AddRefs(endDOM));
   if (!endDOM) 
     return NS_ERROR_ILLEGAL_VALUE;
   endCon = do_QueryInterface(endDOM);
@@ -968,18 +968,18 @@ nsresult nsGeneratedSubtreeIterator::Init(nsIDOMRange* aRange)
   PRInt32 numChildren;
 
   // get common content parent
-  if (NS_FAILED(aRange->GetCommonParent(getter_AddRefs(commonParent))) || !commonParent)
+  if (NS_FAILED(aRange->GetCommonAncestorContainer(getter_AddRefs(commonParent))) || !commonParent)
     return NS_ERROR_FAILURE;
   mCommonParent = do_QueryInterface(commonParent);
 
   // get start content parent
-  if (NS_FAILED(aRange->GetStartParent(getter_AddRefs(startParent))) || !startParent)
+  if (NS_FAILED(aRange->GetStartContainer(getter_AddRefs(startParent))) || !startParent)
     return NS_ERROR_FAILURE;
   cStartP = do_QueryInterface(startParent);
   aRange->GetStartOffset(&startIndx);
 
   // get end content parent
-  if (NS_FAILED(aRange->GetEndParent(getter_AddRefs(endParent))) || !endParent)
+  if (NS_FAILED(aRange->GetEndContainer(getter_AddRefs(endParent))) || !endParent)
     return NS_ERROR_FAILURE;
   cEndP = do_QueryInterface(endParent);
   aRange->GetEndOffset(&endIndx);

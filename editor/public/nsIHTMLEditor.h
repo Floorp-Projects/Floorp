@@ -59,7 +59,8 @@ public:
     eEditorFilterInputBit,                // text input is limited to certain character types, use mFilter
     eEditorMailBit,                       // use mail-compose editting rules
     eEditorDisableForcedUpdatesBit,       // prevent immediate view refreshes
-    eEditorDisableForcedReflowsBit        // prevent immediate reflows
+    eEditorDisableForcedReflowsBit,       // prevent immediate reflows
+    eEditorWidgetBit                      // bit for widgets
     
     // max 32 bits
   };
@@ -73,7 +74,8 @@ public:
     eEditorFilterInputMask          = (1 << eEditorFilterInputBit),
     eEditorMailMask                 = (1 << eEditorMailBit),
     eEditorDisableForcedUpdatesMask = (1 << eEditorDisableForcedUpdatesBit),
-    eEditorDisableForcedReflowsMask = (1 << eEditorDisableForcedReflowsBit)
+    eEditorDisableForcedReflowsMask = (1 << eEditorDisableForcedReflowsBit),
+    eEditorWidgetMask               = (1 << eEditorWidgetBit)
   };
   
   // below used by TypedText()

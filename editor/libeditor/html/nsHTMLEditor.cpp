@@ -1073,9 +1073,9 @@ NS_IMETHODIMP nsHTMLEditor::SetInlineProperty(nsIAtom *aProperty,
       
       // check for easy case: both range endpoints in same text node
       nsCOMPtr<nsIDOMNode> startNode, endNode;
-      res = range->GetStartParent(getter_AddRefs(startNode));
+      res = range->GetStartContainer(getter_AddRefs(startNode));
       if (NS_FAILED(res)) return res;
-      res = range->GetEndParent(getter_AddRefs(endNode));
+      res = range->GetEndContainer(getter_AddRefs(endNode));
       if (NS_FAILED(res)) return res;
       if ((startNode == endNode) && IsTextNode(startNode))
       {
@@ -1359,11 +1359,11 @@ nsresult nsHTMLEditor::SplitStyleAboveRange(nsIDOMRange *inRange,
   nsCOMPtr<nsIDOMNode> startNode, endNode, origStartNode;
   PRInt32 startOffset, endOffset, origStartOffset;
   
-  res = inRange->GetStartParent(getter_AddRefs(startNode));
+  res = inRange->GetStartContainer(getter_AddRefs(startNode));
   if (NS_FAILED(res)) return res;
   res = inRange->GetStartOffset(&startOffset);
   if (NS_FAILED(res)) return res;
-  res = inRange->GetEndParent(getter_AddRefs(endNode));
+  res = inRange->GetEndContainer(getter_AddRefs(endNode));
   if (NS_FAILED(res)) return res;
   res = inRange->GetEndOffset(&endOffset);
   if (NS_FAILED(res)) return res;
@@ -1628,11 +1628,11 @@ nsresult nsHTMLEditor::PromoteInlineRange(nsIDOMRange *inRange)
   nsCOMPtr<nsIDOMNode> startNode, endNode, parent;
   PRInt32 startOffset, endOffset;
   
-  res = inRange->GetStartParent(getter_AddRefs(startNode));
+  res = inRange->GetStartContainer(getter_AddRefs(startNode));
   if (NS_FAILED(res)) return res;
   res = inRange->GetStartOffset(&startOffset);
   if (NS_FAILED(res)) return res;
-  res = inRange->GetEndParent(getter_AddRefs(endNode));
+  res = inRange->GetEndContainer(getter_AddRefs(endNode));
   if (NS_FAILED(res)) return res;
   res = inRange->GetEndOffset(&endOffset);
   if (NS_FAILED(res)) return res;
@@ -1771,7 +1771,7 @@ NS_IMETHODIMP nsHTMLEditor::GetInlinePropertyWithAttrValue(nsIAtom *aProperty,
       // efficiency hack.  we cache prior results for being collapsed in a given text node.
       // this speeds up typing.  Note that other parts of the editor code have to clear out 
       // this cache after certain actions.
-      range->GetStartParent(getter_AddRefs(collapsedNode));
+      range->GetStartContainer(getter_AddRefs(collapsedNode));
       if (!collapsedNode) return NS_ERROR_FAILURE;
       // refresh the cache if we need to
       if (collapsedNode != mCachedNode) CacheInlineStyles(collapsedNode);
@@ -1983,9 +1983,9 @@ nsresult nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom *aProperty, const nsStri
       
       // check for easy case: both range endpoints in same text node
       nsCOMPtr<nsIDOMNode> startNode, endNode;
-      res = range->GetStartParent(getter_AddRefs(startNode));
+      res = range->GetStartContainer(getter_AddRefs(startNode));
       if (NS_FAILED(res)) return res;
-      res = range->GetEndParent(getter_AddRefs(endNode));
+      res = range->GetEndContainer(getter_AddRefs(endNode));
       if (NS_FAILED(res)) return res;
       if ((startNode == endNode) && IsTextNode(startNode))
       {
@@ -2090,7 +2090,7 @@ nsresult nsHTMLEditor::GetTextSelectionOffsets(nsIDOMSelection *aSelection,
   if ((NS_SUCCEEDED(findParentResult)) && (currentItem))
   {
     nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
-    range->GetCommonParent(getter_AddRefs(parentNode));
+    range->GetCommonAncestorContainer(getter_AddRefs(parentNode));
   }
   else 
   {
@@ -2984,7 +2984,7 @@ nsHTMLEditor::GetParentBlockTags(nsStringArray *aTagList, PRBool aGetLists)
       while (subRange)
       {
         nsCOMPtr<nsIDOMNode>startParent;
-        res = subRange->GetStartParent(getter_AddRefs(startParent));
+        res = subRange->GetStartContainer(getter_AddRefs(startParent));
         if (NS_SUCCEEDED(res) && startParent) 
         {
           nsCOMPtr<nsIDOMElement> blockParent;
@@ -3646,13 +3646,13 @@ nsHTMLEditor::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aRetu
 
   nsCOMPtr<nsIDOMNode> startParent;
   PRInt32 startOffset, endOffset;
-  res = range->GetStartParent(getter_AddRefs(startParent));
+  res = range->GetStartContainer(getter_AddRefs(startParent));
   if (NS_FAILED(res)) return res;
   res = range->GetStartOffset(&startOffset);
   if (NS_FAILED(res)) return res;
 
   nsCOMPtr<nsIDOMNode> endParent;
-  res = range->GetEndParent(getter_AddRefs(endParent));
+  res = range->GetEndContainer(getter_AddRefs(endParent));
   if (NS_FAILED(res)) return res;
   res = range->GetEndOffset(&endOffset);
   if (NS_FAILED(res)) return res;
@@ -6746,9 +6746,9 @@ nsHTMLEditor::RelativeFontChange( PRInt32 aSizeChange)
     
     // check for easy case: both range endpoints in same text node
     nsCOMPtr<nsIDOMNode> startNode, endNode;
-    res = range->GetStartParent(getter_AddRefs(startNode));
+    res = range->GetStartContainer(getter_AddRefs(startNode));
     if (NS_FAILED(res)) return res;
-    res = range->GetEndParent(getter_AddRefs(endNode));
+    res = range->GetEndContainer(getter_AddRefs(endNode));
     if (NS_FAILED(res)) return res;
     if ((startNode == endNode) && IsTextNode(startNode))
     {

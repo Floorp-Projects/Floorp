@@ -7,13 +7,13 @@ interface Range {
 	const unsigned short END_TO_START = 2;
 	const unsigned short END_TO_END = 3;
 
-    readonly attribute Node startParent;
+    readonly attribute Node startContainer;
     readonly attribute long startOffset;
-    readonly attribute Node endParent;
+    readonly attribute Node endContainer;
     readonly attribute long endOffset;
 
-    readonly attribute boolean isCollapsed;
-    readonly attribute Node commonParent;
+    readonly attribute boolean collapsed;
+    readonly attribute Node commonAncestorContainer;
 
     void setStart(in Node parent, in long offset);
     void setStartBefore(in Node sibling);
@@ -27,7 +27,7 @@ interface Range {
     void selectNode(in Node n);
     void selectNodeContents(in Node n);
 
-    int  compareEndPoints(in unsigned short how, in Range srcRange);
+    int  compareBoundaryPoints(in unsigned short how, in Range srcRange);
 
     void deleteContents();
 
@@ -37,7 +37,9 @@ interface Range {
     void insertNode(in Node n);
     void surroundContents(in Node n);
 
-    Range clone();
+    Range cloneRange();
+
+    void detach();
 
     DOMString toString();
  };

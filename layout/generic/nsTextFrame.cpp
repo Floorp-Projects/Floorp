@@ -2858,9 +2858,9 @@ nsTextFrame::SetSelected(nsIPresContext* aPresContext,
     PRInt32 endOffset;
     nsCOMPtr<nsIDOMNode> startNode;
     PRInt32 startOffset;
-    aRange->GetEndParent(getter_AddRefs(endNode));
+    aRange->GetEndContainer(getter_AddRefs(endNode));
     aRange->GetEndOffset(&endOffset);
-    aRange->GetStartParent(getter_AddRefs(startNode));
+    aRange->GetStartContainer(getter_AddRefs(startNode));
     aRange->GetStartOffset(&startOffset);
     nsCOMPtr<nsIContent> content;
     result = GetContent(getter_AddRefs(content));
