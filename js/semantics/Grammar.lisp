@@ -601,7 +601,7 @@
                    (:predicate laitem?))
   (grammar nil :type grammar :read-only t) ;The grammar to which this laitem belongs
   (item nil :type item :read-only t)       ;The item to which this laitem corresponds
-  (forbidden nil :type terminalset :read-only t) ;A set of terminals that must not occur after the dot because of lookahead-constraints
+  (forbidden nil :type terminalset)        ;A set of terminals that must not occur after the dot because of lookahead-constraints
   (lookaheads nil :type terminalset)       ;Set of lookahead terminals
   (propagates nil :type list))             ;List of (laitem . mask) to which lookaheads propagate from this laitem (see note below)
 ;When parsing a LALR(1) grammar, propagates contains all laitems (in this and other states)
@@ -708,9 +708,20 @@
 
 ; Return the transition for the given terminal or nil if there is none.
 (defun state-transition (state terminal)
-  (cdr 
-   (or (assoc terminal (state-transitions state) :test *grammar-symbol-=*)
-       (assoc nil (state-transitions state) :test *grammar-symbol-=*))))
+  (let ((transitions (state-transitions state)))
+    (cdr 
+     (or (assoc terminal transitions :test *grammar-symbol-=*)
+         (assoc nil transitions :test *grammar-symbol-=*)))))
+
+
+; If the state has the same transition for every terminal, return that transition;
+; otherwise return nil.
+(defun state-only-transition (state)
+  (let ((transitions (state-transitions state)))
+    (and transitions
+         (null (cdr transitions))
+         (null (caar transitions))
+         (cdar transitions))))
 
 
 ; If all outgoing transitions from the state are the same reduction, return that
