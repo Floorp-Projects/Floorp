@@ -1846,8 +1846,12 @@ NS_IMETHODIMP GlobalWindowImpl::Focus()
 {
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
   GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
-  if (treeOwnerAsWin)
+  if (treeOwnerAsWin) {
     treeOwnerAsWin->SetVisibility(PR_TRUE);
+    nsCOMPtr<nsIEmbeddingSiteWindow> embeddingWin(do_GetInterface(treeOwnerAsWin));
+    if (embeddingWin)
+      embeddingWin->SetFocus();
+  }
 
   nsCOMPtr<nsIPresShell> presShell;
   if (mDocShell) {
