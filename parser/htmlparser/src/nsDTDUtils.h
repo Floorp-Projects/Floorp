@@ -68,6 +68,7 @@ public:
   eHTMLTags   Pop();
   eHTMLTags   First() const;
   eHTMLTags   TagAt(PRInt32 anIndex) const;
+  PRInt32     GetTopmostIndexOf(eHTMLTags aTag) const;
   eHTMLTags   operator[](PRInt32 anIndex) const;
   eHTMLTags   Last() const;
   void        Empty(void); 
