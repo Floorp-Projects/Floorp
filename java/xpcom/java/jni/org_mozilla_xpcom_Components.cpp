@@ -44,13 +44,17 @@ JNIEXPORT void JNICALL Java_org_mozilla_xpcom_Components_initXPCOM
     nsIServiceManager* servMgr;
     rv = NS_InitXPCOM(&servMgr, NULL);
     if (NS_FAILED(rv)) {
+#ifdef DEBUG_idk
         printf("--Components::initXPCOM failed \n");
+#endif
         return;
     }
     rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup,
                                           NULL /* default */);
     if (NS_FAILED(rv))  {
+#ifdef DEBUG_idk
         printf("--Components::initXPCOM failed \n");
+#endif
         return;
     }                                                                                                                                  
                                                            

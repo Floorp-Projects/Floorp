@@ -37,18 +37,38 @@ PRLogModuleInfo* bcJavaGlobal::log = NULL;
 #define JNIENV  (void**)
 #endif
 
-JNIEnv * bcJavaGlobal::GetJNIEnv(void) {
+static int counter = 0;
+
+JNIEnv * bcJavaGlobal::GetJNIEnv(int *detachRequired) {
     JNIEnv * env;
     int res;
+    *detachRequired = 1;
     if (!jvm) {
         StartJVM();
     }
     if (jvm) {
-        res = jvm->AttachCurrentThread(JNIENV &env,NULL);
+        res = jvm->GetEnv(JNIENV &env, JNI_VERSION_1_2);
+        if (res == JNI_OK) {
+            *detachRequired = 0;
+        } else {
+            res = jvm->AttachCurrentThread(JNIENV &env,NULL);
+#ifdef DEBUG_idk
+            printf("--bcJavaGlobal::GetJNIEnv ++counter %d\n",++counter);
+#endif
+        }
     }
     return env;
 }
 
+void bcJavaGlobal::ReleaseJNIEnv() {
+    int res;
+    if (jvm) {
+        res = jvm->DetachCurrentThread();
+#ifdef DEBUG_idk
+        printf("--bcJavaGlobal::ReleaseJNIEnv --counter %d\n",--counter);
+#endif
+    }
+}
 
 void bcJavaGlobal::StartJVM() {
     PRLogModuleInfo * l = GetLog();

@@ -48,9 +48,11 @@ public class bcJavaSample implements bcIJavaSample {
     }
     public void test1(int l) {
         System.out.println("--[java]bcJavaSample.test1 "+l+"\n");
-
-        
-    }
+        try {
+            Thread.currentThread().sleep(1000);
+        } catch (java.lang.InterruptedException e) {
+        };
+    }  
     public void test2(bcIJavaSample o) {
         System.out.println("--[java]bcJavaSample.test2");
         System.out.println("--[java]bcJavaSample.test2 :)))) Hi there");

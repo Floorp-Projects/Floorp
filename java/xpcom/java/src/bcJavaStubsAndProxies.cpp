@@ -118,10 +118,14 @@ NS_IMETHODIMP bcJavaStubsAndProxies::GetProxy(bcOID oid, const nsIID &iid, bcIOR
         *proxy = (jobject)tmp;
         PR_LOG(log, PR_LOG_DEBUG, ("\n--bcJavaStubsAndProxies::GetProxy we have shortcut for oid=%d\n",oid));
     } else {
-        JNIEnv * env = bcJavaGlobal::GetJNIEnv();
+        int detachRequired;
+        JNIEnv * env = bcJavaGlobal::GetJNIEnv(&detachRequired);
         jobject jiid = bcIIDJava::GetObject((nsIID*)&iid);
         *proxy = env->CallStaticObjectMethod(proxyFactory,getProxyID, (jlong)oid, jiid, (jlong)orb);
         EXCEPTION_CHECKING(env);
+        if (detachRequired) {
+            bcJavaGlobal::ReleaseJNIEnv();
+        }
     }
     return NS_OK;
 }
@@ -135,16 +139,21 @@ NS_IMETHODIMP bcJavaStubsAndProxies::GetInterface(const nsIID &iid,  jclass *cla
     if (!componentLoader) {
         return NS_ERROR_FAILURE;
     }
-    JNIEnv * env = bcJavaGlobal::GetJNIEnv();
+    int detachRequired;
+    JNIEnv * env = bcJavaGlobal::GetJNIEnv(&detachRequired);
     jobject jiid = bcIIDJava::GetObject((nsIID*)&iid);
     *clazz = (jclass)env->CallStaticObjectMethod(proxyFactory,getInterfaceID, jiid);
+    if (detachRequired) {
+        bcJavaGlobal::ReleaseJNIEnv();
+    }
     return NS_OK;
 }
 
 NS_IMETHODIMP  bcJavaStubsAndProxies::GetOID(jobject object, bcIORB *orb, bcOID *oid) {
     PRLogModuleInfo *log = bcJavaGlobal::GetLog();
     nsresult rv = NS_OK;
-    JNIEnv * env = bcJavaGlobal::GetJNIEnv();
+    int detachRequired;
+    JNIEnv * env = bcJavaGlobal::GetJNIEnv(&detachRequired);
     if (env->IsInstanceOf(object,java_lang_reflect_Proxy)) {
         EXCEPTION_CHECKING(env);
         jobject handler = env->CallStaticObjectMethod(java_lang_reflect_Proxy,getInvocationHandlerID,object);
@@ -154,12 +163,18 @@ NS_IMETHODIMP  bcJavaStubsAndProxies::GetOID(jobject object, bcIORB *orb, bcOID 
             EXCEPTION_CHECKING(env);
             *oid = env->CallLongMethod(handler,getOIDID);
             PR_LOG(log, PR_LOG_DEBUG, ("--bcJavaStubsAndProxies::GetOID we are using old oid %d\n",*oid));
+            if (detachRequired) {
+                bcJavaGlobal::ReleaseJNIEnv();
+            }
             return rv;
         }
     }
     bcIStub *stub = new bcJavaStub(object);
     *oid = orb->RegisterStub(stub);
     oid2objectMap->Put(new bcOIDKey(*oid),object);
+    if (detachRequired) {
+        bcJavaGlobal::ReleaseJNIEnv();
+    }
     return rv;
 
 }
@@ -167,13 +182,17 @@ NS_IMETHODIMP  bcJavaStubsAndProxies::GetOID(jobject object, bcIORB *orb, bcOID 
 NS_IMETHODIMP bcJavaStubsAndProxies::GetOID(char *location, bcOID *oid) { 
     PRLogModuleInfo *log = bcJavaGlobal::GetLog();
     PR_LOG(log,PR_LOG_DEBUG,("--bcJavaStubsAndProxies::GetOID %s\n",location));
-    JNIEnv * env = bcJavaGlobal::GetJNIEnv();
+    int detachRequired;
+    JNIEnv * env = bcJavaGlobal::GetJNIEnv(&detachRequired);
     nsresult result;
     
     if (!componentLoader) {
         Init();
     }
     if (!componentLoader) {
+        if (detachRequired) {
+            bcJavaGlobal::ReleaseJNIEnv();
+        }
         return NS_ERROR_FAILURE;
     }
     //location[strlen(location)-5] = 0; //nb dirty hack. location is xyz.jar.info
@@ -184,59 +203,87 @@ NS_IMETHODIMP bcJavaStubsAndProxies::GetOID(char *location, bcOID *oid) {
     NS_WITH_SERVICE(bcIORBComponent,_orb,kORBComponent,&result);
     if (NS_FAILED(result)) {
         PR_LOG(log,PR_LOG_DEBUG,("--bcJavaStubsAndProxies::GetOID failed\n"));
+        if (detachRequired) {
+            bcJavaGlobal::ReleaseJNIEnv();
+        }
         return result;
     }
     bcIORB *orb;
     _orb->GetORB(&orb);
     *oid = orb->RegisterStub(stub);
+    if (detachRequired) {
+        bcJavaGlobal::ReleaseJNIEnv();
+    }
     return NS_OK;
 }
 
 void bcJavaStubsAndProxies::Init(void) {
     PRLogModuleInfo *log = bcJavaGlobal::GetLog();
     PR_LOG(log, PR_LOG_DEBUG,("--[c++]bcJavaStubsAndProxies::Init\n"));
-    JNIEnv * env = bcJavaGlobal::GetJNIEnv();
+    int detachRequired;
+    JNIEnv * env = bcJavaGlobal::GetJNIEnv(&detachRequired);
     componentLoader = env->FindClass("org/mozilla/xpcom/ComponentLoader");
     if (env->ExceptionOccurred()) {
         env->ExceptionDescribe();
         componentLoader = 0;
         PR_LOG(log,PR_LOG_ALWAYS,("--Did you set CLASSPATH correctly\n"));
+        if (detachRequired) {
+            bcJavaGlobal::ReleaseJNIEnv();
+        }
         return;
     }
     componentLoader = (jclass)env->NewGlobalRef(componentLoader);
     if (env->ExceptionOccurred()) {
         env->ExceptionDescribe();
         componentLoader = 0;
+        if (detachRequired) {
+            bcJavaGlobal::ReleaseJNIEnv();
+        }
         return;
     }
     loadComponentID = env->GetStaticMethodID(componentLoader,"loadComponent","(Ljava/lang/String;)Ljava/lang/Object;");
     if (env->ExceptionOccurred()) {
         env->ExceptionDescribe();
         componentLoader = 0;
+        if (detachRequired) {
+            bcJavaGlobal::ReleaseJNIEnv();
+        }
         return;
     }
     proxyFactory = env->FindClass("org/mozilla/xpcom/ProxyFactory");
     if (env->ExceptionOccurred()) {
         env->ExceptionDescribe();
         componentLoader = 0;
+        if (detachRequired) {
+            bcJavaGlobal::ReleaseJNIEnv();
+        }
         return;
     }
     proxyFactory = (jclass)env->NewGlobalRef(proxyFactory);
     if (env->ExceptionOccurred()) {
         env->ExceptionDescribe();
         componentLoader = 0;
+        if (detachRequired) {
+            bcJavaGlobal::ReleaseJNIEnv();
+        }
         return;
     }
     getProxyID = env->GetStaticMethodID(proxyFactory, "getProxy","(JLorg/mozilla/xpcom/IID;J)Ljava/lang/Object;");
     if (env->ExceptionOccurred()) {
         env->ExceptionDescribe();
         componentLoader = 0;
+        if (detachRequired) {
+            bcJavaGlobal::ReleaseJNIEnv();
+        }
         return;
     }
     getInterfaceID = env->GetStaticMethodID(proxyFactory, "getInterface","(Lorg/mozilla/xpcom/IID;)Ljava/lang/Class;");
     if (env->ExceptionOccurred()) {
         env->ExceptionDescribe();
         componentLoader = 0;
+        if (detachRequired) {
+            bcJavaGlobal::ReleaseJNIEnv();
+        }
         return;
     }
 
@@ -244,6 +291,9 @@ void bcJavaStubsAndProxies::Init(void) {
     if (env->ExceptionOccurred()) {
         env->ExceptionDescribe();
         componentLoader = 0;
+        if (detachRequired) {
+            bcJavaGlobal::ReleaseJNIEnv();
+        }
         return;
     }
     
@@ -253,6 +303,9 @@ void bcJavaStubsAndProxies::Init(void) {
     if (env->ExceptionOccurred()) {
         env->ExceptionDescribe();
         componentLoader = 0;
+        if (detachRequired) {
+            bcJavaGlobal::ReleaseJNIEnv();
+        }
         return;
     }
 
@@ -260,6 +313,9 @@ void bcJavaStubsAndProxies::Init(void) {
     if (env->ExceptionOccurred()) {
         env->ExceptionDescribe();
         componentLoader = 0;
+        if (detachRequired) {
+            bcJavaGlobal::ReleaseJNIEnv();
+        }
         return;
     }
 
@@ -267,12 +323,18 @@ void bcJavaStubsAndProxies::Init(void) {
     if (env->ExceptionOccurred()) {
         env->ExceptionDescribe();
         componentLoader = 0;
+        if (detachRequired) {
+            bcJavaGlobal::ReleaseJNIEnv();
+        }
         return;
     }
     org_mozilla_xpcom_ProxyHandler = (jclass)env->NewGlobalRef(org_mozilla_xpcom_ProxyHandler);
     if (env->ExceptionOccurred()) {
         env->ExceptionDescribe();
         componentLoader = 0;
+        if (detachRequired) {
+            bcJavaGlobal::ReleaseJNIEnv();
+        }
         return;
     }
 
@@ -280,6 +342,9 @@ void bcJavaStubsAndProxies::Init(void) {
     if (env->ExceptionOccurred()) {
         env->ExceptionDescribe();
         componentLoader = 0;
+        if (detachRequired) {
+            bcJavaGlobal::ReleaseJNIEnv();
+        }
         return;
     }
 

@@ -41,16 +41,25 @@ bcJavaStub::bcJavaStub(jobject obj) : orb(NULL) {
         PR_LOG(log,PR_LOG_DEBUG,("--bcJavaStub::bcJavaStub obj== 0\n"));
         return;
     }
-    JNIEnv * env = bcJavaGlobal::GetJNIEnv();
+    int detachRequired;
+    JNIEnv * env = bcJavaGlobal::GetJNIEnv(&detachRequired);
     object = env->NewGlobalRef(obj);
     refCounter = 0;
+    if (detachRequired) {
+        bcJavaGlobal::ReleaseJNIEnv();
+    }
 }
 
 
 bcJavaStub::~bcJavaStub() {
-    bcJavaGlobal::GetJNIEnv()->DeleteGlobalRef(object);
+    int detachRequired;
+    JNIEnv *env = bcJavaGlobal::GetJNIEnv(&detachRequired);
+    env->DeleteGlobalRef(object);
     if (orb != NULL) {
         orb->UnregisterStub(oid);
+    }
+    if (detachRequired) {
+        bcJavaGlobal::ReleaseJNIEnv();
     }
 }
 
@@ -66,13 +75,17 @@ void bcJavaStub::SetOID(bcOID _oid) {
 void bcJavaStub::Dispatch(bcICall *call) {
     //sigsend(P_PID, getpid(),SIGINT);
     PRLogModuleInfo *log = bcJavaGlobal::GetLog();
-    JNIEnv * env = bcJavaGlobal::GetJNIEnv();
+    int detachRequired;
+    JNIEnv * env = bcJavaGlobal::GetJNIEnv(&detachRequired);
     bcIID iid; bcOID oid; bcMID mid;
     jobjectArray args;
     call->GetParams(&iid, &oid, &mid);
 
     if (mid == 1) { //AddRef
         refCounter++;
+        if (detachRequired) {
+            bcJavaGlobal::ReleaseJNIEnv();
+        }
         return;
     } else if (mid == 2) { //Release
         refCounter--;
@@ -80,6 +93,9 @@ void bcJavaStub::Dispatch(bcICall *call) {
         if (refCounter <= 0) { 
             printf("-java delete\n");
             delete this;
+            if (detachRequired) {
+                bcJavaGlobal::ReleaseJNIEnv();
+            }
             return;
         }
     }
@@ -88,15 +104,24 @@ void bcJavaStub::Dispatch(bcICall *call) {
     nsIInterfaceInfoManager* iimgr;
     if((iimgr = XPTI_GetInterfaceInfoManager()) != NULL) {
         if (NS_FAILED(iimgr->GetInfoForIID(&iid, &interfaceInfo))) {
+            if (detachRequired) {
+                bcJavaGlobal::ReleaseJNIEnv();
+            }
             return;  //nb exception handling
         }
         NS_RELEASE(iimgr);
     } else {
+        if (detachRequired) {
+            bcJavaGlobal::ReleaseJNIEnv();
+        }
         return;
     }
     if (!objectClass) {
         Init();
         if (!objectClass) {
+            if (detachRequired) {
+                bcJavaGlobal::ReleaseJNIEnv();
+            }
             return;
         }
     }
@@ -124,26 +149,39 @@ void bcJavaStub::Dispatch(bcICall *call) {
         mt->Marshal(m, retval);
     }
     delete m; delete um; delete mt;
+    if (detachRequired) {
+        bcJavaGlobal::ReleaseJNIEnv();
+    }
     return;
 }
 
 
 void bcJavaStub::Init() {
-    JNIEnv * env = bcJavaGlobal::GetJNIEnv();
+    int detachRequired;
+    JNIEnv * env = bcJavaGlobal::GetJNIEnv(&detachRequired);
     objectClass = (jclass)env->NewGlobalRef(env->FindClass("java/lang/Object"));
     if (env->ExceptionOccurred()) {
         env->ExceptionDescribe();
+        if (detachRequired) {
+            bcJavaGlobal::ReleaseJNIEnv();
+        }
         return;
     }
 
     utilitiesClass = (jclass)env->NewGlobalRef(env->FindClass("org/mozilla/xpcom/Utilities"));
     if (env->ExceptionOccurred()) {
         env->ExceptionDescribe();
+        if (detachRequired) {
+            bcJavaGlobal::ReleaseJNIEnv();
+        }
         return;
     }
     callMethodByIndexMID = env->GetStaticMethodID(utilitiesClass,"callMethodByIndex","(Ljava/lang/Object;Lorg/mozilla/xpcom/IID;I[Ljava/lang/Object;)Ljava/lang/Object;");
     if (env->ExceptionOccurred()) {
         env->ExceptionDescribe();
+        if (detachRequired) {
+            bcJavaGlobal::ReleaseJNIEnv();
+        }
         return;
     }
 }

@@ -29,41 +29,59 @@ jmethodID bcIIDJava::getStringMID = NULL;
 static nsID nullID =   {0, 0, 0, {0, 0, 0, 0, 0, 0, 0, 0}};
 
 void bcIIDJava::Init(void) {
-    JNIEnv * env = bcJavaGlobal::GetJNIEnv();
+    int detachRequired;
+    JNIEnv * env = bcJavaGlobal::GetJNIEnv(&detachRequired);
     if (env) {
         if (!(iidClass = env->FindClass("org/mozilla/xpcom/IID"))
             || !(iidClass = (jclass) env->NewGlobalRef(iidClass))) {
             env->ExceptionDescribe();
             Destroy();
+            if (detachRequired) {
+                bcJavaGlobal::ReleaseJNIEnv();
+            }
             return;  
         }
         if (!(iidInitMID = env->GetMethodID(iidClass,"<init>","(Ljava/lang/String;)V"))) {
             env->ExceptionDescribe();
             Destroy();
+            if (detachRequired) {
+                bcJavaGlobal::ReleaseJNIEnv();
+            }
             return;
         }
         if (!(getStringMID = env->GetMethodID(iidClass,"getString","()Ljava/lang/String;"))) {
             env->ExceptionDescribe();
             Destroy();
+            if (detachRequired) {
+                bcJavaGlobal::ReleaseJNIEnv();
+            }
             return;
         }
     }
 }
 void bcIIDJava::Destroy() {
-    JNIEnv * env = bcJavaGlobal::GetJNIEnv();
+    int detachRequired;
+    JNIEnv * env = bcJavaGlobal::GetJNIEnv(&detachRequired);
     if (env) {
-	if (iidClass) {
-	    env->DeleteGlobalRef(iidClass);
-	    iidClass = NULL;
-	}
+        if (iidClass) {
+            env->DeleteGlobalRef(iidClass);
+            iidClass = NULL;
+        }
+    }
+    if (detachRequired) {
+        bcJavaGlobal::ReleaseJNIEnv();
     }
 }
 
 jobject  bcIIDJava::GetObject(nsIID *iid) {
-    JNIEnv * env = bcJavaGlobal::GetJNIEnv();
+    int detachRequired;
+    JNIEnv * env = bcJavaGlobal::GetJNIEnv(&detachRequired);
     if (!iid 
         || !env 
         || nullID.Equals(*iid)) {
+        if (detachRequired) {
+            bcJavaGlobal::ReleaseJNIEnv();
+        }
         return NULL;
     }
     if (!iidClass) {
@@ -76,7 +94,11 @@ jobject  bcIIDJava::GetObject(nsIID *iid) {
         siid[strlen(siid)-1] = 0;
         jstr = env->NewStringUTF((const char *)siid);
     }
-    return env->NewObject(iidClass,iidInitMID,jstr);
+    jobject ret = env->NewObject(iidClass,iidInitMID,jstr);
+    if (detachRequired) {
+        bcJavaGlobal::ReleaseJNIEnv();
+    }
+    return ret;
 }
 
 jclass bcIIDJava::GetClass() {
@@ -85,7 +107,8 @@ jclass bcIIDJava::GetClass() {
 
 nsIID bcIIDJava::GetIID(jobject obj) {
     nsIID iid;
-    JNIEnv * env = bcJavaGlobal::GetJNIEnv();
+    int detachRequired;
+    JNIEnv * env = bcJavaGlobal::GetJNIEnv(&detachRequired);
     if (env) {
         if (!iidClass) {
             Init();
@@ -99,6 +122,9 @@ nsIID bcIIDJava::GetIID(jobject obj) {
         } else {
             iid = nullID;
         }
+    }
+    if (detachRequired) {
+        bcJavaGlobal::ReleaseJNIEnv();
     }
     return iid;
 }

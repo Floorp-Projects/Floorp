@@ -32,7 +32,7 @@ public class Utilities {
             Debug.log("--[java]callMethodByIndex args["+i+"] = "+args[i]);
         }
         Method method = InterfaceRegistry.getMethodByIndex(mid,iid);
-        Debug.log("--[java] org.mozilla.xpcom.Utilities.callMethodByIndex method "+method);
+        Debug.log("--[java] org.mozilla.xpcom.Utilities.callMethodByIndex method "+method+" object "+obj);
         try {
             
             if (method != null) {

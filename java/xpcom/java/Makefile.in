@@ -27,6 +27,6 @@ srcdir          = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS= 	xpidl src jni loader  import classes components test
+DIRS= 	xpidl src jni loader  import classes components
 
 include $(topsrcdir)/config/rules.mk

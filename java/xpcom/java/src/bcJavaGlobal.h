@@ -37,7 +37,8 @@
 
 class bcJavaGlobal {
  public:
-    static JNIEnv * GetJNIEnv(void);
+    static JNIEnv * GetJNIEnv(int *detachRequired);
+    static void ReleaseJNIEnv();
     static PRLogModuleInfo * GetLog();
  private:
     static PRLogModuleInfo* log;
