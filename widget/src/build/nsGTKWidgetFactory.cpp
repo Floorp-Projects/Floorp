@@ -41,6 +41,7 @@
 #include "nsMenu.h"
 #include "nsMenuItem.h"
 #include "nsPopUpMenu.h"
+#include "nsTabWidget.h"
 
 #include "nsImageButton.h"
 #include "nsMenuButton.h"
@@ -67,6 +68,7 @@ static NS_DEFINE_IID(kCLookAndFeelCID, NS_LOOKANDFEEL_CID);
 static NS_DEFINE_IID(kCDialog,        NS_DIALOG_CID);
 static NS_DEFINE_IID(kCLabel,         NS_LABEL_CID);
 
+static NS_DEFINE_IID(kCTabWidget,     NS_TABWIDGET_CID);
 
 static NS_DEFINE_IID(kIWidget,        NS_IWIDGET_IID);
 static NS_DEFINE_IID(kIAppShellIID,   NS_IAPPSHELL_IID);
@@ -81,6 +83,7 @@ static NS_DEFINE_IID(kCMenu,          NS_MENU_CID);
 static NS_DEFINE_IID(kCMenuItem,      NS_MENUITEM_CID);
 static NS_DEFINE_IID(kCPopUpMenu,     NS_POPUPMENU_CID);
 
+		    
 static NS_DEFINE_IID(kCImageButton,   NS_IMAGEBUTTON_CID);
 static NS_DEFINE_IID(kCToolBar,       NS_TOOLBAR_CID);
 static NS_DEFINE_IID(kCToolBarManager,  NS_TOOLBARMANAGER_CID);
@@ -205,6 +208,9 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     }
     else if (mClassID.Equals(kCLabel)) {
         inst = (nsISupports *)(nsIWidget *)new nsLabel();
+    }
+    else if (mClassID.Equals(kCTabWidget)) {
+        inst = (nsISupports *)(nsIWidget *)new nsTabWidget();
     }
     else if (mClassID.Equals(kCMenuBar)) {
         inst = (nsISupports*)new nsMenuBar();
