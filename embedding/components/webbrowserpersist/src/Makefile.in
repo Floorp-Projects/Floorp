@@ -60,6 +60,8 @@ REQUIRES	= xpcom \
 		  unicharutil \
 		  docshell \
 		  shistory \
+		  imglib2 \
+		  gfx \
 		  $(NULL)
 
 CPPSRCS		= nsWebBrowserPersist.cpp \

@@ -1,5 +1,4 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -99,6 +98,8 @@
 #include "nsIDOMHTMLEmbedElement.h"
 #include "nsIDOMHTMLObjectElement.h"
 #include "nsIDOMHTMLDocument.h"
+
+#include "nsIImageLoadingContent.h"
 
 #include "ftpCore.h"
 #include "nsITransport.h"
@@ -2909,7 +2910,7 @@ nsWebBrowserPersist::CloneNodeWithFixedUpURIAttributes(
                 rv = ownerDocument->CreateComment(commentText, getter_AddRefs(comment));
                 if (comment)
                 {
-                    return comment->QueryInterface(NS_GET_IID(nsIDOMNode), (void **) aNodeOut);
+                    return CallQueryInterface(comment, aNodeOut);
                 }
             }
         }
@@ -2989,6 +2990,12 @@ nsWebBrowserPersist::CloneNodeWithFixedUpURIAttributes(
         rv = GetNodeToFixup(aNodeIn, aNodeOut);
         if (NS_SUCCEEDED(rv) && *aNodeOut)
         {
+            // Disable image loads
+            nsCOMPtr<nsIImageLoadingContent> imgCon =
+                do_QueryInterface(*aNodeOut);
+            if (imgCon)
+                imgCon->SetLoadingEnabled(PR_FALSE);
+
             FixupAnchor(*aNodeOut);
             FixupNodeAttribute(*aNodeOut, "src");
         }
@@ -3133,7 +3140,7 @@ nsWebBrowserPersist::StoreURIAttribute(
     rv = aNode->GetAttributes(getter_AddRefs(attrMap));
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
-    nsString attribute; attribute.AssignWithConversion(aAttribute);
+    NS_ConvertASCIItoUTF16 attribute(aAttribute);
     rv = attrMap->GetNamedItem(attribute, getter_AddRefs(attrNode));
     if (attrNode)
     {
@@ -3238,7 +3245,7 @@ nsWebBrowserPersist::FixupNodeAttribute(nsIDOMNode *aNode,
     rv = aNode->GetAttributes(getter_AddRefs(attrMap));
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
-    nsString attribute; attribute.AssignWithConversion(aAttribute);
+    NS_ConvertASCIItoUTF16 attribute(aAttribute);
     rv = attrMap->GetNamedItem(attribute, getter_AddRefs(attrNode));
     if (attrNode)
     {
