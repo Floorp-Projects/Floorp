@@ -139,8 +139,9 @@ class nsWindow : public nsBaseWidget,
    NS_IMETHOD              SetFont( const nsFont &aFont);
    NS_IMETHOD              SetColorMap( nsColorMap *aColorMap);
    NS_IMETHOD              SetCursor( nsCursor aCursor);
-   NS_IMETHOD             HideWindowChrome(PRBool aShouldHide);
+   NS_IMETHOD              HideWindowChrome(PRBool aShouldHide);
    NS_IMETHOD              SetTitle( const nsString& aTitle); 
+   NS_IMETHOD              SetIcon(const nsAString& aIconSpec); 
    NS_IMETHOD              SetMenuBar(nsIMenuBar * aMenuBar) { return NS_ERROR_FAILURE; } 
    NS_IMETHOD              ShowMenuBar(PRBool aShow)         { return NS_ERROR_FAILURE; } 
    NS_IMETHOD              Invalidate( PRBool aIsSynchronous);
@@ -235,7 +236,7 @@ protected:
    ULONG     mNextID;         // next child window id
    PSWP      mSWPs;           // SWPs for deferred window positioning
    ULONG     mlHave, mlUsed;  // description of mSWPs array
-   HPOINTER  mPointer;        // current PM pointer
+   HPOINTER  mFrameIcon;      // current frame icon
    HPS       mPS;             // cache PS for window
    ULONG     mPSRefs;         // number of refs to cache ps
    BOOL      mDragInside;     // track draginside state

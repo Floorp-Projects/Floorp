@@ -54,6 +54,12 @@
 #include "nsITimer.h"
 #include "nsIServiceManager.h"
 
+// For SetIcon
+#include "nsSpecialSystemDirectory.h"
+#include "nsAppDirectoryServiceDefs.h"
+#include "nsXPIDLString.h"
+#include "nsIFile.h"
+
 #include <stdlib.h>
 #include <ctype.h>
 
@@ -135,7 +141,7 @@ nsWindow::nsWindow() : nsBaseWidget()
     mSWPs               = 0;
     mlHave              = 0;
     mlUsed              = 0;
-    mPointer            = 0;
+    mFrameIcon          = 0;
     mPS                 = 0;
     mPSRefs             = 0;
     mDragInside         = FALSE;
@@ -174,6 +180,10 @@ nsWindow::~nsWindow()
   mIsDestroying = PR_TRUE;
   if (gCurrentWindow == this) {
     gCurrentWindow = nsnull;
+  }
+  if (mFrameIcon) {
+     WinFreeFileIcon(mFrameIcon);
+     mFrameIcon = NULLHANDLE;
   }
 
   // If the widget was released without calling Destroy() then the native
@@ -3111,6 +3121,52 @@ NS_METHOD nsWindow::SetTitle(const nsString& aTitle)
    }
    return NS_OK;
 } 
+
+NS_METHOD nsWindow::SetIcon(const nsAString& anIconSpec) 
+{
+  // Start at app chrome directory.
+  nsCOMPtr<nsIFile> chromeDir;
+  if ( NS_FAILED( NS_GetSpecialDirectory( NS_APP_CHROME_DIR,
+                                          getter_AddRefs( chromeDir ) ) ) ) {
+      return NS_ERROR_FAILURE;
+  }
+  // Get native file name of that directory.
+  nsAutoString iconPath;
+  chromeDir->GetPath( iconPath );
+
+  // Now take input path...
+  nsAutoString iconSpec( anIconSpec );
+  // ...append ".ico" to that.
+  iconSpec.Append( NS_LITERAL_STRING(".ico") );
+  // ...and figure out where /chrome/... is within that
+  // (and skip the "resource:///chrome" part).
+  nsAutoString key(NS_LITERAL_STRING("/chrome/"));
+  PRInt32 n = iconSpec.Find( key ) + key.Length();
+  // Convert / to \.
+  nsAutoString slash(NS_LITERAL_STRING("/"));
+  nsAutoString bslash(NS_LITERAL_STRING("\\"));
+  iconSpec.ReplaceChar( *(slash.get()), *(bslash.get()) );
+
+  // Append that to icon resource path.
+  iconPath.Append( iconSpec.get() + n - 1 );
+
+  nsCOMPtr<nsILocalFile> pathConverter;
+  if ( NS_SUCCEEDED( NS_NewLocalFile( iconPath,
+                                      PR_FALSE,
+                                      getter_AddRefs( pathConverter ) ) ) ) {
+    // Now try the char* path.
+    nsCAutoString aPath;
+    pathConverter->GetNativePath( aPath );
+    if (mFrameIcon) {
+      WinFreeFileIcon(mFrameIcon);
+      mFrameIcon = NULLHANDLE;
+    }
+    mFrameIcon = WinLoadFileIcon(aPath.get(), FALSE);
+    if (mFrameIcon)
+      WinSendMsg(mFrameWnd, WM_SETICON, (MPARAM)mFrameIcon, (MPARAM)0);
+  }
+  return NS_OK;
+}
 
 NS_METHOD nsWindow::GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight)
 {
