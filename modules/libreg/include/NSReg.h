@@ -165,6 +165,9 @@ VR_INTERFACE(REGERR) NR_RegClose(
  *
  * Parameters:
  *    hReg     - handle of open registry to query
+ * Returns:
+ *    REGERR_OK if writable, REGERR_READONLY if not, possibly
+ *    other errors for an invalid hReg
  * ---------------------------------------------------------------------
  */
 VR_INTERFACE(REGERR) NR_RegIsWritable(
