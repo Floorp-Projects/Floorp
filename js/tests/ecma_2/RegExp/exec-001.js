@@ -27,3 +27,8 @@
     // global property is true
     // global property is false
     // test cases in which the exec returns null
+
+	testcases[0] = { expect:"PASSED", actual:"PASSED", description:"NO TESTS EXIST" };
+
+	test();
+

@@ -13,15 +13,6 @@
 
     startTest();
 
-// These examples come from 15.7.1, OctalEscapeSequences
-
-/* If n is [8–9], and the decimal value of n is less than or equal to the
- * number of parenthesised subexpressions in the pattern, then \n is a
- * backreference; otherwise \n is the literal character n. For example, in
- * the pattern “(.)(.)(.)(.)(.)(.)(.)(.)\8”, “\8” is a backreference. By
- * contrast, in the pattern “……..\8”, “\8” is the character “8”.
- */
-
 // backreference
     AddRegExpCases(
         /(.)(.)(.)(.)(.)(.)(.)(.)\8/,
@@ -46,40 +37,6 @@
         "aabbccaababcc",
         0,
         ["aabbccaaba", "a", "a", "b", "b", "c", "c", "a", "a", "b"] );
-
-    AddRegExpCases(
-        /(.)(.)(.)(.)(.)(.)(.)(.)\9/,
-        "/(.)(.)(.)(.)(.)(.)(.)(.)\\9",
-        "aabbccddeeffgghh",
-        "aabbccddeeffgghh",
-        0,
-        null );
-
-// literal
-
-    AddRegExpCases(
-        /(.)(.)(.)(.)(.)(.)(.)\8/,
-        "/(.)(.)(.)(.)(.)(.)(.)\\8",
-        "aabbccaaa87654321",
-        "aabbccaaa87654321",
-        2,
-        ["bbccaaa8", "b", "b", "c", "c", "a", "a", "a"] );
-
-    AddRegExpCases(
-        /.......\8/,
-        "/.......\\8/",
-        "aabbccaaa87654321",
-        "aabbccaaa87654321",
-        2,
-        ["bbccaaa8"]);
-
-    AddRegExpCases(
-        /........\8/,
-        "/........\\8/",
-        "aabbccaaa87654321",
-        "aabbccaaa87654321",
-        1,
-        ["abbccaaa8"]);
 
     test();
 

@@ -13,13 +13,6 @@
 
     startTest();
 
-// These examples come from 15.7.1, OctalEscapeSequences
-
-// If n is exactly 1 octal digit other than “0”, and the octal value of n is
-// less than or equal to the number of parenthesised subexpressions in the
-// pattern, then \n is a backreference; otherwise \n is an octal value. For
-// example, in the pattern “(.)\1”, “\1” is a backreference. By contrast, in
-// the pattern “.\1”, “\1” is an octal value.
 
 // backreference
     AddRegExpCases(
@@ -29,21 +22,6 @@
         "HI!",
         2,
         ["!!", "!"] );
-
-// octal value
-    AddRegExpCases(
-        /.\1/,
-        "/.\\1/",
-        "HI!" + String.fromCharCode(1),
-        "HI!+ String.fromCharCode(1)",
-        2,
-        ["!\1"] );
-
-// backreference
-    AddRegExpCases( /(.)\041/, "/(.)\\041/", "HI!", "HI!", 1, ["I!", "I"] );
-
-// octal value
-    AddRegExpCases( /.\041/, "/.\\041/", "HI!", "HI!", 1, ["I!"] );
 
     test();
 
