@@ -83,6 +83,7 @@
 #include "nsIControllers.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
+#include "nsIDocShellTreeNode.h"
 #include "nsITransactionManager.h"
 
 ///////////////////////////////////////
@@ -94,6 +95,7 @@
 #include "nsIDOMText.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"
+#include "nsIDocumentLoader.h"
 
 #include "nsIEditor.h"
 #include "nsIHTMLEditor.h"
@@ -198,20 +200,19 @@ nsEditorShell::nsEditorShell()
 ,  mWrapColumn(0)
 ,  mSuggestedWordIndex(0)
 ,  mDictionaryIndex(0)
+,  mCloseWindowWhenLoaded(PR_FALSE)
 ,  mStringBundle(0)
 ,  mEditModeStyleSheet(0)
+,  mParserObserver(nsnull)
 {
-#ifdef APP_DEBUG
-  printf("Created nsEditorShell\n");
-#endif
-
   NS_INIT_REFCNT();
 }
 
 nsEditorShell::~nsEditorShell()
 {
   NS_IF_RELEASE(mStateMaintainer);
-
+  NS_IF_RELEASE(mParserObserver);
+  
   // the only other references we hold are in nsCOMPtrs, so they'll take
   // care of themselves.
 }
@@ -256,22 +257,19 @@ nsEditorShell::QueryInterface(REFNSIID aIID,void** aInstancePtr)
 NS_IMETHODIMP    
 nsEditorShell::Init()
 {  
-  //nsBaseAppCore::Init(aId);
-
   nsAutoString    editorType = "html";      // default to creating HTML editor
   mEditorTypeString = editorType;
   mEditorTypeString.ToLowerCase();
 
   // Get pointer to our string bundle
   nsresult res;
-  NS_WITH_SERVICE(nsIStringBundleService, service, kCStringBundleServiceCID, &res);
-  if (NS_FAILED(res)) { 
-    printf("ERROR: Failed to get StringBundle Service instance.\n");
+  nsCOMPtr<nsIStringBundleService> stringBundleService = do_GetService(kCStringBundleServiceCID, &res);
+  if (!stringBundleService) { 
+    NS_WARNING("ERROR: Failed to get StringBundle Service instance.\n");
     return res;
   }
-  nsILocale* locale = nsnull;
-  res = service->CreateBundle(EDITOR_BUNDLE_URL, locale, 
-                                 getter_AddRefs(mStringBundle));
+  nsILocale* aLocale = nsnull;
+  res = stringBundleService->CreateBundle(EDITOR_BUNDLE_URL, aLocale, getter_AddRefs(mStringBundle));
 
   // XXX: why are we returning NS_OK here rather than res?
   // is it ok to fail to get a string bundle?  if so, it should be documented.
@@ -279,7 +277,7 @@ nsEditorShell::Init()
 }
 
 NS_IMETHODIMP    
-nsEditorShell::PrepareDocumentForEditing(nsIURI *aUrl)
+nsEditorShell::PrepareDocumentForEditing(nsIDocumentLoader* aLoader, nsIURI *aUrl)
 {
   if (!mContentAreaWebShell)
     return NS_ERROR_NOT_INITIALIZED;
@@ -310,8 +308,19 @@ nsEditorShell::PrepareDocumentForEditing(nsIURI *aUrl)
     // Note that if you registered doc state listeners before the second
     // URL load, they don't get transferred to the new editor.
   }
+   
+  // get the webshell for this loader. Need this, not mContentAreaWebShell, in
+  // case we are editing a frameset
+  nsCOMPtr<nsISupports> loaderContainer;
+  aLoader->GetContainer(getter_AddRefs(loaderContainer));
+  nsCOMPtr<nsIWebShell> containerAsWebShell = do_QueryInterface(loaderContainer);
+  if (!containerAsWebShell)
+  {
+    NS_ASSERTION(0, "Failed to get loader container as web shell");
+    return NS_ERROR_UNEXPECTED;
+  }
   
-  nsresult rv = DoEditorMode(mContentAreaWebShell);
+  nsresult rv = DoEditorMode(containerAsWebShell);
   if (NS_FAILED(rv)) return rv;
   
   // transfer the doc state listeners to the editor
@@ -365,7 +374,6 @@ nsEditorShell::PrepareDocumentForEditing(nsIURI *aUrl)
     txnMgr->AddListener(NS_STATIC_CAST(nsITransactionListener*, mStateMaintainer));
   }
 
-
   if (NS_SUCCEEDED(rv) && mContentWindow)
   {
     nsCOMPtr<nsIController> controller;
@@ -401,6 +409,10 @@ nsEditorShell::PrepareDocumentForEditing(nsIURI *aUrl)
     char* pageScheme = nsnull;                                                  
     aUrl->GetScheme(&pageScheme);                                               
     aUrl->GetSpec(&pageURLString);
+
+#if DEBUG
+    printf("Editor is editing %s\n", pageURLString ? pageURLString : "");
+#endif
 
      // only save the file spec if this is a local file, and is not              
      // about:blank                                                              
@@ -513,7 +525,8 @@ nsEditorShell::SetWebShellWindow(nsIDOMWindow* aWin)
 
   mWebShell = webShell;
   //NS_ADDREF(mWebShell);
-  
+
+/*
 #ifdef APP_DEBUG
   nsXPIDLString name;
   nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(docShell));
@@ -524,6 +537,7 @@ nsEditorShell::SetWebShellWindow(nsIDOMWindow* aWin)
   printf("Attaching to WebShellWindow[%s]\n", cstr);
   nsCRT::free(cstr);
 #endif
+*/
 
   nsCOMPtr<nsIWebShellContainer> webShellContainer;
   mWebShell->GetContainer(*getter_AddRefs(webShellContainer));
@@ -653,16 +667,16 @@ nsEditorShell::DoEditorMode(nsIWebShell *aWebShell)
   if (!aWebShell)
       return NS_ERROR_NULL_POINTER;
 
-  nsCOMPtr<nsIDocument> Doc;
-  err = GetDocument(aWebShell, getter_AddRefs(Doc));
-  if (NS_SUCCEEDED(err) && Doc)
+  nsCOMPtr<nsIDocument> doc;
+  err = GetDocument(aWebShell, getter_AddRefs(doc));
+  if (NS_SUCCEEDED(err) && doc)
   {
-    nsCOMPtr<nsIDOMDocument>  DOMDoc;
-    if (NS_SUCCEEDED(Doc->QueryInterface(NS_GET_IID(nsIDOMDocument), (void**)getter_AddRefs(DOMDoc))))
+    nsCOMPtr<nsIDOMDocument>  domDoc = do_QueryInterface(doc);
+    if (domDoc)
     {
       nsCOMPtr<nsIPresShell> presShell = dont_AddRef(GetPresShellFor(aWebShell));
-      if( presShell )
-        err = InstantiateEditor(DOMDoc, presShell);
+      if (presShell)
+        err = InstantiateEditor(domDoc, presShell);
     }
   }
   return err;
@@ -987,100 +1001,102 @@ nsEditorShell::SetDisplayMode(PRInt32 aDisplayMode)
   if (aDisplayMode == eDisplayModeEdit && mEditModeStyleSheet)
     return NS_OK;
 
-  if (!mContentAreaWebShell)
+  if (!mEditor)
     return NS_ERROR_NOT_INITIALIZED;
 
-  nsCOMPtr<nsIPresShell> presShell = dont_AddRef(GetPresShellFor(mContentAreaWebShell));
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
+  
+  nsCOMPtr<nsIDOMDocument>  domDoc;
+  nsresult rv = editor->GetDocument(getter_AddRefs(domDoc));
+  nsCOMPtr<nsIDocument> document = do_QueryInterface(domDoc);
+  if(!document)
+    return NS_ERROR_NULL_POINTER;
+
+  nsCOMPtr<nsIPresShell> presShell;
+  rv = editor->GetPresShell(getter_AddRefs(presShell));
   if (!presShell)
     return NS_ERROR_NULL_POINTER;
 
-  nsCOMPtr<nsIDocument> document;
-  nsresult rv = presShell->GetDocument(getter_AddRefs(document));
+  nsCOMPtr<nsIStyleSet> styleSet;
+  rv = presShell->GetStyleSet(getter_AddRefs(styleSet));
   if (NS_SUCCEEDED(rv))
   {
-    if(!document)
+    if (!styleSet)
       return NS_ERROR_NULL_POINTER;
 
-    nsCOMPtr<nsIStyleSet> styleSet;
-    rv = presShell->GetStyleSet(getter_AddRefs(styleSet));
-    if (NS_SUCCEEDED(rv))
+    nsCOMPtr<nsIStyleSheet> styleSheet;
+    if (aDisplayMode == 0)
     {
-      if (!styleSet)
-        return NS_ERROR_NULL_POINTER;
+      // Create and load the style sheet for editor content
+      nsAutoString styleURL("chrome://editor/content/EditorContent.css");
 
-      nsCOMPtr<nsIStyleSheet> styleSheet;
-      if (aDisplayMode == 0)
+      nsCOMPtr<nsIURI>uaURL;
+      rv = NS_NewURI(getter_AddRefs(uaURL), styleURL);
+
+      if (NS_SUCCEEDED(rv))
       {
-        // Create and load the style sheet for editor content
-        nsAutoString styleURL("chrome://editor/content/EditorContent.css");
+        nsCOMPtr<nsIHTMLContentContainer> container = do_QueryInterface(document);
+        if (!container)
+          return NS_ERROR_NULL_POINTER;
 
-        nsCOMPtr<nsIURI>uaURL;
-        rv = NS_NewURI(getter_AddRefs(uaURL), styleURL);
-
+        nsCOMPtr<nsICSSLoader> cssLoader;
+        rv = container->GetCSSLoader(*getter_AddRefs(cssLoader));
         if (NS_SUCCEEDED(rv))
         {
-          nsCOMPtr<nsIHTMLContentContainer> container = do_QueryInterface(document);
-          if (!container)
+          if (!cssLoader)
             return NS_ERROR_NULL_POINTER;
 
-          nsCOMPtr<nsICSSLoader> cssLoader;
-          rv = container->GetCSSLoader(*getter_AddRefs(cssLoader));
+          nsCOMPtr<nsICSSStyleSheet>cssStyleSheet;
+          PRBool complete;
+
+          // We use null for the callback and data pointer because
+          //  we MUST ONLY load synchronous local files (no @import)
+          rv = cssLoader->LoadAgentSheet(uaURL, *getter_AddRefs(cssStyleSheet), complete, nsnull);
           if (NS_SUCCEEDED(rv))
           {
-            if (!cssLoader)
+            // Synchronous loads should ALWAYS return completed
+            if (!complete || !cssStyleSheet)
               return NS_ERROR_NULL_POINTER;
 
-            nsCOMPtr<nsICSSStyleSheet>cssStyleSheet;
-            PRBool complete;
-
-            // We use null for the callback and data pointer because
-            //  we MUST ONLY load synchronous local files (no @import)
-            rv = cssLoader->LoadAgentSheet(uaURL, *getter_AddRefs(cssStyleSheet), complete, nsnull);
-            if (NS_SUCCEEDED(rv))
-            {
-              // Synchronous loads should ALWAYS return completed
-              if (!complete || !cssStyleSheet)
-                return NS_ERROR_NULL_POINTER;
-
-              styleSheet = do_QueryInterface(cssStyleSheet);
-              if (!styleSheet)
-                return NS_ERROR_NULL_POINTER;
-            }
+            styleSheet = do_QueryInterface(cssStyleSheet);
+            if (!styleSheet)
+              return NS_ERROR_NULL_POINTER;
           }
         }
       }
-      else if (aDisplayMode >= 1)
+    }
+    else if (aDisplayMode >= 1)
+    {
+      if (!mEditModeStyleSheet)
       {
-        if (!mEditModeStyleSheet)
-        {
-          // The edit mode sheet was not previously loaded
-          return NS_OK;
-        }
-        styleSheet = mEditModeStyleSheet;
+        // The edit mode sheet was not previously loaded
+        return NS_OK;
       }
-      
-      if (NS_SUCCEEDED(rv))
+      styleSheet = mEditModeStyleSheet;
+    }
+    
+    if (NS_SUCCEEDED(rv))
+    {
+      switch (aDisplayMode)
       {
-        switch (aDisplayMode)
-        {
-          case eDisplayModeEdit:
-            styleSet->AppendOverrideStyleSheet(styleSheet);
-            mEditModeStyleSheet = styleSheet;
-            break;
-          case eDisplayModeBrowserPreview:
-            styleSet->RemoveOverrideStyleSheet(mEditModeStyleSheet);
-            mEditModeStyleSheet = 0;
-            break;
-          // Add more modes here, e.g., browser mode with JavaScript turned on?
-          default:
-            break;
-        }
-        // This notifies document observers to rebuild all frames
-        // (this doesn't affect style sheet because it is not a doc sheet)
-        document->SetStyleSheetDisabledState(styleSheet, PR_FALSE);
+        case eDisplayModeEdit:
+          styleSet->AppendOverrideStyleSheet(styleSheet);
+          mEditModeStyleSheet = styleSheet;
+          break;
+        case eDisplayModeBrowserPreview:
+          styleSet->RemoveOverrideStyleSheet(mEditModeStyleSheet);
+          mEditModeStyleSheet = 0;
+          break;
+        // Add more modes here, e.g., browser mode with JavaScript turned on?
+        default:
+          break;
       }
+      // This notifies document observers to rebuild all frames
+      // (this doesn't affect style sheet because it is not a doc sheet)
+      document->SetStyleSheetDisabledState(styleSheet, PR_FALSE);
     }
   }
+
   return rv;
 }
 
@@ -4039,11 +4055,23 @@ nsEditorShell::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL, cons
     }
   }
 
+  // set up a parser observer
+  if (!mParserObserver)
+  {
+    mParserObserver = new nsEditorParserObserver();
+    if (!mParserObserver) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    NS_ADDREF(mParserObserver);
+    mParserObserver->RegisterTagToWatch("FRAMESET");
+    mParserObserver->Start();
+  }
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsEditorShell::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsresult aStatus)
+nsEditorShell::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* aChannel, nsresult aStatus)
 {
   // for pages with charsets, this gets called the first time with a 
   // non-zero status value. Don't prepare the editor that time.
@@ -4051,11 +4079,62 @@ nsEditorShell::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel* channel,
   nsresult res = NS_OK;
 	if (NS_SUCCEEDED(aStatus))
 	{
-    nsCOMPtr<nsIURI>  aUrl;
-    channel->GetURI(getter_AddRefs(aUrl));
-    res = PrepareDocumentForEditing(aUrl);
-    SetChromeAttribute( mWebShell, "Editor:Throbber", "busy", "false" );
+    // can we handle this document?
+    if (mParserObserver)
+    {
+      mParserObserver->End();     // how do we know if this is the last call?
+      PRBool cancelEdit;
+      mParserObserver->GetBadTagFound(&cancelEdit);
+      if (cancelEdit)
+      {
+        NS_RELEASE(mParserObserver);
+        if (mWebShellWin)
+        {
+          // where do we pop up a dialog telling the user they can't edit this doc?
+          // this next call will close the window, but do we want to do that?  or tell the .js UI to do it?
+          mCloseWindowWhenLoaded = PR_TRUE;
+        }
+      }
+    }
+    
+    if (mCloseWindowWhenLoaded)
+    {
+      nsAutoString alertLabel, alertMessage;
+      GetBundleString("Alert", alertLabel);
+      GetBundleString("CantEditFramesetMsg", alertMessage);
+      Alert(alertLabel, alertMessage);
+
+      //mWebShellWin->Close();
+      //return NS_OK;
+    }
+
+    // if we're loading a frameset document (which we can't edit yet), don't make an editor.
+    // Only make an editor for child documents.
+    nsCOMPtr<nsISupports> container;
+    aLoader->GetContainer(getter_AddRefs(container));
+    nsCOMPtr<nsIDocShellTreeNode> docShellAsNode = do_QueryInterface(container);
+    if (!docShellAsNode)
+    {
+      NS_ASSERTION(0, "Failed to get the container for this loader as a nsIDocShellTreeNode");
+      return NS_OK;
+    }
+  
+    // only make an editor if this is a non frame-set document
+    PRInt32 numChildren;
+    if (NS_SUCCEEDED(docShellAsNode->GetChildCount(&numChildren)) && numChildren == 0)
+    {
+      nsCOMPtr<nsIURI>  aUrl;
+      aChannel->GetURI(getter_AddRefs(aUrl));
+      res = PrepareDocumentForEditing(aLoader, aUrl);
+      SetChromeAttribute( mWebShell, "Editor:Throbber", "busy", "false" );
+    }
   }
+
+
+  nsAutoString doneText;
+  GetBundleString("LoadingDone", doneText);
+  SetChromeAttribute(mWebShell, "statusText", "value", doneText);
+
   return res;
 }
 
@@ -4067,10 +4146,45 @@ nsEditorShell::OnStartURLLoad(nsIDocumentLoader* loader,
 }
 
 NS_IMETHODIMP
-nsEditorShell::OnProgressURLLoad(nsIDocumentLoader* loader,
+nsEditorShell::OnProgressURLLoad(nsIDocumentLoader* aLoader,
                                     nsIChannel* channel, PRUint32 aProgress, 
                                     PRUint32 aProgressMax)
 {
+  if (mParserObserver)
+  {
+    PRBool cancelEdit;
+    mParserObserver->GetBadTagFound(&cancelEdit);
+    if (cancelEdit)
+    {
+      /*
+      if (aLoader)
+        aLoader->Stop();
+      */
+      nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(mWebShell);
+      if (docShell)
+        docShell->StopLoad();
+      
+      mParserObserver->End();
+      NS_RELEASE(mParserObserver);
+
+      if (mWebShellWin) 
+      {
+        // where do we pop up a dialog telling the user they can't edit this doc?
+        // this next call will close the window, but do we want to do that?  or tell the .js UI to do it?
+        mCloseWindowWhenLoaded = PR_TRUE;
+
+        nsAutoString alertLabel, alertMessage;
+        GetBundleString("Alert", alertLabel);
+        GetBundleString("CantEditFramesetMsg", alertMessage);
+        Alert(alertLabel, alertMessage);
+
+        // mWebShellWin->Show(PR_FALSE);
+        
+        // if you leave the window up, you should kill the throbber
+        // SetChromeAttribute( mWebShell, "Editor:Throbber", "busy", "false" );
+      }
+    }
+  }
   return NS_OK;
 }
 
@@ -4078,6 +4192,9 @@ NS_IMETHODIMP
 nsEditorShell::OnStatusURLLoad(nsIDocumentLoader* loader,
                                   nsIChannel* channel, nsString& aMsg)
 {
+
+  SetChromeAttribute(mWebShell, "statusText", "value", aMsg);
+
   return NS_OK;
 }
 
