@@ -150,6 +150,11 @@
   table td.frame {
     width: 22%;
   }
+
+  span.comment {
+    color: red;
+  }
+
   </style>
 </head>
 <body>
@@ -212,16 +217,17 @@
   </div>
   <h1>Review of Reflow</h1>
   <ul>
-    <li>Reflow starts with pres shell,
+    <li>Reflow starts with pres shell
       <ul>
-        <li>which reflows the reflow root (usually the view port frame),</li>
-        <li>which reflows it children, etc.</li>
+        <li>Which reflows the reflow root (usually the view port frame),</li>
+        <li>Which reflows it children, etc.</li>
       </ul>
     </li>
     <li>Ususally it starts when the pres shell processes its queue of reflow commands.</li>
     <li>The reflower
 	 <ul>
-         <li>Positions reflowee (if it can) before actually reflowing in case views are involved <span class="comment">could you specify when those are involved</span></li>
+         <li>Positions reflowee (if it can) before actually reflowing in case views are involved 
+		 (e.g. absolutely positioned elements) </li>
          <li>Reflows reflowee and passes a reflow state (in) and a reflow metrics (in/out)</li> 
 	 </ul>
     </li>
@@ -235,13 +241,13 @@
   </div>
   <h1>Review of Reflow</h1>
   <ul>
-    <li>the reflow state:
+    <li>The reflow state:
 	 <ul>
       <li>Is a node in a tree structurally equivalent to the frame tree of reflow participants</li>
       <li>contains:
         <ul> 
          <li>reflow type,</li>
-         <li> avail size,</li> 
+         <li>avail size,</li> 
          <li>various computed values,</li>
          <li>resolved style structs</li>
          <li>possible request for preferred size and more.</li>
@@ -298,9 +304,9 @@
 
   <h1>Kinds of reflows</h1>
   <ul>
-    <li>initial - reflowee's first reflow must be of this type (reflower's responsibility).</li> 
-    <li>resize - reflowee gets a change in available space only. Similar to initial, except it can reoccur.</li> 
-    <li>incremental - has a reflow path (tree) where each node has a command with a target frame, <br>reflow command types are:</li> 
+    <li>Initial - reflowee's first reflow must be of this type (reflower's responsibility).</li> 
+    <li>Resize - reflowee gets a change in available space only. Similar to initial, except it can reoccur.</li> 
+    <li>Incremental - has a reflow path (tree) where each node has a command with a target frame, <br>reflow command types are:</li> 
    	 <ul class=nested>
       <li>dirty - something changed inside a target (e.g. it gains, loses children)</li>
       <li>style changed - a target changed stylisticly (recall, size is a style property)</li> 
@@ -318,13 +324,13 @@
   </div>
   <h1>Kinds of reflows</h1>
   <ul>
-    <li>incremental reflow (continued)
+    <li>Incremental reflow (continued)
 	 <ul class=nested>
       <li>reflower not allowed to change available size of reflowee</li>
       <li>reflow commands get coalesced to streamline processing</li> 
 	 </ul>
 	</li>
-    <li>style change 
+    <li>Style change 
 	 <ul class=nested>
       <li>a target changed stylistic if there is a target, otherwise every frame may need to respond</li>
       <li>parent of target usually turns it into an incremental reflow with a style changed command type</li> 
@@ -365,8 +371,8 @@
   </div>
   <h1>Table Reflow</h1>
   <ul>
-    <li>outer table reflows table and caption (if present)</li>
-	<li>table reflows row groups in multiple passes</li> 
+    <li>Outer table reflows table and caption (if present)</li>
+	<li>Table reflows row groups in multiple passes</li> 
 	 <ul class=nested>
       <li>Pass 1 - unconstrained width, height and requests max elem width.</li>
       <li>The table figures out the column widths (balances) given the style width constraints
@@ -386,14 +392,14 @@
   </div>
   <h1>Table Reflow</h1>
   <ul>
-	<li>table reflows row groups (continued)</li> 
+	<li>Table reflows row groups (continued)</li> 
 	 <ul class=nested>
       <li>The row group figures out the row heights given the its style height constraints
 	  its rows and cells and the actual heights of its rows and cells from the pass 2 reflow</li> 
       <li>If the table has a style height, it allocates extra height to its row groups, rows and cells.</li> 
 	 </ul>
 	</li>
-    <li>in each pass, row groups reflow rows which reflow cells which reflow cell blocks</li>
+    <li>In each pass, row groups reflow rows which reflow cells which reflow cell blocks</li>
   </ul>
 </div>
 
@@ -435,6 +441,10 @@ tblO 030176CC r=0 a=8940,UC c=0,0 cnt=429
    rowG 03017A7C d=4470,360
   tbl 030178C4 d=4500,450
  tblO 030176CC d=4500,450
+
+ <a href="frame_reflow_debug.html">frame reflow debugging</a> gives instructions 
+ for turning this on.
+ </pre>
    </td>
    <td>
      <pre style="font-size:.7em;">
@@ -471,7 +481,7 @@ Key:
   <h1>Table reflow optimizations</h1>
   <ul>
     <li>If the table is already balanced, pass 1 constrains the width (like a normal pass 2) based on the current
-	column widths. The pass 2 will get skipped if the table doesn't need to rebalance. <span class="comment">please clarify when can this happen</span></li> 
+	column widths. The pass 2 will get skipped if the table doesn't need to rebalance. <!--<span class="comment">please clarify when can this happen</span>--></li> 
     <li>Nested table reflowed with an unconstrained width (i.e. an ancestor is doing a pass 1 reflow)
 	will only do a pass 1 reflow on its children</li>
     <li>Outer table caches last avail width and avoids reflowing children if resize reflow is the same as previous</li>
@@ -492,7 +502,8 @@ Key:
   changes (style changed).</li> 
     <li>Caption is a target when it changes stylistically (style changed).</li>
     <li>Table, row group, row, col group, col is a target when a child is added or removed (dirty) or it changes
-  stylistically (style changed). <span class="comment">please show how the column style change is propagated into the cell reflows as the cells are reflowed by their parent rows and not cols</span></li>
+  stylistically (style changed). <!--<span class="comment">please show how the column style change is propagated 
+               into the cell reflows as the cells are reflowed by their parent rows and not cols</span>--></li>
     <li>In the dirty cases, a target posted the reflow command in AppendFrames, InsertFrames, or DeleteFrame.</li>
   </ul>
 </div>
@@ -585,7 +596,7 @@ Key:
   <h1>Special height reflow</h1>
   <ul>
     <li>The reflow state holds an observer and initiator</li>
-    <li>observer</li>
+    <li>Observer</li>
 	  <ul class=nested>
 	    <li>is the table cell used as the height basis</li>
         <li>set by frame without computed height in DidReflow</li>
@@ -593,7 +604,7 @@ Key:
         <li>doesn't change height during 3rd pass</li>
 	  </ul>
 	</li>
-    <li>initiator</li>
+    <li>Initiator</li>
 	  <ul class=nested>
 	    <li>is the table containing the observer</li>
         <li>starts the 3rd pass reflow and sets a bit in the reflow state</li>
@@ -610,7 +621,7 @@ Key:
   </div>
   <h1>Special height reflow</h1>
   <ul>
-    <li>optimizations</li>
+    <li>Optimizations</li>
 	  <ul class=nested>
 	    <li>only frames needing 3rd pass actually get it</li>
         <li>frames gettting a 3rd pass only get it once</li>
