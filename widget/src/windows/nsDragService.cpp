@@ -136,16 +136,31 @@ NS_IMETHODIMP nsDragService::GetNumDropItems (PRUint32 * aNumItems)
   UINT format = nsClipboard::GetFormat(MULTI_MIME);
   FORMATETC fe;
   SET_FORMATETC(fe, format, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL);
-
-  if (S_OK != mDataObject->QueryGetData(&fe)) {
-    *aNumItems = 1;
-    return NS_OK;
+  if ( mDataObject->QueryGetData(&fe) == S_OK ) {
+    // If it is the get the number of items in the collection
+    nsDataObjCollection * dataObjCol = NS_STATIC_CAST(nsDataObjCollection*, mDataObject);
+    if ( dataObjCol )
+      *aNumItems = dataObjCol->GetNumDataObjects();
+  }
+  else {
+    // Next check if we have a file drop. Return the number of files in
+    // the file drop as the number of items we have, pretending like we
+    // actually have > 1 drag item.
+    FORMATETC fe2;
+    SET_FORMATETC(fe2, CF_HDROP, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL);
+    if ( mDataObject->QueryGetData(&fe2) ) {
+      STGMEDIUM stm;
+      if ( mDataObject->GetData(&fe2, &stm) ) {      
+        HDROP hdrop = (HDROP) GlobalLock(stm.hGlobal);
+        *aNumItems = ::DragQueryFile(hdrop, 0xFFFFFFFF, NULL, 0);
+        ::GlobalUnlock(stm.hGlobal);
+        ::ReleaseStgMedium(&stm);
+      }
+    }
+    else
+      *aNumItems = 1;
   }
 
-  // If it is the get the number of items in the collection
-  nsDataObjCollection * dataObjCol = NS_STATIC_CAST(nsDataObjCollection*, mDataObject);
-  if ( dataObjCol )
-    *aNumItems = dataObjCol->GetNumDataObjects();
   return NS_OK;
 }
 
@@ -168,7 +183,7 @@ NS_IMETHODIMP nsDragService::GetData (nsITransferable * aTransferable, PRUint32 
   if (S_OK != mDataObject->QueryGetData(&fe)) {
     // Since there is only one object, they better be asking for item "0"
     if (anItem == 0) {
-      return nsClipboard::GetDataFromDataObject(mDataObject, nsnull, aTransferable);
+      return nsClipboard::GetDataFromDataObject(mDataObject, anItem, nsnull, aTransferable);
     } else {
       return NS_ERROR_FAILURE;
     }
@@ -179,7 +194,7 @@ NS_IMETHODIMP nsDragService::GetData (nsITransferable * aTransferable, PRUint32 
     PRUint32 cnt = dataObjCol->GetNumDataObjects();   
     if (anItem >= 0 && anItem < cnt) {
       IDataObject * dataObj = dataObjCol->GetDataObjectAt(anItem);
-      return nsClipboard::GetDataFromDataObject(dataObj, nsnull, aTransferable);
+      return nsClipboard::GetDataFromDataObject(dataObj, 0, nsnull, aTransferable);
     }
   }
   
