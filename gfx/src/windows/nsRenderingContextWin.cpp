@@ -1501,15 +1501,6 @@ NS_IMETHODIMP nsRenderingContextWin :: GetWidth(PRUnichar ch, nscoord &aWidth, P
 {
   PRUnichar buf[1];
   buf[0] = ch;
-#ifdef IBMBIDI
-  WORD charType=0;
-  if (::GetStringTypeW(CT_CTYPE3, &ch, 1, &charType) && (charType & C3_DIACRITIC) && !(charType & C3_ALPHA)) {
-//    aWidth = 0;
-    GetWidth(buf, 1, aWidth, aFontID);
-    aWidth *=-1;
-    return NS_OK;
-  }
-#endif
   return GetWidth(buf, 1, aWidth, aFontID);
 }
 
