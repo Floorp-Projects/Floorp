@@ -39,6 +39,12 @@ my $template = Bugzilla->template;
 my $dbh      = Bugzilla->dbh;
 my $sth;
 
+# @seen_schedules is a list of all of the schedules that have already been
+# touched by reset_timer.  If reset_timer sees a schedule more than once, it
+# sets it to NULL so it won't come up again until the next execution of
+# whine.pl
+my @seen_schedules = ();
+
 # These statement handles should live outside of their functions in order to
 # allow the database to keep their SQL compiled.
 my $sth_run_queries =
@@ -517,6 +523,15 @@ sub check_today {
 sub reset_timer {
     my $schedule_id = shift;
 
+    # Schedules may not be executed more than once for each invocation of
+    # whine.pl -- there are legitimate circumstances that can cause this, like
+    # a set of whines that take a very long time to execute, so it's done
+    # quietly.
+    if (grep(/^$schedule_id$/, @seen_schedules)) {
+        null_schedule($schedule_id);
+    }
+    push @seen_schedules, $schedule_id;
+
     $sth = $dbh->prepare( "SELECT run_day, run_time FROM whine_schedules " .
                           "WHERE id=?" );
     $sth->execute($schedule_id);
@@ -571,15 +586,21 @@ sub reset_timer {
         $sth->execute($minute_offset, $schedule_id);
     } else {
         # The minute offset is zero or less, which is not supposed to happen.
-        # This is a kind of safeguard against infinite loops.  NULL schedules
-        # will not be available to get_next_event until they are rescheduled.
-        $sth = $dbh->prepare("UPDATE whine_schedules " .
-                             "SET run_next = NULL " .
-                             "WHERE id=?");
-        $sth->execute($schedule_id);
-        # complain to STDERR 
-        print STDERR "Bad minute_offset for schedule ID $schedule_id\n";
+        # complain to STDERR
+        null_schedule($schedule_id);
+        print STDERR "Error: bad minute_offset for schedule ID $schedule_id\n";
     }
+}
+
+# null_schedule is used to safeguard against infinite loops.  Schedules with
+# run_next set to NULL will not be available to get_next_event until they are
+# rescheduled, which only happens when whine.pl starts.
+sub null_schedule {
+    my $schedule_id = shift;
+    $sth = $dbh->prepare("UPDATE whine_schedules " .
+                         "SET run_next = NULL " .
+                         "WHERE id=?");
+    $sth->execute($schedule_id);
 }
 
 # get_next_date determines the difference in days between now and the next
@@ -628,7 +649,7 @@ sub get_next_date {
         }
 
         $add_days = $day_num - $now_weekday;
-        if ($add_days < 0) { # it's next week
+        if ($add_days <= 0) { # it's next week
             $add_days += 7;
         }
     }
