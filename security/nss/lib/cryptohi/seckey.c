@@ -89,8 +89,12 @@ const SEC_ASN1Template SECKEY_DHPublicKeyTemplate[] = {
 };
 
 const SEC_ASN1Template SECKEY_DHParamKeyTemplate[] = {
-    { SEC_ASN1_INTEGER, offsetof(SECKEYPublicKey,u.dh.prime), },
-    { SEC_ASN1_INTEGER, offsetof(SECKEYPublicKey,u.dh.base), },
+    { SEC_ASN1_SEQUENCE,  0, NULL, sizeof(PQGParams) },
+    { SEC_ASN1_INTEGER, offsetof(PQGParams,prime), },
+    { SEC_ASN1_INTEGER, offsetof(PQGParams,subPrime), },
+    { SEC_ASN1_INTEGER, offsetof(PQGParams,base), },
+    /* XXX chrisk: this needs to be expanded for decoding of j and validationParms (RFC2459 7.3.2) */
+    { SEC_ASN1_SKIP_REST },
     { 0, }
 };
 
@@ -818,7 +822,7 @@ seckey_ExtractPublicKey(CERTSubjectPublicKeyInfo *spki)
     SECItem os;
     SECStatus rv;
     PRArenaPool *arena;
-    int tag;
+    SECOidTag tag;
 
     arena = PORT_NewArena (DER_DEFAULT_CHUNKSIZE);
     if (arena == NULL)

@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: blapit.h,v 1.1 2000/03/31 19:57:57 relyea%netscape.com Exp $
+ * $Id: blapit.h,v 1.2 2000/06/20 16:22:35 chrisk%netscape.com Exp $
  */
 
 #ifndef _BLAPIT_H_
@@ -161,6 +161,7 @@ struct PQGParamsStr {
     SECItem prime;    /* p */
     SECItem subPrime; /* q */
     SECItem base;     /* g */
+    /* XXX chrisk: this needs to be expanded to hold j and validationParms (RFC2459 7.3.2) */
 };
 typedef struct PQGParamsStr PQGParams;
 
