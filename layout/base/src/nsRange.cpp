@@ -78,6 +78,16 @@ public:
   NS_IMETHOD    Clone(nsIDOMRange** aReturn);
 
   NS_IMETHOD    ToString(nsString& aReturn);
+
+private:
+  PR_Bool mIsPositioned;
+  nsIDOMElement* mStartParent;
+  PRInt32 mStartOffset;
+  nsIDOMElement* mEndParent;
+  PRInt32 mEndOffset;
+
+  PR_Bool IsIncreasing(nsIDOMElement* sParent, PRInt32 sOffset,
+                       nsIDOMElement* eParent, PRInt32 eOffset);
 };
 
 nsresult
@@ -105,6 +115,12 @@ nsresult nsRange::QueryInterface(const nsIID& aIID,
 
 nsRange::nsRange() {
   NS_INIT_REFCNT();
+
+  mIsPositioned = PR_FALSE;
+  nsIDOMElement* mStartParent = NULL;
+  PRInt32 mStartOffset = 0;
+  nsIDOMElement* mEndParent = NULL;
+  PRInt32 mEndOffset = 0;
 } 
 
 nsRange::~nsRange() {
@@ -113,65 +129,220 @@ nsRange::~nsRange() {
 NS_IMPL_ADDREF(nsRange)
 NS_IMPL_RELEASE(nsRange)
 
-nsresult nsRange::GetIsPositioned(PRBool* aIsPositioned)
-{ return NS_ERROR_NOT_IMPLEMENTED; }
+PR_Bool nsRange::IsIncreasing(nsIDOMElement* sParent, PRInt32 sOffset,
+                              nsIDOMElement* eParent, PRInt32 eOffset)
+{
+  // XXX NEED IMPLEMENTATION!
+  return PR_TRUE;
+}
 
-nsresult nsRange::SetIsPositioned(PRBool aIsPositioned)
-{ return NS_ERROR_NOT_IMPLEMENTED; }
+nsresult nsRange::GetIsPositioned(PRBool* aIsPositioned)
+{
+  *aIsPositioned = mIsPositioned;
+  return NS_OK;
+}
 
 nsresult nsRange::GetStartParent(nsIDOMElement** aStartParent)
-{ return NS_ERROR_NOT_IMPLEMENTED; }
+{
+  if (!mIsPositioned)
+    return NS_ERROR_NOT_INITIALIZED;
+  if (!aStartParent)
+    return NS_ERROR_NULL_POINTER;
+  NS_IF_RELEASE(*aStartParent);
+  NS_IF_ADDREF(mStartParent);
+  *aStartParent = mStartParent;
+  return NS_OK;
+}
 
 nsresult nsRange::SetStartParent(nsIDOMElement* aStartParent)
-{ return NS_ERROR_NOT_IMPLEMENTED; }
+{
+  if (!mIsPositioned)
+    return NS_ERROR_NOT_INITIALIZED;
+  if (!IsIncreasing(aStartParent, mStartOffset,
+                    mEndParent, mEndOffset))
+    return NS_ERROR_ILLEGAL_VALUE;
+
+  NS_IF_RELEASE(mStartParent);
+  NS_IF_ADDREF(aStartParent);
+  mStartParent = aStartParent;
+  return NS_OK;
+}
 
 nsresult nsRange::GetStartOffset(PRInt32* aStartOffset)
-{ return NS_ERROR_NOT_IMPLEMENTED; }
+{
+  if (!mIsPositioned)
+    return NS_ERROR_NOT_INITIALIZED;
+  if (!aStartParent)
+    return NS_ERROR_NULL_POINTER;
+  *aStartOffset = mStartOffset;
+  return NS_OK;
+}
 
 nsresult nsRange::SetStartOffset(PRInt32 aStartOffset)
-{ return NS_ERROR_NOT_IMPLEMENTED; }
+{
+  if (!mIsPositioned)
+    return NS_ERROR_NOT_INITIALIZED;
+  if (!IsIncreasing(mStartParent, aStartOffset,
+                    mEndParent, mEndOffset))
+    return NS_ERROR_ILLEGAL_VALUE;
+
+  mStartOffset = aStartOffset;
+  return NS_OK;
+}
 
 nsresult nsRange::GetEndParent(nsIDOMElement** aEndParent)
-{ return NS_ERROR_NOT_IMPLEMENTED; }
+{
+  if (!mIsPositioned)
+    return NS_ERROR_NOT_INITIALIZED;
+  if (!aStartParent)
+    return NS_ERROR_NULL_POINTER;
+  NS_IF_RELEASE(*aEndParent);
+  NS_IF_ADDREF(mEndParent);
+  *aEndParent = mEndParent;
+  return NS_OK;
+}
 
 nsresult nsRange::SetEndParent(nsIDOMElement* aEndParent)
-{ return NS_ERROR_NOT_IMPLEMENTED; }
+{
+  if (!mIsPositioned)
+    return NS_ERROR_NOT_INITIALIZED;
+  if (!IsIncreasing(mStartParent, mStartOffset,
+                    aEndParent, mEndOffset))
+    return NS_ERROR_ILLEGAL_VALUE;
+
+  NS_IF_RELEASE(mEndParent);
+  NS_IF_ADDREF(aEndParent);
+  mEndParent = aEndParent;
+  return NS_OK;
+}
 
 nsresult nsRange::GetEndOffset(PRInt32* aEndOffset)
-{ return NS_ERROR_NOT_IMPLEMENTED; }
+{
+  if (!mIsPositioned)
+    return NS_ERROR_NOT_INITIALIZED;
+  if (!aStartParent)
+    return NS_ERROR_NULL_POINTER;
+  *aEndOffset = mEndOffset;
+  return NS_OK;
+}
 
 nsresult nsRange::SetEndOffset(PRInt32 aEndOffset)
-{ return NS_ERROR_NOT_IMPLEMENTED; }
+{
+  if (!mIsPositioned)
+    return NS_ERROR_NOT_INITIALIZED;
+  if (!IsIncreasing(mStartParent, mStartOffset,
+                    mEndParent, aEndOffset))
+    return NS_ERROR_ILLEGAL_VALUE;
+
+  mEndOffset = aEndOffset;
+  return NS_OK;
+}
 
 nsresult nsRange::GetIsCollapsed(PRBool* aIsCollapsed)
-{ return NS_ERROR_NOT_IMPLEMENTED; }
-
-nsresult nsRange::SetIsCollapsed(PRBool aIsCollapsed)
-{ return NS_ERROR_NOT_IMPLEMENTED; }
+{
+  if (!mIsPositioned)
+    return NS_ERROR_NOT_INITIALIZED;
+  if (mEndParent == 0 ||
+      (mStartParent == mEndParent && mStartOffset == mEndOffset))
+    *aIsCollapsed = PR_TRUE;
+  else
+    *aIsCollapsed = PR_FALSE;
+  return NS_OK;
+}
 
 nsresult nsRange::GetCommonParent(nsIDOMNode** aCommonParent)
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
-nsresult nsRange::SetCommonParent(nsIDOMNode* aCommonParent)
-{ return NS_ERROR_NOT_IMPLEMENTED; }
-
 nsresult nsRange::SetStart(nsIDOMNode* aParent, PRInt32 aOffset)
-{ return NS_ERROR_NOT_IMPLEMENTED; }
+{
+  if (!mIsPositioned)
+  {
+    NS_IF_RELEASE(mEndParent);
+    mEndParent = NULL;
+    mEndOffset = NULL;
+    mIsPositioned = PR_TRUE;
+  }
+  NS_IF_ADDREF(aParent);
+  mStartParent = aParent;
+  mStartOffset = aOffset;
+  return NS_OK;
+}
 
 nsresult nsRange::SetEnd(nsIDOMNode* aParent, PRInt32 aOffset)
-{ return NS_ERROR_NOT_IMPLEMENTED; }
+{
+  if (!mIsPositioned)
+    return NS_ERROR_NOT_INITIALIZED;  // can't set end before start
+
+  NS_IF_ADDREF(aParent);
+  mEndParent = aParent;
+  mEndOffset = aOffset;
+  return NS_OK;
+}
 
 nsresult nsRange::Collapse(PRBool aToStart)
-{ return NS_ERROR_NOT_IMPLEMENTED; }
+{
+  if (!mIsPositioned)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  if (aToStart)
+  {
+    NS_IF_RELEASE(mEndParent);
+    NS_IF_ADDREF(mStartParent);
+    mEndParent = mStartParent;
+    mEndOffset = mStartOffset;
+    return NS_OK;
+  }
+  else
+  {
+    NS_IF_RELEASE(mStartParent);
+    NS_IF_ADDREF(mEndParent);
+    mStartParent = mEndParent;
+    mStartOffset = mEndOffset;
+    return NS_OK;
+  }
+}
 
 nsresult nsRange::Unposition()
-{ return NS_ERROR_NOT_IMPLEMENTED; }
+{
+  NS_IF_RELEASE(mStartParent);
+  mStartParent = NULL;
+  mStartOffset = 0;
+  NS_IF_RELEASE(mEndParent);
+  mEndParent = NULL;
+  mEndOffset = 0;
+  mIsPositioned = PR_FALSE;
+  return NS_OK;
+}
 
 nsresult nsRange::SelectNode(nsIDOMNode* aN)
-{ return NS_ERROR_NOT_IMPLEMENTED; }
+{
+  nsIDOMNode* node;
+  nsresult res = aN->GetParentNode(aN, &node);
+  if (!NS_SUCCEEDED(res))
+    return res;
+
+  if (mIsPositioned)
+    Unposition();
+  NS_IF_ADDREF(node);
+  mStartParent = node;
+  mStartOffset = 0;      // XXX NO DIRECT WAY TO GET CHILD # OF THIS NODE!
+  NS_IF_ADDREF(node);
+  mEndParent = node;
+  mEndOffset = mStartOffset;
+}
 
 nsresult nsRange::SelectNodeContents(nsIDOMNode* aN)
-{ return NS_ERROR_NOT_IMPLEMENTED; }
+{
+  if (mIsPositioned)
+    Unposition();
+
+  NS_IF_ADDREF(aN);
+  mStartParent = aN;
+  mStartOffset = 0;
+  NS_IF_ADDREF(aN);
+  mEndParent = aN;
+  mEndOffset = 0;        // WRONG!  SHOULD BE # OF LAST CHILD!
+}
 
 nsresult nsRange::DeleteContents()
 { return NS_ERROR_NOT_IMPLEMENTED; }
@@ -192,5 +363,21 @@ nsresult nsRange::Clone(nsIDOMRange** aReturn)
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
 nsresult nsRange::ToString(nsString& aReturn)
+{ return NS_ERROR_NOT_IMPLEMENTED; }
+
+//
+// We don't actually want to allow setting this ...
+// it should be set only by actually positioning the range.
+//
+nsresult nsRange::SetIsPositioned(PRBool aIsPositioned)
+{ return NS_ERROR_NOT_IMPLEMENTED; }
+
+//
+// Various other things which we don't want to implement yet:
+//
+nsresult nsRange::SetIsCollapsed(PRBool aIsCollapsed)
+{ return NS_ERROR_NOT_IMPLEMENTED; }
+
+nsresult nsRange::SetCommonParent(nsIDOMNode* aCommonParent)
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
