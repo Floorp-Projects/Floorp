@@ -243,14 +243,13 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)      \
                                                                          \
   *aInstancePtr = NULL;                                                  \
                                                                          \
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 \
   static NS_DEFINE_IID(kClassIID, _classiiddef);                         \
   if (aIID.Equals(kClassIID)) {                                          \
     *aInstancePtr = (void*) this;                                        \
     NS_ADDREF_THIS();                                                    \
     return NS_OK;                                                        \
   }                                                                      \
-  if (aIID.Equals(kISupportsIID)) {                                      \
+  if (aIID.Equals(nsISupports::GetIID())) {                              \
     *aInstancePtr = (void*) ((nsISupports*)this);                        \
     NS_ADDREF_THIS();                                                    \
     return NS_OK;                                                        \
