@@ -1031,6 +1031,32 @@ void nsFileSpec::RecursiveCopy(nsFileSpec newDir) const
 	}
 } // nsFileSpec::RecursiveCopy
 
+//----------------------------------------------------------------------------------------
+nsresult nsFileSpec::Truncate(PRInt32 aNewLength) const
+//----------------------------------------------------------------------------------------
+{
+    short   refNum;
+    OSErr   err;
+        
+    // First see if we have an internal error set
+    if (NS_FAILED(mError))
+        return mError;
+        
+    // Need to open the file to trunc
+    if (::FSpOpenDF(&mSpec, fsWrPerm, &refNum) != noErr)
+        return NS_FILE_FAILURE;
+
+    err = ::SetEOF(refNum, aNewLength);
+        
+    // Close the file unless we got an error that it was already closed
+    if (err != fnOpnErr)
+        (void)::FSClose(refNum);
+        
+    if (err != noErr)
+        return NS_FILE_FAILURE;
+        
+    return NS_OK;
+} // nsFileSpec::Truncate
 
 //----------------------------------------------------------------------------------------
 nsresult nsFileSpec::Rename(const char* inNewName)

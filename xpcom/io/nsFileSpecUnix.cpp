@@ -342,6 +342,22 @@ void nsFileSpec::RecursiveCopy(nsFileSpec newDir) const
 
 
 //----------------------------------------------------------------------------------------
+nsresult nsFileSpec::Truncate(const PRInt32 offset) const
+//----------------------------------------------------------------------------------------
+{
+    char* Path = nsCRT::strdup(mPath);
+
+    int rv = truncate(Path, offset) ;
+
+    nsCRT::free(Path) ;
+
+    if(!rv) 
+        return NS_OK ;
+    else
+        return NS_ERROR_FAILURE ;
+} // nsFileSpec::Truncate
+
+//----------------------------------------------------------------------------------------
 nsresult nsFileSpec::Rename(const char* inNewName)
 //----------------------------------------------------------------------------------------
 {
