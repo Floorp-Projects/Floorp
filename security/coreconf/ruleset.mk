@@ -336,27 +336,3 @@ else
 		endif
 	endif
 endif
-
-#
-# Compressor for executables and DLLs on Win32.  Reduces download footprint 
-# and helps solve some export control problem.
-#
-# PKLIT32C Program must be installed to be used.  Path below is the default 
-# installation path.  No site license is available for this program.
-#
-ifeq ($(OS_ARCH), WINNT)
-ifdef BUILD_OPT
-
-PKLITE      = $(shell which PKLIT32C.EXE)
-PKLITE_ARGS = -is.rdata 
-
-#COMPRESS_TARGET = \
-#	@if test -f $(PKLITE); then \
-#	echo $(PKLITE) $(PKLITE_ARGS) $@; \
-#	$(PKLITE) $(PKLITE_ARGS) $@; fi
-ifneq ($(PKLITE), )
-COMPRESS_TARGET = pklit32c.exe $(PKLITE_ARGS)
-endif
-
-endif
-endif

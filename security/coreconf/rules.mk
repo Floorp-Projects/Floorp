@@ -238,15 +238,7 @@ ifdef LIBRARY
 	-$(PLCYPATCH) $(PLCYPATCH_ARGS) $(LIBRARY)
 endif
 ifdef SHARED_LIBRARY
-ifdef COMPRESS_TARGET
-	if test -f $(SHARED_LIBRARY).bak; then 			\
-		cp $(SHARED_LIBRARY).bak $(SHARED_LIBRARY);	\
-	fi;
-endif
 	-$(PLCYPATCH) $(PLCYPATCH_ARGS) $(SHARED_LIBRARY)
-ifdef COMPRESS_TARGET
-	$(COMPRESS_TARGET) $(SHARED_LIBRARY)
-endif
 endif
 ifdef IMPORT_LIBRARY
 	-$(PLCYPATCH) $(PLCYPATCH_ARGS) $(IMPORT_LIBRARY)
@@ -255,15 +247,7 @@ ifdef PURE_LIBRARY
 	-$(PLCYPATCH) $(PLCYPATCH_ARGS) $(PURE_LIBRARY)
 endif
 ifdef PROGRAM
-ifdef COMPRESS_TARGET
-	if test -f $(PROGRAM).bak; then		\
-		cp $(PROGRAM).bak $(PROGRAM);	\
-	fi;
-endif
 	-$(PLCYPATCH) $(PLCYPATCH_ARGS) $(PROGRAM)
-ifdef COMPRESS_TARGET
-	$(COMPRESS_TARGET) $(PROGRAM)
-endif
 endif
 ifdef PROGRAMS
 	-$(PLCYPATCH) $(PLCYPATCH_ARGS) $(PROGRAMS)
@@ -325,11 +309,6 @@ else
 	$(MKPROG) -o $@ $(CFLAGS) $(OBJS) $(LDFLAGS) $(EXTRA_LIBS) $(EXTRA_SHARED_LIBS) $(OS_LIBS)
 endif
 ifneq ($(POLICY),)
-#ifdef COMPRESS_TARGET
-#	$(COMPRESS_TARGET)
-# We're going to cache a copy to keep around
-#	cp $(PROGRAM) $(PROGRAM).org
-#endif
 	-$(PLCYPATCH) $(PLCYPATCH_ARGS) $@
 endif
 
@@ -379,10 +358,6 @@ else
 endif
 endif
 ifneq ($(POLICY),)
-#ifdef COMPRESS_TARGET
-#	$(COMPRESS_TARGET)
-#	cp $@ $@.org
-#endif
 	-$(PLCYPATCH) $(PLCYPATCH_ARGS) $@
 endif
 
