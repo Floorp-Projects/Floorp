@@ -145,6 +145,10 @@ public:
   virtual nsresult GetCSSDeclaration(nsICSSDeclaration **aDecl,
                                      PRBool aAllocate);
   virtual nsresult SetCSSDeclaration(nsICSSDeclaration *aDecl);
+  virtual nsresult GetCSSParsingEnvironment(nsIContent* aContent,
+                                            nsIURI** aBaseURI,
+                                            nsICSSLoader** aCSSLoader,
+                                            nsICSSParser** aCSSParser);
   virtual nsresult ParsePropertyValue(const nsAReadableString& aPropName,
                                       const nsAReadableString& aPropValue);
   virtual nsresult ParseDeclaration(const nsAReadableString& aDecl,
@@ -293,6 +297,58 @@ nsDOMCSSAttributeDeclaration::SetCSSDeclaration(nsICSSDeclaration *aDecl)
   return result;
 }
 
+/*
+ * This is a utility function.  It will only fail if it can't get a
+ * parser.  This means it can return NS_OK without aURI or aCSSLoader
+ * being initialized
+ */
+nsresult
+nsDOMCSSAttributeDeclaration::GetCSSParsingEnvironment(nsIContent* aContent,
+                                                       nsIURI** aBaseURI,
+                                                       nsICSSLoader** aCSSLoader,
+                                                       nsICSSParser** aCSSParser)
+{
+  NS_ASSERTION(aContent, "Something is severely broken -- there should be an nsIContent here!");
+  // null out the out params since some of them may not get initialized below
+  *aBaseURI = nsnull;
+  *aCSSLoader = nsnull;
+  *aCSSParser = nsnull;
+  
+  nsCOMPtr<nsINodeInfo> nodeInfo;
+  nsresult result = aContent->GetNodeInfo(*getter_AddRefs(nodeInfo));
+  if (NS_FAILED(result)) {
+    return result;
+  }
+  nsCOMPtr<nsIDocument> doc;
+  result = nodeInfo->GetDocument(*getter_AddRefs(doc));
+  if (NS_FAILED(result)) {
+    return result;
+  }
+  
+  if (doc) {
+    doc->GetBaseURL(*aBaseURI);
+    nsCOMPtr<nsIHTMLContentContainer> htmlContainer(do_QueryInterface(doc));
+    if (htmlContainer) {
+      htmlContainer->GetCSSLoader(*aCSSLoader);
+    }
+    NS_ASSERTION(*aCSSLoader, "Document with no CSS loader!");
+  }
+  if (*aCSSLoader) {
+    result = (*aCSSLoader)->GetParserFor(nsnull, aCSSParser);
+  } else {
+    result = NS_NewCSSParser(aCSSParser);
+  }
+  if (NS_FAILED(result)) {
+    return result;
+  }
+  
+  // look up our namespace.  If we're XHTML, we need to be case-sensitive
+  // Otherwise, we should not be
+  (*aCSSParser)->SetCaseSensitive(nodeInfo->NamespaceEquals(kNameSpaceID_XHTML));
+
+  return NS_OK;
+}
+
 nsresult
 nsDOMCSSAttributeDeclaration::ParsePropertyValue(const nsAReadableString& aPropName,
                                                  const nsAReadableString& aPropValue)
@@ -314,21 +370,10 @@ nsDOMCSSAttributeDeclaration::ParsePropertyValue(const nsAReadableString& aPropN
     return result;
   }
   
-  if (doc) {
-    doc->GetBaseURL(*getter_AddRefs(baseURI));
-
-    nsCOMPtr<nsIHTMLContentContainer> htmlContainer(do_QueryInterface(doc));
-    if (htmlContainer) {
-      htmlContainer->GetCSSLoader(*getter_AddRefs(cssLoader));
-    }
-  }
-
-  if (cssLoader) {
-    result = cssLoader->GetParserFor(nsnull, getter_AddRefs(cssParser));
-  }
-  else {
-    result = NS_NewCSSParser(getter_AddRefs(cssParser));
-  }
+  result = GetCSSParsingEnvironment(mContent,
+                                    getter_AddRefs(baseURI),
+                                    getter_AddRefs(cssLoader),
+                                    getter_AddRefs(cssParser));
   if (NS_FAILED(result)) {
     return result;
   }
@@ -339,21 +384,6 @@ nsDOMCSSAttributeDeclaration::ParsePropertyValue(const nsAReadableString& aPropN
     doc->AttributeWillChange(mContent, kNameSpaceID_None, nsHTMLAtoms::style);
   }
   
-  nsCOMPtr<nsINodeInfo> nodeInfo;
-  mContent->GetNodeInfo(*getter_AddRefs(nodeInfo));
-  if (nodeInfo) {
-    nsCOMPtr<nsIDocument> doc;
-    nodeInfo->GetDocument(*getter_AddRefs(doc));
-    if (doc) {
-      nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(doc));
-      if (htmlDoc) {
-        nsDTDMode mode;
-        htmlDoc->GetDTDMode(mode);
-        cssParser->SetQuirkMode(eDTDMode_strict != mode);
-      }
-    }
-  }
-
   result = cssParser->ParseProperty(aPropName, aPropValue, baseURI, decl, &hint);
   if (doc) {
     doc->AttributeChanged(mContent, kNameSpaceID_None,
@@ -384,21 +414,13 @@ nsDOMCSSAttributeDeclaration::ParseDeclaration(const nsAReadableString& aDecl,
     nsCOMPtr<nsIDocument> doc;
 
     result = mContent->GetDocument(*getter_AddRefs(doc));
-    if (doc) {
-      doc->GetBaseURL(*getter_AddRefs(baseURI));
-
-      nsCOMPtr<nsIHTMLContentContainer> htmlContainer(do_QueryInterface(doc));
-      if (htmlContainer) {
-        htmlContainer->GetCSSLoader(*getter_AddRefs(cssLoader));
-      }
+    if (NS_FAILED(result)) {
+      return result;
     }
-
-    if (cssLoader) {
-      result = cssLoader->GetParserFor(nsnull, getter_AddRefs(cssParser));
-    }
-    else {
-      result = NS_NewCSSParser(getter_AddRefs(cssParser));
-    }
+    result = GetCSSParsingEnvironment(mContent,
+                                      getter_AddRefs(baseURI),
+                                      getter_AddRefs(cssLoader),
+                                      getter_AddRefs(cssParser));
 
     if (NS_SUCCEEDED(result)) {
       PRInt32 hint;
@@ -428,21 +450,6 @@ nsDOMCSSAttributeDeclaration::ParseDeclaration(const nsAReadableString& aDecl,
         }
       }
   
-      nsCOMPtr<nsINodeInfo> nodeInfo;
-      mContent->GetNodeInfo(*getter_AddRefs(nodeInfo));
-      if (nodeInfo) {
-        nsCOMPtr<nsIDocument> doc;
-        nodeInfo->GetDocument(*getter_AddRefs(doc));
-        if (doc) {
-          nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(doc));
-          if (htmlDoc) {
-            nsDTDMode mode;
-            htmlDoc->GetDTDMode(mode);
-            cssParser->SetQuirkMode(eDTDMode_strict != mode);
-          }
-        }
-      }
-
       result = cssParser->ParseAndAppendDeclaration(aDecl, baseURI, decl,
                                                     aParseOnlyOneDecl, &hint);
       if (result == NS_CSS_PARSER_DROP_DECLARATION) {
@@ -3500,6 +3507,14 @@ nsGenericHTMLElement::ParseStyleAttribute(const nsAReadableString& aValue, nsHTM
       }
       else {
         result = NS_NewCSSParser(getter_AddRefs(cssParser));
+        if (cssParser) {
+          // look up our namespace.  If we're XHTML, we need to be case-sensitive
+          // Otherwise, we should not be.
+          nsCOMPtr<nsINodeInfo> nodeInfo;
+          result = GetNodeInfo(*getter_AddRefs(nodeInfo));
+          NS_ENSURE_SUCCESS(result, result);
+          cssParser->SetCaseSensitive(nodeInfo->NamespaceEquals(kNameSpaceID_XHTML));
+        }
       }
       if (cssParser) {
         nsCOMPtr<nsIURI> docURL;
