@@ -165,7 +165,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
       const nsString& typeWide = *mTitles[i];
       PRInt32 l = (typeWide.Length()+2)*2;
       char *filterBuffer = (char*) nsMemory::Alloc(l);
-      int len = gWidgetModuleData->WideCharToMultiByte(0,
+      int len = WideCharToMultiByte(0,
                                     typeWide.get(),
                                     typeWide.Length(),
                                     filterBuffer,

@@ -135,12 +135,7 @@ nsWidgetModuleData::~nsWidgetModuleData()
 
    NS_IF_RELEASE(dragService);
 
-   PRInt32  cAtoms = atoms.Count();
-   HATOMTBL systbl = WinQuerySystemAtomTable();
-   for( PRInt32 i = 0; i < cAtoms; i++)
-      WinDeleteAtom( systbl, (ATOM) atoms.ElementAt(i));
-
-   for (i=0;i<=16;i++ ) {
+   for (int i=0;i<=16;i++ ) {
      WinDestroyPointer(hptrArray[i]);
    }
 
@@ -359,18 +354,6 @@ const char *nsWidgetModuleData::ConvertFromUcs( const nsString &aString)
    return ConvertFromUcs( aString.get());
 }
 
-ATOM nsWidgetModuleData::GetAtom( const char *atomname)
-{
-   ATOM atom = WinAddAtom( WinQuerySystemAtomTable(), atomname);
-   atoms.AppendElement( (void*) atom);
-   return atom;
-}
-
-ATOM nsWidgetModuleData::GetAtom( const nsString &atomname)
-{
-   return GetAtom( ConvertFromUcs( atomname));
-}
-
 // Printing stuff -- need to be able to generate a window of a given
 // flavour and then do stuff to it in nsWindow::Paint()
 
@@ -414,49 +397,6 @@ HWND nsWidgetModuleData::GetWindowForPrinting( PCSZ pszClass, ULONG ulStyle)
 
 #endif
 
-int nsWidgetModuleData::WideCharToMultiByte( int CodePage, const PRUnichar *pText, ULONG ulLength, char* szBuffer, ULONG ulSize )
-{
-  UconvObject* pConverter = 0;
-  /* Free any converters that were created */
-  for (int i=0; i < 15 /* eCharSet_COUNT from nsFontMetricsOS2.cpp */ ; i++ ) {
-    if (gUconvInfo[i].mCodePage == CodePage) {
-      if (!gUconvInfo[i].mConverter) {
-        UniChar codepage[20];
-        int unirc = UniMapCpToUcsCp( CodePage, codepage, 20);
-        UniCreateUconvObject( codepage, &gUconvInfo[i].mConverter);
-        break;
-      } /* endif */
-      pConverter = &gUconvInfo[i].mConverter;
-    } /* endif */
-  } /* endfor */
-  if (!pConverter) {
-      pConverter = &gUconvInfo[0].mConverter;
-  } /* endif */
-
-  UniChar *ucsString = (UniChar*) pText;
-  size_t   ucsLen = ulLength;
-  size_t   cplen = ulSize;
-  size_t   cSubs = 0;
-
-  char *tmp = szBuffer; // function alters the out pointer
-
-   int unirc = UniUconvFromUcs( *pConverter, &ucsString, &ucsLen,
-                                (void**) &tmp, &cplen, &cSubs);
-
-  if( unirc == UCONV_E2BIG) // k3w1
-  {
-    // terminate output string (truncating)
-    *(szBuffer + ulSize - 1) = '\0';
-  }
-#ifdef DEBUG
-  else if( unirc != ULS_SUCCESS)
-  {
-     printf("very bad");
-  }
-#endif
-  return ulSize - cplen;
-}
-
 const char *nsWidgetModuleData::DBCSstrchr( const char *string, int c )
 {
    const char* p = string;
@@ -484,3 +424,98 @@ const char *nsWidgetModuleData::DBCSstrrchr( const char *string, int c )
 }
 
 nsWidgetModuleData *gWidgetModuleData = nsnull;
+
+int WideCharToMultiByte( int CodePage, const PRUnichar *pText, ULONG ulLength, char* szBuffer, ULONG ulSize )
+{
+  UconvObject Converter = OS2Uni::GetUconvObject(CodePage);
+
+  UniChar *ucsString = (UniChar*) pText;
+  size_t   ucsLen = ulLength;
+  size_t   cplen = ulSize;
+  size_t   cSubs = 0;
+
+  char *tmp = szBuffer; // function alters the out pointer
+
+  int unirc = ::UniUconvFromUcs( Converter, &ucsString, &ucsLen,
+                                 (void**) &tmp, &cplen, &cSubs);
+
+  if( unirc != ULS_SUCCESS )
+    return 0;
+
+  if( unirc == UCONV_E2BIG)
+  {
+    // terminate output string (truncating)
+    *(szBuffer + ulSize - 1) = '\0';
+  }
+
+  return ulSize - cplen;
+}
+
+int MultiByteToWideChar( int CodePage, const char*pText, ULONG ulLength, PRUnichar *szBuffer, ULONG ulSize )
+{
+  UconvObject Converter = OS2Uni::GetUconvObject(CodePage);
+
+  char *ucsString = (char*) pText;
+  size_t   ucsLen = ulLength;
+  size_t   cplen = ulSize;
+  size_t   cSubs = 0;
+
+  PRUnichar *tmp = szBuffer; // function alters the out pointer
+
+  int unirc = ::UniUconvToUcs( Converter, (void**)&ucsString, &ucsLen,
+                               NS_REINTERPRET_CAST(UniChar**, &tmp),
+                               &cplen, &cSubs);
+                               
+  if( unirc != ULS_SUCCESS )
+    return 0;
+
+  if( unirc == UCONV_E2BIG)
+  {
+    // terminate output string (truncating)
+    *(szBuffer + ulSize - 1) = '\0';
+  }
+
+  return ulSize - cplen;
+}
+
+nsHashtable OS2Uni::gUconvObjects;
+
+UconvObject
+OS2Uni::GetUconvObject(int CodePage)
+{
+  nsPRUint32Key key(CodePage);
+  UconvObject uco = OS2Uni::gUconvObjects.Get(&key);
+  if (!uco) {
+    UniChar codepage[20];
+    int unirc = ::UniMapCpToUcsCp(CodePage, codepage, 20);
+    if (unirc == ULS_SUCCESS) {
+       unirc = ::UniCreateUconvObject(codepage, &uco);
+       if (unirc == ULS_SUCCESS) {
+          uconv_attribute_t attr;
+
+          ::UniQueryUconvObject(uco, &attr, sizeof(uconv_attribute_t), 
+                                NULL, NULL, NULL);
+          attr.options = UCONV_OPTION_SUBSTITUTE_BOTH;
+          attr.subchar_len=1;
+          attr.subchar[0]='?';
+          ::UniSetUconvObject(uco, &attr);
+          OS2Uni::gUconvObjects.Put(&key, uco);
+       }
+    }
+  }
+  return uco;
+}
+
+PR_STATIC_CALLBACK(PRIntn)
+UconvObjectEnum(nsHashKey* hashKey, void *aData, void* closure)
+{
+  UniFreeUconvObject((UconvObject)aData);
+  return kHashEnumerateRemove;
+}
+
+OS2Uni::FreeUconvObjects()
+{
+  if (gUconvObjects.Count()) {
+    gUconvObjects.Enumerate(UconvObjectEnum, nsnull);
+  }
+}

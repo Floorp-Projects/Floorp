@@ -94,32 +94,6 @@ extern "C" BOOL APIENTRY DaxOpenSave(BOOL, LONG *, LPOPENFILENAME, PFNWP);
 
 #define SUPPORT_NON_XPFE /* support for viewer.exe */
 
-struct nsUconvInfo
-{
-  char*    mCharset;
-  PRUint16 mCodePage;
-  UconvObject  mConverter;
-};
-
-static nsUconvInfo gUconvInfo[15  /* eCharSet_COUNT from nsFontMetricsOS2.cpp */ ] = 
-{
-  { "DEFAULT",     0,    NULL },
-  { "ANSI",        1252, NULL },
-  { "EASTEUROPE",  1250, NULL },
-  { "RUSSIAN",     1251, NULL },
-  { "GREEK",       1253, NULL },
-  { "TURKISH",     1254, NULL },
-  { "HEBREW",      1255, NULL },
-  { "ARABIC",      1256, NULL },
-  { "BALTIC",      1257, NULL },
-  { "THAI",        874,  NULL },
-  { "SHIFTJIS",    932,  NULL },
-  { "GB2312",      936,  NULL },
-  { "HANGEUL",     949,  NULL },
-  { "CHINESEBIG5", 950,  NULL },
-  { "JOHAB",       1361, NULL }
-};
-
 class nsDragService;
 class nsIAppShell;
 
@@ -220,5 +194,22 @@ typedef struct _WZDROPXFER
 // can be used as an lvalue too.
 #define lastchar(s) *((s) + strlen((s)) - 1)
 
+struct nsUconvInfo
+{
+  PRUint16 mCodePage;
+  UconvObject  mConverter;
+  nsUconvInfo* pNext;
+};
+
+class OS2Uni {
+public:
+  static UconvObject GetUconvObject(int CodePage);
+  static FreeUconvObjects();
+private:
+  static nsHashtable gUconvObjects;
+};
+
+int WideCharToMultiByte( int CodePage, const PRUnichar *pText, ULONG ulLength, char* szBuffer, ULONG ulSize );
+int MultiByteToWideChar( int CodePage, const char*pText, ULONG ulLength, PRUnichar *szBuffer, ULONG ulSize );
 
 #endif

@@ -36,6 +36,7 @@
 #include "nsISupports.h"
 #include "nsDragService.h"
 #include "nsWidgetDefs.h"
+#include "nsHashtable.h"
 
 #define NS_MODULEDATAOS2_CID \
  { 0xa506d27e, 0x1dd1, 0x11b2, \
@@ -77,11 +78,6 @@ class nsWidgetModuleData : public nsISupports
    const char *ConvertFromUcs( const PRUnichar *pText);
    const char *ConvertFromUcs( const nsString &aStr);
 
-   // Atom service; clients don't need to bother about freeing them.
-   ATOM GetAtom( const char *atomname);
-   ATOM GetAtom( const nsString &atomname);
-
-   int WideCharToMultiByte( int CodePage, const PRUnichar *pText, ULONG ulLength, char* szBuffer, ULONG ulSize );
    const char *DBCSstrchr( const char *string, int c );
    const char *DBCSstrrchr( const char *string, int c );
 
@@ -107,8 +103,6 @@ class nsWidgetModuleData : public nsISupports
 
    UconvObject  converter;
    BOOL         supplantConverter;
-
-   nsVoidArray  atoms;
 };
 
 #endif
