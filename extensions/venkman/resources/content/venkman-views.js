@@ -2243,14 +2243,14 @@ function s2v_sourceclick (event)
     var target = event.target;
     while (target)
     {
-        if (target.localName == "MARGIN")
+        if (target.localName == "margin")
             break;
         target = target.parentNode;
     }
     
-    if (target && target.localName == "MARGIN")
+    if (target && target.localName == "margin")
     {
-        var line = parseInt (target.nextSibling.innerHTML);
+        var line = parseInt (target.nextSibling.firstChild.data);
         sourceText.onMarginClick (event, line);
     }
 }
@@ -2365,16 +2365,22 @@ function s2v_cleardeck ()
         this.onSourceTabUnloaded (this.sourceTabList[i],
                                   Components.results.NS_OK);
     }
-    
-    while (this.tabs.firstChild)
-        this.tabs.removeChild (this.tabs.firstChild);
-    while (this.deck.firstChild)
-        this.deck.removeChild (this.deck.firstChild);
 
-    var bloke = document.createElement ("tab");
-    bloke.setAttribute ("id", "source2-bloke");
-    bloke.setAttribute ("hidden", "true");
-    this.tabs.appendChild (bloke);
+    if (this.tabs)
+    {
+        i = this.tabs.childNodes.length;
+        while (i > 0)
+            this.tabs.removeChild(this.tabs.childNodes[--i]);
+
+        i = this.deck.childNodes.length;
+        while (i > 0)
+            this.deck.removeChild (this.deck.childNodes[--i]);
+
+        var bloke = document.createElement ("tab");
+        bloke.setAttribute ("id", "source2-bloke");
+        bloke.setAttribute ("hidden", "true");
+        this.tabs.appendChild (bloke);
+    }
 }
 
 console.views.source2.createFrameFor =
@@ -2490,7 +2496,6 @@ function s2v_removetext (sourceText)
 console.views.source2.removeSourceTabAtIndex =
 function s2v_removeindex (index)
 {
-    var lastIndex = this.tabs.selectedIndex;
     var sourceTab = this.sourceTabList[index];
     if (this.highlightTab == sourceTab)
         this.unmarkHighlight();
@@ -2499,15 +2504,22 @@ function s2v_removeindex (index)
     sourceTab.content = null;
     sourceTab.stopNode = null;
     arrayRemoveAt (this.sourceTabList, index);
-    if (this.tabs)
-        this.tabs.removeItemAt(index);
-    if (this.deck)
-        this.deck.removeChild(this.deck.childNodes[index]);
-    if (lastIndex >= this.sourceTabList.length)
-        lastIndex = this.sourceTabList.length - 1;
-    if (lastIndex >= 0)
-        this.showTab(lastIndex);
 
+    if (this.tabs)
+    {
+        var lastIndex = this.tabs.selectedIndex;        
+        this.tabs.removeItemAt(index);
+        this.deck.removeChild(this.deck.childNodes[index]);
+        if (lastIndex >= this.sourceTabList.length)
+            lastIndex = this.sourceTabList.length - 1;
+        if (lastIndex >= 0)
+            this.showTab(lastIndex);
+    }
+    else if (this.lastSelectedTab > this.sourceTabList.length)
+    {
+        this.lastSelectedTab = this.sourceTabList.length;
+    }
+    
     if (this.sourceTabList.length == 0)
         this.clearOutputDeck();
 }
@@ -2838,12 +2850,15 @@ function sv_init()
 {
     this.savedState = new Object();
 
+    /*
+      ["save-source"],
+      ["-"],
+    */
+
     console.menuSpecs["context:source"] = {
         getContext: this.getContext,
         items:
         [
-         ["save-source"],
-         ["-"],
          ["break", 
                  {enabledif: "cx.lineIsExecutable && !has('hasBreak')"}],
          ["clear",
@@ -2968,12 +2983,16 @@ function sv_show ()
     var sourceView = this;
     function cb ()
     {
-        var sourceText = sourceView.childData;
-        if (sourceText && sourceText.url in sourceView.savedState)
+        if ("childData" in sourceView)
         {
-            //dd ("clearing lastRowCount");
-            delete sourceView.savedState[sourceText.url].lastRowCount;
+            var sourceText = sourceView.childData;
+            if (sourceText && sourceText.url in sourceView.savedState)
+            {
+                //dd ("clearing lastRowCount");
+                delete sourceView.savedState[sourceText.url].lastRowCount;
+            }
         }
+        
         sourceView.syncTreeView();
         sourceView.urlLabel = getChildById(sourceView.currentContent,
                                            "source-url");
