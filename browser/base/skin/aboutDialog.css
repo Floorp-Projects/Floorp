@@ -4,6 +4,7 @@
 
 #clientBox {
   background-color: #FFFFFF;
+  color: #000000;
 }
 
 #brandName {
@@ -17,6 +18,7 @@
 #userAgent {
   margin: 3px 5px;
   background-color: #FFFFFF;
+  color: #000000;
   padding: 1px 0px 1px 2px;
   -moz-appearance: none;
   border: none;
