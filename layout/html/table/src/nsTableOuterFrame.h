@@ -364,11 +364,11 @@ protected:
 
 
 private:
-  /** used to keep track of this frame's children */
-  nsIFrame* mInnerTableFrame; // XXX this is redundant, mFrames holds the same
+  // used to keep track of this frame's children. They are redundant with mFrames, but more convient
+  nsIFrame* mInnerTableFrame; 
   nsIFrame* mCaptionFrame;
 
-  /** used to track caption max element size */
+  // used to track caption max element size 
   PRInt32   mMinCaptionWidth;
   nscoord   mPriorAvailWidth;
 

@@ -48,42 +48,63 @@
 #include "nsIContent.h"
 #include "nsIDOMHTMLTableColElement.h"
 
-#define COL_TYPE_CONTENT              0x0
-#define COL_TYPE_ANONYMOUS_COL        0x1
-#define COL_TYPE_ANONYMOUS_COLGROUP   0x2
-#define COL_TYPE_ANONYMOUS_CELL       0x3
-
+#define COL_TYPE_BITS                 0xF0000000 // uses bits 29-32 from mState
+#define COL_TYPE_OFFSET               28
+#define COL_ANONYMOUS_BIT             0x08000000 // uses bit  28
+#define COL_ANONYMOUS_OFFSET          27
+#define COL_CONSTRAINT_BITS           0x07000000 // uses bits 25-27
+#define COL_CONSTRAINT_OFFSET         24
 
 nsTableColFrame::nsTableColFrame()
   : nsFrame()
 {
-  // note that all fields are initialized to 0 by nsFrame::operator new
-  mBits.mIsAnonymous = PR_FALSE;
-  ResetSizingInfo();
+  SetIsAnonymous(PR_FALSE);
   SetType(eColContent);
+  ResetSizingInfo();
 }
 
 nsTableColFrame::~nsTableColFrame()
 {
 }
 
-nsTableColType nsTableColFrame::GetType() const {
-  switch(mBits.mType) {
-  case COL_TYPE_ANONYMOUS_COL:
-    return eColAnonymousCol;
-  case COL_TYPE_ANONYMOUS_COLGROUP:
-    return eColAnonymousColGroup;
-  case COL_TYPE_ANONYMOUS_CELL:
-    return eColAnonymousCell;
-  default:
-    return eColContent;
-  }
+nsTableColType 
+nsTableColFrame::GetType() const 
+{
+  return (nsTableColType)((mState & COL_TYPE_BITS) >> COL_TYPE_OFFSET);
 }
 
-void nsTableColFrame::SetType(nsTableColType aType) {
-  mBits.mType = aType - eColContent;
+void 
+nsTableColFrame::SetType(nsTableColType aType) 
+{
+  PRUint32 type = aType - eColContent;
+  mState |= (type << COL_TYPE_OFFSET);
 }
 
+nsColConstraint 
+nsTableColFrame::GetConstraint() const
+{ 
+  return (nsColConstraint)((mState & COL_CONSTRAINT_BITS) >> COL_CONSTRAINT_OFFSET);
+}
+
+void 
+nsTableColFrame::SetConstraint(nsColConstraint aConstraint)
+{ 
+  PRUint32 con = aConstraint - eNoConstraint;
+  mState |= (con << COL_CONSTRAINT_OFFSET);
+}
+
+PRBool 
+nsTableColFrame::IsAnonymous()
+{   
+  return ((mState & COL_ANONYMOUS_BIT) > 0);
+}
+
+void 
+nsTableColFrame::SetIsAnonymous(PRBool aIsAnonymous)
+{
+  PRUint32 anon = (aIsAnonymous) ? 1 : 0;
+  mState |= (anon << COL_ANONYMOUS_OFFSET);
+}
 
 // XXX what about other style besides width
 nsStyleCoord nsTableColFrame::GetStyleWidth() const
@@ -113,8 +134,7 @@ nsStyleCoord nsTableColFrame::GetStyleWidth() const
 void nsTableColFrame::ResetSizingInfo()
 {
   nsCRT::memset(mWidths, WIDTH_NOT_SET, NUM_WIDTHS * sizeof(PRInt32));
-  mConstraint = eNoConstraint;
-  mConstrainingCell = nsnull;
+  SetConstraint(eNoConstraint);
 }
 
 NS_METHOD 
@@ -243,7 +263,7 @@ void nsTableColFrame::Dump(PRInt32 aIndent)
   indent[aIndent] = 0;
 
   printf("%s**START COL DUMP** colIndex=%d isAnonymous=%d constraint=%d",
-    indent, mColIndex, mBits.mIsAnonymous, mConstraint);
+    indent, mColIndex, IsAnonymous(), GetConstraint());
   printf("\n%s widths=", indent);
   for (PRInt32 widthX = 0; widthX < NUM_WIDTHS; widthX++) {
     printf("%d ", mWidths[widthX]);

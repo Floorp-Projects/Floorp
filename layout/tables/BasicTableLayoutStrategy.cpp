@@ -587,7 +587,7 @@ BasicTableLayoutStrategy::ComputeNonPctColspanWidths(const nsHTMLReflowState& aR
       for (PRInt32 widthX = 0; widthX < NUM_MAJOR_WIDTHS; widthX++) {
         nscoord cellWidth = 0;
         if (MIN_CON == widthX) {
-          cellWidth = cellFrame->GetPass1MaxElementSize().width;
+          cellWidth = cellFrame->GetPass1MaxElementWidth();
         }
         else if (DES_CON == widthX) {
           cellWidth = cellFrame->GetMaximumWidth();
@@ -600,7 +600,7 @@ BasicTableLayoutStrategy::ComputeNonPctColspanWidths(const nsHTMLReflowState& aR
             // need to add padding into fixed width
             nsMargin padding = nsTableFrame::GetPadding(nsSize(aReflowState.mComputedWidth, 0), cellFrame);
             cellWidth = cellPosition->mWidth.GetCoordValue() + padding.left + padding.right;
-            cellWidth = PR_MAX(cellWidth, cellFrame->GetPass1MaxElementSize().width);
+            cellWidth = PR_MAX(cellWidth, cellFrame->GetPass1MaxElementWidth());
           }
         }
 
@@ -910,7 +910,6 @@ BasicTableLayoutStrategy::ComputeNonPctColspanWidths(PRInt32           aWidthInd
           }
         }
         colFrame->SetWidth(aWidthIndex + NUM_MAJOR_WIDTHS, newColAdjWidth);
-        colFrame->SetConstrainingCell(aCellFrame); // XXX is this right?
       }
       else {        
         if((newColAdjWidth > 0) && (FIX == aWidthIndex)) {
@@ -998,7 +997,7 @@ BasicTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
         continue;
       }
       // these values include borders and padding
-      minWidth = PR_MAX(minWidth, cellFrame->GetPass1MaxElementSize().width);
+      minWidth = PR_MAX(minWidth, cellFrame->GetPass1MaxElementWidth());
       nscoord cellDesWidth = cellFrame->GetMaximumWidth();
       if (cellDesWidth > desWidth) {
         desContributor = cellFrame;
@@ -1038,7 +1037,6 @@ BasicTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
     // cache the computed column info
     colFrame->SetWidth(MIN_CON, minWidth);
     colFrame->SetWidth(DES_CON, desWidth);
-    colFrame->SetConstrainingCell(fixContributor);
     if (fixWidth > 0) {
       colFrame->SetWidth(FIX, fixWidth);
     }
@@ -1410,7 +1408,6 @@ BasicTableLayoutStrategy::AssignPctColumnWidths(const nsHTMLReflowState& aReflow
     if (maxColPctWidth > 0) {
       maxColPctWidth = PR_MAX(maxColPctWidth, colFrame->GetWidth(MIN_CON));
       colFrame->SetWidth(PCT, maxColPctWidth);
-      colFrame->SetConstrainingCell(percentContributor);
       colPctTotal += NSToCoordRound(100.0f * (float)maxColPct);
     }
   }
@@ -1572,7 +1569,6 @@ BasicTableLayoutStrategy::AssignPctColumnWidths(const nsHTMLReflowState& aReflow
                 newColPctAdjWidth = PR_MAX(newColPctAdjWidth, minWidth); 
                 if (newColPctAdjWidth > colFrame->GetWidth(PCT)) {
                   colFrame->SetWidth(PCT_ADJ, newColPctAdjWidth);
-                  colFrame->SetConstrainingCell(cellFrame);
                   if(0 != basis) { // I am paranoid
                     colPctTotal += NSToCoordRound(100.0f *(newColPctAdjWidth-colPctAdjWidth) / (float)basis); 
                     // accumulate the new distributed percents

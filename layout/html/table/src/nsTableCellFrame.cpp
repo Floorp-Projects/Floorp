@@ -178,12 +178,10 @@ nsTableCellFrame::AttributeChanged(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
-void nsTableCellFrame::SetPass1MaxElementSize(nscoord       aMaxWidth,
-                                              const nsSize& aMaxElementSize)
+void nsTableCellFrame::SetPass1MaxElementWidth(nscoord aMaxWidth,
+                                               nscoord aMaxElementWidth)
 { 
-  mPass1MaxElementSize.height = aMaxElementSize.height;
-
-  nscoord maxElemWidth = aMaxElementSize.width;
+  nscoord maxElemWidth = aMaxElementWidth;
   const nsStylePosition* stylePosition;
   const nsStyleText* styleText;
   // check for fixed width and not nowrap and not pre
@@ -203,7 +201,7 @@ void nsTableCellFrame::SetPass1MaxElementSize(nscoord       aMaxWidth,
       maxElemWidth = NS_MAX(maxElemWidth, stylePosition->mWidth.GetCoordValue());
     }
   }
-  mPass1MaxElementSize.width = maxElemWidth;
+  mPass1MaxElementWidth = maxElemWidth;
 }
 
 NS_IMETHODIMP

@@ -230,13 +230,13 @@ public:
     * not counting reflows where MaxElementSize is not requested.  
     * That is, the cell frame will always remember the last non-null MaxElementSize
     */
-  virtual nsSize GetPass1MaxElementSize() const;
+  virtual nscoord GetPass1MaxElementWidth() const;
 
   /** set the MaxElement size returned by this frame during its last reflow.
     * should never be called with a null MaxElementSize
     */
-  virtual void SetPass1MaxElementSize(nscoord       aMaxWidth,
-                                      const nsSize& aMaxElementSize);
+  virtual void SetPass1MaxElementWidth(nscoord aMaxWidth,
+                                       nscoord aMaxElementWidth);
 
   PRBool GetContentEmpty();
   void SetContentEmpty(PRBool aContentEmpty);
@@ -291,19 +291,15 @@ protected:
 
 protected:
 
-  /** the starting column for this cell */
-  int          mColIndex;
+  PRInt32      mColIndex;             // the starting column for this cell 
 
-  /** the available width we were given in our previous reflow */
-  nscoord      mPriorAvailWidth;
+  // XXX these could be stored as pixels for a savings of 6 x 2 bytes
 
-  /** these are the last computed desired and max element sizes */
-  nsSize       mDesiredSize;
-  nscoord      mDesiredAscent;
-
-  /** these are the Pass 1 maximum width and max element sizes */
-  nscoord      mMaximumWidth;
-  nsSize       mPass1MaxElementSize;
+  nscoord      mPriorAvailWidth;      // the avail width during the last reflow
+  nsSize       mDesiredSize;          // the last desired width & height
+  nscoord      mDesiredAscent;        // the last desired ascent
+  nscoord      mMaximumWidth;         // the last preferred width
+  nscoord      mPass1MaxElementWidth; // the last max element width
 
 public:
 
@@ -340,8 +336,8 @@ inline void nsTableCellFrame::SetMaximumWidth(nscoord aMaximumWidth)
   mMaximumWidth = aMaximumWidth;
 }
 
-inline nsSize nsTableCellFrame::GetPass1MaxElementSize() const
-{ return mPass1MaxElementSize; }
+inline nscoord nsTableCellFrame::GetPass1MaxElementWidth() const
+{ return mPass1MaxElementWidth; }
 
 inline PRBool nsTableCellFrame::GetContentEmpty()
 {

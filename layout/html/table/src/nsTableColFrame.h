@@ -46,8 +46,6 @@ class nsTableCellFrame;
 // this is used to index arrays of widths in nsColFrame and to group important widths
 // for calculations. It is important that the order: min, desired, fixed be maintained
 // for each category (con, adj).
-// XXX MIN_ADJ, DES_ADJ, PCT_ADJ, DES_PRO can probably go away and be replaced
-// by MIN_CON, DES_CON, PCT_CON, DES_CON saving 16 bytes per col frame
 #define WIDTH_NOT_SET   -1
 #define NUM_WIDTHS      10
 #define NUM_MAJOR_WIDTHS 3 // MIN, DES, FIX
@@ -61,6 +59,7 @@ class nsTableCellFrame;
 #define PCT_ADJ          7 // percent width of cell or col from percent colspan
 #define MIN_PRO          8 // desired width due to proportional <col>s or cols attribute
 #define FINAL            9 // width after the table has been balanced, considering all of the others
+
 enum nsColConstraint {
   eNoConstraint          = 0,
   ePixelConstraint       = 1,      // pixel width 
@@ -73,7 +72,7 @@ enum nsTableColType {
   eColContent            = 0, // there is real col content associated   
   eColAnonymousCol       = 1, // the result of a span on a col
   eColAnonymousColGroup  = 2, // the result of a span on a col group
-  eColAnonymousCell      = 3 // the result of a cell alone
+  eColAnonymousCell      = 3  // the result of a cell alone
 };
 
 class nsTableColFrame : public nsFrame {
@@ -154,9 +153,6 @@ public:
   void            SetConstraint(nsColConstraint aConstraint);
   nsColConstraint GetConstraint() const;
 
-  void              SetConstrainingCell(nsTableCellFrame* aCellFrame);
-  nsTableCellFrame* GetConstrainingCell() const;
-
   /** convenience method, calls into cellmap */
   PRInt32 Count() const;
 
@@ -172,22 +168,14 @@ public:
 
 protected:
 
-  struct ColBits {
-    unsigned mType:4;
-    unsigned mIsAnonymous:1;
-    unsigned mUnused:27;                         
-  } mBits;
-
   nsTableColFrame();
   ~nsTableColFrame();
 
-  /** the starting index of the column (starting at 0) that this col object represents */
+  // the starting index of the column (starting at 0) that this col object represents //
   PRInt32           mColIndex;
-
-  // Widths including MIN_CON, DES_CON, FIX_CON, MIN_ADJ, DES_ADJ, FIX_ADJ, PCT, PCT_ADJ, MIN_PRO
+  // Widths including MIN_CON, DES_CON, FIX_CON, MIN_ADJ, DES_ADJ, FIX_ADJ, PCT, PCT_ADJ, MIN_PRO, FINAL
+  // XXX these could be stored as pixels and converted to twips for a savings of 10 x 2 bytes.
   nscoord           mWidths[NUM_WIDTHS];
-  nsColConstraint   mConstraint;
-  nsTableCellFrame* mConstrainingCell;
 };
 
 inline PRInt32 nsTableColFrame::GetColIndex() const
@@ -195,25 +183,6 @@ inline PRInt32 nsTableColFrame::GetColIndex() const
 
 inline void nsTableColFrame::SetColIndex (PRInt32 aColIndex)
 { mColIndex = aColIndex; }
-
-inline nsColConstraint nsTableColFrame::GetConstraint() const
-{ return mConstraint; }
-
-inline void nsTableColFrame::SetConstraint(nsColConstraint aConstraint)
-{  mConstraint = aConstraint;}
-
-inline PRBool nsTableColFrame::IsAnonymous()
-{   return (PRBool)mBits.mIsAnonymous; }
-
-inline void nsTableColFrame::SetIsAnonymous(PRBool aIsAnonymous)
-{   mBits.mIsAnonymous = (unsigned)aIsAnonymous; }
-
-inline void nsTableColFrame::SetConstrainingCell(nsTableCellFrame* aCellFrame) 
-{ mConstrainingCell = aCellFrame; }
-
-inline nsTableCellFrame* nsTableColFrame::GetConstrainingCell() const 
-{ return mConstrainingCell; }
-
 
 #endif
 

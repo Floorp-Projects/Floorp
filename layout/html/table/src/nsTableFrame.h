@@ -831,10 +831,6 @@ public: /* ----- Cell Map public methods ----- */
   /** returns PR_TRUE if table-layout:auto  */
   virtual PRBool IsAutoLayout();
 
-  // compute the height of the table to be used as the basis for 
-  // percentage height cells
-  void ComputePercentBasisForRows(const nsHTMLReflowState& aReflowState);
-
   nscoord GetMinWidth() const;
   void    SetMinWidth(nscoord aWidth);
   
@@ -900,13 +896,12 @@ protected:
     unsigned mRowInserted:1;
     unsigned mNeedSpecialReflow:1;
     unsigned mNeedToInitiateSpecialReflow:1;
-    int : 19;                          // unused
+    unsigned : 20;                     // unused
   } mBits;
 
   nsTableCellMap*         mCellMap;            // maintains the relationships between rows, cols, and cells
   nsITableLayoutStrategy* mTableLayoutStrategy;// the layout strategy for this frame
   nsFrameList             mColGroups;          // the list of colgroup frames
-  nscoord                 mPercentBasisForRows;
   nscoord                 mMinWidth;       // XXX could store as PRUint16 with pixels
   nscoord                 mDesiredWidth;   // XXX could store as PRUint16 with pixels
   nscoord                 mPreferredWidth; // XXX could store as PRUint16 with pixels
