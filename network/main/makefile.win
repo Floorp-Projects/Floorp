@@ -107,6 +107,7 @@ EXPORTS= mkstream.h \
 	 mkpadpac.h \
 	 mkautocf.h \
 	 mkutils.h \
+         mktrace.h \
 	 mkhelp.h
 
 C_OBJS = \
