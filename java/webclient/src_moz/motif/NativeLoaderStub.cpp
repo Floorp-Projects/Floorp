@@ -111,12 +111,12 @@ jint (* nativeGetBookmarks) (JNIEnv *, jobject, jint);
 jint (* nativeNewRDFNode)  (JNIEnv *, jobject, jstring, jboolean);
 // from CurrentPageImpl.h
 void (* nativeCopyCurrentSelectionToSystemClipboard) (JNIEnv *, jobject, jint);
-void (* nativeFindInPage) (JNIEnv *, jobject, jstring, jboolean, jboolean);
-void (* nativeFindNextInPage) (JNIEnv *, jobject, jboolean);
+void (* nativeFindInPage) (JNIEnv *, jobject, jint, jstring, jboolean, jboolean);
+void (* nativeFindNextInPage) (JNIEnv *, jobject, jint, jboolean);
 jstring (* nativeGetCurrentURL) (JNIEnv *, jobject, jint);
 jstring (* nativeGetSource) (JNIEnv *, jobject);
 jbyteArray (* nativeGetSourceBytes) (JNIEnv *, jobject);
-void (* nativeResetFind) (JNIEnv *, jobject);
+void (* nativeResetFind) (JNIEnv *, jobject, jint);
 void (* nativeSelectAll) (JNIEnv *, jobject);
 // from HistoryImpl.h
 void (* nativeBack) (JNIEnv *, jobject, jint);
@@ -159,6 +159,7 @@ void (* nativeRepaint) (JNIEnv *, jobject, jint, jboolean);
 void (* nativeSetBounds) (JNIEnv *, jobject, jint, jint, jint, jint, jint);
 void (* nativeSetFocus) (JNIEnv *, jobject, jint);
 void (* nativeSetVisible) (JNIEnv *, jobject, jint, jboolean);
+void (* nativeDestroyInitContext) (JNIEnv *, jobject, jint);
 //from WrapperFactoryImpl.h
 jboolean (* nativeDoesImplement) (JNIEnv *, jobject, jstring);
 void (* nativeAppInitialize) (JNIEnv *, jobject, jstring);
@@ -179,6 +180,10 @@ void locateBrowserControlStubFunctions(void * dll) {
     printf("got dlsym error %s\n", dlerror());
   }
 
+  nativeDestroyInitContext = (void(*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_WindowControlImpl_nativeDestroyInitContext");
+  if (!nativeDestroyInitContext) {
+    printf("got dlsym error %s\n", dlerror());
+  }
   nativeCreateInitContext = (jint (*) (JNIEnv *, jobject, jint, jint, jint, jint, jint, jobject)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_WindowControlImpl_nativeCreateInitContext");
   if (!nativeCreateInitContext) {
     printf("got dlsym error %s\n", dlerror());
@@ -329,11 +334,11 @@ void locateBrowserControlStubFunctions(void * dll) {
   if (!nativeCopyCurrentSelectionToSystemClipboard) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeFindInPage = (void (*) (JNIEnv *, jobject, jstring, jboolean, jboolean)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeFindInPage");
+  nativeFindInPage = (void (*) (JNIEnv *, jobject, jint, jstring, jboolean, jboolean)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeFindInPage");
   if (!nativeFindInPage) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeFindNextInPage = (void (*) (JNIEnv *, jobject, jboolean)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeFindNextInPage");
+  nativeFindNextInPage = (void (*) (JNIEnv *, jobject, jint, jboolean)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeFindNextInPage");
   if (!nativeFindNextInPage) {
     printf("got dlsym error %s\n", dlerror());
   }
@@ -349,7 +354,7 @@ void locateBrowserControlStubFunctions(void * dll) {
   if (!nativeGetSourceBytes) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeResetFind = (void (*) (JNIEnv *, jobject)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeResetFind");
+  nativeResetFind = (void (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeResetFind");
   if (!nativeResetFind) {
     printf("got dlsym error %s\n", dlerror());
   }
@@ -468,8 +473,8 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
  * Signature: (Ljava/lang/String;ZZ)V
  */
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeFindInPage
-(JNIEnv * env, jobject obj, jstring mystring, jboolean myboolean, jboolean myboolean1) {
-  (* nativeFindInPage) (env, obj, mystring, myboolean, myboolean1);
+(JNIEnv * env, jobject obj, jint webShellPtr, jstring mystring, jboolean myboolean, jboolean myboolean1) {
+  (* nativeFindInPage) (env, obj, webShellPtr, mystring, myboolean, myboolean1);
 }
 
 /*
@@ -478,8 +483,8 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
  * Signature: (Z)V
  */
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeFindNextInPage
-(JNIEnv * env, jobject obj, jboolean myboolean) {
-  (* nativeFindNextInPage) (env, obj, myboolean);
+(JNIEnv * env, jobject obj, jint webShellPtr, jboolean myboolean) {
+  (* nativeFindNextInPage) (env, obj, webShellPtr, myboolean);
 }
 
 /*
@@ -518,8 +523,8 @@ JNIEXPORT jbyteArray JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentP
  * Signature: ()V
  */
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeResetFind
-(JNIEnv * env, jobject obj) {
-  (* nativeResetFind) (env, obj);
+(JNIEnv * env, jobject obj, jint webShellPtr) {
+  (* nativeResetFind) (env, obj, webShellPtr);
 }
 
 /*
@@ -847,6 +852,16 @@ Java_org_mozilla_webclient_wrapper_1native_RDFTreeNode_nativeToString
 
 
 
+// WindowControlImpl
+/*
+ * Class:     org_mozilla_webclient_wrapper_0005fnative_WindowControlImpl
+ * Method:    nativeDestroyInitContext
+ * Signature: (IIIII)I
+ */
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_WindowControlImpl_nativeDestroyInitContext
+(JNIEnv *env, jobject obj, jint webShellPtr) {
+  (* nativeDestroyInitContext) (env, obj, webShellPtr);
+}
 
 // WindowControlImpl
 /*
