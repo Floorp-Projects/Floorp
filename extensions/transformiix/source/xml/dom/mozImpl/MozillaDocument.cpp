@@ -275,9 +275,6 @@ Attr* Document::createAttributeNS(const String& aNamespaceURI,
     NSI_FROM_TX_NULL_CHECK(Document)
     nsCOMPtr<nsIDOMAttr> attr;
 
-    if (nsDocument == NULL)
-        return NULL;
-
     if (NS_SUCCEEDED(nsDocument->CreateAttributeNS(
                 aNamespaceURI.getConstNSString(), aName.getConstNSString(),
                 getter_AddRefs(attr)) == NS_OK))

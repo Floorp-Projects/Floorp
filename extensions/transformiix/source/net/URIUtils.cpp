@@ -29,16 +29,24 @@
  *   -- 20000326
  *     -- added Mozilla integration code
  *
- * $Id: URIUtils.cpp,v 1.10 2001/04/08 14:34:16 peterv%netscape.com Exp $
+ * $Id: URIUtils.cpp,v 1.11 2001/04/12 10:13:15 peterv%netscape.com Exp $
  */
 
 #include "URIUtils.h"
+
+#ifdef MOZ_XSL
+#include "nsIServiceManager.h"
+#include "nsIIOService.h"
+#include "nsIURL.h"
+#include "nsXPIDLString.h"
+#include "nsNetCID.h"
+#endif
 
 /**
  * URIUtils
  * A set of utilities for handling URIs
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.10 $ $Date: 2001/04/08 14:34:16 $
+ * @version $Revision: 1.11 $ $Date: 2001/04/12 10:13:15 $
 **/
 
 #ifndef MOZ_XSL
@@ -97,7 +105,8 @@ void URIUtils::getDocumentBase(const String& href, String& dest) {
     nsCOMPtr<nsIURI> pURL;
     nsresult result = NS_OK;
 
-    NS_WITH_SERVICE(nsIIOService, pService, kIOServiceCID, &result);
+    nsCOMPtr<nsIIOService> pService(do_GetService(NS_IOSERVICE_CONTRACTID,
+                                                  &result));
     if (NS_SUCCEEDED(result)) {
         // XXX This is ugly, there must be an easier (cleaner way).
         char *uriStr = (((String)href).getConstNSString()).ToNewCString();
@@ -150,7 +159,8 @@ void URIUtils::resolveHref(const String& href, const String& base, String& dest)
     nsCOMPtr<nsIURI> pURL;
     nsresult result = NS_OK;
 
-    NS_WITH_SERVICE(nsIIOService, pService, kIOServiceCID, &result);
+    nsCOMPtr<nsIIOService> pService(do_GetService(NS_IOSERVICE_CONTRACTID,
+                                                  &result));
     if (NS_SUCCEEDED(result)) {
         // XXX This is ugly, there must be an easier (cleaner way).
         char *baseStr = (base.getConstNSString()).ToNewCString();

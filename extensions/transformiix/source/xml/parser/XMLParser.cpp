@@ -34,13 +34,17 @@
  *    -- Removed a number of castings of XML_Char to DOM_CHAR since they
  *       were not working on Windows properly
  *
- * $Id: XMLParser.cpp,v 1.14 2001/03/06 00:12:18 Peter.VanderBeken%pandora.be Exp $
+ * $Id: XMLParser.cpp,v 1.15 2001/04/12 10:13:07 peterv%netscape.com Exp $
  */
 
 #include "XMLParser.h"
 #ifdef MOZ_XSL
 #include "nsSyncLoader.h"
 #include "URIUtils.h"
+#include "nsIIOService.h"
+#include "nsIURL.h"
+#include "nsNetCID.h"
+#include "nsIServiceManager.h"
 #endif
 /**
  *  Implementation of an In-Memory DOM based XML parser.  The actual XML
@@ -86,7 +90,8 @@ Document* XMLParser::getDocumentFromURI
 #ifdef MOZ_XSL
     nsresult rv = NS_OK;
     nsCOMPtr<nsIURI> documentURI;
-    NS_WITH_SERVICE(nsIIOService, pService, kIOServiceCID, &rv);
+    nsCOMPtr<nsIIOService> pService(do_GetService(NS_IOSERVICE_CONTRACTID,
+                                                  &rv));
     if (NS_FAILED(rv)) return NULL;
 
     char *hrefStr = (documentURL.getConstNSString()).ToNewCString();
