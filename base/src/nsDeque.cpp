@@ -241,7 +241,7 @@ nsDequeIterator nsDeque::End(void) const{
  * @param   aFunctor object to call for each member
  * @return  *this
  */
-const void nsDeque::ForEach(nsDequeFunctor& aFunctor) const{
+void nsDeque::ForEach(nsDequeFunctor& aFunctor) const{
   int i=0;
   for(i=0;i<mSize;i++){
     void* obj=ObjectAt(i);
@@ -429,7 +429,7 @@ void* nsDequeIterator::GetCurrent(void) {
  * @param   aFunctor object to call for each member
  * @return  *this
  */
-const void nsDequeIterator::ForEach(nsDequeFunctor& aFunctor) const{
+void nsDequeIterator::ForEach(nsDequeFunctor& aFunctor) const{
   mDeque.ForEach(aFunctor);
 }
 
