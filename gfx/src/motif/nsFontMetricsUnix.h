@@ -43,20 +43,21 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD  Init(const nsFont& aFont, nsIDeviceContext* aContext);
+  NS_IMETHOD  Destroy();
 
   NS_IMETHOD  GetWidth(char aC, nscoord &aWidth);
   NS_IMETHOD  GetWidth(PRUnichar aC, nscoord &aWidth);
   NS_IMETHOD  GetWidth(const nsString& aString, nscoord &aWidth);
   NS_IMETHOD  GetWidth(const char *aString, nscoord &aWidth);
+  NS_IMETHOD  GetWidth(const char *aString, PRUint32 aLength, nscoord &aWidth);
   NS_IMETHOD  GetWidth(const PRUnichar *aString, PRUint32 aLength, nscoord &aWidth);
-  NS_IMETHOD  GetWidth(nsIDeviceContext *aContext, const nsString& aString, nscoord &aWidth);
+  NS_IMETHOD  GetWidth(const nsString& aString, nscoord &aWidth);
 
   NS_IMETHOD  GetHeight(nscoord &aHeight);
   NS_IMETHOD  GetLeading(nscoord &aLeading);
   NS_IMETHOD  GetMaxAscent(nscoord &aAscent);
   NS_IMETHOD  GetMaxDescent(nscoord &aDescent);
   NS_IMETHOD  GetMaxAdvance(nscoord &aAdvance);
-  NS_IMETHOD  GetWidths(const nscoord *&aWidths);
 
   NS_IMETHOD  GetFont(const nsFont*& aFont);
   NS_IMETHOD  GetFontHandle(nsFontHandle &aHandle);
