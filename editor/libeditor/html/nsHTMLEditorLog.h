@@ -56,7 +56,7 @@ public:
   NS_IMETHOD SetInlineProperty(nsIAtom *aProperty, 
                             const nsAReadableString & aAttribute, 
                             const nsAReadableString & aValue);
-  NS_IMETHOD SetParagraphFormat(const nsString& aParagraphFormat);
+  NS_IMETHOD SetParagraphFormat(const nsAString& aParagraphFormat);
   NS_IMETHOD RemoveInlineProperty(nsIAtom *aProperty, const nsAReadableString& aAttribute);
   NS_IMETHOD DeleteSelection(nsIEditor::EDirection aAction);
   NS_IMETHOD InsertText(const nsAReadableString& aStringToInsert);

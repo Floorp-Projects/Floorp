@@ -94,7 +94,6 @@ protected:
 protected:
 
   const char* mTagName;
-  const char* mAttributeName;
   
   PRPackedBool  mGotState;    // do we know the state yet?
   PRPackedBool  mState;       // is this style "on" ?

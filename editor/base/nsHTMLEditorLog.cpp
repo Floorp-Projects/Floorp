@@ -82,7 +82,7 @@ nsHTMLEditorLog::SetInlineProperty(nsIAtom *aProperty, const nsAReadableString &
 }
 
 NS_IMETHODIMP
-nsHTMLEditorLog::SetParagraphFormat(const nsString& aParagraphFormat)
+nsHTMLEditorLog::SetParagraphFormat(const nsAString& aParagraphFormat)
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
