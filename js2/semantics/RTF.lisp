@@ -72,23 +72,25 @@
                          red 128 green 0 blue 0 ";"         ;13
                          red 128 green 128 blue 0 ";"       ;14
                          red 128 green 128 blue 128 ";"     ;15
-                         red 192 green 192 blue 192 ";"))   ;16
+                         red 192 green 192 blue 192 ";"     ;16
+                         red 0 green 64 blue 0 ";"))        ;17
     (:black cf 1)
     (:blue cf 2)
-    (:turquoise cf 3)
-    (:bright-green cf 4)
-    (:pink cf 5)
+    (:aqua cf 3)
+    (:lime cf 4)
+    (:fuchsia cf 5)
     (:red cf 6)
     (:yellow cf 7)
     (:white cf 8)
-    (:dark-blue cf 9)
+    (:navy cf 9)
     (:teal cf 10)
     (:green cf 11)
-    (:violet cf 12)
-    (:dark-red cf 13)
-    (:dark-yellow cf 14)
-    (:gray-50 cf 15)
-    (:gray-25 cf 16)
+    (:purple cf 12)
+    (:maroon cf 13)
+    (:olive cf 14)
+    (:gray cf 15)
+    (:silver cf 16)
+    (:dark-green cf 17)
     
     
     ;Misc.
@@ -100,6 +102,7 @@
     (:9-pt fs 18)
     (:10-pt fs 20)
     (:12-pt fs 24)
+    (:14-pt fs 28)
     (:no-language lang 1024)
     (:english-us lang 1033)
     (:english-uk lang 2057)
@@ -249,7 +252,7 @@
     ((+ :styles) (* :character-literal additive sbasedon :default-paragraph-font-num "Character Literal;"))
     
     (:character-literal-control-num 33)
-    (:character-literal-control cs :character-literal-control-num b 0 :times :dark-blue)
+    (:character-literal-control cs :character-literal-control-num b 0 :times :navy)
     ((+ :styles) (* :character-literal-control additive sbasedon :default-paragraph-font-num "Character Literal Control;"))
     
     (:terminal-num 34)
@@ -261,7 +264,7 @@
     ((+ :styles) (* :terminal-keyword additive sbasedon :terminal-num "Terminal Keyword;"))
     
     (:nonterminal-num 36)
-    (:nonterminal cs :nonterminal-num i :palatino :dark-red :no-language)
+    (:nonterminal cs :nonterminal-num i :palatino :maroon :no-language)
     ((+ :styles) (* :nonterminal additive sbasedon :default-paragraph-font-num "Nonterminal;"))
     
     (:nonterminal-attribute-num 37)
@@ -289,15 +292,15 @@
     ((+ :styles) (* :field-name additive sbasedon :type-expression-num "Field Name;"))
     
     (:global-variable-num 44)
-    (:global-variable cs :global-variable-num i :times :green :no-language)
+    (:global-variable cs :global-variable-num i :times :dark-green :no-language)
     ((+ :styles) (* :global-variable additive sbasedon :default-paragraph-font-num "Global Variable;"))
     
     (:local-variable-num 45)
-    (:local-variable cs :local-variable-num i :times :bright-green :no-language)
+    (:local-variable cs :local-variable-num i :times :green :no-language)
     ((+ :styles) (* :local-variable additive sbasedon :default-paragraph-font-num "Local Variable;"))
     
     (:action-name-num 46)
-    (:action-name cs :action-name-num :zapf-chancery :violet :no-language)
+    (:action-name cs :action-name-num :zapf-chancery :purple :no-language)
     ((+ :styles) (* :action-name additive sbasedon :default-paragraph-font-num "Action Name;"))
     
     
@@ -344,6 +347,326 @@
     ((:true 4) (:global-variable "true"))
     ((:false 5) (:global-variable "false"))
     ((:unique 6) (:semantic-keyword "unique"))
+    ))
+
+
+(defparameter *html-to-rtf-definitions*
+  '((:rtf-intro rtf 1 mac ansicpg 10000 uc 1 deff 0 deflang 2057 deflangfe 2057)
+    
+    ;Fonts
+    ((+ :rtf-intro) :fonttbl)
+    (:fonttbl (fonttbl :fonts))
+    
+    (:times f 0)
+    ((+ :fonts) (:times froman fcharset 256 fprq 2 (* panose "02020603050405020304") "Times New Roman;"))
+    (:symbol f 3)
+    ((+ :fonts) (:symbol ftech fcharset 2 fprq 2 "Symbol;"))
+    (:helvetica f 4)
+    ((+ :fonts) (:helvetica fnil fcharset 256 fprq 2 "Helvetica;"))
+    (:courier f 5)
+    ((+ :fonts) (:courier fmodern fcharset 256 fprq 2 "Courier New;"))
+    (:palatino f 6)
+    ((+ :fonts) (:palatino fnil fcharset 256 fprq 2 "Palatino;"))
+    (:zapf-chancery f 7)
+    ((+ :fonts) (:zapf-chancery fscript fcharset 256 fprq 2 "Zapf Chancery;"))
+    (:zapf-dingbats f 8)
+    ((+ :fonts) (:zapf-dingbats ftech fcharset 2 fprq 2 "Zapf Dingbats;"))
+    
+    
+    ;Color table
+    ((+ :rtf-intro) :colortbl)
+    (:colortbl (colortbl ";"                                ;0
+                         red 0 green 0 blue 0 ";"           ;1
+                         red 0 green 0 blue 255 ";"         ;2
+                         red 0 green 255 blue 255 ";"       ;3
+                         red 0 green 255 blue 0 ";"         ;4
+                         red 255 green 0 blue 255 ";"       ;5
+                         red 255 green 0 blue 0 ";"         ;6
+                         red 255 green 255 blue 0 ";"       ;7
+                         red 255 green 255 blue 255 ";"     ;8
+                         red 0 green 0 blue 128 ";"         ;9
+                         red 0 green 128 blue 128 ";"       ;10
+                         red 0 green 128 blue 0 ";"         ;11
+                         red 128 green 0 blue 128 ";"       ;12
+                         red 128 green 0 blue 0 ";"         ;13
+                         red 128 green 128 blue 0 ";"       ;14
+                         red 128 green 128 blue 128 ";"     ;15
+                         red 192 green 192 blue 192 ";"     ;16
+                         red 0 green 64 blue 0 ";"          ;17
+                         red #x33 green #x66 blue #x00 ";"));18
+    (:black cf 1)
+    (:blue cf 2)
+    (:aqua cf 3)
+    (:lime cf 4)
+    (:fuchsia cf 5)
+    (:red cf 6)
+    (:yellow cf 7)
+    (:white cf 8)
+    (:navy cf 9)
+    (:teal cf 10)
+    (:green cf 11)
+    (:purple cf 12)
+    (:maroon cf 13)
+    (:olive cf 14)
+    (:gray cf 15)
+    (:silver cf 16)
+    (:dark-green cf 17)
+    (:color336600 cf 18)
+    
+    
+    ;Misc.
+    (:spc " ")
+    (:tab2 tab)
+    (:tab3 tab)
+    (:nbhy _)             ;Non-breaking hyphen
+    (:8-pt fs 16)
+    (:9-pt fs 18)
+    (:10-pt fs 20)
+    (:12-pt fs 24)
+    (:14-pt fs 28)
+    (:no-language lang 1024)
+    (:english-us lang 1033)
+    (:english-uk lang 2057)
+    
+    (:english :english-uk)
+    
+    (:reset-section sectd)
+    (:new-section sect)
+    (:reset-paragraph pard plain)
+    ((:new-paragraph t) par)
+    ((:new-line t) line)
+    
+    ;Symbols (-10 suffix means 10-point, etc.)
+    ((:bullet 1) bullet)
+    ((:minus 1) endash)
+    ((:not-equal 1) u 8800 \' 173)
+    ((:less-or-equal 1) u 8804 \' 178)
+    ((:greater-or-equal 1) u 8805 \' 179)
+    ((:infinity 1) u 8734 \' 176)
+    ((:left-single-quote 1) lquote)
+    ((:right-single-quote 1) rquote)
+    ((:left-double-quote 1) ldblquote)
+    ((:right-double-quote 1) rdblquote)
+    ((:left-angle-quote 1) u 171 \' 199)
+    ((:right-angle-quote 1) u 187 \' 200)
+    ((:bottom-10 1) (field (* fldinst "SYMBOL 94 \\f \"Symbol\" \\s 10") (fldrslt :symbol :10-pt)))
+    ((:vector-assign-10 2) (field (* fldinst "SYMBOL 172 \\f \"Symbol\" \\s 10") (fldrslt :symbol :10-pt)))
+    ((:up-arrow-10 1) (field (* fldinst "SYMBOL 173 \\f \"Symbol\" \\s 10") (fldrslt :symbol :10-pt)))
+    ((:function-arrow-10 2) (field (* fldinst "SYMBOL 174 \\f \"Symbol\" \\s 10") (fldrslt :symbol :10-pt)))
+    ((:cartesian-product-10 2) (field (* fldinst "SYMBOL 180 \\f \"Symbol\" \\s 10") (fldrslt :symbol :10-pt)))
+    ((:identical-10 2) (field (* fldinst "SYMBOL 186 \\f \"Symbol\" \\s 10") (fldrslt :symbol :10-pt)))
+    ((:circle-plus-10 2) (field (* fldinst "SYMBOL 197 \\f \"Symbol\" \\s 10") (fldrslt :symbol :10-pt)))
+    ((:empty-10 2) (field (* fldinst "SYMBOL 198 \\f \"Symbol\" \\s 10") (fldrslt :symbol :10-pt)))
+    ((:intersection-10 1) (field (* fldinst "SYMBOL 199 \\f \"Symbol\" \\s 10") (fldrslt :symbol :10-pt)))
+    ((:union-10 1) (field (* fldinst "SYMBOL 200 \\f \"Symbol\" \\s 10") (fldrslt :symbol :10-pt)))
+    ((:member-10 2) (field (* fldinst "SYMBOL 206 \\f \"Symbol\" \\s 10") (fldrslt :symbol :10-pt)))
+    ((:not-member-10 2) (field (* fldinst "SYMBOL 207 \\f \"Symbol\" \\s 10") (fldrslt :symbol :10-pt)))
+    ((:derives-10 2) (field (* fldinst "SYMBOL 222 \\f \"Symbol\" \\s 10") (fldrslt :symbol :10-pt)))
+    ((:left-triangle-bracket-10 1) (field (* fldinst "SYMBOL 225 \\f \"Symbol\" \\s 10") (fldrslt :symbol :10-pt)))
+    ((:right-triangle-bracket-10 1) (field (* fldinst "SYMBOL 241 \\f \"Symbol\" \\s 10") (fldrslt :symbol :10-pt)))
+    ((:big-plus-10 2) (field (* fldinst "SYMBOL 58 \\f \"Zapf Dingbats\" \\s 10") (fldrslt :zapf-dingbats :10-pt)))
+    
+    ((:alpha 1) (field (* fldinst "SYMBOL 97 \\f \"Symbol\" \\s 10") (fldrslt :symbol :10-pt)))
+    ((:beta 1) (field (* fldinst "SYMBOL 98 \\f \"Symbol\" \\s 10") (fldrslt :symbol :10-pt)))
+    ((:chi 1) (field (* fldinst "SYMBOL 99 \\f \"Symbol\" \\s 10") (fldrslt :symbol :10-pt)))
+    ((:delta 1) (field (* fldinst "SYMBOL 100 \\f \"Symbol\" \\s 10") (fldrslt :symbol :10-pt)))
+    ((:epsilon 1) (field (* fldinst "SYMBOL 101 \\f \"Symbol\" \\s 10") (fldrslt :symbol :10-pt)))
+    ((:phi 1) (field (* fldinst "SYMBOL 102 \\f \"Symbol\" \\s 10") (fldrslt :symbol :10-pt)))
+    ((:gamma 1) (field (* fldinst "SYMBOL 103 \\f \"Symbol\" \\s 10") (fldrslt :symbol :10-pt)))
+    ((:eta 1) (field (* fldinst "SYMBOL 104 \\f \"Symbol\" \\s 10") (fldrslt :symbol :10-pt)))
+    ((:iota 1) (field (* fldinst "SYMBOL 105 \\f \"Symbol\" \\s 10") (fldrslt :symbol :10-pt)))
+    ((:kappa 1) (field (* fldinst "SYMBOL 107 \\f \"Symbol\" \\s 10") (fldrslt :symbol :10-pt)))
+    ((:lambda 1) (field (* fldinst "SYMBOL 108 \\f \"Symbol\" \\s 10") (fldrslt :symbol :10-pt)))
+    ((:mu 1) (field (* fldinst "SYMBOL 109 \\f \"Symbol\" \\s 10") (fldrslt :symbol :10-pt)))
+    ((:nu 1) (field (* fldinst "SYMBOL 110 \\f \"Symbol\" \\s 10") (fldrslt :symbol :10-pt)))
+    ((:omicron 1) (field (* fldinst "SYMBOL 111 \\f \"Symbol\" \\s 10") (fldrslt :symbol :10-pt)))
+    ((:pi 1) (field (* fldinst "SYMBOL 112 \\f \"Symbol\" \\s 10") (fldrslt :symbol :10-pt)))
+    ((:theta 1) (field (* fldinst "SYMBOL 113 \\f \"Symbol\" \\s 10") (fldrslt :symbol :10-pt)))
+    ((:rho 1) (field (* fldinst "SYMBOL 114 \\f \"Symbol\" \\s 10") (fldrslt :symbol :10-pt)))
+    ((:sigma 1) (field (* fldinst "SYMBOL 115 \\f \"Symbol\" \\s 10") (fldrslt :symbol :10-pt)))
+    ((:tau 1) (field (* fldinst "SYMBOL 116 \\f \"Symbol\" \\s 10") (fldrslt :symbol :10-pt)))
+    ((:upsilon 1) (field (* fldinst "SYMBOL 117 \\f \"Symbol\" \\s 10") (fldrslt :symbol :10-pt)))
+    ((:omega 1) (field (* fldinst "SYMBOL 119 \\f \"Symbol\" \\s 10") (fldrslt :symbol :10-pt)))
+    ((:xi 1) (field (* fldinst "SYMBOL 120 \\f \"Symbol\" \\s 10") (fldrslt :symbol :10-pt)))
+    ((:psi 1) (field (* fldinst "SYMBOL 121 \\f \"Symbol\" \\s 10") (fldrslt :symbol :10-pt)))
+    ((:zeta 1) (field (* fldinst "SYMBOL 122 \\f \"Symbol\" \\s 10") (fldrslt :symbol :10-pt)))
+    
+    
+    ;Styles
+    ((+ :rtf-intro) :stylesheet)
+    (:stylesheet (stylesheet :styles))
+    
+    (:normal-num 0)
+    (:normal s :normal-num)
+    ((+ :styles) (widctlpar :10-pt :english snext :normal-num "Normal;"))
+    
+    (:body-text-num 1)
+    (:body-text s :body-text-num qj sa 120 widctlpar :10-pt :english)
+    ((+ :styles) (:body-text sbasedon :normal-num snext :body-text-num "Body Text;"))
+    
+    (:header-num 2)
+    (:header s :header-num nowidctlpar tqr tx 8640 :10-pt :english)
+    ((+ :styles) (:header sbasedon :normal-num snext :header-num "header;"))
+    
+    (:footer-num 3)
+    (:footer s :footer-num nowidctlpar tqc tx 4320 :10-pt :english)
+    ((+ :styles) (:footer sbasedon :normal-num snext :footer-num "footer;"))
+    
+    (:grammar-num 10)
+    (:grammar s :grammar-num nowidctlpar hyphpar 0 :10-pt :no-language)
+    ((+ :styles) (:grammar sbasedon :normal-num snext :grammar-num "Grammar;"))
+    
+    (:grammar-header-num 11)
+    (:grammar-header s :grammar-header-num sb 60 keep keepn nowidctlpar hyphpar 0 b :10-pt :english)
+    ((+ :styles) (:grammar-header sbasedon :normal-num snext :grammar-lhs-num "Grammar Header;"))
+    
+    (:grammar-lhs-num 12)
+    (:grammar-lhs s :grammar-lhs-num fi -1440 li 1800 sb 120 keep keepn nowidctlpar hyphpar 0 outlinelevel 4 :10-pt :no-language)
+    ((+ :styles) (:grammar-lhs sbasedon :grammar-num snext :grammar-rhs-num "Grammar LHS;"))
+    
+    (:grammar-lhs-last-num 13)
+    (:grammar-lhs-last s :grammar-lhs-last-num fi -1440 li 1800 sb 120 sa 120 keep nowidctlpar hyphpar 0 outlinelevel 4 :10-pt :no-language)
+    ((+ :styles) (:grammar-lhs-last sbasedon :grammar-num snext :grammar-lhs-num "Grammar LHS Last;"))
+    
+    (:grammar-rhs-num 14)
+    (:grammar-rhs s :grammar-rhs-num fi -1260 li 1800 keep keepn nowidctlpar tx 720 hyphpar 0 :10-pt :no-language)
+    ((+ :styles) (:grammar-rhs sbasedon :grammar-num snext :grammar-rhs-num "Grammar RHS;"))
+    
+    (:grammar-rhs-last-num 15)
+    (:grammar-rhs-last s :grammar-rhs-last-num fi -1260 li 1800 sa 120 keep nowidctlpar tx 720 hyphpar 0 :10-pt :no-language)
+    ((+ :styles) (:grammar-rhs-last sbasedon :grammar-rhs-num snext :grammar-lhs-num "Grammar RHS Last;"))
+    
+    (:grammar-argument-num 16)
+    (:grammar-argument s :grammar-argument-num fi -1440 li 1800 sb 120 sa 120 keep nowidctlpar hyphpar 0 outlinelevel 4 :10-pt :no-language)
+    ((+ :styles) (:grammar-argument sbasedon :grammar-num snext :grammar-lhs-num "Grammar Argument;"))
+    
+    (:semantics-num 20)
+    (:semantics s :semantics-num li 180 sb 60 sa 60 keep nowidctlpar hyphpar 0 :10-pt :no-language)
+    ((+ :styles) (:semantics sbasedon :normal-num snext :semantics-num "Semantics;"))
+    
+    (:semantics-next-num 21)
+    (:semantics-next s :semantics-next-num li 540 sa 60 keep nowidctlpar hyphpar 0 :10-pt :no-language)
+    ((+ :styles) (:semantics-next sbasedon :semantics-num snext :semantics-next-num "Semantics Next;"))
+    
+    (:semantic-comment-num 22)
+    (:semantic-comment s :semantic-comment-num qj li 180 sb 120 sa 0 widctlpar :10-pt :english)
+    ((+ :styles) (:semantic-comment sbasedon :normal-num snext :semantics-num "Semantic Comment;"))
+    
+    (:default-paragraph-font-num 30)
+    (:default-paragraph-font cs :default-paragraph-font-num)
+    ((+ :styles) (* :default-paragraph-font additive "Default Paragraph Font;"))
+    
+    (:page-number-num 31)
+    (:page-number cs :page-number-num)
+    ((+ :styles) (* :page-number additive sbasedon :default-paragraph-font-num "page number;"))
+    
+    (:character-literal-num 32)
+    (:character-literal cs :character-literal-num b :courier :blue :no-language)
+    ((+ :styles) (* :character-literal additive sbasedon :default-paragraph-font-num "Character Literal;"))
+    
+    (:character-literal-control-num 33)
+    (:character-literal-control cs :character-literal-control-num b 0 :times :navy)
+    ((+ :styles) (* :character-literal-control additive sbasedon :default-paragraph-font-num "Character Literal Control;"))
+    
+    (:terminal-num 34)
+    (:terminal cs :terminal-num b :palatino :teal :no-language)
+    ((+ :styles) (* :terminal additive sbasedon :default-paragraph-font-num "Terminal;"))
+    
+    (:terminal-keyword-num 35)
+    (:terminal-keyword cs :terminal-keyword-num b :courier :blue :no-language)
+    ((+ :styles) (* :terminal-keyword additive sbasedon :terminal-num "Terminal Keyword;"))
+    
+    (:nonterminal-num 36)
+    (:nonterminal cs :nonterminal-num i :palatino :maroon :no-language)
+    ((+ :styles) (* :nonterminal additive sbasedon :default-paragraph-font-num "Nonterminal;"))
+    
+    (:nonterminal-attribute-num 37)
+    (:nonterminal-attribute cs :nonterminal-attribute-num i 0)
+    ((+ :styles) (* :nonterminal-attribute additive sbasedon :default-paragraph-font-num "Nonterminal Attribute;"))
+    
+    (:nonterminal-argument-num 38)
+    (:nonterminal-argument cs :nonterminal-argument-num)
+    ((+ :styles) (* :nonterminal-argument additive sbasedon :default-paragraph-font-num "Nonterminal Argument;"))
+    
+    (:semantic-keyword-num 40)
+    (:semantic-keyword cs :semantic-keyword-num b :times)
+    ((+ :styles) (* :semantic-keyword additive sbasedon :default-paragraph-font-num "Semantic Keyword;"))
+    
+    (:type-expression-num 41)
+    (:type-expression cs :type-expression-num :times :red :no-language)
+    ((+ :styles) (* :type-expression additive sbasedon :default-paragraph-font-num "Type Expression;"))
+    
+    (:type-name-num 42)
+    (:type-name cs :type-name-num scaps :times :red :no-language)
+    ((+ :styles) (* :type-name additive sbasedon :type-expression-num "Type Name;"))
+    
+    (:field-name-num 43)
+    (:field-name cs :field-name-num :helvetica :red :no-language)
+    ((+ :styles) (* :field-name additive sbasedon :type-expression-num "Field Name;"))
+    
+    (:global-variable-num 44)
+    (:global-variable cs :global-variable-num i :times :dark-green :no-language)
+    ((+ :styles) (* :global-variable additive sbasedon :default-paragraph-font-num "Global Variable;"))
+    
+    (:local-variable-num 45)
+    (:local-variable cs :local-variable-num i :times :green :no-language)
+    ((+ :styles) (* :local-variable additive sbasedon :default-paragraph-font-num "Local Variable;"))
+    
+    (:action-name-num 46)
+    (:action-name cs :action-name-num :zapf-chancery :purple :no-language)
+    ((+ :styles) (* :action-name additive sbasedon :default-paragraph-font-num "Action Name;"))
+    
+
+    (:variable-num 50)
+    (:variable cs :variable-num i :palatino :color336600 :no-language)
+    ((+ :styles) (* :variable additive sbasedon :default-paragraph-font-num "Variable;"))
+    
+
+    (:heading1-num 61)
+    (:heading1 s :heading1-num qj fi -720 li 720 sb 240 sa 180 keep keepn widctlpar hyphpar 0 level 1 b :14-pt :english)
+    ((+ :styles) (:heading1 sbasedon :normal-num snext :body-text-num "heading 1;"))
+    
+    (:heading2-num 62)
+    (:heading2 s :heading2-num qj fi -720 li 720 sb 240 sa 120 keep keepn widctlpar hyphpar 0 level 2 b :12-pt :english)
+    ((+ :styles) (:heading2 sbasedon :heading1-num snext :body-text-num "heading 2;"))
+
+    (:heading3-num 63)
+    (:heading3 s :heading3-num qj fi -720 li 720 sb 180 sa 90 keep keepn widctlpar hyphpar 0 level 3 b :10-pt :english)
+    ((+ :styles) (:heading3 sbasedon :heading2-num snext :body-text-num "heading 3;"))
+
+    (:heading4-num 64)
+    (:heading4 s :heading4-num qj fi -720 li 720 sb 120 sa 60 keep keepn widctlpar hyphpar 0 level 4 b :10-pt :english)
+    ((+ :styles) (:heading4 sbasedon :heading3-num snext :body-text-num "heading 4;"))
+
+
+    (:sample-code-num 70)
+    (:sample-code s :sample-code-num li 1440 sb 60 sa 60 keep nowidctlpar hyphpar 0 b :courier :blue :10-pt :no-language)
+    ((+ :styles) (:sample-code sbasedon :normal-num snext :body-text-num "Sample Code;"))
+    
+    
+    ;Headers and Footers
+    (:header-group header :reset-paragraph :header)
+    (:footer-group (footer :reset-paragraph :footer tab (field (* fldinst (:page-number " PAGE ")) (fldrslt (:page-number :no-language "1")))))
+    
+    
+    ;Document Formatting
+    (:docfmt widowctrl
+             ftnbj          ;footnotes at bottom of page
+             aenddoc        ;endnotes at end of document
+             fet 0          ;footnotes only -- no endnotes
+             formshade      ;shade form fields
+             viewkind 4     ;normal view mode
+             viewscale 125  ;125% view
+             pgbrdrhead     ;page border surrounds header
+             pgbrdrfoot)    ;page border surrounds footer
+    
+    
+    ;Section Formatting
+    
+    
+    ;Specials
+    (:mod-date s :normal-num qr sa 120 widctlpar :10-pt :english i)
+    (:plain-subscript b 0 i 0 sub)
     ))
 
 
@@ -730,8 +1053,8 @@
 ; Create a top-level rtf-stream and call emitter to emit its contents.
 ; emitter takes one argument -- an rtf-stream to which it should emit paragraphs.
 ; Return the top-level rtf-stream.
-(defun depict-rtf-top-level (title emitter)
-  (let* ((top-rtf-stream (make-top-level-rtf-stream *rtf-definitions*))
+(defun depict-rtf-top-level (title emitter &optional (rtf-definitions *rtf-definitions*))
+  (let* ((top-rtf-stream (make-top-level-rtf-stream rtf-definitions))
          (rtf-stream (make-rtf-stream (markup-stream-env top-rtf-stream) *markup-stream-paragraph-level*))
          (time (get-universal-time)))
     (markup-stream-append1 rtf-stream ':rtf-intro)
@@ -751,8 +1074,8 @@
 ; emitter takes one argument -- an rtf-stream to which it should emit paragraphs.
 ; Write the resulting RTF to the text file with the given name (relative to the
 ; local directory).
-(defun depict-rtf-to-local-file (filename title emitter)
-  (let ((top-rtf-stream (depict-rtf-top-level title emitter)))
+(defun depict-rtf-to-local-file (filename title emitter &optional (rtf-definitions *rtf-definitions*))
+  (let ((top-rtf-stream (depict-rtf-top-level title emitter rtf-definitions)))
     (write-rtf-to-local-file filename (markup-stream-output top-rtf-stream)))
   filename)
 
@@ -788,16 +1111,28 @@
 
 (defmethod depict-char-style-f ((rtf-stream rtf-stream) char-style emitter)
   (assert-true (>= (markup-stream-level rtf-stream) *markup-stream-content-level*))
-  (assert-true (and char-style (symbolp char-style)))
-  (let ((inner-rtf-stream (make-rtf-stream (markup-stream-env rtf-stream) *markup-stream-content-level* (markup-stream-logical-position rtf-stream))))
-    (markup-stream-append1 inner-rtf-stream char-style)
-    (prog1
-      (funcall emitter inner-rtf-stream)
-      (rtf-stream-append-or-inline-block rtf-stream (markup-stream-unexpanded-output inner-rtf-stream)))))
+  (if char-style
+    (let ((inner-rtf-stream (make-rtf-stream (markup-stream-env rtf-stream) *markup-stream-content-level* (markup-stream-logical-position rtf-stream))))
+      (assert-true (symbolp char-style))
+      (markup-stream-append1 inner-rtf-stream char-style)
+      (prog1
+        (funcall emitter inner-rtf-stream)
+        (rtf-stream-append-or-inline-block rtf-stream (markup-stream-unexpanded-output inner-rtf-stream))))
+    (funcall emitter rtf-stream)))
 
 
 (defmethod ensure-no-enclosing-style ((rtf-stream rtf-stream) style)
   (declare (ignore style)))
+
+
+(defmethod save-block-style ((rtf-stream rtf-stream))
+  nil)
+
+
+(defmethod with-saved-block-style-f ((rtf-stream rtf-stream) saved-block-style flatten emitter)
+  (declare (ignore saved-block-style flatten))
+  (assert-true (= (markup-stream-level rtf-stream) *markup-stream-paragraph-level*))
+  (funcall emitter rtf-stream))
 
 
 (defmethod depict-anchor ((rtf-stream rtf-stream) link-prefix link-name duplicate)
