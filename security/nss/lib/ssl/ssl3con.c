@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl3con.c,v 1.3 2000/05/12 18:43:25 dougt%netscape.com Exp $
+ * $Id: ssl3con.c,v 1.4 2000/05/18 00:41:38 nelsonb%netscape.com Exp $
  */
 
 #include "cert.h"
@@ -1815,6 +1815,7 @@ ssl3_GenerateSessionKeys(sslSocket *ss, const PK11SymKey *pms)
     CK_FLAGS          keyFlags;
     CK_SSL3_KEY_MAT_PARAMS key_material_params;
     CK_SSL3_KEY_MAT_OUT    returnedKeys;
+    CK_SSL3_MASTER_KEY_DERIVE_PARAMS master_params;
 
     PORT_Assert( ssl_HaveSSL3HandshakeLock(ss));
     PORT_Assert( ssl_HaveSpecWriteLock(ss));
@@ -1830,12 +1831,7 @@ ssl3_GenerateSessionKeys(sslSocket *ss, const PK11SymKey *pms)
 	keyFlags      = 0;
     }
 
-    if (pms != NULL) {
-	CK_SSL3_MASTER_KEY_DERIVE_PARAMS master_params;
-
-	/* XXX We're supposed to check the version numbers.
-	** How can we do that with PKCS#11 ??
-	*/
+    if (pms || !pwSpec->master_secret) {
 	master_params.pVersion                     = NULL;
 	master_params.RandomInfo.pClientRandom     = cr;
 	master_params.RandomInfo.ulClientRandomLen = SSL3_RANDOM_LENGTH;
@@ -1843,8 +1839,10 @@ ssl3_GenerateSessionKeys(sslSocket *ss, const PK11SymKey *pms)
 	master_params.RandomInfo.ulServerRandomLen = SSL3_RANDOM_LENGTH;
 
 	params.data = (unsigned char *) &master_params;
-	params.len  = sizeof(master_params);
+	params.len  = sizeof master_params;
+    }
 
+    if (pms != NULL) {
 	pwSpec->master_secret = PK11_DeriveWithFlags((PK11SymKey *)pms, 
 					master_derive, &params, key_derive, 
 					CKA_DERIVE, 0, keyFlags);
