@@ -1068,6 +1068,7 @@ void nsHTMLTagContent::TriggerLink(nsIPresContext& aPresContext,
     else {
       handler->OnOverLink(nsnull, absURLSpec, aTargetSpec);
     }
+    NS_RELEASE(handler);
   }
 }
 
