@@ -68,22 +68,28 @@ var view = ({
       this.selection.toggleSelect(index);
   },
   swallow : function(initial) {
+    var startt = new Date();
     this.rowCount = initial.length;
-    this.content = initial;
     this.success = new Array(this.rowCount);
     this.names = new Array(this.rowCount);
     this.purps = new Array(this.rowCount);
     this.comms = new Array(this.rowCount);
-    for (k=0;k<this.rowCount;k++) {
-      var cur = initial.item(k);
-      this.names[k] = cur.getAttribute("file");
-      if (cur.childNodes.length>1)
-        this.purps[k] = cur.childNodes.item(1).firstChild.nodeValue;
-      if (cur.childNodes.length>3)
-        this.comms[k] = cur.childNodes.item(3).firstChild.nodeValue;
+    var cur = initial.item(0);
+    var k = 0;
+    while (cur.nextSibling) {
+      if (cur.nodeType==Node.ELEMENT_NODE) {
+        this.names[k] = cur.getAttribute("file");
+        if (cur.childNodes.length>1)
+          this.purps[k] = cur.childNodes.item(1).firstChild.nodeValue;
+        if (cur.childNodes.length>3)
+          this.comms[k] = cur.childNodes.item(3).firstChild.nodeValue;
+        k = k+1;
+      }
+      cur = cur.nextSibling;
     }
     netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
     this.outliner.rowCountChanged(0,this.rowCount);
+    //dump((new Date()-startt)/1000+" secs in swallow for "+k+" items\n");
   },
   remove : function(first,last){
     last = Math.min(this.rowCount,last); 
@@ -194,7 +200,7 @@ function hide_checked(yes){
 
 function select(){
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-  var searchField = matchFieldTag.getAttribute("data");
+  var searchField = matchFieldTag.getAttribute("value");
   var matchRE = new RegExp(matchNameTag.value);
   for (k=0;k<view.rowCount;k++){
     switch (searchField) {
