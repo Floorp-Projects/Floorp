@@ -126,7 +126,8 @@ $::FORM{'assigned_to'} =
 
 my @list = ('reporter', 'assigned_to', 'product', 'version', 'rep_platform',
             'op_sys', 'bug_status', 'bug_severity', 'priority', 'component',
-            'short_desc', 'long_desc', 'creation_ts', 'delta_ts');
+            'short_desc', 'long_desc', 'creation_ts', 'delta_ts',
+            'bug_file_loc');
 
 my @vallist;
 foreach my $i (@list) {
