@@ -860,7 +860,7 @@ nsAccessibilityService::CreateHTMLTextAccessible(nsISupports *aFrame, nsIAccessi
   //   text frame in its block.
   // A depth-first traversal from its nearest parent block frame will produce a frame sequence like
   //   TTTBTTBTT... (B for block frame, T for text frame), so every T frame which is the immediate 
-  //   sibiling of B frame will be the FIRST text frame.
+  //   sibling of B frame will be the FIRST text frame.
   nsIFrame* parentFrame = nsAccessible::GetParentBlockFrame(frame);
   if (! parentFrame)
     return NS_ERROR_FAILURE; 

@@ -276,7 +276,7 @@ void nsAccessibleTreeWalker::UpdateFrame(PRBool aTryFirstChild)
     mState.frame = aTryFirstChild? mState.frame->GetFirstChild(nsnull) : 
                                    mState.frame->GetNextSibling();
 #ifndef MOZ_ACCESSIBILITY_ATK
-    if (mState.frame && mState.siblingIndex <0 && 
+    if (mState.frame && mState.siblingIndex < 0 && 
         mState.frame->IsGeneratedContentFrame()) {
       mState.domNode = do_QueryInterface(mState.frame->GetContent());
       mState.siblingIndex = eSiblingsWalkFrames;
