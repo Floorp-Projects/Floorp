@@ -37,11 +37,10 @@
 
   <script src="chrome://communicator/content/sidebar/preview.js" />
 
-  <box id="paneltitle" class="texttab texttab-sidebar"
-    align="left" selected="true"/>
+  <box id="paneltitle" class="box-texttab texttab-sidebar" selected="true"/>
 
 <!--  <iframe id="previewframe" type="content" src="about:blank" flex="1"/>-->
-  <iframe class="inset" id="previewframe" type="content" src="about:blank" flex="1"/>
+  <iframe class="box-panel" id="previewframe" type="content" src="about:blank" flex="1"/>
 
   <separator class="groove"/>
   
