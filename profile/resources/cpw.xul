@@ -3,19 +3,7 @@
 <?xml-stylesheet href="cpw.css" type="text/css"?>
 
 
-<!DOCTYPE window
-[
-<!ENTITY window.title.label          "Communicator Profile Manager">
-<!ENTITY newprofile.title            "New Profile">
-<!ENTITY dialup.title	             "Dialup">
-<!ENTITY mailnews.title              "Mail News">
-<!ENTITY addrbook.title              "Address Book">
-<!ENTITY back.label                   "Back">
-<!ENTITY next.label                   "Next">
-<!ENTITY cancel.label                 "Cancel">
-<!ENTITY finish.label                 "Finish">
-]>
-
+<!DOCTYPE window SYSTEM "chrome://profile/locale/en-US/cpw.dtd" >
 
 <window title="&window.title.label;" style="width: 100%; height: 100%" align="vertical"
 	xmlns:html="http://www.w3.org/TR/REC-html40"
