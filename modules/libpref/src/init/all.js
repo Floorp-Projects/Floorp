@@ -72,7 +72,7 @@ pref("browser.display.focus_ring_on_anything", false);
 pref("browser.chrome.toolbar_tips",         true);
 pref("browser.chrome.toolbar_style",        2);
 
-pref("browser.toolbars.showbutton.bookmarks", false);
+pref("browser.toolbars.showbutton.bookmarks", true);
 pref("browser.toolbars.showbutton.go",      false);
 pref("browser.toolbars.showbutton.home",    true);
 pref("browser.toolbars.showbutton.mynetscape", true);
