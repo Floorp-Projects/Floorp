@@ -27,13 +27,9 @@ PDBFILE=nunet.pdb
 MAPFILE=nunet.map
 DEFFILE=nunet.def
 
-#// Currently the HTTP handler is being built together with core.
-#// It needs to move to its own dir, once the kinks of dynamic
-#// registration are resolved.
 OBJS=                                   \
-        .\$(OBJDIR)\nsURL.obj  \
-        .\$(OBJDIR)\nsHTTPHandler.obj  \
-        .\$(OBJDIR)\nsHTTPInstance.obj  \
+        .\$(OBJDIR)\nsNetManager.obj  	\
+        .\$(OBJDIR)\nsURL.obj  			\
         $(NULL)
 
 DLL=.\$(OBJDIR)\$(DLLNAME)
@@ -63,4 +59,3 @@ include <$(DEPTH)/config/rules.mak>
 libs:: $(DLL)
     $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME) $(DIST)\bin
     $(MAKE_INSTALL) .\$(OBJDIR)\nunet.lib $(DIST)\lib
-
