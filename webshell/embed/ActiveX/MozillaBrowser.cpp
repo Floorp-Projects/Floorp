@@ -29,7 +29,7 @@ extern "C" void NS_SetupRegistry();
 
 static const std::string c_szPrefsFile     = "prefs.js";
 static const std::string c_szPrefsHomePage = "browser.startup.homepage";
-
+static const std::string c_szDefaultPage   = "resource://res/MozillaControl.html";
 
 /////////////////////////////////////////////////////////////////////////////
 // CMozillaBrowser
@@ -92,6 +92,10 @@ LRESULT CMozillaBrowser::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 
     // Create the NGLayout WebShell
     CreateWebShell();
+
+	// Browse to a default page
+	USES_CONVERSION;
+	Navigate(A2OLE(c_szDefaultPage.c_str()), NULL, NULL, NULL, NULL);
 
 	return 0;
 }
