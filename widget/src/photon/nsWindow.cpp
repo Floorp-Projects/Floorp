@@ -825,6 +825,7 @@ NS_METHOD nsWindow::SetMenuBar( nsIMenuBar * aMenuBar )
 
 NS_METHOD nsWindow::ShowMenuBar( PRBool aShow)
 {
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::ShowMenuBar  aShow=<%d> - Not Implemented \n", aShow));
   return NS_ERROR_FAILURE;
 }
 
