@@ -91,6 +91,7 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 #define HELP_SPACER_1   "\t"
 #define HELP_SPACER_2   "\t\t"
+#define HELP_SPACER_4   "\t\t\t\t"
 
 #ifdef DEBUG
 #include "prlog.h"
@@ -1044,6 +1045,10 @@ static void DumpHelp(char *appname)
   printf("%s-ProfileManager%sStart with profile manager.\n",HELP_SPACER_1,HELP_SPACER_2);
   printf("%s-SelectProfile%sStart with profile selection dialog.\n",HELP_SPACER_1,HELP_SPACER_2);
 #ifdef XP_UNIX
+  printf("%s-remote <command>%sExecute <command> in an already running\n"
+         "%sMozilla process.  For more info, see:\n"
+         "\n%shttp://home.netscape.com/newsref/std/x-remote.html\n\n",
+         HELP_SPACER_1,HELP_SPACER_1,HELP_SPACER_4,HELP_SPACER_2);
   printf("%s-splash%sEnable splash screen.\n",HELP_SPACER_1,HELP_SPACER_2);
 #else
   printf("%s-nosplash%sDisable splash screen.\n",HELP_SPACER_1,HELP_SPACER_2);
