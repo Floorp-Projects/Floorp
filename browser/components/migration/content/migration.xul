@@ -53,16 +53,16 @@
   
   <wizardpage id="importSource" pageid="importSource" next="selectProfile"
               label="&importSource.title;"
-              onpageshow="MigrationWizard.onImportSourcePageShow();"
               onpageadvanced="MigrationWizard.onImportSourcePageAdvanced();">
 #ifdef XP_WIN
-    <description>&importFrom.label;</description>
+    <description id="importAll">&importFrom.label;</description>
 #else
-    <description>&importFromUnix.label;</description>
+    <description id="importAll">&importFromUnix.label;</description>
 #endif
+    <description id="importBookmarks" hidden="true">&importFromBookmarks.label;</description>
     
     <radiogroup id="importSourceGroup" align="start">
-      <radio id="phoenix"   label="&importFromPhoenix.label;"   accesskey="&importFromPhoenix.accesskey;" hidden="true"/>
+      <radio id="phoenix"   label="&importFromPhoenix.label;"   accesskey="&importFromPhoenix.accesskey;"/>
 #ifdef XP_UNIX
 #ifdef XP_MACOSX
 <!-- XXXben - uncomment these as we write migrators for them
@@ -100,6 +100,7 @@
       <radio id="dogbert"   label="&importFromNetscape4.label;" accesskey="&importFromNetscape4.accesskey;"/>
 #endif
 #endif
+      <radio id="fromfile"  label="&importFromFile.label;"      accesskey="&importFromFile.accesskey;" hidden="true"/>
       <radio id="nothing"   label="&importFromNothing.label;"   accesskey="&importFromNothing.accesskey;" hidden="true"/>
     </radiogroup>
   </wizardpage>

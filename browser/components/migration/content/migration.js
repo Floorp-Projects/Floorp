@@ -9,6 +9,7 @@ var MigrationWizard = {
   _wiz: null,
   _migrator: null,
   _autoMigrate: null,
+  _bookmarks: false,
 
   init: function ()
   {
@@ -20,18 +21,18 @@ var MigrationWizard = {
     
     this._wiz = document.documentElement;
 
-    if ("arguments" in window) {
+    if ("arguments" in window && window.arguments.length > 1) {
       this._source = window.arguments[0];
-      this._autoMigrate = window.arguments[1].QueryInterface(kIPStartup);
+      this._migrator = window.arguments[1].QueryInterface(kIMig);
+      this._autoMigrate = window.arguments[2].QueryInterface(kIPStartup);
       
       // Show the "nothing" option in the automigrate case to provide an
       // easily identifiable way to avoid migration and create a new profile.
       var nothing = document.getElementById("nothing");
       nothing.hidden = false;
-      
-      var phoenix = document.getElementById("phoenix");
-      phoenix.hidden = false;
     }
+    
+    this.onImportSourcePageShow();
   },
   
   uninit: function ()
@@ -46,6 +47,23 @@ var MigrationWizard = {
   // 1 - Import Source
   onImportSourcePageShow: function ()
   {
+    //XXXquark This function is called before init, so check for bookmarks here
+    if("arguments" in window && window.arguments[0] == "bookmarks")
+    {
+      this._bookmarks = true;
+    }
+
+    if(this._bookmarks) {
+      var fromfile = document.getElementById("fromfile");
+      fromfile.hidden = false;
+
+      var importBookmarks = document.getElementById("importBookmarks");
+      importBookmarks.hidden = false;
+
+      var importAll = document.getElementById("importAll");
+      importAll.hidden = true;
+    }
+
     document.documentElement.getButton("back").disabled = true;
     
     // Figure out what source apps are are available to import from:
@@ -58,33 +76,32 @@ var MigrationWizard = {
           var migrator = Components.classes[contractID].createInstance(kIMig);
         }
         catch (e) {
-          dump("*** eeee!!! contractID =" + contractID + "\n");
+          dump("*** invalid contractID =" + contractID + "\n");
           return;
         }
-        
-        if (!migrator.sourceExists) {
+        if (!migrator.sourceExists || (suffix == "phoenix" && !this._autoMigrate))
           group.childNodes[i].hidden = true;
-          if (this._source == suffix) this._source = null;
-        }
       }
     }
     
-    var firstNonDisabled = null;
+    var firstSelectable = null;
     for (var i = 0; i < group.childNodes.length; ++i) {
-      if (!group.childNodes[i].disabled) {
-        firstNonDisabled = group.childNodes[i];
+      if (!group.childNodes[i].disabled && !group.childNodes[i].hidden) {
+        firstSelectable = group.childNodes[i];
         break;
       }
     }
 
-    group.selectedItem = this._source == "" ? firstNonDisabled : document.getElementById(this._source);
+    group.selectedItem = !this._source ? firstSelectable : document.getElementById(this._source);
   },
   
   onImportSourcePageAdvanced: function ()
   {
     var newSource = document.getElementById("importSourceGroup").selectedItem.id;
     
-    if (newSource == "nothing") {
+    if (newSource == "nothing" || newSource == "fromfile") {
+      if(newSource == "fromfile")
+        window.opener.fromFile = true;
       document.documentElement.cancel();
       return;
     }
@@ -104,7 +121,7 @@ var MigrationWizard = {
     if (this._migrator.sourceHasMultipleProfiles)
       this._wiz.currentPage.next = "selectProfile";
     else {
-      this._wiz.currentPage.next = this._autoMigrate ? "migrating" : "importItems";
+      this._wiz.currentPage.next = (this._autoMigrate || this._bookmarks) ? "migrating" : "importItems";
       var sourceProfiles = this._migrator.sourceProfiles;
       if (sourceProfiles && sourceProfiles.Count() == 1) {
         var profileName = sourceProfiles.QueryElementAt(0, Components.interfaces.nsISupportsString);
@@ -151,8 +168,8 @@ var MigrationWizard = {
     var profiles = document.getElementById("profiles");
     this._selectedProfile = profiles.selectedItem.id;
     
-    // If we're automigrating, don't show the item selection page, just grab everything.
-    if (this._autoMigrate)
+    // If we're automigrating or just doing bookmarks don't show the item selection page
+    if (this._autoMigrate || this._bookmarks)
       this._wiz.currentPage.next = "migrating";
   },
   
@@ -216,6 +233,10 @@ var MigrationWizard = {
     // When automigrating, show all of the data that can be received from this source.
     if (this._autoMigrate)
       this._itemsFlags = this._migrator.getMigrateData(this._selectedProfile, this._autoMigrate);
+
+    // When importing bookmarks, show only bookmarks
+    if (this._bookmarks)
+      this._itemsFlags = 32;
 
     this._listItems("migratingItems");
     setTimeout(this.onMigratingMigrate, 0, this);
