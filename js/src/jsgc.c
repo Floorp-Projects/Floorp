@@ -53,6 +53,7 @@
 #include "jsatom.h"
 #include "jscntxt.h"
 #include "jsconfig.h"
+#include "jsfun.h"
 #include "jsgc.h"
 #include "jsinterp.h"
 #include "jslock.h"
@@ -1150,14 +1151,16 @@ restart:
                         depth = fp->script->depth;
                         nslots = (JS_UPTRDIFF(fp->sp, fp->spbase)
                                   < depth * sizeof(jsval))
-                                 ? fp->sp - fp->spbase
+                                 ? (uintN)(fp->sp - fp->spbase)
                                  : depth;
                         GC_MARK_JSVALS(cx, nslots, fp->spbase, "operand");
                     }
                 }
                 GC_MARK(cx, fp->thisp, "this", NULL);
-                if (fp->argv)
-                    GC_MARK_JSVALS(cx, fp->argc, fp->argv, "arg");
+                if (fp->argv) {
+                    nslots = JS_MAX(fp->argc, fp->fun->nargs);
+                    GC_MARK_JSVALS(cx, nslots, fp->argv, "arg");
+                }
                 if (JSVAL_IS_GCTHING(fp->rval))
                     GC_MARK(cx, JSVAL_TO_GCTHING(fp->rval), "rval", NULL);
                 if (fp->vars)
