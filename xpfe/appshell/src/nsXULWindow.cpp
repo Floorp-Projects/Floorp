@@ -595,3 +595,4 @@ nsContentShellInfo::~nsContentShellInfo()
 {
    //XXX Set Tree Owner to null if the tree owner is nsXULWindow->mContentTreeOwner
 }
+

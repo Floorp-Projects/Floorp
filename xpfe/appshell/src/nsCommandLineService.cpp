@@ -372,3 +372,4 @@ NS_NewCmdLineServiceFactory(nsIFactory** aFactory)
   *aFactory = inst;
   return rv;
 }
+

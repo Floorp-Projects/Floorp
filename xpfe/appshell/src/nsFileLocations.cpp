@@ -700,3 +700,4 @@ extern "C" NS_APPSHELL nsresult NS_NewFileLocatorFactory(nsIFactory** aFactory)
     *aFactory = inst;
     return rv;
 }
+

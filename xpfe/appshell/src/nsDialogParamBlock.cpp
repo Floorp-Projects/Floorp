@@ -139,3 +139,4 @@ nsresult NS_NewDialogParamBlockFactory(nsIFactory** aResult)
   *aResult = inst;
   return rv;
 }
+

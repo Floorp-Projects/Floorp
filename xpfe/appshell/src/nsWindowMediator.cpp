@@ -926,3 +926,4 @@ void nsWindowEnumerator::WindowRemoved( PRInt32 inIndex)
 NS_IMPL_ADDREF(nsWindowEnumerator);
 NS_IMPL_RELEASE(nsWindowEnumerator);
 NS_IMPL_QUERY_INTERFACE(nsWindowEnumerator, kISimpleEnumberatorIID);
+
