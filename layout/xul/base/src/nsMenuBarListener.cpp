@@ -107,8 +107,18 @@ nsMenuBarListener::KeyDown(nsIDOMEvent* aKeyEvent)
   PRUint32 theChar;
 	keyEvent->GetKeyCode(&theChar);
   if (theChar == NS_VK_ALT) {
-    // The ALT key just went down. Track this.
-    mAltKeyDown = PR_TRUE;
+    // No other modifiers can be down.
+    // Especially CTRL.  CTRL+ALT == AltGR, and
+    // we'll fuck up on non-US enhanced 102-key
+    // keyboards if we don't check this.
+    PRBool ctrl,shift,meta;
+    keyEvent->GetCtrlKey(&ctrl);
+    keyEvent->GetShiftKey(&shift);
+    keyEvent->GetMetaKey(&meta);
+    if (!(ctrl || shift || meta)) {
+      // The ALT key just went down by itself. Track this.
+      mAltKeyDown = PR_TRUE;
+    }
     return NS_OK;
   }
   
