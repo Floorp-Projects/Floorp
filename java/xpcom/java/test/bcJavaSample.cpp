@@ -23,6 +23,7 @@
 
 #include "nsIGenericFactory.h"
 #include "nsIModule.h"
+#include "nsIEnumerator.h"
 #include "stdlib.h"
 
 #define BC_JAVA_SAMPLE_CID \
@@ -93,6 +94,12 @@ NS_IMETHODIMP bcJavaSample::Test4(PRUint32 count, char ***valueArray) {
     *valueArray = array;
     return NS_OK;
 }
+
+/* void test5 (in nsIComponentManager cm); */
+NS_IMETHODIMP bcJavaSample::Test5(nsIComponentManager *cm) {
+    return NS_OK;
+}
+
 void test() {
     printf("--BlackConnect test start\n");
     nsresult r;
@@ -129,6 +136,20 @@ void test() {
         for (int i = 0; i < 4; i++) {
             printf("valueArray2[%d]=%s\n",i,(*valueArray2)[i]);
         }
+    }
+    {
+        
+        nsIComponentManager* cm;
+        nsresult rv = NS_GetGlobalComponentManager(&cm);
+        printf("--[c++] bcJavaSample before test->Test5(cm)\n");
+        test->Test5(cm);
+
+        nsIEnumerator *enumerator;
+        rv = cm->EnumerateCLSIDs(&enumerator);
+        if (NS_FAILED(rv)) {
+            printf("--[c++] can get enumerator\n");
+        }
+        printf("--[c++] bcJavaSample after test->Test5(cm)\n");
     }
     printf("--BlackConnect test end\n");
 }

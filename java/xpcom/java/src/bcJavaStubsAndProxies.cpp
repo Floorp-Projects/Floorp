@@ -128,6 +128,7 @@ void bcJavaStubsAndProxies::Init(void) {
     if (env->ExceptionOccurred()) {
         env->ExceptionDescribe();
         componentLoader = 0;
+        printf("--Did you set CLASSPATH correctly\n");
         return;
     }
     componentLoader = (jclass)env->NewGlobalRef(componentLoader);

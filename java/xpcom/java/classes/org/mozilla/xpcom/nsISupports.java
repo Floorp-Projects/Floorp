@@ -21,7 +21,7 @@ public interface nsISupports
 
 
     /* void QueryInterface (in nsIIDRef uuid, [iid_is (uuid), retval] out nsQIResult result); */
-    public void queryInterface(IID uuid, Object[] obj);
+    public void queryInterface(IID uuid, Object[] result);
 
 }
 

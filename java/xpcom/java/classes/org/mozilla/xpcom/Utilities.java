@@ -46,7 +46,7 @@ public class Utilities {
     static Object callMethod(long oid, Method method, IID iid, long orb , Object[] args) {
         System.out.println("--[java]Utilities.callMethod "+method);
         int mid = InterfaceRegistry.getIndexByMethod(method, iid);
-        if (mid <= 0) {
+        if (mid < 0) {
             System.out.println("--[java]Utilities.callMethod we do not have implementation for "+method);
             return null;
         }

@@ -1,4 +1,5 @@
 #include "nsISupports.idl"
+#include "nsIComponentManager.idl"
 
 [scriptable, uuid(ca1e2656-1dd1-11b2-9c4e-f49ea557abde)]
 interface bcIJavaSample : nsISupports
@@ -8,5 +9,5 @@ interface bcIJavaSample : nsISupports
     void test2(in bcIJavaSample o);
     void test3(in PRUint32 count,[array, size_is(count)] in long valueArray);
     void test4(in PRUint32 count,[array, size_is(count)] inout string valueArray);
-    
+    void test5(in nsIComponentManager cm);
 };

@@ -51,10 +51,9 @@ public class ComponentLoader {
                 //nb
                 return null;
             }
-            Object object = loader.loadClass(componentClassName).newInstance();
-            if (object instanceof nsISupports) {
-                InterfaceRegistry.register((nsISupports)object);
-            }
+            Class component = loader.loadClass(componentClassName);
+            InterfaceRegistry.register(component);
+            Object object = component.newInstance();
             return object;
         } catch (Exception e) {
             e.printStackTrace();

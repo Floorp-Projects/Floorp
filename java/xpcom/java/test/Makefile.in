@@ -41,7 +41,7 @@ bcJavaSample.jar.comp: manifest bcIJavaSample.class bcJavaSample.class
 	$(JDKHOME)/bin/jar cvfm bcJavaSample.jar.comp  manifest *.class
 .java.class:
 	$(JDKHOME)/bin/javac -classpath .:../classes $<
-install-component: bcJavaSample.jar.comp bcJavaSample.jar.info	
+install-component: bcJavaSample.jar.comp bcJavaSample.jar.info
 	cp  bcJavaSample.jar.comp bcJavaSample.jar.info $(DEPTH)/dist/bin/components/
 	
 clobber-java:

@@ -25,7 +25,7 @@ package org.mozilla.xpcom;
 import java.util.Hashtable;
 import java.lang.reflect.*;
 
-class InterfaceRegistry {
+public class InterfaceRegistry {
     
     private static String IID_STRING = "IID";
     private static Hashtable interfaces = null;
@@ -39,13 +39,20 @@ class InterfaceRegistry {
         if (obj == null) {
             return;
         }
+        Class cl = obj.getClass();
+        register(cl);
+    }
+
+    public static void register(Class cl) {
+        if (cl == null) {
+            return;
+        }
         if (interfaces == null) {
             interfaces = new Hashtable();
         }
         if (iMethods == null) {
             iMethods = new Hashtable();
         }
-        Class cl = obj.getClass();
         if (!cl.isInterface()) {
             Class[] ifaces = cl.getInterfaces();
             for (int i = 0; i < ifaces.length; i++) {
@@ -56,12 +63,11 @@ class InterfaceRegistry {
         }
     }
     
-    public static void registerInterfaces(Class cl) {
+    private static void registerInterfaces(Class cl) {
         try {
             Object iidStr = cl.getField(IID_STRING).get(cl);
             if (iidStr instanceof String) {
                 IID iid = new IID((String)iidStr);
-	        ProxyFactory.registerInterfaceForIID(cl,iid);
                 String[] methodNames = Utilities.getInterfaceMethodNames((String)iidStr);
                 if (methodNames != null) {
                     Method[] rmethods = new Method[methodNames.length];
@@ -128,7 +134,7 @@ class InterfaceRegistry {
     }
 
     public static int getIndexByMethod(Method method, IID iid) {
-        int result = 0;
+        int result = -1;
         MethodArray m = (MethodArray)iMethods.get(iid);
         if (m != null && m.methods !=null) {
             for (int i = 0; i < m.methods.length; i++) {

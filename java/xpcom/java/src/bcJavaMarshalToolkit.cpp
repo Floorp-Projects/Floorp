@@ -155,6 +155,9 @@ nsresult bcJavaMarshalToolkit::UnMarshal(bcIUnMarshaler *um) {
             }
             continue;
         }
+        if (isOut) {
+            value = env->GetObjectArrayElement(args,i);
+        }
         UnMarshalElement(&value, i, um, isOut, &param, XPTType2bcXPType(type.TagPart()),allocator);
         env->SetObjectArrayElement(args,i,value);
     }
@@ -355,7 +358,7 @@ bcJavaMarshalToolkit::MarshalElement(bcIMarshaler *m, jobject value,  PRBool isO
                     *value = env->NewObject(_type_##Class,_type_##InitMID,data);   \
                 } else if (isOut && (modifier == array)) {                   \
                       *value = env->NewObjectArray(1, _type_##ArrayClass, NULL);  \
-                } else if (isOut                                           \
+                } else if ( (isOut && callSide == onServer)                         \
                            || (modifier == array)) {                       \
                                int arraySize;                                         \
                                arraySize = (modifier == array) ? ind : 1;             \
@@ -434,7 +437,7 @@ bcJavaMarshalToolkit::UnMarshalElement(jobject *value, uint8 ind, bcIUnMarshaler
                     *value = data;
                 } else if (isOut && (modifier == array)) {
                     *value = env->NewObjectArray(1, stringArrayClass, NULL);
-                } else if (isOut
+                } else if ( (isOut && callSide == onServer)
                            || (modifier == array)) {
                     int arraySize;
                     arraySize = (modifier == array) ? ind : 1;
@@ -462,7 +465,7 @@ bcJavaMarshalToolkit::UnMarshalElement(jobject *value, uint8 ind, bcIUnMarshaler
                     *value = data;
                 } else if (isOut && (modifier == array)) {
                     *value = env->NewObjectArray(1, iidArrayClass, NULL);
-                } else if (isOut
+                } else if ( (isOut && callSide == onServer)
                            || (modifier == array)) {
                     int arraySize;
                     arraySize = (modifier == array) ? ind : 1;
@@ -504,12 +507,12 @@ bcJavaMarshalToolkit::UnMarshalElement(jobject *value, uint8 ind, bcIUnMarshaler
                 if ( ! isOut
                      && (modifier == none) ) {
                     *value = data;
-                } else if (isOut && (modifier == array)) { //how to create type[][] ?
+                } else if ( isOut && (modifier == array)) { //we are  creating type[][]
                     jobject arrayObject;
                     arrayObject = env->NewObjectArray(1,clazz,NULL);
                     jclass arrayClass = (jclass) env->CallObjectMethod(arrayObject,getClassMID); //nb how to to it better ?
                     *value = env->NewObjectArray(1, arrayClass, NULL);
-                } else if (isOut
+                } else if ( (isOut && callSide == onServer)
                            || (modifier == array)) {
                     int arraySize;
                     arraySize = (modifier == array) ? ind : 1;
@@ -531,7 +534,7 @@ bcJavaMarshalToolkit::UnMarshalElement(jobject *value, uint8 ind, bcIUnMarshaler
                     return NS_ERROR_FAILURE;
                 }
                 bcXPType type = XPTType2bcXPType(datumType.TagPart());
-                if (isOut) {
+                if (isOut && callSide == onServer) {
                     UnMarshalElement(value,ind,NULL,isOut,param,type,allocator,array);
                 }
                 if (um != NULL) {

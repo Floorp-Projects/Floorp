@@ -47,28 +47,9 @@ class ProxyKey {
 }
 
 public class ProxyFactory {
-    public static void registerInterfaceForIID(Class inter, IID iid) {
-        System.out.println("--[java] ProxyFactory.registerInterfaceForIID "+iid);
-        if (interfaces == null) {
-            interfaces = new Hashtable();
-        }
-        interfaces.put(iid, inter);  //nb who is gonna remove object from cache?
-    }
     public static Class getInterface(IID iid) {
         System.out.println("--[java] ProxyFactory.getInterface "+iid);
-        Object obj = null;
-        if (interfaces != null) {
-            obj = interfaces.get(iid);
-            if (obj == null) {
-                System.out.println("--[java] ProxyFactory.getInterface interface== null");
-                return null;
-            }
-        }
-        if (!(obj instanceof Class)) {
-            System.out.println("--[java] ProxyFactory.getInterface !(obj instanceof Class"+obj);
-            return null;
-        }
-        return (Class)obj;
+        return InterfaceRegistry.getInterface(iid);
     }
 
     public static Object getProxy(long oid, IID iid, long orb) {
@@ -104,7 +85,6 @@ public class ProxyFactory {
         return null;
     }
     protected  static Hashtable proxies = null;
-    private static Hashtable interfaces = null;
 }
 
 

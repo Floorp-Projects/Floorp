@@ -73,8 +73,61 @@ public class bcJavaSample implements bcIJavaSample {
         String[] returnArray = {"4","3","2","1"};
         valueArray[0] = returnArray;
     }
+    /* void test5 (in nsIComponentManager cm); */
+    public void test5(nsIComponentManager cm) {
+        System.out.println("--[java]bcJavaSample.test5");
+        try {
+            nsIEnumerator [] retval = new nsIEnumerator[1];
+            cm.enumerateContractIDs(retval);
+            nsIEnumerator enumerator = retval[0];
+            System.out.println("--[java] before calling enumerator.firts() "+
+                               "enumerator==null "+(enumerator==null));
+
+            enumerator.first();
+            int counter = 0;
+            nsISupports obj[] = new nsISupports[1];
+            String str[] = new String[1];
+            nsISupportsString strObj[] = new nsISupportsString[1];
+            while (true) {
+                enumerator.currentItem(obj);
+                if (obj[0] == null ||
+                    counter > 10) {
+                    break;
+                }
+                obj[0].queryInterface(nsISupportsStringIID,strObj);
+                strObj[0].toString(str);
+                System.out.println("--[java] bcJavaSample.Test5 string "+str[0]);
+                enumerator.next(); counter++;
+            }
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+    }
+
     static IID bcIJavaSampleIID = new IID(bcIJavaSample.IID);
     static IID nsISupportsIID = new IID(nsISupports.IID);
+    static IID nsIComponenstManagerIID = new IID(nsIComponentManager.IID);
+    static IID nsISupportsStringIID = new IID(nsISupportsString.IID);
+    static {
+      try {
+          Class nsIComponentManagerClass = 
+              Class.forName("org.mozilla.xpcom.nsIComponentManager");
+          Class nsIEnumeratorClass = 
+              Class.forName("org.mozilla.xpcom.nsIEnumerator");
+          Class nsISupportsStringClass = 
+              Class.forName("org.mozilla.xpcom.nsISupportsString");
+          InterfaceRegistry.register(nsIComponentManagerClass);
+          InterfaceRegistry.register(nsIEnumeratorClass);
+          InterfaceRegistry.register(nsISupportsStringClass);
+      } catch (Exception e) {
+          System.out.println(e);
+      }
+    }
 
 };
+
+
+
+
+
 
