@@ -307,8 +307,7 @@ TestConnection::TestConnection(const char* aHostName, PRInt32 aPort,
     if (NS_SUCCEEDED(rv)) {
       // Set up the notification callbacks to provide a progress event sink.
       // That way we exercise the progress notification proxy code.
-      nsCOMPtr<nsIProgressEventSink> sink = do_GetInterface((nsIInterfaceRequestor*)this);
-      rv = mTransport->SetProgressEventSink(sink);
+      mTransport->SetNotificationCallbacks((nsIInterfaceRequestor*)this, PR_FALSE);
     }
   }
 
