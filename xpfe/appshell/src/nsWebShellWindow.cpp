@@ -1812,7 +1812,7 @@ nsWebShellWindow::OnEndDocumentLoad(nsIDocumentLoader* loader,
     mLockedUntilChromeLoad = PR_FALSE;
   }
 
-#ifdef XP_MAC
+#ifdef XP_MAC // Anyone still using native menus should add themselves here.
   // register as document listener
   // this is needed for menus
   nsCOMPtr<nsIContentViewer> cv;
@@ -1830,16 +1830,18 @@ nsWebShellWindow::OnEndDocumentLoad(nsIDocumentLoader* loader,
 
     doc->AddObserver(NS_STATIC_CAST(nsIDocumentObserver*, this));
   }
+#endif
 
   ExecuteStartupCode();
 
+#ifdef XP_MAC // Anyone still using native menus should add themselves here.
   ///////////////////////////////
   // Find the Menubar DOM  and Load the menus, hooking them up to the loaded commands
   ///////////////////////////////
   nsCOMPtr<nsIDOMDocument> menubarDOMDoc(GetNamedDOMDoc(nsAutoString("this"))); // XXX "this" is a small kludge for code reused
   if (menubarDOMDoc)
   {
-#ifdef XP_MAC
+#ifdef XP_MAC // Anyone using native non-dynamic menus should add themselves here.
     LoadMenus(menubarDOMDoc, mWindow);
     // Context Menu test
     nsCOMPtr<nsIDOMElement> element;
@@ -2220,13 +2222,9 @@ void nsWebShellWindow::ExecuteStartupCode()
 
   // Execute the string in the onLoad attribute of the webshellElement.
   nsString startupCode;
-  // This is now triggered from elsewhere.
-  //if (webshellElement && NS_SUCCEEDED(webshellElement->GetAttribute("onload", startupCode)))
-  //  ExecuteJavaScriptString(startupCode);
-
+  
   if (mCallbacks)
     mCallbacks->ConstructAfterJavaScript(mWebShell);
-
 }
 
 
