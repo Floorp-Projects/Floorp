@@ -104,6 +104,13 @@ public:
 
   static nscoord MaxMargin(nscoord a, nscoord b);
 
+  /**
+   * Calculate the line-height value for a given frame.
+   */
+  static nscoord CalcLineHeightFor(nsIPresContext& aPresContext,
+                                   nsIFrame* aFrame,
+                                   nscoord aBaseLineHeight);
+
 protected:
   nsresult SetFrame(nsIFrame* aFrame);
 
