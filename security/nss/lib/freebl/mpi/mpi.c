@@ -35,7 +35,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: mpi.c,v 1.5 2000/07/20 04:47:24 nelsonb%netscape.com Exp $
+ *  $Id: mpi.c,v 1.6 2000/07/21 21:06:08 nelsonb%netscape.com Exp $
  */
 
 #include "mpi.h"
@@ -2710,16 +2710,19 @@ void     s_mp_div_2d(mp_int *mp, mp_digit d)
 mp_digit s_mp_norm(mp_int *a, mp_int *b)
 {
   mp_digit  d;
+  mp_digit  mask;
+  mp_digit  b_msd;
 
+  d = 1;
+  mask  = DIGIT_MAX & ~(DIGIT_MAX >> 1);	/* mask is msb of digit */
+  b_msd = DIGIT(b, USED(b) - 1);
+  while (!(b_msd & mask)) {
+    d <<= 1;
+    b_msd <<= 1;
+  }
   /* If it's already big enough, return 1 and don't bother multiplying */
-  if(DIGIT(b, USED(b) - 1) >= (RADIX/2))
+  if (d == 1)
     return 1;
-
-  /* 
-     This formulation is a modification of that given in Knuth,
-     vol. 2, 2nd. Ed. (it works better, in practise)
-   */
-  d = DIGIT_MAX / (DIGIT(b, USED(b) - 1) + 1);
 
   s_mp_mul_d(a, d);
   s_mp_mul_d(b, d);
