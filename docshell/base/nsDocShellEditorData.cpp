@@ -53,7 +53,7 @@ nsDocShellEditorData::~nsDocShellEditorData()
 {
   // Get editing session on the root docShell
   nsCOMPtr <nsIEditingSession> editingSession;
-  nsresult rv = GetOrCreateEditingSession(getter_AddRefs(editingSession), PR_FALSE);
+  nsresult rv = GetOrCreateEditingSession(PR_FALSE, getter_AddRefs(editingSession));
 
   if (editingSession)
   {
@@ -136,7 +136,7 @@ nsresult
 nsDocShellEditorData::GetEditingSession(nsIEditingSession **outEditingSession)
 {
   NS_ENSURE_ARG_POINTER(outEditingSession);
-  return GetOrCreateEditingSession(outEditingSession, PR_TRUE);
+  return GetOrCreateEditingSession(PR_TRUE, outEditingSession);
 }
 
 
@@ -189,7 +189,7 @@ nsDocShellEditorData::SetEditor(nsIEditor *inEditor)
 
 ----------------------------------------------------------------------------*/
 nsresult
-nsDocShellEditorData::GetOrCreateEditingSession(nsIEditingSession **outEditingSession, PRBool inAllowCreation)
+nsDocShellEditorData::GetOrCreateEditingSession(PRBool inAllowCreation, nsIEditingSession **outEditingSession)
 {
   NS_ENSURE_ARG_POINTER(outEditingSession);
   *outEditingSession = nsnull;
