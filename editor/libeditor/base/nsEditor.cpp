@@ -3239,10 +3239,7 @@ PRBool
 nsEditor::IsMozEditorBogusNode(nsIDOMNode *aNode)
 {
   if (!aNode)
-  {
-    NS_NOTREACHED("null node passed to IsTextNode()");
     return PR_FALSE;
-  }
 
   nsCOMPtr<nsIDOMElement>element;
   element = do_QueryInterface(aNode);
