@@ -1282,7 +1282,8 @@ nsMenuX::GetMenuPopupContent(nsIContent** aResult)
 // CountVisibleBefore
 //
 // Determines how many menus are visible among the siblings that are before me.
-// It doesn't matter if I am visible.
+// It doesn't matter if I am visible. Note that this will always count the Apple
+// menu, since we always put it in there.
 //
 nsresult 
 nsMenuX :: CountVisibleBefore ( PRUint32* outVisibleBefore )
@@ -1297,7 +1298,7 @@ nsMenuX :: CountVisibleBefore ( PRUint32* outVisibleBefore )
   
   // Find this menu among the children of my parent menubar
   PRBool gotThisMenu = PR_FALSE;
-  *outVisibleBefore = 0;
+  *outVisibleBefore = 1;                            // start at 1, the apple menu will always be there
   for ( PRUint32 i = 0; i < numMenus; ++i ) {
     nsCOMPtr<nsIMenu> currMenu;
     menubarParent->GetMenuAt(i, *getter_AddRefs(currMenu));
@@ -1386,44 +1387,51 @@ nsMenuX::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIAtom 
       mMenuContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::collapsed, collapsedValue);
         
       if (hiddenValue == NS_LITERAL_STRING("true") || collapsedValue == NS_LITERAL_STRING("true")) {
-        if ( menubarParent && mVisible ) {
-          PRUint32 indexToRemove = 0;
-          if ( NS_SUCCEEDED(CountVisibleBefore(&indexToRemove)) ) {
-            MenuRef menubar = nsnull;
-            menubarParent->GetNativeData ( (void*)menubar );
-            if ( menubar ) {
-              ::SetMenuItemHierarchicalMenu(menubar, indexToRemove + 1, nsnull);
-              ::DeleteMenuItem(menubar, indexToRemove + 1);
-              mVisible = PR_FALSE;
+        if ( mVisible ) {
+          if ( menubarParent ) {
+            PRUint32 indexToRemove = 0;
+            if ( NS_SUCCEEDED(CountVisibleBefore(&indexToRemove)) ) {
+              ++indexToRemove;                // if there are N siblings before me, my index is N+1
+              MenuRef menubar = nsnull;
+              menubarParent->GetNativeData ( (void*)menubar );
+              if ( menubar ) {
+                ::SetMenuItemHierarchicalMenu(menubar, indexToRemove, nsnull);
+                ::DeleteMenuItem(menubar, indexToRemove);
+                mVisible = PR_FALSE;
+              }
             }
+          } // if on the menubar
+          else {
+            // hide this submenu
+            NS_ASSERTION(PR_FALSE, "nsMenuX::AttributeChanged: WRITE HIDE CODE FOR SUBMENU.");
           }
-        }
-        else {
-          // show this submenu
-          NS_ASSERTION(PR_FALSE, "nsMenuX::AttributeChanged: WRITE SHOW CODE FOR SUBMENU.");
-        }
-      }
+        } // if visible
+        else
+          NS_WARNING("You're hiding the menu twice, please stop");
+      } // if told to hide menu
       else {
-        if ( menubarParent && !mVisible ) {
-          PRUint32 indexToInsert = 0;
-          if ( NS_SUCCEEDED(CountVisibleBefore(&indexToInsert)) ) {
-            MenuRef menubar = nsnull;
-            menubarParent->GetNativeData ( (void*)menubar );
-            if ( menubar ) {
-              // Shove this menu into its rightful place in the menubar. It doesn't matter
-              // what title we pass to InsertMenuItem() because when we stuff the actual menu
-              // handle in, the correct title goes with it.
-              ::InsertMenuItem(menubar, "\pPlaceholder", indexToInsert + 1);              // +1 because macos is 1-based
-              ::SetMenuItemHierarchicalMenu(menubar, indexToInsert + 2, mMacMenuHandle);  // +2 because menu is now in list
-              mVisible = PR_TRUE;
+        if ( !mVisible ) {
+          if ( menubarParent ) {
+            PRUint32 insertAfter = 0;
+            if ( NS_SUCCEEDED(CountVisibleBefore(&insertAfter)) ) {
+              MenuRef menubar = nsnull;
+              menubarParent->GetNativeData ( (void*)menubar );
+              if ( menubar ) {
+                // Shove this menu into its rightful place in the menubar. It doesn't matter
+                // what title we pass to InsertMenuItem() because when we stuff the actual menu
+                // handle in, the correct title goes with it.
+                ::InsertMenuItem(menubar, "\pPlaceholder", insertAfter);
+                ::SetMenuItemHierarchicalMenu(menubar, insertAfter + 1, mMacMenuHandle);  // add 1 to get index of inserted item
+                mVisible = PR_TRUE;
+              }
             }
+          } // if on menubar
+          else {
+            // show this submenu
+            NS_ASSERTION(PR_FALSE, "nsMenuX::AttributeChanged: WRITE SHOW CODE FOR SUBMENU.");
           }
-        }
-        else {
-          // show this submenu
-          NS_ASSERTION(PR_FALSE, "nsMenuX::AttributeChanged: WRITE SHOW CODE FOR SUBMENU.");
-        }
-      }
+        } // if not visible
+      } // if told to show menu
 
       if (menubarParent) {
         ::DrawMenuBar();
