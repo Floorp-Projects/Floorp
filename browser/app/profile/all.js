@@ -612,7 +612,7 @@ pref("alerts.height", 50);
 // update notifications prefs
 pref("update_notifications.enabled", true);
 pref("update_notifications.provider.0.frequency", 7); // number of days
-pref("update_notifications.provider.0.datasource", "chrome://communicator-region/locale/region.properties");
+pref("update_notifications.provider.0.datasource", "chrome://browser-region/locale/region.properties");
 
 // if true, allow plug-ins to override internal imglib decoder mime types in full-page mode
 pref("plugin.override_internal_types", false);
