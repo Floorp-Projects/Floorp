@@ -970,7 +970,7 @@ wallet_CryptSetup() {
     /* Get a secret decoder ring */
     nsresult rv = NS_OK;
     nsCOMPtr<nsISecretDecoderRing> secretDecoderRing
-      = do_CreateInstance("netscape.security.fsdr", &rv);
+      = do_CreateInstance("netscape.security.sdr", &rv);
     if (NS_FAILED(rv)) {
       return NS_ERROR_FAILURE;
     }
