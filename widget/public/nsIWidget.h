@@ -171,15 +171,17 @@ enum nsCursor {   ///(normal cursor,       usually rendered as an arrow)
                 eCursor_select, 
                   ///(can hyper-link,      usually rendered as a human hand)
                 eCursor_hyperlink, 
-                  ///(west/east sizing,    usually rendered as ->||<-)
-                eCursor_sizeWE,
-                  ///(north/south sizing,  usually rendered as sizeWE rotated 90 degrees)
-                eCursor_sizeNS,
+                  ///(north/south/west/east edge sizing)
+                eCursor_n_resize,
+                eCursor_s_resize,
+                eCursor_w_resize,
+                eCursor_e_resize,
                   ///(corner sizing)
-                eCursor_sizeNW,
-                eCursor_sizeSE,
-                eCursor_sizeNE,
-                eCursor_sizeSW,
+                eCursor_nw_resize,
+                eCursor_se_resize,
+                eCursor_ne_resize,
+                eCursor_sw_resize,
+                  // The _arrow_ ones are not used AFAICT - can be removed?
                 eCursor_arrow_north,
                 eCursor_arrow_north_plus,
                 eCursor_arrow_south,
@@ -204,6 +206,16 @@ enum nsCursor {   ///(normal cursor,       usually rendered as an arrow)
                 eCursor_count_up_down,
                 eCursor_zoom_in,
                 eCursor_zoom_out,
+                eCursor_not_allowed,
+                eCursor_col_resize,
+                eCursor_row_resize,
+                eCursor_no_drop,
+                eCursor_vertical_text,
+                eCursor_all_scroll,
+                eCursor_nesw_resize,
+                eCursor_nwse_resize,
+                eCursor_ns_resize,
+                eCursor_ew_resize,
                 // This one better be the last one in this list.
                 eCursorCount
                 }; 

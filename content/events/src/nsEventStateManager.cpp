@@ -2391,24 +2391,28 @@ nsEventStateManager::SetCursor(PRInt32 aCursor, nsIWidget* aWidget, PRBool aLock
     c = eCursor_help;
     break;
   case NS_STYLE_CURSOR_N_RESIZE:
+    c = eCursor_n_resize;
+    break;
   case NS_STYLE_CURSOR_S_RESIZE:
-    c = eCursor_sizeNS;
+    c = eCursor_s_resize;
     break;
   case NS_STYLE_CURSOR_W_RESIZE:
+    c = eCursor_w_resize;
+    break;
   case NS_STYLE_CURSOR_E_RESIZE:
-    c = eCursor_sizeWE;
+    c = eCursor_e_resize;
     break;
   case NS_STYLE_CURSOR_NW_RESIZE:
-    c = eCursor_sizeNW;
+    c = eCursor_nw_resize;
     break;
   case NS_STYLE_CURSOR_SE_RESIZE:
-    c = eCursor_sizeSE;
+    c = eCursor_se_resize;
     break;
   case NS_STYLE_CURSOR_NE_RESIZE:
-    c = eCursor_sizeNE;
+    c = eCursor_ne_resize;
     break;
   case NS_STYLE_CURSOR_SW_RESIZE:
-    c = eCursor_sizeSW;
+    c = eCursor_sw_resize;
     break;
   case NS_STYLE_CURSOR_COPY: // CSS3
     c = eCursor_copy;
@@ -2445,6 +2449,36 @@ nsEventStateManager::SetCursor(PRInt32 aCursor, nsIWidget* aWidget, PRBool aLock
     break;
   case NS_STYLE_CURSOR_MOZ_ZOOM_OUT:
     c = eCursor_zoom_out;
+    break;
+  case NS_STYLE_CURSOR_NOT_ALLOWED:
+    c = eCursor_not_allowed;
+    break;
+  case NS_STYLE_CURSOR_COL_RESIZE:
+    c = eCursor_col_resize;
+    break;
+  case NS_STYLE_CURSOR_ROW_RESIZE:
+    c = eCursor_row_resize;
+    break;
+  case NS_STYLE_CURSOR_NO_DROP:
+    c = eCursor_no_drop;
+    break;
+  case NS_STYLE_CURSOR_VERTICAL_TEXT:
+    c = eCursor_vertical_text;
+    break;
+  case NS_STYLE_CURSOR_ALL_SCROLL:
+    c = eCursor_all_scroll;
+    break;
+  case NS_STYLE_CURSOR_NESW_RESIZE:
+    c = eCursor_nesw_resize;
+    break;
+  case NS_STYLE_CURSOR_NWSE_RESIZE:
+    c = eCursor_nwse_resize;
+    break;
+  case NS_STYLE_CURSOR_NS_RESIZE:
+    c = eCursor_ns_resize;
+    break;
+  case NS_STYLE_CURSOR_EW_RESIZE:
+    c = eCursor_ew_resize;
     break;
   }
 

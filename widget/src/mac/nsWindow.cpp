@@ -74,6 +74,20 @@
 #include "profilerutils.h"
 #endif
 
+#ifdef MAC_OS_X_VERSION_10_3
+const short PANTHER_RESIZE_UP_CURSOR     = kThemeResizeUpCursor;
+const short PANTHER_RESIZE_DOWN_CURSOR   = kThemeResizeDownCursor;
+const short PANTHER_RESIZE_UPDOWN_CURSOR = kThemeResizeUpDownCursor;
+#else
+//19, 20, 21 from Appearance.h in 10.3
+const short PANTHER_RESIZE_UP_CURSOR     = 19; // kThemeResizeUpCursor
+const short PANTHER_RESIZE_DOWN_CURSOR   = 20; // kThemeResizeDownCursor
+const short PANTHER_RESIZE_UPDOWN_CURSOR = 21; // kThemeResizeUpDownCursor
+#endif
+
+const short JAGUAR_RESIZE_UP_CURSOR      = 135;
+const short JAGUAR_RESIZE_DOWN_CURSOR    = 136;
+const short JAGUAR_RESIZE_UPDOWN_CURSOR  = 141;
 
 ////////////////////////////////////////////////////
 nsIRollupListener * gRollupListener = nsnull;
@@ -693,6 +707,18 @@ PRBool OnJaguarOrLater() // Return true if we are on Mac OS X 10.2 or later
     return gOnJaguarOrLater;
 }
 
+PRBool OnPantherOrLater() // Return true if we are on Mac OS X 10.3 or later
+{
+    static PRBool gInitVer1030 = PR_FALSE;
+    static PRBool gOnPantherOrLater = PR_FALSE;
+    if(!gInitVer1030)
+    {
+        gOnPantherOrLater = (nsToolkit::OSXVersion() >= 0x00001030);
+        gInitVer1030 = PR_TRUE;
+    }
+    return gOnPantherOrLater;
+}
+
 //
 // SetCursor
 //
@@ -722,26 +748,12 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
     case eCursor_wait:                cursor = kThemeWatchCursor; break;
     case eCursor_select:              cursor = kThemeIBeamCursor; break;
     case eCursor_hyperlink:           cursor = kThemePointingHandCursor; break;
-    case eCursor_sizeWE:              cursor = kThemeResizeLeftRightCursor; break;
-    case eCursor_sizeNS:              cursor = 129; break;
-    case eCursor_sizeNW:              cursor = 130; break;
-    case eCursor_sizeSE:              cursor = 131; break;
-    case eCursor_sizeNE:              cursor = 132; break;
-    case eCursor_sizeSW:              cursor = 133; break;
-    case eCursor_arrow_north:         cursor = 134; break;
-    case eCursor_arrow_north_plus:    cursor = 135; break;
-    case eCursor_arrow_south:         cursor = 136; break;
-    case eCursor_arrow_south_plus:    cursor = 137; break;
-    case eCursor_arrow_west:          cursor = 138; break;
-    case eCursor_arrow_west_plus:     cursor = 139; break;
-    case eCursor_arrow_east:          cursor = 140; break;
-    case eCursor_arrow_east_plus:     cursor = 141; break;
     case eCursor_crosshair:           cursor = kThemeCrossCursor; break;
     case eCursor_move:                cursor = kThemeOpenHandCursor; break;
-    case eCursor_help:                cursor = 143; break;
-    case eCursor_copy:                cursor = 144; break; // CSS3
-    case eCursor_alias:               cursor = 145; break;
-    case eCursor_context_menu:        cursor = 146; break;
+    case eCursor_help:                cursor = 128; break;
+    case eCursor_copy:                cursor = kThemeCopyArrowCursor; break;
+    case eCursor_alias:               cursor = kThemeAliasArrowCursor; break;
+    case eCursor_context_menu:        cursor = kThemeContextualMenuArrowCursor; break;
     case eCursor_cell:                cursor = kThemePlusCursor; break;
     case eCursor_grab:                cursor = kThemeOpenHandCursor; break;
     case eCursor_grabbing:            cursor = kThemeClosedHandCursor; break;
@@ -749,9 +761,38 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
     case eCursor_count_up:            cursor = kThemeCountingUpHandCursor; break;
     case eCursor_count_down:          cursor = kThemeCountingDownHandCursor; break;
     case eCursor_count_up_down:       cursor = kThemeCountingUpAndDownHandCursor; break;
-    case eCursor_zoom_in:             cursor = 149; break;
-    case eCursor_zoom_out:            cursor = 150; break;
-    default:                          cursor = kThemeArrowCursor; break;
+    case eCursor_zoom_in:             cursor = 129; break;
+    case eCursor_zoom_out:            cursor = 130; break;
+    case eCursor_not_allowed:
+    case eCursor_no_drop:             cursor = OnJaguarOrLater() ? kThemeNotAllowedCursor : 131; break;  
+    case eCursor_col_resize:          cursor = 132; break; 
+    case eCursor_row_resize:          cursor = 133; break;
+    case eCursor_vertical_text:       cursor = 134; break;   
+    case eCursor_all_scroll:          cursor = kThemeOpenHandCursor; break;
+    //arrows
+    case eCursor_n_resize:            
+    case eCursor_arrow_north:         
+    case eCursor_arrow_north_plus:    cursor = OnPantherOrLater() ? PANTHER_RESIZE_UP_CURSOR : JAGUAR_RESIZE_UP_CURSOR; break;
+    case eCursor_arrow_south:
+    case eCursor_arrow_south_plus:        
+    case eCursor_s_resize:            cursor = OnPantherOrLater() ? PANTHER_RESIZE_DOWN_CURSOR : JAGUAR_RESIZE_DOWN_CURSOR; break;
+    case eCursor_w_resize:  
+    case eCursor_arrow_west:
+    case eCursor_arrow_west_plus:     cursor = kThemeResizeLeftCursor; break; 
+    case eCursor_e_resize:
+    case eCursor_arrow_east:
+    case eCursor_arrow_east_plus:     cursor = kThemeResizeRightCursor; break;
+    case eCursor_nw_resize:           cursor = 137; break;
+    case eCursor_se_resize:           cursor = 138; break;
+    case eCursor_ne_resize:           cursor = 139; break;
+    case eCursor_sw_resize:           cursor = 140; break;
+    case eCursor_ew_resize:           cursor = kThemeResizeLeftRightCursor; break;
+    case eCursor_ns_resize:           cursor = OnPantherOrLater() ? PANTHER_RESIZE_UPDOWN_CURSOR : JAGUAR_RESIZE_UPDOWN_CURSOR; break;
+    case eCursor_nesw_resize:         cursor = 142; break;
+    case eCursor_nwse_resize:         cursor = 143; break;        
+    default:                          
+      cursor = kThemeArrowCursor; 
+      break;
   }
 
   //animated cursors cause crash on Mac OS X 10.1 when Japanese Kotorei input method is enabled

@@ -433,106 +433,153 @@ NS_METHOD nsWidget::SetCursor( nsCursor aCursor ) {
   	unsigned short curs = Ph_CURSOR_POINTER;
   	PgColor_t color = Ph_CURSOR_DEFAULT_COLOR;
 
-    switch( aCursor ) {
-			case eCursor_sizeNW:
-				curs = Ph_CURSOR_DRAG_TL;
-				break;
-			case eCursor_sizeSE:
-				curs = Ph_CURSOR_DRAG_BR;
-				break;
-			case eCursor_sizeNE:
-				curs = Ph_CURSOR_DRAG_TL;
-				break;
-			case eCursor_sizeSW:
-				curs = Ph_CURSOR_DRAG_BL;
-				break;
+	switch( aCursor ) {
+		case eCursor_nw_resize:
+			curs = Ph_CURSOR_DRAG_TL;
+			break;
+		case eCursor_se_resize:
+			curs = Ph_CURSOR_DRAG_BR;
+			break;
+		case eCursor_ne_resize:
+			curs = Ph_CURSOR_DRAG_TL;
+			break;
+		case eCursor_sw_resize:
+			curs = Ph_CURSOR_DRAG_BL;
+			break;
 
-			case eCursor_crosshair:
-				curs = Ph_CURSOR_CROSSHAIR;
-				break;
+		case eCursor_crosshair:
+			curs = Ph_CURSOR_CROSSHAIR;
+			break;
 
-			case eCursor_copy:
-			case eCursor_alias:
-			case eCursor_context_menu:
-				break;
+		case eCursor_copy:
+		case eCursor_alias:
+		case eCursor_context_menu:
+			// XXX: No suitable cursor, needs implementing
+			break;
 
-			case eCursor_cell:
-				break;
+		case eCursor_cell:
+			// XXX: No suitable cursor, needs implementing
+			break;
 
-			case eCursor_spinning:
-				break;
+		case eCursor_spinning:
+			// XXX: No suitable cursor, needs implementing
+			break;
 
-			case eCursor_count_up:
-			case eCursor_count_down:
-			case eCursor_count_up_down:
-				break;
+		case eCursor_count_up:
+		case eCursor_count_down:
+		case eCursor_count_up_down:
+			// XXX: No suitable cursor, needs implementing
+			break;
 
-  		case eCursor_move:
-  		  curs = Ph_CURSOR_MOVE;
-  		  break;
-      
-  		case eCursor_help:
-  		  curs = Ph_CURSOR_QUESTION_POINT;
-  		  break;
-      
-  		case eCursor_grab:
-  		case eCursor_grabbing:
-  		  curs = Ph_CURSOR_FINGER;
-  		  break;
-      
-  		case eCursor_select:
-  		  curs = Ph_CURSOR_INSERT;
-				color = Pg_BLACK;
-  		  break;
-      
-  		case eCursor_wait:
-  		  curs = Ph_CURSOR_LONG_WAIT;
-  		  break;
+		case eCursor_move:
+		  curs = Ph_CURSOR_MOVE;
+		  break;
+	  
+		case eCursor_help:
+		  curs = Ph_CURSOR_QUESTION_POINT;
+		  break;
+	  
+		case eCursor_grab:
+		case eCursor_grabbing:
+		  curs = Ph_CURSOR_FINGER;
+		  break;
+	  
+		case eCursor_select:
+		  curs = Ph_CURSOR_INSERT;
+		  color = Pg_BLACK;
+		  break;
+	  
+		case eCursor_wait:
+		  curs = Ph_CURSOR_LONG_WAIT;
+		  break;
 
-  		case eCursor_hyperlink:
-  		  curs = Ph_CURSOR_FINGER;
-  		  break;
+		case eCursor_hyperlink:
+		  curs = Ph_CURSOR_FINGER;
+		  break;
 
-  		case eCursor_standard:
-  		  curs = Ph_CURSOR_POINTER;
-  		  break;
+		case eCursor_standard:
+		  curs = Ph_CURSOR_POINTER;
+		  break;
 
-  		case eCursor_sizeWE:
-  		  curs = Ph_CURSOR_DRAG_HORIZONTAL;
-  		  break;
+		case eCursor_n_resize:
+		case eCursor_s_resize:
+		  curs = Ph_CURSOR_DRAG_VERTICAL;
+		  break;
 
-  		case eCursor_sizeNS:
-  		  curs = Ph_CURSOR_DRAG_VERTICAL;
-  		  break;
+		case eCursor_w_resize:
+		case eCursor_e_resize:
+		  curs = Ph_CURSOR_DRAG_HORIZONTAL;
+		  break;
 
-  		// REVISIT - Photon does not have the following cursor types...
-  		case eCursor_arrow_north:
-  		case eCursor_arrow_north_plus:
-  		  curs = Ph_CURSOR_DRAG_TOP;
-  		  break;
+		// REVISIT - Photon does not have the following cursor types...
+		case eCursor_arrow_north:
+		case eCursor_arrow_north_plus:
+		  curs = Ph_CURSOR_DRAG_TOP;
+		  break;
 
-  		case eCursor_arrow_south:
-  		case eCursor_arrow_south_plus:
-  		  curs = Ph_CURSOR_DRAG_BOTTOM;
-  		  break;
+		case eCursor_arrow_south:
+		case eCursor_arrow_south_plus:
+		  curs = Ph_CURSOR_DRAG_BOTTOM;
+		  break;
 
-  		case eCursor_arrow_east:
-  		case eCursor_arrow_east_plus:
-  		  curs = Ph_CURSOR_DRAG_RIGHT;
-  		  break;
+		case eCursor_arrow_east:
+		case eCursor_arrow_east_plus:
+		  curs = Ph_CURSOR_DRAG_RIGHT;
+		  break;
 
-  		case eCursor_arrow_west:
-  		case eCursor_arrow_west_plus:
-  		  curs = Ph_CURSOR_DRAG_LEFT;
-  		  break;
+		case eCursor_arrow_west:
+		case eCursor_arrow_west_plus:
+		  curs = Ph_CURSOR_DRAG_LEFT;
+		  break;
 
-  		case eCursor_zoom_in:
-  		case eCursor_zoom_out:
-  		  break;
+		case eCursor_zoom_in:
+		case eCursor_zoom_out:
+		  // XXX: No suitable cursor, needs implementing
+		  break;
 
-  		default:
-  		  NS_ASSERTION(0, "Invalid cursor type");
-  		  break;
+		case eCursor_not_allowed:
+		case eCursor_no_drop:
+		  curs = Ph_CURSOR_DONT;
+		  break;
+
+		case eCursor_col_resize:
+		  // XXX: not 100% appropriate perhaps
+		  curs = Ph_CURSOR_DRAG_HORIZONTAL;
+		  break;
+
+		case eCursor_row_resize:
+		  // XXX: not 100% appropriate perhaps
+		  curs = Ph_CURSOR_DRAG_VERTICAL;
+		  break;
+
+		case eCursor_vertical_text:
+		  curs = Ph_CURSOR_INSERT;
+		  color = Pg_BLACK;
+		  break;
+
+		case eCursor_all_scroll:
+		  // XXX: No suitable cursor, needs implementing
+		  break;
+
+		case eCursor_nesw_resize:
+		  curs = Ph_CURSOR_DRAG_FOREDIAG;
+		  break;
+
+		case eCursor_nwse_resize:
+		  curs = Ph_CURSOR_DRAG_BACKDIAG;
+		  break;
+
+		case eCursor_ns_resize:
+		  curs = Ph_CURSOR_DRAG_VERTICAL;
+		  break;
+
+		case eCursor_ew_resize:
+		  curs = Ph_CURSOR_DRAG_HORIZONTAL;
+		  break;
+
+		default:
+		  NS_ASSERTION(0, "Invalid cursor type");
+		  break;
   		}
 
   	if( mWidget ) {

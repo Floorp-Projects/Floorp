@@ -1703,21 +1703,23 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
     newPointer = ::WinQuerySysPointer(HWND_DESKTOP, SPTR_ARROW, FALSE);
     break;
 
-  case eCursor_sizeWE:
-    newPointer = ::WinQuerySysPointer(HWND_DESKTOP, SPTR_SIZEWE, FALSE);
-    break;
-
-  case eCursor_sizeNS:
+  case eCursor_n_resize:
+  case eCursor_s_resize:
     newPointer = ::WinQuerySysPointer(HWND_DESKTOP, SPTR_SIZENS, FALSE);
     break;
 
-  case eCursor_sizeNW:
-  case eCursor_sizeSE:
+  case eCursor_w_resize:
+  case eCursor_e_resize:
+    newPointer = ::WinQuerySysPointer(HWND_DESKTOP, SPTR_SIZEWE, FALSE);
+    break;
+
+  case eCursor_nw_resize:
+  case eCursor_se_resize:
     newPointer = ::WinQuerySysPointer(HWND_DESKTOP, SPTR_SIZENWSE, FALSE);
     break;
 
-  case eCursor_sizeNE:
-  case eCursor_sizeSW:
+  case eCursor_ne_resize:
+  case eCursor_sw_resize:
     newPointer = ::WinQuerySysPointer(HWND_DESKTOP, SPTR_SIZENESW, FALSE);
     break;
 
@@ -1793,6 +1795,7 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
   case eCursor_count_up:
   case eCursor_count_down:
   case eCursor_count_up_down:
+    // XXX: No suitable cursor, needs implementing
     break;
 
   case eCursor_zoom_in:
@@ -1801,6 +1804,45 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
 
   case eCursor_zoom_out:
     newPointer = gPtrArray[IDC_ZOOMOUT-IDC_BASE];
+    break;
+
+  case eCursor_not_allowed:
+  case eCursor_no_drop:
+    newPointer = ::WinQuerySysPointer(HWND_DESKTOP, SPTR_ILLEGAL, FALSE);
+    break;
+
+  case eCursor_col_resize:
+    // XXX not 100% appropriate perhaps
+    newPointer = ::WinQuerySysPointer(HWND_DESKTOP, SPTR_SIZEWE, FALSE);
+    break;
+
+  case eCursor_row_resize:
+    // XXX not 100% appropriate perhaps
+    newPointer = ::WinQuerySysPointer(HWND_DESKTOP, SPTR_SIZENS, FALSE);
+    break;
+
+  case eCursor_vertical_text:
+    // XXX: No suitable cursor, needs implementing
+    break;
+
+  case eCursor_all_scroll:
+    newPointer = ::WinQuerySysPointer(HWND_DESKTOP, SPTR_SIZE, FALSE);
+    break;
+
+  case eCursor_nesw_resize:
+    newPointer = ::WinQuerySysPointer(HWND_DESKTOP, SPTR_SIZENESW, FALSE);
+    break;
+
+  case eCursor_nwse_resize:
+    newPointer = ::WinQuerySysPointer(HWND_DESKTOP, SPTR_SIZENWSE, FALSE);
+    break;
+
+  case eCursor_ns_resize:
+    newPointer = ::WinQuerySysPointer(HWND_DESKTOP, SPTR_SIZENS, FALSE);
+    break;
+
+  case eCursor_ew_resize:
+    newPointer = ::WinQuerySysPointer(HWND_DESKTOP, SPTR_SIZEWE, FALSE);
     break;
 
   default:

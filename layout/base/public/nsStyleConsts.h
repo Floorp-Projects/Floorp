@@ -302,7 +302,16 @@
 #define NS_STYLE_CURSOR_COUNT_UP_DOWN           26
 #define NS_STYLE_CURSOR_MOZ_ZOOM_IN             27
 #define NS_STYLE_CURSOR_MOZ_ZOOM_OUT            28
-
+#define NS_STYLE_CURSOR_NOT_ALLOWED             29
+#define NS_STYLE_CURSOR_COL_RESIZE              30
+#define NS_STYLE_CURSOR_ROW_RESIZE              31
+#define NS_STYLE_CURSOR_NO_DROP                 32
+#define NS_STYLE_CURSOR_VERTICAL_TEXT           33
+#define NS_STYLE_CURSOR_ALL_SCROLL              34
+#define NS_STYLE_CURSOR_NESW_RESIZE             35
+#define NS_STYLE_CURSOR_NWSE_RESIZE             36
+#define NS_STYLE_CURSOR_NS_RESIZE               37
+#define NS_STYLE_CURSOR_EW_RESIZE               38
 
 // See nsStyleDisplay
 #define NS_STYLE_DIRECTION_LTR                  0

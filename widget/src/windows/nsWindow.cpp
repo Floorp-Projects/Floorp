@@ -2397,21 +2397,23 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
       newCursor = ::LoadCursor(NULL, IDC_ARROW);
       break;
 
-    case eCursor_sizeWE:
-      newCursor = ::LoadCursor(NULL, IDC_SIZEWE);
-      break;
-
-    case eCursor_sizeNS:
+    case eCursor_n_resize:
+    case eCursor_s_resize:
       newCursor = ::LoadCursor(NULL, IDC_SIZENS);
       break;
 
-    case eCursor_sizeNW:
-    case eCursor_sizeSE:
+    case eCursor_w_resize:
+    case eCursor_e_resize:
+      newCursor = ::LoadCursor(NULL, IDC_SIZEWE);
+      break;
+
+    case eCursor_nw_resize:
+    case eCursor_se_resize:
       newCursor = ::LoadCursor(NULL, IDC_SIZENWSE);
       break;
 
-    case eCursor_sizeNE:
-    case eCursor_sizeSW:
+    case eCursor_ne_resize:
+    case eCursor_sw_resize:
       newCursor = ::LoadCursor(NULL, IDC_SIZENESW);
       break;
 
@@ -2484,9 +2486,13 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
       break;
 
     case eCursor_context_menu:
+      // XXX this CSS3 cursor needs to be implemented
+      break;
+
     case eCursor_count_up:
     case eCursor_count_down:
     case eCursor_count_up_down:
+      // XXX these -moz- cursors needs to be implemented
       break;
 
     case eCursor_zoom_in:
@@ -2495,6 +2501,44 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
 
     case eCursor_zoom_out:
       newCursor = ::LoadCursor(nsToolkit::mDllInstance, MAKEINTRESOURCE(IDC_ZOOMOUT));
+      break;
+
+    case eCursor_not_allowed:
+    case eCursor_no_drop:
+      newCursor = ::LoadCursor(NULL, IDC_NO);
+      break;
+
+    case eCursor_col_resize:
+      newCursor = ::LoadCursor(nsToolkit::mDllInstance, MAKEINTRESOURCE(IDC_COLRESIZE));
+      break;
+
+    case eCursor_row_resize:
+      newCursor = ::LoadCursor(nsToolkit::mDllInstance, MAKEINTRESOURCE(IDC_ROWRESIZE));
+      break;
+
+    case eCursor_vertical_text:
+      newCursor = ::LoadCursor(nsToolkit::mDllInstance, MAKEINTRESOURCE(IDC_VERTICALTEXT));
+      break;
+
+    case eCursor_all_scroll:
+      // XXX not 100% appropriate perhaps
+      newCursor = ::LoadCursor(NULL, IDC_SIZEALL);
+      break;
+
+    case eCursor_nesw_resize:
+      newCursor = ::LoadCursor(NULL, IDC_SIZENESW);
+      break;
+
+    case eCursor_nwse_resize:
+      newCursor = ::LoadCursor(NULL, IDC_SIZENWSE);
+      break;
+
+    case eCursor_ns_resize:
+      newCursor = ::LoadCursor(NULL, IDC_SIZENS);
+      break;
+
+    case eCursor_ew_resize:
+      newCursor = ::LoadCursor(NULL, IDC_SIZEWE);
       break;
 
     default:

@@ -434,6 +434,7 @@ const PRInt32 nsCSSProps::kContentKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kCursorKTable[] = {
+  // CSS 2.0
   eCSSKeyword_crosshair, NS_STYLE_CURSOR_CROSSHAIR,
   eCSSKeyword_default, NS_STYLE_CURSOR_DEFAULT,
   eCSSKeyword_pointer, NS_STYLE_CURSOR_POINTER,
@@ -451,11 +452,27 @@ const PRInt32 nsCSSProps::kCursorKTable[] = {
   eCSSKeyword_help, NS_STYLE_CURSOR_HELP,
   // CSS 2.1
   eCSSKeyword_progress, NS_STYLE_CURSOR_SPINNING,
-  // CSS3 proposed
+  // CSS3 basic user interface module
+  eCSSKeyword_copy, NS_STYLE_CURSOR_COPY,
+  eCSSKeyword_alias, NS_STYLE_CURSOR_ALIAS,
+  eCSSKeyword_context_menu, NS_STYLE_CURSOR_CONTEXT_MENU,
+  eCSSKeyword_cell, NS_STYLE_CURSOR_CELL,
+  eCSSKeyword_not_allowed, NS_STYLE_CURSOR_NOT_ALLOWED,
+  eCSSKeyword_col_resize, NS_STYLE_CURSOR_COL_RESIZE,
+  eCSSKeyword_row_resize, NS_STYLE_CURSOR_ROW_RESIZE,
+  eCSSKeyword_no_drop, NS_STYLE_CURSOR_NO_DROP,
+  eCSSKeyword_vertical_text, NS_STYLE_CURSOR_VERTICAL_TEXT,
+  eCSSKeyword_all_scroll, NS_STYLE_CURSOR_ALL_SCROLL,
+  eCSSKeyword_nesw_resize, NS_STYLE_CURSOR_NESW_RESIZE,
+  eCSSKeyword_nwse_resize, NS_STYLE_CURSOR_NWSE_RESIZE,
+  eCSSKeyword_ns_resize, NS_STYLE_CURSOR_NS_RESIZE,
+  eCSSKeyword_ew_resize, NS_STYLE_CURSOR_EW_RESIZE,
+  // -moz- prefixed aliases for some CSS3 cursors for backward compat
   eCSSKeyword__moz_copy, NS_STYLE_CURSOR_COPY,
   eCSSKeyword__moz_alias, NS_STYLE_CURSOR_ALIAS,
   eCSSKeyword__moz_context_menu, NS_STYLE_CURSOR_CONTEXT_MENU,
   eCSSKeyword__moz_cell, NS_STYLE_CURSOR_CELL,
+  // -moz- prefixed vendor specific
   eCSSKeyword__moz_grab, NS_STYLE_CURSOR_GRAB,
   eCSSKeyword__moz_grabbing, NS_STYLE_CURSOR_GRABBING,
   eCSSKeyword__moz_spinning, NS_STYLE_CURSOR_SPINNING,

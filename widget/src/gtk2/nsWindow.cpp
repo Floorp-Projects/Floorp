@@ -3235,24 +3235,28 @@ get_gtk_cursor(nsCursor aCursor)
     case eCursor_hyperlink:
         gdkcursor = gdk_cursor_new(GDK_HAND2);
         break;
-    case eCursor_sizeWE:
-        /* GDK_SB_H_DOUBLE_ARROW <==>.  The ideal choice is: =>||<= */
-        gdkcursor = gdk_cursor_new(GDK_SB_H_DOUBLE_ARROW);
+    case eCursor_n_resize:
+        gdkcursor = gdk_cursor_new(GDK_TOP_SIDE);
         break;
-    case eCursor_sizeNS:
-        /* Again, should be =>||<= rotated 90 degrees. */
-        gdkcursor = gdk_cursor_new(GDK_SB_V_DOUBLE_ARROW);
+    case eCursor_s_resize:
+        gdkcursor = gdk_cursor_new(GDK_BOTTOM_SIDE);
         break;
-    case eCursor_sizeNW:
+    case eCursor_w_resize:
+        gdkcursor = gdk_cursor_new(GDK_LEFT_SIDE);
+        break;
+    case eCursor_e_resize:
+        gdkcursor = gdk_cursor_new(GDK_RIGHT_SIDE);
+        break;
+    case eCursor_nw_resize:
         gdkcursor = gdk_cursor_new(GDK_TOP_LEFT_CORNER);
         break;
-    case eCursor_sizeSE:
+    case eCursor_se_resize:
         gdkcursor = gdk_cursor_new(GDK_BOTTOM_RIGHT_CORNER);
         break;
-    case eCursor_sizeNE:
+    case eCursor_ne_resize:
         gdkcursor = gdk_cursor_new(GDK_TOP_RIGHT_CORNER);
         break;
-    case eCursor_sizeSW:
+    case eCursor_sw_resize:
         gdkcursor = gdk_cursor_new(GDK_BOTTOM_LEFT_CORNER);
         break;
     case eCursor_arrow_north:
@@ -3304,7 +3308,7 @@ get_gtk_cursor(nsCursor aCursor)
     case eCursor_count_up:
     case eCursor_count_down:
     case eCursor_count_up_down:
-        // XXX: these CSS3 cursors need to be implemented
+        // XXX: these -moz- cursors need to be implemented
         gdkcursor = gdk_cursor_new(GDK_LEFT_PTR);
         break;
     case eCursor_zoom_in:
@@ -3312,6 +3316,34 @@ get_gtk_cursor(nsCursor aCursor)
         break;
     case eCursor_zoom_out:
         newType = MOZ_CURSOR_ZOOM_OUT;
+        break;
+    case eCursor_not_allowed:
+    case eCursor_no_drop:
+        newType = MOZ_CURSOR_NOT_ALLOWED;
+        break;
+    case eCursor_col_resize:
+        newType = MOZ_CURSOR_COL_RESIZE;
+        break;
+    case eCursor_row_resize:
+        newType = MOZ_CURSOR_ROW_RESIZE;
+        break;
+    case eCursor_vertical_text:
+        newType = MOZ_CURSOR_VERTICAL_TEXT;
+        break;
+    case eCursor_all_scroll:
+        gdkcursor = gdk_cursor_new(GDK_FLEUR);
+        break;
+    case eCursor_nesw_resize:
+        newType = MOZ_CURSOR_NESW_RESIZE;
+        break;
+    case eCursor_nwse_resize:
+        newType = MOZ_CURSOR_NWSE_RESIZE;
+        break;
+    case eCursor_ns_resize:
+        gdkcursor = gdk_cursor_new(GDK_SB_V_DOUBLE_ARROW);
+        break;
+    case eCursor_ew_resize:
+        gdkcursor = gdk_cursor_new(GDK_SB_H_DOUBLE_ARROW);
         break;
     default:
         NS_ASSERTION(aCursor, "Invalid cursor type");
