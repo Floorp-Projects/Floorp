@@ -1416,8 +1416,31 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
               
               if (noFileSpec)
               {
+                // check the current url, use that file name if possible
+                nsString urlstring;
+                res = HTMLDoc->GetURL(urlstring);
+
+       //         ?????
+       //         res = HTMLDoc->GetSourceDocumentURL(jscx, uri);
+       //         do a QI to get an nsIURL and then call GetFileName()
+
+                // if it's not a local file already, grab the current file name
+                if ( (urlstring.Compare("file", PR_TRUE, 4) != 0 )
+                  && (urlstring.Compare("about:blank", PR_TRUE, -1) != 0) )
+                {
+                  PRInt32 index = urlstring.RFindChar((PRUnichar)'/', PR_FALSE, -1, -1 );
+                  if ( index != -1 )
+                  {
+                    // remove cruft before file name including '/'
+                    // if the url ends with a '/' then the whole string will be cut
+                    urlstring = urlstring.Cut(0, index + 1);
+                    if (urlstring.Length() > 0)
+                      fileName = urlstring;
+                  }
+                }
+                
                 // Use page title as suggested name for new document
-                if (title.Length() > 0)
+                if (fileName.Length() == 0 && title.Length() > 0)
                 {
                   //Replace "bad" filename characteres with "_"
                   PRUnichar space = (PRUnichar)' ';
@@ -1448,6 +1471,7 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
               }
               if (fileName.Length() > 0)
                 fileWidget->SetDefaultString(fileName);
+// Why is SkipFilters here?  Shouldn't it be before if (noFileSpec)???
 SkipFilters:
               nsFileDlgResults dialogResult;
               // 1ST PARAM SHOULD BE nsIDOMWindow*, not nsIWidget*
