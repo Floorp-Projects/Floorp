@@ -95,18 +95,24 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 // a linked, ordered list of event queues and their tokens
 class EventQueueToken {
 public:
-  EventQueueToken(const nsIEventQueue *aQueue, const gint aToken);
-
-  const nsIEventQueue *mQueue;
+  EventQueueToken(nsIEventQueue *aQueue, const gint aToken);
+  virtual ~EventQueueToken();  
+  nsIEventQueue   *mQueue;
   gint mToken;
   EventQueueToken *mNext;
 };
 
-EventQueueToken::EventQueueToken(const nsIEventQueue *aQueue, const gint aToken) {
+EventQueueToken::EventQueueToken(nsIEventQueue *aQueue, const gint aToken) {
   mQueue = aQueue;
+  NS_IF_ADDREF(mQueue);
   mToken = aToken;
   mNext = 0;
 }
+
+EventQueueToken::~EventQueueToken(){
+ NS_IF_RELEASE(mQueue);
+}
+
 class EventQueueTokenQueue {
 public:
   EventQueueTokenQueue();
@@ -484,12 +490,6 @@ NS_IMETHODIMP nsAppShell::ListenToEventQueue(nsIEventQueue *aQueue,
   // tell gdk to listen to the event queue or not
 
   gint queueToken;
-  // mscott - this is HORRIBLY wrong....I'm introducing an 
-  // intentional leak of this event queue in order to 
-  // hide the crasher for linux when opening a imap
-  // folder for bug #17352. a=by many folks for now...
-  NS_IF_ADDREF(aQueue);
-
   if (aListen) {
     queueToken = our_gdk_input_add(aQueue->GetEventQueueSelectFD(),
                                    event_processor_callback,
