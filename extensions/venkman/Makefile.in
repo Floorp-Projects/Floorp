@@ -42,4 +42,7 @@ DIRS        = resources
 
 include $(topsrcdir)/config/rules.mk
 
+install::
+	$(INSTALL) $(srcdir)/js/venkman-service.js $(DIST)/bin/components
+
 
