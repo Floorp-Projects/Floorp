@@ -2697,7 +2697,7 @@ MapDeclarationMarginInto(nsICSSDeclaration* aDeclaration,
         else if (SetColor(ourBorderColor->mRight, unused, aPresContext, borderColor)) {
           border->SetBorderColor(NS_SIDE_RIGHT, borderColor);
         }
-        else if (eCSSUnit_Enumerated == ourBorderColor->mTop.GetUnit()) {
+        else if (eCSSUnit_Enumerated == ourBorderColor->mRight.GetUnit()) {
           switch (ourBorderColor->mRight.GetIntValue()) {
             case NS_STYLE_COLOR_TRANSPARENT:
               border->SetBorderTransparent(NS_SIDE_RIGHT);
@@ -2720,7 +2720,7 @@ MapDeclarationMarginInto(nsICSSDeclaration* aDeclaration,
         else if (SetColor(ourBorderColor->mBottom, unused, aPresContext, borderColor)) {
           border->SetBorderColor(NS_SIDE_BOTTOM, borderColor);
         }
-        else if (eCSSUnit_Enumerated == ourBorderColor->mTop.GetUnit()) {
+        else if (eCSSUnit_Enumerated == ourBorderColor->mBottom.GetUnit()) {
           switch (ourBorderColor->mBottom.GetIntValue()) {
             case NS_STYLE_COLOR_TRANSPARENT:
               border->SetBorderTransparent(NS_SIDE_BOTTOM);
@@ -2743,7 +2743,7 @@ MapDeclarationMarginInto(nsICSSDeclaration* aDeclaration,
         else if (SetColor(ourBorderColor->mLeft, unused, aPresContext, borderColor)) {
           border->SetBorderColor(NS_SIDE_LEFT, borderColor);
         }
-        else if (eCSSUnit_Enumerated == ourBorderColor->mTop.GetUnit()) {
+        else if (eCSSUnit_Enumerated == ourBorderColor->mLeft.GetUnit()) {
           switch (ourBorderColor->mLeft.GetIntValue()) {
             case NS_STYLE_COLOR_TRANSPARENT:
               border->SetBorderTransparent(NS_SIDE_LEFT);
