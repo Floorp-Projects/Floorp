@@ -365,7 +365,14 @@ doc_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
             LL_I2L(scale, 1000000);
             LL_MUL(prusec, prsec, scale);
             PR_ExplodeTime(prusec, PR_LocalTimeParameters, &prtime);
-            PR_FormatTime(buf, sizeof buf, "%c", &prtime);
+            PR_FormatTime(buf, sizeof buf,
+#ifdef _WIN32
+                          /* MSVC requires %#c to get a 4-digit date. */
+                          "%#c",
+#else
+                          "%c",
+#endif
+                          &prtime);
         } else {
             buf[0] = '\0';
         }
