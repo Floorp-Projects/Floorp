@@ -571,6 +571,8 @@ NS_IMETHODIMP nsImapMailFolder::GetName(char ** name)
             *name = mName.ToNewCString();
             return NS_OK;
         }
+#if 0
+        // ** Is this right if we just retrieve the name from the uri?
         else
         {
             //Need to read the name from the database
@@ -590,6 +592,7 @@ NS_IMETHODIMP nsImapMailFolder::GetName(char ** name)
 				}
 			}
         }
+#endif 
     }
 	nsAutoString folderName;
 	nsImapURI2Name(kImapRootURI, mURI, folderName);
