@@ -184,6 +184,7 @@ protected:
 
   virtual void      UpdateVisibilityFlag();
   virtual void      UpdateDisplay();
+  virtual void			CalcOffset(PRInt32 &aX,PRInt32 &aY);
 
 
 protected:
@@ -249,6 +250,7 @@ protected:
 	WindowPtr			mWindowPtr;
 	PRBool				mWindowMadeHere;			// if main window and we created, true
 	PRBool				mIsMainWindow;				// top level Mac window
+	
 	
 	void InitDeviceContext(nsIDeviceContext *aContext,nsNativeWidget aParentWidget);
 	

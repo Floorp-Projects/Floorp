@@ -74,7 +74,7 @@ nsWindow::nsWindow() : nsIWidget(),
   mClientData = nsnull;
   mWindowRegion = nsnull;
   mChildren      = NULL;
-
+  
 }
 
 
@@ -266,6 +266,7 @@ void nsWindow::CreateChildWindow(nsNativeWidget  aNativeParent,
   NS_IF_ADDREF(mAppShell);
   mIsMainWindow = PR_FALSE;
   mWindowMadeHere = PR_TRUE;
+  strcpy(gInstanceClassName, "childwindow");
 
   InitToolkit(aToolkit, aWidgetParent);
   
@@ -477,18 +478,32 @@ void nsWindow::Move(PRUint32 aX, PRUint32 aY)
 //-------------------------------------------------------------------------
 void nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 {
+nsSizeEvent 	event;
+
   if (DBG) printf("$$$$$$$$$ %s::Resize %d %d   Repaint: %s\n", 
                   gInstanceClassName, aWidth, aHeight, (aRepaint?"true":"false"));
   mBounds.width  = aWidth;
   mBounds.height = aHeight;
+  
+   if(nsnull!=mWindowRegion)
+  	::DisposeRgn(mWindowRegion);
+	mWindowRegion = NewRgn();
+	SetRectRgn(mWindowRegion,mBounds.x,mBounds.y,mBounds.x+mBounds.width,mBounds.y+mBounds.height);		 
+ 
   if (aRepaint)
   {
   	UpdateVisibilityFlag();
   	UpdateDisplay();
   }
-  //XtVaSetValues(mWidget, XmNx, mBounds.x, XmNy, mBounds.y, XmNwidth, aWidth, XmNheight, aHeight, nsnull);
+  
+  event.message = NS_SIZE;
+  event.point.x = 0;
+  event.point.y = 0;
+  event.windowSize = &mBounds;
+  event.eventStructType = NS_SIZE_EVENT;
+  event.widget = this;
+ 	this->DispatchEvent(&event);
 
-//    XtResizeWidget(mWidget, aWidth, aHeight, 0);
 }
 
     
@@ -499,16 +514,31 @@ void nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 //-------------------------------------------------------------------------
 void nsWindow::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 {
+nsSizeEvent 	event;
+
   mBounds.x      = aX;
   mBounds.y      = aY;
   mBounds.width  = aWidth;
   mBounds.height = aHeight;
+  if(nsnull!=mWindowRegion)
+  	::DisposeRgn(mWindowRegion);
+	mWindowRegion = NewRgn();
+	SetRectRgn(mWindowRegion,mBounds.x,mBounds.y,mBounds.x+mBounds.width,mBounds.y+mBounds.height);
+
   if (aRepaint)
   {
   	UpdateVisibilityFlag();
   	UpdateDisplay();
   }
- // XtVaSetValues(mWidget, XmNx, aX, XmNy, GetYCoord(aY),XmNwidth, aWidth, XmNheight, aHeight, nsnull);
+  
+  event.message = NS_SIZE;
+  event.point.x = 0;
+  event.point.y = 0;
+  event.windowSize = &mBounds;
+  event.widget = this;
+  event.eventStructType = NS_SIZE_EVENT;
+ 	this->DispatchEvent(&event);
+
 }
 
     
@@ -1053,17 +1083,7 @@ void nsWindow::OnDestroy()
 //-------------------------------------------------------------------------
 PRBool nsWindow::OnResize(nsSizeEvent &aEvent)
 {
-    nsRect* size = aEvent.windowSize;
-  /*if (mWidget) {
-    Arg arg[3];
-    printf("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Setting to 600,800\n");
-    XtSetArg(arg[0], XtNwidth, 600);
-    XtSetArg(arg[1], XtNheight,800);
-
-    XtSetValues(mWidget, arg, 2);
-
-  }*/
-
+  nsRect* size = aEvent.windowSize;
   if (mEventCallback && !mIgnoreResize) {
     return(DispatchEvent(&aEvent));
   }
@@ -1170,6 +1190,7 @@ nsWindow::GetResized()
   return(mResized);
 }
 
+#ifdef NOTNOW
 /*
  *  @update  gpk 08/27/98
  *  @param   aX -- x offset in widget local coordinates
@@ -1187,6 +1208,36 @@ Point		hitpt;
 	
 	if( PtInRgn( hitpt,mWindowRegion) )
 		result = TRUE;
+	return(result);
+}
+#endif
+
+/*
+ *  Finds if a point in local coordinates is inside this object
+ */
+PRBool
+nsWindow::PtInWindow(PRInt32 aX,PRInt32 aY)
+{
+PRBool	result = PR_FALSE;
+nsPoint	hitPt(aX,aY);
+nsRect	bounds;
+PRInt32	offx,offy;
+	
+	GetBounds(bounds);
+	if(this->GetParent())
+		{
+		CalcOffset(offx,offy);
+		bounds.MoveBy(offx,offy);
+		}
+	else
+		{
+		offx = bounds.x;
+		offy = bounds.y;
+		bounds.MoveBy(-offx,-offy);
+		}
+	
+	if(bounds.Contains(hitPt))
+		result = PR_TRUE;
 	return(result);
 }
 
@@ -1242,22 +1293,24 @@ void nsWindow::MacRectToNSRect(const Rect& aMacRect, nsRect& aRect) const
 nsWindow* 
 nsWindow::FindWidgetHit(Point aThePoint)
 {
+//PRInt32		xOff,yOff;
 nsWindow	*child = this;
 nsWindow	*deeperWindow;
 nsRect		rect;
 
-	::GlobalToLocal(&aThePoint);
+//<<<<<<< nsWindow.cpp
+	// if this is a main window, then map this point to this windows coordinate space
+//=======
+	//::GlobalToLocal(&aThePoint);
+//>>>>>>> 1.26
 	if (this->PtInWindow(aThePoint.h,aThePoint.v))
 		{
+		
 		// traverse through all the nsWindows to find out who got hit, lowest level of course
 		if (mChildren) 
 			{
 	    mChildren->ResetToLast();
 	    child = (nsWindow*)mChildren->Previous();
-    	nsRect bounds;
-    	GetBounds(bounds);
-    	aThePoint.h -= bounds.x;
-    	aThePoint.v -= bounds.y;
 	    while(child)
         {
         if (child->PtInWindow(aThePoint.h,aThePoint.v) ) 
@@ -1402,6 +1455,36 @@ void nsWindow::UpdateVisibilityFlag()
   }
   
   mVisible = PR_TRUE;
+}
+
+//-------------------------------------------------------------------------
+/*  Calculate the x and y offsets for this particular widget
+ *  @update  ps 09/22/98
+ *  @param   aX -- x offset amount
+ *  @param   aY -- y offset amount 
+ *  @return  NOTHING
+ */
+void nsWindow::CalcOffset(PRInt32 &aX,PRInt32 &aY)
+{
+nsIWidget	*theparent,*child;
+nsRect		therect;
+
+	aX = 0;
+	aY = 0;
+	theparent = this->GetParent();
+	while(theparent)
+		{
+		theparent->GetBounds(therect);
+		child = theparent->GetParent();
+		if(child)
+			{
+			aX += therect.x;
+			aY += therect.y;
+			}
+		theparent = child;
+		}
+
+
 }
 
 //-------------------------------------------------------------------------
