@@ -82,6 +82,8 @@
 #include "nsISound.h"
 #include "nsContentCID.h"
 #include "nsLayoutCID.h"
+#include "nsXULAtoms.h"
+#include "nsINameSpaceManager.h"
 
 // Header for this class
 #include "nsTypeAheadFind.h"
@@ -261,7 +263,7 @@ NS_IMETHODIMP nsTypeAheadFind::OnStateChange(nsIWebProgress *aWebProgress,
     return NS_OK;
   nsCOMPtr<nsIDOMDocument> domDoc;
   domWindow->GetDocument(getter_AddRefs(domDoc));
-  nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc)), parentDoc;
   if (!doc)
     return NS_OK;
   nsCOMPtr<nsIPresShell> presShell;
@@ -283,6 +285,25 @@ NS_IMETHODIMP nsTypeAheadFind::OnStateChange(nsIWebProgress *aWebProgress,
     treeItem->GetItemType(&itemType);
   if (itemType == nsIDocShellTreeItem::typeChrome) 
     return NS_OK;
+
+  // XXX this manual check for the mailnews message pane looks like a hack, but is necessary.
+  // We conflict with mailnews single key shortcuts like "n" for next unread message.
+  // We need this manual check in Mozilla 1.0 and Netscape 7.0 
+  // because people will be using XPI's to install us there, so we have to do our check from here
+  // rather than create a new interface or attribute on the browser element.
+  // XXX We will remove this and use a more elegant check in future trunk builds
+  doc->GetParentDocument(getter_AddRefs(parentDoc));
+  if (parentDoc) {
+    nsCOMPtr<nsIContent> browserElementContent;
+    parentDoc->FindContentForSubDocument(doc, getter_AddRefs(browserElementContent)); // content for <browser>
+    nsCOMPtr<nsIDOMElement> browserElement(do_QueryInterface(browserElementContent));
+    if (browserElement) {
+      nsAutoString id;
+      browserElement->GetAttribute(NS_LITERAL_STRING("id"), id);
+      if (id.EqualsWithConversion("messagepane"))
+        return NS_OK;
+    }
+  }
 
   nsCOMPtr<nsIDOMEventTarget> eventTarget(do_QueryInterface(domWindow));
   if (eventTarget) {
