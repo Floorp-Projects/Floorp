@@ -2931,167 +2931,229 @@ static PRBool IsSignificantChild(nsIContent* aChild, PRBool aAcceptNonWhitespace
 
 static PRBool SelectorMatches(SelectorMatchesData &data,
                               nsCSSSelector* aSelector,
-                              PRBool aTestState) 
+                              PRBool aTestState,
+                              PRInt8 aNegationIndex) 
 
 {
-  PRBool  result = PR_FALSE;
+  // if we are dealing with negations, reverse the values of PR_TRUE and PR_FALSE
+  PRBool  localFalse = PRBool(0 < aNegationIndex);
+  PRBool  localTrue = PRBool(0 == aNegationIndex);
+  PRBool  checkType = (0 == aNegationIndex) || (1 < aNegationIndex);
+  PRBool  result = localFalse;
+  nsAutoString buffer;
 
-  // Bail out early if we can
-  if(kNameSpaceID_Unknown != aSelector->mNameSpace) {
-    if(data.mNameSpaceID != aSelector->mNameSpace) {
+  // Bail out early if we can. Do not perform the test if aNegationIndex==1
+  // because it then contains only negated IDs, classes, attributes and pseudo-
+  // classes
+  if (checkType) {
+    if (kNameSpaceID_Unknown != aSelector->mNameSpace) {
+      if (data.mNameSpaceID != aSelector->mNameSpace) {
+        return result;
+      }
+    }
+  }  
+  if (checkType) {
+    if (localTrue == ((nsnull != aSelector->mTag) && (aSelector->mTag != data.mContentTag)))  {
       return result;
+    }
+    if (1 < aNegationIndex) {
+      // optimization : no other selector to test on negated type or
+      // universal selector
+      return localTrue;
     }
   }
 
-  if ((nsnull == aSelector->mTag) || (aSelector->mTag == data.mContentTag)) {
-
-    result = PR_TRUE;
-    // namespace/tag match
-    if (nsnull != aSelector->mAttrList) { // test for attribute match
-      // if no attributes on the content, no match
-      if(!data.mHasAttributes) {
-        result = PR_FALSE;
-      } else {
-        nsAttrSelector* attr = aSelector->mAttrList;
-        do {
-          nsAutoString  value, partValue;
-          nsresult  attrState = data.mContent->GetAttribute(attr->mNameSpace, attr->mAttr, value);
-          if (NS_FAILED(attrState) || (NS_CONTENT_ATTR_NOT_THERE == attrState)) {
-            result = PR_FALSE;
+  result = localTrue;
+  // namespace/tag match
+  if (nsnull != aSelector->mAttrList) { // test for attribute match
+    // if no attributes on the content, no match
+    if(!data.mHasAttributes) {
+      result = localFalse;
+    } else {
+      nsAttrSelector* attr = aSelector->mAttrList;
+      do {
+        nsAutoString  value, partValue;
+        nsresult  attrState = data.mContent->GetAttribute(attr->mNameSpace, attr->mAttr, value);
+        if (NS_FAILED(attrState) || (NS_CONTENT_ATTR_NOT_THERE == attrState)) {
+          result = localFalse;
+        }
+        else {
+          PRBool isCaseSensitive = (attr->mCaseSensitive && !data.mIsHTMLContent); // Bug 24390: html attributes should not be case-sensitive
+          switch (attr->mFunction) {
+            case NS_ATTR_FUNC_SET:    break;
+            case NS_ATTR_FUNC_EQUALS: 
+              if (isCaseSensitive) {
+                result = PRBool(localTrue == value.Equals(attr->mValue));
+              }
+              else {
+                result = PRBool(localTrue == value.EqualsIgnoreCase(attr->mValue));
+              }
+              break;
+            case NS_ATTR_FUNC_INCLUDES: 
+              result = PRBool(localTrue == ValueIncludes(value, attr->mValue, isCaseSensitive));
+              break;
+            case NS_ATTR_FUNC_DASHMATCH: 
+              result = PRBool(localTrue == ValueDashMatch(value, attr->mValue, isCaseSensitive));
+              break;
+            case NS_ATTR_FUNC_ENDSMATCH:
+              value.Right(partValue, attr->mValue.Length());
+              if (isCaseSensitive) {
+                result = PRBool(localTrue == partValue.Equals(attr->mValue));
+              }
+              else {
+                result = PRBool(localTrue == partValue.EqualsIgnoreCase(attr->mValue));
+              }
+              break;
+            case NS_ATTR_FUNC_BEGINSMATCH:
+              value.Left(partValue, attr->mValue.Length());
+              if (isCaseSensitive) {
+                result = PRBool(localTrue == partValue.Equals(attr->mValue));
+              }
+              else {
+                result = PRBool(localTrue == partValue.EqualsIgnoreCase(attr->mValue));
+              }
+              break;
+            case NS_ATTR_FUNC_CONTAINSMATCH:
+              result = PRBool(localTrue == (-1 != value.Find(attr->mValue, isCaseSensitive)));
+              break;
           }
-          else {
-            PRBool isCaseSensitive = (attr->mCaseSensitive && !data.mIsHTMLContent); // Bug 24390: html attributes should not be case-sensitive
-            switch (attr->mFunction) {
-              case NS_ATTR_FUNC_SET:    break;
-              case NS_ATTR_FUNC_EQUALS: 
-                if (isCaseSensitive) {
-                  result = value.Equals(attr->mValue);
-                }
-                else {
-                  result = value.EqualsIgnoreCase(attr->mValue);
-                }
-                break;
-              case NS_ATTR_FUNC_INCLUDES: 
-                result = ValueIncludes(value, attr->mValue, isCaseSensitive);
-                break;
-              case NS_ATTR_FUNC_DASHMATCH: 
-                result = ValueDashMatch(value, attr->mValue, isCaseSensitive);
-                break;
-              case NS_ATTR_FUNC_ENDSMATCH:
-                value.Right(partValue, attr->mValue.Length());
-                if (isCaseSensitive) {
-                  result = partValue.Equals(attr->mValue);
-                }
-                else {
-                  result = partValue.EqualsIgnoreCase(attr->mValue);
-                }
-                break;
-              case NS_ATTR_FUNC_BEGINSMATCH:
-                value.Left(partValue, attr->mValue.Length());
-                if (isCaseSensitive) {
-                  result = partValue.Equals(attr->mValue);
-                }
-                else {
-                  result = partValue.EqualsIgnoreCase(attr->mValue);
-                }
-                break;
-              case NS_ATTR_FUNC_CONTAINSMATCH:
-                result = (-1 != value.Find(attr->mValue, isCaseSensitive));
-                break;
-            }
-          }
-          attr = attr->mNext;
-        } while ((PR_TRUE == result) && (nsnull != attr));
-      }
+        }
+        attr = attr->mNext;
+      } while ((localTrue == result) && (nsnull != attr));
     }
-    if ((PR_TRUE == result) &&
-        ((nsnull != aSelector->mIDList) || (nsnull != aSelector->mClassList))) {  // test for ID & class match
-      result = PR_FALSE;
-      if (data.mStyledContent) {
-        nsAtomList* IDList = aSelector->mIDList;
-        if (nsnull == IDList) {
-          result = PR_TRUE;
-        }
-        else if (nsnull != data.mContentID) {
-          result = PR_TRUE;
-          while (nsnull != IDList) {
-            if (IDList->mAtom != data.mContentID) {
-              result = PR_FALSE;
-              break;
-            }
-            IDList = IDList->mNext;
+  }
+  if ((localTrue == result) &&
+      ((nsnull != aSelector->mIDList) || (nsnull != aSelector->mClassList))) {  // test for ID & class match
+    result = localFalse;
+    if (data.mStyledContent) {
+      nsAtomList* IDList = aSelector->mIDList;
+      if (nsnull == IDList) {
+        result = localTrue;
+      }
+      else if (nsnull != data.mContentID) {
+        result = localTrue;
+        while (nsnull != IDList) {
+          if (IDList->mAtom != data.mContentID) {
+            result = localFalse;
+            break;
           }
+          IDList = IDList->mNext;
         }
-        
-        if (PR_TRUE == result) {
-          nsAtomList* classList = aSelector->mClassList;
-          while (nsnull != classList) {
-            if (NS_COMFALSE == data.mStyledContent->HasClass(classList->mAtom)) {
-              result = PR_FALSE;
-              break;
-            }
-            classList = classList->mNext;
+      }
+      
+      if (localTrue == result) {
+        nsAtomList* classList = aSelector->mClassList;
+        while (nsnull != classList) {
+          if (NS_COMFALSE == data.mStyledContent->HasClass(classList->mAtom)) {
+            result = localFalse;
+            break;
           }
+          classList = classList->mNext;
         }
       }
     }
-    if ((PR_TRUE == result) &&
-        (nsnull != aSelector->mPseudoClassList)) {  // test for pseudo class match
-      // first-child, root, lang, active, focus, hover, link, outOfDate, visited
-      // XXX disabled, enabled, selected, selection
-      nsAtomList* pseudoClass = aSelector->mPseudoClassList;
+  }
+  if ((localTrue == result) &&
+      (nsnull != aSelector->mPseudoClassList)) {  // test for pseudo class match
+    // first-child, root, lang, active, focus, hover, link, outOfDate, visited
+    // XXX disabled, enabled, selected, selection
+    nsAtomList* pseudoClass = aSelector->mPseudoClassList;
 
-      while ((PR_TRUE == result) && (nsnull != pseudoClass)) {
-        if ((nsCSSAtoms::firstChildPseudo == pseudoClass->mAtom) ||
-            (nsCSSAtoms::firstNodePseudo == pseudoClass->mAtom) ) {
-          nsIContent* firstChild = nsnull;
-          nsIContent* parent = data.mParentContent;
-          if (parent) {
-            PRInt32 index = -1;
-            do {
-              parent->ChildAt(++index, firstChild);
-              if (firstChild) { // skip text & comments (and whitespace for firstNode as well)
-                if (IsSignificantChild(firstChild, (nsCSSAtoms::firstNodePseudo == pseudoClass->mAtom))) {
-                  break;
-                }
-                NS_RELEASE(firstChild);
-              }
-              else {
+    while ((localTrue == result) && (nsnull != pseudoClass)) {
+      if ((nsCSSAtoms::firstChildPseudo == pseudoClass->mAtom) ||
+          (nsCSSAtoms::firstNodePseudo == pseudoClass->mAtom) ) {
+        nsIContent* firstChild = nsnull;
+        nsIContent* parent = data.mParentContent;
+        if (parent) {
+          PRInt32 index = -1;
+          do {
+            parent->ChildAt(++index, firstChild);
+            if (firstChild) { // skip text & comments (and whitespace for firstNode as well)
+              if (IsSignificantChild(firstChild, (nsCSSAtoms::firstNodePseudo == pseudoClass->mAtom))) {
                 break;
               }
-            } while (1 == 1);
-          }
-          result = PRBool(data.mContent == firstChild);
-          NS_IF_RELEASE(firstChild);
+              NS_RELEASE(firstChild);
+            }
+            else {
+              break;
+            }
+          } while (1 == 1);
         }
-        else if (nsCSSAtoms::lastNodePseudo == pseudoClass->mAtom) {
-          nsIContent* lastChild = nsnull;
-          nsIContent* parent = data.mParentContent;
-          if (parent) {
-            PRInt32 index;
-            parent->ChildCount(index);
-            do {
-              parent->ChildAt(--index, lastChild);
-              if (lastChild) { // skip whitespace text & comments
-                if (IsSignificantChild(lastChild, PR_TRUE)) {
-                  break;
-                }
-                NS_RELEASE(lastChild);
-              }
-              else {
+        result = PRBool(localTrue == (data.mContent == firstChild));
+        NS_IF_RELEASE(firstChild);
+      }
+      else if (nsCSSAtoms::lastNodePseudo == pseudoClass->mAtom) {
+        nsIContent* lastChild = nsnull;
+        nsIContent* parent = data.mParentContent;
+        if (parent) {
+          PRInt32 index;
+          parent->ChildCount(index);
+          do {
+            parent->ChildAt(--index, lastChild);
+            if (lastChild) { // skip whitespace text & comments
+              if (IsSignificantChild(lastChild, PR_TRUE)) {
                 break;
               }
-            } while (1 == 1);
-          }
-          result = PRBool(data.mContent == lastChild);
-          NS_IF_RELEASE(lastChild);
+              NS_RELEASE(lastChild);
+            }
+            else {
+              break;
+            }
+          } while (1 == 1);
         }
-        else if (nsCSSAtoms::rootPseudo == pseudoClass->mAtom) {
-          if (data.mParentContent) {
-            result = PR_FALSE;
+        result = PRBool(localTrue == (data.mContent == lastChild));
+        NS_IF_RELEASE(lastChild);
+      }
+      else if (nsCSSAtoms::rootPseudo == pseudoClass->mAtom) {
+        if (data.mParentContent) {
+          result = localFalse;
+        }
+        else {
+          result = localTrue;
+        }
+      }
+      else if (nsCSSAtoms::langPseudo == pseudoClass->mAtom) {
+        // XXX not yet implemented
+        result = localFalse;
+      }
+      else if (IsEventPseudo(pseudoClass->mAtom)) {
+        // check if the element is event-sensitive
+
+        // Quirk Mode: check to see if the element is event-sensitive
+        //  - see if the selector applies to event pseudo classes
+        // NOTE: we distinguish between global and subjected selectors so
+        //       pass that information on to the determining routine
+        PRBool isSelectorGlobal = aSelector->mTag==nsnull ? PR_TRUE : PR_FALSE;
+        if ((data.mIsQuirkMode) &&
+            (!IsEventSensitive(pseudoClass->mAtom, data.mContentTag, isSelectorGlobal))){
+          result = localFalse;
+        } else if (aTestState) {
+          if (nsCSSAtoms::activePseudo == pseudoClass->mAtom) {
+            result = PRBool(localTrue == (0 != (data.mEventState & NS_EVENT_STATE_ACTIVE)));
           }
-          else {
-            result = PR_TRUE;
+          else if (nsCSSAtoms::focusPseudo == pseudoClass->mAtom) {
+            result = PRBool(localTrue == (0 != (data.mEventState & NS_EVENT_STATE_FOCUS)));
+          }
+          else if (nsCSSAtoms::hoverPseudo == pseudoClass->mAtom) {
+            result = PRBool(localTrue == (0 != (data.mEventState & NS_EVENT_STATE_HOVER)));
+          }
+          else if (nsCSSAtoms::dragOverPseudo == pseudoClass->mAtom) {
+            result = PRBool(localTrue == (0 != (data.mEventState & NS_EVENT_STATE_DRAGOVER)));
+          }
+        } 
+      }
+      else if (IsLinkPseudo(pseudoClass->mAtom)) {
+        if (data.mIsHTMLLink || data.mIsSimpleXLink) {
+          if ((localFalse != result) && (aTestState)) {
+            if (nsCSSAtoms::linkPseudo == pseudoClass->mAtom) {
+              result = PRBool(localTrue == (eLinkState_Unvisited == data.mLinkState));
+            }
+            else if (nsCSSAtoms::outOfDatePseudo == pseudoClass->mAtom) {
+              result = PRBool(localTrue == (eLinkState_OutOfDate == data.mLinkState));
+            }
+            else if (nsCSSAtoms::visitedPseudo == pseudoClass->mAtom) {
+              result = PRBool(localTrue == (eLinkState_Visited == data.mLinkState));
+            }
           }
         }
         else if (nsCSSAtoms::xblBoundElementPseudo == pseudoClass->mAtom) {
@@ -3106,62 +3168,21 @@ static PRBool SelectorMatches(SelectorMatchesData &data,
           if (data.mStyleRuleSupplier)
             data.mStyleRuleSupplier->MatchesScopedRoot(data.mContent, &result);
           else 
-            result = PR_FALSE;
-        }
-        else if (nsCSSAtoms::langPseudo == pseudoClass->mAtom) {
-          // XXX not yet implemented
-          result = PR_FALSE;
-        }
-        else if (IsEventPseudo(pseudoClass->mAtom)) {
-          // check if the element is event-sensitive
-
-          // Quirk Mode: check to see if the element is event-sensitive
-          //  - see if the selector applies to event pseudo classes
-          // NOTE: we distinguish between global and subjected selectors so
-          //       pass that information on to the determining routine
-          PRBool isSelectorGlobal = aSelector->mTag==nsnull ? PR_TRUE : PR_FALSE;
-          if ((data.mIsQuirkMode) &&
-              (!IsEventSensitive(pseudoClass->mAtom, data.mContentTag, isSelectorGlobal))){
-            result = PR_FALSE;
-          } else if (aTestState) {
-            if (nsCSSAtoms::activePseudo == pseudoClass->mAtom) {
-              result = PRBool(0 != (data.mEventState & NS_EVENT_STATE_ACTIVE));
-            }
-            else if (nsCSSAtoms::focusPseudo == pseudoClass->mAtom) {
-              result = PRBool(0 != (data.mEventState & NS_EVENT_STATE_FOCUS));
-            }
-            else if (nsCSSAtoms::hoverPseudo == pseudoClass->mAtom) {
-              result = PRBool(0 != (data.mEventState & NS_EVENT_STATE_HOVER));
-            }
-            else if (nsCSSAtoms::dragOverPseudo == pseudoClass->mAtom) {
-              result = PRBool(0 != (data.mEventState & NS_EVENT_STATE_DRAGOVER));
-            }
-          } 
-        }
-        else if (IsLinkPseudo(pseudoClass->mAtom)) {
-          if (data.mIsHTMLLink || data.mIsSimpleXLink) {
-            if ((PR_FALSE != result) && (aTestState)) {
-              if (nsCSSAtoms::linkPseudo == pseudoClass->mAtom) {
-                result = PRBool(eLinkState_Unvisited == data.mLinkState);
-              }
-              else if (nsCSSAtoms::outOfDatePseudo == pseudoClass->mAtom) {
-                result = PRBool(eLinkState_OutOfDate == data.mLinkState);
-              }
-              else if (nsCSSAtoms::visitedPseudo == pseudoClass->mAtom) {
-                result = PRBool(eLinkState_Visited == data.mLinkState);
-              }
-            }
-          }
-          else {
-            result = PR_FALSE;  // not a link
-          }
+            result = localFalse;
         }
         else {
-          result = PR_FALSE;  // unknown pseudo class
+          result = localFalse;  // not a link
         }
-        pseudoClass = pseudoClass->mNext;
       }
+      else {
+        result = localFalse;  // unknown pseudo class
+      }
+      pseudoClass = pseudoClass->mNext;
     }
+  }
+  // apply SelectorMatches to the negated selectors in the chain
+  if ((localTrue == result) && (nsnull != aSelector->mNegations)) {
+    result = SelectorMatches(data, aSelector->mNegations, aTestState, aNegationIndex+1);
   }
   return result;
 }
@@ -3219,7 +3240,7 @@ static PRBool SelectorMatchesTree(SelectorMatchesData &data,
       nsCompatibility compat = data.mIsQuirkMode ? eCompatibility_NavQuirks : eCompatibility_Standard;
       SelectorMatchesData newdata(data.mPresContext, content, data.mParentContext, 
                                   data.mResults, &compat);
-      if (SelectorMatches(newdata, selector, PR_TRUE)) {
+      if (SelectorMatches(newdata, selector, PR_TRUE, 0)) {
         // to avoid greedy matching, we need to recurse if this is a
         // descendant combinator and the next combinator is not
         if ((NS_IS_GREEDY_OPERATOR(selector->mOperator)) &&
@@ -3262,7 +3283,7 @@ static void ContentEnumFunc(nsICSSStyleRule* aRule, void* aData)
   ContentEnumData* data = (ContentEnumData*)aData;
 
   nsCSSSelector* selector = aRule->FirstSelector();
-  if (SelectorMatches(*data, selector, PR_TRUE)) {
+  if (SelectorMatches(*data, selector, PR_TRUE, 0)) {
     selector = selector->mNext;
     if (SelectorMatchesTree(*data, selector)) {
       nsIStyleRule* iRule;
@@ -3368,7 +3389,7 @@ static void PseudoEnumFunc(nsICSSStyleRule* aRule, void* aData)
       if (PRUnichar('+') == selector->mOperator) {
         return; // not valid here, can't match
       }
-      if (SelectorMatches(*data, selector, PR_TRUE)) {
+      if (SelectorMatches(*data, selector, PR_TRUE, 0)) {
         selector = selector->mNext;
       }
       else {
@@ -3452,7 +3473,7 @@ PRBool PR_CALLBACK StateEnumFunc(void* aSelector, void* aData)
   StateEnumData* data = (StateEnumData*)aData;
 
   nsCSSSelector* selector = (nsCSSSelector*)aSelector;
-  if (SelectorMatches(*data, selector, PR_FALSE)) {
+  if (SelectorMatches(*data, selector, PR_FALSE, 0)) {
     selector = selector->mNext;
     if (SelectorMatchesTree(*data, selector)) {
       return PR_FALSE;

@@ -90,6 +90,12 @@ static NS_DEFINE_IID(kCSSXULSID, NS_CSS_XUL_SID);
 #define NS_IF_DELETE(ptr)   \
   if (nsnull != ptr) { delete ptr; ptr = nsnull; }
 
+#define NS_IF_NEGATED_START(bool,str)  \
+  if (bool) { str.Append(NS_LITERAL_STRING(":not(")); }
+
+#define NS_IF_NEGATED_END(bool,str)  \
+  if (bool) { str.Append(PRUnichar(')')); }
+
 MOZ_DECL_CTOR_COUNTER(nsAtomList)
 
 nsAtomList::nsAtomList(nsIAtom* aAtom)
@@ -292,6 +298,7 @@ nsCSSSelector::nsCSSSelector(void)
     mPseudoClassList(nsnull),
     mAttrList(nsnull), 
     mOperator(0),
+    mNegations(nsnull),
     mNext(nsnull)
 {
   MOZ_COUNT_CTOR(nsCSSSelector);
@@ -309,6 +316,7 @@ nsCSSSelector::nsCSSSelector(const nsCSSSelector& aCopy)
     mPseudoClassList(nsnull),
     mAttrList(nsnull), 
     mOperator(aCopy.mOperator),
+    mNegations(nsnull),
     mNext(nsnull)
 {
   MOZ_COUNT_CTOR(nsCSSSelector);
@@ -317,7 +325,8 @@ nsCSSSelector::nsCSSSelector(const nsCSSSelector& aCopy)
   NS_IF_COPY(mClassList, aCopy.mClassList, nsAtomList);
   NS_IF_COPY(mPseudoClassList, aCopy.mPseudoClassList, nsAtomList);
   NS_IF_COPY(mAttrList, aCopy.mAttrList, nsAttrSelector);
-
+  NS_IF_COPY(mNegations, aCopy.mNegations, nsCSSSelector);
+  
 #ifdef DEBUG_REFS
   gSelectorCount++;
   printf( "nsCSSSelector Instances (cp-ctor): %ld\n", (long)gSelectorCount);
@@ -342,7 +351,8 @@ nsCSSSelector& nsCSSSelector::operator=(const nsCSSSelector& aCopy)
   NS_IF_DELETE(mClassList);
   NS_IF_DELETE(mPseudoClassList);
   NS_IF_DELETE(mAttrList);
-
+  NS_IF_DELETE(mNegations);
+  
   mNameSpace    = aCopy.mNameSpace;
   mTag          = aCopy.mTag;
   NS_IF_COPY(mIDList, aCopy.mIDList, nsAtomList);
@@ -350,6 +360,7 @@ nsCSSSelector& nsCSSSelector::operator=(const nsCSSSelector& aCopy)
   NS_IF_COPY(mPseudoClassList, aCopy.mPseudoClassList, nsAtomList);
   NS_IF_COPY(mAttrList, aCopy.mAttrList, nsAttrSelector);
   mOperator     = aCopy.mOperator;
+  NS_IF_COPY(mNegations, aCopy.mNegations, nsCSSSelector);
 
   NS_IF_ADDREF(mTag);
   return *this;
@@ -404,6 +415,11 @@ PRBool nsCSSSelector::Equals(const nsCSSSelector* aOther) const
           return PR_FALSE;
         }
       }
+      if (nsnull != mNegations) {
+        if (PR_FALSE == mNegations->Equals(aOther->mNegations)) {
+          return PR_FALSE;
+        }
+      }
       return PR_TRUE;
     }
   }
@@ -419,6 +435,7 @@ void nsCSSSelector::Reset(void)
   NS_IF_DELETE(mClassList);
   NS_IF_DELETE(mPseudoClassList);
   NS_IF_DELETE(mAttrList);
+  NS_IF_DELETE(mNegations);
   mOperator = PRUnichar(0);
 }
 
@@ -534,6 +551,9 @@ PRInt32 nsCSSSelector::CalcWeight(void) const
     weight += 0x000100;
     attr = attr->mNext;
   }
+  if (nsnull != mNegations) {
+    weight += mNegations->CalcWeight();
+  }
   return weight;
 }
 
@@ -624,6 +644,13 @@ void nsCSSSelector::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
     localSize = 0;
     mAttrList->SizeOf(aSizeOfHandler, localSize);
   }
+
+  // don't forget the negated selectors
+  if(mNegations) {
+    localSize = 0;
+    mNegations->SizeOf(aSizeOfHandler, localSize);
+  }
+  
   // finally chain to the next...
   if(mNext){
     localSize = 0;
@@ -644,18 +671,35 @@ static PRBool IsPseudoElement(nsIAtom* aAtom)
   return PR_FALSE;
 }
 
-nsresult nsCSSSelector::ToString( nsAWritableString& aString, nsICSSStyleSheet* aSheet, PRBool aIsPseudoElem ) const
+void nsCSSSelector::AppendNegationToString(nsAWritableString& aString)
+{
+  aString.Append(NS_LITERAL_STRING(":not("));
+}
+
+//
+// Builds the textual representation of a selector. Called by DOM 2 CSS 
+// StyleRule:selectorText
+//
+nsresult nsCSSSelector::ToString( nsAWritableString& aString, nsICSSStyleSheet* aSheet, PRBool aIsPseudoElem,
+                                  PRInt8 aNegatedIndex) const
 {
   const PRUnichar* temp;
+  PRBool aIsNegated = PRBool(0 < aNegatedIndex);
 
   // selectors are linked from right-to-left, so the next selector in the linked list
   // actually precedes this one in the resulting string
- if (mNext) {
-    mNext->ToString(aString, aSheet, IsPseudoElement(mTag));
-    if (!IsPseudoElement(mTag)) {
+  if (mNext) {
+    mNext->ToString(aString, aSheet, IsPseudoElement(mTag), PR_FALSE);
+    if (!aIsNegated && !IsPseudoElement(mTag)) {
       // don't add a leading whitespace if we have a pseudo-element
+      // or a negated simple selector
       aString.Append(PRUnichar(' '));
     }
+  }
+  if (1 < aNegatedIndex) {
+    // the first mNegations does not contain a negated type element selector
+    // or a negated universal selector
+    NS_IF_NEGATED_START(aIsNegated, aString)
   }
 
   // append the namespace prefix
@@ -672,23 +716,30 @@ nsresult nsCSSSelector::ToString( nsAWritableString& aString, nsICSSStyleSheet* 
       aString.Append(PRUnichar('|'));
     }
   }
-
   // smells like a universal selector
   if (!mTag && !mIDList && !mClassList) {
-    aString.Append(PRUnichar('*'));
+    if (1 != aNegatedIndex) {
+      aString.Append(PRUnichar('*'));
+    }
+    if (1 < aNegatedIndex) {
+      NS_IF_NEGATED_END(aIsNegated, aString)
+    }
   } else {
     // Append the tag name, if there is one
     if (mTag) {
       mTag->GetUnicode(&temp);
       aString.Append(temp);
+      NS_IF_NEGATED_END(aIsNegated, aString)
     }
     // Append the id, if there is one
     if (mIDList) {
       nsAtomList* list = mIDList;
       while (list != nsnull) {
         list->mAtom->GetUnicode(&temp);
+        NS_IF_NEGATED_START(aIsNegated, aString)
         aString.Append(PRUnichar('#'));
         aString.Append(temp);
+        NS_IF_NEGATED_END(aIsNegated, aString)
         list = list->mNext;
       }
     }
@@ -697,8 +748,10 @@ nsresult nsCSSSelector::ToString( nsAWritableString& aString, nsICSSStyleSheet* 
       nsAtomList* list = mClassList;
       while (list != nsnull) {
         list->mAtom->GetUnicode(&temp);
+        NS_IF_NEGATED_START(aIsNegated, aString)
         aString.Append(PRUnichar('.'));
         aString.Append(temp);
+        NS_IF_NEGATED_END(aIsNegated, aString)
         list = list->mNext;
       }
     }
@@ -708,6 +761,7 @@ nsresult nsCSSSelector::ToString( nsAWritableString& aString, nsICSSStyleSheet* 
   if (mAttrList) {
     nsAttrSelector* list = mAttrList;
     while (list != nsnull) {
+      NS_IF_NEGATED_START(aIsNegated, aString)
       aString.Append(PRUnichar('['));
       // Append the namespace prefix
       if (list->mNameSpace > 0) {
@@ -748,6 +802,7 @@ nsresult nsCSSSelector::ToString( nsAWritableString& aString, nsICSSStyleSheet* 
       // Append the value
       aString.Append(list->mValue);
       aString.Append(PRUnichar(']'));
+      NS_IF_NEGATED_END(aIsNegated, aString)
       list = list->mNext;
     }
   }
@@ -757,17 +812,27 @@ nsresult nsCSSSelector::ToString( nsAWritableString& aString, nsICSSStyleSheet* 
     nsAtomList* list = mPseudoClassList;
     while (list != nsnull) {
       list->mAtom->GetUnicode(&temp);
+      NS_IF_NEGATED_START(aIsNegated, aString)
       aString.Append(temp);
+      NS_IF_NEGATED_END(aIsNegated, aString)
       list = list->mNext;
     }
   }
-  // Append the operator
-  if (mOperator && !aIsPseudoElem) {
+
+  if (mNegations) {
+    // chain all the negated selectors
+    mNegations->ToString(aString, aSheet, PR_FALSE, aNegatedIndex + 1);
+  }
+
+  // Append the operator only if the selector is not negated and is not
+  // a pseudo-element
+  if (!aIsNegated && mOperator && !aIsPseudoElem) {
     aString.Append(PRUnichar(' '));
     aString.Append(mOperator);
   }
   return NS_OK;
 }
+
 
 // -- CSSImportantRule -------------------------------
 
@@ -1452,7 +1517,8 @@ void CSSStyleRuleImpl::SetSourceSelectorText(const nsString& aSelectorText)
 
 void CSSStyleRuleImpl::GetSourceSelectorText(nsString& aSelectorText) const
 {
-  mSelector.ToString( aSelectorText, mSheet, IsPseudoElement(mSelector.mTag) );
+  mSelector.ToString( aSelectorText, mSheet, IsPseudoElement(mSelector.mTag),
+                      0 );
 }
 
 PRUint32 CSSStyleRuleImpl::GetLineNumber(void) const
@@ -3578,7 +3644,8 @@ CSSStyleRuleImpl::GetType(PRUint16* aType)
 NS_IMETHODIMP    
 CSSStyleRuleImpl::GetCssText(nsAWritableString& aCssText)
 {
-  mSelector.ToString( aCssText, mSheet, IsPseudoElement(mSelector.mTag) );
+  mSelector.ToString( aCssText, mSheet, IsPseudoElement(mSelector.mTag),
+                      0 );
   aCssText.Append(PRUnichar(' '));
   aCssText.Append(PRUnichar('{'));
   aCssText.Append(PRUnichar(' '));
@@ -3619,7 +3686,7 @@ CSSStyleRuleImpl::GetParentRule(nsIDOMCSSRule** aParentRule)
 NS_IMETHODIMP    
 CSSStyleRuleImpl::GetSelectorText(nsAWritableString& aSelectorText)
 {
-  mSelector.ToString( aSelectorText, mSheet, IsPseudoElement(mSelector.mTag) );
+  mSelector.ToString( aSelectorText, mSheet, IsPseudoElement(mSelector.mTag), 0 );
   return NS_OK;
 }
 

@@ -197,12 +197,16 @@ protected:
   void ParseClassSelector(PRInt32&  aDataMask, nsCSSSelector& aSelector,
                          PRInt32& aParsingStatus, PRInt32& aErrorCode);
   void ParsePseudoSelector(PRInt32&  aDataMask, nsCSSSelector& aSelector,
-                         PRInt32& aParsingStatus, PRInt32& aErrorCode);
+                         PRInt32& aParsingStatus, PRInt32& aErrorCode,
+                         PRBool aIsNegated);
   void ParseAttributeSelector(PRInt32&  aDataMask, nsCSSSelector& aSelector,
                          PRInt32& aParsingStatus, PRInt32& aErrorCode);
 
   void ParseTypeOrUniversalSelector(PRInt32&  aDataMask,
                          nsCSSSelector& aSelector,
+                         PRInt32& aParsingStatus, PRInt32& aErrorCode,
+                         PRBool aIsNegated);
+  void ParseNegatedSimpleSelector(PRInt32&  aDataMask, nsCSSSelector& aSelector,
                          PRInt32& aParsingStatus, PRInt32& aErrorCode);
 
   PRBool ParseSelectorList(PRInt32& aErrorCode, SelectorList*& aListHead);
@@ -1366,11 +1370,12 @@ static PRBool IsPseudoClass(const nsIAtom* aAtom)
                 (nsCSSAtoms::enabledPseudo == aAtom) ||
                 (nsCSSAtoms::firstChildPseudo == aAtom) ||
                 (nsCSSAtoms::firstNodePseudo == aAtom) ||
-                (nsCSSAtoms::lastNodePseudo == aAtom) ||
                 (nsCSSAtoms::focusPseudo == aAtom) ||
                 (nsCSSAtoms::hoverPseudo == aAtom) ||
                 (nsCSSAtoms::langPseudo == aAtom) ||
+                (nsCSSAtoms::lastNodePseudo == aAtom) ||
                 (nsCSSAtoms::linkPseudo == aAtom) ||
+                (nsCSSAtoms::outOfDatePseudo == aAtom) ||
                 (nsCSSAtoms::rootPseudo == aAtom) ||
                 (nsCSSAtoms::xblBoundElementPseudo == aAtom) ||
                 (nsCSSAtoms::outOfDatePseudo == aAtom) ||
@@ -1520,6 +1525,9 @@ PRBool CSSParserImpl::ParseSelectorGroup(PRInt32& aErrorCode,
 #define SELECTOR_PARSING_STOPPED_OK     2
 #define SELECTOR_PARSING_STOPPED_ERROR  3
 
+//
+// Parses an ID selector #name
+//
 void CSSParserImpl::ParseIDSelector(PRInt32&  aDataMask,
                                     nsCSSSelector& aSelector,
                                     PRInt32& aParsingStatus,
@@ -1539,6 +1547,9 @@ void CSSParserImpl::ParseIDSelector(PRInt32&  aDataMask,
   aParsingStatus = SELECTOR_PARSING_ENDED_OK;
 }
 
+//
+// Parses a class selector .name
+//
 void CSSParserImpl::ParseClassSelector(PRInt32&  aDataMask,
                                         nsCSSSelector& aSelector,
                                         PRInt32& aParsingStatus,
@@ -1560,11 +1571,15 @@ void CSSParserImpl::ParseClassSelector(PRInt32&  aDataMask,
   aParsingStatus = SELECTOR_PARSING_ENDED_OK;
 }
 
-
+//
+// Parse a type element selector or a universal selector
+// namespace|type or namespace|* or *|* or *
+//
 void CSSParserImpl::ParseTypeOrUniversalSelector(PRInt32&  aDataMask,
                                       nsCSSSelector& aSelector,
                                       PRInt32& aParsingStatus,
-                                      PRInt32& aErrorCode)
+                                      PRInt32& aErrorCode,
+                                      PRBool aIsNegated)
 {
   nsAutoString buffer;
   if (mToken.IsSymbol('*')) {  // universal element selector, or universal namespace
@@ -1729,8 +1744,16 @@ void CSSParserImpl::ParseTypeOrUniversalSelector(PRInt32&  aDataMask,
     }
   }
   aParsingStatus = SELECTOR_PARSING_ENDED_OK;
+  if (aIsNegated) {
+    // restore last token read in case of a negated type selector
+    UngetToken();
+  }
 }
 
+//
+// Parse attribute selectors [attr], [attr=value], [attr|=value],
+// [attr~=value], [attr^=value], [attr$=value] and [attr*=value]
+//
 void CSSParserImpl::ParseAttributeSelector(PRInt32&  aDataMask,
                                       nsCSSSelector& aSelector,
                                       PRInt32& aParsingStatus,
@@ -1913,10 +1936,14 @@ void CSSParserImpl::ParseAttributeSelector(PRInt32&  aDataMask,
    aParsingStatus = SELECTOR_PARSING_ENDED_OK;
 }
 
+//
+// Parse pseudo-classes and pseudo-elements
+//
 void CSSParserImpl::ParsePseudoSelector(PRInt32&  aDataMask,
                                       nsCSSSelector& aSelector,
                                       PRInt32& aParsingStatus,
-                                      PRInt32& aErrorCode)
+                                      PRInt32& aErrorCode,
+                                      PRBool aIsNegated)
 {
   nsAutoString buffer;
   if (! GetToken(aErrorCode, PR_FALSE)) { // premature eof
@@ -1924,12 +1951,24 @@ void CSSParserImpl::ParsePseudoSelector(PRInt32&  aDataMask,
     aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
     return;
   }
+
+  buffer.Truncate();
+  buffer.AppendWithConversion(':');
+  buffer.Append(mToken.mIdent);
+  buffer.ToLowerCase();
+  nsIAtom* pseudo = NS_NewAtom(buffer);
+
   if (eCSSToken_Ident != mToken.mType) {  // malformed selector
+    if (eCSSToken_Function != mToken.mType ||
+        !(
 #ifdef INCLUDE_XUL
-    if (eCSSToken_Function != mToken.mType || 
-        !IsOutlinerPseudoElement(mToken.mIdent)) {
+          // -moz-outliner is a pseudo-element and therefore cannot be negated
+          (!aIsNegated && IsOutlinerPseudoElement(mToken.mIdent)) ||
 #endif
-      REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Expected identifier for pseudo-class selector but found"));
+          // the negation pseudo-class is a function
+          (nsCSSAtoms::notPseudo == pseudo))) {
+      REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Expected identifier for pseudo-class selector not found"));
+      NS_RELEASE(pseudo);
       UngetToken();
       aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
       return;
@@ -1937,18 +1976,32 @@ void CSSParserImpl::ParsePseudoSelector(PRInt32&  aDataMask,
     }
 #endif
   }
-  buffer.Truncate();
-  buffer.AppendWithConversion(':');
-  buffer.Append(mToken.mIdent);
-  buffer.ToLowerCase();
-  nsIAtom* pseudo = NS_NewAtom(buffer);
-  if (IsPseudoClass(pseudo)) {
-    // XXX parse lang pseudo class
+
+  if (nsCSSAtoms::notPseudo == pseudo) {
+    NS_RELEASE(pseudo);
+    if (aIsNegated) { // :not() can't be itself negated
+      REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Negation pseudo-class can't be negated"));
+      aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
+      return;
+    }
+    // CSS 3 Negation pseudo-class takes one simple selector as argument
+    ParseNegatedSimpleSelector(aDataMask, aSelector, aParsingStatus, aErrorCode);
+    if (SELECTOR_PARSING_ENDED_OK != aParsingStatus) {
+      return;
+    }
+  }    
+  else if (IsPseudoClass(pseudo)) {
+    // XXX parse pseudo classes accepting arguments
     aDataMask |= SEL_MASK_PCLASS;
     aSelector.AddPseudoClass(pseudo);
     NS_RELEASE(pseudo);
   }
   else {
+    if (aIsNegated) { // pseudo-elements can't be negated
+      REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Pseudo-elements can't be negated"));
+      aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
+      return;
+    }
     if (0 == (aDataMask & SEL_MASK_PELEM)) {
       aDataMask |= SEL_MASK_PELEM;
       aSelector.AddPseudoClass(pseudo); // store it here, it gets pulled later
@@ -1992,6 +2045,76 @@ void CSSParserImpl::ParsePseudoSelector(PRInt32&  aDataMask,
   aParsingStatus = SELECTOR_PARSING_ENDED_OK;
 }
 
+//
+// Parse the argument of a negation pseudo-class :not()
+//
+void CSSParserImpl::ParseNegatedSimpleSelector(PRInt32&  aDataMask,
+                                      nsCSSSelector& aSelector,
+                                      PRInt32& aParsingStatus,
+                                      PRInt32& aErrorCode)
+{
+  // Check if we have the first parenthesis
+  if (ExpectSymbol(aErrorCode, '(', PR_FALSE)) {
+    
+    if (! GetToken(aErrorCode, PR_FALSE)) { // premature eof
+      REPORT_UNEXPECTED_EOF();
+      aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
+      return;
+    }
+    aParsingStatus = SELECTOR_PARSING_ENDED_OK;
+    nsCSSSelector* newSel = new nsCSSSelector();
+    if (nsnull == aSelector.mNegations &&
+        ((eCSSToken_ID == mToken.mType) ||
+          mToken.IsSymbol('.') ||
+          mToken.IsSymbol(':') ||
+          mToken.IsSymbol('['))) {
+      // ID, class and attribute selectors and pseudo-classes are stored in
+      // the first mNegations attached to a selector
+      aSelector.mNegations = newSel;
+    }
+    if (eCSSToken_ID == mToken.mType) {   // #id
+      ParseIDSelector(aDataMask, *aSelector.mNegations, aParsingStatus, aErrorCode);
+    }
+    else if (mToken.IsSymbol('.')) {  // .class
+      ParseClassSelector(aDataMask, *aSelector.mNegations, aParsingStatus, aErrorCode);
+    }
+    else if (mToken.IsSymbol(':')) { // :pseudo
+      ParsePseudoSelector(aDataMask, *aSelector.mNegations, aParsingStatus, aErrorCode, PR_TRUE);
+    }
+    else if (mToken.IsSymbol('[')) {  // attribute
+      ParseAttributeSelector(aDataMask, *aSelector.mNegations, aParsingStatus, aErrorCode);
+    }
+    else {
+      // then it should be a type element or universal selector
+      if (nsnull == aSelector.mNegations) {
+        aSelector.mNegations = newSel;
+      }
+      newSel = new nsCSSSelector();
+      nsCSSSelector* negations = aSelector.mNegations;
+      while (nsnull != negations->mNegations) {
+        negations = negations->mNegations;
+      }
+      // negated type element selectors and universal selectors are stored after the first
+      // mNegations containing only negated IDs, classes, attributes and pseudo-classes
+      negations->mNegations = newSel;
+      ParseTypeOrUniversalSelector(aDataMask, *newSel, aParsingStatus, aErrorCode, PR_TRUE);
+    }
+    if (SELECTOR_PARSING_STOPPED_ERROR == aParsingStatus) {
+      REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Malformed simple selector as negation pseudo-class argument"));
+      return;
+    }
+    // close the parenthesis
+    if (!ExpectSymbol(aErrorCode, ')', PR_TRUE)) {
+      REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Missing closing ')' in negation pseudo-class"));
+      aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
+    }
+  }
+  else {
+    REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Missing argument in negation pseudo-class"));
+    aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
+  }
+}
+
 /**
  * This is the format for selectors:
  * operator? [[namespace |]? element_name]? [ ID | class | attrib | pseudo ]*
@@ -2007,7 +2130,7 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
     return PR_FALSE;
   }
 
-  ParseTypeOrUniversalSelector(dataMask, aSelector, parsingStatus, aErrorCode);
+  ParseTypeOrUniversalSelector(dataMask, aSelector, parsingStatus, aErrorCode, PR_FALSE);
   if (SELECTOR_PARSING_STOPPED_OK == parsingStatus) {
     return PR_TRUE;
   }
@@ -2024,7 +2147,7 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
       ParseClassSelector(dataMask, aSelector, parsingStatus, aErrorCode);
     }
     else if (mToken.IsSymbol(':')) { // :pseudo
-      ParsePseudoSelector(dataMask, aSelector, parsingStatus, aErrorCode);
+      ParsePseudoSelector(dataMask, aSelector, parsingStatus, aErrorCode, PR_FALSE);
     }
     else if (mToken.IsSymbol('[')) {  // attribute
       ParseAttributeSelector(dataMask, aSelector, parsingStatus, aErrorCode);

@@ -103,7 +103,12 @@ public:
   PRInt32 CalcWeight(void) const;
 
   void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize);
-  nsresult ToString( nsAWritableString& aString, nsICSSStyleSheet* aSheet, PRBool aIsPseudoElem ) const;
+  nsresult ToString( nsAWritableString& aString, nsICSSStyleSheet* aSheet,
+                    PRBool aIsPseudoElem, PRInt8 aNegatedIndex ) const;
+
+private:
+
+  void AppendNegationToString(nsAWritableString& aString);
 
 public:
   PRInt32         mNameSpace;
@@ -113,9 +118,11 @@ public:
   nsAtomList*     mPseudoClassList;
   nsAttrSelector* mAttrList;
   PRUnichar       mOperator;
+  nsCSSSelector*  mNegations;
 
   nsCSSSelector*  mNext;
 };
+
 
 // IID for the nsICSSStyleRule interface {7c277af0-af19-11d1-8031-006008159b5a}
 #define NS_ICSS_STYLE_RULE_IID     \
