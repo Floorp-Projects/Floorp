@@ -26,8 +26,6 @@
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 
 <!DOCTYPE window [
-<!ENTITY % historyTreeDTD SYSTEM "chrome://communicator/locale/history/historyTreeOverlay.dtd" >
-%historyTreeDTD;
 <!ENTITY % contentAreaCommandsDTD SYSTEM "chrome://communicator/locale/contentAreaCommands.dtd" >
 %contentAreaCommandsDTD;
 <!ENTITY % historyDTD SYSTEM "chrome://browser/locale/history/history.dtd" >
