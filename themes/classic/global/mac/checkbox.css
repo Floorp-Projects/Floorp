@@ -9,11 +9,17 @@
       -moz-user-focus: ignore;
     }
 
+
+
 /* checkmark outer frame */
   checkbox > .internal-box > .checkmark-box 
     {
-      margin-top: 2px;
       margin-right: 2px;
+    }
+    
+  checkbox > .internal-box > .checkbox-label
+    {
+    vertical-align: center !important;
     }
 
   checkbox[disabled="true"] > .internal-box > .checkmark-box,
@@ -58,9 +64,9 @@
     }
     
 /* checkmark label/icon frame */
-  checkbox[value] > .internal-box > html
+  checkbox > .internal-box > html
     {
-      margin: 0px 0px 2px 0px;
+      margin: 0px 0px 2px 0px !important;
       padding: 2px 0px 0px 0px;   /* 7pt: 2px 0px 0px 1px */
     }
 

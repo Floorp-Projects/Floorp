@@ -5,15 +5,14 @@
   radio 
     {
       margin: 3px 5px 3px 5px;
+      /** margin: 1px 5px 1px 5px; **/
       -moz-user-focus: ignore;
     }
 
 
 /* checkmark outer frame */
-  radio > .internal-box > .checkmark-box 
-    {
-      margin-top: 2px;
-    }
+
+
 
   radio[disabled="true"] > .internal-box > .checkmark-box,
   radio[disabled="true"]:hover > .internal-box > .checkmark-box 
@@ -64,8 +63,9 @@
   radio.iconic > .internal-box > .icon 
     {
       /* Good for 10px font */
-      margin:  0px 0px 0px 2px;  /* 9px: 0px 0px 0px 3px */
-      padding:  2px;              /* 9px:  1px 2px 2px 2px */
+      margin:  0px 0px 0px 2px !important;   /* 9px: 0px 0px 0px 3px */
+      padding:  1px 2px 1px 2px;              /* 9px:  1px 2px 2px 2px */
+      vertical-align: center;
     }
 
   radio.iconic > .internal-box > html 
@@ -77,3 +77,5 @@
     {
       color: #777777;
     }
+
+ 
