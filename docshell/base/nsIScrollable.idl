@@ -36,15 +36,15 @@ interface nsIScrollable : nsISupports
 {
 	/*
 	Constants declaring the two scroll orientations a scroll bar can be in.
-	vertScroll - Vertical scrolling.  When passing this in to a scroll position
+	ScrollOrientation_X - Vertical scrolling.  When passing this in to a scroll position
 		method you are requesting or setting the positions for the vertical
 		scroll bar.
-	horizScroll - Horizontal scrolling.  When passing this in to a scroll
+	ScrollOrientation_Y - Horizontal scrolling.  When passing this in to a scroll
 		position you are requesting or setting the positions for the horizontal
 		scroll bar.
 	*/
-	const long vertScroll = 1;
-	const long horizScroll = 2;
+	const long ScrollOrientation_Y = 1;
+	const long ScrollOrientation_X = 2;
 
 	/*
 	Retrieves or Sets the current thumb position to the curPos passed in for the
@@ -67,4 +67,27 @@ interface nsIScrollable : nsISupports
 	*/
 	void getScrollRange(in long scrollOrientation, out long minPos, out long maxPos);
 	void setScrollRange(in long scrollOrientation, in long minPos, in long maxPos);
+
+	/*
+	Constants declaring the states of the scroll bars.
+	ScrollPref_Auto - bars visible only when needed.
+	ScrollPref_Never - bars never visible, even when scrolling still possible.
+	ScrollPref_Always - bars always visible, even when scrolling is not possible
+	*/
+	const long Scrollbar_Auto = 1;
+	const long Scrollbar_Never = 2;
+	const long Scrollbar_Always = 3;
+
+	/*
+	Retrieves of Set the preferences for the scroll bar.
+	*/
+	void setScrollbarPreferences(in long scrollOrientation, in long scrollBarPref);
+	void getScrollbarPreferences(in long scrollOrientation, out long scrollBarPref);
+
+	/*
+	Get information about whether the vertical and horizontal scrollbars are
+	currently visible.
+	*/
+	void getScrollbarVisibility(out boolean verticalVisible, 
+		out boolean horizontalVisible);
 };
