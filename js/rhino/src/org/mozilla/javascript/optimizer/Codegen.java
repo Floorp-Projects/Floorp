@@ -2894,13 +2894,13 @@ public class Codegen extends Interpreter {
     {
         int op = node.getInt();
         Node rightChild = child.getNextSibling();
+        boolean isStrict = op == TokenStream.SHEQ ||
+                           op == TokenStream.SHNE;
         if (trueGOTO == -1) {
             if (rightChild.getType() == TokenStream.PRIMARY &&
                 rightChild.getInt() == TokenStream.NULL)
             {
                 generateCodeFromNode(child, node, -1, -1);
-                boolean isStrict = op == TokenStream.SHEQ ||
-                                   op == TokenStream.SHNE;
                 if (isStrict) {
                     addByteCode(ByteCode.IFNULL, 9);
                 } else {
@@ -2964,45 +2964,41 @@ public class Codegen extends Interpreter {
             if (rightChild.getType() == TokenStream.PRIMARY &&
                 rightChild.getInt() == TokenStream.NULL)
             {
+                if (op != TokenStream.EQ && op != TokenStream.SHEQ) {
+                    // invert true and false.
+                    int temp = trueGOTO;
+                    trueGOTO = falseGOTO;
+                    falseGOTO = temp;
+                }
+
                 generateCodeFromNode(child, node, -1, -1);
+                if (isStrict) {
+                    addByteCode(ByteCode.IFNULL, trueGOTO);
+                    addByteCode(ByteCode.GOTO, falseGOTO);
+                    return;
+                }
                 /*
-                    since we have to test for null && undefined we end up having to
-                    push the operand twice and so have to GOTO to a pop site if the
-                    first test passes.
-                    We can avoid that for operands that are 'simple' i.e. don't generate
-                    a lot of code and don't have side-effects.
+                    since we have to test for null && undefined we end up 
+                    having to push the operand twice and so have to GOTO to 
+                    a pop site if the first test passes.
+                    We can avoid that for operands that are 'simple', i.e. 
+                    don't generate a lot of code and don't have side-effects.
                     For now, 'simple' means GETVAR
                 */
                 boolean simpleChild = (child.getType() == TokenStream.GETVAR);
                 if (!simpleChild) addByteCode(ByteCode.DUP);
                 int popGOTO = acquireLabel();
-                if ((op == TokenStream.EQ) || (op == TokenStream.SHEQ)) {
-                    addByteCode(ByteCode.IFNULL,
-                                    (simpleChild) ? trueGOTO : popGOTO);
-                    short popStack = classFile.getStackTop();
-                    if (simpleChild) generateCodeFromNode(child, node, -1, -1);
-                    pushUndefined();
-                    addByteCode(ByteCode.IF_ACMPEQ, trueGOTO);
-                    addByteCode(ByteCode.GOTO, falseGOTO);
-                    if (!simpleChild) {
-                        markLabel(popGOTO, popStack);
-                        addByteCode(ByteCode.POP);
-                        addByteCode(ByteCode.GOTO, trueGOTO);
-                    }
-                }
-                else {
-                    addByteCode(ByteCode.IFNULL,
-                                    (simpleChild) ? falseGOTO : popGOTO);
-                    short popStack = classFile.getStackTop();
-                    if (simpleChild) generateCodeFromNode(child, node, -1, -1);
-                    pushUndefined();
-                    addByteCode(ByteCode.IF_ACMPEQ, falseGOTO);
+                addByteCode(ByteCode.IFNULL,
+                                (simpleChild) ? trueGOTO : popGOTO);
+                short popStack = classFile.getStackTop();
+                if (simpleChild) generateCodeFromNode(child, node, -1, -1);
+                pushUndefined();
+                addByteCode(ByteCode.IF_ACMPEQ, trueGOTO);
+                addByteCode(ByteCode.GOTO, falseGOTO);
+                if (!simpleChild) {
+                    markLabel(popGOTO, popStack);
+                    addByteCode(ByteCode.POP);
                     addByteCode(ByteCode.GOTO, trueGOTO);
-                    if (!simpleChild) {
-                        markLabel(popGOTO, popStack);
-                        addByteCode(ByteCode.POP);
-                        addByteCode(ByteCode.GOTO, falseGOTO);
-                    }
                 }
                 return;
             }
