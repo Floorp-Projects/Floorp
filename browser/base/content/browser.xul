@@ -956,7 +956,8 @@
                              ondragenter="nsDragAndDrop.dragEnter(event, BookmarksMenuDNDObserver); event.preventBubble()"
                              ondragexit="nsDragAndDrop.dragExit(event, BookmarksMenuDNDObserver); event.preventBubble()"
                              ondragover="nsDragAndDrop.dragOver(event, BookmarksMenuDNDObserver); event.preventBubble()">
-                <menupopup contextmenu="bookmarks-context-menu"/>
+                <menupopup contextmenu="bookmarks-context-menu"
+                           onpopupshowing="if (event.target == this) BookmarksToolbar.updateOverflowMenu(this);"/>
               </toolbarbutton>
             </hbox>
             <toolbarbutton class="bookmark-item bookmarks-toolbar-customize" mousethrough="never"

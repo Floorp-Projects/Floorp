@@ -150,12 +150,11 @@ var BookmarksMenu = {
   // returns the insertion target from aNode
   getBTTarget: function (aNode, aOrientation)
   {
-    dump("aNode.id:"+aNode.id+", localName:"+aNode.localName+"\n");
     var item, parent, index;
     switch (aNode.id) {
     case "bookmarks-ptf":
       parent = "NC:PersonalToolbarFolder";
-      item = this.getLastVisibleBookmark();
+      item = BookmarksToolbar.getLastVisibleBookmark();
       break;
     case "bookmarks-menu":
       parent = "NC:BookmarksRoot";
@@ -750,7 +749,7 @@ var BookmarksToolbar =
   getLastVisibleBookmark: function ()
   {
     var buttons = document.getElementById("bookmarks-ptf");
-    var button = buttons.childNodes[3].nextSibling;
+    var button = buttons.firstChild.nextSibling;
     if (!button)
       return null; // empty bookmarks toolbar
     do {
@@ -764,9 +763,9 @@ var BookmarksToolbar =
   updateOverflowMenu: function (aMenuPopup)
   {
     var hbox = document.getElementById("bookmarks-ptf");
-    for (var i = 4; i < hbox.childNodes.length; i++) {
+    for (var i = 1; i < hbox.childNodes.length; i++) {
       var button = hbox.childNodes[i];
-      var menu = aMenuPopup.childNodes[i-4];
+      var menu = aMenuPopup.childNodes[i-1];
       if (menu.collapsed == button.collapsed)
         menu.collapsed = !menu.collapsed;
     }
@@ -782,7 +781,7 @@ var BookmarksToolbar =
     chevron.collapsed = true;
     var overflowed = false;
 
-    for (var i=4; i<buttons.childNodes.length; i++) {
+    for (var i=1; i<buttons.childNodes.length; i++) {
       var button = buttons.childNodes[i];
       button.collapsed = overflowed;
       
@@ -798,6 +797,7 @@ var BookmarksToolbar =
         }
       }
     }
+    BookmarksToolbarRDFObserver._overflowTimerInEffect = false;
   },
 
   // Fill in tooltips for personal toolbar
@@ -855,6 +855,6 @@ var BookmarksToolbarRDFObserver =
     if (aSource.Value != "NC:PersonalToolbarFolder" || aProperty.Value == NC_NS+"LastModifiedDate")
       return;
     this._overflowTimerInEffect = true;
-    setTimeout("function(){BookmarksToolbar.resizeFunc(null);BookmarksToolbarRDFObserver._overflowTimerInEffect=false;}", 0);
+    setTimeout(BookmarksToolbar.resizeFunc, 0);
   }
 }
