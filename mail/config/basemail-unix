@@ -161,6 +161,7 @@ libgtksuperwin.so
 libgtkxtbin.so 
 libgtkembedmoz.so 
 libxlibrgb.so
+libgfxpsshar.so
 components/libgfx_gtk.so
 components/libgfxps.so
 components/libgfxxprint.so
