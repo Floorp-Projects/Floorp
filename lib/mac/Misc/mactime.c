@@ -121,8 +121,8 @@ long GMTDelta()
 	
 	MyReadLocation(&loc);
 	gmtDelta = loc.u.gmtDelta & 0x00FFFFFF;
-	if (BitTst((Ptr)&gmtDelta, 23))
-		gmtDelta = gmtDelta | 0xFF000000;
+	if ((gmtDelta & 0x00800000) != 0)
+		gmtDelta |= 0xFF000000;
 	return gmtDelta;
 }
 
