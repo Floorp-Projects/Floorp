@@ -281,6 +281,7 @@
 <!ENTITY printButton.label "Print">
 
 <!-- Toolbar items --> 
+<!ENTITY  bookmarksButton.label "Bookmarks">
 <!ENTITY  homeButton.label "Home">
 <!-- LOCALIZATION NOTE  netscapeButton.label: Do NOT localize below line -->
 <!ENTITY  netscapeButton.label "My Netscape">
