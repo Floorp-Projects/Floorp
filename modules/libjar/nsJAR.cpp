@@ -266,6 +266,8 @@ nsJAR::GetInputStream(const char *aFilename, nsIInputStream **result)
 NS_IMETHODIMP
 nsJAR::ParseManifest()
 {
+  PRInt32 extension; // early declaration required on some platforms due to use of goto
+
   //-- Verification Step 1
   if (step1Complete || !SupportsRSAVerification())
     return NS_OK;
@@ -318,7 +320,7 @@ nsJAR::ParseManifest()
   
   //-- Get its corresponding RSA file
   rsaFilename = manifestFilename;
-  PRInt32 extension = rsaFilename.RFindChar('.') + 1;
+  extension = rsaFilename.RFindChar('.') + 1;
   NS_ASSERTION(extension != 0, "Manifest Parser: Missing file extension.");
   (void)rsaFilename.Cut(extension, 2);
   (void)rsaFilename.Append("rsa");
