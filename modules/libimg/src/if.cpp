@@ -1010,8 +1010,8 @@ IL_StreamFirstWrite(il_container *ic, const unsigned char *str, int32 len)
 
     FREE_IF_NOT_NULL(ic->fetch_url);
 
-    if((ic->url)&& ic->url->GetAddress()){
-	    ic->fetch_url = PL_strdup(ic->url->GetAddress());
+    if (ic->url){
+	    ic->fetch_url = ic->url->GetAddress();
     }
     else{
 	if(ic->url_address) /* check needed because of mkicons.c */
@@ -1608,8 +1608,9 @@ IL_StreamCreated(il_container *ic,
 	
 	ic->type = (int)type;
 	ic->content_length = url->GetContentLength();
-	ILTRACE(4,("il: new stream, type %d, %s", ic->type, 
-			   url->GetAddress()));
+    char* addr = url->GetAddress();
+	ILTRACE(4,("il: new stream, type %d, %s", ic->type, addr));
+    nsCRT::free(addr);
 	ic->state = IC_STREAM;
 
 #ifndef M12N                    /* XXXM12N Fix me. */
