@@ -1521,6 +1521,12 @@ GlobalWindowImpl::GetScrollInfo(nsIScrollableView** aScrollableView,
   return result;
 }
 
+NS_IMETHODIMP    
+GlobalWindowImpl::Scroll(PRInt32 aXScroll, PRInt32 aYScroll)
+{
+  return ScrollTo(aXScroll, aYScroll);
+}
+
 NS_IMETHODIMP
 GlobalWindowImpl::ScrollTo(PRInt32 aXScroll, PRInt32 aYScroll)
 {
@@ -2635,12 +2641,15 @@ PRBool
 GlobalWindowImpl::CheckForEventListener(JSContext *aContext, nsString& aPropName)
 {
   nsIEventListenerManager *mManager = nsnull;
+  nsCOMPtr<nsIAtom> atom = getter_AddRefs(NS_NewAtom(aPropName));
+  
+  // XXX Comparisons should really be atom based
 
   if (aPropName == "onmousedown" || aPropName == "onmouseup" || aPropName ==  "onclick" ||
      aPropName == "onmouseover" || aPropName == "onmouseout") {
     if (NS_OK == GetListenerManager(&mManager)) {
       nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
-      if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, kIDOMMouseListenerIID)) {
+      if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, atom, kIDOMMouseListenerIID)) {
         NS_RELEASE(mManager);
         return PR_FALSE;
       }
@@ -2649,7 +2658,7 @@ GlobalWindowImpl::CheckForEventListener(JSContext *aContext, nsString& aPropName
   else if (aPropName == "onkeydown" || aPropName == "onkeyup" || aPropName == "onkeypress") {
     if (NS_OK == GetListenerManager(&mManager)) {
       nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
-      if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, kIDOMKeyListenerIID)) {
+      if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, atom, kIDOMKeyListenerIID)) {
         NS_RELEASE(mManager);
         return PR_FALSE;
       }
@@ -2658,7 +2667,7 @@ GlobalWindowImpl::CheckForEventListener(JSContext *aContext, nsString& aPropName
   else if (aPropName == "onmousemove") {
     if (NS_OK == GetListenerManager(&mManager)) {
       nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
-      if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, kIDOMMouseMotionListenerIID)) {
+      if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, atom, kIDOMMouseMotionListenerIID)) {
         NS_RELEASE(mManager);
         return PR_FALSE;
       }
@@ -2667,7 +2676,7 @@ GlobalWindowImpl::CheckForEventListener(JSContext *aContext, nsString& aPropName
   else if (aPropName == "onfocus" || aPropName == "onblur") {
     if (NS_OK == GetListenerManager(&mManager)) {
       nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
-      if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, kIDOMFocusListenerIID)) {
+      if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, atom, kIDOMFocusListenerIID)) {
         NS_RELEASE(mManager);
         return PR_FALSE;
       }
@@ -2677,7 +2686,7 @@ GlobalWindowImpl::CheckForEventListener(JSContext *aContext, nsString& aPropName
            aPropName == "onselect") {
     if (NS_OK == GetListenerManager(&mManager)) {
       nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
-      if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, kIDOMFormListenerIID)) {
+      if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, atom, kIDOMFormListenerIID)) {
         NS_RELEASE(mManager);
         return PR_FALSE;
       }
@@ -2687,7 +2696,7 @@ GlobalWindowImpl::CheckForEventListener(JSContext *aContext, nsString& aPropName
            aPropName == "onerror") {
     if (NS_OK == GetListenerManager(&mManager)) {
       nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
-      if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, kIDOMLoadListenerIID)) {
+      if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, atom, kIDOMLoadListenerIID)) {
         NS_RELEASE(mManager);
         return PR_FALSE;
       }
@@ -2698,7 +2707,7 @@ GlobalWindowImpl::CheckForEventListener(JSContext *aContext, nsString& aPropName
       nsIScriptContext *mScriptCX = (nsIScriptContext *)
         JS_GetContextPrivate(aContext);
       if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this,
-                                                     kIDOMPaintListenerIID)) {
+                                                         atom, kIDOMPaintListenerIID)) {
         NS_RELEASE(mManager);
         return PR_FALSE;
       }
