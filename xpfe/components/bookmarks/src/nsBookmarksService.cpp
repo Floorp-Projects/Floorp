@@ -4171,7 +4171,7 @@ nsBookmarksService::ReadBookmarks()
 
 #ifdef	XP_BEOS
 	nsAutoString	netPositiveTitle;
-	getLocaleString("ImportedNetPositiveBookmarks", ieTitle);
+	getLocaleString("ImportedNetPositiveBookmarks", netPositiveTitle);
 #endif
 
 #ifdef	XP_MAC
