@@ -102,6 +102,8 @@ interface nsIMsgNewsHost : nsISupports {
 
   void AddPrettyName(in string groupName, in string prettyName);
 
+  void MarkDirty();
+  
   attribute nsINNTPNewsgroupList newsgroupList;
 };
 

@@ -93,6 +93,9 @@ class nsIMsgNewsHost : public nsISupports {
   NS_IMETHOD AddPrettyName(const char *groupName, const char *prettyName) = 0;
 
   /*  <IDL>  */
+  NS_IMETHOD MarkDirty() = 0;
+
+  /*  <IDL>  */
   NS_IMETHOD GetNewsgroupList(nsINNTPNewsgroupList * *aNewsgroupList) = 0;
   NS_IMETHOD SetNewsgroupList(nsINNTPNewsgroupList * aNewsgroupList) = 0;
 };
