@@ -124,4 +124,4 @@ void EmbeddedFramePluginInstance::setFrame(EmbeddedFrame* frame)
 	mFrame = frame;
 }
 
-NS_IMPL_ISUPPORTS(EmbeddedFramePluginInstance, NS_GET_IID(nsIPluginInstance))
+NS_IMPL_ISUPPORTS1(EmbeddedFramePluginInstance, nsIPluginInstance)

@@ -460,8 +460,71 @@ NS_IMETHODIMP_(nsrefcnt) Class::Release(void)                                 \
   NS_IMPL_QUERY_BODY(i6)                                                      \
   NS_IMPL_QUERY_TAIL_INHERITING(Super)                                        \
 
-#define NS_IMPL_ISUPPORTS_INHERITED(Class, Super, i1)                         \
-  NS_IMPL_ISUPPORTS_INHERITED1(Class, Super, i1)                              \
+/**
+ * Convenience macros for implementing all nsISupports methods for
+ * a simple class.
+ * @param _class The name of the class implementing the method
+ * @param _classiiddef The name of the #define symbol that defines the IID
+ * for the class (e.g. NS_ISUPPORTS_IID)
+ */
+
+#define NS_IMPL_ISUPPORTS0(_class)                                            \
+  NS_IMPL_ADDREF(_class)                                                      \
+  NS_IMPL_RELEASE(_class)                                                     \
+  NS_IMPL_QUERY_INTERFACE0(_class)
+
+#define NS_IMPL_ISUPPORTS1(_class, _interface)                                \
+  NS_IMPL_ADDREF(_class)                                                      \
+  NS_IMPL_RELEASE(_class)                                                     \
+  NS_IMPL_QUERY_INTERFACE1(_class, _interface)
+
+#define NS_IMPL_ISUPPORTS2(_class, _i1, _i2)                                  \
+  NS_IMPL_ADDREF(_class)                                                      \
+  NS_IMPL_RELEASE(_class)                                                     \
+  NS_IMPL_QUERY_INTERFACE2(_class, _i1, _i2)
+
+#define NS_IMPL_ISUPPORTS3(_class, _i1, _i2, _i3)                             \
+  NS_IMPL_ADDREF(_class)                                                      \
+  NS_IMPL_RELEASE(_class)                                                     \
+  NS_IMPL_QUERY_INTERFACE3(_class, _i1, _i2, _i3)
+
+#define NS_IMPL_ISUPPORTS4(_class, _i1, _i2, _i3, _i4)                        \
+  NS_IMPL_ADDREF(_class)                                                      \
+  NS_IMPL_RELEASE(_class)                                                     \
+  NS_IMPL_QUERY_INTERFACE4(_class, _i1, _i2, _i3, _i4)
+
+#define NS_IMPL_ISUPPORTS5(_class, _i1, _i2, _i3, _i4, _i5)                   \
+  NS_IMPL_ADDREF(_class)                                                      \
+  NS_IMPL_RELEASE(_class)                                                     \
+  NS_IMPL_QUERY_INTERFACE5(_class, _i1, _i2, _i3, _i4, _i5)
+
+#define NS_IMPL_ISUPPORTS6(_class, _i1, _i2, _i3, _i4, _i5, _i6)              \
+  NS_IMPL_ADDREF(_class)                                                      \
+  NS_IMPL_RELEASE(_class)                                                     \
+  NS_IMPL_QUERY_INTERFACE6(_class, _i1, _i2, _i3, _i4, _i5, _i6)
+
+#define NS_IMPL_ISUPPORTS7(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7)         \
+  NS_IMPL_ADDREF(_class)                                                      \
+  NS_IMPL_RELEASE(_class)                                                     \
+  NS_IMPL_QUERY_INTERFACE7(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7)
+
+#define NS_IMPL_ISUPPORTS8(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8)    \
+  NS_IMPL_ADDREF(_class)                                                      \
+  NS_IMPL_RELEASE(_class)                                                     \
+  NS_IMPL_QUERY_INTERFACE8(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8)
+
+#define NS_IMPL_ISUPPORTS9(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8,    \
+                           _i9)                                               \
+  NS_IMPL_ADDREF(_class)                                                      \
+  NS_IMPL_RELEASE(_class)                                                     \
+  NS_IMPL_QUERY_INTERFACE9(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8, _i9)
+
+#define NS_IMPL_ISUPPORTS10(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8,   \
+                            _i9, _i10)                                        \
+  NS_IMPL_ADDREF(_class)                                                      \
+  NS_IMPL_RELEASE(_class)                                                     \
+  NS_IMPL_QUERY_INTERFACE10(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8,   \
+                            _i9, _i10)
 
 #define NS_IMPL_ISUPPORTS_INHERITED0(Class, Super)                            \
     NS_IMPL_QUERY_INTERFACE_INHERITED0(Class, Super)                          \
@@ -544,23 +607,6 @@ nsrefcnt _class::Release(void)                                                \
   return count;                                                               \
 }
 
-#define NS_IMPL_THREADSAFE_QUERY_INTERFACE(_class,_classiiddef)               \
-NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)      \
-{                                                                             \
-  if (NULL == aInstancePtr) {                                                 \
-    return NS_ERROR_NULL_POINTER;                                             \
-  }                                                                           \
-                                                                              \
-  *aInstancePtr = NULL;                                                       \
-                                                                              \
-  if (aIID.Equals(NS_GET_IID(nsISupports))) {                                 \
-    *aInstancePtr = (void*) ((nsISupports*)this);                             \
-    NS_ADDREF_THIS();                                                         \
-    return NS_OK;                                                             \
-  }                                                                           \
-  return NS_NOINTERFACE;                                                      \
-}
-
 #else  // defined(NS_MT_SUPPORTED)
 
 /**
@@ -574,9 +620,6 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)      \
 #define NS_IMPL_THREADSAFE_ADDREF(_class)  NS_IMPL_ADDREF(_class)
 
 #define NS_IMPL_THREADSAFE_RELEASE(_class) NS_IMPL_RELEASE(_class)
-
-#define NS_IMPL_THREADSAFE_QUERY_INTERFACE(_class,_classiiddef)               \
- NS_IMPL_QUERY_INTERFACE(_class, _classiiddef)
 
 #endif /* !NS_MT_SUPPORTED */
 

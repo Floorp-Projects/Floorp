@@ -70,7 +70,7 @@ PlaceholderTxn::~PlaceholderTxn()
 NS_IMPL_ADDREF_INHERITED(PlaceholderTxn, EditAggregateTxn)
 NS_IMPL_RELEASE_INHERITED(PlaceholderTxn, EditAggregateTxn)
 
-//NS_IMPL_QUERY_INTERFACE_INHERITED(Class, Super, AdditionalInterface)
+//NS_IMPL_QUERY_INTERFACE_INHERITED1(Class, Super, AdditionalInterface)
 NS_IMETHODIMP PlaceholderTxn::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   if (!aInstancePtr) return NS_ERROR_NULL_POINTER;

@@ -64,7 +64,7 @@ public:
 };
 
 /* Implementation file */
-NS_IMPL_ISUPPORTS_INHERITED(nsOutlinerBoxObject, nsBoxObject, nsIOutlinerBoxObject)
+NS_IMPL_ISUPPORTS_INHERITED1(nsOutlinerBoxObject, nsBoxObject, nsIOutlinerBoxObject)
 
 
 NS_IMETHODIMP

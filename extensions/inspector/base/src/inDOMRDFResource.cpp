@@ -46,7 +46,7 @@ inDOMRDFResource::~inDOMRDFResource()
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(inDOMRDFResource, nsRDFResource, inIDOMRDFResource)
+NS_IMPL_ISUPPORTS_INHERITED1(inDOMRDFResource, nsRDFResource, inIDOMRDFResource)
 
 NS_IMETHODIMP
 inDOMRDFResource::SetObject(nsISupports* object)

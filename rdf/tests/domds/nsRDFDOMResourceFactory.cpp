@@ -28,7 +28,7 @@ nsRDFDOMViewerElement::~nsRDFDOMViewerElement()
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(nsRDFDOMViewerElement, nsRDFResource, nsIDOMViewerElement)
+NS_IMPL_ISUPPORTS_INHERITED1(nsRDFDOMViewerElement, nsRDFResource, nsIDOMViewerElement)
 
 NS_IMETHODIMP
 nsRDFDOMViewerElement::SetObject(nsISupports* object)

@@ -76,7 +76,7 @@ nsHTMLComboboxAccessible::~nsHTMLComboboxAccessible()
 }
 
 /** Inherit the ISupports impl from nsAccessible -- handle nsIDOMXULListener ourself */
-NS_IMPL_ISUPPORTS_INHERITED(nsHTMLComboboxAccessible, nsAccessible, nsIDOMXULListener)
+NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLComboboxAccessible, nsAccessible, nsIDOMXULListener)
 
 /** 
   * Tell our caller we are a combobox 
