@@ -104,10 +104,6 @@ NS_IMETHODIMP
 nsPrefMigration::ProcessPrefs(char* oldProfilePathStr, char* newProfilePathStr, nsresult *aResult)
 {
 
-#ifdef XP_MAC
-  aResult = NS_ERROR_FAILURE;
-  return NS_OK;
-#endif
   
   char *oldPOPMailPathStr, *oldNewsPathStr;
   char *newPOPMailPathStr, *newNewsPathStr;
@@ -329,8 +325,8 @@ nsPrefMigration::ProcessPrefs(char* oldProfilePathStr, char* newProfilePathStr, 
   PR_Free(POP_hd_name);
   PR_Free(news_hd_name);
   
-  PR_MkDir(newPOPMailPath, PR_RDWR);
-  PR_MkDir(newNewsPath, PR_RDWR);
+  PR_MkDir(nsNSPRPath(newPOPMailPath), PR_RDWR);
+  PR_MkDir(nsNSPRPath(newNewsPath), PR_RDWR);
   if(hasIMAP)
     PR_MkDir(newIMAPMailPath, PR_RDWR);
 
@@ -373,11 +369,12 @@ nsPrefMigration::CreateNewUser5Tree(char* oldProfilePath, char* newProfilePath)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  //PL_strcpy(prefsFile, oldProfilePath);
-  //PL_strcat(prefsFile, "\\prefs.js\0");
-
   nsFileSpec oldPrefsFile(oldProfilePath);
+#ifdef XP_PC
   oldPrefsFile += "prefs.js";
+#else
+  oldPrefsFile += "Netscape Preferences";
+#endif
 
   nsFileSpec newPrefsFile(newProfilePath);
       
@@ -387,10 +384,13 @@ nsPrefMigration::CreateNewUser5Tree(char* oldProfilePath, char* newProfilePath)
   }
 
   oldPrefsFile.Copy(newPrefsFile);
+#ifdef XP_MAC
+  newPrefsFile += "Netscape Preferences";
+  newPrefsFile.Rename("prefs.js"); /* Rename the file for the Mac only */
+#else
   newPrefsFile += "prefs.js";
-  newPrefsFile.Rename("prefs50.js");
+#endif
 
-  //const char* newPrefsFileStr = newPrefsFile.GetCString();
   PREF_Init(newPrefsFile);
 
   PR_Free(prefsFile);
