@@ -1452,7 +1452,7 @@ sub BuildNeckoProjects()
 	BuildOneProject(":mozilla:netwerk:protocol:jar:macbuild:jar.mcp",			"jar$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);	
 	BuildOneProject(":mozilla:netwerk:protocol:keyword:macbuild:keyword.mcp",	"keyword$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:netwerk:protocol:res:macbuild:res.mcp",			"res$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
-	BuildOneProject(":mozilla:netwerk:protocol:resource:macbuild:resource.mcp", "resource$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
+#	BuildOneProject(":mozilla:netwerk:protocol:resource:macbuild:resource.mcp", "resource$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:dom:src:jsurl:macbuild:JSUrl.mcp",				"JSUrl$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 
 	# mime service
