@@ -4844,6 +4844,8 @@ fi
 
 dnl ========================================================
 dnl disable profile locking
+dnl   do no use this in applications that can have more than
+dnl   one process accessing the profile directory.
 dnl ========================================================
 MOZ_PROFILELOCKING=1
 MOZ_ARG_DISABLE_BOOL(profilelocking,
