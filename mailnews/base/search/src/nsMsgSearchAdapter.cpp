@@ -863,10 +863,9 @@ nsMsgSearchValidityTable::GetAvailableAttributes(PRUint32 *length,
 
     nsMsgSearchAttribValue *array = (nsMsgSearchAttribValue*)
         nsAllocator::Alloc(sizeof(nsMsgSearchAttribValue) * totalAttributes);
-
+    NS_ENSURE_TRUE(array, NS_ERROR_OUT_OF_MEMORY);
+    
     PRUint32 numStored=0;
-    if (!array) return NS_ERROR_OUT_OF_MEMORY;
-
     for (i = 0; i< nsMsgSearchAttrib::kNumMsgSearchAttributes; i++) {
         for (j=0; j< nsMsgSearchOp::kNumMsgSearchOperators; j++) {
             if (m_table[i][j].bitAvailable) {
@@ -880,6 +879,34 @@ nsMsgSearchValidityTable::GetAvailableAttributes(PRUint32 *length,
     *length = totalAttributes;
     *aResult = array;
 
+    return NS_OK;
+}
+
+nsresult
+nsMsgSearchValidityTable::GetAvailableOperators(nsMsgSearchAttribValue aAttribute,
+                                                PRUint32 *aLength,
+                                                nsMsgSearchOpValue **aResult)
+{
+    PRUint32 totalOperators=0;
+    PRInt32 i;
+    for (i=0; i<nsMsgSearchOp::kNumMsgSearchOperators; i++) {
+        if (m_table[aAttribute][i].bitAvailable)
+            totalOperators++;
+    }
+
+    nsMsgSearchOpValue *array = (nsMsgSearchOpValue*)
+        nsAllocator::Alloc(sizeof(nsMsgSearchOpValue) * totalOperators);
+    NS_ENSURE_TRUE(array, NS_ERROR_OUT_OF_MEMORY);
+    
+    PRUint32 numStored = 0;
+    for (i=0; i<nsMsgSearchOp::kNumMsgSearchOperators;i++) {
+        if (m_table[aAttribute][i].bitAvailable)
+            array[numStored++] = i;
+    }
+
+    NS_ASSERTION(totalOperators == numStored, "Search Operators not lining up");
+    *aLength = totalOperators;
+    *aResult = array;
     return NS_OK;
 }
 

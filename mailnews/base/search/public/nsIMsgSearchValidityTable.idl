@@ -53,6 +53,11 @@ interface nsIMsgSearchValidityTable : nsISupports {
 
     void getAvailableAttributes(out unsigned long length,
                                 [retval, array, size_is(length)]
-                                out nsMsgSearchAttribValue aResult);
+                                out nsMsgSearchAttribValue attrs);
+
+    void getAvailableOperators(in nsMsgSearchAttribValue attrib,
+                               out unsigned long length,
+                               [retval, array, size_is(length)]
+                               out nsMsgSearchOpValue operators);
 
 };
