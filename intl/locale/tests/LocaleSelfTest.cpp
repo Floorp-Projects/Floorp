@@ -22,6 +22,12 @@
 #include "nsISupports.h"
 #include "nsRepository.h"
 #include "nsIServiceManager.h"
+#include "nsILocale.h"
+#include "nsILocaleFactory.h"
+#include "nsLocaleCID.h"
+#ifdef XP_PC
+#include "nsIWin32Locale.h"
+#endif
 #include "nsICharsetConverterManager.h"
 #include "nsUCvLatinCID.h"
 #include "nsICaseConversion.h"
@@ -51,10 +57,24 @@
 
 // Collation
 //
-NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
-NS_DEFINE_IID(kICollationFactoryIID, NS_ICOLLATIONFACTORY_IID);
-NS_DEFINE_CID(kCollationCID, NS_COLLATION_CID);
-NS_DEFINE_IID(kICollationIID, NS_ICOLLATION_IID);
+static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
+static NS_DEFINE_IID(kICollationFactoryIID, NS_ICOLLATIONFACTORY_IID);
+static NS_DEFINE_CID(kCollationCID, NS_COLLATION_CID);
+static NS_DEFINE_IID(kICollationIID, NS_ICOLLATION_IID);
+// Date and Time
+//
+static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
+static NS_DEFINE_IID(kIDateTimeFormatIID, NS_IDATETIMEFORMAT_IID);
+// locale
+//
+static NS_DEFINE_CID(kLocaleFactoryCID, NS_LOCALEFACTORY_CID);
+#ifdef XP_PC
+static NS_DEFINE_CID(kWin32LocaleFactoryCID, NS_WIN32LOCALEFACTORY_CID);
+#endif
+// case conversion
+//
+static NS_DEFINE_CID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
+
 
 
 // Create a collation key, the memory is allocated using new which need to be deleted by a caller.
@@ -507,11 +527,6 @@ static void TestSort(nsILocale *locale)
   cout << "==============================\n";
 }
 
-// Date and Time
-//
-NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
-NS_DEFINE_IID(kIDateTimeFormatIID, NS_IDATETIMEFORMAT_IID);
-
 // Test all functions in nsIDateTimeFormat.
 //
 static void TestDateTimeFormat(nsILocale *locale)
@@ -619,10 +634,6 @@ static void TestDateTimeFormat(nsILocale *locale)
   cout << "==============================\n";
 }
  
-// case conversion
-//
-NS_DEFINE_CID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
-NS_DEFINE_IID(kCaseConversionIID, NS_ICASECONVERSION_IID);
 
 int main(int argc, char** argv) {
   nsresult res; 
@@ -645,10 +656,30 @@ int main(int argc, char** argv) {
   res = nsRepository::RegisterFactory(kUnicharUtilCID, UNICHARUTIL_DLL_NAME, PR_FALSE, PR_FALSE);
   if (NS_FAILED(res)) cout << "RegisterFactory failed\n";
 
+	res = nsRepository::RegisterFactory(kLocaleFactoryCID, LOCALE_DLL_NAME, PR_FALSE, PR_FALSE);
+	NS_ASSERTION(res==NS_OK,"nsLocaleTest: RegisterFactory failed.");
+
+#ifdef XP_PC
+	res = nsRepository::RegisterFactory(kWin32LocaleFactoryCID, LOCALE_DLL_NAME, PR_FALSE, PR_FALSE);
+	NS_ASSERTION(res==NS_OK,"nsLocaleTest: Register nsIWin32LocaleFactory failed.");
+#endif
   // --------------------------------------------
 
   nsILocale *locale = NULL;
 
+#if 0
+	nsILocaleFactory*	localeFactory;
+
+	res = nsRepository::FindFactory(kLocaleFactoryCID, (nsIFactory**)&localeFactory);
+  if (NS_FAILED(res) || localeFactory == nsnull) cout << "FindFactory nsILocaleFactory failed\n";
+
+  res = localeFactory->GetSystemLocale(&locale);
+  if (NS_FAILED(res) || locale == nsnull) cout << "GetSystemLocale failed\n";
+
+	localeFactory->Release();
+#endif//0
+  
+  // --------------------------------------------
   if (argc == 1) {
     TestCollation(locale);
     TestSort(locale);
@@ -664,6 +695,8 @@ int main(int argc, char** argv) {
         TestDateTimeFormat(locale);
     }
   }
+
+  NS_IF_RELEASE(locale);
 
   // --------------------------------------------
 
