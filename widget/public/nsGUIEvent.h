@@ -234,6 +234,14 @@ struct nsMouseScrollEvent : public nsInputEvent {
 	PRInt32                 deltaLines;
 };
 
+struct nsReconversionEventReply {
+  PRUnichar *mReconversionString;
+};
+
+struct nsReconversionEvent : public nsInputEvent {
+  nsReconversionEventReply  theReply;
+};
+
 /**
  * Tooltip event
  */
@@ -288,6 +296,7 @@ enum nsDragDropEventStatus {
 #define NS_MOUSE_SCROLL_EVENT 16
 #define NS_COMPOSITION_QUERY  17
 #define NS_SCROLLPORT_EVENT   18
+#define NS_RECONVERSION_QUERY 19
 
  /**
  * GUI MESSAGES

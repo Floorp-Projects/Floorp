@@ -2477,6 +2477,12 @@ nsEditor::ForceCompositionEnd()
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsEditor::GetReconversionString(nsReconversionEventReply* aReply)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 #ifdef XP_MAC
 #pragma mark -
 #pragma mark  public nsEditor methods 

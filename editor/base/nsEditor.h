@@ -304,6 +304,7 @@ public:
   NS_IMETHOD SetCompositionString(const nsString& aCompositionString, nsIPrivateTextRangeList* aTextRangeList,nsTextEventReply* aReply);
   NS_IMETHOD EndComposition(void);
   NS_IMETHOD ForceCompositionEnd(void);
+  NS_IMETHOD GetReconversionString(nsReconversionEventReply *aReply);
 
 public:
 

@@ -155,6 +155,7 @@ public:
   /* ------------ nsIEditorIMESupport overrides -------------- */
   
   NS_IMETHOD SetCompositionString(const nsString& aCompositionString, nsIPrivateTextRangeList* aTextRangeList,nsTextEventReply* aReply);
+  NS_IMETHOD GetReconversionString(nsReconversionEventReply* aReply);
 
   /* ------------ nsIEditorStyleSheets methods -------------- */
 

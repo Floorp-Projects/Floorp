@@ -132,6 +132,7 @@ public:
   virtual nsresult HandleStartComposition(nsIDOMEvent* aCompositionEvent);
   virtual nsresult HandleEndComposition(nsIDOMEvent* aCompositionEvent);
   virtual nsresult HandleQueryComposition(nsIDOMEvent* aCompositionEvent);
+  virtual nsresult HandleQueryReconversion(nsIDOMEvent* aReconvertionEvent);
 /*END implementations of textevent handler interface*/
 
 protected:

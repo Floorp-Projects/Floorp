@@ -807,6 +807,24 @@ nsTextEditorCompositionListener::HandleEndComposition(nsIDOMEvent* aCompositionE
 }
 
 
+nsresult
+nsTextEditorCompositionListener::HandleQueryReconversion(nsIDOMEvent* aReconversionEvent)
+{
+#ifdef DEBUG_IME
+  printf("nsTextEditorCompositionListener::HandleQueryReconversion\n");
+#endif
+  nsCOMPtr<nsIPrivateCompositionEvent> pCompositionEvent = do_QueryInterface(aReconversionEvent);
+  nsReconversionEventReply* eventReply;
+
+  if (!pCompositionEvent)
+    return NS_ERROR_FAILURE;
+
+  nsresult rv = pCompositionEvent->GetReconversionReply(&eventReply);
+  if (NS_FAILED(rv))
+    return rv;
+
+  return mEditor->GetReconversionString(eventReply);
+}
 
 /*
  * Factory functions
