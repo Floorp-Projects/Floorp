@@ -720,7 +720,7 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     JSFunction *fun;
     JSObject *parent;
     JSObject *pobj;
-    JSScopeProperty *sprop;
+    JSProperty *prop;
     uintN dupflag;
     JSBool ok;
     JSTreeContext funtc;
@@ -760,14 +760,14 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
             argAtom = CURRENT_TOKEN(ts).t_atom;
             pobj = NULL;
             if (!js_LookupProperty(cx, fun->object, (jsid)argAtom, &pobj,
-                                   (JSProperty **)&sprop)) {
+                                   &prop)) {
                 return NULL;
             }
             dupflag = 0;
-            if (sprop) {
+            if (prop) {
                 ok = JS_TRUE;
                 if (pobj == fun->object &&
-                    sprop->getter == js_GetArgument) {
+                    ((JSScopeProperty *) prop)->getter == js_GetArgument) {
                     const char *name = js_AtomToPrintableString(cx, argAtom);
 
                     /*
@@ -785,10 +785,10 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 
                     dupflag = SPROP_IS_DUPLICATE;
                 }
-                OBJ_DROP_PROPERTY(cx, pobj, (JSProperty *)sprop);
+                OBJ_DROP_PROPERTY(cx, pobj, prop);
                 if (!ok)
                     return NULL;
-                sprop = NULL;
+                prop = NULL;
             }
             if (!js_AddNativeProperty(cx, fun->object, (jsid)argAtom,
                                       js_GetArgument, js_SetArgument,
@@ -902,16 +902,22 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
             varobj = fp->varobj;
             JS_ASSERT(OBJ_GET_CLASS(cx, varobj) == &js_FunctionClass);
             JS_ASSERT(fp->fun == (JSFunction *) JS_GetPrivate(cx, varobj));
-            if (!js_DefineNativeProperty(cx, varobj, (jsid)funAtom,
-                                         OBJECT_TO_JSVAL(fun->object),
-                                         js_GetLocalVariable,
-                                         js_SetLocalVariable,
-                                         JSPROP_ENUMERATE,
-                                         SPROP_HAS_SHORTID, fp->fun->nvars,
-                                         NULL)) {
+            if (!js_LookupProperty(cx, varobj, (jsid)funAtom, &pobj, &prop))
                 return NULL;
+            if (prop)
+                OBJ_DROP_PROPERTY(cx, pobj, prop);
+            if (!prop || pobj != varobj) {
+                if (!js_DefineNativeProperty(cx, varobj, (jsid)funAtom,
+                                             OBJECT_TO_JSVAL(fun->object),
+                                             js_GetLocalVariable,
+                                             js_SetLocalVariable,
+                                             JSPROP_ENUMERATE,
+                                             SPROP_HAS_SHORTID, fp->fun->nvars,
+                                             NULL)) {
+                    return NULL;
+                }
+                fp->fun->nvars++;
             }
-            fp->fun->nvars++;
         }
 #endif
     }
