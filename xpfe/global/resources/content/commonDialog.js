@@ -198,7 +198,7 @@ function commonDialogOnLoad()
 
 function onCheckboxClick()
 {
-	param.SetInt( 1, 1 - param.GetInt( 1 ) );
+	param.SetInt( 1, (param.GetInt( 1 ) ? 0 : 1 ));
 //	dump("setting checkbox to "+ element.checked+"\n");
 }
 
