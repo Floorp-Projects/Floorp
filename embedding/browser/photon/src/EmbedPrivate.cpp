@@ -76,6 +76,9 @@
 
 #include "PtMozilla.h"
 
+/* globals */
+extern char *g_Print_Left_Header_String, *g_Print_Right_Header_String, *g_Print_Left_Footer_String, *g_Print_Right_Footer_String;
+
 static const char sWatcherContractID[] = "@mozilla.org/embedcomp/window-watcher;1";
 
 nsIAppShell *EmbedPrivate::sAppShell    = nsnull;
@@ -572,6 +575,20 @@ EmbedPrivate::Print(PpPrintContext_t *pc)
     {
     printSettings->SetPrintSilent(PR_TRUE);
 		printSettings->SetEndPageRange((PRInt32) pc);
+
+		nsAutoString format_left_footer;
+		PrintHeaderFooter_FormatSpecialCodes( g_Print_Left_Footer_String, format_left_footer );
+		nsAutoString format_right_footer;
+		PrintHeaderFooter_FormatSpecialCodes( g_Print_Right_Footer_String, format_right_footer );
+		nsAutoString format_left_header;
+		PrintHeaderFooter_FormatSpecialCodes( g_Print_Left_Header_String, format_left_header );
+		nsAutoString format_right_header;
+		PrintHeaderFooter_FormatSpecialCodes( g_Print_Right_Header_String, format_right_header );
+
+		printSettings->SetFooterStrLeft( format_left_footer.get() );
+		printSettings->SetFooterStrRight( format_right_footer.get() );
+		printSettings->SetHeaderStrLeft( format_left_header.get() );
+		printSettings->SetHeaderStrRight( format_right_header.get() );
     }
 
 		nsIPref *pref = GetPrefs();
@@ -919,6 +936,203 @@ static void mozilla_set_default_pref( nsIPref *pref )
 	pref->SetIntPref( "browser.cache.memory.capacity", 100 ); /* 100k ( no cache ) */
 	pref->SetCharPref( "user.print.print_frame", "print_frame_selected" );
 
+	pref->SetCharPref( "print.print_headercenter", "" );
+	pref->SetCharPref( "print.print_footercenter", "" );
+
 	pref->SavePrefFile( nsnull );
 }
 
+
+//------------------------------------------------------------------------------
+#define FORMAT_ESCAPE_CHARACTER                '&'
+void EmbedPrivate::PrintHeaderFooter_FormatSpecialCodes(const char *original, nsString& aNewStr)
+{
+	/* Think of this as a sprintf-variant. */
+
+	const char *szPattern = original;
+
+	time_t aclock;
+	struct tm *tm;
+
+	char workBuffer[20], *sz;
+
+	nsAutoString result;
+
+	while ( *szPattern )
+	{
+		if (*szPattern != FORMAT_ESCAPE_CHARACTER)
+		{
+			workBuffer[0] = *szPattern;
+			szPattern++;
+			workBuffer[1] = 0;
+
+			nsAutoString ss;
+			ss.AssignWithConversion( workBuffer );
+			result += ss;
+		}
+		else
+		{
+			szPattern++;				/* skip over '&' */
+			switch (*szPattern)
+			{
+			case 'w':					/* window name */
+			case 'W':
+				szPattern++;			/* advance past "&w" */
+
+				/* add the title */
+				PRUnichar *uTitle;
+				mWindow->GetTitle( &uTitle );
+				result += uTitle;
+				break;
+
+
+			case 'u':					/* URL */
+			case 'U':					/* TODO should this be ifdef'd for kiosk's */
+				szPattern++;			/* advance past "&w" */
+
+				/* add the URL */
+				result += mURI.get();
+				break;
+
+
+			case 'd':		/* date -- american style "mmm dd yyyy" */
+			case 'D':		/* date -- european style "dd mmm yyyy" */
+				szPattern++;
+				
+				(void) time(&aclock);
+				tm = localtime(&aclock);
+				sz = asctime(tm);
+
+				/*  ..........1.........2.... .   */
+				/*  012345678901234567890123. .   */
+				/* "Fri Oct 22 09:15:00 1993\n\0" */
+
+				if (szPattern[1] == 'd')
+				{
+					workBuffer[0] = sz[4];	/* O */
+					workBuffer[1] = sz[5];	/* c */
+					workBuffer[2] = sz[6];	/* t */
+					workBuffer[3] = sz[7];	/* _ */
+					workBuffer[4] = sz[8];	/* 2 */
+					workBuffer[5] = sz[9];	/* 2 */
+				}
+				else
+				{
+					workBuffer[0] = sz[8];	/* 2 */
+					workBuffer[1] = sz[9];	/* 2 */
+					workBuffer[2] = sz[7];	/* _ */
+					workBuffer[3] = sz[4];	/* O */
+					workBuffer[4] = sz[5];	/* c */
+					workBuffer[5] = sz[6];	/* t */
+				}
+				workBuffer[6] = sz[10];	/* _ */
+				workBuffer[7] = sz[20];	/* 1 */
+				workBuffer[8] = sz[21];	/* 9 */
+				workBuffer[9] = sz[22];	/* 9 */
+				workBuffer[10] = sz[23];	/* 3 */
+				workBuffer[11] = 0;
+
+				/* add the content of workBuffer */
+				{
+				nsAutoString ss;
+				ss.AssignWithConversion( workBuffer );
+				result += ss;
+				}
+
+				break;
+
+
+			case 't':					/* time "HH:MM am" (12 hour format) */
+				szPattern++;
+
+				(void) time(&aclock);
+				tm = localtime(&aclock);
+
+				strftime(workBuffer, sizeof(workBuffer), "%I:%M %p", tm);
+
+				{
+				/* add the content of workBuffer */
+				nsAutoString ss;
+				ss.AssignWithConversion( workBuffer );
+				result += ss;
+				}
+
+				break;
+
+				
+			case 'T':					/* time "HH:MM" (24 hour format) */
+				szPattern++;
+
+				(void) time(&aclock);
+				tm = localtime(&aclock);
+
+				strftime(workBuffer, sizeof(workBuffer), "%H:%M", tm);
+
+				/* add the content of workBuffer */
+				{
+				nsAutoString ss;
+				ss.AssignWithConversion( workBuffer );
+				result += ss;
+				}
+				break;
+
+			case 'p':					/* current page number */
+				szPattern++;
+
+				{
+				/* add the page number */
+				const PRUnichar * uStr = NS_LITERAL_STRING( "&P" ).get();
+				result += uStr;
+				}
+				break;
+
+			case 'P': /* current of total number of pages */
+				/* add the page number */
+				{
+				const PRUnichar * uStr = NS_LITERAL_STRING( "&PT" ).get();
+				result += uStr;
+				}
+				break;
+
+			case FORMAT_ESCAPE_CHARACTER:	/* && expands to a single & */
+
+				workBuffer[0] = *szPattern;
+				szPattern++;
+				workBuffer[1] = 0;
+				{
+				nsAutoString ss;
+				ss.AssignWithConversion( workBuffer );
+				result += ss;
+				}
+				break;
+
+			case '\0':					/* copy '&' to output */
+
+				workBuffer[0] = FORMAT_ESCAPE_CHARACTER;
+				workBuffer[1] = 0;
+				{
+				nsAutoString ss;
+				ss.AssignWithConversion( workBuffer );
+				result += ss;
+				}
+				break;
+				
+			default:					/* copy '&*' to output */
+#if 0
+				SM_STRNCPY(p,(const char *) &szPattern[-1],lenCopy);
+#endif
+				szPattern++;
+
+				/* add the &szPattern[-1] */
+				{
+				nsAutoString ss;
+				ss.AssignWithConversion( &szPattern[-1] );
+				result += ss;
+				}
+				break;
+			}
+		}
+	}
+
+	aNewStr.Assign( result );
+}
