@@ -285,7 +285,7 @@ sub parse_rcs_tree {
         # Compute date string;  Format it the way I like.
         ($mon, $day, $hhmm, $year)
             = &ctime($timestamp{$revision})
-                =~ /... (...) (..) (..:..):.. \S* (....)/;
+                =~ /... (...) (..) (..:..):.. \S*(....)/;
         $revision_ctime{$revision} = "$day $mon $year $hhmm";
 #       $revision_ctime{$revision} = &ctime($timestamp{$revision});
 
