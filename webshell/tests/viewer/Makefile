@@ -20,13 +20,14 @@ DEPTH=../../..
 include $(DEPTH)/config/config.mk
 
 CPPSRCS = \
-	nsUnixMain.cpp		\
 	nsBrowserWindow.cpp	\
-	nsViewerApp.cpp		\
-	nsMotifMenu.cpp		\
+	nsDocLoader.cpp		\
 	nsEditorMode.cpp	\
 	nsEditorInterfaces.cpp	\
+	nsMotifMenu.cpp		\
 	nsSetupRegistry.cpp	\
+	nsUnixMain.cpp		\
+	nsViewerApp.cpp		\
 	$(NULL)
 
 INCLUDES+= -I$(PUBLIC)/raptor -I$(PUBLIC)/xpcom  -I$(PUBLIC)/dom \
