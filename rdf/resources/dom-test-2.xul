@@ -1,10 +1,9 @@
+<?xml version="1.0"?>
 <!--
 
 This test exercises some of the DOMAttr stuff.
 
 -->
-
-<?xml version="1.0"?>
 <?xml-stylesheet href="dom-test-1.css" type="text/css"?>
 
 <xul:window
@@ -25,7 +24,7 @@ function DumpAttributes()
   if (attrs == null)
     return;
 
-  for (var i = 0; i < attrs.length; ++i) {
+  for (var i = 0; i &lt; attrs.length; ++i) {
     var attr = attrs[i];
     dump("attrs[" + i + "] = " + attr + "\n");
     if (attr != null) {
@@ -53,4 +52,4 @@ function DumpAttributes()
   </treebody>
 </tree>
 
-</window>
+</xul:window>

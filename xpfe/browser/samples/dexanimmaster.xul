@@ -35,7 +35,7 @@
     var imageNames = new Array("up.gif", "right.gif", "down.gif", "left.gif");
     var animationFrame = 0;
     var animationFunction = null;
-    for(var i = 0; i < 4; i++) {
+    for(var i = 0; i &lt; 4; i++) {
       images[i] = new Image();
       images[i].src = "sampleimages/" + imageNames[i];
     }

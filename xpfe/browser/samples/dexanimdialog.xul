@@ -17,7 +17,7 @@
     var imageNames = new Array("up.gif", "right.gif", "down.gif", "left.gif");
     var animationFrame = 0;
     var animationFunction = null;
-    for(var i = 0; i < 4; i++) {
+    for(var i = 0; i &lt; 4; i++) {
       images[i] = new Image();
       images[i].src = "sampleimages/" + imageNames[i];
     }
@@ -57,7 +57,7 @@
       var taglist = document.getElementsByTagName("*");
 
       element = null;
-      for (ctr = 0; ctr < taglist.length; ctr++)
+      for (ctr = 0; ctr &lt; taglist.length; ctr++)
         if (taglist[ctr].getAttribute("id") == id) {
           element = taglist[ctr];
           break;

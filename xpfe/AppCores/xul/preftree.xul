@@ -76,7 +76,7 @@
  
      <treeitem>
        
-      <treecell><treeindentation/>Mail & News</treecell>
+      <treecell><treeindentation/>Mail &amp; News</treecell>
        
 	  <treechildren>
         <treeitem>
@@ -98,7 +98,7 @@
           <treecell><treeindentation/>Window Settings</treecell>
 	    </treeitem>
         <treeitem>
-          <treecell><treeindentation/>Copies & Folders</treecell>
+          <treecell><treeindentation/>Copies &amp; Folders</treecell>
 	    </treeitem>
         <treeitem>
           <treecell><treeindentation/>Formatting</treecell>
@@ -177,4 +177,4 @@
   
 </tree>
 
-</window>
+</xul:window>

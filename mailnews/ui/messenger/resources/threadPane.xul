@@ -13,7 +13,7 @@
   <treecol id="SubjectColumn" rdf:resource="http://home.netscape.com/NC-rdf#Subject"/>
   <treecol id="AuthorColumn" rdf:resource="http://home.netscape.com/NC-rdf#Sender"/>
   <treecol id="DateColumn" rdf:resource="http://home.netscape.com/NC-rdf#Date"/>
-  <treecol "id="StatusColumn" rdf:resource="http://home.netscape.com/NC-rdf#Status"/>
+  <treecol id="StatusColumn" rdf:resource="http://home.netscape.com/NC-rdf#Status"/>
   <treehead>
     <treeitem>
 		<treecell onclick="return parent.parent.SortThreadPane('SubjectColumn', 'http://home.netscape.com/NC-rdf#Subject');">

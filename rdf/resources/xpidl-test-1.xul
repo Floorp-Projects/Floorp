@@ -45,4 +45,4 @@ function RenamePersonalToolbar()
   </treebody>
 </tree>
 
-</window>
+</xul:window>

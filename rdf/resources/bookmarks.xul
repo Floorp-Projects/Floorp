@@ -138,5 +138,5 @@ function doSort(sortColName)
   </treebody>
 </tree>
 
-</window>
+</xul:window>
 
