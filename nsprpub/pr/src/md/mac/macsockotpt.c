@@ -1482,9 +1482,6 @@ static PRInt32 SendReceiveStream(PRFileDesc *fd, void *buf, PRInt32 amount,
                 return result;
         } else {
 			switch (result) {
-				case kOTOutStateErr:			// it has been closed
-                    return 0;
-				
 				case kOTLookErr:
 				    PR_ASSERT(!"call to OTLook() required after all.");
 					break;
@@ -1504,6 +1501,7 @@ static PRInt32 SendReceiveStream(PRFileDesc *fd, void *buf, PRInt32 amount,
 						goto ErrorExit;				
 					break;
 					
+				case kOTOutStateErr:	// it has been closed, fall through for error
 				default:
 					err = result;
 					goto ErrorExit;
