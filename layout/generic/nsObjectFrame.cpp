@@ -2493,6 +2493,7 @@ nsresult nsPluginInstanceOwner::Blur(nsIDOMEvent * aFocusEvent)
 
 nsresult nsPluginInstanceOwner::DispatchFocusToPlugin(nsIDOMEvent* aFocusEvent)
 {
+#ifndef XP_WIN    // on Windows, events are sent directly to plugins through child windows
   nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(aFocusEvent));
   if (privateEvent) {
     nsGUIEvent* focusEvent = nsnull;
@@ -2510,6 +2511,9 @@ nsresult nsPluginInstanceOwner::DispatchFocusToPlugin(nsIDOMEvent* aFocusEvent)
   else NS_ASSERTION(PR_FALSE, "nsPluginInstanceOwner::DispatchFocusToPlugin failed, privateEvent null");   
   
   return NS_OK;
+#else
+  return NS_ERROR_FAILURE; // means consume event
+#endif
 }    
 
 
@@ -2539,6 +2543,7 @@ nsresult nsPluginInstanceOwner::KeyPress(nsIDOMEvent* aKeyEvent)
     
 nsresult nsPluginInstanceOwner::DispatchKeyToPlugin(nsIDOMEvent* aKeyEvent)
 {
+#ifndef XP_WIN   // on Windows, events are sent directly to plugins through child windows
   if (mInstance) {
     nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(aKeyEvent));
     if (privateEvent) {
@@ -2557,6 +2562,9 @@ nsresult nsPluginInstanceOwner::DispatchKeyToPlugin(nsIDOMEvent* aKeyEvent)
     else NS_ASSERTION(PR_FALSE, "nsPluginInstanceOwner::DispatchKeyToPlugin failed, privateEvent null");   
   }
   return NS_OK;
+#else
+  return NS_ERROR_FAILURE; // means consume event
+#endif
 }    
 
 /*=============== nsIMouseListener ======================*/
@@ -2564,6 +2572,7 @@ nsresult nsPluginInstanceOwner::DispatchKeyToPlugin(nsIDOMEvent* aKeyEvent)
 nsresult
 nsPluginInstanceOwner::MouseDown(nsIDOMEvent* aMouseEvent)
 {
+#ifndef XP_WIN   // on Windows, events are sent directly to plugins through child windows
   nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(aMouseEvent));
   if (privateEvent) {
     nsMouseEvent* mouseEvent = nsnull;
@@ -2579,6 +2588,9 @@ nsPluginInstanceOwner::MouseDown(nsIDOMEvent* aMouseEvent)
   else NS_ASSERTION(PR_FALSE, "nsPluginInstanceOwner::MouseDown failed, privateEvent null");   
   
   return NS_OK;
+#else
+  return NS_ERROR_FAILURE; // means consume event
+#endif
 }
 
 nsresult
@@ -2613,6 +2625,7 @@ nsPluginInstanceOwner::MouseOut(nsIDOMEvent* aMouseEvent)
 
 nsresult nsPluginInstanceOwner::DispatchMouseToPlugin(nsIDOMEvent* aMouseEvent)
 {
+#ifndef XP_WIN   // on Windows, events are sent directly to plugins through child windows  
   nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(aMouseEvent));
   if (privateEvent) {
     nsMouseEvent* mouseEvent = nsnull;
@@ -2630,6 +2643,9 @@ nsresult nsPluginInstanceOwner::DispatchMouseToPlugin(nsIDOMEvent* aMouseEvent)
   else NS_ASSERTION(PR_FALSE, "nsPluginInstanceOwner::DispatchMouseToPlugin failed, privateEvent null");   
   
   return NS_OK;
+#else
+  return NS_ERROR_FAILURE; // means consume event
+#endif
 }
 
 nsresult
