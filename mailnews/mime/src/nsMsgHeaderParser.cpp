@@ -280,41 +280,22 @@ nsresult nsMsgHeaderParser::ParseHeaderAddresses (const char *charset, const cha
 
   *numAddresses = msg_parse_Header_addresses(line, names, addresses);
 
-  if (nsnull != names && nsnull != *names) {
-    char *s = *names;
-    PRInt32 i, len, len_all = 0;
-    for (i = 0; i < (PRInt32) *numAddresses; i++) {
-      len = nsCRT::strlen(s) + 1;
-      len_all += len;
-      s += len;
-    }
-  }
-  if (nsnull != addresses && nsnull != *addresses) {
-    char *s = *addresses;
-    PRInt32 i, len, len_all = 0;
-    for (i = 0; i < (PRInt32) *numAddresses; i++) {
-      len = nsCRT::strlen(s) + 1;
-      len_all += len;
-      s += len;
-    }
-  }
-
-	return NS_OK;
+  return NS_OK;
 }
 
 nsresult nsMsgHeaderParser::ExtractHeaderAddressMailboxes (const char *charset, const char *line, char ** mailboxes)
 {
-	if (mailboxes)
-	{
+  if (mailboxes)
+  {
 #if DEBUG
     (void) NS_ConvertUTF8toUCS2(line).get(); // asserts if invalid UTF-8
 #endif
-
+    
     *mailboxes = msg_extract_Header_address_mailboxes(line);
     return NS_OK;
-	}
-	else
-		return NS_ERROR_NULL_POINTER;
+  }
+  else
+    return NS_ERROR_NULL_POINTER;
 }
 
 nsresult nsMsgHeaderParser::ExtractHeaderAddressNames (const char *charset, const char *line, char ** names)
