@@ -63,21 +63,7 @@ public:
 
     // nsISupports interface
     NS_DECL_ISUPPORTS
-
-    // nsIDocumentLoaderFactory interface
-    NS_IMETHOD CreateInstance(const char *aCommand,
-                              nsIChannel* aChannel,
-                              nsILoadGroup* aLoadGroup,
-                              const char* aContentType,
-                              nsISupports* aContainer,
-                              nsISupports* aExtraInfo,
-                              nsIStreamListener** aDocListenerResult,
-                              nsIContentViewer** aDocViewerResult);
-
-    NS_IMETHOD CreateInstanceForDocument(nsISupports* aContainer,
-                                         nsIDocument* aDocument,
-                                         const char *aCommand,
-                                         nsIContentViewer** aDocViewerResult);
+    NS_DECL_NSIDOCUMENTLOADERFACTORY
 };
 
 

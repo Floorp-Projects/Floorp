@@ -3413,9 +3413,34 @@ nsDocShell::EnsureDeviceContext()
 NS_IMETHODIMP
 nsDocShell::CreateAboutBlankContentViewer()
 {
-    // XXX
-    NS_ERROR("Not Implemented yet");
+  return NS_ERROR_NOT_IMPLEMENTED; // for now. not quite working yet.
+
+  nsCOMPtr<nsIDocument> blankDoc;
+  nsCOMPtr<nsIContentViewer> viewer;
+
+  // one helper factory, please
+  nsCOMPtr<nsIDocumentLoaderFactory> docFactory(do_CreateInstance(NS_DOCUMENT_LOADER_FACTORY_CONTRACTID_PREFIX "view;1?type=text/html"));
+  if (!docFactory)
     return NS_ERROR_FAILURE;
+
+  // generate (about:blank) document to load
+  docFactory->CreateBlankDocument(getter_AddRefs(blankDoc));
+  if (!blankDoc)
+    return NS_ERROR_FAILURE;
+
+  // create a content viewer for us and the new document
+  docFactory->CreateInstanceForDocument(NS_ISUPPORTS_CAST(nsIDocShell *, this),
+                blankDoc, "view", getter_AddRefs(viewer));
+
+  // hook 'em up
+  if (viewer) {
+    viewer->SetContainer(NS_STATIC_CAST(nsIContentViewerContainer *,this));
+    nsCOMPtr<nsIDOMDocument> domdoc(do_QueryInterface(blankDoc));
+    Embed(viewer, "", 0);
+    viewer->SetDOMDocument(domdoc);
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP

@@ -93,3 +93,10 @@ nsPluginDocLoaderFactory::CreateInstanceForDocument(nsISupports* aContainer,
   NS_NOTREACHED("how'd I get here?");
   return NS_ERROR_FAILURE;
 }
+
+NS_IMETHODIMP
+nsPluginDocLoaderFactory::CreateBlankDocument(nsIDocument **_retval) {
+  NS_NOTREACHED("how'd I get here?");
+  return NS_ERROR_FAILURE;
+}
+
