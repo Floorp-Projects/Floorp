@@ -80,6 +80,10 @@ private:
 
   NS_IMETHOD Notify(nsISupports* aDocumentID, const nsStringArray* keys, const nsStringArray* values);
 
+  NS_IMETHOD GetCharsetFromCompatibilityTag(const nsStringArray* keys, 
+                                            const nsStringArray* values, 
+                                            nsAWritableString& aCharset);
+
   nsCOMPtr<nsICharsetAlias> mAlias;
 
   PRBool bMetaCharsetObserverStarted;
