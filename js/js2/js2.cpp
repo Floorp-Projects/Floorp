@@ -138,20 +138,35 @@ static bool promptLine(istream &in, string &s, const char *prompt)
 }
 
 
-static void readEvalPrint(istream &in)
+static void readEvalPrint(istream &in, World &world)
 {
 	String buffer;
 	string line;
+	String source = widenCString("console");
 
 	while (promptLine(in, line, buffer.empty() ? "js> " : "")) {
 		if (!buffer.empty())
 			buffer += uni::lf;
 		appendChars(buffer, line.data(), line.size());
 		if (!buffer.empty()) {
-			showString(std::cout, buffer);
+			try {
+				StringReader r(buffer, source);
+				Lexer l(r, world);
+				while (true) {
+					Token &t = l.get(true);
+					if (t.kind == Token::End)
+						break;
+					String out;
+					out += ' ';
+					t.print(out, true);
+					showString(std::cout, out);
+				}
+			} catch (Exception &e) {
+				std::cout << std::endl;
+				showString(std::cout, e.fullMessage());
+			}
 			std::cout << std::endl;
-			if (buffer.size() > 16)
-				buffer.clear();
+			buffer.clear();
 		}
 	}
     std::cout << std::endl;
@@ -312,7 +327,8 @@ int main(int argc, char **argv)
 #if defined(XP_MAC) && !defined(XP_MAC_MPW)
     initConsole("\pJavaScript Shell", "Welcome to the js2 shell.\n", argc, argv);
 #endif
-	readEvalPrint(std::cin);
+	World world;
+	readEvalPrint(std::cin, world);
 	return 0;
     //return ProcessArgs(argv + 1, argc - 1);
 }
