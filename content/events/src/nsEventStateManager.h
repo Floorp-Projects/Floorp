@@ -74,20 +74,6 @@ class nsEventStateManager : public nsSupportsWeakReference,
                             public nsIEventStateManager,
                             public nsIObserver
 {
-  // Tab focus model bit field:
-  enum nsTabFocusModel {
-  //eTabFocus_textControlsMask = (1<<0),  // unused - textboxes always tabbable
-    eTabFocus_formElementsMask = (1<<1),  // non-text form elements
-    eTabFocus_linksMask = (1<<2),         // links
-    eTabFocus_any = 1 + (1<<1) + (1<<2)   // everything that can be focused
-  };
-
-  enum nsTextfieldSelectModel {
-    eTextfieldSelect_unset = -1,
-    eTextfieldSelect_manual = 0,
-    eTextfieldSelect_auto = 1   // select textfields when focused with keyboard
-  };
-
 public:
   nsEventStateManager();
   virtual ~nsEventStateManager();
@@ -299,9 +285,6 @@ protected:
   nsIPresContext* mPresContext;      // Not refcnted
   nsCOMPtr<nsIDocument> mDocument;   // Doesn't necessarily need to be owner
 
-  //Pref for dispatching middle and right clicks to content
-  PRBool mLeftClickOnly;
-
   PRUint32 mLClickCount;
   PRUint32 mMClickCount;
   PRUint32 mRClickCount;
@@ -310,9 +293,6 @@ protected:
 
   //Hashtable for accesskey support
   nsSupportsHashtable *mAccessKeys;
-
-  static PRUint32 mInstanceCount;
-  static PRInt32 gGeneralAccesskeyModifier;
 
   // For preferences handling
   nsCOMPtr<nsIPrefBranchInternal> mPrefBranch;
@@ -328,10 +308,6 @@ protected:
 
   // So we don't have to keep checking accessibility.browsewithcaret pref
   PRBool mBrowseWithCaret;
-
-  // Tab focus policy (static, constant across the app):
-  // Which types of elements are in the tab order?
-  static PRInt8  sTextfieldSelectModel;
 
   // Recursion guard for tabbing
   PRBool mTabbedThroughDocument;
