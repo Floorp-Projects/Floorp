@@ -59,7 +59,7 @@ if (NS_FAILED(rv))				\
 }
 
 #ifdef DEBUG
-#define XPISTUB_DLL "\pxpistubDebug.shlb"	
+#define XPISTUB_DLL "\pxpistubDebug.shlb"
 #else
 #define XPISTUB_DLL "\pxpistub.shlb"
 #endif
@@ -217,7 +217,7 @@ RunXPI(FSSpec& aXPI, FSSpec& aXPIStubDir, FSSpec& aTargetDir)
 {	
 	nsresult			rv;
 	OSErr	 			err = noErr;
-	long				flags = 0xFFFF;
+	long				flags = 0x0000;
 	XPI_InitProc		xpi_initProc;
 	XPI_InstallProc		xpi_installProc;
 	XPI_ExitProc		xpi_exitProc;

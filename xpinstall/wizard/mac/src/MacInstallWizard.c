@@ -161,10 +161,12 @@ InitOptObject(void)
 	/* ComponentsWin options */
 	for (i=0; i<kMaxComponents; i++)
 	{
+	/* XXX Remove loop
 		if ((i<gControls->cfg->st[0].numComps) && (gControls->cfg->st[0].comp[i] == kInSetupType))
 			gControls->opt->compSelected[i] = kSelected;
 		else
 			gControls->opt->compSelected[i] = kNotSelected;
+	*/
 	}	
 }
 

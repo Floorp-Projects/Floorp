@@ -528,7 +528,7 @@ DiskSpaceNeeded(void)
 	 */
 	for (i=0; i<kMaxComponents; i++)
 	{	
-		if (gControls->opt->compSelected[i] == kSelected)
+		if (gControls->cfg->comp[i].selected == true)
 		{
 			spaceNeeded += gControls->cfg->comp[i].size;
 		}

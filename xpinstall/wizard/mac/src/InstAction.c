@@ -40,11 +40,12 @@ pascal void* Install(void* unused)
 	Boolean 		isDir = false;
 	GrafPtr			oldPort;
 	
-#if CORRECT_DL_LOCATION == 1
+#ifndef DEBUG
 	/* get "Temporary Items" folder path */
 	ERR_CHECK_RET(FindFolder(kOnSystemDisk, kTemporaryFolderType, kCreateFolder, &vRefNum, &dirID), (void*)0);
 #else
-
+	/* for DEBUG builds dump downloaded items in "<currProcessVolume>:Temp NSInstall:" */
+	
 	vRefNum = gControls->opt->vRefNum;
 	err = FSMakeFSSpec( vRefNum, 0, TEMP_DIR, &tmpSpec );
 	if (err != noErr)
@@ -195,7 +196,7 @@ GenerateIDIFromOpt(Str255 idiName, long dirID, short vRefNum, FSSpec *idiSpec)
 			// if custom and selected, or not custom setup type
 			// add file to buffer
 			if ( ((instChoice == gControls->cfg->numSetupTypes-1) && 
-				  (gControls->opt->compSelected[i] == kSelected)) ||
+				  (gControls->cfg->comp[i].selected == true)) ||
 				 (instChoice < gControls->cfg->numSetupTypes-1) )
 			{
 				// get file number from STR# resource
