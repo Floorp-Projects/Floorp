@@ -32,7 +32,9 @@
 #include "nsINameSpaceManager.h"
 #include "nsIStreamLoader.h"
 #include "nsIUnicharInputStream.h"
-
+#include "nsICharsetConverterManager.h"
+#include "nsIUnicodeDecoder.h"
+#include "nsICharsetAlias.h"
 #include "nsHashtable.h"
 #include "nsIURL.h"
 #include "nsIURL.h"
@@ -51,6 +53,7 @@ static NS_DEFINE_IID(kICSSLoaderIID, NS_ICSS_LOADER_IID);
 //static NS_DEFINE_IID(kIStyleSheetIID, NS_ISTYLE_SHEET_IID);
 static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kIStyleSheetLinkingElementIID, NS_ISTYLESHEETLINKINGELEMENT_IID);
+static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
 class CSSLoaderImpl;
 
@@ -330,6 +333,22 @@ public:
 
   nsHashtable   mSheetMapTable;  // map to insertion index arrays
 
+  // @charset support
+  nsString      mCharset;        // the charset we are using
+
+  NS_IMETHOD GetCharset(/*out*/nsString &aCharsetDest) const; // PUBLIC
+  NS_IMETHOD SetCharset(/*in*/ const nsString &aCharsetSrc);  // PUBLIC
+    // public methods for clients to set the charset if they know it
+    //  NOTE: the SetCharset method will always get the preferred charset from the charset passed in
+    //        unless it is the emptystring, which causes the default charset to be set
+
+  nsresult SetCharset(/*in*/ const nsString &aHTTPHeader, /*in*/ const nsString &aStyleSheetData);
+    // sets the charset based upon the data passed in
+    //  - if HTTPHeader is not empty and it has a charset, use that
+    //  - otherwise, if the StyleSheetData is not empty and it has '@charset' as the first substring,
+    //    then use that
+    //  - othersise set the default charset
+
 #ifdef NS_DEBUG
   PRBool  mSyncCallback;
 #endif
@@ -442,6 +461,7 @@ CSSLoaderImpl::CSSLoaderImpl(void)
   mCaseSensitive = PR_FALSE;
   mNavQuirkMode = PR_FALSE;
   mParsers = nsnull;
+  SetCharset(nsString(""));
 }
 
 static PRBool ReleaseSheet(nsHashKey* aKey, void* aData, void* aClosure)
@@ -572,6 +592,7 @@ CSSLoaderImpl::GetParserFor(nsICSSStyleSheet* aSheet,
   if (*aParser) {
     (*aParser)->SetCaseSensitive(mCaseSensitive);
     (*aParser)->SetQuirkMode(mNavQuirkMode);
+    (*aParser)->SetCharset(mCharset);
     if (aSheet) {
       (*aParser)->SetStyleSheet(aSheet);
     }
@@ -605,13 +626,50 @@ SheetLoadData::OnStreamComplete(nsIStreamLoader* aLoader,
                                 PRUint32 stringLen,
                                 const char* string)
 {
-  nsString aStyleData; aStyleData.AssignWithConversion(string, stringLen);
-  mLoader->DidLoadStyle(aLoader, aStyleData, this, aStatus);
+  nsresult result = NS_OK;
+
+  if (string && stringLen>0) {
+    nsString strUnicodeBuffer;
+
+    // First determine the charset (if one is indicated) and set the data member
+    // XXX use the HTTP header data too
+    nsString strStyleDataUndecoded;
+    nsString strHTTPHeaderData;
+    strStyleDataUndecoded.AssignWithConversion(string,stringLen);
+    result = mLoader->SetCharset(strHTTPHeaderData, strStyleDataUndecoded);
+    if (NS_SUCCEEDED(result)) {
+      // now get the decoder
+      NS_WITH_SERVICE(nsICharsetConverterManager,ccm,kCharsetConverterManagerCID,&result);
+      if (NS_SUCCEEDED(result) && ccm) {
+        nsString charset;
+        mLoader->GetCharset(charset);
+        nsIUnicodeDecoder *decoder = nsnull;
+        ccm->GetUnicodeDecoder(&charset,&decoder);
+        if (decoder) {
+          PRInt32 unicodeLength=0;
+          if (NS_SUCCEEDED(decoder->GetMaxLength(string,stringLen,&unicodeLength))) {
+            PRUnichar *unicodeString = nsnull;
+            // make space for the decoding
+            strUnicodeBuffer.SetCapacity(unicodeLength);
+            unicodeString = (PRUnichar *) strUnicodeBuffer.GetUnicode();
+            result = decoder->Convert(string, (PRInt32 *) &stringLen, unicodeString, &unicodeLength);
+            if (NS_SUCCEEDED(result)) {
+              strUnicodeBuffer.SetLength(unicodeLength);
+            } else {
+              strUnicodeBuffer.SetLength(0);
+            }
+          }
+          NS_RELEASE(decoder);
+        }
+      }
+    }
+    mLoader->DidLoadStyle(aLoader, strUnicodeBuffer, this, aStatus);
+  }
 
   // We added a reference when the loader was created. This
   // release should destroy it.
   NS_RELEASE(aLoader);
-  return NS_OK;
+  return result;
 }
 
 static PRBool
@@ -804,16 +862,17 @@ CSSLoaderImpl::DidLoadStyle(nsIStreamLoader* aLoader,
   if (NS_SUCCEEDED(aStatus) && (0 < aStyleData.Length()) && (mDocument)) {
     nsresult result;
     nsIUnicharInputStream* uin = nsnull;
+
     // wrap the string with the CSS data up in a unicode input stream.
     result = NS_NewStringUnicharInputStream(&uin, new nsString(aStyleData));
+
     if (NS_SUCCEEDED(result)) {
       // XXX We have no way of indicating failure. Silently fail?
       PRBool completed;
       nsICSSStyleSheet* sheet;
       result = ParseSheet(uin, aLoadData, completed, sheet);
       NS_IF_RELEASE(sheet);
-
-      NS_RELEASE(uin);
+      NS_IF_RELEASE(uin);
     }
     else {
       URLKey  key(aLoadData->mURL);
@@ -1346,9 +1405,9 @@ CSSLoaderImpl::LoadAgentSheet(nsIURI* aURL,
       result = NS_OpenURI(&in, urlClone);
       NS_RELEASE(urlClone);
       if (NS_SUCCEEDED(result)) {
-        // Translate the input using the argument character set id into unicode
+        // Translate the input, using our characterset, into unicode
         nsIUnicharInputStream* uin;
-        result = NS_NewConverterStream(&uin, nsnull, in);
+        result = NS_NewConverterStream(&uin, nsnull, in, 0, &mCharset);
         if (NS_SUCCEEDED(result)) {
           SheetLoadData* data = new SheetLoadData(this, aURL, aObserver);
           if (data == nsnull) {
@@ -1412,3 +1471,92 @@ nsresult NS_NewCSSLoader(nsICSSLoader** aLoader)
 
 
 
+NS_IMETHODIMP CSSLoaderImpl::GetCharset(/*out*/nsString &aCharsetDest) const
+{
+  NS_ASSERTION(mCharset.Length() > 0, "CSSLoader charset should be set in ctor" );
+  nsresult rv = NS_OK;
+  aCharsetDest = mCharset;
+  return rv;
+}
+
+NS_IMETHODIMP CSSLoaderImpl::SetCharset(/*in*/ const nsString &aCharsetSrc)
+  // public methods for clients to set the charset if they know it
+  //  NOTE: the SetCharset method will always get the preferred charset from the charset passed in
+  //        unless it is the emptystring, which causes the default charset to be set
+{
+  nsresult rv = NS_OK;
+  if (aCharsetSrc.Length() == 0) {
+    mCharset.AssignWithConversion("ISO-8859-1");
+  } else {
+    NS_WITH_SERVICE(nsICharsetAlias, calias, kCharsetAliasCID, &rv);
+    NS_ASSERTION(calias, "cannot find charset alias");
+    nsAutoString charsetName = aCharsetSrc;
+    if( NS_SUCCEEDED(rv) && (nsnull != calias))
+    {
+      PRBool same = PR_FALSE;
+      rv = calias->Equals(aCharsetSrc, mCharset, &same);
+      if(NS_SUCCEEDED(rv) && same)
+      {
+        return NS_OK; // no difference, don't change it
+      }
+      // different, need to change it
+      rv = calias->GetPreferred(aCharsetSrc, charsetName);
+      if(NS_FAILED(rv))
+      {
+         // failed - unknown alias , fallback to ISO-8859-1
+        charsetName.AssignWithConversion("ISO-8859-1");
+      }
+      mCharset = charsetName;
+    }
+  }
+
+  return rv;
+}
+
+nsresult CSSLoaderImpl::SetCharset(/*in*/ const nsString &aHTTPHeader, 
+                                   /*in*/ const nsString &aStyleSheetData)
+  // sets the charset based upon the data passed in
+  //  - if HTTPHeader is not empty and it has a charset, use that
+  //  - otherwise, if the StyleSheetData is not empty and it has '@charset' as the first substring,
+  //    then use that
+  //  - othersise set the default charset
+{
+  nsresult rv = NS_OK;
+  nsString str;
+  PRBool setCharset = PR_FALSE;
+
+  if (aHTTPHeader.Length() > 0) {
+    // check if it has the charset= parameter
+    if (aHTTPHeader.Find("charset=",PR_TRUE) > 0) {
+      // XXX use it
+      
+      NS_ASSERTION(PR_FALSE,"Needs to be implemented!!!");
+
+      setCharset = PR_TRUE;
+    }
+  } else if (aStyleSheetData.Length() > 0) {
+    if (aStyleSheetData.Find("@charset") > -1) {
+      nsString strValue;
+      // skip past the ident
+      aStyleSheetData.Mid(str,8,-1);
+      // strip any whitespace
+      str.StripWhitespace();
+      // truncate everything past the delimiter (semicolon)
+      PRInt32 pos = str.Find(";");
+      if (pos > -1) {
+        str.Left(strValue,pos);
+      }
+      // strip any quotes
+      strValue.Trim("\"\'");
+
+      // that's the charset!
+      str = strValue;
+
+      setCharset = PR_TRUE;
+    }
+  }
+  if (PR_TRUE == setCharset) {
+    rv = SetCharset(str);
+  }
+  return rv;
+}

@@ -74,6 +74,16 @@ public:
                                        nsICSSDeclaration* aDeclaration,
                                        PRInt32*           aHint) = 0;
 
+  // Charset management method:
+  //  Set the charset before calling any of the Parse emthods if you want the 
+  //  charset to be anything other than the default
+
+  // sets the out-param to the current charset, as set by SetCharset
+  NS_IMETHOD GetCharset(/*out*/nsString &aCharsetDest) const = 0;
+
+  // SetCharset expects the charset to be the preferred charset
+  // and it just records the string exactly as passed in (no alias resolution)
+  NS_IMETHOD SetCharset(/*in*/ const nsString &aCharsetSrc) = 0;
 };
 
 // Values or'd in the GetInfoMask; other bits are reserved
