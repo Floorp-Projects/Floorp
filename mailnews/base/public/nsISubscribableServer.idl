@@ -37,7 +37,7 @@ interface nsISubscribableServer : nsISupports {
 	void setIncomingServer(in nsIMsgIncomingServer server);
 	void setDelimiter(in char delimiter);
 	void populateSubscribeDatasource(in nsIMsgWindow aMsgWindow, in boolean forceToServer);
-	void populateSubscribeDatasourceWithPath(in nsIMsgWindow aMsgWindow, in boolean forceToServer, in string path);
+	void populateSubscribeDatasourceWithUri(in nsIMsgWindow aMsgWindow, in boolean forceToServer, in string uri);
 	attribute nsISubscribeListener subscribeListener;
 	void startPopulatingSubscribeDS();
   	void stopPopulatingSubscribeDS();

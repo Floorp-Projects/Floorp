@@ -330,21 +330,12 @@ function SubscribeOnClick(event)
 			if(open == "true") {
 				var uri = treeitem.getAttribute("id");	
 				
-				// we need the path here,  so if the uri is:
-				// imap://sspitzer@nsmail-1/foo/bar
-				// we want foo/bar
-				//
-				// why not use the "name" attribute?
-				// for i18n, we need the folder path, which is not the same
-				// the folder path (of the uri) will have UTF7
-				// the name has UTF8
-				var path = uri.substring(gServerURI.length + 1,uri.length);
-				dump("do twisty for " + path + "\n");
+				dump("do twisty for " + uri + "\n");
 
 				// Turn progress meter on.
 				gStatusBar.setAttribute("mode","undetermined");	
 
-				gSubscribableServer.populateSubscribeDatasourceWithPath(null /* eventually, a nsIMsgWindow */, true /* force to server */, path);
+				gSubscribableServer.populateSubscribeDatasourceWithUri(null /* eventually, a nsIMsgWindow */, true /* force to server */, uri);
 			}
 		}
 		else {

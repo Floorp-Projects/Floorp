@@ -1839,11 +1839,11 @@ NS_IMETHODIMP nsImapIncomingServer::OnLogonRedirectionReply(const PRUnichar *pHo
 }
 
 NS_IMETHODIMP
-nsImapIncomingServer::PopulateSubscribeDatasourceWithPath(nsIMsgWindow *aMsgWindow, PRBool aForceToServer /*ignored*/, const char *path)
+nsImapIncomingServer::PopulateSubscribeDatasourceWithUri(nsIMsgWindow *aMsgWindow, PRBool aForceToServer /*ignored*/, const char *uri)
 {
 	nsresult rv;
 #ifdef DEBUG_sspitzer
-	printf("in PopulateSubscribeDatasourceWithPath(%s)\n",path);
+	printf("in PopulateSubscribeDatasourceWithUri(%s)\n",uri);
 #endif
 	mDoingSubscribeDialog = PR_TRUE;	
 
@@ -1854,6 +1854,19 @@ nsImapIncomingServer::PopulateSubscribeDatasourceWithPath(nsIMsgWindow *aMsgWind
 	nsCOMPtr<nsIImapService> imapService = do_GetService(kImapServiceCID, &rv);
 	if (NS_FAILED(rv)) return rv;
 	if (!imapService) return NS_ERROR_FAILURE;
+
+	nsXPIDLCString serverUri;
+    rv = GetServerURI(getter_Copies(serverUri));
+	if (NS_FAILED(rv)) return rv;
+
+	/* 
+		if uri = imap://user@host/foo/bar, the serverUri is imap://user@host
+	 	to get path from uri, skip over imap://user@host + 1 (for the /)
+	*/
+	const char *path = uri + nsCRT::strlen((const char *)serverUri) + 1;
+#ifdef DEBUG_seth
+	printf("path = %s\n",path);
+#endif
 
     rv = imapService->BuildSubscribeDatasourceWithPath(this, aMsgWindow, path);
     if (NS_FAILED(rv)) return rv;

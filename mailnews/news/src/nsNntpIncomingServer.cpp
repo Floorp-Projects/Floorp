@@ -679,8 +679,8 @@ writeGroupToHostInfo(nsCString &aElement, void *aData)
 	nsIOFileStream *stream;
 	stream = (nsIOFileStream *)aData;
 	
-    // ",,x,y,z" is a temporary hack
-	*stream << (const char *)aElement << ",,x,y,z" << MSG_LINEBREAK;
+    // ",,1,0,0" is a temporary hack
+	*stream << (const char *)aElement << ",,1,0,0" << MSG_LINEBREAK;
 
 	return PR_TRUE;
 }
@@ -815,12 +815,12 @@ nsNntpIncomingServer::PopulateSubscribeDatasourceFromHostInfo(nsIMsgWindow *aMsg
 }
 
 NS_IMETHODIMP
-nsNntpIncomingServer::PopulateSubscribeDatasourceWithPath(nsIMsgWindow *aMsgWindow, PRBool aForceToServer, const char *path)
+nsNntpIncomingServer::PopulateSubscribeDatasourceWithUri(nsIMsgWindow *aMsgWindow, PRBool aForceToServer, const char *uri)
 {
 	nsresult rv;
 
 #ifdef DEBUG_sspitzer
-	printf("PopulateSubscribeDatasourceWithPath(%s)\n",path);
+	printf("PopulateSubscribeDatasourceWithUri(%s)\n",uri);
 #endif
 
 	rv = StopPopulatingSubscribeDS();
