@@ -1910,6 +1910,12 @@ nsDocument::GetStyleSheets(nsIDOMStyleSheetCollection** aStyleSheets)
 }
 
 NS_IMETHODIMP    
+nsDocument::GetCharacterSet(nsString& aCharacterSet)
+{
+  return GetDocumentCharacterSet(aCharacterSet);
+}
+
+NS_IMETHODIMP    
 nsDocument::CreateElementWithNameSpace(const nsString& aTagName, 
                                        const nsString& aNameSpace, 
                                        nsIDOMElement** aReturn)

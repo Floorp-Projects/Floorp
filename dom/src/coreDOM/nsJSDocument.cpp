@@ -79,7 +79,9 @@ enum Document_slots {
   DOCUMENT_DOCUMENTELEMENT = -3,
   NSDOCUMENT_WIDTH = -4,
   NSDOCUMENT_HEIGHT = -5,
-  NSDOCUMENT_STYLESHEETS = -6
+  NSDOCUMENT_STYLESHEETS = -6,
+  NSDOCUMENT_CHARACTERSET = -7
+
 };
 
 /***********************************************************************/
@@ -228,6 +230,32 @@ GetDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           if(NS_SUCCEEDED(result)) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+            NS_RELEASE(b);
+          }
+          else {
+            NS_RELEASE(b);
+            return nsJSUtils::nsReportError(cx, obj, result);
+          }
+        }
+        else {
+          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
+        }
+        break;
+      }
+      case NSDOCUMENT_CHARACTERSET:
+      {
+        PRBool ok = PR_FALSE;
+        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSDOCUMENT_CHARACTERSET, PR_FALSE, &ok);
+        if (!ok) {
+          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        }
+        nsAutoString prop;
+        nsIDOMNSDocument* b;
+        if (NS_OK == a->QueryInterface(kINSDocumentIID, (void **)&b)) {
+          nsresult result = NS_OK;
+          result = b->GetCharacterSet(prop);
+          if(NS_SUCCEEDED(result)) {
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
             NS_RELEASE(b);
           }
           else {
@@ -908,7 +936,8 @@ static JSPropertySpec DocumentProperties[] =
   {"width",    NSDOCUMENT_WIDTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"height",    NSDOCUMENT_HEIGHT,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"styleSheets",    NSDOCUMENT_STYLESHEETS,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {0}
+  {"characterSet",    NSDOCUMENT_CHARACTERSET,    JSPROP_ENUMERATE | JSPROP_READONLY},
+ {0}
 };
 
 

@@ -671,6 +671,7 @@
     "nodelist.length", \
     "notation.publicid", \
     "notation.systemid", \
+    "nsdocument.characterset", \
     "nsdocument.createelementwithnamespace", \
     "nsdocument.createrange", \
     "nsdocument.height", \
