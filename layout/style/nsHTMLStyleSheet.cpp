@@ -491,7 +491,8 @@ protected:
                                   nsIStyleContext* aStyleContext,
                                   nsAbsoluteItems& aAbsoluteItems,
                                   nsIFrame*&       aNewFrame,
-                                  nsAbsoluteItems& aFixedItems);
+                                  nsAbsoluteItems& aFixedItems,
+								  PRBool           anAllowEvents);
 #endif
 
   nsresult ConstructFrameByDisplayType(nsIPresContext*       aPresContext,
@@ -2182,8 +2183,14 @@ HTMLStyleSheetImpl::ConstructXULFrame(nsIPresContext*  aPresContext,
   else if (aTag == nsXULAtoms::treecell)
   {
     // We make a tree cell frame and process the children.
+	// Find out what the attribute value for event allowance is.
+	nsString attrValue;
+    nsresult result = aContent->GetAttribute(nsXULAtoms::nameSpaceID, nsXULAtoms::treeallowevents, attrValue);
+    attrValue.ToLowerCase();
+    PRBool allowEvents =  (result == NS_CONTENT_ATTR_NO_VALUE ||
+					      (result == NS_CONTENT_ATTR_HAS_VALUE && attrValue=="true"));
     rv = ConstructTreeCellFrame(aPresContext, aContent, aParentFrame, aStyleContext,
-                                aAbsoluteItems, aNewFrame, aFixedItems);
+                                aAbsoluteItems, aNewFrame, aFixedItems, allowEvents);
     aFrameItems.AddChild(aNewFrame);
     return rv;
   }
@@ -2439,12 +2446,13 @@ HTMLStyleSheetImpl::ConstructTreeCellFrame(nsIPresContext*  aPresContext,
                                            nsIStyleContext* aStyleContext,
                                            nsAbsoluteItems& aAbsoluteItems,
                                            nsIFrame*&       aNewFrame,
-                                           nsAbsoluteItems& aFixedItems)
+                                           nsAbsoluteItems& aFixedItems,
+										   PRBool           anAllowEvents)
 {
   nsresult  rv;
 
   // Create a table cell frame
-  rv = NS_NewTreeCellFrame(aNewFrame);
+  rv = NS_NewTreeCellFrame(aNewFrame, anAllowEvents);
   if (NS_SUCCEEDED(rv)) {
     // Initialize the table cell frame
     aNewFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext);
