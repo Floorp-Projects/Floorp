@@ -21,10 +21,37 @@
 
 # NOTE: This is still under definition
 
+# images category
+# ----------------------------------------------------------------------
+<images>
+gfxImageFrame::Init
+
+# jar category
+# ----------------------------------------------------------------------
+<jar>
+nsZipArchive::BuildFileList
+
+# necko
+# ----------------------------------------------------------------------
+<necko>
+nsDiskCacheDevice::Init
+
 # css category
+# ----------------------------------------------------------------------
 <css>
-New_CSS
+NS_NewCSS
 
 # xpcom category
+# ----------------------------------------------------------------------
 <xpcom>
-PrePopulateRegistry
+nsComponentManagerImpl::PlatformPrePopulateRegistry
+
+# fastload js
+# ----------------------------------------------------------------------
+<fastload-js>
+nsXULPrototypeScript::Deserialize
+
+# Everything else
+# ----------------------------------------------------------------------
+# <uncategorized>
+# This is a predefined category. Dont create it yourself.
