@@ -81,6 +81,7 @@
 #include "nsIDNSService.h"
 #include "nsIMsgHdr.h"
 #include "nsMsgUtf7Utils.h"
+#include "nsEscape.h"
 // for the memory cache...
 #include "nsICacheEntryDescriptor.h"
 #include "nsICacheSession.h"
