@@ -54,6 +54,28 @@ NS_IMPL_THREADSAFE_ISUPPORTS4(nsIndexedToHTML,
 
 static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
 
+static void ConvertNonAsciiToNCR(const nsAString& in, nsAFlatString& out)
+{
+  nsAString::const_iterator start, end;
+
+  in.BeginReading(start);
+  in.EndReading(end);
+
+  out.Truncate();
+
+  while (start != end) {
+    if (*start < 128) {
+      out.Append(*start++);
+    } else {
+      out.Append(NS_LITERAL_STRING("&#x"));
+      nsAutoString hex;
+      hex.AppendInt(*start++, 16);
+      out.Append(hex);
+      out.Append((PRUnichar)';');
+    }
+  }
+}
+
 NS_METHOD
 nsIndexedToHTML::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult) {
     nsresult rv;
@@ -201,10 +223,23 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
     }
 
     nsString buffer;
-    buffer.Assign(NS_LITERAL_STRING("<?xml version=\"1.0"));
+    buffer.Assign(NS_LITERAL_STRING("<?xml version=\"1.0\""));
+    
+    // Get the encoding from the parser
+    // XXX - this won't work for any encoding set via a 301: line in the
+    // format - this output stuff would need to move to OnDataAvailable
+    // for that. However, currently only file:// sends that, and file's HTML
+    // index mode isn't enabled yet (bug 102812)
 
-    buffer.Append(NS_LITERAL_STRING("\" encoding=\"UTF-8") +
-                  NS_LITERAL_STRING("\"?>\n") +
+    nsXPIDLCString encoding;
+    rv = mParser->GetEncoding(getter_Copies(encoding));
+    if (NS_FAILED(rv)) return rv;
+
+    buffer.Append(NS_LITERAL_STRING(" encoding=\"") +
+                  NS_ConvertASCIItoUCS2(encoding) +
+                  NS_LITERAL_STRING("\""));
+
+    buffer.Append(NS_LITERAL_STRING("?>\n") +
                   NS_LITERAL_STRING("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.1//EN\" ") +
                   NS_LITERAL_STRING("\"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd\">\n"));
 
@@ -214,9 +249,6 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
     buffer.Append(NS_LITERAL_STRING("<html xmlns=\"http://www.w3.org/1999/xhtml\">\n<head><title>"));
 
     nsXPIDLString title;
-    nsXPIDLCString encoding;
-    rv = mParser->GetEncoding(getter_Copies(encoding));
-    if (NS_FAILED(rv)) return rv;
 
     if (!mTextToSubURI) {
         mTextToSubURI = do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
@@ -241,7 +273,12 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
                                        sizeof(formatTitle)/sizeof(PRUnichar*),
                                        getter_Copies(title));
     if (NS_FAILED(rv)) return rv;
-    buffer.Append(title);
+
+    // we want to convert string bundle to NCR
+    // to ensure they're shown in any charsets
+    nsAutoString strNCR;
+    ConvertNonAsciiToNCR(title, strNCR);
+    buffer.Append(strNCR);
 
     buffer.Append(NS_LITERAL_STRING("</title><base href=\""));    
     buffer.Append(NS_ConvertASCIItoUCS2(baseUri));
@@ -267,7 +304,8 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
                                        getter_Copies(title));
     if (NS_FAILED(rv)) return rv;
     
-    buffer.Append(title);
+    ConvertNonAsciiToNCR(title, strNCR);
+    buffer.Append(strNCR);
     buffer.Append(NS_LITERAL_STRING("</h1>\n<hr/>") + tableHeading);
 
     //buffer.Append(NS_LITERAL_STRING("<tr><th>Name</th><th>Size</th><th>Last modified</th></tr>\n"));
@@ -278,10 +316,11 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
                                         getter_Copies(parentText));
         if (NS_FAILED(rv)) return rv;
         
+        ConvertNonAsciiToNCR(parentText, strNCR);
         buffer.Append(NS_LITERAL_STRING("<tr><td colspan=\"3\"><a href=\"") +
                       NS_ConvertASCIItoUCS2(parentStr) +
                       NS_LITERAL_STRING("\">") +
-                      parentText +
+                      strNCR +
                       NS_LITERAL_STRING("</a></td></tr>\n"));
     }
 
@@ -318,12 +357,72 @@ nsresult
 nsIndexedToHTML::FormatInputStream(nsIRequest* aRequest, nsISupports *aContext, const nsAString &aBuffer) 
 {
     nsresult rv = NS_OK;
-    NS_ConvertUCS2toUTF8 buffer(aBuffer);
+
+    // set up unicode encoder
+    if (!mUnicodeEncoder) {
+      nsXPIDLCString encoding;
+      rv = mParser->GetEncoding(getter_Copies(encoding));
+      if (NS_SUCCEEDED(rv)) {
+        nsCOMPtr<nsICharsetConverterManager2> charsetConverterManager;
+        charsetConverterManager = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
+        nsCOMPtr<nsIAtom> charsetAtom;
+        rv = charsetConverterManager->GetCharsetAtom2(encoding.get(), getter_AddRefs(charsetAtom));
+        if (NS_SUCCEEDED(rv)) {
+          rv = charsetConverterManager->GetUnicodeEncoder(charsetAtom, 
+                                                          getter_AddRefs(mUnicodeEncoder));
+          if (NS_SUCCEEDED(rv))
+            rv = mUnicodeEncoder->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace, 
+                                                       nsnull, (PRUnichar)'?');
+        }
+      }
+    }
+
+    // convert the data with unicode encoder
+    char *buffer = nsnull;
+    PRInt32 dstLength;
+    if (NS_SUCCEEDED(rv)) {
+      PRInt32 unicharLength = aBuffer.Length();
+      rv = mUnicodeEncoder->GetMaxLength(PromiseFlatString(aBuffer).get(), 
+                                         unicharLength, &dstLength);
+      if (NS_SUCCEEDED(rv)) {
+        buffer = (char *) nsMemory::Alloc(dstLength);
+        NS_ENSURE_TRUE(buffer, NS_ERROR_OUT_OF_MEMORY);
+
+        rv = mUnicodeEncoder->Convert(PromiseFlatString(aBuffer).get(), &unicharLength, 
+                                      buffer, &dstLength);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 finLen = 0;
+          rv = mUnicodeEncoder->Finish(buffer + dstLength, &finLen);
+          if (NS_SUCCEEDED(rv))
+            dstLength += finLen;
+        }
+      }
+    }
+
+    // if conversion error then fallback to UTF-8
+    if (NS_FAILED(rv)) {
+      rv = NS_OK;
+      if (buffer) {
+        nsMemory::Free(buffer);
+        buffer = nsnull;
+      }
+    }
+
     nsCOMPtr<nsIInputStream> inputData;
-    rv = NS_NewCStringInputStream(getter_AddRefs(inputData), buffer);
-    if (NS_FAILED(rv)) return rv;
-    rv = mListener->OnDataAvailable(aRequest, aContext,
-                                    inputData, 0, buffer.Length());
+    if (buffer) {
+      rv = NS_NewCStringInputStream(getter_AddRefs(inputData), nsDependentCString(buffer, dstLength));
+      nsMemory::Free(buffer);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = mListener->OnDataAvailable(aRequest, aContext,
+                                      inputData, 0, dstLength);
+    }
+    else {
+      NS_ConvertUCS2toUTF8 utf8Buffer(aBuffer);
+      rv = NS_NewCStringInputStream(getter_AddRefs(inputData), utf8Buffer);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = mListener->OnDataAvailable(aRequest, aContext,
+                                      inputData, 0, utf8Buffer.Length());
+    }
     return (rv);
 }
 
