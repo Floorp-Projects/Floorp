@@ -82,6 +82,8 @@ public:
   NS_IMETHOD Show();
   NS_IMETHOD Hide();
   NS_IMETHOD Print(void);
+  NS_IMETHOD SetEnableRendering(PRBool aOn);
+  NS_IMETHOD GetEnableRendering(PRBool* aResult);
 
   // nsIDocumentViewer interface...
   NS_IMETHOD SetUAStyleSheet(nsIStyleSheet* aUAStyleSheet);
@@ -121,14 +123,15 @@ protected:
   nsCOMPtr<nsIPresShell>   mPresShell;
 
   nsCOMPtr<nsIStyleSheet>  mUAStyleSheet;
+
+  PRBool mEnableRendering;
 };
 
-//Class IDs
+// Class IDs
 static NS_DEFINE_IID(kViewManagerCID,       NS_VIEW_MANAGER_CID);
 static NS_DEFINE_IID(kScrollingViewCID,     NS_SCROLLING_VIEW_CID);
 static NS_DEFINE_IID(kWidgetCID,            NS_CHILD_CID);
 static NS_DEFINE_IID(kViewCID,              NS_VIEW_CID);
-
 
 // Interface IDs
 static NS_DEFINE_IID(kIScriptContextOwnerIID, NS_ISCRIPTCONTEXTOWNER_IID);
@@ -173,7 +176,8 @@ DocumentViewerImpl::DocumentViewerImpl(nsIPresContext* aPresContext)
 NS_IMPL_ADDREF(DocumentViewerImpl)
 NS_IMPL_RELEASE(DocumentViewerImpl)
 
-nsresult DocumentViewerImpl::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+nsresult
+DocumentViewerImpl::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
@@ -200,7 +204,6 @@ nsresult DocumentViewerImpl::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }
   return NS_NOINTERFACE;
 }
-
 
 DocumentViewerImpl::~DocumentViewerImpl()
 {
@@ -267,7 +270,6 @@ DocumentViewerImpl::GetContainer(nsIContentViewerContainer*& aResult)
   NS_IF_ADDREF(aResult);
   return NS_OK;
 }
-
 
 NS_IMETHODIMP
 DocumentViewerImpl::Init(nsNativeWidget aNativeParent,
@@ -356,7 +358,9 @@ DocumentViewerImpl::Init(nsNativeWidget aNativeParent,
         mPresShell->InitialReflow(width, height);
 
         // Now trigger a refresh
-        mViewManager->EnableRefresh();
+        if (mEnableRendering) {
+          mViewManager->EnableRefresh();
+        }
       }
     }
   }
@@ -404,7 +408,6 @@ DocumentViewerImpl::GetPresContext(nsIPresContext*& aResult)
   return NS_OK;
 }
 
-
 NS_IMETHODIMP
 DocumentViewerImpl::GetBounds(nsRect& aResult)
 {
@@ -418,7 +421,6 @@ DocumentViewerImpl::GetBounds(nsRect& aResult)
   return NS_OK;
 }
 
-
 NS_IMETHODIMP
 DocumentViewerImpl::SetBounds(const nsRect& aBounds)
 {
@@ -431,7 +433,6 @@ DocumentViewerImpl::SetBounds(const nsRect& aBounds)
   }
   return NS_OK;
 }
-
 
 NS_IMETHODIMP
 DocumentViewerImpl::Move(PRInt32 aX, PRInt32 aY)
@@ -463,11 +464,11 @@ DocumentViewerImpl::Hide(void)
   return NS_OK;
 }
 
-
 static NS_DEFINE_IID(kIDeviceContextSpecFactoryIID, NS_IDEVICE_CONTEXT_SPEC_FACTORY_IID);
 static NS_DEFINE_IID(kDeviceContextSpecFactoryCID, NS_DEVICE_CONTEXT_SPEC_FACTORY_CID);
 
-NS_IMETHODIMP DocumentViewerImpl::Print(void)
+NS_IMETHODIMP
+DocumentViewerImpl::Print(void)
 {
   nsIDeviceContextSpecFactory *factory = nsnull;
 
@@ -475,21 +476,15 @@ NS_IMETHODIMP DocumentViewerImpl::Print(void)
                                      kIDeviceContextSpecFactoryIID,
                                      (void **)&factory);
 
-  if (nsnull != factory)
-  {
+  if (nsnull != factory) {
     nsIDeviceContextSpec *devspec = nsnull;
     nsCOMPtr<nsIDeviceContext> dx;
     nsIDeviceContext *newdx = nsnull;
-
     factory->CreateDeviceContextSpec(nsnull, devspec, PR_FALSE);
-
     if (nsnull != devspec) {
       mPresContext->GetDeviceContext(getter_AddRefs(dx));
-
-      if (NS_OK == dx->GetDeviceContextFor(devspec, newdx))
-      {
-        nsIPresShell *ps;
-        nsIPresContext *cx;
+      nsresult rv = dx->GetDeviceContextFor(devspec, newdx); 
+      if (NS_SUCCEEDED(rv)) {
         nsIStyleSet *ss;
         nsIPref *prefs;
         nsIViewManager *vm;
@@ -501,43 +496,52 @@ NS_IMETHODIMP DocumentViewerImpl::Print(void)
         newdx->BeginDocument();
         newdx->GetDeviceSurfaceDimensions(width, height);
 
-        NS_NewPrintContext(&cx);
+        nsIPresContext *cx;
+        rv = NS_NewPrintContext(&cx);
+        if (NS_FAILED(rv)) {
+          return rv;
+        }
         mPresContext->GetPrefs(&prefs);
         cx->Init(newdx, prefs);
 
         CreateStyleSet(mDocument, &ss);
 
-        NS_NewPresShell(&ps);
-
-        {
-          nsresult rv;
-
-          rv = nsComponentManager::CreateInstance(kViewManagerCID, 
-                                                  nsnull, 
-                                                  kIViewManagerIID, 
-                                                  (void **)&vm);
-
-          if ((NS_OK != rv) || (NS_OK != vm->Init(newdx))) {
-            NS_ASSERTION(PR_FALSE, "can't get good VM");
-          }
-
-          nsRect tbounds = nsRect(0, 0, width, height);
-
-          // Create a child window of the parent that is our "root view/window"
-          // Create a view
-          rv = nsComponentManager::CreateInstance(kViewCID, 
-                                                  nsnull, 
-                                                  kIViewIID, 
-                                                  (void **)&view);
-          if ((NS_OK != rv) || (NS_OK != view->Init(vm, 
-                                                    tbounds,
-                                                    nsnull))) {
-            NS_ASSERTION(PR_FALSE, "can't get good view");
-          }
-
-          // Setup hierarchical relationship in view manager
-          vm->SetRootView(view);
+        nsIPresShell *ps;
+        rv = NS_NewPresShell(&ps);
+        if (NS_FAILED(rv)) {
+          return rv;
         }
+
+        rv = nsComponentManager::CreateInstance(kViewManagerCID, 
+                                                nsnull, 
+                                                kIViewManagerIID, 
+                                                (void **)&vm);
+        if (NS_FAILED(rv)) {
+          return rv;
+        }
+        rv = vm->Init(newdx);
+        if (NS_FAILED(rv)) {
+          return rv;
+        }
+
+        nsRect tbounds = nsRect(0, 0, width, height);
+
+        // Create a child window of the parent that is our "root view/window"
+        // Create a view
+        rv = nsComponentManager::CreateInstance(kViewCID, 
+                                                nsnull, 
+                                                kIViewIID, 
+                                                (void **)&view);
+        if (NS_FAILED(rv)) {
+          return rv;
+        }
+        rv = view->Init(vm, tbounds, nsnull);
+        if (NS_FAILED(rv)) {
+          return rv;
+        }
+
+        // Setup hierarchical relationship in view manager
+        vm->SetRootView(view);
 
         ps->Init(mDocument, cx, vm, ss);
 
@@ -560,15 +564,39 @@ NS_IMETHODIMP DocumentViewerImpl::Print(void)
         NS_RELEASE(newdx);
         NS_IF_RELEASE(prefs); // XXX why is the prefs null??
       }
-
     }
     NS_RELEASE(factory);
   }
-
   return NS_OK;
 }
 
-void DocumentViewerImpl::ForceRefresh()
+NS_IMETHODIMP
+DocumentViewerImpl::SetEnableRendering(PRBool aOn)
+{
+  mEnableRendering = aOn;
+  if (mViewManager) {
+    if (aOn) {
+      mViewManager->EnableRefresh();
+    }
+    else {
+      mViewManager->DisableRefresh();
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DocumentViewerImpl::GetEnableRendering(PRBool* aResult)
+{
+  NS_PRECONDITION(nsnull != aResult, "null OUT ptr");
+  if (aResult) {
+    *aResult = mEnableRendering;
+  }
+  return NS_OK;
+}
+
+void
+DocumentViewerImpl::ForceRefresh()
 {
   mWindow->Invalidate(PR_TRUE);
 }
@@ -600,7 +628,6 @@ DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument,
   }
   return rv;
 }
-
 
 nsresult
 DocumentViewerImpl::MakeWindow(nsNativeWidget aNativeParent,
