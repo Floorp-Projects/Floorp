@@ -4165,10 +4165,10 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
     return ParseMarks(aErrorCode, aValue);
   case eCSSProperty_max_height:
   case eCSSProperty_max_width:
-    return ParseVariant(aErrorCode, aValue, VARIANT_HLPO, nsnull);
+    return ParsePositiveVariant(aErrorCode, aValue, VARIANT_HLPO, nsnull);
   case eCSSProperty_min_height:
   case eCSSProperty_min_width:
-    return ParseVariant(aErrorCode, aValue, VARIANT_HLP, nsnull);
+    return ParsePositiveVariant(aErrorCode, aValue, VARIANT_HLP, nsnull);
   case eCSSProperty_opacity:
     return ParseVariant(aErrorCode, aValue, VARIANT_HN, nsnull);
   case eCSSProperty_orphans:
