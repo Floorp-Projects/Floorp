@@ -56,12 +56,9 @@
 #define SHGFI_LARGEICON          0x0004
 #define SHGFI_SMALLICON          0x0008
 
-// Used for 4 bips per pel
-typedef struct _PELLPAIR
-{ // Due to byte swap the second is first of the pair
-  INT SecondPel:4;
-  INT FirstPel:4;
-} PELPAIR, *PPELPAIR;
+// Due to byte swap the second is first of the pair
+#define FIRSTPEL(x) (0xF & (x >> 4))
+#define SECONDPEL(x)  (0xF & x)
 
 // forward declarations of a couple of helper methods.
 // Takes a bitmap from the windows registry and converts it into 4 byte RGB data.
@@ -241,7 +238,7 @@ void ConvertColorBitMap(PBYTE buffer, PBITMAPINFO2 pBitMapInfo, nsCString& iconB
   if (pBitMapInfo->cBitCount == 4 ||
       pBitMapInfo->cBitCount == 8  )
   {
-    PPELPAIR pPelPair;
+    PBYTE pPelPair;
     PBYTE pPel;
     if (pBitMapInfo->cBitCount == 4)
     {
@@ -253,15 +250,15 @@ void ConvertColorBitMap(PBYTE buffer, PBITMAPINFO2 pBitMapInfo, nsCString& iconB
     }
     for (INT j = 0; j < pBitMapInfo->cy; j++)  //Number of rows
     {
-      pPelPair = (PPELPAIR)buffer;
+      pPelPair = buffer;
       pPel     = (PBYTE)buffer;
       for(INT i = 0; i < iIter; i++)
       {
 
         if (pBitMapInfo->cBitCount == 4)
         {
-          AddBGR(&pColorTable[pPelPair->FirstPel], iconBuffer);
-          AddBGR(&pColorTable[pPelPair->SecondPel], iconBuffer);
+          AddBGR(&pColorTable[FIRSTPEL(*pPelPair)], iconBuffer);
+          AddBGR(&pColorTable[SECONDPEL(*pPelPair)], iconBuffer);
           pPelPair++;
         }
         else
