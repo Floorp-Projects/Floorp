@@ -1,7 +1,0 @@
-<!-- extracted from aw-email.xul -->
-
-<!ENTITY emailTitle.label "Your Email Address:">
-<!ENTITY emailDesc.label "Enter your email address; this is the address otherws will use to send email to you:">
-<!-- LOCALIZATION NOTE (emailExample.label) : do not translate "example@netscape.net" in below line -->
-<!ENTITY emailExample.label "For example: example@netscape.net">
-

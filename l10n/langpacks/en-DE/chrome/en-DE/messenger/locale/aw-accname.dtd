@@ -1,7 +1,0 @@
-<!-- extracted from aw-accname.xul -->
-
-<!ENTITY accnameTitle.label "Account Name">
-<!-- LOCALIZATION NOTE (accnameDesc.label) : do not translate any "&quot;" in below line -->
-<!ENTITY accnameDesc.label "Enter the name by which you would like to refer to this account. (For example, &quot;Work Account&quot;, &quot;Home Account&quot; or &quot;News Account&quot;)">
-<!ENTITY accnameExample.label "For example, Work Account, Home Account or News Account">
-<!ENTITY accnameLabel.label "Account Name:">

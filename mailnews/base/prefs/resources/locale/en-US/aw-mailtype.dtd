@@ -1,8 +1,0 @@
-<!-- extracted from aw-mailtype.xul -->
-
-<!-- LOCALIZATION NOTE (mailTypeTitle.label) : Do not translate "WebMail" in below line. -->
-<!ENTITY mailTypeTitle.label "WebMail or Other Mail:">
-<!-- LOCALIZATION NOTE (mailTypeDesc.label) : Do not translate "WebMail" in below line. -->
-<!ENTITY mailTypeDesc.label "Select a free WebMail account or other mail account, such as your ISP or company mail.">
-<!ENTITY mailTypeOtherMail.label "Other Mail">
-
