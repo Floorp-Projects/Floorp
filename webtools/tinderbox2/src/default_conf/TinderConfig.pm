@@ -5,8 +5,8 @@
 # customizable settings.
 
 
-# $Revision: 1.41 $ 
-# $Date: 2002/05/03 21:09:55 $ 
+# $Revision: 1.42 $ 
+# $Date: 2002/05/06 18:21:34 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/TinderConfig.pm,v $ 
 # $Name:  $ 
@@ -129,8 +129,8 @@ $REFRESH_TIME = (60 * 15);
 #                  JavaScript in your browsers.
  
 $PopUpImpl = (
-	       'HTMLPopUp::MozillaLayers',
-	      # 'HTMLPopUp::MajorCoolWindow',
+	      # 'HTMLPopUp::MozillaLayers',
+	       'HTMLPopUp::MajorCoolWindow',
 	      # 'HTMLPopUp::None',
 	      # 'HTMLPopUp::PortableLayers',
 	     );
