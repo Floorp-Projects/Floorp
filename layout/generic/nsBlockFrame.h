@@ -422,8 +422,7 @@ protected:
                          nsLineList::iterator aFromLine,
                          PRBool aUpdateGeometricParent,
                          PRBool aDamageDeletedLines,
-                         nsIFrame*& aFrameResult,
-                         PRBool& aStopPulling);
+                         nsIFrame*& aFrameResult);
 
   void PushLines(nsBlockReflowState& aState,
                  nsLineList::iterator aLineBefore);
