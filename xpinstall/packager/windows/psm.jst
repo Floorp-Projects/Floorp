@@ -11,8 +11,6 @@ var srDest;
 var err;
 var fProgram;
 
-$Ren8dot3List$
-
 srDest = $SpaceRequired$:bin;
 err    = initInstall("Personal Security Manager", "Personal Security Manager", "$Version$"); 
 logComment("initInstall: " + err);
@@ -23,8 +21,6 @@ logComment("fProgram: " + fProgram);
 if(verifyDiskSpace(fProgram, srDest))
 {
   setPackageFolder(fProgram);
-
-  $Ren8dot3Call$
 
   upgradeCleanup();
   err = addDirectory("",

@@ -73,7 +73,6 @@ $foundLongFiles   = 0;
 
 print "copy \"$ENV{MOZ_SRC}\\mozilla\\xpinstall\\packager\\common\\share.t\" $outTempFile\n";
 system("copy \"$ENV{MOZ_SRC}\\mozilla\\xpinstall\\packager\\common\\share.t\" $outTempFile");
-system("type \"$ENV{MOZ_SRC}\\mozilla\\xpinstall\\packager\\common\\windows.t\" >> $outTempFile");  # append windows specific functions
 system("type $inJstFile >> $outTempFile");
 
 # Open the input .template file
@@ -104,38 +103,6 @@ while($line = <fpInTemplate>)
       $line =~ s/\$SpaceRequired\$/$spaceRequired/i;
     }
   }
-  elsif($line =~ /\$Ren8dot3List\$/i)
-  {
-    if(-d "$inStagePath\\bin")
-    {
-      # need to close the output file because GetLongFile.pl will attempt to open
-      # it in order to update it.
-      close(fpOutJs);
-      $rv = system("perl \"$ENV{MOZ_SRC}\\mozilla\\xpinstall\\packager\\windows\\GetLongFile.pl\" \"$inStagePath\\bin\" \"$outJsFile\"")/256;
-      if($rv == 0)
-      {
-        # set var when long filenames have been found.  This is so that the 
-        # call to prepareRen8dot3() will not be written out.
-        $foundLongFiles = 1;
-      }
-      elsif($rv == 1)
-      {
-        exit($rv);
-      }
-
-      # reopen the output .js file
-      open(fpOutJs, ">>$outJsFile") || die "\nCould not open $outJsFile: $!\n";
-    }
-  }
-  elsif($line =~ /\$Ren8dot3Call\$/i)
-  {
-    if($foundLongFiles)
-    {
-      print fpOutJs "  // Ren8dot3 process needs to be done before any files have been installed\n";
-      print fpOutJs "  // (this includes the temp files during the prepare phase)\n";
-      print fpOutJs "  prepareRen8dot3(listLongFilePaths);\n";
-    }
-  }
   else
   {
     $line =~ s/\$Version\$/$inVersion/i;
@@ -148,12 +115,7 @@ while($line = <fpInTemplate>)
     $line =~ s/\$UninstallFile\$/$fileUninstall/i;
   }
 
-  # Do not print $line if $Ren8dot3List$ or $Ren8dot3Call$ have been detected.
-  # They have their own print routines.
-  if(!($line =~ /\$Ren8dot3List\$/i) && !($line =~ /\$Ren8dot3Call\$/i))
-  {
-    print fpOutJs $line;
-  }
+  print fpOutJs $line;
 }
 
 close(fpInTemplate);

@@ -304,8 +304,6 @@ var srDest;
 var err;
 var fProgram;
 
-$Ren8dot3List$
-
 srDest = $SpaceRequired$:bin;
 err    = initInstall("Mozilla Mail", "Mail", "$Version$"); 
 logComment("initInstall: " + err);
@@ -316,8 +314,6 @@ logComment("fProgram: " + fProgram);
 if(verifyDiskSpace(fProgram, srDest))
 {
   setPackageFolder(fProgram);
-
-  $Ren8dot3Call$
 
   upgradeCleanup();
   err = addDirectory("",

@@ -49,7 +49,7 @@ bin\nspr4.dll
 bin\components\xpinstal.dll
 bin\components\jar50.dll
 bin\components\ucharuti.dll
-install\ren8dot3.exe,bin\ren8dot3.exe
+;install\ren8dot3.exe,bin\ren8dot3.exe
 
 [browser]
 bin\README.txt,bin\readme.txt

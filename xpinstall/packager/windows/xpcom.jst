@@ -98,8 +98,6 @@ var fileComponentRegStr;
 var fileMsvcrt;
 var fileMsvcirt;
 
-$Ren8dot3List$
-
 srDest = $SpaceRequired$:bin;
 err    = initInstall("Mozilla XPCOM", "XPCOM", "$Version$"); 
 logComment("initInstall: " + err);
@@ -119,8 +117,6 @@ logComment("Installing: " + fProgram + "component.reg");
 if(verifyDiskSpace(fProgram, srDest))
 {
   setPackageFolder(fProgram);
-
-  $Ren8dot3Call$
 
   upgradeCleanup();
   err = addDirectory("",
