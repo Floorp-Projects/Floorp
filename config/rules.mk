@@ -1324,6 +1324,9 @@ endif
 # Used as a dependency to force targets to rebuild
 FORCE:
 
+# Delete target if error occurs when building target
+.DELETE_ON_ERROR:
+
 tags: TAGS
 
 TAGS: $(SUBMAKEFILES) $(CSRCS) $(CPPSRCS) $(wildcard *.h)
