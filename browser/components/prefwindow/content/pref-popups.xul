@@ -68,9 +68,133 @@
   function selectPolicy() {
     setButtons();
   }
+
+  /*** =================== PERMISSIONS CODE =================== ***/
+
+var permissionsTreeView = {
+  rowCount : 0,
+  setTree : function(tree){},
+  getImageSrc : function(row,column) {},
+  getProgressMode : function(row,column) {},
+  getCellValue : function(row,column) {},
+  getCellText : function(row,column){
+    var rv="";
+    if (column=="siteCol") {
+      rv = permissions[row].rawHost;
+    } else if (column=="statusCol") {
+      rv = permissions[row].capability;
+    }
+    return rv;
+  },
+  isSeparator : function(index) {return false;},
+  isSorted: function() { return false; },
+  isContainer : function(index) {return false;},
+  cycleHeader : function(aColId, aElt) {},
+  getRowProperties : function(row,column,prop){},
+  getColumnProperties : function(column,columnElement,prop){},
+  getCellProperties : function(row,prop){}
+ };
+var permissionsTree;
+
+function Permission(number, host, rawHost, type, capability) {
+  this.number = number;
+  this.host = host;
+  this.rawHost = rawHost;
+  this.type = type;
+  this.capability = capability;
+}
+
+function loadPermissions() {
+  // load permissions into a table
+  var enumerator = permissionmanager.enumerator;
+  var count = 0;
+  var contentStr;
+  var canStr, cannotStr;
+  if (dialogType == cookieType) {
+    canStr="can";
+    cannotStr="cannot";
+  } else if (dialogType == imageType) {
+    canStr="canImages";
+    cannotStr="cannotImages";
+  } else {
+    canStr="canPopups";
+    cannotStr="cannotPopups";
+  }
+  while (enumerator.hasMoreElements()) {
+    var nextPermission = enumerator.getNext();
+    nextPermission = nextPermission.QueryInterface(Components.interfaces.nsIPermission);
+    if (nextPermission.type == dialogType) {
+      var host = nextPermission.host;
+      permissions[count] = 
+        new Permission(count++, host,
+                       (host.charAt(0)==".") ? host.substring(1,host.length) : host,
+                       nextPermission.type,
+                       cookieBundle.getString(nextPermission.capability?canStr:cannotStr));
+    }
+  }
+  permissionsTreeView.rowCount = permissions.length;
+
+  // sort and display the table
+  permissionsTree.treeBoxObject.view = permissionsTreeView;
+  PermissionColumnSort('rawHost');
+
+  // disable "remove all" button if there are no cookies/images
+  if (permissions.length == 0) {
+    document.getElementById("removeAllPermissions").setAttribute("disabled","true");
+  } else {
+    document.getElementById("removeAllPermissions").removeAttribute("disabled");
+  }
+
+}
+
+function PermissionSelected() {
+  var selections = GetTreeSelections(permissionsTree);
+  if (selections.length) {
+    document.getElementById("removePermission").removeAttribute("disabled");
+  }
+}
+
+function DeletePermission() {
+  DeleteSelectedItemFromTree(permissionsTree, permissionsTreeView,
+                                 permissions, deletedPermissions,
+                                 "removePermission", "removeAllPermissions");
+  FinalizePermissionDeletions();
+}
+
+function DeleteAllPermissions() {
+  DeleteAllFromTree(permissionsTree, permissionsTreeView,
+                        permissions, deletedPermissions,
+                        "removePermission", "removeAllPermissions");
+  FinalizePermissionDeletions();
+}
+
+function FinalizePermissionDeletions() {
+  var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                    .getService(Components.interfaces.nsIIOService);
+
+  for (var p=0; p<deletedPermissions.length; p++) {
+    if (deletedPermissions[p].type == popupType) {
+      // we lost the URI's original scheme, but this will do because the scheme
+      // is stripped later anyway.
+      var uri = ioService.newURI("http://"+deletedPermissions[p].host, null, null);
+      popupmanager.remove(uri);
+    } else
+      permissionmanager.remove(deletedPermissions[p].host, deletedPermissions[p].type);
+  }
+  deletedPermissions.length = 0;
+}
+
+function HandlePermissionKeyPress(e) {
+  if (e.keyCode == 46) {
+    DeletePermission();
+  }
+}
+
 ]]>
 </script>
 
+<script src="chrome://communicator/content/wallet/CookieViewer.js"/>
+  
 <groupbox id="popupsArea" flex="1">
   <caption label="&popupBlocking.label;"/>
 
@@ -92,8 +216,7 @@
             onkeypress="HandlePermissionKeyPress(event)"
             onselect="PermissionSelected();">
         <treecols>
-          <treecol id="siteCol" label="&treehead.sitename.label;" flex="5"
-                       onclick="PermissionColumnSort('rawHost');"/>
+          <treecol id="siteCol" label="&treehead.sitename.label;" flex="1"/>
         </treecols>
         <treechildren/>
       </tree>

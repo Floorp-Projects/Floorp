@@ -44,7 +44,7 @@
               
   <script type="application/x-javascript" src="chrome://browser/content/pageReport.js"/>
  
-  <description value="&unblockedPopupMsg.label;" id="unblockedPopupMsg"/>
+  <description value="&unblockedPopupMsg.label;" collapsed="true" id="unblockedPopupMsg"/>
 
   <vbox flex="1">
     <description>
