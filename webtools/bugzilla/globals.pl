@@ -33,6 +33,7 @@ use Bugzilla::Constants;
 use Bugzilla::Util;
 # Bring ChmodDataFile in until this is all moved to the module
 use Bugzilla::Config qw(:DEFAULT ChmodDataFile $localconfig $datadir);
+use Bugzilla::BugMail;
 
 # Shut up misguided -w warnings about "used only once".  For some reason,
 # "use vars" chokes on me when I try it here.
@@ -1410,32 +1411,26 @@ sub RemoveVotes {
 
             # Now lets send the e-mail to alert the user to the fact that their votes have
             # been reduced or removed.
-            my $sendmailparm = '-ODeliveryMode=deferred';
-            if (Param('sendmailnow')) {
-               $sendmailparm = '';
-            }
-            if (open(SENDMAIL, "|/usr/lib/sendmail $sendmailparm -t -i")) {
-                my %substs;
+            my %substs;
 
-                $substs{"to"} = $name . Param('emailsuffix');
-                $substs{"bugid"} = $id;
-                $substs{"reason"} = $reason;
+            $substs{"to"} = $name . Param('emailsuffix');
+            $substs{"bugid"} = $id;
+            $substs{"reason"} = $reason;
 
-                $substs{"votesremoved"} = $removedvotes;
-                $substs{"votesold"} = $oldvotes;
-                $substs{"votesnew"} = $newvotes;
+            $substs{"votesremoved"} = $removedvotes;
+            $substs{"votesold"} = $oldvotes;
+            $substs{"votesnew"} = $newvotes;
 
-                $substs{"votesremovedtext"} = $removedvotestext;
-                $substs{"votesoldtext"} = $oldvotestext;
-                $substs{"votesnewtext"} = $newvotestext;
+            $substs{"votesremovedtext"} = $removedvotestext;
+            $substs{"votesoldtext"} = $oldvotestext;
+            $substs{"votesnewtext"} = $newvotestext;
 
-                $substs{"count"} = $removedvotes . "\n    " . $newvotestext;
+            $substs{"count"} = $removedvotes . "\n    " . $newvotestext;
 
-                my $msg = PerformSubsts(Param("voteremovedmail"),
-                                        \%substs);
-                print SENDMAIL $msg;
-                close SENDMAIL;
-            }
+            my $msg = PerformSubsts(Param("voteremovedmail"),
+                                    \%substs);
+
+            Bugzilla::BugMail::MessageToMTA($msg);
         }
         SendSQL("SELECT SUM(vote_count) FROM votes WHERE bug_id = $id");
         my $v = FetchOneColumn();

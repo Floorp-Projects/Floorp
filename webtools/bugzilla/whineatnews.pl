@@ -31,6 +31,8 @@ use strict;
 
 require "globals.pl";
 
+use Bugzilla::BugMail;
+
 SendSQL("select bug_id,short_desc,login_name from bugs,profiles where " .
         "(bug_status = 'NEW' or bug_status = 'REOPENED') and " . 
         "to_days(now()) - to_days(delta_ts) > " . Param('whinedays') .
@@ -68,10 +70,7 @@ foreach my $email (sort (keys %bugs)) {
         $msg .= "    -> ${urlbase}show_bug.cgi?id=$i\n";
     }
 
-    my $sendmailparam = Param('sendmailnow') ? '' : "-ODeliveryMode=deferred";
-    open SENDMAIL, "|/usr/lib/sendmail $sendmailparam -t -i"
-        or die "Can't open sendmail";
-    print SENDMAIL $msg;
-    close SENDMAIL;
+    Bugzilla::BugMail::MessageToMTA($msg);
+
     print "$email      " . join(" ", @{$bugs{$email}}) . "\n";
 }

@@ -33,6 +33,7 @@ use Bugzilla::Config qw(:DEFAULT $datadir);
 use Bugzilla::Constants;
 use Bugzilla::Search;
 use Bugzilla::User;
+use Bugzilla::BugMail;
 
 # create some handles that we'll need
 my $template = Bugzilla->template;
@@ -378,12 +379,7 @@ sub mail {
     $template->process("whine/multipart-mime.txt.tmpl", $args, \$msg)
         or die($template->error());
 
-    my $sendmailparam =
-        Param('sendmailnow') ? '' : "-ODeliveryMode=deferred";
-    open SENDMAIL, "|/usr/lib/sendmail $sendmailparam -t -i"
-        or die "Can't open sendmail";
-    print SENDMAIL $msg;
-    close SENDMAIL;
+    Bugzilla::BugMail::MessageToMTA($msg);
 
     delete $args->{'boundary'};
     delete $args->{'alternatives'};

@@ -864,20 +864,29 @@ sub NewProcessOnePerson ($$$$$$$$$$$$$) {
     
     my $msg = PerformSubsts($template, \%substs);
 
-    my $sendmailparam = "-ODeliveryMode=deferred";
-    if (Param("sendmailnow")) {
-       $sendmailparam = "";
+    MessageToMTA($msg);
+
+    push(@sentlist, $person);
+    return 1;
+}
+
+# XXX: Should eventually add $mail_from and $mail_to options to 
+# control the SMTP Envelope. -mkanat
+sub MessageToMTA ($) {
+   my ($msg) = (@_);
+
+    my $sendmailparam = "";
+    unless (Param("sendmailnow")) {
+       $sendmailparam = "-ODeliveryMode=deferred";
     }
 
     if ($enableSendMail == 1) {
         open(SENDMAIL, "|/usr/lib/sendmail $sendmailparam -t -i") ||
           die "Can't open sendmail";
-    
+
         print SENDMAIL trim($msg) . "\n";
         close SENDMAIL;
     }
-    push(@sentlist, $person);
-    return 1;
 }
 
 1;

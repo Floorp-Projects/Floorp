@@ -31,6 +31,7 @@ package Bugzilla::Token;
 
 use Bugzilla::Config;
 use Bugzilla::Error;
+use Bugzilla::BugMail;
 
 use Date::Format;
 
@@ -91,9 +92,7 @@ sub IssueEmailChangeToken {
     $template->process("account/email/change-old.txt.tmpl", $vars, \$message)
       || ThrowTemplateError($template->error());
 
-    open SENDMAIL, "|/usr/lib/sendmail -t -i";
-    print SENDMAIL $message;
-    close SENDMAIL;
+    Bugzilla::BugMail::MessageToMTA($message);
 
     $vars->{'token'} = $newtoken;
     $vars->{'emailaddress'} = $new_email . Param('emailsuffix');
@@ -102,10 +101,7 @@ sub IssueEmailChangeToken {
     $template->process("account/email/change-new.txt.tmpl", $vars, \$message)
       || ThrowTemplateError($template->error());
 
-    open SENDMAIL, "|/usr/lib/sendmail -t -i";
-    print SENDMAIL $message;
-    close SENDMAIL;
-
+    Bugzilla::BugMail::MessageToMTA($message);
 }
 
 sub IssuePasswordToken {
@@ -157,10 +153,7 @@ sub IssuePasswordToken {
                                                                $vars, \$message)
       || ThrowTemplateError($template->error());
 
-    open SENDMAIL, "|/usr/lib/sendmail -t -i";
-    print SENDMAIL $message;
-    close SENDMAIL;
-
+    Bugzilla::BugMail::MessageToMTA($message);
 }
 
 
@@ -236,9 +229,7 @@ sub Cancel {
     $template->process("account/cancel-token.txt.tmpl", $vars, \$message)
       || ThrowTemplateError($template->error());
 
-    open SENDMAIL, "|/usr/lib/sendmail -t -i";
-    print SENDMAIL $message;
-    close SENDMAIL;
+    Bugzilla::BugMail::MessageToMTA($message);
 
     # Delete the token from the database.
     &::SendSQL("LOCK TABLES tokens WRITE");

@@ -168,11 +168,7 @@ $template->process("bug/show.xml.tmpl", { bugs => \@bugs,
 
 $msg .= "\n";
 
-open(SENDMAIL,
-  "|/usr/lib/sendmail -ODeliveryMode=background -t -i") ||
-    die "Can't open sendmail";
-print SENDMAIL $msg;
-close SENDMAIL;
+Bugzilla::BugMail::MessageToMTA($msg);
 
 my $logstr = "XML: bugs $buglist sent to $to";
 Log($logstr);

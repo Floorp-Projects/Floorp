@@ -61,6 +61,7 @@ use lib ($::path);
 
 use Bugzilla;
 use Bugzilla::Config qw(:DEFAULT $datadir);
+use Bugzilla::BugMail;
 
 use XML::Parser;
 use Data::Dumper;
@@ -113,11 +114,8 @@ sub MailMessage {
   $header.= "From: Bugzilla <$from>\n";
   $header.= "Subject: $subject\n\n";
 
-  open(SENDMAIL,
-    "|/usr/lib/sendmail -ODeliveryMode=background -t -i") ||
-      die "Can't open sendmail";
-  print SENDMAIL $header . $message . "\n";
-  close SENDMAIL;
+  my $sendmessage = $header . $message . "\n";
+  Bugzilla::BugMail::MessageToMTA($sendmessage);
 
   Log($subject . " sent to: $to");
 }

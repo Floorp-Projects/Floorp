@@ -44,6 +44,7 @@ use Bugzilla::Util;
 use Bugzilla::Config;
 use Bugzilla::Constants;
 use Bugzilla::Error;
+use Bugzilla::BugMail;
 
 # Shut up misguided -w warnings about "used only once".  For some reason,
 # "use vars" chokes on me when I try it here.
@@ -225,9 +226,7 @@ sub MailPassword {
                              "login" => $login,
                              "password" => $password});
 
-    open SENDMAIL, "|/usr/lib/sendmail -t -i";
-    print SENDMAIL $msg;
-    close SENDMAIL;
+    Bugzilla::BugMail::MessageToMTA($msg);
 }
 
 sub PutHeader {

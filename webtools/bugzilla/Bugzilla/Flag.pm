@@ -36,6 +36,7 @@ use Bugzilla::Config;
 use Bugzilla::Util;
 use Bugzilla::Error;
 use Bugzilla::Attachment;
+use Bugzilla::BugMail;
 
 use constant TABLES_ALREADY_LOCKED => 1;
 
@@ -637,12 +638,8 @@ sub notify {
         Bugzilla->cgi->header();
         ThrowTemplateError($::template->error());
     }
-    
-    my $delivery_mode = Param("sendmailnow") ? "" : "-ODeliveryMode=deferred";
-    open(SENDMAIL, "|/usr/lib/sendmail $delivery_mode -t -i") 
-      || die "Can't open sendmail";
-    print SENDMAIL $message;
-    close(SENDMAIL);
+
+    Bugzilla::BugMail::MessageToMTA($message);
 }
 
 ################################################################################
