@@ -69,6 +69,10 @@ interface nsISupportsPrimitive : nsISupports
     readonly attribute unsigned short type;
 };
 
+/**
+ * Scriptable storage for nsID structures
+ */
+
 [scriptable, uuid(d18290a0-4a1c-11d3-9890-006008962422)]
 interface nsISupportsID : nsISupportsPrimitive
 {
@@ -76,12 +80,24 @@ interface nsISupportsID : nsISupportsPrimitive
     string toString();
 };
 
+/**
+ * Scriptable storage for ASCII strings
+ * 
+ * @status UNDER_REVIEW
+ */
+
 [scriptable, uuid(d65ff270-4a1c-11d3-9890-006008962422)]
 interface nsISupportsCString : nsISupportsPrimitive
 {
     attribute ACString data;
     string toString();
 };
+
+/**
+ * Scriptable storage for Unicode strings
+ * 
+ * @status UNDER_REVIEW
+ */
 
 [scriptable, uuid(d79dc970-4a1c-11d3-9890-006008962422)]
 interface nsISupportsString : nsISupportsPrimitive
@@ -94,12 +110,24 @@ interface nsISupportsString : nsISupportsPrimitive
  * The rest are truly primitive and are passed by value
  */ 
 
+/**
+ * Scriptable storage for booleans
+ * 
+ * @status UNDER_REVIEW
+ */
+
 [scriptable, uuid(ddc3b490-4a1c-11d3-9890-006008962422)]
 interface nsISupportsPRBool : nsISupportsPrimitive
 {
     attribute PRBool data;
     string toString();
 };
+
+/**
+ * Scriptable storage for 8-bit integers
+ * 
+ * @status UNDER_REVIEW
+ */
 
 [scriptable, uuid(dec2e4e0-4a1c-11d3-9890-006008962422)]
 interface nsISupportsPRUint8 : nsISupportsPrimitive
@@ -108,12 +136,24 @@ interface nsISupportsPRUint8 : nsISupportsPrimitive
     string toString();
 };
 
+/**
+ * Scriptable storage for unsigned 16-bit integers
+ * 
+ * @status UNDER_REVIEW
+ */
+
 [scriptable, uuid(dfacb090-4a1c-11d3-9890-006008962422)]
 interface nsISupportsPRUint16 : nsISupportsPrimitive
 {
     attribute PRUint16 data;
     string toString();
 };
+
+/**
+ * Scriptable storage for unsigned 32-bit integers
+ * 
+ * @status UNDER_REVIEW
+ */
 
 [scriptable, uuid(e01dc470-4a1c-11d3-9890-006008962422)]
 interface nsISupportsPRUint32 : nsISupportsPrimitive
@@ -122,12 +162,24 @@ interface nsISupportsPRUint32 : nsISupportsPrimitive
     string toString();
 };
 
+/**
+ * Scriptable storage for 64-bit integers
+ * 
+ * @status UNDER_REVIEW
+ */
+
 [scriptable, uuid(e13567c0-4a1c-11d3-9890-006008962422)]
 interface nsISupportsPRUint64 : nsISupportsPrimitive
 {
     attribute PRUint64 data;
     string toString();
 };
+
+/**
+ * Scriptable storage for NSPR date/time values
+ * 
+ * @status UNDER_REVIEW
+ */
 
 [scriptable, uuid(e2563630-4a1c-11d3-9890-006008962422)]
 interface nsISupportsPRTime : nsISupportsPrimitive
@@ -136,12 +188,25 @@ interface nsISupportsPRTime : nsISupportsPrimitive
     string toString();
 };
 
+/**
+ * Scriptable storage for single character values
+ * (often used to store an ASCII character)
+ * 
+ * @status UNDER_REVIEW
+ */
+
 [scriptable, uuid(e2b05e40-4a1c-11d3-9890-006008962422)]
 interface nsISupportsChar : nsISupportsPrimitive
 {
     attribute char data;
     string toString();
 };
+
+/**
+ * Scriptable storage for 16-bit integers
+ * 
+ * @status UNDER_REVIEW
+ */
 
 [scriptable, uuid(e30d94b0-4a1c-11d3-9890-006008962422)]
 interface nsISupportsPRInt16 : nsISupportsPrimitive
@@ -150,12 +215,24 @@ interface nsISupportsPRInt16 : nsISupportsPrimitive
     string toString();
 };
 
+/**
+ * Scriptable storage for 32-bit integers
+ * 
+ * @status UNDER_REVIEW
+ */
+
 [scriptable, uuid(e36c5250-4a1c-11d3-9890-006008962422)]
 interface nsISupportsPRInt32 : nsISupportsPrimitive
 {
     attribute PRInt32 data;
     string toString();
 };
+
+/**
+ * Scriptable storage for 64-bit integers
+ * 
+ * @status UNDER_REVIEW
+ */
 
 [scriptable, uuid(e3cb0ff0-4a1c-11d3-9890-006008962422)]
 interface nsISupportsPRInt64 : nsISupportsPrimitive
@@ -164,12 +241,24 @@ interface nsISupportsPRInt64 : nsISupportsPrimitive
     string toString();
 };
 
+/**
+ * Scriptable storage for floating point numbers
+ * 
+ * @status UNDER_REVIEW
+ */
+
 [scriptable, uuid(abeaa390-4ac0-11d3-baea-00805f8a5dd7)]
 interface nsISupportsFloat : nsISupportsPrimitive
 {
     attribute float data;
     string toString();
 };
+
+/**
+ * Scriptable storage for doubles
+ * 
+ * @status UNDER_REVIEW
+ */
 
 [scriptable, uuid(b32523a0-4ac0-11d3-baea-00805f8a5dd7)]
 interface nsISupportsDouble : nsISupportsPrimitive
@@ -178,12 +267,24 @@ interface nsISupportsDouble : nsISupportsPrimitive
     string toString();
 };
 
+/**
+ * Scriptable storage for generic pointers
+ * 
+ * @status UNDER_REVIEW
+ */
+
 [scriptable, uuid(464484f0-568d-11d3-baf8-00805f8a5dd7)]
 interface nsISupportsVoid : nsISupportsPrimitive
 {
     [noscript] attribute voidPtr data;
     string toString();
 };
+
+/**
+ * Scriptable storage for other XPCOM objects
+ * 
+ * @status UNDER_REVIEW
+ */
 
 [scriptable, uuid(995ea724-1dd1-11b2-9211-c21bdd3e7ed0)]
 interface nsISupportsInterfacePointer : nsISupportsPrimitive
