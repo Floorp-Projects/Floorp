@@ -62,9 +62,6 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsXULTreeAccessible, nsXULSelectableAccessible)
 
 NS_IMETHODIMP nsXULTreeAccessible::GetAccState(PRUint32 *_retval)
 {
-  // Get focus status from base class
-  nsAccessible::GetAccState(_retval);
-
   // see if we are multiple select if so set ourselves as such
   nsCOMPtr<nsIDOMElement> element (do_QueryInterface(mDOMNode));
   if (element) {
@@ -75,7 +72,7 @@ NS_IMETHODIMP nsXULTreeAccessible::GetAccState(PRUint32 *_retval)
       *_retval |= STATE_MULTISELECTABLE;
   }
 
-  *_retval |= STATE_READONLY | STATE_FOCUSABLE;
+  *_retval |= STATE_READONLY;
 
   return NS_OK;
 }
@@ -414,7 +411,7 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetAccState(PRUint32 *_retval)
 {
   NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);
 
-  *_retval = STATE_FOCUSABLE;
+  *_retval = STATE_FOCUSABLE | STATE_SELECTABLE;
 
   // get expanded/collapsed state
   PRBool isContainer, isContainerOpen;
@@ -595,6 +592,51 @@ NS_IMETHODIMP nsXULTreeitemAccessible::AccGetBounds(PRInt32 *x, PRInt32 *y, PRIn
   }
 
   return NS_OK;
+}
+
+NS_IMETHODIMP nsXULTreeitemAccessible::AccRemoveSelection()
+{
+  NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsITreeSelection> selection;
+  mTree->GetSelection(getter_AddRefs(selection));
+  if (selection) {
+    PRBool isSelected;
+    selection->IsSelected(mRow, &isSelected);
+    if (isSelected)
+      selection->ToggleSelect(mRow);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXULTreeitemAccessible::AccTakeSelection()
+{
+  NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsITreeSelection> selection;
+  mTree->GetSelection(getter_AddRefs(selection));
+  if (selection) {
+    PRBool isSelected;
+    selection->IsSelected(mRow, &isSelected);
+    if (! isSelected)
+      selection->ToggleSelect(mRow);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXULTreeitemAccessible::AccTakeFocus()
+{ 
+  NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsITreeSelection> selection;
+  mTree->GetSelection(getter_AddRefs(selection));
+  if (selection)
+    selection->SetCurrentIndex(mRow);
+
+  // focus event will be fired here
+  return nsAccessible::AccTakeFocus();
 }
 
 // ---------- nsXULTreeColumnsAccessible ----------

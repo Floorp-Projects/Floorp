@@ -104,6 +104,9 @@ public:
 
   NS_IMETHOD AccDoAction(PRUint8 index);
   NS_IMETHOD AccGetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PRInt32 *height);
+  NS_IMETHOD AccRemoveSelection(void); 
+  NS_IMETHOD AccTakeSelection(void); 
+  NS_IMETHOD AccTakeFocus(void); 
 
 private:
   nsCOMPtr<nsITreeBoxObject> mTree;
