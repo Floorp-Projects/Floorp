@@ -42,6 +42,6 @@ $(PLUGIN_DIR):
 export:: $(PLUGIN_DIR)
 
 clobber::
-	rmdir $(DIST)\bin\plugins
+	rm -r -f $(DIST)\bin\plugins
 
 
