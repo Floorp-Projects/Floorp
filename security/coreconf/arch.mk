@@ -225,9 +225,8 @@ endif
 ifeq ($(OS_ARCH), Windows_NT)
     OS_ARCH = WINNT
     OS_MINOR_RELEASE := $(shell uname -v)
-    ifeq ($(OS_MINOR_RELEASE),00)
-	OS_MINOR_RELEASE = 0
-    endif
+    # strip leading 0
+    OS_MINOR_RELEASE := $(patsubst 0%,%,$(OS_MINOR_RELEASE))
     OS_RELEASE := $(OS_RELEASE).$(OS_MINOR_RELEASE)
     ifndef CPU_ARCH
 	CPU_ARCH := $(shell uname -m)
