@@ -198,7 +198,7 @@ function WSM_SetPageData( currentPageTag, hasExtraAttributes )
       else {                              // automated data provision
         var formElement = doc.getElementById( i );
         
-        if( hasExtraAttributes ) {        // if extra attributes are set, set them
+        if( formElement && hasExtraAttributes ) {        // if extra attributes are set, set them
           for( var attName in thisTagData[i] ) 
           {
             // for each attribute set for this element
