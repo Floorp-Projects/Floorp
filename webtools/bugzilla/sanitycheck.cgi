@@ -51,10 +51,28 @@ PutHeader("Bugzilla Sanity Check");
 print "OK, now running sanity checks.<P>\n";
 
 my @row;
+my @checklist;
+
+Status("Checking version/products");
+
+SendSQL("select distinct product, version from bugs");
+while (@row = FetchSQLData()) {
+    my @copy = @row;
+    push(@checklist, \@copy);
+}
+
+foreach my $ref (@checklist) {
+    my ($product, $version) = (@$ref);
+    SendSQL("select count(*) from versions where program = '$product' and value = '$version'");
+    if (FetchOneColumn() != 1) {
+        Alert("Bug(s) found with invalid product/version: $product/$version");
+    }
+}
+
 
 Status("Checking components/products");
 
-my @checklist;
+@checklist = ();
 SendSQL("select distinct product, component from bugs");
 while (@row = FetchSQLData()) {
     my @copy = @row;
