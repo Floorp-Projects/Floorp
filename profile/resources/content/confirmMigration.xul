@@ -1,0 +1,35 @@
+<?xml version="1.0"?> 
+
+
+<?xml-stylesheet href="chrome://profile/skin/" type="text/css"?>
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+
+<!DOCTYPE window SYSTEM "chrome://profile/locale/confirmMigration.dtd" >
+
+<window
+	xmlns:html="http://www.w3.org/TR/REC-html40"
+	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
+	align="vertical"
+	title="&window.title;"
+	onload="onLoad()"
+	class="dialog"> 
+
+<html:script language="javascript" src="chrome://profile/content/confirmMigration.js"/> 
+    
+    <box align="horizontal" flex="100%">
+    	<box align="vertical" flex="100%">
+		<html:div>
+		&confirmMigrationPart1.label;
+		</html:div>
+		<html:div>
+		&confirmMigrationPart2.label;
+		</html:div>
+		<html:div>
+		&confirmMigrationPart3.label;
+		</html:div>
+	</box>
+    </box>
+
+    <box id="okCancelButtons"/>
+	
+</window>

@@ -1,0 +1,4 @@
+<!ENTITY window.title "Confirm Migration">
+<!ENTITY confirmMigrationPart1.label "You are about to migrate your 4.x profile.">
+<!ENTITY confirmMigrationPart2.label "Are you sure you want to do this?">
+<!ENTITY confirmMigrationPart3.label "(If you click no, you can always do it later.)">
