@@ -108,13 +108,16 @@ namespace JSTypes {
         JSProperties mProperties;
         JSMap* mPrototype;
     public:
-        JSValue& operator[](const String& name)
+        const JSValue& getProperty(const String& name) const
         {
+<<<<<<< jstypes.h
+=======
             return mProperties[name];
         }
         
         const JSValue& getProperty(const String& name)
         {
+>>>>>>> 1.13
         #ifdef XP_MAC
             JSProperties::const_iterator i = mProperties.find(name);
             if (i != mProperties.end())
@@ -134,6 +137,16 @@ namespace JSTypes {
         JSValue& setProperty(const String& name, const JSValue& value)
         {
             return (mProperties[name] = value);
+        }
+
+        void setPrototype(JSMap* prototype)
+        {
+            mPrototype = prototype;
+        }
+        
+        JSMap* getPrototype()
+        {
+            return mPrototype;
         }
     };
 
