@@ -34,11 +34,14 @@ REQUIRES	= \
 		$(NULL)
 
 CPPSRCS		= \
-		convperf.cpp \
 		nsTestUConv.cpp \
 		nsconv.cpp \
 		plattest.cpp \
 		$(NULL)
+
+ifeq ($(OS_ARCH),WINNT)
+CPPSRCS		+= convperf.cpp
+endif
 
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 
