@@ -1564,6 +1564,18 @@ $::template ||= Template->new(
         # filter should be used for a full URL that may have
         # characters that need encoding.
         url_quote => \&url_quote ,
+        
+        # In CSV, quotes are doubled, and any value containing a quote or a
+        # comma is enclosed in quotes.
+        csv => sub
+        {
+            my ($var) = @_;
+            $var =~ s/"/""/;
+            if ($var =~ /",/) {
+                $var = "\"$var\"";
+            }
+            return $var;
+        } ,
       } ,
   }
 ) || die("Template creation failed: " . Template->error());

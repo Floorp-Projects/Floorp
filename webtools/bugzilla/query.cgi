@@ -130,7 +130,9 @@ sub PrefillForm {
                       "long_desc", "long_desc_type", "bug_file_loc",
                       "bug_file_loc_type", "status_whiteboard",
                       "status_whiteboard_type", "bug_id",
-                      "bugidtype", "keywords", "keywords_type") {
+                      "bugidtype", "keywords", "keywords_type",
+                      "x_axis_field", "y_axis_field") 
+    {
         # This is a bit of a hack. The default, empty list has 
         # three entries to accommodate the needs of the email fields -
         # we use each position to denote the relevant field. Array

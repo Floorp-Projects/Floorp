@@ -1,0 +1,143 @@
+ <!-- 1.0@bugzilla.org -->
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #                 <rdean@cambianetworks.com>
+  #%]
+
+[%# INTERFACE:
+  # basequery: The base query for this table, in URL form
+  # row_field: string. The field name for the data in table rows
+  # col_field: string. The field name for the data in table columns
+  # col_names: array of strings. Values for the columns
+  # row_names: array of strings. Values for the rows
+  # col_totals: hash of integers. Totals for the columns, indexed by col_names.
+  # row_totals: hash of integers. Totals for the rows, indexed by row_names.
+  # data: hash of hash of numbers. Bug counts indexed by col_names and 
+  #       row_names values.
+  #%]
+
+[% PROCESS global/header.html.tmpl 
+  title = "Report"
+  onload = "selectProduct(document.forms['queryform']);"
+  style = "
+    .t1     { background-color: #ffffff }
+    .t2     { background-color: #dfefff }
+    .t3     { background-color: #dddddd }
+    .t4     { background-color: #c3d3ed }
+    .ttotal { background-color: #cfffdf }
+  "
+%]
+
+<div align="center">
+  <table>
+    <tr>
+      <td>
+      </td>
+      <td align="center">
+        <strong>[% col_field FILTER html %]</strong>
+      </td>
+    </tr>
+
+    <tr>
+      <td valign="middle">
+        <strong>[% row_field FILTER html %]</strong>
+      </td>
+      <td>
+
+
+[% classes = [ [ "t1", "t2" ] , [ "t3", "t4" ] ] %]
+[% col_idx = 0 %]
+[% row_idx = 0 %]
+
+<table>
+  [% IF col_names %]
+    <tr>
+      <td class="[% classes.$row_idx.$col_idx %]">
+      </td>
+      [% FOREACH col = col_names %]
+        [%# If no col header, skip the col. This makes display look right if
+            there's no defined X axis. Not doing this gives us two cols. %]
+        [% NEXT IF col == "" %] 
+        [% col_idx = 1 - col_idx %]
+        <td class="[% classes.$row_idx.$col_idx %]">
+          [% col FILTER html %]
+        </td>
+      [% END %]
+      <td class="ttotal">
+        Total
+      </td>
+    </tr>
+  [% END %]
+  
+  [% FOREACH row = row_names %]
+    [% row_idx = 1 - row_idx %]
+    <tr>
+      <td class="[% classes.$row_idx.$col_idx %]">
+        [% row FILTER html %]
+      </td>
+      [% FOREACH col = col_names %]
+        [% NEXT IF col == "" %]
+        [% col_idx = 1 - col_idx %]
+        <td class="[% classes.$row_idx.$col_idx %]" align="center">
+          [% IF data.$row.$col AND data.$row.$col > 0 %]
+            <a href="buglist.cgi?[% buglistbase %]&
+              [% row_field FILTER url_quote %]=[% row FILTER url_quote %]&
+              [% col_field FILTER url_quote %]=[% col FILTER url_quote %]">
+              [% data.$row.$col %]</a>
+          [% ELSE %]
+            .
+          [% END %]
+        </td>
+      [% END %] 
+      <td class="ttotal">
+        [% row_totals.$row %]
+      </td>
+    </tr>
+  [% END %]
+  
+  <tr>
+    [% row_idx = 1 - row_idx %]
+    <td class="ttotal">
+      Total
+    </td>
+    [% FOREACH col = col_names %]
+      [% NEXT IF col == "" %]
+      <td class="ttotal" align="center">
+        [% col_totals.$col %]
+      </td> 
+    [% END %]
+    <td class="ttotal">
+      <strong>
+        [% grand_total %]
+      </strong>
+    </td>
+  </tr>
+</table>
+      
+      
+      </td>
+    </tr>
+  </table>
+  
+  <a href="query.cgi?[% buffer %]&format=report-table">Edit this report</a>
+</div>
+
+<br>
+
+[% PROCESS global/footer.html.tmpl %]

@@ -78,6 +78,10 @@
   [% ELSIF error == "no_bug_data" %]
     No data when fetching bug [% bug_id %].
     
+  [% ELSIF error == "no_y_axis_defined" %]
+    No Y axis was defined when creating report. The X axis is optional,
+    but the Y axis is compulsory.
+    
   [% ELSIF error == "template_error" %]
     [% template_error_msg %]
 

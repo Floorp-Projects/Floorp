@@ -813,6 +813,10 @@ sub init {
             $suppseen{$str} = 1;
         }
     }
+    
+    # Make sure we create a legal SQL query.
+    @andlist = ("1 = 1") if !@andlist;
+    
     my $query =  ("SELECT DISTINCT " . 
                     join(', ', @fields) .
                   ", COUNT(DISTINCT ugmap.group_id) AS cntuseringroups, " .

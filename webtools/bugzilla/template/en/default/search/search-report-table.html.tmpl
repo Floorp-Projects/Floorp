@@ -1,0 +1,125 @@
+<!-- 1.0@bugzilla.org -->
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #%]
+
+[%# INTERFACE:
+  # This template has no interface. However, to use it, you need to fulfill
+  # the interfaces of the templates it contains.
+  #%]
+
+[% PROCESS global/header.html.tmpl 
+  title = "Generate Report"
+  onload = "selectProduct(document.forms['reportform']);"
+%]
+
+<p>
+  Produce a table of bug counts by choosing two fields to plot against each 
+  other, and then refining your set of bugs using the rest of the form.
+</p>
+
+[% button_name = "Generate Report" %]
+
+<form method="get" action="report.cgi" name="reportform">
+
+<table>
+  <tr>
+    <th align="center">
+      Vertical Axis
+    </th>
+    <th align="center">
+      Horizontal Axis
+    </th>
+    <th>
+      &nbsp;&nbsp;
+    </th>
+    <th align="center">
+      Format
+    </th>
+  </tr>
+  
+  <tr>
+    <td align="center">
+      [% PROCESS select sel = { name => 'y_axis_field' } %]
+    </td>
+    <td align="center">  
+      [% PROCESS select sel = { name => 'x_axis_field', noop = 1 } %]
+    </td>
+    <td>
+      &nbsp;&nbsp;
+    </td>
+    <td>
+      <input type="radio" name="ctype" value="html" checked>HTML
+      <input type="radio" name="ctype" value="csv">CSV
+    </td>
+  </tr>
+</table>
+
+<hr>
+
+[% PROCESS search/form.html.tmpl %]
+
+<br>
+<input type="submit" value="[% button_name %]">
+<input type="hidden" name="type" value="table">
+<hr>
+
+[% PROCESS "search/boolean-charts.html.tmpl" %]
+
+</form>
+
+[% PROCESS global/footer.html.tmpl %]
+
+[%############################################################################%]
+[%# Block for SELECT fields                                                  #%]
+[%############################################################################%]
+
+[% BLOCK select %]
+  [% fields = [
+    { name => "",                 description => "---" },
+    { name => "product",          description => "Product" },
+    { name => "component",        description => "Component" },
+    { name => "version",          description => "Version" },
+    { name => "rep_platform",     description => "Platform" },
+    { name => "op_sys",           description => "OS" },
+    { name => "bug_status",       description => "Status" },
+    { name => "resolution",       description => "Resolution" },
+    { name => "bug_severity",     description => "Severity" },
+    { name => "priority",         description => "Priority" },
+    { name => "target_milestone", description => "Target Milestone" },
+    { name => "keywords",         description => "Keywords" },
+    { name => "assigned_to",      description => "Assignee" },
+    { name => "reporter",         description => "Reporter" },
+    { name => "qa_contact",       description => "QA Contact" },
+    { name => "votes",            description => "Votes" } ] %]
+
+  <select name="[% sel.name %]">
+    [% FOREACH field = fields %]
+      [% NEXT IF field.name == "" AND !sel.noop %]
+      [% NEXT IF field.name == "target_milestone" AND
+                               !Param('usetargetmilestone') %]
+      [% NEXT IF field.name == "qa_contact" AND !Param('useqacontact') %]
+      [% NEXT IF field.name == "votes" AND !Param('usevotes') %]
+      
+      <option value="[% field.name FILTER html %]" 
+        [% " selected" IF default.${sel.name}.0 == field.name %]>
+        [% field.description FILTER html %]</option>
+    [% END %]
+  </select>
+[% END %]

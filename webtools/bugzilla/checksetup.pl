@@ -563,6 +563,7 @@ $contenttypes = {
    "rdf" => "application/xml" , 
    "xml" => "text/xml" , 
     "js" => "application/x-javascript" , 
+   "csv" => "text/plain" ,
 };
 ');
 
@@ -932,6 +933,7 @@ END
          js => sub { return $_; },
          html_linebreak => sub { return $_; },
          url_quote => sub { return $_; },
+         csv => sub { return $_; },
         },
       }) || die ("Could not create Template: " . Template->error() . "\n");
 
