@@ -170,6 +170,9 @@ nsTitledButtonFrame::AttributeChanged(nsIPresContext* aPresContext,
       shell->AppendReflowCommand(reflowCmd);
   }
 
+  if (aAttribute == nsXULAtoms::accesskey)
+    nsFrame::Invalidate(nsRect(0, 0, mRect.width, mRect.height), PR_FALSE);
+
   // redraw
   mRenderer.Redraw();
 
@@ -714,16 +717,58 @@ nsTitledButtonFrame::PaintTitle(nsIPresContext& aPresContext,
 	   const nsStyleColor* colorStyle = (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
 
 	   aRenderingContext.SetFont(fontStyle->mFont);
-	   
+
+     PRBool hasAccessKey = PR_FALSE;
+     nsString accesskey, value;
+     mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, value);
+     mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::accesskey,
+                            accesskey);
+
+     /* XXX are attribute values always two byte? */
+     PRUnichar *titleString, *accessString;
+     titleString = mCroppedTitle.GetUnicode();
+     if (accesskey != "") {
+       PRInt32 idx = mCroppedTitle.Find(accesskey, PR_TRUE);
+       if (idx != -1) {
+         hasAccessKey = PR_TRUE;
+         accessString = titleString + idx;
+       }
+     }
+                            
+     PRInt32 fontID;
+     nscoord beforeWidth, accessWidth, offset, size, baseline;
+     if (hasAccessKey) {
+       aRenderingContext.GetWidth(titleString, accessString - titleString,
+                                  beforeWidth, &fontID);
+       aRenderingContext.GetWidth(accessString, 1, accessWidth);
+
+       /* XXX?: is there a cheaper way to do this, since we're in layout? */
+       nsIFontMetrics *metrics;
+       aRenderingContext.GetFontMetrics(metrics);
+       metrics->GetUnderline(offset, size);
+       metrics->GetMaxAscent(baseline);
+       NS_RELEASE(metrics);
+     }
+       
 	   // if disabled paint 
 	   if (PR_TRUE == mRenderer.isDisabled())
 	   {
 		   aRenderingContext.SetColor(NS_RGB(255,255,255));
-		   aRenderingContext.DrawString(mCroppedTitle, disabledRect.x, disabledRect.y);
+		   aRenderingContext.DrawString(mCroppedTitle, disabledRect.x, 
+                                    disabledRect.y, fontID);
+       if (hasAccessKey)
+         aRenderingContext.FillRect(disabledRect.x + beforeWidth,
+                                    disabledRect.y + baseline - offset,
+                                    accessWidth, size);
 	   }
 
 	   aRenderingContext.SetColor(colorStyle->mColor);
-	   aRenderingContext.DrawString(mCroppedTitle, mTitleRect.x, mTitleRect.y);
+	   aRenderingContext.DrawString(mCroppedTitle, mTitleRect.x, mTitleRect.y,
+                                  fontID);
+     if (hasAccessKey)
+       aRenderingContext.FillRect(mTitleRect.x + beforeWidth,
+                                  mTitleRect.y + baseline - offset,
+                                  accessWidth, size);
 
    }
 
