@@ -46,8 +46,8 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOBSERVER
 #endif
-
-    virtual void            ProcessNextEvent();
+    
+    virtual void            AdjustCursor(const EventRecord& inMacEvent);
 
     virtual void            HandleAppleEvent(const AppleEvent&	inAppleEvent,
                                              AppleEvent&			outAEReply,
