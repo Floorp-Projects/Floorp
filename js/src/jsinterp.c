@@ -218,12 +218,6 @@ static JSClass prop_iterator_class = {
         STORE_OPND(n, v_);                                                    \
     JS_END_MACRO
 
-#define PUSH_NUMBER(cx, d)                                                    \
-    JS_BEGIN_MACRO                                                            \
-        sp++;                                                                 \
-        STORE_NUMBER(cx, -1, d);                                              \
-    JS_END_MACRO
-
 #define FETCH_NUMBER(cx, n, d)                                                \
     JS_BEGIN_MACRO                                                            \
         jsval v_;                                                             \
@@ -1908,9 +1902,9 @@ js_Interpret(JSContext *cx, jsval *result)
         if (!ok)                                                              \
             goto out;                                                         \
         EXTRA_CODE                                                            \
-        i = i OP j;                                                           \
+        d = i OP j;                                                           \
         sp--;                                                                 \
-        STORE_NUMBER(cx, -1, i);                                              \
+        STORE_NUMBER(cx, -1, d);                                              \
     JS_END_MACRO
 
 #define BITWISE_OP(OP)          INTEGER_OP(OP, (void) 0;)
