@@ -1010,7 +1010,7 @@ NS_IMETHODIMP nsFrame::GetPosition(nsIPresContext& aCX,
                                        aContentOffset, aContentOffsetEnd);
     }
   }
-
+ 
   result = mContent->GetParent(*aNewContent);
   if (*aNewContent){
     result = (*aNewContent)->IndexOf(mContent, aContentOffset);
@@ -1018,6 +1018,7 @@ NS_IMETHODIMP nsFrame::GetPosition(nsIPresContext& aCX,
     {
       return result;
     }
+#if 0
     nsRect rect;
     GetRect(rect);
     nsPoint offsetPoint; //used for offset of result frame
@@ -1025,6 +1026,7 @@ NS_IMETHODIMP nsFrame::GetPosition(nsIPresContext& aCX,
     GetOffsetFromView(offsetPoint, &view);
     if (aXCoord > (rect.width + rect.x))
       aContentOffset++;
+#endif
     aContentOffsetEnd = aContentOffset;
   }
   return result;
@@ -2125,7 +2127,54 @@ nsFrame::PeekOffset(nsPeekOffsetStruct *aPos)
     {
       //this will use the nsFrameTraversal as the default peek method.
       //this should change to use geometry and also look to ALL the child lists
+      //we need to set up line information to make sure we dont jump across line boundaries
 
+      nsIFrame *blockFrame = this;
+      nsIFrame *thisBlock;
+      PRInt32   thisLine;
+      nsCOMPtr<nsILineIterator> it; 
+      while (NS_FAILED(result) && blockFrame)
+      {
+        thisBlock = blockFrame;
+        result = blockFrame->GetParent(&blockFrame);
+        if (NS_SUCCEEDED(result) && blockFrame){
+          result = blockFrame->QueryInterface(nsILineIterator::GetIID(),getter_AddRefs(it));
+        }
+        else
+          blockFrame = nsnull;
+      }
+      if (!blockFrame || !it)
+        return NS_ERROR_FAILURE;
+      result = it->FindLineContaining(thisBlock, &thisLine);
+      if (NS_FAILED(result))
+        return result;
+
+      nsIFrame *firstFrame;
+      nsIFrame *lastFrame;
+      nsRect  nonUsedRect;
+      PRInt32 lineFrameCount;
+
+      result = it->GetLine(thisLine, &firstFrame, &lineFrameCount,nonUsedRect);
+      if (NS_FAILED(result))
+        return result;
+
+      lastFrame = firstFrame;
+      for (;lineFrameCount > 1;lineFrameCount --){
+        result = lastFrame->GetNextSibling(&lastFrame);
+        if (NS_FAILED(result)){
+          NS_ASSERTION(0,"should not be reached nsFrame\n");
+          return NS_ERROR_FAILURE;
+        }
+      }
+
+
+      //END LINE DATA CODE
+      if ((aPos->mDirection == eDirNext && lastFrame == this)
+        ||(aPos->mDirection == eDirPrevious && firstFrame == this))
+      {
+        aPos->mPreferLeft = (PRBool)!(aPos->mPreferLeft);//drift to other side
+        aPos->mAmount = eSelectNoAmount;
+      }
       nsCOMPtr<nsIBidirectionalEnumerator> frameTraversal;
       result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal),LEAF,this);
       if (NS_FAILED(result))
