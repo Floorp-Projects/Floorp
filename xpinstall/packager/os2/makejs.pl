@@ -64,6 +64,7 @@ $nameCompany      = $ENV{WIZ_nameCompany};
 $nameProduct      = $ENV{WIZ_nameProduct};
 $nameProductNoVersion = $ENV{WIZ_nameProductNoVersion};
 $fileMainExe      = $ENV{WIZ_fileMainExe};
+$fileMainIco      = $ENV{WIZ_fileMainIco};
 $fileUninstall    = $ENV{WIZ_fileUninstall};
 
 # Get the name of the file replacing the .jst extension with a .js extension
@@ -117,6 +118,7 @@ while($line = <fpInTemplate>)
     $line =~ s/\$ProductName\$/$nameProduct/i;
     $line =~ s/\$ProductNameNoVersion\$/$nameProductNoVersion/i;
     $line =~ s/\$MainExeFile\$/$fileMainExe/i;
+    $line =~ s/\$MainIcoFile\$/$fileMainIco/i;
     $line =~ s/\$UninstallFile\$/$fileUninstall/i;
   }
 

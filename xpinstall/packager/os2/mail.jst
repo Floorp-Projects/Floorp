@@ -1,55 +1,66 @@
 function upgradeCleanup()
 {
-  // Obsolete files from Netscape 6.0 and Netscape 6.01 that
+  // Obsolete files and generated files that
   // need to be cleaned up.
-  deleteThisFile("Components", "libsigned.so");
+  deleteThisFile("Program",    "msgMapi.dll");
+  deleteThisFile("Components", "signed.dll");
+  deleteThisFile("Components", "smimestb.dll");
+  deleteThisFile("Components", "nsMapiRegistry.dll");
 }
 
-var srDest = $SpaceRequired$;
+// main
+var srDest;
+var err;
+var fProgram;
 
-var err = initInstall("Mozilla Mail", "Mail", "$Version$"); 
+srDest = $SpaceRequired$:bin;
+err    = initInstall("Mozilla Mail", "Mail", "$Version$"); 
 logComment("initInstall: " + err);
 
-var communicatorFolder = getFolder("Program");
-logComment("communicatorFolder: " + communicatorFolder);
+fProgram = getFolder("Program");
+logComment("fProgram: " + fProgram);
 
-if (verifyDiskSpace(communicatorFolder, srDest))
+if(verifyDiskSpace(fProgram, srDest))
 {
-    // Call upgradeCleanup() before addDirectory() in case we accidentaly
-    // delete files that we happen to be also installing.  This way, if we do,
-    // it will just get reinstalled.  This is for safety measure.
-    upgradeCleanup();
-    err = addDirectory("Program",
-                       "$Version$",
-                       "bin",              // jar source folder 
-                       communicatorFolder, // target folder
-                       "",                 // target subdir 
-                       true );             // force flag 
+  setPackageFolder(fProgram);
 
-    logComment("addDirectory() returned: " + err);
+  upgradeCleanup();
+  err = addDirectory("",
+                     "$Version$",
+                     "bin",              // dir name in jar to extract 
+                     fProgram,           // Where to put this file (Returned from GetFolder) 
+                     "",                 // subdir name to create relative to fProgram
+                     true);              // Force Flag 
+  logComment("addDirectory() returned: " + err);
 
-    registerChrome(CONTENT | DELAYED_CHROME,
+  // check return value
+  if( err == SUCCESS )
+  {
+    // register chrome
+    registerChrome(CONTENT | DELAYED_CHROME, 
                    getFolder("Chrome","messenger.jar"),
                    "content/messenger/");
-
     registerChrome(CONTENT | DELAYED_CHROME,
                    getFolder("Chrome","messenger.jar"),
                    "content/messenger-region/");
-
     registerChrome(CONTENT | DELAYED_CHROME,
                    getFolder("Chrome","messenger.jar"),
                    "content/messenger-smime/");
 
-    if (err==SUCCESS)
+    // check return value
+    err = getLastError();
+    if(err == SUCCESS)
     {
-	    err = performInstall(); 
-	    logComment("performInstall() returned: " + err);
+      err = performInstall(); 
+      logComment("performInstall() returned: " + err);
     }
     else
-    {
-	    cancelInstall(err);
-	    logComment("cancelInstall() due to error: " + err);
-    }
+      cancelInstall(err);
+  }
+  else
+    cancelInstall(err);
 }
 else
-    cancelInstall(INSUFFICIENT_DISK_SPACE);
+  cancelInstall(INSUFFICIENT_DISK_SPACE);
+
+// end main

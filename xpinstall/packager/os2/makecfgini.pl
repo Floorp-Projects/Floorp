@@ -91,6 +91,7 @@ $nameCompany      = $ENV{WIZ_nameCompany};
 $nameProduct      = $ENV{WIZ_nameProduct};
 $nameProductNoVersion = $ENV{WIZ_nameProductNoVersion};
 $fileMainExe      = $ENV{WIZ_fileMainExe};
+$fileMainIco      = $ENV{WIZ_fileMainIco;
 $fileUninstall    = $ENV{WIZ_fileUninstall};
 $fileUninstallZip = $ENV{WIZ_fileUninstallZip};
 
@@ -176,6 +177,7 @@ while($line = <fpInIt>)
     $line =~ s/\$ProductName\$/$nameProduct/gi;
     $line =~ s/\$ProductNameNoVersion\$/$nameProductNoVersion/gi;
     $line =~ s/\$MainExeFile\$/$fileMainExe/gi;
+    $line =~ s/\$MainIcoFile\$/$fileMainIco/gi;
     $line =~ s/\$UninstallFile\$/$fileUninstall/gi;
     $line =~ s/\$UninstallFileZip\$/$fileUninstallZip/gi;
     print fpOutIni $line;

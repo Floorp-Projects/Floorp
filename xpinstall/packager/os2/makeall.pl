@@ -109,6 +109,7 @@ $ENV{WIZ_nameCompany}          = "mozilla.org";
 $ENV{WIZ_nameProduct}          = "Mozilla";
 $ENV{WIZ_nameProductNoVersion} = "Mozilla";
 $ENV{WIZ_fileMainExe}          = "Mozilla.exe";
+$ENV{WIZ_fileMainIco}          = "Mozilla.ico";
 $ENV{WIZ_fileUninstall}        = $seuFileNameSpecific;
 $ENV{WIZ_fileUninstallZip}     = $seuzFileNameSpecific;
 # The following variables are for displaying version info in the 
@@ -223,6 +224,12 @@ if(system("cp $ENV{MOZ_SRC}\\mozilla\\LICENSE $inDistPath\\license.txt"))
 if(system("cp $ENV{MOZ_SRC}\\mozilla\\LICENSE $inDistPath\\setup\\license.txt"))
 {
   die "\n Error: copy $ENV{MOZ_SRC}\\mozilla\\LICENSE $inDistPath\\setup\\license.txt\n";
+}
+
+# copy the icons
+if(system("cp $inDistPath\\mozilla.ico $inDistPath\\setup\\mozilla.ico"))
+{
+  die "\n Error: copy $inDistPath\\mozilla.ico $inDistPath\\setup\\mozilla.ico\n";
 }
 
 # build the self-extracting .exe (installer) file.
