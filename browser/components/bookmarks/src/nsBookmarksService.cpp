@@ -970,6 +970,11 @@ BookmarkParser::Unescape(nsString &text)
             text.Cut(offset, 6);
             text.Insert(PRUnichar('\"'), offset);
         }
+        else if (Substring(text, offset, 5).Equals(NS_LITERAL_STRING("&#39;")))
+        {
+            text.Cut(offset, 5);
+            text.Insert(PRUnichar('\''), offset);
+        }
 
         ++offset;
     }
