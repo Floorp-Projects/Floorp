@@ -351,5 +351,8 @@ libs:: $(PROGRAM)
 	echo APPLMOZZ > $(DIST)/$(APP_NAME).app/Contents/PkgInfo
 endif
 
+libs::
+	touch $(DIST)/bin/.autoreg
+
 echo_objs:
 	@echo $(OBJS)
