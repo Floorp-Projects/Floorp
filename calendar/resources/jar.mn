@@ -42,6 +42,7 @@ calendar.jar:
     skin/modern/calendar/arrow_right_down.png (skin/modern/arrow_right_down.png)
     skin/modern/calendar/arrow_right_hover.png (skin/modern/arrow_right_hover.png)
     skin/modern/calendar/calendar.css (skin/modern/calendar.css)
+    skin/modern/calendar/calendarOverlay.css (skin/modern/calendarOverlay.css)
     skin/modern/calendar/calendarEventAlertDialog.css (skin/modern/calendarEventAlertDialog.css)
     skin/modern/calendar/calendarEventDialog.css (skin/modern/calendarEventDialog.css)
     skin/modern/calendar/calendar_topbar.gif (skin/modern/calendar_topbar.gif)
