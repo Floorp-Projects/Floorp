@@ -120,9 +120,8 @@ PRInt32 nsTypeAheadFind::gAccelKey = -1;  // magic value of -1 indicates unitial
 
 nsTypeAheadFind::nsTypeAheadFind(): 
   mLinksOnlyPref(PR_FALSE), mLinksOnly(PR_FALSE), mIsTypeAheadOn(PR_FALSE), 
-  mCaretBrowsingOn(PR_FALSE), mIsRepeatingSameChar(PR_FALSE), mIsRepeatingFind(PR_FALSE),
-  mLiteralTextSearchOnly(PR_FALSE), mKeepSelectionOnCancel(PR_FALSE), 
-  mDontTryExactMatch(PR_FALSE), mTimeoutLength(0),
+  mCaretBrowsingOn(PR_FALSE), mLiteralTextSearchOnly(PR_FALSE), mKeepSelectionOnCancel(PR_FALSE), 
+  mDontTryExactMatch(PR_FALSE), mRepeatingMode(eRepeatingNone), mTimeoutLength(0),
   mFind(do_CreateInstance(NS_FIND_CONTRACTID)), 
   mFindService(do_GetService("@mozilla.org/find/find_service;1"))
 {
@@ -474,20 +473,21 @@ NS_IMETHODIMP nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
       NS_FAILED(keyEvent->GetMetaKey(&isMeta)))
     return NS_ERROR_FAILURE;
 
-  PRBool isFindNext = PR_FALSE, isReverse = PR_FALSE;
-  if (charCode == 'g' && !mTypeAheadBuffer.IsEmpty() && isAlt + isMeta + isCtrl == 1 && (
+  if ((charCode == 'g' || charCode=='G') && !mTypeAheadBuffer.IsEmpty() && isAlt + isMeta + isCtrl == 1 && (
      (nsTypeAheadFind::gAccelKey == nsIDOMKeyEvent::DOM_VK_CONTROL && isCtrl) || 
      (nsTypeAheadFind::gAccelKey == nsIDOMKeyEvent::DOM_VK_ALT     && isAlt ) || 
      (nsTypeAheadFind::gAccelKey == nsIDOMKeyEvent::DOM_VK_META    && isMeta))) {
     // We steal Accel+G (find next) and Accel+Shift+G (find prev), avoid early return
     aEvent->PreventDefault(); // If back space is normally used for a command, don't do it
-    isFindNext = PR_TRUE;
-    isReverse = isShift;
-    mIsRepeatingSameChar = PR_FALSE;
-    mIsRepeatingFind = PR_TRUE;
+    if (mRepeatingMode == eRepeatingChar)
+      mTypeAheadBuffer = mTypeAheadBuffer.First();
+    mRepeatingMode = (charCode=='G')? eRepeatingReverse: eRepeatingForward;
+    mLiteralTextSearchOnly = PR_TRUE;
   }
   else if ((isAlt && !isShift) || isCtrl || isMeta)
     return NS_OK;  // Ignore most modified keys, but alt+shift may be used for entering foreign chars
+  else if (mRepeatingMode == eRepeatingForward || mRepeatingMode == eRepeatingReverse)
+    CancelFind();
 
   // ---------- Get document/presshell/prescontext/selection/etc. ------------
 
@@ -549,7 +549,7 @@ NS_IMETHODIMP nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
     mDontTryExactMatch = PR_FALSE;
   }
   // ----------- Printable characters --------------
-  else if (!isFindNext) {
+  else if (mRepeatingMode != eRepeatingForward && mRepeatingMode != eRepeatingReverse) {
     PRUnichar uniChar = ToLowerCase(NS_STATIC_CAST(PRUnichar, charCode));
     PRInt32 bufferLength = mTypeAheadBuffer.Length();
     if (uniChar < ' ')
@@ -562,9 +562,9 @@ NS_IMETHODIMP nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
     }
     if (bufferLength > 0) {
       if (mTypeAheadBuffer.First() != uniChar)
-        mIsRepeatingSameChar = PR_FALSE;
+        mRepeatingMode = eRepeatingNone;
       else if (bufferLength == 1)
-        mIsRepeatingSameChar = PR_TRUE;
+        mRepeatingMode = eRepeatingChar;
     }
     if (bufferLength == 0)
       if (uniChar == '`' || uniChar=='\'' || uniChar=='\"') {
@@ -592,12 +592,12 @@ NS_IMETHODIMP nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
   nsresult rv = NS_ERROR_FAILURE;
 
   // ----------- Set search options ---------------
-  mFind->SetFindBackwards(isReverse);
+  mFind->SetFindBackwards(mRepeatingMode == eRepeatingReverse);
 
   if (!mDontTryExactMatch)    // Regular find, not repeated char find
     rv = FindItNow(PR_FALSE, mLinksOnly, isFirstVisiblePreferred, isBackspace); // Prefer to find exact match
 #ifndef NO_LINK_CYCLE_ON_SAME_CHAR
-  if (NS_FAILED(rv) && !mLiteralTextSearchOnly && mIsRepeatingSameChar) {
+  if (NS_FAILED(rv) && !mLiteralTextSearchOnly && mRepeatingMode == eRepeatingChar) {
     mDontTryExactMatch = PR_TRUE;  // Repeated character find mode
     rv = FindItNow(PR_TRUE, PR_TRUE, isFirstVisiblePreferred, isBackspace);
   }
@@ -732,7 +732,7 @@ nsresult nsTypeAheadFind::FindItNow(PRBool aIsRepeatingSameChar, PRBool aIsLinks
         // ------ Failure ------
         // Start find again from here 
         returnRange->CloneRange(getter_AddRefs(startPointRange));
-        startPointRange->Collapse(PR_FALSE);  // collapse to end
+        startPointRange->Collapse(mRepeatingMode == eRepeatingReverse);  // collapse to end
         continue;
       }
 
@@ -871,7 +871,7 @@ nsresult nsTypeAheadFind::GetSearchContainers(nsISupports *aContainer, PRBool aI
   else {
     PRInt32 startOffset;
     nsCOMPtr<nsIDOMNode> startNode;
-    if (aIsRepeatingSameChar || mIsRepeatingFind) {
+    if (aIsRepeatingSameChar || mRepeatingMode == eRepeatingForward) {
       currentSelectionRange->GetEndContainer(getter_AddRefs(startNode));
       currentSelectionRange->GetEndOffset(&startOffset);
     }
@@ -1030,8 +1030,7 @@ void nsTypeAheadFind::CancelFind()
 
   // These will be initialized to their true values after the first character is typed
   mCaretBrowsingOn = PR_FALSE;
-  mIsRepeatingSameChar = PR_FALSE;
-  mIsRepeatingFind = PR_FALSE;
+  mRepeatingMode = eRepeatingNone;
   mLiteralTextSearchOnly = PR_FALSE;
   mDontTryExactMatch = PR_FALSE;
   mStartFindRange = nsnull;

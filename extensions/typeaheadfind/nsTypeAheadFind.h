@@ -63,6 +63,8 @@
 
 #define TYPEAHEADFIND_BUNDLE_URL "chrome://typeaheadfind/locale/typeaheadfind.properties"
 
+enum { eRepeatingNone, eRepeatingChar, eRepeatingForward, eRepeatingReverse}; 
+
 class nsTypeAheadFind : public nsIDOMFocusListener,
                         public nsIDOMKeyListener,
                         public nsIDOMLoadListener,
@@ -149,11 +151,10 @@ protected:
   PRBool mLinksOnly;
   PRBool mIsTypeAheadOn;
   PRBool mCaretBrowsingOn;
-  PRBool mIsRepeatingSameChar;
-  PRBool mIsRepeatingFind;
   PRBool mLiteralTextSearchOnly;
   PRBool mKeepSelectionOnCancel;
   PRBool mDontTryExactMatch;
+  PRInt32 mRepeatingMode;
   PRInt32 mTimeoutLength; // Amount of time before find is automatically cancelled
   static PRBool gIsFindingText; // this flag prevents side effects from listener callbacks while selecting/focusing found text
   static PRInt32 gAccelKey;  // magic value of -1 indicates unitialized state
