@@ -190,6 +190,11 @@ MapAttributesInto(nsIPresContext* aPresContext,
   DEBUG_VERIFY_THAT_FRAME_IS(rowFrame, TABLE_ROW);
   DEBUG_VERIFY_THAT_FRAME_IS(rowgroupFrame, TABLE_ROW_GROUP);
   DEBUG_VERIFY_THAT_FRAME_IS(tableFrame, TABLE);
+#ifdef NS_DEBUG
+  PRBool originates;
+  ((nsTableFrame*)tableFrame)->GetCellInfoAt(rowIndex, colIndex, &originates);
+  NS_ASSERTION(originates, "internal error");
+#endif
 
   nsIAtom* atom;
   PRUnichar* attr;
@@ -236,7 +241,8 @@ MapAttributesInto(nsIPresContext* aPresContext,
     aCellContent->SetAttr(kNameSpaceID_None, nsMathMLAtoms::firstrow, trueStr, PR_FALSE);
   }
   // if we are on the last row, set the special -moz-math-lastrow
-  sibling = ((nsTableFrame*)tableFrame)->GetCellFrameAt(rowIndex+1, colIndex);
+  PRInt32 rowSpan = ((nsTableFrame*)tableFrame)->GetEffectiveRowSpan(*cellFrame);
+  sibling = ((nsTableFrame*)tableFrame)->GetCellFrameAt(rowIndex+rowSpan, colIndex);
   if (!sibling) {
     hasChanged = PR_TRUE;
     aCellContent->SetAttr(kNameSpaceID_None, nsMathMLAtoms::lastrow, trueStr, PR_FALSE);
@@ -280,7 +286,8 @@ MapAttributesInto(nsIPresContext* aPresContext,
     aCellContent->SetAttr(kNameSpaceID_None, nsMathMLAtoms::firstcolumn, trueStr, PR_FALSE);
   }
   // if we are on the last column, set the special -moz-math-lastcolumn
-  sibling = ((nsTableFrame*)tableFrame)->GetCellFrameAt(rowIndex, colIndex+1);
+  PRInt32 colSpan = ((nsTableFrame*)tableFrame)->GetEffectiveColSpan(*cellFrame);
+  sibling = ((nsTableFrame*)tableFrame)->GetCellFrameAt(rowIndex, colIndex+colSpan);
   if (!sibling) {
     hasChanged = PR_TRUE;
     aCellContent->SetAttr(kNameSpaceID_None, nsMathMLAtoms::lastcolumn, trueStr, PR_FALSE);
@@ -551,8 +558,9 @@ nsMathMLmtableOuterFrame::Reflow(nsIPresContext*          aPresContext,
       nscoord axisHeight;
       GetAxisHeight(*aReflowState.rendContext, fm, axisHeight);
       if (rowFrame) {
-        // anchor the axis of the table on the axis of the row of reference
+        // anchor the table on the axis of the row of reference
         // XXX fallback to baseline because it is a hard problem
+        // XXX need to fetch the axis of the row; would need rowalign=axis to work better
         nscoord rowAscent = ((nsTableRowFrame*)rowFrame)->GetMaxCellAscent();
         if (rowAscent) { // the row has at least one cell with 'vertical-align: baseline'
           aDesiredSize.ascent = dy + rowAscent;
