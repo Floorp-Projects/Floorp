@@ -64,6 +64,8 @@ private:
 	static nsIRDFResource		*kNC_Data;
 	static nsIRDFResource		*kNC_Name;
 	static nsIRDFResource		*kNC_Description;
+    static nsIRDFResource       *kNC_actionButton;
+    static nsIRDFResource       *kNC_actionBar;
 	static nsIRDFResource		*kNC_LastText;
 	static nsIRDFResource		*kNC_URL;
 	static nsIRDFResource		*kRDF_InstanceOf;
