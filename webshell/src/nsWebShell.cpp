@@ -379,8 +379,6 @@ protected:
   nsISessionHistory * mSHist;
 
   nsRect   mBounds;
-  nsString mOverURL;
-  nsString mOverTarget;
 
   PRPackedBool mIsInSHist;
   PRPackedBool mFailedToLoadHistoryService;
@@ -2229,30 +2227,12 @@ nsWebShell::OnOverLink(nsIContent* aContent,
                        const PRUnichar* aURLSpec,
                        const PRUnichar* aTargetSpec)
 {
-  if (!mOverURL.Equals(aURLSpec) || !mOverTarget.Equals(aTargetSpec)) {
-#ifdef NOISY_LINKS
-    fputs("Was '", stdout);
-    fputs(mOverURL, stdout);
-    fputs("' '", stdout);
-    fputs(mOverTarget, stdout);
-    fputs("'\n", stdout);
-    fputs("Over link '", stdout);
-    fputs(aURLSpec, stdout);
-    fputs("' '", stdout);
-    fputs(aTargetSpec, stdout);
-    fputs("'\n", stdout);
-#endif /* NS_DEBUG */
+   nsCOMPtr<nsIWebBrowserChrome> browserChrome(do_GetInterface(mTreeOwner));
 
-    mOverURL = aURLSpec;
-    mOverTarget = aTargetSpec;
-
-
-    nsCOMPtr<nsIWebBrowserChrome> browserChrome(do_GetInterface(mTreeOwner));
-
-    if (browserChrome)
+   if(browserChrome)
       browserChrome->SetOverLink(aURLSpec);
-  }
-  return NS_OK;
+
+   return NS_OK;
 }
 
 NS_IMETHODIMP
