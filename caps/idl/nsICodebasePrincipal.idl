@@ -16,9 +16,8 @@
  * Reserved.
  */
 
-#include "nsISupports.idl"
-[uuid(ff9313d0-25e1-11d2-8160-006008119d7a)]
-interface nsIPrincipal : nsISupports {
-void IsTrusted([const] in string scope, out boolean pbIsTrusted);
+#include "nsIPrincipal.idl"
+[uuid(c29fe440-25e1-11d2-8160-006008119d7a)]
+interface nsICodebasePrincipal : nsIPrincipal {
+void GetURL(out string ppCodeBaseURL);
 };
-

@@ -16,26 +16,24 @@
  * Reserved.
  */
 
-#include "nsCCodebasePrincipal.h"
+#include "nsCodebasePrincipal.h"
 #include "nsPrincipal.h"
 #include "xp.h"
 
-NS_DEFINE_IID(kICodebasePrincipalIID, NS_ICODEBASEPRINCIPAL_IID);
+static NS_DEFINE_IID(kICodebasePrincipalIID, NS_ICODEBASEPRINCIPAL_IID);
 ////////////////////////////////////////////////////////////////////////////
 // from nsISupports:
 
 // These macros produce simple version of QueryInterface and AddRef.
 // See the nsISupports.h header file for DETAILS.
 
-NS_IMPL_ADDREF(nsCCodebasePrincipal)
-NS_IMPL_RELEASE(nsCCodebasePrincipal)
-NS_IMPL_QUERY_INTERFACE(nsCCodebasePrincipal, kICodebasePrincipalIID);
+NS_IMPL_ISUPPORTS(nsCodebasePrincipal, kICodebasePrincipalIID);
 
 ////////////////////////////////////////////////////////////////////////////
 // from nsIPrincipal:
 
-NS_METHOD
-nsCCodebasePrincipal::IsTrusted(const char* scope, PRBool *pbIsTrusted)
+NS_IMETHODIMP
+nsCodebasePrincipal::IsTrusted(const char* scope, PRBool *pbIsTrusted)
 {
    if(m_pNSPrincipal == NULL)
    {
@@ -53,8 +51,8 @@ nsCCodebasePrincipal::IsTrusted(const char* scope, PRBool *pbIsTrusted)
  *
  * @param result - the resulting codebase URL
  */
-NS_METHOD
-nsCCodebasePrincipal::GetURL(const char **ppCodeBaseURL)
+NS_IMETHODIMP
+nsCodebasePrincipal::GetURL(char **ppCodeBaseURL)
 {
    if(m_pNSPrincipal == NULL)
    {
@@ -68,7 +66,7 @@ nsCCodebasePrincipal::GetURL(const char **ppCodeBaseURL)
 ////////////////////////////////////////////////////////////////////////////
 // from nsCCodebasePrincipal:
 
-nsCCodebasePrincipal::nsCCodebasePrincipal(const char *codebaseURL, 
+nsCodebasePrincipal::nsCodebasePrincipal(const char *codebaseURL, 
                                            nsresult *result)
 {
    m_pNSPrincipal = new nsPrincipal(nsPrincipalType_CodebaseExact, 
@@ -82,18 +80,18 @@ nsCCodebasePrincipal::nsCCodebasePrincipal(const char *codebaseURL,
    *result = NS_OK;
 }
 
-nsCCodebasePrincipal::nsCCodebasePrincipal(nsPrincipal *pNSPrincipal)
+nsCodebasePrincipal::nsCodebasePrincipal(nsPrincipal *pNSPrincipal)
 {
    m_pNSPrincipal = pNSPrincipal;
 }
 
-nsCCodebasePrincipal::~nsCCodebasePrincipal(void)
+nsCodebasePrincipal::~nsCodebasePrincipal(void)
 {
    delete m_pNSPrincipal;
 }
 
 nsPrincipal*
-nsCCodebasePrincipal::GetPeer(void)
+nsCodebasePrincipal::GetPeer(void)
 {
    return m_pNSPrincipal;
 }

@@ -15,6 +15,6 @@ nsCaps.h
 nsCapsEnums.h
 nsCCapsManager.h
 nsCCapsManagerFactory.h
-nsCCertPrincipal.h
-nsCCodebasePrincipal.h
+nsCertificatePrincipal.h
+nsCodebasePrincipal.h
 nsCCodeSourcePrincipal.h

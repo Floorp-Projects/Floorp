@@ -23,10 +23,26 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXPORTS	= nsZip.h nsZig.h nsLoadZig.h nsPrincipal.h nsPrivilege.h nsPrivilegeManager.h nsPrivilegeTable.h nsSystemPrivilegeTable.h nsTarget.h nsUserTarget.h jpermission.h nsUserDialogHelper.h admin.h nsCaps.h nsCapsEnums.h nsCCapsManagerFactory.h nsCCapsManager.h \
- nsCCertPrincipal.h     \
- nsCCodebasePrincipal.h \
- nsCCodeSourcePrincipal.h
+EXPORTS	= nsZip.h \
+	nsZig.h \
+	nsLoadZig.h \
+	nsPrincipal.h \
+	nsPrivilege.h \
+	nsPrivilegeManager.h \
+	nsPrivilegeTable.h \
+	nsSystemPrivilegeTable.h \
+	nsTarget.h \
+	nsUserTarget.h \
+	jpermission.h \
+	nsUserDialogHelper.h \
+	admin.h \
+	nsCaps.h \
+	nsCapsEnums.h \
+	nsCCapsManagerFactory.h \
+	nsCCapsManager.h \
+	nsCertificatePrincipal.h     \
+	nsCodebasePrincipal.h \
+	nsCCodeSourcePrincipal.h
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 

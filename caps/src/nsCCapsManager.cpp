@@ -12,16 +12,16 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
 #include "nsIComponentManager.h"
 #include "nsCapsEnums.h"
 #include "nsCCapsManager.h"
 #include "nsICodebasePrincipal.h"
-#include "nsICertPrincipal.h"
-#include "nsCCodebasePrincipal.h"
-#include "nsCCertPrincipal.h"
+#include "nsICertificatePrincipal.h"
+#include "nsCodebasePrincipal.h"
+#include "nsCertificatePrincipal.h"
 #include "nsCCodeSourcePrincipal.h"
 #include "nsCaps.h"
 #include "nsICapsSecurityCallbacks.h"
@@ -72,8 +72,8 @@ nsCCapsManager::CreateCodebasePrincipal(const char *codebaseURL,
                                         nsIPrincipal** prin)
 {
    nsresult result = NS_OK;
-   nsCCodebasePrincipal *pNSCCodebasePrincipal = 
-       new nsCCodebasePrincipal(codebaseURL, &result);
+   nsCodebasePrincipal *pNSCCodebasePrincipal = 
+       new nsCodebasePrincipal(codebaseURL, &result);
    if (pNSCCodebasePrincipal == NULL)
    {
       return NS_ERROR_OUT_OF_MEMORY;
@@ -90,8 +90,8 @@ nsCCapsManager::CreateCertPrincipal(const unsigned char **certChain,
                                     nsIPrincipal** prin)
 {
    nsresult result = NS_OK;
-   nsCCertPrincipal *pNSCCertPrincipal = 
-       new nsCCertPrincipal(certChain, certChainLengths, noOfCerts, &result);
+   nsCertificatePrincipal *pNSCCertPrincipal = 
+       new nsCertificatePrincipal(certChain, certChainLengths, noOfCerts, &result);
    if (pNSCCertPrincipal == NULL)
    {
       return NS_ERROR_OUT_OF_MEMORY;
@@ -480,9 +480,9 @@ nsCCapsManager::NewPrincipal(nsPrincipalType type, void* key, PRUint32 key_len, 
   nsIPrincipal* pNSIPrincipal;
   nsPrincipal *pNSPrincipal = new nsPrincipal(type, key, key_len, zig);
   if (pNSPrincipal->isCodebase()) {
-      pNSIPrincipal = (nsIPrincipal*)new nsCCodebasePrincipal(pNSPrincipal);
+      pNSIPrincipal = (nsIPrincipal*)new nsCodebasePrincipal(pNSPrincipal);
   } else {
-      pNSIPrincipal = (nsIPrincipal*)new nsCCertPrincipal(pNSPrincipal);
+      pNSIPrincipal = (nsIPrincipal*)new nsCertificatePrincipal(pNSPrincipal);
   }
   *ret_val = pNSIPrincipal;
   return NS_OK;
@@ -642,9 +642,9 @@ nsCCapsManager::GetPrincipalArrayElement(void *prinArrayArg, PRUint32 index, nsI
  nsIPrincipal* pNSIPrincipal;
  nsPrincipal *pNSPrincipal = (nsPrincipal *)nsCapsGetPrincipalArrayElement(prinArrayArg, index);
  if (pNSPrincipal->isCodebase()) {
-     pNSIPrincipal = (nsIPrincipal*)new nsCCodebasePrincipal(pNSPrincipal);
+     pNSIPrincipal = (nsIPrincipal*)new nsCodebasePrincipal(pNSPrincipal);
  } else {
-     pNSIPrincipal = (nsIPrincipal*)new nsCCertPrincipal(pNSPrincipal);
+     pNSIPrincipal = (nsIPrincipal*)new nsCertificatePrincipal(pNSPrincipal);
  }
  *ret_val = pNSIPrincipal;
   return NS_OK;
@@ -729,9 +729,9 @@ nsCCapsManager::CreateNSPrincipalArray(nsPrincipalArray* prinArray,
  for (PRUint32 index = 0; index < count; index++) {
     pNSPrincipal = (nsPrincipal *)prinArray->Get(index);
     if (pNSPrincipal->isCodebase()) {
-        pNSIPrincipal = (nsIPrincipal*)new nsCCodebasePrincipal(pNSPrincipal);
+        pNSIPrincipal = (nsIPrincipal*)new nsCodebasePrincipal(pNSPrincipal);
     } else {
-        pNSIPrincipal = (nsIPrincipal*)new nsCCertPrincipal(pNSPrincipal);
+        pNSIPrincipal = (nsIPrincipal*)new nsCertificatePrincipal(pNSPrincipal);
     }
     newPrinArray->Set(index, pNSIPrincipal);
  }
@@ -779,7 +779,7 @@ nsCCapsManager::GetNSPrincipal(nsIPrincipal* pNSIPrincipal,
       return NS_ERROR_NULL_POINTER;
    }
 
-   NS_DEFINE_IID(kICertPrincipalIID, NS_ICERTPRINCIPAL_IID);
+   NS_DEFINE_IID(kICertificatePrincipalIID, NS_ICERTIFICATEPRINCIPAL_IID);
    NS_DEFINE_IID(kICodebasePrincipalIID, NS_ICODEBASEPRINCIPAL_IID);
    NS_DEFINE_IID(kICodeSourcePrincipalIID, NS_ICODESOURCEPRINCIPAL_IID);
 
@@ -787,7 +787,7 @@ nsCCapsManager::GetNSPrincipal(nsIPrincipal* pNSIPrincipal,
                             (void**)&pNSISupports) == NS_OK) 
    {
       nsCCodeSourcePrincipal *pNSCCodeSourcePrincipal = (nsCCodeSourcePrincipal *)pNSIPrincipal;
-      nsICertPrincipal       *pNSICertPrincipal       = pNSCCodeSourcePrincipal->GetCertPrincipal();
+      nsICertificatePrincipal       *pNSICertPrincipal       = pNSCCodeSourcePrincipal->GetCertPrincipal();
       nsICodebasePrincipal   *pNSICodebasePrincipal   = pNSCCodeSourcePrincipal->GetCodebasePrincipal();
       PRBool bIsTrusted = PR_FALSE;
       if(pNSICertPrincipal != NULL )
@@ -796,14 +796,14 @@ nsCCapsManager::GetNSPrincipal(nsIPrincipal* pNSIPrincipal,
       }
       if (bIsTrusted)
       {
-          nsCCertPrincipal *pNSCCertPrincipal = (nsCCertPrincipal *)pNSICertPrincipal;
+          nsCertificatePrincipal *pNSCCertPrincipal = (nsCertificatePrincipal *)pNSICertPrincipal;
           pNSPrincipal = pNSCCertPrincipal->GetPeer();
           pNSCCertPrincipal->Release();
       }
       else
       if(pNSICodebasePrincipal != NULL )
       {
-          nsCCodebasePrincipal *pNSCCodebasePrincipal = (nsCCodebasePrincipal *)pNSICodebasePrincipal;
+          nsCodebasePrincipal *pNSCCodebasePrincipal = (nsCodebasePrincipal *)pNSICodebasePrincipal;
           pNSPrincipal = pNSCCodebasePrincipal->GetPeer();
           pNSCCodebasePrincipal->Release();
       }
@@ -813,10 +813,10 @@ nsCCapsManager::GetNSPrincipal(nsIPrincipal* pNSIPrincipal,
       }
    }
    else
-   if (pNSIPrincipal->QueryInterface(kICertPrincipalIID,
+   if (pNSIPrincipal->QueryInterface(kICertificatePrincipalIID,
                             (void**)&pNSISupports) == NS_OK) 
    {
-      nsCCertPrincipal *pNSCCertPrincipal = (nsCCertPrincipal *)pNSIPrincipal;
+      nsCertificatePrincipal *pNSCCertPrincipal = (nsCertificatePrincipal *)pNSIPrincipal;
       pNSPrincipal = pNSCCertPrincipal->GetPeer();
       pNSCCertPrincipal->Release();
    }
@@ -824,8 +824,8 @@ nsCCapsManager::GetNSPrincipal(nsIPrincipal* pNSIPrincipal,
    if (pNSIPrincipal->QueryInterface(kICodebasePrincipalIID,
                             (void**)&pNSISupports) == NS_OK) 
    {
-      nsCCodebasePrincipal *pNSCCodebasePrincipal = 
-          (nsCCodebasePrincipal *)pNSIPrincipal;
+      nsCodebasePrincipal *pNSCCodebasePrincipal = 
+          (nsCodebasePrincipal *)pNSIPrincipal;
       pNSPrincipal = pNSCCodebasePrincipal->GetPeer();
       pNSCCodebasePrincipal->Release();
    }

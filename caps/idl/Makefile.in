@@ -28,6 +28,9 @@ XPIDLSRCS = \
 	nsIScriptSecurityManager.idl \
 	nsICapsSecurityCallbacks.idl \
 	nsIPrincipal.idl \
+	nsICodebasePrincipal.idl \
+	nsICertificatePrincipal.idl \
+	nsICodeSourcePrincipal.idl \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

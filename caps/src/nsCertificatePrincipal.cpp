@@ -16,10 +16,10 @@
  * Reserved.
  */
 
-#include "nsCCertPrincipal.h"
+#include "nsCertificatePrincipal.h"
 #include "nsPrincipal.h"
 
-NS_DEFINE_IID(kICertPrincipalIID, NS_ICERTPRINCIPAL_IID);
+static NS_DEFINE_IID(kICertificatePrincipalIID, NS_ICERTIFICATEPRINCIPAL_IID);
 
 ////////////////////////////////////////////////////////////////////////////
 // from nsISupports:
@@ -27,15 +27,13 @@ NS_DEFINE_IID(kICertPrincipalIID, NS_ICERTPRINCIPAL_IID);
 // These macros produce simple version of QueryInterface and AddRef.
 // See the nsISupports.h header file for DETAILS.
 
-NS_IMPL_ADDREF(nsCCertPrincipal)
-NS_IMPL_RELEASE(nsCCertPrincipal)
-NS_IMPL_QUERY_INTERFACE(nsCCertPrincipal, kICertPrincipalIID);
+NS_IMPL_ISUPPORTS(nsCertificatePrincipal,kICertificatePrincipalIID);
 
 ////////////////////////////////////////////////////////////////////////////
 // from nsIPrincipal:
 
-NS_METHOD
-nsCCertPrincipal::IsTrusted(const char* scope, PRBool *pbIsTrusted)
+NS_IMETHODIMP
+nsCertificatePrincipal::IsTrusted(const char* scope, PRBool *pbIsTrusted)
 {
    if(m_pNSPrincipal == NULL)
    {
@@ -47,34 +45,7 @@ nsCCertPrincipal::IsTrusted(const char* scope, PRBool *pbIsTrusted)
 }
      
 ////////////////////////////////////////////////////////////////////////////
-// from nsICertPrincipal:
-
-/**
- * returns the certificate's data that is passes in via Initialize method.
- *
- * @param certChain        - An array of pointers, with each pointer 
- *                           pointing to a certificate data.
- * @param certChainLengths  - An array of intergers. Each integer indicates 
- *                            the length of the cert that is in CertChain 
- *                             parametr.
- * @param noOfCerts - the number of certifcates that are in the certChain array
- */
-NS_METHOD
-nsCCertPrincipal::GetCertData(const unsigned char ***certChain, 
-                              PRUint32 **certChainLengths, 
-                              PRUint32 *noOfCerts)
-{
-    *certChain     = NULL;
-    *certChainLengths = 0;
-    *noOfCerts = 0;
-    if (m_pNSPrincipal == NULL)
-    {
-        return NS_ERROR_ILLEGAL_VALUE;
-    }
-    /* XXX: Raman fix it. Return the correct data */
-    return NS_OK;
-}
-
+// from nsICertificatePrincipal:
 /**
  * Returns the public key of the certificate.
  *
@@ -82,8 +53,8 @@ nsCCertPrincipal::GetCertData(const unsigned char ***certChain,
  * @param publicKeySize - the length of public key data is returned in this
  *                        parameter.
  */
-NS_METHOD
-nsCCertPrincipal::GetPublicKey(unsigned char **publicKey, PRUint32 *publicKeySize)
+NS_IMETHODIMP
+nsCertificatePrincipal::GetPublicKey(char **publicKey, PRUint32 *publicKeySize)
 {
    // XXX raman: fix it.
    PR_ASSERT(PR_FALSE);
@@ -95,8 +66,8 @@ nsCCertPrincipal::GetPublicKey(unsigned char **publicKey, PRUint32 *publicKeySiz
  *
  * @param result - the certificate details about the signer.
  */
-NS_METHOD
-nsCCertPrincipal::GetCompanyName(const char **ppCompanyName)
+NS_IMETHODIMP
+nsCertificatePrincipal::GetCompanyName(char **ppCompanyName)
 {
    if(m_pNSPrincipal == NULL)
    {
@@ -112,8 +83,8 @@ nsCCertPrincipal::GetCompanyName(const char **ppCompanyName)
  *
  * @param result - the details about the issuer
  */
-NS_METHOD
-nsCCertPrincipal::GetCertificateAuthority(const char **ppCertAuthority)
+NS_IMETHODIMP
+nsCertificatePrincipal::GetCertificateAuthority(char **ppCertAuthority)
 {
    if(m_pNSPrincipal == NULL)
    {
@@ -129,8 +100,8 @@ nsCCertPrincipal::GetCertificateAuthority(const char **ppCertAuthority)
  *
  * @param result - Returns the serial number of certificate 
  */
-NS_METHOD
-nsCCertPrincipal::GetSerialNumber(const char **ppSerialNumber)
+NS_IMETHODIMP
+nsCertificatePrincipal::GetSerialNumber(char **ppSerialNumber)
 {
    if(m_pNSPrincipal == NULL)
    {
@@ -146,8 +117,8 @@ nsCCertPrincipal::GetSerialNumber(const char **ppSerialNumber)
  *
  * @param result - Returns the expiration date of certificate 
  */
-NS_METHOD
-nsCCertPrincipal::GetExpirationDate(const char **ppExpDate)
+NS_IMETHODIMP
+nsCertificatePrincipal::GetExpirationDate(char **ppExpDate)
 {
    if(m_pNSPrincipal == NULL)
    {
@@ -163,8 +134,8 @@ nsCCertPrincipal::GetExpirationDate(const char **ppExpDate)
  *
  * @param result - Returns the finger print of certificate 
  */
-NS_METHOD
-nsCCertPrincipal::GetFingerPrint(const char **ppFingerPrint)
+NS_IMETHODIMP
+nsCertificatePrincipal::GetFingerPrint(char **ppFingerPrint)
 {
    if(m_pNSPrincipal == NULL)
    {
@@ -176,9 +147,9 @@ nsCCertPrincipal::GetFingerPrint(const char **ppFingerPrint)
 }
 
 ////////////////////////////////////////////////////////////////////////////
-// from nsCCertPrincipal:
+// from nsCertificatePrincipal:
 
-nsCCertPrincipal::nsCCertPrincipal(const unsigned char **certChain, 
+nsCertificatePrincipal::nsCertificatePrincipal(const unsigned char **certChain, 
                                    PRUint32 *certChainLengths, 
                                    PRUint32 noOfCerts, 
                                    nsresult *result)
@@ -193,20 +164,18 @@ nsCCertPrincipal::nsCCertPrincipal(const unsigned char **certChain,
    *result = NS_OK;
 }
 
-nsCCertPrincipal::nsCCertPrincipal(nsPrincipal *pNSPrincipal)
+nsCertificatePrincipal::nsCertificatePrincipal(nsPrincipal *pNSPrincipal)
 {
    m_pNSPrincipal = pNSPrincipal;
 }
 
-nsCCertPrincipal::~nsCCertPrincipal(void)
+nsCertificatePrincipal::~nsCertificatePrincipal(void)
 {
    delete m_pNSPrincipal;
 }
 
 nsPrincipal*
-nsCCertPrincipal::GetPeer(void)
+nsCertificatePrincipal::GetPeer(void)
 {
    return m_pNSPrincipal;
 }
-
-
