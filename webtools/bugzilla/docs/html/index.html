@@ -4,7 +4,7 @@
 >The Bugzilla Guide</TITLE
 ><META
 NAME="GENERATOR"
-CONTENT="Modular DocBook HTML Stylesheet Version 1.61
+CONTENT="Modular DocBook HTML Stylesheet Version 1.76b+
 "><LINK
 REL="NEXT"
 TITLE="About This Guide"
@@ -37,22 +37,16 @@ ALINK="#0000FF"
 ><DIV
 CLASS="BOOK"
 ><A
-NAME="index"
-></A
-><DIV
+NAME="index"><DIV
 CLASS="TITLEPAGE"
 ><H1
 CLASS="title"
 ><A
-NAME="AEN2"
->The Bugzilla Guide</A
-></H1
+NAME="AEN2">The Bugzilla Guide</H1
 ><H3
 CLASS="author"
 ><A
-NAME="AEN27"
->Matthew P. Barnson</A
-></H3
+NAME="AEN27">Matthew P. Barnson</H3
 ><DIV
 CLASS="affiliation"
 ><DIV
@@ -77,6 +71,9 @@ CLASS="address"
 ></DIV
 ></DIV
 ><BR></SPAN
+><P
+CLASS="pubdate"
+>2001-04-25<BR></P
 ><DIV
 CLASS="revhistory"
 ><TABLE
@@ -186,9 +183,7 @@ COLSPAN="3"
 ><DIV
 CLASS="abstract"
 ><A
-NAME="AEN39"
-></A
-><P
+NAME="AEN39"><P
 ></P
 ><P
 >&#13;	This is the documentation for Bugzilla, the Mozilla
@@ -300,87 +295,11 @@ HREF="why.html"
 HREF="how.html"
 >How do I use Bugzilla?</A
 ></DT
-><DD
-><DL
-><DT
->2.3.1. <A
-HREF="how.html#myaccount"
->Create a Bugzilla Account</A
-></DT
-><DT
->2.3.2. <A
-HREF="how.html#query"
->The Bugzilla Query Page</A
-></DT
-><DT
->2.3.3. <A
-HREF="how.html#bugreports"
->Creating and Managing Bug Reports</A
-></DT
-><DD
-><DL
-><DT
->2.3.3.1. <A
-HREF="how.html#bug-writing"
->Writing a Great Bug Report</A
-></DT
-><DT
->2.3.3.2. <A
-HREF="how.html#bug-manage"
->Managing your Bug Reports</A
-></DT
-></DL
-></DD
-></DL
-></DD
 ><DT
 >2.4. <A
 HREF="init4me.html"
 >Where can I find my user preferences?</A
 ></DT
-><DD
-><DL
-><DT
->2.4.1. <A
-HREF="init4me.html#accountsettings"
->Account Settings</A
-></DT
-><DT
->2.4.2. <A
-HREF="init4me.html#emailsettings"
->Email Settings</A
-></DT
-><DD
-><DL
-><DT
->2.4.2.1. <A
-HREF="init4me.html#notification"
->Email Notification</A
-></DT
-><DT
->2.4.2.2. <A
-HREF="init4me.html#newemailtech"
->New Email Technology</A
-></DT
-><DT
->2.4.2.3. <A
-HREF="init4me.html#watchsettings"
->"Watching" Users</A
-></DT
-></DL
-></DD
-><DT
->2.4.3. <A
-HREF="init4me.html#footersettings"
->Page Footer</A
-></DT
-><DT
->2.4.4. <A
-HREF="init4me.html#permissionsettings"
->Permissions</A
-></DT
-></DL
-></DD
 ><DT
 >2.5. <A
 HREF="usingbz-conc.html"
@@ -405,108 +324,6 @@ HREF="errata.html"
 HREF="stepbystep.html"
 >Step-by-step Install</A
 ></DT
-><DD
-><DL
-><DT
->3.2.1. <A
-HREF="stepbystep.html#AEN509"
->Introduction</A
-></DT
-><DT
->3.2.2. <A
-HREF="stepbystep.html#AEN515"
->Installing the Prerequisites</A
-></DT
-><DT
->3.2.3. <A
-HREF="stepbystep.html#install-mysql"
->Installing MySQL Database</A
-></DT
-><DT
->3.2.4. <A
-HREF="stepbystep.html#install-perl"
->Perl (5.004 or greater)</A
-></DT
-><DT
->3.2.5. <A
-HREF="stepbystep.html#AEN602"
->DBI Perl Module</A
-></DT
-><DT
->3.2.6. <A
-HREF="stepbystep.html#AEN640"
->Data::Dumper Perl Module</A
-></DT
-><DT
->3.2.7. <A
-HREF="stepbystep.html#AEN645"
->MySQL related Perl Module Collection</A
-></DT
-><DT
->3.2.8. <A
-HREF="stepbystep.html#AEN654"
->TimeDate Perl Module Collection</A
-></DT
-><DT
->3.2.9. <A
-HREF="stepbystep.html#AEN658"
->GD Perl Module (1.8.3)</A
-></DT
-><DT
->3.2.10. <A
-HREF="stepbystep.html#AEN667"
->Chart::Base Perl Module (0.99c)</A
-></DT
-><DT
->3.2.11. <A
-HREF="stepbystep.html#AEN671"
->DB_File Perl Module</A
-></DT
-><DT
->3.2.12. <A
-HREF="stepbystep.html#AEN674"
->HTTP Server</A
-></DT
-><DT
->3.2.13. <A
-HREF="stepbystep.html#AEN692"
->Installing the Bugzilla Files</A
-></DT
-><DT
->3.2.14. <A
-HREF="stepbystep.html#AEN721"
->Setting Up the MySQL Database</A
-></DT
-><DT
->3.2.15. <A
-HREF="stepbystep.html#AEN768"
->Tweaking <TT
-CLASS="filename"
->localconfig</TT
-></A
-></DT
-><DT
->3.2.16. <A
-HREF="stepbystep.html#AEN806"
->Setting Up Maintainers Manually (Optional)</A
-></DT
-><DT
->3.2.17. <A
-HREF="stepbystep.html#AEN817"
->The Whining Cron (Optional)</A
-></DT
-><DT
->3.2.18. <A
-HREF="stepbystep.html#AEN827"
->Bug Graphs (Optional)</A
-></DT
-><DT
->3.2.19. <A
-HREF="stepbystep.html#AEN839"
->Securing MySQL</A
-></DT
-></DL
-></DD
 ><DT
 >3.3. <A
 HREF="osx.html"
@@ -522,70 +339,11 @@ HREF="bsdinstall.html"
 HREF="geninstall.html"
 >Installation General Notes</A
 ></DT
-><DD
-><DL
-><DT
->3.5.1. <A
-HREF="geninstall.html#AEN941"
->Modifying Your Running System</A
-></DT
-><DT
->3.5.2. <A
-HREF="geninstall.html#AEN948"
->Upgrading From Previous Versions</A
-></DT
-><DT
->3.5.3. <A
-HREF="geninstall.html#htaccess"
-><TT
-CLASS="filename"
->.htaccess</TT
-> files and security</A
-></DT
-><DT
->3.5.4. <A
-HREF="geninstall.html#mod-throttle"
-><TT
-CLASS="filename"
->mod_throttle</TT
-> and Security</A
-></DT
-><DT
->3.5.5. <A
-HREF="geninstall.html#content-type"
->Preventing untrusted Bugzilla content from executing malicious Javascript code</A
-></DT
-><DT
->3.5.6. <A
-HREF="geninstall.html#unixhistory"
->UNIX Installation Instructions History</A
-></DT
-></DL
-></DD
 ><DT
 >3.6. <A
 HREF="win32.html"
 >Win32 Installation Notes</A
 ></DT
-><DD
-><DL
-><DT
->3.6.1. <A
-HREF="win32.html#wininstall"
->Win32 Installation: Step-by-step</A
-></DT
-><DT
->3.6.2. <A
-HREF="win32.html#addlwintips"
->Additional Windows Tips</A
-></DT
-><DT
->3.6.3. <A
-HREF="win32.html#bzldap"
->Bugzilla LDAP Integration</A
-></DT
-></DL
-></DD
 ></DL
 ></DD
 ><DT
@@ -605,84 +363,12 @@ HREF="postinstall-check.html"
 HREF="useradmin.html"
 >User Administration</A
 ></DT
-><DD
-><DL
-><DT
->4.2.1. <A
-HREF="useradmin.html#defaultuser"
->Creating the Default User</A
-></DT
-><DT
->4.2.2. <A
-HREF="useradmin.html#manageusers"
->Managing Other Users</A
-></DT
-><DD
-><DL
-><DT
->4.2.2.1. <A
-HREF="useradmin.html#login"
->Logging In</A
-></DT
-><DT
->4.2.2.2. <A
-HREF="useradmin.html#createnewusers"
->Creating new users</A
-></DT
-><DT
->4.2.2.3. <A
-HREF="useradmin.html#disableusers"
->Disabling Users</A
-></DT
-><DT
->4.2.2.4. <A
-HREF="useradmin.html#modifyusers"
->Modifying Users</A
-></DT
-></DL
-></DD
-></DL
-></DD
 ><DT
 >4.3. <A
 HREF="programadmin.html"
 >Product, Component, Milestone, and Version
       Administration</A
 ></DT
-><DD
-><DL
-><DT
->4.3.1. <A
-HREF="programadmin.html#products"
->Products</A
-></DT
-><DT
->4.3.2. <A
-HREF="programadmin.html#components"
->Components</A
-></DT
-><DT
->4.3.3. <A
-HREF="programadmin.html#versions"
->Versions</A
-></DT
-><DT
->4.3.4. <A
-HREF="programadmin.html#milestones"
->Milestones</A
-></DT
-><DT
->4.3.5. <A
-HREF="programadmin.html#voting"
->Voting</A
-></DT
-><DT
->4.3.6. <A
-HREF="programadmin.html#groups"
->Groups and Group Security</A
-></DT
-></DL
-></DD
 ><DT
 >4.4. <A
 HREF="security.html"
@@ -790,24 +476,6 @@ HREF="dbschema.html"
 HREF="dbdoc.html"
 >MySQL Bugzilla Database Introduction</A
 ></DT
-><DD
-><DL
-><DT
->C.2.1. <A
-HREF="dbdoc.html#AEN2340"
->Bugzilla Database Basics</A
-></DT
-><DD
-><DL
-><DT
->C.2.1.1. <A
-HREF="dbdoc.html#AEN2369"
->Bugzilla Database Tables</A
-></DT
-></DL
-></DD
-></DL
-></DD
 ><DT
 >C.3. <A
 HREF="granttables.html"
@@ -850,20 +518,6 @@ HREF="quicksearch.html"
 HREF="bzhacking.html"
 >Hacking Bugzilla</A
 ></DT
-><DD
-><DL
-><DT
->D.5.1. <A
-HREF="bzhacking.html#AEN2504"
->Things that have caused problems and should be avoided</A
-></DT
-><DT
->D.5.2. <A
-HREF="bzhacking.html#AEN2518"
->Coding Style for Bugzilla</A
-></DT
-></DL
-></DD
 ></DL
 ></DD
 ><DT
@@ -962,68 +616,74 @@ HREF="how.html#AEN317"
 ></DT
 ><DT
 >3-1. <A
-HREF="stepbystep.html#AEN708"
+HREF="stepbystep.html#AEN709"
 >Setting up bonsaitools symlink</A
 ></DT
 ><DT
 >3-2. <A
-HREF="stepbystep.html#AEN799"
+HREF="stepbystep.html#AEN800"
 >Running checksetup.pl as the web user</A
 ></DT
 ><DT
 >3-3. <A
-HREF="win32.html#AEN1048"
+HREF="win32.html#AEN1051"
 >Installing ActivePerl ppd Modules on Microsoft Windows</A
 ></DT
 ><DT
 >3-4. <A
-HREF="win32.html#AEN1233"
+HREF="win32.html#AEN1064"
+>Installing OpenInteract ppd Modules manually on Microsoft
+              Windows</A
+></DT
+><DT
+>3-5. <A
+HREF="win32.html#AEN1246"
 >Removing encrypt() for Windows NT Bugzilla version
 	      2.12 or earlier</A
 ></DT
 ><DT
 >4-1. <A
-HREF="programadmin.html#AEN1470"
+HREF="programadmin.html#AEN1483"
 >Creating some Components</A
 ></DT
 ><DT
 >4-2. <A
-HREF="programadmin.html#AEN1499"
+HREF="programadmin.html#AEN1512"
 >Common Use of Versions</A
 ></DT
 ><DT
 >4-3. <A
-HREF="programadmin.html#AEN1503"
+HREF="programadmin.html#AEN1516"
 >A Different Use of Versions</A
 ></DT
 ><DT
 >4-4. <A
-HREF="programadmin.html#AEN1531"
+HREF="programadmin.html#AEN1544"
 >Using SortKey with Target Milestone</A
 ></DT
 ><DT
 >4-5. <A
-HREF="programadmin.html#AEN1567"
+HREF="programadmin.html#AEN1580"
 >When to Use Group Security</A
 ></DT
 ><DT
 >4-6. <A
-HREF="programadmin.html#AEN1584"
+HREF="programadmin.html#AEN1597"
 >Creating a New Group</A
 ></DT
 ><DT
 >4-7. <A
-HREF="programadmin.html#AEN1601"
+HREF="programadmin.html#AEN1614"
 >Bugzilla Groups</A
 ></DT
 ><DT
 >D-1. <A
-HREF="setperl.html#AEN2448"
+HREF="setperl.html#AEN2461"
 >Using Setperl to set your perl path</A
 ></DT
 ><DT
 >1. <A
-HREF="glossary.html#AEN2769"
+HREF="glossary.html#AEN2782"
 >A Sample Product</A
 ></DT
 ></DL
@@ -1034,6 +694,7 @@ CLASS="NAVFOOTER"
 ><HR
 ALIGN="LEFT"
 WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
 WIDTH="100%"
 BORDER="0"
 CELLPADDING="0"
@@ -1055,6 +716,7 @@ ALIGN="right"
 VALIGN="top"
 ><A
 HREF="about.html"
+ACCESSKEY="N"
 >Next</A
 ></TD
 ></TR

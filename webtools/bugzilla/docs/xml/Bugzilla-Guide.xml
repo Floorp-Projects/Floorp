@@ -19,7 +19,7 @@
 <!ENTITY requiredsoftware SYSTEM "requiredsoftware.sgml">
 <!ENTITY revhistory SYSTEM "revhistory.sgml">
 
-<!ENTITY bz "http://www.mozilla.org/projects/bugzilla">
+<!ENTITY bz "http://www.bugzilla.org/">
 <!ENTITY bz-ver "2.14">
 <!ENTITY bz-cvs-ver "2.15">
 <!ENTITY bzg-date "August 10, 2001">

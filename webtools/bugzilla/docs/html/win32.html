@@ -4,7 +4,7 @@
 >Win32 Installation Notes</TITLE
 ><META
 NAME="GENERATOR"
-CONTENT="Modular DocBook HTML Stylesheet Version 1.61
+CONTENT="Modular DocBook HTML Stylesheet Version 1.76b+
 "><LINK
 REL="HOME"
 TITLE="The Bugzilla Guide"
@@ -28,6 +28,7 @@ ALINK="#0000FF"
 ><DIV
 CLASS="NAVHEADER"
 ><TABLE
+SUMMARY="Header navigation table"
 WIDTH="100%"
 BORDER="0"
 CELLPADDING="0"
@@ -45,6 +46,7 @@ ALIGN="left"
 VALIGN="bottom"
 ><A
 HREF="geninstall.html"
+ACCESSKEY="P"
 >Prev</A
 ></TD
 ><TD
@@ -58,6 +60,7 @@ ALIGN="right"
 VALIGN="bottom"
 ><A
 HREF="administration.html"
+ACCESSKEY="N"
 >Next</A
 ></TD
 ></TR
@@ -70,9 +73,7 @@ CLASS="section"
 ><H1
 CLASS="section"
 ><A
-NAME="win32"
->3.6. Win32 Installation Notes</A
-></H1
+NAME="win32">3.6. Win32 Installation Notes</H1
 ><P
 >This section covers installation on Microsoft Windows 95,
       98, ME, NT, and 2000.  Bugzilla works fine on Win32 platforms,
@@ -98,9 +99,7 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="wininstall"
->3.6.1. Win32 Installation: Step-by-step</A
-></H2
+NAME="wininstall">3.6.1. Win32 Installation: Step-by-step</H2
 ><DIV
 CLASS="note"
 ><P
@@ -247,11 +246,19 @@ TARGET="_top"
 ></LI
 ><LI
 ><P
->&#13;	    Use ppm from your perl\bin directory to install the following packs: DBI,
-	    DBD-Mysql, TimeDate, Chart, Date-Calc, Date-Manip, and GD.  You may need
-	    to extract them from .zip format using Winzip or other unzip program first.
-	    These additional ppm modules can be downloaded from ActiveState.
-	  </P
+>&#13;            Use ppm from your perl\bin directory to install the following
+            packs:  DBI, DBD-Mysql, TimeDate, Chart, Date-Calc, Date-Manip,
+            GD, AppConfig, and Template. You may need to extract them from
+            .zip format using Winzip or other unzip program first. Most of
+            these additional ppm modules can be downloaded from ActiveState,
+            but AppConfig and Template should be obtained from OpenInteract
+            using <A
+HREF="http://openinteract.sourceforge.net/"
+TARGET="_top"
+>the instructions on
+            the Template Toolkit web site</A
+>.
+          </P
 ><DIV
 CLASS="note"
 ><P
@@ -279,6 +286,11 @@ HREF="http://www.activestate.com/PPMPackages/zips/5xx-builds-only"
 TARGET="_top"
 >&#13;		http://www.activestate.com/PPMPackages/zips/5xx-builds-only/</A
 >
+		or <A
+HREF="http://www.activestate.com/PPMPackages/5.6plus"
+TARGET="_top"
+>http://www.activestate.com/PPMPackages/5.6plus</A
+>
 	    </P
 ></TD
 ></TR
@@ -301,9 +313,7 @@ CLASS="command"
 ><DIV
 CLASS="example"
 ><A
-NAME="AEN1048"
-></A
-><P
+NAME="AEN1051"><P
 ><B
 >Example 3-3. Installing ActivePerl ppd Modules on Microsoft Windows</B
 ></P
@@ -323,13 +333,58 @@ CLASS="option"
 >Watch your capitalization!</P
 ></DIV
 ><P
->&#13;	    You can find ActiveState ppm modules at
-	    <A
-HREF="http://www.activestate.com/PPMPackages/5.6plus/"
-TARGET="_top"
->&#13;	      http://www.activestate.com/PPMPackages/5.6plus</A
+>&#13;            ActiveState's 5.6Plus directory also contains an AppConfig ppm, so
+            you might see the following error when trying to install the
+            version at OpenInteract:
+          </P
+><P
+>&#13;            <TT
+CLASS="computeroutput"
+>&#13;              Error installing package 'AppConfig': Read a PPD for
+              'AppConfig', but it is not intended for this build of Perl
+              (MSWin32-x86-multi-thread)
+            </TT
 >
 	  </P
+><P
+>&#13;            If so, download both <A
+HREF="http://openinteract.sourceforge.net/ppmpackages/AppConfig.tar.gz"
+TARGET="_top"
+>the
+            tarball</A
+> and <A
+HREF="http://openinteract.sourceforge.net/ppmpackages/AppConfig.ppd"
+TARGET="_top"
+>the
+            ppd</A
+> directly from OpenInteract, then run ppm from within
+            the same directory  to which you downloaded those files and
+            install the package by referencing  the ppd file explicitly via in
+            the install command, f.e.: 
+            <DIV
+CLASS="example"
+><A
+NAME="AEN1064"><P
+><B
+>Example 3-4. Installing OpenInteract ppd Modules manually on Microsoft
+              Windows</B
+></P
+><P
+>&#13;                <TT
+CLASS="computeroutput"
+><B
+CLASS="command"
+>install
+                <TT
+CLASS="filename"
+>C:\AppConfig.ppd</TT
+></B
+></TT
+>
+              </P
+></DIV
+>
+          </P
 ></LI
 ><LI
 ><P
@@ -1243,13 +1298,20 @@ VALIGN="TOP"
 HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=62000"
 TARGET="_top"
 >bug 62000</A
->, the perl documentation says that you should always use <TT
+>,
+              the perl documentation says that you should always use
+              <TT
 CLASS="function"
 >binmode()</TT
-> when dealing with binary files, but never when dealing with text files.  That seems to suggest that rather than arbitrarily putting <TT
+> when dealing with binary
+              files, but never when dealing with text files.  That seems
+              to suggest that rather than arbitrarily putting
+              <TT
 CLASS="function"
 >binmode()</TT
-> at the beginning of the attachment files, there should be logic to determine if <TT
+> at the beginning of the
+              attachment files, there should be logic to determine if
+              <TT
 CLASS="function"
 >binmode()</TT
 > is needed or not.
@@ -1321,9 +1383,7 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="addlwintips"
->3.6.2. Additional Windows Tips</A
-></H2
+NAME="addlwintips">3.6.2. Additional Windows Tips</H2
 ><DIV
 CLASS="tip"
 ><P
@@ -1347,9 +1407,7 @@ VALIGN="TOP"
 ><P
 >&#13;	  From Andrew Pearson:
 	  <A
-NAME="AEN1221"
-></A
-><BLOCKQUOTE
+NAME="AEN1234"><BLOCKQUOTE
 CLASS="BLOCKQUOTE"
 ><P
 >&#13;	      You can make Bugzilla work with Personal Web Server for
@@ -1433,11 +1491,9 @@ VALIGN="TOP"
 	  <DIV
 CLASS="example"
 ><A
-NAME="AEN1233"
-></A
-><P
+NAME="AEN1246"><P
 ><B
->Example 3-4. Removing encrypt() for Windows NT Bugzilla version
+>Example 3-5. Removing encrypt() for Windows NT Bugzilla version
 	      2.12 or earlier</B
 ></P
 ><P
@@ -1495,9 +1551,7 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="bzldap"
->3.6.3. Bugzilla LDAP Integration</A
-></H2
+NAME="bzldap">3.6.3. Bugzilla LDAP Integration</H2
 ><P
 >&#13;	What follows is some late-breaking information on using the
 	LDAP authentication options with Bugzilla.  The author has not
@@ -1578,6 +1632,7 @@ CLASS="NAVFOOTER"
 ><HR
 ALIGN="LEFT"
 WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
 WIDTH="100%"
 BORDER="0"
 CELLPADDING="0"
@@ -1589,6 +1644,7 @@ ALIGN="left"
 VALIGN="top"
 ><A
 HREF="geninstall.html"
+ACCESSKEY="P"
 >Prev</A
 ></TD
 ><TD
@@ -1597,6 +1653,7 @@ ALIGN="center"
 VALIGN="top"
 ><A
 HREF="index.html"
+ACCESSKEY="H"
 >Home</A
 ></TD
 ><TD
@@ -1605,6 +1662,7 @@ ALIGN="right"
 VALIGN="top"
 ><A
 HREF="administration.html"
+ACCESSKEY="N"
 >Next</A
 ></TD
 ></TR
@@ -1620,6 +1678,7 @@ ALIGN="center"
 VALIGN="top"
 ><A
 HREF="installation.html"
+ACCESSKEY="U"
 >Up</A
 ></TD
 ><TD
