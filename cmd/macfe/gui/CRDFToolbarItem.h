@@ -33,6 +33,8 @@
 #include "CImageIconMixin.h"
 #include "CDynamicTooltips.h"
 
+class CToolbarButtonContextMenuAttachment;
+
 
 //
 // class CRDFToolbarItem
@@ -43,6 +45,17 @@
 class CRDFToolbarItem
 {
 public:
+	friend class CToolbarButtonContextMenuAttachment;
+	
+	struct placement
+		/*
+		*/
+	{
+		SDimension16	natural_size;
+		SInt16				max_horizontal_shrink;	// min width is natural_size.width-max_horizontal_shrink
+		bool					is_stretchable;		// can usefully grow, e.g., true for a text entry field
+	};
+	
 		// Frame management routines
 		// These MUST be implemented in every subclass. We do this so subclasses 
 		// can inherit from the appropriate LView (such as LControl) w/out forcing
@@ -50,21 +63,25 @@ public:
 	virtual void PutInside ( LView *inView, Boolean inOrient = true) = 0;
 	virtual void ResizeFrameTo ( SInt16 inWidth, SInt16 inHeight, Boolean inRefresh ) = 0;
 	virtual void PlaceInSuperFrameAt ( SInt32 inHoriz, SInt32 inVert, Boolean inRefresh ) = 0;
-	virtual SDimension16 NaturalSize ( SDimension16 inAvail ) const = 0;
-	virtual bool IsStretchy ( ) const { return false; }
+	virtual SDimension16 NaturalSize ( SDimension16 inAvail ) const = 0; // OBSOLETE
+	virtual bool IsStretchy ( ) const { return false; }	// OBSOLETE
+	virtual void GetPlacement( placement&, SDimension16 space_available ) const = 0;
 
 		// Post-creation init routines
 		// These are called AFTER the item has been placed inside its parent
 		// toolbar. This is important because some items need to be part of
 		// a window or need to walk up the view hierarchy to register themselves.
 	virtual void HookUpToListeners ( ) { } ;
-	virtual void FinishCreate ( ) { } ;
+	virtual void FinishCreate ( ) ;
+
 	
 protected:
 
 	HT_Resource HTNode ( ) { return mNode; }
 	const HT_Resource HTNode ( ) const { return mNode; }
-		
+	
+	virtual void AttachContextMenu ( ) { } ;
+
 private:
 
 	HT_Resource mNode;
@@ -107,6 +124,7 @@ public:
 		LPane::PlaceInSuperFrameAt(inHoriz, inVert, inRefresh);	
 	}
 	virtual SDimension16 NaturalSize ( SDimension16 inAvail ) const ;
+	virtual void GetPlacement( placement&, SDimension16 space_available ) const ;
 
 	virtual void HookUpToListeners ( ) ;
 
@@ -137,11 +155,13 @@ protected:
 	virtual void MouseEnter ( Point inPortPt, const EventRecord &inMacEvent) ;
 	virtual void MouseWithin ( Point inPortPt, const EventRecord &inMacEvent);
 	virtual void MouseLeave(void);
+	virtual void AdjustCursorSelf( Point /*inPoint*/, const EventRecord& inEvent ) ;
 
 		// handle control tracking
 	virtual void HotSpotAction(short /* inHotSpot */, Boolean inCurrInside, Boolean inPrevInside) ;
 	virtual void DoneTracking ( SInt16 inHotSpot, Boolean /* inGoodTrack */) ;
 	virtual void HotSpotResult ( Int16 inHotSpot );
+	virtual void ClickSelf( const SMouseDownEvent &inMouseDown ) ;
 	
 	bool IsMouseInFrame ( ) const { return mMouseInFrame; } ;
 	void SetTrackInside(bool inInside) { mTrackInside = inInside; }
@@ -152,7 +172,10 @@ protected:
 												StringPtr outTip );
 	
 	virtual void AssignCommand ( ) ;
-	
+		// is this a special button like back/forward/reload or is it just a url
+	bool IsCommandButton ( ) const ;
+	bool IsIconAboveText ( ) const ;
+		
 private:
 
 	UInt32 CalcAlignment ( UInt32 inTopAlignment, Uint32 inSideAlignment ) const;
@@ -206,6 +229,7 @@ public:
 		LPane::PlaceInSuperFrameAt(inHoriz, inVert, inRefresh);	
 	}
 	virtual SDimension16 NaturalSize ( SDimension16 inAvail ) const ;
+	virtual void GetPlacement( placement&, SDimension16 space_available ) const ;
 	
 	virtual void DrawSelf ( ) ;
 	
@@ -241,10 +265,14 @@ public:
 	}
 	virtual SDimension16 NaturalSize ( SDimension16 inAvail ) const ;
 	virtual bool IsStretchy ( ) const ;
+	virtual void GetPlacement( placement&, SDimension16 space_available ) const ;
 
 	virtual void FinishCreate ( ) ;
 
 private:
+
+	void AttachContextMenu ( ) ;
+
 	// items cannot be passed by value because they exist in 1-to-1 correspondance
 	// with UI elements
 	CRDFURLBar( const CRDFURLBar& );				// DON'T IMPLEMENT

@@ -41,6 +41,7 @@
 #include "CTargetedUpdateMenuRegistry.h"
 #include "uapp.h"
 #include "CPaneEnabler.h"
+#include "CNavCenterContextMenuAtt.h"
 
 
 extern RDF_NCVocab gNavCenter;			// RDF vocab struct for NavCenter
@@ -59,12 +60,19 @@ CRDFToolbarItem :: ~CRDFToolbarItem ( )
 }
 
 
+void
+CRDFToolbarItem :: FinishCreate ( )
+{
+	AttachContextMenu();
+}
+
+
 #pragma mark -
 
 
 CRDFPushButton :: CRDFPushButton ( HT_Resource inNode )
 	: CRDFToolbarItem(inNode), mTitleTraitsID(130), mCurrentMode(eTOOLBAR_TEXT_AND_ICONS),
-		mMouseInFrame(false),  mTrackInside(false), mGraphicPadPixels(5), mTitlePadPixels(5),
+		mMouseInFrame(false),  mTrackInside(false), mGraphicPadPixels(5), mTitlePadPixels(3),
 		mOvalWidth(8), mOvalHeight(8)
 {
 	// figure out icon and text placement depending on the toolbarBitmapPosition property in HT. The
@@ -75,7 +83,6 @@ CRDFPushButton :: CRDFPushButton ( HT_Resource inNode )
 	mCurrentMode = CalcDisplayMode();
 	
 	AttachTooltip();
-	AttachContextMenu();
 	AttachPaneEnabler();
 	
 	AssignCommand();
@@ -102,7 +109,7 @@ void
 CRDFPushButton :: HookUpToListeners ( )
 {
 	const char* url = HT_GetNodeURL(HTNode());
-	if ( url && strncmp(url, "command:", 8) == 0 ) {
+	if ( url && IsCommandButton() ) {
 		LView* top=GetSuperView();
 		while ( top && top->GetSuperView() )
 			top = top->GetSuperView();
@@ -176,24 +183,38 @@ CRDFPushButton :: CalcDisplayMode ( ) const
 // CalcAlignment
 //
 // Compute the FE alignment of a specific HT property. If HT specifies the icon is on top, use |inTopAlignment|,
-// otherwise use |inSideAlignment|. This property is a view-level property so we need to pass in the top node
-// of the view, not the node associated with this button. As a result, all buttons on a given toolbar MUST
-// have the same alignment. You cannot have one button with the icon on top and another with the icons on the side
-// in the same toolbar.
+// otherwise use |inSideAlignment|. 
 //
 UInt32
 CRDFPushButton :: CalcAlignment ( UInt32 inTopAlignment, Uint32 inSideAlignment ) const
 {
-	Uint32 retVal = inSideAlignment;
+	return IsIconAboveText() ? inTopAlignment : inSideAlignment;
+
+} // CalcAlignment
+
+
+//
+// IsIconAboveText
+//
+// A utility routine that asks HT for our icon/text orientation.
+// This property is a view-level property so we need to pass in the top node
+// of the view, not the node associated with this button. As a result, all buttons
+// on a given toolbar MUST have the same alignment. You cannot have one button with 
+// the icon on top and another with the icons on the side in the same toolbar.
+//
+bool
+CRDFPushButton :: IsIconAboveText ( ) const
+{
+	bool retVal = false;		// assume icon is on the side (that's the default in HT)
 	char* value = NULL;
 	PRBool success = HT_GetTemplateData ( HT_TopNode(HT_GetView(HTNode())), gNavCenter->toolbarBitmapPosition, HT_COLUMN_STRING, &value );
 	if ( success && value ) {
 		if ( strcmp(value, "top") == 0 )
-			retVal = inTopAlignment;
+			retVal = true;
 	}
-	
 	return retVal;
-} // CalcAlignment
+
+} // IsIconAboveText
 
 
 //
@@ -245,12 +266,19 @@ CRDFPushButton :: CalcGraphicFrame ( )
 	// The container for the graphic starts out as a 32x32 area. If HT tells us 
 	// the icon is a small icon, use 16x16. If the icon image is loaded, use its
 	// width and height.
+	//
+	// For some odd reason, even when HT wants us to draw a big icon, such as
+	// for command buttons like back/forward, it will still tell us it wants a
+	// small icon. Simply check to make sure that it's not a command button before
+	// shrinking the frame to 16.
 	Rect theContainerFrame = mCachedButtonFrame;
 	Rect theImageFrame = { 0, 0, 32, 32 };
 	char* url = HT_GetIconURL ( HTNode(), PR_TRUE, HT_TOOLBAR_ENABLED );
 	if ( url ) {
-		if ( strncmp(url, "icon/small", 4) == 0 )
-			theImageFrame.right = theImageFrame.bottom = 16;
+		if ( strncmp(url, "icon/small", 10) == 0 ) {
+			if ( !IsCommandButton() )
+				theImageFrame.right = theImageFrame.bottom = 16;
+		}
 		else {
 			SetImageURL(url);
 			
@@ -285,20 +313,6 @@ CRDFPushButton :: AttachTooltip ( )
 
 
 //
-// AttachContextMenu
-//
-// Creates a context menu attachment that will be filled in from HT.
-//
-void
-CRDFPushButton :: AttachContextMenu ( )
-{
-//	CToolbarContextMenuAttachment* menuAtt = new CToolbarContextMenuAttachment ( HTNode() );
-
-
-} // AttachContextMenu
-
-
-//
 // AttachPaneEnabler
 //
 // Creates a enabler policy attachment. We can use the default enabling policy (which is based off
@@ -316,6 +330,21 @@ CRDFPushButton :: AttachPaneEnabler ( )
 
 
 //
+// AttachContextMenu
+//
+// Creates a context menu attachment that will be filled in from HT.
+//
+void
+CRDFPushButton :: AttachContextMenu ( )
+{
+	CToolbarButtonContextMenuAttachment* tip = new CToolbarButtonContextMenuAttachment;
+	Assert_(tip != NULL);
+	if ( tip )
+		AddAttachment(tip);
+}
+
+
+//
 // FindTooltipForMouseLocation
 //
 // Dredge the tooltip text out of HT for this button
@@ -323,17 +352,70 @@ CRDFPushButton :: AttachPaneEnabler ( )
 void
 CRDFPushButton :: FindTooltipForMouseLocation ( const EventRecord& inMacEvent, StringPtr outTip )
 {
-	char* name = HT_GetNodeName(HTNode());
-	if ( name ) {
-		outTip[0] = strlen(name);
-		strcpy ( (char*) &outTip[1], name );
+	char* tipText = NULL;
+	PRBool success = HT_GetTemplateData ( HTNode(), gNavCenter->buttonTooltipText, HT_COLUMN_STRING, &tipText );
+	if ( success && tipText ) {
+		outTip[0] = strlen(tipText);
+		strcpy ( (char*) &outTip[1], tipText );
 	}
-	else
-		*outTip = 0;
+	else {
+		tipText = HT_GetNodeName(HTNode());
+		if ( tipText ) {
+			outTip[0] = strlen(tipText);
+			strcpy ( (char*) &outTip[1], tipText );
+		}
+		else
+			*outTip = 0;
+	}
 
 } // FindTooltipForMouseLocation
 
 
+//
+// AdjustCursorSelf
+//
+// Handle changing cursor to contextual menu cursor if cmd key is down
+//
+void
+CRDFPushButton::AdjustCursorSelf( Point /*inPoint*/, const EventRecord& inEvent )
+{
+	ExecuteAttachments(CContextMenuAttachment::msg_ContextMenuCursor, 
+								static_cast<void*>(const_cast<EventRecord*>(&inEvent)));
+
+}
+
+
+void
+CRDFPushButton::GetPlacement( placement& outPlacement, SDimension16 space_available ) const
+	{
+		outPlacement.natural_size = NaturalSize(space_available);
+		
+		// our min width is the width of the icon + the min # of chars HT tells us we can
+		// display (only if the icon is on the side). If the icon is above the text, we don't
+		// want to shrink
+		if ( ! IsIconAboveText() ) {
+			const int kBullshitSpacingConstant = 15;
+			UInt16 graphicWidth = mCachedGraphicFrame.right - mCachedGraphicFrame.left;
+			
+			string itemText = HT_GetNodeName(HTNode());
+			char* minCharsStr = NULL;
+			Uint16 minChars = 15;
+//			PRBool success = HT_GetTemplateData ( HTNode(), gNavCenter->toolbarMinChars, HT_COLUMN_STRING, &minCharsStr );
+//			if ( success && minCharsStr )
+//				minChars = atoi(minChars);
+			if ( minChars < itemText.length() )
+				itemText[minChars] = '\0';
+			UInt16 textWidth = ::StringWidth(LStr255(itemText.c_str()));
+			
+			outPlacement.max_horizontal_shrink = outPlacement.natural_size.width - 
+													(graphicWidth + textWidth + kBullshitSpacingConstant);	
+		}
+		else
+			outPlacement.max_horizontal_shrink = 0 ;
+		
+		outPlacement.is_stretchable = false;
+	}
+	
 //
 // NaturalSize
 //
@@ -373,15 +455,7 @@ CRDFPushButton::NaturalSize( SDimension16 inAvailable ) const
 {
 	SDimension16 desiredSpace;
 
-	bool iconOnSide = true;
-	char* value = NULL;
-	PRBool success = HT_GetTemplateData ( HT_TopNode(HT_GetView(HTNode())), gNavCenter->toolbarBitmapPosition, HT_COLUMN_STRING, &value );
-	if ( success && value ) {
-		if ( strcmp(value, "top") == 0 )
-			iconOnSide = false;
-	}
-	
-	if ( iconOnSide ) {
+	if ( !IsIconAboveText() ) {
 		desiredSpace.width = (mCachedTitleFrame.right - mCachedTitleFrame.left) + 
 								(mCachedGraphicFrame.right - mCachedGraphicFrame.left) + 15;
 		desiredSpace.height = min ( max(mCachedGraphicFrame.bottom - mCachedGraphicFrame.top, 
@@ -487,9 +561,13 @@ CRDFPushButton :: DrawButtonTitle ( )
 
 	if ( IsMouseInFrame() )
 		URDFUtilities::SetupForegroundTextColor ( HTNode(), gNavCenter->viewRolloverColor, kThemeIconLabelTextColor ) ;
-	else
-		URDFUtilities::SetupForegroundTextColor ( HTNode(), gNavCenter->viewFGColor, kThemeIconLabelTextColor ) ;
-
+	else {
+		if ( IsEnabled() )
+			URDFUtilities::SetupForegroundTextColor ( HTNode(), gNavCenter->viewFGColor, kThemeIconLabelTextColor ) ;
+		else
+			URDFUtilities::SetupForegroundTextColor ( HTNode(), gNavCenter->viewDisabledColor, kThemeInactivePushButtonTextColor ) ;
+	}		
+		
 	char* title = HT_GetNodeName(HTNode());
 	UGraphicGizmos::PlaceStringInRect(LStr255(title), mCachedTitleFrame, teCenter, teCenter);
 
@@ -505,45 +583,47 @@ CRDFPushButton :: DrawButtonTitle ( )
 void
 CRDFPushButton :: DrawButtonGraphic ( )
 {
-	const ResIDT cFolderIconID = kGenericFolderIconResource;
-	const ResIDT cItemIconID = 15313;
-	const ResIDT cFileIconID = kGenericDocumentIconResource;
-	
 	// figure out which graphic to display. We need to check for pressed before rollover because
 	// rollover will always be true when tracking a mouseDown, but not vice-versa.
 	HT_IconType displayType = HT_TOOLBAR_ENABLED;
-	if ( !IsEnabled() )
+	IconTransformType iconTransform = kTransformNone;
+	if ( !IsEnabled() ) {
 		displayType = HT_TOOLBAR_DISABLED;
-	else if ( IsTrackInside() )
+		iconTransform = kTransformDisabled;
+	}
+	else if ( IsTrackInside() ) {
 		displayType = HT_TOOLBAR_PRESSED;
+		iconTransform = kTransformSelected;
+	}
 	else if ( IsMouseInFrame() )
 		displayType = HT_TOOLBAR_ROLLOVER;
 		
 	char* url = HT_GetIconURL ( HTNode(), PR_TRUE, displayType );
 	if ( url ) {
-		if ( strncmp(url, "icon", 4) != 0 ) {
-			// setup where we should draw
+		if ( strncmp(url, "icon", 4) == 0 ) {
+			// HT specified that we use an FE icon to draw. If we're a command button, 
+			// draw our hardcoded FE icons based on the command (this is done by DrawStandby()).
+			// Otherwise, draw an item or a container icon.
+			Point unused = {0,0};
+			DrawStandby ( unused, iconTransform ) ;
+		}
+		else {
+			// HT specified we use a GIF. 
 			Point topLeft;
 			topLeft.h = mCachedGraphicFrame.left; topLeft.v = mCachedGraphicFrame.top;
-			//uint16 width = 0;
-			//uint16 height = 0;
 			
 			// draw
 			SetImageURL ( url );
-			DrawImage ( topLeft, kTransformNone, 0, 0 );
-		}
-		else {
-			SInt32 iconID = HT_IsContainer(HTNode()) ? cFolderIconID : cItemIconID;
-			::PlotIconID(&mCachedGraphicFrame, atNone, kTransformNone, iconID);
+			DrawImage ( topLeft, iconTransform, 0, 0 );
 		}
 	}
 	
 } // DrawButtonGraphic
 
+
 void
 CRDFPushButton :: DrawSelfDisabled ( )
 {
-	// ??
 
 } // DrawSelfDisabled
 
@@ -638,11 +718,38 @@ CRDFPushButton :: ImageIsReady ( )
 // DrawStandby
 //
 // Called when the image we want to draw has not finished loading. We get
-// called to draw something in its place. Any good ideas?
+// called to draw something in its place.
 //
 void
 CRDFPushButton :: DrawStandby ( const Point & inTopLeft, IconTransformType inTransform ) const
 {
+	const ResIDT cItemIconID = 15313;
+	const ResIDT cFileIconID = kGenericDocumentIconResource;
+	
+	SInt16 iconID = 15165;
+	if ( IsCommandButton() ) {
+		switch ( mValueMessage ) {
+			case cmd_GoBack:
+				iconID = 15129;
+				break;
+			case cmd_GoForward:
+				iconID = 15133;
+				break;
+			case cmd_Reload:
+				iconID = 15161;
+				break;
+			case cmd_Stop:
+				iconID = 15165;
+				break;
+			case cmd_NetSearch:
+				iconID = 15149;
+				break;
+		}
+	}
+	else
+		iconID = HT_IsContainer(HTNode()) ? kGenericFolderIconResource : cItemIconID;
+
+	::PlotIconID(&mCachedGraphicFrame, atNone, inTransform, iconID);
 
 } // DrawStandby
 
@@ -696,13 +803,13 @@ void
 CRDFPushButton :: HotSpotResult(Int16 inHotSpot)
 {
 	const char* url = HT_GetNodeURL(HTNode());
-	if ( url && strncmp(url, "command:", 8) == 0 )
+	if ( url && IsCommandButton() )
 	{
 		// We're a command, baby.  Look up our FE command and execute it.
 		HotSpotAction ( 0, false, true );
 		BroadcastValueMessage();
 	}
-	else if ( !HT_IsContainer(HTNode()) && !HT_IsSeparator(HTNode()) )
+	else if ( !HT_IsContainer(HTNode()) )
 	{
 		// we're a plain old url (personal toolbar style). Launch it if HT says we're allowed to.
 		if ( !URDFUtilities::LaunchNode(HTNode()) )
@@ -793,6 +900,43 @@ CRDFPushButton :: DisableSelf ( )
 }
 
 
+//
+// IsCommandButton
+//
+// A utility routine to tell us if this is a special button (like back, forward, reload, etc) or
+// just a simple button (a la the personal toolbar). If the button has a message different from
+// that of a simple button (set by AssignCommand()) then we're special. 
+//
+// Note: because of this, this routine is not valid until AssignCommand() has been called. Any time
+// after the constructor (where AssignCommand() is called) should be ok.
+//
+bool
+CRDFPushButton :: IsCommandButton ( ) const
+{
+	return mValueMessage != cmd_ToolbarButton;
+
+} // IsCommandButton
+
+
+//
+// ClickSelf
+//
+// Try context menu if control key is down, otherwise be a button
+//
+void
+CRDFPushButton :: ClickSelf( const SMouseDownEvent &inMouseDown )
+{
+	if (inMouseDown.macEvent.modifiers & controlKey) {
+		CContextMenuAttachment::SExecuteParams params;
+		params.inMouseDown = &inMouseDown;
+		ExecuteAttachments( CContextMenuAttachment::msg_ContextMenu, &params );
+	}
+	else
+		LControl::ClickSelf(inMouseDown);
+		
+} // ClickSelf
+
+
 #pragma mark -
 
 
@@ -841,6 +985,14 @@ CRDFSeparator :: NaturalSize( SDimension16 inAvailable ) const
 } // NaturalSize
 
 
+void
+CRDFSeparator::GetPlacement( placement& outPlacement, SDimension16 space_available ) const
+	{
+		outPlacement.natural_size = NaturalSize(space_available);
+		outPlacement.is_stretchable = false;
+		outPlacement.max_horizontal_shrink = 0;
+	}
+	
 #pragma mark -
 
 
@@ -870,6 +1022,8 @@ CRDFURLBar :: ~CRDFURLBar ( )
 void
 CRDFURLBar :: FinishCreate ( )
 {
+	CRDFToolbarItem::FinishCreate();
+	
 	LWindow* window = LWindow::FetchWindowObject(GetMacPort());
 	LView* view = UReanimator::CreateView(1104, this, window);	// create the url bar
 
@@ -881,6 +1035,30 @@ CRDFURLBar :: FinishCreate ( )
 		browser->HookupContextToToolbars();
 		
 } // FinishCreate
+
+
+//
+// AttachContextMenu
+//
+// Creates a context menu attachment that will be filled in from HT.
+//
+void
+CRDFURLBar :: AttachContextMenu ( )
+{
+	CToolbarButtonContextMenuAttachment* tip = new CToolbarButtonContextMenuAttachment;
+	Assert_(tip != NULL);
+	if ( tip )
+		AddAttachment(tip);
+}
+
+
+void
+CRDFURLBar::GetPlacement( placement& outPlacement, SDimension16 space_available ) const
+	{
+		outPlacement.natural_size = NaturalSize(space_available);
+		outPlacement.is_stretchable = true; //еее for now
+		outPlacement.max_horizontal_shrink = outPlacement.natural_size.width - 100;		//еее for now
+	}
 
 
 //
