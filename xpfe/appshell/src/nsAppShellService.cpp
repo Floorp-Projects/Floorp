@@ -34,6 +34,7 @@
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
 #include "nsXPComFactory.h"    /* template implementation of a XPCOM factory */
+#include "nsIXPConnect.h"
 
 #include "nsIAppShell.h"
 #include "nsIWidget.h"
@@ -67,7 +68,7 @@ static NS_DEFINE_CID(kAppShellCID,          NS_APPSHELL_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 static NS_DEFINE_CID(kMetaCharsetCID, NS_META_CHARSET_CID);
-
+static NS_DEFINE_CID(kXPConnectCID, NS_XPCONNECT_CID);
 
 // copied from nsEventQueue.cpp
 static char *gEQActivatedNotification = "nsIEventQueueActivated";
@@ -210,6 +211,20 @@ nsAppShellService::CreateHiddenWindow()
                         getter_AddRefs(newWindow));
     if (NS_SUCCEEDED(rv)) {
       mHiddenWindow = newWindow;
+      
+      // Set XPConnect's fallback JSContext (used for JS Components)
+      // to the DOM JSContext for this thread, so that DOM-to-XPConnect
+      // conversions get the JSContext private magic they need to
+      // succeed.
+      NS_WITH_SERVICE(nsIXPConnect, xpc, kXPConnectCID, &rv);
+      if (NS_FAILED(rv)) return rv;
+      nsCOMPtr<nsIDOMWindow> junk;
+      JSContext *cx;
+      rv = GetHiddenWindowAndJSContext(getter_AddRefs(junk), &cx);
+      if (NS_FAILED(rv)) return rv;
+      rv = xpc->SetSafeJSContextForCurrentThread(cx);
+      if (NS_FAILED(rv)) return rv;
+
       // RegisterTopLevelWindow(newWindow); -- Mac only
     }
   }
