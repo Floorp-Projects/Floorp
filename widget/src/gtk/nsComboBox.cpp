@@ -60,6 +60,7 @@ nsComboBox::~nsComboBox()
       g_free(items->data);
     }
   g_list_free(mItems);
+  gtk_widget_destroy(mCombo);
 }
 
 //-------------------------------------------------------------------------
@@ -85,7 +86,7 @@ NS_METHOD nsComboBox::AddItemAt(nsString &aItem, PRInt32 aPosition)
 {
   NS_ALLOC_STR_BUF(val, aItem, 256);
   mItems = g_list_insert( mItems, g_strdup(val), aPosition );
-  gtk_combo_set_popdown_strings( GTK_COMBO( mWidget ), mItems );
+  gtk_combo_set_popdown_strings( GTK_COMBO( mCombo ), mItems );
   mNumItems++;
   NS_FREE_STR_BUF(val);
   return NS_OK;
@@ -135,7 +136,7 @@ PRBool  nsComboBox::RemoveItemAt(PRInt32 aPosition)
 
     g_free(g_list_nth(mItems, aPosition)->data);
     mItems = g_list_remove_link(mItems, g_list_nth(mItems, aPosition));
-    gtk_combo_set_popdown_strings(GTK_COMBO( mWidget ), mItems);
+    gtk_combo_set_popdown_strings(GTK_COMBO( mCombo ), mItems);
     mNumItems--;
     return PR_TRUE;
   }
@@ -166,7 +167,7 @@ PRBool nsComboBox::GetItemAt(nsString& anItem, PRInt32 aPosition)
 //-------------------------------------------------------------------------
 NS_METHOD nsComboBox::GetSelectedItem(nsString& aItem)
 {
-  aItem = gtk_entry_get_text (GTK_ENTRY (GTK_COMBO(mWidget)->entry));
+  aItem = gtk_entry_get_text (GTK_ENTRY (GTK_COMBO(mCombo)->entry));
   return NS_OK;
 }
 
@@ -197,7 +198,7 @@ NS_METHOD nsComboBox::SelectItem(PRInt32 aPosition)
   if (!pos)
     return NS_ERROR_FAILURE;
 
-  gtk_entry_set_text(GTK_ENTRY(GTK_COMBO(mWidget)->entry), (gchar *) pos->data);
+  gtk_entry_set_text(GTK_ENTRY(GTK_COMBO(mCombo)->entry), (gchar *) pos->data);
 
   return NS_OK;
 }
@@ -274,9 +275,18 @@ nsresult nsComboBox::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 //-------------------------------------------------------------------------
 NS_METHOD  nsComboBox::CreateNative(GtkWidget *parentWindow)
 {
-  mWidget = gtk_combo_new();
-  gtk_widget_set_name(mWidget, "nsComboBox");
-//  gtk_combo_set_value_in_list(GTK_COMBO(mWidget), PR_TRUE, PR_TRUE);
+/* there is a bug in gtkcombo
+   add it inside an alignment  set the usize on it..
+   (set xscale yscale for the alignment to 1.0)
+*/
+  mWidget = ::gtk_alignment_new(1.0,1.0,1.0,1.0);
+  ::gtk_widget_set_name(mWidget, "nsComboBox");
+  mCombo = ::gtk_combo_new();
+  gtk_widget_show(mCombo);
+  /* make the stuff uneditable */
+  gtk_entry_set_editable(GTK_ENTRY(GTK_COMBO(mCombo)->entry), PR_FALSE);
+  gtk_container_add(GTK_CONTAINER(mWidget), mCombo);
+//  gtk_combo_set_value_in_list(GTK_COMBO(mCombo), PR_TRUE, PR_TRUE);
 
   return NS_OK;
 }
