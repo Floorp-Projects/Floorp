@@ -35,6 +35,13 @@ CPPSRCS =                              \
         nsStandardUrl.cpp              \
         $(NULL)
 
+EXPORTS = 				\
+	nsIOService.h			\
+	nsFileTransportService.h	\
+	nsSocketTransportService.h	\
+	nsStandardUrl.h			\
+	$(NULL)
+
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
 MODULE = netwerk
@@ -49,5 +56,9 @@ override NO_SHARED_LIB=1
 override NO_STATIC_LIB=
 
 include $(DEPTH)/config/rules.mk
+
+
+
+
 
 

@@ -22,9 +22,12 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
+XPIDLSRCS =                  \
+        nsIHTTPChannel.idl \
+        $(NULL)
+
 EXPORTS =                       \
         nsIHttpEventSink.h      \
-        nsIHTTPConnection.h 	\
         nsIHTTPHandler.h 	\
 	nsHTTPEnums.h		\
         nsIHTTPCommonHeaders.h 	\
