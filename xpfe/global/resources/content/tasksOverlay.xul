@@ -25,7 +25,6 @@
 		<menuitem value="&navigatorCmd.label;" oncommand="toNavigator()"/>
 		<menuitem value="&messengerCmd.label;" oncommand="toMessengerWindow()"/>
     <menuitem value="&editorCmd.label;"    oncommand="toEditor();" />
-    <menuitem value="&textEditorCmd.label;"    oncommand="toNewTextEditorWindow();" />
 		<menuseparator/>
 		<menuitem value="&addressBookCmd.label;" oncommand="toAddressBook()"/>
 		<menuitem value="&newsgroupsCmd.label;" oncommand="toNewsgroups()"/>
