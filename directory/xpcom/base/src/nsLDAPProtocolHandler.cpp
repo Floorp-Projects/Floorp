@@ -86,7 +86,7 @@ nsLDAPProtocolHandler::GetProtocolFlags(PRUint32 *result)
 // construct an appropriate URI
 //
 NS_IMETHODIMP
-nsLDAPProtocolHandler::NewURI(const char *aSpec,
+nsLDAPProtocolHandler::NewURI(const nsACString &aSpec,
                               const char *aOriginCharset, // ignored
                               nsIURI *aBaseURI,
                               nsIURI **result) 

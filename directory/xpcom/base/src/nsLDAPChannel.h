@@ -88,7 +88,7 @@ class nsLDAPChannel : public nsIChannel, public nsILDAPMessageListener
     nsCOMPtr<nsIURI> mURI;         // the URI we're processing
     nsCOMPtr<nsILoadGroup> mUnproxiedLoadGroup; // the load group we belong to
     nsCOMPtr<nsIInterfaceRequestor> mCallbacks; 
-    nsCOMPtr<nsIURI> mOriginalURI; // the URI we started prcessing
+    nsCOMPtr<nsIURI> mOriginalURI; // the URI we started processing
     nsLoadFlags mLoadFlags;        // load attributes for this channel
     nsCOMPtr<nsISupports> mOwner;  // entity responsible for this channel
 

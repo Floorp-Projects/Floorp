@@ -156,8 +156,11 @@ nsLDAPChannel::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 NS_IMETHODIMP
 nsLDAPChannel::GetName(PRUnichar* *result)
 {
-    NS_NOTYETIMPLEMENTED("nsLDAPChannel::GetName");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsCAutoString name;
+    if (mURI)
+        mURI->GetSpec(name);
+    *result = ToNewUnicode(NS_ConvertUTF8toUCS2(name));
+    return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 NS_IMETHODIMP
@@ -531,14 +534,14 @@ nsLDAPChannel::AsyncOpen(nsIStreamListener* aListener,
                          nsISupports* aCtxt)
 {
     nsresult rv;
-    nsXPIDLCString host;
+    nsCAutoString host;
     PRInt32 port;
 
     // slurp out relevant pieces of the URL
     //
-    rv = mURI->GetHost(getter_Copies(host));
+    rv = mURI->GetAsciiHost(host);
     if (NS_FAILED(rv)) {
-        NS_ERROR("nsLDAPChannel::AsyncRead(): mURI->GetHost failed\n");
+        NS_ERROR("nsLDAPChannel::AsyncRead(): mURI->GetAsciiHost failed\n");
         return NS_ERROR_FAILURE;
     }
 
@@ -567,7 +570,7 @@ nsLDAPChannel::AsyncOpen(nsIStreamListener* aListener,
 
     // we don't currently allow for a default host
     //
-    if (nsCRT::strlen(host) == 0)
+    if (host.IsEmpty())
         return NS_ERROR_MALFORMED_URI;
 
     // since the LDAP SDK does all the socket management, we don't have
@@ -617,7 +620,7 @@ nsLDAPChannel::AsyncOpen(nsIStreamListener* aListener,
     // initialize it with the defaults
     // XXXdmose - need to deal with bind name
     //
-    rv = mConnection->Init(host, port, 0, this);
+    rv = mConnection->Init(host.get(), port, 0, this);
     switch (rv) {
     case NS_OK:
         break;
