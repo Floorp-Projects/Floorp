@@ -411,7 +411,8 @@ nsJSSecurityManager::GetCompilationPrincipals(nsIScriptContext *aContext,
      * of principals.
      */
     GetPrincipalsFromStackFrame(cx, aPrincipals);
-    nsAutoString cb(*aPrincipals ? (*aPrincipals)->codebase : gUnknownOriginStr);
+    //XXX Mac doesn't like this.  Fix it!!!
+    nsAutoString cb("");//*aPrincipals ? (*aPrincipals)->codebase : gUnknownOriginStr);
     NewJSPrincipals(nsnull, nsnull, &cb, aPrincipals);
     if (*aPrincipals == nsnull) {
       JS_ReportOutOfMemory(cx);
