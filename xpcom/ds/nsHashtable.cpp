@@ -401,6 +401,8 @@ void*
 nsSupportsHashtable::Get(nsHashKey *aKey)
 {
     void* data = nsHashtable::Get(aKey);
+    if (!data)
+        return nsnull;
     nsISupports* element = NS_STATIC_CAST(nsISupports*, data);
     NS_ADDREF(element);
     return data;
@@ -410,6 +412,8 @@ void*
 nsSupportsHashtable::Remove(nsHashKey *aKey)
 {
     void* data = nsHashtable::Remove(aKey);
+    if (!data)
+        return nsnull;
     nsISupports* element = NS_STATIC_CAST(nsISupports*, data);
     NS_RELEASE(element);
     return data;
