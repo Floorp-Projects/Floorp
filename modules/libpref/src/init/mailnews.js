@@ -227,7 +227,6 @@ pref("mail.identity.default.stationery_folder","mailbox://nobody@Local Folders/T
 pref("mail.identity.default.directoryServer","");
 pref("mail.identity.default.overrideGlobal_Pref", false);
 
-pref("mail.update_compose_title_as_you_type", true);
 
 pref("mail.collect_email_address_incoming", true);
 pref("mail.collect_email_address_outgoing", true);
