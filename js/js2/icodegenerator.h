@@ -121,6 +121,7 @@ namespace ICG {
         uint32   maxRegister;
 	    uint32   statementLabelBase;
         Register exceptionRegister;     // reserved to carry the exception object
+        std::map<String, Register, std::less<String> >    variableList;
         
         void setLabel(Label *label);
         void setLabel(InstructionStream *stream, Label *label);
@@ -137,8 +138,7 @@ namespace ICG {
             { iCode->push_back(new Endtry()); }
 
     public:
-        ICodeGenerator()        { ICodeGenerator(NULL, false, 0); }
-        ICodeGenerator(World *world, bool hasTryStatement, uint32 switchStatementNesting);
+        ICodeGenerator(World *world = NULL, bool hasTryStatement = false, uint32 switchStatementNesting = 0);
         
         virtual ~ICodeGenerator() { if (iCode) delete iCode; }
         
@@ -146,10 +146,8 @@ namespace ICG {
         
         ICodeModule *complete();
 
-        Register allocateVariable(StringAtom& /*name*/) 
-        { Register result = getRegister(); registerBase = topRegister; return result; }
-        Register allocateVariable(char * /*name*/) 
-        { Register result = getRegister(); registerBase = topRegister; return result; }
+        Register allocateVariable(StringAtom& name) 
+        { Register result = getRegister(); variableList[name] = result; registerBase = topRegister; return result; }
         
         Formatter& print(Formatter& f);
         

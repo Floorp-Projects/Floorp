@@ -34,6 +34,7 @@
 #include "numerics.h"
 #include "world.h"
 #include "vmtypes.h"
+#include "jstypes.h"
 #include "icodegenerator.h"
 
 #include <iomanip>
