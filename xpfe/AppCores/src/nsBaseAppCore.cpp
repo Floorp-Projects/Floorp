@@ -27,6 +27,8 @@
 #include "nsIScriptContext.h"
 #include "nsIDOMWindow.h"
 #include "nsIDocument.h"
+#include "nsAppCoresCIDs.h"
+#include "nsIServiceManager.h"
 
 // Globals
 static NS_DEFINE_IID(kISupportsIID,              NS_ISUPPORTS_IID);
@@ -34,21 +36,50 @@ static NS_DEFINE_IID(kIScriptObjectOwnerIID,     NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIDOMBaseAppCoreIID,        nsIDOMBaseAppCore::GetIID());
 static NS_DEFINE_IID(kIDocumentIID,              nsIDocument::GetIID());
 
+static NS_DEFINE_IID(kIDOMAppCoresManagerIID,   NS_IDOMAPPCORESMANAGER_IID);
+static NS_DEFINE_IID(kAppCoresManagerCID,       NS_APPCORESMANAGER_CID);
 
 /////////////////////////////////////////////////////////////////////////
 // nsBaseAppCore
 /////////////////////////////////////////////////////////////////////////
 
 nsBaseAppCore::nsBaseAppCore()
+:  mScriptObject(nsnull)
 {
-  mScriptObject   = nsnull;
-  IncInstanceCount();
-  NS_INIT_REFCNT();
+    IncInstanceCount();
+    NS_INIT_REFCNT();
+
+#ifdef NS_DEBUG
+    printf("Adding app core to AppCoreManager in the base constructor.\n");
+#endif
+    nsIDOMAppCoresManager * appCoreManager;
+    nsresult rv = nsServiceManager::GetService(
+        kAppCoresManagerCID,
+        kIDOMAppCoresManagerIID,
+        (nsISupports**)&appCoreManager);
+    if (NS_FAILED(rv))
+        return;
+    rv = appCoreManager->Add((nsIDOMBaseAppCore *)this);
+#ifdef NS_DEBUG
+    if (NS_FAILED(rv))
+	    printf("...failed!\n");
+#endif
+    nsServiceManager::ReleaseService(kAppCoresManagerCID, appCoreManager);
 }
 
 nsBaseAppCore::~nsBaseAppCore()
 {
-  DecInstanceCount();  
+    nsIDOMAppCoresManager * appCoreManager;
+    nsresult rv = nsServiceManager::GetService(
+        kAppCoresManagerCID,
+        kIDOMAppCoresManagerIID,
+        (nsISupports**)&appCoreManager);
+    if (NS_FAILED(rv))
+        return;
+    appCoreManager->Remove((nsIDOMBaseAppCore *)this);
+    nsServiceManager::ReleaseService(kAppCoresManagerCID, appCoreManager);
+
+    DecInstanceCount();  
 }
 
 
@@ -85,7 +116,6 @@ nsBaseAppCore::QueryInterface(REFNSIID aIID,void** aInstancePtr)
    return NS_NOINTERFACE;
 }
 
-
 NS_IMETHODIMP 
 nsBaseAppCore::SetScriptObject(void *aScriptObject)
 {
@@ -93,13 +123,10 @@ nsBaseAppCore::SetScriptObject(void *aScriptObject)
   return NS_OK;
 }
 
-
 NS_IMETHODIMP    
 nsBaseAppCore::Init(const nsString& aId)
-{
-   
+{   
 	mId = aId;
-
 	return NS_OK;
 }
 
