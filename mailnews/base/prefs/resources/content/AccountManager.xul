@@ -19,11 +19,12 @@
 
 	<box align="horizontal" flex="100%" style="padding: 10px">
 		<box align="vertical" flex="25%">
-<html:div style="border-style:inset;width:100px;height:100px" flex="100%">
+<html:div style="width:100px;height:100px" flex="100%">
 	<tree rdf:datasources="rdf:msgaccountmanager"
           rdf:containment="http://home.netscape.com/NC-rdf#Settings"
           onselect="onAccountClick(event.target)" id="accounttree"
           style="height: 100%"
+          class="inset"
           ref="msgaccounts:/">
 	  <template>
 	  	<rule>
@@ -33,31 +34,11 @@
 		  		<treerow >
 					<treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#Name"/>
 		  		</treerow>
-<!--
-                <treechildren>
-                  <treeitem>
-                    <treerow>
-                      <treecell value="a"/>
-                    </treerow>
-                  </treeitem>
-                  <treeitem>
-                    <treerow>
-                      <treecell value="b"/>
-                    </treerow>
-                  </treeitem>
-                  <treeitem>
-                    <treerow>
-                      <treecell value="c"/>
-                    </treerow>
-                  </treeitem>
-                </treechildren>
--->
 			</treeitem>
             </treechildren>
 		</rule>
 	  </template>
 
-	  <treecol style="width: 100%" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
 	  <treehead>
 	  </treehead>
 
@@ -99,6 +80,6 @@
            </tabcontrol>
         </box>
 	</box>
-    <html:hr/>
+    <html:div class="separator" align="horizontal"/>
     <box id="okCancelButtons"/>
 </window>
