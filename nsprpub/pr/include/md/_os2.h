@@ -75,19 +75,6 @@ APIRET _Optlink SemRequest486(PRAMSEM, ULONG);
 APIRET _Optlink SemReleasex86(PRAMSEM, ULONG);
 #endif
 
-#ifdef XP_OS2_EMX
-/*
- * EMX-specific tweaks:
- *    o Use errno rather than sock_errno()
- *    o Use close rather than soclose
- *    o Ignore sock_init calls.
- */
-#define sock_errno() errno
-#define soclose close
-#define sock_init()
-#include <string.h>
-#endif
-
 /*
  * Internal configuration macros
  */
@@ -294,18 +281,11 @@ extern PRInt32 _MD_CloseSocket(PRInt32 osfd);
 #define _MD_CLOSE_SOCKET              _MD_CloseSocket
 #define _MD_SENDTO                    (_PR_MD_SENDTO)
 #define _MD_RECVFROM                  (_PR_MD_RECVFROM)
-#define _MD_SOCKETPAIR(s, type, proto, sv) -1
+#define _MD_SOCKETPAIR                (_PR_MD_SOCKETPAIR)
 #define _MD_GETSOCKNAME               (_PR_MD_GETSOCKNAME)
 #define _MD_GETPEERNAME               (_PR_MD_GETPEERNAME)
 #define _MD_GETSOCKOPT                (_PR_MD_GETSOCKOPT)
 #define _MD_SETSOCKOPT                (_PR_MD_SETSOCKOPT)
-
-#ifdef XP_OS2_EMX
-extern PRInt32 _MD_SELECT(int nfds, fd_set *readfds, fd_set *writefds,
-                                    fd_set *exceptfds, struct timeval *timeout);
-#else
-#define _MD_SELECT                    select
-#endif
 
 #define _MD_FSYNC                     _PR_MD_FSYNC
 #define _MD_SET_FD_INHERITABLE        (_PR_MD_SET_FD_INHERITABLE)

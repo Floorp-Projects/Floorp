@@ -875,6 +875,30 @@ void _MD_os2_map_shutdown_error(PRInt32 err)
 	}
 }
 
+void _MD_os2_map_socketpair_error(PRInt32 err)
+{
+  switch (err) {
+    case ENOMEM:
+      PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, err);
+      break;
+    case EAFNOSUPPORT:
+      PR_SetError(PR_ADDRESS_NOT_SUPPORTED_ERROR, err);
+      break;
+    case EPROTONOSUPPORT:
+      PR_SetError(PR_PROTOCOL_NOT_SUPPORTED_ERROR, err);
+      break;
+    case EOPNOTSUPP:
+      PR_SetError(PR_NOT_TCP_SOCKET_ERROR, err);
+      break;
+    case EPROTOTYPE:
+      PR_SetError(PR_ADDRESS_NOT_SUPPORTED_ERROR, err);
+      break;
+    default:
+      _MD_os2_map_default_error(err);
+      return;
+  }
+}
+
 void _MD_os2_map_getsockname_error(PRInt32 err)
 {
 	switch (err) {

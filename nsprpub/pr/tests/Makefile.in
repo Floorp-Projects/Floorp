@@ -235,7 +235,7 @@ ifeq ($(MOZ_OS2_TOOLS),VACPP)
   LDOPTS = -NOE -DEBUG -nologo -PMTYPE:VIO
 else
   EXTRA_LIBS = $(OS_LIBS)
-  LDOPTS = -Zmtd -Zomf -Zlinker /PM:VIO -Zlinker /ST:0x30000
+  LDOPTS = -Zomf -Zlinker /PM:VIO -Zlinker /ST:0x64000
 endif
 endif
 

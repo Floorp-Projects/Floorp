@@ -143,6 +143,7 @@ endif
 
 ifeq ($(OS_ARCH),OS2)
 MAPFILE = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).def
+ADD_TO_DEF_FILE = cat $(srcdir)/os2extra.def >> $(MAPFILE)
 GARBAGE += $(MAPFILE)
 MKSHLIB += $(MAPFILE)
 endif
