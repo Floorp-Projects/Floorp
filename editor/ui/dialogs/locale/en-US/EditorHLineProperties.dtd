@@ -26,7 +26,6 @@
 
 <!ENTITY dimensionsBox.label "Dimensions">
 <!ENTITY heightEditField.label "Height">
-<!ENTITY heightEditField.tooltip "Height tooltip">
 <!ENTITY widthEditField.label "Width">
 <!ENTITY pixelsPopup.value "pixels">
 <!ENTITY percentPopup.value "percent">
