@@ -554,7 +554,7 @@ NS_IMETHODIMP nsDiskCacheEntryInfo::GetDataSize(PRUint32 *aDataSize)
 static nsCOMPtr<nsIFileTransportService> gFileTransportService;
 
 nsDiskCacheDevice::nsDiskCacheDevice()
-    :   mCacheCapacity(0), mCacheSize(0)
+    :   mCacheCapacity(0), mCacheSize(0), mInitialized(PR_FALSE)
 {
 }
 
@@ -562,6 +562,7 @@ nsDiskCacheDevice::~nsDiskCacheDevice()
 {
     removeObservers(this);
 
+    if (mInitialized) {
 #if 1
     // XXX implement poor man's eviction strategy right here,
     // keep deleting cache entries from oldest to newest, until
@@ -571,7 +572,7 @@ nsDiskCacheDevice::~nsDiskCacheDevice()
 
     // XXX write out persistent information about the cache.
     writeCacheInfo();
-
+    }
     // XXX release the reference to the cached file transport service.
     gFileTransportService = nsnull;
 }
@@ -598,6 +599,7 @@ nsDiskCacheDevice::Init()
         scanDiskCacheEntries(getter_AddRefs(entries));
     }
     
+    mInitialized = PR_TRUE;
     return NS_OK;
 }
 
