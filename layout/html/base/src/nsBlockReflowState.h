@@ -306,24 +306,7 @@ public:
    * upper left corner.
    */
   void GetAvailableSpace() {
-#ifdef DEBUG
-    // Verify that the caller setup the coordinate system properly
-    nscoord wx, wy;
-    mSpaceManager->GetTranslation(wx, wy);
-    NS_ASSERTION((wx == mSpaceManagerX) && (wy == mSpaceManagerY),
-                 "bad coord system");
-#endif
-    mBand.GetAvailableSpace(mY - BorderPadding().top, mAvailSpaceRect);
-
-#ifdef DEBUG
-    if (gNoisyReflow) {
-      nsFrame::IndentBy(stdout, gNoiseIndent);
-      printf("GetAvailableSpace: band=%d,%d,%d,%d count=%d\n",
-             mAvailSpaceRect.x, mAvailSpaceRect.y,
-             mAvailSpaceRect.width, mAvailSpaceRect.height,
-             mBand.GetTrapezoidCount());
-    }
-#endif
+    GetAvailableSpace(mY);
   }
 
   void GetAvailableSpace(nscoord aY) {
@@ -334,6 +317,7 @@ public:
     NS_ASSERTION((wx == mSpaceManagerX) && (wy == mSpaceManagerY),
                  "bad coord system");
 #endif
+
     mBand.GetAvailableSpace(aY - BorderPadding().top, mAvailSpaceRect);
 
 #ifdef DEBUG
@@ -425,7 +409,6 @@ public:
 
   void RecoverStateFrom(nsLineBox* aLine,
                         PRBool aApplyTopMargin,
-                        nscoord aDeltaY,
                         nsRect* aDamageRect);
 
   void AdvanceToNextLine() {
@@ -997,7 +980,7 @@ nsBlockReflowState::RecoverVerticalMargins(nsLineBox* aLine,
     *aBottomMarginResult = bottomMargin;
   }
   else {
-    // XXX_ib
+    // XXX_ib, see bug 44188
     *aTopMarginResult = 0;
     *aBottomMarginResult = 0;
   }
@@ -1006,7 +989,6 @@ nsBlockReflowState::RecoverVerticalMargins(nsLineBox* aLine,
 void
 nsBlockReflowState::RecoverStateFrom(nsLineBox* aLine,
                                      PRBool aApplyTopMargin,
-                                     nscoord aDeltaY,
                                      nsRect* aDamageRect)
 {
   // Make the line being recovered the current line
@@ -2772,7 +2754,6 @@ nsBlockFrame::GetCurrentLine(nsBlockReflowState *aState, nsLineBox ** aOutCurren
 void
 nsBlockFrame::RecoverStateFrom(nsBlockReflowState& aState,
                                nsLineBox* aLine,
-                               nscoord aDeltaY,
                                nsRect* aDamageRect)
 {
   PRBool applyTopMargin = PR_FALSE;
@@ -2784,7 +2765,7 @@ nsBlockFrame::RecoverStateFrom(nsBlockReflowState& aState,
     }
   }
 
-  aState.RecoverStateFrom(aLine, applyTopMargin, aDeltaY, aDamageRect);
+  aState.RecoverStateFrom(aLine, applyTopMargin, aDamageRect);
 }
 
 /**
@@ -2969,7 +2950,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
     while (line && (line != incrTargetLine))
     {
       nsRect  damageRect;
-      RecoverStateFrom(aState, line, deltaY, incrementalReflow ?
+      RecoverStateFrom(aState, line, incrementalReflow ?
                        &damageRect : 0);
       if (incrementalReflow && !damageRect.IsEmpty()) {
 #ifdef NOISY_BLOCK_INVALIDATE
@@ -3044,8 +3025,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       // vertically constrained situation?
       // Recover state as if we reflowed this line
       nsRect  damageRect;
-      RecoverStateFrom(aState, line, deltaY, incrementalReflow ?
-                       &damageRect : 0);
+      RecoverStateFrom(aState, line, incrementalReflow ? &damageRect : 0);
       if (incrementalReflow && !damageRect.IsEmpty()) {
 #ifdef NOISY_BLOCK_INVALIDATE
         printf("%p invalidate 5 (%d, %d, %d, %d)\n",
