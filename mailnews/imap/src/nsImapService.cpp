@@ -878,7 +878,7 @@ NS_IMETHODIMP nsImapService::SaveMessageToDisk(const char *aMessageURI,
         msgUrl->SetAddDummyEnvelope(aAddDummyEnvelope);
         msgUrl->SetCanonicalLineEnding(canonicalLineEnding);
 
-        return FetchMessage(imapUrl, nsIImapUrl::nsImapSaveMessageToDisk, folder, imapMessageSink, aMsgWindow, aURL, imapMessageSink, msgKey, PR_TRUE);
+        return FetchMessage(imapUrl, nsIImapUrl::nsImapSaveMessageToDisk, folder, imapMessageSink, aMsgWindow, aURL, nsnull, msgKey, PR_TRUE);
     }
 
 	return rv;
@@ -3148,4 +3148,30 @@ nsImapService::UnsubscribeFolder(nsIEventQueue* eventQueue,
         }
     }
     return rv;
+}
+
+NS_IMETHODIMP
+nsImapService::DownloadMessagesForOffline(const char *messageIds, nsIMsgFolder *aFolder, nsIMsgWindow *aMsgWindow)
+{
+  NS_ENSURE_ARG_POINTER(aFolder);
+  NS_ENSURE_ARG_POINTER(messageIds);
+  
+  nsCOMPtr<nsIImapUrl> imapUrl;
+  nsCAutoString urlSpec;
+  nsresult rv;
+  PRUnichar hierarchySeparator = GetHierarchyDelimiter(aFolder);
+  rv = CreateStartOfImapUrl(nsnull, getter_AddRefs(imapUrl), aFolder, nsnull,
+                            urlSpec, hierarchySeparator);
+  if (NS_SUCCEEDED(rv) && imapUrl)
+  {
+      if (NS_SUCCEEDED(rv))
+      {
+        // need to pass in stream listener in order to get the channel created correctly
+        nsCOMPtr<nsIImapMessageSink> imapMessageSink(do_QueryInterface(aFolder, &rv));
+        nsCOMPtr<nsIStreamListener> folderStreamListener(do_QueryInterface(aFolder, &rv));
+        rv = FetchMessage(imapUrl, nsImapUrl::nsImapMsgFetch,aFolder, imapMessageSink, 
+                            aMsgWindow, nsnull, folderStreamListener, messageIds, PR_TRUE);
+      }
+  }
+  return rv;
 }

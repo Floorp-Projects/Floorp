@@ -173,6 +173,8 @@ interface nsIImapService : nsISupports
                              out nsIURI aURL,
                              in nsISupports aCopyState);
   
+  void downloadMessagesForOffline(in string aMessageIds, in nsIMsgFolder aSrcFolder,
+                      in nsIMsgWindow   aMsgWindow);
   nsIURI moveFolder(in nsIEventQueue aClientEventQueue, 
                     in nsIMsgFolder aSrcFolder,
                     in nsIMsgFolder aDstFolder,
