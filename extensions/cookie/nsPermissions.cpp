@@ -51,6 +51,8 @@
 #include "xp_core.h"
 #include "prmem.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsIIOService.h"
+#include "nsNetCID.h"
 
 static const char *kCookiesPermFileName = "cookperm.txt";
 
@@ -684,11 +686,17 @@ PERMISSION_DeletePersistentUserData(void)
 }
 
 PUBLIC void
-PERMISSION_Add(const char * objectURL, PRBool permission, PRInt32 type) {
+PERMISSION_Add(const char * objectURL, PRBool permission, PRInt32 type,
+               nsIIOService* ioService) {
   if (!objectURL) {
     return;
   }
-  char *host = CKutil_ParseURL(objectURL, GET_HOST_PART);
+  nsresult rv = NS_OK;
+  char *host = nsnull;
+  PRUint32 start,end;
+  NS_ASSERTION(ioService, "IOService not available");
+  rv = ioService->ExtractUrlPart(objectURL, nsIIOService::url_Host |
+                                 nsIIOService::url_Port, &start, &end, &host);
 
   /*
    * if permission is false, it will be added to the permission list

@@ -183,6 +183,7 @@ interface nsIIOService : nsISupports
     const short url_Query         = (1<<8);
     const short url_Ref           = (1<<9);
     const short url_Path          = (1<<10);
+    const short url_Port          = (1<<11);
 
     /**
      * Get port from string.
