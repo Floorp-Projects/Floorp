@@ -210,11 +210,10 @@ main(int argc, char* argv[])
     NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    nsIEventQueue* eventQ;
     rv = eventQService->CreateThreadEventQueue();
     if (NS_FAILED(rv)) return rv;
 
-    eventQService->GetThreadEventQueue(PR_CurrentThread(), &eventQ);
+    eventQService->GetThreadEventQueue(PR_CurrentThread(), &gEventQ);
 
     //Create the nsINetService...
     NS_WITH_SERVICE(nsINetService, pService, kNetServiceCID, &rv);
@@ -309,7 +308,15 @@ main(int argc, char* argv[])
     } else {
       gKeepRunning = FALSE;
     }
-#endif
+#else
+#ifdef XP_MAC
+    /* Mac stuff is missing here! */
+#else
+    PLEvent *gEvent;
+    rv = gEventQ->GetEvent(&gEvent);
+    PL_HandleEvent(gEvent);
+#endif /* XP_UNIX */
+#endif /* !WIN32 */
   }
 
     return rv;
