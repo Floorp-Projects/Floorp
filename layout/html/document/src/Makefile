@@ -53,3 +53,13 @@ REQUIRES = xpcom raptor dom netlib
 
 include $(DEPTH)/config/rules.mk
 
+
+export::
+
+install:: $(TARGETS)
+	$(INSTALL) ua.css $(DIST)/bin/res
+
+
+clobber::
+	rm -f $(DIST)/bin/res/ua.css
+
