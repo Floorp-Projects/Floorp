@@ -51,7 +51,7 @@ private:
 	nsresult AddMapping(const char* mimeType, 
                           const char* extension,
                           const char* description,
-                          nsIURI* dataURI, PRUint32 type=PRUint32('????'), PRUint32 creator=PRUint32('????'));
+                          nsIURI* dataURI, PRUint32 type=PRUint32(0x3F3F3F3F), PRUint32 creator=PRUint32(0x3F3F3F3F));
 	nsresult AppendExtension(const char* mimeType, const char* extension);
 	nsresult RemoveExtension(const char* aExtension);
 
