@@ -29,6 +29,8 @@
  
 NS_IMPL_ISUPPORTS1(nsLookAndFeel, nsILookAndFeel)
 
+#define PH_TO_NS_RGB(ns) (ns & 0xff) << 16 | (ns & 0xff00) | ((ns >> 16) & 0xff) 
+
 nsLookAndFeel::nsLookAndFeel() : nsILookAndFeel()
 {
   NS_INIT_REFCNT();
@@ -38,8 +40,6 @@ nsLookAndFeel::nsLookAndFeel() : nsILookAndFeel()
 
 nsLookAndFeel::~nsLookAndFeel()
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsLookAndFeel::~nsLookAndFeel - %p destroyed\n", this));
-
 }
 
 NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
@@ -54,63 +54,142 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
     res = NS_OK;
   }
 
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsLookAndFeel::GetColor this=<%p> mRefCnt=<%d>\n", this, mRefCnt));
-
-  switch( aID )
+  switch (aID) 
   {
-    case eColor_WindowBackground:
-	    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsLookAndFeel::GetColor - WindowBackground\n"));
-        aColor = NS_RGB(255,255,255);	/* White */
-        break;
-    case eColor_WindowForeground:
-	    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsLookAndFeel::GetColor - WindowForeground\n"));
-        aColor = NS_RGB(0,0,0);	        /* Black */
-        break;
-    case eColor_WidgetBackground:
-	    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsLookAndFeel::GetColor - WidgetBackground\n"));
-        aColor = NS_RGB(128,128,128);	/* Gray */
-        break;
-    case eColor_WidgetForeground:
-	    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsLookAndFeel::GetColor - WidgetForeground\n"));
-        aColor = NS_RGB(0,0,0);	        /* Black */
-        break;
-    case eColor_WidgetSelectBackground:
-	    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsLookAndFeel::GetColor - WidgetSelectBackground\n"));
-        aColor = NS_RGB(200,200,200);	/* Dark Gray */
-        break;
-    case eColor_WidgetSelectForeground:
-	    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsLookAndFeel::GetColor - WidgetSelectForeground\n"));
-        aColor = NS_RGB(0,0,0);	        /* Black */
-        break;
-    case eColor_Widget3DHighlight:
-	    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsLookAndFeel::GetColor - Widget3DHighlight\n"));
-        aColor = NS_RGB(255,255,255);	/* White */
-        break;
-    case eColor_Widget3DShadow:
-	    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsLookAndFeel::GetColor - Widget3DHighlight\n"));
-        aColor = NS_RGB(200,200,200);	/* Dark Gray */
-        break;
-    case eColor_TextBackground:
-	    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsLookAndFeel::GetColor - TextBackground\n"));
-        aColor = NS_RGB(255,255,255);	/* White */
-        break;
-    case eColor_TextForeground:
-	    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsLookAndFeel::GetColor - TextForeground\n"));
-        aColor = NS_RGB(0,0,0);	        /* Black */
-        break;
-    case eColor_TextSelectBackground:
-	    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsLookAndFeel::GetColor - TextSelectBackground\n"));
-        aColor = NS_RGB(0,0,255);	        /* Blue */
-        break;
-    case eColor_TextSelectForeground:
-	    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsLookAndFeel::GetColor - TextSelectForeground\n"));
-        aColor = NS_RGB(255,255,255);	/* White */
-        break;
-    default:
-	    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsLookAndFeel::GetColor - Unknown Request!\n"));
-        res = NS_ERROR_FAILURE;
-        break;
-    }
+	  case eColor_WindowBackground:
+		aColor = PH_TO_NS_RGB(Pg_GREY);
+		break;
+	  case eColor_WindowForeground:
+		aColor = PH_TO_NS_RGB(Pg_BLACK);
+		break;
+	  case eColor_WidgetBackground:
+		aColor = PH_TO_NS_RGB(Pg_GREY);
+		break;
+	  case eColor_WidgetForeground:
+		aColor = PH_TO_NS_RGB(Pg_BLACK);
+		break;
+	  case eColor_WidgetSelectBackground:
+		aColor = PH_TO_NS_RGB(Pg_DGREY);
+		break;
+	  case eColor_WidgetSelectForeground:
+		aColor = PH_TO_NS_RGB(Pg_BLACK);
+		break;
+	  case eColor_Widget3DHighlight:
+		aColor = PH_TO_NS_RGB(Pg_WHITE);
+		break;
+	  case eColor_Widget3DShadow:
+		aColor = PH_TO_NS_RGB(Pg_DGREY);
+		break;
+	  case eColor_TextBackground:
+		aColor = PH_TO_NS_RGB(Pg_WHITE);
+		break;
+	  case eColor_TextForeground: 
+		aColor = PH_TO_NS_RGB(Pg_BLACK);
+		break;
+	  case eColor_TextSelectBackground:
+		aColor = PH_TO_NS_RGB(Pg_BLACK);
+		break;
+	  case eColor_TextSelectForeground:
+		aColor = PH_TO_NS_RGB(Pg_WHITE);
+		break;
+
+		// css2  http://www.w3.org/TR/REC-CSS2/ui.html#system-colors
+	  case eColor_activeborder:
+		aColor = PH_TO_NS_RGB(Pg_BLACK);
+		break;
+	  case eColor_activecaption:
+		aColor = PH_TO_NS_RGB(Pg_YELLOW);
+		break;
+	  case eColor_appworkspace:
+		aColor = PH_TO_NS_RGB(Pg_BLACK);
+		break;
+	  case eColor_background:
+		aColor = PH_TO_NS_RGB(Pg_GREY);
+		break;
+	  case eColor_captiontext:
+		aColor = PH_TO_NS_RGB(Pg_BLACK);
+		break;
+	  case eColor_graytext:
+		aColor = PH_TO_NS_RGB(Pg_DGREY);
+		break;
+	  case eColor_highlight:
+		aColor = PH_TO_NS_RGB(0x9ba9c9); // bill blue
+		break;
+	  case eColor_highlighttext:
+		aColor = PH_TO_NS_RGB(Pg_BLACK);
+		break;
+	  case eColor_inactiveborder:
+		aColor = PH_TO_NS_RGB(Pg_DGREY);
+		break;
+	  case eColor_inactivecaption:
+		aColor = PH_TO_NS_RGB(Pg_GREY);
+		break;
+	  case eColor_inactivecaptiontext:
+		aColor = PH_TO_NS_RGB(Pg_DGREY);
+		break;
+	  case eColor_infobackground:
+		aColor = PH_TO_NS_RGB(0xfeffb1);
+		break;
+	  case eColor_infotext:
+		aColor = PH_TO_NS_RGB(Pg_BLACK);
+		break;
+	  case eColor_menu:
+		aColor = PH_TO_NS_RGB(Pg_GREY);
+		break;
+	  case eColor_menutext:
+		aColor = PH_TO_NS_RGB(Pg_BLACK);
+		break;
+	  case eColor_scrollbar:
+		aColor = PH_TO_NS_RGB(Pg_GREY);
+		break;
+	  case eColor_threedface:
+	  case eColor_buttonface:
+		aColor = PH_TO_NS_RGB(Pg_GREY);
+		break;
+
+	  case eColor_buttonhighlight:
+	  case eColor_threedhighlight:
+		aColor = PH_TO_NS_RGB(Pg_WHITE);
+		break;
+
+	  case eColor_buttontext:
+		aColor = PH_TO_NS_RGB(Pg_BLACK);
+		break;
+
+	  case eColor_buttonshadow:
+	  case eColor_threedshadow: // i think these should be the same
+		aColor = PH_TO_NS_RGB(Pg_DGREY);
+		break;
+
+	  case eColor_threeddarkshadow:
+		aColor = PH_TO_NS_RGB(Pg_DGREY);
+		break;
+
+	  case eColor_threedlightshadow:
+		aColor = PH_TO_NS_RGB(Pg_GREY);
+		break;
+
+	  case eColor_window:
+	  case eColor_windowframe:
+		aColor = PH_TO_NS_RGB(Pg_BLUE);
+		break;
+
+	  case eColor_windowtext:
+		aColor = PH_TO_NS_RGB(Pg_BLACK);
+		break;
+
+	  // from the CSS3 working draft (not yet finalized)
+	  // http://www.w3.org/tr/2000/wd-css3-userint-20000216.html#color
+
+	  case eColor__moz_field:
+		aColor = PH_TO_NS_RGB(Pg_WHITE);
+		break;
+  default:
+    /* default color is BLACK */
+    aColor = 0;
+    res    = NS_ERROR_FAILURE;
+    break;
+  }
 
   return res;
 }
@@ -127,62 +206,63 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
     res = NS_OK;
   }
 
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsLookAndFeel::GetMetric\n"));
-
-  switch( aID )
+  switch (aID) 
   {
   case eMetric_WindowTitleHeight:
-    aMetric = 20; // REVISIT - HACK!
+    aMetric = 0;
     break;
   case eMetric_WindowBorderWidth:
-    aMetric = 8; // REVISIT - HACK!
+    //    aMetric = mStyle->klass->xthickness;
     break;
   case eMetric_WindowBorderHeight:
-    aMetric = 8; // REVISIT - HACK!
+    //    aMetric = mStyle->klass->ythickness;
     break;
   case eMetric_Widget3DBorder:
-    aMetric = 2;
+    //    aMetric = 4;
     break;
   case eMetric_TextFieldHeight:
-    aMetric = 23;
+  	aMetric = 20;
     break;
-  case eMetric_ButtonHorizontalInsidePaddingNavQuirks:
-    aMetric = 0; // REVISIT - HACK!
-    break;
-  case eMetric_ButtonHorizontalInsidePaddingOffsetNavQuirks:
-    aMetric = 0; // REVISIT - HACK!
-    break;
-  case eMetric_CheckboxSize:
-    aMetric = 10; // REVISIT - HACK!
-    break;
-  case eMetric_RadioboxSize:
-    aMetric = 10; // REVISIT - HACK!
-    break;
-  case eMetric_TextHorizontalInsideMinimumPadding:
-    aMetric = 1; // REVISIT - HACK!
+  case eMetric_TextFieldBorder:
+    aMetric = 0;
     break;
   case eMetric_TextVerticalInsidePadding:
-    aMetric = 0; // REVISIT - HACK!
+    aMetric = 0;
     break;
   case eMetric_TextShouldUseVerticalInsidePadding:
-    aMetric = 0; // REVISIT - HACK!
+    aMetric = 0;
+    break;
+  case eMetric_TextHorizontalInsideMinimumPadding:
+    aMetric = 0;
     break;
   case eMetric_TextShouldUseHorizontalInsideMinimumPadding:
-    aMetric = 0; // REVISIT - HACK!
+    aMetric = 0;
+    break;
+  case eMetric_ButtonHorizontalInsidePaddingNavQuirks:
+    aMetric = 0;
+    break;
+  case eMetric_ButtonHorizontalInsidePaddingOffsetNavQuirks:
+    aMetric = 0;
+    break;
+  case eMetric_CheckboxSize:
+    aMetric = 0;
+    break;
+  case eMetric_RadioboxSize:
+    aMetric = 0;
     break;
   case eMetric_ListShouldUseHorizontalInsideMinimumPadding:
-    aMetric = 0; // REVISIT - HACK!
+    aMetric = 0;
     break;
   case eMetric_ListHorizontalInsideMinimumPadding:
-    aMetric = 0; // REVISIT - HACK!
+    aMetric = 0;
     break;
   case eMetric_ListShouldUseVerticalInsidePadding:
-    aMetric = 0; // REVISIT - HACK!
+    aMetric = 0;
     break;
   case eMetric_ListVerticalInsidePadding:
-    aMetric = 0; // REVISIT - HACK!
+    aMetric = 0;
     break;
-	case eMetric_CaretBlinkTime:
+  case eMetric_CaretBlinkTime:
     aMetric = 500;
     break;
   case eMetric_SingleLineCaretWidth:
@@ -194,9 +274,7 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
     break;
   default:
     aMetric = -1;
-    res = NS_ERROR_FAILURE;
-    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsLookAndFeel::GetMetric - Unknown ID!\n"));
-    break;
+    res     = NS_ERROR_FAILURE;
   }
 
   return res;
@@ -214,40 +292,36 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricFloatID aID, float & aMetri
     res = NS_OK;
   }
 
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsLookAndFeel::GetMetric with float aID=<%d>\n", aID));
-
-  switch( aID )
-  {
-    case eMetricFloat_TextFieldVerticalInsidePadding:
-        aMetric = 0.25f;
-        break;
-    case eMetricFloat_TextFieldHorizontalInsidePadding:
-        aMetric = 0.95f;
-        break;
-    case eMetricFloat_TextAreaVerticalInsidePadding:
-        aMetric = 0.40f;
-        break;
-    case eMetricFloat_TextAreaHorizontalInsidePadding:
-        aMetric = 0.40f;
-        break;
-    case eMetricFloat_ListVerticalInsidePadding:
-        aMetric = 0.10f;
-        break;
-    case eMetricFloat_ListHorizontalInsidePadding:
-        aMetric = 0.40f;
-        break;
-    case eMetricFloat_ButtonVerticalInsidePadding:
-        aMetric = 0.25f;
-        break;
-    case eMetricFloat_ButtonHorizontalInsidePadding:
-        aMetric = 0.25f;
-        break;
-    default:
-        aMetric = -1.0;
-        PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsLookAndFeel::GetMetric (float) - Unknown ID!\n"));
-        res = NS_ERROR_FAILURE;
-    }
-
+  switch (aID) {
+  case eMetricFloat_TextFieldVerticalInsidePadding:
+    aMetric = 0.25f;
+    break;
+  case eMetricFloat_TextFieldHorizontalInsidePadding:
+    aMetric = 0.95f; // large number on purpose so minimum padding is used
+    break;
+  case eMetricFloat_TextAreaVerticalInsidePadding:
+    aMetric = 0.40f;    
+    break;
+  case eMetricFloat_TextAreaHorizontalInsidePadding:
+    aMetric = 0.40f; // large number on purpose so minimum padding is used
+    break;
+  case eMetricFloat_ListVerticalInsidePadding:
+    aMetric = 0.10f;
+    break;
+  case eMetricFloat_ListHorizontalInsidePadding:
+    aMetric = 0.40f;
+    break;
+  case eMetricFloat_ButtonVerticalInsidePadding:
+    aMetric = 0.25f;
+    break;
+  case eMetricFloat_ButtonHorizontalInsidePadding:
+    aMetric = 0.25f;
+    break;
+  default:
+    aMetric = -1.0;
+    res = NS_ERROR_FAILURE;
+  }
+ 
   return res;
 }
 
