@@ -4,6 +4,7 @@
 
 DefinesMac.h
 DefinesMozilla.h
+DefinesOptions.h
 
 JavaDefines.h
 
