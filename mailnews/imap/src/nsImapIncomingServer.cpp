@@ -645,7 +645,8 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
 			imapFolder->SetHierarchyDelimiter(hierarchyDelimiter);
 			imapFolder->SetBoxFlags(boxFlags);
 			imapFolder->GetOnlineName(getter_Copies(onlineName));
-			if (! ((const char*) onlineName) || nsCRT::strlen((const char *) onlineName) == 0)
+			if (! ((const char*) onlineName) || nsCRT::strlen((const char *) onlineName) == 0
+				|| nsCRT::strcmp((const char *) onlineName, folderPath))
 				imapFolder->SetOnlineName(folderPath);
 		}
     }
