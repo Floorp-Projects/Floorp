@@ -233,6 +233,17 @@ function Commit()
                                        true);
 
     if (oldvalue) oldvalue = oldvalue.QueryInterface(Components.interfaces.nsIRDFLiteral);
+
+    if ((newvalue) && (i == Fields.length-1))
+    {
+    	// we're dealing with the URL attribute;
+    	// if a scheme isn't specified, use "http://"
+    	if (newvalue.indexOf(":") < 0)
+    	{
+    		dump("Setting default URL scheme to HTTP.\n");
+    		newvalue = "http://" + newvalue;
+    	}
+    }
     
     if (updateAttribute(Properties[i], oldvalue, newvalue) == true)
     {
