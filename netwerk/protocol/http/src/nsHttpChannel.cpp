@@ -1873,7 +1873,6 @@ nsHttpChannel::ParseRealm(const char *challenge, nsACString &realm)
         else
             realm.Assign(p);
     }
-    return NS_OK;
 }
 
 nsresult
