@@ -157,8 +157,8 @@ nsFrameList::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
 }
 
 NS_IMETHODIMP 
-nsFrameList::ResetScriptObject()
+nsFrameList::SetScriptObject(void *aScriptObject)
 {
-  mScriptObject = nsnull;
+  mScriptObject = aScriptObject;
   return NS_OK;
 }

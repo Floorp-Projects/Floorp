@@ -27,4 +27,5 @@ nsIDOMLocation.h
 nsIDOMNavigator.h
 nsIDOMWindowCollection.h
 nsIDOMScriptObjectFactory.h
+nsIDOMNativeObjectRegistry.h
 nsDOMCID.h

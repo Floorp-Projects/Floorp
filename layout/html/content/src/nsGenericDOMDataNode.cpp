@@ -418,9 +418,9 @@ nsGenericDOMDataNode::GetScriptObject(nsIScriptContext* aContext,
 }
 
 nsresult
-nsGenericDOMDataNode::ResetScriptObject()
+nsGenericDOMDataNode::SetScriptObject(void *aScriptObject)
 {
-  mScriptObject = nsnull;
+  mScriptObject = aScriptObject;
   return NS_OK;
 }
 

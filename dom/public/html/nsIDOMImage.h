@@ -26,23 +26,19 @@
 
 
 #define NS_IDOMIMAGE_IID \
-{ 0x6f76532a,  0xee43, 0x11d1, \
+{ 0x6f76532b,  0xee43, 0x11d1, \
  { 0x9b, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } } 
 
 class nsIDOMImage : public nsISupports {
 public:
-
-  NS_IMETHOD    Image()=0;
 };
 
 
 #define NS_DECL_IDOMIMAGE   \
-  NS_IMETHOD    Image();  \
 
 
 
 #define NS_FORWARD_IDOMIMAGE(_to)  \
-  NS_IMETHOD    Image() { return _to##Image(); }  \
 
 
 #endif // nsIDOMImage_h__

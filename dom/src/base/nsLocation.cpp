@@ -66,9 +66,9 @@ LocationImpl::QueryInterface(const nsIID& aIID,
 }
 
 nsresult 
-LocationImpl::ResetScriptObject()
+LocationImpl::SetScriptObject(void *aScriptObject)
 {
-  mScriptObject = nsnull;
+  mScriptObject = aScriptObject;
   return NS_OK;
 }
 

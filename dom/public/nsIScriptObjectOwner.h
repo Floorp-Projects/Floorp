@@ -55,11 +55,16 @@ public:
   NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject) = 0;
 
   /**
-   * Nuke the current script object.
-   * Next call to GetScriptObject creates a new script object.
+   * Set the script object associated with this object.
+   * Often used to either reset the object to null or initially
+   * set it in cases where the object comes before the owner.
+   *
+   * @param aScriptObject the script object to set
+   *
+   * @return nsresult NS_OK if the script object is successfully set
    *
    **/
-  NS_IMETHOD ResetScriptObject() = 0;
+  NS_IMETHOD SetScriptObject(void* aScriptObject) = 0;
 };
 
 #endif // nsIScriptObjectOwner_h__

@@ -193,7 +193,7 @@ FinalizeHTMLUListElement(JSContext *cx, JSObject *obj)
     // get the js object
     nsIScriptObjectOwner *owner = nsnull;
     if (NS_OK == a->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-      owner->ResetScriptObject();
+      owner->SetScriptObject(nsnull);
       NS_RELEASE(owner);
     }
 
@@ -286,7 +286,7 @@ static JSFunctionSpec HTMLUListElementMethods[] =
 PR_STATIC_CALLBACK(JSBool)
 HTMLUListElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  return JS_TRUE;
+  return JS_FALSE;
 }
 
 

@@ -190,7 +190,7 @@ public:
 public:
   
   NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
-  NS_IMETHOD ResetScriptObject();
+  NS_IMETHOD SetScriptObject(void *aScriptObject);
 
   // nsIDOMDocument interface
   NS_IMETHOD    GetMasterDoc(nsIDOMDocument **aDocument);

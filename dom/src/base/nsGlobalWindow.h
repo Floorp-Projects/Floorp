@@ -57,7 +57,7 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
-  NS_IMETHOD ResetScriptObject();
+  NS_IMETHOD SetScriptObject(void *aScriptObject);
 
   NS_IMETHOD_(void)       SetContext(nsIScriptContext *aContext);
   NS_IMETHOD_(void)       SetNewDocument(nsIDOMDocument *aDocument);
@@ -193,7 +193,7 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
-  NS_IMETHOD ResetScriptObject();
+  NS_IMETHOD SetScriptObject(void *aScriptObject);
 
   NS_IMETHOD    GetUserAgent(nsString& aUserAgent);
 
@@ -225,7 +225,7 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
-  NS_IMETHOD ResetScriptObject();
+  NS_IMETHOD SetScriptObject(void *aScriptObject);
 
   NS_IMETHOD_(void)       SetWebShell(nsIWebShell *aWebShell);
 

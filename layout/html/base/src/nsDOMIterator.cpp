@@ -79,9 +79,9 @@ nsresult nsDOMIterator::GetScriptObject(nsIScriptContext *aContext, void** aScri
   return res;
 }
 
-nsresult nsDOMIterator::ResetScriptObject()
+nsresult nsDOMIterator::SetScriptObject(void *aScriptObject)
 {
-  mScriptObject = nsnull;
+  mScriptObject = aScriptObject;
   return NS_OK;
 }
 

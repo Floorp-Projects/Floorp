@@ -212,7 +212,7 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
-  NS_IMETHOD ResetScriptObject();
+  NS_IMETHOD SetScriptObject(void *aScriptObject);
 
   // nsIDOMHTMLCollection interface
   NS_DECL_IDOMHTMLCOLLECTION
@@ -1464,9 +1464,9 @@ nsresult nsFormElementList::GetScriptObject(nsIScriptContext *aContext, void** a
   return res;
 }
 
-nsresult nsFormElementList::ResetScriptObject()
+nsresult nsFormElementList::SetScriptObject(void *aScriptObject)
 {
-  mScriptObject = nsnull;
+  mScriptObject = aScriptObject;
   return NS_OK;
 }
 

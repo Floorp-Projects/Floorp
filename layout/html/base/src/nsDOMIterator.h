@@ -31,7 +31,7 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
-  NS_IMETHOD ResetScriptObject();
+  NS_IMETHOD SetScriptObject(void *aScriptObject);
 
   // nsIDOMIterator interface
   NS_IMETHOD SetFilter(PRInt32 aFilter, PRBool aFilterOn);

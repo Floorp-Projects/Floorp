@@ -45,6 +45,7 @@
 #include "nsIDocument.h"
 #include "nsIDocumentViewer.h"
 #include "nsICSSParser.h"
+#include "nsLayoutCID.h"
 
 /* Forward declarations.... */
 class nsDocLoaderImpl;
@@ -71,6 +72,9 @@ NS_DEFINE_IID(kIDocumentLoadInfoIID,      NS_IDOCUMENTLOADINFO_IID);
 NS_DEFINE_IID(kRefreshURLIID,       NS_IREFRESHURL_IID);
 NS_DEFINE_IID(kHTTPURLIID,          NS_IHTTPURL_IID);
 NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
+NS_DEFINE_IID(kCHTMLDocumentCID, NS_HTMLDOCUMENT_CID);
+NS_DEFINE_IID(kCImageDocumentCID, NS_IMAGEDOCUMENT_CID);
 NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
 
 /* 
@@ -275,7 +279,10 @@ nextstep:
     /*
      * Create the HTML document...
      */
-    rv = NS_NewHTMLDocument(&doc);
+    rv = nsRepository::CreateInstance(kCHTMLDocumentCID,
+                                      nsnull,
+                                      kIDocumentIID,
+                                      (void **)&doc);
     if (NS_OK != rv) {
         goto done;
     }
@@ -331,7 +338,10 @@ nsDocFactoryImpl::CreateImageDocument(nsIURL* aURL,
     /*
      * Create the image document...
      */
-    rv = NS_NewImageDocument(&doc);
+    rv = nsRepository::CreateInstance(kCImageDocumentCID,
+                                      nsnull,
+                                      kIDocumentIID,
+                                      (void **)&doc);
     if (NS_OK != rv) {
         goto done;
     }

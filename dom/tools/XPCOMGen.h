@@ -25,6 +25,7 @@
 class ofstream;
 class IdlSpecification;
 class IdlInterface;
+class IdlFunction;
 
 class XPCOMGen : public FileGen {
 public:
@@ -43,6 +44,7 @@ protected:
      void     GenerateEnums(IdlInterface &aInterface);
      void     GenerateMethods(IdlInterface &aInterface);
      void     GenerateEndClassDecl();
+     void     GenerateFactory(IdlInterface &aInterface);
      void     GenerateEpilog(IdlInterface &aInterface, PRBool aIsPrimary);
      void     GenerateDeclMacro(IdlInterface &aInterface);
      void     GenerateForwardMacro(IdlInterface &aInterface);

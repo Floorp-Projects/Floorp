@@ -87,6 +87,11 @@ static const char *kIncludeDefaultsStr = "\n"
 "#include \"nsIPtr.h\"\n"
 "#include \"nsString.h\"\n";
 static const char *kIncludeStr = "#include \"nsIDOM%s.h\"\n";
+static const char *kIncludeConstructorStr =
+"#include \"nsIDOMNativeObjectRegistry.h\"\n"
+"#include \"nsIServiceManager.h\"\n"
+"#include \"nsRepository.h\"\n"
+"#include \"nsDOMCID.h\"\n";
 
 static PRIntn 
 IncludeEnumerator(PLHashEntry *he, PRIntn i, void *arg)
@@ -104,10 +109,14 @@ void
 JSStubGen::GenerateIncludes(IdlSpecification &aSpec)
 {
   ofstream *file = GetFile();
+  IdlInterface *primary_iface = aSpec.GetInterfaceAt(0);
 
   *file << kIncludeDefaultsStr;
   EnumerateAllObjects(aSpec, (PLHashEnumerator)IncludeEnumerator, 
                       file, PR_FALSE);
+  if (HasConstructor(*primary_iface, NULL)) {
+    *file << kIncludeConstructorStr;
+  }
   *file << "\n";
 }
 
@@ -773,7 +782,7 @@ static const char *kFinalizeStr =
 "    // get the js object\n"
 "    nsIScriptObjectOwner *owner = nsnull;\n"
 "    if (NS_OK == a->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {\n"
-"      owner->ResetScriptObject();\n"
+"      owner->SetScriptObject(nsnull);\n"
 "      NS_RELEASE(owner);\n"
 "    }\n"
 "\n"
@@ -1060,11 +1069,8 @@ JSStubGen::GenerateMethods(IdlSpecification &aSpec)
       int p, pcount = func->ParameterCount();
 
       GetCapitalizedName(method_name, *func);
-      // If this is a constructor defined in a non-primary interface
-      // don't have a method for it...we'll alias it to the constructor
-      // for the primary interface.
-      if ((strcmp(method_name, iface_name) == 0) && 
-          (iface != primary_iface)) {
+      // If this is a constructor don't have a method for it
+      if (strcmp(method_name, iface_name) == 0) {
         continue;
       }
       GetVariableTypeForLocal(return_type, *rval);
@@ -1317,11 +1323,8 @@ JSStubGen::GenerateClassFunctions(IdlSpecification &aSpec)
       IdlFunction *func = iface->GetFunctionAt(m);
 
       GetCapitalizedName(method_name, *func);
-      // If this is a constructor defined in a non-primary interface
-      // don't have a method for it...we'll alias it to the constructor
-      // for the primary interface.
-      if ((strcmp(method_name, iface_name) == 0) && 
-          (iface != primary_iface)) {
+      // If this is a constructor don't have a method for it.
+      if (strcmp(method_name, iface_name) == 0) {
         continue;
       }
       sprintf(buf, kFuncSpecEntryStr, func->GetName(),
@@ -1334,27 +1337,107 @@ JSStubGen::GenerateClassFunctions(IdlSpecification &aSpec)
   *file << kFuncSpecEndStr;  
 }
 
-static const char *kConstructorStr = 
+static const char *kEmptyConstructorStr = 
 "\n\n//\n"
 "// %s constructor\n"
 "//\n"
 "PR_STATIC_CALLBACK(JSBool)\n"
 "%s(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)\n"
 "{\n"
-"  return JS_TRUE;\n"
+"  return JS_FALSE;\n"
 "}\n";
 
+#define JSGEN_GENERATE_EMPTYCONSTRUCTOR(buf, className)               \
+     sprintf(buf, kEmptyConstructorStr, className, className);
+
+static const char *kConstructorBeginStr =
+"\n\n//\n"
+"// %s constructor\n"
+"//\n"
+"PR_STATIC_CALLBACK(JSBool)\n"
+"%s(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)\n"
+"{\n"
+"  nsresult result;\n"
+"  nsIID factoryCID;\n"
+"  nsIDOMNativeObjectRegistry *registry;\n"
+"  nsIDOM%sFactory *factory;\n"
+"  nsIDOM%s *nativeThis;\n"
+"  nsIScriptObjectOwner *owner = nsnull;\n"
+"\n"
+"  static NS_DEFINE_IID(kDOMNativeObjectRegistryCID, NS_DOM_NATIVE_OBJECT_REGISTRY_CID);\n"
+"  static NS_DEFINE_IID(kIDOMNativeObjectRegistryIID, NS_IDOM_NATIVE_OBJECT_REGISTRY_IID);\n"
+"  static NS_DEFINE_IID(kIDOM%sFactoryIID, NS_IDOM%sFACTORY_IID);\n"
+"\n"
+"  result = nsServiceManager::GetService(kDOMNativeObjectRegistryCID,\n"
+"                                        kIDOMNativeObjectRegistryIID,\n"
+"                                        (nsISupports **)&registry);\n"
+"  if (NS_OK != result) {\n"
+"    return JS_FALSE;\n"
+"  }\n"
+"\n"
+"  result = registry->GetFactoryCID(\"%s\", factoryCID);\n"
+"  nsServiceManager::ReleaseService(kDOMNativeObjectRegistryCID,\n"
+"                                   registry);\n"
+"  if (NS_OK != result) {\n"
+"    return JS_FALSE;\n"
+"  }\n"
+"\n"
+"  result = nsRepository::CreateInstance(factoryCID,\n"
+"                                        nsnull,\n"
+"                                        kIDOM%sFactoryIID,\n"
+"                                        (void **)&factory);\n"
+"  if (NS_OK != result) {\n"
+"    return JS_FALSE;\n"
+"  }\n"
+"\n";
+
+#define JSGEN_GENERATE_CONSTRUCTORBEGIN(buf, className, caps)               \
+     sprintf(buf, kConstructorBeginStr, className, className, className,    \
+             className, className, caps, className, className);
+
+static const char *kConstructorEndStr =
+"  result = factory->CreateInstance(%s&nativeThis);\n"
+"  NS_RELEASE(factory);\n"
+"  if (NS_OK != result) {\n"
+"    return JS_FALSE;\n"
+"  }\n"
+"\n"
+"  result = nativeThis->QueryInterface(kIScriptObjectOwnerIID, (void **)&owner);\n"
+"  if (NS_OK != result) {\n"
+"    NS_RELEASE(nativeThis);\n"
+"    return JS_FALSE;\n"
+"  }\n"
+"\n"
+"  owner->SetScriptObject((void *)obj);\n"
+"  JS_SetPrivate(cx, obj, nativeThis);\n"
+"\n"
+"  NS_RELEASE(owner);\n"
+"  return JS_TRUE;\n"
+"}";
+  
 void     
 JSStubGen::GenerateConstructor(IdlSpecification &aSpec)
 {
-  char buf[1024];
+  char buf[2048];
   ofstream *file = GetFile();
   IdlInterface *primary_iface = aSpec.GetInterfaceAt(0);
+  IdlFunction *constructor;
+  char *name = primary_iface->GetName();
+  char caps_name[128];
 
-  sprintf(buf, kConstructorStr, primary_iface->GetName(),
-          primary_iface->GetName(), primary_iface->GetName(),
-          primary_iface->GetName());
-  *file << buf;
+  strcpy(caps_name, name);
+  StrUpr(caps_name);
+
+  if (HasConstructor(*primary_iface, &constructor)) {
+    JSGEN_GENERATE_CONSTRUCTORBEGIN(buf, name, caps_name);
+    *file << buf;
+    sprintf(buf, kConstructorEndStr, "");
+    *file << buf;
+  }
+  else {
+    JSGEN_GENERATE_EMPTYCONSTRUCTOR(buf, name);
+    *file << buf;
+  }
 }
 
 static const char *kGlobalInitClassStr =

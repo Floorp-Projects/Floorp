@@ -587,9 +587,9 @@ nsresult nsDocument::GetScriptObject(nsIScriptContext *aContext, void** aScriptO
   return res;
 }
 
-nsresult nsDocument::ResetScriptObject()
+nsresult nsDocument::SetScriptObject(void *aScriptObject)
 {
-  mScriptObject = nsnull;
+  mScriptObject = aScriptObject;
   return NS_OK;
 }
 

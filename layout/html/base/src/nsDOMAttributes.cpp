@@ -79,9 +79,9 @@ nsresult nsDOMAttribute::GetScriptObject(nsIScriptContext *aContext, void** aScr
   return res;
 }
 
-nsresult nsDOMAttribute::ResetScriptObject()
+nsresult nsDOMAttribute::SetScriptObject(void *aScriptObject)
 {
-  mScriptObject = nsnull;
+  mScriptObject = aScriptObject;
   return NS_OK;
 }
 
@@ -293,9 +293,9 @@ nsresult nsDOMAttributeMap::GetScriptObject(nsIScriptContext *aContext, void** a
   return res;
 }
 
-nsresult nsDOMAttributeMap::ResetScriptObject()
+nsresult nsDOMAttributeMap::SetScriptObject(void *aScriptObject)
 {
-  mScriptObject = nsnull;
+  mScriptObject = aScriptObject;
   return NS_OK;
 }
 

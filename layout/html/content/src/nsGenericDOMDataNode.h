@@ -115,7 +115,7 @@ struct nsGenericDOMDataNode {
 
   // nsIScriptObjectOwner interface
   nsresult GetScriptObject(nsIScriptContext* aContext, void** aScriptObject);
-  nsresult ResetScriptObject();
+  nsresult SetScriptObject(void *aScriptObject);
 
   // Implementation for nsIContent
   nsresult GetDocument(nsIDocument*& aResult) const;
@@ -373,8 +373,8 @@ struct nsGenericDOMDataNode {
                              void** aScriptObject) {          \
     return _g.GetScriptObject(aContext, aScriptObject);       \
   }                                                           \
-  NS_IMETHOD ResetScriptObject() {                            \
-    return _g.ResetScriptObject();                            \
+  NS_IMETHOD SetScriptObject(void *aScriptObject) {           \
+    return _g.SetScriptObject(aScriptObject);                 \
   }
 
 #define NS_IMPL_ICONTENT_USING_GENERIC_DOM_DATA(_g)                        \

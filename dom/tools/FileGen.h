@@ -28,6 +28,7 @@ class IdlSpecification;
 class IdlInterface;
 class IdlVariable;
 class IdlParameter;
+class IdlFunction;
 
 class FileGen {
 public:
@@ -56,6 +57,9 @@ protected:
     void            EnumerateAllObjects(IdlInterface &aInterface,
                                         PLHashEnumerator aEnumerator,
                                         void *aArg);
+    PRBool          HasConstructor(IdlInterface &aInterface, 
+                                   IdlFunction **aConstructor);
+
     ofstream*       GetFile() { return mOutputFile; }
     
     void            StrUpr(char *aBuffer);
@@ -68,3 +72,4 @@ private:
 };
 
 #endif // _FileGen_h__
+

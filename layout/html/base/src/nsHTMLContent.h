@@ -143,7 +143,7 @@ public:
 
   static void QuoteForHTML(const nsString& aValue, nsString& aResult);
 
-  NS_IMETHOD ResetScriptObject();
+  NS_IMETHOD SetScriptObject(void *aScriptObject);
 
   // nsIDOMNode interface
   NS_IMETHOD    GetParentNode(nsIDOMNode** aParentNode);
