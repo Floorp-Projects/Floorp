@@ -133,11 +133,15 @@ prop_iterator_finalize(JSContext *cx, JSObject *obj)
     /* Protect against stillborn iterators. */
     iter_state = obj->slots[JSSLOT_ITER_STATE];
     iteratee = obj->slots[JSSLOT_PARENT];
-    if (iter_state != JSVAL_NULL && !JSVAL_IS_PRIMITIVE(iteratee)) {
+    if (!JSVAL_IS_NULL(iter_state) && !JSVAL_IS_PRIMITIVE(iteratee)) {
         OBJ_ENUMERATE(cx, JSVAL_TO_OBJECT(iteratee), JSENUMERATE_DESTROY,
                       &iter_state, NULL);
     }
     js_RemoveRoot(cx->runtime, &obj->slots[JSSLOT_PARENT]);
+
+    /* XXX force the GC to restart so we can collect iteratee, if possible,
+           during the current collector activation */
+    cx->runtime->gcLevel++;
 }
 
 static JSClass prop_iterator_class = {
@@ -1732,13 +1736,15 @@ js_Interpret(JSContext *cx, jsval *result)
                     ok = JS_FALSE;
                     goto out;
                 }
+                propobj->slots[JSSLOT_ITER_STATE] = JSVAL_NULL;
 
                 /*
                  * Root the parent slot so we can get it even in our finalizer
                  * (otherwise, it would live as long as we do, but it might be
                  * finalized first).
                  */
-                ok = js_AddRoot(cx, &propobj->slots[JSSLOT_PARENT], NULL);
+                ok = js_AddRoot(cx, &propobj->slots[JSSLOT_PARENT],
+                                "propobj->parent");
                 if (!ok)
                     goto out;
 
