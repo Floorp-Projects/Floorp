@@ -1,5 +1,4 @@
 skins/classic.jar:
-	messenger/skin/mailheader.css
 	messenger/skin/msgHdrViewOverlay.css
 	messenger/skin/threadPane.css
 	messenger/skin/pref-mailnews.css

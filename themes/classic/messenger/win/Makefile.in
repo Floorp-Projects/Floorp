@@ -37,7 +37,6 @@ EXPORT_RESOURCE_SAMPLES = \
 	msgHdrViewOverlay.css \
 	pref-mailnews.css \
 	messenger.css \
-	mailheader.css \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

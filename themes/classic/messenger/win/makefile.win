@@ -35,4 +35,3 @@ install::
 	$(MAKE_INSTALL) subscribe.css $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
 	$(MAKE_INSTALL) threadPane.css $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
 	$(MAKE_INSTALL) messenger.css $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
-	$(MAKE_INSTALL) mailheader.css $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
