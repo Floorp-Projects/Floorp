@@ -123,8 +123,9 @@ var BookmarksMenu = {
     var target = document.popupNode;
     if (!this.isBTBookmark(target.id))
       return false;
+    var bt = document.getElementById("bookmarks-ptf");
+    bt.focus(); // buttons in the bt have -moz-user-focus: ignore
 
-    target.focus(); // buttons in the pt have -moz-user-focus: ignore
     this._selection   = this.getBTSelection(target);
     this._orientation = this.getBTOrientation(aEvent, target);
     this._target      = this.getBTTarget(target, this._orientation);
@@ -142,6 +143,9 @@ var BookmarksMenu = {
       content.focus()
     BookmarksMenuDNDObserver.onDragRemoveFeedBack(document.popupNode); // needed on cancel
     aEvent.target.removeEventListener("mousemove", BookmarksMenuController.onMouseMove, false)
+    // XXXpch: see bug 210910, it should be done properly in the backend
+    BookmarksMenuDNDObserver.mCurrentDragOverTarget = null;
+    BookmarksMenuDNDObserver.onDragCloseTarget();
   },
 
   /////////////////////////////////////////////////////////////////////////////
@@ -381,7 +385,6 @@ var BookmarksMenuController = {
 
   isCommandEnabled: function (aCommand)
   {
-    // warning: this is not the function called in BookmarksController.onCommandUpdate
     var selection = BookmarksMenu._selection;
     var target    = BookmarksMenu._target;
     if (selection)
@@ -399,9 +402,6 @@ var BookmarksMenuController = {
       BookmarksMenu.expandBTFolder();
       break;
     default:
-      // XXXBlake HACK for bug 210910 -- To be removed after 0.7
-      BookmarksMenuDNDObserver.mCurrentDragOverTarget = null;
-      BookmarksMenuDNDObserver.onDragCloseTarget();
       BookmarksController.doCommand(aCommand, selection, target);
     }
   },
@@ -586,7 +586,7 @@ var BookmarksMenuDNDObserver = {
       this._observers = [
         document.getElementById("bookmarks-ptf"),
         document.getElementById("bookmarks-menu").parentNode,
-        document.getElementById("overflow-padder")
+        document.getElementById("bookmarks-chevron").parentNode
       ]
     }
     return this._observers;
