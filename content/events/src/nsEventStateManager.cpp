@@ -425,7 +425,7 @@ nsEventStateManager::DispatchKeyPressEvent(nsIPresContext& aPresContext,
                                            nsKeyEvent *aEvent,
                                            nsEventStatus& aStatus)
 {
-  nsresult ret;
+  nsresult ret = NS_OK;
 
   //fire keypress
   nsKeyEvent event;

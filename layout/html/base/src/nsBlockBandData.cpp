@@ -66,7 +66,6 @@ nsresult
 nsBlockBandData::GetAvailableSpace(nscoord aY, nsRect& aResult)
 {
   // Get the raw band data for the given Y coordinate
-  PRInt32 currentSize = size;
   nsresult rv = mSpaceManager->GetBandData(aY, mSpace, *this);
   while (NS_FAILED(rv)) {
     // We need more space for our bands

@@ -20,9 +20,9 @@
 #include <fstream.h>
 
 
-nsXIFConverter::nsXIFConverter(nsString& aBuffer) :
-  mBuffer(aBuffer), 
-  mIndent(0)
+nsXIFConverter::nsXIFConverter(nsString& aBuffer)
+  : mIndent(0),
+    mBuffer(aBuffer)
 {
   char* prolog = "<?xml version=\"1.0\"?>\n";
   char* doctype = "<!DOCTYPE xif>\n";
