@@ -3681,7 +3681,7 @@ var nsDeleteTableCommand =
   doCommand: function(aCommand)
   {
     try {
-      GetCurrentEditor().delectTable();
+      GetCurrentEditor().deleteTable();
     } catch(e) {}
     window._content.focus();
   }
