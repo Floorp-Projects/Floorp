@@ -38,7 +38,7 @@
  * 
  * NOTE - These are not public interfaces
  *
- * $Id: secport.h,v 1.6 2002/05/01 00:06:39 wtc%netscape.com Exp $
+ * $Id: secport.h,v 1.7 2003/09/08 23:29:14 jpierre%netscape.com Exp $
  */
 
 #ifndef _SECPORT_H_
@@ -219,6 +219,7 @@ extern char *PORT_Strdup(const char *s);
 #define PORT_Strncat 	strncat
 #define PORT_Strncmp 	strncmp
 #define PORT_Strncpy 	strncpy
+#define PORT_Strpbrk    strpbrk
 #define PORT_Strstr 	strstr
 #define PORT_Strtok 	strtok
 
