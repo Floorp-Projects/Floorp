@@ -468,7 +468,7 @@ void nsMailDatabase::SetReparse(PRBool reparse)
 #ifdef DEBUG	// strictly for testing purposes
 nsresult nsMailDatabase::PrePopulate()
 {
-	nsMsgHdr	*newHdr;
+	nsMsgHdr	*newHdr = NULL;
 	PRTime resultTime, intermediateResult, microSecondsPerSecond;
 	resultTime = PR_Now();
 	time_t resDate;
@@ -478,34 +478,43 @@ nsresult nsMailDatabase::PrePopulate()
 	LL_L2I(resDate, intermediateResult);
 
 	nsresult	res = CreateNewHdr(1, &newHdr);
-	newHdr->SetAuthor("bird@celtics.com (Larry Bird)");
-	newHdr->SetSubject("Why the Lakers suck");
-	newHdr->SetDate(resDate);
-	newHdr->SetRecipients("riley@heat.com (Pat Riley)", FALSE);
-	AddNewHdrToDB (newHdr, PR_TRUE);
-	newHdr->Release();
-
+	if (res == NS_OK && newHdr)
+	{
+		newHdr->SetAuthor("bird@celtics.com (Larry Bird)");
+		newHdr->SetSubject("Why the Lakers suck");
+		newHdr->SetDate(resDate);
+		newHdr->SetRecipients("riley@heat.com (Pat Riley)", FALSE);
+		AddNewHdrToDB (newHdr, PR_TRUE);
+		newHdr->Release();
+	}
 	res = CreateNewHdr(2, &newHdr);
-	newHdr->SetAuthor("shaq@brick.com (Shaquille O'Neal)");
-	newHdr->SetSubject("Anyone here know how to shoot free throws?");
-	newHdr->SetDate(resDate);
-	AddNewHdrToDB (newHdr, PR_TRUE);
-	newHdr->Release();
-
+	if (res == NS_OK && newHdr)
+	{
+		newHdr->SetAuthor("shaq@brick.com (Shaquille O'Neal)");
+		newHdr->SetSubject("Anyone here know how to shoot free throws?");
+		newHdr->SetDate(resDate);
+		AddNewHdrToDB (newHdr, PR_TRUE);
+		newHdr->Release();
+	}
 	res = CreateNewHdr(3, &newHdr);
-	newHdr->SetAuthor("dj@celtics.com (Dennis Johnson)");
-	newHdr->SetSubject("Has anyone seen my jump shot?");
-	newHdr->SetDate(resDate);
-	AddNewHdrToDB (newHdr, PR_TRUE);
-	newHdr->Release();
-
+	if (res == NS_OK && newHdr)
+	{
+		newHdr->SetAuthor("dj@celtics.com (Dennis Johnson)");
+		newHdr->SetSubject("Has anyone seen my jump shot?");
+		newHdr->SetDate(resDate);
+		AddNewHdrToDB (newHdr, PR_TRUE);
+		newHdr->Release();
+	}
 	res = CreateNewHdr(4, &newHdr);
-	newHdr->SetAuthor("sichting@celtics.com (Jerry Sichting)");
-	newHdr->SetSubject("Tips for fighting 7' 4\" guys");
-	newHdr->SetDate(resDate);
-	AddNewHdrToDB (newHdr, PR_TRUE);
-	newHdr->Release();
-	return NS_OK;
+	if (res == NS_OK && newHdr)
+	{
+		newHdr->SetAuthor("sichting@celtics.com (Jerry Sichting)");
+		newHdr->SetSubject("Tips for fighting 7' 4\" guys");
+		newHdr->SetDate(resDate);
+		AddNewHdrToDB (newHdr, PR_TRUE);
+		newHdr->Release();
+	}
+	return res;
 }
 
 #endif
