@@ -55,9 +55,10 @@ pass_1(TreeState *state)
         fprintf(state->file, "/*\n * DO NOT EDIT.  THIS FILE IS GENERATED FROM"
                 " %s.idl\n */\n", state->basename);
         fprintf(state->file, "\n#ifndef __gen_%s_h__\n"
-                "#define __gen_%s_h__\n\n",
+                "#define __gen_%s_h__\n",
                 define, define);
         if (g_hash_table_size(state->includes)) {
+            fputc('\n', state->file);
             g_hash_table_foreach(state->includes, write_header, state);
             fputc('\n', state->file);
         }
@@ -137,6 +138,13 @@ interface(TreeState *state)
 
     if (state->tree && !xpidl_process_node(state))
         return FALSE;
+
+    /* XXXbe keep this statement until -m stub dies */
+    fprintf(state->file,
+            "\n"
+            "  static JSObject *InitJSClass(JSContext *cx);\n"
+            "  static JSObject *GetJSObject(JSContext *cx, %s *priv);\n",
+            className);
 
     fputs("};\n", state->file);
 
