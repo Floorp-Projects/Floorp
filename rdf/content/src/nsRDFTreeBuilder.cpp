@@ -782,7 +782,7 @@ RDFTreeBuilderImpl::OnAppendChild(nsIDOMNode* aParent, nsIDOMNode* aNewChild)
                 // RDF. So let's assert it into the graph. First we
                 // need the property resource.
                 nsCOMPtr<nsIRDFResource> property;
-                rv = gRDFService->GetUnicodeResource(propertyStr, getter_AddRefs(property));
+                rv = gRDFService->GetUnicodeResource(propertyStr.GetUnicode(), getter_AddRefs(property));
                 if (NS_FAILED(rv)) return rv;
 
                 // And now we need the child's resource.
@@ -928,7 +928,7 @@ RDFTreeBuilderImpl::OnRemoveChild(nsIDOMNode* aParent, nsIDOMNode* aOldChild)
                 // unassert it from the graph. First we need the
                 // property resource.
                 nsCOMPtr<nsIRDFResource> property;
-                rv = gRDFService->GetUnicodeResource(propertyStr, getter_AddRefs(property));
+                rv = gRDFService->GetUnicodeResource(propertyStr.GetUnicode(), getter_AddRefs(property));
                 if (NS_FAILED(rv)) return rv;
 
                 // And now we need the child's resource.
@@ -1331,7 +1331,7 @@ RDFTreeBuilderImpl::SetWidgetAttribute(nsIContent* aTreeItemElement,
 
         NS_ASSERTION(text != nsnull, "unable to find text child");
         if (text)
-            text->SetText(value, value.Length(), PR_TRUE);
+            text->SetText(value.GetUnicode(), value.Length(), PR_TRUE);
     }
 
 
@@ -1369,7 +1369,7 @@ RDFTreeBuilderImpl::UnsetWidgetAttribute(nsIContent* aTreeItemElement,
 
         NS_ASSERTION(text != nsnull, "unable to find text child");
         if (text)
-            text->SetText(nsAutoString(), 0, PR_TRUE);
+            text->SetText(nsAutoString().GetUnicode(), 0, PR_TRUE);
     }
 
     // no matter what, it's also been created as an attribute.
@@ -1622,7 +1622,7 @@ RDFTreeBuilderImpl::CreateTreeItemCells(nsIContent* aTreeItemElement)
 
             // First construct a property resource from the URI...
             nsCOMPtr<nsIRDFResource> property;
-            if (NS_FAILED(gRDFService->GetUnicodeResource(uri, getter_AddRefs(property)))) {
+            if (NS_FAILED(gRDFService->GetUnicodeResource(uri.GetUnicode(), getter_AddRefs(property)))) {
                 NS_ERROR("unable to construct resource for xul:treecell");
                 return rv; // XXX fatal
             }
@@ -1720,7 +1720,7 @@ RDFTreeBuilderImpl::GetColumnForProperty(nsIContent* aTreeElement,
         }
 
         if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-            if (0 == nsCRT::strcmp(uri, propertyURI)) {
+            if (0 == nsCRT::strcmp(uri.GetUnicode(), propertyURI)) {
                 *aIndex = index;
                 return NS_OK;
             }

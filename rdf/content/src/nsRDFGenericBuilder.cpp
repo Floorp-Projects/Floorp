@@ -884,7 +884,7 @@ RDFGenericBuilderImpl::OnSetAttribute(nsIDOMElement* aElement, const nsString& a
         // element; e.g., re-rooting an item in the tree.
 
         nsCOMPtr<nsIRDFResource> newResource;
-        if (NS_FAILED(rv = gRDFService->GetUnicodeResource(aValue, getter_AddRefs(newResource)))) {
+        if (NS_FAILED(rv = gRDFService->GetUnicodeResource(aValue.GetUnicode(), getter_AddRefs(newResource)))) {
             NS_ERROR("unable to get new resource");
             return rv;
         }
@@ -972,7 +972,7 @@ RDFGenericBuilderImpl::OnSetAttribute(nsIDOMElement* aElement, const nsString& a
     nsAutoString oldValue;
     if (NS_CONTENT_ATTR_HAS_VALUE == element->GetAttribute(attrNameSpaceID, attrNameAtom, oldValue)) {
         nsCOMPtr<nsIRDFLiteral> value;
-        if (NS_FAILED(rv = gRDFService->GetLiteral(oldValue, getter_AddRefs(value)))) {
+        if (NS_FAILED(rv = gRDFService->GetLiteral(oldValue.GetUnicode(), getter_AddRefs(value)))) {
             NS_ERROR("unable to construct literal");
             return rv;
         }
@@ -984,7 +984,7 @@ RDFGenericBuilderImpl::OnSetAttribute(nsIDOMElement* aElement, const nsString& a
     // Assert the new value
     {
         nsCOMPtr<nsIRDFLiteral> value;
-        if (NS_FAILED(rv = gRDFService->GetLiteral(aValue, getter_AddRefs(value)))) {
+        if (NS_FAILED(rv = gRDFService->GetLiteral(aValue.GetUnicode(), getter_AddRefs(value)))) {
             NS_ERROR("unable to construct literal");
             return rv;
         }
@@ -1074,7 +1074,7 @@ RDFGenericBuilderImpl::OnRemoveAttribute(nsIDOMElement* aElement, const nsString
         nsAutoString oldValue;
         if (NS_CONTENT_ATTR_HAS_VALUE == element->GetAttribute(attrNameSpaceID, attrNameAtom, oldValue)) {
             nsCOMPtr<nsIRDFLiteral> value;
-            if (NS_FAILED(rv = gRDFService->GetLiteral(oldValue, getter_AddRefs(value)))) {
+            if (NS_FAILED(rv = gRDFService->GetLiteral(oldValue.GetUnicode(), getter_AddRefs(value)))) {
                 NS_ERROR("unable to construct literal");
                 return rv;
             }
@@ -1486,7 +1486,7 @@ RDFGenericBuilderImpl::GetResource(PRInt32 aNameSpaceID,
 
     uri.Append(tag);
 
-    nsresult rv = gRDFService->GetUnicodeResource(uri, aResource);
+    nsresult rv = gRDFService->GetUnicodeResource(uri.GetUnicode(), aResource);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
     return rv;
 }
