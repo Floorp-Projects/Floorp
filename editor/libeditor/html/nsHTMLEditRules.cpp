@@ -1667,7 +1667,7 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
               res = nsWSRunObject::PrepareToDeleteNode(mHTMLEditor, nextNode);
               if (NS_FAILED(res)) return res;
             }
-            // remember prior sibling to prior node, if any
+            // remember next sibling after nextNode, if any
             nsCOMPtr<nsIDOMNode> sibling, stepbrother;  
             mHTMLEditor->GetNextHTMLSibling(nextNode, address_of(sibling));
             // delete the break, and join like nodes if appropriate
@@ -1681,7 +1681,7 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
             if (startNode == stepbrother) 
             {
               // are they same type?
-              if (mHTMLEditor->IsTextNode(stepbrother))
+              if (mHTMLEditor->IsTextNode(sibling))
               {
                 // if so, join them!
                 res = JoinNodesSmart(startNode, sibling, address_of(selNode), &selOffset);
