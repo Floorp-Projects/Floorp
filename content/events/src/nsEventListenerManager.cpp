@@ -697,7 +697,7 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
       //method to verify equality.
       nsCOMPtr<nsIScriptEventListener> regSel = do_QueryInterface(ls->mListener, &rv);
       if (NS_SUCCEEDED(rv) && regSel) {
-		    PRBool equal;
+        PRBool equal;
         if (NS_SUCCEEDED(regSel->CheckIfEqual(sel, &equal)) && equal) {
           if (ls->mFlags & aFlags && ls->mSubType & aSubType) {
             found = PR_TRUE;
@@ -1214,10 +1214,10 @@ nsEventListenerManager::RegisterScriptEventListener(nsIScriptContext *aContext,
   nsCOMPtr<nsIJSContextStack> stack =
     do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
   if (NS_FAILED(rv))
-      return rv;
+    return rv;
   JSContext *cx;
-  if (NS_FAILED(stack->Peek(&cx)))
-      return nsnull;
+  if (NS_FAILED(rv = stack->Peek(&cx)))
+    return rv;
 
   JSContext *current_cx = (JSContext *)aContext->GetNativeContext();
 
@@ -1235,18 +1235,18 @@ nsEventListenerManager::RegisterScriptEventListener(nsIScriptContext *aContext,
 
   nsCOMPtr<nsIClassInfo> classInfo = do_QueryInterface(aObject);
 
-  if (sAddListenerID == JSVAL_VOID) {
+  if (sAddListenerID == JSVAL_VOID && cx) {
     sAddListenerID = STRING_TO_JSVAL(::JS_InternString(cx, "addEventListener"));
-  }
 
-  rv = nsContentUtils::GetSecurityManager()->
-    CheckPropertyAccess(cx, jsobj,
-                        "EventTarget",
-                        sAddListenerID,
-                        nsIXPCSecurityManager::ACCESS_SET_PROPERTY);
-  if (NS_FAILED(rv)) {
+    rv = nsContentUtils::GetSecurityManager()->
+      CheckPropertyAccess(cx, jsobj,
+                          "EventTarget",
+                          sAddListenerID,
+                          nsIXPCSecurityManager::ACCESS_SET_PROPERTY);
+    if (NS_FAILED(rv)) {
       // XXX set pending exception on the native call context?
-    return rv;
+      return rv;
+    }
   }
 
   return SetJSEventListener(aContext, aObject, aName, PR_FALSE);
