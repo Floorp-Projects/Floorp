@@ -21,6 +21,8 @@
 
 #include "nsIImapService.h"
 #include "nsIMsgMessageService.h"
+#include "nsISupportsArray.h"
+#include "nsCOMPtr.h"
 
 class nsIImapHostSessionList; 
 class nsString2;
@@ -40,7 +42,7 @@ public:
 	// we suppport the nsIImapService interface 
 	////////////////////////////////////////////////////////////////////////////////////////
 
-	NS_IMETHOD CreateImapConnection (PLEventQueue *aEventQueue, 
+	NS_IMETHOD CreateImapConnection (PLEventQueue *aEventQueue, nsIImapUrl * aImapUrl,
                                      nsIImapProtocol ** aImapConnection);
 
 	NS_IMETHOD SelectFolder(PLEventQueue * aClientEventQueue, 
@@ -158,7 +160,12 @@ protected:
                          imapMessageFlagsType flags,
                          PRBool messageIdsAreUID);
 	nsIImapHostSessionList * m_sessionList; // the one and only list of all host sessions...
-    
+
+	// the connection cache right now is just a simple array of open nsIImapProtocol instances.
+	// we just iterate over all known connections and see if one of the connections can run 
+	// our current request...we can look into making a more sophisticated cache later...
+	nsCOMPtr<nsISupportsArray> m_connectionCache;
+   
 };
 
 #endif /* nsImapService_h___ */

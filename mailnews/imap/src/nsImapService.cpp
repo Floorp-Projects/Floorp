@@ -61,6 +61,9 @@ nsImapService::nsImapService()
 	// on the host session list...
 	nsresult rv = nsServiceManager::GetService(kCImapHostSessionList, nsIImapHostSessionList::GetIID(),
                                   (nsISupports**)&m_sessionList);
+
+	// I don't know how we're going to report this error if we failed to create the isupports array...
+	rv = NS_NewISupportsArray(getter_AddRefs(m_connectionCache));
 }
 
 nsImapService::~nsImapService()
@@ -101,17 +104,41 @@ nsresult nsImapService::QueryInterface(const nsIID &aIID, void** aInstancePtr)
 }
 
 NS_IMETHODIMP
-nsImapService::CreateImapConnection(PLEventQueue *aEventQueue, 
+nsImapService::CreateImapConnection(PLEventQueue *aEventQueue, nsIImapUrl * aImapUrl, 
                                     nsIImapProtocol ** aImapConnection)
 {
-	nsIImapProtocol * protocolInstance = nsnull;
 	nsresult rv = NS_OK;
-	if (aImapConnection)
+	PRBool canRunUrl = PR_FALSE;
+	nsCOMPtr<nsIImapProtocol> connection;
+	// iterate through the connection cache for a connection that can handle this url.
+	for (PRInt32 i = 0; i < m_connectionCache->Count() && !canRunUrl; i++) 
 	{
+        connection = do_QueryInterface(m_connectionCache->ElementAt(i));
+		if (connection)
+			connection->CanHandleUrl(aImapUrl, canRunUrl);
+	}
+
+	// if we got here and we have a connection, then we should return it!
+	if (canRunUrl && connection)
+	{
+		*aImapConnection = connection;
+		NS_IF_ADDREF(*aImapConnection);
+	}
+	else
+	{	
+		// create a new connection and add it to the connection cache
+		// we may need to flag the protocol connection as busy so we don't get a race
+		// condition where someone else goes through this code 
+		nsIImapProtocol * protocolInstance = nsnull;
 		rv = nsComponentManager::CreateInstance(kImapProtocolCID, nsnull, nsIImapProtocol::GetIID(), (void **) &protocolInstance);
 		if (NS_SUCCEEDED(rv) && protocolInstance)
 			rv = protocolInstance->Initialize(m_sessionList, aEventQueue);
-		*aImapConnection = protocolInstance;
+		
+		// take the protocol instance and add it to the connectionCache
+		if (protocolInstance)
+			m_connectionCache->AppendElement(protocolInstance);
+		*aImapConnection = protocolInstance; // this is already ref counted.
+
 	}
 
 	return rv;
@@ -230,21 +257,13 @@ NS_IMETHODIMP nsImapService::DisplayMessage(const char* aMessageURI, nsISupports
 	nsIImapUrl * url = nsnull;
 	nsresult rv = NS_OK;
     PLEventQueue *queue;
-	nsIRDFService* rdf = nsnull;
  	// get the Event Queue for this thread...
-    nsIEventQueueService* pEventQService = nsnull;
-    rv = nsServiceManager::GetService(kEventQueueServiceCID,
-                                          nsIEventQueueService::GetIID(),
-                                          (nsISupports**)&pEventQService);
-	if (NS_SUCCEEDED(rv) && pEventQService)
-	{
-		rv = pEventQService->GetThreadEventQueue(PR_GetCurrentThread(),&queue);
-		NS_RELEASE(pEventQService);
-		rv = nsServiceManager::GetService(kRDFServiceCID,
-										nsIRDFService::GetIID(),
-										(nsISupports**)&rdf);
+	NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv); 
 
-	}
+	if (NS_SUCCEEDED(rv) && pEventQService)
+		rv = pEventQService->GetThreadEventQueue(PR_GetCurrentThread(),&queue);
+
+	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv); 
 
 	nsString	folderURI;
 	nsMsgKey	msgKey;
@@ -270,11 +289,6 @@ NS_IMETHODIMP nsImapService::DisplayMessage(const char* aMessageURI, nsISupports
 						
 		}
 	}
-	if (rdf)
-		(void)nsServiceManager::ReleaseService(kRDFServiceCID, rdf);
-
-	if (pEventQService)
-		(void)nsServiceManager::ReleaseService(kRDFServiceCID, pEventQService);
 
 	return rv;
 }
@@ -349,23 +363,21 @@ nsImapService::FetchMessage(PLEventQueue * aClientEventQueue,
 nsresult nsImapService::GetImapConnectionAndUrl(PLEventQueue * aClientEventQueue, nsIImapUrl  * &imapUrl, 
 												nsIImapProtocol * &protocolInstance, nsString2 &urlSpec)
 {
-	// create a protocol instance to handle the request.
-	// NOTE: once we start working with multiple connections, this step will be much more complicated...but for now
-	// just create a connection and process the request.
-	
-	nsresult rv = CreateImapConnection(aClientEventQueue, &protocolInstance);
+	nsresult rv = NS_OK;
 
-	if (NS_SUCCEEDED(rv) && protocolInstance)
-	{
-		// now we need to create an imap url to load into the connection. The url needs to represent a select folder action.
-		rv = nsComponentManager::CreateInstance(kImapUrlCID, nsnull,
+	// now we need to create an imap url to load into the connection. The url needs to represent a select folder action.
+	rv = nsComponentManager::CreateInstance(kImapUrlCID, nsnull,
                                             nsIImapUrl::GetIID(), (void **)
                                             &imapUrl);
-		if (NS_SUCCEEDED(rv) && imapUrl)
-			rv = CreateStartOfImapUrl(*imapUrl, urlSpec);
-		else
-			NS_RELEASE(protocolInstance);
-	}
+	if (NS_SUCCEEDED(rv) && imapUrl)
+		rv = CreateStartOfImapUrl(*imapUrl, urlSpec);
+
+	// Create a imap connection to run the url inside of....
+	rv = CreateImapConnection(aClientEventQueue, imapUrl, &protocolInstance);
+
+	if (NS_FAILED(rv))
+		NS_IF_RELEASE(imapUrl); // release the imap url before we return it because the whole command failed...
+
 	return rv;
 }
 
