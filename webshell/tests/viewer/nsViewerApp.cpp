@@ -115,7 +115,8 @@ nsViewerApp::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
     return NS_ERROR_NULL_POINTER;
   }
   if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtrResult = (void*) ((nsISupports*)((nsIBrowserWindow*)this));
+    nsISupports* tmp = this;
+    *aInstancePtrResult = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
   }
