@@ -32,13 +32,15 @@
 .toolbar-primary {
   -moz-binding: url("chrome://communicator/skin/toolbar/toolbarBindings.xml#toolbar-primary");
   min-height: 45px;
-  background-image: none;
   background-color: #B1BDC9;
 }
 
-.toolbar-primary > .toolbar-holder {
-  border: none;
+.toolbar-primary-holder {
+  background: url("chrome://communicator/skin/toolbar/prtb-bg-line.gif") repeat-x top;
+  border-top: none;
+  border-right: 1px solid #95A0AD;
   border-bottom: 1px solid #95A0AD;
+  border-left: none;
 }
 
 .toolbar-primary-icon {
@@ -46,34 +48,6 @@
   height: 50px;
   background-repeat: no-repeat;
   background-position: top;
-}
-
-.toolbar-primary-mid-top {
-  height: 36px;
-  background: url("chrome://communicator/skin/toolbar/prtb-mid-top.gif") repeat-x top;
-}
-  
-.toolbar-primary-mid-btm {
-  height: 5px;
-  background: url("chrome://communicator/skin/toolbar/prtb-mid-btm.gif") repeat-x bottom;
-}
-
-.toolbar-primary-right {
-  width: 52px;
-}
-
-.toolbar-primary-right-top {
-  height: 36px;
-  background: url("chrome://communicator/skin/toolbar/prtb-rit-top.gif") no-repeat;
-}
-  
-.toolbar-primary-right-mid {
-  background: url("chrome://communicator/skin/toolbar/prtb-rit-mid.gif") repeat-y;
-}
-  
-.toolbar-primary-right-btm {
-  height: 5px;
-  background: url("chrome://communicator/skin/toolbar/prtb-rit-btm.gif") no-repeat;
 }
 
 /* ::::: toolbargrippy ::::: */

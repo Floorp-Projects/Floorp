@@ -8,25 +8,9 @@
     <content>
       <xul:toolbargrippy inherits="tooltiptext=grippytooltiptext,tooltip=grippytooltip,last-toolbar"
           tbattr="toolbar-grippy" class="toolbar-primary-grippy"/>
-      <xul:hbox class="toolbar-holder" flex="1">
-        <xul:hbox class="toolbar-primary-icon"/>
-        <xul:stack class="toolbar-primary-mid" flex="1">
-          <xul:hbox class="toolbar-primary-mid-2" flex="1">
-            <xul:vbox class="toolbar-primary-mid-bg" flex="1">
-              <xul:spacer class="toolbar-primary-mid-top" flex="1"/> 
-              <xul:spacer class="toolbar-primary-mid-btm"/> 
-            </xul:vbox>
-            <xul:vbox class="toolbar-primary-right">
-              <xul:spacer class="toolbar-primary-right-top"/> 
-              <xul:spacer class="toolbar-primary-right-mid" flex="1"/> 
-              <xul:spacer class="toolbar-primary-right-btm"/> 
-            </xul:vbox>
-          </xul:hbox>
-          <xul:hbox class="toolbar-primary-mid-fg"
-                   inherits="collapsed,last-toolbar,orient=tborient">
-            <children/>
-          </xul:hbox>
-        </xul:stack>
+      <xul:hbox class="toolbar-holder toolbar-primary-holder" flex="1" inherits="orient=tborient">
+        <xul:image class="toolbar-primary-icon"/>
+        <children/>
       </xul:hbox>
     </content>
   </binding>

@@ -163,16 +163,12 @@
 /* ::::: nav-bar - the navigator primary toolbar ::::: */
 
 .toolbar-primary-icon {
-  width: 0px;
-  height: 0px;
+  display: none;
 }
 
-.toolbar-primary-mid-fg {
+.toolbar-primary-holder {
   -moz-box-align: start;
-}
-
-.toolbar-primary-mid-top {
-  background-image: url("chrome://navigator/skin/toolbar/navbar-mid-top.gif");
+  background-image: url("chrome://communicator/skin/toolbar/prtb-bg-noline.gif");
 }
 
 #nav-bar-buttons {
@@ -376,13 +372,8 @@
 
 /* ::::: navigator throbber ::::: */
 
-#navigator-throbber {
-  margin: 5px 15px 0px 8px;
-  list-style-image: url("chrome://communicator/skin/brand/throbber-single.gif");
-}
-
-#navigator-throbber[busy="true"] {
-  list-style-image: url("chrome://communicator/skin/brand/throbber-anim.gif");
+#throbber-box {
+  background: none;
 }
 
 /* ::::: autocomplete ::::: */

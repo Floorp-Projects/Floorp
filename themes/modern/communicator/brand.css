@@ -43,8 +43,9 @@
   list-style-image: url("chrome://communicator/skin/brand/throbber-anim.gif");
 }
 
-#throbber-box,
-.throbber-internal-box {
-  -moz-box-align: start !important;
-}  
+#throbber-box {
+  -moz-box-align: start;
+  padding-left: 8px;
+  background: url("chrome://communicator/skin/toolbar/prtb-bg-noline.gif") #B1BDC9 repeat-x top;
+}
 
