@@ -652,7 +652,7 @@ nsComboboxControlFrame::Reflow(nsIPresContext&          aPresContext,
                                const nsHTMLReflowState& aReflowState, 
                                nsReflowStatus&          aStatus)
 {
-#ifdef DEBUG_rodsXXX
+#ifdef DEBUG_rods
   printf("nsComboboxControlFrame::Reflow %d   Reason: ", myCounter++);
   switch (aReflowState.reason) {
     case eReflowReason_Initial:printf("eReflowReason_Initial\n");break;
@@ -687,6 +687,12 @@ nsComboboxControlFrame::Reflow(nsIPresContext&          aPresContext,
     nsFormFrame::AddFormControlFrame(aPresContext, *this);
   }
 
+  const nsStyleSpacing* spacing;
+  GetStyleData(eStyleStruct_Spacing,  (const nsStyleStruct *&)spacing);
+  nsMargin borderPadding;
+  borderPadding.SizeTo(0, 0, 0, 0);
+  spacing->CalcBorderPaddingFor(this, borderPadding);
+
    // Get the current sizes of the combo box child frames
   displayFrame->GetRect(displayRect);
   buttonFrame->GetRect(buttonRect);
@@ -704,6 +710,10 @@ nsComboboxControlFrame::Reflow(nsIPresContext&          aPresContext,
       nsRect oldDisplayRect = displayRect;
       nsRect oldButtonRect = buttonRect;
       rv = nsAreaFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+      // nsAreaFrame::Reflow adds in the border and padding so we need to remove it
+      if (NS_UNCONSTRAINEDSIZE != firstPassState.mComputedWidth) {
+        aDesiredSize.width -= borderPadding.left + borderPadding.right;
+      }
       displayFrame->GetRect(displayRect);
       buttonFrame->GetRect(buttonRect);
       if ((oldDisplayRect == displayRect) && (oldButtonRect == buttonRect)) {
@@ -783,12 +793,16 @@ nsComboboxControlFrame::Reflow(nsIPresContext&          aPresContext,
     // Since the button's width is the same as its height
     // we subtract size.height (the width)
     nscoord displayWidth = firstPassState.mComputedWidth - size.height;
+    // nsAreaFrame::Reflow adds in the border and padding so we need to remove it
+    displayWidth -= borderPadding.left + borderPadding.right;
 
      // Set the displayFrame to match the displayWidth computed above
     SetChildFrameSize(displayFrame, displayWidth, size.height);
 
       // Reflow again with the width of the display frame set.
     nsAreaFrame::Reflow(aPresContext, aDesiredSize, firstPassState, aStatus);
+    // nsAreaFrame::Reflow adds in the border and padding so we need to remove it
+    aDesiredSize.width -= borderPadding.left + borderPadding.right;
 
      // Reflow the dropdown list to match the width of the display + button
     ReflowComboChildFrame(dropdownFrame, aPresContext, dropdownDesiredSize, firstPassState, aStatus, aDesiredSize.width, NS_UNCONSTRAINEDSIZE);
