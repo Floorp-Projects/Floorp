@@ -1297,10 +1297,11 @@ nsImageFrame::TranslateEventCoords(nsIPresContext* aPresContext,
 }
 
 PRBool
-nsImageFrame::GetAnchorHREF(nsString& aResult)
+nsImageFrame::GetAnchorHREFAndTarget(nsString& aHref, nsString& aTarget)
 {
   PRBool status = PR_FALSE;
-  aResult.Truncate();
+  aHref.Truncate();
+  aTarget.Truncate();
 
   // Walk up the content tree, looking for an nsIDOMAnchorElement
   nsCOMPtr<nsIContent> content;
@@ -1308,10 +1309,11 @@ nsImageFrame::GetAnchorHREF(nsString& aResult)
   while (content) {
     nsCOMPtr<nsIDOMHTMLAnchorElement> anchor(do_QueryInterface(content));
     if (anchor) {
-      anchor->GetHref(aResult);
-      if (aResult.Length() > 0) {
+      anchor->GetHref(aHref);
+      if (aHref.Length() > 0) {
         status = PR_TRUE;
       }
+      anchor->GetTarget(aTarget);
       break;
     }
     nsCOMPtr<nsIContent> parent;
@@ -1390,7 +1392,7 @@ nsImageFrame::HandleEvent(nsIPresContext* aPresContext,
           // Server side image maps use the href in a containing anchor
           // element to provide the basis for the destination url.
           nsAutoString src;
-          if (GetAnchorHREF(src)) {
+          if (GetAnchorHREFAndTarget(src, target)) {
             NS_MakeAbsoluteURI(absURL, src, baseURL);
             NS_IF_RELEASE(baseURL);
             

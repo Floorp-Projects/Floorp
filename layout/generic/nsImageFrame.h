@@ -152,7 +152,7 @@ protected:
                             const nsPoint& aPoint,
                             nsPoint& aResult);
 
-  PRBool GetAnchorHREF(nsString& aResult);
+  PRBool GetAnchorHREFAndTarget(nsString& aHref, nsString& aTarget);
 
   PRIntn GetSuppress();
 
