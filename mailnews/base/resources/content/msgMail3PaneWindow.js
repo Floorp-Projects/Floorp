@@ -611,6 +611,7 @@ function AddToSession()
 function InitPanes()
 {
     OnLoadFolderPane();
+    OnLoadThreadPane();
     SetupCommandUpdateHandlers();
 }
 
@@ -689,6 +690,35 @@ function OnLoadFolderPane()
     var folderOutlinerBuilder = folderOutliner.outlinerBoxObject.outlinerBody.builder.QueryInterface(Components.interfaces.nsIXULOutlinerBuilder);
     folderOutlinerBuilder.addObserver(folderObserver);
     folderOutliner.addEventListener("click",FolderPaneOnClick,true);
+}
+
+// builds prior to 12-08-2001 did not have the labels column
+// in the thread pane.  so if a user ran an old build, and then
+// upgraded, they get the new column, and this causes problems.
+// We're trying to avoid a similar problem to bug #96979.
+// to work around this, we hide the column once, using the 
+// "mailnews.ui.threadpane.version" pref.
+function UpgradeThreadPaneUI()
+{
+  var labelCol;
+  var threadPaneUIVersion;
+
+  try {
+    threadPaneUIVersion = pref.getIntPref("mailnews.ui.threadpane.version");
+    if (threadPaneUIVersion == 1) {
+      labelCol = document.getElementById("labelCol");
+      labelCol.setAttribute("hidden", "true");
+      pref.setIntPref("mailnews.ui.threadpane.version", 2);
+    }
+	}
+  catch (ex) {
+    dump("UpgradeThreadPane: ex = " + ex + "\n");
+  }
+}
+
+function OnLoadThreadPane()
+{
+    UpgradeThreadPaneUI();
 }
 
 function GetFolderDatasource()
