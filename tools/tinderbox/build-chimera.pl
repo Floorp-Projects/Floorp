@@ -97,7 +97,7 @@ sub main {
       
       if ($status == 0) {
         TinderUtils::print_log "Deleting binary...\n";
-        TinderUtils::DeleteBinary("$chimera_dir/projects/build/Navigator.app/Contents/MacOS/$chimera_binary");
+        TinderUtils::DeleteBinary("$chimera_dir/build/Navigator.app/Contents/MacOS/$chimera_binary");
           
         # Always do a clean build; gecko dependencies don't work correctly
         # for Chimera.
@@ -116,8 +116,8 @@ sub main {
       if ($status != 0) {
         TinderUtils::print_log "busted, pbxbuild status non-zero\n";
         $post_status = 'busted';
-      } elsif (not TinderUtils::BinaryExists("$chimera_dir/projects/build/Navigator.app/Contents/MacOS/$chimera_binary")) {
-        TinderUtils::print_log "Error: binary not found: $chimera_dir/projects/build/Navigator.app/Contents/MacOS/$chimera_binary\n";
+      } elsif (not TinderUtils::BinaryExists("$chimera_dir/build/Navigator.app/Contents/MacOS/$chimera_binary")) {
+        TinderUtils::print_log "Error: binary not found: $chimera_dir/build/Navigator.app/Contents/MacOS/$chimera_binary\n";
         $post_status = 'busted';
       } else {
         $post_status = 'success';
@@ -152,7 +152,7 @@ sub main {
   if ($chimera_alive_test and $post_status eq 'success') {
 
     $post_status = TinderUtils::AliveTest("ChimeraAliveTest",
-                                          "$chimera_dir/projects/build/Navigator.app/Contents/MacOS",
+                                          "$chimera_dir/build/Navigator.app/Contents/MacOS",
                                           "Navigator",
                                           "-url \"about:blank\"",  
                                           45);
@@ -207,12 +207,12 @@ sub main {
           select STDOUT; $| = 1;  # make STDOUT unbuffered
           select STDERR; $| = 1;  # make STDERR unbuffered
           print STDERR "hello, world\n";
-          chdir("$chimera_dir/projects/build/Navigator.app/Contents/MacOS");
+          chdir("$chimera_dir/build/Navigator.app/Contents/MacOS");
           exec "./Navigator -url \"http://lxr.mozilla.org/seamonkey/source/webshell/tests/viewer/samples/test8.html\"";
           #exec "foo";
       } else {
           $post_status = TinderUtils::AliveTest("ChimeraLayoutTest8Test",
-                                                "$chimera_dir/projects/build/Navigator.app/Contents/MacOS",
+                                                "$chimera_dir/build/Navigator.app/Contents/MacOS",
                                                 "Navigator",
                                                 "-url \"http://lxr.mozilla.org/seamonkey/source/webshell/tests/viewer/samples/test8.html\"",
                                                 20);
@@ -225,7 +225,7 @@ sub main {
       $post_status = 
         TinderUtils::LayoutPerformanceTest("ChimeraLayoutPerformanceTest",
                                            "Navigator",
-                                           "$chimera_dir/projects/build/Navigator.app/Contents/MacOS",
+                                           "$chimera_dir/build/Navigator.app/Contents/MacOS",
                                            "-url");
 
   }
@@ -237,7 +237,7 @@ sub main {
       $post_status =
         TinderUtils::StartupPerformanceTest("ChimeraStartupPerformanceTest",
                                             "Navigator",
-                                            "$chimera_dir/projects/build/Navigator.app/Contents/MacOS",
+                                            "$chimera_dir/build/Navigator.app/Contents/MacOS",
                                             "-url",
                                             "file:$chimera_dir/../../../startup-test.html");      
   }
