@@ -123,6 +123,8 @@ protected:
     nsCAutoString mAppLanguage;
     nsCAutoString mAppUserAgent;
     nsCAutoString mAppMisc;
+    nsCAutoString mProductName;
+    nsCAutoString mProductVersion;
 };
 
 #endif /* _nsHTTPHandler_h_ */

@@ -41,6 +41,7 @@
 #include "nsFileSpec.h"
 #include "nsIPref.h"
 #include "nsIProtocolProxyService.h"
+#include "nsIStringBundle.h"
 
 #ifdef DEBUG_gagan
 #include "nsUnixColorPrintf.h"
@@ -85,6 +86,7 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID); // remove now TODO
 static NS_DEFINE_CID(kProtocolProxyServiceCID, NS_PROTOCOLPROXYSERVICE_CID);
 
 NS_DEFINE_CID(kCategoryManagerCID, NS_CATEGORYMANAGER_CID);
+static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 NS_IMPL_ISUPPORTS2(nsHTTPHandler,
                    nsIHTTPProtocolHandler,
@@ -405,11 +407,7 @@ nsHTTPHandler::GetVendorName(PRUnichar* *aVendorName)
 NS_IMETHODIMP
 nsHTTPHandler::SetVendorName(const PRUnichar* aVendorName)
 {
-    nsAutoString vendorName(aVendorName);
-    char *vName = vendorName.ToNewCString();
-    if (!vName) return NS_ERROR_OUT_OF_MEMORY;
-    mVendorName = vName;
-    nsAllocator::Free(vName);
+    mVendorName = (const PRUnichar*)aVendorName;
     return BuildUserAgent();
 }
 
@@ -424,11 +422,37 @@ nsHTTPHandler::GetVendorVersion(PRUnichar* *aVendorVersion)
 NS_IMETHODIMP
 nsHTTPHandler::SetVendorVersion(const PRUnichar* aVendorVersion)
 {
-    nsAutoString vendorVersion(aVendorVersion);
-    char *vVer = vendorVersion.ToNewCString();
-    if (*vVer) return NS_ERROR_OUT_OF_MEMORY;
-    mVendorVersion = vVer;
-    nsAllocator::Free(vVer);
+    mVendorVersion = (const PRUnichar*)aVendorVersion;
+    return BuildUserAgent();
+}
+
+NS_IMETHODIMP
+nsHTTPHandler::GetProductName(PRUnichar* *aProductName)
+{
+    *aProductName = mProductName.ToNewUnicode();
+    if (!*aProductName) return NS_ERROR_OUT_OF_MEMORY;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPHandler::SetProductName(const PRUnichar* aProductName)
+{
+    mProductName = (const PRUnichar*)aProductName;
+    return BuildUserAgent();
+}
+
+NS_IMETHODIMP
+nsHTTPHandler::GetProductVersion(PRUnichar* *aProductVersion)
+{
+    *aProductVersion = mProductVersion.ToNewUnicode();
+    if (!*aProductVersion) return NS_ERROR_OUT_OF_MEMORY;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPHandler::SetProductVersion(const PRUnichar* aProductVersion)
+{
+    mProductVersion = (const PRUnichar*)aProductVersion;
     return BuildUserAgent();
 }
 
@@ -443,11 +467,7 @@ nsHTTPHandler::GetLanguage(PRUnichar* *aLanguage)
 NS_IMETHODIMP
 nsHTTPHandler::SetLanguage(const PRUnichar* aLanguage)
 {
-    nsAutoString language(aLanguage);
-    char *lang = language.ToNewCString();
-    if (!lang) return NS_ERROR_OUT_OF_MEMORY;
-    mAppLanguage = lang;
-    nsAllocator::Free(lang);
+    mAppLanguage = (const PRUnichar*)aLanguage;
     return BuildUserAgent();
 }
 
@@ -479,11 +499,7 @@ nsHTTPHandler::GetMisc(PRUnichar* *aMisc)
 NS_IMETHODIMP
 nsHTTPHandler::SetMisc(const PRUnichar* aMisc)
 {
-    nsAutoString miscStr(aMisc);
-    char *misc = miscStr.ToNewCString();
-    if (!misc) return NS_ERROR_OUT_OF_MEMORY;
-    mAppMisc = misc;
-    nsAllocator::Free(misc);
+    mAppMisc = (const PRUnichar*)aMisc;
     return BuildUserAgent();
 }
 
@@ -498,11 +514,7 @@ nsHTTPHandler::GetVendorComment(PRUnichar* *aComment)
 NS_IMETHODIMP
 nsHTTPHandler::SetVendorComment(const PRUnichar* aComment)
 {
-    nsAutoString commentStr(aComment);
-    char *comment = commentStr.ToNewCString();
-    if (!comment) return NS_ERROR_OUT_OF_MEMORY;
-    mVendorComment = comment;
-    nsAllocator::Free(comment);
+    mVendorComment = (const PRUnichar*)aComment;
     return BuildUserAgent();
 }
 
@@ -529,23 +541,46 @@ nsHTTPHandler::Init()
                 HTTPPrefsCallback, (void*)this);
     PrefsChanged();
 
+    NS_WITH_SERVICE(nsIStringBundleService, sBundleService, 
+                    kStringBundleServiceCID, &rv); 
+    if (NS_FAILED(rv)) return rv;
+    nsILocale   *strLocale = nsnull;
+    nsCOMPtr<nsIStringBundle> bundle;
+    rv = sBundleService->CreateBundle("chrome://global/locale/brand.properties", strLocale, getter_AddRefs(bundle));
+    if (NS_FAILED(rv)) return rv;
+
+    // Gather brand.properties values.
+    nsXPIDLString vendorName, vendorVersion;
+    nsAutoString hashName("vendorShortName");
+    rv = bundle->GetStringFromName(hashName.GetUnicode(), getter_Copies(vendorName));
+    if (NS_FAILED(rv)) return rv;
+
+    nsAutoString convString(vendorName);
+    char *lCStr = convString.ToNewCString();
+    if (!lCStr) return NS_ERROR_OUT_OF_MEMORY;
+    mVendorName = lCStr;
+    nsAllocator::Free(lCStr);
+
+    hashName = "vendorVersion";
+    rv = bundle->GetStringFromName(hashName.GetUnicode(), getter_Copies(vendorVersion));
+    if (NS_FAILED(rv)) return rv;
+
+    convString = vendorVersion;
+    lCStr = convString.ToNewCString();
+    if (!lCStr) return NS_ERROR_OUT_OF_MEMORY;
+    mVendorVersion = lCStr;
+    nsAllocator::Free(lCStr);
+
     // initialize the version and app components
     mAppName = "Mozilla";
     mAppVersion = "5.0";
-    mAppSecurity = "N";
+    mAppSecurity = "N"; // XXX needs to be set by HTTPS
 
     nsXPIDLCString locale;
     rv = mPrefs->CopyCharPref("general.useragent.locale", 
         getter_Copies(locale));
     if (NS_SUCCEEDED(rv)) {
         mAppLanguage = locale;
-    }
-
-    nsXPIDLCString milestone;
-    rv = mPrefs->CopyCharPref("general.milestone",
-        getter_Copies(milestone));
-    if (NS_SUCCEEDED(rv)) {
-        mAppVersion += milestone;
     }
 
     // Platform
@@ -948,6 +983,17 @@ nsHTTPHandler::BuildUserAgent() {
         mAppUserAgent += mVendorComment;
         mAppUserAgent += ')';
     }
+
+    // Product portion
+    if (!mProductName.IsEmpty()) {
+        mAppUserAgent += ' ';
+        mAppUserAgent += mProductName;
+        if (!mProductVersion.IsEmpty()) {
+            mAppUserAgent += '/';
+            mAppUserAgent += mProductVersion;
+        }
+    }
+
     return NS_OK;
 }
 
@@ -974,7 +1020,6 @@ nsHTTPHandler::PrefsChanged(const char* pref)
         rv = mPrefs->GetIntPref("network.sendRefererHeader",&referrerLevel);
         if (NS_SUCCEEDED(rv) && referrerLevel>0) 
            mReferrerLevel = referrerLevel; 
-
 #ifdef DEBUG_gagan
         PRINTF_CYAN;
         printf("network.sendRefererHeader = %d\n", mReferrerLevel);
