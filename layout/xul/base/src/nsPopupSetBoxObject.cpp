@@ -136,7 +136,7 @@ nsPopupSetBoxObject::CreatePopup(nsIDOMElement* aSrcContent,
   if (!shell)
     return NS_OK;
 
-  return popupFrame->CreatePopup(srcContent, popupContent, aXPos, aYPos, aPopupType, anAnchorAlignment, aPopupAlignment);
+  return popupFrame->CreatePopup(srcContent, popupContent, aXPos, aYPos, nsAutoString(aPopupType), nsAutoString(anAnchorAlignment), nsAutoString(aPopupAlignment));
 }
 
 NS_IMETHODIMP nsPopupSetBoxObject::GetActiveChild(nsIDOMElement** aResult)

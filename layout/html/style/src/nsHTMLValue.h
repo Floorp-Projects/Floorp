@@ -104,7 +104,7 @@ inline PRInt32 nsHTMLValue::GetIntValue(void) const
   else if (mUnit == eHTMLUnit_String) {
     if (mValue.mString) {
       PRInt32 err=0;
-      nsAutoString str = mValue.mString; // XXX copy. new string APIs will make this better, right?
+      nsAutoString str(mValue.mString); // XXX copy. new string APIs will make this better, right?
       return str.ToInteger(&err);
     }
   }

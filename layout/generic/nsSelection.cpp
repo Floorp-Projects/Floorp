@@ -1533,7 +1533,7 @@ nsDOMSelection::ToString(const nsString& aFormatType, PRUint32 aFlags, PRInt32 a
   nsresult rv = NS_OK;
 
   nsCOMPtr<nsIDocumentEncoder> encoder;
-  nsCAutoString formatType = NS_DOC_ENCODER_PROGID_BASE;
+  nsCAutoString formatType( NS_DOC_ENCODER_PROGID_BASE );
   formatType.AppendWithConversion(aFormatType);
   rv = nsComponentManager::CreateInstance(formatType,
                                           nsnull,

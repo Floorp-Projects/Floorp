@@ -320,7 +320,7 @@ nsXBLStreamListener::Load(nsIDOMEvent* aEvent)
     nsCOMPtr<nsIURI> uri(mBindingDocument->GetDocumentURL());
     nsXPIDLCString str;
     uri->GetSpec(getter_Copies(str));
-    bindingManager->RemoveLoadingDocListener((const char*)str);
+    bindingManager->RemoveLoadingDocListener(nsCAutoString(NS_STATIC_CAST(const char*, str)));
 
     nsCOMPtr<nsIContent> root = getter_AddRefs(mBindingDocument->GetRootContent());
     if (root)
@@ -592,7 +592,7 @@ nsXBLService::LoadBindings(nsIContent* aContent, const nsString& aURL, PRBool aA
   }
 
   if (!newBinding) {
-    nsCAutoString str = "Failed to locate XBL binding. XBL is now using id instead of name to reference bindings. Make sure you have switched over.  The invalid binding name is: ";
+    nsCAutoString str( "Failed to locate XBL binding. XBL is now using id instead of name to reference bindings. Make sure you have switched over.  The invalid binding name is: ");
     str.AppendWithConversion(aURL);
     NS_ERROR(str);
     return NS_OK;
@@ -1057,7 +1057,7 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIURI* aURI, cons
     boundDocument->GetBindingManager(getter_AddRefs(bindingManager));
     nsXPIDLCString uri;
     aURI->GetSpec(getter_Copies(uri));
-    bindingManager->PutLoadingDocListener((const char*)uri, xblListener);
+    bindingManager->PutLoadingDocListener(nsCAutoString(NS_STATIC_CAST(const char*, uri)), xblListener);
 
     // Add our request.
     nsCAutoString bindingURI(uri);

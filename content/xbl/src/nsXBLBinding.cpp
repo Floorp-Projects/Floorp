@@ -867,7 +867,7 @@ nsXBLBinding::InstallProperties(nsIContent* aBoundElement)
           
           if (!getter.IsEmpty() && classObject) {
             rv = context->CompileFunction(classObject,
-                                          "onget",
+                                          nsCAutoString("onget"),
                                           0,
                                           nsnull,
                                           getter, 
@@ -901,7 +901,7 @@ nsXBLBinding::InstallProperties(nsIContent* aBoundElement)
           
           if (!setter.IsEmpty() && classObject) {
             rv = context->CompileFunction(classObject,
-                                          "onset",
+                                          nsCAutoString("onset"),
                                           1,
                                           gPropertyArg,
                                           setter, 

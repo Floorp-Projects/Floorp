@@ -3732,7 +3732,7 @@ HTMLContentSink::ProcessLink(nsIHTMLContent* aElement, const nsString& aLinkData
         }
         if (kNullCh != *equals) {
           *equals = kNullCh;
-          nsAutoString  attr = start;
+          nsAutoString  attr(start);
           attr.StripWhitespace();
 
           PRUnichar* value = ++equals;
@@ -4238,7 +4238,7 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
                 if (!uriAttrib) {
                     uri = baseURI;
                 } else {
-                    rv = NS_NewURI(getter_AddRefs(uri), uriAttrib, baseURI);
+                    rv = NS_NewURI(getter_AddRefs(uri), nsAutoString(uriAttrib), baseURI);
                     nsMemory::Free(uriAttrib);
                 }
 

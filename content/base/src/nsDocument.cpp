@@ -3648,7 +3648,7 @@ nsDocument::SaveFile(nsFileSpec*     aFileSpec,
   if (NS_FAILED(rv))
     return rv;
 
-  nsAutoString charsetStr = aSaveCharset;
+  nsAutoString charsetStr(aSaveCharset);
   if (charsetStr.Length() == 0)
   {
 	  rv = GetDocumentCharacterSet(charsetStr);

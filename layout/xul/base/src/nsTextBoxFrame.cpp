@@ -441,7 +441,7 @@ nsTextBoxFrame::CalculateTitleForWidth(nsIPresContext* aPresContext, nsIRenderin
                return;
 		   
 		   // insert what character we can in.
-           nsAutoString title = mTitle;
+           nsAutoString title( mTitle );
            title.Truncate(i);
 		   mCroppedTitle.Insert(title, 0);
        } 
