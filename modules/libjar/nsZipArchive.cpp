@@ -46,7 +46,7 @@
 
 #else
 
-#ifdef WIN32
+#ifdef XP_WIN
 #include "windows.h"
 #endif
 
@@ -295,8 +295,20 @@ PR_PUBLIC_API(PRInt32) ZIP_FindFree( void* hFind )
   return find->GetArchive()->FindFree( find );
 }
 
-#endif /* STANDALONE */
+#if defined XP_WIN
+void ProcessWindowsMessages()
+{
+  MSG msg;
 
+  while(PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
+  {
+    TranslateMessage(&msg);
+    DispatchMessage(&msg);
+  }
+#endif /* XP_WIN */
+}
+
+#endif /* STANDALONE */
 
 
 
@@ -374,6 +386,10 @@ PRInt32 nsZipArchive::Test(const char *aEntryName)
       // check if crc check failed
       if (rv != ZIP_OK)
         break;
+
+#if defined STANDALONE && defined XP_WIN
+      ProcessWindowsMessages();
+#endif
     }
   
     FindFree(iterator);
@@ -777,6 +793,11 @@ PRInt32 nsZipArchive::BuildFileList()
       break;
     }
 
+    if(pos <= 0)
+      //-- We're at the beginning of the file, and still no sign
+      //-- of the end signiture.  File must be corrupted!
+      status = ZIP_ERR_CORRUPT;
+
     //-- backward read must overlap ZipEnd length
     pos += sizeof(ZipEnd);
 
@@ -1077,10 +1098,6 @@ PRInt32 nsZipArchive::InflateItem( const nsZipItem* aItem, PRFileDesc* fOut,
   PRBool      bToFile;
   Bytef*      old_next_out;
 
-#if defined STANDALONE && defined WIN32
-  MSG msg;
-#endif /* STANDALONE */
-
   // -- if aOutname is null, we'll be writing to a buffer instead of a file
   if (fOut != 0)
   {
@@ -1188,13 +1205,9 @@ PRInt32 nsZipArchive::InflateItem( const nsZipItem* aItem, PRFileDesc* fOut,
     else
       zerr = Z_STREAM_END;
 
-#if defined STANDALONE && defined WIN32
-    while(PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
-    {
-      TranslateMessage(&msg);
-      DispatchMessage(&msg);
-    }
-#endif /* STANDALONE */
+#if defined STANDALONE && defined XP_WIN
+    ProcessWindowsMessages();
+#endif
   } // while
 
   //-- verify crc32
