@@ -147,6 +147,7 @@ private:
     nsresult ParseVMSLine(char *aLine, indexEntry *aEntry);
 
     void     InitPRExplodedTime(PRExplodedTime& aTime);
+    char*    DigestBufferLines(char *aBuffer, nsCAutoString &aString);
 
     // member data
     FTP_Server_Type     mServerType;        // what kind of server is the data coming from?

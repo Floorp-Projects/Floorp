@@ -24,11 +24,11 @@
 #include "nsIAllocator.h"
 #include "plstr.h"
 #include "prlog.h"
-#include "nsIStringStream.h"
 #include "nsIHTTPChannel.h"
 #include "nsIAtom.h"
 #include "nsIServiceManager.h"
 #include "nsIGenericFactory.h"
+#include "nsXPIDLString.h"
 #include "nsCOMPtr.h"
 #include "nsEscape.h"
 #include "nsIIOService.h"
@@ -36,6 +36,7 @@
 #include "nsILocaleService.h"
 #include "nsIComponentManager.h"
 #include "nsDateTimeFormatCID.h"
+#include "nsIStreamListener.h"
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID);
@@ -62,14 +63,121 @@ NS_IMPL_ISUPPORTS2(nsFTPDirListingConv, nsIStreamConverter, nsIStreamListener);
 
 // nsIStreamConverter implementation
 
-// No syncronous conversion at this time.
+#define CONV_BUF_SIZE (4*1024)
 NS_IMETHODIMP
 nsFTPDirListingConv::Convert(nsIInputStream *aFromStream,
                              const PRUnichar *aFromType,
                              const PRUnichar *aToType,
                              nsISupports *aCtxt, nsIInputStream **_retval) {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv;
+
+    // set our internal state to reflect the server type
+    nsCString fromMIMEString(aFromType);
+    const char *from = fromMIMEString.GetBuffer();
+    NS_ASSERTION(from, "nsCString/PRUnichar acceptance failed.");
+
+    from = PL_strstr(from, "/ftp-dir-");
+    if (!from) return NS_ERROR_FAILURE;
+    from += 9;
+    fromMIMEString = from;
+
+    if (-1 != fromMIMEString.Find("unix")) {
+        mServerType = UNIX;
+    } else if (-1 != fromMIMEString.Find("nt")) {
+        mServerType = NT;
+    } else if (-1 != fromMIMEString.Find("dcts")) {
+        mServerType = DCTS;
+    } else if (-1 != fromMIMEString.Find("ncsa")) {
+        mServerType = NCSA;
+    } else if (-1 != fromMIMEString.Find("peter_lewis")) {
+        mServerType = PETER_LEWIS;
+    } else if (-1 != fromMIMEString.Find("machten")) {
+        mServerType = MACHTEN;
+    } else if (-1 != fromMIMEString.Find("cms")) {
+        mServerType = CMS;
+    } else if (-1 != fromMIMEString.Find("tcpc")) {
+        mServerType = TCPC;
+    } else if (-1 != fromMIMEString.Find("vms")) {
+        mServerType = VMS;
+    } else {
+        mServerType = GENERIC;
+    }
+
+    char buffer[CONV_BUF_SIZE];
+    int i = 0;
+    while (i < CONV_BUF_SIZE) {
+        buffer[i] = '\0';
+        i++;
+    }
+    CBufDescriptor desc(buffer, PR_TRUE, CONV_BUF_SIZE);
+    nsCAutoString aBuffer(desc);
+    nsCAutoString convertedData;
+
+    NS_ASSERTION(aCtxt, "FTP dir conversion needs the context");
+    // build up the 300: line
+    nsXPIDLCString spec;
+    nsCOMPtr<nsIURI> uri(do_QueryInterface(aCtxt, &rv));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = uri->GetSpec(getter_Copies(spec));
+    if (NS_FAILED(rv)) return rv;
+
+    convertedData.Append("300: ");
+    convertedData.Append(spec);
+    convertedData.Append('\n');
+    // END 300:
+
+    // build up the column heading; 200:
+    convertedData.Append("200: filename content-length last-modified file-type\n");
+    // END 200:
+
+
+    // build up the body
+    while (1) {
+        PRUint32 amtRead = 0;
+
+        rv = aFromStream->Read(buffer+aBuffer.Length(),
+                               CONV_BUF_SIZE-aBuffer.Length(), &amtRead);
+        if (NS_FAILED(rv)) return rv;
+
+        if (!amtRead) {
+            // EOF
+            break;
+        }
+
+        aBuffer = DigestBufferLines(buffer, convertedData);
+    }
+    // end body building
+
+#ifndef DEBUG_valeski
+    PR_LOG(gFTPDirListConvLog, PR_LOG_DEBUG, ("::OnData() sending the following %d bytes...\n\n%s\n\n", 
+        convertedData.Length(), convertedData.GetBuffer()) );
+#else
+    char *unescData = convertedData.ToNewCString();
+    nsUnescape(unescData);
+    printf("::OnData() sending the following %d bytes...\n\n%s\n\n", convertedData.Length(), unescData);
+    nsAllocator::Free(unescData);
+#endif // DEBUG_valeski
+
+    // send the converted data out.
+    nsCOMPtr<nsIInputStream> inputData;
+    nsCOMPtr<nsISupports>    inputDataSup;
+
+    rv = NS_NewStringInputStream(getter_AddRefs(inputDataSup), convertedData);
+    if (NS_FAILED(rv)) return rv;
+
+    inputData = do_QueryInterface(inputDataSup, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    *_retval = inputData.get();
+    NS_ADDREF(*_retval);
+
+    return NS_OK;
+
 }
+
+
+
 
 // Stream converter service calls this to initialize the actual stream converter (us).
 NS_IMETHODIMP
@@ -80,7 +188,6 @@ nsFTPDirListingConv::AsyncConvertData(const PRUnichar *aFromType, const PRUnicha
 
     // hook up our final listener. this guy gets the various On*() calls we want to throw
     // at him.
-    //
     mFinalListener = aListener;
     NS_ADDREF(mFinalListener);
 
@@ -151,7 +258,7 @@ nsFTPDirListingConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
     NS_ASSERTION(channel, "FTP dir listing stream converter needs a channel");
     nsresult rv;
     PRUint32 read, streamLen;
-    nsCString indexFormat;
+    nsCAutoString indexFormat;
     indexFormat.SetCapacity(72); // quick guess 
 
     rv = inStr->Available(&streamLen);
@@ -207,239 +314,7 @@ nsFTPDirListingConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
     }
 
     char *line = buffer;
-    char *eol;
-    PRBool cr = PR_FALSE;
-
-    // while we have new lines, parse 'em into application/http-index-format.
-    while ( line && (eol = PL_strchr(line, '\n')) ) {
-        // yank any carriage returns too.
-        if (eol > line && *(eol-1) == '\r') {
-            eol--;
-            *eol = '\0';
-            cr = PR_TRUE;
-        } else {
-            *eol = '\0';
-            cr = PR_FALSE;
-        }
-        indexEntry *thisEntry = nsnull;
-        NS_NEWXPCOM(thisEntry, indexEntry);
-        if (!thisEntry) return NS_ERROR_OUT_OF_MEMORY;
-
-        // XXX we need to handle comments in the raw stream.
-
-        // special case windows servers who masquerade as unix servers
-        if (NT == mServerType && !nsString::IsSpace(line[8]))
-            mServerType = UNIX;
-
-
-        char *escName = nsnull;
-        switch (mServerType) {
-
-        case UNIX:
-        case PETER_LEWIS:
-        case MACHTEN:
-        {
-            // don't bother w/ these lines.
-            if(!PL_strncmp(line, "total ", 6)  
-					|| (PL_strstr(line, "Permission denied") != NULL)
-                    || 	(PL_strstr(line, "not available") != NULL)) {
-                NS_DELETEXPCOM(thisEntry);
-                if (cr)
-                    line = eol+2;
-                else
-                    line = eol+1;
-                continue;
-            }
-
-            PRInt32 len = PL_strlen(line);
-
-            // check first character of ls -l output
-            // For example: "dr-x--x--x" is what we're starting with.
-            if (line[0] == 'D' || line[0] == 'd') {
-                /* it's a directory */
-                thisEntry->mType = Dir;
-                thisEntry->mSupressSize = PR_TRUE;
-            } else if (line[0] == 'l') {
-                thisEntry->mType = Link;
-                thisEntry->mSupressSize = PR_TRUE;
-
-                /* strip off " -> pathname" */
-                PRInt32 i;
-                for (i = len - 1; (i > 3) && (!nsString::IsSpace(line[i])
-                    || (line[i-1] != '>') 
-                    || (line[i-2] != '-')
-                    || (line[i-3] != ' ')); i--)
-                         ; /* null body */
-                if (i > 3) {
-                    line[i-3] = '\0';
-                    len = i - 3;
-                }
-            }
-
-            rv = ParseLSLine(line, thisEntry);
-            if ( NS_FAILED(rv) || (thisEntry->mName.Equals("..")) || (thisEntry->mName.Equals(".")) ) {
-                NS_DELETEXPCOM(thisEntry);
-                if (cr)
-                    line = eol+2;
-                else
-                    line = eol+1;
-                continue;
-            }
-
-			/* add a trailing slash to all directories */
-			if(thisEntry->mType == Dir)
-                thisEntry->mName.Append('/');
-
-            break; // END UNIX, PETER_LEWIS, MACHTEN
-        }
-
-        case NCSA:
-        case TCPC:
-        {
-            escName = nsEscape(line, url_Path);
-            thisEntry->mName = escName;
-            nsAllocator::Free(escName);
-
-            if (thisEntry->mName.Last() == '/')
-                thisEntry->mType = Dir;
-
-            break; // END NCSA, TCPC
-        }
-
-        case CMS:
-        {
-            escName = nsEscape(line, url_Path);
-            thisEntry->mName = escName;
-            nsAllocator::Free(escName);
-            break; // END CMS
-        }
-        case VMS:
-        {
-            /* Interpret and edit LIST output from VMS server */
-            /* and convert information lines to zero length.  */
-            rv = ParseVMSLine(line, thisEntry);
-            if (NS_FAILED(rv)) {
-                NS_DELETEXPCOM(thisEntry);
-                if (cr)
-                    line = eol+2;
-                else
-                    line = eol+1;
-                continue;
-            }
-
-            /** Trim off VMS directory extensions **/
-            //len = thisEntry->mName.Length();
-//            if ((len > 4) && !PL_strcmp(&entry_info->filename[len-4], ".dir"))
-//              {
-//                entry_info->filename[len-4] = '\0';
-//				entry_info->special_type = NET_DIRECTORY;
-//                remove_size=TRUE; /* size is not useful */
-//				/* add trailing slash to directories
-//				 */
-//				StrAllocCat(entry_info->filename, "/");
-//              }
-            break; // END VMS
-        }
-        case NT:
-        {
-			char *date, *size_s, *name;
-
-			if(PL_strlen(line) > 37) {
-				date = line;
-				line[17] = '\0';
-				size_s = &line[18];
-				line[38] = '\0';
-				name = &line[39];
-
-                if(PL_strstr(size_s, "<DIR>")) {
-                    thisEntry->mType = Dir;
-                } else {
-                    nsCAutoString size(size_s);
-                    size.StripWhitespace();
-                    thisEntry->mContentLen = atol(size.GetBuffer());
-                }
-
-                ConvertDOSDate(date, thisEntry->mMDTM);
-
-                escName = nsEscape(name, url_Path);
-                thisEntry->mName = escName;
-            } else {
-                escName = nsEscape(line, url_Path);
-                thisEntry->mName = escName;
-			}
-            nsAllocator::Free(escName);
-            break; // END NT
-        }
-        default:
-        {
-            escName = nsEscape(line, url_Path);
-            thisEntry->mName = escName;
-            nsAllocator::Free(escName);
-            break; // END default (catches GENERIC, DCTS)
-        }
-
-        } // end switch (mServerType)
-
-        // blast the index entry into the indexFormat buffer as a 201: line.
-        indexFormat.Append("201: ");
-        // FILENAME
-        indexFormat.Append(thisEntry->mName);
-        indexFormat.Append(' ');
-
-        // CONTENT LENGTH
-        if (!thisEntry->mSupressSize) {
-            indexFormat.Append(thisEntry->mContentLen);
-        } else {
-            indexFormat.Append('0');
-        }
-        indexFormat.Append(' ');
-
-
-        // CONTENT TYPE (not very useful for ftp listings)
-        // XXX this field is currently meaningless for FTP
-        //indexFormat.Append(thisEntry->mContentType);
-        //indexFormat.Append('\t');
-
-
-        // MODIFIED DATE
-        nsString lDate;
-        nsStr::Initialize(lDate, eOneByte);
-        rv = mDateTimeFormat->FormatPRTime(mLocale, kDateFormatShort, kTimeFormatNoSeconds, thisEntry->mMDTM, lDate);
-        if (NS_FAILED(rv)) {
-            NS_DELETEXPCOM(thisEntry);
-            return rv;
-        }
-
-        char *escapedDate = nsEscape(lDate.GetBuffer(), url_Path);
-
-        indexFormat.Append(escapedDate);
-        nsAllocator::Free(escapedDate);
-        indexFormat.Append(' ');
-
-
-        // ENTRY TYPE
-        switch (thisEntry->mType) {
-        case Dir:
-            indexFormat.Append("DIRECTORY");
-            break;
-        case Link:
-            indexFormat.Append("SYM-LINK");
-            break;
-        default:
-            indexFormat.Append("FILE");
-        }
-        indexFormat.Append(' ');
-
-        indexFormat.Append('\n'); // complete this line
-        // END 201:
-
-        NS_DELETEXPCOM(thisEntry);
-
-        if (cr)
-            line = eol+2;
-        else
-            line = eol+1;
-    } // end while(eol)
+    line = DigestBufferLines(line, indexFormat);
 
 #ifndef DEBUG_valeski
     PR_LOG(gFTPDirListConvLog, PR_LOG_DEBUG, ("::OnData() sending the following %d bytes...\n\n%s\n\n", 
@@ -1011,6 +886,247 @@ nsFTPDirListingConv::InitPRExplodedTime(PRExplodedTime& aTime) {
     // localize this sucker.
     PRTimeParameters params = PR_LocalTimeParameters(&aTime);
     aTime.tm_params = params;
+}
+
+char *
+nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCAutoString &aString) {
+    nsresult rv;
+    char *line = aBuffer;
+    char *eol;
+    PRBool cr = PR_FALSE;
+
+    // while we have new lines, parse 'em into application/http-index-format.
+    while ( line && (eol = PL_strchr(line, '\n')) ) {
+        // yank any carriage returns too.
+        if (eol > line && *(eol-1) == '\r') {
+            eol--;
+            *eol = '\0';
+            cr = PR_TRUE;
+        } else {
+            *eol = '\0';
+            cr = PR_FALSE;
+        }
+        indexEntry *thisEntry = nsnull;
+        NS_NEWXPCOM(thisEntry, indexEntry);
+        if (!thisEntry) return nsnull;
+
+        // XXX we need to handle comments in the raw stream.
+
+        // special case windows servers who masquerade as unix servers
+        if (NT == mServerType && !nsString::IsSpace(line[8]))
+            mServerType = UNIX;
+
+
+        char *escName = nsnull;
+        switch (mServerType) {
+
+        case UNIX:
+        case PETER_LEWIS:
+        case MACHTEN:
+        {
+            // don't bother w/ these lines.
+            if(!PL_strncmp(line, "total ", 6)  
+					|| (PL_strstr(line, "Permission denied") != NULL)
+                    || 	(PL_strstr(line, "not available") != NULL)) {
+                NS_DELETEXPCOM(thisEntry);
+                if (cr)
+                    line = eol+2;
+                else
+                    line = eol+1;
+                continue;
+            }
+
+            PRInt32 len = PL_strlen(line);
+
+            // check first character of ls -l output
+            // For example: "dr-x--x--x" is what we're starting with.
+            if (line[0] == 'D' || line[0] == 'd') {
+                /* it's a directory */
+                thisEntry->mType = Dir;
+                thisEntry->mSupressSize = PR_TRUE;
+            } else if (line[0] == 'l') {
+                thisEntry->mType = Link;
+                thisEntry->mSupressSize = PR_TRUE;
+
+                /* strip off " -> pathname" */
+                PRInt32 i;
+                for (i = len - 1; (i > 3) && (!nsString::IsSpace(line[i])
+                    || (line[i-1] != '>') 
+                    || (line[i-2] != '-')
+                    || (line[i-3] != ' ')); i--)
+                         ; /* null body */
+                if (i > 3) {
+                    line[i-3] = '\0';
+                    len = i - 3;
+                }
+            }
+
+            rv = ParseLSLine(line, thisEntry);
+            if ( NS_FAILED(rv) || (thisEntry->mName.Equals("..")) || (thisEntry->mName.Equals(".")) ) {
+                NS_DELETEXPCOM(thisEntry);
+                if (cr)
+                    line = eol+2;
+                else
+                    line = eol+1;
+                continue;
+            }
+
+			/* add a trailing slash to all directories */
+			if(thisEntry->mType == Dir)
+                thisEntry->mName.Append('/');
+
+            break; // END UNIX, PETER_LEWIS, MACHTEN
+        }
+
+        case NCSA:
+        case TCPC:
+        {
+            escName = nsEscape(line, url_Path);
+            thisEntry->mName = escName;
+            nsAllocator::Free(escName);
+
+            if (thisEntry->mName.Last() == '/')
+                thisEntry->mType = Dir;
+
+            break; // END NCSA, TCPC
+        }
+
+        case CMS:
+        {
+            escName = nsEscape(line, url_Path);
+            thisEntry->mName = escName;
+            nsAllocator::Free(escName);
+            break; // END CMS
+        }
+        case VMS:
+        {
+            /* Interpret and edit LIST output from VMS server */
+            /* and convert information lines to zero length.  */
+            rv = ParseVMSLine(line, thisEntry);
+            if (NS_FAILED(rv)) {
+                NS_DELETEXPCOM(thisEntry);
+                if (cr)
+                    line = eol+2;
+                else
+                    line = eol+1;
+                continue;
+            }
+
+            /** Trim off VMS directory extensions **/
+            //len = thisEntry->mName.Length();
+//            if ((len > 4) && !PL_strcmp(&entry_info->filename[len-4], ".dir"))
+//              {
+//                entry_info->filename[len-4] = '\0';
+//				entry_info->special_type = NET_DIRECTORY;
+//                remove_size=TRUE; /* size is not useful */
+//				/* add trailing slash to directories
+//				 */
+//				StrAllocCat(entry_info->filename, "/");
+//              }
+            break; // END VMS
+        }
+        case NT:
+        {
+			char *date, *size_s, *name;
+
+			if(PL_strlen(line) > 37) {
+				date = line;
+				line[17] = '\0';
+				size_s = &line[18];
+				line[38] = '\0';
+				name = &line[39];
+
+                if(PL_strstr(size_s, "<DIR>")) {
+                    thisEntry->mType = Dir;
+                } else {
+                    nsCAutoString size(size_s);
+                    size.StripWhitespace();
+                    thisEntry->mContentLen = atol(size.GetBuffer());
+                }
+
+                ConvertDOSDate(date, thisEntry->mMDTM);
+
+                escName = nsEscape(name, url_Path);
+                thisEntry->mName = escName;
+            } else {
+                escName = nsEscape(line, url_Path);
+                thisEntry->mName = escName;
+			}
+            nsAllocator::Free(escName);
+            break; // END NT
+        }
+        default:
+        {
+            escName = nsEscape(line, url_Path);
+            thisEntry->mName = escName;
+            nsAllocator::Free(escName);
+            break; // END default (catches GENERIC, DCTS)
+        }
+
+        } // end switch (mServerType)
+
+        // blast the index entry into the indexFormat buffer as a 201: line.
+        aString.Append("201: ");
+        // FILENAME
+        aString.Append(thisEntry->mName);
+        aString.Append(' ');
+
+        // CONTENT LENGTH
+        if (!thisEntry->mSupressSize) {
+            aString.Append(thisEntry->mContentLen);
+        } else {
+            aString.Append('0');
+        }
+        aString.Append(' ');
+
+
+        // CONTENT TYPE (not very useful for ftp listings)
+        // XXX this field is currently meaningless for FTP
+        //indexFormat.Append(thisEntry->mContentType);
+        //indexFormat.Append('\t');
+
+
+        // MODIFIED DATE
+        nsString lDate;
+        nsStr::Initialize(lDate, eOneByte);
+        rv = mDateTimeFormat->FormatPRTime(mLocale, kDateFormatShort, kTimeFormatNoSeconds, thisEntry->mMDTM, lDate);
+        if (NS_FAILED(rv)) {
+            NS_DELETEXPCOM(thisEntry);
+            return nsnull;
+        }
+
+        char *escapedDate = nsEscape(lDate.GetBuffer(), url_Path);
+
+        aString.Append(escapedDate);
+        nsAllocator::Free(escapedDate);
+        aString.Append(' ');
+
+
+        // ENTRY TYPE
+        switch (thisEntry->mType) {
+        case Dir:
+            aString.Append("DIRECTORY");
+            break;
+        case Link:
+            aString.Append("SYM-LINK");
+            break;
+        default:
+            aString.Append("FILE");
+        }
+        aString.Append(' ');
+
+        aString.Append('\n'); // complete this line
+        // END 201:
+
+        NS_DELETEXPCOM(thisEntry);
+
+        if (cr)
+            line = eol+2;
+        else
+            line = eol+1;
+    } // end while(eol)
+
+    return line;
 }
 
 nsresult
