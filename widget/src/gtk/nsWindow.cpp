@@ -1847,7 +1847,7 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
                            GDK_LEAVE_NOTIFY_MASK |
                            GDK_STRUCTURE_MASK | 
                            GDK_FOCUS_CHANGE_MASK );
-    gdk_window_set_events(mShell->window, 
+    gdk_window_set_events(mMozArea->window, 
                           mask);
     gtk_signal_connect(GTK_OBJECT(mMozArea),
                        "key_press_event",
