@@ -213,9 +213,9 @@ void nsFontMetricsMac::RealizeFont()
 			theScriptCode = unicodeMappingUtil->MapLangGroupToScriptCode (theCString);
 		else
 		{
-			NS_ConvertUCS2toUTF8	theUnicodeString (theLangGroupString.GetUnicode ());
+			NS_ConvertUCS2toUTF8 theUnicodeString(theLangGroupString);
 
-			theScriptCode = unicodeMappingUtil->MapLangGroupToScriptCode (theUnicodeString);
+			theScriptCode = unicodeMappingUtil->MapLangGroupToScriptCode(theUnicodeString.get());
 		}
 
 	}
