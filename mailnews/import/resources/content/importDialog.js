@@ -62,6 +62,12 @@ function OnLoadImportDialog()
   }
 
   SetUpImportType();
+
+  // on startup, set the focus to the control element
+  // for accessibility reasons.
+  // if we used the wizardOverlay, we would get this for free.
+  // see bug #101874
+  document.getElementById("importFields").focus();
 }
 
 
