@@ -582,7 +582,6 @@ LRESULT CMozillaBrowser::OnSaveAs(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL
 
     char szFile[_MAX_PATH];
     char szFileTitle[256];
-    BSTR pageName = NULL;
 
     //TODO:    The IE control allows you to also save as "Web Page, complete"
     //      where all of the page's images are saved in the same directory.
@@ -610,14 +609,17 @@ LRESULT CMozillaBrowser::OnSaveAs(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL
     SaveFileName.lpfnHook = NULL; 
     SaveFileName.lpTemplateName = NULL; 
 
-
     //Get the title of the current web page to set as the default filename.
-    USES_CONVERSION;
-    char szTmp[256]; // XXX hardcoded URLs array lengths are BAD
-    memset(szTmp, 0, sizeof(szTmp));
-
-    get_LocationName(&pageName);
-    strcpy(szTmp, OLE2A(pageName));
+    char szTmp[_MAX_FNAME] = "untitled";
+    BSTR pageName = NULL;
+    get_LocationName(&pageName); // Page title
+    if (pageName)
+    {
+        USES_CONVERSION;
+        strncpy(szTmp, OLE2A(pageName), sizeof(szTmp) - 1);
+        SysFreeString(pageName);
+        szTmp[sizeof(szTmp) - 1] = '\0';
+    }
     
     // The SaveAs dialog will fail if szFile contains any "bad" characters.
     // This hunk of code attempts to mimick the IE way of replacing "bad"
