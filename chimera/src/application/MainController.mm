@@ -450,6 +450,12 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 }
 
 
+-(BOOL)isMainWindowABrowserWindow
+{
+  return [[[mApplication mainWindow] windowController] isMemberOfClass:[BrowserWindowController class]];
+}
+
+
 -(BOOL)validateMenuItem: (NSMenuItem*)aMenuItem
 {
   // disable items that aren't relevant if there's no main browser window open
@@ -458,7 +464,6 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
         /* ... many more items go here ... */
         action == @selector(printPage:) ||
         action == @selector(findInPage:) ||
-        action == @selector(findAgain:) ||
         action == @selector(doStop:) ||
         action == @selector(doReload:) ||
         action == @selector(biggerTextSize:) ||
@@ -467,15 +472,23 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
         action == @selector(goHome:) ||
         action == @selector(addBookmark:) ||			// doesn't work, not sure why
         action == @selector(savePage:)) {
-    if ([[[mApplication mainWindow] windowController] isMemberOfClass:[BrowserWindowController class]])
+    if ([self isMainWindowABrowserWindow])
       return YES;
     return NO;
   }
 
+  // check if someone has previously done a find before allowing findAgain to be enabled
+  if (action == @selector(findAgain:)) {
+    if ([self isMainWindowABrowserWindow])
+      return (mFindDialog != nil);
+    else
+      return NO;
+  }
+  
   // check what the state of the toolbar should be, but only if there is a browser
   // window open
   if (action == @selector(toggleBookmarksToolbar:)) {
-    if ([[[mApplication mainWindow] windowController] isMemberOfClass:[BrowserWindowController class]]) {
+    if ([self isMainWindowABrowserWindow]) {
       float height = [[[[mApplication mainWindow] windowController] bookmarksToolbar] frame].size.height;
       BOOL toolbarShowing = (height > 0);
       if (toolbarShowing)
@@ -498,7 +511,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
   }
 
   if ( action == @selector(goBack:) || action == @selector(goForward:) ) {
-    if ([[[mApplication mainWindow] windowController] isMemberOfClass:[BrowserWindowController class]]) {
+    if ([self isMainWindowABrowserWindow]) {
       if (action == @selector(goBack:))
         return [[[[[mApplication mainWindow] windowController] getBrowserWrapper] getBrowserView] canGoBack];
       if (action == @selector(goForward:))
