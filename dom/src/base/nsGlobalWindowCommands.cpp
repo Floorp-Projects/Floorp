@@ -293,10 +293,18 @@ nsSelectMoveScrollCommand::DoCommandBrowseWithCaretOn(const char *aCommandName,
     rv = aSelectionController->LineMove(PR_FALSE, PR_FALSE);
   else if (!nsCRT::strcmp(aCommandName, sScrollLineDownString))
     rv = aSelectionController->LineMove(PR_TRUE, PR_FALSE);
+  else if (!nsCRT::strcmp(aCommandName, sWordPreviousString))
+    rv = aSelectionController->WordMove(PR_FALSE, PR_FALSE);
+  else if (!nsCRT::strcmp(aCommandName, sWordNextString))
+    rv = aSelectionController->WordMove(PR_TRUE, PR_FALSE);
   else if (!nsCRT::strcmp(aCommandName, sScrollLeftString))
     rv = aSelectionController->CharacterMove(PR_FALSE, PR_FALSE);
   else if (!nsCRT::strcmp(aCommandName, sScrollRightString))
     rv = aSelectionController->CharacterMove(PR_TRUE, PR_FALSE);
+  else if (!nsCRT::strcmp(aCommandName, sBeginLineString))
+    rv = aSelectionController->IntraLineMove(PR_FALSE, PR_FALSE);
+  else if (!nsCRT::strcmp(aCommandName, sEndLineString))
+    rv = aSelectionController->IntraLineMove(PR_TRUE, PR_FALSE);
 
   if (NS_SUCCEEDED(rv) && aESM)
   {
@@ -338,6 +346,12 @@ nsSelectMoveScrollCommand::DoCommandBrowseWithCaretOff(const char *aCommandName,
     rv = aSelectionController->ScrollHorizontal(PR_TRUE);
   else if (!nsCRT::strcmp(aCommandName, sScrollRightString))
     rv = aSelectionController->ScrollHorizontal(PR_FALSE);
+  // cmd_beginLine/endLine with caret browsing off
+  // will act as cmd_scrollTop/Bottom
+  else if (!nsCRT::strcmp(aCommandName, sBeginLineString))
+    rv = aSelectionController->CompleteScroll(PR_FALSE);
+  else if (!nsCRT::strcmp(aCommandName, sEndLineString))
+    rv = aSelectionController->CompleteScroll(PR_TRUE);
 
   return rv;
 }
@@ -362,18 +376,10 @@ nsSelectCommand::DoSelectCommand(const char *aCommandName, nsIDOMWindow *aWindow
     rv = selCont->CharacterMove(PR_FALSE, PR_TRUE);
   else if (!nsCRT::strcmp(aCommandName, sSelectCharNextString))
     rv = selCont->CharacterMove(PR_TRUE, PR_TRUE);
-  else if (!nsCRT::strcmp(aCommandName, sWordPreviousString))
-    rv = selCont->WordMove(PR_FALSE, PR_FALSE);
-  else if (!nsCRT::strcmp(aCommandName, sWordNextString))
-    rv = selCont->WordMove(PR_TRUE, PR_FALSE);
   else if (!nsCRT::strcmp(aCommandName, sSelectWordPreviousString))
     rv = selCont->WordMove(PR_FALSE, PR_TRUE);
   else if (!nsCRT::strcmp(aCommandName, sSelectWordNextString))
     rv = selCont->WordMove(PR_TRUE, PR_TRUE);
-  else if (!nsCRT::strcmp(aCommandName, sBeginLineString))
-    rv = selCont->IntraLineMove(PR_FALSE, PR_FALSE);
-  else if (!nsCRT::strcmp(aCommandName, sEndLineString))
-    rv = selCont->IntraLineMove(PR_TRUE, PR_FALSE);
   else if (!nsCRT::strcmp(aCommandName, sSelectBeginLineString))
     rv = selCont->IntraLineMove(PR_FALSE, PR_TRUE);
   else if (!nsCRT::strcmp(aCommandName, sSelectEndLineString))
@@ -924,6 +930,10 @@ nsWindowCommandRegistration::RegisterWindowCommands(
   // this set of commands is affected by the 'browse with caret' setting
   NS_REGISTER_FIRST_COMMAND(nsSelectMoveScrollCommand, sScrollTopString);
   NS_REGISTER_NEXT_COMMAND(nsSelectMoveScrollCommand, sScrollBottomString);
+  NS_REGISTER_NEXT_COMMAND(nsSelectMoveScrollCommand, sWordPreviousString);
+  NS_REGISTER_NEXT_COMMAND(nsSelectMoveScrollCommand, sWordNextString);
+  NS_REGISTER_NEXT_COMMAND(nsSelectMoveScrollCommand, sBeginLineString);
+  NS_REGISTER_NEXT_COMMAND(nsSelectMoveScrollCommand, sEndLineString);
   NS_REGISTER_NEXT_COMMAND(nsSelectMoveScrollCommand, sMovePageUpString);
   NS_REGISTER_NEXT_COMMAND(nsSelectMoveScrollCommand, sMovePageDownString);
   NS_REGISTER_NEXT_COMMAND(nsSelectMoveScrollCommand, sScrollPageUpString);
@@ -935,12 +945,8 @@ nsWindowCommandRegistration::RegisterWindowCommands(
 
   NS_REGISTER_FIRST_COMMAND(nsSelectCommand, sSelectCharPreviousString);
   NS_REGISTER_NEXT_COMMAND(nsSelectCommand, sSelectCharNextString);
-  NS_REGISTER_NEXT_COMMAND(nsSelectCommand, sWordPreviousString);
-  NS_REGISTER_NEXT_COMMAND(nsSelectCommand, sWordNextString);
   NS_REGISTER_NEXT_COMMAND(nsSelectCommand, sSelectWordPreviousString);
   NS_REGISTER_NEXT_COMMAND(nsSelectCommand, sSelectWordNextString);
-  NS_REGISTER_NEXT_COMMAND(nsSelectCommand, sBeginLineString);
-  NS_REGISTER_NEXT_COMMAND(nsSelectCommand, sEndLineString);
   NS_REGISTER_NEXT_COMMAND(nsSelectCommand, sSelectBeginLineString);
   NS_REGISTER_NEXT_COMMAND(nsSelectCommand, sSelectEndLineString);
   NS_REGISTER_NEXT_COMMAND(nsSelectCommand, sSelectLinePreviousString);
