@@ -49,6 +49,7 @@ struct nsStyleSpacing;
 
 struct nsDebugTable
 {
+  static PRBool gRflTableOuter;
   static PRBool gRflTable;
   static PRBool gRflRowGrp;
   static PRBool gRflRow;

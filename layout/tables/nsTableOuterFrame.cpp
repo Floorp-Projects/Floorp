@@ -860,6 +860,7 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext&          aPresContext,
                                     const nsHTMLReflowState& aReflowState,
                                     nsReflowStatus&          aStatus)
 {
+  if (nsDebugTable::gRflTableOuter) nsTableFrame::DebugReflow("TO::Rfl en", this, &aReflowState, nsnull);
   nsresult rv = NS_OK;
 
   // Initialize out parameters
@@ -1004,6 +1005,7 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext&          aPresContext,
   aDesiredSize.ascent  = aDesiredSize.height;
   aDesiredSize.descent = 0;
 
+  if (nsDebugTable::gRflTableOuter) nsTableFrame::DebugReflow("TO::Rfl ex", this, nsnull, &aDesiredSize);
   return rv;
 }
 
