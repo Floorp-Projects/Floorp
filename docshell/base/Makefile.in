@@ -23,7 +23,12 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
+include $(DEPTH)/config/autoconf.mk
+
 MODULE		= docshell
+ifeq ($(OS_ARCH),WINNT)
+XPIDL_MODULE	= docshell_base
+endif
 LIBRARY_NAME	= basedocshell_s
 REQUIRES	= xpcom \
 		  string \
@@ -54,8 +59,6 @@ REQUIRES	= xpcom \
 		  find \
 		  nkcache \
 		  $(NULL)
-
-include $(DEPTH)/config/autoconf.mk
 
 XPIDLSRCS	= \
 		nsCDocShell.idl			\

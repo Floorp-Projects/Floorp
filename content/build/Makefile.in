@@ -31,7 +31,9 @@ BUILD_DATE = gbdate.h
 MODULE		= content
 LIBRARY_NAME	= gkcontent
 EXPORT_LIBRARY = 1
+ifneq ($(OS_ARCH),WINNT)
 SHORT_LIBNAME	= gkcontnt
+endif
 IS_COMPONENT	= 1
 MODULE_NAME	= nsContentModule
 EXTRA_DSO_LIBS	= gkgfx

@@ -32,6 +32,8 @@ USE_NON_MT_LIBS = 1
 
 CPPSRCS		= GetShortPathName.cpp
 
+NO_DIST_INSTALL	= 1
+
 include $(topsrcdir)/config/rules.mk
 
 #ifdef MOZ_TOOLS

@@ -32,8 +32,10 @@ EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsUConvModule
 
+ifneq ($(OS_ARCH),WINNT)
 # To avoid conflict with OS/2 system uconv.dll
 SHORT_LIBNAME  = mozuconv
+endif
 REQUIRES	= xpcom \
 		  string \
 		  intl \

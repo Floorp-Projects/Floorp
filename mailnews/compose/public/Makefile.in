@@ -27,6 +27,9 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= msgcompose
+ifeq ($(OS_ARCH),WINNT)
+XPIDL_MODULE	= msgcompo
+endif
 
 EXPORTS		= \
 		$(NULL)

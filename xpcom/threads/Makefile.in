@@ -27,7 +27,11 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpcom
+ifeq ($(OS_ARCH),WINNT)
+XPIDL_MODULE	= xpcom_thread
+else
 XPIDL_MODULE	= xpcom_threads
+endif
 LIBRARY_NAME	= xpcomthreads_s
 REQUIRES	= string \
 		  $(NULL)

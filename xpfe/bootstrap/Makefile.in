@@ -83,7 +83,11 @@ endif
 else
 EXTRA_DSO_LIBS = gkgfx mpfilelocprovider_s
 ifdef MOZ_OJI
+ifeq ($(OS_ARCH),WINNT)
+EXTRA_DSO_LIBS += jsj$(MOZ_BITS)$(VERSION_NUMBER)
+else
 EXTRA_DSO_LIBS += jsj
+endif
 endif
 endif
 
