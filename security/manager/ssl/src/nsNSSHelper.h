@@ -37,6 +37,7 @@
 #define NSS_HELPER_
 
 #include "nsIInterfaceRequestor.h"
+#include "pk11func.h"
 
 //
 // Implementation of an nsIInterfaceRequestor for use
@@ -72,6 +73,16 @@ pip_ucs2_ascii_conversion_fn(PRBool toUnicode,
                              unsigned int *outBufLen,
                              PRBool swapBytes);
 }
+
+//
+// A function that sets the password on an unitialized slot.
+//
+nsresult
+setPassword(PK11SlotInfo *slot, nsIInterfaceRequestor *ctx);
+
+#ifdef XP_MAC
+extern OSErr ConvertMacPathToUnixPath(const char *macPath, char **unixPath);
+#endif
 
 #endif
 
