@@ -110,11 +110,7 @@ void CNsIWebBrowser::WBSetContainerWindow(PRInt16 displayMode)
 {
 	// SetContainerWindow
 
-	rv = qaWebBrowser->SetContainerWindow(qaWebBrowserChrome);
-	if (!qaWebBrowserChrome) {
-		QAOutput("Didn't get web browser chrome object.", displayMode);
-		return;
-	}
+	rv = qaWebBrowser->SetContainerWindow(NS_STATIC_CAST(nsIWebBrowserChrome*, qaBrowserImpl));
 	RvTestResult(rv, "nsIWebBrowser::SetContainerWindow() test", displayMode);
 	RvTestResultDlg(rv, "nsIWebBrowser::SetContainerWindow() test");
 }
@@ -140,11 +136,9 @@ void CNsIWebBrowser::WBSetURIContentListener(PRInt16 displayMode)
 {
 	// SetParentURIContentListener
 
-	rv = qaWebBrowser->SetParentURIContentListener(qaURIContentListener);
+	rv = qaWebBrowser->SetParentURIContentListener(NS_STATIC_CAST(nsIURIContentListener*, qaBrowserImpl));
 	RvTestResult(rv, "nsIWebBrowser::SetParentURIContentListener() test", displayMode);
 	RvTestResultDlg(rv, "nsIWebBrowser::SetParentURIContentListener() test");
-	if (!qaURIContentListener)
-		QAOutput("Didn't get uri content listener object.", displayMode);
 }
 
 void CNsIWebBrowser::WBGetDOMWindow(PRInt16 displayMode)
@@ -201,10 +195,10 @@ void CNsIWebBrowser::RunAllTests()
 {
 	WBAddListener(1);
 	WBRemoveListener(1);
-	WBGetContainerWindow(1);
 	WBSetContainerWindow(1);
-	WBGetURIContentListener(1);
+	WBGetContainerWindow(1);
 	WBSetURIContentListener(1);
+	WBGetURIContentListener(1);
 	WBGetDOMWindow(1);
 	WBSSetupProperty(1);
 }

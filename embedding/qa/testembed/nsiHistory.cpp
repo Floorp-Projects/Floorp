@@ -103,7 +103,7 @@ void CNsIHistory::OnStartTests(UINT nMenuID)
 
 	// get Session History through web nav iface
    if (qaWebNav) {
-	  rv = qaWebNav->GetSessionHistory( getter_AddRefs(theSessionHistory));
+	  rv = qaWebNav->GetSessionHistory(getter_AddRefs(theSessionHistory));
 	  RvTestResult(rv, "GetSessionHistory() object", 1);
 	  RvTestResultDlg(rv, "GetSessionHistory() object", true);
    }
