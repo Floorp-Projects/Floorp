@@ -56,7 +56,9 @@ nsBrowserContentListener.prototype =
           if (webBrowserChrome)
           {
             var chromeFlags = webBrowserChrome.chromeFlags;
-            if (chromeFlags == nsIWebBrowserChrome.CHROME_ALL || chromeFlags == nsIWebBrowserChrome.CHROME_DEFAULT)
+            var res = chromeFlags & nsIWebBrowserChrome.CHROME_ALL;
+            var res2 = chromeFlags & nsIWebBrowserChrome.CHROME_DEFAULT;
+            if ( res == nsIWebBrowserChrome.CHROME_ALL || res2 == nsIWebBrowserChrome.CHROME_DEFAULT)
             {             
               registerWindow = true;
             }
