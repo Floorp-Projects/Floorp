@@ -3483,7 +3483,6 @@ PRInt32 nsNNTPProtocol::Cancel()
                                             nsnull,
                                             nsIMsgRFC822Parser::IID(),
                                             (void **)&parser);
-    rv = NS_NewRFC822Parser(&parser);
     if (NS_SUCCEEDED(rv)) 
 	{
 		char *us, *them;
