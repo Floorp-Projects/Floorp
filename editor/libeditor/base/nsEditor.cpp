@@ -492,13 +492,12 @@ nsEditor::Do(nsITransaction *aTxn)
 
     if (mTxnMgr)
     {
-      nsITransaction *topTxn = 0;
-      result = mTxnMgr->PeekUndoStack(&topTxn);
+      nsCOMPtr<nsITransaction> topTxn;
+      result = mTxnMgr->PeekUndoStack(getter_AddRefs(topTxn));
       if (NS_FAILED(result)) return result;
       if (topTxn)
       {
-        plcTxn = nsnull;
-        topTxn->QueryInterface(NS_GET_IID(nsIAbsorbingTransaction), getter_AddRefs(plcTxn));
+        plcTxn = do_QueryInterface(topTxn);
         if (plcTxn)
         {
           // there is a palceholder transaction on top of the undo stack.  It is 
