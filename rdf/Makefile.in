@@ -29,8 +29,10 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= rdf
 DIRS		= base util datasource resources build
 
+ifdef MOZ_XUL
 ifndef MOZ_XUL_APP
 DIRS            += chrome
+endif
 endif
 
 ifdef ENABLE_TESTS
