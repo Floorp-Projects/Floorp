@@ -1687,6 +1687,7 @@ nsBrowserWindow::Close()
 //  NS_IF_RELEASE(mWindow);
   if (nsnull != mWindow) {
     nsIWidget* w = mWindow;
+    w->Destroy();
     NS_RELEASE(w);
   }
 
