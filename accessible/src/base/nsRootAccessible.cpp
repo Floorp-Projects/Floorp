@@ -201,6 +201,20 @@ NS_IMETHODIMP nsRootAccessible::GetAccRole(PRUint32 *aAccRole)
   */
 
   *aAccRole = ROLE_PANE;
+
+  // If it's a <dialog>, use ROLE_DIALOG instead
+  nsCOMPtr<nsIContent> rootContent;
+  mDocument->GetRootContent(getter_AddRefs(rootContent));
+  if (rootContent) {
+    nsCOMPtr<nsIDOMElement> rootElement(do_QueryInterface(rootContent));
+    if (rootElement) {
+      nsAutoString name;
+      rootElement->GetLocalName(name);
+      if (name.Equals(NS_LITERAL_STRING("dialog"))) 
+        *aAccRole = ROLE_DIALOG;
+    }
+  }
+
   return NS_OK;
 }
 
