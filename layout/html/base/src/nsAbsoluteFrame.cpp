@@ -64,15 +64,12 @@ AbsoluteFrame::~AbsoluteFrame()
 {
 }
 
-nsIView* AbsoluteFrame::CreateView(nsIFrame*     aContainingBlock,
+nsIView* AbsoluteFrame::CreateView(nsIView*      aContainingView,
                                    const nsRect& aRect,
                                    PRInt32       aZIndex)
 {
-  nsIView*  containingView;
   nsIView*  view;
 
-  // Create a view for the frame and position it
-  aContainingBlock->GetView(containingView);
   static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
   static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 
@@ -81,7 +78,7 @@ nsIView* AbsoluteFrame::CreateView(nsIFrame*     aContainingBlock,
                                                  kIViewIID, 
                                                  (void **)&view);
   if (NS_OK == result) {
-    nsIViewManager* viewManager = containingView->GetViewManager();
+    nsIViewManager* viewManager = aContainingView->GetViewManager();
 
     // Initialize the view
     NS_ASSERTION(nsnull != viewManager, "null view manager");
@@ -90,7 +87,7 @@ nsIView* AbsoluteFrame::CreateView(nsIFrame*     aContainingBlock,
     nsIScrollableView*  scrollView = nsnull;
     nsresult            result;
      
-    result = containingView->QueryInterface(kIScrollableViewIID, (void**)&scrollView);
+    result = aContainingView->QueryInterface(kIScrollableViewIID, (void**)&scrollView);
     if (NS_OK == result) {
       nsIView* scrolledView = scrollView->GetScrolledView();
 
@@ -99,85 +96,78 @@ nsIView* AbsoluteFrame::CreateView(nsIFrame*     aContainingBlock,
       NS_RELEASE(scrolledView);
       NS_RELEASE(scrollView);
     } else {
-      view->Init(viewManager, aRect, containingView, nsnull, nsnull, nsnull, aZIndex);
-      viewManager->InsertChild(containingView, view, 0);
+      view->Init(viewManager, aRect, aContainingView, nsnull, nsnull, nsnull, aZIndex);
+      viewManager->InsertChild(aContainingView, view, 0);
     }
   
     NS_RELEASE(viewManager);
   }
-  NS_RELEASE(containingView);
+
   return view;
 }
 
-void AbsoluteFrame::ComputeViewsRect(nsIFrame* aContainingBlock, nsRect& aRect)
+void AbsoluteFrame::ComputeViewBounds(const nsRect&    aContainingInnerRect,
+                                      nsStylePosition* aPosition,
+                                      nsRect&          aRect)
 {
-  // Get the bounding rect for the containing block's view. This is used
-  // when computing the size of our view
-  nsIView*  containingView;
-  nsRect    containingRect;
-
-  aContainingBlock->GetView(containingView);
-  NS_ASSERTION(nsnull != containingView, "no view");
-  containingView->GetBounds(containingRect);
-  NS_RELEASE(containingView);
-
-  // Compute the offset and size for the view based on the position properties
+  // Compute the offset and size of the view based on the position properties
+  // and the inner rect of the containing block
   nsStylePosition*  position = (nsStylePosition*)mStyleContext->GetData(kStylePositionSID);
 
+  // x-offset
   if (NS_STYLE_POSITION_VALUE_AUTO == position->mLeftOffsetFlags) {
-    // Left offset should be automatically computed
-    if (NS_STYLE_POSITION_VALUE_AUTO == position->mWidthFlags) {
-      // When both properties are 'auto' the width is the same as the width of
-      // the containing block
-      aRect.width = containingRect.width;
-      aRect.x = 0;
-    } else if (NS_STYLE_POSITION_VALUE_LENGTH == position->mWidthFlags) {
-      aRect.width = position->mWidth;
-      aRect.x = containingRect.width - aRect.width;
-    } else {
-      NS_ASSERTION(NS_STYLE_POSITION_VALUE_PCT == position->mWidthFlags, "unexpected width");
-      aRect.width = containingRect.width * position->mWidth / 100;
-      aRect.x = 0;
-    }
-  } else {
+    // XXX This isn't correct. We should use the current x-offset of our frame
+    // translated into the coordinate space of the containing block. But, we
+    // don't know it yet...
+    aRect.x = 0;
+  } else if (NS_STYLE_POSITION_VALUE_LENGTH == position->mLeftOffsetFlags) {
     aRect.x = position->mLeftOffset;
-
-    if (NS_STYLE_POSITION_VALUE_AUTO == position->mWidthFlags) {
-      aRect.width = containingRect.width - aRect.x;
-    } else if (NS_STYLE_POSITION_VALUE_LENGTH == position->mWidthFlags) {
-      aRect.width = position->mWidth;
-    } else {
-      NS_ASSERTION(NS_STYLE_POSITION_VALUE_PCT == position->mWidthFlags, "unexpected width");
-      aRect.width = containingRect.width * position->mWidth / 100;
-    }
+  } else {
+    NS_ASSERTION(NS_STYLE_POSITION_VALUE_PCT == position->mLeftOffsetFlags,
+                 "unexpected offset type");
+    // Percentage values refer to the width of the containing block
+    aRect.x = aContainingInnerRect.x + (aContainingInnerRect.width *
+              position->mLeftOffset / 100);
   }
 
+  // y-offset
   if (NS_STYLE_POSITION_VALUE_AUTO == position->mTopOffsetFlags) {
-    // Top offset should be automatically computed
-    if (NS_STYLE_POSITION_VALUE_AUTO == position->mHeightFlags) {
-      // When both properties are 'auto' the height is the same as the height of
-      // the containing block
-      aRect.height = containingRect.height;
-      aRect.y = 0;
-    } else if (NS_STYLE_POSITION_VALUE_LENGTH == position->mHeightFlags) {
-      aRect.height = position->mHeight;
-      aRect.y = containingRect.height - aRect.height;
-    } else {
-      NS_ASSERTION(NS_STYLE_POSITION_VALUE_PCT == position->mHeightFlags, "unexpected height");
-      aRect.height = containingRect.height * position->mHeight / 100;
-      aRect.y = 0;
-    }
-  } else {
+    // XXX This isn't correct. We should use the current y-offset of our frame
+    // translated into the coordinate space of the containing block. But, we
+    // don't know it yet...
+    aRect.y = 0;
+  } else if (NS_STYLE_POSITION_VALUE_LENGTH == position->mTopOffsetFlags) {
     aRect.y = position->mTopOffset;
+  } else {
+    NS_ASSERTION(NS_STYLE_POSITION_VALUE_PCT == position->mTopOffsetFlags,
+                 "unexpected offset type");
+    // Percentage values refer to the height of the containing block
+    aRect.y = aContainingInnerRect.y + (aContainingInnerRect.height *
+              position->mTopOffset / 100);
+  }
 
-    if (NS_STYLE_POSITION_VALUE_AUTO == position->mHeightFlags) {
-      aRect.height = containingRect.height - aRect.y;
-    } else if (NS_STYLE_POSITION_VALUE_LENGTH == position->mHeightFlags) {
-      aRect.height = position->mHeight;
-    } else {
-      NS_ASSERTION(NS_STYLE_POSITION_VALUE_PCT == position->mHeightFlags, "unexpected height");
-      aRect.height = containingRect.height * position->mHeight / 100;
-    }
+  // width
+  if (NS_STYLE_POSITION_VALUE_AUTO == position->mWidthFlags) {
+    // Use the right-edge of the containing block
+    aRect.width = aContainingInnerRect.width - aRect.x;
+  } else if (NS_STYLE_POSITION_VALUE_LENGTH == position->mWidthFlags) {
+    aRect.width = position->mWidth;
+  } else {
+    NS_ASSERTION(NS_STYLE_POSITION_VALUE_PCT == position->mWidthFlags,
+                 "unexpected width type");
+    aRect.width = aContainingInnerRect.width * position->mWidth / 100;
+  }
+
+  // height
+  if (NS_STYLE_POSITION_VALUE_AUTO == position->mHeightFlags) {
+    // Allow it to be as high as it wants
+    aRect.height = NS_UNCONSTRAINEDSIZE;
+  } else if (NS_STYLE_POSITION_VALUE_LENGTH == position->mHeightFlags) {
+    aRect.height = position->mHeight;
+  } else {
+    NS_ASSERTION(NS_STYLE_POSITION_VALUE_PCT == position->mHeightFlags,
+                 "unexpected height type");
+    aRect.height = aContainingInnerRect.height * position->mHeight / 100;
   }
 }
 
@@ -239,17 +229,30 @@ NS_METHOD AbsoluteFrame::ResizeReflow(nsIPresContext*  aPresContext,
       mFrame->SetStyleContext(mStyleContext);
     }
 
-    // Get the containing block
+    // Get the containing block, and its associated view
     nsIFrame* containingBlock = GetContainingBlock();
+    
+    // Get the inner rect of the containing block. Because of the way the frame
+    // sizing protocol works (it's top-down and the size of a container is set
+    // after reflowing its children), get the rect from the containing block's
+    // view
+    nsIView*  containingView;
+    nsRect    containingRect;
 
-    // Determine the view's rect
-    nsRect    rect;
+    // XXX We should be using the inner rect, and not just the bounding rect
+    containingBlock->GetView(containingView);
+    containingView->GetBounds(containingRect);
+    containingRect.x = containingRect.y = 0;
 
-    ComputeViewsRect(containingBlock, rect);
+    // Use the position properties to determine the offset and size
+    nsStylePosition*  position = (nsStylePosition*)mStyleContext->GetData(kStylePositionSID);
+    nsRect            rect;
+
+    ComputeViewBounds(containingRect, position, rect);
 
     // Create a view for the frame
-    nsStylePosition* position = (nsStylePosition*)mStyleContext->GetData(kStylePositionSID);
-    nsIView*         view = CreateView(containingBlock, rect, position->mZIndex);
+    nsIView*  view = CreateView(containingView, rect, position->mZIndex);
+    NS_RELEASE(containingView);
 
     mFrame->SetView(view);  
     NS_RELEASE(view);
@@ -257,7 +260,25 @@ NS_METHOD AbsoluteFrame::ResizeReflow(nsIPresContext*  aPresContext,
     // Resize reflow the absolutely positioned element
     nsSize  availSize(rect.width, rect.height);
 
+    if (NS_STYLE_OVERFLOW_VISIBLE == position->mOverflow) {
+      // Don't constrain the height since the container should be enlarged to
+      // contain overflowing frames
+      availSize.height = NS_UNCONSTRAINEDSIZE;
+    }
+
     mFrame->ResizeReflow(aPresContext, aDesiredSize, availSize, nsnull, aStatus);
+
+    // Figure out what size to actually use. If the position style is 'auto' or
+    // the container should be enlarged to contain overflowing frames then use
+    // the desired size
+    if ((NS_STYLE_POSITION_VALUE_AUTO == position->mWidthFlags) ||
+        ((aDesiredSize.width > availSize.width) &&
+         (NS_STYLE_OVERFLOW_VISIBLE) == position->mOverflow)) {
+      rect.width = aDesiredSize.width;
+    }
+    if (NS_STYLE_POSITION_VALUE_AUTO == position->mHeightFlags) {
+      rect.height = aDesiredSize.height;
+    }
     mFrame->SizeTo(rect.width, rect.height);
   }
 

@@ -62,9 +62,6 @@
 #define NS_STYLE_CLEAR_RIGHT                    0x2
 #define NS_STYLE_CLEAR_BOTH                     0x3
 
-// See nsStyleMolecule.clipFlags
-#define NS_STYLE_CLIP_AUTO                      0
-
 // See nsStyleMolecule.cursor
 #define NS_STYLE_CURSOR_INHERIT                 0
 #define NS_STYLE_CURSOR_DEFAULT                 1
@@ -112,7 +109,7 @@
 #define NS_STYLE_FONT_SIZE_LARGER               7
 #define NS_STYLE_FONT_SIZE_SMALLER              8
 
-// See nsStylePosition
+// See nsStylePosition.mPosition
 #define NS_STYLE_POSITION_STATIC                0
 #define NS_STYLE_POSITION_RELATIVE              1
 #define NS_STYLE_POSITION_ABSOLUTE              2
@@ -122,6 +119,16 @@
 #define NS_STYLE_POSITION_VALUE_PCT             1
 #define NS_STYLE_POSITION_VALUE_AUTO            2
 #define NS_STYLE_POSITION_VALUE_INHERIT         3
+
+// See nsStylePosition.mClip
+#define NS_STYLE_CLIP_AUTO                      0
+#define NS_STYLE_CLIP_RECT                      1
+
+// See nsStylePosition.mOverflow
+#define NS_STYLE_OVERFLOW_VISIBLE               0
+#define NS_STYLE_OVERFLOW_HIDDEN                1
+#define NS_STYLE_OVERFLOW_SCROLL                2
+#define NS_STYLE_OVERFLOW_AUTO                  3
 
 #define NS_STYLE_HEIGHT_AUTO                    0
 
@@ -146,11 +153,6 @@
 #define NS_STYLE_LIST_STYLE_POSITION_OUTSIDE    1
 
 #define NS_STYLE_MARGIN_SIZE_AUTO               0
-
-#define NS_STYLE_OVERFLOW_VISIBLE               0
-#define NS_STYLE_OVERFLOW_HIDDEN                1
-#define NS_STYLE_OVERFLOW_SCROLL                2
-#define NS_STYLE_OVERFLOW_AUTO                  3
 
 #define NS_STYLE_SPACING_NORMAL                 0
 

@@ -668,6 +668,11 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
           position->mPosition = ourPosition->mPosition.GetIntValue();
         }
 
+        // overflow
+        if (ourPosition->mOverflow.GetUnit() == eCSSUnit_Enumerated) {
+          position->mOverflow = ourPosition->mOverflow.GetIntValue();
+        }
+
         // box offsets. note: default value is auto so we don't check for it here
         if (ourPosition->mLeft.IsLengthUnit()) {
           position->mLeftOffset = CalcLength(ourPosition->mLeft, font, aPresContext);

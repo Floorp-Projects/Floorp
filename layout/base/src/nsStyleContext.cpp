@@ -218,6 +218,7 @@ struct StylePositionImpl: public nsStylePosition {
   StylePositionImpl(void)
   {
     mPosition = NS_STYLE_POSITION_STATIC;
+    mOverflow = NS_STYLE_OVERFLOW_VISIBLE;
     mLeftOffsetFlags = NS_STYLE_POSITION_VALUE_AUTO;
     mLeftOffset = 0;
     mTopOffsetFlags = NS_STYLE_POSITION_VALUE_AUTO;
