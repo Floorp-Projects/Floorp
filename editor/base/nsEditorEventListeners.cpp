@@ -637,7 +637,7 @@ nsTextEditorDragListener::DragOver(nsIDOMEvent* aDragEvent)
   NS_WITH_SERVICE ( nsIDragService, dragService, "@mozilla.org/widget/dragservice;1", &rv );
   if ( NS_SUCCEEDED(rv) ) {
     nsCOMPtr<nsIDragSession> dragSession;
-    dragService->GetCurrentSession(getter_AddRefs(dragService)));
+    dragService->GetCurrentSession(getter_AddRefs(dragSession));
     if ( dragSession ) {
       PRUint32 flags;
       if (NS_SUCCEEDED(mEditor->GetFlags(&flags))) {
@@ -696,7 +696,7 @@ nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
     }
 
     nsCOMPtr<nsIDragSession> dragSession;
-    dragService->GetCurrentSession(getter_AddRefs(dragService)));
+    dragService->GetCurrentSession(getter_AddRefs(dragSession));
     if (dragSession)
     {
        PRBool flavorSupported = PR_FALSE;
