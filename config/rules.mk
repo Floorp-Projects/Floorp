@@ -502,6 +502,15 @@ endif # HAS_EXTRAEXPORTS
 endif # IS_COMPONENT
 endif # AIX
 
+#
+# Linux: add -Bsymbolic flag for components
+# 
+ifeq ($(OS_ARCH),Linux)
+ifdef IS_COMPONENT
+EXTRA_DSO_LDOPTS += -Wl,-Bsymbolic
+endif
+endif 
+
 ifeq ($(USE_TVFS),1)
 IFLAGS1 = -rb
 IFLAGS2 = -rb
