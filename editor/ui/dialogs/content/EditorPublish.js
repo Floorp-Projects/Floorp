@@ -25,7 +25,6 @@ var gSettingsPanel = 1;
 var gCurrentPanel = gPublishPanel;
 var gPublishSiteData;
 var gReturnData;
-var gPublishDataChanged = false;
 var gDefaultSiteIndex = -1;
 var gDefaultSiteName;
 var gPreviousDefaultSite;
@@ -45,7 +44,7 @@ function Startup()
     window.close();
     return;
   }
-  gReturnData = window.arguments[gUrlIndex];
+  gReturnData = window.arguments[1];
 
   gDialog.TabPanels           = document.getElementById("TabPanels");
   gDialog.PublishTab          = document.getElementById("PublishTab");
@@ -55,7 +54,9 @@ function Startup()
   gDialog.PageTitleInput      = document.getElementById("PageTitleInput");
   gDialog.FilenameInput       = document.getElementById("FilenameInput");
   gDialog.SiteList            = document.getElementById("SiteList");
-  gDialog.DirList             = document.getElementById("DirList");
+  gDialog.DocDirList          = document.getElementById("DocDirList");
+  gDialog.OtherDirCheckbox    = document.getElementById("OtherDirCheckbox");
+  gDialog.OtherDirList        = document.getElementById("OtherDirList");
 
   gDialog.MoreSection         = document.getElementById("MoreSection");
   gDialog.MoreFewerButton     = document.getElementById("MoreFewerButton");
@@ -66,7 +67,9 @@ function Startup()
   gDialog.SiteNameInput       = document.getElementById("SiteNameInput");
   gDialog.PublishUrlInput     = document.getElementById("PublishUrlInput");
   gDialog.BrowseUrlInput      = document.getElementById("BrowseUrlInput");
-  gDialog.UserNameInput       = document.getElementById("UserNameInput");
+  gDialog.UsernameInput       = document.getElementById("UsernameInput");
+  gDialog.PasswordInput       = document.getElementById("PasswordInput");
+  gDialog.SavePassword        = document.getElementById("SavePassword");
 
   gDialog.PublishButton       = document.documentElement.getButton("accept");
 
@@ -96,83 +99,61 @@ function Startup()
 
 function InitDialog()
 {
-  gPreviousTitle = editorShell.GetDocumentTitle();
-
-  var selectedSiteIndex = -1;
+  var siteIndex = -1;
   if (gPublishSiteData)
     FillSiteList();
 
-  var docUrl = editorShell.editorDocument.location.href;
+  var docUrl = GetDocumentUrl();
   var scheme = GetScheme(docUrl);
   var filename = "";
   if (scheme)
   {
     filename = GetFilename(docUrl);
 
-    if (scheme.toLowerCase() != "file:")
+    if (scheme != "file")
     {
       // Editing a remote URL.
       // Attempt to find doc URL in Site Data
       if (gPublishSiteData)
       {
-        // Remove filename from docUrl
-        var lastSlash = docUrl.lastIndexOf("\/");
-        var destinationDir = docUrl.slice(0, lastSlash);
-        selectedSiteIndex = FindDestinationUrlInPublishData(destinationDir);
+        var dirObj = {};
+        siteIndex = FindSiteIndexAndDocDir(gPublishSiteData, docUrl, dirObj);
+
+        // Select the site we found
+        gDialog.SiteList.selectedIndex = siteIndex;
+        var docDir = dirObj.value;
+
+        if (siteIndex != -1)
+        {
+          // Be sure directory found is part of that site's dir list
+          AppendDirToSelectedSite(docDir);
+
+          // Use the directory within site in the editable menulist
+          gPublishSiteData[siteIndex].docDir = docDir;
+
+          //XXX HOW DO WE DECIDE WHAT "OTHER" DIR TO USE?
+          //gPublishSiteData[siteIndex].otherDir = docDir;
+        }        
       }
     }
   }
 
   // We didn't find a site -- use default
-  if (selectedSiteIndex == -1)
+  if (siteIndex == -1)
     gDialog.SiteList.selectedIndex = gDefaultSiteIndex;
+
+  // Fill in  all the site data for currently-selected site
+  SelectSiteList();
+
+  try {
+    gPreviousTitle = editorShell.GetDocumentTitle();
+  } catch (e) {}
 
   gDialog.PageTitleInput.value = gPreviousTitle;
   gDialog.FilenameInput.value = filename;
-
-  // Settings panel widgets are filled in by InitSiteSettings() when we switch to that panel
-}
-
-function FindDestinationUrlInPublishData(url)
-{
-  if (!url)
-    return -1;
-  var siteIndex = -1;
-  var siteUrlLen = 0;
-  var urlLen = url.length;
-
-  if (gPublishSiteData)
-  {
-    for (var i = 0; i < gPublishSiteData.length; i++)
-    {
-      // Site url needs to be contained in document URL,
-      //  but that may also have a directory after the site base URL
-      //  So we must examine all records to find the site URL that best
-      //    matches the document URL
-      if (url.indexOf(gPublishSiteData[i][gUrlIndex]) == 0)
-      {
-        var len = gPublishSiteData[i][gUrlIndex].length;
-        if (len > siteUrlLen)
-        {
-          siteIndex = i;
-          siteUrlLen = len;
-          // We must be done if doc exactly matches the site URL
-          if (len = urlLen)
-            break;
-        }
-      }
-    }
-    if (siteIndex >= 0)
-    {
-      // Select the site we found
-      gDialog.SiteList.selectedIndex = siteIndex;
-      
-      // Set extra directory name from the end of url
-      if (urlLen > siteUrlLen)
-        gDialog.DirList.value = url.slice(siteUrlLen);
-    }
-  }
-  return siteIndex;
+  
+  //XXX TODO: How do we decide whether or not to save associated files?
+  gDialog.OtherDirCheckbox.checked = true;
 }
 
 function FillSiteList()
@@ -186,9 +167,9 @@ function FillSiteList()
 
   for (i = 0; i < count; i++)
   {
-    var name = gPublishSiteData[i][gNameIndex];
+    var name = gPublishSiteData[i].siteName;
     var menuitem = AppendStringToMenulist(gDialog.SiteList, name);
-    // Show checkmark in front of default site
+    // Highlight the default site
     if (name == gDefaultSiteName)
     {
       gDefaultSiteIndex = i;
@@ -203,39 +184,60 @@ function FillSiteList()
 
 function doEnabling()
 {
-
+  gDialog.OtherDirList.disabled = !gDialog.OtherDirCheckbox.checked;
 }
 
 function SelectSiteList()
 {
-dump(" *** SelectSiteList called\n");
-  // Fill the Directory list
-  if (!gPublishSiteData)
-    return;
-
   var selectedSiteIndex = gDialog.SiteList.selectedIndex;  
-  if (selectedSiteIndex == -1)
-    return;
 
-  var dirArray = gPublishSiteData[selectedSiteIndex][gDirListIndex];
-  for (var i = 0; i < dirArray.length; i++)
-    AppendStringToMenulist(gDialog.DirList, dirArray[i]);
+  var siteName = "";
+  var publishUrl = "";
+  var browseUrl = "";
+  var username = "";
+  var password = "";
+  var savePassword = false;
 
-  gDialog.DirList.value = gPublishSiteData[selectedSiteIndex][gDefaultDirIndex];
-}
+  ClearMenulist(gDialog.DocDirList);
+  ClearMenulist(gDialog.OtherDirList);
 
-function SetDefault()
-{
-  if (!gPublishSiteData)
-    return;
-
-  var index = gDialog.SiteList.selectedIndex;
-  if (index >= 0)
+  if (gPublishSiteData && selectedSiteIndex != -1)
   {
-    gDefaultSiteIndex = index;
-    gDefaultSiteName = gPublishSiteData[index][gNameIndex];
-    gSettingsChanged = false;
+    siteName = gPublishSiteData[selectedSiteIndex].siteName;
+    publishUrl = gPublishSiteData[selectedSiteIndex].publishUrl;
+    browseUrl = gPublishSiteData[selectedSiteIndex].browseUrl;
+    username = gPublishSiteData[selectedSiteIndex].username;
+    savePassword = gPublishSiteData[selectedSiteIndex].savePassword;
+    if (savePassword)
+      password = gPublishSiteData[selectedSiteIndex].password;
+
+    // Fill the directory menulists
+    if (gPublishSiteData[selectedSiteIndex].dirList.length)
+    {
+      for (var i = 0; i < gPublishSiteData[selectedSiteIndex].dirList.length; i++)
+      {
+        AppendStringToMenulist(gDialog.DocDirList, gPublishSiteData[selectedSiteIndex].dirList[i]);
+        AppendStringToMenulist(gDialog.OtherDirList, gPublishSiteData[selectedSiteIndex].dirList[i]);
+      }
+    }
+    gDialog.DocDirList.value = gPublishSiteData[selectedSiteIndex].docDir;
+    gDialog.OtherDirList.value = gPublishSiteData[selectedSiteIndex].otherDir;
+
+    gDialog.DocDirList.value = FormatDirForPublishing(gPublishSiteData[selectedSiteIndex].docDir);
+    gDialog.OtherDirList.value = FormatDirForPublishing(gPublishSiteData[selectedSiteIndex].otherDir);
   }
+  else
+  {
+    gDialog.DocDirList.value = "/";
+    gDialog.OtherDirList.value = "/";
+  }
+
+  gDialog.SiteNameInput.value    = siteName;
+  gDialog.PublishUrlInput.value  = publishUrl;
+  gDialog.BrowseUrlInput.value   = browseUrl;
+  gDialog.UsernameInput.value    = username;
+  gDialog.PasswordInput.value    = password;
+  gDialog.SavePassword.checked   = savePassword;
 }
 
 function onMoreFewerPublish()
@@ -268,9 +270,13 @@ function AddNewSite()
   //  to automatically switch to "Settings" panel
   //  to enter data for new site
   SwitchPanel(gSettingsPanel);
+  
+  gDialog.SiteList.selectedIndex = -1;
 
-  // Initialize Setting widgets to none of the selected sites
-  InitSiteSettings(-1);
+  SelectSiteList();
+  
+  gSettingsChanged = true;
+
   SetTextboxFocus(gDialog.SiteNameInput);
 }
 
@@ -279,7 +285,7 @@ function SelectPublishTab()
   if (gSettingsChanged)
   {
     gCurrentPanel = gPublishPanel;
-    if (!SaveSettingsData())
+    if (!ValidateSettings())
       return;
 
     gCurrentPanel = gSettingsPanel;
@@ -291,40 +297,8 @@ function SelectPublishTab()
 
 function SelectSettingsTab()
 {
-  // Initialize Setting widgets based on Selectd Site from Publish panel
-  var index = gDialog.SiteList.selectedIndex;
-  if (index >= 0)
-    InitSiteSettings(index);
-  
   SwitchPanel(gSettingsPanel);
   SetTextboxFocus(gDialog.SiteNameInput);
-}
-
-function InitSiteSettings(selectedSiteIndex)
-{
-  var siteName = "";
-  var publishUrl = "";
-  var browseUrl = "";
-  var username = "";
-  var password = "";
-  var savePassord = false;
-
-  if (gPublishSiteData && selectedSiteIndex >= 0)
-  {
-    siteName = gPublishSiteData[selectedSiteIndex][gNameIndex];
-    publishUrl = gPublishSiteData[selectedSiteIndex][gUrlIndex];
-    browseUrl = gPublishSiteData[selectedSiteIndex][gBrowseIndex];
-    username = gPublishSiteData[selectedSiteIndex][gUserNameIndex];
-    // TODO: HOW TO GET PASSWORD???
-  }
-
-  gDialog.SiteNameInput.value    = siteName;
-  gDialog.PublishUrlInput.value  = publishUrl;
-  gDialog.BrowseUrlInput.value   = browseUrl;
-  gDialog.UserNameInput.value    = username;
-  gDialog.SiteList.selectedIndex = selectedSiteIndex;
-
-  gSettingsChanged = false;
 }
 
 function SwitchPanel(panel)
@@ -366,193 +340,197 @@ function onInputSettings()
   gSettingsChanged = true;
 }
 
-function ShowErrorInPanel(panelId, errorMsgId, widgetWithError)
+function GetPublishUrlInput()
 {
-  SwitchPanel(panelId);
-  ShowInputErrorMessage(GetString(errorMsgId));
-  if (widgetWithError)
-    SetTextboxFocus(widgetWithError);
+  gDialog.PublishUrlInput.value = FormatUrlForPublishing(gDialog.PublishUrlInput.value);
+  return gDialog.PublishUrlInput.value;
 }
 
-function ValidatePublishData()
+function GetBrowseUrlInput()
 {
-  var selectedSiteIndex = gDialog.SiteList.selectedIndex;  
-  
+  gDialog.BrowseUrlInput.value = FormatUrlForPublishing(gDialog.BrowseUrlInput.value);
+  return gDialog.BrowseUrlInput.value;
+}
+
+function GetDocDirInput()
+{
+  gDialog.DocDirList.value = FormatDirForPublishing(gDialog.DocDirList.value);
+  return gDialog.DocDirList.value;
+}
+
+function GetOtherDirInput()
+{
+  gDialog.OtherDirList.value = FormatDirForPublishing(gDialog.OtherDirList.value);
+  return gDialog.OtherDirList.value;
+}
+
+function ChooseDir(menulist)
+{
+  //TODO: For FTP publish destinations, get file listing of just dirs 
+  //  and build a tree to let user select dir
+}
+
+function AppendDirToSelectedSite(dir)
+{
+  var selectedSiteIndex = gDialog.SiteList.selectedIndex;
   if (selectedSiteIndex == -1)
+    return;
+
+  var i;
+  var dirFound = false;
+  for (i = 0; i < gPublishSiteData[selectedSiteIndex].dirList.length; i++)
   {
-    if (gPublishSiteData)
-      selectedSiteIndex = gDefaultSiteIndex;
-    else
-    {
-      // No site selected!
-      ShowErrorInPanel(gPublishPanel, "MissingPublishSiteError", null);
-      AddNewSite();
-    }
+    dirFound = (dir == gPublishSiteData[selectedSiteIndex].dirList[i]);
+    if (dirFound)
+      break;
+  }
+  if (!dirFound)
+  {
+    // Append dir to end and sort
+    gPublishSiteData[selectedSiteIndex].dirList[i] = dir;
+    if (gPublishSiteData[selectedSiteIndex].dirList.length > 1)
+      gPublishSiteData[selectedSiteIndex].dirList.sort();
+  }
+}
+
+function ValidateSettings()
+{
+  var siteName = TrimString(gDialog.SiteNameInput.value);
+  if (!siteName)
+  {
+    ShowErrorInPanel(gSettingsPanel, "MissingSiteNameError", gDialog.SiteNameInput);
+    return false;
   }
 
-  var title = TrimString(gDialog.PageTitleInput.value);
+  var publishUrl = GetPublishUrlInput();
+  if (!publishUrl)
+  {
+    ShowErrorInPanel(gSettingsPanel, "MissingPublishUrlError", gDialog.PublishUrlInput);
+    return false;
+  }
+
+  //TODO: If publish scheme = "ftp" we should encourage user to supply the http BrowseUrl
+  var browseUrl = GetBrowseUrlInput();
+
+  //XXXX We don't get a prompt dialog if username is missing (bug ?????)
+  //     If not, we must force user to supply one here
+  var username = TrimString(gDialog.UsernameInput.value);
+  var savePassword = gDialog.SavePassword.checked;
+  var password = gDialog.PasswordInput.value;
+
+  // Update or add data for a site 
+  var siteIndex = gDialog.SiteList.selectedIndex;
+  var newSite = false;
+
+  if (siteIndex == -1)
+  {
+    // No site is selected, add a new site at the end
+    if (gPublishSiteData)
+    {
+      siteIndex = gPublishSiteData.length;
+    }
+    else
+    {
+      gPublishSiteData = new Array(1);
+      siteIndex = 0;
+      gDefaultSiteIndex = 0;
+      gDefaultSiteName = siteName;
+    }    
+    gPublishSiteData[siteIndex] = {};
+    gPublishSiteData[siteIndex].docDir = "/";
+    gPublishSiteData[siteIndex].otherDir = "/";
+    gPublishSiteData[siteIndex].dirList = ["/"];
+    newSite = true;
+  }
+  gPublishSiteData[siteIndex].siteName = siteName;
+  gPublishSiteData[siteIndex].publishUrl = publishUrl;
+  gPublishSiteData[siteIndex].browseUrl = browseUrl;
+  gPublishSiteData[siteIndex].username = username;
+  // Don't save password in data that will be saved in prefs
+  gPublishSiteData[siteIndex].password = savePassword ? password : "";
+  gPublishSiteData[siteIndex].savePassword = savePassword;
+
+  gDialog.SiteList.selectedIndex = siteIndex;
+  if (siteIndex == gDefaultSiteIndex)
+    gDefaultSiteName = siteName;
+
+  // Should never be empty, but be sure we have a default site
+  if (!gDefaultSiteName)
+  {
+    gDefaultSiteName = gPublishSiteData[0].siteName;
+    gDefaultSiteIndex = 0;
+  }
+
+  // Rebuild the site menulist if we added a new site
+  if (newSite)
+  {
+    FillSiteList();
+    gDialog.SiteList.selectedIndex = siteIndex;
+  }
+  
+  // Get the directory name in site to publish to
+  var docDir = GetDocDirInput();
+
+  // Because of the autoselect behavior in editable menulists,
+  //   selectedIndex = -1 means value in input field is not already in the list, 
+  //   so add it to the list of site directories
+  if (gDialog.DocDirList.selectedIndex == -1)
+    AppendDirToSelectedSite(docDir);
+
+  gPublishSiteData[siteIndex].docDir = docDir;
+
+  // And directory for images and other files
+  var otherDir = GetOtherDirInput();
+  if (gDialog.OtherDirList.selectedIndex == -1)
+    AppendDirToSelectedSite(otherDir);
+
+  gPublishSiteData[siteIndex].otherDir = otherDir;
+
+  // Fill return data object
+  gReturnData.siteName = siteName;
+  gReturnData.publishUrl = publishUrl;
+  gReturnData.browseUrl = browseUrl;
+  gReturnData.username = username;
+  // Note that we use the password for the next publish action 
+  // even if savePassword is false; but we won't save it in PasswordManager database
+  gReturnData.password = password;
+  gReturnData.savePassword = savePassword;
+  gReturnData.docDir = gPublishSiteData[siteIndex].docDir;
+
+  // If "Other dir" is not checked, return empty string to indicate "don't save associated files"
+  gReturnData.otherDir = gDialog.OtherDirCheckbox.checked ? gPublishSiteData[siteIndex].otherDir : "";
+
+  gReturnData.dirList = gPublishSiteData[siteIndex].dirList;
+  return true;
+}
+
+function ValidateData()
+{
+  if (!ValidateSettings())
+    return false;
+
+  var siteIndex = gDialog.SiteList.selectedIndex;
+  if (siteIndex == -1)
+    return false;
+
   var filename = TrimString(gDialog.FilenameInput.value);
   if (!filename)
   {
     ShowErrorInPanel(gPublishPanel, "MissingPublishFilename", gDialog.FilenameInput);
     return false;
   }
-  gReturnData.Filename = filename;
 
-  if (selectedSiteIndex >=0 )
-  {
-    // Get rest of the data from the Site database
-    gReturnData.DestinationDir = gPublishSiteData[selectedSiteIndex][gUrlIndex];
-    gReturnData.BrowseDir = gPublishSiteData[selectedSiteIndex][gBrowseIndex];
-    gReturnData.UserName = gPublishSiteData[selectedSiteIndex][gUserNameIndex];
-    // TODO: HOW TO GET PASSWORD?
-    gReturnData.Password = "";
-  }
-  else
-  {
-    gReturnData.DestinationDir = "";
-    gReturnData.BrowseDir = "";
-    gReturnData.UserName = "";
-    gReturnData.Password = "";
-  }
-  // TODO; RELATED DOCS (IMAGES)
+  gReturnData.filename = filename;
 
   return true;
 }
 
-function ValidateSettingsData()
+function ShowErrorInPanel(panelId, errorMsgId, widgetWithError)
 {
-  if (gSettingsChanged)
-    return SaveSettingsData();
-
-  return true;
-}
-
-
-function SaveSettingsData()
-{
-  // Validate and add new site
-  var newName = TrimString(gDialog.SiteNameInput.value);
-  if (!newName)
-  {
-    ShowErrorInPanel(gSettingsPanel, "MissingSiteNameError", gDialog.SiteNameInput);
-    return false;
-  }
-  var newUrl = TrimString(gDialog.PublishUrlInput.value);
-  if (!newUrl)
-  {
-    ShowErrorInPanel(gSettingsPanel, "MissingPublishUrlError", gDialog.PublishUrlInput);
-    return false;
-  }
-
-  var siteIndex = -1;
-  if (!gPublishSiteData)
-  {
-dump(" * Create new gPublishSiteData\n");
-    // Create the first site profile
-    gPublishSiteData = new Array(1);
-    siteIndex = 0;
-  }
-  else
-  {
-    // Update existing site profile
-    siteIndex = gDialog.SiteList.selectedIndex;
-dump(" * Updating site data for list index = "+siteIndex+"\n");
-    if (siteIndex == -1)
-    {
-      // No site is selected -- add new data at the end
-      siteIndex = gPublishSiteData.length;
-    }
-  }
-dump(" * SaveSettingsData: NEW DATA AT index="+siteIndex+", gPublishSiteData.length="+gPublishSiteData.length+"\n");
-
-  gPublishSiteData[siteIndex] = new Array(gSiteDataLength);
-  gPublishSiteData[siteIndex][gNameIndex] = newName;
-  gPublishSiteData[siteIndex][gUrlIndex] = newUrl;
-  gPublishSiteData[siteIndex][gBrowseIndex] = TrimString(gDialog.BrowseUrlInput.value);
-  gPublishSiteData[siteIndex][gUserNameIndex] = TrimString(gDialog.UserNameInput.value);
-
-  if (siteIndex == gDefaultSiteIndex)
-    gDefaultSiteName = newName;
-
-dump("  Default SiteName = "+gDefaultSiteName+", Index="+gDefaultSiteIndex+"\n");
-
-dump("New Site Array: data="+gPublishSiteData[siteIndex][gNameIndex]+","+gPublishSiteData[siteIndex][gUrlIndex]+","+gPublishSiteData[siteIndex][gBrowseIndex]+","+gPublishSiteData[siteIndex][gUserNameIndex]+"\n");
-
-  var publishSiteName = gPublishSiteData[siteIndex][gNameIndex];
-
-  var count = gPublishSiteData.length;
-  if (count > 1)
-  {
-    // XXX Ascii sort, not locale-aware
-    gPublishSiteData.sort();
-
-    // Find previously-selected item in sorted list
-    for (var i = 0; i < count; i++)
-    {
-  dump(" Name #"+i+" = "+gPublishSiteData[i][gNameIndex]+"\n");
-
-      if (gPublishSiteData[i][gNameIndex] == publishSiteName)
-      {
-        siteIndex = i;
-        break;
-      }
-    }
-  }
-
-  // When adding the very first site, assume that's the default
-  if (count == 1 && !gDefaultSiteName)
-  {
-    gDefaultSiteName = gPublishSiteData[0][gNameIndex];
-    gDefaultSiteIndex = 0;
-  }
-
-  FillSiteList();
-  gDialog.SiteList.selectedIndex = siteIndex;
-
-  // Get the directory name -- add to database if not already there
-  // Because of the autoselect behavior in editable menulists,
-  //   selectedIndex = -1 means value in input field is not already in the list
-  var dirIndex = gDialog.DirList.selectedIndex;
-  var dirName = TrimString(gDialog.DirList.value);
-  if (dirName && dirIndex == -1)
-  {
-    var dirListLen = gPublishSiteData[siteIndex][gDirListIndex].length;
-dump(" *** Current directory list length = "+dirListLen+"\n");
-    gPublishSiteData[siteIndex][gDirListIndex][dirListLen] = dirName;
-  }
-  gPublishSiteData[siteIndex][gDefaultDirIndex] = dirName;
-    
-
-  gSettingsChanged = false;
-
-  SavePublishSiteDataToPrefs(gPublishSiteData, gDefaultSiteName);
-
-  return true;
-}
-
-function ChooseDir()
-{
-}
-
-function ValidateData()
-{
-  var result = true;;
-  var savePanel = gCurrentPanel;
-
-  // Validate current panel first
-  if (gCurrentPanel == gPublishPanel)
-  {
-    result = ValidatePublishData();
-    if (result)
-      result = ValidateSettingsData();
-
-  } else {
-    result = ValidateSettingsData();
-    if (result)
-      result = ValidatePublishData();
-  }
-  return result;
+  SwitchPanel(panelId);
+  ShowInputErrorMessage(GetString(errorMsgId));
+  if (widgetWithError)
+    SetTextboxFocus(widgetWithError);
 }
 
 function doHelpButton()
@@ -564,11 +542,16 @@ function onAccept()
 {
   if (ValidateData())
   {
+    // We save new site data to prefs only if we are attempting to publish
+    if (gSettingsChanged)
+      SavePublishSiteDataToPrefs(gPublishSiteData, gDefaultSiteName);
+
     var title = TrimString(gDialog.PageTitleInput.value);
     if (title != gPreviousTitle)
       editorShell.SetDocumentTitle(title);
-    
+
     SaveWindowLocation();
+    window.opener.ok = true;
     return true;
   }
 

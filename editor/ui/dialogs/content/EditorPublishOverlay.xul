@@ -35,7 +35,7 @@
     <caption label="&serverInfo.label;"/>
     <hbox align="center">
       <label value="&siteName.label;"/>
-      <textbox id="SiteNameInput" class="MinWidth10em" oninput="onInputSettings();"/>
+      <textbox id="SiteNameInput" class="MinWidth20em" oninput="onInputSettings();"/>
     </hbox>
     <spacer class="spacer"/>
     <label value="&siteUrl.label;"/>
@@ -50,14 +50,14 @@
       <columns><column flex="1"/><column flex="3"/></columns>
       <rows>
         <row align="center">
-          <label value="&userName.label;"/>
-          <textbox id="UserNameInput" class="MinWidth10em" flex="1" oninput="onInputSettings();"/>
+          <label value="&username.label;"/>
+          <textbox id="UsernameInput" class="MinWidth10em" flex="1" oninput="onInputSettings();"/>
         </row>
         <row align="center">
           <label value="&password.label;"/>
           <hbox>
-            <textbox id="PasswordInput" type="password" class="MinWidth5em"/>
-            <checkbox id="SavePassword" label="&savePassword.label;"/>
+            <textbox id="PasswordInput" type="password" class="MinWidth5em" oninput="onInputSettings();"/>
+            <checkbox id="SavePassword" label="&savePassword.label;" oncommand="onInputSettings();"/>
           </hbox>
         </row>
       </rows>

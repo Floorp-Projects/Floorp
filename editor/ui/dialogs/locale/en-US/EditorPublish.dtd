@@ -22,7 +22,8 @@
 
 
 <!-- Window title -->
-<!ENTITY windowTitle.label    "Publish Page">
+<!ENTITY windowTitle.label         "Publish Page">
+<!ENTITY windowTitleSettings.label "Publish Settings">
 
 <!ENTITY publishTab.label         "Publish">
 <!ENTITY settingsTab.label        "Settings">
@@ -31,7 +32,8 @@
 <!ENTITY siteList.label           "Site Name:">
 <!ENTITY newSiteButton.label      "New Site">
 <!ENTITY siteDirList.label        "Select or type a directory name in your publishing site:">
-<!ENTITY siteDirector.label       "Directory for HTML file">
+<!ENTITY docDirList.label         "Directory for HTML page:">
+<!ENTITY otherDirList.label       "Save images and other files to this directory:">
 <!ENTITY chooseDirButton.label    "Choose...">
 <!ENTITY pageTitle.label          "Page Title:">
 <!ENTITY pageTitleExample.label   "e.g.: &quot;My Web Page&quot;">
@@ -49,6 +51,6 @@
 <!ENTITY siteName.label       "Site Name:">
 <!ENTITY siteUrl.label        "Publishing Location (provided by your ISP or Sys Admin.):">
 <!ENTITY browseUrl.label      "Home Page Location (if different from above):">
-<!ENTITY userName.label       "User Name:">
+<!ENTITY username.label       "Username:">
 <!ENTITY password.label       "Password:">
 <!ENTITY savePassword.label   "Save Password">

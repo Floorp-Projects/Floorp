@@ -41,14 +41,7 @@ var editorShell;
 var gDialog = {};
 
 // Bummer! Can't get at enums from nsIDocumentEncoder.h
-const gOutputSelectionOnly = 1;
-const gOutputFormatted     = 2;
-const gOutputBodyOnly      = 8;
-const gOutputPreformatted  = 16;
-const gOutputWrap          = 32;
-const gOutputFormatFlowed  = 64;
-const gOutputAbsoluteLinks = 128;
-const gOutputEncodeEntities = 256;
+// http://lxr.mozilla.org/seamonkey/source/content/base/public/nsIDocumentEncoder.h#111
 var gStringBundle;
 var gIOService;
 var gPrefsService;
@@ -190,7 +183,7 @@ function ConvertToCDATAString(string)
 
 function GetSelectionAsText()
 {
-  return editorShell.GetContentsAs("text/plain", gOutputSelectionOnly);
+  return editorShell.GetContentsAs("text/plain", 1); // OutputSelectionOnly
 }
 
 
@@ -442,7 +435,7 @@ function MakeRelativeUrl(url)
   // We only return "urlPath", so we can convert
   //  the entire docPath for case-insensitive comparisons
   var os = GetOS();
-  var doCaseInsensitive = (docScheme.toLowerCase() == "file" && os == gWin);
+  var doCaseInsensitive = (docScheme == "file" && os == gWin);
   if (doCaseInsensitive)
     docPath = docPath.toLowerCase();
 
@@ -582,10 +575,23 @@ function GetDocumentBaseUrl()
         docUrl = base.getAttribute("href");
     }
     if (!docUrl)
-      docUrl = editorShell.editorDocument.location.href;
+      docUrl = GetDocumentUrl();
 
     if (!IsUrlAboutBlank(docUrl))
       return docUrl;
+  }
+  return "";
+}
+
+function GetDocumentUrl()
+{
+  if (editorShell && editorShell.editorDocument)
+  {
+    try {
+      var aDOMHTMLDoc = editorShell.editorDocument.QueryInterface(Components.interfaces.nsIDOMHTMLDocument);
+      return aDOMHTMLDoc.URL;
+    }
+    catch (e) {}
   }
   return "";
 }
@@ -609,9 +615,9 @@ function GetScheme(url)
   try {
     // This fails if there's no scheme
     scheme = IOService.extractScheme(resultUrl, {schemeStartPos:0}, {schemeEndPos:0});
-   } catch (e) {}
+  } catch (e) {}
 
-  return scheme ? scheme : "";
+  return scheme ? scheme.toLowerCase() : "";
 }
 
 function GetHost(url)
@@ -653,6 +659,38 @@ function GetFilename(url)
   return filename ? filename : "";
 }
 
+// Return the url with username and password (preHost) removed
+function StripUsernamePassword(url)
+{
+  if (url)
+  {
+    try {
+      uri = Components.classes["@mozilla.org/network/standard-url;1"].createInstance(Components.interfaces.nsIURI);
+      uri.spec = url;
+      return StripUsernamePasswordFromURI(uri);
+    } catch (e) {}    
+  }
+  return url;
+}
+
+function StripUsernamePasswordFromURI(uri)
+{
+  var url = "";
+  if (uri)
+  {
+    try {
+      url = uri.spec;
+      var preHost = uri.preHost;
+      if (preHost)
+      {
+        start = url.indexOf(preHost);
+        url = url.slice(0, start) + url.slice(start+preHost.length+1);
+      }
+    } catch (e) {}    
+  }
+  return url;
+}
+
 function GetOS()
 {
   if (gOS)
@@ -692,6 +730,8 @@ function ConvertRGBColorIntoHEXColor(color)
   }
 }
 
+/************* CSS ***************/
+
 function GetHTMLOrCSSStyleValue(element, attrName, cssPropertyName)
 {
   var prefs = GetPrefs();
@@ -712,15 +752,4 @@ function GetHTMLOrCSSStyleValue(element, attrName, cssPropertyName)
     value = "";
   }
   return value;
-}
-
-function GetPromptService()
-{
-  var promptService = null;
-  try {
-    promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
-    promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);
-  }
-  catch (e) {}
-  return promptService;
 }

@@ -207,6 +207,9 @@ function DoEnabling()
     SetElementEnabledById("Replace", false);
     SetElementEnabledById("ReplaceAll", false);
     SetElementEnabledById("AddToDictionary", false);
+
+    // Signal to calling window that we're done
+    window.opener.spellCheckCompleted = true;
   } else {
     SetElementEnabledById("MisspelledWordLabel", true);
     SetElementEnabledById("ReplaceWordLabel", true);
@@ -220,6 +223,9 @@ function DoEnabling()
 
     gDialog.CloseButton.removeAttribute("default");
     SetReplaceEnable();
+
+    // Signal to calling window that we're not done
+    window.opener.spellCheckCompleted = false;
   }
 }
 

@@ -109,8 +109,7 @@ function Startup()
     gDialog.widthUnitsMenulist.selectedIndex == 0 &&
     gDialog.heightUnitsMenulist.selectedIndex == 0;
 
-  // XXX hack alert: defer SetTextboxFocus; see bug 103197
-  setTimeout(SetTextboxFocus, 0, gDialog.srcInput);
+  SetTextboxFocus(gDialog.srcInput);
 
   SetWindowLocation();
 }

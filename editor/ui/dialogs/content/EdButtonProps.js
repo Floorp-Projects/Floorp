@@ -154,7 +154,7 @@ function onAccept()
 
   if (insertNew && !InsertElementAroundSelection(buttonElement))
   {
-    buttonElement.innerHTML = editorShell.GetContentsAs("text/html", gOutputSelectionOnly);
+    buttonElement.innerHTML = editorShell.GetContentsAs("text/html", 1); // OutputSelectionOnly (see nsIDocumentEncoder.h)
     editorShell.InsertElementAtSelection(buttonElement, true);
   }
 

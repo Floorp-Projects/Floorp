@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  cmanske@netscape.com
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,15 +36,398 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// Number of items in each site profile array
-const gSiteDataLength = 4;
-// Index to each profile item:
-const gNameIndex = 0;
-const gUrlIndex = 1;
-const gBrowseIndex = 2;
-const gUserNameIndex = 3;
-const gDefaultDirIndex = 4;
-const gDirListIndex = 5;
+
+/****************** Get publishing data methods *******************/
+
+// Build an array of all publish site data obtained from prefs
+function GetPublishSiteData()
+{
+  var publishBranch = GetPublishPrefsBranch();
+  if (!publishBranch)
+    return null;
+
+  var siteCountObj = {value:0};
+  var siteNamePrefs;
+  try {
+    siteNamePrefs = publishBranch.getChildList("site_name.", siteCountObj);
+  } catch (e) {}
+
+  if (!siteNamePrefs || siteCountObj.value == 0)
+    return null;
+
+  // Array of all site data
+  var siteArray = [];
+  // Array of site names
+  var siteNameList = [];
+  var index = 0;
+  var i;
+  for (i = 0; i < siteCountObj.value; i++)
+  {
+    var siteName = GetPublishStringPref(publishBranch, siteNamePrefs[i]);
+    if (siteName)
+    {
+      siteNameList[index] = siteName;
+      index++;
+    }
+  }
+  var siteCount = siteNameList.length;
+  if (siteCount == 0)
+    return null;
+
+  // Build array for sites in alphabetical order (XXX Ascii sort, not locale-aware)
+  if (siteCount > 1)
+    siteNameList.sort();
+
+  // We  rewrite siteName prefs to eliminate names if data is bad
+  //  and to be sure order is the same as sorted name list
+  try {
+    publishBranch.deleteBranch("site_name.");
+  } catch (e) {}
+
+  // Get publish data using siteName as the key
+  index = 0;
+  for (i = 0; i < siteCount; i++)
+  {
+    // Associated data uses site name as key
+    var publishData = GetPublishData_internal(publishBranch, siteNameList[i]);
+    if (publishData)
+    {
+      siteArray[index] = publishData;
+      SetPublishStringPref(publishBranch, "site_name."+index, siteNameList[i]);
+      index++;
+    }
+    else
+    {
+      try {
+        // Remove bad site prefs now
+        publishBranch.deleteBranch("site_data." + siteNameList[i] + ".");
+      } catch (e) {}
+    }
+  }
+
+  SavePrefFile();
+
+  if (index == 0) // No Valid pref records found!
+    return null;
+
+
+  return siteArray;
+}
+
+function GetDefaultPublishSiteName()
+{
+  var publishBranch = GetPublishPrefsBranch();
+  var name = "";  
+  if (publishBranch)
+    name = GetPublishStringPref(publishBranch, "default_site");
+
+  return name;
+}
+
+// Return object with all info needed to publish
+//   from database of sites previously published to.
+function GetPublishDataFromUrl(docUrl)
+{
+  if (!docUrl || IsUrlAboutBlank(docUrl))
+    return null;
+
+  var pubSiteData = GetPublishSiteData();
+  if (!pubSiteData)
+    return null;
+
+  var dirObj = {};
+  var index = FindSiteIndexAndDocDir(pubSiteData, docUrl, dirObj);
+  var publishData;
+  if (index != -1)
+  {
+    publishData = pubSiteData[index];
+    publishData.docDir = FormatDirForPublishing(dirObj.value)
+
+    //XXX Problem: OtherDir: How do we decide when to use the dir in 
+    //    publishSiteData (default DocDir) or docDir from current filepath?
+    publishData.otherDir = FormatDirForPublishing(pubSiteData[index].otherDir);
+
+    publishData.filename = GetFilename(docUrl);
+    publishData.notInSiteData = false;
+    return publishData;
+  }
+
+  // Document wasn't found in publish site database
+  // Create data just from URL
+
+  // Strip off filename
+  var lastSlash = docUrl.lastIndexOf("\/");
+  var pubUrl = docUrl.slice(0, lastSlash);
+
+  publishData = { 
+    siteName : pubUrl,
+    filename : GetFilename(docUrl),
+    username : "",
+    password : "",
+    savePassword : false,
+    publishUrl : pubUrl,
+    browseUrl  : pubUrl,
+    docDir     : "/",
+    otherDir   : "/",
+    dirList    : ["/"],
+    notInSiteData : true
+  }
+
+  return publishData;
+}
+
+// Similar to above, but in param is a site profile name
+// Note that this is more efficient than getting from a URL,
+//   since we don't have to get all the sitedata but can key off of sitename.
+// But caller must supply the filename
+function GetPublishDataFromSiteName(siteName, filename)
+{
+  var publishBranch = GetPublishPrefsBranch();
+  if (!publishBranch)
+    return null;
+
+  var siteCount = {value:0};
+  var siteNamePrefs;
+  try {
+    siteNamePrefs = publishBranch.getChildList("site_name.", siteCount);
+  } catch (e) {}
+
+  if (!siteNamePrefs || siteCount.value == 0)
+    return null;
+
+  for (var i = 0; i < siteCount.value; i++)
+  {
+    var name = GetPublishStringPref(publishBranch, siteNamePrefs[i]);
+    if (name && name == siteName)
+    {
+      var publishData = GetPublishData_internal(publishBranch, siteName);
+      publishData.filename = filename;
+      return publishData;
+    }
+  }
+  return null;
+}
+
+function GetDefaultPublishData()
+{
+  var publishBranch = GetPublishPrefsBranch();
+  if (!publishBranch)
+    return null;
+
+  var siteName = GetPublishStringPref(publishBranch, "default_site");
+  if (!siteName)
+    return null;
+
+  return GetPublishData_internal(publishBranch, siteName);
+}
+
+function GetPublishData_internal(publishBranch, siteName)
+{
+  if (!publishBranch || !siteName)
+    return null;
+
+  var prefPrefix = "site_data." + siteName + ".";
+
+  // We must have a publish url, else we ignore this site
+  // (siteData and siteNames for sites with incomplete data 
+  //  will get deleted by SavePublishSiteDataToPrefs)
+  var publishUrl = GetPublishStringPref(publishBranch, prefPrefix+"url");
+  if (!publishUrl)
+    return null;
+
+  var savePassword = false;
+  try {
+    savePassword = publishBranch.getBoolPref(prefPrefix+"save_password");
+  } catch (e) {}
+
+  var publishData = { 
+    siteName : siteName,
+    filename : "",
+    username : GetPublishStringPref(publishBranch, prefPrefix+"username"),
+    savePassword : savePassword,
+    publishUrl : publishUrl,
+    browseUrl  : GetPublishStringPref(publishBranch, prefPrefix+"browse_url"),
+    docDir     : FormatDirForPublishing(GetPublishStringPref(publishBranch, prefPrefix+"doc_dir")),
+    otherDir   : FormatDirForPublishing(GetPublishStringPref(publishBranch, prefPrefix+"other_dir"))
+  }
+  // Get password from PasswordManager
+  publishData.password = GetPassword(publishData);
+
+  // Build history list of directories 
+  // Always supply the root dir 
+  publishData.dirList = ["/"];
+
+  // Get the rest from prefs
+  var dirCount = {value:0};
+  var dirPrefs;
+  try {
+    dirPrefs = publishBranch.getChildList(prefPrefix+"dir.", dirCount);
+  } catch (e) {}
+
+  if (dirPrefs && dirCount.value > 0)
+  {
+    if (dirCount.value > 1)
+      dirPrefs.sort();
+
+    for (var j = 0; j < dirCount.value; j++)
+    {
+      var dirName = GetPublishStringPref(publishBranch, dirPrefs[j]);
+      if (dirName)
+        publishData.dirList[j+1] = dirName;
+    }
+  }
+
+  return publishData;
+}
+
+/****************** Save publishing data methods *********************/
+
+// Save the siteArray containing all current publish site data
+function SavePublishSiteDataToPrefs(siteArray, defaultName)
+{
+  var publishBranch = GetPublishPrefsBranch();
+  if (!publishBranch)
+    return false;
+
+  try {
+    // Clear existing names and data -- rebuild all site prefs
+    publishBranch.deleteBranch("site_name.");
+    publishBranch.deleteBranch("site_data.");
+
+    var i;
+    if (siteArray)
+    {
+      for (i = 0; i < siteArray.length; i++)
+        SavePublishData_Internal(publishBranch, siteArray[i], i);
+    }
+
+    // Save default site name
+    SetPublishStringPref(publishBranch, "default_site", defaultName);
+  
+    // Force saving to file so next page edited finds these values
+    SavePrefFile();
+  }
+  catch (ex) { return false; }
+
+  return true;
+}
+
+// Update prefs if publish site already exists
+//  or add prefs for a new site
+function SavePublishDataToPrefs(publishData)
+{
+  if (!publishData || !publishData.publishUrl)
+    return false;
+
+  var publishBranch = GetPublishPrefsBranch();
+  if (!publishBranch)
+    return false;
+
+  // Use the site URL if no site name is provided
+  if (!publishData.siteName)
+    publishData.siteName = publishData.publishUrl;
+
+  var siteCount = {value:0};
+  var siteNamePrefs;
+  try {
+    siteNamePrefs = publishBranch.getChildList("site_name.", siteCount);
+  } catch (e) {}
+
+  if (!siteNamePrefs || siteCount.value == 0)
+  {
+    // We currently have no site prefs, so create them
+    var siteData = [publishData];
+    return SavePublishSiteDataToPrefs(siteData, publishData.siteName);
+  }
+
+  // Find site number of existing site or fall through at next available one
+  // (Number is arbitrary; needed to construct unique "site_name.x" pref string)
+  var i;
+  for (i = 0; i < siteCount.value; i++)
+  {
+    var siteName = GetPublishStringPref(publishBranch, "site_name."+i);
+    if (siteName == publishData.siteName)
+      break;
+  }
+  var ret = SavePublishData_Internal(publishBranch, publishData, i);
+  if (ret)
+  {
+    SavePrefFile();
+    // Clear signal to save these data
+    if (publishData.notInSiteData)
+      publishData.notInSiteData = false;
+  }
+  return ret;
+}
+
+// Save data at a particular site number
+function SavePublishData_Internal(publishPrefsBranch, publishData, siteIndex)
+{
+  if (!publishPrefsBranch || !publishData)
+    return false;
+
+  SetPublishStringPref(publishPrefsBranch, "site_name."+siteIndex, publishData.siteName);
+
+  var prefPrefix = "site_data." + publishData.siteName + "."
+  SetPublishStringPref(publishPrefsBranch, prefPrefix+"url", publishData.publishUrl);
+  SetPublishStringPref(publishPrefsBranch, prefPrefix+"browse_url", publishData.browseUrl);
+  SetPublishStringPref(publishPrefsBranch, prefPrefix+"username", publishData.username);
+  
+  try {
+    publishPrefsBranch.setBoolPref(prefPrefix+"save_password", publishData.savePassword);
+  } catch (e) {}
+
+  // Save password using PasswordManager 
+  // (If publishData.savePassword = false, this clears existing password)
+  SavePassword(publishData);
+
+  SetPublishStringPref(publishPrefsBranch, prefPrefix+"doc_dir", publishData.docDir);
+  if (publishData.otherDir)
+    SetPublishStringPref(publishPrefsBranch, prefPrefix+"other_dir", publishData.otherDir);
+
+  // Save array of directories in each site
+  if (publishData.dirList.length)
+  {
+    publishData.dirList.sort();
+    var dirIndex = 0;
+    for (var j = 0; j < publishData.dirList.length; j++)
+    {
+      var dir = publishData.dirList[j];
+
+      // Don't store the root dir
+      if (dir != "/")
+      {
+        SetPublishStringPref(publishPrefsBranch, prefPrefix + "dir." + dirIndex, dir);
+        dirIndex++;
+      }
+    }
+  }
+  return true;
+}
+
+// This doesn't force saving prefs file
+// Call "SavePublishSiteDataToPrefs(null, defaultName)" to force saving file 
+//    with just a new default site name
+function SetDefaultSiteName(name)
+{
+  if (name)
+  {
+    var publishBranch = GetPublishPrefsBranch();
+    if (publishBranch)
+      SetPublishStringPref(publishBranch, "default_site", name);
+  }
+}
+
+function SavePrefFile()
+{
+  try {
+    if (gPrefsService)
+      gPrefsService.savePrefFile(null);
+  }
+  catch (e) {}
+}
+
+/***************** Helper / utility methods ********************/
 
 function GetPublishPrefsBranch()
 {
@@ -54,174 +438,181 @@ function GetPublishPrefsBranch()
   return prefsService.getBranch("editor.publish.");
 }
 
-// Build an array of publish site data obtained from prefs
-function GetPublishSiteData()
+// Find index of a site record in supplied publish site database
+// docUrl: Document URL with or without filename
+//         (Must end in "/" if no filename)
+// dirObj.value =  the directory of the document URL 
+//      relative to the base publishing URL, using "/" if none
+//
+// XXX: Currently finds the site with the longest-matching url;
+//      should we look for the shortest instead? Or match just the host portion?
+function FindSiteIndexAndDocDir(publishSiteData, docUrl, dirObj)
 {
-  var publishBranch = GetPublishPrefsBranch();
-  if (!publishBranch)
-    return null;
+  if (dirObj)
+    dirObj.value = "/";
 
-  var prefCount = {value:0};
-  var nameArray = publishBranch.getChildList("site_name.", prefCount);
-dump(" *** GetPublishSiteData: nameArray="+nameArray+", count ="+prefCount.value+"\n");
+  if (!publishSiteData || !docUrl)
+    return -1;
 
-  if (!nameArray || prefCount.value == 0)
-    return null;
-
-  // Array of all site data
-  var siteArray = new Array();
-
-  var index = 0;
-  var i;
-
-  for (i = 0; i < prefCount.value; i++)
+  // Remove filename from docUrl
+  // (Check for terminal "/" so docUrl param can be a directory path)
+  if (docUrl.charAt(docUrl.length-1) != "/")
   {
-    var name = GetPublishCharPref(publishBranch, nameArray[i]);
-    if (name)
-    {
-      // Associated data uses site name as key
-      var prefPrefix = "site_data." + name + ".";
-
-      // We must at least have a publish url, else we ignore this site
-      // (siteData and siteNames for sites with incomplete data 
-      //  will get deleted by SavePublishSiteDataToPrefs)
-      var publishUrl = GetPublishCharPref(publishBranch, prefPrefix+"url");
-      if (publishUrl)
-      {
-        siteArray[index] = new Array(gSiteDataLength);
-        siteArray[index][gNameIndex] = name;
-        siteArray[index][gUrlIndex] = publishUrl;
-        siteArray[index][gBrowseIndex] = GetPublishCharPref(publishBranch, prefPrefix+"browse_url");
-        siteArray[index][gUserNameIndex] = GetPublishCharPref(publishBranch, prefPrefix+"username");
-        siteArray[index][gDefaultDirIndex] = GetPublishCharPref(publishBranch, prefPrefix+"default_dir");
-
-        // Get the list of directories within each site
-        var dirCount = {value:0};
-        var dirArray = publishBranch.getChildList(prefPrefix+"dir_name.", dirCount);
-        if (dirArray && dirCount.value > 0)
-        {
-          siteArray[index][gDirListIndex] = new Array();
-          for (var j = 0; j < dirCount.value; j++)
-          {
-            var dirName = GetPublishCharPref(publishBranch, prefPrefix+dirArray[j]);
-dump("      DirName="+dirName+"\n");
-            if (dirName)
-              siteArray[index][gDirListIndex][j] = dirName;
-          }
-        }
-        index++;
-      }
-dump(" Name="+name+", URL="+publishUrl+"\n");
-    }
-  }
-  if (index == 0) // No Valid pref records found!
-    return null;
-
-  if (index > 1)
-  {
-    // NOTE: This is an ASCII sort (not locale-aware)
-    siteArray.sort();
-  }
-  return siteArray;
-}
-
-function SavePublishSiteDataToPrefs(siteArray, defaultName)
-{
-  var publishBranch = GetPublishPrefsBranch();
-dump(" *** Saving Publish Data: publishBranch="+publishBranch+"\n");
-  if (!publishBranch)
-    return;
-
-  // Clear existing names and data -- rebuild all site prefs
-  publishBranch.deleteBranch("site_name.");
-  publishBranch.deleteBranch("site_data.");
-
-// *****  DEBUG ONLY
-  var prefCount = {value:0};
-  var pubArray = publishBranch.getChildList("", prefCount);
-dump(" *** editor.publish child array ="+pubArray+", prefCount.value ="+prefCount.value+"\n");
-
-// *****  DEBUG ONLY
-
-  var i;
-  if (siteArray)
-  {
-    for (i = 0; i < siteArray.length; i++)
-    {
-dump("  Saving prefs for "+siteArray[i][gNameIndex]+"\n");
-      var prefPrefix = "site_data." + siteArray[i][gNameIndex] + "."
-      publishBranch.setCharPref("site_name."+i, siteArray[i][gNameIndex]);
-      publishBranch.setCharPref(prefPrefix+"url", siteArray[i][gUrlIndex]);
-      publishBranch.setCharPref(prefPrefix+"browse_url", siteArray[i][gBrowseIndex]);
-      publishBranch.setCharPref(prefPrefix+"username", siteArray[i][gUserNameIndex]);
-    }
+    var lastSlash = docUrl.lastIndexOf("/");
+    docUrl = docUrl.slice(0, lastSlash);
   }
 
-  // Save default site name
-  publishBranch.setCharPref("default_site", defaultName);
+  var siteIndex = -1;
+  var siteUrlLen = 0;
+  var urlLen = docUrl.length;
   
-  // Force saving to file so next file opened finds these values
-  if (gPrefsService)
-    gPrefsService.savePrefFile(null);
-}
-
-// This doesn't force saving prefs file
-// Call "SavePublishSiteDataToPrefs(null, defaultName)" to force saving file
-function SetDefaultSiteName(name)
-{
-  if (name)
+  for (var i = 0; i < publishSiteData.length; i++)
   {
-    var publishBranch = GetPublishPrefsBranch();
-    if (publishBranch)
-      publishBranch.setCharPref("default_site", name);
-  }
-}
-
-function GetDefaultPublishSiteName()
-{
-  var publishBranch = GetPublishPrefsBranch();
-  var name = "";  
-  if (publishBranch)
-    try {
-      name = GetPublishCharPref(publishBranch, "default_site");
-    } catch (ex) {}
-
-  return name;
-}
-
-function GetDefaultPublishSiteData()
-{
-  var publishBranch = GetPublishPrefsBranch();
-  if (!publishBranch)
-    return null;
-
-  var name = GetPublishCharPref(publishBranch, "default_site");
-  if (!name)
-    return null;
-
-  var prefPrefix = "site_data." + name + ".";
-
-  var publishData = { 
-    SiteName : name,
-    UserName : GetPublishCharPref(publishBranch, prefPrefix+"username"),
-    Password : "",
-    Filename : "",
-    DestinationDir : GetPublishCharPref(publishBranch, prefPrefix+"url"),
-    BrowseDir : GetPublishCharPref(publishBranch, prefPrefix+"browse_url"),
-    RelatedDocs : {}
+    // Site publish or browse url needs to be contained in document URL,
+    //  but that may also have a directory after the site base URL
+    //  So we must examine all records to find the site URL that best
+    //    matches the document URL (XXX is this right?)
+    var pubUrlFound = docUrl.indexOf(publishSiteData[i].publishUrl) == 0;
+    var browseUrlFound = docUrl.indexOf(publishSiteData[i].browseUrl) == 0;
+    if (pubUrlFound || browseUrlFound)
+    {
+      var len = pubUrlFound ? publishSiteData[i].publishUrl.length : publishSiteData[i].browseUrl.length;
+      if (len > siteUrlLen)
+      {
+        siteIndex = i;
+        siteUrlLen = len;
+      }
+    }
   }
 
-  return publishData;
+  // Get directory name from the end of url (may be just "/")
+  if (dirObj && siteIndex >= 0 && urlLen > siteUrlLen)
+    dirObj.value = FormatDirForPublishing(docUrl.slice(siteUrlLen));
+
+  return siteIndex;
 }
 
 // Prefs that don't exist will through an exception,
-//  so just return empty string for those cases
-function GetPublishCharPref(prefBranch, name)
+//  so just return an empty string
+function GetPublishStringPref(prefBranch, name)
 {
-  var prefStr = "";
-  try {
-    prefStr = prefBranch.getCharPref(name);
-  } catch (ex) {}
+  if (prefBranch && name)
+  {
+    try {
+      return prefBranch.getComplexValue(name, Components.interfaces.nsISupportsWString).data;
+    } catch (e) {}
+  }
+  return "";
+}
 
-  return prefStr;
+function SetPublishStringPref(prefBranch, name, value)
+{
+  if (prefBranch && name)
+  {
+    try {
+        var str = Components.classes["@mozilla.org/supports-wstring;1"]
+                            .createInstance(Components.interfaces.nsISupportsWString);
+        str.data = value;
+        prefBranch.setComplexValue(name, Components.interfaces.nsISupportsWString, str);
+    } catch (e) {}
+  }
+}
+
+// Assure that a publishing URL does not end in "/"
+function FormatUrlForPublishing(url)
+{
+  url = TrimString(url);
+  if (url && url.charAt(url.length-1) == "/")
+    url = url.slice(0,url.length-1);
+
+  return url;
+}
+
+// Assure that a publishing directory begins and ends with "/"
+// Input dir is assumed to be a subdirectory string, not a full URL or pathname
+function FormatDirForPublishing(dir)
+{
+  dir = TrimString(dir);
+
+  if (!dir || dir.charAt(0) != "/")
+    dir = "/" + dir;
+
+  var dirLen = dir.length;
+  if (dirLen > 1 && dir.charAt(dirLen-1) != "/")
+    dir = dir + "/";
+
+  return dir;
+}
+
+
+var gPasswordManager;
+function GetPasswordManager()
+{
+  if (!gPasswordManager)
+  {
+    var passwordManager = Components.classes["@mozilla.org/passwordmanager;1"].createInstance();
+    if (passwordManager)
+      gPasswordManager = passwordManager.QueryInterface(Components.interfaces.nsIPasswordManager);
+  }
+  return gPasswordManager
+}
+
+function GetPassword(publishData)
+{
+  if (!publishData || !publishData.savePassword)
+    return "";
+
+  var passwordManager = GetPasswordManager();
+  if (!passwordManager)
+    return "";
+
+  var enumerator = passwordManager.enumerator;
+  if (!enumerator)
+    return "";
+  
+  //XXX After fix for bug 80296 is checked in, following can be replaced by:
+  // var host = { value:publishData.publishUrl };
+  // var user =  { value:publishData.username };
+  // var password = { value:"" }; 
+  // passwordManager.findPasswordEntry(host, user, password);
+  // return password.value;
+  try {
+    while (enumerator.hasMoreElements())
+    {
+      var passwordObj = enumerator.getNext();
+      passwordObj = passwordObj.QueryInterface(Components.interfaces.nsIPassword);
+      if (passwordObj && 
+          passwordObj.host == publishData.publishUrl && 
+          passwordObj.user == publishData.username)
+        return passwordObj.password;
+    }
+  } catch (e) {}
+
+  return "";
+}
+
+function SavePassword(publishData)
+{
+  if (!publishData || !publishData.publishUrl || !publishData.username)
+    return false;
+
+  var passwordManager = GetPasswordManager();
+  if (passwordManager)
+  {
+    // Remove existing entry
+    // (Note: there is no method to update a password for an existing entry)
+    try {
+      passwordManager.removeUser(publishData.publishUrl, publishData.username);
+    } catch (e) {}
+
+    // If SavePassword is true, add new password
+    if (publishData.savePassword)
+    {
+      try {
+        passwordManager.addUser(publishData.publishUrl, publishData.username, publishData.password);
+      } catch (e) {}
+    }
+    return true;
+  }
+  return false;
 }
