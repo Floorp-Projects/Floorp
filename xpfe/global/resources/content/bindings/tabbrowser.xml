@@ -51,7 +51,7 @@
 
     <content>
       <xul:stringbundle src="chrome://global/locale/tabbrowser.properties"/>
-      <xul:tabbox flex="1" eventnode="document">
+      <xul:tabbox flex="1" eventnode="document" xbl:inherits="handleCtrlPageUpDown">
         <xul:hbox class="tabbrowser-strip chromeclass-toolbar" collapsed="true" tooltip="_child" context="_child">
           <xul:tooltip onpopupshowing="event.preventBubble(); if (document.tooltipNode.hasAttribute('label')) { this.setAttribute('label', document.tooltipNode.getAttribute('label')); return true; } return false;"/>
           <xul:menupopup onpopupshowing="this.parentNode.parentNode.parentNode.updatePopupMenu(this);">
@@ -1397,7 +1397,12 @@
     <handlers>
       <handler event="select" action="if (event.originalTarget == this.mPanelContainer) this.updateCurrentBrowser();"/>
 
-      <handler event="keypress" modifiers="control" keycode="vk_f4" action="this.removeCurrentTab();"/>
+      <handler event="keypress" modifiers="control" keycode="VK_F4">
+        <![CDATA[
+          if (this.mTabBox.handleCtrlPageUpDown)
+            this.removeCurrentTab();
+        ]]>
+      </handler>
 
       <handler event="DOMWindowClose">
         <![CDATA[
