@@ -99,7 +99,7 @@
       <treechildren>
         <treeitem open="true">
           <treerow>
-            <treecell name="about:blank"><treeindentation/>&languages.label;</treecell>
+            <treecell name="chrome://pref/content/pref-languages.xul"><treeindentation/>&languages.label;</treecell>
           </treerow>
         </treeitem>
 
@@ -111,7 +111,7 @@
 
         <treeitem open="true">
           <treerow>
-            <treecell name="chrome://pref/content/pref-smart_browsing.xul"><treeindentation/>&smartBrowse.label;</treecell>
+            <treecell name="about:blank" foo="chrome://pref/content/pref-smart_browsing.xul"><treeindentation/>&smartBrowse.label;</treecell>
           </treerow>
         </treeitem>
       </treechildren>
