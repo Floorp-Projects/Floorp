@@ -745,6 +745,7 @@ nsPICS::OnStartDocumentLoad(nsIDocumentLoader* loader,
                                 const char* aCommand)
 {
   nsresult rv = NS_ERROR_FAILURE;
+  
   mWebShellServices = nsnull;
   if(!mPICSRatingsEnabled)
     return rv;
@@ -759,8 +760,24 @@ nsPICS::OnEndDocumentLoad(nsIDocumentLoader* loader,
                               PRInt32 aStatus)
 {
   nsresult rv = NS_OK;
+
+  nsIContentViewerContainer *cont;
+
   if(!mPICSRatingsEnabled)
     return rv;
+  mWebShellServices = nsnull;
+
+  rv = loader->GetContainer(&cont);
+  if (NS_OK == rv) {
+    nsIWebShellServices  *ws;
+    if(cont) {
+      rv = cont->QueryInterface(kIWebShellServicesIID, (void **)&ws);
+      if (NS_OK == rv) {
+        mWebShellServices = ws;
+        ws->SetRendering(PR_TRUE);
+      }
+    }
+  }
   return rv;
 
 }
@@ -791,6 +808,7 @@ nsPICS::OnStartURLLoad(nsIDocumentLoader* loader,
         rv = cont->QueryInterface(kIWebShellServicesIID, (void **)&ws);
         if (NS_OK == rv) {
           mWebShellServices = ws;
+          ws->SetRendering(PR_FALSE);
         }
       }
     }
@@ -798,7 +816,7 @@ nsPICS::OnStartURLLoad(nsIDocumentLoader* loader,
      if (nsnull != aURL) {
       urlData = PR_NEWZAP(PICS_URLData);
       urlData->url = (nsIURL*)PR_Malloc(sizeof(aURL));
-  //  urlData->url = new nsIURL;
+      urlData->url = aURL;
       urlData->notified = PR_FALSE;
       
     }
@@ -865,6 +883,7 @@ nsPICS::OnEndURLLoad(nsIDocumentLoader* loader,
   const char* uHost;
   const char* uFile;
   nsIURL* rootURL;
+  nsIWebShellServices  *ws;
 
   nsVoidArray* currentURLList;
 
@@ -874,7 +893,7 @@ nsPICS::OnEndURLLoad(nsIDocumentLoader* loader,
 
   rv = loader->GetContainer(&cont);
   if (NS_OK == rv) {
-    nsIWebShellServices  *ws;
+    
     if(cont) {
       rv = cont->QueryInterface(kIWebShellServicesIID, (void **)&ws);
       if (NS_OK == rv) {
@@ -906,7 +925,9 @@ nsPICS::OnEndURLLoad(nsIDocumentLoader* loader,
         if(aURL == nsnull)
           continue;
         aURL->GetSpec(&spec1);
-        aURL->GetSpec(&spec2);
+        if(urlData->url == nsnull)
+          continue;
+        (urlData->url)->GetSpec(&spec2);
 
         if(spec1 == nsnull)
           continue;
@@ -931,7 +952,7 @@ nsPICS::OnEndURLLoad(nsIDocumentLoader* loader,
 
                   rv = NS_NewURL(&rootURL, rootStr);
                //   rv = GetRootURL(rootURL);
-                 }
+                }
               }
             }
           }
