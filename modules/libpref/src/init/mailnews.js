@@ -367,3 +367,5 @@ pref("mail.server.default.abbreviate",true);
 
 pref("mail.convert_emoticons",true);
 pref("mail.convert_structs",true);
+
+pref("mail.forward_message_mode", 0);	; // 0=default as attachment 2=forward as inline with attachments, (obsolete)1=forward as quoted
