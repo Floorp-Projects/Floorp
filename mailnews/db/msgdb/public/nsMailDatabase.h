@@ -19,6 +19,8 @@
 #ifndef _nsMailDatabase_H_
 #define _nsMailDatabase_H_
 
+#include "nsMsgDatabase.h"
+
 // This is the subclass of nsMsgDatabase that handles local mail messages.
 class nsOfflineImapOperation;
 
@@ -27,16 +29,16 @@ class nsMailDatabase : public nsMsgDatabase
 public:
 			nsMailDatabase();
 	virtual ~nsMailDatabase();
-	static nsresult			Open(const char * dbName, PRBool create, nsMailDatabase** pMessageDB);
+	static nsresult			Open(nsFilePath &dbName, PRBool create, nsMailDatabase** pMessageDB);
 
-	static  nsresult		CloneInvalidDBInfoIntoNewDB(const char * pathName, nsMailDatabase** pMailDB);
+	static  nsresult		CloneInvalidDBInfoIntoNewDB(nsFilePath &pathName, nsMailDatabase** pMailDB);
 
-	virtual nsresult		OnNewPath (const char *newPath);
+	virtual nsresult		OnNewPath (nsFilePath &newPath);
 
 	virtual nsresult		DeleteMessages(IDArray &messageKeys, ChangeListener *instigator);
 
 	virtual int				GetCurVersion() {return kMailDBVersion;}
-	static  nsresult		SetFolderInfoValid(const char* pathname, int num, int numunread);
+	static  nsresult		SetFolderInfoValid(nsFilePath &pathname, int num, int numunread);
 	virtual const char		*GetFolderName() {return m_folderName;}
 	virtual nsMailDatabase	*GetMailDB() {return this;}
 			MSG_Master		*GetMaster() {return m_master;}

@@ -15,11 +15,14 @@
  * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+#ifndef _nsMsgDatabase_H_
+#define _nsMsgDatabase_H_
 
 
 #include "nsMsgHdr.h"
 #include "nsMsgPtrArray.h"	// for XPPtrArray
 #include "nsString.h"
+#include "nsFileSpec.h"
 
 class ListContext;
 
@@ -46,8 +49,8 @@ struct MessageHdrStruct
 	nsString	m_references; 
 	nsString	m_recipients;
 	time_t 		m_date;         // is there some sort of PR type I should use for this?
-	PRUInt32	m_messageSize;	// lines for news articles, bytes for local mail and imap messages
-	PRUInt32	m_flags;
+	PRUint32	m_messageSize;	// lines for news articles, bytes for local mail and imap messages
+	PRUint32	m_flags;
 	PRInt16		m_numChildren;		// for top-level threads
 	PRInt16		m_numNewChildren;	// for top-level threads
 	MSG_PRIORITY m_priority;
@@ -63,12 +66,17 @@ public:
 	nsMsgDatabase();
 	virtual ~nsMsgDatabase();
 
+	nsrefcnt			AddRef(void);                                       
+    nsrefcnt			Release(void);   
 	virtual nsresult	OpenMDB(const char *dbName, PRBool create);
-	virtual nsresult	CloseMDB(PR_Bool commit = TRUE);
+	virtual nsresult	CloseMDB(PRBool commit = TRUE);
+	// Force closed is evil, and we should see if we can do without it.
+	// In 4.x, it was mainly used to remove corrupted databases.
+	virtual nsresult	ForceClosed();
 	// get a message header for the given key. Caller must release()!
 	virtual nsresult	GetMsgHdrForKey(MessageKey messageKey, nsMsgHdr **msgHdr);
 
-	virtual nsresult	CreateNewHdr(PRBool *newThread, PRBool notify = FALSE, nsMsgHdr **newHdr);
+	virtual nsresult	CreateNewHdr(PRBool *newThread, nsMsgHdr **newHdr, PRBool notify = FALSE);
 
 	// iterator methods
 	// iterate through message headers, in no particular order
@@ -78,13 +86,26 @@ public:
 	nsresult	ListFirst(ListContext **pContext, nsMsgHdr **pResult);
 	nsresult	ListNext(ListContext *pContext, nsMsgHdr **pResult);
 	nsresult	ListDone(ListContext *pContext);
-	static nsMsgDatabase* FindInCache(const char * pDBName);
+	static mdbFactory		*GetMDBFactory();
+
+	static nsMsgDatabase* FindInCache(nsFilePath &dbName);
+	static void		CleanupCache();
+#ifdef DEBUG
+	static int		GetNumInCache(void) {return(GetDBCache()->GetSize());}
+	static void		DumpCache();
+#endif
 protected:
 	mdbEnv		*m_mdbEnv;	// to be used in all the db calls.
+	nsFilePath	m_dbName;
+	nsrefcnt	mRefCnt;
+
 	static void		AddToCache(nsMsgDatabase* pMessageDB) 
 						{GetDBCache()->Add(pMessageDB);}
 	static void		RemoveFromCache(nsMsgDatabase* pMessageDB);
 	static int		FindInCache(nsMsgDatabase* pMessageDB);
+			PRBool	MatchDbName(nsFilePath &dbName);	// returns TRUE if they match
 	static nsMsgDatabaseArray*	GetDBCache();
 	static nsMsgDatabaseArray	*m_dbCache;
 };
+
+#endif
