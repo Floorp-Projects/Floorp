@@ -44,7 +44,7 @@
 
 #ifdef CALL_SAFETY_ON
 
-static PRBool gSkipPluginSafeCalls = PR_FALSE;
+extern PRBool gSkipPluginSafeCalls;
 
 #define NS_INIT_PLUGIN_SAFE_CALLS                               \
 PR_BEGIN_MACRO                                                  \

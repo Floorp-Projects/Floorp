@@ -276,6 +276,10 @@ static const char *hashValue = "value";
 
 static nsActivePluginList *gActivePluginList;
 
+#ifdef CALL_SAFETY_ON
+PRBool gSkipPluginSafeCalls = PR_FALSE;
+#endif
+
 ////////////////////////////////////////////////////////////////////////
 void DisplayNoDefaultPluginDialog(const char *mimeType, nsIPrompt *prompt)
 {
