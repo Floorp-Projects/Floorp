@@ -186,7 +186,7 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnStartRequest(nsIRequest *request, nsISupport
   //
   // Deal with "special" HTTP responses:
   //
-  // - In the case of a 204 (No Content) response, do not try to find a
+  // - In the case of a 204 (No Content)  or 205 (Reset Content) response, do not try to find a
   //   content handler.  Just return.  This causes the request to be
   //   ignored.
   //
@@ -202,7 +202,7 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnStartRequest(nsIRequest *request, nsISupport
       return NS_OK;
     }
 
-    if (204 == responseCode) {
+    if (204 == responseCode || 205 == responseCode) {
       return NS_OK;
     }
   }
