@@ -2497,28 +2497,28 @@ nsMsgFolder::GetFilterList(nsIMsgFilterList **aResult)
 /* void enableNotifications (in long notificationType, in boolean enable); */
 NS_IMETHODIMP nsMsgFolder::EnableNotifications(PRInt32 notificationType, PRBool enable)
 {
-	if(notificationType == nsIMsgFolder::allMessageCountNotifications)
-	{
-		mNotifyCountChanges = enable;
+  if(notificationType == nsIMsgFolder::allMessageCountNotifications)
+  {
+    mNotifyCountChanges = enable;
     // start and stop db batching here. This is under the theory
     // that any time we want to enable and disable notifications,
     // we're probably doing something that should be batched.
     nsCOMPtr <nsIMsgDatabase> database;
-
-
+    
+    
     GetMsgDatabase(nsnull, getter_AddRefs(database));
-		if(enable)
+    if(enable)
     {
       if (database)
         database->EndBatch();
-			UpdateSummaryTotals(PR_TRUE);
+      UpdateSummaryTotals(PR_TRUE);
     }
     else if (database)
       database->StartBatch();
-
-		return NS_OK;
-	}
-	return NS_ERROR_NOT_IMPLEMENTED;
+    
+    return NS_OK;
+  }
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 

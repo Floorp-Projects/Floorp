@@ -1956,44 +1956,42 @@ NS_IMETHODIMP nsMsgDatabase::MarkHdrMarked(nsIMsgDBHdr *msgHdr, PRBool mark,
 
 NS_IMETHODIMP nsMsgDatabase::MarkAllRead(nsMsgKeyArray *thoseMarked)
 {
-	nsresult		rv;
-	nsMsgHdr		*pHeader;
-	//ListContext		*listContext = NULL;
-	PRInt32			numChanged = 0;
-
-    nsCOMPtr <nsISimpleEnumerator> hdrs;
-    rv = EnumerateMessages(getter_AddRefs(hdrs));
-    if (NS_FAILED(rv))
-		return rv;
-	PRBool hasMore = PR_FALSE;
-
-	while (NS_SUCCEEDED(rv = hdrs->HasMoreElements(&hasMore)) && (hasMore == PR_TRUE)) 
-	{
-		rv = hdrs->GetNext((nsISupports**)&pHeader);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "nsMsgDBEnumerator broken");
-        if (NS_FAILED(rv)) 
-			break;
-
-		if (thoseMarked) 
-		{
-            nsMsgKey key;
-            (void)pHeader->GetMessageKey(&key);
-			thoseMarked->Add(key);
-        }
-		rv = MarkHdrRead(pHeader, PR_TRUE, NULL); 	// ### dmb - blow off error?
-		numChanged++;
-		NS_RELEASE(pHeader);
-	}
-
-	if (numChanged > 0)	// commit every once in a while
-		Commit(nsMsgDBCommitType::kLargeCommit);
-	// force num new to 0.
-	PRInt32 numNewMessages;
-
-	rv = m_dbFolderInfo->GetNumNewMessages(&numNewMessages);
-	if (rv == NS_OK)
-		m_dbFolderInfo->ChangeNumNewMessages(-numNewMessages);
-	return rv;
+  nsresult		rv;
+  nsMsgHdr		*pHeader;
+  PRInt32			numChanged = 0;
+  
+  nsCOMPtr <nsISimpleEnumerator> hdrs;
+  rv = EnumerateMessages(getter_AddRefs(hdrs));
+  if (NS_FAILED(rv))
+    return rv;
+  PRBool hasMore = PR_FALSE;
+  
+  while (NS_SUCCEEDED(rv = hdrs->HasMoreElements(&hasMore)) && (hasMore == PR_TRUE)) 
+  {
+    rv = hdrs->GetNext((nsISupports**)&pHeader);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "nsMsgDBEnumerator broken");
+    if (NS_FAILED(rv)) 
+      break;
+    
+    if (thoseMarked) 
+    {
+      nsMsgKey key;
+      (void)pHeader->GetMessageKey(&key);
+      thoseMarked->Add(key);
+    }
+    rv = MarkHdrRead(pHeader, PR_TRUE, nsnull); 	// ### dmb - blow off error?
+    numChanged++;
+    NS_RELEASE(pHeader);
+  }
+  
+  // force num new to 0.
+  PRInt32 numNewMessages;
+  
+  rv = m_dbFolderInfo->GetNumNewMessages(&numNewMessages);
+  if (rv == NS_OK)
+    m_dbFolderInfo->ChangeNumNewMessages(-numNewMessages);
+  // caller will Commit the db, so no need to do it here.
+  return rv;
 }
 
 NS_IMETHODIMP nsMsgDatabase::MarkReadByDate (PRTime startDate, PRTime endDate, nsMsgKeyArray *markedIds)
@@ -3102,14 +3100,14 @@ PRUint32 nsMsgDatabase::GetCurVersion()
 	return kMsgDBVersion;
 }
 
-nsresult nsMsgDatabase::SetSummaryValid(PRBool valid /* = PR_TRUE */)
+NS_IMETHODIMP nsMsgDatabase::SetSummaryValid(PRBool valid /* = PR_TRUE */)
 {
-	// setting the version to 0 ought to make it pretty invalid.
-	if (!valid)
-		m_dbFolderInfo->SetVersion(0);
-
-	// for default db (and news), there's no nothing to set to make it it valid
-	return NS_OK;
+  // setting the version to 0 ought to make it pretty invalid.
+  if (!valid)
+    m_dbFolderInfo->SetVersion(0);
+  
+  // for default db (and news), there's no nothing to set to make it it valid
+  return NS_OK;
 }
 
 // protected routines

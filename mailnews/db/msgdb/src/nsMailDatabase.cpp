@@ -234,12 +234,12 @@ return NS_OK;
 NS_IMETHODIMP nsMailDatabase::EndBatch()
 {
 #ifndef XP_MAC
-	if (m_folderStream)
-    {
-      m_folderStream->close();  
-	  delete m_folderStream;
-    }
-	m_folderStream = NULL;
+  if (m_folderStream)
+  {
+    m_folderStream->close();  
+    delete m_folderStream;
+  }
+  m_folderStream = nsnull;
 #endif
   return NS_OK;
 }
@@ -265,21 +265,21 @@ NS_IMETHODIMP nsMailDatabase::DeleteMessages(nsMsgKeyArray* nsMsgKeys, nsIDBChan
 // Helper routine - lowest level of flag setting
 PRBool nsMailDatabase::SetHdrFlag(nsIMsgDBHdr *msgHdr, PRBool bSet, MsgFlags flag)
 {
-	nsIOFileStream *fileStream = NULL;
-	PRBool		ret = PR_FALSE;
-
-	if (nsMsgDatabase::SetHdrFlag(msgHdr, bSet, flag))
-	{
-		UpdateFolderFlag(msgHdr, bSet, flag, &fileStream);
-		if (fileStream)
-        {
-            fileStream->close();
-			delete fileStream;
-			SetFolderInfoValid(m_folderSpec, 0, 0);
-		}
-		ret = PR_TRUE;
-	}
-	return ret;
+  nsIOFileStream *fileStream = NULL;
+  PRBool		ret = PR_FALSE;
+  
+  if (nsMsgDatabase::SetHdrFlag(msgHdr, bSet, flag))
+  {
+    UpdateFolderFlag(msgHdr, bSet, flag, &fileStream);
+    if (fileStream)
+    {
+      fileStream->close();
+      delete fileStream;
+      SetFolderInfoValid(m_folderSpec, 0, 0);
+    }
+    ret = PR_TRUE;
+  }
+  return ret;
 }
 
 #ifdef XP_MAC
@@ -435,27 +435,27 @@ void nsMailDatabase::UpdateFolderFlag(nsIMsgDBHdr *mailHdr, PRBool bSet,
 
 /* static */  nsresult nsMailDatabase::SetSummaryValid(PRBool valid)
 {
-	nsresult ret = NS_OK;
-
-	if (!m_folderSpec->Exists()) 
-		return NS_MSG_ERROR_FOLDER_MISSING;
-
-	if (m_dbFolderInfo)
-	{
-		if (valid)
-		{
-			nsFileSpec::TimeStamp actualFolderTimeStamp;
-			m_folderSpec->GetModDate(actualFolderTimeStamp) ;
-			
-			m_dbFolderInfo->SetFolderSize(m_folderSpec->GetFileSize());
-			m_dbFolderInfo->SetFolderDate(actualFolderTimeStamp);
-		}
-		else
-		{
-			m_dbFolderInfo->SetVersion(0);	// that ought to do the trick.
-		}
-	}
-	return ret;
+  nsresult ret = NS_OK;
+  
+  if (!m_folderSpec->Exists()) 
+    return NS_MSG_ERROR_FOLDER_MISSING;
+  
+  if (m_dbFolderInfo)
+  {
+    if (valid)
+    {
+      nsFileSpec::TimeStamp actualFolderTimeStamp;
+      m_folderSpec->GetModDate(actualFolderTimeStamp) ;
+      
+      m_dbFolderInfo->SetFolderSize(m_folderSpec->GetFileSize());
+      m_dbFolderInfo->SetFolderDate(actualFolderTimeStamp);
+    }
+    else
+    {
+      m_dbFolderInfo->SetVersion(0);	// that ought to do the trick.
+    }
+  }
+  return ret;
 }
 
 nsresult nsMailDatabase::GetFolderName(nsString &folderName)

@@ -1094,26 +1094,28 @@ nsMsgDBFolder::AddMessageDispositionState(nsIMsgDBHdr *aMessage, nsMsgDispositio
 NS_IMETHODIMP
 nsMsgDBFolder::MarkAllMessagesRead(void)
 {
-	// ### fix me need nsIMsgWindow
-	nsresult rv = GetDatabase(nsnull);
-	
-	if(NS_SUCCEEDED(rv))
+  // ### fix me need nsIMsgWindow
+  nsresult rv = GetDatabase(nsnull);
+  
+  if(NS_SUCCEEDED(rv))
   {
     EnableNotifications(allMessageCountNotifications, PR_FALSE);
-		rv = mDatabase->MarkAllRead(nsnull);
+    rv = mDatabase->MarkAllRead(nsnull);
     EnableNotifications(allMessageCountNotifications, PR_TRUE);
+    mDatabase->SetSummaryValid(PR_TRUE);
+    mDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
   }
-	return rv;
+  return rv;
 }
 
 NS_IMETHODIMP nsMsgDBFolder::MarkThreadRead(nsIMsgThread *thread)
 {
-
-	nsresult rv = GetDatabase(nsnull);
-	if(NS_SUCCEEDED(rv))
-		return mDatabase->MarkThreadRead(thread, nsnull, nsnull);
-
-	return rv;
+  
+  nsresult rv = GetDatabase(nsnull);
+  if(NS_SUCCEEDED(rv))
+    return mDatabase->MarkThreadRead(thread, nsnull, nsnull);
+  
+  return rv;
 }
 
 NS_IMETHODIMP
