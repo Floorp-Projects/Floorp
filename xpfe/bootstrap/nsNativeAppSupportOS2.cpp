@@ -2364,10 +2364,11 @@ nsNativeAppSupportOS2::OnLastWindowClosing() {
         }
     }
 
-    nsCOMPtr<nsIProfileInternal> profileMgr(do_GetService(NS_PROFILE_CONTRACTID, &rv));
+    nsCOMPtr<nsIObserverService> observerService(do_GetService("@mozilla.org/observer-service;1", &rv));
     if (NS_FAILED(rv)) return rv;
-    rv = profileMgr->ShutDownCurrentProfile(nsIProfile::SHUTDOWN_PERSIST);
-    if (NS_FAILED(rv)) return rv;
+    observerService->NotifyObservers(nsnull, "session-logout", nsnull);
+
+    mForceProfileStartup = PR_TRUE;
 
     return NS_OK;
 }
