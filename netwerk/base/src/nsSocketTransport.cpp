@@ -498,6 +498,11 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
         mStatus = doConnection(aSelectFlags);
         if (NS_SUCCEEDED(mStatus) && mOpenObserver) {
           mOpenObserver->OnStartRequest(this, mOpenContext);
+          NS_ASSERTION(mOperation == eSocketOperation_Connect, "bad state");
+          mCurrentState = gStateTable[mOperation][mCurrentState];
+          mOperation    = eSocketOperation_None;
+          done = PR_TRUE;
+          continue;
         }
         break;
 
@@ -1512,7 +1517,7 @@ NS_IMETHODIMP
 nsSocketTransport::AsyncOpen(nsIStreamObserver *observer, nsISupports* ctxt)
 {
   nsresult rv = NS_OK;
-  
+
   // Enter the socket transport lock...
   nsAutoLock aLock(mLock);
 
