@@ -228,7 +228,7 @@ nsBrowserAppCore::SetContentWindow(nsIDOMWindow* aWin)
   globalObj->GetWebShell(&webShell);
   if (nsnull != webShell) {
     webShell->SetObserver(this);
-    PRUnichar * name;
+    const PRUnichar * name;
     webShell->GetName( &name);
     nsAutoString str(name);
 
@@ -253,7 +253,7 @@ nsBrowserAppCore::SetWebShellWindow(nsIDOMWindow* aWin)
   nsIWebShell * webShell;
   globalObj->GetWebShell(&webShell);
   if (nsnull != webShell) {
-    PRUnichar * name;
+    const PRUnichar * name;
     webShell->GetName( &name);
     nsAutoString str(name);
 

@@ -183,7 +183,7 @@ NS_IMETHODIMP nsXULCommand::SetCommand(const nsString & aStrCmd)
 //----------------------------------------------------------------------
 NS_IMETHODIMP nsXULCommand::DoCommand()
 {
-  PRUnichar * name;
+  const PRUnichar * name;
   mWebShell->GetName( &name);
   nsAutoString str(name);
 
