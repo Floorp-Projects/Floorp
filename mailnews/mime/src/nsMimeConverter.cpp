@@ -120,7 +120,7 @@ nsMimeConverter::DecodeMimePartIIStr(const nsString& header,
   }
   return res;
 }
-
+ 
 nsresult
 nsMimeConverter::DecodeMimePartIIStr(const char *header, 
                                            char       *charset, 
@@ -149,7 +149,9 @@ nsMimeConverter::EncodeMimePartIIStr(const char    *header,
   if (MIME_ConvertString(mailCharset, "UTF-8", header, &utf8String) != 0)
     return NS_ERROR_FAILURE;
 
-  return EncodeMimePartIIStr_UTF8((const char *) utf8String, mailCharset, encodedWordSize, encodedString);
+  nsresult rv = EncodeMimePartIIStr_UTF8((const char *) utf8String, mailCharset, encodedWordSize, encodedString);
+  nsCRT::free(utf8String);
+  return rv;
 }
 
 nsresult
