@@ -69,20 +69,12 @@ BINREL_DIST=$(XPDIST)\WIN954.0_DBG.OBJD
 !endif
 !endif
 
-!ifndef MOZ_SECURITY
-HASHLIBS=$(DIST)\lib\secfreenav32.lib
-!else
-HASHLIBS=$(BINREL_DIST)\lib\hash.lib $(BINREL_DIST)\lib\secutil.lib 
-!endif
-
 # DEFFILE	= $(DLLNAME).def
 LLIBS	= \
 	$(DIST)\lib\plc3.lib \
 	$(LIBNSPR) \
-	$(DIST)\lib\js$(MOZ_BITS)$(VERSION_NUMBER).lib \
 	$(DIST)\lib\xpcom32.lib \
 	$(DIST)\lib\raptorbase.lib \
-	$(HASHLIBS)
 
 #//------------------------------------------------------------------------
 #// 
