@@ -293,7 +293,7 @@ pref("mail.collect_email_address_outgoing", true);
 pref("mail.collect_email_address_newsgroup", false);
 
 // by default, use the Personal Addressbook for collection
-pref("mail.collect_addressbook","moz-abmdbdirectory://abook.mab");
+pref("mail.collect_addressbook","moz-abmdbdirectory://abook.mab"); // the Personal addressbook.
 
 pref("mail.default_sendlater_uri","mailbox://nobody@Local%20Folders/Unsent%20Messages");
 
@@ -330,6 +330,15 @@ pref("mail.server.default.login_at_startup", false);
 pref("mail.server.default.allows_specialfolders_usage", true);
 pref("mail.server.default.canCreateFolders", true);
 pref("mail.server.default.canFileMessages", true);
+
+// for spam
+pref("mail.server.default.spamLevel",60);  // 0 - 100, 0 off, 20, lowest, 40 low, 60 medium, 80 high, 100 highest
+pref("mail.server.default.moveOnSpam",false);
+pref("mail.server.default.spamActionTargetFolder","mailbox://nobody@Local%20Folders/Junk%20Mail");
+pref("mail.server.default.useWhiteList",true);
+pref("mail.server.default.whiteListAbURI","moz-abmdbdirectory://abook.mab");  // the Personal addressbook.
+pref("mail.server.default.purgeSpam",false);
+pref("mail.server.default.purgeSpamInterval",14); // 14 days
 
 pref("mail.smtpserver.default.auth_method", 1); // auth any
 pref("mail.smtpserver.default.try_ssl", 0);
