@@ -207,6 +207,7 @@ protected:
   PRUint8           *mGammaTable;
 
   static PhGC_t     *mPtGC;
+  PRBool            mBufferIsEmpty;
 
 #ifdef NS_DEBUG
   PRBool            mInitialized;

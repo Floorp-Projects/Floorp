@@ -64,7 +64,7 @@ nsRegionPh :: nsRegionPh()
 
 nsRegionPh :: ~nsRegionPh()
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::~nsRegion Destructor called\n"));
+//  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::~nsRegion Destructor called\n"));
   
 #ifdef DEBUG_REGION
   DumpTiles(mRegion);
@@ -226,7 +226,7 @@ PRBool nsRegionPh :: IsEmpty(void)
 {
   PRBool result = PR_FALSE;
 
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::IsEmpty mRegion=<%p>\n", mRegion));
+//  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::IsEmpty mRegion=<%p>\n", mRegion));
 
   if (!mRegion)
     result = PR_TRUE;
@@ -440,7 +440,7 @@ NS_IMETHODIMP nsRegionPh :: GetRegionComplexity(nsRegionComplexity &aComplexity)
 
 void nsRegionPh :: SetRegionEmpty(void)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::SetRegionEmpty mRegion=<%p>\n", mRegion));
+//  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::SetRegionEmpty mRegion=<%p>\n", mRegion));
 
 #ifdef DEBUG_REGION
   DumpTiles(mRegion);
