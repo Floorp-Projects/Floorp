@@ -48,8 +48,8 @@
 class nsChildElementIterator {
 private:
   nsCOMPtr<nsIDOMNodeList> mNodeList;
-  PRUint32 mLength;
   PRUint32 mIndex;
+  PRUint32 mLength;
   nsString mNamespace;
   const char** mNamespaceArray;
   PRUint32 mNumNamespaces;
