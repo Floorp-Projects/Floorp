@@ -1,15 +1,24 @@
 <html>
-<head><title>The Jprof Profiler</title></head><body>
-<center><h1>The Jprof Profiler</h1></center><hr>
+<head><title>The Jprof Profiler</title></head>
 
-<h2>Introduction</h2>
+<body bgcolor="#FFFFFF" text="#000000"
+      link="#0000EE" vlink="#551A8B" alink="#FF0000">
+<center>
+<h1>The Jprof Profiler</h1>
+<font size="-1">
+<a href="mailto:jim_nance%yahoo.com">jim_nance@yahoo.com</a>
+</font>
+</center>
+<hr>
+
+<h3>Introduction</h3>
 
 Jprof is a profiling tool.  I am writing it because I need to find out
 where mozilla is spending its time, and there do not seem to be any
 profilers for Linux that can handle threads and/or shared libraries.
 This code is based heavily on Kipp Hickman's leaky.
 
-<P> <h2>Operation</h2>
+<P> <h3>Operation</h3>
 
 Jprof operates by installing a timer which periodically interrupts mozilla.
 When this timer goes off, the jprof code inside mozilla walks the function
@@ -17,39 +26,38 @@ call stack to determine which code was executing.  By collecting a large
 number of these call stacks, it is possible to deduce where mozilla is
 spending its time.
 
-<P> <h2>Use</h2>
+<P> <h3>Usage</h3>
 
 First, check out the jprof source code since it is not a part of the
 default SeaMonkeyAll CVS tag.  To do this do:
 <pre>
-cvs co mozilla/tools/jprof
-<pre>
-<P>
+  cvs co mozilla/tools/jprof
+</pre>
 Next, enable jprof and rebuild mozilla:
-<P>
 <pre>
-configure --enable-jprof
-make
+  # jprof needs symbols, do not use --enable-strip-libs
+  ./configure --enable-jprof
+  make
 </pre>
 Now you can run jprof.  To do this the JPROF_FLAGS environment variable
 must be set.  As a simple example:
 <pre>
-cd dist/bin
-env JPROF_FLAGS=JP_START LD_LIBRARY_PATH=. ./mozilla-bin
+  cd dist/bin
+  setenv JPROF_FLAGS JP_START
 </pre>
 <P>
 The JPROF_FLAGS environment variable can be composed of several substrings
 which have the following meanings:
 <ul>
-    <li> JP_START : Install the signal handler, and start sending the
+    <li> <b>JP_START</b> : Install the signal handler, and start sending the
     timer signals.
-    <li> JP_DEFER : Install the signal handler, but don't start sending
+    <li> <b>JP_DEFER</b> : Install the signal handler, but don't start sending
     the timer signals.  The user must start the signals by sending
     the first one (with <code>kill -PROF</code>, or with <code>kill
     -ALRM</code> if JP_REALTIME is used).
-    <li> JP_FIRST=x : Wait x seconds before starting the timer
-    <li> JP_PERIOD=y : Set timer to interrupt every y seconds
-    <li> JP_REALTIME : Do the profiling in intervals of real time rather
+    <li> <b>JP_FIRST=x</b> : Wait x seconds before starting the timer
+    <li> <b>JP_PERIOD=y</b> : Set timer to interrupt every y seconds
+    <li> <b>JP_REALTIME</b> : Do the profiling in intervals of real time rather
     than intervals of time used by the mozilla process (and the kernel
     when doing work for mozilla).  This could probably lead to weird
     results (you'll see whatever runs when mozilla is waiting for events),
@@ -59,7 +67,7 @@ which have the following meanings:
 For example you could say:
 
 <pre>
-setenv JPROF_FLAGS "JP_START JP_FIRST=3 JP_PERIOD=0.025"
+  setenv JPROF_FLAGS "JP_START JP_FIRST=3 JP_PERIOD=0.025"
 </pre>
 
 <P>
@@ -80,12 +88,12 @@ files into readable output.  To do this jprof needs the name of the mozilla
 binary and the log file.  It deduces the name of the map file:
 
 <pre>
-./jprof mozilla-bin ./jprof-log > tmp.html
+  ./jprof mozilla-bin ./jprof-log > tmp.html
 </pre>
 
 This will generate the file tmp.html which you should view in a web browser.
 
-<P> <h2>Interpretation</h2>
+<P> <h3>Interpretation</h3>
 
 The Jprof output is split into a flat portion and a hierarchical portion.
 There are links to each section at the top of the page.  It is typically
@@ -154,19 +162,24 @@ went off.  In our example, each of the 652 times the timer went off
 and nsWidget::DispatchMouseEvent was in the call stack it was calling
 nsWidget::DispatchWindowEvent.
 
-<P> <h2>Bugs</h2>
+<h3>Bugs</h3>
 Jprof has only been tested under Red Hat Linux 6.0, 6.1, and 6.2.  It does
 not work under 6.0, though it is possible hack up the source code and make
 it work there.  The way I determine the stack trace from inside the
 signal handler is tightly bound to the version of glibc that is running.
 If you know of a more portable way to get this information please let
 me know.
-<P> <h3>Update</h3>
-Ben Bucksch reports that installing the Red Hat 6.1 glibc rpms on a Red Hat
+
+<h3>Update</h3>
+<ul>
+  <li>Ben Bucksch reports that installing the Red Hat 6.1 glibc rpms on a Red Hat
 6.0 system allows jprof to work, and does not seem to break anything except
 gdm (the Gnome login program), and that can be fixed by installing the RH 6.1
-gdb rpm.
-<h3>Update</h3>
-David Baron reports that jprof works under RedHat 6.0 if one uncomments
+gdb rpm.</li>
+  <li>David Baron reports that jprof works under RedHat 6.0 if one uncomments
 the <code>#define JPROF_PTHREAD_HACK</code> near the beginning of
-<code>libmalloc.cpp</code>.
+<code>libmalloc.cpp</code>.</li>
+</ul>
+
+</body>
+</html>
