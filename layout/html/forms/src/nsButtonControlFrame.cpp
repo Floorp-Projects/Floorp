@@ -303,7 +303,10 @@ nsButtonControlFrame::Paint(nsIPresContext& aPresContext,
 	   const nsStyleColor* colorStyle = (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
 
 	   aRenderingContext.SetFont(fontStyle->mFont);
-	   
+
+     PRBool clipState;
+     aRenderingContext.PushState();
+     aRenderingContext.SetClipRect(rect, nsClipCombine_kIntersect, clipState);
 	   // if disabled paint 
 	   if (PR_TRUE == mRenderer.isDisabled())
 	   {
@@ -317,6 +320,7 @@ nsButtonControlFrame::Paint(nsIPresContext& aPresContext,
 
 	   aRenderingContext.SetColor(colorStyle->mColor);
 	   aRenderingContext.DrawString(label, content.x, content.y);
+	   aRenderingContext.PopState(clipState);
     }
 
   return NS_OK;
