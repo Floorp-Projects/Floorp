@@ -423,7 +423,7 @@ function RestoreThreadPaneSelection(selectionArray)
 		}
 		if(messageElement)
 		{
-			dump("We have a messageElement\n");
+			//dump("We have a messageElement\n");
 			tree.addItemToSelection(messageElement);
 			if(i==0)
 				tree.ensureElementIsVisible(messageElement);
