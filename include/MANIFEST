@@ -2,8 +2,6 @@
 # This is a list of local files which get copied to the mozilla:dist directory
 #
 
-abcom.h
-abdefn.h
 client.h
 csid.h
 ctxtfunc.h
@@ -24,7 +22,6 @@ mimeenc.h
 minicom.h
 mk_cx_fn.h
 msgcom.h
-msgmapi.h
 msgtypes.h
 m_cvstrm.h
 ncompat.h
