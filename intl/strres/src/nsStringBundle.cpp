@@ -268,7 +268,7 @@ nsStringBundle::GetInputStream(const char* aURLSpec, nsILocale* aLocale, nsIInpu
 nsresult
 nsStringBundle::OpenInputStream(nsString2& aURLStr, nsIInputStream*& in) 
 {
-#ifdef DEBUG
+#ifdef DEBUG_tao
   {
     char *s = aURLStr.ToNewCString();
     printf("\n** nsStringBundle::OpenInputStream: %s\n", s?s:"null");
@@ -288,7 +288,7 @@ nsStringBundle::OpenInputStream(nsString2& aURLStr, nsIInputStream*& in)
   ret = pNetService->CreateURL(&url, aURLStr, nsnull, nsnull,
                                nsnull);
   if (NS_FAILED(ret)) {
-#ifdef NS_DEBUG
+#ifdef DEBUG_tao
     char *s = aURLStr.ToNewCString();
     printf("\n** cannot create URL for %s\n", s?s:"null");
     delete s;
@@ -298,7 +298,7 @@ nsStringBundle::OpenInputStream(nsString2& aURLStr, nsIInputStream*& in)
   //
   ret = pNetService->OpenBlockingStream(url, nsnull, &in);
   NS_RELEASE(url);
-#ifdef NS_DEBUG
+#ifdef DEBUG_tao
   if (NS_FAILED(ret) || !in) {
     char *s = aURLStr.ToNewCString();
     printf("\n** cannot open stream: %s\n", s?s:"null");
@@ -366,7 +366,7 @@ public:
 
 nsStringBundleService::nsStringBundleService()
 {
-#if DEBUG
+#ifdef DEBUG_tao
   printf("\n++ nsStringBundleService::nsStringBundleService ++\n");
 #endif
   NS_INIT_REFCNT();
@@ -382,7 +382,7 @@ NS_IMETHODIMP
 nsStringBundleService::CreateBundle(const char* aURLSpec, nsILocale* aLocale,
                                     nsIStringBundle** aResult)
 {
-#ifdef DEBUG
+#ifdef DEBUG_tao
   printf("\n++ nsStringBundleService::CreateBundle ++\n");
   {
     nsString2 aURLStr(aURLSpec);
@@ -413,7 +413,7 @@ NS_IMETHODIMP
 nsStringBundleService::CreateXPCBundle(const char *aURLSpec, const PRUnichar *aLocaleName, nsIStringBundle **aResult)
 {
 
-#ifdef DEBUG
+#ifdef DEBUG_tao
   printf("\n++ nsStringBundleService::CreateXPCBundle ++\n");
   {
     nsString2 aURLStr(aURLSpec);
@@ -453,7 +453,7 @@ public:
 
 nsStringBundleServiceFactory::nsStringBundleServiceFactory()
 {
-#ifdef DEBUG
+#ifdef DEBUG_tao
   printf("\n++ nsStringBundleServiceFactory::nsStringBundleServiceFactory ++\n");
 #endif
   NS_INIT_REFCNT();
@@ -469,7 +469,7 @@ NS_IMETHODIMP
 nsStringBundleServiceFactory::CreateInstance(nsISupports* aOuter,
   REFNSIID aIID, void** aResult)
 {
-#ifdef DEBUG
+#ifdef DEBUG_tao
   printf("\n++ nsStringBundleServiceFactory::CreateInstance ++\n");
 #endif
   nsStringBundleService* service = new nsStringBundleService();
@@ -488,7 +488,7 @@ nsStringBundleServiceFactory::CreateInstance(nsISupports* aOuter,
 NS_IMETHODIMP
 nsStringBundleServiceFactory::LockFactory(PRBool aLock)
 {
-#ifdef DEBUG
+#ifdef DEBUG_tao
   printf("\n++ nsStringBundleServiceFactory::LockFactory ++\n");
 #endif
   if (aLock) {
@@ -504,7 +504,7 @@ nsStringBundleServiceFactory::LockFactory(PRBool aLock)
 extern "C" NS_EXPORT nsresult
 NSRegisterSelf(nsISupports* aServMgr, const char* path)
 {
-#ifdef DEBUG
+#ifdef DEBUG_tao
   printf("\n++  str bunlde  NSRegisterSelf ++\n");
 #endif
   nsresult rv;
@@ -533,7 +533,7 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
 extern "C" NS_EXPORT nsresult
 NSUnregisterSelf(nsISupports* aServMgr, const char* path)
 {
-#ifdef DEBUG
+#ifdef DEBUG_tao
   printf("\n++  str bunlde  NSUnregisterSelf ++\n");
 #endif
   nsresult rv;
@@ -562,7 +562,7 @@ NSGetFactory(nsISupports* aServMgr,
              const char *aProgID,
              nsIFactory **aFactory)
 {
-#ifdef DEBUG
+#ifdef DEBUG_tao
   printf("\n++  str bunlde  NSGetFactory ++\n");
 #endif
   nsresult  res;
