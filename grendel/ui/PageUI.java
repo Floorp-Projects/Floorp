@@ -94,10 +94,6 @@ public class PageUI extends JPanel {
       title = pb.getTitle();
     } catch (Exception e) {
     }
-
-    model.setAttribute("userNameField", "foo");
-    model.setAttribute("userOrgainzationField", "bar");
-    model.setAttribute("userEmailAddressField", "grail@cafebabe.org");
   }
 
   /**
@@ -176,7 +172,6 @@ public class PageUI extends JPanel {
       }
 
       if (val != null) {
-        System.out.println(k + " is " + val);
         model.setAttribute(k, val);
       }
     }
