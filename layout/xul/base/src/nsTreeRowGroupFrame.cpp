@@ -1021,6 +1021,10 @@ nsTreeRowGroupFrame::ReflowAfterRowLayout(nsIPresContext*       aPresContext,
   PRInt32 count = 0;
   ComputeTotalRowCount(count, mContent); // XXX This sucks! Needs to be cheap!
   
+  nsTableFrame* tableFrame;
+  nsTableFrame::GetTableFrame(this, tableFrame);
+  nsTreeFrame* treeFrame = (nsTreeFrame*)tableFrame;
+
   // Our page size is the # of rows instantiated.
   PRInt32 pageRowCount;
   GetRowCount(pageRowCount);
@@ -1063,10 +1067,7 @@ nsTreeRowGroupFrame::ReflowAfterRowLayout(nsIPresContext*       aPresContext,
       mScrollbar = nsnull;
 
       // Dirty the tree for another reflow.
-      nsTableFrame* tableFrame;
-      nsTableFrame::GetTableFrame(this, tableFrame);
-  
-      MarkTreeAsDirty(aPresContext, (nsTreeFrame*)tableFrame);
+      MarkTreeAsDirty(aPresContext, treeFrame);
     }
   }
 
@@ -1088,6 +1089,12 @@ nsTreeRowGroupFrame::ReflowAfterRowLayout(nsIPresContext*       aPresContext,
     PRInt32 rowCount = count-1;
     if (rowCount < 0)
       rowCount = 0;
+
+    // Subtract one from our maxpos if we're a fixed row height.
+    PRInt32 rowSize = treeFrame->GetFixedRowSize();
+    if (rowSize != -1) {
+      rowCount--;
+    }
 
     nsAutoString maxpos;
     if (!mIsFull) {
@@ -1411,9 +1418,22 @@ PRBool nsTreeRowGroupFrame::ContinueReflow(nsIFrame* aFrame, nsIPresContext* aPr
   }
 
   PRBool reflowStopped = treeFrame->IsReflowHalted();
+  /*if (reflowStopped) {
+    // This is only hit for fixed row trees (e.g., rows="3")
+    nsCOMPtr<nsIContent> nextRow;
+    nsCOMPtr<nsIContent> treeContent;
+    treeFrame->GetContent(getter_AddRefs(treeContent));
+
+    FindRowContentAtIndex(rowSize, treeContent,
+                          getter_AddRefs(nextRow));
+
+    if (nextRow)
+      mIsFull = PR_TRUE;
+  }*/
 
   if ((rowSize == -1 && height <= 0) || reflowStopped) {
     mIsFull = PR_TRUE;
+
     nsIFrame* lastChild = GetLastFrame();
     nsIFrame* startingPoint = mBottomFrame;
     if (startingPoint == nsnull) {
