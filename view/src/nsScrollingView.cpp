@@ -771,7 +771,6 @@ void nsScrollingView :: Notify(nsITimer * aTimer)
 
   // First do the scrolling of the view
   view->GetScrollOffset(&xoff, &yoff);
-  printf("GetScrollOffset %d %d\n", xoff, yoff);
 
   nscoord newPos = yoff+mScrollingDelta;
   if (newPos < 0) {
