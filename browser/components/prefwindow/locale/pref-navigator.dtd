@@ -5,6 +5,6 @@
 <!ENTITY  location.label            "Location:">
 <!ENTITY  location.accesskey        "a">
 <!ENTITY  useCurrent.label          "Use Current Page">
-<!ENTITY  useCurrent.accesskey      "u">
-<!ENTITY  useBlank.label            "Use blank page">
-<!ENTITY  useBlank.accesskey        "n">
+<!ENTITY  useCurrent.accesskey      "U">
+<!ENTITY  useBlank.label            "Use Blank Page">
+<!ENTITY  useBlank.accesskey        "B">
