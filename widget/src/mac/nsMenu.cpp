@@ -692,13 +692,10 @@ nsEventStatus nsMenu::MenuDestruct(const nsMenuEvent & aMenuEvent)
       return nsEventStatus_eIgnore;
   }
   
-  nsCOMPtr<nsIDOMDocument> domDocument = do_QueryInterface(contentNode);
-  if (!domDocument) {
-      NS_ERROR("DOM Node doesn't support the nsIContent interface.");
-      return nsEventStatus_eIgnore;
-  }
-  
-  domElement->RemoveAttribute("open");
+  nsIDocument * tmp = nsnull;
+  contentNode->GetDocument(tmp);
+  if(tmp)
+    domElement->RemoveAttribute("open");
   
   return nsEventStatus_eIgnore;
 }
