@@ -312,6 +312,49 @@
 	list-style-image        : url("chrome://editor/skin/images/insert-disabled.gif");
 }
 
+/* Objects dropdown menu */
+
+#InsertLinkItem {
+  list-style-image: url("chrome://editor/skin/images/link.gif");
+}
+
+#InsertLinkItem:hover {
+  list-style-image: url("chrome://editor/skin/images/link-hover.gif");
+}
+
+#InsertAnchorItem {
+  list-style-image: url("chrome://editor/skin/images/anchor.gif");
+}
+
+#InsertAnchorItem:hover {
+  list-style-image: url("chrome://editor/skin/images/anchor-hover.gif");
+}
+
+#InsertImageItem {
+  list-style-image: url("chrome://editor/skin/images/image.gif");
+}
+
+#InsertImageItem:hover {
+  list-style-image: url("chrome://editor/skin/images/image-hover.gif");
+}
+
+#InsertHRuleItem {
+  list-style-image: url("chrome://editor/skin/images/hline.gif");
+}
+
+#InsertHRuleItem:hover {
+  list-style-image: url("chrome://editor/skin/images/hline-hover.gif");
+}
+
+#InsertTableItem {
+  list-style-image: url("chrome://editor/skin/images/table.gif");
+}
+
+#InsertTableItem:hover {
+  list-style-image: url("chrome://editor/skin/images/table-hover.gif");
+}
+
+
 #text-align-left,
 #align-left-button
   {
