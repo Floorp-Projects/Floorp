@@ -146,12 +146,12 @@ PQG_DestroyParams(PQGParams *params)
     	return;
     if (params->arena != NULL) {
 	PORT_FreeArena(params->arena, PR_FALSE);	/* don't zero it */
-	return;
+    } else {
+	SECITEM_FreeItem(&params->prime,    PR_FALSE); /* don't free prime */
+	SECITEM_FreeItem(&params->subPrime, PR_FALSE); /* don't free subPrime */
+	SECITEM_FreeItem(&params->base,     PR_FALSE); /* don't free base */
+	PORT_Free(params);
     }
-    SECITEM_FreeItem(&params->prime,    PR_FALSE); /* don't free prime */
-    SECITEM_FreeItem(&params->subPrime, PR_FALSE); /* don't free subPrime */
-    SECITEM_FreeItem(&params->base,     PR_FALSE); /* don't free base */
-    PORT_Free(params);
 }
 
 /**************************************************************************
@@ -259,9 +259,9 @@ PQG_DestroyVerify(PQGVerify *vfy)
     	return;
     if (vfy->arena != NULL) {
 	PORT_FreeArena(vfy->arena, PR_FALSE);	/* don't zero it */
-	return;
+    } else {
+	SECITEM_FreeItem(&vfy->seed,   PR_FALSE); /* don't free seed */
+	SECITEM_FreeItem(&vfy->h,      PR_FALSE); /* don't free h */
+	PORT_Free(vfy);
     }
-    SECITEM_FreeItem(&vfy->seed,   PR_FALSE); /* don't free seed */
-    SECITEM_FreeItem(&vfy->h,      PR_FALSE); /* don't free h */
-    PORT_Free(vfy);
 }
