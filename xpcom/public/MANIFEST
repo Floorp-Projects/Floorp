@@ -20,4 +20,7 @@ nsVector.h
 nsMacRepository.h
 nsTraceRefcnt.h
 plvector.h
+nsXPComFactory.h
+nsXPComCIID.h
+nsIEventQueueService.h
 nsICollection.h
