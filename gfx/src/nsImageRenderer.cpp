@@ -223,6 +223,7 @@ ImageRendererImpl::SetDecodedRect(   IL_Pixmap* aImage,
 				                PRInt32 x1, PRInt32 y1,
                                 PRInt32 x2, PRInt32 y2)
 {
+
   nsIImage         *img;
   
   if(aImage == NULL)
