@@ -1012,7 +1012,7 @@ sub MakeResourceAliases()
 	#// Make aliases of resource files
 	#//
 	_MakeAlias(":mozilla:layout:html:document:src:ua.css",								"$resource_dir");
-	_MakeAlias(":mozilla:webshell:tests:viewer:resources:viewer.properties",				"$resource_dir");
+	_MakeAlias(":mozilla:webshell:tests:viewer:resources:viewer.properties",			"$resource_dir");
 	_MakeAlias(":mozilla:intl:uconv:src:charsetalias.properties",						"$resource_dir");
 	_MakeAlias(":mozilla:intl:uconv:src:maccharset.properties",							"$resource_dir");
 
@@ -1020,7 +1020,7 @@ sub MakeResourceAliases()
 	_MakeAlias(":mozilla:extensions:wallet:src:wallet.properties",						"$resource_dir");
 
 	my($html_dir) = "$resource_dir" . "html:";
-	_MakeAlias(":mozilla:layout:html:base:src:broken-image.gif",							"$html_dir");
+    _InstallResources(":mozilla:layout:html:base:src:MANIFEST_RES",						"$html_dir");
 
 	my($throbber_dir) = "$resource_dir" . "throbber:";
 	BuildFolderResourceAliases(":mozilla:webshell:tests:viewer:throbber:",				"$throbber_dir");
