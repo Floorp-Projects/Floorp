@@ -37,9 +37,7 @@ nsGenericDOMNodeList::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
   static NS_DEFINE_IID(kIDOMNodeListIID, NS_IDOMNODELIST_IID);
-  static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
   if (aIID.Equals(kIDOMNodeListIID)) {
     *aInstancePtr = (void*)(nsIDOMNodeList*)this;
     AddRef();

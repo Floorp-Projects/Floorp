@@ -2529,25 +2529,25 @@ nsGenericHTMLContainerElement::ReplaceChild(nsIDOMNode* aNewChild,
   }
   nsIContent* content = nsnull;
   nsresult res = aOldChild->QueryInterface(kIContentIID, (void**)&content);
-  NS_ASSERTION(NS_OK == res, "Must be an nsIContent");
-  if (NS_OK == res) {
+  NS_ASSERTION(NS_SUCCEEDED(res), "Must be an nsIContent");
+  if (NS_SUCCEEDED(res)) {
     PRInt32 pos;
     IndexOf(content, pos);
     if (pos >= 0) {
       nsIContent* newContent = nsnull;
-      nsresult res = aNewChild->QueryInterface(kIContentIID, (void**)&newContent);
-      NS_ASSERTION(NS_OK == res, "Must be an nsIContent");
-      if (NS_OK == res) {
+      res = aNewChild->QueryInterface(kIContentIID, (void**)&newContent);
+      NS_ASSERTION(NS_SUCCEEDED(res), "Must be an nsIContent");
+      if (NS_SUCCEEDED(res)) {
         // Check if this is a document fragment. If it is, we need
         // to remove the children of the document fragment and add them
         // individually (i.e. we don't add the actual document fragment).
         nsIDOMDocumentFragment* docFrag = nsnull;
-        if (NS_OK == aNewChild->QueryInterface(kIDOMDocumentFragmentIID,
-                                               (void **)&docFrag)) {
+        if (NS_SUCCEEDED(aNewChild->QueryInterface(kIDOMDocumentFragmentIID,
+                                                   (void **)&docFrag))) {
     
           nsIContent* docFragContent;
           res = aNewChild->QueryInterface(kIContentIID, (void **)&docFragContent);
-          if (NS_OK == res) {
+          if (NS_SUCCEEDED(res)) {
             PRInt32 count;
 
             docFragContent->ChildCount(count);
@@ -2557,23 +2557,23 @@ nsGenericHTMLContainerElement::ReplaceChild(nsIDOMNode* aNewChild,
               // Remove the last child of the document fragment
               // and do a replace with it
               res = docFragContent->ChildAt(count-1, childContent);
-              if (NS_OK == res) {
+              if (NS_SUCCEEDED(res)) {
                 res = docFragContent->RemoveChildAt(count-1, PR_FALSE);
-                if (NS_OK == res) {
+                if (NS_SUCCEEDED(res)) {
                   SetDocumentInChildrenOf(childContent, mDocument);
                   res = ReplaceChildAt(childContent, pos, PR_TRUE);
                   // If there are more children, then insert them before
                   // the newly replaced child
-                  if ((NS_OK == res) && (count > 1)) {
+                  if ((NS_SUCCEEDED(res)) && (count > 1)) {
                     nsIDOMNode* childNode = nsnull;
 
                     res = childContent->QueryInterface(kIDOMNodeIID,
                                                        (void **)&childNode);
-                    if (NS_OK == res) {
+                    if (NS_SUCCEEDED(res)) {
                       nsIDOMNode* rv;
 
                       res = InsertBefore(aNewChild, childNode, &rv);
-                      if (NS_OK == res) {
+                      if (NS_SUCCEEDED(res)) {
                         NS_IF_RELEASE(rv);
                       }
                       NS_RELEASE(childNode);
@@ -2593,7 +2593,7 @@ nsGenericHTMLContainerElement::ReplaceChild(nsIDOMNode* aNewChild,
         else {
           nsIContent* oldParent;
           res = newContent->GetParent(oldParent);
-          if (NS_OK == res) {
+          if (NS_SUCCEEDED(res)) {
             // Remove the element from the old parent if one exists
             if (nsnull != oldParent) {
               PRInt32 index;
@@ -2639,8 +2639,8 @@ nsGenericHTMLContainerElement::RemoveChild(nsIDOMNode* aOldChild,
     return NS_ERROR_NULL_POINTER;
   }
   nsresult res = aOldChild->QueryInterface(kIContentIID, (void**)&content);
-  NS_ASSERTION(NS_OK == res, "Must be an nsIContent");
-  if (NS_OK == res) {
+  NS_ASSERTION(NS_SUCCEEDED(res), "Must be an nsIContent");
+  if (NS_SUCCEEDED(res)) {
     PRInt32 pos;
     IndexOf(content, pos);
     if (pos >= 0) {

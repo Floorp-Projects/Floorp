@@ -625,7 +625,6 @@ PRBool nsTableFrame::HasGroupRules() const
 // this won't work until bug 12948 is resolved and col groups are considered 
 void nsTableFrame::ProcessGroupRules(nsIPresContext& aPresContext)
 {
-  PRInt32 numRows = GetRowCount();
   PRInt32 numCols = GetColCount();
 
   // process row groups

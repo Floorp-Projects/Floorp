@@ -1073,8 +1073,8 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
 
   if (nsnull!=aAttributes)
   {
-    float p2t;
-    aPresContext->GetScaledPixelsToTwips(&p2t);
+    float sp2t;
+    aPresContext->GetScaledPixelsToTwips(&sp2t);
     nsHTMLValue value;
 
     const nsStyleDisplay* readDisplay = (nsStyleDisplay*)
@@ -1116,7 +1116,7 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
           break;
 
         case eHTMLUnit_Pixel:
-          position->mWidth.SetCoordValue(NSIntPixelsToTwips(value.GetPixelValue(), p2t));
+          position->mWidth.SetCoordValue(NSIntPixelsToTwips(value.GetPixelValue(), sp2t));
           break;
         default:
           break;
@@ -1134,14 +1134,15 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
           break;
 
         case eHTMLUnit_Pixel:
-          position->mHeight.SetCoordValue(NSIntPixelsToTwips(value.GetPixelValue(), p2t));
+          position->mHeight.SetCoordValue(NSIntPixelsToTwips(value.GetPixelValue(), sp2t));
           break;
         default:
           break;
         }
       }
 
-      nsStyleSpacing* spacing = (nsStyleSpacing*)aContext->GetMutableStyleData(eStyleStruct_Spacing);
+      nsStyleSpacing* spacing = (nsStyleSpacing*)
+        aContext->GetMutableStyleData(eStyleStruct_Spacing);
 
       // default border style is the quirks outset
       PRUint8 borderStyle = NS_STYLE_BORDER_STYLE_BG_OUTSET;
@@ -1165,8 +1166,6 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
       aAttributes->GetAttribute(nsHTMLAtoms::align, value);
       if (value.GetUnit() == eHTMLUnit_Enumerated) {
         if (NS_STYLE_TEXT_ALIGN_CENTER == value.GetIntValue()) {
-          nsStyleSpacing* spacing = (nsStyleSpacing*)
-            aContext->GetMutableStyleData(eStyleStruct_Spacing);
           nsStyleCoord otto(eStyleUnit_Auto);
           spacing->mMargin.SetLeft(otto);
           spacing->mMargin.SetRight(otto);
@@ -1199,7 +1198,7 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
       if (value.GetUnit() == eHTMLUnit_Pixel) {
         if (nsnull==tableStyle)
           tableStyle = (nsStyleTable*)aContext->GetMutableStyleData(eStyleStruct_Table);
-        tableStyle->mCellPadding.SetCoordValue(NSIntPixelsToTwips(value.GetPixelValue(), p2t));
+        tableStyle->mCellPadding.SetCoordValue(NSIntPixelsToTwips(value.GetPixelValue(), sp2t));
       }
 
       // cellspacing  (reuses tableStyle if already resolved)
@@ -1208,8 +1207,8 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
       if (value.GetUnit() == eHTMLUnit_Pixel) {
         if (nsnull==tableStyle)
           tableStyle = (nsStyleTable*)aContext->GetMutableStyleData(eStyleStruct_Table);
-        tableStyle->mBorderSpacingX.SetCoordValue(NSIntPixelsToTwips(value.GetPixelValue(), p2t));
-        tableStyle->mBorderSpacingY.SetCoordValue(NSIntPixelsToTwips(value.GetPixelValue(), p2t));
+        tableStyle->mBorderSpacingX.SetCoordValue(NSIntPixelsToTwips(value.GetPixelValue(), sp2t));
+        tableStyle->mBorderSpacingY.SetCoordValue(NSIntPixelsToTwips(value.GetPixelValue(), sp2t));
       }
 
       // cols
