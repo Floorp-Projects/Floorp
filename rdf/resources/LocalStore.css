@@ -1,52 +1,34 @@
-DOCUMENT, BODY {
-  display: block;
-}
+window { 
+ display: block; 
+} 
 
-FOLDER, CHILD {
-  display: block;
-  color: #FFFFFF;
-  background-color: #AAAAEE;
-  margin-left: 8px;
-}
+tree { 
+ display: table; 
+ background-color: #eeeeee; 
+ border: none; 
+ border-spacing: 0px; 
+ border-collapse: collapse; 
+} 
 
-NAME {
-  font-weight: bold;
-  text-decoration: underline;
-  cursor: pointer;
-  padding: 2px;
-}
+treerow { 
+ display: table-row; 
+} 
 
-SUBJECT {
-  display: none;
-}
+treehead { 
+ display: table-header-group; 
+} 
 
-FOLDER FOLDER CHILD SUBJECT {
-  display: block;
-  float: left;
-  width: 300px;
-  font-family: Verdana, Sans-Serif;
-  font-size: 10pt;
-  font-weight: bold;
-  cursor: pointer;
-}
+treebody { 
+ display: table-row-group; 
 
-FOLDER CHILD NAME {
-  text-decoration: none;
-  font-family: Verdana, Sans-Serif;
-  font-size: 10pt;
-  font-weight: bold;
-  cursor: pointer;
-}
+} 
 
-DATE {
-  margin-left: 12px;
-  font-family: Verdana, Sans-Serif;
-  font-size: 10pt;
-}
+treecell { 
+ display: table-cell; 
+} 
 
-LASTVISITDATE, BOOKMARKADDDATE, LASTMODIFIEDDATE {
-  font-family: monospace;
-  display: block;
-  float: right;
-  width: 100px;
-}
+treehead treerow treecell { 
+ background-color: #a0a0a0; 
+ border: thin black solid; 
+} 
+  
