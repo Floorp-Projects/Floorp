@@ -3004,11 +3004,18 @@ public class Codegen extends Interpreter {
                 pushAsWrapperObject(num);
             }
             else {
-                String constantName = "jsK_" + addNumberConstant(num);
-                String constantType = getStaticConstantWrapperType(num);
-                classFile.add(ByteCode.GETSTATIC,
-                              classFile.fullyQualifiedForm(this.name),
-                              constantName, constantType);
+                if (num != num) {
+                    // Add NaN object
+                    classFile.add(ByteCode.GETSTATIC,
+                                  "org/mozilla/javascript/ScriptRuntime",
+                                  "NaNobj", "Ljava/lang/Double;");
+                } else {
+                    String constantName = "jsK_" + addNumberConstant(num);
+                    String constantType = getStaticConstantWrapperType(num);
+                    classFile.add(ByteCode.GETSTATIC,
+                                  classFile.fullyQualifiedForm(this.name),
+                                  constantName, constantType);
+                }
             }
         }
     }
@@ -3040,6 +3047,8 @@ public class Codegen extends Interpreter {
     }
 
     private int addNumberConstant(double num) {
+        // NaN is provided via ScriptRuntime.NaNobj
+        if (num != num) Context.codeBug();
         int N = itsConstantListSize;
         if (N == 0) {
             itsConstantList = new double[128];
@@ -3071,7 +3080,7 @@ public class Codegen extends Interpreter {
         double[] array = itsConstantList;
         for (int i = 0; i != N; ++i) {
             double num = array[i];
-            String constantName = "jsK_" + addNumberConstant(num);
+            String constantName = "jsK_" + i;
             String constantType = getStaticConstantWrapperType(num);
             classFile.addField(constantName, constantType,
                                ClassFileWriter.ACC_STATIC);
