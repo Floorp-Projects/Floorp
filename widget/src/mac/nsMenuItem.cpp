@@ -16,12 +16,16 @@
  * Reserved.
  */
 
+#include "nsCOMPtr.h"
+#include "nsIDocumentViewer.h"
+#include "nsIContent.h"
+#include "nsIPresContext.h"
+
 #include "nsMenuItem.h"
 #include "nsIMenu.h"
 #include "nsIMenuBar.h"
 #include "nsIWidget.h"
 #include "nsIMenuListener.h"
-
 #include "nsStringUtil.h"
 
 #include "nsIPopUpMenu.h"
@@ -75,6 +79,8 @@ nsMenuItem::nsMenuItem() : nsIMenuItem()
   mTarget      = nsnull;
   mXULCommandListener = nsnull;
   mIsSeparator = PR_FALSE;
+  mWebShell    = nsnull;
+  mDOMElement  = nsnull;
 }
 
 //-------------------------------------------------------------------------
@@ -319,6 +325,7 @@ nsEventStatus nsMenuItem::MenuSelected(const nsMenuEvent & aMenuEvent)
 	if(mXULCommandListener)
 		return mXULCommandListener->MenuSelected(aMenuEvent);
 		
+    DoCommand();
   	return nsEventStatus_eIgnore;
 }
 
@@ -364,12 +371,57 @@ NS_METHOD nsMenuItem::SetCommand(const nsString & aStrCmd)
 */
 NS_METHOD nsMenuItem::DoCommand()
 {
-	return NS_OK;
+
+  nsresult rv = NS_ERROR_FAILURE;
+ 
+  nsCOMPtr<nsIContentViewerContainer> contentViewerContainer;
+  contentViewerContainer = do_QueryInterface(mWebShell);
+  if (!contentViewerContainer) {
+      NS_ERROR("Webshell doesn't support the content viewer container interface");
+      return rv;
+  }
+
+  nsCOMPtr<nsIContentViewer> contentViewer;
+  if (NS_FAILED(rv = contentViewerContainer->GetContentViewer(getter_AddRefs(contentViewer)))) {
+      NS_ERROR("Unable to retrieve content viewer.");
+      return rv;
+  }
+
+  nsCOMPtr<nsIDocumentViewer> docViewer;
+  docViewer = do_QueryInterface(contentViewer);
+  if (!docViewer) {
+      NS_ERROR("Document viewer interface not supported by the content viewer.");
+      return rv;
+  }
+
+  nsCOMPtr<nsIPresContext> presContext;
+  if (NS_FAILED(rv = docViewer->GetPresContext(*getter_AddRefs(presContext)))) {
+      NS_ERROR("Unable to retrieve the doc viewer's presentation context.");
+      return rv;
+  }
+
+  nsEventStatus status = nsEventStatus_eIgnore;
+  nsMouseEvent event;
+  event.eventStructType = NS_MOUSE_EVENT;
+  event.message = NS_MOUSE_LEFT_CLICK;
+
+  nsCOMPtr<nsIContent> contentNode;
+  contentNode = do_QueryInterface(mDOMElement);
+  if (!contentNode) {
+      NS_ERROR("DOM Node doesn't support the nsIContent interface required to handle DOM events.");
+      return rv;
+  }
+
+  rv = contentNode->HandleDOMEvent(*presContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
+
+  return rv;
+
 }
 
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuItem::SetDOMElement(nsIDOMElement * aDOMElement)
 {
+    mDOMElement = aDOMElement;
 	return NS_OK;
 }
     
@@ -382,6 +434,7 @@ NS_METHOD nsMenuItem::GetDOMElement(nsIDOMElement ** aDOMElement)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuItem::SetWebShell(nsIWebShell * aWebShell)
 {
+    mWebShell = aWebShell;
 	return NS_OK;
 }
     

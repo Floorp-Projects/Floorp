@@ -98,6 +98,9 @@ protected:
   nsIMenuListener * mXULCommandListener;
   PRBool            mIsSeparator;
   nsIMenuListener * mListener;
+  
+  nsIWebShell   *   mWebShell;
+  nsIDOMElement *   mDOMElement;
 };
 
 #endif // nsMenuItem_h__
