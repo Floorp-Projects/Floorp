@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.30 $ $Date: 2002/04/18 17:52:55 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.31 $ $Date: 2002/04/19 23:06:44 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIM_H
@@ -61,6 +61,8 @@ static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.30 $ $Da
 
 #ifdef NSS_3_4_CODE
 #include "cert.h"
+#include "dev.h"
+#include "pki3hack.h"
 #endif
 
 #ifdef DEBUG_CACHE
@@ -447,23 +449,39 @@ nssTrustDomain_FlushCache
 {
 }
 
-struct token_cert_destructor {
-    nssTDCertificateCache *cache;
+struct token_cert_dtor {
     NSSToken *token;
+    nssTDCertificateCache *cache;
+    NSSCertificate **certs;
+    PRUint32 numCerts, arrSize;
 };
 
 static void 
 remove_token_certs(const void *k, void *v, void *a)
 {
-#if 0
-    struct NSSItem *identifier = (struct NSSItem *)k;
-    NSSCertificate *c = (NSSCertificate *)v;
-    struct token_cert_destructor *tcd = (struct token_cert_destructor *)a;
-    if (c->token == tcd->token) {
-	nssHash_Remove(tcd->cache->issuerAndSN, identifier);
-	/* remove from the other hashes */
+    NSSCertificate *c = (NSSCertificate *)k;
+    nssPKIObject *object = &c->object;
+    struct token_cert_dtor *dtor = a;
+    PRUint32 i;
+    PZ_Lock(object->lock);
+    for (i=0; i<object->numInstances; i++) {
+	if (object->instances[i]->token == dtor->token) {
+	    nssCryptokiObject_Destroy(object->instances[i]);
+	    object->instances[i] = object->instances[object->numInstances-1];
+	    object->instances[object->numInstances-1] = NULL;
+	    object->numInstances--;
+	    dtor->certs[dtor->numCerts++] = nssCertificate_AddRef(c);
+	    if (dtor->numCerts == dtor->arrSize) {
+		dtor->arrSize *= 2;
+		dtor->certs = nss_ZREALLOCARRAY(dtor->certs, 
+		                                NSSCertificate *,
+		                                dtor->arrSize);
+	    }
+	    break;
+	}
     }
-#endif
+    PZ_Unlock(object->lock);
+    return;
 }
 
 /* 
@@ -477,12 +495,72 @@ nssTrustDomain_RemoveTokenCertsFromCache
   NSSToken *token
 )
 {
-    struct token_cert_destructor tcd;
-    tcd.cache = td->cache;
-    tcd.token = token;
+    NSSCertificate **certs;
+    PRUint32 i, arrSize = 10;
+    struct token_cert_dtor dtor;
+    certs = nss_ZNEWARRAY(NULL, NSSCertificate *, arrSize);
+    if (!certs) {
+	return PR_FAILURE;
+    }
+    dtor.cache = td->cache;
+    dtor.token = token;
+    dtor.certs = certs;
+    dtor.numCerts = 0;
+    dtor.arrSize = arrSize;
     PZ_Lock(td->cache->lock);
-    nssHash_Iterate(td->cache->issuerAndSN, remove_token_certs, (void *)&tcd);
+    nssHash_Iterate(td->cache->issuerAndSN, remove_token_certs, (void *)&dtor);
     PZ_Unlock(td->cache->lock);
+    for (i=0; i<dtor.numCerts; i++) {
+	if (dtor.certs[i]->object.numInstances == 0) {
+	    nssTrustDomain_RemoveCertFromCache(td, dtor.certs[i]);
+	} else {
+	    STAN_ForceCERTCertificateUpdate(dtor.certs[i]);
+	}
+	nssCertificate_Destroy(dtor.certs[i]);
+    }
+    nss_ZFreeIf(dtor.certs);
+    return PR_SUCCESS;
+}
+
+NSS_IMPLEMENT PRStatus
+nssTrustDomain_UpdateCachedTokenCerts
+(
+  NSSTrustDomain *td,
+  NSSToken *token
+)
+{
+    NSSCertificate **cp, **cached = NULL;
+    nssList *certList;
+    PRUint32 count;
+    certList = nssList_Create(NULL, PR_FALSE);
+    if (!certList) return PR_FAILURE;
+    (void *)nssTrustDomain_GetCertsFromCache(td, certList);
+    count = nssList_Count(certList);
+    if (count > 0) {
+	cached = nss_ZNEWARRAY(NULL, NSSCertificate *, count + 1);
+	if (!cached) {
+	    return PR_FAILURE;
+	}
+	nssList_GetArray(certList, (void **)cached, count);
+	nssList_Destroy(certList);
+	for (cp = cached; *cp; cp++) {
+	    nssCryptokiObject *instance;
+	    NSSCertificate *c = *cp;
+	    nssTokenSearchType tokenOnly = nssTokenSearchType_TokenOnly;
+	    instance = nssToken_FindCertificateByIssuerAndSerialNumber(
+	                                                       token,
+                                                               NULL,
+                                                               &c->issuer,
+                                                               &c->serial,
+                                                               tokenOnly,
+                                                               NULL);
+	    if (instance) {
+		nssPKIObject_AddInstance(&c->object, instance);
+		STAN_ForceCERTCertificateUpdate(c);
+	    }
+	}
+	nssCertificateArray_Destroy(cached);
+    }
     return PR_SUCCESS;
 }
 
