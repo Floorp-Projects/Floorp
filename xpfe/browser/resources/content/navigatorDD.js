@@ -323,7 +323,7 @@ var contentAreaDNDObserver = {
               case 'LI':
               case 'OL':
               case 'DD':
-                var node = enclosingLink(aEvent.target);
+                var node = this.findEnclosingLink(aEvent.target);
                 textstring = "";
                 //select node now!
                 if (node)
