@@ -20,9 +20,13 @@
 #define _nsHTTPResponseListener_h_
 
 #include "nsIStreamListener.h"
+#include "nsString.h"
+
+class nsIBuffer;
 class nsIChannel;
 class nsHTTPResponse;
 class nsIHTTPChannel;
+
 /* 
     The nsHTTPResponseListener class is the response reader listener that 
     receives notifications of OnStartBinding, OnDataAvailable and 
@@ -69,10 +73,11 @@ protected:
     // nsHTTPResponseListener methods...
     nsresult FireOnHeadersAvailable();
 
-    nsresult ParseStatusLine(nsIBufferInputStream* aStream);
+    nsresult ParseStatusLine(nsIBuffer* aBuffer, PRUint32 aLength,
+                             PRUint32 *aBytesRead);
 
-    
-    static char *   EatWhiteSpace(char* aBuffer);
+    nsresult ParseHTTPHeader(nsIBuffer* aBuffer, PRUint32 aLength, 
+                             PRUint32* aBytesRead);
 
 
 protected:
@@ -84,6 +89,8 @@ protected:
     PRUint32            m_ReadLength; // Already read
     char*               m_PartHeader; // used between calls of OnDataAvailable
     PRUint32            m_PartHeaderLen;
+
+    nsString            m_HeaderBuffer;
 };
 
 #endif /* _nsHTTPResponseListener_h_ */
