@@ -421,9 +421,13 @@ morkAtomRowMap::~morkAtomRowMap()
 {
 }
 
+// I changed to sizeof(mork_ip) from sizeof(mork_aid) to fix a crash on
+// 64 bit machines.  I am not sure it was the right way to fix the problem,
+// but it does stop the crash.  Perhaps we should be using the
+// morkPointerMap instead?
 morkAtomRowMap::morkAtomRowMap(morkEnv* ev, const morkUsage& inUsage,
   nsIMdbHeap* ioHeap, nsIMdbHeap* ioSlotHeap, mork_column inIndexColumn)
-  : morkIntMap(ev, inUsage, sizeof(mork_aid), ioHeap, ioSlotHeap,
+  : morkIntMap(ev, inUsage, sizeof(mork_ip), ioHeap, ioSlotHeap,
     /*inHoldChanges*/ morkBool_kFalse)
 , mAtomRowMap_IndexColumn( inIndexColumn )
 {
