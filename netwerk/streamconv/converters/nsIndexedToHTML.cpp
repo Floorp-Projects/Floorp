@@ -490,9 +490,17 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
     rv = mTextToSubURI->UnEscapeAndConvert(encoding, loc,
                                            getter_Copies(unEscapeSpec));
     if (NS_FAILED(rv)) return rv;
-    
-    pushBuffer.Append(unEscapeSpec);
+  
+    // need to escape links
+    nsCAutoString escapeBuf;
 
+    NS_ConvertUCS2toUTF8 utf8UnEscapeSpec(unEscapeSpec);
+
+    NS_EscapeURL(utf8UnEscapeSpec.get(), utf8UnEscapeSpec.Length(),
+                 esc_FileBaseName|esc_OnlyASCII|esc_AlwaysCopy, escapeBuf);
+  
+    pushBuffer.Append(NS_ConvertUTF8toUCS2(escapeBuf));
+    
     pushBuffer.Append(NS_LITERAL_STRING("\"><img src=\""));
 
     switch (type) {
