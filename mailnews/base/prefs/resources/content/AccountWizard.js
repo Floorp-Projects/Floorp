@@ -35,6 +35,7 @@ var currentPageTag;
 var contentWindow;
 
 var wizardContents;
+var smtpService;
 
 function init() {
     if (!contentWindow) contentWindow = window.frames["wizardContents"];
@@ -42,6 +43,12 @@ function init() {
 }
 // event handlers
 function onLoad() {
+    if (!smtpService)
+        smtpService =
+            Components.classes["component://netscape/messengercompose/smtp"].getService(Components.interfaces.nsISmtpService);;
+
+    wizardContents["smtp.hostname"] = smtpService.defaultServer.hostname;
+    dump("initialized with " + wizardContents["smtp.hostname"] + "\n");
     init();
 }
 
@@ -132,6 +139,7 @@ function saveContents(win, hash) {
 
 function restoreValue(hash, element) {
     if (!hash[element.name]) return;
+    dump("Restoring " + element.name + " from " + hash[element.name] + "\n");
     if (element.type=="radio") {
         if (hash[element.name] == element.value)
             element.checked=true;
@@ -220,6 +228,8 @@ function createAccount(hash) {
             identity[slot] = hash[i];
         else if (type == "server")
             server[slot] = hash[i];
+        else if (type == "smtp")
+            smtpService.defaultServer.hostname = hash[i];
     }
     
     var account = am.createAccount();

@@ -59,7 +59,7 @@ Rights Reserved.
     <html:div>&smtpServerDesc.label;</html:div>
     <html:div>
       &smtpServerLabel.label;
-      <html:input type="text" id="identity.smtpHostname" name="identity.smtpHostname"/>
+      <html:input type="text" id="smtp.hostname" name="smtp.hostname"/>
     </html:div>
   </box>
 </box>
