@@ -692,13 +692,9 @@ nsGfxButtonControlFrame::HandleEvent(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsGfxButtonControlFrame::GetStateType(nsIPresContext* aPresContext, nsIStatefulFrame::StateType* aStateType)
-{
-  *aStateType = nsIStatefulFrame::eTextType;
-  return NS_OK;
-}
-
+//----------------------------------------------------------------------
+// nsIStatefulFrame
+//----------------------------------------------------------------------
 NS_IMETHODIMP
 nsGfxButtonControlFrame::SaveState(nsIPresContext* aPresContext, nsIPresState** aState)
 {
@@ -710,12 +706,11 @@ nsGfxButtonControlFrame::SaveState(nsIPresContext* aPresContext, nsIPresState** 
   NS_ENSURE_SUCCESS(res, res);
 
   // Compare to default value, and only save if needed (Bug 62713)
+  NS_ENSURE_TRUE(mContent->IsContentOfType(nsIContent::eHTML_FORM_CONTROL),
+                 NS_ERROR_UNEXPECTED);
   nsAutoString defaultStateString;
   if (!mDefaultValueWasChanged) {
-    nsCOMPtr<nsIHTMLContent> formControl(do_QueryInterface(mContent));
-    if (formControl) {
-      formControl->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, defaultStateString);
-    }
+    mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, defaultStateString);
   }
 
   if (mDefaultValueWasChanged || !stateString.Equals(defaultStateString)) {

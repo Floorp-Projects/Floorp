@@ -374,14 +374,6 @@ nsGfxRadioControlFrame::InitializeControl(nsIPresContext* aPresContext)
 // nsIStatefulFrame
 //----------------------------------------------------------------------
 NS_IMETHODIMP
-nsGfxRadioControlFrame::GetStateType(nsIPresContext* aPresContext, nsIStatefulFrame::StateType* aStateType)
-{
-  *aStateType = nsIStatefulFrame::eRadioType;
-  return NS_OK;
-}
-
-//----------------------------------------------------------------------
-NS_IMETHODIMP
 nsGfxRadioControlFrame::SaveState(nsIPresContext* aPresContext, nsIPresState** aState)
 {
   NS_ENSURE_ARG_POINTER(aState);

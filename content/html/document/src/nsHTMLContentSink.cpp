@@ -2791,6 +2791,19 @@ HTMLContentSink::OpenHead(const nsIParserNode& aNode)
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
                   "HTMLContentSink::OpenHead", aNode, 0, this);
   nsresult rv = NS_OK;
+
+  // Flush everything in the current context so that we don't have
+  // to worry about insertions resulting in inconsistent frame creation.
+  //
+  // Try to do this only if needed (costly), i.e., only if we are sure
+  // we are changing contexts from some other context to the head.
+  //
+  // PERF: This call causes approximately a 2% slowdown in page load time
+  // according to jrgm's page load tests, but seems to be a necessary evil
+  if (mCurrentContext && (mCurrentContext != mHeadContext)) {
+    mCurrentContext->FlushTags(PR_TRUE);
+  }
+
   if (nsnull == mHeadContext) {
     mHeadContext = new SinkContext(this);
     if (nsnull == mHeadContext) {

@@ -26,3 +26,4 @@ nsIStyleRuleSupplier.h
 nsIStyleSheet.h
 nsIStyleSheetLinkingElement.h
 nsITextContent.h
+nsIContentList.h

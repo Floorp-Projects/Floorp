@@ -24,20 +24,6 @@
 #include "nsILayoutHistoryState.h"
 #include "nsWeakReference.h"
 #include "nsHashtable.h"
-#include "nsIStatefulFrame.h" // Get StateType enum
-
-MOZ_DECL_CTOR_COUNTER(HistoryKey)
-
-class HistoryKey: public nsVoidKey {
- public:
-   HistoryKey(PRUint32 aContentID, nsIStatefulFrame::StateType aStateType)
-       : nsVoidKey((void*)(aContentID * nsIStatefulFrame::eNumStateTypes + aStateType)) {
-   }
-
-   HistoryKey(PRUint32 aKey) 
-       : nsVoidKey((void*)aKey) {
-   }
-};
 
 class nsLayoutHistoryState : public nsILayoutHistoryState,
                              public nsSupportsWeakReference
@@ -49,14 +35,9 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsILayoutHistoryState
-  NS_IMETHOD AddState(PRUint32 aContentID,
-    nsIPresState* aState,
-    nsIStatefulFrame::StateType aStateType = nsIStatefulFrame::eNoType);
-  NS_IMETHOD GetState(PRUint32 aContentID,
-    nsIPresState** aState,
-    nsIStatefulFrame::StateType aStateType = nsIStatefulFrame::eNoType);
-  NS_IMETHOD RemoveState(PRUint32 aContentID,
-    nsIStatefulFrame::StateType aStateType = nsIStatefulFrame::eNoType);
+  NS_IMETHOD AddState(const nsCString& aKey, nsIPresState* aState);
+  NS_IMETHOD GetState(const nsCString& aKey, nsIPresState** aState);
+  NS_IMETHOD RemoveState(const nsCString& aKey);
 
 
 private:
@@ -67,7 +48,7 @@ private:
 nsresult
 NS_NewLayoutHistoryState(nsILayoutHistoryState** aState)
 {
-    NS_PRECONDITION(aState != nsnull, "null ptr");
+    NS_ENSURE_ARG_POINTER(aState);
     if (! aState)
         return NS_ERROR_NULL_POINTER;
 
@@ -95,35 +76,35 @@ NS_IMPL_ISUPPORTS2(nsLayoutHistoryState,
                    nsISupportsWeakReference);
 
 NS_IMETHODIMP
-nsLayoutHistoryState::AddState(PRUint32 aContentID,                                
-                               nsIPresState* aState, 
-                               nsIStatefulFrame::StateType aStateType)
+nsLayoutHistoryState::AddState(const nsCString& aStateKey,
+                               nsIPresState* aState)
 {
-  HistoryKey key(aContentID, aStateType);
+  nsCStringKey key(aStateKey);
+
   /*
-   * nsSupportsHashtable::Put() returns false when no object has been
-   * replaced when inserting the new one, true if it some one was.
-   *
+   * nsSupportsHashtable::Put() returns false when no object was
+   * replaced when inserting the new one, true if one was.
    */
-  PRBool replaced = mStates.Put (&key, aState);
-  if (replaced)
-  {
-          // done this way by indication of warren@netscape.com [ipg]
-#if 0
-      printf("nsLayoutHistoryState::AddState OOPS!. There was already a state in the hash table for the key\n");
+#ifdef DEBUG_pollmann
+  PRBool replaced =
 #endif
-  }
+
+  mStates.Put (&key, aState);
+
+#ifdef DEBUG_pollmann
+  NS_ASSERTION(!replaced, 
+               "nsLayoutHistoryState::AddState OOPS!. There was already a state in the hash table for the key\n");
+#endif
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsLayoutHistoryState::GetState(PRUint32 aContentID,                                
-                               nsIPresState** aState,
-                               nsIStatefulFrame::StateType aStateType)
+nsLayoutHistoryState::GetState(const nsCString& aKey,
+                               nsIPresState** aState)
 {
   nsresult rv = NS_OK;
-  HistoryKey key(aContentID, aStateType);
+  nsCStringKey key(aKey);
   nsISupports *state = nsnull;
   state = mStates.Get(&key);
   if (state) {
@@ -140,11 +121,10 @@ nsLayoutHistoryState::GetState(PRUint32 aContentID,
 }
 
 NS_IMETHODIMP
-nsLayoutHistoryState::RemoveState(PRUint32 aContentID,                                
-                                  nsIStatefulFrame::StateType aStateType)
+nsLayoutHistoryState::RemoveState(const nsCString& aKey)
 {
   nsresult rv = NS_OK;
-  HistoryKey key(aContentID, aStateType);
+  nsCStringKey key(aKey);
   mStates.Remove(&key);
   return rv;
 }

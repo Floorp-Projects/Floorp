@@ -3433,20 +3433,16 @@ nsGfxTextControlFrame2::GetWidthInCharacters() const
   return DEFAULT_COLUMN_WIDTH;
 }
 
-NS_IMETHODIMP
-nsGfxTextControlFrame2::GetStateType(nsIPresContext* aPresContext, nsIStatefulFrame::StateType* aStateType)
-{
-  *aStateType = nsIStatefulFrame::eTextType;
-  return NS_OK;
-}
-
+//----------------------------------------------------------------------
+// nsIStatefulFrame
+//----------------------------------------------------------------------
 NS_IMETHODIMP
 nsGfxTextControlFrame2::SaveState(nsIPresContext* aPresContext, nsIPresState** aState)
 {
   NS_ENSURE_ARG_POINTER(aState);
 
   // Don't save state before we are initialized
-  if (!mUseEditor) {
+  if (!mUseEditor && !mCachedState) {
     return NS_OK;
   }
 
@@ -3455,26 +3451,18 @@ nsGfxTextControlFrame2::SaveState(nsIPresContext* aPresContext, nsIPresState** a
   nsresult res = GetProperty(nsHTMLAtoms::value, stateString);
   NS_ENSURE_SUCCESS(res, res);
 
-  // Compare to default value, and only save if needed (Bug 62713)
-  nsAutoString defaultStateString;
-  nsCOMPtr<nsIHTMLContent> formControl(do_QueryInterface(mContent));
-  if (formControl) {
-    formControl->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, defaultStateString);
-  }
-
   // XXX Removed comparison between current and default state to
   // XXX temporarily fix bug 69365 (mail reply all looses addresses)
 
-    // XXX Should use nsAutoString above but ConvertStringLineBreaks requires mOwnsBuffer!
-    res = nsLinebreakConverter::ConvertStringLineBreaks(stateString,
-             nsLinebreakConverter::eLinebreakPlatform, nsLinebreakConverter::eLinebreakContent);
-    NS_ASSERTION(NS_SUCCEEDED(res), "Converting linebreaks failed!");
+  // XXX Should use nsAutoString above but ConvertStringLineBreaks requires mOwnsBuffer!
+  res = nsLinebreakConverter::ConvertStringLineBreaks(stateString,
+           nsLinebreakConverter::eLinebreakPlatform, nsLinebreakConverter::eLinebreakContent);
+  NS_ASSERTION(NS_SUCCEEDED(res), "Converting linebreaks failed!");
 
-    // Construct a pres state and store value in it.
-    res = NS_NewPresState(aState);
-    NS_ENSURE_SUCCESS(res, res);
-    res = (*aState)->SetStateProperty(NS_LITERAL_STRING("value"), stateString);
-
+  // Construct a pres state and store value in it.
+  res = NS_NewPresState(aState);
+  NS_ENSURE_SUCCESS(res, res);
+  res = (*aState)->SetStateProperty(NS_LITERAL_STRING("value"), stateString);
   return res;
 }
 

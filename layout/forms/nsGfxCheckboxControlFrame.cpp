@@ -613,13 +613,6 @@ nsGfxCheckboxControlFrame::SwitchModesWithEmergencyBrake ( nsIPresContext* aPres
 //----------------------------------------------------------------------
 // nsIStatefulFrame
 //----------------------------------------------------------------------
-NS_IMETHODIMP nsGfxCheckboxControlFrame::GetStateType(nsIPresContext* aPresContext,
-                                                   nsIStatefulFrame::StateType* aStateType)
-{
-  *aStateType=nsIStatefulFrame::eCheckboxType;
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsGfxCheckboxControlFrame::SaveState(nsIPresContext* aPresContext,
                                                 nsIPresState** aState)
 {

@@ -691,13 +691,6 @@ nsFileControlFrame::Paint(nsIPresContext* aPresContext,
 // nsIStatefulFrame
 //----------------------------------------------------------------------
 NS_IMETHODIMP
-nsFileControlFrame::GetStateType(nsIPresContext* aPresContext, nsIStatefulFrame::StateType* aStateType)
-{
-  *aStateType = nsIStatefulFrame::eFileType;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsFileControlFrame::SaveState(nsIPresContext* aPresContext, nsIPresState** aState)
 {
   NS_ENSURE_ARG_POINTER(aState);

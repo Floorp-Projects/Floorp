@@ -53,6 +53,7 @@ public:
   // nsIDOMHTMLIsIndexElement
   NS_DECL_NSIDOMHTMLISINDEXELEMENT
 
+  NS_IMETHOD_(PRBool) IsContentOfType(PRUint32 aFlags);
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 };
 
@@ -149,6 +150,11 @@ nsHTMLIsIndexElement::GetForm(nsIDOMHTMLFormElement** aForm)
 
 NS_IMPL_STRING_ATTR(nsHTMLIsIndexElement, Prompt, prompt)
 
+NS_IMETHODIMP_(PRBool)
+nsHTMLIsIndexElement::IsContentOfType(PRUint32 aFlags)
+{
+  return !(aFlags & ~(eELEMENT | eHTML | eHTML_FORM_CONTROL));
+}
 
 NS_IMETHODIMP
 nsHTMLIsIndexElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const

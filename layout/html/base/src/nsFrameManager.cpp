@@ -57,6 +57,16 @@
 #include "nsIBindingManager.h"
 #include "nsIScrollableFrame.h"
 
+#include "nsIHTMLDocument.h"
+#include "nsIDOMHTMLDocument.h"
+#include "nsIDOMNodeList.h"
+#include "nsIDOMHTMLCollection.h"
+#include "nsIFormControl.h"
+#include "nsIDOMElement.h"
+#include "nsIDOMHTMLFormElement.h"
+#include "nsIForm.h"
+#include "nsIContentList.h"
+
 #define NEW_CONTEXT_PARENTAGE_INVARIANT
 
 #ifdef NEW_CONTEXT_PARENTAGE_INVARIANT
@@ -288,6 +298,9 @@ public:
                                nsIFrame*              aFrame,
                                nsILayoutHistoryState* aState,
                                nsIStatefulFrame::SpecialStateID aID = nsIStatefulFrame::eNoID);
+  NS_IMETHOD GenerateStateKey(nsIContent* aContent,
+                              nsIStatefulFrame::SpecialStateID aID,
+                              nsCString& aString);
 
   // Gets and sets properties on a given frame
   NS_IMETHOD GetFrameProperty(nsIFrame* aFrame,
@@ -336,6 +349,8 @@ private:
   UndisplayedMap*                 mUndisplayedMap;
   CantRenderReplacedElementEvent* mPostedEvents;
   PropertyList*                   mPropertyList;
+  nsCOMPtr<nsIContentList>        mHTMLForms;
+  nsCOMPtr<nsIContentList>        mHTMLFormControls;
 
   void ReResolveStyleContext(nsIPresContext* aPresContext,
                              nsIFrame* aFrame,
@@ -401,6 +416,23 @@ FrameManager::Init(nsIPresShell* aPresShell,
   mDSTNodeArena = nsDST::NewMemoryArena();
   if (!mDSTNodeArena) {
     return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  // Force the forms and form control content lists to be added as
+  // document observers *before* us (pres shell) so they will be
+  // up to date when we try to use them.
+  nsCOMPtr<nsIDocument> document;
+  mPresShell->GetDocument(getter_AddRefs(document));
+  nsCOMPtr<nsIHTMLDocument> htmlDocument(do_QueryInterface(document));
+  nsCOMPtr<nsIDOMHTMLDocument> domHtmlDocument(do_QueryInterface(htmlDocument));
+  if (domHtmlDocument) {
+    nsCOMPtr<nsIDOMHTMLCollection> forms;
+    domHtmlDocument->GetForms(getter_AddRefs(forms));
+    mHTMLForms = do_QueryInterface(forms);
+
+    nsCOMPtr<nsIDOMNodeList> formControls;
+    htmlDocument->GetFormControlElements(getter_AddRefs(formControls));
+    mHTMLFormControls = do_QueryInterface(formControls);
   }
 
   return NS_OK;
@@ -2064,52 +2096,47 @@ FrameManager::AttributeAffectsStyle(nsIAtom *aAttribute, nsIContent *aContent,
 // Capture state for a given frame.
 // Accept a content id here, in some cases we may not have content (scroll position)
 NS_IMETHODIMP
-FrameManager::CaptureFrameStateFor(nsIPresContext* aPresContext, nsIFrame* aFrame, nsILayoutHistoryState* aState, nsIStatefulFrame::SpecialStateID aID)
+FrameManager::CaptureFrameStateFor(nsIPresContext* aPresContext,
+                                   nsIFrame* aFrame,
+                                   nsILayoutHistoryState* aState,
+                                   nsIStatefulFrame::SpecialStateID aID)
 {
-  nsresult rv = NS_OK;
-  NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
-  NS_PRECONDITION(nsnull != aFrame && nsnull != aState, "null parameters passed in");
+  NS_ENSURE_TRUE(mPresShell && aFrame && aState, NS_ERROR_FAILURE);
 
-  // See if the frame is stateful.
-  // Frames are not ref-counted so no addref/release is required on statefulFrame.
+  // Only capture state for stateful frames
   nsIStatefulFrame* statefulFrame = nsnull;
   aFrame->QueryInterface(NS_GET_IID(nsIStatefulFrame), (void**) &statefulFrame);
-  if (nsnull != statefulFrame) {
-
-    // If not given one, get the content ID
-    PRUint32 ID = aID;
-    if (nsIStatefulFrame::eNoID == ID) {
-      nsCOMPtr<nsIContent> content;    
-      rv = aFrame->GetContent(getter_AddRefs(content));   
-      if (NS_SUCCEEDED(rv) && content) {
-        rv = content->GetContentID(&ID);
-      }
-    }
-    if (NS_SUCCEEDED(rv) && ID) { // Must have ID (don't do anonymous content)
-
-      // Get the state type
-      nsIStatefulFrame::StateType type = nsIStatefulFrame::eNoType;
-      rv = statefulFrame->GetStateType(aPresContext, &type);
-      if (NS_SUCCEEDED(rv)) {
-
-        // Get the state
-        nsCOMPtr<nsIPresState> frameState;
-        rv = statefulFrame->SaveState(aPresContext, getter_AddRefs(frameState));
-        if (NS_SUCCEEDED(rv) && frameState) {
-
-          // add an association between (ID, type) and (state) to the
-          // history state storage object, aState.
-          rv = aState->AddState(ID, frameState, type);            
-        }
-      }
-    }
+  if (!statefulFrame) {
+    return NS_OK;
   }
 
-  return rv;
+  // Capture the state, exit early if we get null (nothing to save)
+  nsCOMPtr<nsIPresState> frameState;
+  nsresult rv = NS_OK;
+  rv = statefulFrame->SaveState(aPresContext, getter_AddRefs(frameState));
+  if (!frameState) {
+    return NS_OK;
+  }
+
+  // Generate the hash key to store the state under
+  // Exit early if we get empty key
+  nsCOMPtr<nsIContent> content;
+  rv = aFrame->GetContent(getter_AddRefs(content));
+
+  nsCAutoString stateKey;
+  rv = GenerateStateKey(content, aID, stateKey);
+  if(NS_FAILED(rv) || stateKey.IsEmpty()) {
+    return rv;
+  }
+
+  // Store the state
+  return aState->AddState(stateKey, frameState);
 }
 
 NS_IMETHODIMP
-FrameManager::CaptureFrameState(nsIPresContext* aPresContext, nsIFrame* aFrame, nsILayoutHistoryState* aState)
+FrameManager::CaptureFrameState(nsIPresContext* aPresContext,
+                                nsIFrame* aFrame,
+                                nsILayoutHistoryState* aState)
 {
   nsresult rv = NS_OK;
   NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
@@ -2140,45 +2167,40 @@ FrameManager::CaptureFrameState(nsIPresContext* aPresContext, nsIFrame* aFrame, 
 NS_IMETHODIMP
 FrameManager::RestoreFrameStateFor(nsIPresContext* aPresContext, nsIFrame* aFrame, nsILayoutHistoryState* aState, nsIStatefulFrame::SpecialStateID aID)
 {
-  nsresult rv = NS_OK;
-  NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
-  NS_PRECONDITION(nsnull != aFrame && nsnull != aState, "null parameters passed in");
+  NS_ENSURE_TRUE(mPresShell && aFrame && aState, NS_ERROR_FAILURE);
 
-  // See if the frame is stateful.
-  // Frames are not ref-counted so no addref/release is required on statefulFrame.
+  // Only capture state for stateful frames
   nsIStatefulFrame* statefulFrame = nsnull;
   aFrame->QueryInterface(NS_GET_IID(nsIStatefulFrame), (void**) &statefulFrame);
-  if (nsnull != statefulFrame) {
-    // If not given one, get the content ID
-    PRUint32 ID = aID;
-    if (nsIStatefulFrame::eNoID == ID) {
-      nsCOMPtr<nsIContent> content;    
-      rv = aFrame->GetContent(getter_AddRefs(content));   
-      if (NS_SUCCEEDED(rv) && content) {
-        rv = content->GetContentID(&ID);
-      }
-    }
-    if (NS_SUCCEEDED(rv) && ID) { // Must have ID (don't do anonymous content)
+  if (!statefulFrame) {
+    return NS_OK;
+  }
 
-      nsIStatefulFrame::StateType type = nsIStatefulFrame::eNoType;
-      rv = statefulFrame->GetStateType(aPresContext, &type);
-      if (NS_SUCCEEDED(rv)) {
+  // Generate the hash key the state was stored under
+  // Exit early if we get empty key
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIContent> content;
+  rv = aFrame->GetContent(getter_AddRefs(content));
 
-        nsCOMPtr<nsIPresState> frameState;
-        rv = aState->GetState(ID, getter_AddRefs(frameState), type);          
-        if (NS_SUCCEEDED(rv) && frameState) {
+  nsCAutoString stateKey;
+  rv = GenerateStateKey(content, aID, stateKey);
+  if(NS_FAILED(rv) || stateKey.IsEmpty()) {
+    return rv;
+  }
 
-          // First restore the state.
-          rv = statefulFrame->RestoreState(aPresContext, frameState);
+  // Get the state from the hash
+  nsCOMPtr<nsIPresState> frameState;
+  rv = aState->GetState(stateKey, getter_AddRefs(frameState));
+  if (!frameState) {
+    return NS_OK;
+  }
 
-          // Now remove the state from the state table.
-          aState->RemoveState(ID, type);
-        }
-      }
-    }
-  }  
+  // Restore it
+  rv = statefulFrame->RestoreState(aPresContext, frameState);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  return rv;
+  // If we restore ok, remove the state from the state table
+  return aState->RemoveState(stateKey);
 }
 
 NS_IMETHODIMP
@@ -2196,7 +2218,7 @@ FrameManager::RestoreFrameState(nsIPresContext* aPresContext, nsIFrame* aFrame, 
   do {    
     nsIFrame* childFrame;
     aFrame->FirstChild(aPresContext, childListName, &childFrame);
-    while (childFrame) {             
+    while (childFrame) {
       rv = RestoreFrameState(aPresContext, childFrame, aState);
       // Get the next sibling child frame
       childFrame->GetNextSibling(&childFrame);
@@ -2206,6 +2228,147 @@ FrameManager::RestoreFrameState(nsIPresContext* aPresContext, nsIFrame* aFrame, 
   } while (childListName);
 
   return rv;
+}
+
+
+static inline void KeyAppendSep(nsCString& aKey)
+{
+  if (!aKey.IsEmpty()) {
+    aKey.Append(">");
+  }
+}
+
+static inline void KeyAppendString(nsAReadableString& aString, nsCString& aKey)
+{
+  KeyAppendSep(aKey);
+
+  // Could escape separator here if collisions happen.  > is not a legal char
+  // for a name or type attribute, so we should be safe avoiding that extra work.
+
+  aKey.Append(NS_ConvertUCS2toUTF8(aString));
+}
+
+static inline void KeyAppendInt(PRInt32 aInt, nsCString& aKey)
+{
+  KeyAppendSep(aKey);
+
+  aKey.AppendInt(aInt);
+}
+
+static inline void KeyAppendAtom(nsIAtom* aAtom, nsCString& aKey)
+{
+  NS_PRECONDITION(aAtom, "KeyAppendAtom: aAtom can not be null!\n");
+
+  const PRUnichar* atomString = nsnull;
+  aAtom->GetUnicode(&atomString);
+
+  KeyAppendString(nsDependentString(atomString), aKey);
+}
+
+NS_IMETHODIMP
+FrameManager::GenerateStateKey(nsIContent* aContent,
+                               nsIStatefulFrame::SpecialStateID aID,
+                               nsCString& aKey)
+{
+  aKey.Truncate();
+
+  // SpecialStateID case - e.g. scrollbars around the content window
+  // The key in this case is the special state id (always < min(contentID))
+  if (nsIStatefulFrame::eNoID != aID) {
+    KeyAppendInt(aID, aKey);
+    return NS_OK;
+  }
+
+  // We must have content if we're not using a special state id
+  NS_ENSURE_TRUE(aContent, NS_ERROR_FAILURE);
+
+  // Don't capture state for anonymous content
+  PRUint32 contentID;
+  aContent->GetContentID(&contentID);
+  if (!contentID) {
+    return NS_OK;
+  }
+
+  // If we have a dom element, add tag/type/name to hash key
+  // This is paranoia, but guarantees that we won't restore
+  // state to the wrong type of control.
+  nsCOMPtr<nsIAtom> tag;
+  if (aContent->IsContentOfType(nsIContent::eHTML_FORM_CONTROL)) {
+
+    aContent->GetTag(*getter_AddRefs(tag));
+    KeyAppendAtom(tag, aKey);
+
+    nsAutoString name;
+    aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::name, name);
+    KeyAppendString(name, aKey);
+  }
+
+  // If we have a form control and can calculate form information, use
+  // that as the key - it is more reliable than contentID.
+  // Important to have a unique key, and tag/type/name may not be.
+  nsCOMPtr<nsIFormControl> control(do_QueryInterface(aContent));
+  PRBool generatedUniqueKey = PR_FALSE;
+  if (control && mHTMLFormControls && mHTMLForms) {
+
+    if (tag == nsHTMLAtoms::input) {
+      PRInt32 type;
+      control->GetType(&type);
+      KeyAppendInt(type, aKey);
+    }
+
+    // If in a form, add form name / index of form / index in form
+    PRInt32 index = -1;
+    nsCOMPtr<nsIDOMHTMLFormElement> formElement;
+    control->GetForm(getter_AddRefs(formElement));
+    if (formElement) {
+
+      nsAutoString formName;
+      formElement->GetName(formName);
+      KeyAppendString(formName, aKey);
+
+      nsCOMPtr<nsIContent> formContent(do_QueryInterface(formElement));
+      mHTMLForms->IndexOf(formContent, index, PR_FALSE);
+      NS_ASSERTION(index > -1,
+                   "nsFrameManager::GenerateStateKey didn't find form index!");
+      if (index > -1) {
+        KeyAppendInt(index, aKey);
+
+        nsCOMPtr<nsIForm> form(do_QueryInterface(formElement));
+        form->IndexOfControl(control, &index);
+        NS_ASSERTION(index > -1,
+                     "nsFrameManager::GenerateStateKey didn't find form control index!");
+
+        if (index > -1) {
+          KeyAppendInt(index, aKey);
+          generatedUniqueKey = PR_TRUE;
+        }
+      }
+
+    } else {
+
+      // If not in a form, add index of control in document
+      // Less desirable than indexing by form info. 
+
+      // Hash by index of control in doc (we are not in a form)
+      // These are important as they are unique, and type/name may not be.
+      mHTMLFormControls->IndexOf(aContent, index, PR_FALSE);
+      NS_ASSERTION(index > -1,
+                   "nsFrameManager::GenerateStateKey didn't find content by type!");
+      if (index > -1) {
+        KeyAppendInt(index, aKey);
+        generatedUniqueKey = PR_TRUE;
+      }
+    }
+  }
+
+  if (!generatedUniqueKey) {
+
+    // Either we didn't have a form control or we aren't in an HTML document
+    // so we can't figure out form info, hash by content ID instead :(
+    KeyAppendInt(contentID, aKey);
+  }
+
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------

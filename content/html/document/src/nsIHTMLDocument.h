@@ -71,6 +71,9 @@ public:
   NS_IMETHOD ResolveName(const nsAReadableString& aName,
                          nsIDOMHTMLFormElement *aForm,
                          nsISupports **aResult) = 0;
+
+  NS_IMETHOD GetFormControlElements(nsIDOMNodeList** aReturn) = 0;
+
 };
 
 #endif /* nsIHTMLDocument_h___ */

@@ -99,8 +99,7 @@ protected:
   virtual PRBool IsSubmit(PRInt32 type);
   virtual PRBool IsBrowse(PRInt32 type); // Browse button of file input
 
-//nsIStatefulFrame
-  NS_IMETHOD GetStateType(nsIPresContext* aPresContext, nsIStatefulFrame::StateType* aStateType);
+  //nsIStatefulFrame
   NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsIPresState** aState);
   NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsIPresState* aState);
 

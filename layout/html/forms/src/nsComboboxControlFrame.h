@@ -66,7 +66,7 @@ class nsComboboxControlFrame : public nsAreaFrame,
                                public nsIComboboxControlFrame,
                                public nsIAnonymousContentCreator,
                                public nsISelectControlFrame,
-			                         public nsIStatefulFrame,
+                               public nsIStatefulFrame,
                                public nsIRollupListener,
                                public nsIScrollableViewProvider
 {
@@ -179,7 +179,6 @@ public:
   NS_IMETHOD OptionDisabled(nsIContent * aContent);
 
   //nsIStatefulFrame
-  NS_IMETHOD GetStateType(nsIPresContext* aPresContext, nsIStatefulFrame::StateType* aStateType);
   NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsIPresState** aState);
   NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsIPresState* aState);
 
