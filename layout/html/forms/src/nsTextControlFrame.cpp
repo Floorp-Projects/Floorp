@@ -2101,6 +2101,17 @@ nsTextControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
         col = ((colAttr.GetUnit() == eHTMLUnit_Pixel) ? colAttr.GetPixelValue() : colAttr.GetIntValue());
         col = (col <= 0) ? 1 : col; // XXX why a default of 1 char, why hide it
       }
+      if (type == NS_FORM_TEXTAREA)
+      {
+         nsFormControlHelper::nsHTMLTextWrap wrapProp;
+         nsresult rv = nsFormControlHelper::GetWrapPropertyEnum(mContent, wrapProp);
+         // do not wrap at the cols attribute when wrap=off
+         if ((rv != NS_CONTENT_ATTR_NOT_THERE) &&
+             (wrapProp == nsFormControlHelper::eHTMLTextWrap_Off))
+         {
+           col = -1;
+         }
+      }
       textEditor->SetWrapWidth(col);
       delete spec;
     }
