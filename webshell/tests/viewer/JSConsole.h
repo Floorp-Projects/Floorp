@@ -39,8 +39,7 @@
 #define jsconsole_h__
 
 #include <windows.h>
-
-class nsIScriptContext;
+#include "nsIScriptContext.h"
 
 #define OPEN_DIALOG         0
 #define SAVE_DIALOG         1
@@ -92,7 +91,11 @@ public:
 
     HWND GetMainWindow() { return mMainWindow; }
     void SetNotification(DESTROY_NOTIFICATION aNotification) { mDestroyNotification = aNotification; }
-    void SetContext(nsIScriptContext *aContext) { mContext = aContext; }
+    void SetContext(nsIScriptContext *aContext) {
+      NS_IF_ADDREF(aContext);
+      NS_IF_RELEASE(mContext);
+      mContext = aContext;
+    }
 
     void EvaluateText(UINT aStartSel, UINT aEndSel);
 

@@ -1566,10 +1566,6 @@ static void ShowConsole(nsBrowserWindow* aWindow)
           // create the console
           gConsole = JSConsole::CreateConsole();
           gConsole->SetContext(context);
-          // lifetime of the context is still unclear at this point.
-          // Anyway, as long as the web widget is alive the context is alive.
-          // Maybe the context shouldn't even be RefCounted
-          context->Release();
           gConsole->SetNotification(DestroyConsole);
         }
       }

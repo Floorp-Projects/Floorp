@@ -324,6 +324,7 @@ JSConsole::JSConsole(HWND aMainWindow, HWND aEditControl) :
 //
 JSConsole::~JSConsole()
 {
+    NS_IF_RELEASE(mContext);
 }
 
 //

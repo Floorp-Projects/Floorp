@@ -818,7 +818,7 @@ END_COM_MAP()
         if (!globalObject)
             return E_UNEXPECTED;
 
-        nsIScriptContext *scriptContext = globalObject->GetContext();
+        nsCOMPtr<nsIScriptContext> scriptContext = globalObject->GetContext();
         if (!scriptContext)
             return E_UNEXPECTED;
 

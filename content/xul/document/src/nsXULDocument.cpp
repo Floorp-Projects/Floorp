@@ -3239,7 +3239,7 @@ nsXULDocument::ExecuteScript(JSObject* aScriptObject)
 
     NS_ASSERTION(mScriptGlobalObject != nsnull, "no script global object");
 
-    nsIScriptContext *context;
+    nsCOMPtr<nsIScriptContext> context;
     if (mScriptGlobalObject && (context = mScriptGlobalObject->GetContext()))
         rv = context->ExecuteScript(aScriptObject, nsnull, nsnull, nsnull);
 

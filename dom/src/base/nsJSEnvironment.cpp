@@ -713,10 +713,6 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
     return NS_ERROR_FAILURE;
   }
 
-  // This context can be deleted unexpectedly if the JS closes the
-  // owning window.
-  nsCOMPtr<nsIScriptContext> kungFuDeathGrip(this);
-
   // The result of evaluation, used only if there were no errors.  This need
   // not be a GC root currently, provided we run the GC only from the branch
   // callback or from ScriptEvaluated.  TODO: use JS_Begin/EndRequest to keep
@@ -870,10 +866,6 @@ nsJSContext::EvaluateString(const nsAString& aScript,
       return NS_ERROR_FAILURE;
     principal->GetJSPrincipals(mContext, &jsprin);
   }
-
-  // this context can be deleted unexpectedly if the JS closes the
-  // owning window.
-  nsCOMPtr<nsIScriptContext> kungFuDeathGrip(this);
 
   // From here on, we must JSPRINCIPALS_DROP(jsprin) before returning...
 
@@ -1260,12 +1252,6 @@ nsJSContext::CallEventHandler(JSObject *aTarget, JSObject *aHandler,
   if (NS_FAILED(rv) || NS_FAILED(stack->Push(mContext)))
     return NS_ERROR_FAILURE;
 
-  // this context can be deleted unexpectedly if the JS closes
-  // the owning window. we ran into this problem specifically
-  // when going through the "close window" key event handler
-  // (that is, hitting ^W on Windows). the addref just below
-  // prevents our untimely destruction.
-  nsCOMPtr<nsIScriptContext> kungFuDeathGrip(this);
   mTerminationFuncArg = nsnull;
   mTerminationFunc = nsnull;
 
