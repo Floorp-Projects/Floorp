@@ -85,7 +85,7 @@ interface nsIChromeRegistry : nsISupports
   void checkForNewChrome();
 };
 
-[scriptable, uuid(a9f92623-5982-4afe-9d90-619cf5b0c39f)]
+[scriptable, uuid(fd1ee2f8-0238-40b0-9b54-27cf810d9c86)]
 interface nsIXULChromeRegistry : nsIChromeRegistry {
 
   /* Applies a skin or locale to all possible packages */
@@ -96,8 +96,9 @@ interface nsIXULChromeRegistry : nsIChromeRegistry {
   PRInt32 isSkinSelected(in ACString skinName, in boolean useProfile);
   PRInt32 isLocaleSelected(in ACString localeName, in boolean useProfile);
  
- // Special additional APIs for locales only.
+  //Special additional APIs for locales and skin.
   void selectLocaleForProfile(in ACString localeName, in wstring profilePath);
+  void selectSkinForProfile(in ACString skinName, in wstring profilePath);
   
   /* Should be called when locales change to reload all chrome (including XUL). */
   void reloadChrome();
