@@ -25,7 +25,6 @@
 # Query the CVS database.
 #
 
-use diagnostics;
 use strict;
 
 # Shut up misguided -w warnings about "used only once".  "use vars" just
@@ -57,6 +56,7 @@ $::TreeID = 'default'
 
 my $dir = $::FORM{"dir"};
 $dir = "" unless defined $dir;
+$dir = "" if ($dir =~ /^..\/$/);
 $dir =~ s/^\/([^:]*)/$1/;
 $dir =~ s/([^:]*)\/$/$1/;
 
