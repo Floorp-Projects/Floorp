@@ -485,6 +485,7 @@ nsStreamConverter::nsStreamConverter()
   mAlreadyKnowOutputType = PR_FALSE;
   mMimeStreamConverterListener = nsnull;
   mForwardInline = PR_FALSE;
+  mDesiredOutputType = nsnull;
 }
 
 nsStreamConverter::~nsStreamConverter()
