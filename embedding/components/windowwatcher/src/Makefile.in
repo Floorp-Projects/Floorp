@@ -28,7 +28,8 @@ MODULE		= embedcomponents
 LIBRARY_NAME	= windowwatcher_s
 REQUIRES	= xpcom string dom windowwatcher widget js xpconnect caps layout uriloader necko docshell locale webbrwsr embed_base gfx2 wallet intl appshell
 
-CPPSRCS		= nsPrompt.cpp \
+CPPSRCS		= nsDialogParamBlock.cpp \
+                  nsPrompt.cpp \
                   nsPromptService.cpp \
                   nsWWJSUtils.cpp \
                   nsWindowWatcher.cpp  \

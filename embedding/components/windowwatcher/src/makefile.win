@@ -24,6 +24,7 @@ MODULE=embedcomponents
 LIBRARY_NAME=windowwatcher_s
 
 CPP_OBJS= \
+	.\$(OBJDIR)\nsDialogParamBlock.obj \
 	.\$(OBJDIR)\nsPrompt.obj \
 	.\$(OBJDIR)\nsPromptService.obj \
 	.\$(OBJDIR)\nsWWJSUtils.obj \
