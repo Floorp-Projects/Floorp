@@ -34,5 +34,7 @@ interface nsICodebasePrincipal : nsISupports {
 	readonly attribute nsIURI URI;
 
 	readonly attribute string origin;
+
+	readonly attribute string spec;
 };
 

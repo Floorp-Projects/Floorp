@@ -726,11 +726,10 @@ nsScriptSecurityManager::GetCertificatePrincipal(const char* aCertID,
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsScriptSecurityManager::GetCodebasePrincipal(nsIURI *aURI, 
-                                              nsIPrincipal **result)
+nsresult
+nsScriptSecurityManager::CreateCodebasePrincipal(nsIURI* aURI, nsIPrincipal **result)
 {
-    nsresult rv;
+	nsresult rv = NS_OK;
     nsCodebasePrincipal *codebase = new nsCodebasePrincipal();
     if (!codebase)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -739,17 +738,43 @@ nsScriptSecurityManager::GetCodebasePrincipal(nsIURI *aURI,
         NS_RELEASE(codebase);
         return NS_ERROR_FAILURE;
     }
-    nsCOMPtr<nsIPrincipal> principal = 
-      do_QueryInterface((nsBasePrincipal*)codebase, &rv);
+    rv = CallQueryInterface((nsBasePrincipal*)codebase, result);
     NS_RELEASE(codebase);
-    if (NS_FAILED(rv)) return rv;
+    return rv;
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::GetCodebasePrincipal(nsIURI *aURI,
+                                              nsIPrincipal **result)
+{
+	nsresult rv;
+	nsCOMPtr<nsIPrincipal> principal;
+	rv = CreateCodebasePrincipal(aURI, getter_AddRefs(principal));
+	if (NS_FAILED(rv)) return rv;
 
     if (mPrincipals) {
-        // Check to see if we already have this principal.
+        //-- Check to see if we already have this principal.
         nsIPrincipalKey key(principal);
         nsCOMPtr<nsIPrincipal> fromTable = (nsIPrincipal *) mPrincipals->Get(&key);
         if (fromTable) 
             principal = fromTable;
+		else //-- Check to see if we have a more general principal
+		{
+			nsCOMPtr<nsICodebasePrincipal> codebasePrin = do_QueryInterface(principal);
+			nsXPIDLCString originUrl;
+			rv = codebasePrin->GetOrigin(getter_Copies(originUrl));
+			if (NS_FAILED(rv)) return rv;
+			nsCOMPtr<nsIURI> newURI;
+			rv = NS_NewURI(getter_AddRefs(newURI), originUrl, nsnull);
+			if (NS_FAILED(rv)) return rv;
+			nsCOMPtr<nsIPrincipal> principal2;
+			rv = CreateCodebasePrincipal(newURI, getter_AddRefs(principal2));
+			if (NS_FAILED(rv)) return rv;
+			 nsIPrincipalKey key2(principal2);
+				fromTable = (nsIPrincipal *) mPrincipals->Get(&key2);
+			if (fromTable) 
+				principal = fromTable;
+		}		
     }
 
     //-- Bundle this codebase principal into an aggregate principal

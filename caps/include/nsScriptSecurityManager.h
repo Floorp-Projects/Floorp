@@ -98,6 +98,9 @@ public:
 private:
 
     NS_IMETHOD
+    CreateCodebasePrincipal(nsIURI* aURI, nsIPrincipal** result);
+
+    NS_IMETHOD
     GetSubjectPrincipal(JSContext *aCx, nsIPrincipal **result);
 
     NS_IMETHOD
