@@ -1287,16 +1287,13 @@ nsWebBrowserPersist::GetExtensionForContentType(const PRUnichar *aContentType, P
     nsCOMPtr<nsIMIMEInfo> mimeInfo;
     nsCAutoString contentType;
     contentType.AssignWithConversion(aContentType);
-    mMIMEService->GetFromTypeAndExtension(contentType.get(), nsnull, getter_AddRefs(mimeInfo));
-    if (mimeInfo)
+    nsXPIDLCString ext;
+    rv = mMIMEService->GetPrimaryExtension(contentType.get(), nsnull, getter_Copies(ext));
+    if (NS_SUCCEEDED(rv))
     {
-        nsXPIDLCString ext;
-        if (NS_SUCCEEDED(mimeInfo->GetPrimaryExtension(getter_Copies(ext))))
-        {
-            *aExt = ToNewUnicode(ext);
-            NS_ENSURE_TRUE(*aExt, NS_ERROR_OUT_OF_MEMORY);
-            return NS_OK;
-        }
+        *aExt = ToNewUnicode(ext);
+        NS_ENSURE_TRUE(*aExt, NS_ERROR_OUT_OF_MEMORY);
+        return NS_OK;
     }
 
     return NS_ERROR_FAILURE;
