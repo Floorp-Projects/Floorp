@@ -111,9 +111,11 @@
                
          <!-- This is an overlay being included from above -->
          <box id="day-view-content-box" flex="1">
-	       <vbox id="leftgradientbox" >
+	       <!--
+          <vbox id="leftgradientbox" >
                    <image src="chrome://calendar/skin/day_left_gradient.png" left="1" top="1" width="30" height="1199"/>           
 	       </vbox>
+          -->
 	       <stack id="day-view-content-board" flex="1">
 		      <vbox id="day-hour-content-holder" flex="1">    
                 <box top="0" left="31" class="day-view-hour-box-class" id="day-tree-item-0" hour="0" onclick="dayViewHourClick( event )" ondblclick="dayViewHourDoubleClick( event )" flex="1" ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);" ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)" ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)" oncontextmenu="dayViewHourContextClick( event )">

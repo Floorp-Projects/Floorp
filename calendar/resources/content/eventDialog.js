@@ -230,6 +230,9 @@ function loadCalendarEventDialog()
    }
    
    setFieldValue( "repeat-checkbox", gEvent.recur, "checked");
+   if( gEvent.recurInterval < 1 )
+      gEvent.recurInterval = 1;
+
    setFieldValue( "repeat-length-field", gEvent.recurInterval );
    if( gEvent.recurUnits )
        setFieldValue( "repeat-length-units", gEvent.recurUnits );  //don't put the extra "value" element here, or it won't work.
@@ -834,17 +837,14 @@ function updateRepeatItemEnabled()
    }
    
    // udpate plural/singular
-   
    updateRepeatPlural();
    
    updateAlarmPlural();
    
    // update until items whenever repeat changes
-   
    updateUntilItemEnabled();
    
    // extra interface depending on units
-   
    updateRepeatUnitExtensions();
 }
 
@@ -969,6 +969,7 @@ function updateRepeatUnitExtensions( )
            case "months":
                weekExtensions.setAttribute( "collapsed", "true" );
                monthExtensions.removeAttribute( "collapsed" );
+               //the following line causes resize problems after turning on repeating events
                updateAdvancedRepeatDayOfMonth();
            break;
            
@@ -1177,8 +1178,6 @@ function updateAdvancedRepeatDayOfMonth()
 
       document.getElementById( "advanced-repeat-dayofweek-last" ).setAttribute( "collapsed", "true" );
    }
-
-   
 }
 
 /*

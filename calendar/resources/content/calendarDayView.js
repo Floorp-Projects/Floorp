@@ -153,16 +153,43 @@ DayView.prototype.refreshEvents = function dayview_refreshEvents( )
    // get the events for the day and loop through them
    
    var dayEventList = this.calendarWindow.eventSource.getEventsForDay( this.calendarWindow.getSelectedDate() );
-  
-   //refresh the array and the current spot.
    
-   for ( i = 0; i < dayEventList.length; i++ ) 
+   //refresh the array and the current spot.
+   var LowestStartHour = getIntPref( this.calendarWindow.calendarPreferences.calendarPref, "event.defaultstarthour", 8 );
+   var HighestEndHour = getIntPref( this.calendarWindow.calendarPreferences.calendarPref, "event.defaultendhour", 17 );;
+   for ( var i = 0; i < dayEventList.length; i++ ) 
    {
       dayEventList[i].OtherSpotArray = new Array('0');
       dayEventList[i].CurrentSpot = 0;
       dayEventList[i].NumberOfSameTimeEvents = 0;
+      if( dayEventList[i].event.allDay != true )
+      {
+         var ThisLowestStartHour = new Date( dayEventList[0].displayDate.getTime() );
+         if( ThisLowestStartHour.getHours() < LowestStartHour ) 
+            LowestStartHour = ThisLowestStartHour.getHours();
+         
+         var EndDate = new Date( dayEventList[i].event.end.getTime() );
+         if( EndDate.getHours() > HighestEndHour )
+            HighestEndHour = EndDate;
+      }
    }
 
+   for( i = 0; i < 24; i++ )
+   {
+      document.getElementById( "day-tree-item-"+i ).removeAttribute( "collapsed" );
+   }
+
+   //alert( "LowestStartHour is "+LowestStartHour );
+   for( i = 0; i < LowestStartHour; i++ )
+   {
+      document.getElementById( "day-tree-item-"+i ).setAttribute( "collapsed", "true" );
+   }
+   
+   for( i = ( HighestEndHour + 1 ); i < 24; i++ )
+   {
+      document.getElementById( "day-tree-item-"+i ).setAttribute( "collapsed", "true" );
+   }
+   
    for ( i = 0; i < dayEventList.length; i++ ) 
    {
       var calendarEventDisplay = dayEventList[i];
@@ -203,9 +230,7 @@ DayView.prototype.refreshEvents = function dayview_refreshEvents( )
          //this is the actual spot (0 -> n) that the event will go in on the day view.
          calendarEventDisplay.CurrentSpot = LowestNumber;
          calendarEventDisplay.NumberOfSameTimeEvents = SortedOtherSpotArray.length;
-  
       }
-
    }
    
    for ( var eventIndex = 0; eventIndex < dayEventList.length; ++eventIndex )
@@ -298,18 +323,21 @@ DayView.prototype.createEventBox = function dayview_createEventBox( calendarEven
    
    var eventBox = document.createElement( "vbox" );
    
-   var topHeight = eval( ( startHour*kDayViewHourHeight ) + ( ( startMinutes/60 ) * kDayViewHourHeight ) );
-   topHeight = Math.round( topHeight ) - 1;
+   var boxHeight = document.getElementById( "day-tree-item-"+startHour ).boxObject.height;
+   var topHeight = document.getElementById( "day-tree-item-"+startHour ).boxObject.y - document.getElementById( "day-tree-item-"+startHour ).parentNode.boxObject.y;
+   var boxWidth = document.getElementById( "day-tree-item-"+startHour ).boxObject.width;
+   
+   var topHeight = eval( topHeight + ( ( startMinutes/60 ) * boxHeight ) );
+   topHeight = Math.round( topHeight ) - 2;
    eventBox.setAttribute( "top", topHeight );
    
-   eventBox.setAttribute( "height", Math.round( ( hourDuration*kDayViewHourHeight ) + 1 ) );
+   eventBox.setAttribute( "height", Math.round( ( hourDuration*boxHeight ) + 1 ) );
    
-   var daywidth = parseInt(document.defaultView.getComputedStyle(document.getElementById("day-tree-item-0"), "").getPropertyValue("width"));
-   var width = Math.round( ( daywidth-kDayViewHourLeftStart ) / calendarEventDisplay.NumberOfSameTimeEvents );
+   var width = Math.round( ( boxWidth-kDayViewHourLeftStart ) / calendarEventDisplay.NumberOfSameTimeEvents );
    eventBox.setAttribute( "width", width );
    
    var left = eval( ( ( calendarEventDisplay.CurrentSpot - 1 ) * width )  + kDayViewHourLeftStart );
-   left = left - ( 1 * ( calendarEventDisplay.CurrentSpot - 1 ));
+   left = left - ( calendarEventDisplay.CurrentSpot - 1 );
    eventBox.setAttribute( "left", Math.round( left ) );
    
    //if you change this class, you have to change calendarViewDNDObserver in calendarDragDrop.js

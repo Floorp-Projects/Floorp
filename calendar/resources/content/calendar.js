@@ -102,8 +102,6 @@ var gClockId;
 var showTooltip = true;
 
 // DAY VIEW VARIABLES
-var kDayViewHourHeight = 50;
-var kDayViewHourWidth = 105;
 var kDayViewHourLeftStart = 105;
 
 var kWeekViewHourHeight = 50;
