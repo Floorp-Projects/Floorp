@@ -1308,6 +1308,7 @@ nsHTMLCopyEncoder::IncludeInContext(nsIDOMNode *aNode)
   if (tag.get() == nsHTMLAtoms::b        ||
       tag.get() == nsHTMLAtoms::i        ||
       tag.get() == nsHTMLAtoms::u        ||
+      tag.get() == nsHTMLAtoms::a        ||
       tag.get() == nsHTMLAtoms::tt       ||
       tag.get() == nsHTMLAtoms::s        ||
       tag.get() == nsHTMLAtoms::big      ||
