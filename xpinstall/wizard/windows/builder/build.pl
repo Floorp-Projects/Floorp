@@ -22,6 +22,10 @@
 #   Sean Su <ssu@netscape.com>
 
 #
+# Purpose:
+#    To build the mozilla self-extracting installer and its corresponding .xpi files
+#    given a mozilla build on a local system.
+#
 # Requirements:
 # 1. perl needs to be installed correctly on the build system because cwd.pm is used.
 # 2. mozilla\xpinstall\wizard\windows needs to be built.
