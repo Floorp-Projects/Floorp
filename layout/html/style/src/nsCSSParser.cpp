@@ -56,7 +56,8 @@ static NS_DEFINE_IID(kICSSParserIID, NS_ICSS_PARSER_IID);
 static NS_DEFINE_IID(kICSSStyleSheetIID, NS_ICSS_STYLE_SHEET_IID);
 static NS_DEFINE_IID(kIStyleSheetIID, NS_ISTYLE_SHEET_IID);
 
-//#define ENABLE_OUTLINE  // un-comment this to enable the outline properties
+//#define ENABLE_OUTLINE   // un-comment this to enable the outline properties (bug 9816)
+//#define ENABLE_COUNTERS  // un-comment this to enable counters (bug 15174)
 
 MOZ_DECL_CTOR_COUNTER(SelectorList);
 
@@ -263,7 +264,7 @@ protected:
   PRBool ParseCounter(PRInt32& aErrorCode, nsCSSValue& aValue);
   PRBool ParseAttr(PRInt32& aErrorCode, nsCSSValue& aValue);
   PRBool ParseURL(PRInt32& aErrorCode, nsCSSValue& aValue);
-  PRBool TranslateDimension(nsCSSValue& aValue, PRInt32 aVariantMask,
+  PRBool TranslateDimension(PRInt32& aErrorCode, nsCSSValue& aValue, PRInt32 aVariantMask,
                             float aNumber, const nsString& aUnit);
 
   // Current token. The value is valid after calling GetToken
@@ -2177,7 +2178,8 @@ PRBool CSSParserImpl::ParseEnum(PRInt32& aErrorCode, nsCSSValue& aValue,
   return PR_FALSE;
 }
 
-PRBool CSSParserImpl::TranslateDimension(nsCSSValue& aValue,
+PRBool CSSParserImpl::TranslateDimension(PRInt32& aErrorCode,
+                                         nsCSSValue& aValue,
                                          PRInt32 aVariantMask,
                                          float aNumber,
                                          const nsString& aUnit)
@@ -2208,6 +2210,7 @@ PRBool CSSParserImpl::TranslateDimension(nsCSSValue& aValue,
       case eCSSKeyword_ms:    units = eCSSUnit_Milliseconds;  type = VARIANT_TIME;  break;
       default:
         // unknown unit
+        aErrorCode = NS_ERROR_ILLEGAL_VALUE;
         return PR_FALSE;
     }
   } else {
@@ -2306,7 +2309,7 @@ PRBool CSSParserImpl::ParseVariant(PRInt32& aErrorCode, nsCSSValue& aValue,
   }
   if (((aVariantMask & (VARIANT_LENGTH | VARIANT_ANGLE | VARIANT_FREQUENCY | VARIANT_TIME)) != 0) && 
       tk->IsDimension()) {
-    return TranslateDimension(aValue, aVariantMask, tk->mNumber, tk->mIdent);
+    return TranslateDimension(aErrorCode, aValue, aVariantMask, tk->mNumber, tk->mIdent);
   }
   if (((aVariantMask & VARIANT_PERCENT) != 0) &&
       (eCSSToken_Percentage == tk->mType)) {
@@ -2370,9 +2373,11 @@ PRBool CSSParserImpl::ParseVariant(PRInt32& aErrorCode, nsCSSValue& aValue,
       (eCSSToken_Function == tk->mType) &&
       (tk->mIdent.EqualsIgnoreCase("counter") || 
        tk->mIdent.EqualsIgnoreCase("counters"))) {
+#ifdef ENABLE_COUNTERS
     if (ParseCounter(aErrorCode, aValue)) {
       return PR_TRUE;
     }
+#endif
     return PR_FALSE;
   }
   if (((aVariantMask & VARIANT_ATTR) != 0) &&
@@ -2604,6 +2609,11 @@ PRInt32 CSSParserImpl::ParseChoice(PRInt32& aErrorCode, nsCSSValue aValues[],
         if (ParseSingleValueProperty(aErrorCode, aValues[index], aPropIDs[index])) {
           found |= bit;
         }
+        if (aErrorCode == NS_ERROR_ILLEGAL_VALUE) { // bug 47138
+          aErrorCode = NS_OK;
+          found = 0;
+          goto done;
+        }
       }
     }
     if (found == hadFound) {  // found nothing new
@@ -2628,7 +2638,7 @@ PRInt32 CSSParserImpl::ParseChoice(PRInt32& aErrorCode, nsCSSValue aValues[],
       }
     }
   }
-
+done:
   SetParsingCompoundProperty(PR_FALSE);
   return found;
 }
@@ -2665,6 +2675,10 @@ PRBool CSSParserImpl::ParseBoxProperties(PRInt32& aErrorCode,
   PRInt32 index;
   for (index = 0; index < 4; index++) {
     if (! ParseSingleValueProperty(aErrorCode, values[index], aPropIDs[index])) {
+      if (aErrorCode == NS_ERROR_ILLEGAL_VALUE) { // bug 47138
+        aErrorCode = NS_OK;
+        count = 0;
+      }
       break;
     }
     count++;
