@@ -337,7 +337,10 @@ mozXMLTermUtils::ExecuteScript(nsIDOMDocument* aDOMDocument,
   if (!doc)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIPrincipal> docPrincipal=dont_AddRef(doc->GetDocumentPrincipal());
+  nsCOMPtr<nsIPrincipal> docPrincipal;
+  result =  doc->GetPrincipal(getter_AddRefs(docPrincipal));
+  if (NS_FAILED(result)) 
+    return result;
 
   // Get document script context
   nsCOMPtr<nsIScriptContext> scriptContext;

@@ -62,7 +62,7 @@ DEFINES = $(TK_CFLAGS)
 CPPSRCS = nsSetupRegistry.cpp  \
 	mozSimpleContainer.cpp \
 	mozGeckoTerm.cpp       \
-	nsTimer.cpp            \
+#	nsTimer.cpp            \
 	$(NULL)
 
 # Libraries to be linked
