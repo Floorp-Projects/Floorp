@@ -379,6 +379,15 @@ nsProtocolProxyService::ExamineForProxy(nsIURI *aURI, char * *aProxyHost, PRInt3
     *aProxyHost = nsnull;
     *aProxyType = nsnull;
     *aProxyPort = -1;
+    
+    // we only know about http, https, ftp and gopher as yet...
+    // return nothing for others. See what happens otherwise in bug 81214
+    PRBool validScheme = PR_FALSE;
+    if ((NS_FAILED(aURI->SchemeIs("http", &validScheme)) || !validScheme) &&
+        (NS_FAILED(aURI->SchemeIs("https", &validScheme)) || !validScheme) &&
+        (NS_FAILED(aURI->SchemeIs("ftp", &validScheme)) || !validScheme ) &&
+        (NS_FAILED(aURI->SchemeIs("gopher", &validScheme)) || !validScheme))
+        return NS_OK;
 
     // if proxies are enabled and this host:port combo is
     // supposed to use a proxy, check for a proxy.
@@ -406,7 +415,7 @@ nsProtocolProxyService::ExamineForProxy(nsIURI *aURI, char * *aProxyHost, PRInt3
     nsXPIDLCString scheme;
     rv = aURI->GetScheme(getter_Copies(scheme));
     if (NS_FAILED(rv)) return rv;
-    
+
     if (mHTTPProxyHost.get()[0] && mHTTPProxyPort > 0 &&
         !PL_strcasecmp(scheme, "http")) {
         *aProxyHost = PL_strdup(mHTTPProxyHost);
