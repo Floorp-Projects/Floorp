@@ -87,7 +87,6 @@ public:
   NS_IMETHOD Init(nsIContent *aOwner);
   NS_IMETHOD LoadFrame();
   NS_IMETHOD GetDocShell(nsIDocShell **aDocShell);
-  NS_IMETHOD GetIsDocumentLoading(PRBool* aIsDocumentLoading);
   NS_IMETHOD Destroy();
 
 protected:
@@ -98,8 +97,6 @@ protected:
   nsCOMPtr<nsIDocShell> mDocShell;
 
   nsIContent *mOwnerContent; // WEAK
-
-  PRBool mIsLoadStarted;
 };
 
 nsresult
@@ -114,7 +111,7 @@ NS_NewFrameLoader(nsIFrameLoader **aFrameLoader)
 }
 
 nsFrameLoader::nsFrameLoader()
-  : mOwnerContent(nsnull), mIsLoadStarted(PR_FALSE)
+  : mOwnerContent(nsnull)
 {
   NS_INIT_ISUPPORTS();
 }
@@ -163,10 +160,7 @@ nsFrameLoader::LoadFrame()
   src.Trim(" \t\n\r");
 
   if (src.IsEmpty()) {
-    // about:blank will be synthesized into a frame if not URL is
-    // loaded into it (bug 35986)
-
-    return NS_OK;
+    src.Assign(NS_LITERAL_STRING("about:blank"));
   }
 
   // Make an absolute URI
@@ -235,8 +229,6 @@ nsFrameLoader::LoadFrame()
                           PR_FALSE);
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to load URL");
 
-  mIsLoadStarted = NS_SUCCEEDED(rv);
-
   return rv;
 }
 
@@ -250,14 +242,6 @@ nsFrameLoader::GetDocShell(nsIDocShell **aDocShell)
 
   *aDocShell = mDocShell;
   NS_IF_ADDREF(*aDocShell);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFrameLoader::GetIsDocumentLoading(PRBool* aIsDocumentLoading)
-{
-  *aIsDocumentLoading = mIsLoadStarted;
 
   return NS_OK;
 }

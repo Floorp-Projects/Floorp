@@ -90,11 +90,6 @@ public:
   NS_IMETHOD GetDocShell(nsIDocShell **aDocShell) = 0;
 
   /**
-   * Tells whether or not the loader started loading a document.
-   */
-  NS_IMETHOD GetIsDocumentLoading(PRBool *aIsDocumentLoading) = 0;
-
-  /**
    * Destroy the frame loader and everything inside it. This will
    * clear the weak owner content reference.  */
   NS_IMETHOD Destroy() = 0;

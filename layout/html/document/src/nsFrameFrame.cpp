@@ -93,6 +93,7 @@
 #include "nsIDOMDocument.h"
 #include "nsPIDOMWindow.h"
 #include "nsIRenderingContext.h"
+#include "nsIFrameFrame.h"
 
 // For Accessibility
 #ifdef ACCESSIBILITY
@@ -129,8 +130,9 @@ public:
  *****************************************************************************/
 #define nsHTMLFrameOuterFrameSuper nsHTMLContainerFrame
 
-class nsHTMLFrameOuterFrame : public nsHTMLFrameOuterFrameSuper {
-
+class nsHTMLFrameOuterFrame : public nsHTMLFrameOuterFrameSuper,
+                              public nsIFrameFrame
+{
 public:
   nsHTMLFrameOuterFrame();
 
@@ -139,7 +141,9 @@ public:
 #endif
 
   // nsISupports
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
+  NS_IMETHOD_(nsrefcnt) AddRef(void) { return 2; }
+  NS_IMETHOD_(nsrefcnt) Release(void) { return 1; }
 
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
 
@@ -170,6 +174,9 @@ public:
 #ifdef ACCESSIBILITY
   NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
 #endif
+
+  // nsIFrameFrame
+  NS_IMETHOD GetDocShell(nsIDocShell **aDocShell);
 
   NS_IMETHOD  VerifyTree() const;
   PRBool IsInline();
@@ -237,8 +244,8 @@ public:
   PRBool GetName(nsIContent* aContent, nsString& aResult);
   PRInt32 GetScrolling(nsIContent* aContent);
   nsFrameborder GetFrameBorder();
-  PRInt32 GetMarginWidth(nsIPresContext* aPresContext, nsIContent* aContent);
-  PRInt32 GetMarginHeight(nsIPresContext* aPresContext, nsIContent* aContent);
+  PRInt32 GetMarginWidth(nsIContent* aContent);
+  PRInt32 GetMarginHeight(nsIContent* aContent);
 
 friend class nsHTMLFrameOuterFrame;
 
@@ -290,6 +297,20 @@ NS_IMETHODIMP nsHTMLFrameOuterFrame::GetAccessible(nsIAccessible** aAccessible)
 }
 #endif
 
+NS_IMETHODIMP
+nsHTMLFrameOuterFrame::GetDocShell(nsIDocShell **aDocShell)
+{
+  *aDocShell = nsnull;
+
+  nsHTMLFrameInnerFrame* firstChild = NS_STATIC_CAST(nsHTMLFrameInnerFrame*,
+                                                     mFrames.FirstChild());
+  if (!firstChild) 
+    return NS_OK;
+
+  return firstChild->GetDocShell(aDocShell);
+}
+
+
 //--------------------------------------------------------------
 // Frames are not refcounted, no need to AddRef
 NS_IMETHODIMP
@@ -298,6 +319,12 @@ nsHTMLFrameOuterFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   NS_PRECONDITION(0 != aInstancePtr, "null ptr");
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
+  }
+
+  if (aIID.Equals(NS_GET_IID(nsIFrameFrame))) {
+    nsISupports *tmp = NS_STATIC_CAST(nsIFrameFrame *, this);
+    *aInstancePtr = tmp;
+    return NS_OK;
   }
 
   return nsHTMLFrameOuterFrameSuper::QueryInterface(aIID, aInstancePtr);
@@ -783,7 +810,7 @@ nsFrameborder nsHTMLFrameInnerFrame::GetFrameBorder()
 }
 
 
-PRInt32 nsHTMLFrameInnerFrame::GetMarginWidth(nsIPresContext* aPresContext, nsIContent* aContent)
+PRInt32 nsHTMLFrameInnerFrame::GetMarginWidth(nsIContent* aContent)
 {
   PRInt32 marginWidth = -1;
   nsresult rv = NS_OK;
@@ -797,7 +824,7 @@ PRInt32 nsHTMLFrameInnerFrame::GetMarginWidth(nsIPresContext* aPresContext, nsIC
   return marginWidth;
 }
 
-PRInt32 nsHTMLFrameInnerFrame::GetMarginHeight(nsIPresContext* aPresContext, nsIContent* aContent)
+PRInt32 nsHTMLFrameInnerFrame::GetMarginHeight(nsIContent* aContent)
 {
   PRInt32 marginHeight = -1;
   nsresult rv = NS_OK;
@@ -927,7 +954,8 @@ nsHTMLFrameInnerFrame::GetDocShell(nsIDocShell **aDocShell)
       mFrameLoader->Init(content);
 
       // ... and tell it to start loading.
-      mFrameLoader->LoadFrame();
+      rv = mFrameLoader->LoadFrame();
+      NS_ENSURE_SUCCESS(rv, rv);
     }
   }
 
@@ -974,36 +1002,6 @@ nsHTMLFrameInnerFrame::ShowDocShell(nsIPresContext* aPresContext)
   nsresult rv = GetDocShell(getter_AddRefs(docShell));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRBool is_document_synthetic = PR_FALSE;
-
-  if (mContent->IsContentOfType(nsIContent::eXUL)) {
-    // We're a XUL iframe/browser tag, for the XUL box object to
-    // docshell mapping to work we must force a document to be created
-    // at this point, if we don't, mozilla won't even start since it
-    // can't reach the docshell from the iframe/browser tags. That
-    // mapping is based on the subdocument map in the document, which
-    // obviously won't be setup until the subdocument is created.
-
-    // Make sure there's a document in the docshell.
-    nsCOMPtr<nsIDOMWindow> win(do_GetInterface(docShell));
-    NS_ENSURE_TRUE(win, NS_ERROR_UNEXPECTED);
-
-    nsCOMPtr<nsPIDOMWindow> pwin(do_QueryInterface(win));
-
-    nsCOMPtr<nsIDOMDocument> extant_dom_doc;
-    pwin->GetExtantDocument(getter_AddRefs(extant_dom_doc));
-
-    // This will synchronously create a document if there is no
-    // document in the window yet.
-
-    nsCOMPtr<nsIDOMDocument> dom_doc;
-    win->GetDocument(getter_AddRefs(dom_doc));
-
-    if (dom_doc != extant_dom_doc) {
-      is_document_synthetic = PR_TRUE;
-    }
-  }
-
   nsCOMPtr<nsIPresShell> presShell;
   docShell->GetPresShell(getter_AddRefs(presShell));
 
@@ -1013,41 +1011,27 @@ nsHTMLFrameInnerFrame::ShowDocShell(nsIPresContext* aPresContext)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem(do_QueryInterface(docShell));
-
-  nsCOMPtr<nsIDocShellTreeItem> parentDocShellTreeItem;
-  docShellTreeItem->GetParent(getter_AddRefs(parentDocShellTreeItem));
-
-  nsCOMPtr<nsIDocShell> parentDocShell =
-    do_QueryInterface(parentDocShellTreeItem);
-
-  nsCOMPtr<nsIPresShell> parentPresShell;
-  parentDocShell->GetPresShell(getter_AddRefs(parentPresShell));
-
   nsCOMPtr<nsIContent> content;
   GetParentContent(getter_AddRefs(content));
 
   // pass along marginwidth, marginheight, scrolling so sub document
   // can use it
-  docShell->SetMarginWidth(GetMarginWidth(aPresContext, content));
-  docShell->SetMarginHeight(GetMarginHeight(aPresContext, content));
+  docShell->SetMarginWidth(GetMarginWidth(content));
+  docShell->SetMarginHeight(GetMarginHeight(content));
 
   // Current and initial scrolling is set so that all succeeding docs
   // will use the scrolling value set here, regardless if scrolling is
   // set by viewing a particular document (e.g. XUL turns off scrolling)
-  nsCOMPtr<nsIScrollable> scrollableContainer(do_QueryInterface(docShell));
+  nsCOMPtr<nsIScrollable> sc(do_QueryInterface(docShell));
 
-  if (scrollableContainer) {
+  if (sc) {
     PRInt32 scrolling = GetScrolling(content);
 
-    scrollableContainer->SetDefaultScrollbarPreferences(nsIScrollable::ScrollOrientation_Y,
-                                                        scrolling);
-    scrollableContainer->SetDefaultScrollbarPreferences(nsIScrollable::ScrollOrientation_X,
-                                                        scrolling);
+    sc->SetDefaultScrollbarPreferences(nsIScrollable::ScrollOrientation_Y,
+                                       scrolling);
+    sc->SetDefaultScrollbarPreferences(nsIScrollable::ScrollOrientation_X,
+                                       scrolling);
   }
-
-  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(docShell));
-  NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIWidget> widget;
 
@@ -1067,18 +1051,7 @@ nsHTMLFrameInnerFrame::ShowDocShell(nsIPresContext* aPresContext)
 
     baseWindow->Create();
 
-    PRBool is_document_loading = PR_TRUE;
-    mFrameLoader->GetIsDocumentLoading(&is_document_loading);
-
-    if (!is_document_synthetic || !is_document_loading) {
-      // We're about to either show a "real" document (i.e. not a
-      // synthetic about:blank document) or we're showing an iframe
-      // that we didn't load anything into yet (i.e. there was no
-      // src="..."  attribute on the iframe element. Make sure we show
-      // the window.
-
-      baseWindow->SetVisibility(PR_TRUE);
-    }
+    baseWindow->SetVisibility(PR_TRUE);
   }
 
   return NS_OK;

@@ -84,32 +84,9 @@ nsIFrameBoxObject::~nsIFrameBoxObject()
   /* destructor code */
 }
 
-/* void openIFrame (in boolean openFlag); */
 NS_IMETHODIMP nsIFrameBoxObject::GetDocShell(nsIDocShell** aResult)
 {
-  *aResult = nsnull;
-
-  if (!mPresShell) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIDocument> doc, sub_doc;
-  mPresShell->GetDocument(getter_AddRefs(doc));
-
-  doc->GetSubDocumentFor(mContent, getter_AddRefs(sub_doc));
-
-  if (!sub_doc) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsISupports> container;
-  sub_doc->GetContainer(getter_AddRefs(container));
-
-  if (!container) {
-    return NS_OK;
-  }
-
-  return CallQueryInterface(container, aResult);
+  return nsBoxObject::GetDocShell(aResult);
 }
 
 // Creation Routine ///////////////////////////////////////////////////////////////////////

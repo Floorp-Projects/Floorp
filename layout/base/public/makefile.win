@@ -46,12 +46,12 @@ EXPORTS =				\
 	nsIMutableStyleContext.h	\
 	nsIObjectFrame.h		\
 	nsIPageSequenceFrame.h		\
-	nsIPercentHeightObserver.h  \
+	nsIPercentHeightObserver.h	\
 	nsIPresContext.h		\
 	nsIPresShell.h			\
 	nsIPresState.h			\
 	nsIPrintContext.h		\
-    nsIPrintPreviewContext.h \
+	nsIPrintPreviewContext.h	\
 	nsIReflowCallback.h		\
 	nsIScrollableFrame.h		\
 	nsIScrollableViewProvider.h	\
@@ -62,10 +62,11 @@ EXPORTS =				\
 	nsReflowType.h			\
 	nsStyleChangeList.h		\
 	nsStyleConsts.h			\
+	nsIFrameFrame.h			\
 !ifdef IBMBIDI
 	nsBidiPresUtils.h		\
 	nsITextFrame.h			\
-	nsBidi.h						\
+	nsBidi.h			\
 !endif
 	$(NULL)
 

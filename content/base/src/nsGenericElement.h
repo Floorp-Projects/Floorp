@@ -395,17 +395,17 @@ public:
   virtual ~nsGenericContainerElement();
 
   NS_IMETHOD CopyInnerTo(nsIContent* aSrcContent,
-                       nsGenericContainerElement* aDest,
-                       PRBool aDeep);
+                         nsGenericContainerElement* aDest,
+                         PRBool aDeep);
 
   // nsIDOMElement methods
   NS_METHOD GetAttribute(const nsAString& aName,
-                        nsAString& aReturn) 
+                         nsAString& aReturn) 
   {
     return nsGenericElement::GetAttribute(aName, aReturn);
   }
   NS_METHOD SetAttribute(const nsAString& aName,
-                        const nsAString& aValue)
+                         const nsAString& aValue)
   {
     return nsGenericElement::SetAttribute(aName, aValue);
   }
@@ -417,12 +417,12 @@ public:
   NS_IMETHOD GetLastChild(nsIDOMNode** aLastChild);
   
   NS_IMETHOD InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
-                        nsIDOMNode** aReturn)
+                          nsIDOMNode** aReturn)
   {
     return nsGenericElement::doInsertBefore(aNewChild, aRefChild, aReturn);
   }
   NS_IMETHOD ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
-                        nsIDOMNode** aReturn)
+                          nsIDOMNode** aReturn)
   {
     return nsGenericElement::doReplaceChild(aNewChild, aOldChild, aReturn);
   }
@@ -439,8 +439,8 @@ public:
   NS_IMETHOD NormalizeAttrString(const nsAString& aStr,
                                  nsINodeInfo*& aNodeInfo);
   NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                          const nsAString& aValue,
-                          PRBool aNotify);
+                     const nsAString& aValue,
+                     PRBool aNotify);
   NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo,
                      const nsAString& aValue,
                      PRBool aNotify);
