@@ -19,7 +19,6 @@
  *
  * Contributor(s): 
  * Norris Boyd
- * Mitch Stoltz
  */
 
 /* Describes principals by their orginating uris */
@@ -61,20 +60,6 @@ NS_IMETHODIMP
 nsCodebasePrincipal::ToUserVisibleString(char **result)
 {
     return GetOrigin(result);
-}
-
-NS_IMETHODIMP 
-nsCodebasePrincipal::ToStreamableForm(char** aName, char** aData)
-{
-    if (!mPrefName) {
-        nsCAutoString s("security.principal.codebase");
-        s += mCapabilitiesOrdinal++;
-        mPrefName = s.ToNewCString();
-    }
-    *aName = nsCRT::strdup(mPrefName);
-    if (!*aName)
-        return NS_ERROR_FAILURE;
-    return nsBasePrincipal::ToStreamableForm(aName, aData);
 }
 
 NS_IMETHODIMP
@@ -270,30 +255,28 @@ nsresult
 nsCodebasePrincipal::InitFromPersistent(const char *name, const char* data)
 {
     // Parses preference strings of the form 
-    // "<codebase URL><space><capabilities string>"
-    // ie. "http://www.mozilla.org UniversalBrowserRead=Granted"
+    // "[Codebase URL] capabilities string"
+    // ie. "[Codebase http://www.mozilla.org] UniversalBrowserRead=1"
     if (!data)
         return NS_ERROR_ILLEGAL_VALUE;
 
-    char* urlEnd = PL_strchr(data, ' '); // Find end of URL
-    if (urlEnd)
-        *urlEnd = '\0';
+    data = PL_strchr(data, ' '); // Jump to URL
+    if (!data)
+        return NS_ERROR_FAILURE;
+    data += 1;
 
-    nsCOMPtr<nsIURI> uri;
-    if (NS_FAILED(NS_NewURI(getter_AddRefs(uri), data, nsnull))) {
+    char* urlEnd = PL_strchr(data, ']'); // Find end of URL
+    NS_ASSERTION(urlEnd, "Malformed security.principal preference.");
+    *urlEnd = '\0'; // XXX modification of const char *
+
+    if (NS_FAILED(NS_NewURI(&mURI, data, nsnull))) {
         NS_ASSERTION(PR_FALSE, "Malformed URI in security.principal preference.");
         return NS_ERROR_FAILURE;
     }
-    if (NS_FAILED(Init(uri))) return NS_ERROR_FAILURE;
 
-    if (urlEnd) 
-    {
-        // Jump to beginning of capabilities list
-        data = urlEnd+1;
-        while (*data == ' ')
-            data++;
-        if (data)
-            return nsBasePrincipal::InitFromPersistent(name, data);
+    if (urlEnd[1] != '\0') {
+        data = urlEnd+2; // Jump to beginning of caps data
+        return nsBasePrincipal::InitFromPersistent(name, data);
     }
     return NS_OK;
 }

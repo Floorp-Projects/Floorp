@@ -56,7 +56,8 @@ interface nsIScriptSecurityManager : nsISupports
 	/**
 	 * Return a principal that can be QI'd to nsICertificatePrincipal.
 	 */
-    nsIPrincipal GetCertificatePrincipal(in string CertID);
+    nsIPrincipal GetCertificatePrincipal(in string aIssuer, in string aSerialNumber,
+                                         in string companyName);
 
 	///////////////// Security Checks //////////////////
 
@@ -135,15 +136,6 @@ interface nsIScriptSecurityManager : nsISupports
 	 * script.
 	 */
     void DisableCapability(in string capability);
-
-    //////////////// Master Certificate Functions ////////////////////
-
-	/**
-	 * Allow 'certificateID' to enable 'capability.' Can only be performed
-     * by code signed by the system certificate.
-	 */
-    void SetCanEnableCapability(in string certificateID, in string capability, 
-                                in short canEnable);    
 };
 
 %{C++

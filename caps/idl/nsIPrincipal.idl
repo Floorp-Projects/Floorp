@@ -19,7 +19,6 @@
  *
  * Contributor(s): 
  * Norris Boyd
- * Mitch Stoltz
  */
 
 /* Defines the abstract interface for a principal. */
@@ -27,12 +26,14 @@
 #include "nsISupports.idl"
 
 %{C++
+class nsSupportsHashtable;
 struct JSPrincipals;
 %}
 
 interface nsIPref;
 
 [ptr] native JSPrincipals(JSPrincipals);
+[ptr] native nsSupportsHashtable(nsSupportsHashtable);
 
 [uuid(ff9313d0-25e1-11d2-8160-006008119d7a)]
 interface nsIPrincipal : nsISupports {
@@ -48,8 +49,6 @@ interface nsIPrincipal : nsISupports {
 	string ToString();
 
 	string ToUserVisibleString();
-
-    void ToStreamableForm(out string name, out string data);
 
 	boolean Equals(in nsIPrincipal other);
 
@@ -68,6 +67,8 @@ interface nsIPrincipal : nsISupports {
     void RevertCapability(in string capability, inout voidStar annotation);
 
     void DisableCapability(in string capability, inout voidStar annotation);
+
+	void Save(in nsSupportsHashtable aPrincipals, in nsIPref prefs);
 };
 
 

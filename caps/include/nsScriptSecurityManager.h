@@ -103,6 +103,8 @@ public:
     GetScriptSecurityManager();
     
 private:
+    void
+    LookupPrincipal(nsCOMPtr<nsIPrincipal>* aPrincipal);
 
     NS_IMETHOD
     GetSubjectPrincipal(JSContext *aCx, nsIPrincipal **result);
@@ -139,9 +141,6 @@ private:
                          JSStackFrame **frameResult);
 
     NS_IMETHOD
-    SavePrincipal(nsIPrincipal* aToSave);
-
-    NS_IMETHOD
     InitFromPrefs();
 
     static void
@@ -159,11 +158,10 @@ private:
     nsObjectHashtable *mOriginToPolicyMap;
     nsIPref *mPrefs;
     nsIPrincipal *mSystemPrincipal;
-    nsCOMPtr<nsIPrincipal> mSystemCertificate;
     nsSupportsHashtable *mPrincipals;
     PRBool mIsJavaScriptEnabled;
     PRBool mIsMailJavaScriptEnabled;
-    PRBool mIsAccessingPrefs;
+    PRBool mIsWritingPrefs;
     unsigned char hasPolicyVector[(NS_DOM_PROP_MAX >> 3) + 1];
     unsigned char hasDomainPolicyVector[(NS_DOM_PROP_MAX >> 3) + 1];
 };

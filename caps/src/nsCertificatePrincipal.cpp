@@ -38,25 +38,24 @@ NSBASEPRINCIPALS_RELEASE(nsCertificatePrincipal);
 // Methods implementing nsICertificatePrincipal //
 //////////////////////////////////////////////////
 NS_IMETHODIMP
-nsCertificatePrincipal::GetCertificateID(char** aCertificateID)
+nsCertificatePrincipal::GetIssuerName(char ** issuerName)
 {
-    *aCertificateID = nsCRT::strdup(mCertificateID);
-	return *mCertificateID ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    *issuerName = nsCRT::strdup(mIssuerName);
+	return *issuerName ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 NS_IMETHODIMP
-nsCertificatePrincipal::GetCommonName(char** aCommonName)
+nsCertificatePrincipal::GetSerialNumber(char ** serialNumber)
 {
-    *aCommonName = nsCRT::strdup(mCommonName);
-	return *aCommonName ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    *serialNumber = nsCRT::strdup(mSerialNumber);
+	return *serialNumber ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 NS_IMETHODIMP
-nsCertificatePrincipal::SetCommonName(const char* aCommonName)
+nsCertificatePrincipal::GetCompanyName(char ** companyName)
 {
-    PR_FREEIF(mCommonName);
-    mCommonName = nsCRT::strdup(aCommonName);
-	return * mCommonName ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    *companyName = nsCRT::strdup(mCompanyName);
+	return * companyName ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 
@@ -77,54 +76,52 @@ nsCertificatePrincipal::CanEnableCapability(const char *capability,
 NS_IMETHODIMP 
 nsCertificatePrincipal::ToString(char **result)
 {
-    return GetCertificateID(result);
+      // STRING USE WARNING: perhaps |str| should be an |nsCAutoString|? -- scc
+    nsAutoString str;
+    str.AppendWithConversion("[Certificate ");
+    str.AppendWithConversion(mIssuerName);
+    str.AppendWithConversion(' ');
+    str.AppendWithConversion(mSerialNumber);
+    str.AppendWithConversion(']');
+    *result = str.ToNewCString();
+    return (*result) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 NS_IMETHODIMP 
 nsCertificatePrincipal::ToUserVisibleString(char **result)
 {
-    return GetCommonName(result);
-}
-
-NS_IMETHODIMP 
-nsCertificatePrincipal::ToStreamableForm(char** aName, char** aData)
-{
-    if (!mPrefName) {
-        nsCAutoString s("security.principal.certificate");
-        s += mCapabilitiesOrdinal++;
-        mPrefName = s.ToNewCString();
-    }
-    *aName = nsCRT::strdup(mPrefName);
-    if (!*aName)
-        return NS_ERROR_FAILURE;
-    return nsBasePrincipal::ToStreamableForm(aName, aData);
+    return GetCompanyName(result);
 }
 
 NS_IMETHODIMP
 nsCertificatePrincipal::Equals(nsIPrincipal * other, PRBool * result)
 {
-    *result = PR_FALSE;
     if (this == other) {
         *result = PR_TRUE;
         return NS_OK;
     }
-    if (!other)
+    if (!other) {
+        *result = PR_FALSE;
         return NS_OK;
+    }
     nsresult rv;
     nsCOMPtr<nsICertificatePrincipal> otherCertificate = 
         do_QueryInterface(other, &rv);
     if (NS_FAILED(rv))
-        return NS_OK;
-    //-- Compare cert ID's
-    char* otherID;
-    rv = otherCertificate->GetCertificateID(&otherID);
-    if (NS_FAILED(rv)) 
     {
-        PR_FREEIF(otherID);
-        return rv;
+        *result = PR_FALSE;
+        return NS_OK;
     }
-    *result = (PL_strcmp(mCertificateID, otherID) == 0);
-    PR_FREEIF(otherID);
+    //-- Compare issuer name and serial number; 
+    //   these comprise the unique id of the cert
+    char* otherIssuer;
+    otherCertificate->GetIssuerName(&otherIssuer);
+    char* otherSerial;
+    otherCertificate->GetSerialNumber(&otherSerial);
+    *result = ( (PL_strcmp(mIssuerName, otherIssuer) == 0) &&
+                (PL_strcmp(mSerialNumber, otherSerial) == 0) );
+    PR_FREEIF(otherIssuer);
+    PR_FREEIF(otherSerial);
     return NS_OK;
 }
 
@@ -145,46 +142,59 @@ NS_IMETHODIMP
 nsCertificatePrincipal::InitFromPersistent(const char *name, const char* data)
 {
     // Parses preference strings of the form 
-    // <certificateID><space><capabilities list>"
-    // ie. "AB:CD:12:34 UniversalBrowserRead=Granted"
+    // "[Certificate Issuer Serial#] capabilities string"
+    // ie. "[Certificate CertCo 12:34:AB:CD] UniversalBrowserRead=1"
 
     if (!data)
         return NS_ERROR_ILLEGAL_VALUE;
 
-    char* idEnd = PL_strchr(data, ' '); // Find end of certID
-    if (idEnd)
-        *idEnd = '\0';
+    data = PL_strchr(data, ' '); // Jump to issuer
+    NS_ASSERTION(data, "Malformed security.principal preference");
+    data += 1;
 
-    if (NS_FAILED(Init(data))) 
+    char* wordEnd = PL_strchr(data, ' '); // Find end of issuer
+    NS_ASSERTION(wordEnd, "Malformed security.principal preference");
+    *wordEnd = '\0';
+    const char* issuer = data;
+
+    data = wordEnd+1; // Jump to serial#
+    wordEnd = PL_strchr(data, ']'); // Find end of serial#
+    NS_ASSERTION(wordEnd, "Malformed security.principal preference");
+    *wordEnd = '\0';
+    const char* serial = data;
+
+    if (NS_FAILED(Init(issuer, serial, nsnull))) 
         return NS_ERROR_FAILURE;
-    
-    if (idEnd)
-    {
-        data = idEnd+1;
-        while (*data == ' ')
-            data++;
-        if (data)
-            return nsBasePrincipal::InitFromPersistent(name, data);
+
+    if (wordEnd[1] != '\0') {
+        data = wordEnd+2; // Jump to beginning of caps data
+        return nsBasePrincipal::InitFromPersistent(name, data);
     }
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsCertificatePrincipal::Init(const char* aCertificateID)
+nsCertificatePrincipal::Init(const char* aIssuerName, const char* aSerialNumber,
+                             const char* aCompanyName)
 {
-    mCertificateID = nsCRT::strdup(aCertificateID);
-    if (!mCertificateID) return NS_ERROR_OUT_OF_MEMORY;
+    mIssuerName = nsCRT::strdup(aIssuerName);
+    mSerialNumber = nsCRT::strdup(aSerialNumber);
+    mCompanyName = nsCRT::strdup(aCompanyName);
+    if (!mIssuerName || !mSerialNumber ||
+        !mCompanyName) return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
 }
 
-nsCertificatePrincipal::nsCertificatePrincipal() : mCertificateID(nsnull),
-                                                   mCommonName(nsnull)
+nsCertificatePrincipal::nsCertificatePrincipal() : mIssuerName(nsnull),
+                                                   mSerialNumber(nsnull),
+                                                   mCompanyName(nsnull)
 {
     NS_INIT_ISUPPORTS();
 }
 
 nsCertificatePrincipal::~nsCertificatePrincipal()
 {
-    PR_FREEIF(mCertificateID);
-    PR_FREEIF(mCommonName);
+    PR_FREEIF(mIssuerName);
+    PR_FREEIF(mSerialNumber);
+    PR_FREEIF(mCompanyName);
 }

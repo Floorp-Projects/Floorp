@@ -790,8 +790,10 @@ nsJARChannel::GetOwner(nsISupports* *aOwner)
     if (!mOwner)
     {
         nsCOMPtr<nsIPrincipal> certificate;
+        PRInt16 result;
         nsresult rv = mJAR->GetCertificatePrincipal(mJAREntry, 
-                                                    getter_AddRefs(certificate));
+                                                    getter_AddRefs(certificate),
+                                                    &result);
         if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
         if (certificate)
         {   // Get the codebase principal

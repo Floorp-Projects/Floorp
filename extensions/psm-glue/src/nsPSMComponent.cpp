@@ -49,7 +49,6 @@
 #include "nsISecureBrowserUI.h"
 #include "nsIDocumentLoaderObserver.h"
 #include "nsIScriptSecurityManager.h"
-#include "nsICertificatePrincipal.h"
 
 #define PSM_VERSION_REG_KEY "/Netscape/Personal Security Manager"
 
@@ -746,57 +745,29 @@ nsPSMComponent::CreatePrincipalFromCert(PRUint32 aCertID, nsIPrincipal** aPrinci
   if (NS_FAILED(GetControlConnection( &controlConnection )))
     return NS_ERROR_FAILURE;
 
-  //-- Read cert ID
+  //-- Read cert info
   CMTStatus result;
-
-  CMTItem fingerprint;
+  CMTItem issuerItem;
   result = CMT_GetStringAttribute(controlConnection, aCertID,
-                                  SSM_FID_CERT_FINGERPRINT, &fingerprint);
+                                  SSM_FID_CERT_COMMON_NAME, &issuerItem);
   if (result != CMTSuccess) return NS_ERROR_FAILURE;
-
+  CMTItemStr serialNumberItem;
+  result = CMT_GetStringAttribute(controlConnection, aCertID,
+                                  SSM_FID_CERT_SERIAL_NUMBER, &serialNumberItem);
+  if (result != CMTSuccess) return NS_ERROR_FAILURE;
+  CMTItemStr companyNameItem;
+  result = CMT_GetStringAttribute(controlConnection, aCertID,
+                                  SSM_FID_CERT_ORG_NAME, &companyNameItem);
+  if (result != CMTSuccess) return NS_ERROR_FAILURE;  
   //-- Get a principal
   nsresult rv;
   NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                   NS_SCRIPTSECURITYMANAGER_PROGID, &rv)
     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-  rv = secMan->GetCertificatePrincipal((char*)fingerprint.data,
+  rv = secMan->GetCertificatePrincipal((char*)issuerItem.data, 
+                                       (char*)serialNumberItem.data,
+                                       (char*)companyNameItem.data,
                                        aPrincipal);
-  if (NS_FAILED(rv)) return rv;
-
-  //-- Get common name and store it in the principal.
-  //   Using common name + organizational unit as the user-visible certificate name
-  nsCOMPtr<nsICertificatePrincipal> certificate = do_QueryInterface(*aPrincipal, &rv);
-  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-
-  CMTItem common;
-  result = CMT_GetStringAttribute(controlConnection, aCertID,
-                                  SSM_FID_CERT_COMMON_NAME, &common);
-  if (result != CMTSuccess) return NS_ERROR_FAILURE;
-  CMTItem subject;
-  result = CMT_GetStringAttribute(controlConnection, aCertID,
-                                  SSM_FID_CERT_SUBJECT_NAME, &subject);
-  if (result != CMTSuccess) return NS_ERROR_FAILURE;
-
-  nsCAutoString commonName;
-  commonName = (char*)common.data;
-  static const char orgUnitTag[] = " OU=";
-  char* orgUnitPos = PL_strstr((char*)subject.data, orgUnitTag);
-  if (orgUnitPos)
-  {
-    orgUnitPos += sizeof(orgUnitTag)-1;
-    char* orgUnitEnd = PL_strchr(orgUnitPos, ',');
-    PRInt32 orgUnitLen;
-    if(orgUnitEnd)
-      orgUnitLen = orgUnitEnd - orgUnitPos;
-    else
-      orgUnitLen = PL_strlen(orgUnitPos);
-    commonName.Append(' ');
-    commonName.Append(orgUnitPos, orgUnitLen);
-  }
-  char* commonChar = commonName.ToNewCString();
-  if (!commonChar) return NS_ERROR_OUT_OF_MEMORY;
-  rv = certificate->SetCommonName(commonChar);
-  Recycle(commonChar);
   return rv;
 }
  
