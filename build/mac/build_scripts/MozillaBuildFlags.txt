@@ -78,7 +78,7 @@ string_debug    0      DEBUG_STRING
 string_stats    0      DEBUG_STRING_STATS
 xpctools        0      XPC_TOOLS_SUPPORT
 smime           1
-mdn             0
+mdn             1
 print_preview   1      NS_PRINT_PREVIEW
 moz_xul         1      MOZ_XUL
 
