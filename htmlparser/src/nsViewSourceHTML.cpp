@@ -861,12 +861,14 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
 
       result=WriteTag(mStartTag,aToken,aToken->GetAttributeCount(),PR_TRUE);
       if((!mIsText) && mParser && (NS_OK==result)) {
-        CObserverService& theService=mParser->GetObserverService();
-        CParserContext*   pc=mParser->PeekContext(); 
-        void*             theDocID=(pc)? pc->mKey:0; 
-        eHTMLTags         theTag=(eHTMLTags)theToken->GetTypeID();  
+        CObserverService* theService=mParser->GetObserverService();
+        if(theService) {
+          CParserContext*   pc=mParser->PeekContext(); 
+          void*             theDocID=(pc)? pc->mKey:0; 
+          eHTMLTags         theTag=(eHTMLTags)theToken->GetTypeID();  
 
-        result=theService.Notify(theTag,theContext.mTokenNode,(PRUint32)theDocID,kViewSourceCommand,mParser);
+          result=theService->Notify(theTag,theContext.mTokenNode,(PRUint32)theDocID,kViewSourceCommand,mParser);
+        }
       }
       theContext.mTokenNode.Init(0,0,gTokenRecycler);  //now recycle.
       break;

@@ -291,7 +291,7 @@ CLASS_EXPORT_HTMLPARS nsParser : public nsIParser, public nsIStreamListener {
      * @param   
      * @return  
      */
-    CObserverService& GetObserverService(void) { return mObserverService; }
+    CObserverService* GetObserverService(void);
 
 protected:
 
@@ -382,6 +382,7 @@ protected:
     nsCharsetSource     mCharsetSource;
     nsresult            mInternalState;
     CObserverService    mObserverService;
+    PRBool              mObserversEnabled;
 
 public:    
     MOZ_TIMER_DECLARE(mParseTime)
