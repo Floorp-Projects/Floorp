@@ -270,10 +270,13 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
                             !preferred.Equals(NS_LITERAL_STRING("UTF-16BE")) &&
                             !preferred.Equals(NS_LITERAL_STRING("UTF-16LE")) &&
                             !preferred.Equals(NS_LITERAL_STRING("UTF-32BE")) &&
-                            !preferred.Equals(NS_LITERAL_STRING("UTF-32LE")))
+                            !preferred.Equals(NS_LITERAL_STRING("UTF-32LE"))) {
+                          // Propagate the error message so that the parser can
+                          // shutdown correctly. - Ref. Bug 96440
                           res = NotifyWebShell(aDocumentID,
-                                          NS_ConvertUCS2toUTF8(preferred).get(),
-                                          kCharsetFromMetaTag);
+                                               NS_ConvertUCS2toUTF8(preferred).get(),
+                                               kCharsetFromMetaTag);
+                        }
                      } // if(NS_SUCCEEDED(res)
                  }
              } // if EqualIgnoreCase 
@@ -285,11 +288,14 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
       nsAutoString compatCharset;
       if (NS_SUCCEEDED(GetCharsetFromCompatibilityTag(keys, values, compatCharset)))
       {
-          if (!compatCharset.IsEmpty())
-              res = NotifyWebShell(aDocumentID, NS_ConvertUCS2toUTF8(compatCharset).get(), kCharsetFromMetaTag);
+        if (!compatCharset.IsEmpty()) {
+          res = NotifyWebShell(aDocumentID, 
+                               NS_ConvertUCS2toUTF8(compatCharset).get(), 
+                               kCharsetFromMetaTag);
+        }
       }
     }
-    return NS_OK;
+    return res;
 }
 
 //-------------------------------------------------------------------------
