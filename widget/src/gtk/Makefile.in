@@ -25,7 +25,7 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
-LIBRARY_NAME = raptorwidgetunix_s
+LIBRARY_NAME = raptorwidgetgtk_s
 
 MODULE=raptor
 
@@ -59,29 +59,8 @@ CPPSRCS= \
 	nsRadioButton.cpp \
 	nsWindow.cpp
 
-CPP_OBJS= \
-	nsAppShell.o \
-	nsComboBox.o \
-	nsLabel.o \
-	nsScrollbar.o \
-	nsButton.o \
-	nsListBox.o \
-	nsLookAndFeel.o \
-	nsTextAreaWidget.o \
-	nsCheckButton.o \
-	nsMenu.o \
-	nsTextHelper.o \
-	nsDialog.o \
-	nsMenuBar.o \
-	nsTextWidget.o \
-	nsFileWidget.o \
-	nsMenuItem.o \
-	nsToolkit.o \
-	nsGtkEventHandler.o \
-	nsRadioButton.o \
-	nsWindow.o \
-        $(NULL)
-
+CSRCS = gtklayout.c \
+	$(NULL)
 
 TARGETS = $(LIBRARY)
 
@@ -89,9 +68,5 @@ MKSHLIB :=
 
 include $(topsrcdir)/config/rules.mk
 
-
-
-
-
-
+gtklayout.o nsWindow.o: gtklayout.h
 
