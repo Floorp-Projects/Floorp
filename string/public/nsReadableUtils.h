@@ -35,6 +35,10 @@
 #include "nsAString.h"
 #endif
 
+#ifndef nsASingleFragmentString_h___
+#include "nsASingleFragmentString.h"
+#endif
+
 #ifndef nsAStringGenerator_h___
 #include "nsAStringGenerator.h"
 #endif
@@ -173,6 +177,10 @@ NS_COM PRBool IsASCII( const nsAString& aString );
 NS_COM void ToUpperCase( nsACString& );
 
 NS_COM void ToLowerCase( nsACString& );
+
+NS_COM void ToUpperCase( nsASingleFragmentCString& );
+
+NS_COM void ToLowerCase( nsASingleFragmentCString& );
 
   /**
    * Converts case from string aSource to aDest.
