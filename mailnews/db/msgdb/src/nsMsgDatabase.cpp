@@ -2260,7 +2260,7 @@ nsresult nsMsgDatabase::ThreadNewHdr(nsMsgHdr* newHdr, PRBool &newThread)
 	nsString subject;
 
 	newHdr->GetSubject(subject);
-	if ((ThreadBySubjectWithoutRe() || (newHdrFlags & MSG_FLAG_HAS_RE)) && !thread == NULL)
+	if ((ThreadBySubjectWithoutRe() || (newHdrFlags & MSG_FLAG_HAS_RE)) && thread == NULL)
 	{
 		thread = getter_AddRefs(GetThreadForSubject(nsAutoCString(subject)));
 		if(thread)
