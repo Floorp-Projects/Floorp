@@ -21,7 +21,13 @@ LIBRARY_NAME=raptorxsldoc_s
 MODULE=raptor 
 REQUIRES=xpcom raptor pref
 
-DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
+DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN \
+!if defined(MOZ_XSL)
+-DXSL
+!endif
+
+XPIDLSRCS=	.\nsIDocumentTransformer.idl \
+            $(NULL)
 
 CPPSRCS=					\
 	nsXSLContentSink.cpp			\
@@ -34,7 +40,6 @@ CPP_OBJS=					\
 	$(NULL)
 
 EXPORTS = 					\
-	nsIDocumentTransformer.h		\
 	nsITransformMediator.h			\
 	$(NULL)
 
