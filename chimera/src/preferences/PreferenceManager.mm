@@ -166,6 +166,20 @@ app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
         return;
     }
 
+    // fix up the cookie prefs. If 'p3p' or 'accept foreign cookies' are on, remap them to
+    // something that chimera can deal with.
+    PRInt32 acceptCookies = 0;
+		static const char* kCookieBehaviorPref = "network.cookie.cookieBehavior";
+    prefs->GetIntPref(kCookieBehaviorPref, &acceptCookies);
+    if ( acceptCookies == 1 )	{          // accept foreign cookies, assume off	
+      acceptCookies = 2;
+		  prefs->SetIntPref(kCookieBehaviorPref, acceptCookies);
+		}
+    else if ( acceptCookies == 3 ) {     // p3p, assume all cookies on
+      acceptCookies = 0;
+		  prefs->SetIntPref(kCookieBehaviorPref, acceptCookies);
+    }
+		
     // get home page from Internet Config
     string = [self getICStringPref:kICWWWHomePage];
     if (string) {
