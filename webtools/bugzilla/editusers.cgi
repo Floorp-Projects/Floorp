@@ -645,9 +645,11 @@ if ($action eq 'delete') {
              WHERE login_name=" . SqlQuote($user));
     my $userid = FetchOneColumn();
 
+    Bugzilla->logout_user_by_id($userid);
     SendSQL("DELETE FROM profiles
              WHERE login_name=" . SqlQuote($user));
-    Bugzilla->logout_user_by_id($userid);
+    SendSQL("DELETE FROM user_group_map
+             WHERE user_id=" . $userid);
     print "User deleted.<BR>\n";
 
     PutTrailer($localtrailer);
