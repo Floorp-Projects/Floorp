@@ -748,6 +748,31 @@ protected:
     return SetHTMLAttribute(nsHTMLAtoms::_atom, value, PR_TRUE);    \
   }
 
+/**
+ * A macro to implement the getter and the setter for a given pixel
+ * valued content property. The method uses the generic GetAttr and
+ * SetAttr methods
+ */
+#define NS_IMPL_PIXEL_ATTR(_class, _method, _atom)                  \
+  NS_IMETHODIMP                                                     \
+  _class::Get##_method(PRInt32* aValue)                             \
+  {                                                                 \
+    nsHTMLValue value;                                              \
+    *aValue = -1;                                                   \
+    if (NS_CONTENT_ATTR_HAS_VALUE ==                                \
+        GetHTMLAttribute(nsHTMLAtoms::_atom, value)) {              \
+      if (value.GetUnit() == eHTMLUnit_Pixel) {                     \
+        *aValue = value.GetPixelValue();                            \
+      }                                                             \
+    }                                                               \
+    return NS_OK;                                                   \
+  }                                                                 \
+  NS_IMETHODIMP                                                     \
+  _class::Set##_method(PRInt32 aValue)                              \
+  {                                                                 \
+    nsHTMLValue value(aValue, eHTMLUnit_Pixel);                     \
+    return SetHTMLAttribute(nsHTMLAtoms::_atom, value, PR_TRUE);    \
+  }
 
 /**
  * QueryInterface() implementation helper macros
