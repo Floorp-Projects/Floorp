@@ -42,7 +42,11 @@ function goOpenNewMessage()
 	var msgComposeService = Components.classes["component://netscape/messengercompose"].getService(); 
 	msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMsgComposeService); 
 
-	msgComposeService.OpenComposeWindowWithValues(null, 0, null, null, null, null, null, null, null); 
+	msgComposeService.OpenComposeWindow(null,
+										null,
+										Components.interfaces.nsIMsgCompType.New,
+										Components.interfaces.nsIMsgCompFormat.Default,
+										null); 
 }  
 
 function goNewCardDialog(selectedAB)
