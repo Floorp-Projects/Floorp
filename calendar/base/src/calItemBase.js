@@ -94,7 +94,7 @@ calItemBase.prototype = {
     mId: null, get id() { return this.mId; }, set id(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.mId = v; dump("set " + "id" + " to " + v + "\n");},
     mTitle: "", get title() { return this.mTitle; }, set title(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.mTitle = v; dump("set " + "title" + " to " + v + "\n");},
     mPriority: 0, get priority() { return this.mPriority; }, set priority(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.mPriority = v; dump("set " + "priority" + " to " + v + "\n");},
-    mPrivacy: "PUBLIC", get isPrivate() { return this.mPrivacy; }, set isPrivate(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.mPrivacy = v; dump("set " + "isPrivate" + " to " + v + "\n");},
+    mPrivacy: "PUBLIC", get privacy() { return this.mPrivacy; }, set privacy(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.mPrivacy = v; dump("set " + "privacy" + " to " + v + "\n");},
     mStatus: null, get status() { return this.mStatus; }, set status(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.mStatus = v; dump("set " + "status" + " to " + v + "\n");},
     mHasAlarm: false, get hasAlarm() { return this.mHasAlarm; }, set hasAlarm(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.mHasAlarm = v; dump("set " + "hasAlarm" + " to " + v + "\n");},
     mAlarmTime: null, get alarmTime() { return this.mAlarmTime; }, set alarmTime(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.mAlarmTime = v; dump("set " + "alarmTime" + " to " + v + "\n");},
@@ -214,10 +214,6 @@ calItemBase.prototype = {
             throw Components.results.NS_ERROR_FAILURE;
         this.mapPropsFromICS(icalcomp, this.icsBasePropMap);
         this.mPrivacy = icalcomp.icalClass;
-        if (icalcomp.icalClass == "PUBLIC")
-            this.mIsPrivate = false;
-        else
-            this.mIsPrivate = true;
 
         for (var attprop = icalcomp.getFirstProperty("ATTENDEE");
              attprop;

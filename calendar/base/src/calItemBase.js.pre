@@ -136,7 +136,7 @@ calItemBase.prototype = {
     MEMBER_ATTR(mId, null, id),
     MEMBER_ATTR(mTitle, "", title),
     MEMBER_ATTR(mPriority, 0, priority),
-    MEMBER_ATTR(mPrivacy, "PUBLIC", isPrivate),
+    MEMBER_ATTR(mPrivacy, "PUBLIC", privacy),
     MEMBER_ATTR(mStatus, null, status),
     MEMBER_ATTR(mHasAlarm, false, hasAlarm),
     MEMBER_ATTR(mAlarmTime, null, alarmTime),
@@ -256,10 +256,6 @@ calItemBase.prototype = {
             throw Components.results.NS_ERROR_FAILURE;
         this.mapPropsFromICS(icalcomp, this.icsBasePropMap);
         this.mPrivacy = icalcomp.icalClass;
-        if (icalcomp.icalClass == "PUBLIC")
-            this.mIsPrivate = false;
-        else
-            this.mIsPrivate = true;
 
         for (var attprop = icalcomp.getFirstProperty("ATTENDEE");
              attprop;
