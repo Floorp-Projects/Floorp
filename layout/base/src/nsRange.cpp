@@ -15,7 +15,6 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/* AUTO-GENERATED. DO NOT EDIT!!! */
 
 /*
  * nsRange.cpp: Implementation of the nsIDOMRange object.
