@@ -76,7 +76,7 @@
       </row>
       <row align="center">
         <hbox pack="end">
-          <label value="&shortcutURL.label;" accesskey="&shortcutURL.accesskey;" control="shortcutURL"/>
+          <label value="&shortcutURL.label;" accesskey="&shortcutURL.accesskey;" control="shortcutUrl"/>
         </hbox>
         <textbox id="shortcutUrl"/>
       </row>
