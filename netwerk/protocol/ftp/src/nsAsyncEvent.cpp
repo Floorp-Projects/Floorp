@@ -90,8 +90,8 @@ nsFTPAsyncWriteEvent::nsFTPAsyncWriteEvent(nsIInputStream* inStream,
                                           nsIStreamObserver* observer,
                                           nsIChannel* channel,
                                           nsISupports* context)
-                    : nsAsyncEvent(channel, context), mInStream(inStream),
-                      mWriteCount(writeCount), mObserver(observer)
+                    : nsAsyncEvent(channel, context), mObserver(observer),
+                      mInStream(inStream), mWriteCount(writeCount)
 { }
 
 NS_IMETHODIMP
