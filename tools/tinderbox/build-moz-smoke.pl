@@ -6,26 +6,20 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = '$Revision: 1.22 $';
+$Version = '$Revision: 1.23 $';
 
 sub InitVars {
     # PLEASE FILL THIS IN WITH YOUR PROPER EMAIL ADDRESS
     $BuildAdministrator = "$ENV{'USER'}\@$ENV{'HOST'}";
 
-    # Default values of cmdline opts
-    $BuildDepend = 1;	# Depend or Clobber
-    $ReportStatus = 1;	# Send results to server, or not
-    $BuildOnce = 0;	# Build once, don't send results to server
-    $BuildClassic = 0;	# Build classic source
-    $BuildAuto = 1;     # Build with client.mk, or manually
-    $RunTest = 1;	# Run the smoke test on successful build, or not
-    $UseTimeStamp = 0;	# Use the CVS 'pull-by-timestamp' option, or not
-
-    # Relative path to binary
-    $BinaryName{'x'} = 'mozilla-export';
-    $BinaryName{'qt'} = 'qtmozilla-export';
-    $BinaryName{'gnome'} = 'gnuzilla-export';
-    $BinaryName{'apprunner'} = '/dist/bin/apprunner';
+    # Default values of cmdline opts (1==on, 0==off)
+    $BuildDepend = 1;		# Depend or Clobber
+    $BuildNSCommercial = 0;	# Build Netscape commercial client (internal only)
+    $BuildOnce = 0;		# Build once, don't send results to server
+    $ReportStatus = 1;		# Send results to server, or not
+    $RunTest = 1;		# Run the smoke test on successful build, or not
+    $UseObjDir = 1;		# Use a separate object dir, or build in the source tree
+    $UseTimeStamp = 0;		# Use the CVS 'pull-by-timestamp' option, or not
 
     # Set these to what makes sense for your system
     $cpus = 1;
@@ -44,47 +38,30 @@ sub InitVars {
     $DisplayServer = 'crucible.mcom.com:0.0';
 
     # These shouldn't really need to be changed
-    $BuildSleep = 10; # Minimum wait period from start of build to start
-                      # of next build in minutes
-    $BuildTree = 'MozillaTest'; # until you get the script working.
-                                # when it works, change to the tree you're
-                                # actually building
+    $BinaryName = '/dist/bin/apprunner';
     $BuildName = '';
-    $BuildTag = '';
     $BuildObjName = '';
-    $BuildConfigDir = 'mozilla/config';
+    $BuildSleep = 10;  # Minimum wait period from start of build to start of next build in minutes.
     $BuildStart = '';
-    $TopLevel = '.';
-    $Topsrcdir = 'mozilla';
-    $ClobberStr = 'realclean';
+    $BuildTag = '';
+    $BuildTree = 'MozillaTest';  # Your build results will be displayed on this Tinderbox page.
+    $Compiler = 'gcc';
     $ConfigureEnvArgs = '';
     $ConfigureArgs = '--with-nspr=' . $NSPRDir . ' --cache-file=/dev/null ';
     $ConfigGuess = './build/autoconf/config.guess';
+    $FE = 'apprunner'; 
     $Logfile = '${BuildDir}.log';
+    $NSCommModule = 'CommercialClient50All';
     $NSPRArgs = 'DIST=' . $NSPRDir . ' MOZILLA_CLIENT=1 NSDISTMODE=copy NO_MDUPDATE=1 ';
-    $Compiler = 'gcc';
     $ShellOverride = ''; # Only used if the default shell is too stupid
-}
-
-sub ConditionalArgs {
-    if ( $BuildClassic ) {
-	$FE = 'x';
-	$ConfigureArgs .= "--enable-fe=$FE ";
-	$BuildModule = 'Raptor';
-	$BuildTag = ''
-	    if ( $BuildTag eq '' );
-	$TopLevel = "mozilla-classic";
-    } else {
-	$FE = 'apprunner'; 
-	$BuildModule = 'SeaMonkeyAll';
-    }
-    $CVSCO .= " -r $BuildTag" if ( $BuildTag ne '' );
+    $TopLevel = '.';
+    $Topsrcdir = 'mozilla';
 }
 
 sub SetupEnv {
     umask(0);
     $ENV{"CVSROOT"} = ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot';
-    $ENV{"LD_LIBRARY_PATH"} = $NSPRDir . '/lib:' . $BaseDir . '/' . $DirName . '/mozilla/' . $ObjDir . 'dist/bin:/usr/lib/png:/usr/local/lib:' . $BaseDir . '/' . $DirName . '/mozilla/dist/bin';
+    $ENV{"LD_LIBRARY_PATH"} = $NSPRDir . '/lib:' . $BaseDir . '/' . $DirName . '/mozilla/' . $ObjDir . '/dist/bin:/usr/lib/png:/usr/local/lib';
     $ENV{"DISPLAY"} = $DisplayServer;
 }
 
@@ -163,7 +140,7 @@ sub SetupPath {
 	$ENV{'PATH'} = '/usr/local/bin:' . $ENV{'PATH'};
 	$ENV{'LD_LIBRARY_PATH'} .= ':/usr/X11/lib';
 	$ConfigureArgs .= '--disable-shared --x-includes=/usr/X11/include --x-libraries=/usr/X11/lib';
-	$ConfigureEnvArgs = 'CC="cc -DQNX" CXX="cc -DQNX"';
+	$ConfigureEnvArgs = 'CC="cc -DQNX" CXX="cc -DQNX" LIBS="-lunix -lc"';
 	$Compiler = 'cc';
 	$mail = '/usr/bin/sendmail';
     }
@@ -217,7 +194,6 @@ sub GetSystemInfo {
     $OS = `uname -s`;
     $OSVer = `uname -r`;
     $CPU = `uname -m`;
-    $BuildName = ""; 
 
     my($host) = "";
     my($myhost) = hostname;
@@ -253,26 +229,100 @@ sub GetSystemInfo {
     }
 
     if ( "$host" ne "" ) {
-	$BuildName = $host . ' ' . $OS . ' ' . $OSVer . ' ' . ($BuildDepend?'Depend':'Clobber');
+	$BuildName = $host . ' ' . $OS . ' ' . $OSVer;
     }
+
+    #
+    # Defining ObjDir really ought to be done by first checking out
+    # mozilla/build/autoconf/config.guess, and then using it to do
+    # the definition once.
+    #
+
+    if ( $OS eq 'AIX' ) {
+	# Assumes 4.2.1 for now.
+	$ObjDir = 'obj-powerpc-ibm-aix4.2.1.0';
+    }
+
+    if ( $OS eq 'BSD_OS' ) {
+	$ObjDir = 'obj-' . $CPU . '-pc-bsdi' . $OSVer;
+	$BuildName = $host . ' BSD/OS ' . $OSVer;
+    }
+
+    if ( $OS eq 'FreeBSD' ) {
+	$ObjDir = 'obj-' . $CPU . '-unknown-freebsd' . $OSVer;
+	$ObjDir =~ s/(bsd[0-9]\.[0-9])(-[A-Za-z0-9]*)$/$1/o;
+	$BuildName = $host . ' ' . $OS . '/' . $CPU . ' ' . $OSVer;
+    }
+
+    if ( $OS eq 'HP-UX' ) {
+	$ObjDir = 'obj-hppa1.1-hp-hpux' . $OSVer;
+	$ObjDir =~ s/hpux[AB]\./hpux/o;
+    }
+
+    if ( $OS eq 'IRIX' ) {
+	$ObjDir = 'obj-mips-sgi-irix' . $OSVer;
+    }
+
+    if ( $OS eq 'Linux' ) {
+	if ( $CPU eq 'alpha' || $CPU eq 'sparc' ) {
+	    $ObjDir = 'obj-' . $CPU . '-unknown-linux-gnu';
+	    $BuildName = $host . ' ' . $OS . '/' . $CPU . ' ' . $OSVer;
+	} elsif ( $CPU eq 'armv4l' || $CPU eq 'sa110' ) {
+	    $ObjDir = 'obj-arm-unknown-linux-gnu';
+	    $BuildName = $host . ' ' . $OS . '/arm ' . $OSVer;
+	    # This is here because I ran out of space on my netwinder. --briano.
+	    $ConfigureArgs .= '--disable-debug --enable-optimize';
+	} elsif ( $CPU eq 'ppc' ) {
+	    $ObjDir = 'obj-powerpc-unknown-linux-gnu';
+	    $BuildName = $host . ' ' . $OS . '/' . $CPU . ' ' . $OSVer;
+	} else {
+	    $ObjDir = 'obj-' . $CPU . '-pc-linux-gnu';
+	    $BuildName = $host . ' ' . $OS . '/i386 ' . $OSVer;
+	}
+    }
+
+    if ( $OS eq 'NetBSD' ) {
+	$ObjDir = 'obj-' . $CPU . '-unknown-netbsd' . $OSVer;
+	$BuildName = $host . ' ' . $OS . '/' . $CPU . ' ' . $OSVer;
+    }
+
+    if ( $OS eq 'OSF1' ) {
+	# Assumes 4.0D for now.
+	$ObjDir = 'obj-alpha-dec-osf4.0d';
+    }
+
+    if ( $OS eq 'QNX' ) {
+	$ObjDir = 'obj-i386-pc-qnx4';
+    }
+
+    if ( $OS eq 'SunOS' ) {
+	if ( $CPU eq 'i86pc' ) {
+	    $ObjDir = 'obj-i386-pc-solaris' . $OSVer;
+	    $BuildName = $host . ' ' . $OS . '/i386 ' . $OSVer;
+	} else {
+	    $ObjDir = 'obj-sparc-sun-';
+	    $OSVerMajor = substr($OSVer, 0, 1);
+	    if ( $OSVerMajor eq '4' ) {
+		$ObjDir .= 'sunos';
+	    } else {
+		$ObjDir .= 'solaris';
+		$BuildName = $host . ' ' . $OS . '/sparc ' . $OSVer;
+	    }
+	    $ObjDir .= $OSVer;
+	}
+	$ObjDir =~ s/s5\./s2./o;
+    }
+
+    if ( $UseObjDir == 0 ) {
+	$ObjDir = '';
+    }
+    $BuildName .= ' ' . ($BuildDepend?'Depend':'Clobber');
     $DirName = $OS . '_' . $OSVer . '_' . ($BuildDepend?'depend':'clobber');
-
-    # if we're building with client.mk, let us eschew the objdir altogether
-    if ( $BuildAuto ) {
-      $ObjDir = '';
-    } else {
-      $ObjDir .= $ObjDir . '/';
-    }
-
-    if ( $BuildClassic ) {
-        $logfile = "${DirName}-classic.log";
-    } else {
-	$logfile = "${DirName}.log";
-    }
+    $logfile = "${DirName}.log";
 }
 
 sub BuildIt {
-    my($fe, @felist, $EarlyExit, $LastTime, $SaveCVSCO, $StartTimeStr, $comptmp, $jflag);
+    my($fe, @felist, $ClobberTarget, $DependTarget, $EarlyExit, $LastTime, $SaveCVSCO, $StartTimeStr, $comptmp, $jflag);
     $comptmp = '';
     $jflag = '';
 
@@ -340,15 +390,9 @@ sub BuildIt {
 	mkdir($TopLevel, 0777);
 	chdir($TopLevel) || die "chdir($TopLevel): $!\n";
 
-	if ( $BuildClassic ) {
-	    print"$CVS $CVSCO $BuildModule\n";
-	    print LOG "$CVS $CVSCO $BuildModule\n";
-	    open (PULL, "$CVS $CVSCO $BuildModule 2>&1 |") || die "open: $!\n";
-	} else {
-	    print "$CVS $CVSCO mozilla/client.mk\n";
-	    print LOG "$CVS $CVSCO mozilla/client.mk\n";
-	    open (PULL, "$CVS $CVSCO mozilla/client.mk 2>&1 |") || die "open: $!\n";
-	}
+	print "$CVS $CVSCO mozilla/client.mk\n";
+	print LOG "$CVS $CVSCO mozilla/client.mk\n";
+	open (PULL, "$CVS $CVSCO mozilla/client.mk 2>&1 |") || die "open: $!\n";
 	while (<PULL>) {
 	    print $_;
 	    print LOG $_;
@@ -356,165 +400,105 @@ sub BuildIt {
 	close(PULL);
 
 	# Do a separate checkout with toplevel makefile
-	if ( $BuildClassic == 0 ) {
-	    print LOG "$Make -f mozilla/client.mk checkout CVSCO=\"$CVS $CVSCO\"|\n";
-	    open (PULLALL, "$Make -f mozilla/client.mk checkout CVSCO=\"$CVS $CVSCO\" |\n");
-	    while (<PULLALL>) {
+	print LOG "$Make -f mozilla/client.mk checkout CVSCO=\"$CVS $CVSCO\"|\n";
+	open (PULLALL, "$Make -f mozilla/client.mk checkout CVSCO=\"$CVS $CVSCO\" |\n");
+	while (<PULLALL>) {
+	    print LOG $_;
+	    print $_;
+	}
+	close(PULLALL);
+
+	if ( $BuildNSCommercial ) {
+	    print LOG "$CVS -d /m/src $CVSCO $NSCommModule\n";
+	    open (PULLNS, "$CVS -d /m/src $CVSCO $NSCommModule 2>&1 |") || die "open: $!\n";
+	    while (<PULLNS>) {
 		print LOG $_;
 		print $_;
 	    }
-	    close(PULLALL);
+	    close(PULLNS);
 	}
 
 	chdir($Topsrcdir) || die "chdir($Topsrcdir): $!\n";
+	print LOG "Build nspr\n";
+	open (BUILDNSPR, "gmake -C nsprpub $NSPRArgs export 2>&1 | ") || die "Build nspr: $!\n";
+	while (<BUILDNSPR>) {
+		print LOG $_;
+		print $_;
+	}
 
-	# beginning of a long block of manual steps that client.mk
-	# handles (minus objdir creation, which is for loser unix weenies
-	if ( $BuildAuto == 0 ) {
-	  print LOG "Build nspr\n";
-	  open (BUILDNSPR, "gmake -C nsprpub $NSPRArgs export 2>&1 | ") || die "Build nspr: $!\n";
-	  while (<BUILDNSPR>) {
-	    print LOG $_;
-	    print $_;
-	  }
-	  
-	  print LOG "$ConfigGuess\n";
-	  $BuildObjName = "obj-";
-	  open (GETOBJ, "$ConfigGuess 2>&1 |") || die "$ConfigGuess: $!\n";
-	  while (<GETOBJ>) {
-	    print $_;
-	    print LOG $_;
-	    chomp($BuildObjName .= $_); 
-	  }
-	  close (GETOBJ); 
+	if ( $UseObjDir ) {
+	    print LOG "$ConfigGuess\n";
+	    $BuildObjName = "obj-";
+	    open (GETOBJ, "$ConfigGuess 2>&1 |") || die "$ConfigGuess: $!\n";
+	    while (<GETOBJ>) {
+		print $_;
+		print LOG $_;
+		chomp($BuildObjName .= $_); 
+	    }
+	    close (GETOBJ); 
 
-	  mkdir($BuildObjName, 0777);
-	  chdir($BuildObjName) || die "chdir($BuildObjName): $!\n";
-	  
-	  print LOG "$ConfigureEnvArgs ../configure $ConfigureArgs\n";
-	  open (CONFIGURE, "$ConfigureEnvArgs $ShellOverride ../configure $ConfigureArgs 2>&1 |") || die "../configure: $!\n";
-	  while (<CONFIGURE>) {
+	    mkdir($BuildObjName, 0777);
+	    chdir($BuildObjName) || die "chdir($BuildObjName): $!\n";
+	}
+
+	print LOG "$ConfigureEnvArgs ../configure $ConfigureArgs\n";
+	open (CONFIGURE, "$ConfigureEnvArgs $ShellOverride ../configure $ConfigureArgs 2>&1 |") || die "../configure: $!\n";
+	while (<CONFIGURE>) {
 	    print $_;
 	    print LOG $_;
-	  }
-	  close(CONFIGURE);
-	  
-	  
-	  print "--- config.cache.\n";
-	  print LOG "--- config.cache.\n";
-	  open (CONFIGURE, "config.cache");
-	  while (<CONFIGURE>) {
-	    print $_;
-	    print LOG $_;
-	  }
-	  close(CONFIGURE);
-	  print "--- config.cache.\n";
-	  print LOG "--- config.cache.\n";
-	} # end long block of manual labor
+	}
+	close(CONFIGURE);
+
+	print "--- config.cache.\n";
+	print LOG "--- config.cache.\n";
+	open (CONFIGURE, "config.cache");
+	while (<CONFIGURE>) {
+		print $_;
+		print LOG $_;
+	}
+	close(CONFIGURE);
+	print "--- config.cache.\n";
+	print LOG "--- config.cache.\n";
 
 	# If we are building depend, rebuild dependencies
 	if ( $BuildDepend ) {
-	  if ( $BuildAuto == 0 ) {
-	    print LOG "$Make MAKE='$Make $jflag' depend 2>&1 |\n";
-	    open ( MAKEDEPEND, "$Make MAKE='$Make $jflag' depend 2>&1 |");
-	    while ( <MAKEDEPEND> ) {
-	      print $_;
-	      print LOG $_;
-	    }
-	    close (MAKEDEPEND);
-	  } else {
-	 #   print LOG "$Make -f client.mk depend 2>&1 |\n";
-	 #   open ( MAKEDEPEND, "$Make -f client.mk depend 2>&1 |");
-	 #   while ( <MAKEDEPEND> ) {
-	 #     print $_;
-	 #     print LOG $_;
-	 #   }
-	 #   close (MAKEDEPEND);
-	    # I'm not sure how client.mk should handle depend builds.
-	  }
-	  system("rm -rf dist");
+	    $ClobberTarget = '';
+	    $DependTarget = 'depend';
 	} else {
-	    # Building clobber
-	  if ( $BuildAuto == 0 ) {
-	    print LOG "$Make MAKE='$Make $jflag' $ClobberStr 2>&1 |\n";
-	    open( MAKECLOBBER, "$Make MAKE='$Make $jflag' $ClobberStr 2>&1 |");	    
-	    while ( <MAKECLOBBER> ) {
-	      print $_;
-	      print LOG $_;
-	    }
-	    close( MAKECLOBBER );
-	  } else {
-	    print LOG "$Make -f client.mk $ClobberStr 2>&1 |\n";
-	    open( MAKECLOBBER, "$Make -f client.mk $$ClobberStr 2>&1 |");
-	    while ( <MAKECLOBBER> ) {
-	      print $_;
-	      print LOG $_;
-	    }
-	    close( MAKECLOBBER );
-	  }
-        }
+	    $ClobberTarget = 'realclean';
+	    $DependTarget = '';
+	}
+
+	print LOG "$Make MAKE='$Make $jflag' $DependTarget $ClobberTarget 2>&1 |\n";
+	open (MAKEPREBUILD, "$Make MAKE='$Make $jflag' $DependTarget $ClobberTarget 2>&1 |");
+	while (<MAKEPREBUILD>) {
+	    print $_;
+	    print LOG $_;
+	}
+	close (MAKEPREBUILD);
+	system("rm -rf dist");
+
+	print LOG "$Make MAKE='$Make $jflag' $MakeOverrides 2>&1 |\n";
+	open(BUILD, "$Make MAKE='$Make $jflag' $MakeOverrides 2>&1 |\n");
+	while (<BUILD>) {
+	    print $_;
+	    print LOG $_;
+	}
+	close(BUILD);
 
 	@felist = split(/,/, $FE);
-
-	foreach $fe ( @felist ) {	    
-	    if ( &BinaryExists($fe) ) {
-		print LOG "deleting existing binary\n";
-		&DeleteBinary($fe);
-	    }
-	}
-
-	if ( $BuildClassic ) {
-	    # Build the BE only	    
-	    print LOG "$Make MAKE='$Make $jflag' MOZ_FE= 2>&1 |\n";
-	    open( BEBUILD, "$Make MAKE='$Make $jflag' MOZ_FE= 2>&1 |");
-
-	    while ( <BEBUILD> ) {
-		print $_;
-		print LOG $_;
-	    }
-	    close( BEBUILD );
-
-	    foreach $fe ( @felist ) {		   
-		# Now build each front end
-		print LOG "$Make MAKE='$Make $jflag' -C cmd/${fe}fe 2>&1 |\n";
-		open(FEBUILD, "$Make MAKE='$Make $jflag' -C cmd/${fe}fe 2>&1 |\n");
-		while (<FEBUILD>) {
-		    print $_;
-		    print LOG $_;
-		}
-		close(FEBUILD);
-	    }
-	} else {
-	  if ( $BuildAuto == 0 ) {
-	    print LOG "$Make MAKE='$Make $jflag' $MakeOverrides 2>&1 |\n";
-	    open(BUILD, "$Make MAKE='$Make $jflag' $MakeOverrides 2>&1 |");
-	    while (<BUILD>) {
-	      print $_;
-	      print LOG $_;
-	    }
-	    close(BUILD);
-	  } else {
-	    print LOG "$Make -f client.mk build 2>&1 |\n";
-	    open(BUILD, "$Make -f client.mk build 2>&1 |");
-	    while (<BUILD>) {
-	      print $_;
-	      print LOG $_;
-	    }
-	    close(BUILD);
-	  }
-	}
 
 	foreach $fe (@felist) {
 	    if ( &BinaryExists($fe) ) {
 		if ( $RunTest ) {
-		    print LOG "export binary exists, build successful.  Testing...\n";
+		    print LOG "$FE binary exists, build successful.  Testing...\n";
 		    $BuildStatus = &RunSmokeTest($fe);
 		} else {
-		    print LOG "export binary exists, build successful.  Skipping test.\n";
+		    print LOG "$FE binary exists, build successful.  Skipping test.\n";
 		    $BuildStatus = 0;
 		}
 	    } else {
-		print LOG "export binary missing, build FAILED\n";
+		print LOG "$FE binary missing, build FAILED\n";
 		$BuildStatus = 666;
 	    }
 
@@ -617,44 +601,17 @@ sub StartBuild {
 
 # check for the existence of the binary
 sub BinaryExists {
-  my($fe) = @_;
-  my($BinName);
-  $fe = 'x' if ( !defined($fe) ); 
-  
-  if ( $BuildClassic ) {
-    $BinName = $BuildDir . '/' . $TopLevel . '/' . $Topsrcdir . '/'. $BuildObjName . "/cmd/${fe}fe/" . $BinaryName{"$fe"};
-  } else {
-    if ( $BuildAuto == 0 ) {
-      $BinName = $BuildDir . '/' . $TopLevel . '/' . $Topsrcdir . '/' . $BuildObjName . $BinaryName{"$fe"};
-    } else {
-      $BinName = $BuildDir . '/' . $TopLevel . '/' . $Topsrcdir . $BinaryName{"$fe"};
-    }
+    my($Binname);
+
+    $BinName = $BuildDir . '/' . $TopLevel . '/' . $Topsrcdir . '/' . $BuildObjName . $BinaryName;
+
     print LOG $BinName . "\n"; 
     if ( (-e $BinName) && (-x $BinName) && (-s $BinName) ) {
-      1;
+	1;
     }
     else {
-      0;
+	0;
     }
-  }
-}
-
-sub DeleteBinary {
-    my($fe) = @_;
-    my($BinName);
-    $fe = 'x' if ( !defined($fe) ); 
-    
-    if ( $BuildClassic ) {
-      $BinName = $BuildDir . '/' . $TopLevel . '/' . $Topsrcdir . '/' . $BuildObjName . "/cmd/${fe}fe/" . $BinaryName{"$fe"};
-      } else {
-      if ( $BuildAuto == 0 ) {
-	$BinName = $BuildDir . '/' . $TopLevel . '/' . $Topsrcdir . '/' . $BuildObjName . $BinaryName{"$fe"};
-      } else {
-	$BinName = $BuildDir . '/' . $TopLevel . '/' . $Topsrcdir . $BinaryName{"$fe"};
-      }
-    }
-    print LOG "unlinking $BinName\n";
-    unlink ($BinName) || print LOG "unlinking $BinName failed\n";
 }
 
 sub ParseArgs {
@@ -666,12 +623,13 @@ sub ParseArgs {
     $i = 0;
     $manArg = 0;
     while( $i < @ARGV ) {
-	if ( $ARGV[$i] eq '--classic' ) {
-	    $BuildClassic = 1;
-	}
-	elsif ( $ARGV[$i] eq '--clobber' ) {
+	if ( $ARGV[$i] eq '--clobber' ) {
 	    $BuildDepend = 0;
+	    $ConfigureArgs .= '--disable-md ';
 	    $manArg++;
+	}
+	elsif ( $ARGV[$i] eq '--commercial' ) {
+	    $BuildNSCommercial = 1;
 	}
 	elsif ( $ARGV[$i] eq '--compress' ) {
 	    $CVS = 'cvs -q -z3';
@@ -680,14 +638,11 @@ sub ParseArgs {
 	    $BuildDepend = 1;
  	    $manArg++;
 	}
-	elsif ( $ARGV[$i] eq '--manual' ) {
-	    $BuildAuto = 1;
-	}
 	elsif ( $ARGV[$i] eq '--help' || $ARGV[$i] eq '-h' ) {
 	    &PrintUsage;
 	}
-	elsif ( $ARGV[$i] eq '--nodeps' ) {
-	    $ConfigureArgs .= '--enable-md=no ';
+	elsif ( $ARGV[$i] eq '--noobjdir' ) {
+	    $UseObjDir = 0;
 	}
 	elsif ( $ARGV[$i] eq '--noreport' ) {
 	    $ReportStatus = 0;
@@ -703,6 +658,8 @@ sub ParseArgs {
 	    $BuildTag = $ARGV[$i];
 	    if ( $BuildTag eq '' || $BuildTag eq '-t' ) {
 		&PrintUsage;
+	    } else {
+		$CVSCO .= " -r $BuildTag";
 	    }
 	}
 	elsif ( $ARGV[$i] eq '--timestamp' ) {
@@ -735,7 +692,7 @@ sub ParseArgs {
 }
 
 sub PrintUsage {
-    die "usage: $0 --depend | --clobber [ --once --manual --classic --compress --noreport --notest --timestamp -tag TREETAG -t TREENAME --version ]\n";
+    die "usage: $0 --depend | --clobber [ --once --compress --noreport --notest --timestamp -tag TREETAG -t TREENAME --version ]\n";
 }
 
 sub PrintEnv {
@@ -747,55 +704,49 @@ sub PrintEnv {
 }
 
 sub RunSmokeTest {
-    my($fe) = @_;
-    my($Binary);
+    my($Binary, $BinaryLog);
     my($status) = 0;
-    my($waittime) = 45;
+    my($waittime) = 60;
     my($pid) = fork;
-    $fe = 'x' if ( !defined($fe) );
 
-    if ( $BuildAuto == 0 ) {
-      $ENV{"LD_LIBRARY_PATH"} = $BuildDir . '/' . $TopLevel . '/' . $Topsrcdir . '/' . $BuildObjName . '/dist/bin';
-      $ENV{"MOZILLA_FIVE_HOME"} = $ENV{"LD_LIBRARY_PATH"};
-      $Binary = $BuildDir . '/' . $TopLevel . '/' . $Topsrcdir . '/' . $BuildObjName . $BinaryName{"$fe"};
-    } else {
-      $ENV{"LD_LIBRARY_PATH"} = $BuildDir . '/' . $TopLevel . '/' . $Topsrcdir . '/dist/bin';
-      $ENV{"MOZILLA_FIVE_HOME"} = $ENV{"LD_LIBRARY_PATH"};
-      $Binary = $BuildDir . '/' . $TopLevel . '/' . $Topsrcdir . $BinaryName{"$fe"};
-    }
+    $ENV{"MOZILLA_FIVE_HOME"} = $BuildDir . '/' . $TopLevel . '/' . $Topsrcdir . '/' . $BuildObjName . '/dist/bin';
+    $Binary = $BuildDir . '/' . $TopLevel . '/' . $Topsrcdir . '/' . $BuildObjName . $BinaryName;
+    $BinaryLog = $BuildDir . '/runlog';
+
     print LOG $Binary . "\n";
 
     if ( !$pid ) { # child
-      $BinaryDir = $BuildDir . '/' . $TopLevel . '/' . $Topsrcdir . '/dist/bin';
-      $Binary = $BuildDir . '/' . $TopLevel . '/' . $Topsrcdir . '/dist/bin/mozilla-apprunner.sh';
-      open(RUNLOG, ">runlog");
-      print RUNLOG "$Binary 2>&1 |\n";
-      open(BINARY, "$Binary 2>&1 |");
-      while (<BINARY>) {
-	print $_;
-	print RUNLOG $_;
-      }
-      close(BINARY);
-      close(RUNLOG);
+	chdir("$ENV{'MOZILLA_FIVE_HOME'}");
+	print LOG "MOZILLA_FIVE_HOME = $ENV{'MOZILLA_FIVE_HOME'}\n";
+	print LOG `pwd`;
+	unlink("$BinaryLog");
+	open(STDOUT,">$BinaryLog");
+	select STDOUT; $| = 1; # make STDOUT unbuffered
+	open(STDERR,">&STDOUT");
+	select STDERR; $| = 1; # make STDERR unbuffered
+	exec("$Binary");
+	close(STDOUT);
+	close(STDERR);
+	die "Couldn't exec()";
     }
-    
+
     # parent - wait $waittime seconds then check on child
     sleep $waittime;
     $status = waitpid($pid, WNOHANG());
     if ( $status != 0 ) {
 	print LOG "$Binary has crashed or quit.  Turn the tree orange now.\n";
-	print LOG "Output: \n";
-	open(READRUNLOG, "runlog");
+	print LOG "------------------------- Output from $FE\n";
+	open(READRUNLOG, "$BinaryLog");
 	while (<READRUNLOG>) {
-	  print $_;
-	  print LOG $_;
+	    print $_;
+	    print LOG $_;
 	}
 	close(READRUNLOG);
+	print LOG "------------------------- End of Output\n";
 	return 333;
     }
 
-    print LOG "Success! $Binary is still running.  Killing...\n";
-    # try to kill 3 times, then try a kill -9
+    print LOG "Success!  $FE is still running.  Killing...\n";
     for ($i=0 ; $i<3 ; $i++) {
 	kill('TERM',$pid,);
 	# give it 3 seconds to actually die
@@ -803,20 +754,12 @@ sub RunSmokeTest {
 	$status = waitpid($pid, WNOHANG());
 	last if ( $status != 0 );
     }
-    print LOG "Output: \n";
-    open(READRUNLOG, "runlog");
-    while (<READRUNLOG>) {
-      print $_;
-      print LOG $_;
-    }
-    close(READRUNLOG);
     return 0;
 }
 
 # Main function
 &InitVars;
 &ParseArgs;
-&ConditionalArgs;
 &GetSystemInfo;
 &SetupEnv;
 &SetupPath;
