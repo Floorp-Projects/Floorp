@@ -40,6 +40,7 @@
 
 #include "vmtypes.h"
 #include "jstypes.h"
+#include "interpreter.h"
 
 #define iter string::const_iterator
 
@@ -119,12 +120,15 @@ namespace ICodeASM {
     struct StatementNode {
         iter begin;
         uint icodeID;
-        AnyOperand operand[3];
+        AnyOperand operand[4];
     };
     
     class ICodeParser 
     {
     private:
+        StringAtom(const StringAtom&); /* No copy constructor */
+
+        Interpreter::Context *mCx;
         uint mMaxRegister;
         std::vector<StatementNode *> mStatementNodes;
         VM::LabelList mUnnamedLabels;
@@ -132,6 +136,7 @@ namespace ICodeASM {
         LabelMap mNamedLabels;
 
     public:
+        ICodeParser (Interpreter::Context *aCx) : mCx(aCx) {}
         void ParseSourceFromString (const string &source);
 
         /* locate the beginning of the next token and take a guess at what it
@@ -166,14 +171,15 @@ namespace ICodeASM {
         iter ParseDoubleOperand (iter begin, iter end, double *rval);
         iter ParseICodeModuleOperand (iter begin, iter end, string **rval);
         iter ParseJSClassOperand (iter begin, iter end, string **rval);
-        iter ParseJSStringOperand (iter begin, iter end, string **rval);
+        iter ParseJSStringOperand (iter begin, iter end,
+                                   JSTypes::JSString **rval);
         iter ParseJSFunctionOperand (iter begin, iter end, string **rval);
-        iter ParseJSTypeOperand (iter begin, iter end, string **rval);
+        iter ParseJSTypeOperand (iter begin, iter end, JSTypes::JSType **rval);
         iter ParseLabelOperand (iter begin, iter end, VM::Label **rval);
         iter ParseUInt32Operand (iter begin, iter end, uint32 *rval);
         iter ParseRegisterOperand (iter begin, iter end,
                                    JSTypes::Register *rval);
-        iter ParseStringAtomOperand (iter begin, iter end, string **rval);
+        iter ParseStringAtomOperand (iter begin, iter end, StringAtom **rval);
 
         /* "high level" parse functions */
         iter ParseInstruction (uint icodeID, iter start, iter end);

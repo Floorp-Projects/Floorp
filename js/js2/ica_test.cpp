@@ -143,15 +143,15 @@ main (int , char **)
     /* XXX what to do with the overflow? */
     //testUInt32 (icp, "12123687213612873621873438754387934657834", 0);
 
-    string src =
-"some_label:\n"
-"LOAD_STRING               R1, 'hello'   ;test comment\n"
-"CAST                      R2, R1, 'any';another test comment\n"
-"SAVE_NAME                 'x', R2\n"
-"LOAD_NAME                 R1, 'x'\n"
-"LOAD_NAME                 R2, 'print'\n"
-"CALL                      R3, R2, <NaR>, (R1, R2)\n"
-"RETURN                    R3";
+    string src = 
+        "some_label:\n"
+        "LOAD_STRING               R1, 'hello'   ;test comment\n"
+        "CAST                      R2, R1, 'any';another test comment\n"
+        "SAVE_NAME                 'x', R2\n"
+        "LOAD_NAME                 R1, 'x'\n"
+        "LOAD_NAME                 R2, 'print'\n"
+        "CALL                      R3, R2, <NaR>, ('foo':R1, R2)\n"
+        "RETURN                    R3";
     
     testParse (icp, src);
 
