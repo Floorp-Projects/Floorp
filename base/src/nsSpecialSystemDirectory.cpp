@@ -36,6 +36,7 @@
 #include <stdio.h>
 #elif defined(XP_UNIX)
 #include <unistd.h>
+#include <sys/param.h>
 #endif
 
 #include "plstr.h"
@@ -96,7 +97,7 @@ GetCurrentProcessDirectory(nsFileSpec& aFileSpec)
 #elif defined(XP_UNIX)
 
     // XXX This is wrong, but I don't know a better way to do it.
-    char buf[PATH_MAX];
+    char buf[MAXPATHLEN];
     if (getcwd(buf, sizeof(buf))) {
         aFileSpec = buf;
         return;
