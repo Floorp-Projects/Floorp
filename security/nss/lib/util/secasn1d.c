@@ -35,7 +35,7 @@
  * Support for DEcoding ASN.1 data based on BER/DER (Basic/Distinguished
  * Encoding Rules).
  *
- * $Id: secasn1d.c,v 1.1 2000/03/31 19:38:50 relyea%netscape.com Exp $
+ * $Id: secasn1d.c,v 1.2 2000/05/22 15:24:20 chrisk%netscape.com Exp $
  */
 
 #include "secasn1.h"
@@ -2183,6 +2183,47 @@ sec_asn1d_after_choice
   state->child->consumed = 0;
   state->place = afterEndOfContents;
   sec_asn1d_pop_state(state);
+}
+
+unsigned long
+sec_asn1d_uinteger(SECItem *src)
+{
+    unsigned long value;
+    int len;
+
+    if (src->len > 5 || (src->len > 4 && src->data[0] == 0))
+	return 0;
+
+    value = 0;
+    len = src->len;
+    while (len) {
+	value <<= 8;
+	value |= src->data[--len];
+    }
+    return value;
+}
+
+SECStatus
+SEC_ASN1DecodeInteger(SECItem *src, unsigned long *value)
+{
+    unsigned long v;
+    int i;
+    
+    if (src->len > sizeof(unsigned long))
+	return SECFailure;
+
+    if (src->data[0] & 0x80)
+	v = -1;		/* signed and negative - start with all 1's */
+    else
+	v = 0;
+
+    for (i= 0; i < src->len; i++) {
+	/* shift in next byte */
+	v <<= 8;
+	v |= src->data[i];
+    }
+    *value = v;
+    return SECSuccess;
 }
 
 #ifdef DEBUG_ASN1D_STATES
