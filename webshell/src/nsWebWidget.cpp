@@ -81,7 +81,8 @@ public:
 
   NS_IMETHOD GetLinkHandler(nsILinkHandler** aResult);
 
-  NS_IMETHOD LoadURL(const nsString& aURL, nsIPostData* aPostData);
+  NS_IMETHOD LoadURL(const nsString& aURL, nsIStreamListener* aListener,
+                     nsIPostData* aPostData);
   virtual nsIDocument* GetDocument();
 
   virtual void DumpContent(FILE* out);
@@ -382,7 +383,10 @@ nsresult WebWidgetImpl::ProvideDefaultHandlers()
 
 // XXX need to save old document in case of failure? Does caller do that?
 
-NS_IMETHODIMP WebWidgetImpl::LoadURL(const nsString& aURLSpec, nsIPostData* aPostData)
+NS_IMETHODIMP
+WebWidgetImpl::LoadURL(const nsString& aURLSpec,
+                       nsIStreamListener* aListener,
+                       nsIPostData* aPostData)
 {
 #ifdef NS_DEBUG
   printf("WebWidgetImpl::LoadURL: loadURL(");
@@ -447,7 +451,7 @@ NS_IMETHODIMP WebWidgetImpl::LoadURL(const nsString& aURLSpec, nsIPostData* aPos
 
   // Now load the document
   mPresShell->EnterReflowLock();
-  doc->LoadURL(url, aPostData);
+  doc->LoadURL(url, aListener, aPostData);
   mPresShell->ExitReflowLock();
 
   PRTime end = PR_Now();
