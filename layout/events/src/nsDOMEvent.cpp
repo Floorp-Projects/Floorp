@@ -42,7 +42,7 @@ static char* mEventNames[] = {
   "mouseout", "mousemove", "keydown", "keyup", "keypress",
   "focus", "blur", "load", "unload", "abort", "error",
   "submit", "reset", "change", "paint" ,"text",
-  "create", "destroy"
+  "create", "destroy", "action"
 };
 
 nsDOMEvent::nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent) {
@@ -622,10 +622,12 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return mEventNames[eDOMEvents_paint];
   case NS_TEXT_EVENT:
 	  return mEventNames[eDOMEvents_text];
-  case NS_POPUP_CONSTRUCT:
-    return mEventNames[eDOMEvents_construct];
-  case NS_POPUP_DESTRUCT:
-    return mEventNames[eDOMEvents_destruct];
+  case NS_MENU_CREATE:
+    return mEventNames[eDOMEvents_create];
+  case NS_MENU_DESTROY:
+    return mEventNames[eDOMEvents_destroy];
+  case NS_MENU_ACTION:
+    return mEventNames[eDOMEvents_action];
   default:
     break;
   }

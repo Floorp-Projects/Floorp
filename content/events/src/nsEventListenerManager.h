@@ -108,7 +108,7 @@ protected:
   nsVoidArray* mPaintListeners;
   nsVoidArray* mTextListeners;
   nsVoidArray* mCompositionListeners;
-
+  nsVoidArray* mMenuListeners;
 };
 
 
@@ -163,8 +163,11 @@ protected:
 #define NS_EVENT_BITS_LOAD_UNLOAD   0x02
 #define NS_EVENT_BITS_LOAD_ABORT    0x04
 #define NS_EVENT_BITS_LOAD_ERROR    0x08
-#define NS_EVENT_BITS_LOAD_CONSTRUCT 0x10
-#define NS_EVENT_BITS_LOAD_DESTRUCT  0x20
+
+//nsIDOMMenuListener
+#define NS_EVENT_BITS_MENU_CREATE   0x00
+#define NS_EVENT_BITS_MENU_DESTROY  0x01
+#define NS_EVENT_BITS_MENU_ACTION   0x02
 
 //nsIDOMDragListener
 #define NS_EVENT_BITS_DRAG_NONE     0x00
