@@ -54,6 +54,7 @@ protected:
 	nsresult WriteLineToMailbox(char *buffer);
 
     PRBool m_authed;
+    PRInt32 m_msgOffset;
     char* m_accountUrl;
     PRUint32 m_biffState;
     PRBool m_senderAuthed;
