@@ -35,6 +35,7 @@
  * 03/23/2000  IBM Corp.       Updated original version, which was prior to nsIFile drop, to the  latest 
  *                                     Win/Unix versions.
  * 06/09/2000  IBM Corp.       Make more like Windows. (from Doug Turner's windows code).
+ * 07/18/2000  IBM Corp.       Sync up with latest Windows code.
  *
  */
 
@@ -58,6 +59,8 @@ static unsigned char* PR_CALLBACK
 _mbschr( const unsigned char* stringToSearch, int charToSearchFor);
 static unsigned char* PR_CALLBACK
 _mbsrchr( const unsigned char* stringToSearch, int charToSearchFor);
+static nsresult PR_CALLBACK
+CreateDirectoryA( PSZ resolvedPath, PEAOP2 ppEABuf);
 
 #ifdef XP_OS2_VACPP
 #include <direct.h>
@@ -101,6 +104,11 @@ static nsresult ConvertWinError(DWORD winErr)
             break;
         case ERROR_HANDLE_DISK_FULL:
             rv = NS_ERROR_FILE_TOO_BIG;
+            break;
+        case ERROR_FILE_EXISTS:
+        case ERROR_ALREADY_EXISTS:
+        case ERROR_CANNOT_MAKE:
+            rv = NS_ERROR_FILE_ALREADY_EXISTS;
             break;
         case 0:
             rv = NS_OK;
@@ -263,8 +271,8 @@ nsLocalFile::nsLocalFile()
     mPersistFile = nsnull;
     mShellLink   = nsnull;
 #endif
-    mFollowSymlinks = PR_FALSE;
     mLastResolution = PR_FALSE;
+    mFollowSymlinks = PR_FALSE;
     MakeDirty();
 }
 
@@ -332,6 +340,10 @@ nsLocalFile::ResolvePath(const char* workingPath, PRBool resolveTerminal, char**
     nsresult rv = NS_OK;
     
 #ifndef XP_OS2
+
+    if (strstr(workingPath, ".lnk") == nsnull)
+        return NS_ERROR_FILE_INVALID_PATH;
+
     if (mPersistFile == nsnull || mShellLink == nsnull)
     {
         CoInitialize(NULL);  // FIX: we should probably move somewhere higher up during startup
@@ -535,6 +547,7 @@ nsLocalFile::ResolveAndStat(PRBool resolveTerminal)
         return NS_OK;
     }
     mLastResolution = resolveTerminal;
+    mResolvedPath.Assign(mWorkingPath);  //until we know better.
 
     // First we will see if the workingPath exists.  If it does, then we
     // can simply use that as the resolved path.  This simplification can
@@ -556,19 +569,30 @@ nsLocalFile::ResolveAndStat(PRBool resolveTerminal)
     PRStatus status = PR_GetFileInfo64(nsprPath, &mFileInfo64);
     if ( status == PR_SUCCESS )
     {
-        mResolvedPath.Assign(workingFilePath);
-		mDirty = PR_FALSE;
-		return NS_OK;
+        if (!resolveTerminal)
+        {
+		    mDirty = PR_FALSE;
+            return NS_OK;
+        }
+       
+#ifndef XP_OS2
+        // check to see that this is shortcut.
+            
+        int pathLen = strlen(workingFilePath);
+        const char* leaf = workingFilePath + pathLen - 4;
+    
+        if ( (strcmp(leaf, ".lnk") != 0))
+        {
+		    mDirty = PR_FALSE;
+            return NS_OK;
+        }
+#endif
     }
-#ifdef XP_OS2
-    else
-    {
-        mResolvedPath.Assign(workingFilePath);
-        return(NS_ERROR_FILE_NOT_FOUND);
-    } 
-#else
+
+#ifndef XP_OS2
     if (!mFollowSymlinks)
         return NS_ERROR_FILE_NOT_FOUND;  // if we are not resolving, we just give up here.
+#endif
 
     nsresult result;
 
@@ -578,22 +602,12 @@ nsLocalFile::ResolveAndStat(PRBool resolveTerminal)
     
 	result = ResolvePath(workingFilePath, resolveTerminal, &resolvePath);
     if (NS_FAILED(result))
-       return result;
+       return NS_ERROR_FILE_NOT_FOUND;
     
 	mResolvedPath.Assign(resolvePath);
     nsMemory::Free(resolvePath);
 
-    // if we are not resolving the terminal node, we have to "fake" windows
-    // out and append the ".lnk" file extension before getting any information
-    // about the shortcut.  If resoveTerminal was TRUE, than it the shortcut was
-    // resolved by the call to ResolvePath above.
-
-    
-    char linkStr[MAX_PATH];
-    strcpy(linkStr, mResolvedPath.GetBuffer());
-    strcat(linkStr, ".lnk");
-    
-    status = PR_GetFileInfo64(linkStr, &mFileInfo64);
+    status = PR_GetFileInfo64(mResolvedPath, &mFileInfo64);
     
     if ( status == PR_SUCCESS )
 		mDirty = PR_FALSE;
@@ -601,7 +615,6 @@ nsLocalFile::ResolveAndStat(PRBool resolveTerminal)
         result = NS_ERROR_FILE_NOT_FOUND;
 
 	return result;
-#endif
 }
 
 NS_IMETHODIMP  
@@ -668,6 +681,7 @@ nsLocalFile::InitWithPath(const char *filePath)
     
     mWorkingPath.Assign(nativeFilePath);
     nsMemory::Free( nativeFilePath );
+
     return NS_OK;
 }
 
@@ -725,16 +739,15 @@ nsLocalFile::Create(PRUint32 type, PRUint32 attributes)
         *slash = '\0';
 
 #ifdef XP_OS2
-#if 0
-        int ret;
-        ret = mkdir(mResolvedPath, attributes); 
-#endif
-
-        DosCreateDir((PSZ) mResolvedPath, NULL);  // OS2TODO: pass back the result
+        rv = CreateDirectoryA(mResolvedPath, NULL);
+        if (rv) {
+            rv = ConvertOS2Error(rv);
 #else
-        CreateDirectoryA(mResolvedPath, NULL);// todo: pass back the result
+        if (!CreateDirectoryA(mResolvedPath, NULL)) {
+            rv = ConvertWinError(GetLastError());
 #endif
-
+            if (rv != NS_ERROR_FILE_ALREADY_EXISTS) return rv;
+        }
         *slash = '\\';
         ++slash;
         slash = _mbschr(slash, '\\');
@@ -753,14 +766,15 @@ nsLocalFile::Create(PRUint32 type, PRUint32 attributes)
     if (type == DIRECTORY_TYPE)
     {
 #ifdef XP_OS2
-
-        DosCreateDir((PSZ) mResolvedPath, NULL);  // OS2TODO: pass back the result
-        return NS_OK;
-
+        rv = CreateDirectoryA(mResolvedPath, NULL);
+        if (rv) 
+            return ConvertOS2Error(rv);
 #else
-	    CreateDirectoryA(mResolvedPath, NULL); // todo: pass back the result
-        return NS_OK;
+        if (!CreateDirectoryA(mResolvedPath, NULL))
+            return ConvertWinError(GetLastError());
 #endif
+        else 
+            return NS_OK;
     }
 
     return NS_ERROR_FILE_UNKNOWN_TYPE;
@@ -926,7 +940,6 @@ nsLocalFile::CopySingleFile(nsIFile *sourceFile, nsIFile *destParent, const char
     
     if (!copyOK)  // CopyFile and MoveFile returns non-zero if succeeds (backward if you ask me).
 #ifdef XP_OS2
-        // rv already contains DosCopy return code (do we need to convert it?) OS2TODO
         rv = ConvertOS2Error(rv);
 #else
         rv = ConvertWinError(GetLastError());
@@ -2045,6 +2058,7 @@ nsLocalFile::SetFollowLinks(PRBool aFollowLinks)
     return NS_OK;
 }
 
+
 NS_IMETHODIMP
 nsLocalFile::GetDirectoryEntries(nsISimpleEnumerator * *entries)
 {
@@ -2099,11 +2113,14 @@ NS_NewLocalFile(const char* path, PRBool followLinks, nsILocalFile* *result)
 
     file->SetFollowLinks(followLinks);
 
-    nsresult rv = file->InitWithPath(path);
-    if (NS_FAILED(rv)) {
-        NS_RELEASE(file);
-        return rv;
+    if (path) {
+        nsresult rv = file->InitWithPath(path);
+        if (NS_FAILED(rv)) {
+            NS_RELEASE(file);
+            return rv;
+        }
     }
+
     *result = file;
     return NS_OK;
 }
@@ -2143,4 +2160,30 @@ _mbsrchr( const unsigned char* stringToSearch, int charToSearchFor)
 
   
    return tempPrev;
+}
+
+// Implement equivalent of Win32 CreateDirectoryA
+static nsresult PR_CALLBACK
+CreateDirectoryA( PSZ resolvedPath, PEAOP2 ppEABuf)
+{
+   APIRET rc;
+   nsresult rv;
+   FILESTATUS3 pathInfo;
+
+   rc = DosCreateDir( resolvedPath, ppEABuf );  
+   if (rc != NO_ERROR) { 
+      rv = ConvertOS2Error(rc);
+
+      // Check if directory already exists and if so, reflect that in the return value
+      rc = DosQueryPathInfo(resolvedPath, 
+                                      FIL_STANDARD,             // Level 1 info
+                                      &pathInfo, 
+                                      sizeof(pathInfo));
+      if (rc == NO_ERROR) 
+         rv = ERROR_FILE_EXISTS;
+   } 
+   else 
+      rv = rc; 
+
+   return rv;
 }
