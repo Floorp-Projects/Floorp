@@ -1410,19 +1410,19 @@ nsGenericElement::Finalize(JSContext *aContext, JSObject *aObj)
 
 // nsISupports implementation
 
-NS_IMETHODIMP
+nsresult
 nsGenericElement::QueryInterface(REFNSIID aIID,void** aInstancePtr)
 {
   return mContent->QueryInterface(aIID, aInstancePtr);
 }
 
-NS_IMETHODIMP_(nsrefcnt) 
+nsrefcnt
 nsGenericElement::AddRef()
 {
   return NS_ADDREF(mContent);
 }
 
-NS_IMETHODIMP_(nsrefcnt) 
+nsrefcnt
 nsGenericElement::Release()
 {
   nsrefcnt rc=0;
