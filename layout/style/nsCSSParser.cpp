@@ -1855,7 +1855,10 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
       }
       if ((eCSSToken_Symbol == mToken.mType) ||
           (eCSSToken_Includes == mToken.mType) ||
-          (eCSSToken_Dashmatch == mToken.mType)) {
+          (eCSSToken_Dashmatch == mToken.mType) ||
+          (eCSSToken_Beginsmatch == mToken.mType) ||
+          (eCSSToken_Endsmatch == mToken.mType) ||
+          (eCSSToken_Containsmatch == mToken.mType)) {
         mToken.AppendToString(aSource);
         PRUint8 func;
         if (eCSSToken_Includes == mToken.mType) {
@@ -1863,6 +1866,15 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
         }
         else if (eCSSToken_Dashmatch == mToken.mType) {
           func = NS_ATTR_FUNC_DASHMATCH;
+        }
+        else if (eCSSToken_Beginsmatch == mToken.mType) {
+          func = NS_ATTR_FUNC_BEGINSMATCH;
+        }
+        else if (eCSSToken_Endsmatch == mToken.mType) {
+          func = NS_ATTR_FUNC_ENDSMATCH;
+        }
+        else if (eCSSToken_Containsmatch == mToken.mType) {
+          func = NS_ATTR_FUNC_CONTAINSMATCH;
         }
         else if (']' == mToken.mSymbol) {
           dataMask |= SEL_MASK_ATTRIB;

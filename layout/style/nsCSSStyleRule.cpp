@@ -732,6 +732,15 @@ nsresult nsCSSSelector::ToString( nsAWritableString& aString, nsICSSStyleSheet* 
       } else if (list->mFunction == NS_ATTR_FUNC_DASHMATCH) {
         aString.Append(PRUnichar('|'));
         aString.Append(PRUnichar('='));
+      } else if (list->mFunction == NS_ATTR_FUNC_BEGINSMATCH) {
+        aString.Append(PRUnichar('^'));
+        aString.Append(PRUnichar('='));
+      } else if (list->mFunction == NS_ATTR_FUNC_ENDSMATCH) {
+        aString.Append(PRUnichar('$'));
+        aString.Append(PRUnichar('='));
+      } else if (list->mFunction == NS_ATTR_FUNC_CONTAINSMATCH) {
+        aString.Append(PRUnichar('*'));
+        aString.Append(PRUnichar('='));
       }
       // Append the value
       aString.Append(list->mValue);

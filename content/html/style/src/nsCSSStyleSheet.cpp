@@ -2951,7 +2951,7 @@ static PRBool SelectorMatches(SelectorMatchesData &data,
       } else {
         nsAttrSelector* attr = aSelector->mAttrList;
         do {
-          nsAutoString  value;
+          nsAutoString  value, partValue;
           nsresult  attrState = data.mContent->GetAttribute(attr->mNameSpace, attr->mAttr, value);
           if (NS_FAILED(attrState) || (NS_CONTENT_ATTR_NOT_THERE == attrState)) {
             result = PR_FALSE;
@@ -2973,6 +2973,27 @@ static PRBool SelectorMatches(SelectorMatchesData &data,
                 break;
               case NS_ATTR_FUNC_DASHMATCH: 
                 result = ValueDashMatch(value, attr->mValue, isCaseSensitive);
+                break;
+              case NS_ATTR_FUNC_ENDSMATCH:
+                value.Right(partValue, attr->mValue.Length());
+                if (isCaseSensitive) {
+                  result = partValue.Equals(attr->mValue);
+                }
+                else {
+                  result = partValue.EqualsIgnoreCase(attr->mValue);
+                }
+                break;
+              case NS_ATTR_FUNC_BEGINSMATCH:
+                value.Left(partValue, attr->mValue.Length());
+                if (isCaseSensitive) {
+                  result = partValue.Equals(attr->mValue);
+                }
+                else {
+                  result = partValue.EqualsIgnoreCase(attr->mValue);
+                }
+                break;
+              case NS_ATTR_FUNC_CONTAINSMATCH:
+                result = (-1 != value.Find(attr->mValue, isCaseSensitive));
                 break;
             }
           }

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Daniel Glazman <glazman@netscape.com>
  */
 #ifndef nsCSSScanner_h___
 #define nsCSSScanner_h___
@@ -67,7 +68,10 @@ enum nsCSSTokenType {
   eCSSToken_HTMLComment = 12,    // "<!--" or "-->"
 
   eCSSToken_Includes = 13,      // "~="
-  eCSSToken_Dashmatch = 14      // "|="
+  eCSSToken_Dashmatch = 14,     // "|="
+  eCSSToken_Beginsmatch = 15,   // "^="
+  eCSSToken_Endsmatch = 16,     // "$="
+  eCSSToken_Containsmatch = 17  // "*="
 
 };
 
