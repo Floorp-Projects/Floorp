@@ -49,7 +49,7 @@ END
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-ICON 1 DISCARDABLE "nsinstall.ico"
+ICON 1 DISCARDABLE "stubinstall.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //

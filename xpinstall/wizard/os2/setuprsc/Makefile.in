@@ -31,6 +31,7 @@ LIBRARY_NAME	= setuprsc
 RESFILE		= setuprsc.res
 
 USE_NON_MT_LIBS = 1
+USE_STATIC_LIBS = 1
 
 NO_DIST_INSTALL = 1
 

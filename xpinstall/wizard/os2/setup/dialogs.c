@@ -733,10 +733,16 @@ MRESULT EXPENTRY DlgProcSetupType(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
           break;
 
         case IDC_README:
+          {
+          char fullReadme[CCHMAXPATH];
+          strcpy(fullReadme, szSetupDir);
+          strcat(fullReadme, diSetupType.szReadmeFilename);
+
           if(*diSetupType.szReadmeApp == '\0')
             WinSpawn(diSetupType.szReadmeFilename, NULL, szSetupDir, FALSE);
           else
-            WinSpawn(diSetupType.szReadmeApp, diSetupType.szReadmeFilename, szSetupDir, FALSE);
+            WinSpawn(diSetupType.szReadmeApp, fullReadme, szSetupDir, FALSE);
+          }
           return (MRESULT)TRUE;
           break;
 
