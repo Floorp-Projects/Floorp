@@ -23,7 +23,7 @@ srcdir		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 EXPORTS = \
-		nsIMimeHeaderConverter.h    	\
+		nsIMimeConverter.h    	\
 		nsIStreamConverter.h		\
 		nsIMimeObjectClassAccess.h	\
 		nsIMimeEmitter.h		\

@@ -21,7 +21,7 @@ IGNORE_MANIFEST=1
 EXPORTS =					\
 	nsIStreamConverter.h			\
 	nsIMimeObjectClassAccess.h		\
-	nsIMimeHeaderConverter.h		\
+	nsIMimeConverter.h		\
 	nsIMimeEmitter.h			\
 	nsMailHeaders.h				\
         $(NULL)
