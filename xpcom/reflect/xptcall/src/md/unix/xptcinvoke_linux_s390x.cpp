@@ -194,6 +194,8 @@ invoke_copy_to_stack(PRUint32 paramCount, nsXPTCVariant* s, PRUint64* d_ov, PRUi
     }
 }
 
+volatile register void* r14 asm("r14");
+
 XPTC_PUBLIC_API(nsresult)
 XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
                    PRUint32 paramCount, nsXPTCVariant* params)
@@ -206,6 +208,8 @@ XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
 #endif /* G++ V3 ABI */
     PRUint64 overflow = invoke_count_words (paramCount, params);
     PRUint64 result;
+
+    volatile void* sav_r14 = r14;
 
     __asm__ __volatile__
     (
@@ -245,6 +249,8 @@ XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
           "a" (method)
         : "2", "3", "4", "5", "6", "7", "memory"
     );
+
+    r14 = sav_r14;
   
     return result;
 }    
