@@ -1194,9 +1194,12 @@ function checkForDirectoryListing()
  **/
 function FillInHTMLTooltip(tipElement)
 {
-  const XLinkNS = "http://www.w3.org/1999/xlink";
-
   var retVal = false;
+
+  if (tipElement.namespaceURI == "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul")
+    return retVal;
+
+  const XLinkNS = "http://www.w3.org/1999/xlink";
 
   var titleText = null;
   var XLinkTitleText = null;
