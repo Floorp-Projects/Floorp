@@ -3,8 +3,8 @@
 # Utils.pm - General purpose utility functions.  Every project needs a
 # kludge bucket for common access.
 
-# $Revision: 1.9 $ 
-# $Date: 2001/01/04 00:31:20 $ 
+# $Revision: 1.10 $ 
+# $Date: 2001/01/04 16:40:22 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Utils.pm,v $ 
 # $Name:  $ 
@@ -68,13 +68,13 @@ sub security_check_data_dir {
 
   my $tinderbox_uid = $<;
 
-#  ( $uid == $tinderbox_uid ) ||
-#    die("Security Error. dir: $dir is not owned by ".
-#        "the tinderbox id: $tinderbox_uid\n");
-  
-#  ( $mode & 02) &&
-#    die("Security Error. dir: $dir is writable by other\n");
-  
+  ( $uid == $tinderbox_uid ) ||
+    die("Security Error. dir: $dir is not owned by ".
+        "the tinderbox id: $tinderbox_uid\n");
+
+  ( $mode & 02) &&
+    die("Security Error. dir: $dir is writable by other\n");
+
   return 1;
 }
 
