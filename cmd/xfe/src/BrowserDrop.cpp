@@ -212,13 +212,13 @@ void XFE_BrowserDrop::loadURL(const char *url,int newFrame)
         || !MSG_RequiresBrowserWindow(urlStruct->address)
 #endif
 	) {
-        _browserFrame->getURL(urlStruct, (urlStruct == NULL));
+        _browserFrame->getURL(urlStruct);
         fe_UserActivity(_browserFrame->getContext());
     }
     else {
         XFE_BrowserFrame *newFrame=new XFE_BrowserFrame(XtParent(_browserFrame->getBaseWidget()), _browserFrame, NULL);
         newFrame->show();
-        newFrame->getURL(urlStruct, (urlStruct == NULL));
+        newFrame->getURL(urlStruct);
         fe_UserActivity(newFrame->getContext());
     }
 }
