@@ -37,6 +37,8 @@ $outfile = shift @ARGV;
 # Parse dependency files
 while ($line = <STDIN>) {
   chomp $line;
+  # Remove extra ^M caused by using dos-mode line-endings
+  chop $line if (substr($line, -1, 1) eq "\r");
   ($obj,$rest) = split /\s*:\s+/, $line, 2;
   next if $obj eq '';
 
