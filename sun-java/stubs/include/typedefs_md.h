@@ -38,7 +38,7 @@ typedef uint32 uint32_t;
 
 typedef prword_t uintVP_t; /* unsigned that is same size as a void pointer */
 
-#if !defined(BSDI) && !defined(IRIX6_2) && !defined(IRIX6_3) && !defined(LINUX2_0) && !defined(MKLINUX) && !defined(SOLARIS2_6) && !defined(HPUX10_20) && !defined(HPUX10_30) && !defined(HPUX11)
+#if !defined(BSDI) && !defined(IRIX6_2) && !defined(IRIX6_3) && !defined(LINUX) && !defined(SOLARIS2_6) && !defined(HPUX10_20) && !defined(HPUX10_30) && !defined(HPUX11)
 typedef int64 int64_t;
 #else
 /*
@@ -62,7 +62,7 @@ typedef unsigned int uint_t;
 	#pragma warning_errors reset
 #endif
 
-#if defined(XP_PC)
+#if defined(XP_PC) && !defined(XP_OS2)
 typedef long int32_t;
 #endif
 
