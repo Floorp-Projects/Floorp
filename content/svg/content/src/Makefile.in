@@ -75,6 +75,7 @@ CPPSRCS		= \
 		nsSVGCircleElement.cpp \
 		nsSVGClassValue.cpp \
 		nsSVGCoordCtxProvider.cpp \
+		nsSVGDefsElement.cpp \
 		nsSVGElement.cpp \
 		nsSVGElementFactory.cpp \
 		nsSVGEllipseElement.cpp \
@@ -109,12 +110,13 @@ CPPSRCS		= \
 		nsSVGSVGElement.cpp \
 		nsSVGStopElement.cpp \
 		nsSVGStyleElement.cpp \
+		nsSVGSymbolElement.cpp \
 		nsSVGTSpanElement.cpp \
 		nsSVGTextElement.cpp \
 		nsSVGTransform.cpp \
 		nsSVGTransformList.cpp \
+		nsSVGUseElement.cpp \
 		nsSVGValue.cpp \
-		nsSVGDefsElement.cpp \
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk

@@ -130,6 +130,7 @@ endif
 EXPORTS		= \
 		nsILineIterator.h \
 		nsHTMLParts.h \
+		nsIAnonymousContentCreator.h \
 		$(NULL)
 
 ifdef IBMBIDI

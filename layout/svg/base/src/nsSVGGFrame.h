@@ -1,6 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
- * ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -16,15 +15,16 @@
  * The Original Code is the Mozilla SVG project.
  *
  * The Initial Developer of the Original Code is
- * Crocodile Clips Ltd.
+ * Crocodile Clips Ltd..
  * Portions created by the Initial Developer are Copyright (C) 2001
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Alex Fritze <alex.fritze@crocodile-clips.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -36,34 +36,22 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-@namespace url(http://www.w3.org/2000/svg);
+#ifndef NSSVGGFRAME_H
+#define NSSVGGFRAME_H
 
-a {
-  -moz-binding:url('chrome://svg/content/svgBindings.xml#a'); 
-}
+#include "nsSVGDefsFrame.h"
 
-a * {
-  cursor: pointer;
-}
-               
-svg {
-  /* XXX see bugs #71191 and #172574 before applying xbl binding to
-     either 'svg' or 'svg:not(:root)'
-  */
+typedef nsSVGDefsFrame nsSVGGFrameBase;
 
-  /* give svg elements block display style, so that they reflow
-     correctly when given a relative width/height: */
-  display: block;
+class nsSVGGFrame : public nsSVGGFrameBase
+{
+  friend nsresult
+  NS_NewSVGGFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
 
-  font-family: sans-serif;
-}
+  // nsISVGChildFrame interface:
+  NS_IMETHOD Paint(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips);
+  NS_IMETHOD GetFrameForPoint(float x, float y, nsIFrame** hit);  
+  NS_IMETHOD_(already_AddRefed<nsISVGRendererRegion>) GetCoveredRegion();
+};
 
-style {
- display: none;
-}
-
-svg, symbol, image, marker, pattern, foreignObject { overflow: hidden }
-
-symbol {
- display: none;
-}
+#endif
