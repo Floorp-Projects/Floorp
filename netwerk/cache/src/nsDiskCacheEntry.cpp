@@ -97,9 +97,9 @@ CreateDiskCacheEntry(nsDiskCacheBinding *  binding)
     nsCacheEntry * entry = binding->mCacheEntry;
     if (!entry)  return nsnull;
     
-    PRUint32  keySize = entry->Key()->Length() + 1;
-    PRUint32  size = sizeof(nsDiskCacheEntry) +
-                     keySize + entry->MetaDataSize();
+    PRUint32  keySize  = entry->Key()->Length() + 1;
+    PRUint32  metaSize = entry->MetaDataSize();
+    PRUint32  size     = sizeof(nsDiskCacheEntry) + keySize + metaSize;
     
     // pad size so we can write to block files without overrunning buffer
     PRInt32 pad = size;
@@ -119,25 +119,16 @@ CreateDiskCacheEntry(nsDiskCacheBinding *  binding)
     diskEntry->mExpirationTime  = entry->ExpirationTime();
     diskEntry->mDataSize        = entry->DataSize();
     diskEntry->mKeySize         = keySize;
-    diskEntry->mMetaDataSize    = entry->MetaDataSize();
+    diskEntry->mMetaDataSize    = metaSize;
     
     nsCRT::memcpy(diskEntry->mKeyStart, entry->Key()->get(),keySize);
     
-    // XXX FIXME FlattenMetaData should not allocate a buffer
-    char *    metaData = nsnull;
-    PRUint32  metaSize = 0;
-    nsresult rv = entry->FlattenMetaData(&metaData, &metaSize);
+    nsresult rv = entry->FlattenMetaData(&diskEntry->mKeyStart[keySize], metaSize);
     if (NS_FAILED(rv)) {
         delete [] (char *)diskEntry;
         return nsnull;
     }
-    
-    diskEntry->mMetaDataSize    = metaSize;
-    if (metaSize)
-        nsCRT::memcpy(&diskEntry->mKeyStart[keySize], metaData, metaSize);
-    
-    delete metaData;
-    
+        
     pad -= diskEntry->Size();
     NS_ASSERTION(pad >= 0, "under allocated buffer for diskEntry.");
     if (pad > 0)

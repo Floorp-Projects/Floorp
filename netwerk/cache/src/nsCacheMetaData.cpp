@@ -159,17 +159,19 @@ nsCacheMetaData::Size(void)
 }
 
 
-nsresult
-nsCacheMetaData::FlattenMetaData(char ** data, PRUint32 * size)
-{
-    *size = 0;
+typedef struct {
+    char *    bufPtr;
+    PRUint32  bufSize;
+    PRUint32  metaSize;
+    nsresult  rv;
+} AccumulateStruct;
 
-    if (PL_DHashTableEnumerate(&table, CalculateSize, size) != 0 && data) {
-        *data = new char[*size];
-        if (*data == nsnull) return NS_ERROR_OUT_OF_MEMORY;
-        char* state = *data;
-        PL_DHashTableEnumerate(&table, AccumulateElement, &state);
-    }
+
+nsresult
+nsCacheMetaData::FlattenMetaData(char * buffer, PRUint32 bufSize)
+{
+    AccumulateStruct  state = {buffer, bufSize, 0, NS_OK};
+    PL_DHashTableEnumerate(&table, AccumulateElement, &state);
 
     return NS_OK;
 }
@@ -279,22 +281,32 @@ nsCacheMetaData::CalculateSize(PLDHashTable *table,
     return PL_DHASH_NEXT;
 }
 
+
 PLDHashOperator PR_CALLBACK
 nsCacheMetaData::AccumulateElement(PLDHashTable *table,
                                  PLDHashEntryHdr *hdr,
                                  PRUint32 number,
                                  void *arg)
 {
-    char** bufferPtr = (char**) arg;
+    AccumulateStruct * state = (AccumulateStruct *)arg;
     nsCacheMetaDataHashTableEntry* hashEntry = (nsCacheMetaDataHashTableEntry *)hdr;
-    PRUint32 size = 1 + hashEntry->key->Length();
-    nsCRT::memcpy(*bufferPtr, hashEntry->key->get(), size);
-    *bufferPtr += size;
-    size = 1 + hashEntry->value->Length();
-    nsCRT::memcpy(*bufferPtr, hashEntry->value->get(), size);
-    *bufferPtr += size;
+    PRUint32 keySize = 1 + hashEntry->key->Length();
+    PRUint32 valSize = 1 + hashEntry->value->Length();
+    if ((state->metaSize + keySize + valSize) > state->bufSize) {
+        // not enough space to copy key/value pair
+        state->rv = NS_ERROR_OUT_OF_MEMORY;
+        NS_ERROR("buffer size too small for meta data.");
+        return PL_DHASH_STOP;
+    }
+    
+    nsCRT::memcpy(state->bufPtr, hashEntry->key->get(), keySize);
+    state->bufPtr += keySize;
+    nsCRT::memcpy(state->bufPtr, hashEntry->value->get(), valSize);
+    state->bufPtr += valSize;
+    state->metaSize += keySize + valSize;
     return PL_DHASH_NEXT;
 }
+
 
 PLDHashOperator PR_CALLBACK
 nsCacheMetaData::FreeElement(PLDHashTable *table,
