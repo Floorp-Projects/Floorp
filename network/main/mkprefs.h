@@ -47,6 +47,7 @@
 #define pref_mailQuotedStyle        "mail.quoted_style"
 #define pref_cookieBehavior         "network.cookie.cookieBehavior"
 #define pref_warnAboutCookies       "network.cookie.warnAboutCookies"
+#define pref_strictCookieDomains    "network.cookie.strictDomains"
 #define pref_scriptName             "network.cookie.filterName"
 #define pref_goBrowsingEnabled      "browser.goBrowsing.enabled"
 #define pref_sendRefererHeader      "network.sendRefererHeader"
