@@ -44,7 +44,7 @@ sub protocol {
     $self->notImplemented(); # this must be overriden by descendants
 }
 
-sub init {
+sub serviceInstanceInit {
     my $self = shift;
     my($app) = @_;
     $self->SUPER::init(@_);
