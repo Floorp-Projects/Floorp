@@ -1129,6 +1129,10 @@ nsDocLoaderImpl::FireOnLocationChange(nsIWebProgress* aWebProgress,
   }
 
   mListenerList->Compact();
+  // Pass the notification up to the parent...
+  if (mParent) {
+    mParent->FireOnLocationChange(aWebProgress, aRequest, aUri);
+  }
 
   return NS_OK;
 }
