@@ -2542,7 +2542,7 @@ if test "$GNU_CC"; then
     _USE_CPP_INCLUDE_FLAG=1
 else
     MKSHLIB='$(LD) $(DSO_LDOPTS)'
-    MKCSHLIB='$(MKSHLIB)'
+    MKCSHLIB='$(LD) $(DSO_LDOPTS)'
     DSO_LDOPTS='-shared -h $(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
     DSO_CFLAGS='-KPIC'
     _DEFINES_CFLAGS='$(ACDEFINES)'
@@ -2617,7 +2617,7 @@ case "$target" in
 		DSO_CFLAGS='-DPIC -brtl -qflag=w:w'
 	fi
 	MKSHLIB='makeC++SharedLib_r -p1 -brtl -berok --'
-	MKCSHLIB='$(MKSHLIB)'
+	MKCSHLIB='makeC++SharedLib_r -p1 -brtl -berok --'
 	;;
 
 *-*-solaris*) 
@@ -2658,7 +2658,7 @@ EOF
 *-*-sunos*) 
     DSO_LDOPTS=''
     MKSHLIB='$(LD) $(DSO_LDOPTS)'
-    MKCSHLIB='$(MKSHLIB)'
+    MKCSHLIB='$(LD) $(DSO_LDOPTS)'
     ;;
 
 alpha*-*-linux*)
@@ -2717,7 +2717,7 @@ alpha*-*-osf*)
     DSO_CFLAGS='-fPIC'
     DSO_LDOPTS='-shared -h $(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
     MKSHLIB='$(LD) $(DSO_LDOPTS)'
-    MKCSHLIB='$(MKSHLIB)'
+    MKCSHLIB='$(LD) $(DSO_LDOPTS)'
     if $CC -E - -dM </dev/null | grep -v __ELF__ >/dev/null; then
 	DSO_LDOPTS="-Bshareable /usr/lib/c++rt0.o"
     fi
@@ -2733,7 +2733,7 @@ alpha*-*-osf*)
     fi
     DSO_LDOPTS='-b -E -L$(DIST)/bin'
     MKSHLIB='$(LD) $(DSO_LDOPTS)'
-    MKCSHLIB='$(MKSHLIB)'
+    MKCSHLIB='$(LD) $(DSO_LDOPTS)'
     ;;
 
 *-irix*)
