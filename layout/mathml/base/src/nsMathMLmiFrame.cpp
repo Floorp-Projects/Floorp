@@ -100,7 +100,7 @@ nsMathMLmiFrame::SetInitialChildList(nsIPresContext* aPresContext,
   // First, let the base class do its work
   rv = nsMathMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
 
-  // Get text content that we enclose  and its length
+  // Get the text content that we enclose and its length
   // our content can include comment-nodes, attribute-nodes, text-nodes...
   // we use the DOM to make sure that we are only looking at text-nodes...
   nsAutoString data;
@@ -128,18 +128,22 @@ nsMathMLmiFrame::SetInitialChildList(nsIPresContext* aPresContext,
   if (firstChild && ((1 < length) || isStyleInvariant)) {
     // we are going to switch the font to normal ...
 
-    // we don't switch if we are in the scope of a mstyle frame with an 
-    // explicit fontstyle="italic" ...
+    // we always enforce the style to normal if this is a non-stylable char.
+    // for other chars, we don't disable the italic style if we are in the
+    // scope of a mstyle frame with an explicit fontstyle="italic" ...
+    // XXX Need to also disable any bold style for non-stylable char.
     nsAutoString fontstyle;
-    if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
-                     nsMathMLAtoms::fontstyle_, fontstyle))
-    {
-      if (fontstyle.EqualsWithConversion("italic"))
-        return rv;
+    if (!isStyleInvariant) {
+      if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
+                       nsMathMLAtoms::fontstyle_, fontstyle))
+      {
+        if (fontstyle.Equals(NS_LITERAL_STRING("italic")))
+          return rv;
+      }
     }
 
     // set the -moz-math-font-style attribute without notifying that we want a reflow
-    fontstyle.AssignWithConversion("normal");
+    fontstyle.Assign(NS_LITERAL_STRING("normal"));
     mContent->SetAttribute(kNameSpaceID_None, nsMathMLAtoms::fontstyle,
                            fontstyle, PR_FALSE);
     // then, re-resolve the style contexts in our subtree
