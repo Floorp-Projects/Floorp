@@ -80,6 +80,7 @@
 #include "nsIURL.h"
 #ifdef NECKO
 #include "nsNeckoUtil.h"
+#include "nsIChannel.h"
 #endif // NECKO
 #include "nsLayoutCID.h" // for NS_NAMESPACEMANAGER_CID.
 #include "nsParserCIID.h"
@@ -541,12 +542,22 @@ rdf_BlockingParse(nsIURI* aURL, nsIStreamListener* aConsumer)
     // to the parser: it seems like this is something that netlib
     // should be able to do by itself.
 
-    nsIInputStream* in;
 #ifdef NECKO
-    if (NS_FAILED(rv = NS_OpenURI(&in, aURL, nsnull /* XXX aConsumer */)))
+    nsCOMPtr<nsIChannel> channel;
+    rv = NS_OpenURI(getter_AddRefs(channel), aURL, nsnull /* XXX aConsumer */);
+    if (NS_FAILED(rv))
+    {
+        NS_ERROR("unable to open channel");
+        return rv;
+    }
+    nsIInputStream* in;
+    PRUint32 sourceOffset = 0;
+    rv = channel->OpenInputStream(0, -1, &in);
 #else
-    if (NS_FAILED(rv = NS_OpenURL(aURL, &in, nsnull /* XXX aConsumer */)))
+    nsIInputStream* in;
+    rv = NS_OpenURL(aURL, &in, nsnull /* XXX aConsumer */);
 #endif
+    if (NS_FAILED(rv))
     {
         NS_ERROR("unable to open blocking stream");
         return rv;
@@ -560,7 +571,9 @@ rdf_BlockingParse(nsIURI* aURL, nsIStreamListener* aConsumer)
     if (! proxy)
         goto done;
 
-#ifndef NECKO   // XXX I'm assuming necko will do this now
+#ifdef NECKO
+    aConsumer->OnStartRequest(channel);
+#else
     // XXX shouldn't netlib be doing this???
     aConsumer->OnStartRequest(aURL, "text/rdf");
 #endif
@@ -576,7 +589,10 @@ rdf_BlockingParse(nsIURI* aURL, nsIStreamListener* aConsumer)
 
         proxy->SetBuffer(buf, readCount);
 
-#ifndef NECKO   // XXX I'm assuming necko will do this now
+#ifdef NECKO
+        rv = aConsumer->OnDataAvailable(channel, proxy, sourceOffset, readCount);
+        sourceOffset += readCount;
+#else
         // XXX shouldn't netlib be doing this???
         rv = aConsumer->OnDataAvailable(aURL, proxy, readCount);
 #endif
@@ -586,7 +602,9 @@ rdf_BlockingParse(nsIURI* aURL, nsIStreamListener* aConsumer)
     if (rv == NS_BASE_STREAM_EOF) {
         rv = NS_OK;
     }
-#ifndef NECKO   // XXX I'm assuming necko will do this now
+#ifdef NECKO
+    aConsumer->OnStopRequest(channel, NS_OK, nsnull);
+#else
     // XXX shouldn't netlib be doing this???
     aConsumer->OnStopRequest(aURL, 0, nsnull);
 #endif
