@@ -36,17 +36,31 @@
 *
 * Date:    30 Jan 2002
 * Revised: 10 Apr 2002
+* Revised: 14 July 2002
+*
 * SUMMARY: JS should error on |for(i in undefined)|, |for(i in null)|
 * See http://bugzilla.mozilla.org/show_bug.cgi?id=121744
 *
 * ECMA-262 3rd Edition Final spec says such statements should error. See:
-* Section 12.6.4  The for-in Statement
-* Section 9.9     ToObject
+*
+*               Section 12.6.4  The for-in Statement
+*               Section 9.9     ToObject
+*
 *
 * BUT: SpiderMonkey has decided NOT to follow this; it's a bug in the spec.
 * See http://bugzilla.mozilla.org/show_bug.cgi?id=131348
 *
-* So adding an early return for SpiderMonkey; will continue to use for Rhino.
+* UPDATE: Rhino has also decided not to follow the spec on this.
+* See http://bugzilla.mozilla.org/show_bug.cgi?id=136893
+*
+
+  |----------------------------------------------------------------------|
+  |                                                                      |
+  | So for now, adding an early return for this test so it won't be run. |
+  |                                                                      |
+  |----------------------------------------------------------------------|
+
+*
 */
 //-----------------------------------------------------------------------------
 var UBound = 0;
@@ -63,10 +77,9 @@ var expect= '';
 var expectedvalues = [];
 
 /*
- * As of 10 Apr 2002, we only want to run this test in Rhino
+ * AS OF 14 JULY 2002, DON'T RUN THIS TEST IN EITHER RHINO OR SPIDERMONKEY -
  */
-if (!inRhino())
-  quit();
+quit();
 
 
 status = inSection(1);
