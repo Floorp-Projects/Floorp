@@ -2851,6 +2851,7 @@ SINGSIGN_GetSignonListForViewer(nsAutoString& aSignonList)
 
   /* unlock the database */
   if (SI_LoadSignonData(PR_TRUE) != 0) {
+    aSignonList = "."; /* a list of length 1 tells viewer that database was not unlocked */ 
     /* don't display saved signons if user couldn't unlock the database */
     return;
   }

@@ -65,7 +65,9 @@ function Startup()
     pref = null;
   }
 
-  LoadSignons();
+  if (!LoadSignons()) {
+    return; /* user failed to unlock the database */
+  }
   LoadReject();
   LoadNopreview();
   LoadNocapture();
@@ -78,6 +80,12 @@ function Startup()
 function LoadSignons()
 {
   signonList = signonviewer.GetSignonValue();
+  if (signonList.length == 1) {
+    /* user supplied invalid database key */
+    window.close();
+    return false;
+  }
+
   var delim = signonList[0];
   signonList = signonList.split(delim);
   for(var i = 1; i < signonList.length; i++)
@@ -89,6 +97,7 @@ function LoadSignons()
     var user = currSignon.substring(currSignon.lastIndexOf(":")+1,currSignon.length);
     AddItem("savesignonlist",[site,user],"signon_",i-1);
   }
+  return true;
 }
 
 // function : <SignonViewer.js>::DeleteSignon();
