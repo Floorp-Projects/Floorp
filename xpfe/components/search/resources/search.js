@@ -1,7 +1,11 @@
 
-function loadPage(thePage)
+var	gSearchStr = "";
+
+function loadPage(thePage, searchStr)
 {
 	var	content="", results="";
+
+	gSearchStr = "";
 
 	if (thePage == "find")
 	{
@@ -12,6 +16,11 @@ function loadPage(thePage)
 	{
 		content="internet.xul";
 		results="internetresults.xul";
+
+		if ((searchStr) && (searchStr != null))
+		{
+			gSearchStr = searchStr;
+		}
 	}
 	else if (thePage == "mail")
 	{
@@ -38,4 +47,11 @@ function loadPage(thePage)
 		}
 	}
 	return(true);
+}
+
+
+
+function getSearchText()
+{
+	return(gSearchStr);
 }
