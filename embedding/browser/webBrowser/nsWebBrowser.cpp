@@ -34,7 +34,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIWebBrowserChrome.h"
-#include "nsIWebNavigation.h"
 
 static NS_DEFINE_IID(kChildCID,               NS_CHILD_CID);
 static NS_DEFINE_IID(kDeviceContextCID,       NS_DEVICE_CONTEXT_CID);
@@ -80,15 +79,16 @@ NS_IMETHODIMP nsWebBrowser::Create(nsISupports* aOuter, const nsIID& aIID,
 NS_IMPL_ADDREF(nsWebBrowser)
 NS_IMPL_RELEASE(nsWebBrowser)
 
-NS_IMPL_QUERY_HEAD(nsWebBrowser)
-   NS_IMPL_QUERY_BODY(nsIWebBrowser)
-   NS_IMPL_QUERY_BODY(nsIWebBrowserNav)
-   NS_IMPL_QUERY_BODY(nsIProgress)
-   NS_IMPL_QUERY_BODY(nsIBaseWindow)
-   NS_IMPL_QUERY_BODY(nsIScrollable)
-   NS_IMPL_QUERY_BODY(nsITextScroll)
+NS_INTERFACE_MAP_BEGIN(nsWebBrowser)
+   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebBrowser)
+   NS_INTERFACE_MAP_ENTRY(nsIWebBrowser)
+   NS_INTERFACE_MAP_ENTRY(nsIWebNavigation)
+   NS_INTERFACE_MAP_ENTRY(nsIProgress)
+   NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
+   NS_INTERFACE_MAP_ENTRY(nsIScrollable)
+   NS_INTERFACE_MAP_ENTRY(nsITextScroll)
 //   NS_IMPL_QUERY_BODY(nsIInterfaceRequestor)
-NS_IMPL_QUERY_TAIL(nsIWebBrowser)
+NS_INTERFACE_MAP_END
 
 //*****************************************************************************
 // nsWebBrowser::nsIWebBrowser
@@ -157,7 +157,7 @@ NS_IMETHODIMP nsWebBrowser::GetDocShell(nsIDocShell** docShell)
 }
 
 //*****************************************************************************
-// nsWebBrowser::nsIWebBrowserNav
+// nsWebBrowser::nsIWebNavigation
 //*****************************************************************************
 
 NS_IMETHODIMP nsWebBrowser::GetCanGoBack(PRBool* pCanGoBack)
@@ -211,28 +211,12 @@ NS_IMETHODIMP nsWebBrowser::GoForward()
 
 NS_IMETHODIMP nsWebBrowser::LoadURI(const PRUnichar* uri)
 {
-   //NS_ENSURE_ARG(uri);  // Done in LoadURIVia for us.
+   NS_ENSURE_ARG(uri);
 
-   return LoadURIVia(uri, 0); // Can blindly return because we know this 
+   return NS_ERROR_FAILURE; // Can blindly return because we know this 
 }                             // method to return the same errors.
 
-NS_IMETHODIMP nsWebBrowser::LoadURIVia(const PRUnichar* uri, 
-   PRUint32 adapterBinding)
-{
-   //XXX First Check
-	/*
-	Loads a given URI through the specified adapter.  This will give priority
-	to loading the requested URI in the object implementing this interface.
-	If it can't be loaded here	however, the URL dispatcher will go through its
-	normal process of content loading.
-
-	@param uri - The URI to load.
-	@param adapterBinding - The local IP address of the adapter to bind to.
-	*/
-   return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP nsWebBrowser::Reload()
+NS_IMETHODIMP nsWebBrowser::Reload(PRInt32 aReloadType)
 {
    //XXX First Check
    return NS_ERROR_FAILURE;
@@ -299,6 +283,20 @@ NS_IMETHODIMP nsWebBrowser::GetCurrentURI(PRUnichar** aCurrentURI)
    *aCurrentURI = nsAutoString(spec).ToNewUnicode();
 
    return NS_OK;
+}
+
+NS_IMETHODIMP nsWebBrowser::SetSessionHistory(nsISHistory* aSessionHistory)
+{
+   // XXX 
+   NS_ERROR("Not Yet Implemented");
+   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsWebBrowser::GetSessionHistory(nsISHistory** aSessionHistory)
+{
+   // XXX 
+   NS_ERROR("Not Yet Implemented");
+   return NS_ERROR_FAILURE;
 }
 
 //*****************************************************************************

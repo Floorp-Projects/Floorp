@@ -36,7 +36,7 @@
 #include "nsITextScroll.h"
 #include "nsIWidget.h"
 #include "nsIWebBrowser.h"
-#include "nsIWebBrowserNav.h"
+#include "nsIWebNavigation.h"
 
 class nsWebBrowserInitInfo
 {
@@ -52,7 +52,7 @@ public:
 };
 
 
-class nsWebBrowser : public nsIWebBrowser, public nsIWebBrowserNav,
+class nsWebBrowser : public nsIWebBrowser, public nsIWebNavigation,
    public nsIProgress, public nsIBaseWindow, public nsIScrollable,
    public nsITextScroll
 {
@@ -60,7 +60,7 @@ public:
    NS_DECL_ISUPPORTS
 
    NS_DECL_NSIWEBBROWSER
-   NS_DECL_NSIWEBBROWSERNAV
+   NS_DECL_NSIWEBNAVIGATION
    NS_DECL_NSIPROGRESS
    NS_DECL_NSIBASEWINDOW
    NS_DECL_NSISCROLLABLE   

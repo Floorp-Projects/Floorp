@@ -28,7 +28,6 @@ XPIDLSRCS=						\
 		.\nsIProgressListener.idl						\
 		.\nsIWebBrowser.idl						\
 		.\nsIWebBrowserChrome.idl					\
-		.\nsIWebBrowserNav.idl					\
 		$(NULL)
 
 LIBRARY_NAME=nsWebBrowser_s
