@@ -92,6 +92,11 @@ MimeCharsetConverterClass *nsMsgHeaderParser::GetUSAsciiToUtf8CharsetConverter()
 		if (m_USAsciiToUtf8CharsetConverter)
 		{
 			nsresult rv = m_USAsciiToUtf8CharsetConverter->Initialize("us-ascii","utf-8", PR_FALSE);
+			if (!NS_SUCCEEDED(rv))
+			{
+				delete m_USAsciiToUtf8CharsetConverter;
+				m_USAsciiToUtf8CharsetConverter = nsnull;
+			}
 		}
 	}
 	return m_USAsciiToUtf8CharsetConverter;
