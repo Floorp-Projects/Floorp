@@ -119,7 +119,7 @@ static const char kURINC_FilterSearchURLsRoot[]       = "NC:FilterSearchURLsRoot
 static const char kURINC_FilterSearchSitesRoot[]      = "NC:FilterSearchSitesRoot";
 static const char kSearchCommand[]                    = "http://home.netscape.com/NC-rdf#command?";
 
-PR_CALLBACK int	searchModePrefCallback(const char *pref, void *aClosure);
+int	PR_CALLBACK searchModePrefCallback(const char *pref, void *aClosure);
 
 
 
@@ -474,7 +474,7 @@ static const char		kSearchProtocol[] = "internetsearch:";
 
 
 
-PR_CALLBACK int
+int PR_CALLBACK
 searchModePrefCallback(const char *pref, void *aClosure)
 {
 	InternetSearchDataSource *searchDS = NS_STATIC_CAST(InternetSearchDataSource *, aClosure);
