@@ -1073,22 +1073,13 @@ HTMLAttributesImpl::EnsureSingleMappedFor(nsIHTMLContent* aContent,
 {
   nsresult result = NS_OK;
   if (mMapped) {
-    PRInt32 useCount;
-    mMapped->GetUseCount(useCount);
-    if (1 < useCount) { // shared, clone it
-      nsHTMLMappedAttributes* single;
-      result = mMapped->Clone(&single);
-      if (NS_SUCCEEDED(result)) {
-        mMapped->ReleaseUse();
-        NS_RELEASE(mMapped);
-        mMapped = single;
-        mMapped->AddUse();
-      }
-    }
-    else {  // single use, remove it from unique table before modifying
-      if (aSheet) {
-        aSheet->DropMappedAttributes(mMapped);
-      }
+    nsHTMLMappedAttributes* single;
+    result = mMapped->Clone(&single);
+    if (NS_SUCCEEDED(result)) {
+      mMapped->ReleaseUse();
+      NS_RELEASE(mMapped);
+      mMapped = single;
+      mMapped->AddUse();
     }
   }
   else if (aCreate) {  // create one
