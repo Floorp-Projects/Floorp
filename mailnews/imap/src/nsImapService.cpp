@@ -787,13 +787,19 @@ nsImapService::CopyMessages(nsMsgKeyArray *keys, nsIMsgFolder *srcFolder, nsIStr
     nsCOMPtr<nsIImapMessageSink> imapMessageSink(do_QueryInterface(folder, &rv));
     if (NS_SUCCEEDED(rv))
     {
+      // we generate the uri for the first message so that way on down the line,
+      // GetMessage in nsCopyMessageStreamListener will get an unescaped username
+      // and be able to find the msg hdr. See bug 259656 for details
+      nsXPIDLCString uri;
+      srcFolder->GenerateMessageURI(keys->GetAt(0), getter_Copies(uri));
+
       nsCString messageIds;
       PRUint32 numKeys = keys->GetSize();
       AllocateImapUidString(keys->GetArray(), numKeys, nsnull, messageIds);
       nsCOMPtr<nsIImapUrl> imapUrl;
       nsCAutoString urlSpec;
       PRUnichar hierarchySeparator = GetHierarchyDelimiter(folder);
-      rv = CreateStartOfImapUrl(nsnull, getter_AddRefs(imapUrl), folder, aUrlListener, urlSpec, hierarchySeparator);
+      rv = CreateStartOfImapUrl(uri, getter_AddRefs(imapUrl), folder, aUrlListener, urlSpec, hierarchySeparator);
       nsImapAction action;
       if (moveMessage)
         action = nsIImapUrl::nsImapOnlineToOfflineMove;
