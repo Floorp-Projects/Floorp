@@ -29,10 +29,10 @@ extern "C" void
 NET_InitSockStubProtocol(void);
 
 /* XXX: Hack the following is a realy hack. Should go away */
-PUBLIC PRFileDesc *
+extern "C" PRFileDesc *
 NET_GetSocketToHashTable(URL_Struct_* URL_s);
 
-PUBLIC int32
+extern "C" int32
 NET_FreeSocket(URL_Struct_* URL_s);
 
 #endif /* SOCKSTUB_H */
