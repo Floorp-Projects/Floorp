@@ -1366,15 +1366,16 @@ nsHTMLFormElement::WalkRadioGroup(const nsAString& aName,
       PRInt32 type;
       control->GetType(&type);
       if (type == NS_FORM_INPUT_RADIO) {
-        nsCOMPtr<nsIDOMHTMLInputElement> elem(do_QueryInterface(control));
-        if (elem) {
+        nsCOMPtr<nsIContent> controlContent(do_QueryInterface(control));
+        if (controlContent) {
           //
           // XXX This is a particularly frivolous string copy just to determine
           // if the string is empty or not
           //
           nsAutoString name;
-          elem->GetName(name);
-          if (name.IsEmpty()) {
+          if (controlContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::name,
+                                      name) != NS_CONTENT_ATTR_NOT_THERE &&
+              name.IsEmpty()) {
             aVisitor->Visit(control, &stopIterating);
             if (stopIterating) {
               break;

@@ -248,6 +248,16 @@ protected:
 #endif
 
   /**
+   * Get the name if it exists and return whether it did exist
+   * @param aName the name returned [OUT]
+   * @param true if the name existed, false if not
+   */
+  PRBool GetNameIfExists(nsAString& aName) {
+    return GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, aName) !=
+           NS_CONTENT_ATTR_NOT_THERE;
+  }
+
+  /**
    * Called when an attribute is about to be changed
    */
   void BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
@@ -829,8 +839,9 @@ nsHTMLInputElement::SetChecked(PRBool aChecked)
       nsCOMPtr<nsIRadioGroupContainer> container = GetRadioGroupContainer();
       if (container) {
         nsAutoString name;
-        GetName(name);
-        container->SetCurrentRadioButton(name, nsnull);
+        if (GetNameIfExists(name)) {
+          container->SetCurrentRadioButton(name, nsnull);
+        }
       }
     }
   } else {
@@ -852,9 +863,12 @@ nsHTMLInputElement::RadioSetChecked()
   nsCOMPtr<nsIRadioGroupContainer> container = GetRadioGroupContainer();
   // This is ONLY INITIALIZED IF container EXISTS
   nsAutoString name;
+  PRBool nameExists = PR_FALSE;
   if (container) {
-    GetName(name);
-    container->GetCurrentRadioButton(name, getter_AddRefs(currentlySelected));
+    nameExists = GetNameIfExists(name);
+    if (nameExists) {
+      container->GetCurrentRadioButton(name, getter_AddRefs(currentlySelected));
+    }
   }
 
   //
@@ -877,7 +891,7 @@ nsHTMLInputElement::RadioSetChecked()
   // Let the group know that we are now the One True Radio Button
   //
   NS_ENSURE_SUCCESS(rv, rv);
-  if (container) {
+  if (container && nameExists) {
     rv = container->SetCurrentRadioButton(name, this);
   }
 
@@ -1409,9 +1423,10 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
           nsCOMPtr<nsIRadioGroupContainer> container = GetRadioGroupContainer();
           if (container) {
             nsAutoString name;
-            GetName(name);
-            container->GetCurrentRadioButton(name,
-                                             getter_AddRefs(selectedRadioButton));
+            if (GetNameIfExists(name)) {
+              container->GetCurrentRadioButton(name,
+                                               getter_AddRefs(selectedRadioButton));
+            }
           }
 
           PRBool checked;
@@ -2630,8 +2645,9 @@ nsHTMLInputElement::AddedToRadioGroup()
   nsCOMPtr<nsIRadioGroupContainer> container = GetRadioGroupContainer();
   if (container) {
     nsAutoString name;
-    GetName(name);
-    container->AddToRadioGroup(name, NS_STATIC_CAST(nsIFormControl*, this));
+    if (GetNameIfExists(name)) {
+      container->AddToRadioGroup(name, NS_STATIC_CAST(nsIFormControl*, this));
+    }
   }
 
   return NS_OK;
@@ -2659,7 +2675,10 @@ nsHTMLInputElement::WillRemoveFromRadioGroup()
   PRBool gotName = PR_FALSE;
   if (checked) {
     if (!gotName) {
-      GetName(name);
+      if (!GetNameIfExists(name)) {
+        // If the name doesn't exist, nothing is going to happen anyway
+        return NS_OK;
+      }
       gotName = PR_TRUE;
     }
 
@@ -2675,7 +2694,10 @@ nsHTMLInputElement::WillRemoveFromRadioGroup()
   nsCOMPtr<nsIRadioGroupContainer> container = GetRadioGroupContainer();
   if (container) {
     if (!gotName) {
-      GetName(name);
+      if (!GetNameIfExists(name)) {
+        // If the name doesn't exist, nothing is going to happen anyway
+        return NS_OK;
+      }
       gotName = PR_TRUE;
     }
     container->RemoveFromRadioGroup(name,
@@ -2692,8 +2714,12 @@ nsHTMLInputElement::VisitGroup(nsIRadioVisitor* aVisitor)
   nsCOMPtr<nsIRadioGroupContainer> container = GetRadioGroupContainer();
   if (container) {
     nsAutoString name;
-    GetName(name);
-    rv = container->WalkRadioGroup(name, aVisitor);
+    if (GetNameIfExists(name)) {
+      rv = container->WalkRadioGroup(name, aVisitor);
+    } else {
+      PRBool stop;
+      aVisitor->Visit(this, &stop);
+    }
   } else {
     PRBool stop;
     aVisitor->Visit(this, &stop);
