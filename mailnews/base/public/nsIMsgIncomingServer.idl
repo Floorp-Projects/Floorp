@@ -179,7 +179,7 @@ interface nsIMsgIncomingServer : nsISupports {
   /* get filter list */
   nsIMsgFilterList getFilterList(in nsIMsgWindow aMsgWindow);
 
-  /*set filter list */
+  /* set filter list */
   void setFilterList(in nsIMsgFilterList aFilterList);
 
   /* we use this to set the default local path.  we use this when migrating prefs */

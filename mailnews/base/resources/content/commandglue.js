@@ -481,6 +481,9 @@ function ConvertColumnIDToSortType(columnID)
     case "junkStatusCol":
       sortKey = nsMsgViewSortType.byJunkStatus;
       break;
+    case "idCol":
+      sortKey = nsMsgViewSortType.byId;
+      break;
     default:
       dump("unsupported sort column: " + columnID + "\n");
       sortKey = 0;
@@ -533,8 +536,7 @@ function ConvertSortTypeToColumnID(sortKey)
       columnID = "threadCol";
       break;
     case nsMsgViewSortType.byId:
-      // there is no orderReceivedCol, so return null
-      columnID = null;
+      columnID = "idCol";
       break;
     case nsMsgViewSortType.byJunkStatus:
       columnID = "junkStatusCol";

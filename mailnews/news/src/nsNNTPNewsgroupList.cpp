@@ -108,7 +108,7 @@ nsNNTPNewsgroupList::~nsNNTPNewsgroupList()
   CleanUp();
 }
 
-NS_IMPL_ISUPPORTS1(nsNNTPNewsgroupList, nsINNTPNewsgroupList)
+NS_IMPL_ISUPPORTS2(nsNNTPNewsgroupList, nsINNTPNewsgroupList, nsIMsgFilterHitNotify)
 
 nsresult
 nsNNTPNewsgroupList::Initialize(nsINntpUrl *runningURL, nsIMsgNewsFolder *newsFolder)
@@ -129,6 +129,7 @@ nsNNTPNewsgroupList::Initialize(nsINntpUrl *runningURL, nsIMsgNewsFolder *newsFo
   m_lastMsgToDownload = 0;
   m_runningURL = runningURL;
   m_lastPercent = -1;
+
   LL_I2L(m_lastStatusUpdate, 0);
 
   return NS_OK;
@@ -213,8 +214,10 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(nsIMsgWindow *aMsgWindow,
     nsCOMPtr <nsIMsgFolder> folder = do_QueryInterface(m_newsFolder, &rv);
     NS_ENSURE_SUCCESS(rv,rv);
 
+    m_msgWindow = aMsgWindow;
+
 	if (!m_newsDB) {
-      rv = folder->GetMsgDatabase(nsnull /* use aMsgWindow? */, getter_AddRefs(m_newsDB));
+      rv = folder->GetMsgDatabase(nsnull /* use m_msgWindow? */, getter_AddRefs(m_newsDB));
 	}
 	
     nsCOMPtr<nsINewsDatabase> db(do_QueryInterface(m_newsDB, &rv));
@@ -468,143 +471,314 @@ nsNNTPNewsgroupList::InitXOVER(PRInt32 first_msg, PRInt32 last_msg)
 	return status;
 }
 
+// from RFC 822, don't translate 
+#define FROM_HEADER "From: "
+#define SUBECT_HEADER "Subject: "
+#define DATE_HEADER "Date: "
+
 nsresult
 nsNNTPNewsgroupList::ParseLine(char *line, PRUint32 * message_number) 
 {
-	nsresult rv = NS_OK;
-	nsCOMPtr <nsIMsgDBHdr> newMsgHdr;
-    
-	if (!line || !message_number) {
-		return NS_ERROR_NULL_POINTER;
-	}
+  nsresult rv = NS_OK;
+  nsCOMPtr <nsIMsgDBHdr> newMsgHdr;
+  char *dateStr = nsnull;  // keep track of date str, for filters
+  char *authorStr = nsnull; // keep track of author str, for filters
 
-	char *next = line;
-
+  if (!line || !message_number) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  
+  char *next = line;
+  
 #define GET_TOKEN()								\
   line = next;									\
   next = (line ? PL_strchr (line, '\t') : 0);	\
   if (next) *next++ = 0
-
-	GET_TOKEN ();
-#ifdef DEBUG_NEWS											/* message number */
-	printf("message number = %ld\n", atol(line));
-#endif
-	*message_number = atol(line);
- 
-	if (atol(line) == 0)					/* bogus xover data */
-	return NS_ERROR_UNEXPECTED;
-
-	m_newsDB->CreateNewHdr(*message_number, getter_AddRefs(newMsgHdr));
-  	if (NS_FAILED(rv)) return rv;           
-	NS_ASSERTION(newMsgHdr, "CreateNewHdr didn't fail, but it returned a null newMsgHdr");
-	if (!newMsgHdr) return NS_ERROR_NULL_POINTER;
-
-	GET_TOKEN (); /* subject */
-	if (line)
-
-	{
-		const char *subject = line;  /* #### const evilness */
-		PRUint32 subjectLen = strlen(line);
-
-		PRUint32 flags;
-		rv = newMsgHdr->GetFlags(&flags);
-   		if (NS_FAILED(rv)) return rv;
-		/* strip "Re: " */
-                nsXPIDLCString modifiedSubject;
-		if (NS_MsgStripRE(&subject, &subjectLen, getter_Copies(modifiedSubject)))
-                  flags |= MSG_FLAG_HAS_RE;
-		rv = newMsgHdr->SetFlags(flags); // this will make sure read flags agree with newsrc
-    		if (NS_FAILED(rv)) return rv;
-
-		if (! (flags & MSG_FLAG_READ))
-			rv = newMsgHdr->OrFlags(MSG_FLAG_NEW, &flags);
-#ifdef DEBUG_NEWS
-		printf("subject = %s\n",modifiedSubject.IsEmpty() ? subject : modifiedSubject.get());
-#endif
+  
+  GET_TOKEN (); /* message number */
+  *message_number = atol(line);
+  
+  if (atol(line) == 0)					/* bogus xover data */
+    return NS_ERROR_UNEXPECTED;
+  
+  m_newsDB->CreateNewHdr(*message_number, getter_AddRefs(newMsgHdr));      
+  
+  NS_ASSERTION(newMsgHdr, "CreateNewHdr didn't fail, but it returned a null newMsgHdr");
+  if (!newMsgHdr) 
+    return NS_ERROR_NULL_POINTER;
+  
+  GET_TOKEN (); /* subject */
+  if (line) {
+    const char *subject = line;  /* #### const evilness */
+    PRUint32 subjectLen = strlen(line);
+    
+    PRUint32 flags;
+    rv = newMsgHdr->GetFlags(&flags);
+    if (NS_FAILED(rv)) 
+      return rv;
+    /* strip "Re: " */
+    nsXPIDLCString modifiedSubject;
+    if (NS_MsgStripRE(&subject, &subjectLen, getter_Copies(modifiedSubject)))
+      flags |= MSG_FLAG_HAS_RE;
+    rv = newMsgHdr->SetFlags(flags); // this will make sure read flags agree with newsrc
+    if (NS_FAILED(rv)) 
+      return rv;
+    
+    if (! (flags & MSG_FLAG_READ))
+      rv = newMsgHdr->OrFlags(MSG_FLAG_NEW, &flags);
+    
     rv = newMsgHdr->SetSubject(modifiedSubject.IsEmpty() ? subject : modifiedSubject.get());
-    		if (NS_FAILED(rv)) return rv;
-		
-	}
-
+    if (NS_FAILED(rv)) 
+      return rv;
+  }
+  
   GET_TOKEN ();											/* author */
   if (line) {
-#ifdef DEBUG_spitzer
-	printf("author = %s\n", line);
-#endif
-	rv = newMsgHdr->SetAuthor(line);
-    	if (NS_FAILED(rv)) return rv;
+    authorStr = line;
+    rv = newMsgHdr->SetAuthor(line);
+    if (NS_FAILED(rv)) 
+      return rv;
   }
-
+  
   GET_TOKEN ();	
   if (line) {
-	PRTime date;
-	PRStatus status = PR_ParseTimeString (line, PR_FALSE, &date);
-	if (PR_SUCCESS == status) {
-
-#ifdef DEBUG_NEWS
-		printf("date = %s\n", line);
-#endif
-		rv = newMsgHdr->SetDate(date);					/* date */
-		if (NS_FAILED(rv)) return rv;
-	}
+    dateStr = line;
+    PRTime date;
+    PRStatus status = PR_ParseTimeString (line, PR_FALSE, &date);
+    if (PR_SUCCESS == status) {      
+      rv = newMsgHdr->SetDate(date);					/* date */
+      if (NS_FAILED(rv)) 
+        return rv;
+    }
   }
-
+  
   GET_TOKEN ();											/* message id */
   if (line) {
-#ifdef DEBUG_NEWS
-	printf("message id = %s\n", line);
-#endif
-	char *strippedId = line;
-
-	if (strippedId[0] == '<')
-		strippedId++;
-
-	char * lastChar = strippedId + PL_strlen(strippedId) -1;
-
-	if (*lastChar == '>')
-		*lastChar = '\0';
-
-	rv = newMsgHdr->SetMessageId(strippedId);
-  	if (NS_FAILED(rv)) return rv;           
+    char *strippedId = line;
+    
+    if (strippedId[0] == '<')
+      strippedId++;
+    
+    char * lastChar = strippedId + PL_strlen(strippedId) -1;
+    
+    if (*lastChar == '>')
+      *lastChar = '\0';
+    
+    rv = newMsgHdr->SetMessageId(strippedId);
+    if (NS_FAILED(rv)) 
+      return rv;           
   }
-
+  
   GET_TOKEN ();											/* references */
   if (line) {
-#ifdef DEBUG_NEWS
-	printf("references = %s\n",line);
-#endif
-	rv = newMsgHdr->SetReferences(line);
-  	if (NS_FAILED(rv)) return rv;           
+    rv = newMsgHdr->SetReferences(line);
+    if (NS_FAILED(rv)) 
+      return rv;           
   }
-
+  
   GET_TOKEN ();											/* bytes */
   if (line) {
-	PRUint32 msgSize = 0;
-	msgSize = (line) ? atol (line) : 0;
-
-#ifdef DEBUG_NEWS
-	printf("bytes = %d\n", msgSize);
-#endif
-	rv = newMsgHdr->SetMessageSize(msgSize);
-  	if (NS_FAILED(rv)) return rv;           
+    PRUint32 msgSize = 0;
+    msgSize = (line) ? atol (line) : 0;
+    
+    rv = newMsgHdr->SetMessageSize(msgSize);
+    if (NS_FAILED(rv)) return rv;           
   }
-
+  
   GET_TOKEN ();											/* lines */
   if (line) {
-	PRUint32 numLines = 0;
-	numLines = line ? atol (line) : 0;
-#ifdef DEBUG_NEWS	
-	printf("lines = %d\n", numLines);
-#endif
-	rv = newMsgHdr->SetLineCount(numLines);
-  	if (NS_FAILED(rv)) return rv;           
+    PRUint32 numLines = 0;
+    numLines = line ? atol (line) : 0;
+    rv = newMsgHdr->SetLineCount(numLines);
+    if (NS_FAILED(rv)) return rv;           
   }
-
+  
   GET_TOKEN (); /* xref */
   
-  rv = m_newsDB->AddNewHdrToDB(newMsgHdr, PR_TRUE);
-  if (NS_FAILED(rv)) return rv;           
+  // apply filters
+  // XXX todo, and then do spam classification
 
+  nsCOMPtr <nsIMsgFolder> folder = do_QueryInterface(m_newsFolder, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  if (!m_filterList) {
+    rv = folder->GetFilterList(m_msgWindow, getter_AddRefs(m_filterList));
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+
+  // flag for kill
+  // if the action is Delete, and we get a hit (see ApplyFilterHit())
+  // we set this to PR_FALSE.  if false, we won't add it to the db
+  m_addHdrToDB = PR_TRUE;
+  
+  PRUint32 filterCount = 0;
+  if (m_filterList) {
+  	rv = m_filterList->GetFilterCount(&filterCount);
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+
+  // only do this if we have filters
+  if (filterCount) {
+    // build up a "headers" for filter code
+    nsXPIDLCString subject;
+    rv = newMsgHdr->GetSubject(getter_Copies(subject));
+    NS_ENSURE_SUCCESS(rv,rv);
+    
+    PRUint32 headersSize = 0;
+ 
+    // +1 to separate headers with a null byte 
+    if (authorStr)
+      headersSize += strlen(FROM_HEADER) + strlen(authorStr) + 1;
+    
+    if (!(subject.IsEmpty()))
+      headersSize += strlen(SUBECT_HEADER) + subject.Length() + 1;
+
+    if (dateStr)
+     headersSize += strlen(DATE_HEADER) + strlen(dateStr) + 1;
+    
+    if (headersSize) {
+      char *headers = (char *)PR_Malloc(headersSize);
+      char *headerPos = headers;
+      if (!headers)
+        return NS_ERROR_OUT_OF_MEMORY;
+    
+      if (authorStr) {
+        PL_strcpy(headerPos, FROM_HEADER);
+        headerPos += strlen(FROM_HEADER);
+    
+        PL_strcpy(headerPos, authorStr);
+        headerPos += strlen(authorStr);
+    
+        *headerPos = '\0';
+        headerPos++;
+      }
+
+      if (!(subject.IsEmpty())) {
+        PL_strcpy(headerPos, SUBECT_HEADER);
+        headerPos += strlen(SUBECT_HEADER);
+        
+        PL_strcpy(headerPos, subject.get());
+        headerPos += subject.Length();
+        
+        *headerPos = '\0';
+        headerPos++;
+      }
+
+      if (dateStr) {        
+        PL_strcpy(headerPos, DATE_HEADER);
+        headerPos += strlen(DATE_HEADER);
+        
+        PL_strcpy(headerPos, dateStr);
+        headerPos += strlen(dateStr);
+        
+        *headerPos = '\0';
+        headerPos++;
+      }
+
+      // on a filter hit (see ApplyFilterHit()), we'll be modifying the header 
+      // so keep track of the header
+      m_newMsgHdr = newMsgHdr;
+      
+      rv = m_filterList->ApplyFiltersToHdr(nsMsgFilterType::NewsRule, newMsgHdr, folder, m_newsDB, 
+        headers, headersSize, this, m_msgWindow);
+      PR_Free ((void*) headers);
+      NS_ENSURE_SUCCESS(rv,rv);
+    }
+  }
+  
+  // if we deleted it, don't add it
+  if (m_addHdrToDB) {
+    rv = m_newsDB->AddNewHdrToDB(newMsgHdr, PR_TRUE);
+    if (NS_FAILED(rv)) 
+      return rv;           
+  }
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsNNTPNewsgroupList::ApplyFilterHit(nsIMsgFilter *aFilter, nsIMsgWindow *aMsgWindow, PRBool *aApplyMore)
+{
+  NS_ENSURE_ARG_POINTER(aFilter);
+  NS_ENSURE_ARG_POINTER(aApplyMore);
+  NS_ENSURE_TRUE(m_newMsgHdr, NS_ERROR_UNEXPECTED);
+  NS_ENSURE_TRUE(m_newsDB, NS_ERROR_UNEXPECTED);
+   
+  // you can't move news messages, so applyMore is always true
+  *aApplyMore = PR_TRUE;
+  
+  nsCOMPtr<nsISupportsArray> filterActionList;
+  nsresult rv = NS_NewISupportsArray(getter_AddRefs(filterActionList));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = aFilter->GetSortedActionList(filterActionList);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUint32 numActions;
+  rv = filterActionList->Count(&numActions);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool loggingEnabled = PR_FALSE;
+  if (m_filterList && numActions)
+    m_filterList->GetLoggingEnabled(&loggingEnabled);
+
+  for (PRUint32 actionIndex = 0; actionIndex < numActions; actionIndex++)
+  {
+    nsCOMPtr<nsIMsgRuleAction> filterAction;
+    filterActionList->QueryElementAt(actionIndex, NS_GET_IID(nsIMsgRuleAction), getter_AddRefs(filterAction));
+    if (!filterAction)
+      continue;
+    
+    nsMsgRuleActionType actionType;
+    if (NS_SUCCEEDED(filterAction->GetType(&actionType)))
+    {  
+      switch (actionType)
+      {
+      case nsMsgFilterAction::Delete:
+        m_addHdrToDB = PR_FALSE;
+        break;
+      case nsMsgFilterAction::MarkRead:
+        m_newsDB->MarkHdrRead(m_newMsgHdr, PR_TRUE, nsnull);
+        break;
+      case nsMsgFilterAction::KillThread:
+        {
+          PRUint32 newFlags;
+          // The db will check for this flag when a hdr gets added to the db, and set the flag appropriately on the thread object
+          m_newMsgHdr->OrFlags(MSG_FLAG_IGNORED, &newFlags);
+        }
+        break;
+      case nsMsgFilterAction::WatchThread: 
+        {
+          PRUint32 newFlags;
+          m_newMsgHdr->OrFlags(MSG_FLAG_WATCHED, &newFlags);
+        }
+        break;
+      case nsMsgFilterAction::MarkFlagged:
+        m_newMsgHdr->MarkFlagged(PR_TRUE);
+        break;
+      case nsMsgFilterAction::ChangePriority:
+        {
+          nsMsgPriorityValue filterPriority;
+          filterAction->GetPriority(&filterPriority);
+          m_newMsgHdr->SetPriority(filterPriority);
+        }
+        break;
+      case nsMsgFilterAction::Label:
+        {
+          nsMsgLabelValue filterLabel;
+          filterAction->GetLabel(&filterLabel);
+          nsMsgKey msgKey;
+          m_newMsgHdr->GetMessageKey(&msgKey);
+          m_newsDB->SetLabel(msgKey, filterLabel);
+        }
+        break;
+      default:
+        NS_ASSERTION(0, "unexpected action");
+        break;
+      }
+      
+      if (loggingEnabled)
+        (void) aFilter->LogRuleHit(filterAction, m_newMsgHdr);
+    }
+  }
   return NS_OK;
 }
 

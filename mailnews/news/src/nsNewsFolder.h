@@ -54,6 +54,7 @@
 #include "nsMsgKeySet.h"
 #include "nsIMsgNewsFolder.h"
 #include "nsCOMPtr.h"
+#include "nsIMsgFilterService.h"
 
 class nsMsgNewsFolder : public nsMsgDBFolder, public nsIMsgNewsFolder, public nsMsgLineBuffer
 {
@@ -119,6 +120,9 @@ public:
   NS_IMETHOD GetPersistElided(PRBool *aPersistElided);
 
   NS_IMETHOD Shutdown(PRBool shutdownChildren);
+  
+  NS_IMETHOD GetFilterList(nsIMsgWindow *aMsgWindow, nsIMsgFilterList **aFilterList);
+  NS_IMETHOD SetFilterList(nsIMsgFilterList *aFilterList);
 
   // for nsMsgLineBuffer
   virtual PRInt32 HandleLine(char *line, PRUint32 line_size);
@@ -165,6 +169,9 @@ private:
     nsresult CreateNewsgroupUsernameUrlForSignon(const char *inUriStr, char **result);
     nsresult CreateNewsgroupPasswordUrlForSignon(const char *inUriStr, char **result);
     nsresult CreateNewsgroupUrlForSignon(const char *inUriStr, const char *ref, char **result);
+
+    nsCOMPtr <nsIFileSpec> mFilterFile;
+    nsCOMPtr <nsIMsgFilterList> mFilterList;
 };
 
 #endif // nsMsgNewsFolder_h__

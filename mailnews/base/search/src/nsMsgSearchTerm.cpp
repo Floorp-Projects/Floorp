@@ -192,21 +192,21 @@ typedef struct
 
 nsMsgSearchOperatorEntry SearchOperatorEntryTable[] =
 {
-	{nsMsgSearchOp::Contains,	"contains"},
-    {nsMsgSearchOp::DoesntContain,"doesn't contain"},
-    {nsMsgSearchOp::Is,           "is"},
-    {nsMsgSearchOp::Isnt,		"isn't"},
-    {nsMsgSearchOp::IsEmpty,		"is empty"},
-	{nsMsgSearchOp::IsBefore,    "is before"},
-    {nsMsgSearchOp::IsAfter,		"is after"},
-    {nsMsgSearchOp::IsHigherThan, "is higher than"},
-    {nsMsgSearchOp::IsLowerThan,	"is lower than"},
-    {nsMsgSearchOp::BeginsWith,  "begins with"},
-	{nsMsgSearchOp::EndsWith,	"ends with"},
-    {nsMsgSearchOp::IsInAB,	 "is in ab"},
-    {nsMsgSearchOp::IsntInAB,	"isn't in ab"},
-    {nsMsgSearchOp::IsGreaterThan, "is greater than"},
-    {nsMsgSearchOp::IsLessThan, "is less than"}
+  {nsMsgSearchOp::Contains,	"contains"},
+  {nsMsgSearchOp::DoesntContain,"doesn't contain"},
+  {nsMsgSearchOp::Is,           "is"},
+  {nsMsgSearchOp::Isnt,		"isn't"},
+  {nsMsgSearchOp::IsEmpty,		"is empty"},
+  {nsMsgSearchOp::IsBefore,    "is before"},
+  {nsMsgSearchOp::IsAfter,		"is after"},
+  {nsMsgSearchOp::IsHigherThan, "is higher than"},
+  {nsMsgSearchOp::IsLowerThan,	"is lower than"},
+  {nsMsgSearchOp::BeginsWith,  "begins with"},
+  {nsMsgSearchOp::EndsWith,	"ends with"},
+  {nsMsgSearchOp::IsInAB,	 "is in ab"},
+  {nsMsgSearchOp::IsntInAB,	"isn't in ab"},
+  {nsMsgSearchOp::IsGreaterThan, "is greater than"},
+  {nsMsgSearchOp::IsLessThan, "is less than"}
 };
 
 nsresult NS_MsgGetOperatorFromString(const char *string, PRInt16 *op)

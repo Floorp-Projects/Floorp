@@ -1058,8 +1058,13 @@ nsresult nsMsgSearchValidityManager::GetTable (int whichTable, nsIMsgSearchValid
 		break;
 	case nsMsgSearchScope::news:
 		if (!m_newsTable)
-			err = InitNewsTable ();
+			err = InitNewsTable();
 		*ppOutTable = m_newsTable;
+		break;
+  case nsMsgSearchScope::newsFilter:
+		if (!m_newsFilterTable)
+			err = InitNewsFilterTable();
+		*ppOutTable = m_newsFilterTable;
 		break;
 	case nsMsgSearchScope::localNews:
 		if (!m_localNewsTable)

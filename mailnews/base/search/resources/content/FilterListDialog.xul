@@ -48,20 +48,46 @@ Contributor(s):  Hkan Waara <hwaara@chello.se>
     <label value="&filtersForPrefix.label;" 
            accesskey="&filtersForPrefix.accesskey;" control="serverMenu"/>
 
-      <menulist oncommand="onServerClick(event);" id="serverMenu">
-        <menupopup datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
-                   containment="http://home.netscape.com/NC-rdf#child" ref="msgaccounts:/">
+      <menulist oncommand="onServerClick(event);" id="serverMenu"
+          datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
+          sortResource="http://home.netscape.com/NC-rdf#FolderTreeName"
+          sortDirection="ascending"
+          ref="msgaccounts:/">
           <template>
-            <rule nc:SupportsFilters="true">
-              <menuitem uri="..." value="..."
+            <rule iscontainer="true" isempty="false" nc:ServerType="nntp">
+              <menupopup>
+                <menu uri="..." 
+                                class="folderMenuItem menu-iconic" 
+                                IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+                                IsSecure="rdf:http://home.netscape.com/NC-rdf#IsSecure"
+                                ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"
+                                label="rdf:http://home.netscape.com/NC-rdf#Name">
+                  <menupopup class="menulist-menupopup"/>
+                </menu>
+              </menupopup>
+            </rule>
+            <rule nc:ServerType="nntp">
+              <menupopup>
+                <menuitem uri="..." value="..."  
                  class="folderMenuItem menuitem-iconic"
                  IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
                  IsSecure="rdf:http://home.netscape.com/NC-rdf#IsSecure"
                  ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"
                  label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+              </menupopup>
+            </rule>
+            <rule nc:SupportsFilters="true">
+              <menupopup>
+                <menuitem uri="..." value="..."
+                 class="folderMenuItem menuitem-iconic"
+                 IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+                 IsSecure="rdf:http://home.netscape.com/NC-rdf#IsSecure"
+                 ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"
+                 label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+              </menupopup>
             </rule>
           </template>
-        </menupopup>
+          <menupopup/>
       </menulist>
       <spacer flex="1"/> 
       <vbox>

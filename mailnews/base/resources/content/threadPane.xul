@@ -61,7 +61,13 @@ Rights Reserved.
     <treecol id="unreadCol" class="sortDirectionIndicator" persist="hidden ordinal width" flex="1" label="&unreadColumn.label;"/>
     <splitter class="tree-splitter"/>
     <treecol id="totalCol" class="sortDirectionIndicator" persist="hidden ordinal width" flex="1" label="&totalColumn.label;"/>
+    <splitter class="tree-splitter"/>
     <treecol id="locationCol" class="sortDirectionIndicator" persist="width" flex="1" hidden="true" ignoreincolumnpicker="true" label="&locationColumn.label;"/>
+<!-- not enabled yet.  note, Mail.app has it.  useful for debugging.
+     if we were going to turn it on, we'd need to add "View | Sort By | ID", too
+    <splitter class="tree-splitter"/>
+    <treecol id="idCol" class="sortDirectionIndicator" persist="hidden ordinal width" flex="1" label="&idColumn.label;"/>
+-->
   </treecols>
   <treechildren ondraggesture="BeginDragThreadPane(event);"/>
 </tree>

@@ -119,6 +119,11 @@ nsNntpIncomingServer::nsNntpIncomingServer() : nsMsgLineBuffer(nsnull, PR_FALSE)
   mSubscribedAtom = getter_AddRefs(NS_NewAtom("subscribed"));
   mNntpAtom = getter_AddRefs(NS_NewAtom("nntp"));
 
+  // our filters are on the server, they are on a per newsgroup basis
+  // but this will make the filter UI enable for news accounts
+  // which is what we want
+  m_canHaveFilters = PR_TRUE;
+
   SetupNewsrcSaveTimer();
 }
 
@@ -616,22 +621,20 @@ nsNntpIncomingServer::PerformExpand(nsIMsgWindow *aMsgWindow)
   return NS_OK;
 }
 
-// fix this when news supports filters
 NS_IMETHODIMP
 nsNntpIncomingServer::GetFilterList(nsIMsgWindow *aMsgWindow, nsIMsgFilterList **aResult)
 {
+  // news servers don't have filters, each newsgroup does.
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP 
 nsNntpIncomingServer::GetNumGroupsNeedingCounts(PRInt32 *aNumGroupsNeedingCounts)
 {
-    nsresult rv;
-
     nsCOMPtr<nsIEnumerator> subFolders;
     nsCOMPtr<nsIFolder> rootFolder;
  
-    rv = GetRootFolder(getter_AddRefs(rootFolder));
+    nsresult rv = GetRootFolder(getter_AddRefs(rootFolder));
     if (NS_FAILED(rv)) return rv;
 
     PRBool hasSubFolders = PR_FALSE;
@@ -1984,7 +1987,7 @@ nsNntpIncomingServer::GetFilterScope(nsMsgSearchScopeValue *filterScope)
 {
    NS_ENSURE_ARG_POINTER(filterScope);
 
-   *filterScope = nsMsgSearchScope::news;
+   *filterScope = nsMsgSearchScope::newsFilter;
    return NS_OK;
 }
 

@@ -741,7 +741,7 @@ NS_IMETHODIMP nsMsgComposeService::TimeStamp(const char * label, PRBool resetTim
   PRIntervalTime deltaTime = PR_IntervalToMilliseconds(now - mPreviousTime);
 
 #if defined(DEBUG_ducarroz)
-  printf(">>> Time Stamp: [%5d][%5d] - %s\n", totalTime, deltaTime, label);
+  printf("XXX Time Stamp: [%5d][%5d] - %s\n", totalTime, deltaTime, label);
 #endif
   PR_LOG(MsgComposeLogModule, PR_LOG_ALWAYS, ("[%3.2f][%3.2f] - %s\n",
 ((double)totalTime/1000.0) + 0.005, ((double)deltaTime/1000.0) + 0.005, label));

@@ -619,7 +619,7 @@ nsMovemailService::GetRequiresUsername(PRBool *aRequiresUsername)
         NS_ENSURE_ARG_POINTER(aRequiresUsername);
 
 #ifdef MOVEMAIL_DEBUG
-        fprintf(stderr, ">>> Yah, got asked for info\n");
+        fprintf(stderr, "XXX Yah, got asked for info\n");
 #endif
 
         *aRequiresUsername = PR_FALSE;

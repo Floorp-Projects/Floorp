@@ -1638,24 +1638,16 @@ void nsParseNewMailState::ApplyFilters(PRBool *pMoved, nsIMsgWindow *msgWindow)
 
 NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWindow *msgWindow, PRBool *applyMore)
 {
+  NS_ENSURE_ARG_POINTER(applyMore);
+
 	nsMsgRuleActionType actionType;
   nsXPIDLCString actionTargetFolderUri;
 	PRUint32	newFlags;
 	nsresult rv = NS_OK;
 
-	if (!applyMore)
-	{
-		NS_ASSERTION(PR_FALSE, "need to return status!");
-		return NS_ERROR_NULL_POINTER;
-	}
-
 	*applyMore = PR_TRUE;
 
   nsCOMPtr<nsIMsgDBHdr> msgHdr = m_newMsgHdr;
-
-  PRBool loggingEnabled = PR_FALSE;
-  if (m_filterList)
-	  m_filterList->GetLoggingEnabled(&loggingEnabled);
 
   nsCOMPtr<nsISupportsArray> filterActionList;
   rv = NS_NewISupportsArray(getter_AddRefs(filterActionList));
@@ -1671,6 +1663,10 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWi
   PRUint32 numActions;
   rv = filterActionList->Count(&numActions);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool loggingEnabled = PR_FALSE;
+  if (m_filterList && numActions)
+	  m_filterList->GetLoggingEnabled(&loggingEnabled);
 
   for (PRUint32 actionIndex =0; actionIndex < numActions && *applyMore; actionIndex++)
   {
@@ -1724,10 +1720,7 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWi
 			    MarkFilteredMessageRead(msgHdr);
 			    break;
 		    case nsMsgFilterAction::KillThread:
-			    // for ignore and watch, we will need the db
-			    // to check for the flags in msgHdr's that
-			    // get added, because only then will we know
-			    // the thread they're getting added to.
+			    // The db will check for this flag when a hdr gets added to the db, and set the flag appropriately on the thread object
 			    msgHdr->OrFlags(MSG_FLAG_IGNORED, &newFlags);
 			    break;
 		    case nsMsgFilterAction::WatchThread:
@@ -2075,12 +2068,12 @@ nsresult ParseIMAPMailboxState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 					nsMsgKeyArray *idsToMoveFromInbox = destMailFolder->GetImapIdsToMoveFromInbox();
 					idsToMoveFromInbox->Add(keyToFilter);
 
-					// this is our last best chance to log this
-                                        PRBool loggingEnabled = PR_FALSE;
-                                        if (m_filterList)
-                                          m_filterList->GetLoggingEnabled(&loggingEnabled);
-                                        if (loggingEnabled)
-                                          filter->LogRuleHit(mailHdr);
+          // this is our last best chance to log this
+          PRBool loggingEnabled = PR_FALSE;
+          if (m_filterList)
+            m_filterList->GetLoggingEnabled(&loggingEnabled);
+          if (loggingEnabled)
+            filter->LogRuleHit(mailHdr);
 
 					if (imapDeleteIsMoveToTrash)
 					{

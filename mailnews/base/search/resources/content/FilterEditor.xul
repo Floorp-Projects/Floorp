@@ -83,13 +83,13 @@ Contributor(s):
       </listcols>
       <listitem allowevents="true">
         <listcell>
-          <checkbox id="moveToFolder" label="&moveToFolder.label;"/>
+          <checkbox id="moveToFolder" enablefornews="false" label="&moveToFolder.label;"/>
         </listcell>
         <listcell> 
-          <menulist id="actionTargetFolder" flex="1"/>
+          <menulist id="actionTargetFolder" enablefornews="false" flex="1"/>
         </listcell>
         <listcell> 
-          <button id="newFolderButton" label="&newFolderButton.label;" 
+          <button id="newFolderButton" enablefornews="false" label="&newFolderButton.label;" 
               accesskey="&newFolderButton.accesskey;" 
               oncommand="MsgNewFolder(SearchNewFolderOkCallback);"/>
         </listcell>
@@ -147,8 +147,20 @@ Contributor(s):
         <listcell>
           <checkbox id="delete" label="&delete.label;"/>
         </listcell>
-
       </listitem>
+
+      <listitem allowevents="true">
+        <listcell>
+          <checkbox id="ignore" enablefornews="true" label="&ignoreThread.label;"/>
+        </listcell>
+      </listitem>
+
+      <listitem allowevents="true">
+        <listcell>
+          <checkbox id="watch" enablefornews="true" label="&watchThread.label;"/>
+        </listcell>
+      </listitem>
+
     </listbox>
     </hbox>
   </vbox>

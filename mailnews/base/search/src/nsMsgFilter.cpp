@@ -135,7 +135,6 @@ nsMsgRuleAction::GetTargetFolderUri(char** aResult)
 }
 
 nsMsgFilter::nsMsgFilter():
-    m_type(1),
     m_temporary(PR_FALSE),
     m_unparseable(PR_FALSE),
     m_filterList(nsnull)
@@ -143,6 +142,8 @@ nsMsgFilter::nsMsgFilter():
 	NS_INIT_ISUPPORTS();
   NS_NewISupportsArray(getter_AddRefs(m_termList));
   NS_NewISupportsArray(getter_AddRefs(m_actionList));
+
+  m_type = nsMsgFilterType::InboxRule;
 }
 
 nsMsgFilter::~nsMsgFilter()
@@ -151,7 +152,7 @@ nsMsgFilter::~nsMsgFilter()
 
 NS_IMPL_ISUPPORTS1(nsMsgFilter, nsIMsgFilter)
 
-NS_IMPL_GETTER(nsMsgFilter::GetFilterType, nsMsgFilterTypeType, m_type);
+NS_IMPL_GETSET(nsMsgFilter, FilterType, nsMsgFilterTypeType, m_type);
 NS_IMPL_GETSET(nsMsgFilter, Enabled, PRBool, m_enabled);
 NS_IMPL_GETSET(nsMsgFilter, Temporary, PRBool, m_temporary);
 NS_IMPL_GETSET(nsMsgFilter, Unparseable, PRBool, m_unparseable);

@@ -1497,6 +1497,14 @@ NS_IMETHODIMP nsMsgDBView::GetCellText(PRInt32 aRow, const PRUnichar * aColID, n
       CopyASCIItoUCS2(junkScoreStr, aValue);
     }
     break;
+  case 'i': // id
+    {
+      nsAutoString keyString;
+      nsMsgKey key;
+      msgHdr->GetMessageKey(&key);
+      keyString.AppendInt(key);
+      aValue.Assign(keyString);
+    }
   default:
     break;
   }

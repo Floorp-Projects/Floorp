@@ -22,6 +22,7 @@
  * Contributor(s):
  * Alec Flett <alecf@netscape.com>
  * Håkan Waara <hwaara@chello.se>
+ * Seth Spitzer <sspitzer@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -58,6 +59,9 @@ var gLabelCheckbox;
 var gMarkReadCheckbox;
 var gMarkFlaggedCheckbox;
 var gDeleteCheckbox;
+var gIgnoreCheckbox;
+var gWatchCheckbox;
+var gFilterActionList;
 
 var nsMsgFilterAction = Components.interfaces.nsMsgFilterAction;
 
@@ -82,6 +86,7 @@ function filterEditorOnLoad()
         } 
         else {
           gFilterList = args.filterList;
+          
           if (gFilterList)
               setSearchScope(getScopeFromFilterList(gFilterList));
 
@@ -101,13 +106,16 @@ function filterEditorOnLoad()
             term.value = termValue;
 
             gFilter.appendTerm(term);
+
+            // the default action for news filters is Delete
+            // for everything else, it's MoveToFolder
+            gFilter.action = (getScopeFromFilterList(gFilterList) == Components.interfaces.nsMsgSearchScope.newsFilter) ? nsMsgFilterAction.Delete : nsMsgFilterAction.MoveToFolder;
             initializeDialog(gFilter);
           }
           else{
             // fake the first more button press
             onMore(null);
           }
-
         }
     }
 
@@ -124,6 +132,8 @@ function filterEditorOnLoad()
         name = stub + " " + count.toString();
       }
       gFilterNameElement.value = name;
+
+      SetUpFilterActionList(getScopeFromFilterList(gFilterList));
     }
     gFilterNameElement.select();
     moveToAlertPosition();
@@ -214,17 +224,16 @@ function duplicateFilterNameExists(filterName)
 
 function getScopeFromFilterList(filterList)
 {
-    if (!filterList) {
-      dump("yikes, null filterList\n");
-      return nsMsgSearchScope.offlineMail;
-}
-
-    return filterList.folder.server.filterScope;
+  if (!filterList) {
+    dump("yikes, null filterList\n");
+    return nsMsgSearchScope.offlineMail;
+  }
+  return filterList.folder.server.filterScope;
 }
 
 function getScope(filter) 
 {
-    return getScopeFromFilterList(filter.filterList);
+  return getScopeFromFilterList(filter.filterList);
 }
 
 function setLabelAttributes(labelID, menuItemID)
@@ -263,6 +272,9 @@ function initializeFilterWidgets()
     gMarkReadCheckbox = document.getElementById("markRead");
     gMarkFlaggedCheckbox = document.getElementById("markFlagged");
     gDeleteCheckbox = document.getElementById("delete");
+    gIgnoreCheckbox = document.getElementById("ignore");
+    gWatchCheckbox = document.getElementById("watch");
+    gFilterActionList = document.getElementById("filterActionList");
 }
 
 function initializeDialog(filter)
@@ -274,6 +286,9 @@ function initializeDialog(filter)
     for (var actionIndex=0; actionIndex < numActions; actionIndex++)
     {
       var filterAction = actionList.QueryElementAt(actionIndex, Components.interfaces.nsIMsgRuleAction);
+
+      // set up action picker
+      SetUpFilterActionList(getScope(filter));
 
       if (filterAction.type == nsMsgFilterAction.MoveToFolder) {
         // preselect target folder
@@ -311,6 +326,10 @@ function initializeDialog(filter)
         gMarkFlaggedCheckbox.checked = true;
       else if (filterAction.type == nsMsgFilterAction.Delete)
         gDeleteCheckbox.checked = true;
+      else if (filterAction.type == nsMsgFilterAction.Watch)
+        gWatchCheckbox.checked = true;
+      else if (filterAction.type == nsMsgFilterAction.Ignore)
+        gIgnoreCheckbox.checked = true;
     }
 
     var scope = getScope(filter);
@@ -343,9 +362,7 @@ function InitMessageLabel()
     document.commandDispatcher.updateCommands('create-menu-label');
 }
 
-
 // move to overlay
-
 function saveFilter() 
 {
   var isNewFilter;
@@ -450,13 +467,32 @@ function saveFilter()
     filterAction.type = nsMsgFilterAction.Delete;
     gFilter.appendAction(filterAction);
   }
- 
+
+  if (gWatchCheckbox.checked) 
+  {
+    filterAction = gFilter.createAction();
+    filterAction.type = nsMsgFilterAction.Watch;
+    gFilter.appendAction(filterAction);
+  }
+  
+  if (gIgnoreCheckbox.checked) 
+  {
+    filterAction = gFilter.createAction();
+    filterAction.type = nsMsgFilterAction.Ignore;
+    gFilter.appendAction(filterAction);
+  }
+    
   if (gFilter.actionList.Count() <= 0)
   {
     str = gFilterBundle.getString("mustSelectAction");
     window.alert(str);
     return false;
   }
+
+  if (getScope(gFilter) == Components.interfaces.nsMsgSearchScope.newsFilter)
+    gFilter.filterType = Components.interfaces.nsMsgFilterType.NewsRule;
+  else
+    gFilter.filterType = Components.interfaces.nsMsgFilterType.InboxRule;
 
   saveSearchTerms(gFilter.searchTerms, gFilter);
 
@@ -473,6 +509,35 @@ function saveFilter()
 function onTargetFolderSelected(event)
 {
     SetFolderPicker(event.target.id, gActionTargetElement.id);
+}
+
+function SetUpFilterActionList(aScope)
+{
+  var element, elements, i;
+
+  // disable / enable all elements in the "filteractionlist"
+  // based on the scope and the "enablefornews" attribute
+  elements = gFilterActionList.getElementsByAttribute("enablefornews","true");
+  for (i=0;i<elements.length;i++) 
+  {
+    element = elements[i];
+
+    if (aScope == Components.interfaces.nsMsgSearchScope.newsFilter)
+      element.removeAttribute("disabled");
+    else
+      element.setAttribute("disabled", "true");
+  }
+
+  elements = gFilterActionList.getElementsByAttribute("enablefornews","false");
+  for (i=0;i<elements.length;i++) 
+  {
+    element = elements[i];
+
+    if (aScope != Components.interfaces.nsMsgSearchScope.newsFilter)
+      element.removeAttribute("disabled");
+    else
+      element.setAttribute("disabled", "true");
+  }
 }
 
 function onLabelListChanged(event)

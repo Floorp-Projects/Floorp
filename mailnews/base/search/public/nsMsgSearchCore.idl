@@ -58,6 +58,7 @@ interface nsMsgSearchScope {
     const nsMsgSearchScopeValue LDAP = 6;
 	const nsMsgSearchScopeValue LocalAB = 7;
     const nsMsgSearchScopeValue allSearchableGroups = 8;
+	const nsMsgSearchScopeValue newsFilter = 9;
 };
 
 typedef long nsMsgSearchAttribValue;

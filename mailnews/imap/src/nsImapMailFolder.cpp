@@ -2848,17 +2848,13 @@ NS_IMETHODIMP nsImapMailFolder::EndMessage(nsMsgKey key)
 }
 
 NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWindow *msgWindow, PRBool *applyMore)
-{
+{  
+  NS_ENSURE_ARG_POINTER(applyMore);
+
   nsMsgRuleActionType actionType;
   nsXPIDLCString actionTargetFolderUri;
   PRUint32  newFlags;
   nsresult rv = NS_OK;
-
-  if (!applyMore)
-  {
-    NS_ASSERTION(PR_FALSE, "need to return status!");
-    return NS_ERROR_NULL_POINTER;
-  }
 
   // look at action - currently handle move
   #ifdef DEBUG_bienvenu
@@ -2873,10 +2869,6 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWindo
   if (!msgHdr)
     return NS_ERROR_NULL_POINTER; //fatal error, cannot apply filters
 
-  PRBool loggingEnabled = PR_FALSE;
-  if (m_filterList)
-    (void)m_filterList->GetLoggingEnabled(&loggingEnabled);
-
   PRBool deleteToTrash = DeleteIsMoveToTrash();
 
   nsCOMPtr<nsISupportsArray> filterActionList;
@@ -2889,7 +2881,11 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWindo
   rv = filterActionList->Count(&numActions);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  for (PRUint32 actionIndex =0; actionIndex < numActions && *applyMore; actionIndex++)
+  PRBool loggingEnabled = PR_FALSE;
+  if (m_filterList && numActions)
+    (void)m_filterList->GetLoggingEnabled(&loggingEnabled);
+
+  for (PRUint32 actionIndex = 0; actionIndex < numActions && *applyMore; actionIndex++)
   {
     nsCOMPtr<nsIMsgRuleAction> filterAction;
     filterActionList->QueryElementAt(actionIndex, NS_GET_IID(nsIMsgRuleAction), getter_AddRefs(filterAction));
@@ -2978,12 +2974,9 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWindo
         }
         break;
         case nsMsgFilterAction::KillThread:
-          // for ignore and watch, we will need the db
-          // to check for the flags in msgHdr's that
-          // get added, because only then will we know
-          // the thread they're getting added to.
+          // The db will check for this flag when a hdr gets added to the db, and set the flag appropriately on the thread object
           msgHdr->OrFlags(MSG_FLAG_IGNORED, &newFlags);
-        break;
+          break;
         case nsMsgFilterAction::WatchThread:
           msgHdr->OrFlags(MSG_FLAG_WATCHED, &newFlags);
         break;

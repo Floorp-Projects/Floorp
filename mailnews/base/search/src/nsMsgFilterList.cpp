@@ -261,9 +261,8 @@ nsMsgFilterList::ApplyFiltersToHdr(nsMsgFilterTypeType filterType,
 {
 	nsCOMPtr <nsIMsgFilter>	filter;
 	PRUint32		filterCount = 0;
-	nsresult		ret = NS_OK;
-
-	GetFilterCount(&filterCount);
+	nsresult		rv = GetFilterCount(&filterCount);
+  NS_ENSURE_SUCCESS(rv,rv);
 
 	for (PRUint32 filterIndex = 0; filterIndex < filterCount; filterIndex++)
 	{
@@ -287,14 +286,14 @@ nsMsgFilterList::ApplyFiltersToHdr(nsMsgFilterTypeType filterType,
 				{
 					PRBool applyMore = PR_TRUE;
 
-					ret  = listener->ApplyFilterHit(filter, msgWindow, &applyMore);
-					if (NS_FAILED(ret) || !applyMore)
+					rv = listener->ApplyFilterHit(filter, msgWindow, &applyMore);
+					if (NS_FAILED(rv) || !applyMore)
 						break;
 				}
 			}
 		}
 	}
-	return ret;
+	return rv;
 }
 
 NS_IMETHODIMP
@@ -835,7 +834,6 @@ nsresult nsMsgFilterList::GetFilterCount(PRUint32 *pCount)
 
 nsresult nsMsgFilterList::GetMsgFilterAt(PRUint32 filterIndex, nsMsgFilter **filter)
 {
-
 	PRUint32			filterCount;
 	m_filters->Count(&filterCount);
 	if (! (filterCount >= filterIndex))

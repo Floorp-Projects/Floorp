@@ -1837,11 +1837,64 @@ NS_IMETHODIMP nsMsgNewsFolder::GetPersistElided(PRBool *aPersistElided)
   return rv;
 }
 
-
 NS_IMETHODIMP nsMsgNewsFolder::Shutdown(PRBool shutdownChildren)
 {
+  if (mFilterList) 
+  {
+    // close the filter log stream
+    nsresult rv = mFilterList->SetLogStream(nsnull);
+    NS_ENSURE_SUCCESS(rv,rv);
+    mFilterList = nsnull;
+  }
+
   mInitialized = PR_FALSE;
   mReadSet = nsnull;
   return nsMsgDBFolder::Shutdown(shutdownChildren);
 }
 
+NS_IMETHODIMP
+nsMsgNewsFolder::SetFilterList(nsIMsgFilterList *aFilterList)
+{
+  mFilterList = aFilterList;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgNewsFolder::GetFilterList(nsIMsgWindow *aMsgWindow, nsIMsgFilterList **aResult)
+{
+  if (!mFilterList) {
+    nsCOMPtr<nsIFileSpec> thisFolder;
+    nsresult rv = GetPath(getter_AddRefs(thisFolder));
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    mFilterFile = do_CreateInstance(NS_FILESPEC_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    // in 4.x, the news filter file was
+    // C:\Program Files\Netscape\Users\meer\News\host-news.mcom.com.dat
+    // where the summary file was 
+    // C:\Program Files\Netscape\Users\meer\News\host-news.mcom.com.snm
+    // do it the same way in mozilla, so that migration works.
+    rv = mFilterFile->FromFileSpec(thisFolder);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    nsXPIDLCString filterFileName;
+    rv = mFilterFile->GetLeafName(getter_Copies(filterFileName));
+    NS_ENSURE_SUCCESS(rv,rv);
+    
+    filterFileName.Append(".dat");
+    
+    rv = mFilterFile->SetLeafName(filterFileName.get());
+    NS_ENSURE_SUCCESS(rv,rv);
+    
+    nsCOMPtr<nsIMsgFilterService> filterService =
+      do_GetService(NS_MSGFILTERSERVICE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    rv = filterService->OpenFilterList(mFilterFile, this, aMsgWindow, getter_AddRefs(mFilterList));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  
+  NS_IF_ADDREF(*aResult = mFilterList);
+  return NS_OK;
+}

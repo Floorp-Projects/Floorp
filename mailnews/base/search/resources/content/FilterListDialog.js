@@ -142,7 +142,7 @@ function onCancel()
 function onServerClick(event)
 {
     var item = event.target;
-    setServer(item.id);
+    selectServer(item.id);
 }
 
 // roots the tree at the specified server
@@ -165,10 +165,23 @@ function setServer(uri)
    
    // root the folder picker to this server
    gRunFiltersFolderPicker.setAttribute("ref", uri);
-   // select the first folder., for POP3 and IMAP, the INBOX
-   gRunFiltersFolderPicker.selectedIndex = 0;
-   SetFolderPicker(gRunFiltersFolderPicker.selectedItem.getAttribute("id"),"runFiltersFolder");
 
+   // run filters after the fact not supported by news
+   if (msgFolder.server.type == "nntp" && !msgFolder.isServer) {
+     gRunFiltersFolderPicker.setAttribute("hidden", "true");
+     gRunFiltersButton.setAttribute("hidden", "true");
+     gRunFiltersFolderPickerLabel.setAttribute("hidden", "true");
+   }
+   else {
+     gRunFiltersFolderPicker.removeAttribute("hidden");
+     gRunFiltersButton.removeAttribute("hidden");
+     gRunFiltersFolderPickerLabel.removeAttribute("hidden");
+
+     // for POP3 and IMAP, select the first folder, which is the INBOX
+     gRunFiltersFolderPicker.selectedIndex = 0;
+   }
+
+   SetFolderPicker(uri, "runFiltersFolder");
    updateButtons();
 
    gCurrentServerURI = uri;
@@ -194,8 +207,24 @@ function selectServer(uri)
 {
     // update the server menu
     var serverMenu = document.getElementById("serverMenu");
-    var menuitems = serverMenu.getElementsByAttribute("id", uri);
-    serverMenu.selectedItem = menuitems[0];
+    
+    var resource = gRDF.GetResource(uri);
+    var msgFolder = resource.QueryInterface(Components.interfaces.nsIMsgFolder);
+
+    // XXX todo
+    // See msgFolderPickerOverlay.js, SetFolderPicker()
+    // why do we have to do this?  seems like a hack to work around a bug.
+    // the bug is that the (deep) content isn't there
+    // and so this won't work:
+    //
+    //   var menuitems = serverMenu.getElementsByAttribute("id", uri);
+    //   serverMenu.selectedItem = menuitems[0];
+    //
+    // we might need help from a XUL template expert to help out here.
+    // see bug #XXXXXX
+    serverMenu.setAttribute("label", msgFolder.name);
+    serverMenu.setAttribute("uri",uri);
+
     setServer(uri);
 }
 
@@ -224,8 +253,8 @@ function currentFilter()
 
 function currentFilterList()
 {
-    var serverMenu = document.getElementById("serverMenu");
-    var serverUri = serverMenu.value;
+    // note, serverUri might be a newsgroup
+    var serverUri = document.getElementById("serverMenu").getAttribute("uri");
     var filterList = gRDF.GetResource(serverUri).GetDelegate("filter", Components.interfaces.nsIMsgFilterList);
     return filterList;
 }
@@ -439,7 +468,7 @@ function getSelectedServerForFilters()
     var firstItem = null;
     var args = window.arguments;
     var selectedFolder = args[0].folder;
-
+  
     if (args && args[0] && selectedFolder)
     {
         var msgFolder = selectedFolder.QueryInterface(Components.interfaces.nsIMsgFolder);
@@ -452,7 +481,9 @@ function getSelectedServerForFilters()
 
                 if (server.canHaveFilters)
                 {
-                    firstItem = rootFolder.URI;
+                    // for news, select the news folder
+                    // for everything else, select the folder's server
+                    firstItem = (server.type == "nntp") ? msgFolder.URI : rootFolder.URI;
                 }
             }
         }

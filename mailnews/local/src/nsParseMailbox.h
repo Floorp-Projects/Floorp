@@ -102,7 +102,7 @@ public:
 
 	nsCOMPtr<nsIMsgHeaderParser> m_HeaderAddressParser;
 
-	nsCOMPtr<nsIMsgDBHdr>		m_newMsgHdr;		/* current message header we're building */
+	nsCOMPtr<nsIMsgDBHdr> m_newMsgHdr; /* current message header we're building */
 	nsCOMPtr<nsIMsgDatabase>	m_mailDB;
 
 	nsMailboxParseState m_state;

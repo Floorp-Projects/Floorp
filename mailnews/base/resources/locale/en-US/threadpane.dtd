@@ -34,6 +34,7 @@ Rights Reserved.
 <!ENTITY readColumn.label "Read">
 <!ENTITY flagColumn.label "Flag">
 <!ENTITY locationColumn.label "Location">
+<!ENTITY idColumn.label "ID">
 
 <!--Tooltips-->
 <!ENTITY threadColumnHeader.tooltip "Click to display message threads"> 

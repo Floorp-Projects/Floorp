@@ -50,7 +50,9 @@
 #include "nsIMsgDatabase.h"
 #include "nsMsgKeySet.h"
 #include "nsINntpUrl.h"
-
+#include "nsIMsgFilterList.h"
+#include "nsIMsgHdr.h"
+#include "nsIMsgWindow.h"
 
 /* The below is all stuff that we remember for netlib about which
    articles we've already seen in the current newsgroup. */
@@ -76,7 +78,7 @@ typedef struct MSG_NewsKnown {
 // state machine - either by inheritance or delegation.
 // Currently, a folder pane owns one and libnet news group listing
 // related messages get passed to this object.
-class nsNNTPNewsgroupList : public nsINNTPNewsgroupList
+class nsNNTPNewsgroupList : public nsINNTPNewsgroupList, public nsIMsgFilterHitNotify
 #ifdef HAVE_CHANGELISTENER
 /* ,public ChangeListener */
 #endif
@@ -86,6 +88,8 @@ public:
   virtual  ~nsNNTPNewsgroupList();
   NS_DECL_ISUPPORTS
   NS_DECL_NSINNTPNEWSGROUPLIST
+  NS_DECL_NSIMSGFILTERHITNOTIFY
+
 private:
   NS_METHOD CleanUp();
      
@@ -119,6 +123,12 @@ protected:
   
   struct MSG_NewsKnown m_knownArts;
   nsMsgKeySet *m_set;
+
+private:
+  nsCOMPtr <nsIMsgWindow> m_msgWindow;
+  nsCOMPtr <nsIMsgFilterList> m_filterList;
+  nsCOMPtr <nsIMsgDBHdr> m_newMsgHdr; /* current message header we're building */
+  PRBool m_addHdrToDB;
 };
     
 #endif /* nsNNTPNewsgroupListState_h___ */

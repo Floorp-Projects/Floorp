@@ -143,9 +143,12 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
    */
 	readonly attribute nsIMsgFolder rootFolder;
 
-  /* function to get the filter list on folder's server */
-  nsIMsgFilterList getFilterList( in nsIMsgWindow msgWindow);
-  void setFilterList( in nsIMsgFilterList filterList);
+  /**
+   * function to get the filter list on folder's server 
+   * (or in the case of news, the filter list for this newsgroup)'
+   */
+  nsIMsgFilterList getFilterList(in nsIMsgWindow msgWindow);
+  void setFilterList(in nsIMsgFilterList filterList);
   
 	void ForceDBClosed ();
 	void Delete ();

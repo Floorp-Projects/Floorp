@@ -214,17 +214,19 @@ protected:
   nsCOMPtr<nsIMsgSearchValidityTable> m_localNewsTable; // used for local news searching or offline news searching...
   nsCOMPtr<nsIMsgSearchValidityTable> m_ldapTable;
   nsCOMPtr<nsIMsgSearchValidityTable> m_localABTable;
+  nsCOMPtr<nsIMsgSearchValidityTable> m_newsFilterTable;
 
   nsresult NewTable (nsIMsgSearchValidityTable **);
 
-  nsresult InitOfflineMailTable ();
-  nsresult InitOnlineMailTable ();
-  nsresult InitOnlineMailFilterTable ();
-  nsresult InitNewsTable ();
+  nsresult InitOfflineMailTable();
+  nsresult InitOnlineMailTable();
+  nsresult InitOnlineMailFilterTable();
+  nsresult InitNewsTable();
   nsresult InitLocalNewsTable(); 
+  nsresult InitNewsFilterTable();
 
 #ifdef DOING_EXNEWSSEARCH
-  nsresult InitNewsExTable (nsINntpIncomingServer *host = nsnull);
+  nsresult InitNewsExTable(nsINntpIncomingServer *host = nsnull);
 #endif
   //set the custom headers in the table, changes whenever "mailnews.customHeaders" pref changes.
   nsresult SetOtherHeadersInTable(nsIMsgSearchValidityTable *table, const char *customHeaders); 

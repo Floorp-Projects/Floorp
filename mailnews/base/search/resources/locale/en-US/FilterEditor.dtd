@@ -33,7 +33,7 @@
 <!ENTITY highestPriorityCmd.label "highest">
 
 <!ENTITY conditionDesc.label "For incoming messages that:">
-<!ENTITY filterActionDesc.label "Perform this action:">
+<!ENTITY filterActionDesc.label "Perform these actions:">
 <!ENTITY filterActionDesc.accesskey "P">
 
 <!ENTITY newFolderButton.label "New Folder...">

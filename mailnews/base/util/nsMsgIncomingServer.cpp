@@ -1073,7 +1073,7 @@ nsMsgIncomingServer::SetFilterList(nsIMsgFilterList *aFilterList)
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsMsgIncomingServer::GetFilterList(nsIMsgWindow *aMsgWindow, nsIMsgFilterList **aResult)
 {
   if (!mFilterList) {
