@@ -1068,8 +1068,8 @@ namespace JavaScript {
         ExprPairList *parseLiteralField();
         ExprNode *parseFieldName();
         ExprPairList *parseArgumentList(NodeQueue<ExprPairList> &args);
-        ExprPairList *parseArgumentListPrime(NodeQueue<ExprPairList> &$$);
-        ExprPairList *parseNamedArgumentListPrime(NodeQueue<ExprPairList> &$$);
+        ExprPairList *parseArgumentListPrime(NodeQueue<ExprPairList> &args);
+        ExprPairList *parseNamedArgumentListPrime(NodeQueue<ExprPairList> &args);
         VariableBinding *parseAllParameters(FunctionDefinition &fd,NodeQueue<VariableBinding> &params);
         VariableBinding *parseNamedParameters(FunctionDefinition &fd,NodeQueue<VariableBinding> &params);
         VariableBinding *parseRestParameter();
@@ -1077,7 +1077,7 @@ namespace JavaScript {
         VariableBinding *parseOptionalNamedRestParameters(FunctionDefinition &fd,NodeQueue<VariableBinding> &params);
         VariableBinding *parseNamedRestParameters(FunctionDefinition &fd,NodeQueue<VariableBinding> &params);
         VariableBinding *parseOptionalParameter();
-        VariableBinding *parseOptionalParameterPrime(VariableBinding* $1);
+        VariableBinding *parseOptionalParameterPrime(VariableBinding* binding);
         VariableBinding *parseNamedParameter(NodeQueue<IdentifierList> &aliases);
         ExprNode  *parseResultSignature();
 	};
