@@ -93,7 +93,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /D "DEBUG" /FR /YX /FD /GZ /c
-# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /FR /YX /FD /GZ /c
+# ADD CPP /nologo /W3 /Gm /GR /GX /ZI /Od /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /D "NEW_PARSER" /FR /YX /FD /GZ /c
 # ADD BASE RSC /l 0x409 /d "_DEBUG" /d "DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG" /d "DEBUG"
 BSC32=bscmake.exe
@@ -120,6 +120,10 @@ SOURCE=..\debugger.cpp
 # Begin Source File
 
 SOURCE=..\hash.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\icodeasm.cpp
 # End Source File
 # Begin Source File
 
@@ -204,6 +208,10 @@ SOURCE=..\jsmath.h
 # Begin Source File
 
 SOURCE=..\jstypes.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\nodefactory.h
 # End Source File
 # Begin Source File
 
