@@ -89,16 +89,11 @@ public:
 
   // nsIDOMAttr interface
   NS_DECL_NSIDOMATTR
- 
+
   // nsIAttribute interface
-  NS_IMETHOD DropReference();
-  NS_IMETHOD SetContent(nsIContent* aContent);
-  NS_IMETHOD GetContent(nsIContent** aContent);
-  NS_IMETHOD GetNodeInfo(nsINodeInfo** aNodeInfo);
+  // No methods, all inline.
 
 private:
-  nsIContent* mContent;
-  nsCOMPtr<nsINodeInfo> mNodeInfo;
   nsString mValue;
   // XXX For now, there's only a single child - a text
   // element representing the value

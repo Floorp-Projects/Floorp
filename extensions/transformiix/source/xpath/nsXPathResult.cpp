@@ -201,16 +201,15 @@ NS_IMPL_NSIDOCUMENTOBSERVER_REFLOW_STUB(nsXPathResult)
 NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(nsXPathResult)
 NS_IMPL_NSIDOCUMENTOBSERVER_STATE_STUB(nsXPathResult)
 
-NS_IMETHODIMP
+void
 nsXPathResult::ContentChanged(nsIDocument* aDocument,
                               nsIContent *aContent,
                               nsISupports *aSubContent)
 {
     Invalidate();
-    return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsXPathResult::AttributeChanged(nsIDocument* aDocument,
                                 nsIContent* aContent,
                                 PRInt32 aNameSpaceID,
@@ -218,29 +217,26 @@ nsXPathResult::AttributeChanged(nsIDocument* aDocument,
                                 PRInt32 aModType)
 {
     Invalidate();
-    return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsXPathResult::ContentAppended(nsIDocument* aDocument,
                                nsIContent* aContainer,
                                PRInt32 aNewIndexInContainer)
 {
     Invalidate();
-    return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsXPathResult::ContentInserted(nsIDocument* aDocument,
                                nsIContent* aContainer,
                                nsIContent* aChild,
                                PRInt32 aIndexInContainer)
 {
     Invalidate();
-    return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsXPathResult::ContentReplaced(nsIDocument* aDocument,
                                nsIContent* aContainer,
                                nsIContent* aOldChild,
@@ -248,17 +244,15 @@ nsXPathResult::ContentReplaced(nsIDocument* aDocument,
                                PRInt32 aIndexInContainer)
 {
     Invalidate();
-    return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsXPathResult::ContentRemoved(nsIDocument* aDocument,
                               nsIContent* aContainer,
                               nsIContent* aChild,
                               PRInt32 aIndexInContainer)
 {
     Invalidate();
-    return NS_OK;
 }
 
 NS_IMETHODIMP

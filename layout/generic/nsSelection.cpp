@@ -4933,45 +4933,49 @@ nsTypedSelection::selectFrames(nsIPresContext* aPresContext,
 #endif //OLD_TABLE_SELECTION
     }
     // Now iterated through the child frames and set them
-    nsCOMPtr<nsIContent> innercontent;
-    while (NS_ENUMERATOR_FALSE == aInnerIter->IsDone())
+    while (!aInnerIter->IsDone())
     {
-      result = aInnerIter->CurrentNode(getter_AddRefs(innercontent));
-      if (NS_SUCCEEDED(result) && innercontent)
+      nsIContent *innercontent = aInnerIter->GetCurrentNode();
+
+      result = mFrameSelection->GetTracker()->GetPrimaryFrameFor(innercontent, &frame);
+      if (NS_SUCCEEDED(result) && frame)
       {
-        result = mFrameSelection->GetTracker()->GetPrimaryFrameFor(innercontent, &frame);
-        if (NS_SUCCEEDED(result) && frame)
+        //NOTE: eSpreadDown is now IGNORED. Selected state is set only
+        //for given frame
+
+        //spread from here to hit all frames in flow
+        frame->SetSelected(aPresContext, nsnull,aFlags,eSpreadDown);
+        nsRect frameRect = frame->GetRect();
+
+        //if a rect is 0 height/width then try to notify next
+        //available in flow of selection status.
+        while (!frameRect.width || !frameRect.height)
         {
-          //NOTE: eSpreadDown is now IGNORED. Selected state is set only for given frame
-          frame->SetSelected(aPresContext, nsnull,aFlags,eSpreadDown);//spread from here to hit all frames in flow
-          nsRect frameRect = frame->GetRect();
-          
-          //if a rect is 0 height/width then try to notify next available in flow of selection status.
-          while (!frameRect.width || !frameRect.height)
+          //try to notify next in flow that its content is selected.
+          if (NS_SUCCEEDED(frame->GetNextInFlow(&frame)) && frame)
           {
-            //try to notify next in flow that its content is selected.
-            if (NS_SUCCEEDED(frame->GetNextInFlow(&frame)) && frame)
-            {
-              frameRect = frame->GetRect();
-              frame->SetSelected(aPresContext, nsnull,aFlags,eSpreadDown);
-            }
-            else
-              break;
+            frameRect = frame->GetRect();
+            frame->SetSelected(aPresContext, nsnull,aFlags,eSpreadDown);
           }
-        //if the frame is splittable and this frame is 0,0 then set the next in flow frame to be selected also
+          else
+            break;
         }
+        //if the frame is splittable and this frame is 0,0 then set
+        //the next in flow frame to be selected also
       }
-      result = aInnerIter->Next();
-      if (NS_FAILED(result))
-        return result;
+
+      aInnerIter->Next();
     }
+
 #if 0
     result = mFrameSelection->GetTracker()->GetPrimaryFrameFor(content, &frame);
     if (NS_SUCCEEDED(result) && frame)
       frame->SetSelected(aRange,aFlags,eSpreadDown);//spread from here to hit all frames in flow
 #endif
+
     return NS_OK;
   }
+
   return NS_ERROR_FAILURE;
 }
 
@@ -5034,14 +5038,15 @@ nsTypedSelection::selectFrames(nsIPresContext* aPresContext, nsIDOMRange *aRange
         frame->SetSelected(aPresContext, aRange,aFlags,eSpreadDown);//spread from here to hit all frames in flow
     }
 //end start content
-    result = iter->First();
-    while (NS_SUCCEEDED(result) && NS_ENUMERATOR_FALSE == iter->IsDone())
+    iter->First();
+
+    while (!iter->IsDone())
     {
-      result = iter->CurrentNode(getter_AddRefs(content));
-      if (NS_FAILED(result) || !content)
-        return result;
+      content = iter->GetCurrentNode();
+
       selectFrames(aPresContext, inneriter, content, aRange, presShell,aFlags);
-      result = iter->Next();
+
+      iter->Next();
     }
 //we must now do the last one  if it is not the same as the first
     if (FetchEndParent(aRange) != FetchStartParent(aRange))

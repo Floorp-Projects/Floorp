@@ -94,7 +94,7 @@ public:
     // nsITreeView
     NS_DECL_NSITREEVIEW
 
-    NS_IMETHOD DocumentWillBeDestroyed(nsIDocument *aDocument);
+    virtual void DocumentWillBeDestroyed(nsIDocument *aDocument);
 
 protected:
     friend NS_IMETHODIMP
@@ -1069,13 +1069,13 @@ nsXULTreeBuilder::PerformActionOnCell(const PRUnichar* action, PRInt32 row, cons
 }
 
 
-NS_IMETHODIMP
+void
 nsXULTreeBuilder::DocumentWillBeDestroyed(nsIDocument* aDocument)
 {
     if (mObservers)
         mObservers->Clear();
 
-    return nsXULTemplateBuilder::DocumentWillBeDestroyed(aDocument);
+    nsXULTemplateBuilder::DocumentWillBeDestroyed(aDocument);
 }
 
  

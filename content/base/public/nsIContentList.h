@@ -51,29 +51,27 @@
 /**
  * Interface for content list.
  */
-class nsIContentList : public nsISupports {
+class nsIContentList : public nsISupports
+{
 public:
-
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICONTENTLIST_IID)
 
   /**
    * Returns the object that the content list should be parented to.
    */
-  NS_IMETHOD GetParentObject(nsISupports** aParentObject) = 0;
-    
+  virtual nsISupports *GetParentObject() = 0;
+
   // Callers will want to pass in PR_TRUE for aDoFlush unless they
   // are explicitly avoiding an FlushPendingNotifications.  The
   // flush guarantees that the list will be up to date.
 
-  NS_IMETHOD_(PRUint32) GetLength(PRBool aDoFlush) = 0;
+  virtual PRUint32 Length(PRBool aDoFlush) = 0;
 
-  NS_IMETHOD Item(PRUint32 aIndex, nsIDOMNode** aReturn,
-                  PRBool aDoFlush) = 0;
+  virtual nsIContent *Item(PRUint32 aIndex, PRBool aDoFlush) = 0;
 
-  NS_IMETHOD NamedItem(const nsAString& aName, nsIDOMNode** aReturn,
-                       PRBool aDoFlush) = 0;
+  virtual nsIContent *NamedItem(const nsAString& aName, PRBool aDoFlush) = 0;
 
-  NS_IMETHOD_(PRInt32) IndexOf(nsIContent *aContent, PRBool aDoFlush) = 0;
+  virtual PRInt32 IndexOf(nsIContent *aContent, PRBool aDoFlush) = 0;
 };
 
 #endif /* nsIContentList_h___ */

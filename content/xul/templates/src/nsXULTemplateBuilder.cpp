@@ -287,29 +287,26 @@ NS_IMPL_NSIDOCUMENTOBSERVER_REFLOW_STUB(nsXULTemplateBuilder)
 NS_IMPL_NSIDOCUMENTOBSERVER_STATE_STUB(nsXULTemplateBuilder)
 NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(nsXULTemplateBuilder)
 
-NS_IMETHODIMP
+void
 nsXULTemplateBuilder::BeginUpdate(nsIDocument *aDocument,
                                   nsUpdateType aUpdateType)
 {
-    return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsXULTemplateBuilder::EndUpdate(nsIDocument *aDocument,
                                 nsUpdateType aUpdateType)
 {
-    return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsXULTemplateBuilder::ContentChanged(nsIDocument *aDocument,
                                      nsIContent* aContent,
                                      nsISupports* aSubContent)
 {
-    return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsXULTemplateBuilder::AttributeChanged(nsIDocument *aDocument,
                                        nsIContent*  aContent,
                                        PRInt32      aNameSpaceID,
@@ -321,47 +318,41 @@ nsXULTemplateBuilder::AttributeChanged(nsIDocument *aDocument,
     // beneath the element.
     if ((aAttribute == nsXULAtoms::ref) && (aContent == mRoot))
         Rebuild();
-
-    return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsXULTemplateBuilder::ContentAppended(nsIDocument *aDocument,
                                       nsIContent* aContainer,
                                       PRInt32     aNewIndexInContainer)
 {
-    return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsXULTemplateBuilder::ContentInserted(nsIDocument *aDocument,
                                       nsIContent* aContainer,
                                       nsIContent* aChild,
                                       PRInt32 aIndexInContainer)
 {
-    return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsXULTemplateBuilder::ContentReplaced(nsIDocument *aDocument,
                                       nsIContent* aContainer,
                                       nsIContent* aOldChild,
                                       nsIContent* aNewChild,
                                       PRInt32 aIndexInContainer)
 {
-    return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsXULTemplateBuilder::ContentRemoved(nsIDocument *aDocument,
                                      nsIContent* aContainer,
                                      nsIContent* aChild,
                                      PRInt32 aIndexInContainer)
 {
-    return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsXULTemplateBuilder::DocumentWillBeDestroyed(nsIDocument *aDocument)
 {
     // Break circular references
@@ -371,7 +362,6 @@ nsXULTemplateBuilder::DocumentWillBeDestroyed(nsIDocument *aDocument)
     }
 
     mRoot = nsnull;
-    return NS_OK;
 }
 
 

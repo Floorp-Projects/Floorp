@@ -587,29 +587,21 @@ nsHTMLAnchorElement::GetText(nsAString& aText)
   // Initialize the content iterator with the children of the anchor
   iter->Init(this);
 
-  nsCOMPtr<nsIContent> curNode;
-
   // Position the iterator. Last() is the anchor itself, this is not what we 
   // want. Prev() positions the iterator to the last child of the anchor,
   // starting at the deepest level of children, just like NS4 does.
-  rv = iter->Last();
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = iter->Prev();
-  NS_ENSURE_SUCCESS(rv, rv);
+  iter->Last();
+  iter->Prev();
 
-  iter->CurrentNode(getter_AddRefs(curNode));
-
-  while(curNode && (NS_ENUMERATOR_FALSE == iter->IsDone())) {
-    nsCOMPtr<nsIDOMText> textNode(do_QueryInterface(curNode));
+  while(!iter->IsDone()) {
+    nsCOMPtr<nsIDOMText> textNode(do_QueryInterface(iter->GetCurrentNode()));
     if(textNode) {
       // The current node is a text node. Get its value and break the loop.
       textNode->GetData(aText);
       break;
     }
 
-    rv = iter->Prev();
-    NS_ENSURE_SUCCESS(rv, rv);
-    iter->CurrentNode(getter_AddRefs(curNode));
+    iter->Prev();
   }
 
   return NS_OK;

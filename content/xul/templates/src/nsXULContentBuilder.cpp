@@ -128,13 +128,13 @@ public:
     NS_IMETHOD CreateContents(nsIContent* aElement);
 
     // nsIDocumentObserver interface
-    NS_IMETHOD AttributeChanged(nsIDocument* aDocument,
-                                nsIContent*  aContent,
-                                PRInt32      aNameSpaceID,
-                                nsIAtom*     aAttribute,
-                                PRInt32      aModType);
+    virtual void AttributeChanged(nsIDocument* aDocument,
+                                  nsIContent*  aContent,
+                                  PRInt32      aNameSpaceID,
+                                  nsIAtom*     aAttribute,
+                                  PRInt32      aModType);
 
-    NS_IMETHOD DocumentWillBeDestroyed(nsIDocument* aDocument);
+    void DocumentWillBeDestroyed(nsIDocument* aDocument);
 
 protected:
     friend NS_IMETHODIMP
@@ -1599,7 +1599,7 @@ nsXULContentBuilder::CreateContents(nsIContent* aElement)
 // nsIDocumentObserver methods
 //
 
-NS_IMETHODIMP
+void
 nsXULContentBuilder::AttributeChanged(nsIDocument* aDocument,
                                       nsIContent*  aContent,
                                       PRInt32      aNameSpaceID,
@@ -1624,16 +1624,17 @@ nsXULContentBuilder::AttributeChanged(nsIDocument* aDocument,
     }
 
     // Pass along to the generic template builder.
-    return nsXULTemplateBuilder::AttributeChanged(aDocument, aContent, aNameSpaceID, aAttribute, aModType);
+    nsXULTemplateBuilder::AttributeChanged(aDocument, aContent, aNameSpaceID,
+                                           aAttribute, aModType);
 }
 
-NS_IMETHODIMP
+void
 nsXULContentBuilder::DocumentWillBeDestroyed(nsIDocument *aDocument)
 {
     // Break circular references
     mContentSupportMap.Clear();
 
-    return nsXULTemplateBuilder::DocumentWillBeDestroyed(aDocument);
+    nsXULTemplateBuilder::DocumentWillBeDestroyed(aDocument);
 }
 
 

@@ -34,17 +34,17 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIContentIterator
-  NS_IMETHOD Init(nsIContent* aRoot);
-  NS_IMETHOD Init(nsIDOMRange* aRange);
-  
-  NS_IMETHOD First();
-  NS_IMETHOD Last();
-  NS_IMETHOD Next();
-  NS_IMETHOD Prev();
+  virtual nsresult Init(nsIContent* aRoot);
+  virtual nsresult Init(nsIDOMRange* aRange);
 
-  NS_IMETHOD CurrentNode(nsIContent **aNode);
-  NS_IMETHOD IsDone();
-  NS_IMETHOD PositionAt(nsIContent* aCurNode);
+  virtual void First();
+  virtual void Last();
+  virtual void Next();
+  virtual void Prev();
+
+  virtual nsIContent *GetCurrentNode();
+  virtual PRBool IsDone();
+  virtual nsresult PositionAt(nsIContent* aCurNode);
 
 private:
   nsCOMPtr<nsIPresContext>  mPresContext;
@@ -54,7 +54,7 @@ private:
 };
 
 nsFrameContentIterator::nsFrameContentIterator(nsIPresContext* aPresContext,
-                                                   nsIFrame*       aFrame)
+                                               nsIFrame*       aFrame)
   : mPresContext(aPresContext), mParentFrame(aFrame), mIsDone(PR_FALSE)
 {
   First();
@@ -66,28 +66,25 @@ nsFrameContentIterator::~nsFrameContentIterator()
 {
 }
 
-NS_IMETHODIMP
+nsresult
 nsFrameContentIterator::Init(nsIContent* aRoot)
 {
   return NS_ERROR_ALREADY_INITIALIZED;
 }
 
-NS_IMETHODIMP
+nsresult
 nsFrameContentIterator::Init(nsIDOMRange* aRange)
 {
   return NS_ERROR_ALREADY_INITIALIZED;
 }
 
-NS_IMETHODIMP
+void
 nsFrameContentIterator::First()
 {
   // Get the first child frame and make it the current node
   mCurrentChild = mParentFrame->GetFirstChild(nsnull);
-  if (!mCurrentChild) {
-    return NS_ERROR_FAILURE;
-  }
-  mIsDone = PR_FALSE;
-  return NS_OK;
+
+  mIsDone = !mCurrentChild;
 }
 
 
@@ -116,7 +113,7 @@ GetNextChildFrame(nsIPresContext* aPresContext, nsIFrame* aFrame)
   return nextSibling;
 }
 
-NS_IMETHODIMP
+void
 nsFrameContentIterator::Last()
 {
   // Starting with the first child walk and find the last child
@@ -127,14 +124,10 @@ nsFrameContentIterator::Last()
     nextChild = ::GetNextChildFrame(mPresContext, nextChild);
   }
 
-  if (!mCurrentChild) {
-    return NS_ERROR_FAILURE;
-  }
-  mIsDone = PR_FALSE;
-  return NS_OK;
+  mIsDone = !mCurrentChild;
 }
 
-NS_IMETHODIMP
+void
 nsFrameContentIterator::Next()
 {
   nsIFrame* nextChild = ::GetNextChildFrame(mPresContext, mCurrentChild);
@@ -145,10 +138,12 @@ nsFrameContentIterator::Next()
 
     // If we're at the end then the collection is at the end
     mIsDone = (nsnull == ::GetNextChildFrame(mPresContext, mCurrentChild));
-    return NS_OK;
+
+    return;
   }
 
-  return NS_ERROR_FAILURE;
+  // No next frame, we're done.
+  mIsDone = PR_TRUE;
 }
 
 static nsIFrame*
@@ -192,7 +187,7 @@ GetPrevChildFrame(nsIPresContext* aPresContext, nsIFrame* aFrame)
   return prevSibling;
 }
 
-NS_IMETHODIMP
+void
 nsFrameContentIterator::Prev()
 {
   nsIFrame* prevChild = ::GetPrevChildFrame(mPresContext, mCurrentChild);
@@ -203,32 +198,31 @@ nsFrameContentIterator::Prev()
     
     // If we're at the beginning then the collection is at the end
     mIsDone = (nsnull == ::GetPrevChildFrame(mPresContext, mCurrentChild));
-    return NS_OK;
+
+    return;
   }
 
-  return NS_ERROR_FAILURE;
+  // No previous frame, we're done.
+  mIsDone = PR_TRUE;
 }
 
-NS_IMETHODIMP
-nsFrameContentIterator::CurrentNode(nsIContent **aNode)
+nsIContent *
+nsFrameContentIterator::GetCurrentNode()
 {
-  if (mCurrentChild) {
-    *aNode = mCurrentChild->GetContent();
-    NS_IF_ADDREF(*aNode);
-    return NS_OK;
-  } else {
-    *aNode = nsnull;
-    return NS_ERROR_FAILURE;
+  if (mCurrentChild && !mIsDone) {
+    return mCurrentChild->GetContent();
   }
+
+  return nsnull;
 }
 
-NS_IMETHODIMP
+PRBool
 nsFrameContentIterator::IsDone()
 {
-  return mIsDone ? NS_OK : NS_ENUMERATOR_FALSE;
+  return mIsDone;
 }
 
-NS_IMETHODIMP
+nsresult
 nsFrameContentIterator::PositionAt(nsIContent* aCurNode)
 {
   // Starting with the first child frame search for the child frame
@@ -245,10 +239,9 @@ nsFrameContentIterator::PositionAt(nsIContent* aCurNode)
     // Make it the current child
     mCurrentChild = child;
     mIsDone = PR_FALSE;
-    return NS_OK;
   }
 
-  return NS_ERROR_FAILURE;
+  return NS_OK;
 }
 
 nsresult

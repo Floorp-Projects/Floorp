@@ -1528,21 +1528,22 @@ NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(nsWebShellWindow)
 // nsIDocumentObserver
 // this is needed for menu changes
 ///////////////////////////////////////////////////////////////
-NS_IMETHODIMP
+void
 nsWebShellWindow::ContentChanged(nsIDocument *aDocument,
                                  nsIContent* aContent,
                                  nsISupports* aSubContent)
 {
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsWebShellWindow::AttributeChanged(nsIDocument *aDocument,
                                    nsIContent*  aContent,
                                    PRInt32      aNameSpaceID,
                                    nsIAtom*     aAttribute,
                                    PRInt32      aModType)
 {
+  // XXX: Uh, none of this nsIDocumentObserver stuff is needed if the
+  // blow code isn't needed.
 #if 0
   //printf("AttributeChanged\n");
   PRInt32 i;
@@ -1563,43 +1564,38 @@ nsWebShellWindow::AttributeChanged(nsIDocument *aDocument,
     }
   }
 #endif  
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsWebShellWindow::ContentAppended(nsIDocument *aDocument,
                             nsIContent* aContainer,
                             PRInt32     aNewIndexInContainer)
 {
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsWebShellWindow::ContentInserted(nsIDocument *aDocument,
                             nsIContent* aContainer,
                             nsIContent* aChild,
                             PRInt32 aIndexInContainer)
 {
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsWebShellWindow::ContentReplaced(nsIDocument *aDocument,
                             nsIContent* aContainer,
                             nsIContent* aOldChild,
                             nsIContent* aNewChild,
                             PRInt32 aIndexInContainer)
 {
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsWebShellWindow::ContentRemoved(nsIDocument *aDocument,
                            nsIContent* aContainer,
                            nsIContent* aChild,
                            PRInt32 aIndexInContainer)
 {
-  return NS_OK;
 }
 
 // This should rightfully be somebody's CONTRACTID?

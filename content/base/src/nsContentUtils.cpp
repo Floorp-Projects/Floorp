@@ -465,12 +465,12 @@ nsContentUtils::GetDocumentAndPrincipal(nsIDOMNode* aNode,
     if (!domDoc) {
       // if we can't get a doc then lets try to get principal through nodeinfo
       // manager
-      nsCOMPtr<nsINodeInfo> ni;
+      nsINodeInfo *ni;
       if (content) {
         ni = content->GetNodeInfo();
       }
       else {
-        attr->GetNodeInfo(getter_AddRefs(ni));
+        ni = attr->NodeInfo();
       }
 
       if (!ni) {

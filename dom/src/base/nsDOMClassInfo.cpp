@@ -4475,7 +4475,6 @@ nsNodeSH::PreCreate(nsISupports *nativeObj, JSContext *cx, JSObject *globalObj,
   }
 
   jsval v;
-
   nsresult rv = WrapNative(cx, ::JS_GetGlobalObject(cx), native_parent,
                            NS_GET_IID(nsISupports), &v);
 
@@ -4972,8 +4971,7 @@ nsContentListSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
   nsCOMPtr<nsIContentList> contentList(do_QueryInterface(nativeObj));
   NS_ASSERTION(contentList, "Why does something not implementing nsIContentList use nsContentListSH??");
 
-  nsCOMPtr<nsISupports> native_parent;
-  contentList->GetParentObject(getter_AddRefs(native_parent));
+  nsISupports *native_parent = contentList->GetParentObject();
 
   if (!native_parent) {
     *parentObj = globalObj;

@@ -411,11 +411,7 @@ nsDOMAttributeMap::RemoveNamedItemNS(const nsAString& aNamespaceURI,
                "didn't implement nsIAttribute");
   NS_ENSURE_TRUE(attr, NS_ERROR_UNEXPECTED);
 
-
-  nsCOMPtr<nsINodeInfo> ni;
-  attr->GetNodeInfo(getter_AddRefs(ni));
-  NS_ENSURE_TRUE(ni, NS_ERROR_UNEXPECTED);
-
+  nsINodeInfo *ni = attr->NodeInfo();
   mContent->UnsetAttr(ni->NamespaceID(), ni->NameAtom(), PR_TRUE);
 
   return NS_OK;

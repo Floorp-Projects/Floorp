@@ -328,14 +328,12 @@ NS_IMETHODIMP DeleteRangeTxn::CreateTxnsToDeleteNodesBetween()
 
   nsresult result = iter->Init(mRange);
   if (NS_FAILED(result)) return result;
-    
-  while (NS_ENUMERATOR_FALSE == iter->IsDone())
+
+  while (!iter->IsDone())
   {
-    nsCOMPtr<nsIContent> content;
-    result = iter->CurrentNode(getter_AddRefs(content));
-    if (NS_FAILED(result)) return result;
-    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(content);
-    if (!node) return NS_ERROR_NULL_POINTER;
+    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(iter->GetCurrentNode());
+    if (!node)
+      return NS_ERROR_NULL_POINTER;
 
     DeleteElementTxn *txn;
     result = TransactionFactory::GetNewTransaction(DeleteElementTxn::GetCID(), (EditTxn **)&txn);

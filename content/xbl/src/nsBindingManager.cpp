@@ -1324,25 +1324,23 @@ NS_IMPL_NSIDOCUMENTOBSERVER_REFLOW_STUB(nsBindingManager)
 NS_IMPL_NSIDOCUMENTOBSERVER_STATE_STUB(nsBindingManager)
 NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(nsBindingManager)
 
-NS_IMETHODIMP
+void
 nsBindingManager::ContentChanged(nsIDocument* aDoc, 
                             nsIContent* aContent,
                             nsISupports* aSubContent)
 {
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsBindingManager::AttributeChanged(nsIDocument* aDocument,
                               nsIContent*  aContent,
                               PRInt32      aNameSpaceID,
                               nsIAtom*     aAttribute,
                               PRInt32      aModType)
 {
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsBindingManager::ContentAppended(nsIDocument* aDocument,
 			                            nsIContent* aContainer,
                                   PRInt32     aNewIndexInContainer)
@@ -1350,7 +1348,7 @@ nsBindingManager::ContentAppended(nsIDocument* aDocument,
   // XXX This is hacked and not quite correct. See below.
   if (aNewIndexInContainer == -1 || !mContentListTable.ops)
     // It's anonymous.
-    return NS_OK;
+    return;
 
   PRInt32 childCount = aContainer->GetChildCount();
 
@@ -1387,11 +1385,9 @@ nsBindingManager::ContentAppended(nsIDocument* aDocument,
       }
     }
   }
- 
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsBindingManager::ContentInserted(nsIDocument* aDocument,
                                   nsIContent* aContainer,
                                   nsIContent* aChild,
@@ -1400,8 +1396,8 @@ nsBindingManager::ContentInserted(nsIDocument* aDocument,
 // XXX This is hacked just to make menus work again.
   if (aIndexInContainer == -1 || !mContentListTable.ops)
     // It's anonymous.
-    return NS_OK;
- 
+    return;
+
   nsCOMPtr<nsIContent> ins;
   GetNestedInsertionPoint(aContainer, aChild, getter_AddRefs(ins));
 
@@ -1429,21 +1425,18 @@ nsBindingManager::ContentInserted(nsIDocument* aDocument,
       }
     }
   }
- 
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsBindingManager::ContentReplaced(nsIDocument* aDocument,
                                   nsIContent* aContainer,
                                   nsIContent* aOldChild,
                                   nsIContent* aNewChild,
                                   PRInt32 aIndexInContainer)
 {
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsBindingManager::ContentRemoved(nsIDocument* aDocument,
                                  nsIContent* aContainer,
                                  nsIContent* aChild,
@@ -1452,8 +1445,8 @@ nsBindingManager::ContentRemoved(nsIDocument* aDocument,
 {
   if (aIndexInContainer == -1 || !mContentListTable.ops)
     // It's anonymous.
-    return NS_OK;
- 
+    return;
+
   nsCOMPtr<nsIContent> point;
   GetNestedInsertionPoint(aContainer, aChild, getter_AddRefs(point));
 
@@ -1475,8 +1468,6 @@ nsBindingManager::ContentRemoved(nsIDocument* aDocument,
       }
     }
   }
- 
-  return NS_OK;
 }
 
 // Creation Routine ///////////////////////////////////////////////////////////////////////

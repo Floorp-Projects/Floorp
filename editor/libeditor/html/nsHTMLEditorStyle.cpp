@@ -215,7 +215,6 @@ NS_IMETHODIMP nsHTMLEditor::SetInlineProperty(nsIAtom *aProperty,
         if (!iter)          return NS_ERROR_FAILURE;
 
         nsCOMArray<nsIDOMNode> arrayOfNodes;
-        nsCOMPtr<nsIContent> content;
         nsCOMPtr<nsIDOMNode> node;
         
         // iterate range and build up array
@@ -226,18 +225,18 @@ NS_IMETHODIMP nsHTMLEditor::SetInlineProperty(nsIAtom *aProperty,
         // any *whole* nodes.
         if (NS_SUCCEEDED(res))
         {
-          while (NS_ENUMERATOR_FALSE == iter->IsDone())
+          while (!iter->IsDone())
           {
-            res = iter->CurrentNode(getter_AddRefs(content));
-            if (NS_FAILED(res)) return res;
-            node = do_QueryInterface(content);
-            if (!node) return NS_ERROR_FAILURE;
+            node = do_QueryInterface(iter->GetCurrentNode());
+            if (!node)
+              return NS_ERROR_FAILURE;
+
             if (IsEditable(node))
             { 
               arrayOfNodes.AppendObject(node);
             }
-            res = iter->Next();
-            if (NS_FAILED(res)) return res;
+
+            iter->Next();
           }
         }
         // first check the start parent of the range to see if it needs to 
@@ -1086,17 +1085,18 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty,
     if (!iter) return NS_ERROR_NULL_POINTER;
 
     iter->Init(range);
-    nsCOMPtr<nsIContent> content;
     nsAutoString firstValue, theValue;
-    iter->CurrentNode(getter_AddRefs(content));
+
     nsCOMPtr<nsIDOMNode> endNode;
     PRInt32 endOffset;
     result = range->GetEndContainer(getter_AddRefs(endNode));
     if (NS_FAILED(result)) return result;
     result = range->GetEndOffset(&endOffset);
     if (NS_FAILED(result)) return result;
-    while (NS_ENUMERATOR_FALSE == iter->IsDone())
+    while (!iter->IsDone())
     {
+      nsIContent *content = iter->GetCurrentNode();
+
       nsCOMPtr<nsIDOMNode> node = do_QueryInterface(content);
 
       if (node && nsTextEditUtils::IsBody(node))
@@ -1190,10 +1190,8 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty,
           }
         }
       }
-      result = iter->Next();
-      if (NS_FAILED(result))  
-        break;
-      iter->CurrentNode(getter_AddRefs(content));
+
+      iter->Next();
     }
   }
   if (!*aAny) 
@@ -1378,23 +1376,22 @@ nsresult nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom *aProperty, const nsAStr
         if (!iter)          return NS_ERROR_FAILURE;
 
         nsCOMArray<nsIDOMNode> arrayOfNodes;
-        nsCOMPtr<nsIContent> content;
         nsCOMPtr<nsIDOMNode> node;
         
         // iterate range and build up array
         iter->Init(range);
-        while (NS_ENUMERATOR_FALSE == iter->IsDone())
+        while (!iter->IsDone())
         {
-          res = iter->CurrentNode(getter_AddRefs(content));
-          if (NS_FAILED(res)) return res;
-          node = do_QueryInterface(content);
-          if (!node) return NS_ERROR_FAILURE;
+          node = do_QueryInterface(iter->GetCurrentNode());
+          if (!node)
+            return NS_ERROR_FAILURE;
+
           if (IsEditable(node))
           { 
             arrayOfNodes.AppendObject(node);
           }
-          res = iter->Next();
-          if (NS_FAILED(res)) return res;
+
+          iter->Next();
         }
         
         // loop through the list, remove the property on each node
@@ -1557,23 +1554,23 @@ nsHTMLEditor::RelativeFontChange( PRInt32 aSizeChange)
       if (!iter)          return NS_ERROR_FAILURE;
 
       nsCOMArray<nsIDOMNode> arrayOfNodes;
-      nsCOMPtr<nsIContent> content;
       nsCOMPtr<nsIDOMNode> node;
       
       // iterate range and build up array
       res = iter->Init(range);
       if (NS_SUCCEEDED(res))
       {
-        while (NS_ENUMERATOR_FALSE == iter->IsDone())
+        while (!iter->IsDone())
         {
-          res = iter->CurrentNode(getter_AddRefs(content));
-          if (NS_FAILED(res)) return res;
-          node = do_QueryInterface(content);
-          if (!node) return NS_ERROR_FAILURE;
+          node = do_QueryInterface(iter->GetCurrentNode());
+          if (!node)
+            return NS_ERROR_FAILURE;
+
           if (IsEditable(node))
           { 
             arrayOfNodes.AppendObject(node);
           }
+
           iter->Next();
         }
         

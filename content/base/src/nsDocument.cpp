@@ -235,7 +235,33 @@ nsDOMStyleSheetList::Item(PRUint32 aIndex, nsIDOMStyleSheet** aReturn)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+NS_IMPL_NSIDOCUMENTOBSERVER_LOAD_STUB(nsDOMStyleSheetList)
+NS_IMPL_NSIDOCUMENTOBSERVER_REFLOW_STUB(nsDOMStyleSheetList)
+NS_IMPL_NSIDOCUMENTOBSERVER_STATE_STUB(nsDOMStyleSheetList)
+NS_IMPL_NSIDOCUMENTOBSERVER_CONTENT(nsDOMStyleSheetList)
+
+void
+nsDOMStyleSheetList::BeginUpdate(nsIDocument* aDocument,
+                                 nsUpdateType aUpdateType)
+{
+}
+
+void
+nsDOMStyleSheetList::EndUpdate(nsIDocument* aDocument,
+                               nsUpdateType aUpdateType)
+{
+}
+
+void
+nsDOMStyleSheetList::DocumentWillBeDestroyed(nsIDocument *aDocument)
+{
+  if (nsnull != mDocument) {
+    aDocument->RemoveObserver(this);
+    mDocument = nsnull;
+  }
+}
+
+void
 nsDOMStyleSheetList::StyleSheetAdded(nsIDocument *aDocument,
                                      nsIStyleSheet* aStyleSheet)
 {
@@ -245,11 +271,9 @@ nsDOMStyleSheetList::StyleSheetAdded(nsIDocument *aDocument,
       mLength++;
     }
   }
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsDOMStyleSheetList::StyleSheetRemoved(nsIDocument *aDocument,
                                        nsIStyleSheet* aStyleSheet)
 {
@@ -259,19 +283,37 @@ nsDOMStyleSheetList::StyleSheetRemoved(nsIDocument *aDocument,
       mLength--;
     }
   }
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDOMStyleSheetList::DocumentWillBeDestroyed(nsIDocument *aDocument)
+void
+nsDOMStyleSheetList::StyleSheetApplicableStateChanged(nsIDocument* aDocument,
+                                                      nsIStyleSheet* aStyleSheet,
+                                                      PRBool aApplicable)
 {
-  if (nsnull != mDocument) {
-    aDocument->RemoveObserver(this);
-    mDocument = nsnull;
-  }
-
-  return NS_OK;
 }
+
+void
+nsDOMStyleSheetList::StyleRuleChanged(nsIDocument* aDocument,
+                                      nsIStyleSheet* aStyleSheet,
+                                      nsIStyleRule* aOldStyleRule,
+                                      nsIStyleRule* aNewStyleRule)
+{
+}
+
+void
+nsDOMStyleSheetList::StyleRuleAdded(nsIDocument* aDocument,
+                                    nsIStyleSheet* aStyleSheet,
+                                    nsIStyleRule* aStyleRule)
+{
+}
+
+void
+nsDOMStyleSheetList::StyleRuleRemoved(nsIDocument* aDocument,
+                                      nsIStyleSheet* aStyleSheet,
+                                      nsIStyleRule* aStyleRule)
+{
+}
+
 
 class nsDOMImplementation : public nsIDOMDOMImplementation,
                             public nsIPrivateDOMImplementation

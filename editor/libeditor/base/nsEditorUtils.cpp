@@ -122,20 +122,17 @@ nsDOMIterator::Init(nsIDOMNode* aNode)
 void
 nsDOMIterator::ForEach(nsDomIterFunctor& functor) const
 {
-  nsCOMPtr<nsIContent> content;
   nsCOMPtr<nsIDOMNode> node;
-  nsresult res;
   
   // iterate through dom
-  while (NS_ENUMERATOR_FALSE == mIter->IsDone())
+  while (!mIter->IsDone())
   {
-    res = mIter->CurrentNode(getter_AddRefs(content));
-    if (NS_FAILED(res)) return;
-    node = do_QueryInterface(content);
-    if (!node) return;
+    node = do_QueryInterface(mIter->GetCurrentNode());
+    if (!node)
+      return;
+
     functor(node);
-    res = mIter->Next();
-    if (NS_FAILED(res)) return;
+    mIter->Next();
   }
 }
 
@@ -143,23 +140,20 @@ nsresult
 nsDOMIterator::AppendList(nsBoolDomIterFunctor& functor,
                           nsCOMArray<nsIDOMNode>& arrayOfNodes) const
 {
-  nsCOMPtr<nsIContent> content;
   nsCOMPtr<nsIDOMNode> node;
-  nsresult res;
   
   // iterate through dom and build list
-  while (NS_ENUMERATOR_FALSE == mIter->IsDone())
+  while (!mIter->IsDone())
   {
-    res = mIter->CurrentNode(getter_AddRefs(content));
-    if (NS_FAILED(res)) return res;
-    node = do_QueryInterface(content);
-    if (!node) return NS_ERROR_NULL_POINTER;
+    node = do_QueryInterface(mIter->GetCurrentNode());
+    if (!node)
+      return NS_ERROR_NULL_POINTER;
+
     if (functor(node))
     {
       arrayOfNodes.AppendObject(node);
     }
-    res = mIter->Next();
-    if (NS_FAILED(res)) return res;
+    mIter->Next();
   }
   return NS_OK;
 }

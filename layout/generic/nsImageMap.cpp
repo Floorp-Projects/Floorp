@@ -1025,7 +1025,7 @@ nsImageMap::IsAncestorOf(nsIContent* aContent,
   return PR_FALSE;
 }
 
-NS_IMETHODIMP
+void
 nsImageMap::ContentChanged(nsIDocument *aDocument,
                            nsIContent* aContent,
                            nsISupports* aSubContent)
@@ -1039,10 +1039,18 @@ nsImageMap::ContentChanged(nsIDocument *aDocument,
       UpdateAreas();
     }
   }
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
+nsImageMap::MaybeUpdateAreas(nsIContent *aContent)
+{
+  if (aContent == mMap || 
+      (mContainsBlockContents && IsAncestorOf(aContent, mMap))) {
+    UpdateAreas();
+  }
+}
+
+void
 nsImageMap::AttributeChanged(nsIDocument *aDocument,
                              nsIContent*  aContent,
                              PRInt32      aNameSpaceID,
@@ -1051,64 +1059,43 @@ nsImageMap::AttributeChanged(nsIDocument *aDocument,
 {
   // If the parent of the changing content node is our map then update
   // the map.
-  nsIContent* parent = aContent->GetParent();
-  if ((parent == mMap) || 
-      (mContainsBlockContents && IsAncestorOf(parent, mMap))) {
-    UpdateAreas();
-  }
-  return NS_OK;
+  MaybeUpdateAreas(aContent->GetParent());
 }
 
-NS_IMETHODIMP
+void
 nsImageMap::ContentAppended(nsIDocument *aDocument,
                             nsIContent* aContainer,
                             PRInt32     aNewIndexInContainer)
 {
-  if ((mMap == aContainer) || 
-      (mContainsBlockContents && IsAncestorOf(aContainer, mMap))) {
-    UpdateAreas();
-  }
-  return NS_OK;
+  MaybeUpdateAreas(aContainer);
 }
 
-NS_IMETHODIMP
+void
 nsImageMap::ContentInserted(nsIDocument *aDocument,
                             nsIContent* aContainer,
                             nsIContent* aChild,
                             PRInt32 aIndexInContainer)
 {
-  if ((mMap == aContainer) ||
-      (mContainsBlockContents && IsAncestorOf(aContainer, mMap))) {
-    UpdateAreas();
-  }
-  return NS_OK;
+  MaybeUpdateAreas(aContainer);
 }
 
-NS_IMETHODIMP
+void
 nsImageMap::ContentReplaced(nsIDocument *aDocument,
                             nsIContent* aContainer,
                             nsIContent* aOldChild,
                             nsIContent* aNewChild,
                             PRInt32 aIndexInContainer)
 {
-  if ((mMap == aContainer) ||
-      (mContainsBlockContents && IsAncestorOf(aContainer, mMap))) {
-    UpdateAreas();
-  }
-  return NS_OK;
+  MaybeUpdateAreas(aContainer);
 }
 
-NS_IMETHODIMP
+void
 nsImageMap::ContentRemoved(nsIDocument *aDocument,
                            nsIContent* aContainer,
                            nsIContent* aChild,
                            PRInt32 aIndexInContainer)
 {
-  if ((mMap == aContainer) ||
-      (mContainsBlockContents && IsAncestorOf(aContainer, mMap))) {
-    UpdateAreas();
-  }
-  return NS_OK;
+  MaybeUpdateAreas(aContainer);
 }
 
 nsresult
