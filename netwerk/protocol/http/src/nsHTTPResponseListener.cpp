@@ -552,6 +552,7 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
         }
 
         rv = mResponseDataListener->OnDataAvailable(mChannel, mChannel->mResponseContext, i_pStream, 0, i_Length) ;
+        if (NS_FAILED(rv)) return rv;
 
         PRInt32 cl = -1;
         mResponse->GetContentLength(&cl) ;
