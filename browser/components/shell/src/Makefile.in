@@ -39,7 +39,7 @@ REQUIRES	= \
 		  layout \
 		  content \
 		  widget \
-		  browsercomps \
+		  appcomps \
 		  imglib2 \
 		  gfx \
 		  locale \
