@@ -715,6 +715,8 @@ mozJSComponentLoader::GlobalForLocation(const char *aLocation,
     JS_AddNamedRoot(mContext, &he->value, location);
 
  out:
+    if (script)
+        JS_DestroyScript(mContext, script);
     JSContext *cx;
     rv = cxstack->Pop(&cx);
     NS_ASSERTION(NS_SUCCEEDED(rv) && cx == mContext,
