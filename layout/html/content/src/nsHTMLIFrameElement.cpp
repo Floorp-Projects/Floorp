@@ -313,6 +313,28 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
     else if (value.GetUnit() == eHTMLUnit_Percent) {
       pos->mHeight.SetPercentValue(value.GetPercentValue());
     }
+
+    // frameborder: 0 | 1 (| NO | YES in quirks mode)
+    // If frameborder is 0 or No, set border to 0
+    // else leave it as the value set in html.css
+    aAttributes->GetAttribute(nsHTMLAtoms::frameborder, value);
+    if (value.GetUnit() == eHTMLUnit_Enumerated) {
+      PRInt32 frameborder = value.GetIntValue();
+      if (NS_STYLE_FRAME_0 == frameborder ||
+          NS_STYLE_FRAME_NO == frameborder ||
+          NS_STYLE_FRAME_OFF == frameborder) {
+        nsStyleSpacing* spacing = (nsStyleSpacing*)
+          aContext->GetMutableStyleData(eStyleStruct_Spacing);
+        if (spacing) {
+          nsStyleCoord coord;
+          coord.SetCoordValue(0);
+          spacing->mBorder.SetTop(coord);
+          spacing->mBorder.SetRight(coord);
+          spacing->mBorder.SetBottom(coord);
+          spacing->mBorder.SetLeft(coord);
+        }
+      }
+    }
   }
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
 }
@@ -326,6 +348,9 @@ nsHTMLIFrameElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
     aHint = NS_STYLE_HINT_REFLOW;
   }
   else if (aAttribute == nsHTMLAtoms::align) {
+    aHint = NS_STYLE_HINT_REFLOW;
+  }
+  else if (aAttribute == nsHTMLAtoms::frameborder) {
     aHint = NS_STYLE_HINT_REFLOW;
   }
   else if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
