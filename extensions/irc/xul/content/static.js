@@ -767,25 +767,12 @@ function cycleView (amount)
     if (len <= 1)
         return;
     
-    if (amount > len)
-        amount = amount % client.viewsArray.length;
-
     var tb = getTabForObject (client.currentObject);
     if (!tb)
         return;
     
     var vk = Number(tb.getAttribute("viewKey"));
-    var destKey = vk + amount;
-    if (destKey > len - 1)
-    {
-        /* wrap past max */
-        destKey -= client.viewsArray.length;
-    }
-    else if (destKey < 0)
-    {
-        /* wrap past 0 */
-        destKey += client.viewsArray.length;
-    }
+    var destKey = (vk + amount) % len; /* wrap around */
     
     setCurrentObject (client.viewsArray[destKey].source);
 }
