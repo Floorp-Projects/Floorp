@@ -208,6 +208,13 @@ NS_IMETHODIMP nsImapUrl::SetFolder(nsIMsgFolder  * aMsgFolder)
 {
   nsresult rv;
   m_imapFolder = do_GetWeakReference(aMsgFolder, &rv);
+  if (aMsgFolder)
+  {
+    nsCOMPtr <nsIMsgIncomingServer> incomingServer;
+    aMsgFolder->GetServer(getter_AddRefs(incomingServer));
+    if (incomingServer)
+      incomingServer->GetKey(getter_Copies(m_serverKey));
+  }
   return rv;
 }
 
@@ -349,7 +356,7 @@ NS_IMETHODIMP nsImapUrl::CreateSearchCriteriaString(char ** aResult)
   // o.t. add lock protection..
   if (nsnull == aResult || !m_searchCriteriaString) 
     return  NS_ERROR_NULL_POINTER;
-  *aResult = nsCRT::strdup(m_searchCriteriaString);
+  *aResult = strdup(m_searchCriteriaString);
   return NS_OK;
 }
 
@@ -387,7 +394,7 @@ NS_IMETHODIMP nsImapUrl::CreateListOfMessageIdsString(char ** aResult)
 NS_IMETHODIMP nsImapUrl::GetCommand(char **result)
 {
   NS_ENSURE_ARG_POINTER(result);
-  *result = nsCRT::strdup(m_command.get());
+  *result = strdup(m_command.get());
   return (*result) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
@@ -415,7 +422,7 @@ NS_IMETHODIMP nsImapUrl::SetCustomAttributeResult(const char *result)
 NS_IMETHODIMP nsImapUrl::GetCustomCommandResult(char **result)
 {
   NS_ENSURE_ARG_POINTER(result);
-  *result = nsCRT::strdup(m_customCommandResult.get());
+  *result = strdup(m_customCommandResult.get());
   return (*result) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
@@ -747,7 +754,7 @@ void nsImapUrl::ParseImapPart(char *imapPartOfUrl)
       if (m_tokenPlaceHolder && *m_tokenPlaceHolder)
         ParseListOfMessageIds();
       else
-        m_listOfMessageIds = nsCRT::strdup("");
+        m_listOfMessageIds = strdup("");
     }
     else if (!nsCRT::strcasecmp(m_urlidSubString, "subscribe"))
     {
@@ -820,17 +827,12 @@ NS_IMETHODIMP nsImapUrl::AddOnlineDirectoryIfNecessary(const char *onlineMailbox
   nsresult rv;
   nsXPIDLCString serverKey;
   nsString aString;
-  nsCOMPtr<nsIMsgIncomingServer> server;
   char *newOnlineName = nsnull;
   
   nsCOMPtr<nsIImapHostSessionList> hostSessionList = 
     do_GetService(kCImapHostSessionListCID, &rv);
   if (NS_FAILED(rv)) return rv;
-  rv = GetServer(getter_AddRefs(server));
-  if (NS_FAILED(rv)) return rv;
-  rv = server->GetKey(getter_Copies(serverKey));
-  if (NS_FAILED(rv)) return rv;
-  rv = hostSessionList->GetOnlineDirForHost(serverKey, aString);
+  rv = hostSessionList->GetOnlineDirForHost(m_serverKey, aString);
   nsCAutoString onlineDir;
   onlineDir.AssignWithConversion(aString);
   
@@ -912,7 +914,7 @@ NS_IMETHODIMP nsImapUrl::AllocateServerPath(const char * canonicalPath, char onl
   if (canonicalPath)
     rv = ReplaceCharsInCopiedString(canonicalPath, '/', delimiterToUse);
   else
-    rv = nsCRT::strdup("");
+    rv = strdup("");
   
   if (delimiterToUse != '/')
     UnescapeSlashes(rv);
@@ -999,7 +1001,7 @@ NS_IMETHODIMP nsImapUrl::AllocateServerPath(const char * canonicalPath, char onl
 
 /*  static */ nsresult nsImapUrl::ConvertToCanonicalFormat(const char *folderName, char onlineDelimiter, char **resultingCanonicalPath)
 {
-	// Now, start the conversion to canonical form.
+  // Now, start the conversion to canonical form.
 
   char *canonicalPath;
   if (onlineDelimiter != '/')
@@ -1011,7 +1013,7 @@ NS_IMETHODIMP nsImapUrl::AllocateServerPath(const char * canonicalPath, char onl
   }
   else
   {
-    canonicalPath = nsCRT::strdup(folderName);
+    canonicalPath = strdup(folderName);
   }
   if (canonicalPath)
     *resultingCanonicalPath = canonicalPath;
@@ -1047,12 +1049,7 @@ NS_IMETHODIMP nsImapUrl::AllocateCanonicalPath(const char *serverPath, char onli
   if (!serverPath || NS_FAILED(rv))
     goto done;
   
-  rv = GetServer(getter_AddRefs(server));
-  if (NS_FAILED(rv))
-    goto done;
-  
-  server->GetKey(&serverKey);
-  hostSessionList->GetOnlineDirForHost(serverKey, aString); 
+  hostSessionList->GetOnlineDirForHost(m_serverKey, aString); 
   // First we have to check to see if we should strip off an online server
   // subdirectory 
   // If this host has an online server directory configured
@@ -1108,7 +1105,7 @@ NS_IMETHODIMP nsImapUrl::CreateCanonicalSourceFolderPathString(char **result)
 {
   NS_ENSURE_ARG_POINTER(result);
   nsAutoCMonitor mon(this);
-  *result = nsCRT::strdup(m_sourceCanonicalFolderPathSubString ? m_sourceCanonicalFolderPathSubString : "");
+  *result = strdup(m_sourceCanonicalFolderPathSubString ? m_sourceCanonicalFolderPathSubString : "");
   return (*result) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
@@ -1277,23 +1274,23 @@ NS_IMETHODIMP nsImapUrl::AddChannelToLoadGroup()
 
 NS_IMETHODIMP nsImapUrl::RemoveChannel(nsresult status)
 {
-	nsCOMPtr <nsILoadGroup> loadGroup;
-	if (m_mockChannel)
-	{
-		m_mockChannel->GetLoadGroup(getter_AddRefs(loadGroup));
+  nsCOMPtr <nsILoadGroup> loadGroup;
+  if (m_mockChannel)
+  {
+    m_mockChannel->GetLoadGroup(getter_AddRefs(loadGroup));
     // if the mock channel wasn't initialized with a load group then 
     // use our load group (they may differ)
     if (!loadGroup)
       GetLoadGroup(getter_AddRefs(loadGroup));
-		if (loadGroup)
-		{
-            nsCOMPtr<nsIRequest> request = do_QueryInterface(m_mockChannel);
-            loadGroup->RemoveRequest(request, nsnull, status);
-		}
+    if (loadGroup)
+    {
+      nsCOMPtr<nsIRequest> request = do_QueryInterface(m_mockChannel);
+      loadGroup->RemoveRequest(request, nsnull, status);
+    }
     // break deadly embrace between mock channel and url
     SetMockChannel(nsnull);
-	}
-	return NS_OK;
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsImapUrl::GetAllowContentChange(PRBool *result)
@@ -1543,7 +1540,7 @@ void nsImapUrl::ParseListOfMessageIds()
     m_validUrl = PR_FALSE;
   else
   {
-    m_listOfMessageIds = nsCRT::strdup(m_listOfMessageIds);
+    m_listOfMessageIds = strdup(m_listOfMessageIds);
     m_mimePartSelectorDetected = PL_strstr(m_listOfMessageIds, "&part=") != 0 || PL_strstr(m_listOfMessageIds, "?part=") != 0;
     
     // if we're asking for just the body, don't download the whole message. see

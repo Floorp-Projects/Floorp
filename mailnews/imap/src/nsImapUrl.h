@@ -130,7 +130,7 @@ protected:
   PRInt32 m_discoveryDepth;
 
   nsXPIDLCString  m_userName;
-
+  nsXPIDLCString  m_serverKey;
   // event sinks
   imapMessageFlagsType	m_flags;
   nsImapAction	m_imapAction;
