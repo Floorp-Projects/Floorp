@@ -38,7 +38,10 @@ nsGfxButtonControlFrame::IsSuccessful(nsIFormControlFrame* aSubmitter)
   PRInt32 type;
   GetType(&type);
   if ((NS_FORM_INPUT_HIDDEN == type) || (this == aSubmitter)) {
-    return nsHTMLButtonControlFrame::IsSuccessful(aSubmitter);
+     // Can not use the nsHTMLButtonControlFrame::IsSuccessful because
+     // it will fail it's test of (this==aSubmitter)
+    nsAutoString name;
+    return (NS_CONTENT_ATTR_HAS_VALUE == GetName(&name));
   } else {
     return PR_FALSE;
   }
