@@ -176,8 +176,8 @@ private:
   DownloadState mDownloadState;
 
   PRInt32 mPercentComplete;
-  PRInt32 mCurrBytes;
-  PRInt32 mMaxBytes;
+  PRUint64 mCurrBytes;
+  PRUint64 mMaxBytes;
   PRTime mStartTime;
   PRTime mLastUpdate;
 };

@@ -141,6 +141,21 @@ nsDownloadListener::GetPercentComplete(PRInt32 *aPercentComplete)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+/* readonly attribute PRUint64 amountTransferred; */
+NS_IMETHODIMP
+nsDownloadListener::GetAmountTransferred(PRUint64 *aAmountTransferred)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* readonly attribute PRUint64 size; */
+NS_IMETHODIMP
+nsDownloadListener::GetSize(PRUint64 *aSize)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
 /* attribute wstring displayName; */
 NS_IMETHODIMP
 nsDownloadListener::GetDisplayName(PRUnichar * *aDisplayName)

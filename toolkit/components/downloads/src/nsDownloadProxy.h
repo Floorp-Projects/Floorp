@@ -136,7 +136,17 @@ public:
   {
     return mInner->GetPercentComplete(aPercentComplete);
   }
-   
+
+  NS_IMETHODIMP GetAmountTransferred(PRUint64* aAmountTransferred)
+  {
+    return mInner->GetAmountTransferred(aAmountTransferred);
+  }
+  
+  NS_IMETHODIMP GetSize(PRUint64* aSize)
+  {
+    return mInner->GetSize(aSize);
+  }
+
   NS_IMETHODIMP GetListener(nsIWebProgressListener** aListener)
   {
     return mInner->GetListener(aListener);
