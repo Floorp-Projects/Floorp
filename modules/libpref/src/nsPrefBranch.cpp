@@ -181,7 +181,7 @@ NS_IMETHODIMP nsPrefBranch::GetComplexValue(const char *aPrefName, const nsIID &
   nsXPIDLCString utf8String;
 
   // if we can't get the pref, there's no point in being here
-  rv = GetCharPref(aPrefName, getter_Copies(utf8String));
+  rv = GetCharPref(getPrefName(aPrefName), getter_Copies(utf8String));
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -268,7 +268,7 @@ NS_IMETHODIMP nsPrefBranch::SetComplexValue(const char *aPrefName, const nsIID &
 
     rv = file->GetPersistentDescriptor(getter_Copies(descriptorString));
     if (NS_SUCCEEDED(rv)) {
-      rv = SetCharPref(aPrefName, descriptorString);
+      rv = SetCharPref(getPrefName(aPrefName), descriptorString);
     }
     return rv;
   }
@@ -281,7 +281,7 @@ NS_IMETHODIMP nsPrefBranch::SetComplexValue(const char *aPrefName, const nsIID &
 
       rv = theString->GetData(getter_Copies(wideString));
       if (NS_SUCCEEDED(rv)) {
-        rv = SetCharPref(aPrefName, NS_ConvertUCS2toUTF8(wideString).get());
+        rv = SetCharPref(getPrefName(aPrefName), NS_ConvertUCS2toUTF8(wideString).get());
       }
     }
     return rv;
@@ -295,7 +295,7 @@ NS_IMETHODIMP nsPrefBranch::SetComplexValue(const char *aPrefName, const nsIID &
 
       rv = theString->GetData(getter_Copies(wideString));
       if (NS_SUCCEEDED(rv)) {
-        rv = SetCharPref(aPrefName, NS_ConvertUCS2toUTF8(wideString).get());
+        rv = SetCharPref(getPrefName(aPrefName), NS_ConvertUCS2toUTF8(wideString).get());
       }
     }
     return rv;
@@ -308,7 +308,7 @@ NS_IMETHODIMP nsPrefBranch::SetComplexValue(const char *aPrefName, const nsIID &
 
     rv = file->GetPersistentDescriptorString(getter_Copies(descriptorString));
     if (NS_SUCCEEDED(rv)) {
-      rv = SetCharPref(aPrefName, descriptorString);
+      rv = SetCharPref(getPrefName(aPrefName), descriptorString);
     }
     return rv;
   }
