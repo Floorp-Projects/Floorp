@@ -186,7 +186,8 @@ MOZ_REGISTRY_LIBS          = $(DIST)/lib/libmozreg_s.$(LIB_SUFFIX)
 MOZ_WIDGET_SUPPORT_LIBS    = $(DIST)/lib/libwidgetsupport_s.$(LIB_SUFFIX)
 
 # determine debug-related options
-DEBUG_FLAGS :=
+_DEBUG_CFLAGS :=
+_DEBUG_LDFLAGS :=
 
 ifndef MOZ_DEBUG
   # global debugging is disabled 
@@ -203,9 +204,9 @@ else
 endif
 
 ifdef MOZ_DEBUG
-  DEBUG_FLAGS += $(MOZ_DEBUG_ENABLE_DEFS)
+  _DEBUG_CFLAGS += $(MOZ_DEBUG_ENABLE_DEFS)
 else
-  DEBUG_FLAGS += $(MOZ_DEBUG_DISABLE_DEFS)
+  _DEBUG_CFLAGS += $(MOZ_DEBUG_DISABLE_DEFS)
 endif
 
 # determine if -g should be passed to the compiler, based on
@@ -236,7 +237,8 @@ first_match:=$(firstword $(filter $(pattern), $(MOZ_DBGRINFO_MODULES)))
 ifeq ($(first_match), $(MODULE))
   # the user specified explicitly that 
   # this module should be compiled with -g
-  DEBUG_FLAGS += $(MOZ_DEBUG_FLAGS)
+  _DEBUG_CFLAGS += $(MOZ_DEBUG_FLAGS)
+  _DEBUG_LDFLAGS += $(MOZ_DEBUG_LDFLAGS)
 else
   ifeq ($(first_match), ^$(MODULE))
     # the user specified explicitly that this module 
@@ -245,7 +247,8 @@ else
     ifeq ($(first_match), ALL_MODULES)
       # the user didn't mention this module explicitly, 
       # but wanted all modules to be compiled with -g
-      DEBUG_FLAGS += $(MOZ_DEBUG_FLAGS)
+      _DEBUG_CFLAGS += $(MOZ_DEBUG_FLAGS)
+      _DEBUG_LDFLAGS += $(MOZ_DEBUG_LDFLAGS)      
     else
       ifeq ($(first_match), ^ALL_MODULES)
         # the user didn't mention this module explicitly, 
@@ -258,8 +261,9 @@ endif
 
 # append debug flags 
 # (these might have been above when processing MOZ_DBGRINFO_MODULES)
-OS_CFLAGS += $(DEBUG_FLAGS)
-OS_CXXFLAGS += $(DEBUG_FLAGS)
+OS_CFLAGS += $(_DEBUG_CFLAGS)
+OS_CXXFLAGS += $(_DEBUG_CFLAGS)
+OS_LDFLAGS += $(_DEBUG_LDFLAGS)
 
 #
 # -ffunction-sections is needed to reorder functions using a GNU ld
@@ -465,8 +469,40 @@ endif # MOZ_OPTIMIZE == 1
 LDFLAGS		+= $(MOZ_OPTIMIZE_LDFLAGS)
 endif # MOZ_OPTIMIZE
 
-COMPILE_CFLAGS	= $(DEFINES) $(INCLUDES) $(XCFLAGS) $(PROFILER_CFLAGS) $(DSO_CFLAGS) $(DSO_PIC_CFLAGS) $(CFLAGS) $(OS_COMPILE_CFLAGS)
-COMPILE_CXXFLAGS = $(DEFINES) $(INCLUDES) $(XCFLAGS) $(PROFILER_CFLAGS) $(DSO_CFLAGS) $(DSO_PIC_CFLAGS)  $(CXXFLAGS) $(OS_COMPILE_CXXFLAGS)
+ifeq ($(OS_ARCH),WINNT)
+#// Currently, unless USE_STATIC_LIBS is defined, the multithreaded
+#// DLL version of the RTL is used...
+#//
+#//------------------------------------------------------------------------
+ifdef USE_STATIC_LIBS
+RTL_FLAGS=-MT          # Statically linked multithreaded RTL
+ifneq (,$(MOZ_DEBUG)$(MOZ_TRACE_MALLOC))
+RTL_FLAGS=-MTd         # Statically linked multithreaded MSVC4.0 debug RTL
+endif # MOZ_DEBUG || MOZ_TRACE_MALLOC
+
+else # !USE_STATIC_LIBS
+
+ifdef USE_NON_MT_LIBS
+RTL_FLAGS=-ML          # Statically linked non-multithreaded LIBC RTL
+ifneq (,$(MOZ_DEBUG)$(MOZ_TRACE_MALLOC))
+RTL_FLAGS=-MLd         # Statically linked non-multithreaded LIBC debug RTL
+endif # MOZ_DEBUG || MOZ_TRACE_MALLOC
+
+else # ! USE_NON_MT_LIBS
+
+RTL_FLAGS=-MD          # Dynamically linked, multithreaded RTL
+ifneq (,$(MOZ_DEBUG)$(MOZ_TRACE_MALLOC))
+ifndef MOZ_NO_DEBUG_RTL
+RTL_FLAGS=-MDd         # Dynamically linked, multithreaded MSVC4.0 debug RTL
+endif 
+endif # MOZ_DEBUG || MOZ_TRACE_MALLOC
+endif # USE_NON_MT_LIBS
+endif # USE_STATIC_LIBS
+endif # WINNT
+
+
+COMPILE_CFLAGS	= $(DEFINES) $(INCLUDES) $(XCFLAGS) $(PROFILER_CFLAGS) $(DSO_CFLAGS) $(DSO_PIC_CFLAGS) $(CFLAGS) $(RTL_FLAGS) $(OS_COMPILE_CFLAGS)
+COMPILE_CXXFLAGS = $(DEFINES) $(INCLUDES) $(XCFLAGS) $(PROFILER_CFLAGS) $(DSO_CFLAGS) $(DSO_PIC_CFLAGS)  $(CXXFLAGS) $(RTL_FLAGS) $(OS_COMPILE_CXXFLAGS)
 
 #
 # Some platforms (Solaris) might require builds using either

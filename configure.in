@@ -152,9 +152,6 @@ case "$target" in
         fi
         rm -f dummy dummy.o dummy.obj dummy.exe dummy.c
     fi
-    if test `echo $MOZ_BUILD_ROOT | grep -c ^/cygdrive/` != 0; then
-        MOZ_BUILD_ROOT=`echo $MOZ_BUILD_ROOT | sed -e 's|^/cygdrive/||' -e 's|/|:/|'`
-    fi
     ;;
 *-msvc*|*-mksnt*)
     _WIN32_MSVC=1
@@ -427,6 +424,7 @@ AR_EXTRACT='$(AR) x'
 AR_DELETE='$(AR) d'
 AS='$(CC)'
 AS_DASH_C_FLAG='-c'
+LIB_PREFIX=lib
 DLL_SUFFIX=.so
 OBJ_SUFFIX=o
 LIB_SUFFIX=a
@@ -912,18 +910,21 @@ case "$target" in
         ZIP=zip
         UNZIP=unzip
         GARBAGE='$(OBJDIR)/vc20.pdb $(OBJDIR)/vc40.pdb'
+        LIB_PREFIX=
     	OBJ_SUFFIX=obj
     	LIB_SUFFIX=lib
     	DLL_SUFFIX=.dll
-        MKSHLIB='$(LD) /NOLOGO /DLL /OUT:$@ /PDB:$(PDBFILE)'
+        MKSHLIB='$(LD) /NOLOGO /DLL /OUT:$@ /PDB:$(PDBFILE) $(DSO_LDOPTS)'
         MKSHLIB_FORCE_ALL=
         MKSHLIB_UNFORCE_ALL=
-        DSO_LDOPTS=
+        DSO_LDOPTS=/SUBSYSTEM:WINDOWS
         DSO_CFLAGS=
         DSO_PIC_CFLAGS=
-        CFLAGS="$CFLAGS -W3 -nologo -Gy"
-        CXXFLAGS="$CXXFLAGS -W3 -nologo -Gy"
+        CFLAGS="$CFLAGS -W3 -nologo -Gy -Fd\$(PDBFILE)"
+        CXXFLAGS="$CXXFLAGS -W3 -nologo -Gy -Fd\$(PDBFILE)"
+        LIBS="$LIBS kernel32.lib user32.lib gdi32.lib winmm.lib wsock32.lib advapi32.lib"
         MOZ_DEBUG_FLAGS='-Zi'
+        MOZ_DEBUG_LDFLAGS='/DEBUG /DEBUGTYPE:CV'
     	MOZ_OPTIMIZE_FLAGS='-O1'
         MOZ_JPEG_LIBS='$(DIST)/lib/mozjpeg.lib'
         MOZ_ZLIB_LIBS='$(DIST)/lib/mozz.lib'
@@ -935,12 +936,14 @@ case "$target" in
         MOZ_COMPONENT_XPCOM_LIBS='$(XPCOM_LIBS)'
     fi
     AC_DEFINE(_WINDOWS)
+    AC_DEFINE(_WIN32)
     AC_DEFINE(WIN32)
     AC_DEFINE(XP_PC)
     AC_DEFINE(XP_WIN)
     AC_DEFINE(XP_WIN32)
     AC_DEFINE(HW_THREADS)
     AC_DEFINE_UNQUOTED(WINVER,0x400)
+    AC_DEFINE(MSVC4)
     AC_DEFINE(STDC_HEADERS)
     TARGET_MD_ARCH=win32
     OS_TARGET=WINNT
@@ -950,6 +953,20 @@ case "$target" in
     dnl Hardcode to win95 for now - cls
     TARGET_NSPR_MDCPUCFG='\"md/_win95.cfg\"'
     no_x=yes
+
+    dnl Remove cygwinism from MOZ_BUILD_ROOT
+    if test `echo $MOZ_BUILD_ROOT | grep -c ^/cygdrive/` != 0; then
+        MOZ_BUILD_ROOT=`echo $MOZ_BUILD_ROOT | sed -e 's|^/cygdrive/||' -e 's|/|:/|'`
+    fi
+
+    if test "$MOZ_TOOLS"; then
+        _MOZTOOLS=`cd $MOZ_TOOLS ; pwd`
+        _MOZTOOLS=`echo $_MOZTOOLS | sed -e 's|^/cygdrive/||' -e 's|/|:/|'`
+        LIBIDL_CFLAGS="-I${_MOZTOOLS}/include"
+        LIBIDL_LIBS="${_MOZTOOLS}/lib/libidl-0.6.lib ${_MOZTOOLS}/lib/glib-1.2.lib"
+   else
+        AC_MSG_ERROR([MOZ_TOOLS is not set])
+    fi
 
     case "$target" in
     i?86-*)
@@ -1112,6 +1129,7 @@ case "$target" in
         DSO_LDOPTS=''
         IMPLIB='implib /NOL /NOI'
         FILTER='cppfilt -q -B -P'
+        LIB_PREFIX=
         AC_DEFINE(NO_ANSI_KEYWORDS)
         AC_DEFINE(OS2,4)
         AC_DEFINE(_X86_)
@@ -3219,23 +3237,21 @@ MOZ_ARG_DISABLE_BOOL(debug,
 [  --disable-debug         Disable building with debug info],
     MOZ_DEBUG=)
 
-MOZ_DEBUG_ENABLE_DEFS="-DDEBUG"
+MOZ_DEBUG_ENABLE_DEFS="-DDEBUG -D_DEBUG"
  case "${target_os}" in
     beos*)
-      MOZ_DEBUG_ENABLE_DEFS="$MOZ_DEBUG_ENABLE_DEFS -DDEBUG_${USER}"
+        MOZ_DEBUG_ENABLE_DEFS="$MOZ_DEBUG_ENABLE_DEFS -DDEBUG_${USER}"
+        ;;
+    msvc*|mksnt*|cygwin*|mingw*)
+        MOZ_DEBUG_ENABLE_DEFS="$MOZ_DEBUG_ENABLE_DEFS -DDEBUG_${USERNAME}"
         ;;
     *) 
-      MOZ_DEBUG_ENABLE_DEFS="$MOZ_DEBUG_ENABLE_DEFS -DDEBUG_`$WHOAMI`"
+        MOZ_DEBUG_ENABLE_DEFS="$MOZ_DEBUG_ENABLE_DEFS -DDEBUG_`$WHOAMI`"
         ;;
   esac
 MOZ_DEBUG_ENABLE_DEFS="$MOZ_DEBUG_ENABLE_DEFS -DTRACING"
 
 MOZ_DEBUG_DISABLE_DEFS="-DNDEBUG -DTRIMMED"
-
-if test "$MOZ_DEBUG"
-then
-  LDFLAGS="$LDFLAGS $MOZ_DEBUG_LDFLAGS"
-fi
 
 dnl ========================================================
 dnl = Enable code optimization. OFF by default.
@@ -3961,7 +3977,7 @@ fi
 dnl Disable ldap if LDAP is not building all of Mozilla
 dnl and ldap isn't in the standalone list
 if test "$BUILD_MODULES" != "all" &&
-    test `echo "$BUILD_MODULES" | grep -c ldap` -ne 0 &&
+    test `echo "$BUILD_MODULES" | grep -c ldap` = 0 &&
     test "$enable_ldap" != "yes"; then
     MOZ_LDAP_XPCOM=
 fi
@@ -4111,6 +4127,7 @@ AC_SUBST(MOZ_PROFILE_MODULES)
 AC_SUBST(MOZ_DEBUG_ENABLE_DEFS)
 AC_SUBST(MOZ_DEBUG_DISABLE_DEFS)
 AC_SUBST(MOZ_DEBUG_FLAGS)
+AC_SUBST(MOZ_DEBUG_LDFLAGS)
 AC_SUBST(MOZ_DBGRINFO_MODULES)
 AC_SUBST(MOZ_EXTENSIONS)
 AC_SUBST(MOZ_JSDEBUGGER)
@@ -4280,6 +4297,7 @@ AC_SUBST(MKSHLIB_UNFORCE_ALL)
 AC_SUBST(DSO_CFLAGS)
 AC_SUBST(DSO_PIC_CFLAGS)
 AC_SUBST(DSO_LDOPTS)
+AC_SUBST(LIB_PREFIX)
 AC_SUBST(DLL_SUFFIX)
 AC_DEFINE_UNQUOTED(MOZ_DLL_SUFFIX, "$DLL_SUFFIX")
 AC_SUBST(LIB_SUFFIX)
