@@ -86,10 +86,17 @@ function OpenBookmarkURL(event, node, datasources)
   
 	// If we don't have a browser window or metaKey is down,
 	// then open a new browser window
-	if ((window._content == null) || (event.metaKey))
-
+	if (!window._content || event.metaKey)
 	{
-		window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", url ); 
+    const WM_PROGID = "component://netscape/rdf/datasource?name=window-mediator";
+    var wm = nsJSComponentManager.getService(WM_PROGID, "nsIWindowMediator");
+    if (wm) {
+      navWindow = wm.getMostRecentWindow("navigator:browser");
+      if (navWindow) 
+        navWindow.appCore.loadUrl(url); // it pains me to type this. 
+    }
+    else 
+  		window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", url ); 
 	}
 	else
 	{
