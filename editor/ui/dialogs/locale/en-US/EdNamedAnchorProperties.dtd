@@ -14,7 +14,7 @@
    - 
    - The Initial Developer of the Original Code is Netscape
    - Communications Corporation. Portions created by Netscape are
-   - Copyright (C) 1998-1999 Netscape Communications Corporation. All
+   - Copyright (C) 1998-2000 Netscape Communications Corporation. All
    - Rights Reserved.
    - 
    - Contributor(s): 
@@ -22,7 +22,7 @@
 
 <!ENTITY windowTitle.label "Named Anchor Properties">
 <!ENTITY anchorNameEditField.label "Anchor Name:">
-<!ENTITY noSpacesMsg.label "(Spaces are not allowed.)">
-<!ENTITY nameInput.tooltip "tooltip for anchor name edit field">
+<!ENTITY noSpacesMsg.label "(Do not include spaces)">
+<!ENTITY nameInput.tooltip "Enter a name for this anchor (target). Click Advanced Edit to add or modify additional properties for this anchor.">
 
 

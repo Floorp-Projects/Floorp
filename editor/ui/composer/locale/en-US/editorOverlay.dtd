@@ -14,7 +14,7 @@
    - 
    - The Initial Developer of the Original Code is Netscape
    - Communications Corporation. Portions created by Netscape are
-   - Copyright (C) 1999 Netscape Communications Corporation. All
+   - Copyright (C) 1999-2000 Netscape Communications Corporation. All
    - Rights Reserved.
    - 
    - Contributor(s):
@@ -269,7 +269,7 @@
 <!ENTITY formatmenu.accesskey "o">
 
 <!-- Font Face SubMenu -->
-<!ENTITY FontFaceSelect.tooltip "Font tooltip for formatting toolbar">
+<!ENTITY FontFaceSelect.tooltip "Choose a font from the drop-down list">
 <!ENTITY fontfaceMenu.label "Font">
 <!ENTITY formatfontmenu.accesskey "f">
 <!ENTITY fontVarWidth.label "Variable Width">
@@ -284,7 +284,7 @@
 <!ENTITY fontcourier.accesskey "c">
 
 <!-- Font Size SubMenu -->
-<!ENTITY FontSizeSelect.tooltip "Font Size tooltip for formatting toolbar">
+<!ENTITY FontSizeSelect.tooltip "Choose a font size">
 <!ENTITY decreaseFontSize.label "Decrease">
 <!ENTITY decreasefontsize.accesskey "d">
 <!ENTITY decreaseFontSize.keybinding "[">
@@ -423,7 +423,7 @@ Menu item text for "[Page|Table|Cell] Background color" is filled from
 <!ENTITY listprops.accesskey "l">
 
 <!-- Shared by Heading and Paragraph menu, and in toolbar menulist -->
-<!ENTITY ParagraphSelect.tooltip "tooltip for Paragraph menu on formatting toolbar">
+<!ENTITY ParagraphSelect.tooltip "Choose a paragraph format from the drop-down list">
 <!ENTITY normalCmd.label "Normal">
 <!ENTITY normal.accesskey "n">
 <!ENTITY advancedPropertiesCmd.label "Advanced Properties...">
@@ -549,43 +549,43 @@ Menu item text for "[Page|Table|Cell] Background color" is filled from
 <!ENTITY setFocusCmd.label "Set Focus">
 
 <!-- toolbar-only items -->
-<!ENTITY newToolbarCmd.tooltip "New Blank Page">
+<!ENTITY newToolbarCmd.tooltip "Create a new blank page">
 <!ENTITY openToolbarCmd.label "Open">
-<!ENTITY openToolbarCmd.tooltip "Open Local Page">
-<!ENTITY saveToolbarCmd.tooltip "Save Page Locally">
+<!ENTITY openToolbarCmd.tooltip "Open a local file">
+<!ENTITY saveToolbarCmd.tooltip "Save file locally">
 <!ENTITY previewToolbarCmd.label "Preview">
-<!ENTITY previewToolbarCmd.tooltip "Preview Page in Navigator">
+<!ENTITY previewToolbarCmd.tooltip "Preview this page in Navigator">
 <!ENTITY printToolbarCmd.label "Print">
-<!ENTITY printToolbarCmd.tooltip "Print Page">
+<!ENTITY printToolbarCmd.tooltip "Print this page">
 <!ENTITY findToolbarCmd.label "Find">
-<!ENTITY findToolbarCmd.tooltip "Find string in Page">
+<!ENTITY findToolbarCmd.tooltip "Find text in page">
 <!ENTITY spellToolbarCmd.label "Spell">
 <!ENTITY spellToolbarCmd.tooltip "Check Spelling of Selection or Entire Page">
 <!ENTITY imageToolbarCmd.label "Image">
-<!ENTITY imageToolbarCmd.tooltip "Edit Selected Image Properties or Insert New Image">
+<!ENTITY imageToolbarCmd.tooltip "Insert new image or edit selected image properties">
 <!ENTITY hruleToolbarCmd.label "H.Line">
-<!ENTITY hruleToolbarCmd.tooltip "Edit Selected Horizontal Line or Insert New Horizontal Line">
+<!ENTITY hruleToolbarCmd.tooltip "Insert horizontal line or edit selected line properties">
 <!ENTITY tableToolbarCmd.label "Table">
-<!ENTITY tableToolbarCmd.tooltip "Edit Selected Table or Insert New Table">
+<!ENTITY tableToolbarCmd.tooltip "Insert new table or edit selected table properties">
 <!ENTITY linkToolbarCmd.label "Link">
-<!ENTITY linkToolbarCmd.tooltip "Edit Selected Link or Insert New Link">
+<!ENTITY linkToolbarCmd.tooltip "Insert new link or edit selected link properties">
 <!ENTITY anchorToolbarCmd.label "Anchor">
-<!ENTITY anchorToolbarCmd.tooltip "Edit Selected Anchor or Insert New Anchor (Target)">
+<!ENTITY anchorToolbarCmd.tooltip "Insert new anchor (target) or edit anchor properties">
 <!ENTITY textColorCaption.label "Text Color">
-<!ENTITY TextColorPopupButton.tooltip "Text Color tooltip">
-<!ENTITY BackColorPopupButton.tooltip "Page Background Color tooltip">
+<!ENTITY TextColorPopupButton.tooltip "Choose color for text">
+<!ENTITY BackColorPopupButton.tooltip "Choose color for page background">
 
 <!-- editor toolbar -->
 <!ENTITY decreaseFontSizeToolbarCmd.tooltip "Decrease Font Size">
 <!ENTITY increaseFontSizeToolbarCmd.tooltip "Increase Font Size">
-<!ENTITY boldToolbarCmd.tooltip "Make Selected or New Text Bold">
-<!ENTITY italicToolbarCmd.tooltip "Make Selected or New Text Italic">
-<!ENTITY underlineToolbarCmd.tooltip "Make Selected or New Text Underline">
-<!ENTITY bulletListToolbarCmd.tooltip "Make Bulleted List">
-<!ENTITY numberListToolbarCmd.tooltip "Make Numbered List">
-<!ENTITY outdentToolbarCmd.tooltip "Outdent Text (Move to the left)">
-<!ENTITY indentToolbarCmd.tooltip "Indent Text (Move to the right)">
-<!ENTITY AlignPopupButton.tooltip "Set Alignment of Text">
+<!ENTITY boldToolbarCmd.tooltip "Bold">
+<!ENTITY italicToolbarCmd.tooltip "Italic">
+<!ENTITY underlineToolbarCmd.tooltip "Underline">
+<!ENTITY bulletListToolbarCmd.tooltip "Apply bulleted list format">
+<!ENTITY numberListToolbarCmd.tooltip "Apply numbered list format">
+<!ENTITY outdentToolbarCmd.tooltip "Outdent text (move left)">
+<!ENTITY indentToolbarCmd.tooltip "Indent text (move right)">
+<!ENTITY AlignPopupButton.tooltip "Choose text alignment">
 
 <!-- formatting toolbar not used, but may be in future -->
 <!ENTITY formatToolbar.boldChar "B">
@@ -601,11 +601,11 @@ Menu item text for "[Page|Table|Cell] Background color" is filled from
 
 <!-- Display Mode Toolbar -->
 <!ENTITY normalMode.label "Normal">
-<!ENTITY normalMode.tooltip "Normal Edit Mode (Default)">
+<!ENTITY normalMode.tooltip "Show table borders and named anchors">
 <!ENTITY previewMode.label "Edit Preview">
-<!ENTITY previewMode.tooltip "Edit Preview Mode (???)">
+<!ENTITY previewMode.tooltip "Display as WYSIWYG (browser)">
 <!ENTITY showAllTags.label "Show All Tags">
-<!ENTITY showAllTags.tooltip "Show All Tags Mode (Edit with each html tag iconified)">
+<!ENTITY showAllTags.tooltip "Display icons for all HTML tags">
 <!ENTITY sourceMode.label "HTML Source">
-<!ENTITY sourceMode.tooltip "HTML Source (Edit the Raw HTML Source)">
-<!ENTITY ToggleEditModeType.tooltip "Change between icon and text labeled tabs">
+<!ENTITY sourceMode.tooltip "Edit HTML source">
+<!ENTITY ToggleEditModeType.tooltip "Toggle between tab icons and text labels ">
