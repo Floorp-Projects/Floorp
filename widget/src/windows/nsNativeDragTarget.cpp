@@ -208,6 +208,14 @@ STDMETHODIMP nsNativeDragTarget::DragEnter(LPDATAOBJECT pIDataSource,
     mDataObj = pIDataSource;
     NS_ADDREF(mDataObj);
 
+    // This cast is ok because in the constructor we created a 
+    // the actual implementation we wanted, so we know this is
+    // a nsDragService
+    nsDragService * winDragService = NS_STATIC_CAST(nsDragService *, mDragService);
+
+    // Set the native data object into drage service
+    winDragService->SetIDataObject(pIDataSource);
+
     // Now process the native drag state and then dispatch the event
     ProcessDrag(NS_DRAGDROP_ENTER, grfKeyState, pt, pdwEffect);
 
