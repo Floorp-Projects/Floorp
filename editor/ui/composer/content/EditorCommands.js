@@ -55,18 +55,15 @@ function EditorOnLoad() {
         // Opened via window.openDialog with URL as argument.    
         // Put argument where EditorStartup expects it.
         document.getElementById( "args" ).setAttribute( "value", window.arguments[0] );
-        // Continue with normal startup.
-        EditorStartup( 'html' );
-        return;
-    } else {
-        // No problem, proceed the old-fashioned way.
-        return;
     }
+    // Continue with normal startup.
+    EditorStartup( 'html' );
+    return;
 }
   
 function EditorStartup(editorType)
 {
-  dump("Doing Startup...\n");
+  dump("Doing Editor Startup...\n");
   contentWindow = window.content;
 
   // set up event listeners
@@ -76,7 +73,6 @@ function EditorStartup(editorType)
   var editorShell = Components.classes["component://netscape/editor/editorshell"].createInstance();
   if (editorShell)
     editorShell = editorShell.QueryInterface(Components.interfaces.nsIEditorShell);
-  
   if (!editorShell)
   {
     dump("Failed to create editor shell\n");
