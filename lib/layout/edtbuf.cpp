@@ -1166,7 +1166,7 @@ intn CEditBuffer::ParseOpenTag(pa_DocData *pData, PA_Tag* pTag, intn status){
         case P_LINEBREAK:
             {
             // Ignore <BR> after </LI>.
-            if ( m_bLastTagIsEnd && BitSet( edt_setIgnoreBreakAfterClose, m_iLastTagType ) ) {
+            if ( m_bLastTagIsEnd && BitSet( edt_setIgnoreBreakAfterClose, m_iLastTagType ) &&  m_iLastTagType != P_PARAGRAPH) {
             }
             else {
                 pElement = new CEditBreakElement(m_pCreationCursor, pTag);
@@ -1231,6 +1231,12 @@ intn CEditBuffer::ParseOpenTag(pa_DocData *pData, PA_Tag* pTag, intn status){
               }
 
 
+/* Don't add extra breaks here. We now add extra breaks after a </P> in
+ * CEditContainerElement::AdjustContainers().
+ *
+ * - kin
+ */
+#if 0
               // A table following a </P> should have an extra break before the table.  Add a NSDT.
               CEditElement *pPrev = m_pCreationCursor->GetLastChild();
               if (pPrev && pPrev->IsContainer()) {
@@ -1243,6 +1249,7 @@ intn CEditBuffer::ParseOpenTag(pa_DocData *pData, PA_Tag* pTag, intn status){
                     (void) new CEditTextElement(pNew, 0);
                   }
               }
+#endif
 
 
               m_pCreationCursor = pElement = new CEditTableElement( m_pCreationCursor, pTag, GetRAMCharSetID(), GetCurrentAlignment() );

@@ -6558,6 +6558,10 @@ void CEditContainerElement::AdjustContainers( CEditBuffer *pBuffer ){
         || (pBuffer->IsComposeWindow() 
                 && GetType() == P_PREFORMAT
                 && m_hackPreformat ) ){
+
+        XP_Bool bInsertNewContainer = FALSE;
+        XP_Bool bIsParagraph        = GetType() == P_PARAGRAPH;
+
         //
         // Convert to internal paragraph type
         //
@@ -6570,9 +6574,47 @@ void CEditContainerElement::AdjustContainers( CEditBuffer *pBuffer ){
         //
         if ( pPreviousSibling && pPreviousSibling->IsContainer() ) 
           pPrev = (CEditContainerElement*) pPreviousSibling;
-        if ( pNext && !pNext->IsContainer() ) pNext = 0;
-        
-        if ( !pNext || !CompareAlignments(GetAlignment(), pNext->GetAlignment())){
+
+        if (!pNext)
+            bInsertNewContainer = TRUE;
+        else if (pNext->IsContainer())
+        {
+            //
+            // If the alignments of this container and the next one
+            // don't match, add a blank container after this container.
+            //
+            // - Or -
+            //
+            // If this paragraph has an end tag, and the next container
+		    // is an NSDT, add a blank container after this paragraph.
+            //
+            // This will allow us to handle cases like:
+            //
+            //    <P></P><BR>
+            //    <P></P>text
+            //    <P></P><IMG>
+            //
+
+            if (!CompareAlignments(GetAlignment(), pNext->GetAlignment()) ||
+			    (bIsParagraph && m_bHasEndTag && pNext->GetType() == P_NSDT))
+                bInsertNewContainer = TRUE;
+        }
+        else if (bIsParagraph &&
+                 ((!IsListContainer(pNext->GetType()) && !pNext->IsTable()) ||
+                 (m_bHasEndTag && pNext->IsTable())))
+        {
+            //
+            // Dont' add a blank container between a paragraph and
+            // a list ... layout does that for us for free.
+            //
+            // If the paragraph is followed by a table, add a blank
+            // container only if the paragraph has a </P> tag.
+            //
+
+            bInsertNewContainer = TRUE;
+        }
+
+        if ( bInsertNewContainer ){
             CEditContainerElement *pNew;
             pNew = CEditContainerElement::NewDefaultContainer( 0, 
                         GetAlignment() );
@@ -6581,7 +6623,7 @@ void CEditContainerElement::AdjustContainers( CEditBuffer *pBuffer ){
             (void) new CEditBreakElement(pNew, 0);
             pNew->InsertAfter( this );
         }
-
+        
         // 
         // If there is a previous container, append an empty single spaced 
         //  paragraph before this one.  also append an empty single spaced paragraph if it was a table.
