@@ -129,7 +129,7 @@ if ($p->param('format') && $p->param('format') eq 'raw') {
         print " " x ($tab*5);
         print;
       }
-      if (/^--->/) {
+      if (/^--->/ && !/<---$/) {
         $tab++;
       }
     }
