@@ -340,6 +340,7 @@ decode
             rv = PR_FAILURE;
             break;
         case 0:
+            rv = PR_SUCCESS;
             break;
         default:
             PR_NOT_REACHED("coding error");
@@ -371,6 +372,11 @@ PL_Base64Decode
 {
     PRStatus status;
     PRBool allocated = PR_FALSE;
+
+    if( (char *)0 == src )
+    {
+        return (char *)0;
+    }
 
     if( 0 == srclen )
     {
