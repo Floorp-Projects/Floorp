@@ -987,7 +987,7 @@ sub stocks {
 
 sub LoadStockList {
     %stocklist = ("AOL"  => [$channel],
-                  "BE" => [$channel],
+                  "BEOS" => [$channel],
                   "^DJI" => [$channel],
                   "^IXIC" => [$channel]);
 
