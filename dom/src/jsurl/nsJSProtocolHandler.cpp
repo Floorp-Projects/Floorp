@@ -115,33 +115,26 @@ nsEvaluateStringProxy::EvaluateString(char **aRetValue, PRBool *aIsUndefined)
     if (NS_FAILED(rv)) return rv;
 
     // Get principal of code for execution
-    NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    // Get principal
+    nsCOMPtr<nsISupports> owner;
+    rv = mChannel->GetOwner(getter_AddRefs(owner));
     nsCOMPtr<nsIPrincipal> principal;
-    nsCOMPtr<nsIURI> referringUri;
-    // XXX this is wrong: see bugs 31818 and 29831. Norris is looking at it.
-    rv = mChannel->GetOriginalURI(getter_AddRefs(referringUri));
-    if (NS_FAILED(rv)) {
-        // No referrer available. Use the current javascript: URI, which will mean 
-        // that this script will be in another trust domain than any other script
-        // since SameOrigin should be false for anything other than the same
-        // javascript: URI.
-#if 0
-        nsCOMPtr<nsIDocShell> docShell;
-        docShell = do_QueryInterface(globalOwner, &rv);
-        if (NS_FAILED(rv)) return rv;
-        rv = docShell->GetCurrentURI(getter_AddRefs(referringUri));
-#else
-        rv = mChannel->GetURI(getter_AddRefs(referringUri));
-#endif
-        if (NS_FAILED(rv)) return rv;
+    if (owner)
+    {
+        principal = do_QueryInterface(owner, &rv);
+        NS_ASSERTION(principal, "Channel's owner is not a principal");
+        if (!principal) return NS_ERROR_FAILURE;
     }
-    rv = securityManager->GetCodebasePrincipal(referringUri, 
-                                               getter_AddRefs(principal));
-    if (NS_FAILED(rv)) return rv;
+    else // No owner from channel, use the current URI to generate a principal
+    {
+        nsCOMPtr<nsIURI> uri;
+        rv = mChannel->GetURI(getter_AddRefs(uri));
+        if (NS_FAILED(rv) || !uri) return NS_ERROR_FAILURE;
+        NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager,
+                        NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+        if (NS_FAILED(rv)) return rv;
+        rv =securityManager->GetCodebasePrincipal(uri, getter_AddRefs(principal));
+        if (NS_FAILED(rv) || !principal) return NS_ERROR_FAILURE;
+    }
 
     nsCOMPtr<nsIURI> jsURI;
     rv = mChannel->GetURI(getter_AddRefs(jsURI));

@@ -184,15 +184,16 @@ protected:
       loadRefresh
    } loadType;
 
-   NS_IMETHOD InternalLoad(nsIURI* aURI, nsIURI* aReferrerURI,
-      const char* aWindowTarget=nsnull, nsIInputStream* aPostData=nsnull, 
-      loadType aLoadType=loadNormal);
+   NS_IMETHOD InternalLoad(nsIURI* aURI, nsIURI* aReferrerURI, 
+      nsISupports* owner, const char* aWindowTarget=nsnull, 
+      nsIInputStream* aPostData=nsnull, loadType aLoadType=loadNormal);
    NS_IMETHOD CreateFixupURI(const PRUnichar* aStringURI, nsIURI** aURI);
    NS_IMETHOD FileURIFixup(const PRUnichar* aStringURI, nsIURI** aURI);
    NS_IMETHOD ConvertFileToStringURI(nsString& aIn, nsString& aOut);
    NS_IMETHOD ConvertStringURIToFileCharset(nsString& aIn, nsCString& aOut);
    NS_IMETHOD KeywordURIFixup(const PRUnichar* aStringURI, nsIURI** aURI);
-   NS_IMETHOD DoURILoad(nsIURI* aURI, nsIURI* aReferrer, 
+   NS_IMETHOD GetCurrentDocumentOwner(nsISupports** aOwner);
+   NS_IMETHOD DoURILoad(nsIURI* aURI, nsIURI* aReferrer, nsISupports *aOwner,
       nsURILoadCommand aLoadCmd, const char* aWindowTarget, 
       nsIInputStream* aPostData);
    NS_IMETHOD StopCurrentLoads();
