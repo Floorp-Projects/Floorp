@@ -180,23 +180,21 @@ nsJSContext::InitializeExternalClasses()
 nsresult
 nsJSContext::InitializeLiveConnectClasses()
 {
-  nsresult result = NS_OK;
+	nsresult result = NS_OK;
 
 #if defined(OJI) && defined(XP_MAC)
-  if (!mIsInitialized) {
-    nsILiveConnectManager* manager = NULL;
-    result = nsServiceManager::GetService(nsIJVMManager::GetCID(),
-                                          nsILiveConnectManager::GetIID(),
-                                          (nsISupports **)&manager);
-    if (result == NS_OK) {
-      result = manager->InitLiveConnectClasses(mContext, JS_GetGlobalObject(mContext));
-      nsServiceManager::ReleaseService(nsIJVMManager::GetCID(), manager);
-    }
-  }
+	nsILiveConnectManager* manager = NULL;
+	result = nsServiceManager::GetService(nsIJVMManager::GetCID(),
+	                                  nsILiveConnectManager::GetIID(),
+	                                  (nsISupports **)&manager);
+	if (result == NS_OK) {
+		result = manager->InitLiveConnectClasses(mContext, JS_GetGlobalObject(mContext));
+		nsServiceManager::ReleaseService(nsIJVMManager::GetCID(), manager);
+	}
 #endif
 
-  // return all is well until things are stable.
-  return NS_OK;
+	// return all is well until things are stable.
+	return NS_OK;
 }
 
 NS_IMETHODIMP
