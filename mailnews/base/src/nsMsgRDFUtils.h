@@ -33,36 +33,37 @@ typedef struct _nsMsgRDFNotification {
 
 //Some property declarations
 
-#define NC_RDF_SUBJECT				"http://home.netscape.com/NC-rdf#Subject"
-#define NC_RDF_SENDER				"http://home.netscape.com/NC-rdf#Sender"
-#define NC_RDF_DATE					"http://home.netscape.com/NC-rdf#Date"
-#define NC_RDF_STATUS				"http://home.netscape.com/NC-rdf#Status"
+#define NC_RDF_SUBJECT				NC_NAMESPACE_URI "Subject"
+#define NC_RDF_SENDER				NC_NAMESPACE_URI "Sender"
+#define NC_RDF_DATE					NC_NAMESPACE_URI "Date"
+#define NC_RDF_STATUS				NC_NAMESPACE_URI "Status"
 
-#define NC_RDF_CHILD				"http://home.netscape.com/NC-rdf#child"
-#define NC_RDF_MESSAGECHILD			"http://home.netscape.com/NC-rdf#MessageChild"
-#define NC_RDF_NAME					"http://home.netscape.com/NC-rdf#Name"
-#define NC_RDF_FOLDER				"http://home.netscape.com/NC-rdf#Folder"
-#define NC_RDF_SPECIALFOLDER		"http://home.netscape.com/NC-rdf#SpecialFolder"
-#define NC_RDF_TOTALMESSAGES		"http://home.netscape.com/NC-rdf#TotalMessages"
-#define NC_RDF_TOTALUNREADMESSAGES	"http://home.netscape.com/NC-rdf#TotalUnreadMessages"
-#define NC_RDF_CHARSET				"http://home.netscape.com/NC-rdf#Charset"
-#define NC_RDF_BIFFSTATE			"http://home.netscape.com/NC-rdf#BiffState"
+#define NC_RDF_CHILD				NC_NAMESPACE_URI "child"
+#define NC_RDF_MESSAGECHILD			NC_NAMESPACE_URI "MessageChild"
+#define NC_RDF_NAME					NC_NAMESPACE_URI "Name"
+#define NC_RDF_FOLDER				NC_NAMESPACE_URI "Folder"
+#define NC_RDF_SPECIALFOLDER		NC_NAMESPACE_URI "SpecialFolder"
+#define NC_RDF_SERVERTYPE   NC_NAMESPACE_URI "ServerType"
+#define NC_RDF_TOTALMESSAGES		NC_NAMESPACE_URI "TotalMessages"
+#define NC_RDF_TOTALUNREADMESSAGES	NC_NAMESPACE_URI "TotalUnreadMessages"
+#define NC_RDF_CHARSET				NC_NAMESPACE_URI "Charset"
+#define NC_RDF_BIFFSTATE			NC_NAMESPACE_URI "BiffState"
 
 //Folder Commands
-#define NC_RDF_DELETE				"http://home.netscape.com/NC-rdf#Delete"
-#define NC_RDF_NEWFOLDER			"http://home.netscape.com/NC-rdf#NewFolder"
-#define NC_RDF_GETNEWMESSAGES		"http://home.netscape.com/NC-rdf#GetNewMessages"
-#define NC_RDF_COPY					"http://home.netscape.com/NC-rdf#Copy"
-#define NC_RDF_MOVE					"http://home.netscape.com/NC-rdf#Move"
-#define NC_RDF_MARKALLMESSAGESREAD  "http://home.netscape.com/NC-rdf#MarkAllMessagesRead"
-#define NC_RDF_COMPACT				"http://home.netscape.com/NC-rdf#Compact"
-#define NC_RDF_RENAME				"http://home.netscape.com/NC_rdf#Rename"
-#define NC_RDF_EMPTYTRASH   "http://home.netscape.com/NC_rdf#EmptyTrash"
+#define NC_RDF_DELETE				NC_NAMESPACE_URI "Delete"
+#define NC_RDF_NEWFOLDER			NC_NAMESPACE_URI "NewFolder"
+#define NC_RDF_GETNEWMESSAGES		NC_NAMESPACE_URI "GetNewMessages"
+#define NC_RDF_COPY					NC_NAMESPACE_URI "Copy"
+#define NC_RDF_MOVE					NC_NAMESPACE_URI "Move"
+#define NC_RDF_MARKALLMESSAGESREAD  NC_NAMESPACE_URI "MarkAllMessagesRead"
+#define NC_RDF_COMPACT				NC_NAMESPACE_URI "Compact"
+#define NC_RDF_RENAME				NC_NAMESPACE_URI "Rename"
+#define NC_RDF_EMPTYTRASH   NC_NAMESPACE_URI "EmptyTrash"
 
 //Message Commands
-#define NC_RDF_MARKREAD				"http://home.netscape.com/NC-rdf#MarkRead"
-#define NC_RDF_MARKUNREAD			"http://home.netscape.com/NC-rdf#MarkUnread"
-#define NC_RDF_TOGGLEREAD			"http://home.netscape.com/NC-rdf#ToggleRead"
+#define NC_RDF_MARKREAD				NC_NAMESPACE_URI "MarkRead"
+#define NC_RDF_MARKUNREAD			NC_NAMESPACE_URI "MarkUnread"
+#define NC_RDF_TOGGLEREAD			NC_NAMESPACE_URI "ToggleRead"
 
 
 //Returns PR_TRUE if r1 is equal to r2 and r2 is the sort property.
@@ -75,6 +76,7 @@ peqCollationSort(nsIRDFResource* r1, nsIRDFResource* r2, PRBool *isCollation);
 
 //Given an nsString, create an nsIRDFNode
 nsresult createNode(nsString& str, nsIRDFNode **node);
+nsresult createNode(const char*, nsIRDFNode **);
 
 //Given a PRUint32, create an nsiIRDFNode.
 nsresult createNode(PRUint32 value, nsIRDFNode **node);

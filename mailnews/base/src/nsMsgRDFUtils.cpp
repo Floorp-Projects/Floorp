@@ -114,6 +114,23 @@ nsresult createNode(PRUint32 value, nsIRDFNode **node)
 	return rv;
 }
 
+nsresult createNode(const char* charstr, nsIRDFNode **node)
+{
+  nsresult rv;
+  // use nsString to convert to unicode
+	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv); 
+	if (NS_FAILED(rv)) return rv;  
+	nsCOMPtr<nsIRDFLiteral> value;
+  nsString str(charstr);
+  PRUnichar *ucharstr = str.ToNewUnicode();
+	rv = rdf->GetLiteral(ucharstr, getter_AddRefs(value));
+	if(NS_SUCCEEDED(rv)) {
+		*node = value;
+		NS_IF_ADDREF(*node);
+	}
+  return rv;
+}
+
 nsresult createDateNode(PRTime time, nsIRDFNode **node)
 {
 	*node = nsnull;

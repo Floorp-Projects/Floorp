@@ -48,6 +48,7 @@ nsIRDFResource* nsMsgFolderDataSource::kNC_MessageChild = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_Folder= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_Name= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_SpecialFolder= nsnull;
+nsIRDFResource* nsMsgFolderDataSource::kNC_ServerType = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_TotalMessages= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_TotalUnreadMessages= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_Charset = nsnull;
@@ -87,6 +88,7 @@ nsMsgFolderDataSource::~nsMsgFolderDataSource (void)
   NS_RELEASE2(kNC_Folder, refcnt);
   NS_RELEASE2(kNC_Name, refcnt);
   NS_RELEASE2(kNC_SpecialFolder, refcnt);
+  NS_RELEASE2(kNC_ServerType, refcnt);
   NS_RELEASE2(kNC_TotalMessages, refcnt);
   NS_RELEASE2(kNC_TotalUnreadMessages, refcnt);
   NS_RELEASE2(kNC_Charset, refcnt);
@@ -130,6 +132,7 @@ nsresult nsMsgFolderDataSource::Init()
     mRDFService->GetResource(NC_RDF_FOLDER,  &kNC_Folder);
     mRDFService->GetResource(NC_RDF_NAME,    &kNC_Name);
     mRDFService->GetResource(NC_RDF_SPECIALFOLDER, &kNC_SpecialFolder);
+    mRDFService->GetResource(NC_RDF_SERVERTYPE, &kNC_ServerType);
     mRDFService->GetResource(NC_RDF_TOTALMESSAGES, &kNC_TotalMessages);
     mRDFService->GetResource(NC_RDF_TOTALUNREADMESSAGES, &kNC_TotalUnreadMessages);
     mRDFService->GetResource(NC_RDF_CHARSET, &kNC_Charset);
@@ -293,7 +296,9 @@ NS_IMETHODIMP nsMsgFolderDataSource::GetTargets(nsIRDFResource* source,
 		  rv = NS_OK;
 	  }
     }
-    else if((kNC_Name == property) || (kNC_SpecialFolder == property))
+    else if ((kNC_Name == property) ||
+             (kNC_SpecialFolder == property) ||
+             (kNC_ServerType == property))
     {
       nsSingletonEnumerator* cursor =
         new nsSingletonEnumerator(property);
@@ -350,6 +355,16 @@ NS_IMETHODIMP nsMsgFolderDataSource::HasAssertion(nsIRDFResource* source,
                             PRBool* hasAssertion)
 {
 	nsresult rv;
+#if 0
+  nsXPIDLCString sourceval;
+  nsXPIDLCString propval;
+  nsXPIDLCString targetval;
+  source->GetValue(getter_Copies(sourceval));
+  property->GetValue(getter_Copies(propval));
+  /*  target->GetValue(getter_Copies(targetval)); */
+  printf("HasAssertion(%s, %s, ??...)\n", (const char*)sourceval, (const char*)propval);
+#endif
+
 	nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(source, &rv));
 	if(NS_SUCCEEDED(rv))
 		return DoFolderHasAssertion(folder, property, target, tv, hasAssertion);
@@ -373,7 +388,6 @@ NS_IMETHODIMP nsMsgFolderDataSource::ArcLabelsOut(nsIRDFResource* source,
   
   nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(source, &rv));
   if (NS_SUCCEEDED(rv)) {
-    fflush(stdout);
     rv = getFolderArcLabelsOut(folder, getter_AddRefs(arcs));
 #if 0
     nsXPIDLCString srcval;
@@ -409,6 +423,7 @@ nsMsgFolderDataSource::getFolderArcLabelsOut(nsIMsgFolder *folder,
   
   (*arcs)->AppendElement(kNC_Name);
   (*arcs)->AppendElement(kNC_SpecialFolder);
+  (*arcs)->AppendElement(kNC_ServerType);
   (*arcs)->AppendElement(kNC_TotalMessages);
   (*arcs)->AppendElement(kNC_TotalUnreadMessages);
   (*arcs)->AppendElement(kNC_Charset);
@@ -725,6 +740,8 @@ nsresult nsMsgFolderDataSource::createFolderNode(nsIMsgFolder* folder,
 		rv = createFolderNameNode(folder, target);
   else if ((kNC_SpecialFolder == property))
 		rv = createFolderSpecialNode(folder,target);
+  else if ((kNC_ServerType == property))
+    rv = createFolderServerTypeNode(folder, target);
 	else if ((kNC_TotalMessages == property))
 		rv = createTotalMessagesNode(folder, target);
 	else if ((kNC_TotalUnreadMessages == property))
@@ -780,6 +797,22 @@ nsMsgFolderDataSource::createFolderSpecialNode(nsIMsgFolder *folder,
     specialFolderString = "none";
   
   createNode(specialFolderString, target);
+  return NS_OK;
+}
+
+nsresult
+nsMsgFolderDataSource::createFolderServerTypeNode(nsIMsgFolder* folder,
+                                                  nsIRDFNode **target)
+{
+  nsresult rv;
+  nsCOMPtr<nsIMsgIncomingServer> server;
+  rv = folder->GetServer(getter_AddRefs(server));
+  if (NS_FAILED(rv)) return rv;
+
+  nsXPIDLCString serverType;
+  rv = server->GetType(getter_Copies(serverType));
+
+  createNode(serverType, target);
   return NS_OK;
 }
 
@@ -1050,8 +1083,11 @@ nsresult nsMsgFolderDataSource::DoFolderAssert(nsIMsgFolder *folder, nsIRDFResou
 }
 
 
-nsresult nsMsgFolderDataSource::DoFolderHasAssertion(nsIMsgFolder *folder, nsIRDFResource *property, nsIRDFNode *target,
-													 PRBool tv, PRBool *hasAssertion)
+nsresult nsMsgFolderDataSource::DoFolderHasAssertion(nsIMsgFolder *folder,
+                                                     nsIRDFResource *property,
+                                                     nsIRDFNode *target,
+                                                     PRBool tv,
+                                                     PRBool *hasAssertion)
 {
 	nsresult rv = NS_OK;
 	if(!hasAssertion)
@@ -1063,7 +1099,7 @@ nsresult nsMsgFolderDataSource::DoFolderHasAssertion(nsIMsgFolder *folder, nsIRD
 		*hasAssertion = PR_FALSE;
 		return NS_OK;
 	}
-
+  
 	if((kNC_Child == property))
 	{
 		nsCOMPtr<nsIFolder> childFolder(do_QueryInterface(target, &rv));
@@ -1082,8 +1118,13 @@ nsresult nsMsgFolderDataSource::DoFolderHasAssertion(nsIMsgFolder *folder, nsIRD
 		if(NS_SUCCEEDED(rv))
 			rv = folder->HasMessage(message, hasAssertion);
 	}
-	else if ((kNC_Name == property) || (kNC_SpecialFolder == property) || (kNC_TotalMessages == property)
-		|| (kNC_TotalUnreadMessages == property) || (kNC_Charset == property) || (kNC_BiffState == property))
+	else if ((kNC_Name == property) ||
+           (kNC_SpecialFolder == property) ||
+           (kNC_ServerType == property) ||
+           (kNC_TotalMessages == property) ||
+           (kNC_TotalUnreadMessages == property) ||
+           (kNC_Charset == property) ||
+           (kNC_BiffState == property))
 	{
 		nsCOMPtr<nsIRDFResource> folderResource(do_QueryInterface(folder, &rv));
 
