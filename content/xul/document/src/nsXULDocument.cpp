@@ -5037,9 +5037,9 @@ nsXULDocument::CreateElement(nsXULPrototypeElement* aPrototype, nsIContent** aRe
                 nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(result);
                 keyListener->Init(domElement, this);
 
-                AddEventListener("keypress", domEventListener, PR_TRUE);
-                AddEventListener("keydown",  domEventListener, PR_TRUE);
-                AddEventListener("keyup",    domEventListener, PR_TRUE);
+                AddEventListener("keypress", domEventListener, PR_FALSE);
+                AddEventListener("keydown",  domEventListener, PR_FALSE);
+                AddEventListener("keyup",    domEventListener, PR_FALSE);
             }
         }
     }
