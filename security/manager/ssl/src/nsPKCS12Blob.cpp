@@ -31,7 +31,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsPKCS12Blob.cpp,v 1.13 2001/06/24 19:15:59 mcgreer%netscape.com Exp $
+ * $Id: nsPKCS12Blob.cpp,v 1.14 2001/06/29 04:35:04 javi%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -250,6 +250,7 @@ nsPKCS12Blob::ExportToFile(nsILocalFile *file,
   nsXPIDLCString xpidlFilePath;
   nsAutoString filePath;
   int i;
+  nsCOMPtr<nsILocalFile> localFileRef;
   NS_ASSERTION(mToken, "Need to set the token before exporting");
   // init slot
   rv = mToken->Login(PR_TRUE);
@@ -330,12 +331,22 @@ nsPKCS12Blob::ExportToFile(nsILocalFile *file,
   this->mTmpFile = NULL;
   file->GetPath(getter_Copies(xpidlFilePath));
   filePath.AssignWithConversion(xpidlFilePath);
+  // Use the nsCOMPtr var localFileRef so that
+  // the reference to the nsILocalFile we create gets released as soon as
+  // we're out of scope, ie when this function exits.
   if (filePath.RFind(".p12", PR_TRUE, -1, 4) < 0) {
+    // We're going to add the .p12 extension to the file name just like
+    // Communicator used to.  We create a new nsILocalFile and initialize
+    // it with the new patch.
     filePath.AppendWithConversion(".p12");
+    localFileRef = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) goto finish;
+    localFileRef->InitWithUnicodePath(filePath.get());
+    file = localFileRef;
   }
-  this->mTmpFile = PR_Open(NS_ConvertUCS2toUTF8(filePath.get()).get(),
-                           PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 0600);
-  if (!this->mTmpFile) goto finish;
+  rv = file->OpenNSPRFileDesc(PR_RDWR|PR_CREATE_FILE|PR_TRUNCATE, 0664, 
+                              &mTmpFile);
+  if (NS_FAILED(rv) || !this->mTmpFile) goto finish;
   // encode and write
   srv = SEC_PKCS12Encode(ecx, write_export_file, this);
   if (srv) goto finish;
