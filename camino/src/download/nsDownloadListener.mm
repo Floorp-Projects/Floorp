@@ -40,6 +40,7 @@
 #import "NSString+Utils.h"
 
 #include "nsDownloadListener.h"
+#include "nsIObserver.h"
 
 #include "nsIWebProgress.h"
 #include "nsIRequest.h"

@@ -51,7 +51,7 @@
 #include "nsIURI.h"
 #include "nsILocalFile.h"
 
-#include "nsExternalHelperAppService.h"
+#include "nsIExternalHelperAppService.h"
 
 
 // maybe this should replace nsHeaderSniffer too?
