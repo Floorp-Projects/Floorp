@@ -1290,7 +1290,7 @@ my $query = GenerateSQL(\@selectnames, $::buffer);
 ################################################################################
 
 # Add to the query some instructions for sorting the bug list.
-if ($::COOKIE{'LASTORDER'} && !$order || $order =~ /^reuse/i) {
+if ($::COOKIE{'LASTORDER'} && (!$order || $order =~ /^reuse/i)) {
     $order = url_decode($::COOKIE{'LASTORDER'});
     $order_from_cookie = 1;
 }
