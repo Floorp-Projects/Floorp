@@ -423,7 +423,7 @@ PR_STATIC_CALLBACK(JSBool)
 WinRegSetValue(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsWinReg *nativeThis = (nsWinReg*)JS_GetPrivate(cx, obj);
-  PRInt32 nativeRet;
+//  PRInt32 nativeRet;
   nsAutoString b0;
   nsAutoString b1;
 //  nsWinRegItem *b2;
@@ -454,7 +454,7 @@ WinRegSetValue(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
 //      return JS_FALSE;
 //    }
 
-    *rval = INT_TO_JSVAL(nativeRet);
+//    *rval = INT_TO_JSVAL(nativeRet);
   }
   else
   {

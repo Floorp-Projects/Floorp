@@ -56,10 +56,22 @@ nsWinProfile::WriteString(nsString section, nsString key, nsString value, PRInt3
 {
   *aReturn = NS_OK;
   
-  nsWinProfileItem* wi = new nsWinProfileItem(this, section, key, value);
+  nsWinProfileItem* wi = new nsWinProfileItem(this, section, key, value, aReturn);
 
   if(wi == nsnull)
-      return nsInstall::OUT_OF_MEMORY;
+  {
+    *aReturn = nsInstall::OUT_OF_MEMORY;
+    return NS_OK;
+  }
+
+  if(*aReturn != nsInstall::SUCCESS)
+  {
+    if(wi)
+    {
+      delete wi;
+      return NS_OK;
+    }
+  }
 
   if (mInstallObject)
     mInstallObject->ScheduleForInstall(wi);

@@ -38,65 +38,105 @@ nsWinReg::SetRootKey(PRInt32 key)
 PRInt32
 nsWinReg::CreateKey(const nsString& subkey, const nsString& classname, PRInt32* aReturn)
 {
-	nsWinRegItem* wi = new nsWinRegItem(this, mRootKey, NS_WIN_REG_CREATE, subkey, classname, "null");
+	nsWinRegItem* wi = new nsWinRegItem(this, mRootKey, NS_WIN_REG_CREATE, subkey, classname, "null", aReturn);
 
-	if(wi == nsnull)
+  if(wi == nsnull)
+  {
+    *aReturn = nsInstall::OUT_OF_MEMORY;
+    return NS_OK;
+  }
+
+  if(*aReturn != nsInstall::SUCCESS)
+  {
+    if(wi)
     {
-        return NS_OK;
+      delete wi;
+      return NS_OK;
     }
-    
-    if (mInstallObject)
-    	mInstallObject->ScheduleForInstall(wi);
+  }
+
+  if(mInstallObject)
+  	mInstallObject->ScheduleForInstall(wi);
 	
-    return 0;
+  return 0;
 }
   
 PRInt32
 nsWinReg::DeleteKey(const nsString& subkey, PRInt32* aReturn)
 {
-	nsWinRegItem* wi = new nsWinRegItem(this, mRootKey, NS_WIN_REG_DELETE, subkey, "null", "null");
+	nsWinRegItem* wi = new nsWinRegItem(this, mRootKey, NS_WIN_REG_DELETE, subkey, "null", "null", aReturn);
 
-	if(wi == nsnull)
+  if(wi == nsnull)
+  {
+    *aReturn = nsInstall::OUT_OF_MEMORY;
+    return NS_OK;
+  }
+
+  if(*aReturn != nsInstall::SUCCESS)
+  {
+    if(wi)
     {
-        return NS_OK;
+      delete wi;
+      return NS_OK;
     }
-	
-    if (mInstallObject)
-        mInstallObject->ScheduleForInstall(wi);
-	
-    return 0;
+  }
+
+  if(mInstallObject)
+    mInstallObject->ScheduleForInstall(wi);
+
+  return 0;
 }
 
 PRInt32
 nsWinReg::DeleteValue(const nsString& subkey, const nsString& valname, PRInt32* aReturn)
 {
-	nsWinRegItem* wi = new nsWinRegItem(this, mRootKey, NS_WIN_REG_DELETE_VAL, subkey, valname, "null");
+	nsWinRegItem* wi = new nsWinRegItem(this, mRootKey, NS_WIN_REG_DELETE_VAL, subkey, valname, "null", aReturn);
 
-	if(wi == nsnull)
+  if(wi == nsnull)
+  {
+    *aReturn = nsInstall::OUT_OF_MEMORY;
+    return NS_OK;
+  }
+
+  if(*aReturn != nsInstall::SUCCESS)
+  {
+    if(wi)
     {
-        return NS_OK;
+      delete wi;
+      return NS_OK;
     }
-	
-    if (mInstallObject)
-        mInstallObject->ScheduleForInstall(wi);
-	
-    return 0;
+  }
+
+  if(mInstallObject)
+    mInstallObject->ScheduleForInstall(wi);
+
+  return 0;
 }
 
 PRInt32
 nsWinReg::SetValueString(const nsString& subkey, const nsString& valname, const nsString& value, PRInt32* aReturn)
 {
-	nsWinRegItem* wi = new nsWinRegItem(this, mRootKey, NS_WIN_REG_SET_VAL_STRING, subkey, valname, value);
+	nsWinRegItem* wi = new nsWinRegItem(this, mRootKey, NS_WIN_REG_SET_VAL_STRING, subkey, valname, value, aReturn);
 
-	if(wi == nsnull)
+  if(wi == nsnull)
+  {
+    *aReturn = nsInstall::OUT_OF_MEMORY;
+    return NS_OK;
+  }
+
+  if(*aReturn != nsInstall::SUCCESS)
+  {
+    if(wi)
     {
-        return NS_OK;
+      delete wi;
+      return NS_OK;
     }
+  }
 
-	if (mInstallObject)
-        mInstallObject->ScheduleForInstall(wi);
+  if(mInstallObject)
+    mInstallObject->ScheduleForInstall(wi);
 	
-    return 0;
+  return 0;
 }
 
 PRInt32
@@ -109,17 +149,27 @@ nsWinReg::GetValueString(const nsString& subkey, const nsString& valname, nsStri
 PRInt32
 nsWinReg::SetValueNumber(const nsString& subkey, const nsString& valname, PRInt32 value, PRInt32* aReturn)
 {
-	nsWinRegItem* wi = new nsWinRegItem(this, mRootKey, NS_WIN_REG_SET_VAL_NUMBER, subkey, valname, value);
+	nsWinRegItem* wi = new nsWinRegItem(this, mRootKey, NS_WIN_REG_SET_VAL_NUMBER, subkey, valname, value, aReturn);
 
-	if(wi == nsnull)
+  if(wi == nsnull)
+  {
+    *aReturn = nsInstall::OUT_OF_MEMORY;
+    return NS_OK;
+  }
+
+  if(*aReturn != nsInstall::SUCCESS)
+  {
+    if(wi)
     {
-        return NS_OK;
+      delete wi;
+      return NS_OK;
     }
-	
-    if (mInstallObject)
-        mInstallObject->ScheduleForInstall(wi);
-	
-    return 0;
+  }
+
+  if(mInstallObject)
+    mInstallObject->ScheduleForInstall(wi);
+
+  return 0;
 }
 
 PRInt32
@@ -134,7 +184,7 @@ nsWinReg::SetValue(const nsString& subkey, const nsString& valname, nsWinRegValu
 {
   // fix: need to figure out what to do with nsWinRegValue class.
   //
-	// nsWinRegItem* wi = new nsWinRegItem(this, mRootKey, NS_WIN_REG_SET_VAL, subkey, valname, (nsWinRegValue*)value);
+	// nsWinRegItem* wi = new nsWinRegItem(this, mRootKey, NS_WIN_REG_SET_VAL, subkey, valname, (nsWinRegValue*)value, aReturn);
   //
 	// if(wi == nsnull)
   // {
@@ -161,7 +211,7 @@ nsWinReg::FinalCreateKey(PRInt32 root, const nsString& subkey, const nsString& c
 {
 	SetRootKey(root);
 	*aReturn = NativeCreateKey(subkey, classname);
-    return NS_OK;
+  return NS_OK;
 }
   
 PRInt32
@@ -169,7 +219,7 @@ nsWinReg::FinalDeleteKey(PRInt32 root, const nsString& subkey, PRInt32* aReturn)
 {
 	SetRootKey(root);
 	*aReturn = NativeDeleteKey(subkey);
-    return NS_OK;
+  return NS_OK;
 }
   
 PRInt32
@@ -177,7 +227,7 @@ nsWinReg::FinalDeleteValue(PRInt32 root, const nsString& subkey, const nsString&
 {
 	SetRootKey(root);
 	*aReturn = NativeDeleteValue(subkey, valname);
-    return NS_OK;
+  return NS_OK;
 }
 
 PRInt32
@@ -185,7 +235,7 @@ nsWinReg::FinalSetValueString(PRInt32 root, const nsString& subkey, const nsStri
 {
 	SetRootKey(root);
 	*aReturn = NativeSetValueString(subkey, valname, value);
-    return NS_OK;
+  return NS_OK;
 }
  
 PRInt32
@@ -193,7 +243,7 @@ nsWinReg::FinalSetValueNumber(PRInt32 root, const nsString& subkey, const nsStri
 {
 	SetRootKey(root);
 	*aReturn = NativeSetValueNumber(subkey, valname, value);
-    return NS_OK;
+  return NS_OK;
 }
  
 PRInt32
@@ -201,7 +251,7 @@ nsWinReg::FinalSetValue(PRInt32 root, const nsString& subkey, const nsString& va
 {
 	SetRootKey(root);
 	*aReturn = NativeSetValue(subkey, valname, value);
-    return NS_OK;
+  return NS_OK;
 }
 
 
