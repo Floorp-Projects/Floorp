@@ -71,7 +71,7 @@ public:
         
     NS_DECL_NSIRDFXMLSINKOBSERVER
         
-private:
+protected:
     
     nsXPINotifierImpl();
     virtual ~nsXPINotifierImpl();
@@ -630,7 +630,7 @@ nsXPINotifierImpl::OnEndLoad(nsIRDFXMLSink *aSink)
                         nsCOMPtr<nsIRDFDataSource> ds = do_QueryInterface(mInner);
 
                         ds->Assert(aPackage, kNC_Type, kXPI_Notifier_Type, PR_TRUE);
-                        ds->Assert(aPackage, kNC_Source, title, PR_TRUE);
+                        ds->Assert(aPackage, kNC_Description, title, PR_TRUE);
                         ds->Assert(aPackage, kNC_URL, url, PR_TRUE);
 
                         ds->Assert(kNC_FlashRoot, kNC_Child, aPackage, PR_TRUE);
