@@ -22,11 +22,10 @@
 #include "msgCore.h"
 #include "prprf.h" /* should be defined into msgCore.h? */
 #include "nsMsgHeaderMasks.h"
-
-#include "nsMsgTransition.h"
-
 #include "nsIMsgCompFields.h"
-
+#include "nsMsgZapIt.h"
+#include "msgcom.h"
+#include "rosetta_mailnews.h"
 
 /* Note that all the "Get" methods never return NULL (except in case of serious
    error, like an illegal parameter); rather, they return "" if things were set

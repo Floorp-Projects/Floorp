@@ -85,6 +85,8 @@ public:
 private:
 	// the nsISmtpURL that is currently running
 	nsCOMPtr<nsISmtpUrl>		m_runningURL;
+	// the error state we want to set on the url
+	nsresult			m_urlErrorState;
 	PRUint32 m_LastTime;
     nsCOMPtr<nsIMsgStatusFeedback> m_statusFeedback;
 

@@ -44,10 +44,8 @@
 #include "nsIMsgCopyServiceListener.h"
 #include "nsIFileSpec.h"
 #include "nsMsgCopy.h"
-#include "nsMsgTransition.h"
 #include "nsXPIDLString.h"
 #include "nsMsgPrompts.h"
-#include "nsMsgTransition.h"
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIDOMHTMLLinkElement.h"
 #include "nsIDOMHTMLAnchorElement.h"
@@ -1335,14 +1333,12 @@ PRUint32                  i;
   // we will have memory problems and we should just return 
   // with an error.
   if (multipartCount != mMultipartRelatedAttachmentCount) {
-    //return MK_MIME_MPART_ATTACHMENT_ERROR;
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_MIME_MPART_ATTACHMENT_ERROR;
   }
 
   rv = mEditor->GetEmbeddedObjects(&aNodeList);
   if ((NS_FAILED(rv) || (!aNodeList))) {
-    //return MK_MIME_MPART_ATTACHMENT_ERROR;
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_MIME_MPART_ATTACHMENT_ERROR;
   }
  
   nsMsgAttachmentData   attachment;
@@ -1368,15 +1364,13 @@ PRUint32                  i;
     nsISupports             *isupp = aNodeList->ElementAt(locCount);
 
     if (!isupp) {
-      //return MK_MIME_MPART_ATTACHMENT_ERROR;
-      return NS_ERROR_FAILURE;
+      return NS_ERROR_MIME_MPART_ATTACHMENT_ERROR;
     }
 
     node = do_QueryInterface(isupp);
     NS_IF_RELEASE(isupp);             // make sure we cleanup
     if (!node) {
-      //return MK_MIME_MPART_ATTACHMENT_ERROR;
-      return NS_ERROR_FAILURE;
+      return NS_ERROR_MIME_MPART_ATTACHMENT_ERROR;
     }
 
     // Now, we know the types of objects this node can be, so we will do
@@ -1478,8 +1472,7 @@ PRUint32                  i;
     else
     {
       // If we get here, we got something we didn't expect!
-      //return MK_MIME_MPART_ATTACHMENT_ERROR;
-      return NS_ERROR_FAILURE;
+      return NS_ERROR_MIME_MPART_ATTACHMENT_ERROR;
     }
 
     // 
@@ -2622,10 +2615,14 @@ nsMsgComposeAndSend::Fail(nsresult failure_code, const PRUnichar * error_msg)
 {
   if (NS_FAILED(failure_code))
   {
-    if (!error_msg)
-      nsMsgDisplayMessageByID(failure_code);
-    else
-      nsMsgDisplayMessageByString(error_msg);
+    // in certain cases, we've already shown the alert
+    // and we don't need to show another alert here.
+    if (failure_code != NS_ERROR_BUT_DONT_SHOW_ALERT) {
+	    if (!error_msg)
+	      nsMsgDisplayMessageByID(failure_code);
+	    else
+	      nsMsgDisplayMessageByString(error_msg);
+    }
   }
 
   if (m_attachments_done_callback)
@@ -3390,7 +3387,7 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
 	}
 
   //
-  // First, we we need to put a Berkely "From - " delimiter at the head of 
+  // First, we we need to put a Berkeley "From - " delimiter at the head of 
   // the file for parsing...
   //
   turi = GetFolderURIFromUserPrefs(mode, mUserIdentity);

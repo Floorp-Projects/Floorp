@@ -22,7 +22,6 @@
 #include "msgCore.h"
 #include "prprf.h" /* should be defined into msgCore.h? */
 #include "intl_csi.h"
-#include "nsMsgTransition.h"
 #include "nsMsgZapIt.h"
 #include "nsMsgSend.h"
 

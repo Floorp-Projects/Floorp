@@ -38,7 +38,6 @@ EXPORTS=    nsSmtpUrl.h             \
 			nsMsgCompFields.h \
 			nsMsgQuote.h \
 			nsURLFetcher.h \
-			nsMsgTransition.h \
 			nsSmtpServer.h	\
             $(NULL)
 

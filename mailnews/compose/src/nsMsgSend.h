@@ -124,7 +124,6 @@
 #include "rosetta_mailnews.h"
 #include "nsFileStream.h"
 #include "nsMsgMessageFlags.h"
-#include "nsMsgTransition.h"
 #include "nsIMsgSend.h"
 #include "nsIURL.h"
 #include "nsMsgAttachmentHandler.h"

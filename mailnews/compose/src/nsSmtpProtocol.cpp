@@ -16,7 +16,6 @@
  * Reserved.
  */
 #include "msgCore.h"
-#include "nsMsgTransition.h" // need this to get MK_ defines...
 #include "nsSmtpProtocol.h"
 #include "nscore.h"
 #include "nsIStreamListener.h"
@@ -27,6 +26,10 @@
 #include "nsIMsgMailNewsUrl.h"
 #include "nsMsgComposeStringBundle.h"
 #include "nsMsgBaseCID.h"
+#include "nsINetSupportDialogService.h"
+#include "nsIPrompt.h"
+#include "nsString.h"
+#include "nsTextFormater.h"
 
 #include "prtime.h"
 #include "prlog.h"
@@ -34,7 +37,12 @@
 #include "prprf.h"
 #include "nsEscape.h"
 
+#ifndef XP_UNIX
+#include <stdarg.h>
+#endif /* !XP_UNIX */
+
 static NS_DEFINE_CID(kHeaderParserCID, NS_MSGHEADERPARSER_CID);
+static NS_DEFINE_CID(kCNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID); 
 
 extern "C" 
 {
@@ -63,19 +71,44 @@ const char *XP_AppCodeName = "Mozilla";
 #endif
 #define NET_IS_SPACE(x) ((((unsigned int) (x)) > 0x7f) ? 0 : isspace(x))
 
-/*
- * This function takes an error code and associated error data
- * and creates a string containing a textual description of
- * what the error is and why it happened.
- *
- * The returned string is allocated and thus should be freed
- * once it has been used.
- *
- * This function is defined in mkmessag.c.
- */
-char * NET_ExplainErrorDetails (int code, ...)
+/* based on in NET_ExplainErrorDetails in mkmessag.c */
+nsresult nsExplainErrorDetails(int code, ...)
 {
-	char * rv = PR_smprintf("%s", "Error descriptions not implemented yet");
+	nsresult rv;
+	va_list args;
+	
+	NS_WITH_SERVICE(nsIPrompt, dialog, kCNetSupportDialogCID, &rv);
+
+	PRUnichar *msg = nsnull;
+	PRUnichar *eMsg = nsnull;
+
+	va_start (args, code);
+
+	switch (code)	{
+		case NS_ERROR_SMTP_SERVER_ERROR:
+		case NS_ERROR_TCP_READ_ERROR:
+		case NS_ERROR_SENDING_FROM_COMMAND:
+		case NS_ERROR_SENDING_RCPT_COMMAND:
+		case NS_ERROR_SENDING_DATA_COMMAND:
+		case NS_ERROR_SENDING_MESSAGE:   
+			eMsg = ComposeGetStringByID(code);
+			msg = nsTextFormater::vsmprintf(eMsg, args);
+			nsCRT::free(eMsg);
+			break;
+		default:
+			eMsg = ComposeGetStringByID(NS_ERROR_COMMUNICATIONS_ERROR);
+			msg = nsTextFormater::smprintf(eMsg, code);
+			nsCRT::free(eMsg);
+			break;
+	}
+
+	if (msg) {
+		rv = dialog->Alert(msg);
+		nsTextFormater::smprintf_free(msg);
+	}
+
+	va_end (args);
+
 	return rv;
 }
 
@@ -225,7 +258,9 @@ void nsSmtpProtocol::Initialize(nsIURI * aURL)
 	m_flags = 0;
 	m_port = SMTP_PORT;
 
-	if (aURL)
+	m_urlErrorState = NS_ERROR_FAILURE;
+
+	if (aURL) 
 		m_runningURL = do_QueryInterface(aURL);
 
     // extract out message feedback if there is any.
@@ -380,21 +415,23 @@ PRInt32 nsSmtpProtocol::SmtpResponse(nsIInputStream * inputStream, PRUint32 leng
         m_nextState = SMTP_ERROR_DONE;
         ClearFlag(SMTP_PAUSE_FOR_READ);
 
-		nsCOMPtr<nsIMsgMailNewsUrl> url = do_QueryInterface(m_runningURL);
-		url->SetErrorMessage(NET_ExplainErrorDetails(MK_SMTP_SERVER_ERROR, (const char*)m_responseText));
-		status = MK_SMTP_SERVER_ERROR;
-        return(MK_SMTP_SERVER_ERROR);
+	nsresult rv = nsExplainErrorDetails(NS_ERROR_SMTP_SERVER_ERROR, (const char*)m_responseText);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "failed to explain SMTP error");
+
+        m_urlErrorState = NS_ERROR_BUT_DONT_SHOW_ALERT;
+        return(NS_ERROR_SMTP_SERVER_ERROR);
     }
 
     /* if TCP error of if there is not a full line yet return
      */
     if(status < 0)
 	{
-		nsCOMPtr<nsIMsgMailNewsUrl> url = do_QueryInterface(m_runningURL);
-		url->SetErrorMessage(NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError()));
-        /* return TCP error
-         */
-        return MK_TCP_READ_ERROR;
+	nsresult rv = nsExplainErrorDetails(NS_ERROR_TCP_READ_ERROR, PR_GetOSError());
+	NS_ASSERTION(NS_SUCCEEDED(rv), "failed to explain SMTP error");
+
+	m_urlErrorState = NS_ERROR_BUT_DONT_SHOW_ALERT;
+        /* return TCP error */
+	return(NS_ERROR_TCP_READ_ERROR);
 	}
 	else if(!line)
 	{
@@ -438,9 +475,8 @@ PRInt32 nsSmtpProtocol::LoginResponse(nsIInputStream * inputStream, PRUint32 len
 
     if(m_responseCode != 220)
 	{
-		nsCOMPtr<nsIMsgMailNewsUrl> url = do_QueryInterface(m_runningURL);
-		url->SetErrorMessage(NET_ExplainErrorDetails(MK_COULD_NOT_LOGIN_TO_SMTP_SERVER));
-		return(MK_COULD_NOT_LOGIN_TO_SMTP_SERVER);
+		m_urlErrorState = NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER;
+		return(NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER);
 	}
 
 	buffer += GetUserDomainName();
@@ -464,9 +500,8 @@ PRInt32 nsSmtpProtocol::ExtensionLoginResponse(nsIInputStream * inputStream, PRU
 
     if(m_responseCode != 220)
 	{
-		nsCOMPtr<nsIMsgMailNewsUrl> url = do_QueryInterface(m_runningURL);
-		url->SetErrorMessage(NET_ExplainErrorDetails(MK_COULD_NOT_LOGIN_TO_SMTP_SERVER));
-		return(MK_COULD_NOT_LOGIN_TO_SMTP_SERVER);
+		m_urlErrorState = NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER;
+		return(NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER);
 	}
 
 	buffer += GetUserDomainName();
@@ -498,9 +533,8 @@ PRInt32 nsSmtpProtocol::SendHeloResponse(nsIInputStream * inputStream, PRUint32 
 
 	if(!userAddress)
 	{
-		nsCOMPtr<nsIMsgMailNewsUrl> url = do_QueryInterface(m_runningURL);
-		url->SetErrorMessage(NET_ExplainErrorDetails(MK_COULD_NOT_GET_USERS_MAIL_ADDRESS));
-		return(MK_COULD_NOT_GET_USERS_MAIL_ADDRESS);
+		m_urlErrorState = NS_ERROR_COULD_NOT_GET_USERS_MAIL_ADDRESS;
+		return(NS_ERROR_COULD_NOT_GET_USERS_MAIL_ADDRESS);
 	}
 
 	if(m_verifyAddress)
@@ -696,7 +730,7 @@ PRInt32 nsSmtpProtocol::AuthLoginResponse(nsIInputStream * stream, PRUint32 leng
 			 * they want auth login we're just going to return an error 
 			 * and not let the msg be sent to the server
 			 */
-			status = MK_POP3_PASSWORD_UNDEFINED;
+			status = NS_ERROR_POP3_PASSWORD_UNDEFINED;
         }
 		PR_FREEIF(net_smtp_name);
 		PR_FREEIF(tmp_name);
@@ -720,7 +754,7 @@ PRInt32 nsSmtpProtocol::AuthLoginUsername()
   if (!net_smtp_name || !*net_smtp_name)
   {
 	  PR_FREEIF(net_smtp_name);
-	  return (MK_POP3_USERNAME_UNDEFINED);
+	  return (NS_POP3_USERNAME_UNDEFINED);
   }
 
   if (m_authMethod == 1)
@@ -739,7 +773,7 @@ PRInt32 nsSmtpProtocol::AuthLoginUsername()
 		  if (!net_smtp_password)
 			net_smtp_password = net_smtp_prompt_for_password(cur_entry);
 		  if (!net_smtp_password)
-			  return MK_POP3_PASSWORD_UNDEFINED;
+			  return NS_ERROR_POP3_PASSWORD_UNDEFINED;
 	  }
 
 	  nsCRT::memset(plain_string, 0, 512);
@@ -757,7 +791,7 @@ PRInt32 nsSmtpProtocol::AuthLoginUsername()
 	  else if (m_authMethod == SMTP_AUTH_PLAIN)
 		  PR_snprintf(buffer, sizeof(buffer), "AUTH PLAIN %.256s" CRLF, base64Str);
 	  else
-		  return (MK_COMMUNICATIONS_ERROR);
+		  return (NS_ERROR_COMMUNICATIONS_ERROR);
 	
 	  nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
 	  status = SendData(url, buffer);
@@ -795,7 +829,7 @@ PRInt32 nsSmtpProtocol::AuthLoginPassword()
 	  PR_FREEIF(net_smtp_password);
 	  net_smtp_password = net_smtp_prompt_for_password(cur_entry);
 	  if (!net_smtp_password)
-		  return MK_POP3_PASSWORD_UNDEFINED;
+		  return NS_ERROR_POP3_PASSWORD_UNDEFINED;
   }
 
   PR_ASSERT(net_smtp_password);
@@ -830,9 +864,9 @@ PRInt32 nsSmtpProtocol::SendVerifyResponse()
     char buffer[512];
 
     if(m_responseCode == 250 || m_responseCode == 251)
-		return(MK_USER_VERIFIED_BY_SMTP);
+		return(NS_USER_VERIFIED_BY_SMTP);
 	else
-		return(MK_USER_NOT_VERIFIED_BY_SMTP);
+		return(NS_USER_NOT_VERIFIED_BY_SMTP);
 #else	
 	PR_ASSERT(0);
 	return(-1);
@@ -846,9 +880,11 @@ PRInt32 nsSmtpProtocol::SendMailResponse()
 
     if(m_responseCode != 250)
 	{
-		nsCOMPtr<nsIMsgMailNewsUrl> url = do_QueryInterface(m_runningURL);
-		url->SetErrorMessage(NET_ExplainErrorDetails(MK_ERROR_SENDING_FROM_COMMAND, (const char*)m_responseText));
-		return(MK_ERROR_SENDING_FROM_COMMAND);  
+		nsresult rv = nsExplainErrorDetails(NS_ERROR_SENDING_FROM_COMMAND, (const char*)m_responseText);
+		NS_ASSERTION(NS_SUCCEEDED(rv), "failed to explain SMTP error");
+
+		m_urlErrorState = NS_ERROR_BUT_DONT_SHOW_ALERT;
+		return(NS_ERROR_SENDING_FROM_COMMAND);
 	}
 
     /* Send the RCPT TO: command */
@@ -873,8 +909,8 @@ PRInt32 nsSmtpProtocol::SendMailResponse()
 		}
 		else 
 		{
-			status = MK_OUT_OF_MEMORY;
-			return (status);
+			m_urlErrorState = NS_ERROR_OUT_OF_MEMORY;
+			return (NS_ERROR_OUT_OF_MEMORY);
 		}
 	}
 	else
@@ -905,9 +941,11 @@ PRInt32 nsSmtpProtocol::SendRecipientResponse()
 
 	if(m_responseCode != 250 && m_responseCode != 251)
 	{
-		nsCOMPtr<nsIMsgMailNewsUrl> url = do_QueryInterface(m_runningURL);
-		url->SetErrorMessage(NET_ExplainErrorDetails(MK_ERROR_SENDING_RCPT_COMMAND, (const char*)m_responseText));
-        return(MK_ERROR_SENDING_RCPT_COMMAND);
+                nsresult rv = nsExplainErrorDetails(NS_ERROR_SENDING_RCPT_COMMAND, (const char*)m_responseText);
+                NS_ASSERTION(NS_SUCCEEDED(rv), "failed to explain SMTP error");
+
+                m_urlErrorState = NS_ERROR_BUT_DONT_SHOW_ALERT;
+                return(NS_ERROR_SENDING_RCPT_COMMAND);
 	}
 
 	if(m_addressesLeft > 0)
@@ -938,10 +976,11 @@ PRInt32 nsSmtpProtocol::SendDataResponse()
 
     if(m_responseCode != 354)
 	{
-		nsCOMPtr<nsIMsgMailNewsUrl> url = do_QueryInterface(m_runningURL);
-		url->SetErrorMessage(NET_ExplainErrorDetails(MK_ERROR_SENDING_DATA_COMMAND, 
-			(const char*)m_responseText));
-        return(MK_ERROR_SENDING_DATA_COMMAND);
+                nsresult rv = nsExplainErrorDetails(NS_ERROR_SENDING_DATA_COMMAND, (const char*)m_responseText);
+                NS_ASSERTION(NS_SUCCEEDED(rv), "failed to explain SMTP error");
+
+                m_urlErrorState = NS_ERROR_BUT_DONT_SHOW_ALERT;
+                return(NS_ERROR_SENDING_DATA_COMMAND);
 	}
 #ifdef UNREADY_CODE
 #ifdef XP_UNIX
@@ -958,8 +997,8 @@ PRInt32 nsSmtpProtocol::SendDataResponse()
 	      s = (real_name ? MSG_MakeFullAddress (NULL, real_name) : 0);
 	      if (real_name && !s)
 		{
-		  CE_URL_S->error_msg = NET_ExplainErrorDetails(MK_COULD_NOT_GET_UID);
-          return(MK_COULD_NOT_GET_UID);
+               		m_urlErrorState = NS_ERROR_COULD_NOT_GET_UID;
+               		return(NS_ERROR_COULD_NOT_GET_UID);
 		}
 	      if(real_name)
 		{
@@ -968,8 +1007,8 @@ PRInt32 nsSmtpProtocol::SendDataResponse()
 		  NET_SACat(command, buffer);
 		  if(!command)
 		    {
-		      CE_URL_S->error_msg = NET_ExplainErrorDetails(MK_OUT_OF_MEMORY);
-		      return(MK_OUT_OF_MEMORY);
+		      m_urlErrorState = NS_ERROR_OUT_OF_MEMORY;
+		      return(NS_ERROR_OUT_OF_MEMORY);
 		    }
 	           
 	      status = (int) NET_BlockingWrite(CE_SOCK, command, PL_strlen(command));   
@@ -1186,9 +1225,11 @@ PRInt32 nsSmtpProtocol::SendMessageResponse()
 
     if(m_responseCode != 250)
 	{
-		nsCOMPtr<nsIMsgMailNewsUrl> url = do_QueryInterface(m_runningURL);
-		url->SetErrorMessage(NET_ExplainErrorDetails(MK_ERROR_SENDING_MESSAGE, (const char*)m_responseText));
-        return(MK_ERROR_SENDING_MESSAGE);
+                nsresult rv = nsExplainErrorDetails(NS_ERROR_SENDING_MESSAGE, (const char*)m_responseText);
+                NS_ASSERTION(NS_SUCCEEDED(rv), "failed to explain SMTP error");
+
+                m_urlErrorState = NS_ERROR_BUT_DONT_SHOW_ALERT;
+                return(NS_ERROR_SENDING_MESSAGE);
 	}
 
     UpdateStatus(SMTP_PROGRESS_MAILSENT);
@@ -1280,10 +1321,9 @@ nsresult nsSmtpProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer )
 				{
 					m_nextState = SMTP_ERROR_DONE;
 					ClearFlag(SMTP_PAUSE_FOR_READ);
-					status = MK_MIME_NO_RECIPIENTS;
-					nsCOMPtr<nsIMsgMailNewsUrl> url = do_QueryInterface(m_runningURL);
-					url->SetErrorMessage(NET_ExplainErrorDetails(status));
-					return status;
+					status = NS_MSG_NO_RECIPIENTS;
+                			m_urlErrorState = NS_MSG_NO_RECIPIENTS;
+					return(status);
 				}
 
 				m_addressCopy = addrs2;
@@ -1423,7 +1463,8 @@ nsresult nsSmtpProtocol::ProcessProtocolState(nsIURI * url, nsIInputStream * inp
 			case SMTP_ERROR_DONE:
                 {
 					nsCOMPtr <nsIMsgMailNewsUrl> mailNewsUrl = do_QueryInterface(m_runningURL);
-					mailNewsUrl->SetUrlState(PR_FALSE, NS_ERROR_FAILURE);
+					// propagate the right error code
+					mailNewsUrl->SetUrlState(PR_FALSE, m_urlErrorState);
 					m_nextState = SMTP_FREE;
 				}
 	            m_nextState = SMTP_FREE;
@@ -1495,10 +1536,10 @@ NET_SendMessageUnattended(MWContext* context, char* to, char* subject,
 
     urlstring = PR_smprintf("mailto:%s", convto ? convto : to);
 
-    if (!urlstring) return MK_OUT_OF_MEMORY;
+    if (!urlstring) return NS_ERROR_OUT_OF_MEMORY;
     url = NET_CreateURLStruct(urlstring, NET_DONT_RELOAD);
     PR_FREEIF(urlstring);
-    if (!url) return MK_OUT_OF_MEMORY;
+    if (!url) return NS_ERROR_OUT_OF_MEMORY;
 
     
 
@@ -1510,9 +1551,9 @@ Subject: %s\n\
 								 otherheaders);
     if (convto) PR_FREEIF(convto);
     if (convsub) PR_FREEIF(convsub);
-    if (!url->post_headers) return MK_OUT_OF_MEMORY;
+    if (!url->post_headers) return NS_ERROR_OUT_OF_MEMORY;
 	url->post_data = PL_strdup(body);
-	if (!url->post_data) return MK_OUT_OF_MEMORY;
+	if (!url->post_data) return NS_ERROR_OUT_OF_MEMORY;
     url->post_data_size = PL_strlen(url->post_data);
     url->post_data_is_file = PR_FALSE;
     url->method = URL_POST_METHOD;
