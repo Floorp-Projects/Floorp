@@ -1287,25 +1287,23 @@ nsresult nsRange::DeleteContents()
     deleteList.RemoveElementAt(0);
   }
   
-  // If mStartParent is a text node, delete the text after start offset
-  nsIDOMText *textNode;
-  res = mStartParent->QueryInterface(NS_GET_IID(nsIDOMText), (void**)&textNode);
-  if (NS_SUCCEEDED(res)) 
+ // If mStartParent is a text node, delete the text after start offset
+  nsCOMPtr<nsIDOMText> textNode( do_QueryInterface(mStartParent) );
+  if (textNode) 
   {
     res = textNode->DeleteData(mStartOffset, 0xFFFFFFFF); // del to end
     if (NS_FAILED(res))
-      return res;  // XXX need to switch over to nsCOMPtr to avoid leaks here
+      return res;
   }
 
   // If mEndParent is a text node, delete the text before end offset
-  res = mEndParent->QueryInterface(NS_GET_IID(nsIDOMText), (void**)&textNode);
-  if (NS_SUCCEEDED(res)) 
+  textNode = do_QueryInterface(mEndParent);  
+  if (textNode) 
   {
     res = textNode->DeleteData(0, mEndOffset); // del from start
     if (NS_FAILED(res))
-      return res;  // XXX need to switch over to nsCOMPtr to avoid leaks here
+      return res;
   }
-
   // Collapse to start point:
   mEndParent = mStartParent;
   mEndOffset = mStartOffset;
