@@ -195,7 +195,7 @@ sub build {
         ensure_dir_exists($class_dir);
         print_do("$javac $javac_opt_flag -sourcepath . -d $class_dir " .
             "$classpath " . join(" ",@source_list));
-        print_do("cd $class_dir && rm -f $class_jar && pwd && ls -al && ls -al ../../dist && zip -r $class_jar *");
+        print_do("pwd && cd $class_dir && pwd && rm -f $class_jar && pwd && ls -al && ls -al ../../dist && zip -r $class_jar *");
         print "Exit status was " . ($?>>8) . "\n";
     }
 
