@@ -42,10 +42,6 @@
 
 static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 
-#ifdef HAVE_PANES
-class MSG_Master;
-#endif
-
 #include "nsXPIDLString.h"
 #include "nsIMsgAccountManager.h"
 #include "nsIMsgIncomingServer.h"
@@ -75,10 +71,6 @@ class MSG_Master;
 #include "nsMsgDatabase.h"
 
 #include "nsIDBFolderInfo.h"
-
-#ifdef HAVE_PANES
-#include "msgpane.h"
-#endif
 
 #include "nsNewsUtils.h"
 
@@ -854,11 +846,8 @@ nsNNTPNewsgroupList::ProcessXOVERLINE(const char *line, PRUint32 *status)
 		PRInt32	totIndex = m_lastMsgNumber - m_firstMsgNumber + 1;
 
 		PRInt32 	percent = (totIndex) ? (PRInt32)(100.0 * (double)numDownloaded / (double)totToDownload) : 0;
-#ifdef HAVE_PANES
-		FE_SetProgressBarPercent (m_pane->GetContext(), percent);
-#else	
+
 		SetProgressBarPercent(percent);
-#endif
 		
 		/* only update every  NEWS_ART_DISPLAY_FREQ articles for speed */
 		if ( (totIndex <= NEWS_ART_DISPLAY_FREQ) || ((lastIndex % NEWS_ART_DISPLAY_FREQ) == 0) || (lastIndex == totIndex))
@@ -869,11 +858,8 @@ nsNNTPNewsgroupList::ProcessXOVERLINE(const char *line, PRUint32 *status)
 #else
 			char *statusString = PR_smprintf ("Received %d of %d headers", numDownloaded, totToDownload);
 #endif
-#ifdef HAVE_PANES
-			FE_Progress (m_pane->GetContext(), statusString);
-#else
+
 			SetProgressStatus(statusString);
-#endif
 			PR_FREEIF(statusString);
 		}
 	}
@@ -985,11 +971,7 @@ nsNNTPNewsgroupList::FinishXOVERLINE(int status, int *newstatus)
 #endif
 			if (statusString)
 			{
-#ifdef HAVE_PANES
-				FE_Progress (context, statusString);
-#else
 				SetProgressStatus(statusString);
-#endif
 				PR_FREEIF(statusString);
 			}
 		}
