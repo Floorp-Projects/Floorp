@@ -85,9 +85,6 @@
 const short kMinWindowWidth = 125;
 const short kMinWindowHeight = 150;
 
-NS_WIDGET nsMacMessagePump::nsWindowlessMenuEventHandler nsMacMessagePump::gWindowlessMenuEventHandler = nsnull;
-
-
 extern nsIRollupListener * gRollupListener;
 extern nsIWidget				 * gRollupWidget;
 
@@ -216,6 +213,23 @@ nsMacMessagePump::~nsMacMessagePump()
 	// release the TSM Message Pump
 	//
 }
+
+
+//=================================================================
+/*	Return the frontmost window that is not the SIOUX console
+ */
+WindowPtr nsMacMessagePump::GetFrontApplicationWindow()
+{
+	WindowPtr firstAppWindow = ::FrontWindow();
+
+#if DEBUG
+	if (IsSIOUXWindow(firstAppWindow))
+	  firstAppWindow = ::GetNextWindow(firstAppWindow);
+#endif
+
+	return firstAppWindow;
+}
+
 
 //=================================================================
 /*	Runs the message pump for the macintosh
@@ -747,7 +761,7 @@ void nsMacMessagePump::DoMouseUp(EventRecord &anEvent)
 		// when the user clicks a widget, keeps the mouse button pressed and
 		// releases it outside the window, the event needs to be reported to
 		// the widget so that it can deactivate itself.
-		whichWindow = ::FrontWindow();
+		whichWindow = GetFrontApplicationWindow();
 	}
 	DispatchOSEventToRaptor(anEvent, whichWindow);
 }
@@ -771,7 +785,7 @@ void	nsMacMessagePump::DoMouseMove(EventRecord &anEvent)
 
 	partCode = ::FindWindow(anEvent.where, &whichWindow);
 	if (whichWindow == nil)
-		whichWindow = ::FrontWindow();
+		whichWindow = GetFrontApplicationWindow();
 
 	/* Disable mouse moved events for windowshaded windows -- this prevents tooltips
 	   from popping up in empty space.
@@ -808,7 +822,7 @@ void	nsMacMessagePump::DoKey(EventRecord &anEvent)
 	//}
 	//else
 	{
-		PRBool handled = DispatchOSEventToRaptor(anEvent, ::FrontWindow());
+		PRBool handled = DispatchOSEventToRaptor(anEvent, GetFrontApplicationWindow());
 		/* we want to call this if cmdKey is pressed and no other modifier keys are pressed */
 		if((!handled) && (anEvent.what == keyDown) && (anEvent.modifiers == cmdKey) )
 		{
@@ -849,6 +863,8 @@ void nsMacMessagePump::DoDisk(const EventRecord& anEvent)
 // DoMenu
 //
 //-------------------------------------------------------------------------
+extern Boolean SIOUXIsAppWindow(WindowPtr window);
+
 void	nsMacMessagePump::DoMenu(EventRecord &anEvent, long menuResult)
 {
 	// The app can handle its menu commands here or
@@ -881,16 +897,8 @@ extern const PRInt16 kAppleMenuID;	// Danger Will Robinson!!! - this currently r
 
 	// Note that we still give Raptor a shot at the event as it will eventually
 	// handle the About... selection
-	
-	if (mMessageSink->IsRaptorWindow(::FrontWindow()))
-	{
-		DispatchMenuCommandToRaptor(anEvent, menuResult);
-	}
-	else
-	{
-		if (gWindowlessMenuEventHandler != nsnull)
-			gWindowlessMenuEventHandler(menuResult);
-	}
+	DispatchMenuCommandToRaptor(anEvent, menuResult);
+
 	HiliteMenu(0);
 }
 
@@ -960,9 +968,10 @@ PRBool nsMacMessagePump::DispatchMenuCommandToRaptor(
 													long					menuResult)
 {
 	PRBool		handled = PR_FALSE;
+  WindowPtr theFrontWindow = GetFrontApplicationWindow();
 
-	if (mMessageSink->IsRaptorWindow(::FrontWindow()))
-		handled = mMessageSink->DispatchMenuCommand(anEvent, menuResult);
+	if (mMessageSink->IsRaptorWindow(theFrontWindow))
+		handled = mMessageSink->DispatchMenuCommand(anEvent, menuResult, theFrontWindow);
 
 	return handled;
 }
