@@ -65,7 +65,8 @@ public:
 
   NS_IMETHOD GetNewNews(nsIUrlListener * aUrlListener,
                                    nsINntpIncomingServer *nntpServer,
-                                   nsIURL ** aURL) = 0;
+                                   nsIURL ** aURL,
+									const char *uri) = 0;
 };
 
 #endif /* nsINntpService_h___ */

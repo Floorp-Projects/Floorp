@@ -143,7 +143,6 @@ nsresult nsNntpService::ConvertNewsMessageURI2NewsURI(const char *messageURI, ns
   PRUint32 key;
 
   // messageURI is of the form:  news_message://news.mcom.com/mcom.linux#1
-
   rv = nsParseNewsMessageURI(messageURI, folder, &key);
   if (NS_FAILED(rv)) {
     return rv;
@@ -300,7 +299,9 @@ nsNntpService::RunNewsUrl(const nsString& urlString, nsISupports * aConsumer,
 	nsresult rv = NS_OK;
 
 	// make sure we have a netlib service around...
-	rv = NS_NewINetService(&pNetService, nsnull); 
+	rv = NS_NewINetService(&pNetService, nsnull);
+
+
 
 	if (NS_SUCCEEDED(rv) && pNetService)
 	{
@@ -309,19 +310,31 @@ nsNntpService::RunNewsUrl(const nsString& urlString, nsISupports * aConsumer,
 
 		if (NS_SUCCEEDED(rv) && nntpUrl) {
 			char * urlSpec = urlString.ToNewCString();
+	
 			nntpUrl->SetSpec(urlSpec);
+
+			char *newsgroupName = nsnull;
+			nsAutoString nameStr;
+			nsNewsURI2Name(kNewsRootURI, urlSpec, nameStr);
+			newsgroupName = nameStr.ToNewCString();
+
 			if (urlSpec) {
 				delete [] urlSpec;
 			}
-
+			
             nsINNTPNewsgroup *newsgroup = nsnull;
             rv = NS_NewNewsgroup(&newsgroup, nsnull /* line */, nsnull /* set */, PR_FALSE /* subscribed */, nsnull /* host*/, 1 /* depth */);
             
-            if (NS_SUCCEEDED(rv)) {
-              // hard coded for now, until I get the wiring worked out...
-              newsgroup->SetName("netscape.test");
+            if (NS_SUCCEEDED(rv) && newsgroup) {
+              newsgroup->SetName(newsgroupName);
+			  if (newsgroupName) {
+				delete [] newsgroupName;
+			  }
             }
             else {
+			  if (newsgroupName) {
+				delete [] newsgroupName;
+			  }
               return rv;
             }            
             nntpUrl->SetNewsgroup(newsgroup);
@@ -362,14 +375,17 @@ nsNntpService::RunNewsUrl(const nsString& urlString, nsISupports * aConsumer,
 	return rv;
 }
 
-
-
 nsresult nsNntpService::GetNewNews(nsIUrlListener * aUrlListener,
                                    nsINntpIncomingServer *nntpServer,
-                                   nsIURL ** aURL)
+                                   nsIURL ** aURL,
+								   const char *uri)
 {
+  if (!uri) {
+	return NS_ERROR_NULL_POINTER;
+  }
+
 #if DEBUG_sspitzer
-  printf("nsNntpService::GetNewNews()\n");
+  printf("nsNntpService::GetNewNews(%s)\n", uri);
 #endif
   
   NS_LOCK_INSTANCE();
@@ -384,12 +400,14 @@ nsresult nsNntpService::GetNewNews(nsIUrlListener * aUrlListener,
   // convert normal host to nntp host.
   // XXX - this doesn't handle QI failing very well
   if (server) {
-#ifdef DEBUG_sspitzer
-    printf("server != nsnull\n");
-#endif
     // load up required server information
     server->GetHostName(&nntpHostName);
   }
+#ifdef DEBUG_sspitzer
+  else {
+	  printf("server == nsnull\n");
+  }
+#endif
   
 #ifdef DEBUG_sspitzer
   if (nntpHostName) {
@@ -400,8 +418,7 @@ nsresult nsNntpService::GetNewNews(nsIUrlListener * aUrlListener,
   }
 #endif
 
-  // hard coded for now, until I get the wiring worked out.
-  rv = RunNewsUrl("news://news.mozilla.org/netscape.test", nsnull, aUrlListener, aURL);
+  rv = RunNewsUrl(uri, nsnull, aUrlListener, aURL);
   
   NS_UNLOCK_INSTANCE();
   return rv;

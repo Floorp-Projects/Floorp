@@ -37,7 +37,7 @@ public:
   
   NS_IMETHOD PostMessage(nsFilePath &pathToFile, const char *subject, const char *newsgroup, nsIUrlListener * aUrlListener, nsIURL ** aURL);
 
-  NS_IMETHOD GetNewNews(nsIUrlListener * aUrlListener, nsINntpIncomingServer *nntpServer, nsIURL ** aURL);
+  NS_IMETHOD GetNewNews(nsIUrlListener * aUrlListener, nsINntpIncomingServer *nntpServer, nsIURL ** aURL, const char *uri);
 
   ////////////////////////////////////////////////////////////////////////////////////////
   // we suppport the nsIMsgMessageService Interface 

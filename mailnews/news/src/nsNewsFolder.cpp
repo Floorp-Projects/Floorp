@@ -139,10 +139,10 @@ PRBool
 nsMsgNewsFolder::isNewsHost() 
 {
   // this will do for now.  Eventually, this will go away...
-  PRInt32 mURIlen = PL_strlen(mURI);
+  PRInt32 uriLen = PL_strlen(mURI);
 
   // if we are shorter than news://, we are too short to be a host
-  if (mURIlen <= kNewsRootURILen) {
+  if (uriLen <= kNewsRootURILen) {
     return PR_FALSE;
   }
   
@@ -544,7 +544,6 @@ nsMsgNewsFolder::GetMessages(nsIEnumerator* *result)
 	}
 	return rv;
 }
-
 
 NS_IMETHODIMP nsMsgNewsFolder::BuildFolderURL(char **url)
 {
@@ -1007,8 +1006,13 @@ NS_IMETHODIMP nsMsgNewsFolder::GetNewMessages()
   nsresult rv = NS_OK;
 
 #ifdef DEBUG_sspitzer
-  printf("GetNewMessages (for news)\n");
+  printf("GetNewMessages (for news)  uri = %s\n",mURI);
 #endif
+
+  if (isNewsHost()) {
+		printf("sorry, can't get news for entire news server yet.  try it on a newsgroup by newsgroup level\n");
+		return NS_OK;
+  }
   
   NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv);
   if (NS_FAILED(rv)) return rv;
@@ -1028,7 +1032,7 @@ NS_IMETHODIMP nsMsgNewsFolder::GetNewMessages()
 #ifdef DEBUG_sspitzer
     printf("Getting new news articles....\n");
 #endif
-    rv = nntpService->GetNewNews(nsnull,nntpServer,nsnull);
+    rv = nntpService->GetNewNews(nsnull,nntpServer,nsnull,mURI);
   }
  
 	return rv;
