@@ -2611,6 +2611,41 @@ nsAbSync::AddNewUsers()
     if (mLastSyncFailed)
       cardAlreadyThere = CardAlreadyInAddressBook(newCard, &localID, &tempCRC);
 
+    // Ok, now, lets be extra nice and see if we should build a display name for the
+    // card.
+    //
+    PRUnichar   *tDispName = nsnull;
+    if (NS_SUCCEEDED(newCard->GetCardValue(kDisplayNameColumn, &tDispName)))
+    {
+      if ( (!tDispName) || (!*tDispName) )
+      {
+        PRUnichar   *tFirstName = nsnull;
+        PRUnichar   *tLastName = nsnull;
+        nsString    tFullName;
+
+        newCard->GetCardValue(kFirstNameColumn, &tFirstName);
+        newCard->GetCardValue(kLastNameColumn, &tLastName);
+  
+        if (tFirstName)
+        {
+          tFullName.Append(tFirstName);
+          if (tLastName)
+            tFullName.Append(NS_ConvertASCIItoUCS2(" "));
+        }
+
+        if (tLastName)
+          tFullName.Append(tLastName);
+
+        PR_FREEIF(tFirstName);
+        PR_FREEIF(tLastName);
+
+        // Ok, now we should add a display name...
+        newCard->SetDisplayName(tFullName.GetUnicode());
+      }
+      else
+        PR_FREEIF(tDispName);
+    }
+
     // Ok, now we need to modify or add the card! ONLY IF ITS NOT THERE ALREADY
     if (!cardAlreadyThere)
     {
