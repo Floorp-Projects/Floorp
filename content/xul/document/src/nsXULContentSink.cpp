@@ -110,7 +110,6 @@
 
 static const char kNameSpaceSeparator = ':';
 static const char kNameSpaceDef[] = "xmlns";
-static const char kXULID[] = "id";
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gLog;
@@ -121,7 +120,6 @@ static PRLogModuleInfo* gLog;
 static const char kXULNameSpaceURI[] = XUL_NAMESPACE_URI;
 
 
-static NS_DEFINE_CID(kCSSLoaderCID,              NS_CSS_LOADER_CID);
 static NS_DEFINE_CID(kCSSParserCID,              NS_CSSPARSER_CID);
 static NS_DEFINE_CID(kNameSpaceManagerCID,       NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_CID(kXULPrototypeCacheCID,      NS_XULPROTOTYPECACHE_CID);
