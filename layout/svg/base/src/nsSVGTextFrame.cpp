@@ -155,13 +155,15 @@ public:
   NS_IMETHOD_(PRBool) GetAbsolutePositionAdjustmentY(float &y, PRUint32 charNum);
   NS_IMETHOD_(PRBool) GetRelativePositionAdjustmentX(float &dx, PRUint32 charNum);
   NS_IMETHOD_(PRBool) GetRelativePositionAdjustmentY(float &dy, PRUint32 charNum);
+  NS_IMETHOD_(already_AddRefed<nsIDOMSVGLengthList>) GetX();
+  NS_IMETHOD_(already_AddRefed<nsIDOMSVGLengthList>) GetY();
+  NS_IMETHOD_(already_AddRefed<nsIDOMSVGLengthList>) GetDx();
+  NS_IMETHOD_(already_AddRefed<nsIDOMSVGLengthList>) GetDy();
 
 protected:
   void EnsureFragmentTreeUpToDate();
   void UpdateFragmentTree();
   void UpdateGlyphPositioning();
-  already_AddRefed<nsIDOMSVGLengthList> GetX();
-  already_AddRefed<nsIDOMSVGLengthList> GetY();
   already_AddRefed<nsIDOMSVGAnimatedTransformList> GetTransform();
   nsISVGGlyphFragmentNode *GetFirstGlyphFragmentChildNode();
   nsISVGGlyphFragmentNode *GetNextGlyphFragmentChildNode(nsISVGGlyphFragmentNode*node);
@@ -171,10 +173,10 @@ protected:
     unsuspended,
     suspended,
     updating};
-  UpdateState mMetricsState;
   UpdateState mFragmentTreeState;
-  PRBool mPositioningDirty;
+  UpdateState mMetricsState;
   PRBool mFragmentTreeDirty;
+  PRBool mPositioningDirty;
 
   nsCOMPtr<nsIDOMSVGMatrix> mCanvasTM;
   PRBool mPropagateTransform;
@@ -228,6 +230,16 @@ nsSVGTextFrame::~nsSVGTextFrame()
   }
 
   {
+    nsCOMPtr<nsIDOMSVGLengthList> lengthList = GetDx();
+    NS_REMOVE_SVGVALUE_OBSERVER(lengthList);
+  }
+
+  {
+    nsCOMPtr<nsIDOMSVGLengthList> lengthList = GetDy();
+    NS_REMOVE_SVGVALUE_OBSERVER(lengthList);
+  }
+
+  {
     nsCOMPtr<nsIDOMSVGTransformable> transformable = do_QueryInterface(mContent);
     NS_ASSERTION(transformable, "wrong content element");
     nsCOMPtr<nsIDOMSVGAnimatedTransformList> transforms;
@@ -246,6 +258,16 @@ nsresult nsSVGTextFrame::Init()
 
   {
     nsCOMPtr<nsIDOMSVGLengthList> lengthList = GetY();
+    NS_ADD_SVGVALUE_OBSERVER(lengthList);
+  }
+
+  {
+    nsCOMPtr<nsIDOMSVGLengthList> lengthList = GetDx();
+    NS_ADD_SVGVALUE_OBSERVER(lengthList);
+  }
+
+  {
+    nsCOMPtr<nsIDOMSVGLengthList> lengthList = GetDy();
     NS_ADD_SVGVALUE_OBSERVER(lengthList);
   }
 
@@ -970,76 +992,33 @@ nsSVGTextFrame::UpdateFragmentTree()
     UpdateGlyphPositioning();
 }
 
+static void
+GetSingleValue(nsIDOMSVGLengthList *list, float *val)
+{
+  *val = 0.0f;
+  if (!list)
+    return;
+
+  PRUint32 count = 0;
+  list->GetNumberOfItems(&count);
+#ifdef DEBUG
+  if (count > 1)
+    NS_WARNING("multiple lengths for x/y attributes on <text> elements not implemented yet!");
+#endif
+  if (count) {
+    nsCOMPtr<nsIDOMSVGLength> length;
+    list->GetItem(0, getter_AddRefs(length));
+    length->GetValue(val);
+  }
+}
+
 void
 nsSVGTextFrame::UpdateGlyphPositioning()
 {
-  // XXX need to iterate separately over each chunk (currently we
-  // treat everything underneath this text-element as a single chunk)
-  
   NS_ASSERTION(mMetricsState == unsuspended, "updating during suspension");
 
   nsISVGGlyphFragmentNode *node = GetFirstGlyphFragmentChildNode();
   if (!node) return;
-
-  nsISVGGlyphFragmentLeaf* fragment;
-
-  float x=0.0f;
-  {
-    nsCOMPtr<nsIDOMSVGLengthList> list = GetX();
-    PRUint32 count = 0;
-    list->GetNumberOfItems(&count);
-#ifdef DEBUG
-    if (count > 1)
-      NS_WARNING("multiple lengths for x/y attributes on <text> elements not implemented yet!");
-#endif
-    if (count) {
-      nsCOMPtr<nsIDOMSVGLength> length;
-      list->GetItem(0, getter_AddRefs(length));
-      length->GetValue(&x);
-    }
-  }
-  
-  float y=0.0f;
-  {
-    nsCOMPtr<nsIDOMSVGLengthList> list = GetY();
-    PRUint32 count = 0;
-    list->GetNumberOfItems(&count);
-#ifdef DEBUG
-    if (count > 1)
-      NS_WARNING("multiple lengths for x/y attributes on <text> elements not implemented yet!");
-#endif
-    if (count) {
-      nsCOMPtr<nsIDOMSVGLength> length;
-      list->GetItem(0, getter_AddRefs(length));
-      length->GetValue(&y);
-    }
-  }
-
-  // determine x offset based on text_anchor:
-  
-  PRUint8 anchor = GetStyleSVG()->mTextAnchor;
-
-  float chunkLength = 0.0f;
-  if (anchor != NS_STYLE_TEXT_ANCHOR_START) {
-    // need to get the total chunk length
-    
-    fragment = node->GetFirstGlyphFragment();
-    while (fragment) {
-      nsCOMPtr<nsISVGRendererGlyphMetrics> metrics;
-      fragment->GetGlyphMetrics(getter_AddRefs(metrics));
-      if (!metrics) continue;
-
-      float advance;
-      metrics->GetAdvance(&advance);
-      chunkLength+=advance;
-      fragment = fragment->GetNextGlyphFragment();
-    }
-  }
-
-  if (anchor == NS_STYLE_TEXT_ANCHOR_MIDDLE) 
-    x -= chunkLength/2.0f;
-  else if (anchor == NS_STYLE_TEXT_ANCHOR_END)
-    x -= chunkLength;
 
   // we'll align every fragment in this chunk on the dominant-baseline:
   // XXX should actually inspect 'alignment-baseline' for each fragment
@@ -1074,31 +1053,90 @@ nsSVGTextFrame::UpdateGlyphPositioning()
       baseline = nsISVGRendererGlyphMetrics::BASELINE_ALPHABETIC;
       break;
   }
+
+  nsISVGGlyphFragmentLeaf *fragment, *firstFragment;
+
+  firstFragment = node->GetFirstGlyphFragment();
+
+  // loop over chunks
+  while (firstFragment) {
+    float x, y;
+    {
+      nsCOMPtr<nsIDOMSVGLengthList> list = firstFragment->GetX();
+      GetSingleValue(list, &x);
+    }
+    {
+      nsCOMPtr<nsIDOMSVGLengthList> list = firstFragment->GetY();
+      GetSingleValue(list, &y);
+    }
+
+    // determine x offset based on text_anchor:
   
-  // set position of each fragment in this chunk:
+    PRUint8 anchor = firstFragment->GetTextAnchor();
+
+    float chunkLength = 0.0f;
+    if (anchor != NS_STYLE_TEXT_ANCHOR_START) {
+      // need to get the total chunk length
+    
+      fragment = firstFragment;
+      while (fragment) {
+        nsCOMPtr<nsISVGRendererGlyphMetrics> metrics;
+        fragment->GetGlyphMetrics(getter_AddRefs(metrics));
+        if (!metrics) continue;
+
+        float advance, dx;
+        nsCOMPtr<nsIDOMSVGLengthList> list = fragment->GetDx();
+        GetSingleValue(list, &dx);
+        metrics->GetAdvance(&advance);
+        chunkLength += advance + dx;
+        fragment = fragment->GetNextGlyphFragment();
+        if (fragment && fragment->IsAbsolutelyPositioned())
+          break;
+      }
+    }
+
+    if (anchor == NS_STYLE_TEXT_ANCHOR_MIDDLE)
+      x -= chunkLength/2.0f;
+    else if (anchor == NS_STYLE_TEXT_ANCHOR_END)
+      x -= chunkLength;
   
-  fragment = node->GetFirstGlyphFragment();
-  while (fragment) {
-    nsCOMPtr<nsISVGRendererGlyphMetrics> metrics;
-    fragment->GetGlyphMetrics(getter_AddRefs(metrics));
-    if (!metrics) continue;
+    // set position of each fragment in this chunk:
+  
+    fragment = firstFragment;
+    while (fragment) {
+      nsCOMPtr<nsISVGRendererGlyphMetrics> metrics;
+      fragment->GetGlyphMetrics(getter_AddRefs(metrics));
+      if (!metrics) continue;
 
-    float baseline_offset;
-    metrics->GetBaselineOffset(baseline, &baseline_offset);
+      float baseline_offset, dx, dy;
+      metrics->GetBaselineOffset(baseline, &baseline_offset);
+      {
+        nsCOMPtr<nsIDOMSVGLengthList> list = fragment->GetDx();
+        GetSingleValue(list, &dx);
+      }
+      {
+        nsCOMPtr<nsIDOMSVGLengthList> list = fragment->GetDy();
+        GetSingleValue(list, &dy);
+      }
 
-    fragment->SetGlyphPosition(x, y - baseline_offset);
+      fragment->SetGlyphPosition(x + dx, y + dy - baseline_offset);
 
-    float advance;
-    metrics->GetAdvance(&advance);
-    x+=advance;
-    fragment = fragment->GetNextGlyphFragment();
+      float advance;
+      metrics->GetAdvance(&advance);
+      x += dx + advance;
+      y += dy;
+      fragment = fragment->GetNextGlyphFragment();
+      if (fragment && fragment->IsAbsolutelyPositioned())
+        break;
+    }
+    firstFragment = fragment;
   }
 
   mPositioningDirty = PR_FALSE;
 }
 
 
-already_AddRefed<nsIDOMSVGLengthList>
+NS_IMETHODIMP_(already_AddRefed<nsIDOMSVGLengthList>)
 nsSVGTextFrame::GetX()
 {
   nsCOMPtr<nsIDOMSVGTextPositioningElement> tpElement = do_QueryInterface(mContent);
@@ -1111,7 +1149,7 @@ nsSVGTextFrame::GetX()
   return retval;
 }
 
-already_AddRefed<nsIDOMSVGLengthList>
+NS_IMETHODIMP_(already_AddRefed<nsIDOMSVGLengthList>)
 nsSVGTextFrame::GetY()
 {
   nsCOMPtr<nsIDOMSVGTextPositioningElement> tpElement = do_QueryInterface(mContent);
@@ -1119,6 +1157,32 @@ nsSVGTextFrame::GetY()
 
   nsCOMPtr<nsIDOMSVGAnimatedLengthList> animLengthList;
   tpElement->GetY(getter_AddRefs(animLengthList));
+  nsIDOMSVGLengthList *retval;
+  animLengthList->GetAnimVal(&retval);
+  return retval;
+}
+
+NS_IMETHODIMP_(already_AddRefed<nsIDOMSVGLengthList>)
+nsSVGTextFrame::GetDx()
+{
+  nsCOMPtr<nsIDOMSVGTextPositioningElement> tpElement = do_QueryInterface(mContent);
+  NS_ASSERTION(tpElement, "wrong content element");
+
+  nsCOMPtr<nsIDOMSVGAnimatedLengthList> animLengthList;
+  tpElement->GetDx(getter_AddRefs(animLengthList));
+  nsIDOMSVGLengthList *retval;
+  animLengthList->GetAnimVal(&retval);
+  return retval;
+}
+
+NS_IMETHODIMP_(already_AddRefed<nsIDOMSVGLengthList>)
+nsSVGTextFrame::GetDy()
+{
+  nsCOMPtr<nsIDOMSVGTextPositioningElement> tpElement = do_QueryInterface(mContent);
+  NS_ASSERTION(tpElement, "wrong content element");
+
+  nsCOMPtr<nsIDOMSVGAnimatedLengthList> animLengthList;
+  tpElement->GetDy(getter_AddRefs(animLengthList));
   nsIDOMSVGLengthList *retval;
   animLengthList->GetAnimVal(&retval);
   return retval;

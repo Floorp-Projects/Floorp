@@ -58,6 +58,8 @@
 #include "nsISVGOuterSVGFrame.h"
 #include "nsSVGRect.h"
 #include "nsSVGMatrix.h"
+#include "nsINameSpaceManager.h"
+#include "nsSVGAtoms.h"
 
 typedef nsContainerFrame nsSVGTSpanFrameBase;
 
@@ -133,6 +135,10 @@ public:
   NS_IMETHOD_(PRBool) GetAbsolutePositionAdjustmentY(float &y, PRUint32 charNum);
   NS_IMETHOD_(PRBool) GetRelativePositionAdjustmentX(float &dx, PRUint32 charNum);
   NS_IMETHOD_(PRBool) GetRelativePositionAdjustmentY(float &dy, PRUint32 charNum);
+  NS_IMETHOD_(already_AddRefed<nsIDOMSVGLengthList>) GetX();
+  NS_IMETHOD_(already_AddRefed<nsIDOMSVGLengthList>) GetY();
+  NS_IMETHOD_(already_AddRefed<nsIDOMSVGLengthList>) GetDx();
+  NS_IMETHOD_(already_AddRefed<nsIDOMSVGLengthList>) GetDy();
   
   // nsISVGGlyphFragmentNode interface:
   NS_IMETHOD_(nsISVGGlyphFragmentLeaf *) GetFirstGlyphFragment();
@@ -144,8 +150,6 @@ public:
   NS_IMETHOD_(void) NotifyGlyphFragmentTreeUnsuspended();
 
 protected:
-  already_AddRefed<nsIDOMSVGLengthList> GetX();
-  already_AddRefed<nsIDOMSVGLengthList> GetY();
   nsISVGGlyphFragmentNode *GetFirstGlyphFragmentChildNode();
   nsISVGGlyphFragmentNode *GetNextGlyphFragmentChildNode(nsISVGGlyphFragmentNode*node);
   
@@ -205,6 +209,16 @@ nsSVGTSpanFrame::~nsSVGTSpanFrame()
     nsCOMPtr<nsIDOMSVGLengthList> lengthList = GetY();
     NS_REMOVE_SVGVALUE_OBSERVER(lengthList);
   }
+
+  {
+    nsCOMPtr<nsIDOMSVGLengthList> lengthList = GetDx();
+    NS_REMOVE_SVGVALUE_OBSERVER(lengthList);
+  }
+
+  {
+    nsCOMPtr<nsIDOMSVGLengthList> lengthList = GetDy();
+    NS_REMOVE_SVGVALUE_OBSERVER(lengthList);
+  }
 }
 
 nsresult nsSVGTSpanFrame::Init()
@@ -217,6 +231,16 @@ nsresult nsSVGTSpanFrame::Init()
 
   {
     nsCOMPtr<nsIDOMSVGLengthList> lengthList = GetY();
+    NS_ADD_SVGVALUE_OBSERVER(lengthList);
+  }
+
+  {
+    nsCOMPtr<nsIDOMSVGLengthList> lengthList = GetDx();
+    NS_ADD_SVGVALUE_OBSERVER(lengthList);
+  }
+
+  {
+    nsCOMPtr<nsIDOMSVGLengthList> lengthList = GetDy();
     NS_ADD_SVGVALUE_OBSERVER(lengthList);
   }
 
@@ -779,12 +803,20 @@ nsSVGTSpanFrame::NotifyGlyphFragmentTreeUnsuspended()
 //----------------------------------------------------------------------
 //
 
-already_AddRefed<nsIDOMSVGLengthList>
+NS_IMETHODIMP_(already_AddRefed<nsIDOMSVGLengthList>)
 nsSVGTSpanFrame::GetX()
 {
   nsCOMPtr<nsIDOMSVGTextPositioningElement> tpElement = do_QueryInterface(mContent);
   NS_ASSERTION(tpElement, "wrong content element");
 
+  if (!mContent->HasAttr(kNameSpaceID_None, nsSVGAtoms::x)) {
+    nsISVGTextContainerFrame *parent;
+    mParent->QueryInterface(NS_GET_IID(nsISVGTextContainerFrame), (void **)&parent);
+    if (parent)
+      return parent->GetX();
+    else
+      return nsnull;
+  }
   nsCOMPtr<nsIDOMSVGAnimatedLengthList> animLengthList;
   tpElement->GetX(getter_AddRefs(animLengthList));
   nsIDOMSVGLengthList *retval;
@@ -792,14 +824,48 @@ nsSVGTSpanFrame::GetX()
   return retval;
 }
 
-already_AddRefed<nsIDOMSVGLengthList>
+NS_IMETHODIMP_(already_AddRefed<nsIDOMSVGLengthList>)
 nsSVGTSpanFrame::GetY()
 {
   nsCOMPtr<nsIDOMSVGTextPositioningElement> tpElement = do_QueryInterface(mContent);
   NS_ASSERTION(tpElement, "wrong content element");
 
+  if (!mContent->HasAttr(kNameSpaceID_None, nsSVGAtoms::y)) {
+    nsISVGTextContainerFrame *parent;
+    mParent->QueryInterface(NS_GET_IID(nsISVGTextContainerFrame), (void **)&parent);
+    if (parent)
+      return parent->GetY();
+    else
+      return nsnull;
+  }
   nsCOMPtr<nsIDOMSVGAnimatedLengthList> animLengthList;
   tpElement->GetY(getter_AddRefs(animLengthList));
+  nsIDOMSVGLengthList *retval;
+  animLengthList->GetAnimVal(&retval);
+  return retval;
+}
+
+NS_IMETHODIMP_(already_AddRefed<nsIDOMSVGLengthList>)
+nsSVGTSpanFrame::GetDx()
+{
+  nsCOMPtr<nsIDOMSVGTextPositioningElement> tpElement = do_QueryInterface(mContent);
+  NS_ASSERTION(tpElement, "wrong content element");
+
+  nsCOMPtr<nsIDOMSVGAnimatedLengthList> animLengthList;
+  tpElement->GetDx(getter_AddRefs(animLengthList));
+  nsIDOMSVGLengthList *retval;
+  animLengthList->GetAnimVal(&retval);
+  return retval;
+}
+
+NS_IMETHODIMP_(already_AddRefed<nsIDOMSVGLengthList>)
+nsSVGTSpanFrame::GetDy()
+{
+  nsCOMPtr<nsIDOMSVGTextPositioningElement> tpElement = do_QueryInterface(mContent);
+  NS_ASSERTION(tpElement, "wrong content element");
+
+  nsCOMPtr<nsIDOMSVGAnimatedLengthList> animLengthList;
+  tpElement->GetDy(getter_AddRefs(animLengthList));
   nsIDOMSVGLengthList *retval;
   animLengthList->GetAnimVal(&retval);
   return retval;
