@@ -24,6 +24,8 @@ pref("editor.html_editor",                  "");
 pref("editor.image_editor",                 "");
 pref("editor.author",                       "");
 pref("editor.auto_save_delay",              10);    // minutes
+pref("editor.returnkey_mapping",            1);
+pref("editor.enterkey_mapping",             1);
 pref("editor.template_location",            "http://home.netscape.com/home/gold3.0_templates.html");
 pref("editor.default_template_location",    "http://home.netscape.com/home/gold3.0_templates.html");
 pref("editor.template_last_loc",            "");
