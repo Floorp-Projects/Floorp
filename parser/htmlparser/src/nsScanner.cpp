@@ -64,7 +64,7 @@ CScanner::CScanner(const char* aFilename,eParseMode aMode) : mBuffer("") {
   mParseMode=aMode;
   mNetStream=0;
   mIncremental=PR_FALSE;
-#if defined(XP_UNIX) && defined(IRIX)
+#if defined(XP_UNIX) && (defined(IRIX) || defined(MKLINUX))
   /* XXX: IRIX does not support ios::binary */
   mFileStream=new fstream(aFilename,ios::in);
 #else
