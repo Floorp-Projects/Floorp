@@ -34,6 +34,19 @@ enum {
   kDiffIdx
 };
 
+#define IS_ASCII(u)       ( 0x0000 == ((u) & 0xFF80))
+#define IS_ASCII_UPPER(u) ((0x0041 <= (u)) && ( (u) <= 0x005a))
+#define IS_ASCII_LOWER(u) ((0x0061 <= (u)) && ( (u) <= 0x007a))
+#define IS_ASCII_ALPHA(u) (IS_ASCII_UPPER(u) || IS_ASCII_LOWER(u))
+
+#define IS_NOCASE_CHAR(u) (PR_FALSE)
+// consider the following range need double check
+//  0x0600 0x0FFF
+//  0x1100 0x1DFF
+//  0x2000 0x20FF
+//  0x2200 0x23FF
+//  0x2500 0xFEFF
+
 // Size of Tables
 
 
@@ -135,13 +148,19 @@ nsresult nsCaseConversionImp2::ToUpper(
   PRUnichar aChar, PRUnichar* aReturn
 )
 {
-  if( 0x0000 == (aChar & 0xFF80)) // optimize for ASCII
+  if( IS_ASCII(aChar)) // optimize for ASCII
   {
-     if((0x0061 <= aChar) && ( aChar <= 0x007a))
+     if(IS_ASCII_LOWER(aChar))
         *aReturn = aChar - 0x0020;
      else
         *aReturn = aChar;
-  } else {
+  } 
+  else if( IS_NOCASE_CHAR(aChar)) // optimize for block which have no case
+  {
+    *aReturn = aChar;
+  } 
+  else 
+  {
     *aReturn = gUpperMap->Map(aChar);
   }
   return NS_OK;
@@ -151,14 +170,21 @@ nsresult nsCaseConversionImp2::ToLower(
   PRUnichar aChar, PRUnichar* aReturn
 )
 {
-  if( 0x0000 == (aChar & 0xFF80)) // optimize for ASCII
+  if( IS_ASCII(aChar)) // optimize for ASCII
   {
-     if((0x0041 <= aChar) && ( aChar <= 0x005a))
+     if(IS_ASCII_UPPER(aChar))
         *aReturn = aChar + 0x0020;
      else
         *aReturn = aChar;
   } 
-  *aReturn = gLowerMap->Map(aChar);
+  else if( IS_NOCASE_CHAR(aChar)) // optimize for block which have no case
+  {
+    *aReturn = aChar;
+  } 
+  else
+  {
+    *aReturn = gLowerMap->Map(aChar);
+  } 
   return NS_OK;
 }
 
@@ -166,18 +192,26 @@ nsresult nsCaseConversionImp2::ToTitle(
   PRUnichar aChar, PRUnichar* aReturn
 )
 {
-  if( 0x0000 == (aChar & 0xFF80)) // optimize for ASCII
+  if( IS_ASCII(aChar)) // optimize for ASCII
+  {
     return this->ToUpper(aChar, aReturn);
-  
-  PRUnichar upper;
-  upper = gUpperMap->Map(aChar);
-  for(PRUint32 i = 0 ; i < gUpperToTitleItems; i++) {
-    if ( upper == gUpperToTitle[(i<<1)+kUpperIdx]) {
-       *aReturn = gUpperToTitle[(i<<1)+kTitleIdx];
-       return NS_OK;
-    }
   }
-  *aReturn = upper;
+  else if( IS_NOCASE_CHAR(aChar)) // optimize for block which have no case
+  {
+    *aReturn = aChar;
+  } 
+  else
+  {
+    PRUnichar upper;
+    upper = gUpperMap->Map(aChar);
+    for(PRUint32 i = 0 ; i < gUpperToTitleItems; i++) {
+      if ( upper == gUpperToTitle[(i<<1)+kUpperIdx]) {
+         *aReturn = gUpperToTitle[(i<<1)+kTitleIdx];
+         return NS_OK;
+      }
+    }
+    *aReturn = upper;
+  }
   return NS_OK;
 }
 
@@ -189,13 +223,19 @@ nsresult nsCaseConversionImp2::ToUpper(
   for(i=0;i<aLen;i++) 
   {
     PRUnichar aChar = anArray[i];
-    if( 0x0000 == (aChar & 0xFF80)) // optimize for ASCII
+    if( IS_ASCII(aChar)) // optimize for ASCII
     {
-       if((0x0061 <= aChar) && ( aChar <= 0x007a))
+       if(IS_ASCII_LOWER(aChar))
           aReturn[i] = aChar - 0x0020;
        else
           aReturn[i] = aChar;
-    } else {
+    }
+    else if( IS_NOCASE_CHAR(aChar)) // optimize for block which have no case
+    {
+          aReturn[i] = aChar;
+    } 
+    else 
+    {
       aReturn[i] = gUpperMap->Map(aChar);
     }
   }
@@ -210,31 +250,57 @@ nsresult nsCaseConversionImp2::ToLower(
   for(i=0;i<aLen;i++) 
   {
     PRUnichar aChar = anArray[i];
-    if( 0x0000 == (aChar & 0xFF80)) // optimize for ASCII
+    if( IS_ASCII(aChar)) // optimize for ASCII
     {
-       if((0x0041 <= aChar) && ( aChar <= 0x005a))
+       if(IS_ASCII_UPPER(aChar))
           aReturn[i] = aChar + 0x0020;
        else
           aReturn[i] = aChar;
-    } else {
+    } 
+    else if( IS_NOCASE_CHAR(aChar)) // optimize for block which have no case
+    {
+          aReturn[i] = aChar;
+    } 
+    else 
+    {
       aReturn[i] = gLowerMap->Map(aChar);
     }
   }
   return NS_OK;
 }
 
+
+
 nsresult nsCaseConversionImp2::ToTitle(
   const PRUnichar* anArray, PRUnichar* aReturn, PRUint32 aLen
 )
 {
+  if(0 == aLen)
+    return NS_OK;
+
+  PRBool bBeginAsWordBegin = PR_TRUE; // this should really a function arguemnet
 
   //
-  // to be written
+  // We need to replace this implementation to a real one
+  // Currently, it only do the right thing for ASCII
+  // Howerver, we need a word breaker to do the right job
   //
-  return this->ToUpper(anArray, aReturn, aLen);
+  this->ToLower(anArray, aReturn, aLen);
+  PRBool bLastIsChar = bLastIsChar =  IS_ASCII_LOWER(anArray[0]);
+  if(bBeginAsWordBegin)
+  {
+     this->ToTitle(aReturn[0], &aReturn[0]);
+  }
+
+  PRUint32 i;
+  for(i=1;i<aLen;i++)
+  {
+    if(!bLastIsChar)
+    {
+      this->ToTitle(aReturn[i], &aReturn[i]);
+    }
+
+    bLastIsChar = IS_ASCII_LOWER(aReturn[i]);
+  }
+  return NS_OK;
 }
-   
-
-
-
-
