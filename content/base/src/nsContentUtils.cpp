@@ -95,6 +95,7 @@
 #include "nsDOMString.h"
 #include "nsGenericElement.h"
 #include "nsNodeInfoManager.h"
+#include "nsCRT.h"
 
 static const char kJSStackContractID[] = "@mozilla.org/js/xpc/ContextStack;1";
 static NS_DEFINE_IID(kParserServiceCID, NS_PARSERSERVICE_CID);
@@ -1268,7 +1269,7 @@ nsContentUtils::TrimWhitespace(const nsAString& aStr, PRBool aTrimTrailing)
   aStr.EndReading(end);
 
   // Skip whitespace charaters in the beginning
-  while (start != end && nsString::IsSpace(*start)) {
+  while (start != end && nsCRT::IsAsciiSpace(*start)) {
     ++start;
   }
 
@@ -1277,7 +1278,7 @@ nsContentUtils::TrimWhitespace(const nsAString& aStr, PRBool aTrimTrailing)
     while (end != start) {
       --end;
 
-      if (!nsString::IsSpace(*end)) {
+      if (!nsCRT::IsAsciiSpace(*end)) {
         // Step back to the last non-whitespace character.
         ++end;
 

@@ -506,11 +506,11 @@ nsHTMLContentSerializer::EscapeURI(const nsAString& aURI, nsAString& aEscapedURI
   // But we eventually want to use UTF-8 instead of a document charset, then the code would be much simpler.
   // See HTML 4.01 spec, "Appendix B.2.1 Non-ASCII characters in URI attribute values"
   nsCOMPtr<nsITextToSubURI> textToSubURI;
-  nsAutoString uri(aURI); // in order to use FindCharInSet(), IsASCII()
+  nsAutoString uri(aURI); // in order to use FindCharInSet()
   nsresult rv = NS_OK;
 
 
-  if (!mCharSet.IsEmpty() && !uri.IsASCII()) {
+  if (!mCharSet.IsEmpty() && !IsASCII(uri)) {
     textToSubURI = do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
   }
