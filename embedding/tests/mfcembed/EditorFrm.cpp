@@ -46,13 +46,45 @@
 //------------------------------------------------------------
 //              Editor Command/Parameter Names
 //------------------------------------------------------------
-#define BOLD_COMMAND        NS_LITERAL_STRING("cmd_bold")
-#define ITALIC_COMMAND      NS_LITERAL_STRING("cmd_italic")
-#define UNDERLINE_COMMAND   NS_LITERAL_STRING("cmd_underline")
+#define BOLD_COMMAND            NS_LITERAL_STRING("cmd_bold")
+#define ITALIC_COMMAND          NS_LITERAL_STRING("cmd_italic")
+#define UNDERLINE_COMMAND       NS_LITERAL_STRING("cmd_underline")
+#define INDENT_COMMAND          NS_LITERAL_STRING("cmd_indent")
+#define OUTDENT_COMMAND         NS_LITERAL_STRING("cmd_outdent")
+#define FONTCOLOR_COMMAND       NS_LITERAL_STRING("cmd_fontColor")
+#define BACKGROUNDCOLOR_COMMAND NS_LITERAL_STRING("cmd_backgroundColor")
+#define COMMAND_NAME            NS_LITERAL_STRING("cmd_name")
+#define INCREASEFONT_COMMAND    NS_LITERAL_STRING("cmd_increaseFont")
+#define DECREASEFONT_COMMAND    NS_LITERAL_STRING("cmd_decreaseFont")
+#define FONTFACE_COMMAND        NS_LITERAL_STRING("cmd_fontFace")
+#define ALIGN_COMMAND           NS_LITERAL_STRING("cmd_align")
+#define UNDO_COMMAND            NS_LITERAL_STRING("cmd_undo")
+#define REDO_COMMAND            NS_LITERAL_STRING("cmd_redo")
 
-#define COMMAND_NAME        NS_LITERAL_STRING("cmd_name")
+
+//states
 #define STATE_ALL           NS_LITERAL_STRING("state_all")
 #define STATE_MIXED         NS_LITERAL_STRING("state_mixed")
+#define STATE_ATTRIBUTE     NS_LITERAL_STRING("state_attribute")
+#define STATE_ENABLED       NS_LITERAL_STRING("state_enabled")
+
+//colors
+#define COLOR_RED       NS_LITERAL_STRING("#FF0000")
+#define COLOR_BLACK     NS_LITERAL_STRING("#000000")
+
+//fonts
+#define FONT_ARIAL			NS_LITERAL_STRING("Helvetica, Arial, sans-serif")
+#define FONT_TIMES			NS_LITERAL_STRING("Times New Roman, Times, serif")
+#define FONT_COURIER		NS_LITERAL_STRING("Courier New, Courier, monospace")
+
+//align
+#define ALIGN_LEFT      NS_LITERAL_STRING("left")
+#define ALIGN_RIGHT     NS_LITERAL_STRING("right")
+#define ALIGN_CENTER    NS_LITERAL_STRING("center")
+
+
+//value
+#define STATE_EMPTY		NS_LITERAL_STRING("")
 
 IMPLEMENT_DYNAMIC(CEditorFrame, CBrowserFrame)
 
@@ -64,6 +96,34 @@ BEGIN_MESSAGE_MAP(CEditorFrame, CBrowserFrame)
     ON_UPDATE_COMMAND_UI(ID_ITALICS, OnUpdateItalics)
     ON_COMMAND(ID_UNDERLINE, OnUnderline)
     ON_UPDATE_COMMAND_UI(ID_UNDERLINE, OnUpdateUnderline)
+	ON_COMMAND(ID_INDENT, OnIndent)
+	ON_UPDATE_COMMAND_UI(ID_INDENT, OnUpdateIndent)
+	ON_COMMAND(ID_OUTDENT, OnOutdent)
+	ON_UPDATE_COMMAND_UI(ID_OUTDENT, OnUpdateOutdent)
+	ON_COMMAND(ID_FONTRED, OnFontred)
+	ON_UPDATE_COMMAND_UI(ID_FONTRED, OnUpdateFontred)
+	ON_COMMAND(ID_FONTBLACK, OnFontblack)
+	ON_UPDATE_COMMAND_UI(ID_FONTBLACK, OnUpdateFontblack)
+	ON_COMMAND(ID_BGCOLOR, OnBgcolor)
+	ON_UPDATE_COMMAND_UI(ID_BGCOLOR, OnUpdateBgcolor)
+	ON_COMMAND(ID_NOBGCOLOR, OnNobgcolor)
+	ON_UPDATE_COMMAND_UI(ID_NOBGCOLOR, OnUpdateNobgcolor)
+	ON_COMMAND(ID_FONTSIZEINCREASE, OnFontsizeincrease)
+	ON_COMMAND(ID_FONTSIZEDECREASE, OnFontsizedecrease)
+	ON_COMMAND(ID_ARIAL, OnArial)
+	ON_COMMAND(ID_TIMES, OnTimes)
+	ON_COMMAND(ID_COURIER, OnCourier)
+	ON_COMMAND(ID_ALIGNLEFT, OnAlignleft)
+	ON_UPDATE_COMMAND_UI(ID_ALIGNLEFT, OnUpdateAlignleft)
+	ON_COMMAND(ID_ALIGNRIGHT, OnAlignright)
+	ON_UPDATE_COMMAND_UI(ID_ALIGNRIGHT, OnUpdateAlignright)
+	ON_COMMAND(ID_ALIGNCENTER, OnAligncenter)
+	ON_UPDATE_COMMAND_UI(ID_ALIGNCENTER, OnUpdateAligncenter)
+	ON_COMMAND(ID_INSERTLINK, OnInsertlink)
+	ON_COMMAND(ID_EDIT_UNDO, OnEditUndo)
+	ON_COMMAND(ID_EDIT_REDO, OnEditRedo)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_REDO, OnUpdateEditRedo)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_UNDO, OnUpdateEditUndo)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -121,6 +181,23 @@ void CEditorFrame::OnUpdateUnderline(CCmdUI* pCmdUI)
 }
 
 
+//Called to make a nsICommandParams with the 1 value pair of command name
+NS_METHOD
+CEditorFrame::MakeCommandParams(const nsAString &aCommand,nsICommandParams **aParams)
+{
+    nsresult rv;
+    nsCOMPtr<nsICommandParams> params = do_CreateInstance(NS_COMMAND_PARAMS_CONTRACTID,&rv);
+	if (NS_FAILED(rv))
+		return rv;
+	if (!params)
+		return NS_ERROR_FAILURE;
+    rv = params->SetStringValue(COMMAND_NAME, aCommand);
+	*aParams = params;
+	NS_ADDREF(*aParams);
+	return rv;
+}
+
+
 // Called in response to the ON_COMMAND messages generated
 // when style related toolbar buttons(bold, italic etc)
 // are clicked
@@ -128,13 +205,13 @@ void CEditorFrame::OnUpdateUnderline(CCmdUI* pCmdUI)
 NS_METHOD
 CEditorFrame::ExecuteStyleCommand(const nsAString &aCommand)
 {
-    nsresult rv;
-    nsCOMPtr<nsICommandParams> params = do_CreateInstance(NS_COMMAND_PARAMS_CONTRACTID, &rv);
-    if (NS_FAILED(rv) || !params)
-        return rv;
-
+	nsCOMPtr<nsICommandParams> params;
+	nsresult rv = MakeCommandParams(aCommand,getter_AddRefs(params));
+	if (NS_FAILED(rv))
+		return rv;
+	if (!params)
+		return NS_ERROR_FAILURE;
     params->SetBooleanValue(STATE_ALL, true);
-    params->SetStringValue(COMMAND_NAME, aCommand);
 
     return DoCommand(params);
 }
@@ -145,10 +222,11 @@ CEditorFrame::ExecuteStyleCommand(const nsAString &aCommand)
 //
 void CEditorFrame::UpdateStyleToolBarBtn(const nsAString &aCommand, CCmdUI* pCmdUI)
 {
+	nsCOMPtr<nsICommandParams> params;
     nsresult rv;
-    nsCOMPtr<nsICommandParams> params = do_CreateInstance(NS_COMMAND_PARAMS_CONTRACTID,&rv);
-    params->SetStringValue(COMMAND_NAME, aCommand);
-
+	rv = MakeCommandParams(aCommand,getter_AddRefs(params));
+	if (NS_FAILED(rv) || !params)
+		return;
     rv = GetCommandState(params);
     if (NS_SUCCEEDED(rv))
     {
@@ -249,4 +327,286 @@ NS_METHOD
 CEditorFrame::GetCommandState(nsICommandParams *aCommandParams)
 {
     return mCommandManager ? mCommandManager->GetCommandState(aCommandParams) : NS_ERROR_FAILURE;
+}
+
+NS_METHOD
+CEditorFrame::ExecuteNoParam(const nsAString &aCommand)
+{
+    nsresult rv;
+	nsCOMPtr<nsICommandParams> params;
+	rv = MakeCommandParams(aCommand,getter_AddRefs(params));
+	if (NS_FAILED(rv))
+		return rv;
+	if (!params)
+		return NS_ERROR_FAILURE;
+    return DoCommand(params);
+}
+
+void CEditorFrame::OnIndent() 
+{
+	// TODO: Add your command handler code here
+	ExecuteNoParam(INDENT_COMMAND);	
+}
+
+void CEditorFrame::OnUpdateIndent(CCmdUI* pCmdUI) 
+{
+	// TODO: Add your command update UI handler code here
+	
+}
+
+void CEditorFrame::OnOutdent() 
+{
+	// TODO: Add your command handler code here
+	ExecuteNoParam(OUTDENT_COMMAND);	
+}
+
+void CEditorFrame::OnUpdateOutdent(CCmdUI* pCmdUI) 
+{
+	// TODO: Add your command update UI handler code here
+	
+}
+
+NS_METHOD
+CEditorFrame::ExecuteAttribParam(const nsAString &aCommand, const nsAString &aAttribute)
+{
+    nsresult rv;
+	nsCOMPtr<nsICommandParams> params;
+	rv = MakeCommandParams(aCommand,getter_AddRefs(params));
+	if (NS_FAILED(rv))
+		return rv;
+	if (!params)
+		return NS_ERROR_FAILURE;
+    params->SetStringValue(STATE_ATTRIBUTE, aAttribute);
+    return DoCommand(params);
+}
+
+NS_METHOD
+CEditorFrame::GetAttributeParamValue(const nsAString &aCommand, nsString &aValue)
+{
+  nsresult rv;
+  nsCOMPtr<nsICommandParams> params;
+  rv = MakeCommandParams(aCommand,getter_AddRefs(params));
+  if (NS_FAILED(rv))
+    return rv;
+  if (!params)
+    return NS_ERROR_FAILURE;
+  rv = GetCommandState(params);
+  if (NS_SUCCEEDED(rv))
+  {
+    return params->GetStringValue(STATE_ATTRIBUTE,aValue);
+  }
+  return rv;
+}
+
+
+void CEditorFrame::OnFontred() 
+{
+	// TODO: Add your command handler code here
+	ExecuteAttribParam(FONTCOLOR_COMMAND,COLOR_RED);	
+}
+
+void CEditorFrame::OnUpdateFontred(CCmdUI* pCmdUI) 
+{
+	// TODO: Add your command update UI handler code here
+	
+}
+
+void CEditorFrame::OnFontblack() 
+{
+	// TODO: Add your command handler code here
+	ExecuteAttribParam(FONTCOLOR_COMMAND,COLOR_BLACK);		
+}
+
+void CEditorFrame::OnUpdateFontblack(CCmdUI* pCmdUI) 
+{
+	// TODO: Add your command update UI handler code here
+	
+}
+
+void CEditorFrame::OnBgcolor() 
+{
+	// TODO: Add your command handler code here
+	ExecuteAttribParam(BACKGROUNDCOLOR_COMMAND,COLOR_RED);		
+	
+}
+
+void CEditorFrame::OnUpdateBgcolor(CCmdUI* pCmdUI) 
+{
+	// TODO: Add your command update UI handler code here
+	
+}
+
+void CEditorFrame::OnNobgcolor() 
+{
+	// TODO: Add your command handler code here
+	ExecuteAttribParam(BACKGROUNDCOLOR_COMMAND,STATE_EMPTY);
+}
+
+void CEditorFrame::OnUpdateNobgcolor(CCmdUI* pCmdUI) 
+{
+	// TODO: Add your command update UI handler code here
+	
+}
+
+void CEditorFrame::OnFontsizeincrease() 
+{
+	// TODO: Add your command handler code here
+	ExecuteNoParam(INCREASEFONT_COMMAND);
+}
+
+void CEditorFrame::OnFontsizedecrease() 
+{
+	// TODO: Add your command handler code here
+	ExecuteNoParam(DECREASEFONT_COMMAND);	
+}
+
+void CEditorFrame::OnArial() 
+{
+	// TODO: Add your command handler code here
+	ExecuteAttribParam(FONTFACE_COMMAND,FONT_ARIAL);
+}
+
+void CEditorFrame::OnTimes() 
+{
+	// TODO: Add your command handler code here
+	ExecuteAttribParam(FONTFACE_COMMAND,FONT_TIMES);	
+}
+
+void CEditorFrame::OnCourier() 
+{
+	// TODO: Add your command handler code here
+	ExecuteAttribParam(FONTFACE_COMMAND,FONT_COURIER);
+}
+
+void CEditorFrame::OnAlignleft() 
+{
+	// TODO: Add your command handler code here
+	ExecuteAttribParam(ALIGN_COMMAND,ALIGN_LEFT);
+	
+}
+
+
+void CEditorFrame::OnUpdateAlignleft(CCmdUI* pCmdUI) 
+{
+	// TODO: Add your command update UI handler code here
+  nsString tValue;
+
+  nsresult rv = GetAttributeParamValue(ALIGN_COMMAND,tValue);
+  if (NS_SUCCEEDED(rv))
+  {
+    if (tValue == ALIGN_LEFT)
+      pCmdUI->SetCheck(1);
+    else
+      pCmdUI->SetCheck(0);
+  }
+}
+
+void CEditorFrame::OnAlignright() 
+{
+	// TODO: Add your command handler code here
+	ExecuteAttribParam(ALIGN_COMMAND,ALIGN_RIGHT);
+	
+}
+
+void CEditorFrame::OnUpdateAlignright(CCmdUI* pCmdUI) 
+{
+	// TODO: Add your command update UI handler code here
+	// TODO: Add your command update UI handler code here
+  nsString tValue;
+  nsresult rv = GetAttributeParamValue(ALIGN_COMMAND,tValue);
+  if (NS_SUCCEEDED(rv))
+  {
+    if (tValue == ALIGN_RIGHT)
+      pCmdUI->SetCheck(1);
+    else
+      pCmdUI->SetCheck(0);
+  }
+}
+
+void CEditorFrame::OnAligncenter() 
+{
+	// TODO: Add your command handler code here
+	ExecuteAttribParam(ALIGN_COMMAND,ALIGN_CENTER);
+	
+}
+
+void CEditorFrame::OnUpdateAligncenter(CCmdUI* pCmdUI) 
+{
+ 	// TODO: Add your command update UI handler code here
+	// TODO: Add your command update UI handler code here
+  nsString tValue;
+  nsresult rv = GetAttributeParamValue(ALIGN_COMMAND,tValue);
+  if (NS_SUCCEEDED(rv))
+  {
+    if (tValue == ALIGN_CENTER)
+      pCmdUI->SetCheck(1);
+    else
+      pCmdUI->SetCheck(0);
+  }
+}
+
+void CEditorFrame::OnInsertlink() 
+{
+	// TODO: Add your command handler code here
+	
+}
+
+void CEditorFrame::OnEditUndo() 
+{
+	// TODO: Add your command handler code here
+	ExecuteNoParam(UNDO_COMMAND);
+}
+
+void CEditorFrame::OnEditRedo() 
+{
+	// TODO: Add your command handler code here
+	ExecuteNoParam(REDO_COMMAND);	
+}
+
+void CEditorFrame::OnUpdateEditRedo(CCmdUI* pCmdUI) 
+{
+	// TODO: Add your command update UI handler code here
+  nsresult rv;
+  nsCOMPtr<nsICommandParams> params;
+  rv = MakeCommandParams(REDO_COMMAND,getter_AddRefs(params));
+  if (NS_FAILED(rv))
+    return;
+  if (!params)
+    return;
+  rv = GetCommandState(params);
+  if (NS_SUCCEEDED(rv))
+  {
+    PRBool tValue;
+    params->GetBooleanValue(STATE_ENABLED,&tValue);
+    if (tValue)
+    {
+      pCmdUI->Enable(TRUE);
+      return;
+    }
+  }
+  pCmdUI->Enable(FALSE);	
+}
+
+void CEditorFrame::OnUpdateEditUndo(CCmdUI* pCmdUI) 
+{
+	// TODO: Add your command update UI handler code here
+  nsresult rv;
+  nsCOMPtr<nsICommandParams> params;
+  rv = MakeCommandParams(UNDO_COMMAND,getter_AddRefs(params));
+  if (NS_FAILED(rv))
+    return;
+  if (!params)
+    return;
+  rv = GetCommandState(params);
+  if (NS_SUCCEEDED(rv))
+  {
+    PRBool tValue;
+    params->GetBooleanValue(STATE_ENABLED,&tValue);
+    if (tValue)
+    {
+      pCmdUI->Enable(TRUE);
+      return;
+    }
+  }
+  pCmdUI->Enable(FALSE);		
 }

@@ -102,6 +102,23 @@ BEGIN
     BUTTON      ID_BOLD
     BUTTON      ID_ITALICS
     BUTTON      ID_UNDERLINE
+    SEPARATOR
+    BUTTON      ID_INDENT
+    BUTTON      ID_OUTDENT
+    SEPARATOR
+    BUTTON      ID_FONTBLACK
+    BUTTON      ID_FONTRED
+    BUTTON      ID_BGCOLOR
+    BUTTON      ID_NOBGCOLOR
+    SEPARATOR
+    BUTTON      ID_FONTSIZEINCREASE
+    BUTTON      ID_FONTSIZEDECREASE
+    SEPARATOR
+    BUTTON      ID_ALIGNLEFT
+    BUTTON      ID_ALIGNCENTER
+    BUTTON      ID_ALIGNRIGHT
+    SEPARATOR
+    BUTTON      ID_INSERTLINK
 END
 
 
@@ -257,6 +274,9 @@ BEGIN
     END
     POPUP "&Edit"
     BEGIN
+        MENUITEM "Undo\tCtrl+Z",                ID_EDIT_UNDO
+        MENUITEM "Redo\tCtrl+Shift+Z",          ID_EDIT_REDO
+        MENUITEM SEPARATOR
         MENUITEM "Cu&t\tCtrl+X",                ID_EDIT_CUT
         MENUITEM "&Copy\tCtrl+C",               ID_EDIT_COPY
         MENUITEM "&Paste\tCtrl+V",              ID_EDIT_PASTE
@@ -265,6 +285,15 @@ BEGIN
         MENUITEM "Select &None",                ID_EDIT_SELECT_NONE
         MENUITEM SEPARATOR
         MENUITEM "&Find in This Page...\tCtrl+F", ID_EDIT_FIND
+    END
+    POPUP "F& ormat"
+    BEGIN
+        POPUP "Font"
+        BEGIN
+            MENUITEM "Arial",                       ID_ARIAL
+            MENUITEM "Times New Roman",             ID_TIMES
+            MENUITEM "Courier",                     ID_COURIER
+        END
     END
     POPUP "&Help"
     BEGIN
@@ -288,13 +317,15 @@ BEGIN
     "V",            ID_EDIT_PASTE,          VIRTKEY, CONTROL, NOINVERT
     VK_BACK,        ID_EDIT_UNDO,           VIRTKEY, ALT, NOINVERT
     VK_DELETE,      ID_EDIT_CUT,            VIRTKEY, SHIFT, NOINVERT
+    VK_ESCAPE,      ID_NAV_STOP,            VIRTKEY, NOINVERT
     VK_F6,          ID_NEXT_PANE,           VIRTKEY, NOINVERT
     VK_F6,          ID_PREV_PANE,           VIRTKEY, SHIFT, NOINVERT
     VK_INSERT,      ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
     VK_INSERT,      ID_EDIT_PASTE,          VIRTKEY, SHIFT, NOINVERT
     "X",            ID_EDIT_CUT,            VIRTKEY, CONTROL, NOINVERT
     "Z",            ID_EDIT_UNDO,           VIRTKEY, CONTROL, NOINVERT
-    VK_ESCAPE,      ID_NAV_STOP,            VIRTKEY 
+    "Z",            ID_EDIT_REDO,           VIRTKEY, SHIFT, CONTROL, 
+                                                    NOINVERT
 END
 
 
@@ -652,6 +683,12 @@ STRINGTABLE DISCARDABLE
 BEGIN
     ID_FILE_PRINTPREVIEW    "Print Preview"
     ID_FILE_PRINTSETUP      "Page Setup Dialog"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_ARIAL                "Arial"
+    ID_TIMES                "Times New Roman"
 END
 
 #endif    // English (U.S.) resources
