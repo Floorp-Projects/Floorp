@@ -1,0 +1,52 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/*
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is Mozilla.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications.  Portions created by Netscape Communications are
+ * Copyright (C) 2001 by Netscape Communications.  All
+ * Rights Reserved.
+ * 
+ * Contributor(s): 
+ *   Vidur Apparao <vidur@netscape.com> (original author)
+ */
+
+#include "nsISupports.idl"
+
+interface nsISchema;
+interface nsIURI;
+interface nsIDOMElement;
+interface nsISchemaLoadListener;
+
+[scriptable, uuid(3c14a032-6f4e-11d5-9b46-000064657374)]
+interface nsISchemaLoader : nsISupports {
+  nsISchema load(in nsIURI schemaURI);
+  void loadAsync(in nsIURI schemaURI, in nsISchemaLoadListener listener);
+  nsISchema processSchemaElement(in nsIDOMElement element);
+};
+
+[scriptable, uuid(3c14a033-6f4e-11d5-9b46-000064657374)]
+interface nsISchemaLoadListener : nsISupports {
+  void onError(in PRInt32 status,
+	       in wstring statusMessage);
+  void onComplete(in nsISchema schema);
+};
+
+%{ C++
+#define NS_SCHEMALOADER_CID                           \
+{ /* 5adc10f0-74e1-11d5-9b49-00104bdf5339 */          \
+ 0x5adc10f0, 0x74e1, 0x11d5,                          \
+{0x9b, 0x49, 0x00, 0x10, 0x4b, 0xdf, 0x53, 0x39}}     
+
+#define NS_SCHEMALOADER_CONTRACTID "@mozilla.org/xmlextras/schemaloader;1"
+%}
