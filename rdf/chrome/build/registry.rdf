@@ -7,7 +7,7 @@
 	
     <skin> 
       <RDF:Description about="chrome://global/skin/">
-	    <base>resource:/res/samples/</base>
+	    <base>resource:/chrome/global/skin/default/</base>
         <main>xul.css</main> 
       </RDF:Description> 
     </skin> 
@@ -19,14 +19,14 @@
 
     <skin> 
       <RDF:Description about="chrome://navigator/skin/">
-	    <base>resource:/res/samples/</base>
+	    <base>resource:/chrome/navigator/skin/default/</base>
         <main>navigator.css</main> 
       </RDF:Description> 
     </skin> 
 
     <content> 
       <RDF:Description about="chrome://navigator/content/">
-	    <base>resource:/res/samples/</base>
+	    <base>resource:/chrome/navigator/content/default/</base>
         <main>navigator.xul</main> 
       </RDF:Description> 
     </content> 
