@@ -184,7 +184,7 @@ nsExpatTokenizer::nsExpatTokenizer(nsString* aURL) : nsHTMLTokenizer() {
   mState->parser = nsnull;
   mState->tokenDeque = nsnull;
 
-  nsAutoString buffer("UTF-16");
+  nsAutoString buffer; buffer.AssignWithConversion("UTF-16");
   const PRUnichar* encoding = buffer.GetUnicode();
   if (encoding) {
     mExpatParser = XML_ParserCreate((const XML_Char*) encoding);
@@ -267,7 +267,10 @@ void nsExpatTokenizer::GetLine(const char* aSourceBuffer, PRUint32 aLength,
   aLine.Truncate(0);
   if (startIndex == endIndex) {
     /* Special case if the error is on a line where the only character is a newline */
-    aLine.Append("");
+      // STRING USE WARNING: I have no idea what this is supposed to do; to me it looks like a no-op
+      //  ... so I'm not going to delete it but I will fix it to conform to the new standard.
+    // aLine.Append("");
+    aLine.AppendWithConversion("");
   }
   else {
     NS_ASSERTION(endIndex - startIndex >= sizeof(PRUnichar), "?");
@@ -291,15 +294,15 @@ void nsExpatTokenizer::GetLine(const char* aSourceBuffer, PRUint32 aLength,
 static nsresult 
 CreateErrorText(const nsParserError* aError, nsString& aErrorString)
 {
-  aErrorString = "XML Parsing Error: ";
+  aErrorString.AssignWithConversion("XML Parsing Error: ");
 
   if (aError) {
     aErrorString.Append(aError->description);
-    aErrorString.Append("\nLine Number ");
-    aErrorString.Append(aError->lineNumber, 10);
-    aErrorString.Append(", Column ");
-    aErrorString.Append(aError->colNumber, 10);
-    aErrorString.Append(":");
+    aErrorString.AppendWithConversion("\nLine Number ");
+    aErrorString.AppendWithConversion(aError->lineNumber, 10);
+    aErrorString.AppendWithConversion(", Column ");
+    aErrorString.AppendWithConversion(aError->colNumber, 10);
+    aErrorString.AppendWithConversion(":");
   }
 
   return NS_OK;
@@ -311,10 +314,10 @@ CreateSourceText(const nsParserError* aError, nsString& aSourceString)
   PRInt32 errorPosition = aError->colNumber;
 
   aSourceString.Append(aError->sourceLine);
-  aSourceString.Append("\n");
+  aSourceString.AppendWithConversion("\n");
   for (int i = 0; i < errorPosition; i++)
-    aSourceString.Append("-");
-  aSourceString.Append("^");  
+    aSourceString.AppendWithConversion("-");
+  aSourceString.AppendWithConversion("^");  
 
   return NS_OK;
 }
@@ -337,7 +340,7 @@ nsExpatTokenizer::AddErrorMessageTokens(nsParserError* aError)
   CAttributeToken* attrToken = (CAttributeToken*) 
       mState->tokenRecycler->CreateTokenOfType(eToken_attribute, eHTMLTag_unknown);  
   nsString& key = attrToken->GetKey();
-  key.Assign("xmlns");
+  key.AssignWithConversion("xmlns");
   attrToken->SetStringValue(kHTMLNameSpaceURI);
   newToken->SetAttributeCount(1);
   newToken = (CToken*) attrToken;
@@ -396,7 +399,7 @@ nsExpatTokenizer::PushXMLErrorTokens(const char *aBuffer, PRUint32 aLength, PRBo
     error->code = XML_GetErrorCode(mExpatParser);
     error->lineNumber = XML_GetCurrentLineNumber(mExpatParser);
     error->colNumber = XML_GetCurrentColumnNumber(mExpatParser);  
-    error->description = XML_ErrorString(error->code);
+    error->description.AssignWithConversion(XML_ErrorString(error->code));
     if (!aIsFinal) {
       PRInt32 byteIndexRelativeToFile = 0;
       byteIndexRelativeToFile = XML_GetCurrentByteIndex(mExpatParser);
@@ -617,13 +620,13 @@ void nsExpatTokenizer::HandleProcessingInstruction(void *userData,
   CToken* theToken = state->tokenRecycler->CreateTokenOfType(eToken_instruction,eHTMLTag_unknown);
   if(theToken) {
     nsString& theString=theToken->GetStringValueXXX();
-    theString. Append("<?");
+    theString. AppendWithConversion("<?");
     theString.Append((PRUnichar *) target);
     if(data) {
-      theString.Append(" ");
+      theString.AppendWithConversion(" ");
       theString.Append((PRUnichar *) data);
     }
-    theString.Append("?>");
+    theString.AppendWithConversion("?>");
     AddToken(theToken, NS_OK, state->tokenDeque, state->tokenRecycler);
   }
   else{
@@ -687,8 +690,8 @@ IsLoadableDTD(nsIURI** aDTD)
       res = dtdURL->GetFileName(&fileName);
       if (NS_SUCCEEDED(res) && nsnull != fileName) {
         nsSpecialSystemDirectory dtdPath(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
-        nsString path(kDTDDirectory);        
-        path.Append(fileName);
+        nsString path; path.AssignWithConversion(kDTDDirectory);        
+        path.AppendWithConversion(fileName);
         dtdPath += path;
         if (dtdPath.Exists()) {
           // The DTD was found in the local DTD directory.
@@ -728,7 +731,7 @@ nsExpatTokenizer::OpenInputStream(const nsString& aURLStr,
         rv = NS_OpenURI(in, uri);
         char* absURL = nsnull;
         uri->GetSpec(&absURL);
-        aAbsURL->Append(absURL);
+        aAbsURL->AppendWithConversion(absURL);
         nsCRT::free(absURL);
       } 
       else {
@@ -747,7 +750,7 @@ nsresult nsExpatTokenizer::LoadStream(nsIInputStream* in,
   PRUint32               aCount = 1024,
                          bufsize = aCount*sizeof(PRUnichar);  
   nsIUnicharInputStream *uniIn = nsnull;
-  nsAutoString utf8("UTF-8");
+  nsAutoString utf8; utf8.AssignWithConversion("UTF-8");
 
   nsresult res = NS_NewConverterStream(&uniIn,
                                        nsnull,
@@ -815,7 +818,7 @@ int nsExpatTokenizer::HandleExternalEntityRef(XML_Parser parser,
     // Pass the buffer to expat for parsing
     if (NS_SUCCEEDED(rv) && nsnull != uniBuf) {    
       // Create a parser for parsing the external entity
-      nsAutoString encoding("UTF-16");  
+      nsAutoString encoding; encoding.AssignWithConversion("UTF-16");  
       XML_Parser entParser = nsnull;
 
       entParser = XML_ExternalEntityParserCreate(parser, 0, 
@@ -854,10 +857,10 @@ void nsExpatTokenizer::HandleStartDoctypeDecl(void *userData,
   CToken* token = state->tokenRecycler->CreateTokenOfType(eToken_doctypeDecl, eHTMLTag_unknown);
   if (token) {
     nsString& str = token->GetStringValueXXX();
-    str.Append(kDocTypeDeclPrefix);
-    str.Append(" ");
+    str.AppendWithConversion(kDocTypeDeclPrefix);
+    str.AppendWithConversion(" ");
     str.Append((PRUnichar*) doctypeName);
-    str.Append(">");
+    str.AppendWithConversion(">");
     AddToken(token, NS_OK, state->tokenDeque, state->tokenRecycler);
   }
 }

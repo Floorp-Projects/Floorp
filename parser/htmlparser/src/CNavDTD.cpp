@@ -134,9 +134,7 @@ NS_IMPL_RELEASE(CNavDTD)
 CNavDTD::CNavDTD() : nsIDTD(), 
     mMisplacedContent(0), 
     mSkippedContent(0), 
-    mSharedNodes(0), 
-    mScratch(""),
-    mMimeType("") {
+    mSharedNodes(0) {
   NS_INIT_REFCNT();
   mSink = 0; 
   mParser=0;       
@@ -373,18 +371,18 @@ eAutoDetectResult CNavDTD::CanParse(CParserContext& aParserContext,nsString& aBu
 
 
   if(eViewSource==aParserContext.mParserCommand) {
-    if(PR_TRUE==aParserContext.mMimeType.Equals(kPlainTextContentType)) {
+    if(PR_TRUE==aParserContext.mMimeType.EqualsWithConversion(kPlainTextContentType)) {
       result=ePrimaryDetect;
     }
-    else if(aParserContext.mMimeType.Equals(kRTFTextContentType)){ 
+    else if(aParserContext.mMimeType.EqualsWithConversion(kRTFTextContentType)){ 
       result=ePrimaryDetect;
     }
   }
   else {
-    if(PR_TRUE==aParserContext.mMimeType.Equals(kHTMLTextContentType)) {
+    if(PR_TRUE==aParserContext.mMimeType.EqualsWithConversion(kHTMLTextContentType)) {
       result=ePrimaryDetect;
     }
-    else if(PR_TRUE==aParserContext.mMimeType.Equals(kPlainTextContentType)) {
+    else if(PR_TRUE==aParserContext.mMimeType.EqualsWithConversion(kPlainTextContentType)) {
       result=ePrimaryDetect;
     }
     else {
@@ -393,7 +391,7 @@ eAutoDetectResult CNavDTD::CanParse(CParserContext& aParserContext,nsString& aBu
       if(BufferContainsHTML(aBuffer,theBufHasXML)){
         result = eValidDetect ;
         if(0==aParserContext.mMimeType.Length()) {
-          aParserContext.SetMimeType(kHTMLTextContentType);
+          aParserContext.SetMimeType(NS_ConvertToString(kHTMLTextContentType));
           result = (theBufHasXML) ? eValidDetect : ePrimaryDetect;
         }
       }
@@ -482,7 +480,7 @@ nsresult CNavDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsIToke
 
         if(!mBodyContext->GetCount()) {
             //if the content model is empty, then begin by opening <html>...
-          CStartToken *theToken=(CStartToken*)mTokenRecycler->CreateTokenOfType(eToken_start,eHTMLTag_html,"html");
+          CStartToken *theToken=(CStartToken*)mTokenRecycler->CreateTokenOfType(eToken_start,eHTMLTag_html,NS_ConvertToString("html"));
           HandleStartToken(theToken); //this token should get pushed on the context stack, don't recycle it.
 
           if(ePlainText==mDocType) {
@@ -540,7 +538,7 @@ nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParse
 
       mSkipTarget=eHTMLTag_unknown; //clear this in case we were searching earlier.
 
-      CStartToken *theToken=(CStartToken*)mTokenRecycler->CreateTokenOfType(eToken_start,eHTMLTag_body,"body");
+      CStartToken *theToken=(CStartToken*)mTokenRecycler->CreateTokenOfType(eToken_start,eHTMLTag_body,NS_ConvertToString("body"));
       mTokenizer->PushTokenFront(theToken); //this token should get pushed on the context stack, don't recycle it 
       result=BuildModel(aParser,mTokenizer,0,aSink);
     } 
@@ -726,7 +724,7 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
                 mMisplacedContent.Push(aToken);
                 aToken->mUseCount++;
                 if(mParseMode==eParseMode_quirks && (gHTMLElements[theTag].HasSpecialProperty(kRequiresBody))) {
-                  CToken* theBodyToken=(CToken*)mTokenRecycler->CreateTokenOfType(eToken_start,eHTMLTag_body,"body");
+                  CToken* theBodyToken=(CToken*)mTokenRecycler->CreateTokenOfType(eToken_start,eHTMLTag_body,NS_ConvertToString("body"));
                   result=HandleToken(theBodyToken,aParser);
                 }
                 return result;
@@ -1131,7 +1129,7 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNode
       CParserContext*   pc=mParser->PeekContext();
       void*             theDocID=(pc)? pc->mKey:0;
     
-      result=theService->Notify(aTag,aNode,(PRUint32)theDocID,kHTMLTextContentType,mParser); 
+      result=theService->Notify(aTag,aNode,(PRUint32)theDocID, NS_ConvertToString(kHTMLTextContentType), mParser); 
     }
   }
 
@@ -2129,7 +2127,7 @@ NS_IMETHODIMP CNavDTD::StringTagToIntTag(nsString &aTag, PRInt32* aIntTag) const
 }
 
 NS_IMETHODIMP CNavDTD::IntTagToStringTag(PRInt32 aIntTag, nsString& aTag) const {
-  aTag = nsHTMLTags::GetStringValue((nsHTMLTag)aIntTag);
+  aTag.AssignWithConversion(nsHTMLTags::GetStringValue((nsHTMLTag)aIntTag));
   return NS_OK;
 }
 

@@ -386,7 +386,7 @@ nsresult nsHTMLTokenizer::ConsumeTag(PRUnichar aChar,CToken*& aToken,nsScanner& 
           // We are not dealing with a tag. So, put back the char
           // and leave the decision to ConsumeText().
           aScanner.PutBack(aChar);
-          nsAutoString temp("<");
+          nsAutoString temp; temp.AssignWithConversion("<");
           result=ConsumeText(temp,aToken,aScanner);
         }
     } //switch
@@ -548,7 +548,7 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
         
         if((eHTMLTag_style==theTag) || (eHTMLTag_script==theTag)) {
           nsAutoString endTag(nsHTMLTags::GetStringValue(theTag));
-          endTag.Insert("</",0,2);
+          endTag.InsertWithConversion("</",0,2);
           CToken* textToken=theRecycler->CreateTokenOfType(eToken_text,theTag);
           result=((CTextToken*)textToken)->ConsumeUntil(0,PR_FALSE,aScanner,endTag,mParseMode,aFlushTokens);  //tell new token to finish consuming text...    
           //endTag.Append(">");
@@ -623,7 +623,7 @@ nsresult nsHTMLTokenizer::ConsumeEntity(PRUnichar aChar,CToken*& aToken,nsScanne
     }
     else {
        //oops, we're actually looking at plain text...
-       nsAutoString temp("&");
+       nsAutoString temp; temp.AssignWithConversion("&");
        aScanner.PutBack(theChar);
        return ConsumeText(temp,aToken,aScanner);
     }//if
@@ -632,7 +632,7 @@ nsresult nsHTMLTokenizer::ConsumeEntity(PRUnichar aChar,CToken*& aToken,nsScanne
       if((kHashsign!=theChar) && (-1==nsHTMLEntities::EntityToUnicode(theStr))){
         //if you're here we have a bogus entity.
         //convert it into a text token.
-        nsAutoString temp("&");
+        nsAutoString temp; temp.AssignWithConversion("&");
         temp.Append(theStr);
         CToken* theToken=theRecycler->CreateTokenOfType(eToken_text,eHTMLTag_text,temp);
         theRecycler->RecycleToken(aToken);

@@ -213,7 +213,7 @@ static eRTFTags GetTagID(const nsString& aTag) {
   while(low<=high) {
     middle=(PRInt32)(low+high)/2;
 
-    PRInt32 cmp=aTag.Compare(gRTFTable[middle].mName);
+    PRInt32 cmp=aTag.CompareWithConversion(gRTFTable[middle].mName);
     if(0==cmp)
       return gRTFTable[middle].mTagID;
     if(-1==cmp)
@@ -342,7 +342,7 @@ eAutoDetectResult CRtfDTD::CanParse(CParserContext& aParserContext,nsString& aBu
   eAutoDetectResult result=eUnknownDetect;
 
   if(eViewSource!=aParserContext.mParserCommand) {
-    if(aParserContext.mMimeType.Equals(kRTFTextContentType)) {
+    if(aParserContext.mMimeType.EqualsWithConversion(kRTFTextContentType)) {
       result=ePrimaryDetect;
     }
     else if(kNotFound!=aBuffer.Find(kRTFDocHeader)) {
@@ -542,7 +542,7 @@ NS_IMETHODIMP CRtfDTD::StringTagToIntTag(nsString &aTag, PRInt32* aIntTag) const
 }
 
 NS_IMETHODIMP CRtfDTD::IntTagToStringTag(PRInt32 aIntTag, nsString& aTag) const {
-  aTag = nsHTMLTags::GetStringValue((nsHTMLTag)aIntTag);
+  aTag.AssignWithConversion(nsHTMLTags::GetStringValue((nsHTMLTag)aIntTag).GetBuffer());
   return NS_OK;
 }
 
@@ -593,7 +593,7 @@ nsresult CRtfDTD::AddLeafContainer(eHTMLTags aTag,const char* aTagName){
   nsresult result=NS_OK;
 
   if(mSink) {
-    nsAutoString theStr(aTagName);
+    nsAutoString theStr; theStr.AssignWithConversion(aTagName);
     CStartToken theToken(theStr,aTag);
     nsCParserNode theNode(&theToken);
 
@@ -617,7 +617,7 @@ nsresult CRtfDTD::OpenContainer(eHTMLTags aTag,const char* aTagName){
   nsresult result=NS_OK;
 
   if(mSink) {
-    nsAutoString theStr(aTagName);
+    nsAutoString theStr; theStr.AssignWithConversion(aTagName);
     CStartToken theToken(theStr,aTag);
     nsCParserNode theNode(&theToken);
 
@@ -754,7 +754,7 @@ nsresult CRtfDTD::HandleControlWord(CToken* aToken){
             break;
           case eRTFCtrl_tab:
             {
-              CTextToken theToken2("   ");
+              CTextToken theToken2( NS_ConvertToString("   ") );
               result=HandleContent(&theToken2);
             }
             break;
@@ -890,7 +890,7 @@ nsresult CRTFControlWord::Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aM
   
   if(NS_SUCCEEDED(result)) {
     if(('a'<=theChar) && (theChar<='z')) {
-      nsAutoString temp(gAlphaChars);
+      nsAutoString temp; temp.AssignWithConversion(gAlphaChars);
       result=aScanner.ReadWhile(mTextValue,temp,PR_FALSE);
       if(NS_OK==result) {
         //ok, now look for an option parameter...
@@ -903,7 +903,7 @@ nsresult CRTFControlWord::Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aM
           case '5': case '6': case '7': case '8': case '9': 
           case kMinus:
             {
-              nsAutoString theDigits(gDigits);
+              nsAutoString theDigits; theDigits.AssignWithConversion(gDigits);
               result=aScanner.ReadWhile(mArgument,theDigits,PR_FALSE);
             }
             break;

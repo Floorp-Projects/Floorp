@@ -79,15 +79,15 @@ NS_IMETHODIMP RobotSinkObserver::ProcessLink(const nsString& aURLSpec)
      // Geez this is ugly. temporary hack to only process html files
      str.Truncate();
      nsString(aURLSpec).Right(str,1);
-     if (!str.Equals("/"))
+     if (!str.EqualsWithConversion("/"))
      {
         str.Truncate();
         nsString(aURLSpec).Right(str,4);
-        if (!str.Equals("html"))
+        if (!str.EqualsWithConversion("html"))
         {
            str.Truncate();
            nsString(aURLSpec).Right(str,3);
-           if (!str.Equals("htm"))
+           if (!str.EqualsWithConversion("htm"))
               return NS_OK;
         }
      }
@@ -108,7 +108,7 @@ NS_IMETHODIMP RobotSinkObserver::ProcessLink(const nsString& aURLSpec)
      g_duplicateList->AppendElement(new nsString(aURLSpec));
      str.Truncate();
      nsString(aURLSpec).Left(str,5);
-     if (str.Equals("http:")) {
+     if (str.EqualsWithConversion("http:")) {
         g_iProcessed++;
         if (g_iProcessed == (g_iMaxProcess > 0 ? g_iMaxProcess-1 : 0))
            g_bHitTop = PR_TRUE;
@@ -328,7 +328,7 @@ extern "C" NS_EXPORT int DebugRobot(
       }
       char* spec;
       (void)url->GetSpec(&spec);
-      nsAutoString theSpec(spec);
+      nsAutoString theSpec; theSpec.AssignWithConversion(spec);
       nsCRT::free(spec);
       nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(docShell));
       webNav->LoadURI(theSpec.GetUnicode());/* XXX hook up stream listener here! */

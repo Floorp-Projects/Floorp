@@ -107,7 +107,7 @@ class CTagFinder: public nsDequeFunctor{
 
 public:
   CTagFinder(){}
-  void Initialize(const nsString &aTagName) {mTagName = aTagName;}
+  void Initialize(const nsString &aTagName) {mTagName.Assign(aTagName);}
 
   virtual ~CTagFinder() {
   }
@@ -220,7 +220,7 @@ NS_IMPL_RELEASE(COtherDTD)
  *  @param   
  *  @return  
  */
-COtherDTD::COtherDTD() : nsIDTD(), mMisplacedContent(0), mSkippedContent(0), mSharedNodes(0), mScratch("") {
+COtherDTD::COtherDTD() : nsIDTD(), mMisplacedContent(0), mSkippedContent(0), mSharedNodes(0) {
   NS_INIT_REFCNT();
   mSink = 0; 
   mParser=0;       
@@ -471,7 +471,7 @@ eAutoDetectResult COtherDTD::CanParse(CParserContext& aParserContext,nsString& a
 
   
   if(eViewSource!=aParserContext.mParserCommand) {
-    if(PR_TRUE==(aParserContext.mMimeType.Equals(kHTMLTextContentType) || aParserContext.mMimeType.Equals(kPlainTextContentType))) {
+    if(PR_TRUE==(aParserContext.mMimeType.EqualsWithConversion(kHTMLTextContentType) || aParserContext.mMimeType.EqualsWithConversion(kPlainTextContentType))) {
       result=ePrimaryDetect;
     }
     else {
@@ -480,7 +480,7 @@ eAutoDetectResult COtherDTD::CanParse(CParserContext& aParserContext,nsString& a
       if(BufferContainsHTML(aBuffer,theBufHasXML)){
         result = eValidDetect ;
         if(0==aParserContext.mMimeType.Length()) {
-          aParserContext.SetMimeType(kHTMLTextContentType);
+          aParserContext.SetMimeType( NS_ConvertToString(kHTMLTextContentType) );
           result = (theBufHasXML) ? eValidDetect : ePrimaryDetect;
         }
       }
@@ -569,7 +569,7 @@ nsresult COtherDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsITo
 
         if(!mBodyContext->GetCount()) {
             //if the content model is empty, then begin by opening <html>...
-          CStartToken *theToken=(CStartToken*)mTokenRecycler->CreateTokenOfType(eToken_start,eHTMLTag_html,"html");
+          CStartToken *theToken=(CStartToken*)mTokenRecycler->CreateTokenOfType(eToken_start,eHTMLTag_html, NS_ConvertToString("html"));
           HandleStartToken(theToken); //this token should get pushed on the context stack, don't recycle it.
         }
 
@@ -623,11 +623,11 @@ nsresult COtherDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIPar
       mTokenizer->PrependTokens(mMisplacedContent); //push misplaced content 
 
       if(ePlainText==mDocType) {
-        CStartToken *theToken=(CStartToken*)mTokenRecycler->CreateTokenOfType(eToken_start,eHTMLTag_pre,"pre");
+        CStartToken *theToken=(CStartToken*)mTokenRecycler->CreateTokenOfType(eToken_start,eHTMLTag_pre, NS_ConvertToString("pre"));
         mTokenizer->PushTokenFront(theToken); //this token should get pushed on the context stack, don't recycle it 
       }
 
-      CStartToken *theToken=(CStartToken*)mTokenRecycler->CreateTokenOfType(eToken_start,eHTMLTag_body,"body");
+      CStartToken *theToken=(CStartToken*)mTokenRecycler->CreateTokenOfType(eToken_start,eHTMLTag_body, NS_ConvertToString("body"));
       mTokenizer->PushTokenFront(theToken); //this token should get pushed on the context stack, don't recycle it 
 
       result=BuildModel(aParser,mTokenizer,0,aSink);
@@ -1204,7 +1204,7 @@ nsresult COtherDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNo
       CParserContext*   pc=mParser->PeekContext();
       void*             theDocID=(pc)? pc->mKey:0;
     
-      result=theService->Notify(aTag,aNode,(PRUint32)theDocID,kHTMLTextContentType,mParser);                            
+      result=theService->Notify(aTag,aNode,(PRUint32)theDocID, NS_ConvertToString(kHTMLTextContentType), mParser);                            
     }
   }
 
@@ -2075,7 +2075,7 @@ nsresult COtherDTD::CollectSkippedContent(nsCParserNode& aNode,PRInt32 &aCount) 
   // the parser and into the form element code
   PRBool aMustConvertLinebreaks = PR_FALSE;
   
-  mScratch="";
+  mScratch.SetLength(0);
   aNode.SetSkippedContent(mScratch);
 
   for(aIndex=0;aIndex<aMax;aIndex++){
@@ -2154,7 +2154,7 @@ NS_IMETHODIMP COtherDTD::StringTagToIntTag(nsString &aTag, PRInt32* aIntTag) con
 }
 
 NS_IMETHODIMP COtherDTD::IntTagToStringTag(PRInt32 aIntTag, nsString& aTag) const {
-  aTag = nsHTMLTags::GetStringValue((nsHTMLTag)aIntTag);
+  aTag.AssignWithConversion(nsHTMLTags::GetStringValue((nsHTMLTag)aIntTag));
   return NS_OK;
 }
 
