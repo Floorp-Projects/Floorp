@@ -800,36 +800,6 @@ RFindCharInSet( const CharT* data, PRUint32 dataLen, const SetCharT* set )
     return kNotFound;
   }
 
-  // this is rickg's original code from AppendInt
-static void
-IntegerToCString( PRInt32 aInteger, PRInt32 aRadix, char *aBuf )
-  {
-    PRUint32 theInt=(PRUint32)aInteger;
-
-    PRInt32 radices[] = {1000000000,268435456};
-    PRInt32 mask1=radices[16==aRadix];
-
-    PRInt32 charpos=0;
-    if(aInteger<0) {
-      theInt*=-1;
-      if(10==aRadix) {
-        aBuf[charpos++]='-';
-      }
-      else theInt=(int)~(theInt-1);
-    }
-
-    PRBool isfirst=PR_TRUE;
-    while(mask1>=1) {
-      PRInt32 theDiv=theInt/mask1;
-      if((theDiv) || (!isfirst)) {
-        aBuf[charpos++]="0123456789abcdef"[theDiv];
-        isfirst=PR_FALSE;
-      }
-      theInt-=theDiv*mask1;
-      mask1/=aRadix;
-    }
-  }
-
 /**
  * This is a copy of |PR_cnvtf| with a bug fixed.  (The second argument
  * of PR_dtoa is 2 rather than 1.)
@@ -1283,19 +1253,82 @@ nsString::InsertWithConversion( const char* aData, PRUint32 aOffset, PRInt32 aCo
 void
 nsCString::AppendInt( PRInt32 aInteger, PRInt32 aRadix )
   {
-    char buf[] = {'0',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-    IntegerToCString(aInteger, aRadix, buf);
+    char buf[20];
+    const char* fmt;
+    switch (aRadix) {
+      case 8:
+        fmt = "%o";
+        break;
+      case 10:
+        fmt = "%d";
+        break;
+      default:
+        NS_ASSERTION(aRadix == 16, "Invalid radix!");
+        fmt = "%x";
+    }
+    PR_snprintf(buf, sizeof(buf), fmt, aInteger);
     Append(buf);
   }
 
 void
 nsString::AppendInt( PRInt32 aInteger, PRInt32 aRadix )
   {
-    char buf[] = {'0',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-    IntegerToCString(aInteger, aRadix, buf);
-    AppendWithConversion(buf);
+    char buf[20];
+    const char* fmt;
+    switch (aRadix) {
+      case 8:
+        fmt = "%o";
+        break;
+      case 10:
+        fmt = "%d";
+        break;
+      default:
+        NS_ASSERTION(aRadix == 16, "Invalid radix!");
+        fmt = "%x";
+    }
+    PR_snprintf(buf, sizeof(buf), fmt, aInteger);
+    AppendASCIItoUTF16(buf, *this);
   }
 
+void
+nsCString::AppendInt( PRInt64 aInteger, PRInt32 aRadix )
+  {
+    char buf[30];
+    const char* fmt;
+    switch (aRadix) {
+      case 8:
+        fmt = "%llo";
+        break;
+      case 10:
+        fmt = "%lld";
+        break;
+      default:
+        NS_ASSERTION(aRadix == 16, "Invalid radix!");
+        fmt = "%llx";
+    }
+    PR_snprintf(buf, sizeof(buf), fmt, aInteger);
+    Append(buf);
+  }
+
+void
+nsString::AppendInt( PRInt64 aInteger, PRInt32 aRadix )
+  {
+    char buf[30];
+    const char* fmt;
+    switch (aRadix) {
+      case 8:
+        fmt = "%llo";
+        break;
+      case 10:
+        fmt = "%lld";
+        break;
+      default:
+        NS_ASSERTION(aRadix == 16, "Invalid radix!");
+        fmt = "%llx";
+    }
+    PR_snprintf(buf, sizeof(buf), fmt, aInteger);
+    AppendASCIItoUTF16(buf, *this);
+  }
 
   /**
    * nsTString::AppendFloat
