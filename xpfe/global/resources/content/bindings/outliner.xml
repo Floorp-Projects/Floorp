@@ -89,8 +89,9 @@
           this._ensureColumnOrder();
           
           var cols = [];
+          var col;
           if (aColBefore.ordinal < aColMove.ordinal) {
-            var col = aColBefore;
+            col = aColBefore;
             while (col) {
               if (col.localName == "outlinercol")
                 cols.push(col);
@@ -104,7 +105,7 @@
             for (i = 0; i < cols.length; ++i)
               cols[i].ordinal += 2;
           } else {
-            var col = aColMove.boxObject.nextSibling;
+            col = aColMove.boxObject.nextSibling;
             while (col) {
               if (col.localName == "outlinercol")
                 cols.push(col);
