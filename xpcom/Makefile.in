@@ -38,4 +38,8 @@ ifdef ENABLE_TESTS
 DIRS += tests
 endif
 
+ifeq ($(OS_ARCH),BeOS)
+EXTRA_DSO_LDOPTS += -lbe
+endif
+
 include $(topsrcdir)/config/rules.mk
