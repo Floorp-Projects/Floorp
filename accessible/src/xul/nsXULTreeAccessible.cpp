@@ -50,7 +50,7 @@
 // ---------- nsXULTreeAccessible ----------
 
 nsXULTreeAccessible::nsXULTreeAccessible(nsIDOMNode *aDOMNode, nsIWeakReference *aShell):
-nsAccessible(aDOMNode, aShell)
+nsXULSelectableAccessible(aDOMNode, aShell)
 {
   GetTreeBoxObject(aDOMNode, getter_AddRefs(mTree));
   if (mTree)
@@ -58,7 +58,7 @@ nsAccessible(aDOMNode, aShell)
   NS_ASSERTION(mTree && mTreeView, "Can't get mTree or mTreeView!\n");
 }
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsXULTreeAccessible, nsAccessible, nsIAccessibleSelectable)
+NS_IMPL_ISUPPORTS_INHERITED0(nsXULTreeAccessible, nsXULSelectableAccessible)
 
 NS_IMETHODIMP nsXULTreeAccessible::GetAccState(PRUint32 *_retval)
 {
@@ -68,10 +68,11 @@ NS_IMETHODIMP nsXULTreeAccessible::GetAccState(PRUint32 *_retval)
   // see if we are multiple select if so set ourselves as such
   nsCOMPtr<nsIDOMElement> element (do_QueryInterface(mDOMNode));
   if (element) {
+    // the default selection type is multiple
     nsAutoString selType;
     element->GetAttribute(NS_LITERAL_STRING("seltype"), selType);
-    if (!selType.IsEmpty() && selType.Equals(NS_LITERAL_STRING("multiple")))
-        *_retval |= STATE_MULTISELECTABLE;
+    if (selType.IsEmpty() || !selType.Equals(NS_LITERAL_STRING("single")))
+      *_retval |= STATE_MULTISELECTABLE;
   }
 
   *_retval |= STATE_READONLY | STATE_FOCUSABLE;
@@ -196,6 +197,121 @@ NS_IMETHODIMP nsXULTreeAccessible::GetSelectedChildren(nsISupportsArray **_retva
   if (length != 0) {
     *_retval = selectedAccessibles;
     NS_IF_ADDREF(*_retval);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXULTreeAccessible::GetSelectionCount(PRInt32 *aSelectionCount)
+{
+  *aSelectionCount = 0;
+
+  NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsITreeSelection> selection;
+  mTree->GetSelection(getter_AddRefs(selection));
+  if (selection)
+    selection->GetCount(aSelectionCount);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXULTreeAccessible::ChangeSelection(PRInt32 aIndex, PRUint8 aMethod, PRBool *aSelState)
+{
+  NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsITreeSelection> selection;
+  mTree->GetSelection(getter_AddRefs(selection));
+  if (selection) {
+    selection->IsSelected(aIndex, aSelState);
+    if ((!(*aSelState) && eSelection_Add == aMethod) || 
+        ((*aSelState) && eSelection_Remove == aMethod))
+      selection->ToggleSelect(aIndex);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXULTreeAccessible::AddSelection(PRInt32 aIndex)
+{
+  PRBool isSelected;
+  return ChangeSelection(aIndex, eSelection_Add, &isSelected);
+}
+
+NS_IMETHODIMP nsXULTreeAccessible::RemoveSelection(PRInt32 aIndex)
+{
+  PRBool isSelected;
+  return ChangeSelection(aIndex, eSelection_Remove, &isSelected);
+}
+
+NS_IMETHODIMP nsXULTreeAccessible::IsChildSelected(PRInt32 aIndex, PRBool *_retval)
+{
+  return ChangeSelection(aIndex, eSelection_GetState, _retval);
+}
+
+NS_IMETHODIMP nsXULTreeAccessible::ClearSelection()
+{
+  NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsITreeSelection> selection;
+  mTree->GetSelection(getter_AddRefs(selection));
+  if (selection)
+    selection->ClearSelection();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXULTreeAccessible::RefSelection(PRInt32 aIndex, nsIAccessible **_retval)
+{
+  *_retval = nsnull;
+
+  NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsITreeSelection> selection;
+  mTree->GetSelection(getter_AddRefs(selection));
+  if (!selection)
+    return NS_ERROR_FAILURE;
+
+  PRInt32 rowIndex, rowCount;
+  PRInt32 selCount = 0;
+  PRBool isSelected;
+  mTreeView->GetRowCount(&rowCount);
+  for (rowIndex = 0; rowIndex < rowCount; rowIndex++) {
+    selection->IsSelected(rowIndex, &isSelected);
+    if (isSelected) {
+      if (selCount == aIndex) {
+        nsCOMPtr<nsIAccessible> tempAccess;
+        tempAccess = new nsXULTreeitemAccessible(this, mDOMNode, mPresShell, rowIndex);
+        if (!tempAccess)
+          return NS_ERROR_OUT_OF_MEMORY;
+        *_retval = tempAccess;
+        NS_ADDREF(*_retval);
+      }
+      selCount++;
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXULTreeAccessible::SelectAllSelection(PRBool *_retval)
+{
+  *_retval = PR_FALSE;
+
+  NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);
+
+  // see if we are multiple select if so set ourselves as such
+  nsCOMPtr<nsIDOMElement> element (do_QueryInterface(mDOMNode));
+  if (element) {
+    nsAutoString selType;
+    element->GetAttribute(NS_LITERAL_STRING("seltype"), selType);
+    if (selType.IsEmpty() || !selType.Equals(NS_LITERAL_STRING("single"))) {
+      *_retval = PR_TRUE;
+      nsCOMPtr<nsITreeSelection> selection;
+      mTree->GetSelection(getter_AddRefs(selection));
+      if (selection)
+        selection->SelectAll();
+    }
   }
 
   return NS_OK;

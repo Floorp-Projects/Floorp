@@ -22,7 +22,7 @@
  * Contributor(s):
  * Original Author: Eric Vaughan (evaughan@netscape.com)
  * Contributor(s):  John Gaunt (jgaunt@netscape.com)
- *
+ *                  Kyle Yuan (kyle.yuan@sun.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -42,19 +42,20 @@
 #include "nsFormControlAccessible.h"
 #include "nsIAtom.h"
 #include "nsIComboboxControlFrame.h"
-#include "nsIDOMEventReceiver.h"
-#include "nsIDOMHTMLCollection.h"
-#include "nsIDOMHTMLOptionElement.h"
 #include "nsIDOMHTMLOptGroupElement.h"
-#include "nsIDOMText.h"
 #include "nsIDOMHTMLSelectElement.h"
+#include "nsIDOMText.h"
+#include "nsIDOMXULMultSelectCntrlEl.h"
+#include "nsIDOMXULSelectCntrlEl.h"
+#include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsIFrame.h"
 #include "nsIListControlFrame.h"
 #include "nsISelectControlFrame.h"
+#include "nsIServiceManager.h"
 #include "nsLayoutAtoms.h"
 #include "nsRootAccessible.h"
 #include "nsSelectAccessible.h"
-#include "nsIServiceManager.h"
+
 
 /** ------------------------------------------------------ */
 /**  First, the common widgets                             */
@@ -194,206 +195,6 @@ NS_IMETHODIMP nsSelectOptionAccessible::GetAccName(nsAString& _retval)
   }
   
   return NS_ERROR_FAILURE;
-}
-
-/** ------------------------------------------------------ */
-/**  Secondly, the Listbox widget                          */
-/** ------------------------------------------------------ */
-
-/** ----- nsListboxAccessible ----- */
-
-/** Constructor */
-nsListboxAccessible::nsListboxAccessible(nsIDOMNode* aDOMNode, 
-                                                   nsIWeakReference* aShell):
-nsAccessible(aDOMNode, aShell)
-{
-}
-
-NS_IMPL_ISUPPORTS_INHERITED1(nsListboxAccessible, nsAccessible, nsIAccessibleSelectable)
-
-/** We are a window, as far as MSAA is concerned */
-NS_IMETHODIMP nsListboxAccessible::GetAccRole(PRUint32 *_retval)
-{
-  *_retval = ROLE_WINDOW;
-  return NS_OK;
-}
-
-/**
-  * We always have 1 child: a subclass of nsSelectListAccessible.
-  */
-NS_IMETHODIMP nsListboxAccessible::GetAccChildCount(PRInt32 *_retval)
-{
-  *_retval = 1;
-  return NS_OK;
-}
-
-/**
-  * As a nsHTMLListboxAccessible we can have the following states:
-  *     STATE_FOCUSED
-  *     STATE_READONLY
-  *     STATE_FOCUSABLE
-  */
-NS_IMETHODIMP nsListboxAccessible::GetAccState(PRUint32 *_retval)
-{
-  // Get focus status from base class
-  nsAccessible::GetAccState(_retval);
-
-  *_retval |= STATE_READONLY | STATE_FOCUSABLE;
-
-  return NS_OK;
-}
-
-/**
-  * No-op method body. subclasses MUST override this method
-  */
-NS_IMETHODIMP nsListboxAccessible::GetSelectedChildren(nsISupportsArray **_retval)
-{
-  *_retval = nsnull;
-  return NS_OK;
-}
-
-/** ------------------------------------------------------ */
-/**  Finally, the Combobox widgets                         */
-/** ------------------------------------------------------ */
-
-/** ----- nsComboboxAccessible ----- */
-
-/**
-  * Constructor -- set initial state - closed, register ourself
-  */
-nsComboboxAccessible::nsComboboxAccessible(nsIDOMNode* aDOMNode, 
-                                                   nsIWeakReference* aShell):
-nsAccessible(aDOMNode, aShell)
-{
-  mRegistered = PR_FALSE;
-  mOpen = PR_FALSE;
-  SetupMenuListener();
-}
-
-/**
-  * Destructor -- If we are registered, remove ourselves as a listener.
-  */
-nsComboboxAccessible::~nsComboboxAccessible()
-{
-  if (mRegistered) {
-    nsCOMPtr<nsIDOMEventReceiver> eventReceiver(do_QueryInterface(mDOMNode));
-    if (eventReceiver) 
-      eventReceiver->RemoveEventListener(NS_LITERAL_STRING("popupshowing"), this, PR_TRUE);   
-  }
-}
-
-/** 
-  * Inherit the ISupports impl from nsAccessible, 
-  *  handle nsIDOMXULListener and nsIAccessibleSelectable ourself 
-  */
-NS_IMPL_ISUPPORTS_INHERITED2(nsComboboxAccessible, nsAccessible, nsIDOMXULListener, nsIAccessibleSelectable)
-
-/**
-  * If we aren't already registered, register ourselves as a
-  *     listener to "popupshowing" events on our DOM node. Set our
-  *     state to registered, but don't notify MSAA as they 
-  *     don't need to know about this state.
-  */
-void
-nsComboboxAccessible::SetupMenuListener()
-{
-  // if not already registered as a popup listener, register ourself
-  if (!mRegistered) {
-    nsCOMPtr<nsIDOMEventReceiver> eventReceiver(do_QueryInterface(mDOMNode));
-    if (eventReceiver && NS_SUCCEEDED(eventReceiver->AddEventListener(NS_LITERAL_STRING("popupshowing"), this, PR_TRUE)))
-      mRegistered = PR_TRUE;
-  }
-}
-
-/** We are a combobox */
-NS_IMETHODIMP nsComboboxAccessible::GetAccRole(PRUint32 *_retval)
-{
-  *_retval = ROLE_COMBOBOX;
-  return NS_OK;
-}
-
-/**
-  * We always have 3 children: TextField, Button, Window. In that order
-  */
-NS_IMETHODIMP nsComboboxAccessible::GetAccChildCount(PRInt32 *_retval)
-{
-  *_retval = 3;
-  return NS_OK;
-}
-
-/**
-  * nsIAccessibleSelectable method. No-op because our selection is returned through
-  *     GetValue(). This _may_ change just to provide additional info for the vendors
-  *     and another option for them to get at stuff. Despite the fact that we are
-  *     single selection only.
-  */
-NS_IMETHODIMP nsComboboxAccessible::GetSelectedChildren(nsISupportsArray **_retval)
-{
-  *_retval = nsnull;
-  return NS_OK;
-}
-
-/**
-  * As a nsComboboxAccessible we can have the following states:
-  *     STATE_FOCUSED
-  *     STATE_READONLY
-  *     STATE_FOCUSABLE
-  *     STATE_HASPOPUP
-  *     STATE_EXPANDED
-  *     STATE_COLLAPSED
-  */
-NS_IMETHODIMP nsComboboxAccessible::GetAccState(PRUint32 *_retval)
-{
-  // Get focus status from base class
-  nsAccessible::GetAccState(_retval);
-
-  if (mOpen)
-    *_retval |= STATE_EXPANDED;
-  else
-    *_retval |= STATE_COLLAPSED;
-
-  *_retval |= STATE_HASPOPUP | STATE_READONLY | STATE_FOCUSABLE;
-
-  return NS_OK;
-}
-
-/**
-  * Set our state to open and (TBD) fire an event to MSAA saying our state
-  *     has changed.
-  */
-NS_IMETHODIMP nsComboboxAccessible::PopupShowing(nsIDOMEvent* aEvent)
-{ 
-  mOpen = PR_TRUE;
-
-  /* TBD send state change event */ 
-
-  return NS_OK; 
-}
-
-/**
-  * Set our state to not open and (TDB) fire an event to MSAA saying
-  *     our state has changed.
-  */
-NS_IMETHODIMP nsComboboxAccessible::PopupHiding(nsIDOMEvent* aEvent)
-{ 
-  mOpen = PR_FALSE;
-
-  /* TBD send state change event */ 
-
-  return NS_OK; 
-}
-
-/**
-  * Set our state to not open and (TDB) fire an event to MSAA saying
-  *     our state has changed.
-  */
-NS_IMETHODIMP nsComboboxAccessible::Close(nsIDOMEvent* aEvent)
-{ 
-  mOpen = PR_FALSE;
-
-  /* TBD send state change event */ 
-
-  return NS_OK; 
 }
 
 /** ----- nsComboboxTextFieldAccessible ----- */

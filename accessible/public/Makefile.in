@@ -41,7 +41,6 @@ XPIDLSRCS = \
       nsIAccessibleHyperText.idl \
       nsIAccessibleProvider.idl \
       nsIAccessibleSelectable.idl \
-      nsIAccessibleSelection.idl \
       nsIAccessibleTable.idl \
       nsIAccessibleText.idl \
       nsIAccessibleValue.idl \
