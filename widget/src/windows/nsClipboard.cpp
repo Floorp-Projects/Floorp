@@ -138,7 +138,8 @@ nsresult nsClipboard::CreateNativeDataObject(nsITransferable * aTransferable, ID
 
   // Get the transferable list of data flavors
   nsISupportsArray * dfList;
-  aTransferable->GetTransferDataFlavors(&dfList);
+  //aTransferable->GetTransferDataFlavors(&dfList);
+  aTransferable->FlavorsTransferableCanExport(&dfList);
 
   // Walk through flavors that contain data and register them
   // into the DataObj as supported flavors
@@ -169,7 +170,7 @@ nsresult nsClipboard::CreateNativeDataObject(nsITransferable * aTransferable, ID
   // Now check to see if there is a converter for the transferable
   // and then register any of it's output formats
   // Get the transferable list of data flavors
-  nsCOMPtr<nsIGenericTransferable> genericTrans = do_QueryInterface(aTransferable);
+/*  nsCOMPtr<nsIGenericTransferable> genericTrans = do_QueryInterface(aTransferable);
   if (genericTrans) {
     nsCOMPtr<nsIFormatConverter> converter;
     genericTrans->GetConverter(getter_AddRefs(converter));
@@ -201,7 +202,7 @@ nsresult nsClipboard::CreateNativeDataObject(nsITransferable * aTransferable, ID
       }
     }
   }
-
+*/
   *aDataObj = dataObj;
   return NS_OK;
 }
@@ -323,10 +324,11 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
 
   // Starting by querying for the data to see if we can get it as from global memory
   if (S_OK == aDataObject->QueryGetData(&fe)) {
-    LPSTGMEDIUM stm;
-    HRESULT hres = aDataObject->GetData(&fe, stm);
+    //LPSTGMEDIUM stm;
+    STGMEDIUM stm;
+    HRESULT hres = aDataObject->GetData(&fe, &stm);
 
-#if 0 // for debug
+#if 1 // for debug
     if (hres == E_INVALIDARG) {
       printf("E_INVALIDARG\n");
     }
@@ -359,9 +361,9 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
     } 
 #endif
     if (S_OK == hres) {
-      switch (stm->tymed) {
+      switch (stm.tymed) {
         case TYMED_HGLOBAL:
-          result = GetGlobalData(stm->hGlobal, aData, aLen);
+          result = GetGlobalData(stm.hGlobal, aData, aLen);
           if (fe.cfFormat == CF_TEXT) {
             char * str = (char *)*aData;
             if (str[*aLen-1] == 0) {
