@@ -23,7 +23,7 @@
 
 /* Some build-wide Mac-related defines */
 #define macintosh			/* macintosh is defined for GUSI */
-#define XP_MAC 1
+#define XP_MAC 		1
 
 /* We have to do this here because ConditionalMacros.h will be included from
  * within OpenTptInternet.h and will stupidly define these to 1 if they

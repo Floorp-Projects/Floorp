@@ -40,9 +40,9 @@
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 
 #define MOCHA
-#define MOZILLA_CLIENT
+#define MOZILLA_CLIENT	1
 #ifndef NETSCAPE
-#define NETSCAPE
+#define NETSCAPE	1
 #endif
 
 // #define JAVA 	1
@@ -51,7 +51,7 @@
 	#define UNICODE_FONTLIST 1
 #endif
 
-#define LAYERS
+#define LAYERS	1
 
 #define CASTED_READ_OBJECT(stream, type, reference) (reference = NULL)
 
@@ -61,5 +61,5 @@
 */
 
 // 97/05/05 jrm -- use phil's new search scope api
-#define B3_SEARCH_API
+#define B3_SEARCH_API	1
 
