@@ -6,3 +6,4 @@ nsIOutputStream.idl
 nsIPipe.idl
 nsIFile.idl
 nsILocalFile.idl
+nsIByteArrayInputStream.idl

@@ -22,9 +22,12 @@
 #include "nsByteArrayInputStream.h"
 #include "nsIAllocator.h"
 
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsByteArrayInputStream, nsIInputStream, nsIBaseStream)
+
 nsByteArrayInputStream::nsByteArrayInputStream (char *buffer, PRUint32 bytes)
     : _buffer (buffer), _nbytes (bytes), _pos (0)
 { 
+    NS_INIT_REFCNT ();
 }
 
 nsByteArrayInputStream::~nsByteArrayInputStream ()
@@ -32,8 +35,6 @@ nsByteArrayInputStream::~nsByteArrayInputStream ()
     if (_buffer != NULL)
         nsAllocator::Free (_buffer);
 }
-
-NS_IMPL_THREADSAFE_ISUPPORTS (nsByteArrayInputStream, NS_GET_IID (nsIByteArrayInputStream))
 
 NS_IMETHODIMP
 nsByteArrayInputStream::Available (PRUint32* aResult)
