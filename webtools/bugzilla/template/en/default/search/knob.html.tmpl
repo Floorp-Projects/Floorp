@@ -18,6 +18,7 @@
   #
   # Contributor(s): Gervase Markham <gerv@gerv.net>
   #                 Tobias Burnus <burnus@net-b.de>
+  #                 Jouni Heikniemi <jouni@heikniemi.net>
   #%]
 
 [%# This is not necessary for English templates, but useful for localisers. %]
@@ -27,78 +28,72 @@
    "Importance"   => "Importance",
    "Assignee"     => "Assignee",
    "Last Changed" => "Last Changed" } %]
-  
-<table>
-  <tr>
-    <td colspan="2">
 
-    [% IF NOT userid %]
-      <input type="hidden" name="cmdtype" value="doit">
-    [% ELSE %]
-      <br>
-      <input type="radio" name="cmdtype" value="doit" checked="checked"> Run this query
-      <br>
-
-      [% IF namedqueries.size > 0 %]
-        <p>
-        <table cellspacing="0" cellpadding="0">
-          <tr>
-           <td>
-             <input type="radio" name="cmdtype" value="editnamed">
-             Load my remembered query:
-           </td>
-           <td rowspan="3">
-             <select name="namedcmd">
+<br>
+[% IF NOT userid %]
+   <input type="hidden" name="cmdtype" value="doit">
+[% ELSE %]
+   <input type="radio" name="cmdtype" value="doit" checked="checked">
+     Run this query
+   <br>
+   [% IF namedqueries.size > 0 %]
+     <br>
+     <table cellspacing="0" cellpadding="0">
+       <tr>
+         <td>
+           <input type="radio" name="cmdtype" value="editnamed">
+           Load my remembered query:
+         </td>
+         <td rowspan="3">
+           &nbsp;&nbsp;<select name="namedcmd">
              [% FOREACH query = namedqueries %]
-               <option value="[% query FILTER html %]">[% query FILTER html %]</option>
+               <option value="[% query FILTER html %]">
+                 [% query FILTER html %]</option>
              [% END %]
-             </select>
-            </td>
-          </tr>  
-          <tr>
-            <td>
-              <input type="radio" name="cmdtype" value="runnamed">
-              Run my remembered query:
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <input type="radio" name="cmdtype" value="forgetnamed">
-              Forget my remembered query:
-            </td>
-          </tr>
-        </table>
-        </p>
-      [% END %]
+           </select>
+         </td>
+       </tr>  
+       <tr>
+         <td>
+           <input type="radio" name="cmdtype" value="runnamed">
+           Run my remembered query:
+         </td>
+       </tr>
+       <tr>
+          <td>
+           <input type="radio" name="cmdtype" value="forgetnamed">
+           Forget my remembered query:
+         </td>
+       </tr>
+     </table>
+     <br>
+   [% END %]
+   <input type="radio" name="cmdtype" value="asdefault">
+     Remember this as my default query
+   <br>
+   <input type="radio" name="cmdtype" value="asnamed">
+     Remember this query, and name it: 
+     <input type="text" name="newqueryname">
+     <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+     <input type="checkbox" name="tofooter" value="1">
+       and put it in my page footer
+[% END %]
 
-      <input type="radio" name="cmdtype" value="asdefault">
-      Remember this as my default query
-      <br>
-      <input type="radio" name="cmdtype" value="asnamed">
-      Remember this query, and name it:
-      <input type="text" name="newqueryname">
-      <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" name="tofooter" value="1">
-          and put it in my page footer
-      <br>
+  <p>
+    Sort results by:
+    <select name="order">
+    [% FOREACH order = orders %]
+      <option value="[% order FILTER html %]"
+        [% " selected" IF default.order.0 == order %]>
+           [% ordersdesc.$order FILTER html %]</option> 
     [% END %]
-      <br>
-      <div>
-      Sort results by:
-      <select name="order">
-      [% FOREACH order = orders %]
-        <option value="[% order FILTER html %]"
-          [% " selected" IF default.order.0 == order %]>[% ordersdesc.$order FILTER html %]</option> 
-      [% END %]
-      </select>
+    </select>
 
-      <input type="submit" value="[% button_name %]">
-      [% IF userdefaultquery %]
-         <p>
-           <a href="query.cgi?nukedefaultquery=1">
-             Set my default query back to the system default</a>
-         </p>
-      [% END %]
-      </div>
-    </td>
-  </tr>
-</table>  
+    <input type="submit" value="[% button_name %]">
+    [% IF userdefaultquery %]
+       <p>
+         <a href="query.cgi?nukedefaultquery=1">
+           Set my default query back to the system default</a>
+       </p>
+    [% END %]
+  </p>
