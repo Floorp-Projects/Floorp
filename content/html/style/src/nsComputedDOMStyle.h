@@ -174,6 +174,8 @@ private:
   nsresult GetBackgroundColor(nsIFrame *aFrame, nsIDOMCSSValue** aValue);
   nsresult GetBackgroundImage(nsIFrame *aFrame, nsIDOMCSSValue** aValue);
   nsresult GetBackgroundRepeat(nsIFrame *aFrame, nsIDOMCSSValue** aValue);
+  nsresult GetBackgroundClip(nsIFrame *aFrame, nsIDOMCSSValue** aValue);
+  nsresult GetBackgroundOrigin(nsIFrame *aFrame, nsIDOMCSSValue** aValue);
 
   /* Padding properties */
   nsresult GetPadding(nsIFrame *aFrame, nsIDOMCSSValue** aValue);

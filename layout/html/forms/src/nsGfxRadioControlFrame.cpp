@@ -201,6 +201,8 @@ nsGfxRadioControlFrame::PaintRadioButton(nsIPresContext* aPresContext,
 
      const nsStyleBorder* myBorder = (const nsStyleBorder*)
           mRadioButtonFaceStyle->GetStyleData(eStyleStruct_Border);
+     const nsStylePadding* myPadding = (const nsStylePadding*)
+          mRadioButtonFaceStyle->GetStyleData(eStyleStruct_Padding);
      const nsStylePosition* myPosition = (const nsStylePosition*)
           mRadioButtonFaceStyle->GetStyleData(eStyleStruct_Position);
 
@@ -211,7 +213,7 @@ nsGfxRadioControlFrame::PaintRadioButton(nsIPresContext* aPresContext,
      nscoord y = (mRect.height - height) / 2;
      nsRect rect(x, y, width, height); 
 
-     // So we will use the PaintBackground to paint the dot, 
+     // So we will use PaintBackgroundWithSC to paint the dot, 
      // but it uses the mBackgroundColor for painting and we need to use the mColor
      // so create a temporary style color struct and set it up appropriately
      // XXXldb It would make more sense to use
@@ -221,7 +223,8 @@ nsGfxRadioControlFrame::PaintRadioButton(nsIPresContext* aPresContext,
      tmpColor.mBackgroundColor = color->mColor;
      nsCSSRendering::PaintBackgroundWithSC(aPresContext, aRenderingContext,
                                            this, aDirtyRect, rect,
-                                           tmpColor, *myBorder, 0, 0);
+                                           tmpColor, *myBorder, *myPadding,
+                                           0, 0);
      nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
                                   aDirtyRect, rect, *myBorder, mRadioButtonFaceStyle, 0);
    }

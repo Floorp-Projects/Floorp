@@ -164,6 +164,8 @@ struct nsCSSColor : public nsCSSStruct  {
   nsCSSValue      mBackAttachment;
   nsCSSValue      mBackPositionX;
   nsCSSValue      mBackPositionY;
+  nsCSSValue      mBackClip;
+  nsCSSValue      mBackOrigin;
 };
 
 struct nsCSSShadow {

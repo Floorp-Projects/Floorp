@@ -302,6 +302,7 @@ protected:
                              PRUint32&                 aFlags,
                              const nsStyleTableBorder& aCellTableStyle,
                              const nsStyleBorder&      aStyleBorder,
+                             const nsStylePadding&     aStylePadding,
                              PRBool                    aVisibleBackground,
                              PRBool&                   aPaintChildren);
 
@@ -480,6 +481,7 @@ protected:
                              PRUint32&                 aFlags,
                              const nsStyleTableBorder& aCellTableStyle,
                              const nsStyleBorder&      aStyleBorder,
+                             const nsStylePadding&     aStylePadding,
                              PRBool                    aVisibleBackground,
                              PRBool&                   aPaintChildren);
 

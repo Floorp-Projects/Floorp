@@ -156,10 +156,16 @@ struct nsStyleBackground : public nsStyleStruct {
   };
 
   nsChangeHint CalcDifference(const nsStyleBackground& aOther) const;
-  
-  PRUint8 mBackgroundAttachment;  // [reset] See nsStyleConsts.h
-  PRUint8 mBackgroundFlags;       // [reset] See nsStyleConsts.h
-  PRUint8 mBackgroundRepeat;      // [reset] See nsStyleConsts.h
+
+  // On Linux (others?), there is an extra byte being used up by
+  // inheritance so we only have 3 bytes to fit these 5 things into.
+  // Fortunately, the properties are enums which have few possible
+  // values.
+  PRUint8 mBackgroundFlags;          // [reset] See nsStyleConsts.h
+  PRUint8 mBackgroundAttachment : 4; // [reset] See nsStyleConsts.h
+  PRUint8 mBackgroundClip       : 4; // [reset] See nsStyleConsts.h
+  PRUint8 mBackgroundOrigin     : 4; // [reset] See nsStyleConsts.h
+  PRUint8 mBackgroundRepeat     : 4; // [reset] See nsStyleConsts.h
 
   nscolor mBackgroundColor;       // [reset]
   nscoord mBackgroundXPosition;   // [reset]

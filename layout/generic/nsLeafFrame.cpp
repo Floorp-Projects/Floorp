@@ -68,11 +68,14 @@ nsLeafFrame::Paint(nsIPresContext*      aPresContext,
     if (vis->IsVisibleOrCollapsed()) {
       const nsStyleBorder* myBorder = (const nsStyleBorder*)
         mStyleContext->GetStyleData(eStyleStruct_Border);
+      const nsStylePadding* myPadding = (const nsStylePadding*)
+        mStyleContext->GetStyleData(eStyleStruct_Padding);
       const nsStyleOutline* myOutline = (const nsStyleOutline*)
         mStyleContext->GetStyleData(eStyleStruct_Outline);
       nsRect rect(0, 0, mRect.width, mRect.height);
       nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                      aDirtyRect, rect, *myBorder, 0, 0);
+                                      aDirtyRect, rect, *myBorder, *myPadding,
+                                      0, 0);
       nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
                                   aDirtyRect, rect, *myBorder,
                                   mStyleContext, 0);

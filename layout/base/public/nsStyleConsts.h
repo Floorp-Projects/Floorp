@@ -189,15 +189,15 @@
 #define NS_STYLE_VOLUME_X_LOUD            5
 
 // See nsStyleColor
-#define NS_STYLE_BG_ATTACHMENT_SCROLL     0
-#define NS_STYLE_BG_ATTACHMENT_FIXED      1
-
-// See nsStyleColor
 #define NS_STYLE_COLOR_TRANSPARENT        0
 #define NS_STYLE_COLOR_INVERT             1
 #define NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR      2
 
 // See nsStyleColor
+#define NS_COLOR_MOZ_HYPERLINKTEXT              -1
+#define NS_COLOR_MOZ_VISITEDHYPERLINKTEXT       -2
+
+// See nsStyleBackground
 #define NS_STYLE_BG_COLOR_TRANSPARENT           0x01
 #define NS_STYLE_BG_IMAGE_NONE                  0x02
 #define NS_STYLE_BG_X_POSITION_PERCENT          0x04
@@ -205,15 +205,24 @@
 #define NS_STYLE_BG_Y_POSITION_PERCENT          0x10
 #define NS_STYLE_BG_Y_POSITION_LENGTH           0x20
 
-// See nsStyleColor
+// See nsStyleBackground
+#define NS_STYLE_BG_ATTACHMENT_SCROLL     0
+#define NS_STYLE_BG_ATTACHMENT_FIXED      1
+
+// See nsStyleBackground
+#define NS_STYLE_BG_CLIP_BORDER           0
+#define NS_STYLE_BG_CLIP_PADDING          1
+
+// See nsStyleBackground
+#define NS_STYLE_BG_ORIGIN_BORDER         0
+#define NS_STYLE_BG_ORIGIN_PADDING        1
+#define NS_STYLE_BG_ORIGIN_CONTENT        2
+
+// See nsStyleBackground
 #define NS_STYLE_BG_REPEAT_OFF                  0x00
 #define NS_STYLE_BG_REPEAT_X                    0x01
 #define NS_STYLE_BG_REPEAT_Y                    0x02
 #define NS_STYLE_BG_REPEAT_XY                   0x03
-
-// See nsStyleColor
-#define NS_COLOR_MOZ_HYPERLINKTEXT              -1
-#define NS_COLOR_MOZ_VISITEDHYPERLINKTEXT       -2
 
 // See nsStyleTable
 #define NS_STYLE_BORDER_COLLAPSE                0

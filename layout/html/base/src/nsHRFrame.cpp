@@ -194,10 +194,11 @@ HRuleFrame::Paint(nsIPresContext*      aPresContext,
     nsRect rect(x0, y0, width, height);
 
     const nsStyleBorder* border = (const nsStyleBorder*) mStyleContext->GetStyleData(eStyleStruct_Border);
+    const nsStylePadding* padding = (const nsStylePadding*) mStyleContext->GetStyleData(eStyleStruct_Padding);
     
     nsCSSRendering::PaintBackground(aPresContext, aRenderingContext,
                                     this,aDirtyRect, rect,
-                                    *border, 0, 0);
+                                    *border, *padding, 0, 0);
     nsCSSRendering::PaintBorder(aPresContext, aRenderingContext,
                                 this,aDirtyRect, rect, *border,
                                 mStyleContext, 0);

@@ -187,6 +187,8 @@ nsFieldSetFrame::Paint(nsIPresContext*      aPresContext,
       PRIntn skipSides = GetSkipSides();
       const nsStyleBorder* borderStyle = 
         (const nsStyleBorder*)mStyleContext->GetStyleData(eStyleStruct_Border);
+      const nsStylePadding* paddingStyle = 
+        (const nsStylePadding*)mStyleContext->GetStyleData(eStyleStruct_Padding);
        
         nsMargin border;
         if (!borderStyle->GetBorder(border)) {
@@ -203,7 +205,8 @@ nsFieldSetFrame::Paint(nsIPresContext*      aPresContext,
         nsRect rect(0, yoff, mRect.width, mRect.height - yoff);
 
         nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                        aDirtyRect, rect, *borderStyle, 0, 0);
+                                        aDirtyRect, rect, *borderStyle,
+                                        *paddingStyle, 0, 0);
 
         if (mLegendFrame) {
 

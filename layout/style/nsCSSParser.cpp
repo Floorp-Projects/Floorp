@@ -3748,11 +3748,17 @@ PRBool CSSParserImpl::ParseSingleValueProperty(PRInt32& aErrorCode,
   case eCSSProperty_background_attachment:
     return ParseVariant(aErrorCode, aValue, VARIANT_HK,
                         nsCSSProps::kBackgroundAttachmentKTable);
+  case eCSSProperty__moz_background_clip:
+    return ParseVariant(aErrorCode, aValue, VARIANT_HK,
+                        nsCSSProps::kBackgroundClipKTable);
   case eCSSProperty_background_color:
     return ParseVariant(aErrorCode, aValue, VARIANT_HCK,
                         nsCSSProps::kBackgroundColorKTable);
   case eCSSProperty_background_image:
     return ParseVariant(aErrorCode, aValue, VARIANT_HUO, nsnull);
+  case eCSSProperty__moz_background_origin:
+    return ParseVariant(aErrorCode, aValue, VARIANT_HK,
+                        nsCSSProps::kBackgroundOriginKTable);
   case eCSSProperty_background_repeat:
     return ParseVariant(aErrorCode, aValue, VARIANT_HK,
                         nsCSSProps::kBackgroundRepeatKTable);
@@ -4244,9 +4250,23 @@ PRBool CSSParserImpl::ParseBackground(PRInt32& aErrorCode, nsCSSDeclaration* aDe
   }
 
   PRInt32 index;
-  for (index = 0; index < numProps; index++) {
+  for (index = 0; index < numProps; ++index) {
     AppendValue(aDeclaration, kBackgroundIDs[index], values[index], aChangeHint);
   }
+
+  // Background properties not settable from the shorthand get reset to their initial value
+  const PRInt32 numResetProps = 2;
+  static const nsCSSProperty kBackgroundResetIDs[numResetProps] = {
+    eCSSProperty__moz_background_clip,
+    eCSSProperty__moz_background_origin
+  };
+
+  nsCSSValue initial;
+  initial.SetInitialValue();
+  for (index = 0; index < numResetProps; ++index) {
+    AppendValue(aDeclaration, kBackgroundResetIDs[index], initial, aChangeHint);
+  }
+
   return PR_TRUE;
 }
 

@@ -2264,14 +2264,16 @@ void nsCSSRendering::PaintBorderEdges(nsIPresContext* aPresContext,
 // i.e., they are either 0 or a negative number whose absolute value is
 // less than the tile size in that dimension
 //
-// aRelativeBounds is the box to which the tiling position should be relative,
-// aTilingBounds is the box in which the tiling will actually be done. They
-// should be identical except when painting on the canvas, in which case the
-// relative bounds should be the bounds of the root element's frame and the
-// tiling bounds should be the bounds of the canvas frame.
+// aOriginBounds is the box to which the tiling position should be relative
+// aClipBounds is the box in which the tiling will actually be done
+// They should correspond to 'background-origin' and 'background-clip',
+// except when painting on the canvas, in which case the origin bounds
+// should be the bounds of the root element's frame and the clip bounds
+// should be the bounds of the canvas frame.
 static void
 ComputeBackgroundAnchorPoint(const nsStyleBackground& aColor,
-                             const nsRect& aRelativeBounds, const nsRect& aTilingBounds,
+                             const nsRect& aOriginBounds,
+                             const nsRect& aClipBounds,
                              nscoord aTileWidth, nscoord aTileHeight,
                              nsPoint& aResult)
 {
@@ -2283,10 +2285,10 @@ ComputeBackgroundAnchorPoint(const nsStyleBackground& aColor,
     nscoord t = aColor.mBackgroundXPosition;
     float pct = float(t) / 100.0f;
     nscoord tilePos = nscoord(pct * aTileWidth);
-    nscoord boxPos = nscoord(pct * aRelativeBounds.width);
+    nscoord boxPos = nscoord(pct * aOriginBounds.width);
     x = boxPos - tilePos;
   }
-  x += aRelativeBounds.x - aTilingBounds.x;
+  x += aOriginBounds.x - aClipBounds.x;
   if (NS_STYLE_BG_REPEAT_X & aColor.mBackgroundRepeat) {
     // When we are tiling in the x direction the loop will run from
     // the left edge of the box to the right edge of the box. We need
@@ -2320,10 +2322,10 @@ ComputeBackgroundAnchorPoint(const nsStyleBackground& aColor,
     nscoord t = aColor.mBackgroundYPosition;
     float pct = float(t) / 100.0f;
     nscoord tilePos = nscoord(pct * aTileHeight);
-    nscoord boxPos = nscoord(pct * aRelativeBounds.height);
+    nscoord boxPos = nscoord(pct * aOriginBounds.height);
     y = boxPos - tilePos;
   }
-  y += aRelativeBounds.y - aTilingBounds.y;
+  y += aOriginBounds.y - aClipBounds.y;
   if (NS_STYLE_BG_REPEAT_Y & aColor.mBackgroundRepeat) {
     // When we are tiling in the y direction the loop will run from
     // the top edge of the box to the bottom edge of the box. We need
@@ -2586,6 +2588,7 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
                                 const nsRect& aDirtyRect,
                                 const nsRect& aBorderArea,
                                 const nsStyleBorder& aBorder,
+                                const nsStylePadding& aPadding,
                                 nscoord aDX,
                                 nscoord aDY,PRBool aUsePrintSettings)
 {
@@ -2622,7 +2625,8 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
   }
   if (!isCanvas) {
     PaintBackgroundWithSC(aPresContext, aRenderingContext, aForFrame,
-                          aDirtyRect, aBorderArea, *color, aBorder, aDX, aDY, aUsePrintSettings);
+                          aDirtyRect, aBorderArea, *color, aBorder,
+                          aPadding, aDX, aDY, aUsePrintSettings);
     return;
   }
 
@@ -2663,7 +2667,7 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
 
   PaintBackgroundWithSC(aPresContext, aRenderingContext, aForFrame,
                         aDirtyRect, aBorderArea, canvasColor,
-                        aBorder, aDX, aDY, aUsePrintSettings);
+                        aBorder, aPadding, aDX, aDY, aUsePrintSettings);
 }
 
 void
@@ -2674,6 +2678,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
                                       const nsRect& aBorderArea,
                                       const nsStyleBackground& aColor,
                                       const nsStyleBorder& aBorder,
+                                      const nsStylePadding& aPadding,
                                       nscoord aDX,
                                       nscoord aDY,
                                       PRBool aUsePrintSettings)
@@ -2706,144 +2711,99 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
     }
   }
 
-  PRBool        transparentBG = 
-                  NS_STYLE_BG_COLOR_TRANSPARENT ==
-                  (aColor.mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT);
-  float         percent;
-  nsStyleCoord  bordStyleRadius[4];
-  PRInt16       borderRadii[4],i;
+  // The background is rendered over the 'background-clip' area.
+  nsRect bgClipArea(aBorderArea);
+  if (aColor.mBackgroundClip != NS_STYLE_BG_CLIP_BORDER) {
+    NS_ASSERTION(aColor.mBackgroundClip == NS_STYLE_BG_CLIP_PADDING,
+                 "unknown background-clip value");
+    nsMargin border;
+    aBorder.GetBorder(border);
+    bgClipArea.Deflate(border);
+  }
+
+  // The actual dirty rect is the intersection of the 'background-clip'
+  // area and the dirty rect we were given
+  nsRect dirtyRect;
+  if (!dirtyRect.IntersectRect(bgClipArea, aDirtyRect)) {
+    // Nothing to paint
+    return;
+  }
 
   // if there is no background image or background images are turned off, try a color.
   if (aColor.mBackgroundImage.IsEmpty() || (canDrawBackgroundColor && !canDrawBackgroundImage)) {
-    // See if there's a background color specified. The background color
-    // is rendered over the 'border' 'padding' and 'content' areas
-    if (!transparentBG) {
-      // get the radius for our border
-      aBorder.mBorderRadius.GetTop(bordStyleRadius[0]);      //topleft
-      aBorder.mBorderRadius.GetRight(bordStyleRadius[1]);    //topright
-      aBorder.mBorderRadius.GetBottom(bordStyleRadius[2]);   //bottomright
-      aBorder.mBorderRadius.GetLeft(bordStyleRadius[3]);     //bottomleft
+    PaintBackgroundColor(aPresContext, aRenderingContext, aForFrame, bgClipArea,
+                         aColor, aBorder, aPadding, aDX, aDY);
+    return;
+  }
 
-      for(i=0;i<4;i++) {
-        borderRadii[i] = 0;
-        switch ( bordStyleRadius[i].GetUnit()) {
-          case eStyleUnit_Inherit:
-            break;
-          case eStyleUnit_Percent:
-            percent = bordStyleRadius[i].GetPercentValue();
-            borderRadii[i] = (nscoord)(percent * aBorderArea.width);
-            break;
-          case eStyleUnit_Coord:
-            borderRadii[i] = bordStyleRadius[i].GetCoordValue();
-            break;
-          default:
-            break;
-        }
-      }
+  // We have a background image
 
-      // rounded version of the border
-      if (!aBorder.mBorderColors) {
-        // XXXdwh Composite borders (with multiple colors per side) use their own border radius
-        // algorithm now, since the current one doesn't work right for small radii.
-        for(i=0;i<4;i++){
-          if (borderRadii[i] > 0){
-            PaintRoundedBackground(aPresContext,aRenderingContext,aForFrame,aDirtyRect,
-                                   aBorderArea,aColor,aDX,aDY,borderRadii);
-            return;
-          }
-        }
-      }
-      else {
-        nsMargin border;
-        aBorder.GetBorder(border);
-        nsRect borderArea(aBorderArea);
-        borderArea.Deflate(border);
-        aRenderingContext.SetColor(aColor.mBackgroundColor);
-        aRenderingContext.FillRect(borderArea);
-        return;
-      }
+  // get the frame for the background image load to complete in
+  // - this may be different than the frame we are rendering
+  //   (as in the case of the canvas frame) 
+  nsIFrame *pBGFrame = nsnull;
+  GetFrameForBackgroundUpdate(aPresContext, aForFrame, &pBGFrame);
+  NS_ASSERTION(pBGFrame, "Background Frame must be set by GetFrameForBackgroundUpdate");
 
-      aRenderingContext.SetColor(aColor.mBackgroundColor);
-      aRenderingContext.FillRect(aBorderArea);
-    }
-  } else {
-    // we have a background image
+  // Lookup the image
+  nsCOMPtr<imgIRequest> req;
+  nsresult rv = aPresContext->LoadImage(aColor.mBackgroundImage, pBGFrame, getter_AddRefs(req));
 
+  PRUint32 status = imgIRequest::STATUS_ERROR;
+  if (req)
+    req->GetImageStatus(&status);
 
-    // get the frame for the background image load to complete in
-    // - this may be different than the frame we are rendering
-    //   (as in the case of the canvas frame) 
-    nsIFrame *pBGFrame = nsnull;
-    GetFrameForBackgroundUpdate(aPresContext, aForFrame, &pBGFrame);
-    NS_ASSERTION(pBGFrame, "Background Frame must be set by GetFrameForBackgroundUpdate");
+  if (NS_FAILED(rv) || !req || !(status & imgIRequest::STATUS_FRAME_COMPLETE) || !(status & imgIRequest::STATUS_SIZE_AVAILABLE)) {
+    PaintBackgroundColor(aPresContext, aRenderingContext, aForFrame, bgClipArea,
+                         aColor, aBorder, aPadding, aDX, aDY);
+    return;
+  }
 
-    // Lookup the image
-    nsCOMPtr<imgIRequest> req;
-    nsresult rv = aPresContext->LoadImage(aColor.mBackgroundImage, pBGFrame, getter_AddRefs(req));
+  nsCOMPtr<imgIContainer> image;
+  req->GetImage(getter_AddRefs(image));
 
-    PRUint32 status = imgIRequest::STATUS_ERROR;
-    if (req)
-      req->GetImageStatus(&status);
+  nsSize imageSize;
+  image->GetWidth(&imageSize.width);
+  image->GetHeight(&imageSize.height);
 
-    if (NS_FAILED(rv) || !req || !(status & imgIRequest::STATUS_FRAME_COMPLETE) || !(status & imgIRequest::STATUS_SIZE_AVAILABLE)) {
-      if (!transparentBG) {
-        // The background color is rendered over the 'border' 'padding' and
-        // 'content' areas
-        aRenderingContext.SetColor(aColor.mBackgroundColor);
-        aRenderingContext.FillRect(aBorderArea);
-      }
-      return;
-    }
+  float p2t;
+  aPresContext->GetPixelsToTwips(&p2t);
+  imageSize.width = NSIntPixelsToTwips(imageSize.width, p2t);
+  imageSize.height = NSIntPixelsToTwips(imageSize.height, p2t);
 
-    nsSize imageSize;
-    nsCOMPtr<imgIContainer> image;
-    req->GetImage(getter_AddRefs(image));
+  req = nsnull;
 
-    image->GetWidth(&imageSize.width);
-    image->GetHeight(&imageSize.height);
-
-    float p2t;
-    aPresContext->GetPixelsToTwips(&p2t);
-    imageSize.width = NSIntPixelsToTwips(imageSize.width, p2t);
-    imageSize.height = NSIntPixelsToTwips(imageSize.height, p2t);
-
-    req = nsnull;
-
-    // Background images are tiled over the 'content' and 'padding' areas
-    // only (not the 'border' area)
-    nsRect    paddingArea(aBorderArea);
-    nsMargin  border;
-
+  // Background images are tiled over the 'background-clip' area
+  // but the origin of the tiling is based on the 'background-origin' area
+  nsRect bgOriginArea(aBorderArea);
+  if (aColor.mBackgroundOrigin != NS_STYLE_BG_ORIGIN_BORDER) {
+    nsMargin border;
     if (!aBorder.GetBorder(border)) {
       NS_NOTYETIMPLEMENTED("percentage border");
     }
-    paddingArea.Deflate(border);
 
-    // The actual dirty rect is the intersection of the padding area and the
-    // dirty rect we were given
-    nsRect  dirtyRect;
-
-    if (!dirtyRect.IntersectRect(paddingArea, aDirtyRect)) {
-      // Nothing to paint
-      return;
+    bgOriginArea.Deflate(border);
+    if (aColor.mBackgroundOrigin != NS_STYLE_BG_ORIGIN_PADDING) {
+      nsMargin padding;
+      // XXX CalcPaddingFor is deprecated, but we need it for percentage padding
+      aPadding.CalcPaddingFor(aForFrame, padding);
+      bgOriginArea.Deflate(padding);
+      NS_ASSERTION(aColor.mBackgroundOrigin == NS_STYLE_BG_ORIGIN_CONTENT,
+                   "unknown background-origin value");
     }
+  }
 
-    // Based on the repeat setting, compute how many tiles we should
-    // lay down for each axis. The value computed is the maximum based
-    // on the dirty rect before accounting for the background-position.
-    nscoord tileWidth = imageSize.width;
-    nscoord tileHeight = imageSize.height;
-    PRBool  needBackgroundColor = PR_TRUE;
-    PRIntn  repeat = aColor.mBackgroundRepeat;
-    nscoord xDistance, yDistance;
-    PRBool needBackgroundOnContinuation = PR_FALSE; // set to true if repeat-y value is set
+  // Based on the repeat setting, compute how many tiles we should
+  // lay down for each axis. The value computed is the maximum based
+  // on the dirty rect before accounting for the background-position.
+  nscoord tileWidth = imageSize.width;
+  nscoord tileHeight = imageSize.height;
+  PRBool  needBackgroundColor = PR_TRUE;
+  PRIntn  repeat = aColor.mBackgroundRepeat;
+  nscoord xDistance, yDistance;
+  PRBool needBackgroundOnContinuation = PR_FALSE; // set to true if repeat-y value is set
 
-    switch (repeat) {
-    case NS_STYLE_BG_REPEAT_OFF:
-    default:
-      xDistance = tileWidth;
-      yDistance = tileHeight;
-      break;
+  switch (repeat) {
     case NS_STYLE_BG_REPEAT_X:
       xDistance = dirtyRect.width;
       yDistance = tileHeight;
@@ -2860,157 +2820,156 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
       // We need to render the background color if the image is transparent
       //needBackgroundColor = image->GetHasAlphaMask();
       break;
-    }
+    case NS_STYLE_BG_REPEAT_OFF:
+    default:
+      NS_ASSERTION(repeat == NS_STYLE_BG_REPEAT_OFF, "unknown background-repeat value");
+      xDistance = tileWidth;
+      yDistance = tileHeight;
+      break;
+  }
 
-    // The background color is rendered over the 'border' 'padding' and
-    // 'content' areas
-    if (!transparentBG && needBackgroundColor) {
-      aRenderingContext.SetColor(aColor.mBackgroundColor);
-      aRenderingContext.FillRect(aBorderArea);
-    }
+  // The background color is rendered over the 'background-clip' area
+  if (needBackgroundColor) {
+    PaintBackgroundColor(aPresContext, aRenderingContext, aForFrame, bgClipArea,
+                         aColor, aBorder, aPadding, aDX, aDY);
+  }
 
-    // See if there's nothing left to do
-    if ((tileWidth == 0) || (tileHeight == 0) || dirtyRect.IsEmpty()) {
-      // Nothing to paint
-      return;
-    }
+  if ((tileWidth == 0) || (tileHeight == 0) || dirtyRect.IsEmpty()) {
+    // Nothing left to paint
+    return;
+  }
 
-    // if the frame is a continuation frame, check if we need to draw the image for it
-    // (continuation with no repeat setting in the Y direction do not get background images)
-    if (aForFrame) {
-      nsIFrame *prevInFlowFrame = nsnull;
-      aForFrame->GetPrevInFlow(&prevInFlowFrame);
-      if (prevInFlowFrame != nsnull) {
-        if (!needBackgroundOnContinuation) {
-          // the frame is a continuation, and we do not want the background image repeated
-          // in the Y direction (needBackgroundOnContinuation == PR_FALSE) so just bail
-          return;
+  // if the frame is a continuation frame, check if we need to draw the image for it
+  // (continuation with no repeat setting in the Y direction do not get background images)
+  if (aForFrame) {
+    nsIFrame *prevInFlowFrame = nsnull;
+    aForFrame->GetPrevInFlow(&prevInFlowFrame);
+    if (prevInFlowFrame) {
+      if (!needBackgroundOnContinuation) {
+        // the frame is a continuation, and we do not want the background image repeated
+        // in the Y direction (needBackgroundOnContinuation == PR_FALSE) so just bail
+        return;
+      }
+    }
+  }
+
+
+  // Compute the anchor point.
+  //
+  // When tiling, the anchor coordinate values will be negative offsets
+  // from the padding area
+
+  nsPoint anchor;
+  if (NS_STYLE_BG_ATTACHMENT_FIXED == aColor.mBackgroundAttachment) {
+    // If it's a fixed background attachment, then the image is placed 
+    // relative to the nearest scrolling ancestor, or the viewport if
+    // the frame doesn't have a scrolling ancestor
+    nsIFrame* scrolledFrame = nsnull;
+    nsIView* viewportView = nsnull;
+    nsRect viewportArea;
+
+    // get the nsIScrollableFrame interface from the scrollFrame
+    nsIFrame* scrollFrame = GetNearestScrollFrame(aForFrame);
+    if (scrollFrame) {
+      nsCOMPtr<nsIScrollableFrame> scrollableFrame(do_QueryInterface(scrollFrame));
+      if (scrollableFrame) {
+        scrollableFrame->GetScrolledFrame(aPresContext, scrolledFrame);
+        if (scrolledFrame) {
+          scrolledFrame->GetRect(viewportArea);
+          scrolledFrame->GetView(aPresContext, &viewportView);
         }
       }
     }
+    if (!scrolledFrame) {
+      // The viewport isn't scrollable, so use the root frame's view
+      nsCOMPtr<nsIPresShell> presShell;
+      aPresContext->GetShell(getter_AddRefs(presShell));
+      NS_ASSERTION(presShell, "no pres shell");
 
+      nsIFrame* rootFrame;
+      presShell->GetRootFrame(&rootFrame);
+      NS_ASSERTION(rootFrame, "no root frame");
 
-    // Compute the anchor point.
-    //
-    // When tiling, the anchor coordinate values will be negative offsets
-    // from the padding area
+      rootFrame->GetView(aPresContext, &viewportView);
+      NS_ASSERTION(viewportView, "no viewport view");
+      viewportView->GetBounds(viewportArea);
+      viewportArea.x = 0;
+      viewportArea.y = 0;
+    }
 
-    nsPoint anchor;
-    if (NS_STYLE_BG_ATTACHMENT_FIXED == aColor.mBackgroundAttachment) {
-      // If it's a fixed background attachment, then the image is placed 
-      // relative to the nearest scrolling ancestor, or the viewport if
-      // the frame doesn't have a scrolling ancestor
-      nsIFrame* scrolledFrame = nsnull;
-      nsIView* viewportView = nsnull;
-      nsRect viewportArea;
-        
-      // get the nsIScrollableFrame interface from the scrollFrame
-      nsIFrame* scrollFrame = GetNearestScrollFrame(aForFrame);
-      if (scrollFrame) {
-        nsCOMPtr<nsIScrollableFrame> scrollableFrame(do_QueryInterface(scrollFrame));
-        if (scrollableFrame) {
-          scrollableFrame->GetScrolledFrame(aPresContext, scrolledFrame);
-          if (scrolledFrame) {
-            scrolledFrame->GetRect(viewportArea);
-            scrolledFrame->GetView(aPresContext, &viewportView);
-          }
-        }
-      } 
-      if (!scrolledFrame) {
-        // The viewport isn't scrollable, so use the root frame's view
-        nsCOMPtr<nsIPresShell> presShell;
-        aPresContext->GetShell(getter_AddRefs(presShell));
-        NS_ASSERTION(presShell, "no pres shell");
-        
-        nsIFrame* rootFrame;
-        presShell->GetRootFrame(&rootFrame);
-        NS_ASSERTION(rootFrame, "no root frame");
+    // Get the anchor point
+    ComputeBackgroundAnchorPoint(aColor, viewportArea, viewportArea, tileWidth, tileHeight, anchor);
 
-        rootFrame->GetView(aPresContext, &viewportView);
-        NS_ASSERTION(viewportView, "no viewport view");
-        viewportView->GetBounds(viewportArea);
-        viewportArea.x = 0;
-        viewportArea.y = 0;
-      }
+    // Convert the anchor point to aForFrame's coordinate space
+    nsIView*  view;
+    aForFrame->GetView(aPresContext, &view);
+    if (!view) {
+      nsPoint offset;
+      aForFrame->GetOffsetFromView(aPresContext, offset, &view);
+      anchor -= offset;
+    }
+    NS_ASSERTION(view, "expected a view");
+    while (view && (view != viewportView)) {
+      nscoord x, y;
 
-      // Get the anchor point
-      ComputeBackgroundAnchorPoint(aColor, viewportArea, viewportArea, tileWidth, tileHeight, anchor);
+      view->GetPosition(&x, &y);
+      anchor.x -= x;
+      anchor.y -= y;
 
-      // Convert the anchor point to aForFrame's coordinate space
-      nsIView*  view;
-      aForFrame->GetView(aPresContext, &view);
-      if (!view) {
-        nsPoint offset;
-        aForFrame->GetOffsetFromView(aPresContext, offset, &view);
-        anchor -= offset;
-      }
-      NS_ASSERTION(view, "expected a view");
-      while (view && (view != viewportView)) {
-        nscoord x, y;
-        
-        view->GetPosition(&x, &y);
-        anchor.x -= x;
-        anchor.y -= y;
-        
-        // Get the parent view until we reach the viewport view
-        view->GetParent(view);
-      }
+      // Get the parent view until we reach the viewport view
+      view->GetParent(view);
+    }
+  } else {
+    nsCOMPtr<nsIAtom> frameType;
+    aForFrame->GetFrameType(getter_AddRefs(frameType));
+    if (frameType.get() == nsLayoutAtoms::canvasFrame) {
+      // If the frame is the canvas, the image is placed relative to
+      // the root element's (first) frame (see bug 46446)
+      nsRect firstRootElementFrameArea;
+      nsIFrame* firstRootElementFrame;
+      aForFrame->FirstChild(aPresContext, nsnull, &firstRootElementFrame);
+      NS_ASSERTION(firstRootElementFrame, "A canvas with a background "
+        "image had no child frame, which is impossible according to CSS. "
+        "Make sure there isn't a background image specified on the "
+        "|:viewport| pseudo-element in |html.css|.");
 
-      // Move the padding area so that we can use the same logic for both the 
-      // fixed and scrolling cases
-      paddingArea.x = 0;
-      paddingArea.y = 0;
-    } else { 
-      nsCOMPtr<nsIAtom> frameType;
-      aForFrame->GetFrameType(getter_AddRefs(frameType));
-      if (frameType.get() == nsLayoutAtoms::canvasFrame) {
-        // If the frame is the canvas, the image is placed relative to
-        // the root element's (first) frame (see bug 46446)
-        nsRect firstRootElementFrameArea;
-        nsIFrame* firstRootElementFrame;
-        aForFrame->FirstChild(aPresContext, nsnull, &firstRootElementFrame);
-        NS_ASSERTION(firstRootElementFrame, "A canvas with a background "
-          "image had no child frame, which is impossible according to CSS. "
-          "Make sure there isn't a background image specified on the "
-          "|:viewport| pseudo-element in |html.css|.");
+      // temporary null check -- see bug 97226
+      if (firstRootElementFrame) {
+        firstRootElementFrame->GetRect(firstRootElementFrameArea);
 
-        // temporary null check -- see bug 97226
-        if (firstRootElementFrame) {
-          firstRootElementFrame->GetRect(firstRootElementFrameArea);
+        // Take the border out of the frame's rect
+        const nsStyleBorder* borderStyle;
+        firstRootElementFrame->GetStyleData(eStyleStruct_Border, (const nsStyleStruct*&)borderStyle);
+        nsMargin border;
+        borderStyle->GetBorder(border);
+        firstRootElementFrameArea.Deflate(border);
 
-          // Take the border out of the frame's rect
-          const nsStyleBorder* borderStyle;
-          firstRootElementFrame->GetStyleData(eStyleStruct_Border, (const nsStyleStruct*&)borderStyle);
-          nsMargin border;
-          borderStyle->GetBorder(border);
-          firstRootElementFrameArea.Deflate(border);
-
-          // Get the anchor point
-          ComputeBackgroundAnchorPoint(aColor, firstRootElementFrameArea, paddingArea, tileWidth, tileHeight, anchor);
-        } else {
-          ComputeBackgroundAnchorPoint(aColor, paddingArea, paddingArea, tileWidth, tileHeight, anchor);
-        }
+        // Get the anchor point
+        ComputeBackgroundAnchorPoint(aColor, firstRootElementFrameArea, bgClipArea, tileWidth, tileHeight, anchor);
       } else {
-        // Otherwise, it is the normal case, and the background is
-        // simply placed relative to the frame's padding area
-        ComputeBackgroundAnchorPoint(aColor, paddingArea, paddingArea, tileWidth, tileHeight, anchor);
+        ComputeBackgroundAnchorPoint(aColor, bgOriginArea, bgClipArea, tileWidth, tileHeight, anchor);
       }
+    } else {
+      // Otherwise, it is the normal case, and the background is
+      // simply placed relative to the frame's background-clip area
+      ComputeBackgroundAnchorPoint(aColor, bgOriginArea, bgClipArea, tileWidth, tileHeight, anchor);
     }
+  }
 
 
 #if (!defined(XP_UNIX) && !defined(XP_BEOS)) || defined(XP_MACOSX)
-    // Setup clipping so that rendering doesn't leak out of the computed
-    // dirty rect
-    PRBool clipState;
-    aRenderingContext.PushState();
-    aRenderingContext.SetClipRect(dirtyRect, nsClipCombine_kIntersect,
-                                  clipState);
+  // Setup clipping so that rendering doesn't leak out of the computed
+  // dirty rect
+  PRBool clipState;
+  aRenderingContext.PushState();
+  aRenderingContext.SetClipRect(dirtyRect, nsClipCombine_kIntersect,
+                                clipState);
 #endif
 
-    // Compute the x and y starting points and limits for tiling
+  // Compute the x and y starting points and limits for tiling
 
-    /* An Overview Of The Following Logic
-                     
+  /* An Overview Of The Following Logic
+
           A........ . . . . . . . . . . . . . .
           :   +---:-------.-------.-------.----  /|\
           :   |   :       .       .       .       |  nh 
@@ -3024,10 +2983,9 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
           .   |   .       .       .       .    
           |<-----nw------>|       |<--w-->|
 
-       ---- = the paddingArea edge. The padding is done relative to this
-              area. Outside the padding is the border. If the background
-              is positioned relative to the viewport ('fixed') then this
-              is the viewport edge.
+       ---- = the background clip area edge. The painting is done within
+              to this area.  If the background is positioned relative to the 
+              viewport ('fixed') then this is the viewport edge.
 
        .... = the primary tile.
 
@@ -3056,26 +3014,26 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
 
        Therefore, 
 
-          x0 = paddingArea.x + anchor.x + n * tileWidth;
+          x0 = bgClipArea.x + anchor.x + n * tileWidth;
 
        ...where n is an integer greater or equal to 0 fitting:
 
           n * tileWidth <= 
-                      dirtyRect.x - (paddingArea.x + anchor.x) <= 
+                      dirtyRect.x - (bgClipArea.x + anchor.x) <=
                                                              (n+1) * tileWidth
 
        ...i.e.,
 
-          n <= (dirtyRect.x - (paddingArea.x + anchor.x)) / tileWidth < n + 1
+          n <= (dirtyRect.x - (bgClipArea.x + anchor.x)) / tileWidth < n + 1
 
        ...which, treating the division as an integer divide rounding down, gives:
 
-          n = (dirtyRect.x - (paddingArea.x + anchor.x)) / tileWidth
+          n = (dirtyRect.x - (bgClipArea.x + anchor.x)) / tileWidth
 
        Substituting into the original expression for x0:
 
-          x0 = paddingArea.x + anchor.x +
-               ((dirtyRect.x - (paddingArea.x + anchor.x)) / tileWidth) *
+          x0 = bgClipArea.x + anchor.x +
+               ((dirtyRect.x - (bgClipArea.x + anchor.x)) / tileWidth) *
                tileWidth;
 
        From this x1 is determined,
@@ -3103,62 +3061,136 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
                      tileWidth) * tileWidth
 
        The vertical case is analogous. If the background is fixed, then 
-       paddingArea.x and paddingArea.y are set to zero when finding the parent
+       bgClipArea.x and bgClipArea.y are set to zero when finding the parent
        viewport, above.
 
-    */
+  */
 
-    // first do the horizontal case
-    nscoord x0, x1;
-    if (repeat & NS_STYLE_BG_REPEAT_X) {
-      // When tiling in the x direction, adjust the starting position of the
-      // tile to account for dirtyRect.x. When tiling in x, the anchor.x value
-      // will be a negative value used to adjust the starting coordinate.
-      x0 = paddingArea.x + anchor.x + ((dirtyRect.x - (paddingArea.x + anchor.x)) / tileWidth) * tileWidth;
-      x1 = x0 + ((dirtyRect.x + dirtyRect.width - x0 + tileWidth - 1) / tileWidth) * tileWidth;
+  // first do the horizontal case
+  nscoord x0, x1;
+  if (repeat & NS_STYLE_BG_REPEAT_X) {
+    // When tiling in the x direction, adjust the starting position of the
+    // tile to account for dirtyRect.x. When tiling in x, the anchor.x value
+    // will be a negative value used to adjust the starting coordinate.
+    x0 = bgClipArea.x + anchor.x + ((dirtyRect.x - (bgClipArea.x + anchor.x)) / tileWidth) * tileWidth;
+    x1 = x0 + ((dirtyRect.x + dirtyRect.width - x0 + tileWidth - 1) / tileWidth) * tileWidth;
+  }
+  else {
+    // For scrolling attachment, the anchor is within the 'background-clip'
+    // For fixed attachment, the anchor is within the bounds of the nearest
+    // scrolling ancestor (or the viewport)
+    x0 = anchor.x;
+    if (NS_STYLE_BG_ATTACHMENT_SCROLL == aColor.mBackgroundAttachment) {
+      x0 += bgClipArea.x;
     }
-    else {
-      // For scrolling attachment, the anchor is relative to the padding area.
-      // For fixed attachment, paddingArea.x is set to zero and the anchor is 
-      // relative to the nearest scrolling ancestor (or the viewport).
-      x0 = paddingArea.x + anchor.x;
-      x1 = x0 + tileWidth;
-    }
-
-    // now do all that again with the vertical case
-    nscoord y0, y1;
-    if (repeat & NS_STYLE_BG_REPEAT_Y) {
-      // When tiling in the y direction, adjust the starting position of the
-      // tile to account for dirtyRect.y. When tiling in y, the anchor.y value
-      // will be a negative value used to adjust the starting coordinate.
-      y0 = paddingArea.y + anchor.y + ((dirtyRect.y - (paddingArea.y + anchor.y)) / tileHeight) * tileHeight;
-      y1 = y0 + ((dirtyRect.y + dirtyRect.height - y0 + tileHeight - 1) / tileHeight) * tileHeight;
-    }
-    else {
-      // For scrolling attachment, the anchor is relative to the padding area.
-      // For fixed attachment, paddingArea.y is set to zero and the anchor is 
-      // relative to the nearest scrolling ancestor (or the viewport).
-      y0 = paddingArea.y + anchor.y;
-      y1 = y0 + tileHeight;
-    }
-
-    // Take the intersection again to paint only the required area
-    nsRect tileRect(x0,y0,(x1-x0),(y1-y0));
-    nsRect drawRect;
-
-    if (drawRect.IntersectRect(tileRect, dirtyRect)) {
-      PRInt32 xOffset = drawRect.x - x0,
-              yOffset = drawRect.y - y0;
-      aRenderingContext.DrawTile(image,xOffset,yOffset,&drawRect);
-    }
-
-#if (!defined(XP_UNIX) && !defined(XP_BEOS)) || defined(XP_MACOSX)
-    // Restore clipping
-    aRenderingContext.PopState(clipState);
-#endif
-
+    x1 = x0 + tileWidth;
   }
 
+  // now do all that again with the vertical case
+  nscoord y0, y1;
+  if (repeat & NS_STYLE_BG_REPEAT_Y) {
+    // When tiling in the y direction, adjust the starting position of the
+    // tile to account for dirtyRect.y. When tiling in y, the anchor.y value
+    // will be a negative value used to adjust the starting coordinate.
+    y0 = bgClipArea.y + anchor.y + ((dirtyRect.y - (bgClipArea.y + anchor.y)) / tileHeight) * tileHeight;
+    y1 = y0 + ((dirtyRect.y + dirtyRect.height - y0 + tileHeight - 1) / tileHeight) * tileHeight;
+  }
+  else {
+    // For scrolling attachment, the anchor is within the 'background-clip'
+    // For fixed attachment, the anchor is within the bounds of the nearest
+    // scrolling ancestor (or the viewport)
+    y0 = anchor.y;
+    if (NS_STYLE_BG_ATTACHMENT_SCROLL == aColor.mBackgroundAttachment) {
+      y0 += bgClipArea.y;
+    }
+    y1 = y0 + tileHeight;
+  }
+
+  // Take the intersection again to paint only the required area
+  nsRect tileRect(x0, y0, (x1 - x0), (y1 - y0));
+  nsRect drawRect;
+
+  if (drawRect.IntersectRect(tileRect, dirtyRect)) {
+    PRInt32 xOffset = drawRect.x - x0,
+            yOffset = drawRect.y - y0;
+    aRenderingContext.DrawTile(image, xOffset, yOffset, &drawRect);
+  }
+
+#if (!defined(XP_UNIX) && !defined(XP_BEOS)) || defined(XP_MACOSX)
+  // Restore clipping
+  aRenderingContext.PopState(clipState);
+#endif
+
+}
+
+void
+nsCSSRendering::PaintBackgroundColor(nsIPresContext* aPresContext,
+                                     nsIRenderingContext& aRenderingContext,
+                                     nsIFrame* aForFrame,
+                                     const nsRect& aBgClipArea,
+                                     const nsStyleBackground& aColor,
+                                     const nsStyleBorder& aBorder,
+                                     const nsStylePadding& aPadding,
+                                     nscoord aDX,
+                                     nscoord aDY)
+{
+  if (aColor.mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT) {
+    // nothing to paint
+    return;
+  }
+
+  nsStyleCoord bordStyleRadius[4];
+  PRInt16 borderRadii[4];
+  nsRect bgClipArea(aBgClipArea);
+
+  // get the radius for our border
+  aBorder.mBorderRadius.GetTop(bordStyleRadius[NS_SIDE_TOP]);       // topleft
+  aBorder.mBorderRadius.GetRight(bordStyleRadius[NS_SIDE_RIGHT]);   // topright
+  aBorder.mBorderRadius.GetBottom(bordStyleRadius[NS_SIDE_BOTTOM]); // bottomright
+  aBorder.mBorderRadius.GetLeft(bordStyleRadius[NS_SIDE_LEFT]);     // bottomleft
+
+  PRUint8 side = 0;
+  for (; side < 4; ++side) {
+    borderRadii[side] = 0;
+    switch (bordStyleRadius[side].GetUnit()) {
+      case eStyleUnit_Inherit:
+        // do nothing
+        break;
+      case eStyleUnit_Percent:
+        borderRadii[side] = nscoord(bordStyleRadius[side].GetPercentValue() * aBgClipArea.width);
+        break;
+      case eStyleUnit_Coord:
+        borderRadii[side] = bordStyleRadius[side].GetCoordValue();
+        break;
+      default:
+        break;
+    }
+  }
+
+  // Rounded version of the border
+  // XXXdwh Composite borders (with multiple colors per side) use their own border radius
+  // algorithm now, since the current one doesn't work right for small radii.
+  if (!aBorder.mBorderColors) {
+    for (side = 0; side < 4; ++side) {
+      if (borderRadii[side] > 0) {
+        PaintRoundedBackground(aPresContext, aRenderingContext, aForFrame,
+                               bgClipArea, aColor, aBorder, aDX, aDY, borderRadii);
+        return;
+      }
+    }
+  }
+  else if (aColor.mBackgroundClip == NS_STYLE_BG_CLIP_BORDER) {
+    // XXX users of -moz-border-*-colors expect a transparent border-color
+    // to show the parent's background-color instead of its background-color.
+    // This seems wrong, but we handle that here by explictly clipping the
+    // background to the padding area.
+    nsMargin border;
+    aBorder.GetBorder(border);
+    bgClipArea.Deflate(border);
+  }
+
+  aRenderingContext.SetColor(aColor.mBackgroundColor);
+  aRenderingContext.FillRect(bgClipArea);
 }
 
 /** ---------------------------------------------------
@@ -3199,24 +3231,24 @@ PRInt32 flag = NS_COPYBITS_TO_BACK_BUFFER | NS_COPYBITS_XFORM_DEST_VALUES;
  */
 void
 nsCSSRendering::PaintRoundedBackground(nsIPresContext* aPresContext,
-                                nsIRenderingContext& aRenderingContext,
-                                nsIFrame* aForFrame,
-                                const nsRect& aDirtyRect,
-                                const nsRect& aBorderArea,
-                                const nsStyleBackground& aColor,
-                                nscoord aDX,
-                                nscoord aDY,
-                                PRInt16 aTheRadius[4])
+                                       nsIRenderingContext& aRenderingContext,
+                                       nsIFrame* aForFrame,
+                                       const nsRect& aBgClipArea,
+                                       const nsStyleBackground& aColor,
+                                       const nsStyleBorder& aBorder,
+                                       nscoord aDX,
+                                       nscoord aDY,
+                                       PRInt16 aTheRadius[4])
 {
-RoundedRect   outerPath;
-QBCurve       cr1,cr2,cr3,cr4;
-QBCurve       UL,UR,LL,LR;
-PRInt32       curIndex,c1Index;
-nsFloatPoint  thePath[MAXPATHSIZE];
-static nsPoint       polyPath[MAXPOLYPATHSIZE];
-PRInt16       np;
-nscoord       twipsPerPixel;
-float         p2t;
+  RoundedRect   outerPath;
+  QBCurve       cr1,cr2,cr3,cr4;
+  QBCurve       UL,UR,LL,LR;
+  PRInt32       curIndex,c1Index;
+  nsFloatPoint  thePath[MAXPATHSIZE];
+  static nsPoint       polyPath[MAXPOLYPATHSIZE];
+  PRInt16       np;
+  nscoord       twipsPerPixel;
+  float         p2t;
 
   // needed for our border thickness
   aPresContext->GetPixelsToTwips(&p2t);
@@ -3224,8 +3256,27 @@ float         p2t;
 
   aRenderingContext.SetColor(aColor.mBackgroundColor);
 
+  // Adjust for background-clip, if necessary
+  if (aColor.mBackgroundClip != NS_STYLE_BG_CLIP_BORDER) {
+    NS_ASSERTION(aColor.mBackgroundClip == NS_STYLE_BG_CLIP_PADDING, "unknown background-clip value");
+
+    // Get the radius to the outer edge of the padding.
+    // -moz-border-radius is the radius to the outer edge of the border.
+    nsMargin border;
+    aBorder.GetBorder(border);
+    aTheRadius[NS_SIDE_TOP]    -= border.top;
+    aTheRadius[NS_SIDE_RIGHT]  -= border.right;
+    aTheRadius[NS_SIDE_BOTTOM] -= border.bottom;
+    aTheRadius[NS_SIDE_LEFT]   -= border.left;
+    for (PRUint8 i = 0; i < 4; ++i) {
+      if (aTheRadius[i] < 0) {
+        aTheRadius[i] = 0;
+      }
+    }
+  }
+
   // set the rounded rect up, and let'er rip
-  outerPath.Set(aBorderArea.x,aBorderArea.y,aBorderArea.width,aBorderArea.height,aTheRadius,twipsPerPixel);
+  outerPath.Set(aBgClipArea.x,aBgClipArea.y,aBgClipArea.width,aBgClipArea.height,aTheRadius,twipsPerPixel);
   outerPath.GetRoundedBorders(UL,UR,LL,LR);
 
   // BUILD THE ENTIRE OUTSIDE PATH
@@ -3278,7 +3329,6 @@ float         p2t;
   GetPath(thePath,polyPath,&curIndex,eOutside,c1Index);
 
   aRenderingContext.FillPolygon(polyPath,curIndex); 
-
 }
 
 

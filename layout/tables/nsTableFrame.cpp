@@ -1463,10 +1463,13 @@ nsTableFrame::Paint(nsIPresContext*      aPresContext,
     if (vis && vis->IsVisibleOrCollapsed()) {
       const nsStyleBorder* border =
         (const nsStyleBorder*)mStyleContext->GetStyleData(eStyleStruct_Border);
+      const nsStylePadding* padding =
+        (const nsStylePadding*)mStyleContext->GetStyleData(eStyleStruct_Padding);
       nsRect  rect(0, 0, mRect.width, mRect.height);
 
       nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                      aDirtyRect, rect, *border, 0, 0, PR_TRUE);
+                                      aDirtyRect, rect, *border, *padding,
+                                      0, 0, PR_TRUE);
       
       // paint the border here only for separate borders
       if (!IsBorderCollapse()) {

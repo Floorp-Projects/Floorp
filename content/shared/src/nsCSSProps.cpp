@@ -222,6 +222,19 @@ const PRInt32 nsCSSProps::kBackgroundColorKTable[] = {
   -1,-1
 };
 
+const PRInt32 nsCSSProps::kBackgroundClipKTable[] = {
+  eCSSKeyword_border,     NS_STYLE_BG_CLIP_BORDER,
+  eCSSKeyword_padding,    NS_STYLE_BG_CLIP_PADDING,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kBackgroundOriginKTable[] = {
+  eCSSKeyword_border,     NS_STYLE_BG_ORIGIN_BORDER,
+  eCSSKeyword_padding,    NS_STYLE_BG_ORIGIN_PADDING,
+  eCSSKeyword_content,    NS_STYLE_BG_ORIGIN_CONTENT,
+  -1,-1
+};
+
 const PRInt32 nsCSSProps::kBackgroundRepeatKTable[] = {
   eCSSKeyword_no_repeat,  NS_STYLE_BG_REPEAT_OFF,
   eCSSKeyword_repeat,     NS_STYLE_BG_REPEAT_XY,
@@ -919,6 +932,12 @@ static const PRInt32 kBackgroundYPositionKTable[] = {
 
   case eCSSProperty_background_repeat:
     return SearchKeywordTable(aValue, kBackgroundRepeatKTable);
+
+  case eCSSProperty__moz_background_clip:
+    return SearchKeywordTable(aValue, kBackgroundClipKTable);
+
+  case eCSSProperty__moz_background_origin:
+    return SearchKeywordTable(aValue, kBackgroundOriginKTable);
 
   case eCSSProperty_background_x_position:
     return SearchKeywordTable(aValue, kBackgroundXPositionKTable);

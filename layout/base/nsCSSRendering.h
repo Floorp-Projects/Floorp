@@ -139,6 +139,7 @@ public:
                               const nsRect& aDirtyRect,
                               const nsRect& aBorderArea,
                               const nsStyleBorder& aBorder,
+                              const nsStylePadding& aPadding,
                               nscoord aDX,
                               nscoord aDY,
                               PRBool aUsePrintSettings=PR_FALSE);
@@ -155,6 +156,7 @@ public:
                                     const nsRect& aBorderArea,
                                     const nsStyleBackground& aColor,
                                     const nsStyleBorder& aBorder,
+                                    const nsStylePadding& aPadding,
                                     nscoord aDX,
                                     nscoord aDY,
                                     PRBool aUsePrintSettings=PR_FALSE);
@@ -229,22 +231,30 @@ protected:
                           PRInt16 aBorderRadius[4],nsRect* aGap = 0,
                           PRBool aIsOutline=PR_FALSE);
 
-
   static void RenderSide(nsFloatPoint aPoints[],nsIRenderingContext& aRenderingContext,
                         const nsStyleBorder* aBorderStyle,const nsStyleOutline* aOutlineStyle,nsIStyleContext* aStyleContext,
                         PRUint8 aSide,nsMargin  &aBorThick,nscoord aTwipsPerPixel,
                         PRBool aIsOutline=PR_FALSE);
 
-  static void PaintRoundedBackground(nsIPresContext* aPresContext,
-                              nsIRenderingContext& aRenderingContext,
-                              nsIFrame* aForFrame,
-                              const nsRect& aDirtyRect,
-                              const nsRect& aBorderArea,
-                              const nsStyleBackground& aColor,
-                              nscoord aDX,
-                              nscoord aDY,
-                              PRInt16 aTheRadius[4]);
+  static void PaintBackgroundColor(nsIPresContext* aPresContext,
+                                   nsIRenderingContext& aRenderingContext,
+                                   nsIFrame* aForFrame,
+                                   const nsRect& aBgClipArea,
+                                   const nsStyleBackground& aColor,
+                                   const nsStyleBorder& aBorder,
+                                   const nsStylePadding& aPadding,
+                                   nscoord aDX,
+                                   nscoord aDY);
 
+  static void PaintRoundedBackground(nsIPresContext* aPresContext,
+                                     nsIRenderingContext& aRenderingContext,
+                                     nsIFrame* aForFrame,
+                                     const nsRect& aBorderArea,
+                                     const nsStyleBackground& aColor,
+                                     const nsStyleBorder& aBorder,
+                                     nscoord aDX,
+                                     nscoord aDY,
+                                     PRInt16 aTheRadius[4]);
 
   static nscolor MakeBevelColor(PRIntn whichSide, PRUint8 style,
                                 nscolor aBackgroundColor,

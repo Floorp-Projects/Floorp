@@ -748,11 +748,16 @@ nsPageFrame::DrawBackground(nsIPresContext*      aPresContext,
 
     nsRect rect;
     pageContentFrame->GetRect(rect);
-    const nsStyleBorder* border = NS_STATIC_CAST(const nsStyleBorder*,
-                             mStyleContext->GetStyleData(eStyleStruct_Border));
+    const nsStyleBorder* border = 
+      NS_STATIC_CAST(const nsStyleBorder*,
+                     mStyleContext->GetStyleData(eStyleStruct_Border));
+    const nsStylePadding* padding = 
+      NS_STATIC_CAST(const nsStylePadding*,
+                     mStyleContext->GetStyleData(eStyleStruct_Padding));
 
     nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                    aDirtyRect, rect, *border, 0, 0, PR_TRUE);      
+                                    aDirtyRect, rect, *border, *padding,
+                                    0, 0, PR_TRUE);
   }
 }
 
