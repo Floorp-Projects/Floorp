@@ -504,7 +504,7 @@ public:
 ////////////////////////////////////////////////////////////////////////
 
 // XXX we should get this from prefs.
-const char* BookmarkDataSourceImpl::kBookmarksFilename = "bookmarks.html";
+const char* BookmarkDataSourceImpl::kBookmarksFilename = "res\\rdf\\bookmarks.html";
 
 BookmarkDataSourceImpl::BookmarkDataSourceImpl(void)
 {

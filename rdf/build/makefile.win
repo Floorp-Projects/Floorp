@@ -63,6 +63,7 @@ install:: $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
 	$(MAKE_INSTALL) ..\resources\Mail\joe@meer.net\inbox $(DIST)\bin\res\rdf\Mail\joe@meer.net
 	$(MAKE_INSTALL) ..\resources\LocalStore.rdf $(DIST)\bin\res\rdf
+	$(MAKE_INSTALL) ..\resources\bookmarks.html $(DIST)\bin\res\rdf
 	$(MAKE_INSTALL) ..\resources\LocalStore.css $(DIST)\bin\res\rdf
 	$(MAKE_INSTALL) ..\resources\Mail\joe@meer.net\work $(DIST)\bin\res\rdf\Mail\joe@meer.net
 	$(MAKE_INSTALL) ..\resources\Mail\joe@meer.net\other $(DIST)\bin\res\rdf\Mail\joe@meer.net
