@@ -826,6 +826,8 @@ nsHTMLEditRules::WillMakeHeader(nsIDOMSelection *aSelection, PRBool *aCancel)
       }
     }
   }
+  // unfinished, just return NS_OK for now
+  return NS_OK;
 }
 
 
