@@ -848,39 +848,29 @@ function createNewAttachmentInfo(contentType, url, displayName, uri, notDownload
   this.notDownloaded = notDownloaded;
 }
 
-function dofunc(aFunctionName, aFunctionArg)
+createNewAttachmentInfo.prototype.saveAttachment = function saveAttachment()
 {
-  if (aFunctionName == "saveAttachment") 
-    saveAttachment(aFunctionArg); 
-  else if (aFunctionName == "openAttachment") 
-    openAttachment(aFunctionArg); 
-  else if (aFunctionName == "printAttachment") 
-    printAttachment(aFunctionArg);
+  messenger.saveAttachment(this.contentType, 
+                           this.url, 
+                           escape(this.displayName), 
+                           this.uri);
 }
 
-function saveAttachment(aAttachment)
+createNewAttachmentInfo.prototype.openAttachment = function openAttachment()
 {
-  messenger.saveAttachment(aAttachment.contentType, 
-                           aAttachment.url, 
-                           escape(aAttachment.displayName), 
-                           aAttachment.messageUri);
+  messenger.openAttachment(this.contentType, 
+                           this.url, 
+                           escape(this.displayName), 
+                           this.uri);
 }
 
-function openAttachment(aAttachment)
-{
-  messenger.openAttachment(aAttachment.contentType, 
-                           aAttachment.url, 
-                           escape(aAttachment.displayName), 
-                           aAttachment.messageUri);
-}
-
-function printAttachment(aAttachment)
+createNewAttachmentInfo.prototype.printAttachment = function printAttachment()
 {
   /* we haven't implemented the ability to print attachments yet...
-  messenger.printAttachment(aAttachment.contentType, 
-                            aAttachment.url, 
-                            escape(aAttachment.displayName), 
-                            aAttachment.messageUri);
+  messenger.printAttachment(this.contentType, 
+                            this.url, 
+                            escape(this.displayName), 
+                            this.uri);
   */
 }
 
@@ -915,7 +905,7 @@ function attachmentListClick(event)
       var target = event.target;
       if (target.localName == "listitem")
       {
-	dofunc("openAttachment", target.attachment);
+	target.attachment.openAttachment();
       }
     }
 }
@@ -929,17 +919,7 @@ function handleAttachmentSelection(commandPrefix)
   var selectedAttachments = attachmentList.selectedItems;
   var listItem = selectedAttachments[0];
 
-  dofunc(commandPrefix, listItem.attachment);
-}
-
-function cloneAttachment(aAttachment)
-{
-  var obj = new Object();
-  obj.contentType = aAttachment.contentType;
-  obj.url = aAttachment.url;
-  obj.displayName = aAttachment.displayName;
-  obj.messageUri = aAttachment.uri;
-  return obj;
+  listItem.attachment[commandPrefix]();
 }
 
 function displayAttachmentsForExpandedView()
@@ -958,7 +938,7 @@ function displayAttachmentsForExpandedView()
       var item = attachmentList.appendItem(attachment.displayName,"");
       item.setAttribute("class", "listitem-iconic"); 
       item.setAttribute("tooltip", "attachmentListTooltip");
-      item.attachment = cloneAttachment(attachment);
+      item.attachment = attachment;
       item.setAttribute("attachmentUrl", attachment.url);
       item.setAttribute("attachmentContentType", attachment.contentType);
       item.setAttribute("attachmentUri", attachment.uri);
@@ -1064,8 +1044,8 @@ function addAttachmentToPopup(popup, attachment, attachmentIndex)
 
       var menuitementry = document.createElement('menuitem');     
 
-      menuitementry.attachment = cloneAttachment(attachment);
-      menuitementry.setAttribute('oncommand', 'openAttachment(this.attachment)'); 
+      menuitementry.attachment = attachment;
+      menuitementry.setAttribute('oncommand', 'this.attachment.openAttachment()'); 
 
       if (!gSaveLabel)
         gSaveLabel = gMessengerBundle.getString("saveLabel");
@@ -1084,8 +1064,8 @@ function addAttachmentToPopup(popup, attachment, attachmentIndex)
       openpopup.appendChild(menuseparator);
       
       menuitementry = document.createElement('menuitem');
-      menuitementry.attachment = cloneAttachment(attachment);
-      menuitementry.setAttribute('oncommand', 'saveAttachment(this.attachment)'); 
+      menuitementry.attachment = attachment;
+      menuitementry.setAttribute('oncommand', 'this.attachment.saveAttachment()'); 
       menuitementry.setAttribute('label', gSaveLabel); 
       menuitementry.setAttribute('accesskey', gSaveLabelAccesskey); 
       menuitementry = openpopup.appendChild(menuitementry);
