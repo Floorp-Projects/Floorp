@@ -148,7 +148,7 @@ sub OpenErrorLog($)
 			{
 				$log_file = full_path_to($log_file);
  
-				open(ERROR_LOG, ">$log_file") || die "Can't open logfile, check the file path.\n";
+				open(ERROR_LOG, ">$log_file") || die "Error: Can't open $log_file\n";
 				MacPerl::SetFileInfo("CWIE", "TEXT", $log_file);
 
 				$log_file =~ m/.+:(.+)/;
@@ -474,6 +474,18 @@ sub RedirectOutputToFile($)
 {
     my($log_file) = @_;
     
+    # ensure that folders in the path exist
+    my($logdir) = "";
+    my($logfile) = $log_file;
+    
+    if ($log_file =~ /(.+?:)([^:]+)$/)       # ? for non-greedy match
+    {
+        $logdir = $1;
+        $logfile = $2;
+        
+        mkpath($logdir);
+    }
+
     print "Output is now being redirected to the file '$log_file'\n";
     
     open(STDOUT, "> $log_file") || die "Can't redirect stdout";

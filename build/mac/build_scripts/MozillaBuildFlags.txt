@@ -1,0 +1,53 @@
+#-------------------------------------------------------------------------------
+# These 3 lists are the 'master lists' to control what gets built.
+# 
+# Ordering in these arrays is important; it has to reflect the order in
+# which the build occurs.
+#
+# Setting containing spaces must be quoted with double quotes.
+#-------------------------------------------------------------------------------
+
+pull_flags
+all             1
+
+build_flags
+all             1
+dist            0
+xpidl           0
+idl             0
+stubs           0
+runtime         0
+common          0
+imglib          0
+necko           0
+security        0
+browserutils    0
+intl            0
+nglayout        0
+editor          0
+viewer          0
+xpapp           0
+extensions      0
+plugins         0
+mailnews        0
+apprunner       0
+resources       0
+
+options_flags
+chrome_jars     1
+chrome_files    0
+use_jars        1
+transformiix    0
+mathml          0
+svg             0
+mng             1
+ldap            0
+xmlextras       0
+mailextras      1
+xptlink         0
+
+filepath_flags
+idepath             ":Build IDE Path.txt"
+sessionpath         ":Build session path.txt"
+buildlogfilepath    ":Build Logs:Mozilla build log.txt"
+scriptlogfilepath   ":Build Logs:Mozilla script log.txt"

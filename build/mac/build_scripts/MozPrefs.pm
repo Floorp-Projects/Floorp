@@ -84,10 +84,11 @@ sub WriteDefaultPrefsFile($)
 %    buildfrom   nglayout                % where to start the build
 %
 %   Lines which specify the location of the files used to store paths
-%   to the CodeWarrior IDE, and the MacCVS Pro session file. Examples:
+%   to the CodeWarrior IDE, and the MacCVS Pro session file. Note quoting
+%   of paths containing whitespace. Examples:
 %
 %    filepath   idepath         ::codewarrior.txt
-%    filepath   sessionpath     :sessionpath.txt
+%    filepath   sessionpath     ":Some folder:MacCVS session path.txt"
 %
 %   Lines which modify the build settings like %main::DEBUG.
 %   Any lines which do not match either of the above are assumed
@@ -180,12 +181,16 @@ sub ReadPrefsFile($$$$$)
         next;
       }
       
-      if ($line =~ /^\s*(\w+)\s+(\w+)\s+([^\s]+)\s*/)
+      if (($line =~ /^\s*(\w+)\s+(\w+)\s+\"(.+)\"\s*/) ||
+          ($line =~ /^\s*(\w+)\s+(\w+)\s+\'(.+)\'\s*/) ||
+          ($line =~ /^\s*(\w+)\s+(\w+)\s+([^\s]+)\s*/))
       {
         my($array_name) = $1;      
         my($option_name) = $2;
         my($option_value) = $3;      
       
+        # print "Read '$array_name' '$option_name' '$option_value'\n";
+        
         if ($array_name eq "pull")
         {
           HandlePrefSet($pull_flags, $option_name, $option_value, "Pull");

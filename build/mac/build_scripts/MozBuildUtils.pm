@@ -11,6 +11,7 @@ use strict;
 use Exporter;
 
 use Cwd;
+use File::Path;
 
 use Mac::Events;
 use Mac::StandardFile;
@@ -302,16 +303,22 @@ sub ScanForManifestFiles($$$$)
 #-----------------------------------------------
 # SetupBuildLog
 #-----------------------------------------------
-sub SetupBuildLog($)
+sub SetupBuildLog($$)
 {
-    my($timestamped_log) = @_;
+    my($logfile_path, $timestamped_log) = @_;
     
-    my $logdir = ":Build Logs:";
-    if (! -d $logdir)
+    my($logdir) = "";
+    my($logfile) = $logfile_path;
+    
+    if ($logfile_path =~ /(.+?:)([^:]+)$/)       # ? for non-greedy match
     {
-        mkdir $logdir, 0777 || die "Couldn't create directory $logdir";
+        $logdir = $1;
+        $logfile = $2;
+        
+        print "got log file settings '$logdir' '$logfile'\n";
+        mkpath($logdir);
     }
-
+    
     if ($timestamped_log)
     {
         #Use time-stamped names so that you don't clobber your previous log file!
@@ -321,7 +328,7 @@ sub SetupBuildLog($)
     }
     else
     {
-        OpenErrorLog("${logdir}Mozilla build log");
+        OpenErrorLog("${logdir}${logfile}");
     }
 }
 

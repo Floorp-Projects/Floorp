@@ -1976,16 +1976,10 @@ sub Checkout()
 #//--------------------------------------------------------------------------------------------------
 #// RunBuild
 #//--------------------------------------------------------------------------------------------------
-sub RunBuild($$$)
+sub RunBuild($$$$)
 {
-    my($do_pull, $do_build, $build_prefs) = @_;
+    my($do_pull, $do_build, $build_flags_file, $build_prefs) = @_;
     
-    # setup the build log
-    SetupBuildLog($main::USE_TIMESTAMPED_LOGS);
-    
-    StopForErrors();
-    #DontStopForErrors();
-
     # if we are pulling, we probably want to do a full build, so clear the build progress
     if ($do_pull) {
         ClearBuildProgress();    
@@ -1997,11 +1991,15 @@ sub RunBuild($$$)
                      \%main::options,
                      \%main::optiondefines,
                      \%main::filepaths,
-                     "MozillaBuildFlags.txt",
+                     $build_flags_file,
                      $build_prefs);
 
+    # setup the build log
+    SetupBuildLog($main::filepaths{"buildlogfilepath"}, $main::USE_TIMESTAMPED_LOGS);
+    StopForErrors();
+    
     if ($main::LOG_TO_FILE) {
-        RedirectOutputToFile("Mozilla script log");
+        RedirectOutputToFile($main::filepaths{"scriptlogfilepath"});
     }
     
     # run a pre-build check to see that the tools etc are in order
@@ -2015,7 +2013,9 @@ sub RunBuild($$$)
 
     # create generated headers
     ConfigureBuildSystem();
-        
+    
+    die;
+    
     chdir($main::MOZ_SRC);
     BuildDist();
     

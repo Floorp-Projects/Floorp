@@ -48,4 +48,4 @@ $MOZ_SRC = cwd();
 my($do_checkout)    = 1;
 my($do_build)       = 0;
 
-RunBuild($do_checkout, $do_build, "Pull prefs");
+RunBuild($do_checkout, $do_build, "MozillaBuildFlags.txt", "Pull prefs");
