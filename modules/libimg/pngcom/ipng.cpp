@@ -31,10 +31,11 @@
 
 
 static void png_set_dims(il_container *, png_structp);
+static void info_callback(png_structp png_ptr, png_infop info);
 static void row_callback(png_structp png_ptr, png_bytep new_row,
                          png_uint_32 row_num, int pass);
 static void end_callback(png_structp png_ptr, png_infop info);
-static void info_callback(png_structp png_ptr, png_infop info);
+static void il_png_error_handler(png_structp png_ptr, png_const_charp msg);
 
 
 
@@ -69,23 +70,28 @@ il_png_init(il_container *ic)
 int 
 il_png_write(il_container *ic, const unsigned char *buf, int32 len)
 {
-   ipng_structp ipng_p;
-
-   png_structp png_ptr;
-   png_infop info_ptr;
+    ipng_structp ipng_p;
+    png_structp png_ptr;
+    png_infop info_ptr;
   
-	/*------*/
    
+    PR_ASSERT(ic != NULL);
 	ipng_p = (ipng_structp)ic->ds;   
+
+    if (ipng_p->state == PNG_ERROR)
+        return -1;
+
     if(ipng_p->state == PNG_INIT ){
-        png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL );
+        png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, ipng_p,
+          il_png_error_handler, NULL);
     	ipng_p->pngs_p = png_ptr;
         /* Allocate/initialize the memory for image information.  REQUIRED. */
 	    info_ptr = png_create_info_struct(png_ptr);
         ipng_p->info_p = info_ptr;
 	    if (info_ptr == NULL){
-		      png_destroy_read_struct(&png_ptr, (png_infopp)NULL, (png_infopp)NULL);
-		      return -1;
+		    png_destroy_read_struct(&png_ptr, NULL, NULL);
+            ipng_p->state = PNG_ERROR;
+		    return -1;
 	    }
         png_set_progressive_read_fn(png_ptr, (void *)buf,
         info_callback, row_callback, end_callback); 
@@ -96,10 +102,13 @@ il_png_write(il_container *ic, const unsigned char *buf, int32 len)
     }
     /* note addition of ic to png structure.... */
     png_ptr->io_ptr = ic;
-    if (setjmp(png_ptr->jmpbuf)) {
-         png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
-         return -1;
+
+    if (setjmp(ipng_p->jmpbuf)) {
+        png_destroy_read_struct(&ipng_p->pngs_p, &ipng_p->info_p, NULL);
+        ipng_p->state = PNG_ERROR;
+        return -1;
     }
+
     png_process_data( png_ptr, info_ptr, (unsigned char *)buf, len );
     ipng_p->state = PNG_CONTINUE;
           
@@ -328,4 +337,34 @@ end_callback(png_structp png_ptr, png_infop info)
       il_container *ic = (il_container *)png_ptr->io_ptr;
         
       ic->imgdcb->ImgDCBFlushImage();
+}
+
+
+
+static void
+il_png_error_handler(png_structp png_ptr, png_const_charp msg)
+{
+    ipng_structp ipng_p;
+
+    /* This function, aside from the extra step of retrieving the "error
+     * pointer" (below) and the fact that it exists within the application
+     * rather than within libpng, is essentially identical to libpng's
+     * default error handler.  The second point is critical:  since both
+     * setjmp() and longjmp() are called from the same code, they are
+     * guaranteed to have compatible notions of how big a jmp_buf is,
+     * regardless of whether _BSD_SOURCE or anything else has (or has not)
+     * been defined.  Adapted from readpng2_error_handler() in "PNG: The
+     * Definitive Guide" (O'Reilly, 1999). */
+
+    fprintf(stderr, "nspng libpng error: %s\n", msg);
+    fflush(stderr);
+
+    ipng_p = (ipng_structp)png_get_error_ptr(png_ptr);
+    if (ipng_p == NULL) {            /* we are completely hosed now */
+        fprintf(stderr, "nspng severe error:  jmpbuf not recoverable.\n");
+        fflush(stderr);
+        PR_ASSERT(ipng_p != NULL);   /* instead of exit(99); */
+    }
+
+    longjmp(ipng_p->jmpbuf, 1);
 }
