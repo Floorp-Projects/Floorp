@@ -77,29 +77,13 @@
 	<answer>
 	  <para>
 	    There are <emphasis>dozens</emphasis> of major companies with public
-	    Bugzilla sites to track bugs in their products. A few include:
-	    <simplelist>
-	      <member>Netscape/AOL</member>
-	      <member>Mozilla.org</member>
-	      <member>NASA</member>
-	      <member>Red Hat Software</member>
-	      <member>SuSe Corp</member>
-	      <member>The Horde Project</member>
-	      <member>AbiSource</member>
-	      <member>Real Time Enterprises, Inc</member>
-	      <member>Eggheads.org</member>
-	      <member>Strata Software</member>
-	      <member>RockLinux</member>
-	      <member>Creative Labs (makers of SoundBlaster)</member>
-	      <member>The Apache Foundation</member>
-	      <member>The Gnome Foundation</member>
-	      <member>Ximian</member>
-	      <member>Linux-Mandrake</member>
-	    </simplelist>
-	  </para>
-	  <para>
-	    Suffice to say, there are more than enough huge projects using Bugzilla
-	    that we can safely say it's extremely popular.
+	    Bugzilla sites to track bugs in their products. We have a fairly
+            complete list available on our website at
+            <ulink url="http://bugzilla.org/installation_list.html"/>. If you
+            have an installation of Bugzilla and would like to be added to the
+            list, whether it's a public install or not, simply e-mail
+            Gerv <email>gerv@mozilla.org</email>. Keep in mind that it's kinda
+            difficult to get onto the <quote>high-profile</quote> list ;).
 	  </para>
 	</answer>
       </qandaentry>
