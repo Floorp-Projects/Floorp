@@ -6,24 +6,44 @@
 <!ENTITY throbber.url "http://www.mozilla.org"> 
 <!ENTITY myNetscape.url "http://my.netscape.com">
 <!ENTITY fileMenu.label "File">
+<!ENTITY fileMenu.accesskey "f">
 <!ENTITY browserCmd.label "New Browser Window">
+<!ENTITY browserCmd.accesskey "n">
 <!ENTITY newMenu.label "New">
+<!ENTITY newMenu.accesskey "e">
 <!ENTITY newMailCmd.label "Mail Message">
+<!ENTITY newMailCmd.accesskey "m">
 <!ENTITY newBlankPageCmd.label "Blank Window">
+<!ENTITY newBlankPageCmd.accesskey "b" >
 <!ENTITY newPageFromTemplateCmd.label "Page Using Template">
+<!ENTITY newPageFromTemplateCmd.accesskey "t">
 <!ENTITY newPageFromDraftCmd.label "Page using Draft">
+<!ENTITY newPageFromDraftCmd.accesskey "d">
 <!ENTITY openCmd.label "Open Web Location...">
+<!ENTITY openCmd.accesskey "o">
 <!ENTITY openFileCmd.label "Open File...">
+<!ENTITY openFileCmd.accesskey "l">
 <!ENTITY sendPageCmd.label "Send Page">
+<!ENTITY sendPageCmd.accesskey "s">
 <!ENTITY editPageCmd.label "Edit Page">
+<!ENTITY editPageCmd.accesskey "e">
 <!ENTITY offlineMenu.label "Offline">
+<!ENTITY offlineMenu.accesskey "f">
 <!ENTITY offlineGoOfflineCmd.label "Go Offline">
+<!ENTITY offlineGoOfflineCmd.accesskey "g">
 <!ENTITY offlineSynchronizeCmd.label "Synchronize">
+<!ENTITY offlineSynchronizeCmd.accesskey "s">
 <!ENTITY printSetupCmd.label "Print Setup...">
+<!ENTITY printSetupCmd.accesskey "r">
 <!ENTITY printPreviewCmd.label "Print Preview">
+<!ENTITY printPreviewCmd.accesskey "v">
 <!ENTITY printCmd.label "Print...">
+<!ENTITY printCmd.accesskey "p">
 <!ENTITY closeCmd.label "Close">
+<!ENTITY closeCmd.accesskey "c">
 <!ENTITY quitCmd.label "Quit">
+<!ENTITY quitCmd.accesskey "q">
+
 <!ENTITY editMenu.label "Edit">
 <!ENTITY undoCmd.label "Undo">
 <!ENTITY redoCmd.label "Redo">
@@ -130,24 +150,26 @@
 <!ENTITY searchMenu.label "Search">
 <!ENTITY findOnCmd.label "Find On this page...">
 <!ENTITY findAgainCmd.label "Find Again">
-<!ENTITY searchParentCmd.label "Search Parent Item...">
-<!ENTITY searchParenet2Cmd.label "Search Parent2 Item">
-<!ENTITY appSpecificCmd.label "App Specific">
 <!ENTITY searchBookmarksHistoryCmd.label "Search Bookmarks/History">
 <!ENTITY searchInternetCmd.label "Search the Internet">
 <!ENTITY searchAllMailCmd.label "Search Mail/News">
 <!ENTITY searchAddressbookCmd.label "Search Addressbook">
 <!ENTITY searchComputerCmd.label "Search on this Computer...">
 <!ENTITY goMenu.label "Go">
+<!ENTITY goMenu.accesskey "g">
 <!ENTITY goBackCmd.label "Back">
+<!ENTITY goBackCmd.accesskey "b">
 <!ENTITY goForwardCmd.label "Forward">
+<!ENTITY goForwardCmd.accesskey "f">
 <!ENTITY goHomeCmd.label "Home">
-<!ENTITY goPrev1Cmd.label "Previous Site 1">
-<!ENTITY goPrev2Cmd.label "Previous Site 2">
-<!ENTITY goPrevnCmd.label "Previous Site n">
+<!ENTITY goHomeCmd.accesskey "h">
+
 <!ENTITY bookmarksMenu.label "Bookmarks">
+<!ENTITY bookmarksMenu.accesskey "b">
 <!ENTITY addCurPageCmd.label "Add Current Page">
+<!ENTITY addCurPageCmd.accesskey "a">
 <!ENTITY manBookmarksCmd.label "Manage Bookmarks...">
+<!ENTITY manBookmarksCmd.accesskey "m">
 
 <!ENTITY helpMenuCmd.label "Help">
 <!ENTITY helpContentsCmd.label "Help Contents">
