@@ -134,6 +134,14 @@ nsCSSToken::AppendToString(nsString& aBuffer)
       aBuffer.Append(PRUnichar('#'));
       aBuffer.Append(mIdent);
       break;
+    case eCSSToken_Includes:
+      aBuffer.Append(PRUnichar('~'));
+      aBuffer.Append(PRUnichar('='));
+      break;
+    case eCSSToken_Dashmatch:
+      aBuffer.Append(PRUnichar('|'));
+      aBuffer.Append(PRUnichar('='));
+      break;
 
     default:
       NS_ERROR("invalid token type");
@@ -382,60 +390,45 @@ PRBool nsCSSScanner::Next(PRInt32& aErrorCode, nsCSSToken& aToken)
         return ParseCComment(aErrorCode, aToken);
       }
     }
-    if (ch == '<') {  // consume HTML comment tags as comments
-      PRInt32 nextChar = Peek(aErrorCode);
-      if (nextChar == '!') {
-        (void) Read(aErrorCode);
-        aToken.mType = eCSSToken_HTMLComment;
-        aToken.mIdent.SetLength(0);
-        aToken.mIdent.Append(PRUnichar(ch));
-        aToken.mIdent.Append(PRUnichar(nextChar));
-        nextChar = Peek(aErrorCode);
-        while ((0 < nextChar) && (nextChar == '-')) {
-          Read(aErrorCode);
-          aToken.mIdent.Append(PRUnichar(nextChar));
-          nextChar = Peek(aErrorCode);
+    if (ch == '<') {  // consume HTML comment tags
+      if (LookAhead(aErrorCode, '!')) {
+        if (LookAhead(aErrorCode, '-')) {
+          if (LookAhead(aErrorCode, '-')) {
+            aToken.mType = eCSSToken_HTMLComment;
+            aToken.mIdent.SetLength(0);
+            aToken.mIdent.Append(PRUnichar('<'));
+            aToken.mIdent.Append(PRUnichar('!'));
+            aToken.mIdent.Append(PRUnichar('-'));
+            aToken.mIdent.Append(PRUnichar('-'));
+            return PR_TRUE;
+          }
+          Pushback('-');
         }
-        return PR_TRUE;
+        Pushback('!');
       }
     }
     if (ch == '-') {  // check for HTML comment end
-      PRInt32 nextChar = Peek(aErrorCode);
-      if (nextChar == '-') {
-        PRInt32 dashCount = 1;
-        PRBool white = PR_FALSE;
-        while (nextChar == '-') {
-          (void) Read(aErrorCode);
-          dashCount++;
-          nextChar = Peek(aErrorCode);
-        }
-        if ((nextChar == ' ') || (nextChar == '\n') || 
-            (nextChar == '\r') || (nextChar == '\t')) {
-          EatWhiteSpace(aErrorCode);
-          white = PR_TRUE;
-          nextChar = Peek(aErrorCode);
-        }
-        if (nextChar == '>') { // HTML end
-          (void) Read(aErrorCode);
+      if (LookAhead(aErrorCode, '-')) {
+        if (LookAhead(aErrorCode, '>')) {
           aToken.mType = eCSSToken_HTMLComment;
           aToken.mIdent.SetLength(0);
-          while (0 < dashCount--) {
-            aToken.mIdent.AppendWithConversion('-');
-          }
-          if (white) {
-            aToken.mIdent.AppendWithConversion(' ');
-          }
+          aToken.mIdent.AppendWithConversion('-');
+          aToken.mIdent.AppendWithConversion('-');
           aToken.mIdent.AppendWithConversion('>');
           return PR_TRUE;
         }
-        else {  // wasn't an end comment, push it all back
-          if (white) {
-            Pushback(' ');
-          }
-          while (0 < --dashCount) {
-            Pushback('-');
-          }
-        }
+        Pushback('-');
+      }
+    }
+
+    // INCLUDES ("~=") and DASHMATCH ("|=")
+    if (( ch == '|' ) || ( ch == '~')) {
+      PRInt32 nextChar = Read(aErrorCode);
+      if ( nextChar == '=' ) {
+        aToken.mType = (ch == '~') ? eCSSToken_Includes : eCSSToken_Dashmatch;
+        return PR_TRUE;
+      } else {
+        Pushback(nextChar);
       }
     }
   }
@@ -764,6 +757,7 @@ PRBool nsCSSScanner::ParseCComment(PRInt32& aErrorCode, nsCSSToken& aToken)
   return PR_TRUE;
 }
 
+#if 0
 PRBool nsCSSScanner::ParseEOLComment(PRInt32& aErrorCode, nsCSSToken& aToken)
 {
   nsString& ident = aToken.mIdent;
@@ -783,6 +777,7 @@ PRBool nsCSSScanner::ParseEOLComment(PRInt32& aErrorCode, nsCSSToken& aToken)
   aToken.mType = eCSSToken_WhiteSpace;
   return PR_TRUE;
 }
+#endif // 0
 
 PRBool nsCSSScanner::GatherString(PRInt32& aErrorCode, PRInt32 aStop,
                                   nsString& aBuffer)
