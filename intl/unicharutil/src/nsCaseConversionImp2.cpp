@@ -79,7 +79,7 @@ nsCompressedMap::nsCompressedMap(PRUnichar *aTable, PRUint32 aSize)
 
 nsCompressedMap::~nsCompressedMap()
 {
-   delete mCache;
+   delete[] mCache;
 }
 
 PRUnichar nsCompressedMap::Map(PRUnichar aChar)
