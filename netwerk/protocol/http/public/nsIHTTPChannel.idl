@@ -55,9 +55,6 @@ interface nsIHTTPChannel : nsIChannel
     */
 	attribute nsIInputStream PostDataStream;
 
-    /* Since multiple inheritence is not supported in idl */
-    attribute string ProxyHost;
-    attribute long ProxyPort;
     attribute PRBool UsingProxy;
 
     /* 

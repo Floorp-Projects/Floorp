@@ -19,17 +19,13 @@
  *
  * Contributor(s): 
  */
-#include "nsCOMPtr.h"
-#include "nscore.h"
-#include "nsIHTTPProtocolHandler.h"
-
-#include "nsIFactory.h"
 #include "nsIGenericFactory.h"
 #include "nsIServiceManager.h"
 #include "nsIModule.h"
 
 #include "nsXPComFactory.h"
-#include "nsIProtocolHandler.h" // for NS_NETWORK_PROTOCOL_PROGID_PREFIX
+
+#include "nsIHTTPProtocolHandler.h"
 #include "nsHTTPHandler.h"
 
 ////////////////////////////////////////////////////////////////////////
@@ -43,6 +39,5 @@ static nsModuleComponentInfo components[] =
     NS_NETWORK_PROTOCOL_PROGID_PREFIX "http",
     nsHTTPHandlerConstructor }
 };
-
   
 NS_IMPL_NSGETMODULE("nsHTTPHandlerModule", components)

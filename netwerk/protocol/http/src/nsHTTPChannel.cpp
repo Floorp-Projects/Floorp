@@ -136,7 +136,12 @@ nsHTTPChannel::~nsHTTPChannel()
     CRTFREEIF(mProxy);
 }
 
-NS_IMPL_ISUPPORTS4(nsHTTPChannel, nsIHTTPChannel, nsIChannel, nsIInterfaceRequestor, nsIProgressEventSink);
+NS_IMPL_ISUPPORTS5(nsHTTPChannel, 
+                   nsIHTTPChannel, 
+                   nsIChannel, 
+                   nsIInterfaceRequestor, 
+                   nsIProgressEventSink,
+                   nsIProxy);
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIRequest methods:
@@ -1849,7 +1854,7 @@ nsHTTPChannel::ProcessAuthentication(PRInt32 aStatusCode)
     return Authenticate(challenge, (407 == aStatusCode));
 }
 
-// nsIProxy methods- but not. since we cant multi in idl. 
+// nsIProxy methods
 NS_IMETHODIMP
 nsHTTPChannel::GetProxyHost(char* *o_ProxyHost)
 {
