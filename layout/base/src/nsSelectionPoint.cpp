@@ -24,6 +24,7 @@ nsSelectionPoint::nsSelectionPoint(nsIContent * aContent,
   fContent  = aContent;
   fOffset   = aOffset;
   fIsAnchor = aIsAnchor; 
+  fEntireContent = PR_FALSE;
 }
 
 nsSelectionPoint::~nsSelectionPoint() 
