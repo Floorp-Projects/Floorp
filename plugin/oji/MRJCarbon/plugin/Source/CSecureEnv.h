@@ -46,7 +46,6 @@
 #include "nsISecureEnv.h"
 #include "nsIThreadManager.h"
 #include "SupportsMixin.h"
-#include "nsAgg.h"
 
 class MRJPlugin;
 class MRJSession;
@@ -60,11 +59,6 @@ class JavaMessageQueue;
 
 class CSecureEnv : public nsISecureEnv, public nsIRunnable, private SupportsMixin {
 public:
-
-    ////////////////////////////////////////////////////////////////////////////
-    // from nsISupports and AggregatedQueryInterface:
-
-	// NS_DECL_AGGREGATED
     DECL_SUPPORTS_MIXIN
 
 	static NS_METHOD Create(MRJPlugin* plugin, JNIEnv* proxyEnv, const nsIID& aIID, void* *aInstancePtr);

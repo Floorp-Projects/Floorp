@@ -166,14 +166,16 @@ static void netscape_oji_JNIThread_run(JNIEnv* env, jobject self)
 	}
 }
 
-static void check_exceptions(JNIEnv* env)
+static bool check_exceptions(JNIEnv* env)
 {
     jthrowable exc = env->ExceptionOccurred();
 	if (exc) {
 	    env->ExceptionDescribe();
 	    env->ExceptionClear();
 	    env->DeleteLocalRef(exc);
+	    return true;
 	}
+	return false;
 }
 
 /**
@@ -190,13 +192,15 @@ static void CreateJNIThread(CSecureEnv* secureEnv)
 
 	jclass JNIThreadClass = env->FindClass("netscape.oji.JNIThread");
 	if (JNIThreadClass != NULL) {
-	    DebugStr("\pCreateJNIThread: found JNIThreadClass.");
 		JNINativeMethod method = { "run", "()V", &netscape_oji_JNIThread_run };
 		env->RegisterNatives(JNIThreadClass, &method, 1);
 		jmethodID constructorID = env->GetMethodID(JNIThreadClass, "<init>", "(I)V");
 		if (constructorID != NULL) {
 			jobject javaThread = env->NewObject(JNIThreadClass, constructorID, secureEnv);
 			for (;;) {
+				// was there some kind of exception? bail if so.
+				if (check_exceptions(env))
+				    break;
 				// give time to Java, to allow the thread to come up.
 				session->idle();
 				// has the thread made contact?
@@ -206,11 +210,7 @@ static void CreateJNIThread(CSecureEnv* secureEnv)
 				manager->Sleep();
 			}
 		}
-	} else {
-	    DebugStr("\pCreateJNIThread: failed.");
 	}
-
-    check_exceptions(env);
 }
 
 /**
@@ -330,34 +330,7 @@ void CSecureEnv::sendMessageFromJava(JNIEnv* javaEnv, JavaMessage* msg, Boolean 
 }
 
 ////////////////////////////////////////////////////////////////////////////
-// from nsISupports and AggregatedQueryInterface:
-
-// Thes macro expands to the aggregated query interface scheme.
-
-#if 0
-NS_IMPL_AGGREGATED(CSecureEnv);
-
-NS_METHOD
-CSecureEnv::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-    if (aIID.Equals(kISupportsIID)) {
-      *aInstancePtr = GetInner();
-      AddRef();
-      return NS_OK;
-    }
-    if (aIID.Equals(kISecureEnvIID)) {
-        *aInstancePtr = (nsISecureEnv*) this;
-        AddRef();
-        return NS_OK;
-    }
-    if (aIID.Equals(kIRunnableIID)) {
-        *aInstancePtr = (nsIRunnable*) this;
-        AddRef();
-        return NS_OK;
-    }
-    return NS_NOINTERFACE;
-}
-#endif
+// Table-driven nsISupports data.
 
 const InterfaceInfo CSecureEnv::sInterfaces[] = {
 	{ NS_ISECUREENV_IID, INTERFACE_OFFSET(CSecureEnv, nsISecureEnv) },
