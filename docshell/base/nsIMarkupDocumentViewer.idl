@@ -1,0 +1,82 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is the Mozilla browser.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications, Inc.  Portions created by Netscape are
+ * Copyright (C) 1999, Mozilla.  All Rights Reserved.
+ * 
+ * Contributor(s):
+ *   Travis Bogard <travis@netscape.com>
+ */
+
+#include "nsISupports.idl"
+
+/**
+ * The nsIContentViewerEdit    
+ */
+
+/**
+ * The nsIMarkupDocumentViewer
+ * This interface describes the properties of a content viewer 
+ * for a markup document - HTML or XML
+ */
+
+#include "nsISupports.idl"
+#include "domstubs.idl"
+
+
+[scriptable, uuid(69E5DE03-7B8B-11d3-AF61-00A024FFC08C)]
+interface nsIMarkupDocumentViewer : nsISupports
+{
+
+	/*
+	Scrolls to a given DOM content node. 
+	*/
+	void scrollToNode(in nsIDOMNode node);
+
+	/** if true, plugins are allowed within the doc shell.  default = true */
+	attribute boolean allowPlugins;
+
+	/*
+	XXX Comment here!
+	*/
+	attribute boolean isFrame;
+
+	/*
+	XXX Comment here!
+	*/
+	attribute wstring defaultCharacterSet;
+
+	/*
+	XXX Comment here!
+	*/
+	attribute wstring forceCharacterSet;
+
+	/*
+	XXX Comment here!
+	*/
+	attribute wstring hintCharacterSet;
+
+	/*
+	XXX Comment here!
+	*/
+	attribute PRInt32 hintCharacterSetSource;
+
+	//void GetCharacterSetHint(in wstring hintCharset, in nsCharsetSource charsetSource);
+
+	/**
+	* Tell the container to shrink-to-fit or grow-to-fit its contents
+	*/
+	void sizeToContent();
+};
