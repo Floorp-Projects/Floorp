@@ -35,10 +35,17 @@ JSValue interpret(InstructionStream& iCode, const JSValues& args)
 	JSValues registers(32);
 	static std::map<String, JSValue> globals;
 	
-    for (InstructionIterator pc = iCode.begin(); pc != iCode.end(); ++pc) {
+	InstructionIterator pc = iCode.begin();
+    while (pc != iCode.end()) {
         Instruction* instruction = *pc;
 	    switch (instruction->opcode()) {
-                case LOAD_NAME:
+		case MOVE_TO:
+			{
+				Move* i = static_cast<Move*>(instruction);
+				registers[op2(i)] = registers[op1(i)];
+			}
+			break;
+        case LOAD_NAME:
 			{
 				LoadName* i = static_cast<LoadName*>(instruction);
 				registers[op2(i)] = globals[*op1(i)];
@@ -72,14 +79,61 @@ JSValue interpret(InstructionStream& iCode, const JSValues& args)
 			{
 				Branch* i = static_cast<Branch*>(instruction);
 				pc = iCode.begin() + op1(i);
+				continue;
 			}
 			break;
-		case BRANCH_COND:
+		case BRANCH_LT:
 			{
 				BranchCond* i = static_cast<BranchCond*>(instruction);
-				// s << "target #" << t->itsOperand1 << ", R" << t->itsOperand2;
-				if (registers[op2(i)].i32)
+				if (registers[op2(i)].i32 < 0) {
 					pc = iCode.begin() + op1(i);
+					continue;
+				}
+			}
+			break;
+		case BRANCH_LE:
+			{
+				BranchCond* i = static_cast<BranchCond*>(instruction);
+				if (registers[op2(i)].i32 <= 0) {
+					pc = iCode.begin() + op1(i);
+					continue;
+				}
+			}
+			break;
+		case BRANCH_EQ:
+			{
+				BranchCond* i = static_cast<BranchCond*>(instruction);
+				if (registers[op2(i)].i32 == 0) {
+					pc = iCode.begin() + op1(i);
+					continue;
+				}
+			}
+			break;
+		case BRANCH_NE:
+			{
+				BranchCond* i = static_cast<BranchCond*>(instruction);
+				if (registers[op2(i)].i32 != 0) {
+					pc = iCode.begin() + op1(i);
+					continue;
+				}
+			}
+			break;
+		case BRANCH_GE:
+			{
+				BranchCond* i = static_cast<BranchCond*>(instruction);
+				if (registers[op2(i)].i32 >= 0) {
+					pc = iCode.begin() + op1(i);
+					continue;
+				}
+			}
+			break;
+		case BRANCH_GT:
+			{
+				BranchCond* i = static_cast<BranchCond*>(instruction);
+				if (registers[op2(i)].i32 > 0) {
+					pc = iCode.begin() + op1(i);
+					continue;
+				}
 			}
 			break;
 		case ADD:
@@ -89,16 +143,32 @@ JSValue interpret(InstructionStream& iCode, const JSValues& args)
 				registers[op3(i)] = JSValue(registers[op1(i)].f64 + registers[op2(i)].f64);
 			}
 			break;
+		case SUBTRACT:
+			{
+				// could get clever here with Functional forms.
+				Arithmetic* i = static_cast<Arithmetic*>(instruction);
+				registers[op3(i)] = JSValue(registers[op1(i)].f64 - registers[op2(i)].f64);
+			}
+			break;
+		case MULTIPLY:
+			{
+				// could get clever here with Functional forms.
+				Arithmetic* i = static_cast<Arithmetic*>(instruction);
+				registers[op3(i)] = JSValue(registers[op1(i)].f64 * registers[op2(i)].f64);
+			}
+			break;
+		case DIVIDE:
+			{
+				// could get clever here with Functional forms.
+				Arithmetic* i = static_cast<Arithmetic*>(instruction);
+				registers[op3(i)] = JSValue(registers[op1(i)].f64 / registers[op2(i)].f64);
+			}
+			break;
 		case COMPARE:
 			{
 				Arithmetic* i = static_cast<Arithmetic*>(instruction);
-				registers[op3(i)].i32 = registers[op1(i)].f64 == registers[op2(i)].f64;
-			}
-			break;
-		case MOVE_TO:
-			{
-				Move* i = static_cast<Move*>(instruction);
-				registers[op2(i)] = registers[op1(i)];
+				float64 diff = (registers[op1(i)].f64 - registers[op2(i)].f64);
+				registers[op3(i)].i32 = (diff == 0.0 ? 0 : (diff > 0.0 ? 1 : -1));
 			}
 			break;
 		case NOT:
@@ -107,9 +177,19 @@ JSValue interpret(InstructionStream& iCode, const JSValues& args)
 				registers[op2(i)].i32 = !registers[op1(i)].i32;
 			}
 			break;
+		case RETURN:
+		    {
+		        Return* i = static_cast<Return*>(instruction);
+		        result = registers[op1(i)];
+		        pc = iCode.end();
+		        continue;
+		    }
         default:
             break;
     	}
+    	
+    	// increment the program counter.
+    	++pc;
     }
 
 	return result;
