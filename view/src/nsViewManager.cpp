@@ -24,6 +24,9 @@
 #include "nsGfxCIID.h"
 #include "nsIScrollableView.h"
 #include "nsIRegion.h"
+#include "nsView.h"
+
+static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
 
 static const PRBool gsDebug = PR_FALSE;
 
@@ -145,6 +148,9 @@ nsresult nsViewManager::Init(nsIPresContext* aPresContext)
 
   mRefreshEnabled = PR_TRUE;
 
+  mMouseGrabber = nsnull;
+  mKeyGrabber = nsnull;
+
   return rv;
 }
 
@@ -239,9 +245,7 @@ void nsViewManager :: GetWindowOffsets(nscoord *xoffset, nscoord *yoffset)
   {
     nsIScrollableView *scroller;
 
-    static NS_DEFINE_IID(kscroller, NS_ISCROLLABLEVIEW_IID);
-
-    if (NS_OK == mRootView->QueryInterface(kscroller, (void **)&scroller))
+    if (NS_OK == mRootView->QueryInterface(kIScrollableViewIID, (void **)&scroller))
     {
       scroller->GetVisibleOffset(xoffset, yoffset);
     }
@@ -258,9 +262,7 @@ void nsViewManager :: SetWindowOffsets(nscoord xoffset, nscoord yoffset)
   {
     nsIScrollableView *scroller;
 
-    static NS_DEFINE_IID(kscroller, NS_ISCROLLABLEVIEW_IID);
-
-    if (NS_OK == mRootView->QueryInterface(kscroller, (void **)&scroller))
+    if (NS_OK == mRootView->QueryInterface(kIScrollableViewIID, (void **)&scroller))
     {
       scroller->SetVisibleOffset(xoffset, yoffset);
     }
@@ -273,9 +275,7 @@ void nsViewManager :: ResetScrolling(void)
   {
     nsIScrollableView *scroller;
 
-    static NS_DEFINE_IID(kscroller, NS_ISCROLLABLEVIEW_IID);
-
-    if (NS_OK == mRootView->QueryInterface(kscroller, (void **)&scroller))
+    if (NS_OK == mRootView->QueryInterface(kIScrollableViewIID, (void **)&scroller))
     {
       scroller->ComputeContainerSize();
     }
@@ -592,29 +592,146 @@ void nsViewManager :: UpdateView(nsIView *aView, const nsRect &aRect, PRUint32 a
   }
 }
 
-PRBool nsViewManager :: DispatchEvent(nsIEvent *event)
+nsEventStatus nsViewManager :: DispatchEvent(nsGUIEvent *aEvent)
 {
-  return PR_TRUE;
+  nsEventStatus result = nsEventStatus_eIgnore;
+
+  switch(aEvent->message)
+  {
+    case NS_SIZE:
+    {
+      nsIView*      view = nsView::GetViewFor(aEvent->widget);
+      if (nsnull != view) {
+
+        nscoord width = ((nsSizeEvent*)aEvent)->windowSize->width;
+        nscoord height = ((nsSizeEvent*)aEvent)->windowSize->height;
+
+        // The root view may not be set if this is the resize associated with
+        // window creation
+
+        if (view == mRootView)
+        {
+          // Convert from pixels to twips
+          float p2t = mContext->GetPixelsToTwips();
+          nsIScrollableView *scrollView;
+
+          //XXX hey look, a hack! :) i'm not proud of it, but it does
+          //work. the purpose is to prevent resizes of the view if the
+          //clip size (assumed to be the size of this window) is the same
+          //as the new size we get here. MMP
+
+          if (NS_OK == mRootView->QueryInterface(kIScrollableViewIID, (void **)&scrollView))
+          {
+            nscoord sizex, sizey;
+            float t2p = mContext->GetTwipsToPixels();
+
+            scrollView->GetClipSize(&sizex, &sizey);
+
+            if ((width == NSTwipsToIntPixels(sizex, t2p)) &&
+                (height == NSTwipsToIntPixels(sizey, t2p)))
+            {
+              break;
+            }
+          }
+
+          SetWindowDimensions(NSIntPixelsToTwips(width, p2t),
+                              NSIntPixelsToTwips(height, p2t));
+          result = nsEventStatus_eConsumeNoDefault;
+        }
+      }
+
+      break;
+    }
+
+    case NS_PAINT:
+    {
+      nsIView*      view = nsView::GetViewFor(aEvent->widget);
+      if (nsnull != view) {
+
+        float             convert = mContext->GetPixelsToTwips();
+        nsRect            trect = *((nsPaintEvent*)aEvent)->rect;
+        nsIDeviceContext  *dx = mContext->GetDeviceContext();
+
+        trect *= convert;
+
+//printf("damage repair...\n");
+
+        UpdateView(view, trect,
+                   NS_VMREFRESH_SCREEN_RECT |
+                   NS_VMREFRESH_IMMEDIATE |
+                   NS_VMREFRESH_AUTO_DOUBLE_BUFFER);
+
+        NS_RELEASE(dx);
+
+        result = nsEventStatus_eConsumeNoDefault;
+      }
+      break;
+    }
+
+    case NS_DESTROY:
+      result = nsEventStatus_eConsumeNoDefault;
+      break;
+
+    default:
+    {
+      nsIView* view;
+        
+      if (nsnull != mMouseGrabber && NS_IS_MOUSE_EVENT(aEvent)) {
+        view = mMouseGrabber;
+      }
+      else if (nsnull != mKeyGrabber && NS_IS_KEY_EVENT(aEvent)) {
+        view = mKeyGrabber;
+      }
+      else {
+        view = nsView::GetViewFor(aEvent->widget);
+      }
+
+      if (nsnull != view) {
+        nsIViewManager *vm = view->GetViewManager();
+        nsIPresContext  *cx = vm->GetPresContext();
+
+        // pass on to view somewhere else to deal with
+
+        aEvent->point.x = NSIntPixelsToTwips(aEvent->point.x, cx->GetPixelsToTwips());
+        aEvent->point.y = NSIntPixelsToTwips(aEvent->point.y, cx->GetPixelsToTwips());
+
+        
+        result = view->HandleEvent(aEvent, NS_VIEW_FLAG_CHECK_CHILDREN | 
+                                           NS_VIEW_FLAG_CHECK_PARENT |
+                                           NS_VIEW_FLAG_CHECK_SIBLINGS);
+
+        aEvent->point.x = NSTwipsToIntPixels(aEvent->point.x, cx->GetTwipsToPixels());
+        aEvent->point.y = NSTwipsToIntPixels(aEvent->point.y, cx->GetTwipsToPixels());
+
+        NS_RELEASE(cx);
+        NS_RELEASE(vm);
+      }
+      break;
+    }
+  }
+  return result;
 }
 
 PRBool nsViewManager :: GrabMouseEvents(nsIView *aView)
 {
+  mMouseGrabber = aView;
   return PR_TRUE;
 }
 
 PRBool nsViewManager :: GrabKeyEvents(nsIView *aView)
 {
+  mKeyGrabber = aView;
   return PR_TRUE;
 }
 
 nsIView * nsViewManager :: GetMouseEventGrabber()
 {
-  return nsnull;
+  return mMouseGrabber;
 }
 
 nsIView * nsViewManager :: GetKeyEventGrabber()
 {
-  return nsnull;
+  return mKeyGrabber;
 }
 
 void nsViewManager :: InsertChild(nsIView *parent, nsIView *child, nsIView *sibling,
@@ -940,9 +1057,7 @@ void nsViewManager :: ShowQuality(PRBool aShow)
 {
   nsIScrollableView *scroller;
 
-  static NS_DEFINE_IID(kscroller, NS_ISCROLLABLEVIEW_IID);
-
-  if (NS_OK == mRootView->QueryInterface(kscroller, (void **)&scroller))
+  if (NS_OK == mRootView->QueryInterface(kIScrollableViewIID, (void **)&scroller))
   {
     scroller->ShowQuality(aShow);
   }
@@ -953,9 +1068,7 @@ PRBool nsViewManager :: GetShowQuality(void)
   nsIScrollableView *scroller;
   PRBool            retval = PR_FALSE;
 
-  static NS_DEFINE_IID(kscroller, NS_ISCROLLABLEVIEW_IID);
-
-  if (NS_OK == mRootView->QueryInterface(kscroller, (void **)&scroller))
+  if (NS_OK == mRootView->QueryInterface(kIScrollableViewIID, (void **)&scroller))
   {
     retval = scroller->GetShowQuality();
   }
@@ -967,9 +1080,7 @@ void nsViewManager :: SetQuality(nsContentQuality aQuality)
 {
   nsIScrollableView *scroller;
 
-  static NS_DEFINE_IID(kscroller, NS_ISCROLLABLEVIEW_IID);
-
-  if (NS_OK == mRootView->QueryInterface(kscroller, (void **)&scroller))
+  if (NS_OK == mRootView->QueryInterface(kIScrollableViewIID, (void **)&scroller))
   {
     scroller->SetQuality(aQuality);
   }

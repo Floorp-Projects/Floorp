@@ -64,7 +64,7 @@ public:
                           PRUint32 aUpdateFlags);
   virtual void UpdateView(nsIView *aView, const nsRect &aRect, PRUint32 aUpdateFlags);
 
-  virtual PRBool DispatchEvent(nsIEvent *event);
+  virtual nsEventStatus DispatchEvent(nsGUIEvent *aEvent);
 
   virtual PRBool GrabMouseEvents(nsIView *aView);
   virtual PRBool GrabKeyEvents(nsIView *aView);
@@ -132,6 +132,8 @@ private:
   nsIRegion         *mDirtyRegion;
   PRInt32           mTransCnt;
   PRBool            mRefreshEnabled;
+  nsIView           *mMouseGrabber;
+  nsIView           *mKeyGrabber;
 
   static PRUint32          mVMCount;        //number of viewmanagers
   static nsDrawingSurface  mDrawingSurface; //single drawing surface

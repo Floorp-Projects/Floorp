@@ -44,116 +44,13 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
 { 
 //printf(" %d %d %d (%d,%d) \n", aEvent->widget, aEvent->widgetSupports, 
 //       aEvent->message, aEvent->point.x, aEvent->point.y);
-  nsIView*      view = nsView::GetViewFor(aEvent->widget);
   nsEventStatus result = nsEventStatus_eIgnore;
-
-  if (nsnull != view)
-  {
-    switch(aEvent->message)
-    {
-      case NS_SIZE:
-      {
-        nscoord width = ((nsSizeEvent*)aEvent)->windowSize->width;
-        nscoord height = ((nsSizeEvent*)aEvent)->windowSize->height;
-
-        // Inform the view manager that the root window has been resized
-        nsIViewManager*  vm = view->GetViewManager();
-        nsIPresContext* presContext = vm->GetPresContext();
-
-        // The root view may not be set if this is the resize associated with
-        // window creation
-
-        nsIView* rootView = vm->GetRootView();
-
-        if (view == rootView)
-        {
-          // Convert from pixels to twips
-          float p2t = presContext->GetPixelsToTwips();
-          nsIScrollableView *scrollView;
-
-          //XXX hey look, a hack! :) i'm not proud of it, but it does
-          //work. the purpose is to prevent resizes of the view if the
-          //clip size (assumed to be the size of this window) is the same
-          //as the new size we get here. MMP
-
-          if (NS_OK == rootView->QueryInterface(kIScrollableViewIID, (void **)&scrollView))
-          {
-            nscoord sizex, sizey;
-            float t2p = presContext->GetTwipsToPixels();
-
-            scrollView->GetClipSize(&sizex, &sizey);
-
-            if ((width == NSTwipsToIntPixels(sizex, t2p)) &&
-                (height == NSTwipsToIntPixels(sizey, t2p)))
-            {
-              NS_RELEASE(presContext);
-              NS_RELEASE(vm);
-              break;
-            }
-          }
-
-          vm->SetWindowDimensions(NSIntPixelsToTwips(width, p2t),
-                                  NSIntPixelsToTwips(height, p2t));
-          result = nsEventStatus_eConsumeNoDefault;
-        }
-
-        NS_RELEASE(presContext);
-        NS_RELEASE(vm);
-
-        break;
-      }
-
-      case NS_PAINT:
-      {
-        nsIViewManager    *vm = view->GetViewManager();
-        nsIPresContext    *px = vm->GetPresContext();
-        float             convert = px->GetPixelsToTwips();
-        nsRect            trect = *((nsPaintEvent*)aEvent)->rect;
-        nsIDeviceContext  *dx = px->GetDeviceContext();
-
-        trect *= convert;
-
-//printf("damage repair...\n");
-
-        vm->UpdateView(view, trect,
-                       NS_VMREFRESH_SCREEN_RECT |
-                       NS_VMREFRESH_IMMEDIATE |
-                       NS_VMREFRESH_AUTO_DOUBLE_BUFFER);
-
-        NS_RELEASE(dx);
-        NS_RELEASE(px);
-        NS_RELEASE(vm);
-
-        result = nsEventStatus_eConsumeNoDefault;
-
-        break;
-      }
-
-      case NS_DESTROY:
-        result = nsEventStatus_eConsumeNoDefault;
-        break;
-
-      default:
-        nsIViewManager *vm = view->GetViewManager();
-        nsIPresContext  *cx = vm->GetPresContext();
-
-        // pass on to view somewhere else to deal with
-
-        aEvent->point.x = NSIntPixelsToTwips(aEvent->point.x, cx->GetPixelsToTwips());
-        aEvent->point.y = NSIntPixelsToTwips(aEvent->point.y, cx->GetPixelsToTwips());
-
-        result = view->HandleEvent(aEvent, NS_VIEW_FLAG_CHECK_CHILDREN | 
-                                           NS_VIEW_FLAG_CHECK_PARENT |
-                                           NS_VIEW_FLAG_CHECK_SIBLINGS);
-
-        aEvent->point.x = NSTwipsToIntPixels(aEvent->point.x, cx->GetTwipsToPixels());
-        aEvent->point.y = NSTwipsToIntPixels(aEvent->point.y, cx->GetTwipsToPixels());
-
-        NS_RELEASE(cx);
-        NS_RELEASE(vm);
-
-        break;
-    }
+  
+  nsIView*      view = nsView::GetViewFor(aEvent->widget);
+  if (nsnull != view) {
+    nsIViewManager*  vm = view->GetViewManager();
+    result = vm->DispatchEvent(aEvent);
+    NS_RELEASE(vm);
   }
 
   return result;
@@ -590,9 +487,7 @@ nsEventStatus nsView :: HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags)
   nsEventStatus retval = nsEventStatus_eIgnore;
 
   //see if any of this view's children can process the event
-  if ((aEventFlags & NS_VIEW_FLAG_CHECK_CHILDREN) &&
-      (retval == nsEventStatus_eIgnore))
-  {
+  if (retval == nsEventStatus_eIgnore) {
     PRInt32 numkids = GetChildCount();
     nsRect  trect;
     nscoord x, y;
@@ -604,7 +499,7 @@ nsEventStatus nsView :: HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags)
     {
       nsIView *pKid = GetChild(cnt);
       nscoord lx, ly;
-      
+
       pKid->GetBounds(trect);
 
       lx = x - trect.x;
@@ -631,7 +526,7 @@ nsEventStatus nsView :: HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags)
   }
 
   //if the view's children didn't take the event, check the view itself.
-  if ((retval == nsEventStatus_eIgnore) && (nsnull != mFrame))
+  if (retval == nsEventStatus_eIgnore && nsnull != mFrame)
   {
     nsIPresContext  *cx = mViewManager->GetPresContext();
     nscoord         xoff, yoff;
@@ -647,44 +542,6 @@ nsEventStatus nsView :: HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags)
     event->point.y -= yoff;
 
     NS_RELEASE(cx);
-  }
-
-  //see if any of this views siblings can process this event
-  //we only go from the next sibling since this is a z-ordered
-  //list
-
-  if ((aEventFlags & NS_VIEW_FLAG_CHECK_SIBLINGS) &&
-      (retval == nsEventStatus_eIgnore))
-  {
-    nsIView *pNext = GetNextSibling();
-
-    while (pNext)
-    {
-      retval = pNext->HandleEvent(event, NS_VIEW_FLAG_CHECK_CHILDREN);
-
-      if (retval != PR_FALSE)
-        break;
-
-      pNext = pNext->GetNextSibling();
-    }
-  }
-  
-  //no-one has a clue what to do with this... so ask the
-  //parents. kind of mimics life, huh?
-
-  if ((aEventFlags & NS_VIEW_FLAG_CHECK_PARENT) && (retval == nsEventStatus_eIgnore))
-  {
-    nsIView *pParent = GetParent();
-
-    while (pParent)
-    {
-      retval = pParent->HandleEvent(event, NS_VIEW_FLAG_CHECK_SIBLINGS);
-
-      if (retval == nsEventStatus_eIgnore)
-        break;
-
-      pParent = pParent->GetParent();
-    }
   }
 
   return retval;

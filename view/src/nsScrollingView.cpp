@@ -57,7 +57,7 @@ ScrollBarView :: ~ScrollBarView()
 
 nsEventStatus ScrollBarView :: HandleEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags)
 {
-  nsEventStatus retval;
+  nsEventStatus retval = nsEventStatus_eIgnore;
 
   switch (aEvent->message)
   {
@@ -73,7 +73,6 @@ nsEventStatus ScrollBarView :: HandleEvent(nsGUIEvent *aEvent, PRUint32 aEventFl
       break;
 
     default:
-      retval = nsEventStatus_eIgnore;
       break;
   }
 
