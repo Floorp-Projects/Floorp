@@ -37,9 +37,7 @@
 #include "jstypes.h"
 #include "icodegenerator.h"
 
-#include <iomanip>
 #include <stdexcept>
-
 
 namespace JavaScript {
 namespace ICG {
