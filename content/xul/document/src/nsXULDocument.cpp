@@ -296,7 +296,7 @@ public:
   }
 };
 
-NS_IMPL_ISUPPORTS(nsProxyLoadStream, NS_GET_IID(nsIInputStream));
+NS_IMPL_ISUPPORTS1(nsProxyLoadStream, nsIInputStream);
 
 //----------------------------------------------------------------------
 //
@@ -6438,7 +6438,7 @@ nsXULDocument::ParserObserver::~ParserObserver()
     NS_IF_RELEASE(mDocument);
 }
 
-NS_IMPL_ISUPPORTS(nsXULDocument::ParserObserver, NS_GET_IID(nsIStreamObserver));
+NS_IMPL_ISUPPORTS1(nsXULDocument::ParserObserver, nsIStreamObserver);
 
 NS_IMETHODIMP
 nsXULDocument::ParserObserver::OnStartRequest(nsIChannel* aChannel,
@@ -6538,7 +6538,7 @@ XULElementFactoryImpl::~XULElementFactoryImpl()
 }
 
 
-NS_IMPL_ISUPPORTS(XULElementFactoryImpl, NS_GET_IID(nsIElementFactory));
+NS_IMPL_ISUPPORTS1(XULElementFactoryImpl, nsIElementFactory)
 
 
 nsresult

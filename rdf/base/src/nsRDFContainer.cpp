@@ -106,7 +106,7 @@ nsIRDFResource*       RDFContainerImpl::kRDF_nextVal;
 ////////////////////////////////////////////////////////////////////////
 // nsISupports interface
 
-NS_IMPL_ISUPPORTS(RDFContainerImpl, NS_GET_IID(nsIRDFContainer));
+NS_IMPL_ISUPPORTS1(RDFContainerImpl, nsIRDFContainer)
 
 
 

@@ -150,7 +150,7 @@ Observer::Observer()
     NS_INIT_REFCNT();
 }
 
-NS_IMPL_ISUPPORTS(Observer, NS_GET_IID(nsIRDFObserver));
+NS_IMPL_ISUPPORTS1(Observer, nsIRDFObserver)
 
 static nsresult
 rdf_WriteOp(const char* aOp,

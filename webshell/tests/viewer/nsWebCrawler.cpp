@@ -60,7 +60,6 @@
 #include "nsIWebNavigation.h"
 
 static NS_DEFINE_IID(kIDocumentLoaderObserverIID, NS_IDOCUMENTLOADEROBSERVER_IID);
-static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
 static NS_DEFINE_IID(kFrameUtilCID, NS_FRAME_UTIL_CID);
 static NS_DEFINE_IID(kIFrameUtilIID, NS_IFRAME_UTIL_IID);
 static NS_DEFINE_IID(kIXMLContentIID, NS_IXMLCONTENT_IID);
@@ -212,7 +211,7 @@ nsWebCrawler::~nsWebCrawler()
   delete mVisited;
 }
 
-NS_IMPL_ISUPPORTS(nsWebCrawler, kIDocumentLoaderObserverIID)
+NS_IMPL_ISUPPORTS1(nsWebCrawler, nsIDocumentLoaderObserver)
 
 NS_IMETHODIMP
 nsWebCrawler::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL,
@@ -760,7 +759,7 @@ nsWebCrawler::FindMoreURLs()
     docShell->GetContentViewer(&cv);
     if (nsnull != cv) {
       nsIDocumentViewer* docv = nsnull;
-      cv->QueryInterface(kIDocumentViewerIID, (void**) &docv);
+      cv->QueryInterface(NS_GET_IID(nsIDocumentViewer), (void**) &docv);
       if (nsnull != docv) {
         nsIDocument* doc = nsnull;
         docv->GetDocument(doc);
@@ -863,7 +862,7 @@ nsWebCrawler::GetPresShell()
     docShell->GetContentViewer(&cv);
     if (nsnull != cv) {
       nsIDocumentViewer* docv = nsnull;
-      cv->QueryInterface(kIDocumentViewerIID, (void**) &docv);
+      cv->QueryInterface(NS_GET_IID(nsIDocumentViewer), (void**) &docv);
       if (nsnull != docv) {
         nsIPresContext* cx;
         docv->GetPresContext(cx);

@@ -82,7 +82,7 @@ nsTimeBomb::~nsTimeBomb()
 {
 }
 
-NS_IMPL_ISUPPORTS(nsTimeBomb, NS_GET_IID(nsITimeBomb));
+NS_IMPL_ISUPPORTS1(nsTimeBomb, nsITimeBomb)
 
 NS_IMETHODIMP
 nsTimeBomb::Init()

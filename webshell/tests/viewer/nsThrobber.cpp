@@ -40,7 +40,6 @@
 static NS_DEFINE_IID(kChildCID, NS_CHILD_CID);
 
 static NS_DEFINE_IID(kIWidgetIID,        NS_IWIDGET_IID);
-static NS_DEFINE_IID(kIImageObserverIID, NS_IIMAGEREQUESTOBSERVER_IID);
 static NS_DEFINE_IID(kISupportsIID,      NS_ISUPPORTS_IID);
 
 
@@ -212,7 +211,7 @@ nsThrobber::Destroy()
   }
 }
 
-NS_IMPL_ISUPPORTS(nsThrobber, kIImageObserverIID)
+NS_IMPL_ISUPPORTS1(nsThrobber, nsIImageRequestObserver)
 
 nsresult
 nsThrobber::Init(nsIWidget* aParent, const nsRect& aBounds, const nsString& aFileNameMask, PRInt32 aNumImages)

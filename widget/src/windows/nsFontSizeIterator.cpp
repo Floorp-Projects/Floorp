@@ -27,10 +27,7 @@
 #include "nsFont.h"
 #include "nsVoidArray.h"
  
-
-NS_IMPL_ADDREF(nsFontSizeIterator)
-NS_IMPL_RELEASE(nsFontSizeIterator)
-NS_IMPL_QUERY_INTERFACE(nsFontSizeIterator, NS_GET_IID(nsIFontSizeIterator))
+NS_IMPL_ISUPPORTS1(nsFontSizeIterator, nsIFontSizeIterator)
 
 //----------------------------------------------------------
 nsFontSizeIterator::nsFontSizeIterator() 

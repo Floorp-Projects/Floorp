@@ -36,7 +36,6 @@
 #include "nsIStreamListener.h"
 #include "nsGfxCIID.h"
 
-static NS_DEFINE_IID(kIImageGroupIID, NS_IIMAGEGROUP_IID);
 static NS_DEFINE_IID(kImageManagerCID, NS_IMAGEMANAGER_CID);
 
 class ImageGroupImpl : public nsIImageGroup
@@ -120,7 +119,7 @@ ImageGroupImpl::~ImageGroupImpl()
   NS_IF_RELEASE(mNetContext);
 }
 
-NS_IMPL_ISUPPORTS(ImageGroupImpl, kIImageGroupIID)
+NS_IMPL_ISUPPORTS1(ImageGroupImpl, nsIImageGroup)
 
 static void ns_observer_proc (XP_Observable aSource,
                               XP_ObservableMsg	aMsg, 
@@ -383,5 +382,5 @@ NS_NewImageGroup(nsIImageGroup **aInstancePtrResult)
      return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return group->QueryInterface(kIImageGroupIID, (void **) aInstancePtrResult);
+  return group->QueryInterface(NS_GET_IID(nsIImageGroup), (void **) aInstancePtrResult);
 }

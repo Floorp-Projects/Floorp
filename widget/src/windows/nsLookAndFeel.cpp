@@ -28,7 +28,7 @@
  
 static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 
-NS_IMPL_ISUPPORTS(nsLookAndFeel, NS_ILOOKANDFEEL_IID)
+NS_IMPL_ISUPPORTS1(nsLookAndFeel, nsILookAndFeel)
 
 nsLookAndFeel::nsLookAndFeel() : nsILookAndFeel()
 {

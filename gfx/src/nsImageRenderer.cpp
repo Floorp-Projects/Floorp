@@ -94,7 +94,7 @@ ImageRendererImpl::ImageRendererImpl()
   NS_INIT_REFCNT();
 }
 
-NS_IMPL_ISUPPORTS(ImageRendererImpl, kIImageRendererIID)
+NS_IMPL_ISUPPORTS1(ImageRendererImpl, ilIImageRenderer)
 
 
 NS_IMETHODIMP
@@ -351,5 +351,5 @@ NS_NewImageRenderer(ilIImageRenderer  **aInstancePtrResult)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return renderer->QueryInterface(kIImageRendererIID, (void **)aInstancePtrResult);
+  return renderer->QueryInterface(NS_GET_IID(ilIImageRenderer), (void **)aInstancePtrResult);
 }

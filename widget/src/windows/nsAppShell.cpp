@@ -37,7 +37,7 @@
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kTimerManagerCID, NS_TIMERMANAGER_CID);
 
-NS_IMPL_ISUPPORTS(nsAppShell, NS_IAPPSHELL_IID) 
+NS_IMPL_ISUPPORTS1(nsAppShell, nsIAppShell) 
 
 static int gKeepGoing = 1;
 //-------------------------------------------------------------------------

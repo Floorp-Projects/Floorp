@@ -52,7 +52,6 @@
 #include "nsIPref.h"
 
 static NS_DEFINE_CID(kStreamConvServiceCID, NS_STREAMCONVERTERSERVICE_CID);
-static NS_DEFINE_IID(kIImageNetContextIID, IL_INETCONTEXT_IID);
 static NS_DEFINE_IID(kIURLIID, NS_IURL_IID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
@@ -598,7 +597,7 @@ ImageNetContextImpl::~ImageNetContextImpl()
   }
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS(ImageNetContextImpl, kIImageNetContextIID)
+NS_IMPL_THREADSAFE_ISUPPORTS1(ImageNetContextImpl, ilINetContext)
 
 ilINetContext* 
 ImageNetContextImpl::Clone()
@@ -893,6 +892,6 @@ Need code to check freshness of necko cache.
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return cx->QueryInterface(kIImageNetContextIID, (void **) aInstancePtrResult);
+  return cx->QueryInterface(NS_GET_IID(ilINetContext), (void **) aInstancePtrResult);
 
 }

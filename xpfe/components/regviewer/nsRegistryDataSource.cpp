@@ -766,7 +766,7 @@ nsRegistryDataSource::SubkeyEnumerator::ConvertRegistryNodeToResource(nsISupport
     return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS(nsRegistryDataSource::SubkeyEnumerator, NS_GET_IID(nsISimpleEnumerator));
+NS_IMPL_ISUPPORTS1(nsRegistryDataSource::SubkeyEnumerator, nsISimpleEnumerator)
 
 NS_IMETHODIMP
 nsRegistryDataSource::SubkeyEnumerator::HasMoreElements(PRBool* _retval)

@@ -85,7 +85,6 @@ static void GenerateSingleByte(nsCharSetInfo* aSelf);
 static void GenerateMultiByte(nsCharSetInfo* aSelf);
 
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
-static NS_DEFINE_IID(kIFontMetricsIID, NS_IFONT_METRICS_IID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 nsGlobalFont* nsFontMetricsWin::gGlobalFonts = nsnull;
@@ -229,31 +228,10 @@ nsFontMetricsWin :: Release()
   return mRefCnt;
 }
 
-nsresult
-nsFontMetricsWin :: QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  *aInstancePtr = NULL;
-
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-  static NS_DEFINE_IID(kClassIID, kIFontMetricsIID);
-  if (aIID.Equals(kClassIID)) {
-    *aInstancePtr = (void*) this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtr = (void*) ((nsISupports*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
+NS_IMPL_QUERY_INTERFACE1(nsFontMetricsWin, nsIFontMetrics)
+  
 #else
-NS_IMPL_ISUPPORTS(nsFontMetricsWin, kIFontMetricsIID)
+NS_IMPL_ISUPPORTS1(nsFontMetricsWin, nsIFontMetrics)
 #endif
 
 NS_IMETHODIMP
@@ -4208,8 +4186,7 @@ nsFontEnumeratorWin::nsFontEnumeratorWin()
   NS_INIT_REFCNT();
 }
 
-NS_IMPL_ISUPPORTS(nsFontEnumeratorWin,
-                  NS_GET_IID(nsIFontEnumerator));
+NS_IMPL_ISUPPORTS1(nsFontEnumeratorWin,nsIFontEnumerator)
 
 static int gInitializedFontEnumerator = 0;
 
