@@ -383,8 +383,10 @@ protected:
   nsresult SetHrefWithContext(JSContext* cx, const nsAReadableString& aHref,
                               PRBool aReplace);
 
-  nsresult GetSourceURL(JSContext* cx,
-                        nsIURI** sourceURL);
+  nsresult GetSourceURL(JSContext* cx, nsIURI** sourceURL);
+  nsresult GetSourceBaseURL(JSContext* cx, nsIURI** sourceURL);
+  nsresult GetSourceDocument(JSContext* cx, nsIDocument** aDocument);
+
   nsresult CheckURL(nsIURI *url, nsIDocShellLoadInfo** aLoadInfo);
 
   nsIDocShell *mDocShell; // Weak Reference
