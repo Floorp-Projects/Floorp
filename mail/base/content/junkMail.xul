@@ -204,6 +204,14 @@
           <hbox class="indent">
             <checkbox id="level" oncommand="conditionallyEnableUI(null);" accesskey="&level.accesskey;" label="&level.label;"/>
           </hbox>
+          
+          <separator/>
+          <description width="1">&resetTrainingDescription.label;</description>
+          <separator class="thin"/>
+          <hbox class="indent">
+            <spacer flex="1"/>
+            <button label="&resetTrainingData.label;" accesskey="&resetTrainingData.accesskey;" oncommand="resetTrainingData()"/>
+          </hbox>
         </vbox>
 
 #if 0

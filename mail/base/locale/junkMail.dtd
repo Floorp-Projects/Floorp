@@ -4,7 +4,7 @@
 <!-- Tab titles -->
 <!ENTITY settingsTab.label "Settings">
 <!ENTITY whiteListTab.label "White Lists">
-<!ENTITY adaptiveTab.label "Adaptive Filters">
+<!ENTITY adaptiveTab.label "Adaptive Filter">
 <!ENTITY blackListsTab.label "Black Lists">
 
 <!-- Settings tab -->
@@ -33,10 +33,14 @@
 <!-- Adaptive Filter tab -->
 
 <!ENTITY adaptiveInfo.label "&brandShortName; can be trained to analyze the contents of your incoming messages and identify those that are most likely to be junk. This can be an extremely effective tool for detecting junk mail.">
-<!ENTITY adaptiveCaption.label "Adaptive Filters">
+<!ENTITY adaptiveCaption.label "Adaptive Filter">
 <!ENTITY trainingWarning.label "If enabled, you must first train &brandShortName; to identify junk mail by using the Junk toolbar button to mark messages as junk or not. You need to identify both junk and non junk messages.">
 <!ENTITY level.label "Enable adaptive junk mail detection">
 <!ENTITY level.accesskey "E">
+
+<!ENTITY resetTrainingDescription.label "Resetting the training data used by the adaptive filter requires you to retrain the filter">
+<!ENTITY resetTrainingData.label "Reset Training Data">
+<!ENTITY resetTrainingData.accesskey "R">
 
 <!-- White List tab -->
 <!ENTITY whiteListCaption.label "White Lists">

@@ -274,3 +274,22 @@ function doHelpButton()
 {
   openHelp("mail-junk-controls");
 }
+
+function resetTrainingData()
+{
+  // make sure the user really wants to do this
+  promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
+  var title = gMessengerBundle.getString("confirmResetJunkTrainingTitle");
+  var text = gMessengerBundle.getString("confirmResetJunkTrainingText");
+
+  // if the user says no, then just fall out
+  if (!promptService.confirm(window, title, text))
+    return;
+
+  // otherwise go ahead and remove the training data
+  var junkmailPlugin = Components.classes["@mozilla.org/messenger/filter-plugin;1?name=bayesianfilter"]
+	                    .getService(Components.interfaces.nsIJunkMailPlugin);
+
+  if (junkmailPlugin)
+    junkmailPlugin.resetTrainingData();
+}
