@@ -18,8 +18,8 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- *	sspitzer@netscape.com
- *  alecf@netscape.com
+ *	Seth Spitzer <sspitzer@netscape.com>
+ *  Alec Flett <alecf@netscape.com>
  */
 
 #include "nsIComponentManager.h"
@@ -1625,6 +1625,8 @@ nsMessengerMigrator::MigrateNewsAccounts(nsIMsgIdentity *identity)
 
 	rv = locator->GetFileLocation(nsSpecialFileSpec::App_NewsDirectory50, getter_AddRefs(newsDir));
 	if (NS_FAILED(rv)) return rv;
+   	rv = newsDir->GetFileSpec(&newsHostsDir);
+	if (NS_FAILED(rv)) return rv;
     }
  
     PRBool dirExists;
@@ -1895,6 +1897,10 @@ nsMessengerMigrator::MigrateNewsAccount(nsIMsgIdentity *identity, const char *ho
 	account->SetIncomingServer(server);
 	account->AddIdentity(copied_identity);
 	
+#ifdef DEBUG_MIGRATOR
+    printf("migrate old nntp prefs\n");
+#endif /* DEBUG_MIGRATOR */
+
     rv = MigrateOldNntpPrefs(server, hostAndPort, newsrcfile);
     if (NS_FAILED(rv)) return rv;
 		
@@ -1918,7 +1924,13 @@ nsMessengerMigrator::MigrateNewsAccount(nsIMsgIdentity *identity, const char *ho
 	rv = NS_NewFileSpecWithSpec(thisNewsHostsDir, getter_AddRefs(newsDir));
 	if (NS_FAILED(rv)) return rv;
 
-    // set the local path for this "nntp" server
+#ifdef DEBUG_MIGRATOR
+    nsXPIDLCString nativePathStr;
+    rv = newsDir->GetUnixStyleFilePath(getter_Copies(nativePathStr));
+    if (NS_FAILED(rv)) return rv;
+
+    printf("set the local path for this nntp server to: %s\n",(const char *)nativePathStr);
+#endif 
     rv = server->SetLocalPath(newsDir);
     if (NS_FAILED(rv)) return rv;
     
