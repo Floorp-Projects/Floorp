@@ -321,7 +321,7 @@ function onMoreFewerImage()
 
     // Show the "Advanced Edit" button at bottom
     dialog.AdvancedEditButton.setAttribute("hidden","true");
-    dialog.AdvancedEditButton2.removeAttribute("hidden","false");
+    dialog.AdvancedEditButton2.removeAttribute("hidden");
     
     InitDialog();
     
