@@ -45,13 +45,8 @@
 #include "nsIServiceManager.h"
 #include "nsISupports.h"
 #include "nsIFactory.h"
+#include "nsString.h"
 #include "simpleCID.h"
-#include <gdk/gdk.h>
-#include <gdk/gdkprivate.h>
-#include <gtk/gtk.h>
-#include <gdksuperwin.h>
-#include <gtkmozbox.h>
-
 /*------------------------------------------------------------------------------
  * Windows Includes
  *----------------------------------------------------------------------------*/
@@ -65,6 +60,11 @@
 //#include <X11/Xlib.h>
 //#include <X11/Intrinsic.h>
 //#include <X11/StringDefs.h>
+#include <gdk/gdk.h>
+#include <gdk/gdkprivate.h>
+#include <gtk/gtk.h>
+#include <gdksuperwin.h>
+#include <gtkmozbox.h>
 #endif /* XP_UNIX */
 
 
@@ -397,6 +397,8 @@ static PRBool gPluginLocked = PR_FALSE;
 ////////////////////////////////////////////////////////////////////////////////
 
 SimplePlugin::SimplePlugin()
+    :   mPluginManager(NULL), 
+        mServiceManager(NULL)
 {
     NS_INIT_REFCNT();
 
@@ -671,6 +673,15 @@ SimplePlugin::CreatePluginInstance(nsISupports *aOuter, REFNSIID aIID,
     printf("SimplePlugin::CreatePluginInstance\n");
 #endif
 
+    SimplePluginInstance* inst = new SimplePluginInstance();
+    if(!inst)
+    {
+        *aResult = NULL;
+        return NS_ERROR_UNEXPECTED;
+        
+    }
+    inst->AddRef();
+    *aResult = inst;
     return NS_OK;
 }
 
@@ -835,7 +846,14 @@ SimplePluginInstance::NewStream(nsIPluginStreamListener** listener)
 #endif
 
     if(listener != NULL)
-        *listener = new SimplePluginStreamListener(this, "http://warp");
+    {
+        SimplePluginStreamListener* sl = 
+                new SimplePluginStreamListener(this, "http://www.mozilla.org");
+        if(!sl)
+            return NS_ERROR_UNEXPECTED;
+        sl->AddRef();
+        *listener = sl;
+    }
     
     return NS_OK;
 }
@@ -1231,9 +1249,15 @@ SimplePluginInstance::PluginWindowProc( HWND hWnd, UINT Msg, WPARAM wParam, LPAR
       case WM_PAINT: {
           PAINTSTRUCT paintStruct;
           HDC hdc;
+          static const char str[] = "Hello, World!";
 
           hdc = BeginPaint( hWnd, &paintStruct );
-          TextOut(hdc, 0, 0, "Hello, World!", 15);
+
+          if(paintStruct.fErase)
+            FillRect(hdc, &paintStruct.rcPaint, 
+                     (HBRUSH) GetStockObject(WHITE_BRUSH)); 
+          
+          TextOut(hdc, 0, 0, str, sizeof(str)-1);
 
           EndPaint( hWnd, &paintStruct );
           break;
