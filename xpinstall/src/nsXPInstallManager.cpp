@@ -89,13 +89,16 @@ inline PRBool nsXPInstallManager::TimeToUpdate(PRTime now)
 nsXPInstallManager::nsXPInstallManager()
   : mTriggers(0), mItem(0), mNextItem(0), mNumJars(0), 
     mFinalizing(PR_FALSE), mCancelled(PR_FALSE), mChromeType(0),
-    mSelectChrome(PR_TRUE), mContentLength(0), mLastUpdate(LL_ZERO)
+    mSelectChrome(PR_TRUE), mContentLength(0)
 {
     NS_INIT_ISUPPORTS();
 
     // we need to own ourself because we have a longer
     // lifetime than the scriptlet that created us.
     NS_ADDREF_THIS();
+
+    // initialize mLastUpdate to the current time
+    mLastUpdate = PR_Now();
 
     // get the resourced xpinstall string bundle
     mStringBundle = nsnull;
@@ -273,7 +276,7 @@ PRBool nsXPInstallManager::ConfirmInstall(nsIScriptGlobalObject* aGlobalObject, 
                                             "sss%ip",
                                             "chrome://communicator/content/xpinstall/institems.xul",
                                             "_blank",
-                                            "chrome,modal,titlebar",
+                                            "chrome,modal,titlebar,resizable",
                                             (const nsIID*)(&NS_GET_IID(nsIDialogParamBlock)),
                                             (nsISupports*)ioParamBlock);
 
