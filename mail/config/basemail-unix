@@ -104,6 +104,8 @@ components/xpinstall.xpt
 components/libxmlextras.so
 components/xmlextras.xpt
 
+; offline extension (may not be present in the build, that's ok)
+chrome/offline.jar
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; base browser for unix (from basebrowser-unix)

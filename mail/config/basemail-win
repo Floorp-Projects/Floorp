@@ -106,11 +106,14 @@ components\xpinstall.xpt
 components\xmlextras.dll
 components\xmlextras.xpt
 
+; offline extension (may not be present in the build, that's ok)
+chrome\offline.jar
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Base Package Files
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-LICENSE
+LICENSE.txt
 README.txt
 
 ; NSPR:
