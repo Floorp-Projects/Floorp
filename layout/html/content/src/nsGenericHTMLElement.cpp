@@ -1690,20 +1690,6 @@ static nsGenericHTMLElement::EnumTable kScrollingStandardTable[] = {
   { 0 }
 };
 
-static nsGenericHTMLElement::EnumTable kTableHAlignTable[] = {
-  { "left",   NS_STYLE_TEXT_ALIGN_LEFT },
-  { "right",  NS_STYLE_TEXT_ALIGN_RIGHT },
-  { "center", NS_STYLE_TEXT_ALIGN_CENTER },
-  { "char",   NS_STYLE_TEXT_ALIGN_CHAR },
-  { "justify",NS_STYLE_TEXT_ALIGN_JUSTIFY },
-
-  // The following are non-standard but necessary for Nav4 compatibility
-  { "middle", NS_STYLE_TEXT_ALIGN_CENTER },
-  { "absmiddle", NS_STYLE_TEXT_ALIGN_CENTER },
-
-  { 0 }
-};
-
 static nsGenericHTMLElement::EnumTable kTableVAlignTable[] = {
   { "top",     NS_STYLE_VERTICAL_ALIGN_TOP },
   { "middle",  NS_STYLE_VERTICAL_ALIGN_MIDDLE },
@@ -1730,12 +1716,90 @@ nsGenericHTMLElement::ParseAlignValue(const nsString& aString,
   return ParseEnumValue(aString, kAlignTable, aResult);
 }
 
+//----------------------------------------
+
+// Vanilla table as defined by the html4 spec...
+static nsGenericHTMLElement::EnumTable kTableHAlignTable[] = {
+  { "left",   NS_STYLE_TEXT_ALIGN_LEFT },
+  { "right",  NS_STYLE_TEXT_ALIGN_RIGHT },
+  { "center", NS_STYLE_TEXT_ALIGN_CENTER },
+  { "char",   NS_STYLE_TEXT_ALIGN_CHAR },
+  { "justify",NS_STYLE_TEXT_ALIGN_JUSTIFY },
+  { 0 }
+};
+
+// This table is used for TABLE when in compatability mode
+static nsGenericHTMLElement::EnumTable kCompatTableHAlignTable[] = {
+  { "left",   NS_STYLE_TEXT_ALIGN_LEFT },
+  { "right",  NS_STYLE_TEXT_ALIGN_RIGHT },
+  { "center", NS_STYLE_TEXT_ALIGN_CENTER },
+  { "char",   NS_STYLE_TEXT_ALIGN_CHAR },
+  { "justify",NS_STYLE_TEXT_ALIGN_JUSTIFY },
+  { "abscenter", NS_STYLE_TEXT_ALIGN_CENTER },
+  { 0 }
+};
+
 PRBool
 nsGenericHTMLElement::ParseTableHAlignValue(const nsString& aString,
-                                            nsHTMLValue& aResult)
+                                            nsHTMLValue& aResult) const
 {
+  if (InNavQuirksMode()) {
+    return ParseEnumValue(aString, kCompatTableHAlignTable, aResult);
+  }
   return ParseEnumValue(aString, kTableHAlignTable, aResult);
 }
+
+PRBool
+nsGenericHTMLElement::TableHAlignValueToString(const nsHTMLValue& aValue,
+                                               nsString& aResult) const
+{
+  if (InNavQuirksMode()) {
+    return EnumValueToString(aValue, kCompatTableHAlignTable, aResult);
+  }
+  return EnumValueToString(aValue, kTableHAlignTable, aResult);
+}
+
+//----------------------------------------
+
+// This table is used for TD,TH,TR, etc (but not TABLE) when in
+// compatability mode
+static nsGenericHTMLElement::EnumTable kCompatTableCellHAlignTable[] = {
+  { "left",   NS_STYLE_TEXT_ALIGN_LEFT },
+  // Note: use compatible version of alignment constants so that
+  // nested tables will be right aligned or center aligned.
+  { "right",  NS_STYLE_TEXT_ALIGN_MOZ_RIGHT },
+  { "center", NS_STYLE_TEXT_ALIGN_MOZ_CENTER },
+  { "char",   NS_STYLE_TEXT_ALIGN_CHAR },
+  { "justify",NS_STYLE_TEXT_ALIGN_JUSTIFY },
+
+  // The following are non-standard but necessary for Nav4 compatibility
+  { "middle", NS_STYLE_TEXT_ALIGN_CENTER },
+  { "absmiddle", NS_STYLE_TEXT_ALIGN_CENTER },// XXX is this right???
+
+  { 0 }
+};
+
+PRBool
+nsGenericHTMLElement::ParseTableCellHAlignValue(const nsString& aString,
+                                                nsHTMLValue& aResult) const
+{
+  if (InNavQuirksMode()) {
+    return ParseEnumValue(aString, kCompatTableCellHAlignTable, aResult);
+  }
+  return ParseEnumValue(aString, kTableHAlignTable, aResult);
+}
+
+PRBool
+nsGenericHTMLElement::TableCellHAlignValueToString(const nsHTMLValue& aValue,
+                                                   nsString& aResult) const
+{
+  if (InNavQuirksMode()) {
+    return EnumValueToString(aValue, kCompatTableCellHAlignTable, aResult);
+  }
+  return EnumValueToString(aValue, kTableHAlignTable, aResult);
+}
+
+//----------------------------------------
 
 PRBool
 nsGenericHTMLElement::ParseTableVAlignValue(const nsString& aString,
@@ -1749,13 +1813,6 @@ nsGenericHTMLElement::AlignValueToString(const nsHTMLValue& aValue,
                                          nsString& aResult)
 {
   return EnumValueToString(aValue, kAlignTable, aResult);
-}
-
-PRBool
-nsGenericHTMLElement::TableHAlignValueToString(const nsHTMLValue& aValue,
-                                               nsString& aResult)
-{
-  return EnumValueToString(aValue, kTableHAlignTable, aResult);
 }
 
 PRBool

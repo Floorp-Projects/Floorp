@@ -181,7 +181,7 @@ nsHTMLTableColElement::StringToAttribute(nsIAtom* aAttribute,
 
   /* other attributes */
   else if (aAttribute == nsHTMLAtoms::align) {
-    if (nsGenericHTMLElement::ParseTableHAlignValue(aValue, aResult)) {
+    if (mInner.ParseTableCellHAlignValue(aValue, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -205,7 +205,7 @@ nsHTMLTableColElement::AttributeToString(nsIAtom* aAttribute,
      choff, span
    */
   if (aAttribute == nsHTMLAtoms::align) {
-    if (nsGenericHTMLElement::TableHAlignValueToString(aValue, aResult)) {
+    if (mInner.TableCellHAlignValueToString(aValue, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }

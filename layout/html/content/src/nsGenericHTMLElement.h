@@ -189,24 +189,27 @@ public:
 
   PRBool ParseDivAlignValue(const nsString& aString,
                             nsHTMLValue& aResult) const;
+  PRBool DivAlignValueToString(const nsHTMLValue& aValue,
+                               nsString& aResult) const;
 
-  static PRBool ParseTableHAlignValue(const nsString& aString,
-                                      nsHTMLValue& aResult);
+  PRBool ParseTableHAlignValue(const nsString& aString,
+                               nsHTMLValue& aResult) const;
+  PRBool TableHAlignValueToString(const nsHTMLValue& aValue,
+                                  nsString& aResult) const;
+
+  PRBool ParseTableCellHAlignValue(const nsString& aString,
+                                   nsHTMLValue& aResult) const;
+  PRBool TableCellHAlignValueToString(const nsHTMLValue& aValue,
+                                      nsString& aResult) const;
 
   static PRBool ParseTableVAlignValue(const nsString& aString,
                                       nsHTMLValue& aResult);
-
-  static PRBool TableHAlignValueToString(const nsHTMLValue& aValue,
-                                         nsString& aResult);
 
   static PRBool TableVAlignValueToString(const nsHTMLValue& aValue,
                                          nsString& aResult);
 
   static PRBool AlignValueToString(const nsHTMLValue& aValue,
                                    nsString& aResult);
-
-  PRBool DivAlignValueToString(const nsHTMLValue& aValue,
-                               nsString& aResult) const;
 
   static PRBool ParseImageAttribute(nsIAtom* aAttribute,
                                     const nsString& aString,
