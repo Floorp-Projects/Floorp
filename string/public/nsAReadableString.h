@@ -1351,7 +1351,7 @@ class basic_nsPromiseFlatString :
 template <class CharT>
 basic_nsPromiseFlatString<CharT>::basic_nsPromiseFlatString( const basic_nsAReadableString<CharT>& aString ) : mLength(aString.Length()), mOwnsBuffer(PR_FALSE)
 {
-  typedef basic_nsAReadableString<CharT>::const_iterator iterator;
+  typedef nsReadingIterator<CharT> iterator;
 
   iterator start( aString.BeginReading() );
   iterator end( aString.EndReading() );
