@@ -520,13 +520,14 @@ function EditorToggleDisplayStyle()
     EditorDisplayStyle = false;
     styleSheet = "resource:/res/ua.css";
     //TODO: Where do we store localizable JS strings?
-    buttonText = "Preview";
+    buttonText = "Edit Mode";
   }
   else {
     EditorDisplayStyle = true;
     styleSheet = "chrome://editor/content/EditorContent.css"
-    buttonText = "Edit Mode";
+    buttonText = "Preview";
   }
+  //TODO: THIS IS NOT THE RIGHT THING TO DO!
   EditorApplyStyleSheet(styleSheet);
   
   button = document.getElementById("DisplayStyleButton");

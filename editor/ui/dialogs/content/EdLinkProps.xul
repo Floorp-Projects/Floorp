@@ -57,19 +57,18 @@
     <xul:spring class="bigspacer"/>
 
     <fieldset><legend align="left"> &LinkURLFieldset.label; </legend>
-      <!-- xul:box align="vertical" -->
-        <xul:box align="horizontal">
-  <!--  	    <label for="ChooseFile"> &LinkURLEditField.label; </label> -->
-          <div> &LinkURLEditField.label;</div>
-          <xul:spring flex="100%"/>
-	        <xul:titledbutton class="hspaced" id="RemoveLink" onclick="RemoveLink()" value="&RemoveLinkButton.label;"/>
-	      </xul:box>
-	      <xul:box align="horizontal">
-  	      <input type="text" size="25" length="25" id="hrefInput"></input>
-          <xul:spring flex="100%"/>
-	        <xul:titledbutton class="hspaced" id="ChooseFile" onclick="ChooseFile()" value="&LinkChooseFileButton.label;"/>
-        </xul:box>
-      <!-- /xul:box -->
+    <!-- xul:box align="vertical" -->
+      <xul:box align="horizontal">
+        <div> &LinkURLEditField.label;</div>
+        <xul:spring flex="100%"/>
+	      <xul:titledbutton class="hspaced" id="RemoveLink" onclick="RemoveLink()" value="&RemoveLinkButton.label;"/>
+	    </xul:box>
+	    <xul:box align="horizontal">
+  	    <input type="text" size="25" length="25" id="hrefInput"></input>
+        <xul:spring flex="100%"/>
+	      <xul:titledbutton class="hspaced" id="ChooseFile" onclick="ChooseFile()" value="&LinkChooseFileButton.label;"/>
+      </xul:box>
+    <!-- /xul:box -->
     </fieldset>
   </xul:box>
   <xul:spring class="bigspacer"/>
