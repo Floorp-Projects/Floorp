@@ -1144,6 +1144,31 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
       rv = nsuiEvent->GetRangeOffset(&newSelectionOffset);
       if (NS_FAILED(rv)) return rv;
 
+      // XXX: This userSelectNode code is a workaround for bug 195957.
+      //
+      // Check to see if newSelectionParent is part of a "-moz-user-select: all"
+      // subtree. If it is, we need to make sure we don't drop into it!
+
+      nsCOMPtr<nsIDOMNode> userSelectNode = FindUserSelectAllNode(newSelectionParent);
+
+      if (userSelectNode)
+      {
+        // The drop is happening over a "-moz-user-select: all"
+        // subtree so make sure the content we insert goes before
+        // the root of the subtree.
+        //
+        // XXX: Note that inserting before the subtree matches the
+        //      current behavior when dropping on top of an image.
+        //      The decision for dropping before or after the
+        //      subtree should really be done based on coordinates.
+
+        rv = GetNodeLocation(userSelectNode, address_of(newSelectionParent),
+                             &newSelectionOffset);
+
+        if (NS_FAILED(rv)) return rv;
+        if (!newSelectionParent) return NS_ERROR_FAILURE;
+      }
+
       // We never have to delete if selection is already collapsed
       PRBool deleteSelection = PR_FALSE;
       PRBool cursorIsInSelection = PR_FALSE;
