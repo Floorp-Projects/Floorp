@@ -3425,9 +3425,13 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*          aPre
     }
   }
   // See if it's relatively positioned
-  else if (NS_STYLE_POSITION_RELATIVE == position->mPosition) {
+  else if ((NS_STYLE_POSITION_RELATIVE == position->mPosition) &&
+           ((NS_STYLE_DISPLAY_BLOCK == aDisplay->mDisplay) ||
+            (NS_STYLE_DISPLAY_INLINE == aDisplay->mDisplay) ||
+            (NS_STYLE_DISPLAY_LIST_ITEM == aDisplay->mDisplay))) {
     // Is it block-level or inline-level?
-    if (NS_STYLE_DISPLAY_BLOCK == aDisplay->mDisplay) {
+    if ((NS_STYLE_DISPLAY_BLOCK == aDisplay->mDisplay) &&
+        (NS_STYLE_DISPLAY_LIST_ITEM == aDisplay->mDisplay)) {
       // Create a wrapper frame. No space manager, though
       NS_NewRelativeItemWrapperFrame(&newFrame);
     } else {
