@@ -545,11 +545,8 @@ function testModify( owner )
       this.repeatEnd = new Date( 2000, 6, 7, 0, 0, 0 );
       this.addedEvent.repeatEnd      = this.repeatEnd;
       
-      this.addedEvent.category = "7";
-      
       /* THESE FIELDS ARE NOT SET UP PROPERLY WHEN YOU GET AN EVENT
          FOR MODIFICATION!!!!
-            category:null, 
             location:null, 
             inviteEmailAddress:null, 
             alarmEmailAddress:null, 
@@ -597,7 +594,6 @@ function testModify( owner )
       assertEquals( "mod: start" , this.newStart.toString(), this.modEvent.start.toString() );
       assertEquals( "mod: end" , this.newEnd.toString(), this.modEvent.end.toString() );
       assertEquals( "mod: description" , "test description", this.modEvent.description );
-      assertEquals( "mod: category" , "7", this.modEvent.category );
       assertEquals( "mod: location" , "test location", this.modEvent.location );
       assertEquals( "mod: privateEvent" , false, this.modEvent.privateEvent );
       assertEquals( "mod: alarm" , true, this.modEvent.alarm );

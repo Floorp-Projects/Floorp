@@ -432,20 +432,6 @@ function deselectEventInUnifinder( )
    document.getElementById( "modify_command" ).setAttribute( "disabled", true );
 }
    
-function selectCategoryInUnifinder( )
-{
-   document.getElementById( "delete_command" ).removeAttribute( "disabled" );
-
-   document.getElementById( "modify_command" ).removeAttribute( "disabled" );
-}
-
-function deselectCategoryInUnifinder( )
-{
-   document.getElementById( "delete_command" ).setAttribute( "disabled", true );
-
-   document.getElementById( "modify_command" ).setAttribute( "disabled", true );
-}
-
 
 /** 
 * Called when the new event button is clicked

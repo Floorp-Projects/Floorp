@@ -122,24 +122,20 @@ tabpanels {
 
 .unifinder-modify-button  > .unifinder-button-image
   {
-	 background-color			 : #DDE3EB;
     list-style-image        : url("chrome://calendar/skin/unifinder/modify_up.png");
   }
 .unifinder-modify-button[disabled="true"] > .unifinder-button-image,
 .unifinder-modify-button[disabled="true"]:hover > .unifinder-button-image,
 .unifinder-modify-button[disabled="true"]:hover:active > .unifinder-button-image
   {
-	 background-color			 : #DDE3EB;
    list-style-image         : url("chrome://calendar/skin/unifinder/modify_disabled.png");
   }
 .unifinder-modify-button:hover > .unifinder-button-image
   {
-	 background-color			 : #EAEEF6;
     list-style-image        : url("chrome://calendar/skin/unifinder/modify_hover.png");
   }
 .unifinder-modify-button:hover:active > .unifinder-button-image
   {
-	 background-color			 : #CBD9E8;
     list-style-image        : url("chrome://calendar/skin/unifinder/modify_down.png");
   }
 
@@ -173,6 +169,28 @@ tabpanels {
     list-style-image        : url("chrome://calendar/skin/unifinder/remove_down.png");
   }
   
+.unifinder-remove-button,
+.unifinder-remove-button[disabled="true"],
+.unifinder-remove-button[disabled="true"]:hover,
+.unifinder-remove-button[disabled="true"]:hover:active,
+.unifinder-modify-button,
+.unifinder-modify-button[disabled="true"],
+.unifinder-modify-button[disabled="true"]:hover,
+.unifinder-modify-button[disabled="true"]:hover:active
+  {
+	 background-color			 : #DDE3EB;
+  }
+.unifinder-remove-button:hover,
+.unifinder-modify-button:hover
+  {
+	 background-color			 : #EAEEF6;
+  }
+.unifinder-remove-button:hover:active,
+.unifinder-modify-button:hover:active
+  {
+	 background-color			 : #CBD9E8;
+  }
+
 .unifinder-button-text
 {
         font-family             : helvetica;

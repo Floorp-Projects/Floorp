@@ -127,18 +127,6 @@
                         <textbox id="location-field"/>
                     </row>
             
-                    <!-- Category -->    
-                    <row collapsed="true" align="center">
-                        <hbox class="field-label-box-class" pack="end">
-                            <label for="category-field" value="&newevent.category.label;"/>
-                        </hbox>
-                        <menulist id="category-field" label="&newevent.choosecategory.label;" value="" >
-									<menupopup id="category-field-menupopup">
-										<menuitem label="&newevent.nocategory.label;" value=""/>
-									</menupopup>
-								</menulist>
-                    </row>
-            
                     <!-- Date -->    
                     <row align="center">
                         <hbox class="field-label-box-class" pack="end">

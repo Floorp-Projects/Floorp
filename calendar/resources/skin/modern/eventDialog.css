@@ -169,21 +169,21 @@
 #start-date-button 
   {
     margin-left             : 3px;
-    list-style-image        : url("chrome://calendar/skin/ca-event-dialog/calendar_up.png");
+    list-style-image        : url("chrome://calendar/skin/ca-event-dialog/calendar_up.gif");
   }
 #start-date-button[disabled="true"],
 #start-date-button[disabled="true"]:hover,
 #start-date-button[disabled="true"]:hover:active
   {
-   list-style-image         : url("chrome://calendar/skin/ca-event-dialog/calendar_disabled.png");
+   list-style-image         : url("chrome://calendar/skin/ca-event-dialog/calendar_disabled.gif");
   }
 #start-date-button:hover
   {
-    list-style-image        : url("chrome://calendar/skin/ca-event-dialog/calendar_hover.png");
+    list-style-image        : url("chrome://calendar/skin/ca-event-dialog/calendar_hover.gif");
   }
 #start-date-button:hover:active
   {
-    list-style-image        : url("chrome://calendar/skin/ca-event-dialog/calendar_down.png");
+    list-style-image        : url("chrome://calendar/skin/ca-event-dialog/calendar_down.gif");
   }
 
 
@@ -194,21 +194,21 @@
 #start-time-button 
   {
     margin-left             : 3px;
-    list-style-image        : url("chrome://calendar/skin/ca-event-dialog/clock_up.png");
+    list-style-image        : url("chrome://calendar/skin/ca-event-dialog/clock_up.gif");
   }
 #start-time-button[disabled="true"],
 #start-time-button[disabled="true"]:hover,
 #start-time-button[disabled="true"]:hover:active
   {
-   list-style-image         : url("chrome://calendar/skin/ca-event-dialog/clock_disabled.png");
+   list-style-image         : url("chrome://calendar/skin/ca-event-dialog/clock_disabled.gif");
   }
 #start-time-button:hover
   {
-    list-style-image        : url("chrome://calendar/skin/ca-event-dialog/clock_hover.png");
+    list-style-image        : url("chrome://calendar/skin/ca-event-dialog/clock_hover.gif");
   }
 #start-time-button:hover:active
   {
-    list-style-image        : url("chrome://calendar/skin/ca-event-dialog/clock_down.png");
+    list-style-image        : url("chrome://calendar/skin/ca-event-dialog/clock_down.gif");
   }
 
 
@@ -219,21 +219,21 @@
 #end-time-button 
   {
     margin-left             : 3px;
-    list-style-image        : url("chrome://calendar/skin/ca-event-dialog/clock_up.png");
+    list-style-image        : url("chrome://calendar/skin/ca-event-dialog/clock_up.gif");
   }
 #end-time-button[disabled="true"],
 #end-time-button[disabled="true"]:hover,
 #end-time-button[disabled="true"]:hover:active
   {
-   list-style-image         : url("chrome://calendar/skin/ca-event-dialog/clock_disabled.png");
+   list-style-image         : url("chrome://calendar/skin/ca-event-dialog/clock_disabled.gif");
   }
 #end-time-button:hover
   {
-    list-style-image        : url("chrome://calendar/skin/ca-event-dialog/clock_hover.png");
+    list-style-image        : url("chrome://calendar/skin/ca-event-dialog/clock_hover.gif");
   }
 #end-time-button:hover:active
   {
-    list-style-image        : url("chrome://calendar/skin/ca-event-dialog/clock_down.png");
+    list-style-image        : url("chrome://calendar/skin/ca-event-dialog/clock_down.gif");
   }
 
 
@@ -245,21 +245,21 @@
 #repeat-end-date-button 
   {
     margin-left             : 3px;
-    list-style-image        : url("chrome://calendar/skin/ca-event-dialog/calendar_up.png");
+    list-style-image        : url("chrome://calendar/skin/ca-event-dialog/calendar_up.gif");
   }
 #repeat-end-date-button[disabled="true"],
 #repeat-end-date-button[disabled="true"]:hover,
 #repeat-end-date-button[disabled="true"]:hover:active
   {
-   list-style-image         : url("chrome://calendar/skin/ca-event-dialog/calendar_disabled.png");
+   list-style-image         : url("chrome://calendar/skin/ca-event-dialog/calendar_disabled.gif");
   }
 #repeat-end-date-button:hover
   {
-    list-style-image        : url("chrome://calendar/skin/ca-event-dialog/calendar_hover.png");
+    list-style-image        : url("chrome://calendar/skin/ca-event-dialog/calendar_hover.gif");
   }
 #repeat-end-date-button:hover:active
   {
-    list-style-image        : url("chrome://calendar/skin/ca-event-dialog/calendar_down.png");
+    list-style-image        : url("chrome://calendar/skin/ca-event-dialog/calendar_down.gif");
   }
 
 
