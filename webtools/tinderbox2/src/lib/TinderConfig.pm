@@ -4,8 +4,8 @@
 
 
 
-# $Revision: 1.3 $ 
-# $Date: 2000/08/11 00:35:13 $ 
+# $Revision: 1.4 $ 
+# $Date: 2000/08/24 15:00:45 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Attic/TinderConfig.pm,v $ 
 # $Name:  $ 
@@ -158,8 +158,15 @@ $VCDisplayImpl = (
 		  #'VCDisplay::Bonsai',
 		 );
 
+$PersistenceImpl = (
+                    'Persistence::Dumper',
+# storable has not been tested yet
+                    # 'Persistence::Storable',
+                   );
+
+
 # If you your using VCDisplay:Bonsai we need to know how to make HMTL
-# to point o the bonsai CGI programs.
+# to point to the bonsai CGI programs.
 
 $BONSAI_URL = "http://tinderbox.mozilla.org/bonsai";
 

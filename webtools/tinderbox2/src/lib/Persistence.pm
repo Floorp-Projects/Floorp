@@ -9,9 +9,9 @@
 # but binary format.
 
 
-# $Revision: 1.1 $ 
-# $Date: 2000/06/22 04:13:58 $ 
-# $Author: mcafee%netscape.com $ 
+# $Revision: 1.2 $ 
+# $Date: 2000/08/24 14:58:08 $ 
+# $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Persistence.pm,v $ 
 # $Name:  $ 
 
@@ -43,8 +43,30 @@
 
 package Persistence;
 
-use Persistence::Dumper;
-#use Persistence::Storable;
+
+
+# Load standard perl libraries
+
+
+# Load Tinderbox libraries
+
+use Utils;
+
+$VERSION = '#tinder_version#';
+
+
+# Pick how you wish to the Tinderbox Persistence to be implemented:
+# Uncomment only one Persistence implementation.
+
+$IMPLS = ( ($TinderConfig::PersistenceImpl) ||
+           (
+            'Persistence::Dumper',
+# storable has not been tested yet
+            # 'Persistence::Storable',
+           )
+         );
+
+main::require_modules($IMPLS);
 
 
 1;
