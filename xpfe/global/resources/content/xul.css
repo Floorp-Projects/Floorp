@@ -264,6 +264,7 @@ menupopup[menugenerated="true"],
 popup[menugenerated="true"],
 tooltip[menugenerated="true"] {
   display: -moz-popup;
+  margin-top: 21px;
 }
 
 tooltip {
