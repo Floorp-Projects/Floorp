@@ -23,20 +23,20 @@
  * Bob Miller, kbob@oblix.com
  *    -- plugged core leak.
  *
- * $Id: StringList.h,v 1.4 2000/02/17 20:56:20 kvisco%ziplink.net Exp $
+ * $Id: StringList.h,v 1.5 2000/02/22 11:10:01 kvisco%ziplink.net Exp $
  */
 
 /**
  * A class for keeping an ordered list of Strings
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.4 $ $Date: 2000/02/17 20:56:20 $
+ * @version $Revision: 1.5 $ $Date: 2000/02/22 11:10:01 $
 **/
 
 #include "String.h"
 #include "baseutils.h"
 
-#ifndef MITREXSL_STRINGLIST_H
-#define MITREXSL_STRINGLIST_H
+#ifndef TRANSFRMX_STRINGLIST_H
+#define TRANSFRMX_STRINGLIST_H
 
 class StringList {
    friend class StringListIterator;
@@ -51,7 +51,7 @@ class StringList {
       /**
        * StringList destructor
       **/
-      ~StringList();
+      virtual ~StringList();
 
        MBool contains(String& search);
 
@@ -112,7 +112,7 @@ public:
 
 
    StringListIterator(StringList* list);
-   ~StringListIterator();
+   virtual ~StringListIterator();
 
    void    add(String* strptr);
 
