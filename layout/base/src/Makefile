@@ -25,6 +25,7 @@ CPPSRCS =				\
 	nsContainerFrame.cpp		\
 	nsDocument.cpp			\
 	nsFrame.cpp			\
+	nsFrameImageLoader.cpp		\
 	nsGalleyContext.cpp		\
 	nsPresContext.cpp		\
 	nsPresShell.cpp			\
