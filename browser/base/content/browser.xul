@@ -58,7 +58,7 @@
   <script type="application/x-javascript" src="chrome://browser/content/browser.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/contentAreaUtils.js"/>
 
-  <stringbundleset id="stringbundleset"> <!-- Overlay hook for 3rd parties. Don't remove. -->
+  <stringbundleset id="stringbundleset">
     <stringbundle id="bundle_browser" src="chrome://browser/locale/browser.properties"/>
     <stringbundle id="bundle_browser_region" src="chrome://navigator-region/locale/region.properties"/>
     <stringbundle id="findBundle" src="chrome://global/locale/finddialog.properties"/>
