@@ -2186,16 +2186,27 @@ nsAbSync::GetTypeOfPhoneNumber(nsString tagName)
     if ( (!val) || val->IsEmpty() )
       continue;
 
-    if (!compValue.CompareWithConversion(ABSYNC_HOME_PHONE_TYPE, PR_TRUE, nsCRT::strlen(ABSYNC_HOME_PHONE_TYPE)))
-      return ABSYNC_HOME_PHONE_ID;
-    else if (!compValue.CompareWithConversion(ABSYNC_WORK_PHONE_TYPE, PR_TRUE, nsCRT::strlen(ABSYNC_WORK_PHONE_TYPE)))
-      return ABSYNC_WORK_PHONE_ID;
-    else if (!compValue.CompareWithConversion(ABSYNC_FAX_PHONE_TYPE, PR_TRUE, nsCRT::strlen(ABSYNC_FAX_PHONE_TYPE)))
-      return ABSYNC_FAX_PHONE_ID;
-    else if (!compValue.CompareWithConversion(ABSYNC_PAGER_PHONE_TYPE, PR_TRUE, nsCRT::strlen(ABSYNC_PAGER_PHONE_TYPE)))
-      return ABSYNC_PAGER_PHONE_ID;
-    else if (!compValue.CompareWithConversion(ABSYNC_CELL_PHONE_TYPE, PR_TRUE, nsCRT::strlen(ABSYNC_CELL_PHONE_TYPE)))
-      return ABSYNC_CELL_PHONE_ID;
+    if (!compValue.CompareWithConversion(*val, PR_TRUE, compValue.Length()))
+    {
+      nsString phoneType;
+
+      phoneType.Assign(*val);
+      PRInt32 loc = phoneType.FindChar('=');
+      if (loc == -1)
+        continue;
+      
+      phoneType.Cut(0, loc+1);
+      if (!phoneType.CompareWithConversion(ABSYNC_HOME_PHONE_TYPE, PR_TRUE, nsCRT::strlen(ABSYNC_HOME_PHONE_TYPE)))
+        return ABSYNC_HOME_PHONE_ID;
+      else if (!phoneType.CompareWithConversion(ABSYNC_WORK_PHONE_TYPE, PR_TRUE, nsCRT::strlen(ABSYNC_WORK_PHONE_TYPE)))
+        return ABSYNC_WORK_PHONE_ID;
+      else if (!phoneType.CompareWithConversion(ABSYNC_FAX_PHONE_TYPE, PR_TRUE, nsCRT::strlen(ABSYNC_FAX_PHONE_TYPE)))
+        return ABSYNC_FAX_PHONE_ID;
+      else if (!phoneType.CompareWithConversion(ABSYNC_PAGER_PHONE_TYPE, PR_TRUE, nsCRT::strlen(ABSYNC_PAGER_PHONE_TYPE)))
+        return ABSYNC_PAGER_PHONE_ID;
+      else if (!phoneType.CompareWithConversion(ABSYNC_CELL_PHONE_TYPE, PR_TRUE, nsCRT::strlen(ABSYNC_CELL_PHONE_TYPE)))
+        return ABSYNC_CELL_PHONE_ID;
+    }
   }
 
   // If we get here...drop back to the defaults...why, oh why is it this way?
@@ -2235,7 +2246,7 @@ nsAbSync::ProcessPhoneNumbersTheyAreSpecial(nsIAbCard *aCard)
       continue;
 
     tagName.Cut(loc, (tagName.Length() - loc));
-    phoneNumber.Cut(0, loc);
+    phoneNumber.Cut(0, loc+1);
 
     PRInt32 pType = GetTypeOfPhoneNumber(tagName);
     if (pType == 0)
@@ -2270,10 +2281,15 @@ nsAbSync::AddValueToNewCard(nsIAbCard *aCard, nsString *aTagName, nsString *aTag
 
   if (!aTagName->CompareWithConversion("phone", PR_TRUE, 5))
   {
+    nsString      tempVal;
+    tempVal.Append(*aTagName);
+    tempVal.Append(NS_ConvertASCIItoUCS2("="));
+    tempVal.Append(*aTagValue);
+
     if (aTagName->FindChar(aChar) != -1)
-      mPhoneTypes->AppendString(NS_ConvertASCIItoUCS2(aTagValue->ToNewCString()));
+      mPhoneTypes->AppendString(NS_ConvertASCIItoUCS2(tempVal.ToNewCString()));
     else
-      mPhoneValues->AppendString(NS_ConvertASCIItoUCS2(aTagValue->ToNewCString()));
+      mPhoneValues->AppendString(NS_ConvertASCIItoUCS2(tempVal.ToNewCString()));
 
     return NS_OK;
   }
