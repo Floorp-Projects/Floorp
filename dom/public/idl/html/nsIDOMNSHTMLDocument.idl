@@ -50,7 +50,6 @@ interface nsIDOMNSHTMLDocument : nsISupports
            attribute DOMString            vlinkColor;
            attribute DOMString            bgColor;
            attribute DOMString            fgColor;
-  readonly attribute DOMString            lastModified;
            attribute DOMString            domain;
 
   readonly attribute nsIDOMHTMLCollection embeds;

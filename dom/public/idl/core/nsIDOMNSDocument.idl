@@ -55,6 +55,7 @@ interface nsIDOMNSDocument : nsISupports
            attribute DOMString            title;
 
   readonly attribute DOMString            contentType;
+  readonly attribute DOMString            lastModified;
 
   nsIBoxObject              getBoxObjectFor(in nsIDOMElement elt);
   void                      setBoxObjectFor(in nsIDOMElement elt,

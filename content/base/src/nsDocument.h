@@ -286,7 +286,7 @@ public:
   // Already declared in nsIDOMNSDocument
 
   /**
-   * Get the Content-Type of this document.
+   * Set the Content-Type of this document.
    */
   NS_IMETHOD SetContentType(const nsAString& aContentType);
 
@@ -588,6 +588,8 @@ protected:
   virtual already_AddRefed<nsIStyleSheet> InternalGetStyleSheetAt(PRInt32 aIndex);
   virtual PRInt32 InternalGetNumberOfStyleSheets();
 
+  virtual void RetrieveRelevantHeaders(nsIChannel *aChannel);
+
   nsresult doCreateShell(nsIPresContext* aContext,
                          nsIViewManager* aViewManager, nsIStyleSet* aStyleSet,
                          nsCompatibility aCompatMode,
@@ -598,6 +600,7 @@ protected:
 
   nsCOMPtr<nsIArena> mArena;
   nsString mDocumentTitle;
+  nsString mLastModified;
   nsCOMPtr<nsIURI> mDocumentURL;
   nsCOMPtr<nsIURI> mDocumentBaseURL;
   nsCOMPtr<nsIPrincipal> mPrincipal;
