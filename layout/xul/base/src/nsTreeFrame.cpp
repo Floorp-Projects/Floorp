@@ -620,7 +620,6 @@ nsTreeFrame::ScrollByLines(nsIPresContext* aPresContext, PRInt32 lines)
 NS_IMETHODIMP
 nsTreeFrame::ScrollByPages(nsIPresContext* aPresContext, PRInt32 pages)
 {
-  printf("nsTreeFrame::ScrollByPages\n");
   PRInt32 lines;
 
   // Get our treechildren child frame.
@@ -638,8 +637,10 @@ nsTreeFrame::ScrollByPages(nsIPresContext* aPresContext, PRInt32 pages)
   if (pages < 0)
     lines = -lines;
 
+#ifdef DEBUG_bryner
   printf("nsTreeFrame::ScrollByPages : scrolling treeRowGroup by %d lines\n", lines);
   treeRowGroup->ScrollByLines(aPresContext, lines);
+#endif
 
   return NS_OK;
 }
