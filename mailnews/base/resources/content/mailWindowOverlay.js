@@ -1012,7 +1012,7 @@ function IsCompactFolderEnabled()
     if (!folder)
         return false;
 
-    return (folder.getAttribute('CanCompact') == "true");
+    return (folder.getAttribute('CanCompact') == "true" && isCommandEnabled("cmd_compactFolder"));
 }
 
 var gDeleteButton = null;

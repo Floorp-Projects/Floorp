@@ -266,7 +266,7 @@ public:
 	NS_IMETHOD MatchName(nsString *name, PRBool *matches);
 	// nsIMsgFilterHitNotification method(s)
 	NS_IMETHOD ApplyFilterHit(nsIMsgFilter *filter, PRBool *applyMore);
-
+        NS_IMETHOD IsCommandEnabled(const char *command, PRBool *result);
 
 	nsresult MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr, 
 									   nsIMsgDatabase *sourceDB, 

@@ -1217,6 +1217,12 @@ NS_IMETHODIMP nsMsgDBFolder::SetDownloadSettings(nsIMsgDownloadSettings *setting
   return NS_OK;
 }
 
+NS_IMETHODIMP nsMsgDBFolder::IsCommandEnabled(const char *command, PRBool *result)
+{
+  NS_ENSURE_ARG_POINTER(result);
+  *result = PR_TRUE;
+  return NS_OK;
+}
 
 nsresult nsMsgDBFolder::NotifyStoreClosedAllHeaders()
 {

@@ -5756,6 +5756,23 @@ NS_IMETHODIMP nsImapMailFolder::RenameSubfolders(nsIMsgFolder *oldFolder)
   return rv;
 }
 
+NS_IMETHODIMP nsImapMailFolder::IsCommandEnabled(const char *command, PRBool *result)
+{
+  NS_ENSURE_ARG_POINTER(result);
+  NS_ENSURE_ARG_POINTER(command);
+
+  *result = PR_TRUE;
+
+  if(WeAreOffline() &&
+     ((nsCRT::strcmp(command, "cmd_renameFolder") == 0) ||
+      (nsCRT::strcmp(command, "cmd_compactFolder") == 0) ||
+      (nsCRT::strcmp(command, "cmd_delete") == 0) ||
+      (nsCRT::strcmp(command, "button_delete") == 0)))
+     *result = PR_FALSE;
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP 
 nsImapMailFolder::GetCanFileMessages(PRBool *aCanFileMessages) 
 {

@@ -43,53 +43,55 @@ var FolderPaneController =
 
 	isCommandEnabled: function(command)
 	{
-        //		dump("FolderPaneController.IsCommandEnabled(" + command + ")\n");
-		switch ( command )
-		{
-			case "cmd_selectAll":
-			case "cmd_cut":
-			case "cmd_copy":
-			case "cmd_paste":
-				return false;
-			case "cmd_delete":
-			case "button_delete":
-				if ( command == "cmd_delete" )
-					goSetMenuValue(command, 'valueFolder');
-				var folderTree = GetFolderTree();
-				if ( folderTree && folderTree.selectedItems &&
-                     folderTree.selectedItems.length > 0)
-                {
-					var specialFolder = null;
-					var isServer = null;
-					var serverType = null;
-					try {
-						var selectedFolder = folderTree.selectedItems[0];
-                    	specialFolder = selectedFolder.getAttribute('SpecialFolder');
-                    	isServer = selectedFolder.getAttribute('IsServer');
-						serverType = selectedFolder.getAttribute('ServerType');
-
-                        if (serverType == "nntp") {
-				            if ( command == "cmd_delete" )
+           //	dump("FolderPaneController.IsCommandEnabled(" + command + ")\n");
+            switch ( command )
+            {
+                case "cmd_selectAll":
+                case "cmd_cut":
+                case "cmd_copy":
+                case "cmd_paste":
+                    return false;
+                case "cmd_delete":
+                case "button_delete":
+                    if ( command == "cmd_delete" )
+                        goSetMenuValue(command, 'valueFolder');
+                    var folderTree = GetFolderTree();
+                    if ( folderTree && folderTree.selectedItems &&
+                        folderTree.selectedItems.length > 0)
                     {
-					            goSetMenuValue(command, 'valueNewsgroup');
-					            goSetAccessKey(command, 'valueNewsgroupAccessKey');
-                    }
-                        }
-					}
-					catch (ex) {
-						//dump("specialFolder failure: " + ex + "\n");
-					}
-                    if (specialFolder == "Inbox" || specialFolder == "Trash" || isServer == "true")
-                       return false;
-                    else
-					   return true;
-                }
-				else
-					return false;
+                        var canDeleteThisFolder;
+                        var specialFolder = null;
+                        var isServer = null;
+                        var serverType = null;
+                        try {
+                            var selectedFolder = folderTree.selectedItems[0];
+                            specialFolder = selectedFolder.getAttribute('SpecialFolder');
+                            isServer = selectedFolder.getAttribute('IsServer');
+                            serverType = selectedFolder.getAttribute('ServerType');
 
-			default:
-				return false;
-		}
+                            if (serverType == "nntp") {
+                                if ( command == "cmd_delete" )
+                                {
+                                    goSetMenuValue(command, 'valueNewsgroup');
+                                    goSetAccessKey(command, 'valueNewsgroupAccessKey');
+                                }
+                            }
+                        }
+                        catch (ex) {
+                            //dump("specialFolder failure: " + ex + "\n");
+                        }
+                        if (specialFolder == "Inbox" || specialFolder == "Trash" || isServer == "true")
+                            canDeleteThisFolder = false;
+                        else
+                            canDeleteThisFolder = true;
+                        return canDeleteThisFolder && isCommandEnabled(command); 
+                   }
+                   else
+                        return false;
+
+               default:
+                   return false;
+            }
 	},
 
 	doCommand: function(command)
@@ -378,7 +380,7 @@ var DefaultController =
       case "cmd_redo":
           return SetupUndoRedoCommand(command);
       case "cmd_renameFolder":
-        return IsRenameFolderEnabled();
+        return IsRenameFolderEnabled(); 
       case "button_getNewMessages":
       case "cmd_getNewMessages":
       case "cmd_properties":
@@ -390,7 +392,7 @@ var DefaultController =
       case "cmd_emptyTrash":
         return IsEmptyTrashEnabled();
       case "cmd_compactFolder":
-        return IsCompactFolderEnabled();
+        return IsCompactFolderEnabled(); 
       case "cmd_setFolderCharset":
         return IsFolderCharsetEnabled();
       case "cmd_close":
@@ -754,18 +756,20 @@ function SetupCommandUpdateHandlers()
 }
 
 function IsRenameFolderEnabled()
-{
-	var tree = GetFolderTree();
-	var folderList = tree.selectedItems;
+{     
+    var tree = GetFolderTree();
+    var folderList = tree.selectedItems;
 
-	if(folderList.length == 1)
-	{
-		var folderNode = folderList[0];
-		return(folderNode.getAttribute("CanRename") == "true");
-	}
-	else
-		return false;
-
+    if(folderList.length == 1)
+    {
+        var canRename;
+        var folderNode = folderList[0];
+        canRename = (folderNode.getAttribute("CanRename") == "true");
+        return canRename && isCommandEnabled("cmd_renameFolder");
+    }
+    else
+        return false;
+    
 }
 
 function IsFolderCharsetEnabled()
@@ -1076,4 +1080,19 @@ function CheckOnline()
   if(ioService.offline) return false;
   else return true;
 	
+}
+
+function isCommandEnabled(cmd)
+{
+  var selectedFolders = GetSelectedMsgFolders();
+  var numFolders = selectedFolders.length;
+  if(numFolders !=1)
+    return false;
+
+  var folder = selectedFolders[0];
+  if (!folder)
+    return false;
+  else
+    return folder.isCommandEnabled(cmd);
+
 }

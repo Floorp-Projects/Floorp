@@ -362,6 +362,7 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
    */
   const unsigned long allMessageCountNotifications    = 0;
   void enableNotifications(in long notificationType, in boolean enable);
+  boolean isCommandEnabled(in string command);
 
   attribute nsIMsgRetentionSettings retentionSettings;
   attribute nsIMsgDownloadSettings downloadSettings;

@@ -97,6 +97,7 @@ public:
   NS_IMETHOD SetDownloadSettings(nsIMsgDownloadSettings *settings);
   NS_IMETHOD GetOfflineStoreOutputStream(nsIOutputStream **outputStream);
   NS_IMETHOD GetOfflineStoreInputStream(nsIInputStream **outputStream);
+  NS_IMETHOD IsCommandEnabled(const char *command, PRBool *result);
 protected:
   virtual nsresult ReadDBFolderInfo(PRBool force);
   virtual nsresult FlushToFolderCache();
