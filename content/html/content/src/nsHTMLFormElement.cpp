@@ -1600,7 +1600,7 @@ nsFormControlList::AddElementToTable(nsIFormControl* aChild,
 
       // Found an element, create a list, add the element to the list and put
       // the list in the hash
-      nsContentList *list = new nsContentList(nsnull);
+      nsBaseContentList *list = new nsBaseContentList();
       NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
 
       list->AppendElement(content);
@@ -1620,11 +1620,11 @@ nsFormControlList::AddElementToTable(nsIFormControl* aChild,
       NS_ENSURE_TRUE(nodeList, NS_ERROR_FAILURE);
 
       // Upcast, uggly, but it works!
-      nsContentList *list = NS_STATIC_CAST(nsContentList *,
-                                           (nsIDOMNodeList *)nodeList.get());
+      nsBaseContentList *list = NS_STATIC_CAST(nsBaseContentList *,
+                                               (nsIDOMNodeList *)nodeList.get());
 
       PRInt32 oldIndex = -1;
-      list->IndexOf(newChild, oldIndex, PR_TRUE);
+      list->IndexOf(newChild, oldIndex);
 
       // Add the new child only if it's not in our list already
       if (oldIndex < 0) {
@@ -1686,8 +1686,8 @@ nsFormControlList::RemoveElementFromTable(nsIFormControl* aChild,
   NS_ENSURE_TRUE(nodeList, NS_ERROR_FAILURE);
 
   // Upcast, uggly, but it works!
-  nsContentList *list = NS_STATIC_CAST(nsContentList *,
-                                       (nsIDOMNodeList *)nodeList.get());
+  nsBaseContentList *list = NS_STATIC_CAST(nsBaseContentList *,
+                                           (nsIDOMNodeList *)nodeList.get());
 
   list->RemoveElement(content);
 
