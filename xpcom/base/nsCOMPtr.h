@@ -600,7 +600,7 @@ class nsCOMPtr
     Specializing |nsCOMPtr| for |nsISupports| allows us to 
   */
 
-// template <>
+NS_SPECIALIZE_TEMPLATE
 class nsCOMPtr<nsISupports>
     : private nsCOMPtr_base
   {
@@ -843,7 +843,7 @@ class nsGetterAddRefs
   };
 
 
-// template <>
+NS_SPECIALIZE_TEMPLATE
 class nsGetterAddRefs<nsISupports>
   {
     public:
