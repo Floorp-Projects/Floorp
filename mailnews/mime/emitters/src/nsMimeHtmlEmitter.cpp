@@ -329,7 +329,7 @@ nsMimeHtmlDisplayEmitter::StartAttachment(const char *name, const char *contentT
     // we emit it...
     nsXPIDLString unicodeHeaderValue;
 
-    rv = NS_ERROR_FAILURE;
+    rv = NS_ERROR_FAILURE;  // use failure to mean that we couldn't decode
     if (mUnicodeConverter)
   	  rv = mUnicodeConverter->DecodeMimeHeader(name,
                                                getter_Copies(unicodeHeaderValue));
@@ -337,6 +337,10 @@ nsMimeHtmlDisplayEmitter::StartAttachment(const char *name, const char *contentT
     if (NS_FAILED(rv))
     {
       unicodeHeaderValue.Adopt(ToNewUnicode(nsDependentCString(name)));
+
+        // but it's not really a failure if we didn't have a converter in the first place
+      if ( !mUnicodeConverter )
+        rv = NS_OK;
     }
 
     headerSink->HandleAttachment(contentType, url /* was escapedUrl */, unicodeHeaderValue, uriString, aNotDownloaded);
