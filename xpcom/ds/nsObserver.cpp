@@ -28,7 +28,6 @@
 #include "nsRepository.h"
 #include "nsIObserver.h"
 #include "nsObserver.h"
-#include "nsString.h"
 
 static NS_DEFINE_CID(kObserverCID, NS_OBSERVER_CID);
 

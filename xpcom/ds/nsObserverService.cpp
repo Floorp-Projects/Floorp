@@ -32,7 +32,6 @@
 #include "nsIObserverList.h"
 #include "nsObserverList.h"
 #include "nsHashtable.h"
-#include "nsString.h"
 
 static NS_DEFINE_CID(kObserverServiceCID, NS_OBSERVERSERVICE_CID);
 
@@ -100,7 +99,7 @@ ReleaseObserverList(nsHashKey *aKey, void *aData, void* closure)
     return PR_TRUE;
 }
 
-nsresult nsObserverService::GetObserverList(const nsString& aTopic, nsIObserverList** anObserverList)
+nsresult nsObserverService::GetObserverList(const PRUnichar* aTopic, nsIObserverList** anObserverList)
 {
     if (anObserverList == NULL)
     {
@@ -152,8 +151,7 @@ nsresult nsObserverService::AddObserver(nsIObserver* anObserver, const PRUnichar
         return NS_ERROR_NULL_POINTER;
     }
 
-    nsAutoString topic(aTopic);
-	rv = GetObserverList(topic, &anObserverList);
+	rv = GetObserverList(aTopic, &anObserverList);
 	if (NS_FAILED(rv)) return rv;
 
 	if (anObserverList) {
@@ -178,8 +176,7 @@ nsresult nsObserverService::RemoveObserver(nsIObserver* anObserver, const PRUnic
         return NS_ERROR_NULL_POINTER;
     }
 
-    nsAutoString topic(aTopic);
-	rv = GetObserverList(topic, &anObserverList);
+	rv = GetObserverList(aTopic, &anObserverList);
 	if (NS_FAILED(rv)) return rv;
 
 	if (anObserverList) {
@@ -204,8 +201,7 @@ nsresult nsObserverService::EnumerateObserverList(const PRUnichar* aTopic, nsIEn
         return NS_ERROR_NULL_POINTER;
     }
 
-    nsAutoString topic(aTopic);
-	rv = GetObserverList(topic, &anObserverList);
+	rv = GetObserverList(aTopic, &anObserverList);
 	if (NS_FAILED(rv)) return rv;
 
 	if (anObserverList) {

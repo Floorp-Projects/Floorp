@@ -27,7 +27,6 @@
 #include "nsIObserverList.h"
 
 class nsObjectHashtable;
-class nsString;
 
 // {D07F5195-E3D1-11d2-8ACD-00105A1B8860}
 #define NS_OBSERVERSERVICE_CID \
@@ -51,7 +50,7 @@ public:
 
 private:
 	
-  NS_IMETHOD GetObserverList(const nsString& aTopic, nsIObserverList** anObserverList);
+  NS_IMETHOD GetObserverList(const PRUnichar* aTopic, nsIObserverList** anObserverList);
 
   nsObjectHashtable* mObserverTopicTable;
 
