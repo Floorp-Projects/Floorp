@@ -40,4 +40,5 @@ JAR = $(JDK)/sh/jar
 INCLUDES   += -I$(JDK)/include
 
 #OTHER_LIBS += -L$(JDK)/lib/aix/native_threads -ljava
-OTHER_LIBS += -L$(JDK)/jre/bin -ljava
+OTHER_LIBS += -L$(JDK)/jre/bin -ljava -L$(JDK)/jre/bin/classic -ljvm
+
