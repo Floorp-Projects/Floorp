@@ -825,7 +825,8 @@ wait_for_retrieval(GtkClipboard *clipboard, retrieval_context *r_context)
     int cnumber = ConnectionNumber(xDisplay);
     fd_set select_set;
     FD_ZERO(&select_set);
-    FD_SET(cnumber++, &select_set);
+    FD_SET(cnumber, &select_set);
+    ++cnumber;
     struct timeval tv;
 #endif
 
