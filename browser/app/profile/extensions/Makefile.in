@@ -30,6 +30,8 @@ FILES := $(addprefix $(srcdir)/, $(FILES))
 
 libs::
 	$(INSTALL) $(FILES) $(DIST)/bin/defaults/profile/extensions
-
+	$(INSTALL) $(srcdir)/"installed-extensions.txt" $(DIST)/bin/Extensions
+ 
 install::
 	$(SYSINSTALL) $(IFLAGS1) $(FILES) $(DESTDIR)$(mozappdir)/defaults/profile/extensions
+	$(SYSINSTALL) $(IFLAGS1) $(srcdir)/"installed-extensions.txt" $(DESTDIR)$(mozappdir)/Extensions
