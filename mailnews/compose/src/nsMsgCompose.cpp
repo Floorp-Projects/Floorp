@@ -212,7 +212,7 @@ static void TranslateLineEnding(nsString& data)
   data.SetLength(wPtr - sPtr);
 }
 
-static void GetTopmostMsgWindowCharacterSet(nsXPIDLString& charset)
+static void GetTopmostMsgWindowCharacterSet(nsXPIDLString& charset, PRBool* charsetOverride)
 {
   // HACK: if we are replying to a message and that message used a charset over ride
   // (as specified in the top most window (assuming the reply originated from that window)
@@ -226,6 +226,7 @@ static void GetTopmostMsgWindowCharacterSet(nsXPIDLString& charset)
     {
       nsXPIDLString mailCharset;
       msgWindow->GetMailCharacterSet(getter_Copies(charset));
+      msgWindow->GetCharsetOverride(charsetOverride);
     }
   }
 }
@@ -244,6 +245,7 @@ nsMsgCompose::nsMsgCompose()
   m_window = nsnull;
   m_editor = nsnull;
   mQuoteStreamListener=nsnull;
+  mCharsetOverride = PR_FALSE;
   m_compFields = nsnull;    //m_compFields will be set during nsMsgCompose::Initialize
   mType = nsIMsgCompType::New;
 
@@ -1396,7 +1398,7 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
 
           // use a charset of the original message
           nsXPIDLString mailCharset;
-          GetTopmostMsgWindowCharacterSet(mailCharset);
+          GetTopmostMsgWindowCharacterSet(mailCharset, &mCharsetOverride);
           if (mailCharset && (* (const PRUnichar *) mailCharset) )
           {
             charset.Adopt(ToNewUTF8String(nsDependentString(mailCharset)));
@@ -1452,7 +1454,7 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
 
           // use a charset of the original message
           nsXPIDLString mailCharset;
-          GetTopmostMsgWindowCharacterSet(mailCharset);
+          GetTopmostMsgWindowCharacterSet(mailCharset, &mCharsetOverride);
           if (mailCharset && (* (const PRUnichar *) mailCharset) )
           {
             charset.Adopt(ToNewUTF8String(nsDependentString(mailCharset)));
@@ -2079,7 +2081,8 @@ nsMsgCompose::QuoteOriginalMessage(const char *originalMsgURI, PRInt32 what) // 
 
   mQuoteStreamListener->SetComposeObj(this);
 
-  rv = mQuote->QuoteMessage(originalMsgURI, what != 1, mQuoteStreamListener, m_compFields->GetCharacterSet());
+  rv = mQuote->QuoteMessage(originalMsgURI, what != 1, mQuoteStreamListener, 
+                            mCharsetOverride ? m_compFields->GetCharacterSet() : "");
   return rv;
 }
 

@@ -74,6 +74,8 @@ interface nsIMsgWindow : nsISupports {
     readonly attribute nsIPrompt promptDialog;
     readonly attribute nsIAuthPrompt authPromptDialog;
     attribute wstring mailCharacterSet;
+	// Remember the message's charaset was overridden, so it can be inherited (e.g for quoting). 
+    attribute boolean charsetOverride;
 
   /* has a running url been stopped? If you care about checking 
       this flag, you need to clear it before you start your operation since 

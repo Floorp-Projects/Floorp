@@ -143,6 +143,7 @@ private:
 	nsMsgDocumentStateListener                *mDocumentListener;
 	MSG_ComposeType                           mType;		          // Message type
   nsCOMPtr<nsISupportsArray>                mStateListeners;		// contents are nsISupports
+  PRBool                                    mCharsetOverride;
 
   nsCOMPtr<nsIMsgSendListener>              mExternalSendListener;
   nsCString                                 mSmtpPassword;

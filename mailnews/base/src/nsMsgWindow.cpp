@@ -80,6 +80,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(nsMsgWindow,
 
 nsMsgWindow::nsMsgWindow()
 {
+  mCharsetOverride = PR_FALSE;
   m_stopped = PR_FALSE;
   NS_INIT_ISUPPORTS();
 }
@@ -335,6 +336,19 @@ NS_IMETHODIMP nsMsgWindow::SetMailCharacterSet(const PRUnichar * aMailCharacterS
       rv = charsetAtom->ToString(mMailCharacterSet);
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgWindow::GetCharsetOverride(PRBool *aCharsetOverride)
+{
+  NS_ENSURE_ARG_POINTER(aCharsetOverride);
+  *aCharsetOverride = mCharsetOverride;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgWindow::SetCharsetOverride(PRBool aCharsetOverride)
+{
+  mCharsetOverride = aCharsetOverride;
   return NS_OK;
 }
 
