@@ -92,6 +92,7 @@ interface nsIChromeRegistry : nsISupports
   void uninstallPackage(in wstring packageName, in boolean useProfile);
 
   void getBackstopSheets(out nsISupportsArray styleSheets);
+  void getUserSheets(in boolean useChromeSheets, out nsISupportsArray styleSheets);
 
   boolean allowScriptsForSkin(in nsIURI url);
 
