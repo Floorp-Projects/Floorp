@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Patrick C. Beard <beard@netscape.com>
+ *   Seth Spitzer <sspitzer@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -36,6 +37,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef MOZ_LOGGING
+// sorry, this has to be before the pre-compiled header
+#define FORCE_PR_LOG /* Allow logging in the release build */
+#endif
+
 #include "nsCRT.h"
 #include "nsBayesianFilter.h"
 #include "nsIInputStream.h"
@@ -47,6 +53,9 @@
 #include "nsMsgUtils.h" // for GetMessageServiceFromURI
 #include "prnetdb.h"
 #include "nsIMsgWindow.h"
+#include "prlog.h"
+
+static PRLogModuleInfo *BayesianFilterLogModule = nsnull;
 
 static const char* kBayesianFilterTokenDelimiters = " \t\n\r\f!\"#%&()*+,./:;<=>?@[\\]^_`{|}~";
 
@@ -153,6 +162,8 @@ Tokenizer::Tokenizer()
     PL_INIT_ARENA_POOL(&mWordPool, "Words Arena", 16384);
     PRBool ok = PL_DHashTableInit(&mTokenTable, &gTokenTableOps, nsnull, sizeof(Token), 256);
     NS_ASSERTION(ok, "mTokenTable failed to initialize");
+    if (!ok)
+      PR_LOG(BayesianFilterLogModule, PR_LOG_ALWAYS, ("mTokenTable failed to initialize"));
 }
 
 Tokenizer::~Tokenizer()
@@ -173,6 +184,8 @@ nsresult Tokenizer::clearTokens()
         PL_FreeArenaPool(&mWordPool);
         ok = PL_DHashTableInit(&mTokenTable, &gTokenTableOps, nsnull, sizeof(Token), 256);
         NS_ASSERTION(ok, "mTokenTable failed to initialize");
+        if (!ok)
+          PR_LOG(BayesianFilterLogModule, PR_LOG_ALWAYS, ("mTokenTable failed to initialize in clearTokens()"));
     }
     return (ok) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
@@ -197,23 +210,29 @@ inline Token* Tokenizer::get(const char* word)
 
 Token* Tokenizer::add(const char* word, PRUint32 count)
 {
+    PR_LOG(BayesianFilterLogModule, PR_LOG_ALWAYS, ("add word: %s (count=%d)", word, count));
     PLDHashEntryHdr* entry = PL_DHashTableOperate(&mTokenTable, word, PL_DHASH_ADD);
     Token* token = NS_STATIC_CAST(Token*, entry);
     if (token) {
         if (token->mWord == NULL) {
             PRUint32 len = strlen(word);
             NS_ASSERTION(len != 0, "adding zero length word to tokenizer");
+            if (!len)
+              PR_LOG(BayesianFilterLogModule, PR_LOG_ALWAYS, ("adding zero length word to tokenizer"));
             token->mWord = copyWord(word, len);
             NS_ASSERTION(token->mWord, "copyWord failed");
             if (!token->mWord) {
+                PR_LOG(BayesianFilterLogModule, PR_LOG_ALWAYS, ("copyWord failed: %s (%d)", word, len));
                 PL_DHashTableRawRemove(&mTokenTable, entry);
                 return NULL;
             }
             token->mLength = len;
             token->mCount = count;
             token->mProbability = 0;
+            PR_LOG(BayesianFilterLogModule, PR_LOG_ALWAYS, ("adding word to tokenizer: %s (len=%d) (count=%d)", word, len, count));
         } else {
             token->mCount += count;
+            PR_LOG(BayesianFilterLogModule, PR_LOG_ALWAYS, ("adding word to tokenizer: %s (count=%d) (mCount=%d)", word, count, token->mCount));
         }
     }
     return token;
@@ -221,13 +240,18 @@ Token* Tokenizer::add(const char* word, PRUint32 count)
 
 void Tokenizer::remove(const char* word, PRUint32 count)
 {
+    PR_LOG(BayesianFilterLogModule, PR_LOG_ALWAYS, ("remove word: %s (count=%d)", word, count));
     Token* token = get(word);
     if (token) {
         NS_ASSERTION(token->mCount >= count, "token count underflow");
         if (token->mCount >= count) {
+            PR_LOG(BayesianFilterLogModule, PR_LOG_ALWAYS, ("remove word: %s (count=%d) (mCount=%d)", word, count, token->mCount));
             token->mCount -= count;
             if (token->mCount == 0)
                 PL_DHashTableRawRemove(&mTokenTable, token);
+        }
+        else {
+          PR_LOG(BayesianFilterLogModule, PR_LOG_ALWAYS, ("token count underflow: %s (count=%d) (mCount=%d)", word, count, token->mCount));
         }
     }
 }
@@ -269,6 +293,7 @@ static char* toLowerCase(char* str)
 
 void Tokenizer::tokenize(char* text)
 {
+    PR_LOG(BayesianFilterLogModule, PR_LOG_ALWAYS, ("tokenize: %s", text));
     char* word;
     char* next = text;
     while ((word = nsCRT::strtok(next, kBayesianFilterTokenDelimiters, &next)) != NULL) {
@@ -324,6 +349,9 @@ void Tokenizer::visit(PRBool (*f) (Token*, void*), void* data)
     VisitClosure closure = { f, data };
     PRUint32 visitCount = PL_DHashTableEnumerate(&mTokenTable, VisitEntry, &closure);
     NS_ASSERTION(visitCount == mTokenTable.entryCount, "visitCount != entryCount!");
+    if (visitCount != mTokenTable.entryCount) {
+      PR_LOG(BayesianFilterLogModule, PR_LOG_ALWAYS, ("visitCount != entryCount!: %d vs %d", visitCount, mTokenTable.entryCount));
+    }
 }
 
 inline PRUint32 Tokenizer::countTokens()
@@ -497,6 +525,7 @@ NS_IMETHODIMP TokenStreamListener::OnStopRequest(nsIRequest *aRequest, nsISuppor
     }
     
     /* finally, analyze the tokenized message. */
+    PR_LOG(BayesianFilterLogModule, PR_LOG_ALWAYS, ("analyze the tokenized message"));
     if (mAnalyzer)
         mAnalyzer->analyzeTokens(mTokenizer);
     
@@ -510,10 +539,16 @@ nsBayesianFilter::nsBayesianFilter()
     :   mGoodCount(0), mBadCount(0),
         mBatchLevel(0), mTrainingDataDirty(PR_FALSE)
 {
+    if (!BayesianFilterLogModule)
+      BayesianFilterLogModule = PR_NewLogModule("BayesianFilter");
+
     PRBool ok = (mGoodTokens && mBadTokens);
     NS_ASSERTION(ok, "error allocating tokenizers");
     if (ok)
         readTrainingData();
+    else {
+      PR_LOG(BayesianFilterLogModule, PR_LOG_ALWAYS, ("error allocating tokenizers"));
+    }
 }
 
 nsBayesianFilter::~nsBayesianFilter() {}
@@ -552,8 +587,11 @@ public:
 
     virtual void classifyNextMessage()
     {
-      if (++mCurMessageToClassify < mNumMessagesToClassify && mMessageURIs[mCurMessageToClassify])
+      
+      if (++mCurMessageToClassify < mNumMessagesToClassify && mMessageURIs[mCurMessageToClassify]) {
+        PR_LOG(BayesianFilterLogModule, PR_LOG_ALWAYS, ("classifyNextMessage(%s)", mMessageURIs[mCurMessageToClassify]));
         mFilter->tokenizeMessage(mMessageURIs[mCurMessageToClassify], mMsgWindow, this);
+      }
       else
       {
         mTokenListener = nsnull; // this breaks the circular ref that keeps this object alive
@@ -613,10 +651,12 @@ void nsBayesianFilter::classifyMessage(Tokenizer& tokenizer, const char* message
     // this will also "encourage" the user to train
     // see bug #194238
     if (listener && !mGoodCount && !mGoodTokens.countTokens()) {
+      PR_LOG(BayesianFilterLogModule, PR_LOG_ALWAYS, ("no good tokens, assume junk"));
       listener->OnMessageClassified(messageURI, nsMsgJunkStatus(nsIJunkMailPlugin::JUNK));
       return;
     }
     if (listener && !mBadCount && !mBadTokens.countTokens()) {
+      PR_LOG(BayesianFilterLogModule, PR_LOG_ALWAYS, ("no bad tokens, assume good"));
       listener->OnMessageClassified(messageURI, nsMsgJunkStatus(nsIJunkMailPlugin::GOOD));
       return;
     }
@@ -643,8 +683,10 @@ void nsBayesianFilter::classifyMessage(Tokenizer& tokenizer, const char* message
                                          (dmin(1.0, (b / nbad)) /
                                               (dmin(1.0, (g / ngood)) +
                                                dmin(1.0, (b / nbad))))));
+            PR_LOG(BayesianFilterLogModule, PR_LOG_ALWAYS, ("token.mProbability (%s) is %f", word, token.mProbability));
         } else {
             token.mProbability = 0.4;
+            PR_LOG(BayesianFilterLogModule, PR_LOG_ALWAYS, ("token.mProbability (%s) assume 0.4", word));
         }
     }
     
@@ -665,6 +707,7 @@ void nsBayesianFilter::classifyMessage(Tokenizer& tokenizer, const char* message
     }
     double prob = (prod1 / (prod1 + prod2));
     PRBool isJunk = (prob >= 0.90);
+    PR_LOG(BayesianFilterLogModule, PR_LOG_ALWAYS, ("%s is junk probability = (%f)", messageURI, prob));
 
     delete[] tokens;
 
@@ -690,18 +733,14 @@ NS_IMETHODIMP nsBayesianFilter::GetShouldDownloadAllHeaders(PRBool *aShouldDownl
 
 NS_IMETHODIMP nsBayesianFilter::StartBatch(void)
 {
-#ifdef DEBUG_dmose
-    printf("StartBatch() entered with mBatchLevel=%d\n", mBatchLevel);
-#endif
-    ++mBatchLevel;
-    return NS_OK;
+  PR_LOG(BayesianFilterLogModule, PR_LOG_ALWAYS, ("StartBatch() entered with mBatchLevel=%d", mBatchLevel));
+  ++mBatchLevel;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsBayesianFilter::EndBatch(void)
 {
-#ifdef DEBUG_dmose
-    printf("EndBatch() entered with mBatchLevel=%d\n", mBatchLevel);
-#endif
+    PR_LOG(BayesianFilterLogModule, PR_LOG_ALWAYS, ("EndBatch() entered with mBatchLevel=%d", mBatchLevel));
     NS_ASSERTION(mBatchLevel > 0, "nsBayesianFilter::EndBatch() called with"
                  " mBatchLevel <= 0");
     --mBatchLevel;
@@ -781,6 +820,7 @@ void nsBayesianFilter::observeMessage(Tokenizer& tokenizer, const char* messageU
                                       nsMsgJunkStatus oldClassification, nsMsgJunkStatus newClassification,
                                       nsIJunkMailClassificationListener* listener)
 {
+    PR_LOG(BayesianFilterLogModule, PR_LOG_ALWAYS, ("observeMessage(%s) old=%d new=%d", messageURL, oldClassification, newClassification));
     TokenEnumeration tokens = tokenizer.getTokens();
     switch (oldClassification) {
     case nsIJunkMailPlugin::JUNK:
@@ -935,9 +975,7 @@ static const char kMagicCookie[] = { '\xFE', '\xED', '\xFA', '\xCE' };
 
 void nsBayesianFilter::writeTrainingData()
 {
-#ifdef DEBUG_dmose
-    printf("writeTrainingData() entered\n");
-#endif
+    PR_LOG(BayesianFilterLogModule, PR_LOG_ALWAYS, ("writeTrainingData() entered"));
     nsCOMPtr<nsILocalFile> file;
     nsresult rv = getTrainingFile(file);
     if (NS_FAILED(rv)) return;
@@ -986,6 +1024,7 @@ void nsBayesianFilter::readTrainingData()
            readTokens(stream, mGoodTokens) &&
            readTokens(stream, mBadTokens))) {
         NS_WARNING("failed to read training data.");
+        PR_LOG(BayesianFilterLogModule, PR_LOG_ALWAYS, ("failed to read training data."));
     }
     
     fclose(stream);
