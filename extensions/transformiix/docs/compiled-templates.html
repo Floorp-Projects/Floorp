@@ -1,0 +1,100 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN">
+<html>
+  <head>
+    <title>XSLT Templates and Compiling</title>
+  </head>
+
+  <body>
+    <h1>XSLT Templates and Compiling</h1>
+    <p>This document describes compiling of XSLT stylesheets and the
+      evaluation of the result.</p>
+    <div>
+      <ul>
+	<li><a href="#pre">Prerequisites</a></li>
+	<li><a href="#comp">Compilation</a></li>
+	<li><a href="#eval">Evaluation</a></li>
+      </ul>
+</div>
+    <h2><a name="pre">Objectives:</a></h2>
+    <ul>
+      <li>Speed</li>
+      <li>Better support for AVTs</li>
+      <li>Interruptability of processing</li>
+      <li>exclude and alias namespaces</li>
+    </ul>
+    <h2>Concepts:</h2>
+    <div>
+      <dl>
+	<dt>LRE namespaces</dt>
+	<dd>The concept of namespaces needs two mappings of IDs to
+	  prefix/namespaceURI pairs. We can't create LRE elements with
+	  known LRE namespace URIs in the template, as namespace-alias can
+	  be unknown. (In a sink, the namespace-alias element can occur
+	  after the template element.) Therefore, LRE elements carry
+	  localname and namespace ID and output tries to 
+	  <ol>
+	    <li>lookup the ID in the namespace alias list,</li>
+	    <li>lookup the ID in the original namespace list.</li>
+	  </ol>
+	  To identify aliases correctly, one namespace URI with two
+	  prefixes needs two IDs.</dd>
+      </dl>
+    </div>
+
+    <h2><a name="comp">Compilation:</a></h2>
+    <p>The XSLT specification describes XSLT in terms of the XPath
+      datamodel, something pretty close to a DOM. So we talk about the
+      input in terms of DOM elements.</p>
+    <div>The DOM nodes in a stylesheet get compiled into either
+      <ul>
+	<li>nothing :-) (stuff like xsl:output),</li>
+	<li><code>xslTopElement</code>s or</li>
+	<li><code>xslInstruction</code>s.</li>
+      </ul>
+      The <code>xslInstruction</code>s fall into classes,
+      <ol>
+	<li>simple instructions,</li>
+	<li>utilities (no-op, variable-pop, push-handler),</li>
+	<li>branching instructions,</li>
+	<li>instructions changing the result handler and</li>
+	<li>instructions calling into different
+	  <code>xslTopElement</code>s.</li>
+      </ol>
+    </div>
+    <h2><a name="eval">How do instructions work?</a></h2>
+    <div>The general pattern used to create output from a set of
+      instructions is
+      <pre>while (instruction) {
+  rv = instruction.do(args);
+  if (NS_FAILED(rv)) {
+    //cleanup
+    return rv;
+  }
+  instruction = instruction.mNext;
+}</pre>
+      This says pretty much all about simple and utility instructions.
+    </div>
+    <h3>Branching instructions</h3>
+    <div>Branching instructions need a tad more work. A branching
+      instruction is a instruction that forks the flow of work. That
+      includes that <code>instruction</code> needs to be part of the
+      argument list of <code>::do()</code>.<br>
+      Suggested scheme: Each possible path of workflow
+      starts with a <em>no-op-instruction</em> and ends with a link to
+      a single <em>no-op-instruction</em>. The <code>do</code> of the
+      branching instruction sets the instruction to a
+      <em>no-op-instruction</em> according to the decisions. The
+      iteration step in the main loop skips the no-op and the workflow
+      proceeds in the intented path. The trailing single no-op helps
+      in rejoining the paths, as that no-op can be created before the
+      paths and thus easily appended to each end of the paths.</div>
+    <h3>Instructions that change the output handler</h3>
+    <div>These instructions (attribute, comment, pi creating text
+      handlers, variable possibly creating a rtf handler) get created
+      by inserting a push-handler-instruction into the workflow for
+      the start of the element and the XSLT instruction at the
+      end. The handler instruction should keep a non-owning reference
+      to the push-handler-instruction to get the result and restore
+      the previous handler.</div>
+  </body>
+</html>
