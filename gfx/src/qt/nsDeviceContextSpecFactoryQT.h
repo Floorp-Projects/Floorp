@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -16,11 +16,11 @@
  *
  * The Initial Developer of the Original Code is 
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1999
+ * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *		John C. Griggs <johng@corel.com>
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -45,23 +45,20 @@
 
 class nsDeviceContextSpecFactoryQT : public nsIDeviceContextSpecFactory
 {
+
 public:
-    nsDeviceContextSpecFactoryQT();
+  nsDeviceContextSpecFactoryQT();
 
-    NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS
 
-    NS_IMETHOD Init(void);
-    NS_IMETHOD CreateDeviceContextSpec(nsIWidget *aWidget,
-                                       nsIPrintSettings* aPrintSettings,
-                                       nsIDeviceContextSpec *&aNewSpec,
-                                       PRBool aIsPrintPreview);
+  NS_IMETHOD Init(void);
+  NS_IMETHOD CreateDeviceContextSpec(nsIWidget *aWidget,
+                                     nsIPrintSettings* aPrintSettings,
+                                     nsIDeviceContextSpec *&aNewSpec,
+                                     PRBool aIsPrintPreview);
 
 protected:
-    virtual ~nsDeviceContextSpecFactoryQT();
-#ifdef DEBUG
-private:
-		PRUint32 mID;
-#endif
+  virtual ~nsDeviceContextSpecFactoryQT();
 };
 
-#endif
+#endif /* !nsDeviceContextSpecFactoryQT_h___ */

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -16,11 +16,11 @@
  *
  * The Initial Developer of the Original Code is 
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1999
+ * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *		John C. Griggs <johng@corel.com>
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -39,84 +39,43 @@
 
 #include "nsDeviceContextSpecFactoryQT.h"
 #include "nsDeviceContextSpecQT.h"
-#include "nsRenderingContextQT.h"
 #include "nsGfxCIID.h"
 #include "plstr.h"
-#include <qapplication.h>
-
-#include "qtlog.h"
-
-#ifdef DEBUG
-PRUint32 gDCSpecFactoryCount = 0;
-PRUint32 gDCSpecFactoryID = 0;
-#endif
-
-/** -------------------------------------------------------
- *  Constructor
- *  @update   dc 2/16/98
- */
-nsDeviceContextSpecFactoryQT::nsDeviceContextSpecFactoryQT()
-{
-#ifdef DEBUG
-  gDCSpecFactoryCount++;
-  mID = gDCSpecFactoryID++;
-  PR_LOG(gQTLogModule, QT_BASIC,
-      ("nsDeviceContextSpecFactoryQT CTOR (%p) ID: %d, Count: %d\n",
-       this, mID, gDCSpecFactoryCount));
-#endif
-   NS_INIT_ISUPPORTS();
-}
-
-/** -------------------------------------------------------
- *  Destructor
- *  @update   dc 2/16/98
- */
-nsDeviceContextSpecFactoryQT::~nsDeviceContextSpecFactoryQT()
-{
-#ifdef DEBUG
-  gDCSpecFactoryCount--;
-  PR_LOG(gQTLogModule, QT_BASIC,
-      ("nsDeviceContextSpecFactoryQT DTOR (%p) ID: %d, Count: %d\n",
-       this, mID, gDCSpecFactoryCount));
-#endif
-}
-
-static NS_DEFINE_IID(kIDeviceContextSpecIID, NS_IDEVICE_CONTEXT_SPEC_IID);
-static NS_DEFINE_IID(kDeviceContextSpecCID, NS_DEVICE_CONTEXT_SPEC_CID);
 
 NS_IMPL_ISUPPORTS1(nsDeviceContextSpecFactoryQT, nsIDeviceContextSpecFactory)
 
-/** -------------------------------------------------------
- *  Initialize the device context spec factory
- *  @update   dc 2/16/98
- */
+nsDeviceContextSpecFactoryQT::nsDeviceContextSpecFactoryQT() 
+{
+  NS_INIT_ISUPPORTS();
+}
+
+nsDeviceContextSpecFactoryQT::~nsDeviceContextSpecFactoryQT() 
+{
+}
+
 NS_IMETHODIMP nsDeviceContextSpecFactoryQT::Init(void)
 {
-    return NS_OK;
+  return NS_OK;
 }
 
-/** -------------------------------------------------------
- *  Get a device context specification
- *  @update   dc 2/16/98
- */
-NS_IMETHODIMP
-nsDeviceContextSpecFactoryQT::CreateDeviceContextSpec(nsIWidget *aWidget,
-                                                      nsIPrintSettings* aPrintSettings,
-                                                      nsIDeviceContextSpec *&aNewSpec,
-                                                      PRBool aIsPrintPreview)
+NS_IMETHODIMP nsDeviceContextSpecFactoryQT::CreateDeviceContextSpec(nsIWidget *aWidget,
+                                                                    nsIPrintSettings* aPrintSettings,
+                                                                    nsIDeviceContextSpec *&aNewSpec,
+                                                                    PRBool aIsPrintPreview)
 {
-    nsresult  rv = NS_ERROR_FAILURE;
-    nsIDeviceContextSpec  *devSpec = nsnull;
-
-    nsComponentManager::CreateInstance(kDeviceContextSpecCID,nsnull, 
-                                       kIDeviceContextSpecIID, 
-                                       (void **)&devSpec);
-
-    if (nsnull != devSpec) {
-        if (NS_OK == ((nsDeviceContextSpecQT*)devSpec)->Init(aPrintSettings)) {
-            aNewSpec = devSpec;
-            rv = NS_OK;
-        }
+  nsresult rv;
+  static NS_DEFINE_CID(kDeviceContextSpecCID, NS_DEVICE_CONTEXT_SPEC_CID);
+  nsCOMPtr<nsIDeviceContextSpec> devSpec = do_CreateInstance(kDeviceContextSpecCID, &rv);
+  if (NS_SUCCEEDED(rv))
+  {
+    rv = ((nsDeviceContextSpecQT *)devSpec.get())->Init(aPrintSettings);
+    if (NS_SUCCEEDED(rv))
+    {
+      aNewSpec = devSpec;
+      NS_ADDREF(aNewSpec);
     }
-    return rv;
+  }
+
+  return rv;
 }
+

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *		John C. Griggs <johng@corel.com>
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -40,95 +40,91 @@
 #ifndef nsDeviceContextSpecQT_h___
 #define nsDeviceContextSpecQT_h___
 
+#include "nsCOMPtr.h"
 #include "nsIDeviceContextSpec.h"
-#include "nsDeviceContextSpecQT.h"
+#include "nsIPrintSettings.h"
+#include "nsIPrintOptions.h" 
+#include "nsVoidArray.h"
+#include <limits.h>
 #ifdef USE_POSTSCRIPT
 #include "nsIDeviceContextSpecPS.h"
-#endif
-#include "nsIPrintSettings.h"
-#include "nsCOMPtr.h"
-//XXX WHAT IN THE WORLD VV ??
-#include "../gtk/nsPrintdGTK.h"
+#endif /* USE_POSTSCRIPT */
+#ifdef USE_XPRINT
+#include "nsIDeviceContextSpecXPrint.h"
+#endif /* USE_XPRINT */
 
-class nsDeviceContextSpecQT
-: public nsIDeviceContextSpec
+#define NS_PORTRAIT  0
+#define NS_LANDSCAPE 1
+
+typedef enum
+{
+  pmInvalid = 0,
+  pmXprint,
+  pmPostScript
+} PrintMethod;
+
+class nsDeviceContextSpecQT : public nsIDeviceContextSpec
 #ifdef USE_POSTSCRIPT
-, public nsIDeviceContextSpecPS
-#endif
+                              , public nsIDeviceContextSpecPS
+#endif /* USE_POSTSCRIPT */
+#ifdef USE_XPRINT
+                              , public nsIDeviceContextSpecXp
+#endif /* USE_XPRINT */
 {
 public:
-/**
- * Construct a nsDeviceContextSpecQT, which is an object which contains and manages a printrecord
- * @update  dc 12/02/98
- */
-    nsDeviceContextSpecQT();
+  nsDeviceContextSpecQT();
 
-    NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS
 
-/**
- * Initialize the nsDeviceContextSpecQT for use.  This will allocate a printrecord for use
- * @update   dc 2/16/98
- * @return error status
- */
-    NS_IMETHOD Init(nsIPrintSettings* aPS);
+  NS_IMETHOD Init(nsIPrintSettings* aPS);
+  NS_IMETHOD ClosePrintManager(); 
+
+  NS_IMETHOD GetToPrinter(PRBool &aToPrinter); 
+  NS_IMETHOD GetPrinterName ( const char **aPrinter );
+  NS_IMETHOD GetCopies ( int &aCopies );
+  NS_IMETHOD GetFirstPageFirst(PRBool &aFpf);     
+  NS_IMETHOD GetGrayscale(PRBool &aGrayscale);   
+  NS_IMETHOD GetTopMargin(float &value); 
+  NS_IMETHOD GetBottomMargin(float &value); 
+  NS_IMETHOD GetLeftMargin(float &value); 
+  NS_IMETHOD GetRightMargin(float &value); 
+  NS_IMETHOD GetCommand(const char **aCommand);   
+  NS_IMETHOD GetPath (const char **aPath);    
+  NS_IMETHOD GetLandscape (PRBool &aLandscape);
+  NS_IMETHOD GetUserCancelled(PRBool &aCancel);      
+  NS_IMETHOD GetPrintMethod(PrintMethod &aMethod);
+  static nsresult GetPrintMethod(const char *aPrinter, PrintMethod &aMethod);
+  NS_IMETHOD GetPageSizeInTwips(PRInt32 *aWidth, PRInt32 *aHeight);
+  NS_IMETHOD GetPaperName(const char **aPaperName);
+  virtual ~nsDeviceContextSpecQT();
   
-  
-/**
- * Closes the printmanager if it is open.
- * @update   dc 2/13/98
- * @return error status
- */
-    NS_IMETHOD ClosePrintManager();
-
-    NS_IMETHOD GetToPrinter(PRBool &aToPrinter);
- 
-    NS_IMETHOD GetPrinterName ( const char **aPrinter );
-
-    NS_IMETHOD GetFirstPageFirst(PRBool &aFpf);
- 
-    NS_IMETHOD GetGrayscale(PRBool &aGrayscale);
- 
-    NS_IMETHOD GetSize(int &aSize);
- 
-    NS_IMETHOD GetTopMargin(float &value);
- 
-    NS_IMETHOD GetBottomMargin(float &value);
- 
-    NS_IMETHOD GetLeftMargin(float &value);
- 
-    NS_IMETHOD GetCopies ( int &aCopies );
-
-    NS_IMETHOD GetRightMargin(float &value);
- 
-    NS_IMETHOD GetCommand(const char **aCommand);
- 
-    NS_IMETHOD GetPath(const char **aPath);
- 
-    NS_IMETHOD GetPageDimensions(float &aWidth, float &aHeight);
- 
-    NS_IMETHOD GetLandscape(PRBool &aLandscape);
-
-    NS_IMETHOD GetUserCancelled(PRBool &aCancel);
-
-    NS_IMETHOD GetPaperName( const char **aPaperName );
-
-    NS_IMETHOD GetPageSizeInTwips(PRInt32 *aWidth, PRInt32 *aHeight);
-
- 
 protected:
-/**
- * Destuct a nsDeviceContextSpecQT, this will release the printrecord
- * @update  dc 2/16/98
- */
-    virtual ~nsDeviceContextSpecQT();
-
-protected:
-    UnixPrData mPrData;
-    nsCOMPtr<nsIPrintSettings> mPrintSettings;
-#ifdef DEBUG
-private:
-    PRUint32 mID;
-#endif
+  nsCOMPtr<nsIPrintSettings> mPrintSettings;
+  PRBool mToPrinter;          /* If PR_TRUE, print to printer */
+  PRBool mFpf;                /* If PR_TRUE, first page first */
+  PRBool mGrayscale;          /* If PR_TRUE, print grayscale */
+  int    mOrientation;        /* Orientation e.g. Portrait */
+  char   mCommand[PATH_MAX];  /* Print command e.g., lpr */
+  char   mPath[PATH_MAX];     /* If toPrinter = PR_FALSE, dest file */
+  char   mPrinter[256];       /* Printer name */
+  char   mPaperName[256];     /* Printer name */
+  int    mCopies;             /* number of copies */
+  PRBool mCancel;             /* If PR_TRUE, user cancelled */
+  float  mLeft;               /* left margin */
+  float  mRight;              /* right margin */
+  float  mTop;                /* top margin */
+  float  mBottom;             /* bottom margin */
 };
 
-#endif
+//-------------------------------------------------------------------------
+// Printer Enumerator
+//-------------------------------------------------------------------------
+class nsPrinterEnumeratorQT : public nsIPrinterEnumerator
+{
+public:
+  nsPrinterEnumeratorQT();
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIPRINTERENUMERATOR
+};
+
+#endif /* !nsDeviceContextSpecQT_h___ */

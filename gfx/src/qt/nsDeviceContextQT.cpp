@@ -22,6 +22,7 @@
  * Contributor(s):
  *   John C. Griggs <johng@corel.com>
  *   Esben Mose Hansen <esben@despammed.com>
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -51,11 +52,16 @@
 #include "nsFont.h"
 #include "nsGfxCIID.h"
 #include "nsRenderingContextQT.h" 
+#include "nsDeviceContextSpecQT.h"
 
 #ifdef USE_POSTSCRIPT
 #include "nsGfxPSCID.h"
 #include "nsIDeviceContextPS.h"
-#endif
+#endif /* USE_POSTSCRIPT */
+#ifdef USE_XPRINT
+#include "nsGfxXPrintCID.h"
+#include "nsIDeviceContextXPrint.h"
+#endif /* USE_XPRINT */
 
 #include <qpaintdevicemetrics.h>
 #include <qscrollbar.h>
@@ -384,36 +390,68 @@ NS_IMETHODIMP nsDeviceContextQT::GetClientRect(nsRect &aRect)
   return GetRect(aRect);
 }
 
-NS_IMETHODIMP 
-nsDeviceContextQT::GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
-                                       nsIDeviceContext *&aContext)
+NS_IMETHODIMP nsDeviceContextQT::GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
+                                                     nsIDeviceContext *&aContext)
 {
-  dmsg(ENTER, "GetDeviceContextFor");
-  nsresult rv;
-#ifdef USE_POSTSCRIPT
-  static NS_DEFINE_CID(kCDeviceContextPS,NS_DEVICECONTEXTPS_CID);
+  nsresult                 rv;
+  PrintMethod              method;
+  nsDeviceContextSpecQT   *spec = NS_STATIC_CAST(nsDeviceContextSpecQT *, aDevice);
   
-  // Create a Postscript device context 
-  nsIDeviceContextPS *dcps;
-  
-  rv = nsComponentManager::CreateInstance(kCDeviceContextPS,nsnull,
-                                          NS_GET_IID(nsIDeviceContextPS),
-                                          (void**)&dcps);
-  NS_ASSERTION(NS_SUCCEEDED(rv),"Couldn't create PS Device context");
-  
-  dcps->SetSpec(aDevice);
-  dcps->InitDeviceContextPS((nsIDeviceContext*)aContext,
-                            (nsIDeviceContext*)this);
+  rv = spec->GetPrintMethod(method);
+  if (NS_FAILED(rv)) 
+    return rv;
 
-  rv = dcps->QueryInterface(NS_GET_IID(nsIDeviceContext),
-                            (void**)&aContext);
-  NS_RELEASE(dcps);
-#else
-  //XXX add xprint support
-  rv = NS_ERROR_NOT_IMPLEMENTED;
-#endif
-  dmsg(EXIT, "GetDeviceContextFor");
-  return rv;
+#ifdef USE_XPRINT
+  if (method == pmXprint) { // XPRINT
+    static NS_DEFINE_CID(kCDeviceContextXp, NS_DEVICECONTEXTXP_CID);
+    nsCOMPtr<nsIDeviceContextXp> dcxp(do_CreateInstance(kCDeviceContextXp, &rv));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't create Xp Device context.");    
+    if (NS_FAILED(rv)) 
+      return rv;
+    
+    rv = dcxp->SetSpec(aDevice);
+    if (NS_FAILED(rv)) 
+      return rv;
+    
+    rv = dcxp->InitDeviceContextXP((nsIDeviceContext*)aContext,
+                                   (nsIDeviceContext*)this);
+    if (NS_FAILED(rv)) 
+      return rv;
+      
+    rv = dcxp->QueryInterface(NS_GET_IID(nsIDeviceContext),
+                              (void **)&aContext);
+    return rv;
+  }
+  else
+#endif /* USE_XPRINT */
+#ifdef USE_POSTSCRIPT
+  if (method == pmPostScript) { // PostScript
+    // default/PS
+    static NS_DEFINE_CID(kCDeviceContextPS, NS_DEVICECONTEXTPS_CID);
+  
+    // Create a Postscript device context 
+    nsCOMPtr<nsIDeviceContextPS> dcps(do_CreateInstance(kCDeviceContextPS, &rv));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't create PS Device context.");
+    if (NS_FAILED(rv)) 
+      return rv;
+  
+    rv = dcps->SetSpec(aDevice);
+    if (NS_FAILED(rv)) 
+      return rv;
+      
+    rv = dcps->InitDeviceContextPS((nsIDeviceContext*)aContext,
+                                   (nsIDeviceContext*)this);
+    if (NS_FAILED(rv)) 
+      return rv;
+
+    rv = dcps->QueryInterface(NS_GET_IID(nsIDeviceContext),
+                              (void **)&aContext);
+    return rv;
+  }
+#endif /* USE_POSTSCRIPT */
+  
+  NS_WARNING("no print module created.");
+  return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP nsDeviceContextQT::BeginDocument(PRUnichar * aTitle, PRUnichar* aPrintToFileName, PRInt32 aStartPage, PRInt32 aEndPage)
