@@ -885,6 +885,7 @@ void CNetscapeStatusBar::DrawProgressBar()
     bmMem.CreateCompatibleBitmap( &dc, rcBarArea.right-rcBarArea.left, rcBarArea.bottom-rcBarArea.top );
     CBitmap *pbmOld = dcMem.SelectObject( &bmMem );
 
+#if !defined(SMOOTH_PROGRESS)
     // Select the font
     CFont *pOldFont = NULL;
     if( GetFont() ) 
@@ -894,6 +895,7 @@ void CNetscapeStatusBar::DrawProgressBar()
 
     char szPercent[8];
     wsprintf( szPercent, "%u%%", m_nDone );
+#endif
     dcMem.SetBkMode( TRANSPARENT );
 
     RECT rcBm = { 0, 0, rcBarArea.right-rcBarArea.left, rcBarArea.bottom-rcBarArea.top };
@@ -905,8 +907,10 @@ void CNetscapeStatusBar::DrawProgressBar()
         // Render the image into the mem DC
     	dcMem.FillRect( &rcBm, CBrush::FromHandle( sysInfo.m_hbrBtnFace ) );
 
+#if !defined(SMOOTH_PROGRESS)
         dcMem.SetTextColor( GetSysColor( COLOR_BTNTEXT ) );
         dcMem.DrawText( szPercent, -1, &rcBm, DT_CENTER | DT_VCENTER | DT_SINGLELINE );
+#endif
         
         RECT rcBar = { 0, 0, CASTINT(rcBm.right * m_nDone / 100), CASTINT(rcBm.bottom) };
         dcMem.InvertRect( &rcBar );
@@ -919,9 +923,11 @@ void CNetscapeStatusBar::DrawProgressBar()
 
         // Render the image into the mem DC
     	dcMem.FillRect( &rcBm, CBrush::FromHandle( (HBRUSH)GetStockObject( WHITE_BRUSH ) ) );
-        
+     
+#if !defined(SMOOTH_PROGRESS)
         dcMem.SetTextColor( RGB(0,0,0) );
         dcMem.DrawText( szPercent, -1, &rcBm, DT_CENTER | DT_VCENTER | DT_SINGLELINE );
+#endif
         
         RECT rcBar = { 0, 0, CASTINT(rcBm.right * m_nDone / 100), CASTINT(rcBm.bottom) };
         dcMem.InvertRect( &rcBar );
@@ -930,11 +936,12 @@ void CNetscapeStatusBar::DrawProgressBar()
     dc.BitBlt( rcBarArea.left, rcBarArea.top, rcBarArea.right-rcBarArea.left, rcBarArea.bottom-rcBarArea.top, &dcMem, 0, 0, SRCCOPY );
 
     // Tidy up
-    
+#if !defined(SMOOTH_PROGRESS)    
     if( pOldFont ) 
     {
         dcMem.SelectObject( pOldFont );
     }
+#endif
     dcMem.SelectObject( pbmOld );
 }
 

@@ -46,6 +46,10 @@
 #include "mozilla.h"
 #include "timing.h"
 
+#if defined(SMOOTH_PROGRESS)
+#include "progress.h"
+#endif
+
 CAbstractCX::CAbstractCX()  {
 //	Purpose:    Constructor for the abstract base class.
 //	Arguments:  void
@@ -155,6 +159,11 @@ void CAbstractCX::DestroyContext()	{
         //      from memory.
         //  This lock is removed in the destructor.
         AfxOleLockApp();
+
+#if defined(SMOOTH_PROGRESS)
+        // Destroy the progress manager if one exists.
+        PM_ReleaseProgressManager(m_pXPCX);
+#endif
 
 	    //	Have the document interrupt.
 	    //	We call again when we get the mocha complete callback, but that 
@@ -672,6 +681,9 @@ int CAbstractCX::GetUrl(URL_Struct *pUrl, FO_Present_Types iFormatOut, BOOL bRea
         			int iOldInProcessNet = winfeInProcessNet; 
         			winfeInProcessNet = TRUE;
         			StartAnimation();
+#if defined(SMOOTH_PROGRESS)
+                    PM_EnsureProgressManager(GetContext());
+#endif
 					if ( m_cxType == IconCX)
         				iRetval = NET_GetURL(pUrl, iFormatOut, GetContext(), Icon_GetUrlExitRoutine);
 					else {

@@ -100,12 +100,14 @@ void CFE_AllConnectionsComplete(MWContext *pContext)	{
 	} else 
 #endif   
     {
+#if !defined(SMOOTH_PROGRESS)
 		// Set the progress to be complete.
         // We don't like this message in Composer, so use a blank line instead
         if( EDT_IS_EDITOR(pContext) )
     		FE_Progress(pContext, " ");
         else
 		    FE_Progress(pContext, szLoadString(IDS_DOC_DONE));
+#endif
 	}
 
     ABSTRACTCX(pContext)->AllConnectionsComplete(pContext);
