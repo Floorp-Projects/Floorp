@@ -356,7 +356,7 @@ nsresult nsDateTimeFormatMac::FormatTMTime(nsILocale* locale,
     if(NS_SUCCEEDED(res) && decoder) {
       PRInt32 unicharLength = 0;
       PRInt32 srcLength = (PRInt32) PL_strlen(aBuffer);
-      res = decoder->Length(aBuffer, 0, srcLength, &unicharLength);
+      res = decoder->GetMaxLength(aBuffer, srcLength, &unicharLength);
       PRUnichar *unichars = new PRUnichar [ unicharLength ];
   
       if (nsnull != unichars) {
