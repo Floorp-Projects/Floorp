@@ -47,6 +47,10 @@
 #define MESSAGE15 "XmNnumPrivateComponents is a read-only resource."
 #define MESSAGE16 "XmNlayableChildren is a read-only resource."
 #define MESSAGE17 "XmNnumLayableChildren is a read-only resource."
+#define MESSAGE18 "The %s class does not support XmNlayableChildren."
+#define MESSAGE19 "The %s class does not support XmNnumLayableChildren."
+#define MESSAGE20 "XmNprivateComponent is a read-only resource."
+#define MESSAGE21 "XmNlinkNode is a read-only resource."
 
 #define MIN_LAYOUT_WIDTH	10
 #define MIN_LAYOUT_HEIGHT	10
@@ -66,6 +70,7 @@ static void				Realize			(Widget,XtValueMask *,
 static void				Redisplay		(Widget,XEvent *,Region);
 static Boolean			SetValues		(Widget,Widget,Widget,ArgList,
 										 Cardinal *);
+static void				GetValuesHook	(Widget,ArgList,Cardinal *);
 static XtGeometryResult QueryGeometry	(Widget,XtWidgetGeometry *,
 										 XtWidgetGeometry *);
 
@@ -106,10 +111,16 @@ static Boolean	SetValuesPostHook			(Widget,Widget,Widget);
 static void		ConstraintInitializePostHook(Widget,Widget);
 static Boolean	ConstraintSetValuesPostHook	(Widget,Widget,Widget);
 static void		PreferredGeometry			(Widget,Dimension *,Dimension *);
-static void		MinimumGeometry			(Widget,Dimension *,Dimension *);
+static void		MinimumGeometry				(Widget,Dimension *,Dimension *);
 static void		UpdateRect					(Widget);
 static void		DrawShadow					(Widget,XEvent *,Region,
 											 XRectangle *);
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* Layable children functions											*/
+/*																		*/
+/*----------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -327,12 +338,25 @@ static XtResource resources[] =
 	{ 
 		XmNlayableChildren,
 		XmCReadOnly,
-		XmRWidgetList,
-		sizeof(WidgetList),
+		XmRLinkedChildren,
+		sizeof(XfeLinked),
 		XtOffsetOf(XfeManagerRec , xfe_manager . layable_children),
 		XmRImmediate, 
 		(XtPointer) NULL
     },
+
+#ifdef DEBUG
+	/* Debug resources */
+	{
+		"debugTrace",
+		"DebugTrace",
+		XmRBoolean,
+		sizeof(Boolean),
+		XtOffsetOf(XfeManagerRec , xfe_manager . debug_trace),
+		XmRImmediate, 
+		(XtPointer) False
+	},
+#endif
 
 	/* Popup children resources */
     { 
@@ -473,6 +497,15 @@ static XtResource constraint_resources[] =
 		XmRImmediate,
 		(XtPointer) False
     },
+    { 
+		XmNlinkNode,
+		XmCLinkNode,
+		XmRPointer,
+		sizeof(XfeLinkNode),
+		XtOffsetOf(XfeManagerConstraintRec , xfe_manager . link_node),
+		XmRImmediate,
+		(XtPointer) NULL
+    },
 };   
 
 /* Widget class record initialization. */
@@ -503,7 +536,7 @@ _XFE_WIDGET_CLASS_RECORD(manager,Manager) =
 		SetValues,								/* set_values			*/
 		NULL,									/* set_values_hook		*/
 		XtInheritSetValuesAlmost,				/* set_values_almost	*/
-		NULL,									/* get_values_hook		*/
+		GetValuesHook,							/* get_values_hook		*/
 		NULL,									/* accept_focus			*/
 		XtVersion,								/* version				*/
 		NULL,									/* callback_private		*/
@@ -650,6 +683,12 @@ Initialize(Widget rw,Widget nw,ArgList args,Cardinal *nargs)
     XfeRepTypeCheck(nw,XmRShadowType,&_XfemShadowType(nw),
 					XfeDEFAULT_SHADOW_TYPE);
 
+	/* Construct list of layable children if needed */
+	if (_XfeManagerCountLayableChildren(nw))
+	{
+		_XfemLayableChildren(nw) = XfeLinkedConstruct();
+	}
+
     /* Finish of initialization */
     _XfeManagerChainInitialize(rw,nw,xfeManagerWidgetClass);
 }
@@ -688,6 +727,14 @@ Destroy(Widget w)
 	if (_XfemLayableChildren(w) != NULL)
 	{
 		XtFree((char *) _XfemLayableChildren(w));
+	}
+
+/* 	printf("Destroy(%s)\n",XtName(w)); */
+
+	/* Destroy list of layable children if needed */
+	if (_XfemLayableChildren(w) != NULL)
+	{
+		XfeLinkedDestroy(_XfemLayableChildren(w),NULL,NULL);
 	}
 }
 /*----------------------------------------------------------------------*/
@@ -920,6 +967,36 @@ SetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 	return _XfeManagerChainSetValues(ow,rw,nw,xfeManagerWidgetClass);
 }
 /*----------------------------------------------------------------------*/
+static void
+GetValuesHook(Widget w,ArgList av,Cardinal * pac)
+{
+	/* Verify layable children resources are not used with wrong classes */
+	if (!_XfeManagerCountLayableChildren(w))
+	{
+		Cardinal i;
+
+		for (i = 0; i < *pac; i++)
+		{
+			/* XmNlayableChildren */
+			if (strcmp(av[i].name,XmNlayableChildren) == 0)
+			{
+				/* av[i] = NULL */
+				_XfeGetValuesCastAndAssign(av,i,NULL);
+
+				_XfeArgWarning(w,MESSAGE18,XfeClassNameForWidget(w));
+			}
+			/* XmNnumLayableChildren */
+			else if (strcmp(av[i].name,XmNnumLayableChildren) == 0)
+			{
+				/* av[i] = 0 */
+				_XfeGetValuesCastAndAssign(av,i,0);
+
+				_XfeArgWarning(w,MESSAGE19,XfeClassNameForWidget(w));
+			}      
+		}
+	}
+}
+/*----------------------------------------------------------------------*/
 static XtGeometryResult
 QueryGeometry(Widget w,XtWidgetGeometry	*req,XtWidgetGeometry *reply)
 {
@@ -971,6 +1048,16 @@ InsertChild(Widget child)
     /* Accept or reject other children */
     else if (_XfeManagerAcceptChild(child))
     {
+		/* Add child to layable children list if needed */
+		if (_XfeManagerCountLayableChildren(w) &&
+			_XfeManagerChildIsLayable(child))
+		{
+			XfeLinkNode node = XfeLinkedInsertAtTail(_XfemLayableChildren(w),
+													 child);
+
+			_XfeManagerLinkNode(child) = node;
+		}
+
         /* Call XmManager's InsertChild */
         (*mwc->composite_class.insert_child)(child);
 
@@ -1004,13 +1091,27 @@ DeleteChild(Widget child)
     /* Leave private components alone */
     if (!_XfeManagerPrivateComponent(child))
     {
+		/* Remove child from layable children list if needed */
+		if (_XfeManagerLinkNode(child) != NULL)
+		{
+			Widget node_data = 
+				(Widget) XfeLinkedRemoveNode(_XfemLayableChildren(w),
+											 _XfeManagerLinkNode(child));
+
+
+			assert( node_data != NULL );
+			assert( node_data == child );
+
+			_XfeManagerLinkNode(child) = NULL;
+		}
+
         /* Delete the child and relayout if necessary */
         layout = _XfeManagerDeleteChild(child);
 	}
 	else
 	{
-		/* Increment the private component count */
-		_XfemNumPrivateComponents(w)++;
+		/* Decrement the private component count */
+		_XfemNumPrivateComponents(w)--;
     }
     
     /* call manager DeleteChild to update child info */
@@ -1025,6 +1126,8 @@ DeleteChild(Widget child)
 static void
 ChangeManaged(Widget w)
 {
+/* 	printf("ChangeManaged(%s)\n",XtName(w)); */
+
     /* Update widget geometry only if ignore_configure is False */
     if (!_XfemIgnoreConfigure(w))
     {
@@ -1412,8 +1515,8 @@ static Boolean
 ConstraintSetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 {
 	Widget						w = XtParent(nw);
-/* 	XfeManagerConstraintPart *	np = _XfeManagerConstraintPart(nw); */
-/* 	XfeManagerConstraintPart *	op = _XfeManagerConstraintPart(ow); */
+ 	XfeManagerConstraintPart *	np = _XfeManagerConstraintPart(nw);
+ 	XfeManagerConstraintPart *	op = _XfeManagerConstraintPart(ow);
 
 	/* Reset the Configuration Flags */
 	_XfemConfigFlags(w) = XfeConfigNone;
@@ -1421,6 +1524,27 @@ ConstraintSetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 	/* Reset the preparation Flags */
 	_XfemPrepareFlags(w) = XfePrepareNone;
 
+	/* XmNprivateComponent */
+	if (np->private_component != op->private_component)
+	{
+		np->private_component = op->private_component;
+
+		_XfeWarning(nw,MESSAGE20);
+	}
+
+	/* XmNlinkNode */
+	if (np->link_node != op->link_node)
+	{
+		np->link_node = op->link_node;
+
+		_XfeWarning(nw,MESSAGE21);
+	}
+
+	/* XmNpositionIndex */
+	if (np->position_index != op->position_index)
+	{
+		/* Do something magical */
+	}
 
 	/* Finish constraint set values */
 	return _XfeConstraintChainSetValues(ow,rw,nw,xfeManagerWidgetClass);
@@ -1893,12 +2017,16 @@ _XfeManagerChildIsLayable(Widget child)
 	XfeManagerWidgetClass	mc = (XfeManagerWidgetClass) XtClass(w);
 	Boolean					filter = True;
 
-	if (mc->xfe_manager_class.delete_child != NULL)
+	if (mc->xfe_manager_class.child_is_layable != NULL)
 	{
-		filter = (*mc->xfe_manager_class.delete_child)(child);
+		filter = (*mc->xfe_manager_class.child_is_layable)(child);
 	}
-	
-	return (filter && _XfeChildIsShown(child) && _XfeIsRealized(child));
+
+#if 0	
+ 	return (filter && _XfeChildIsShown(child) && _XfeIsRealized(child));
+#else
+	return (filter);
+#endif
 }
 /*----------------------------------------------------------------------*/
 
@@ -2159,7 +2287,6 @@ _XfeManagerComponentInfo(Widget				w,
 	}
 }
 /*----------------------------------------------------------------------*/
-/*----------------------------------------------------------------------*/
 /*																		*/
 /* Name:		_XfeManagerGetLayableChildren()							*/
 /*																		*/
@@ -2167,68 +2294,101 @@ _XfeManagerComponentInfo(Widget				w,
 /*																		*/
 /* Ret Val:		void													*/
 /*																		*/
-/* Args in:		w					The manager widget.					*/
+/* Args in:		w							The manager widget.			*/
 /*																		*/
 /* Args out:	layable_children_out		Array of layable children	*/
 /*				num_layable_children_out	Size of the array			*/
+/*				max_width_out				Max layable children width.	*/
+/*				max_height_out				Max layable children height.*/
+/*																		*/
+/* Comments:	Its up to the caller to XtFree() the value returned in	*/
+/*              layable_children_out (if its not NULL)					*/
 /*																		*/
 /*----------------------------------------------------------------------*/
 /* extern */ void
-layable_children(Widget				w,
-				 WidgetList *		layable_children_out,
-				 Cardinal *			num_layable_children_out)
+_XfeManagerGetLayableChildrenInfo(Widget		w,
+								  WidgetList *	layable_children_out,
+								  Cardinal *	num_layable_children_out,
+								  Dimension *	max_width_out,
+								  Dimension *	max_height_out)
 {
 	Widget				child;
 	Cardinal			i;
 	WidgetList			layable_children = NULL;
 	Cardinal			num_layable_children = 0;
+	Dimension			max_width = 0;
+	Dimension			max_height = 0;
 
 	assert( XfeIsManager(w) );
+
 	assert( layable_children_out != NULL );
 	assert( num_layable_children_out != NULL );
-	assert( XfeIsManager(w) );
 
-	
+	/* Proceed only if children exist */
+	if (_XfemNumChildren(w) > 0)
+	{
+		num_layable_children = 0;
+
+		/* Allocate a layable children array with num_children elements */
+		layable_children = 
+			(WidgetList) XtMalloc(sizeof(Widget) * _XfemNumChildren(w));
+
+		/* Iterate through all the items */
+		for (i = 0; i < _XfemNumChildren(w); i++)
+		{
+			child = _XfeChildrenIndex(w,i);
+
+			/* Look for layable children and add them to the array */
+			if (_XfeManagerChildIsLayable(child))
+			{
+				layable_children[num_layable_children] = child;	
+
+				num_layable_children++;
+
+				/* Keep track of largest width */
+				if (_XfeWidth(child) > max_width)
+				{
+					max_width = _XfeWidth(child);
+				}
+				
+				/* Keep track of largest height */
+				if (_XfeHeight(child) > max_height)
+				{
+					max_height = _XfeHeight(child);
+				}
+			}
+		}
+
+		/* Free the array if no layable children exist */
+		if (num_layable_children == 0)
+		{
+			XtFree((char *) layable_children);
+
+			layable_children = NULL;			
+		}
+		/* Adjust the layable children size if needed */
+		else if (num_layable_children != _XfemNumChildren(w))
+		{
+			layable_children = 
+				(WidgetList) XtRealloc((char *) layable_children,
+									   sizeof(Widget) * num_layable_children);
+		}
+	}
 
 	*layable_children_out = layable_children;
 	*num_layable_children_out = num_layable_children;
 
-#if 0
-	/* Iterate through all the items */
-	for (i = 0; i < _XfemNumChildren(w); i++)
-	{
-		child = _XfemChildren(w)[i];
-
-		/* Check for private components */
-		if (_XfeManagerPrivateComponent(child) &&
-			XtIsManaged(child) && 
-			_XfeIsAlive(child))
-		{
-			/* Keep track of largest width */
-			if (_XfeWidth(child) > max_width)
-			{
-				max_width = _XfeWidth(child);
-			}
-
-			/* Keep track of largest height */
-			if (_XfeHeight(child) > max_height)
-			{
-				max_height = _XfeHeight(child);
-			}
-		}
-	}
-
-	/* Assign only required arguments */
+	/* Assign max width if needed */
 	if (max_width_out) 
 	{
 		*max_width_out = max_width;
 	}
 
+	/* Assign max height if needed */
 	if (max_height_out) 
 	{
 		*max_height_out = max_height;
 	}
-#endif
 }
 /*----------------------------------------------------------------------*/
 

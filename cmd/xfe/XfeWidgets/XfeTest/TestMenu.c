@@ -161,16 +161,19 @@ XfeMenuPaneCreate2(Widget			pw,
 				   XfeMenuItemRec * items,
 				   XtPointer		client_data)
 {
-	XfeMenuPaneRec menu_pane;
+	XfeMenuPaneRec	menu_pane[2];
 
 	assert( XfeIsAlive(pw) );
 	assert( XmIsRowColumn(pw) );
 	assert( name != NULL );
 
-	menu_pane.name	= name;
-	menu_pane.items	= items;
+	menu_pane[0].name	= name;
+	menu_pane[0].items	= items;
 
-	return XfeMenuPaneCreate(pw,&menu_pane,client_data);
+	menu_pane[1].name	= NULL;
+	menu_pane[1].items	= NULL;
+
+	return XfeMenuPaneCreate(pw,menu_pane,client_data);
 }
 /*----------------------------------------------------------------------*/
 /* extern */ Widget
@@ -208,7 +211,7 @@ XfeMenuBarCreate(Widget				pw,
 /* extern */ Widget
 XfePopupMenuCreate(Widget			pw,
 				   String			name,
-				   XfeMenuPaneRec *	items,
+				   XfeMenuItemRec *	items,
 				   XtPointer		client_data,
 				   ArgList			av,
 				   Cardinal			ac)
@@ -220,17 +223,15 @@ XfePopupMenuCreate(Widget			pw,
 
 	popup_menu = XmCreatePopupMenu(pw,name,av,ac);
 
-	XtVaSetValues(popup_menu,XmNtearOffModel,XmTEAR_OFF_ENABLED,NULL);
-
 	if (items)
 	{
-		XfeMenuPane pane = items;
+		XfeMenuItem item = items;
 
-		while(pane && pane->name)
+		while(item && item->name)
 		{
-			XfeMenuPaneCreate(popup_menu,pane,client_data);
+			XfeMenuItemCreate(popup_menu,item,client_data);
 
-			pane++;
+			item++;
 		}
 	}
 

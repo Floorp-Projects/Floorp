@@ -44,6 +44,7 @@ CSRCS			= \
 				DashBoardTest.c \
 				LabelTest.c \
 				LogoTest.c \
+				PaneTestFour.c \
 				PaneTestOne.c \
 				PaneTestThree.c \
 				PaneTestTwo.c \

@@ -28,7 +28,7 @@
 #include "View.h"
 #include "IconGroup.h"
 #include "htrdf.h"
-
+#include "NavCenterView.h"
 #include "PopupMenu.h"
 
 class XFE_RDFPopupMenu : public XFE_SimplePopupMenu
@@ -77,7 +77,9 @@ public:
 private:
   //HT_Pane m_Pane;		// The pane that owns this view
   HT_View m_rdfview;		// The view as registered in the hypertree
-
+  Widget  viewName;     // The label that displays the currently open pane
+  Widget  rdfControlsParent; // Parent of the label and the button on top
+  Widget  m_tree;       // The tree widget
   XFE_RDFPopupMenu *m_popup;
 
   // icons for use in the bookmark window.
@@ -92,7 +94,7 @@ private:
 
   void add_row(HT_Resource node);
   void add_row(int node);
-  void delete_row(int row);
+  void delete_row(int row, PRBool deleteChildren);
   void add_column(int index, char *name, uint32 width,
                   void *token, uint32 token_type);
 
@@ -114,6 +116,7 @@ private:
   static void deselect_cb(Widget, XtPointer, XtPointer);
   static void select_cb(Widget, XtPointer, XtPointer);
   static void popup_cb(Widget, XtPointer, XtPointer);
+  static void closeRdfView_cb(Widget, XtPointer, XtPointer);
 
 #ifdef NOTYET
   void dropfunc(Widget dropw, fe_dnd_Event type, fe_dnd_Source *source, XEvent *event);

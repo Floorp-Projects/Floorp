@@ -106,6 +106,11 @@ typedef struct _XfePrimitivePart
     Boolean				pointer_inside;			/* Pointer in Window	*/
     Dimension			preferred_width;		/* Preferred Width		*/
     Dimension			preferred_height;		/* Preferred Height		*/
+
+	/* Debug resources */
+#ifdef DEBUG
+	Boolean				debug_trace;			/* Trace / debug		*/
+#endif
     
     /* Private Data Members */
     int					config_flags;			/* Config Flags			*/
@@ -405,6 +410,17 @@ _XfePrimitiveFocus					(Widget,XEvent *,char **,Cardinal *);
 #define _XfeUserData(w) \
 (((XmPrimitiveWidget) (w))->primitive . user_data)
 /*----------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* Access to debug resources											*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+#ifdef DEBUG
+#define _XfeDebugTrace(w) \
+(((XfePrimitiveWidget) (w))->xfe_primitive . debug_trace)
+/*----------------------------------------------------------------------*/
+#endif
 
 /*----------------------------------------------------------------------*/
 /*																		*/

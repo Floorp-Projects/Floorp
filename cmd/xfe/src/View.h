@@ -31,6 +31,16 @@
 #include "Command.h"
 #include "Component.h"
 
+typedef enum EViewType {
+  VIEW_NONE=-1,
+  VIEW_BROWSER,
+  VIEW_HTML,
+  VIEW_NAVCENTER,
+} EViewType;
+
+
+
+
 class XFE_View : public XFE_Component
 {
 public:
@@ -98,6 +108,14 @@ public:
 	virtual char *getDocString(CommandType /* cmd */) {return NULL;}
 	virtual char *getTipString(CommandType /* cmd */) {return NULL;}
 
+// static methods to obtain particular view type. 
+  static XFE_View * getNavCenterView(XFE_View * parent);
+  static XFE_View * getViewOfType(XFE_View * parent, EViewType);
+
+  virtual void handleDisplayPixmap(Widget, IL_Pixmap *, IL_Pixmap *, long int, long int) { return;}
+  virtual void handleNewPixmap(Widget, IL_Pixmap *, Boolean mask) { return; }
+  virtual void handleImageComplete(Widget, IL_Pixmap *) {return; }
+
 protected:
   MWContext *m_contextData; // the MWContext *
   virtual void addView(XFE_View *new_view);
@@ -108,8 +126,10 @@ protected:
   int m_numsubviews;
   int m_numsubviews_allocated;
   XP_Bool m_areScrollbarsActive;
+  EViewType  m_viewType;
 private:
   XFE_View *m_parentView;
+  
 };
 
 #endif /* _xfe_xfeview_h */

@@ -45,6 +45,13 @@ fe_icon XFE_RDFView::openedFolder = { 0 };
 
 #define SECONDS_PER_DAY		86400L
 
+typedef struct _closeRdfViewCBStruct {
+
+  XFE_RDFView *  rdfview;
+  XFE_NavCenterView *  ncview;
+ } closeRdfViewCBStruct;
+
+
 extern int XP_BKMKS_HOURS_AGO;
 extern int XP_BKMKS_DAYS_AGO;
 extern int XP_BKMKS_LESS_THAN_ONE_HOUR_AGO;
@@ -158,7 +165,44 @@ XFE_RDFView::XFE_RDFView(XFE_Component *toplevel, Widget parent,
   if (!my_commands)
       registerCommand(my_commands, new RdfPopupCommand);
 
-  Widget tree = 
+   rdfControlsParent = XtVaCreateManagedWidget("rdfViewParent",
+                                           xmFormWidgetClass,
+                                           parent,
+                                           XmNtopAttachment, XmATTACH_FORM,
+                                           XmNrightAttachment, XmATTACH_FORM,
+                                           XmNleftAttachment, XmATTACH_FORM,
+                                           XmNbottomAttachment, XmATTACH_NONE,
+                                           NULL);
+
+  viewName = XtVaCreateManagedWidget("Name",
+                                     xmLabelGadgetClass,
+                                     rdfControlsParent,
+                                     XmNtopAttachment, XmATTACH_FORM,
+                                     XmNrightAttachment, XmATTACH_NONE,
+                                     XmNleftAttachment, XmATTACH_FORM,
+                                     XmNbottomAttachment, XmATTACH_FORM,
+                                     NULL);
+                                     
+  Widget closeRDFView = XtVaCreateManagedWidget("X",
+                                     xmPushButtonWidgetClass,
+                                     rdfControlsParent,
+                                     XmNtopAttachment, XmATTACH_FORM,
+                                     XmNrightAttachment, XmATTACH_FORM,
+                                     XmNleftAttachment, XmATTACH_NONE,
+                                     XmNbottomAttachment, XmATTACH_FORM,
+                                     XmNpushButtonEnabled, True,
+                                     NULL);
+
+  closeRdfViewCBStruct *  cb_str = new closeRdfViewCBStruct;
+
+  cb_str->rdfview = this;
+  cb_str->ncview = (XFE_NavCenterView *)parent_view;
+
+#ifdef NOT_YET
+  XtAddCallback(closeRDFView, XmNactivateCallback, (XtCallbackProc)closeRdfView_cb , (void *)cb_str);
+#endif    /* NOT_YET */
+
+   m_tree = 
       XtVaCreateManagedWidget(TREE_NAME,
                               xmlTreeWidgetClass,
                               parent,
@@ -172,7 +216,8 @@ XFE_RDFView::XFE_RDFView(XFE_Component *toplevel, Widget parent,
                               XmNvisibleColumns,        (isStandalone ? 0 : 1),
                               //XmNdebugLevel, 1,
                               /* Form resources */
-                              XmNtopAttachment,    XmATTACH_FORM,
+                              XmNtopAttachment,    XmATTACH_WIDGET,
+                              XmNtopWidget, rdfControlsParent,
                               XmNbottomAttachment, XmATTACH_FORM,
                               XmNleftAttachment,   XmATTACH_FORM,
                               XmNrightAttachment,  XmATTACH_FORM,
@@ -182,7 +227,11 @@ XFE_RDFView::XFE_RDFView(XFE_Component *toplevel, Widget parent,
                               XmNrightOffset,      2,
                               NULL);
 
-  setBaseWidget(tree);
+  /* 
+   * i don't think this is right. Shall check with slamm change it soon.
+   * - Radha
+   */
+  setBaseWidget(m_tree);
 
   XtVaSetValues(m_widget, XmNcellAlignment, XmALIGNMENT_LEFT, NULL);
   XtVaSetValues(m_widget,
@@ -453,9 +502,29 @@ XFE_RDFView::notify(HT_Notification ns, HT_Resource n,
              HT_GetNodeName(n)););
     break;
   case HT_EVENT_NODE_DELETED_NODATA:
+    {
     D(printf("RDFView::HT_Event: %s on %s\n","HT_EVENT_NODE_DELETED_NODATA",
              HT_GetNodeName(n)););
+       // Is this a container node?
+       Boolean expands =    HT_IsContainer(n);
+       PRBool isExpanded = False;
+
+       // Is the node expanded?
+       if (expands) {
+          HT_GetOpenState(n, &isExpanded);   
+       }
+   
+       int row = HT_GetNodeIndex(m_rdfview, n);    
+
+       // Delete the row with children
+       if (expands && !isExpanded)
+         delete_row(row, True);
+       else
+         delete_row(row, False);
+
+
     break;
+    }
   case HT_EVENT_NODE_VPROP_CHANGED:
     D(printf("RDFView::HT_Event: %s on %s\n","HT_EVENT_NODE_VPROP_CHANGED",
              HT_GetNodeName(n)););
@@ -468,8 +537,31 @@ XFE_RDFView::notify(HT_Notification ns, HT_Resource n,
     {
       D(printf("RDFView::HT_Event: %s on %s\n","HT_EVENT_NODE_OPENCLOSE_CHANGED",
                HT_GetNodeName(n)););
-      
       refresh(n);
+      Boolean expands =    HT_IsContainer(n);
+
+
+      if (expands)
+      {
+         PRBool isExpanded = False;
+
+         HT_GetOpenState(n, &isExpanded);          
+         int row = HT_GetNodeIndex(m_rdfview, n);    
+
+         if (isExpanded)   // The node has been opened
+         {
+            // Expand the row
+            XtVaSetValues(m_widget, XmNrow, row, 
+                          XmNrowIsExpanded, True, NULL);
+         }
+         else
+         {
+            // collapse the row
+           XtVaSetValues(m_widget, XmNrow, row,
+                         XmNrowIsExpanded, False, NULL);           
+         }
+      }
+
 
       break;
     }
@@ -483,15 +575,25 @@ XFE_RDFView::notify(HT_Notification ns, HT_Resource n,
                HT_GetNodeName(n)););
       
       HT_View view = HT_GetView(n);
-      
+      char * label = HT_GetViewName(view);
+
+  
+      if (m_rdfview != view) {
+        XtVaSetValues (viewName, 
+                       XmNlabelString, XmStringCreateLocalized(label),
+                       NULL);
+      }
+
       if (m_rdfview != view)
         setRDFView(view);
     }
     break;
   case HT_EVENT_NODE_OPENCLOSE_CHANGING:
-    D(printf("RDFView::HT_Event: %s on %s\n","HT_EVENT_NODE_OPENCLOSE_CHANGING",
+    {
+     D(printf("RDFView::HT_Event: %s on %s\n","HT_EVENT_NODE_OPENCLOSE_CHANGING",
              HT_GetNodeName(n)););
     break;
+    }
   default:
     D(printf("RDFView::HT_Event: Unknown type on %s\n",HT_GetNodeName(n)););
     break;
@@ -517,7 +619,8 @@ XFE_RDFView::fill_tree()
   if (!m_rdfview || !m_widget)
       return;
   
-  int item_count =  HT_GetItemListCount(m_rdfview);
+  int 
+item_count =  HT_GetItemListCount(m_rdfview);
 
   XtVaSetValues(m_widget,
                 XmNlayoutFrozen, True,
@@ -586,7 +689,8 @@ XFE_RDFView::add_row(int row)
 }
 
 void
-XFE_RDFView::add_row(HT_Resource node)
+XFE_RDFView::add_row
+(HT_Resource node)
 {
   //HT_Resource node = GetNthItem (m_rdfview, row);
     int row = HT_GetNodeIndex(m_rdfview, node);
@@ -640,7 +744,7 @@ XFE_RDFView::add_row(HT_Resource node)
                       NULL);
 
         Boolean is_editable = HT_IsNodeDataEditable(node,
-                                                    column_data->token,
+                                                     column_data->token,
                                                     column_data->token_type);
         XtVaSetValues(m_widget,
                       XmNrow,          row,
@@ -689,9 +793,46 @@ XFE_RDFView::add_row(HT_Resource node)
 }
 
 void
-XFE_RDFView::delete_row(int row)
+XFE_RDFView::delete_row(int row, PRBool deleteChildren)
 {
-  XmLGridDeleteRows(m_widget, XmCONTENT, row, 1);
+  /* If a container node is deleted and the node is in collapsed 
+   * state, the backend sends only one delete message to the container and 
+   * none to the invisible children. we have to delete theinvisible
+   *  children too. The following segment is for that. But it looks like
+   * it is not necessary to do this. Shall yan it after discussing with
+   * slamm - radha.
+   */
+  
+   int numRows = 1;
+   if (deleteChildren)
+   {
+      XmLGridRow   rowPtr;
+      int  i=0, j=0, level=0, rows=0;
+
+      rowPtr = XmLGridGetRow(m_tree, XmCONTENT, row);
+      XtVaGetValues(m_tree,
+                    XmNrowPtr, rowPtr,
+                    XmNrowLevel, &level,
+                    XmNrows, &rows,
+                    NULL);
+      i = row + 1;
+      while (i < rows)
+      {
+         rowPtr = XmLGridGetRow(m_tree, XmCONTENT, i);
+         XtVaGetValues(m_tree,
+                       XmNrowPtr, rowPtr,
+                       XmNrowLevel, &j,
+                        NULL);
+         if (j <= level)
+           break;
+         i++;
+      }
+      numRows = i - row;
+
+   }
+   
+   XmLGridDeleteRows(m_widget, XmCONTENT, row, numRows);
+
 }
 
 void
@@ -868,4 +1009,29 @@ void
 XFE_RDFPopupMenu::PushButtonActivate(Widget w, XtPointer userData)
 {
     HT_DoMenuCmd(m_pane, (HT_MenuCmd)userData);
+}
+
+void
+XFE_RDFView::closeRdfView_cb(Widget, XtPointer clientData, XtPointer callData)
+{
+
+  closeRdfViewCBStruct * obj = (closeRdfViewCBStruct *) clientData;
+  XFE_NavCenterView * ncview = obj->ncview;
+
+  Widget  selector  = (Widget )ncview->getSelector();
+
+  Widget nc_base_widget = ncview->getBaseWidget();
+  Widget parent = XtParent(obj->rdfview->rdfControlsParent);
+
+
+/*   XtVaSetValues(nc_base_widget, XmNresizable, True, NULL); */
+  XtUnmanageChild(parent);
+  XtUnmanageChild(selector);  
+
+  XtVaSetValues(selector, XmNrightAttachment, XmATTACH_FORM, 
+                          XmNleftAttachment, XmATTACH_FORM,
+                          XmNtopAttachment, XmATTACH_FORM,
+                          XmNbottomAttachment, XmATTACH_FORM,
+                          NULL);
+  XtManageChild(selector);
 }

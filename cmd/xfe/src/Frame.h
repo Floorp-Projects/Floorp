@@ -244,6 +244,14 @@ public:
 
   virtual XP_Bool isOkToClose();
   virtual void	doClose();
+
+// Handles image display in the new setup
+/*
+void displayImage(MWContext * context, IL_Pixmap * image, 
+                        IL_Pixmap * mask, long int x, long int y,
+                        jint x_offset, jint y_offset, jint width, jint height);
+*/
+
 protected:
     char* geometryPrefName;
     // Next two routines return static data -- copy immediately
@@ -288,6 +296,8 @@ protected:
 
   // Add Z order support
   void zaxis_AddSupport();
+
+
 
   // Widget that manages all the chrome
   Widget m_chrome; 
@@ -369,6 +379,9 @@ protected:
   static void zaxis_BelowEH(Widget,XtPointer,XEvent *,Boolean *);
 #endif
 
+// Misc utilities
+   Boolean getNavCenterView(XFE_View *);
+
   XFE_Frame *m_parentframe;
 
   EFrameType m_frametype;
@@ -437,6 +450,7 @@ void xfe_ExecuteCommand(XFE_Frame* frame,
 						CommandType cmd,
 						void *calldata = NULL,
 						XFE_CommandInfo* = NULL);
+
 
 #endif /* _xfe_frame_h */
 

@@ -25,10 +25,15 @@
 
 #ifdef DEBUG									/* ifdef DEBUG			*/
 
+#include <stdarg.h>
 #include <stdlib.h>
 #include <ctype.h>
 
 #include <Xfe/XfeP.h>
+
+#include <Xfe/PrimitiveP.h>
+#include <Xfe/ManagerP.h>
+
 #include <Xm/RepType.h>
 
 #define DEBUG_BUFFER_SIZE 2048
@@ -211,6 +216,73 @@ XfeDebugGetWidgetString(Widget w,String name)
 	}
 
 	return NULL;
+}
+/*----------------------------------------------------------------------*/
+
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* The following XfeDebugWidgets*() API allows for a list of 'debug'	*/
+/* widget to be maintained.  Extra debugging info can then be printed	*/
+/* for such widgets.													*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+/* extern */ Boolean
+XfeDebugIsEnabled(Widget w)
+{
+	Boolean result = False;
+
+	assert( XfeIsManager(w) || XfeIsPrimitive(w) );
+	
+	if (XfeIsPrimitive(w))
+	{
+		result = _XfeDebugTrace(w);
+	}
+	else
+	{
+		result = _XfemDebugTrace(w);
+	}
+
+	return result;
+}
+/*----------------------------------------------------------------------*/
+/* extern */ void
+XfeDebugPrintf(Widget w,char * format, ...)
+{
+	if (XfeDebugIsEnabled(w))
+	{
+		va_list arglist;
+
+		va_start(arglist,format);
+		
+		vprintf(format,arglist);
+		
+		va_end(arglist);
+	}
+}
+/*----------------------------------------------------------------------*/
+/* extern */ void
+XfeDebugPrintfFunction(Widget w,char * func_name,char * format, ...)
+{
+	if (XfeDebugIsEnabled(w))
+	{
+		assert( func_name != NULL );
+
+		printf("%s(%s",func_name,XtName(w));
+
+		if (format != NULL)
+		{
+			va_list arglist;
+			
+			va_start(arglist,format);
+			
+			vprintf(format,arglist);
+			
+			va_end(arglist);
+		}
+
+		printf(")\n");
+	}
 }
 /*----------------------------------------------------------------------*/
 

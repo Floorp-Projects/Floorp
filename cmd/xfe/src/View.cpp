@@ -46,6 +46,7 @@ XFE_View::XFE_View(XFE_Component *toplevel_component,
   m_numsubviews = 0;
   m_numsubviews_allocated = 0 ;
   m_contextData = context;
+  m_viewType = VIEW_NONE;
 
   /* View can contains other view as its sub-views*/
   m_numsubviews = 0;
@@ -318,4 +319,31 @@ XFE_View::getCommandView(XFE_Command* command)
 		return this;
 	else
 		return NULL;
+}
+
+
+static XFE_View *
+XFE_View::getNavCenterView(XFE_View * parent)
+{
+   return getViewOfType(parent, VIEW_NAVCENTER);
+}
+
+static XFE_View *
+XFE_View::getViewOfType(XFE_View * parent, EViewType viewType)
+{
+    int numSubViews=0, i = 0;
+
+    if (parent->m_viewType == viewType)
+      return(parent);
+    else if ((numSubViews = parent->getNumSubViews()) > 0)
+    {
+        for (i=0; i<numSubViews; i++)
+        {
+           if (getViewOfType(parent->m_subviews[i], viewType) != NULL)
+             return(parent->m_subviews[i]);  
+
+        }
+    }
+    return (XFE_View *) NULL;
+
 }

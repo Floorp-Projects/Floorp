@@ -500,7 +500,9 @@ fe_showTreeView (Widget parent, int tree_type, int width, int height)
 extern "C" void 
 xfe_handleRDFNotify (HT_Notification ns, 
 					 HT_Resource node,
-					 HT_Event event)
+					 HT_Event event,
+					 void *token,
+					 uint32 tokenType)
 {
 #ifdef DEBUG_spence
 	printf ("handleRDFNotify\n");

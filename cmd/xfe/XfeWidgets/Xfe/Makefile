@@ -95,6 +95,7 @@ CSRCS			= \
 				GcUtil.c \
 				Geometry.c \
 				Label.c \
+				Linked.c \
 				ListUtil.c \
 				Logo.c \
 				Manager.c \
@@ -150,6 +151,8 @@ EXPORTS			= \
 				GeometryP.h \
 				Label.h \
 				LabelP.h \
+				Linked.h \
+				LinkedP.h \
 				ListUtil.h \
 				ListUtilP.h \
 				Logo.h \
@@ -159,9 +162,9 @@ EXPORTS			= \
 				MenuUtil.h \
 				Oriented.h \
 				OrientedP.h \
-				PrepareP.h \
 				Pane.h \
 				PaneP.h \
+				PrepareP.h \
 				Primitive.h \
 				PrimitiveP.h \
 				ProgressBar.h \

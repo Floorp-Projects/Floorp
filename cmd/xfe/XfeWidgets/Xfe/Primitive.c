@@ -280,6 +280,19 @@ static XtResource resources[] =
 		(XtPointer) True
 	},
 
+#ifdef DEBUG
+	/* Debug resources */
+	{
+		"debugTrace",
+		"DebugTrace",
+		XmRBoolean,
+		sizeof(Boolean),
+		XtOffsetOf(XfePrimitiveRec , xfe_primitive . debug_trace),
+		XmRImmediate, 
+		(XtPointer) False
+	},
+#endif
+
 	/* Core popup resources */
 	{ 
 		XmNnumPopupChildren,

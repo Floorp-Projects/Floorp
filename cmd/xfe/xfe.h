@@ -75,6 +75,7 @@ extern "C" {
 #include <Xm/Frame.h>
 #include <Xm/Protocols.h>
 
+#include "libimg.h"
 #include "menu.h"
 
 #include "fe_rgn.h"
@@ -118,6 +119,14 @@ typedef struct fe_Drawable
     int32 y_origin;
     FE_Region clip_region;
 } fe_Drawable;
+
+
+/* Client data for Imagelib callbacks */
+typedef struct fe_PixmapClientData {
+    Pixmap pixmap;
+    Display *dpy;
+} fe_PixmapClientData;
+
 
 /* if not found in binpath, _long will contain full-path exec name */ 
 /* if FOUND in binpath, fe_progname_long == fe_progname */
@@ -354,6 +363,27 @@ extern void fe_InitIcons (MWContext *context, MSG_BIFF_STATE state);
 extern void fe_IconSize (int icon_number, long *width, long *height);
 extern Pixmap fe_ToolbarPixmap (MWContext *context, int i, Boolean disabled_p,
 				Boolean urls_p);
+
+
+/* Image rendering methods.  */
+extern Pixmap
+fe_TiledMaskWithClipRegion(Display *dpy, Drawable drawable,
+                           Pixmap mask_x_pixmap,
+                           unsigned int width, unsigned int height,
+                           int x_tile_offset, int y_tile_offset,
+                           int x_clip_offset, int y_clip_offset,
+                           Region clip_region);
+
+extern void
+fe_DrawMaskedImageWithClipRegion(Display *dpy, Drawable drawable,
+                                 Pixmap img_x_pixmap, Pixmap mask_x_pixmap,
+                                 unsigned int width, unsigned int height,
+                                 int img_x_offset, int img_y_offset,
+                                 int x_offset, int y_offset,
+                                 Region clip_region);
+
+
+
 /* used for the mail window, where integer indexes just don't work. */
 extern Pixmap fe_ToolbarPixmapByName (MWContext *context, char *pixmap_name, Boolean disabled_p,
 				      Boolean urls_p);
@@ -482,6 +512,11 @@ extern XP_Bool fe_IsPolarisInstalled(void);
 XP_END_PROTOS
 
 #include "xp_str.h"
+
+  typedef void (* DisplayPixmapPtr)(MWContext * context, IL_Pixmap * pixmap, IL_Pixmap * mask, jint  x, jint y, jint x_offset, jint y_offset, jint width, jint height);
+
+  typedef void ( * NewPixmapPtr)(MWContext *, IL_Pixmap * pixmap, Boolean Mask);
+   typedef void ( * ImageCompletePtr)(MWContext *, IL_Pixmap * pixmap);
 
 
 struct fe_file_type_data
@@ -637,6 +672,12 @@ XtPointer fe_WidgetTreeWalkChildren(Widget widget,
 				    fe_WidgetTreeWalkMappee callback,
 				    XtPointer data);
 Widget    fe_FindWidget(Widget top, char* name); /* find widget by name */
+
+
+void DisplayPixmap(MWContext *, IL_Pixmap *, IL_Pixmap * , jint , jint , jint , jint , jint , jint) ;
+void NewPixmap(MWContext *, IL_Pixmap * image, Boolean mask);
+void ImageComplete(MWContext *, IL_Pixmap * image);
+
 
 XP_END_PROTOS
 
@@ -1224,6 +1265,13 @@ typedef struct fe_ContextData
   struct {
     int32 x,y;
   } cachedPos;
+
+
+  /* Handle to the image display method */
+
+   DisplayPixmapPtr   DisplayPixmap;
+   NewPixmapPtr       NewPixmap;
+   ImageCompletePtr   ImageComplete;
 
 } fe_ContextData;
 

@@ -32,6 +32,7 @@
 #include <Xfe/PrimitiveP.h>
 #include <Xfe/Manager.h>
 #include <Xfe/PrepareP.h>
+#include <Xfe/Linked.h>
 #include <Xm/ManagerP.h>
 
 #ifdef __cplusplus								/* start C++			*/
@@ -165,7 +166,12 @@ typedef struct _XfeManagerPart
 
 	/* Layable children resources */
 	Cardinal			num_layable_children;	/* Num layable children	*/
-	WidgetList			layable_children;		/* Layable children		*/
+	XfeLinked			layable_children;		/* Layable children		*/
+
+	/* Debug resources */
+#ifdef DEBUG
+	Boolean				debug_trace;			/* Trace / debug		*/
+#endif
 
 	/* Private Data Members */
 	int					config_flags;			/* Require Geometry		*/
@@ -199,6 +205,7 @@ typedef struct _XfeManagerConstraintPart
 {
     int					position_index;			/* Position Index		*/
     Boolean				private_component;		/* Private Component	*/
+	XfeLinkNode			link_node;				/* Link node			*/
 } XfeManagerConstraintPart;
 
 /*----------------------------------------------------------------------*/
@@ -315,6 +322,13 @@ _XfeManagerComponentInfo		(Widget			w,
 								 Dimension *	max_width_out,
 								 Dimension *	max_height_out);
 /*----------------------------------------------------------------------*/
+extern void
+_XfeManagerGetLayableChildrenInfo	(Widget			w,
+									 WidgetList *	layable_children_out,
+									 Cardinal *		num_layable_children_out,
+									 Dimension *	max_width_out,
+									 Dimension *	max_height_out);
+/*----------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -329,7 +343,7 @@ _XfeManagerComponentInfo		(Widget			w,
 /* XfeManagerWidgetClass bit_gravity access macro						*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-#define _XfeManagerTrackLayableChildren(w) \
+#define _XfeManagerCountLayableChildren(w) \
 (((XfeManagerWidgetClass) XtClass(w))->xfe_manager_class . count_layable_children)
 
 /*----------------------------------------------------------------------*/
@@ -542,6 +556,17 @@ _XfeManagerComponentInfo		(Widget			w,
 
 /*----------------------------------------------------------------------*/
 /*																		*/
+/* Access to debug resources											*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+#ifdef DEBUG
+#define _XfemDebugTrace(w) \
+(((XfeManagerWidget) (w))->xfe_manager . debug_trace)
+/*----------------------------------------------------------------------*/
+#endif
+
+/*----------------------------------------------------------------------*/
+/*																		*/
 /* XfeManager misc access macros										*/
 /*																		*/
 /*----------------------------------------------------------------------*/
@@ -596,11 +621,14 @@ _XfeManagerComponentInfo		(Widget			w,
 /* XfeManager child individual constraint resource access macro			*/
 /*																		*/
 /*----------------------------------------------------------------------*/
+#define _XfeManagerPositionIndex(w) \
+(_XfeManagerConstraintPart(w)) -> position_index
+/*----------------------------------------------------------------------*/
 #define _XfeManagerPrivateComponent(w) \
 (_XfeManagerConstraintPart(w)) -> private_component
 /*----------------------------------------------------------------------*/
-#define _XfeManagerPositionIndex(w) \
-(_XfeManagerConstraintPart(w)) -> position_index
+#define _XfeManagerLinkNode(w) \
+(_XfeManagerConstraintPart(w)) -> link_node
 /*----------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------*/

@@ -130,7 +130,7 @@ XfeMenuBarCreate			(Widget				pw,
 extern Widget
 XfePopupMenuCreate			(Widget				pw,
 							 String				name,
-							 XfeMenuPaneRec *	items,
+							 XfeMenuItemRec *	items,
 							 XtPointer			client_data,
 							 ArgList			av,
 							 Cardinal			ac);

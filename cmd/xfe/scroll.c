@@ -926,7 +926,8 @@ fe_hack_scrollbar (Widget sb, int max, int inc, int page_inc,
     inc = 1;
   if (page_inc < inc)
     page_inc = inc;
-  XtVaSetValues (sb,
+  if (sb)
+   XtVaSetValues (sb,
 		 XmNmaximum, max,
 		 XmNincrement, inc,
 		 XmNpageIncrement, page_inc,

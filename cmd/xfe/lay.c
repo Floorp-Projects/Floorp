@@ -2313,7 +2313,6 @@ XFE_FreeEdgeElement (MWContext *context, LO_EdgeStruct *edge)
   XP_FREE (sashinfo);
 }
 
-#ifdef SHACK
 extern Widget fe_showRDFView (Widget w, int width, int height);
 
 void
@@ -2364,7 +2363,6 @@ XFE_FreeBuiltinElement (MWContext *context, LO_BuiltinStruct *builtin_struct)
 	XtDestroyWidget (view);
 	builtin_struct->FE_Data = NULL;
 }
-#endif /* SHACK */
 
 /*
  * This is called by the plugin code to create a new embedded window

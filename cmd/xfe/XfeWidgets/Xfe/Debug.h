@@ -64,6 +64,28 @@ XfeDebugRepTypeIndexToValue			(String			rep_type,
 									 Cardinal		i);
 /*----------------------------------------------------------------------*/
 
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* The following XfeDebugWidgets*() API allows for a list of 'debug'	*/
+/* widget to be maintained.  Extra debugging info can then be printed	*/
+/* for such widgets.													*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+/* extern */ Boolean
+XfeDebugIsEnabled					(Widget		w);
+/*----------------------------------------------------------------------*/
+extern void
+XfeDebugPrintf						(Widget		w,
+									 char *		format,
+									 ...);
+/*----------------------------------------------------------------------*/
+extern void
+XfeDebugPrintfFunction				(Widget		w,
+									 char *		func_name,
+									 char *		format, 
+									 ...);
+/*----------------------------------------------------------------------*/
+
 #endif											/* endif DEBUG			*/
 
 #ifdef __cplusplus								/* end C++				*/
