@@ -1967,6 +1967,19 @@ nsDocShell::GetChildSHEntry(PRInt32 aChildOffset, nsISHEntry ** aResult)
     // the progress of loading a document too...
     //
     if (mLSHE) {
+        /* Before looking for the subframe's url, check
+         * the expiration status of the parent. If the parent
+         * has expired from cache, then subframes will not be 
+         * loaded from history. The whole page will be loaded
+         * fresh from the server. 
+         */
+        PRBool parentExpired=PR_FALSE;
+        mLSHE->GetExpirationStatus(&parentExpired);
+        if (parentExpired) {
+            // The parent has expired. Return null.
+            *aResult = nsnull;
+            return rv;
+        }
         /* Get the parent's Load Type so that it can be set on the child too.
          * By default give a loadHistory value
          */
@@ -1980,19 +1993,10 @@ nsDocShell::GetChildSHEntry(PRInt32 aChildOffset, nsISHEntry ** aResult)
             return rv;
         nsCOMPtr<nsISHContainer> container(do_QueryInterface(mLSHE));
         if (container) {
-            rv = container->GetChildAt(aChildOffset, aResult);
-            if (*aResult) {
-              // Check the child SHEnty's expiration status.
-              // If the page has already expired, we don't want to 
-              // load the page from history.
-              PRBool expired = PR_FALSE;
-              (*aResult)->GetExpirationStatus(&expired);
-              if (expired) {
-                *aResult = nsnull;
-                return rv;
-              }
-                (*aResult)->SetLoadType(loadType);
-            }
+            // Get the child subframe from session history.
+            rv = container->GetChildAt(aChildOffset, aResult);            
+            if (*aResult) 
+                (*aResult)->SetLoadType(loadType);            
         }
     }
     return rv;
