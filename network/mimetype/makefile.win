@@ -58,7 +58,7 @@ EXTRA_LIBS=
 REQUIRES= foo parse jtools java zlib nspr dbm util network js security
 EXPORTS= \
 	 mkformat.h \
-	$(NULL);
+	$(NULL)
 
 C_OBJS = \
 	$(NULL)
