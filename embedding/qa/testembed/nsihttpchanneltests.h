@@ -42,6 +42,7 @@ public:
 	void GetRequestSucceededTest(nsIHttpChannel *, PRInt16);
 	void GetResponseHeaderTest(nsIHttpChannel *, const char *, PRInt16);
 	void SetResponseHeaderTest(nsIHttpChannel *, const char *, const char *, PRBool, PRInt16);
+	void VisitResponseHeaderTest(nsIHttpChannel *, PRInt16);
 	void IsNoStoreResponseTest(nsIHttpChannel *, PRInt16);
 	void IsNoCacheResponseTest(nsIHttpChannel *, PRInt16);
 public:

@@ -108,6 +108,7 @@ protected:
 	afx_msg void OnTestsGlobalHistory();
 	afx_msg void OnTestsCreateFile();
 	afx_msg void OnTestsCreateprofile();
+	afx_msg void OnTestsAddTooltipListener();
 	afx_msg void OnTestsAddWebProgListener();
 	afx_msg void OnTestsAddHistoryListener();
 	afx_msg void OnTestsRemovehistorylistener();

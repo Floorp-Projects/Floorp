@@ -81,6 +81,10 @@ struct IBrowserFrameGlue {
 	// ContextMenu Related Methods
 	virtual void ShowContextMenu(PRUint32 aContextFlags, nsIDOMNode *aNode) = 0;
 
+    // Tooltip methods
+    virtual void ShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords, const PRUnichar *aTipText) = 0;
+    virtual void HideTooltip() = 0;
+
 	virtual HWND GetBrowserFrameNativeWnd() = 0;
 };
 
@@ -105,8 +109,9 @@ struct IBrowserFrameGlue {
 		virtual void FocusAvailable(PRBool *aFocusAvail);				\
 		virtual void GetBrowserFrameVisibility(PRBool *aVisible);		\
 		virtual void ShowContextMenu(PRUint32 aContextFlags, nsIDOMNode *aNode); \
-		virtual HWND GetBrowserFrameNativeWnd();
-		
+        virtual void ShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords, const PRUnichar *aTipText); \
+        virtual void HideTooltip(); \
+		virtual HWND GetBrowserFrameNativeWnd();		
 typedef IBrowserFrameGlue *PBROWSERFRAMEGLUE;
 
 #endif //_IBROWSERFRAMEGLUE_H

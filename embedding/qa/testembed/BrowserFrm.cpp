@@ -215,6 +215,11 @@ int CBrowserFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 		return -1;      // fail to create
 	}
 
+	// The third pane(i.e. at index 2) of the status bar will have 
+	// the security lock icon displayed in it. Set up it's size(16) 
+	// and style(no border)so that the padlock icons can be properly drawn
+//	m_wndStatusBar.SetPaneInfo(2, -1, SBPS_NORMAL|SBPS_NOBORDERS, 16);
+
 	// Based on the "chromeMask" we were supplied during construction
 	// hide any requested UI elements - statusbar, menubar etc...
 	// Note that the window styles (WM_RESIZE etc) are set inside

@@ -12,6 +12,7 @@
 #include "QaUtils.h"
 #include "Tests.h"
 #include "nsichanneltests.h"
+#include "nsIHttpHeaderVisitor.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -33,6 +34,25 @@ CnsIHttpChannelTests::~CnsIHttpChannelTests()
 {
 }
 
+class HeaderVisitor : public nsIHttpHeaderVisitor
+{
+public:
+   NS_DECL_ISUPPORTS
+   NS_DECL_NSIHTTPHEADERVISITOR
+ 
+   HeaderVisitor() { }
+   virtual ~HeaderVisitor() {}
+ };
+
+NS_IMPL_ISUPPORTS1(HeaderVisitor, nsIHttpHeaderVisitor)
+
+NS_IMETHODIMP
+HeaderVisitor::VisitHeader(const nsACString &header, const nsACString &value)
+{
+   FormatAndPrintOutput("VisitHeader header = ", PromiseFlatCString(header).get(), 1);
+   FormatAndPrintOutput("VisitHeader value = ", PromiseFlatCString(value).get(), 1);
+return NS_OK;
+}
 
 /////////////////////////////////////////////////////////////////////////////
 // CnsIHttpChannelTests message handlers
@@ -237,7 +257,7 @@ void  CnsIHttpChannelTests::VisitRequestHeadersTest(nsIHttpChannel *theHttpChann
 												    PRInt16 displayMode)
 {
 	// visitRequestHeaders()
-	nsCOMPtr<nsIHttpHeaderVisitor> theVisitor;
+	HeaderVisitor *theVisitor = new HeaderVisitor();
 	if (!theVisitor)
 	   QAOutput("Didn't get nsIHttpHeaderVisitor object. Test failed.", displayMode);
 
@@ -306,6 +326,7 @@ void CnsIHttpChannelTests::CallResponseTests(nsIHttpChannel *theHttpChannel,
 	GetResponseHeaderTest(theHttpChannel, "Set-Cookie", displayMode);
 	SetResponseHeaderTest(theHttpChannel, "Cache-control", "no-cache", PR_FALSE, displayMode);
 	GetResponseHeaderTest(theHttpChannel, "Cache-control", displayMode);
+	VisitResponseHeaderTest(theHttpChannel, displayMode);
 	IsNoStoreResponseTest(theHttpChannel, displayMode);
 	IsNoCacheResponseTest(theHttpChannel, displayMode);
 }
@@ -363,6 +384,18 @@ void CnsIHttpChannelTests::SetResponseHeaderTest(nsIHttpChannel *theHttpChannel,
 	RvTestResult(rv, "SetResponseHeader()", displayMode);
 	FormatAndPrintOutput("SetResponseHeader value = ", value, displayMode);
 	FormatAndPrintOutput("SetResponseHeader response type = ", responseType, displayMode);
+}
+
+void CnsIHttpChannelTests::VisitResponseHeaderTest(nsIHttpChannel *theHttpChannel,
+												   PRInt16 displayMode)
+{
+	// visitResponseHeaders()
+	HeaderVisitor *theVisitor = new HeaderVisitor();
+	if (!theVisitor)
+	   QAOutput("Didn't get nsIHttpHeaderVisitor object. Test failed.", displayMode);
+
+	rv = theHttpChannel->VisitResponseHeaders(theVisitor);
+	RvTestResult(rv, "VisitResponseHeaders()", displayMode);
 }
 
 void CnsIHttpChannelTests::IsNoStoreResponseTest(nsIHttpChannel *theHttpChannel,
