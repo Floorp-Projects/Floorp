@@ -60,6 +60,7 @@ CSRCS = \
 	sha_fast.c \
 	md2.c \
 	md5.c \
+	alg2268.c \
 	$(NULL)
 endif
 
