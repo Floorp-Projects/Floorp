@@ -751,6 +751,7 @@ NS_IMETHODIMP
 nsWebShell::GetInterface(const nsIID &aIID, void** aInstancePtr)
 {
    NS_ENSURE_ARG_POINTER(aInstancePtr);
+   nsresult rv = NS_OK;
 
    if(aIID.Equals(NS_GET_IID(nsILinkHandler)))
       {
@@ -778,9 +779,12 @@ nsWebShell::GetInterface(const nsIID &aIID, void** aInstancePtr)
       return NS_OK;
       }
    else if(mPluginManager) //XXX this seems a little wrong. MMP
-      return mPluginManager->QueryInterface(aIID, aInstancePtr);
+      rv = mPluginManager->QueryInterface(aIID, aInstancePtr); 
 
-  return QueryInterface(aIID, aInstancePtr);
+   if (!*aInstancePtr || NS_FAILED(rv))
+     return QueryInterface(aIID, aInstancePtr);
+   else
+     return rv;
 }
 
 NS_IMETHODIMP
@@ -1566,8 +1570,9 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
             * so that urlbar, forward/back buttons will
             * behave properly when going to named anchors
             */
+           nsIInterfaceRequestor * interfaceRequestor = NS_STATIC_CAST(nsIInterfaceRequestor *, this);
            nsCOMPtr<nsIChannel> dummyChannel;
-           rv = NS_OpenURI(getter_AddRefs(dummyChannel), aUri, nsnull);
+           rv = NS_OpenURI(getter_AddRefs(dummyChannel), aUri, nsnull, interfaceRequestor);
            if (NS_FAILED(rv)) return rv;
            if (nsnull != (const char *) ref) {
               rv = OnStartDocumentLoad(mDocLoader, aUri, "load");
