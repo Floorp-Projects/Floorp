@@ -496,7 +496,7 @@ function makeLinkTab()
         if (elem.hasAttributeNS(XLinkNS, "href"))
         {
           linktext = getValueText(elem);
-          linkView.AddRow([++linkIndex, linktext, elem.href, linkX, ""]);
+          linkView.addRow([++linkIndex, linktext, elem.href, linkX, ""]);
         }
         else
           dump("Page Info - makeLinkTab(): Hey, that's an odd one! ("+elem+")");
@@ -543,9 +543,9 @@ function grabAllXLinks(aDocument)
 {
   function XLinkFilter() 
   {
-    this.acceptNode = function(aDocument)
+    this.acceptNode = function(aNode)
     {
-      return (aDocument.hasAttributeNS(XLinkNS, "href")) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
+      return (aNode.hasAttributeNS(XLinkNS, "href")) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
     }     
   }
 
