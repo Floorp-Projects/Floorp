@@ -2867,9 +2867,6 @@ nsSelection::CommonPageMove(PRBool aForward,
   if (!mainframe)
     return NS_ERROR_FAILURE;
 
-  // find out where we are; determine amount to page up/down
-  nsRect viewRect = aScrollableView->View()->GetBounds();
-
   // find out where the caret is.
   // we should know mDesiredX value of nsSelection, but I havent seen that behavior in other windows applications yet.
   nsCOMPtr<nsISelection> domSel;
@@ -2893,12 +2890,13 @@ nsSelection::CommonPageMove(PRBool aForward,
     return result;
   
   //need to adjust caret jump by percentage scroll
-  viewRect.height = (PRInt32) (viewRect.height * PAGE_SCROLL_PERCENT);
-  
+  nsSize scrollDelta;
+  aScrollableView->GetPageScrollDistances(&scrollDelta);
+
   if (aForward)
-    caretPos.y += viewRect.height;
+    caretPos.y += scrollDelta.height;
   else
-    caretPos.y -= viewRect.height;
+    caretPos.y -= scrollDelta.height;
 
   
   if (caretView)
