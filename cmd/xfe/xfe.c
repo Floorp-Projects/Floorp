@@ -494,27 +494,22 @@ fe_GetURL (MWContext *context, URL_Struct *url, Boolean skip_get_url)
 		fe_SetURLString (context, url);
 	  }
 
-      if (url->history_num == 0) {
-          /* Create URL from prev history entry to preserve security, etc. */
-          urlcp = SHIST_CreateURLStructFromHistoryEntry(context, he);
-          
-          /*  Swap addresses. */
-          temp = url->address;
-          url->address = urlcp->address;
-          urlcp->address = temp;
-	
-          /* set history_num correctly */
-          /*urlcp->history_num = url->history_num;*/
-      
-          /*  Free old URL, and reassign. */
-          NET_FreeURLStruct(url);
-          url = urlcp;
+      /* Create URL from prev history entry to preserve security, etc. */
+      urlcp = SHIST_CreateURLStructFromHistoryEntry(context, he);
 
-          /*fe_RefreshAllAnchors ();*/
-          SHIST_AddDocument(context, SHIST_CreateHistoryEntry(url,he->title));
-      } else {
-          SHIST_SetCurrent(&context->hist, url->history_num);
-      }
+      /*  Swap addresses. */
+      temp = url->address;
+      url->address = urlcp->address;
+      urlcp->address = temp;
+	
+      /* set history_num correctly */
+      urlcp->history_num = url->history_num;
+      
+      /*  Free old URL, and reassign. */
+      NET_FreeURLStruct(url);
+      url = urlcp;
+      NET_FreeURLStruct (url);
+      fe_RefreshAllAnchors ();
       return 0;
     }
   else
