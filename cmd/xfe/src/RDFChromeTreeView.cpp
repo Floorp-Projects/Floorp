@@ -36,11 +36,6 @@
 
 extern "C" RDF_NCVocab  gNavCenter;
 
-extern "C"
-{
-   extern PRBool fe_getPixelFromRGB(MWContext *, char * rgbString, Pixel * pixel);
-};
-
 #ifdef DEBUG_slamm
 #define D(x) x
 #else
@@ -249,7 +244,7 @@ XFE_RDFChromeTreeView::setHTTitlebarProperties(HT_View view, Widget  titleBar)
    HT_GetTemplateData(HT_TopNode(view),  gNavCenter->titleBarFGColor, HT_COLUMN_STRING, &data);
    if (data)
    {
-      gotit = fe_getPixelFromRGB(getContext(), (char *) data, &pixel);
+      gotit = fe_GetPixelFromRGBString(getContext(), (char *) data, &pixel);
       if (gotit)
          XtSetArg(av[ac], XmNforeground, pixel); ac++;
    }
@@ -260,7 +255,7 @@ XFE_RDFChromeTreeView::setHTTitlebarProperties(HT_View view, Widget  titleBar)
    HT_GetTemplateData(HT_TopNode(view),  gNavCenter->titleBarBGColor, HT_COLUMN_STRING, &data);
    if (data)
    {
-      gotit = fe_getPixelFromRGB(getContext(), (char *) data, &pixel);
+      gotit = fe_GetPixelFromRGBString(getContext(), (char *) data, &pixel);
       if (gotit)
          XtSetArg(av[ac], XmNbackground, pixel); ac++;
    }

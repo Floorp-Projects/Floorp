@@ -1085,6 +1085,26 @@ fe_GetPixel (MWContext *context, int r, int g, int b)
   return fe_get_shared_pixel (context, r, g, b, CELL_TRANSIENT);
 }
 
+PRBool
+fe_GetPixelFromRGBString(MWContext *	context,
+						 const char *	color_string, 
+						 Pixel *		pixel_out)
+{
+    uint8 red, green, blue;
+
+    PRBool bColorsFound = LO_ParseRGB((char *) color_string, 
+									  &red, &green, &blue);
+
+	PR_ASSERT( pixel_out != NULL );
+
+    if (bColorsFound)
+	{
+		*pixel_out = fe_GetPixel(context, red, green, blue);
+	}
+
+    return (bColorsFound);
+}
+
 /* Get a color that will be allocated for the life of the app */
 Pixel
 fe_GetPermanentPixel (MWContext *context, int r, int g, int b)

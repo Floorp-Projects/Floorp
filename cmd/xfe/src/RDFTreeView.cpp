@@ -57,7 +57,6 @@ extern int XP_BKMKS_LESS_THAN_ONE_HOUR_AGO;
 
 extern "C"
 {
-   extern PRBool fe_getPixelFromRGB(MWContext *, char * rgbString, Pixel * pixel);
    extern void treeview_bg_image_cb(XtPointer clientData);
 };
 
@@ -980,7 +979,7 @@ XFE_RDFTreeView::setHTTreeViewProperties( HT_View  view)
    HT_GetTemplateData(HT_TopNode(view),  gNavCenter->viewBGColor, HT_COLUMN_STRING, &data);
    if (data)
    {
-      gotit = fe_getPixelFromRGB(getContext(), (char *) data, &pixel);
+      gotit = fe_GetPixelFromRGBString(getContext(), (char *) data, &pixel);
       if (gotit) {
          XtSetArg(av[ac], XmNbackground, pixel); ac++;
       }
@@ -991,7 +990,7 @@ XFE_RDFTreeView::setHTTreeViewProperties( HT_View  view)
   HT_GetTemplateData(HT_TopNode(view),  gNavCenter->viewFGColor, HT_COLUMN_STRING, &data);
    if (data) 
    {
-      gotit = fe_getPixelFromRGB(getContext(), (char *) data, &pixel);
+      gotit = fe_GetPixelFromRGBString(getContext(), (char *) data, &pixel);
       if (gotit) {
          XtSetArg(av[ac], XmNforeground, pixel); ac++;
       }
@@ -1033,7 +1032,7 @@ XFE_RDFTreeView::setHTTreeViewProperties( HT_View  view)
    HT_GetTemplateData(HT_TopNode(view),  gNavCenter->selectionFGColor, HT_COLUMN_STRING, &data);
    if (data)
    {
-      gotit = fe_getPixelFromRGB(getContext(), (char *) data, &pixel);
+      gotit = fe_GetPixelFromRGBString(getContext(), (char *) data, &pixel);
       if (gotit) {
          XtSetArg(av[ac], XmNselectForeground, pixel); ac++;
       }
@@ -1043,7 +1042,7 @@ XFE_RDFTreeView::setHTTreeViewProperties( HT_View  view)
    HT_GetTemplateData(HT_TopNode(view),  gNavCenter->selectionBGColor, HT_COLUMN_STRING, &data);
    if (data)
    {
-      gotit = fe_getPixelFromRGB(getContext(), (char *) data, &pixel);
+      gotit = fe_GetPixelFromRGBString(getContext(), (char *) data, &pixel);
       if (gotit) {
          XtSetArg(av[ac], XmNselectBackground, pixel); ac++;
       }
@@ -1055,7 +1054,7 @@ XFE_RDFTreeView::setHTTreeViewProperties( HT_View  view)
    HT_GetTemplateData(HT_TopNode(view),  gNavCenter->treeConnectionFGColor, HT_COLUMN_STRING, &data);
    if (data)
    {
-      gotit = fe_getPixelFromRGB(getContext(), (char *) data, &pixel);
+      gotit = fe_GetPixelFromRGBString(getContext(), (char *) data, &pixel);
       if (gotit) {
          XtSetArg(av[ac], XmNconnectingLineColor, pixel); ac++;
       }
@@ -1159,21 +1158,6 @@ HT_GetTemplateData(HT_TopNode(view),  gNavCenter->sortColumnBGColor, HT_COLUMN_S
 
 
 }
-
-extern "C"
-{
-/* This s'd go to a utility file */
-PRBool
-fe_getPixelFromRGB(MWContext * context, char * color, Pixel *pixel)
-{
-    uint8 red, green, blue;
-    PRBool bColorsFound = LO_ParseRGB(color, &red, &green, &blue);
-    if (bColorsFound)
-       *pixel = fe_GetPixel(context, red, green, blue);
-
-    return (bColorsFound);
-}
-};
 
 extern "C" {
 

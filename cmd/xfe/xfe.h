@@ -325,6 +325,9 @@ extern void fe_GetMargin(MWContext*, int32 *marginw_ptr, int32 *marginh_ptr);
 
 extern Pixel fe_GetPermanentPixel (MWContext *context, int r, int g, int b);
 extern Pixel fe_GetPixel (MWContext *context, int r, int g, int b);
+extern PRBool fe_GetPixelFromRGBString(MWContext * context, 
+									   const char * color_string, 
+									   Pixel * pixel_out);
 extern Pixel fe_GetImagePixel (MWContext *context, int r, int g, int b);
 extern void fe_QueryColor (MWContext *context, XColor *color);
 extern Colormap fe_MakeNewColormap (MWContext *new_context,
