@@ -426,7 +426,7 @@ NS_IMETHODIMP nsDeviceContextBeOS::GetDeviceContextFor(nsIDeviceContextSpec *aDe
   return rv;
 }
 
-NS_IMETHODIMP nsDeviceContextBeOS::BeginDocument(void)
+NS_IMETHODIMP nsDeviceContextBeOS::BeginDocument(PRUnichar * aTitle)
 {
   return NS_OK;
 }

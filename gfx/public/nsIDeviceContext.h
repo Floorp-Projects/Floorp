@@ -405,7 +405,7 @@ public:
    * app regarding pagination progress and aborting print operations?
    * @return error status
    */
-  NS_IMETHOD BeginDocument(void) = 0;
+  NS_IMETHOD BeginDocument(PRUnichar * aTitle) = 0;
 
   /**
    * Inform the output device that output of a document is ending.

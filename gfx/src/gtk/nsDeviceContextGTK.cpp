@@ -519,7 +519,7 @@ NS_IMETHODIMP nsDeviceContextGTK::GetDeviceContextFor(nsIDeviceContextSpec *aDev
   return rv;
 }
 
-NS_IMETHODIMP nsDeviceContextGTK::BeginDocument(void)
+NS_IMETHODIMP nsDeviceContextGTK::BeginDocument(PRUnichar * aTitle)
 {
   return NS_OK;
 }

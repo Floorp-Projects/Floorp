@@ -71,7 +71,7 @@ public:
 
   NS_IMETHOD 	GetDeviceContextFor(nsIDeviceContextSpec *aDevice,nsIDeviceContext *&aContext);
   NS_IMETHOD  GetSystemAttribute(nsSystemAttrID anID, SystemAttrStruct * aInfo) const;
-  NS_IMETHOD 	BeginDocument(void);
+  NS_IMETHOD 	BeginDocument(PRUnichar * aTitle);
   NS_IMETHOD 	EndDocument(void);
   NS_IMETHOD 	BeginPage(void);
   NS_IMETHOD 	EndPage(void);

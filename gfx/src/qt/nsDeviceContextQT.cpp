@@ -498,7 +498,7 @@ nsDeviceContextQT::GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
     return rv;
 }
 
-NS_IMETHODIMP nsDeviceContextQT::BeginDocument(void)
+NS_IMETHODIMP nsDeviceContextQT::BeginDocument(PRUnichar * aTitle)
 {
     PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsDeviceContextQT::BeginDocument\n"));
     return NS_OK;
