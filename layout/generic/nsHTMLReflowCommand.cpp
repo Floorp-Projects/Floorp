@@ -16,6 +16,7 @@
  * Reserved.
  */
 #include "nsHTMLReflowCommand.h"
+#include "nsHTMLParts.h"
 #include "nsIFrame.h"
 #include "nsIHTMLReflow.h"
 #include "nsIPresContext.h"
