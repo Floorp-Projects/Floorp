@@ -34,14 +34,12 @@ class nsIContent;
 class nsColLayoutData
 {
 public:
-  nsColLayoutData();
+  nsColLayoutData(nsTableColFrame* aColFrame, PRInt32 aNumRows);
 
   // NOT VIRTUAL BECAUSE THIS CLASS SHOULD **NEVER** BE SUBCLASSED  
   ~nsColLayoutData();
 
   nsTableColFrame *GetColFrame();
-
-  void SetColFrame(nsTableColFrame *aColFrame);
 
   nsVoidArray * GetCells();
 
@@ -76,10 +74,6 @@ private:
 
 inline nsTableColFrame * nsColLayoutData::GetColFrame()
 {  return mColFrame;}
-
-inline void nsColLayoutData::SetColFrame(nsTableColFrame *aColFrame)
-{  mColFrame = aColFrame;}
-
 
 inline nsCellLayoutData* nsColLayoutData::ElementAt(PRInt32 aIndex) const
 {  return (nsCellLayoutData*)mCells->ElementAt(aIndex);}

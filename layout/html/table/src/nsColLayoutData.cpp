@@ -20,10 +20,10 @@
 #include "nsCellLayoutData.h"
 #include "nsTableCell.h"
 
-nsColLayoutData::nsColLayoutData()
+nsColLayoutData::nsColLayoutData(nsTableColFrame* aColFrame, PRInt32 aNumRows)
 {
-  mCells = new nsVoidArray();
-  mColFrame = nsnull;
+  mColFrame = aColFrame;
+  mCells = new nsVoidArray(aNumRows);
 }
 
 nsColLayoutData::~nsColLayoutData()

@@ -287,7 +287,10 @@ PRBool BasicTableLayoutStrategy::AssignFixedColumnWidths(nsIPresContext* aPresCo
     for (PRInt32 cellIndex = 0; cellIndex<numCells; cellIndex++)
     {
       nsCellLayoutData * data = (nsCellLayoutData *)(cells->ElementAt(cellIndex));
-      NS_ASSERTION(nsnull != data, "bad data");
+      if (nsnull == data) {
+        // For cells that span rows there's only cell layout data for the first row
+        continue;
+      }
       
       nsMargin  margin;
       nsresult  result = data->GetMargin(margin);
@@ -558,8 +561,10 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsTableFits(nsIPresContext* aPresCo
       for (PRInt32 cellIndex = 0; cellIndex<numCells; cellIndex++)
       { // this col has proportional width, so determine its width requirements
         nsCellLayoutData * data = (nsCellLayoutData *)(cells->ElementAt(cellIndex));
-        NS_ASSERTION(nsnull != data, "bad data");
-
+        if (nsnull == data) {
+          // For cells that span rows there's only cell layout data for the first row
+          continue;
+        }
  
         PRInt32 colSpan = data->GetCellFrame()->GetColSpan();
         // distribute a portion of the spanning cell's min and max width to this column
@@ -897,7 +902,10 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsConstrained( nsIPresContext* aPre
       for (PRInt32 cellIndex = 0; cellIndex<numCells; cellIndex++)
       { // this col has proportional width, so determine its width requirements
         nsCellLayoutData * data = (nsCellLayoutData *)(cells->ElementAt(cellIndex));
-        NS_ASSERTION(nsnull != data, "bad data");
+        if (nsnull == data) {
+          // For cells that span rows there's only cell layout data for the first row
+          continue;
+        }
 
         PRInt32 colSpan = data->GetCellFrame()->GetColSpan();
         nsSize * cellMinSize = data->GetMaxElementSize();
