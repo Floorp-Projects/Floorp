@@ -3525,190 +3525,185 @@ static PRBool SelectorMatches(RuleProcessorData &data,
 
   result = PR_TRUE;
 
-  if (nsnull != aSelector->mPseudoClassList) {  // test for pseudo class match
-    // first-child, root, lang, active, focus, hover, link, visited...
-    // XXX disabled, enabled, selected, selection
-    nsAtomStringList* pseudoClass = aSelector->mPseudoClassList;
-
-    while (result && (nsnull != pseudoClass)) {
-      if ((nsCSSPseudoClasses::firstChild == pseudoClass->mAtom) ||
-          (nsCSSPseudoClasses::firstNode == pseudoClass->mAtom) ) {
-        nsIContent *firstChild = nsnull;
-        nsIContent *parent = data.mParentContent;
-        if (parent) {
-          PRBool acceptNonWhitespace =
-            nsCSSPseudoClasses::firstNode == pseudoClass->mAtom;
-          PRInt32 index = -1;
-          do {
-            firstChild = parent->GetChildAt(++index);
-            // stop at first non-comment and non-whitespace node (and
-            // non-text node for firstChild)
-          } while (firstChild &&
-                   !IsSignificantChild(firstChild, acceptNonWhitespace));
-        }
-        result = localTrue == (data.mContent == firstChild);
-      }
-      else if ((nsCSSPseudoClasses::lastChild == pseudoClass->mAtom) ||
-               (nsCSSPseudoClasses::lastNode == pseudoClass->mAtom)) {
-        nsIContent *lastChild = nsnull;
-        nsIContent *parent = data.mParentContent;
-        if (parent) {
-          PRBool acceptNonWhitespace =
-            nsCSSPseudoClasses::lastNode == pseudoClass->mAtom;
-          PRUint32 index = parent->GetChildCount();
-          do {
-            lastChild = parent->GetChildAt(--index);
-            // stop at first non-comment and non-whitespace node (and
-            // non-text node for lastChild)
-          } while (lastChild &&
-                   !IsSignificantChild(lastChild, acceptNonWhitespace));
-        }
-        result = localTrue == (data.mContent == lastChild);
-      }
-      else if (nsCSSPseudoClasses::empty == pseudoClass->mAtom) {
-        nsIContent *child = nsnull;
-        nsIContent *element = data.mContent;
+  // test for pseudo class match
+  // first-child, root, lang, active, focus, hover, link, visited...
+  // XXX disabled, enabled, selected, selection
+  for (nsAtomStringList* pseudoClass = aSelector->mPseudoClassList;
+       pseudoClass && result; pseudoClass = pseudoClass->mNext) {
+    if ((nsCSSPseudoClasses::firstChild == pseudoClass->mAtom) ||
+        (nsCSSPseudoClasses::firstNode == pseudoClass->mAtom) ) {
+      nsIContent *firstChild = nsnull;
+      nsIContent *parent = data.mParentContent;
+      if (parent) {
+        PRBool acceptNonWhitespace =
+          nsCSSPseudoClasses::firstNode == pseudoClass->mAtom;
         PRInt32 index = -1;
         do {
-          child = element->GetChildAt(++index);
-          // stop at first non-comment and non-whitespace node
-        } while (child && !IsSignificantChild(child, PR_TRUE));
-        result = localTrue == (child == nsnull);
+          firstChild = parent->GetChildAt(++index);
+          // stop at first non-comment and non-whitespace node (and
+          // non-text node for firstChild)
+        } while (firstChild &&
+                 !IsSignificantChild(firstChild, acceptNonWhitespace));
       }
-      else if (nsCSSPseudoClasses::root == pseudoClass->mAtom) {
-        if (data.mParentContent) {
-          result = localFalse;
+      result = localTrue == (data.mContent == firstChild);
+    }
+    else if ((nsCSSPseudoClasses::lastChild == pseudoClass->mAtom) ||
+             (nsCSSPseudoClasses::lastNode == pseudoClass->mAtom)) {
+      nsIContent *lastChild = nsnull;
+      nsIContent *parent = data.mParentContent;
+      if (parent) {
+        PRBool acceptNonWhitespace =
+          nsCSSPseudoClasses::lastNode == pseudoClass->mAtom;
+        PRUint32 index = parent->GetChildCount();
+        do {
+          lastChild = parent->GetChildAt(--index);
+          // stop at first non-comment and non-whitespace node (and
+          // non-text node for lastChild)
+        } while (lastChild &&
+                 !IsSignificantChild(lastChild, acceptNonWhitespace));
+      }
+      result = localTrue == (data.mContent == lastChild);
+    }
+    else if (nsCSSPseudoClasses::empty == pseudoClass->mAtom) {
+      nsIContent *child = nsnull;
+      nsIContent *element = data.mContent;
+      PRInt32 index = -1;
+      do {
+        child = element->GetChildAt(++index);
+        // stop at first non-comment and non-whitespace node
+      } while (child && !IsSignificantChild(child, PR_TRUE));
+      result = localTrue == (child == nsnull);
+    }
+    else if (nsCSSPseudoClasses::root == pseudoClass->mAtom) {
+      if (data.mParentContent) {
+        result = localFalse;
+      }
+      else {
+        result = localTrue;
+      }
+    }
+    else if (nsCSSPseudoClasses::mozBoundElement == pseudoClass->mAtom) {
+      // XXXldb How do we know where the selector came from?  And what
+      // if there are multiple bindings, and we should be matching the
+      // outer one?
+      result = (data.mScopedRoot && data.mScopedRoot == data.mContent)
+                 ? localTrue : localFalse;
+    }
+    else if (nsCSSPseudoClasses::lang == pseudoClass->mAtom) {
+      NS_ASSERTION(nsnull != pseudoClass->mString, "null lang parameter");
+      result = localFalse;
+      if (pseudoClass->mString && *pseudoClass->mString) {
+        // We have to determine the language of the current element.  Since
+        // this is currently no property and since the language is inherited
+        // from the parent we have to be prepared to look at all parent
+        // nodes.  The language itself is encoded in the LANG attribute.
+        const nsString* lang = data.GetLang();
+        if (lang && !lang->IsEmpty()) { // null check for out-of-memory
+          result = localTrue == DashMatchCompare(*lang,
+                          nsDependentString(pseudoClass->mString), PR_FALSE);
         }
         else {
-          result = localTrue;
-        }
-      }
-      else if (nsCSSPseudoClasses::mozBoundElement == pseudoClass->mAtom) {
-        // XXXldb How do we know where the selector came from?  And what
-        // if there are multiple bindings, and we should be matching the
-        // outer one?
-        result = (data.mScopedRoot && data.mScopedRoot == data.mContent)
-                   ? localTrue : localFalse;
-      }
-      else if (nsCSSPseudoClasses::lang == pseudoClass->mAtom) {
-        NS_ASSERTION(nsnull != pseudoClass->mString, "null lang parameter");
-        result = localFalse;
-        if (pseudoClass->mString && *pseudoClass->mString) {
-          // We have to determine the language of the current element.  Since
-          // this is currently no property and since the language is inherited
-          // from the parent we have to be prepared to look at all parent
-          // nodes.  The language itself is encoded in the LANG attribute.
-          const nsString* lang = data.GetLang();
-          if (lang && !lang->IsEmpty()) { // null check for out-of-memory
-            result = localTrue == DashMatchCompare(*lang,
-                            nsDependentString(pseudoClass->mString), PR_FALSE);
-          }
-          else {
-            nsIDocument* doc = data.mContent->GetDocument();
-            if (doc) {
-              // Try to get the language from the HTTP header or if this
-              // is missing as well from the preferences.
-              // The content language can be a comma-separated list of
-              // language codes.
-              nsAutoString language;
-              if (NS_SUCCEEDED(doc->GetContentLanguage(language))) {
-                nsDependentString langString(pseudoClass->mString);
-                language.StripWhitespace();
-                PRInt32 begin = 0;
-                PRInt32 len = language.Length();
-                while (begin < len) {
-                  PRInt32 end = language.FindChar(PRUnichar(','), begin);
-                  if (end == kNotFound) {
-                    end = len;
-                  }
-                  if (DashMatchCompare(Substring(language, begin, end-begin),
-                                       langString,
-                                       PR_FALSE)) {
-                    result = localTrue;
-                    break;
-                  }
-                  begin = end + 1;
+          nsIDocument* doc = data.mContent->GetDocument();
+          if (doc) {
+            // Try to get the language from the HTTP header or if this
+            // is missing as well from the preferences.
+            // The content language can be a comma-separated list of
+            // language codes.
+            nsAutoString language;
+            if (NS_SUCCEEDED(doc->GetContentLanguage(language))) {
+              nsDependentString langString(pseudoClass->mString);
+              language.StripWhitespace();
+              PRInt32 begin = 0;
+              PRInt32 len = language.Length();
+              while (begin < len) {
+                PRInt32 end = language.FindChar(PRUnichar(','), begin);
+                if (end == kNotFound) {
+                  end = len;
                 }
+                if (DashMatchCompare(Substring(language, begin, end-begin),
+                                     langString,
+                                     PR_FALSE)) {
+                  result = localTrue;
+                  break;
+                }
+                begin = end + 1;
               }
             }
           }
         }
       }
-      else if (IsEventPseudo(pseudoClass->mAtom)) {
-        // check if the element is event-sensitive
-        if (data.mCompatMode == eCompatibility_NavQuirks &&
-            // global selector (but don't check .class):
-            !aSelector->mTag && !aSelector->mIDList && !aSelector->mAttrList &&
-            // This (or the other way around) both make :not() asymmetric
-            // in quirks mode (and it's hard to work around since we're
-            // testing the current mNegations, not the first
-            // (unnegated)). This at least makes it closer to the spec.
-            aNegationIndex == 0 &&
-            // :hover or :active
-            (nsCSSPseudoClasses::active == pseudoClass->mAtom ||
-             nsCSSPseudoClasses::hover == pseudoClass->mAtom) &&
-            // important for |IsQuirkEventSensitive|:
-            data.mIsHTMLContent && !data.mIsHTMLLink &&
-            !IsQuirkEventSensitive(data.mContentTag)) {
-          // In quirks mode, only make certain elements sensitive to
-          // selectors ":hover" and ":active".
-          // XXX Once we make ":active" work correctly (bug 65917) this
-          // quirk should apply only to ":hover" (if to anything at all).
-          result = localFalse;
-        } else {
-          if (nsCSSPseudoClasses::active == pseudoClass->mAtom) {
-            result = (aStateMask & NS_EVENT_STATE_ACTIVE) ||
-                     (localTrue == (0 != (data.mEventState & NS_EVENT_STATE_ACTIVE)));
-          }
-          else if (nsCSSPseudoClasses::focus == pseudoClass->mAtom) {
-            result = (aStateMask & NS_EVENT_STATE_FOCUS) ||
-                     (localTrue == (0 != (data.mEventState & NS_EVENT_STATE_FOCUS)));
-          }
-          else if (nsCSSPseudoClasses::hover == pseudoClass->mAtom) {
-            result = (aStateMask & NS_EVENT_STATE_HOVER) ||
-                     (localTrue == (0 != (data.mEventState & NS_EVENT_STATE_HOVER)));
-          }
-          else if (nsCSSPseudoClasses::mozDragOver == pseudoClass->mAtom) {
-            result = (aStateMask & NS_EVENT_STATE_DRAGOVER) ||
-                     (localTrue == (0 != (data.mEventState & NS_EVENT_STATE_DRAGOVER)));
-          }
-          else if (nsCSSPseudoClasses::target == pseudoClass->mAtom) {
-            result = (aStateMask & NS_EVENT_STATE_URLTARGET) ||
-                     (localTrue == (0 != (data.mEventState & NS_EVENT_STATE_URLTARGET)));
-          }
-        } 
-      }
-      else if (IsLinkPseudo(pseudoClass->mAtom)) {
-        if (data.mIsHTMLLink || data.mIsSimpleXLink) {
-          if (result) {
-            if (nsCSSPseudoClasses::mozAnyLink == pseudoClass->mAtom) {
-              result = localTrue;
-            }
-            else if (nsCSSPseudoClasses::link == pseudoClass->mAtom) {
-              result = localTrue == (eLinkState_Unvisited == data.mLinkState);
-            }
-            else if (nsCSSPseudoClasses::visited == pseudoClass->mAtom) {
-              result = localTrue == (eLinkState_Visited == data.mLinkState);
-            }
-          }
+    }
+    else if (IsEventPseudo(pseudoClass->mAtom)) {
+      // check if the element is event-sensitive
+      if (data.mCompatMode == eCompatibility_NavQuirks &&
+          // global selector (but don't check .class):
+          !aSelector->mTag && !aSelector->mIDList && !aSelector->mAttrList &&
+          // This (or the other way around) both make :not() asymmetric
+          // in quirks mode (and it's hard to work around since we're
+          // testing the current mNegations, not the first
+          // (unnegated)). This at least makes it closer to the spec.
+          aNegationIndex == 0 &&
+          // :hover or :active
+          (nsCSSPseudoClasses::active == pseudoClass->mAtom ||
+           nsCSSPseudoClasses::hover == pseudoClass->mAtom) &&
+          // important for |IsQuirkEventSensitive|:
+          data.mIsHTMLContent && !data.mIsHTMLLink &&
+          !IsQuirkEventSensitive(data.mContentTag)) {
+        // In quirks mode, only make certain elements sensitive to
+        // selectors ":hover" and ":active".
+        // XXX Once we make ":active" work correctly (bug 65917) this
+        // quirk should apply only to ":hover" (if to anything at all).
+        result = localFalse;
+      } else {
+        if (nsCSSPseudoClasses::active == pseudoClass->mAtom) {
+          result = (aStateMask & NS_EVENT_STATE_ACTIVE) ||
+                   (localTrue == (0 != (data.mEventState & NS_EVENT_STATE_ACTIVE)));
         }
-        else {
-          result = localFalse;  // not a link
+        else if (nsCSSPseudoClasses::focus == pseudoClass->mAtom) {
+          result = (aStateMask & NS_EVENT_STATE_FOCUS) ||
+                   (localTrue == (0 != (data.mEventState & NS_EVENT_STATE_FOCUS)));
         }
-      }
-      else if (nsCSSPseudoClasses::checked == pseudoClass->mAtom) {
-        // This pseudoclass matches the selected state on the following elements:
-        //  <option>
-        //  <input type=checkbox>
-        //  <input type=radio>
-        if (!(aStateMask & NS_EVENT_STATE_CHECKED))
-          result = data.mIsChecked ? localTrue : localFalse;
+        else if (nsCSSPseudoClasses::hover == pseudoClass->mAtom) {
+          result = (aStateMask & NS_EVENT_STATE_HOVER) ||
+                   (localTrue == (0 != (data.mEventState & NS_EVENT_STATE_HOVER)));
+        }
+        else if (nsCSSPseudoClasses::mozDragOver == pseudoClass->mAtom) {
+          result = (aStateMask & NS_EVENT_STATE_DRAGOVER) ||
+                   (localTrue == (0 != (data.mEventState & NS_EVENT_STATE_DRAGOVER)));
+        }
+        else if (nsCSSPseudoClasses::target == pseudoClass->mAtom) {
+          result = (aStateMask & NS_EVENT_STATE_URLTARGET) ||
+                   (localTrue == (0 != (data.mEventState & NS_EVENT_STATE_URLTARGET)));
+        }
+      } 
+    }
+    else if (IsLinkPseudo(pseudoClass->mAtom)) {
+      if (data.mIsHTMLLink || data.mIsSimpleXLink) {
+        if (nsCSSPseudoClasses::mozAnyLink == pseudoClass->mAtom) {
+          result = localTrue;
+        }
+        else if (nsCSSPseudoClasses::link == pseudoClass->mAtom) {
+          result = localTrue == (eLinkState_Unvisited == data.mLinkState);
+        }
+        else if (nsCSSPseudoClasses::visited == pseudoClass->mAtom) {
+          result = localTrue == (eLinkState_Visited == data.mLinkState);
+        }
       }
       else {
-        NS_ERROR("CSS parser parsed a pseudo-class that we do not handle");
-        result = PR_FALSE;  // unknown pseudo class
+        result = localFalse;  // not a link
       }
-      pseudoClass = pseudoClass->mNext;
+    }
+    else if (nsCSSPseudoClasses::checked == pseudoClass->mAtom) {
+      // This pseudoclass matches the selected state on the following elements:
+      //  <option>
+      //  <input type=checkbox>
+      //  <input type=radio>
+      if (!(aStateMask & NS_EVENT_STATE_CHECKED))
+        result = data.mIsChecked ? localTrue : localFalse;
+    }
+    else {
+      NS_ERROR("CSS parser parsed a pseudo-class that we do not handle");
+      result = PR_FALSE;  // unknown pseudo class
     }
   }
 
@@ -3859,37 +3854,34 @@ static PRBool SelectorMatches(RuleProcessorData &data,
   return result;
 }
 
-static PRBool SelectorMatchesTree(RuleProcessorData &data,
+static PRBool SelectorMatchesTree(RuleProcessorData& aPrevData,
                                   nsCSSSelector* aSelector) 
 {
   nsCSSSelector* selector = aSelector;
-  RuleProcessorData* curdata = &data;
+  RuleProcessorData* prevdata = &aPrevData;
   while (selector) { // check compound selectors
-    // Find the appropriate content (whether parent or previous sibling)
-    // to check next, and if we don't already have a RuleProcessorData
+    // For the appropriate content (whether parent or previous sibling)
+    // to check next, if we don't already have a RuleProcessorData
     // for it, create one.
 
     // for adjacent sibling combinators, the content to test against the
-    // selector is the previous sibling
-    nsCompatibility compat = curdata->mCompatMode;
-    RuleProcessorData* newdata;
+    // selector is the previous sibling *element*
+    RuleProcessorData* data;
     if (PRUnichar('+') == selector->mOperator) {
-      newdata = curdata->mPreviousSiblingData;
-      if (!newdata) {
-        nsIContent* content = curdata->mContent;
+      data = prevdata->mPreviousSiblingData;
+      if (!data) {
+        nsIContent* content = prevdata->mContent;
         nsIContent* parent = content->GetParent();
         if (parent) {
           PRInt32 index = parent->IndexOf(content);
-          while (0 <= --index) {  // skip text & comment nodes
+          while (0 <= --index) {
             content = parent->GetChildAt(index);
-            nsCOMPtr<nsIAtom> tag;
-            content->GetTag(getter_AddRefs(tag));
-            if ((tag != nsLayoutAtoms::textTagName) && 
-                (tag != nsLayoutAtoms::commentTagName)) {
-              newdata = new (curdata->mPresContext)
-                          RuleProcessorData(curdata->mPresContext, content,
-                                            curdata->mRuleWalker, &compat);
-              curdata->mPreviousSiblingData = newdata;    
+            if (content->IsContentOfType(nsIContent::eELEMENT)) {
+              data = new (prevdata->mPresContext)
+                          RuleProcessorData(prevdata->mPresContext, content,
+                                            prevdata->mRuleWalker,
+                                            &prevdata->mCompatMode);
+              prevdata->mPreviousSiblingData = data;    
               break;
             }
           }
@@ -3899,21 +3891,22 @@ static PRBool SelectorMatchesTree(RuleProcessorData &data,
     // for descendant combinators and child combinators, the content
     // to test against is the parent
     else {
-      newdata = curdata->mParentData;
-      if (!newdata) {
-        nsIContent *content = curdata->mContent->GetParent();
+      data = prevdata->mParentData;
+      if (!data) {
+        nsIContent *content = prevdata->mContent->GetParent();
         if (content) {
-          newdata = new (curdata->mPresContext)
-                      RuleProcessorData(curdata->mPresContext, content,
-                                        curdata->mRuleWalker, &compat);
-          curdata->mParentData = newdata;    
+          data = new (prevdata->mPresContext)
+                      RuleProcessorData(prevdata->mPresContext, content,
+                                        prevdata->mRuleWalker,
+                                        &prevdata->mCompatMode);
+          prevdata->mParentData = data;    
         }
       }
     }
-    if (! newdata) {
+    if (! data) {
       return PR_FALSE;
     }
-    if (SelectorMatches(*newdata, selector, 0, nsnull, 0)) {
+    if (SelectorMatches(*data, selector, 0, nsnull, 0)) {
       // to avoid greedy matching, we need to recur if this is a
       // descendant combinator and the next combinator is not
       if ((NS_IS_GREEDY_OPERATOR(selector->mOperator)) &&
@@ -3927,7 +3920,7 @@ static PRBool SelectorMatchesTree(RuleProcessorData &data,
         // it tests from the top of the content tree, down.  This
         // doesn't matter much for performance since most selectors
         // don't match.  (If most did, it might be faster...)
-        if (SelectorMatchesTree(*newdata, selector)) {
+        if (SelectorMatchesTree(*data, selector)) {
           return PR_TRUE;
         }
       }
@@ -3940,7 +3933,7 @@ static PRBool SelectorMatchesTree(RuleProcessorData &data,
         return PR_FALSE;  // parent was required to match
       }
     }
-    curdata = newdata;
+    prevdata = data;
   }
   return PR_TRUE; // all the selectors matched.
 }
