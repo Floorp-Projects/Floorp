@@ -586,6 +586,9 @@ pa_map_escape(char *buf, int32 len, int32 *esc_len, unsigned char *out,
 			case 0x20AC:
 				r = "EUR"; 
 				break;
+			case 0x00AD:
+				r = "-"; 
+				break;
 			case 0x00A9:
 				switch(win_csid)
 				{
