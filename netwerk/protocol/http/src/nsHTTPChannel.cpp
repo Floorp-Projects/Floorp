@@ -103,7 +103,7 @@ nsHTTPChannel::~nsHTTPChannel()
            ("Deleting nsHTTPChannel [this=%x].\n", this));
 
     //TODO if we keep our copy of mURI, then delete it too.
-    NS_IF_RELEASE(mRequest);
+    NS_RELEASE(mRequest);
     NS_IF_RELEASE(mResponse);
     NS_IF_RELEASE(mResponseDataListener);
 
@@ -140,14 +140,7 @@ NS_IMPL_RELEASE(nsHTTPChannel);
 NS_IMETHODIMP
 nsHTTPChannel::IsPending(PRBool *result)
 {
-  nsresult rv;
-
-  if (mRequest) {
-    rv = mRequest->IsPending(result);
-  } else {
-    rv = NS_ERROR_NULL_POINTER;
-  }
-  return rv;
+  return mRequest->IsPending(result);
 }
 
 NS_IMETHODIMP
@@ -163,38 +156,19 @@ nsHTTPChannel::Cancel(void)
     rv = mHandler->CancelPendingChannel(this);
   }
 
-  if (mRequest) {
-    rv = mRequest->Cancel();
-  } else {
-    rv = NS_ERROR_NULL_POINTER;
-  }
-  return rv;
+  return mRequest->Cancel();
 }
 
 NS_IMETHODIMP
 nsHTTPChannel::Suspend(void)
 {
-  nsresult rv;
-
-  if (mRequest) {
-    rv = mRequest->Suspend();
-  } else {
-    rv = NS_ERROR_NULL_POINTER;
-  }
-  return rv;
+  return mRequest->Suspend();
 }
 
 NS_IMETHODIMP
 nsHTTPChannel::Resume(void)
 {
-  nsresult rv;
-
-  if (mRequest) {
-    rv = mRequest->Resume();
-  } else {
-    rv = NS_ERROR_NULL_POINTER;
-  }
-  return rv;
+  return mRequest->Resume();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -387,28 +361,19 @@ nsHTTPChannel::SetOwner(nsISupports * aOwner)
 NS_IMETHODIMP
 nsHTTPChannel::GetRequestHeader(nsIAtom* i_Header, char* *o_Value)
 {
-    NS_ASSERTION(mRequest, "The request object vanished from underneath the connection!");
     return mRequest->GetHeader(i_Header, o_Value);
 }
 
 NS_IMETHODIMP
 nsHTTPChannel::SetRequestHeader(nsIAtom* i_Header, const char* i_Value)
 {
-    NS_ASSERTION(mRequest, "The request object vanished from underneath the connection!");
     return mRequest->SetHeader(i_Header, i_Value);
 }
 
 NS_IMETHODIMP
 nsHTTPChannel::GetRequestHeaderEnumerator(nsISimpleEnumerator** aResult)
 {
-    nsresult rv;
-
-    if (mRequest) {
-        rv = mRequest->GetHeaderEnumerator(aResult);
-    } else {
-        rv = NS_ERROR_FAILURE;
-    }
-    return rv;
+    return mRequest->GetHeaderEnumerator(aResult);
 }
 
 
@@ -503,8 +468,7 @@ nsHTTPChannel::GetEventSink(nsIHTTPEventSink* *o_EventSink)
 NS_IMETHODIMP
 nsHTTPChannel::SetRequestMethod(PRUint32/*HTTPMethod*/ i_Method)
 {
-    NS_ASSERTION(mRequest, "No request set as yet!");
-    return mRequest ? mRequest->SetMethod((HTTPMethod)i_Method) : NS_ERROR_FAILURE;
+    return mRequest->SetMethod((HTTPMethod)i_Method);
 }
 
 NS_IMETHODIMP
@@ -538,29 +502,13 @@ nsHTTPChannel::GetCharset(char* *o_String)
 NS_IMETHODIMP
 nsHTTPChannel::SetPostDataStream(nsIInputStream* aPostStream)
 {
-  nsresult rv = NS_OK;
-
-  if (aPostStream && mRequest) {
-    rv = mRequest->SetPostDataStream(aPostStream);
-  } else {
-    rv = NS_ERROR_NULL_POINTER;
-  }
-
-  return rv;
+  return mRequest->SetPostDataStream(aPostStream);
 }
 
 NS_IMETHODIMP
 nsHTTPChannel::GetPostDataStream(nsIInputStream **o_postStream)
 { 
-  nsresult rv = NS_OK;
-
-  if (o_postStream && mRequest) {
-    rv = mRequest->GetPostDataStream(o_postStream);
-  } else {
-    rv = NS_ERROR_NULL_POINTER;
-  }
-
-  return rv;
+  return mRequest->GetPostDataStream(o_postStream);
 }
 
 NS_IMETHODIMP
@@ -835,6 +783,7 @@ nsresult nsHTTPChannel::ResponseCompleted(nsIChannel* aTransport,
                                               mResponseContext, 
                                               aStatus, 
                                               aMsg);
+
     if (NS_FAILED(rv)) {
       PR_LOG(gHTTPLog, PR_LOG_ERROR, 
              ("nsHTTPChannel::ResponseCompleted(...) [this=%x]."
@@ -847,8 +796,9 @@ nsresult nsHTTPChannel::ResponseCompleted(nsIChannel* aTransport,
   mResponseContext = null_nsCOMPtr();
   NS_IF_RELEASE(mResponseDataListener);
 
+  // Release the transport...
   if (aTransport) {
-    rv = mHandler->ReleaseTransport(aTransport);
+    (void)mHandler->ReleaseTransport(aTransport);
   }
 
   // Remove the channel from its load group...
