@@ -259,9 +259,6 @@ function Startup()
 
   gProgressMeterPanel = document.getElementById("statusbar-progresspanel");
 
-  var toolbox = document.getElementById("navigator-toolbox");
-  toolbox.customizeDone = BrowserToolboxCustomizeDone;
-
   var webNavigation;
   try {
     // Create the browser instance component.
@@ -353,7 +350,7 @@ function Startup()
         loadURI(uriToLoad);
       }
     }
-
+#ifdef XP_UNIX
     // hook up remote support
     if (XREMOTESERVICE_CONTRACTID in Components.classes) {
       var remoteService;
@@ -364,7 +361,7 @@ function Startup()
       RegisterTabOpenObserver();
     }
   }
-  
+#endif  
   if (window.opener) {
     var openerSidebarBox = window.opener.document.getElementById("sidebar-box");
     if (!openerSidebarBox.hidden) {
@@ -426,6 +423,9 @@ function delayedStartup(aElt)
 
   SetPageProxyState("invalid", null);
 
+  var toolbox = document.getElementById("navigator-toolbox");
+  toolbox.customizeDone = BrowserToolboxCustomizeDone;
+
   // Get the preferences service
   gPrefService = Components.classes["@mozilla.org/preferences-service;1"]
                               .getService(Components.interfaces.nsIPrefService);
@@ -453,6 +453,7 @@ function WindowFocusTimerCallback(element)
 
 function Shutdown()
 {
+#ifdef XP_UNIX
   // remove remote support
   if (XREMOTESERVICE_CONTRACTID in Components.classes) {
     var remoteService;
@@ -460,7 +461,7 @@ function Shutdown()
                               .getService(Components.interfaces.nsIXRemoteService);
     remoteService.removeBrowserInstance(window);
   }
-
+#endif
   try {
     gBrowser.removeProgressListener(window.XULBrowserWindow);
   } catch (ex) {
