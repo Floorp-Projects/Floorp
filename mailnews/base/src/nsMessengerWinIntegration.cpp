@@ -485,8 +485,8 @@ nsresult nsMessengerWinIntegration::ShowAlertMessage(const PRUnichar * aAlertTit
     nsCOMPtr<nsIAlertsService> alertsService (do_GetService(NS_ALERTSERVICE_CONTRACTID, &rv));
     if (NS_SUCCEEDED(rv))
     {
-      rv = alertsService->ShowAlertNotification(NEW_MAIL_ALERT_ICON, aAlertTitle, aAlertText, PR_TRUE, 
-                                                NS_ConvertASCIItoUCS2(aFolderURI).get(), this); 
+      rv = alertsService->ShowAlertNotification(NS_LITERAL_STRING(NEW_MAIL_ALERT_ICON), nsDependentString(aAlertTitle), nsDependentString(aAlertText), PR_TRUE, 
+                                                NS_ConvertASCIItoUCS2(aFolderURI), this); 
       mAlertInProgress = PR_TRUE;
     }
   }
