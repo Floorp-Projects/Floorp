@@ -32,6 +32,7 @@ EXPORT_RESOURCE_SAMPLES = \
 		messengercompose.dtd \
 		addressingWidgetOverlay.dtd \
 		MsgAttachPage.dtd \
+		askSendFormat.dtd \
 		composeMsgs.properties \
 		$(NULL)
 

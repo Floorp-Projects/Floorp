@@ -28,11 +28,13 @@ install::
 	$(MAKE_INSTALL) messengercompose.dtd $(DIST)\bin\chrome\messengercompose\locale\en-US
 	$(MAKE_INSTALL) addressingWidgetOverlay.dtd $(DIST)\bin\chrome\messengercompose\locale\en-US
 	$(MAKE_INSTALL) MsgAttachPage.dtd $(DIST)\bin\chrome\messengercompose\locale\en-US
+	$(MAKE_INSTALL) askSendFormat.dtd $(DIST)\bin\chrome\messengercompose\locale\en-US
 	$(MAKE_INSTALL) composeMsgs.properties $(DIST)\bin\chrome\messengercompose\locale\en-US
 
 clobber::
 	rm -f $(DIST)\bin\chrome\messengercompose\locale\en-US\messengercompose.dtd
 	rm -f $(DIST)\bin\chrome\messengercompose\locale\en-US\addressingWidgetOverlay.dtd
 	rm -f $(DIST)\bin\chrome\messengercompose\locale\en-US\MsgAttachPage.dtd
+	rm -f $(DIST)\bin\chrome\messengercompose\locale\en-US\askSendFormat.dtd
 	rm -f $(DIST)\bin\chrome\messengercompose\locale\en-US\composeMsgs.properties
 

@@ -27,3 +27,5 @@ MsgAttachPage.js
 MsgAttachPage.xul
 addressingWidgetOverlay.js
 addressingWidgetOverlay.xul
+askSendFormat.js
+askSendFormat.xul
