@@ -118,15 +118,43 @@ void nsUniversalDetector::HandleData(const char* aBuf, PRUint32 aLen)
   if (aLen > 0)
     mGotData = PR_TRUE;
 
-  //If the data start with BOM, we know it is UCS2
+  //If the data starts with BOM, we know it is UTF
   if (mStart)
   {
     mStart = PR_FALSE;
-    if (aLen > 1)
-      if (aBuf[0] == '\376' && aBuf[1] == '\377')
-        mDetectedCharset = "UTF-16BE";
-      else if (aBuf[0] == '\377' && aBuf[1] == '\376')
-        mDetectedCharset = "UTF-16LE";
+    if (aLen > 3)
+      switch (aBuf[0])
+        {
+        case 0xEF:
+          if ((0xBB == aBuf[1]) && (0xBF == aBuf[2]))
+            // EF BB BF  UTF-8 encoded BOM
+            mDetectedCharset = "UTF-8";
+        break;
+        case 0xFE:
+          if ((0xFF == aBuf[1]) && (0x00 == aBuf[2]) && (0x00 == aBuf[3]))
+            // FE FF 00 00  UCS-4, unusual octet order BOM (3412)
+            mDetectedCharset = "X-ISO-10646-UCS-4-3412";
+          else if (0xFF == aBuf[1])
+            // FE FF  UTF-16, big endian BOM
+            mDetectedCharset = "UTF-16BE";
+        break;
+        case 0x00:
+          if ((0x00 == aBuf[1]) && (0xFE == aBuf[2]) && (0xFF == aBuf[3]))
+            // 00 00 FE FF  UTF-32, big-endian BOM
+            mDetectedCharset = "UTF-32BE";
+          else if ((0x00 == aBuf[1]) && (0xFF == aBuf[2]) && (0xFE == aBuf[3]))
+            // 00 00 FF FE  UCS-4, unusual octet order BOM (2143)
+            mDetectedCharset = "X-ISO-10646-UCS-4-2143";
+        break;
+        case 0xFF:
+          if ((0xFE == aBuf[1]) && (0x00 == aBuf[2]) && (0x00 == aBuf[3]))
+            // FF FE 00 00  UTF-32, little-endian BOM
+            mDetectedCharset = "UTF-32LE";
+          else if (0xFE == aBuf[1])
+            // FF FE  UTF-16, little endian BOM
+            mDetectedCharset = "UTF-16LE";
+        break;
+      }  // switch
 
       if (mDetectedCharset)
       {
