@@ -538,7 +538,11 @@ nsXMLHttpRequest::Abort()
   mDocument = nsnull;
   mState |= XML_HTTP_REQUEST_ABORTED;
 
+  ChangeState(XML_HTTP_REQUEST_COMPLETED);
+
   ClearEventListeners();
+
+  ChangeState(XML_HTTP_REQUEST_UNINITIALIZED, PR_FALSE);  // IE seems to do it
 
   return NS_OK;
 }
@@ -625,6 +629,85 @@ nsXMLHttpRequest::GetBaseURI(nsIURI **aBaseURI)
   }
 
   return NS_OK;
+}
+
+nsresult
+nsXMLHttpRequest::CreateEvent(PRUint32 aMsg, nsIDOMEvent** aDOMEvent)
+{
+  nsresult rv;
+
+  nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(mDocument));
+  if (!receiver) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIEventListenerManager> manager;
+  rv = receiver->GetListenerManager(getter_AddRefs(manager));
+  if (!manager) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsEvent event(aMsg);
+  rv = manager->CreateEvent(nsnull, &event,
+                            NS_LITERAL_STRING("HTMLEvents"), 
+                            aDOMEvent);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  nsCOMPtr<nsIPrivateDOMEvent> privevent(do_QueryInterface(*aDOMEvent));
+  if (!privevent) {
+    NS_IF_RELEASE(*aDOMEvent);
+    return NS_ERROR_FAILURE;
+  }
+  privevent->SetTarget(this);
+  privevent->SetCurrentTarget(this);
+  privevent->SetOriginalTarget(this);
+
+  return NS_OK;
+}
+
+void
+nsXMLHttpRequest::NotifyEventListeners(nsIDOMEventListener* aHandler, nsISupportsArray* aListeners, nsIDOMEvent* aEvent)
+{
+  if (!aEvent)
+    return;
+
+  nsCOMPtr<nsIJSContextStack> stack;
+  JSContext *cx = nsnull;
+
+  if (mScriptContext) {
+    stack = do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+
+    if (stack) {
+      cx = (JSContext *)mScriptContext->GetNativeContext();
+
+      if (cx) {
+        stack->Push(cx);
+      }
+    }
+  }
+
+  if (aHandler) {
+    aHandler->HandleEvent(aEvent);
+  }
+
+  if (aListeners) {
+    PRUint32 index, count;
+
+    aListeners->Count(&count);
+    for (index = 0; index < count; index++) {
+      nsCOMPtr<nsIDOMEventListener> listener = do_QueryElementAt(aListeners, index);
+
+      if (listener) {
+        listener->HandleEvent(aEvent);
+      }
+    }
+  }
+
+  if (cx) {
+    stack->Pop(&cx);
+  }
 }
 
 void
@@ -942,6 +1025,10 @@ nsXMLHttpRequest::OnDataAvailable(nsIRequest *request, nsISupports *ctxt, nsIInp
 NS_IMETHODIMP 
 nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 {
+  // Don't do anything if we have been aborted
+  if (mState & XML_HTTP_REQUEST_UNINITIALIZED)
+    return NS_OK;
+
   mReadRequest = request;
   mContext = ctxt;
   mState |= XML_HTTP_REQUEST_PARSEBODY;
@@ -999,6 +1086,10 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 NS_IMETHODIMP 
 nsXMLHttpRequest::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult status)
 {
+  // Don't do anything if we have been aborted
+  if (mState & XML_HTTP_REQUEST_UNINITIALIZED)
+    return NS_OK;
+
   nsresult rv = NS_OK;
 
   nsCOMPtr<nsIParser> parser;
@@ -1016,17 +1107,14 @@ nsXMLHttpRequest::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult
   mChannel->SetNotificationCallbacks(nsnull);
 
   if (NS_FAILED(status)) {
-    // This can happen if the user leaves the page while the request was still
-    // active. This might also happen if request was active during the regular
-    // page load and the user was able to hit STOP button. If XMLHttpRequest is
-    // the only active network connection on the page the throbber nor the STOP
-    // button are active.
-    Abort();
+    // This can happen if the server is unreachable. Other possible reasons
+    // are that the user leaves the page or hits the ESC key.
+    Error(nsnull);
+
     // By nulling out channel here we make it so that Send() can test for that
     // and throw. Also calling the various status methods/members will not throw.
     // This matches what IE does.
     mChannel = nsnull;
-    ChangeState(XML_HTTP_REQUEST_COMPLETED, PR_FALSE); // IE also seems to set this
   } else if (!parser || parser->IsParserEnabled()) {
     // If we don't have a parser, we never attempted to parse the
     // incoming data, and we can proceed to call RequestCompleted().
@@ -1063,32 +1151,9 @@ nsXMLHttpRequest::RequestCompleted()
     return NS_OK;
   }
 
+  // We need to create the event before nulling out mDocument
   nsCOMPtr<nsIDOMEvent> domevent;
-  nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(mDocument));
-  if (!receiver) {
-    return NS_ERROR_FAILURE;
-  }
-  
-  nsCOMPtr<nsIEventListenerManager> manager;
-  rv = receiver->GetListenerManager(getter_AddRefs(manager));
-  if (!manager) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsEvent event(NS_PAGE_LOAD);
-  rv = manager->CreateEvent(nsnull, &event,
-                            NS_LITERAL_STRING("HTMLEvents"), 
-                            getter_AddRefs(domevent));
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  
-  nsCOMPtr<nsIPrivateDOMEvent> privevent(do_QueryInterface(domevent));
-  if (!privevent) {
-    return NS_ERROR_FAILURE;
-  }
-  privevent->SetTarget(this);
-  privevent->SetCurrentTarget(this);
+  rv = CreateEvent(NS_PAGE_LOAD, getter_AddRefs(domevent));
 
   // We might have been sent non-XML data. If that was the case,
   // we should null out the document member. The idea in this
@@ -1104,47 +1169,8 @@ nsXMLHttpRequest::RequestCompleted()
 
   ChangeState(XML_HTTP_REQUEST_COMPLETED);
 
-  nsCOMPtr<nsIJSContextStack> stack;
-  JSContext *cx = nsnull;
-
-  if (mScriptContext) {
-    stack = do_GetService("@mozilla.org/js/xpc/ContextStack;1");
-
-    if (stack) {
-      cx = (JSContext *)mScriptContext->GetNativeContext();
-
-      if (cx) {
-        stack->Push(cx);
-      }
-    }
-  }
-
-  if (mOnLoadListener) {
-    mOnLoadListener->HandleEvent(domevent);
-  }
-
-  if (mLoadEventListeners) {
-    PRUint32 index, count;
-
-    mLoadEventListeners->Count(&count);
-    for (index = 0; index < count; index++) {
-      nsCOMPtr<nsIDOMEventListener> listener;
-
-      mLoadEventListeners->QueryElementAt(index,
-                                          NS_GET_IID(nsIDOMEventListener),
-                                          getter_AddRefs(listener));
-
-      if (listener) {
-        listener->HandleEvent(domevent);
-      }
-    }
-  }
-
+  NotifyEventListeners(mOnLoadListener, mLoadEventListeners, domevent);
   ClearEventListeners();
-
-  if (cx) {
-    stack->Pop(&cx);
-  }
 
   return rv;
 }
@@ -1154,7 +1180,7 @@ NS_IMETHODIMP
 nsXMLHttpRequest::Send(nsIVariant *aBody)
 {
   nsresult rv;
-  
+
   // Return error if we're already processing a request
   if (XML_HTTP_REQUEST_SENT & mState) {
     return NS_ERROR_FAILURE;
@@ -1362,7 +1388,7 @@ nsXMLHttpRequest::SetRequestHeader(const char *header, const char *value)
                                          nsDependentCString(value),
                                          PR_FALSE);
   }
-  
+
   return NS_OK;
 }
 
@@ -1397,6 +1423,7 @@ nsXMLHttpRequest::OverrideMimeType(const char* aMimeType)
   mOverrideMimeType.Assign(aMimeType);
   return NS_OK;
 }
+
 
 // nsIDOMEventListener
 nsresult
@@ -1446,8 +1473,6 @@ nsXMLHttpRequest::Abort(nsIDOMEvent* aEvent)
 {
   Abort();
 
-  ChangeState(XML_HTTP_REQUEST_UNINITIALIZED);
-
   mState &= ~XML_HTTP_REQUEST_SYNCLOOPING;
 
   return NS_OK;
@@ -1456,52 +1481,20 @@ nsXMLHttpRequest::Abort(nsIDOMEvent* aEvent)
 nsresult
 nsXMLHttpRequest::Error(nsIDOMEvent* aEvent)
 {
+  // We need to create the event before nulling out mDocument
+  nsCOMPtr<nsIDOMEvent> event(do_QueryInterface(aEvent));
+  if (!event) {
+    // There is no NS_PAGE_ERROR event but NS_SCRIPT_ERROR should be ok.
+    CreateEvent(NS_SCRIPT_ERROR, getter_AddRefs(event));
+  }
+
   mDocument = nsnull;
-  ChangeState(XML_HTTP_REQUEST_UNINITIALIZED);
-  
+  ChangeState(XML_HTTP_REQUEST_COMPLETED);
+
   mState &= ~XML_HTTP_REQUEST_SYNCLOOPING;
 
-  nsCOMPtr<nsIJSContextStack> stack;
-  JSContext *cx = nsnull;
-
-  if (mScriptContext) {
-    stack = do_GetService("@mozilla.org/js/xpc/ContextStack;1");
-
-    if (stack) {
-      cx = (JSContext *)mScriptContext->GetNativeContext();
-
-      if (cx) {
-        stack->Push(cx);
-      }
-    }
-  }
-
-  if (mOnErrorListener) {
-    mOnErrorListener->HandleEvent(aEvent);
-  }
-
-  if (mErrorEventListeners) {
-    PRUint32 index, count;
-
-    mErrorEventListeners->Count(&count);
-    for (index = 0; index < count; index++) {
-      nsCOMPtr<nsIDOMEventListener> listener;
-
-      mErrorEventListeners->QueryElementAt(index,
-                                           NS_GET_IID(nsIDOMEventListener),
-                                           getter_AddRefs(listener));
-
-      if (listener) {
-        listener->HandleEvent(aEvent);
-      }
-    }
-  }
-
+  NotifyEventListeners(mOnErrorListener, mErrorEventListeners, event);
   ClearEventListeners();
-
-  if (cx) {
-    stack->Pop(&cx);
-  }
 
   return NS_OK;
 }
@@ -1630,4 +1623,3 @@ nsHeaderVisitor::VisitHeader(const nsACString &header, const nsACString &value)
     mHeaders.Append('\n');
     return NS_OK;
 }
-
