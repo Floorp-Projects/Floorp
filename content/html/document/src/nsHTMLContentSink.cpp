@@ -462,7 +462,8 @@ GetAttributeValueAt(const nsIParserNode& aNode,
 static nsresult
 AddAttributes(const nsIParserNode& aNode,
               nsIHTMLContent* aContent,
-              nsIScriptContextOwner* aScriptContextOwner)
+              nsIScriptContextOwner* aScriptContextOwner,
+              PRBool aNotify = PR_FALSE)
 {
   // Add tag attributes to the content attributes
   nsAutoString k, v;
@@ -483,7 +484,7 @@ AddAttributes(const nsIParserNode& aNode,
       GetAttributeValueAt(aNode, i, v, aScriptContextOwner);
 
       // Add attribute to content
-      aContent->SetAttribute(kNameSpaceID_HTML, keyAtom, v, PR_FALSE);
+      aContent->SetAttribute(kNameSpaceID_HTML, keyAtom, v,aNotify);
     }
     NS_RELEASE(keyAtom);
   }
@@ -1756,32 +1757,11 @@ HTMLContentSink::OpenBody(const nsIParserNode& aNode)
 
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
                   "HTMLContentSink::OpenBody", aNode);
-  // Check for attributes on the second body and apply them to the
-  // existing BODY node.
+  // Add attributes, if any, to the current BODY node
   if(mBody != nsnull){
-    PRInt32 attrCount = aNode.GetAttributeCount();
-    if(attrCount){
-      nsAutoString k, newValue;
-      nsIScriptContextOwner* sco = mDocument->GetScriptContextOwner();
-      for (PRInt32 index = 0; index < attrCount; index++) {
-        // Get upper-cased key
-        const nsString& key = aNode.GetKeyAt(index);
- 
-        k.Truncate();
-        k.Append(key);
-        k.ToLowerCase();
-
-        nsIAtom*  keyAtom = NS_NewAtom(k);
-        nsHTMLValue oldValue;
-    
-        // Get value and remove mandatory quotes
-        GetAttributeValueAt(aNode, index, newValue, sco);
-        // Add attribute to body
-        mBody->SetAttribute(kNameSpaceID_HTML, keyAtom, newValue, PR_TRUE);
-        NS_RELEASE(keyAtom);
-      }
-      NS_IF_RELEASE(sco);      
-    }
+    nsIScriptContextOwner* sco = mDocument->GetScriptContextOwner();
+    AddAttributes(aNode,mBody,sco,PR_TRUE);
+    NS_IF_RELEASE(sco);      
     NS_ADDREF(mBody);
     mCurrentContext->mStackPos++;
     return NS_OK;
