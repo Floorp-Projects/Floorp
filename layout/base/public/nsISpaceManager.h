@@ -24,6 +24,7 @@
 
 class nsIFrame;
 class nsVoidArray;
+class nsISizeOfHandler;
 struct nsSize;
 
 // IID for the nsISpaceManager interface {17C8FB50-BE96-11d1-80B5-00805F8A274D}
@@ -187,6 +188,10 @@ public:
    * Dump the state of the spacemanager out to a file
    */
   NS_IMETHOD List(FILE* out) = 0;
+
+#ifdef DEBUG
+  virtual void SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const = 0;
+#endif
 };
 
 inline void nsBandTrapezoid::GetRect(nsRect& aRect) const
