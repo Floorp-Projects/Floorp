@@ -79,6 +79,7 @@ NO_PKG_FILES = \
 	res/rdf \
 	res/viewer.properties \
 	res/viewsource.css \
+	chrome/app-chrome.manifest \
 	chrome/US.jar \
 	chrome/chromelist.txt \
 	chrome/classic.jar \

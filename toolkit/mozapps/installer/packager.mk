@@ -149,6 +149,7 @@ NO_PKG_FILES += \
 	shlibsign* \
 	winEmbed.exe \
 	chrome/chrome.rdf \
+	chrome/app-chrome.manifest \
 	$(NULL)
 
 libs:: $(PACKAGE)
