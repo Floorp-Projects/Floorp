@@ -280,6 +280,7 @@ DocumentViewerImpl::Init(nsNativeWidget aNativeParent,
 {
     nsresult rv;
     nsRect bounds;
+    nscoord width, height;
 
     NS_PRECONDITION(nsnull != aPresContext, "null ptr");
     NS_PRECONDITION(nsnull != aDocument,    "null ptr");
@@ -342,17 +343,14 @@ DocumentViewerImpl::Init(nsNativeWidget aNativeParent,
         goto done;
     }
 
-    // Now that we have a presentation shell trigger a reflow so we
-    // create a frame model
+    // Initialize our view manager
     mWindow->GetBounds(bounds);
-    if (nsnull != mPresShell) {
-        nscoord width = bounds.width;
-        nscoord height = bounds.height;
-        width = NS_TO_INT_ROUND(width * mPresContext->GetPixelsToTwips());
-        height = NS_TO_INT_ROUND(height * mPresContext->GetPixelsToTwips());
-        mViewManager->SetWindowDimensions(width, height);
-    }
-    ForceRefresh();
+    width = bounds.width;
+    height = bounds.height;
+    width = NS_TO_INT_ROUND(width * mPresContext->GetPixelsToTwips());
+    height = NS_TO_INT_ROUND(height * mPresContext->GetPixelsToTwips());
+    mViewManager->DisableRefresh();
+    mViewManager->SetWindowDimensions(width, height);
 
 done:
     return rv;
