@@ -402,6 +402,9 @@ nsTableRowFrame::DidResize(nsIPresContext*          aPresContext,
     childFrame = iter.Next();
   }
   StoreOverflow(aPresContext, desiredSize);
+  if (HasView()) {
+    nsContainerFrame::SyncFrameViewAfterReflow(aPresContext, this, GetView(), &desiredSize.mOverflowArea, 0);
+  }
   // Let our base class do the usual work
 }
 
