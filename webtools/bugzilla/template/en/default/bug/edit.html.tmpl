@@ -433,7 +433,7 @@
 
       <input type="radio" name="knob" value="reassignbycomponent">
       Reassign bug to owner
-      [% "and QA contact" IF useqacontact %]
+      [% "and QA contact" IF Param('useqacontact') %]
       of selected component
       <br>
       [% IF bug.isunconfirmed && user.canconfirm %]
