@@ -1,25 +1,21 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://communicator/skin/"?>
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/profile/selectLang.dtd">
 
-<window id="selectLangWindow"
-        title="&langSelBox.title.label;"
-        orient="vertical" class="dialog"
-        style="width: 22em; -moz-user-focus: ignore;"
+<dialog title="&langSelBox.title.label;"
+        style="width: 22em;"
         onload="Startup();"
+        ondialogaccept="return onAccept();"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script type="application/x-javascript" src="chrome://communicator/content/profile/selectLang.js"/>
-
-    <keyset id="keyset"/>
-        
-    <text class="label" value="&langList.txt.label;" for="langList"/>
+       
+    <label value="&langList.txt.label;" control="langList"/>
 
     <separator class="thin" />
     
-    <tree class="inset" id="langList" flex="1" rows="5" 
+    <tree id="langList" flex="1" rows="5" 
           ref="urn:mozilla:locale:root" datasources="rdf:chrome"
           sortResource="http://www.mozilla.org/rdf/chrome#name"
           sortDirection="ascending">
@@ -45,7 +41,7 @@
 
     <separator class="thin" />
 
-    <text class="label" value="&regionList.txt.label;" for="regionList"/>
+    <label value="&regionList.txt.label;" control="regionList"/>
 
     <separator class="thin" />
  
@@ -62,9 +58,5 @@
           </rule>
         </template>
       </menupopup>
-    </menulist>       
-
-  <separator/>  
-  <hbox id="okCancelButtonsRight"/>
-        
-</window>        
+    </menulist>             
+</dialog>        

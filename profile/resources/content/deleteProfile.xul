@@ -15,7 +15,6 @@
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   class="dialog"
-  orient="vertical"
   style="width: 35em;"
   title="&title;"
   onload="Startup();">
@@ -28,8 +27,8 @@
   <keyset id="keyset"/>
   
   <vbox flex="1">
-    <html>&intro;</html> 
-    <html>&question;</html> 
+    <description>&intro;</description> 
+    <description>&question;</description> 
     <separator/>
     <hbox id="okCancelButtonsRight" class="Button1"/>
   </vbox>

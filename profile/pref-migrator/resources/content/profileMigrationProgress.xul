@@ -5,7 +5,6 @@
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/profile/profileMigrationProgress.dtd" >
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
-	orient="vertical"
 	onload="onLoad()"
 	title="&window.title;"
 	class="dialog"> 
@@ -15,13 +14,13 @@
   <keyset id="keyset"/>
 
   <hbox>
-  	<hbox autostretch="never">
+  	<hbox align="center">
       		<image class="message-icon"/>
 	</hbox>
     	<vbox flex="100%">
-		<text id="info.header" value="&dialogTitle.label;" />
-		<text id="info1" flex="100%" value="&currentlyProcessing.text;" />
-		<text id="info2" flex="100%" value="&downloadBeforeUpdate.text;" />
+                <label id="info.header" value="&dialogTitle.label;" />
+		<label id="info1" flex="100%" value="&currentlyProcessing.text;" />
+                <label id="info2" flex="100%" value="&downloadBeforeUpdate.text;" />
 		<hbox id="pm-box">
 			<progressmeter id="dialog.progress" mode="undetermined" flex="100%"/>
 		</hbox>

@@ -58,9 +58,7 @@
   <script type="application/x-javascript" src="chrome://communicator/content/profile/profileSelection.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/profile/profileManager.js"/>
   
-  <keyset id="dialogKeys">
-    <key id="fooKey" key="s"   event="keydown" oncommand="foo()" modifiers="accel, shift"/>
-  </keyset>
+  <keyset id="dialogKeys"/>
 
   <hbox class="box-header" id="header" title="&profilemanager.label;" description="&windowtitle.label;"/>
   
@@ -100,7 +98,7 @@
         </treehead>
         <treechildren id="profilekids" flex="1"/>
       </tree>    
-      <hbox autostretch="never">
+      <hbox align="start">
         <checkbox id="offlineState" label="&offlineState.label;" accesskey="&offlineState.accesskey;"/> 
       </hbox>
     </vbox>
