@@ -33,7 +33,7 @@
 /*
  * certt.h - public data structures for the certificate library
  *
- * $Id: pcertt.h,v 1.4 2002/05/16 20:39:03 relyea%netscape.com Exp $
+ * $Id: pcertt.h,v 1.5 2002/06/20 18:46:46 relyea%netscape.com Exp $
  */
 #ifndef _PCERTT_H_
 #define _PCERTT_H_
@@ -133,11 +133,13 @@ struct NSSLOWCERTCertificateStr {
 
     SECItem derCert;			/* original DER for the cert */
     SECItem derIssuer;			/* DER for issuer name */
+    SECItem derSN;
     SECItem serialNumber;
     SECItem derSubject;			/* DER for subject name */
-    NSSLOWCERTSubjectPublicKeyInfo subjectPublicKeyInfo;
+    SECItem derSubjKeyInfo;
+    NSSLOWCERTSubjectPublicKeyInfo *subjectPublicKeyInfo;
     SECItem certKey;			/* database key for this cert */
-    NSSLOWCERTValidity validity;
+    SECItem validity;
     certDBEntryCert *dbEntry;		/* database entry struct */
     SECItem subjectKeyID;	/* x509v3 subject key identifier */
     char *nickname;
