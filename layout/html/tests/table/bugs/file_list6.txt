@@ -76,3 +76,4 @@ file:///s|/mozilla/layout/html/tests/table/bugs/bug9879.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug9879-1.html
 file:///s|/mozilla/layout/html/tests/table/bugs/97619.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug85016.html
+file:///s|/mozilla/layout/html/tests/table/bugs/bug99948.html
