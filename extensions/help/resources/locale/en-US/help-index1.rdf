@@ -1785,7 +1785,7 @@
    <nc:subheadings>
      <rdf:Seq><rdf:li>
        <rdf:Description ID="proxies:preferences"
-         nc:name="prioxy preferences"
+         nc:name="proxy preferences"
 	 nc:link="cs_nav_prefs_advanced.html#proxies:preferencesIDX"/>
      </rdf:li>
      <rdf:li>
