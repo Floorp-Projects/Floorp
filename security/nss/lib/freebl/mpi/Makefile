@@ -37,7 +37,7 @@
 ## GPL.
 ## 
 ##
-## $Id: Makefile,v 1.18 2002/09/27 01:23:28 nelsonb%netscape.com Exp $
+## $Id: Makefile,v 1.19 2003/03/29 00:18:22 nelsonb%netscape.com Exp $
 ##
 
 ## Define CC to be the C compiler you wish to use.  The GNU cc
@@ -262,7 +262,7 @@ VERS=1.7p6
 ##
 ## This is the list of source files that need to be packed into
 ## the distribution file
-SRCS=   mpi.c mpprime.c mplogic.c mpmontg.c mpi-test.c primes.c tests/ \
+SRCS=   mpi.c mpprime.c mplogic.c mp_gf2m.c mpmontg.c mpi-test.c primes.c tests/ \
 	utils/gcd.c utils/invmod.c utils/lap.c \
 	utils/ptab.pl utils/sieve.c utils/isprime.c\
 	utils/dec2hex.c utils/hex2dec.c utils/bbs_rand.c \
@@ -274,7 +274,7 @@ SRCS=   mpi.c mpprime.c mplogic.c mpmontg.c mpi-test.c primes.c tests/ \
 	types.pl stats timetest multest
 
 ## These are the header files that go into the distribution file
-HDRS=mpi.h mpi-config.h utils/mpi.h utils/mpi-config.h mpprime.h mplogic.h \
+HDRS=mpi.h mpi-config.h utils/mpi.h utils/mpi-config.h mpprime.h mplogic.h mp_gf2m.h \
      utils/bbs_rand.h tests/mpi.h tests/mpprime.h
 
 ## These are the documentation files that go into the distribution file
@@ -284,9 +284,9 @@ DOCS=README doc utils/README utils/PRIMES
 TOOLS=gcd invmod isprime lap dec2hex hex2dec primegen prng \
 	basecvt fact exptmod pi makeprime identest
 
-LIBOBJS = mpprime.o mpmontg.o mplogic.o mpi.o $(AS_OBJS)
+LIBOBJS = mpprime.o mpmontg.o mplogic.o mp_gf2m.o mpi.o $(AS_OBJS)
 LIBHDRS = mpi-config.h mpi-priv.h mpi.h
-APPHDRS = mpi-config.h mpi.h mplogic.h mpprime.h
+APPHDRS = mpi-config.h mpi.h mplogic.h mp_gf2m.h mpprime.h
 
 help:
 	@ echo ""
@@ -319,6 +319,8 @@ logtab.h: make-logtab
 mpi.o: mpi.c logtab.h $(LIBHDRS)
 
 mplogic.o: mplogic.c mpi-priv.h mplogic.h $(LIBHDRS)
+
+mp_gf2m.o: mp_gf2m.c mpi-priv.h mp_gf2m.h $(LIBHDRS)
 
 mpmontg.o: mpmontg.c mpi-priv.h mplogic.h mpprime.h $(LIBHDRS)
 
@@ -354,7 +356,7 @@ mpi.i: mpi.h
 #---------------------------------------
 
 MPTESTOBJS = mptest1.o mptest2.o mptest3.o mptest3a.o mptest4.o mptest4a.o \
-	mptest4b.o mptest6.o mptest7.o mptest8.o mptest9.o
+	mptest4b.o mptest6.o mptest7.o mptest8.o mptest9.o mptestb.o
 MPTESTS = $(MPTESTOBJS:.o=)
 
 $(MPTESTOBJS): mptest%.o: tests/mptest-%.c $(LIBHDRS)
@@ -364,7 +366,7 @@ $(MPTESTS): mptest%: mptest%.o libmpi.a
 	$(CC) $(CFLAGS) -o $@ $^  $(LIBS)
 
 tests: mptest1 mptest2 mptest3 mptest3a mptest4 mptest4a mptest4b mptest6 \
-	bbsrand
+	mptestb bbsrand
 
 utests: mptest7 mptest8 mptest9
 

@@ -68,8 +68,8 @@ PRIVATE_EXPORTS = \
 	ec.h \
 	$(NULL)
 
-MPI_HDRS = mpi-config.h mpi.h mpi-priv.h mplogic.h mpprime.h logtab.h
-MPI_SRCS = mpprime.c mpmontg.c mplogic.c mpi.c 
+MPI_HDRS = mpi-config.h mpi.h mpi-priv.h mplogic.h mpprime.h logtab.h mp_gf2m.h
+MPI_SRCS = mpprime.c mpmontg.c mplogic.c mpi.c mp_gf2m.c
 
 ifdef MOZILLA_BSAFE_BUILD
 CSRCS = \
@@ -100,6 +100,7 @@ CSRCS = \
 	dh.c \
 	ec.c \
 	GFp_ecl.c \
+	GF2m_ecl.c \
 	pqg.c \
 	dsa.c \
 	rsa.c \
@@ -116,6 +117,7 @@ ALL_HDRS =  \
 	des.h \
 	ec.h \
 	GFp_ecl.h \
+	GF2m_ecl.h \
 	loader.h \
 	rijndael.h \
 	secmpi.h \
