@@ -69,8 +69,6 @@ struct nsModuleComponentInfoContainer {
  extern nsModuleComponentInfo*  nsMsgComposeModule_NSGM_comps; extern PRUint32 nsMsgComposeModule_NSGM_comp_count;
  extern "C" nsresult local_mail_services_NSGetModule(nsIComponentManager *servMgr, nsIFile* aPath, nsIModule** return_cobj);
  extern nsModuleComponentInfo*  local_mail_services_NSGM_comps; extern PRUint32 local_mail_services_NSGM_comp_count;
- extern "C" nsresult nsAbSyncModule_NSGetModule(nsIComponentManager *servMgr, nsIFile* aPath, nsIModule** return_cobj);
- extern nsModuleComponentInfo*  nsAbSyncModule_NSGM_comps; extern PRUint32 nsAbSyncModule_NSGM_comp_count;
  extern "C" nsresult nsImportServiceModule_NSGetModule(nsIComponentManager *servMgr, nsIFile* aPath, nsIModule** return_cobj);
  extern nsModuleComponentInfo*  nsImportServiceModule_NSGM_comps; extern PRUint32 nsImportServiceModule_NSGM_comp_count;
  extern "C" nsresult nsTextImportModule_NSGetModule(nsIComponentManager *servMgr, nsIFile* aPath, nsIModule** return_cobj);
@@ -96,7 +94,6 @@ NS_RegisterMetaModules(nsIComponentManager *aCompMgr,
      REGISTER_MODULE_USING(nsMsgNewsModule_NSGetModule);
      REGISTER_MODULE_USING(nsMsgComposeModule_NSGetModule);
      REGISTER_MODULE_USING(local_mail_services_NSGetModule);
-     REGISTER_MODULE_USING(nsAbSyncModule_NSGetModule);
      REGISTER_MODULE_USING(nsImportServiceModule_NSGetModule);
      REGISTER_MODULE_USING(nsTextImportModule_NSGetModule);
      REGISTER_MODULE_USING(nsAbModule_NSGetModule);
@@ -172,7 +169,6 @@ static nsModuleComponentInfoContainer componentsList[] = {
      { nsMsgNewsModule_NSGM_comps, nsMsgNewsModule_NSGM_comp_count },
      { nsMsgComposeModule_NSGM_comps, nsMsgComposeModule_NSGM_comp_count },
      { local_mail_services_NSGM_comps, local_mail_services_NSGM_comp_count },
-     { nsAbSyncModule_NSGM_comps, nsAbSyncModule_NSGM_comp_count },
      { nsImportServiceModule_NSGM_comps, nsImportServiceModule_NSGM_comp_count },
      { nsTextImportModule_NSGM_comps, nsTextImportModule_NSGM_comp_count },
      { nsAbModule_NSGM_comps, nsAbModule_NSGM_comp_count },
