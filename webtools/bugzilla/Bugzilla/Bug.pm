@@ -539,6 +539,7 @@ sub GetComments {
                AS time, longdescs.thetext AS body, longdescs.work_time,
                      isprivate, already_wrapped,
             " . $dbh->sql_date_format('longdescs.bug_when', '%Y%m%d%H%i%s') . "
+               AS bug_when
              FROM    longdescs, profiles
             WHERE    profiles.userid = longdescs.who
               AND    longdescs.bug_id = ?
