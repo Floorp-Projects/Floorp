@@ -451,21 +451,14 @@ nsDocShell::SetMarginHeight(PRInt32 aHeight)
 NS_IMETHODIMP nsDocShell::GetName(PRUnichar** aName)
 {
    NS_ENSURE_ARG_POINTER(aName);
-   *aName = nsnull;
-   if(0 != mName.Length())
-      *aName = mName.ToNewUnicode();
+   *aName = mName.ToNewUnicode();
    return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShell::SetName(const PRUnichar* aName)
 {
-  if (aName) {
-    mName = aName;  // this does a copy of aName
-  }
-  else {
-    mName = "";
-  }
-  return NS_OK;
+   mName = aName;  // this does a copy of aName
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShell::GetParent(nsIDocShellTreeItem** parent)
@@ -609,13 +602,13 @@ NS_IMETHODIMP nsDocShell::FindChildWithName(const PRUnichar *aName, nsIDocShellT
   
    *_retval = nsnull;  // if we don't find one, we return NS_OK and a null result 
    nsAutoString name(aName);
-   PRUnichar *childName;
+   nsXPIDLString childName;
    PRInt32 i, n = mChildren.Count();
    for (i = 0; i < n; i++) 
       {
       nsIDocShellTreeItem* child = (nsIDocShellTreeItem*) mChildren.ElementAt(i); // doesn't addref the result
       NS_ENSURE_TRUE(child, NS_ERROR_FAILURE);
-      child->GetName(&childName);
+      child->GetName(getter_Copies(childName));
       if(name.Equals(childName))
          {
          *_retval = child;
