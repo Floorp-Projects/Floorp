@@ -218,7 +218,7 @@ nsresult nsCharsetConverterManager::CreateMapping()
 // slots.
 nsresult nsCharsetConverterManager::CreateConvertersList()
 {
-  #include "registryhack2.h"
+#include "registryhack2.h"
 
   return NS_OK;
 }
