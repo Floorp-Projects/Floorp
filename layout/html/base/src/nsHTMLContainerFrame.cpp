@@ -520,4 +520,6 @@ nsHTMLContainerFrame::StyleChangeReflow(nsIPresContext& aPresContext,
     shell->AppendReflowCommand(reflowCmd);
     NS_RELEASE(reflowCmd);
   }
+
+  NS_RELEASE(shell);
 }
