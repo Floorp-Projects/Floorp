@@ -254,6 +254,8 @@ optgroup:before {
   z-index: 2147483647;
   background-color: inherit;
   -moz-user-select: none;
+  position: static !important;
+  float: none !important;
 
   border: 1px outset black !important;
 } 
