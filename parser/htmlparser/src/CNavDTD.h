@@ -680,11 +680,11 @@ protected:
 
     CTokenHandler*      mTokenHandlers[eToken_last];
 
-    PRBool              mLeafBits[50];
-    eHTMLTags           mContextStack[50];
+    PRBool              mLeafBits[4096];
+    eHTMLTags           mContextStack[4096];
     PRInt32             mContextStackPos;
 
-    eHTMLTags           mStyleStack[50];
+    eHTMLTags           mStyleStack[4096];
     PRInt32             mStyleStackPos;
     PRBool              mHasOpenForm;
     PRBool              mHasOpenMap;
