@@ -160,6 +160,7 @@ nsHttpHeaderArray::CanAppendToHeader(nsHttpAtom header)
            header == nsHttp::Referer ||
            header == nsHttp::Host ||
            header == nsHttp::Authorization ||
+           header == nsHttp::Proxy_Authorization ||
            header == nsHttp::If_Modified_Since ||
            header == nsHttp::If_Unmodified_Since ||
            header == nsHttp::From ||
