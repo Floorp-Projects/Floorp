@@ -31,6 +31,7 @@
 #include "nsIReflowCommand.h"
 #include "nsIRenderingContext.h"
 #include "nsIURL.h"
+#include "nsLayoutAtoms.h"
 #include "prprf.h"
 
 nsBulletFrame::nsBulletFrame()
@@ -91,7 +92,16 @@ nsBulletFrame::GetFrameName(nsString& aResult) const
   return MakeFrameName("Bullet", aResult);
 }
 
-NS_METHOD
+NS_IMETHODIMP
+nsBulletFrame::GetFrameType(nsIAtom** aType) const
+{
+  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
+  *aType = nsLayoutAtoms::bulletFrame; 
+  NS_ADDREF(*aType);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsBulletFrame::Paint(nsIPresContext&      aCX,
                      nsIRenderingContext& aRenderingContext,
                      const nsRect&        aDirtyRect,
