@@ -472,6 +472,8 @@ nsAuthURLParser::ParseAuthority(const char *auth, PRInt32 authLen,
                                 PRUint32 *hostnamePos, PRInt32 *hostnameLen,
                                 PRInt32 *port)
 {
+    nsresult rv;
+
     NS_PRECONDITION(auth, "null pointer");
 
     if (authLen < 0)
@@ -491,21 +493,24 @@ nsAuthURLParser::ParseAuthority(const char *auth, PRInt32 authLen,
     for (; (*p != '@') && (p > auth); --p);
     if ( *p == '@' ) {
         // auth = <user-info@server-info>
-        ParseUserInfo(auth, p - auth,
-                      usernamePos, usernameLen,
-                      passwordPos, passwordLen);
-        ParseServerInfo(p + 1, authLen - (p - auth + 1),
-                        hostnamePos, hostnameLen,
-                        port);
+        rv = ParseUserInfo(auth, p - auth,
+                           usernamePos, usernameLen,
+                           passwordPos, passwordLen);
+        if (NS_FAILED(rv)) return rv;
+        rv = ParseServerInfo(p + 1, authLen - (p - auth + 1),
+                             hostnamePos, hostnameLen,
+                             port);
+        if (NS_FAILED(rv)) return rv;
         OFFSET_RESULT(hostname, p + 1 - auth);
     }
     else {
         // auth = <server-info>
         SET_RESULT(username, 0, -1);
         SET_RESULT(password, 0, -1);
-        ParseServerInfo(auth, authLen,
-                        hostnamePos, hostnameLen,
-                        port);
+        rv = ParseServerInfo(auth, authLen,
+                             hostnamePos, hostnameLen,
+                             port);
+        if (NS_FAILED(rv)) return rv;
     }
     return NS_OK;
 }
@@ -552,17 +557,31 @@ nsAuthURLParser::ParseServerInfo(const char *serverinfo, PRInt32 serverinfoLen,
     }
 
     // search backwards for a ':' but stop on ']' (IPv6 address literal
-    // delimiter)
+    // delimiter).  check for illegal characters in the hostname.
     const char *p = serverinfo + serverinfoLen - 1;
-    for (; (*p != ']') && (*p != ':') && (p > serverinfo); --p);
+    const char *colon = nsnull, *bracket = nsnull;
+    for (; p > serverinfo; --p) {
+        switch (*p) {
+            case ']':
+                bracket = p;
+                break;
+            case ':':
+                if (bracket == nsnull)
+                    colon = p;
+                break;
+            case ' ':
+                // hostname must not contain a space
+                NS_WARNING("malformed hostname");
+                return NS_ERROR_MALFORMED_URI;
+        }
+    }
 
-    //const char *p = (const char *) memchr(serverinfo, ':', serverinfoLen);
-    if (*p == ':') {
+    if (colon) {
         // serverinfo = <hostname:port>
-        SET_RESULT(hostname, 0, p - serverinfo);
+        SET_RESULT(hostname, 0, colon - serverinfo);
         if (port) {
             // XXX unfortunately ToInteger is not defined for substrings
-            nsCAutoString buf(p+1, serverinfoLen - (p + 1 - serverinfo));
+            nsCAutoString buf(colon+1, serverinfoLen - (colon + 1 - serverinfo));
             PRInt32 err;
            *port = buf.ToInteger(&err);
             if (NS_FAILED(err))
