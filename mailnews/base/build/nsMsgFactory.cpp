@@ -41,6 +41,7 @@
 #include "nsIUrlListenerManager.h"
 #include "nsUrlListenerManager.h"
 #include "nsMsgMailSession.h"
+#include "nsMessageViewDataSource.h"
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
@@ -56,6 +57,8 @@ static NS_DEFINE_CID(kCMsgFolderEventCID, NS_MSGFOLDEREVENT_CID);
 
 static NS_DEFINE_CID(kCMsgAppCoreCID, NS_MSGAPPCORE_CID);
 static NS_DEFINE_CID(kCMsgGroupRecordCID, NS_MSGGROUPRECORD_CID);
+
+static NS_DEFINE_CID(kCMessageViewDataSourceCID, NS_MESSAGEVIEWDATASOURCE_CID);
 
 
 ////////////////////////////////////////////////////////////
@@ -205,7 +208,11 @@ nsMsgFactory::CreateInstance(nsISupports *aOuter,
 		res = NS_NewMsgAppCore((nsIDOMMsgAppCore **)&inst);
 		if (NS_FAILED(res)) return res;
 	}
+	else if (mClassID.Equals(kCMessageViewDataSourceCID))
+	{
+		inst = NS_STATIC_CAST(nsIRDFCompositeDataSource*, new nsMessageViewDataSource());
 
+	}
 	// End of checking the interface ID code....
 	if (inst) 
 	{
@@ -324,6 +331,13 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
                                   path,
                                   PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) goto done;
+
+	rv = compMgr->RegisterComponent(kCMessageViewDataSourceCID, 
+                                  "Mail/News Message View Data Source",
+                                  NS_RDF_DATASOURCE_PROGID_PREFIX "mail-messageview",
+                                  path, PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) goto done;
+
 #ifdef NS_DEBUG
   printf("mailnews registering from %s\n",path);
 #endif
@@ -362,6 +376,9 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* path)
   rv = compMgr->UnregisterComponent(kCMsgFolderEventCID, path);
   if (NS_FAILED(rv)) goto done;
   rv = compMgr->UnregisterComponent(kCMsgMailSessionCID, path);
+  if(NS_FAILED(rv)) goto done;
+  rv = compMgr->UnregisterComponent(kCMessageViewDataSourceCID, path);
+  if(NS_FAILED(rv)) goto done;
 
   done:
   (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
