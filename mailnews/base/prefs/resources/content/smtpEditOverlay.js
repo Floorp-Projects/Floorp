@@ -92,19 +92,4 @@ function onUseUsername(checkbox, dofocus)
 
 function updateControls() {
 
-    dump("Update controls..\n");
-
-    var isSecure =
-        document.getElementById("smtp.isSecure").checked;
-
-    if (isSecure) {
-        document.getElementById("smtp.alwaysSecure").removeAttribute("disabled");
-        document.getElementById("smtp.sometimesSecure").removeAttribute("disabled");
-    }
-
-    else {
-        document.getElementById("smtp.alwaysSecure").setAttribute("disabled", "true");
-        document.getElementById("smtp.sometimesSecure").setAttribute("disabled", "true");
-    }
-
 }
