@@ -49,11 +49,11 @@ class CNavDelegate : public ITokenizerDelegate {
                           CNavDelegate();
                           CNavDelegate(CNavDelegate& aDelegate);
 
-      virtual CToken*     GetToken(CScanner& aScanner,PRInt32& anErrorCode);
+      virtual PRInt32     GetToken(CScanner& aScanner,CToken*& aToken);
       virtual PRBool      WillAddToken(CToken& aToken);
 
-      virtual PRBool      WillTokenize();
-      virtual PRBool      DidTokenize();
+      virtual PRBool      WillTokenize(PRBool aIncremental);
+      virtual PRBool      DidTokenize(PRBool aIncremental);
 
       virtual eParseMode  GetParseMode(void) const;
       virtual nsIDTD*     GetDTD(void) const;
@@ -63,17 +63,17 @@ class CNavDelegate : public ITokenizerDelegate {
 
       virtual CToken*     CreateTokenOfType(eHTMLTokenTypes aType);
 
-              CToken*     ConsumeTag(PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode);
-              CToken*     ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode);
-              void        ConsumeAttributes(PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode);
-              CToken*     ConsumeText(const nsString& aString,CScanner& aScanner,PRInt32& anErrorCode);
-              CToken*     ConsumeEntity(PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode);
-              CToken*     ConsumeWhitespace(PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode);
-              CToken*     ConsumeComment(PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode);
-              CToken*     ConsumeNewline(PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode);
+              PRInt32     ConsumeTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
+              PRInt32     ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
+              PRInt32     ConsumeAttributes(PRUnichar aChar,CScanner& aScanner);
+              PRInt32     ConsumeText(const nsString& aString,CScanner& aScanner,CToken*& aToken);
+              PRInt32     ConsumeEntity(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
+              PRInt32     ConsumeWhitespace(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
+              PRInt32     ConsumeComment(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
+              PRInt32     ConsumeNewline(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
 
                     //the only special case method...
-      virtual CToken*     ConsumeContentToEndTag(const nsString& aString,PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode);
+      virtual PRInt32     ConsumeContentToEndTag(const nsString& aString,PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
 
               nsDeque     mTokenDeque;
 

@@ -16,6 +16,8 @@
  * Reserved.
  */
   
+//#define __INCREMENTAL 1
+
 #include "nsHTMLParser.h"
 #include "nsHTMLContentSink.h" 
 #include "nsTokenizer.h"
@@ -513,7 +515,15 @@ PRBool nsHTMLParser::Parse(nsIURL* aURL,eParseMode aMode){
     if(mDTD)
       mDTD->SetParser(this);
     mTokenizer=new CTokenizer(aURL, theDelegate, mParseMode);
+
+#ifdef __INCREMENTAL 
+    int iter=-1;
+    for(;;){
+      mTokenizer->TokenizeAvailable(++iter);
+    }
+#else
     mTokenizer->Tokenize();
+#endif
     result=IterateTokens();
   }
   return result;

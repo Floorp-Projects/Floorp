@@ -20,8 +20,7 @@
 #include "COtherDelegate.h"
 #include "nsScanner.h"
 #include "nsParserTypes.h"
-#include "COtherDTD.h"
-
+#include "CNavDTD.h"
 
 
 // Note: We already handle the following special case conditions:
@@ -66,6 +65,7 @@ eParseMode COtherDelegate::GetParseMode(void) const {
   return eParseMode_unknown;
 }
 
+
 /**
  * Cause delegate to create and return a new DTD.
  *
@@ -73,7 +73,7 @@ eParseMode COtherDelegate::GetParseMode(void) const {
  * @return  new DTD or null
  */
 nsIDTD* COtherDelegate::GetDTD(void) const{
-  return new COtherDTD();
+  return new CNavDTD();
 }
 
 /**
@@ -85,36 +85,36 @@ nsIDTD* COtherDelegate::GetDTD(void) const{
  *  @param   
  *  @return  
  */
-CToken* COtherDelegate::ConsumeTag(PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode) {
-  CToken* result=0;
+PRInt32 COtherDelegate::ConsumeTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
+
   nsAutoString empty("");
-  anErrorCode=anErrorCode=aScanner.GetChar(aChar);
+  PRInt32 result=aScanner.GetChar(aChar);
 
   switch(aChar) {
     case kForwardSlash:
       PRUnichar ch; 
-      anErrorCode=aScanner.Peek(ch);
+      result=aScanner.Peek(ch);
       if(nsString::IsAlpha(ch))
-        result=new CEndToken(empty);
-      else result=new CCommentToken(empty); //Special case: </ ...> is treated as a comment
+        aToken=new CEndToken(empty);
+      else aToken=new CCommentToken(empty); //Special case: </ ...> is treated as a comment
       break;
     case kExclamation:
-      result=new CCommentToken(empty);
+      aToken=new CCommentToken(empty);
       break;
     default:
       if(nsString::IsAlpha(aChar))
-        return ConsumeStartTag(aChar,aScanner,anErrorCode);
+        return ConsumeStartTag(aChar,aScanner,aToken);
       else if(kEOF!=aChar) {
         nsAutoString temp("<");
-        return ConsumeText(temp,aScanner,anErrorCode);
+        return ConsumeText(temp,aScanner,aToken);
       }
   } //switch
 
-  if(result!=0) {
-    anErrorCode= result->Consume(aChar,aScanner);  //tell new token to finish consuming text...    
-    if(anErrorCode) {
-      result=0;
-      delete result;
+  if(0!=aToken) {
+    result= aToken->Consume(aChar,aScanner);  //tell new token to finish consuming text...    
+    if(result) {
+      delete aToken;
+      aToken=0;
     }
   }
   return result;
@@ -129,23 +129,23 @@ CToken* COtherDelegate::ConsumeTag(PRUnichar aChar,CScanner& aScanner,PRInt32& a
  *  @param   aScanner: see nsScanner.h
  *  @return  
  */
-void COtherDelegate::ConsumeAttributes(PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode) {
+PRInt32 COtherDelegate::ConsumeAttributes(PRUnichar aChar,CScanner& aScanner) {
   PRBool done=PR_FALSE;
   nsAutoString as("");
-  anErrorCode=kNoError;
-  while((!done) && (anErrorCode==kNoError)) {
-     CToken* result = new CAttributeToken(as);
-      if(result){
-        anErrorCode= result->Consume(aChar,aScanner);  //tell new token to finish consuming text...    
-         mTokenDeque.Push(result);
+  PRInt32 result=kNoError;
+  while((!done) && (result==kNoError)) {
+     CToken* theToken= new CAttributeToken(as);
+      if(theToken){
+        result= theToken->Consume(aChar,aScanner);  //tell new token to finish consuming text...    
+        mTokenDeque.Push(theToken);
       }
     aScanner.Peek(aChar);
-      if(aChar==kGreaterThan) { //you just ate the '>'
-        aScanner.GetChar(aChar); //skip the '>'
-        done=PR_TRUE;
-      }
+    if(aChar==kGreaterThan) { //you just ate the '>'
+      aScanner.GetChar(aChar); //skip the '>'
+      done=PR_TRUE;
+    }
   }
-  return;
+  return result;
 }
 
 /**
@@ -157,7 +157,7 @@ void COtherDelegate::ConsumeAttributes(PRUnichar aChar,CScanner& aScanner,PRInt3
  *  @param  anErrorCode: arg that will hold error condition
  *  @return new token or null
  */
-CToken* COtherDelegate::ConsumeContentToEndTag(const nsString& aString,PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode){
+PRInt32 COtherDelegate::ConsumeContentToEndTag(const nsString& aString,PRUnichar aChar,CScanner& aScanner,CToken*& aToken){
   
   //In the case that we just read the given tag, we should go and
   //consume all the input until we find a matching end tag.
@@ -165,9 +165,9 @@ CToken* COtherDelegate::ConsumeContentToEndTag(const nsString& aString,PRUnichar
   nsAutoString endTag("</");
   endTag.Append(aString);
   endTag.Append(">");
-  CSkippedContentToken* sc=new CSkippedContentToken(endTag);
-  anErrorCode= sc->Consume(aChar,aScanner);  //tell new token to finish consuming text...    
-  return sc;
+  aToken=new CSkippedContentToken(endTag);
+  PRInt32 result= aToken->Consume(aChar,aScanner);  //tell new token to finish consuming text...    
+  return result;
 }
 
 /**
@@ -180,30 +180,31 @@ CToken* COtherDelegate::ConsumeContentToEndTag(const nsString& aString,PRUnichar
  *  @param  anErrorCode: arg that will hold error condition
  *  @return new token or null 
  */
-CToken* COtherDelegate::ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode) {
-  CStartToken* result=new CStartToken(nsAutoString(""));
-  if(result) {
-    anErrorCode= result->Consume(aChar,aScanner);  //tell new token to finish consuming text...    
-    if(result->IsAttributed()) {
-      ConsumeAttributes(aChar,aScanner,anErrorCode);
+PRInt32 COtherDelegate::ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
+  aToken=new CStartToken(nsAutoString(""));
+  PRInt32 result=kNoError;
+  if(aToken) {
+    result= aToken->Consume(aChar,aScanner);  //tell new token to finish consuming text...    
+    if(((CStartToken*)aToken)->IsAttributed()) {
+      result=ConsumeAttributes(aChar,aScanner);
     }
     //now that that's over with, we have one more problem to solve.
     //In the case that we just read a <SCRIPT> or <STYLE> tags, we should go and
     //consume all the content itself.
-    nsString& str=result->GetText();
+    nsString& str=aToken->GetText();
     if(str.EqualsIgnoreCase("SCRIPT") ||
        str.EqualsIgnoreCase("STYLE") ||
        str.EqualsIgnoreCase("TITLE") ||
        str.EqualsIgnoreCase("TEXTAREA")) {
-      CToken* sc=ConsumeContentToEndTag(str,aChar,aScanner,anErrorCode);
+      result=ConsumeContentToEndTag(str,aChar,aScanner,aToken);
       
-      if(sc){
+      if(aToken){
           //now we strip the ending sequence from our new SkippedContent token...
         PRInt32 slen=str.Length()+3;
-        nsString& skippedText=sc->GetText();
+        nsString& skippedText=aToken->GetText();
       
         skippedText.Cut(skippedText.Length()-slen,slen);
-        mTokenDeque.Push(sc);
+        mTokenDeque.Push(aToken);
     
         //In the case that we just read a given tag, we should go and
         //consume all the tag content itself (and throw it all away).
@@ -226,22 +227,21 @@ CToken* COtherDelegate::ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,PRInt
  *  @param  anErrorCode: arg that will hold error condition
  *  @return new token or null 
  */
-CToken* COtherDelegate::ConsumeEntity(PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode) {
-   CToken*    result = 0;
+PRInt32 COtherDelegate::ConsumeEntity(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
    PRUnichar  ch;
-   anErrorCode=aScanner.GetChar(ch);
+   PRInt32 result=aScanner.GetChar(ch);
    if(nsString::IsAlpha(ch)) { //handle common enity references &xxx; or &#000.
-     result = new CEntityToken(nsAutoString(""));
-     anErrorCode= result->Consume(ch,aScanner);  //tell new token to finish consuming text...    
+     aToken = new CEntityToken(nsAutoString(""));
+     result = aToken->Consume(ch,aScanner);  //tell new token to finish consuming text...    
    }
    else if(kHashsign==ch) {
-     result = new CEntityToken(nsAutoString(""));
-     anErrorCode=result->Consume(ch,aScanner);
+     aToken = new CEntityToken(nsAutoString(""));
+     result=aToken->Consume(ch,aScanner);
    }
    else {
      //oops, we're actually looking at plain text...
      nsAutoString temp("&");
-     return ConsumeText(temp,aScanner,anErrorCode);
+     result=ConsumeText(temp,aScanner,aToken);
    }
    return result;
 }
@@ -256,9 +256,12 @@ CToken* COtherDelegate::ConsumeEntity(PRUnichar aChar,CScanner& aScanner,PRInt32
  *  @param  anErrorCode: arg that will hold error condition
  *  @return new token or null 
  */
-CToken* COtherDelegate::ConsumeWhitespace(PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode) {
-  CToken* result = new CWhitespaceToken(nsAutoString(""));
-  anErrorCode=result->Consume(aChar,aScanner);
+PRInt32 COtherDelegate::ConsumeWhitespace(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
+  aToken = new CWhitespaceToken(nsAutoString(""));
+  PRInt32 result=kNoError;
+  if(aToken) {
+     result=aToken->Consume(aChar,aScanner);
+  }
   return result;
 }
 
@@ -272,9 +275,12 @@ CToken* COtherDelegate::ConsumeWhitespace(PRUnichar aChar,CScanner& aScanner,PRI
  *  @param  anErrorCode: arg that will hold error condition
  *  @return new token or null 
  */
-CToken* COtherDelegate::ConsumeComment(PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode){
-  CToken* result= new CCommentToken(nsAutoString(""));
-  anErrorCode=result->Consume(aChar,aScanner);
+PRInt32 COtherDelegate::ConsumeComment(PRUnichar aChar,CScanner& aScanner,CToken*& aToken){
+  aToken = new CCommentToken(nsAutoString(""));
+  PRInt32 result=kNoError;
+  if(aToken) {
+     result=aToken->Consume(aChar,aScanner);
+  }
   return result;
 }
 
@@ -288,11 +294,12 @@ CToken* COtherDelegate::ConsumeComment(PRUnichar aChar,CScanner& aScanner,PRInt3
  *  @param  anErrorCode: arg that will hold error condition
  *  @return new token or null 
  */
-CToken* COtherDelegate::ConsumeText(const nsString& aString,CScanner& aScanner,PRInt32& anErrorCode){
-  CToken* result=new CTextToken(aString);
-  if(result) {
+PRInt32 COtherDelegate::ConsumeText(const nsString& aString,CScanner& aScanner,CToken*& aToken){
+  aToken=new CTextToken(aString);
+  PRInt32 result=kNoError;
+  if(aToken) {
     PRUnichar ch;
-     anErrorCode=result->Consume(ch,aScanner);
+    result=aToken->Consume(ch,aScanner);
   }
   return result;
 }
@@ -306,10 +313,11 @@ CToken* COtherDelegate::ConsumeText(const nsString& aString,CScanner& aScanner,P
  *  @param  anErrorCode: arg that will hold error condition
  *  @return new token or null 
  */
-CToken* COtherDelegate::ConsumeNewline(PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode){
-  CToken* result=new CNewlineToken(nsAutoString(""));
-  if(result) {
-     anErrorCode=result->Consume(aChar,aScanner);
+PRInt32 COtherDelegate::ConsumeNewline(PRUnichar aChar,CScanner& aScanner,CToken*& aToken){
+  aToken=new CNewlineToken(nsAutoString(""));
+  PRInt32 result=kNoError;
+  if(aToken) {
+    result=aToken->Consume(aChar,aScanner);
   }
   return result;
 }
@@ -326,36 +334,36 @@ CToken* COtherDelegate::ConsumeNewline(PRUnichar aChar,CScanner& aScanner,PRInt3
  *  @param  anErrorCode: arg that will hold error condition
  *  @return new token or null 
  */
-CToken* COtherDelegate::GetToken(CScanner& aScanner,PRInt32& anErrorCode){
-  CToken*   result=0;
+PRInt32 COtherDelegate::GetToken(CScanner& aScanner,CToken*& aToken){
+  PRInt32   result=kNoError;
   PRUnichar aChar;
 
   if(mTokenDeque.GetSize()>0) {
-    return (CToken*)mTokenDeque.Pop();
+    aToken=(CToken*)mTokenDeque.Pop();
+    return result;
   }
 
-   while(!aScanner.Eof()) {
-     anErrorCode=aScanner.GetChar(aChar);
+  while(!aScanner.Eof()) {
+    result=aScanner.GetChar(aChar);
     switch(aChar) {
       case kAmpersand:
-        return ConsumeEntity(aChar,aScanner,anErrorCode);
+        return ConsumeEntity(aChar,aScanner,aToken);
       case kLessThan:
-        return ConsumeTag(aChar,aScanner,anErrorCode);
+        return ConsumeTag(aChar,aScanner,aToken);
       case kCR: case kLF:
-        return ConsumeNewline(aChar,aScanner,anErrorCode);
+        return ConsumeNewline(aChar,aScanner,aToken);
       case kNotFound:
         break;
       default:
-        if(nsString::IsSpace(aChar))
-            return ConsumeWhitespace(aChar,aScanner,anErrorCode);
-        else
-        {
+        if(!nsString::IsSpace(aChar)) {
           nsAutoString temp(aChar);
-          return ConsumeText(temp,aScanner,anErrorCode);
+          return ConsumeText(temp,aScanner,aToken);
         }
+        else return ConsumeWhitespace(aChar,aScanner,aToken);
+        break;
     } //switch
-    if(anErrorCode==kEOF)
-      anErrorCode=0;
+    if(result==kEOF)
+      result=0;
    } //while
   return result;
 }
@@ -395,7 +403,7 @@ PRBool COtherDelegate::WillAddToken(CToken& /*aToken*/) {
  *  @update gess 3/25/98
  *  @return TRUE if preinitialization completed successfully
  */
-PRBool COtherDelegate::WillTokenize() {
+PRBool COtherDelegate::WillTokenize(PRBool aIncremental) {
   PRBool result=PR_TRUE;
   return result;
 }
@@ -408,7 +416,7 @@ PRBool COtherDelegate::WillTokenize() {
  *  @update gess 3/25/98
  *  @return TRUE if preinitialization completed successfully
  */
-PRBool COtherDelegate::DidTokenize() {
+PRBool COtherDelegate::DidTokenize(PRBool aIncremental) {
   PRBool result=PR_TRUE;
    return result;
 }
