@@ -317,6 +317,7 @@ nsSelectFrame::GetWidgetInitData(nsIPresContext& aPresContext)
   nsSelect* select = (nsSelect *)mContent;
   if (select->mIsComboBox) {
     nsComboBoxInitData* initData = new nsComboBoxInitData();
+    initData->clipChildren = PR_TRUE;
     float twipToPix = aPresContext.GetTwipsToPixels();
     initData->mDropDownHeight = NSTwipsToIntPixels(mWidgetSize.height, twipToPix);
     return initData;
@@ -327,6 +328,7 @@ nsSelectFrame::GetWidgetInitData(nsIPresContext& aPresContext)
     GetContent((nsIContent *&) content);
     if (content->IsMultiple()) {
       initData = new nsListBoxInitData();
+      initData->clipChildren = PR_TRUE;
       initData->mMultiSelect = PR_TRUE;
     }
     NS_RELEASE(content);
