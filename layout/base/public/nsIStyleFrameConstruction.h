@@ -18,9 +18,14 @@
 #ifndef nsIStyleFrameConstruction_h___
 #define nsIStyleFrameConstruction_h___
 
+#include "nsISupports.h"
+
 class nsIPresContext;
 class nsIContent;
 class nsIFrame;
+class nsIAtom;
+class nsIStyleSheet;
+class nsIStyleRule;
 
 // IID for the nsIStyleSet interface {a6cf9066-15b3-11d2-932e-00805f8add32}
 #define NS_ISTYLE_FRAME_CONSTRUCTION_IID \
