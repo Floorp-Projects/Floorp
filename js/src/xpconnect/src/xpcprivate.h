@@ -2385,6 +2385,9 @@ protected:
 // nsJSIID
 
 class nsJSIID : public nsIJSIID, public nsIXPCScriptable
+#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
+          , public nsISecurityCheckedComponent
+#endif
 {
 public:
     NS_DECL_ISUPPORTS
@@ -2395,6 +2398,9 @@ public:
     // we implement the rest...
     NS_DECL_NSIJSIID
     NS_DECL_NSIXPCSCRIPTABLE
+#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
+    NS_DECL_NSISECURITYCHECKEDCOMPONENT
+#endif
 
     static nsJSIID* NewID(const char* str);
 
