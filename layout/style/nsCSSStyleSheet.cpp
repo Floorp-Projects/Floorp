@@ -707,7 +707,9 @@ CSSStyleSheetImpl::~CSSStyleSheetImpl()
     mImportsCollection->DropReference();
     NS_RELEASE(mImportsCollection);
   }
-  mOrderedRules->EnumerateForwards(DropStyleSheetReference, nsnull);
+  if (mOrderedRules.IsNotNull()) {
+    mOrderedRules->EnumerateForwards(DropStyleSheetReference, nsnull);
+  }
   ClearHash();
 }
 
