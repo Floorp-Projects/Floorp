@@ -96,5 +96,16 @@ sub _get_create_index_ddl {
     return($sql);
 
 } #eosub--_get_create_index_ddl
-#------------------------------------------------------------------------------
+#--------------------------------------------------------------------
+
+# MySQL has a simpler ALTER TABLE syntax than ANSI.
+sub get_alter_column_ddl {
+
+    my ($self, $table, $column, $new_def) = @_;
+
+    my $new_ddl = $self->get_type_ddl($new_def);
+
+    return (("ALTER TABLE $table CHANGE COLUMN $column $column $new_ddl"));
+}
+
 1;

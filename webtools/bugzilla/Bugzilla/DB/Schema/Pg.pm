@@ -115,8 +115,8 @@ sub get_add_column_ddl {
     }
 
     if ($definition->{PRIMARYKEY}) {
-         push(@statements, "ALTER TABLE $table ALTER COLUMN $column "
-                         . " SET ADD PRIMARY KEY");
+         push(@statements, "ALTER TABLE $table ALTER COLUMN "
+                         . " ADD PRIMARY KEY ($column)");
     }
 
     return @statements;

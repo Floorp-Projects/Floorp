@@ -1359,6 +1359,7 @@ sub _get_create_index_ddl {
 #--------------------------------------------------------------------------
 
 sub get_add_column_ddl {
+
 =item C<get_alter_ddl($table, $column, \%definition)>
 
  Description: Generate SQL to add a column to a table.
@@ -1377,9 +1378,100 @@ sub get_add_column_ddl {
     return ($statement);
 }
 
+sub get_alter_column_ddl {
+
+=item C<get_alter_ddl($table, $column, \%definition)>
+
+ Description: Generate SQL to alter a column in a table.
+              The column that you are altering must exist,
+              and the table that it lives in must exist.
+ Params:      $table - The table containing the column.
+              $column - The name of the column being changed.
+              \%definition - The new definition for the column,
+                  in standard C<ABSTRACT_SCHEMA> format.
+ Returns:     An array of SQL statements.
+
+=cut
+
+    my ($self, $table, $column, $new_def) = @_;
+
+    my @statements;
+    my $old_def = $self->get_column_abstract($table, $column);
+    my $specific = $self->{db_specific};
+
+    my $typechange = 0;
+    # If the types have changed, we have to deal with that.
+    if (uc(trim($old_def->{TYPE})) ne uc(trim($new_def->{TYPE}))) {
+        $typechange = 1;
+        my $type = $new_def->{TYPE};
+        $type = $specific->{$type} if exists $specific->{$type};
+        # Make sure we can CAST from the old type to the new without an error.
+        push(@statements, "SELECT CAST($column AS $type) FROM $table LIMIT 1");
+        # Add a new temporary column of the new type
+        push(@statements, "ALTER TABLE $table ADD COLUMN ${column}_ALTERTEMP"
+                        . " $type");
+        # UPDATE the temp column to have the same values as the old column
+        push(@statements, "UPDATE $table SET ${column}_ALTERTEMP = " 
+                        . " CAST($column AS $type)");
+        # DROP the old column
+        push(@statements, "ALTER TABLE $table DROP COLUMN $column");
+        # And rename the temp column to be the new one.
+        push(@statements, "ALTER TABLE $table RENAME COLUMN "
+                        . " ${column}_ALTERTEMP TO $column");
+
+        # FIXME - And now, we have to regenerate any indexes that got
+        #         dropped, except for the PK index which will be handled
+        #         below.
+    }
+
+    my $default = $new_def->{DEFAULT};
+    my $default_old = $old_def->{DEFAULT};
+    # If we went from having a default to not having one
+    if (!defined $default && defined $default_old) {
+        push(@statements, "ALTER TABLE $table ALTER COLUMN $column"
+                        . " DROP DEFAULT");
+    }
+    # If we went from no default to a default, or we changed the default,
+    # or we have a default and we changed the data type of the field
+    elsif ( (defined $default && !defined $default_old) || 
+         ($default ne $default_old) ||
+         ($typechange && defined $new_def->{DEFAULT}) ) {
+        $default = $specific->{$default} if exists $specific->{$default};
+        push(@statements, "ALTER TABLE $table ALTER COLUMN $column "
+                         . " SET DEFAULT $default");
+    }
+
+    # If we went from NULL to NOT NULL
+    # OR if we changed the type and we are NOT NULL
+    if ( (!$old_def->{NOTNULL} && $new_def->{NOTNULL}) ||
+         ($typechange && $new_def->{NOTNULL}) ) {
+        push(@statements, "ALTER TABLE $table ALTER COLUMN $column"
+                          . " SET NOT NULL");
+    }
+    # If we went from NOT NULL to NULL
+    elsif ($old_def->{NOTNULL} && !$new_def->{NOTNULL}) {
+        push(@statements, "ALTER TABLE $table ALTER COLUMN $column"
+                        . " DROP NOT NULL");
+    }
+
+    # If we went from not being a PRIMARY KEY to being a PRIMARY KEY,
+    # or if we changed types and we are a PK.
+    if ( (!$old_def->{PRIMARYKEY} && $new_def->{PRIMARYKEY}) ||
+         ($typechange && $new_def->{PRIMARYKEY}) ) {
+        push(@statements, "ALTER TABLE $table ADD PRIMARY KEY ($column)");
+    }
+    # If we went from being a PK to not being a PK
+    elsif ( $old_def->{PRIMARYKEY} && !$new_def->{PRIMARYKEY} ) {
+        push(@statements, "ALTER TABLE $table DROP PRIMARY KEY");
+    }
+
+    return @statements;
+}
+
 sub get_column_abstract {
 
 =item C<get_column_abstract($table, $column)>
+
 
  Description: A column definition from the abstract internal schema.
               cross-database format.
@@ -1421,7 +1513,7 @@ sub get_index_abstract {
     # table doesn't exist.
     if (exists $self->{abstract_schema}->{$table}) {
         my %indexes = (@{ $self->{abstract_schema}{$table}{INDEXES} });
-        return $indexes{$index};
+        return dclone($indexes{$index});
     }
     return undef;
 }
@@ -1446,24 +1538,50 @@ sub set_column {
 
     my ($self, $table, $column, $new_def) = @_;
 
-    my $fields = \@{ $self->{schema}{$table}{FIELDS} };
     my $abstract_fields = \@{ $self->{abstract_schema}{$table}{FIELDS} };
 
-    my $field_position = lsearch($fields, $column) + 1;
+    my $field_position = lsearch($abstract_fields, $column) + 1;
     # If the column doesn't exist, then add it.
     if (!$field_position) {
-        push(@$fields, $column);
-        push(@$fields, $new_def);
         push(@$abstract_fields, $column);
         push(@$abstract_fields, $new_def);
     }
     # We're modifying an existing column.
     else {
-        splice(@$fields, $field_position, 1, $new_def);
         splice(@$abstract_fields, $field_position, 1, $new_def);
     }
 
+    $self->{schema} = dclone($self->{abstract_schema});
     $self->_adjust_schema();
+}
+
+sub columns_equal {
+
+=item C<columns_equal($col_one, $col_two)>
+
+ Description: Tells you if two columns have entirely identical definitions.
+              The TYPE field's value will be compared case-insensitive.
+              However, all other fields will be case-sensitive.
+ Params:      $col_one, $col_two - The columns to compare. Hash 
+                  references, in C<ABSTRACT_SCHEMA> format.
+ Returns:     C<1> if the columns are identical, C<0> if they are not.
+=cut
+
+    my $self = shift;
+    my $col_one = dclone(shift);
+    my $col_two = dclone(shift);
+
+    $col_one->{TYPE} = uc($col_one->{TYPE});
+    $col_two->{TYPE} = uc($col_two->{TYPE});
+
+    my @col_one_array = %$col_one;
+    my @col_two_array = %$col_two;
+
+    my ($removed, $added) = diff_arrays(\@col_one_array, \@col_two_array);
+
+    # If there are no differences between the arrays,
+    # then they are equal.
+    return !scalar(@$removed) && !scalar(@$added) ? 1 : 0;
 }
 
 

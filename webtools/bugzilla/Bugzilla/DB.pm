@@ -357,6 +357,27 @@ sub bz_add_column {
     }
 }
 
+sub bz_alter_column {
+    my ($self, $table, $name, $new_def) = @_;
+
+    my $current_def = $self->bz_column_info($table, $name);
+
+    if (!$self->_bz_schema->columns_equal($current_def, $new_def)) {
+        my @statements = $self->_bz_real_schema->get_alter_column_ddl(
+            $table, $name, $new_def);
+        my $old_ddl = $self->_bz_schema->get_type_ddl($current_def);
+        my $new_ddl = $self->_bz_schema->get_type_ddl($new_def);
+        print "Updating column $name in table $table ...\n";
+        print "Old: $old_ddl\n";
+        print "New: $new_ddl\n";
+        foreach my $sql (@statements) {
+            $self->do($sql);
+        }
+        $self->_bz_real_schema->set_column($table, $name, $new_def);
+        $self->_bz_store_real_schema;
+    }
+}
+
 
 # XXX - Need to make this cross-db compatible
 # XXX - This shouldn't print stuff to stdout
