@@ -1532,19 +1532,39 @@ nsHTMLInputElement::HandleDOMEvent(nsPresContext* aPresContext,
                mType == NS_FORM_INPUT_PASSWORD ||
                mType == NS_FORM_INPUT_FILE)) {
 
-            nsIFrame* primaryFrame = GetPrimaryFrame(PR_FALSE);
-            if (primaryFrame) {
-              nsITextControlFrame* textFrame = nsnull;
-              CallQueryInterface(primaryFrame, &textFrame);
-              
-              // Fire onChange (if necessary)
-              if (textFrame) {
-                textFrame->CheckFireOnChange();
+            PRBool isButton = PR_FALSE;
+            // If this is an enter on the button of a file input, don't submit
+            // -- that's supposed to put up the filepicker
+            if (mType == NS_FORM_INPUT_FILE && aDOMEvent) {
+              nsCOMPtr<nsIDOMNSEvent> nsEvent(do_QueryInterface(*aDOMEvent));
+              if (nsEvent) {
+                nsCOMPtr<nsIDOMEventTarget> originalTarget;
+                nsEvent->GetOriginalTarget(getter_AddRefs(originalTarget));
+                nsCOMPtr<nsIContent> maybeButton(do_QueryInterface(originalTarget));
+                if (maybeButton) {
+                  nsAutoString type;
+                  maybeButton->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type,
+                                       type);
+                  isButton = type.EqualsLiteral("button");
+                }
               }
             }
+            
+            if (!isButton) {
+              nsIFrame* primaryFrame = GetPrimaryFrame(PR_FALSE);
+              if (primaryFrame) {
+                nsITextControlFrame* textFrame = nsnull;
+                CallQueryInterface(primaryFrame, &textFrame);
+              
+                // Fire onChange (if necessary)
+                if (textFrame) {
+                  textFrame->CheckFireOnChange();
+                }
+              }
 
-            rv = MaybeSubmitForm(aPresContext);
-            NS_ENSURE_SUCCESS(rv, rv);
+              rv = MaybeSubmitForm(aPresContext);
+              NS_ENSURE_SUCCESS(rv, rv);
+            }
           }
 
         } break; // NS_KEY_PRESS || NS_KEY_UP
