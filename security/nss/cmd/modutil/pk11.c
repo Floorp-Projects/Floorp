@@ -437,6 +437,7 @@ ListModule(char *moduleName)
 	CK_TOKEN_INFO tokeninfo;
 	char *ciphers, *mechanisms;
 	PK11DisableReasons reason;
+	Error  rv = SUCCESS;
 
 	if(!moduleName) {
 		return SUCCESS;
@@ -495,12 +496,8 @@ ListModule(char *moduleName)
 		if(PK11_GetSlotInfo(slot, &slotinfo) != SECSuccess) {
 			PR_fprintf(PR_STDERR, errStrings[SLOT_INFO_ERR],
 				PK11_GetSlotName(slot));
-			return SLOT_INFO_ERR;
-		}
-		if(PK11_GetTokenInfo(slot, &tokeninfo) != SECSuccess) {
-			PR_fprintf(PR_STDERR, errStrings[TOKEN_INFO_ERR],
-			  slot->token_name);
-			return TOKEN_INFO_ERR;
+			rv = SLOT_INFO_ERR;
+			continue;
 		}
 
 		/* Slot Info */
@@ -534,6 +531,13 @@ ListModule(char *moduleName)
 			PR_fprintf(PR_STDOUT, PAD"Status: Enabled\n");
 		}
 
+		if(PK11_GetTokenInfo(slot, &tokeninfo) != SECSuccess) {
+			PR_fprintf(PR_STDERR, errStrings[TOKEN_INFO_ERR],
+			  slot->token_name);
+			rv = TOKEN_INFO_ERR;
+			continue;
+		}
+
 		/* Token Info */
 		PR_fprintf(PR_STDOUT, PAD"Token Name: %.32s\n",
 			tokeninfo.label);
@@ -565,7 +569,7 @@ ListModule(char *moduleName)
 	}
 	PR_fprintf(PR_STDOUT, 
 		"\n-----------------------------------------------------------\n");
-	return SUCCESS;
+	return rv;
 }
 
 /************************************************************************
