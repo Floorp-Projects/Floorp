@@ -26,7 +26,7 @@ include <$(DEPTH)\config\config.mak>
 
 embed_chrome: embed-jar.mn
 !if "$(_CHROME_FILE_FORMAT)" != "jar"
-        $(PERL) gen_mn.pl -manifest embed-jar.mn -mozpath $(DEPTH) -chrome $(DIST)/bin/chrome > embed.mn
+        $(PERL) gen_mn.pl -manifest embed-jar.mn -mozpath $(DEPTH) -chrome $(DIST)/bin/chrome > embed-tmp.mn
         $(PERL) -I$(DEPTH)\config $(DEPTH)\config\make-jars.pl -v -f $(_CHROME_FILE_FORMAT) $(_NO_FLOCK) -s $(DIST)\bin\chrome -d $(DIST)\bin\chrome < embed-tmp.mn
         -$(RM) -f embed-tmp.mn
 !else
