@@ -498,16 +498,16 @@ public class Interpreter
                     stackChange(1);
                     iCodeTop = generateICode(first, iCodeTop);
                     iCodeTop = addToken(Token.SHEQ, iCodeTop);
-                    itsStackDepth--;
+                    stackChange(-1);
                     Node.Target target = new Node.Target();
                     thisCase.addChildAfter(target, first);
                     // If true, Icode_IFEQ_POP will jump and remove case value
                     // from stack
                     iCodeTop = addGoto(target, Icode_IFEQ_POP, iCodeTop);
-                    itsStackDepth--;
+                    stackChange(-1);
                 }
                 iCodeTop = addToken(Token.POP, iCodeTop);
-                itsStackDepth--;
+                stackChange(-1);
 
                 Node defaultNode = (Node) switchNode.getProp(Node.DEFAULT_PROP);
                 if (defaultNode != null) {
@@ -755,13 +755,13 @@ public class Interpreter
                     iCodeTop = addIcode(Icode_DUP2, iCodeTop);
                     stackChange(2);
                     iCodeTop = addToken(Token.GETELEM, iCodeTop);
-                    itsStackDepth--;
+                    stackChange(-1);
                     // Compensate for the following USE_STACK
-                    itsStackDepth--;
+                    stackChange(-1);
                 }
                 iCodeTop = generateICode(child, iCodeTop);
                 iCodeTop = addToken(Token.SETELEM, iCodeTop);
-                itsStackDepth -= 2;
+                stackChange(-2);
                 break;
 
             case Token.SETNAME :
@@ -2178,66 +2178,12 @@ public class Interpreter
         int sourceLine = getShort(iCode, pc);
         throw new JavaScriptException(value, idata.itsSourceFile, sourceLine);
     }
-    case Token.GE : {
-        --stackTop;
-        Object rhs = stack[stackTop + 1];
-        Object lhs = stack[stackTop];
-        boolean valBln;
-        if (rhs == DBL_MRK || lhs == DBL_MRK) {
-            double rDbl = stack_double(stack, sDbl, stackTop + 1);
-            double lDbl = stack_double(stack, sDbl, stackTop);
-            valBln = (rDbl <= lDbl);
-        } else {
-            valBln = ScriptRuntime.cmp_LE(rhs, lhs);
-        }
-        stack[stackTop] = valBln ? Boolean.TRUE : Boolean.FALSE;
+    case Token.GE :
+    case Token.LE :
+    case Token.GT :
+    case Token.LT :
+        stackTop = do_cmp(stack, sDbl, stackTop, op);
         continue Loop;
-    }
-    case Token.LE : {
-        --stackTop;
-        Object rhs = stack[stackTop + 1];
-        Object lhs = stack[stackTop];
-        boolean valBln;
-        if (rhs == DBL_MRK || lhs == DBL_MRK) {
-            double rDbl = stack_double(stack, sDbl, stackTop + 1);
-            double lDbl = stack_double(stack, sDbl, stackTop);
-            valBln = (lDbl <= rDbl);
-        } else {
-            valBln = ScriptRuntime.cmp_LE(lhs, rhs);
-        }
-        stack[stackTop] = valBln ? Boolean.TRUE : Boolean.FALSE;
-        continue Loop;
-    }
-    case Token.GT : {
-        --stackTop;
-        Object rhs = stack[stackTop + 1];
-        Object lhs = stack[stackTop];
-        boolean valBln;
-        if (rhs == DBL_MRK || lhs == DBL_MRK) {
-            double rDbl = stack_double(stack, sDbl, stackTop + 1);
-            double lDbl = stack_double(stack, sDbl, stackTop);
-            valBln = (rDbl < lDbl);
-        } else {
-            valBln = ScriptRuntime.cmp_LT(rhs, lhs);
-        }
-        stack[stackTop] = valBln ? Boolean.TRUE : Boolean.FALSE;
-        continue Loop;
-    }
-    case Token.LT : {
-        --stackTop;
-        Object rhs = stack[stackTop + 1];
-        Object lhs = stack[stackTop];
-        boolean valBln;
-        if (rhs == DBL_MRK || lhs == DBL_MRK) {
-            double rDbl = stack_double(stack, sDbl, stackTop + 1);
-            double lDbl = stack_double(stack, sDbl, stackTop);
-            valBln = (lDbl < rDbl);
-        } else {
-            valBln = ScriptRuntime.cmp_LT(lhs, rhs);
-        }
-        stack[stackTop] = valBln ? Boolean.TRUE : Boolean.FALSE;
-        continue Loop;
-    }
     case Token.IN : {
         Object rhs = stack[stackTop];
         if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
@@ -2258,59 +2204,33 @@ public class Interpreter
         stack[stackTop] = valBln ? Boolean.TRUE : Boolean.FALSE;
         continue Loop;
     }
-    case Token.EQ : {
-        --stackTop;
-        boolean valBln = do_eq(stack, sDbl, stackTop);
-        stack[stackTop] = valBln ? Boolean.TRUE : Boolean.FALSE;
+    case Token.EQ :
+    case Token.NE :
+        stackTop = do_eq(stack, sDbl, stackTop, op);
         continue Loop;
-    }
-    case Token.NE : {
-        --stackTop;
-        boolean valBln = !do_eq(stack, sDbl, stackTop);
-        stack[stackTop] = valBln ? Boolean.TRUE : Boolean.FALSE;
+    case Token.SHEQ :
+    case Token.SHNE :
+        stackTop = do_sheq(stack, sDbl, stackTop, op);
         continue Loop;
-    }
-    case Token.SHEQ : {
-        --stackTop;
-        boolean valBln = do_sheq(stack, sDbl, stackTop);
-        stack[stackTop] = valBln ? Boolean.TRUE : Boolean.FALSE;
-        continue Loop;
-    }
-    case Token.SHNE : {
-        --stackTop;
-        boolean valBln = !do_sheq(stack, sDbl, stackTop);
-        stack[stackTop] = valBln ? Boolean.TRUE : Boolean.FALSE;
-        continue Loop;
-    }
-    case Token.IFNE : {
-        boolean valBln = stack_boolean(stack, sDbl, stackTop);
-        --stackTop;
-        if (valBln) {
+    case Token.IFNE :
+        if (stack_boolean(stack, sDbl, stackTop--)) {
             pc += 2;
             continue Loop;
         }
         break;
-    }
-    case Token.IFEQ : {
-        boolean valBln = stack_boolean(stack, sDbl, stackTop);
-        --stackTop;
-        if (!valBln) {
+    case Token.IFEQ :
+        if (!stack_boolean(stack, sDbl, stackTop--)) {
             pc += 2;
             continue Loop;
         }
         break;
-    }
-    case Icode_IFEQ_POP : {
-        boolean valBln = stack_boolean(stack, sDbl, stackTop);
-        --stackTop;
-        if (!valBln) {
+    case Icode_IFEQ_POP :
+        if (!stack_boolean(stack, sDbl, stackTop--)) {
             pc += 2;
             continue Loop;
         }
-        stack[stackTop] = null;
-        --stackTop;
+        stack[stackTop--] = null;
         break;
-    }
     case Token.GOTO :
         break;
     case Icode_GOSUB :
@@ -2435,18 +2355,6 @@ public class Interpreter
         sDbl[stackTop] = ScriptRuntime.toUint32(lDbl) >>> rIntValue;
         continue Loop;
     }
-    case Token.ADD :
-        --stackTop;
-        do_add(stack, sDbl, stackTop);
-        continue Loop;
-    case Token.SUB : {
-        double rDbl = stack_double(stack, sDbl, stackTop);
-        --stackTop;
-        double lDbl = stack_double(stack, sDbl, stackTop);
-        stack[stackTop] = DBL_MRK;
-        sDbl[stackTop] = lDbl - rDbl;
-        continue Loop;
-    }
     case Token.NEG : {
         double rDbl = stack_double(stack, sDbl, stackTop);
         stack[stackTop] = DBL_MRK;
@@ -2457,6 +2365,17 @@ public class Interpreter
         double rDbl = stack_double(stack, sDbl, stackTop);
         stack[stackTop] = DBL_MRK;
         sDbl[stackTop] = rDbl;
+        continue Loop;
+    }
+    case Token.ADD :
+        stackTop = do_add(stack, sDbl, stackTop);
+        continue Loop;
+    case Token.SUB : {
+        double rDbl = stack_double(stack, sDbl, stackTop);
+        --stackTop;
+        double lDbl = stack_double(stack, sDbl, stackTop);
+        stack[stackTop] = DBL_MRK;
+        sDbl[stackTop] = lDbl - rDbl;
         continue Loop;
     }
     case Token.MUL : {
@@ -2484,11 +2403,10 @@ public class Interpreter
         sDbl[stackTop] = lDbl % rDbl;
         continue Loop;
     }
-    case Token.NOT : {
+    case Token.NOT :
         stack[stackTop] = stack_boolean(stack, sDbl, stackTop)
                           ? Boolean.FALSE : Boolean.TRUE;
         continue Loop;
-    }
     case Token.BINDNAME :
         stack[++stackTop] = ScriptRuntime.bind(scope, stringReg);
         continue Loop;
@@ -2525,12 +2443,10 @@ public class Interpreter
         continue Loop;
     }
     case Token.GETELEM :
-        do_getElem(cx, stack, sDbl, stackTop, scope);
-        --stackTop;
+        stackTop = do_getElem(stack, sDbl, stackTop, cx, scope);
         continue Loop;
     case Token.SETELEM :
-        do_setElem(cx, stack, sDbl, stackTop, scope);
-        stackTop -= 2;
+        stackTop = do_setElem(stack, sDbl, stackTop, cx, scope);
         continue Loop;
     case Icode_PROPINC :
     case Icode_PROPDEC : {
@@ -2834,34 +2750,11 @@ public class Interpreter
         continue Loop;
     }
     case Icode_GETPROTO :
-    case Icode_GETSCOPEPARENT : {
-        Object lhs = stack[stackTop];
-        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-        Object val;
-        if (op == Icode_GETPROTO) {
-            val = ScriptRuntime.getProto(lhs, scope);
-        } else {
-            val = ScriptRuntime.getParent(lhs, scope);
-        }
-        stack[stackTop] = val;
-        continue Loop;
-    }
+    case Icode_GETSCOPEPARENT :
     case Icode_SETPROTO :
-    case Icode_SETPARENT : {
-        Object rhs = stack[stackTop];
-        if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
-        --stackTop;
-        Object lhs = stack[stackTop];
-        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-        Object val;
-        if (op == Icode_SETPROTO) {
-            val = ScriptRuntime.setProto(lhs, rhs, scope);
-        } else {
-            val = ScriptRuntime.setParent(lhs, rhs, scope);
-        }
-        stack[stackTop] = val;
+    case Icode_SETPARENT :
+        stackTop = do_specialProp(stack, sDbl, stackTop, op, scope);
         continue Loop;
-    }
     case Icode_SCOPE :
         stack[++stackTop] = scope;
         continue Loop;
@@ -3078,34 +2971,39 @@ public class Interpreter
                                          int i)
     {
         Object x = stack[i];
-        if (x == DBL_MRK) {
+        if (x == Boolean.TRUE) {
+            return true;
+        } else if (x == Boolean.FALSE) {
+            return false;
+        } else if (x == DBL_MRK) {
             double d = stackDbl[i];
             return d == d && d != 0.0;
-        } else if (x instanceof Boolean) {
-            return ((Boolean)x).booleanValue();
         } else if (x == null || x == Undefined.instance) {
             return false;
         } else if (x instanceof Number) {
             double d = ((Number)x).doubleValue();
             return (d == d && d != 0.0);
+        } else if (x instanceof Boolean) {
+            return ((Boolean)x).booleanValue();
         } else {
             return ScriptRuntime.toBoolean(x);
         }
     }
 
-    private static void do_add(Object[] stack, double[] stackDbl, int stackTop)
+    private static int do_add(Object[] stack, double[] sDbl, int stackTop)
     {
+        --stackTop;
         Object rhs = stack[stackTop + 1];
         Object lhs = stack[stackTop];
         if (rhs == DBL_MRK) {
-            double rDbl = stackDbl[stackTop + 1];
+            double rDbl = sDbl[stackTop + 1];
             if (lhs == DBL_MRK) {
-                stackDbl[stackTop] += rDbl;
+                sDbl[stackTop] += rDbl;
             } else {
-                do_add(lhs, rDbl, stack, stackDbl, stackTop, true);
+                do_add(lhs, rDbl, stack, sDbl, stackTop, true);
             }
         } else if (lhs == DBL_MRK) {
-            do_add(rhs, stackDbl[stackTop], stack, stackDbl, stackTop, false);
+            do_add(rhs, sDbl[stackTop], stack, sDbl, stackTop, false);
         } else {
             if (lhs instanceof Scriptable)
                 lhs = ((Scriptable) lhs).getDefaultValue(null);
@@ -3125,9 +3023,10 @@ public class Interpreter
                 double rDbl = (rhs instanceof Number)
                     ? ((Number)rhs).doubleValue() : ScriptRuntime.toNumber(rhs);
                 stack[stackTop] = DBL_MRK;
-                stackDbl[stackTop] = lDbl + rDbl;
+                sDbl[stackTop] = lDbl + rDbl;
             }
         }
+        return stackTop;
     }
 
     // x + y when x is Number
@@ -3159,71 +3058,142 @@ public class Interpreter
         }
     }
 
-    private static boolean do_eq(Object[] stack, double[] stackDbl,
-                                 int stackTop)
+    private static int do_cmp(Object[] stack, double[] sDbl, int stackTop,
+                              int op)
     {
+        --stackTop;
+        Object rhs = stack[stackTop + 1];
+        Object lhs = stack[stackTop];
+        boolean result;
+      object_compare:
+        {
+          number_compare:
+            {
+                double rDbl, lDbl;
+                if (rhs == DBL_MRK) {
+                    rDbl = sDbl[stackTop + 1];
+                    lDbl = stack_double(stack, sDbl, stackTop);
+                } else if (lhs == DBL_MRK) {
+                    rDbl = ScriptRuntime.toNumber(rhs);
+                    lDbl = sDbl[stackTop];
+                } else {
+                    break number_compare;
+                }
+                switch (op) {
+                  case Token.GE:
+                    result = (lDbl >= rDbl);
+                    break object_compare;
+                  case Token.LE:
+                    result = (lDbl <= rDbl);
+                    break object_compare;
+                  case Token.GT:
+                    result = (lDbl > rDbl);
+                    break object_compare;
+                  case Token.LT:
+                    result = (lDbl < rDbl);
+                    break object_compare;
+                  default:
+                    throw Kit.codeBug();
+                }
+            }
+            switch (op) {
+              case Token.GE:
+                result = ScriptRuntime.cmp_LE(rhs, lhs);
+                break;
+              case Token.LE:
+                result = ScriptRuntime.cmp_LE(lhs, rhs);
+                break;
+              case Token.GT:
+                result = ScriptRuntime.cmp_LT(rhs, lhs);
+                break;
+              case Token.LT:
+                result = ScriptRuntime.cmp_LT(lhs, rhs);
+                break;
+              default:
+                throw Kit.codeBug();
+            }
+        }
+        stack[stackTop] = result ? Boolean.TRUE : Boolean.FALSE;
+        return stackTop;
+    }
+
+    private static int do_eq(Object[] stack, double[] sDbl, int stackTop,
+                             int op)
+    {
+        --stackTop;
         boolean result;
         Object rhs = stack[stackTop + 1];
         Object lhs = stack[stackTop];
         if (rhs == DBL_MRK) {
             if (lhs == DBL_MRK) {
-                result = (stackDbl[stackTop] == stackDbl[stackTop + 1]);
+                result = (sDbl[stackTop] == sDbl[stackTop + 1]);
             } else {
-                result = ScriptRuntime.eqNumber(stackDbl[stackTop + 1], lhs);
+                result = ScriptRuntime.eqNumber(sDbl[stackTop + 1], lhs);
             }
         } else {
             if (lhs == DBL_MRK) {
-                result = ScriptRuntime.eqNumber(stackDbl[stackTop], rhs);
+                result = ScriptRuntime.eqNumber(sDbl[stackTop], rhs);
             } else {
                 result = ScriptRuntime.eq(lhs, rhs);
             }
         }
-        return result;
+        result ^= (op == Token.NE);
+        stack[stackTop] = (result) ? Boolean.TRUE : Boolean.FALSE;
+        return stackTop;
     }
 
-    private static boolean do_sheq(Object[] stack, double[] stackDbl,
-                                   int stackTop)
+    private static int do_sheq(Object[] stack, double[] sDbl, int stackTop,
+                               int op)
     {
+        --stackTop;
         Object rhs = stack[stackTop + 1];
         Object lhs = stack[stackTop];
-        double rdbl, ldbl;
-        if (rhs == DBL_MRK) {
-            rdbl = stackDbl[stackTop + 1];
-            if (lhs == DBL_MRK) {
-                ldbl = stackDbl[stackTop];
-            } else if (lhs instanceof Number) {
-                ldbl = ((Number)lhs).doubleValue();
-            } else {
-                return false;
-            }
-        } else if (lhs == DBL_MRK) {
-            ldbl = stackDbl[stackTop];
+        boolean result;
+      double_compare: {
+            double rdbl, ldbl;
             if (rhs == DBL_MRK) {
-                rdbl = stackDbl[stackTop + 1];
-            } else if (rhs instanceof Number) {
-                rdbl = ((Number)rhs).doubleValue();
+                rdbl = sDbl[stackTop + 1];
+                if (lhs == DBL_MRK) {
+                    ldbl = sDbl[stackTop];
+                } else if (lhs instanceof Number) {
+                    ldbl = ((Number)lhs).doubleValue();
+                } else {
+                    result = false;
+                    break double_compare;
+                }
+            } else if (lhs == DBL_MRK) {
+                ldbl = sDbl[stackTop];
+                if (rhs == DBL_MRK) {
+                    rdbl = sDbl[stackTop + 1];
+                } else if (rhs instanceof Number) {
+                    rdbl = ((Number)rhs).doubleValue();
+                } else {
+                    result = false;
+                    break double_compare;
+                }
             } else {
-                return false;
+                result = ScriptRuntime.shallowEq(lhs, rhs);
+                break double_compare;
             }
-        } else {
-            return ScriptRuntime.shallowEq(lhs, rhs);
+            result = ldbl == rdbl;
         }
-        return ldbl == rdbl;
+        result ^= (op == Token.SHNE);
+        stack[stackTop] = (result) ? Boolean.TRUE : Boolean.FALSE;
+        return stackTop;
     }
 
-    private static void do_getElem(Context cx,
-                                   Object[] stack, double[] stackDbl,
-                                   int stackTop, Scriptable scope)
+    private static int do_getElem(Object[] stack, double[] sDbl, int stackTop,
+                                  Context cx, Scriptable scope)
     {
         Object lhs = stack[stackTop - 1];
-        if (lhs == DBL_MRK) lhs = doubleWrap(stackDbl[stackTop - 1]);
+        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop - 1]);
 
         Object result;
         Object id = stack[stackTop];
         if (id != DBL_MRK) {
             result = ScriptRuntime.getElem(lhs, id, scope);
         } else {
-            double val = stackDbl[stackTop];
+            double val = sDbl[stackTop];
             if (lhs == null || lhs == Undefined.instance) {
                 throw ScriptRuntime.undefReadError(
                           lhs, ScriptRuntime.toString(val));
@@ -3239,24 +3209,25 @@ public class Interpreter
                 result = ScriptRuntime.getStrIdElem(obj, s);
             }
         }
-        stack[stackTop - 1] = result;
+        --stackTop;
+        stack[stackTop] = result;
+        return stackTop;
     }
 
-    private static void do_setElem(Context cx,
-                                   Object[] stack, double[] stackDbl,
-                                   int stackTop, Scriptable scope)
+    private static int do_setElem(Object[] stack, double[] sDbl, int stackTop,
+                                  Context cx, Scriptable scope)
     {
         Object rhs = stack[stackTop];
-        if (rhs == DBL_MRK) rhs = doubleWrap(stackDbl[stackTop]);
+        if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
         Object lhs = stack[stackTop - 2];
-        if (lhs == DBL_MRK) lhs = doubleWrap(stackDbl[stackTop - 2]);
+        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop - 2]);
 
         Object result;
         Object id = stack[stackTop - 1];
         if (id != DBL_MRK) {
             result = ScriptRuntime.setElem(lhs, id, rhs, scope);
         } else {
-            double val = stackDbl[stackTop - 1];
+            double val = sDbl[stackTop - 1];
             if (lhs == null || lhs == Undefined.instance) {
                 throw ScriptRuntime.undefWriteError(
                           lhs, ScriptRuntime.toString(val), rhs);
@@ -3272,7 +3243,9 @@ public class Interpreter
                 result = ScriptRuntime.setStrIdElem(obj, s, rhs, scope);
             }
         }
-        stack[stackTop - 2] = result;
+        stackTop -= 2;
+        stack[stackTop] = result;
+        return stackTop;
     }
 
     private static int do_nameAndThis(Object[] stack, int stackTop,
@@ -3297,6 +3270,36 @@ public class Interpreter
         stack[++stackTop] = prop;
         stack[++stackTop] = thisArg;
 
+        return stackTop;
+    }
+
+    private static int do_specialProp(Object[] stack, double[] sDbl,
+                                      int stackTop, int op, Scriptable scope)
+    {
+        Object val;
+        Object top = stack[stackTop];
+        if (top == DBL_MRK) top = doubleWrap(sDbl[stackTop]);
+        switch (op) {
+          default: throw Kit.codeBug();
+          case Icode_GETPROTO:
+            val = ScriptRuntime.getProto(top, scope);
+            break;
+          case Icode_GETSCOPEPARENT:
+            val = ScriptRuntime.getParent(top, scope);
+            break;
+          case Icode_SETPROTO:
+          case Icode_SETPARENT:
+            --stackTop;
+            Object snd = stack[stackTop];
+            if (snd == DBL_MRK) snd = doubleWrap(sDbl[stackTop]);
+            if (op == Icode_SETPROTO) {
+                val = ScriptRuntime.setProto(snd, top, scope);
+            } else {
+                val = ScriptRuntime.setParent(snd, top, scope);
+            }
+            break;
+        }
+        stack[stackTop] = val;
         return stackTop;
     }
 
