@@ -52,7 +52,6 @@ static PRBool DEBUG_REFLOW_ROWGRP = PR_FALSE;
 static PRBool DEBUG_REFLOW_ROW    = PR_FALSE;
 static PRBool DEBUG_REFLOW_CELL   = PR_FALSE;
 static PRBool DEBUG_REFLOW_AREA   = PR_FALSE;
-
 /* ============================================================================ */
 
 /** nsTableFrame maps the inner portion of a table (everything except captions.)
