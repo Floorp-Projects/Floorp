@@ -30,8 +30,8 @@ include $(THEME_ROOT_DEPTH)/theme.mk
 include $(topsrcdir)/config/rules.mk
 
 chrome::
-	@$(REGCHROME) skin modern/communicator modern.jar; \
-	$(REGCHROME) skin modern/editor modern.jar;	  \
-	$(REGCHROME) skin modern/global modern.jar;	  \
-	$(REGCHROME) skin modern/messenger modern.jar;	  \
-	$(REGCHROME) skin modern/navigator modern.jar
+	@$(REGCHROME) skin modern/communicator modern.jar
+	@$(REGCHROME) skin modern/editor modern.jar
+	@$(REGCHROME) skin modern/global modern.jar
+	@$(REGCHROME) skin modern/messenger modern.jar
+	@$(REGCHROME) skin modern/navigator modern.jar

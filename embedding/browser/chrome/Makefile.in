@@ -41,6 +41,6 @@ CHROME_MISC	= \
 include $(topsrcdir)/config/rules.mk
 
 chrome::
-	@$(REGCHROME) content browser embed.jar; \
-	$(REGCHROME) skin modern/browser embed.jar; \
-	$(REGCHROME) locale en-US/browser embed.jar
+	@$(REGCHROME) content browser embed.jar
+	@$(REGCHROME) skin modern/browser embed.jar
+	@$(REGCHROME) locale en-US/browser embed.jar

@@ -31,5 +31,5 @@ DIRS		= resources
 include $(topsrcdir)/config/rules.mk
 
 chrome::
-	@$(REGCHROME) content communicator comm.jar; \
-	$(REGCHROME) locale en-US/communicator en-US.jar
+	@$(REGCHROME) content communicator comm.jar
+	@$(REGCHROME) locale en-US/communicator en-US.jar
