@@ -297,8 +297,8 @@
     </implementation>
     <handlers>
         <handler event="DOMMenuBarActive">
-            if (!this._statusbar)
-                this._statusbar = document.getElementById(this.statusbar);
+            if (!this.statusbar) return;
+            this._statusbar = document.getElementById(this.statusbar);
             if (!this._statusbar)
                 return;
             this._active = true;
