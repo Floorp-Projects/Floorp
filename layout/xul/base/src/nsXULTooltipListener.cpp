@@ -64,7 +64,7 @@ nsXULTooltipListener::nsXULTooltipListener()
     mCurrentTooltip(nsnull),
     mMouseClientX(0), mMouseClientY(0),
     mIsTargetOutliner(PR_FALSE), mNeedTitletip(PR_FALSE),
-    mOutlinerBox(nsnull), mLastOutlinerRow(-1)
+    mLastOutlinerRow(-1)
 {
 	 NS_INIT_REFCNT();
 }
@@ -143,7 +143,6 @@ nsXULTooltipListener::MouseOut(nsIDOMEvent* aMouseEvent)
 
       // reset special outliner tracking
       if (mIsTargetOutliner) {
-        mOutlinerBox = nsnull;
         mLastOutlinerRow = -1;
         mLastOutlinerCol.Truncate();
       }
@@ -307,33 +306,16 @@ nsXULTooltipListener::RemoveTooltipSupport(nsIContent* aNode)
 void
 nsXULTooltipListener::CheckOutlinerBodyMove(nsIDOMMouseEvent* aMouseEvent)
 {
-  if (!mOutlinerBox) {
-    // This will be called from MouseMove before the tooltip timer is
-    // killed so that mTargetNode isn't yet set to null
-    if (mTargetNode) {
-      nsCOMPtr<nsIDocument> doc;
-      mSourceNode->GetDocument(*getter_AddRefs(doc));
-      nsCOMPtr<nsIPresShell> shell;
-      doc->GetShellAt(0, getter_AddRefs(shell));
-      if (shell) {
-        nsIFrame* bodyFrame = nsnull;
-        shell->GetPrimaryFrameFor(mTargetNode, &bodyFrame);
-        if (bodyFrame) {
-          nsCOMPtr<nsIOutlinerBoxObject> bx(do_QueryInterface(bodyFrame));
-          mOutlinerBox = bx;
-        }
-      }
-    }
-  }
-
-  if (mOutlinerBox) {
+  nsCOMPtr<nsIOutlinerBoxObject> obx;
+  GetTargetOutlinerBoxObject(getter_AddRefs(obx));
+  if (obx) {
     PRInt32 x, y;
     aMouseEvent->GetClientX(&x);
     aMouseEvent->GetClientY(&y);
     PRInt32 row;
     nsXPIDLString colId, obj;
 
-    mOutlinerBox->GetCellAt(x, y, &row, getter_Copies(colId), getter_Copies(obj));
+    obx->GetCellAt(x, y, &row, getter_Copies(colId), getter_Copies(obj));
     
     // determine if we are going to need a titletip
     // XXX check the disabletitletips attribute on the outliner content
@@ -341,9 +323,9 @@ nsXULTooltipListener::CheckOutlinerBodyMove(nsIDOMMouseEvent* aMouseEvent)
 #ifdef DEBUG_crap
     if (row >= 0 && obj.Equals(NS_LITERAL_STRING("text"))) {
       nsCOMPtr<nsIOutlinerView> view;
-      mOutlinerBox->GetView(getter_AddRefs(view));
+      obx->GetView(getter_AddRefs(view));
       PRBool isCropped;
-      mOutlinerBox->IsCellCropped(row, colId, &isCropped);
+      obx->IsCellCropped(row, colId, &isCropped);
       mNeedTitletip = isCropped;
     }
 #endif
@@ -473,10 +455,12 @@ nsXULTooltipListener::LaunchTooltip(nsIContent* aTarget, PRInt32 aX, PRInt32 aY)
     PRInt32 x = aX;
     PRInt32 y = aY;
     if (mNeedTitletip) {
-      GetOutlinerCellCoords(mOutlinerBox, mSourceNode,
+      nsCOMPtr<nsIOutlinerBoxObject> obx;
+      GetTargetOutlinerBoxObject(getter_AddRefs(obx));
+      GetOutlinerCellCoords(obx, mSourceNode,
                             mLastOutlinerRow, mLastOutlinerCol, &x, &y);
 
-      SetTitletipLabel(mOutlinerBox, mCurrentTooltip, mLastOutlinerRow, mLastOutlinerCol);
+      SetTitletipLabel(obx, mCurrentTooltip, mLastOutlinerRow, mLastOutlinerCol);
       mCurrentTooltip->SetAttr(nsnull, nsXULAtoms::titletip, NS_LITERAL_STRING("true"), PR_FALSE);
     } else
       mCurrentTooltip->UnsetAttr(nsnull, nsXULAtoms::titletip, PR_FALSE);
@@ -693,4 +677,23 @@ nsXULTooltipListener::sTooltipPrefChanged(const char* aPref, void* aData)
     prefs->GetBoolPref("browser.chrome.toolbar_tips", &sShowTooltips);
 
   return NS_OK;
+}
+
+nsresult
+nsXULTooltipListener::GetTargetOutlinerBoxObject(nsIOutlinerBoxObject** aBoxObject)
+{
+  if (mTargetNode) {
+    nsCOMPtr<nsIDOMXULElement> xulEl(do_QueryInterface(mTargetNode));
+    if (xulEl) {
+      nsCOMPtr<nsIBoxObject> bx;
+      xulEl->GetBoxObject(getter_AddRefs(bx));
+      nsCOMPtr<nsIOutlinerBoxObject> obx(do_QueryInterface(bx));
+      if (obx) {
+        *aBoxObject = obx;
+        NS_ADDREF(*aBoxObject);
+        return NS_OK;
+      }
+    }
+  }
+  return NS_ERROR_FAILURE;
 }

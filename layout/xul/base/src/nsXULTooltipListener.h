@@ -99,6 +99,7 @@ public:
   nsresult GetDefaultTooltip(nsIContent** aDefaultTooltip);
   nsresult AddTooltipSupport(nsIContent* aNode);
   nsresult RemoveTooltipSupport(nsIContent* aNode);
+  nsresult GetTargetOutlinerBoxObject(nsIOutlinerBoxObject** aBoxObject);
 
 protected:
 
@@ -141,7 +142,6 @@ protected:
   PRBool mIsTargetOutliner;
   PRBool mNeedTitletip;
   PRInt32 mLastOutlinerRow;
-  nsIOutlinerBoxObject* mOutlinerBox;
   nsAutoString mLastOutlinerCol;
 };
 
