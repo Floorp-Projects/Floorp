@@ -22,7 +22,6 @@ HTML {
 
 BODY {
   background: inherit;
-  cursor: inherit;
   display: block;
   line-height: normal;
 
@@ -155,7 +154,6 @@ TD, TH {
 //  border-style: inset;
   border-color: #C0C0C0;
   display: table-cell;
-  cursor: inherit;
 }
 TH {
   font-weight: bold;
@@ -440,8 +438,9 @@ BUTTON {
   display: inline;
   vertical-align: bottom;
   background-color: white; 
-	border: 3px outset gray;
-	padding: 3px
+  border: 3px outset gray;
+  padding: 3px;
+  cursor: default;
 }
 SELECT {
   vertical-align: bottom;
@@ -502,3 +501,4 @@ NOFRAMES {
 :XML-ROOT {
   background-color: inherit;
 }
+
