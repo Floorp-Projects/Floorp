@@ -58,20 +58,27 @@
   #ifndef __cplusplus
     typedef int bool;
   #endif
-#elif defined(bsdi) || defined(FREEBSD)
+#elif defined(bsdi) || defined(FREEBSD) || defined(OPENBSD)
   /*
-   * BSD/OS and FreeBSD ship sys/types.h that define int32_t and u_int32_t.
+   * BSD/OS, FreeBSD, and OpenBSD ship sys/types.h that define int32_t and 
+   * u_int32_t.
    */
   #include <sys/types.h>
 
   /*
    * BSD/OS ships no header that defines uint32_t, nor bool (for C)
+   * OpenBSD ships no header that defines uint32_t, but provides bool as a 
+   * macro.
    */
-  #if defined(bsdi)
+  #if defined(bsdi) || defined(OPENBSD)
   typedef u_int32_t uint32_t;
 
+  #if defined(bsdi)
   #if !defined(__cplusplus)
     typedef int bool;
+  #endif
+  #else /* OPENBSD is defined, so use its bool */
+    #include <stdbool.h>
   #endif
   #else
   /*
