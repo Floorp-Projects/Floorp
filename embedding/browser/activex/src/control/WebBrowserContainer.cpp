@@ -398,9 +398,12 @@ NS_IMETHODIMP
 CWebBrowserContainer::FindItemWithName(const PRUnichar* aName,
    nsIDocShellTreeItem* aRequestor, nsIDocShellTreeItem** aFoundItem)
 {
+	return NS_ERROR_FAILURE;
+/*
 	nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(m_pOwner->mWebBrowser));
 	NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
 	return docShellAsItem->FindItemWithName(aName, NS_STATIC_CAST(nsIWebBrowserChrome*, this), aFoundItem);
+	*/
 }
 
 
@@ -441,7 +444,24 @@ CWebBrowserContainer::ShowModal()
 NS_IMETHODIMP CWebBrowserContainer::GetNewWindow(PRInt32 aChromeFlags, 
    nsIDocShellTreeItem** aDocShellTreeItem)
 {
-	NS_ERROR("Haven't Implemented this yet");
+	IDispatch *pDispNew = NULL;
+	VARIANT_BOOL bCancel = VARIANT_FALSE;
+	
+	// Test if the event sink can give us a new window to navigate into
+	m_pEvents2->Fire_NewWindow2(&pDispNew, &bCancel);
+
+	if ((bCancel == VARIANT_FALSE) && pDispNew)
+	{
+		CMozillaBrowser *pBrowser = (CMozillaBrowser *) pDispNew;
+
+		nsIDocShell *docShell;
+		pBrowser->mWebBrowser->GetDocShell(&docShell);
+		docShell->QueryInterface(nsIDocShellTreeItem::GetIID(), (void **) aDocShellTreeItem);
+		docShell->Release();
+		pDispNew->Release();
+		return NS_OK;
+	}
+
 	*aDocShellTreeItem = nsnull;
 	return NS_ERROR_FAILURE;
 }
