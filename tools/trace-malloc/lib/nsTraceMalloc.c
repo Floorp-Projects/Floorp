@@ -210,17 +210,19 @@ static int my_dladdr(const void *address, Dl_info *info)
     return 1;
 }
 #endif /* 0 */
-#else /*NOT UNIX DEFINE OUT LIBC*/
+
+#else  /* !XP_UNIX */
+
 #define __libc_malloc(x) malloc(x)
 #define __libc_calloc(x, y) calloc(x,y)
 #define __libc_realloc(x, y) realloc(x,y)
 #define __libc_free(x) free(x)
-/*
-ok we need to load the malloc,free,realloc,calloc from the dll and store the function pointers somewhere and call them by function
-that is the only way that "I" can see to override malloc ect assuredly. all other dlls that link with this library should have their
-malloc overridden to call this one.
-*/
 
+/*
+ * Ok we need to load malloc, free, realloc, and calloc from the dll and store
+ * the function pointers somewhere. All other dlls that link with this library
+ * should have their malloc overridden to call this one.
+ */
 typedef void * (__stdcall *MALLOCPROC)(size_t);
 typedef void * (__stdcall *REALLOCPROC)(void *, size_t);
 typedef void * (__stdcall *CALLOCPROC)(size_t,size_t);
@@ -248,7 +250,8 @@ struct AllocationFuncs
 #endif
   int          prevent_reentry;
 }gAllocFuncs;
-#endif /*!XP_UNIX*/
+
+#endif /* !XP_UNIX */
 
 typedef struct logfile logfile;
 
@@ -268,7 +271,8 @@ struct logfile {
 };
 
 static char      default_buf[STARTUP_TMBUFSIZE];
-static logfile   default_logfile = {-1, 0, default_buf, STARTUP_TMBUFSIZE, 0, 0, 0, NULL, NULL};
+static logfile   default_logfile =
+                   {-1, 0, default_buf, STARTUP_TMBUFSIZE, 0, 0, 0, NULL, NULL};
 static logfile   *logfile_list = NULL;
 static logfile   **logfile_tail = &logfile_list;
 static logfile   *logfp = &default_logfile;
@@ -392,34 +396,23 @@ static void log_string(logfile *fp, const char *str)
     log_byte(fp, '\0');
 }
 
-static void log_filename(logfile* aFP, const char* aFilename)
+static void log_filename(logfile* fp, const char* filename)
 {
-    int nameLen = strlen(aFilename);
+    if (strlen(filename) < 512) {
+        char *bp, *cp, buf[512];
 
-    if (512 > nameLen) {
-        const char* skipTry1 = "mozilla";
-        char* found = nsnull;
-        char* convert = nsnull;
-        char dup[512];
+        bp = strstr(strcpy(buf, filename), "mozilla");
+        if (!bp)
+            bp = buf;
 
-        strcpy(dup, aFilename);
-
-        found = strstr(dup, skipTry1);
-        if (nsnull == found) {
-            found = dup;
+        for (cp = bp; *cp; cp++) {
+            if (*cp == '\\')
+                *cp = '/';
         }
 
-        for (convert = found; '\0' != *convert; convert++) {
-            if ('\\' == *convert) {
-                *convert = '/';
-            }
-        }
-
-        log_string(aFP, found);
+        filename = bp;
     }
-    else {
-        log_string(aFP, aFilename);
-    }
+    log_string(fp, filename);
 }
 
 static void log_uint32(logfile *fp, uint32 ival)
@@ -530,7 +523,8 @@ static uint32 tmstats_serial_generator = 0;
 static uint32 filename_serial_generator = 0;
 
 /* Root of the tree of callsites, the sum of all (cycle-compressed) stacks. */
-static callsite calltree_root = {0, 0, LFD_SET_STATIC_INITIALIZER, NULL, NULL, 0, NULL, NULL, NULL};
+static callsite calltree_root =
+  {0, 0, LFD_SET_STATIC_INITIALIZER, NULL, NULL, 0, NULL, NULL, NULL};
 
 /* Basic instrumentation. */
 static nsTMStats tmstats = NS_TMSTATS_STATIC_INITIALIZER;
@@ -567,7 +561,8 @@ static void log_tmstats(logfile *fp)
     log_uint32(fp, tmstats.realloc_failures);
     log_uint32(fp, tmstats.free_calls);
     log_uint32(fp, tmstats.null_free_calls);
-    log_uint32(fp, calltree_maxkids_parent ? calltree_maxkids_parent->serial : 0);
+    log_uint32(fp, calltree_maxkids_parent ? calltree_maxkids_parent->serial
+                                           : 0);
     log_uint32(fp, calltree_maxstack_top ? calltree_maxstack_top->serial : 0);
 }
 
@@ -613,7 +608,7 @@ static PLHashAllocOps lfdset_hashallocops = {
 static PLHashTable *libraries = NULL;
 
 /* Table of filename pathnames mapped to logged 'G' record serial numbers. */
-static PLHashTable *filenames = nsnull;
+static PLHashTable *filenames = NULL;
 
 /* Table mapping method names to logged 'N' record serial numbers. */
 static PLHashTable *methods = NULL;
@@ -652,7 +647,7 @@ static callsite *calltree(int skip)
     lfdset_entry *le;
     char* noname = "noname";
     IMAGEHLP_LINE imagehelpLine;
-    const char* filename = nsnull;
+    const char* filename = NULL;
     uint32 linenumber = 0;
     uint32 filename_serial = 0;
 
@@ -693,10 +688,10 @@ static callsite *calltree(int skip)
                         myThread,
                         &(frame[framenum]),
                         &context,
-                        0,                       /* read process memory hook */
-                        _SymFunctionTableAccess, /* function table access hook */
-                        _SymGetModuleBase,       /* module base hook */
-                        0);                      /* translate address hook */
+                        0,                      /* read process memory hook */
+                        _SymFunctionTableAccess,/* function table access hook */
+                        _SymGetModuleBase,      /* module base hook */
+                        0);                     /* translate address hook */
 
         if (!ok)
             break;
@@ -846,9 +841,9 @@ static callsite *calltree(int skip)
                 filenames = PL_NewHashTable(100, PL_HashString,
                                             PL_CompareStrings, PL_CompareValues,
                                             &lfdset_hashallocops, NULL);
-                if (nsnull == filenames) {
+                if (!filenames) {
                     tmstats.btmalloc_failures++;
-                    return nsnull;
+                    return NULL;
                 }
             }
             hash = PL_HashString(filename);
@@ -949,7 +944,8 @@ static callsite *calltree(int skip)
             le = (lfdset_entry *) he;
         }
         if (le) {
-            log_event4(fp, TM_EVENT_METHOD, method_serial, library_serial, filename_serial, linenumber);
+            log_event4(fp, TM_EVENT_METHOD, method_serial, library_serial,
+                       filename_serial, linenumber);
             log_string(fp, method);
             LFD_SET(fp->lfd, &le->lfdset);
         }
@@ -1160,9 +1156,9 @@ static callsite *calltree(uint32 *bp)
                 filenames = PL_NewHashTable(100, PL_HashString,
                                             PL_CompareStrings, PL_CompareValues,
                                             &lfdset_hashallocops, NULL);
-                if (nsnull == filenames) {
+                if (!filenames) {
                     tmstats.btmalloc_failures++;
-                    return nsnull;
+                    return NULL;
                 }
             }
             hash = PL_HashString(filename);
@@ -1253,7 +1249,8 @@ static callsite *calltree(uint32 *bp)
             le = (lfdset_entry *) he;
         }
         if (le) {
-            log_event4(fp, TM_EVENT_METHOD, method_serial, library_serial, filename_serial, linenumber);
+            log_event4(fp, TM_EVENT_METHOD, method_serial, library_serial,
+                       filename_serial, linenumber);
             log_string(fp, method);
             LFD_SET(fp->lfd, &le->lfdset);
         }
@@ -1630,7 +1627,7 @@ void free(__ptr_t ptr)
     start = PR_IntervalNow();
     __libc_free(ptr);
     end = PR_IntervalNow();
-   
+
     if (size != 0) {
         TM_ENTER_MONITOR();
         log_event5(logfp, TM_EVENT_FREE,
@@ -1976,12 +1973,12 @@ NS_TraceMallocLogTimestamp(const char *caption)
     log_byte(fp, TM_EVENT_TIMESTAMP);
 
 #ifdef XP_UNIX
-     gettimeofday(&tv, NULL);
+    gettimeofday(&tv, NULL);
     log_uint32(fp, (uint32) tv.tv_sec);
     log_uint32(fp, (uint32) tv.tv_usec);
 #endif
 #ifdef XP_WIN32
-     _ftime(&tb);
+    _ftime(&tb);
     log_uint32(fp, (uint32) tb.time);
     log_uint32(fp, (uint32) tb.millitm);
 #endif
@@ -2000,15 +1997,20 @@ allocation_enumerator(PLHashEntry *he, PRIntn i, void *arg)
     extern const char* nsGetTypeName(const void* ptr);
     unsigned *p, *end;
 
-    fprintf(ofp, "0x%08X <%s> (%lu)\n", (unsigned) he->key, nsGetTypeName(he->key), (unsigned long) alloc->size);
+    fprintf(ofp, "0x%08X <%s> (%lu)\n",
+            (unsigned) he->key,
+            nsGetTypeName(he->key),
+            (unsigned long) alloc->size);
 
     end = (unsigned*)(((char*) he->key) + alloc->size);
     for (p = (unsigned*)he->key; p < end; ++p)
         fprintf(ofp, "\t0x%08X\n", *p);
 
     while (site) {
-        if (site->name || site->parent)
-            fprintf(ofp, "%s[%s +0x%X]\n", site->name, site->library, site->offset);
+        if (site->name || site->parent) {
+            fprintf(ofp, "%s[%s +0x%X]\n",
+                    site->name, site->library, site->offset);
+        }
         site = site->parent;
     }
     fputc('\n', ofp);
@@ -2022,8 +2024,10 @@ NS_TraceStack(int skip, FILE *ofp)
 
     site = backtrace(skip + 1);
     while (site) {
-        if (site->name || site->parent)
-            fprintf(ofp, "%s[%s +0x%X]\n", site->name, site->library, site->offset);
+        if (site->name || site->parent) {
+            fprintf(ofp, "%s[%s +0x%X]\n",
+                    site->name, site->library, site->offset);
+        }
         site = site->parent;
     }
 }
