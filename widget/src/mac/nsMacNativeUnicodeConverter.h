@@ -48,7 +48,9 @@ public:
   static nsresult ConvertUnicodetoScript(const PRUnichar *aUnicodeStr, 
                                          PRInt32 aUnicodeStrLen,
                                          char **aMultibyteStr,
-                                         PRInt32 *aMultibyteStrlen);
+                                         PRInt32 *aMultibyteStrlen,
+                                         ScriptCodeRun **aScriptCodeRuns,
+                                         PRInt32 *aScriptCodeRunLen);
 
 };
 

@@ -63,6 +63,7 @@
 #include "nsMacNativeUnicodeConverter.h"
 #include "nsICharsetConverterManager.h"
 #include "nsCRT.h"
+#include "nsStylClipboardUtils.h"
 
 #include <Scrap.h>
 #include <Script.h>
@@ -158,6 +159,9 @@ nsClipboard :: SetNativeClipboardData ( PRInt32 aWhichClipboard )
           PRInt32 plainTextLen = 0;
           errCode = nsPrimitiveHelpers::ConvertUnicodeToPlatformPlainText ( castedUnicode, dataSize / 2, &plainTextData, &plainTextLen );
           
+          ScriptCodeRun *scriptCodeRuns = nsnull;
+          PRInt32 scriptRunOutLen;
+          
           // if characters are not mapped from Unicode then try native API to convert to 
           // available script
           if (errCode == NS_ERROR_UENC_NOMAPPING) {
@@ -168,13 +172,41 @@ nsClipboard :: SetNativeClipboardData ( PRInt32 aWhichClipboard )
             errCode = nsMacNativeUnicodeConverter::ConvertUnicodetoScript(castedUnicode, 
                                                                           dataSize / 2,
                                                                           &plainTextData, 
-                                                                          &plainTextLen);
+                                                                          &plainTextLen,
+                                                                          &scriptCodeRuns,
+                                                                          &scriptRunOutLen);
+          }
+          else if (NS_SUCCEEDED(errCode)) {
+            // create a single run with the default system script
+            scriptCodeRuns = NS_REINTERPRET_CAST(ScriptCodeRun*,
+                                                 nsMemory::Alloc(sizeof(ScriptCodeRun)));
+            if (scriptCodeRuns) {
+              scriptCodeRuns[0].offset = 0;
+              scriptCodeRuns[0].script = (ScriptCode) ::GetScriptManagerVariable(smSysScript);
+              scriptRunOutLen = 1;
+            }
           }
           
           if ( NS_SUCCEEDED(errCode) && plainTextData ) {
             errCode = PutOnClipboard ( 'TEXT', plainTextData, plainTextLen );
             nsMemory::Free ( plainTextData ); 
+            
+            // create 'styl' from the script runs
+            if (NS_SUCCEEDED(errCode) && scriptCodeRuns) {
+              char *stylData;
+              PRInt32 stylLen;
+              errCode = CreateStylFromScriptRuns(scriptCodeRuns,
+                                                 scriptRunOutLen,
+                                                 &stylData,
+                                                 &stylLen);
+              if (NS_SUCCEEDED(errCode)) {
+                errCode = PutOnClipboard ('styl', stylData, stylLen);
+                nsMemory::Free(stylData);
+              }
+            }
           }
+          if (scriptCodeRuns)
+            nsMemory::Free(scriptCodeRuns);
         }
       } // if unicode
       else if ( strcmp(flavorStr, kPNGImageMime) == 0 || strcmp(flavorStr, kJPEGImageMime) == 0 ||
