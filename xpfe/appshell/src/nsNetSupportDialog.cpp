@@ -404,7 +404,8 @@ void nsNetSupportDialog::OnOK()
 	if ( mPassword )
 		GetInputFieldValue( mWebShell,"Password" ,*mPassword);
 	// Fill in NetLib struct
-	*mReturnValue = kOKButton;
+  if ( mReturnValue ) 
+    *mReturnValue = kOKButton;
 	if ( mCheckValue )
 		GetCheckboxValue( mWebShell, "checkbox", *mCheckValue );
 	// Cleanup
