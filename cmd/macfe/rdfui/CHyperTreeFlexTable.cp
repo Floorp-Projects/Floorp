@@ -625,7 +625,7 @@ CHyperTreeFlexTable :: OpenRow ( TableIndexT inRow )
 	if (node) {
 	
 		// we can ignore the click if it is a container.
-		if ( !HT_IsContainer(node) && !HT_IsSeparator(node) )
+		if ( !HT_IsContainer(node) && !HT_IsSeparator(node) && !HT_Launch(node, NULL) )
 			CFrontApp::DoGetURL( HT_GetNodeURL(node) );
 					
 	} // if valid node
