@@ -300,7 +300,7 @@ public:
     // Overrides of base implementation.
     NS_IMETHOD Start( PRBool *aResult );
     NS_IMETHOD Stop( PRBool *aResult );
-    void Quit();
+    NS_IMETHOD Quit();
     NS_IMETHOD Enable();
 
     // The "old" Start method (renamed).
@@ -879,7 +879,7 @@ nsNativeAppSupportOS2::StartDDE() {
                     NS_ERROR_FAILURE );
 
     // Allocate DDE strings.
-    NS_ENSURE_TRUE( ( mApplication = WinDdeCreateStringHandle( gAppData->appName, CP_WINANSI ) ) && InitTopicStrings(),
+    NS_ENSURE_TRUE( ( mApplication = WinDdeCreateStringHandle( (char*) gAppData->appName, CP_WINANSI ) ) && InitTopicStrings(),
                     NS_ERROR_FAILURE );
 
     // Next step is to register a DDE service.
