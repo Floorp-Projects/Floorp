@@ -44,6 +44,7 @@
 #include "List.h"
 #include "nsAutoPtr.h"
 #include "txCore.h"
+#include "nsString.h"
 
 #ifdef DEBUG
 #define TX_TO_STRING
@@ -715,6 +716,27 @@ private:
    List expressions;
 
 }; //-- UnionExpr
+
+/**
+ *  Expression that failed to parse
+ */
+class txErrorExpr : public Expr
+{
+public:
+#ifdef TX_TO_STRING
+    txErrorExpr(const nsAString& aStr)
+      : mStr(aStr)
+    {
+    }
+#endif
+
+    TX_DECL_EXPR;
+
+#ifdef TX_TO_STRING
+private:
+    nsString mStr;
+#endif
+};
 
 #endif
 
