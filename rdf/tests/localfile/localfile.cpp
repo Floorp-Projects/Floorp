@@ -128,33 +128,6 @@ SetupRegistry(void)
 
 ////////////////////////////////////////////////////////////////////////
 
-class ConsoleOutputStreamImpl : public nsIOutputStream
-{
-public:
-    ConsoleOutputStreamImpl(void) {}
-    virtual ~ConsoleOutputStreamImpl(void) {}
-
-    // nsISupports interface
-    NS_DECL_ISUPPORTS
-
-    // nsIBaseStream interface
-    NS_IMETHOD Close(void) {
-        return NS_OK;
-    }
-
-    // nsIOutputStream interface
-    NS_IMETHOD Write(const char* aBuf, PRUint32 aOffset, PRUint32 aCount, PRUint32 *aWriteCount) {
-        write(1, aBuf + aOffset, aCount);
-        *aWriteCount = aCount;
-        return NS_OK;
-    }
-};
-
-NS_IMPL_ISUPPORTS(ConsoleOutputStreamImpl, kIOutputStreamIID);
-
-
-////////////////////////////////////////////////////////////////////////
-
 int
 main(int argc, char** argv)
 {
