@@ -25,6 +25,6 @@
 class nsIWebBrowserChrome;
 
 // a little ooky, but new windows gotta come from somewhere
-nsresult CreateBrowserWindow(PRUint32 aChromeFlags,
-           nsIWebBrowserChrome *aParent, nsIWebBrowserChrome **aNewWindow);
+nsresult CreateBrowserWindow(PRUint32 aChromeFlags, nsIWebBrowserChrome *aParent,
+                             nsIWebBrowserChrome **aNewWindow);
 

@@ -33,11 +33,16 @@
 
 // Mozilla header files
 #include "nsEmbedAPI.h"
+#include "nsWeakReference.h"
 #include "nsIClipboardCommands.h"
 #include "nsXPIDLString.h"
 #include "nsIWebBrowserPersist.h"
 #include "nsIWindowWatcher.h"
 #include "nsIProfile.h"
+#include "nsIObserverService.h"
+#include "nsIObserver.h"
+#include "nsIProfileChangeStatus.h"
+#include "nsINetDataCacheManager.h"
 
 // Local header files
 #include "winEmbed.h"
@@ -53,23 +58,54 @@ const TCHAR *szWindowClass = _T("WINEMBED");
 static ATOM             MyRegisterClass(HINSTANCE hInstance);
 static LRESULT CALLBACK BrowserWndProc(HWND, UINT, WPARAM, LPARAM);
 static BOOL    CALLBACK BrowserDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-static LRESULT CALLBACK GetURIDlgProc(HWND, UINT, WPARAM, LPARAM);
 
 static nsresult InitializeWindowCreator();
 static nsresult OpenWebPage(const char * url);
 static nsresult ResizeEmbedding(nsIWebBrowserChrome* chrome);
 
 // Profile chooser stuff
-static BOOL ChooseNewProfile(BOOL bShowForMultipleProfilesOnly);
+static BOOL ChooseNewProfile(BOOL bShowForMultipleProfilesOnly, const char *szDefaultProfile);
 static LRESULT CALLBACK ChooseProfileDlgProc(HWND, UINT, WPARAM, LPARAM);
 
 // Global variables
-static char gLastURI[100];
 static UINT gDialogCount = 0;
-static PRBool gDumbBanner = PR_TRUE;
-static PRInt32 gDumbBannerSize = 32;
+static BOOL gProfileSwitch = FALSE;
 static HINSTANCE ghInstanceResources = NULL;
 static HINSTANCE ghInstanceApp = NULL;
+static char gFirstURL[1024];
+
+// A list of URLs to populate the URL drop down list with
+static const TCHAR *gDefaultURLs[] = 
+{
+    _T("http://www.mozilla.org/"),
+    _T("http://www.netscape.com/"),
+    _T("http://browsertest.web.aol.com/tests/javascript/javascpt/index.htm"),
+    _T("http://127.0.0.1/"),
+    _T("http://www.yahoo.com/"),
+    _T("http://www.travelocity.com/"),
+    _T("http://www.disney.com/"),
+    _T("http://www.go.com/"),
+    _T("http://www.google.com/"),
+    _T("http://www.ebay.com/"),
+    _T("http://www.shockwave.com/"),
+    _T("http://www.slashdot.org/"),
+    _T("http://www.quicken.com/"),
+    _T("http://www.hotmail.com/"),
+    _T("http://www.cnn.com/"),
+    _T("http://www.javasoft.com/")
+};
+
+class ProfileChangeObserver : public nsIObserver,
+                              public nsSupportsWeakReference
+
+{
+public:
+	ProfileChangeObserver();
+
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIOBSERVER
+};
+
 
 int main(int argc, char *argv[])
 {
@@ -77,10 +113,23 @@ int main(int argc, char *argv[])
     
     // Sophisticated command-line parsing in action
     char *szFirstURL = "http://www.mozilla.org/projects/embedding";
-    if (argc > 1)
-    {
-        szFirstURL = argv[1];
+	char *szDefaultProfile = nsnull;
+	int argn;
+	for (argn = 1; argn < argc; argn++)
+	{
+		if (stricmp("-P", argv[argn]) == 0)
+		{
+			if (argn + 1 < argc)
+			{
+				szDefaultProfile = argv[++argn];
+			}
+		}
+		else
+		{
+	        szFirstURL = argv[argn];
+		}
     }
+	strncpy(gFirstURL, szFirstURL, sizeof(gFirstURL) - 1);
 
     ghInstanceApp = GetModuleHandle(NULL);
     ghInstanceResources = GetModuleHandle(NULL);
@@ -93,12 +142,30 @@ int main(int argc, char *argv[])
     // Init Embedding APIs
     NS_InitEmbedding(nsnull, nsnull);
 
+	// Choose the new profile
+	if (!ChooseNewProfile(TRUE, szDefaultProfile))
+    {
+        NS_TermEmbedding();
+        return 1;
+    }
+
+	// Now register an observer to watch for profile changes
+	nsresult rv;
+	NS_WITH_SERVICE(nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
+	ProfileChangeObserver *observer = new ProfileChangeObserver;
+	observer->AddRef();
+    observerService->AddObserver(NS_STATIC_CAST(nsIObserver *, observer), NS_LITERAL_STRING("profile-approve-change").get());
+    observerService->AddObserver(NS_STATIC_CAST(nsIObserver *, observer), NS_LITERAL_STRING("profile-change-teardown").get());
+    observerService->AddObserver(NS_STATIC_CAST(nsIObserver *, observer), NS_LITERAL_STRING("profile-after-change").get());
+
     InitializeWindowCreator();
 
     // Open the initial browser window
-    OpenWebPage(szFirstURL);
+    OpenWebPage(gFirstURL);
 
-	// Main message loop:
+	// Main message loop.
+    // NOTE: We use a fake event and a timeout in order to process idle stuff for
+    //       Mozilla every 1/10th of a second.
 	MSG msg;
 	HANDLE hFakeEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
     while (1)
@@ -130,11 +197,77 @@ int main(int argc, char *argv[])
 	CloseHandle(hFakeEvent);
 
 end_msg_loop:
+	observer->Release();
 
     // Close down Embedding APIs
     NS_TermEmbedding();
 
 	return msg.wParam;
+}
+
+//-----------------------------------------------------------------------------
+// ProfileChangeObserver
+//-----------------------------------------------------------------------------
+
+NS_IMPL_THREADSAFE_ISUPPORTS2(ProfileChangeObserver, nsIObserver, nsISupportsWeakReference);
+
+ProfileChangeObserver::ProfileChangeObserver()
+{
+	NS_INIT_REFCNT();
+}
+
+// ---------------------------------------------------------------------------
+//  CMfcEmbedApp : nsIObserver
+// ---------------------------------------------------------------------------
+
+NS_IMETHODIMP ProfileChangeObserver::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
+{
+    nsresult rv = NS_OK;
+
+    if (nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-approve-change").get()) == 0)
+    {
+		// The profile is about to change!
+
+        // Ask the user if they want to
+        int result = ::MessageBox(NULL, "Do you want to close all windows in order to switch the profile?", "Confirm", MB_YESNO | MB_ICONQUESTION);
+        if (result != IDYES)
+        {
+            nsCOMPtr<nsIProfileChangeStatus> status = do_QueryInterface(aSubject);
+            NS_ENSURE_TRUE(status, NS_ERROR_FAILURE);
+            status->VetoChange();
+        }
+    }
+    else if (nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-change-teardown").get()) == 0)
+    {
+		// The profile is changing!
+
+		// Prevent WM_QUIT by incrementing the dialog count
+		gDialogCount++;
+
+        // TODO why must this be done in the client???
+        NS_WITH_SERVICE(nsINetDataCacheManager, cacheMgr, NS_NETWORK_CACHE_MANAGER_CONTRACTID, &rv);
+        if (NS_SUCCEEDED(rv))
+          cacheMgr->Clear(nsINetDataCacheManager::MEM_CACHE);
+    }
+    else if (nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-after-change").get()) == 0)
+    {
+		// Decrease the dialog count so WM_QUIT can once more happen
+		gDialogCount--;
+        if (gDialogCount == 0)
+        {
+            // All the dialogs have been torn down so open new page
+            OpenWebPage(gFirstURL);
+        }
+        else
+        {
+		    // The profile has changed, but dialogs are still being
+            // torn down. Set this flag so when the last one goes
+            // it can finish the switch.
+            gProfileSwitch = TRUE;
+        }
+    }
+
+    return rv;
 }
 
 /* InitializeWindowCreator creates and hands off an object with a callback
@@ -160,15 +293,7 @@ nsresult InitializeWindowCreator()
   return NS_ERROR_FAILURE;
 }
 
-class Win32ChromeUI : public WebBrowserChromeUI
-{
-public:
-  NS_DECL_WEBBROWSERCHROMEUI;
-
-protected:
-  void HandChromeOwnershipToNativeWindow(nsIWebBrowserChrome *aChrome);
-};
-
+//-----------------------------------------------------------------------------
 
 //
 //  FUNCTION: OpenWebPage()
@@ -178,26 +303,28 @@ protected:
 //
 nsresult OpenWebPage(const char *url)
 {
+  nsresult  rv;
 
-  nsresult             rv;
-  nsCOMPtr<nsIWebBrowserChrome> chrome;
+  // Create the chrome object. Note that it leaves this function
+  // with an extra reference so that it can released correctly during
+  // destruction (via Win32UI::Destroy)
 
-  rv = CreateBrowserWindow(nsIWebBrowserChrome::CHROME_ALL, nsnull,
-                           getter_AddRefs(chrome));
-
-  if (NS_SUCCEEDED(rv)) {
+  nsIWebBrowserChrome *chrome = nsnull;
+  rv = CreateBrowserWindow(nsIWebBrowserChrome::CHROME_ALL, nsnull, &chrome);
+  if (NS_SUCCEEDED(rv))
+  {
     // Start loading a page
     nsCOMPtr<nsIWebBrowser> newBrowser;
     chrome->GetWebBrowser(getter_AddRefs(newBrowser));
     nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(newBrowser));
     return webNav->LoadURI(NS_ConvertASCIItoUCS2(url).GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE);
   }
+
   return rv;
 }   
 
 
-nsresult CreateBrowserWindow(PRUint32 aChromeFlags,
-           nsIWebBrowserChrome *aParent, nsIWebBrowserChrome **aNewWindow)
+nsresult CreateBrowserWindow(PRUint32 aChromeFlags, nsIWebBrowserChrome *aParent, nsIWebBrowserChrome **aNewWindow)
 {
   WebBrowserChrome * chrome = new WebBrowserChrome();
   if (!chrome)
@@ -207,9 +334,6 @@ nsresult CreateBrowserWindow(PRUint32 aChromeFlags,
 
   chrome->SetChromeFlags(aChromeFlags);
 
-  // Note, the chrome owns the UI object once set & will delete it
-  chrome->SetUI(new Win32ChromeUI);
-
   // Insert the browser
   nsCOMPtr<nsIWebBrowser> newBrowser;
   chrome->CreateBrowser(-1, -1, -1, -1, getter_AddRefs(newBrowser));
@@ -218,6 +342,12 @@ nsresult CreateBrowserWindow(PRUint32 aChromeFlags,
 
   // Place it where we want it.
   ResizeEmbedding(NS_STATIC_CAST(nsIWebBrowserChrome*, chrome));
+  
+  // Subscribe new window to profile changes so it can kill itself when one happens
+  nsresult rv;
+  NS_WITH_SERVICE(nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
+  observerService->AddObserver(NS_STATIC_CAST(nsIObserver *, chrome), NS_LITERAL_STRING("profile-change-teardown").get());
+
   return NS_OK;
 }
 
@@ -351,12 +481,6 @@ nsresult ResizeEmbedding(nsIWebBrowserChrome* chrome)
     RECT rect;
     GetClientRect(hWnd, &rect);
     
-    // Add space for the banner if there is enough to show it
-    if (gDumbBanner && rect.bottom - rect.top > gDumbBannerSize)
-    {
-        rect.top += gDumbBannerSize;
-    }
-
 	// Make sure the browser is visible and sized
 	nsCOMPtr<nsIWebBrowser> webBrowser;
 	chrome->GetWebBrowser(getter_AddRefs(webBrowser));
@@ -480,9 +604,15 @@ void UpdateUI(nsIWebBrowserChrome *aChrome)
 //
 BOOL CALLBACK BrowserDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	if (uMsg == WM_COMMAND && LOWORD(wParam) == MOZ_SwitchProfile)
+	{
+        ChooseNewProfile(FALSE, NULL);
+		return FALSE;
+	}
+
     // Get the browser and other pointers since they are used a lot below
     HWND hwndBrowser = GetDlgItem(hwndDlg, IDC_BROWSER);
-    nsIWebBrowserChrome *chrome = nsnull;
+    nsIWebBrowserChrome *chrome = nsnull ;
     if (hwndBrowser)
     {
         chrome = (nsIWebBrowserChrome *) GetWindowLong(hwndBrowser, GWL_USERDATA);
@@ -498,13 +628,25 @@ BOOL CALLBACK BrowserDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
     // Test the message
     switch (uMsg)
     {
+    case WM_INITDIALOG:
+        return TRUE;
+
     case WM_INITMENU:
         UpdateUI(chrome);
         return TRUE;
 
-    case WM_NOTIFY:
+    case WM_SYSCOMMAND:
+        if (wParam == SC_CLOSE)
+        {
+            WebBrowserChromeUI::Destroy(chrome);
+            return TRUE;
+        }
+        break;
 
-	case WM_COMMAND:
+    case WM_DESTROY:
+	    return TRUE;
+
+    case WM_COMMAND:
         if (!webBrowser)
         {
             return TRUE;
@@ -546,15 +688,7 @@ BOOL CALLBACK BrowserDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
         // File menu commands
 
         case MOZ_NewBrowser:
-            gLastURI[0] = 0;
-            if (DialogBox(ghInstanceResources, (LPCTSTR)MOZ_GetURI, hwndDlg, (DLGPROC)GetURIDlgProc) == IDOK)
-            {
-                OpenWebPage(gLastURI);
-            }
-            break;
-
-        case MOZ_SwitchProfile:
-            ChooseNewProfile(FALSE);
+            OpenWebPage(gFirstURL);
             break;
 
         case MOZ_Save:
@@ -708,27 +842,6 @@ BOOL CALLBACK BrowserDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                          SWP_NOMOVE | SWP_NOZORDER);
         }
         return TRUE;
-
-    case WM_SYSCOMMAND:
-        if (wParam == SC_CLOSE)
-        {
-            DestroyWindow(hwndDlg);
-            return TRUE;
-        }
-        break;
-
-    case WM_DESTROY:
-        --gDialogCount;
-        if (webNavigation)
-        {
-            webNavigation->Stop();
-        }
-        // Quit when there are no more browser windows
-        if (gDialogCount == 0)
-        {
-            PostQuitMessage(0);
-        }
-	    return TRUE;
     }
     return FALSE;
 }
@@ -739,84 +852,20 @@ BOOL CALLBACK BrowserDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 //
 //  PURPOSE:  Processes messages for the browser container window.
 //
-//  WM_PAINT	- Paint the main window
-//  WM_DESTROY	- Cleanup
-//
-//
 LRESULT CALLBACK BrowserWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-	PAINTSTRUCT ps;
-	HDC hdc;
-	TCHAR szHello[MAX_LOADSTRING];
-	LoadString(ghInstanceResources, IDS_HELLO, szHello, MAX_LOADSTRING);
-  nsIWebBrowserChrome *chrome = (nsIWebBrowserChrome *) GetWindowLong(hWnd, GWL_USERDATA);
-
+    nsIWebBrowserChrome *chrome = (nsIWebBrowserChrome *) GetWindowLong(hWnd, GWL_USERDATA);
 	switch (message) 
 	{
     case WM_SIZE:
         // Resize the embedded browser
         ResizeEmbedding(chrome);
-        break;
-        
+        return 0;
     case WM_ERASEBKGND:
         // Reduce flicker by not painting the non-visible background
         return 1;
-
-	case WM_PAINT:
-        // Draw a banner message above the browser
-        if (gDumbBanner)
-        {
-            // this draws that silly text at the top of the window.
-            hdc = BeginPaint(hWnd, &ps);
-		    RECT rc;
-		    GetClientRect(hWnd, &rc);
-            // Only draw banner if there is space
-            if (rc.bottom - rc.top > gDumbBannerSize)
-            {
-                rc.bottom = gDumbBannerSize;
-                FillRect(hdc, &rc, (HBRUSH) GetStockObject(WHITE_BRUSH));
-                FrameRect(hdc,  &rc, CreateSolidBrush( 0x00 ) );
-                rc.top = 4;
-		        DrawText(hdc, szHello, strlen(szHello), &rc, DT_CENTER);
-            }
-            EndPaint(hWnd, &ps);
-        }
-		break;
-
-	case WM_DESTROY:
-        // release ownership taken by HandChromeOwnershipToNativeWindow
-        NS_RELEASE(chrome);
-		break;
-
-	default:
-		return DefWindowProc(hWnd, message, wParam, lParam);
-   }
-   return 0;
-}
-
-
-//
-//  FUNCTION: GetURIDlgProc(HWND, unsigned, WORD, LONG)
-//
-//  PURPOSE:  Dialog handler procedure for the open uri dialog.
-//
-LRESULT CALLBACK GetURIDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
-{
-	switch (message)
-	{
-	case WM_INITDIALOG:
-			return TRUE;
-
-	case WM_COMMAND:
-		if (LOWORD(wParam) == IDOK)
-        {
-            GetDlgItemText(hDlg, MOZ_EDIT_URI, gLastURI, 100);
-        }
-        EndDialog(hDlg, LOWORD(wParam));
-        return TRUE;
-	}
-
-    return FALSE;
+    }
+    return DefWindowProc(hWnd, message, wParam, lParam);
 }
 
 
@@ -833,7 +882,7 @@ LRESULT CALLBACK GetURIDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 //           without displaying a dialog box if there is only one profile to
 //           select.
 //
-BOOL ChooseNewProfile(BOOL bShowForMultipleProfilesOnly)
+BOOL ChooseNewProfile(BOOL bShowForMultipleProfilesOnly, const char *szDefaultProfile)
 {
     nsresult rv;
     NS_WITH_SERVICE(nsIProfile, profileService, NS_PROFILE_CONTRACTID, &rv);
@@ -841,27 +890,46 @@ BOOL ChooseNewProfile(BOOL bShowForMultipleProfilesOnly)
     {
         return FALSE;
     }
-                                                                                 
+
+    if (szDefaultProfile)
+    {
+        // Make a new default profile
+        nsAutoString newProfileName; newProfileName.AssignWithConversion(szDefaultProfile);
+        rv = profileService->CreateNewProfile(newProfileName.get(), nsnull, nsnull, PR_FALSE);
+        if (NS_FAILED(rv)) return FALSE;
+        rv = profileService->SetCurrentProfile(newProfileName.get());
+        if (NS_FAILED(rv)) return FALSE;
+        return TRUE;
+    }
+
     PRInt32 profileCount = 0;
     rv = profileService->GetProfileCount(&profileCount);
     if (profileCount == 0)
     {
-        // TODO ask them if they wish to create a default profile
-        // NS_NAMED_LITERAL_STRING(newProfileName, "default");
-        // rv = profileService->CreateNewProfile(newProfileName, nsnull, nsnull, PR_FALSE);
-        // rv = profileService->SetCurrentProfile(newProfileName);
+        // Make a new default profile
+        NS_NAMED_LITERAL_STRING(newProfileName, "winEmbed");
+        rv = profileService->CreateNewProfile(newProfileName.get(), nsnull, nsnull, PR_FALSE);
+        if (NS_FAILED(rv)) return FALSE;
+        rv = profileService->SetCurrentProfile(newProfileName.get());
+        if (NS_FAILED(rv)) return FALSE;
         return TRUE;
     }
     else if (profileCount == 1 && bShowForMultipleProfilesOnly)
     {
-        // TODO Select the one and only profile and return
+        // GetCurrentProfile returns the profile which was last used but is not nescesarily
+        // active. Call SetCurrentProfile to make it installed and active.
+        
+        nsXPIDLString   currProfileName;
+        rv = profileService->GetCurrentProfile(getter_Copies(currProfileName));
+        if (NS_FAILED(rv)) return FALSE;
+        rv = profileService->SetCurrentProfile(currProfileName);
+        if (NS_FAILED(rv)) return FALSE;
         return TRUE;
     }
 
     INT nResult;
     nResult = DialogBox(ghInstanceResources, (LPCTSTR)IDD_CHOOSEPROFILE, NULL, (DLGPROC)ChooseProfileDlgProc);
-
-    return TRUE;
+    return (nResult == IDOK) ? TRUE : FALSE;
 }
 
 
@@ -918,7 +986,8 @@ LRESULT CALLBACK ChooseProfileDlgProc(HWND hDlg, UINT message, WPARAM wParam, LP
 		return TRUE;
 
 	case WM_COMMAND:
-		if (LOWORD(wParam) == IDOK)
+		if (LOWORD(wParam) == IDOK ||
+			(HIWORD(wParam) & LBN_DBLCLK && LOWORD(wParam) == IDC_PROFILELIST))
         {
             HWND hwndProfileList = GetDlgItem(hDlg, IDC_PROFILELIST);
 
@@ -934,8 +1003,12 @@ LRESULT CALLBACK ChooseProfileDlgProc(HWND hDlg, UINT message, WPARAM wParam, LP
                 nsAutoString newProfile; newProfile.AssignWithConversion(profileName);
                 rv = profileService->SetCurrentProfile(newProfile.GetUnicode());
             }
+	        EndDialog(hDlg, LOWORD(wParam));
         }
-        EndDialog(hDlg, LOWORD(wParam));
+		else if (LOWORD(wParam) == IDCANCEL)
+		{
+	        EndDialog(hDlg, LOWORD(wParam));
+		}
         return TRUE;
 	}
 
@@ -945,7 +1018,7 @@ LRESULT CALLBACK ChooseProfileDlgProc(HWND hDlg, UINT message, WPARAM wParam, LP
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Win32ChromeUI
+// WebBrowserChromeUI
 
 //
 //  FUNCTION: CreateNativeWindow()
@@ -958,7 +1031,7 @@ LRESULT CALLBACK ChooseProfileDlgProc(HWND hDlg, UINT message, WPARAM wParam, LP
 //    and returns the HWND for the webbrowser container dialog item
 //    to the caller.
 //
-nativeWindow Win32ChromeUI::CreateNativeWindow(nsIWebBrowserChrome* chrome)
+nativeWindow WebBrowserChromeUI::CreateNativeWindow(nsIWebBrowserChrome* chrome)
 {
   // Load the browser dialog from resource
   HWND hwndDialog;
@@ -978,8 +1051,6 @@ nativeWindow Win32ChromeUI::CreateNativeWindow(nsIWebBrowserChrome* chrome)
   if (!hwndDialog)
     return NULL;
 
-  ++gDialogCount;
-
   // Stick a menu onto it
   if (chromeFlags & nsIWebBrowserChrome::CHROME_MENUBAR) {
     HMENU hmenuDlg = LoadMenu(ghInstanceResources, MAKEINTRESOURCE(IDC_WINEMBED));
@@ -989,29 +1060,95 @@ nativeWindow Win32ChromeUI::CreateNativeWindow(nsIWebBrowserChrome* chrome)
   // Add some interesting URLs to the address drop down
   HWND hwndAddress = GetDlgItem(hwndDialog, IDC_ADDRESS);
   if (hwndAddress) {
-    SendMessage(hwndAddress, CB_ADDSTRING, 0, (LPARAM) _T("http://www.mozilla.org/"));
-    SendMessage(hwndAddress, CB_ADDSTRING, 0, (LPARAM) _T("http://www.netscape.com/"));
-    SendMessage(hwndAddress, CB_ADDSTRING, 0, (LPARAM) _T("http://127.0.0.1/"));
-    SendMessage(hwndAddress, CB_ADDSTRING, 0, (LPARAM) _T("http://www.yahoo.com/"));
-    SendMessage(hwndAddress, CB_ADDSTRING, 0, (LPARAM) _T("http://www.travelocity.com/"));
-    SendMessage(hwndAddress, CB_ADDSTRING, 0, (LPARAM) _T("http://www.disney.com/"));
-    SendMessage(hwndAddress, CB_ADDSTRING, 0, (LPARAM) _T("http://www.go.com/"));
-    SendMessage(hwndAddress, CB_ADDSTRING, 0, (LPARAM) _T("http://www.google.com/"));
-    SendMessage(hwndAddress, CB_ADDSTRING, 0, (LPARAM) _T("http://www.ebay.com/"));
-    SendMessage(hwndAddress, CB_ADDSTRING, 0, (LPARAM) _T("http://www.shockwave.com/"));
-    SendMessage(hwndAddress, CB_ADDSTRING, 0, (LPARAM) _T("http://www.slashdot.org/"));
-    SendMessage(hwndAddress, CB_ADDSTRING, 0, (LPARAM) _T("http://www.quicken.com/"));
-    SendMessage(hwndAddress, CB_ADDSTRING, 0, (LPARAM) _T("http://www.hotmail.com/"));
-    SendMessage(hwndAddress, CB_ADDSTRING, 0, (LPARAM) _T("http://www.cnn.com/"));
-    SendMessage(hwndAddress, CB_ADDSTRING, 0, (LPARAM) _T("http://www.javasoft.com/"));
+    for (int i = 0; i < sizeof(gDefaultURLs) / sizeof(gDefaultURLs[0]); i++)
+    {
+      SendMessage(hwndAddress, CB_ADDSTRING, 0, (LPARAM) gDefaultURLs[i]);
+    }
   }
 
   // Fetch the browser window handle
   HWND hwndBrowser = GetDlgItem(hwndDialog, IDC_BROWSER);
   SetWindowLong(hwndBrowser, GWL_USERDATA, (LONG)chrome);  // save the browser LONG_PTR.
   SetWindowLong(hwndBrowser, GWL_STYLE, GetWindowLong(hwndBrowser, GWL_STYLE) | WS_CLIPCHILDREN);
-  HandChromeOwnershipToNativeWindow(chrome);
+
+  gDialogCount++;
+
   return hwndBrowser;
+}
+
+
+//
+// FUNCTION: Destroy()
+//
+// PURPOSE: Destroy the window specified by the chrome
+//
+void WebBrowserChromeUI::Destroy(nsIWebBrowserChrome* chrome)
+{
+    nsCOMPtr<nsIWebBrowser> webBrowser;
+    nsCOMPtr<nsIWebNavigation> webNavigation;
+
+    chrome->GetWebBrowser(getter_AddRefs(webBrowser));
+    webNavigation = do_QueryInterface(webBrowser);
+
+    if (webNavigation)
+    {
+        webNavigation->Stop();
+    }
+
+    HWND hwndDlg = GetBrowserDlgFromChrome(chrome);
+	if (hwndDlg == NULL)
+	{
+		return;
+	}
+
+	// Explicitly destroy the embedded browser and then the chrome
+
+	// First the browser
+	nsCOMPtr<nsIWebBrowser> browser = nsnull;
+	chrome->GetWebBrowser(getter_AddRefs(browser));
+	nsCOMPtr<nsIBaseWindow> browserAsWin = do_QueryInterface(browser);
+	if (browserAsWin)
+	{
+		browserAsWin->Destroy();
+	}
+
+	// Now the chrome
+    chrome->SetWebBrowser(nsnull);
+	NS_RELEASE(chrome);
+}
+
+
+//
+// FUNCTION: Called as the final act of a chrome object during its destructor
+//
+void WebBrowserChromeUI::Destroyed(nsIWebBrowserChrome* chrome)
+{
+    HWND hwndDlg = GetBrowserDlgFromChrome(chrome);
+	if (hwndDlg == NULL)
+	{
+		return;
+	}
+
+    // Clear the window user data
+    HWND hwndBrowser = GetDlgItem(hwndDlg, IDC_BROWSER);
+    SetWindowLong(hwndBrowser, GWL_USERDATA, nsnull);
+	DestroyWindow(hwndBrowser);
+    DestroyWindow(hwndDlg);
+
+    --gDialogCount;
+    if (gDialogCount == 0)
+    {
+        if (gProfileSwitch)
+        {
+            gProfileSwitch = FALSE;
+            OpenWebPage(gFirstURL);
+        }
+        else
+        {
+            // Quit when there are no more browser objects
+            PostQuitMessage(0);
+        }
+    }
 }
 
 
@@ -1020,7 +1157,7 @@ nativeWindow Win32ChromeUI::CreateNativeWindow(nsIWebBrowserChrome* chrome)
 //
 //  PURPOSE: Set the status bar text.
 //
-void Win32ChromeUI::UpdateStatusBarText(nsIWebBrowserChrome *aChrome, const PRUnichar* aStatusText)
+void WebBrowserChromeUI::UpdateStatusBarText(nsIWebBrowserChrome *aChrome, const PRUnichar* aStatusText)
 {
     HWND hwndDlg = GetBrowserDlgFromChrome(aChrome);
     nsCString status; 
@@ -1035,7 +1172,7 @@ void Win32ChromeUI::UpdateStatusBarText(nsIWebBrowserChrome *aChrome, const PRUn
 //
 //  PURPOSE: Updates the URL address field
 //
-void Win32ChromeUI::UpdateCurrentURI(nsIWebBrowserChrome *aChrome)
+void WebBrowserChromeUI::UpdateCurrentURI(nsIWebBrowserChrome *aChrome)
 {
     nsCOMPtr<nsIWebBrowser> webBrowser;
     nsCOMPtr<nsIWebNavigation> webNavigation;
@@ -1059,7 +1196,7 @@ void Win32ChromeUI::UpdateCurrentURI(nsIWebBrowserChrome *aChrome)
 //
 //  PURPOSE: Refreshes the stop/go buttons in the browser dialog
 //
-void Win32ChromeUI::UpdateBusyState(nsIWebBrowserChrome *aChrome, PRBool aBusy)
+void WebBrowserChromeUI::UpdateBusyState(nsIWebBrowserChrome *aChrome, PRBool aBusy)
 {
     HWND hwndDlg = GetBrowserDlgFromChrome(aChrome);
     HWND button;
@@ -1078,7 +1215,7 @@ void Win32ChromeUI::UpdateBusyState(nsIWebBrowserChrome *aChrome, PRBool aBusy)
 //
 //  PURPOSE: Refreshes the progress bar in the browser dialog
 //
-void Win32ChromeUI::UpdateProgress(nsIWebBrowserChrome *aChrome, PRInt32 aCurrent, PRInt32 aMax)
+void WebBrowserChromeUI::UpdateProgress(nsIWebBrowserChrome *aChrome, PRInt32 aCurrent, PRInt32 aMax)
 {
     HWND hwndDlg = GetBrowserDlgFromChrome(aChrome);
     HWND hwndProgress = GetDlgItem(hwndDlg, IDC_PROGRESS);
@@ -1103,7 +1240,7 @@ void Win32ChromeUI::UpdateProgress(nsIWebBrowserChrome *aChrome, PRInt32 aCurren
 //
 //  PURPOSE: Get the resource string for the ID
 //
-void Win32ChromeUI::GetResourceStringById(PRInt32 aID, char ** aReturn)
+void WebBrowserChromeUI::GetResourceStringById(PRInt32 aID, char ** aReturn)
 {
 
   char resBuf[MAX_LOADSTRING];
@@ -1118,9 +1255,3 @@ void Win32ChromeUI::GetResourceStringById(PRInt32 aID, char ** aReturn)
   return;
 }
 
-// this method is a kind of documentation that ownership of
-// the chrome object is given to the native window
-void Win32ChromeUI::HandChromeOwnershipToNativeWindow(nsIWebBrowserChrome *aChrome)
-{
-  NS_IF_ADDREF(aChrome);
-}
