@@ -71,43 +71,43 @@ sub BuildMozilla()
 		BuildProject(":lib:mac:MoreFiles:build:MoreFilesPPC.prj");
 		MakeAlias(":lib:mac:MoreFiles:build:MoreFilesPPC.lib", "$dist_dir");
 		
-			Moz::BuildProject(":nsprpub:macbuild:NSPR20PPC$LibD.mcp");
-			MakeAlias(":nsprpub:macbuild:NSPR20PPC$LibDLib", "$dist_dir");
-			
-			Moz::BuildProject(":dbm:macbuild:DBMPPC$LibD.mcp");
-			MakeAlias(":dbm:macbuild:DBMPPC$LibDLib", "${dist_dir}");
+		BuildProject(":nsprpub:macbuild:NSPR20PPC".$LibD.".mcp");
+		MakeAlias(":nsprpub:macbuild:NSPR20PPC".$LibD."Lib", "$dist_dir");
+		
+		BuildProject(":dbm:macbuild:DBMPPC".$LibD.".mcp");
+		MakeAlias(":dbm:macbuild:DBMPPC".$LibD."Lib", "${dist_dir}");
 
 		BuildProject(":lib:mac:MacMemoryAllocator:MemAllocator.mcp",					"PPC Shared Library$D");
-		MakeAlias(":lib:mac:MacMemoryAllocator:MemAllocatorPPC$LibDLib", "$dist_dir");
+		MakeAlias(":lib:mac:MacMemoryAllocator:MemAllocatorPPC".$LibD."Lib", "$dist_dir");
 			
 		BuildProject(":lib:mac:NSStdLib:NSStdLib.mcp",												"PPC Shared Library");
 		MakeAlias(":lib:mac:NSStdLib:NSStdLibPPCLib", "$dist_dir");
 		
 		BuildProject(":modules:security:freenav:macbuild:NoSecurity.mcp",			"PPC Shared Library$D");
-		MakeAlias(":modules:security:freenav:macbuild:NoSecurity$LibDLib", "$dist_dir");
+		MakeAlias(":modules:security:freenav:macbuild:NoSecurity".$LibD."Lib", "$dist_dir");
 		
 		BuildProject(":xpcom:macbuild:xpcomPPC$Lib.mcp");
-		MakeAlias(":xpcom:macbuild:xpcomPPC$LibDLib", "$dist_dir");
+		MakeAlias(":xpcom:macbuild:xpcomPPC".$LibD."Lib", "$dist_dir");
 		
 		BuildProject(":lib:mac:PowerPlant:PowerPlant.mcp");		
-		MakeAlias(":lib:mac:PowerPlant:PowerPlantPPC$LibDLib", "$dist_dir");
+		MakeAlias(":lib:mac:PowerPlant:PowerPlantPPC".$LibD."Lib", "$dist_dir");
 		
 		BuildProject(":modules:zlib:macbuild:zlib.mcp",												"PPC Shared Library$D");
-		MakeAlias(":modules:zlib:macbuild:zlib$LibDLib", "$dist_dir");
+		MakeAlias(":modules:zlib:macbuild:zlib".$LibD."Lib", "$dist_dir");
 		
 		BuildProject(":jpeg:macbuild:JPEG.mcp",																"PPC Shared Library$D");
-		MakeAlias(":jpeg:macbuild:JPEGPPC$LibDLib", "$dist_dir");
+		MakeAlias(":jpeg:macbuild:JPEGPPC".$LibD."Lib", "$dist_dir");
 		
 		BuildProject(":sun-java:stubs:macbuild:JavaStubs.mcp",								"PPC Shared Library$D");
-		MakeAlias(":sun-java:stubs:macbuild:JavaRuntimePPC$LibDLib", "$dist_dir");	
+		MakeAlias(":sun-java:stubs:macbuild:JavaRuntimePPC".$LibD."Lib", "$dist_dir");	
 		
-		BuildProject(":js:jsj:macbuild:JSJ_PPC$LibD.mcp");
+		BuildProject(":js:jsj:macbuild:JSJ_PPC".$LibD.".mcp");
 		
-		BuildProject(":js:macbuild:JavaScriptPPC$LibD.mcp");
-		MakeAlias(":js:macbuild:JavaScriptPPC$LibDLib", "$dist_dir");
+		BuildProject(":js:macbuild:JavaScriptPPC".$LibD.".mcp");
+		MakeAlias(":js:macbuild:JavaScriptPPC".$LibD."Lib", "$dist_dir");
 		
 		BuildProject(":nav-java:stubs:macbuild:NavJavaStubs.mcp",							"PPC Shared Library$D");
-		MakeAlias(":nav-java:stubs:macbuild:NavJavaDebug$LibDLib", "$dist_dir");
+		MakeAlias(":nav-java:stubs:macbuild:NavJavaDebug".$LibD."Lib", "$dist_dir");
 
 		if ( $main::DEBUG )
 			{
@@ -121,12 +121,12 @@ sub BuildMozilla()
 			}
 
 		BuildProject(":modules:xml:macbuild:XML.mcp",													"PPC Shared Library$D");
-		MakeAlias(":modules:xml:macbuild:XMLPPC$LibDLib", "$dist_dir");
+		MakeAlias(":modules:xml:macbuild:XMLPPC".$LibD."Lib", "$dist_dir");
 		
 		BuildProject(":modules:libfont:macbuild:FontBroker.mcp",							"PPC Library$D");
 				
 		BuildProject(":modules:schedulr:macbuild:Schedulr.mcp",								"PPC Shared Library$D");
-		MakeAlias(":modules:schedulr:macbuild:SchedulerPPC$LibDLib", "$dist_dir");
+		MakeAlias(":modules:schedulr:macbuild:SchedulerPPC".$LibD."Lib", "$dist_dir");
 		
 		BuildProject(":network:macbuild:network.mcp",													"PPC Library (Debug Moz)");
 		
