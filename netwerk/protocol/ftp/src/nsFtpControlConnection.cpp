@@ -44,6 +44,7 @@
 #include "nsISocketTransportService.h"
 #include "nsISocketTransport.h"
 #include "nsNetUtil.h"
+#include "nsEventQueueUtils.h"
 #include "nsCRT.h"
 
 #if defined(PR_LOGGING)
@@ -90,7 +91,8 @@ nsFtpControlConnection::IsAlive()
     return isAlive;
 }
 nsresult 
-nsFtpControlConnection::Connect(nsIProxyInfo* proxyInfo)
+nsFtpControlConnection::Connect(nsIProxyInfo* proxyInfo,
+                                nsITransportEventSink* eventSink)
 {
     nsresult rv;
 
@@ -102,6 +104,13 @@ nsFtpControlConnection::Connect(nsIProxyInfo* proxyInfo)
         rv = sts->CreateTransport(nsnull, 0, mHost, mPort, proxyInfo,
                                   getter_AddRefs(mCPipe)); // the command transport
         if (NS_FAILED(rv)) return rv;
+
+        if (eventSink) {
+            nsCOMPtr<nsIEventQueue> eventQ;
+            rv = NS_GetCurrentEventQ(getter_AddRefs(eventQ));
+            if (NS_SUCCEEDED(rv))
+                mCPipe->SetEventSink(eventSink, eventQ);
+        }
 
         // open buffered, blocking output stream to socket.  so long as commands
         // do not exceed 1024 bytes in length, the writing thread (the main thread)

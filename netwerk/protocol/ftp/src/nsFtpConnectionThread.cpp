@@ -86,6 +86,36 @@ static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 extern PRLogModuleInfo* gFTPLog;
 #endif /* PR_LOGGING */
 
+class TransportEventForwarder : public nsITransportEventSink
+{
+public:
+    TransportEventForwarder(nsIProgressEventSink* aSink) : mSink(aSink) {}
+
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSITRANSPORTEVENTSINK
+private:
+    nsCOMPtr<nsIProgressEventSink> mSink;
+};
+
+NS_IMPL_ISUPPORTS1(TransportEventForwarder, nsITransportEventSink)
+
+NS_IMETHODIMP
+TransportEventForwarder::OnTransportStatus(nsITransport *transport, nsresult status,
+                                           PRUint32 progress, PRUint32 progressMax)
+{
+    // We only want to forward the resolving and connecting states of the
+    // control connection and report the data connection for the rest of the
+    // transfer, to avoid continuously switching between "sending to" and
+    // "receiving from"
+    if (mSink &&
+            (status == NS_NET_STATUS_RESOLVING_HOST ||
+             status == NS_NET_STATUS_CONNECTING_TO ||
+             status == NS_NET_STATUS_CONNECTED_TO))
+        mSink->OnStatus(nsnull, nsnull, status, nsnull);
+    return NS_OK;
+}
+
+
 class DataRequestForwarder : public nsIFTPChannel, 
                              public nsIStreamListener,
                              public nsIResumableChannel,
@@ -574,7 +604,9 @@ nsFtpState::EstablishControlConnection()
         
     nsFtpControlConnection* connection;
     (void) gFtpHandler->RemoveConnection(mURL, &connection);
-    
+
+    nsCOMPtr<nsIProgressEventSink> psink(do_QueryInterface(mChannel));
+    nsRefPtr<TransportEventForwarder> fwd(new TransportEventForwarder(psink));
     if (connection) {
         mControlConnection = connection;
         if (mControlConnection->IsAlive())
@@ -596,7 +628,7 @@ nsFtpState::EstablishControlConnection()
 
             // if we succeed, return.  Otherwise, we need to 
             // create a transport
-            rv = mControlConnection->Connect(mProxyInfo);
+            rv = mControlConnection->Connect(mProxyInfo, fwd);
             if (NS_SUCCEEDED(rv))
                 return rv;
         }
@@ -624,7 +656,7 @@ nsFtpState::EstablishControlConnection()
     // Must do it this way 'cuz the channel intercepts the progress notifications.
     (void) mControlConnection->SetStreamListener(NS_STATIC_CAST(nsIStreamListener*, this));
 
-    return mControlConnection->Connect(mProxyInfo);
+    return mControlConnection->Connect(mProxyInfo, fwd);
 }
 
 void 
