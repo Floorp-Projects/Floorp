@@ -243,33 +243,33 @@ PRBool nsRegionMac::ContainsRect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32
 
 NS_IMETHODIMP nsRegionMac::GetRects(nsRegionRectSet **aRects)
 {
-	NS_ASSERTION(aRects, "bad ptr");
+  NS_ASSERTION(aRects, "bad ptr");
 
-	nsRegionRectSet* rects = *aRects;
+  nsRegionRectSet* rects = *aRects;
   long numrects = 0;
   QDRegionToRects(mRegion, kQDParseRegionFromTopLeft, sCountRectProc, &numrects);
 
-	if (!rects || rects->mRectsLen < (PRUint32) numrects) {
+  if (!rects || rects->mRectsLen < (PRUint32) numrects) {
     void* buf = PR_Realloc(rects, sizeof(nsRegionRectSet) + sizeof(nsRegionRect) * (numrects - 1));
 
-		if (!buf) {
+    if (!buf) {
       if (rects)
         rects->mNumRects = 0;
 
       return NS_ERROR_OUT_OF_MEMORY;
-		}
+    }
 
     rects = (nsRegionRectSet*) buf;
-		rects->mRectsLen = numrects;
-	}
+    rects->mRectsLen = numrects;
+  }
 
-	rects->mNumRects = 0;
-	rects->mArea = 0;
+  rects->mNumRects = 0;
+  rects->mArea = 0;
   QDRegionToRects(mRegion, kQDParseRegionFromTopLeft, sAddRectToArrayProc, rects);
 
   *aRects = rects;
 
-	return NS_OK;
+  return NS_OK;
 }
 
 //---------------------------------------------------------------------
