@@ -53,6 +53,7 @@ LINCS=  \
   -I$(PUBLIC)\java \
   -I$(PUBLIC)\plugin \
   -I$(PUBLIC)\pref \
+  -I$(PUBLIC)\editor \
 !if defined(NGPREFS)
   -I$(PUBLIC)\ngprefs \
 !endif
