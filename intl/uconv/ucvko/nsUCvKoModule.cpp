@@ -87,18 +87,20 @@ PRUint16 g_HangulNullMapping[] ={
   0x0001, 0x0004, 0x0005, 0x0008, 0x0000, 0xAC00, 0xD7A3, 0xAC00
 };
 
-NS_IMPL_NSUCONVERTERREGSELF
+NS_CONVERTER_REGISTRY_START
+NS_UCONV_REG_UNREG("EUC-KR", "Unicode" , NS_EUCKRTOUNICODE_CID)
+NS_UCONV_REG_UNREG("Unicode", "EUC-KR",  NS_UNICODETOEUCKR_CID)
+NS_UCONV_REG_UNREG("Unicode", "ks_c_5601-1987",  NS_UNICODETOKSC5601_CID)
+NS_UCONV_REG_UNREG("Unicode", "x-x11johab",  NS_UNICODETOX11JOHAB_CID)
+NS_UCONV_REG_UNREG("x-johab", "Unicode" , NS_JOHABTOUNICODE_CID)
+NS_UCONV_REG_UNREG("Unicode", "x-johab",  NS_UNICODETOJOHAB_CID)
+NS_UCONV_REG_UNREG("Unicode", "x-johab-noascii",  NS_UNICODETOJOHABNOASCII_CID)
+NS_UCONV_REG_UNREG("x-windows-949", "Unicode" , NS_CP949TOUNICODE_CID)
+NS_UCONV_REG_UNREG("Unicode", "x-windows-949",  NS_UNICODETOCP949_CID)
+NS_UCONV_REG_UNREG("ISO-2022-KR", "Unicode" , NS_ISO2022KRTOUNICODE_CID)
+NS_CONVERTER_REGISTRY_END
 
-NS_UCONV_REG_UNREG(nsEUCKRToUnicode, "EUC-KR", "Unicode" , NS_EUCKRTOUNICODE_CID);
-NS_UCONV_REG_UNREG(nsUnicodeToEUCKR, "Unicode", "EUC-KR",  NS_UNICODETOEUCKR_CID);
-NS_UCONV_REG_UNREG(nsUnicodeToKSC5601, "Unicode", "ks_c_5601-1987",  NS_UNICODETOKSC5601_CID);
-NS_UCONV_REG_UNREG(nsUnicodeToX11Johab, "Unicode", "x-x11johab",  NS_UNICODETOX11JOHAB_CID);
-NS_UCONV_REG_UNREG(nsJohabToUnicode, "x-johab", "Unicode" , NS_JOHABTOUNICODE_CID);
-NS_UCONV_REG_UNREG(nsUnicodeToJohab, "Unicode", "x-johab",  NS_UNICODETOJOHAB_CID);
-NS_UCONV_REG_UNREG(nsUnicodeToJohabNoAscii, "Unicode", "x-johab-noascii",  NS_UNICODETOJOHABNOASCII_CID);
-NS_UCONV_REG_UNREG(nsCP949ToUnicode, "x-windows-949", "Unicode" , NS_CP949TOUNICODE_CID);
-NS_UCONV_REG_UNREG(nsUnicodeToCP949, "Unicode", "x-windows-949",  NS_UNICODETOCP949_CID);
-NS_UCONV_REG_UNREG(nsISO2022KRToUnicode, "ISO-2022-KR", "Unicode" , NS_ISO2022KRTOUNICODE_CID);
+NS_IMPL_NSUCONVERTERREGSELF
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsEUCKRToUnicode);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToEUCKR);
@@ -117,61 +119,53 @@ static const nsModuleComponentInfo components[] =
     DECODER_NAME_BASE "EUC-KR" , NS_EUCKRTOUNICODE_CID, 
     NS_UNICODEDECODER_CONTRACTID_BASE "EUC-KR",
     nsEUCKRToUnicodeConstructor ,
-    nsEUCKRToUnicodeRegSelf , nsEUCKRToUnicodeUnRegSelf 
+    // global converter registration
+    nsUConverterRegSelf, nsUConverterUnregSelf,
   },
   { 
     ENCODER_NAME_BASE "EUC-KR" , NS_UNICODETOEUCKR_CID, 
     NS_UNICODEENCODER_CONTRACTID_BASE "EUC-KR",
     nsUnicodeToEUCKRConstructor, 
-    nsUnicodeToEUCKRRegSelf, nsUnicodeToEUCKRUnRegSelf
   },
   { 
     ENCODER_NAME_BASE "ks_c_5601-1987" , NS_UNICODETOKSC5601_CID, 
     NS_UNICODEENCODER_CONTRACTID_BASE "ks_c_5601-1987",
     nsUnicodeToKSC5601Constructor,
-    nsUnicodeToKSC5601RegSelf, nsUnicodeToKSC5601UnRegSelf
   },
   { 
     ENCODER_NAME_BASE "x-x11johab" , NS_UNICODETOX11JOHAB_CID, 
     NS_UNICODEENCODER_CONTRACTID_BASE "x-x11johab",
     nsUnicodeToX11JohabConstructor,
-    nsUnicodeToX11JohabRegSelf, nsUnicodeToX11JohabUnRegSelf
   },
   { 
     DECODER_NAME_BASE "x-johab" , NS_JOHABTOUNICODE_CID, 
     NS_UNICODEDECODER_CONTRACTID_BASE "x-johab",
     nsJohabToUnicodeConstructor ,
-    nsJohabToUnicodeRegSelf , nsJohabToUnicodeUnRegSelf 
   },
   { 
     ENCODER_NAME_BASE "x-johab" , NS_UNICODETOJOHAB_CID, 
     NS_UNICODEENCODER_CONTRACTID_BASE "x-johab",
     nsUnicodeToJohabConstructor,
-    nsUnicodeToJohabRegSelf, nsUnicodeToJohabUnRegSelf
   },
   { 
     ENCODER_NAME_BASE "x-johab-noascii", NS_UNICODETOJOHABNOASCII_CID, 
     NS_UNICODEENCODER_CONTRACTID_BASE "x-johab-noascii",
     nsUnicodeToJohabNoAsciiConstructor,
-    nsUnicodeToJohabNoAsciiRegSelf, nsUnicodeToJohabNoAsciiUnRegSelf
   },
   { 
     DECODER_NAME_BASE "x-windows-949" , NS_CP949TOUNICODE_CID, 
     NS_UNICODEDECODER_CONTRACTID_BASE "x-windows-949",
     nsCP949ToUnicodeConstructor ,
-    nsCP949ToUnicodeRegSelf , nsCP949ToUnicodeUnRegSelf 
   },
   { 
     ENCODER_NAME_BASE "x-windows-949" , NS_UNICODETOCP949_CID, 
     NS_UNICODEENCODER_CONTRACTID_BASE "x-windows-949",
     nsUnicodeToCP949Constructor,
-    nsUnicodeToCP949RegSelf, nsUnicodeToCP949UnRegSelf
   },
   { 
     DECODER_NAME_BASE "ISO-2022-KR" , NS_ISO2022KRTOUNICODE_CID, 
     NS_UNICODEDECODER_CONTRACTID_BASE "ISO-2022-KR",
     nsISO2022KRToUnicodeConstructor ,
-    nsISO2022KRToUnicodeRegSelf , nsISO2022KRToUnicodeUnRegSelf 
   }
 };
 

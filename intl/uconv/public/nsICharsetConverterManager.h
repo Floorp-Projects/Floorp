@@ -76,11 +76,26 @@
 #define REGSELF_PRINTF(x,y)
 #endif
 
+struct nsConverterRegistryInfo {
+  const char *fromCharset;
+  const char *toCharset;
+  nsCID cid;
+};
+
+#define NS_CONVERTER_REGISTRY_START \
+  static const nsConverterRegistryInfo gConverterRegistryInfo[] = {
+
+#define NS_CONVERTER_REGISTRY_END \
+  };
+
+
 #define NS_IMPL_NSUCONVERTERREGSELF                                     \
 static NS_IMETHODIMP                                                    \
-nsUConverterRegSelf( const char* aFromCharset,                          \
-                     const char* aToCharset,                            \
-                     nsCID aCID)                                        \
+nsUConverterRegSelf(nsIComponentManager *aCompMgr,                      \
+                    nsIFile *aPath,                                     \
+                    const char* registryLocation,                       \
+                    const char* componentType,                          \
+                    const nsModuleComponentInfo *info)                  \
 {                                                                       \
   nsresult res = NS_OK;                                                 \
   nsRegistryKey key;                                                    \
@@ -89,55 +104,56 @@ nsUConverterRegSelf( const char* aFromCharset,                          \
   nsCOMPtr<nsIRegistry> registry =                                      \
            do_GetService(NS_REGISTRY_CONTRACTID, &res);                 \
   if (NS_FAILED(res))                                                   \
-    goto done;                                                          \
+    return res;                                                         \
   res = registry->IsOpen(&isOpen);                                      \
   if (NS_FAILED(res))                                                   \
-    goto done;                                                          \
+    return res;                                                         \
   if(! isOpen) {                                                        \
     res = registry->OpenWellKnownRegistry(                              \
         nsIRegistry::ApplicationComponentRegistry);                     \
     if (NS_FAILED(res))                                                 \
-      goto done;                                                        \
+      return res;                                                       \
   }                                                                     \
-  char * cid_string;                                                    \
-  cid_string = aCID.ToString();                                         \
-  sprintf(buff, "%s/%s", "software/netscape/intl/uconv", cid_string);   \
-  nsCRT::free(cid_string);                                              \
-  res = registry -> AddSubtree(nsIRegistry::Common, buff, &key);        \
-  if (NS_FAILED(res))                                                   \
-    goto done;                                                          \
-  res = registry -> SetStringUTF8(key, "source", aFromCharset);             \
-  if (NS_FAILED(res))                                                   \
-    goto done;                                                          \
-  res = registry -> SetStringUTF8(key, "destination", aToCharset);          \
-  if (NS_FAILED(res))                                                   \
-    goto done;                                                          \
-  REGSELF_PRINTF(aFromCharset, aToCharset);                             \
-done:                                                                   \
-  return res;                                                           \
+  int i;                                                                \
+  for (i=0; i<sizeof(gConverterRegistryInfo)/sizeof(gConverterRegistryInfo[0]); i++) { \
+      char * cid_string;                                                    \
+      cid_string = gConverterRegistryInfo[i].cid.ToString();                \
+      sprintf(buff, "%s/%s", "software/netscape/intl/uconv", cid_string);   \
+      nsCRT::free(cid_string);                                              \
+      res = registry->AddSubtree(nsIRegistry::Common, buff, &key);        \
+      if (NS_FAILED(res))                                                   \
+        continue;                                                           \
+      res = registry->SetStringUTF8(key, "source",                        \
+                                    gConverterRegistryInfo[i].fromCharset);\
+      if (NS_FAILED(res))                                                   \
+        continue;                                                           \
+      res = registry->SetStringUTF8(key, "destination",                   \
+                                    gConverterRegistryInfo[i].toCharset); \
+      if (NS_FAILED(res))                                                   \
+        continue;                                                           \
+      REGSELF_PRINTF(gConverterRegistryInfo[i].fromCharset,                 \
+                     gConverterRegistryInfo[i].toCharset);                  \
+  }                                                                         \
+  return res;                                                               \
+} \
+\
+static NS_IMETHODIMP \
+nsUConverterUnregSelf(nsIComponentManager *aCompMgr,                        \
+                      nsIFile *aPath,                                       \
+                      const char*,                                          \
+                      const nsModuleComponentInfo *info)                    \
+{ \
+  return NS_OK; \
 }
 
-#define NS_UCONV_REG_UNREG(_InstanceClass, _From, _To, _CID )         \
-static NS_IMETHODIMP                                                  \
-_InstanceClass##RegSelf (nsIComponentManager *aCompMgr,               \
-                         nsIFile *aPath,                              \
-                         const char* registryLocation,                \
-                         const char* componentType,                   \
-                         const nsModuleComponentInfo *info)           \
-{                                                                     \
-   nsCID cid = _CID;                                                  \
-   return nsUConverterRegSelf( _From, _To, cid);                      \
-}                                                                     \
-static NS_IMETHODIMP                                                  \
-_InstanceClass##UnRegSelf (nsIComponentManager *aCompMgr,             \
-                           nsIFile *aPath,                            \
-                           const char* registryLocation,              \
-                           const nsModuleComponentInfo *info)         \
-{                                                                     \
-  NS_WARNING("UnRegSelf " _From " to " _To "converter not implemented\n"); \
-  return NS_ERROR_NOT_IMPLEMENTED;                                    \
-}
 
+#define NS_UCONV_REG_UNREG(_From, _To, _CID )               \
+  {                                                                         \
+    _From,                                                                  \
+    _To,                                                                    \
+    _CID,                                                                   \
+  },
+  
 /**
  * Interface for a Manager of Charset Converters.
  * 

@@ -72,16 +72,18 @@
 #include "nsUnicodeToUTF8.h"
 #include "nsScriptableUConv.h"
 
-NS_IMPL_NSUCONVERTERREGSELF
+NS_CONVERTER_REGISTRY_START
+NS_UCONV_REG_UNREG("ISO-8859-1", "Unicode", NS_ISO88591TOUNICODE_CID)
+NS_UCONV_REG_UNREG("windows-1252", "Unicode", NS_CP1252TOUNICODE_CID)
+NS_UCONV_REG_UNREG("x-mac-roman", "Unicode", NS_MACROMANTOUNICODE_CID)
+NS_UCONV_REG_UNREG("UTF-8", "Unicode", NS_UTF8TOUNICODE_CID)
+NS_UCONV_REG_UNREG("Unicode", "ISO-8859-1", NS_UNICODETOISO88591_CID)
+NS_UCONV_REG_UNREG("Unicode", "windows-1252",  NS_UNICODETOCP1252_CID)
+NS_UCONV_REG_UNREG("Unicode", "x-mac-roman", NS_UNICODETOMACROMAN_CID)
+NS_UCONV_REG_UNREG("Unicode", "UTF-8",  NS_UNICODETOUTF8_CID)
+NS_CONVERTER_REGISTRY_END
 
-NS_UCONV_REG_UNREG(nsISO88591ToUnicode, "ISO-8859-1", "Unicode", NS_ISO88591TOUNICODE_CID);
-NS_UCONV_REG_UNREG(nsCP1252ToUnicode, "windows-1252", "Unicode", NS_CP1252TOUNICODE_CID);
-NS_UCONV_REG_UNREG(nsMacRomanToUnicode, "x-mac-roman", "Unicode", NS_MACROMANTOUNICODE_CID);
-NS_UCONV_REG_UNREG(nsUTF8ToUnicode, "UTF-8", "Unicode", NS_UTF8TOUNICODE_CID);
-NS_UCONV_REG_UNREG(nsUnicodeToISO88591, "Unicode", "ISO-8859-1", NS_UNICODETOISO88591_CID);
-NS_UCONV_REG_UNREG(nsUnicodeToCP1252, "Unicode", "windows-1252",  NS_UNICODETOCP1252_CID);
-NS_UCONV_REG_UNREG(nsUnicodeToMacRoman, "Unicode", "x-mac-roman", NS_UNICODETOMACROMAN_CID);
-NS_UCONV_REG_UNREG(nsUnicodeToUTF8, "Unicode", "UTF-8",  NS_UNICODETOUTF8_CID);
+NS_IMPL_NSUCONVERTERREGSELF
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCharsetConverterManager)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeDecodeHelper)
@@ -156,49 +158,43 @@ static const nsModuleComponentInfo components[] =
     "ISO-8859-1 To Unicode Converter", NS_ISO88591TOUNICODE_CID, 
     NS_ISO88591TOUNICODE_CONTRACTID,
     nsISO88591ToUnicodeConstructor,
-    nsISO88591ToUnicodeRegSelf, nsISO88591ToUnicodeUnRegSelf 
+    // global converter registration
+    nsUConverterRegSelf, nsUConverterUnregSelf,
   },
   { 
     "windows-1252 To Unicode Converter", NS_CP1252TOUNICODE_CID, 
     NS_CP1252TOUNICODE_CONTRACTID,
     nsCP1252ToUnicodeConstructor,
-    nsCP1252ToUnicodeRegSelf, nsCP1252ToUnicodeUnRegSelf 
   },
   { 
     "x-mac-roman To Unicode Converter", NS_MACROMANTOUNICODE_CID,
     NS_MACROMANTOUNICODE_CONTRACTID,
     nsMacRomanToUnicodeConstructor,
-    nsMacRomanToUnicodeRegSelf, nsMacRomanToUnicodeUnRegSelf 
   },
   { 
     "UTF-8 To Unicode Converter", NS_UTF8TOUNICODE_CID,
     NS_UTF8TOUNICODE_CONTRACTID,
     nsUTF8ToUnicodeConstructor,
-    nsUTF8ToUnicodeRegSelf, nsUTF8ToUnicodeUnRegSelf 
   },
   { 
     "Unicode To ISO-8859-1 Converter", NS_UNICODETOISO88591_CID,
     NS_UNICODETOISO88591_CONTRACTID,
     nsUnicodeToISO88591Constructor, 
-    nsUnicodeToISO88591RegSelf, nsUnicodeToISO88591UnRegSelf
   },
   { 
     "Unicode To windows-1252 Converter", NS_UNICODETOCP1252_CID,
     NS_UNICODETOCP1252_CONTRACTID, 
     nsUnicodeToCP1252Constructor, 
-    nsUnicodeToCP1252RegSelf, nsUnicodeToCP1252UnRegSelf
   },
   { 
     "Unicode To x-mac-roman Converter", NS_UNICODETOMACROMAN_CID,
     NS_UNICODETOMACROMAN_CONTRACTID, 
     nsUnicodeToMacRomanConstructor, 
-    nsUnicodeToMacRomanRegSelf, nsUnicodeToMacRomanUnRegSelf
   },
   { 
     "Unicode To UTF-8 Converter", NS_UNICODETOUTF8_CID,
     NS_UNICODETOUTF8_CONTRACTID, 
     nsUnicodeToUTF8Constructor, 
-    nsUnicodeToUTF8RegSelf, nsUnicodeToUTF8UnRegSelf
   }
 };
 
