@@ -127,11 +127,11 @@ nsDownloadManager::Init()
   gRDFService->GetResource(NC_NAMESPACE_URI "DownloadState", &gNC_DownloadState);
   gRDFService->GetResource(NC_NAMESPACE_URI "StatusText", &gNC_StatusText);
 
-  nsXPIDLCString downloadsDB;
+  nsAutoCString downloadsDB;
   rv = GetProfileDownloadsFileURL(getter_Copies(downloadsDB));
   if (NS_FAILED(rv)) return rv;
 
-  rv = gRDFService->GetDataSourceBlocking(downloadsDB, getter_AddRefs(mDataSource));
+  rv = gRDFService->GetDataSourceBlocking(downloadsDB.get(), getter_AddRefs(mDataSource));
   if (NS_FAILED(rv)) return rv;
 
   mListener = do_CreateInstance("@mozilla.org/download-manager/listener;1", &rv);
@@ -864,11 +864,11 @@ nsDownload::GetTransferInformation(PRInt32* aCurr, PRInt32* aMax)
 
 NS_IMETHODIMP
 nsDownload::OnProgressChange(nsIWebProgress *aWebProgress,
-                               nsIRequest *aRequest,
-                               PRInt32 aCurSelfProgress,
-                               PRInt32 aMaxSelfProgress,
-                               PRInt32 aCurTotalProgress,
-                               PRInt32 aMaxTotalProgress)
+                             nsIRequest *aRequest,
+                             PRInt32 aCurSelfProgress,
+                             PRInt32 aMaxSelfProgress,
+                             PRInt32 aCurTotalProgress,
+                             PRInt32 aMaxTotalProgress)
 {
 
   if (!mRequest)
@@ -922,7 +922,7 @@ nsDownload::OnProgressChange(nsIWebProgress *aWebProgress,
 
 NS_IMETHODIMP
 nsDownload::OnLocationChange(nsIWebProgress *aWebProgress,
-                               nsIRequest *aRequest, nsIURI *aLocation)
+                             nsIRequest *aRequest, nsIURI *aLocation)
 {
   if (mListener)
     mListener->OnLocationChange(aWebProgress, aRequest, aLocation);
@@ -942,8 +942,8 @@ nsDownload::OnLocationChange(nsIWebProgress *aWebProgress,
 
 NS_IMETHODIMP
 nsDownload::OnStatusChange(nsIWebProgress *aWebProgress,
-                             nsIRequest *aRequest, nsresult aStatus,
-                             const PRUnichar *aMessage)
+                           nsIRequest *aRequest, nsresult aStatus,
+                           const PRUnichar *aMessage)
 {   
   if (NS_FAILED(aStatus)) {
     mDownloadState = FAILED;
@@ -970,8 +970,8 @@ nsDownload::OnStatusChange(nsIWebProgress *aWebProgress,
 
 NS_IMETHODIMP
 nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
-                            nsIRequest* aRequest, PRInt32 aStateFlags,
-                            PRUint32 aStatus)
+                          nsIRequest* aRequest, PRInt32 aStateFlags,
+                          PRUint32 aStatus)
 {
   if (aStateFlags & STATE_START)
     mStartTime = PR_Now();
@@ -1007,7 +1007,7 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
 
 NS_IMETHODIMP
 nsDownload::OnSecurityChange(nsIWebProgress *aWebProgress,
-                               nsIRequest *aRequest, PRInt32 aState)
+                             nsIRequest *aRequest, PRInt32 aState)
 {
   if (mListener)
     mListener->OnSecurityChange(aWebProgress, aRequest, aState);
