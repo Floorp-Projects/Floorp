@@ -79,10 +79,15 @@ function onOK()
   //return true;
 }
 
-function Cancel()
+function Unload()
 {
   window.opener.InsertCharWindow = null;
   SaveWindowLocation();
+}
+
+function Cancel()
+{
+  // This will trigger call to "Unload()"
   window.close();
 }
 
