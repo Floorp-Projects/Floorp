@@ -24,6 +24,7 @@
 #include "nsReadableUtils.h"
 #include "nsMemory.h"
 #include "nsString.h"
+#include "nsCRT.h"
 
 
 
@@ -214,7 +215,7 @@ IsASCII( const nsAReadableString& aString )
     nsReadingIterator<PRUnichar> iter;
     for ( aString.BeginReading(iter); iter != done_reading; iter.advance( PRInt32(fragmentLength) ) )
       {
-        fragmentLength = iter.size_forward();
+        fragmentLength = PRUint32(iter.size_forward());
         const PRUnichar* c = iter.get();
         const PRUnichar* fragmentEnd = c + fragmentLength;
 
@@ -227,3 +228,77 @@ IsASCII( const nsAReadableString& aString )
     return PR_TRUE;
   }
 
+
+
+  /**
+   * A character sink for case conversion.
+   */
+template <class CharT>
+class ConvertToUpperCase
+  {
+    public:
+      typedef CharT value_type;
+
+      PRUint32
+      write( const CharT* aSource, PRUint32 aSourceLength )
+        {
+          for ( int i=0; i<aSourceLength; ++i )
+            NS_CONST_CAST(CharT*, aSource)[i] = nsCRT::ToUpper(aSource[i]);
+          return aSourceLength;
+        }
+  };
+
+NS_COM
+void
+ToUpperCase( nsAWritableString& aString )
+  {
+    nsAWritableString::iterator fromBegin, fromEnd;
+    ConvertToUpperCase<PRUnichar> converter;
+    copy_string(aString.BeginWriting(fromBegin), aString.EndWriting(fromEnd), converter);
+  }
+
+NS_COM
+void
+ToUpperCase( nsAWritableCString& aCString )
+  {
+    nsAWritableCString::iterator fromBegin, fromEnd;
+    ConvertToUpperCase<char> converter;
+    copy_string(aCString.BeginWriting(fromBegin), aCString.EndWriting(fromEnd), converter);
+  }
+
+
+  /**
+   * A character sink for case conversion.
+   */
+template <class CharT>
+class ConvertToLowerCase
+  {
+    public:
+      typedef CharT value_type;
+
+      PRUint32
+      write( const CharT* aSource, PRUint32 aSourceLength )
+        {
+          for ( int i=0; i<aSourceLength; ++i )
+            NS_CONST_CAST(CharT*, aSource)[i] = nsCRT::ToLower(aSource[i]);
+          return aSourceLength;
+        }
+  };
+
+NS_COM
+void
+ToLowerCase( nsAWritableString& aString )
+  {
+    nsAWritableString::iterator fromBegin, fromEnd;
+    ConvertToLowerCase<PRUnichar> converter;
+    copy_string(aString.BeginWriting(fromBegin), aString.EndWriting(fromEnd), converter);
+  }
+
+NS_COM
+void
+ToLowerCase( nsAWritableCString& aCString )
+  {
+    nsAWritableCString::iterator fromBegin, fromEnd;
+    ConvertToLowerCase<char> converter;
+    copy_string(aCString.BeginWriting(fromBegin), aCString.EndWriting(fromEnd), converter);
+  }

@@ -17,18 +17,23 @@
  * Copyright (C) 2000 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Original Author:
- *   Scott Collins <scc@mozilla.org>
- *
  * Contributor(s):
+ *   Scott Collins <scc@mozilla.org> (original author)
+ *   Johnny Stenbeck <jst@netscape.com>
+ *
  */
 
 #ifndef nsReadableUtils_h___
 #define nsReadableUtils_h___
 
-#include "nsAReadableString.h"
+  /**
+   * I guess all the routines in this file are all mis-named.
+   * According to our conventions, they should be |NS_xxx|.
+   */
+
+#ifndef nsAWritableString_h___
 #include "nsAWritableString.h"
-#include "nsCRT.h"
+#endif
 
 NS_COM void CopyUCS2toASCII( const nsAReadableString& aSource, nsAWritableCString& aDest );
 NS_COM void CopyASCIItoUCS2( const nsAReadableCString& aSource, nsAWritableString& aDest );
@@ -121,53 +126,14 @@ NS_COM PRUnichar* CopyUnicodeTo( const nsAReadableString& aSource,
 NS_COM PRBool IsASCII( const nsAReadableString& aString );
 
 
-  //
-  // |ToUpperCase(basic_nsAWritableString<CharT>&)|
-  //
-template <class CharT>
-void
-ToUpperCase(basic_nsAWritableString<CharT>& aString)
-  {
-    nsWritingIterator<CharT> start( aString.BeginWriting() );
-    nsWritingIterator<CharT> end( aString.EndWriting() );
 
-    while ( start != end ) {
-      PRUint32 fraglen = start.size_forward();
-      PRUint32 num_bytes = fraglen;
-      CharT *buf = start.get();
+  /**
+   * Converts case in place in the argument string.
+   */
+NS_COM void ToUpperCase( nsAWritableString& );
+NS_COM void ToUpperCase( nsAWritableCString& );
 
-      while ( num_bytes-- ) {
-        *buf = nsCRT::ToUpper(*buf);
-        ++buf;
-      }
-
-      start += fraglen;
-    }
-  }
-
-  //
-  // |ToUpperCase(basic_nsAWritableString<CharT>&)|
-  //
-template <class CharT>
-void
-ToLowerCase(basic_nsAWritableString<CharT>& aString)
-  {
-    nsWritingIterator<CharT> start( aString.BeginWriting() );
-    nsWritingIterator<CharT> end( aString.EndWriting() );
-
-    while ( start != end ) {
-      PRUint32 fraglen = start.size_forward();
-      PRUint32 num_bytes = fraglen;
-      CharT *buf = start.get();
-
-      while ( num_bytes-- ) {
-        *buf = nsCRT::ToLower(*buf);
-        ++buf;
-      }
-
-      start += fraglen;
-    }
-  }
-
+NS_COM void ToLowerCase( nsAWritableString& );
+NS_COM void ToLowerCase( nsAWritableCString& );
 
 #endif // !defined(nsReadableUtils_h___)
