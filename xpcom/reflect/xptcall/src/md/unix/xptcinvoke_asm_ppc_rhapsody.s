@@ -28,7 +28,7 @@
 # ** from index to entry is (4 * index) + 8.
 #
 
-.data
+.text
 	.align 2
 #
 #   XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
@@ -58,7 +58,7 @@ __XPTC_InvokeByIndex:
 	mr	r4,r6
 
 	stwu	r1,-24(r1)	
-	bl	_invoke_count_words
+	bl	L_invoke_count_words$stub
 	lwz	r1,0(r1)
 
 # prepare args for 'invoke_copy_to_stack' call
@@ -77,7 +77,7 @@ __XPTC_InvokeByIndex:
 	
 # create "temporary" stack frame for _invoke_copy_to_stack to operate in.
 	stwu	r1,-40(r1)
-	bl	_invoke_copy_to_stack
+	bl	L_invoke_copy_to_stack$stub
 # remove temporary stack frame.
 	lwz	r1,0(r1)
 
@@ -120,3 +120,41 @@ __XPTC_InvokeByIndex:
 	lwz     r31,-4(r1)
 
 	blr
+
+.picsymbol_stub
+L_invoke_count_words$stub:
+        .indirect_symbol _invoke_count_words
+        mflr r0
+        bcl 20,31,L1$pb
+L1$pb:
+        mflr r11
+        addis r11,r11,ha16(L1$lz-L1$pb)
+        mtlr r0
+        lwz r12,lo16(L1$lz-L1$pb)(r11)
+        mtctr r12
+        addi r11,r11,lo16(L1$lz-L1$pb)
+        bctr
+.lazy_symbol_pointer
+L1$lz:
+        .indirect_symbol _invoke_count_words
+        .long dyld_stub_binding_helper
+
+
+.picsymbol_stub
+L_invoke_copy_to_stack$stub:
+        .indirect_symbol _invoke_copy_to_stack
+        mflr r0
+        bcl 20,31,L2$pb
+L2$pb:
+        mflr r11
+        addis r11,r11,ha16(L2$lz-L2$pb)
+        mtlr r0
+        lwz r12,lo16(L2$lz-L2$pb)(r11)
+        mtctr r12
+        addi r11,r11,lo16(L2$lz-L2$pb)
+        bctr
+.lazy_symbol_pointer
+L2$lz:
+        .indirect_symbol _invoke_copy_to_stack
+        .long dyld_stub_binding_helper
+

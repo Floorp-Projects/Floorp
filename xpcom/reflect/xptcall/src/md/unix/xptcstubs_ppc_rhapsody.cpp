@@ -242,27 +242,7 @@ PrepareAndDispatch(nsXPTCStubBase* self, PRUint32 methodIndex, PRUint32* args, P
 }
 
 
-#if 1
-//extern "C" void SharedStub();
-#define STUB_ENTRY(n) 						\
-__asm__ (                       \
-    ".data\n\t"                           \
-    ".align 2\n\t"                                     \
-    ".globl  _Stub"#n"__14nsXPTCStubBase\n"           \
-    "_Stub"#n"__14nsXPTCStubBase:\n\t" \
-		"addi r12,0,"#n"\n\t"					\
-		"b _SharedStub"					\
-);
-#else
-extern "C" nsresult SharedStub();
-#define STUB_ENTRY(n) \
-nsresult nsXPTCStubBase::Stub##n()     \
-{\
-  return SharedStub();\
-}
-#endif
-
-
+#define STUB_ENTRY(n)
 #define SENTINEL_ENTRY(n) \
 nsresult nsXPTCStubBase::Sentinel##n() \
 { \
@@ -272,5 +252,3 @@ nsresult nsXPTCStubBase::Sentinel##n() \
 
 
 #include "xptcstubsdef.inc"
-
-
