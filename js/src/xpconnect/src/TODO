@@ -15,7 +15,7 @@
 + 64bit ints on platforms w/o 'long long'
 + re-org the source directory layout
 + define 'JSFILE' by default in JS engines
-- better api for Components object
++ better api for Components object
 - reimplement nsSJIID and nsJSCID using multiple inheritence
 + nsJSCID getService method
 - global namespace interface
@@ -36,7 +36,7 @@
 - xpidl work and documents
 
 - proto object per class?
-- Param gc rooting?
++ Param gc rooting?
 - safer use of jsdoubles?
 
 **** ISSUES ****
@@ -102,5 +102,5 @@ when we try to coerce an out of range conversion, like converting
 
 - deal with whatever comes up as we get deployment feedback.
 
-- manage JSContexts on a stack per thread basis - get rid of XPCContext!
+- manage JSContexts on a stack per thread basis - get rid of XPCContext?
 
