@@ -6,8 +6,7 @@ BODY { font-family: monaco, courier, elite, monospace;
 
 DIV, PRE, SPAN { margin: 0; padding-top: 0; padding-bottom: 0 }
 
-PRE { font-family: monaco;
-      line-height: 120% }
+PRE { line-height: 120% }
 
 /* Input components */
 SPAN.prompt      { color: blue }

@@ -1,7 +1,7 @@
 Known bugs
 ----------
 
-25 May 2000
+23 Oct 2000
 
 1. Mozilla bug (Solaris only): The cursor has disappeared! (also in Composer)
 
@@ -39,3 +39,13 @@ Known bugs
 
 11. Style changes have become fickle, e.g., prompt underlining doesn't seem
     to work properly.
+
+12. cd /usr/share/pixmaps/mc
+    xcat i-symlink.png
+
+    causes crash (seems to be related to GTK event callback)
+    Switching to XP event posting may remove this bug
+
+13. xmlterm termination not clean, segfaults
+
+    in mozXMLTerminal, mPresShell and mDOMDocument need to addref'ed?

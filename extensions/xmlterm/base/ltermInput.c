@@ -377,7 +377,7 @@ static int ltermLineInput(struct lterms *lts,
     } else if (lti->escapeCSIFlag) {
       /* Character part of escape code sequence */
 
-      LTERM_LOG(ltermLineInput,38,("Escape code sequence - %c\n", (char) uch));
+      LTERM_LOG(ltermLineInput,38,("Escape code sequence - 0x%x\n", uch));
 
       if ((uch >= (UNICHAR)U_ZERO && uch <= (UNICHAR)U_NINE)) {
         /* Process numerical argument to escape code sequence */
@@ -499,7 +499,7 @@ static int ltermLineInput(struct lterms *lts,
         if (ltermDeleteGlyphs(lti, 1) != 0)
           return -1;
 
-        LTERM_LOG(ltermLineInput,39,("TTYERASE=%x/%x\n",
+        LTERM_LOG(ltermLineInput,39,("TTYERASE=0x%x/0x%x\n",
                                      lts->control[TTYERASE], uch ));
 
       } else {

@@ -84,7 +84,7 @@ int ltermProcessEscape(struct lterms *lts, const UNICHAR *buf,
 {
   struct LtermOutput *lto = &(lts->ltermOutput);
 
-  LTERM_LOG(ltermProcessEscape,50,("count=%d, buf[1]='%c', cursorChar=%d, Chars=%d\n",
+  LTERM_LOG(ltermProcessEscape,50,("count=%d, buf[1]=0x%x, cursorChar=%d, Chars=%d\n",
                 count, buf[1], lto->outputCursorChar, lto->outputChars));
 
   if (count < 2) {
@@ -123,7 +123,7 @@ int ltermProcessEscape(struct lterms *lts, const UNICHAR *buf,
   case U_STAR:              /* ESC * C Designate G2 Character Set */
   case U_PLUS:              /* ESC + C Designate G3 Character Set */
   case U_DOLLAR:            /* ESC $ C Designate Kanji Character Set */
-    LTERM_LOG(ltermProcessEscape,51,("3 char sequence, buf[1:2]='%c%c'\n",
+    LTERM_LOG(ltermProcessEscape,51,("3 char sequence, buf[1:2]=0x%x,0x%x\n",
                   buf[1], buf[2]));
 
     if (count < 3) {
@@ -142,11 +142,11 @@ int ltermProcessEscape(struct lterms *lts, const UNICHAR *buf,
 
   /* Two character sequences */
   case U_SEVEN:             /* ESC 7 Save Cursor */
-    LTERM_LOG(ltermProcessEscape,2,("Unimplemented %c\n", buf[1]));
+    LTERM_LOG(ltermProcessEscape,2,("Unimplemented 0x%x\n", buf[1]));
     return 0;
 
   case U_EIGHT:             /* ESC 8 Restore Cursor */
-    LTERM_LOG(ltermProcessEscape,2,("Unimplemented %c\n", buf[1]));
+    LTERM_LOG(ltermProcessEscape,2,("Unimplemented 0x%x\n", buf[1]));
     return 0;
 
   case U_EQUALS:            /* ESC = Application Keypad */
@@ -185,7 +185,7 @@ int ltermProcessEscape(struct lterms *lts, const UNICHAR *buf,
     return 0;
 
   case U_H_CHAR:            /* ESC H Tab Set (HTS) */
-    LTERM_LOG(ltermProcessEscape,2,("Unimplemented %c\n", buf[1]));
+    LTERM_LOG(ltermProcessEscape,2,("Unimplemented 0x%x\n", buf[1]));
     return 0;
 
   case U_M_CHAR:            /* ESC M Reverse Index (TI) */
@@ -201,31 +201,31 @@ int ltermProcessEscape(struct lterms *lts, const UNICHAR *buf,
     return 0;
 
   case U_N_CHAR:            /* ESC N Single Shift Select of G2 Character Set */
-    LTERM_LOG(ltermProcessEscape,2,("Unimplemented %c\n", buf[1]));
+    LTERM_LOG(ltermProcessEscape,2,("Unimplemented 0x%x\n", buf[1]));
     return 0;
 
   case U_O_CHAR:            /* ESC O Single Shift Select of G3 Character Set */
-    LTERM_LOG(ltermProcessEscape,2,("Unimplemented %c\n", buf[1]));
+    LTERM_LOG(ltermProcessEscape,2,("Unimplemented 0x%x\n", buf[1]));
     return 0;
 
   case U_Z_CHAR:            /* ESC Z Obsolete form of ESC[c */
-    LTERM_LOG(ltermProcessEscape,2,("Unimplemented %c\n", buf[1]));
+    LTERM_LOG(ltermProcessEscape,2,("Unimplemented 0x%x\n", buf[1]));
     return 0;
 
   case U_c_CHAR:            /* ESC c Full reset (RIS)  */
-    LTERM_LOG(ltermProcessEscape,2,("Unimplemented %c\n", buf[1]));
+    LTERM_LOG(ltermProcessEscape,2,("Unimplemented 0x%x\n", buf[1]));
     return 0;
 
   case U_n_CHAR:            /* ESC n Invoke the G2 Character Set  */
-    LTERM_LOG(ltermProcessEscape,2,("Unimplemented %c\n", buf[1]));
+    LTERM_LOG(ltermProcessEscape,2,("Unimplemented 0x%x\n", buf[1]));
     return 0;
 
   case U_o_CHAR:            /* ESC o Invoke the G3 Character Set */
-    LTERM_LOG(ltermProcessEscape,2,("Unimplemented %c\n", buf[1]));
+    LTERM_LOG(ltermProcessEscape,2,("Unimplemented 0x%x\n", buf[1]));
     return 0;
 
   default:
-    LTERM_WARNING("ltermProcessEscape: Warning - unknown sequence %x\n",
+    LTERM_WARNING("ltermProcessEscape: Warning - unknown sequence 0x%x\n",
                   buf[1]);
     return 0;
   }
@@ -250,7 +250,7 @@ static int ltermProcessCSISequence(struct lterms *lts, const UNICHAR *buf,
     return 1;
   }
 
-  LTERM_LOG(ltermProcessCSISequence,50,("buf[2]='%c', cursorChar=%d, Chars=%d\n",
+  LTERM_LOG(ltermProcessCSISequence,50,("buf[2]=0x%x, cursorChar=%d, Chars=%d\n",
                 buf[2], lto->outputCursorChar, lto->outputChars));
 
   privateMode = 0;
@@ -461,7 +461,7 @@ static int ltermProcessCSISequence(struct lterms *lts, const UNICHAR *buf,
     return 0;
 
   case U_I_CHAR:    /* Move forward Ps tab stops [default: 1] */
-    LTERM_LOG(ltermProcessCSISequence,2,("Unimplemented %c\n", buf[offset]));
+    LTERM_LOG(ltermProcessCSISequence,2,("Unimplemented 0x%x\n", buf[offset]));
     return 0;
 
   case U_J_CHAR:    /* Erase in Display (ED)
@@ -621,7 +621,7 @@ static int ltermProcessCSISequence(struct lterms *lts, const UNICHAR *buf,
   case U_T_CHAR:    /* Initiate hilite mouse tracking. Parameters
                      * [func;startx;starty;firstrow;lastrow]. 
                      */
-    LTERM_LOG(ltermProcessCSISequence,2,("Unimplemented %c\n", buf[offset]));
+    LTERM_LOG(ltermProcessCSISequence,2,("Unimplemented 0x%x\n", buf[offset]));
     return 0;
 
   case U_W_CHAR:    /* Tabulator functions:
@@ -629,7 +629,7 @@ static int ltermProcessCSISequence(struct lterms *lts, const UNICHAR *buf,
                      *  Ps = 2  Tab Clear (TBC), Clear Current Column (default)
                      *  Ps = 5  Tab Clear (TBC), Clear All 
                      */
-    LTERM_LOG(ltermProcessCSISequence,2,("Unimplemented %c\n", buf[offset]));
+    LTERM_LOG(ltermProcessCSISequence,2,("Unimplemented 0x%x\n", buf[offset]));
     return 0;
 
   case U_X_CHAR:    /* Erase Ps Character(s) [default: 1] (ECH) */
@@ -638,7 +638,7 @@ static int ltermProcessCSISequence(struct lterms *lts, const UNICHAR *buf,
     return 0;
 
   case U_Z_CHAR:    /* Move backward Ps [default: 1] tab stops */
-    LTERM_LOG(ltermProcessCSISequence,2,("Unimplemented %c\n", buf[offset]));
+    LTERM_LOG(ltermProcessCSISequence,2,("Unimplemented 0x%x\n", buf[offset]));
     return 0;
 
   case U_c_CHAR:    /* Send Device Attributes (DA)
@@ -670,21 +670,21 @@ static int ltermProcessCSISequence(struct lterms *lts, const UNICHAR *buf,
   case U_f_CHAR:    /* Horizontal and Vertical Position [row;column] (HVP)
                      * [default: 1;1]
                      */
-    LTERM_LOG(ltermProcessCSISequence,2,("Unimplemented %c\n", buf[offset]));
+    LTERM_LOG(ltermProcessCSISequence,2,("Unimplemented 0x%x\n", buf[offset]));
     return 0;
 
   case U_g_CHAR:    /* Tab Clear (TBC) 
                      * Ps = 0 Clear Current Column (default) 
                      * Ps = 3 Clear All (TBC)
                      */
-    LTERM_LOG(ltermProcessCSISequence,2,("Unimplemented %c\n", buf[offset]));
+    LTERM_LOG(ltermProcessCSISequence,2,("Unimplemented 0x%x\n", buf[offset]));
     return 0;
 
   case U_i_CHAR:    /* Printing 
                      * Ps = 4 disable transparent print mode (MC4) 
                      * Ps = 5 enable transparent print mode (MC5)
                      */
-    LTERM_LOG(ltermProcessCSISequence,2,("Unimplemented %c\n", buf[offset]));
+    LTERM_LOG(ltermProcessCSISequence,2,("Unimplemented 0x%x\n", buf[offset]));
     return 0;
 
   case U_h_CHAR:    /* Set Mode (SM)
@@ -853,11 +853,11 @@ static int ltermProcessCSISequence(struct lterms *lts, const UNICHAR *buf,
     return 0;
 
   case U_x_CHAR:    /* Request Terminal Parameters (DECREQTPARM) */
-    LTERM_LOG(ltermProcessCSISequence,2,("Unimplemented %c\n", buf[offset]));
+    LTERM_LOG(ltermProcessCSISequence,2,("Unimplemented 0x%x\n", buf[offset]));
     return 0;
 
   default:          /* Unknown Escape sequence */
-    LTERM_WARNING("ltermProcessCSISequence: Warning - unknown sequence %x\n",
+    LTERM_WARNING("ltermProcessCSISequence: Warning - unknown sequence 0x%x\n",
                   buf[offset]);
     return 0;
   }
@@ -875,8 +875,8 @@ static int ltermProcessDECPrivateMode(struct lterms *lts,
   struct LtermOutput *lto = &(lts->ltermOutput);
   int param1, param2;
 
-  LTERM_LOG(ltermProcessDECPrivateMode,50,("ch='%c', cursorChar=%d, Chars=%d\n",
-                (char) uch, lto->outputCursorChar, lto->outputChars));
+  LTERM_LOG(ltermProcessDECPrivateMode,50,("ch=0x%x, cursorChar=%d, Chars=%d\n",
+                uch, lto->outputCursorChar, lto->outputChars));
 
   /* Set returned opcodes to zero */
   *opcodes = 0;
@@ -887,7 +887,7 @@ static int ltermProcessDECPrivateMode(struct lterms *lts,
 
   switch (uch) {
   case U_h_CHAR:    /* DEC Private Mode Set (DECSET) */
-    LTERM_LOG(ltermProcessDECPrivateMode,2,("Unimplemented %c\n", (char) uch));
+    LTERM_LOG(ltermProcessDECPrivateMode,2,("Unimplemented 0x%x\n", uch));
     if ((param1 % 100) == 47) {
       /* Switch to screen mode */
       if (lto->outputMode == LTERM2_LINE_MODE) {
@@ -898,7 +898,7 @@ static int ltermProcessDECPrivateMode(struct lterms *lts,
     return 0;
 
   case U_l_CHAR:    /* DEC Private Mode Reset (DECRST) */
-    LTERM_LOG(ltermProcessDECPrivateMode,2,("Unimplemented %c\n", (char) uch));
+    LTERM_LOG(ltermProcessDECPrivateMode,2,("Unimplemented 0x%x\n", uch));
     if ((param1 % 100) == 47) {
       /* Switch to line mode */
       if (lto->outputMode == LTERM1_SCREEN_MODE) {
@@ -909,19 +909,19 @@ static int ltermProcessDECPrivateMode(struct lterms *lts,
     return 0;
 
   case U_r_CHAR:    /* Restore previously saved DEC Private Mode Values */
-    LTERM_LOG(ltermProcessDECPrivateMode,2,("Unimplemented %c\n", (char) uch));
+    LTERM_LOG(ltermProcessDECPrivateMode,2,("Unimplemented 0x%x\n", uch));
     return 0;
 
   case U_s_CHAR:    /* Save DEC Private Mode Values */
-    LTERM_LOG(ltermProcessDECPrivateMode,2,("Unimplemented %c\n", (char) uch));
+    LTERM_LOG(ltermProcessDECPrivateMode,2,("Unimplemented 0x%x\n", uch));
     return 0;
 
   case U_t_CHAR:    /* Toggle DEC Private Mode Values */
-    LTERM_LOG(ltermProcessDECPrivateMode,2,("Unimplemented %c\n", (char) uch));
+    LTERM_LOG(ltermProcessDECPrivateMode,2,("Unimplemented 0x%x\n", uch));
     return 0;
 
   default:          /* Unknown escape sequence */
-    LTERM_WARNING("ltermProcessDECPrivateMode: Warning - unknown sequence %x\n",
+    LTERM_WARNING("ltermProcessDECPrivateMode: Warning - unknown sequence 0x%x\n",
                   uch);
     return 0;
   }
@@ -975,7 +975,7 @@ static int ltermProcessXTERMSequence(struct lterms *lts, const UNICHAR *buf,
     return 0;
   }
 
-  LTERM_LOG(ltermProcessXTERMSequence,51,("paramValue=%d, offset=%d, buf[offset]=%x\n",
+  LTERM_LOG(ltermProcessXTERMSequence,51,("paramValue=%d, offset=%d, buf[offset]=0x%x\n",
                  paramValue, offset, buf[offset]));
 
   /* Skip the semicolon */
@@ -1008,7 +1008,7 @@ static int ltermProcessXTERMSequence(struct lterms *lts, const UNICHAR *buf,
   /* All parsed characters have been consumed at this point */
   *consumed = offset+1;
 
-  LTERM_WARNING("ltermProcessXTERMSequence: Warning - unimplemented %c\n",
+  LTERM_WARNING("ltermProcessXTERMSequence: Warning - unimplemented 0x%x\n",
                 buf[offset]);
 
   return 0;
@@ -1101,7 +1101,7 @@ static int ltermProcessXMLTermSequence(struct lterms *lts, const UNICHAR *buf,
   /* Skip terminating character */
   offset++;
 
-  LTERM_LOG(ltermProcessXMLTermSequence,51,("paramCount=%d, offset=%d, termChar=%x\n",
+  LTERM_LOG(ltermProcessXMLTermSequence,51,("paramCount=%d, offset=%d, termChar=0x%x\n",
                  paramCount, offset, termChar));
 
   /* Process string parameter */
@@ -1262,7 +1262,7 @@ static int ltermProcessXMLTermSequence(struct lterms *lts, const UNICHAR *buf,
     return 0;
 
   default:          /* Unknown escape sequence */
-    LTERM_WARNING("ltermProcessXMLTermSequence: Warning - unknown sequence %c\n",
+    LTERM_WARNING("ltermProcessXMLTermSequence: Warning - unknown sequence 0x%x\n",
                    termChar);
     return 0;
   }
