@@ -82,6 +82,7 @@ CPP_OBJS =					\
 	.\$(OBJDIR)\nsObserverService.obj \
 	.\$(OBJDIR)\nsObserverList.obj \
 	.\$(OBJDIR)\nsObserver.obj \
+	.\$(OBJDIR)\nsQuickSort.obj \
 	$(NULL)
 
 EXPORTS=nscore.h nsIArena.h nsIAtom.h nsIByteBuffer.h \
