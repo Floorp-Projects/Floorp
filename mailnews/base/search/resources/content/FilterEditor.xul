@@ -93,14 +93,14 @@ Contributor(s):
             <menuitem value="2" label="&lowestPriorityCmd.label;"/>
           </menupopup>
         </menulist>
-        <menulist id="actionValueLabel">
-          <menupopup>
+        <menulist id="actionValueLabel" oncommand="onLabelListChanged(event)">
+          <menupopup id="menuPopup-labels" onpopupshowing="InitMessageLabel()">
             <!-- see MailNewsTypes2.idl -->
-            <menuitem value="1" label="&firstLabelCmd.label;"/>
-            <menuitem value="2" label="&secondLabelCmd.label;"/>
-            <menuitem value="3" label="&thirdLabelCmd.label;"/>
-            <menuitem value="4" label="&fourthLabelCmd.label;"/>
-            <menuitem value="5" label="&fifthLabelCmd.label;"/>
+            <menuitem id="labelMenuItem1" value="1"/>
+            <menuitem id="labelMenuItem2" value="2"/>
+            <menuitem id="labelMenuItem3" value="3"/>
+            <menuitem id="labelMenuItem4" value="4"/>
+            <menuitem id="labelMenuItem5" value="5"/>
           </menupopup>
         </menulist>
         <label id="actionValueNone"/>

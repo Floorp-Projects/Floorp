@@ -50,6 +50,8 @@ var gActionLabel;
 var gFilterBundle;
 var gPreFillName;
 var nsMsgSearchScope = Components.interfaces.nsMsgSearchScope;
+var gPref;
+var gPrefBranch;
 
 var nsMsgFilterAction = Components.interfaces.nsMsgFilterAction;
 
@@ -63,6 +65,8 @@ function filterEditorOnLoad()
     initializeSearchWidgets();
     initializeFilterWidgets();
 
+    gPref = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPref);
+    gPrefBranch = gPref.getDefaultBranch(null);
     gFilterBundle = document.getElementById("bundle_filter");
     if ("arguments" in window && window.arguments[0]) {
         var args = window.arguments[0];
@@ -195,6 +199,29 @@ function getScope(filter)
     return getScopeFromFilterList(filter.filterList);
 }
 
+function setLabelAttributes(labelID, menuItemID)
+{
+    var color;
+    var prefString;
+
+    try
+    {
+        color = gPrefBranch.getCharPref("mailnews.labels.color." + labelID);
+        prefString = gPref.getComplexValue("mailnews.labels.description." + labelID,
+                                           Components.interfaces.nsIPrefLocalizedString);
+    }
+    catch(ex)
+    {
+        dump("bad! " + ex + "\n");
+    }
+
+    document.getElementById(menuItemID).setAttribute("label", prefString);
+
+    // the following is commented out for now until UE decides on how to show the
+    // Labels menu items in the drop down list menu.
+    //document.getElementById(menuItemID).setAttribute("style", ("color: " + color));
+}
+
 function initializeFilterWidgets()
 {
     gFilterNameElement = document.getElementById("filterName");
@@ -238,6 +265,9 @@ function initializeDialog(filter)
             selectedLabel = selectedLabel[0];
             gActionLabel.selectedItem = selectedLabel;
         }
+        gFilter.actionLabel = gActionLabel.selectedItem.getAttribute("value");
+        // Set the label text on dialog initialization.
+        setLabelAttributes(gFilter.actionLabel, "actionValueLabel");
     }
 
     var scope = getScope(filter);
@@ -246,6 +276,21 @@ function initializeDialog(filter)
     if (filter.searchTerms.Count() > 1)
         gSearchLessButton.removeAttribute("disabled", "false");
 
+}
+
+function InitMessageLabel()
+{
+    /* this code gets the label strings and changes the menu labels */
+    var lastLabel = 5;
+
+    // start with 1 because there is no None label (id 0) as an filtering
+    // option to filter to.
+    for (var i = 1; i <= lastLabel; i++)
+    {
+        setLabelAttributes(i, "labelMenuItem" + i);
+    }
+
+    document.commandDispatcher.updateCommands('create-menu-label');
 }
 
 
@@ -347,8 +392,35 @@ function showActionElementFor(menuitem)
 
     gActionValueDeck.setAttribute("selectedIndex", indexValue);
 
+    // If it's the Label menuItem selected, we need to fill the menulist
+    // associated with this because the very first time it is selected,
+    // it is not filled.
+    // 2 indicates the Labels menu item.
+    if (indexValue == "2")
+    {
+        var labelID = gActionLabel.selectedItem.getAttribute("value");
+
+        setLabelAttributes(labelID, "actionValueLabel");
+    }
+
     // Disable the "New Folder..." button if any other action than MoveToFolder is chosen
     document.getElementById("newFolderButton").setAttribute("disabled", indexValue == "0" ? "false" : "true");
+}
+
+function onLabelListChanged(event)
+{
+    var menuitem = event.target;
+    showLabelColorFor(menuitem);
+}
+
+function showLabelColorFor(menuitem)
+{
+    if (!menuitem) return;
+    var indexValue = menuitem.getAttribute("value");
+    var labelID = gActionLabel.selectedItem.getAttribute("value");
+
+    gActionLabel.setAttribute("selectedIndex", indexValue);
+    setLabelAttributes(labelID, "actionValueLabel");
 }
 
 function GetFirstSelectedMsgFolder()
