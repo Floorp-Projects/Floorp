@@ -285,7 +285,7 @@ nsSaveAsCharset::DoConversionFallBack(PRUnichar inCharacter, char *outString, PR
     char *entity = NULL;
     rv = mEntityConverter->ConvertToEntity(inCharacter, mEntityVersion, &entity);
     if (NS_SUCCEEDED(rv)) {
-      if (NULL == entity || (PRInt32)nsCRT::strlen(entity) > bufferLength) {
+      if (NULL == entity || (PRInt32)strlen(entity) > bufferLength) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
       PL_strcpy(outString, entity);

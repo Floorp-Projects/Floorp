@@ -135,7 +135,7 @@ NS_IMETHODIMP  nsTextToSubURI::UnEscapeAndConvert(
     rv = ccm->GetUnicodeDecoder(&charsetStr, &decoder);
     if (NS_SUCCEEDED(rv)) {
       PRUnichar *pBuf = nsnull;
-      PRInt32 len = nsCRT::strlen(unescaped);
+      PRInt32 len = strlen(unescaped);
       PRInt32 outlen = 0;
       if (NS_SUCCEEDED(rv = decoder->GetMaxLength(unescaped, len, &outlen))) {
         pBuf = (PRUnichar *) PR_Malloc((outlen+1)*sizeof(PRUnichar*));

@@ -3943,7 +3943,7 @@ SubstituteChars(PRBool           aDisplayUnicode,
     nsAutoString tmp(aString, aLength); // we need to pass a null-terminated string
     gFontSubstituteConverter->Convert(tmp.get(), &conv);
     if (conv) {
-      *aCount = nsCRT::strlen(conv);
+      *aCount = strlen(conv);
       if (*aCount > aBufferLength) {
         // allocate a bigger array that the caller should free
         result = new PRUnichar[*aCount];
