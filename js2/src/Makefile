@@ -15,6 +15,18 @@ objs = 	hash.o \
 	vmtypes.o \
 	debugger.o
 
+test_objs = 	hash.o \
+	icodegenerator.o \
+	interpreter.o \
+	jsmath.o \
+	jstypes.o \
+	numerics.o \
+	parser.o \
+	utilities.o \
+	world.o \
+	vmtypes.o \
+	debugger.o
+
 gc_path = ../../gc/boehm/
 
 libs =	gc.a -lstdc++ -lm
@@ -33,7 +45,7 @@ gctest: gc_allocator.o
 	$(CC) -o $@ -ggdb $^ $(libs)
 
 ica_test:
-	$(CC) $(CFLAGS) -o ica_test ica_test.cpp icodeasm.cpp $(LIBS)
+	$(CC) $(CFLAGS) -o ica_test ica_test.cpp icodeasm.cpp $(test_objs) $(libs)
 
 clean:
 	rm -f $(objs)

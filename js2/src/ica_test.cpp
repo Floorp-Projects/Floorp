@@ -37,15 +37,35 @@
 #include "icodeasm.h"
 
 int
-main (int argc, char **argv)
+main (int , char **)
 {
-    JavaScript::Debugger::ICodeParser icp;
-    string str = "true";
+    JavaScript::ICodeASM::ICodeParser icp;
+    bool b;
+    string str;
     
-    bool b = false;
-    icp.ParseBool (str.begin(), str.end(), &b);
-    fprintf (stderr, "bool parsed as %c\n", b);
-    
+#define BOOL_TEST(s, expect)                                                \
+    {                                                                       \
+        b = false;                                                          \
+        str = s;                                                            \
+        icp.ParseBool (str.begin(), str.end(), &b);                         \
+        if (b == expect)                                                    \
+            fprintf (stderr, "PASS: ");                                     \
+        else                                                                \
+            fprintf (stderr, "FAIL: ");                                     \
+        fprintf (stderr, "string %s bool parsed as %i\n", str.c_str(), b);  \
+    }                                                                       \
+
+    BOOL_TEST ("true", true);
+    BOOL_TEST ("True", true);
+    BOOL_TEST ("tRue", true);
+    BOOL_TEST ("TRUE", true);
+    BOOL_TEST ("True", true);
+    BOOL_TEST ("false", false);
+    BOOL_TEST ("False", false); 
+    BOOL_TEST ("fAlSe", false);
+    BOOL_TEST ("FALSE", false);
+    BOOL_TEST ("False", false);
+
     return 0;
 }
 

@@ -85,7 +85,7 @@ namespace ICodeASM {
         double asDouble;
         uint32 asUInt32;
         VM::Register asRegister;
-        bool asBool;
+        bool asBoolean;
         VM::ArgumentList *asArgumentList;
         string *asString;
     };
