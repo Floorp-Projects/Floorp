@@ -48,8 +48,7 @@ class nsScannerString : public nsSlidingString {
     nsScannerString(PRUnichar* aStorageStart, 
                     PRUnichar* aDataEnd, 
                     PRUnichar* aStorageEnd);
-    virtual void InsertData(const PRUnichar* aDataStart, 
-                            const PRUnichar* aDataEnd);
+    virtual void UngetReadable(const nsAReadableString& aReadable, const nsReadingIterator<PRUnichar>& aCurrentPosition) { InsertReadable(aReadable,aCurrentPosition); }
     virtual void ReplaceCharacter(nsReadingIterator<PRUnichar>& aPosition,
                                   PRUnichar aChar);
 };
@@ -260,7 +259,7 @@ class nsScanner {
        *  @param   
        *  @return  
        */
-      PRBool Insert(const nsAReadableString& aBuffer);
+      PRBool UngetReadable(const nsAReadableString& aBuffer);
 
       /**
        *  
