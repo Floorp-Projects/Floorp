@@ -1059,6 +1059,7 @@ nsCOMPtr<nsIPref>                     prefs;
           mPrintDC->GetDeviceSurfaceDimensions(width,height);
           mPresContext->GetPrefs(getter_AddRefs(prefs));
           mPrintPC->Init(mPrintDC,prefs);
+          mPrintPC->SetContainer(webContainer);
           CreateStyleSet(mDocument,&mPrintSS);
 
           rv = NS_NewPresShell(&mPrintPS);
