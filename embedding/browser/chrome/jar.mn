@@ -1,4 +1,4 @@
-embed.jar:
+embed-sample.jar:
 	content/embed/contents.rdf		(content/contents.rdf)
 	content/embed/mini-nav.js		(content/mini-nav.js)
 	content/embed/mini-nav.xul		(content/mini-nav.xul)
