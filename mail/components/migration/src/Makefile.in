@@ -15,12 +15,10 @@ REQUIRES = \
 	xpcom_obsolete \
 	xulapp \
 	libreg \
-	toolkitcomps \
 	windowwatcher \
 	dom \
 	pref \
 	rdf \
-	libreg \
 	necko \
 	intl \
 	uconv \

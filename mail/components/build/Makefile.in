@@ -54,7 +54,6 @@ REQUIRES = \
 	xulapp \
 	mailprofilemigration \
 	string \
-	xpcom \
 	libreg \
 	intl \
 	pref \

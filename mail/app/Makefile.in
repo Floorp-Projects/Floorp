@@ -59,11 +59,7 @@ PROGRAM = thunderbird-bin$(BIN_SUFFIX)
 endif
 
 REQUIRES = \
-	string \
 	xpcom \
-	xulapp \
-	xpinstall \
-        appshell \
 	$(NULL)
 
 LOCAL_INCLUDES = -I$(topsrcdir)/toolkit/xre
