@@ -150,7 +150,6 @@ components\xuldoc.xpt
 
 ; Imaging:
 mozz.dll
-components\imgmng.dll
 components\imglib2.dll
 components\imgicon.dll
 components\imgicon.xpt

@@ -95,19 +95,23 @@
 
 #spellingButton {
   list-style-image: url("chrome://editor/skin/icons/btn1.gif");
-  -moz-image-region: rect(101px 23px 122px 0);
+  -moz-image-region: rect(96px 16px 112px 0);
+}
+
+#spellingButton > .toolbarbutton-icon {
+  padding: 3px 0px 2px 4px;
 }
 
 #spellingButton:hover {
-  -moz-image-region: rect(101px 46px 122px 23px);
+  -moz-image-region: rect(96px 32px 112px 16px);
 }
 
 #spellingButton:hover:active {
-  -moz-image-region: rect(122px 23px 143px 0);
+  -moz-image-region: rect(96px 48px 112px 32px);
 }
 
 #spellingButton[disabled="true"] {
-  -moz-image-region: rect(122px 46px 143px 23px) !important;
+  -moz-image-region: rect(96px 64px 112px 48px) !important;
 }
 
 #button-save {

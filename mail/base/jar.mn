@@ -31,8 +31,8 @@ classic.jar:
     skin/classic/messenger/icons/mail-toolbar-small.png  (skin/icons/mail-toolbar-small.png)
 +   skin/classic/communicator/alerts/alert.css      (skin/alert.css)
     skin/classic/messenger/icons/throbber.png       (skin/icons/throbber.png)
-    skin/classic/messenger/icons/throbber.mng       (skin/icons/throbber.mng)
-    skin/classic/messenger/icons/throbber-small.mng (skin/icons/throbber-small.mng)
+    skin/classic/messenger/icons/throbber.gif       (skin/icons/throbber.gif)
+    skin/classic/messenger/icons/throbber-small.gif (skin/icons/throbber-small.gif)
     skin/classic/messenger/icons/throbber-small.png (skin/icons/throbber-small.png)
 
 comm.jar:

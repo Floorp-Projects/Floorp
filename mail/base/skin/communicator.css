@@ -64,7 +64,7 @@
 }
 
 #navigator-throbber[busy="true"] {
-  list-style-image: url("chrome://messenger/skin/icons/throbber.mng");
+  list-style-image: url("chrome://messenger/skin/icons/throbber.gif");
 }
 
 toolbar[iconsize="small"] #navigator-throbber,
@@ -73,7 +73,7 @@ toolbar[mode="text"] #navigator-throbber {
 }
 toolbar[iconsize="small"] #navigator-throbber[busy="true"],
 toolbar[mode="text"] #navigator-throbber[busy="true"] {
-  list-style-image: url("chrome://messenger/skin/icons/throbber-small.mng");
+  list-style-image: url("chrome://messenger/skin/icons/throbber-small.gif");
 }
 
 /* ::::: online/offline icons ::::: */
