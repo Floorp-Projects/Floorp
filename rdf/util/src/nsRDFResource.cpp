@@ -167,7 +167,7 @@ nsRDFResource::GetDelegate(const char* aKey, REFNSIID aIID, void** aResult)
 
     DelegateEntry* entry = mDelegates;
     while (entry) {
-        if (entry->mKey == aKey) {
+        if (entry->mKey.Equals(aKey)) {
             rv = entry->mDelegate->QueryInterface(aIID, aResult);
             return rv;
         }
@@ -220,7 +220,7 @@ nsRDFResource::ReleaseDelegate(const char* aKey)
     DelegateEntry** link = &mDelegates;
 
     while (entry) {
-        if (entry->mKey == aKey) {
+        if (entry->mKey.Equals(aKey)) {
             *link = entry->mNext;
             delete entry;
             return NS_OK;
