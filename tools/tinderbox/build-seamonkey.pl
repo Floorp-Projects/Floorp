@@ -11,7 +11,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
-$::Version = '$Revision: 1.82 $ ';
+$::Version = '$Revision: 1.83 $ ';
 
 sub PrintUsage {
     die <<END_USAGE
@@ -342,24 +342,28 @@ sub run_tests {
     # MailNews test needs this preference set:
     #   user_pref("signed.applets.codebase_principal_support",true);
     # First run gives two dialogs; they set this preference:
-    #   user_pref("security.principal.X0","[Codebase http://www.mozilla.org/quality/mailnews/APITest.html] UniversalBrowserRead=1 UniversalXPConnect=1");
+    #   user_pref("security.principal.X0","[Codebase http://www.mozilla.org/quality/mailnews/popTest.html] UniversalBrowserRead=1 UniversalXPConnect=1");
+	#
+	# Only do pop3 test now.
+	#
     if ($Settings::MailNewsTest and $test_result eq 'success') {
         print_log "Running MailNewsTest ...\n";
+
         my $cmd = "$binary_basename "
-                  ."http://www.mozilla.org/quality/mailnews/APITest.html";
+                  ."http://www.mozilla.org/quality/mailnews/popTest.html";
 
 		# Stuff prefs in here.
-		my $pref_file = $build_dir . "/.mozilla/mozProfile/prefs.js";
+		my $pref_file = $build_dir . "/.mozilla/$Settings::MozProfileName/prefs.js";
 		if (system("grep -s signed.applets.codebase_principal_support $pref_file > /dev/null")) {
-		  open PREFS, ">>$pref_file" or die "can't open $?\n";
+		  open PREFS, ">>$pref_file" or die "can't open $pref_file ($?)\n";
 		  print PREFS "user_pref(\"signed.applets.codebase_principal_support\", true);\n";
-		  print PREFS "user_pref(\"security.principal.X0\", \"[Codebase http://www.mozilla.org/quality/mailnews/APITest.html] UniversalBrowserRead=1 UniversalXPConnect=1\");";
+		  print PREFS "user_pref(\"security.principal.X0\", \"[Codebase http://www.mozilla.org/quality/mailnews/popTest.html] UniversalBrowserRead=1 UniversalXPConnect=1\");";
 		  close PREFS;
 		}
 
         $test_result = FileBasedTest("MailNewsTest", $build_dir, $binary_dir, 
 									 $cmd,  90, 
-									 "MAILNEWS TEST: Passed", 1, 
+									 "POP MAILNEWS TEST: Passed", 1, 
 									 1);  # Timeout is Ok.
     }
     
@@ -744,6 +748,7 @@ $BloatTest = 0;
 $DomToTextConversionTest = 0;
 $MailNewsTest = 0;
 $MozConfigFileName = 'mozconfig';
+$MozProfileName = 'mozProfile';
 
 #- Set these to what makes sense for your system
 $Make          = 'gmake';       # Must be GNU make
