@@ -4,8 +4,6 @@ var err;
 var fDesktop;
 var szFolderDesktop;
 
-$Ren8dot3List$
-
 srDest = $SpaceRequired$;
 err    = initInstall("Mozilla Installer", "/mozilla.org/Mozilla Installer", "$Version$"); 
 logComment("initInstall: " + err);
@@ -23,8 +21,6 @@ logComment("Desktop location: " + fDesktop);
 if(verifyDiskSpace(fDesktop, srDest))
 {
   setPackageFolder(fDesktop);
-
-  $Ren8dot3Call$
 
   err =  addFile("",
                  "",
