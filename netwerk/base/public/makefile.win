@@ -50,3 +50,8 @@ XPIDLSRCS =                        \
         $(NULL)
 
 include <$(DEPTH)/config/rules.mak>
+
+$(DEPTH)\netwerk\dist\include: 
+        -mkdir $(DEPTH)\netwerk\dist
+        -mkdir $(DEPTH)\netwerk\dist\include
+
