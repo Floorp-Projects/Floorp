@@ -306,6 +306,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
     jsval result;
     uint8 paramCount=0;
     nsresult retval = NS_ERROR_FAILURE;
+    nsresult pending_result = NS_OK;
     JSErrorReporter older;
     JSBool success;
     JSContext* cx = GetJSContext();
@@ -330,6 +331,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
     if(!xpc || !mXPCContext || !cx || !IsReflectable(methodIndex))
         goto pre_call_clean_up;
 
+    mXPCContext->SetPendingResult(pending_result);
     mXPCContext->SetException(nsnull);
     xpc->SetPendingException(nsnull);
 
@@ -518,6 +520,10 @@ pre_call_clean_up:
     /* this one would be set by our error reporter */
     xpc_exception = mXPCContext->GetException();
 
+    // get this right away in case we do something below to cause JS code
+    // to run on this JSContext
+    pending_result = mXPCContext->GetPendingResult();
+
     /* JS might throw an expection whether the reporter was called or not */
     if(JS_GetPendingException(cx, &js_exception))
     {
@@ -528,7 +534,7 @@ pre_call_clean_up:
         /* cleanup and set failed even if we can't build an exception */
         if(!xpc_exception)
         {
-            xpc->SetPendingException(nsnull);
+            xpc->SetPendingException(nsnull); // XXX necessary?
             success = JS_FALSE;
         }
         JS_ClearPendingException(cx);
@@ -536,17 +542,37 @@ pre_call_clean_up:
 
     if(xpc_exception)
     {
-        xpc->SetPendingException(xpc_exception);
-        xpc_exception->GetCode(&retval);
-        NS_RELEASE(xpc_exception);
-        mXPCContext->SetException(nsnull);
-        success = JS_FALSE;
+        // Only throw the exception and fail if the JS code threw something
+        // that does indicate a failure; i.e. 'throw 0' is not really a failure
+        nsresult e_code;
+        if(NS_SUCCEEDED(xpc_exception->GetCode(&e_code)) && NS_FAILED(e_code))
+        {
+            xpc->SetPendingException(xpc_exception);
+            NS_RELEASE(xpc_exception);
+            mXPCContext->SetException(nsnull);
+            retval = e_code;
+            success = JS_FALSE;
+        }
+        else
+        {
+            pending_result = e_code;
+            NS_RELEASE(xpc_exception);
+        }
+    }
+    else
+    {
+        // see if JS code signaled failure result without throwing exception
+        if(NS_FAILED(pending_result))
+        {
+            retval = pending_result;
+            success = JS_FALSE;
+        }
     }
 
     if(!success)
         goto done;
 
-    xpc->SetPendingException(nsnull);
+    xpc->SetPendingException(nsnull); // XXX necessary?
 
     // convert out args and result
     // NOTE: this is the total number of native params, not just the args
@@ -616,7 +642,8 @@ pre_call_clean_up:
         goto pre_call_clean_up;
     }
 
-    retval = NS_OK;
+    // set to whatever the JS code might have set as the result
+    retval = pending_result;
 
 done:
     if(sp)

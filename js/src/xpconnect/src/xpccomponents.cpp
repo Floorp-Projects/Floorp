@@ -1076,11 +1076,31 @@ nsXPCComponents::GetProperty(JSContext *cx, JSObject *obj,
                              JSBool* retval)
 {
     XPCContext* xpcc = nsXPConnect::GetContext(cx);
-    if(xpcc && xpcc->GetStringID(XPCContext::IDX_LAST_RESULT) == id)
+    if(xpcc)
     {
-        *retval = JS_TRUE;
-        if(JS_NewNumberValue(cx, (jsdouble) xpcc->GetLastResult(), vp))
+        PRBool doResult = JS_FALSE;
+        nsresult res;
+        if(xpcc->GetStringID(XPCContext::IDX_LAST_RESULT) == id)
+        {
+            res = xpcc->GetLastResult();
+            doResult = JS_TRUE;
+        }
+        else if(xpcc->GetStringID(XPCContext::IDX_RETURN_CODE) == id)
+        {
+            res = xpcc->GetPendingResult();
+            doResult = JS_TRUE;
+        }
+
+        if(doResult)
+        {
+            if(!JS_NewNumberValue(cx, (jsdouble) res, vp))
+            {
+                JS_ReportOutOfMemory(cx);
+                return NS_ERROR_OUT_OF_MEMORY;
+            }
+            *retval = JS_TRUE;
             return NS_OK;
+        }
     }
     return arbitrary->GetProperty(cx, obj, id, vp, wrapper, nsnull, retval);
 }
@@ -1092,6 +1112,23 @@ nsXPCComponents::SetProperty(JSContext *cx, JSObject *obj,
                              nsIXPCScriptable* arbitrary,
                              JSBool* retval)
 {
+    XPCContext* xpcc = nsXPConnect::GetContext(cx);
+    if(xpcc)
+    {
+        if(xpcc->GetStringID(XPCContext::IDX_RETURN_CODE) == id)
+        {
+            nsresult rv;
+            if(JS_ValueToECMAUint32(cx, *vp, (uint32*)&rv))
+            {
+                xpcc->SetPendingResult(rv);
+                xpcc->SetLastResult(rv);
+            }
+            // XXX even if it fails we are silent?
+            *retval = JS_TRUE;
+            return NS_OK;
+        }
+    }
+
     if(mCreating)
         return arbitrary->SetProperty(cx, obj, id, vp, wrapper, nsnull, retval);
     *retval = JS_TRUE;

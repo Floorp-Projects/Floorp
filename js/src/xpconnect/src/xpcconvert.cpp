@@ -73,7 +73,7 @@ static uint8 xpc_reflectable_flags[XPC_FLAG_COUNT] = {
 JSBool
 XPCConvert::IsMethodReflectable(const nsXPTMethodInfo& info)
 {
-    if(info.IsHidden())
+    if(info.IsNotXPCOM() || info.IsHidden())
         return JS_FALSE;
 
     for(int i = info.GetParamCount()-1; i >= 0; i--)
