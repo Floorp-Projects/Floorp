@@ -1605,8 +1605,8 @@ SinkContext::DemoteContainer(const nsIParserNode& aNode)
         sync = PR_TRUE;
       }
       // Otherwise just append the container to the parent without
-      // notification
-      else {
+      // notification (it the container hasn't already been appended)
+      else if (!(mStack[stackPos].mFlags & APPENDED)) {
         mSink->mInNotification++;
         parent->AppendChildTo(container, PR_FALSE);
         mSink->mInNotification--;
