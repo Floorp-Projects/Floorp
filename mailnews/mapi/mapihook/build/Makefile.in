@@ -51,6 +51,7 @@ LOCAL_INCLUDES	= -I.
 # Force use of PIC
 FORCE_USE_PIC	= 1 
 FORCE_SHARED_LIB = 1
+SRCS_IN_OBJDIR	= 1
 
 include $(topsrcdir)/config/rules.mk
 
@@ -63,15 +64,6 @@ done_gen: msgMapi.idl
 	"$(MIDL)" $(UNICODE_FLAGS) $(srcdir)/msgMapi.idl
 	touch $@
 
-copy_csrcs: done_gen
-	@for f in $(CSRCS); do \
-	    if test ! -f $(srcdir)/$$f; then \
-		cp $$f $(srcdir)/$$f; \
-	    fi ; \
-	done
-
-$(SRCDIR_CSRCS): copy_csrcs
-
-export:: done_gen copy_csrcs
+export:: done_gen
 
 

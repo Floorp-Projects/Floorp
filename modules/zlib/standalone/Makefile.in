@@ -35,6 +35,7 @@ CSRCS		= $(MODULES_ZLIB_SRC_LCSRCS)
 EXPORTS		= $(MODULES_ZLIB_SRC_EXPORTS)
 
 FORCE_STATIC_LIB = 1
+SRCS_IN_OBJDIR	= 1
 
 ifeq ($(OS_ARCH),WINNT)
 USE_NON_MT_LIBS=1
@@ -57,9 +58,5 @@ include $(topsrcdir)/config/rules.mk
 LOCAL_INCLUDES = -I$(srcdir)/../src
 
 export:: $(MODULES_ZLIB_SRC_CSRCS)
-ifeq ($(OS_ARCH),WINNT)
-	$(INSTALL) $^ $(srcdir)
-else
 	$(INSTALL) $^ .
-endif
 

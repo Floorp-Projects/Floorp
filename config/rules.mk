@@ -95,9 +95,21 @@ ifeq ($(MOZ_OS2_TOOLS),VACPP)
 _EXTRA_DSO_RELATIVE_PATHS=1
 else
 ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
+ifndef SRCS_IN_OBJDIR
 _NO_AUTO_VARS=1
+endif
 _EXTRA_DSO_RELATIVE_PATHS=1
 endif
+endif
+
+ifdef SRCS_IN_OBJDIR
+ifeq ($(OS_ARCH),WINNT)
+_VPATH_SRCS = $(shell cygpath -m $< | grep ^.:/ || cygpath -m `pwd`/$<)
+else
+_VPATH_SRCS = $<
+endif
+else
+_VPATH_SRCS = $<
 endif
 
 ifdef _EXTRA_DSO_RELATIVE_PATHS
@@ -994,7 +1006,7 @@ host_%.o: %.c Makefile.in
 ifdef _NO_AUTO_VARS
 	$(ELOG) $(HOST_CC) $(OUTOPTION)$@ -c $(HOST_CFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(srcdir)/$*.c
 else
-	$(ELOG) $(HOST_CC) $(OUTOPTION)$@ -c $(HOST_CFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $<
+	$(ELOG) $(HOST_CC) $(OUTOPTION)$@ -c $(HOST_CFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(_VPATH_SRCS)
 endif
 
 %: %.c Makefile.in
@@ -1003,7 +1015,7 @@ endif
 ifdef _NO_AUTO_VARS
 	$(ELOG) $(CC) $(CFLAGS) $(LDFLAGS) $(OUTOPTION)$@ $(srcdir)/$*.c
 else
-	$(ELOG) $(CC) $(CFLAGS) $(LDFLAGS) $(OUTOPTION)$@ $<
+	$(ELOG) $(CC) $(CFLAGS) $(LDFLAGS) $(OUTOPTION)$@ $(_VPATH_SRCS)
 endif
 
 %.$(OBJ_SUFFIX): %.c Makefile.in
@@ -1012,7 +1024,7 @@ endif
 ifdef _NO_AUTO_VARS
 	$(ELOG) $(CC) $(OUTOPTION)$@ -c $(COMPILE_CFLAGS) $(srcdir)/$*.c
 else
-	$(ELOG) $(CC) $(OUTOPTION)$@ -c $(COMPILE_CFLAGS) $<
+	$(ELOG) $(CC) $(OUTOPTION)$@ -c $(COMPILE_CFLAGS) $(_VPATH_SRCS)
 endif
 
 moc_%.cpp: %.h Makefile.in
@@ -1024,7 +1036,7 @@ moc_%.cpp: %.h Makefile.in
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
 	$(AS) -Fdo:./$(OBJDIR) -Feo:.$(OBJ_SUFFIX) $(ASFLAGS) $(AS_DASH_C_FLAG) $<
 else
-	$(AS) -o $@ $(ASFLAGS) $(AS_DASH_C_FLAG) $<
+	$(AS) -o $@ $(ASFLAGS) $(AS_DASH_C_FLAG) $(_VPATH_SRCS)
 endif
 
 %.$(OBJ_SUFFIX): %.S Makefile.in
@@ -1035,7 +1047,7 @@ endif
 ifdef _NO_AUTO_VARS
 	$(CCC) $(OUTOPTION)$@ $(CXXFLAGS) $(srcdir)/$*.cpp $(LDFLAGS)
 else
-	$(CCC) $(OUTOPTION)$@ $(CXXFLAGS) $< $(LDFLAGS)
+	$(CCC) $(OUTOPTION)$@ $(CXXFLAGS) $(_VPATH_SRCS) $(LDFLAGS)
 endif
 
 #
@@ -1047,7 +1059,7 @@ endif
 ifdef _NO_AUTO_VARS
 	$(ELOG) $(CCC) $(OUTOPTION)$@ -c $(COMPILE_CXXFLAGS) $(srcdir)/$*.cc
 else
-	$(ELOG) $(CCC) $(OUTOPTION)$@ -c $(COMPILE_CXXFLAGS) $<
+	$(ELOG) $(CCC) $(OUTOPTION)$@ -c $(COMPILE_CXXFLAGS) $(_VPATH_SRCS)
 endif
 
 %.$(OBJ_SUFFIX): %.cpp Makefile.in
@@ -1061,7 +1073,7 @@ else
 ifdef _NO_AUTO_VARS
 	$(ELOG) $(CCC) $(OUTOPTION)$@ -c $(COMPILE_CXXFLAGS) $(srcdir)/$*.cpp
 else
-	$(ELOG) $(CCC) $(OUTOPTION)$@ -c $(COMPILE_CXXFLAGS) $<
+	$(ELOG) $(CCC) $(OUTOPTION)$@ -c $(COMPILE_CXXFLAGS) $(_VPATH_SRCS)
 endif
 endif #STRICT_CPLUSPLUS_SUFFIX
 
@@ -1225,7 +1237,7 @@ $(XPIDL_GEN_DIR)/%.h: %.idl $(XPIDL_COMPILE) $(XPIDL_GEN_DIR)/.done
 ifdef _NO_AUTO_VARS
 	$(ELOG) $(XPIDL_COMPILE) -m header -w -I $(IDL_DIR) -I$(srcdir) -o $(XPIDL_GEN_DIR)/$* $(srcdir)/$*.idl
 else
-	$(ELOG) $(XPIDL_COMPILE) -m header -w -I $(IDL_DIR) -I$(srcdir) -o $(XPIDL_GEN_DIR)/$* $<
+	$(ELOG) $(XPIDL_COMPILE) -m header -w -I $(IDL_DIR) -I$(srcdir) -o $(XPIDL_GEN_DIR)/$* $(_VPATH_SRCS)
 endif
 	@if test -n "$(findstring $*.h, $(EXPORTS) $(SDK_HEADERS))"; \
 	  then echo "*** WARNING: file $*.h generated from $*.idl overrides $(srcdir)/$*.h"; else true; fi
@@ -1238,7 +1250,7 @@ $(XPIDL_GEN_DIR)/%.xpt: %.idl $(XPIDL_COMPILE)
 ifdef _NO_AUTO_VARS
 	$(ELOG) $(XPIDL_COMPILE) -m typelib -w -I $(IDL_DIR) -I$(srcdir) -o $(XPIDL_GEN_DIR)/$* $(srcdir)/$*.idl
 else
-	$(ELOG) $(XPIDL_COMPILE) -m typelib -w -I $(IDL_DIR) -I$(srcdir) -o $(XPIDL_GEN_DIR)/$* $<
+	$(ELOG) $(XPIDL_COMPILE) -m typelib -w -I $(IDL_DIR) -I$(srcdir) -o $(XPIDL_GEN_DIR)/$* $(_VPATH_SRCS)
 endif
 
 $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.xpt,$(XPIDLSRCS) $(SDK_XPIDLSRCS)) Makefile.in Makefile

@@ -63,6 +63,8 @@ FORCE_SHARED_LIB = 1
 
 LOCAL_INCLUDES	= -I.
 
+SRCS_IN_OBJDIR	= 1
+
 include $(topsrcdir)/config/rules.mk
 
 $(MIDL_GENERATED_FILES): done_gen
@@ -74,16 +76,7 @@ done_gen: ISimpleDOMDocument.idl
 	cp ISimpleDOMDocument_i.c ../../ISimpleDOMDocument_iid.h
 	touch $@
 
-copy_csrcs: done_gen
-	@for f in $(CSRCS); do \
-	    if test ! -f $(srcdir)/$$f; then \
-		cp $$f $(srcdir)/$$f; \
-	    fi ; \
-	done
-
-$(SRCDIR_CSRCS): copy_csrcs
-
-export:: done_gen copy_csrcs
+export:: done_gen
 
 libs::
 	regsvr32 /s $(DIST)/bin/$(SHARED_LIBRARY)
