@@ -373,6 +373,17 @@ nsXULCommandDispatcher::Focus(nsIDOMEvent* aEvent)
       GetParentWindowFromDocument(domDoc, getter_AddRefs(domWindow));
       if (domWindow && (domWindow != mCurrentWindow)) {
         SetFocusedWindow(domWindow);
+        if (mCurrentElement) {
+          // Make sure this element is in our window. If not, we
+          // should clear this field.
+          nsCOMPtr<nsIDOMDocument> ownerDoc;
+          mCurrentElement->GetOwnerDocument(getter_AddRefs(ownerDoc));
+          nsCOMPtr<nsIDOMDocument> windowDoc;
+          mCurrentWindow->GetDocument(getter_AddRefs(windowDoc));
+          if (ownerDoc == windowDoc.get())
+            mCurrentElement = nsnull;
+        }
+
         if (!mCurrentElement)
           UpdateCommands(nsAutoString("focus"));
       }
