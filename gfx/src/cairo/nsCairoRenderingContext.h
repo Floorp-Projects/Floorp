@@ -67,6 +67,7 @@ public:
 
     NS_IMETHOD Init(nsIDeviceContext* aContext, nsIWidget *aWidget);
     NS_IMETHOD Init(nsIDeviceContext* aContext, nsIDrawingSurface *aSurface);
+    NS_IMETHOD CommonInit(void);
     NS_IMETHOD Reset(void);
     NS_IMETHOD GetDeviceContext(nsIDeviceContext *& aDeviceContext);
     NS_IMETHOD LockDrawingSurface(PRInt32 aX, PRInt32 aY,
@@ -202,6 +203,8 @@ public:
 
     cairo_t *GetCairo() { return mCairo; }
 
+    nsTransform2D& CurrentTransform();
+
 protected:
     PRBool DoCairoDrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints);
     void DoCairoDrawEllipse (double aX, double aY, double aWidth, double aHeight);
@@ -225,6 +228,10 @@ protected:
     nsCOMPtr<nsCairoDrawingSurface> mDrawingSurface;
     nsCOMPtr<nsCairoDrawingSurface> mOffscreenSurface;
     nsCOMPtr<nsCairoDrawingSurface> mBackBufferSurface;
+
+    // for handing out to people
+    void UpdateTempTransformMatrix();
+    nsTransform2D mTempTransform;
 };
 
 #endif  // NSCAIRORENDERINGCONTEXT__H__

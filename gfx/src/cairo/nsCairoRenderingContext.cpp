@@ -101,7 +101,7 @@ nsCairoRenderingContext::Init(nsIDeviceContext* aContext, nsIWidget *aWidget)
 
     cairo_select_font (mCairo, "Sans", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
 
-    return NS_OK;
+    return (CommonInit());
 }
 
 NS_IMETHODIMP
@@ -124,6 +124,16 @@ nsCairoRenderingContext::Init(nsIDeviceContext* aContext, nsIDrawingSurface *aSu
 
     cairo_select_font (mCairo, "Sans", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
 
+    return (CommonInit());
+}
+
+NS_IMETHODIMP
+nsCairoRenderingContext::CommonInit(void)
+{
+    float app2dev;
+    app2dev = mDeviceContext->AppUnitsToDevUnits();
+    Scale(app2dev, app2dev);
+
     return NS_OK;
 }
 
@@ -138,7 +148,7 @@ nsCairoRenderingContext::Reset(void)
 
     mClipRegion = new nsCairoRegion();
 
-    return NS_OK;
+    return (CommonInit());
 }
 
 NS_IMETHODIMP
@@ -247,11 +257,17 @@ nsCairoRenderingContext::DoCairoClip()
 
     cairo_init_clip (mCairo);
 
+    float pixToTwip = mDeviceContext->DevUnitsToTwips();
+
     if (cplx == eRegionComplexity_rect) {
         PRInt32 x, y, w, h;
         mClipRegion->GetBoundingBox(&x, &y, &w, &h);
         cairo_new_path (mCairo);
-        cairo_rectangle (mCairo, double(x*15), double(y*15), double(w*15), double(h*15));
+        cairo_rectangle (mCairo,
+                         double(x * pixToTwip),
+                         double(y * pixToTwip),
+                         double(w * pixToTwip),
+                         double(h * pixToTwip));
         cairo_clip (mCairo);
     } else if (cplx == eRegionComplexity_complex) {
         nsRegionRectSet *rects = nsnull;
@@ -262,10 +278,10 @@ nsCairoRenderingContext::DoCairoClip()
         cairo_new_path (mCairo);
         for (PRUint32 i = 0; i < rects->mRectsLen; i++) {
             cairo_rectangle (mCairo,
-                             double (rects->mRects[i].x * 15),
-                             double (rects->mRects[i].y * 15),
-                             double (rects->mRects[i].width * 15),
-                             double (rects->mRects[i].height * 15));
+                             double (rects->mRects[i].x * pixToTwip),
+                             double (rects->mRects[i].y * pixToTwip),
+                             double (rects->mRects[i].width * pixToTwip),
+                             double (rects->mRects[i].height * pixToTwip));
         }
 
         cairo_clip (mCairo);
@@ -312,14 +328,16 @@ nsCairoRenderingContext::SetClipRegion(const nsIRegion& aRegion,
 NS_IMETHODIMP
 nsCairoRenderingContext::CopyClipRegion(nsIRegion &aRegion)
 {
-    NS_ERROR("not used anywhere");
+    aRegion.SetTo(*mClipRegion);
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsCairoRenderingContext::GetClipRegion(nsIRegion **aRegion)
 {
-    NS_ERROR("not used anywhere");
+    *aRegion = new nsCairoRegion();
+    (*aRegion)->SetTo(*mClipRegion);
+    NS_ADDREF(*aRegion);
     return NS_OK;
 }
 
@@ -420,6 +438,7 @@ nsCairoRenderingContext::GetColor(nscolor &aColor) const
 NS_IMETHODIMP
 nsCairoRenderingContext::Translate(nscoord aX, nscoord aY)
 {
+    fprintf (stderr, "++ Xlate: %g %g\n", (double)aX, (double)aY);
     cairo_translate (mCairo, (double) aX, (double) aY);
     return NS_OK;
 }
@@ -427,43 +446,59 @@ nsCairoRenderingContext::Translate(nscoord aX, nscoord aY)
 NS_IMETHODIMP
 nsCairoRenderingContext::Scale(float aSx, float aSy)
 {
+//    fprintf (stderr, "++ Scale: %g %g\n", (double)aSx, (double)aSy);
     cairo_scale (mCairo, (double) aSx, (double) aSy);
     return NS_OK;
+}
+
+void
+nsCairoRenderingContext::UpdateTempTransformMatrix()
+{
+    double a, b, c, d, tx, ty;
+    cairo_matrix_t *mat = cairo_matrix_create();
+    cairo_current_matrix (mCairo, mat);
+    cairo_matrix_get_affine (mat, &a, &b, &c, &d, &tx, &ty);
+    /*****
+     * Cairo matrix layout:   gfx matrix layout:
+     * | a  b  0 |            | m00 m01  0 |
+     * | c  d  0 |            | m10 m11  0 |
+     * | tx ty 1 |            | m20 m21  1 |
+     *****/
+
+    cairo_matrix_destroy (mat);
+
+    if (tx == ty == 0.0 &&
+        b == c == 0.0)
+    {
+        mTempTransform.SetToScale (a, d);
+    } else if (b == c == 0.0 &&
+               a == d == 1.0)
+    {
+        mTempTransform.SetToTranslate (tx, ty);
+    } else {
+        /* XXX we need to add api on nsTransform2D to set all these values since they are private */
+        mTempTransform.m00 = a;
+        mTempTransform.m01 = b;
+        mTempTransform.m10 = c;
+        mTempTransform.m11 = d;
+        mTempTransform.m20 = tx;
+        mTempTransform.m21 = ty;
+        mTempTransform.type = MG_2DGENERAL;
+    }
+}
+
+nsTransform2D&
+nsCairoRenderingContext::CurrentTransform()
+{
+    UpdateTempTransformMatrix();
+    return mTempTransform;
 }
 
 NS_IMETHODIMP
 nsCairoRenderingContext::GetCurrentTransform(nsTransform2D *&aTransform)
 {
-    printf("getcurrenttrasnform()\n");
-    double a, b, c, d, tx, ty;
-    cairo_matrix_t *mat = cairo_matrix_create();
-    cairo_current_matrix (mCairo, mat);
-    cairo_matrix_get_affine (mat, &a, &b, &c, &d, &tx, &ty);
-    cairo_matrix_destroy (mat);
-
-    aTransform = new nsTransform2D;
-
-    if (tx == ty == 0.0 &&
-        b == c == 0.0)
-    {
-        aTransform->SetToScale (a, d);
-    } else if (b == c == 0.0 &&
-               a == d == 1.0)
-    {
-        aTransform->SetToTranslate (tx, ty);
-    } else {
-        aTransform->Set(a, b, c, d, tx, ty, MG_2DGENERAL);
-        /* XXX we need to add api on nsTransform2D to set all these values since they are private
-        aTransform->m00 = a;
-        aTransform->m01 = b;
-        aTransform->m10 = c;
-        aTransform->m11 = d;
-        aTransform->m20 = tx;
-        aTransform->m21 = ty;
-        aTransform->type = MG_2DGENERAL;
-        */
-    }
-
+    UpdateTempTransformMatrix();
+    aTransform = &mTempTransform;
     return NS_OK;
 }
 
@@ -757,11 +792,15 @@ nsCairoRenderingContext::GetBackbuffer(const nsRect &aRequestedSize,
                                        nsIDrawingSurface* &aBackbuffer)
 {
     if (!mBackBufferSurface) {
+#if 1
         nsIDeviceContext *dc = mDeviceContext.get();
         mBackBufferSurface = new nsCairoDrawingSurface ();
         mBackBufferSurface->Init (NS_STATIC_CAST(nsCairoDeviceContext*, dc),
                                   aMaxSize.width, aMaxSize.height,
                                   PR_FALSE);
+#else
+        mBackBufferSurface = mDrawingSurface;
+#endif
     }
 
     aBackbuffer = mBackBufferSurface;

@@ -1532,8 +1532,7 @@ nsFontMetricsXft::DrawStringCallback(const FcChar32 *aString, PRUint32 aLen,
             nscoord y = data->y;
 
             // convert this into device coordinates
-            // XXX pavlov ugh...
-            //data->context->GetTranMatrix()->TransformCoord(&x, &y);
+            data->context->CurrentTransform().TransformCoord(&x, &y);
 
             DrawUnknownGlyph(ch, x, y + mMiniFontYOffset, &data->color,
                              data->draw);
@@ -2005,8 +2004,7 @@ nsFontXft::DrawStringSpec(FcChar32 *aString, PRUint32 aLen, void *aData)
         nscoord x = data->x + data->xOffset;               
         nscoord y = data->y;                        
         /* Convert to device coordinate. */   
-        // XXX pavlov ugh..
-        //data->context->GetTranMatrix()->TransformCoord(&x, &y);
+        data->context->CurrentTransform().TransformCoord(&x, &y);
                                                                  
         /* position in X is the location offset in the string 
            plus whatever offset is required for the spacing   
