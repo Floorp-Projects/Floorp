@@ -2245,10 +2245,14 @@ NS_IMETHODIMP nsHTMLEditor::DeleteSelection(nsIEditor::EDirection aAction)
   PRBool cancel, handled;
   nsresult result;
 
+  // delete placeholder txns merge.
+  nsAutoPlaceHolderBatch batch(this, gDeleteTxnName);
+  nsAutoRules beginRulesSniffing(this, kOpDeleteSelection, aAction);
+
   // If it's one of these modes,
   // we have to extend the selection first.
-  // This can't happen inside selection batching --
-  // selection refuses to move if batching is on.
+  // This needs to happen inside selection batching,
+  // otherwise the deleted text is autocopied to the clipboard.
   if (aAction == eNextWord || aAction == ePreviousWord
       || aAction == eToBeginningOfLine || aAction == eToEndOfLine)
   {
@@ -2291,10 +2295,6 @@ NS_IMETHODIMP nsHTMLEditor::DeleteSelection(nsIEditor::EDirection aAction)
       return result;
     }
   }
-
-  // delete placeholder txns merge.
-  nsAutoPlaceHolderBatch batch(this, gDeleteTxnName);
-  nsAutoRules beginRulesSniffing(this, kOpDeleteSelection, aAction);
 
   // pre-process
   result = GetSelection(getter_AddRefs(selection));
