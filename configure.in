@@ -433,6 +433,9 @@ alpha*-*-osf*)
     ;;
 
 *-qnx*) 
+    dnl Solves the problems the QNX compiler has with nsCOMPtr.h.
+    AC_DEFINE(NSCAP_DISABLE_TEST_DONTQUERY_CASES)
+    AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
     if test "$no_x" = "yes"; then
 	MOZ_WIDGET_TOOLKIT='photon'
 	TK_LIBS='-lphoton -lphrender'
@@ -1517,7 +1520,7 @@ AC_CACHE_CHECK(whether C++ requires implementation of unused methods,
 if test "$ac_cv_cpp_unused_required" = yes ; then
    AC_DEFINE(NEED_CPP_UNUSED_IMPLEMENTATIONS)
 fi
-    
+
 CC=$_SAVE_CC
 ac_ext=c
 
@@ -1544,7 +1547,7 @@ if test "$ac_cv_i18n_lc_messages" = yes; then
    AC_DEFINE(HAVE_I18N_LC_MESSAGES)
 fi 	
 
-  
+
 dnl Mozilla specific options
 dnl ========================================================
 dnl The macros used for command line options
@@ -1670,7 +1673,7 @@ MOZ_ARG_DISABLE_BOOL(single-signon,
 if test "$ClientWallet"
 then
   AC_DEFINE(ClientWallet)
-  
+
   # I guess one depends on the other
   SingleSignon=1
 fi
