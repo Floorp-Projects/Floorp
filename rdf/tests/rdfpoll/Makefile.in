@@ -26,12 +26,12 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-PROGRAM		= rdfpoll
+PROGRAM		= rdfpoll$(BIN_SUFFIX)
 CPPSRCS		= rdfpoll.cpp
 
 LIBS		= \
 		$(MOZ_TIMER_LIBS) \
-		-lmozjs \
+		$(MOZ_JS_LIBS) \
 		$(XPCOM_LIBS) \
 		$(TK_LIBS) \
 		$(LOST_SYM_LIBS) \

@@ -27,8 +27,11 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= testdynamic
+SHORT_LIBNAME	= tdynamic
 
 CPPSRCS		= TestDynamic.cpp
+
+include $(topsrcdir)/config/config.mk
 
 LOCAL_INCLUDES	= -I$(srcdir)/.. -I$(srcdir)/../../public
 

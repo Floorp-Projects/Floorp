@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 CPPSRCS		= StringBundleTest.cpp
 
-SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=)
+SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 
 EXPORT_RESOURCE	= \
 		$(srcdir)/strres.properties \
@@ -39,7 +39,7 @@ EXPORT_RESOURCE	= \
 		$(NULL)
 
 LIBS		= \
-		-lmozjs \
+		$(MOZ_JS_LIBS) \
 		$(XPCOM_LIBS) \
 		$(MOZ_TIMER_LIBS) \
 		$(NSPR_LIBS) \

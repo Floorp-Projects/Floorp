@@ -28,6 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 IS_COMPONENT	= 1
 LIBRARY_NAME	= MyService
+SHORT_LIBNAME	= MyServce
 
 CPPSRCS		= MyService.cpp
 

@@ -26,7 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-PROGRAM		= TestLineBreak
+PROGRAM		= TestLineBreak$(BIN_SUFFIX)
 
 CPPSRCS		= TestLineBreak.cpp
 

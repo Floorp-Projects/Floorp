@@ -27,11 +27,13 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= dbm
-PROGRAM		= lots
+PROGRAM		= lots$(BIN_SUFFIX)
 
 CSRCS		= lots.c
 
-LIBS		= -lmozdbm_s
+EXTRA_DSO_LIBS	= mozdbm_s
+
+LIBS		= $(EXTRA_DSO_LIBS) 
 
 include $(topsrcdir)/config/rules.mk
 
