@@ -344,6 +344,77 @@ static nsresult drawThemeButton(ThemeButtonKind kind, Arguments& args, nsIInputS
     return rv;
 }
 
+static nsresult drawThemeMenuItem(Arguments& args, nsIInputStream **result, PRInt32 *length)
+{
+	int width = getIntArgument(args, "width", 60);
+    int height = getIntArgument(args, "height", 20);
+    bool isActive = getBoolArgument(args, "active", true);
+    bool isSelected = getBoolArgument(args, "selected", false);
+	bool hasSubMenu  = getBoolArgument(args, "submenu", false);
+	bool isUpArrow  = getBoolArgument(args, "uparrow", false);
+	bool isDownArrow  = getBoolArgument(args, "downarrow", false);
+	bool isAtTop  = getBoolArgument(args, "attop", false);
+	bool isAtBottom  = getBoolArgument(args, "atbottom", false);
+	bool isInSubMenu  = getBoolArgument(args, "insubmenu", false);
+	bool isInPopup  = getBoolArgument(args, "inpopup", false);
+	bool hasIcon  = getBoolArgument(args, "icon", false);
+
+		
+	nsresult rv = NS_ERROR_OUT_OF_MEMORY;
+    OSStatus status;
+
+	ThemeMenuState state = (isActive ? (isSelected? kThemeMenuSelected : kThemeMenuActive) : kThemeMenuDisabled);
+	ThemeMenuItemType type = (hasSubMenu ? kThemeMenuItemHierarchical : kThemeMenuItemPlain);
+	type = (isUpArrow ? kThemeMenuItemScrollUpArrow : type);
+	type = (isDownArrow ? kThemeMenuItemScrollDownArrow : type);
+	
+	if (isAtTop) {
+		type += kThemeMenuItemAtTop;
+	} else if (isAtBottom) {
+		type += kThemeMenuItemAtBottom;
+	}
+	
+	if (isInSubMenu) {
+		type += kThemeMenuItemHierBackground;
+	}
+	
+	if (isInPopup) {
+		type += kThemeMenuItemPopUpBackground;
+	}
+
+	if (hasIcon) {
+		if (type != kThemeMenuItemScrollUpArrow && type != kThemeMenuItemScrollDownArrow) {
+			type += kThemeMenuItemHasIcon;
+		}
+	}
+	
+	PRInt16 extraHeight, extraWidth;
+	status = ::GetThemeMenuItemExtra(type, &extraHeight, &extraWidth);
+	if (status == noErr) {
+		width += extraWidth;
+		height += extraHeight;
+	}
+	Rect itemBounds = { height / 2, 0, 3 * height / 2 , width };
+	Rect menuBounds = { 0, 0, 2*height, width };
+	TempGWorld world(menuBounds);
+    if (world.valid()) {
+        // initialize the GWorld with all black, alpha=0xFF.
+        world.fill(0xFF000000);
+        
+        status = ::DrawThemeMenuItem(&menuBounds, &itemBounds, 0, 2*height, state, type,
+                                   NULL, NULL);
+
+        // now, for all pixels that aren't 0xFF000000, turn on the alpha channel,
+        // otherwise turn it off on the pixels that weren't touched.
+        world.xorFill(0xFF000000);
+        
+        // now, encode the image as a 'PNGf' image, and return the encoded image
+        // as an nsIInputStream.
+        rv = encodeGWorld(world, 'PNGf', result, length);
+    }
+    return rv;
+}
+
 static nsresult drawThemeScrollbarThumb(TempGWorld& world, ThemeTrackDrawInfo& drawInfo,
                                         nsIInputStream **result, PRInt32 *length)
 {
@@ -541,6 +612,8 @@ nsThemeHandler::NewChannel(nsIURI* url, nsIChannel* *result)
     ButtonMap::const_iterator ba = gButtonActions.find(action);
     if (ba != gButtonActions.end()) {
         rv = drawThemeButton(ba->second, args, getter_AddRefs(input), &contentLength);
+    } else if (action == "menuitem") {
+    	rv = drawThemeMenuItem(args,  getter_AddRefs(input), &contentLength);
     } else if (action == "scrollbar") {
         rv = drawThemeScrollbar(args, getter_AddRefs(input), &contentLength);
     } else {
