@@ -1351,28 +1351,36 @@ RDFGenericBuilderImpl::OnSetAttribute(nsIDOMElement* aElement, const nsString& a
         return rv;
     }
 
-    // Unassert the old value, if there was one.
-    nsAutoString oldValue;
-    if (NS_CONTENT_ATTR_HAS_VALUE == element->GetAttribute(attrNameSpaceID, attrNameAtom, oldValue)) {
-        nsCOMPtr<nsIRDFLiteral> value;
-        if (NS_FAILED(rv = gRDFService->GetLiteral(oldValue.GetUnicode(), getter_AddRefs(value)))) {
-            NS_ERROR("unable to construct literal");
-            return rv;
-        }
+    // Get the old value, if there was one.
+    nsAutoString oldValueStr;
+    rv = element->GetAttribute(attrNameSpaceID, attrNameAtom, oldValueStr);
+    if (NS_FAILED(rv)) return rv;
 
-        rv = mDB->Unassert(resource, property, value);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to unassert old property value");
+    nsCOMPtr<nsIRDFLiteral> oldvalue;
+    if (NS_CONTENT_ATTR_HAS_VALUE == rv) {
+        rv = gRDFService->GetLiteral(oldValueStr.GetUnicode(), getter_AddRefs(oldvalue));
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to construct literal");
+        if (NS_FAILED(rv)) return rv;
     }
 
-    // Assert the new value
-    {
-        nsCOMPtr<nsIRDFLiteral> value;
-        if (NS_FAILED(rv = gRDFService->GetLiteral(aValue.GetUnicode(), getter_AddRefs(value)))) {
-            NS_ERROR("unable to construct literal");
-            return rv;
-        }
+    // Get the new value
+    nsCOMPtr<nsIRDFLiteral> newvalue;
+    rv = gRDFService->GetLiteral(aValue.GetUnicode(), getter_AddRefs(newvalue));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to construct literal");
+    if (NS_FAILED(rv)) return rv;
 
-        rv = mDB->Assert(resource, property, value, PR_TRUE);
+    if (oldvalue) {
+        rv = mDB->Change(resource, property, oldvalue, newvalue);
+        if (NS_FAILED(rv)) return rv;
+    }
+    else {
+        rv = mDB->Assert(resource, property, newvalue, PR_TRUE);
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    if (rv == NS_RDF_ASSERTION_REJECTED) {
+        // Okay, just force the attribute to be set.
+        rv = element->SetAttribute(attrNameSpaceID, attrNameAtom, aValue, PR_TRUE);
         if (NS_FAILED(rv)) return rv;
     }
 
