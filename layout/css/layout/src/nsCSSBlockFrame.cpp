@@ -628,11 +628,13 @@ void nsCSSBlockReflowState::BlockBandData::ComputeAvailSpaceRect()
     // The trapezoid is occupied. That means there's no available space
     trapezoid->GetRect(availSpace);
 
-    // XXX Handle the case of multiple frames
-    trapezoid->frame->GetStyleData(eStyleStruct_Display,
-                                   (const nsStyleStruct*&)display);
-    if (NS_STYLE_FLOAT_LEFT == display->mFloats) {
-      availSpace.x = availSpace.XMost();
+    // XXX Better handle the case of multiple frames
+    if (nsBandTrapezoid::Occupied == trapezoid->state) {
+      trapezoid->frame->GetStyleData(eStyleStruct_Display,
+                                     (const nsStyleStruct*&)display);
+      if (NS_STYLE_FLOAT_LEFT == display->mFloats) {
+        availSpace.x = availSpace.XMost();
+      }
     }
     availSpace.width = 0;
   }
