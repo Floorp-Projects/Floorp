@@ -223,7 +223,7 @@
 <!ENTITY fontvarwidth.accesskey "v">
 <!ENTITY defaultFixedWidthCmd.label "Fixed Width">
 <!ENTITY fontfixedwidth.accesskey "x">
-<!ENTITY arialHelveticaFont.label "Arial, Helv.">
+<!ENTITY arialHelveticaFont.label "Arial,Helvetica">
 <!ENTITY fonthelvetica.accesskey "l">
 <!ENTITY timesFont.label "Times">
 <!ENTITY fonttimes.accesskey "t">
@@ -327,13 +327,13 @@
 <!ENTITY paragraphpreformat.accesskey "p">
 <!ENTITY paragraphListCmd.label "List item">
 <!ENTITY paragraphlist.accesskey "l">
-<!ENTITY paragraphDfnTermCmd.label "Def. term">
+<!ENTITY paragraphDfnTermCmd.label "Term">
 <!ENTITY paragraphterm.accesskey "t">
-<!ENTITY paragraphDfnDescCmd.label "Def. description">
+<!ENTITY paragraphDfnDescCmd.label "Description">
 <!ENTITY paragraphdesc.accesskey "d">
 
 <!-- List menu items -->
-<!ENTITY listProps.label "List...">
+<!ENTITY listProps.label "List Properties...">
 <!ENTITY formatlistmenu.accesskey "l">
 <!ENTITY listNoneCmd.label "None">
 <!ENTITY listnone.accesskey "o">
@@ -434,8 +434,8 @@
 <!ENTITY hruleToolbarCmd.label "H.Line">
 <!ENTITY tableToolbarCmd.label "Table">
 <!ENTITY spellToolbarCmd.label "Spell">
-
 <!ENTITY toolspellcheck.accesskey "s">
+<!ENTITY textColorCaption.label "Text Color">
 
 <!-- editor toolbar -->
 

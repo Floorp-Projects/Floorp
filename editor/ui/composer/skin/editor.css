@@ -75,26 +75,28 @@ toolbar#FormatToolbar titledbutton[class~=format]:active {
 }
 
 toolbar#FormatToolbar titledbutton[class~=TextAttribute] {
-	/* Make these narrower */
+	/* Make these buttons narrower */
   padding: 2px 0px;
-  min-width: 18px; 
-  width: 18px; 
-  /*height: 16px; */
-  /* padding: 2px 0px 0px 0px;*/
+  min-width: 16px; 
+  width: 16px; 
   font-size: 19px; 
-  font-family: times, serif, sans-serif;
+  font-family: arial,helvetica,sans-serif;
+  /* font-family: times, serif, sans-serif; */
 }
 
 toolbar#FormatToolbar titledbutton#boldButton {
+  list-style-image:url(chrome://editor/skin/images/bold.gif); 
   font-weight: bold; 
 }
 
 toolbar#FormatToolbar titledbutton#italicButton {
-  font-weight: bold; 
+  list-style-image:url(chrome://editor/skin/images/italic.gif); 
+  /* font-weight: bold; */
   font-style:  italic;
 }
 
 toolbar#FormatToolbar titledbutton#underlineButton {
+  list-style-image:url(chrome://editor/skin/images/underline.gif); 
   font-weight: normal; 
   text-decoration: underline;
 }
@@ -104,16 +106,13 @@ div.toolbar-middle {
   vertical-align: middle;
 }
 select.toolbar {
-  /* I'd prefer to have this centered */
-  margin-top:   3px;
-  margin-left:  3px;
-  margin-right: 3px;
   /* This is ignored! */
-	font-size: smaller;
+	/*font-size: smaller;*/
   max-width: 20em;
+  margin: 2px 3px 0px 3px;
 }
 
-box#DisplayModeBar titledbutton[class~=DisplayModeButton] {
+box#DisplayModeBar titledbutton.DisplayModeButton {
   border: 1px solid transparent;
   border-left: 1px solid darkgray;
   padding: 0px 4px 0px 4px;
@@ -123,7 +122,7 @@ box#DisplayModeBar titledbutton[class~=DisplayModeButton] {
 	background-color: #003366;
 }
 
-box#DisplayModeBar titledbutton[class~=DisplayModeButton]:hover {
+box#DisplayModeBar titledbutton.DisplayModeButton:hover {
   border:  1px solid white;
   /* Alternate hover style: change background
   color: white;
@@ -131,12 +130,11 @@ box#DisplayModeBar titledbutton[class~=DisplayModeButton]:hover {
   */
 }
 
-box#DisplayModeBar titledbutton[class~=DisplayModeButton]:active {
-  color: black;
-  background-color: #33FFFF;
+box#DisplayModeBar titledbutton.DisplayModeButton:active {
+  padding: 1px 5px -1px 3px;
 }
 
-box#DisplayModeBar titledbutton[class~=DisplayModeButton][selected="1"] {
+box#DisplayModeBar titledbutton.DisplayModeButton[selected="1"] {
   border:  1px outset white;
   padding: 0px 4px 0px 4px;
   margin: -2px 0px 0px 0px;
@@ -145,7 +143,7 @@ box#DisplayModeBar titledbutton[class~=DisplayModeButton][selected="1"] {
 	background-color: #CCCCCC;
 }
 
-box#DisplayModeBar titledbutton[class~=DisplayModeButton][selected="1"]:hover {
+box#DisplayModeBar titledbutton.DisplayModeButton[selected="1"]:hover {
   border:  1px solid white;
   /* Alternate hover style: change background
   background-color: #66AAAA;
@@ -153,9 +151,8 @@ box#DisplayModeBar titledbutton[class~=DisplayModeButton][selected="1"]:hover {
   */
 }
 
-box#DisplayModeBar titledbutton[class~=DisplayModeButton][selected="1"]:active {
-  background-color: #33FFFF;
-  color: black;
+box#DisplayModeBar titledbutton.DisplayModeButton[selected="1"]:active {
+  padding: 1px 5px -1px 3px;
 }
 
 box#DisplayModeBar div.VerticalSeparator { 
@@ -201,23 +198,51 @@ titledbutton#findButton {
 	list-style-image:url("chrome://editor/skin/images/find.gif");
 }
 titledbutton#linkButton {
-	list-style-image:url("chrome://editor/skin/images/link.gif");
+	list-style-image:url("chrome://editor/skin/images/link-white.gif");
 }
 titledbutton#imageButton {
-	list-style-image:url("chrome://editor/skin/images/image.gif");
+	list-style-image:url("chrome://editor/skin/images/image-white.gif");
 }
 titledbutton#namedAnchorButton {
-	list-style-image:url("chrome://editor/skin/images/anchor.gif");
+	list-style-image:url("chrome://editor/skin/images/anchor-white.gif");
 }
 titledbutton#hlineButton {
-	list-style-image:url("chrome://editor/skin/images/hline.gif");
+	list-style-image:url("chrome://editor/skin/images/hline-white.gif");
 }
 titledbutton#tableButton {
-	list-style-image:url("chrome://editor/skin/images/table.gif");
+	list-style-image:url("chrome://editor/skin/images/table-white.gif");
 }
 titledbutton#spellingButton {
 	list-style-image:url("chrome://editor/skin/images/spell.gif");
 }
+
+titledbutton#DecreaseFontSizeButton {
+	list-style-image:url("chrome://editor/skin/images/dec-font-size.gif");
+  border: 1px solid transparent;
+  margin:  1px 0px 1px 1px;
+  padding: 2px 1px 2px 2px;
+}
+titledbutton#DecreaseFontSizeButton:hover {
+  border: 1px solid white;
+}
+titledbutton#DecreaseFontSizeButton:active {
+  border: 1px inset white;
+  padding: 3px 0px 1px 3px;
+}
+titledbutton#IncreaseFontSizeButton {
+	list-style-image:url("chrome://editor/skin/images/inc-font-size.gif");
+  border: 1px solid transparent;
+  margin: 1px 1px 1px 0px;
+  padding: 2px 2px 2px 0px;
+}
+titledbutton#IncreaseFontSizeButton:hover {
+  border: 1px solid white;
+}
+titledbutton#IncreaseFontSizeButton:active {
+  border: 1px inset white;
+  padding: 3px 1px 1px 1px;
+}
+
 titledbutton#ulButton {
 	list-style-image:url("chrome://editor/skin/images/bullets.gif");
 }
@@ -242,7 +267,6 @@ titledbutton#TextColorPopupButton {
   padding: 0px;
 }
 titledbutton#TextColorPopupButton:hover {
-	list-style-image:url("chrome://editor/skin/images/text-color.gif");
   border: 1px solid white;
 }
 
@@ -253,8 +277,48 @@ titledbutton#BackColorPopupButton {
   padding: 0px;
 }
 titledbutton#BackColorPopupButton:hover {
-	list-style-image:url("chrome://editor/skin/images/backcolor.gif");
   border: 1px solid white;
+}
+
+box#ColorButtons {
+  border: 1px solid transparent;
+  margin:  1px;
+  padding: 0px;
+}
+
+/* Doesn't work! */
+box#ColorButtons:hover {
+  border: 1px solid white;
+}
+div.color-caption {
+  border: 1px inset white;
+}
+
+titledbutton#TextColorPopupButton1 {
+	list-style-image:url("chrome://editor/skin/images/text-color1.gif");
+  border: 0px;
+  margin: 2px 0px 0px 2px;
+  padding: 0px;
+  /* TEMP: Set color here. TODO: Set color from page */
+  background-color: #AA0000;
+}
+titledbutton#BackColorPopupButton1 {
+	list-style-image:url("chrome://editor/skin/images/back-color1.gif");
+  border: 0px;
+  /* Top margin important to lower the button */
+  margin: 8px 2px 2px 0px;
+  padding: 0px;
+  /* TEMP: Set color here. TODO: Set color from page */
+  background-color: yellow;
+}
+titledbutton#BackColorPopupButton2 {
+	list-style-image:url("chrome://editor/skin/images/back-color2.gif");
+  border: 0px;
+  /* Left margin important to "indent" the button */
+  margin: 0px 0px 2px 8px;
+  padding: 0px;
+  /* TEMP: Set color here. TODO: Set color from page */
+  background-color: yellow;
 }
 
 titledbutton#text-align-left {

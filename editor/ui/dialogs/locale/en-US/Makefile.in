@@ -33,6 +33,7 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/EditorInsertTable.dtd \
 		$(srcdir)/EditorLinkProperties.dtd \
 		$(srcdir)/EditorListProperties.dtd \
+		$(srcdir)/EditorPageProperties.dtd \
 		$(srcdir)/EditorPersonalDictionary.dtd \
 		$(srcdir)/EditorSpellCheck.dtd \
 		$(srcdir)/EditorTableProperties.dtd \

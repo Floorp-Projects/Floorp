@@ -28,6 +28,8 @@ var SeeMore       = true;
 var wasEnableAll  = false;
 var oldSourceInt  = 0;
 var imageElement;
+var canRemoveImageMap = false;
+var imageMapDisabled = false;
 
 // dialog initialization code
 
@@ -55,6 +57,11 @@ function Startup()
   dialog.imagetbInput      = document.getElementById( "imagetopbottomInput" );
   dialog.border            = document.getElementById( "border" );
   dialog.alignTypeSelect   = document.getElementById( "alignTypeSelect" );
+  dialog.editImageMap      = document.getElementById( "editImageMap" );
+  dialog.removeImageMap    = document.getElementById( "removeImageMap" );
+  
+  // Another version of button just for this dialog -- on same line as "More Properties"
+  dialog.AdvancedEditButton2 = document.getElementById( "AdvancedEditButton2" );
 
   // Set SeeMore bool to the OPPOSITE of the current state,
   //   which is automatically saved by using the 'persist="more"' 
@@ -169,11 +176,8 @@ function chooseFile()
   fileName = editorShell.GetLocalFileURL(window, "img");
   if (fileName && fileName != "") {
     dialog.srcInput.value = fileName;
-//  imageTypeExtension  = checkForImage();
-    doValueChanged();
+    doOverallEnabling();
   }
-  
-  checkForImage( "srcInput" );
   
   // Put focus into the input field
   dialog.srcInput.focus();
@@ -184,6 +188,8 @@ function onMoreFewer()
   if (SeeMore)
   {
     dialog.MoreSection.setAttribute("style","display: none");
+    // Show the "Advanced Edit" button on same line as "More Properties"
+    dialog.AdvancedEditButton2.setAttribute("style","display: inherit");
     window.sizeToContent();
     dialog.MoreFewerButton.setAttribute("more","0");
     dialog.MoreFewerButton.setAttribute("value",GetString("MoreProperties"));
@@ -192,34 +198,21 @@ function onMoreFewer()
   else
   {
     dialog.MoreSection.setAttribute("style","display: inherit");
+    // Hide the "Advanced Edit" next to "More..." Use button at bottom right of dialog
+    dialog.AdvancedEditButton2.setAttribute("style","display: none");
     window.sizeToContent();
+
     dialog.MoreFewerButton.setAttribute("more","1");
     dialog.MoreFewerButton.setAttribute("value",GetString("FewerProperties"));
     SeeMore = true;
   }
 }
 
-function doValueChanged()
-{
-    doOverallEnabling();
-}
-
-function OnChangeSrc()
-{
-  doValueChanged();
-}
-
 function doDimensionEnabling( doEnable )
 {
-  // Make associated text labels look disabled or not
-  SetElementEnabledByID( "originalsizeLabel", doEnable );
-  SetElementEnabledByID( "customsizeLabel", doEnable );
-  SetElementEnabledByID( "dimensionsLabel", doEnable );
+dump("doDimensionEnabling called\n");
 
-  SetElementEnabledByID( "originalsizeRadio", doEnable );
-  SetElementEnabledByID( "customsizeRadio", doEnable );
-
-  // Rest are enabled only if "Custom" is checked
+  // Enabled only if "Custom" is checked
   var enable = (doEnable && dialog.customsizeRadio.checked);
 
   SetElementEnabledByID( "widthInput", enable );
@@ -237,6 +230,8 @@ function doDimensionEnabling( doEnable )
 
 function doOverallEnabling()
 {
+dump("doOverallEnabling called\n");
+
   var imageTypeExtension = checkForImage();
   var canEnableAll       = imageTypeExtension != 0;
   if ( wasEnableAll == canEnableAll )
@@ -248,6 +243,9 @@ function doOverallEnabling()
   SetElementEnabledByID( "altTextLabel", canEnableAll );
 
   // Do widgets for sizing
+  SetElementEnabledByID( "originalsizeLabel", canEnableAll );
+  SetElementEnabledByID( "customsizeLabel", canEnableAll );
+  SetElementEnabledByID( "dimensionsLabel", canEnableAll );
   doDimensionEnabling( canEnableAll );
   
   SetElementEnabledByID("alignLabel", canEnableAll );
@@ -267,7 +265,13 @@ function doOverallEnabling()
   SetElementEnabledByID( "borderLabel", canEnableAll );
   SetElementEnabledByID( "bordertypeLabel", canEnableAll );
 
-  SetElementEnabledByID( "AdvancedEdit", canEnableAll );
+  // This shouldn't find button, but it does!
+  SetElementEnabledByID( "AdvancedEditButton2", canEnableAll );
+  SetElementEnabledByID( "AdvancedEditButton3", canEnableAll );
+
+  SetElementEnabledByID( "editImageMap", canEnableAll );
+  // TODO: ADD APPROPRIATE DISABLING BASED ON EXISTENCE OF IMAGE MAP
+  SetElementEnabledByID( "removeImageMap", canEnableAll && canRemoveImageMap);
 }
 
 // an API to validate and image by sniffing out the extension
@@ -337,6 +341,16 @@ function constrainProportions( srcID, destID )
     destElement.value = Math.round( srcElement.value * destElement.value / oldSourceInt );
   
   oldSourceInt = srcElement.value;
+}
+
+function editImageMap()
+{
+  dump("editImageMap -- WRITE ME!\n");
+}
+
+function removeImageMap()
+{
+  dump("removeImageMap -- WRITE ME!\n");
 }
 
 // Get data from widgets, validate, and set for the global element

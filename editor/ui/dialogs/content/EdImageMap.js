@@ -33,6 +33,9 @@ function Startup(){
   if (!InitEditorShell())
     return;
   dump("EditorShell found for image map dialog\n");
+
+  doSetOKCancel(onOK, null);
+
   initDialog();
 }
 
@@ -70,11 +73,6 @@ function initDialog(){
   //Recreate Image Map if it exists
   if (imageElement.getAttribute("usemap") != "")
     recreateMap();
-}
-
-function exitImageMap(){
-  dump("exit called");
-  window.close();
 }
 
 function hideToolbar(){
@@ -132,7 +130,7 @@ function recreateMap(){
   imageElement.ownerDocument.body.removeChild(mapCollection[0]);
 }
 
-function finishMap(){
+function onOK(){
   spots = frameDoc.getElementsByName("hotspot");
   var len = spots.length;
   createMap();

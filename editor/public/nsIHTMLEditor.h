@@ -131,6 +131,19 @@ public:
    */
   NS_IMETHOD RemoveInlineProperty(nsIAtom *aProperty, const nsString *aAttribute)=0;
 
+  /**
+   *  Increase font size for text in selection by 1 HTML unit
+   *  All existing text is scanned for existing <FONT SIZE> attributes
+   *    so they will be incremented instead of inserting new <FONT> tag
+   */
+  NS_IMETHOD IncreaseFontSize()=0;
+
+  /**
+   *  Decrease font size for text in selection by 1 HTML unit
+   *  All existing text is scanned for existing <FONT SIZE> attributes
+   *    so they will be decreased instead of inserting new <FONT> tag
+   */
+  NS_IMETHOD DecreaseFontSize()=0;
 
   /**
    * GetTypingState() gets the state for typing (which may differ from that of

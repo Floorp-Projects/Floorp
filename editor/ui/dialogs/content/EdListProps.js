@@ -57,7 +57,7 @@ function Startup()
   if (ListElement)
     globalElement = ListElement.cloneNode(false);
 
-  dump("List and global elements: "+ListElement+globalElement+"\n");
+  //dump("List and global elements: "+ListElement+globalElement+"\n");
 
   InitDialog();
 
@@ -80,7 +80,7 @@ function BuildBulletStyleList()
   var label = "";
   var selectedIndex = -1;
 
-  dump("List Type: "+ListType+" globalElement: "+globalElement+"\n");
+  //dump("List Type: "+ListType+" globalElement: "+globalElement+"\n");
 
   if (ListType == "ul")
   {
@@ -138,7 +138,7 @@ function BuildBulletStyleList()
     BulletStyleLabel.value = label;
     if (BulletStyleLabel.hasChildNodes())
     {
-      dump("BulletStyleLabel.firstChild: "+BulletStyleLabel.firstChild+"\n");
+      //dump("BulletStyleLabel.firstChild: "+BulletStyleLabel.firstChild+"\n");
       BulletStyleLabel.removeChild(BulletStyleLabel.firstChild);
     }
     
@@ -190,7 +190,7 @@ function ValidateData()
 {
   var type = 0;
   // globalElement should already be of the correct type 
-  dump("Global List element="+globalElement+"  should be type: "+ListType+"\n");
+  //dump("Global List element="+globalElement+"  should be type: "+ListType+"\n");
 
   if (globalElement)
   {

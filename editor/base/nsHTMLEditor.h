@@ -85,6 +85,8 @@ public:
                              PRBool &aFirst, PRBool &aAny, PRBool &aAll);
 
   NS_IMETHOD RemoveInlineProperty(nsIAtom *aProperty, const nsString *aAttribute);
+  NS_IMETHOD IncreaseFontSize();
+  NS_IMETHOD DecreaseFontSize();
   NS_IMETHOD GetTypingState(nsIAtom *aProperty, PRBool &aSet);
   NS_IMETHOD GetTypingStateValue(nsIAtom *aProperty, nsString &aValue);
 

@@ -153,7 +153,7 @@ nsInterfaceState::ForceUpdate()
   // udpate the font face
   rv = UpdateFontFace("Editor:Font:Face", "font", mFontString);
   
-  // TODO: FINISH FONT FACE AND ADD FONT SIZE ("Editor:Font:Size", "size", mFontSize)
+  // TODO: FINISH FONT FACE AND ADD FONT SIZE ("Editor:Font:Size", "fontsize", mFontSize)
 
   // update the list buttons
   rv = UpdateListState("Editor:Paragraph:ListType");
@@ -194,18 +194,6 @@ nsInterfaceState::UpdateParagraphState(const char* observerName, const char* att
   //  (directly under <body>). Consider it normal
   if (numTags > 0)
   {
-#ifdef DEBUG_cmanske
-    if (thisTag.Length() > 0)
-      printf (thisTag.ToNewCString());
-    else
-      printf("[emtpy string]");
-    printf(",");
-    if (mParagraphFormat.Length() > 0)
-      printf (mParagraphFormat.ToNewCString());
-    else
-      printf("[mParagraph is empty]");
-    printf(" = ParagraphTag,mParagraphFormat in nsInterfaceState::UpdateParagraphState()\n");
-#endif
     // This will never show the "mixed state"
     // TODO: Scan list of tags and if any are different, set to "mixed"
     tagList.StringAt(0, thisTag);
@@ -300,9 +288,11 @@ nsInterfaceState::UpdateFontFace(const char* observerName, const char* attribute
       // No font face set -- check for "tt"
       rv = mEditor->GetInlineProperty(fixedStyleAtom, nsnull, nsnull, firstOfSelectionHasProp, anyOfSelectionHasProp, allOfSelectionHasProp);
       testBoolean = anyOfSelectionHasProp;
-      thisFace = faceStr;
+      if (anyOfSelectionHasProp)
+        thisFace = "tt";
     }
   }
+
   // TODO: HANDLE "MIXED" STATE
   if (thisFace != mFontString)
   {

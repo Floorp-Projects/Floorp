@@ -128,7 +128,7 @@
     <broadcaster id="Editor:Paragraph:Format" format=""/>
     <broadcaster id="Editor:Paragraph:ListType" format=""/>
     <broadcaster id="Editor:Font:Face" face=""/>
-    <broadcaster id="Editor:Font:Size" size=""/>
+    <broadcaster id="Editor:Font:Size" fontsize=""/>
 
     <!-- Command Broadcaster nodes -->
     <broadcaster id="Editor:Open"         value="&openCmd.label;"                           oncommand="EditorOpen()"/>
@@ -494,22 +494,34 @@
        <menuitem value="&colorCyanCmd.label;"      oncommand="EditorSetFontColor('cyan')"/>
        <menuitem value="&colorYellowCmd.label;"    oncommand="EditorSetFontColor('yellow')"/>
        <menuitem value="&colorMagentaCmd.label;"   oncommand="EditorSetFontColor('magenta')"/>
-     </menupopup>
-   
-     <menupopup id="AlignmentPopup">
-       <menuitem oncommand="EditorAlign('left')">
-         <titledbutton id="text-align-left" align="left" value="&alignLeft.label;"/>
-       </menuitem>
-       <menuitem oncommand="EditorAlign('center')">
-         <titledbutton id="text-align-center" align="left" value="&alignCenter.label;"/>
-       </menuitem>
-       <menuitem oncommand="EditorAlign('right')">
-         <titledbutton id="text-align-right" align="left" value="&alignRight.label;"/>
-       </menuitem>
-       <menuitem oncommand="EditorAlign('justify')">
-         <titledbutton id="text-align-justify" align="left" value="&alignJustify.label;"/>
-       </menuitem>
-     </menupopup>
+    </menupopup>
+
+    <menupopup id="TextColorPicker">
+      <html:div id="TextColorCaption" class="color-caption" align="center">&textColorCaption.label;</html:div>
+  		<!-- TODO: Add "Last color picked" button and text -->
+      <colorpicker palettename="standard" onclick="EditorSelectTextColor()"/>
+    </menupopup>
+    <menupopup id="BackColorPicker">
+      <!-- Text Caption is filled in at runtime -->
+  		<!-- TODO: Add "Last color picked" button and text -->
+      <html:div id="BackColorCaption" class="color-caption" align="center">Background Color</html:div>
+  		<colorpicker palettename="standard" onclick="EditorSelectBackColor()"/>
+    </menupopup>
+
+    <menupopup id="AlignmentPopup">
+      <menuitem oncommand="EditorAlign('left')">
+       <titledbutton id="text-align-left" align="left" value="&alignLeft.label;"/>
+      </menuitem>
+      <menuitem oncommand="EditorAlign('center')">
+       <titledbutton id="text-align-center" align="left" value="&alignCenter.label;"/>
+      </menuitem>
+      <menuitem oncommand="EditorAlign('right')">
+       <titledbutton id="text-align-right" align="left" value="&alignRight.label;"/>
+      </menuitem>
+      <menuitem oncommand="EditorAlign('justify')">
+       <titledbutton id="text-align-justify" align="left" value="&alignJustify.label;"/>
+      </menuitem>
+    </menupopup>
      
     <!-- Editor toolbar items -->
     <!-- note that we override the submenu item label "Blank Window" with "New" used for the menu -->
@@ -554,7 +566,7 @@
     </html:select>
 
     <html:select class="toolbar" id="FontSizeSelect" size="1" onchange="EditorSelectFontSize()">
-      <observes element="Editor:Font:Size" attribute="size" onbroadcast="onFontSizeChange()"/>
+      <observes element="Editor:Font:Size" attribute="fontsize" onbroadcast="onFontSizeChange()"/>
       <html:option>&size-2Cmd.label;</html:option>
       <html:option>&size-1Cmd.label;</html:option>
       <html:option>&size0Cmd.label;</html:option>
@@ -564,18 +576,40 @@
       <html:option>&size4Cmd.label;</html:option>
     </html:select>
 
-    <!-- CSS not working to pull buttons together with -margin -->
     <titledbutton id="TextColorPopupButton" class="popup"  popupanchor="bottomleft"/>
     <titledbutton id="BackColorPopupButton" class="popup"  popupanchor="bottomleft"/>
+    
+    <!-- The new Color Picker UI -->
+    <box id="ColorButtons" align="horizontal">
+      <box align="vertical">
+        <html:div><!-- Prevent boxes from mucking with button layout -->
+          <menu>
+            <titledbutton id="TextColorPopupButton1"/>
+            <menupopup id="TextColorPicker"/>
+          </menu>
+          <menu>
+            <titledbutton id="BackColorPopupButton2"/>
+          </menu>
+        </html:div>
+      </box>
+      <html:div>
+        <menu>
+          <titledbutton id="BackColorPopupButton1"/>
+          <menupopup id="BackColorPicker"/>
+        </menu>
+      </html:div>
+    </box>
 
-    <!-- can't just use observes here because we don't want the value from the broadcaster -->
-    <titledbutton id="boldButton" class="format TextAttribute" value="&formatToolbar.boldChar;" align="center" onclick="EditorToggleStyle('bold')">
+    <titledbutton id="DecreaseFontSizeButton" onclick="EditorDecreaseFontSize()"/>
+    <titledbutton id="IncreaseFontSizeButton" onclick="EditorIncreaseFontSize()"/>
+
+    <titledbutton id="boldButton" class="format" align="center" onclick="EditorToggleStyle('bold')">
       <observes element="Editor:Bold" attribute="bold" onbroadcast="onStyleChange('bold')"/>
     </titledbutton>
-    <titledbutton id="italicButton" class="format TextAttribute" value="&formatToolbar.italicChar;" align="center" onclick="EditorToggleStyle('italic')">
+    <titledbutton id="italicButton" class="format" align="center" onclick="EditorToggleStyle('italic')">
       <observes element="Editor:Italic" attribute="italic" onbroadcast="onStyleChange('italic')"/>
     </titledbutton>
-    <titledbutton id="underlineButton" class="format TextAttribute" value="&formatToolbar.underlineChar;" align="center" onclick="EditorToggleStyle('underline')">
+    <titledbutton id="underlineButton" class="format" align="center" onclick="EditorToggleStyle('underline')">
       <observes element="Editor:Underline" attribute="underline" onbroadcast="onStyleChange('underline')"/>
     </titledbutton>
 
