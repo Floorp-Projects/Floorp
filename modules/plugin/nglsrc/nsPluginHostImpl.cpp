@@ -974,15 +974,23 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStartRequest(nsIURI* aURL, const cha
     }
   }
 
-  // only set up the stream listener if we have both the mimetype and
-  // have mLength set (as indicated by the mGotProgress bool)
-  if(mGotProgress == PR_TRUE && mSetUpListener == PR_FALSE)
-	   rv = SetUpStreamListener(aURL);
-
-  mOnStartRequest = PR_TRUE;
 #ifdef NECKO
   nsCRT::free(aContentType);
 #endif //NECKO
+
+  //
+  // Set up the stream listener...
+  //
+  PRInt32 length;
+
+  rv = channel->GetContentLength(&length);
+  if (NS_FAILED(rv)) return rv;
+  mPluginStreamInfo->SetLength(length);
+
+  rv = SetUpStreamListener(aURL);
+  if (NS_FAILED(rv)) return rv;
+
+  mOnStartRequest = PR_TRUE;
   return rv;
 }
 
@@ -998,16 +1006,13 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnProgress(nsIURI* aURL, PRUint32 aPro
 {
   nsresult rv = NS_OK;
 
-#ifdef NECKO
-  nsCOMPtr<nsIURI> aURL;
-  rv = channel->GetURI(getter_AddRefs(aURL));
-  if (NS_FAILED(rv)) return rv;
-#endif
+#ifndef NECKO
   mPluginStreamInfo->SetLength(aProgressMax);
   if(mOnStartRequest == PR_TRUE && mSetUpListener == PR_FALSE)
 	rv = SetUpStreamListener(aURL);
 
   mGotProgress = PR_TRUE;
+#endif
 
   return rv;
 }
