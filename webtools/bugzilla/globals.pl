@@ -968,10 +968,10 @@ sub GetAttachmentLink {
     # Now that we know we've got all the information we're gonna get, let's
     # return the link (which is the whole reason we were called :)
     my ($title, $className) = @{$::attachlink{$attachid}};
-    # $title will be undefined if the bug didn't exist in the database.
+    # $title will be undefined if the attachment didn't exist in the database.
     if (defined $title) {
-        my $linkval = "attachment.cgi?id=$attachid&amp;action=view";
-        return qq{<a href="$linkval" class="$className" title="$title">$link_text</a>};
+        my $linkval = "attachment.cgi?id=$attachid";
+        return qq{<a href="$linkval" class="$className" title="$title">$link_text</a> [<a href="$linkval&amp;action=edit">edit</a>]};
     }
     else {
         return qq{$link_text};
