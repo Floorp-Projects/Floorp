@@ -35,7 +35,7 @@ class nsIWordBreaker;
 #define CH_NBSP 160
 #define CH_SHY  173
 
-#define NS_TEXT_TRANSFORMER_AUTO_WORD_BUF_SIZE 100
+#define NS_TEXT_TRANSFORMER_AUTO_WORD_BUF_SIZE 256
 
 // A growable text buffer that tries to avoid using malloc by having a
 // builtin buffer. Ideally used as an automatic variable.
@@ -67,6 +67,9 @@ public:
  * <LI>capitalization
  * <LI>lowercasing
  * <LI>uppercasing
+ * <LI>ascii to Unicode
+ * <LI>discarded characters
+ * <LI>conversion of &nbsp that is not part of whitespace into a space
  * </UL>
  *
  * Note that no transformations are applied that would impact word
@@ -85,9 +88,8 @@ public:
   ~nsTextTransformer();
 
   /**
-   * Initialize the text transform. This is when the transformation
-   * occurs. Subsequent calls to GetTransformedTextFor will just
-   * return the result of the single transformation.
+   * Initialize the text transform. Use GetNextWord() and GetPrevWord()
+   * to iterate the text
    */
   nsresult Init(nsIFrame* aFrame,
                 nsIContent* aContent,
@@ -97,10 +99,22 @@ public:
     return mFrag ? mFrag->GetLength() : 0;
   }
 
+  /**
+   * Iterates the next word in the text fragment.
+   *
+   * Returns a pointer to the word, the number of characters in the word, the
+   * content length of the word, and whether it is whitespace. The content
+   * length can be greater than the word length if whitespace compression
+   * occured or if characters were discarded
+   *
+   * The default behavior is to reset the transform buffer to the beginning,
+   * but you can choose to not reste it and buffer across multiple words
+   */
   PRUnichar* GetNextWord(PRBool aInWord,
                          PRInt32* aWordLenResult,
                          PRInt32* aContentLenResult,
                          PRBool* aIsWhitespaceResult,
+                         PRBool aResetTransformBuf = PR_TRUE,
                          PRBool aForLineBreak = PR_TRUE);
 
   PRUnichar* GetPrevWord(PRBool aInWord,
@@ -168,6 +182,10 @@ protected:
   // Buffer used to hold the transformed words from GetNextWord or
   // GetPrevWord
   nsAutoTextBuffer mTransformBuf;
+
+  // Our current position within the buffer. Used when iterating the next
+  // word, because we may be requested to buffer across multiple words
+  PRInt32 mBufferPos;
 
 #ifdef DEBUG
   static void SelfTest(nsILineBreaker* aLineBreaker,

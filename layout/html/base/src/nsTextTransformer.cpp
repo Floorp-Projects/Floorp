@@ -122,7 +122,8 @@ nsTextTransformer::nsTextTransformer(nsILineBreaker* aLineBreaker,
     mTextTransform(NS_STYLE_TEXT_TRANSFORM_NONE),
     mMode(eNormal),
     mLineBreaker(aLineBreaker),
-    mWordBreaker(aWordBreaker)
+    mWordBreaker(aWordBreaker),
+    mBufferPos(0)
 {
   MOZ_COUNT_CTOR(nsTextTransformer);
 
@@ -196,7 +197,7 @@ nsTextTransformer::ScanNormalWhiteSpace_F()
     }
   }
 
-  mTransformBuf.mBuffer[0] = ' ';
+  mTransformBuf.mBuffer[mBufferPos++] = ' ';
   return offset;
 }
 
@@ -207,11 +208,14 @@ nsTextTransformer::ScanNormalAsciiText_F(PRInt32* aWordLen)
   const nsTextFragment* frag = mFrag;
   PRInt32 fragLen = frag->GetLength();
   PRInt32 offset = mOffset;
-  PRUnichar* bp = mTransformBuf.GetBuffer();
+  PRUnichar* bp = mTransformBuf.GetBuffer() + mBufferPos;
   PRUnichar* endbp = mTransformBuf.GetBufferEnd();
+  PRInt32 prevBufferPos = mBufferPos;
+  const unsigned char* cp = (const unsigned char*)frag->Get1b();
+  cp += offset;
 
   for (; offset < fragLen; offset++) {
-    PRUnichar ch = frag->CharAt(offset);
+    PRUnichar ch = *cp++;
     if (XP_IS_SPACE(ch)) {
       break;
     }
@@ -234,9 +238,10 @@ nsTextTransformer::ScanNormalAsciiText_F(PRInt32* aWordLen)
       endbp = mTransformBuf.GetBufferEnd();
     }
     *bp++ = ch;
+    mBufferPos++;
   }
 
-  *aWordLen = bp - mTransformBuf.GetBuffer();
+  *aWordLen = mBufferPos - prevBufferPos;
   return offset;
 }
 
@@ -254,7 +259,7 @@ nsTextTransformer::ScanNormalUnicodeText_F(PRBool aForLineBreak,
   if (CH_NBSP == firstChar) {
     firstChar = ' ';
   }
-  mTransformBuf.mBuffer[0] = firstChar;
+  mTransformBuf.mBuffer[mBufferPos++] = firstChar;
   if (firstChar > MAX_UNIBYTE) mHasMultibyte = PR_TRUE;
 
   // Only evaluate complex breaking logic if there are more characters
@@ -264,12 +269,10 @@ nsTextTransformer::ScanNormalUnicodeText_F(PRBool aForLineBreak,
     const PRUnichar* cp = cp0 + offset;
     PRBool breakBetween = PR_FALSE;
     if (aForLineBreak) {
-      mLineBreaker->BreakInBetween(mTransformBuf.GetBuffer(), 1,
-                                   cp, (fragLen-offset), &breakBetween);
+      mLineBreaker->BreakInBetween(&firstChar, 1, cp, (fragLen-offset), &breakBetween);
     }
     else {
-      mWordBreaker->BreakInBetween(mTransformBuf.GetBuffer(), 1,
-                                   cp, (fragLen-offset), &breakBetween);
+      mWordBreaker->BreakInBetween(&firstChar, 1, cp, (fragLen-offset), &breakBetween);
     }
 
     if (!breakBetween) {
@@ -284,16 +287,20 @@ nsTextTransformer::ScanNormalUnicodeText_F(PRBool aForLineBreak,
       }
       numChars = (PRInt32) (next - (PRUint32) offset) + 1;
 
-      // Grow buffer before copying
-      nsresult rv = mTransformBuf.GrowTo(numChars);
+      // Since we know the number of characters we're adding grow the buffer
+      // now before we start copying
+      nsresult rv = mTransformBuf.GrowTo(mBufferPos + numChars);
       if (NS_FAILED(rv)) {
-        numChars = mTransformBuf.GetBufferLength();
+        numChars = mTransformBuf.GetBufferLength() - mBufferPos;
       }
 
+      offset += numChars - 1;
+
       // 1. convert nbsp into space
-      // 2. check mHasMultibyte flag
-      // 3. copy buffer
-      PRUnichar* bp = mTransformBuf.GetBuffer() + 1;
+      // 2. check for discarded characters
+      // 3. check mHasMultibyte flag
+      // 4. copy buffer
+      PRUnichar* bp = &mTransformBuf.mBuffer[mBufferPos];
       const PRUnichar* end = cp + numChars - 1;
       while (cp < end) {
         PRUnichar ch = *cp++;
@@ -302,15 +309,13 @@ nsTextTransformer::ScanNormalUnicodeText_F(PRBool aForLineBreak,
         }
         else if (IS_DISCARDED(ch) || (ch == 0x0a) || (ch == 0x0d)) {
           // Strip discarded characters from the transformed output
+          numChars--;
           continue;
         }
         if (ch > MAX_UNIBYTE) mHasMultibyte = PR_TRUE;
         *bp++ = ch;
+        mBufferPos++;
       }
-
-      // Recompute offset and numChars in case we stripped something
-      offset += numChars - 1;
-      numChars = bp - mTransformBuf.GetBuffer();
     }
   }
 
@@ -325,10 +330,13 @@ nsTextTransformer::ScanPreWrapWhiteSpace_F(PRInt32* aWordLen)
   const nsTextFragment* frag = mFrag;
   PRInt32 fragLen = frag->GetLength();
   PRInt32 offset = mOffset;
-  PRUnichar* bp = mTransformBuf.GetBuffer();
+  PRUnichar* bp = mTransformBuf.GetBuffer() + mBufferPos;
   PRUnichar* endbp = mTransformBuf.GetBufferEnd();
+  PRInt32 prevBufferPos = mBufferPos;
 
   for (; offset < fragLen; offset++) {
+    // This function is used for both Unicode and ascii strings so don't
+    // make any assumptions about what kind of data it is
     PRUnichar ch = frag->CharAt(offset);
     if (!XP_IS_SPACE(ch) || (ch == '\t') || (ch == '\n')) {
       if (IS_DISCARDED(ch)) {
@@ -348,9 +356,10 @@ nsTextTransformer::ScanPreWrapWhiteSpace_F(PRInt32* aWordLen)
       endbp = mTransformBuf.GetBufferEnd();
     }
     *bp++ = ' ';
+    mBufferPos++;
   }
 
-  *aWordLen = bp - mTransformBuf.GetBuffer();
+  *aWordLen = mBufferPos - prevBufferPos;
   return offset;
 }
 
@@ -361,10 +370,13 @@ nsTextTransformer::ScanPreData_F(PRInt32* aWordLen)
   const nsTextFragment* frag = mFrag;
   PRInt32 fragLen = frag->GetLength();
   PRInt32 offset = mOffset;
-  PRUnichar* bp = mTransformBuf.GetBuffer();
+  PRUnichar* bp = mTransformBuf.GetBuffer() + mBufferPos;
   PRUnichar* endbp = mTransformBuf.GetBufferEnd();
+  PRInt32 prevBufferPos = mBufferPos;
 
   for (; offset < fragLen; offset++) {
+    // This function is used for both Unicode and ascii strings so don't
+    // make any assumptions about what kind of data it is
     PRUnichar ch = frag->CharAt(offset);
     if ((ch == '\t') || (ch == '\n')) {
       break;
@@ -387,9 +399,10 @@ nsTextTransformer::ScanPreData_F(PRInt32* aWordLen)
       endbp = mTransformBuf.GetBufferEnd();
     }
     *bp++ = ch;
+    mBufferPos++;
   }
 
-  *aWordLen = bp - mTransformBuf.GetBuffer();
+  *aWordLen = mBufferPos - prevBufferPos;
   return offset;
 }
 
@@ -398,10 +411,11 @@ PRInt32
 nsTextTransformer::ScanPreAsciiData_F(PRInt32* aWordLen)
 {
   const nsTextFragment* frag = mFrag;
-  PRUnichar* bp = mTransformBuf.GetBuffer();
+  PRUnichar* bp = mTransformBuf.GetBuffer() + mBufferPos;
   PRUnichar* endbp = mTransformBuf.GetBufferEnd();
   const unsigned char* cp = (const unsigned char*) frag->Get1b();
   const unsigned char* end = cp + frag->GetLength();
+  PRInt32 prevBufferPos = mBufferPos;
   cp += mOffset;
 
   while (cp < end) {
@@ -428,9 +442,10 @@ nsTextTransformer::ScanPreAsciiData_F(PRInt32* aWordLen)
       endbp = mTransformBuf.GetBufferEnd();
     }
     *bp++ = ch;
+    mBufferPos++;
   }
 
-  *aWordLen = bp - mTransformBuf.GetBuffer();
+  *aWordLen = mBufferPos - prevBufferPos;
   return cp - ((const unsigned char*)frag->Get1b());
 }
 
@@ -441,6 +456,7 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
                                PRInt32* aWordLenResult,
                                PRInt32* aContentLenResult,
                                PRBool* aIsWhiteSpaceResult,
+                               PRBool aResetTransformBuf,
                                PRBool aForLineBreak)
 {
   const nsTextFragment* frag = mFrag;
@@ -449,6 +465,14 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
   PRInt32 wordLen = 0;
   PRBool isWhitespace = PR_FALSE;
   PRUnichar* result = nsnull;
+  PRBool prevBufferPos;
+
+  // See if we should reset the current buffer position back to the
+  // beginning of the buffer
+  if (aResetTransformBuf) {
+    mBufferPos = 0;
+  }
+  prevBufferPos = mBufferPos;
 
   // Fix word breaking problem w/ PREFORMAT and PREWRAP
   // for word breaking, we should really go to the normal code
@@ -482,7 +506,7 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
 
       case ePreformatted:
         if (('\n' == firstChar) || ('\t' == firstChar)) {
-          mTransformBuf.mBuffer[0] = firstChar;
+          mTransformBuf.mBuffer[mBufferPos++] = firstChar;
           offset++;
           wordLen = 1;
           isWhitespace = PR_TRUE;
@@ -498,7 +522,7 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
       case ePreWrap:
         if (XP_IS_SPACE(firstChar)) {
           if (('\n' == firstChar) || ('\t' == firstChar)) {
-            mTransformBuf.mBuffer[0] = firstChar;
+            mTransformBuf.mBuffer[mBufferPos++] = firstChar;
             offset++;
             wordLen = 1;
           }
@@ -515,7 +539,7 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
         }
         break;
     }
-    result = mTransformBuf.GetBuffer();
+    result = &mTransformBuf.mBuffer[prevBufferPos];
 
     if (!isWhitespace) {
       switch (mTextTransform) {

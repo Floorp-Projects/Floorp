@@ -3359,19 +3359,9 @@ struct SegmentData {
   PRInt32 ContentLen() {return PRInt32(mContentLen);}
 };
 
-#define IS_ODD_NUMBER(n) \
-  (0 != ((n) & 0x1))
-
-#define IS_EVEN_NUMBER(n) \
-  (0 == ((n) & 0x1))
-
-#define IS_32BIT_ALIGNED_PTR(p) \
-  (0 == (long(p) & 0x3))
-
 struct TextRun {
-  PRUnichar     mBufSpace[256];
-  PRUnichar*    mBuf;
-  PRInt32       mBufSize, mBufLength;
+  // Total number of characters and the accumulated content length
+  PRInt32       mTotalNumChars, mTotalContentLen;
 
   // Words and whitespace each count as a segment
   PRInt32       mNumSegments;
@@ -3384,22 +3374,14 @@ struct TextRun {
 
   TextRun()
   {
-    mBuf = mBufSpace;
-    mBufSize = 256;
-    mBufLength = mNumSegments = 0;
+    Reset();
   }
   
-  ~TextRun()
-  {
-    if (mBuf != mBufSpace) {
-      delete []mBuf;
-    }
-  }
-
   void Reset()
   {
-    mBufLength = 0;
     mNumSegments = 0;
+    mTotalNumChars = 0;
+    mTotalContentLen = 0;
   }
 
   // Returns PR_TRUE if we're currently buffering text
@@ -3408,87 +3390,15 @@ struct TextRun {
     return mNumSegments > 0;
   }
 
-  void GrowBuffer(PRInt32 aMinBufSize)
-  {
-    // Allocate a new buffer
-    do {
-      mBufSize += 100;
-    } while (mBufSize < aMinBufSize);
-
-    PRUnichar*  newBufSpace = new PRUnichar[mBufSize];
-    memcpy(newBufSpace, mBuf, mBufLength * sizeof(PRUnichar));
-    if (mBuf != mBufSpace) {
-      delete []mBuf;
-    }
-    mBuf = newBufSpace;
-  }
-
-  void AddWhitespace(PRUnichar* aText,
-                     PRInt32    aNumChars,
-                     PRInt32    aContentLen)
+  void AddSegment(PRInt32 aNumChars, PRInt32 aContentLen, PRBool aIsWhitespace)
   {
     NS_PRECONDITION(mNumSegments < TEXT_MAX_NUM_SEGMENTS, "segment overflow");
-    NS_PRECONDITION(IS_32BIT_ALIGNED_PTR(aText), "unexpected alignment of text pointer");
 
-    // See if we have room in the buffer
-    PRInt32 newBufLength = mBufLength + aNumChars;
-    if (newBufLength > mBufSize) {
-      GrowBuffer(newBufLength);
-    }
-
-    if (1 == aNumChars) {
-      mBuf[mBufLength] = *aText;
-    } else {
-      ::memcpy(&mBuf[mBufLength], aText, aNumChars * sizeof(PRUnichar*));
-    }
-    mBufLength = newBufLength;
-
-    mBreaks[mNumSegments] = mBufLength;
-    mSegments[mNumSegments].mIsWhitespace = PR_TRUE;
-    mSegments[mNumSegments].mContentLen = PRUint32(aContentLen);
-    if (mNumSegments > 0) {
-      mSegments[mNumSegments].mContentLen += mSegments[mNumSegments - 1].ContentLen();
-    }
-    mNumSegments++;
-  }
-
-  void AddWord(PRUnichar* aText,
-               PRInt32    aNumChars,
-               PRInt32    aContentLen)
-  {
-    NS_PRECONDITION(mNumSegments < TEXT_MAX_NUM_SEGMENTS, "segment overflow");
-    NS_PRECONDITION(IS_32BIT_ALIGNED_PTR(aText), "unexpected alignment of text pointer");
-
-    // See if we have room in the buffer
-    PRInt32 newBufLength = mBufLength + aNumChars;
-    if (newBufLength > mBufSize) {
-      GrowBuffer(newBufLength);
-    }
-
-    if (IS_EVEN_NUMBER(mBufLength)) {
-      // We have a small amount of text (a single word) and we're at a point
-      // in our buffer that is 32-bit aligned so copy 32-bit chunks at a time
-      int*  dest = (int*)&mBuf[mBufLength];
-      int*  src = (int*)aText;
-      for (int i = aNumChars / 2; i > 0; i--) {
-        *dest++ = *src++;
-      }
-      if (IS_ODD_NUMBER(aNumChars)) {
-        // Copy the one remaining character
-        *((PRUnichar*)dest) = *((PRUnichar*)src);
-      }
-
-    } else {
-      ::memcpy(&mBuf[mBufLength], aText, aNumChars * sizeof(PRUnichar*));
-    }
-    mBufLength = newBufLength;
-
-    mBreaks[mNumSegments] = mBufLength;
-    mSegments[mNumSegments].mIsWhitespace = PR_FALSE;
-    mSegments[mNumSegments].mContentLen = PRUint32(aContentLen);
-    if (mNumSegments > 0) {
-      mSegments[mNumSegments].mContentLen += mSegments[mNumSegments - 1].ContentLen();
-    }
+    mTotalNumChars += aNumChars;
+    mBreaks[mNumSegments] = mTotalNumChars;
+    mSegments[mNumSegments].mIsWhitespace = aIsWhitespace;
+    mTotalContentLen += aContentLen;
+    mSegments[mNumSegments].mContentLen = PRUint32(mTotalContentLen);
     mNumSegments++;
   }
 };
@@ -3512,6 +3422,7 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
   nscoord prevMaxWordWidth = 0;
   PRInt32 lastWordLen = 0;
   PRInt32 lastWordWidth = 0;
+  PRUnichar* lastWordPtr = nsnull;
   PRBool  textStartsWithNBSP = PR_FALSE;
   PRBool  endsInWhitespace = PR_FALSE;
   PRBool  endsInNewline = PR_FALSE;
@@ -3535,7 +3446,8 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
     // Get next word/whitespace from the text
     PRBool isWhitespace;
     PRInt32 wordLen, contentLen;
-    PRUnichar* bp = aTx.GetNextWord(aTextData.mInWord, &wordLen, &contentLen, &isWhitespace);
+    PRUnichar* bp = aTx.GetNextWord(aTextData.mInWord, &wordLen, &contentLen, &isWhitespace,
+                                    textRun.mNumSegments == 0);
     if (nsnull == bp) {
       if (textRun.IsBuffering()) {
         // Measure the remaining text
@@ -3550,6 +3462,7 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
       }
     }
     lastWordLen = wordLen;
+    lastWordPtr = bp;
     aTextData.mInWord = PR_FALSE;
 
     // Measure the word/whitespace
@@ -3578,7 +3491,8 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
         width = aTs.mSpaceWidth * wordLen;
       }
       else if (textRun.IsBuffering()) {
-        textRun.AddWhitespace(bp, wordLen, contentLen);
+        // Add a whitespace segment
+        textRun.AddSegment(wordLen, contentLen, PR_TRUE);
         continue;
       }
       else {
@@ -3627,10 +3541,10 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
       if (aTextData.mMeasureText) {
         if (measureTextRuns && !justDidFirstLetter) {
           // Add another word to the text run
-          textRun.AddWord(bp, wordLen, contentLen);
+          textRun.AddSegment(wordLen, contentLen, PR_FALSE);
 
           // See if we should measure the text
-          if ((textRun.mBufLength >= estimatedNumChars) ||
+          if ((textRun.mTotalNumChars >= estimatedNumChars) ||
               (textRun.mNumSegments >= (TEXT_MAX_NUM_SEGMENTS - 1))) {
             goto MeasureTextRun;
           }
@@ -3688,7 +3602,7 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
   MeasureTextRun:
 #ifdef _WIN32
     PRInt32 numCharsFit;
-    aReflowState.rendContext->GetWidth(textRun.mBuf, textRun.mBufLength,
+    aReflowState.rendContext->GetWidth(aTx.GetWordBuffer(), textRun.mTotalNumChars,
                                        maxWidth - aTextData.mX,
                                        textRun.mBreaks, textRun.mNumSegments,
                                        width, numCharsFit);
@@ -3700,7 +3614,7 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
 
     // Find the index of the last segment that fit
     PRInt32 lastSegment = textRun.mNumSegments - 1;
-    if (textRun.mBufLength != numCharsFit) {
+    if (numCharsFit != textRun.mTotalNumChars) {
       for (lastSegment = 0; textRun.mBreaks[lastSegment] < numCharsFit; lastSegment++) ;
       NS_ASSERTION(lastSegment < textRun.mNumSegments, "failed to find segment");
     }
@@ -3719,15 +3633,18 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
     column += numCharsFit;
     aTextData.mOffset += textRun.mSegments[lastSegment].ContentLen();
     endsInWhitespace = textRun.mSegments[lastSegment].IsWhitespace();
+    // Since we measure multiple words we don't know what the last word
+    // width is
+    lastWordWidth = -1;
 
     // If all the text didn't fit, then we're done
-    if (textRun.mBufLength != numCharsFit) {
+    if (numCharsFit != textRun.mTotalNumChars) {
       break;
     }
 
     if (nsnull == bp) {
-      // No more text so we're all finished. Advance the offset in case we
-      // just consumed a bunch of discarded characters
+      // No more text so we're all finished. Advance the offset in case the last
+      // call to GetNextWord() discarded characters
       aTextData.mOffset += contentLen;
       break;
     }
@@ -3735,7 +3652,7 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
     // Reset the number of text run segments
     textRun.Reset();
 
-    // Estimate the number of characters we think will fit
+    // Estimate the remaining number of characters we think will fit
     estimatedNumChars = (maxWidth - aTextData.mX) / aTs.mAveCharWidth;
     estimatedNumChars += estimatedNumChars / 20;
 #else
@@ -3800,26 +3717,27 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
           ListTag(stdout, next);
           printf("\n");
 #endif
-          PRUnichar* pWordBuf = aTx.GetWordBuffer();
-          PRUint32   wordBufLen = aTx.GetWordBufferLength();
+          PRUnichar* pWordBuf = lastWordPtr;
+          PRUint32   wordBufLen = aTx.GetWordBufferLength() -
+                                  (lastWordPtr - aTx.GetWordBuffer());
 
           // Look ahead in the text-run and compute the final word
           // width, taking into account any style changes and stopping
           // at the first breakable point.
-          if (!aTextData.mMeasureText) {
-            // We didn't measure any text so we don't know lastWordWidth.
-            // We have to compute it now
+          if (!aTextData.mMeasureText || (lastWordWidth == -1)) {
+            // We either didn't measure any text or we measured multiple words
+            // at once so either way we don't know lastWordWidth. We'll have to
+            // compute it now
             if (prevOffset == startingOffset) {
               // There's only one word, so we don't have to measure after all
               lastWordWidth = aTextData.mX;
             }
             else if (aTs.mSmallCaps) {
-              MeasureSmallCapsText(aReflowState, aTs, aTx.GetWordBuffer(),
+              MeasureSmallCapsText(aReflowState, aTs, pWordBuf,
                                    lastWordLen, &lastWordWidth);
             }
             else {
-              aReflowState.rendContext->GetWidth(aTx.GetWordBuffer(),
-                                                 lastWordLen, lastWordWidth);
+              aReflowState.rendContext->GetWidth(pWordBuf, lastWordLen, lastWordWidth);
               if (aTs.mLetterSpacing) {
                 lastWordWidth += aTs.mLetterSpacing * lastWordLen;
               }
