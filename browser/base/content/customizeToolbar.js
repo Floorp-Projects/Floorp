@@ -19,6 +19,7 @@
   
   Contributor(s): 
     David Hyatt (hyatt@apple.com)
+    Blake Ross (blaker@netscape.com)
 
 */
 
@@ -31,28 +32,35 @@ function buildDialog()
 
   var paletteBox = document.getElementById("palette-box");
 
-  var newToolbar = toolbar.cloneNode(true);
-  cloneToolbarBox.appendChild(newToolbar);
+  var newToolbar = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                                            "toolbar");
+  newToolbar.id = "cloneToolbar";
 
   // Make sure all buttons look enabled (and that textboxes are disabled).
-  var toolbarItem = newToolbar.firstChild;
+  var toolbarItem = toolbar.firstChild;
   while (toolbarItem) {
-    toolbarItem.removeAttribute("observes");
-    toolbarItem.removeAttribute("disabled");
-    toolbarItem.removeAttribute("type");
+    var newItem = toolbarItem.cloneNode(true);
+    newItem.removeAttribute("observes");
+    newItem.removeAttribute("disabled");
+    newItem.removeAttribute("type");
 
-    if (toolbarItem.localName == "toolbaritem" && 
-        toolbarItem.firstChild) {
-      toolbarItem.firstChild.removeAttribute("observes");
-      if (toolbarItem.firstChild.localName == "textbox")
-        toolbarItem.firstChild.setAttribute("disabled", "true");
+    if (newItem.localName == "toolbaritem" && 
+        newItem.firstChild) {
+      newItem.firstChild.removeAttribute("observes");
+      if (newItem.firstChild.localName == "textbox")
+        newItem.firstChild.setAttribute("disabled", "true");
       else
-        toolbarItem.firstChild.removeAttribute("disabled");
+        newItem.firstChild.removeAttribute("disabled");
     }
 
+    var paletteEnclosure = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                                                    "toolbarpaletteitem");
+    paletteEnclosure.appendChild(newItem);
+    newToolbar.appendChild(paletteEnclosure);
     toolbarItem = toolbarItem.nextSibling;
   }
 
+  cloneToolbarBox.appendChild(newToolbar);
   
   // Now build up a palette of items.
   var currentRow = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
@@ -157,12 +165,14 @@ var dropObserver = {
         break;
       paletteItem = paletteItem.nextSibling;
     }
+
     if (!paletteItem)
       return;
 
     paletteItem = paletteItem.cloneNode(paletteItem);
-    var toolbar = document.getElementById("nav-bar");
+    var toolbar = document.getElementById("cloneToolbar");
     toolbar.insertBefore(paletteItem, gCurrentDragOverItem);
+    gCurrentDragOverItem.removeAttribute("dragactive");
     gCurrentDragOverItem = null;
   },
   _flavourSet: null,

@@ -36,6 +36,10 @@
   margin:0px 15px 10px 15px;
 }
 
-toolbarbutton[dragactive], toolbaritem[dragactive] {
-  -moz-border-left-colors: black !important;
+toolbarpaletteitem {
+  border-left: 2px solid transparent !important;
+}
+
+toolbarpaletteitem[dragactive] {
+  border-left: 2px solid black !important;
 }
