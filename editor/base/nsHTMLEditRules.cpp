@@ -73,7 +73,7 @@ NS_IMETHODIMP
 nsHTMLEditRules::WillDoAction(nsIDOMSelection *aSelection, 
                               nsRulesInfo *aInfo, PRBool *aCancel)
 {
-  if (!aSelection || !aInfo || !aCancel) 
+  if (!aInfo || !aCancel) 
     return NS_ERROR_NULL_POINTER;
 
   *aCancel = PR_FALSE;
