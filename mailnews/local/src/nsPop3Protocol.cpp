@@ -555,8 +555,8 @@ nsresult nsPop3Protocol::GetPassword(char ** aPassword, PRBool *okayValue)
         } // otherwise this is the first time we've asked about the server's password so show a first time prompt
         else
             mStringService->GetStringByID(POP3_ENTER_PASSWORD_PROMPT, getter_Copies(passwordTemplate));
-          
-        passwordPromptString = nsTextFormatter::smprintf(passwordTemplate, (const char *) userName, (const char *) hostName);
+        if (passwordTemplate)
+          passwordPromptString = nsTextFormatter::smprintf(passwordTemplate, (const char *) userName, (const char *) hostName);
         // now go get the password!!!!
         nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_url, &rv);
         if (NS_FAILED(rv)) return rv;
@@ -567,8 +567,9 @@ nsresult nsPop3Protocol::GetPassword(char ** aPassword, PRBool *okayValue)
         mStringService->GetStringByID(POP3_ENTER_PASSWORD_PROMPT_TITLE, getter_Copies(passwordTitle));
         if (passwordPromptString)
         {
-          rv =  server->GetPasswordWithUI(passwordPromptString, passwordTitle.get(),
-                                        aMsgWindow, okayValue, aPassword);
+          if (passwordTitle)
+            rv =  server->GetPasswordWithUI(passwordPromptString, passwordTitle.get(),
+                                          aMsgWindow, okayValue, aPassword);
           nsTextFormatter::smprintf_free(passwordPromptString);
         }
 
