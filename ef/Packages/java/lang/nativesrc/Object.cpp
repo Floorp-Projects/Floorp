@@ -113,6 +113,15 @@ Netscape_Java_java_lang_Object_wait(Java_java_lang_Object *o, int64 l)
     Monitor::wait(*o,l);
 }
 
+/*
+ * Class : java/lang/Object
+ * Method : registerNatives
+ * Signature : ()V
+ */
+NS_EXPORT NS_NATIVECALL(void)
+Netscape_Java_java_lang_Object_registerNatives()
+{
+}
 
 } /* extern "C" */
 
