@@ -246,7 +246,7 @@ public:
    * Check to see if context is as yet intialized. Used to prevent
    * reentrancy issues during the initialization process.
    *
-   * @return NS_OK if initialized, NS_COMFALSE if not
+   * @return NS_OK if initialized, NS_ERROR_NOT_INITIALIZED if not
    *
    */
   NS_IMETHOD IsContextInitialized() = 0;

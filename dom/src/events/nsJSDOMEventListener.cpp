@@ -99,7 +99,11 @@ nsresult nsJSDOMEventListener::HandleEvent(nsIDOMEvent* aEvent)
 
 nsresult nsJSDOMEventListener::CheckIfEqual(nsIScriptEventListener *aListener)
 {
-  return NS_COMFALSE;
+  /*
+   * This should be rewritten to use a PRBool out parameter in stead of
+   * using the return value to show if this equals aListener...
+   */
+  return NS_ERROR_FAILURE;
 }
 
 /*

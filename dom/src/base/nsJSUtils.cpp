@@ -503,7 +503,8 @@ nsJSUtils::nsGlobalResolve(JSContext* aContext,
       return JS_TRUE;
     }
 
-    if (NS_COMFALSE == scriptContext->IsContextInitialized()) {
+    result = scriptContext->IsContextInitialized();
+    if (NS_FAILED(result)) {
       return JS_TRUE;
     }
 

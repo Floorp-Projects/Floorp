@@ -892,7 +892,7 @@ nsJSContext::InitClasses()
 NS_IMETHODIMP
 nsJSContext::IsContextInitialized()
 {
-  return (mIsInitialized) ? NS_OK : NS_COMFALSE;
+  return (mIsInitialized) ? NS_OK : NS_ERROR_NOT_INITIALIZED;
 }
 
 NS_IMETHODIMP

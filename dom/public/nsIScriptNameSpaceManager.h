@@ -76,7 +76,7 @@ public:
    *        a global symbol.
    * @param aCID out parameter that returns the class ID
    *        that corresponds to the name
-   * @result NS_OK if the lookup succeeded. NS_COMFALSE
+   * @result NS_OK if the lookup succeeded. NS_ERROR_INVALID_ARG
    *         if the lookup failed.
    */
   NS_IMETHOD LookupName(const nsString& aName, 
