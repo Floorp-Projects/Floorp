@@ -128,6 +128,8 @@ static NS_DEFINE_CID(kRDFContainerUtilsCID,     NS_RDFCONTAINERUTILS_CID);
 static NS_DEFINE_CID(kRDFServiceCID,            NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
 
+static const char kRDFNameSpaceURI[] = RDF_NAMESPACE_URI;
+
 ////////////////////////////////////////////////////////////////////////
 // Utility routines
 
@@ -264,10 +266,10 @@ protected:
     nsIDocument* mChildDocument;
     nsIParser*   mParser;
     
-	nsVoidArray*       mOverlayArray;
-	PRInt32 		   mCurrentOverlay;
-	nsIXULContentSink* mParentContentSink;
-	
+  nsVoidArray*       mOverlayArray;
+  PRInt32        mCurrentOverlay;
+  nsIXULContentSink* mParentContentSink;
+  
     nsString      mPreferredStyle;
     PRInt32       mStyleSheetCount;
     nsICSSLoader* mCSSLoader;
@@ -300,8 +302,8 @@ XULContentSinkImpl::XULContentSinkImpl()
       mChildDocument(nsnull),
       mParser(nsnull),
       mOverlayArray(nsnull),
-	  mCurrentOverlay(0),
-	  mParentContentSink(nsnull),
+    mCurrentOverlay(0),
+    mParentContentSink(nsnull),
       mStyleSheetCount(0),
       mCSSLoader(nsnull)
 {
@@ -443,16 +445,16 @@ XULContentSinkImpl::~XULContentSinkImpl()
         NS_IF_RELEASE(kXUL_element);
     }
 
-	// Delete all the elements from our overlay array
-	if (mOverlayArray) {
-	  PRInt32 count = mOverlayArray->Count();
-	  for (PRInt32 i = 0; i < count; i++) {
-		nsString* element = (nsString*)(mOverlayArray->ElementAt(i));
-		delete element;
-	  }
-	  
-	  delete mOverlayArray;
-	}
+  // Delete all the elements from our overlay array
+  if (mOverlayArray) {
+    PRInt32 count = mOverlayArray->Count();
+    for (PRInt32 i = 0; i < count; i++) {
+    nsString* element = (nsString*)(mOverlayArray->ElementAt(i));
+    delete element;
+    }
+    
+    delete mOverlayArray;
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -620,7 +622,7 @@ XULContentSinkImpl::OpenContainer(const nsIParserNode& aNode)
         break;
     }
 
-	//NS_ASSERTION(NS_SUCCEEDED(rv), "unexpected content");
+  //NS_ASSERTION(NS_SUCCEEDED(rv), "unexpected content");
     return rv;
 }
 
@@ -657,16 +659,16 @@ XULContentSinkImpl::CloseContainer(const nsIParserNode& aNode)
         FlushText();
     }
 
-	// XXX The following code is a hack to make forms work in XUL. Forms aren't
-	// really pushed and popped like other elements.
-	  nsAutoString tag;
+  // XXX The following code is a hack to make forms work in XUL. Forms aren't
+  // really pushed and popped like other elements.
+    nsAutoString tag;
     PRInt32 nameSpaceID;
     SplitQualifiedName(aNode.GetText(), nameSpaceID, tag);
-	  PRBool popContent = PR_TRUE;
+    PRBool popContent = PR_TRUE;
     if (nameSpaceID == kNameSpaceID_HTML) {
-		    if (tag.Equals("form"))
-		        popContent = PR_FALSE;
-		}
+        if (tag.Equals("form"))
+            popContent = PR_FALSE;
+    }
 
     if (popContent) {
         nsIRDFResource* resource;
@@ -690,25 +692,25 @@ XULContentSinkImpl::CloseContainer(const nsIParserNode& aNode)
 
     PRInt32 nestLevel = mContextStack->Count();
     if (nestLevel == 0) {
-		  mState = eXULContentSinkState_InEpilog;
-		  
-		  // We're about to finish parsing. Now we want to kick off the processing
-		  // of our child overlays.
-		  PRInt32 count;
-		  if (mOverlayArray && (count = mOverlayArray->Count())) {
-			  nsString* href = (nsString*)mOverlayArray->ElementAt(0);
-			  ProcessOverlay(*href);
-			  
-			  // Block the parser. It will only be unblocked after all
-			  // of our child overlays have finished parsing.
+      mState = eXULContentSinkState_InEpilog;
+      
+      // We're about to finish parsing. Now we want to kick off the processing
+      // of our child overlays.
+      PRInt32 count;
+      if (mOverlayArray && (count = mOverlayArray->Count())) {
+        nsString* href = (nsString*)mOverlayArray->ElementAt(0);
+        ProcessOverlay(*href);
+        
+        // Block the parser. It will only be unblocked after all
+        // of our child overlays have finished parsing.
         rv = NS_ERROR_HTMLPARSER_BLOCK;
-		  }
-		  
-		  // Unblock the next sibling overlay. If there is no next sibling
-		  // overlay, unblock our parent.
-		  if (mParentContentSink) {
-			  mParentContentSink->UnblockNextOverlay();
-		  }
+      }
+      
+      // Unblock the next sibling overlay. If there is no next sibling
+      // overlay, unblock our parent.
+      if (mParentContentSink) {
+        mParentContentSink->UnblockNextOverlay();
+      }
     }
 
     PopNameSpaces();
@@ -1437,7 +1439,7 @@ XULContentSinkImpl::OpenTag(const nsIParserNode& aNode)
     SplitQualifiedName(aNode.GetText(), nameSpaceID, tag);
 
     // HTML tags must be lowercase
-	PRBool pushContent = PR_TRUE;
+	  PRBool pushContent = PR_TRUE;
     if (nameSpaceID == kNameSpaceID_HTML) {
         if (tag.Equals("script")) {
             return OpenScript(aNode);
@@ -1486,8 +1488,8 @@ XULContentSinkImpl::OpenTag(const nsIParserNode& aNode)
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to assert tag type");
     if (NS_FAILED(rv)) return rv;
 
-	// Make arcs from us to all of our attribute values (with the attribute names
-	// as the labels of the arcs).
+    // Make arcs from us to all of our attribute values (with the attribute names
+    // as the labels of the arcs).
     if (NS_FAILED(rv = AddAttributes(aNode, rdfResource))) {
         NS_ERROR("problem adding properties to node");
         return rv;
@@ -1498,15 +1500,7 @@ XULContentSinkImpl::OpenTag(const nsIParserNode& aNode)
         // container).
         mHaveSetRootResource = PR_TRUE;
 
-        /*if (mFragmentRoot) {
-            // We're a subdocument.  We need to take this fragment
-            // node (which is the root of the fragment) and completely
-            // discard it.  The fragment root's resource is actually what
-            // should become the root of this subtree.
-            rdfResource = dont_QueryInterface(mFragmentRoot);
-        }
-        else*/
-		if (!mParentContentSink) {
+		    if (!mParentContentSink) {
             nsCOMPtr<nsIRDFDocument> rdfDoc;
             if (NS_SUCCEEDED(mDocument->QueryInterface(nsIRDFDocument::GetIID(),
                                                        (void**) getter_AddRefs(rdfDoc)))) {
@@ -1524,14 +1518,54 @@ XULContentSinkImpl::OpenTag(const nsIParserNode& aNode)
         rv = NS_NewRDFContainer(mDataSource, GetTopResource(), getter_AddRefs(container));
         if (NS_FAILED(rv)) return rv;
 
-        rv = container->AppendElement(rdfResource);
+        // Find out if a position is specified.  If so, we use that as the arc
+        // label instead of appending the object to the end.
+        // Add the attribute to RDF
+        nsCOMPtr<nsIRDFResource> property;
+        nsAutoString attr("#position");
+        
+        rv = gRDFService->GetUnicodeResource(attr.GetUnicode(), getter_AddRefs(property));
+        if (NS_FAILED(rv)) return rv;
+
+        nsCOMPtr<nsIRDFNode> positionValue;
+        rv = mDataSource->GetTarget(rdfResource, property, PR_TRUE, getter_AddRefs(positionValue));
+        if (NS_FAILED(rv)) return rv;
+
+        if (positionValue) { 
+          nsCOMPtr<nsIRDFLiteral> positionLiteral = do_QueryInterface(positionValue);
+          if (positionLiteral) {
+            // Retrieve the value that represents the position.
+            const PRUnichar* valueStr;
+            positionLiteral->GetValueConst(&valueStr);
+            nsCOMPtr<nsIRDFResource> posResource;
+            nsAutoString posStr(valueStr);
+            nsAutoString nextValStr = kRDFNameSpaceURI;
+            nextValStr.Append("_");
+            nextValStr.Append(posStr, 10);
+            rv = gRDFService->GetUnicodeResource(nextValStr.GetUnicode(), getter_AddRefs(posResource));
+            if (NS_FAILED(rv)) return rv;
+
+            rv = mDataSource->Assert(GetTopResource(), posResource, rdfResource, PR_TRUE);
+          }
+          else rv = container->AppendElement(rdfResource);
+        }
+        else {
+          // XXX We could be an overlay node indicating a removal.  If so, then we
+          // want to find the original assertion that linked us to the parent
+          // and perform a removal.
+
+          // Otherwise we're just a normal child and should be appended just like anyone
+          // else.
+          rv = container->AppendElement(rdfResource);
+        }
+
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add child to container");
         if (NS_FAILED(rv)) return rv;
     }
 
     // Push the element onto the context stack, so that child
     // containers will hook up to us as their parent.
-	// (XXX The push content hack is for HTML form content. See above.)
+    // (XXX The push content hack is for HTML form content. See above.)
     if (pushContent)
 		PushResourceAndState(rdfResource, mState);
     mState = eXULContentSinkState_InDocumentElement;
