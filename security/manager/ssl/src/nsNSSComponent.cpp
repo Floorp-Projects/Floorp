@@ -420,11 +420,13 @@ nsNSSComponent::Init()
 }
 
 /* nsISupports Implementation for the class */
-NS_IMPL_THREADSAFE_ISUPPORTS4(nsNSSComponent,
+NS_IMPL_THREADSAFE_ISUPPORTS6(nsNSSComponent,
                               nsISecurityManagerComponent,
                               nsISignatureVerifier,
                               nsIEntropyCollector,
-                              nsINSSComponent);
+                              nsINSSComponent,
+                              nsIObserver,
+                              nsISupportsWeakReference);
 
 NS_IMETHODIMP
 nsNSSComponent::DisplaySecurityAdvisor()
@@ -516,6 +518,8 @@ nsNSSComponent::PrefChanged(const char* prefName)
 }
 
 #define PROFILE_BEFORE_CHANGE_TOPIC NS_LITERAL_STRING("profile-before-change").get()
+#define PROFILE_AFTER_CHANGE_TOPIC NS_LITERAL_STRING("profile-after-change").get()
+
 
 NS_IMETHODIMP
 nsNSSComponent::Observe(nsISupports *aSubject, const PRUnichar *aTopic, 
@@ -525,6 +529,9 @@ nsNSSComponent::Observe(nsISupports *aSubject, const PRUnichar *aTopic,
     //The profile is about to change, shut down NSS
     NSS_Shutdown();
     mNSSInitialized = PR_FALSE;
+  } else if (nsCRT::strcmp(aTopic, PROFILE_AFTER_CHANGE_TOPIC) == 0) {
+    InitializeNSS();
+    InstallLoadableRoots();
   }
 
   return NS_OK;
@@ -543,6 +550,7 @@ nsNSSComponent::RegisterProfileChangeObserver()
     // get deleted.
     ++mRefCnt;
     observerService->AddObserver(this, PROFILE_BEFORE_CHANGE_TOPIC);
+    observerService->AddObserver(this, PROFILE_AFTER_CHANGE_TOPIC);
     --mRefCnt;
   }
   return rv;
