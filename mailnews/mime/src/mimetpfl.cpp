@@ -247,35 +247,23 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
 
   NS_ASSERTION(exdata, "The extra data has disappeared!");
 
-#ifdef DEBUG_bratell
-  fprintf(stderr,"*IN*");
-  for(int32 lineindex = 0; lineindex < length; lineindex++) {
-    switch(line[lineindex]) {
-    case ' ': fprintf(stderr, "_", line[lineindex]);break;
-    case '\n': fprintf(stderr, "\\n", line[lineindex]);break;
-    case '\r': fprintf(stderr, "\\r", line[lineindex]);break;
-    default:  fprintf(stderr, "%c", line[lineindex]);break;
-    }
-  }
-  fprintf(stderr,"$\n");
-#endif
-
   NS_ASSERTION(length > 0, "zero length");
   if (length <= 0) return 0;
 
-  // Every line ends in a '\r' and a '\n' according to the rfc822 format.
-  // The line is flowed if the the third to last char is a ' '
-  //
-  // rhp: While the above statement is true for RFC822 messages, it is not
-  //      true to assume that every line you will be fed by the mime parser
-  //      will be terminated with a CRLF. The reason for this is you need to
-  //      have the ability to support a multipart related part that does NOT
-  //      end with CRLF. For this reason, I am removing these asserts.
-  // NS_ASSERTION(length>1, "Line should be at least a \"\\r\\n\"");
-  // NS_ASSERTION('\n' == line[length-1], "Corrupt line end (#1)");
-  // NS_ASSERTION('\r' == line[length-2], "Corrupt line end (#2)");
-  
-  int32 flowed = (length>=2 && (' ' == line[length-3]));
+  // Look if the last character (after stripping ending end
+  // of lines) is a SPACE. If it is, we are looking at a
+  // flowed line. Normally we assume that the last two chars
+  // are CR and LF as said in RFC822, but that doesn't seem to
+  // be the case always.
+  PRBool flowed = PR_FALSE;
+  PRInt32 index = length-1;
+  while(index >= 0 &&
+        (('\r' == line[index]) || ('\n' == line[index]))) {
+    index--;
+  }
+  if((index >= 0) && (' ' == line[index])) {
+    flowed = PR_TRUE;
+  }
   
   // Grows the buffer if needed for this line
   // calculate needed buffersize. Use the linelength
@@ -500,7 +488,7 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
     PRBool firstSpaceNbsp = PR_FALSE;   /* Convert all spaces but
          the first in a row into nbsp (i.e. always wrap) */
     PRBool nextSpaceIsNbsp = firstSpaceNbsp;
-    while(*templinep && ('\r' != *templinep)) {
+    while(*templinep && (*templinep != '\r') && (*templinep != '\n')) {
       // Check RFC 2646 "4.3. Usenet Signature Convention": "-- "+CRLF is
       // not a flowed line
       if(dashdashspace>=0) {
@@ -570,6 +558,9 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
       
     }
     if(3 == dashdashspace) {
+#ifdef DEBUG_BenB
+printf("SIGNATURE\n");
+#endif
       // "-- " is a fixed line. 
       *outlinep='<'; outlinep++;
       *outlinep='b'; outlinep++;
@@ -597,7 +588,7 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
          /* If wrap, convert all spaces but the first in a row into nbsp,
             otherwise all. */
     PRBool nextSpaceIsNbsp = firstSpaceNbsp;
-    while(*templinep && (*templinep != '\r')) {
+    while(*templinep && (*templinep != '\r') && (*templinep != '\n')) {
       if('<' == *templinep) intag = 1;
       if(!intag) {
         if((' ' == *templinep) && !exdata->inflow) {
@@ -661,21 +652,6 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
   *outlinep='\0'; outlinep++;
 
   PR_Free(templine);
-
-#ifdef DEBUG_bratell
-  fprintf(stderr,"*OUT*");
-  for(uint32 lineindex2 = 0; lineindex2 < nsCRT::strlen(obj->obuffer); lineindex2++) {
-    switch(obj->obuffer[lineindex2]) {
-    case ' ': fprintf(stderr, "_", obj->obuffer[lineindex2]);break;
-    case '\n': fprintf(stderr, "\\n", obj->obuffer[lineindex2]);break;
-    case '\r': fprintf(stderr, "\\r", obj->obuffer[lineindex2]);break;
-      //    case ' ': fprintf(stderr, "%c", obj->obuffer[lineindex2]);break;
-      //    case ' ': fprintf(stderr, "%c", obj->obuffer[lineindex2]);break;
-    default:  fprintf(stderr, "%c", obj->obuffer[lineindex2]);break;
-    }
-  }
-  fprintf(stderr,"$\n");
-#endif
 
   // Calculate linelength as
   // <pointer to the next free char>-<pointer to the beginning>-1
