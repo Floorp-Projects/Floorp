@@ -2003,12 +2003,13 @@ nsc_DSA_Verify_Stub(void *ctx, CK_BYTE_PTR pSignature, CK_ULONG ulSignatureLen,
 			    CK_BYTE_PTR pData, CK_ULONG ulDataLen)
 {
     SECItem signature, digest;
+    SECKEYLowPublicKey *key = (SECKEYLowPublicKey *)ctx;
 
     signature.data = pSignature;
     signature.len = ulSignatureLen;
     digest.data = pData;
     digest.len = ulDataLen;
-    return DSA_VerifyDigest((DSAPublicKey *)ctx, &signature, &digest);
+    return DSA_VerifyDigest(&(key->u.dsa), &signature, &digest);
 }
 
 static SECStatus
@@ -2018,11 +2019,12 @@ nsc_DSA_Sign_Stub(void *ctx, CK_BYTE_PTR pSignature,
 {
     SECItem signature = { 0 }, digest;
     SECStatus rv;
+    SECKEYLowPrivateKey *key = (SECKEYLowPrivateKey *)ctx;
 
     (void)SECITEM_AllocItem(NULL, &signature, maxulSignatureLen);
     digest.data = pData;
     digest.len = ulDataLen;
-    rv = DSA_SignDigest((DSAPrivateKey *)ctx, &signature, &digest);
+    rv = DSA_SignDigest(&(key->u.dsa), &signature, &digest);
     *ulSignatureLen = signature.len;
     PORT_Memcpy(pSignature, signature.data, signature.len);
     SECITEM_FreeItem(&signature, PR_FALSE);
@@ -2171,11 +2173,11 @@ finish_rsa:
 	    crv = CKR_HOST_MEMORY;
 	    break;
 	}
-	context->cipherInfo = &(privKey->u.dsa);
+	context->cipherInfo = privKey;
 	context->update     = (PK11Cipher) nsc_DSA_Sign_Stub;
-	context->destroy    = pk11_Null;
+	context->destroy    = (privKey == key->objectInfo) ?
+		(PK11Destroy) pk11_Null:(PK11Destroy)pk11_FreePrivKey;
 
-        if (key->objectInfo != privKey) SECKEY_LowDestroyPrivateKey(privKey);
 	break;
     case CKM_MD2_HMAC_GENERAL:
 	crv = pk11_doHMACInit(context,SEC_OID_MD2,key,
@@ -2577,7 +2579,7 @@ finish_rsa:
 	    crv = CKR_HOST_MEMORY;
 	    break;
 	}
-	context->cipherInfo = &(pubKey->u.dsa);
+	context->cipherInfo = pubKey;
 	context->verify     = (PK11Verify) nsc_DSA_Verify_Stub;
 	context->destroy    = pk11_Null;
 	break;
