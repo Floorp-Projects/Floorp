@@ -274,7 +274,7 @@ XPC_IMPLEMENT_IGNORE_CONSTRUCT(nsJSIID)
 XPC_IMPLEMENT_FORWARD_FINALIZE(nsJSIID)
 
 nsJSIID::nsJSIID()
-    :   mCacheFilled(JS_FALSE)
+    :   mObj(nsnull)
 {
     NS_INIT_ISUPPORTS();
 }
@@ -479,7 +479,8 @@ nsJSIID::FillCache(JSContext *cx, JSObject *obj,
         }
     }
 
-    mCacheFilled = JS_TRUE;
+    // Indicate that we've added the properties to the current object.
+    mObj = obj;
     return;
 }
 
@@ -502,7 +503,7 @@ nsJSIID::LookupProperty(JSContext *cx, JSObject *obj,
                         nsIXPCScriptable* arbitrary,
                         JSBool* retval)
 {
-    if(!mCacheFilled)
+    if(NeedToFillCache(obj))
         FillCache(cx, obj, wrapper, arbitrary);
     return arbitrary->LookupProperty(cx, obj, id, objp, propp, wrapper,
                                      nsnull, retval);
@@ -515,7 +516,7 @@ nsJSIID::GetProperty(JSContext *cx, JSObject *obj,
                      nsIXPCScriptable* arbitrary,
                      JSBool* retval)
 {
-    if(!mCacheFilled)
+    if(NeedToFillCache(obj))
         FillCache(cx, obj, wrapper, arbitrary);
     return arbitrary->GetProperty(cx, obj, id, vp, wrapper, nsnull, retval);
 }
@@ -529,7 +530,7 @@ nsJSIID::Enumerate(JSContext *cx, JSObject *obj,
                    nsIXPCScriptable *arbitrary,
                    JSBool *retval)
 {
-    if(enum_op == JSENUMERATE_INIT && !mCacheFilled)
+    if(enum_op == JSENUMERATE_INIT && NeedToFillCache(obj))
         FillCache(cx, obj, wrapper, arbitrary);
 
     return arbitrary->Enumerate(cx, obj, enum_op, statep, idp, wrapper,
