@@ -233,6 +233,38 @@ BrowserAppCoreLoadUrl(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 
 
 //
+// Native method LoadUrl
+//
+PR_STATIC_CALLBACK(JSBool)
+BrowserAppCoreLoadInitialPage(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+ 
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->LoadInitialPage()) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function loadInitialPage requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+//
 // Native method WalletEditor
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -888,6 +920,7 @@ static JSFunctionSpec BrowserAppCoreMethods[] =
   {"back",          BrowserAppCoreBack,     0},
   {"forward",          BrowserAppCoreForward,     0},
   {"loadUrl",          BrowserAppCoreLoadUrl,     1},
+  {"loadInitialPage",          BrowserAppCoreLoadInitialPage,     0},
   {"walletEditor",          BrowserAppCoreWalletEditor,     0},
   {"walletSafeFillin",          BrowserAppCoreWalletSafeFillin,     0},
   {"walletQuickFillin",          BrowserAppCoreWalletQuickFillin,     0},
