@@ -448,17 +448,27 @@ LocateMessageFolder(nsIMsgIdentity   *userIdentity,
 
     nsCOMPtr <nsIMsgFolder> folderResource;
     folderResource = do_QueryInterface(resource, &rv);
-    if (NS_SUCCEEDED(rv) && folderResource) {
+    if (NS_SUCCEEDED(rv) && folderResource) 
+    {
         // don't check validity of folder - caller will handle creating it
-	*msgFolder = folderResource;
-	NS_ADDREF(*msgFolder);
-	return NS_OK;
+      nsCOMPtr<nsIMsgIncomingServer> server; //make sure that folder hierarchy is built so that legitimate parent-child relationship is established
+      folderResource->GetServer(getter_AddRefs(server));
+      if (server)
+      {
+        nsCOMPtr<nsIMsgFolder> rootMsgFolder;
+        server->GetRootMsgFolder(getter_AddRefs(rootMsgFolder));
+        if (rootMsgFolder)
+          rootMsgFolder->GetChildWithURI(aFolderURI, PR_TRUE, PR_FALSE, msgFolder);
+      }
+	    return NS_OK;
     }
-    else {
-	return NS_ERROR_FAILURE;
+    else 
+    {
+	    return NS_ERROR_FAILURE;
     }
   }
-  else {
+  else 
+  {
     PRUint32                  cnt = 0;
     PRUint32                  i;
 
