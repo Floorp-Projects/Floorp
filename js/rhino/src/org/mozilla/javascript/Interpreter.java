@@ -1598,9 +1598,7 @@ public class Interpreter {
 
         if (idata.itsFunctionType != 0) {
             InterpretedFunction f = (InterpretedFunction)fnOrScript;
-            if (f.itsClosure != null) {
-                scope = f.itsClosure;
-            } else if (!f.itsUseDynamicScope) {
+            if (!f.itsUseDynamicScope) {
                 scope = fnOrScript.getParentScope();
             }
 
@@ -2442,7 +2440,7 @@ public class Interpreter {
         InterpreterData closureData = idata.itsNestedFunctions[i];
         InterpretedFunction closure = createFunction(cx, scope, closureData,
                                                      idata.itsFromEvalCode);
-        closure.itsClosure = scope;
+        closure.itsUseDynamicScope = false;
         stack[++stackTop] = closure;
         pc += 2;
         break;
