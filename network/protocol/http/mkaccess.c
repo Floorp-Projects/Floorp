@@ -1859,7 +1859,8 @@ NET_GetCookie(MWContext * context, char * address)
       char* profile;
       if (BP_GetProfile(&profile)) {
         if (! first)
-          StrAllocCat(rv, "; BP=");
+          StrAllocCat(rv, "; ");
+        StrAllocCat(rv, "BP=");
         StrAllocCat(rv, profile);
         PL_strfree(profile);
       }
