@@ -32,24 +32,6 @@ NS_IMPL_ADDREF(nsMsgMailboxParser)
 NS_IMPL_RELEASE(nsMsgMailboxParser)
 NS_IMPL_QUERY_INTERFACE(nsMsgMailboxParser, nsIStreamListener::GetIID()); /* we need to pass in the interface ID of this interface */
 
-NS_BEGIN_EXTERN_C
-
-nsresult NS_NewMsgParser(nsIStreamListener ** aInstancePtr)
-{
-	nsresult rv = NS_OK;
-	if (aInstancePtr)
-	{
-		nsMsgMailboxParser * parser = new nsMsgMailboxParser();
-		if (parser)
-			rv =parser->QueryInterface(nsIStreamListener::GetIID(), (void **) aInstancePtr);		
-	}
-
-	return rv;
-}
-
-NS_END_EXTERN_C
-
-
 // Whenever data arrives from the connection, core netlib notifices the protocol by calling
 // OnDataAvailable. We then read and process the incoming data from the input stream. 
 NS_IMETHODIMP nsMsgMailboxParser::OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStream, PRUint32 aLength)
