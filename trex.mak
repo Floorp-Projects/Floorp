@@ -183,6 +183,12 @@ clobber_build_all:: 	clobber_all \
 
 pull_all:: pull_platform pull_julian pull_trex
 
+pull_julian_and_trex:: pull_julian pull_trex
+    @echo +++ trex.mak: checking out platform with "$(CVS_BRANCH)"
+    cd $(MOZ_SRC)\.
+    -$(CVS) $(CONFIG_BRANCH)  $(CONFIG_DIR)
+    cd $(MOZ_SRC)\.
+
 pull_platform::
     @echo +++ trex.mak: checking out platform with "$(CVS_BRANCH)"
     cd $(MOZ_SRC)\.
@@ -214,6 +220,8 @@ pull_trex::
 
 
 build_all:: build_platform build_julian build_trex
+
+build_julian_and_trex:: build_julian build_trex
 
 # builds PLATFORM_DIRS
 #build_platform:: 
