@@ -2702,7 +2702,7 @@ nsGlobalHistory::CheckHostnameEntries()
 
   nsCOMPtr<nsIMdbTableRowCursor> cursor;
   nsCOMPtr<nsIMdbRow> row;
-
+ 
   err = mTable->GetTableRowCursor(mEnv, -1, getter_AddRefs(cursor));
   if (err != 0) return NS_ERROR_FAILURE;
 
@@ -4092,9 +4092,12 @@ nsGlobalHistory::StopSearch()
 nsresult
 nsGlobalHistory::AutoCompleteTypedSearch(nsIAutoCompleteMdbResult **aResult)
 {
+  mdb_count count;
+  mdb_err err = mTable->GetCount(mEnv, &count);
+
   // Get a cursor to iterate through all rows in the database
   nsCOMPtr<nsIMdbTableRowCursor> rowCursor;
-  mdb_err err = mTable->GetTableRowCursor(mEnv, -1, getter_AddRefs(rowCursor));
+   err = mTable->GetTableRowCursor(mEnv, count, getter_AddRefs(rowCursor));
   NS_ENSURE_TRUE(!err, NS_ERROR_FAILURE);
 
   nsresult rv;
@@ -4106,7 +4109,7 @@ nsGlobalHistory::AutoCompleteTypedSearch(nsIAutoCompleteMdbResult **aResult)
   nsIMdbRow *row = nsnull;
   mdb_pos pos;
   do {
-    rowCursor->NextRow(mEnv, &row, &pos);
+    rowCursor->PrevRow(mEnv, &row, &pos);
     if (!row) break;
     
     if (HasCell(mEnv, row, kToken_TypedColumn)) {
