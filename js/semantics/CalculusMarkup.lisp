@@ -20,6 +20,18 @@
 ;;;
 
 
+(defvar *hide-$-nonterminals* t) ; Should rules and actions expanding nonterminals starting with $ be invisible?
+
+(defun hidden-nonterminal? (general-nonterminal)
+  (and *hide-$-nonterminals*
+       (eql (first-symbol-char (general-grammar-symbol-symbol general-nonterminal)) #\$)))
+
+
+; Return true if this action call should be replaced by a plain reference to the action's nonterminal.
+(defun default-action? (action-name)
+  (equal (symbol-name action-name) "$DEFAULT-ACTION"))
+
+
 ;;; ------------------------------------------------------------------------------------------------------
 ;;; SEMANTIC DEPICTION UTILITIES
 
@@ -51,7 +63,8 @@
 ;;; DEPICT-ENV
 
 ; A depict-env holds state that helps in depicting a grammar or lexer.
-(defstruct depict-env
+(defstruct (depict-env (:constructor make-depict-env (visible-semantics)))
+  (visible-semantics t :type bool)                               ;Nil if semantics are not to be depicted
   (grammar-info nil :type (or null grammar-info))                ;The current grammar-info or nil if none
   (seen-nonterminals nil :type (or null hash-table))             ;Hash table (nonterminal -> t) of nonterminals already depicted
   (seen-grammar-arguments nil :type (or null hash-table))        ;Hash table (grammar-argument -> t) of grammar-arguments already depicted
@@ -64,19 +77,20 @@
       (error "Grammar needed")))
 
 
-(defvar *visible-modes* t)
-
 ; Set the mode to the given mode, emitting a heading if necessary.
+; Return true if the contents should be visible, nil if not.
 (defun depict-mode (markup-stream depict-env mode)
   (unless (eq mode (depict-env-mode depict-env))
-    (when *visible-modes*
+    (when (depict-env-visible-semantics depict-env)
       (ecase mode
         (:syntax (depict-paragraph (markup-stream ':grammar-header)
                    (depict markup-stream "Syntax")))
         (:semantics (depict-paragraph (markup-stream ':grammar-header)
                       (depict markup-stream "Semantics")))
         ((nil))))
-    (setf (depict-env-mode depict-env) mode)))
+    (setf (depict-env-mode depict-env) mode))
+  (or (depict-env-visible-semantics depict-env)
+      (not (eq mode :semantics))))
 
 
 ; Emit markup paragraphs for a command.
@@ -93,8 +107,8 @@
 
 
 ; Emit markup paragraphs for the world's commands.
-(defun depict-world-commands (markup-stream world)
-  (let ((depict-env (make-depict-env)))
+(defun depict-world-commands (markup-stream world &key (visible-semantics t))
+  (let ((depict-env (make-depict-env visible-semantics)))
     (dolist (command (world-commands-source world))
       (depict-command markup-stream world depict-env command))
     (depict-clear-grammar markup-stream world depict-env)))
@@ -117,15 +131,41 @@
 
 
 ; Emit markup for the name of a type, which must be a symbol.
-(defun depict-type-name (markup-stream type-name)
-  (depict-char-style (markup-stream :type-name)
-    (depict markup-stream (symbol-upper-mixed-case-name type-name))))
+; link should be one of:
+;   :reference   if this is a reference of this type name;
+;   :external    if this is an external reference of this type name;
+;   :definition  if this is a definition of this type name;
+;   nil          if this use of the type name should not be cross-referenced.
+(defun depict-type-name (markup-stream type-name link)
+  (let ((name (symbol-upper-mixed-case-name type-name)))
+    (depict-link (markup-stream link "T-" name nil)
+      (depict-char-style (markup-stream :type-name)
+        (depict markup-stream name)))))
 
 
 ; Emit markup for the name of a tuple or oneof field, which must be a symbol.
-(defun depict-field-name (markup-stream field-name)
-  (depict-char-style (markup-stream :field-name)
-    (depict markup-stream (symbol-lower-mixed-case-name field-name))))
+; link should be one of:
+;   :reference   if this is a reference of this general-nonterminal;
+;   :external    if this is an external reference of this general-nonterminal;
+;   :definition  if this is a definition of this general-nonterminal;
+;   nil          if this use of the general-nonterminal should not be cross-referenced.
+; type is the tuple or oneof type that contains the field or nil if not known
+; (it's only needed if link is :reference or :external).
+(defun depict-field-name (markup-stream field-name link &optional type)
+  (labels
+    ((depict-it (markup-stream)
+       (depict-char-style (markup-stream :field-name)
+         (depict markup-stream (symbol-lower-mixed-case-name field-name)))))
+    (if (or (eq link :reference) (eq link :external))
+      (let ((type-name (type-name type)))
+        (assert-true (field-type type field-name))
+        (if type-name
+          (depict-link (markup-stream link "T-" (symbol-upper-mixed-case-name type-name) nil)
+            (depict-it markup-stream))
+          (progn
+            (warn "Reference to field ~S of anonymous type ~S" field-name type)
+            (depict-it markup-stream))))
+      (depict-it markup-stream))))
 
 
 ; If level < threshold, depict an opening parenthesis, evaluate body, and depict a closing
@@ -142,7 +182,8 @@
 (defun depict-type-expr (markup-stream world type-expr &optional level)
   (cond
    ((identifier? type-expr)
-    (depict-type-name markup-stream type-expr))
+    (let ((type-name (world-intern world type-expr)))
+      (depict-type-name markup-stream type-expr (if (symbol-type-user-defined type-name) :reference :external))))
    ((type? type-expr)
     (let ((type-str (print-type-to-string type-expr)))
       (warn "Depicting raw type ~A" type-str)
@@ -193,9 +234,9 @@
    markup-stream
    #'(lambda (markup-stream tag-pair)
        (if (identifier? tag-pair)
-         (depict-field-name markup-stream tag-pair)
+         (depict-field-name markup-stream tag-pair :definition)
          (progn
-           (depict-field-name markup-stream (first tag-pair))
+           (depict-field-name markup-stream (first tag-pair) :definition)
            (depict markup-stream ": ")
            (depict-type-expr markup-stream world (second tag-pair) *type-level-function*))))
    tag-pairs
@@ -271,9 +312,16 @@
 
 
 ; Emit markup for the name of a global variable, which must be a symbol.
-(defun depict-global-variable (markup-stream name)
-  (depict-char-style (markup-stream :global-variable)
-    (depict markup-stream (symbol-lower-mixed-case-name name))))
+; link should be one of:
+;   :reference   if this is a reference of this global variable;
+;   :external    if this is an external reference of this global variable;
+;   :definition  if this is a definition of this global variable;
+;   nil          if this use of the global variable should not be cross-referenced.
+(defun depict-global-variable (markup-stream global-name link)
+  (let ((name (symbol-lower-mixed-case-name global-name)))
+    (depict-link (markup-stream link "V-" name nil)
+      (depict-char-style (markup-stream :global-variable)
+        (depict markup-stream name)))))
 
 
 ; Emit markup for the name of a local variable, which must be a symbol.
@@ -309,7 +357,12 @@
 (defun depict-primitive (markup-stream primitive)
   (unless (eq (primitive-appearance primitive) ':global)
     (error "Can't depict primitive ~S outside a call" primitive))
-  (depict-item-or-group-list markup-stream (primitive-markup1 primitive)))
+  (let ((markup (primitive-markup1 primitive))
+        (external-name (primitive-markup2 primitive)))
+    (if external-name
+      (depict-link (markup-stream :external "V-" external-name nil)
+        (depict-item-or-group-list markup-stream markup))
+      (depict-item-or-group-list markup-stream markup))))
 
 
 ; Emit markup for the parameters to a function call.
@@ -362,10 +415,13 @@
 
 ; Emit markup for the reference to the action on the given general grammar symbol.
 (defun depict-action-reference (markup-stream action-name general-grammar-symbol &optional index)
-  (depict-action-name markup-stream action-name)
-  (depict markup-stream :action-begin)
-  (depict-general-grammar-symbol markup-stream general-grammar-symbol index)
-  (depict markup-stream :action-end))
+  (let ((action-default (default-action? action-name)))
+    (unless action-default
+      (depict-action-name markup-stream action-name)
+      (depict markup-stream :action-begin))
+    (depict-general-grammar-symbol markup-stream general-grammar-symbol :reference index)
+    (unless action-default
+      (depict markup-stream :action-end))))
 
 
 ; Emit markup for the given annotated value expression.  level indicates the binding level imposed
@@ -377,7 +433,7 @@
       (expr-annotation:constant (depict-constant markup-stream (first args)))
       (expr-annotation:primitive (depict-primitive markup-stream (symbol-primitive (first args))))
       (expr-annotation:local (depict-local-variable markup-stream (first args)))
-      (expr-annotation:global (depict-global-variable markup-stream (first args)))
+      (expr-annotation:global (depict-global-variable markup-stream (first args) :reference))
       (expr-annotation:call (apply #'depict-call markup-stream world level args))
       (expr-annotation:action (apply #'depict-action-reference markup-stream args))
       (expr-annotation:special-form
@@ -537,20 +593,21 @@
 
 ;;; Oneofs
 
-; (oneof <oneof-type> <tag> <value-expr>)
-(defun depict-oneof-form (markup-stream world level tag &optional value-annotated-expr)
+; (oneof <tag> <value-expr> [type])
+; [type] was added by scan-oneof-form.
+(defun depict-oneof-form (markup-stream world level tag value-annotated-expr type)
   (depict-expr-parentheses (markup-stream level *primitive-level-unary-prefix*)
-    (depict-field-name markup-stream tag)
+    (depict-field-name markup-stream tag :reference type)
     (when value-annotated-expr
       (depict-logical-block (markup-stream 4)
         (depict-break markup-stream 1)
         (depict-annotated-value-expr markup-stream world value-annotated-expr *primitive-level-unary*)))))
 
 
-; (typed-oneof <type-expr> <tag> <value-expr>)
-(defun depict-typed-oneof (markup-stream world level type-expr tag &optional value-annotated-expr)
+; (typed-oneof <type-expr> <tag> <value-expr> [type])
+(defun depict-typed-oneof (markup-stream world level type-expr tag value-annotated-expr type)
   (depict-expr-parentheses (markup-stream level *primitive-level-unary-prefix*)
-    (depict-field-name markup-stream tag)
+    (depict-field-name markup-stream tag :reference type)
     (depict-subscript-type-expr markup-stream world type-expr)
     (when value-annotated-expr
       (depict-logical-block (markup-stream 4)
@@ -558,9 +615,9 @@
         (depict-annotated-value-expr markup-stream world value-annotated-expr *primitive-level-unary*)))))
 
 
-; (case <oneof-expr> (<tag-spec> <value-expr>) (<tag-spec> <value-expr>) ... (<tag-spec> <value-expr>))
+; (case <oneof-expr> [oneof-expr-type] (<tag-spec> <value-expr>) (<tag-spec> <value-expr>) ... (<tag-spec> <value-expr>))
 ; where each <tag-spec> is either ((<tag> <tag> ... <tag>) nil nil) or ((<tag>) <var> <type>)
-(defun depict-case (markup-stream world level oneof-annotated-expr &rest annotated-cases)
+(defun depict-case (markup-stream world level oneof-annotated-expr oneof-expr-type &rest annotated-cases)
   (depict-statement (markup-stream 'case)
     (depict-logical-block (markup-stream 6)
       (depict-annotated-value-expr markup-stream world oneof-annotated-expr))
@@ -576,7 +633,8 @@
                   (depict-break markup-stream)
                   (depict-logical-block (markup-stream 6)
                     (depict-list markup-stream
-                                 #'depict-field-name
+                                 #'(lambda (markup-stream field-name)
+                                     (depict-field-name markup-stream field-name :reference oneof-expr-type))
                                  tags
                                  :indent 0
                                  :separator ","
@@ -597,23 +655,23 @@
       (depict-semantic-keyword markup-stream 'end))))
 
 
-; (select <tag> <oneof-expr>)
-; (& <tag> <tuple-expr>)
-(defun depict-select-or-& (markup-stream world level tag annotated-expr)
+; (select <tag> <oneof-expr> [oneof-expr-type])
+; (& <tag> <tuple-expr> [tuple-expr-type])
+(defun depict-select-or-& (markup-stream world level tag annotated-expr expr-type)
   (depict-expr-parentheses (markup-stream level *primitive-level-unary-suffix*)
     (depict-annotated-value-expr markup-stream world annotated-expr *primitive-level-unary-suffix*)
     (depict markup-stream ".")
-    (depict-field-name markup-stream tag)))
+    (depict-field-name markup-stream tag :reference expr-type)))
 
 
-; (is <tag> <oneof-expr>)
-(defun depict-is (markup-stream world level tag oneof-annotated-expr)
+; (is <tag> <oneof-expr> [oneof-expr-type])
+(defun depict-is (markup-stream world level tag oneof-annotated-expr oneof-expr-type)
   (depict-expr-parentheses (markup-stream level *primitive-level-relational*)
     (depict-annotated-value-expr markup-stream world oneof-annotated-expr *primitive-level-unary-suffix*)
     (depict-space markup-stream)
     (depict-semantic-keyword markup-stream 'is)
     (depict-space markup-stream)
-    (depict-field-name markup-stream tag)))
+    (depict-field-name markup-stream tag :reference oneof-expr-type)))
 
 
 ;;; Tuples
@@ -725,15 +783,15 @@
 
 
 ; (letexc (<var> <type> <expr> [:unused]) <body>)  ==>
-; (case <expr>
-;   ((abrupt x exception) (typed-oneof <body-type> abrupt x))
+; (case <expr> [expr-type]
+;   ((abrupt x exception) (typed-oneof <body-type> abrupt x [body-type]))
 ;   ((normal <var> <type> [:unused]) <body>)))
 (defun depict-letexc (markup-stream world level annotated-expansion)
   (assert-true (special-form-annotated-expr? 'case annotated-expansion))
   (let* ((expr-annotated-expr (third annotated-expansion))
-         (abrupt-binding (fourth annotated-expansion))
+         (abrupt-binding (fifth annotated-expansion))
          (abrupt-tag-spec (first abrupt-binding))
-         (normal-binding (fifth annotated-expansion))
+         (normal-binding (sixth annotated-expansion))
          (normal-tag-spec (first normal-binding)))
     (assert-true (equal (first abrupt-tag-spec) '(abrupt)))
     (assert-true (equal (first normal-tag-spec) '(normal)))
@@ -751,8 +809,7 @@
 
 
 (defmacro depict-semantics ((markup-stream depict-env &optional (paragraph-style ':semantics)) &body body)
-  `(progn
-     (depict-mode ,markup-stream ,depict-env :semantics)
+  `(when (depict-mode ,markup-stream ,depict-env :semantics)
      (depict-paragraph (,markup-stream ,paragraph-style)
        ,@body)))
 
@@ -761,18 +818,34 @@
 (defun depict-%section (markup-stream world depict-env section-name)
   (declare (ignore world))
   (assert-type section-name string)
-  (depict-mode markup-stream depict-env nil)
-  (depict-paragraph (markup-stream :section-heading)
-    (depict markup-stream section-name)))
+  (when (depict-mode markup-stream depict-env nil)
+    (depict-paragraph (markup-stream ':section-heading)
+      (depict markup-stream section-name))))
 
 
 ; (%subsection "subsection-name")
 (defun depict-%subsection (markup-stream world depict-env section-name)
   (declare (ignore world))
   (assert-type section-name string)
-  (depict-mode markup-stream depict-env nil)
-  (depict-paragraph (markup-stream :subsection-heading)
-    (depict markup-stream section-name)))
+  (when (depict-mode markup-stream depict-env nil)
+    (depict-paragraph (markup-stream ':subsection-heading)
+      (depict markup-stream section-name))))
+
+
+; (%text <mode> . <styled-text>)
+; <mode> is one of:
+;   :syntax     This is a comment about the syntax
+;   :semantics  This is a comment about the semantics (not displayed when semantics are not displayed)
+;   nil         This is a general comment
+(defun depict-%text (markup-stream world depict-env mode &rest text)
+  (declare (ignore world))
+  (when (depict-mode markup-stream depict-env mode)
+    (depict-paragraph (markup-stream ':body-text)
+      (let ((grammar-info (depict-env-grammar-info depict-env)))
+        (if grammar-info
+          (let ((*styled-text-grammar-parametrization* (grammar-info-grammar grammar-info)))
+            (depict-styled-text markup-stream text))
+          (depict-styled-text markup-stream text))))))
 
 
 ; (grammar-argument <argument> <attribute> <attribute> ... <attribute>)
@@ -781,17 +854,17 @@
   (let ((seen-grammar-arguments (depict-env-seen-grammar-arguments depict-env))
         (abbreviated-argument (symbol-abbreviation argument)))
     (unless (gethash abbreviated-argument seen-grammar-arguments)
-      (depict-mode markup-stream depict-env :syntax)
-      (depict-paragraph (markup-stream :grammar-argument)
-        (depict-nonterminal-argument markup-stream argument)
-        (depict markup-stream " " :member-10 " ")
-        (depict-list markup-stream
-                     #'(lambda (markup-stream attribute)
-                         (depict-nonterminal-attribute markup-stream attribute))
-                     attributes
-                     :prefix "{"
-                     :suffix "}"
-                     :separator ", "))
+      (when (depict-mode markup-stream depict-env :syntax)
+        (depict-paragraph (markup-stream :grammar-argument)
+          (depict-nonterminal-argument markup-stream argument)
+          (depict markup-stream " " :member-10 " ")
+          (depict-list markup-stream
+                       #'(lambda (markup-stream attribute)
+                           (depict-nonterminal-attribute markup-stream attribute))
+                       attributes
+                       :prefix "{"
+                       :suffix "}"
+                       :separator ", ")))
       (setf (gethash abbreviated-argument seen-grammar-arguments) t))))
 
 
@@ -807,32 +880,36 @@
     (labels
       ((seen-nonterminal? (nonterminal)
          (gethash nonterminal seen-nonterminals)))
-      (unless (every #'seen-nonterminal? (general-grammar-symbol-instances grammar general-nonterminal))
-        (depict-mode markup-stream depict-env :syntax)
-        (dolist (general-rule (grammar-general-rules grammar general-nonterminal))
-          (let ((rule-lhs-nonterminals (general-grammar-symbol-instances grammar (general-rule-lhs general-rule))))
-            (unless (every #'seen-nonterminal? rule-lhs-nonterminals)
-              (when (some #'seen-nonterminal? rule-lhs-nonterminals)
-                (warn "General rule for ~S listed before specific ones; use %rule to disambiguate" general-nonterminal))
-              (depict-general-rule markup-stream general-rule)
-              (dolist (nonterminal rule-lhs-nonterminals)
-                (setf (gethash nonterminal seen-nonterminals) t)))))))))
+      (unless (or (hidden-nonterminal? general-nonterminal)
+                  (every #'seen-nonterminal? (general-grammar-symbol-instances grammar general-nonterminal)))
+        (let ((visible (depict-mode markup-stream depict-env :syntax)))
+          (dolist (general-rule (grammar-general-rules grammar general-nonterminal))
+            (let ((rule-lhs-nonterminals (general-grammar-symbol-instances grammar (general-rule-lhs general-rule))))
+              (unless (every #'seen-nonterminal? rule-lhs-nonterminals)
+                (when (some #'seen-nonterminal? rule-lhs-nonterminals)
+                  (warn "General rule for ~S listed before specific ones; use %rule to disambiguate" general-nonterminal))
+                (when visible
+                  (depict-general-rule markup-stream general-rule))
+                (dolist (nonterminal rule-lhs-nonterminals)
+                  (setf (gethash nonterminal seen-nonterminals) t))))))))))
 ;******** May still have a problem when a specific rule precedes a general one.
 
 
 ; (%charclass <nonterminal>)
-(defun depict-%charclass (markup-stream world depict-env nonterminal)
+(defun depict-%charclass (markup-stream world depict-env nonterminal-source)
   (let* ((grammar-info (checked-depict-env-grammar-info depict-env))
+         (grammar (grammar-info-grammar grammar-info))
+         (nonterminal (grammar-parametrization-intern grammar nonterminal-source))
          (charclass (grammar-info-charclass grammar-info nonterminal)))
     (unless charclass
       (error "%charclass with a non-charclass ~S" nonterminal))
     (if (gethash nonterminal (depict-env-seen-nonterminals depict-env))
       (warn "Duplicate charclass ~S" nonterminal)
       (progn
-        (depict-mode markup-stream depict-env :syntax)
-        (depict-charclass markup-stream charclass)
-        (dolist (action-cons (charclass-actions charclass))
-          (depict-charclass-action world depict-env (cdr action-cons) nonterminal))
+        (when (depict-mode markup-stream depict-env :syntax)
+          (depict-charclass markup-stream charclass)
+          (dolist (action-cons (charclass-actions charclass))
+            (depict-charclass-action world depict-env (cdr action-cons) nonterminal)))
         (setf (gethash nonterminal (depict-env-seen-nonterminals depict-env)) t)))))
 
 
@@ -850,7 +927,7 @@
     (depict-logical-block (markup-stream 2)
       (depict-semantic-keyword markup-stream 'type)
       (depict-space markup-stream)
-      (depict-type-name markup-stream name)
+      (depict-type-name markup-stream name :definition)
       (depict-break markup-stream 1)
       (depict-logical-block (markup-stream 3)
         (depict markup-stream "= ")
@@ -867,7 +944,7 @@
 (defun depict-define (markup-stream world depict-env name type-expr value-expr destructured)
   (depict-semantics (markup-stream depict-env)
     (depict-logical-block (markup-stream 2)
-      (depict-global-variable markup-stream name)
+      (depict-global-variable markup-stream name :definition)
       (flet
         ((depict-type-and-value (markup-stream type-expr annotated-value-expr)
            (depict-logical-block (markup-stream 0)
@@ -910,7 +987,8 @@
             (missed-nonterminals nil))
         (dolist (nonterminal (grammar-nonterminals-list (grammar-info-grammar grammar-info)))
           (unless (or (gethash nonterminal seen-nonterminals)
-                      (eq nonterminal *start-nonterminal*))
+                      (eq nonterminal *start-nonterminal*)
+                      (hidden-nonterminal? nonterminal))
             (push nonterminal missed-nonterminals)))
         (when missed-nonterminals
           (warn "Nonterminals not printed: ~S" missed-nonterminals)))
@@ -929,7 +1007,7 @@
   (depict-space markup-stream)
   (depict-action-name markup-stream action-name)
   (depict markup-stream :action-begin)
-  (depict-general-grammar-symbol markup-stream general-grammar-symbol)
+  (depict-general-grammar-symbol markup-stream general-grammar-symbol :reference)
   (depict markup-stream :action-end)
   (depict-break markup-stream 1)
   (depict-logical-block (markup-stream 2)
@@ -942,7 +1020,8 @@
   (declare (ignore markup-stream))
   (let* ((grammar-info (checked-depict-env-grammar-info depict-env))
          (general-grammar-symbol (grammar-parametrization-intern (grammar-info-grammar grammar-info) general-grammar-symbol-source)))
-    (unless (grammar-info-charclass-or-partition grammar-info general-grammar-symbol)
+    (unless (or (and (general-nonterminal? general-grammar-symbol) (hidden-nonterminal? general-grammar-symbol))
+                (grammar-info-charclass-or-partition grammar-info general-grammar-symbol))
       (depict-delayed-action (markup-stream depict-env)
         (depict-semantics (markup-stream depict-env)
           (depict-logical-block (markup-stream 4)
@@ -951,15 +1030,17 @@
 
 ; Declare and define the lexer-action on the charclass given by nonterminal.
 (defun depict-charclass-action (world depict-env lexer-action nonterminal)
-  (depict-delayed-action (markup-stream depict-env)
-    (depict-semantics (markup-stream depict-env)
-      (depict-logical-block (markup-stream 4)
-        (depict-declare-action-contents markup-stream world (lexer-action-name lexer-action)
-                                        nonterminal (lexer-action-type-expr lexer-action))
-        (depict-break markup-stream 1)
-        (depict-logical-block (markup-stream 3)
-          (depict markup-stream "= ")
-          (depict-lexer-action markup-stream lexer-action nonterminal))))))
+  (let ((action-name (lexer-action-name lexer-action)))
+    (unless (default-action? action-name)
+      (depict-delayed-action (markup-stream depict-env)
+        (depict-semantics (markup-stream depict-env)
+          (depict-logical-block (markup-stream 4)
+            (depict-declare-action-contents markup-stream world action-name
+                                            nonterminal (lexer-action-type-expr lexer-action))
+            (depict-break markup-stream 1)
+            (depict-logical-block (markup-stream 3)
+              (depict markup-stream "= ")
+              (depict-lexer-action markup-stream lexer-action nonterminal))))))))
 
 
 ; (action <action-name> <production-name> <body>)
@@ -971,8 +1052,10 @@
   (declare (ignore markup-stream))
   (let* ((grammar-info (checked-depict-env-grammar-info depict-env))
          (grammar (grammar-info-grammar grammar-info))
-         (general-production (grammar-general-production grammar production-name)))
-    (unless (grammar-info-charclass grammar-info (general-production-lhs general-production))
+         (general-production (grammar-general-production grammar production-name))
+         (lhs (general-production-lhs general-production)))
+    (unless (or (grammar-info-charclass grammar-info lhs)
+                (hidden-nonterminal? lhs))
       (depict-delayed-action (markup-stream depict-env)
         (depict-semantics (markup-stream depict-env :semantics-next)
           (depict-logical-block (markup-stream 2)
@@ -981,7 +1064,7 @@
                    (action-grammar-symbols (annotated-expr-grammar-symbols body-annotated-expr)))
               (depict-action-name markup-stream action-name)
               (depict markup-stream :action-begin)
-              (depict-general-production markup-stream general-production action-grammar-symbols)
+              (depict-general-production markup-stream general-production :reference action-grammar-symbols)
               (depict markup-stream :action-end)
               (flet
                 ((depict-body (markup-stream body-annotated-expr)
