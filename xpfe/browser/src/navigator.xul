@@ -208,6 +208,7 @@
 <!ENTITY demo13Cmd.label "#13 DHTML">
 <!ENTITY demo14Cmd.label "#14 XML Sorting">
 <!ENTITY demo15Cmd.label "#15 XML IRS">
+<!ENTITY demo16Cmd.label "#16 Gfx Widgets">
 
 <!ENTITY xptkMenu.label "XPToolkit">
 <!ENTITY xptk1Cmd.label "Tri-state checkbox">
@@ -556,8 +557,9 @@
         <menuitem name="&demo11Cmd.label;" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test11.html'"/>
         <menuitem name="&demo12Cmd.label;" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test12.html'"/>
         <menuitem name="&demo13Cmd.label;" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test13.html'"/>
-	<menuitem name="&demo14Cmd.label;" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test14.html'"/>
-	<menuitem name="&demo15Cmd.label;" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test15.html'"/>
+        <menuitem name="&demo14Cmd.label;" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test14.html'"/>
+        <menuitem name="&demo15Cmd.label;" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test15.html'"/>
+        <menuitem name="&demo16Cmd.label;" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test16.html'"/>
       </menu>
 
       <menu name="&xptkMenu.label;"> // XPToolkit tests.
