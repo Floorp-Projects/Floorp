@@ -47,7 +47,9 @@ static char * ignoreArray[] = {
 	    "ftp://",
 		"www.",
 		"http://www.",
-        "keyword:",
+		"https://",
+		"https://www.",
+		"keyword:",
 		"://",
 		"//",
 		"\\",
@@ -56,7 +58,10 @@ static char * ignoreArray[] = {
 		".com",
 		".org",
 		".net",
-		"."
+		".",
+		"?",
+		"&",
+		"="
 	};
 static nsIRDFResource * kNC_CHILD;
 static nsIRDFResource * kNC_URLBARHISTORY;
