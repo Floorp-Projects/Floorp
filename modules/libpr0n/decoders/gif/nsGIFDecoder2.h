@@ -29,7 +29,6 @@
 #include "imgIContainer.h"
 #include "imgIDecoderObserver.h"
 #include "gfxIImageFrame.h"
-#include "imgIRequest.h"
 
 #include "GIF2.h"
 
@@ -62,7 +61,6 @@ public:
 
   nsCOMPtr<imgIContainer> mImageContainer;
   nsCOMPtr<gfxIImageFrame> mImageFrame;
-  nsCOMPtr<imgIRequest> mImageRequest;
   nsCOMPtr<imgIDecoderObserver> mObserver; // this is just qi'd from mRequest for speed
   PRInt32 mCurrentRow;
   PRInt32 mLastFlushedRow;

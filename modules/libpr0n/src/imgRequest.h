@@ -24,7 +24,7 @@
 #ifndef imgRequest_h__
 #define imgRequest_h__
 
-#include "imgIRequest.h"
+#include "imgILoad.h"
 
 #include "imgIContainer.h"
 #include "imgIDecoder.h"
@@ -42,14 +42,6 @@
 
 class imgRequestProxy;
 
-#define NS_IMGREQUEST_CID \
-{ /* 9f733dd6-1dd1-11b2-8cdf-effb70d1ea71 */         \
-     0x9f733dd6,                                     \
-     0x1dd1,                                         \
-     0x11b2,                                         \
-    {0x8c, 0xdf, 0xef, 0xfb, 0x70, 0xd1, 0xea, 0x71} \
-}
-
 enum {
   onStartDecode    = PR_BIT(0),
   onStartContainer = PR_BIT(1),
@@ -58,8 +50,8 @@ enum {
   onStopRequest    = PR_BIT(4)
 };
 
-class imgRequest : public imgIRequest,
-                   public imgIDecoderObserver, 
+class imgRequest : public imgILoad,
+                   public imgIDecoderObserver,
                    public nsIStreamListener,
                    public nsSupportsWeakReference
 {
@@ -67,21 +59,26 @@ public:
   imgRequest();
   virtual ~imgRequest();
 
-  /* additional members */
+  NS_DECL_ISUPPORTS
+
   nsresult Init(nsIChannel *aChannel, nsICacheEntryDescriptor *aCacheEntry);
-  nsresult AddProxy(imgRequestProxy *proxy);
+
+  nsresult AddProxy   (imgRequestProxy *proxy);
   nsresult RemoveProxy(imgRequestProxy *proxy, nsresult aStatus);
 
   void SniffMimeType(const char *buf, PRUint32 len);
 
-protected:
+private:
+  friend class imgRequestProxy;
+
+  inline PRUint32 GetImageStatus() { return mImageStatus; }
+  inline nsresult GetResultFromImageStatus(PRUint32 aStatus);
+  void Cancel(nsresult aStatus);
+  nsresult GetURI(nsIURI **aURI);
   void RemoveFromCache();
-  inline nsresult GetResultFromStatus(PRUint32 aStatus);
 
 public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_IMGIREQUEST
-  NS_DECL_NSIREQUEST
+  NS_DECL_IMGILOAD
   NS_DECL_IMGIDECODEROBSERVER
   NS_DECL_IMGICONTAINEROBSERVER
   NS_DECL_NSISTREAMLISTENER
@@ -98,7 +95,7 @@ private:
   PRBool mLoading;
   PRBool mProcessing;
 
-  PRUint32 mStatus;
+  PRUint32 mImageStatus;
   PRUint32 mState;
 
   nsCString mContentType;

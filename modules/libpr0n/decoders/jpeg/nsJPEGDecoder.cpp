@@ -116,11 +116,11 @@ nsJPEGDecoder::~nsJPEGDecoder()
 
 /** imgIDecoder methods **/
 
-/* void init (in imgIRequest aRequest); */
-NS_IMETHODIMP nsJPEGDecoder::Init(imgIRequest *aRequest)
+/* void init (in imgILoad aLoad); */
+NS_IMETHODIMP nsJPEGDecoder::Init(imgILoad *aLoad)
 {
-  mRequest = aRequest;
-  mObserver = do_QueryInterface(mRequest);
+  mImageLoad = aLoad;
+  mObserver = do_QueryInterface(aLoad);
 
   /* We set up the normal JPEG error routines, then override error_exit. */
   mInfo.err = jpeg_std_error(&mErr.pub);
@@ -268,7 +268,7 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
        this is the case when multipart/x-mixed-replace is being downloaded
        if we already have one and it has the same width and height, reuse it.
      */
-    mRequest->GetImage(getter_AddRefs(mImage));
+    mImageLoad->GetImage(getter_AddRefs(mImage));
     if (mImage) {
       PRInt32 width, height;
       mImage->GetWidth(&width);
@@ -285,7 +285,7 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
         mState = JPEG_ERROR;
         return NS_ERROR_OUT_OF_MEMORY;
       }
-      mRequest->SetImage(mImage);
+      mImageLoad->SetImage(mImage);
       mImage->Init(mInfo.image_width, mInfo.image_height, mObserver);
     }
 

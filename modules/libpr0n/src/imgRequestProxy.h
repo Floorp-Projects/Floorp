@@ -21,7 +21,7 @@
  *   Stuart Parmenter <pavlov@netscape.com>
  */
 
-#include "imgRequest.h"
+#include "imgIRequest.h"
 #include "imgIDecoderObserver.h"
 
 #include "imgIContainer.h"
@@ -30,6 +30,8 @@
 #include "nsIChannel.h"
 #include "nsILoadGroup.h"
 #include "nsCOMPtr.h"
+
+#include "imgRequest.h"
 
 #include "prlock.h"
 
@@ -41,17 +43,12 @@
     {0x8f, 0x65, 0x9c, 0x46, 0x2e, 0xe2, 0xbc, 0x95} \
 }
 
-class imgRequestProxy : public imgIRequest,
-                        public imgIDecoderObserver,
-                        public nsIRequestObserver
+class imgRequestProxy : public imgIRequest
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_IMGIREQUEST
   NS_DECL_NSIREQUEST
-  NS_DECL_IMGIDECODEROBSERVER
-  NS_DECL_IMGICONTAINEROBSERVER
-  NS_DECL_NSIREQUESTOBSERVER
 
   imgRequestProxy();
   virtual ~imgRequestProxy();
@@ -59,12 +56,30 @@ public:
   /* additional members */
   nsresult Init(imgRequest *request, nsILoadGroup *aLoadGroup, imgIDecoderObserver *aObserver, nsISupports *cx);
 
+protected:
+  friend class imgRequest;
+
+  /* non-virtual imgIDecoderObserver methods */
+  void OnStartDecode   (nsISupports *aCX);
+  void OnStartContainer(nsISupports *aCX, imgIContainer *aContainer);
+  void OnStartFrame    (nsISupports *aCX, gfxIImageFrame *aFrame);
+  void OnDataAvailable (nsISupports *aCX, gfxIImageFrame *aFrame, const nsRect * aRect);
+  void OnStopFrame     (nsISupports *aCX, gfxIImageFrame *aFrame);
+  void OnStopContainer (nsISupports *aCX, imgIContainer *aContainer);
+  void OnStopDecode    (nsISupports *aCX, nsresult status, const PRUnichar *statusArg); 
+
+  /* non-virtual imgIContainerObserver methods */
+  void FrameChanged(imgIContainer *aContainer, nsISupports *aCX, gfxIImageFrame *aFrame, nsRect * aDirtyRect);
+
+  /* non-virtual nsIRequestObserver methods */
+  void OnStartRequest(nsIRequest *request, nsISupports *ctxt);
+  void OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult statusCode); 
+
 private:
+  imgRequest *mOwner;
+
   nsCOMPtr<imgIDecoderObserver> mListener;
-
   nsCOMPtr<nsISupports> mContext;
-  nsCOMPtr<imgIRequest> mOwner;
-
   nsCOMPtr<nsILoadGroup> mLoadGroup;
 
   nsLoadFlags mLoadFlags;

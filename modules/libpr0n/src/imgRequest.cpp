@@ -49,15 +49,14 @@
 PRLogModuleInfo *gImgLog = PR_NewLogModule("imgRequest");
 #endif
 
-NS_IMPL_THREADSAFE_ISUPPORTS7(imgRequest, imgIRequest, nsIRequest,
-                              imgIDecoderObserver, imgIContainerObserver,
+NS_IMPL_THREADSAFE_ISUPPORTS5(imgRequest, imgIDecoderObserver, imgIContainerObserver,
                               nsIStreamListener, nsIRequestObserver,
                               nsISupportsWeakReference)
 
 imgRequest::imgRequest() : 
   mObservers(0),
   mLoading(PR_FALSE), mProcessing(PR_FALSE),
-  mStatus(imgIRequest::STATUS_NONE), mState(0)
+  mImageStatus(imgIRequest::STATUS_NONE), mState(0)
 {
   NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
@@ -67,7 +66,6 @@ imgRequest::~imgRequest()
 {
   /* destructor code */
 }
-
 
 nsresult imgRequest::Init(nsIChannel *aChannel, nsICacheEntryDescriptor *aCacheEntry)
 {
@@ -98,11 +96,11 @@ nsresult imgRequest::AddProxy(imgRequestProxy *proxy)
 
   // OnStartDecode
   if (mState & onStartDecode)
-    proxy->OnStartDecode(nsnull, nsnull);
+    proxy->OnStartDecode(nsnull);
 
   // OnStartContainer
   if (mState & onStartContainer)
-    proxy->OnStartContainer(nsnull, nsnull, mImage);
+    proxy->OnStartContainer(nsnull, mImage);
 
   // Send frame messages (OnStartFrame, OnDataAvailable, OnStopFrame)
   PRUint32 nframes = 0;
@@ -117,31 +115,31 @@ nsresult imgRequest::AddProxy(imgRequestProxy *proxy)
     NS_ASSERTION(frame, "GetCurrentFrame gave back a null frame!");
 
     // OnStartFrame
-    proxy->OnStartFrame(nsnull, nsnull, frame);
+    proxy->OnStartFrame(nsnull, frame);
 
     if (!(mState & onStopContainer)) {
       // OnDataAvailable
       nsRect r;
       frame->GetRect(r);  // XXX we should only send the currently decoded rectangle here.
-      proxy->OnDataAvailable(nsnull, nsnull, frame, &r);
+      proxy->OnDataAvailable(nsnull, frame, &r);
     } else {
       // OnDataAvailable
       nsRect r;
       frame->GetRect(r);  // We're done loading this image, send the the whole rect
-      proxy->OnDataAvailable(nsnull, nsnull, frame, &r);
+      proxy->OnDataAvailable(nsnull, frame, &r);
 
       // OnStopFrame
-      proxy->OnStopFrame(nsnull, nsnull, frame);
+      proxy->OnStopFrame(nsnull, frame);
     }
   }
 
   // OnStopContainer
   if (mState & onStopContainer)
-    proxy->OnStopContainer(nsnull, nsnull, mImage);
+    proxy->OnStopContainer(nsnull, mImage);
 
   // OnStopDecode
   if (mState & onStopDecode)
-    proxy->OnStopDecode(nsnull, nsnull, GetResultFromStatus(mStatus), nsnull);
+    proxy->OnStopDecode(nsnull, GetResultFromImageStatus(mImageStatus), nsnull);
 
   if (mImage && (mObservers.Count() == 1)) {
     LOG_MSG(gImgLog, "imgRequest::AddProxy", "starting animation");
@@ -150,7 +148,7 @@ nsresult imgRequest::AddProxy(imgRequestProxy *proxy)
   }
 
   if (mState & onStopRequest) {
-    proxy->OnStopRequest(nsnull, nsnull, GetResultFromStatus(mStatus));
+    proxy->OnStopRequest(nsnull, nsnull, GetResultFromImageStatus(mImageStatus));
   } 
 
   return NS_OK;
@@ -170,7 +168,7 @@ nsresult imgRequest::RemoveProxy(imgRequestProxy *proxy, nsresult aStatus)
 
   // make sure that observer gets an OnStopDecode message sent to it
   if (!(mState & onStopDecode)) {
-    proxy->OnStopDecode(nsnull, nsnull, aStatus, nsnull);
+    proxy->OnStopDecode(nsnull, aStatus, nsnull);
   }
 
   // make sure that observer gets an OnStopRequest message sent to it
@@ -193,7 +191,7 @@ nsresult imgRequest::RemoveProxy(imgRequestProxy *proxy, nsresult aStatus)
     if (mChannel && mLoading && NS_FAILED(aStatus)) {
       LOG_MSG(gImgLog, "imgRequest::RemoveProxy", "load in progress.  canceling");
 
-      mStatus |= STATUS_LOAD_PARTIAL;
+      mImageStatus |= imgIRequest::STATUS_LOAD_PARTIAL;
 
       this->Cancel(NS_BINDING_ABORTED);
     }
@@ -205,17 +203,7 @@ nsresult imgRequest::RemoveProxy(imgRequestProxy *proxy, nsresult aStatus)
   return NS_OK;
 }
 
-void imgRequest::RemoveFromCache()
-{
-  LOG_SCOPE(gImgLog, "imgRequest::RemoveFromCache");
-
-  if (mCacheEntry) {
-    mCacheEntry->Doom();
-    mCacheEntry = nsnull;
-  }
-}
-
-nsresult imgRequest::GetResultFromStatus(PRUint32 aStatus)
+nsresult imgRequest::GetResultFromImageStatus(PRUint32 aStatus)
 {
   nsresult rv = NS_OK;
 
@@ -227,32 +215,7 @@ nsresult imgRequest::GetResultFromStatus(PRUint32 aStatus)
   return rv;
 }
 
-
-/**  nsIRequest / imgIRequest methods **/
-
-/* readonly attribute wstring name; */
-NS_IMETHODIMP imgRequest::GetName(PRUnichar * *aName)
-{
-    NS_NOTYETIMPLEMENTED("imgRequest::GetName");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* boolean isPending (); */
-NS_IMETHODIMP imgRequest::IsPending(PRBool *_retval)
-{
-    NS_NOTYETIMPLEMENTED("imgRequest::IsPending");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* readonly attribute nsresult status; */
-NS_IMETHODIMP imgRequest::GetStatus(nsresult *aStatus)
-{
-    NS_NOTYETIMPLEMENTED("imgRequest::GetStatus");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* void cancel (in nsresult status); */
-NS_IMETHODIMP imgRequest::Cancel(nsresult aStatus)
+void imgRequest::Cancel(nsresult aStatus)
 {
   /* The Cancel() method here should only be called by this class. */
 
@@ -264,85 +227,16 @@ NS_IMETHODIMP imgRequest::Cancel(nsresult aStatus)
     mImage->StopAnimation();
   }
 
-  if (!(mStatus & imgIRequest::STATUS_LOAD_PARTIAL))
-    mStatus |= imgIRequest::STATUS_ERROR;
+  if (!(mImageStatus & imgIRequest::STATUS_LOAD_PARTIAL))
+    mImageStatus |= imgIRequest::STATUS_ERROR;
 
   RemoveFromCache();
 
   if (mChannel && mLoading)
     mChannel->Cancel(aStatus);
-
-  return NS_OK;
 }
 
-/* void suspend (); */
-NS_IMETHODIMP imgRequest::Suspend()
-{
-    NS_NOTYETIMPLEMENTED("imgRequest::Suspend");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* void resume (); */
-NS_IMETHODIMP imgRequest::Resume()
-{
-    NS_NOTYETIMPLEMENTED("imgRequest::Resume");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* attribute nsILoadGroup loadGroup */
-NS_IMETHODIMP imgRequest::GetLoadGroup(nsILoadGroup **loadGroup)
-{
-    NS_NOTYETIMPLEMENTED("imgRequest::GetLoadGroup");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-NS_IMETHODIMP imgRequest::SetLoadGroup(nsILoadGroup *loadGroup)
-{
-    NS_NOTYETIMPLEMENTED("imgRequest::SetLoadGroup");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* attribute nsLoadFlags loadFlags */
-NS_IMETHODIMP imgRequest::GetLoadFlags(nsLoadFlags *flags)
-{
-    *flags = LOAD_NORMAL;
-    return NS_OK;
-}
-NS_IMETHODIMP imgRequest::SetLoadFlags(nsLoadFlags flags)
-{
-    return NS_OK;
-}
-
-/** imgIRequest methods **/
-
-/* attribute imgIContainer image; */
-NS_IMETHODIMP imgRequest::GetImage(imgIContainer * *aImage)
-{
-  LOG_FUNC(gImgLog, "imgRequest::GetImage");
-
-  *aImage = mImage;
-  NS_IF_ADDREF(*aImage);
-  return NS_OK;
-}
-
-NS_IMETHODIMP imgRequest::SetImage(imgIContainer *aImage)
-{
-  LOG_FUNC(gImgLog, "imgRequest::SetImage");
-
-  mImage = aImage;
-  return NS_OK;
-}
-
-/* readonly attribute unsigned long imageStatus; */
-NS_IMETHODIMP imgRequest::GetImageStatus(PRUint32 *aStatus)
-{
-  LOG_FUNC(gImgLog, "imgRequest::GetImageStatus");
-
-  *aStatus = mStatus;
-  return NS_OK;
-}
-
-/* readonly attribute nsIURI URI; */
-NS_IMETHODIMP imgRequest::GetURI(nsIURI **aURI)
+nsresult imgRequest::GetURI(nsIURI **aURI)
 {
   LOG_FUNC(gImgLog, "imgRequest::GetURI");
 
@@ -358,11 +252,36 @@ NS_IMETHODIMP imgRequest::GetURI(nsIURI **aURI)
   return NS_ERROR_FAILURE;
 }
 
-/* readonly attribute imgIDecoderObserver decoderObserver; */
-NS_IMETHODIMP imgRequest::GetDecoderObserver(imgIDecoderObserver **aDecoderObserver)
+
+void imgRequest::RemoveFromCache()
 {
-    NS_NOTYETIMPLEMENTED("imgRequest::GetDecoderObserver");
-    return NS_ERROR_NOT_IMPLEMENTED;
+  LOG_SCOPE(gImgLog, "imgRequest::RemoveFromCache");
+
+  if (mCacheEntry) {
+    mCacheEntry->Doom();
+    mCacheEntry = nsnull;
+  }
+}
+
+
+/** imgILoad methods **/
+
+NS_IMETHODIMP imgRequest::SetImage(imgIContainer *aImage)
+{
+  LOG_FUNC(gImgLog, "imgRequest::SetImage");
+
+  mImage = aImage;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP imgRequest::GetImage(imgIContainer **aImage)
+{
+  LOG_FUNC(gImgLog, "imgRequest::GetImage");
+
+  *aImage = mImage;
+  NS_IF_ADDREF(*aImage);
+  return NS_OK;
 }
 
 
@@ -399,7 +318,7 @@ NS_IMETHODIMP imgRequest::OnStartDecode(imgIRequest *request, nsISupports *cx)
   PRInt32 count = mObservers.Count();
   for (PRInt32 i = 0; i < count; i++) {
     imgRequestProxy *proxy = NS_STATIC_CAST(imgRequestProxy*, mObservers[i]);
-    if (proxy) proxy->OnStartDecode(request, cx);
+    if (proxy) proxy->OnStartDecode(cx);
 
     // If this assertion fires, it means that imgRequest notifications could
     // be dropped!
@@ -428,12 +347,12 @@ NS_IMETHODIMP imgRequest::OnStartContainer(imgIRequest *request, nsISupports *cx
 
   mState |= onStartContainer;
 
-  mStatus |= imgIRequest::STATUS_SIZE_AVAILABLE;
+  mImageStatus |= imgIRequest::STATUS_SIZE_AVAILABLE;
 
   PRInt32 count = mObservers.Count();
   for (PRInt32 i = 0; i < count; i++) {
     imgRequestProxy *proxy = NS_STATIC_CAST(imgRequestProxy*, mObservers[i]);
-    if (proxy) proxy->OnStartContainer(request, cx, image);
+    if (proxy) proxy->OnStartContainer(cx, image);
 
     // If this assertion fires, it means that imgRequest notifications could
     // be dropped!
@@ -453,7 +372,7 @@ NS_IMETHODIMP imgRequest::OnStartFrame(imgIRequest *request, nsISupports *cx, gf
   PRInt32 count = mObservers.Count();
   for (PRInt32 i = 0; i < count; i++) {
     imgRequestProxy *proxy = NS_STATIC_CAST(imgRequestProxy*, mObservers[i]);
-    if (proxy) proxy->OnStartFrame(request, cx, frame);
+    if (proxy) proxy->OnStartFrame(cx, frame);
 
     // If this assertion fires, it means that imgRequest notifications could
     // be dropped!
@@ -476,7 +395,7 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(imgIRequest *request, nsISupports *cx,
   PRInt32 count = mObservers.Count();
   for (PRInt32 i = 0; i < count; i++) {
     imgRequestProxy *proxy = NS_STATIC_CAST(imgRequestProxy*, mObservers[i]);
-    if (proxy) proxy->OnDataAvailable(request, cx, frame, rect);
+    if (proxy) proxy->OnDataAvailable(cx, frame, rect);
 
     // If this assertion fires, it means that imgRequest notifications could
     // be dropped!
@@ -512,7 +431,7 @@ NS_IMETHODIMP imgRequest::OnStopFrame(imgIRequest *request, nsISupports *cx, gfx
   PRInt32 count = mObservers.Count();
   for (PRInt32 i = 0; i < count; i++) {
     imgRequestProxy *proxy = NS_STATIC_CAST(imgRequestProxy*, mObservers[i]);
-    if (proxy) proxy->OnStopFrame(request, cx, frame);
+    if (proxy) proxy->OnStopFrame(cx, frame);
 
     // If this assertion fires, it means that imgRequest notifications could
     // be dropped!
@@ -533,7 +452,7 @@ NS_IMETHODIMP imgRequest::OnStopContainer(imgIRequest *request, nsISupports *cx,
   PRInt32 count = mObservers.Count();
   for (PRInt32 i = 0; i < count; i++) {
     imgRequestProxy *proxy = NS_STATIC_CAST(imgRequestProxy*, mObservers[i]);
-    if (proxy) proxy->OnStopContainer(request, cx, image);
+    if (proxy) proxy->OnStopContainer(cx, image);
 
     // If this assertion fires, it means that imgRequest notifications could
     // be dropped!
@@ -553,14 +472,14 @@ NS_IMETHODIMP imgRequest::OnStopDecode(imgIRequest *aRequest, nsISupports *aCX, 
 
   mState |= onStopDecode;
 
-  if (NS_FAILED(aStatus) && !(mStatus & imgIRequest::STATUS_LOAD_PARTIAL)) {
-    mStatus |= imgIRequest::STATUS_ERROR;
+  if (NS_FAILED(aStatus) && !(mImageStatus & imgIRequest::STATUS_LOAD_PARTIAL)) {
+    mImageStatus |= imgIRequest::STATUS_ERROR;
   }
 
   PRInt32 count = mObservers.Count();
   for (PRInt32 i = 0; i < count; i++) {
     imgRequestProxy *proxy = NS_STATIC_CAST(imgRequestProxy*, mObservers[i]);
-    if (proxy) proxy->OnStopDecode(aRequest, aCX, GetResultFromStatus(mStatus), aStatusArg);
+    if (proxy) proxy->OnStopDecode(aCX, GetResultFromImageStatus(mImageStatus), aStatusArg);
 
     // If this assertion fires, it means that imgRequest notifications could
     // be dropped!
@@ -570,10 +489,6 @@ NS_IMETHODIMP imgRequest::OnStopDecode(imgIRequest *aRequest, nsISupports *aCX, 
 
   return NS_OK;
 }
-
-
-
-
 
 
 /** nsIRequestObserver methods **/
@@ -597,7 +512,7 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
   }
 
   /* set our state variables to their initial values. */
-  mStatus = imgIRequest::STATUS_NONE;
+  mImageStatus = imgIRequest::STATUS_NONE;
   mState = 0;
 
   /* set our loading flag to true */
@@ -662,7 +577,7 @@ NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt,
   if (NS_FAILED(status) || !mImage) {
     this->Cancel(status); // sets status, stops animations, removes from cache
   } else {
-    mStatus |= imgIRequest::STATUS_LOAD_COMPLETE;
+    mImageStatus |= imgIRequest::STATUS_LOAD_COMPLETE;
   }
 
   if (mDecoder) {
@@ -766,7 +681,7 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
       return NS_IMAGELIB_ERROR_NO_DECODER;
     }
 
-    nsresult rv = mDecoder->Init(NS_STATIC_CAST(imgIRequest*, this));
+    nsresult rv = mDecoder->Init(NS_STATIC_CAST(imgILoad*, this));
     if (NS_FAILED(rv)) {
       PR_LOG(gImgLog, PR_LOG_WARNING,
              ("[this=%p] imgRequest::OnDataAvailable -- mDecoder->Init failed\n", this));

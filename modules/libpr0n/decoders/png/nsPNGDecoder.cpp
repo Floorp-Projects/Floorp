@@ -24,21 +24,16 @@
 
 #include "nsPNGDecoder.h"
 
-#include "nsIInputStream.h"
-
-#include "nspr.h"
-
-#include "nsIComponentManager.h"
-
-#include "png.h"
-
-#include "nsIRequestObserver.h"
-
+#include "nsMemory.h"
 #include "nsRect.h"
 
-#include "nsMemory.h"
+#include "nsIComponentManager.h"
+#include "nsIInputStream.h"
 
 #include "imgIContainerObserver.h"
+
+#include "nspr.h"
+#include "png.h"
 
 PR_STATIC_CALLBACK(void) info_callback(png_structp png_ptr, png_infop info_ptr);
 PR_STATIC_CALLBACK(void) row_callback(png_structp png_ptr, png_bytep new_row,
@@ -71,17 +66,16 @@ nsPNGDecoder::~nsPNGDecoder()
 
 /** imgIDecoder methods **/
 
-/* void init (in imgIRequest aRequest); */
-NS_IMETHODIMP nsPNGDecoder::Init(imgIRequest *aRequest)
+/* void init (in imgILoad aLoad); */
+NS_IMETHODIMP nsPNGDecoder::Init(imgILoad *aLoad)
 {
-  mRequest = aRequest;
-  mObserver = do_QueryInterface(aRequest);  // we're holding 2 strong refs to the request.
+  mImageLoad = aLoad;
+  mObserver = do_QueryInterface(aLoad);  // we're holding 2 strong refs to the request.
 
   /* do png init stuff */
 
   /* Initialize the container's source image header. */
   /* Always decode to 24 bit pixdepth */
-
 
   mPNG = png_create_read_struct(PNG_LIBPNG_VER_STRING, 
                                 NULL, NULL, 
@@ -309,7 +303,7 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
   if (!decoder->mImage)
     longjmp(decoder->mPNG->jmpbuf, 5); // NS_ERROR_OUT_OF_MEMORY
 
-  decoder->mRequest->SetImage(decoder->mImage);
+  decoder->mImageLoad->SetImage(decoder->mImage);
 
   // since the png is only 1 frame, initalize the container to the width and height of the frame
   decoder->mImage->Init(width, height, decoder->mObserver);

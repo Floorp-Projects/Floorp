@@ -29,6 +29,8 @@
 
 #include "imgIContainerObserver.h"
 
+#include "imgILoad.h"
+
 #include "nsRect.h"
 
 //////////////////////////////////////////////////////////////////////
@@ -74,14 +76,13 @@ nsGIFDecoder2::~nsGIFDecoder2(void)
 //******************************************************************************
 
 //******************************************************************************
-/* void init (in imgIRequest aRequest); */
-NS_IMETHODIMP nsGIFDecoder2::Init(imgIRequest *aRequest)
+/* void init (in imgILoad aLoad); */
+NS_IMETHODIMP nsGIFDecoder2::Init(imgILoad *aLoad)
 {
-  mImageRequest = aRequest;
-  mObserver = do_QueryInterface(aRequest);  // we're holding 2 strong refs to the request.
+  mObserver = do_QueryInterface(aLoad);
 
   mImageContainer = do_CreateInstance("@mozilla.org/image/container;1");
-  aRequest->SetImage(mImageContainer);
+  aLoad->SetImage(mImageContainer);
   
   /* do gif init stuff */
   /* Always decode to 24 bit pixdepth */

@@ -31,7 +31,6 @@
 #include "imgIContainer.h"
 #include "imgIDecoderObserver.h"
 #include "gfxIImageFrame.h"
-#include "imgIRequest.h"
 
 #define NS_ICONDECODER_CID                           \
 { /* FFC08380-256C-11d5-9905-001083010E9B */         \
@@ -72,7 +71,6 @@ public:
 private:
   nsCOMPtr<imgIContainer> mImage;
   nsCOMPtr<gfxIImageFrame> mFrame;
-  nsCOMPtr<imgIRequest> mRequest;
   nsCOMPtr<imgIDecoderObserver> mObserver; // this is just qi'd from mRequest for speed
 };
 

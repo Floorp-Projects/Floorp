@@ -55,15 +55,15 @@ nsPPMDecoder::~nsPPMDecoder()
 
 /** imgIDecoder methods **/
 
-/* void init (in imgIRequest aRequest); */
-NS_IMETHODIMP nsPPMDecoder::Init(imgIRequest *aRequest)
+/* void init (in imgILoad aLoad); */
+NS_IMETHODIMP nsPPMDecoder::Init(imgILoad *aLoad)
 {
-  mRequest = aRequest;
+  mImageLoad = aLoad;
 
-  mObserver = do_QueryInterface(aRequest);  // we're holding 2 strong refs to the request.
+  mObserver = do_QueryInterface(aLoad);  // we're holding 2 strong refs to the request.
 
   mImage = do_CreateInstance("@mozilla.org/image/container;1");
-  aRequest->SetImage(mImage);
+  aLoad->SetImage(mImage);
 
   mFrame = do_CreateInstance("@mozilla.org/gfx/image/frame;2");
   if (!mFrame)
