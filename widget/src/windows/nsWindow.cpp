@@ -35,8 +35,13 @@
 BOOL nsWindow::sIsRegistered = FALSE;
 
 nsWindow * mCurrentWindow = NULL;
+// Global variable 
+//     g_hinst - handle of the application instance 
+extern HINSTANCE g_hinst; 
 
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
+
+
 
 
 // DoCreateTooltip - creates a tooltip control and adds some tools  
@@ -45,9 +50,6 @@ static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 //     otherwise. 
 // hwndOwner - handle of the owner window 
 // 
-// Global variable 
-//     g_hinst - handle of the application instance 
-extern HINSTANCE g_hinst; 
 
 void nsWindow::AddTooltip(HWND hwndOwner,nsRect& aRect) 
 { 
@@ -85,6 +87,30 @@ void nsWindow::AddTooltip(HWND hwndOwner,nsRect& aRect)
             (LPARAM) (LPTOOLINFO) &ti)) 
         return; 
 
+}
+
+void nsWindow::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
+{
+  POINT point;
+  point.x = aOldRect.x;
+  point.y = aOldRect.y;
+  ::ClientToScreen((HWND)GetNativeData(NS_NATIVE_WINDOW), &point);
+  aNewRect.x = point.x;
+  aNewRect.y = point.y;
+  aNewRect.width = aOldRect.width;
+  aNewRect.height = aOldRect.height;
+}
+
+void nsWindow::ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect)
+{
+  POINT point;
+  point.x = aOldRect.x;
+  point.y = aOldRect.y;
+  ::ScreenToClient((HWND)GetNativeData(NS_NATIVE_WINDOW), &point);
+  aNewRect.x = point.x;
+  aNewRect.y = point.y;
+  aNewRect.width = aOldRect.width;
+  aNewRect.height = aOldRect.height;
 } 
 
 //-------------------------------------------------------------------------

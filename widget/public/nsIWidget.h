@@ -416,6 +416,24 @@ class nsIWidget : public nsISupports {
 
     virtual void RemoveTooltips() = 0;
 
+     /**
+     * Convert from this widget coordinates to screen coordinates.
+     *
+     * @param  aOldRect  widget coordinates stored in the x,y members
+     * @param  aNewRect  screen coordinates stored in the x,y members
+     */
+
+    virtual void WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect) = 0;
+
+    /**
+     * Convert from screen coordinates to this widget's coordinates.
+     *
+     * @param  aOldRect  screen coordinates stored in the x,y members
+     * @param  aNewRect  widget's coordinates stored in the x,y members
+     */
+
+    virtual void ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect) = 0;
+
 };
 
 #endif // nsIWidget_h__
