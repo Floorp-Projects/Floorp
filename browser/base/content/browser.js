@@ -462,20 +462,20 @@ function ctrlNumberTabSelection(event)
   if (event.altKey && event.keyCode == KeyEvent.DOM_VK_RETURN) {
     // Don't let winxp beep on ALT+ENTER, since the URL bar uses it.
     event.preventDefault();
-    return true;
+    return;
   } 
 
   if (!event.ctrlKey)
-    return false;
+    return;
 
   var index = event.charCode - 49;
   if (index == -1)
     index = 9;
   if (index < 0 || index > 9)
-    return false;
+    return;
 
   if (index >= gBrowser.mTabContainer.childNodes.length)
-    return false;
+    return;
 
   var oldTab = gBrowser.selectedTab;
   var newTab = gBrowser.mTabContainer.childNodes[index];
