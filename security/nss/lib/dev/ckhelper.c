@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: ckhelper.c,v $ $Revision: 1.33 $ $Date: 2005/01/20 02:25:47 $";
+static const char CVS_ID[] = "@(#) $RCSfile: ckhelper.c,v $ $Revision: 1.34 $ $Date: 2005/04/04 18:46:23 $";
 #endif /* DEBUG */
 
 #ifndef NSSCKEPV_H
@@ -550,7 +550,8 @@ nssCryptokiTrust_GetAttributes (
     PRStatus status;
     NSSSlot *slot;
     nssSession *session;
-    CK_BBOOL isToken, stepUp;
+    CK_BBOOL isToken = PR_FALSE;
+    CK_BBOOL stepUp = PR_FALSE;
     CK_TRUST saTrust = CKT_NETSCAPE_TRUST_UNKNOWN;
     CK_TRUST caTrust = CKT_NETSCAPE_TRUST_UNKNOWN;
     CK_TRUST epTrust = CKT_NETSCAPE_TRUST_UNKNOWN;
