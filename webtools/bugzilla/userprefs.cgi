@@ -49,7 +49,7 @@ my @emailGroups = (
         );
 
 my @emailFlags = (
-        'Removeme',     'If I am removed from that capacity',
+        'Removeme',     'When I\'m added to or removed from this capacity',
         'Comments',     'New Comments',
         'Attachments',  'New Attachments',
         'Status',       'Priority, status, severity, and milestone changes',

@@ -679,6 +679,21 @@ sub getEmailAttributes ($@) {
         } elsif ( $fieldName eq 'CC') {
             push (@flags, 'CC');
         }
+
+        # These next few lines are for finding out who's been added
+        # to the Owner, QA, CC, etc. fields.  It does not effect
+        # the @flags array at all, but is run here because it does
+        # effect filtering later and we're already in the loop.
+        if ($fieldName eq 'Owner') {
+            push (@{$force{'Owner'}}, $new);
+        } elsif ($fieldName eq 'QAContact') {
+           push (@{$force{'QAContact'}}, $new);
+        } elsif ($fieldName eq 'CC') {
+            my @oldVal = split (/,/, $old);
+            my @newVal = split (/,/, $new);
+            my @added = filterExcludeList(\@newVal, \@oldVal);
+            push (@{$force{'CClist'}}, @added);
+        }
     }
     
     if ( $commentField =~ /Created an attachment \(/ ) {
@@ -831,8 +846,12 @@ sub filterEmailGroup ($$$) {
                 pop(@filteredList);
             }
 
-            # check to see if the person was removed from this email 
-            # group.
+            # check to see if the person was added to or removed from  
+            # this email group.
+            # Note: This was originally written as only removed from
+            # and was rewritten to be Added/Removed, but for simplicity
+            # sake, the name "Removeme" wasn't changed.
+            # http://bugzilla.mozilla.org/show_bug.cgi?id=71912 
 
             if ( grep ($_ eq $person, @{$force{$emailGroup}} ) ) {
 
