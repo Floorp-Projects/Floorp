@@ -88,8 +88,6 @@ smime_init()
 smime_main()
 {
 
-  echo "$SCRIPTNAME: doing nothing, so HP can do it's coredump..."
-  cmsutil < alice.txt 
   echo "$SCRIPTNAME: Signing Attached Message ------------------------------"
   echo "cmsutil -S -N Alice -i alice.txt -d ${R_ALICEDIR} -p nss -o alice.sig"
   cmsutil -S -N Alice -i alice.txt -d ${R_ALICEDIR} -p nss -o alice.sig
