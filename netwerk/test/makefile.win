@@ -39,9 +39,7 @@ LLIBS=					\
  $(DIST)\lib\xpcom.lib		\
  $(DIST)\lib\raptorgfxwin.lib		\
  $(LIBNSPR)				\
-!if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
-LLIBS=$(LLIBS) $(GLOWDIR)\glowcode.lib
-!endif
+ $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
 
