@@ -1006,8 +1006,9 @@ nsWebShellWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCont
   if (parentDocument == nsnull)
     return NS_ERROR_FAILURE;
 
+  nsCOMPtr<nsIContent> popupContent = do_QueryInterface(aPopupContent);
   nsCOMPtr<nsIDocument> popupDocument;
-  if (NS_FAILED(rv = parentDocument->CreatePopupDocument(aPopupContent, getter_AddRefs(popupDocument)))) {
+  if (NS_FAILED(rv = parentDocument->CreatePopupDocument(popupContent, getter_AddRefs(popupDocument)))) {
     NS_ERROR("Unable to create the child popup document.");
     return rv;
   }
