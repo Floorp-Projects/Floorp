@@ -286,14 +286,11 @@ nsImageBoxFrame::AttributeChanged(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
-#ifdef USE_IMG2
 nsImageBoxFrame::nsImageBoxFrame(nsIPresShell* aShell):nsLeafBoxFrame(aShell), mIntrinsicSize(0,0)
-#else
-nsImageBoxFrame::nsImageBoxFrame(nsIPresShell* aShell):nsLeafBoxFrame(aShell)
-#endif
 {
   mSizeFrozen = PR_FALSE;
   mHasImage = PR_FALSE;
+  mUseSrcAttr = PR_FALSE;
   NeedsRecalc();
 }
 
@@ -313,16 +310,11 @@ NS_METHOD
 nsImageBoxFrame::Destroy(nsIPresContext* aPresContext)
 {
   // Release image loader first so that it's refcnt can go to zero
-#ifdef USE_IMG2
   if (mImageRequest)
     mImageRequest->Cancel(NS_ERROR_FAILURE);
 
   if (mListener)
     NS_REINTERPRET_CAST(nsImageBoxListener*, mListener.get())->SetFrame(nsnull); // set the frame to null so we don't send messages to a dead object.
-
-#else
-  mImageLoader.StopAllLoadImages(aPresContext);
-#endif
 
   return nsLeafBoxFrame::Destroy(aPresContext);
 }
@@ -346,27 +338,35 @@ nsImageBoxFrame::Init(nsIPresContext*  aPresContext,
 
   nsresult  rv = nsLeafBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
+  GetImageSource();
   UpdateLoadFlags();
+
+  PRBool aResize;
+  UpdateImage(aPresContext, aResize);
 
   return rv;
 }
 
 void
-nsImageBoxFrame::GetImageSource(nsString& aResult)
+nsImageBoxFrame::GetImageSource()
 {
   // get the new image src
-  mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, aResult);
+  mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, mSrc);
 
   // if the new image is empty
-  if (aResult.IsEmpty()) {
+  if (mSrc.IsEmpty()) {
+    mUseSrcAttr = PR_FALSE;
+
     // get the list-style-image
     const nsStyleList* myList =
       (const nsStyleList*)mStyleContext->GetStyleData(eStyleStruct_List);
   
     if (myList->mListStyleImage.Length() > 0) {
-      aResult = myList->mListStyleImage;
+      mSrc = myList->mListStyleImage;
     }
   }
+  else
+    mUseSrcAttr = PR_TRUE;
 }
 
 void
@@ -375,8 +375,10 @@ nsImageBoxFrame::UpdateAttributes(nsIPresContext*  aPresContext, nsIAtom* aAttri
   aResize = PR_FALSE;
   aRedraw = PR_FALSE;
 
-  if (aAttribute == nsnull || aAttribute == nsHTMLAtoms::src)
+  if (aAttribute == nsnull || aAttribute == nsHTMLAtoms::src) {
+    GetImageSource();
     UpdateImage(aPresContext, aResize);
+  }
   else if (aAttribute == nsXULAtoms::validate)
     UpdateLoadFlags();
 }
@@ -399,13 +401,8 @@ nsImageBoxFrame::UpdateImage(nsIPresContext*  aPresContext, PRBool& aResize)
 {
   aResize = PR_FALSE;
 
-#ifdef USE_IMG2
-
   // get the new image src
-  nsAutoString src;
-  GetImageSource(src);
-
-  if (src.IsEmpty()) {
+  if (mSrc.IsEmpty()) {
     mSizeFrozen = PR_TRUE;
     mHasImage = PR_FALSE;
     aResize = PR_TRUE;
@@ -418,7 +415,7 @@ nsImageBoxFrame::UpdateImage(nsIPresContext*  aPresContext, PRBool& aResize)
   nsCOMPtr<nsIURI> baseURI;
   GetBaseURI(getter_AddRefs(baseURI));
   nsCOMPtr<nsIURI> srcURI;
-  NS_NewURI(getter_AddRefs(srcURI), src, baseURI);
+  NS_NewURI(getter_AddRefs(srcURI), mSrc, baseURI);
 
   if (mImageRequest) {
     nsCOMPtr<nsIURI> requestURI;
@@ -451,33 +448,6 @@ nsImageBoxFrame::UpdateImage(nsIPresContext*  aPresContext, PRBool& aResize)
   il->LoadImage(srcURI, loadGroup, mListener, aPresContext, mLoadFlags, nsnull, nsnull, getter_AddRefs(mImageRequest));
 
   aResize = PR_TRUE;
-
-#else
-  // see if the source changed
-  // get the old image src
-  nsAutoString oldSrc;
-  mImageLoader.GetURLSpec(oldSrc);
-
-  // get the new image src
-  nsAutoString src;
-  GetImageSource(src);
-
-   // see if the images are different
-  if (!oldSrc.Equals(src)) {      
-
-    if (!src.IsEmpty()) {
-      mSizeFrozen = PR_FALSE;
-      mHasImage = PR_TRUE;
-    } else {
-      mSizeFrozen = PR_TRUE;
-      mHasImage = PR_FALSE;
-    }
-
-    mImageLoader.UpdateURLSpec(aPresContext, src);  
-
-    aResize = PR_TRUE;
-  }
-#endif
 }
 
 NS_IMETHODIMP
@@ -523,36 +493,38 @@ nsImageBoxFrame::PaintImage(nsIPresContext* aPresContext,
   if (NS_FRAME_PAINT_LAYER_FOREGROUND != aWhichLayer)
     return NS_OK;
 
-#ifdef USE_IMG2
   if (!mImageRequest) return NS_ERROR_UNEXPECTED;
 
   nsCOMPtr<imgIContainer> imgCon;
   mImageRequest->GetImage(getter_AddRefs(imgCon));
 
   if (imgCon) {
-    if (rect.width == mImageSize.width && rect.height == mImageSize.height) {
+    PRBool hasSubRect = mSubRect.width > 0 || mSubRect.height > 0;
+    PRBool sizeMatch = hasSubRect ? 
+                       mSubRect.width == rect.width && mSubRect.height == rect.height :
+                       mImageSize.width == rect.width && mImageSize.height == rect.height;
+
+    if (sizeMatch) {
       nsPoint p(rect.x, rect.y);
-      rect.x = 0;
-      rect.y = 0;
+        
+      if (hasSubRect)
+        rect = mSubRect;
+      else {
+        rect.x = 0;
+        rect.y = 0;
+      }
+
+      // XXXdwh do dirty rect intersection like the HTML image frame does,
+      // so that we don't always repaint the entire image!
       aRenderingContext.DrawImage(imgCon, &rect, &p);
     }
     else {
-      nsRect src(rect.x, rect.y, mImageSize.width, mImageSize.height);
-      rect.x = rect.y = 0;
+      nsRect src(0, 0, mImageSize.width, mImageSize.height);
+      if (hasSubRect)
+        src = mSubRect;
       aRenderingContext.DrawScaledImage(imgCon, &src, &rect);
     }
   }
-
-#else
-  nsCOMPtr<nsIImage> image ( dont_AddRef(mImageLoader.GetImage()) );
-  if ( !image ) {
-  }
-  else {
-    // Now render the image into our content area (the area inside the
-    // borders and padding)
-    aRenderingContext.DrawImage(image, rect);
-  }
-#endif
 
   return NS_OK;
 }
@@ -564,14 +536,26 @@ nsImageBoxFrame::PaintImage(nsIPresContext* aPresContext,
 // When the style context changes, make sure that all of our image is up to date.
 //
 NS_IMETHODIMP
-nsImageBoxFrame :: DidSetStyleContext( nsIPresContext* aPresContext )
+nsImageBoxFrame::DidSetStyleContext( nsIPresContext* aPresContext )
 {
-  // if list-style-image change we want to change the image
+  // Fetch our subrect.
+  const nsStyleList* myList =
+    (const nsStyleList*)mStyleContext->GetStyleData(eStyleStruct_List);
+  mSubRect = myList->mImageRegion;
+
+  if (mUseSrcAttr)
+    return NS_OK; // No more work required, since the image isn't specified by style.
+
+  // If list-style-image changes, we have a new image.
+  nsAutoString newSrc;
+  if (myList->mListStyleImage.Equals(mSrc))
+    return NS_OK;
+
+  mSrc = myList->mListStyleImage;
+
   PRBool aResize;
   UpdateImage(aPresContext, aResize);
-  
   return NS_OK;
-  
 } // DidSetStyleContext
 
 void
@@ -593,17 +577,11 @@ nsImageBoxFrame::GetImageSize(nsIPresContext* aPresContext)
       return;
 	  } else {
       // Ask the image loader for the *intrinsic* image size
-#ifdef USE_IMG2
       if (mIntrinsicSize.width > 0 && mIntrinsicSize.height > 0) {
         mImageSize.width = mIntrinsicSize.width;
         mImageSize.height = mIntrinsicSize.height;
         return;
       } else {
-#else
-      mImageLoader.GetDesiredSize(aPresContext, nsnull, desiredSize);
-      if (desiredSize.width == 1 || desiredSize.height == 1)
-      {
-#endif
         mImageSize.width = kDefaultSizeInTwips;
         mImageSize.height = kDefaultSizeInTwips;
         return;
@@ -635,7 +613,10 @@ nsImageBoxFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
      CacheImageSize(aState);
   }
 
-  aSize = mImageSize;
+  if (mSubRect.width > 0 || mSubRect.height > 0)
+    aSize = nsSize(mSubRect.width, mSubRect.height);
+  else
+    aSize = mImageSize;
   AddBorderAndPadding(aSize);
   AddInset(aSize);
   nsIBox::AddCSSPrefSize(aState, this, aSize);
@@ -643,9 +624,6 @@ nsImageBoxFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
   return NS_OK;
 }
 
-/**
- * Ok return our dimensions
- */
 NS_IMETHODIMP
 nsImageBoxFrame::GetMinSize(nsBoxLayoutState& aState, nsSize& aSize)
 {
@@ -705,7 +683,6 @@ nsImageBoxFrame::GetBaseURI(nsIURI **uri)
   NS_IF_ADDREF(*uri);
 }
 
-#ifdef USE_IMG2
 void
 nsImageBoxFrame::GetLoadGroup(nsIPresContext *aPresContext, nsILoadGroup **aLoadGroup)
 {
@@ -758,7 +735,7 @@ NS_IMETHODIMP nsImageBoxFrame::OnStartContainer(imgIRequest *request, nsIPresCon
 
 NS_IMETHODIMP nsImageBoxFrame::OnStartFrame(imgIRequest *request, nsIPresContext *aPresContext, gfxIImageFrame *frame)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsImageBoxFrame::OnDataAvailable(imgIRequest *request, nsIPresContext *aPresContext, gfxIImageFrame *frame, const nsRect * rect)
@@ -768,7 +745,7 @@ NS_IMETHODIMP nsImageBoxFrame::OnDataAvailable(imgIRequest *request, nsIPresCont
 
 NS_IMETHODIMP nsImageBoxFrame::OnStopFrame(imgIRequest *request, nsIPresContext *aPresContext, gfxIImageFrame *frame)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsImageBoxFrame::OnStopContainer(imgIRequest *request, nsIPresContext *aPresContext, imgIContainer *image)
@@ -797,11 +774,7 @@ NS_IMETHODIMP nsImageBoxFrame::FrameChanged(imgIContainer *container, nsIPresCon
 
   return NS_OK;
 }
-#endif
 
-
-
-#ifdef USE_IMG2
 NS_IMPL_ISUPPORTS2(nsImageBoxListener, imgIDecoderObserver, imgIContainerObserver)
 
 nsImageBoxListener::nsImageBoxListener()
@@ -886,7 +859,4 @@ NS_IMETHODIMP nsImageBoxListener::FrameChanged(imgIContainer *container, nsISupp
   nsCOMPtr<nsIPresContext> pc(do_QueryInterface(cx));
   return mFrame->FrameChanged(container, pc, newframe, dirtyRect);
 }
-
-#endif
-
 

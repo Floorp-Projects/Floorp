@@ -1874,6 +1874,25 @@ MapListForDeclaration(nsICSSDeclaration* aDecl, nsCSSList& aList)
   if (aList.mPosition.GetUnit() == eCSSUnit_Null && ourList->mPosition.GetUnit() != eCSSUnit_Null)
     aList.mPosition = ourList->mPosition;
 
+  // image region: length, auto or inherit
+  if (ourList->mImageRegion) {
+    if (aList.mImageRegion->mLeft.GetUnit() == eCSSUnit_Null && 
+        ourList->mImageRegion->mLeft.GetUnit() != eCSSUnit_Null)
+      aList.mImageRegion->mLeft = ourList->mImageRegion->mLeft;
+
+    if (aList.mImageRegion->mRight.GetUnit() == eCSSUnit_Null && 
+        ourList->mImageRegion->mRight.GetUnit() != eCSSUnit_Null)
+      aList.mImageRegion->mRight = ourList->mImageRegion->mRight;
+
+    if (aList.mImageRegion->mTop.GetUnit() == eCSSUnit_Null && 
+        ourList->mImageRegion->mTop.GetUnit() != eCSSUnit_Null)
+      aList.mImageRegion->mTop = ourList->mImageRegion->mTop;
+
+    if (aList.mImageRegion->mBottom.GetUnit() == eCSSUnit_Null && 
+        ourList->mImageRegion->mBottom.GetUnit() != eCSSUnit_Null)
+      aList.mImageRegion->mBottom = ourList->mImageRegion->mBottom;
+  }
+
   return NS_OK;
 }
     
@@ -1960,6 +1979,13 @@ MapMarginForDeclaration(nsICSSDeclaration* aDeclaration, const nsStyleStructID& 
 
       if (eCSSUnit_Null == aMargin.mBorderColor->mBottom.GetUnit() && eCSSUnit_Null != ourMargin->mBorderColor->mBottom.GetUnit())
         aMargin.mBorderColor->mBottom = ourMargin->mBorderColor->mBottom;
+    }
+
+    // border-colors
+    if (ourMargin->mBorderColors) {
+      for (PRInt32 i = 0; i < 4; i++)
+        if (!aMargin.mBorderColors[i] && ourMargin->mBorderColors[i])
+          aMargin.mBorderColors[i] = ourMargin->mBorderColors[i];
     }
 
     // -moz-border-radius

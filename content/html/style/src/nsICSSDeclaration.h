@@ -233,10 +233,13 @@ struct nsCSSMargin : public nsCSSStruct  {
   const nsID& GetID(void);
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
+  void EnsureBorderColors();
+
   nsCSSRect*  mMargin;
   nsCSSRect*  mPadding;
   nsCSSRect*  mBorderWidth;
   nsCSSRect*  mBorderColor;
+  nsCSSValueList** mBorderColors;
   nsCSSRect*  mBorderStyle;
   nsCSSRect*  mBorderRadius;  // (extension)
   nsCSSValue  mOutlineWidth;
@@ -276,6 +279,7 @@ struct nsCSSList : public nsCSSStruct  {
   nsCSSValue mType;
   nsCSSValue mImage;
   nsCSSValue mPosition;
+  nsCSSRect*  mImageRegion;
 };
 
 struct nsCSSTable : public nsCSSStruct  { // NEW

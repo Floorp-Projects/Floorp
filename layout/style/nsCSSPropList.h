@@ -99,22 +99,26 @@ CSS_PROP(-moz-binding, binding, FRAMECHANGE) // XXX bug 3935
 CSS_PROP(border, border, REFLOW)
 CSS_PROP(border-bottom, border_bottom, REFLOW)
 CSS_PROP(border-bottom-color, border_bottom_color, VISUAL)
+CSS_PROP(-moz-border-bottom-colors, border_bottom_colors, VISUAL)
 CSS_PROP(border-bottom-style, border_bottom_style, REFLOW)  // on/off will need reflow
 CSS_PROP(border-bottom-width, border_bottom_width, REFLOW)
 CSS_PROP(border-collapse, border_collapse, REFLOW)
 CSS_PROP(border-color, border_color, VISUAL)
 CSS_PROP(border-left, border_left, REFLOW)
 CSS_PROP(border-left-color, border_left_color, VISUAL)
+CSS_PROP(-moz-border-left-colors, border_left_colors, VISUAL)
 CSS_PROP(border-left-style, border_left_style, REFLOW)  // on/off will need reflow
 CSS_PROP(border-left-width, border_left_width, REFLOW)
 CSS_PROP(border-right, border_right, REFLOW)
 CSS_PROP(border-right-color, border_right_color, VISUAL)
+CSS_PROP(-moz-border-right-colors, border_right_colors, VISUAL)
 CSS_PROP(border-right-style, border_right_style, REFLOW)  // on/off will need reflow
 CSS_PROP(border-right-width, border_right_width, REFLOW)
 CSS_PROP(border-spacing, border_spacing, REFLOW)
 CSS_PROP(border-style, border_style, REFLOW)  // on/off will need reflow
 CSS_PROP(border-top, border_top, REFLOW)
 CSS_PROP(border-top-color, border_top_color, VISUAL)
+CSS_PROP(-moz-border-top-colors, border_top_colors, VISUAL)
 CSS_PROP(border-top-style, border_top_style, REFLOW)  // on/off will need reflow
 CSS_PROP(border-top-width, border_top_width, REFLOW)
 CSS_PROP(border-width, border_width, REFLOW)
@@ -159,6 +163,11 @@ CSS_PROP(font-style, font_style, REFLOW)
 CSS_PROP(font-variant, font_variant, REFLOW)
 CSS_PROP(font-weight, font_weight, REFLOW)
 CSS_PROP(height, height, REFLOW)
+CSS_PROP(-moz-image-region, image_region, REFLOW)
+CSS_PROP(-x-image-region-bottom, image_region_bottom, REFLOW)
+CSS_PROP(-x-image-region-left, image_region_left, REFLOW)
+CSS_PROP(-x-image-region-right, image_region_right, REFLOW)
+CSS_PROP(-x-image-region-top, image_region_top, REFLOW)
 CSS_PROP(-moz-key-equivalent, key_equivalent, CONTENT) // This will need some other notification, but what? // XXX bug 3935
 CSS_PROP(left, left, REFLOW)
 CSS_PROP(letter-spacing, letter_spacing, REFLOW)

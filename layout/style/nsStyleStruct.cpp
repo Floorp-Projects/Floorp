@@ -449,6 +449,8 @@ nsStyleBorder::nsStyleBorder(nsIPresContext* aPresContext)
   mBorderColor[2] = NS_RGB(0, 0, 0);  
   mBorderColor[3] = NS_RGB(0, 0, 0); 
 
+  mBorderColors = nsnull;
+
   mBorderRadius.Reset();
 
   mFloatEdge = NS_STYLE_FLOAT_EDGE_CONTENT;
@@ -459,6 +461,14 @@ nsStyleBorder::nsStyleBorder(nsIPresContext* aPresContext)
 nsStyleBorder::nsStyleBorder(const nsStyleBorder& aSrc)
 {
   nsCRT::memcpy((nsStyleBorder*)this, &aSrc, sizeof(nsStyleBorder));
+  if (aSrc.mBorderColors) {
+    EnsureBorderColors();
+    for (PRInt32 i = 0; i < 4; i++)
+      if (aSrc.mBorderColors[i])
+        mBorderColors[i] = aSrc.mBorderColors[i]->CopyColors();
+      else
+        mBorderColors[i] = nsnull;
+  }
   mHasCachedBorder = PR_FALSE;
 }
 
@@ -653,8 +663,14 @@ PRInt32 nsStyleList::CalcDifference(const nsStyleList& aOther) const
 {
   if (mListStylePosition == aOther.mListStylePosition)
     if (mListStyleImage == aOther.mListStyleImage)
-      if (mListStyleType == aOther.mListStyleType)
-        return NS_STYLE_HINT_NONE;
+      if (mListStyleType == aOther.mListStyleType) {
+        if (mImageRegion == aOther.mImageRegion)
+          return NS_STYLE_HINT_NONE;
+        if (mImageRegion.width == aOther.mImageRegion.width &&
+            mImageRegion.height == aOther.mImageRegion.height)
+          return NS_STYLE_HINT_VISUAL;
+        return NS_STYLE_HINT_REFLOW;
+      }
       return NS_STYLE_HINT_REFLOW;
     return NS_STYLE_HINT_REFLOW;
   return NS_STYLE_HINT_REFLOW;
@@ -740,9 +756,8 @@ PRInt32 nsStylePosition::CalcDifference(const nsStylePosition& aOther) const
       (mMinHeight == aOther.mMinHeight) &&
       (mMaxHeight == aOther.mMaxHeight) &&
       (mBoxSizing == aOther.mBoxSizing) &&
-      (mZIndex == aOther.mZIndex)) {
+      (mZIndex == aOther.mZIndex))
     return NS_STYLE_HINT_NONE;
-  }
   return NS_STYLE_HINT_REFLOW;
 }
 
