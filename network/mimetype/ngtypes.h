@@ -6,6 +6,8 @@ desc=\"Plain Text\"               icon=resource:/res/network/gopher-text.gif",
 desc=\"Hypertext Markup Language\" icon=resource:/res/network/gopher-text.gif",
 "exts=\"xml\"	                  type=text/xml                 \
 desc=\"Extensible Markup Language\" icon=resource:/res/network/gopher-text.gif",
+"exts=\"rdf\"                     type=text/rdf                    \
+desc=\"Resource Description Framework\" icon=resource:/res/network/gopher-text.gif",
 "exts=\"rtf\"                      type=application/rtf            \
 desc=\"Rich Text Format\"         icon=resource:/res/network/gopher-text.gif",
 "exts=\"pdf\"                      type=application/pdf            \
