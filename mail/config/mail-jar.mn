@@ -151,6 +151,8 @@ content/global/NPL-1.1.html,                          toolkit/content/global/NPL
 content/global/customizeToolbar.xul,                  toolkit/content/global/customizeToolbar.xul
 content/global/customizeToolbar.js,                   toolkit/content/global/customizeToolbar.js
 content/global/customizeToolbar.css,                  toolkit/content/global/customizeToolbar.css
+content/global/customizeCharset.xul,                  toolkit/content/global/customizeCharset.xul
+content/global/customizeCharset.js,                   toolkit/content/global/customizeCharset.js
 
 #from mozapps
 content/mozapps/downloads,                            toolkit/content/mozapps/downloads
