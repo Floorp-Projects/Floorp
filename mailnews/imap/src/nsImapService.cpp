@@ -2180,14 +2180,14 @@ NS_IMETHODIMP nsImapService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI 
 
         if (aRootFolder)
         {
-            nsCOMPtr<nsISupports> aSupports;
-            rv = aRootFolder->GetChildNamed(folderName, getter_AddRefs(aSupports));
+            nsCOMPtr<nsIFolder> aFolder;
+            rv = aRootFolder->FindSubFolder(folderName, getter_AddRefs(aFolder));
             if (NS_SUCCEEDED(rv))
             {
-                nsCOMPtr<nsIImapMessageSink> msgSink = do_QueryInterface(aSupports);
+                nsCOMPtr<nsIImapMessageSink> msgSink = do_QueryInterface(aFolder);
                 rv = aImapUrl->SetImapMessageSink(msgSink);
 
-                nsCOMPtr<nsIMsgFolder> msgFolder = do_QueryInterface(aSupports);
+                nsCOMPtr<nsIMsgFolder> msgFolder = do_QueryInterface(aFolder);
                 rv = SetImapUrlSink(msgFolder, aImapUrl);	
             }
 
