@@ -74,10 +74,6 @@ public:
   // nsIContent interface methods
 
   virtual void SetParent(nsIContent* aParent);
-  virtual PRBool CanContainChildren() const;
-  virtual PRUint32 GetChildCount() const;
-  virtual nsIContent *GetChildAt(PRUint32 aIndex) const;
-  virtual PRInt32 IndexOf(nsIContent* aPossibleChild) const;
   virtual nsIAtom *GetIDAttributeName() const;
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                    const nsAString& aValue, PRBool aNotify)

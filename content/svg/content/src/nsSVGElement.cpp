@@ -123,30 +123,6 @@ nsSVGElement::SetParent(nsIContent* aParent)
   ParentChainChanged();
 }
 
-PRBool
-nsSVGElement::CanContainChildren() const
-{
-  return PR_TRUE;
-}
-
-PRUint32
-nsSVGElement::GetChildCount() const
-{
-  return mAttrsAndChildren.ChildCount();
-}
-
-nsIContent *
-nsSVGElement::GetChildAt(PRUint32 aIndex) const
-{
-  return mAttrsAndChildren.GetSafeChildAt(aIndex);
-}
-
-PRInt32
-nsSVGElement::IndexOf(nsIContent* aPossibleChild) const
-{
-  return mAttrsAndChildren.IndexOfChild(aPossibleChild);
-}
-
 nsIAtom *
 nsSVGElement::GetIDAttributeName() const
 {

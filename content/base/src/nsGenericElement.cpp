@@ -3218,15 +3218,14 @@ nsGenericElement::AddScriptEventListener(nsIAtom* aAttribute,
 //----------------------------------------------------------------------
 
 const nsAttrName*
-nsGenericContainerElement::InternalGetExistingAttrNameFromQName(const nsAString& aStr) const
+nsGenericElement::InternalGetExistingAttrNameFromQName(const nsAString& aStr) const
 {
   return mAttrsAndChildren.GetExistingAttrNameFromQName(
     NS_ConvertUTF16toUTF8(aStr));
 }
 
 nsresult
-nsGenericContainerElement::CopyInnerTo(nsGenericContainerElement* aDst,
-                                       PRBool aDeep)
+nsGenericElement::CopyInnerTo(nsGenericElement* aDst, PRBool aDeep)
 {
   nsresult rv;
   PRUint32 i, count = mAttrsAndChildren.AttrCount();
@@ -3312,9 +3311,9 @@ nsGenericElement::HasMutationListeners(nsIContent* aContent, PRUint32 aType)
 }
 
 nsresult
-nsGenericContainerElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
-                                   nsIAtom* aPrefix, const nsAString& aValue,
-                                   PRBool aNotify)
+nsGenericElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
+                          nsIAtom* aPrefix, const nsAString& aValue,
+                          PRBool aNotify)
 {
   NS_ENSURE_ARG_POINTER(aName);
   NS_ASSERTION(aNamespaceID != kNameSpaceID_Unknown,
@@ -3411,8 +3410,8 @@ nsGenericContainerElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
 }
 
 nsresult
-nsGenericContainerElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                   nsAString& aResult) const
+nsGenericElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                          nsAString& aResult) const
 {
   NS_ASSERTION(nsnull != aName, "must have attribute name");
   NS_ASSERTION(aNameSpaceID != kNameSpaceID_Unknown,
@@ -3435,7 +3434,7 @@ nsGenericContainerElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 }
 
 PRBool
-nsGenericContainerElement::HasAttr(PRInt32 aNameSpaceID, nsIAtom* aName) const
+nsGenericElement::HasAttr(PRInt32 aNameSpaceID, nsIAtom* aName) const
 {
   NS_ASSERTION(nsnull != aName, "must have attribute name");
   NS_ASSERTION(aNameSpaceID != kNameSpaceID_Unknown,
@@ -3445,8 +3444,8 @@ nsGenericContainerElement::HasAttr(PRInt32 aNameSpaceID, nsIAtom* aName) const
 }
 
 nsresult
-nsGenericContainerElement::UnsetAttr(PRInt32 aNameSpaceID,
-                                     nsIAtom* aName, PRBool aNotify)
+nsGenericElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                            PRBool aNotify)
 {
   NS_ASSERTION(nsnull != aName, "must have attribute name");
 
@@ -3506,10 +3505,8 @@ nsGenericContainerElement::UnsetAttr(PRInt32 aNameSpaceID,
 }
 
 nsresult
-nsGenericContainerElement::GetAttrNameAt(PRUint32 aIndex,
-                                         PRInt32* aNameSpaceID,
-                                         nsIAtom** aName,
-                                         nsIAtom** aPrefix) const
+nsGenericElement::GetAttrNameAt(PRUint32 aIndex, PRInt32* aNameSpaceID,
+                                nsIAtom** aName, nsIAtom** aPrefix) const
 {
   const nsAttrName* name = mAttrsAndChildren.GetSafeAttrNameAt(aIndex);
   if (name) {
@@ -3528,18 +3525,28 @@ nsGenericContainerElement::GetAttrNameAt(PRUint32 aIndex,
 }
 
 PRUint32
-nsGenericContainerElement::GetAttrCount() const
+nsGenericElement::GetAttrCount() const
 {
   return mAttrsAndChildren.AttrCount();
 }
 
 #ifdef DEBUG
 void
-nsGenericContainerElement::ListAttributes(FILE* out) const
+nsGenericElement::List(FILE* out, PRInt32 aIndent) const
 {
-  PRUint32 index, count = mAttrsAndChildren.AttrCount();
+  NS_PRECONDITION(nsnull != mDocument, "bad content");
 
-  for (index = 0; index < count; index++) {
+  PRInt32 index;
+  for (index = aIndent; --index >= 0; ) fputs("  ", out);
+
+  nsAutoString buf;
+  mNodeInfo->GetQualifiedName(buf);
+  fputs(NS_LossyConvertUCS2toASCII(buf).get(), out);
+
+  fprintf(out, "@%p", this);
+
+  PRUint32 attrcount = mAttrsAndChildren.AttrCount();
+  for (index = 0; index < attrcount; index++) {
     nsAutoString buffer;
 
     // name
@@ -3554,23 +3561,6 @@ nsGenericContainerElement::ListAttributes(FILE* out) const
     fputs(" ", out);
     fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
   }
-}
-
-void
-nsGenericContainerElement::List(FILE* out, PRInt32 aIndent) const
-{
-  NS_PRECONDITION(nsnull != mDocument, "bad content");
-
-  PRInt32 index;
-  for (index = aIndent; --index >= 0; ) fputs("  ", out);
-
-  nsAutoString buf;
-  mNodeInfo->GetQualifiedName(buf);
-  fputs(NS_LossyConvertUCS2toASCII(buf).get(), out);
-
-  fprintf(out, "@%p", this);
-
-  ListAttributes(out);
 
   fprintf(out, " refcount=%d<", mRefCnt.get());
 
@@ -3591,7 +3581,7 @@ nsGenericContainerElement::List(FILE* out, PRInt32 aIndent) const
     nsIBindingManager* bindingManager = mDocument->GetBindingManager();
     if (bindingManager) {
       nsCOMPtr<nsIDOMNodeList> anonymousChildren;
-      bindingManager->GetAnonymousNodesFor(NS_STATIC_CAST(nsIContent*, NS_CONST_CAST(nsGenericContainerElement*, this)),
+      bindingManager->GetAnonymousNodesFor(NS_CONST_CAST(nsGenericElement*, this),
                                            getter_AddRefs(anonymousChildren));
 
       if (anonymousChildren) {
@@ -3614,12 +3604,12 @@ nsGenericContainerElement::List(FILE* out, PRInt32 aIndent) const
       }
 
       PRBool hasContentList;
-      bindingManager->HasContentListFor(NS_STATIC_CAST(nsIContent*, NS_CONST_CAST(nsGenericContainerElement*, this)),
+      bindingManager->HasContentListFor(NS_CONST_CAST(nsGenericElement*, this),
                                         &hasContentList);
 
       if (hasContentList) {
         nsCOMPtr<nsIDOMNodeList> contentList;
-        bindingManager->GetContentListFor(NS_STATIC_CAST(nsIContent*, NS_CONST_CAST(nsGenericContainerElement*, this)),
+        bindingManager->GetContentListFor(NS_CONST_CAST(nsGenericElement*, this),
                                           getter_AddRefs(contentList));
 
         NS_ASSERTION(contentList != nsnull, "oops, binding manager lied");
@@ -3646,32 +3636,32 @@ nsGenericContainerElement::List(FILE* out, PRInt32 aIndent) const
 }
 
 void
-nsGenericContainerElement::DumpContent(FILE* out, PRInt32 aIndent,
-                                       PRBool aDumpAll) const
+nsGenericElement::DumpContent(FILE* out, PRInt32 aIndent,
+                              PRBool aDumpAll) const
 {
 }
 #endif
 
 PRBool
-nsGenericContainerElement::CanContainChildren() const
+nsGenericElement::CanContainChildren() const
 {
   return PR_TRUE;
 }
 
 PRUint32
-nsGenericContainerElement::GetChildCount() const
+nsGenericElement::GetChildCount() const
 {
   return mAttrsAndChildren.ChildCount();
 }
 
 nsIContent *
-nsGenericContainerElement::GetChildAt(PRUint32 aIndex) const
+nsGenericElement::GetChildAt(PRUint32 aIndex) const
 {
   return mAttrsAndChildren.GetSafeChildAt(aIndex);
 }
 
 PRInt32
-nsGenericContainerElement::IndexOf(nsIContent* aPossibleChild) const
+nsGenericElement::IndexOf(nsIContent* aPossibleChild) const
 {
   NS_PRECONDITION(nsnull != aPossibleChild, "null ptr");
 

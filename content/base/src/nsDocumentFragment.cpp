@@ -50,7 +50,7 @@
 #include "nsLayoutAtoms.h"
 
 
-class nsDocumentFragment : public nsGenericContainerElement,
+class nsDocumentFragment : public nsGenericElement,
                            public nsIDocumentFragment,
                            public nsIDOM3Node
 {
@@ -68,24 +68,24 @@ public:
 
   // interface nsIDOMDocumentFragment
   NS_IMETHOD    GetNodeName(nsAString& aNodeName)
-  { return nsGenericContainerElement::GetNodeName(aNodeName); }
+  { return nsGenericElement::GetNodeName(aNodeName); }
   NS_IMETHOD    GetNodeValue(nsAString& aNodeValue)
-  { return nsGenericContainerElement::GetNodeValue(aNodeValue); }
+  { return nsGenericElement::GetNodeValue(aNodeValue); }
   NS_IMETHOD    SetNodeValue(const nsAString& aNodeValue)
-  { return nsGenericContainerElement::SetNodeValue(aNodeValue); }
+  { return nsGenericElement::SetNodeValue(aNodeValue); }
   NS_IMETHOD    GetNodeType(PRUint16* aNodeType);
   NS_IMETHOD    GetParentNode(nsIDOMNode** aParentNode)
-  { return nsGenericContainerElement::GetParentNode(aParentNode); }
+  { return nsGenericElement::GetParentNode(aParentNode); }
   NS_IMETHOD    GetChildNodes(nsIDOMNodeList** aChildNodes)
-  { return nsGenericContainerElement::GetChildNodes(aChildNodes); }
+  { return nsGenericElement::GetChildNodes(aChildNodes); }
   NS_IMETHOD    GetFirstChild(nsIDOMNode** aFirstChild)
-  { return nsGenericContainerElement::GetFirstChild(aFirstChild); }
+  { return nsGenericElement::GetFirstChild(aFirstChild); }
   NS_IMETHOD    GetLastChild(nsIDOMNode** aLastChild)
-  { return nsGenericContainerElement::GetLastChild(aLastChild); }
+  { return nsGenericElement::GetLastChild(aLastChild); }
   NS_IMETHOD    GetPreviousSibling(nsIDOMNode** aPreviousSibling)
-  { return nsGenericContainerElement::GetPreviousSibling(aPreviousSibling); }
+  { return nsGenericElement::GetPreviousSibling(aPreviousSibling); }
   NS_IMETHOD    GetNextSibling(nsIDOMNode** aNextSibling)
-  { return nsGenericContainerElement::GetNextSibling(aNextSibling); }
+  { return nsGenericElement::GetNextSibling(aNextSibling); }
   NS_IMETHOD    GetAttributes(nsIDOMNamedNodeMap** aAttributes)
     {
       *aAttributes = nsnull;
@@ -94,35 +94,32 @@ public:
   NS_IMETHOD    GetOwnerDocument(nsIDOMDocument** aOwnerDocument);
   NS_IMETHOD    InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, 
                              nsIDOMNode** aReturn)
-  { return nsGenericContainerElement::InsertBefore(aNewChild, aRefChild,
-                                                   aReturn); }
+  { return nsGenericElement::InsertBefore(aNewChild, aRefChild, aReturn); }
   NS_IMETHOD    ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, 
                              nsIDOMNode** aReturn)
-  { return nsGenericContainerElement::ReplaceChild(aNewChild, aOldChild,
-                                                   aReturn); }
+  { return nsGenericElement::ReplaceChild(aNewChild, aOldChild, aReturn); }
   NS_IMETHOD    RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
-  { return nsGenericContainerElement::RemoveChild(aOldChild, aReturn); }
+  { return nsGenericElement::RemoveChild(aOldChild, aReturn); }
   NS_IMETHOD    AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
-  { return nsGenericContainerElement::AppendChild(aNewChild, aReturn); }
+  { return nsGenericElement::AppendChild(aNewChild, aReturn); }
   NS_IMETHOD    HasChildNodes(PRBool* aReturn)
-  { return nsGenericContainerElement::HasChildNodes(aReturn); }
+  { return nsGenericElement::HasChildNodes(aReturn); }
   NS_IMETHOD    HasAttributes(PRBool* aReturn)
-  { return nsGenericContainerElement::HasAttributes(aReturn); }
+  { return nsGenericElement::HasAttributes(aReturn); }
   NS_IMETHOD    CloneNode(PRBool aDeep, nsIDOMNode** aReturn);
   NS_IMETHOD    GetPrefix(nsAString& aPrefix)
-  { return nsGenericContainerElement::GetPrefix(aPrefix); }
+  { return nsGenericElement::GetPrefix(aPrefix); }
   NS_IMETHOD    SetPrefix(const nsAString& aPrefix);
   NS_IMETHOD    GetNamespaceURI(nsAString& aNamespaceURI)
-  { return nsGenericContainerElement::GetNamespaceURI(aNamespaceURI); }
+  { return nsGenericElement::GetNamespaceURI(aNamespaceURI); }
   NS_IMETHOD    GetLocalName(nsAString& aLocalName)
-  { return nsGenericContainerElement::GetLocalName(aLocalName); }
+  { return nsGenericElement::GetLocalName(aLocalName); }
   NS_IMETHOD    Normalize()
-  { return nsGenericContainerElement::Normalize(); }
+  { return nsGenericElement::Normalize(); }
   NS_IMETHOD    IsSupported(const nsAString& aFeature,
                             const nsAString& aVersion,
                             PRBool* aReturn)
-  { return nsGenericContainerElement::IsSupported(aFeature, aVersion,
-                                                  aReturn); }
+  { return nsGenericElement::IsSupported(aFeature, aVersion, aReturn); }
 
   // nsIDOM3Node
   NS_DECL_NSIDOM3NODE
