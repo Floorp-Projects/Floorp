@@ -35,4 +35,27 @@ public class JNIUtils {
 	public static Object GetCurrentThread() {
 		return Thread.currentThread();
 	}
+	
+	
+	/**
+	 * Stub SecurityManager class, to expose access to class loaders.
+	 */
+	static class StubSecurityManager extends SecurityManager {
+		public ClassLoader getCurrentClassLoader() {
+			return currentClassLoader();
+		}
+	}
+	
+	private static StubSecurityManager stubManager = new StubSecurityManager();
+	
+	/**
+	 * Returns the current class loader.
+	 */
+	public static Object GetCurrentClassLoader() {
+		return stubManager.getCurrentClassLoader();
+	}
+	
+	public static Object GetObjectClassLoader(Object object) {
+		return object.getClass().getClassLoader();
+	}
 }
