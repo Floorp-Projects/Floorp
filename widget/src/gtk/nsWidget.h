@@ -136,6 +136,10 @@ class nsWidget : public nsBaseWidget
     GtkWidget *mWidget;
     nsWidget *mParent;
 
+    // This is the composite update area (union of all the calls to
+    // Invalidate)
+    nsRect mUpdateArea;
+
     PRBool mShown;
 
     PRUint32 mPreferredWidth, mPreferredHeight;

@@ -409,6 +409,16 @@ PRBool nsWindow::OnPaint(nsPaintEvent &event)
   if (mEventCallback) {
 
     event.renderingContext = nsnull;
+#if 0
+    if (event.rect) {
+      g_print("nsWindow::OnPaint(this=%p, {%i,%i,%i,%i})\n", this,
+              event.rect->x, event.rect->y,
+              event.rect->width, event.rect->height);
+    }
+    else {
+      g_print("nsWindow::OnPaint(this=%p, NO RECT)\n", this);
+    }
+#endif
     static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
     static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
     if (NS_OK == nsComponentManager::CreateInstance(kRenderingContextCID,
