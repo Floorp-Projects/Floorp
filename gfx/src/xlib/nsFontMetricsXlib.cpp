@@ -172,7 +172,8 @@ public:
   nsFontNodeArrayXlib                   mGlobalList;
 
   nsFontCharSetInfoXlib                *mUnknown,
-                                       *mSpecial;
+                                       *mSpecial,
+                                       *mISO106461;
   
   nsCOMPtr<nsIAtom>                     mUnicode;
   nsCOMPtr<nsIAtom>                     mUserDefined;
@@ -811,6 +812,10 @@ PRBool CopyFontCharSetMapXlib(nsFontMetricsXlibContext *aFmctx)
         else if (fcsm[l][i].mInfo == &Special)
         {
           aFmctx->mSpecial = slot;
+        }
+        else if (fcsm[l][i].mInfo == &ISO106461)
+        {
+          aFmctx->mISO106461 = slot;
         }
 
         *slot = *fcsm[l][i].mInfo;
@@ -2860,7 +2865,7 @@ nsFontXlib::LoadFont(void)
     mMaxAscent = xFont->ascent;
     mMaxDescent = xFont->descent;
 
-    if (mCharSetInfo == &ISO106461) {
+    if (mCharSetInfo == mFontMetricsContext->mISO106461) {
       mCCMap = GetMapFor10646Font(xFont_with_per_char);
       if (!mCCMap) {
         mXFont->UnloadFont();
@@ -2929,7 +2934,7 @@ nsFontXlib::GetXFont(void)
 PRBool
 nsFontXlib::GetXFontIs10646(void)
 {
-  return ((PRBool) (mCharSetInfo == &ISO106461));
+  return ((PRBool) (mCharSetInfo == mFontMetricsContext->mISO106461));
 }
 
 #ifdef USE_FREETYPE
@@ -2960,7 +2965,7 @@ nsFontXlib::~nsFontXlib()
       ) {
     XFreeFont(xxlib_rgb_get_display(mFontMetricsContext->mXlibRgbHandle), mFont);
   }
-  if (mCharSetInfo == &ISO106461) {
+  if (mCharSetInfo == mFontMetricsContext->mISO106461) {
     FreeCCMap(mCCMap);
   }
   if (mName) {
@@ -3527,7 +3532,7 @@ SetFontCharsetInfo(nsFontXlib *aFont, nsFontCharSetInfoXlib* aCharSet,
     }
   }
   else {
-    if (aCharSet == &ISO106461) {
+    if (aCharSet == aFont->mFontMetricsContext->mISO106461) {
       aFont->LoadFont();
       if (!aFont->GetXFont()) {
         return PR_FALSE;
@@ -3599,7 +3604,7 @@ nsFontMetricsXlib::PickASizeAndLoad(nsFontStretchXlib* aStretch,
     SetCharsetLangGroup(mFontMetricsContext, aCharSet);
     ftfont->mSize = mPixelSize;
     ftfont->LoadFont();
-    ftfont->mCharSetInfo = &ISO106461;
+    ftfont->mCharSetInfo = mFontMetricsContext->mISO106461;
     //FREETYPE_FONT_PRINTF(("add the ftfont"));
     return AddToLoadedFontsList(ftfont);
   }
