@@ -43,6 +43,7 @@
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
+#include "nsIAtom.h"
 
 class nsHTMLSpanElement : public nsGenericHTMLContainerElement,
                           public nsIDOMHTMLElement
@@ -62,6 +63,9 @@ public:
 
   // nsIDOMHTMLElement
   NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
+
+  NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML);
+  NS_IMETHOD SetInnerHTML(const nsAString& aInnerHTML);
 
 #ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
@@ -141,6 +145,30 @@ nsHTMLSpanElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   NS_ADDREF(*aReturn);
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLSpanElement::GetInnerHTML(nsAString& aInnerHTML)
+{
+  nsCOMPtr<nsIAtom> tag;
+  GetTag(*getter_AddRefs(tag));
+  if (tag == nsHTMLAtoms::xmp || tag == nsHTMLAtoms::plaintext) {
+    return GetContentsAsText(aInnerHTML);
+  }
+
+  return nsGenericHTMLContainerElement::GetInnerHTML(aInnerHTML);  
+}
+
+NS_IMETHODIMP
+nsHTMLSpanElement::SetInnerHTML(const nsAString& aInnerHTML)
+{
+  nsCOMPtr<nsIAtom> tag;
+  GetTag(*getter_AddRefs(tag));
+  if (tag == nsHTMLAtoms::xmp || tag == nsHTMLAtoms::plaintext) {
+    return ReplaceContentsWithText(aInnerHTML, PR_TRUE);
+  }
+
+  return nsGenericHTMLContainerElement::SetInnerHTML(aInnerHTML);
 }
 
 #ifdef DEBUG

@@ -128,8 +128,8 @@ public:
   nsresult GetOffsetWidth(PRInt32* aOffsetWidth);
   nsresult GetOffsetHeight(PRInt32* aOffsetHeight);
   nsresult GetOffsetParent(nsIDOMElement** aOffsetParent);
-  nsresult GetInnerHTML(nsAString& aInnerHTML);
-  nsresult SetInnerHTML(const nsAString& aInnerHTML);
+  virtual nsresult GetInnerHTML(nsAString& aInnerHTML);
+  virtual nsresult SetInnerHTML(const nsAString& aInnerHTML);
   nsresult GetScrollTop(PRInt32* aScrollTop);
   nsresult SetScrollTop(PRInt32 aScrollTop);
   nsresult GetScrollLeft(PRInt32* aScrollLeft);
@@ -644,6 +644,21 @@ public:
   NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify);
 
   nsSmallVoidArray mChildren;
+protected:
+  /**
+   * ReplaceContentsWithText will take the aText string and make sure
+   * that the only child of |this| is a textnode which corresponds to
+   * that string.
+   */
+  nsresult ReplaceContentsWithText(const nsAString& aText, PRBool aNotify);
+  /**
+   * GetContentsAsText will take all the textnodes that are children
+   * of |this| and concatenate the text in them into aText.  It
+   * completely ignores any non-text-node children of |this|; in
+   * particular it does not descend into any children of |this| that
+   * happen to be container elements.
+   */
+  nsresult GetContentsAsText(nsAString& aText);
 };
 
 //----------------------------------------------------------------------

@@ -132,6 +132,9 @@
 
 #include "nsHTMLUtils.h"
 
+#include "nsIDOMText.h"
+#include "nsITextContent.h"
+
 static NS_DEFINE_CID(kPresStateCID,  NS_PRESSTATE_CID);
 // XXX todo: add in missing out-of-memory checks
 
@@ -4142,6 +4145,73 @@ nsGenericHTMLContainerElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
     doc->EndUpdate();
   }
 
+  return NS_OK;
+}
+
+nsresult
+nsGenericHTMLContainerElement::ReplaceContentsWithText(const nsAString& aText,
+                                                       PRBool aNotify) {
+  PRInt32 children;
+  nsresult rv = ChildCount(children);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIContent> firstChild;
+  nsCOMPtr<nsIDOMText> textChild;
+  // if we already have a DOMText child, reuse it.
+  if (children > 0) {
+    rv = ChildAt(0, *getter_AddRefs(firstChild));
+    NS_ENSURE_SUCCESS(rv, rv);
+    textChild = do_QueryInterface(firstChild);
+  }
+  
+  PRInt32 i;
+  PRInt32 lastChild = textChild ? 1 : 0;
+  for (i = children - 1; i >= lastChild; --i) {
+    RemoveChildAt(i, aNotify);
+  }
+    
+  if (!textChild) {
+    nsCOMPtr<nsIContent> text;
+    rv = NS_NewTextNode(getter_AddRefs(text));
+    NS_ENSURE_SUCCESS(rv, rv);
+    textChild = do_QueryInterface(text);
+    NS_ASSERTION(textChild, "NS_NewTextNode returned something not implementing nsIDOMText!");
+    rv = textChild->SetData(aText);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = InsertChildAt(text, 0, aNotify, PR_FALSE);
+  } else {
+    rv = textChild->SetData(aText);
+  }    
+      
+  return rv;
+}
+
+nsresult
+nsGenericHTMLContainerElement::GetContentsAsText(nsAString& aText)
+{
+  aText.Truncate();
+  PRInt32 children;
+  nsresult rv = ChildCount(children);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  nsCOMPtr<nsIDOMText> tc;
+  nsCOMPtr<nsIContent> child;
+  nsAutoString textData;
+
+  PRInt32 i;
+  for (i = 0; i < children; ++i) {
+    ChildAt(i, *getter_AddRefs(child));
+    tc = do_QueryInterface(child);
+    if (tc) {
+      if (aText.IsEmpty()) {
+        tc->GetData(aText);
+      } else {
+        tc->GetData(textData);
+        aText.Append(textData);
+      }
+    }
+  }
+  
   return NS_OK;
 }
 
