@@ -25,6 +25,9 @@
 #    Added -All- report, change "nobanner" to "banner" (it is strange to have a
 #    list with 2 positive and 1 negative choice), default links on, add show
 #    sql comment.
+# Joe Robins <jmrobins@tgix.com>,
+#    If using the usebuggroups parameter, users shouldn't be able to see
+#    reports for products they don't have access to.
 
 use diagnostics;
 use strict;
@@ -52,6 +55,10 @@ my %reports =
 	"show_chart" => \&show_chart,
 	);
 
+# If we're using bug groups for products, we should apply those restrictions
+# to viewing reports, as well.  Time to check the login in that case.
+quietly_check_login();
+
 print "Content-type: text/html\n";
 print "Content-disposition: attachment; filename=bugzilla_report.html\n\n";
 
@@ -68,8 +75,21 @@ else
 ConnectToDatabase(1);
 GetVersionTable();
 
+# If the usebuggroups parameter is set, we don't want to list all products.
+# We only want those products that the user has permissions for.
 my @myproducts;
-push( @myproducts, "-All-", @::legal_product );
+if(Param("usebuggroups")) {
+  push( @myproducts, "-All-");
+  foreach my $this_product (@::legal_product) {
+    if(GroupExists($this_product) && !UserInGroup($this_product)) {
+      next;
+    } else {
+      push( @myproducts, $this_product )
+    }
+  }
+} else {
+  push( @myproducts, "-All-", @::legal_product );
+}
 
 $::FORM{'output'} = $::FORM{'output'} || "most_doomed"; # a reasonable default
 
@@ -79,6 +99,19 @@ if (! defined $::FORM{'product'})
 	}
 else
 	{
+          # If usebuggroups is on, we don't want people to be able to view
+          # reports for products they don't have permissions for...
+          if(Param("usebuggroups") &&
+             GroupExists($::FORM{'product'}) &&
+             !UserInGroup($::FORM{'product'})) {
+            print "<H1>Permission denied.</H1>\n";
+            print "Sorry; you do not have the permissions necessary to view\n";
+            print "reports for this product.\n";
+            print "<P>\n";
+            PutFooter();
+            exit;
+          }
+          
 	# we want to be careful about what subroutines 
 	# can be called from outside. modify %reports
 	# accordingly when a new report type is added
