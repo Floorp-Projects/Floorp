@@ -123,7 +123,6 @@ private:
 
   // are we offscreen
   PRBool         mIsOffscreen;
-  PRBool         mDestroyDrawable;
 
 private:
   static PRUint8 ConvertMaskToCount(unsigned long val);
