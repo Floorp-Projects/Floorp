@@ -372,7 +372,7 @@ env_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         return JS_FALSE;
     name = JS_GetStringBytes(idstr);
     value = JS_GetStringBytes(valstr);
-#ifdef XP_WIN
+#if defined XP_WIN || defined HPUX
     {
         char *waste = JS_smprintf("%s=%s", name, value);
         if (!waste) {
@@ -380,7 +380,10 @@ env_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
             return JS_FALSE;
         }
         rv = putenv(waste);
+#ifndef HPUX
+        /* XXX hpux9 at least still has the bad old non-copying putenv */
         free(waste);
+#endif
     }
 #else
     rv = setenv(name, value, 1);
