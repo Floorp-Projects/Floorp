@@ -21,11 +21,13 @@
 #include "nslayout.h"
 #include "nsError.h"
 class nsIFrame;
+class nsIContent;
 
 // XXX would all platforms support putting this inside the list?
 struct nsStyleChangeData {
-  nsIFrame* mFrame;
-  PRInt32   mHint;
+  nsIFrame*   mFrame;
+  nsIContent* mContent;
+  PRInt32     mHint;
 };
 
 static const PRUint32 kStyleChangeBufferSize = 10;
@@ -39,11 +41,12 @@ public:
     return mCount;
   }
 
-  nsresult ChangeAt(PRInt32 aIndex, nsIFrame*& aFrame, PRInt32& aHint) const;
+  nsresult ChangeAt(PRInt32 aIndex, nsIFrame*& aFrame, nsIContent*& aContent,
+                    PRInt32& aHint) const;
 
-  nsresult AppendChange(nsIFrame* aFrame, PRInt32 aHint);
+  nsresult AppendChange(nsIFrame* aFrame, nsIContent* aContent, PRInt32 aHint);
 
-  void Clear();
+  void Clear(void);
 
 protected:
   nsStyleChangeList&  operator=(const nsStyleChangeList& aCopy);
