@@ -19,8 +19,6 @@
 #
 # Contributor(s): 
 
-
-
 DEPTH=..\..\..\..
 
 DIRS=locale
@@ -32,11 +30,15 @@ CHROME_L10N_DIR = locales\en-US\global\locale
 CHROME_CONTENT	= \
 	.\unknownContent.xul \
 	.\unknownContent.js \
+    .\helperAppLauncher.xul \
+    .\helperAppLauncher.js \
 	$(NULL)
 
 CHROME_L10N	= \
 	.\locale/en-US/unknownContent.dtd \
 	.\locale/en-US/unknownContent.properties \
+	.\locale/en-US/helperAppLauncher.dtd \
+	.\locale/en-US/helperAppLauncher.properties \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
