@@ -423,7 +423,7 @@ nsLDAPMessage::IterateAttributes(PRUint32 *aAttrCount, char** *aAttributes,
 
     // free the position pointer, if necessary
     //
-    if (!position) {
+    if (position) {
         ldap_ber_free(position, 0);
     }
 
@@ -514,6 +514,7 @@ nsLDAPMessage::GetValues(const char *aAttr, PRUint32 *aCount,
     *aValues = NS_STATIC_CAST(PRUnichar **, 
                               nsMemory::Alloc(numVals * sizeof(PRUnichar *)));
     if (!*aValues) {
+        ldap_value_free(values);
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
@@ -525,9 +526,14 @@ nsLDAPMessage::GetValues(const char *aAttr, PRUint32 *aCount,
         (*aValues)[i] = ToNewUnicode(NS_ConvertUTF8toUCS2(values[i]));
         if ( ! (*aValues)[i] ) {
             NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(i, aValues);
+            ldap_value_free(values);
             return NS_ERROR_OUT_OF_MEMORY;
         }
     }
+
+    // now free our value array since we already cloned the values array 
+    // to the 'aValues' results array.
+    ldap_value_free(values);
 
     *aCount = numVals;
     return NS_OK;
