@@ -8,14 +8,6 @@ o Implement DOM exceptions.
 
   [5d. In Progress. Denis Sharypov <sdv@sparc.spb.su>]
 
-o Implement the equals() and hashCode() methods for all DOM
-  objects. The equals method is to be implemented by doing a
-  QueryInterface to nsISupports and them comparing pointers to the
-  native DOM objects. Similarly, thye hashCode method should do a 
-  QI to nsISupports and then return the pointer.
-
-  [2d. In progress, ttully@eng.sun.com] 
-
 o Use OJI to obtain the JVM.
 
   [5d. Awaiting OJI availability]
