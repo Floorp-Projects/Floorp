@@ -35,12 +35,14 @@ class nsPrefMigration: public nsIPrefMigration
                         PRBool readSubdirs,
                         PRUint32* sizeTotal);
 
-      nsresult CheckForSpace(char* newProfilePath, 
+      nsresult CheckForSpace(nsFileSpec newProfilePath, 
                              PRFloat64 requiredSpace);
 
 		  nsresult DoTheCopy(nsFileSpec oldPath, 
                          nsFileSpec newPath,
                          PRBool readSubdirs); 
+
+      nsresult DoSpecialUpdates(nsFileSpec profilePath);
 
 
 };
