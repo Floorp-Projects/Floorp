@@ -114,7 +114,7 @@ XfeSetXmStringPSZ(Widget w,String name,char * tag,char * value)
 
 	xmstr = XmStringCreateLtoR(value,tag);
 
-    XfeSetValue(w,name,xmstr);
+    XfeSetValue(w,name,(XtArgVal) xmstr);
 
 	if (xmstr)
 	{
