@@ -352,7 +352,7 @@ void nsHTMLFramesetFrame::CalculateRowCol(nsIPresContext* aPresContext,
   // allocate the percentage sizes from what is left over from the fixed allocation
   for (i = 0; i < numPercent; i++) {
     j = percent[i];
-    aValues[j] = NSToCoordRound((float)aSpecs[j].mValue * (float)percentMax / 100.0f);
+    aValues[j] = NSToCoordRound((float)aSpecs[j].mValue * (float)aSize / 100.0f);
     percentTotal += aValues[j];
   }
 
