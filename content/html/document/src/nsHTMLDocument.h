@@ -89,7 +89,7 @@ public:
   { return nsDocument::GetElementsByTagName(aTagname, aReturn); }
 
   // nsIDOMNode interface
-  NS_FORWARD_IDOMNODE(nsDocument)
+  NS_FORWARD_IDOMNODE(nsDocument::)
 
   // nsIDOMHTMLDocument interface
   NS_DECL_IDOMHTMLDOCUMENT

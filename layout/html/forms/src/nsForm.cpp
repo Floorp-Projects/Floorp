@@ -164,9 +164,9 @@ public:
   virtual nsFormRenderingMode GetMode() const { return mRenderingMode; }
   virtual void SetMode(nsFormRenderingMode aMode) { mRenderingMode = aMode; }
 
-  NS_FORWARD_IDOMNODE(nsHTMLContainer)
-  NS_FORWARD_IDOMELEMENT(nsHTMLContainer)
-  NS_FORWARD_IDOMHTMLELEMENT(nsHTMLContainer)
+  NS_FORWARD_IDOMNODE(nsHTMLContainer::)
+  NS_FORWARD_IDOMELEMENT(nsHTMLContainer::)
+  NS_FORWARD_IDOMHTMLELEMENT(nsHTMLContainer::)
 
   NS_DECL_IDOMHTMLFORMELEMENT
   NS_DECL_IDOMNSHTMLFORMELEMENT
