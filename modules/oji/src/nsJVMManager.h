@@ -158,6 +158,12 @@ public:
 	NS_IMETHOD
     InitLiveConnectClasses(JSContext* context, JSObject* globalObject);
 
+    /**
+     * Creates a JavaScript wrapper for a Java object.
+     */
+	NS_IMETHOD
+	WrapJavaObject(JSContext* context, jobject javaObject, JSObject* *outJSObject);
+
     /* JVMMgr specific methods: */
 
     /* ====> From here on are things only called by the browser, not the plugin... */
