@@ -15,7 +15,7 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH = ../../..
+DEPTH = ../..
 topsrcdir	= @top_srcdir@
 VPATH		= @srcdir@
 srcdir		= @srcdir@
@@ -23,10 +23,6 @@ srcdir		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 DIRS = src build
-
-#ifdef ENABLE_TESTS
-#DIRS += tests
-#endif
 
 include $(topsrcdir)/config/config.mk
 
