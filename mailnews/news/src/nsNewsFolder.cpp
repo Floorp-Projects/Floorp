@@ -62,7 +62,7 @@ static NS_DEFINE_CID(kCNewsDB, NS_NEWSDB_CID);
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
-#define PREF_MAX_NEWS_HEADERS_TO_SHOW "mail.news.maxheaderstoshow"
+#define PREF_NEWS_MAX_HEADERS_TO_SHOW "news.max_headers_to_show"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -539,7 +539,7 @@ nsMsgNewsFolder::GetMessages(nsIEnumerator* *result)
   nsresult rv = NS_OK;
   NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
   if (NS_SUCCEEDED(rv) && prefs) {
-    rv = prefs->GetIntPref(PREF_MAX_NEWS_HEADERS_TO_SHOW, &number_to_show);
+    rv = prefs->GetIntPref(PREF_NEWS_MAX_HEADERS_TO_SHOW, &number_to_show);
     if (NS_FAILED(rv)) {
       // failed to get the pref...show them all the headers
       number_to_show = 0;

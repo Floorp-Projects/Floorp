@@ -60,6 +60,12 @@
 #include "nsMsgKeySet.h"
 
 #include "nsNewsUtils.h"
+#include "nsIPref.h"
+
+#define PREF_NEWS_MAX_ARTICLES "news.max_articles"
+#define PREF_NEWS_MARK_OLD_READ "news.mark_old_read"
+
+#define DEFAULT_NEWS_CHUNK_SIZE -1
 
 /* #define UNREADY_CODE	*/  /* mscott: generic flag for hiding access to url struct and active entry which are now gone */
 
@@ -72,8 +78,8 @@ char * NET_SACat (char **destination, const char *source);
 
 }
 
-static NS_DEFINE_IID(kIWebShell, NS_IWEB_SHELL_IID);
-static NS_DEFINE_CID(kNntpUrlCID, NS_NNTPURL_CID);
+static NS_DEFINE_IID(kIWebShell, NS_IWEB_SHELL_IID);  
+static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 // quiet compiler warnings by defining these function prototypes
 char *NET_ExplainErrorDetails (int code, ...);
@@ -224,7 +230,7 @@ HG25430
 */
 /* PRIVATE XP_List * nntp_connection_list=0; */
 PRIVATE PRBool net_news_last_username_probably_valid=PR_FALSE;
-PRInt32 net_NewsChunkSize=-1;  /* default */
+PRInt32 net_NewsChunkSize=DEFAULT_NEWS_CHUNK_SIZE; 
 /* PRIVATE PRInt32 net_news_timeout = 170; */
 /* seconds that an idle NNTP conn can live */
 extern "C"
@@ -356,6 +362,15 @@ nsNNTPProtocol::nsNNTPProtocol(nsIURL * aURL, nsITransport * transportLayer)
   /* the following macro is used to initialize the ref counting data */
   NS_INIT_REFCNT();
   Initialize(aURL, transportLayer);
+  
+  nsresult rv = NS_OK;
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+  if (NS_SUCCEEDED(rv) && (prefs)) {
+      rv = prefs->GetIntPref(PREF_NEWS_MAX_ARTICLES, &net_NewsChunkSize);
+      if (NS_FAILED(rv)) {
+          net_NewsChunkSize = DEFAULT_NEWS_CHUNK_SIZE;
+      }
+  }
 }
 
 nsNNTPProtocol::~nsNNTPProtocol()
@@ -2005,7 +2020,6 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
 {
 	char *line;
 	PRUint32 status = 0;
-	nsresult rv = NS_OK;
 	char outputBuffer[OUTPUT_BUFFER_SIZE];
 	
 	PRBool pauseForMoreData = PR_FALSE;

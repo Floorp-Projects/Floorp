@@ -66,7 +66,14 @@ class MSG_Master;
 #include "nsNewsUtils.h"
 
 #include "nsMsgDBCID.h"
+
+#include "nsIPref.h"
+
+#define PREF_NEWS_MAX_ARTICLES "news.max_articles"
+#define PREF_NEWS_MARK_OLD_READ "news.mark_old_read"
+
 static NS_DEFINE_CID(kCNewsDB, NS_NEWSDB_CID);
+static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 extern PRInt32 net_NewsChunkSize;
 
@@ -405,10 +412,15 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(
 
 	if (m_getOldMessages || !m_knownArts.set->IsMember(last_possible)) 
 	{
+        nsresult rv = NS_OK;
+        NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+        if (NS_FAILED(rv) || (!prefs)) {
+            return rv;
+        }    
 #ifdef HAVE_PANES
 		PRBool notifyMaxExceededOn = (m_pane && !m_finishingXover && m_pane->GetPrefs() && m_pane->GetPrefs()->GetNewsNotifyOn());
 #else
-        PRBool notifyMaxExceededOn = PR_FALSE;
+        PRBool notifyMaxExceededOn = PR_TRUE;   // check prefs GetPrefs()->GetNewsNotifyOn
 #endif
 		// if the preference to notify when downloading more than x headers is not on,
 		// and we're downloading new headers, set maxextra to a very large number.
@@ -425,7 +437,7 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(
 		{
 			if (!m_getOldMessages && !m_promptedAlready && notifyMaxExceededOn)
 			{
-                PRBool download = PR_FALSE;
+                PRBool download = PR_TRUE;  // yes, I'd like some news messages
 #ifdef HAVE_PANES
 				nsINNTPNewsgroup *newsFolder = m_pane->GetMaster()->FindNewsFolder(m_host, m_groupName, PR_FALSE);
 				download = FE_NewsDownloadPrompt(m_pane->GetContext(),
@@ -436,17 +448,27 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(
 				{
 					m_maxArticles = 0;
 
-#ifdef HAVE_PREFS
-					PREF_GetIntPref("news.max_articles", &m_maxArticles);
+                    rv = prefs->GetIntPref(PREF_NEWS_MAX_ARTICLES, &m_maxArticles);
+                    if (NS_FAILED(rv)) {
+#ifdef DEBUG_sspitzer
+                        printf("get pref of PREF_NEWS_MAX_ARTICLES failed\n");
 #endif
+                        m_maxArticles = 0;
+                    }
+                    
                     net_NewsChunkSize = m_maxArticles;
 					maxextra = m_maxArticles;
 					if (!m_downloadAll)
 					{
 						PRBool markOldRead = PR_FALSE;
-#ifdef HAVE_PREFS
-						PREF_GetBoolPref("news.mark_old_read", &markOldRead);
-#endif
+
+						rv = prefs->GetBoolPref(PREF_NEWS_MARK_OLD_READ, &markOldRead);
+                        if (NS_FAILED(rv)) {
+#ifdef DEBUG_sspitzer
+                            printf("get pref of PREF_NEWS_MARK_OLD_READ failed\n");
+#endif                           
+                        }
+
 						if (markOldRead && m_set)
 							m_set->AddRange(*first, *last - maxextra); 
 						*first = *last - maxextra + 1;
