@@ -20,7 +20,7 @@
  *   Adam Lock <adamlock@netscape.com>
  */
 
-#include "nsVector.h"
+#include "nsVoidArray.h"
 
 #include "nsCOMPtr.h"
 #include "nsDOMWalker.h"
@@ -35,7 +35,7 @@ nsresult nsDOMWalker::WalkDOM(nsIDOMNode *aRootNode, nsDOMWalkerCallback *aCallb
     NS_ENSURE_ARG_POINTER(aRootNode);
     NS_ENSURE_ARG_POINTER(aCallback);
 
-    nsVector stack;
+    nsVoidArray stack;
     nsresult rv = NS_OK;
 
     // Push the top most node onto the stack
@@ -45,16 +45,16 @@ nsresult nsDOMWalker::WalkDOM(nsIDOMNode *aRootNode, nsDOMWalkerCallback *aCallb
         return NS_ERROR_OUT_OF_MEMORY;
     }
     rootPos->current = aRootNode;
-    stack.Add(rootPos);
+    stack.AppendElement(rootPos);
 
-    while (stack.size > 0)
+    while (stack.Count() > 0)
     {
         nsCOMPtr<nsIDOMNode> current;
         nsCOMPtr<nsIDOMNode> next;
 
         // Pop the last position off the stack
-        DOMTreePos *pos = (DOMTreePos *) stack.Get(stack.size - 1);
-        stack.Remove(stack.size - 1);
+        DOMTreePos *pos = (DOMTreePos *) stack.ElementAt(stack.Count() - 1);
+        stack.RemoveElementAt(stack.Count() - 1);
         current = do_QueryInterface(pos->current);
         delete pos;
             
@@ -88,7 +88,7 @@ nsresult nsDOMWalker::WalkDOM(nsIDOMNode *aRootNode, nsDOMWalkerCallback *aCallb
                         goto cleanup;
                     }
                     nextPos->current = next;
-                    stack.Add(nextPos);
+                    stack.AppendElement(nextPos);
                 }
                 // Push the first child onto the stack
                 DOMTreePos *childPos = new DOMTreePos;
@@ -98,7 +98,7 @@ nsresult nsDOMWalker::WalkDOM(nsIDOMNode *aRootNode, nsDOMWalkerCallback *aCallb
                     goto cleanup;
                 }
                 current->GetFirstChild(getter_AddRefs(childPos->current));
-                stack.Add(childPos);
+                stack.AppendElement(childPos);
                 break;
             }
             current = next;
@@ -107,12 +107,13 @@ nsresult nsDOMWalker::WalkDOM(nsIDOMNode *aRootNode, nsDOMWalkerCallback *aCallb
 
 cleanup:
     // Clean the tree in case we came out early
-    while (stack.size > 0)
+    PRInt32 i;
+    for (i = 0; i < stack.Count(); i++)
     {
-        DOMTreePos *pos = (DOMTreePos *) stack.Get(stack.size - 1);
-        stack.Remove(stack.size - 1);
+        DOMTreePos *pos = (DOMTreePos *) stack.ElementAt(i);
         delete pos;
     }
+    stack.Clear();
 
     return rv;
 }
