@@ -22,6 +22,7 @@
 
 #include "math.h"
 #include "nspr.h"
+#include <FixMath.h>
 
 static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
 
@@ -29,7 +30,20 @@ static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
 
 nsDeviceContextMac :: nsDeviceContextMac()
 {
+GDHandle			thegd;
+PixMapHandle	thepix;
+double				pix_inch;
+
   NS_INIT_REFCNT();
+  
+  // see IM Imaging with Quickdraw, chapter 5.  This is an imcomplete implementation
+  thegd = ::GetMainDevice();
+  HLock((Handle)thegd);
+	thepix = (**thegd).gdPMap;
+	pix_inch = Fix2X((**thepix).hRes);
+	
+	mTwipsToPixels = pix_inch/(float)NSIntPointsToTwips(72);
+	mPixelsToTwips = 1.0f/mTwipsToPixels;
 
 }
 
@@ -45,6 +59,9 @@ nsresult nsDeviceContextMac :: Init(nsNativeWidget aNativeWidget)
 {
   NS_ASSERTION(!(aNativeWidget == nsnull), "attempt to init devicecontext with null widget");
 
+
+	// this is a windowptr, or grafptr, native to macintosh only
+	mSurface = aNativeWidget;
 
   return NS_OK;
 }
@@ -66,8 +83,7 @@ float nsDeviceContextMac :: GetScrollBarHeight() const
 
 nsDrawingSurface nsDeviceContextMac :: GetDrawingSurface(nsIRenderingContext &aContext)
 {
-  //return aContext.CreateDrawingSurface(nsnull);
-  return nsnull;
+  return aContext.CreateDrawingSurface(nsnull);
 }
 
 
