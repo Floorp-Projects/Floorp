@@ -82,6 +82,7 @@
 
 #include "nsILocaleService.h"
 static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID);
+static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 #ifdef XP_PC
 #include <windows.h>
@@ -1789,7 +1790,7 @@ nsWebShell::GetProtocolHandler(nsIURI *aURI, nsIProtocolHandler **aProtocolHandl
 }
 
 NS_IMETHODIMP nsWebShell::CanHandleContent(const char * aContentType,
-                                           const char * aCommand,
+                                           nsURILoadCommand aCommand,
                                            const char * aWindowTarget,
                                            char ** aDesiredContentType,
                                            PRBool * aCanHandleContent)
@@ -1814,11 +1815,11 @@ NS_IMETHODIMP nsWebShell::CanHandleContent(const char * aContentType,
 
 NS_IMETHODIMP 
 nsWebShell::DoContent(const char * aContentType,
-                       const char * aCommand,
-                       const char * aWindowTarget,
-                       nsIChannel * aOpenedChannel,
-                       nsIStreamListener ** aContentHandler,
-                       PRBool * aAbortProcess)
+                      nsURILoadCommand aCommand,
+                      const char * aWindowTarget,
+                      nsIChannel * aOpenedChannel,
+                      nsIStreamListener ** aContentHandler,
+                      PRBool * aAbortProcess)
 {
   if (aAbortProcess)
     *aAbortProcess = PR_FALSE;
@@ -1827,16 +1828,16 @@ nsWebShell::DoContent(const char * aContentType,
   // had we gone through OpenURI
   nsCOMPtr<nsIURI> aUri;
   aOpenedChannel->GetURI(getter_AddRefs(aUri));
-  PrepareToLoadURI(aUri, aCommand, nsnull, PR_TRUE, nsIChannel::LOAD_NORMAL, 0, nsnull, nsnull);
+  PrepareToLoadURI(aUri, "view", nsnull, PR_TRUE, nsIChannel::LOAD_NORMAL, 0, nsnull, nsnull);
   // mscott: when I called DoLoadURL I found that we ran into problems because
   // we currently don't have channel retargeting yet. Basically, what happens is that
   // DoLoadURL calls StopBeforeRequestingURL and this cancels the current load group
   // however since we can't retarget yet, we were basically canceling our very
   // own load group!!! So the request would get canceled out from under us...
   // after retargeting we may be able to safely call DoLoadURL. 
-  DoLoadURL(aUri, aCommand, nsnull, nsIChannel::LOAD_NORMAL, 0, nsnull, PR_FALSE);
+  DoLoadURL(aUri, "view", nsnull, nsIChannel::LOAD_NORMAL, 0, nsnull, PR_FALSE);
   return mDocLoader->LoadOpenedDocument(aOpenedChannel, 
-                                        aCommand,
+                                        "view",
                                         this,
                                         nsnull,
                                         nsnull,
@@ -2754,9 +2755,27 @@ nsWebShell::HandleLinkClickEvent(nsIContent *aContent,
         if (nsnull != shell) {
           // Allocate since mURL may change beneath us
           PRUnichar* str = mURL.ToNewUnicode();
-          (void)shell->LoadURL(aURLSpec, aPostDataStream,
-                               PR_TRUE, nsIChannel::LOAD_NORMAL,
-                               0, nsnull, str);
+          nsresult rv = NS_OK;
+
+          NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv); 
+          PRBool useURILoader = PR_FALSE;
+          if (NS_SUCCEEDED(rv))
+            prefs->GetBoolPref("browser.uriloader", &useURILoader);
+          if (useURILoader)
+          {
+              // for now, just hack the verb to be view-link-clicked
+              // and down in the load document code we'll detect this and
+              // set the correct uri loader command
+            (void)shell->LoadURL(aURLSpec, "view-link-click", aPostDataStream,
+                                PR_TRUE, nsIChannel::LOAD_NORMAL, 
+                                0, nsnull, str);
+          }
+          else
+          {
+            (void)shell->LoadURL(aURLSpec, aPostDataStream,
+                                 PR_TRUE, nsIChannel::LOAD_NORMAL,
+                                 0, nsnull, str);
+          }
           Recycle(str);
           NS_RELEASE(shell);
         }
