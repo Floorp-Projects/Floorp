@@ -257,7 +257,7 @@ class nsTString_CharT : public nsTSubstring_CharT
         return Compare(aString, PR_TRUE, aCount) == 0;
       }
 #else
-      PRBool EqualsIgnoreCase( const char* aString, PRInt32 aCount=-1 ) const;
+      NS_COM PRBool EqualsIgnoreCase( const char* aString, PRInt32 aCount=-1 ) const;
 
 
         /**
@@ -428,7 +428,6 @@ class nsTString_CharT : public nsTSubstring_CharT
          */
 
       NS_COM void AppendFloat( double aFloat );
-
 
 #endif // !MOZ_STRING_WITH_OBSOLETE_API
 
