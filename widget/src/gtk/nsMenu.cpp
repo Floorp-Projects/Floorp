@@ -58,7 +58,7 @@ nsMenu::~nsMenu()
 //-------------------------------------------------------------------------
 GtkWidget *nsMenu::GetNativeParent()
 {
-  GtkWidget * voidData; 
+  void * voidData; 
   if (nsnull != mMenuParent) {
     mMenuParent->GetNativeData(voidData);
   } else if (nsnull != mMenuBarParent) {
@@ -66,7 +66,7 @@ GtkWidget *nsMenu::GetNativeParent()
   } else {
     return nsnull;
   }
-  return (GtkWidget*)voidData;
+  return GTK_WIDGET(voidData);
 }
 
 
