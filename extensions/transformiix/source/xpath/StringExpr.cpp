@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *    
- * $Id: StringExpr.cpp,v 1.2 2001/05/12 09:54:16 nisheeth%netscape.com Exp $
+ * $Id: StringExpr.cpp,v 1.3 2001/06/30 13:54:34 sicking%bigfoot.com Exp $
  */
 
 #include "Expr.h"
@@ -29,7 +29,7 @@
 /**
  * StringExpr
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
- * @version $Revision: 1.2 $ $Date: 2001/05/12 09:54:16 $
+ * @version $Revision: 1.3 $ $Date: 2001/06/30 13:54:34 $
 **/
 
 /**
@@ -77,8 +77,11 @@ ExprResult* StringExpr::evaluate(Node* context, ContextState* cs) {
  * @return the String representation of this Expr.
 **/
 void StringExpr::toString(String& str) {
-    str.append('\'');
+    UNICODE_CHAR ch = '\'';
+    if (value.indexOf(ch) != NOT_FOUND)
+        ch = '\"';
+    str.append(ch);
     str.append(value);
-    str.append('\'');
+    str.append(ch);
 } //-- toString
 

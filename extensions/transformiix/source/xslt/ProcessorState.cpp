@@ -30,7 +30,7 @@
 /**
  * Implementation of ProcessorState
  * Much of this code was ported from XSL:P
- * @version $Revision: 1.33 $ $Date: 2001/06/26 14:09:18 $
+ * @version $Revision: 1.34 $ $Date: 2001/06/30 13:54:38 $
 **/
 
 #include "ProcessorState.h"
@@ -195,8 +195,10 @@ void ProcessorState::addTemplate(Element* xslTemplate) {
         namedTemplates.put(name,mObj);
         if ( oldObj ) delete oldObj;
     }
-    patternExprHash.put(match, exprParser.createPatternExpr(match));
-    templates.add(xslTemplate);
+    if (match.length() > 0) {
+        patternExprHash.put(match, exprParser.createPatternExpr(match));
+        templates.add(xslTemplate);
+    }
 } //-- addTempalte
 
 /**

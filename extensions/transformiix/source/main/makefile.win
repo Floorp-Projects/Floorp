@@ -68,12 +68,13 @@ CPP_OBJS=                                       \
   ../xpath/$(OBJDIR)/BooleanResult.obj \
   ../xpath/$(OBJDIR)/ElementExpr.obj \
   ../xpath/$(OBJDIR)/ErrorFunctionCall.obj \
+  ../xpath/$(OBJDIR)/Expr.obj \
   ../xpath/$(OBJDIR)/ExprLexer.obj \
+  ../xpath/$(OBJDIR)/ExprLexerChars.obj \
   ../xpath/$(OBJDIR)/ExprParser.obj \
   ../xpath/$(OBJDIR)/ExtensionFunctionCall.obj \
   ../xpath/$(OBJDIR)/FilterExpr.obj \
   ../xpath/$(OBJDIR)/FunctionCall.obj \
-  ../xpath/$(OBJDIR)/IdentityExpr.obj \
   ../xpath/$(OBJDIR)/LocationStep.obj \
   ../xpath/$(OBJDIR)/MultiplicativeExpr.obj \
   ../xpath/$(OBJDIR)/NodeSet.obj \
@@ -81,7 +82,6 @@ CPP_OBJS=                                       \
   ../xpath/$(OBJDIR)/NumberExpr.obj \
   ../xpath/$(OBJDIR)/NumberFunctionCall.obj \
   ../xpath/$(OBJDIR)/NumberResult.obj \
-  ../xpath/$(OBJDIR)/ParentExpr.obj \
   ../xpath/$(OBJDIR)/PathExpr.obj \
   ../xpath/$(OBJDIR)/PredicateList.obj \
   ../xpath/$(OBJDIR)/RelationalExpr.obj \
@@ -91,6 +91,7 @@ CPP_OBJS=                                       \
   ../xpath/$(OBJDIR)/StringResult.obj \
   ../xpath/$(OBJDIR)/TextExpr.obj \
   ../xpath/$(OBJDIR)/UnionExpr.obj \
+  ../xpath/$(OBJDIR)/UnaryExpr.obj \
   ../xpath/$(OBJDIR)/VariableRefExpr.obj \
   ../xpath/$(OBJDIR)/XPathNames.obj \
   ../xml/$(OBJDIR)/XMLUtils.obj \

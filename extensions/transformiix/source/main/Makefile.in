@@ -70,12 +70,13 @@ OBJS =../base/ArrayList.o \
   ../xpath/BooleanResult.o \
   ../xpath/ElementExpr.o \
   ../xpath/ErrorFunctionCall.o \
+  ../xpath/Expr.o \
   ../xpath/ExprLexer.o \
+  ../xpath/ExprLexerChars.o \
   ../xpath/ExprParser.o \
   ../xpath/ExtensionFunctionCall.o \
   ../xpath/FilterExpr.o \
   ../xpath/FunctionCall.o \
-  ../xpath/IdentityExpr.o \
   ../xpath/LocationStep.o \
   ../xpath/MultiplicativeExpr.o \
   ../xpath/NodeSet.o \
@@ -83,7 +84,6 @@ OBJS =../base/ArrayList.o \
   ../xpath/NumberExpr.o \
   ../xpath/NumberFunctionCall.o \
   ../xpath/NumberResult.o \
-  ../xpath/ParentExpr.o \
   ../xpath/PathExpr.o \
   ../xpath/PredicateList.o \
   ../xpath/RelationalExpr.o \
@@ -93,6 +93,7 @@ OBJS =../base/ArrayList.o \
   ../xpath/StringResult.o \
   ../xpath/TextExpr.o \
   ../xpath/UnionExpr.o \
+  ../xpath/UnaryExpr.o \
   ../xpath/VariableRefExpr.o \
   ../xpath/XPathNames.o \
   ../xml/XMLUtils.o \
