@@ -118,7 +118,7 @@ popup > menuitem[menuactive="true"]
   {
     color                 : inherit;
     margin                : 0px 4px 0px 3px;
-    width                 : 13px;
+    width                 : 16px;
     text-align            : center;
     list-style-image      : inherit;
   }
@@ -141,7 +141,7 @@ popup > menuitem[menuactive="true"]
 
 .menu-text 
   {
-    margin                : 2px 2px 2px 20px;
+    margin                : 2px 2px 2px 23px;
   }
 
 .menu-accel 
