@@ -54,7 +54,7 @@ interface calIRecurrenceInfo : nsISupports
   void makeImmutable();
 
   // clone always returns a mutable event
-  calIItemBase clone();
+  calIRecurrenceInfo clone();
 
   //
   // recurrence
@@ -85,34 +85,36 @@ interface calIRecurrenceInfo : nsISupports
   const long CAL_RECUR_BYHOUR = 10;
   const long CAL_RECUR_BYDAY = 11;
   const long CAL_RECUR_BYMONTHDAY = 12;
-  const long CAL_RECUR_BYWEEKNO = 13;
-  const long CAL_RECUR_BYMONTH = 14;
-  const long CAL_RECUR_BYSETPOS = 15;
+  const long CAL_RECUR_BYYEARDAY = 13;
+  const long CAL_RECUR_BYWEEKNO = 14;
+  const long CAL_RECUR_BYMONTH = 15;
+  const long CAL_RECUR_BYSETPOS = 16;
 
   void getComponent (in long aComponentType,
-                     out unsigned long aCount, [array,size_is(aCount),retval] out long aValues);
+                     out unsigned long aCount, [array,size_is(aCount),retval] out short aValues);
   void setComponent (in long aComponentType,
-                     in unsigned long aCount, [array,size_is(aCount)] in long aValues);
+                     in unsigned long aCount, [array,size_is(aCount)] in short aValues);
 
   // exceptions
   void getExceptions (out unsigned long aCount, [array,size_is(aCount),retval] out calIDateTime aDates);
   void setExceptions (in unsigned long aCount, [array, size_is(aCount)] in calIDateTime aDates);
 
-  // return the next display item for this event,
+  // return the next display item for the event,
   // where the start time is >= aStartTime
-  calIItemOccurrence getNextOccurrence (in calIDateTime aStartTime);
-
-  // return the previous display item for this event,
-  // where the start time is < aStartTime
-  calIItemOccurrence getPreviousOccurrence (in calIDateTime aStartTime);
+  calIItemOccurrence getNextOccurrence (in calIItemBase aItem, in calIDateTime aStartTime);
 
   // return array of calIItemOccurrence representing all
   // occurrences of this event between start and end.
-  void getOccurrences (in calIDateTime aStartTime,
-                       in calIDateTime aEndTime,
-                       out unsigned long aCount, [array,size_is(aCount),retval] out calIItemOccurrence aItems);
+  void getOccurrencesBetween (in calIItemBase aItem,
+                              in calIDateTime aStartTime,
+                              in calIDateTime aEndTime,
+                              out unsigned long aCount, [array,size_is(aCount),retval] out calIItemOccurrence aItems);
 
-  // return array of calIItemOccurrence representing all
-  // occurrences of this event.
-  void getAllOccurrences (out unsigned long aCount, [array,size_is(aCount),retval] out calIItemOccurrence aItems);
+  // return array of calIItemOccurrence representing all occurrences
+  // of this event, starting at the given time.  if aMaxCount is not
+  // 0, a max of aMaxCount occurrences is returned
+  void getOccurrences (in calIItemBase aItem,
+                       in calIDateTime aStartTime,
+                       in unsigned long aMaxCount,
+                       out unsigned long aCount, [array,size_is(aCount),retval] out calIItemOccurrence aItems);
 };

@@ -62,6 +62,7 @@ REQUIRES = xpcom \
 
 CPPSRCS = calDateTime.cpp \
 	  calICSService.cpp \
+	  calRecurrenceInfo.cpp \
 	  $(NULL)
 
 
@@ -70,6 +71,7 @@ EXTRA_COMPONENTS = \
 	calEvent.js \
 	calItemBase.js \
 	calItemModule.js \
+	calTodo.js \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
@@ -77,7 +79,7 @@ include $(topsrcdir)/config/rules.mk
 #%.js: %.js.pre
 #	cpp -P -undef $(DEFINES) $(ACDEFINES) $^ > $@
 
-CPP_FODDER = calItemBase calEvent calAttendee
+CPP_FODDER = calItemBase calEvent calAttendee calTodo
 
 rebuild:
 	for i in $(CPP_FODDER); do \

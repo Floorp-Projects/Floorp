@@ -18,16 +18,16 @@ calAttendee.prototype = {
     get isMutable() { return !this.mImmutable; },
 
     makeImmutable : function() {
- this.mImmutable = true;
+        this.mImmutable = true;
     },
 
     clone: function() {
- var a = new calAttendee();
- var allProps = ["id", "commonName", "rsvp", "role", "participantStatus",
-   "userType"];
- for (var i in allProps)
-     a[allProps[i]] = this[allProps[i]];
- return a;
+        var a = new calAttendee();
+        var allProps = ["id", "commonName", "rsvp", "role", "participantStatus",
+                        "userType"];
+        for (var i in allProps)
+            a[allProps[i]] = this[allProps[i]];
+        return a;
     },
 
 

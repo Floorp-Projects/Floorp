@@ -52,7 +52,7 @@ const componentData =
 
     {cid: Components.ID("{7af51168-6abe-4a31-984d-6f8a3989212d}"),
      contractid: "@mozilla.org/calendar/todo;1",
-     script: null,
+     script: "calTodo.js",
      constructor: "calTodo"},
 
     {cid: Components.ID("{bad672b3-30b8-4ecd-8075-7153313d1f2c}"),

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -171,6 +171,32 @@ calDateTime::Normalize()
 }
 
 NS_IMETHODIMP
+calDateTime::AddDuration(calIDateTime *aDuration)
+{
+    NS_ENSURE_ARG_POINTER(aDuration);
+    nsresult rv;
+
+    PRInt16 y, mo, d, h, m, s;
+    aDuration->GetYear(&y);
+    aDuration->GetMonth(&mo);
+    aDuration->GetDay(&d);
+    aDuration->GetHour(&h);
+    aDuration->GetMinute(&m);
+    aDuration->GetSecond(&s);
+
+    mYear += y;
+    mMonth += mo;
+    mDay += d;
+    mHour += h;
+    mMinute += m;
+    mSecond += s;
+
+    mLastModified = PR_Now();
+
+    return Normalize();
+}
+
+NS_IMETHODIMP
 calDateTime::ToString(nsACString& aResult)
 {
     aResult.Assign(nsPrintfCString(100,
@@ -196,7 +222,8 @@ calDateTime::SetTimeInTimezone(PRTime aTime, const char *aTimezone)
 
     tt = sectime;
     icalt = icaltime_from_timet(tt, 0);
-    icalt = icaltime_as_utc(icalt, aTimezone);
+    if (aTimezone && (strncmp(aTimezone, "UTC", 3) != 0))
+        icalt = icaltime_as_utc(icalt, aTimezone);
 
     FromIcalTime(&icalt);
 
@@ -304,7 +331,7 @@ calDateTime::FromIcalTime(icaltimetype *icalt)
 }
 
 /*
- * nsIXPCScriptable ipl
+ * nsIXPCScriptable impl
  */
 
 /* readonly attribute string className; */
@@ -312,7 +339,7 @@ NS_IMETHODIMP
 calDateTime::GetClassName(char * *aClassName)
 {
     NS_ENSURE_ARG_POINTER(aClassName);
-    *aClassName = (char *) nsMemory::Clone("calDateTime", 12);
+    *aClassName = (char *) nsMemory::Clone("mozStorageStatementRow", 23);
     if (!*aClassName)
         return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
@@ -339,8 +366,14 @@ calDateTime::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
         nsDependentString jsid((PRUnichar *)::JS_GetStringChars(JSVAL_TO_STRING(id)),
                                ::JS_GetStringLength(JSVAL_TO_STRING(id)));
         if (jsid.EqualsLiteral("jsDate")) {
-            JSObject *obj = ::js_NewDateObject(cx, mYear, mMonth, mDay,
-                                               mHour, mMinute, mSecond);
+            PRTime tmp, thousand;
+            jsdouble msec;
+            LL_I2L(thousand, 1000);
+            LL_DIV(tmp, mNativeTime, thousand);
+            LL_L2D(msec, tmp);
+
+            JSObject *obj = ::js_NewDateObjectMsec(cx, msec);
+
             *vp = OBJECT_TO_JSVAL(obj);
             *_retval = PR_TRUE;
             return NS_OK;
@@ -372,7 +405,7 @@ calDateTime::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
                 LL_I2L(thousands, 1000);
                 LL_MUL(utcTime, utcTime, thousands);
 
-                mIsUtc = PR_TRUE;
+                mIsUtc = PR_FALSE;
                 mTimezone.AssignLiteral("");
 
                 nsresult rv = SetNativeTime(utcTime);

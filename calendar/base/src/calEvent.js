@@ -27,24 +27,25 @@ calEvent.prototype = {
     clone: function () {
         var m = new calEvent();
         this.cloneItemBaseInto(m);
-        if (this.mStartDate)
-            m.mStartDate = this.mStartDate.clone();
-        if (this.mEndDate)
-            m.mEndDate = this.mEndDate.clone();
-        if (this.mStampDate)
-            m.mStampDate = this.mStampDate.clone();
+        m.mStartDate = this.mStartDate.clone();
+        m.mEndDate = this.mEndDate.clone();
+        m.mStampDate = this.mStampDate.clone();
 
         return m;
     },
 
     makeImmutable: function () {
-        if (this.mStartDate)
-            this.mStartDate.makeImmutable();
-        if (this.mEndDate)
-            this.mEndDate.makeImmutable();
-        if (this.mStampDate)
-            this.mStampDate.makeImmutable();
+        this.mStartDate.makeImmutable();
+        this.mEndDate.makeImmutable();
+        this.mStampDate.makeImmutable();
+
         this.makeItemBaseImmutable();
+    },
+
+    get duration() {
+        var dur = createCalDateTime();
+        dur.setTimeInTimezone (this.mEndDate.nativeTime - this.mStartDate.nativeTime, null);
+        return dur;
     },
 
 

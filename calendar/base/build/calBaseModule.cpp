@@ -40,11 +40,13 @@
 
 #include "calDateTime.h"
 #include "calICSService.h"
+#include "calRecurrenceInfo.h"
 
 #include "calBaseCID.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(calDateTime)
 NS_GENERIC_FACTORY_CONSTRUCTOR(calICSService)
+NS_GENERIC_FACTORY_CONSTRUCTOR(calRecurrenceInfo)
 
 static const nsModuleComponentInfo components[] =
 {
@@ -55,7 +57,11 @@ static const nsModuleComponentInfo components[] =
     { "ICS parser/serializer",
       CAL_ICSSERVICE_CID,
       CAL_ICSSERVICE_CONTRACTID,
-      calICSServiceConstructor }
+      calICSServiceConstructor },
+    { "Calendar Recurrence Object",
+      CAL_RECURRENCEINFO_CID,
+      CAL_RECURRENCEINFO_CONTRACTID,
+      calRecurrenceInfoConstructor }
 };
 
 NS_IMPL_NSGETMODULE(calBaseModule, components)

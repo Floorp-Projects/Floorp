@@ -57,6 +57,9 @@ interface calIEvent : calIItemBase
   attribute calIDateTime endDate;
   attribute calIDateTime stampDate; // ??
 
+  // calculated as endDate - startDate
+  readonly attribute calIDateTime duration;
+
   // all day event?
   attribute boolean isAllDay;
 };

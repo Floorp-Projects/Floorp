@@ -121,6 +121,10 @@ interface calIDateTime : nsISupports
   // item in the given timezone
   calIDateTime getInTimezone (in string aTimezone);
 
+  // add the given calIDateTime, treating it as a duration, to
+  // this item
+  void addDuration (in calIDateTime aDuration);
+
   //
   // Some helper getters for calculating useful ranges
   //

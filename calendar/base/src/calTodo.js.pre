@@ -21,7 +21,6 @@
  *
  * Contributor(s):
  *   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
- *   Mike Shaver <shaver@off.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,59 +37,59 @@
  * ***** END LICENSE BLOCK ***** */
 
 //
-// calEvent.js
+// calTodo.js
 //
 
 //
 // constructor
 //
-function calEvent() {
+function calTodo() {
     this.wrappedJSObject = this;
     this.initItemBase();
-    this.initEvent();
+    this.initTodo();
 }
 
 // var trickery to suppress lib-as-component errors from loader
 var calItemBase;
 
-calEvent.prototype = {
+calTodo.prototype = {
     __proto__: calItemBase ? (new calItemBase()) : {},
 
     QueryInterface: function (aIID) {
-        if (aIID.equals(Components.interfaces.calIEvent))
-            return this;
+        if (!aIID.equals(Components.interfaces.nsISupports) &&
+            !aIID.equals(Components.interfaces.calIItemBase) &&
+            !aIID.equals(Components.interfaces.calITodo))
+        {
+            throw Components.results.NS_ERROR_NO_INTERFACE;
+        }
 
-        return this.__proto__.QueryInterface(aIID);
+        return this;
     },
 
-    initEvent: function () {
-        this.mStartDate = createCalDateTime();
-        this.mEndDate = createCalDateTime();
-        this.mStampDate = createCalDateTime();
+    initTodo: function () {
+        this.mEntryTime = createCalDateTime();
+        this.mDueDate = createCalDateTime();
+        this.mCompletedDate = createCalDateTime();
+        this.mPercentComplete = 0;
     },
 
     clone: function () {
         var m = new calEvent();
         this.cloneItemBaseInto(m);
-        m.mStartDate = this.mStartDate.clone();
-        m.mEndDate = this.mEndDate.clone();
-        m.mStampDate = this.mStampDate.clone();
+        m.mEntryDate = this.mEntryDate.clone();
+        m.mDueDate = this.mDueDate.clone();
+        m.mCompletedDate = this.mCompletedDate.clone();
+        m.mPercentComplete = this.mPercentComplete;
 
         return m;
     },
 
     makeImmutable: function () {
-        this.mStartDate.makeImmutable();
-        this.mEndDate.makeImmutable();
-        this.mStampDate.makeImmutable();
+        this.mEntryDate.makeImmutable();
+        this.mDueDate.makeImmutable();
+        this.mCompletedDate.makeImmutable();
 
         this.makeItemBaseImmutable();
-    },
-
-    get duration() {
-        var dur = createCalDateTime();
-        dur.setTimeInTimezone (this.mEndDate.nativeTime - this.mStartDate.nativeTime, null);
-        return dur;
     },
 
 #define MEMBER_ATTR(varname, initvalue, attrname) \
@@ -98,9 +97,11 @@ calEvent.prototype = {
     get attrname() { return this.varname; },      \
     set attrname(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.varname = v; }
 
-    MEMBER_ATTR(mStartDate, null, startDate),
+    MEMBER_ATTR(mEntryDate, null, entryDate),
     MEMBER_ATTR(mEndDate, null, endDate),
-    MEMBER_ATTR(mStampDate, null, stampDate)
+    MEMBER_ATTR(mCompletedDate, null, completedDate),
+    MEMBER_ATTR(mPercentComplete, 0, percentComplete),
 
 #undef MEMBER_ATTR
 };
+        

@@ -211,12 +211,28 @@ calItemOccurrence.prototype = {
         return this;
     },
 
+    initialize: function (aItem, aStartDate, aEndDate) {
+        this.item = aItem;
+        this.occurrenceStartDate = aStartDate.clone();
+        this.occurrenceStartDate.makeImmutable();
+        this.occurrenceEndDate = aEndDate.clone();
+        this.occurrenceEndDate.makeImmutable();
+    },
+
     item: null,
     occurrenceStartDate: null,
     occurrenceEndDate: null,
 
-    next: null,
-    previous: null
+    get next() {
+        if (this.item.recurrenceInfo)
+            return this.item.recurrenceInfo.getNextOccurrence(this.item, aEndDate);
+        return null;
+    },
+    get previous() {
+        if (this.item.recurrenceInfo)
+            return this.item.recurrenceInfo.getPreviousOccurrence(this.item, aStartDate);
+        return null;
+    }
 };
 
 //

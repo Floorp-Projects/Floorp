@@ -186,6 +186,10 @@ interface calIItemBase : nsISupports
 [scriptable, uuid(b19f3d7e-e848-4139-af3e-505a8023568d)]
 interface calIItemOccurrence : nsISupports
 {
+  // Initialize this Occurrence
+  void initialize (in calIItemBase aItem,
+                   in calIDateTime aStartDate,
+                   in calIDateTime aEndDate);
   //
   // The parent item for which this is the occurrence item for
   //
