@@ -234,19 +234,22 @@ NS_IMPL_RELEASE(nsXIFDTD)
  *  @return  
  */
 static
-PRInt32 XIFDispatchTokenHandler(CToken* aToken,nsIDTD* aDTD) {
-  
-  PRInt32         result=0;
-
-  eHTMLTokenTypes theType= (eHTMLTokenTypes)aToken->GetTokenType();  
+PRInt32 XIFDispatchTokenHandler(CToken* aToken,nsIDTD* aDTD)
+{
+  eHTMLTokenTypes theType = (eHTMLTokenTypes)aToken->GetTokenType();
   nsXIFDTD*       theDTD=(nsXIFDTD*)aDTD;
 
   nsString& name = aToken->GetStringValueXXX();
-  eXIFTags type = DetermineXIFTagType(name);
-  
-  if (type != eXIFTag_userdefined)
-    aToken->SetTypeID(type);
-  
+  eXIFTags type = eXIFTag_userdefined;
+
+  if((eToken_start==theType) || (eToken_end==theType)) {
+    type=DetermineXIFTagType(name);
+    if (type != eXIFTag_userdefined)
+      aToken->SetTypeID(type);
+  }
+
+  PRInt32 result=0;
+
   if(aDTD) {
     switch(theType) {
       case eToken_start:

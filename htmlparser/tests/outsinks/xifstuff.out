@@ -25,18 +25,18 @@
 
 <title>XIF Test Page</title>
 
-
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-</head>
-
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
 
 <body>
 <h2>Here's the deal...</h2>
 
 <p>This is a good place to add in <b>html</b> to aid in testing features 
-under development.  It's also a great place to not use latin.
+under development.
+&lt;a href="http://www.mozilla.org"&gt;
+It's also a great place to not use latin.
 <!-- This is a comment;
      Here is more of the comment.
  -->
 
-</p></body></html>
+</p></body>
+</html>
