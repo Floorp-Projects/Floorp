@@ -42,6 +42,10 @@ CSRCS		= png.c \
 		  pngwutil.c \
 		  $(NULL)
 
+EXPORTS =	  png.h pngconf.h
+
+EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
+
 REQUIRES	= util 
 
 ifndef MOZ_NATIVE_ZLIB
