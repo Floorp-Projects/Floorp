@@ -17,13 +17,27 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
+ *   Scott Collins <scc@mozilla.org>: |do_QueryElementAt|
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsSupportsArray.h"
 #include "nsSupportsArrayEnumerator.h"
 #include <string.h>
+
+nsresult
+nsQueryElementAt::operator()( const nsIID& aIID, void** aResult ) const
+  {
+    nsresult status = mCollection
+                        ? mCollection->QueryElementAt(mIndex, aIID, aResult)
+                        : NS_ERROR_NULL_POINTER;
+
+    if ( mErrorPtr )
+      *mErrorPtr = status;
+
+    return status;
+  }
 
 static const PRUint32 kGrowArrayBy = 8;
 

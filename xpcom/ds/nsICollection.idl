@@ -17,7 +17,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
+ *   Scott Collins <scc@mozilla.org>: |do_QueryElementAt|
  */
 
 #include "nsISupports.idl"
@@ -40,3 +41,37 @@ interface nsICollection : nsISupports
   void Clear();
 
 };
+
+%{C++
+
+#ifndef nsCOMPtr_h__
+#include "nsCOMPtr.h"
+#endif
+
+class NS_EXPORT nsQueryElementAt : public nsCOMPtr_helper
+  {
+    public:
+      nsQueryElementAt( nsICollection* aCollection, PRUint32 aIndex, nsresult* aErrorPtr )
+          : mCollection(aCollection),
+            mIndex(aIndex),
+            mErrorPtr(aErrorPtr)
+        {
+          // nothing else to do here
+        }
+
+      virtual nsresult operator()( const nsIID& aIID, void** ) const;
+
+    private:
+      nsICollection*  mCollection;
+      PRUint32        mIndex;
+      nsresult*       mErrorPtr;
+  };
+
+inline
+const nsQueryElementAt
+do_QueryElementAt( nsICollection* aCollection, PRUint32 aIndex, nsresult* aErrorPtr = 0 )
+  {
+    return nsQueryElementAt(aCollection, aIndex, aErrorPtr);
+  }
+
+%}
