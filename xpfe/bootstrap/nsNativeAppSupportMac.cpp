@@ -45,7 +45,6 @@
 
 #include "nsAppShellCIDs.h"
 #include "nsCOMPtr.h"
-#include "nsCommandLineServiceMac.h"
 #include "nsNativeAppSupportBase.h"
 
 #include "nsIAppShellService.h"
