@@ -1164,10 +1164,10 @@ nsBlockFrame::ReflowMappedChildren(nsIPresContext* aCX,
   nsIFrame* kidFrame;
 
   for (kidFrame = mFirstChild; nsnull != kidFrame; ) {
-    nsIContentPtr kid;
-     
-    kidFrame->GetContent(kid.AssignRef());
-    nsIStyleContextPtr kidSC = aCX->ResolveStyleContextFor(kid, this);
+
+    /* we get the kid's style from kidFrame's cached style context */
+    nsIStyleContextPtr kidSC; 
+    kidFrame->GetStyleContext(aCX, kidSC.AssignRef()); 
 
     // Attempt to place and reflow the child
 
@@ -1246,6 +1246,14 @@ nsBlockFrame::ReflowMappedChildren(nsIPresContext* aCX,
   return result;
 }
 
+/* XXX:
+ * In this method, we seem to be getting the style for the next child,
+ * and checking that child's style for the child's display type. 
+ * The problem is that it's very inefficient to ResolveStyleFor(kid) here 
+ * and then just throw it away, when we end up doing a ResolveStyleFor(kid)
+ * again when we actually create a frame for the content.
+ * It would be nice to cache the resolved style, maybe in the reflow state?
+ */
 PRBool nsBlockFrame::MoreToReflow(nsIPresContext* aCX)
 {
   PRBool rv = PR_FALSE;
