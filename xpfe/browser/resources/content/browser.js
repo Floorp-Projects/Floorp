@@ -250,7 +250,7 @@ function BrowserPrintPreview()
       Components.interfaces.nsIWebBrowserPrint);     
     if (webBrowserPrint) {
       gPrintSettings = GetPrintSettings(webBrowserPrint);
-      webBrowserPrint.printPreview(gPrintSettings);
+      webBrowserPrint.printPreview(gPrintSettings, null);
     }
 
     // show the toolbar after we go into print preview mode so
