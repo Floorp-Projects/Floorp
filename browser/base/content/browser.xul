@@ -259,6 +259,9 @@
         <stack id="bookmarks-stack" flex="1" style="min-width:0px; width:0px;"
                onpopupshowing="BookmarksToolbar.setOpenedMenu(event);"
                onpopuphidden="BookmarksToolbar.unsetOpenedMenu(event);">
+          <hbox id="insertion-feedback" hidden="true">
+            <button id="insertion-feedback-button" style="margin:0px !important;"/>
+          </hbox>
           <hbox id="bookmarks-ptf" class="bookmarks-toolbar-items" contextmenu="bookmarks-context-menu"
                 flex="1" style="min-width:0px; width:0px;margin-left: 3px;" 
                 datasources="rdf:bookmarks rdf:files rdf:localsearch"
@@ -295,9 +298,6 @@
             </hbox>
             <toolbarbutton class="bookmark-item bookmarks-toolbar-customize" mousethrough="never"
                            label="&bookmarksToolbarItem.label;"/>
-            <hbox id="insertion-feedback" hidden="true">
-              <button id="insertion-feedback-button" style="margin:0px !important;"/>
-            </hbox>
           </stack>
         </toolbaritem>
 
