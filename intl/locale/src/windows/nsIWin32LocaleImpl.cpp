@@ -455,7 +455,7 @@ nsIWin32LocaleImpl::GetXPLocale(LCID winLCID, nsString* locale)
 
 	for(i=0;i<LENGTH_MAPPING_LIST;i++) {
 		if (lang_id==iso_list[i].win_code) {
-			for(j=0;strlen(iso_list[i].sublang_list[j].iso_code)!=0;i++) {
+			for(j=0;strlen(iso_list[i].sublang_list[j].iso_code)!=0;j++) {
 				if (sublang_id == iso_list[i].sublang_list[j].win_code) {
 					PR_snprintf(rfc_locale_string,9,"%s-%s%c",iso_list[i].iso_code,
 						iso_list[i].sublang_list[j].iso_code,0);
