@@ -147,7 +147,7 @@ void ReplaceScheduledFiles(void)
                         {
                             char* leafName = targetFile.GetLeafName();
                             replaceFile.Rename(leafName);
-                            delete [] leafName;
+                            nsCRT::free(leafName);
                             
                             NR_RegDeleteEntry( reg, key, tmpfile );
                         }

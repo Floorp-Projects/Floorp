@@ -798,7 +798,7 @@ FileSystemDataSource::isVisible(const nsNativeFileSpec& file)
 		{
 			isVisible = PR_FALSE;
 		}
-		delete []basename;
+		nsCRT::free(basename);
 	}
 #endif
 
@@ -863,7 +863,7 @@ FileSystemDataSource::GetName(nsIRDFResource *source, nsIRDFLiteral **aResult)
         nsIRDFLiteral *literal;
         gRDFService->GetLiteral(name.GetUnicode(), &literal);
         *aResult = literal;
-        delete []basename;
+        nsCRT::free(basename);
 
 	return NS_OK;
 }

@@ -293,9 +293,9 @@ nsMsgLocalMailFolder::GetSubFolders(nsIEnumerator* *result)
       PL_strcat(newLeafName, kDirExt);
       path->SetLeafName(newLeafName);
       if(folderName)
-        delete[] folderName;
+        nsCRT::free(folderName);
       if(newLeafName)
-        delete[] newLeafName;
+        nsCRT::free(newLeafName);
 #endif
     }
 

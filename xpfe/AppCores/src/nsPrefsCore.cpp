@@ -169,7 +169,7 @@ nsresult nsPrefsCore::InitializePrefsManager()
                 oldPrefs.Copy(newParent);
                 const char* oldName = oldPrefs.GetLeafName();
                 newPrefs = newParent + oldName;
-                delete [] oldName;
+                PL_strfree(oldName);
                 newPrefs.Rename("prefs.js");
             }
         }
