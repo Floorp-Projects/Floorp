@@ -44,6 +44,7 @@
 #include "nsTransferable.h"
 #include "nsXIFFormatConverter.h"
 #include "nsDataFlavor.h"
+#include "nsDragService.h"
 
 #include "nsTextAreaWidget.h"
 #include "nsListBox.h"
@@ -81,10 +82,12 @@ static NS_DEFINE_IID(kCMenuButton,     NS_MENUBUTTON_CID);
 static NS_DEFINE_IID(kISupportsIID,   NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID,    NS_IFACTORY_IID);
 
+// Drag and Drop/Clipboard
 static NS_DEFINE_IID(kCDataFlavor,    NS_DATAFLAVOR_CID);
 static NS_DEFINE_IID(kCClipboard,     NS_CLIPBOARD_CID);
 static NS_DEFINE_IID(kCGenericTransferable,  NS_GENERICTRANSFERABLE_CID);
 static NS_DEFINE_IID(kCXIFFormatConverter,  NS_XIFFORMATCONVERTER_CID);
+static NS_DEFINE_IID(kCDragService,   NS_DRAGSERVICE_CID);
 
 
 //-------------------------------------------------------------------------
@@ -265,6 +268,9 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     }
     else if (mClassID.Equals(kCClipboard)) {
         inst = (nsISupports*)new nsClipboard();
+    }
+    else if (mClassID.Equals(kCDragService)) {
+        inst = (nsISupports*)NS_STATIC_CAST(nsIDragService*, new nsDragService());
     }
   
     if (inst == NULL) {  
