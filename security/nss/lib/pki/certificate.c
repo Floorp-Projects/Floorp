@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.11 $ $Date: 2001/10/19 18:16:43 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.12 $ $Date: 2001/11/05 17:29:27 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -306,24 +306,44 @@ static CK_OBJECT_HANDLE
 create_cert_trust_object
 (
   NSSCertificate *c,
-  nssSession *session
+  NSSTrust *trust
 )
 {
     CK_ULONG tobj_size;
     CK_OBJECT_CLASS tobjc = CKO_NETSCAPE_TRUST;
     CK_ATTRIBUTE tobj_template[] = {
-	{ CKA_CLASS,          NULL,   0 }, 
-	{ CKA_CERT_SHA1_HASH, NULL,   0 }
+	{ CKA_CLASS,                  NULL, 0 }, 
+	{ CKA_TOKEN,                  NULL, 0 }, 
+	{ CKA_ISSUER,                 NULL, 0 },
+	{ CKA_SERIAL_NUMBER,          NULL, 0 },
+	{ CKA_CERT_SHA1_HASH,         NULL, 0 },
+	{ CKA_CERT_MD5_HASH,          NULL, 0 },
+	{ CKA_TRUST_SERVER_AUTH,      NULL, 0 },
+	{ CKA_TRUST_CLIENT_AUTH,      NULL, 0 },
+	{ CKA_TRUST_EMAIL_PROTECTION, NULL, 0 },
+	{ CKA_TRUST_CODE_SIGNING,     NULL, 0 }
     };
     unsigned char sha1_hash[SHA1_LENGTH];
+    unsigned char md5_hash[MD5_LENGTH];
     tobj_size = sizeof(tobj_template) / sizeof(tobj_template[0]);
-    NSS_CK_SET_ATTRIBUTE_VAR(tobj_template, 0, tobjc);
+    NSS_CK_SET_ATTRIBUTE_VAR( tobj_template, 0, tobjc);
+    NSS_CK_SET_ATTRIBUTE_ITEM(tobj_template, 1, &g_ck_true);
+    NSS_CK_SET_ATTRIBUTE_ITEM(tobj_template, 2, &c->issuer);
+    NSS_CK_SET_ATTRIBUTE_ITEM(tobj_template, 3, &c->serial);
     /* First, use the SHA-1 hash of the cert to locate the trust object */
     /* XXX get rid of this PK11_ call! */
     PK11_HashBuf(SEC_OID_SHA1, sha1_hash, c->encoding.data, c->encoding.size);
-    tobj_template[1].pValue = (CK_VOID_PTR)sha1_hash;
-    tobj_template[1].ulValueLen = (CK_ULONG)SHA1_LENGTH;
-    return nssToken_ImportObject(c->token, session, tobj_template, tobj_size);
+    tobj_template[4].pValue = (CK_VOID_PTR)sha1_hash;
+    tobj_template[4].ulValueLen = (CK_ULONG)SHA1_LENGTH;
+    PK11_HashBuf(SEC_OID_MD5, md5_hash, c->encoding.data, c->encoding.size);
+    tobj_template[5].pValue = (CK_VOID_PTR)md5_hash;
+    tobj_template[5].ulValueLen = (CK_ULONG)MD5_LENGTH;
+    /* now set the trust values */
+    NSS_CK_SET_ATTRIBUTE_VAR(tobj_template, 6, trust->serverAuth);
+    NSS_CK_SET_ATTRIBUTE_VAR(tobj_template, 7, trust->clientAuth);
+    NSS_CK_SET_ATTRIBUTE_VAR(tobj_template, 8, trust->emailProtection);
+    NSS_CK_SET_ATTRIBUTE_VAR(tobj_template, 9, trust->codeSigning);
+    return nssToken_ImportObject(c->token, NULL, tobj_template, tobj_size);
 }
 
 NSS_IMPLEMENT PRStatus
@@ -335,10 +355,12 @@ nssCertificate_SetCertTrust
 {
     PRStatus nssrv;
     nssSession *session;
+    PRBool createdSession;
     CK_OBJECT_HANDLE tobjID;
     CK_ULONG trust_size;
     CK_ATTRIBUTE trust_template[] = {
 	{ CKA_TRUST_SERVER_AUTH,      NULL, 0 },
+	{ CKA_TRUST_CLIENT_AUTH,      NULL, 0 },
 	{ CKA_TRUST_EMAIL_PROTECTION, NULL, 0 },
 	{ CKA_TRUST_CODE_SIGNING,     NULL, 0 }
     };
@@ -351,18 +373,29 @@ nssCertificate_SetCertTrust
     tobjID = get_cert_trust_handle(c, session);
     if (tobjID == CK_INVALID_KEY) {
 	/* trust object doesn't exist yet, create one */
-	tobjID = create_cert_trust_object(c, session);
+	return create_cert_trust_object(c, trust);
     }
     NSS_CK_SET_ATTRIBUTE_VAR(trust_template, 0, trust->serverAuth);
-    NSS_CK_SET_ATTRIBUTE_VAR(trust_template, 1, trust->emailProtection);
-    NSS_CK_SET_ATTRIBUTE_VAR(trust_template, 2, trust->codeSigning);
+    NSS_CK_SET_ATTRIBUTE_VAR(trust_template, 1, trust->clientAuth);
+    NSS_CK_SET_ATTRIBUTE_VAR(trust_template, 2, trust->emailProtection);
+    NSS_CK_SET_ATTRIBUTE_VAR(trust_template, 3, trust->codeSigning);
+    /* changing cert trust requires rw session XXX session objects */
+    createdSession = PR_FALSE;
+    if (!nssSession_IsReadWrite(session)) {
+	createdSession = PR_TRUE;
+	session = nssSlot_CreateSession(c->slot, NULL, PR_TRUE);
+    }
     nssrv = nssCKObject_SetAttributes(tobjID,
                                       trust_template, trust_size,
                                       session, c->slot);
+    if (createdSession) {
+	nssSession_Destroy(session);
+    }
     if (nssrv == PR_FAILURE) {
 	return nssrv;
     }
     c->trust.serverAuth = trust->serverAuth;
+    c->trust.clientAuth = trust->clientAuth;
     c->trust.emailProtection = trust->emailProtection;
     c->trust.codeSigning = trust->codeSigning;
     return PR_SUCCESS;
