@@ -86,7 +86,7 @@ function Startup()
     newLegend = false;
     editorShell.SelectElement(legendElement);
     gDialog.legendText.value = GetSelectionAsText();
-    if (legendElement.innerHTML.match(/</))
+    if (/</.test(legendElement.innerHTML))
     {
       gDialog.editText.checked = false;
       gDialog.editText.disabled = false;
@@ -124,7 +124,7 @@ function Startup()
 
 function InitDialog()
 {
-  gDialog.legendAlign.value = globalElement.getAttribute("align");
+  gDialog.legendAlign.value = GetHTMLOrCSSStyleValue(globalElement, "align", "caption-side");
 }
 
 function onEditText()
@@ -135,11 +135,12 @@ function onEditText()
 
 function RemoveFieldSet()
 {
-  // RemoveTextProperty might work becuase the field set element was selected above
   editorShell.BeginBatchChanges();
   try {
     if (!newLegend)
       editorShell.DeleteElement(legendElement);
+    // This really needs to call the C++ function RemoveBlockContainer
+    // which inserts any <BR>s needed
     RemoveElementKeepingChildren(fieldsetElement);
   } finally {
     editorShell.EndBatchChanges();
@@ -160,16 +161,11 @@ function ValidateData()
 function onAccept()
 {
   // All values are valid - copy to actual element in doc
-  // ValidateData();
+  ValidateData();
 
   editorShell.BeginBatchChanges();
 
   try {
-    editorShell.CloneAttributes(legendElement, globalElement);
-  
-    if (insertNew)
-      InsertElementAroundSelection(fieldsetElement);
-  
     if (gDialog.editText.checked)
     {
       if (gDialog.legendText.value)
@@ -179,11 +175,18 @@ function onAccept()
           editorShell.InsertElement(legendElement, fieldsetElement, 0, true);
         else while (legendElement.firstChild)
           editor.DeleteNode(legendElement.firstChild);
-        editor.InsertNode(document.createTextNode(gDialog.legendText.value), legendElement, 0);
+        editor.InsertNode(editorShell.editorDocument.createTextNode(gDialog.legendText.value), legendElement, 0);
       }
       else if (!newLegend)
         editorShell.DeleteElement(legendElement);
     }
+ 
+    if (insertNew)
+      InsertElementAroundSelection(fieldsetElement);
+    else
+      editorShell.SelectElement(fieldsetElement);
+
+    editorShell.CloneAttributes(legendElement, globalElement);
   }
   finally {
     editorShell.EndBatchChanges();

@@ -88,8 +88,8 @@
       </groupbox>
 
       <!-- panels overlayed from EdImageOverlay.xul -->
-      <groupbox id="imageLocation"/>
-      <groupbox id="imageDimensions"/>
+      <vbox id="imageLocation"/>
+      <vbox id="imageDimensions"/>
       <hbox id="imageAppearance"/>
 
     </tabpanels>

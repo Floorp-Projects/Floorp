@@ -88,50 +88,56 @@
             <textbox id="TextAreaCols" class="narrow" oninput="forceInteger(this.id);onInput();"/>
           </hbox>
         </row>
-        <hbox>
-          <button id="MoreFewerButton" oncommand="onMoreFewer();" persist="more"/>
-        </hbox>
-        <rows id="MoreSection">
-          <row id="wrap" collapsed="true" align="center">
-            <label value="&TextAreaWrap.label;" accesskey="&TextAreaWrap.accessKey;"/>
-            <menulist id="TextAreaWrap">
-              <menupopup>
-                <menuitem label="&WrapDefault.value;"/>
-                <menuitem label="&WrapOff.value;" value="off"/>
-                <menuseparator/>
-                <menuitem label="&WrapSoft.value;" value="soft"/>
-                <menuitem label="&WrapHard.value;" value="hard"/>
-                <menuseparator/>
-                <menuitem label="&WrapPhysical.value;" value="physical"/>
-                <menuitem label="&WrapVirtual.value;" value="virtual"/>
-              </menupopup>
-            </menulist>
-          </row>
-          <row>
-            <spacer/>
-            <checkbox id="TextAreaReadOnly" label="&TextAreaReadOnly.label;" accesskey="&TextAreaReadOnly.accessKey;"/>
-          </row>
-          <row>
-            <spacer/>
-            <checkbox id="TextAreaDisabled" label="&TextAreaDisabled.label;" accesskey="&TextAreaDisabled.accessKey;"/>
-          </row>
-          <row align="center">
-            <label value="&TextAreaTabIndex.label;" accesskey="&TextAreaTabIndex.accessKey;"/>
-            <hbox>
-              <textbox id="TextAreaTabIndex" class="narrow" oninput="forceInteger(this.id);"/>
-            </hbox>
-          </row>
-          <row align="center">
-            <label value="&TextAreaAccessKey.label;" accesskey="&TextAreaAccessKey.accessKey;"/>
-            <hbox>
-              <textbox id="TextAreaAccessKey" class="narrow" maxlength="1"/>
-            </hbox>
-          </row>
-          <row>
-            <label value="&InitialText.label;" accesskey="&InitialText.accessKey;"/>
-          </row>
-          <textbox id="TextAreaValue" flex="1" multiline="true" rows="5"/>
-        </rows>
+      </rows>
+    </grid>
+    <hbox>
+      <button id="MoreFewerButton" oncommand="onMoreFewer();" persist="more"/>
+    </hbox>
+    <grid id="MoreSection"><columns><column/><column/></columns>
+      <rows>
+        <row align="center">
+          <label value="&TextAreaWrap.label;" accesskey="&TextAreaWrap.accessKey;"/>
+          <menulist id="TextAreaWrap">
+            <menupopup>
+              <menuitem label="&WrapDefault.value;"/>
+              <menuitem label="&WrapOff.value;" value="off"/>
+              <menuseparator/>
+              <menuitem label="&WrapSoft.value;" value="soft"/>
+              <menuitem label="&WrapHard.value;" value="hard"/>
+              <menuseparator/>
+              <menuitem label="&WrapPhysical.value;" value="physical"/>
+              <menuitem label="&WrapVirtual.value;" value="virtual"/>
+              <menuseparator/>
+              <menuitem label="normal" value="normal"/>
+              <menuitem label="nowrap" value="nowrap"/>
+              <menuitem label="pre" value="pre"/>
+            </menupopup>
+          </menulist>
+        </row>
+        <row>
+          <spacer/>
+          <checkbox id="TextAreaReadOnly" label="&TextAreaReadOnly.label;" accesskey="&TextAreaReadOnly.accessKey;"/>
+        </row>
+        <row>
+          <spacer/>
+          <checkbox id="TextAreaDisabled" label="&TextAreaDisabled.label;" accesskey="&TextAreaDisabled.accessKey;"/>
+        </row>
+        <row align="center">
+          <label value="&TextAreaTabIndex.label;" accesskey="&TextAreaTabIndex.accessKey;"/>
+          <hbox>
+            <textbox id="TextAreaTabIndex" class="narrow" oninput="forceInteger(this.id);"/>
+          </hbox>
+        </row>
+        <row align="center">
+          <label value="&TextAreaAccessKey.label;" accesskey="&TextAreaAccessKey.accessKey;"/>
+          <hbox>
+            <textbox id="TextAreaAccessKey" class="narrow" maxlength="1"/>
+          </hbox>
+        </row>
+        <row>
+          <label value="&InitialText.label;" accesskey="&InitialText.accessKey;"/>
+        </row>
+        <textbox id="TextAreaValue" flex="1" multiline="true" rows="5"/>
       </rows>
     </grid>
   </groupbox>

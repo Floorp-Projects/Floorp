@@ -531,6 +531,10 @@ dump(" *** Current directory list length = "+dirListLen+"\n");
   return true;
 }
 
+function ChooseDir()
+{
+}
+
 function ValidateData()
 {
   var result = true;;

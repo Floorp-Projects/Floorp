@@ -659,7 +659,6 @@ function onMoreFewer()
     gDialog.MoreFewerButton.setAttribute("more","0");
     gDialog.MoreFewerButton.setAttribute("label",GetString("MoreProperties"));
     SeeMore = false;
-//    window.sizeToContent();
   }
   else
   {

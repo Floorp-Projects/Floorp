@@ -119,8 +119,11 @@ function onAccept()
     var editor = editorShell.editor;
     while (labelElement.firstChild)
       editor.DeleteNode(labelElement.firstChild);
-    if (gDialog.labelText.value)
-      editor.InsertNode(document.createTextNode(gDialog.labelText.value), labelElement, 0);
+    if (gDialog.labelText.value) {
+      var textNode = editorShell.editorDocument.createTextNode(gDialog.labelText.value);
+      editor.InsertNode(textNode, labelElement, 0);
+      editorShell.SelectElement(labelElement);
+    }
   }
 
   editorShell.EndBatchChanges();

@@ -63,9 +63,12 @@ function Startup()
   var tagName = "textarea";
   textareaElement = editorShell.GetSelectedElement(tagName);
 
-  if (textareaElement)
+  if (textareaElement) {
     // We found an element and don't need to insert one
     insertNew = false;
+
+    gDialog.textareaValue.value = textareaElement.value;
+  }
   else
   {
     insertNew = true;
@@ -81,7 +84,7 @@ function Startup()
       return;
     }
     else
-      textareaElement.value = GetSelectionAsText();
+      gDialog.textareaValue.value = GetSelectionAsText();
   }
 
   // Make a copy to use for AdvancedEdit
@@ -90,13 +93,6 @@ function Startup()
   InitDialog();
 
   InitMoreFewer();
-
-  if ("@mozilla.org/preferences;1" in Components.classes) try {
-    var pref = Components.classes["@mozilla.org/preferences;1"];
-    pref = pref.getService(Components.interfaces.nsIPref);
-    var wrap = document.getElementById("wrap");
-    wrap.setAttribute("collapsed", pref.GetBoolPref("editor.dtd.strict"));
-  } catch (e) {}
 
   SetTextboxFocus(gDialog.textareaName);
   
@@ -108,12 +104,11 @@ function InitDialog()
   gDialog.textareaName.value = globalElement.getAttribute("name");
   gDialog.textareaRows.value = globalElement.getAttribute("rows");
   gDialog.textareaCols.value = globalElement.getAttribute("cols");
-  gDialog.textareaWrap.value = globalElement.getAttribute("wrap");
+  gDialog.textareaWrap.value = GetHTMLOrCSSStyleValue(globalElement, "wrap", "white-space");
   gDialog.textareaReadOnly.checked = globalElement.hasAttribute("readonly");
   gDialog.textareaDisabled.checked = globalElement.hasAttribute("disabled");
   gDialog.textareaTabIndex.value = globalElement.getAttribute("tabindex");
   gDialog.textareaAccessKey.value = globalElement.getAttribute("accesskey");
-  gDialog.textareaValue.value = globalElement.value;
   onInput();
 }
 
@@ -152,32 +147,38 @@ function ValidateData()
     else
       globalElement.removeAttribute(f);
   }
-  globalElement.value = gDialog.textareaValue.value;
   return true;
 }
 
 function onAccept()
 {
-  editorShell.BeginBatchChanges();
-
-  if (insertNew)
-  {
-    try {
-      // 'true' means delete the selection before inserting
-      // in case were are converting text to a text area
-      editorShell.InsertElementAtSelection(textareaElement, true);
-    } catch (e) {
-      dump(e);
-    }
-  }
-
   // All values are valid - copy to actual element in doc or
   //   element created to insert
   ValidateData();
 
-  editorShell.CloneAttributes(textareaElement, globalElement);
+  editorShell.BeginBatchChanges();
 
-  editorShell.EndBatchChanges();
+  try {
+    // undoably set value
+    var initialText = gDialog.textareaValue.value;
+    if (initialText != textareaElement.value) {
+      while (textareaElement.hasChildNodes())
+        editorShell.editor.DeleteNode(textareaElement.firstChild);
+      if (initialText) {
+        var textNode = editorShell.editorDocument.createTextNode(initialText);
+        editorShell.editor.InsertNode(textNode, textareaElement, 0);
+      }
+    }
+
+    if (insertNew)
+      editorShell.InsertElementAtSelection(textareaElement, true);
+    else
+      editorShell.SelectElement(textareaElement);
+
+    editorShell.CloneAttributes(textareaElement, globalElement);
+  } finally {
+    editorShell.EndBatchChanges();
+  }
 
   SaveWindowLocation();
 

@@ -103,14 +103,7 @@ function InitDialog()
     gDialog.alignGroup.selectedItem = gDialog.leftAlign;
   }
 
-  // This is tricky! Since the "noshade" attribute doesn't always have a value,
-  //  we can't use getAttribute to figure out if it's set!
-  // This gets the attribute NODE from the attributes NamedNodeMap
-  if (globalElement.attributes.getNamedItem("noshade"))
-    gDialog.shading.checked = false;
-  else
-    gDialog.shading.checked = true;
-
+  gDialog.shading.checked = globalElement.hasAttribute("noshade");
 }
 
 function onSaveDefault()
