@@ -488,7 +488,8 @@ nsMsgSendPart::Write()
   if ( (m_parent) &&
        (m_numchildren == 0) &&
        ( (!m_buffer) || (!*m_buffer) ) &&
-       (!m_filespec) )
+       (!m_filespec) &&
+       (!m_mainpart) )
     return SKIP_EMPTY_PART;
 
   if (m_mainpart && m_type && PL_strcmp(m_type, TEXT_HTML) == 0) 
