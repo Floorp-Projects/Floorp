@@ -1668,12 +1668,8 @@ nsFtpConnectionThread::Run() {
         mList       = mConn->mList;
     } else {
         // build our own
-<<<<<<< nsFtpConnectionThread.cpp
-        rv = mSTS->CreateTransport(host, port, nsnull, host, getter_AddRefs(mCPipe)); // the command channel
+        rv = mSTS->CreateTransport(host, port, mEventSinkGetter, host, getter_AddRefs(mCPipe)); // the command channel
         nsAllocator::Free(host);
-=======
-        rv = mSTS->CreateTransport(host, port, mEventSinkGetter, getter_AddRefs(mCPipe)); // the command channel
->>>>>>> 1.61
         if (NS_FAILED(rv)) return rv;
 
         // get the output stream so we can write to the server
