@@ -5796,9 +5796,11 @@ nsXULDocument::AddAttributes(nsXULPrototypeElement* aPrototype, nsIContent* aEle
 
     for (PRInt32 i = 0; i < aPrototype->mNumAttributes; ++i) {
         nsXULPrototypeAttribute* protoattr = &(aPrototype->mAttributes[i]);
+        nsAutoString  valueStr;
+        protoattr->mValue.GetValue( valueStr );
 
         rv = aElement->SetAttribute(protoattr->mNodeInfo,
-                                    protoattr->mValue,
+                                    valueStr,
                                     PR_FALSE);
         if (NS_FAILED(rv)) return rv;
     }

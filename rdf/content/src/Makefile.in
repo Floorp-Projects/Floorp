@@ -42,6 +42,7 @@ CPPSRCS		= \
 		nsRuleNetwork.cpp \
 		nsXULAtoms.cpp \
 		nsXULElement.cpp \
+                nsXULAttributeValue.cpp \
 		nsXULAttributes.cpp \
 		nsXULContentSink.cpp \
 		nsXULContentUtils.cpp \
