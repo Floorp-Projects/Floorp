@@ -38,7 +38,7 @@
 #define NSSCKFWT_H
 
 #ifdef DEBUG
-static const char NSSCKFWT_CVS_ID[] = "@(#) $RCSfile: nssckfwt.h,v $ $Revision: 1.2 $ $Date: 2004/04/25 15:03:04 $ $Name:  $";
+static const char NSSCKFWT_CVS_ID[] = "@(#) $RCSfile: nssckfwt.h,v $ $Revision: 1.3 $ $Date: 2004/07/29 22:51:00 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -110,5 +110,10 @@ typedef struct NSSCKFWFindObjectsStr NSSCKFWFindObjects;
 
 struct NSSCKFWMutexStr;
 typedef struct NSSCKFWMutexStr NSSCKFWMutex;
+
+typedef enum {
+    SingleThreaded,
+    MultiThreaded
+} CryptokiLockingState ;
 
 #endif /* NSSCKFWT_H */

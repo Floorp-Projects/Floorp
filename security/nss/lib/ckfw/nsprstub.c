@@ -42,7 +42,7 @@
  * SW FORTEZZA to link with some low level security functions without dragging
  * in NSPR.
  *
- * $Id: nsprstub.c,v 1.5 2004/04/25 15:03:04 gerv%gerv.net Exp $
+ * $Id: nsprstub.c,v 1.6 2004/07/29 22:51:00 jpierre%netscape.com Exp $
  */
 
 #include "seccomon.h"
@@ -348,15 +348,76 @@ PR_IMPLEMENT(PRInt32) PR_AtomicSet(PRInt32 *val) { return ++(*val); }
 PR_IMPLEMENT(PRInt32) PR_AtomicIncrement(PRInt32 *val) { return ++(*val); }
 #endif /* ! (WIN32 && GCC) */
 
-CK_C_INITIALIZE_ARGS_PTR nssstub_initArgs = NULL;
-NSSArena *nssstub_arena = NULL;
-PR_IMPLEMENT(void)
-nssSetLockArgs(CK_C_INITIALIZE_ARGS_PTR pInitArgs)
+static CK_C_INITIALIZE_ARGS_PTR nssstub_pInitArgs = NULL;
+static CK_C_INITIALIZE_ARGS nssstub_initArgs;
+static NSSArena *nssstub_arena = NULL;
+static CryptokiLockingState nssstub_LockingState = SingleThreaded;
+
+PR_IMPLEMENT(CK_RV)
+nssSetLockArgs(CK_C_INITIALIZE_ARGS_PTR pInitArgs, CryptokiLockingState* returned)
 {
-    if (nssstub_initArgs == NULL) {
-	nssstub_initArgs = pInitArgs;
+    CK_ULONG count = (CK_ULONG)0;
+    CK_BBOOL os_ok = CK_FALSE;
+    CK_RV rv = CKR_OK;
+    if (nssstub_pInitArgs == NULL) {
+	if (pInitArgs != NULL) {
+	    nssstub_initArgs = *pInitArgs;
+	    nssstub_pInitArgs = &nssstub_initArgs;
+            if( (CK_CREATEMUTEX )NULL != pInitArgs->CreateMutex  ) count++;
+            if( (CK_DESTROYMUTEX)NULL != pInitArgs->DestroyMutex ) count++;
+            if( (CK_LOCKMUTEX   )NULL != pInitArgs->LockMutex    ) count++;
+            if( (CK_UNLOCKMUTEX )NULL != pInitArgs->UnlockMutex  ) count++;
+            os_ok = (pInitArgs->flags & CKF_OS_LOCKING_OK) ? CK_TRUE : CK_FALSE;
+
+            if( (0 != count) && (4 != count) ) {
+                rv = CKR_ARGUMENTS_BAD;
+                goto loser;
+            }
+	} else {
+	    nssstub_pInitArgs = pInitArgs;
+	}
 	/* nssstub_arena = NSSArena_Create(); */
     }
+
+    if( (0 == count) && (CK_TRUE == os_ok) ) {
+      /*
+       * This is case #2 in the description of C_Initialize:
+       * The library will be called in a multithreaded way, but
+       * no routines were specified: os locking calls should be
+       * used.  Unfortunately, this can be hard.. like, I think
+       * I may have to dynamically look up the entry points in
+       * the instance of NSPR already going in the application.
+       *
+       * I know that *we* always specify routines, so this only
+       * comes up if someone is using NSS to create their own
+       * PCKS#11 modules for other products.  Oh, heck, I'll 
+       * worry about this then.
+       */
+      rv = CKR_CANT_LOCK;
+      goto loser;
+    }
+
+    if( 0 == count ) {
+      /*
+       * With the above test out of the way, we know this is case
+       * #1 in the description of C_Initialize: this library will
+       * not be called in a multithreaded way.
+       */
+
+      nssstub_LockingState = SingleThreaded;
+    } else {
+      /*
+       * We know that we're in either case #3 or #4 in the description
+       * of C_Initialize.  Case #3 says we should use the specified
+       * functions, case #4 cays we can use either the specified ones
+       * or the OS ones.  I'll use the specified ones.
+       */
+      nssstub_LockingState = MultiThreaded;
+    }
+
+    loser:
+    *returned = nssstub_LockingState;
+    return rv;
 }
 
 /*
@@ -372,7 +433,7 @@ PR_NewLock(void) {
 	NSSCKFWMutex *mlock = NULL;
 	CK_RV error;
 
-	mlock = nssCKFWMutex_Create(nssstub_initArgs,nssstub_arena,&error);
+	mlock = nssCKFWMutex_Create(nssstub_pInitArgs,nssstub_LockingState,nssstub_arena,&error);
 	lock = (PRLock *)mlock;
 
 	/* if we don't have a lock, nssCKFWMutex can deal with things */
