@@ -105,6 +105,14 @@ class EmbedPrivate {
   // visibility is set.
   void        ContentFinishedLoading(void);
 
+
+#if 0
+/*
+  not used - we handle focus in/out activate/deactivate in
+  child_getting_focus/child_losing_focus methods
+  of the PtMozilla widget class
+*/
+
   // these let the widget code know when the toplevel window gets and
   // looses focus.
   void        TopLevelFocusIn (void);
@@ -114,6 +122,8 @@ class EmbedPrivate {
   // events
   void        ChildFocusIn (void);
   void        ChildFocusOut(void);
+#endif
+
 
   PtWidget_t                   *mOwningWidget;
 

@@ -726,6 +726,17 @@ EmbedPrivate::ContentFinishedLoading(void)
   }
 }
 
+
+
+#if 0
+
+/*
+	not used - we handle focus in/out activate/deactivate in
+	child_getting_focus/child_losing_focus methods
+	of the PtMozilla widget class
+*/
+
+
 // handle focus in and focus out events
 void
 EmbedPrivate::TopLevelFocusIn(void)
@@ -785,6 +796,9 @@ EmbedPrivate::ChildFocusOut(void)
     focusController->SetActive(PR_TRUE);
 
 }
+
+#endif
+
 
 // Get the event listener for the chrome event handler.
 

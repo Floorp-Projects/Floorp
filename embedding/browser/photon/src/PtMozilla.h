@@ -324,7 +324,7 @@ typedef struct Pt_mozilla_client_widget
 
 	char				url[MAX_URL_LENGTH];
 	int 				navigate_flags;
-	char 				disable_exception_dlg, disable_new_windows, spare[2];
+	char 				disable_exception_dlg, disable_new_windows, toActivate, spare[1];
 
 	int fDownloadCount;
 	EmbedDownload **fDownload;

@@ -155,11 +155,16 @@ NS_IMETHODIMP CPromptService::Alert(nsIDOMWindow *parent, const PRUnichar *dialo
 	nsString 			mTitle(dialogTitle);
 	nsString 			mText(text);
 	PtWidget_t *w = GetWebBrowser( parent );
-	if( w ) InvokeDialogCallback(w, Pt_MOZ_DIALOG_ALERT, ToNewCString(mTitle), ToNewCString(mText), nsnull, nsnull);
+	char *title = ToNewCString(mTitle), *ptext = ToNewCString(mText);
+
+	if( w ) InvokeDialogCallback(w, Pt_MOZ_DIALOG_ALERT, title, ptext, nsnull, nsnull);
 	else {
 		char const *btns[] = { "&Ok" };
-		PtAlert( NULL, NULL, ToNewCString(mTitle), NULL, ToNewCString(mText), NULL, 1, btns, NULL, 1, 1, 0 );
+		PtAlert( NULL, NULL, title, NULL, ptext, NULL, 1, btns, NULL, 1, 1, 0 );
 		}
+
+	if( title ) nsMemory::Free( (void*)title );
+	if( ptext ) nsMemory::Free( (void*)ptext );
 
 	return NS_OK;
 	}
@@ -175,10 +180,14 @@ NS_IMETHODIMP CPromptService::AlertCheck(nsIDOMWindow *parent,
 	nsString 	mMsg(checkboxMsg);
 	int 		ret = 0;
 	PtWidget_t *w = GetWebBrowser( parent );
+	char *title = ToNewCString(mTitle), *ptext = ToNewCString(mText), *msg = ToNewCString(mMsg);
 
-	InvokeDialogCallback(w, Pt_MOZ_DIALOG_ALERT, ToNewCString(mTitle), ToNewCString(mText), \
-			ToNewCString(mMsg), &ret);
+	InvokeDialogCallback(w, Pt_MOZ_DIALOG_ALERT, title, ptext, msg, &ret);
 	*checkValue = ret;
+
+	if( title ) nsMemory::Free( (void*)title );
+	if( ptext ) nsMemory::Free( (void*)ptext );
+	if( msg ) nsMemory::Free( (void*)msg );
 
 	return NS_OK;
 	}
@@ -192,11 +201,15 @@ NS_IMETHODIMP CPromptService::Confirm(nsIDOMWindow *parent,
 	nsString 			mTitle(dialogTitle);
 	nsString 			mText(text);
 	PtWidget_t *w = GetWebBrowser( parent );
+	char *title = ToNewCString(mTitle), *ptext = ToNewCString(mText);
 
-	if (InvokeDialogCallback(w, Pt_MOZ_DIALOG_CONFIRM, ToNewCString(mTitle), ToNewCString(mText), nsnull, nsnull) == Pt_CONTINUE)
+	if(InvokeDialogCallback(w, Pt_MOZ_DIALOG_CONFIRM, title, ptext, nsnull, nsnull) == Pt_CONTINUE)
 		*_retval = PR_TRUE;
 	else
 		*_retval = PR_FALSE;
+
+	if( title ) nsMemory::Free( (void*)title );
+	if( ptext ) nsMemory::Free( (void*)ptext );
 
 	return NS_OK;
 }
@@ -213,15 +226,18 @@ NS_IMETHODIMP CPromptService::ConfirmCheck(nsIDOMWindow *parent,
   nsString  mMsg(checkboxMsg);
   int     ret = 0;
   PtWidget_t *w = GetWebBrowser( parent );
+	char *title = ToNewCString(mTitle), *ptext = ToNewCString(mText), *msg = ToNewCString(mMsg);
 
-
-  if (InvokeDialogCallback(w, Pt_MOZ_DIALOG_CONFIRM_CHECK, ToNewCString(mTitle), ToNewCString(mText), \
-      ToNewCString(mMsg), &ret) == Pt_CONTINUE)
+  if (InvokeDialogCallback(w, Pt_MOZ_DIALOG_CONFIRM_CHECK, title, ptext, msg, &ret) == Pt_CONTINUE)
     *_retval = PR_TRUE;
   else
     *_retval = PR_FALSE;
   if (checkValue)
     *checkValue = ret;
+
+	if( title ) nsMemory::Free( (void*)title );
+	if( ptext ) nsMemory::Free( (void*)ptext );
+	if( msg ) nsMemory::Free( (void*)msg );
 
   return NS_OK;
 
@@ -240,15 +256,18 @@ NS_IMETHODIMP CPromptService::Prompt(nsIDOMWindow *parent,
 	nsString 	mMsg(checkboxMsg);
 	int				ret = 0;
 	PtWidget_t *w = GetWebBrowser( parent );
+	char *title = ToNewCString(mTitle), *ptext = ToNewCString(mText), *msg = ToNewCString(mMsg);
 
-
-	if (InvokeDialogCallback(w, Pt_MOZ_DIALOG_CONFIRM, ToNewCString(mTitle), ToNewCString(mText), \
-			ToNewCString(mMsg), &ret) == Pt_CONTINUE)
+	if(InvokeDialogCallback(w, Pt_MOZ_DIALOG_CONFIRM, title, ptext, msg, &ret) == Pt_CONTINUE)
 		*_retval = PR_TRUE;
 	else
 		*_retval = PR_FALSE;
 	if (checkValue)
 		*checkValue = ret;
+
+	if( title ) nsMemory::Free( (void*)title );
+	if( ptext ) nsMemory::Free( (void*)ptext );
+	if( msg ) nsMemory::Free( (void*)msg );
 
 	return NS_OK;
 }
