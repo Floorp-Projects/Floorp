@@ -183,5 +183,5 @@ IconType DetermineIconType(HT_Resource pNode, BOOL largeIcon);
 
 void PaintBackground(HDC hdc, CRect rect, NSNavCenterImage* pImage, int ySrcOffset = -1);
 		// This function tiles and paints the background image in the tree.
-
+void ResolveToPaletteColor(COLORREF& color, HPALETTE hPal);
 #endif // RDFACC_H

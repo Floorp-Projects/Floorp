@@ -3145,8 +3145,6 @@ CRDFOutlinerParent::CRDFOutlinerParent(HT_Pane thePane, HT_View theView)
 {
 	CRDFOutliner* theOutliner = new CRDFOutliner(thePane, theView, this);
 	m_pOutliner = theOutliner;
-	m_ForegroundColor = RGB(0,0,0);
-	m_BackgroundColor = RGB(192, 192, 192);
 }
 
 BOOL CRDFOutlinerParent::PreCreateWindow(CREATESTRUCT& cs)
@@ -3177,6 +3175,45 @@ void CRDFOutlinerParent::OnPaint ( )
     if ( !m_pOutliner || m_bDisableHeaders )
         return;
 
+	// Read in our values.
+	CRDFOutliner* pRDFLiner = (CRDFOutliner*)m_pOutliner;
+	HT_View view = pRDFLiner->GetHTView();
+	HT_Resource top = HT_TopNode(view);
+
+	// Foreground color
+	void* data;
+	HT_GetNodeData(top, gNavCenter->columnHeaderFGColor, HT_COLUMN_STRING, &data);
+	if (data)
+		WFE_ParseColor((char*)data, &m_ForegroundColor);
+	else m_ForegroundColor = RGB(0,0,0);
+
+	// background color
+	HT_GetNodeData(top, gNavCenter->columnHeaderBGColor, HT_COLUMN_STRING, &data);
+	if (data)
+		WFE_ParseColor((char*)data, &m_BackgroundColor);
+	else m_BackgroundColor = RGB(192,192,192);
+
+	// Background image URL
+	m_BackgroundImageURL = "";
+	HT_GetNodeData(top, gNavCenter->columnHeaderBGURL, HT_COLUMN_STRING, &data);
+	if (data)
+		m_BackgroundImageURL = (char*)data;
+	m_pBackgroundImage = NULL; // Clear out the BG image.
+
+	HPALETTE pOldPalette = NULL;
+	if (sysInfo.m_iBitsPerPixel < 16 && (::GetDeviceCaps(pdc.m_hDC, RASTERCAPS) & RC_PALETTE))
+	{
+		// Use the palette, since we have less than 16 bits per pixel and are
+		// using a palette-based device.
+		HPALETTE hPalette = WFE_GetUIPalette(GetParentFrame());
+		::SelectPalette(pdc.m_hDC, hPalette, FALSE);	
+
+		// Find the nearest match in our palette for our colors.
+		ResolveToPaletteColor(m_BackgroundColor, hPalette);
+		ResolveToPaletteColor(m_ForegroundColor, hPalette);
+	}
+
+
     int i, offset;
 
 	// we might use these in the for() loop below --- make sure
@@ -3190,6 +3227,20 @@ void CRDFOutlinerParent::OnPaint ( )
 
 	CRect rectClient;
 	GetClientRect ( &rectClient );
+
+	// Do the background painting
+	if (m_BackgroundImageURL != "")
+	{
+		// There's a background that needs to be drawn.
+		m_pBackgroundImage = LookupImage(m_BackgroundImageURL, NULL);
+	}
+
+	BOOL shouldPaintBG = m_pBackgroundImage && m_pBackgroundImage->SuccessfullyLoaded();
+	if (shouldPaintBG)
+	{
+		PaintBackground(pdc, rectClient, m_pBackgroundImage);
+	}
+
 	int iMaxHeaderWidth = rectClient.right - m_iPusherWidth;
 
     for ( i = offset = 0; (i < (int)m_pOutliner->GetVisibleColumns()) && (offset < iMaxHeaderWidth); i++ )
@@ -3206,13 +3257,13 @@ void CRDFOutlinerParent::OnPaint ( )
         if ( ::IntersectRect ( &rcInter, &pdc.m_ps.rcPaint, &rect ) )
         {
 			CRect rcText = rect;
-			//::InflateRect(&rcText,-2,-2);
-			::FillRect(pdc.m_hDC, &rcText, bgBrush );
+			
+			if (!shouldPaintBG)
+				::FillRect(pdc.m_hDC, &rcText, bgBrush );
 			rcText.InflateRect(1, 0, 0, 0);
 			::FrameRect(pdc.m_hDC, &rcText, fgBrush);
 
 			DrawColumnHeader( pdc.m_hDC, rcText, i );
-			//DrawButtonRect( pdc.m_hDC, rect, bDep );
 		}
 
         offset += m_pOutliner->m_pColumn[ i ]->iCol;
@@ -3226,12 +3277,10 @@ void CRDFOutlinerParent::OnPaint ( )
 
 		if ( IntersectRect( &rcInter, &pdc.m_ps.rcPaint, &rect ) ) {
 			CRect rcText = rect;
-			//::InflateRect(&rcText,-2,-2);
-			::FillRect(pdc.m_hDC, &rcText, bgBrush );
+			if (!shouldPaintBG)
+				::FillRect(pdc.m_hDC, &rcText, bgBrush );
 			rcText.InflateRect(1, 0, 0, 0);
 			::FrameRect(pdc.m_hDC, &rcText, fgBrush );
-
-			//DrawButtonRect( pdc.m_hDC, rect, FALSE );
 		}
 	}
 
@@ -3241,7 +3290,8 @@ void CRDFOutlinerParent::OnPaint ( )
     if ( iRect.IntersectRect ( &pdc.m_ps.rcPaint, &rect ) ) {
 		int idxImage;
 		rect.InflateRect(1,0,1,0);
-		::FillRect ( pdc.m_hDC, &rect, bgBrush );
+		if (!shouldPaintBG)
+			::FillRect ( pdc.m_hDC, &rect, bgBrush );
 		::FrameRect( pdc.m_hDC, &rect, fgBrush );
 
 		m_iPusherState = pusherNone;
@@ -3305,6 +3355,11 @@ void CRDFOutlinerParent::OnPaint ( )
 		GetClientRect(&clientRect);
 		::FrameRect( pdc.m_hDC, &clientRect, hBrush );	 
 		VERIFY(DeleteObject( hBrush ));
+	}
+
+	if (sysInfo.m_iBitsPerPixel < 16 && (::GetDeviceCaps(pdc.m_hDC, RASTERCAPS) & RC_PALETTE))
+	{
+		::SelectPalette(pdc.m_hDC, pOldPalette, FALSE);
 	}
 
 }

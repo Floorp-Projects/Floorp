@@ -351,12 +351,14 @@ public:
 	CRDFDropTarget(COutliner* pOutliner) :COutlinerDropTarget(pOutliner) {};
 };
 
-class CRDFOutlinerParent : public COutlinerParent 
+class CRDFOutlinerParent : public COutlinerParent, CCustomImageObject 
 {
 private:
 	CRDFCommandMap columnMap;
 	COLORREF m_ForegroundColor;
 	COLORREF m_BackgroundColor;
+	NSNavCenterImage* m_pBackgroundImage;
+	CString m_BackgroundImageURL;
 
 public:
 	CRDFOutlinerParent(HT_Pane thePane, HT_View theView);
@@ -368,6 +370,8 @@ public:
 	BOOL ColumnCommand( int iColumn );
 	void Initialize();
 	CRDFCommandMap& GetColumnCommandMap() { return columnMap; }
+
+	void LoadComplete(HT_Resource r) { Invalidate(); }
 
 protected:
     afx_msg void OnDestroy();
