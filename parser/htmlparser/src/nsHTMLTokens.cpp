@@ -474,21 +474,21 @@ CCommentToken::CCommentToken(const nsString& aName) : CHTMLToken(aName) {
  *  @param   aScanner -- controller of underlying input source
  *  @return  error result
  */
-nsresult CCommentToken::Consume(PRUnichar, CScanner& aScanner) {
+nsresult CCommentToken::Consume(PRUnichar aChar, CScanner& aScanner) {
 
-  PRUnichar ch,ch2;
-  nsresult   result=NS_OK;
+  nsresult  result=NS_OK;
   
   static nsAutoString terminals(">");
   
-  aScanner.GetChar(ch);
+  aScanner.GetChar(aChar);
   mTextValue="<!";
-  if(kMinus==ch) {
-    result=aScanner.GetChar(ch2);
+  if(kMinus==aChar) {
+    mTextValue+="-";
+    result=aScanner.GetChar(aChar);
     if(NS_OK==result) {
-      if(kMinus==ch2) {
+      if(kMinus==aChar) {
            //in this case, we're reading a long-form comment <-- xxx -->
-        mTextValue+="--";
+        mTextValue+="-";
         PRInt32 findpos=-1;
         while((findpos==kNotFound) && (NS_OK==result)) {
           result=aScanner.ReadUntil(mTextValue,terminals,PR_TRUE);
@@ -496,11 +496,13 @@ nsresult CCommentToken::Consume(PRUnichar, CScanner& aScanner) {
         }
       }
     }
-    return result;
   }
+
+  if(NS_OK==result) {
      //if you're here, we're consuming a "short-form" comment
-  mTextValue+=ch;
-  result=aScanner.ReadUntil(mTextValue,terminals,PR_TRUE);
+    mTextValue+=aChar;
+    result=aScanner.ReadUntil(mTextValue,terminals,PR_TRUE);
+  }
   return result;
 };
 
