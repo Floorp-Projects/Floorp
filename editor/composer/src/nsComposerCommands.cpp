@@ -47,6 +47,8 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIDOMDocument.h"
+#include "nsIDocument.h"
+#include "nsIURI.h"
 
 #include "nsIClipboard.h"
 
@@ -58,6 +60,7 @@
 #include "nsICommandParams.h"
 #include "nsComponentManagerUtils.h"
 #include "nsCRT.h"
+
 //prototype
 nsresult GetListState(nsIEditor *aEditor, PRBool *aMixed, PRUnichar **tagStr);
 nsresult RemoveOneProperty(nsIHTMLEditor *aEditor,const nsString& aProp,
@@ -1747,9 +1750,10 @@ nsSetDocumentStateCommand::GetCommandStateParams(const char *aCommandName,
 
 /**
  * Commands just for state notification 
- *  As of 11/11/02, possible commands are:
+ *  As of 11/21/02, possible commands are:
  *    "obs_documentCreated"
  *    "obs_documentWillBeDestroyed"
+ *    "obs_documentLocationChanged"
  *  Note that you can use the same command class, nsDocumentStateCommand
  *    for these or future observer commands.
  *    We check the input command param for different behavior
@@ -1817,13 +1821,13 @@ nsDocumentStateCommand::GetCommandStateParams(const char *aCommandName,
                                               nsICommandParams *aParams,
                                               nsISupports *refCon)
 {
+  NS_ENSURE_ARG_POINTER(aParams);
   NS_ENSURE_ARG_POINTER(aCommandName);
   nsCOMPtr<nsIEditingSession> editingSession = do_QueryInterface(refCon);
-
+  nsresult rv;
 
   if (!nsCRT::strcmp(aCommandName, "obs_documentCreated"))
   {
-    NS_ENSURE_ARG_POINTER(aParams);
 
     PRUint32 editorStatus = nsIEditingSession::eEditorErrorUnknown;
     if (editingSession)
@@ -1833,7 +1837,7 @@ nsDocumentStateCommand::GetCommandStateParams(const char *aCommandName,
       // Embedder gets error status if this fails
       // If called before startup is finished, 
       //    status = eEditorCreationInProgress
-      nsresult rv = editingSession->GetEditorStatus(&editorStatus);
+      rv = editingSession->GetEditorStatus(&editorStatus);
       NS_ENSURE_SUCCESS(rv, rv);
     }
     else
@@ -1847,6 +1851,25 @@ nsDocumentStateCommand::GetCommandStateParams(const char *aCommandName,
     // Note that if refCon is not-null, but is neither
     // an nsIEditingSession or nsIEditor, we return "eEditorErrorUnknown"
     aParams->SetLongValue(STATE_DATA, editorStatus);
+    return NS_OK;
+  }  
+  else if (!nsCRT::strcmp(aCommandName, "obs_documentLocationChanged"))
+  {
+    nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
+    if (editor)
+    {
+      nsCOMPtr<nsIDOMDocument> domDoc;
+      editor->GetDocument(getter_AddRefs(domDoc));
+      nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+      if (!doc) return NS_ERROR_FAILURE;
+
+      nsCOMPtr<nsIURI> uri;
+      rv = doc->GetDocumentURL(getter_AddRefs(uri));
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (!uri) return NS_ERROR_FAILURE;
+
+      return aParams->SetISupportsValue(STATE_DATA, (nsISupports*)uri);
+    }
     return NS_OK;
   }  
 

@@ -389,6 +389,15 @@ var gEditorDocumentObserver =
         dump("obs_documentWillBeDestroyed notification\n");
         break;
 
+      case "obs_documentLocationChanged":
+        // Ignore this when editor doesn't exist,
+        //   which happens once when page load starts
+        if (editor)
+          try {
+            editor.updateBaseURL();
+          } catch(e) { dump (e); }
+        break;
+
       case "cmd_bold":
         // Update all style items
         window.updateCommands("style");
@@ -483,6 +492,7 @@ function EditorSharedStartup()
     commandManager.addCommandObserver(gEditorDocumentObserver, "obs_documentCreated");
     commandManager.addCommandObserver(gEditorDocumentObserver, "cmd_setDocumentModified");
     commandManager.addCommandObserver(gEditorDocumentObserver, "obs_documentWillBeDestroyed");
+    commandManager.addCommandObserver(gEditorDocumentObserver, "obs_documentLocationChanged");
 
     // Until nsIControllerCommandGroup-based code is implemented,
     //  we will observe just the bold command to trigger update of
@@ -564,6 +574,7 @@ function EditorShutdown()
     var commandManager = GetCurrentCommandManager();
     commandManager.removeCommandObserver(gEditorDocumentObserver, "obs_documentCreated");
     commandManager.removeCommandObserver(gEditorDocumentObserver, "obs_documentWillBeDestroyed");
+    commandManager.removeCommandObserver(gEditorDocumentObserver, "obs_documentLocationChanged");
   } catch (e) { dump (e); }   
 }
 
@@ -3199,4 +3210,3 @@ function FillInHTMLTooltip(tooltip)
   }
   return false;
 }
-

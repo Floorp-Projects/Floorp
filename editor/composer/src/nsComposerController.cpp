@@ -97,6 +97,7 @@ nsComposerController::RegisterEditorDocStateCommands(
   // observer commands for document state
   NS_REGISTER_ONE_COMMAND(nsDocumentStateCommand, "obs_documentCreated")
   NS_REGISTER_ONE_COMMAND(nsDocumentStateCommand, "obs_documentWillBeDestroyed")
+  NS_REGISTER_ONE_COMMAND(nsDocumentStateCommand, "obs_documentLocationChanged")
 
   // commands that may get or change state
   NS_REGISTER_ONE_COMMAND(nsSetDocumentStateCommand, "cmd_setDocumentModified")

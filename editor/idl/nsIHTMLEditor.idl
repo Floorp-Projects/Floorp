@@ -239,9 +239,20 @@ interface nsIHTMLEditor : nsISupports
   void insertElementAtSelection(in nsIDOMElement aElement,
                                 in boolean aDeleteSelection);
 
-  /** Set the documents title.
+  /** 
+   *   Set the documents title.
    */
   void setDocumentTitle(in AString aTitle);
+
+  /** 
+   *   Set the BaseURL for the document to the current URL
+   *     but only if the page doesn't have a <base> tag
+   *   This should be done after the document URL has changed,
+   *     such as after saving a file
+   *   This is used as base for relativizing link and image urls
+   */
+  void updateBaseURL();
+
 
   /* ------------ Selection manipulation -------------- */
   /* Should these be moved to nsISelection? */
