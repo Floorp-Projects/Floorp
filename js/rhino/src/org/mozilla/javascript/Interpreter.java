@@ -1403,6 +1403,18 @@ public class Interpreter extends LabelTable {
                                    InterpreterData theData)
         throws JavaScriptException
     {
+        if (cx.interpreterSecurityDomain != theData.securityDomain) {
+           // If securityDomain is different, update domain in Cotext
+           // and call self under new domain
+            Object savedDomain = cx.interpreterSecurityDomain;
+            cx.interpreterSecurityDomain = theData.securityDomain;
+            try {
+                return interpret(cx, scope, thisObj, args, fnOrScript, theData);
+            } finally {
+                cx.interpreterSecurityDomain = savedDomain;
+            }
+        }
+
         int i;
         Object lhs;
 
@@ -1480,13 +1492,6 @@ public class Interpreter extends LabelTable {
             cx.pushFrame(frame);
         }
 
-        /* Save the security domain. Must restore upon normal exit.
-         * If we exit the interpreter loop by throwing an exception,
-         * set cx.interpreterSecurityDomain to null, and require the
-         * catching function to restore it.
-         */
-        Object savedSecurityDomain = cx.interpreterSecurityDomain;
-        cx.interpreterSecurityDomain = theData.securityDomain;
         Object result = undefined;
 
         int pcPrevBranch = pc;
@@ -2212,8 +2217,6 @@ public class Interpreter extends LabelTable {
                 pc++;
             }
             catch (Throwable ex) {
-                cx.interpreterSecurityDomain = null;
-
                 if (instructionThreshold != 0) {
                     if (instructionCount < 0) {
                         // throw during function call
@@ -2315,10 +2318,8 @@ public class Interpreter extends LabelTable {
                 scope = (Scriptable)stack[TRY_SCOPE_SHFT + tryStackTop];
                 stackTop = 0;
                 stack[0] = errObj;
-                cx.interpreterSecurityDomain = theData.securityDomain;
             }
         }
-        cx.interpreterSecurityDomain = savedSecurityDomain;
         if (frame != null)
             cx.popFrame();
 
