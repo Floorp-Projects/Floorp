@@ -40,7 +40,7 @@ namespace JavaScript {
 		const char16 *p;				// Position in source text
 		const char16 *end;				// End of source text; *end is a null character
 	  public:
-		const String source;			// Source text
+		String source;			        // Source text
 		const String sourceLocation;	// Description of location from which the source text came
 	  private:
 		const uint32 initialLineNum;	// One-based number of current line
