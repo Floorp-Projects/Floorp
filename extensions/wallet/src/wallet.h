@@ -120,6 +120,9 @@ Wallet_UTF8Get(nsInputFileStream& strm);
 extern void
 Wallet_SignonViewerReturn(const nsString& results);
 
+extern void
+Wallet_ReleaseAllLists();
+
 XP_END_PROTOS
 
 #endif /* !_WALLET_H */

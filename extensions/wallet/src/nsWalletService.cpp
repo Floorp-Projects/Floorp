@@ -63,6 +63,7 @@ nsWalletlibService::~nsWalletlibService()
 #ifdef DEBUG_dp
   printf("Wallet Service destroyed successfully.\n");
 #endif /* DEBUG_dp */
+  Wallet_ReleaseAllLists();
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS5(nsWalletlibService,
