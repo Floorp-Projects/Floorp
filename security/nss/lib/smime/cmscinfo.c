@@ -34,7 +34,7 @@
 /*
  * CMS contentInfo methods.
  *
- * $Id: cmscinfo.c,v 1.3 2002/04/12 19:05:18 relyea%netscape.com Exp $
+ * $Id: cmscinfo.c,v 1.4 2003/11/18 06:16:25 nelsonb%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -93,20 +93,31 @@ NSS_CMSContentInfo_Destroy(NSSCMSContentInfo *cinfo)
 NSSCMSContentInfo *
 NSS_CMSContentInfo_GetChildContentInfo(NSSCMSContentInfo *cinfo)
 {
-    switch (NSS_CMSContentInfo_GetContentTypeTag(cinfo)) {
-    case SEC_OID_PKCS7_DATA:
-	return NULL;
+    void * ptr                  = NULL;
+    NSSCMSContentInfo * ccinfo  = NULL;
+    SECOidTag tag = NSS_CMSContentInfo_GetContentTypeTag(cinfo);
+    switch (tag) {
     case SEC_OID_PKCS7_SIGNED_DATA:
-	return &(cinfo->content.signedData->contentInfo);
+	ptr    = (void *)cinfo->content.signedData;
+	ccinfo = &(cinfo->content.signedData->contentInfo);
+	break;
     case SEC_OID_PKCS7_ENVELOPED_DATA:
-	return &(cinfo->content.envelopedData->contentInfo);
+	ptr    = (void *)cinfo->content.envelopedData;
+	ccinfo = &(cinfo->content.envelopedData->contentInfo);
+	break;
     case SEC_OID_PKCS7_DIGESTED_DATA:
-	return &(cinfo->content.digestedData->contentInfo);
+	ptr    = (void *)cinfo->content.digestedData;
+	ccinfo = &(cinfo->content.digestedData->contentInfo);
+	break;
     case SEC_OID_PKCS7_ENCRYPTED_DATA:
-	return &(cinfo->content.encryptedData->contentInfo);
+	ptr    = (void *)cinfo->content.encryptedData;
+	ccinfo = &(cinfo->content.encryptedData->contentInfo);
+	break;
+    case SEC_OID_PKCS7_DATA:
     default:
-	return NULL;
+	break;
     }
+    return (ptr ? ccinfo : NULL);
 }
 
 /*

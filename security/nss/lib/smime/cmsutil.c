@@ -34,7 +34,7 @@
 /*
  * CMS miscellaneous utility functions.
  *
- * $Id: cmsutil.c,v 1.8 2002/12/12 06:05:39 nelsonb%netscape.com Exp $
+ * $Id: cmsutil.c,v 1.9 2003/11/18 06:16:25 nelsonb%netscape.com Exp $
  */
 
 #include "nssrenam.h"
@@ -319,10 +319,10 @@ NSSCMSContentInfo *
 NSS_CMSContent_GetContentInfo(void *msg, SECOidTag type)
 {
     NSSCMSContent c;
-    NSSCMSContentInfo *cinfo;
+    NSSCMSContentInfo *cinfo = NULL;
 
-    PORT_Assert(msg != NULL);
-
+    if (!msg)
+	return cinfo;
     c.pointer = msg;
     switch (type) {
     case SEC_OID_PKCS7_SIGNED_DATA:
