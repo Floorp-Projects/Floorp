@@ -889,25 +889,27 @@ nsSetupTypeDlg::DeleteOldInst()
           gtk_signal_connect(GTK_OBJECT(cancelBtn), "clicked",
                          GTK_SIGNAL_FUNC(DeleteInstCancel), sDelInstDlg);
 
-          // wrap message at 64 columns, and truncate at 20 rows
           msg = currLC->GetMessage();
           msgPtr = msg;
-          numLines = strlen(msg)/64;
-          for (i = 0; i <= numLines && i < 20; i++)
+          msgEndPtr = msg + strlen(msg);
+          // wrap message at MAXCHARS colums (or last space inside MAXCHARS)
+          // stop at MAXLINES rows or stop after last char is reached
+          for (int i = 0; i < MAXLINES && msgPtr < msgEndPtr; i++)
           {
-              memset(msgChunk, 0, 65);
-              strncpy(msgChunk, msgPtr, 64);
-
-              // pad by a line but don't allow overflow
-              if (msgPtr > msg + strlen(msg))
-                  break;
+              // get the next MAXCHARS chars
+              memset(msgChunk, 0, MAXCHARS+1);
+              strncpy(msgChunk, msgPtr, MAXCHARS);
 
               // find last space
               msgChunkPtr = strrchr(msgChunk, ' ');
-              if (64 != msgChunkPtr - msgChunk + 1)
+              if (msgChunkPtr)
               {
-                  msgChunk[msgChunkPtr - msgChunk] = 0;
-                  msgPtr = msgPtr + (msgChunkPtr - msgChunk + 1);
+                  *msgChunkPtr = '\0';
+                  msgPtr += (msgChunkPtr - msgChunk + 1);
+              }
+              else
+              {
+                  msgPtr += MAXCHARS;
               }
               label = gtk_label_new(msgChunk);
               gtk_box_pack_start(GTK_BOX(GTK_DIALOG(sDelInstDlg)->vbox), label,
