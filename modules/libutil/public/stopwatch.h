@@ -1,3 +1,5 @@
+#ifndef __STOPWATCH_H
+#define __STOPWATCH_H
 #include "nscore.h"
 #include "prlog.h"
 
@@ -29,14 +31,23 @@ const double gTicks = 1.0e-7;
 
 
 #ifdef RAPTOR_PERF_METRICS
-static PRLogModuleInfo* gLogStopwatchModule = PR_NewLogModule("gecko_timing");
 
+static PRLogModuleInfo* gLogStopwatchModule = PR_NewLogModule("timing");
+
+#if 0
 #define RAPTOR_TRACE_STOPWATCHES        0x1
 
 #define RAPTOR_STOPWATCH_TRACE(_args)                               \
   PR_BEGIN_MACRO                                                    \
   PR_LOG(gLogStopwatchModule, RAPTOR_TRACE_STOPWATCHES, _args);     \
   PR_END_MACRO
+#endif
+
+#define RAPTOR_STOPWATCH_TRACE(_args)      \
+  PR_BEGIN_MACRO                           \
+  printf _args ;                           \
+  PR_END_MACRO
+
 #else
 #define RAPTOR_TRACE_STOPWATCHES 
 #define RAPTOR_STOPWATCH_TRACE(_args) 
@@ -73,3 +84,4 @@ public:
    static double  GetCPUTime();
 
 };
+#endif
