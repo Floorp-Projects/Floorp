@@ -24,12 +24,24 @@
 
 var messenger = Components.classes['component://netscape/messenger'].createInstance();
 messenger = messenger.QueryInterface(Components.interfaces.nsIMessenger);
+//Create windows status feedback
+var statusFeedback = Components.classes["component://netscape/messenger/statusfeedback"].createInstance();
+statusFeedback = statusFeedback.QueryInterface(Components.interfaces.nsIMsgStatusFeedback);
 
 function OpenAttachURL(url)
 {
   dump("\nOpenAttachURL from XUL\n");
-
-  messenger.SetWindow(window);
+  dump(url);
+  dump("\n");
+  messenger.SetWindow(window, statusFeedback);
   messenger.OpenURL(url);
 }
 
+function SaveAttachURL(url)
+{
+  dump("\nSaveAttachURL from XUL\n");
+  dump(url);
+  dump("\n");
+  messenger.SetWindow(window, statusFeedback);
+  messenger.OpenURL(url);
+}
