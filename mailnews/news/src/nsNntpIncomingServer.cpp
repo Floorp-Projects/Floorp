@@ -887,7 +887,9 @@ nsNntpIncomingServer::LoadHostInfoFile()
 	// it is ok if the hostinfo.dat file does not exist.
 	if (!exists) return NS_OK;
 
-	nsInputFileStream hostinfoStream(mHostInfoFile); 
+    char *buffer = nsnull;
+    rv = mHostInfoFile->OpenStreamForReading();
+    NS_ENSURE_SUCCESS(rv,rv);
 
     PRInt32 numread = 0;
 
@@ -898,7 +900,9 @@ nsNntpIncomingServer::LoadHostInfoFile()
 	mHasSeenBeginGroups = PR_FALSE;
 
     while (1) {
-    	numread = hostinfoStream.read(mHostInfoInputStream.GetBuffer(), HOSTINFO_FILE_BUFFER_SIZE);
+        buffer = mHostInfoInputStream.GetBuffer();
+        rv = mHostInfoFile->Read(&buffer, HOSTINFO_FILE_BUFFER_SIZE, &numread);
+        NS_ENSURE_SUCCESS(rv,rv);
         if (numread == 0) {
       		break;
     	}
@@ -910,8 +914,8 @@ nsNntpIncomingServer::LoadHostInfoFile()
     	}
   	}
 
-  	hostinfoStream.close();
-    
+    mHostInfoFile->CloseStream();
+     
 	rv = UpdateSubscribed();
 	if (NS_FAILED(rv)) return rv;
 

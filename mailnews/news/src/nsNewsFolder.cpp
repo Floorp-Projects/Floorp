@@ -1047,7 +1047,9 @@ nsMsgNewsFolder::LoadNewsrcFileAndCreateNewsgroups()
 	return NS_OK;
   }
 
-  nsInputFileStream newsrcStream(mNewsrcFilePath); 
+  char *buffer = nsnull;
+  rv = mNewsrcFilePath->OpenStreamForReading();
+  NS_ENSURE_SUCCESS(rv,rv);
 
   PRInt32 numread = 0;
 
@@ -1056,7 +1058,9 @@ nsMsgNewsFolder::LoadNewsrcFileAndCreateNewsgroups()
   }
 	
   while (1) {
-    numread = newsrcStream.read(m_newsrcInputStream.GetBuffer(), NEWSRC_FILE_BUFFER_SIZE);
+    buffer = m_newsrcInputStream.GetBuffer();
+    rv = mNewsrcFilePath->Read(&buffer, NEWSRC_FILE_BUFFER_SIZE, &numread);
+    NS_ENSURE_SUCCESS(rv,rv);
     if (numread == 0) {
       break;
     }
@@ -1068,7 +1072,7 @@ nsMsgNewsFolder::LoadNewsrcFileAndCreateNewsgroups()
     }
   }
 
-  newsrcStream.close();
+  mNewsrcFilePath->CloseStream();
   
   return rv;
 }

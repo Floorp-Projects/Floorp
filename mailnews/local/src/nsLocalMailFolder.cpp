@@ -1950,7 +1950,6 @@ nsMsgLocalMailFolder::CopyFileMessage(nsIFileSpec* fileSpec, nsIMessage*
   nsresult rv = NS_ERROR_NULL_POINTER;
   if (!fileSpec) return rv;
 
-  nsInputFileStream *inputFileStream = nsnull;
   nsCOMPtr<nsIInputStream> inputStream;
   nsParseMailMessageState* parseMsgState = nsnull;
   PRUint32 fileSize = 0;
@@ -1981,20 +1980,15 @@ nsMsgLocalMailFolder::CopyFileMessage(nsIFileSpec* fileSpec, nsIMessage*
       parseMsgState->SetMailDB(msgDb);
   }
 
-  inputFileStream = new nsInputFileStream(fileSpec);
-  if (!inputFileStream)
-  {
-    rv = NS_ERROR_OUT_OF_MEMORY;
-    goto done;
-  }
+  rv = fileSpec->OpenStreamForReading();
+  NS_ENSURE_SUCCESS(rv,rv);
 
-  inputStream = do_QueryInterface(inputFileStream->GetIStream());
-  if (!inputStream) {
-	rv = NS_ERROR_FAILURE;
-	goto done;
-  }
-
-  rv = inputStream->Available(&fileSize);
+  rv = fileSpec->GetInputStream(getter_AddRefs(inputStream));
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  rv = NS_ERROR_NULL_POINTER;
+  if (inputStream)
+    rv = inputStream->Available(&fileSize);
   if (NS_FAILED(rv)) goto done;
   rv = BeginCopy(nsnull);
   if (NS_FAILED(rv)) goto done;
@@ -2014,12 +2008,7 @@ done:
     ClearCopyState();
   }
 
-  if (inputFileStream)
-  {
-    inputFileStream->close();
-    inputStream = null_nsCOMPtr();
-    delete inputFileStream;
-  }
+  fileSpec->CloseStream();
   return rv;
 }
 
@@ -2729,12 +2718,9 @@ nsresult nsMsgLocalMailFolder::DeleteMsgsOnPop3Server(nsISupportsArray *messages
   if (NS_FAILED(rv)) 
     return rv;
 
-  nsInputFileStream *inputFileStream = nsnull;
-
-  inputFileStream = new nsInputFileStream(mailboxSpec);
-  if (!inputFileStream)
-    return NS_ERROR_OUT_OF_MEMORY;
-
+  rv = mailboxSpec->OpenStreamForReading();
+  NS_ENSURE_SUCCESS(rv,rv);
+  
   PRUint32 srcCount;
   messages->Count(&srcCount);
 
@@ -2767,14 +2753,17 @@ nsresult nsMsgLocalMailFolder::DeleteMsgsOnPop3Server(nsISupportsArray *messages
       PRUint32 messageOffset;
 
       msgDBHdr->GetMessageOffset(&messageOffset);
-			/* no return value?!! */ inputFileStream->seek(messageOffset); /* GetMessageKey */
+			rv = mailboxSpec->Seek(messageOffset);
+            NS_ENSURE_SUCCESS(rv,rv);
 			msgDBHdr->GetMessageSize(&len);
+            PRBool wasTruncated = PR_FALSE;
 			while ((len > 0) && !uidl)
 			{
 				size = len;
 				if (size > 512)
 					size = 512;
-				if (inputFileStream->readline(header, size))
+				rv = mailboxSpec->ReadLine(&header, size, &wasTruncated);
+                if (NS_SUCCEEDED(rv) && !wasTruncated)
 				{
 					size = strlen(header);
 					if (!size)
@@ -2813,7 +2802,7 @@ nsresult nsMsgLocalMailFolder::DeleteMsgsOnPop3Server(nsISupportsArray *messages
 		KillPopData(popData);
 		popData = nsnull;
 	}
-  delete inputFileStream;
+  mailboxSpec->CloseStream();
   return rv;
 }
 
