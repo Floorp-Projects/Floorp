@@ -602,6 +602,7 @@ NS_IMETHODIMP nsPop3Protocol::OnStopRequest(nsIChannel * aChannel, nsISupports *
 		if (server)
 			server->SetServerBusy(PR_FALSE); // the server is now busy
 	}
+	CommitState(PR_TRUE);
 	return rv;
 }
 
