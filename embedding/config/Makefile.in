@@ -35,8 +35,8 @@ ifeq (windows,$(MOZ_WIDGET_TOOLKIT))
   BASEBROWSER = basebrowser-win
   BASEBROWSER_SUPP = basebrowser-win-supp
   CLIENTMANIFEST = client-win
-  MREMANIFEST = mre-win
-  MREMANIFEST_SUPP = mre-win-supp
+  GREMANIFEST = gre-win
+  GREMANIFEST_SUPP = gre-win-supp
   _PLATFORM = dos
   WINAPP=mfcembed
   #WINAPP=winembed
@@ -91,16 +91,16 @@ endif
 endif # WINNT
 
 ifeq ($(OS_ARCH),WINNT)
-mre:: embed_chrome
-	$(PERL) -I$(srcdir) $(srcdir)/mre.pl mre < $(srcdir)/$(BASEBROWSER) > $(MOZILLA_DIR)/embedding/config/mre-win.tmp
-	$(PERL) $(topsrcdir)/xpinstall/packager/pkgcp.pl -s $(DIST)/bin -d $(DIST) --f $(MOZILLA_DIR)/embedding/config/mre-win.tmp -o $(_PLATFORM) -v
-	-$(RM) -f $(MOZILLA_DIR)/embedding/config/mre-win.tmp
-	$(PERL) $(topsrcdir)/xpinstall/packager/pkgcp.pl -s $(DIST)/bin -d $(DIST) --f $(srcdir)/$(MREMANIFEST) -o $(_PLATFORM) -v
-	$(PERL) -I$(srcdir) $(srcdir)/mre.pl mre_app_support < $(srcdir)/$(BASEBROWSER_SUPP) > $(MOZILLA_DIR)/embedding/config/mre-win-supp.tmp
-	$(PERL) $(topsrcdir)/xpinstall/packager/pkgcp.pl -s $(DIST)/bin -d $(DIST) --f $(MOZILLA_DIR)/embedding/config/mre-win-supp.tmp -o $(_PLATFORM) -v
-	-$(RM) -f $(MOZILLA_DIR)/embedding/config/mre-win-supp.tmp
-	$(PERL) $(topsrcdir)/xpinstall/packager/pkgcp.pl -s $(DIST)/bin -d $(DIST) --f $(srcdir)/$(MREMANIFEST_SUPP) -o $(_PLATFORM) -v
-	$(NSINSTALL) -t $(srcdir)/installed-chrome.txt $(DIST)/mre_app_support/chrome
-	test -d $(DIST)/mre_app_support/plugins || mkdir $(DIST)/mre_app_support/plugins
-	test -d $(DIST)/mre_app_support/components || mkdir $(DIST)/mre_app_support/components
+gre:: embed_chrome
+	$(PERL) -I$(srcdir) $(srcdir)/gre.pl gre < $(srcdir)/$(BASEBROWSER) > $(MOZILLA_DIR)/embedding/config/gre-win.tmp
+	$(PERL) $(topsrcdir)/xpinstall/packager/pkgcp.pl -s $(DIST)/bin -d $(DIST) --f $(MOZILLA_DIR)/embedding/config/gre-win.tmp -o $(_PLATFORM) -v
+	-$(RM) -f $(MOZILLA_DIR)/embedding/config/gre-win.tmp
+	$(PERL) $(topsrcdir)/xpinstall/packager/pkgcp.pl -s $(DIST)/bin -d $(DIST) --f $(srcdir)/$(GREMANIFEST) -o $(_PLATFORM) -v
+	$(PERL) -I$(srcdir) $(srcdir)/gre.pl gre_app_support < $(srcdir)/$(BASEBROWSER_SUPP) > $(MOZILLA_DIR)/embedding/config/gre-win-supp.tmp
+	$(PERL) $(topsrcdir)/xpinstall/packager/pkgcp.pl -s $(DIST)/bin -d $(DIST) --f $(MOZILLA_DIR)/embedding/config/gre-win-supp.tmp -o $(_PLATFORM) -v
+	-$(RM) -f $(MOZILLA_DIR)/embedding/config/gre-win-supp.tmp
+	$(PERL) $(topsrcdir)/xpinstall/packager/pkgcp.pl -s $(DIST)/bin -d $(DIST) --f $(srcdir)/$(GREMANIFEST_SUPP) -o $(_PLATFORM) -v
+	$(NSINSTALL) -t $(srcdir)/installed-chrome.txt $(DIST)/gre_app_support/chrome
+	test -d $(DIST)/gre_app_support/plugins || mkdir $(DIST)/gre_app_support/plugins
+	test -d $(DIST)/gre_app_support/components || mkdir $(DIST)/gre_app_support/components
 endif # WINNT
