@@ -88,7 +88,7 @@
 #include "nsIStringBundle.h"
 
 #include "nsIInputStream.h"
-#include "nsIBufferInputStream.h"
+#include "nsIInputStream.h"
 #include "nsIStreamListener.h"
 #include "nsIHTTPHeader.h"
 

@@ -20,8 +20,9 @@
 #define nsSyncStreamListener_h__
 
 #include "nsIStreamListener.h"
-#include "nsIBufferInputStream.h"
-#include "nsIBufferOutputStream.h"
+#include "nsIInputStream.h"
+#include "nsIOutputStream.h"
+#include "nsCOMPtr.h"
 
 class nsSyncStreamListener : public nsISyncStreamListener
 {
@@ -41,10 +42,10 @@ public:
     static NS_METHOD
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
-    nsIBufferOutputStream* GetOutputStream() { return mOutputStream; }
+    nsIOutputStream* GetOutputStream() { return mOutputStream; }
 
 protected:
-    nsIBufferOutputStream*      mOutputStream;
+    nsCOMPtr<nsIOutputStream> mOutputStream;
 };
 
 #define NS_SYNC_STREAM_LISTENER_SEGMENT_SIZE    (4 * 1024)

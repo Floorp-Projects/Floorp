@@ -27,6 +27,7 @@
 #include "nsIMimeEmitter.h"
 #include "nsMimeRebuffer.h"
 #include "nsIStreamListener.h"
+#include "nsIInputStream.h"
 #include "nsIOutputStream.h"
 #include "nsIURI.h"
 #include "nsIPref.h"
@@ -66,7 +67,10 @@ typedef struct {
   char      *value;
 } headerInfoType;
 
-class nsMimeBaseEmitter : public nsIMimeEmitter, public nsIPipeObserver {
+class nsMimeBaseEmitter : public nsIMimeEmitter, 
+                          public nsIInputStreamObserver,
+                          public nsIOutputStreamObserver
+{
 public: 
   nsMimeBaseEmitter ();
   virtual             ~nsMimeBaseEmitter (void);
@@ -75,7 +79,8 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_DECL_NSIMIMEEMITTER
-  NS_DECL_NSIPIPEOBSERVER
+  NS_DECL_NSIINPUTSTREAMOBSERVER
+  NS_DECL_NSIOUTPUTSTREAMOBSERVER
 
   // Utility output functions...
   NS_IMETHOD          UtilityWriteCRLF(const char *buf);

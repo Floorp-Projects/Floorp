@@ -41,8 +41,8 @@
 #include "nsDeque.h"
 #include "nsIRegistry.h"
 #include "nsIEnumerator.h"
-#include "nsIBufferInputStream.h"
-#include "nsIBufferOutputStream.h"
+#include "nsIInputStream.h"
+#include "nsIOutputStream.h"
 #include "nsIStreamConverter.h"
 #include "nsCOMPtr.h"
 

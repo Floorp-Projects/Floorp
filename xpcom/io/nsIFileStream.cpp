@@ -66,10 +66,19 @@ class FileImpl
         // nsIInputStream interface
         NS_IMETHOD                      Available(PRUint32 *aLength);
         NS_IMETHOD                      Read(char* aBuf, PRUint32 aCount, PRUint32 *aReadCount);
+        NS_IMETHOD                      ReadSegments(nsWriteSegmentFun writer, void * closure, PRUint32 count, PRUint32 *_retval);
+        NS_IMETHOD                      GetObserver(nsIInputStreamObserver * *aObserver);
+        NS_IMETHOD                      SetObserver(nsIInputStreamObserver * aObserver); 
 
         // nsIOutputStream interface
         NS_IMETHOD                      Write(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteCount);
         NS_IMETHOD                      Flush();
+        NS_IMETHOD                      WriteFrom(nsIInputStream *inStr, PRUint32 count, PRUint32 *_retval);
+        NS_IMETHOD                      WriteSegments(nsReadSegmentFun reader, void * closure, PRUint32 count, PRUint32 *_retval);
+        NS_IMETHOD                      GetNonBlocking(PRBool *aNonBlocking);
+        NS_IMETHOD                      SetNonBlocking(PRBool aNonBlocking);
+        NS_IMETHOD                      GetObserver(nsIOutputStreamObserver * *aObserver);
+        NS_IMETHOD                      SetObserver(nsIOutputStreamObserver * aObserver);
         NS_IMETHOD                      GetAtEOF(PRBool* outAtEOF);
         NS_IMETHOD                      SetAtEOF(PRBool inAtEOF);
 
@@ -105,9 +114,6 @@ NS_IMPL_QUERY_HEAD(FileImpl)
   NS_IMPL_QUERY_BODY(nsIInputStream)
   NS_IMPL_QUERY_BODY(nsIFileInputStream)
   NS_IMPL_QUERY_BODY(nsIFileOutputStream)
-  if ( aIID.Equals(NS_GET_IID(nsIBaseStream)) )
-    foundInterface = NS_STATIC_CAST(nsIBaseStream*, NS_STATIC_CAST(nsIOutputStream*, this));
-  else
 NS_IMPL_QUERY_TAIL(nsIOutputStream)
 
 
@@ -350,6 +356,26 @@ NS_IMETHODIMP FileImpl::Read(char* aBuf, PRUint32 aCount, PRUint32 *aReadCount)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+FileImpl::ReadSegments(nsWriteSegmentFun writer, void * closure, PRUint32 count, PRUint32 *_retval)
+{
+    NS_NOTREACHED("ReadSegments");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+FileImpl::GetObserver(nsIInputStreamObserver * *aObserver)
+{
+    NS_NOTREACHED("GetObserver");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+FileImpl::SetObserver(nsIInputStreamObserver * aObserver)
+{
+    NS_NOTREACHED("SetObserver");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 //----------------------------------------------------------------------------------------
 NS_IMETHODIMP FileImpl::Write(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteCount)
@@ -418,6 +444,59 @@ NS_IMETHODIMP FileImpl::Write(const char* aBuf, PRUint32 aCount, PRUint32 *aWrit
     return NS_OK;
 }
 
+static NS_METHOD
+nsWriteSegmentToFile(nsIInputStream* in,
+                     void* closure,
+                     const char* fromRawSegment,
+                     PRUint32 toOffset,
+                     PRUint32 count,
+                     PRUint32 *writeCount)
+{
+    NS_NOTREACHED("nsWriteSegmentToFile");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+FileImpl::WriteFrom(nsIInputStream *inStr, PRUint32 count, PRUint32 *result)
+{
+    return inStr->ReadSegments(nsWriteSegmentToFile, nsnull, count, result);
+}
+
+NS_IMETHODIMP 
+FileImpl::WriteSegments(nsReadSegmentFun reader, void * closure, 
+                        PRUint32 count, PRUint32 *result)
+{
+    NS_NOTREACHED("WriteSegments");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+FileImpl::GetNonBlocking(PRBool *aNonBlocking)
+{
+    NS_NOTREACHED("GetNonBlocking");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+FileImpl::SetNonBlocking(PRBool aNonBlocking)
+{
+    NS_NOTREACHED("SetNonBlocking");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+FileImpl::GetObserver(nsIOutputStreamObserver * *aObserver)
+{
+    NS_NOTREACHED("GetObserver");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+FileImpl::SetObserver(nsIOutputStreamObserver * aObserver)
+{
+    NS_NOTREACHED("SetObserver");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 //----------------------------------------------------------------------------------------
 NS_IMETHODIMP FileImpl::Tell(PRIntn* outWhere)

@@ -456,6 +456,43 @@ public:
     fflush(stdout);
     return NS_OK;
   }
+
+    
+    NS_IMETHOD
+    WriteFrom(nsIInputStream *inStr, PRUint32 count, PRUint32 *_retval) {
+      NS_NOTREACHED("WriteFrom");
+      return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
+    NS_IMETHOD
+    WriteSegments(nsReadSegmentFun reader, void * closure, PRUint32 count, PRUint32 *_retval) {
+      NS_NOTREACHED("WriteSegments");
+      return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
+    NS_IMETHOD
+    GetNonBlocking(PRBool *aNonBlocking) {
+      NS_NOTREACHED("GetNonBlocking");
+      return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
+    NS_IMETHOD
+    SetNonBlocking(PRBool aNonBlocking) {
+      NS_NOTREACHED("SetNonBlocking");
+      return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
+    NS_IMETHOD
+    GetObserver(nsIOutputStreamObserver * *aObserver) {
+      NS_NOTREACHED("GetObserver");
+      return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
+    NS_IMETHOD
+    SetObserver(nsIOutputStreamObserver * aObserver) {
+      NS_NOTREACHED("SetObserver");
+      return NS_ERROR_NOT_IMPLEMENTED;
+    }
 };
 
 NS_IMPL_ADDREF(ConsoleOutput)

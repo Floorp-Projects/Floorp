@@ -344,6 +344,41 @@ nsIOService::SetOffline(PRBool offline)
     return NS_OK;
 }
 
+
+NS_IMETHODIMP
+nsIOService::ConsumeInput(nsIChannel* channel, nsISupports* context,
+                          nsIStreamListener* consumer)
+{
+    nsresult rv;
+    nsCOMPtr<nsIInputStream> in;
+    rv = channel->OpenInputStream(getter_AddRefs(in));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = consumer->OnStartRequest(channel, context);
+    if (NS_FAILED(rv)) return rv;
+
+    PRUint32 sourceOffset = 0;
+    while (1) {
+        char buf[1024];
+        PRUint32 readCount;
+        rv = in->Read(buf, sizeof(buf), &readCount);
+        if (NS_FAILED(rv)) 
+            break;
+
+        if (readCount == 0)     // eof
+            break;
+
+        rv = consumer->OnDataAvailable(channel, context, 0, sourceOffset, readCount);
+        sourceOffset += readCount;
+        if (NS_FAILED(rv)) 
+            break;
+    }
+    rv = consumer->OnStopRequest(channel, context, rv, nsnull);
+    if (NS_FAILED(rv)) return rv;
+
+    return rv;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // URL parsing utilities
 

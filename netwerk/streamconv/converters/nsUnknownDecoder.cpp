@@ -26,8 +26,8 @@
 #include "nsIStreamConverterService.h"
 
 #include "nsIPipe.h"
-#include "nsIBufferInputStream.h"
-#include "nsIBufferOutputStream.h"
+#include "nsIInputStream.h"
+#include "nsIOutputStream.h"
 #include "nsMimeTypes.h"
 #include "netCore.h"
 
@@ -314,11 +314,11 @@ nsresult nsUnknownDecoder::FireListenerNotifications(nsIChannel *aChannel,
   // stream into the sniffer buffer...
   if (NS_SUCCEEDED(rv)) {
     PRUint32 len = 0;
-    nsCOMPtr<nsIBufferInputStream> in;
-    nsCOMPtr<nsIBufferOutputStream> out;
+    nsCOMPtr<nsIInputStream> in;
+    nsCOMPtr<nsIOutputStream> out;
 
     // Create a pipe and fill it with the data from the sniffer buffer.
-    rv = NS_NewPipe(getter_AddRefs(in), getter_AddRefs(out), nsnull, 
+    rv = NS_NewPipe(getter_AddRefs(in), getter_AddRefs(out),
                     MAX_BUFFER_SIZE, MAX_BUFFER_SIZE);
 
     if (NS_SUCCEEDED(rv)) {

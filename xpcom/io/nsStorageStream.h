@@ -47,7 +47,6 @@ public:
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSISTORAGESTREAM
-    NS_DECL_NSIBASESTREAM
     NS_DECL_NSIOUTPUTSTREAM
 
     friend class nsStorageInputStream;

@@ -23,7 +23,7 @@
 #define nsAbSyncPostEngine_h_
 
 #include "nsCOMPtr.h"
-#include "nsIBufferInputStream.h"
+#include "nsIInputStream.h"
 #include "nsIStreamListener.h"
 #include "nsFileStream.h"
 #include "nsIAbSyncPostEngine.h"

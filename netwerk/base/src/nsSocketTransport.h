@@ -31,8 +31,8 @@
 #include "nsISocketTransport.h"
 #include "nsIChannel.h"
 #include "nsIInputStream.h"
-#include "nsIBufferInputStream.h"
-#include "nsIBufferOutputStream.h"
+#include "nsIInputStream.h"
+#include "nsIOutputStream.h"
 #include "nsIEventQueueService.h"
 #include "nsIStreamListener.h"
 #include "nsIDNSListener.h"
@@ -117,16 +117,18 @@ class nsSocketTransportService;
 class nsIInterfaceRequestor;
 
 class nsSocketTransport : public nsISocketTransport,
-                                 public nsIChannel, 
-                                 public nsIDNSListener,
-                                 public nsIPipeObserver
+                          public nsIChannel, 
+                          public nsIDNSListener,
+                          public nsIInputStreamObserver,
+                          public nsIOutputStreamObserver
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSISOCKETTRANSPORT
     NS_DECL_NSIREQUEST
     NS_DECL_NSICHANNEL
-    NS_DECL_NSIPIPEOBSERVER
+    NS_DECL_NSIINPUTSTREAMOBSERVER
+    NS_DECL_NSIOUTPUTSTREAMOBSERVER
     NS_DECL_NSIDNSLISTENER
     
     // nsSocketTransport methods:
@@ -225,8 +227,8 @@ protected:
     PRBool			    mProxyTransparent;
     nsCOMPtr<nsISupports>           mReadContext;
     nsCOMPtr<nsIStreamListener>     mReadListener;
-    nsCOMPtr<nsIBufferInputStream>  mReadPipeIn;
-    nsCOMPtr<nsIBufferOutputStream> mReadPipeOut;
+    nsCOMPtr<nsIInputStream>        mReadPipeIn;
+    nsCOMPtr<nsIOutputStream>       mReadPipeOut;
     PRUint32                        mReadWriteState;
     PRInt16                         mSelectFlags;
     nsSocketTransportService*       mService;
@@ -253,8 +255,8 @@ protected:
     PRUint32                        mWriteBufferLength;
     
     nsCOMPtr<nsIStreamObserver>     mWriteObserver;
-    nsCOMPtr<nsIBufferInputStream>  mWritePipeIn;
-    nsCOMPtr<nsIBufferOutputStream> mWritePipeOut;
+    nsCOMPtr<nsIInputStream>        mWritePipeIn;
+    nsCOMPtr<nsIOutputStream>       mWritePipeOut;
     PRUint32                        mBufferSegmentSize;
     PRUint32                        mBufferMaxSize;
     

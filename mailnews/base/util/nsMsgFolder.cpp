@@ -576,7 +576,7 @@ nsMsgFolder::parseURI(PRBool needServer)
     // the name is the trailing directory in the path
     nsXPIDLCString fileName;
     rv = url->GetFileName(getter_Copies(fileName));
-    if (NS_SUCCEEDED(rv)) {
+    if (NS_SUCCEEDED(rv) && (const char*)fileName != nsnull) {
       // XXX conversion to unicode here? is fileName in UTF8?
 		// yes, let's say it is in utf8
 

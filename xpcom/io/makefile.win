@@ -47,13 +47,10 @@ XPIDL_MODULE = xpcom_io
 
 XPIDLSRCS =                         \
         .\nsIPipe.idl               \
-        .\nsIBaseStream.idl         \
-        .\nsIBinaryInputStream.idl  \
-        .\nsIBinaryOutputStream.idl \
         .\nsIInputStream.idl        \
         .\nsIOutputStream.idl       \
-        .\nsIBufferInputStream.idl  \
-        .\nsIBufferOutputStream.idl \
+        .\nsIBinaryInputStream.idl  \
+        .\nsIBinaryOutputStream.idl \
         .\nsIScriptableInputStream.idl \
         .\nsIStorageStream.idl      \
         .\nsIFileSpec.idl           \

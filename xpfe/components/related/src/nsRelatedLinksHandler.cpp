@@ -42,7 +42,7 @@
 #include "nsIStreamListener.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
-#include "nsIBufferInputStream.h"
+#include "nsIInputStream.h"
 #include "nsIPref.h"
 #include "nsRDFCID.h"
 #include "nsString.h"

@@ -34,8 +34,8 @@
 #include "nsILocalFile.h"
 #include "nsNetUtil.h"
 #include "nsIPipe.h"
-#include "nsIBufferOutputStream.h"
-#include "nsIBufferInputStream.h"
+#include "nsIOutputStream.h"
+#include "nsIInputStream.h"
 #include "nsIRunnable.h"
 #include "nsIThread.h"
 #include "nsISupportsArray.h"
@@ -201,9 +201,9 @@ Simulated_nsFileTransport_Run(nsReader* reader, const char* path)
 
     nsresult rv;
     nsCOMPtr<nsIInputStream> fileStr;
-    nsIBufferInputStream* bufStr = nsnull;
+    nsIInputStream* bufStr = nsnull;
     PRUint32 sourceOffset = 0;
-    nsCOMPtr<nsIBufferOutputStream> out;
+    nsCOMPtr<nsIOutputStream> out;
     nsCOMPtr<nsILocalFile> file;
 
     rv = reader->OnStartRequest(nsnull, nsnull);
@@ -215,7 +215,7 @@ Simulated_nsFileTransport_Run(nsReader* reader, const char* path)
     rv = NS_NewLocalFileInputStream(getter_AddRefs(fileStr), file);
     if (NS_FAILED(rv)) goto done;
 
-    rv = NS_NewPipe(&bufStr, getter_AddRefs(out), nsnull,
+    rv = NS_NewPipe(&bufStr, getter_AddRefs(out),
                     NS_FILE_TRANSPORT_BUFFER_SIZE,
                     NS_FILE_TRANSPORT_BUFFER_SIZE);
     if (NS_FAILED(rv)) goto done;

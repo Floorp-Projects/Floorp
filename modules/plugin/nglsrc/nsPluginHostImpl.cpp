@@ -36,7 +36,7 @@
 #include "nsIPref.h"
 #include "nsIFile.h"
 
-#include "nsIBufferInputStream.h"
+#include "nsIInputStream.h"
 #include "nsIIOService.h"
 #include "nsIURL.h"
 #include "nsIChannel.h"

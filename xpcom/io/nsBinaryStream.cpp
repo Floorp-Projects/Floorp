@@ -68,6 +68,48 @@ nsBinaryOutputStream::Write(const char *aBuf, PRUint32 aCount, PRUint32 *aActual
     return mOutputStream->Write(aBuf, aCount, aActualBytes);
 }
 
+NS_IMETHODIMP 
+nsBinaryOutputStream::WriteFrom(nsIInputStream *inStr, PRUint32 count, PRUint32 *_retval)
+{
+    NS_NOTREACHED("WriteFrom");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+nsBinaryOutputStream::WriteSegments(nsReadSegmentFun reader, void * closure, PRUint32 count, PRUint32 *_retval)
+{
+    NS_NOTREACHED("WriteSegments");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+nsBinaryOutputStream::GetNonBlocking(PRBool *aNonBlocking)
+{
+    NS_NOTREACHED("GetNonBlocking");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+nsBinaryOutputStream::SetNonBlocking(PRBool aNonBlocking)
+{
+    NS_NOTREACHED("SetNonBlocking");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+nsBinaryOutputStream::GetObserver(nsIOutputStreamObserver * *aObserver)
+{
+    NS_NOTREACHED("GetObserver");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+nsBinaryOutputStream::SetObserver(nsIOutputStreamObserver * aObserver)
+{
+    NS_NOTREACHED("SetObserver");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 nsresult
 nsBinaryOutputStream::WriteFully(const char *aBuf, PRUint32 aCount)
 {
@@ -156,12 +198,14 @@ nsBinaryOutputStream::WriteStringZ(const char *aString)
 NS_IMETHODIMP
 nsBinaryOutputStream::WriteWStringZ(const PRUnichar* aString)
 {
+    NS_NOTREACHED("WriteWStringZ");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsBinaryOutputStream::WriteUtf8Z(const PRUnichar* aString)
 {
+    NS_NOTREACHED("WriteUtf8Z");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -180,6 +224,7 @@ nsBinaryOutputStream::WriteBytes(const char *aString, PRUint32 aLength)
 NS_IMETHODIMP
 nsBinaryOutputStream::WriteString(nsString* aString)
 {
+    NS_NOTREACHED("WriteString");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -194,6 +239,34 @@ NS_IMETHODIMP
 nsBinaryInputStream::Read(char* aBuffer, PRUint32 aCount, PRUint32 *aNumRead)
 {
     return mInputStream->Read(aBuffer, aCount, aNumRead);
+}
+
+NS_IMETHODIMP 
+nsBinaryInputStream::ReadSegments(nsWriteSegmentFun writer, void * closure, PRUint32 count, PRUint32 *_retval)
+{
+    NS_NOTREACHED("ReadSegments");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+nsBinaryInputStream::GetNonBlocking(PRBool *aNonBlocking)
+{
+    NS_NOTREACHED("GetNonBlocking");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+nsBinaryInputStream::GetObserver(nsIInputStreamObserver * *aObserver)
+{
+    NS_NOTREACHED("GetObserver");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+nsBinaryInputStream::SetObserver(nsIInputStreamObserver * aObserver)
+{
+    NS_NOTREACHED("SetObserver");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -317,12 +390,14 @@ nsBinaryInputStream::ReadStringZ(char* *aString)
 NS_IMETHODIMP
 nsBinaryInputStream::ReadWStringZ(PRUnichar* *aString)
 {
+    NS_NOTREACHED("ReadWStringZ");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsBinaryInputStream::ReadUtf8Z(PRUnichar* *aString)
 {
+    NS_NOTREACHED("ReadUtf8Z");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -349,6 +424,7 @@ nsBinaryInputStream::ReadBytes(char* *aString, PRUint32 aLength)
 NS_IMETHODIMP
 nsBinaryInputStream::ReadString(nsString* *aString)
 {
+    NS_NOTREACHED("ReadString");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 

@@ -20,12 +20,45 @@
  * Contributor(s): 
  */
 
-#include "nsIBaseStream.idl"
-#include "nsIInputStream.idl"
+#include "nsISupports.idl"
+interface nsIOutputStream;
+interface nsIOutputStreamObserver;
+interface nsIInputStream;
 
-[scriptable, uuid(7f13b870-e95f-11d1-beae-00805f8a66dc)]
-interface nsIOutputStream : nsIBaseStream
+%{C++
+/**
+ * The signature for the reader function passed to WriteSegment. This 
+ * specifies where the data should come from that gets written into the buffer.
+ * Implementers should return the following:
+ * @return NS_OK and readCount > 0 - if successfully read something
+ * @return NS_OK and readCount == 0 - if no more to read (EOF)
+ * @return NS_BASE_STREAM_WOULD_BLOCK - if there is currently no data (in
+ *   a non-blocking mode)
+ * @return <other-error> - on failure
+ */
+typedef NS_CALLBACK(nsReadSegmentFun)(nsIOutputStream* out,
+                                      void* closure,
+                                      char* toRawSegment,
+                                      PRUint32 fromOffset,
+                                      PRUint32 count,
+                                      PRUint32 *readCount);
+%}
+
+native nsReadSegmentFun(nsReadSegmentFun);
+
+[scriptable, uuid(0d0acd2a-61b4-11d4-9877-00c04fa0cf4a)]
+interface nsIOutputStream : nsISupports
 {
+    /** 
+     * Closes the stream. 
+     */
+    void close();
+
+    /**
+     * Flushes the stream.
+     */
+    void flush();
+
     /** Write data into the stream.
      *  @param aBuf the buffer from which the data is read
      *  @param aCount the maximum number of bytes to write
@@ -33,10 +66,56 @@ interface nsIOutputStream : nsIBaseStream
      *         bytes written. if an error occurs, the writecount
      *         is undefined
      */
-    unsigned long Write(in string buf, in unsigned long count);
+    unsigned long write(in string buf, in unsigned long count);
 
     /**
-     * Flushes the stream.
+     * Writes data into the stream from an input stream.
+     * Implementer's note: This method is defined by this interface in order
+     * to allow the output stream to efficiently copy the data from the input
+     * stream into its internal buffer (if any). If this method was provide
+     * as an external facility, a separate char* buffer would need to be used
+     * in order to call the output stream's other Write method.
+     * @param fromStream the stream from which the data is read
+     * @param count the maximun number of bytes to write
+     * @return aWriteCount out parameter to hold the number of
+     *         bytes written. if an error occurs, the writecount
+     *         is undefined
      */
-    void Flush();
+    unsigned long writeFrom(in nsIInputStream inStr,
+                            in unsigned long count);
+
+    /**
+     * Low-level write method that has access to the stream's underlying buffer. The
+     * reader function may be called multiple times for segmented buffers.
+     */
+    [noscript] unsigned long writeSegments(in nsReadSegmentFun reader,
+                                           in voidPtr closure,
+                                           in unsigned long count);
+    /**
+     * Set this attribute to put the stream in non-blocking mode.
+     */
+    attribute boolean nonBlocking;
+
+    /**
+     * Allows users to set an observer on an output stream to receive notifications
+     * about the consumer emptying the output stream's underlying buffer, or closing the
+     * stream. This is necessary for non-blocking streams so that the producer can suspend
+     * itself until more data can be written.
+     */
+    attribute nsIOutputStreamObserver observer;
+};
+
+[scriptable, uuid(12314194-61b4-11d4-9877-00c04fa0cf4a)]
+interface nsIOutputStreamObserver : nsISupports
+{
+    /**
+     * Called when the input stream's producer has written more data into the stream.
+     */
+    void onWrite(in nsIOutputStream inStr, 
+                 in unsigned long amount);
+
+    /**
+     * Called when the stream's underlying buffer becomes full.
+     */
+    void onFull(in nsIOutputStream inStr);
 };

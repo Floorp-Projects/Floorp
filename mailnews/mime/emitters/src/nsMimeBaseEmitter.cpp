@@ -53,7 +53,10 @@ static    NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static    NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static    NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
 
-NS_IMPL_ISUPPORTS2(nsMimeBaseEmitter, nsIMimeEmitter, nsIPipeObserver)
+NS_IMPL_ISUPPORTS3(nsMimeBaseEmitter, 
+                   nsIMimeEmitter, 
+                   nsIInputStreamObserver, 
+                   nsIOutputStreamObserver)
 
 nsMimeBaseEmitter::nsMimeBaseEmitter()
 {
@@ -240,18 +243,18 @@ nsMimeBaseEmitter::LocalizeHeaderName(const char *aHeaderName, const char *aDefa
 // nsIPipeObserver Interface
 ///////////////////////////////////////////////////////////////////////////
 
-NS_IMETHODIMP nsMimeBaseEmitter::OnWrite(nsIPipe* aPipe, PRUint32 aCount)
+NS_IMETHODIMP nsMimeBaseEmitter::OnWrite(nsIOutputStream* out, PRUint32 aCount)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMimeBaseEmitter::OnEmpty(nsIPipe* aPipe)
+NS_IMETHODIMP nsMimeBaseEmitter::OnEmpty(nsIInputStream* in)
 {
   return NS_OK;
 }
 
 
-NS_IMETHODIMP nsMimeBaseEmitter::OnFull(nsIPipe* /* aPipe */)
+NS_IMETHODIMP nsMimeBaseEmitter::OnFull(nsIOutputStream* out)
 {
   // the pipe is full so we should flush our data to the converter's listener
   // in order to make more room. 
@@ -273,7 +276,7 @@ NS_IMETHODIMP nsMimeBaseEmitter::OnFull(nsIPipe* /* aPipe */)
   return rv;
 }
 
-NS_IMETHODIMP nsMimeBaseEmitter::OnClose(nsIPipe* aPipe)
+NS_IMETHODIMP nsMimeBaseEmitter::OnClose(nsIInputStream* in)
 {
   return NS_OK;
 }

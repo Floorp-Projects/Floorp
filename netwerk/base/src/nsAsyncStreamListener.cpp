@@ -21,7 +21,7 @@
  */
 
 #include "nsAsyncStreamListener.h"
-#include "nsIBufferInputStream.h"
+#include "nsIInputStream.h"
 #include "nsString.h"
 #include "nsCRT.h"
 #include "nsIEventQueueService.h"

@@ -29,8 +29,8 @@
 #include "nsIEventQueue.h"
 #include "nsIStreamListener.h"
 #include "nsIOutputStream.h"
-#include "nsIBufferOutputStream.h"
-#include "nsIBufferInputStream.h"
+#include "nsIOutputStream.h"
+#include "nsIInputStream.h"
 #include "nsImapCore.h"
 #include "nsString.h"
 #include "nsIProgressEventSink.h"
@@ -316,8 +316,8 @@ private:
 	nsCOMPtr<nsIOutputStream>	m_outputStream;   // this will be obtained from the transport interface
 	nsCOMPtr<nsIInputStream>    m_inputStream;
 
-  nsCOMPtr<nsIBufferInputStream>  m_channelInputStream;
-	nsCOMPtr<nsIBufferOutputStream> m_channelOutputStream;
+  nsCOMPtr<nsIInputStream>  m_channelInputStream;
+	nsCOMPtr<nsIOutputStream> m_channelOutputStream;
 	nsCOMPtr<nsIStreamListener>	    m_channelListener; // if we are displaying an article this is the rfc-822 display sink...
   nsCOMPtr<nsISupports>           m_channelContext;
   nsCOMPtr<nsIImapMockChannel>    m_mockChannel;   // this is the channel we should forward to people

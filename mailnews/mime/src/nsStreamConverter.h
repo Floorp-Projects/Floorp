@@ -27,8 +27,8 @@
 #include "nsIOutputStream.h"
 #include "nsIMimeEmitter.h" 
 #include "nsIURI.h"
-#include "nsIBufferInputStream.h"
-#include "nsIBufferOutputStream.h"
+#include "nsIInputStream.h"
+#include "nsIOutputStream.h"
 #include "nsIChannel.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
@@ -65,8 +65,8 @@ private:
   nsresult Close();
 
   // the input and output streams form a pipe...they need to be passed around together..
-  nsCOMPtr<nsIBufferOutputStream>     mOutputStream;     // output stream
-  nsCOMPtr<nsIBufferInputStream>	    mInputStream;
+  nsCOMPtr<nsIOutputStream>     mOutputStream;     // output stream
+  nsCOMPtr<nsIInputStream>	    mInputStream;
 
   nsCOMPtr<nsIStreamListener>   mOutListener;   // output stream listener
   nsCOMPtr<nsIChannel>			mOutgoingChannel;

@@ -132,8 +132,8 @@ nsFileTransport::~nsFileTransport()
         DoClose();
     }
     NS_ASSERTION(mSource == nsnull, "transport not closed");
-    NS_ASSERTION(mBufferInputStream == nsnull, "transport not closed");
-    NS_ASSERTION(mBufferOutputStream == nsnull, "transport not closed");
+    NS_ASSERTION(mInputStream == nsnull, "transport not closed");
+    NS_ASSERTION(mOutputStream == nsnull, "transport not closed");
     NS_ASSERTION(mSink == nsnull, "transport not closed");
     NS_ASSERTION(mBuffer == nsnull, "transport not closed");
     if (mMonitor)
@@ -145,11 +145,12 @@ nsFileTransport::~nsFileTransport()
 
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS4(nsFileTransport, 
+NS_IMPL_THREADSAFE_ISUPPORTS5(nsFileTransport, 
                               nsIChannel, 
                               nsIRequest, 
                               nsIRunnable, 
-                              nsIPipeObserver);
+                              nsIInputStreamObserver,
+                              nsIOutputStreamObserver);
 
 NS_METHOD
 nsFileTransport::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
@@ -284,15 +285,15 @@ nsFileTransport::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
                                    listener, nsnull);
     if (NS_FAILED(rv)) return rv;
 
-    rv = NS_NewPipe(getter_AddRefs(mBufferInputStream),
-                    getter_AddRefs(mBufferOutputStream),
-                    this,       // nsIPipeObserver
-                    mBufferSegmentSize, mBufferMaxSize);
+    rv = NS_NewPipe(getter_AddRefs(mInputStream),
+                    getter_AddRefs(mOutputStream),
+                    mBufferSegmentSize, mBufferMaxSize,
+                    PR_TRUE, PR_TRUE);
     if (NS_FAILED(rv)) return rv;
 
-    rv = mBufferInputStream->SetNonBlocking(PR_TRUE);
+    rv = mInputStream->SetObserver(this);
     if (NS_FAILED(rv)) return rv;
-    rv = mBufferOutputStream->SetNonBlocking(PR_TRUE);
+    rv = mOutputStream->SetObserver(this);
     if (NS_FAILED(rv)) return rv;
 
     NS_ASSERTION(mContext == nsnull, "context not released");
@@ -363,7 +364,8 @@ nsFileTransport::Run(void)
 }
 
 static NS_METHOD
-nsWriteToFile(void* closure,
+nsWriteToFile(nsIInputStream* in,
+              void* closure,
               const char* fromRawSegment,
               PRUint32 toOffset,
               PRUint32 count,
@@ -435,7 +437,7 @@ nsFileTransport::Process(void)
       case READING: {
         PRUint32 writeAmt;
         // and feed the buffer to the application via the buffer stream:
-        mStatus = mBufferOutputStream->WriteFrom(mSource, mTransferAmount, &writeAmt);
+        mStatus = mOutputStream->WriteFrom(mSource, mTransferAmount, &writeAmt);
         PR_LOG(gFileTransportLog, PR_LOG_DEBUG,
                ("nsFileTransport: READING [this=%x %s] amt=%d status=%x",
                 this, mStreamName.GetBuffer(), writeAmt, mStatus));
@@ -460,7 +462,7 @@ nsFileTransport::Process(void)
         mOffset += writeAmt;
         if (mListener) {
             mStatus = mListener->OnDataAvailable(this, mContext,
-                                                 mBufferInputStream,
+                                                 mInputStream,
                                                  offset, writeAmt);
             if (NS_FAILED(mStatus)) {
                 PR_LOG(gFileTransportLog, PR_LOG_DEBUG,
@@ -505,9 +507,9 @@ nsFileTransport::Process(void)
             // of the data in the stream/file.
             mStatus = NS_BASE_STREAM_CLOSED;
         }
-        mBufferOutputStream->Flush();
-        mBufferOutputStream = null_nsCOMPtr();
-        mBufferInputStream = null_nsCOMPtr();
+        mOutputStream->Flush();
+        mOutputStream = null_nsCOMPtr();
+        mInputStream = null_nsCOMPtr();
 
         mSource = null_nsCOMPtr();
 
@@ -575,7 +577,7 @@ nsFileTransport::Process(void)
             mOffset = 0;
         }
 
-        mBufferInputStream = do_QueryInterface(mSource, &mStatus);
+        mInputStream = do_QueryInterface(mSource, &mStatus);
         if (NS_FAILED(mStatus)) {
             // if the given input stream isn't a buffered input
             // stream, then we need to have our own buffer to do the
@@ -599,9 +601,9 @@ nsFileTransport::Process(void)
         if (mTransferAmount >= 0)
             transferAmt = PR_MIN(mBufferSegmentSize, (PRUint32)mTransferAmount);
         PRUint32 writeAmt;
-        if (mBufferInputStream) {
-            mStatus = mBufferInputStream->ReadSegments(nsWriteToFile, mSink,
-                                                       transferAmt, &writeAmt);
+        if (mInputStream) {
+            mStatus = mInputStream->ReadSegments(nsWriteToFile, mSink,
+                                                 transferAmt, &writeAmt);
         }
         else {
             PRUint32 readAmt;
@@ -660,8 +662,8 @@ nsFileTransport::Process(void)
             mSink->Flush();
             mSink = null_nsCOMPtr();
         }
-        if (mBufferInputStream) {
-            mBufferInputStream = null_nsCOMPtr();
+        if (mInputStream) {
+            mInputStream = null_nsCOMPtr();
         }
         else if (mBuffer) {
             delete mBuffer;
@@ -721,29 +723,29 @@ nsFileTransport::DoClose(void)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsIPipeObserver methods:
+// nsIInputStreamObserver/nsIOutputStreamObserver methods:
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP
-nsFileTransport::OnFull(nsIPipe* pipe)
+nsFileTransport::OnFull(nsIOutputStream* out)
 {
     return Suspend();
 }
 
 NS_IMETHODIMP
-nsFileTransport::OnWrite(nsIPipe* pipe, PRUint32 aCount)
+nsFileTransport::OnWrite(nsIOutputStream* out, PRUint32 aCount)
 {
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFileTransport::OnEmpty(nsIPipe* pipe)
+nsFileTransport::OnEmpty(nsIInputStream* in)
 {
     return Resume();
 }
 
 NS_IMETHODIMP
-nsFileTransport::OnClose(nsIPipe* pipe)
+nsFileTransport::OnClose(nsIInputStream* in)
 {
     return NS_OK;
 }

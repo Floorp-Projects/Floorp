@@ -27,25 +27,26 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 nsresult 
-nsSyncStreamListener::Init(nsIInputStream* *inStr, nsIBufferOutputStream* *outStr)
+nsSyncStreamListener::Init(nsIInputStream* *inStr, nsIOutputStream* *outStr)
 {
     nsresult rv;
-    nsIBufferInputStream* in;
+    nsCOMPtr<nsIInputStream> in;
 
-    rv = NS_NewPipe(&in, &mOutputStream, nsnull, 
+    rv = NS_NewPipe(getter_AddRefs(in),
+                    getter_AddRefs(mOutputStream),
                     NS_SYNC_STREAM_LISTENER_SEGMENT_SIZE,
                     NS_SYNC_STREAM_LISTENER_BUFFER_SIZE);
     if (NS_FAILED(rv)) return rv;
 
-    *inStr = in;
-    *outStr = mOutputStream;
-    NS_ADDREF(mOutputStream);
+    *inStr = in.get();
+    *outStr = mOutputStream.get();
+    NS_ADDREF(*inStr);
+    NS_ADDREF(*outStr);
     return NS_OK;
 }
 
 nsSyncStreamListener::~nsSyncStreamListener()
 {
-    NS_IF_RELEASE(mOutputStream);
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS3(nsSyncStreamListener, 

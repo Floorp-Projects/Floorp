@@ -1000,7 +1000,8 @@ typedef struct {
 
 
 static NS_METHOD
-nsReadFromSocket(void* closure,
+nsReadFromSocket(nsIOutputStream* out,
+                 void* closure,
                  char* toRawSegment,
                  PRUint32 offset,
                  PRUint32 count,
@@ -1053,7 +1054,8 @@ nsReadFromSocket(void* closure,
 }
 
 static NS_METHOD
-nsWriteToSocket(void* closure,
+nsWriteToSocket(nsIInputStream* in,
+                void* closure,
                 const char* fromRawSegment,
                 PRUint32 toOffset,
                 PRUint32 count,
@@ -1228,7 +1230,7 @@ nsresult nsSocketTransport::doWrite(PRInt16 aSelectFlags)
   {
     totalBytesWritten = 0;
     if (mWritePipeIn) {
-        // Writing from a nsIBufferInputStream...
+        // Writing from a nsIInputStream...
         rv = doWriteFromBuffer(&totalBytesWritten);
     }
     else {
@@ -1361,7 +1363,7 @@ nsresult nsSocketTransport::doWriteFromStream(PRUint32 *aCount)
   *aCount = 0;
   if (NS_SUCCEEDED(rv)) {
     // Try to send the data to the network.
-    rv = nsWriteToSocket((void*)mSocketFD, mWriteBuffer, mWriteBufferIndex, 
+    rv = nsWriteToSocket(nsnull, (void*)mSocketFD, mWriteBuffer, mWriteBufferIndex, 
                          mWriteBufferLength, aCount);
     // Update the buffer index and length with the actual amount of data
     // that was sent...
@@ -1417,11 +1419,12 @@ nsresult nsSocketTransport::CloseConnection (PRBool bNow)
 // --------------------------------------------------------------------------
 //
 
-NS_IMPL_THREADSAFE_ISUPPORTS5(nsSocketTransport, 
+NS_IMPL_THREADSAFE_ISUPPORTS6(nsSocketTransport, 
                               nsIChannel, 
                               nsIRequest, 
                               nsIDNSListener, 
-                              nsIPipeObserver,
+                              nsIInputStreamObserver,
+                              nsIOutputStreamObserver,
                               nsISocketTransport);
 
 //
@@ -1625,7 +1628,7 @@ nsSocketTransport::Resume(void)
 
 // 
 // -------------------------------------------------------------------------- 
-// nsIPipeObserver implementation... 
+// nsIInputStreamObserver/nsIOutputStreamObserver implementation... 
 // -------------------------------------------------------------------------- 
 // 
 // The pipe observer is used by the following methods: 
@@ -1634,20 +1637,18 @@ nsSocketTransport::Resume(void)
 //    OpenOutputStream(...). 
 // 
 NS_IMETHODIMP 
-nsSocketTransport::OnFull(nsIPipe* aPipe) 
+nsSocketTransport::OnFull(nsIOutputStream* out) 
 { 
     PR_LOG(gSocketLog, PR_LOG_DEBUG, 
-        ("nsSocketTransport::OnFull() [%s:%d %x] nsIPipe=%x.\n", 
-        mHostName, mPort, this, aPipe));
+        ("nsSocketTransport::OnFull() [%s:%d %x] nsIOutputStream=%x.\n", 
+        mHostName, mPort, this, out));
     
     // 
     // The socket transport has filled up the pipe.  Remove the 
     // transport from the select list until the consumer can 
     // make room... 
     // 
-    nsCOMPtr<nsIBufferInputStream> in;
-    nsresult rv = aPipe->GetInputStream(getter_AddRefs(in));
-    if (NS_SUCCEEDED(rv) && in == mReadPipeIn) 
+    if (out == mReadPipeOut) 
     {
         // Enter the socket transport lock...
         nsAutoMonitor mon(mMonitor);
@@ -1662,27 +1663,25 @@ nsSocketTransport::OnFull(nsIPipe* aPipe)
     
     // Else, since we might get an OnFull without an intervening OnWrite
     // try the OnWrite case to see if we need to resume the blocking write operation:
-    return OnWrite(aPipe, 0);
+    return OnWrite(out, 0);
 }
 
 
 NS_IMETHODIMP
-nsSocketTransport::OnWrite(nsIPipe* aPipe, PRUint32 aCount)
+nsSocketTransport::OnWrite(nsIOutputStream* out, PRUint32 aCount)
 {
   nsresult rv = NS_OK;
 
   PR_LOG(gSocketLog, PR_LOG_DEBUG, 
-         ("nsSocketTransport::OnWrite() [%s:%d %x]. nsIPipe=%x Count=%d\n", 
-         mHostName, mPort, this, aPipe, aCount));
+         ("nsSocketTransport::OnWrite() [%s:%d %x]. nsIOutputStream=%x Count=%d\n", 
+         mHostName, mPort, this, out, aCount));
 
   // 
   // The consumer has written some data into the pipe... If the transport 
   // was waiting to write some data to the network, then add it to the 
   // select list... 
   // 
-  nsCOMPtr<nsIBufferInputStream> in;
-  rv = aPipe->GetInputStream(getter_AddRefs(in));
-  if (NS_SUCCEEDED(rv) && in == mWritePipeIn) {
+  if (out == mWritePipeOut) {
     // Enter the socket transport lock...
     nsAutoMonitor mon(mMonitor);
 
@@ -1702,21 +1701,19 @@ nsSocketTransport::OnWrite(nsIPipe* aPipe, PRUint32 aCount)
 
 
 NS_IMETHODIMP 
-nsSocketTransport::OnEmpty(nsIPipe* aPipe)
+nsSocketTransport::OnEmpty(nsIInputStream* in)
 {
   nsresult rv = NS_OK;
 
   PR_LOG(gSocketLog, PR_LOG_DEBUG, 
-         ("nsSocketTransport::OnEmpty() [%s:%d %x] nsIPipe=%x.\n", 
-         mHostName, mPort, this, aPipe));
+         ("nsSocketTransport::OnEmpty() [%s:%d %x] nsIInputStream=%x.\n", 
+         mHostName, mPort, this, in));
 
   // 
   // The consumer has emptied the pipe...  If the transport was waiting 
   // for room in the pipe, then put it back on the select list... 
   // 
-  nsCOMPtr<nsIBufferInputStream> in;
-  rv = aPipe->GetInputStream(getter_AddRefs(in));
-  if (NS_SUCCEEDED(rv) && in == mReadPipeIn) {
+  if (in == mReadPipeIn) {
     // Enter the socket transport lock... 
     nsAutoMonitor mon(mMonitor); 
   
@@ -1732,7 +1729,7 @@ nsSocketTransport::OnEmpty(nsIPipe* aPipe)
 }
 
 NS_IMETHODIMP 
-nsSocketTransport::OnClose(nsIPipe* aPipe) 
+nsSocketTransport::OnClose(nsIInputStream* inStr) 
 { 
   return NS_OK;
 }
@@ -1896,15 +1893,14 @@ nsSocketTransport::AsyncRead(nsIStreamListener* aListener,
     {
         // XXXbe calling out of module with a lock held...
         rv = NS_NewPipe(getter_AddRefs(mReadPipeIn),
-            getter_AddRefs(mReadPipeOut),
-            this,       // nsIPipeObserver
-            mBufferSegmentSize, mBufferMaxSize);
+                        getter_AddRefs(mReadPipeOut),
+                        mBufferSegmentSize, mBufferMaxSize,
+                        PR_TRUE, PR_TRUE);
+        if (NS_SUCCEEDED(rv))
+            rv = mReadPipeIn->SetObserver(this);
         
         if (NS_SUCCEEDED(rv))
-            rv = mReadPipeIn->SetNonBlocking(PR_TRUE);
-
-        if (NS_SUCCEEDED(rv))
-            rv = mReadPipeOut->SetNonBlocking(PR_TRUE);
+            rv = mReadPipeOut->SetObserver(this);
     }
     
     // Create a marshalling stream listener to receive notifications...
@@ -1958,7 +1954,7 @@ nsSocketTransport::AsyncWrite(nsIInputStream* aFromStream,
         mWritePipeIn = do_QueryInterface(aFromStream, &rv);
         if (NS_FAILED(rv))
         {
-            // If the input stream does not support nsIBufferInputStream, then
+            // If the input stream does not support nsIInputStream, then
             // an intermediate buffer is necessary to move the data from the
             // stream to the network...
             mWriteFromStream = aFromStream;
@@ -2034,12 +2030,17 @@ nsSocketTransport::OpenInputStream(nsIInputStream* *result)
     // XXXbe calling out of module with a lock held...
     rv = NS_NewPipe(getter_AddRefs(mReadPipeIn),
                     getter_AddRefs(mReadPipeOut),
-                    this,       // nsIPipeObserver
                     mBufferSegmentSize, mBufferMaxSize);
     if (NS_SUCCEEDED(rv)) {
-      rv = mReadPipeOut->SetNonBlocking(PR_TRUE);
-      *result = mReadPipeIn;
-      NS_IF_ADDREF(*result);
+        if (NS_SUCCEEDED(rv))
+            rv = mReadPipeIn->SetObserver(this);
+        if (NS_SUCCEEDED(rv))
+            rv = mReadPipeOut->SetObserver(this);
+        if (NS_SUCCEEDED(rv)) {
+            rv = mReadPipeOut->SetNonBlocking(PR_TRUE);
+            *result = mReadPipeIn;
+            NS_IF_ADDREF(*result);
+        }
     }
   }
 
@@ -2088,16 +2089,18 @@ nsSocketTransport::OpenOutputStream(nsIOutputStream* *result)
     // is then written to the underlying socket when nsSocketTransport::doWrite()
     // is called.
 
-    nsCOMPtr<nsIBufferOutputStream> out;
-    nsCOMPtr<nsIBufferInputStream>  in;
+    nsCOMPtr<nsIOutputStream> out;
+    nsCOMPtr<nsIInputStream>  in;
     // XXXbe calling out of module with a lock held...
     rv = NS_NewPipe(getter_AddRefs(in), getter_AddRefs(out),
-                    this,       // nsIPipeObserver
-                    mBufferSegmentSize, mBufferMaxSize);
-    if (NS_SUCCEEDED(rv)) {
-      rv = in->SetNonBlocking(PR_TRUE);
-    }
-
+                    mBufferSegmentSize, mBufferMaxSize,
+                    PR_TRUE, PR_FALSE);
+    if (NS_SUCCEEDED(rv))
+        rv = in->SetObserver(this);
+        
+    if (NS_SUCCEEDED(rv))
+        rv = out->SetObserver(this);
+        
     if (NS_SUCCEEDED(rv)) {
       mWritePipeIn = in;
       *result = out;

@@ -24,27 +24,18 @@
 
 interface nsIPipe;
 interface nsIMemory;
-interface nsIBufferInputStream;
-interface nsIBufferOutputStream;
+interface nsIInputStream;
+interface nsIOutputStream;
 
-[scriptable, uuid(686b2d98-56c2-11d3-8cd4-0060b0fc14a3)]
-interface nsIPipeObserver : nsISupports {
-    void onFull(in nsIPipe pipe);
-    void onWrite(in nsIPipe pipe, 
-                 in unsigned long amount);
-    void onEmpty(in nsIPipe pipe);
-    void onClose(in nsIPipe pipe);
-};
-
-[scriptable, uuid(6c2c0146-56c2-11d3-8cd4-0060b0fc14a3)]
+[scriptable, uuid(f4211abc-61b3-11d4-9877-00c04fa0cf4a)]
 interface nsIPipe : nsISupports {
     void initialize(in unsigned long segmentSize,
                     in unsigned long maxSize,
-                    in nsIPipeObserver observer,
+                    in boolean nonBlockingInput,
+                    in boolean nonBlockingOutput,
                     in nsIMemory segmentAllocator);
-    readonly attribute nsIBufferInputStream inputStream;
-    readonly attribute nsIBufferOutputStream outputStream;
-    attribute nsIPipeObserver observer;
+    readonly attribute nsIInputStream inputStream;
+    readonly attribute nsIOutputStream outputStream;
 };
 
 %{C++
@@ -52,9 +43,11 @@ interface nsIPipe : nsISupports {
 #define NS_PIPE_DEFAULT_BUFFER_SIZE     (1024*1024)
 
 extern NS_COM nsresult
-NS_NewPipe(nsIBufferInputStream* *inStrResult,
-           nsIBufferOutputStream* *outStrResult,
-           nsIPipeObserver* observer = nsnull,
+NS_NewPipe(nsIInputStream* *inStrResult,
+           nsIOutputStream* *outStrResult,
            PRUint32 segmentSize = NS_PIPE_DEFAULT_SEGMENT_SIZE,
-           PRUint32 maxSize = NS_PIPE_DEFAULT_BUFFER_SIZE);
+           PRUint32 maxSize = NS_PIPE_DEFAULT_BUFFER_SIZE,
+           PRBool nonBlockingInput = PR_FALSE,
+           PRBool nonBlockingOutput = PR_FALSE,
+           nsIMemory* segmentAllocator = nsnull);
 %}
