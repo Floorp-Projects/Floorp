@@ -2745,7 +2745,24 @@ function toggleSidebar(aCommandID, forceOpen) {
   sidebarBox.setAttribute("src", url);
   sidebarBox.setAttribute("sidebarcommand", elt.id);
   sidebarTitle.setAttribute("value", title);
+  if (aCommandID != "viewWebPanelsSidebar") { // no searchbox there
+    // if the sidebar we want is already constructed, focus the searchbox
+    if ((aCommandID == "viewBookmarksSidebar" && sidebar.contentDocument.getElementById("bookmarksPanel"))
+    || (aCommandID == "viewHistorySidebar" && sidebar.contentDocument.getElementById("history-panel")))
+      sidebar.contentDocument.getElementById("search-box").focus();
+    // otherwiese, attach an onload handler
+    else
+      sidebar.addEventListener("load", asyncFocusSearchBox, true);
+  }
 }
+
+function asyncFocusSearchBox(event)
+{
+  var sidebar = document.getElementById("sidebar");
+  var searchBox = sidebar.contentDocument.getElementById("search-box");
+  searchBox.focus();
+  sidebar.removeEventListener("load", asyncFocusSearchBox, true);
+ }
 
 function openPreferences()
 {
