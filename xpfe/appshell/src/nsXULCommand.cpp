@@ -158,7 +158,7 @@ NS_IMETHODIMP nsXULCommand::ExecuteJavaScriptString(nsIWebShell* aWebShell, nsSt
   NS_ASSERTION(nsnull != aWebShell, "null webshell passed to EvaluateJavaScriptString");
 
   // Get nsIScriptContextOwner
-  nsCOMPtr<nsIScriptContextOwner> scriptContextOwner ( aWebShell );
+  nsCOMPtr<nsIScriptContextOwner> scriptContextOwner ( do_QueryInterface(aWebShell) );
   if ( scriptContextOwner ) {
     const char* url = "";
       // Get nsIScriptContext

@@ -851,7 +851,7 @@ void nsWebShellWindow::ExecuteJavaScriptString(nsString& aJavaScript)
   }
   
   // Get nsIScriptContextOwner
-  nsCOMPtr<nsIScriptContextOwner> scriptContextOwner ( mWebShell );
+  nsCOMPtr<nsIScriptContextOwner> scriptContextOwner ( do_QueryInterface(mWebShell) );
   if ( scriptContextOwner ) {
     const char* url = "";
       // Get nsIScriptContext
