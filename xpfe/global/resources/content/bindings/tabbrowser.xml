@@ -592,16 +592,8 @@
         <![CDATA[
           this.mStrip.collapsed = !aShow;
           if (aShow) {
-            // XXXdwh temporary unclean dependency on specific menu items in navigator.xul
-            document.getElementById("menu_closeWindow").hidden = false;
-            document.getElementById("menu_close").setAttribute("label", this.mStringBundle.getString("tabs.closeTab"));
             if (!this.mTabbedMode)
               this.enterTabbedMode();
-          }
-          else {
-            // XXXdwh temporary unclean dependency on specific menu items in navigator.xul
-            document.getElementById("menu_closeWindow").hidden = true;
-            document.getElementById("menu_close").setAttribute("label", this.mStringBundle.getString("tabs.close"));
           }
         ]]>
         </body>
@@ -714,6 +706,24 @@
                                  aReferrerURI, null, null);
 
             return t;
+          ]]>
+        </body>
+      </method>
+
+      <method name="removeAllTabsBut">
+        <parameter name="aTab"/>
+        <body>
+          <![CDATA[
+            if (aTab.localName != "tab")
+              aTab = this.mCurrentTab;
+            else
+              this.mTabContainer.selectedItem = aTab;
+
+            while (this.mTabContainer.lastChild != aTab)
+              this.removeTab(this.mTabContainer.lastChild);
+
+            while (aTab.previousSibling)
+              this.removeTab(aTab.previousSibling);
           ]]>
         </body>
       </method>

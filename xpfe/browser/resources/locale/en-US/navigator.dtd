@@ -72,6 +72,7 @@
 <!ENTITY translateMenu.accesskey "T">
 <!ENTITY translate.commandKey "t">
 
+<!ENTITY closeOtherTabs.label "Close Other Tabs">
 <!ENTITY closeWindow.label "Close Window">
 
 <!-- I'd like all this to move to an overlay or something -->
