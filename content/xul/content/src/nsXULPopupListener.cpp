@@ -217,8 +217,8 @@ XULPopupListenerImpl::LaunchPopup(nsIDOMEvent* anEvent)
 
         // Retrieve our x and y position.
         PRInt32 xPos, yPos;
-        anEvent->GetClientX(&xPos); // XXX We may run into conversion problems if we're in nested 
-        anEvent->GetClientY(&yPos); // frames.
+        anEvent->GetScreenX(&xPos); // XXX I need to figure out frames for alignment purposes
+        anEvent->GetScreenY(&yPos); 
         
         domWindow->CreatePopup(element, popupContent, 
                                xPos, yPos, 
