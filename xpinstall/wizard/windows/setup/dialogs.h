@@ -62,5 +62,6 @@ void              TruncateString(HWND hWnd, LPSTR szInPath, DWORD dwInPathBufSiz
 void              SaveDownloadOptions(HWND hDlg, HWND hwndCBSiteSelector);
 WNDPROC           SubclassWindow( HWND hWnd, WNDPROC NewWndProc);
 LRESULT CALLBACK  ListBoxBrowseWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+void              DisableSystemMenuItems(HWND hWnd, BOOL bDisableClose);
 
 #endif

@@ -87,51 +87,16 @@ BOOL InitDialogClass(HINSTANCE hInstance, HINSTANCE hSetupRscInst)
 
 BOOL InitApplication(HINSTANCE hInstance, HINSTANCE hSetupRscInst)
 {
-  BOOL     bRv;
-  WNDCLASS wc;
-
-  wc.style         = CS_HREDRAW | CS_VREDRAW | CS_PARENTDC | CS_SAVEBITS;
-  wc.lpfnWndProc   = (WNDPROC)DlgProcMain;
-  wc.cbClsExtra    = 0;
-  wc.cbWndExtra    = 0;
-  wc.hInstance     = hInstance;
-  wc.hIcon         = LoadIcon(hSetupRscInst, MAKEINTRESOURCE(IDI_SETUP));
-  wc.hCursor       = LoadCursor(NULL, IDC_ARROW);
-  wc.hbrBackground = (HBRUSH)(COLOR_ACTIVECAPTION + 1);
-  wc.lpszMenuName  = NULL;
-  wc.lpszClassName = CLASS_NAME_SETUP;
-
-  bRv = RegisterClass(&wc);
-  if(bRv == FALSE)
-    return(bRv);
-
   return(InitDialogClass(hInstance, hSetupRscInst));
 }
 
 BOOL InitInstance(HINSTANCE hInstance, DWORD dwCmdShow)
 {
-  HWND  hWnd;
-
   dwScreenX = GetSystemMetrics(SM_CXSCREEN);
   dwScreenY = GetSystemMetrics(SM_CYSCREEN);
 
   hInst = hInstance;
-  hWnd = CreateWindow(CLASS_NAME_SETUP,
-                      CLASS_NAME_SETUP,
-                      WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_MAXIMIZE,
-                      0,
-                      0,
-                      dwScreenX,
-                      dwScreenY,
-                      NULL,
-                      NULL,
-                      hInstance,
-                      NULL);
-
-  if(!hWnd)
-    return(FALSE);
-
-  hWndMain = hWnd;
+  hWndMain = NULL;
 
   return(TRUE);
 }
@@ -1841,6 +1806,8 @@ HRESULT InitSetupGeneral()
     return(1);
   if((sgProduct.szProgramName                 = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
+  if((sgProduct.szCompanyName                 = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
   if((sgProduct.szProductName                 = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
   if((sgProduct.szProgramFolderName           = NS_GlobalAlloc(MAX_BUF)) == NULL)
@@ -1874,6 +1841,7 @@ void DeInitSetupGeneral()
   FreeMemory(&(sgProduct.szPath));
   FreeMemory(&(sgProduct.szSubPath));
   FreeMemory(&(sgProduct.szProgramName));
+  FreeMemory(&(sgProduct.szCompanyName));
   FreeMemory(&(sgProduct.szProductName));
   FreeMemory(&(sgProduct.szProgramFolderName));
   FreeMemory(&(sgProduct.szProgramFolderPath));
@@ -3061,11 +3029,11 @@ HRESULT InitComponentDiskSpaceInfo(dsN **dsnComponentDSRequirement)
       AppendBackSlash(szBuf, sizeof(szBuf));
       UpdatePathDiskSpaceRequired(szBuf, siCObject->ullInstallSize, dsnComponentDSRequirement);
 
-      if(*szSysPath != '\0')
-        UpdatePathDiskSpaceRequired(szSysPath, siCObject->ullInstallSizeSystem, dsnComponentDSRequirement);
-
       if(*szTempDir != '\0')
         UpdatePathDiskSpaceRequired(szTempDir, siCObject->ullInstallSizeArchive, dsnComponentDSRequirement);
+
+      if(*szSysPath != '\0')
+        UpdatePathDiskSpaceRequired(szSysPath, siCObject->ullInstallSizeSystem, dsnComponentDSRequirement);
     }
 
     ++dwIndex0;
@@ -4371,7 +4339,6 @@ COLORREF DecryptFontColor(LPSTR szColor)
 
 HRESULT ParseConfigIni(LPSTR lpszCmdLine)
 {
-  HDC  hdc;
   char szBuf[MAX_BUF];
   char szMsgInitSetup[MAX_BUF];
   char szPreviousPath[MAX_BUF];
@@ -4417,14 +4384,8 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   SetSetupRunMode(szBuf);
   ParseCommandLine(lpszCmdLine);
 
-  if((sgProduct.dwMode == NORMAL) || (sgProduct.dwMode == AUTO))
-  {
-    /* show blue background here */
-    ShowWindow(hWndMain, SW_MAXIMIZE);
-    UpdateWindow(hWndMain);
-  }
-
   /* get product name description */
+  GetPrivateProfileString("General", "Company Name", "", sgProduct.szCompanyName, MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("General", "Product Name", "", sgProduct.szProductName, MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("General", "Sub Path",     "", sgProduct.szSubPath,     MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("General", "Program Name", "", sgProduct.szProgramName, MAX_BUF, szFileIniConfig);
@@ -4805,10 +4766,6 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
     siCFXpcomFile.bCleanup = TRUE;
   }
 
-  hdc = GetDC(hWndMain);
-
-  OutputSetupTitle(hdc);
-  ReleaseDC(hWndMain, hdc);
   CleanupXpcomFile();
   ShowMessage(szMsgInitSetup, FALSE);
 
@@ -5349,45 +5306,22 @@ HRESULT DecryptVariable(LPSTR szVariable, DWORD dwVariableSize)
     AppendBackSlash(szVariable, dwVariableSize);
     lstrcat(szVariable, sgProduct.szProgramFolderName);
   }
-  else if(lstrcmpi(szVariable, "Netscape Seamonkey CurrentVersion") == 0)
+  else if(lstrcmpi(szVariable, "Product CurrentVersion") == 0)
   {
+    char szKey[MAX_BUF];
+
+    lstrcpy(szKey, "Software\\");
+    lstrcat(szKey, sgProduct.szCompanyName);
+    lstrcat(szKey, "\\");
+    lstrcat(szKey, sgProduct.szProductName);
+
     /* parse for the current Netscape WinReg key */
-    GetWinReg(HKEY_LOCAL_MACHINE, "Software\\Netscape\\Netscape Seamonkey", "CurrentVersion", szBuf, sizeof(szBuf));
+    GetWinReg(HKEY_LOCAL_MACHINE, szKey, "CurrentVersion", szBuf, sizeof(szBuf));
 
     if(*szBuf == '\0')
       return(FALSE);
 
-    wsprintf(szVariable, "Software\\Netscape\\Netscape Seamonkey\\%s", szBuf);
-  }
-  else if(lstrcmpi(szVariable, "Netscape 6 CurrentVersion") == 0)
-  {
-    /* parse for the current Netscape WinReg key */
-    GetWinReg(HKEY_LOCAL_MACHINE, "Software\\Netscape\\Netscape 6", "CurrentVersion", szBuf, sizeof(szBuf));
-
-    if(*szBuf == '\0')
-      return(FALSE);
-
-    wsprintf(szVariable, "Software\\Netscape\\Netscape 6\\%s", szBuf);
-  }
-  else if(lstrcmpi(szVariable, "Netscape Netbusiness Messenger CurrentVersion") == 0)
-  {
-    /* parse for the current Netscape WinReg key */
-    GetWinReg(HKEY_LOCAL_MACHINE, "Software\\Netscape\\Netscape Netbusiness Messenger", "CurrentVersion", szBuf, sizeof(szBuf));
-
-    if(*szBuf == '\0')
-      return(FALSE);
-
-    wsprintf(szVariable, "Software\\Netscape\\Netscape Netbusiness Messenger\\%s", szBuf);
-  }
-  else if(lstrcmpi(szVariable, "Mozilla Seamonkey CurrentVersion") == 0)
-  {
-    /* parse for the current Mozilla WinReg key */
-    GetWinReg(HKEY_LOCAL_MACHINE, "Software\\Mozilla\\Mozilla Seamonkey", "CurrentVersion", szBuf, sizeof(szBuf));
-
-    if(*szBuf == '\0')
-      return(FALSE);
-
-    wsprintf(szVariable, "Software\\Mozilla\\Mozilla Seamonkey\\%s", szBuf);
+    wsprintf(szVariable, "Software\\%s\\%s\\%s", sgProduct.szCompanyName, sgProduct.szProductName, szBuf);
   }
   else
     return(FALSE);

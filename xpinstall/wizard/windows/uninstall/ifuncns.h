@@ -34,5 +34,6 @@ HRESULT     FileDelete(LPSTR szDestination);
 HRESULT     DirectoryRemove(LPSTR szDestination, BOOL bRemoveSubdirs);
 HRESULT     CreateDirectoriesAll(char* szPath);
 HKEY        ParseRootKey(LPSTR szRootKey);
+LPSTR       GetStringRootKey(HKEY hkRootKey, LPSTR szString, DWORD dwStringSize);
 
 #endif

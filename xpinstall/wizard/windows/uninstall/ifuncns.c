@@ -273,3 +273,59 @@ HKEY ParseRootKey(LPSTR szRootKey)
 
   return(hkRootKey);
 }
+
+LPSTR GetStringRootKey(HKEY hkRootKey, LPSTR szString, DWORD dwStringSize)
+{
+  if(hkRootKey == HKEY_CURRENT_CONFIG)
+  {
+    if(sizeof("HKEY_CURRENT_CONFIG") <= dwStringSize)
+      lstrcpy(szString, "HKEY_CURRENT_CONFIG");
+    else
+      return(NULL);
+  }
+  else if(hkRootKey == HKEY_CURRENT_USER)
+  {
+    if(sizeof("HKEY_CURRENT_USER") <= dwStringSize)
+      lstrcpy(szString, "HKEY_CURRENT_USER");
+    else
+      return(NULL);
+  }
+  else if(hkRootKey == HKEY_LOCAL_MACHINE)
+  {
+    if(sizeof("HKEY_LOCAL_MACHINE") <= dwStringSize)
+      lstrcpy(szString, "HKEY_LOCAL_MACHINE");
+    else
+      return(NULL);
+  }
+  else if(hkRootKey == HKEY_USERS)
+  {
+    if(sizeof("HKEY_USERS") <= dwStringSize)
+      lstrcpy(szString, "HKEY_USERS");
+    else
+      return(NULL);
+  }
+  else if(hkRootKey == HKEY_PERFORMANCE_DATA)
+  {
+    if(sizeof("HKEY_PERFORMANCE_DATA") <= dwStringSize)
+      lstrcpy(szString, "HKEY_PERFORMANCE_DATA");
+    else
+      return(NULL);
+  }
+  else if(hkRootKey == HKEY_DYN_DATA)
+  {
+    if(sizeof("HKEY_DYN_DATA") <= dwStringSize)
+      lstrcpy(szString, "HKEY_DYN_DATA");
+    else
+      return(NULL);
+  }
+  else
+  {
+    if(sizeof("HKEY_CLASSES_ROOT") <= dwStringSize)
+      lstrcpy(szString, "HKEY_CLASSES_ROOT");
+    else
+      return(NULL);
+  }
+
+  return(szString);
+}
+

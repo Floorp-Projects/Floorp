@@ -698,6 +698,8 @@ HRESULT InitUninstallGeneral()
     return(1);
   if((ugUninstall.szLogFilename             = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
+  if((ugUninstall.szCompanyName             = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
   if((ugUninstall.szProductName             = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
   if((ugUninstall.szWrKey                   = NS_GlobalAlloc(MAX_BUF)) == NULL)
@@ -725,6 +727,7 @@ void DeInitUninstallGeneral()
   FreeMemory(&(ugUninstall.szUninstallFilename));
   FreeMemory(&(ugUninstall.szUserAgent));
   FreeMemory(&(ugUninstall.szWrKey));
+  FreeMemory(&(ugUninstall.szCompanyName));
   FreeMemory(&(ugUninstall.szProductName));
   FreeMemory(&(ugUninstall.szWrMainKey));
 }
@@ -1073,24 +1076,26 @@ HRESULT GetUninstallLogPath()
   char szWindowsUninstallKey[MAX_BUF];
   char szErrorMsg[MAX_BUF];
   char szEUninstallLogFolder[MAX_BUF];
+  char szRootKey[MAX_BUF];
+  HKEY hkRoot;
 
   if(*ugUninstall.szUserAgent != '\0')
   {
+    hkRoot = ugUninstall.hWrMainRoot;
     lstrcpy(szKey, ugUninstall.szWrMainKey);
     AppendBackSlash(szKey, sizeof(szKey));
     lstrcat(szKey, ugUninstall.szUserAgent);
     AppendBackSlash(szKey, sizeof(szKey));
     lstrcat(szKey, "Uninstall");
-
-    GetWinReg(ugUninstall.hWrMainRoot, szKey, "Uninstall Log Folder",   szLogFolder, sizeof(szLogFolder));
-    GetWinReg(ugUninstall.hWrMainRoot, szKey, "Description",            ugUninstall.szUninstallKeyDescription, sizeof(szLogFolder));
   }
   else
   {
-    GetWinReg(ugUninstall.hWrRoot, ugUninstall.szWrKey, "Uninstall Log Folder", szLogFolder, sizeof(szLogFolder));
-    GetWinReg(ugUninstall.hWrRoot, ugUninstall.szWrKey, "Description",          ugUninstall.szUninstallKeyDescription, sizeof(szLogFolder));
+    hkRoot = ugUninstall.hWrRoot;
+    strcpy(szKey, ugUninstall.szWrKey);
   }
 
+  GetWinReg(hkRoot, szKey, "Uninstall Log Folder",   szLogFolder, sizeof(szLogFolder));
+  GetWinReg(hkRoot, szKey, "Description",            ugUninstall.szUninstallKeyDescription, sizeof(szLogFolder));
   lstrcpy(szWindowsUninstallKey, "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\");
   lstrcat(szWindowsUninstallKey, ugUninstall.szUninstallKeyDescription);
   GetWinReg(HKEY_LOCAL_MACHINE, szWindowsUninstallKey, "DisplayName", ugUninstall.szDescription, sizeof(szLogFolder));
@@ -1100,7 +1105,18 @@ HRESULT GetUninstallLogPath()
     if(NS_LoadString(hInst, IDS_ERROR_UNINSTALL_LOG_FOLDER, szEUninstallLogFolder, MAX_BUF) == WIZ_OK)
     {
       lstrcpy(szBuf, "\n\n    ");
-      lstrcat(szBuf, szLogFolder);
+
+      if(*szLogFolder == '\0')
+      {
+        GetStringRootKey(hkRoot, szRootKey, sizeof(szRootKey));
+        lstrcat(szBuf, szRootKey);
+        lstrcat(szBuf, "\\");
+        lstrcat(szBuf, szKey);
+        lstrcat(szBuf, "\\Uninstall Log Folder");
+      }
+      else
+        lstrcat(szBuf, szLogFolder);
+
       lstrcat(szBuf, "\n");
       wsprintf(szErrorMsg, szEUninstallLogFolder, szBuf);
       PrintError(szErrorMsg, ERROR_CODE_SHOW);
@@ -1134,6 +1150,7 @@ HRESULT ParseUninstallIni(LPSTR lpszCmdLine)
   ParseCommandLine(lpszCmdLine);
 
   /* get product name description */
+  GetPrivateProfileString("General", "Company Name", "", ugUninstall.szCompanyName, MAX_BUF, szFileIniUninstall);
   GetPrivateProfileString("General", "Product Name", "", ugUninstall.szProductName, MAX_BUF, szFileIniUninstall);
   GetPrivateProfileString("General", "Root Key",     "", szBuf, MAX_BUF, szFileIniUninstall);
   ugUninstall.hWrRoot = ParseRootKey(szBuf);
@@ -1144,6 +1161,9 @@ HRESULT ParseUninstallIni(LPSTR lpszCmdLine)
   {
     DecryptString(ugUninstall.szWrKey, szKeyCrypted);
   }
+  else
+    strcpy(ugUninstall.szWrKey, szKeyCrypted);
+
   RemoveBackSlash(ugUninstall.szWrKey);
 
   GetPrivateProfileString("General", "Main Root Key",    "", szBuf, MAX_BUF, szFileIniUninstall);
@@ -1155,6 +1175,9 @@ HRESULT ParseUninstallIni(LPSTR lpszCmdLine)
   {
     DecryptString(ugUninstall.szWrMainKey, szKeyCrypted);
   }
+  else
+    strcpy(ugUninstall.szWrMainKey, szKeyCrypted);
+
   RemoveBackSlash(ugUninstall.szWrMainKey);
 
   GetPrivateProfileString("General", "Uninstall Filename", "", ugUninstall.szUninstallFilename, MAX_BUF, szFileIniUninstall);
@@ -1480,57 +1503,33 @@ HRESULT DecryptVariable(LPSTR szVariable, DWORD dwVariableSize)
   {
     lstrcpy(szVariable, szUninstallDir);
   }
-  else if(lstrcmpi(szVariable, "Netscape Seamonkey CurrentVersion") == 0)
+  else if(lstrcmpi(szVariable, "Product CurrentVersion") == 0)
   {
+    char szKey[MAX_BUF];
+
+    lstrcpy(szKey, "Software\\");
+    lstrcat(szKey, ugUninstall.szCompanyName);
+    lstrcat(szKey, "\\");
+    lstrcat(szKey, ugUninstall.szProductName);
+
     /* parse for the current Netscape WinReg key */
-    GetWinReg(HKEY_LOCAL_MACHINE, "Software\\Netscape\\Netscape Seamonkey", "CurrentVersion", szBuf, sizeof(szBuf));
+    GetWinReg(HKEY_LOCAL_MACHINE, szKey, "CurrentVersion", szBuf, sizeof(szBuf));
 
     if(*szBuf == '\0')
       return(FALSE);
 
-    wsprintf(szVariable, "Software\\Netscape\\Netscape Seamonkey\\%s", szBuf);
+    wsprintf(szVariable, "Software\\%s\\%s\\%s", ugUninstall.szCompanyName, ugUninstall.szProductName, szBuf);
   }
-  else if(lstrcmpi(szVariable, "WinRegKey Netscape 6") == 0)
+  else if(lstrcmpi(szVariable, "Product WinRegKey") == 0)
   {
-    lstrcpy(szVariable, "Software\\Netscape\\Netscape 6");
-  }
-  else if(lstrcmpi(szVariable, "Netscape 6 CurrentVersion") == 0)
-  {
-    /* parse for the current Netscape WinReg key */
-    GetWinReg(HKEY_LOCAL_MACHINE, "Software\\Netscape\\Netscape 6", "CurrentVersion", szBuf, sizeof(szBuf));
+    char szKey[MAX_BUF];
 
-    if(*szBuf == '\0')
-      return(FALSE);
+    lstrcpy(szKey, "Software\\");
+    lstrcat(szKey, ugUninstall.szCompanyName);
+    lstrcat(szKey, "\\");
+    lstrcat(szKey, ugUninstall.szProductName);
 
-    wsprintf(szVariable, "Software\\Netscape\\Netscape 6\\%s", szBuf);
-  }
-  else if(lstrcmpi(szVariable, "WinRegKey Netscape Netbusiness Messenger") == 0)
-  {
-    lstrcpy(szVariable, "Software\\Netscape\\Netscape Netbusiness Messenger");
-  }
-  else if(lstrcmpi(szVariable, "Netscape Netbusiness Messenger CurrentVersion") == 0)
-  {
-    /* parse for the current Netscape WinReg key */
-    GetWinReg(HKEY_LOCAL_MACHINE, "Software\\Netscape\\Netscape Netbusiness Messenger", "CurrentVersion", szBuf, sizeof(szBuf));
-
-    if(*szBuf == '\0')
-      return(FALSE);
-
-    wsprintf(szVariable, "Software\\Netscape\\Netscape Netbusiness Messenger\\%s", szBuf);
-  }
-  else if(lstrcmpi(szVariable, "WinRegKey Mozilla Seamonkey") == 0)
-  {
-    lstrcpy(szVariable, "Software\\Mozilla\\Mozilla Seamonkey");
-  }
-  else if(lstrcmpi(szVariable, "Mozilla Seamonkey CurrentVersion") == 0)
-  {
-    /* parse for the current Mozilla WinReg key */
-    GetWinReg(HKEY_LOCAL_MACHINE, "Software\\Mozilla\\Mozilla Seamonkey", "CurrentVersion", szBuf, sizeof(szBuf));
-
-    if(*szBuf == '\0')
-      return(FALSE);
-
-    wsprintf(szVariable, "Software\\Mozilla\\Mozilla Seamonkey\\%s", szBuf);
+    wsprintf(szVariable, "Software\\%s\\%s", ugUninstall.szCompanyName, ugUninstall.szProductName);
   }
   else
     return(FALSE);
