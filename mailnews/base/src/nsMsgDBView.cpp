@@ -1774,7 +1774,7 @@ NS_IMETHODIMP nsMsgDBView::GetURIsForSelection(char ***uris, PRUint32 *length)
   for (PRUint32 i=0;i<numIndicies;i++) 
   {
     nsMsgViewIndex selectedIndex = selection.GetAt(i);
-    if (!folder)
+    if (!m_folder) // must be a cross folder view, like search results
       GetFolderForViewIndex(selectedIndex, getter_AddRefs(folder));
     rv = GenerateURIForMsgKey(m_keys[selectedIndex], folder, next);
     NS_ENSURE_SUCCESS(rv,rv);

@@ -1144,31 +1144,48 @@ NS_IMETHODIMP nsMessenger::DeleteFolders(nsIRDFCompositeDataSource *db,
 }
 
 NS_IMETHODIMP
-nsMessenger::CopyMessages(nsIMsgFolder *srcFolder, nsIMsgFolder *destFolder,
-                          nsISupportsArray *messageArray,
+nsMessenger::CopyMessages(nsIRDFCompositeDataSource *database,
+                          nsIRDFResource *srcResource, // folder
+						              nsIRDFResource *dstResource,
+                          nsISupportsArray *argumentArray, // nsIMessages
                           PRBool isMove)
 {
 	nsresult rv;
-    NS_ENSURE_ARG_POINTER(srcFolder);
-    NS_ENSURE_ARG_POINTER(destFolder);
-    NS_ENSURE_ARG_POINTER(messageArray);
 
-    rv = destFolder->CopyMessages(srcFolder, messageArray, isMove, mMsgWindow /* nsIMsgWindow */, nsnull /* listener */, PR_FALSE /* isFolder */, PR_TRUE /*allowUndo*/ );
-    NS_ENSURE_SUCCESS(rv,rv);
-    return rv;
+  NS_ENSURE_ARG_POINTER(srcResource);
+  NS_ENSURE_ARG_POINTER(dstResource);
+  NS_ENSURE_ARG_POINTER(argumentArray);
+	
+  nsCOMPtr<nsIMsgFolder> srcFolder;
+  nsCOMPtr<nsISupportsArray> folderArray;
+    
+  srcFolder = do_QueryInterface(srcResource);
+  if(!srcFolder)
+    return NS_ERROR_NO_INTERFACE;
+  
+  nsCOMPtr<nsISupports> srcFolderSupports(do_QueryInterface(srcFolder));
+  if(srcFolderSupports)
+    argumentArray->InsertElementAt(srcFolderSupports, 0);
+
+  rv = NS_NewISupportsArray(getter_AddRefs(folderArray));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  folderArray->AppendElement(dstResource);
+  rv = DoCommand(database, isMove ? (char *)NC_RDF_MOVE : (char *)NC_RDF_COPY, folderArray, argumentArray);
+  return rv;
+
 }
-
 
 NS_IMETHODIMP
 nsMessenger::MessageServiceFromURI(const char *uri, nsIMsgMessageService **msgService)
 {
-    nsresult rv;
-    NS_ENSURE_ARG_POINTER(uri);
-    NS_ENSURE_ARG_POINTER(msgService);
-
-    rv = GetMessageServiceFromURI(uri, msgService);
-    NS_ENSURE_SUCCESS(rv,rv);
-    return rv;
+   nsresult rv;
+   NS_ENSURE_ARG_POINTER(uri);
+   NS_ENSURE_ARG_POINTER(msgService);
+ 
+   rv = GetMessageServiceFromURI(uri, msgService);
+   NS_ENSURE_SUCCESS(rv,rv);
+   return rv;
 }
 
 NS_IMETHODIMP
@@ -1491,19 +1508,19 @@ nsMessenger::SendUnsentMessages(nsIMsgIdentity *aIdentity, nsIMsgWindow *aMsgWin
         printf("We succesfully obtained a nsIMsgSendLater interface....\n"); 
 #endif
 
-      SendLaterListener *sendLaterListener = new SendLaterListener(this);
-      if (!sendLaterListener)
-          return NS_ERROR_OUT_OF_MEMORY;
+    SendLaterListener *sendLaterListener = new SendLaterListener(this);
+    if (!sendLaterListener)
+      return NS_ERROR_OUT_OF_MEMORY;
 
-      NS_ADDREF(sendLaterListener);
-      pMsgSendLater->AddListener(sendLaterListener);
-      pMsgSendLater->SetMsgWindow(aMsgWindow);
-      mSendingUnsentMsgs = PR_TRUE;
-
-      pMsgSendLater->SendUnsentMessages(aIdentity); 
-      NS_RELEASE(sendLaterListener);
-    } 
-    return NS_OK;
+    NS_ADDREF(sendLaterListener);
+    pMsgSendLater->AddListener(sendLaterListener);
+    pMsgSendLater->SetMsgWindow(aMsgWindow);
+    mSendingUnsentMsgs = PR_TRUE;
+ 
+    pMsgSendLater->SendUnsentMessages(aIdentity); 
+    NS_RELEASE(sendLaterListener);
+	} 
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsMessenger::DoPrint()

@@ -409,7 +409,7 @@ protected:
                          nsIMsgCopyServiceListener* listener,
                          nsIMsgWindow *msgWindow,
                          PRBool allowUndo);
-  void ClearCopyState(nsresult exitCode);
+  void OnCopyCompleted(nsresult exitCode);
   nsresult BuildIdsAndKeyArray(nsISupportsArray* messages,
                                nsCString& msgIds, nsMsgKeyArray& keyArray);
 

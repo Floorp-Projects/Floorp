@@ -167,9 +167,21 @@ nsMsgSearchDBView::OnSearchHit(nsIMsgDBHdr* aMsgHdr, nsIMsgFolder *folder)
 {
   NS_ENSURE_ARG(aMsgHdr);
   NS_ENSURE_ARG(folder);
-  nsresult rv = NS_OK;
 
   nsCOMPtr <nsISupports> supports = do_QueryInterface(folder);
+  if (m_folders->IndexOf(supports) < 0 ) //do this just for new folder
+  {
+    nsCOMPtr<nsIMsgDatabase> dbToUse;
+    nsCOMPtr<nsIDBFolderInfo> folderInfo;
+    folder->GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(dbToUse));
+    if (dbToUse)
+    {
+      dbToUse->AddListener(this);
+      nsCOMPtr <nsISupports> dbSupports = do_QueryInterface(dbToUse);
+      m_dbToUseList->AppendElement(dbSupports);
+    }
+  }
+
   m_folders->AppendElement(supports);
   nsMsgKey msgKey;
   PRUint32 msgFlags;
@@ -183,7 +195,7 @@ nsMsgSearchDBView::OnSearchHit(nsIMsgDBHdr* aMsgHdr, nsIMsgFolder *folder)
   if (mTree)
     mTree->RowCountChanged(GetSize() - 1, 1);
 
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -206,6 +218,12 @@ NS_IMETHODIMP
 nsMsgSearchDBView::OnNewSearch()
 {
   PRInt32 oldSize = GetSize();
+
+  PRUint32 count=0;
+  m_dbToUseList->Count(&count);
+  for(PRUint32 j = 0; j < count; j++)
+    ((nsIMsgDatabase*)m_dbToUseList->ElementAt(j))->RemoveListener(this);
+  m_dbToUseList->Clear();
 
   m_folders->Clear();
   m_keys.RemoveAll();
@@ -286,13 +304,13 @@ nsMsgSearchDBView::InitializeGlobalsForDeleteAndFile(nsMsgViewIndex *indices, PR
   nsresult rv = NS_OK; 
   mCurIndex = 0;
                     //initialize and clear from the last usage
-  if (!m_uniqueFolders)
+  if (!m_uniqueFoldersSelected)
   {
-    m_uniqueFolders = do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, &rv);
+    m_uniqueFoldersSelected = do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv); 
   }
   else
-    m_uniqueFolders->Clear();
+    m_uniqueFoldersSelected->Clear();
   
   if (!m_hdrsForEachFolder)
   {
@@ -302,41 +320,20 @@ nsMsgSearchDBView::InitializeGlobalsForDeleteAndFile(nsMsgViewIndex *indices, PR
   else
     m_hdrsForEachFolder->Clear();
 
-  PRUint32 count=0;
-  rv = m_dbToUseList->Count(&count);
-  NS_ENSURE_SUCCESS(rv,rv);
-  for(PRUint32 j = 0; j < count; j++)
-    ((nsIMsgDatabase*)m_dbToUseList->ElementAt(j))->RemoveListener(this);
-  m_dbToUseList->Clear();
-
   //Build unique folder list based on headers selected by the user
   for (nsMsgViewIndex i = 0; i < (nsMsgViewIndex) numIndices; i++)
   {
      nsCOMPtr <nsISupports> curSupports = getter_AddRefs(m_folders->ElementAt(indices[i]));
-     if ( m_uniqueFolders->IndexOf(curSupports) < 0)
-     {
-        m_uniqueFolders->AppendElement(curSupports); 
-        nsCOMPtr<nsIMsgFolder> curFolder = do_QueryInterface(curSupports);
-        nsCOMPtr <nsIMsgDatabase> dbToUse;
-        if (curFolder)
-        {
-           nsCOMPtr <nsIDBFolderInfo> folderInfo;
-           rv = curFolder->GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(dbToUse));
-           NS_ENSURE_SUCCESS(rv,rv);
-           dbToUse->AddListener(this);
-
-           nsCOMPtr <nsISupports> tmpSupports = do_QueryInterface(dbToUse);
-           m_dbToUseList->AppendElement(tmpSupports);
-        }
-     }
+     if ( m_uniqueFoldersSelected->IndexOf(curSupports) < 0)
+       m_uniqueFoldersSelected->AppendElement(curSupports); 
   }
 
   PRUint32 numFolders =0; 
-  rv = m_uniqueFolders->Count(&numFolders);   //group the headers selected by each folder 
+  rv = m_uniqueFoldersSelected->Count(&numFolders);   //group the headers selected by each folder 
   NS_ENSURE_SUCCESS(rv,rv);
   for (PRUint32 folderIndex=0; folderIndex < numFolders; folderIndex++)
   {
-     nsCOMPtr <nsISupports> curSupports = getter_AddRefs(m_uniqueFolders->ElementAt(folderIndex));
+     nsCOMPtr <nsISupports> curSupports = getter_AddRefs(m_uniqueFoldersSelected->ElementAt(folderIndex));
      nsCOMPtr <nsIMsgFolder> curFolder = do_QueryInterface(curSupports, &rv);
      nsCOMPtr <nsISupportsArray> msgHdrsForOneFolder;
      NS_NewISupportsArray(getter_AddRefs(msgHdrsForOneFolder));
@@ -398,7 +395,7 @@ nsMsgSearchDBView::OnStopCopy(nsresult aStatus)
     {
         mCurIndex++;
         PRUint32 numFolders =0;
-        rv = m_uniqueFolders->Count(&numFolders);
+        rv = m_uniqueFoldersSelected->Count(&numFolders);
         if ( mCurIndex < numFolders)
           ProcessRequestsInOneFolder(mMsgWindow);
     }
@@ -412,7 +409,7 @@ nsresult nsMsgSearchDBView::ProcessRequestsInOneFolder(nsIMsgWindow *window)
 {
     nsresult rv = NS_OK;
 
-    nsCOMPtr <nsISupports> curSupports = getter_AddRefs(m_uniqueFolders->ElementAt(mCurIndex));
+    nsCOMPtr <nsISupports> curSupports = getter_AddRefs(m_uniqueFoldersSelected->ElementAt(mCurIndex));
     NS_ASSERTION(curSupports, "curSupports is null");
     nsCOMPtr<nsIMsgFolder> curFolder = do_QueryInterface(curSupports);
     nsCOMPtr <nsISupports> msgSupports = getter_AddRefs(m_hdrsForEachFolder->ElementAt(mCurIndex));
@@ -427,10 +424,14 @@ nsresult nsMsgSearchDBView::ProcessRequestsInOneFolder(nsIMsgWindow *window)
       NS_ASSERTION(!(curFolder == mDestFolder), "The source folder and the destination folder are the same");
       if (NS_SUCCEEDED(rv) && curFolder != mDestFolder)
       {
-         if (mCommand == nsMsgViewCommandType::moveMessages)
-           mDestFolder->CopyMessages(curFolder, messageArray, PR_TRUE /* isMove */,window, this, PR_FALSE /*is_Folder*/, PR_FALSE /*allowUndo*/);
-         else if (mCommand == nsMsgViewCommandType::copyMessages)
-           mDestFolder->CopyMessages(curFolder, messageArray, PR_FALSE /* isMove */, window, this, PR_FALSE /*is_Folder*/, PR_FALSE /*allowUndo*/);
+         nsCOMPtr<nsIMsgCopyService> copyService = do_GetService(NS_MSGCOPYSERVICE_CONTRACTID, &rv);
+         if (NS_SUCCEEDED(rv))
+         {
+           if (mCommand == nsMsgViewCommandType::moveMessages)
+             copyService->CopyMessages(curFolder, messageArray, mDestFolder, PR_TRUE /* isMove */, this, window, PR_FALSE /*allowUndo*/);
+           else if (mCommand == nsMsgViewCommandType::copyMessages)
+             copyService->CopyMessages(curFolder, messageArray, mDestFolder, PR_FALSE /* isMove */, this, window, PR_FALSE /*allowUndo*/);
+         }
       }
     }
     return rv;
@@ -439,11 +440,11 @@ nsresult nsMsgSearchDBView::ProcessRequestsInOneFolder(nsIMsgWindow *window)
 nsresult nsMsgSearchDBView::ProcessRequestsInAllFolders(nsIMsgWindow *window)
 {
     PRUint32 numFolders =0;
-    nsresult rv = m_uniqueFolders->Count(&numFolders);
+    nsresult rv = m_uniqueFoldersSelected->Count(&numFolders);
     NS_ENSURE_SUCCESS(rv,rv);
     for (PRUint32 folderIndex=0; folderIndex < numFolders; folderIndex++)
     {
-       nsCOMPtr <nsISupports> curSupports = getter_AddRefs(m_uniqueFolders->ElementAt(folderIndex));
+       nsCOMPtr <nsISupports> curSupports = getter_AddRefs(m_uniqueFoldersSelected->ElementAt(folderIndex));
        NS_ASSERTION (curSupports, "curSupports is null");
        nsCOMPtr<nsIMsgFolder> curFolder = do_QueryInterface(curSupports);
 

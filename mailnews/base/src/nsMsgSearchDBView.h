@@ -78,7 +78,7 @@ protected:
   nsCOMPtr <nsISupportsArray> m_folders; // maybe we should store ranges, or the actual headers instead.
   nsCOMPtr <nsISupportsArray> m_hdrsForEachFolder;
   nsCOMPtr <nsISupportsArray> m_copyListenerList;
-  nsCOMPtr <nsISupportsArray> m_uniqueFolders;
+  nsCOMPtr <nsISupportsArray> m_uniqueFoldersSelected;
   PRInt32 mCurIndex;
 
   nsMsgViewIndex* mIndicesForChainedDeleteAndFile;

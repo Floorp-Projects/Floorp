@@ -316,9 +316,11 @@ nsMsgCopy::DoCopy(nsIFileSpec *aDiskFile, nsIMsgFolder *dstFolder,
     // ** make sure we have a valid copy listener while waiting for copy
     // server to finish
     nsCOMPtr<CopyListener> aCopyListener = do_QueryInterface(tPtr);
+    nsCOMPtr<nsIMsgCopyService> copyService = do_GetService(NS_MSGCOPYSERVICE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = dstFolder->CopyFileMessage(aDiskFile, aMsgToReplace,
-                                      aIsDraft, msgWindow, mCopyListener);
+    rv = copyService->CopyFileMessage(aDiskFile, dstFolder, aMsgToReplace, 
+                                      aIsDraft, mCopyListener, msgWindow);
     // aCopyListener->mCopyInProgress can only be set when we are in the
     // middle of the shutdown process
     while (aCopyListener->mCopyInProgress)

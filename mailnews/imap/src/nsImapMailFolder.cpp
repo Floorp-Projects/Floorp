@@ -4235,13 +4235,11 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
 {
   NS_PRECONDITION(aUrl, "just a sanity check since this is a test program");
   nsresult rv = NS_OK;
-  PRBool sendEndCopyNotification = PR_FALSE;
 
   m_urlRunning = PR_FALSE;
   m_downloadingFolderForOfflineUse = PR_FALSE;
   nsCOMPtr<nsIMsgMailSession> session = 
-           do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv); 
-  nsCOMPtr <nsIMsgCopyServiceListener> listener;
+           do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv);
   if (aUrl)
   {
     nsCOMPtr<nsIMsgWindow> msgWindow;
@@ -4329,10 +4327,7 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
               if (txnMgr)
                 txnMgr->DoTransaction(m_copyState->m_undoMsgTxn);
             }
-            if (m_copyState->m_listener)
-              listener = do_QueryInterface(m_copyState->m_listener);
-            ClearCopyState(aExitCode);
-            sendEndCopyNotification = PR_TRUE;
+            OnCopyCompleted(aExitCode);
           }
           // we're the dest folder of a move/copy - if we're not open in the ui,
           // then we should clear our nsMsgDatabase pointer. Otherwise, the db would
@@ -4417,20 +4412,12 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
                     if (txnMgr)
                       txnMgr->DoTransaction(m_copyState->m_undoMsgTxn);
                   }
-                  if (m_copyState->m_listener)
-                    listener = do_QueryInterface(m_copyState->m_listener);
-                  ClearCopyState(aExitCode);
-                  sendEndCopyNotification = PR_TRUE;
+                  OnCopyCompleted(aExitCode);
                 }
               }
               else
-              {  //clear the copyState if copy has failed
-
-                if (m_copyState->m_listener)
-                  listener = do_QueryInterface(m_copyState->m_listener);
-                ClearCopyState(aExitCode);
-                sendEndCopyNotification = PR_TRUE;
-              }              
+                //clear the copyState if copy has failed
+                OnCopyCompleted(aExitCode);              
             }
             break;
         case nsIImapUrl::nsImapRenameFolder:
@@ -4516,11 +4503,6 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
   }
   SetGettingNewMessages(PR_FALSE); // if we're not running a url, we must not be getting new mail :-)
 
-  // Only send the OnStopCopy notification if we have no copy state (which means we're doing an online
-  // move/copy, and have cleared the copy state above) or if we've finished the move/copy
-  // of multiple imap messages, one msg at a time (i.e., moving to a local folder).
-  if (listener && sendEndCopyNotification)
-    listener->OnStopCopy(aExitCode);
   if (m_urlListener)
   {
     m_urlListener->OnStopRunningUrl(aUrl, aExitCode);
@@ -5702,7 +5684,7 @@ nsImapMailFolder::CopyMessagesWithStream(nsIMsgFolder* srcFolder,
       if (NS_SUCCEEDED(rv))
         CopyStreamMessage(aMessage, this, msgWindow, isMove);
       else
-        ClearCopyState(rv);
+        OnCopyCompleted(rv);
     }
     else
     {
@@ -6240,7 +6222,7 @@ nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
     else 
     {
       NS_ASSERTION(PR_FALSE, "online copy failed");
-      ClearCopyState(rv);
+      OnCopyCompleted(rv);
     }
 
 done:
@@ -6344,7 +6326,7 @@ nsImapMailFolder::CopyFileMessage(nsIFileSpec* fileSpec,
                                             copySupport,
                                             msgWindow);
     if (NS_FAILED(rv))
-      ClearCopyState(rv);
+      OnCopyCompleted(rv);
 
     return rv;
 }
@@ -6477,7 +6459,7 @@ nsImapMailFolder::InitCopyState(nsISupports* srcSupport,
 }
 
 void
-nsImapMailFolder::ClearCopyState(nsresult rv)
+nsImapMailFolder::OnCopyCompleted(nsresult rv)
 {
     if (m_copyState)
     {

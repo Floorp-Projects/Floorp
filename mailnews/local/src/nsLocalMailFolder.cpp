@@ -1678,17 +1678,21 @@ nsMsgLocalMailFolder::InitCopyState(nsISupports* aSupport,
 done:
 
   if (NS_FAILED(rv))
-    ClearCopyState(PR_FALSE);
+    OnCopyCompleted(PR_FALSE);
 
   return rv;
 }
 
 void
-nsMsgLocalMailFolder::ClearCopyState(PRBool moveCopySucceeded)
+nsMsgLocalMailFolder::OnCopyCompleted(PRBool moveCopySucceeded)
 {
+  nsCOMPtr<nsISupports> srcSupport;
   if (mCopyState)
+  {
+    srcSupport = mCopyState->m_srcSupport;
     delete mCopyState;
-  mCopyState = nsnull;
+    mCopyState = nsnull;
+  }
    
   // we are the destination folder for a move/copy
   if (moveCopySucceeded && mDatabase)
@@ -1713,6 +1717,12 @@ nsMsgLocalMailFolder::ClearCopyState(PRBool moveCopySucceeded)
     &haveSemaphore);
   if(NS_SUCCEEDED(result) && haveSemaphore)
     ReleaseSemaphore(NS_STATIC_CAST(nsIMsgLocalMailFolder*, this));
+
+  nsCOMPtr<nsIMsgCopyService> copyService = 
+     do_GetService(NS_MSGCOPYSERVICE_CONTRACTID, &result);
+
+  if (NS_SUCCEEDED(result))  //copyService will do listener->OnStopCopy()
+    copyService->NotifyCompletion(srcSupport, this, moveCopySucceeded ? NS_OK : NS_ERROR_FAILURE); 
 }
 
 nsresult 
@@ -1827,7 +1837,7 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
     
     if (NS_FAILED(rv))
     {
-      ClearCopyState(PR_FALSE);
+      OnCopyCompleted(PR_FALSE);
     }
     else
     {
@@ -1862,7 +1872,7 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
       if (NS_FAILED(rv))
       {
         NS_ASSERTION(PR_FALSE, "copy message failed");
-        ClearCopyState(PR_FALSE);
+        OnCopyCompleted(PR_FALSE);
       }
     }
   }
@@ -2174,7 +2184,7 @@ nsMsgLocalMailFolder::CopyFileMessage(nsIFileSpec* fileSpec, nsIMsgDBHdr*
 done:
   if(NS_FAILED(rv))
   {
-    ClearCopyState(PR_FALSE);
+    OnCopyCompleted(PR_FALSE);
   }
 
   fileSpec->CloseStream();
@@ -2482,7 +2492,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
       hdrs in place. The message that has failed has been truncated so the msf file and berkeley mailbox
       are in sync*/
 
-      ClearCopyState(PR_TRUE);
+      OnCopyCompleted(PR_TRUE);
 
       // enable the dest folder
       EnableNotifications(allMessageCountNotifications, PR_TRUE, PR_FALSE /*dbBatching*/); //dest folder doesn't need db batching
@@ -2609,9 +2619,6 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
         if (mCopyState->m_isFolder)
           DoNextSubFolder(srcFolder, nsnull, nsnull);  //Copy all subfolders then notify completion
         
-        nsCOMPtr<nsIMsgCopyService> copyService = 
-                 do_GetService(kMsgCopyServiceCID, &result);
-        
         if (mCopyState->m_msgWindow && mCopyState->m_undoMsgTxn)
         {
           nsCOMPtr<nsITransactionManager> txnMgr;
@@ -2622,20 +2629,8 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
         if (srcFolder && !mCopyState->m_isFolder)
           srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);	 
         
-        nsCOMPtr<nsISupports> srcSupport = do_QueryInterface(mCopyState->m_srcSupport);
-        nsCOMPtr<nsIMsgCopyServiceListener> listener =do_QueryInterface(mCopyState->m_listener);
-        
-        if (!mCopyState->m_copyingMultipleMessages || multipleCopiesFinished)
-          ClearCopyState(PR_TRUE);
-
-        if (listener) //notify after clearing the copy state;
-          listener->OnStopCopy(NS_OK);
-        // OnStopCopy() should be called only once (listener is null when drag and drop msgs).
-        else if (NS_SUCCEEDED(result))
-          copyService->NotifyCompletion(srcSupport, this, rv);
-        
-      }
-      
+        OnCopyCompleted(PR_TRUE);
+      }      
       // enable the dest folder
       EnableNotifications(allMessageCountNotifications, PR_TRUE, PR_FALSE /*dbBatching*/); //dest folder doesn't need db batching
     }
@@ -2659,7 +2654,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndMove(PRBool moveSucceeded)
     hdrs in place. The message that has failed has been truncated so the msf file and berkeley mailbox
     are in sync*/
 
-    ClearCopyState(PR_TRUE);
+    OnCopyCompleted(PR_TRUE);
 
     // enable the dest folder
     EnableNotifications(allMessageCountNotifications, PR_TRUE, PR_FALSE /*dbBatching*/ );  //dest folder doesn't need db batching
@@ -2670,40 +2665,28 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndMove(PRBool moveSucceeded)
   if (mCopyState && mCopyState->m_curCopyIndex >= mCopyState->m_totalMsgCount)
   {
     
-    nsCOMPtr <nsIMsgCopyService> copyService = do_GetService(NS_MSGCOPYSERVICE_CONTRACTID, &result); 
-    if (copyService && NS_SUCCEEDED(result))
+    //Notify that a completion finished.
+    nsCOMPtr<nsIMsgFolder> srcFolder = do_QueryInterface(mCopyState->m_srcSupport);
+    if(srcFolder)
     {
-      //Notify that a completion finished.
-      nsCOMPtr<nsIMsgFolder> srcFolder = do_QueryInterface(mCopyState->m_srcSupport);
-      if(srcFolder)
-      {
-        // lets delete these all at once - much faster that way
-        result = srcFolder->DeleteMessages(mCopyState->m_messages, nsnull, PR_TRUE, PR_TRUE, nsnull, mCopyState->m_allowUndo);
-        srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
-      }
-      
-      // enable the dest folder
-      EnableNotifications(allMessageCountNotifications, PR_TRUE, PR_FALSE /*dbBatching*/); //dest folder doesn't need db batching
-      
-      if (mCopyState->m_msgWindow && mCopyState->m_undoMsgTxn)
-      {
-        nsCOMPtr<nsITransactionManager> txnMgr;
-        mCopyState->m_msgWindow->GetTransactionManager(getter_AddRefs(txnMgr));
-        if (txnMgr)
-          txnMgr->DoTransaction(mCopyState->m_undoMsgTxn);
-      }
-    
-      nsCOMPtr<nsISupports> srcSupport = do_QueryInterface(mCopyState->m_srcSupport);
-      nsCOMPtr<nsIMsgCopyServiceListener> listener =do_QueryInterface(mCopyState->m_listener);
-      ClearCopyState(PR_TRUE);  //clear the copy state so that the next message from a different folder can be moved
-      if (listener) //notify after clearing the copy state;
-        listener->OnStopCopy(NS_OK);
-      // ### we don't know if it succeeded
-      //passing in NS_OK because we only get in here if copy portion succeeded
-    
-      copyService->NotifyCompletion(srcSupport, this, NS_OK);
-                        
+      // lets delete these all at once - much faster that way
+      result = srcFolder->DeleteMessages(mCopyState->m_messages, nsnull, PR_TRUE, PR_TRUE, nsnull, mCopyState->m_allowUndo);
+      srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
     }
+      
+    // enable the dest folder
+    EnableNotifications(allMessageCountNotifications, PR_TRUE, PR_FALSE /*dbBatching*/); //dest folder doesn't need db batching
+      
+    if (mCopyState->m_msgWindow && mCopyState->m_undoMsgTxn)
+    {
+      nsCOMPtr<nsITransactionManager> txnMgr;
+      mCopyState->m_msgWindow->GetTransactionManager(getter_AddRefs(txnMgr));
+      if (txnMgr)
+        txnMgr->DoTransaction(mCopyState->m_undoMsgTxn);
+    }
+    
+    nsCOMPtr<nsISupports> srcSupport = do_QueryInterface(mCopyState->m_srcSupport);
+    OnCopyCompleted(PR_TRUE);  //clear the copy state so that the next message from a different folder can be move
   }
   
   return NS_OK;

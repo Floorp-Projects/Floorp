@@ -1145,7 +1145,8 @@ function GetSelectedMessages()
   try {
     var messageArray = {}; 
     var length = {};
-    gDBView.getURIsForSelection(messageArray,length);
+    var view = GetDBView();
+    view.getURIsForSelection(messageArray,length);
     return messageArray.value;
   }
   catch (ex) {

@@ -183,15 +183,12 @@ nsMsgCopyService::ClearRequest(nsCopyRequest* aRequest, nsresult rv)
 nsresult 
 nsMsgCopyService::DoCopy(nsCopyRequest* aRequest)
 {
-  nsresult rv = NS_ERROR_NULL_POINTER;
+  NS_ENSURE_ARG(aRequest);
+  m_copyRequests.AppendElement((void*) aRequest);
+  if (m_copyRequests.Count() == 1)  //if only one request, then go ahead and do the copy, otherwise the request is queued
+    return DoNextCopy();
 
-  if (aRequest)
-  {
-      m_copyRequests.AppendElement((void*) aRequest);
-      rv = DoNextCopy();
-  }
-
-  return rv;
+  return NS_OK;
 }
 
 nsresult
@@ -217,6 +214,10 @@ nsMsgCopyService::DoNextCopy()
         {
           copySource = (nsCopySource*)
               copyRequest->m_copySourceArray.ElementAt(j);
+
+          if (copySource->m_msgFolder == copyRequest->m_dstFolder)  //don't do move/copy on itself, just skip
+            copySource->m_processed = PR_TRUE;
+
           if (!copySource->m_processed) goto found;
         }
         if (j >= scnt) // all processed set the value
@@ -239,13 +240,13 @@ nsMsgCopyService::DoNextCopy()
                                                               
           }
           else if (copyRequest->m_requestType == nsCopyFoldersType )
-		  {
-			  copySource->m_processed = PR_TRUE;
+          {
+			        copySource->m_processed = PR_TRUE;
               rv = copyRequest->m_dstFolder->CopyFolder
                   (copySource->m_msgFolder,
                    copyRequest->m_isMoveOrDraftOrTemplate,
                    copyRequest->m_msgWindow, copyRequest->m_listener);
-		  }
+          }
           else if (copyRequest->m_requestType == nsCopyFileMessageType)
           {
             nsCOMPtr<nsIFileSpec> aSpec(do_QueryInterface(copyRequest->m_srcSupport, &rv));
@@ -309,47 +310,96 @@ nsMsgCopyService::CopyMessages(nsIMsgFolder* srcFolder, /* UI src folder */
                                nsIMsgWindow* window,
                                PRBool allowUndo)
 {
-    nsCopyRequest* copyRequest;
-    nsCopySource* copySource = nsnull;
-    nsresult rv = NS_ERROR_NULL_POINTER;
-    nsCOMPtr<nsISupportsArray> msgArray;
-    PRUint32 i, cnt;
-    nsCOMPtr<nsIMsgDBHdr> msg;
-    nsCOMPtr<nsIMsgFolder> curFolder;
-    nsCOMPtr<nsISupports> aSupport;
+  NS_ENSURE_ARG_POINTER(srcFolder);
+  NS_ENSURE_ARG_POINTER(messages);
+  NS_ENSURE_ARG_POINTER(dstFolder);
 
-    if (!srcFolder || !messages || !dstFolder) return rv;
+  nsCopyRequest* copyRequest;
+  nsCopySource* copySource = nsnull;
+  nsCOMPtr<nsISupportsArray> msgArray;
+  PRUint32 i, cnt;
+  nsCOMPtr<nsIMsgDBHdr> msg;
+  nsCOMPtr<nsIMsgFolder> curFolder;
+  nsCOMPtr<nsISupports> aSupport;
+  nsresult rv;
+    
+  copyRequest = new nsCopyRequest();
+  if (!copyRequest) 
+    return NS_ERROR_OUT_OF_MEMORY;
 
-    copyRequest = new nsCopyRequest();
-    if (!copyRequest) return rv;
-    aSupport = do_QueryInterface(srcFolder, &rv);
+  aSupport = do_QueryInterface(srcFolder, &rv);
 
-    rv = copyRequest->Init(nsCopyMessagesType, aSupport, dstFolder, 
-                           isMove, listener, window, allowUndo);
-    if (NS_FAILED(rv)) goto done;
+  rv = copyRequest->Init(nsCopyMessagesType, aSupport, dstFolder, 
+                         isMove, listener, window, allowUndo);
+  if (NS_FAILED(rv)) 
+    goto done;
 
-    rv = NS_NewISupportsArray(getter_AddRefs(msgArray));
-    if (NS_FAILED(rv)) goto done;
+  rv = NS_NewISupportsArray(getter_AddRefs(msgArray));
+  if (NS_FAILED(rv)) 
+    goto done;
 
-    messages->Count(&cnt);
-    copySource = copyRequest->AddNewCopySource(srcFolder);
+  messages->Count(&cnt);
 
-    for (i=0; i<cnt; i++)
+  // duplicate the message array so we could sort the messages by it's
+  // folder easily
+  for (i=0; i<cnt; i++)
+  {
+    aSupport = getter_AddRefs(messages->ElementAt(i));
+    msgArray->AppendElement(aSupport);
+  }
+
+  rv = msgArray->Count(&cnt);
+  if (NS_FAILED(rv)) 
+    goto done;
+
+  while (cnt-- > 0)
+  {
+    aSupport = getter_AddRefs(msgArray->ElementAt(cnt));
+    msg = do_QueryInterface(aSupport, &rv);
+
+    if (NS_FAILED(rv)) 
+      goto done;
+
+    rv = msg->GetFolder(getter_AddRefs(curFolder));
+
+    if (NS_FAILED(rv)) 
+      goto done;
+    if (!copySource)
     {
-      aSupport = getter_AddRefs(messages->ElementAt(i));
-      msg = do_QueryInterface(aSupport, &rv);
-      copySource->AddMessage(msg);
+      copySource = copyRequest->AddNewCopySource(curFolder);
+      if (!copySource)
+      {
+         rv = NS_ERROR_OUT_OF_MEMORY;
+         goto done;
+      }
     }
-    // undo stuff
-    if (NS_SUCCEEDED(rv) && copyRequest->m_allowUndo && copyRequest->m_copySourceArray.Count() > 1 &&
-        copyRequest->m_txnMgr)
-        copyRequest->m_txnMgr->BeginBatch();
+
+    if (curFolder == copySource->m_msgFolder)
+    {
+      copySource->AddMessage(msg);
+      msgArray->RemoveElementAt(cnt);
+    }
+
+    if (cnt == 0)
+    {
+      rv = msgArray->Count(&cnt);
+      if (cnt > 0)
+        copySource = nsnull; // * force to create a new one and
+                             // * continue grouping the messages
+    }
+  }
+
+  // undo stuff
+  if (NS_SUCCEEDED(rv) && copyRequest->m_allowUndo && copyRequest->m_copySourceArray.Count() > 1 &&
+      copyRequest->m_txnMgr)
+    copyRequest->m_txnMgr->BeginBatch();
+
 done:
     
     if (NS_FAILED(rv))
-        delete copyRequest;
+      delete copyRequest;
     else
-        rv = DoCopy(copyRequest);
+      rv = DoCopy(copyRequest);
     
     msgArray->Clear();
 
