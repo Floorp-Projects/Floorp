@@ -32,10 +32,14 @@ CPU_ARCH		= hppa
 OS_CFLAGS		= +ESlit $(DSO_CFLAGS) -DHPUX -D$(CPU_ARCH) -D_HPUX_SOURCE
 
 #
-# The header netdb.h on 10.10 and 10.20 declares h_errno only
-# if _XOPEN_SOURCE_EXTENDED is defined.  So we need to declare
+# The header netdb.h on HP-UX 9 does not declare h_errno.
+# On 10.10 and 10.20, netdb.h declares h_errno only if
+# _XOPEN_SOURCE_EXTENDED is defined.  So we need to declare
 # h_errno ourselves.
 #
+ifeq ($(basename $(OS_RELEASE)),A.09)
+OS_CFLAGS		+= -D_PR_NEED_H_ERRNO
+endif
 ifeq (,$(filter-out B.10.10 B.10.20,$(OS_RELEASE)))
 OS_CFLAGS		+= -D_PR_NEED_H_ERRNO
 endif
@@ -58,12 +62,7 @@ endif
 # On HP-UX 10.30 and 11.00, the default implementation strategy is
 # pthreads.  Classic nspr and pthreads-user are also available.
 #
-ifeq ($(OS_RELEASE),A.09.03)
-OS_CFLAGS		+= -DHPUX9
-DEFAULT_IMPL_STRATEGY = _CLASSIC
-endif
-
-ifeq ($(OS_RELEASE),A.09.07)
+ifeq ($(basename $(OS_RELEASE)),A.09)
 OS_CFLAGS		+= -DHPUX9
 DEFAULT_IMPL_STRATEGY = _CLASSIC
 endif
@@ -89,15 +88,19 @@ endif
 
 ifeq ($(OS_RELEASE),B.10.30)
 CCC			= /opt/aCC/bin/aCC
-OS_CFLAGS		+= +DA1.0 +DS1.0 -DHPUX10 -DHPUX10_30
+OS_CFLAGS		+= +DAportable +DS1.1 -DHPUX10 -DHPUX10_30
 DEFAULT_IMPL_STRATEGY = _PTH
 endif
 
 # 11.00 is similar to 10.30.
 ifeq ($(OS_RELEASE),B.11.00)
 CCC			= /opt/aCC/bin/aCC
-OS_CFLAGS		+= +DA1.0 +DS1.0 -DHPUX10 -DHPUX11
+OS_CFLAGS		+= +DAportable +DS1.1 -DHPUX10 -DHPUX11
 DEFAULT_IMPL_STRATEGY = _PTH
+endif
+
+ifeq ($(DEFAULT_IMPL_STRATEGY),_CLASSIC)
+CLASSIC_NSPR = 1
 endif
 
 ifeq ($(DEFAULT_IMPL_STRATEGY),_PTH)

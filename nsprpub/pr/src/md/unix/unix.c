@@ -2213,6 +2213,23 @@ static void ClockInterruptHandler()
 	_PR_MD_SET_INTSOFF(0);
 }
 
+/*
+ * On HP-UX 9, we have to use the sigvector() interface to restart
+ * interrupted system calls, because sigaction() does not have the
+ * SA_RESTART flag.
+ */
+
+#ifdef HPUX9
+static void HPUX9_ClockInterruptHandler(
+    int sig,
+    int code,
+    struct sigcontext *scp)
+{
+    ClockInterruptHandler();
+    scp->sc_syscall_action = SIG_RESTART;
+}
+#endif /* HPUX9 */
+
 /* # of milliseconds per clock tick that we will use */
 #define MSEC_PER_TICK    50
 
@@ -2221,12 +2238,21 @@ void _MD_StartInterrupts()
 {
 	struct itimerval itval;
 	char *eval;
+#ifdef HPUX9
+	struct sigvec vec;
+
+	vec.sv_handler = (void (*)()) HPUX9_ClockInterruptHandler;
+	vec.sv_mask = 0;
+	vec.sv_flags = 0;
+	sigvector(SIGALRM, &vec, 0);
+#else
 	struct sigaction vtact;
 
 	vtact.sa_handler = (void (*)()) ClockInterruptHandler;
+	sigemptyset(&vtact.sa_mask);
 	vtact.sa_flags = SA_RESTART;
-	vtact.sa_mask = timer_set;
 	sigaction(SIGALRM, &vtact, 0);
+#endif /* HPUX9 */
 
 	if ((eval = getenv("NSPR_NOCLOCK")) != NULL) {
 		if (atoi(eval) == 0)
@@ -2388,21 +2414,21 @@ void _PR_UnixInit()
 
     if (getenv("NSPR_SIGSEGV_HANDLE")) {
 		sigact.sa_handler = sigsegvhandler;
-		sigact.sa_flags = SA_RESTART;
+		sigact.sa_flags = 0;
 		sigact.sa_mask = timer_set;
 		sigaction(SIGSEGV, &sigact, 0);
 	}
 
     if (getenv("NSPR_SIGABRT_HANDLE")) {
 		sigact.sa_handler = sigaborthandler;
-		sigact.sa_flags = SA_RESTART;
+		sigact.sa_flags = 0;
 		sigact.sa_mask = timer_set;
 		sigaction(SIGABRT, &sigact, 0);
 	}
 
     if (getenv("NSPR_SIGBUS_HANDLE")) {
 		sigact.sa_handler = sigbushandler;
-		sigact.sa_flags = SA_RESTART;
+		sigact.sa_flags = 0;
 		sigact.sa_mask = timer_set;
 		sigaction(SIGBUS, &sigact, 0);
 	}

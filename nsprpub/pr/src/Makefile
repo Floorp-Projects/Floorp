@@ -108,7 +108,7 @@ endif
 endif
 
 ifeq ($(OS_ARCH),HP-UX)
-ifeq ($(OS_RELEASE),A.09.03)
+ifeq ($(basename $(OS_RELEASE)),A.09)
 OS_LIBS		= -ldld -L/lib/pa1.1 -lm
 else
 OS_LIBS		= -ldld -lm -lc
