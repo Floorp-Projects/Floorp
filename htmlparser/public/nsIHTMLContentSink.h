@@ -224,12 +224,10 @@ public:
   NS_IMETHOD EndContext(PRInt32 aPosition) = 0;
   
   /**
-   * Use this method to retrieve pref. for the tag. 
-   *
-   * @update 04/11/01 harishd
-   * @param aTag - Check pref. for this tag.
+   * @update 01/09/2003 harishd
+   * @param aTag - Check if this tag is enabled or not.
    */
-  NS_IMETHOD GetPref(PRInt32 aTag,PRBool& aPref) = 0;
+  NS_IMETHOD IsEnabled(PRInt32 aTag, PRBool* aReturn) = 0;
 
    /**
    * This method is called when parser is about to begin

@@ -168,10 +168,9 @@ mozSanitizingHTMLSerializer::Write(const nsAString& aString)
 
 
 NS_IMETHODIMP
-mozSanitizingHTMLSerializer::GetPref(PRInt32 aTag, PRBool& aPref)
+mozSanitizingHTMLSerializer::IsEnabled(PRInt32 aTag, PRBool* aReturn)
 {
-  aPref = PR_FALSE;
-
+  *aReturn = PR_FALSE;
   return NS_OK;
 }
 

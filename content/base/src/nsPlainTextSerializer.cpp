@@ -586,18 +586,18 @@ nsPlainTextSerializer::CloseFrameset()
 }
 
 NS_IMETHODIMP
-nsPlainTextSerializer::GetPref(PRInt32 aTag, PRBool& aPref)
+nsPlainTextSerializer::IsEnabled(PRInt32 aTag, PRBool* aReturn)
 {
   nsHTMLTag theHTMLTag = nsHTMLTag(aTag);
 
   if (theHTMLTag == eHTMLTag_script) {
-    aPref = mFlags & nsIDocumentEncoder::OutputNoScriptContent;
+    *aReturn = !(mFlags & nsIDocumentEncoder::OutputNoScriptContent);
   }
   else if (theHTMLTag == eHTMLTag_frameset) {
-    aPref = !(mFlags & nsIDocumentEncoder::OutputNoFramesContent);
+    *aReturn = !(mFlags & nsIDocumentEncoder::OutputNoFramesContent);
   }
   else {
-    aPref = PR_FALSE;
+    *aReturn = PR_FALSE;
   }
 
   return NS_OK;
@@ -634,7 +634,9 @@ nsPlainTextSerializer::DoOpenContainer(const nsIParserNode* aNode, PRInt32 aTag)
        !(mFlags & nsIDocumentEncoder::OutputNoScriptContent)) ||
       ((type == eHTMLTag_iframe || type == eHTMLTag_noframes) &&
        !(mFlags & nsIDocumentEncoder::OutputNoFramesContent))) {
-    mIgnoreAboveIndex = mTagStackIndex;
+    // Ignore everything that follows the current tag in 
+    // question until a matching end tag is encountered.
+    mIgnoreAboveIndex = mTagStackIndex - 1;
     return NS_OK;
   }
 
@@ -923,18 +925,21 @@ nsPlainTextSerializer::DoOpenContainer(const nsIParserNode* aNode, PRInt32 aTag)
 nsresult
 nsPlainTextSerializer::DoCloseContainer(PRInt32 aTag)
 {
-  eHTMLTags type = (eHTMLTags)aTag;
-
   if (mTagStackIndex > 0) {
     --mTagStackIndex;
   }
 
   if (mTagStackIndex >= mIgnoreAboveIndex) {
+    if (mTagStackIndex == mIgnoreAboveIndex) {
+      // We're dealing with the close tag whose matching
+      // open tag had set the mIgnoreAboveIndex value.
+      // Reset mIgnoreAboveIndex before discarding this tag.
+      mIgnoreAboveIndex = (PRUint32)kNotFound;
+    }
     return NS_OK;
   }
 
-  mIgnoreAboveIndex = (PRUint32)kNotFound;
-
+  eHTMLTags type = (eHTMLTags)aTag;
   // End current line if we're ending a block level tag
   if((type == eHTMLTag_body) || (type == eHTMLTag_html)) {
     // We want the output to end with a new line,
