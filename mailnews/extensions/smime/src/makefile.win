@@ -75,7 +75,7 @@ EXPORTS=    nsMsgComposeSecure.h \
 LIBRARY_NAME=msgsmime_s
 
 CPP_OBJS=   .\$(OBJDIR)\nsMsgComposeSecure.obj \
-            nsSMimeJSHelper.obj \
+            .\$(OBJDIR)\nsSMimeJSHelper.obj \
             $(NULL)
 
 
