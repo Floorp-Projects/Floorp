@@ -26,7 +26,9 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE		= webshell_tests
 LIBRARY_NAME	= viewer_qt_s
+REQUIRES	= xpcom string docshell necko dom widget timer layout uriloader gfx2 webbrwsr webshell locale util
 
 CPPSRCS		= \
 		nsQtMain.cpp \
