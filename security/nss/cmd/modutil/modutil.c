@@ -81,6 +81,7 @@ typedef enum {
 	CIPHERS_ARG,
 	CREATE_ARG,
 	DBDIR_ARG,
+	DBPREFIX_ARG,
 	DEFAULT_ARG,
 	DELETE_ARG,
 	DISABLE_ARG,
@@ -109,6 +110,7 @@ static char *optionStrings[] = {
 	"-ciphers",
 	"-create",
 	"-dbdir",
+	"-dbprefix",
 	"-default",
 	"-delete",
 	"-disable",
@@ -144,6 +146,7 @@ static char* slotName = NULL;
 static char* tokenName = NULL;
 static char* libFile = NULL;
 static char* dbdir = NULL;
+static char* dbprefix = "";
 static char* mechanisms = NULL;
 static char* ciphers = NULL;
 static char* fipsArg = NULL;
@@ -240,6 +243,13 @@ parse_args(int argc, char *argv[])
 				return OPTION_NEEDS_ARG_ERR;
 			}
 			dbdir = argv[i];
+			break;
+		case DBPREFIX_ARG:
+			if(TRY_INC(i, argc)) {
+				PR_fprintf(PR_STDERR, errStrings[OPTION_NEEDS_ARG_ERR], arg);
+				return OPTION_NEEDS_ARG_ERR;
+			}
+			dbprefix = argv[i];
 			break;
 		case UNDEFAULT_ARG:
 		case DEFAULT_ARG:
@@ -603,11 +613,8 @@ init_crypto(PRBool create, PRBool readOnly)
 	}
 
 	/* Open/create key database */
-	if (readOnly) {
-	    NSS_Init(SECU_ConfigDirectory(NULL));
-	} else {
-	    NSS_InitReadWrite(SECU_ConfigDirectory(NULL));
-	}
+	NSS_Initialize(SECU_ConfigDirectory(NULL), dbprefix, dbprefix,
+	               "secmod.db", readOnly);
 
 	retval=SUCCESS;
 loser:
@@ -670,6 +677,7 @@ usage()
 "                             OPTIONS\n"
 "---------------------------------------------------------------------------\n"
 "-dbdir DIR                       Directory DIR contains the security databases\n"
+"-dbprefix prefix                 Prefix for the security databases\n"
 "-nocertdb                        Do not load certificate or key databases. No\n"
 "                                 verification will be performed on JAR files.\n"
 "---------------------------------------------------------------------------\n"
