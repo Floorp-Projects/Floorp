@@ -77,9 +77,9 @@ public class InvokerImpl extends Invoker {
         // Add our instantiator!
         cfw.startMethod("<init>", "()V", ClassFileWriter.ACC_PUBLIC);
         cfw.add(ByteCode.ALOAD_0);
-        cfw.add(ByteCode.INVOKESPECIAL,
-                "org.mozilla.javascript.Invoker",
-                "<init>", "()", "V");
+        cfw.addInvoke(ByteCode.INVOKESPECIAL,
+                      "org.mozilla.javascript.Invoker",
+                      "<init>", "()V");
         cfw.add(ByteCode.RETURN);
         cfw.stopMethod((short)1, null); // one argument -- this???
 
@@ -102,39 +102,39 @@ public class InvokerImpl extends Invoker {
         if (returnType.isPrimitive()) {
             if (returnType == Boolean.TYPE) {
                 returnsBoolean = true;
-                invokeSpecialType = "(Z)";
+                invokeSpecialType = "(Z)V";
             } else if (returnType == Void.TYPE) {
                 returnsVoid = true;
-                invokeSpecialType = "(V)";
+                invokeSpecialType = "()V";
             } else if (returnType == Integer.TYPE) {
                 cfw.add(ByteCode.NEW, invokeSpecial = "java/lang/Integer");
                 cfw.add(ByteCode.DUP);
-                invokeSpecialType = "(I)";
+                invokeSpecialType = "(I)V";
             } else if (returnType == Long.TYPE) {
                 cfw.add(ByteCode.NEW, invokeSpecial = "java/lang/Long");
                 cfw.add(ByteCode.DUP);
-                invokeSpecialType = "(J)";
+                invokeSpecialType = "(J)V";
             } else if (returnType == Short.TYPE) {
                 cfw.add(ByteCode.NEW, invokeSpecial = "java/lang/Short");
                 cfw.add(ByteCode.DUP);
-                invokeSpecialType = "(S)";
+                invokeSpecialType = "(S)V";
             } else if (returnType == Float.TYPE) {
                 cfw.add(ByteCode.NEW, invokeSpecial = "java/lang/Float");
                 cfw.add(ByteCode.DUP);
-                invokeSpecialType = "(F)";
+                invokeSpecialType = "(F)V";
             } else if (returnType == Double.TYPE) {
                 cfw.add(ByteCode.NEW, invokeSpecial = "java/lang/Double");
                 cfw.add(ByteCode.DUP);
-                invokeSpecialType = "(D)";
+                invokeSpecialType = "(D)V";
             } else if (returnType == Byte.TYPE) {
                 cfw.add(ByteCode.NEW, invokeSpecial = "java/lang/Byte");
                 cfw.add(ByteCode.DUP);
-                invokeSpecialType = "(B)";
+                invokeSpecialType = "(B)V";
             } else if (returnType == Character.TYPE) {
                 cfw.add(ByteCode.NEW, invokeSpecial
                             = "java/lang/Character");
                 cfw.add(ByteCode.DUP);
-                invokeSpecialType = "(C)";
+                invokeSpecialType = "(C)V";
             }
         }
 
@@ -172,38 +172,45 @@ public class InvokerImpl extends Invoker {
 
                     if (type == Boolean.TYPE) {
                         cfw.add(ByteCode.CHECKCAST, "java/lang/Boolean");
-                        cfw.add(ByteCode.INVOKEVIRTUAL, "java/lang/Boolean",
-                                "booleanValue", "()", "Z");
+                        cfw.addInvoke(ByteCode.INVOKEVIRTUAL,
+                                      "java/lang/Boolean",
+                                      "booleanValue", "()Z");
                         params.append('Z');
                     } else if (type == Integer.TYPE) {
                         cfw.add(ByteCode.CHECKCAST, "java/lang/Number");
-                        cfw.add(ByteCode.INVOKEVIRTUAL, "java/lang/Number",
-                                "intValue", "()", "I");
+                        cfw.addInvoke(ByteCode.INVOKEVIRTUAL,
+                                      "java/lang/Number",
+                                      "intValue", "()I");
                         params.append('I');
                     } else if (type == Short.TYPE) {
                         cfw.add(ByteCode.CHECKCAST, "java/lang/Number");
-                        cfw.add(ByteCode.INVOKEVIRTUAL, "java/lang/Number",
-                                "shortValue", "()", "S");
+                        cfw.addInvoke(ByteCode.INVOKEVIRTUAL,
+                                      "java/lang/Number",
+                                      "shortValue", "()S");
                         params.append('S');
                     } else if (type == Character.TYPE) {
                         cfw.add(ByteCode.CHECKCAST, "java/lang/Character");
-                        cfw.add(ByteCode.INVOKEVIRTUAL, "java/lang/Character",
-                                "charValue", "()", "C");
+                        cfw.addInvoke(ByteCode.INVOKEVIRTUAL,
+                                      "java/lang/Character",
+                                      "charValue", "()C");
                         params.append('C');
                     } else if (type == Double.TYPE) {
                         cfw.add(ByteCode.CHECKCAST, "java/lang/Number");
-                        cfw.add(ByteCode.INVOKEVIRTUAL, "java/lang/Number",
-                                "doubleValue", "()", "D");
+                        cfw.addInvoke(ByteCode.INVOKEVIRTUAL,
+                                      "java/lang/Number",
+                                      "doubleValue", "()D");
                         params.append('D');
                     } else if (type == Float.TYPE) {
                         cfw.add(ByteCode.CHECKCAST, "java/lang/Number");
-                        cfw.add(ByteCode.INVOKEVIRTUAL, "java/lang/Number",
-                                "floatValue", "()", "F");
+                        cfw.addInvoke(ByteCode.INVOKEVIRTUAL,
+                                      "java/lang/Number",
+                                      "floatValue", "()F");
                         params.append('F');
                     } else if (type == Byte.TYPE) {
                         cfw.add(ByteCode.CHECKCAST, "java/lang/Byte");
-                        cfw.add(ByteCode.INVOKEVIRTUAL, "java/lang/Byte",
-                                "byteValue", "()", "B");
+                        cfw.addInvoke(ByteCode.INVOKEVIRTUAL,
+                                      "java/lang/Byte",
+                                      "byteValue", "()B");
                         params.append('B');
                     }
                 } else {
@@ -222,24 +229,28 @@ public class InvokerImpl extends Invoker {
             }
         }
         params.append(')');
+        if (invokeSpecialType != null) {
+            if (returnsVoid) {
+                params.append('V');
+            } else {
+                params.append(invokeSpecialType.charAt(1));
+            }
+        } else if (returnType.isArray()) {
+            params.append(returnType.getName().replace('.','/'));
+        } else {
+            params.append('L');
+            params.append(returnType.getName().replace('.','/'));
+            params.append(';');
+        }
 
         // Call actual function!
         if (!java.lang.reflect.Modifier.isStatic(method.getModifiers())) {
-            cfw.add(ByteCode.INVOKEVIRTUAL, declaringClassName,
-                    method.getName(), params.toString(),
-                    (invokeSpecialType!=null?invokeSpecialType.substring(1,2)
-                                             :returnType.isArray()?
-                                              returnType.getName().replace('.','/')
-                                              :"L".concat
-                (returnType.getName().replace('.', '/').concat(";"))));
+            cfw.addInvoke(ByteCode.INVOKEVIRTUAL,
+                          declaringClassName,
+                          method.getName(), params.toString());
         } else {
-            cfw.add(ByteCode.INVOKESTATIC, declaringClassName,
-                    method.getName(), params.toString(),
-                    (invokeSpecialType!=null?invokeSpecialType.substring(1,2)
-                                             :returnType.isArray()?
-                                              returnType.getName().replace('.','/')
-                                              :"L".concat
-                (returnType.getName().replace('.', '/').concat(";"))));
+            cfw.addInvoke(ByteCode.INVOKESTATIC, declaringClassName,
+                          method.getName(), params.toString());
         }
 
         // Handle return value
@@ -262,9 +273,9 @@ public class InvokerImpl extends Invoker {
                     "Ljava/lang/Boolean;");
             cfw.add(ByteCode.ARETURN);
         } else if (invokeSpecial != null) {
-            cfw.add(ByteCode.INVOKESPECIAL,
-                    invokeSpecial,
-                    "<init>", invokeSpecialType, "V");
+            cfw.addInvoke(ByteCode.INVOKESPECIAL,
+                          invokeSpecial,
+                          "<init>", invokeSpecialType);
             cfw.add(ByteCode.ARETURN);
         } else {
             cfw.add(ByteCode.ARETURN);
