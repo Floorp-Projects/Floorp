@@ -71,6 +71,7 @@ function initCommands(commandObject)
          ["help",           cmdHelp,               CMD_CONSOLE],
          ["loadd",          cmdLoadd,              CMD_CONSOLE],
          ["next",           cmdNext,               CMD_CONSOLE | CMD_NEED_STACK],
+         ["open-dialog",    cmdOpenDialog,         CMD_CONSOLE],
          ["pprint",         cmdPPrint,             CMD_CONSOLE],
          ["pref",           cmdPref,               CMD_CONSOLE],
          ["props",          cmdProps,              CMD_CONSOLE | CMD_NEED_STACK],
@@ -103,7 +104,7 @@ function initCommands(commandObject)
 
     console.commandManager.argTypes.__aliasTypes__ (["index", "breakpointIndex",
                                                      "lineNumber"], "int");
-    console.commandManager.argTypes.__aliasTypes__ (["scriptText",
+    console.commandManager.argTypes.__aliasTypes__ (["scriptText", "windowFlags",
                                                      "expression"], "rest");
 }
 
@@ -306,7 +307,8 @@ function cmdChromeFilter (e)
                     /* filter is off, add chrome file to scripts view */
                     if (!("parentRecord" in rec))
                     {
-                        //dd ("append " + rec.fileName);
+                        //dd ("cmdChromeFilter: append " +
+                        //    tov_formatRecord(rec, ""));
                         scriptList.appendChild(rec);
                     }
                     else
@@ -740,6 +742,11 @@ function cmdNext ()
     dispatch ("step");
     console.jsds.functionHook = console._callHook;
     return true;
+}
+
+function cmdOpenDialog (e)
+{
+    return openDialog (e.url, e.windowName, e.windowFlags);
 }
 
 function cmdPPrint (e)
