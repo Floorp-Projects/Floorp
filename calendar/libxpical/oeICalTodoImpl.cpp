@@ -261,9 +261,16 @@ icalcomponent* oeICalTodoImpl::AsIcalComponent()
         return nsnull;
     }
     
+    //version
+    icalproperty *prop = icalproperty_new_version( ICALEVENT_VERSION );
+    icalcomponent_add_property( newcalendar, prop );
+
+    //prodid
+    prop = icalproperty_new_prodid( ICALEVENT_PRODID );
+    icalcomponent_add_property( newcalendar, prop );
+
     icalcomponent *vtodo = icalcomponent_new_vtodo();
     icalcomponent *vevent = icalcomponent_get_first_component( basevcal, ICAL_VEVENT_COMPONENT );
-    icalproperty *prop;
     for( prop = icalcomponent_get_first_property( vevent, ICAL_ANY_PROPERTY );
          prop != 0 ;
          prop = icalcomponent_get_next_property( vevent, ICAL_ANY_PROPERTY ) ) {

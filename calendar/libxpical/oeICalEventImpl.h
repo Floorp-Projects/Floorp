@@ -55,6 +55,9 @@ extern "C" {
 
 #define OE_ICALEVENT_CONTRACTID "@mozilla.org/icalevent;1"
 
+#define ICALEVENT_VERSION "2.0"
+#define ICALEVENT_PRODID "-//Mozilla.org/NONSGML Mozilla Calendar V1.0//EN"
+
 class
 oeDateEnumerator : public nsISimpleEnumerator
 {

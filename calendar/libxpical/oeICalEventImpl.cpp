@@ -1898,9 +1898,6 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
     return true;
 }
 
-#define ICALEVENT_VERSION "2.0"
-#define ICALEVENT_PRODID "-//Mozilla.org/NONSGML Mozilla Calendar V1.0//EN"
-
 icalcomponent* oeICalEventImpl::AsIcalComponent()
 {
 #ifdef ICAL_DEBUG_ALL
