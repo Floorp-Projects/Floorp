@@ -1549,13 +1549,13 @@ public:
 /**********************************************************
   This is for the body element...
  **********************************************************/
-static eHTMLTags gBodyKids[] = {eHTMLTag_del, eHTMLTag_ins, eHTMLTag_script, eHTMLTag_unknown};
+static eHTMLTags gBodyKids[] = {eHTMLTag_button, eHTMLTag_del, eHTMLTag_ins, eHTMLTag_map,eHTMLTag_script, eHTMLTag_unknown};
 static eHTMLTags gBodyExcludeKids[] = {eHTMLTag_applet, eHTMLTag_button, eHTMLTag_iframe, eHTMLTag_object, eHTMLTag_unknown};
 
 class CBodyElement: public CElement {
 public:
 
-
+ 
   static CGroupMembers& GetGroup(void) {
     static CGroupMembers theGroup={0};
     theGroup.mBits.mTopLevel=1;
