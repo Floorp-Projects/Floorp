@@ -55,7 +55,7 @@ nscoord nsCSSLayout::VerticallyAlignChildren(nsIPresContext* aCX,
   nsRect kidRect;
   nscoord minY = aY0;
   nscoord maxY = aY0;
-  PRIntn bottomAlignKids = 0;
+  PRIntn pass2Kids = 0;
   PRIntn kidCount = aChildCount;
   while (--kidCount >= 0) {
     nscoord kidAscent = *aAscents++;
@@ -65,13 +65,13 @@ nscoord nsCSSLayout::VerticallyAlignChildren(nsIPresContext* aCX,
     kid->GetStyleContext(aCX, kidSC.AssignRef());
     kid->GetContent(kidContent.AssignRef());
     nsStyleText* textStyle = (nsStyleText*)kidSC->GetData(kStyleTextSID);
-    PRIntn verticalAlign = textStyle->mVerticalAlign;
+    PRUint8 verticalAlignFlags = textStyle->mVerticalAlignFlags;
 
     kid->GetRect(kidRect);
 
     // Vertically align the child
     nscoord kidYTop = 0;
-    switch (verticalAlign) {
+    switch (verticalAlignFlags) {
     default:
     case NS_STYLE_VERTICAL_ALIGN_BASELINE:
       // Align the kid's baseline at the max baseline
@@ -97,11 +97,14 @@ nscoord nsCSSLayout::VerticallyAlignChildren(nsIPresContext* aCX,
       break;
 
     case NS_STYLE_VERTICAL_ALIGN_BOTTOM:
-      bottomAlignKids++;
+    case NS_STYLE_VERTICAL_ALIGN_PERCENT:
+      pass2Kids++;
       break;
 
     case NS_STYLE_VERTICAL_ALIGN_MIDDLE:
-      kidYTop = aMaxAscent - (fm->GetHeight(/*'x'XXX */) / 2) - kidRect.height/2;
+      // XXX spec says use the 'x' height but our font api doesn't give us
+      // that information.
+      kidYTop = aMaxAscent - (fm->GetHeight() / 2) - kidRect.height/2;
       break;
 
     case NS_STYLE_VERTICAL_ALIGN_TEXT_BOTTOM:
@@ -113,11 +116,7 @@ nscoord nsCSSLayout::VerticallyAlignChildren(nsIPresContext* aCX,
       break;
 
     case NS_STYLE_VERTICAL_ALIGN_LENGTH:
-      // XXX css2 hasn't yet specified what this means!
-      break;
-
-    case NS_STYLE_VERTICAL_ALIGN_PCT:
-      // XXX need kidMol->lineHeight in translated to a value form...
+      kidYTop = aMaxAscent + textStyle->mVerticalAlign.coord;
       break;
     }
 
@@ -133,7 +132,7 @@ nscoord nsCSSLayout::VerticallyAlignChildren(nsIPresContext* aCX,
 
   nscoord lineHeight = maxY - minY;
 
-  if (0 != bottomAlignKids) {
+  if (0 != pass2Kids) {
     // Position all of the bottom aligned children
     kidCount = aChildCount;
     kid = aFirstChild;
@@ -145,15 +144,25 @@ nscoord nsCSSLayout::VerticallyAlignChildren(nsIPresContext* aCX,
       kid->GetStyleContext(aCX, kidSC.AssignRef());
       kid->GetContent(kidContent.AssignRef());
       nsStyleText* textStyle = (nsStyleText*)kidSC->GetData(kStyleTextSID);
-      PRIntn verticalAlign = textStyle->mVerticalAlign;
+      PRUint8 verticalAlignFlags = textStyle->mVerticalAlignFlags;
 
       // Vertically align the child
-      if (verticalAlign == NS_STYLE_VERTICAL_ALIGN_BOTTOM) {
+      if (verticalAlignFlags == NS_STYLE_VERTICAL_ALIGN_BOTTOM) {
         // Place kid along the bottom
         kid->GetRect(kidRect);
         kid->MoveTo(kidRect.x, aY0 + lineHeight - kidRect.height);
-        if (--bottomAlignKids == 0) {
-          // Stop on lost bottom aligned kid
+        if (--pass2Kids == 0) {
+          // Stop on last pass2 kid
+          break;
+        }
+      }
+      else if (verticalAlignFlags == NS_STYLE_VERTICAL_ALIGN_PERCENT) {
+        nscoord kidYTop = aMaxAscent +
+          nscoord(textStyle->mVerticalAlign.percent * lineHeight);
+        kid->GetRect(kidRect);
+        kid->MoveTo(kidRect.x, aY0 + kidYTop);
+        if (--pass2Kids == 0) {
+          // Stop on last pass2 kid
           break;
         }
       }
