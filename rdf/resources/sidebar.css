@@ -59,7 +59,11 @@ treecell[sortActive="true"] {
 treecol[sortActive="true"] {
   background-color: green;
 }
-  
+
+treeitem[container="true"][open="true"][loading="true"] > treecell > titledbutton {
+ list-style-image: url("resource:/res/rdf/loading.gif") ! important ;
+}
+
 treeitem[type="http://home.netscape.com/NC-rdf#Folder"] > treecell > titledbutton {
  list-style-image: url("resource:/res/rdf/bookmark-folder-closed.gif");
 }
