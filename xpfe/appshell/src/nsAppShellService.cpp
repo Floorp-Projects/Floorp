@@ -802,6 +802,9 @@ nsAppShellService::UnregisterTopLevelWindow(nsIXULWindow* aWindow)
   if (NS_FAILED(rv)) return rv;
   if (0 == cnt)
   {
+    if (!mQuitOnLastWindowClosing)
+      return NS_OK;
+      
   #if XP_MAC
 	 // if no hidden window is available (perhaps due to initial
 	 // Profile Manager window being cancelled), then just quit. We don't have
@@ -815,7 +818,7 @@ nsAppShellService::UnregisterTopLevelWindow(nsIXULWindow* aWindow)
     PRBool serverMode = PR_FALSE;
     if (mNativeAppSupport)
         mNativeAppSupport->GetIsServerMode(&serverMode);
-    if (!mQuitOnLastWindowClosing || serverMode)
+    if (serverMode)
         return NS_OK;
 
     Quit();

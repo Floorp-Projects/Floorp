@@ -153,7 +153,7 @@ class nsPrefMigration: public nsIPrefMigration
       nsCOMPtr<nsIPref>         m_prefs;
       nsCOMPtr<nsILocalFile>     m_prefsFile; 
       nsCOMPtr<nsIDOMWindowInternal>    m_parentWindow;
-      nsCOMPtr<nsIXULWindow>    mPMProgressWindow;
+      nsCOMPtr<nsIDOMWindow>    mPMProgressWindow;
 };
 
 #endif /* nsPrefMigration_h___ */
