@@ -2476,11 +2476,9 @@ nsTableFrame::AppendFrames(nsPresContext* aPresContext,
                            nsIAtom*        aListName,
                            nsIFrame*       aFrameList)
 {
-  PRInt32 startColIndex = 0;
   // Because we actually have two child lists, one for col group frames and one
   // for everything else, we need to look at each frame individually
   nsIFrame* f = aFrameList;
-  nsIFrame* firstAppendedColGroup = nsnull;
   while (f) {
     // Get the next frame and disconnect this frame from its sibling
     nsIFrame* next = f->GetNextSibling();
@@ -2490,14 +2488,15 @@ nsTableFrame::AppendFrames(nsPresContext* aPresContext,
     const nsStyleDisplay* display = f->GetStyleDisplay();
 
     if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == display->mDisplay) {
-      if (!firstAppendedColGroup) {
-        firstAppendedColGroup = f;
-        nsTableColGroupFrame* lastColGroup = (nsTableColGroupFrame *)mColGroups.LastChild();
-        startColIndex = (lastColGroup) 
-          ? lastColGroup->GetStartColumnIndex() + lastColGroup->GetColCount() : 0;
-      }
+      nsTableColGroupFrame* lastColGroup = (nsTableColGroupFrame *)mColGroups.LastChild();
+      PRInt32 startColIndex = (lastColGroup) 
+        ? lastColGroup->GetStartColumnIndex() + lastColGroup->GetColCount() : 0;
+      
       // Append the new col group frame
       mColGroups.AppendFrame(nsnull, f);
+
+      // Insert the colgroup and its cols into the table
+      InsertColGroups(*aPresContext, startColIndex, f);
     } else if (IsRowGroup(display->mDisplay)) {
       // Append the new row group frame to the sibling chain
       mFrames.AppendFrame(nsnull, f);
@@ -2513,10 +2512,10 @@ nsTableFrame::AppendFrames(nsPresContext* aPresContext,
     f = next;
   }
 
-  if (firstAppendedColGroup) {
-    InsertColGroups(*aPresContext, startColIndex, firstAppendedColGroup);
-  }
-
+#ifdef DEBUG_TABLE_CELLMAP
+  printf("TableFrame::AppendFrames");
+  Dump(PR_TRUE, PR_TRUE, PR_TRUE);
+#endif
   SetNeedStrategyInit(PR_TRUE); // XXX assume the worse
   AppendDirtyReflowCommand(&aPresShell, this);
 
@@ -4318,12 +4317,35 @@ nsTableFrame::Dump(PRBool          aDumpRows,
   if (aDumpCols) {
 	  // output col frame cache
     printf("\n col frame cache ->");
-	  for (colX = 0; colX < numCols; colX++) {
+	   for (colX = 0; colX < numCols; colX++) {
       nsTableColFrame* colFrame = (nsTableColFrame *)mColFrames.ElementAt(colX);
       if (0 == (colX % 8)) {
         printf("\n");
       }
       printf ("%d=%p ", colX, colFrame);
+      nsTableColType colType = colFrame->GetColType();
+      switch (colType) {
+      case eColContent:
+        printf(" content ");
+        break;
+      case eColAnonymousCol: 
+        printf(" anonymous-column ");
+        break;
+      case eColAnonymousColGroup:
+        printf(" anonymous-colgroup ");
+        break;
+      case eColAnonymousCell: 
+        printf(" anonymous-cell ");
+        break;
+      }
+    }
+    printf("\n colgroups->");
+    for (nsIFrame* childFrame = mColGroups.FirstChild(); childFrame;
+         childFrame = childFrame->GetNextSibling()) {
+      if (nsLayoutAtoms::tableColGroupFrame == childFrame->GetType()) {
+        nsTableColGroupFrame* colGroupFrame = (nsTableColGroupFrame *)childFrame;
+        colGroupFrame->Dump(1);
+      }
     }
     for (colX = 0; colX < numCols; colX++) {
       printf("\n");
