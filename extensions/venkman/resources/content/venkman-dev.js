@@ -38,6 +38,7 @@ function initDev()
     var cmdary =
         [["dumpcontexts",  cmdDumpContexts,  CMD_CONSOLE | CMD_NO_HELP],
          ["dumpfilters",   cmdDumpFilters,   CMD_CONSOLE | CMD_NO_HELP],
+         ["dumptree",      cmdDumpTree,      CMD_CONSOLE | CMD_NO_HELP],
          ["reloadui",      cmdReloadUI,      CMD_CONSOLE | CMD_NO_HELP],
          ["sync-debug",    cmdSyncDebug,     CMD_CONSOLE | CMD_NO_HELP],
          ["testargs",      cmdTestArgs,      CMD_CONSOLE | CMD_NO_HELP],
@@ -71,11 +72,13 @@ function cmdDumpContexts()
                               }
                               else
                               {
-                                  var v = context.globalObject;
-                                  var prop = v.getProperty("title");
+                                  var v = context.globalObject.getWrappedValue();
                                   var title = "<n/a>";
-                                  if (prop)
-                                      title = prop.value.stringValue;
+                                  if (v instanceof Object &&
+                                      "document" in v)
+                                  {
+                                      title = v.document.title;
+                                  }
                               
                                   dd ("enumerateContext: Index " + i +
                                       ", Version " + context.version +
@@ -106,6 +109,13 @@ function cmdDumpFilters()
     console.jsds.enumerateFilters (enumer);
 }
 
+function cmdDumpTree(e)
+{
+    if (!e.depth)
+        e.depth = 0;
+    dd(e.tree + ":\n" + tov_formatBranch (eval(e.tree), "", e.depth));
+}
+
 function cmdReloadUI()
 {
     var bs = Components.classes["@mozilla.org/intl/stringbundle;1"];
@@ -134,34 +144,34 @@ function cmdSyncDebug()
 
 function cmdTestArgs (e)
 {
-    dd (dumpObjectTree(e));
+    display (dumpObjectTree(e));
 }
 
 function cmdTestFilters ()
 {
     var filter1 = {
-        glob: null,
+        globalObject: null,
         flags: jsdIFilter.FLAG_ENABLED,
         urlPattern: "1",
         startLine: 0,
         endLine: 0
     };
     var filter2 = {
-        glob: null,
+        globalObject: null,
         flags: jsdIFilter.FLAG_ENABLED,
         urlPattern: "*2",
         startLine: 0,
         endLine: 0
     };
     var filter3 = {
-        glob: null,
+        globalObject: null,
         flags: jsdIFilter.FLAG_ENABLED,
         urlPattern: "3*",
         startLine: 0,
         endLine: 0
     };
     var filter4 = {
-        glob: null,
+        globalObject: null,
         flags: jsdIFilter.FLAG_ENABLED,
         urlPattern: "*4*",
         startLine: 0,
@@ -195,7 +205,7 @@ function cmdTreeTest()
 {
     var w = openDialog("chrome://venkman/content/tests/tree.xul", "", "");
     var testsFilter = {
-        glob: w,
+        globalObject: w,
         flags: jsdIFilter.FLAG_ENABLED | jsdIFilter.FLAG_PASS,
         urlPattern: null,
         startLine: 0,
