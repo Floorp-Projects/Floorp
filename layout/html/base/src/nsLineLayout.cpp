@@ -2302,6 +2302,12 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
   while (nsnull != pfd) {
     nsIFrame* frame = pfd->mFrame;
 
+    // sanity check (see bug 105168, non-reproducable crashes from null frame)
+    NS_ASSERTION(frame, "null frame in PerFrameData - something is very very bad");
+    if (!frame) {
+      return;
+    }
+
     // Compute the logical height of the frame
     nscoord logicalHeight;
     nscoord topLeading;
