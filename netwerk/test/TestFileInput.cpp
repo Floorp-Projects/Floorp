@@ -301,8 +301,10 @@ ParallelReadTest(char* dirName, nsIFileTransportService* fts)
         NS_ASSERTION(listener, "QI failed");
     
         nsITransport* trans;
-        rv = fts->AsyncRead(spec, nsnull, reader->GetEventQueue(), 
-                            listener, &trans);
+        rv = fts->CreateTransport(spec, &trans);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "create failed");
+
+        rv = trans->AsyncRead(nsnull, reader->GetEventQueue(), listener);
         NS_ASSERTION(NS_SUCCEEDED(rv), "AsyncRead failed");
 
         // the reader thread will hang on to these objects until it quits
