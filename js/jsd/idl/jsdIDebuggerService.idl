@@ -111,6 +111,9 @@ interface jsdIDebuggerService : nsISupports
     void on ();
     /**
      * Turn on the debugger for a given runtime.
+     *
+     * @param rt The runtime you want to debug.  You cannot turn the debugger
+     *           on for multiple runtimes.
      */
     [noscript] void onForRuntime (in JSRuntime rt);
     /**
@@ -126,9 +129,25 @@ interface jsdIDebuggerService : nsISupports
      */
     void GC();
     /**
+     * Ignore/unignore execution hooks which are triggered by a context with a
+     * particular global object.
+     *
+     * @param glob Global object to ignore/unignore.  For the typical Mozilla
+     *             context, global objects are DOM windows.
+     *
+     * @param state |true| to ignore this global object, |false| to unignore.
+     *              If state is |false| and the the glob passed in is not
+     *              currently ignored, this method will throw an
+     *              NS_ERROR_INVALID_PARAM exception.
+     */
+    //void filterGlobalObject (in nsISupports glob, in boolean state);
+    /**
      * Enumerate all scripts the debugger knows about.  Any scripts created
      * before you turned the debugger on, or after turning the debugger off
      * will not be available unless the autostart perf is set.
+     *
+     * @param enumerator jsdIScriptEnumerator instance to be called back for
+     *                   the enumeration.
      */
     void enumerateScripts (in jsdIScriptEnumerator enumerator);
     /**
@@ -171,7 +190,7 @@ interface jsdIScriptHook : nsISupports
     void onScriptCreated (in jsdIScript script);
     /**
      * Called when the JavaScript engine destroys a script.  The jsdIScript
-     * object passed in will be invalidated.
+     * object passed in will already be invalidated.
      */
     void onScriptDestroyed (in jsdIScript script);
 };
@@ -210,7 +229,7 @@ interface jsdIExecutionHook : nsISupports
     const unsigned long RETURN_CONTINUE_THROW = 5;
 
     /**
-     * @param frame A jsdIFrame object representing the bottom stack frame.
+     * @param frame A jsdIStackFrame object representing the bottom stack frame.
      * @param type  One of the jsdIExecutionHook::TYPE_ constants.
      * @param val   in  - Current exception (if any) when this method is called.
      *              out - If you return RETURN_THROW_WITH_VAL, value to be
@@ -245,8 +264,8 @@ interface jsdIEphemeral : nsISupports
 /* handle objects */
 
 /**
- * XXX can't reflect the jsuword pc because it'll change sizes on 64 it systems,
- * but we could represent all pc's as offsets, and store them in ulongs.  This
+ * XXX can't reflect the jsuword pc because it'll change sizes on 64 bit systems,
+ * but we could represent all pcs as offsets, and store them in ulongs.  This
  * would allow us to get rid of jsdIPC, and simplify things in some places.  The
  * only tradeoff would be that scripts with more than 2^32 instructions would
  * have pc's we can't represent.  If you're script is that large, you need more
@@ -367,7 +386,7 @@ interface jsdIScript : jsdIEphemeral
      */
     unsigned long pcToLine (in jsdIPC pc);
     /**
-     * Get the first PC associated with a PC.
+     * Get the first PC associated with a line.
      */
     jsdIPC lineToPc (in unsigned long line);    
     /**
@@ -399,8 +418,7 @@ interface jsdIValue : jsdIEphemeral
     [noscript] readonly attribute JSDValue   JSDValue;
 
     /**
-     * |true| if the value represents "native" data, such as a C function
-     * provided by the embedding.
+     * |false| unless the value is a function declared in script.
      */
     readonly attribute boolean isNative;
     /**
