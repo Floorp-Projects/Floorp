@@ -64,6 +64,10 @@ treecol[hideheader="true"] {
     height: 0px;
 }
 
+#source2-heading { 
+    padding-top: 2px !important;
+}
+
 tree {
     margin: 0px;
 }
@@ -472,6 +476,14 @@ treechildren:-moz-tree-cell-text(watches\:col-0, item-error) {
     color: darkred;
 }
 
+treechildren:-moz-tree-cell-text(scripts\:col-0, script-disabled) {
+    font-style: italic;
+    color: darkred;
+}
+
+treechildren:-moz-tree-cell-text(scripts\:col-0, script-disabled, selected, focus) {
+    color: white;
+}
 
 treechildren:-moz-tree-cell-text(item-exception) {
     font-weight: bold;

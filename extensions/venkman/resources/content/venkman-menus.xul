@@ -135,8 +135,10 @@
       <toolbar id="maintoolbar-outer" collapsed="true">
         <hbox id="maintoolbar">
         </hbox>
+    <!--
         <textbox id="paint-hack"
           style="border: none; background: none; height: 0px; width: 0px"/>
+    -->
       </toolbar>
 
     </toolbox>  

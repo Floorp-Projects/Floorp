@@ -76,8 +76,8 @@
           context="context:locals">
 
           <treecols>
-            <treecol id="locals:col-0" label="&LocalsCol0.header;" primary="true"
-              flex="1" persist="hidden width"/>
+            <treecol id="locals:col-0" label="&LocalsCol0.header;"
+              primary="true" flex="1" persist="hidden width"/>
             <splitter class="tree-splitter"/>
             <treecol id="locals:col-1" flex="1" label="&LocalsCol1.header;"
               persist="hidden width" hidden="true"/>
@@ -142,7 +142,7 @@
     <!-- source2 view -->
 
     <floatingview id="source2" title="&Source.label;" flex="1">
-      <stack flex="1">
+      <vbox flex="1">
         <tabbox id="source2-tabbox" flex="1">
           <tabs id="source2-tabs">
             <!-- 
@@ -153,7 +153,8 @@
           </tabs>
           <tabpanels id="source2-deck" flex="1"/>
         </tabbox>
-      </stack>
+        <textbox class="plain" id="source2-heading" readonly="true"/>
+      </vbox>
     </floatingview>
 
     <!-- source view -->

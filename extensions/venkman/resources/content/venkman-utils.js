@@ -766,12 +766,12 @@ function stringTrim (s)
 
 function formatDateOffset (seconds, format)
 {
-    seconds = parseInt(seconds);
-    var minutes = parseInt(seconds / 60);
+    seconds = Math.floor(seconds);
+    var minutes = Math.floor(seconds / 60);
     seconds = seconds % 60;
-    var hours   = parseInt(minutes / 60);
+    var hours   = Math.floor(minutes / 60);
     minutes = minutes % 60;
-    var days    = parseInt(hours / 24);
+    var days    = Math.floor(hours / 24);
     hours = hours % 24;
 
     if (!format)
@@ -889,7 +889,7 @@ function arrayRemoveAt (ary, i)
 
 function getRandomElement (ary)
 {
-    var i = parseInt (Math.random() * ary.length)
+    var i = Math.floor (Math.random() * ary.length)
 	if (i == ary.length) i = 0;
 
     return ary[i];
@@ -930,7 +930,7 @@ function randomRange (min, max)
     if (typeof max == "undefined")
         max = 1;
 
-    var rv = (parseInt(Math.round((Math.random() * (max - min)) + min )));
+    var rv = (Math.floor(Math.round((Math.random() * (max - min)) + min )));
     
     return rv;
 

@@ -185,10 +185,12 @@ var guessThis =
 function () 
 {
     var x = 1;
+    switchTest();
+    observer.onFoo();
 }
 
 var observer = {
-    onFoo: function (){}
+    onFoo: function (){ returnSomething(); }
 }
 
 function switchTest ()

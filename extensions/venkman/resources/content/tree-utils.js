@@ -1342,8 +1342,13 @@ function xtv_isseparator (index)
 XULTreeView.prototype.getParentIndex =
 function xtv_getpi (index)
 {
+    if (index < 0)
+        return -1;
+    
     var row = this.childData.locateChildByVisualRow (index);
-    //ASSERT(row, "bogus row " + index);
+    //if (!ASSERT(row, "bogus row " + index))
+    //    return -1;
+    
     var rv = row.parentRecord.calculateVisualRow();
     //dd ("getParentIndex: row " + index + " returning " + rv);
     return (rv != null) ? rv : -1;

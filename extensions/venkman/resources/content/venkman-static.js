@@ -33,7 +33,7 @@
  *
  */
 
-const __vnk_version        = "0.9.57";
+const __vnk_version        = "0.9.60";
 const __vnk_requiredLocale = "0.9.51+";
 var   __vnk_versionSuffix  = "";
 
@@ -724,7 +724,7 @@ function hookDebugStop (e)
     enableDebugCommands();
 
     //XXX
-    paintHack();
+    //paintHack();
 }
 
 console.hooks["hook-venkman-query-exit"] =
@@ -1058,8 +1058,22 @@ function st_oncomplete (data, url, status)
 
     if (!ASSERT(data, "loadSource succeeded but got no data"))
         data = "";
+
+    var matchResult;
+    
+    // Check before split because xml declarlation may contain newline.
+    if (data.substring(0, 5) == "<?xml" && !("charset" in this))
+    {
+        var s = data.substring(6, data.indexOf("?>"));
+        matchResult = s.match(/encoding\s*=\s*([\"\'])([^\"\'\s]+)\1/i);
+        if (matchResult)
+            this.charset = matchResult[2];
+    }
     
     var ary = data.split(/\r\n|\n|\r/m);
+    var charsetRE =
+        /meta\s+http-equiv\s+content-type\s+charset=([^\;\"\'\s]+)/i;
+
     for (var i = 0; i < ary.length; ++i)
     {
         /*
@@ -1070,8 +1084,7 @@ function st_oncomplete (data, url, status)
         ary[i] = ary[i].replace(/[\x00-\x08]|[\x0A-\x1F]/g, "?");
         if (!("charset" in this))
         {
-            var matchResult =
-                ary[i].match(/meta.*http-equiv.*content-type.*charset=([^\;\"]+)/i);
+            matchResult = ary[i].match(charsetRE);
             if (matchResult)
                 this.charset = matchResult[1];
         }

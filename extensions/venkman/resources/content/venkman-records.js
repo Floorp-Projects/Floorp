@@ -37,12 +37,12 @@ function initRecords()
 {
     var cmdary =
         [/* "real" commands */
-         ["show-functions",  cmdShowFunctions,                      CMD_CONSOLE],
-         ["show-ecmas",      cmdShowECMAs,                          CMD_CONSOLE],
+         ["show-functions",  cmdShowFunctions,                     CMD_CONSOLE],
+         ["show-ecmas",      cmdShowECMAs,                         CMD_CONSOLE],
 
          /* aliases */
-         ["toggle-functions",     "show-functions toggle",                    0],
-         ["toggle-ecmas",         "show-ecma toggle",                         0]
+         ["toggle-functions",     "show-functions toggle",                   0],
+         ["toggle-ecmas",         "show-ecma toggle",                        0]
         ];
 
     console.commandManager.defineCommands (cmdary);
@@ -57,6 +57,18 @@ function initRecords()
 
     FrameRecord.prototype.property    = atomsvc.getAtom("item-frame");
     FrameRecord.prototype.atomCurrent = atomsvc.getAtom("current-frame-flag");
+
+    ScriptInstanceRecord.prototype.atomUnknown = atomsvc.getAtom("item-unk");
+    ScriptInstanceRecord.prototype.atomHTML    = atomsvc.getAtom("item-html");
+    ScriptInstanceRecord.prototype.atomJS      = atomsvc.getAtom("item-js");
+    ScriptInstanceRecord.prototype.atomXUL     = atomsvc.getAtom("item-xul");
+    ScriptInstanceRecord.prototype.atomXML     = atomsvc.getAtom("item-xml");
+    ScriptInstanceRecord.prototype.atomDisabled = 
+        atomsvc.getAtom("script-disabled");
+
+    ScriptRecord.prototype.atomFunction   = atomsvc.getAtom("file-function");
+    ScriptRecord.prototype.atomBreakpoint = atomsvc.getAtom("item-has-bp");
+    ScriptRecord.prototype.atomDisabled   = atomsvc.getAtom("script-disabled");
 
     var prefs =
         [
@@ -310,7 +322,7 @@ function ScriptInstanceRecord(scriptInstance)
     this.reserveChildren(true);
     this.url = scriptInstance.url;
     var sv = console.views.scripts;
-    this.fileType = sv.atomUnknown;
+    this.fileType = this.atomUnknown;
     this.shortName = this.url;
     this.group = 4;
     this.scriptInstance = scriptInstance;
@@ -324,23 +336,23 @@ function ScriptInstanceRecord(scriptInstance)
         switch (ary[1].toLowerCase())
         {
             case "js":
-                this.fileType = sv.atomJS;
+                this.fileType = this.atomJS;
                 this.group = 0;
                 break;
             
             case "html":
                 this.group = 1;
-                this.fileType = sv.atomHTML;
+                this.fileType = this.atomHTML;
                 break;
             
             case "xul":
                 this.group = 2;
-                this.fileType = sv.atomXUL;
+                this.fileType = this.atomXUL;
                 break;
             
             case "xml":
                 this.group = 3;
-                this.fileType = sv.atomXML;
+                this.fileType = this.atomXML;
                 break;
         }
     }
@@ -365,6 +377,15 @@ function scr_dragstart (e, transferData, dragAction)
                                         "'>" + this.fileName + "</a>");
     return true;
 }    
+
+ScriptInstanceRecord.prototype.getProperties =
+function scr_getprops (properties)
+{
+    properties.AppendElement(this.fileType);
+    
+    if (this.scriptInstance.disabledScripts > 0)
+        properties.AppendElement (this.atomDisabled);
+}
 
 ScriptInstanceRecord.prototype.super_resort = XTRootRecord.prototype.resort;
 
@@ -475,6 +496,21 @@ function sr_dragstart (e, transferData, dragAction)
                                         "<a href='" + fileName +
                                         "'>" + fileName + "</a>");
     return true;
+}
+
+ScriptRecord.prototype.getProperties =
+function sr_getprops (properties)
+{
+    properties.AppendElement (this.atomFunction);
+
+    if (this.scriptWrapper.breakpointCount)
+        properties.AppendElement (this.atomBreakpoint);
+
+    if (this.scriptWrapper.jsdScript.isValid &&
+        this.scriptWrapper.jsdScript.flags & SCRIPT_NODEBUG)
+    {
+        properties.AppendElement (this.atomDisabled);
+    }
 }
 
 /*******************************************************************************

@@ -574,7 +574,8 @@ function lv_renit (jsdFrame)
     
     if (jsdFrame.thisValue)
     {
-        this.thisRecord = new ValueRecord (jsdFrame.thisValue, MSG_VAL_THIS, "");
+        this.thisRecord = new ValueRecord (jsdFrame.thisValue, MSG_VAL_THIS,
+                                           "");
         this.thisRecord.onPreRefresh = null;
         this.childData.appendChild(this.thisRecord);
         if (!state && jsdFrame.thisValue.propertyCount < 
@@ -820,11 +821,11 @@ function scv_init ()
 
     this.cmdary =
         [
-         ["show-most-recent",          cmdShowMostRecent,           CMD_CONSOLE],
-         ["search-scripts",            cmdSearchScripts,            CMD_CONSOLE],
-         ["toggle-scripts-search-box", cmdToggleScriptsSearchBox,   CMD_CONSOLE],
+         ["show-most-recent",          cmdShowMostRecent,          CMD_CONSOLE],
+         ["search-scripts",            cmdSearchScripts,           CMD_CONSOLE],
+         ["toggle-scripts-search-box", cmdToggleScriptsSearchBox,  CMD_CONSOLE],
 
-         ["toggle-show-most-recent",   "show-most-recent toggle",             0]
+         ["toggle-show-most-recent",   "show-most-recent toggle",            0]
         ];
 
     console.menuSpecs["context:scripts"] = {
@@ -882,16 +883,6 @@ function scv_init ()
 
     this.childData.setSortColumn("baseLineNumber");
     this.groupFiles = console.prefs["scriptsView.groupFiles"];
-
-    var atomsvc = console.atomService;
-    this.atomUnknown    = atomsvc.getAtom("item-unk");
-    this.atomHTML       = atomsvc.getAtom("item-html");
-    this.atomJS         = atomsvc.getAtom("item-js");
-    this.atomXUL        = atomsvc.getAtom("item-xul");
-    this.atomXML        = atomsvc.getAtom("item-xml");
-    this.atomGuessed    = atomsvc.getAtom("item-guessed");
-    this.atomBreakpoint = atomsvc.getAtom("item-has-bp");
-    this.atomFunction   = atomsvc.getAtom("file-function");
 }
 
 function cmdSearchScripts (e)
@@ -924,14 +915,16 @@ function cmdSearchScripts (e)
 
     if (scriptsView.currentContent)
     {
-        var textbox = getChildById(scriptsView.currentContent, "scripts-search");
+        var textbox = getChildById(scriptsView.currentContent,
+                                   "scripts-search");
         textbox.value = e.pattern;
     }
 }
 
 function cmdShowMostRecent (e)
 {
-    e.toggle = getToggle (e.toggle, console.prefs["scriptsView.showMostRecent"]);
+    e.toggle = getToggle (e.toggle,
+                          console.prefs["scriptsView.showMostRecent"]);
 
     console.prefs["scriptsView.showMostRecent"] = e.toggle;
     
@@ -978,7 +971,8 @@ function cmdToggleScriptsSearchBox(e)
 
     if (scriptsView.currentContent)
     {
-        var box = getChildById(scriptsView.currentContent, "scripts-search-box");
+        var box = getChildById(scriptsView.currentContent,
+                               "scripts-search-box");
         if (box.hasAttribute("hidden"))
             box.removeAttribute("hidden");
         else
@@ -1136,16 +1130,12 @@ function scv_hookScriptInstanceDestroyed (e)
     }
 }
 
-console.views.scripts.hooks["hook-window-opened"] =
-function scv_hookWindowOpen (e)
+console.views.scripts.hooks["debug-script"] =
+console.views.scripts.hooks["debug-instance"] =
+function scv_hookDebugFlagChanged (e)
 {
-    //console.views.scripts.freeze();
-}
-
-console.views.scripts.hooks["hook-window-loaded"] =
-function scv_hookWindowOpen (e)
-{
-    //console.views.scripts.thaw();
+    if (console.views.scripts.tree)
+        console.views.scripts.tree.invalidate();
 }
 
 console.views.scripts.onSearchInput =
@@ -1259,29 +1249,22 @@ function scv_setmode (flag)
 }
 
 console.views.scripts.getCellProperties =
-function scv_getcprops (index, colID, properties)
+function scv_cellprops (index, colID, properties)
 {
-    var row = this.childData.locateChildByVisualRow (index)
+    if (colID != "scripts:col-0")
+        return null;
+    
+    var row = this.childData.locateChildByVisualRow(index);
     if (row)
     {
-        if (colID == "scripts:col-0")
-        {
-            if (row instanceof ScriptInstanceRecord)
-            {
-                properties.AppendElement (row.fileType);
+        if ("getProperties" in row)
+            return row.getProperties (properties);
 
-                if (row.scriptInstance.breakpointCount)
-                    properties.AppendElement (this.atomBreakpoint);
-            }
-            else if (row instanceof ScriptRecord)
-            {
-                properties.AppendElement (this.atomFunction);
-
-                if (row.scriptWrapper.breakpointCount)
-                    properties.AppendElement (this.atomBreakpoint);
-            }
-        }        
+        if (row.property)
+            return properties.AppendElement (row.property);
     }
+
+    return null;
 }
 
 console.views.scripts.getContext =
@@ -1441,7 +1424,7 @@ function ss_init ()
     this.munger.enabled = true;
     this.munger.addRule ("quote", /(``|'')/, insertQuote);
     this.munger.addRule
-        ("link", /((\w+):\/\/[^<>()\'\"\s:]+|www(\.[^.<>()\'\"\s:]+){2,}|x-jsd:help[\w&\?%]*)/,
+        ("link", /((\w+):\/\/[^<>()\'\"\s]+|www(\.[^.<>()\'\"\s]+){2,}|x-jsd:help[\w&\?%]*)/,
          insertLink);
     this.munger.addRule ("word-hyphenator",
                          new RegExp ("(\\S{" + MAX_WORD_LEN + ",})"),
@@ -2199,6 +2182,7 @@ function ss_init ()
 
     this.deck  = null;
     this.tabs  = null;
+    this.heading  = null;
     this.sourceTabList = new Array();
     this.highlightTab = null;
     this.highlightNodes = new Array();
@@ -2222,8 +2206,6 @@ function cmdCloseTab (e)
     source2View.removeSourceTabAtIndex (e.index);
 }
 
-var gFindInstData;
-
 function cmdFindString (e)
 {
     var source2View = console.views.source2;
@@ -2235,16 +2217,28 @@ function cmdFindString (e)
         return;
 
     var browser = source2View.sourceTabList[index].iframe;
-    if (!gFindInstData)
-      gFindInstData = new nsFindInstData();
-    gFindInstData.browser = browser;
-    gFindInstData.rootSearchWindow = browser.contentWindow;
-    gFindInstData.currentSearchWindow = browser.contentWindow;
-    findInPage(gFindInstData);
+
+    if (typeof nsFindData != "undefined")
+    {
+        if (!("findData" in console))
+            console.findData = new nsFindInstData();
+
+        console.findData.browser = browser;
+        console.findData.rootSearchWindow = browser.contentWindow;
+        console.findData.currentSearchWindow = browser.contentWindow;
+        findInPage(console.findData);
+    }
+    else
+    {
+        findInPage(browser, browser.contentWindow, browser.contentWindow);
+    }
 }
 
 function cmdReloadTab (e)
 {
+    if (console.views.source2.sourceTabList.length == 0)
+        return
+
     var source2View = console.views.source2;
     
     function cb(status)
@@ -2584,6 +2578,9 @@ function s2v_initmargin (sourceTab)
 console.views.source2.markStopLine =
 function s2v_marktab (sourceTab, currentFrame)
 {
+    if ("stopNode" in sourceTab)
+        this.unmarkStopLine(sourceTab);
+    
     if (!currentFrame)
         return;
     
@@ -2600,15 +2597,19 @@ function s2v_marktab (sourceTab, currentFrame)
     var sourceText = sourceTab.sourceText;
     var line = -1;
 
-    if ("scriptInstance" in sourceText &&
-        sourceText.scriptInstance.containsScriptTag (tag))
+    if ("scriptInstance" in sourceText)
     {
-        line = currentFrame.line;
+        if (sourceText.scriptInstance.containsScriptTag (tag) ||
+            tag in sourceText.scriptInstance.scriptManager.transients)
+        {
+            line = currentFrame.line;
+        }
     }
     else if ("scriptWrapper" in sourceText &&
              sourceText.scriptWrapper.tag == tag)
     {
-        line = currentFrame.script.pcToLine (currentFrame.pc, PCMAP_PRETTYPRINT);
+        line = currentFrame.script.pcToLine (currentFrame.pc,
+                                             PCMAP_PRETTYPRINT);
     }
 
     if (line > 0)
@@ -3154,6 +3155,7 @@ function s2v_showtab (index)
             return;
         }
         this.deck.selectedIndex = index;
+        this.heading.value = this.sourceTabList[index].sourceText.url;
     }
     else
         this.lastSelectedTab = index;
@@ -3355,6 +3357,7 @@ function s2v_show ()
     {
         this.tabs  = getChildById (this.currentContent, "source2-tabs");
         this.deck  = getChildById (this.currentContent, "source2-deck");
+        this.heading = getChildById(this.currentContent, "source2-heading");
         //this.bloke = getChildById (this.currentContent, "source2-bloke");
         //version = getChildById (this.currentContent, "source2-version-label");
         //help = getChildById (this.currentContent, "source2-help-label");
@@ -3385,6 +3388,7 @@ function s2v_hide ()
     this.clearOutputDeck();
     this.deck = null;
     this.tabs = null;
+    this.heading = null;
 }
 
 /*******************************************************************************

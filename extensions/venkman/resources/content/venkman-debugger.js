@@ -221,13 +221,16 @@ function jsdScriptDestroyed (jsdScript)
 
 function jsdExecutionHook (frame, type, rv)
 {
+    //dd ("execution hook: " + formatFrame(frame));
+    
     var hookReturn = jsdIExecutionHook.RETURN_CONTINUE;
 
     if (!console.initialized)
         return hookReturn;
     
 
-    if (!ASSERT(!("frames" in console), "Execution hook called while stopped") ||
+    if (!ASSERT(!("frames" in console),
+                "Execution hook called while stopped") ||
         frame.isNative ||
         !ASSERT(frame.script, "Execution hook called with no script") ||
         frame.script.fileName == MSG_VAL_CONSOLE ||
@@ -238,6 +241,16 @@ function jsdExecutionHook (frame, type, rv)
                 "stopped in a filtered URL"))
     {
         return hookReturn;
+    }
+
+    var frames = new Array();
+    var prevFrame = frame;
+    var hasDisabledFrame = false;
+    
+    while (prevFrame)
+    {
+        frames.push(prevFrame);
+        prevFrame = prevFrame.callingFrame;
     }
 
     var targetWindow = null;
@@ -276,7 +289,7 @@ function jsdExecutionHook (frame, type, rv)
     try
     {
         //dd ("debug trap " + formatFrame(frame));
-        hookReturn = debugTrap(frame, type, rv);
+        hookReturn = debugTrap(frames, type, rv);
         //dd ("debug trap returned " + hookReturn);
     }
     catch (ex)
@@ -310,18 +323,34 @@ function jsdCallHook (frame, type)
     if (type == jsdICallHook.TYPE_FUNCTION_CALL)
     {
         setStopState(false);
-        ++console._stepOverLevel;
+        //dd ("Calling: " + frame.functionName);
     }
     else if (type == jsdICallHook.TYPE_FUNCTION_RETURN)
     {
-        if (--console._stepOverLevel <= 0)
+        // we're called *before* the returning frame is popped from the
+        // stack, so we want our depth calculation to be off by one.
+        var depth = -1;
+        var prevFrame = frame;
+        
+        while (prevFrame)
         {
+            depth++;
+            prevFrame = prevFrame.callingFrame;
+        }
+
+        
+        //dd ("Returning: " + frame.functionName +
+        //    ", target depth: " + console._stepOverDepth +
+        //    ", current depth: " + depth);
+        
+        if (depth <= console._stepOverDepth)
+        {
+            //dd ("step over at target depth of " + depth);
             setStopState(true);
             console.jsds.functionHook = null;
+            delete console._stepOverDepth;
         }
     }
-    //dd ("Call Hook: " + frame.functionName + ", type " +
-    //    type + " callCount: " + console._stepOverLevel);
 }
 
 function jsdErrorHook (message, fileName, line, pos, flags, exception)
@@ -565,6 +594,7 @@ function ScriptInstance (manager)
     this.isSealed = false;
     this.scriptCount = 0;
     this.breakpointCount = 0;
+    this.disabledScripts = 0;
     this._lineMap = new Array();
     this._lineMapInited = false;
 }
@@ -626,6 +656,7 @@ function si_seal ()
 
     if (isURLFiltered(this.url))
     {
+        this.disabledScripts = 1;
         var nada = SCRIPT_NODEBUG | SCRIPT_NOPROFILE;
         if (this.topLevel && this.topLevel.isValid)
             this.topLevel.jsdScript.flags |= nada;
@@ -634,6 +665,7 @@ function si_seal ()
         {
             if (this.functions[f].jsdScript.isValid)
                 this.functions[f].jsdScript.flags |= nada;
+            ++this.disabledScripts;
         }
     }
 
@@ -1454,11 +1486,15 @@ const TMODE_IGNORE = 0;
 const TMODE_TRACE  = 1;
 const TMODE_BREAK  = 2;
 
-function debugTrap (frame, type, rv)
+function debugTrap (frames, type, rv)
 {
     var tn = "";
     var retcode = jsdIExecutionHook.RETURN_CONTINUE;
 
+    //dd ("debugTrap");
+
+    var frame = frames[0];
+    
     $ = new Array();
     
     switch (type)
@@ -1493,21 +1529,27 @@ function debugTrap (frame, type, rv)
             tn = MSG_VAL_THROW;
             break;
         case jsdIExecutionHook.TYPE_INTERRUPTED:
+            
             if (!frame.script.functionName && 
                 isURLFiltered(frame.script.fileName))
             {
-                dd ("filtered url: " + frame.script.fileName);
+                //dd ("filtered url: " + frame.script.fileName);
                 frame.script.flags |= SCRIPT_NOPROFILE | SCRIPT_NODEBUG;
                 return retcode;
             }
-            
+
             var line;
             if (console.prefs["prettyprint"])
                 line = frame.script.pcToLine (frame.pc, PCMAP_PRETTYPRINT);
             else
                 line = frame.line;
-            if (console._stepPast == frame.script.fileName + line)
+            if (console._stepPast == 
+                frames.length + frame.script.fileName + line)
+            {
+                //dd("stepPast: " + console._stepPast);
                 return retcode;
+            }
+            
             delete console._stepPast;
             setStopState(false);
             break;
@@ -1524,10 +1566,7 @@ function debugTrap (frame, type, rv)
         display (getMsg(MSN_STOP, tn), MT_STOP);
     
     /* build an array of frames */
-    console.frames = new Array(frame);
-    
-    while ((frame = frame.callingFrame))
-        console.frames.push(frame);
+    console.frames = frames;
     
     console.trapType = type;
     
