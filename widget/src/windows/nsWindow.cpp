@@ -3198,6 +3198,11 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             } 
             break;
 
+        case WM_GETDLGCODE:
+            *aRetValue = DLGC_WANTALLKEYS;
+            result = PR_TRUE;
+            break;
+
         case WM_MOUSEMOVE:
             //RelayMouseEvent(msg,wParam, lParam); 
             result = DispatchMouseEvent(NS_MOUSE_MOVE);
