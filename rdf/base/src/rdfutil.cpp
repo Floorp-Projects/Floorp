@@ -237,3 +237,23 @@ rdf_MakeAbsoluteURI(const nsString& aBaseURI, nsString& aURI)
 
     return NS_OK;
 }
+
+
+PR_EXTERN(nsresult)
+rdf_MakeAbsoluteURI(nsIURL* aURL, nsString& aURI)
+{
+    nsresult rv;
+    nsAutoString result;
+
+    rv = NS_MakeAbsoluteURL(aURL, nsAutoString(""), aURI, result);
+    if (NS_SUCCEEDED(rv)) {
+        aURI = result;
+    }
+    else {
+        // There are some ugly URIs (e.g., "NC:Foo") that netlib can't
+        // parse. If NS_MakeAbsoluteURL fails, then just punt and
+        // assume that aURI was already absolute.
+    }
+
+    return NS_OK;
+}
