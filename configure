@@ -15491,6 +15491,10 @@ cat >> confdefs.h <<EOF
 #define MOZILLA_REGION_VERSION "$MOZILLA_REGION_VERSION"
 EOF
 
+cat >> confdefs.h <<EOF
+#define MOZILLA_SKIN_VERSION "$MOZILLA_SKIN_VERSION"
+EOF
+
 
 
 
