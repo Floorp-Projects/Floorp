@@ -174,6 +174,10 @@ nsContentAttr nsHTMLTagContent::GetAttribute(const nsString& aName,
 
     // Provide default conversions for most everything
     switch (value.GetUnit()) {
+    case eHTMLUnit_Empty:
+      aResult.Truncate();
+      break;
+
     case eHTMLUnit_String:
     case eHTMLUnit_Null:
       value.GetStringValue(aResult);
