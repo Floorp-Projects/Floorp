@@ -32,6 +32,7 @@ REQUIRES	=\
 			XfeBm \
 			XfeToolBar \
 			XfeToolTip \
+			XfeComboBox \
 			Microline \
 			nspr \
 			layer \
@@ -77,6 +78,9 @@ endif
 endif
 
 CPPSRCS		= \
+		  ToolbarButton.cpp \
+		  ToolbarItem.cpp \
+		  ToolbarUrlBar.cpp \
 		  plugin.cpp \
 		  BackForwardMenu.cpp \
 		  BookmarkFrame.cpp \
