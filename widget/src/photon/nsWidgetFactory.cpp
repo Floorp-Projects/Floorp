@@ -111,30 +111,21 @@ static NS_DEFINE_CID(kCFileSpecWithUI,   NS_FILESPECWITHUI_CID);
 class nsWidgetFactory : public nsIFactory
 {   
 public:   
-    // nsISupports methods
+
     NS_DECL_ISUPPORTS
 
-    // nsIFactory methods   
-    NS_IMETHOD CreateInstance(nsISupports *aOuter,   
-                              const nsIID &aIID,   
-                              void **aResult);   
-
-    NS_IMETHOD LockFactory(PRBool aLock);   
+    NS_DECL_NSIFACTORY
 
     nsWidgetFactory(const nsCID &aClass);   
-    ~nsWidgetFactory();   
-
+    virtual ~nsWidgetFactory();   
 private:
-    nsCID mClassID;
-};   
+  nsCID mClassID;
 
-NS_IMPL_ADDREF(nsWidgetFactory)
-NS_IMPL_RELEASE(nsWidgetFactory)
-
+};   ;   
 
 nsWidgetFactory::nsWidgetFactory(const nsCID &aClass)   
 {   
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mClassID = aClass;
 
   if (!PhWidLog)
@@ -151,31 +142,7 @@ nsWidgetFactory::~nsWidgetFactory()
   PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidgetFactory::~nsWidgetFactory Destructor Called\n"));
 }   
 
-nsresult nsWidgetFactory::QueryInterface(const nsIID &aIID,   
-                                         void **aResult)   
-{   
-//  PR_LOG(PhWidLog, PR_LOG_ERROR,( "nsWidgetFactory::QueryInterface mRefCnt=<%d>\n", mRefCnt));
-
-  if (NULL == aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  *aResult = NULL;
-
-  if (aIID.Equals(kISupportsIID)) {
-    *aResult = (void *)(nsISupports *)this;
-  } else if (aIID.Equals(kIFactoryIID)) {
-    *aResult = (void *)(nsIFactory *)this;
-  }
-
-  if (*aResult == NULL) {
-    return NS_NOINTERFACE;
-  }
-
-  NS_ADDREF_THIS();
-  return NS_OK;
-}   
-
+NS_IMPL_ISUPPORTS(nsWidgetFactory, NS_GET_IID(nsIFactory))
 
 nsresult nsWidgetFactory::CreateInstance( nsISupports *aOuter,  
                                           const nsIID &aIID,  
@@ -300,13 +267,9 @@ nsresult nsWidgetFactory::CreateInstance( nsISupports *aOuter,
 
 //PR_LOG(PhWidLog, PR_LOG_ERROR,( "nsWidgetFactory::CreateInstance 2 mRefCnt=<%d>\n", mRefCnt));
 
+    NS_ADDREF(inst);
     nsresult res = inst->QueryInterface(aIID, aResult);
-
-    if (res != NS_OK) {  
-        PR_LOG(PhWidLog, PR_LOG_ERROR,( "nsWidgetFactory::CreateInstance  query interface barfed.\n" ));
-        // We didn't get the right interface, so clean up  
-        delete inst;  
-    }
+    NS_RELEASE(inst);
 
     return res;
 
