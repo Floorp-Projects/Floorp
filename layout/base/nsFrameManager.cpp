@@ -1190,6 +1190,17 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
         if (aMinChange < NS_STYLE_HINT_FRAMECHANGE) { // if frame gets regenerated, let it keep old context
           aFrame->SetStyleContext(aPresContext, newContext);
         }
+        // if old context had image and new context does not have the same image, 
+        // stop the image load for the frame
+        nsStyleColor oldColor;
+        nsStyleColor newColor;
+        oldContext->GetStyle(eStyleStruct_Color, (nsStyleColor &)oldColor);
+        newContext->GetStyle(eStyleStruct_Color, (nsStyleColor &)newColor);
+        if(oldColor.mBackgroundImage.Length() > 0 &&
+          oldColor.mBackgroundImage != newColor.mBackgroundImage ){
+          // stop the image loading for the frame, the image has changed
+          aPresContext->StopAllLoadImagesFor(aFrame);
+        }
       }
       else {
         oldContext->RemapStyle(aPresContext, PR_FALSE);
