@@ -50,12 +50,10 @@
 <tree datasources="rdf:bookmarks">
   <treecol rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
   <treecol rdf:resource="http://home.netscape.com/NC-rdf#URL"/>
-  <treecol rdf:resource="http://home.netscape.com/WEB-rdf#LastModifiedDate"/>
   <treehead>
     <treeitem>
       <treecell>Name</treecell>
       <treecell>URL</treecell>
-      <treecell>Last Modified</treecell>
     </treeitem>
   </treehead>
 
@@ -84,9 +82,8 @@
       </treechildren>
     </treeitem>
 
-    <treeitem id="NC:BookmarksRoot">
+    <treeitem id="NC:BookmarksRoot" open="true">
       <treecell>Bookmarks</treecell>
-      <treecell></treecell>
       <treecell></treecell>
     </treeitem>
 

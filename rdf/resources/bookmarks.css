@@ -8,6 +8,7 @@ tree {
  border: none; 
  border-spacing: 0px; 
  border-collapse: collapse; 
+ width: 100%;
 } 
 
 treeitem { 
@@ -20,7 +21,6 @@ treehead {
 
 treebody { 
  display: table-row-group; 
-
 } 
 
 treecell { 
@@ -29,6 +29,10 @@ treecell {
 
 treehead treeitem treecell { 
  background-color: #c0c0c0; 
- border: thin black solid; 
-} 
+ border: outset 1px;
+ border-color: white #707070 #707070 white;
+ padding-left: 4px;
+}
+
+
   
