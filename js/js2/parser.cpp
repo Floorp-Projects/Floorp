@@ -3675,9 +3675,6 @@ JS::VariableBinding *JS::Parser::parseNamedRestParameters(FunctionDefinition &fd
         if (!fd.optParameters && $1->initializer) {
             fd.optParameters = $1;
         }
-        if (fd.optParameters && !$1->initializer) {
-            syntaxError("'=' expected", 0);
-        }
         if( lookahead(Token::comma) ) {
             params += $1;
             match(Token::comma);
@@ -3710,9 +3707,6 @@ JS::VariableBinding *JS::Parser::parseNamedParameters(FunctionDefinition &fd,Nod
     }
     if (!fd.optParameters && $1->initializer) {
         fd.optParameters = $1;
-    }
-    if (fd.optParameters && !$1->initializer) {
-        syntaxError("'=' expected", 0);
     }
     if (lookahead(Token::comma)) {
         params += $1;
