@@ -42,7 +42,7 @@ GetVersionTable();
 my $cgi = Bugzilla->cgi;
 my $product = $cgi->param('product');
 
-if (!$product) {
+if (!defined $product) {
     # Reference to a subset of %::proddesc, which the user is allowed to see
     my %products;
 
