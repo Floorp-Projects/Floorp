@@ -55,6 +55,9 @@
 #include "nsIWebBrowserChrome.h"
 #include "nsIDOMElement.h"
 #include "nsContentPolicyUtils.h"
+#include "nsIDOMMouseListener.h"
+#include "nsIDOMEventReceiver.h"
+#include "nsIPrivateDOMEvent.h"
 
 // XXX For temporary paint code
 #include "nsIStyleContext.h"
@@ -64,11 +67,15 @@
 
 #include "nsObjectFrame.h"
 
+static NS_DEFINE_IID(kIDOMMouseListenerIID, NS_IDOMMOUSELISTENER_IID);
+
 class nsPluginInstanceOwner : public nsIPluginInstanceOwner,
                               public nsIPluginTagInfo2,
                               public nsIJVMPluginTagInfo,
                               public nsIEventListener,
-                              public nsITimerCallback
+                              public nsITimerCallback,
+                              public nsIDOMMouseListener
+                              
 {
 public:
   nsPluginInstanceOwner();
@@ -142,7 +149,21 @@ public:
   NS_IMETHOD GetName(const char* *result);
 
   NS_IMETHOD GetMayScript(PRBool *result);
-  
+
+ /** nsIDOMMouseListener interfaces 
+  * @see nsIDOMMouseListener
+  */
+  virtual nsresult MouseDown(nsIDOMEvent* aMouseEvent);
+  virtual nsresult MouseUp(nsIDOMEvent* aMouseEvent);
+  virtual nsresult MouseClick(nsIDOMEvent* aMouseEvent);
+  virtual nsresult MouseDblClick(nsIDOMEvent* aMouseEvent);
+  virtual nsresult MouseOver(nsIDOMEvent* aMouseEvent);
+  virtual nsresult MouseOut(nsIDOMEvent* aMouseEvent);
+  virtual nsresult HandleEvent(nsIDOMEvent* aEvent);     
+  /* END interfaces from nsIDOMMouseListener*/
+
+  nsresult Destroy();  
+
   //nsIEventListener interface
   nsEventStatus ProcessEvent(const nsGUIEvent & anEvent);
   
@@ -193,12 +214,15 @@ private:
 nsObjectFrame::~nsObjectFrame()
 {
   // beard: stop the timer explicitly to reduce reference count.
-  if (nsnull != mInstanceOwner)
+  if (nsnull != mInstanceOwner) {
     mInstanceOwner->CancelTimer();
+    mInstanceOwner->Destroy();
+  }
 
   NS_IF_RELEASE(mWidget);
   NS_IF_RELEASE(mInstanceOwner);
   NS_IF_RELEASE(mFullURL);
+
 }
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -1280,13 +1304,14 @@ nsObjectFrame::HandleEvent(nsIPresContext* aPresContext,
   {
 	  switch (anEvent->message) 
     {
-      case NS_MOUSE_LEFT_BUTTON_DOWN:
+    //XXX: All of the button down's are handled by the DOM listener 
+     // case NS_MOUSE_LEFT_BUTTON_DOWN:
       case NS_MOUSE_LEFT_BUTTON_UP:
       case NS_MOUSE_LEFT_DOUBLECLICK:
-      case NS_MOUSE_RIGHT_BUTTON_DOWN:
+     // case NS_MOUSE_RIGHT_BUTTON_DOWN:
       case NS_MOUSE_RIGHT_BUTTON_UP:
       case NS_MOUSE_RIGHT_DOUBLECLICK:
-      case NS_MOUSE_MIDDLE_BUTTON_DOWN:
+     // case NS_MOUSE_MIDDLE_BUTTON_DOWN:
       case NS_MOUSE_MIDDLE_BUTTON_UP:
       case NS_MOUSE_MIDDLE_DOUBLECLICK:
       case NS_MOUSE_MOVE:
@@ -1535,6 +1560,12 @@ nsresult nsPluginInstanceOwner::QueryInterface(const nsIID& aIID,
     *aInstancePtrResult = (void *)((nsITimerCallback *)this);
     AddRef();
     return NS_OK;
+  }
+
+  if (aIID.Equals(kIDOMMouseListenerIID)) {                                         
+    *aInstancePtrResult = (void*)(nsIDOMMouseListener*) this;    
+    AddRef();
+    return NS_OK;                                                        
   }
 
   if (aIID.Equals(kISupportsIID))
@@ -2337,6 +2368,71 @@ static void GUItoMacEvent(const nsGUIEvent& anEvent, EventRecord& aMacEvent)
 }
 #endif
 
+
+/*=============== nsIMouseListener ======================*/
+
+nsresult
+nsPluginInstanceOwner::MouseDown(nsIDOMEvent* aMouseEvent)
+{
+  nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(aMouseEvent));
+  if (privateEvent) {
+    nsMouseEvent* mouseEvent = nsnull;
+    privateEvent->GetInternalNSEvent((nsEvent**)&mouseEvent);
+    if (mouseEvent) {
+      nsEventStatus rv = ProcessEvent(*mouseEvent);
+      if (nsEventStatus_eConsumeNoDefault == rv) {
+        return NS_ERROR_FAILURE; // means consume event
+      }
+    }
+    else NS_ASSERTION(PR_FALSE, "nsPluginInstanceOwner::MouseDown failed, mouseEvent null");   
+  }
+  else NS_ASSERTION(PR_FALSE, "nsPluginInstanceOwner::MouseDown failed, privateEvent null");   
+  
+  return NS_OK;
+}
+
+nsresult
+nsPluginInstanceOwner::MouseUp(nsIDOMEvent* aMouseEvent)
+{
+  
+  return NS_OK;
+}
+
+nsresult
+nsPluginInstanceOwner::MouseClick(nsIDOMEvent* aMouseEvent)
+{
+ 
+  return NS_OK;
+}
+
+nsresult
+nsPluginInstanceOwner::MouseDblClick(nsIDOMEvent* aMouseEvent)
+{
+ 
+  return NS_OK;
+}
+
+nsresult
+nsPluginInstanceOwner::MouseOver(nsIDOMEvent* aMouseEvent)
+{
+ 
+  return NS_OK;
+}
+
+nsresult
+nsPluginInstanceOwner::MouseOut(nsIDOMEvent* aMouseEvent)
+{
+ 
+  return NS_OK;
+}
+
+nsresult
+nsPluginInstanceOwner::HandleEvent(nsIDOMEvent* aEvent)
+{
+  return NS_OK;
+}
+
+
 nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
 {
 	nsEventStatus rv = nsEventStatus_eIgnore;
@@ -2367,6 +2463,28 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
 #endif
 
   return rv;
+}
+
+nsresult
+nsPluginInstanceOwner::Destroy()
+{
+  // Unregister mouse event listener
+  nsCOMPtr<nsIContent> content;
+  mOwner->GetContent(getter_AddRefs(content));
+  if (content) {
+    nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(content));
+    if (receiver) {
+      nsCOMPtr<nsIDOMMouseListener> mouseListener;
+      QueryInterface(NS_GET_IID(nsIDOMMouseListener), getter_AddRefs(mouseListener));
+      if (mouseListener) { 
+        receiver->RemoveEventListenerByIID(mouseListener, NS_GET_IID(nsIDOMMouseListener));
+      }
+      else NS_ASSERTION(PR_FALSE, "Unable to remove event listener for plugin");
+    }
+    else NS_ASSERTION(PR_FALSE, "plugin was not an event listener");
+  }
+  else NS_ASSERTION(PR_FALSE, "plugin had no content");
+  return NS_OK;
 }
 
 // Paints are handled differently, so we just simulate an update event.
@@ -2480,7 +2598,24 @@ NS_IMETHODIMP nsPluginInstanceOwner::Init(nsIPresContext* aPresContext, nsObject
   //do not addref to avoid circular refs. MMP
   mContext = aPresContext;
   mOwner = aFrame;
-  return NS_OK;
+
+  // Register mouse listener
+  nsCOMPtr<nsIContent> content;
+  mOwner->GetContent(getter_AddRefs(content));
+  if (content) {
+    nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(content));
+    if (receiver) {
+      nsCOMPtr<nsIDOMMouseListener> mouseListener;
+      QueryInterface(NS_GET_IID(nsIDOMMouseListener), getter_AddRefs(mouseListener));
+      if (mouseListener) {
+        receiver->AddEventListenerByIID(mouseListener, NS_GET_IID(nsIDOMMouseListener));
+        return NS_OK;
+      }
+    }
+  }
+
+  NS_ASSERTION(PR_FALSE, "plugin could not be added as a mouse listener");
+  return NS_ERROR_NO_INTERFACE; 
 }
 
 nsPluginPort* nsPluginInstanceOwner::GetPluginPort()
