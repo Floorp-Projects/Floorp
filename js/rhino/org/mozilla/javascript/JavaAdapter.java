@@ -783,9 +783,13 @@ public class JavaAdapter extends ScriptableObject {
             Class clazz = findLoadedClass(name);
             if (clazz == null) {
                 ClassLoader loader = getClass().getClassLoader();
-                if (loader != null)
-                    return loader.loadClass(name);
-                clazz = findSystemClass(name);
+                try {
+                    if (loader != null)
+                        return loader.loadClass(name);
+                    clazz = findSystemClass(name);
+                } catch (ClassNotFoundException e) {
+                    return ScriptRuntime.loadClassName(name);
+                }
             }
             if (resolve)
                 resolveClass(clazz);
