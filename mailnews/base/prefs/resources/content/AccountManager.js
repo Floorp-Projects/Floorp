@@ -555,10 +555,6 @@ function getFormElementValue(formElement) {
 
   else if (type == "text") {
     var val = formElement.getAttribute("value");
-    dump("getting text element '" +
-         formElement.id + "` = " +
-         val + "\n");
-    
     if (val) return val;
     else return null;
   }
@@ -626,7 +622,6 @@ function setFormElementValue(formElement, value) {
   }
 
   else if (type == "text") {
-    dump("setting text element '" + formElement.id + "' to " + value + "\n");
     if (value == null || value == undefined)
       formElement.removeAttribute("value");
     else

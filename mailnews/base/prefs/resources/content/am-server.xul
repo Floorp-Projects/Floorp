@@ -37,6 +37,10 @@
         <text class="label" value="&userName.label;"/>
         <text class="label" id="username.verbose"/>
       </row>
+      <row>
+        <text class="label" value="&port.label;"/>
+        <textfield wsm_persist="true" size="3" id="server.port"/>
+      </row>
     </rows>
   </grid>
   <spring class="spacer"/>
@@ -62,7 +66,11 @@
             value="&deleteOnServer.label;"/>
   <checkbox wsm_persist="true" id="pop3.emptyTrashOnExit"
             value="&emptyTrashOnExit.label;"/>
-
+  <box>
+    <checkbox wsm_persist="true" value="&maxMessageSizePrefix.label;" id="pop3.limitMessageSize"/>
+    <textfield wsm_persist="true" id="pop3.maxMessageSize" size="3"/>
+    <text value="&maxMessageSizePostfix.label;" for="pop3.limitMessageSize" class="label"/>
+  </box>
   <!-- IMAP -->
   <box iscontrolcontainer="true">
     <text class="label" value="&deleteMessagePrefix.label;"/>

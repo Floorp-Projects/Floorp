@@ -10,6 +10,7 @@
 <!ENTITY serverType.label "Server Type:">
 <!ENTITY serverName.label "Server Name:">
 <!ENTITY userName.label "User Name:">
+<!ENTITY port.label "Port:">
 <!ENTITY savePassword.label "Save password.">
 <!-- LOCALIZATION NOTE (biffStart.label) : translate below 2 line with grammer dependency
         For example, in Japanese cases:
@@ -42,3 +43,5 @@
 <!ENTITY abbreviateOff.label "Abbreviate names (For example, 'n.p.m.mail-news')">
 <!ENTITY advancedButton.label "Advanced...">
 
+<!ENTITY maxMessageSizePrefix.label "Limit message download to">
+<!ENTITY maxMessageSizePostfix.label "kB per message">
