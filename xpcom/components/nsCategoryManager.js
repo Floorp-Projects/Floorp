@@ -245,7 +245,7 @@ CategoryEnumerator.prototype = {
         if (!this.hasMoreElements())
             return null;        // XXX?
         var str = Components.classes["component://netscape/supports-string"]
-            .createInterface(Components.interfaces.nsISupportsString);
+            .createInstance(Components.interfaces.nsISupportsString);
         str.data = this.contents[this.index++];
         return str;
     },
