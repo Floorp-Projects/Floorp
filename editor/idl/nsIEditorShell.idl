@@ -552,6 +552,25 @@ interface nsIEditorShell : nsISupports
     */
   void SetDisplayMode(in PRInt32 displayMode);
 
+  /** Get current mode for editing
+    *  Returns:
+    *  0 (eDisplayModePreview,)
+    *  1 (eDisplayModeNormal)
+    *  2 (eDisplayModeAllTags)
+    *  3 (eDisplayModeSource)
+    */
+  PRInt32 GetEditMode();
+  
+  /** For quicker test if we are in HTML Source mode
+    */
+  boolean IsHTMLSourceMode();
+
+  /** Save the current HTML source edit session
+    *  by inserting it into the document,
+    *  replacing existing DOM
+    */
+  void FinishHTMLSource();
+
   /** Add/remove an overridestyle sheet to show paragraph marks
     *
     */

@@ -122,7 +122,10 @@ nsBaseStateUpdatingCommand::IsCommandEnabled(const PRUnichar *aCommand, nsISuppo
   editorShell->GetEditor(getter_AddRefs(editor));
   if (!editor) return NS_OK;
  
-  *outCmdEnabled = PR_TRUE;
+  // Enable commands only if not in HTML source edit mode
+  PRBool sourceMode = PR_FALSE;
+  editorShell->IsHTMLSourceMode(&sourceMode);
+  *outCmdEnabled = !sourceMode;
     
   // also udpate the command state  
   return UpdateCommandState(aCommand, refCon);
@@ -229,7 +232,8 @@ nsPrintingCommands::DoCommand(const PRUnichar *aCommand, nsISupports * refCon)
   if (!editorShell) return NS_ERROR_NULL_POINTER;
   nsresult rv = NS_OK;
   
-  
+  editorShell->FinishHTMLSource();
+
   nsAutoString cmdString(aCommand);
   if (cmdString.EqualsWithConversion("cmd_print"))
     rv = editorShell->Print();
@@ -237,7 +241,7 @@ nsPrintingCommands::DoCommand(const PRUnichar *aCommand, nsISupports * refCon)
     rv = NS_ERROR_NOT_IMPLEMENTED;
   else if (cmdString.EqualsWithConversion("cmd_printPreview"))
     rv = NS_ERROR_NOT_IMPLEMENTED;
-  
+
   return rv;  
 }
 
@@ -270,10 +274,10 @@ nsSaveCommand::DoCommand(const PRUnichar *aCommand, nsISupports * refCon)
   
   if (editorShell)
   {
+    editorShell->FinishHTMLSource();
     PRBool wasSaved;
     rv = editorShell->SaveDocument(PR_FALSE, PR_FALSE, &wasSaved);
   }
-  
   return rv;  
 }
 
@@ -298,10 +302,10 @@ nsSaveAsCommand::DoCommand(const PRUnichar *aCommand, nsISupports * refCon)
   nsresult rv = NS_OK;
   if (editorShell)
   {
+    editorShell->FinishHTMLSource();
     PRBool wasSaved;
     rv = editorShell->SaveDocument(PR_TRUE, PR_FALSE, &wasSaved);
   }
-  
   return rv;  
 }
 

@@ -602,10 +602,12 @@
       <text class="label" value="&lastPickedColor.label;"/>
     </box>
     <colorpicker id="TextColorPicker" palettename="standard" onclick="EditorSelectTextColor('TextColorPicker','TextColorPopupButton');"/>
+<!--
     <box valign="middle" autostretch="never">
       <text class="label" value="&colorLabel.label;"/>
       <button class="dialog" value="&ok.label;" oncommand="SetManualTextColor()"/>
     </box>
+-->
     <button class="dialog" value="&colorPicker.default.label;" oncommand="EditorRemoveTextColor('TextColorPopupButton');"/>
   </popup>
 
@@ -618,10 +620,12 @@
       <text class="label" value="&lastPickedColor.label;"/>
     </box>
     <colorpicker id="BackColorPicker" palettename="standard" onclick="EditorSelectBackColor('BackColorPicker','BackColorPopupButton');"/>
+<!--
     <box valign="middle" autostretch="never">
       <text class="label" value="&colorLabel.label;"/>
       <button class="dialog" value="Ok" oncommand="SetManualBackColor()"/>
     </box>
+-->
     <button class="dialog" value="&colorPicker.default.label;" oncommand="EditorRemoveBackColor('BackColorPopupButton');"/>
   </popup>
 

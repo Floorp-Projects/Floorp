@@ -95,9 +95,14 @@ function ShowHiddenItemOnCleanup( id )
 function ShowMenuItem(id, showItem)
 {
   var item = document.getElementById(id);
-	var showing = (item.getAttribute('hidden') !='true');
-	if(item && (showItem != showing))
-		item.setAttribute('hidden', showItem ? '' : 'true');
+  if (item)
+  {
+	  var showing = (item.getAttribute('hidden') !='true');
+	  if(showItem != showing)
+		  item.setAttribute('hidden', showItem ? '' : 'true');
+  }
+  else
+    dump("ShowMenuItem: item id="+id+" not found\n");
 }
 
 function IsMenuItemShowing(menuID)

@@ -90,6 +90,8 @@ function SetupControllerCommands()
   gComposerCommandManager.registerCommand("cmd_tableJoinCells",     nsJoinTableCellsCommand);
   gComposerCommandManager.registerCommand("cmd_tableSplitCell",     nsSplitTableCellCommand);
   gComposerCommandManager.registerCommand("cmd_NormalizeTable",     nsNormalizeTableCommand);
+  gComposerCommandManager.registerCommand("cmd_FinishHTMLSource",   nsFinishHTMLSource);
+  gComposerCommandManager.registerCommand("cmd_CancelHTMLSource",   nsCancelHTMLSource);
 }
 
 //-----------------------------------------------------------------------------------
@@ -169,6 +171,8 @@ var nsOpenCommand =
 
   doCommand: function(aCommand)
   {
+dump("*** nsOpenCommand: doCommand\n");
+
     var fp = Components.classes["component://mozilla/filepicker"].createInstance(nsIFilePicker);
     fp.init(window, window.editorShell.GetString("OpenHTMLFile"), nsIFilePicker.modeOpen);
   
@@ -207,10 +211,12 @@ var nsSaveAsCharsetCommand =
   doCommand: function(aCommand)
   {
     window.ok = false;
-    if(window.openDialog("chrome://editor/content/EditorSaveAsCharset.xul","_blank", "chrome,close,titlebar,modal"))
+    // In editor.js
+    FinishHTMLSource();
+    if (window.openDialog("chrome://editor/content/EditorSaveAsCharset.xul","_blank", "chrome,close,titlebar,modal"))
     {
-       if( window.ok ) 
-         return window.editorShell.saveDocument(true, false);
+      if( window.ok ) 
+        return window.editorShell.saveDocument(true, false);
     }
     return false;
   }
@@ -227,48 +233,43 @@ var nsRevertCommand =
 
   doCommand: function(aCommand)
   {
-    if (window.editorShell && 
-        window.editorShell.documentModified &&
-        window.editorShell.editorDocument.location != "about:blank")
+    // Confirm with the user to abandon current changes
+    if (commonDialogsService)
     {
-      // Confirm with the user to abandon current changes
-      if (commonDialogsService)
-      {
-        var result = {value:0};
+      var result = {value:0};
 
-        // Put the page title in the message string
-        var title = window.editorShell.editorDocument.title;
-        if (!title || title.length == 0)
-          title = window.editorShell.GetTitle("untitled");
+      // Put the page title in the message string
+      var title = window.editorShell.editorDocument.title;
+      if (!title || title.length == 0)
+        title = window.editorShell.GetTitle("untitled");
 
-        var msg = window.editorShell.GetString("AbandonChanges").replace(/%title%/,title);
+      var msg = window.editorShell.GetString("AbandonChanges").replace(/%title%/,title);
 
-        commonDialogsService.UniversalDialog(
-          window,
-          null,
-          window.editorShell.GetString("RevertCaption"),
-          msg,
-          null,
-          window.editorShell.GetString("Revert"),
-          window.editorShell.GetString("Cancel"),
-          null,
-          null,
-          null,
-          null,
-          {value:0},
-          {value:0},
-          "chrome://global/skin/question-icon.gif",
-          {value:"false"},
-          2,
-          0,
-          0,
-          result
-          );
+      commonDialogsService.UniversalDialog(
+        window,
+        null,
+        window.editorShell.GetString("RevertCaption"),
+        msg,
+        null,
+        window.editorShell.GetString("Revert"),
+        window.editorShell.GetString("Cancel"),
+        null,
+        null,
+        null,
+        null,
+        {value:0},
+        {value:0},
+        "chrome://global/skin/question-icon.gif",
+        {value:"false"},
+        2,
+        0,
+        0,
+        result
+        );
 
-        // Reload page if first button (Rever) was pressed
-        if(result.value == 0)
-          window.editorShell.LoadUrl(editorShell.editorDocument.location);
-      }
+      // Reload page if first button (Rever) was pressed
+      if(result.value == 0)
+        window.editorShell.LoadUrl(editorShell.editorDocument.location);
     }
   }
 };
@@ -317,6 +318,7 @@ var nsPreviewCommand =
 
   doCommand: function(aCommand)
   {
+    FinishHTMLSource();
 	  if (!editorShell.CheckAndSaveDocument(window.editorShell.GetString("BeforePreview")))
 	    return;
 
@@ -346,6 +348,8 @@ var nsQuitCommand =
 
   doCommand: function(aCommand)
   {
+    // In editor.js
+    FinishHTMLSource();
     goQuitApplication();
   }
 };
@@ -393,7 +397,6 @@ var nsSpellingCommand =
     var spellChecker = window.editorShell.QueryInterface(Components.interfaces.nsIEditorSpellCheck);
     if (spellChecker)
     {
-      // dump("Check Spelling starting...\n");
       // Start the spell checker module. Return is first misspelled word
       try {
         spellChecker.InitSpellChecker();
@@ -462,16 +465,16 @@ var nsHLineCommand =
     // Inserting an HLine is different in that we don't use properties dialog
     //  unless we are editing an existing line's attributes
     //  We get the last-used attributes from the prefs and insert immediately
-  
+
     tagName = "hr";
     hLine = window.editorShell.GetSelectedElement(tagName);
-  
+
     if (hLine) {
       // We only open the dialog for an existing HRule
       window.openDialog("chrome://editor/content/EdHLineProps.xul", "_blank", "chrome,close,titlebar,modal");
     } else {
       hLine = window.editorShell.CreateElementWithDefaults(tagName);
-  
+
       if (hLine) {
         // We change the default attributes to those saved in the user prefs
 
@@ -480,7 +483,7 @@ var nsHLineCommand =
           var height;
           var shading;
           var ud = "undefined";
-  
+
           try {
             var align = gPrefs.GetIntPref("editor.hrule.align");
             if (align == 0 ) {
@@ -496,12 +499,12 @@ var nsHLineCommand =
             var percent = gPrefs.GetBoolPref("editor.hrule.width_percent");
             if (percent)
               width = width +"%";
-  
+
             hLine.setAttribute("width", width);
-  
+
             var height = gPrefs.GetIntPref("editor.hrule.height");
             hLine.setAttribute("size", String(height));
-  
+
             var shading = gPrefs.GetBoolPref("editor.hrule.shading");
             if (shading) {
               hLine.removeAttribute("noshade");
@@ -750,8 +753,7 @@ var nsInsertOrEditTableCommand =
   doCommand: function(aCommand)
   {
 dump("nsInsertOrEditTableCommand\n");
-    if (this.isCommandEnabled(aCommand))
-      EditorInsertOrEditTable(true);
+    EditorInsertOrEditTable(true);
   }
 };
 
@@ -765,8 +767,7 @@ var nsEditTableCommand =
   doCommand: function(aCommand)
   {
 dump("nsEditTableCommand\n");
-    if (this.isCommandEnabled(aCommand))
-      EditorInsertOrEditTable(false);
+    EditorInsertOrEditTable(false);
   }
 };
 
@@ -780,11 +781,8 @@ var nsSelectTableCommand =
   doCommand: function(aCommand)
   {
 dump("nsSelectTableCommand\n");
-    if (this.isCommandEnabled(aCommand))
-    {
-      window.editorShell.SelectTable();
-      window._content.focus();
-    }
+    window.editorShell.SelectTable();
+    window._content.focus();
   }
 };
 
@@ -797,11 +795,8 @@ var nsSelectTableRowCommand =
   doCommand: function(aCommand)
   {
 dump("nsSelectTableRowCommand\n");
-    if (this.isCommandEnabled(aCommand))
-    {
-      window.editorShell.SelectTableRow();
-      window._content.focus();
-    }
+    window.editorShell.SelectTableRow();
+    window._content.focus();
   }
 };
 
@@ -814,11 +809,8 @@ var nsSelectTableColumnCommand =
   doCommand: function(aCommand)
   {
 dump("nsSelectTableColumnCommand\n");
-    if (this.isCommandEnabled(aCommand))
-    {
-      window.editorShell.SelectTableColumn();
-      window._content.focus();
-    }
+    window.editorShell.SelectTableColumn();
+    window._content.focus();
   }
 };
 
@@ -831,11 +823,8 @@ var nsSelectTableCellCommand =
   doCommand: function(aCommand)
   {
 dump("nsSelectTableCellCommand\n");
-    if (this.isCommandEnabled(aCommand))
-    {
-      window.editorShell.SelectTableCell();
-      window._content.focus();
-    }
+    window.editorShell.SelectTableCell();
+    window._content.focus();
   }
 };
 
@@ -848,11 +837,8 @@ var nsSelectAllTableCellsCommand =
   doCommand: function(aCommand)
   {
 dump("nsSelectAllTableCellsCommand\n");
-    if (this.isCommandEnabled(aCommand))
-    {
-      window.editorShell.SelectAllTableCells();
-      window._content.focus();
-    }
+    window.editorShell.SelectAllTableCells();
+    window._content.focus();
   }
 };
 
@@ -865,8 +851,7 @@ var nsInsertTableCommand =
   },
   doCommand: function(aCommand)
   {
-    if (this.isCommandEnabled(aCommand))
-      EditorInsertTable();
+    EditorInsertTable();
   }
 };
 
@@ -878,11 +863,8 @@ var nsInsertTableRowAboveCommand =
   },
   doCommand: function(aCommand)
   {
-    if (this.isCommandEnabled(aCommand))
-    {
-      window.editorShell.InsertTableRow(1, false);
-      window._content.focus();
-    }
+    window.editorShell.InsertTableRow(1, false);
+    window._content.focus();
   }
 };
 
@@ -894,11 +876,8 @@ var nsInsertTableRowBelowCommand =
   },
   doCommand: function(aCommand)
   {
-    if (this.isCommandEnabled(aCommand))
-    {
-      window.editorShell.InsertTableRow(1,true);
-      window._content.focus();
-    }
+    window.editorShell.InsertTableRow(1,true);
+    window._content.focus();
   }
 };
 
@@ -910,11 +889,8 @@ var nsInsertTableColumnBeforeCommand =
   },
   doCommand: function(aCommand)
   {
-    if (this.isCommandEnabled(aCommand))
-    {
-      window.editorShell.InsertTableColumn(1, false);
-      window._content.focus();
-    }
+    window.editorShell.InsertTableColumn(1, false);
+    window._content.focus();
   }
 };
 
@@ -926,11 +902,8 @@ var nsInsertTableColumnAfterCommand =
   },
   doCommand: function(aCommand)
   {
-    if (this.isCommandEnabled(aCommand))
-    {
-      window.editorShell.InsertTableColumn(1, true);
-      window._content.focus();
-    }
+    window.editorShell.InsertTableColumn(1, true);
+    window._content.focus();
   }
 };
 
@@ -942,8 +915,7 @@ var nsInsertTableCellBeforeCommand =
   },
   doCommand: function(aCommand)
   {
-    if (this.isCommandEnabled(aCommand))
-      window.editorShell.InsertTableCell(1, false);
+    window.editorShell.InsertTableCell(1, false);
   }
 };
 
@@ -955,11 +927,8 @@ var nsInsertTableCellAfterCommand =
   },
   doCommand: function(aCommand)
   {
-    if (this.isCommandEnabled(aCommand))
-    {
-      window.editorShell.InsertTableCell(1, true);
-      window._content.focus();
-    }
+    window.editorShell.InsertTableCell(1, true);
+    window._content.focus();
   }
 };
 
@@ -972,11 +941,8 @@ var nsDeleteTableCommand =
   },
   doCommand: function(aCommand)
   {
-    if (this.isCommandEnabled(aCommand))
-    {
-      window.editorShell.DeleteTable();        
-      window._content.focus();
-    }
+    window.editorShell.DeleteTable();        
+    window._content.focus();
   }
 };
 
@@ -988,11 +954,9 @@ var nsDeleteTableRowCommand =
   },
   doCommand: function(aCommand)
   {
-    if (this.isCommandEnabled(aCommand))
-    {
-      window.editorShell.DeleteTableRow(1);
-      window._content.focus();
-    }
+dump("nsDeleteTableRowCommand: doCommand\n");
+    window.editorShell.DeleteTableRow(1);
+    window._content.focus();
   }
 };
 
@@ -1004,11 +968,8 @@ var nsDeleteTableColumnCommand =
   },
   doCommand: function(aCommand)
   {
-    if (this.isCommandEnabled(aCommand))
-    {
-      window.editorShell.DeleteTableColumn(1); 
-      window._content.focus();
-    }
+    window.editorShell.DeleteTableColumn(1); 
+    window._content.focus();
   }
 };
 
@@ -1020,11 +981,8 @@ var nsDeleteTableCellCommand =
   },
   doCommand: function(aCommand)
   {
-    if (this.isCommandEnabled(aCommand))
-    {
-      window.editorShell.DeleteTableCell(1);   
-      window._content.focus();
-    }
+    window.editorShell.DeleteTableCell(1);   
+    window._content.focus();
   }
 };
 
@@ -1036,11 +994,8 @@ var nsDeleteTableCellContentsCommand =
   },
   doCommand: function(aCommand)
   {
-    if (this.isCommandEnabled(aCommand))
-    {
-      window.editorShell.DeleteTableCellContents();
-      window._content.focus();
-    }
+    window.editorShell.DeleteTableCellContents();
+    window._content.focus();
   }
 };
 
@@ -1054,12 +1009,9 @@ var nsNormalizeTableCommand =
   },
   doCommand: function(aCommand)
   {
-    if (this.isCommandEnabled(aCommand))
-    {
-      // Use nsnull to let editor find table enclosing current selection
-      window.editorShell.NormalizeTable(null);
-      window._content.focus();
-    }
+    // Use nsnull to let editor find table enclosing current selection
+    window.editorShell.NormalizeTable(null);
+    window._content.focus();
   }
 };
 
@@ -1098,12 +1050,9 @@ var nsJoinTableCellsCommand =
   },
   doCommand: function(aCommand)
   {
-    if (this.isCommandEnabled(aCommand))
-    {
-      // Param: Don't merge non-contiguous cells
-      window.editorShell.JoinTableCells(false);
-      window._content.focus();
-    }
+    // Param: Don't merge non-contiguous cells
+    window.editorShell.JoinTableCells(false);
+    window._content.focus();
   }
 };
 
@@ -1135,11 +1084,8 @@ var nsSplitTableCellCommand =
   },
   doCommand: function(aCommand)
   {
-    if (this.isCommandEnabled(aCommand))
-    {
-      window.editorShell.SplitTableCell();
-      window._content.focus();
-    }
+    window.editorShell.SplitTableCell();
+    window._content.focus();
   }
 };
 
@@ -1157,3 +1103,28 @@ var nsPreferencesCommand =
 };
 
 
+var nsFinishHTMLSource =
+{
+  isCommandEnabled: function(aCommand, dummy)
+  {
+    return true;
+  },
+  doCommand: function(aCommand)
+  {
+    // In editor.js
+    FinishHTMLSource();
+  }
+};
+
+var nsCancelHTMLSource =
+{
+  isCommandEnabled: function(aCommand, dummy)
+  {
+    return true;
+  },
+  doCommand: function(aCommand)
+  {
+    // In editor.js
+    CancelHTMLSource();
+  }
+};

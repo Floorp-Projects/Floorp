@@ -445,8 +445,9 @@ nsHTMLEditor::InsertTableColumn(PRInt32 aNumber, PRBool aAfter)
       }
     } else {
       // We are inserting after all existing columns
-      //TODO: Make sure table is "well formed" (call NormalizeTable)
+      // Make sure table is "well formed"
       //  before appending new column
+      NormalizeTable(table);
       
       // Get current row and append new cells after last cell in row
       if(rowIndex == 0)
@@ -468,7 +469,7 @@ nsHTMLEditor::InsertTableColumn(PRInt32 aNumber, PRBool aAfter)
         // Simply add same number of cells to each row
         // Although tempted to check cell indexes for curCell,
         //  the effects of COLSPAN>1 in some cells makes this futile!
-        // We must use NormalizeTable first to assure proper 
+        // We must use NormalizeTable first to assure
         //  that there are cells in each cellmap location
         selection->Collapse(curCell, 0);
         res = InsertTableCell(aNumber, PR_TRUE);
@@ -844,9 +845,7 @@ nsHTMLEditor::DeleteTableCell(PRInt32 aNumber)
     {
       // More than 1 cell in the row
 
-      // We clear the selection to avoid problems when nodes in the selection are deleted,
       // The setCaret object will call SetSelectionAfterTableEdit in it's destructor
-      selection->ClearSelection();
       nsSetSelectionAfterTableEdit setCaret(this, table, startRowIndex, startColIndex, ePreviousColumn, PR_FALSE);
       nsAutoTxnsConserveSelection dontChangeSelection(this);
 
@@ -1161,8 +1160,11 @@ nsHTMLEditor::DeleteTableRow(PRInt32 aNumber)
     res = GetCellIndexes(firstCell, startRowIndex, startColIndex);
     if (NS_FAILED(res)) return res;
   }
+
   //We control selection resetting after the insert...
   nsSetSelectionAfterTableEdit setCaret(this, table, startRowIndex, startColIndex, ePreviousRow, PR_FALSE);
+  // Don't change selection during deletions
+  nsAutoTxnsConserveSelection dontChangeSelection(this);
 
   if (firstCell && rangeCount > 1)
   {
@@ -1198,10 +1200,6 @@ nsHTMLEditor::DeleteTableRow(PRInt32 aNumber)
     // Check for counts too high
     aNumber = PR_MIN(aNumber,(rowCount-startRowIndex));
 
-    // We clear the selection to avoid problems when nodes in the selection are deleted,
-    // Be sure to set it correctly later (in SetSelectionAfterTableEdit)!
-    selection->ClearSelection();
-  
     for (PRInt32 i = 0; i < aNumber; i++)
     {
       res = DeleteRow(table, startRowIndex);
@@ -1227,42 +1225,66 @@ nsHTMLEditor::DeleteRow(nsIDOMElement *aTable, PRInt32 aRowIndex)
 
   nsCOMPtr<nsIDOMElement> cell;
   nsCOMPtr<nsIDOMElement> cellInDeleteRow;
-  PRInt32 curStartRowIndex, curStartColIndex, rowSpan, colSpan, actualRowSpan, actualColSpan;
+  PRInt32 startRowIndex, startColIndex, rowSpan, colSpan, actualRowSpan, actualColSpan;
   PRBool  isSelected;
   PRInt32 colIndex = 0;
   nsresult res = NS_OK;
    
+  // Prevent rules testing until we're done
+  nsAutoRules beginRulesSniffing(this, kOpDeleteNode, nsIEditor::eNext);
+
+  // The list of cells we will change rowspan in
+  //  and the new rowspan values for each
+  nsVoidArray spanCellList;
+  nsVoidArray newSpanList;
+
   // Scan through cells in row to do rowspan adjustments
   // Note that after we delete row, startRowIndex will point to the
   //   cells in the next row to be deleted
   do {
-    nsCOMPtr<nsIDOMElement> cell;
     res = GetCellDataAt(aTable, aRowIndex, colIndex, *getter_AddRefs(cell),
-                        curStartRowIndex, curStartColIndex, rowSpan, colSpan, 
+                        startRowIndex, startColIndex, rowSpan, colSpan, 
                         actualRowSpan, actualColSpan, isSelected);
   
     // We don't fail if we don't find a cell, so this must be real bad
     if(NS_FAILED(res)) return res;
 
-    // Find cells that don't start in row we are deleting
+    // Compensate for cells that don't start or extend below the row we are deleting
     if (cell)
     {
-      //Real colspan must always be >= 1
+      // Real colspan must always be >= 1
       NS_ASSERTION((actualColSpan > 0),"Effective COLSPAN = 0 in DeleteTableRow");
-      if (curStartRowIndex < aRowIndex)
+      if (startRowIndex < aRowIndex)
       {
-        // We have a cell spanning this location
+        // Cell starts in row above us
         // Decrease its rowspan to keep table rectangular
         //  but we don't need to do this if rowspan=0,
         //  since it will automatically adjust
         if (rowSpan > 0)
-          SetRowSpan(cell, PR_MAX((aRowIndex - curStartRowIndex), actualRowSpan-1));
+        {
+          // Build list of cells to change rowspan
+          // We can't do it now since it upsets cell map,
+          //  so we will do it after deleting the row
+          spanCellList.AppendElement((void*)cell.get());
+          newSpanList.AppendElement((void*)PR_MAX((aRowIndex - startRowIndex), actualRowSpan-1));
+        }
       }
-      else if (!cellInDeleteRow)
+      else 
       {
-        cellInDeleteRow = cell;
+        if (rowSpan > 1)
+        {
+          //Cell spans below row to delete,
+          //  so we must insert new cells to keep rows below even
+          // Note that we test "rowSpan" so we don't do this if rowSpan = 0 (automatic readjustment)
+          res = SplitCellIntoRows(aTable, startRowIndex, startColIndex,
+                                  aRowIndex - startRowIndex + 1, // The row above the row to insert new cell into
+                                  actualRowSpan - 1, nsnull);    // Span remaining below
+          if (NS_FAILED(res)) return res;
+        }
+        if (!cellInDeleteRow)
+          cellInDeleteRow = cell; // Reference cell to find row to delete
       }
-      // Skip over locations spanned by this cell
+      // Skip over other columns spanned by this cell
       colIndex += actualColSpan;
     }
   } while (cell);
@@ -1271,12 +1293,7 @@ nsHTMLEditor::DeleteRow(nsIDOMElement *aTable, PRInt32 aRowIndex)
   if (!cellInDeleteRow)
     return NS_ERROR_FAILURE;
 
-  //TODO: To minimize effect of deleting cells that have rowspan > 1:
-  //      Scan for rowspan > 1 and insert extra emtpy cells in 
-  //      appropriate rows to take place of spanned regions.
-  //      (Hard part is finding appropriate neighbor cell before/after in correct row)
-
-  // Delete the row
+  // Delete the entire row
   nsCOMPtr<nsIDOMElement> parentRow;
   res = GetElementOrParentByTagName(NS_LITERAL_STRING("tr"), cellInDeleteRow, getter_AddRefs(parentRow));
   if (NS_FAILED(res)) return res;
@@ -1285,6 +1302,25 @@ nsHTMLEditor::DeleteRow(nsIDOMElement *aTable, PRInt32 aRowIndex)
   {
     res = DeleteNode(parentRow);
     if (NS_FAILED(res)) return res;
+  }
+
+  // Now we can set new rowspans for cells stored above  
+  nsIDOMElement *cellPtr;
+  PRInt32 newSpan;
+  PRInt32 count;
+  while ((count = spanCellList.Count()))
+  {
+    // go backwards to keep nsVoidArray from mem-moving everything each time
+    count--; // nsVoidArray is zero based
+    cellPtr = (nsIDOMElement*)spanCellList.ElementAt(count);
+    spanCellList.RemoveElementAt(count);
+    newSpan = (PRInt32)newSpanList.ElementAt(count);
+    newSpanList.RemoveElementAt(count);
+    if (cellPtr)
+    {
+      res = SetRowSpan(cellPtr, newSpan);
+      if (NS_FAILED(res)) return res;
+    }
   }
   return NS_OK;
 }
@@ -3289,4 +3325,3 @@ nsHTMLEditor::IsEmptyCell(nsIDOMElement *aCell)
   }
   return PR_FALSE;
 }
-

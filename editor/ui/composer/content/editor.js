@@ -45,6 +45,8 @@ var gContentWindow = 0;
 var gSourceContentWindow = 0;
 var gContentWindowDeck;
 var gFormatToolbar;
+var gFormatToolbarHidden;
+var gFormatToolbarCollapsed;
 var gEditModeBar;
 // Bummer! Can't get at enums from nsIDocumentEncoder.h
 var gOutputSelectionOnly = 1;
@@ -116,12 +118,13 @@ var DocumentStateListener =
     EditorInitToolbars();
     DoRecentFilesMenuSave();  // Save the recent files menu
 	 
-    // udpate menu items now that we have an editor to play with
-    dump("Updating 'create' commands\n");
+    BuildRecentMenu();
     window._content.focus();
 
+    // udpate menu items now that we have an editor to play with
+    // Note: This must be AFTER window._content.focus();
+    dump("Updating 'create' commands\n");
     window.updateCommands("create");
-    BuildRecentMenu();
   },
   
   NotifyDocumentWillBeDestroyed: function() {},
@@ -221,7 +224,7 @@ function EditorSharedStartup()
   document.getElementById("menu_DeleteCellContents").setAttribute("acceltext",DelStr);
 
   // hide UI that we don't have components for
-  HideInapplicableUIElements();
+  RemoveInapplicableUIElements();
 }
 
 function _EditorNotImplemented()
@@ -400,6 +403,7 @@ function EditorCanClose()
 {
   // Returns FALSE only if user cancels save action
   dump("Calling EditorCanClose\n");
+
   return editorShell.CheckAndSaveDocument(GetString("BeforeClosing"));
 }
 
@@ -720,14 +724,13 @@ function EditorRemoveLinks()
 //  but will accept a parent table cell if inside one
 function GetSelectedElementOrParentCell()
 {
+//dump("GetSelectedElementOrParentCell\n");
   var element = editorShell.GetSelectedElement("");
   if (!element)
     element = editorShell.GetElementOrParentByTagName("td",null);
 
   return element;
 }
-
-// --------------------------- Dialogs ---------------------------
 
 function EditorAlign(commandID, alignType)
 {
@@ -770,7 +773,6 @@ function SetEditMode(mode)
         {
           gSourceContentWindow.setAttribute("value",editorShell.GetContentsAs("text/html", gOutputBodyOnly));
           gSourceContentWindow.focus();
-          setTimeout("gSourceContentWindow.focus()", 10);
           return;
         }
       }
@@ -790,17 +792,48 @@ function SetEditMode(mode)
         editorShell.editorSelection.collapse(bodyNode, 0);
 
       window._content.focus();
-      // yuck. what is this?
-      setTimeout("window._content.focus()", 10);
     }
   }
 }
 
-function CancelSourceEditing()
+function CancelHTMLSource()
 {
-  // Empty the source window
-  gSourceContentWindow.value="";
+dump("*** CancelHTMLSource ***\n");
+  // Don't convert source text back into the DOM document
+  gSourceContentWindow.value = "";
   SetDisplayMode(PreviousNonSourceDisplayMode);
+}
+
+
+function FinishHTMLSource()
+{
+dump("*** FinishHTMLSource ***\n");
+  // Switch edit modes -- converts source back into DOM document
+  SetEditMode(PreviousNonSourceDisplayMode);
+}
+
+function CollapseItem(id, collapse)
+{
+  var item = document.getElementById(id);
+  if (item)
+  {
+	  if(collapse != (item.getAttribute("collapsed") == "true"))
+		  item.setAttribute("collapsed", collapse ? "true" : "");
+  }
+  else
+    dump("CollapseItem: item id="+id+" not found\n");
+}
+
+function DisableItem(id, disable)
+{
+  var item = document.getElementById(id);
+  if (item)
+  {
+	  if(disable != (item.getAttribute("disabled") == "true"))
+		  item.setAttribute("disabled", disable ? "true" : "");
+  }
+  else
+    dump("DisableItem: item id="+id+" not found\n");
 }
 
 function SetDisplayMode(mode)
@@ -833,8 +866,36 @@ function SetDisplayMode(mode)
       // Switch to the sourceWindow (second in the deck)
       gContentWindowDeck.setAttribute("index","1");
 
-      // TODO: WE MUST DISABLE APPROPRIATE COMMANDS
-      // and change UI to appropriate
+      // Hide menus that are completely disabled
+      // Note: ShowMenuItem is implemented in EditorContextMenu.js
+      ShowMenuItem("editMenu", false);
+      ShowMenuItem("viewMenu", false);
+      ShowMenuItem("insertMenu", false);
+      ShowMenuItem("formatMenu", false);
+      ShowMenuItem("tableMenu", false);
+
+/*
+      CollapseItem("editMenu", true);
+      CollapseItem("viewMenu", true);
+      CollapseItem("insertMenu", true);
+      CollapseItem("formatMenu", true);
+      CollapseItem("tableMenu", true);
+*/
+
+      DisableItem("findButton", true);
+      DisableItem("spellingButton", true);
+      DisableItem("imageButton", true);
+      DisableItem("hlineButton", true);
+      DisableItem("tableButton", true);
+      DisableItem("linkButton", true);
+      DisableItem("namedAnchorButton", true);
+
+      //Hide the formating toolbar if not already hidden
+      gFormatToolbarHidden = gFormatToolbar.getAttribute("hidden");
+      if (gFormatToolbarHidden != "true")
+      {
+        gFormatToolbar.setAttribute("hidden", "true");
+      }
 
       // THIS DOESN'T WORK!
       gSourceContentWindow.focus();
@@ -844,8 +905,33 @@ function SetDisplayMode(mode)
       // Switch to the normal editor (first in the deck)
       gContentWindowDeck.setAttribute("index","0");
 
-      // TODO: WE MUST ENABLE APPROPRIATE COMMANDS
-      // and change UI back to "normal"
+      // Restore menus and toolbars
+      ShowMenuItem("editMenu", true);
+      ShowMenuItem("viewMenu", true);
+      ShowMenuItem("insertMenu", true);
+      ShowMenuItem("formatMenu", true);
+      ShowMenuItem("tableMenu", true);
+
+/*
+      CollapseItem("editMenu", false);
+      CollapseItem("viewMenu", false);
+      CollapseItem("insertMenu", false);
+      CollapseItem("formatMenu", false);
+      CollapseItem("tableMenu", false);
+*/
+      DisableItem("findButton", false);
+      DisableItem("spellingButton", false);
+      DisableItem("imageButton", false);
+      DisableItem("hlineButton", false);
+      DisableItem("tableButton", false);
+      DisableItem("linkButton", false);
+      DisableItem("namedAnchorButton", false);
+
+      if (gFormatToolbarHidden != "true")
+      {
+dump("Switching back to visible toolbar. gFormatToolbarHidden = "+gFormatToolbarHidden+"\n");
+        gFormatToolbar.setAttribute("hidden", gFormatToolbarHidden);
+      }
 
       window._content.focus();
     }
@@ -1112,23 +1198,23 @@ function EditorInitFormatMenu()
     if (element && element.nodeName)
     {
       var objStr = "";
-      menuItem.removeAttribute("disabled");
+      menuItem.setAttribute("disabled", "");
       var name = element.nodeName.toLowerCase();
       switch (name)
       {
-        case 'img':
+        case "img":
           objStr = GetString("Image");
           break;
-        case 'hr':
+        case "hr":
           objStr = GetString("HLine");
           break;
-        case 'table':
+        case "table":
           objStr = GetString("Table");
           break;
-        case 'td':
+        case "td":
           objStr = GetString("TableCell");
           break;
-        case 'a':
+        case "a":
           if (element.name)
             objStr = GetString("NamedAnchor");
           else if(element.href)
@@ -1583,7 +1669,7 @@ function getColorAndSetColorWell(ColorPickerID, ColorWellID)
   if (colorPicker) 
   {
     // Extract color from colorPicker and assign to colorWell.
-    var color = colorPicker.getAttribute('color');
+    var color = colorPicker.getAttribute("color");
     dump("setColor to: "+color+"\n");
 
     if (colorWell && color)
@@ -1608,11 +1694,12 @@ function IsSpellCheckerInstalled()
   var spellcheckerClass = Components.classes["mozilla.spellchecker.1"]; 
   gHaveSpellChecker = (spellcheckerClass != null);
   gSoughtSpellChecker = true;
+  dump("Have SpellChecker = "+gHaveSpellChecker+"\n");
   return gHaveSpellChecker;
 }
 
 //-----------------------------------------------------------------------------------
-function HideInapplicableUIElements()
+function RemoveInapplicableUIElements()
 {
   // if no spell checker, remove spell checker ui
   if (!IsSpellCheckerInstalled())
@@ -1633,7 +1720,34 @@ function HideInapplicableUIElements()
     if (spellingSepItem)
       spellingSepItem.parentNode.removeChild(spellingSepItem);
   }
+/*
+  // if no spell checker, remove spell checker ui
+  if (!IsSpellCheckerInstalled())
+  {
+    dump("Removing spell checker items\n");
+    
+    // Completely remove UI elements intended for spelling
+    // This allows HTMLSource to use "hidden" to turn items off/on
+    //   and also needed because of class="hide-in-IM" CSS rule used by AIM
 
+    // First, remove the command node used by both button and menuitem
+    var spellingCommand = document.getElementById("cmd_spelling");
+    if (spellingCommand)
+      spellingCommand.parentNode.removeChild(spellingCommand);
+    
+    var spellingButton = document.getElementById("spellingButton");
+    if (spellingButton)
+      spellingButton.parentNode.removeChild(spellingButton);
+    
+    var spellingMenuItem = document.getElementById("menu_checkspelling");
+    if (spellingMenuItem)
+      spellingMenuItem.parentNode.removeChild(spellingMenuItem);
+
+    var spellingSepItem  = document.getElementById("sep_checkspelling");
+    if (spellingSepItem)
+      spellingSepItem.parentNode.removeChild(spellingSepItem);
+  }
+*/
 }
 
 function onEditorFocus()
@@ -1645,7 +1759,7 @@ function GetPrefsService()
 {
   // Store the prefs object
   try {
-    var prefsService = Components.classes['component://netscape/preferences'];
+    var prefsService = Components.classes["component://netscape/preferences"];
     if (prefsService) 
       prefsService = prefsService.getService();
     if (prefsService)
