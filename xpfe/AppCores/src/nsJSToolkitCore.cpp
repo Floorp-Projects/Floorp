@@ -131,6 +131,51 @@ ResolveToolkitCore(JSContext *cx, JSObject *obj, jsval id)
 
 
 //
+// Native method ShowDialog
+//
+PR_STATIC_CALLBACK(JSBool)
+ToolkitCoreShowDialog(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMToolkitCore *nativeThis = (nsIDOMToolkitCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsAutoString b0;
+  nsIDOMWindowPtr b1;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 2) {
+
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+
+    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b1,
+                                           kIWindowIID,
+                                           "Window",
+                                           cx,
+                                           argv[1])) {
+      return JS_FALSE;
+    }
+
+    if (NS_OK != nativeThis->ShowDialog(b0, b1)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function ShowDialog requires 2 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method ShowWindow
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -207,6 +252,7 @@ static JSPropertySpec ToolkitCoreProperties[] =
 //
 static JSFunctionSpec ToolkitCoreMethods[] = 
 {
+  {"ShowDialog",          ToolkitCoreShowDialog,     2},
   {"ShowWindow",          ToolkitCoreShowWindow,     2},
   {0}
 };
@@ -264,7 +310,7 @@ ToolkitCore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 //
 // ToolkitCore class initialization
 //
-nsresult NS_InitToolkitCoreClass(nsIScriptContext *aContext, void **aPrototype)
+extern "C" NS_DOM nsresult NS_InitToolkitCoreClass(nsIScriptContext *aContext, void **aPrototype)
 {
   JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
   JSObject *proto = nsnull;

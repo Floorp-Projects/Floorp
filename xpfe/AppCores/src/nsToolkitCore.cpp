@@ -128,6 +128,44 @@ nsToolkitCore::Init(const nsString& aId) {
 
 
 NS_IMETHODIMP
+nsToolkitCore::ShowDialog(const nsString& aUrl, nsIDOMWindow* aParent) {
+
+  nsresult           rv;
+  nsString           controllerCID;
+  nsIAppShellService *appShell;
+  nsIWidget          *window;
+
+  window = nsnull;
+
+  nsCOMPtr<nsIURL> urlObj;
+  rv = NS_NewURL(getter_AddRefs(urlObj), aUrl);
+  if (NS_FAILED(rv))
+    return rv;
+
+  rv = nsServiceManager::GetService(kAppShellServiceCID, kIAppShellServiceIID,
+                                    (nsISupports**) &appShell);
+  if (NS_FAILED(rv))
+    return rv;
+
+  // hardwired temporary hack.  See nsAppRunner.cpp at main()
+  controllerCID = "43147b80-8a39-11d2-9938-0080c7cb1081";
+
+  nsCOMPtr<nsIWebShellWindow> webWindow = DOMWindowToWebShellWindow(aParent);
+  nsCOMPtr<nsIWidget> parent;
+  if (webWindow)
+    webWindow->GetWidget(*getter_AddRefs(parent));
+
+  appShell->CreateTopLevelWindow(parent, urlObj, controllerCID, window,
+                               nsnull, nsnull, 615, 650);
+  nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
+
+  if (window != nsnull)
+    window->Show(PR_TRUE);
+
+  return rv;
+}
+
+NS_IMETHODIMP
 nsToolkitCore::ShowWindow(const nsString& aUrl, nsIDOMWindow* aParent) {
 
   nsresult           rv;
