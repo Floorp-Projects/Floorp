@@ -61,6 +61,11 @@ public:
                                 nsIFrame* aParentFrame,
                                 nsISupportsArray* aResults);
 
+  virtual PRInt32 RulesMatching(nsIPresContext* aPresContext,
+                                nsIAtom* aPseudoTag,
+                                nsIFrame* aParentFrame,
+                                nsISupportsArray* aResults);
+
   virtual nsIURL* GetURL(void);
 
   virtual PRBool ContainsStyleSheet(nsIURL* aURL);
@@ -210,13 +215,69 @@ PRInt32 CSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
 {
   NS_PRECONDITION(nsnull != aPresContext, "null arg");
   NS_PRECONDITION(nsnull != aContent, "null arg");
-//  NS_PRECONDITION(nsnull != aParentFrame, "null arg");
   NS_PRECONDITION(nsnull != aResults, "null arg");
 
   PRInt32 matchCount = 0;
+
+  nsIContentPtr parentContent;
+  if (nsnull != aParentFrame) {
+    aParentFrame->GetContent(parentContent.AssignRef());
+  }
+
+  if (aContent != parentContent) {  // if not a pseudo frame...
+    nsICSSStyleSheet*  child = mFirstChild;
+    while (nsnull != child) {
+      matchCount += child->RulesMatching(aPresContext, aContent, aParentFrame, aResults);
+      child = ((CSSStyleSheetImpl*)child)->mNext;
+    }
+
+    PRInt32 count = (mRules.IsNotNull() ? mRules->Count() : 0);
+
+    for (PRInt32 index = 0; index < count; index++) {
+      nsICSSStyleRulePtr rule = (nsICSSStyleRule*)mRules->ElementAt(index);
+
+      nsCSSSelector* selector = rule->FirstSelector();
+      if (SelectorMatches(selector, aContent)) {
+        selector = selector->mNext;
+        nsIFrame* frame = aParentFrame;
+        nsIContentPtr lastContent;
+        while ((nsnull != selector) && (nsnull != frame)) { // check compound selectors
+          nsIContentPtr content;
+          frame->GetContent(content.AssignRef());
+          if ((content != lastContent) && // skip pseudo frames (actually we're skipping pseudo's parent, but same result)
+              SelectorMatches(selector, content)) {
+            selector = selector->mNext;
+          }
+          frame->GetGeometricParent(frame);
+          lastContent = content;
+        }
+        if (nsnull == selector) { // ran out, it matched
+          nsIStyleRulePtr iRule;
+          if (NS_OK == rule->QueryInterface(kIStyleRuleIID, iRule.Query())) {
+            aResults->AppendElement(iRule);
+            matchCount++;
+          }
+        }
+      }
+    }
+  }
+  return matchCount;
+}
+
+PRInt32 CSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
+                                         nsIAtom* aPseudoTag,
+                                         nsIFrame* aParentFrame,
+                                         nsISupportsArray* aResults)
+{
+  NS_PRECONDITION(nsnull != aPresContext, "null arg");
+  NS_PRECONDITION(nsnull != aPseudoTag, "null arg");
+  NS_PRECONDITION(nsnull != aResults, "null arg");
+
+  PRInt32 matchCount = 0;
+
   nsICSSStyleSheet*  child = mFirstChild;
   while (nsnull != child) {
-    matchCount += child->RulesMatching(aPresContext, aContent, aParentFrame, aResults);
+    matchCount += child->RulesMatching(aPresContext, aPseudoTag, aParentFrame, aResults);
     child = ((CSSStyleSheetImpl*)child)->mNext;
   }
 
@@ -226,16 +287,19 @@ PRInt32 CSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
     nsICSSStyleRulePtr rule = (nsICSSStyleRule*)mRules->ElementAt(index);
 
     nsCSSSelector* selector = rule->FirstSelector();
-    if (SelectorMatches(selector, aContent)) {
+    if (selector->mTag == aPseudoTag) {
       selector = selector->mNext;
       nsIFrame* frame = aParentFrame;
+      nsIContentPtr lastContent;
       while ((nsnull != selector) && (nsnull != frame)) { // check compound selectors
         nsIContentPtr content;
         frame->GetContent(content.AssignRef());
-        if (SelectorMatches(selector, content)) {
+        if ((content != lastContent) && // skip pseudo frames (actually we're skipping pseudo's parent, but same result)
+            SelectorMatches(selector, content)) {
           selector = selector->mNext;
         }
         frame->GetGeometricParent(frame);
+        lastContent = content;
       }
       if (nsnull == selector) { // ran out, it matched
         nsIStyleRulePtr iRule;
