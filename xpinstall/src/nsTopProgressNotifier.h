@@ -41,13 +41,14 @@ class nsTopProgressNotifier : public nsIXPINotifier
 
         NS_DECL_ISUPPORTS
 
-
+        // nsIXPINotifier interfaces
         NS_IMETHOD BeforeJavascriptEvaluation();
         NS_IMETHOD AfterJavascriptEvaluation();
         NS_IMETHOD InstallStarted(const char* UIPackageName);
         NS_IMETHOD ItemScheduled(const  char* message );
         NS_IMETHOD InstallFinalization(const char* message, PRInt32 itemNum, PRInt32 totNum );
         NS_IMETHOD InstallAborted();
+        NS_IMETHOD LogComment(const char* comment);
    
    private:
         nsVector *mNotifiers;

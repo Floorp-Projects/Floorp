@@ -483,3 +483,10 @@ nsXPInstallManager::InstallAborted()
 {
     return NS_OK;
 }
+
+NS_IMETHODIMP 
+nsXPInstallManager::LogComment(const char* comment)
+{
+    return NS_OK;
+}
+

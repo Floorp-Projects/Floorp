@@ -34,4 +34,5 @@ interface nsIXPINotifier : nsISupports
         void ItemScheduled([const] in string message );
         void InstallFinalization([const] in string message, in long itemNum, in long totNum );
         void InstallAborted();
+        void LogComment([const] in string comment);
 };

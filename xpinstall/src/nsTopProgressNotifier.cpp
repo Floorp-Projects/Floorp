@@ -167,4 +167,19 @@ nsTopProgressNotifier::InstallAborted(void)
    return NS_OK;
 }
 
+NS_IMETHODIMP
+nsTopProgressNotifier::LogComment(const char* comment)
+{
+   if (mNotifiers)
+    {
+        PRUint32 i=0;
+        for (; i < mNotifiers->GetSize(); i++) 
+        {
+            nsIXPINotifier* element = (nsIXPINotifier*)mNotifiers->Get(i);
+            if (element != NULL)
+                element->LogComment(comment);
+        }
+    }
+   return NS_OK;
+}
 

@@ -1372,6 +1372,13 @@ nsInstall::FileOpFileUnixLinkCreate(nsFileSpec& aTarget, PRInt32 aFlags, PRInt32
   return NS_OK;
 }
 
+void
+nsInstall::LogComment(nsString& aComment)
+{
+  if(mNotifier)
+    mNotifier->LogComment(nsAutoCString(aComment));
+}
+
 /////////////////////////////////////////////////////////////////////////
 // Private Methods
 /////////////////////////////////////////////////////////////////////////
