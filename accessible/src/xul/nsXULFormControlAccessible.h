@@ -118,6 +118,8 @@ class nsXULRadioGroupAccessible : public nsAccessible
 {
 public:
   nsXULRadioGroupAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+  NS_IMETHOD GetAccRole(PRUint32 *_retval); 
+  NS_IMETHOD GetAccState(PRUint32 *_retval); 
 };
 
 class nsXULStatusBarAccessible : public nsAccessible
