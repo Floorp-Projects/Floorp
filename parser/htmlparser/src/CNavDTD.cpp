@@ -684,12 +684,7 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
         case eHTMLTag_link:
         case eHTMLTag_base:
         case eHTMLTag_meta:
-          {
-            result=OpenHead(attrNode);
-            if(NS_OK==result)
-              result=AddLeaf(attrNode);
-            result=CloseHead(attrNode);
-          }
+          result=AddHeadLeaf(attrNode);
           break;
 
         case eHTMLTag_style:
@@ -1275,13 +1270,9 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
 
       case eHTMLTag_dt:
         {
-          static eHTMLTags datalistTags[]={eHTMLTag_dt,eHTMLTag_dd};
-
-          if(FindTagInSet(aChild,datalistTags,sizeof(datalistTags)/sizeof(eHTMLTag_unknown))) {
+          if(eHTMLTag_dt==aChild)
             result=PR_TRUE;
-          }
-          else
-            result=FindTagInSet(aChild,gTagSet1,sizeof(gTagSet1)/sizeof(eHTMLTag_unknown));
+          else result=FindTagInSet(aChild,gTagSet1,sizeof(gTagSet1)/sizeof(eHTMLTag_unknown));
         }
         break;
 
@@ -1372,6 +1363,8 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
           static eHTMLTags datalistTags[]={eHTMLTag_dt,eHTMLTag_dd};
 
           if(eHTMLTag_p==aChild)
+            result=PR_FALSE;
+          if(eHTMLTag_div==aChild)
             result=PR_FALSE;
           else if(FindTagInSet(aChild,datalistTags,sizeof(datalistTags)/sizeof(eHTMLTag_unknown))) {
             //we now allow DT/DD inside a paragraph, so long as a DL is open...
@@ -1817,6 +1810,16 @@ PRBool CNavDTD::RequiresAutomaticClosure(eHTMLTags aParentTag,eHTMLTags aChildTa
     }
   }
 */
+    //this little bit of code forces DT and DD to autoclose each other.
+  if(eHTMLTag_dd==aChildTag) {
+    if(eHTMLTag_dt==aParentTag)
+      return PR_TRUE;
+  }
+  else if(eHTMLTag_dt==aChildTag) {
+    if(eHTMLTag_dd==aParentTag)
+      return PR_TRUE;
+  }
+
   /***************************************************************************************
     How this works:
       1. Find the nearest parent on the appropriate stack that can gate the given child.
@@ -1855,6 +1858,8 @@ PRBool CNavDTD::CanOmit(eHTMLTags aParent,eHTMLTags aChild) const {
     case eHTMLTag_table:
       if(eHTMLTag_form==aChild)
         result=PR_FALSE;
+      else if(FindTagInSet(aChild,gFormElementTags,sizeof(gFormElementTags)/sizeof(eHTMLTag_unknown)))
+        result=!HasOpenContainer(eHTMLTag_form);
       else result=!FindTagInSet(aChild,gTableTags,sizeof(gTableTags)/sizeof(eHTMLTag_unknown));
       break;
 
@@ -1867,6 +1872,8 @@ PRBool CNavDTD::CanOmit(eHTMLTags aParent,eHTMLTags aChild) const {
           result=PR_FALSE;
           break;
         default:
+          if(FindTagInSet(aChild,gFormElementTags,sizeof(gFormElementTags)/sizeof(eHTMLTag_unknown)))
+            result=!HasOpenContainer(eHTMLTag_form);
           result=PR_TRUE;
       }
       break;
@@ -1906,8 +1913,7 @@ PRBool CNavDTD::CanOmit(eHTMLTags aParent,eHTMLTags aChild) const {
         case eHTMLTag_label:        case eHTMLTag_legend:
         case eHTMLTag_select:       case eHTMLTag_textarea:
         case eHTMLTag_option:
-          if(PR_FALSE==HasOpenContainer(eHTMLTag_form))
-            result=PR_TRUE; 
+          result=!HasOpenContainer(eHTMLTag_form);
           break;
 
         case eHTMLTag_newline:    
@@ -2236,10 +2242,9 @@ PRBool CNavDTD::BackwardPropagate(nsTagStack& aStack,eHTMLTags aParentTag,eHTMLT
 }
 
 
-
 /**
- *  This method allows the caller to determine if a form
- *  element is currently open.
+ *  This method allows the caller to determine if a given container
+ *  is currently open
  *  
  *  @update  gess 11/9/98
  *  @param   
@@ -2258,6 +2263,27 @@ PRBool CNavDTD::HasOpenContainer(eHTMLTags aContainer) const {
   }
   return result;
 }
+
+/**
+ *  This method allows the caller to determine if a any member
+ *  in a set of tags is currently open
+ *  
+ *  @update  gess 11/9/98
+ *  @param   
+ *  @return  
+ */
+PRBool CNavDTD::HasOpenContainer(const eHTMLTags aTagSet[],PRInt32 aCount) const {
+
+  int theIndex; 
+  int theTopIndex=mBodyContext->mElements.mCount-1;
+
+  for(theIndex=theTopIndex;theIndex>0;theIndex--){
+    if(FindTagInSet(mBodyContext->mElements.mTags[theIndex],aTagSet,aCount))
+      return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
 
 /**
  *  Call this method when you want to determine whether a
@@ -2723,6 +2749,9 @@ CNavDTD::OpenContainer(const nsIParserNode& aNode,PRBool aUpdateStyleStack){
     case eHTMLTag_form:
       result=OpenForm(aNode); break;
 
+    case eHTMLTag_frameset:
+      result=OpenFrameset(aNode); break;
+
     case eHTMLTag_script:
       {
         nsCParserNode& theCNode=*(nsCParserNode*)&aNode;
@@ -2782,6 +2811,9 @@ CNavDTD::CloseContainer(const nsIParserNode& aNode,eHTMLTags aTag,
 
     case eHTMLTag_form:
       result=CloseForm(aNode); break;
+
+    case eHTMLTag_frameset:
+      result=CloseFrameset(aNode); break;
 
     case eHTMLTag_title:
     default:
@@ -2897,6 +2929,36 @@ nsresult CNavDTD::AddLeaf(const nsIParserNode& aNode){
   return result;
 }
 
+/**
+ * Call this method ONLY when you want to write a leaf
+ * into the head container.
+ * 
+ * @update  gess4/6/98
+ * @param   aNode -- next node to be added to model
+ * @return  error code; 0 means OK
+ */
+nsresult CNavDTD::AddHeadLeaf(const nsIParserNode& aNode){
+  
+  static eHTMLTags gNoXTags[]={eHTMLTag_noframes,eHTMLTag_nolayer,eHTMLTag_noscript};
+  
+  //this code has been added to prevent <meta> tags from being processed inside
+  //the document if the <meta> tag itself was found in a <noframe>, <nolayer>, or <noscript> tag.
+  if(eHTMLTag_meta==aNode.GetNodeType())
+    if(HasOpenContainer(gNoXTags,sizeof(gNoXTags)/sizeof(eHTMLTag_unknown))) {
+      return NS_OK;
+    }
+
+  nsresult result=OpenHead(aNode);
+  if(NS_OK==result) {
+    result=AddLeaf(aNode);
+    if(NS_OK==result) {
+      result=CloseHead(aNode);
+    }
+  }
+  return result;
+}
+
+  
 static nsTagStack kPropagationStack;
 
 /**
