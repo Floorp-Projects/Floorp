@@ -35,31 +35,33 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const nsIExtensionManager         = Components.interfaces.nsIExtensionManager;
-const nsIUpdateService            = Components.interfaces.nsIUpdateService;
-const nsIUpdateItem               = Components.interfaces.nsIUpdateItem;
+const nsIExtensionManager       = Components.interfaces.nsIExtensionManager;
+const nsIUpdateService          = Components.interfaces.nsIUpdateService;
+const nsIUpdateItem             = Components.interfaces.nsIUpdateItem;
 
-const PREF_EM_APP_ID              = "app.id";
-const PREF_EM_APP_VERSION         = "app.version";
-const PREF_EM_LAST_APP_VERSION    = "extensions.lastAppVersion";
-const PREF_UPDATE_COUNT           = "update.extensions.count";
-const PREF_UPDATE_EXT_WSDL_URI    = "update.extensions.wsdl";
-const PREF_EM_WASINSAFEMODE       = "extensions.wasInSafeMode";
+const PREF_EM_APP_ID            = "app.id";
+const PREF_EM_APP_VERSION       = "app.version";
+const PREF_EM_LAST_APP_VERSION  = "extensions.lastAppVersion";
+const PREF_UPDATE_COUNT         = "update.extensions.count";
+const PREF_UPDATE_EXT_WSDL_URI  = "update.extensions.wsdl";
+const PREF_EM_WASINSAFEMODE     = "extensions.wasInSafeMode";
 
-const DIR_EXTENSIONS          = "Extensions";
-const DIR_UNINSTALL           = "Uninstall";
-const DIR_TEMP                = "Temp";
-const DIR_CHROME              = "Chrome";
-const DIR_COMPONENTS          = "Components";
-const DIR_DEFAULTS            = "Defaults";
-const DIR_DEFAULTS_PREFS      = "Preferences";
-const FILE_EXTENSIONS         = "Extensions.rdf";
-const FILE_UNINSTALL_LOG      = "Uninstall";
-const FILE_DEFAULTS           = "Defaults";
-const FILE_AUTOREG            = ".autoreg";
-const FILE_INSTALL_MANIFEST   = "install.rdf";
-const FILE_CHROME_MANIFEST    = "contents.rdf";
-const FILE_WASINSAFEMODE      = "Safe Mode";
+const DIR_EXTENSIONS            = "Extensions";
+const DIR_UNINSTALL             = "Uninstall";
+const DIR_TEMP                  = "Temp";
+const DIR_CHROME                = "Chrome";
+const DIR_COMPONENTS            = "Components";
+const DIR_DEFAULTS              = "Defaults";
+const DIR_DEFAULTS_PREFS        = "Preferences";
+const FILE_EXTENSIONS           = "Extensions.rdf";
+const FILE_UNINSTALL_LOG        = "Uninstall";
+const FILE_DEFAULTS             = "Defaults";
+const FILE_AUTOREG              = ".autoreg";
+const FILE_INSTALL_MANIFEST     = "install.rdf";
+const FILE_CHROME_MANIFEST      = "contents.rdf";
+const FILE_WASINSAFEMODE        = "Safe Mode";
+const FILE_INSTALLED_EXTENSIONS = "Installed Extensions"
+const FILE_INSTALLED_EXTENSIONS_PROCESSED = "Installed Extensions (Processed)"
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -315,6 +317,75 @@ nsInstallLogReader.prototype = {
     case this.TOKEN_SKIN:
       var isProfile = parts[1] == this.TOKEN_PROFILE;
       this._listener.onInstallSkin(parts[2], isProfile);
+      break;
+    }
+  }
+};
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// nsInstalledExtensionReader
+//
+function nsInstalledExtensionReader(aManager)
+{
+  this._installedExtensions = getFile("XCurProcD",
+                                      [DIR_EXTENSIONS, 
+                                       FILE_INSTALLED_EXTENSIONS]);
+  this._manager = aManager;
+}
+
+nsInstalledExtensionReader.prototype = {
+  _manager            : null,
+  _installedExtensions: null,
+  
+  read: function ()
+  {
+    if (!this._installedExtensions.exists())
+      return;
+      
+    var fis = Components.classes["@mozilla.org/network/file-input-stream;1"]
+                        .createInstance(Components.interfaces.nsIFileInputStream);
+    dumpFile(this._installedExtensions);
+    fis.init(this._installedExtensions, -1, -1, false);
+    var lis = fis.QueryInterface(Components.interfaces.nsILineInputStream);
+    var line = { value: "" };
+    var more = false;
+    var lines = [];
+    do {
+      more = lis.readLine(line);
+      lines.push(line.value);
+    }
+    while (more);
+    fis.close();
+
+    // Now that we've closed the stream we can remove all the files    
+    for (var i = 0; i < lines.length; ++i)
+      this._parseLine(lines[i]);
+    
+    this._installedExtensons.moveTo(getDir("XCurProcD", [DIR_EXTENSIONS]), 
+                                    FILE_INSTALLED_EXTENSIONS_PROCESSED);
+  },
+  
+  TOKEN_EXTENSION : "extension",
+  TOKEN_THEME     : "theme",
+  
+  _parseLine: function (aLine)
+  {
+    // extension\t{GUID} or theme\tpersistentDescriptor
+    var parts = aLine.split("\t");
+    var manifest = getFile("XCurProcD", 
+                           [DIR_EXTENSIONS, parts[1], FILE_INSTALL_MANIFEST]);
+    switch (parts[0]) {
+    case this.TOKEN_EXTENSION:
+      this._manager.installExtensionInternal(manifest, false);
+      break;
+    case this.TOKEN_THEME:
+      var prefix = parts[0] + "\t";
+      var filePD = aLine.substr(prefix.length, aLine.length);
+      var lf = Components.classes["@mozilla.org/file/local;1"]
+                         .createInstance(Components.interfaces.nsILocalFile);
+      lf.persistentDescriptor = filePD;
+      this._manager.installTheme(lf, nsIExtensionManager.INSTALL_GLOBAL);
       break;
     }
   }
@@ -865,10 +936,14 @@ nsExtensionManager.prototype = {
           
           win.close();
         }
-        
+
         // XXXben we should be doing all of this in the EM's ctor, NOT after profile
         //        selection... this means we need to verify that all the services
         //        invoked by these operations are globally available.
+
+        // Install any pre-configured items
+        (new nsInstalledExtensionReader(this)).read();
+        
         var globalExtension = cmdLineSvc.getCmdLineValue("-install-global-extension");
         if (globalExtension)
           this._checkForGlobalInstalls(globalExtension, nsIUpdateItem.TYPE_EXTENSION);
@@ -1104,8 +1179,8 @@ nsExtensionManager.prototype = {
     }
     
     // Now update the last app version so we don't do this checking 
-    // again. goats
-    // pref.setCharPref(PREF_EM_LAST_APP_VERSION, currAppVersion);
+    // again. 
+    pref.setCharPref(PREF_EM_LAST_APP_VERSION, currAppVersion);
     
     return rv;
   },
@@ -1235,9 +1310,23 @@ nsExtensionManager.prototype = {
                                [DIR_EXTENSIONS, DIR_TEMP, FILE_INSTALL_MANIFEST]);
     zipReader.extract(FILE_INSTALL_MANIFEST, tempManifest);
     
+    var extensionID = this.installExtensionInternal(tempManifest, installProfile);
+    if (extensionID) {
+      // Then we stage the extension's XPI into a temporary directory so we 
+      // can extract them after the next restart. 
+      this._stageExtensionXPI(zipReader, extensionID, installProfile);
+
+      this._writeAutoReg(installProfile);
+    }
+    zipReader.close();
+    tempManifest.remove(false);
+  },
+  
+  installExtensionInternal: function (aManifest, aIsProfile)
+  {
     var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
                         .getService(Components.interfaces.nsIRDFService);
-    var ds = rdf.GetDataSourceBlocking(getURLSpecFromFile(tempManifest));
+    var ds = rdf.GetDataSourceBlocking(getURLSpecFromFile(aManifest));
     
     // We do a basic version check first just to make sure we somehow weren't 
     // tricked into installing an incompatible extension...
@@ -1253,14 +1342,10 @@ nsExtensionManager.prototype = {
                     version       : this.getManifestProperty(ds, "version") };
       for (var p in props) {
         this._ds.setItemProperty(extensionID, this._ds._emR(p),
-                                 props[p], installProfile,
+                                 props[p], aIsProfile,
                                  nsIUpdateItem.TYPE_EXTENSION);
       }
 
-      // Then we stage the extension's XPI into a temporary directory so we 
-      // can extract them after the next restart. 
-      this._stageExtensionXPI(zipReader, extensionID, installProfile);
-      
       // Insert it into the child list NOW rather than later because:
       // - extensions installed using the command line need to be a member
       //   of a container during the install phase for the code to be able
@@ -1269,12 +1354,10 @@ nsExtensionManager.prototype = {
       //   feedback to indicate their presence is forthcoming (i.e. they
       //   will be available after a restart).
       this._ds.insertForthcomingItem(extensionID, nsIUpdateItem.TYPE_EXTENSION, 
-                                     installProfile);
+                                     aIsProfile);
     }
-    zipReader.close();
-    tempManifest.remove(false);
     
-    this._writeAutoReg(installProfile);
+    return extensionID;
   },
   
   canInstallItem: function (aDataSource)
@@ -1329,9 +1412,20 @@ nsExtensionManager.prototype = {
   {
     if (!this._extEnabler)
       this._extEnabler = new nsExtensionEnabler(this._ds);
-    this._extEnabler.enable(aExtensionID, 
-                            this._ds.isProfileItem(aExtensionID), 
-                            aDisable);
+      
+    var isProfile = this._ds.isProfileItem(aExtensionID);
+    this._extEnabler.enable(aExtensionID, isProfile, aDisable);
+
+    // clear temporary flags
+    this._ds.setItemProperty(aExtensionID, 
+                             this._ds._emR("toBeEnabled"),
+                             null, isProfile,
+                             nsIUpdateItem.TYPE_EXTENSION);
+    this._ds.setItemProperty(aExtensionID, 
+                             this._ds._emR("toBeDisabled"),
+                             null, isProfile,
+                             nsIUpdateItem.TYPE_EXTENSION);
+    
     this._writeDefaults();
   },
   
@@ -1994,11 +2088,6 @@ nsExtensionsDataSource.prototype = {
         var literal = literals.getNext().QueryInterface(Components.interfaces.nsIRDFNode);
         targetDS.Assert(targetRes, property, literal, true);
       }
-    }
-    
-    if (aItemType == nsIUpdateItem.TYPE_EXTENSION) {
-      // Unset the "to be installed" flag since we're done installing now.
-      targetDS.Unassert(targetRes, this._emR("toBeInstalled"), this._emL("true"));
     }
     
     this._flush(aIsProfile);
