@@ -72,9 +72,9 @@ struct nsReflowMetrics {
 #define NS_UNCONSTRAINEDSIZE NS_MAXSIZE
 
 enum nsReflowReason {
-  eReflowReason_Initial,     // initial reflow of a newly created frame
-  eReflowReason_Incremental, // an incremental change has occured. see the reflow command for details
-  eReflowReason_Resize       // general request to determine a desired size
+  eReflowReason_Initial = 0,     // initial reflow of a newly created frame
+  eReflowReason_Incremental = 1, // an incremental change has occured. see the reflow command for details
+  eReflowReason_Resize = 2       // general request to determine a desired size
 };
 
 /**
