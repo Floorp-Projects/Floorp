@@ -53,6 +53,8 @@
 #include "nsINodeInfo.h"
 #include "nsIScrollbarFrame.h"
 #include "nsIScrollbarMediator.h"
+#include "nsIGfxTextControlFrame.h"
+#include "nsIDOMHTMLTextAreaElement.h"
 
 static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
 static NS_DEFINE_IID(kScrollingViewCID, NS_SCROLLING_VIEW_CID);
@@ -385,6 +387,19 @@ NS_IMETHODIMP
 nsGfxScrollFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
                                          nsISupportsArray& aAnonymousChildren)
 {
+  // The anonymous <div> used by <inputs> never gets scrollbars.
+  nsCOMPtr<nsIGfxTextControlFrame2> textFrame(do_QueryInterface(mParent));
+  if (textFrame) {
+    // Make sure we are not a text area.
+    nsCOMPtr<nsIContent> content;
+    mParent->GetContent(getter_AddRefs(content));
+    nsCOMPtr<nsIDOMHTMLTextAreaElement> textAreaElement(do_QueryInterface(mContent));
+    if (!textAreaElement) {
+      SetScrollbarVisibility(aPresContext, PR_FALSE, PR_FALSE);
+      return NS_OK;
+    }
+  }
+
   // create horzontal scrollbar
   nsresult rv;
   NS_WITH_SERVICE(nsIElementFactory, elementFactory,
@@ -465,7 +480,8 @@ nsGfxScrollFrame::SetInitialChildList(nsIPresContext* aPresContext,
   mInner->mScrollAreaBox->GetNextBox(&mInner->mHScrollbarBox);
 
   // vertical scrollbar
-  mInner->mHScrollbarBox->GetNextBox(&mInner->mVScrollbarBox);
+  if (mInner->mHScrollbarBox)
+    mInner->mHScrollbarBox->GetNextBox(&mInner->mVScrollbarBox);
 
   // listen for scroll events.
   mInner->GetScrollableView(aPresContext)->AddScrollPositionListener(mInner);
@@ -835,8 +851,12 @@ nsGfxScrollFrameInner::ScrollPositionWillChange(nsIScrollableView* aScrollable, 
 NS_IMETHODIMP
 nsGfxScrollFrameInner::ScrollPositionDidChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY)
 {
-   SetAttribute(mVScrollbarBox, nsXULAtoms::curpos, aY);
-   SetAttribute(mHScrollbarBox, nsXULAtoms::curpos, aX);
+   if (mVScrollbarBox)
+     SetAttribute(mVScrollbarBox, nsXULAtoms::curpos, aY);
+   
+   if (mHScrollbarBox)
+     SetAttribute(mHScrollbarBox, nsXULAtoms::curpos, aX);
+   
    return NS_OK;
 }
 
@@ -1192,8 +1212,11 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
   nsIScrollableView* scrollable = GetScrollableView(presContext);
   scrollable->SetLineHeight(fontHeight);
 
-  mHScrollbarBox->GetPrefSize(aState, hSize);
-  mVScrollbarBox->GetPrefSize(aState, vSize);
+  if (mHScrollbarBox)
+    mHScrollbarBox->GetPrefSize(aState, hSize);
+  
+  if (mVScrollbarBox)
+    mVScrollbarBox->GetPrefSize(aState, vSize);
 
   // layout vertical scrollbar
   nsRect vRect(clientRect);
@@ -1217,9 +1240,11 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
     SetAttribute(mVScrollbarBox, nsXULAtoms::increment, fontHeight, PR_FALSE);
   }
 
-  LayoutBox(aState, mVScrollbarBox, vRect);
-  mVScrollbarBox->GetPrefSize(aState, vSize);
-  mVScrollbarBox->GetMinSize(aState, vMinSize);
+  if (mVScrollbarBox) {
+    LayoutBox(aState, mVScrollbarBox, vRect);
+    mVScrollbarBox->GetPrefSize(aState, vSize);
+    mVScrollbarBox->GetMinSize(aState, vMinSize);
+  }
 
   if (mHasVerticalScrollbar && (vMinSize.width > vRect.width || vMinSize.height > vRect.height)) {
     if (RemoveVerticalScrollbar(aState, scrollAreaRect, scrollBarRight))
@@ -1251,9 +1276,10 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
     SetAttribute(mHScrollbarBox, nsXULAtoms::increment, 10*mOnePixel, PR_FALSE);
   } 
 
-  LayoutBox(aState, mHScrollbarBox, hRect);
-
-  mHScrollbarBox->GetMinSize(aState, hMinSize);
+  if (mHScrollbarBox) {
+    LayoutBox(aState, mHScrollbarBox, hRect);
+    mHScrollbarBox->GetMinSize(aState, hMinSize);
+  }
 
   if (mHasHorizontalScrollbar && (hMinSize.width > hRect.width || hMinSize.height > hRect.height)) {
     if (RemoveHorizontalScrollbar(aState, scrollAreaRect, scrollBarBottom))
