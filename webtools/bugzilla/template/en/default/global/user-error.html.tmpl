@@ -988,7 +988,7 @@
   
 [% USE Bugzilla %]
 [% namedcmd = Bugzilla.cgi.param("namedcmd") %]
-[% IF namedcmd %]
+[% IF namedcmd AND error != "missing_query" %]
   <p>  
     Alternatively, you can    
     <a href="buglist.cgi?cmdtype=dorem&amp;remaction=forget&amp;namedcmd=
@@ -1000,7 +1000,7 @@
       [% END %]
     [% END %]
     
-    this saved search: '[% namedcmd FILTER html %]'.
+    the saved search '[% namedcmd FILTER html %]'.
   </p>
 [% END %]            
 
