@@ -102,6 +102,7 @@ DEFINE_RDF_VOCAB(CHROME_URI, CHROME, baseURL);
 DEFINE_RDF_VOCAB(CHROME_URI, CHROME, packages);
 DEFINE_RDF_VOCAB(CHROME_URI, CHROME, package);
 DEFINE_RDF_VOCAB(CHROME_URI, CHROME, name);
+DEFINE_RDF_VOCAB(CHROME_URI, CHROME, image);
 DEFINE_RDF_VOCAB(CHROME_URI, CHROME, locType);
 DEFINE_RDF_VOCAB(CHROME_URI, CHROME, allowScripts);
 
@@ -251,6 +252,9 @@ nsChromeRegistry::nsChromeRegistry()
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
 
     rv = mRDFService->GetResource(kURICHROME_name, getter_AddRefs(mName));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
+
+    rv = mRDFService->GetResource(kURICHROME_image, getter_AddRefs(mImage));
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
 
     rv = mRDFService->GetResource(kURICHROME_locType, getter_AddRefs(mLocType));
@@ -2041,11 +2045,28 @@ NS_IMETHODIMP nsChromeRegistry::InstallProvider(const nsCString& aProviderType,
             rv = nsChromeRegistry::UpdateArc(installSource, resource, mLocType, locLiteral, aRemove);
             if (NS_FAILED(rv)) return rv;
           }
-
+          
           nsCOMPtr<nsIRDFNode> newTarget;
           rv = dataSource->GetTarget(resource, arc, PR_TRUE, getter_AddRefs(newTarget));
           if (NS_FAILED(rv)) return rv;
         
+          if (arc == mImage) {
+            // We are an image URL.  Check to see if we're a relative URL.
+            nsCOMPtr<nsIRDFLiteral> literal(do_QueryInterface(newTarget));
+            if (literal) {
+              const PRUnichar* valueStr;
+              literal->GetValueConst(&valueStr);
+              nsAutoString imageURL(valueStr);
+              if (imageURL.FindChar(':') == -1) {
+                // We're relative. Prepend the base URL of the package.
+                nsAutoString fullURL; fullURL.AssignWithConversion(aBaseURL);
+                fullURL += imageURL;
+                mRDFService->GetLiteral(fullURL.GetUnicode(), getter_AddRefs(literal));
+                newTarget = do_QueryInterface(literal);
+              }
+            }
+          }
+
           rv = nsChromeRegistry::UpdateArc(installSource, resource, arc, newTarget, aRemove);
           if (NS_FAILED(rv)) return rv;
 

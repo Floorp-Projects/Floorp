@@ -154,6 +154,7 @@ protected:
   nsCOMPtr<nsIRDFResource> mPackages;
   nsCOMPtr<nsIRDFResource> mPackage;
   nsCOMPtr<nsIRDFResource> mName;
+  nsCOMPtr<nsIRDFResource> mImage;
   nsCOMPtr<nsIRDFResource> mLocType;
   nsCOMPtr<nsIRDFResource> mAllowScripts;
 
