@@ -37,13 +37,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// priviledge shortcut
-enablePrivilege = netscape.security.PrivilegeManager.enablePrivilege;
-
 // helper function to shortcut component creation
 function doCreate(aContract, aInterface)
 {
-    enablePrivilege('UniversalXPConnect');
     return Components.classes[aContract].createInstance(aInterface);
 }
 
@@ -54,7 +50,6 @@ const SIS_CTRID       = "@mozilla.org/scriptableinputstream;1"
 const nsISIS          = Components.interfaces.nsIScriptableInputStream;
 
 // rdf foo, onload handler
-enablePrivilege('UniversalXPConnect');
 const kRDFSvcContractID = "@mozilla.org/rdf/rdf-service;1";
 const kRDFInMemContractID = 
     "@mozilla.org/rdf/datasource;1?name=in-memory-datasource";
@@ -97,7 +92,6 @@ const kContUtils = doCreate(kRDFContUtilsID, nsIRDFContainerUtils);
 
 function doCreateRDFFP(aTitle, aMode)
 {
-    enablePrivilege('UniversalXPConnect');
     var fp = doCreate("@mozilla.org/filepicker;1", nsIFilePicker);
     fp.init(window, aTitle, aMode);
     fp.appendFilter('*.rdf', '*.rdf');
@@ -108,7 +102,6 @@ function doCreateRDFFP(aTitle, aMode)
 function goDoCommand(aCommand)
 {
     try {
-        enablePrivilege('UniversalXPConnect');
         var controller = 
             top.document.commandDispatcher.getControllerForCommand(aCommand);
         if (controller && controller.isCommandEnabled(aCommand))

@@ -47,7 +47,6 @@ function onLoad()
     view.tests_selected = document.getElementById("tests_selected");
     view.tree = document.getElementById('out');
     view.boxObject = view.tree.boxObject.QueryInterface(Components.interfaces.nsITreeBoxObject);
-    enablePrivilege('UniversalXPConnect');
     // prune the spurious children of the iframe doc
     {  
         var iframe = document.getElementById('hiddenHtml').contentDocument;

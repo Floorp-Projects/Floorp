@@ -43,7 +43,6 @@ var view =
     {
         var sels = this.boxObject.selection,a=new Object(),b=new Object(),k;
         var rowResource, name, path;
-        enablePrivilege('UniversalXPConnect');
         for (k=0;k<sels.getRangeCount();k++){
             sels.getRangeAt(k,a,b);
             for (var l=a.value;l<=b.value;l++) {
@@ -56,7 +55,6 @@ var view =
     displayTest : function()
     {
         var current = this.boxObject.selection.currentIndex;
-        enablePrivilege('UniversalXPConnect');
         var rowResource = this.builder.getResourceAtIndex(current);
         var item = itemCache.getItem(rowResource);
         DumpDOM(item.mSourceDoc);
@@ -64,7 +62,6 @@ var view =
     },
     browseForRDF : function()
     {
-        enablePrivilege('UniversalXPConnect');
         var fp = doCreateRDFFP('Xalan Description File',
                                nsIFilePicker.modeOpen);
         var res = fp.show();
@@ -76,7 +73,6 @@ var view =
     },
     dump_Good : function()
     {
-        enablePrivilege('UniversalXPConnect');
         var enumi = this.database.GetSources(krTypeSucc, kGood, true);
         var k = 0;
         while (enumi.hasMoreElements()) {
@@ -87,7 +83,6 @@ var view =
     },
     prune_ds : function()
     {
-        enablePrivilege('UniversalXPConnect');
         this.unassert(this.database.GetSources(krTypeSucc, kGood, true),
                       kGood);
         this.unassert(this.database.GetSources(krTypeSucc, kBad, true),
@@ -99,7 +94,6 @@ var view =
     },
     unassert : function(aEnum, aResult)
     {
-        enablePrivilege('UniversalXPConnect');
         var k = 0, item;
         while (aEnum.hasMoreElements()) {
             k += 1;
@@ -151,7 +145,6 @@ var view =
     },
     fillItemContext : function()
     {
-        enablePrivilege('UniversalXPConnect');
         var index = view.boxObject.selection.currentIndex;
         var res = view.builder.getResourceAtIndex(index);
         var purp = view.database.GetTarget(res, krTypePurp, true);

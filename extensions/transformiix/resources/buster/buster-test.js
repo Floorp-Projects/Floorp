@@ -64,7 +64,6 @@ var itemCache =
     mArray : new Array(),
     getItem : function(aResource)
     {
-        enablePrivilege('UniversalXPConnect');
         // Directory selected
         if (kContUtils.IsSeq(runItem.prototype.kDatabase, aResource)) {
             var aSeq = kContUtils.MakeSeq(runItem.prototype.kDatabase, aResource);
@@ -113,7 +112,6 @@ var itemCache =
 
 function runItem(aResource)
 {
-  enablePrivilege('UniversalXPConnect');
   this.mResource = aResource;
   // Directory selected
   if (kContUtils.IsSeq(this.kDatabase,this.mResource)) {
@@ -130,7 +128,6 @@ function runItem(aResource)
   }
 }
 
-enablePrivilege('UniversalXPConnect');
 runItem.prototype = 
 {
     // RDF resource associated with this test
@@ -231,7 +228,6 @@ runItem.prototype =
         if (this.mLoaded < 3) {
             return;
         }
-        enablePrivilege('UniversalXPConnect');
         this.mResDoc = document.implementation.createDocument("", "", null);
         this.kProcessor.transformDocument(this.mSourceDoc,
                                           this.mStyleDoc,
@@ -271,7 +267,6 @@ runItem.prototype =
 
     loadTextFile : function(url)
     {
-        enablePrivilege('UniversalXPConnect');
         var serv = Components.classes[IOSERVICE_CTRID].
             getService(nsIIOService);
         if (!serv) {
