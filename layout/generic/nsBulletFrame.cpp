@@ -111,13 +111,7 @@ nsBulletFrame::Paint(nsIPresContext&      aCX,
 
     if (myList->mListStyleImage.Length() > 0) {
       nsIImage* image = mImageLoader.GetImage();
-      if (nsnull == image) {
-        if (!mImageLoader.GetLoadImageFailed()) {
-          // No image yet
-          return NS_OK;
-        }
-      }
-      else {
+      if (image) {
         if (!mImageLoader.GetLoadImageFailed()) {
           nsRect innerArea(mPadding.left, mPadding.top,
                            mRect.width - (mPadding.left + mPadding.right),
@@ -125,7 +119,6 @@ nsBulletFrame::Paint(nsIPresContext&      aCX,
           aRenderingContext.DrawImage(image, innerArea);
           return NS_OK;
         }
-        listStyleType = NS_STYLE_LIST_STYLE_DISC;
       }
     }
 
@@ -741,9 +734,10 @@ nsBulletFrame::UpdateBulletCB(nsIPresContext* aPresContext,
                               PRUint32 aStatus)
 {
   nsresult rv = NS_OK;
-  if (NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE & aStatus) {
-    // Now that the size is available, trigger a reflow of the bullet
-    // frame.
+  if ((NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE|NS_IMAGE_LOAD_STATUS_ERROR)
+      & aStatus) {
+    // Now that the size is available (or an error occurred), trigger
+    // a reflow of the bullet frame.
     nsCOMPtr<nsIPresShell> shell;
     rv = aPresContext->GetShell(getter_AddRefs(shell));
     if (NS_SUCCEEDED(rv) && shell) {
