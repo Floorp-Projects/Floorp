@@ -393,6 +393,7 @@ nsWindow::ReleaseGlobals()
       gsGtkCursorCache[i] = nsnull;
     }
   }
+  gGlobalsInitialized = PR_FALSE;
 }
 
 NS_IMETHODIMP nsWindow::Destroy(void)

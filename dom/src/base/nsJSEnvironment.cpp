@@ -111,6 +111,8 @@ static PRLogModuleInfo* gJSDiagnostics;
 #define NS_GC_DELAY                2000 // ms
 #define NS_FIRST_GC_DELAY          10000 // ms
 
+// if you add statics here, add them to the list in nsJSEnvironment::Startup
+
 static nsITimer *sGCTimer;
 static PRBool sReadyForGC;
 
@@ -126,6 +128,7 @@ static PRThread *gDOMThread;
 
 static JSGCCallback gOldJSGCCallback;
 
+static PRBool sIsInitialized;
 static PRBool sDidShutdown;
 
 static PRInt32 sContextCount;
@@ -1915,13 +1918,30 @@ DOMGCCallback(JSContext *cx, JSGCStatus status)
   return gOldJSGCCallback ? gOldJSGCCallback(cx, status) : JS_TRUE;
 }
 
+//static
+void
+nsJSEnvironment::Startup()
+{
+  // initialize all our statics, so that we can restart XPCOM
+  sGCTimer = nsnull;
+  sReadyForGC = PR_FALSE;
+  gNameSpaceManager = nsnull;
+  sRuntimeService = nsnull;
+  sRuntime = nsnull;
+  gDOMThread = nsnull;
+  gOldJSGCCallback = nsnull;
+  sIsInitialized = PR_FALSE;
+  sDidShutdown = PR_FALSE;
+  sContextCount = 0;
+  sSecurityManager = nsnull;
+  gCollation = nsnull;
+}
+
 // static
 nsresult
 nsJSEnvironment::Init()
 {
-  static PRBool isInitialized;
-
-  if (isInitialized) {
+  if (sIsInitialized) {
     return NS_OK;
   }
 
@@ -1991,7 +2011,7 @@ nsJSEnvironment::Init()
 
   rv = CallGetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &sSecurityManager);
 
-  isInitialized = NS_SUCCEEDED(rv);
+  sIsInitialized = NS_SUCCEEDED(rv);
 
   return rv;
 }

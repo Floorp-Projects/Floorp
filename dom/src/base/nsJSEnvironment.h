@@ -179,6 +179,9 @@ private:
   static JSRuntime *sRuntime;
 
 public:
+  // called from the module Ctor to initialize statics
+  static void Startup();
+
   static nsresult Init();
 
   static nsJSEnvironment *GetScriptingEnvironment();

@@ -251,6 +251,7 @@ void
 CSSLoaderImpl::Shutdown()
 {
   delete gParsers;
+  gParsers = nsnull;
 }
 
 NS_IMETHODIMP

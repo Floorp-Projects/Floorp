@@ -44,7 +44,6 @@
 #include "nsNetUtil.h"
 #include "nsIObserverService.h"
 #include "nsIServiceManagerUtils.h"
-#include "nsIProfileChangeStatus.h"
 
 NS_IMPL_ISUPPORTS1(nsLayoutStylesheetCache, nsIObserver)
 
