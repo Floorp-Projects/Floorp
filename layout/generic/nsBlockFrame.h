@@ -404,6 +404,8 @@ protected:
                              nsIFrame* aFrame,
                              PRUint8* aLineReflowStatus);
 
+  // An incomplete aReflowStatus indicates the floater should be split
+  // but only if the available height is constrained.
   nsresult ReflowFloater(nsBlockReflowState& aState,
                          nsPlaceholderFrame* aPlaceholder,
                          nsRect&             aCombinedRectResult,
