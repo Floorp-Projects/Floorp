@@ -1149,21 +1149,6 @@ NS_METHOD nsTableRowFrame::IR_StyleChanged(nsIPresContext&      aPresContext,
   {
     tableFrame->InvalidateFirstPassCache();
   }
-
-  /*
-  // we are obligated to pass along the reflow command to our children before doing anything else
-  nsIFrame *childFrame = mFirstChild;
-  while (nsnull!=childFrame)
-  {
-    nsHTMLReflowState childReflowState(aPresContext, childFrame, aReflowState.reflowState,
-                                       aReflowState.availSize, eReflowReason_Incremental);
-    rv = ReflowChild(childFrame, aPresContext, aDesiredSize, childReflowState, aStatus);
-    if (NS_FAILED(rv))
-      break;
-    // the returned desired size is irrelevant, because we'll do a resize reflow in a moment
-    childFrame->GetNextSibling(childFrame);
-  }
-  */
   return rv;
 }
 

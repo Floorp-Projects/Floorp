@@ -2222,23 +2222,8 @@ NS_METHOD nsTableFrame::IR_StyleChanged(nsIPresContext&        aPresContext,
   // we presume that all the easy optimizations were done in the nsHTMLStyleSheet before we were called here
   // XXX: we can optimize this when we know which style attribute changed
   //      if something like border changes, we need to do pass1 again
-  //      but if something like width changes, we just need to do pass2
+  //      but if something like width changes from 100 to 200, we just need to do pass2
   InvalidateFirstPassCache();
-
-  // we are obligated to pass along the reflow command to our children before doing anything else
-  /*
-  nsIFrame *childFrame = mFirstChild;
-  while (nsnull!=childFrame)
-  {
-    nsHTMLReflowState childReflowState(aPresContext, childFrame, aReflowState.reflowState,
-                                       aReflowState.availSize, eReflowReason_Incremental);
-    rv = ReflowChild(childFrame, aPresContext, aDesiredSize, childReflowState, aStatus);
-    if (NS_FAILED(rv))
-      break;
-    // the returned desired size is irrelevant, because we'll do a resize reflow in a moment
-    childFrame->GetNextSibling(childFrame);
-  }
-  */
   return rv;
 }
 
