@@ -752,12 +752,13 @@ MailFolder::GetName(nsIRDFLiteral**  result) const
 NS_IMETHODIMP
 MailFolder::GetMessageList (nsVoidArray** result)
 {
+    nsresult rv = NS_OK;
     if (mStatus == eMailFolder_Uninitialized) {
         mStatus = eMailFolder_OK;
-        ReadSummaryFile(mURI);
+        rv = ReadSummaryFile(mURI);
     }
     *result = &mMessages;
-    return NS_OK;
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -901,6 +902,7 @@ trimString (char* str)
 nsresult
 MailFolder::ReadSummaryFile (char* url)
 {
+    nsresult rv = NS_OK;
     static const PRInt32 kBufferSize = 4096;
 
     if (startsWith("mailbox://", url)) {
@@ -935,23 +937,27 @@ MailFolder::ReadSummaryFile (char* url)
                 sscanf(&buff[9], "%d", &summOffset);
                 fgets(buff, kBufferSize, mSummaryFile);
                 nsAutoString pfrom(trimString(&buff[6]));
-                gRDFService->GetUnicodeResource(pfrom, &rFrom);
-
-                fgets(buff, kBufferSize, mSummaryFile);
-                nsAutoString psubject(trimString(&buff[8]));
-                gRDFService->GetLiteral(psubject, &rSubject);
-
-                fgets(buff, kBufferSize, mSummaryFile);
-                nsAutoString pdate(trimString(&buff[6]));
-                gRDFService->GetLiteral(pdate, &rDate);
-
-                fgets(buff, kBufferSize, mSummaryFile);
-                sscanf(&buff[9], "%d", &messageOffset);
-                PR_snprintf(nurl, nurllen, "%s?%d", url, messageOffset); // XXX unsafe
-                nsAutoString purl(nurl);
-                AddMessage(purl, this, rFrom, rSubject, rDate, summOffset,
-                           messageOffset, flags, 0);
+                rv = gRDFService->GetUnicodeResource(pfrom, &rFrom);
+                if (rv == NS_OK) {
+                    fgets(buff, kBufferSize, mSummaryFile);
+                    nsAutoString psubject(trimString(&buff[8]));
+                    rv = gRDFService->GetLiteral(psubject, &rSubject);
+                    if (rv == NS_OK) {
+                        fgets(buff, kBufferSize, mSummaryFile);
+                        nsAutoString pdate(trimString(&buff[6]));
+                        rv = gRDFService->GetLiteral(pdate, &rDate);
+                        if (rv == NS_OK) {
+                            fgets(buff, kBufferSize, mSummaryFile);
+                            sscanf(&buff[9], "%d", &messageOffset);
+                            PR_snprintf(nurl, nurllen, "%s?%d", url, messageOffset); // XXX unsafe
+                            nsAutoString purl(nurl);
+                            rv = AddMessage(purl, this, rFrom, rSubject, rDate, summOffset,
+                                            messageOffset, flags, 0);
+                        }
+                    }
+                }
                 PL_strfree(flags);
+                if (rv != NS_OK) return rv;
             }
         }
 
@@ -962,8 +968,8 @@ MailFolder::ReadSummaryFile (char* url)
                 if (strncmp("From ", buff, 5) ==0)  {
                     if (rFrom) {
                         nsAutoString purl(nurl);
-                        AddMessage(purl, this, rFrom, rSubject, rDate, messageOffset, flags, nsnull);
-
+                        rv = AddMessage(purl, this, rFrom, rSubject, rDate, messageOffset, flags, nsnull);
+                        if (rv != NS_OK) goto done;
                     }
                     messageOffset = ftell(mf);
                     if (flags) PL_strfree(flags);
@@ -990,15 +996,16 @@ MailFolder::ReadSummaryFile (char* url)
             }
             if (rFrom){
                 nsAutoString purl(nurl);
-                AddMessage(purl, this, rFrom, rSubject, rDate, messageOffset, flags, nsnull);
+                rv = AddMessage(purl, this, rFrom, rSubject, rDate, messageOffset, flags, nsnull);
+                // fall through with rv
             }
             fflush(mSummaryFile);
         }
-
+      done:
         PR_DELETE(buff);
         PR_DELETE(nurl);
     }
-    return NS_OK;
+    return rv;
 }
 
 /********************************** MailMessage **************************************
