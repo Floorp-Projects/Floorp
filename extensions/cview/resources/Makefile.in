@@ -31,3 +31,8 @@ include $(DEPTH)/config/autoconf.mk
 DIRS        = content locale skin
 
 include $(topsrcdir)/config/rules.mk
+
+chrome::
+	@$(REGCHROME) content cview cview.jar
+	@$(REGCHROME) skin modern/cview cview.jar
+	@$(REGCHROME) locale en-US/cview cview.jar

@@ -42,3 +42,8 @@ CHROME_MISC = \
 	$(NULL)
 
 include <$(topsrcdir)\config\rules.mak>
+
+chrome::
+    $(REGCHROME) content cview cview.jar
+    $(REGCHROME) skin modern/cview cview.jar
+    $(REGCHROME) locale en-US/cview cview.jar

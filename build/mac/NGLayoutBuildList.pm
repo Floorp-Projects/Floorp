@@ -1314,7 +1314,7 @@ sub ProcessJarManifests()
     if ($main::build{extensions})
     {
       MozJar::CreateJarFromManifest(":mozilla:extensions:irc:jar.mn", $chrome_dir, \%jars);
-      # cview needs a jar.mn file
+      MozJar::CreateJarFromManifest(":mozilla:extensions:cview:jar.mn", $chrome_dir, \%jars);
       # transformiix needs a jar.mn file
     }
     
@@ -2610,8 +2610,6 @@ sub BuildExtensionsProjects()
       _InstallResources(":mozilla:extensions:cview:resources:content:MANIFEST", "$cviewContent");
       _InstallResources(":mozilla:extensions:cview:resources:skin:MANIFEST", "$cviewSkin");
       _InstallResources(":mozilla:extensions:cview:resources:locale:en-US:MANIFEST", "$cviewLocale", 0);
-      
-      # this needs a jar.mn file for jar_manifest builds
     }
     
     
