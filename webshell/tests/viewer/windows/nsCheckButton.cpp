@@ -200,6 +200,18 @@ PRBool nsCheckButton::OnResize(nsRect &aWindowRect)
     return PR_FALSE;
 }
 
+#ifdef MOZ_UNICODE
+//-------------------------------------------------------------------------
+//
+// return the window class name and initialize the class if needed
+//
+//-------------------------------------------------------------------------
+LPCWSTR nsCheckButton::WindowClassW()
+{
+    return L"BUTTON";
+}
+#endif /* MOZ_UNICODE */
+
 //-------------------------------------------------------------------------
 //
 // return the window class name and initialize the class if needed

@@ -46,6 +46,10 @@ CPPSRCS		= \
 
 DEFINES		+= -DWIN32_LEAN_AND_MEAN
 
+ifdef MOZ_UNICODE
+DEFINES += -DMOZ_UNICODE 
+endif
+
 LOCAL_INCLUDES	= \
 		-I$(topsrcdir)/widget/src/windows \
 		-I$(topsrcdir)/widget/src/xpwidgets \
