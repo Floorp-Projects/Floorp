@@ -200,7 +200,7 @@ public:
     NS_IMETHOD        CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent);
     NS_IMETHOD        SetTitle(const nsString& title);
   
-    NS_IMETHOD        GetAttention();
+    NS_IMETHOD        GetAttention(PRInt32 aCycleCount);
 
     // Mac specific methods
     static void         nsRectToMacRect(const nsRect& aRect, Rect& aMacRect);

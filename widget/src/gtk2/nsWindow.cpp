@@ -577,7 +577,7 @@ nsWindow::SetFocus(PRBool aRaise)
     if (gRaiseWindows && aRaise && toplevelWidget &&
         !GTK_WIDGET_HAS_FOCUS(owningWidget) &&
         !GTK_WIDGET_HAS_FOCUS(toplevelWidget))
-        GetAttention();
+        GetAttention(-1);
 
     nsWindow  *owningWindow = get_window_for_gtk_widget(owningWidget);
     if (!owningWindow)
@@ -1125,7 +1125,7 @@ nsWindow::CaptureRollupEvents(nsIRollupListener *aListener,
 }
 
 NS_IMETHODIMP
-nsWindow::GetAttention()
+nsWindow::GetAttention(PRInt32 aCycleCount)
 {
     LOG(("nsWindow::GetAttention [%p]\n", (void *)this));
 

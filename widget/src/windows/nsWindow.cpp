@@ -553,7 +553,7 @@ public:
       delete current;
     }
   }
-  void AddTimer(HWND timerWindow, HWND flashWindow, UINT timerID) {
+  void AddTimer(HWND timerWindow, HWND flashWindow, PRInt32 maxFlashCount, UINT timerID) {
     TimerInfo *info;
     PRBool    newInfo = PR_FALSE;
     info = FindInfo(timerWindow);
@@ -564,6 +564,8 @@ public:
     if (info) {
       info->timerWindow = timerWindow;
       info->flashWindow = flashWindow;
+      info->maxFlashCount = maxFlashCount;
+      info->flashCount = 0;
       info->timerID = timerID;
       info->hasFlashed = PR_FALSE;
       info->next = 0;
@@ -574,6 +576,18 @@ public:
   HWND GetFlashWindowFor(HWND timerWindow) {
     TimerInfo *info = FindInfo(timerWindow);
     return info ? info->flashWindow : 0;
+  }
+  PRInt32 GetMaxFlashCount(HWND timerWindow) {
+    TimerInfo *info = FindInfo(timerWindow);
+    return info ? info->maxFlashCount : -1;
+  }
+  PRInt32 GetFlashCount(HWND timerWindow) {
+    TimerInfo *info = FindInfo(timerWindow);
+    return info ? info->flashCount : -1;
+  }
+  void IncrementFlashCount(HWND timerWindow) {
+    TimerInfo *info = FindInfo(timerWindow);
+    ++(info->flashCount);
   }
   void KillTimer(HWND timerWindow) {
     TimerInfo *info = FindInfo(timerWindow);
@@ -597,6 +611,8 @@ private:
     HWND       timerWindow,
                flashWindow;
     UINT       timerID;
+    PRInt32    maxFlashCount;
+    PRInt32    flashCount;
     PRBool     hasFlashed;
     TimerInfo *next;
   };
@@ -6696,7 +6712,22 @@ static VOID CALLBACK nsGetAttentionTimerFunc(HWND hwnd, UINT uMsg, UINT idEvent,
     // flash the outermost owner
     HWND flashwnd = gAttentionTimerMonitor->GetFlashWindowFor(hwnd);
     
-    ::FlashWindow(flashwnd, TRUE);
+    PRInt32 maxFlashCount = gAttentionTimerMonitor->GetMaxFlashCount(hwnd);
+    PRInt32 flashCount = gAttentionTimerMonitor->GetFlashCount(hwnd);
+    if (maxFlashCount > 0) {
+      // We have a max flash count, if we haven't met it yet, flash again.
+      if (flashCount < maxFlashCount) {
+        ::FlashWindow(flashwnd, TRUE);
+        gAttentionTimerMonitor->IncrementFlashCount(hwnd);
+      }
+      else
+        gAttentionTimerMonitor->KillTimer(hwnd);      
+    }
+    else {
+      // The caller didn't specify a flash count.
+      ::FlashWindow(flashwnd, TRUE);
+    }
+
     gAttentionTimerMonitor->SetFlashed(hwnd);
   }
   else
@@ -6705,11 +6736,15 @@ static VOID CALLBACK nsGetAttentionTimerFunc(HWND hwnd, UINT uMsg, UINT idEvent,
 
 // Draw user's attention to this window until it comes to foreground.
 NS_IMETHODIMP
-nsWindow::GetAttention() {
+nsWindow::GetAttention(PRInt32 aCycleCount) {
 
   // Got window?
   if (!mWnd)
     return NS_ERROR_NOT_INITIALIZED;
+
+  // Don't flash if the flash count is 0. 
+  if (aCycleCount == 0)
+    return NS_OK;
 
   // timer is on the parentmost window; window to flash is its ownermost
   HWND nextwnd,
@@ -6727,7 +6762,7 @@ nsWindow::GetAttention() {
     if (!gAttentionTimerMonitor)
       gAttentionTimerMonitor = new nsAttentionTimerMonitor;
     if (gAttentionTimerMonitor) {
-      gAttentionTimerMonitor->AddTimer(timerwnd, flashwnd, NS_FLASH_TIMER_ID);
+      gAttentionTimerMonitor->AddTimer(timerwnd, flashwnd, aCycleCount, NS_FLASH_TIMER_ID);
       ::SetTimer(timerwnd, NS_FLASH_TIMER_ID, GetCaretBlinkTime(), (TIMERPROC)nsGetAttentionTimerFunc);
     }
   }

@@ -5760,11 +5760,17 @@ nsGlobalChromeWindow::Restore()
 NS_IMETHODIMP
 nsGlobalChromeWindow::GetAttention()
 {
+  return GetAttentionWithCycleCount(-1);
+}
+
+NS_IMETHODIMP
+nsGlobalChromeWindow::GetAttentionWithCycleCount(PRInt32 aCycleCount)
+{
   nsCOMPtr<nsIWidget> widget;
   nsresult rv = GetMainWidget(getter_AddRefs(widget));
 
   if (widget) {
-    rv = widget->GetAttention();
+    rv = widget->GetAttention(aCycleCount);
   }
 
   return rv;

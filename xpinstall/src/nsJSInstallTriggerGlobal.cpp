@@ -195,6 +195,7 @@ InstallTriggerGlobalInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
     {
       jsval v;
       const PRUnichar *name, *URL;
+      const PRUnichar *iconURL = nsnull;
 
       for (int i = 0; i < ida->length; i++ )
       {
@@ -202,11 +203,24 @@ InstallTriggerGlobalInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
         name = NS_REINTERPRET_CAST(const PRUnichar*, JS_GetStringChars( JS_ValueToString( cx, v ) ));
 
         JS_GetUCProperty( cx, JSVAL_TO_OBJECT(argv[0]), NS_REINTERPRET_CAST(const jschar*, name), nsCRT::strlen(name), &v );
+        if ( JSVAL_IS_OBJECT(v) ) 
+        {
+          
+          jsval v2;
+          JS_GetProperty( cx, JSVAL_TO_OBJECT(v), "URL", &v2 );
+          URL = NS_REINTERPRET_CAST(const PRUnichar*, JS_GetStringChars( JS_ValueToString( cx, v2 ) ));
+
+          JS_GetProperty( cx, JSVAL_TO_OBJECT(v), "IconURL", &v2 );
+          iconURL = NS_REINTERPRET_CAST(const PRUnichar*, JS_GetStringChars( JS_ValueToString( cx, v2 ) ));
+        }
+        else 
+        {
         URL = NS_REINTERPRET_CAST(const PRUnichar*, JS_GetStringChars( JS_ValueToString( cx, v ) ));
+        }
 
         if ( name && URL )
         {
-            nsXPITriggerItem *item = new nsXPITriggerItem( name, URL );
+            nsXPITriggerItem *item = new nsXPITriggerItem( name, URL, iconURL );
             if ( item )
             {
                 if ( item->IsRelativeURL() )
@@ -313,7 +327,8 @@ InstallTriggerGlobalInstallChrome(JSContext *cx, JSObject *obj, uintN argc, jsva
     {
         // there's at least one known chrome type
         nsXPITriggerItem* item = new nsXPITriggerItem(name.get(),
-                                                      sourceURL.get());
+                                                      sourceURL.get(), 
+                                                      nsnull);
 
         if (item && item->IsRelativeURL())
             item->mURL.Insert( baseURL, 0 );

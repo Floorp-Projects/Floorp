@@ -274,7 +274,7 @@ nsInstallTrigger::StartSoftwareUpdate(nsIScriptGlobalObject* aGlobalObject, cons
         nsXPITriggerInfo* trigger = new nsXPITriggerInfo();
         if ( trigger )
         {
-            nsXPITriggerItem* item = new nsXPITriggerItem(0,aURL.get());
+            nsXPITriggerItem* item = new nsXPITriggerItem(0,aURL.get(),nsnull);
             if (item)
             {
                 trigger->Add( item );

@@ -2027,7 +2027,7 @@ NS_IMETHODIMP nsChildView::SetTitle(const nsString& title)
 }
 
 
-NS_IMETHODIMP nsChildView::GetAttention()
+NS_IMETHODIMP nsChildView::GetAttention(PRInt32 aCycleCount)
 {
   // Since the Mac doesn't consider each window a separate process this call functions
   // slightly different than on other platforms.  We first check to see if we're the

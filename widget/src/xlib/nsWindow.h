@@ -115,7 +115,7 @@ class nsWindow : public nsWidget
 
   NS_IMETHOD SetFocus(PRBool aRaise);
   virtual  PRBool OnExpose(nsPaintEvent &event);
-  NS_IMETHOD GetAttention(void);
+  NS_IMETHOD GetAttention(PRInt32 aCycleCount);
   
 protected:
   virtual long GetEventMask();

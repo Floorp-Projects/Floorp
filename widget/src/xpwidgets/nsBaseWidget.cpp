@@ -890,7 +890,7 @@ NS_METHOD nsBaseWidget::ModalEventFilter(PRBool aRealEvent, void *aEvent,
 }
 
 NS_IMETHODIMP
-nsBaseWidget::GetAttention() {
+nsBaseWidget::GetAttention(PRInt32 aCycleCount) {
     return NS_OK;
 }
 
