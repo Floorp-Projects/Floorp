@@ -3179,6 +3179,8 @@ nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
   if (aStart) {
     if (aStart->HasAttr(kNameSpaceID_None, nsHTMLAtoms::tabindex)) {
       aStart->IsFocusable(&mCurrentTabIndex);
+    } else {
+      ignoreTabIndex = PR_TRUE; // ignore current tabindex, bug 81481
     }
   } else if (!mCurrentFocus) {  // Get tabindex ready
     if (aForward) {

@@ -43,6 +43,11 @@
 #include "nsPresContext.h"
 #include "nsIForm.h"
 #include "nsIFormControl.h"
+#include "nsIEventStateManager.h"
+#include "nsIFocusController.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIDocument.h"
+#include "nsPIDOMWindow.h"
 
 
 class nsHTMLLegendElement : public nsGenericHTMLFormElement,
@@ -74,6 +79,9 @@ public:
                                nsIContent* aSubmitElement);
 
   // nsIContent
+  virtual void SetDocument(nsIDocument* aDocument, PRBool aDeep,
+                           PRBool aCompileEventHandlers);
+  virtual void SetFocus(nsPresContext* aPresContext);
   virtual PRBool ParseAttribute(nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
@@ -82,6 +90,16 @@ public:
                                nsAString& aResult) const;
   virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
                                               PRInt32 aModType) const;
+  nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                   const nsAString& aValue, PRBool aNotify)
+  {
+    return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
+  }
+  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                           nsIAtom* aPrefix, const nsAString& aValue,
+                           PRBool aNotify);
+  virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+                             PRBool aNotify);
 };
 
 
@@ -177,9 +195,89 @@ nsHTMLLegendElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
 }
 
 nsresult
+nsHTMLLegendElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+                             nsIAtom* aPrefix, const nsAString& aValue,
+                             PRBool aNotify)
+{
+  PRBool accesskey = (aAttribute == nsHTMLAtoms::accesskey &&
+                      aNameSpaceID == kNameSpaceID_None);
+  if (accesskey) {
+    RegUnRegAccessKey(PR_FALSE);
+  }
+
+  nsresult rv = nsGenericHTMLFormElement::SetAttr(aNameSpaceID, aAttribute,
+                                                  aPrefix, aValue, aNotify);
+
+  if (accesskey && !aValue.IsEmpty()) {
+    RegUnRegAccessKey(PR_TRUE);
+  }
+
+  return rv;
+}
+
+nsresult
+nsHTMLLegendElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+                               PRBool aNotify)
+{
+  if (aAttribute == nsHTMLAtoms::accesskey &&
+      aNameSpaceID == kNameSpaceID_None) {
+    RegUnRegAccessKey(PR_FALSE);
+  }
+
+  return nsGenericHTMLFormElement::UnsetAttr(aNameSpaceID, aAttribute, aNotify);
+}
+
+nsresult
 nsHTMLLegendElement::Reset()
 {
   return NS_OK;
+}
+
+void
+nsHTMLLegendElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
+                                 PRBool aCompileEventHandlers)
+{
+  nsIDocument *document = GetCurrentDoc();
+  PRBool documentChanging = (aDocument != document);
+  
+  // Unregister the access key for the old document.
+  if (documentChanging && document) {
+    RegUnRegAccessKey(PR_FALSE);
+  }
+
+  nsGenericHTMLFormElement::SetDocument(aDocument, aDeep,
+                                        aCompileEventHandlers);
+
+  // Register the access key for the new document.
+  if (documentChanging && document) {
+    RegUnRegAccessKey(PR_TRUE);
+  }
+}
+
+void
+nsHTMLLegendElement::SetFocus(nsPresContext* aPresContext)
+{
+  nsIDocument *document = GetCurrentDoc();
+  if (!aPresContext || !document) {
+    return;
+  }
+
+  nsCOMPtr<nsIEventStateManager> esm = aPresContext->EventStateManager();
+  if (IsFocusable()) {
+    esm->SetContentState(this, NS_EVENT_STATE_FOCUS);
+  } else {
+    // If the legend isn't focusable (no tabindex) we focus whatever is
+    // focusable following the legend instead, bug 81481.
+    nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(document->GetScriptGlobalObject());
+    if (ourWindow) {
+      nsIFocusController* focusController = ourWindow->GetRootFocusController();
+      nsIDOMElement* domElement = nsnull;
+      CallQueryInterface(this, &domElement);
+      if (focusController && domElement) {
+        focusController->MoveFocus(PR_TRUE, domElement);
+      }
+    }
+  }
 }
 
 NS_IMETHODIMP
