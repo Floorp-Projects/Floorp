@@ -51,6 +51,7 @@
 
 nsUnixToolkitService::nsUnixToolkitService()
 {
+  NS_INIT_REFCNT();
 }
 
 nsUnixToolkitService::~nsUnixToolkitService()
