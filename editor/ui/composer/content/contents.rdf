@@ -11,7 +11,8 @@
   <RDF:Description about="urn:mozilla:package:editor"
         chrome:displayName="Editor"
         chrome:author="mozilla.org"
-        chrome:name="editor">
+        chrome:name="editor"
+		chrome:skinVersion="1">
   </RDF:Description>
   
   <!-- overlay information -->

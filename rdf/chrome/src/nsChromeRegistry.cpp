@@ -556,13 +556,15 @@ NS_IMETHODIMP
 nsChromeRegistry::GetBaseURL(const nsCString& aPackage, const nsCString& aProvider, 
                              nsCString& aBaseURL)
 {
+  nsCOMPtr<nsIRDFResource> resource;
+
   nsCAutoString resourceStr("urn:mozilla:package:");
   resourceStr += aPackage;
 
   // Obtain the resource.
   nsresult rv = NS_OK;
-  nsCOMPtr<nsIRDFResource> resource;
-  rv = GetResource(resourceStr, getter_AddRefs(resource));
+  nsCOMPtr<nsIRDFResource> packageResource;
+  rv = GetResource(resourceStr, getter_AddRefs(packageResource));
   if (NS_FAILED(rv)) {
     NS_ERROR("Unable to obtain the package resource.");
     return rv;
@@ -576,23 +578,52 @@ nsChromeRegistry::GetBaseURL(const nsCString& aPackage, const nsCString& aProvid
   else if (aProvider.Equals(nsCAutoString("locale"))) {
     arc = mSelectedLocale;
   }
+  else
+    // We're a package.
+    resource = packageResource;
 
   if (arc) {
     
     nsCOMPtr<nsIRDFNode> selectedProvider;
-    if (NS_FAILED(rv = mChromeDataSource->GetTarget(resource, arc, PR_TRUE, getter_AddRefs(selectedProvider)))) {
+    if (NS_FAILED(rv = mChromeDataSource->GetTarget(packageResource, arc, PR_TRUE, getter_AddRefs(selectedProvider)))) {
       NS_ERROR("Unable to obtain the provider.");
       return rv;
     }
 
-    if (!selectedProvider) {
-      rv = FindProvider(aPackage, aProvider, arc, getter_AddRefs(selectedProvider));
-      if (NS_FAILED(rv)) return rv;
+    resource = do_QueryInterface(selectedProvider);
+
+    if (resource) {
+      // We found a selected provider, but now we need to verify that the version
+      // specified by the package and the version specified by the provider are
+      // one and the same.  If they aren't, then we cannot use this provider.
+      nsCOMPtr<nsIRDFResource> versionArc;
+      if (arc == mSelectedSkin)
+        versionArc = mSkinVersion;
+      else // Locale arc
+        versionArc = mLocaleVersion;
+
+      nsCAutoString packageVersion;
+      nsChromeRegistry::FollowArc(mChromeDataSource, packageVersion, packageResource, versionArc);
+      if (!packageVersion.IsEmpty()) {
+        // The package only wants providers (skins) that say they can work with it.  Let's find out
+        // if our provider (skin) can work with it.
+        nsCAutoString providerVersion;
+        nsChromeRegistry::FollowArc(mChromeDataSource, providerVersion, resource, versionArc);
+        if (!providerVersion.Equals(packageVersion))
+          selectedProvider = nsnull;
+      }
     }
+
+    if (!selectedProvider) {
+      // Find provider will attempt to auto-select a version-compatible provider (skin).  If none
+      // exist it will return nsnull in the selectedProvider variable.
+      FindProvider(aPackage, aProvider, arc, getter_AddRefs(selectedProvider));
+      resource = do_QueryInterface(selectedProvider);
+    }
+     
     if (!selectedProvider)
       return rv;
 
-    resource = do_QueryInterface(selectedProvider);
     if (!resource)
       return NS_ERROR_FAILURE;
   }
@@ -623,7 +654,7 @@ nsChromeRegistry::FindProvider(const nsCString& aPackage,
   nsCOMPtr<nsIRDFResource> resource;
   rv = GetResource(rootStr, getter_AddRefs(resource));
   if (NS_FAILED(rv)) {
-    NS_ERROR("Unable to obtain the package resource.");
+    NS_ERROR("Unable to obtain the provider root resource.");
     return rv;
   }
 
@@ -672,7 +703,9 @@ nsChromeRegistry::FindProvider(const nsCString& aPackage,
       // if aPackage is named in kid's package list, select it and we're done
       rv = SelectPackageInProvider(packageList, aPackage, aProvider, providerName,
                                    aArc, aSelectedProvider);
-      if (NS_FAILED(rv)) return rv;
+      if (NS_FAILED(rv))
+        continue; // Don't let this be disastrous.  We may find another acceptable match.
+
       if (*aSelectedProvider)
         return NS_OK;
     }
@@ -745,7 +778,9 @@ nsChromeRegistry::SelectPackageInProvider(nsIRDFResource *aPackageList,
                                  // install dir for the packages required to bring up the profile UI.
         rv = SelectProviderForPackage(aProvider, providerNameUC.GetUnicode(),
                                       packageNameUC.GetUnicode(), aArc, useProfile, PR_TRUE);
-        if (NS_FAILED(rv)) return rv;
+        if (NS_FAILED(rv))
+          return NS_ERROR_FAILURE;
+
         *aSelectedProvider = kid;
         NS_ADDREF(*aSelectedProvider);
         return NS_OK;
@@ -1602,10 +1637,8 @@ NS_IMETHODIMP nsChromeRegistry::SetProvider(const nsCString& aProvider,
          nsCOMPtr<nsIRDFResource> packageResource(do_QueryInterface(packageNode));
          if (packageResource) {
            rv = SetProviderForPackage(aProvider, packageResource, entry, aSelectionArc, aUseProfile, aProfilePath, aIsAdding);
-           if (NS_FAILED(rv)) {
-             NS_ERROR("Unable to set provider for package resource.");
-             return rv;
-           }
+           if (NS_FAILED(rv))
+             continue; // Well, let's set as many sub-packages as we can...
          }
       }
     }
@@ -1730,6 +1763,28 @@ NS_IMETHODIMP nsChromeRegistry::SelectProviderForPackage(const nsCString& aProvi
     return rv;
   }
   NS_ASSERTION(providerResource, "failed to get providerResource");
+
+  // Version-check before selecting.  If this skin isn't a compatible version, then
+  // don't allow the selection.
+  // We found a selected provider, but now we need to verify that the version
+  // specified by the package and the version specified by the provider are
+  // one and the same.  If they aren't, then we cannot use this provider.
+  nsCOMPtr<nsIRDFResource> versionArc;
+  if (aSelectionArc == mSelectedSkin)
+    versionArc = mSkinVersion;
+  else // Locale arc
+    versionArc = mLocaleVersion;
+
+  nsCAutoString packageVersion;
+  nsChromeRegistry::FollowArc(mChromeDataSource, packageVersion, packageResource, versionArc);
+  if (!packageVersion.IsEmpty()) {
+    // The package only wants providers (skins) that say they can work with it.  Let's find out
+    // if our provider (skin) can work with it.
+    nsCAutoString providerVersion;
+    nsChromeRegistry::FollowArc(mChromeDataSource, providerVersion, providerResource, versionArc);
+    if (!providerVersion.Equals(packageVersion))
+      return NS_ERROR_FAILURE;
+  }
 
   return SetProviderForPackage(aProviderType, packageResource, providerResource, aSelectionArc, 
                                aUseProfile, nsnull, aIsAdding);;
