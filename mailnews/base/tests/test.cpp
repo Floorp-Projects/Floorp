@@ -17,7 +17,7 @@ static NS_DEFINE_CID(kMsgRFC822ParserCID, NS_MSGRFC822PARSER_CID);
    nsIMsgRFC822Parser *sample; 
 
    // register our dll
-   nsRepository::RegisterFactory(kMsgRFC822ParserCID, "mailnews.dll", PR_FALSE, PR_FALSE);
+   nsRepository::RegisterComponent(kMsgRFC822ParserCID, NULL, NULL, "mailnews.dll", PR_FALSE, PR_FALSE);
    
    nsresult res = nsRepository::CreateInstance(kMsgRFC822ParserCID, 
                                                NULL, 
