@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Seth Spitzer <sspitzer@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -120,7 +121,7 @@ private:
 
   nsresult DoomUrlIfChannelHasError(nsIImapUrl *aImapUrl, PRBool *urlDoomed);
   PRBool ConnectionTimeOut(nsIImapProtocol* aImapConnection);
-  nsresult GetFormattedName(const PRUnichar *constructedPrettyName, PRUnichar **formattedPrettyName);  
+  nsresult GetFormattedStringFromID(const PRUnichar *aValue, PRInt32 aID, PRUnichar **aResult);  
   nsresult CreatePrefNameWithRedirectorType(const char *prefSuffix, nsCAutoString &prefName);
   nsresult GetPrefForServerAttribute(const char *prefSuffix, PRBool *prefValue);
 

@@ -24,7 +24,7 @@
  *   Jeff Tsai <jefft@netscape.com>
  *   Scott MacGregor <mscott@netscape.com>
  *   Seth Spitzer <sspitzer@netscape.com>
- *   Alecf Flett <alecf@netscape.com>
+ *   Alec Flett <alecf@netscape.com>
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -64,7 +64,6 @@
 #include "nsImapStringBundle.h"
 #include "nsIPref.h"
 #include "nsMsgFolderFlags.h"
-#include "nsTextFormatter.h"
 #include "prmem.h"
 #include "plstr.h"
 #include "nsXPIDLString.h"
@@ -235,7 +234,8 @@ nsImapIncomingServer::GetConstructedPrettyName(PRUnichar **retval)
 
     }
   }
-  rv = GetFormattedName(emailAddress.get(), retval);
+
+  rv = GetFormattedStringFromID(emailAddress.get(), IMAP_DEFAULT_ACCOUNT_NAME, retval);
   return rv;
 }
 
@@ -2415,21 +2415,44 @@ NS_IMETHODIMP nsImapIncomingServer::ForgetPassword()
 NS_IMETHODIMP nsImapIncomingServer::PromptForPassword(char ** aPassword,
                                                       nsIMsgWindow * aMsgWindow)
 {
-    nsXPIDLString passwordTemplate;
-    IMAPGetStringByID(IMAP_ENTER_PASSWORD_PROMPT, getter_Copies(passwordTemplate));
     nsXPIDLString passwordTitle; 
     IMAPGetStringByID(IMAP_ENTER_PASSWORD_PROMPT_TITLE, getter_Copies(passwordTitle));
-    PRUnichar *passwordText = nsnull;
-    nsXPIDLCString hostName;
     nsXPIDLCString userName;
     PRBool okayValue;
-
-    GetRealHostName(getter_Copies(hostName));
     GetRealUsername(getter_Copies(userName));
-    passwordText = nsTextFormatter::smprintf(passwordTemplate, (const char *) userName, (const char *) hostName);
-    nsresult rv =  GetPasswordWithUI(passwordText, passwordTitle, aMsgWindow,
+
+    nsCAutoString promptValue(userName);
+
+    nsCAutoString prefName;
+    nsresult rv = CreatePrefNameWithRedirectorType(".hide_hostname_for_password", prefName);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    nsCOMPtr <nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    nsCOMPtr<nsIPrefBranch> prefBranch; 
+    rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch)); 
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    PRBool hideHostnameForPassword = PR_FALSE;
+    rv = prefBranch->GetBoolPref(prefName.get(), &hideHostnameForPassword);
+    if (NS_SUCCEEDED(rv) && hideHostnameForPassword) {
+      // for certain redirector types, we don't want to show the
+      // hostname to the user when prompting for password
+    }
+    else {
+      nsXPIDLCString hostName;
+      GetRealHostName(getter_Copies(hostName));
+      promptValue.Append("@");
+      promptValue.Append(hostName);
+    }
+
+    nsXPIDLString passwordText;
+    rv = GetFormattedStringFromID(NS_ConvertASCIItoUCS2(promptValue).get(), IMAP_ENTER_PASSWORD_PROMPT, getter_Copies(passwordText));
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    rv =  GetPasswordWithUI(passwordText, passwordTitle, aMsgWindow,
                                      &okayValue, aPassword);
-    nsTextFormatter::smprintf_free(passwordText);
     return (okayValue) ? rv : NS_MSG_PASSWORD_PROMPT_CANCELLED;
 }
 
@@ -3463,27 +3486,28 @@ nsImapIncomingServer::GeneratePrettyNameForMigration(PRUnichar **aPrettyName)
     }
 
     // Format the pretty name
-    rv = GetFormattedName(constructedPrettyName.get(), aPrettyName); 
+    rv = GetFormattedStringFromID(constructedPrettyName.get(), IMAP_DEFAULT_ACCOUNT_NAME, aPrettyName);
     NS_ENSURE_SUCCESS(rv, rv);
 
     return rv;
 }
 
-// Take the pretty name and return a formatted account name
 nsresult
-nsImapIncomingServer::GetFormattedName(const PRUnichar *prettyName, PRUnichar **retval)
+nsImapIncomingServer::GetFormattedStringFromID(const PRUnichar *aValue, PRInt32 aID, PRUnichar **aResult)
 {
+    NS_ENSURE_ARG_POINTER(aResult);
+
     nsresult rv;
     rv = GetStringBundle();
     if (m_stringBundle)
     {
         const PRUnichar *formatStrings[] =
         {
-            prettyName,
+            aValue,
         };
-        rv = m_stringBundle->FormatStringFromID(IMAP_DEFAULT_ACCOUNT_NAME,
+        rv = m_stringBundle->FormatStringFromID(aID,
                                     formatStrings, 1,
-                                    retval);
+                                    aResult);
         NS_ENSURE_SUCCESS(rv, rv);
     }
     return rv;
