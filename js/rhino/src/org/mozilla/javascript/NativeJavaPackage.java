@@ -54,9 +54,28 @@ import java.lang.reflect.*;
 
 public class NativeJavaPackage extends ScriptableObject {
 
-    public NativeJavaPackage(String packageName, ClassLoader classLoader) {
+    NativeJavaPackage(boolean internalUsage,
+                      String packageName, ClassLoader classLoader)
+    {
         this.packageName = packageName;
         this.classLoader = classLoader;
+    }
+
+    /**
+     * @deprecated NativeJavaPackage is an internal class, do not use
+     * it directly.
+     */
+    public NativeJavaPackage(String packageName, ClassLoader classLoader) {
+        this(false, packageName, classLoader);
+    }
+
+    /**
+     * @deprecated NativeJavaPackage is an internal class, do not use
+     * it directly.
+     */
+    public NativeJavaPackage(String packageName) {
+        this(false, packageName,
+             Context.getCurrentContext().getApplicationClassLoader());
     }
 
     public String getClassName() {
@@ -105,7 +124,7 @@ public class NativeJavaPackage extends ScriptableObject {
             String newPackage = packageName.length() == 0
                                 ? id
                                 : packageName + "." + id;
-            pkg = new NativeJavaPackage(newPackage, classLoader);
+            pkg = new NativeJavaPackage(true, newPackage, classLoader);
             pkg.setParentScope(this);
             pkg.setPrototype(this.prototype);
             super.put(id, this, pkg);
@@ -141,7 +160,7 @@ public class NativeJavaPackage extends ScriptableObject {
             }
         }
         if (newValue == null && createPkg) {
-            NativeJavaPackage pkg = new NativeJavaPackage(className,
+            NativeJavaPackage pkg = new NativeJavaPackage(true, className,
                                                           classLoader);
             pkg.setParentScope(this);
             pkg.setPrototype(this.prototype);

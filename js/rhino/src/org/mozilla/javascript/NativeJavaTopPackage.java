@@ -72,9 +72,9 @@ public class NativeJavaTopPackage
                                                  +"javax.swing;"
                                                  ;
 
-    public NativeJavaTopPackage(ClassLoader loader)
+    NativeJavaTopPackage(ClassLoader loader)
     {
-        super("", loader);
+        super(true, "", loader);
     }
 
     public Object call(Context cx, Scriptable scope, Scriptable thisObj,
@@ -101,7 +101,7 @@ public class NativeJavaTopPackage
             Context.reportRuntimeError0("msg.not.classloader");
             return null;
         }
-        return new NativeJavaPackage("", loader);
+        return new NativeJavaPackage(true, "", loader);
     }
 
     public static void init(Context cx, Scriptable scope, boolean sealed)
