@@ -47,7 +47,7 @@ sub isTestingFile {
         if ($file eq $exclude) { return undef; } # get rid of excluded files.
   }
 
-  if ($file =~ /\.cgi$|\.pl$/) {
+  if ($file =~ /\.cgi$|\.pl$|\.pm$/) {
     return 1;
   }
   my $additional;
