@@ -51,6 +51,7 @@ enum nsFragmentRequest { kPrevFragment, kFirstFragment, kLastFragment, kNextFrag
    * |nsReadingIterator|s work.
    *
    * @see nsReadingIterator
+   * @status FROZEN
    */
 
 template <class CharT>
@@ -106,6 +107,7 @@ struct nsReadableFragment
    * |nsWritingIterator|s work.
    *
    * @see nsWritingIterator
+   * @status FROZEN
    */
 
 template <class CharT>

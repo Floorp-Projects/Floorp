@@ -40,7 +40,10 @@
 #include "nsStringIterator.h"
 #endif
 
-
+  /**
+   * The base for wide string comparators
+   * @status FROZEN
+   */
 class NS_COM nsStringComparator
   {
     public:
@@ -58,6 +61,11 @@ class NS_COM nsDefaultStringComparator
       virtual int operator() ( char_type, char_type ) const;
   };
 
+
+  /**
+   * The base for narrow string comparators
+   * @status FROZEN
+   */
 class NS_COM nsCStringComparator
   {
     public:
@@ -84,6 +92,8 @@ class NS_COM nsDefaultCStringComparator
    *
    * See also |nsASingleFragmentC?String| and |nsAFlatC?String|, the
    * other main abstract classes in the string hierarchy.
+   *
+   * @status FROZEN
    */
 
 class NS_COM nsAString
@@ -335,6 +345,10 @@ class NS_COM nsAString
 
       PRBool IsDependentOn( const self_type& aString ) const;
   };
+
+  /**
+   * @status FROZEN
+   */
 
 class NS_COM nsACString
   {

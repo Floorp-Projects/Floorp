@@ -84,6 +84,7 @@
 
   /**
    *
+   * @status FROZEN
    */
 template <class CharT>
 class nsBufferHandle
@@ -109,6 +110,10 @@ class nsBufferHandle
       CharT*  mDataEnd;
   };
 
+  /**
+   *
+   * @status FROZEN
+   */
 template <class CharT>
 class nsConstBufferHandle
   {
@@ -178,6 +183,7 @@ struct nsStringAllocatorTraits<PRUnichar>
 
   /**
    *
+   * @status FROZEN
    */
 template <class CharT>
 class nsSharedBufferHandle
