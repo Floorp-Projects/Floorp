@@ -975,47 +975,12 @@ nsMsgLocalMailFolder::CreateSubfolder(const PRUnichar *folderName)
 	}
 	return rv;
 }
-#ifdef DEBUG_bienvenu
-  nsIMsgSearchSession *saveSearchSession;
-#endif
 
 NS_IMETHODIMP nsMsgLocalMailFolder::Compact()
 {
     // **** jefft -- needs to provide nsIMsgWindow for the compact status
     // update; come back later
 
-#ifdef DEBUG_bienvenu
-  nsCOMPtr<nsIMsgSearchSession> searchSession;
-  nsresult ret = nsComponentManager::CreateInstance(NS_MSGSEARCHSESSION_PROGID,
-                                          nsnull,
-                                          NS_GET_IID(nsIMsgSearchSession),
-                                          getter_AddRefs(searchSession));
-  if (searchSession)
-  {
-    nsCOMPtr <nsIMsgSearchValue> searchValue;
-    nsCOMPtr <nsIMsgSearchTerm> searchTerm;
-    nsCOMPtr<nsISupportsArray> searchTerms;
-    nsString valStr;
-    valStr.AssignWithConversion("test");
-    ret = NS_NewISupportsArray(getter_AddRefs(searchTerms));
-
-    searchSession->CreateSearchTerm(getter_AddRefs(searchTerm));
-    searchTerm->GetValue(getter_AddRefs(searchValue));
-    searchValue->SetStr(valStr.GetUnicode());
-    searchValue->SetAttrib(nsMsgSearchAttrib::Body);
-    searchTerm->SetAttrib(nsMsgSearchAttrib::Body);
-    searchTerm->SetOp(nsMsgSearchOp::Contains);
-    searchTerm->SetBooleanAnd(PR_FALSE);
-    searchTerm->SetValue(searchValue); // I guess this is right...
-    searchTerms->AppendElement(searchTerm);
-    searchSession->AddSearchTermArray(searchTerms);
-    searchSession->AddScopeTerm(nsMsgSearchScope::MailFolder, this);
-    saveSearchSession = searchSession;
-    NS_ADDREF(saveSearchSession);
-    searchSession->Search(nsnull);
-    return NS_OK;
-  }
-#endif
   nsresult rv = NS_ERROR_FAILURE;
   nsCOMPtr<nsIMsgDatabase> db;
   nsCOMPtr<nsIDBFolderInfo> folderInfo;
