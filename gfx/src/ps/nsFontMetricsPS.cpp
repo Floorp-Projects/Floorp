@@ -56,7 +56,6 @@
 #ifdef MOZ_ENABLE_FREETYPE2
 #include "nsArray.h"
 #endif
-#include "nsAutoBuffer.h"
 
 const PRUint16 nsPSFontGenerator::kSubFontSize = 255; 
 
