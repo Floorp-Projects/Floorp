@@ -24,12 +24,14 @@ IS_COMPONENT=1
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE=mimect-cal
-LIBRARY_NAME=mimect-cal
+MODULE=calendar
+LIBRARY_NAME=calendar
 
 CPPSRCS = \
 		mimexpcom.cpp	\
 		mimecal.cpp	\
+		nsMimeContentTypeHandler.cpp	\
+		nsCalendarFactory.cpp	\
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = 	\

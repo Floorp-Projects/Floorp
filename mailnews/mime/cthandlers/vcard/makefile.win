@@ -17,7 +17,7 @@
 IGNORE_MANIFEST = 1
 
 #
-# mimect-vcard.dll
+# vcard.dll
 # ================
 # This is a content type handler for vcards. This will live externally
 # to libmime and be able to render a text/vcard stream
@@ -36,7 +36,7 @@ DEPTH=..\..\..\..
 # New build system where zip dll is build indepenant of java stubs.
 #//
 #//------------------------------------------------------------------------
-MODULE  = mimect-vcard
+MODULE  = vcard
 REQUIRES=
 # EXPORTS =
 # Put any necessary exported headers here!!!               	
@@ -59,6 +59,8 @@ OBJS=						\
 		.\$(OBJDIR)\nsVCardTransition.obj	\
 		.\$(OBJDIR)\oldi18n.obj		\
 		.\$(OBJDIR)\comi18n.obj		\
+		.\$(OBJDIR)\nsVCardFactory.obj	\
+		.\$(OBJDIR)\nsMimeContentTypeHandler.obj	\
 		$(NULL)
 
 #//------------------------------------------------------------------------
@@ -120,7 +122,7 @@ LINCS=$(LINCS)  -I.             \
 include <$(DEPTH)/config/rules.mak>
 
 install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\mimeplugins
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
 
 clobber::
 	rm -f $(DIST)\bin\$(DLLNAME)

@@ -24,8 +24,8 @@ IS_COMPONENT=1
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE=mimect-vcard
-LIBRARY_NAME=mimect-vcard
+MODULE=vcard
+LIBRARY_NAME=vcard
 
 
 CPPSRCS = \
@@ -35,6 +35,8 @@ CPPSRCS = \
 		nsVCardObj.cpp	\
 		nsVCardTransition.cpp	\
 		comi18n.cpp		\
+    nsVCardFactory.cpp	\
+		nsMimeContentTypeHandler.cpp	\
 		$(NULL)
 
 CSRCS = \
