@@ -484,7 +484,7 @@ public class Codegen extends Interpreter
         // 5: this, cx, scope, js this, args[]
     }
 
-    private static void generateMain(ClassFileWriter cfw)
+    private void generateMain(ClassFileWriter cfw)
     {
         cfw.startMethod("main", "([Ljava/lang/String;)V",
                         (short)(ClassFileWriter.ACC_PUBLIC
@@ -497,8 +497,9 @@ public class Codegen extends Interpreter
                       "<init>", "()V");
          // load 'args'
         cfw.add(ByteCode.ALOAD_0);
+        // Call mainMethodClass.main(Script script, String[] args)
         cfw.addInvoke(ByteCode.INVOKESTATIC,
-                      "org/mozilla/javascript/optimizer/OptRuntime",
+                      mainMethodClass,
                       "main",
                       "(Lorg/mozilla/javascript/Script;[Ljava/lang/String;)V");
         cfw.add(ByteCode.RETURN);
@@ -1031,6 +1032,14 @@ public class Codegen extends Interpreter
         throw new RuntimeException("Bad tree in codegen");
     }
 
+     void setMainMethodClass(String className)
+     {
+         mainMethodClass = className;
+     }
+
+     static final String DEFAULT_MAIN_METHOD_CLASS
+        = "org.mozilla.javascript.optimizer.OptRuntime";
+
     private static final String SUPER_CLASS_NAME
         = "org.mozilla.javascript.NativeFunction";
 
@@ -1063,6 +1072,8 @@ public class Codegen extends Interpreter
     private ObjArray directCallTargets;
     ScriptOrFnNode[] scriptOrFnNodes;
     private ObjToIntMap scriptOrFnIndexes;
+
+    private String mainMethodClass = DEFAULT_MAIN_METHOD_CLASS;
 
     String mainClassName;
     String mainClassSignature;

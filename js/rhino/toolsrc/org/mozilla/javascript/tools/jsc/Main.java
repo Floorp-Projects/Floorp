@@ -136,6 +136,10 @@ public class Main {
                 compilerEnv.setGenerateDebugInfo(true);
                 continue;
             }
+            if (arg.equals("-main-method-class") && ++i < args.length) {
+                compiler.setMainMethodClass(args[i]);
+                continue;
+            }
             if (arg.equals("-o") && ++i < args.length) {
                 String name = args[i];
                 int end = name.length();

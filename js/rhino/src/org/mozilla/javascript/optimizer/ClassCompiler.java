@@ -56,6 +56,30 @@ public class ClassCompiler
     {
         if (compilerEnv == null) throw new IllegalArgumentException();
         this.compilerEnv = compilerEnv;
+        this.mainMethodClassName = Codegen.DEFAULT_MAIN_METHOD_CLASS;
+    }
+
+    /**
+     * Set the class name to use for main method implementation.
+     * The class must have a method matching
+     * <tt>public static void main(Script sc, String[] args)</tt>, it will be
+     * called when <tt>main(String[] args)</tt> is called in the generated
+     * class. The class name should be fully qulified name and include the
+     * package name like in <tt>org.foo.Bar<tt>.
+     */
+    public void setMainMethodClass(String className)
+    {
+        // XXX Should this check for a valid class name?
+        mainMethodClassName = className;
+    }
+
+    /**
+     * Get the name of the class for main method implementation.
+     * @see #setMainMethodClass(String)
+     */
+    public String getMainMethodClass()
+    {
+        return mainMethodClassName;
     }
 
     /**
@@ -149,6 +173,7 @@ public class ClassCompiler
         }
 
         Codegen codegen = new Codegen();
+        codegen.setMainMethodClass(mainMethodClassName);
         byte[] scriptClassBytes
             = codegen.compileToClassFile(compilerEnv, scriptClassName,
                                          tree, encodedSource,
@@ -178,6 +203,7 @@ public class ClassCompiler
                               scriptClassName, scriptClassBytes };
     }
 
+    private String mainMethodClassName;
     private CompilerEnvirons compilerEnv;
     private Class targetExtends;
     private Class[] targetImplements;
