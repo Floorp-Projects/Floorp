@@ -11,9 +11,6 @@
 <!ENTITY  useBlank.label            "Use Blank Page">
 <!ENTITY  useBlank.accesskey        "B">
 
-<!ENTITY  windowsAndTabs.label      "Windows and Tabs">
-<!ENTITY  background.label          "Open Links in the background">
-
 #ifdef XP_WIN
 <!ENTITY defaultBrowserGroup.label  "Default Browser">
 <!ENTITY defaultBrowserButton.label "Set Default Browser">

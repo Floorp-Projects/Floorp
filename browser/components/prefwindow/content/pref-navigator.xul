@@ -57,7 +57,7 @@
 
   <script type="application/x-javascript">
   <![CDATA[
-    var _elementIDs = ["browserStartupHomepage", "tabBackground"];
+    var _elementIDs = ["browserStartupHomepage"];
     
 #ifdef XP_WIN
      // "Install" the SetFields function.  This will be
@@ -170,12 +170,6 @@
               id="browserUseBlank"
               prefstring="pref.browser.homepage.disable_button.blank_page"/>
     </hbox>
-  </groupbox>
-  <groupbox>
-    <caption label="&windowsAndTabs.label;"/>
-    <checkbox id="tabBackground"
-              label="&background.label;" 
-              prefstring="browser.tabs.loadInBackground"/>
   </groupbox>
 #ifdef XP_WIN
   <groupbox orient="horizontal">

@@ -18,6 +18,7 @@ toolkit.jar:
          content/global/widgets/textbox.xml                 (content/widgets/textbox.xml)
          content/global/widgets/radio.xml                   (content/widgets/radio.xml)
          content/global/widgets/checkbox.xml                (content/widgets/checkbox.xml)
+         content/global/widgets/expander.xml                (content/widgets/expander.xml)
          content/global/widgets/button.xml                  (content/widgets/button.xml)
          content/global/widgets/toolbar.xml                 (content/widgets/toolbar.xml)
          content/global/widgets/toolbarbutton.xml           (content/widgets/toolbarbutton.xml)

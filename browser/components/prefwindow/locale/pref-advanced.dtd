@@ -2,17 +2,14 @@
 <!--LOCALIZATION NOTE : FILE 'Advanced' prefs settings -->
 <!ENTITY lHeader                      "Advanced">
 
-<!ENTITY enbJavaCheck.label           "Enable Java">
-<!ENTITY enbJavaCheck.accesskey       "j">
-
-<!ENTITY sendAddFtpCheck.label        "Send this email address as anonymous FTP password:">
-<!ENTITY sendAddFtpCheck.accesskey    "e">
-<!ENTITY general.label "General">
-<!ENTITY popupReject.label              "Reject popup windows">
-<!ENTITY popupReject.accesskey          "r">
-
-<!ENTITY div.blessedservers.label       "Always allow the sites below to open popup windows:">
-
-<!ENTITY addpermission.label         "Add Site...">
-<!ENTITY removepermission.label         "Remove Site">
-<!ENTITY removeallpermissions.label     "Remove All Sites">
+<!ENTITY accessibility.label          "Accessibility">
+<!ENTITY moveSystemCaret.label        "Move system caret with focus/selection changes">
+<!ENTITY browsing.label               "Browsing">
+<!ENTITY loadInBackground.label       "Open links in the background">
+<!ENTITY useSmoothScrolling.label     "Use smooth scrolling">
+<!ENTITY multimedia.label             "Multimedia">
+<!ENTITY enableAutoImageResizing.label "Enable Automatic Image Resizing">
+<!ENTITY security.label               "Security">
+<!ENTITY useSSL2.label                "Use SSL 2.0">
+<!ENTITY useSSL3.label                "Use SSL 3.0">
+<!ENTITY useTLS1.label                "Use TLS 1.0">

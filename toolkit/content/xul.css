@@ -879,3 +879,10 @@ wizardpage {
 .wizard-buttons {
   -moz-binding: url("chrome://global/content/bindings/wizard.xml#wizard-buttons");
 }
+
+/********** expander ********/
+
+expander {
+  -moz-binding: url("chrome://global/content/widgets/expander.xml#expander");
+  -moz-box-orient: vertical;
+}
