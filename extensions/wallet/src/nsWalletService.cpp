@@ -115,21 +115,21 @@ NS_IMETHODIMP nsWalletlibService::WALLET_FetchFromNetCenter(){
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWalletlibService::PromptUsernameAndPassword
+NS_IMETHODIMP nsWalletlibService::PromptUsernameAndPasswordURL
     (const PRUnichar *text, PRUnichar **user, PRUnichar **pwd,
-     PRBool *returnValue, const char* urlname) {
-  return ::SINGSIGN_PromptUsernameAndPassword(text, user, pwd, returnValue, urlname);
+     const char *urlname, PRBool *returnValue) {
+  return ::SINGSIGN_PromptUsernameAndPassword(text, user, pwd, urlname, returnValue);
 }
 
-NS_IMETHODIMP nsWalletlibService::PromptPassword
-    (const PRUnichar *text, PRUnichar **pwd, PRBool *returnValue, const char* urlname) {
-  return ::SINGSIGN_PromptPassword(text, pwd, returnValue, urlname);
+NS_IMETHODIMP nsWalletlibService::PromptPasswordURL
+    (const PRUnichar *text, PRUnichar **pwd, const char *urlname, PRBool *returnValue) {
+  return ::SINGSIGN_PromptPassword(text, pwd, urlname, returnValue);
 }
 
-NS_IMETHODIMP nsWalletlibService::Prompt
+NS_IMETHODIMP nsWalletlibService::PromptURL
     (const PRUnichar *text, const PRUnichar *defaultText, PRUnichar **resultText,
-     PRBool *returnValue, const char* urlname) {
-  return ::SINGSIGN_Prompt(text, defaultText, resultText, returnValue, urlname);
+     const char *urlname, PRBool *returnValue) {
+  return ::SINGSIGN_Prompt(text, defaultText, resultText, urlname, returnValue);
 }
 
 NS_IMETHODIMP nsWalletlibService::SI_RemoveUser(const char *URLName, char *userName) {

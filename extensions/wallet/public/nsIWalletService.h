@@ -54,14 +54,14 @@ struct nsIWalletService : public nsISupports
   NS_IMETHOD WALLET_PrefillReturn(nsAutoString results) = 0;
   NS_IMETHOD WALLET_FetchFromNetCenter() = 0;
 
-  NS_IMETHOD PromptUsernameAndPassword
+  NS_IMETHOD PromptUsernameAndPasswordURL
     (const PRUnichar *text, PRUnichar **user, PRUnichar **pwd,
-     PRBool *_retval, const char* urlname) = 0;
-  NS_IMETHOD PromptPassword
-    (const PRUnichar *text, PRUnichar **pwd, PRBool *_retval, const char* urlname) = 0;
-  NS_IMETHOD Prompt
+     const char *urlname, PRBool *_retval) = 0;
+  NS_IMETHOD PromptPasswordURL
+    (const PRUnichar *text, PRUnichar **pwd, const char *urlname, PRBool *_retval) = 0;
+  NS_IMETHOD PromptURL
     (const PRUnichar *text, const PRUnichar *defaultText, PRUnichar **result,
-     PRBool *_retval, const char* urlname) = 0;
+     const char *urlname, PRBool *_retval) = 0;
   NS_IMETHOD SI_RemoveUser(const char *URLName, char *userName) = 0;
 
   NS_IMETHOD WALLET_GetNopreviewListForViewer(nsString& aNopreviewList) = 0;

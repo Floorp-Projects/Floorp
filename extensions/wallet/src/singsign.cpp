@@ -2179,7 +2179,7 @@ si_RestoreOldSignonDataFromBrowser
 PUBLIC nsresult
 SINGSIGN_PromptUsernameAndPassword
     (const PRUnichar *text, PRUnichar **user, PRUnichar **pwd,
-     PRBool *returnValue, const char* urlname) {
+     const char *urlname, PRBool *returnValue) {
 
   nsresult res;
   NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
@@ -2216,8 +2216,8 @@ SINGSIGN_PromptUsernameAndPassword
   res = dialog->PromptUsernameAndPassword(text, user, pwd, returnValue);
   if (NS_FAILED(res) || !(*returnValue)) {
     /* user pressed Cancel */
-    PR_FREEIF(user);
-    PR_FREEIF(pwd);
+    PR_FREEIF(*user);
+    PR_FREEIF(*pwd);
     PR_FREEIF(host);
     return res;
   }
@@ -2238,7 +2238,7 @@ SINGSIGN_PromptUsernameAndPassword
 
 PUBLIC nsresult
 SINGSIGN_PromptPassword
-    (const PRUnichar *text, PRUnichar **pwd, PRBool *returnValue, const char* urlname) {
+    (const PRUnichar *text, PRUnichar **pwd, const char *urlname, PRBool *returnValue) {
 
   nsresult res;
   char *password=0, *username=0;
@@ -2324,7 +2324,7 @@ SINGSIGN_PromptPassword
 PUBLIC nsresult
 SINGSIGN_Prompt
     (const PRUnichar *text, const PRUnichar *defaultText,
-     PRUnichar **resultText, PRBool *returnValue, const char* urlname) {
+     PRUnichar **resultText, const char *urlname, PRBool *returnValue) {
   return NS_OK;
 }
 

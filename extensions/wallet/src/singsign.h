@@ -46,16 +46,16 @@ SINGSIGN_RestoreSignonData(char* URLName, char* name, char** value);
 extern nsresult
 SINGSIGN_PromptUsernameAndPassword
     (const PRUnichar *text, PRUnichar **user, PRUnichar **pwd,
-     PRBool *returnValue, const char* urlname);
+     const char *urlname, PRBool *returnValue);
 
 extern nsresult
 SINGSIGN_PromptPassword
-    (const PRUnichar *text, PRUnichar **pwd, PRBool *returnValue, const char* urlname);
+    (const PRUnichar *text, PRUnichar **pwd, const char *urlname, PRBool *returnValue);
 
 extern nsresult
 SINGSIGN_Prompt
     (const PRUnichar *text, const PRUnichar *defaultText, PRUnichar **resultText,
-     PRBool *returnValue, const char* urlname);
+     const char *urlname, PRBool *returnValue);
 
 extern PRBool
 SINGSIGN_RemoveUser(const char *URLName, char *userName);
