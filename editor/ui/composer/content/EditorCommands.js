@@ -618,7 +618,7 @@ function EditorExecuteScript(fileSpec)
     ++lineNum;
 
     try       { eval(buf.value); }
-    catch(ex) { dump("Playback ERROR: Line " + lineNum + "  " + ex + "\n"); }
+    catch(ex) { dump("Playback ERROR: Line " + lineNum + "  " + ex + "\n"); return; }
   }
 
   buf.value = null;
