@@ -25,6 +25,8 @@
 #include "prmem.h"
 #include "plstr.h"
 
+#include "nsFileSpec.h"
+
 #include "VerReg.h"
 #include "nsInstallFile.h"
 
@@ -65,18 +67,16 @@ nsInstallFile::nsInstallFile(nsIDOMInstall* inInstall,
                              nsIDOMInstallFolder* folderSpec,
                              const nsString& inPartialPath,
                              PRBool forceInstall,
-                             char* *errorMsg) 
+                             PRInt32 *error) 
 : nsInstallObject(inInstall)
 {
     mTempFile    = nsnull;
     mFinalFile   = nsnull;
     mUpgradeFile = PR_FALSE;
 
-    if ((folderSpec == NULL) || (inInstall == NULL)  ||
-        (inVInfo == NULL)) 
+    if ((folderSpec == NULL) || (inInstall == NULL)  || (inVInfo == NULL)) 
     {
-        *errorMsg = nsInstallErrorMessages::GetErrorMsg( "Invalid arguments to the constructor", 
-            nsIDOMInstall::SUERR_INVALID_ARGUMENTS);
+        *error = nsIDOMInstall::SUERR_INVALID_ARGUMENTS;
         return;
     }
     
@@ -133,42 +133,17 @@ nsInstallFile::~nsInstallFile()
 /* Prepare
  * Extracts file out of the JAR archive into the temp directory
  */
-char* nsInstallFile::Prepare()
+PRInt32 nsInstallFile::Prepare()
 {
     char *errorMsg = NULL;
 
-    if (mInstall == NULL) 
-    {
-        errorMsg = nsInstallErrorMessages::GetErrorMsg("nsSoftwareUpdate object is null", 
-                                                nsIDOMInstall::SUERR_INVALID_ARGUMENTS);
-        return errorMsg;
-    }
-    
-    if (mJarLocation == NULL) 
-    {
-        errorMsg = nsInstallErrorMessages::GetErrorMsg("JAR file is null", 
-                                                nsIDOMInstall::SUERR_INVALID_ARGUMENTS);
+    if (mInstall == NULL || mFinalFile == NULL || mJarLocation == NULL) 
+        return nsIDOMInstall::SUERR_INVALID_ARGUMENTS;
 
-        return errorMsg;
-    }
+    PRInt32 err;
+    mInstall->ExtractFileFromJar(*mJarLocation, *mFinalFile, *mTempFile, &err);
 
-    if (mFinalFile == NULL) 
-    {
-        errorMsg = nsInstallErrorMessages::GetErrorMsg("folderSpec's full path (mFinalFile) was null", 
-                                                nsIDOMInstall::SUERR_INVALID_ARGUMENTS);
-        return errorMsg;
-  }
-
-
-    nsString errString;
-    mInstall->ExtractFileFromJar(*mJarLocation, *mFinalFile, *mTempFile, errString);
-
-    if (errString != "") 
-    {
-        return errString.ToNewCString();
-    }
-  
-    return NULL;
+    return err;
 }
 
 /* Complete
@@ -176,28 +151,15 @@ char* nsInstallFile::Prepare()
  * - move the downloaded file to the final location
  * - updates the registry
  */
-char* nsInstallFile::Complete()
+PRInt32 nsInstallFile::Complete()
 {
     int err;
     int refCount;
     int rc;
 
-    if (mInstall == NULL) 
+    if (mInstall == NULL || mVersionRegistryName == NULL || mFinalFile == NULL) 
     {
-        return nsInstallErrorMessages::GetErrorMsg("nsSoftwareUpdate object is null", 
-                                                    nsIDOMInstall::SUERR_INVALID_ARGUMENTS);
-    }
-  
-    if (mVersionRegistryName == NULL) 
-    {
-        return nsInstallErrorMessages::GetErrorMsg("version registry name is null", 
-                                                    nsIDOMInstall::SUERR_INVALID_ARGUMENTS);
-    }
-
-    if (mFinalFile == NULL) 
-    {
-       return nsInstallErrorMessages::GetErrorMsg("folderSpec's full path (mFinalFile) is null", 
-                                                    nsIDOMInstall::SUERR_INVALID_ARGUMENTS);
+       return nsIDOMInstall::SUERR_INVALID_ARGUMENTS;
     }
 
     /* Check the security for our target */
@@ -329,10 +291,9 @@ char* nsInstallFile::Complete()
     delete final_file;
 
     if ( err != 0 ) 
-    {
-           return nsInstallErrorMessages::GetErrorMsg(nsIDOMInstall::SU_INSTALL_FILE_UNEXPECTED_MSG_ID, mFinalFile, err);
-    }
-    return NULL;
+        return nsIDOMInstall::SUERR_UNEXPECTED_ERROR;
+    
+    return nsIDOMInstall::SU_SUCCESS;
 }
 
 void nsInstallFile::Abort()
@@ -405,7 +366,8 @@ int nsInstallFile::NativeComplete()
         }
         else
         {
-            /* Target exists, can't trust XP_FileRename--do platform
+            /* FIX 
+             * Target exists, can't trust XP_FileRename--do platform
              * specific stuff in FE_ReplaceExistingFile()
              */
             result = -1;
@@ -419,7 +381,7 @@ int nsInstallFile::NativeComplete()
         if (stat(finalName, &finfo) == 0)
         {
             /* File already exists, need to remove the original */
-            // result = FE_ReplaceExistingFile(currentName, xpURL, finalName, xpURL, mForceInstall);
+            // FIX result = FE_ReplaceExistingFile(currentName, xpURL, finalName, xpURL, mForceInstall);
             if ( result == nsIDOMInstall::SU_REBOOT_NEEDED ) 
             {
             }
@@ -434,8 +396,12 @@ int nsInstallFile::NativeComplete()
             if (end) 
             {
                 end[0] = 0;
-                // FIX- this need to be made recursive?
-                result = PR_MkDir( finalName, 0);
+                
+                // Lame use of nsNativeFileSpec, but NSPR does not support creation
+                // of nested directories.
+                nsNativeFileSpec* directoryMaker = new nsNativeFileSpec(finalName, PR_TRUE);
+                delete directoryMaker;
+
                 end[0] = separator;
                 if ( 0 == result )
                 {
@@ -460,7 +426,7 @@ void nsInstallFile::AddToClasspath(nsString* file)
 {
   if ( file != NULL ) {
     char *final_file = file->ToNewCString();
-//    JVM_AddToClassPath(final_file);
+// FIX    JVM_AddToClassPath(final_file);
     delete final_file;
   }
 }

@@ -50,12 +50,12 @@ class nsInstallFile : public nsInstallObject
                         nsIDOMInstallFolder* folderSpec,
                         const nsString& inPartialPath,
                         PRBool forceInstall,
-                        char**errorMsg);
+                        PRInt32 *error);
 
         virtual ~nsInstallFile();
 
-        char* Prepare();
-        char* Complete();
+        PRInt32 Prepare();
+        PRInt32 Complete();
         void  Abort();
         char* toString();
 
