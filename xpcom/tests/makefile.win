@@ -62,15 +62,23 @@ REQUIRES=libreg
 
 LINCS=                     \
         -Iservices         \
+!ifdef NECKO
+        -I$(PUBLIC)\necko  \
+!else
 !ifdef MODULAR_NETLIB
         -I$(PUBLIC)\netlib \
+!endif
 !endif
         -I$(PUBLIC)\xpcom
 
 LLIBS=                         \
         $(DIST)\lib\xpcom.lib  \
+!ifdef NECKO
+        $(DIST)\lib\neckoutil_s.lib \
+!else
 !ifdef MODULAR_NETLIB
         $(DIST)\lib\netlib.lib \
+!endif
 !endif
         $(LIBNSPR)             \
         $(DIST)\lib\plc3.lib

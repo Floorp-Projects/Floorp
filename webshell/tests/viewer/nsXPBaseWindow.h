@@ -21,7 +21,10 @@
 
 #include "nsIXPBaseWindow.h"
 #include "nsIStreamListener.h"
+#ifdef NECKO
+#else
 #include "nsINetSupport.h"
+#endif
 #include "nsIWebShell.h"
 #include "nsIScriptContextOwner.h"
 #include "nsString.h"
@@ -43,7 +46,10 @@ class nsIPref;
  */
 class nsXPBaseWindow : public nsIXPBaseWindow,
                        public nsIStreamObserver,
+#ifdef NECKO
+#else
                        public nsINetSupport,
+#endif
                        public nsIWebShellContainer,
                        public nsIDOMMouseListener
 {
@@ -83,11 +89,21 @@ public:
 
   NS_IMETHOD LoadURL(const nsString &aURL);
 
+#ifdef NECKO
+  // nsIStreamObserver
+	NS_IMETHOD OnStartBinding(nsISupports *ctxt);
+	NS_IMETHOD OnStopBinding(nsISupports *ctxt, nsresult status, 
+		const PRUnichar *errorMsg);
+	NS_IMETHOD OnStartRequest(nsISupports *ctxt) { return NS_OK; }
+	NS_IMETHOD OnStopRequest(nsISupports *ctxt, nsresult status, 
+		const PRUnichar *errorMsg) { return NS_OK; }
+#else
   // nsIStreamObserver
   NS_IMETHOD OnStartBinding(nsIURI* aURL, const char *aContentType);
   NS_IMETHOD OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
   NS_IMETHOD OnStatus(nsIURI* aURL, const PRUnichar* aMsg);
   NS_IMETHOD OnStopBinding(nsIURI* aURL, nsresult status, const PRUnichar* aMsg);
+#endif
 
   // nsIWebShellContainer
   NS_IMETHOD WillLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, nsLoadType aReason);

@@ -993,7 +993,11 @@ nsViewerApp::CreateRobot(nsBrowserWindow* aWindow)
       nsCOMPtr<nsIDocument> doc;
       shell->GetDocument(getter_AddRefs(doc));
       if (doc) {
+#ifdef NECKO
+        char * str;
+#else
         const char * str;
+#endif
         nsresult rv = doc->GetDocumentURL()->GetSpec(&str);
         if (NS_FAILED(rv)) {
           return rv;
@@ -1007,6 +1011,9 @@ nsViewerApp::CreateRobot(nsBrowserWindow* aWindow)
           gDebugRobotLoads, 
           PL_strdup(gVerifyDir),
           yieldProc);
+#endif
+#ifdef NECKO
+        nsCRT::free(str);
 #endif
       }
     }

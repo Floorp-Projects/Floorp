@@ -31,12 +31,12 @@
 #include "nsIInputStream.h"
 #ifndef NECKO
 #include "nsINetService.h"
+#include "nsIPostToServer.h"
 #else
 #include "nsIIOService.h"
 #endif // NECKO
 #include "nsIOutputStream.h"
 #include "nsIGenericFactory.h"
-#include "nsIPostToServer.h"
 #include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFRemoteDataSource.h"
 #include "nsIRDFDocument.h"

@@ -101,7 +101,10 @@ static NS_DEFINE_CID(kCSpellCheckerCID,         NS_SPELLCHECKER_CID);
 static NS_DEFINE_IID(kFileWidgetCID,            NS_FILEWIDGET_CID);
 
 /* Define Interface IDs */
+#ifdef NECKO
+#else
 static NS_DEFINE_IID(kINetSupportIID,           NS_INETSUPPORT_IID);
+#endif
 static NS_DEFINE_IID(kISupportsIID,             NS_ISUPPORTS_IID);
 
 #define APP_DEBUG 0 

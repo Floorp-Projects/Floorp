@@ -68,7 +68,12 @@ LCFLAGS = \
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\dom \
 	-I$(PUBLIC)\js -I..\..\style\src -I..\html\base\src -I..\base\src \
-	-I$(PUBLIC)\netlib -I$(PUBLIC)\rdf
+!ifdef NECKO
+	-I$(PUBLIC)\necko \
+!else
+	-I$(PUBLIC)\netlib \
+!endif
+        -I$(PUBLIC)\rdf
 
 # These are the libraries we need to link with to create the dll
 LLIBS=					\
@@ -88,7 +93,11 @@ LLIBS=					\
  $(DIST)\lib\raptorgfxwin.lib		\
  $(DIST)\lib\raptorhtmlpars.lib		\
  $(DIST)\lib\jsdom.lib		        \
+!ifdef NECKO
+ $(DIST)\lib\neckoutil_s.lib	        \
+!else
  $(DIST)\lib\netlib.lib		        \
+!endif
  $(DIST)\lib\plc3.lib		\
  $(DIST)\lib\js32$(VERSION_NUMBER).lib	\
 !if defined(MOZ_DEBUG) && defined(GLOWCODE) && "$(MOZ_BITS)"=="32"

@@ -29,15 +29,13 @@
 #include "nsINetService.h"
 static NS_DEFINE_IID( kNetServiceCID,      NS_NETSERVICE_CID );
 #else
-#include "nsIIOService.h"
+#include "nsNeckoUtil.h"
 #include "nsIURL.h"
-#include "nsIServiceManager.h"
 #include "nsIChannel.h"
 #include "nsIEventQueueService.h"
 #include "nsIProgressEventSink.h"
 #include "nsIBufferInputStream.h"
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
 
 static NS_DEFINE_IID( kAppShellServiceCID, NS_APPSHELL_SERVICE_CID );
@@ -75,32 +73,8 @@ nsDownloadProgressDialog::OnStart() {
                       __FILE__, (int)__LINE__, (int)rv );
     }
 #else
-    nsresult rv;
-    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
-    if (NS_FAILED(rv)) return;
-
-    nsIURI *uri = nsnull;
-    rv = mUrl->QueryInterface(nsIURI::GetIID(), (void**)&uri);
-    if (NS_FAILED(rv)) return;
-
-    nsIChannel *channel = nsnull;
-    // XXX NECKO verb? getter?
-    rv = service->NewChannelFromURI("load", uri, nsnull, &channel);
-    NS_RELEASE(uri);
-    if (NS_FAILED(rv)) return;
-
-    // Create the Event Queue for this thread...
-    NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
-    if (NS_FAILED(rv)) return;
-
-    nsIEventQueue *eventQ = nsnull;
-    rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), &eventQ);
-    if (NS_FAILED(rv)) return;
-
-    rv = channel->AsyncRead(0, -1, nsnull, eventQ, this);
-    NS_RELEASE(eventQ);
-    NS_RELEASE(channel);
-    if (NS_FAILED(rv)) return;
+    nsresult rv = NS_OpenURI(this, mUrl);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "OnStart doesn't return rv!");
 #endif // NECKO
 }
 
@@ -152,15 +126,7 @@ nsDownloadProgressDialog::Show() {
 #ifndef NECKO
         rv = NS_NewURL( &url, urlStr );
 #else
-        NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
-        if (NS_FAILED(rv)) return rv;
-
-        nsIURI *uri = nsnull;
-        rv = service->NewURI(urlStr, nsnull, &uri);
-        if (NS_FAILED(rv)) return rv;
-
-        rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
-        NS_RELEASE(uri);
+        rv = NS_NewURI( &url, urlStr );
 #endif // NECKO
 
         if ( NS_SUCCEEDED(rv) ) {

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8; c-file-style: "stroustrup" -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4; c-file-style: "stroustrup" -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -36,9 +36,8 @@
 #include "nsIStreamListener.h"
 #include "nsIURL.h"
 #ifdef NECKO
-#include "nsIIOService.h"
-#include "nsIURL.h"
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#include "nsNeckoUtil.h"
+#include "nsIBufferInputStream.h"
 #endif // NECKO
 #include "nsRDFCID.h"
 #include "nsString.h"
@@ -99,17 +98,32 @@ public:
 	 NS_METHOD	Init();
 	 NS_METHOD	CreateAnonymousResource(const nsString& aPrefixURI, nsCOMPtr<nsIRDFResource>* aResult);
 
-	 // stream observer
+#ifdef NECKO
+	// nsIStreamObserver
+	NS_IMETHOD OnStartBinding(nsISupports *ctxt);
+	NS_IMETHOD OnStopBinding(nsISupports *ctxt, nsresult status, 
+							 const PRUnichar *errorMsg);
+	NS_IMETHOD OnStartRequest(nsISupports *ctxt) { return NS_OK; }
+	NS_IMETHOD OnStopRequest(nsISupports *ctxt, nsresult status, 
+							 const PRUnichar *errorMsg) { return NS_OK; }
 
-	 NS_IMETHOD	OnStartBinding(nsIURI *aURL, const char *aContentType);
-	 NS_IMETHOD	OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
-	 NS_IMETHOD	OnStatus(nsIURI* aURL, const PRUnichar* aMsg);
-	 NS_IMETHOD	OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg);
+	// nsIStreamListener
+	NS_IMETHOD OnDataAvailable(nsISupports *ctxt, nsIBufferInputStream *inStr, PRUint32 sourceOffset, PRUint32 count);
+
+#else
+	// stream observer
+
+	NS_IMETHOD	OnStartBinding(nsIURI *aURL, const char *aContentType);
+	NS_IMETHOD	OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
+	NS_IMETHOD	OnStatus(nsIURI* aURL, const PRUnichar* aMsg);
+	NS_IMETHOD	OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg);
 
 	 // stream listener
-	 NS_IMETHOD	GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo);
-	 NS_IMETHOD	OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, 
-				PRUint32 aLength);
+	NS_IMETHOD	GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo);
+	NS_IMETHOD	OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, 
+								PRUint32 aLength);
+#endif
+
 };
 
 PRInt32			RelatedLinksStreamListener::gRefCnt;
@@ -230,7 +244,11 @@ NS_IMPL_ISUPPORTS(RelatedLinksStreamListener, nsIStreamListener::GetIID());
 
 
 NS_IMETHODIMP
+#ifdef NECKO
+RelatedLinksStreamListener::OnStartBinding(nsISupports *ctxt)
+#else
 RelatedLinksStreamListener::OnStartBinding(nsIURI *aURL, const char *aContentType)
+#endif
 {
 	 nsAutoString		trueStr("true");
 	 nsIRDFLiteral		*literal = nsnull;
@@ -244,7 +262,7 @@ RelatedLinksStreamListener::OnStartBinding(nsIURI *aURL, const char *aContentTyp
 }
 
 
-
+#ifndef NECKO
 NS_IMETHODIMP
 RelatedLinksStreamListener::OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax) 
 {
@@ -258,11 +276,16 @@ RelatedLinksStreamListener::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
 {
 	 return(NS_OK);
 }
-
+#endif
 
 
 NS_IMETHODIMP
+#ifdef NECKO
+RelatedLinksStreamListener::OnStopBinding(nsISupports *ctxt, nsresult status, 
+										  const PRUnichar *errorMsg) 
+#else
 RelatedLinksStreamListener::OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg) 
+#endif
 {
 	 nsAutoString		trueStr("true");
 	 nsIRDFLiteral		*literal = nsnull;
@@ -280,17 +303,24 @@ RelatedLinksStreamListener::OnStopBinding(nsIURI* aURL, nsresult aStatus, const 
 // stream listener methods
 
 
-
+#ifndef NECKO
 NS_IMETHODIMP
 RelatedLinksStreamListener::GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo)
 {
 	return(NS_OK);
 }
-
+#endif
 
 
 NS_IMETHODIMP
+#ifdef NECKO
+RelatedLinksStreamListener::OnDataAvailable(nsISupports *ctxt,
+											nsIBufferInputStream *aIStream,
+											PRUint32 sourceOffset,
+											PRUint32 aLength)
+#else
 RelatedLinksStreamListener::OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, PRUint32 aLength)
+#endif
 {
 	nsresult	rv = NS_OK;
 
@@ -814,15 +844,7 @@ RelatedLinksHandlerImpl::SetURL(char* aURL)
 #ifndef NECKO
 	rv = NS_NewURL(getter_AddRefs(url), queryURL);
 #else
-    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    nsIURI *uri = nsnull;
-    rv = service->NewURI(queryURL, nsnull, &uri);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
-    NS_RELEASE(uri);
+	rv = NS_NewURI(getter_AddRefs(url), queryURL);
 #endif // NECKO
 
 	if (NS_FAILED(rv)) return rv;
@@ -832,7 +854,11 @@ RelatedLinksHandlerImpl::SetURL(char* aURL)
 	rv = NS_NewRelatedLinksStreamListener(mInner, getter_AddRefs(listener));
 	if (NS_FAILED(rv)) return rv;
 
+#ifdef NECKO
+	rv = NS_OpenURI(listener, url);
+#else
 	rv = NS_OpenURL(url, listener);
+#endif
 	if (NS_FAILED(rv)) return rv;
 
 	return NS_OK;

@@ -30,8 +30,13 @@
 #include "nsIServiceManager.h"
 
 #include "nsIURL.h"
+#ifdef NECKO
+#include "nsNeckoUtil.h"
+#include "nsIBufferInputStream.h"
+#else
 #include "nsINetlibURL.h"
 #include "nsINetService.h"
+#endif
 #include "nsIInputStream.h"
 #include "nsIStreamListener.h"
 
@@ -204,9 +209,18 @@ nsresult nsXPInstallManager::DownloadNext()
             {
                 // --- start the download
                 nsIURI  *pURL;
+#ifdef NECKO
+                rv = NS_NewURI(&pURL, mItem->mURL);
+#else
                 rv = NS_NewURL(&pURL, mItem->mURL);
-                if (NS_SUCCEEDED(rv))
+#endif
+                if (NS_SUCCEEDED(rv)) {
+#ifdef NECKO
+                    rv = NS_OpenURI( this, pURL );
+#else
                     rv = NS_OpenURL( pURL, this );
+#endif
+                }
             }
 
             if (NS_FAILED(rv))
@@ -248,7 +262,7 @@ nsresult nsXPInstallManager::DownloadNext()
 
 
 // IStreamListener methods
-
+#ifndef NECKO
 NS_IMETHODIMP
 nsXPInstallManager::GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* info)
 {
@@ -272,19 +286,29 @@ nsXPInstallManager::OnStatus(nsIURI* aURL,
     else
         return NS_ERROR_NULL_POINTER;
 }
+#endif
 
 NS_IMETHODIMP
+#ifdef NECKO
+nsXPInstallManager::OnStartBinding(nsISupports *ctxt)
+#else
 nsXPInstallManager::OnStartBinding(nsIURI* aURL, 
                              const char *aContentType)
+#endif
 {
     mItem->mFile->openStreamForWriting();
     return NS_OK;
 }
 
 NS_IMETHODIMP
+#ifdef NECKO
+nsXPInstallManager::OnStopBinding(nsISupports *ctxt, nsresult status, 
+                                  const PRUnichar *errorMsg)
+#else
 nsXPInstallManager::OnStopBinding(nsIURI* aURL,
                                         nsresult status,
                                         const PRUnichar* aMsg)
+#endif
 {
     nsresult rv;
     switch( status ) 
@@ -314,7 +338,16 @@ nsXPInstallManager::OnStopBinding(nsIURI* aURL,
 #define BUF_SIZE 1024
 
 NS_IMETHODIMP
-nsXPInstallManager::OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream, PRUint32 length)
+#ifdef NECKO
+nsXPInstallManager::OnDataAvailable(nsISupports *ctxt, 
+                                    nsIBufferInputStream *pIStream,
+                                    PRUint32 sourceOffset, 
+                                    PRUint32 length)
+#else
+nsXPInstallManager::OnDataAvailable(nsIURI* aURL,
+                                    nsIInputStream *pIStream,
+                                    PRUint32 length)
+#endif
 {
     PRUint32 len;
     PRInt32  result;

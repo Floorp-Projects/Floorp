@@ -23,7 +23,9 @@
 #include "nsIWidget.h"
 #include "nsIScrollableView.h"
 #include "nsIContentViewerContainer.h"
-#ifndef NECKO
+#ifdef NECKO
+#include "nsIChannel.h"
+#else
 #include "nsILoadAttribs.h"
 #endif // NECKO
 #include "nsIScrollableView.h"
@@ -336,8 +338,7 @@ public:
                      nsIPostData* aPostData=nsnull,
                      PRBool aModifyHistory=PR_TRUE,
 #ifdef NECKO
-                     PRBool bypassCache = PR_FALSE,
-                     PRBool bypassProxy = PR_FALSE,
+                     PRUint32 aType = nsIChannel::LOAD_NORMAL,
 #else
                      nsURLReloadType aType=nsURLReload,
 #endif
@@ -351,8 +352,7 @@ public:
                      nsIPostData* aPostData=nsnull,
                      PRBool aModifyHistory=PR_TRUE,
 #ifdef NECKO
-                     PRBool bypassCache = PR_FALSE,
-                     PRBool bypassProxy = PR_FALSE,
+                     PRUint32 aType = nsIChannel::LOAD_NORMAL,
 #else
                      nsURLReloadType aType=nsURLReload,
 #endif
@@ -368,7 +368,7 @@ public:
    * Reload the current document.
    */
 #ifdef NECKO
-  NS_IMETHOD Reload(PRBool bypassCache, PRBool bypassProxy) = 0;
+  NS_IMETHOD Reload(PRUint32 aType) = 0;
 #else
   NS_IMETHOD Reload(nsURLReloadType aType) = 0;
 #endif

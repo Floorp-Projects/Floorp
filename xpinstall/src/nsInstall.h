@@ -49,7 +49,9 @@
 
 #include "nsIStringBundle.h"
 #include "nsILocale.h"
+#ifndef NECKO
 #include "nsINetService.h"
+#endif
 #include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"

@@ -375,11 +375,18 @@ nsresult nsWebShellWindow::Initialize(nsIWebShellWindow* aParent,
   NS_IF_ADDREF(mCallbacks);
 
   if (nsnull != aUrl)  {
+#ifdef NECKO
+    char *tmpStr = NULL;
+#else
     const char *tmpStr = NULL;
+#endif
     nsString urlString;
 
     aUrl->GetSpec(&tmpStr);
     urlString = tmpStr;
+#ifdef NECKO
+    nsCRT::free(tmpStr);
+#endif
     mWebShell->LoadURL(urlString.GetUnicode());
   }
                      
@@ -1596,9 +1603,15 @@ nsWebShellWindow::OnStartDocumentLoad(nsIDocumentLoader* loader,
 }
 
 NS_IMETHODIMP
+#ifdef NECKO
+nsWebShellWindow::OnEndDocumentLoad(nsIDocumentLoader* loader, 
+                                    nsIChannel* channel, PRInt32 aStatus,
+                                    nsIDocumentLoaderObserver * aDocObserver)
+#else
 nsWebShellWindow::OnEndDocumentLoad(nsIDocumentLoader* loader, 
                                     nsIURI* aURL, PRInt32 aStatus,
-									nsIDocumentLoaderObserver * aDocObserver)
+                                    nsIDocumentLoaderObserver * aDocObserver)
+#endif
 {
 #ifdef DEBUG_MENUSDEL
   printf("OnEndDocumentLoad\n");
@@ -1706,42 +1719,73 @@ nsWebShellWindow::OnEndDocumentLoad(nsIDocumentLoader* loader,
 }
 
 NS_IMETHODIMP 
+#ifdef NECKO
+nsWebShellWindow::OnStartURLLoad(nsIDocumentLoader* loader, 
+                                 nsIChannel* channel, 
+                                 const char* aContentType, 
+                                 nsIContentViewer* aViewer)
+#else
 nsWebShellWindow::OnStartURLLoad(nsIDocumentLoader* loader, 
                                  nsIURI* aURL, 
                                  const char* aContentType, 
                                  nsIContentViewer* aViewer)
+#endif
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
+#ifdef NECKO
+nsWebShellWindow::OnProgressURLLoad(nsIDocumentLoader* loader, 
+                                    nsIChannel* channel, 
+                                    PRUint32 aProgress, 
+                                    PRUint32 aProgressMax)
+#else
 nsWebShellWindow::OnProgressURLLoad(nsIDocumentLoader* loader, 
                                     nsIURI* aURL, 
                                     PRUint32 aProgress, 
                                     PRUint32 aProgressMax)
+#endif
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
+#ifdef NECKO
+nsWebShellWindow::OnStatusURLLoad(nsIDocumentLoader* loader, 
+                                  nsIChannel* channel, nsString& aMsg)
+#else
 nsWebShellWindow::OnStatusURLLoad(nsIDocumentLoader* loader, 
                                   nsIURI* aURL, nsString& aMsg)
+#endif
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
+#ifdef NECKO
+nsWebShellWindow::OnEndURLLoad(nsIDocumentLoader* loader, 
+                               nsIChannel* channel, PRInt32 aStatus)
+#else
 nsWebShellWindow::OnEndURLLoad(nsIDocumentLoader* loader, 
                                nsIURI* aURL, PRInt32 aStatus)
+#endif
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
+#ifdef NECKO
+nsWebShellWindow::HandleUnknownContentType(nsIDocumentLoader* loader, 
+                                           nsIChannel* channel, 
+                                           const char *aContentType,
+                                           const char *aCommand )
+#else
 nsWebShellWindow::HandleUnknownContentType(nsIDocumentLoader* loader, 
                                            nsIURI* aURL,
                                            const char *aContentType,
                                            const char *aCommand )
+#endif
 {
   return NS_OK;
 }
@@ -2181,9 +2225,19 @@ void nsWebShellWindow::LoadContentAreas() {
       docViewer->GetDocument(*getter_AddRefs(doc));
       nsCOMPtr<nsIURI> mainURL = getter_AddRefs(doc->GetDocumentURL());
       if (mainURL) {
+#ifdef NECKO
+        char *search = nsnull;
+        nsCOMPtr<nsIURL> url = do_QueryInterface(mainURL);
+        if (url)
+          url->GetQuery(&search);
+#else
         const char *search;
         mainURL->GetSearch(&search);
+#endif
         searchSpec = search;
+#ifdef NECKO
+        nsCRT::free(search);
+#endif
       }
     }
   }

@@ -34,7 +34,11 @@ CPP_OBJS=                               \
 LINCS=-I$(PUBLIC)\raptor                \
       -I$(PUBLIC)\xpcom                 \
       -I$(PUBLIC)\base                  \
+!ifdef NECKO
+      -I$(PUBLIC)\necko                 \
+!else
       -I$(PUBLIC)\netlib                \
+!endif
       -I$(PUBLIC)\pref                  \
       -I$(PUBLIC)\js                    \
       -I$(PUBLIC)\dom                   \
@@ -67,10 +71,14 @@ LCFLAGS = \
 
 # These are the libraries we need to link with to create the exe
 LLIBS=                          \
- $(DIST)\lib\xpcom.lib        \
+ $(DIST)\lib\xpcom.lib          \
  $(DIST)\lib\raptorgfxwin.lib   \
- $(DIST)\lib\plc3.lib       \
+ $(DIST)\lib\plc3.lib           \
+!ifdef NECKO
+ $(DIST)\lib\neckoutil_s.lib    \
+!else
  $(DIST)\lib\netlib.lib         \
+!endif
  $(LIBNSPR)                     \
  $(NULL)
 

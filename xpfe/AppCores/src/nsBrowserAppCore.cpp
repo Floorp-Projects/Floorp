@@ -112,7 +112,10 @@ static NS_DEFINE_IID(kISupportsIID,              NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIBrowserAppCoreIID,        NS_IDOMBROWSERAPPCORE_IID);
 static NS_DEFINE_IID(kIDOMDocumentIID,           nsIDOMDocument::GetIID());
 static NS_DEFINE_IID(kIDocumentIID,              nsIDocument::GetIID());
+#ifdef NECKO
+#else
 static NS_DEFINE_IID(kINetSupportIID,            NS_INETSUPPORT_IID);
+#endif
 static NS_DEFINE_IID(kIStreamObserverIID,        NS_ISTREAMOBSERVER_IID);
 static NS_DEFINE_IID(kIWebShellWindowIID,        NS_IWEBSHELL_WINDOW_IID);
 static NS_DEFINE_IID(kIGlobalHistoryIID,       NS_IGLOBALHISTORY_IID);
@@ -195,11 +198,14 @@ nsBrowserAppCore::QueryInterface(REFNSIID aIID,void** aInstancePtr)
     AddRef();
     return NS_OK;
   }
+#ifdef NECKO
+#else
   if (aIID.Equals(kINetSupportIID)) {
     *aInstancePtr = (void*) ((nsINetSupport*)this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
+#endif
   /* This isn't supported any more
   if (aIID.Equals(kIStreamObserverIID)) {
     *aInstancePtr = (void*) ((nsIStreamObserver*)this);
@@ -1045,11 +1051,18 @@ nsBrowserAppCore::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aURL, 
   NS_WITH_SERVICE(nsIObserverService, observer, NS_OBSERVERSERVICE_PROGID, &rv);
   if (NS_FAILED(rv)) return rv;
 
+#ifdef NECKO
+  char* url;
+#else
   const char* url;
+#endif
   rv = aURL->GetSpec(&url);
   if (NS_FAILED(rv)) return rv;
 
   nsAutoString urlStr(url);
+#ifdef NECKO
+  nsCRT::free(url);
+#endif
 
   nsAutoString kStartDocumentLoad("StartDocumentLoad");
   rv = observer->Notify(mContentWindow,
@@ -1073,22 +1086,28 @@ nsBrowserAppCore::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aURL, 
 
 
 NS_IMETHODIMP
+#ifdef NECKO
+nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* channel, PRInt32 aStatus,
+									nsIDocumentLoaderObserver * aObserver)
+#else
 nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIURI *aUrl, PRInt32 aStatus,
 									nsIDocumentLoaderObserver * aObserver)
+#endif
 {
   NS_PRECONDITION(aLoader != nsnull, "null ptr");
   if (! aLoader)
     return NS_ERROR_NULL_POINTER;
 
+#ifdef NECKO
+  NS_PRECONDITION(channel != nsnull, "null ptr");
+  if (! channel)
+    return NS_ERROR_NULL_POINTER;
+#else
   NS_PRECONDITION(aUrl != nsnull, "null ptr");
   if (! aUrl)
     return NS_ERROR_NULL_POINTER;
+#endif
 
-  const char* spec =nsnull;
-
-  aUrl->GetSpec(&spec);
-
- 
   nsresult rv;
 
   nsIWebShell * aWebShell= nsnull, * parent = nsnull;
@@ -1098,7 +1117,14 @@ nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIURI *aUrl, PR
   NS_WITH_SERVICE(nsIObserverService, observer, NS_OBSERVERSERVICE_PROGID, &rv);
   if (NS_FAILED(rv)) return rv;
 
+#ifdef NECKO
+  nsCOMPtr<nsIURI> aUrl;
+  rv = channel->GetURI(getter_AddRefs(aUrl));
+  if (NS_FAILED(rv)) return rv;
+  char* url;
+#else
   const char* url;
+#endif
   rv = aUrl->GetSpec(&url);
   if (NS_FAILED(rv)) return rv;
 
@@ -1155,39 +1181,50 @@ done:
 
 	    /* To satisfy a request from the QA group */
 	if (aStatus == NS_OK) {
-      fprintf(stdout, "Document %s loaded successfully\n", spec);
+      fprintf(stdout, "Document %s loaded successfully\n", url);
       fflush(stdout);
 	}
 	else {
-      fprintf(stdout, "Error loading URL %s \n", spec);
+      fprintf(stdout, "Error loading URL %s \n", url);
       fflush(stdout);
 	}
 
 end:
 
-    setAttribute( mWebShell, "Browser:Throbber", "busy", "false" );
-    PRBool result=PR_TRUE;
-    // Check with sessionHistory if you can go forward
-    canForward(result);
-    setAttribute(mWebShell, "canGoForward", "disabled", (result == PR_TRUE) ? "" : "true");
+  setAttribute( mWebShell, "Browser:Throbber", "busy", "false" );
+  PRBool result=PR_TRUE;
+  // Check with sessionHistory if you can go forward
+  canForward(result);
+  setAttribute(mWebShell, "canGoForward", "disabled", (result == PR_TRUE) ? "" : "true");
 
     // Check with sessionHistory if you can go back
-    canBack(result);
-    setAttribute(mWebShell, "canGoBack", "disabled", (result == PR_TRUE) ? "" : "true");
+  canBack(result);
+  setAttribute(mWebShell, "canGoBack", "disabled", (result == PR_TRUE) ? "" : "true");
 
-	//Disable the Stop button
-	setAttribute( mWebShell, "canStop", "disabled", "true" );
+    //Disable the Stop button
+  setAttribute( mWebShell, "canStop", "disabled", "true" );
 
 	//Enable the reload button
 	setAttribute(mWebShell, "canReload", "disabled", "");
-    return NS_OK;
+#ifdef NECKO
+  nsCRT::free(url);
+#endif
+  return NS_OK;
 }
 
 NS_IMETHODIMP
+#ifdef NECKO
+nsBrowserAppCore::HandleUnknownContentType(nsIDocumentLoader* loader, 
+                                           nsIChannel* channel,
+                                           const char *aContentType,
+                                           const char *aCommand )
+#else
 nsBrowserAppCore::HandleUnknownContentType(nsIDocumentLoader* loader, 
                                            nsIURI *aURL,
                                            const char *aContentType,
-                                           const char *aCommand ) {
+                                           const char *aCommand )
+#endif
+{
     nsresult rv = NS_OK;
 
     // Turn off the indicators in the chrome.
@@ -1201,7 +1238,11 @@ nsBrowserAppCore::HandleUnknownContentType(nsIDocumentLoader* loader,
 
     if ( NS_SUCCEEDED( rv ) ) {
         /* Have handler take care of this. */
+#ifdef NECKO
+        rv = handler->HandleUnknownContentType( channel, aContentType, loader );
+#else
         rv = handler->HandleUnknownContentType( aURL, aContentType, loader );
+#endif
 
         // Release the unknown content type handler service object.
         nsServiceManager::ReleaseService( NS_IUNKNOWNCONTENTTYPEHANDLER_PROGID, handler );
@@ -1216,30 +1257,57 @@ nsBrowserAppCore::HandleUnknownContentType(nsIDocumentLoader* loader,
 }
 
 NS_IMETHODIMP
+#ifdef NECKO
+nsBrowserAppCore::OnStartURLLoad(nsIDocumentLoader* loader, 
+                                 nsIChannel* channel, const char* aContentType,
+                                 nsIContentViewer* aViewer)
+#else
 nsBrowserAppCore::OnStartURLLoad(nsIDocumentLoader* loader, 
                                  nsIURI* aURL, const char* aContentType,
                                  nsIContentViewer* aViewer)
+#endif
 {
 
    return NS_OK;
 }
 
 NS_IMETHODIMP
+#ifdef NECKO
+nsBrowserAppCore::OnProgressURLLoad(nsIDocumentLoader* loader, 
+                                    nsIChannel* channel, PRUint32 aProgress, 
+                                    PRUint32 aProgressMax)
+#else
 nsBrowserAppCore::OnProgressURLLoad(nsIDocumentLoader* loader, 
                                     nsIURI* aURL, PRUint32 aProgress, 
                                     PRUint32 aProgressMax)
+#endif
 {
   nsresult rv = NS_OK;
   PRUint32 progress = aProgressMax ? ( aProgress * 100 ) / aProgressMax : 0;
+#ifdef NECKO
+  nsCOMPtr<nsIURI> aURL;
+  rv = channel->GetURI(getter_AddRefs(aURL));
+  if (NS_FAILED(rv)) return rv;
+  char *urlString = 0;
+#else
   const char *urlString = 0;
+#endif
   aURL->GetSpec( &urlString );
+#ifdef NECKO
+  nsCRT::free(urlString);
+#endif
   return rv;
 }
 
 
 NS_IMETHODIMP
+#ifdef NECKO
+nsBrowserAppCore::OnStatusURLLoad(nsIDocumentLoader* loader, 
+                                  nsIChannel* channel, nsString& aMsg)
+#else
 nsBrowserAppCore::OnStatusURLLoad(nsIDocumentLoader* loader, 
                                   nsIURI* aURL, nsString& aMsg)
+#endif
 {
   nsresult rv = setAttribute( mWebShell, "Browser:Status", "value", aMsg );
    return rv;
@@ -1247,8 +1315,13 @@ nsBrowserAppCore::OnStatusURLLoad(nsIDocumentLoader* loader,
 
 
 NS_IMETHODIMP
+#ifdef NECKO
+nsBrowserAppCore::OnEndURLLoad(nsIDocumentLoader* loader, 
+                               nsIChannel* channel, PRInt32 aStatus)
+#else
 nsBrowserAppCore::OnEndURLLoad(nsIDocumentLoader* loader, 
                                nsIURI* aURL, PRInt32 aStatus)
+#endif
 {
 
    return NS_OK;

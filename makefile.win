@@ -62,9 +62,6 @@ DIRS = \
 !if !defined(NECKO)
   network			\
 !endif
-!if defined(NECKO)
-  netwerk			\
-!endif
   profile			\
 !endif
 !if defined(LAYOUT_DIRS)
@@ -72,6 +69,9 @@ DIRS = \
   expat				\
   htmlparser			\
   gfx				\
+!if defined(NECKO)
+  netwerk			\
+!endif
   widget			\
   dom				\
   view				\

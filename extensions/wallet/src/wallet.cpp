@@ -1593,12 +1593,27 @@ wallet_InitializeCurrentURL(nsIDocument * doc) {
   }
 
   /* get host+file */
+#ifdef NECKO
+  char* host;
+#else
   const char* host;
+#endif
   url->GetHost(&host);
   nsAutoString urlName = nsAutoString(host);
+#ifdef NECKO
+  nsCRT::free(host);
+#endif
+#ifdef NECKO
+  char* file;
+  url->GetPath(&file);
+#else
   const char* file;
   url->GetFile(&file);
+#endif
   urlName = urlName + file;
+#ifdef NECKO
+  nsCRT::free(file);
+#endif
   NS_RELEASE(url);
 
   /* get field/schema mapping specific to current url */

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -26,7 +26,10 @@
 
 #include "nsIDOMBrowserAppCore.h"
 #include "nsBaseAppCore.h"
+#ifdef NECKO
+#else
 #include "nsINetSupport.h"
+#endif
 #include "nsIStreamObserver.h"
 #include "nsIDocumentLoaderObserver.h"
 #include "nsIObserver.h"
@@ -48,7 +51,10 @@ class nsIFindComponent;
 
 class nsBrowserAppCore : public nsBaseAppCore, 
                          public nsIDOMBrowserAppCore,
+#ifdef NECKO
+#else
                          public nsINetSupport,
+#endif
                          //     public nsIStreamObserver,
                          public nsIDocumentLoaderObserver,
                          public nsIObserver,
@@ -95,6 +101,15 @@ class nsBrowserAppCore : public nsBaseAppCore,
     NS_IMETHOD    LoadInitialPage();
 
     // nsIDocumentLoaderObserver
+#ifdef NECKO
+    NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL, const char* aCommand);
+    NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel* channel, PRInt32 aStatus, nsIDocumentLoaderObserver* aObserver);
+    NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, const char* aContentType, nsIContentViewer* aViewer);
+    NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, PRUint32 aProgress, PRUint32 aProgressMax);
+    NS_IMETHOD OnStatusURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsString& aMsg);
+    NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, PRInt32 aStatus);
+    NS_IMETHOD HandleUnknownContentType(nsIDocumentLoader* loader, nsIChannel* channel, const char *aContentType,const char *aCommand );		
+#else
     NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL, const char* aCommand);
     NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, nsIURI *aUrl, PRInt32 aStatus,
 								 nsIDocumentLoaderObserver * aObserver);
@@ -109,7 +124,7 @@ class nsBrowserAppCore : public nsBaseAppCore,
                                         nsIURI *aURL,
                                         const char *aContentType,
                                         const char *aCommand );
-
+#endif
 
     // nsINetSupport
     NS_IMETHOD_(void) Alert(const nsString &aText);
@@ -136,7 +151,9 @@ class nsBrowserAppCore : public nsBaseAppCore,
     NS_IMETHOD GoForward(nsIWebShell * aPrev);
 
     NS_IMETHOD GoBack(nsIWebShell * aPrev);
-#ifndef NECKO
+#ifdef NECKO
+	NS_IMETHOD Reload(nsIWebShell * aPrev, PRUint32 aType);
+#else
 	NS_IMETHOD Reload(nsIWebShell * aPrev, nsURLReloadType aType);
 #endif  /* NECKO */
 

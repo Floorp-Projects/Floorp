@@ -32,7 +32,11 @@ OBJS=           .\$(OBJDIR)\rdfpoll.obj
 LLIBS=				\
  $(DIST)\lib\rdf.lib            \
  $(DIST)\lib\xpcom.lib	\
+!ifdef NECKO
+ $(DIST)\lib\neckoutil_s.lib    \
+!else
  $(DIST)\lib\netlib.lib         \
+!endif
  $(DIST)\lib\plc3.lib       \
  $(LIBNSPR)  
 
