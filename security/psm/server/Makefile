@@ -212,13 +212,16 @@ XPCOM_LIBS = \
 
 ifeq ($(OS_ARCH), SunOS)
 NSPR_LINK_LIBS = -L$(DIST)/lib -Bdynamic -lnspr4 -lplc4 -lplds4
+XPCOM_LINK_LIBS = -lxpcom
 else
 NSPR_LINK_LIBS = $(NSPR_LIBS)
+XPCOM_LINK_LIBS	= $(XPCOM_LIBS)
 endif
 
 # Adding HP-UX Specific Fixes
 ifeq ($(OS_ARCH), HP-UX)
 NSPR_LINK_LIBS = -L$(DIST)/lib -shared -lnspr4 -lplc4 -lplds4
+XPCOM_LINK_LIBS = -lxpcom
 endif
 
 EXTRA_LIBS += \
@@ -245,8 +248,8 @@ EXTRA_LIBS += \
         $(DIST)/lib/libcrypto.a \
         $(DIST)/lib/libdbm.a \
         $(DIST)/lib/libprotocol.a \
-        $(DIST)/lib/libxpcom.a \
 	$(NSPR_LINK_LIBS) \
+	$(XPCOM_LINK_LIBS) \
 	$(CPLUSPLUSRUNTIME) \
 	$(LDAPSDKDIST)/lib/libldap30.a \
 	$(NULL)
