@@ -71,57 +71,6 @@ sub AlertBadVoteCache {
     $offervotecacherebuild = 1;
 }
 
-sub CrossCheck {
-    my $table = shift @_;
-    my $field = shift @_;
-
-    Status("Checking references to $table.$field");
-
-    while (@_) {
-        my $ref = shift @_;
-        my ($refertable, $referfield, $keyname, $exceptions) = @$ref;
-
-        $exceptions ||= [];
-        my %exceptions = map { $_ => 1 } @$exceptions;
-
-        Status("... from $refertable.$referfield");
-        
-        SendSQL("SELECT DISTINCT $refertable.$referfield" . ($keyname ? ", $refertable.$keyname" : '') . " " .
-                "FROM   $refertable LEFT JOIN $table " .
-                "  ON   $refertable.$referfield = $table.$field " .
-                "WHERE  $table.$field IS NULL " .
-                "  AND  $refertable.$referfield IS NOT NULL");
-
-        while (MoreSQLData()) {
-            my ($value, $key) = FetchSQLData();
-            if (!$exceptions{$value}) {
-                my $alert = "Bad value $value found in $refertable.$referfield";
-                if ($keyname) {
-                    if ($keyname eq 'bug_id') {
-                        $alert .= ' (bug ' . BugLink($key) . ')';
-                    }
-                    else {
-                        $alert .= " ($keyname == '$key')";
-                    }
-                }
-                Alert($alert);
-            }
-        }
-    }
-}
-
-sub DateCheck {
-    my $table = shift @_;
-    my $field = shift @_;
-    Status("Checking dates in $table.$field");
-    SendSQL("SELECT COUNT( $field ) FROM $table WHERE $field > NOW()");
-    my $c = FetchOneColumn();
-    if ($c) {
-        Alert("Found $c dates in future");
-    }
-}
-
-    
 my @badbugs;
 
 
@@ -150,6 +99,10 @@ if (exists $::FORM{'rebuildvotecache'}) {
     SendSQL("unlock tables");
     Status("Vote cache has been rebuilt.");
 }
+
+###########################################################################
+# Fix group derivations
+###########################################################################
 
 if (exists $::FORM{'rederivegroups'}) {
     Status("OK, All users' inherited permissions will be rechecked when " .
@@ -204,6 +157,10 @@ if (exists $::FORM{'cleangroupsnow'}) {
 
 print "OK, now running sanity checks.<p>\n";
 
+###########################################################################
+# Check enumeration values
+###########################################################################
+
 # This one goes first, because if this is wrong, then the below tests
 # will probably fail too
 
@@ -225,6 +182,45 @@ foreach my $field (("bug_severity", "bug_status", "op_sys",
 ###########################################################################
 # Perform referential (cross) checks
 ###########################################################################
+
+sub CrossCheck {
+    my $table = shift @_;
+    my $field = shift @_;
+
+    Status("Checking references to $table.$field");
+
+    while (@_) {
+        my $ref = shift @_;
+        my ($refertable, $referfield, $keyname, $exceptions) = @$ref;
+
+        $exceptions ||= [];
+        my %exceptions = map { $_ => 1 } @$exceptions;
+
+        Status("... from $refertable.$referfield");
+        
+        SendSQL("SELECT DISTINCT $refertable.$referfield" . ($keyname ? ", $refertable.$keyname" : '') . " " .
+                "FROM   $refertable LEFT JOIN $table " .
+                "  ON   $refertable.$referfield = $table.$field " .
+                "WHERE  $table.$field IS NULL " .
+                "  AND  $refertable.$referfield IS NOT NULL");
+
+        while (MoreSQLData()) {
+            my ($value, $key) = FetchSQLData();
+            if (!$exceptions{$value}) {
+                my $alert = "Bad value $value found in $refertable.$referfield";
+                if ($keyname) {
+                    if ($keyname eq 'bug_id') {
+                        $alert .= ' (bug ' . BugLink($key) . ')';
+                    }
+                    else {
+                        $alert .= " ($keyname == '$key')";
+                    }
+                }
+                Alert($alert);
+            }
+        }
+    }
+}
 
 CrossCheck("keyworddefs", "id",
            ["keywords", "keywordid"]);
@@ -283,9 +279,6 @@ CrossCheck("products", "id",
            ["versions", "product_id", "value"],
            ["flaginclusions", "product_id", "type_id"],
            ["flagexclusions", "product_id", "type_id"]);
-
-DateCheck("groups", "last_changed");
-DateCheck("profiles", "refreshed_when");
 
 ###########################################################################
 # Perform double field referential (cross) checks
@@ -565,6 +558,24 @@ BugCheck("bugs, products WHERE " .
          "everconfirmed = 0 AND " .
          "votestoconfirm <= votes",
          "Bugs that have enough votes to be confirmed but haven't been");
+
+###########################################################################
+# Date checks
+###########################################################################
+
+sub DateCheck {
+    my $table = shift @_;
+    my $field = shift @_;
+    Status("Checking dates in $table.$field");
+    SendSQL("SELECT COUNT( $field ) FROM $table WHERE $field > NOW()");
+    my $c = FetchOneColumn();
+    if ($c) {
+        Alert("Found $c dates in future");
+    }
+}
+    
+DateCheck("groups", "last_changed");
+DateCheck("profiles", "refreshed_when");
 
 ###########################################################################
 # Unsent mail
