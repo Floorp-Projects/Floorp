@@ -38,6 +38,7 @@
  */
 
 [ptr] native nsIPresContext(nsIPresContext);
+[ptr] native nsIPresShell(nsIPresShell);
 [ptr] native nsIDocumentLoaderObserver(nsIDocumentLoaderObserver);
 [ptr] native nsIContentViewer(nsIContentViewer);
 
@@ -103,6 +104,11 @@ interface nsIDocShell : nsISupports
 	Presentation context for the currently loaded document.  This may be null.
 	*/
 	readonly attribute nsIPresContext presContext;
+
+	/*
+	Presentation context for the currently loaded document.  This may be null.
+	*/
+	readonly attribute nsIPresShell presShell;
 
 	/*
 	Content Viewer that is currently loaded for this DocShell.  This may change
