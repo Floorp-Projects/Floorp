@@ -44,7 +44,21 @@ ifndef NS_USE_GCC
 	ifeq ($(OS_TEST), ia64)
 	    OS_CFLAGS	+= -Aa +e +p +DD64
 	else
+	    # Our HP-UX build machine has a strange problem.  If
+	    # a 64-bit PA-RISC executable calls getcwd() in a
+	    # network-mounted directory, it fails with ENOENT.
+	    # We don't know why.  Since nsinstall calls getcwd(),
+	    # this breaks our 64-bit HP-UX nightly builds.  None
+	    # of our other HP-UX machines have this problem.
+	    #
+	    # We worked around this problem by building nsinstall
+	    # as a 32-bit PA-RISC executable for 64-bit PA-RISC
+	    # builds.  -- wtc 2003-06-03
+	    ifdef INTERNAL_TOOLS
+	    OS_CFLAGS	+= +DAportable +DS2.0
+	    else
 	    OS_CFLAGS	+= -Aa +e +DA2.0W +DS2.0 +DChpux
+	    endif
 	endif
 # Next line replaced by generic name handling in arch.mk
 #	COMPILER_TAG    = _64
