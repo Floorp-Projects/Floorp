@@ -90,8 +90,19 @@ class Arguments extends ScriptableObject {
     public Object get(int index, Scriptable start) {
         if (0 <= index && index < args.length) {
             NativeFunction f = activation.funObj;
-            if (index < f.argCount)
+            if (index < f.argCount) {
+                String argName = f.argNames[index];
+                for (int i=index+1; i < f.argNames.length; i++) {
+                    if (argName.equals(f.argNames[i])) {
+                        // duplicate parameter name, must use initial 
+                        // parameter value
+                        Object[] orig = activation.getOriginalArguments();
+                        return index < orig.length ? orig[index] 
+                                                   : Undefined.instance;
+                    }
+                }
                 return activation.get(f.argNames[index], activation);
+            }
             return args[index];
         }
         return super.get(index, start);
