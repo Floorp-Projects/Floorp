@@ -748,9 +748,7 @@ CDEFINES=/DXP_PC /Dx386 /D_WINDOWS /D_X86_ \
 !elseif defined(MOZ_JAVA)
     /DJAVA \
 !endif
-!if defined(MOZ_ENDER)
 	/DENDER \
-!endif
     /DMOZILLA_CLIENT
 
 
