@@ -75,6 +75,7 @@ FILES = CGI.pl			\
 	editmessage.cgi		\
 	editparams.cgi		\
 	editwhiteboard.cgi	\
+	get_line.pl		\
 	globals.pl		\
 	handleAdminMail.pl	\
 	handleCheckinMail.pl	\
