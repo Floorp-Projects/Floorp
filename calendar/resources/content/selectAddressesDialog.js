@@ -55,7 +55,8 @@ var gInviteRemoveCommandsArray;
 
 /** Global instance of RDF service */
 var gRdf = Components.classes[ "@mozilla.org/rdf/rdf-service;1" ].getService( Components.interfaces.nsIRDFService );
-var gHeaderParser = Components.classes[ "@mozilla.org/messenger/headerparser;1" ].getService( Components.interfaces.nsIMsgHeaderParser );
+if( Components.classes[ "@mozilla.org/messenger/headerparser;1" ] )
+    var gHeaderParser = Components.classes[ "@mozilla.org/messenger/headerparser;1" ].getService( Components.interfaces.nsIMsgHeaderParser );
 
 /** Global refs to original composer window */
 var gMsgCompFields = 0;
