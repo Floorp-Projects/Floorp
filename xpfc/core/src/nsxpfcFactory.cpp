@@ -164,6 +164,8 @@ nsresult nsxpfcFactory::CreateInstance(nsISupports *aOuter,
     inst = (nsISupports *)new nsMessage();
   } else if (mClassID.Equals(kCMIMEMessageCID)) {
     inst = (nsISupports *)(nsIMIMEMessage*) new nsMIMEMessage();
+  } else if (mClassID.Equals(kCMIMEBodyPartCID)) {
+    inst = (nsISupports *)(nsIMIMEBodyPart*) new nsMIMEBodyPart();
   }
 
   if (inst == NULL) {  

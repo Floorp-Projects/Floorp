@@ -21,6 +21,7 @@
 
 #include "nsISupports.h"
 #include "nsString.h"
+#include "nsIMIMEBodyPart.h"
 
 //d69d9a40-7027-11d2-8dbc-00805f8a7ab6
 #define NS_IMIME_MESSAGE_IID   \
@@ -33,6 +34,15 @@ class nsIMIMEMessage : public nsISupports
 public:
 
   NS_IMETHOD Init() = 0;
+
+  NS_IMETHOD AddHeader(nsString& aHeaderName, nsString& aHeaderValue) = 0;
+  NS_IMETHOD RemoveHeader(nsString& aHeaderName) = 0;
+  NS_IMETHOD GetHeader(nsString& aHeaderName, nsString& aHeaderValue) = 0;
+
+  NS_IMETHOD AddAttachment(nsString& aAttachment, nsMIMEEncoding aMIMEEncoding = nsMIMEEncoding_default) = 0;
+  NS_IMETHOD AddText(nsString& aText, nsMIMEEncoding aMIMEEncoding = nsMIMEEncoding_default) = 0;
+
+  NS_IMETHOD AddBodyPart(nsIMIMEBodyPart& aBodyPart) = 0;
 
 };
 

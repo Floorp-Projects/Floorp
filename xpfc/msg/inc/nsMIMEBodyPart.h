@@ -16,34 +16,23 @@
  * Reserved.
  */
 
-#ifndef nsMIMEMessage_h___
-#define nsMIMEMessage_h___
+#ifndef nsMIMEBodyPart_h___
+#define nsMIMEBodyPart_h___
 
-#include "nsMessage.h"
-#include "nsIMIMEMessage.h"
+#include "nsIMIMEBodyPart.h"
 
-class nsMIMEMessage : public nsMessage,
-                      public nsIMIMEMessage
+class nsMIMEBodyPart : public nsIMIMEBodyPart
 {
 public:
-  nsMIMEMessage();
+  nsMIMEBodyPart();
 
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD Init() ;
 
-  NS_IMETHOD AddHeader(nsString& aHeaderName, nsString& aHeaderValue);
-  NS_IMETHOD RemoveHeader(nsString& aHeaderName);
-  NS_IMETHOD GetHeader(nsString& aHeaderName, nsString& aHeaderValue);
-
-  NS_IMETHOD AddAttachment(nsString& aAttachment, nsMIMEEncoding aMIMEEncoding = nsMIMEEncoding_default);
-  NS_IMETHOD AddText(nsString& aText, nsMIMEEncoding aMIMEEncoding = nsMIMEEncoding_default);
-
-  NS_IMETHOD AddBodyPart(nsIMIMEBodyPart& aBodyPart);
-
 protected:
-  ~nsMIMEMessage();
+  ~nsMIMEBodyPart();
 
 };
 
-#endif /* nsMIMEMessage_h___ */
+#endif /* nsMIMEBodyPart_h___ */
