@@ -39,7 +39,7 @@ nsHTTPResponse::nsHTTPResponse()
     NS_INIT_REFCNT();
 
     mStatus = 0;
-    mServerVersion = HTTP_ONE_ZERO;
+    mServerVersion = HTTP_UNKNOWN;
 
     // The content length is unknown...
     mContentLength = -1;
@@ -162,12 +162,65 @@ nsresult nsHTTPResponse::GetHeader(nsIAtom* i_Header, char* *o_Value)
 
 nsresult nsHTTPResponse::SetServerVersion(const char* i_Version)
 {
-    // convert it to HTTP Version
-    // TODO
-    mServerVersion = HTTP_ONE_ZERO;
-    return NS_OK;
+  nsresult rv = NS_OK;
 
+  PRInt32 err, offset;
+  float version;
+  nsCString str(i_Version);
+
+  // Make sure the version string is prefixed by 'HTTP/'
+  offset = str.Find("HTTP/");
+
+  // Malformed Version string - Not prefixed by 'HTTP/'.
+  if (0 != offset) {
+    mServerVersion = HTTP_UNKNOWN;
+    return NS_ERROR_FAILURE;
+  }
+
+  // Chop off the leading 'HTTP/'
+  str.Cut(0, 5);
+  version = str.ToFloat(&err);
+
+  // Malformed Version string - Version number not a number!
+  if ((PRInt32)NS_OK != err) {
+    mServerVersion = HTTP_UNKNOWN;
+    return NS_ERROR_FAILURE;
+  }
+
+  // At least HTTP/1.1
+  if (version >= 1.1f) {
+    mServerVersion = HTTP_ONE_ONE;
+  } 
+  //
+  // At least HTTP/1.0.  Some 1.0 servers actually send 0.0 as their
+  // version :-(
+  //
+  else if ((version >= 1.0f) || (version == 0.0f)) {
+    mServerVersion = HTTP_ONE_ZERO;
+  }
+  //
+  // HTTP/0.9.  In this case, the version string has been supplied internally
+  // since 0.9 responses do not contain a status line!
+  //
+  else if (version == 0.9f) {
+    mServerVersion = HTTP_ZERO_NINE;
+  }
+  // No idea what the version is.  It must be malformed!
+  else {
+    mServerVersion = HTTP_UNKNOWN;
+    rv = NS_ERROR_FAILURE;
+  }
+
+  return rv;
 }
+
+nsresult nsHTTPResponse::GetServerVersion(HTTPVersion* aResult)
+{
+  *aResult = mServerVersion;
+
+  return NS_OK;
+}
+
 
 nsresult nsHTTPResponse::SetStatusString(const char* i_Status)
 {
@@ -190,7 +243,7 @@ nsresult nsHTTPResponse::ParseStatusLine(nsCString& aStatusLine)
     // The Status Line has the following: format:
     //    HTTP-Version SP Status-Code SP Reason-Phrase CRLF
     //
-
+    nsresult rv;
     const char *token;
     nsCAutoString str;
     PRInt32 offset, error;
@@ -201,12 +254,19 @@ nsresult nsHTTPResponse::ParseStatusLine(nsCString& aStatusLine)
 
     offset = aStatusLine.FindChar(' ');
     (void) aStatusLine.Left(str, offset);
-    if (!str.Length()) {
-        // The status line is bogus...
-        return NS_ERROR_FAILURE;
-    }
+
+    if (str.Length() == 0) {
+      //
+      // This is a HTTP/0.9 response...
+      // Pretend that the status line and headers have been consumed.
+      //
+      rv = SetServerVersion("HTTP/0.9");
+      return rv;
+    } 
+
     token = str.GetBuffer();
-    SetServerVersion(token);
+    rv = SetServerVersion(token);
+    if (NS_FAILED(rv)) return rv;
 
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("\tParseStatusLine [this=%x].\tHTTP-Version: %s\n",

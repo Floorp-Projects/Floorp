@@ -61,6 +61,7 @@ typedef enum
 } HTTPState;
 
 typedef enum {
+    HTTP_UNKNOWN,
     HTTP_ZERO_NINE, // HTTP/0.9
     HTTP_ONE_ZERO,  // HTTP/1.0
     HTTP_ONE_ONE    // HTTP/1.1

@@ -390,11 +390,29 @@ nsresult nsHTTPResponseListener::ParseStatusLine(nsIBufferInputStream* in,
   mHeaderBuffer.StripChars("\r\n");
 
   rv = mResponse->ParseStatusLine(mHeaderBuffer);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_SUCCEEDED(rv)) {
+    HTTPVersion ver;
+
+    rv = mResponse->GetServerVersion(&ver);
+    if (HTTP_ZERO_NINE == ver) {
+      //
+      // This is a HTTP/0.9 response...
+      // Pretend that the headers have been consumed.
+      //
+      PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
+             ("\tParseStatusLine [this=%x]. HTTP/0.9 Server Response!"
+              " Hold onto you seats!\n", this));
+
+      mResponse->SetStatus(200);
+
+      // XXX: There will be no Content-Type or Content-Length headers!
+      mHeadersDone = PR_TRUE;
+    }
+  }
 
   mFirstLineParsed = PR_TRUE;
 
-  return NS_OK;
+  return rv;
 }
 
 

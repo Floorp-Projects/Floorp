@@ -62,6 +62,7 @@ public:
     nsresult            GetStatusString(char* *o_String);
     nsresult            GetServer(char* *o_String);
     nsresult            SetServerVersion(const char* i_ServerVersion);
+    nsresult            GetServerVersion(HTTPVersion *aResult);
 
     nsresult            GetHeader(nsIAtom* i_Header, char* *o_Value);
     nsresult            SetHeader(nsIAtom* i_Header, const char* o_Value);
