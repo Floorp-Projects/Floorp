@@ -43,7 +43,7 @@ class nsIDOMWindow;
 | stream transfer is completed.  The result generally indicates only whether   |
 | or not the stream transfer was successfully initiated.                       |
 ------------------------------------------------------------------------------*/
-[uuid(a6cf90f0-15b3-11d2-932e-00805f8add32)]
+[scriptable, uuid(a6cf90f0-15b3-11d2-932e-00805f8add32)]
 interface nsIStreamTransfer : nsIAppShellComponent {
 
     /*-------------------- SelectFileAndTransferLocation -----------------------
@@ -51,7 +51,7 @@ interface nsIStreamTransfer : nsIAppShellComponent {
     | the argument URL as source to that file, while showing a progress        |
     | dialog.                                                                  |
     --------------------------------------------------------------------------*/
-    void SelectFileAndTransferLocation( in nsIURI aURL, in nsIDOMWindow parent );
+    [noscript] void SelectFileAndTransferLocation( in nsIURI aURL, in nsIDOMWindow parent );
     void SelectFileAndTransferLocationSpec( in string aURL, in nsIDOMWindow parent );
 };
 
