@@ -89,7 +89,8 @@ jmethodID proxyToStringMID = nsnull;
 NativeToJavaProxyMap* gNativeToJavaProxyMap = nsnull;
 JavaToXPTCStubMap* gJavaToXPTCStubMap = nsnull;
 
-PRMonitor* gJavaXPCOMMonitor = nsnull;
+PRBool gJavaXPCOMInitialized = PR_FALSE;
+PRLock* gJavaXPCOMLock = nsnull;
 
 
 /******************************
@@ -98,7 +99,7 @@ PRMonitor* gJavaXPCOMMonitor = nsnull;
 PRBool
 InitializeJavaGlobals(JNIEnv *env)
 {
-  if (gJavaXPCOMMonitor)
+  if (gJavaXPCOMInitialized)
     return PR_TRUE;
 
   jclass clazz;
@@ -244,7 +245,8 @@ InitializeJavaGlobals(JNIEnv *env)
     goto init_error;
   }
 
-  gJavaXPCOMMonitor = nsAutoMonitor::NewMonitor("Javaconnect Monitor");
+  gJavaXPCOMLock = PR_NewLock();
+  gJavaXPCOMInitialized = PR_TRUE;
   return PR_TRUE;
 
 init_error:
@@ -260,7 +262,13 @@ init_error:
 void
 FreeJavaGlobals(JNIEnv* env)
 {
-  PR_EnterMonitor(gJavaXPCOMMonitor);
+  PR_Lock(gJavaXPCOMLock);
+
+  // null out global lock so no one else can use it
+  PRLock* tempLock = gJavaXPCOMLock;
+  gJavaXPCOMLock = nsnull;
+
+  gJavaXPCOMInitialized = PR_FALSE;
 
   // Free the mappings first, since that process depends on some of the Java
   // globals that are freed later.
@@ -325,9 +333,8 @@ FreeJavaGlobals(JNIEnv* env)
     xpcomJavaProxyClass = nsnull;
   }
 
-  PR_ExitMonitor(gJavaXPCOMMonitor);
-  nsAutoMonitor::DestroyMonitor(gJavaXPCOMMonitor);
-  gJavaXPCOMMonitor = nsnull;
+  PR_Unlock(tempLock);
+  PR_DestroyLock(tempLock);
 }
 
 
@@ -402,7 +409,8 @@ DestroyJavaProxyMappingEnum(PLDHashTable* aTable, PLDHashEntryHdr* aHeader,
 nsresult
 NativeToJavaProxyMap::Destroy(JNIEnv* env)
 {
-  nsAutoMonitor mon(gJavaXPCOMMonitor);
+  // This is only called from FreeGlobals(), which already holds the lock.
+  //  nsAutoLock lock(gJavaXPCOMLock);
 
   PL_DHashTableEnumerate(mHashTable, DestroyJavaProxyMappingEnum, env);
   PL_DHashTableDestroy(mHashTable);
@@ -415,7 +423,7 @@ nsresult
 NativeToJavaProxyMap::Add(JNIEnv* env, nsISupports* aXPCOMObject,
                           const nsIID& aIID, jobject aProxy)
 {
-  nsAutoMonitor mon(gJavaXPCOMMonitor);
+  nsAutoLock lock(gJavaXPCOMLock);
 
   Entry* e = NS_STATIC_CAST(Entry*, PL_DHashTableOperate(mHashTable,
                                                          aXPCOMObject,
@@ -450,7 +458,7 @@ NativeToJavaProxyMap::Find(JNIEnv* env, nsISupports* aNativeObject,
   if (!aResult)
     return NS_ERROR_FAILURE;
 
-  nsAutoMonitor mon(gJavaXPCOMMonitor);
+  nsAutoLock lock(gJavaXPCOMLock);
 
   *aResult = nsnull;
   Entry* e = NS_STATIC_CAST(Entry*, PL_DHashTableOperate(mHashTable,
@@ -485,7 +493,8 @@ nsresult
 NativeToJavaProxyMap::Remove(JNIEnv* env, nsISupports* aNativeObject,
                              const nsIID& aIID)
 {
-  nsAutoMonitor mon(gJavaXPCOMMonitor);
+  // This is only called from finalizeProxy(), which already holds the lock.
+  //  nsAutoLock lock(gJavaXPCOMLock);
 
   Entry* e = NS_STATIC_CAST(Entry*, PL_DHashTableOperate(mHashTable,
                                                          aNativeObject,
@@ -557,7 +566,8 @@ DestroyXPTCMappingEnum(PLDHashTable* aTable, PLDHashEntryHdr* aHeader,
 nsresult
 JavaToXPTCStubMap::Destroy()
 {
-  nsAutoMonitor mon(gJavaXPCOMMonitor);
+  // This is only called from FreeGlobals(), which already holds the lock.
+  //  nsAutoLock lock(gJavaXPCOMLock);
 
   PL_DHashTableEnumerate(mHashTable, DestroyXPTCMappingEnum, nsnull);
   PL_DHashTableDestroy(mHashTable);
@@ -569,7 +579,7 @@ JavaToXPTCStubMap::Destroy()
 nsresult
 JavaToXPTCStubMap::Add(JNIEnv* env, jobject aJavaObject, nsJavaXPTCStub* aProxy)
 {
-  nsAutoMonitor mon(gJavaXPCOMMonitor);
+  nsAutoLock lock(gJavaXPCOMLock);
 
   jint hash = env->CallIntMethod(aJavaObject, hashCodeMID);
   Entry* e = NS_STATIC_CAST(Entry*, PL_DHashTableOperate(mHashTable,
@@ -606,7 +616,7 @@ JavaToXPTCStubMap::Find(JNIEnv* env, jobject aJavaObject, const nsIID& aIID,
   if (!aResult)
     return NS_ERROR_FAILURE;
 
-  nsAutoMonitor mon(gJavaXPCOMMonitor);
+  nsAutoLock lock(gJavaXPCOMLock);
 
   *aResult = nsnull;
   jint hash = env->CallIntMethod(aJavaObject, hashCodeMID);
@@ -637,8 +647,6 @@ JavaToXPTCStubMap::Find(JNIEnv* env, jobject aJavaObject, const nsIID& aIID,
 nsresult
 JavaToXPTCStubMap::Remove(JNIEnv* env, jobject aJavaObject)
 {
-  nsAutoMonitor mon(gJavaXPCOMMonitor);
-
   jint hash = env->CallIntMethod(aJavaObject, hashCodeMID);
   PL_DHashTableOperate(mHashTable, NS_INT32_TO_PTR(hash), PL_DHASH_REMOVE);
 
@@ -702,8 +710,6 @@ GetNewOrUsedJavaObject(JNIEnv* env, nsISupports* aXPCOMObject,
     return NS_OK;
   }
 
-  nsAutoMonitor mon(gJavaXPCOMMonitor);
-
   // Get associated Java object from hash table
   rv = gNativeToJavaProxyMap->Find(env, aXPCOMObject, aIID, aResult);
   if (NS_FAILED(rv))
@@ -750,8 +756,6 @@ GetNewOrUsedXPCOMObject(JNIEnv* env, jobject aJavaObject, const nsIID& aIID,
       return NS_OK;
     }
   }
-
-  nsAutoMonitor mon(gJavaXPCOMMonitor);
 
   *aIsXPTCStub = PR_TRUE;
 

@@ -1301,25 +1301,32 @@ JAVAPROXY_NATIVE(finalizeProxy) (JNIEnv *env, jclass that, jobject aJavaProxy)
   // Due to Java's garbage collection, this finalize statement may get called
   // after FreeJavaGlobals().  So check to make sure that everything is still
   // initialized.
-  if (gJavaXPCOMMonitor) {
-    nsAutoMonitor mon(gJavaXPCOMMonitor);
+  if (gJavaXPCOMLock) {
+    nsAutoLock lock(gJavaXPCOMLock);
 
-    // Get native XPCOM instance
-    void* xpcom_obj;
-    nsresult rv = GetXPCOMInstFromProxy(env, aJavaProxy, &xpcom_obj);
-    if (NS_SUCCEEDED(rv)) {
-      JavaXPCOMInstance* inst = NS_STATIC_CAST(JavaXPCOMInstance*, xpcom_obj);
-#ifdef DEBUG_JAVAXPCOM
-      xpcom_addr = NS_REINTERPRET_CAST(PRUint32, inst->GetInstance());
-#endif
-      nsIID* iid;
-      rv = inst->InterfaceInfo()->GetInterfaceIID(&iid);
+    // If may be possible for the lock to be acquired here when FreeGlobals is
+    // in the middle of running.  If so, then this thread will sleep until
+    // FreeGlobals releases its lock.  At that point, we resume this thread
+    // here, but JavaXPCOM may no longer be initialized.  So we need to check
+    // that everything is legit after acquiring the lock.
+    if (gJavaXPCOMInitialized) {
+      // Get native XPCOM instance
+      void* xpcom_obj;
+      nsresult rv = GetXPCOMInstFromProxy(env, aJavaProxy, &xpcom_obj);
       if (NS_SUCCEEDED(rv)) {
-        rv = gNativeToJavaProxyMap->Remove(env, inst->GetInstance(), *iid);
-        nsMemory::Free(iid);
+        JavaXPCOMInstance* inst = NS_STATIC_CAST(JavaXPCOMInstance*, xpcom_obj);
+#ifdef DEBUG_JAVAXPCOM
+        xpcom_addr = NS_REINTERPRET_CAST(PRUint32, inst->GetInstance());
+#endif
+        nsIID* iid;
+        rv = inst->InterfaceInfo()->GetInterfaceIID(&iid);
+        if (NS_SUCCEEDED(rv)) {
+          rv = gNativeToJavaProxyMap->Remove(env, inst->GetInstance(), *iid);
+          nsMemory::Free(iid);
+        }
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to RemoveJavaProxy");
+        delete inst;
       }
-      NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to RemoveJavaProxy");
-      delete inst;
     }
   }
 
