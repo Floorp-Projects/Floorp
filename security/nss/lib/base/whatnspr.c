@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: whatnspr.c,v $ $Revision: 1.1 $ $Date: 2000/05/17 20:19:24 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: whatnspr.c,v $ $Revision: 1.2 $ $Date: 2002/01/31 19:18:55 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef BASE_H
@@ -96,7 +96,8 @@ set_whatnspr
 NSS_IMPLEMENT PRStatus
 nss_NewThreadPrivateIndex
 (
-  PRUintn *ip
+  PRUintn *ip,
+  PRThreadPrivateDTOR dtor
 )
 {
   switch( WHATNSPR ) {
@@ -114,7 +115,7 @@ nss_NewThreadPrivateIndex
     }
   case 2:
   default:
-    return PR_NewThreadPrivateIndex(ip, NULL);
+    return PR_NewThreadPrivateIndex(ip, dtor);
   }
 }
 

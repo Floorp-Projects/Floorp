@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: error.c,v $ $Revision: 1.2 $ $Date: 2000/05/17 20:19:23 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: error.c,v $ $Revision: 1.3 $ $Date: 2002/01/31 19:18:55 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -94,7 +94,7 @@ error_once_function
   void
 )
 {
-  return nss_NewThreadPrivateIndex(&error_stack_index);
+  return nss_NewThreadPrivateIndex(&error_stack_index,PR_Free);
   /* return PR_NewThreadPrivateIndex(&error_stack_index, PR_Free); */
 }
 
@@ -142,13 +142,12 @@ error_get_my_stack
   new_bytes = (new_size * sizeof(PRInt32)) + 
     sizeof(struct stack_header_str);
   /* Use NSPR's calloc/realloc, not NSS's, to avoid loops! */
-  if( (error_stack *)NULL == rv ) {
-    new_stack = PR_Calloc(1, new_bytes);
-  } else {
-    new_stack = PR_Realloc(rv, new_bytes);
-  }
+  new_stack = PR_Calloc(1, new_bytes);
   
   if( (error_stack *)NULL != new_stack ) {
+    if( (error_stack *)NULL != rv ) {
+	(void)nsslibc_memcpy(new_stack,rv,rv->header.space);
+    }
     new_stack->header.space = new_size;
   }
 
