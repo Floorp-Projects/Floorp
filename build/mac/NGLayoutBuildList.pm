@@ -521,6 +521,7 @@ sub BuildClientDist()
 
 	# MAILNEWS
    InstallFromManifest(":mozilla:mailnews:public:MANIFEST",							"$distdirectory:mailnews:");
+   InstallFromManifest(":mozilla:mailnews:public:MANIFEST_IDL",						"$distdirectory:idl:");
    InstallFromManifest(":mozilla:mailnews:base:public:MANIFEST",					"$distdirectory:mailnews:");
    InstallFromManifest(":mozilla:mailnews:base:public:MANIFEST_IDL",				"$distdirectory:idl:");
    InstallFromManifest(":mozilla:mailnews:base:build:MANIFEST",						"$distdirectory:mailnews:");
