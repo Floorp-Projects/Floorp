@@ -35,7 +35,6 @@
 
 <form method="post" action="editkeywords.cgi">
   <table border="0" cellpadding="4" cellspacing="0">
-    <input type="hidden" name="id" value="[% keyword_id %]">
     <tr>
       <th align="right">Name:</th>
       <td><input size="64" maxlength="64" name="name" value="[% name FILTER html %]"></td>
@@ -61,6 +60,7 @@
 
   <input type="submit" value="Update">
   <input type="hidden" name="action" value="update">
+  <input type="hidden" name="id" value="[% keyword_id %]">
 </form>
 
 <p><a href="editkeywords.cgi">Edit other keywords</a>.</p>

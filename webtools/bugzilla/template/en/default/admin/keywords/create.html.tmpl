@@ -31,7 +31,6 @@
 
 <form method="post" action="editkeywords.cgi">
   <table border="0" cellpadding="4" cellspacing="0">
-    <input type="hidden" name="id" value="-1">
     <tr>
       <th align="right">Name:</th>
       <td><input size="64" maxlength="64" name="name" value=""></td>
@@ -45,6 +44,7 @@
     </tr>
   </table>
   <hr>
+  <input type="hidden" name="id" value="-1">
   <input type="submit" value="Add">
   <input type="hidden" name="action" value="new">
 </form>
