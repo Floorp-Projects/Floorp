@@ -20,6 +20,5 @@
 #
 
 nppg.h
-npupp.h
 npglue.h
 nppriv.h
