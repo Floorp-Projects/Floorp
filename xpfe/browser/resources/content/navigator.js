@@ -422,15 +422,35 @@ nsButtonPrefListener.prototype =
 
 function Startup()
 {
+  // init globals
   gNavigatorBundle = document.getElementById("bundle_navigator");
   gBrandBundle = document.getElementById("bundle_brand");
   gNavigatorRegionBundle = document.getElementById("bundle_navigator_region");
   gBrandRegionBundle = document.getElementById("bundle_brand_region");
 
-  window.XULBrowserWindow = new nsXULBrowserWindow();
-  window.buttonPrefListener = new nsButtonPrefListener();
+  gURLBar = document.getElementById("urlbar");
 
+  // Do all UI building here:
 
+  setOfflineStatus();
+
+  // set home button tooltip text
+  var homePage = getHomePage();
+  if (homePage)
+    document.getElementById("home-button").setAttribute("tooltiptext", homePage);
+
+  try {
+    var searchMode = pref.GetIntPref("browser.search.mode");
+    setBrowserSearchMode(searchMode);
+  } catch (ex) {
+  }
+
+  // call rest of init on timer so the window shows early
+  setTimeout(delayedInit, 0);
+}
+
+function delayedInit()
+{
   var webNavigation;
   try {
     // Create the browser instance component.
@@ -448,15 +468,15 @@ function Startup()
     return;
   }
 
+  // initialize observers and listeners
+  window.XULBrowserWindow = new nsXULBrowserWindow();
+  window.buttonPrefListener = new nsButtonPrefListener();
+
+  // XXXjag hack for directory.xul/js
   _content.appCore = appCore;
 
   // Initialize browser instance..
   appCore.setWebShellWindow(window);
-
-  gURLBar = document.getElementById("urlbar");
-
-  // set the offline/online mode
-  setOfflineStatus();
 
   // Add a capturing event listener to the content area
   // (rjc note: not the entire window, otherwise we'll get sidebar pane loads too!)
@@ -476,25 +496,16 @@ function Startup()
     }
   }
 
-  try {
-    var searchMode = pref.GetIntPref("browser.search.mode");
-    setBrowserSearchMode(searchMode);
-  } catch (ex) {
-  }
-
-  // set home button tooltip text
-  var homePage = getHomePage();
-  if (homePage)
-    document.getElementById("home-button").setAttribute("tooltiptext", homePage);
-
   //initConsoleListener();
 
+  // wire up session history before any possible progress notifications for back/forward button updating
+  webNavigation.sessionHistory = Components.classes["@mozilla.org/browser/shistory;1"]
+                                           .createInstance(Components.interfaces.nsISHistory);
+
+  // hook up UI through progress listener
   var interfaceRequestor = getBrowser().docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
   var webProgress = interfaceRequestor.getInterface(Components.interfaces.nsIWebProgress);
   webProgress.addProgressListener(appCore);
-
-  webNavigation.sessionHistory = Components.classes["@mozilla.org/browser/shistory;1"]
-                                           .createInstance(Components.interfaces.nsISHistory);
 
   // XXXjag see bug 68662
   getBrowser().boxObject.setPropertyAsSupports("listenerkungfu", appCore);
