@@ -30,7 +30,7 @@ class ostrstream;
  * Owns the copied text, listens for selection request events.
  */
 
-class nsSelectionMgr : nsISelectionMgr
+class nsSelectionMgr : public nsISelectionMgr
 {
 public:
   NS_DECL_ISUPPORTS

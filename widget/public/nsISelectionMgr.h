@@ -26,7 +26,9 @@
 { 0xa6cf90ea, 0x15b3, 0x11d2, \
 { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } }
 
-class ostream;
+// We'd like to declare this as a forwarded class,
+// but for some reason the Mac won't accept that here.
+#include <ostream.h>
 
 /**
  * Selection Manager interface.
@@ -38,7 +40,7 @@ class nsISelectionMgr : public nsISupports
 public:
   static const nsIID& IID()
     { static nsIID iid = NS_ISELECTIONMGR_IID; return iid; }
-
+    
   NS_IMETHOD GetCopyOStream(ostream** aStream) = 0;
 
   NS_IMETHOD CopyToClipboard() = 0;

@@ -21,6 +21,7 @@
 #include "plevent.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
+#include "nsSelectionMgr.h"
 #include "nsXPComCIID.h"
 #include <stdlib.h>
 
@@ -37,6 +38,7 @@ nsAppShell::nsAppShell()
 {
   mRefCnt = 0;
   mDispatchListener = 0;
+  mSelectionMgr = 0;
 }
 
 //-------------------------------------------------------------------------
@@ -46,6 +48,7 @@ nsAppShell::nsAppShell()
 //-------------------------------------------------------------------------
 nsAppShell::~nsAppShell()
 {
+  NS_IF_RELEASE(mSelectionMgr);
 }
 
 //-------------------------------------------------------------------------
@@ -93,6 +96,10 @@ NS_METHOD nsAppShell::Create(int* argc, char ** argv)
   g_free(path);
 
 //  gtk_rc_init();
+
+  // Create the selection manager
+  if (!mSelectionMgr)
+      NS_NewSelectionMgr(&mSelectionMgr);
 
   return NS_OK;
 }
@@ -187,3 +194,14 @@ nsresult nsAppShell::DispatchNativeEvent(void * aEvent)
 {
   return NS_ERROR_FAILURE;
 }
+
+NS_METHOD
+nsAppShell::GetSelectionMgr(nsISelectionMgr** aSelectionMgr)
+{
+  *aSelectionMgr = mSelectionMgr;
+  NS_IF_ADDREF(mSelectionMgr);
+  if (!mSelectionMgr)
+    return NS_ERROR_NOT_INITIALIZED;
+  return NS_OK;
+}
+
