@@ -88,7 +88,6 @@
 #include "nsICaret.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIXPointer.h"
-#include "nsIXMLDocument.h"
 #include "nsIDOMXMLDocument.h"
 #include "nsIScrollableView.h"
 #include "nsIParser.h"

@@ -65,7 +65,6 @@
 #include "nsIScrollableView.h"
 #include "nsStyleConsts.h"
 #include "nsTableOuterFrame.h"
-#include "nsIXMLDocument.h"
 #include "nsIDOMXULElement.h"
 #include "nsIWebShell.h"
 #include "nsHTMLContainerFrame.h"

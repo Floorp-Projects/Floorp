@@ -97,7 +97,6 @@
 #include "jsapi.h"
 
 // baseURI
-#include "nsIXMLDocument.h"
 #include "nsIDOMXPathEvaluator.h"
 
 #ifdef DEBUG_waterson
@@ -195,29 +194,26 @@ nsNode3Tearoff::GetBaseURI(nsAString& aURI)
 
   mContent->GetDocument(*getter_AddRefs(doc));
 
-  nsCOMPtr<nsIXMLDocument> xmlDoc(do_QueryInterface(doc));
-
   aURI.Truncate();
 
-  if (xmlDoc) {
-    // XML documents can use the XML Base (W3C spec) way of setting
-    // the base per element. We look at this node and its ancestors
-    // until we find the first XML content and get it's base.
-    nsCOMPtr<nsIContent> content(mContent);
+  // XML content can use the XML Base (W3C spec) way of setting the
+  // base per element. We look at this node and its ancestors until we
+  // find the first XML content and get it's base.
+  nsCOMPtr<nsIContent> content(mContent);
 
-    while (content) {
-      nsCOMPtr<nsIXMLContent> xmlContent(do_QueryInterface(content));
+  do {
+    nsCOMPtr<nsIXMLContent> xmlContent(do_QueryInterface(content));
 
-      if (xmlContent) {
-        xmlContent->GetXMLBaseURI(getter_AddRefs(uri));
+    if (xmlContent) {
+      xmlContent->GetXMLBaseURI(getter_AddRefs(uri));
 
-        break;
-      }
-
-      nsCOMPtr<nsIContent> tmp(content);
-      tmp->GetParent(*getter_AddRefs(content));
+      break;
     }
-  }
+
+    nsCOMPtr<nsIContent> parent;
+    content->GetParent(*getter_AddRefs(parent));
+    content.swap(parent);
+  } while (content);
 
   if (!uri && doc) {
     // HTML document or for some reason there was no XML content in

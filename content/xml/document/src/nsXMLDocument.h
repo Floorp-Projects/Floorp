@@ -40,7 +40,6 @@
 #define nsXMLDocument_h___
 
 #include "nsDocument.h"
-#include "nsIXMLDocument.h"
 #include "nsIHTMLContentContainer.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -57,7 +56,6 @@ class nsICSSLoader;
 class nsIURI;
 
 class nsXMLDocument : public nsDocument,
-                      public nsIXMLDocument,
                       public nsIHTMLContentContainer,
                       public nsIInterfaceRequestor,
                       public nsIHttpEventSink
@@ -109,9 +107,6 @@ public:
   NS_IMETHOD GetElementById(const nsAString& aElementId,
                             nsIDOMElement** aReturn);
 
-  // nsIXMLDocument interface
-  NS_IMETHOD SetDefaultStylesheets(nsIURI* aUrl);
-
   // nsIHTMLContentContainer
   NS_IMETHOD GetAttributeStyleSheet(nsIHTMLStyleSheet** aResult);
   NS_IMETHOD GetInlineStyleSheet(nsIHTMLCSSStyleSheet** aResult);
@@ -138,6 +133,8 @@ protected:
   nsresult CreateElement(nsINodeInfo *aNodeInfo, nsIDOMElement** aResult);
   
   virtual nsresult GetLoadGroup(nsILoadGroup **aLoadGroup);
+
+  nsresult SetDefaultStylesheets(nsIURI* aUrl);
 
   // For HTML elements in our content model
   // XXX This is not clean, but is there a better way? 

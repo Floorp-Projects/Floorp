@@ -479,7 +479,6 @@ NS_IMPL_RELEASE_INHERITED(nsXULDocument, nsXMLDocument)
 // QueryInterface implementation for nsXULDocument
 NS_INTERFACE_MAP_BEGIN(nsXULDocument)
     NS_INTERFACE_MAP_ENTRY(nsIXULDocument)
-    NS_INTERFACE_MAP_ENTRY(nsIXMLDocument)
     NS_INTERFACE_MAP_ENTRY(nsIDOMXULDocument)
     NS_INTERFACE_MAP_ENTRY(nsIHTMLContentContainer)
     NS_INTERFACE_MAP_ENTRY(nsIStreamLoaderObserver)
@@ -1311,39 +1310,6 @@ nsXULDocument::HandleDOMEvent(nsIPresContext* aPresContext,
 
     return ret;
 }
-
-//----------------------------------------------------------------------
-//
-// nsIXMLDocument interface
-//
-
-NS_IMETHODIMP
-nsXULDocument::SetDefaultStylesheets(nsIURI* aUrl)
-{
-    NS_ASSERTION(0,"not implemented");
-    NS_NOTREACHED("nsXULDocument::SetDefaultStylesheets");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsXULDocument::SetXMLDeclaration(const nsAString& aVersion,
-                                 const nsAString& aEncoding,
-                                 const nsAString& aStandalone)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXULDocument::GetXMLDeclaration(nsAString& aVersion,
-                                 nsAString& aEncoding,
-                                 nsAString& aStandalone)
-{
-    aVersion.Truncate();
-    aEncoding.Truncate();
-    aStandalone.Truncate();
-    return NS_OK;
-}
-
 
 
 //----------------------------------------------------------------------
@@ -3305,8 +3271,8 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
                                 PRUint32 stringLen,
                                 const char* string)
 {
+#ifdef DEBUG
     // print a load error on bad status
-    // XXXbe shouldn't we do this only #ifdef DEBUG
     if (NS_FAILED(aStatus)) {
         nsCOMPtr<nsIRequest> request;
         aLoader->GetRequest(getter_AddRefs(request));
@@ -3322,6 +3288,7 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
             }
         }
     }
+#endif
 
     // This is the completion routine that will be called when a
     // transcluded script completes. Compile and execute the script

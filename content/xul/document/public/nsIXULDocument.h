@@ -38,7 +38,7 @@
 
 /*
 
-  An XUL-specific extension to nsIXMLDocument. Includes methods for
+  An XUL-specific extension to nsIDocument. Includes methods for
   setting the root resource of the document content model, a factory
   method for constructing the children of a node, etc.
 
@@ -48,8 +48,6 @@
 
 #ifndef nsIXULDocument_h___
 #define nsIXULDocument_h___
-
-class nsIContent; // XXX nsIXMLDocument.h is bad and doesn't declare this class...
 
 #include "nsISupports.h"
 #include "nsString.h"
@@ -63,6 +61,7 @@ class nsISupportsArray;
 class nsIXULPrototypeDocument;
 class nsIXULTemplateBuilder;
 class nsIURI;
+class nsIContent;
 
 // {954F0811-81DC-11d2-B52A-000000000000}
 #define NS_IXULDOCUMENT_IID \
