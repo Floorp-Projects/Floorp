@@ -151,18 +151,12 @@ public:
   NS_IMETHOD GetPageSequenceFrame(nsIPageSequenceFrame** aResult) const;
   NS_IMETHOD GetPrimaryFrameFor(nsIContent* aContent,
                                 nsIFrame**  aPrimaryFrame) const;
-  NS_IMETHOD SetPrimaryFrameFor(nsIContent* aContent,
-                                nsIFrame*   aPrimaryFrame);
-  NS_IMETHOD ClearPrimaryFrameMap();
   NS_IMETHOD GetStyleContextFor(nsIFrame*         aFrame,
                                 nsIStyleContext** aStyleContext) const;
   NS_IMETHOD GetLayoutObjectFor(nsIContent*   aContent,
                                 nsISupports** aResult) const;
   NS_IMETHOD GetPlaceholderFrameFor(nsIFrame*  aFrame,
                                     nsIFrame** aPlaceholderFrame) const;
-  NS_IMETHOD SetPlaceholderFrameFor(nsIFrame* aFrame,
-                                    nsIFrame* aPlaceholderFrame);
-  NS_IMETHOD ClearPlaceholderFrameMap();
   NS_IMETHOD AppendReflowCommand(nsIReflowCommand* aReflowCommand);
   NS_IMETHOD CancelReflowCommand(nsIFrame* aTargetFrame);
   NS_IMETHOD ProcessReflowCommands();
@@ -1873,19 +1867,6 @@ PresShell::GetPrimaryFrameFor(nsIContent* aContent,
   return mFrameManager->GetPrimaryFrameFor(aContent, aResult);
 }
 
-NS_IMETHODIMP
-PresShell::SetPrimaryFrameFor(nsIContent* aContent,
-                              nsIFrame*   aPrimaryFrame)
-{
-  return mFrameManager->SetPrimaryFrameFor(aContent, aPrimaryFrame);
-}
-
-NS_IMETHODIMP
-PresShell::ClearPrimaryFrameMap()
-{
-  return mFrameManager->ClearPrimaryFrameMap();
-}
-
 NS_IMETHODIMP 
 PresShell::GetStyleContextFor(nsIFrame*         aFrame,
                               nsIStyleContext** aStyleContext) const
@@ -1920,19 +1901,6 @@ PresShell::GetPlaceholderFrameFor(nsIFrame*  aFrame,
                                   nsIFrame** aResult) const
 {
   return mFrameManager->GetPlaceholderFrameFor(aFrame, aResult);
-}
-
-NS_IMETHODIMP
-PresShell::SetPlaceholderFrameFor(nsIFrame* aFrame,
-                                  nsIFrame* aPlaceholderFrame)
-{
-  return mFrameManager->SetPlaceholderFrameFor(aFrame, aPlaceholderFrame);
-}
-
-NS_IMETHODIMP
-PresShell::ClearPlaceholderFrameMap()
-{
-  return mFrameManager->ClearPlaceholderFrameMap();
 }
 
 //nsIViewObserver

@@ -151,7 +151,8 @@ public:
   NS_IMETHOD GetPageSequenceFrame(nsIPageSequenceFrame** aResult) const = 0;
 
   /**
-   * Get/set the primary frame associated with the content object.
+   * Gets the primary frame associated with the content object. This is a
+   * helper function that just forwards the request to the frame manager.
    *
    * The primary frame is the frame that is most closely associated with the
    * content. A frame is more closely associated with the content that another
@@ -165,9 +166,6 @@ public:
    */
   NS_IMETHOD GetPrimaryFrameFor(nsIContent* aContent,
                                 nsIFrame**  aPrimaryFrame) const = 0;
-  NS_IMETHOD SetPrimaryFrameFor(nsIContent* aContent,
-                                nsIFrame*   aPrimaryFrame) = 0;
-  NS_IMETHOD ClearPrimaryFrameMap() = 0;
 
   /** Returns the style context associated with the frame.
     * Used by code outside of layout that can't use nsIFrame methods to get
@@ -186,17 +184,11 @@ public:
                                 nsISupports** aResult) const = 0;
 
   /**
-   * Get/Set the placeholder frame associated with the specified frame.
-   *
-   * Out of flow frames (e.g., absolutely positioned frames and floated frames)
-   * can have placeholder frames that are inserted into the flow and indicate
-   * where the frame would be if it were part of the flow
+   * Gets the placeholder frame associated with the specified frame. This is
+   * a helper frame that forwards the request to the frame manager.
    */
   NS_IMETHOD GetPlaceholderFrameFor(nsIFrame*  aFrame,
                                     nsIFrame** aPlaceholderFrame) const = 0;
-  NS_IMETHOD SetPlaceholderFrameFor(nsIFrame* aFrame,
-                                    nsIFrame* aPlaceholderFrame) = 0;
-  NS_IMETHOD ClearPlaceholderFrameMap() = 0;
 
   /**
    * Reflow commands

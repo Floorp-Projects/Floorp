@@ -47,8 +47,7 @@ public:
   NS_IMETHOD Init(nsIPresShell* aPresShell) = 0;
 
   // Primary frame functions
-  NS_IMETHOD GetPrimaryFrameFor(nsIContent* aContent,
-                                nsIFrame**  aPrimaryFrame) const = 0;
+  NS_IMETHOD GetPrimaryFrameFor(nsIContent* aContent, nsIFrame** aPrimaryFrame) = 0;
   NS_IMETHOD SetPrimaryFrameFor(nsIContent* aContent,
                                 nsIFrame*   aPrimaryFrame) = 0;
   NS_IMETHOD ClearPrimaryFrameMap() = 0;

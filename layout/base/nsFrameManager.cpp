@@ -169,8 +169,7 @@ public:
   NS_IMETHOD Init(nsIPresShell* aPresShell);
 
   // Primary frame functions
-  NS_IMETHOD GetPrimaryFrameFor(nsIContent* aContent,
-                                nsIFrame**  aPrimaryFrame) const;
+  NS_IMETHOD GetPrimaryFrameFor(nsIContent* aContent, nsIFrame** aPrimaryFrame);
   NS_IMETHOD SetPrimaryFrameFor(nsIContent* aContent,
                                 nsIFrame*   aPrimaryFrame);
   NS_IMETHOD ClearPrimaryFrameMap();
@@ -261,8 +260,7 @@ FrameManager::Init(nsIPresShell* aPresShell)
 
 // Primary frame functions
 NS_IMETHODIMP
-FrameManager::GetPrimaryFrameFor(nsIContent* aContent,
-                                 nsIFrame**  aResult) const
+FrameManager::GetPrimaryFrameFor(nsIContent* aContent, nsIFrame** aResult)
 {
   NS_PRECONDITION(nsnull != aResult, "null ptr");
   NS_PRECONDITION(nsnull != aContent, "no content object");
@@ -282,7 +280,7 @@ FrameManager::GetPrimaryFrameFor(nsIContent* aContent,
       // frame that maps the content object
       mPresShell->GetStyleSet(getter_AddRefs(styleSet));
       mPresShell->GetPresContext(getter_AddRefs(presContext));
-      styleSet->FindPrimaryFrameFor(presContext, aContent, aResult);
+      styleSet->FindPrimaryFrameFor(presContext, this, aContent, aResult);
     }
   }
   
