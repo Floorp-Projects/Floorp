@@ -16,17 +16,11 @@
 # Reserved.
 
 DEPTH=../../..
-IGNORE_MANIFEST=1
-
-MAKE_OBJ_TYPE=EXE
-PROGRAM=./$(OBJDIR)/viewer
 
 include $(DEPTH)/config/config.mk
 
 CPPSRCS = \
 	main.cpp \
-        nsViewer.cpp \
-	nsDocLoader.cpp \
 	$(NULL)
 
 INCLUDES+= -I$(PUBLIC)/raptor -I$(PUBLIC)/xpcom  -I$(PUBLIC)/dom -I$(PUBLIC)/netlib -I$(PUBLIC)/js
@@ -35,57 +29,55 @@ DIRS	=
 
 OBJS	= $(CPPSRCS:.cpp=.o)
 
-MYLIBS = \
+
+
+EX_LIBS = \
 	$(DIST)/bin/libraptorbase.so	\
-	$(DIST)/bin/libraptorgfx.so	\
-	$(DIST)/bin/libraptorhtml.so	\
-	$(DIST)/bin/libgfxunix.so	\
-	$(DIST)/bin/libxpcom.so	        \
-	$(DIST)/bin/libreg.so	        \
-	$(DIST)/bin/libplc21.so	        \
+	$(DIST)/bin/libxpcom.so	\
+	$(DIST)/bin/libreg.so	\
+	$(DIST)/bin/libplc21.so	\
 	$(DIST)/bin/libplds21.so	\
 	$(DIST)/bin/libnspr21.so	\
-	$(DIST)/bin/libnetlib.so	\
-	$(DIST)/bin/libwidgetunix.so	\
+	$(DIST)/bin/libnetlib.so \
 	$(NULL)
+
+
+#EX_LIBS = \
+#	$(DIST)/bin/libraptorhtml.so \
+#	$(DIST)/bin/libnetlib.so \
+#	$(DIST)/bin/libraptorbase.so	\
+#	$(DIST)/bin/libxpcom.so	\
+#	$(DIST)/bin/libreg.so	\
+#	$(DIST)/bin/libplc21.so	\
+#	$(DIST)/bin/libplds21.so	\
+#	$(DIST)/bin/libnspr21.so	\
+#	$(NULL)
+
+PROGS	= $(addprefix $(OBJDIR)/, $(CPPSRCS:.cpp=))
+
+TARGETS = $(PROGS)
+
 
 include $(DEPTH)/config/rules.mk
 
+nsDocLoader.o::	nsDocLoader.cpp
+	$(CCC) -c $(CFLAGS) nsDocLoader.cpp $(LDFLAGS) 
 
-install:: $(PROGRAM)
-	$(MAKE_INSTALL) $(PROGRAM) $(DIST)/bin
-	$(MAKE_INSTALL) samples/test0.html $(DIST)/bin/res/samples
-	$(MAKE_INSTALL) samples/test1.html $(DIST)/bin/res/samples
-	$(MAKE_INSTALL) samples/test2.html $(DIST)/bin/res/samples
-	$(MAKE_INSTALL) samples/test3.html $(DIST)/bin/res/samples
-	$(MAKE_INSTALL) samples/test4.html $(DIST)/bin/res/samples
-	$(MAKE_INSTALL) samples/test5.html $(DIST)/bin/res/samples
-	$(MAKE_INSTALL) samples/test6.html $(DIST)/bin/res/samples
-	$(MAKE_INSTALL) samples/test7.html $(DIST)/bin/res/samples
-	$(MAKE_INSTALL) samples/test8.html $(DIST)/bin/res/samples
-	$(MAKE_INSTALL) samples/test8siz.html $(DIST)/bin/res/samples
-	$(MAKE_INSTALL) samples/test8sca.html $(DIST)/bin/res/samples
-	$(MAKE_INSTALL) samples/test8tab.html $(DIST)/bin/res/samples
-	$(MAKE_INSTALL) samples/raptor.jpg $(DIST)/bin/res/samples
-	$(MAKE_INSTALL) samples/Anieyes.gif $(DIST)/bin/res/samples
-	$(MAKE_INSTALL) samples/gear1.gif $(DIST)/bin/res/samples
-	$(MAKE_INSTALL) samples/rock_gra.gif $(DIST)/bin/res/samples
-	$(MAKE_INSTALL) samples/bg.jpg $(DIST)/bin/res/samples
+nsViewer.o::	nsViewer.cpp
+	$(CCC) -c $(CFLAGS) nsViewer.cpp $(LDFLAGS) 
 
-clobber::
-	rm -f $(DIST)/bin/viewer.exe
-	rm -f $(DIST)/bin/res/samples/test0.html
-	rm -f $(DIST)/bin/res/samples/test1.html
-	rm -f $(DIST)/bin/res/samples/test2.html
-	rm -f $(DIST)/bin/res/samples/test3.html
-	rm -f $(DIST)/bin/res/samples/test4.html
-	rm -f $(DIST)/bin/res/samples/test5.html
-	rm -f $(DIST)/bin/res/samples/test6.html
-	rm -f $(DIST)/bin/res/samples/test7.html
-	rm -f $(DIST)/bin/res/samples/test8.html
-	rm -f $(DIST)/bin/res/samples/raptor.jpg
-	rm -f $(DIST)/bin/res/samples/Anieyes.gif
-	rm -f $(DIST)/bin/res/samples/gear1.gif
-	rm -f $(DIST)/bin/res/samples/rock_gra.gif
-	rm -f $(DIST)/bin/res/samples/bg.jpg
+
+$(OBJDIR)/%.o: %.cpp
+	@$(MAKE_OBJDIR)
+	$(CCC) -o $@ $(CFLAGS) -c $*.cpp
+
+$(PROGS):$(OBJDIR)/%: $(OBJDIR)/%.o nsViewer.o nsDocLoader.o 
+	@$(MAKE_OBJDIR)
+	$(CCC) -o $@ $@.o nsViewer.o nsDocLoader.o $(LDFLAGS) $(EX_LIBS) $(OS_LIBS) /usr/X11R6/lib/libXm.a  /usr/X11R6/lib/libXt.a /usr/X11R6/lib/libX11.a
+
+
+export::
+
+install:: $(TARGETS)
+	$(INSTALL) $(PROGS) $(DIST)/bin
 
