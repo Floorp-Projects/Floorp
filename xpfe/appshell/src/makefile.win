@@ -28,6 +28,9 @@ DEFINES=-D_IMPL_NS_APPSHELL -DWIN32_LEAN_AND_MEAN
 MODULE=raptor 
 
 CPPSRCS=                                \
+ nsChromeTreeOwner.cpp                  \
+ nsContentTreeOwner.cpp                  \
+ nsXULWindow.cpp                  \
  nsXULCommand.cpp                  \
  nsAppShellService.cpp                  \
  nsWebShellWindow.cpp                   \
@@ -46,6 +49,9 @@ CPPSRCS=                                \
  $(NULL)
 
 CPP_OBJS=                               \
+ .\$(OBJDIR)\nsChromeTreeOwner.obj      \
+ .\$(OBJDIR)\nsContentTreeOwner.obj      \
+ .\$(OBJDIR)\nsXULWindow.obj      \
  .\$(OBJDIR)\nsXULCommand.obj      \
  .\$(OBJDIR)\nsAppShellService.obj      \
  .\$(OBJDIR)\nsWebShellWindow.obj       \
