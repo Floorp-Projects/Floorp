@@ -74,6 +74,16 @@ class nsIMenuBar;
 #define COLOREF_2_NSRGB(color) \
             NS_RGB(GetRValue(color), GetGValue(color), GetBValue(color))
 
+const LPCWSTR kWClassNameHidden     = L"MozillaHiddenWindowClass";
+const LPCWSTR kWClassNameUI         = L"MozillaUIWindowClass";
+const LPCWSTR kWClassNameContent    = L"MozillaContentWindowClass";
+const LPCWSTR kWClassNameGeneral    = L"MozillaWindowClass";
+
+const LPCSTR kClassNameHidden     = "MozillaHiddenWindowClass";
+const LPCSTR kClassNameUI         = "MozillaUIWindowClass";
+const LPCSTR kClassNameContent    = "MozillaContentWindowClass";
+const LPCSTR kClassNameGeneral    = "MozillaWindowClass";
+
 /** 
 * Native IMM wrapper
 */
@@ -491,7 +501,6 @@ protected:
     void MapDBCSAtrributeArrayToUnicodeOffsets(PRUint32* textRangeListLengthResult, nsTextRangeArray* textRangeListResult);
 
     void ConstrainZLevel(HWND *aAfter);
-    PRBool SetWin32ContentType();
 
 private:
 

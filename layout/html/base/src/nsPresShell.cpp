@@ -7053,9 +7053,7 @@ PresShell::VerifyIncrementalReflow()
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to init scroll view");
 
   //now create the widget for the view
-  nsCOMPtr<nsIDOMXULDocument> xulDoc(do_QueryInterface(mDocument));
-  rv = view->CreateWidget(kWidgetCID, nsnull, nativeParentWidget, PR_TRUE, 
-                          PR_TRUE, xulDoc? eContentTypeUI: eContentTypeContent);
+  rv = view->CreateWidget(kWidgetCID, nsnull, nativeParentWidget, PR_TRUE);
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to create scroll view widget");
 
   // Setup hierarchical relationship in view manager
