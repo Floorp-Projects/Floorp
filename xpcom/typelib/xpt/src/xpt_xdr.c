@@ -274,12 +274,15 @@ XPT_NewString(PRUint16 length, char *bytes)
     if (!str)
         return NULL;
     str->length = length;
-    str->bytes = malloc(length);
+    /* Alloc one extra to store the trailing nul. */
+    str->bytes = malloc(length + 1);
     if (!str->bytes) {
         XPT_DELETE(str);
         return NULL;
     }
     memcpy(str->bytes, bytes, length);
+    /* nul-terminate it. */
+    str->bytes[length] = '\0';
     return str;
 }
 
