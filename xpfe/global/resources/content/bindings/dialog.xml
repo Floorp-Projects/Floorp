@@ -58,8 +58,7 @@
         <parameter name="aDlgType"/>
         <body>
         <![CDATA[
-          var btns = this.getElementsByAttribute("dlgtype", aDlgType);
-          return btns.length > 0 ? btns[0] : document.getAnonymousElementByAttribute(this, "dlgtype", aDlgType);
+          return this._buttons[aDlgType];
         ]]>
         </body>
       </method>
@@ -110,43 +109,26 @@
 
       <constructor>
       <![CDATA[
-        this._useAnonButton = {};
-        
+        this._configureButtons(this.getAttribute("buttons"));
+
         // listen for when window is closed via native close buttons
         window.addEventListener("close", this._closeHandler, false);
 
-        window.addEventListener("load", this.initialize, false);
+        // for things that we need to initialize after onload fires
+        window.addEventListener("load", this.postLoadInit, false);
 
         window.moveToAlertPosition = this.moveToAlertPosition;
         window.centerWindowOnScreen = this.centerWindowOnScreen;
       ]]>
       </constructor>
 
-      <method name="initialize">
-        <parameter name="event"/>
+      <method name="postLoadInit">
+        <parameter name="aEvent"/>
         <body>
         <![CDATA[
-          var dialog = document.documentElement;
-
-          dialog._initDialogButton("accept");
-          dialog._initDialogButton("cancel");
-          dialog._initDialogButton("help");
-          dialog._initDialogButton("disclosure");
-          dialog._initDialogButton("extra1");
-          dialog._initDialogButton("extra2");
-          
-          // hide/show the appropriate buttons
-          dialog._configureButtons(dialog.getAttribute("buttons"));
-
-          var position = dialog.getAttribute("position");
-          if (position == "alert")
-            dialog.moveToAlertPosition();
-          else if (position == "center")
-            dialog.centerWindowOnScreen();
-  
           // give focus to the first focusable element in the dialog
           if (!document.commandDispatcher.focusedElement)
-            document.commandDispatcher.advanceFocusIntoSubtree(dialog);
+            document.commandDispatcher.advanceFocusIntoSubtree(document.documentElement);
         ]]>
         </body>
       </method>                
@@ -168,63 +150,57 @@
         ]]></getter>
       </property>
       
-      <method name="_initDialogButton">
-        <parameter name="aDlgType"/>
-        <body><![CDATA[
-          // determine if button is going to be anonymous or explicit
-          var btn;
-          var btns = this.getElementsByAttribute("dlgtype", aDlgType);
-          if (btns.length > 0) {
-            btn = btns[0];
-            this._useAnonButton[aDlgType] = false;
-          } else {
-            btn = document.getAnonymousElementByAttribute(this, "dlgtype", aDlgType);
-            this._useAnonButton[aDlgType] = true;
-          }
-          
-          if (btn) {
-            btn.addEventListener("command", this._handleButtonCommand, true);
-            // don't override custom labels with pre-defined labels on explicit buttons
-            if (!btn.hasAttribute("label"))
-              btn.setAttribute("label", this.mStrBundle.GetStringFromName("button-"+aDlgType));
-          }
-          return btn;
-        ]]></body>
-      </method>
-
       <method name="_configureButtons">
         <parameter name="aButtons"/>
         <body>
         <![CDATA[
-          var shown;
-          if (!aButtons) {
-            shown = { accept: true, cancel: true, help: false, 
-                      disclosure: false, extra1: false, extra2: false };
-          } else {
-            // expect a comma or space delimitd list of dlgtype values to be shown
-            var list = aButtons.split(",");
+          // by default, get all the anonymous button elements
+          var buttons = {};
+          this._buttons = buttons;
+          buttons.accept = document.getAnonymousElementByAttribute(this, "dlgtype", "accept");
+          buttons.cancel = document.getAnonymousElementByAttribute(this, "dlgtype", "cancel");
+          buttons.extra1 = document.getAnonymousElementByAttribute(this, "dlgtype", "extra1");
+          buttons.extra2 = document.getAnonymousElementByAttribute(this, "dlgtype", "extra2");
+          buttons.help = document.getAnonymousElementByAttribute(this, "dlgtype", "help");
+          buttons.disclosure = document.getAnonymousElementByAttribute(this, "dlgtype", "disclosure");
 
-            // mark shown dlgtypes as true
-            shown = { accept: false, cancel: false, help: false,
-                      disclosure: false, extra1: false, extra2: false };
-            for (var i = 0; i < list.length; ++i)
-              shown[list[i].replace(/ /g, "")] = true;
+          // look for any overriding explicit button elements
+          var exBtns = this.getElementsByAttribute("dlgtype", "*");
+          for (var i = 0; i < exBtns.length; ++i) {
+            var dlgtype = exBtns[i].getAttribute("dlgtype");
+            buttons[dlgtype].hidden = true; // hide the anonymous button
+            buttons[dlgtype] = exBtns[i];
+          }
+
+          // add the label and oncommand handler to each button
+          for (var dlgtype in buttons) {
+            var button = buttons[dlgtype];
+            buttons[dlgtype].addEventListener("command", this._handleButtonCommand, true);
+            // don't override custom labels with pre-defined labels on explicit buttons
+            if (!button.hasAttribute("label"))
+              button.setAttribute("label", this.mStrBundle.GetStringFromName("button-"+dlgtype));
           }
           
-          // hide anonymous buttons that aren't mentioned in the buttons attribute, and are not
-          // supplied via explicit content
-          for (var dlgtype in shown) {
-            var anonBtn = document.getAnonymousElementByAttribute(this, "dlgtype", dlgtype);
-            if (anonBtn) {
-              if (this._useAnonButton[dlgtype] && shown[dlgtype]) {
-                anonBtn.removeAttribute("hidden");
-                if (dlgtype == "accept")
-                  anonBtn.setAttribute("default", "true");
-              } else {
-                anonBtn.setAttribute("hidden", "true");
-                if (dlgtype == "accept")
-                  anonBtn.removeAttribute("default");
-              }
+          // ensure that hitting enter triggers ondialogaccept
+          buttons["accept"].setAttribute("default", "true");
+          
+          // if there is a special button configuration, use it
+          if (aButtons) {
+            // expect a comma delimitd list of dlgtype values
+            var list = aButtons.split(",");
+  
+            // mark shown dlgtypes as true
+            var shown = { accept: false, cancel: false, help: false,
+                          disclosure: false, extra1: false, extra2: false };
+            for (var i = 0; i < list.length; ++i)
+              shown[list[i].replace(/ /g, "")] = true;
+            
+            // hide/show the buttons we want
+            for (var dlgtype in shown) {
+              if (shown[dlgtype])
+                buttons[dlgtype].hidden = false;
+              else
+                buttons[dlgtype].hidden = true;
             }
           }
         ]]>
