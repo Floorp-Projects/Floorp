@@ -90,7 +90,7 @@
                             PrototypeInstance *pInst = new PrototypeInstance(protoObj, meta->objectClass);
                             baseVal = OBJECT_TO_JS2VAL(pInst);
                             runtimeFrame->thisObject = baseVal;
-                            runtimeFrame->assignArguments(base(argCount), argCount);
+                            runtimeFrame->assignArguments(meta, base(argCount), argCount);
                             jsr(phase, fWrap->bCon, base(argCount + 1), baseVal);   // seems out of order, but we need to catch the current top frame 
                             meta->env->addFrame(runtimeFrame);
                         }
@@ -126,7 +126,6 @@
                     fWrap = (checked_cast<FunctionInstance *>(fObj))->fWrap;
                 }
             if (fWrap) {
-
                 if (fWrap->compileFrame->prototype) {
                     if (JS2VAL_IS_VOID(a) || JS2VAL_IS_NULL(a)) {
                         Frame *g = meta->env->getPackageOrGlobalFrame();
@@ -134,7 +133,6 @@
                             a = OBJECT_TO_JS2VAL(g);
                     }
                 }
-
                 if (fWrap->code) {  // native code
                     a = fWrap->code(meta, a, base(argCount), argCount);
                     pop(argCount + 2);
@@ -146,7 +144,7 @@
                     runtimeFrame->thisObject = a;
     //                assignArguments(runtimeFrame, fWrap->compileFrame->signature);
                     // XXX
-                    runtimeFrame->assignArguments(base(argCount), argCount);
+                    runtimeFrame->assignArguments(meta, base(argCount), argCount);
                     jsr(phase, fWrap->bCon, base(argCount + 2), JS2VAL_VOID);   // seems out of order, but we need to catch the current top frame 
                     meta->env->addFrame(runtimeFrame);
                 }

@@ -89,7 +89,7 @@ js2val Array_Constructor(JS2Metadata *meta, const js2val /*thisValue*/, js2val *
             }
             else {
                 setLength(meta, arrInst, 1);
-                Multiname mn(meta->toString((int32)0), meta->publicNamespace);
+                Multiname mn(meta->engine->numberToString((int32)0), meta->publicNamespace);
                 meta->writeDynamicProperty(arrInst, &mn, true, argv[0], RunPhase);
             }
         }
@@ -97,7 +97,7 @@ js2val Array_Constructor(JS2Metadata *meta, const js2val /*thisValue*/, js2val *
             Multiname mn(NULL, meta->publicNamespace);
             setLength(meta, arrInst, argc);
             for (uint32 i = 0; i < argc; i++) {
-                mn.name = meta->toString(i);
+                mn.name = meta->engine->numberToString(i);
                 meta->writeDynamicProperty(arrInst, &mn, true, argv[i], RunPhase);
             }
         }

@@ -379,12 +379,12 @@ int main(int argc, char **argv)
 #endif
 
     metadata = new MetaData::JS2Metadata(world);
-    metadata->addGlobalObjectFunction("print", print);
-    metadata->addGlobalObjectFunction("load", load);
+    metadata->addGlobalObjectFunction("print", print, 1);
+    metadata->addGlobalObjectFunction("load", load, 1);
 #ifdef DEBUG
-    metadata->addGlobalObjectFunction("dump", dump);
-    metadata->addGlobalObjectFunction("trees", trees);
-    metadata->addGlobalObjectFunction("trace", trace);
+    metadata->addGlobalObjectFunction("dump", dump, 1);
+    metadata->addGlobalObjectFunction("trees", trees, 0);
+    metadata->addGlobalObjectFunction("trace", trace, 0);
 #endif
 
     try {

@@ -64,7 +64,7 @@ namespace MetaData {
         js2val result = JS2VAL_VOID;
 
         Arena a;
-        Pragma::Flags flags = Pragma::es4;
+        Pragma::Flags flags = Pragma::js1;
         Parser p(world, a, flags, str, fileName);
         CompilationData *oldData = NULL;
         try {

@@ -887,7 +887,7 @@ public:
     uint32 positionalCount;
 
     virtual void instantiate(Environment *env);
-    void assignArguments(js2val *argBase, uint32 argCount);
+    void assignArguments(JS2Metadata *meta, js2val *argBase, uint32 argCount);
     virtual void markChildren();
     virtual ~ParameterFrame()           { }
 };
@@ -1090,7 +1090,7 @@ public:
     bool deleteLocalMember(LocalMember *m, bool *result);
     bool deleteInstanceMember(JS2Class *c, QualifiedName *qname, bool *result);
 
-    void addGlobalObjectFunction(char *name, NativeCode *code);
+    void addGlobalObjectFunction(char *name, NativeCode *code, uint32 length);
 
     void reportError(Exception::Kind kind, const char *message, size_t pos, const char *arg = NULL);
     void reportError(Exception::Kind kind, const char *message, size_t pos, const String &name);

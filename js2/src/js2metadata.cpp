@@ -2325,6 +2325,8 @@ doUnary:
                     && !JS2VAL_IS_NULL(checked_cast<ParameterFrame *>(pf)->thisObject))
                 if (allowPrototypeThis || !checked_cast<ParameterFrame *>(pf)->prototype)
                     return checked_cast<ParameterFrame *>(pf)->thisObject;
+            if (pf->kind == GlobalObjectKind)
+                return OBJECT_TO_JS2VAL(pf);
             fi++;
         }
         return JS2VAL_VOID;
@@ -2917,6 +2919,11 @@ doUnary:
         return BOOLEAN_TO_JS2VAL(JSDOUBLE_IS_NaN(d));
     }
 
+    static js2val GlobalObject_toString(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint32 /* argc */)
+    {
+        return STRING_TO_JS2VAL(meta->engine->allocString("[object global]"));
+    }
+
     static js2val GlobalObject_eval(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint32 argc)
     {
         if (!JS2VAL_IS_STRING(argv[0]))
@@ -2924,12 +2931,12 @@ doUnary:
         return meta->readEvalString(*meta->toString(argv[0]), widenCString("Eval Source"));
     }
 
-    // XXX need length value
-    void JS2Metadata::addGlobalObjectFunction(char *name, NativeCode *code)
+    void JS2Metadata::addGlobalObjectFunction(char *name, NativeCode *code, uint32 length)
     {
         SimpleInstance *fInst = new SimpleInstance(functionClass);
         fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), code);
         writeDynamicProperty(glob, new Multiname(&world.identifiers[name], publicNamespace), true, OBJECT_TO_JS2VAL(fInst), RunPhase);
+        writeDynamicProperty(fInst, new Multiname(engine->length_StringAtom, publicNamespace), true, length, RunPhase);
     }
 
 #define MAKEBUILTINCLASS(c, super, dynamic, allowNull, final, name, defaultVal) c = new JS2Class(super, NULL, new Namespace(engine->private_StringAtom), dynamic, allowNull, final, name); c->complete = true; c->defaultValue = defaultVal;
@@ -2994,8 +3001,9 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         // XXX add 'version' 
         writeDynamicProperty(glob, new Multiname(&world.identifiers["version"], publicNamespace), true, INT_TO_JS2VAL(0), RunPhase);
         // Function properties of the global object 
-        addGlobalObjectFunction("isNaN", GlobalObject_isNaN);
-        addGlobalObjectFunction("eval", GlobalObject_eval);
+        addGlobalObjectFunction("isNaN", GlobalObject_isNaN, 1);
+        addGlobalObjectFunction("eval", GlobalObject_eval, 1);
+        addGlobalObjectFunction("toString", GlobalObject_toString, 0);
 
 
 /*** ECMA 3  Object Class ***/
@@ -4573,16 +4581,32 @@ deleteClassProperty:
     // Assume that instantiate has been called, the plural frame will contain
     // the cloned Variables assigned into this (singular) frame. Use the 
     // incoming values to initialize the positionals.
-    void ParameterFrame::assignArguments(js2val *argBase, uint32 argCount)
+    void ParameterFrame::assignArguments(JS2Metadata *meta, js2val *argBase, uint32 argCount)
     {
+        Multiname mn(NULL, meta->publicNamespace);
+
         ASSERT(pluralFrame->kind == ParameterKind);
         ParameterFrame *plural = checked_cast<ParameterFrame *>(pluralFrame);
         ASSERT((plural->positionalCount == 0) || (plural->positional != NULL));
+        
+        js2val argumentsVal = OBJECT_TO_JS2VAL(new ArrayInstance(meta->arrayClass));
+        ArrayInstance *arrInst = checked_cast<ArrayInstance *>(JS2VAL_TO_OBJECT(argumentsVal));
+
         for (uint32 i = 0; ((i < argCount) && (i < plural->positionalCount)); i++) {
             ASSERT(plural->positional[i]->cloneContent);
             ASSERT(plural->positional[i]->cloneContent->kind == Member::Variable);
             (checked_cast<Variable *>(plural->positional[i]->cloneContent))->value = argBase[i];
+
+            mn.name = meta->engine->numberToString(i);
+            meta->writeDynamicProperty(arrInst, &mn, true, argBase[i], RunPhase);
         }
+        setLength(meta, arrInst, i);
+
+        // Add the 'arguments' property
+        QualifiedName qn(meta->publicNamespace, &meta->world.identifiers["arguments"]);
+        LocalBinding *sb = new LocalBinding(qn, new Variable(meta->arrayClass, argumentsVal, true));
+        const LocalBindingMap::value_type e(*qn.id, sb);
+        localReadBindings.insert(e);
     }
 
 
