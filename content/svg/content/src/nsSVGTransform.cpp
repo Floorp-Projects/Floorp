@@ -106,7 +106,7 @@ nsSVGTransform::nsSVGTransform()
 
 nsresult nsSVGTransform::Init()
 {
-  return nsSVGMatrix::Create(getter_AddRefs(mMatrix));
+  return NS_NewSVGMatrix(getter_AddRefs(mMatrix));
   // XXX register as matrix observer 
 }
 
@@ -309,7 +309,7 @@ NS_IMETHODIMP nsSVGTransform::SetRotate(float angle, float cx, float cy)
   mOriginX = cx;
   mOriginY = cy;
 
-  nsSVGMatrix::Create(getter_AddRefs(mMatrix));
+  NS_NewSVGMatrix(getter_AddRefs(mMatrix));
   nsCOMPtr<nsIDOMSVGMatrix> temp;
   mMatrix->Translate(cx, cy, getter_AddRefs(temp));
   mMatrix = temp;
@@ -330,7 +330,7 @@ NS_IMETHODIMP nsSVGTransform::SetSkewX(float angle)
   mType = SVG_TRANSFORM_SKEWX;
   mAngle = angle;
 
-  nsSVGMatrix::Create(getter_AddRefs(mMatrix));
+  NS_NewSVGMatrix(getter_AddRefs(mMatrix));
   nsCOMPtr<nsIDOMSVGMatrix> temp;
   mMatrix->SkewX(angle, getter_AddRefs(temp));
   mMatrix = temp;
@@ -347,7 +347,7 @@ NS_IMETHODIMP nsSVGTransform::SetSkewY(float angle)
   mType = SVG_TRANSFORM_SKEWY;
   mAngle = angle;
 
-  nsSVGMatrix::Create(getter_AddRefs(mMatrix));
+  NS_NewSVGMatrix(getter_AddRefs(mMatrix));
   nsCOMPtr<nsIDOMSVGMatrix> temp;
   mMatrix->SkewY(angle, getter_AddRefs(temp));
   mMatrix = temp;

@@ -38,19 +38,45 @@
 
 #include "nsSVGPoint.h"
 #include "nsIDOMSVGMatrix.h"
+#include "nsSVGValue.h"
+
+class nsSVGPoint : public nsIDOMSVGPoint,
+                   public nsSVGValue
+{
+public:
+  nsSVGPoint(float x, float y); // addrefs
+
+  // nsISupports interface:
+  NS_DECL_ISUPPORTS
+
+  // nsIDOMSVGPoint interface:
+  NS_DECL_NSIDOMSVGPOINT
+
+  // nsISVGValue interface:
+  NS_IMETHOD SetValueString(const nsAString& aValue);
+  NS_IMETHOD GetValueString(nsAString& aValue);
+  
+protected:
+  float mX;
+  float mY;
+};
+
+
+//----------------------------------------------------------------------
+// Implementation
 
 nsresult
-nsSVGPoint::Create(float x, float y, nsIDOMSVGPoint** aResult)
+NS_NewSVGPoint(nsIDOMSVGPoint** result, float x, float y)
 {
-  *aResult = (nsIDOMSVGPoint*) new nsSVGPoint(x, y);
-  if(!*aResult) return NS_ERROR_OUT_OF_MEMORY;
-  
-  NS_ADDREF(*aResult);
+  *result = new nsSVGPoint(x, y);
+  if (!*result)
+    return NS_ERROR_OUT_OF_MEMORY;
+
   return NS_OK;
 }
 
 nsSVGPoint::nsSVGPoint(float x, float y)
-    : mX(x), mY(y)
+    : mRefCnt(1), mX(x), mY(y)
 {
 }
 
@@ -113,7 +139,7 @@ NS_IMETHODIMP nsSVGPoint::MatrixTransform(nsIDOMSVGMatrix *matrix, nsIDOMSVGPoin
   matrix->GetE(&e);
   matrix->GetF(&f);
   
-  return Create( a*mX + c*mY + e, b*mX + d*mY + f, _retval);
+  return NS_NewSVGPoint(_retval, a*mX + c*mY + e, b*mX + d*mY + f);
 }
 
 //----------------------------------------------------------------------

@@ -56,6 +56,7 @@
 #include "nsISVGGlyphFragmentNode.h"
 #include "nsIDOMSVGRect.h"
 #include "nsISVGOuterSVGFrame.h"
+#include "nsSVGRect.h"
 
 typedef nsContainerFrame nsSVGTSpanFrameBase;
 
@@ -559,14 +560,7 @@ nsSVGTSpanFrame::GetBBox(nsIDOMSVGRect **_retval)
     return NS_ERROR_FAILURE;
   }
 
-  outerSVGFrame->CreateSVGRect(_retval);
-
-  (*_retval)->SetWidth(x2-x1);
-  (*_retval)->SetHeight(y2-y1);
-  (*_retval)->SetX(x1);
-  (*_retval)->SetY(y1);
-
-  return NS_OK;  
+  return NS_NewSVGRect(_retval, x1, y1, x2 - x1, y2 - y1);
 }
 
 //----------------------------------------------------------------------

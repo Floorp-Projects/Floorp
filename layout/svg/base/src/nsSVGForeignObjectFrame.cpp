@@ -59,6 +59,7 @@
 #include "nsISVGRenderer.h"
 #include "nsISVGOuterSVGFrame.h"
 #include "nsTransform2D.h"
+#include "nsSVGPoint.h"
 
 typedef nsBlockFrame nsSVGForeignObjectFrameBase;
 
@@ -778,25 +779,23 @@ float nsSVGForeignObjectFrame::GetTwipsPerPx()
 void nsSVGForeignObjectFrame::TransformPoint(float& x, float& y)
 {
   nsCOMPtr<nsIDOMSVGMatrix> ctm = GetCanvasTM();
-  if (!ctm) return;
+  if (!ctm)
+    return;
 
   // XXX this is absurd! we need to add another method (interface
   // even?) to nsIDOMSVGMatrix to make this easier. (something like
   // nsIDOMSVGMatrix::TransformPoint(float*x,float*y))
   
-  nsCOMPtr<nsIDOMSVGElement> el = do_QueryInterface(mContent);
-  nsCOMPtr<nsIDOMSVGSVGElement> svg_el;
-  el->GetOwnerSVGElement(getter_AddRefs(svg_el));
-  if (!svg_el) return;
   nsCOMPtr<nsIDOMSVGPoint> point;
-  svg_el->CreateSVGPoint(getter_AddRefs(point));
-  NS_ASSERTION(point, "couldn't create point!");
-  if (!point) return;
-  
-  point->SetX(x);
-  point->SetY(y);
+  NS_NewSVGPoint(getter_AddRefs(point), x, y);
+  if (!point)
+    return;
+
   nsCOMPtr<nsIDOMSVGPoint> xfpoint;
   point->MatrixTransform(ctm, getter_AddRefs(xfpoint));
+  if (!xfpoint)
+    return;
+
   xfpoint->GetX(&x);
   xfpoint->GetY(&y);
 }

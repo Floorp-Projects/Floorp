@@ -294,7 +294,7 @@ nsSVGSVGElement::Init()
 
   // DOM property: currentTranslate
   {
-    rv = nsSVGPoint::Create(0.0f, 0.0f, getter_AddRefs(mCurrentTranslate));
+    rv = NS_NewSVGPoint(getter_AddRefs(mCurrentTranslate));
     NS_ENSURE_SUCCESS(rv,rv);
     NS_ADD_SVGVALUE_OBSERVER(mCurrentTranslate);
   }
@@ -699,14 +699,14 @@ nsSVGSVGElement::CreateSVGAngle(nsIDOMSVGAngle **_retval)
 NS_IMETHODIMP
 nsSVGSVGElement::CreateSVGPoint(nsIDOMSVGPoint **_retval)
 {
-  return nsSVGPoint::Create(0.0f, 0.0f, _retval);
+  return NS_NewSVGPoint(_retval);
 }
 
 /* nsIDOMSVGMatrix createSVGMatrix (); */
 NS_IMETHODIMP
 nsSVGSVGElement::CreateSVGMatrix(nsIDOMSVGMatrix **_retval)
 {
-  return nsSVGMatrix::Create(_retval);
+  return NS_NewSVGMatrix(_retval);
 }
 
 /* nsIDOMSVGRect createSVGRect (); */
@@ -869,8 +869,8 @@ nsSVGSVGElement::GetViewboxToViewportTransform(nsIDOMSVGMatrix **_retval)
     printf("                            [b d f] = [   0,  %f, %f]\n", d, f);
 #endif
     
-    nsSVGMatrix::Create(getter_AddRefs(mViewBoxToViewportTransform),
-                                       a, 0.0f, 0.0f, d, e, f);
+    NS_NewSVGMatrix(getter_AddRefs(mViewBoxToViewportTransform),
+                    a, 0.0f, 0.0f, d, e, f);
   }
 
   *_retval = mViewBoxToViewportTransform;
@@ -993,7 +993,7 @@ nsSVGSVGElement::GetCTM(nsIDOMSVGMatrix **_retval)
   if (!CTM) {
     // We either didn't find an SVG parent, or our parent failed in
     // giving us a CTM. In either case:
-    nsSVGMatrix::Create(getter_AddRefs(CTM));
+    NS_NewSVGMatrix(getter_AddRefs(CTM));
   }
   
   // XXX do we have to append our viewboxToViewport  transformation?
@@ -1080,7 +1080,7 @@ nsSVGSVGElement::GetScreenCTM(nsIDOMSVGMatrix **_retval)
     // giving us a CTM.
     // In either case, we'll just assume that we are the outermost element:
     nsCOMPtr<nsIDOMSVGMatrix> matrix;
-    nsSVGMatrix::Create(getter_AddRefs(matrix));
+    NS_NewSVGMatrix(getter_AddRefs(matrix));
     PRInt32 x, y;
     GetScreenPosition(x, y);
     matrix->Translate((float)x, (float)y, getter_AddRefs(screenCTM));

@@ -133,6 +133,9 @@ EXPORTS =  			\
 	nsSVGCoordCtxProvider.h    \
 	nsSVGCoordCtx.h            \
 	nsSVGNumber.h              \
+	nsSVGRect.h                \
+	nsSVGPoint.h               \
+	nsSVGMatrix.h              \
 	$(NULL)
 
 
