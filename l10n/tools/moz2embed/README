@@ -51,7 +51,10 @@
 #      c. look at the list of differed files to see they do need localization. 
 #      d. update the template, "jar.mn-ab-CD", to reflect what files can be 
 #         copied from "embed_jar/" into the "embed_jar-de-FG/" and what files 
-#         to be leveraged from "de-FG_jar/"
+#         to be leveraged from "de-FG_jar/". For the latter, update 
+#         leverage.sh accordingly to leverage files changed since de-FG.jar 
+#         was generated.
+#         
 #   6. Run the main script, "make-l10n-jar.sh", to leverage translations from the 
 #      language packs of existing localized Netscape 7.0 client.
 #

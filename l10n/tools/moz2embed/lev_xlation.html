@@ -1,5 +1,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<!-- ***** BEGIN LICENSE BLOCK *****
+<html>
+<head>
+ <!-- ***** BEGIN LICENSE BLOCK *****
    - Version: MPL 1.1/GPL 2.0/LGPL 2.1
    -
    - The contents of this file are subject to the Mozilla Public License Version
@@ -35,143 +37,151 @@
    - the terms of any one of the MPL, the GPL or the LGPL.
    -
    - ***** END LICENSE BLOCK ***** -->
-<html>
-<head>
   <title>How to create a localized embed.jar from existing translation</title>
-                    
+                                  
   <meta http-equiv="content-type"
  content="text/html; charset=ISO-8859-1">
-           
+                   
   <meta name="author" content="Tao Cheng">
 </head>
   <body>
-     
+         
 <div align="center"><big><big><b>How to create a localized embed.jar from 
- existing translation</b></big></big><br>
-    </div>
-       
+  existing translation</b></big></big><br>
+      </div>
+           
 <h4><br>
-    </h4>
-       
+      </h4>
+           
 <h4>History</h4>
- 
+     
 <ul>
+     <li>2002-08-02: refer to <a href="README">README</a> for updated procedure.<br>
+   </li>
    <li>2002-06-25: added note of <a href="#make-jars">partial automation</a><br>
-   </li>
-   <li>2002-06-24: 1 st version<br>
-   </li>
- 
-</ul>
- 
-<h4>Assumption<br>
-   </h4>
-    You have a pair of localized browser's jar files in Japanese, ja-JP.jar 
- and ja-win.jar, based off the N7.0 PR1 (2002-05-12) build. You would like 
- to create an embed.jar of the same day from it. For T-Bird, you need ja-mac.jar
-  instead of ja-win.jar.<br>
-       
-<h4>What you need</h4>
-    All the following jar files from the same day (2002-05-12):<br>
-       
-<ul>
-     <li>en-US.jar and en-win.jar from the English US build</li>
-     <li>embed.jar and installed-chrome.txt from the embedding build off
-2002-05-12's  mozilla pull.<br>
-      </li>
+     </li>
+     <li>2002-06-24: 1 st version<br>
+     </li>
      
 </ul>
-       
+     
+<h4>Assumption<br>
+     </h4>
+      You have a pair of localized browser's jar files in Japanese, ja-JP.jar 
+  and ja-win.jar, based off the N7.0 PR1 (2002-05-12) build. You would like 
+  to create an embed.jar of the same day from it. For T-Bird, you need ja-mac.jar
+   instead of ja-win.jar.<br>
+           
+<h4>What you need</h4>
+      All the following jar files from the same day (2002-05-12):<br>
+           
+<ul>
+       <li>en-US.jar and en-win.jar from the English US build</li>
+       <li>embed.jar and installed-chrome.txt from the embedding build off
+ 2002-05-12's  mozilla pull.<br>
+        </li>
+         
+</ul>
+           
 <h4>Procedure (I use unix cmd; current working directory is <font
  color="#3333ff">workspace</font>/)</h4>
-    Find out what's the difference between the English embed.jar and browser
-  jar files, en-US.jar and en-win.jar. Expand embed.jar into embed_jar folder
-  and en-US_jar.<br>
-    <br>
-    1. Find out what files are different first. Jar files are zip archives<br>
-       
+<u><i>Option 1</i></u>: read README for more automated process.<br>
+<br>
+<u><i>Option 2</i></u>: less automated approach<br>
+<br>
+Find out what's the difference between the English embed.jar and browser
+   jar files, en-US.jar and en-win.jar. Expand embed.jar into embed_jar folder
+   and en-US_jar.<br>
+      <br>
+      1. Find out what files are different first. Jar files are zip archives<br>
+           
 <ul>
-     <li><font color="#3333ff">workspace</font> &gt; unzip embed.jar -d <font
- color="#3333ff">embed_jar</font></li>
-     <li><font color="#3333ff">workspace </font>&gt; unzip en-US.jar -d <font
+       <li><font color="#3333ff">workspace</font> &gt; unzip embed.jar -d 
+    <font color="#3333ff">embed_jar</font></li>
+       <li><font color="#3333ff">workspace </font>&gt; unzip en-US.jar -d 
+    <font color="#3333ff">en-US_jar</font></li>
+       <li><font color="#3333ff">workspace</font> &gt; unzip en-win.jar -d&nbsp;<font
  color="#3333ff">en-US_jar</font></li>
-     <li><font color="#3333ff">workspace</font> &gt; unzip en-win.jar -d&nbsp;<font
- color="#3333ff">en-US_jar</font></li>
-     <li><font color="#3333ff">workspace</font> &gt; unzip ja-JP.jar -d <font
+       <li><font color="#3333ff">workspace</font> &gt; unzip ja-JP.jar -d 
+    <font color="#3333ff">ja-JP_jar</font></li>
+       <li><font color="#3333ff">workspace</font> &gt; unzip ja-win.jar -d&nbsp;<font
  color="#3333ff">ja-JP_jar</font></li>
-     <li><font color="#3333ff">workspace</font> &gt; unzip ja-win.jar -d&nbsp;<font
- color="#3333ff">ja-JP_jar</font></li>
-     <li><font color="#3333ff">workspace</font> &gt; diff --brief&nbsp;<font
+       <li><font color="#3333ff">workspace</font> &gt; diff --brief&nbsp;<font
  color="#3333ff">embed_jar</font>/locale&nbsp;<font color="#3333ff">en-US_jar</font>/locale 
- &gt; locDiff.txt</li>
-     
+  &gt; locDiff.txt</li>
+         
 </ul>
-    You will find some files exist in <font color="#3333ff">embed_jar </font>only 
- and the others exist in <font color="#3333ff">en-US_jar </font>only.<br>
-    <br>
-    2. For the files are different, find out if they need translation at
-all<br>
-    <br>
-    There should be only a few files are different. Let me name those files, 
- "<b>en_diff</b>". The rest of exactly the same. Let me call them "<b>en_same</b>". 
- For PR1, I found only 5 files in "<b>en_diff</b>";&nbsp;  four of them do 
- not need translation. I only needed to manually edit navigator.properties 
-  to copy/paste localized resources from ja-JP directory. To automate this
-  process, you can write a small app or perl script to replace resource values
-  in the English version with those from the localized version.<br>
-    <br>
-    3. Prepare the files/directory for localized embed.jar<br>
-    <br>
-    Copy skin and content files first<br>
-       
+      You will find some files exist in <font color="#3333ff">embed_jar </font>only 
+  and the others exist in <font color="#3333ff">en-US_jar </font>only.<br>
+      <br>
+      2. For the files are different, find out if they need translation at
+ all<br>
+      <br>
+      There should be only a few files are different. Let me name those files, 
+  "<b>en_diff</b>". The rest of exactly the same. Let me call them "<b>en_same</b>". 
+  For PR1, I found only 5 files in "<b>en_diff</b>";&nbsp;  four of them do
+  not need translation. I only needed to manually edit navigator.properties 
+   to copy/paste localized resources from ja-JP directory. To automate this
+   process, you can write a small app or perl script to replace resource
+values    in the English version with those from the localized version.<br>
+      <br>
+      3. Prepare the files/directory for localized embed.jar<br>
+      <br>
+      Copy skin and content files first<br>
+           
 <ul>
-     <li><font color="#3333ff">workspace</font> &gt; mkdir <font
+       <li><font color="#3333ff">workspace</font> &gt; mkdir <font
  color="#3333ff">embed-ja-JP</font></li>
-     <li><font color="#3333ff">workspace</font> &gt; cp <font
+       <li><font color="#3333ff">workspace</font> &gt; cp <font
  color="#3333ff">embed_jar</font>/{skin,content} <font color="#3333ff">embed-ja-JP</font></li>
-     
+         
 </ul>
-    Then<br>
-       
+      Then<br>
+           
 <ul>
-     <li>copy Japanese version of "<b>en_same</b>" from <font
+       <li>copy Japanese version of "<b>en_same</b>" from <font
  color="#3333ff">ja-JP_jar</font> into <font color="#3333ff">embed-ja-JP</font></li>
-     <li>copy "<b>en_diff</b>" from&nbsp;<font color="#3333ff">embed_jar</font>/locale 
- into <font color="#3333ff">embed-ja-JP/</font>locale</li>
-     
+       <li>copy "<b>en_diff</b>" from&nbsp;<font color="#3333ff">embed_jar</font>/locale 
+  into <font color="#3333ff">embed-ja-JP/</font>locale</li>
+         
 </ul>
- <a name="make-jars"></a>Note that for this last step, you can automate it 
-with make-jars.pl (one of Mozilla's build tools) &amp; <a href="jar.mn">jar.mn</a><br>
- 
+   <a name="make-jars"></a>Note that for this last step, you can automate 
+it  with make-jars.pl (one of Mozilla's build tools) &amp; <a
+ href="jar.mn">jar.mn</a><br>
+     
 <ul>
-   <li><font color="#3333ff">workspace</font> &gt; make-jars.pl -s <font
+     <li><font color="#3333ff">workspace</font> &gt; make-jars.pl -s <font
  color="#3333ff">ja-JP_jar</font> &lt; jar.mn</li>
-   <li><font color="#3333ff">workspace</font> &gt; unzip embed.jar -d <font
+     <li><font color="#3333ff">workspace</font> &gt; unzip embed.jar -d <font
  color="#3333ff">embed-ja-JP</font></li>
-   <li><font color="#3333ff">workspace</font> &gt; rm embed.jar<br>
-   </li>
- 
-</ul>
-    4. In <font color="#3333ff">embed-ja-JP/</font>locale, open "navigator.properties" 
- to replace resource values from localized resources in "navigator.properties" 
- in the&nbsp; <font color="#3333ff">ja-JP_jar</font> directory. To automate 
- this process, you can write a small app or perl script.<br>
-    <br>
-    5. Repackage them with zip    
-<ul>
-     <li><font color="#3333ff">workspace</font> &gt; cd <font
- color="#3333ff">embed-ja-JP</font>/</li>
-     <li><font color="#3333ff">workspace</font> &gt; zip embed.jar -r content 
- skin locale</li>
+     <li><font color="#3333ff">workspace</font> &gt; rm embed.jar<br>
+     </li>
      
 </ul>
-    6. Replace all "en-US" strings in installed-chrome.txt with the new language 
- code, "ja-JP". You are done!<br>
-    <br>
-       
+      4. In <font color="#3333ff">embed-ja-JP/</font>locale, open "navigator.properties" 
+  to replace resource values from localized resources in "navigator.properties" 
+  in the&nbsp; <font color="#3333ff">ja-JP_jar</font> directory. To automate 
+  this process, you can write a small app or perl script.<br>
+      <br>
+      5. Repackage them with zip      
+<ul>
+       <li><font color="#3333ff">workspace</font> &gt; cd <font
+ color="#3333ff">embed-ja-JP</font>/</li>
+       <li><font color="#3333ff">workspace</font> &gt; zip embed.jar -r content 
+  skin locale</li>
+         
+</ul>
+      6. Replace all "en-US" strings in installed-chrome.txt with the new 
+language   code, "ja-JP". You are done!<br>
+      <br>
+           
 <h4>Questions</h4>
-   Feel free to <a href="mailto:tao@netscape.com?subject=Q:%20embed.jar">contact 
- me</a> for questions.<br>
-   <br>
+     Feel free to <a
+ href="mailto:tao@netscape.com?subject=Q:%20embed.jar">contact   me</a> for 
+questions.<br>
+     <br>
+     <br>
+    <br>
    <br>
   <br>
  <br>
