@@ -69,6 +69,7 @@ CPPSRCS		= \
 		nsMsgHeaderParser.cpp \
 		nsStreamConverter.cpp \
 		mimedrft.cpp	\
+		nsMimeHeaders.cpp \
 		$(NULL)
 
 EXPORTS		= \
