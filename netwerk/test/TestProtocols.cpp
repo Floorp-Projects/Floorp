@@ -105,7 +105,7 @@ static PRBool gAskUserForInput = PR_FALSE;
 static PRBool gResume = PR_FALSE;
 static PRUint64 gStartAt = 0;
 
-static const char* gEntityID = NULL;
+static const char* gEntityID;
 
 //-----------------------------------------------------------------------------
 // Set proxy preferences for testing
@@ -476,7 +476,7 @@ InputTestConsumer::OnDataAvailable(nsIRequest *request,
 
 PR_STATIC_CALLBACK(void) DecrementDestroyHandler(PLEvent *self) 
 {
-    PR_DELETE(self);
+    PR_DELETE(((void*)self));
 }
 
 
