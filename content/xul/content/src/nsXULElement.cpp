@@ -88,6 +88,7 @@
 #include "nsXULTreeElement.h"
 #include "rdfutil.h"
 #include "prlog.h"
+#include "rdf.h"
 
 // The XUL interfaces implemented by the RDF content node.
 #include "nsIDOMXULElement.h"

@@ -52,7 +52,7 @@ public:
   NS_IMETHOD Clear(void);
 
   // nsIFolder methods:
-  NS_IMETHOD GetURI(char* *name) { return nsRDFResource::GetValue((const char**)&name); }
+  NS_IMETHOD GetURI(char* *name) { return nsRDFResource::GetValue(name); }
   NS_IMETHOD GetName(char **name);
   NS_IMETHOD SetName(char *name);
   NS_IMETHOD GetChildNamed(const char *name, nsISupports* *result);

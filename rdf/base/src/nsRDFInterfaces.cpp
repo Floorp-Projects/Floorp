@@ -1,29 +1,11 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM ../../../../rdf/base/idl/nsRDFInterfaces.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM nsRDFInterfaces.idl
  */
 #include "jsapi.h"
 #include "nsRDFInterfaces.h"
 
 static char XXXnsresult2string_fmt[] = "XPCOM error %#x";
 #define XXXnsresult2string(res) XXXnsresult2string_fmt, res
-
-/* void Init (in string uri); */
-static JSBool
-nsIRDFNode_Init(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIRDFNode *priv = (nsIRDFNode *)JS_GetPrivate(cx, obj);
-  if (!priv)
-    return JS_TRUE;
-  char *uri;
-  if (!JS_ConvertArguments(cx, argc, argv, "s", &uri))
-    return JS_FALSE;
-  nsresult rv = priv->Init(uri);
-  if (NS_FAILED(rv)) {
-    JS_ReportError(cx, XXXnsresult2string(rv));
-    return JS_FALSE;
-  }
-  return JS_TRUE;
-}
 
 /* boolean EqualsNode (in nsIRDFNode aNode); */
 static JSBool
@@ -46,7 +28,6 @@ nsIRDFNode_EqualsNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 }
 
 static JSFunctionSpec nsIRDFNode_funcs[] = {
-  {"Init", nsIRDFNode_Init, 1},
   {"EqualsNode", nsIRDFNode_EqualsNode, 1},
   {0}
 };
@@ -112,6 +93,24 @@ nsIRDFNode::GetJSObject(JSContext *cx, nsIRDFNode *priv)
 }
 #endif /* XPIDL_JS_STUBS */
 
+/* void Init (in string uri); */
+static JSBool
+nsIRDFResource_Init(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIRDFResource *priv = (nsIRDFResource *)JS_GetPrivate(cx, obj);
+  if (!priv)
+    return JS_TRUE;
+  const char *uri;
+  if (!JS_ConvertArguments(cx, argc, argv, "s", &uri))
+    return JS_FALSE;
+  nsresult rv = priv->Init(uri);
+  if (NS_FAILED(rv)) {
+    JS_ReportError(cx, XXXnsresult2string(rv));
+    return JS_FALSE;
+  }
+  return JS_TRUE;
+}
+
 /* boolean EqualsResource (in nsIRDFResource aResource); */
 static JSBool
 nsIRDFResource_EqualsResource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
@@ -139,7 +138,7 @@ nsIRDFResource_EqualsString(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
   nsIRDFResource *priv = (nsIRDFResource *)JS_GetPrivate(cx, obj);
   if (!priv)
     return JS_TRUE;
-  char *aURI;
+  const char *aURI;
   if (!JS_ConvertArguments(cx, argc, argv, "s", &aURI))
     return JS_FALSE;
   PRBool retval;
@@ -153,6 +152,7 @@ nsIRDFResource_EqualsString(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
 }
 
 static JSFunctionSpec nsIRDFResource_funcs[] = {
+  {"Init", nsIRDFResource_Init, 1},
   {"EqualsResource", nsIRDFResource_EqualsResource, 1},
   {"EqualsString", nsIRDFResource_EqualsString, 1},
   {0}
@@ -251,18 +251,18 @@ nsIRDFResource::GetJSObject(JSContext *cx, nsIRDFResource *priv)
 }
 #endif /* XPIDL_JS_STUBS */
 
-/* boolean EqualsLiteral (in nsIRDFLiteral literal); */
+/* boolean EqualsLiteral (in nsIRDFLiteral aLiteral); */
 static JSBool
 nsIRDFLiteral_EqualsLiteral(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIRDFLiteral *priv = (nsIRDFLiteral *)JS_GetPrivate(cx, obj);
   if (!priv)
     return JS_TRUE;
-  nsIRDFLiteral *literal;
-  if (!JS_ConvertArguments(cx, argc, argv, "o", &literal))
+  nsIRDFLiteral *aLiteral;
+  if (!JS_ConvertArguments(cx, argc, argv, "o", &aLiteral))
     return JS_FALSE;
   PRBool retval;
-  nsresult rv = priv->EqualsLiteral(literal, &retval);
+  nsresult rv = priv->EqualsLiteral(aLiteral, &retval);
   if (NS_FAILED(rv)) {
     JS_ReportError(cx, XXXnsresult2string(rv));
     return JS_FALSE;
@@ -356,6 +356,237 @@ nsIRDFLiteral::GetJSObject(JSContext *cx, nsIRDFLiteral *priv)
     return 0;
   if (JSVAL_IS_VOID(v)) {
     JSObject *obj = JS_NewObject(cx, &nsIRDFLiteral_class, 0, 0);
+    if (!obj || !JS_SetPrivate(cx, obj, priv))
+      return 0;
+    NS_ADDREF(priv);
+    v = PRIVATE_TO_JSVAL(obj);
+    if (!JS_DefineElement(cx, globj, (jsint)priv >> 1, v, 0, 0,
+                          JSPROP_READONLY | JSPROP_PERMANENT)) {
+      return 0;
+    }
+  }
+  return (JSObject *)JSVAL_TO_PRIVATE(v);
+}
+#endif /* XPIDL_JS_STUBS */
+
+/* boolean EqualsDate (in nsIRDFDate aDate); */
+static JSBool
+nsIRDFDate_EqualsDate(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIRDFDate *priv = (nsIRDFDate *)JS_GetPrivate(cx, obj);
+  if (!priv)
+    return JS_TRUE;
+  nsIRDFDate *aDate;
+  if (!JS_ConvertArguments(cx, argc, argv, "o", &aDate))
+    return JS_FALSE;
+  PRBool retval;
+  nsresult rv = priv->EqualsDate(aDate, &retval);
+  if (NS_FAILED(rv)) {
+    JS_ReportError(cx, XXXnsresult2string(rv));
+    return JS_FALSE;
+  }
+  *rval = BOOLEAN_TO_JSVAL(retval);
+  return JS_TRUE;
+}
+
+static JSFunctionSpec nsIRDFDate_funcs[] = {
+  {"EqualsDate", nsIRDFDate_EqualsDate, 1},
+  {0}
+};
+
+static JSPropertySpec nsIRDFDate_props[] = {
+  {"Value", -1, JSPROP_READONLY},
+  {0}
+};
+
+static JSBool
+nsIRDFDate_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
+{
+  if (!JSVAL_IS_INT(id))
+    return JS_TRUE;
+  nsresult result;
+  nsIRDFDate *priv = (nsIRDFDate *)JS_GetPrivate(cx, obj);
+  if (!priv)
+    return JS_TRUE;
+  switch (JSVAL_TO_INT(id)) {
+   case -1:
+    PRTime Value;
+    result = priv->GetValue(&Value);
+    if (NS_FAILED(result))
+      goto bad;
+    *vp = JSVAL_NULL;
+    break;
+  }
+  return JS_TRUE;
+bad:
+  JS_ReportError(cx, XXXnsresult2string(result));
+  return JS_FALSE;
+}
+
+static void
+nsIRDFDate_Finalize(JSContext *cx, JSObject *obj)
+{
+  nsIRDFDate *priv = (nsIRDFDate *)JS_GetPrivate(cx, obj);
+  if (!priv)
+    return;
+  JSObject *globj = JS_GetGlobalObject(cx);
+  if (globj)
+    (void) JS_DeleteElement(cx, globj, (jsint)priv >> 1);
+  NS_RELEASE(priv);
+}
+
+static JSBool
+nsIRDFDate_ctor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  return JS_TRUE;
+}
+
+static JSClass nsIRDFDate_class = {
+  "nsIRDFDate",
+  JSCLASS_HAS_PRIVATE,
+  JS_PropertyStub, JS_PropertyStub, nsIRDFDate_GetProperty, JS_PropertyStub,
+  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, nsIRDFDate_Finalize
+};
+#ifdef XPIDL_JS_STUBS
+
+JSObject *
+nsIRDFDate::InitJSClass(JSContext *cx)
+{
+  JSObject *globj = JS_GetGlobalObject(cx);
+  if (!globj)
+    return 0;
+  JSObject *proto = JS_InitClass(cx, globj, 0, &nsIRDFDate_class, nsIRDFDate_ctor, 0,
+                                 nsIRDFDate_props, nsIRDFDate_funcs, 0, 0);
+  return proto;
+}
+
+JSObject *
+nsIRDFDate::GetJSObject(JSContext *cx, nsIRDFDate *priv)
+{
+  JSObject *globj = JS_GetGlobalObject(cx);
+  if (!globj)
+    return 0;
+  jsval v;
+  if (!JS_LookupElement(cx, globj, (jsint)priv >> 1, &v))
+    return 0;
+  if (JSVAL_IS_VOID(v)) {
+    JSObject *obj = JS_NewObject(cx, &nsIRDFDate_class, 0, 0);
+    if (!obj || !JS_SetPrivate(cx, obj, priv))
+      return 0;
+    NS_ADDREF(priv);
+    v = PRIVATE_TO_JSVAL(obj);
+    if (!JS_DefineElement(cx, globj, (jsint)priv >> 1, v, 0, 0,
+                          JSPROP_READONLY | JSPROP_PERMANENT)) {
+      return 0;
+    }
+  }
+  return (JSObject *)JSVAL_TO_PRIVATE(v);
+}
+#endif /* XPIDL_JS_STUBS */
+
+/* boolean EqualsInt (in nsIRDFInt aInt); */
+static JSBool
+nsIRDFInt_EqualsInt(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIRDFInt *priv = (nsIRDFInt *)JS_GetPrivate(cx, obj);
+  if (!priv)
+    return JS_TRUE;
+  nsIRDFInt *aInt;
+  if (!JS_ConvertArguments(cx, argc, argv, "o", &aInt))
+    return JS_FALSE;
+  PRBool retval;
+  nsresult rv = priv->EqualsInt(aInt, &retval);
+  if (NS_FAILED(rv)) {
+    JS_ReportError(cx, XXXnsresult2string(rv));
+    return JS_FALSE;
+  }
+  *rval = BOOLEAN_TO_JSVAL(retval);
+  return JS_TRUE;
+}
+
+static JSFunctionSpec nsIRDFInt_funcs[] = {
+  {"EqualsInt", nsIRDFInt_EqualsInt, 1},
+  {0}
+};
+
+static JSPropertySpec nsIRDFInt_props[] = {
+  {"Value", -1, JSPROP_READONLY},
+  {0}
+};
+
+static JSBool
+nsIRDFInt_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
+{
+  if (!JSVAL_IS_INT(id))
+    return JS_TRUE;
+  nsresult result;
+  nsIRDFInt *priv = (nsIRDFInt *)JS_GetPrivate(cx, obj);
+  if (!priv)
+    return JS_TRUE;
+  switch (JSVAL_TO_INT(id)) {
+   case -1:
+    PRInt32 Value;
+    result = priv->GetValue(&Value);
+    if (NS_FAILED(result))
+      goto bad;
+    if (!JS_NewNumberValue(cx, (jsdouble) Value, vp))
+      return JS_FALSE;
+    break;
+  }
+  return JS_TRUE;
+bad:
+  JS_ReportError(cx, XXXnsresult2string(result));
+  return JS_FALSE;
+}
+
+static void
+nsIRDFInt_Finalize(JSContext *cx, JSObject *obj)
+{
+  nsIRDFInt *priv = (nsIRDFInt *)JS_GetPrivate(cx, obj);
+  if (!priv)
+    return;
+  JSObject *globj = JS_GetGlobalObject(cx);
+  if (globj)
+    (void) JS_DeleteElement(cx, globj, (jsint)priv >> 1);
+  NS_RELEASE(priv);
+}
+
+static JSBool
+nsIRDFInt_ctor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  return JS_TRUE;
+}
+
+static JSClass nsIRDFInt_class = {
+  "nsIRDFInt",
+  JSCLASS_HAS_PRIVATE,
+  JS_PropertyStub, JS_PropertyStub, nsIRDFInt_GetProperty, JS_PropertyStub,
+  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, nsIRDFInt_Finalize
+};
+#ifdef XPIDL_JS_STUBS
+
+JSObject *
+nsIRDFInt::InitJSClass(JSContext *cx)
+{
+  JSObject *globj = JS_GetGlobalObject(cx);
+  if (!globj)
+    return 0;
+  JSObject *proto = JS_InitClass(cx, globj, 0, &nsIRDFInt_class, nsIRDFInt_ctor, 0,
+                                 nsIRDFInt_props, nsIRDFInt_funcs, 0, 0);
+  return proto;
+}
+
+JSObject *
+nsIRDFInt::GetJSObject(JSContext *cx, nsIRDFInt *priv)
+{
+  JSObject *globj = JS_GetGlobalObject(cx);
+  if (!globj)
+    return 0;
+  jsval v;
+  if (!JS_LookupElement(cx, globj, (jsint)priv >> 1, &v))
+    return 0;
+  if (JSVAL_IS_VOID(v)) {
+    JSObject *obj = JS_NewObject(cx, &nsIRDFInt_class, 0, 0);
     if (!obj || !JS_SetPrivate(cx, obj, priv))
       return 0;
     NS_ADDREF(priv);
@@ -1013,7 +1244,7 @@ nsIRDFDataSource_Init(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
   nsIRDFDataSource *priv = (nsIRDFDataSource *)JS_GetPrivate(cx, obj);
   if (!priv)
     return JS_TRUE;
-  char *uri;
+  const char *uri;
   if (!JS_ConvertArguments(cx, argc, argv, "s", &uri))
     return JS_FALSE;
   nsresult rv = priv->Init(uri);
@@ -1295,19 +1526,41 @@ nsIRDFDataSource_Flush(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
   return JS_TRUE;
 }
 
-/* boolean IsCommandEnabled (in string aCommand, in nsIRDFResource aCommandTarget); */
+/* nsIEnumerator GetAllCommands (in nsIRDFResource aSource); */
+static JSBool
+nsIRDFDataSource_GetAllCommands(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIRDFDataSource *priv = (nsIRDFDataSource *)JS_GetPrivate(cx, obj);
+  if (!priv)
+    return JS_TRUE;
+  nsIRDFResource *aSource;
+  if (!JS_ConvertArguments(cx, argc, argv, "o", &aSource))
+    return JS_FALSE;
+  nsIEnumerator * retval;
+  nsresult rv = priv->GetAllCommands(aSource, &retval);
+  if (NS_FAILED(rv)) {
+    JS_ReportError(cx, XXXnsresult2string(rv));
+    return JS_FALSE;
+  }
+  *rval = OBJECT_TO_JSVAL(nsIEnumerator::GetJSObject(cx, retval));
+  NS_RELEASE(retval);
+  return JS_TRUE;
+}
+
+/* boolean IsCommandEnabled (in nsISupportsArray aSources, in nsIRDFResource aCommand, in nsISupportsArray aArguments); */
 static JSBool
 nsIRDFDataSource_IsCommandEnabled(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIRDFDataSource *priv = (nsIRDFDataSource *)JS_GetPrivate(cx, obj);
   if (!priv)
     return JS_TRUE;
-  char *aCommand;
-  nsIRDFResource *aCommandTarget;
-  if (!JS_ConvertArguments(cx, argc, argv, "so", &aCommand, &aCommandTarget))
+  nsISupportsArray *aSources;
+  nsIRDFResource *aCommand;
+  nsISupportsArray *aArguments;
+  if (!JS_ConvertArguments(cx, argc, argv, "ooo", &aSources, &aCommand, &aArguments))
     return JS_FALSE;
   PRBool retval;
-  nsresult rv = priv->IsCommandEnabled(aCommand, aCommandTarget, &retval);
+  nsresult rv = priv->IsCommandEnabled(aSources, aCommand, aArguments, &retval);
   if (NS_FAILED(rv)) {
     JS_ReportError(cx, XXXnsresult2string(rv));
     return JS_FALSE;
@@ -1316,18 +1569,19 @@ nsIRDFDataSource_IsCommandEnabled(JSContext *cx, JSObject *obj, uintN argc, jsva
   return JS_TRUE;
 }
 
-/* void DoCommand (in string aCommand, in nsIRDFResource aCommandTarget); */
+/* void DoCommand (in nsISupportsArray aSources, in nsIRDFResource aCommand, in nsISupportsArray aArguments); */
 static JSBool
 nsIRDFDataSource_DoCommand(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIRDFDataSource *priv = (nsIRDFDataSource *)JS_GetPrivate(cx, obj);
   if (!priv)
     return JS_TRUE;
-  char *aCommand;
-  nsIRDFResource *aCommandTarget;
-  if (!JS_ConvertArguments(cx, argc, argv, "so", &aCommand, &aCommandTarget))
+  nsISupportsArray *aSources;
+  nsIRDFResource *aCommand;
+  nsISupportsArray *aArguments;
+  if (!JS_ConvertArguments(cx, argc, argv, "ooo", &aSources, &aCommand, &aArguments))
     return JS_FALSE;
-  nsresult rv = priv->DoCommand(aCommand, aCommandTarget);
+  nsresult rv = priv->DoCommand(aSources, aCommand, aArguments);
   if (NS_FAILED(rv)) {
     JS_ReportError(cx, XXXnsresult2string(rv));
     return JS_FALSE;
@@ -1350,8 +1604,9 @@ static JSFunctionSpec nsIRDFDataSource_funcs[] = {
   {"ArcLabelsOut", nsIRDFDataSource_ArcLabelsOut, 1},
   {"GetAllResources", nsIRDFDataSource_GetAllResources, 0},
   {"Flush", nsIRDFDataSource_Flush, 0},
-  {"IsCommandEnabled", nsIRDFDataSource_IsCommandEnabled, 2},
-  {"DoCommand", nsIRDFDataSource_DoCommand, 2},
+  {"GetAllCommands", nsIRDFDataSource_GetAllCommands, 1},
+  {"IsCommandEnabled", nsIRDFDataSource_IsCommandEnabled, 3},
+  {"DoCommand", nsIRDFDataSource_DoCommand, 3},
   {0}
 };
 
@@ -1558,7 +1813,7 @@ nsIRDFService_GetResource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   nsIRDFService *priv = (nsIRDFService *)JS_GetPrivate(cx, obj);
   if (!priv)
     return JS_TRUE;
-  char *aURI;
+  const char *aURI;
   if (!JS_ConvertArguments(cx, argc, argv, "s", &aURI))
     return JS_FALSE;
   nsIRDFResource * retval;
@@ -1579,7 +1834,7 @@ nsIRDFService_GetUnicodeResource(JSContext *cx, JSObject *obj, uintN argc, jsval
   nsIRDFService *priv = (nsIRDFService *)JS_GetPrivate(cx, obj);
   if (!priv)
     return JS_TRUE;
-  PRUnichar *aURI;
+  const PRUnichar *aURI;
   if (!JS_ConvertArguments(cx, argc, argv, "W", &aURI))
     return JS_FALSE;
   nsIRDFResource * retval;
@@ -1600,7 +1855,7 @@ nsIRDFService_GetLiteral(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
   nsIRDFService *priv = (nsIRDFService *)JS_GetPrivate(cx, obj);
   if (!priv)
     return JS_TRUE;
-  PRUnichar *aValue;
+  const PRUnichar *aValue;
   if (!JS_ConvertArguments(cx, argc, argv, "W", &aValue))
     return JS_FALSE;
   nsIRDFLiteral * retval;
@@ -1610,6 +1865,48 @@ nsIRDFService_GetLiteral(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
     return JS_FALSE;
   }
   *rval = OBJECT_TO_JSVAL(nsIRDFLiteral::GetJSObject(cx, retval));
+  NS_RELEASE(retval);
+  return JS_TRUE;
+}
+
+/* nsIRDFDate GetDateLiteral (in time aValue); */
+static JSBool
+nsIRDFService_GetDateLiteral(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIRDFService *priv = (nsIRDFService *)JS_GetPrivate(cx, obj);
+  if (!priv)
+    return JS_TRUE;
+  PRTime aValue;
+  if (!JS_ConvertArguments(cx, argc, argv, "o", &aValue))
+    return JS_FALSE;
+  nsIRDFDate * retval;
+  nsresult rv = priv->GetDateLiteral(aValue, &retval);
+  if (NS_FAILED(rv)) {
+    JS_ReportError(cx, XXXnsresult2string(rv));
+    return JS_FALSE;
+  }
+  *rval = OBJECT_TO_JSVAL(nsIRDFDate::GetJSObject(cx, retval));
+  NS_RELEASE(retval);
+  return JS_TRUE;
+}
+
+/* nsIRDFInt GetIntLiteral (in long aValue); */
+static JSBool
+nsIRDFService_GetIntLiteral(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIRDFService *priv = (nsIRDFService *)JS_GetPrivate(cx, obj);
+  if (!priv)
+    return JS_TRUE;
+  PRInt32 aValue;
+  if (!JS_ConvertArguments(cx, argc, argv, "i", &aValue))
+    return JS_FALSE;
+  nsIRDFInt * retval;
+  nsresult rv = priv->GetIntLiteral(aValue, &retval);
+  if (NS_FAILED(rv)) {
+    JS_ReportError(cx, XXXnsresult2string(rv));
+    return JS_FALSE;
+  }
+  *rval = OBJECT_TO_JSVAL(nsIRDFInt::GetJSObject(cx, retval));
   NS_RELEASE(retval);
   return JS_TRUE;
 }
@@ -1695,7 +1992,7 @@ nsIRDFService_GetDataSource(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
   nsIRDFService *priv = (nsIRDFService *)JS_GetPrivate(cx, obj);
   if (!priv)
     return JS_TRUE;
-  char *aURI;
+  const char *aURI;
   if (!JS_ConvertArguments(cx, argc, argv, "s", &aURI))
     return JS_FALSE;
   nsIRDFDataSource * retval;
@@ -1713,6 +2010,8 @@ static JSFunctionSpec nsIRDFService_funcs[] = {
   {"GetResource", nsIRDFService_GetResource, 1},
   {"GetUnicodeResource", nsIRDFService_GetUnicodeResource, 1},
   {"GetLiteral", nsIRDFService_GetLiteral, 1},
+  {"GetDateLiteral", nsIRDFService_GetDateLiteral, 1},
+  {"GetIntLiteral", nsIRDFService_GetIntLiteral, 1},
   {"RegisterResource", nsIRDFService_RegisterResource, 2},
   {"UnregisterResource", nsIRDFService_UnregisterResource, 1},
   {"RegisterDataSource", nsIRDFService_RegisterDataSource, 2},

@@ -44,6 +44,7 @@
 #include "nsRDFCID.h"
 #include "nsRDFContentUtils.h"
 #include "nsString.h"
+#include "nsXPIDLString.h"
 #include "rdf.h"
 #include "rdfutil.h"
 
@@ -247,7 +248,7 @@ RDFMenuBuilderImpl::AddWidgetItem(nsIContent* aElement,
 
     while (NS_SUCCEEDED(rv = arcs->Advance())) {
         nsCOMPtr<nsIRDFResource> property;
-        if (NS_FAILED(rv = arcs->GetPredicate(getter_AddRefs(property)))) {
+        if (NS_FAILED(rv = arcs->GetLabel(getter_AddRefs(property)))) {
             NS_ERROR("unable to get cursor value");
             return rv;
         }
@@ -274,13 +275,13 @@ RDFMenuBuilderImpl::AddWidgetItem(nsIContent* aElement,
 
         nsAutoString s;
         if (NS_SUCCEEDED(rv = value->QueryInterface(kIRDFResourceIID, getter_AddRefs(resource)))) {
-            const char* uri;
-            resource->GetValue(&uri);
+            nsXPIDLCString uri;
+            resource->GetValue( getter_Copies(uri) );
             s = uri;
         }
         else if (NS_SUCCEEDED(rv = value->QueryInterface(kIRDFLiteralIID, getter_AddRefs(literal)))) {
-            const PRUnichar* p;
-            literal->GetValue(&p);
+            nsXPIDLString p;
+            literal->GetValue( getter_Copies(p) );
             s = p;
         }
         else {

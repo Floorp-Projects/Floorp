@@ -21,6 +21,11 @@
 
 #include "nsISupports.h"
 
+#if defined(XPIDL_JS_STUBS)
+struct JSObject;
+struct JSContext;
+#endif
+
 #define NS_IENUMERATOR_IID                           \
 { /* ad385286-cbc4-11d2-8cca-0060b0fc14a3 */         \
     0xad385286,                                      \
@@ -53,6 +58,18 @@ public:
    */
   NS_IMETHOD IsDone(void) = 0;
 
+#if defined(XPIDL_JS_STUBS)
+  // XXX Scriptability hack...
+  static NS_EXPORT_(JSObject*) InitJSClass(JSContext* cx) {
+    NS_NOTYETIMPLEMENTED("nsIEnumerator isn't XPIDL scriptable yet");
+    return 0;
+  }
+
+  static NS_EXPORT_(JSObject*) GetJSObject(JSContext* cx, nsIEnumerator* priv) {
+    NS_NOTYETIMPLEMENTED("nsIEnumerator isn't XPIDL scriptable yet");
+    return 0;
+  }
+#endif
 };
 
 #define NS_IBIDIRECTIONALENUMERATOR_IID              \

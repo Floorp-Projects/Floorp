@@ -21,6 +21,7 @@
 #include "nsIServiceManager.h"
 #include "nsIRDFService.h"
 #include "nsRDFCID.h"
+#include "nsXPIDLString.h"
 #include "prlog.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -86,23 +87,7 @@ nsRDFResource::QueryInterface(REFNSIID iid, void** result)
 // nsIRDFNode methods:
 
 NS_IMETHODIMP
-nsRDFResource::Init(const char* aURI)
-{
-    NS_PRECONDITION(aURI != nsnull, "null ptr");
-    if (! aURI)
-        return NS_ERROR_NULL_POINTER;
-
-    if (! (mURI = new char[PL_strlen(aURI) + 1]))
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    PL_strcpy(mURI, aURI);
-
-    // don't replace an existing resource with the same URI automatically
-    return gRDFService->RegisterResource(this, PR_TRUE);
-}
-
-NS_IMETHODIMP
-nsRDFResource::EqualsNode(nsIRDFNode* node, PRBool* result) const
+nsRDFResource::EqualsNode(nsIRDFNode* node, PRBool* result)
 {
     nsresult rv;
     nsIRDFResource* resource;
@@ -121,16 +106,35 @@ nsRDFResource::EqualsNode(nsIRDFNode* node, PRBool* result) const
 // nsIRDFResource methods:
 
 NS_IMETHODIMP
-nsRDFResource::GetValue(const char* *uri) const
+nsRDFResource::Init(const char* aURI)
 {
-    if (!uri)
+    NS_PRECONDITION(aURI != nsnull, "null ptr");
+    if (! aURI)
         return NS_ERROR_NULL_POINTER;
-    *uri = mURI;
-    return NS_OK;
+
+    if (! (mURI = new char[PL_strlen(aURI) + 1]))
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    PL_strcpy(mURI, aURI);
+
+    // don't replace an existing resource with the same URI automatically
+    return gRDFService->RegisterResource(this, PR_TRUE);
 }
 
 NS_IMETHODIMP
-nsRDFResource::EqualsResource(const nsIRDFResource* resource, PRBool* result) const
+nsRDFResource::GetValue(char* *uri)
+{
+    if (!uri)
+        return NS_ERROR_NULL_POINTER;
+    
+    if ((*uri = nsXPIDLCString::Copy(mURI)) == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    else
+        return NS_OK;
+}
+
+NS_IMETHODIMP
+nsRDFResource::EqualsResource(nsIRDFResource* resource, PRBool* result)
 {
     NS_PRECONDITION(resource != nsnull, "null ptr");
     NS_PRECONDITION(result != nsnull, "null ptr");
@@ -144,7 +148,7 @@ nsRDFResource::EqualsResource(const nsIRDFResource* resource, PRBool* result) co
 }
 
 NS_IMETHODIMP
-nsRDFResource::EqualsString(const char* uri, PRBool* result) const
+nsRDFResource::EqualsString(const char* uri, PRBool* result)
 {
     NS_PRECONDITION(uri != nsnull, "null ptr");
     NS_PRECONDITION(result != nsnull, "null ptr");

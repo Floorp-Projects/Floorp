@@ -39,14 +39,17 @@
 
 */
 
+#include "nsCOMPtr.h"
+#include "nsIComponentManager.h"
+#include "nsIEnumerator.h"
+#include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFCursor.h"
 #include "nsIRDFNode.h"
-#include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFObserver.h"
-#include "nsIComponentManager.h"
 #include "nsVoidArray.h"
-#include "nsCOMPtr.h"
-#include "nsIEnumerator.h"
+#include "nsXPIDLString.h"
+#include "rdf.h"
+
 #ifdef NS_DEBUG
 #include "prlog.h"
 #include "prprf.h"
@@ -81,7 +84,7 @@ public:
     // nsIRDFDataSource interface
     NS_IMETHOD Init(const char* uri);
 
-    NS_IMETHOD GetURI(const char* *uri) const;
+    NS_IMETHOD GetURI(char* *uri);
 
     NS_IMETHOD GetSource(nsIRDFResource* property,
                          nsIRDFNode* target,
@@ -137,7 +140,8 @@ public:
 
     NS_IMETHOD IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
                                 nsIRDFResource*   aCommand,
-                                nsISupportsArray/*<nsIRDFResource>*/* aArguments);
+                                nsISupportsArray/*<nsIRDFResource>*/* aArguments,
+                                PRBool* aResult);
 
     NS_IMETHOD DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
                          nsIRDFResource*   aCommand,
@@ -186,17 +190,17 @@ public:
                 mOutCursor->GetDataSource(aDataSource));
     }
 
-    NS_IMETHOD GetSubject(nsIRDFResource** aResource) {
-        return mOutCursor->GetSubject(aResource);
+    NS_IMETHOD GetSource(nsIRDFResource** aResource) {
+        return mOutCursor->GetSource(aResource);
     }
 
-    NS_IMETHOD GetObject(nsIRDFNode** aNode) {
-        return mInCursor->GetObject(aNode);
+    NS_IMETHOD GetTarget(nsIRDFNode** aNode) {
+        return mInCursor->GetTarget(aNode);
     }
 
-    NS_IMETHOD GetPredicate(nsIRDFResource** aPredicate) {     
-        return (mInCursor ? mInCursor->GetPredicate(aPredicate) : 
-                mOutCursor->GetPredicate(aPredicate));
+    NS_IMETHOD GetLabel(nsIRDFResource** aPredicate) {     
+        return (mInCursor ? mInCursor->GetLabel(aPredicate) : 
+                mOutCursor->GetLabel(aPredicate));
     }
 
     NS_IMETHOD GetValue(nsIRDFNode** aValue) {
@@ -347,16 +351,16 @@ public:
         return mCurrentCursor->GetDataSource(aDataSource);
     }
 
-    NS_IMETHOD GetSubject(nsIRDFResource** aResource) {
-        return mCurrentCursor->GetSubject(aResource);
+    NS_IMETHOD GetSource(nsIRDFResource** aResource) {
+        return mCurrentCursor->GetSource(aResource);
     }
 
-    NS_IMETHOD GetPredicate(nsIRDFResource** aPredicate) {     
-        return mCurrentCursor->GetPredicate(aPredicate);
+    NS_IMETHOD GetLabel(nsIRDFResource** aPredicate) {     
+        return mCurrentCursor->GetLabel(aPredicate);
     }
 
-    NS_IMETHOD GetObject(nsIRDFNode** aObject) {
-        nsresult rv = mCurrentCursor->GetObject(aObject);
+    NS_IMETHOD GetTarget(nsIRDFNode** aObject) {
+        nsresult rv = mCurrentCursor->GetTarget(aObject);
 #ifdef NS_DEBUG
         if (NS_SUCCEEDED(rv)) {
             Trace(mSource ? "GetTargets" : "GetSources", *aObject);
@@ -386,39 +390,40 @@ public:
             nsIRDFResource* subRes;
             nsIRDFResource* predRes;
             nsIRDFResource* valRes;
-            const char* dsName;
-            const char* subject;
-            const char* predicate;
-            char* value;
+            nsXPIDLCString dsName;
+            nsXPIDLCString subject;
+            nsXPIDLCString predicate;
+            nsXPIDLCString value;
+            char* valueStr;
             nsIRDFDataSource* ds;
 
             rv = GetDataSource(&ds);
             if (NS_FAILED(rv)) return;
-            rv = ds->GetURI(&dsName);
+            rv = ds->GetURI(getter_Copies(dsName));
             if (NS_FAILED(rv)) return;
-            rv = GetSubject(&subRes);
+            rv = GetSource(&subRes);
             if (NS_FAILED(rv)) return;
-            rv = subRes->GetValue(&subject);
+            rv = subRes->GetValue(getter_Copies(subject));
             if (NS_FAILED(rv)) return;
-            rv = GetPredicate(&predRes);
+            rv = GetLabel(&predRes);
             if (NS_FAILED(rv)) return;
-            rv = predRes->GetValue(&predicate);
+            rv = predRes->GetValue(getter_Copies(predicate));
             if (NS_FAILED(rv)) return;
             if (NS_SUCCEEDED(valueNode->QueryInterface(nsIRDFResource::GetIID(), (void**)&valRes))) {
-                rv = valRes->GetValue((const char**)&value);
+                rv = valRes->GetValue(getter_Copies(value));
                 if (NS_FAILED(rv)) return;
                 NS_RELEASE(valRes);
-                value = PR_smprintf("%s", value);   // freed below
+                valueStr = PR_smprintf("%s", (const char*) value);   // freed below
             }
             else {
-                value = PR_smprintf("<nsIRDFNode 0x%x>", valueNode);
+                valueStr = PR_smprintf("<nsIRDFNode 0x%x>", valueNode);
             }
-            if (value == nsnull) return;
+            if (valueStr == nsnull) return;
             printf("RDF %s: datasource=%s\n  subject: %s\n     pred: %s\n    value: %s\n",
-                   msg, dsName, subject, predicate, value);
+                   msg, (const char*) dsName, (const char*) subject, (const char*) predicate, valueStr);
             NS_RELEASE(predRes);
             NS_RELEASE(subRes);
-            PR_smprintf_free(value);
+            PR_smprintf_free(valueStr);
         }
     }
 #endif
@@ -507,8 +512,8 @@ DBGetSTCursor::Advance(void)
         while (NS_ERROR_RDF_CURSOR_EMPTY != result) {
             nsIRDFResource* src;
             nsIRDFNode*     trg;            
-            mCurrentCursor->GetSubject(&src);
-            mCurrentCursor->GetObject(&trg);
+            mCurrentCursor->GetSource(&src);
+            mCurrentCursor->GetTarget(&trg);
             if (!mCompositeDataSourceImpl->HasAssertionN(mCount-1, src, mLabel, trg, !mTruthValue)) {
                 return NS_OK;
             } else {
@@ -608,14 +613,14 @@ CompositeDataSourceImpl::QueryInterface(REFNSIID iid, void** result)
 NS_IMETHODIMP
 CompositeDataSourceImpl::Init(const char* uri)
 {
-    NS_NOTYETIMPLEMENTED("CompositeDataSourceImpl::Init");
+    NS_NOTREACHED("CompositeDataSourceImpl::Init");
     return NS_ERROR_UNEXPECTED; // XXX CompositeDataSourceImpl doesn't have a URI?
 }
 
 NS_IMETHODIMP
-CompositeDataSourceImpl::GetURI(const char* *uri) const
+CompositeDataSourceImpl::GetURI(char* *uri)
 {
-    NS_NOTYETIMPLEMENTED("CompositeDataSourceImpl::GetURI");
+    NS_NOTREACHED("CompositeDataSourceImpl::GetURI");
     return NS_ERROR_UNEXPECTED; // XXX CompositeDataSourceImpl doesn't have a URI?
 }
 
@@ -928,15 +933,23 @@ CompositeDataSourceImpl::GetAllCommands(nsIRDFResource* source,
 NS_IMETHODIMP
 CompositeDataSourceImpl::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
                                           nsIRDFResource*   aCommand,
-                                          nsISupportsArray/*<nsIRDFResource>*/* aArguments)
+                                          nsISupportsArray/*<nsIRDFResource>*/* aArguments,
+                                          PRBool* aResult)
 {
     nsresult rv;
     for (PRInt32 i = mDataSources.Count() - 1; i >= 0; --i) {
         nsIRDFDataSource* ds = NS_STATIC_CAST(nsIRDFDataSource*, mDataSources[i]);
 
-        rv = ds->IsCommandEnabled(aSources, aCommand, aArguments);
-        if (rv == NS_COMFALSE || NS_FAILED(rv)) return rv;
+        PRBool enabled;
+        rv = ds->IsCommandEnabled(aSources, aCommand, aArguments, &enabled);
+        if (NS_FAILED(rv)) return rv;
+
+        if (! enabled) {
+            *aResult = PR_FALSE;
+            return NS_OK;
+        }
     }
+    *aResult = PR_TRUE;
     return NS_OK;
 }
 

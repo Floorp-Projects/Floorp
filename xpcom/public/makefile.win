@@ -44,6 +44,7 @@ EXPORTS =                      \
         plvector.h             \
         nsXPComFactory.h       \
         nsXPComCIID.h          \
+        nsXPIDLString.h        \
         nsIEventQueueService.h \
         nsIAllocator.h         \
         nsIRegistry.h          \

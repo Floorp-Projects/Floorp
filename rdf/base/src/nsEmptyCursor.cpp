@@ -27,6 +27,7 @@
 
 #include "nscore.h"
 #include "nsIRDFCursor.h"
+#include "rdf.h"
 
 static NS_DEFINE_IID(kIRDFArcsInCursorIID,    NS_IRDFARCSINCURSOR_IID);
 static NS_DEFINE_IID(kIRDFArcsOutCursorIID,   NS_IRDFARCSOUTCURSOR_IID);
@@ -75,15 +76,15 @@ public:
         return NS_ERROR_UNEXPECTED;
     }
 
-    NS_IMETHOD GetSubject(nsIRDFResource** aResource) {
+    NS_IMETHOD GetSource(nsIRDFResource** aResource) {
         return NS_ERROR_UNEXPECTED;
     }
 
-    NS_IMETHOD GetPredicate(nsIRDFResource** aPredicate) {
+    NS_IMETHOD GetLabel(nsIRDFResource** aPredicate) {
         return NS_ERROR_UNEXPECTED;
     }
 
-    NS_IMETHOD GetObject(nsIRDFNode** aObject) {
+    NS_IMETHOD GetTarget(nsIRDFNode** aObject) {
         return NS_ERROR_UNEXPECTED;
     }
 
@@ -146,11 +147,11 @@ public:
         return NS_ERROR_UNEXPECTED;
     }
 
-    NS_IMETHOD GetSubject(nsIRDFResource** aResource) {
+    NS_IMETHOD GetSource(nsIRDFResource** aResource) {
         return NS_ERROR_UNEXPECTED;
     }
 
-    NS_IMETHOD GetPredicate(nsIRDFResource** aPredicate) {
+    NS_IMETHOD GetLabel(nsIRDFResource** aPredicate) {
         return NS_ERROR_UNEXPECTED;
     }
 
@@ -213,11 +214,11 @@ public:
         return NS_ERROR_UNEXPECTED;
     }
 
-    NS_IMETHOD GetPredicate(nsIRDFResource** aPredicate) {
+    NS_IMETHOD GetLabel(nsIRDFResource** aPredicate) {
         return NS_ERROR_UNEXPECTED;
     }
 
-    NS_IMETHOD GetObject(nsIRDFNode** aNode) {
+    NS_IMETHOD GetTarget(nsIRDFNode** aNode) {
         return NS_ERROR_UNEXPECTED;
     }
 

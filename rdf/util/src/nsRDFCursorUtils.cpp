@@ -88,21 +88,21 @@ NS_IMPL_ISUPPORTS_INHERITED(nsRDFArrayAssertionCursor,
                             nsIRDFAssertionCursor);
 
 NS_IMETHODIMP 
-nsRDFArrayAssertionCursor::GetSubject(nsIRDFResource* *aSubject)
+nsRDFArrayAssertionCursor::GetSource(nsIRDFResource* *aSubject)
 {
     *aSubject = mSubject;
     NS_ADDREF(mSubject);
     return NS_OK;
 }
 
-NS_IMETHODIMP nsRDFArrayAssertionCursor::GetPredicate(nsIRDFResource* *aPredicate)
+NS_IMETHODIMP nsRDFArrayAssertionCursor::GetLabel(nsIRDFResource* *aPredicate)
 {
     *aPredicate = mPredicate;
     NS_ADDREF(mPredicate);
     return NS_OK;
 }
 
-NS_IMETHODIMP nsRDFArrayAssertionCursor::GetObject(nsIRDFNode* *aObject)
+NS_IMETHODIMP nsRDFArrayAssertionCursor::GetTarget(nsIRDFNode* *aObject)
 {
     return nsRDFArrayCursor::GetValue(aObject);
 }
@@ -188,7 +188,7 @@ NS_IMETHODIMP nsRDFSingletonAssertionCursor::GetValue(nsIRDFNode** aValue)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsRDFSingletonAssertionCursor::GetSubject(nsIRDFResource* *aSubject)
+NS_IMETHODIMP nsRDFSingletonAssertionCursor::GetSource(nsIRDFResource* *aSubject)
 {
     if (mConsumed)
         return NS_ERROR_RDF_CURSOR_EMPTY;
@@ -202,7 +202,7 @@ NS_IMETHODIMP nsRDFSingletonAssertionCursor::GetSubject(nsIRDFResource* *aSubjec
     }
 }
 
-NS_IMETHODIMP nsRDFSingletonAssertionCursor::GetPredicate(nsIRDFResource* *aPredicate)
+NS_IMETHODIMP nsRDFSingletonAssertionCursor::GetLabel(nsIRDFResource* *aPredicate)
 {
     if (mConsumed)
         return NS_ERROR_RDF_CURSOR_EMPTY;
@@ -211,7 +211,7 @@ NS_IMETHODIMP nsRDFSingletonAssertionCursor::GetPredicate(nsIRDFResource* *aPred
     return NS_OK;
 }
 
-NS_IMETHODIMP nsRDFSingletonAssertionCursor::GetObject(nsIRDFNode* *aObject)
+NS_IMETHODIMP nsRDFSingletonAssertionCursor::GetTarget(nsIRDFNode* *aObject)
 {
     if (mConsumed)
         return NS_ERROR_RDF_CURSOR_EMPTY;
@@ -346,21 +346,21 @@ NS_IMPL_ISUPPORTS_INHERITED(nsRDFEnumeratorAssertionCursor,
                             nsIRDFAssertionCursor);
 
 NS_IMETHODIMP 
-nsRDFEnumeratorAssertionCursor::GetSubject(nsIRDFResource* *aSubject)
+nsRDFEnumeratorAssertionCursor::GetSource(nsIRDFResource* *aSubject)
 {
     *aSubject = mSubject;
     NS_ADDREF(mSubject);
     return NS_OK;
 }
 
-NS_IMETHODIMP nsRDFEnumeratorAssertionCursor::GetPredicate(nsIRDFResource* *aPredicate)
+NS_IMETHODIMP nsRDFEnumeratorAssertionCursor::GetLabel(nsIRDFResource* *aPredicate)
 {
     *aPredicate = mPredicate;
     NS_ADDREF(mPredicate);
     return NS_OK;
 }
 
-NS_IMETHODIMP nsRDFEnumeratorAssertionCursor::GetObject(nsIRDFNode* *aObject)
+NS_IMETHODIMP nsRDFEnumeratorAssertionCursor::GetTarget(nsIRDFNode* *aObject)
 {
     return nsRDFEnumeratorCursor::GetValue(aObject);
 }

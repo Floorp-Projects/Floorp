@@ -34,6 +34,7 @@ EXPORTS=\
         nsIRDFService.h                 \
         nsIRDFXMLDataSource.h           \
         nsIRDFXMLSource.h               \
+        nsRDFInterfaces.h               \
         rdf_qsort.h                     \
 	$(NULL)
 

@@ -47,6 +47,7 @@
 #include "nsIServiceManager.h"
 #include "nsRDFCID.h"
 #include "nsString.h"
+#include "nsXPIDLString.h"
 #include "prlog.h"
 #include "rdf.h"
 #include "rdfutil.h"
@@ -90,9 +91,9 @@ public:
     NS_IMETHOD Advance(void);
 
     NS_IMETHOD GetDataSource(nsIRDFDataSource** aDataSource);
-    NS_IMETHOD GetSubject(nsIRDFResource** aResource);
-    NS_IMETHOD GetPredicate(nsIRDFResource** aPredicate);
-    NS_IMETHOD GetObject(nsIRDFNode** aObject);
+    NS_IMETHOD GetSource(nsIRDFResource** aResource);
+    NS_IMETHOD GetLabel(nsIRDFResource** aPredicate);
+    NS_IMETHOD GetTarget(nsIRDFNode** aObject);
     NS_IMETHOD GetTruthValue(PRBool* aTruthValue);
     NS_IMETHOD GetValue(nsIRDFNode** aValue);
 };
@@ -172,7 +173,7 @@ ContainerCursorImpl::Advance(void)
 
     nsIRDFNode* nextNode        = nsnull;
     nsIRDFLiteral* nextVal      = nsnull;
-    const PRUnichar* p;
+    nsXPIDLString p;
     nsAutoString s;
     PRInt32 last;
     PRInt32 err;
@@ -186,7 +187,7 @@ ContainerCursorImpl::Advance(void)
     if (NS_FAILED(rv = nextNode->QueryInterface(kIRDFLiteralIID, (void**) &nextVal)))
         goto done;
 
-    if (NS_FAILED(rv = nextVal->GetValue(&p)))
+    if (NS_FAILED(rv = nextVal->GetValue(getter_Copies(p))))
         goto done;
 
     s = p;
@@ -237,7 +238,7 @@ ContainerCursorImpl::GetDataSource(nsIRDFDataSource** aDataSource)
 
 
 NS_IMETHODIMP
-ContainerCursorImpl::GetSubject(nsIRDFResource** aSubject)
+ContainerCursorImpl::GetSource(nsIRDFResource** aSubject)
 {
     NS_PRECONDITION(aSubject != nsnull, "null ptr");
     if (! aSubject)
@@ -250,7 +251,7 @@ ContainerCursorImpl::GetSubject(nsIRDFResource** aSubject)
 
 
 NS_IMETHODIMP
-ContainerCursorImpl::GetPredicate(nsIRDFResource** aPredicate)
+ContainerCursorImpl::GetLabel(nsIRDFResource** aPredicate)
 {
     NS_PRECONDITION(aPredicate != nsnull, "null ptr");
     if (! aPredicate)
@@ -267,7 +268,7 @@ ContainerCursorImpl::GetPredicate(nsIRDFResource** aPredicate)
 
 
 NS_IMETHODIMP
-ContainerCursorImpl::GetObject(nsIRDFNode** aObject)
+ContainerCursorImpl::GetTarget(nsIRDFNode** aObject)
 {
     NS_PRECONDITION(aObject != nsnull, "null ptr");
     if (! aObject)

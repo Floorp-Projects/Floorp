@@ -41,6 +41,7 @@
 #include "nsIServiceManager.h"
 #include "nsRDFCID.h"
 #include "nsString.h"
+#include "nsXPIDLString.h"
 #include "plstr.h"
 #include "prprf.h"
 #include "rdfutil.h"
@@ -130,15 +131,16 @@ done:
 ////////////////////////////////////////////////////////////////////////
 
 PRBool
-rdf_IsOrdinalProperty(const nsIRDFResource* property)
+rdf_IsOrdinalProperty(nsIRDFResource* aProperty)
 {
-    const char* s;
-    if (NS_FAILED(property->GetValue(&s)))
+    nsXPIDLCString propertyStr;
+    if (NS_FAILED(aProperty->GetValue( getter_Copies(propertyStr) )))
         return PR_FALSE;
 
-    if (PL_strncmp(s, kRDFNameSpaceURI, sizeof(kRDFNameSpaceURI) - 1) != 0)
+    if (PL_strncmp(propertyStr, kRDFNameSpaceURI, sizeof(kRDFNameSpaceURI) - 1) != 0)
         return PR_FALSE;
 
+    const char* s = propertyStr;
     s += sizeof(kRDFNameSpaceURI) - 1;
     if (*s != '_')
         return PR_FALSE;
@@ -158,10 +160,11 @@ rdf_IsOrdinalProperty(const nsIRDFResource* property)
 nsresult
 rdf_OrdinalResourceToIndex(nsIRDFResource* aOrdinal, PRInt32* aIndex)
 {
-    const char* s;
-    if (NS_FAILED(aOrdinal->GetValue(&s)))
+    nsXPIDLCString ordinalStr;
+    if (NS_FAILED(aOrdinal->GetValue( getter_Copies(ordinalStr) )))
         return PR_FALSE;
 
+    const char* s = ordinalStr;
     if (PL_strncmp(s, kRDFNameSpaceURI, sizeof(kRDFNameSpaceURI) - 1) != 0) {
         NS_ERROR("not an ordinal");
         return NS_ERROR_UNEXPECTED;
@@ -322,10 +325,10 @@ rdf_Assert(nsIRDFDataSource* ds,
     NS_ASSERTION(object,    "null ptr");
 
 #ifdef DEBUG_waterson
-    const char* s;
-    predicate->GetValue(&s);
-    printf(" %s", (strchr(s, '#') ? strchr(s, '#')+1 : s));
-    subject->GetValue(&s);
+    nsXPIDLCString s;
+    predicate->GetValue( getter_Copies(s) );
+    printf(" %s", (strchr(s, '#') ? strchr(s, '#')+1 : (const char*) s));
+    subject->GetValue( getter_Copies(s) );
     printf("(%s, ", s);
      
 
@@ -333,14 +336,14 @@ rdf_Assert(nsIRDFDataSource* ds,
     nsIRDFLiteral* objectLiteral;
 
     if (NS_SUCCEEDED(object->QueryInterface(kIRDFResourceIID, (void**) &objectResource))) {
-        objectResource->GetValue(&s);
-        printf(" %s)\n", s);
+        objectResource->GetValue( getter_Copies(s) );
+        printf(" %s)\n", (const char*) s);
         NS_RELEASE(objectResource);
     }
     else if (NS_SUCCEEDED(object->QueryInterface(kIRDFLiteralIID, (void**) &objectLiteral))) {
-        const PRUnichar* p;
-        objectLiteral->GetValue(&p);
-        nsAutoString s2(p);
+        nsXPIDLString p;
+        objectLiteral->GetValue( getter_Copies(p) );
+        nsAutoString s2((const PRUnichar*) p);
         char buf[1024];
         printf(" %s)\n", s2.ToCString(buf, sizeof buf));
         NS_RELEASE(objectLiteral);
@@ -524,13 +527,13 @@ PRBool
 rdf_IsAnonymousResource(const nsString& aContextURI, nsIRDFResource* aResource)
 {
     nsresult rv;
-    const char* s;
-    if (NS_FAILED(rv = aResource->GetValue(&s))) {
+    nsXPIDLCString s;
+    if (NS_FAILED(rv = aResource->GetValue( getter_Copies(s) ))) {
         NS_ASSERTION(PR_FALSE, "unable to get resource URI");
         return PR_FALSE;
     }
 
-    nsAutoString uri(s);
+    nsAutoString uri((const char*) s);
 
     // Make sure that they have the same context (prefix)
     if (uri.Find(aContextURI) != 0)
@@ -715,7 +718,7 @@ rdf_ContainerGetNextValue(nsIRDFDataSource* ds,
 
     nsIRDFNode* nextValNode       = nsnull;
     nsIRDFLiteral* nextValLiteral = nsnull;
-    const PRUnichar* s;
+    nsXPIDLString s;
     nsAutoString nextValStr;
     PRInt32 nextVal;
     PRInt32 err;
@@ -728,10 +731,10 @@ rdf_ContainerGetNextValue(nsIRDFDataSource* ds,
     if (NS_FAILED(rv = nextValNode->QueryInterface(kIRDFLiteralIID, (void**) &nextValLiteral)))
         goto done;
 
-    if (NS_FAILED(rv = nextValLiteral->GetValue(&s)))
+    if (NS_FAILED(rv = nextValLiteral->GetValue( getter_Copies(s) )))
         goto done;
 
-    nextValStr = s;
+    nextValStr = (const PRUnichar*) s;
     nextVal = nextValStr.ToInteger(&err);
     if (NS_FAILED(err))
         goto done;
@@ -826,7 +829,7 @@ rdf_ContainerRemoveElement(nsIRDFDataSource* aDataSource,
 
     while (NS_SUCCEEDED(rv = elements->Advance())) {
         nsCOMPtr<nsIRDFNode> element;
-        if (NS_FAILED(rv = elements->GetObject(getter_AddRefs(element)))) {
+        if (NS_FAILED(rv = elements->GetTarget(getter_AddRefs(element)))) {
             NS_ERROR("unable to read cursor");
             return rv;
         }
@@ -844,7 +847,7 @@ rdf_ContainerRemoveElement(nsIRDFDataSource* aDataSource,
 
         // What was it's index?
         nsCOMPtr<nsIRDFResource> ordinal;
-        if (NS_FAILED(rv = elements->GetPredicate(getter_AddRefs(ordinal)))) {
+        if (NS_FAILED(rv = elements->GetLabel(getter_AddRefs(ordinal)))) {
             NS_ERROR("unable to get element's ordinal index");
             return rv;
         }
@@ -864,12 +867,12 @@ rdf_ContainerRemoveElement(nsIRDFDataSource* aDataSource,
         // Now slide the rest of the collection backwards to fill in
         // the gap.
         while (NS_SUCCEEDED(rv = elements->Advance())) {
-            if (NS_FAILED(rv = elements->GetObject(getter_AddRefs(element)))) {
+            if (NS_FAILED(rv = elements->GetTarget(getter_AddRefs(element)))) {
                 NS_ERROR("unable to get element from cursor");
                 return rv;
             }
 
-            if (NS_FAILED(rv = elements->GetPredicate(getter_AddRefs(ordinal)))) {
+            if (NS_FAILED(rv = elements->GetLabel(getter_AddRefs(ordinal)))) {
                 NS_ERROR("unable to get element's ordinal index");
                 return rv;
             }
@@ -949,7 +952,7 @@ rdf_ContainerInsertElementAt(nsIRDFDataSource* aDataSource,
 
     // Advance the cursor to the aIndex'th element.
     while (NS_SUCCEEDED(rv = elements->Advance())) {
-        if (NS_FAILED(rv = elements->GetPredicate(getter_AddRefs(ordinal)))) {
+        if (NS_FAILED(rv = elements->GetLabel(getter_AddRefs(ordinal)))) {
             NS_ERROR("unable to get element's ordinal index");
             return rv;
         }
@@ -1008,13 +1011,13 @@ rdf_ContainerInsertElementAt(nsIRDFDataSource* aDataSource,
     // Now slide the rest of the container "up" by one...
     if (! cursorExhausted) {
         do {
-            if (NS_FAILED(rv = elements->GetPredicate(getter_AddRefs(ordinal)))) {
+            if (NS_FAILED(rv = elements->GetLabel(getter_AddRefs(ordinal)))) {
                 NS_ERROR("unable to get element's ordinal index");
                 return rv;
             }
 
             nsCOMPtr<nsIRDFNode> element;
-            if (NS_FAILED(rv = elements->GetObject(getter_AddRefs(element)))) {
+            if (NS_FAILED(rv = elements->GetTarget(getter_AddRefs(element)))) {
                 NS_ERROR("unable to get element from cursor");
                 return rv;
             }
@@ -1084,14 +1087,14 @@ rdf_ContainerIndexOf(nsIRDFDataSource* aDataSource,
     // Advance the cursor until we find the element we want
     while (NS_SUCCEEDED(rv = elements->Advance())) {
         nsCOMPtr<nsIRDFNode> element;
-        if (NS_FAILED(rv = elements->GetObject(getter_AddRefs(element)))) {
+        if (NS_FAILED(rv = elements->GetTarget(getter_AddRefs(element)))) {
             NS_ERROR("unable to get element from cursor");
             return rv;
         }
 
         // Okay, we've found it.
         nsCOMPtr<nsIRDFResource> ordinal;
-        if (NS_FAILED(rv = elements->GetPredicate(getter_AddRefs(ordinal)))) {
+        if (NS_FAILED(rv = elements->GetLabel(getter_AddRefs(ordinal)))) {
             NS_ERROR("unable to get element's ordinal index");
             return rv;
         }

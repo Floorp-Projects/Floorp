@@ -1,24 +1,21 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM ../../../../rdf/base/idl/nsRDFInterfaces.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM nsRDFInterfaces.idl
  */
 
 #ifndef __gen_nsRDFInterfaces_h__
 #define __gen_nsRDFInterfaces_h__
 
 #include "nsISupports.h" /* interface nsISupports */
+#include "nsISupportsArray.h" /* interface nsISupportsArray */
+#include "nsICollection.h" /* interface nsICollection */
+#include "nsIEnumerator.h" /* interface nsIEnumerator */
 #include "nsID.h" /* interface nsID */
 
 #ifdef XPIDL_JS_STUBS
 #include "jsapi.h"
 #endif
-#include "nsDebug.h"
-#include "nsTraceRefcnt.h"
-#include "nsID.h"
-#include "nsIID.h"
-#include "nsError.h"
-#include "nsISupportsUtils.h"
-
 #include "nscore.h" // for PRUnichar
+#include "prtime.h" // for PRTime
 
 
 /* starting interface nsIRDFNode */
@@ -35,9 +32,6 @@ class nsIRDFNode : public nsISupports {
     static nsIID iid = NS_IRDFNODE_IID;
     return iid;
   }
-
-  /* void Init (in string uri); */
-  NS_IMETHOD Init(char *uri) = 0;
 
   /* boolean EqualsNode (in nsIRDFNode aNode); */
   NS_IMETHOD EqualsNode(nsIRDFNode *aNode, PRBool *_retval) = 0;
@@ -66,11 +60,14 @@ class nsIRDFResource : public nsIRDFNode {
   /* readonly attribute string Value; */
   NS_IMETHOD GetValue(char * *aValue) = 0;
 
+  /* void Init (in string uri); */
+  NS_IMETHOD Init(const char *uri) = 0;
+
   /* boolean EqualsResource (in nsIRDFResource aResource); */
   NS_IMETHOD EqualsResource(nsIRDFResource *aResource, PRBool *_retval) = 0;
 
   /* boolean EqualsString (in string aURI); */
-  NS_IMETHOD EqualsString(char *aURI, PRBool *_retval) = 0;
+  NS_IMETHOD EqualsString(const char *aURI, PRBool *_retval) = 0;
 
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
@@ -96,12 +93,66 @@ class nsIRDFLiteral : public nsIRDFNode {
   /* readonly attribute wstring Value; */
   NS_IMETHOD GetValue(PRUnichar * *aValue) = 0;
 
-  /* boolean EqualsLiteral (in nsIRDFLiteral literal); */
-  NS_IMETHOD EqualsLiteral(nsIRDFLiteral *literal, PRBool *_retval) = 0;
+  /* boolean EqualsLiteral (in nsIRDFLiteral aLiteral); */
+  NS_IMETHOD EqualsLiteral(nsIRDFLiteral *aLiteral, PRBool *_retval) = 0;
 
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
   static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIRDFLiteral *priv);
+#endif
+};
+
+/* starting interface nsIRDFDate */
+
+/* {E13A24E1-C77A-11d2-80BE-006097B76B8E} */
+#define NS_IRDFDATE_IID_STR "E13A24E1-C77A-11d2-80BE-006097B76B8E"
+#define NS_IRDFDATE_IID \
+  {0xE13A24E1, 0xC77A, 0x11d2, \
+    { 0x80, 0xBE, 0x00, 0x60, 0x97, 0xB7, 0x6B, 0x8E }}
+
+class nsIRDFDate : public nsIRDFNode {
+ public: 
+  static const nsIID& GetIID() {
+    static nsIID iid = NS_IRDFDATE_IID;
+    return iid;
+  }
+
+  /* readonly attribute time Value; */
+  NS_IMETHOD GetValue(PRTime *aValue) = 0;
+
+  /* boolean EqualsDate (in nsIRDFDate aDate); */
+  NS_IMETHOD EqualsDate(nsIRDFDate *aDate, PRBool *_retval) = 0;
+
+#ifdef XPIDL_JS_STUBS
+  static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
+  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIRDFDate *priv);
+#endif
+};
+
+/* starting interface nsIRDFInt */
+
+/* {E13A24E3-C77A-11d2-80BE-006097B76B8E} */
+#define NS_IRDFINT_IID_STR "E13A24E3-C77A-11d2-80BE-006097B76B8E"
+#define NS_IRDFINT_IID \
+  {0xE13A24E3, 0xC77A, 0x11d2, \
+    { 0x80, 0xBE, 0x00, 0x60, 0x97, 0xB7, 0x6B, 0x8E }}
+
+class nsIRDFInt : public nsIRDFNode {
+ public: 
+  static const nsIID& GetIID() {
+    static nsIID iid = NS_IRDFINT_IID;
+    return iid;
+  }
+
+  /* readonly attribute long Value; */
+  NS_IMETHOD GetValue(PRInt32 *aValue) = 0;
+
+  /* boolean EqualsInt (in nsIRDFInt aInt); */
+  NS_IMETHOD EqualsInt(nsIRDFInt *aInt, PRBool *_retval) = 0;
+
+#ifdef XPIDL_JS_STUBS
+  static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
+  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIRDFInt *priv);
 #endif
 };
 class nsIRDFDataSource; /* forward decl */
@@ -290,7 +341,7 @@ class nsIRDFDataSource : public nsISupports {
   }
 
   /* void Init (in string uri); */
-  NS_IMETHOD Init(char *uri) = 0;
+  NS_IMETHOD Init(const char *uri) = 0;
 
   /* readonly attribute string URI; */
   NS_IMETHOD GetURI(char * *aURI) = 0;
@@ -334,11 +385,14 @@ class nsIRDFDataSource : public nsISupports {
   /* void Flush (); */
   NS_IMETHOD Flush() = 0;
 
-  /* boolean IsCommandEnabled (in string aCommand, in nsIRDFResource aCommandTarget); */
-  NS_IMETHOD IsCommandEnabled(char *aCommand, nsIRDFResource *aCommandTarget, PRBool *_retval) = 0;
+  /* nsIEnumerator GetAllCommands (in nsIRDFResource aSource); */
+  NS_IMETHOD GetAllCommands(nsIRDFResource *aSource, nsIEnumerator **_retval) = 0;
 
-  /* void DoCommand (in string aCommand, in nsIRDFResource aCommandTarget); */
-  NS_IMETHOD DoCommand(char *aCommand, nsIRDFResource *aCommandTarget) = 0;
+  /* boolean IsCommandEnabled (in nsISupportsArray aSources, in nsIRDFResource aCommand, in nsISupportsArray aArguments); */
+  NS_IMETHOD IsCommandEnabled(nsISupportsArray *aSources, nsIRDFResource *aCommand, nsISupportsArray *aArguments, PRBool *_retval) = 0;
+
+  /* void DoCommand (in nsISupportsArray aSources, in nsIRDFResource aCommand, in nsISupportsArray aArguments); */
+  NS_IMETHOD DoCommand(nsISupportsArray *aSources, nsIRDFResource *aCommand, nsISupportsArray *aArguments) = 0;
 
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
@@ -389,13 +443,19 @@ class nsIRDFService : public nsISupports {
   }
 
   /* nsIRDFResource GetResource (in string aURI); */
-  NS_IMETHOD GetResource(char *aURI, nsIRDFResource **_retval) = 0;
+  NS_IMETHOD GetResource(const char *aURI, nsIRDFResource **_retval) = 0;
 
   /* nsIRDFResource GetUnicodeResource (in wstring aURI); */
-  NS_IMETHOD GetUnicodeResource(PRUnichar *aURI, nsIRDFResource **_retval) = 0;
+  NS_IMETHOD GetUnicodeResource(const PRUnichar *aURI, nsIRDFResource **_retval) = 0;
 
   /* nsIRDFLiteral GetLiteral (in wstring aValue); */
-  NS_IMETHOD GetLiteral(PRUnichar *aValue, nsIRDFLiteral **_retval) = 0;
+  NS_IMETHOD GetLiteral(const PRUnichar *aValue, nsIRDFLiteral **_retval) = 0;
+
+  /* nsIRDFDate GetDateLiteral (in time aValue); */
+  NS_IMETHOD GetDateLiteral(PRTime aValue, nsIRDFDate **_retval) = 0;
+
+  /* nsIRDFInt GetIntLiteral (in long aValue); */
+  NS_IMETHOD GetIntLiteral(PRInt32 aValue, nsIRDFInt **_retval) = 0;
 
   /* void RegisterResource (in nsIRDFResource aResource, in boolean aReplace); */
   NS_IMETHOD RegisterResource(nsIRDFResource *aResource, PRBool aReplace) = 0;
@@ -410,7 +470,7 @@ class nsIRDFService : public nsISupports {
   NS_IMETHOD UnregisterDataSource(nsIRDFDataSource *aDataSource) = 0;
 
   /* nsIRDFDataSource GetDataSource (in string aURI); */
-  NS_IMETHOD GetDataSource(char *aURI, nsIRDFDataSource **_retval) = 0;
+  NS_IMETHOD GetDataSource(const char *aURI, nsIRDFDataSource **_retval) = 0;
 
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);

@@ -26,6 +26,10 @@
 #ifndef nsIRDFDataSource_h__
 #define nsIRDFDataSource_h__
 
+#if 1 //defined(USE_XPIDL_INTERFACES)
+#include "nsRDFInterfaces.h"
+#else
+
 #include "nsISupports.h"
 #include "nsISupportsArray.h"
 #include "nsIEnumerator.h"
@@ -211,5 +215,7 @@ public:
                          nsIRDFResource*   aCommand,
                          nsISupportsArray/*<nsIRDFResource>*/* aArguments) = 0;
 };
+
+#endif
 
 #endif /* nsIRDFDataSource_h__ */

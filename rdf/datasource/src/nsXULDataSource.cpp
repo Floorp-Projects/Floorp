@@ -121,7 +121,7 @@ public:
     // nsIRDFDataSource
     NS_IMETHOD Init(const char* uri);
 
-    NS_IMETHOD GetURI(const char* *uri) const {
+    NS_IMETHOD GetURI(char* *uri) {
         return mInner->GetURI(uri);
     }
 
@@ -205,8 +205,9 @@ public:
 
     NS_IMETHOD IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
                                 nsIRDFResource*   aCommand,
-                                nsISupportsArray/*<nsIRDFResource>*/* aArguments) {
-        return mInner->IsCommandEnabled(aSources, aCommand, aArguments);
+                                nsISupportsArray/*<nsIRDFResource>*/* aArguments,
+                                PRBool* aResult) {
+        return mInner->IsCommandEnabled(aSources, aCommand, aArguments, aResult);
     }
 
     NS_IMETHOD DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
@@ -366,7 +367,7 @@ static const char kResourceURIPrefix[] = "resource:";
                                                     (nsISupports**) &rdfService)))
         goto done;
 
-    if (NS_FAILED(rv = rdfService->RegisterDataSource(this)))
+    if (NS_FAILED(rv = rdfService->RegisterDataSource(this, PR_FALSE)))
         goto done;
 
     if (NS_FAILED(rv = nsComponentManager::CreateInstance(kNameSpaceManagerCID,

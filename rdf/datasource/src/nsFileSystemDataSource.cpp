@@ -31,6 +31,7 @@
 #include "nsIServiceManager.h"
 #include "nsString.h"
 #include "nsVoidArray.h"  // XXX introduces dependency on raptorbase
+#include "nsXPIDLString.h"
 #include "nsRDFCID.h"
 #include "rdfutil.h"
 #include "nsIRDFService.h"
@@ -40,6 +41,7 @@
 #include "prmem.h"
 #include "prprf.h"
 #include "prio.h"
+#include "rdf.h"
 #include "nsFileSpec.h"
 #include "nsIRDFFileSystem.h"
 #include "nsFileSystemDataSource.h"
@@ -112,9 +114,9 @@ static PRBool
 isFileURI(nsIRDFResource *r)
 {
 	PRBool		isFileURI = PR_FALSE;
-	const char	*uri;
+        nsXPIDLCString uri;
 	
-	r->GetValue(&uri);
+	r->GetValue( getter_Copies(uri) );
 	if (!strncmp(uri, "file://", 7))
 	{
 		// XXX HACK HACK HACK
@@ -203,7 +205,7 @@ FileSystemDataSource::Init(const char *uri)
 		return rv;
 
 	// register this as a named data source with the service manager
-	if (NS_FAILED(rv = gRDFService->RegisterDataSource(this)))
+	if (NS_FAILED(rv = gRDFService->RegisterDataSource(this, PR_FALSE)))
 		return rv;
 	return NS_OK;
 }
@@ -211,19 +213,21 @@ FileSystemDataSource::Init(const char *uri)
 
 
 NS_IMETHODIMP
-FileSystemDataSource::GetURI(const char **uri) const
+FileSystemDataSource::GetURI(char **uri)
 {
-	*uri = mURI;
-	return NS_OK;
+    if ((*uri = nsXPIDLCString::Copy(mURI)) == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    else
+        return NS_OK;
 }
 
 
 
 NS_IMETHODIMP
 FileSystemDataSource::GetSource(nsIRDFResource* property,
-                          nsIRDFNode* target,
-                          PRBool tv,
-                          nsIRDFResource** source /* out */)
+                                nsIRDFNode* target,
+                                PRBool tv,
+                                nsIRDFResource** source /* out */)
 {
 	nsresult rv = NS_ERROR_RDF_NO_VALUE;
 	return rv;
@@ -277,8 +281,8 @@ FileSystemDataSource::GetTarget(nsIRDFResource *source,
 		}
 		else if (peq(property, kRDF_type))
 		{
-			const char	*uri;
-			kNC_FileSystemObject->GetValue(&uri);
+                    nsXPIDLCString uri;
+			kNC_FileSystemObject->GetValue( getter_Copies(uri) );
 			if (uri)
 			{
 				nsAutoString	url(uri);
@@ -342,8 +346,8 @@ FileSystemDataSource::GetTargets(nsIRDFResource *source,
 		}
 		else if (peq(property, kRDF_type))
 		{
-			const char	*uri;
-			kNC_FileSystemObject->GetValue(&uri);
+                    nsXPIDLCString uri;
+			kNC_FileSystemObject->GetValue( getter_Copies(uri) );
 			if (uri)
 			{
 				nsAutoString	url(uri);
@@ -460,8 +464,8 @@ FileSystemDataSource::ArcLabelsOut(nsIRDFResource *source,
 		if (nsnull == temp)
 			return NS_ERROR_OUT_OF_MEMORY;
 
-		const char *uri;
-		source->GetValue(&uri);
+                nsXPIDLCString uri;
+		source->GetValue( getter_Copies(uri) );
 		if (uri)
 		{
 			nsFileURL	fileURL(uri);
@@ -538,7 +542,8 @@ FileSystemDataSource::GetAllCommands(nsIRDFResource* source,
 NS_IMETHODIMP
 FileSystemDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
                                        nsIRDFResource*   aCommand,
-                                       nsISupportsArray/*<nsIRDFResource>*/* aArguments)
+                                       nsISupportsArray/*<nsIRDFResource>*/* aArguments,
+                                       PRBool* aResult)
 {
     NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -714,7 +719,7 @@ FileSystemCursor::GetDataSource(nsIRDFDataSource **aDataSource)
 
 
 NS_IMETHODIMP
-FileSystemCursor::GetSubject(nsIRDFResource **aResource)
+FileSystemCursor::GetSource(nsIRDFResource **aResource)
 {
 	NS_ADDREF(mSource);
 	*aResource = mSource;
@@ -724,7 +729,7 @@ FileSystemCursor::GetSubject(nsIRDFResource **aResource)
 
 
 NS_IMETHODIMP
-FileSystemCursor::GetPredicate(nsIRDFResource **aPredicate)
+FileSystemCursor::GetLabel(nsIRDFResource **aPredicate)
 {
 	if (mArcsOut == PR_FALSE)
 	{
@@ -744,7 +749,7 @@ FileSystemCursor::GetPredicate(nsIRDFResource **aPredicate)
 
 
 NS_IMETHODIMP
-FileSystemCursor::GetObject(nsIRDFNode **aObject)
+FileSystemCursor::GetTarget(nsIRDFNode **aObject)
 {
 	if (nsnull != mTarget)
 		NS_ADDREF(mTarget);
@@ -841,9 +846,9 @@ GetFolderList(nsIRDFResource *source, nsVoidArray **array /* out */)
 		return(NS_ERROR_OUT_OF_MEMORY);
 	}
 
-	const char		*uri;
-	source->GetValue(&uri);
-	if (nsnull == uri)
+        nsXPIDLCString uri;
+	source->GetValue( getter_Copies(uri) );
+	if (! uri)
 	{
 		return(NS_ERROR_FAILURE);
 	}
@@ -878,8 +883,8 @@ GetName(nsIRDFResource *source, nsVoidArray **array)
 		return(NS_ERROR_OUT_OF_MEMORY);
 	}
 
-	const char		*uri;
-	source->GetValue(&uri);
+        nsXPIDLCString uri;
+	source->GetValue( getter_Copies(uri) );
 	nsFileURL		url(uri);
 	nsNativeFileSpec	native(url);
 	char			*basename = native.GetLeafName();
@@ -906,8 +911,8 @@ GetURL(nsIRDFResource *source, nsVoidArray **array)
 		return(NS_ERROR_OUT_OF_MEMORY);
 	}
 
-	const char	*uri;
-	source->GetValue(&uri);
+        nsXPIDLCString uri;
+	source->GetValue( getter_Copies(uri) );
 	nsAutoString	url(uri);
 
 	nsIRDFLiteral	*literal;

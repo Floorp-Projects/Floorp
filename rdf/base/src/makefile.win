@@ -17,7 +17,7 @@
 
 DEPTH=..\..\..
 
-LCFLAGS=-D_IMPL_NS_RDF -DWIN32_LEAN_AND_MEAN
+LCFLAGS=-DXPIDL_JS_STUBS
 
 MODULE=rdf
 LIBRARY_NAME=rdfbase_s
@@ -33,6 +33,7 @@ CPP_OBJS=\
         .\$(OBJDIR)\nsEmptyCursor.obj             \
         .\$(OBJDIR)\nsInMemoryDataSource.obj      \
         .\$(OBJDIR)\nsRDFContentSink.obj          \
+        .\$(OBJDIR)\nsRDFInterfaces.obj           \
         .\$(OBJDIR)\nsRDFParserUtils.obj          \
         .\$(OBJDIR)\nsRDFService.obj              \
         .\$(OBJDIR)\nsRDFXMLDataSource.obj        \
@@ -44,6 +45,7 @@ LINCS=  -I$(PUBLIC)\rdf          \
         -I$(PUBLIC)\xpcom        \
         -I$(PUBLIC)\raptor       \
         -I$(PUBLIC)\netlib       \
+        -I$(PUBLIC)\js           \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

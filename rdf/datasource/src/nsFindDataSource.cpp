@@ -31,6 +31,7 @@
 #include "nsIServiceManager.h"
 #include "nsString.h"
 #include "nsVoidArray.h"  // XXX introduces dependency on raptorbase
+#include "nsXPIDLString.h"
 #include "nsRDFCID.h"
 #include "rdfutil.h"
 #include "nsIRDFService.h"
@@ -40,6 +41,7 @@
 #include "prmem.h"
 #include "prprf.h"
 #include "prio.h"
+#include "rdf.h"
 #include "nsIRDFFind.h"
 #include "nsFindDataSource.h"
 
@@ -102,9 +104,9 @@ static PRBool
 isFindURI(nsIRDFResource *r)
 {
 	PRBool		isFindURI = PR_FALSE;
-	const char	*uri;
+        nsXPIDLCString uri;
 	
-	r->GetValue(&uri);
+	r->GetValue( getter_Copies(uri) );
 	if (!strncmp(uri, "find:", 5))
 	{
 		isFindURI = PR_TRUE;
@@ -187,7 +189,7 @@ FindDataSource::Init(const char *uri)
 		return rv;
 
 	// register this as a named data source with the service manager
-	if (NS_FAILED(rv = gRDFService->RegisterDataSource(this)))
+	if (NS_FAILED(rv = gRDFService->RegisterDataSource(this, PR_FALSE)))
 		return rv;
 	return NS_OK;
 }
@@ -195,10 +197,12 @@ FindDataSource::Init(const char *uri)
 
 
 NS_IMETHODIMP
-FindDataSource::GetURI(const char **uri) const
+FindDataSource::GetURI(char **uri)
 {
-	*uri = mURI;
-	return NS_OK;
+    if ((*uri = nsXPIDLCString::Copy(mURI)) == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    else
+        return NS_OK;
 }
 
 
@@ -259,8 +263,8 @@ FindDataSource::GetTarget(nsIRDFResource *source,
 		}
 		else if (peq(property, kRDF_type))
 		{
-			const char	*uri;
-			kNC_FindObject->GetValue(&uri);
+                    nsXPIDLCString uri;
+			kNC_FindObject->GetValue( getter_Copies(uri) );
 			if (uri)
 			{
 				nsAutoString	url(uri);
@@ -291,14 +295,14 @@ FindDataSource::GetTarget(nsIRDFResource *source,
 NS_METHOD
 FindDataSource::parseResourceIntoFindTokens(nsIRDFResource *u, findTokenPtr tokens)
 {
-	const char		*uri;
+    nsXPIDLCString uri;
 	char			*id, *token, *value;
 	int			loop;
 	nsresult		rv;
 
-	if (NS_FAILED(rv = u->GetValue(&uri)))	return(rv);
+	if (NS_FAILED(rv = u->GetValue( getter_Copies(uri) )))	return(rv);
 
-	printf("Find: %s\n", uri);
+	printf("Find: %s\n", (const char*) uri);
 
 	if (!(id = PL_strdup(uri + strlen("find:"))))	return(NS_ERROR_OUT_OF_MEMORY);
 
@@ -336,9 +340,9 @@ FindDataSource::doMatch(nsIRDFLiteral *literal, char *matchMethod, char *matchTe
 	if ((nsnull == literal) || (nsnull == matchMethod) || (nsnull == matchText))
 		return(found);
 
-	const	PRUnichar	*str;
-	literal->GetValue(&str);
-	if (nsnull == str)	return(found);
+        nsXPIDLString str;
+	literal->GetValue( getter_Copies(str) );
+	if (! str)	return(found);
 	nsAutoString	value(str);
 
 	// XXX Note: nsString.Find() is currently only case-significant.
@@ -412,8 +416,8 @@ FindDataSource::parseFindURL(nsIRDFResource *u, nsVoidArray *array)
 						nsIRDFResource	*source = nsnull;
 						if (NS_SUCCEEDED(rv = node->QueryInterface(kIRDFResourceIID, (void **)&source)))
 						{
-							const char *uri;
-							source->GetValue(&uri);
+                                                    nsXPIDLCString uri;
+							source->GetValue( getter_Copies(uri) );
 							if (PL_strncmp(uri, "find:", PL_strlen("find:")))	// never match against a "find:" URI
 							{
 								nsIRDFResource	*property = nsnull;
@@ -514,8 +518,8 @@ FindDataSource::GetTargets(nsIRDFResource *source,
 		}
 		else if (peq(property, kRDF_type))
 		{
-			const char	*uri;
-			kNC_FindObject->GetValue(&uri);
+                    nsXPIDLCString uri;
+			kNC_FindObject->GetValue( getter_Copies(uri) );
 			if (uri)
 			{
 				nsAutoString	url(uri);
@@ -686,7 +690,8 @@ FindDataSource::GetAllCommands(nsIRDFResource* source,nsIEnumerator/*<nsIRDFReso
 NS_IMETHODIMP
 FindDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
 				nsIRDFResource*   aCommand,
-				nsISupportsArray/*<nsIRDFResource>*/* aArguments)
+				nsISupportsArray/*<nsIRDFResource>*/* aArguments,
+                                PRBool* aResult)
 {
 	NS_NOTYETIMPLEMENTED("write me!");
 	return NS_ERROR_NOT_IMPLEMENTED;
@@ -798,7 +803,7 @@ FindCursor::GetDataSource(nsIRDFDataSource **aDataSource)
 
 
 NS_IMETHODIMP
-FindCursor::GetSubject(nsIRDFResource **aResource)
+FindCursor::GetSource(nsIRDFResource **aResource)
 {
 	NS_ADDREF(mSource);
 	*aResource = mSource;
@@ -808,7 +813,7 @@ FindCursor::GetSubject(nsIRDFResource **aResource)
 
 
 NS_IMETHODIMP
-FindCursor::GetPredicate(nsIRDFResource **aPredicate)
+FindCursor::GetLabel(nsIRDFResource **aPredicate)
 {
 	if (mArcsOut == PR_FALSE)
 	{
@@ -828,7 +833,7 @@ FindCursor::GetPredicate(nsIRDFResource **aPredicate)
 
 
 NS_IMETHODIMP
-FindCursor::GetObject(nsIRDFNode **aObject)
+FindCursor::GetTarget(nsIRDFNode **aObject)
 {
 	if (nsnull != mTarget)
 		NS_ADDREF(mTarget);

@@ -42,6 +42,7 @@
 #include "nsIMsgRFC822Parser.h"
 #include "nsMsgBaseCID.h"
 #include "nsCOMPtr.h"
+#include "nsXPIDLString.h"
 //This is a temporary dependency.  I need this for parsemessageURI.  In the future
 //we should have the nsIMessage have the ability to get the folder from it.
 #include "nsLocalMailFolder.h"
@@ -238,7 +239,7 @@ NS_IMETHODIMP nsMSGFolderDataSource::Init(const char* uri)
   if ((mURI = PL_strdup(uri)) == nsnull)
       return NS_ERROR_OUT_OF_MEMORY;
 
-  gRDFService->RegisterDataSource(this);
+  gRDFService->RegisterDataSource(this, PR_FALSE);
 
   if (! kNC_Child) {
     gRDFService->GetResource(kURINC_child,   &kNC_Child);
@@ -284,10 +285,12 @@ NS_IMETHODIMP nsMSGFolderDataSource::Init(const char* uri)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMSGFolderDataSource::GetURI(const char* *uri) const
+NS_IMETHODIMP nsMSGFolderDataSource::GetURI(char* *uri)
 {
-  *uri = mURI;
-  return NS_OK;
+  if ((*uri = nsXPIDLCString::Copy(mURI)) == nsnull)
+    return NS_ERROR_OUT_OF_MEMORY;
+  else
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsMSGFolderDataSource::GetSource(nsIRDFResource* property,
@@ -719,7 +722,8 @@ nsMSGFolderDataSource::GetAllCommands(nsIRDFResource* source,
 NS_IMETHODIMP
 nsMSGFolderDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
                                         nsIRDFResource*   aCommand,
-                                        nsISupportsArray/*<nsIRDFResource>*/* aArguments)
+                                        nsISupportsArray/*<nsIRDFResource>*/* aArguments,
+                                        PRBool* aResult)
 {
   nsIMsgFolder* folder;
   nsIMessage* message;
@@ -731,8 +735,10 @@ nsMSGFolderDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aS
       NS_RELEASE(folder);       // release now that we know it's a folder
 
       // we don't care about the arguments -- folder commands are always enabled
-      if (!(peq(aCommand, kNC_Delete)))
-        return NS_COMFALSE;
+      if (!(peq(aCommand, kNC_Delete))) {
+        *aResult = PR_FALSE;
+        return NS_OK;
+      }
     }
     else if (NS_SUCCEEDED(source->QueryInterface(nsIMessage::GetIID(), (void**)&message))) {
       NS_RELEASE(message);       // release now that we know it's a message
@@ -740,10 +746,13 @@ nsMSGFolderDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aS
       // we don't care about the arguments -- message commands are always enabled
       if (!(peq(aCommand, kNC_Delete) ||
             peq(aCommand, kNC_Reply) ||
-            peq(aCommand, kNC_Forward)))
-        return NS_COMFALSE;
+            peq(aCommand, kNC_Forward))) {
+        *aResult = PR_FALSE;
+        return NS_OK;
+      }
     }
   }
+  *aResult = PR_TRUE;
   return NS_OK; // succeeded for all sources
 }
 
@@ -847,11 +856,11 @@ nsresult nsMSGFolderDataSource::GetFolderFromMessage(nsIMessage *message, nsIMsg
 {
 	nsresult rv;
 
-	const char *uri;
+  nsXPIDLCString uri;
 	nsIRDFResource *resource;
 	if(NS_SUCCEEDED( rv = message->QueryInterface(nsIRDFResource::GetIID(), (void**)&resource)))
 	{
-		resource->GetValue(&uri);
+		resource->GetValue( getter_Copies(uri) );
 		nsString messageFolderURIStr;
 		nsMsgKey key;
 		nsParseLocalMessageURI(uri, messageFolderURIStr, &key);

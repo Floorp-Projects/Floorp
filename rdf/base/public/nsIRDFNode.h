@@ -26,6 +26,10 @@
 #ifndef nsIRDFNode_h__
 #define nsIRDFNode_h__
 
+#if 1 //defined(USE_XPIDL_INTERFACES)
+#include "nsRDFInterfaces.h"
+#else
+
 #include "nscore.h"
 #include "rdf.h"
 #include "nsISupports.h"
@@ -125,5 +129,7 @@ public:
 
 // XXX this is here because a lot of files think they can just include nsIRDFNode
 #include "nsIRDFResource.h"
+
+#endif
 
 #endif // nsIRDFNode_h__

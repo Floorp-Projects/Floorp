@@ -59,6 +59,7 @@
 #include "nsRDFCID.h"
 #include "nsRDFContentUtils.h"
 #include "nsString.h"
+#include "nsXPIDLString.h"
 #include "rdf.h"
 #include "rdfutil.h"
 
@@ -538,9 +539,9 @@ RDFTreeBuilderImpl::AddWidgetItem(nsIContent* aElement,
     // subsequent changes via the DOM in sink. This property should be
     // immutable.
     {
-        const char* uri;
-        aProperty->GetValue(&uri);
-        treeItem->SetAttribute(kNameSpaceID_RDF, kPropertyAtom, uri, PR_FALSE);
+        nsXPIDLCString uri;
+        aProperty->GetValue( getter_Copies(uri) );
+        treeItem->SetAttribute(kNameSpaceID_RDF, kPropertyAtom, (const char*) uri, PR_FALSE);
     }
 
     // Create the cell substructure
@@ -560,7 +561,7 @@ RDFTreeBuilderImpl::AddWidgetItem(nsIContent* aElement,
 
     while (NS_SUCCEEDED(rv = arcs->Advance())) {
         nsCOMPtr<nsIRDFResource> property;
-        if (NS_FAILED(rv = arcs->GetPredicate(getter_AddRefs(property)))) {
+        if (NS_FAILED(rv = arcs->GetLabel(getter_AddRefs(property)))) {
             NS_ERROR("unable to get cursor value");
             return rv;
         }
@@ -590,13 +591,13 @@ RDFTreeBuilderImpl::AddWidgetItem(nsIContent* aElement,
 
         nsAutoString s;
         if (NS_SUCCEEDED(rv = value->QueryInterface(kIRDFResourceIID, getter_AddRefs(resource)))) {
-            const char* uri;
-            resource->GetValue(&uri);
+            nsXPIDLCString uri;
+            resource->GetValue( getter_Copies(uri) );
             s = uri;
         }
         else if (NS_SUCCEEDED(rv = value->QueryInterface(kIRDFLiteralIID, getter_AddRefs(literal)))) {
-            const PRUnichar* p;
-            literal->GetValue(&p);
+            nsXPIDLString p;
+            literal->GetValue( getter_Copies(p) );
             s = p;
         }
         else {
@@ -992,8 +993,8 @@ RDFTreeBuilderImpl::GetColumnForProperty(nsIContent* aTreeElement,
 {
     nsresult rv;
 
-    const char* propertyURI;
-    if (NS_FAILED(rv = aProperty->GetValue(&propertyURI))) {
+    nsXPIDLCString propertyURI;
+    if (NS_FAILED(rv = aProperty->GetValue( getter_Copies(propertyURI) ))) {
         NS_ERROR("unable to get property's URI");
         return rv;
     }

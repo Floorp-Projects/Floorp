@@ -80,6 +80,7 @@
 #include "nsRDFCID.h"
 #include "nsRDFDOMNodeList.h"
 #include "nsVoidArray.h"
+#include "nsXPIDLString.h" // XXX should go away
 #include "plhash.h"
 #include "plstr.h"
 #include "rdfutil.h"
@@ -1906,8 +1907,8 @@ XULDocumentImpl::SplitProperty(nsIRDFResource* aProperty,
     //    specified property's URI has any of them as a substring.
     //
 
-    const char* p;
-    aProperty->GetValue(&p);
+    nsXPIDLCString p;
+    aProperty->GetValue( getter_Copies(p) );
     nsAutoString uri(p);
 
     PRInt32 index;
@@ -1986,9 +1987,9 @@ XULDocumentImpl::AddElementForResource(nsIRDFResource* aResource, nsIContent* aE
         return NS_ERROR_NULL_POINTER;
 
 #ifdef DEBUG_waterson
-    const char* uri;
-    aResource->GetValue(&uri);
-    printf("add    [%p] <-- %s\n", aElement, uri);
+    nsXPIDLCString uri;
+    aResource->GetValue( getter_Copies(uri) );
+    printf("add    [%p] <-- %s\n", aElement, (const char*) uri);
 #endif
 
     mResources.Add(aResource, aElement);
@@ -2008,9 +2009,9 @@ XULDocumentImpl::RemoveElementForResource(nsIRDFResource* aResource, nsIContent*
         return NS_ERROR_NULL_POINTER;
 
 #ifdef DEBUG_waterson
-    const char* uri;
-    aResource->GetValue(&uri);
-    printf("remove [%p] <-- %s\n", aElement, uri);
+    nsXPIDLCString uri;
+    aResource->GetValue( getter_Copies(uri) );
+    printf("remove [%p] <-- %s\n", aElement, (const char*) uri);
 #endif
 
     mResources.Remove(aResource, aElement);

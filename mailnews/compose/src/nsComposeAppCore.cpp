@@ -45,6 +45,7 @@
 #include "nsMsgCompPrefs.h"
 #include "nsIDOMMsgAppCore.h"
 #include "nsIMessage.h"
+#include "nsXPIDLString.h"
 
 #include "nsMsgCompCID.h"
 #include "nsIMsgCompose.h"
@@ -615,8 +616,8 @@ nsComposeAppCore::NewMessage(nsAutoString& aUrl,
                                                 getter_AddRefs(rdfResource));
                     if (rdfResource)
                     {	
-                        const char *uri = 0;
-                        rdfResource->GetValue(&uri);
+                        nsXPIDLCString uri;
+                        rdfResource->GetValue( getter_Copies(uri) );
                         nsString messageUri = uri;
                     }
                     if (messageType == 2)

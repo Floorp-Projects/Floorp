@@ -46,7 +46,7 @@ public:
   // nsIRDFDataSource methods
   NS_IMETHOD Init(const char* uri);
 
-  NS_IMETHOD GetURI(const char* *uri) const;
+  NS_IMETHOD GetURI(char* *uri);
 
   NS_IMETHOD GetSource(nsIRDFResource* property,
                        nsIRDFNode* target,
@@ -102,7 +102,8 @@ public:
 
   NS_IMETHOD IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
                               nsIRDFResource*   aCommand,
-                              nsISupportsArray/*<nsIRDFResource>*/* aArguments);
+                              nsISupportsArray/*<nsIRDFResource>*/* aArguments,
+                              PRBool* aResult);
 
   NS_IMETHOD DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
                        nsIRDFResource*   aCommand,

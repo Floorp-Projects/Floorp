@@ -23,6 +23,7 @@
 #include "nsIRDFNode.h"
 #include "nsSupportsArrayEnumerator.h"
 #include "nsIEnumerator.h"
+#include "rdf.h"
 
 class NS_RDF nsRDFArrayCursor : public nsSupportsArrayEnumerator, 
                                 public nsIRDFCursor
@@ -65,9 +66,9 @@ public:
     }
 
     // nsIRDFAssertionCursor methods:
-    NS_IMETHOD GetSubject(nsIRDFResource* *aSubject);
-    NS_IMETHOD GetPredicate(nsIRDFResource* *aPredicate);
-    NS_IMETHOD GetObject(nsIRDFNode* *aObject);
+    NS_IMETHOD GetSource(nsIRDFResource* *aSubject);
+    NS_IMETHOD GetLabel(nsIRDFResource* *aPredicate);
+    NS_IMETHOD GetTarget(nsIRDFNode* *aObject);
     NS_IMETHOD GetTruthValue(PRBool *aTruthValue);
 
     // nsRDFArrayAssertionCursor methods:
@@ -97,9 +98,9 @@ public:
     NS_IMETHOD GetValue(nsIRDFNode** aValue);
 
     // nsIRDFAssertionCursor methods:
-    NS_IMETHOD GetSubject(nsIRDFResource* *aSubject);
-    NS_IMETHOD GetPredicate(nsIRDFResource* *aPredicate);
-    NS_IMETHOD GetObject(nsIRDFNode* *aObject);
+    NS_IMETHOD GetSource(nsIRDFResource* *aSubject);
+    NS_IMETHOD GetLabel(nsIRDFResource* *aPredicate);
+    NS_IMETHOD GetTarget(nsIRDFNode* *aObject);
     NS_IMETHOD GetTruthValue(PRBool *aTruthValue);
 
     // nsRDFSingletonAssertionCursor methods:
@@ -136,7 +137,7 @@ public:
     virtual ~nsRDFArrayArcsCursor();
 
 protected:
-    nsresult GetPredicate(nsIRDFResource** aPredicate) {
+    nsresult GetLabel(nsIRDFResource** aPredicate) {
         return GetValue((nsIRDFNode**)aPredicate);
     }
 
@@ -169,11 +170,11 @@ public:
     }
 
     // nsIRDFArcsOutCursor methods:
-    NS_IMETHOD GetSubject(nsIRDFResource** aSubject) {
+    NS_IMETHOD GetSource(nsIRDFResource** aSubject) {
         return GetNode((nsIRDFNode**)aSubject);
     }
-    NS_IMETHOD GetPredicate(nsIRDFResource** aPredicate) {
-        return nsRDFArrayArcsCursor::GetPredicate(aPredicate);
+    NS_IMETHOD GetLabel(nsIRDFResource** aPredicate) {
+        return nsRDFArrayArcsCursor::GetLabel(aPredicate);
     }
 
     // nsRDFArrayArcsOutCursor methods:
@@ -204,11 +205,11 @@ public:
     }
 
     // nsIRDFArcsInCursor methods:
-    NS_IMETHOD GetObject(nsIRDFNode** aObject) {
+    NS_IMETHOD GetTarget(nsIRDFNode** aObject) {
         return GetNode(aObject);
     }
-    NS_IMETHOD GetPredicate(nsIRDFResource** aPredicate) {
-        return nsRDFArrayArcsCursor::GetPredicate(aPredicate);
+    NS_IMETHOD GetLabel(nsIRDFResource** aPredicate) {
+        return nsRDFArrayArcsCursor::GetLabel(aPredicate);
     }
 
     // nsRDFArrayArcsInCursor methods:
@@ -262,9 +263,9 @@ public:
     }
 
     // nsIRDFAssertionCursor methods:
-    NS_IMETHOD GetSubject(nsIRDFResource* *aSubject);
-    NS_IMETHOD GetPredicate(nsIRDFResource* *aPredicate);
-    NS_IMETHOD GetObject(nsIRDFNode* *aObject);
+    NS_IMETHOD GetSource(nsIRDFResource* *aSubject);
+    NS_IMETHOD GetLabel(nsIRDFResource* *aPredicate);
+    NS_IMETHOD GetTarget(nsIRDFNode* *aObject);
     NS_IMETHOD GetTruthValue(PRBool *aTruthValue);
 
     // nsRDFEnumeratorAssertionCursor methods:
@@ -293,7 +294,7 @@ public:
     virtual ~nsRDFEnumeratorArcsCursor();
 
 protected:
-    nsresult GetPredicate(nsIRDFResource** aPredicate) {
+    nsresult GetLabel(nsIRDFResource** aPredicate) {
         return GetValue((nsIRDFNode**)aPredicate);
     }
 
@@ -326,11 +327,11 @@ public:
     }
 
     // nsIRDFArcsOutCursor methods:
-    NS_IMETHOD GetSubject(nsIRDFResource** aSubject) {
+    NS_IMETHOD GetSource(nsIRDFResource** aSubject) {
         return GetNode((nsIRDFNode**)aSubject);
     }
-    NS_IMETHOD GetPredicate(nsIRDFResource** aPredicate) {
-        return nsRDFEnumeratorArcsCursor::GetPredicate(aPredicate);
+    NS_IMETHOD GetLabel(nsIRDFResource** aPredicate) {
+        return nsRDFEnumeratorArcsCursor::GetLabel(aPredicate);
     }
 
     // nsRDFEnumeratorArcsOutCursor methods:
@@ -361,11 +362,11 @@ public:
     }
 
     // nsIRDFArcsInCursor methods:
-    NS_IMETHOD GetObject(nsIRDFNode** aObject) {
+    NS_IMETHOD GetTarget(nsIRDFNode** aObject) {
         return GetNode(aObject);
     }
-    NS_IMETHOD GetPredicate(nsIRDFResource** aPredicate) {
-        return nsRDFEnumeratorArcsCursor::GetPredicate(aPredicate);
+    NS_IMETHOD GetLabel(nsIRDFResource** aPredicate) {
+        return nsRDFEnumeratorArcsCursor::GetLabel(aPredicate);
     }
 
     // nsRDFEnumeratorArcsInCursor methods:
