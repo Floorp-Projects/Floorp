@@ -790,46 +790,48 @@ void nsDeviceContextMac :: InitFontInfoList()
 				OSType	resType;
 				Str255	fontName;
 				::GetResInfo(fond, &fondID, &resType, fontName); 
-
+				if( (0 != fontName[0]) && ('.' != fontName[1]) && ('%' != fontName[1]))
+				{
 #if !TARGET_CARBON
-				ScriptCode script = ::FontToScript(fondID);
-				if (script != lastscript)
-				{
-					lastscript = script;
+					ScriptCode script = ::FontToScript(fondID);
+					if (script != lastscript)
+					{
+						lastscript = script;
 
-					TextEncoding sourceEncoding;
-					err = ::UpgradeScriptInfoToTextEncoding(script, kTextLanguageDontCare, 
-								kTextRegionDontCare, NULL, &sourceEncoding);
-							
+						TextEncoding sourceEncoding;
+						err = ::UpgradeScriptInfoToTextEncoding(script, kTextLanguageDontCare, 
+									kTextRegionDontCare, NULL, &sourceEncoding);
+								
+						if (converter)
+							err = ::TECDisposeConverter(converter);
+
+						err = ::TECCreateConverter(&converter, sourceEncoding, unicodeEncoding);
+						if (err != noErr)
+							converter = nil;
+					}
+
 					if (converter)
-						err = ::TECDisposeConverter(converter);
+					{
+						PRUnichar unicodeFontName[sizeof(fontName)];
+						ByteCount actualInputLength, actualOutputLength;
+						err = ::TECConvertText(converter, &fontName[1], fontName[0], &actualInputLength, 
+													(TextPtr)unicodeFontName , sizeof(unicodeFontName), &actualOutputLength);	
+						unicodeFontName[actualOutputLength / sizeof(PRUnichar)] = '\0';
 
-					err = ::TECCreateConverter(&converter, sourceEncoding, unicodeEncoding);
-					if (err != noErr)
-						converter = nil;
-				}
-
-				if (converter)
-				{
-					PRUnichar unicodeFontName[sizeof(fontName)];
-					ByteCount actualInputLength, actualOutputLength;
-					err = ::TECConvertText(converter, &fontName[1], fontName[0], &actualInputLength, 
-												(TextPtr)unicodeFontName , sizeof(unicodeFontName), &actualOutputLength);	
-					unicodeFontName[actualOutputLength / sizeof(PRUnichar)] = '\0';
-
-	        		FontNameKey key(unicodeFontName);
-					gFontInfoList->Put(&key, (void*)fondID);
-				}
+		        		FontNameKey key(unicodeFontName);
+						gFontInfoList->Put(&key, (void*)fondID);
+					}
 #else
-				// pinkerton - CreateTextEncoding() makes a carbon app exit. this is a smarmy hack
-				char buffer[500];
-				::BlockMoveData ( &fontName[1], buffer, *fontName );
-				buffer[*fontName] = NULL;
-printf("font buffer is %s\n", buffer);
-	        	FontNameKey key(buffer);
-				gFontInfoList->Put(&key, (void*)fondID);				
+					// pinkerton - CreateTextEncoding() makes a carbon app exit. this is a smarmy hack
+					char buffer[500];
+					::BlockMoveData ( &fontName[1], buffer, *fontName );
+					buffer[*fontName] = NULL;
+	printf("font buffer is %s\n", buffer);
+		        	FontNameKey key(buffer);
+					gFontInfoList->Put(&key, (void*)fondID);				
 #endif
-				::ReleaseResource(fond);
+					::ReleaseResource(fond);
+				}
 			}
 		}
 		if (converter)
