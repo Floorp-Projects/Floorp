@@ -47,8 +47,7 @@
 #include <windows.h>
 #include <stdlib.h>
 #elif defined(XP_OS2)
-#define MAX_PATH _MAX_PATH
-#define INCL_WINWORKPLACE
+#define INCL_DOS
 #include <os2.h>
 #include <stdlib.h>
 #include <stdio.h>
