@@ -579,7 +579,7 @@ var BookmarksCommand = {
         if (target) {
           var uri = target.QueryInterface(kRDFLITIID).Value;
           if (index < tabCount)
-            tabPanels[index].loadURI(uri, null, nsIWebNavigation.LOAD_FLAGS_NONE);
+            tabPanels[index].loadURI(uri);
           else
             browser.addTab(uri);
           ++index;
