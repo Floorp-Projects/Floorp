@@ -1,0 +1,55 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+/* nsIURIContentListener is an interface used by classes which
+   want to know (and have a chance to handle) a particular content type.
+   Typical useage scenarios will include running applications which register
+   a nsIURIContentListener for each of its content windows with the uri dispatcher
+   service. 
+*/ 
+
+#include "nsISupports.idl"
+interface nsIProtocolHandler;
+interface nsIStreamListener;
+
+[scriptable, uuid(94928AB3-8B63-11d3-989D-001083010E9B)]
+interface nsIURIContentListener : nsISupports
+{
+  /* Give the content listener first crack at forcing us to use
+     a specific content handler. Content listener's do not need to 
+     support this method if they want the uri dispatcher to find the
+     default protocol handler from the registry. 
+   */
+   readonly attribute nsIProtocolHandler protocolHandler;
+
+  /* The URIDispatcher will give the content listener a shot at handling
+     the content before it tries other means. If the content listener
+     wants to handle the content then it should return a stream listener
+     the data should be pushed into. 
+     aContentType --> the content type we need to handle
+     aCommand --> verb for the action (this comes from layout???)
+     aWindowTarget --> name of the target window if any
+     aStreamListener --> the content viewer the content should be displayed in
+                        You should return null for this out parameter if you do
+                        not want to handle this content type.
+  */
+
+   void doContent(in string aContentType, in string aCommand, 
+                  in string aWindowTarget, 
+                  out nsIStreamListener aContentHandler);
+};
