@@ -104,6 +104,7 @@ NS_IMPL_RELEASE(nsDocShell)
 NS_INTERFACE_MAP_BEGIN(nsDocShell)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDocShell)
    NS_INTERFACE_MAP_ENTRY(nsIDocShell)
+   NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeItem)
    NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeNode)
    NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
    NS_INTERFACE_MAP_ENTRY(nsIScrollable)
@@ -282,29 +283,6 @@ nsDocShell::SetDocument(nsIDOMDocument *aDOMDoc, nsIDOMElement *aRootNode)
    return NS_OK;
 }
 
-
-
-// caller is responsible for calling nsString::Recycle(*aName);
-NS_IMETHODIMP nsDocShell::GetName(PRUnichar** aName)
-{
-   NS_ENSURE_ARG_POINTER(aName);
-   *aName = nsnull;
-   if(0 != mName.Length())
-      *aName = mName.ToNewUnicode();
-   return NS_OK;
-}
-
-NS_IMETHODIMP nsDocShell::SetName(const PRUnichar* aName)
-{
-  if (aName) {
-    mName = aName;  // this does a copy of aName
-  }
-  else {
-    mName = "";
-  }
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsDocShell::GetPresContext(nsIPresContext** aPresContext)
 {
    NS_ENSURE_ARG_POINTER(aPresContext);
@@ -343,28 +321,6 @@ NS_IMETHODIMP nsDocShell::GetContentViewer(nsIContentViewer** aContentViewer)
    *aContentViewer = mContentViewer;
    NS_IF_ADDREF(*aContentViewer);
    return NS_OK;
-}
-
-NS_IMETHODIMP nsDocShell::GetParent(nsIDocShell** parent)
-{
-   NS_ENSURE_ARG_POINTER(parent);
-
-   *parent = mParent;
-   NS_IF_ADDREF(*parent);
-
-   return NS_OK;
-}
-
-NS_IMETHODIMP nsDocShell::SetParent(nsIDocShell* aParent)
-{
-  // null aParent is ok
-   /*
-   Note this doesn't do an addref on purpose.  This is because the parent
-   is an implied lifetime.  We don't want to create a cycle by refcounting
-   the parent.
-   */
-   mParent = aParent;
-  return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShell::GetTreeOwner(nsIDocShellTreeOwner** aTreeOwner)
@@ -417,22 +373,6 @@ NS_IMETHODIMP nsDocShell::SetPrefs(nsIPref* aPrefs)
 {
   // null aPrefs is ok
   mPrefs = aPrefs;    // this assignment does an addref
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDocShell::GetRootDocShell(nsIDocShell** aRootDocShell)
-{
-  NS_ENSURE_ARG_POINTER(aRootDocShell);
-  *aRootDocShell = NS_STATIC_CAST(nsIDocShell*, this);
-
-  nsCOMPtr<nsIDocShell> parent;
-  NS_ENSURE_TRUE(GetParent(getter_AddRefs(parent)), NS_ERROR_FAILURE);
-  while (parent)
-  {
-    *aRootDocShell = parent;
-    NS_ENSURE_TRUE(GetParent(getter_AddRefs(parent)), NS_ERROR_FAILURE);
-  }
-  NS_IF_ADDREF(*aRootDocShell);
   return NS_OK;
 }
 
@@ -522,6 +462,68 @@ nsDocShell::SetMarginHeight(PRInt32 aHeight)
 }
 
 //*****************************************************************************
+// nsDocShell::nsIDocShellTreeItem
+//*****************************************************************************   
+
+NS_IMETHODIMP nsDocShell::GetName(PRUnichar** aName)
+{
+   NS_ENSURE_ARG_POINTER(aName);
+   *aName = nsnull;
+   if(0 != mName.Length())
+      *aName = mName.ToNewUnicode();
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::SetName(const PRUnichar* aName)
+{
+  if (aName) {
+    mName = aName;  // this does a copy of aName
+  }
+  else {
+    mName = "";
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::GetParent(nsIDocShellTreeItem** parent)
+{
+   NS_ENSURE_ARG_POINTER(parent);
+
+   *parent = mParent;
+   NS_IF_ADDREF(*parent);
+
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::SetParent(nsIDocShellTreeItem* aParent)
+{
+  // null aParent is ok
+   /*
+   Note this doesn't do an addref on purpose.  This is because the parent
+   is an implied lifetime.  We don't want to create a cycle by refcounting
+   the parent.
+   */
+   mParent = aParent;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::GetRootTreeItem(nsIDocShellTreeItem** aRootTreeItem)
+{
+  NS_ENSURE_ARG_POINTER(aRootTreeItem);
+  *aRootTreeItem = NS_STATIC_CAST(nsIDocShellTreeItem*, this);
+
+  nsCOMPtr<nsIDocShellTreeItem> parent;
+  NS_ENSURE_TRUE(GetParent(getter_AddRefs(parent)), NS_ERROR_FAILURE);
+  while (parent)
+  {
+    *aRootTreeItem = parent;
+    NS_ENSURE_TRUE(GetParent(getter_AddRefs(parent)), NS_ERROR_FAILURE);
+  }
+  NS_IF_ADDREF(*aRootTreeItem);
+  return NS_OK;
+}
+
+//*****************************************************************************
 // nsDocShell::nsIDocShellTreeNode
 //*****************************************************************************   
 
@@ -532,44 +534,48 @@ NS_IMETHODIMP nsDocShell::GetChildCount(PRInt32 *aChildCount)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShell::AddChild(nsIDocShell *aChild)
+NS_IMETHODIMP nsDocShell::AddChild(nsIDocShellTreeItem *aChild)
 {
-  NS_ENSURE_ARG_POINTER(aChild);
+   NS_ENSURE_ARG_POINTER(aChild);
 
-  NS_ENSURE_SUCCESS(aChild->SetParent(this), NS_ERROR_FAILURE);
-  mChildren.AppendElement(aChild);
-  NS_ADDREF(aChild);
+   NS_ENSURE_SUCCESS(aChild->SetParent(this), NS_ERROR_FAILURE);
+   mChildren.AppendElement(aChild);
+   NS_ADDREF(aChild);
 
-  PRUnichar *defaultCharset=nsnull;
-  PRUnichar *forceCharset=nsnull;
-  nsCOMPtr<nsIContentViewer> cv;
-  NS_ENSURE_SUCCESS(GetContentViewer(getter_AddRefs(cv)), NS_ERROR_FAILURE);
-  if (cv)
-  {
-    nsCOMPtr<nsIMarkupDocumentViewer> muDV = do_QueryInterface(cv);
-    if (muDV)
-    {
+   nsCOMPtr<nsIDocShell> childAsDocShell(do_QueryInterface(aChild));
+   if(!childAsDocShell)
+      return NS_OK;
+
+   // Do some docShell Specific stuff.
+   PRUnichar *defaultCharset=nsnull;
+   PRUnichar *forceCharset=nsnull;
+   NS_ENSURE_TRUE(mContentViewer, NS_ERROR_FAILURE);
+
+   nsCOMPtr<nsIMarkupDocumentViewer> muDV = do_QueryInterface(mContentViewer);
+   if(muDV)
+      {
       NS_ENSURE_SUCCESS(muDV->GetDefaultCharacterSet (&defaultCharset), NS_ERROR_FAILURE);
       NS_ENSURE_SUCCESS(muDV->GetForceCharacterSet (&forceCharset), NS_ERROR_FAILURE);
-    }
-    nsCOMPtr<nsIContentViewer> childCV;
-    NS_ENSURE_SUCCESS(aChild->GetContentViewer(getter_AddRefs(childCV)), NS_ERROR_FAILURE);
-    if (childCV)
-    {
-      nsCOMPtr<nsIMarkupDocumentViewer> childmuDV = do_QueryInterface(cv);
-      if (childmuDV)
-      {
-        NS_ENSURE_SUCCESS(childmuDV->SetDefaultCharacterSet(defaultCharset), NS_ERROR_FAILURE);
-        NS_ENSURE_SUCCESS(childmuDV->SetForceCharacterSet(forceCharset), NS_ERROR_FAILURE);
       }
-    }
-  }
+   nsCOMPtr<nsIContentViewer> childCV;
+   NS_ENSURE_SUCCESS(childAsDocShell->GetContentViewer(getter_AddRefs(childCV)),
+      NS_ERROR_FAILURE);
+   if(childCV)
+      {
+      nsCOMPtr<nsIMarkupDocumentViewer> childmuDV = do_QueryInterface(childCV);
+      if(childmuDV)
+         {
+         NS_ENSURE_SUCCESS(childmuDV->SetDefaultCharacterSet(defaultCharset), 
+            NS_ERROR_FAILURE);
+         NS_ENSURE_SUCCESS(childmuDV->SetForceCharacterSet(forceCharset), 
+            NS_ERROR_FAILURE);
+         }
+      }
 
   return NS_OK;
 }
 
-// tiny semantic change from webshell.  aChild is only effected if it was actually a child of this docshell
-NS_IMETHODIMP nsDocShell::RemoveChild(nsIDocShell *aChild)
+NS_IMETHODIMP nsDocShell::RemoveChild(nsIDocShellTreeItem *aChild)
 {
    NS_ENSURE_ARG_POINTER(aChild);
 
@@ -584,49 +590,48 @@ NS_IMETHODIMP nsDocShell::RemoveChild(nsIDocShell *aChild)
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShell::GetChildAt(PRInt32 aIndex, nsIDocShell** aDocShell)
+NS_IMETHODIMP nsDocShell::GetChildAt(PRInt32 aIndex, nsIDocShellTreeItem** aChild)
 {
-   NS_ENSURE_ARG_POINTER(aDocShell);
+   NS_ENSURE_ARG_POINTER(aChild);
    NS_ENSURE_ARG_RANGE(aIndex, 0, mChildren.Count() - 1);
 
-   *aDocShell = (nsIDocShell*) mChildren.ElementAt(aIndex);
-   NS_IF_ADDREF(*aDocShell);
+   *aChild = (nsIDocShellTreeItem*) mChildren.ElementAt(aIndex);
+   NS_IF_ADDREF(*aChild);
 
    return NS_OK;
 }
 
 /* depth-first search for a child shell with aName */
-NS_IMETHODIMP nsDocShell::FindChildWithName(const PRUnichar *aName, nsIDocShell **_retval)
+NS_IMETHODIMP nsDocShell::FindChildWithName(const PRUnichar *aName, nsIDocShellTreeItem **_retval)
 {
-  NS_ENSURE_ARG(aName);
-  NS_ENSURE_ARG_POINTER(_retval);
+   NS_ENSURE_ARG(aName);
+   NS_ENSURE_ARG_POINTER(_retval);
   
-  *_retval = nsnull;  // if we don't find one, we return NS_OK and a null result 
-  nsAutoString name(aName);
-  PRUnichar *childName;
-  PRInt32 i, n = mChildren.Count();
-  for (i = 0; i < n; i++) 
-  {
-    nsIDocShell* child = (nsIDocShell*) mChildren.ElementAt(i); // doesn't addref the result
-    if (nsnull != child) {
+   *_retval = nsnull;  // if we don't find one, we return NS_OK and a null result 
+   nsAutoString name(aName);
+   PRUnichar *childName;
+   PRInt32 i, n = mChildren.Count();
+   for (i = 0; i < n; i++) 
+      {
+      nsIDocShellTreeItem* child = (nsIDocShellTreeItem*) mChildren.ElementAt(i); // doesn't addref the result
+      NS_ENSURE_TRUE(child, NS_ERROR_FAILURE);
       child->GetName(&childName);
-      if (name.Equals(childName)) {
-        *_retval = child;
-        NS_ADDREF(child);
-        break;
-      }
+      if(name.Equals(childName))
+         {
+         *_retval = child;
+         NS_ADDREF(child);
+         break;
+         }
 
       // See if child contains the shell with the given name
-      nsCOMPtr<nsIDocShellTreeNode> childAsContainer = do_QueryInterface(child);
-      if (child)
-      {
-        NS_ENSURE_SUCCESS(childAsContainer->FindChildWithName(name.GetUnicode(), _retval), NS_ERROR_FAILURE);
+      nsCOMPtr<nsIDocShellTreeNode> childAsNode = do_QueryInterface(child);
+      if(child)
+         {
+         NS_ENSURE_SUCCESS(childAsNode->FindChildWithName(name.GetUnicode(), _retval), NS_ERROR_FAILURE);
+         }
+      if (*_retval)   // found it
+         break;
       }
-      if (*_retval) {  // found it
-        break;
-      }
-    }
-  }
   return NS_OK;
 }
 
@@ -1598,11 +1603,14 @@ nsDocShell::FireStartDocumentLoad(nsIDocumentLoader* aLoader,
       /* If this is a frame (in which case it would have a parent && doesn't
        * have a documentloaderObserver, get it from the rootWebShell
        */
-      nsCOMPtr<nsIDocShell> root;
-      NS_ENSURE_SUCCESS(GetRootDocShell(getter_AddRefs(root)), NS_ERROR_FAILURE);
+      nsCOMPtr<nsIDocShellTreeItem> rootTreeItem;
+      NS_ENSURE_SUCCESS(GetRootTreeItem(getter_AddRefs(rootTreeItem)), 
+         NS_ERROR_FAILURE);
 
-      if (root)
-        NS_ENSURE_SUCCESS(root->GetDocLoaderObserver(getter_AddRefs(dlObserver)), NS_ERROR_FAILURE);
+      nsCOMPtr<nsIDocShell> rootAsDocShell(do_QueryInterface(rootTreeItem));
+      if(rootAsDocShell)
+         NS_ENSURE_SUCCESS(rootAsDocShell->GetDocLoaderObserver(getter_AddRefs(dlObserver)), 
+            NS_ERROR_FAILURE);
     }
     else
     {
@@ -1696,11 +1704,14 @@ nsDocShell::FireEndDocumentLoad(nsIDocumentLoader* aLoader,
     {
       // If this is a frame (in which case it would have a parent && doesn't
       // have a documentloaderObserver, get it from the rootWebShell
-      nsCOMPtr<nsIDocShell> root;
-      NS_ENSURE_SUCCESS(GetRootDocShell(getter_AddRefs(root)), NS_ERROR_FAILURE);
+      nsCOMPtr<nsIDocShellTreeItem> rootTreeItem;
+      NS_ENSURE_SUCCESS(GetRootTreeItem(getter_AddRefs(rootTreeItem)), 
+         NS_ERROR_FAILURE);
 
-      if (root)
-        NS_ENSURE_SUCCESS(root->GetDocLoaderObserver(getter_AddRefs(dlObserver)), NS_ERROR_FAILURE);
+      nsCOMPtr<nsIDocShell> rootAsDocShell(do_QueryInterface(rootTreeItem));
+      if(rootAsDocShell)
+         NS_ENSURE_SUCCESS(rootAsDocShell->GetDocLoaderObserver(getter_AddRefs(dlObserver)),
+            NS_ERROR_FAILURE);
     }
     else
     {
@@ -1729,10 +1740,8 @@ nsDocShell::FireEndDocumentLoad(nsIDocumentLoader* aLoader,
 
 NS_IMETHODIMP nsDocShell::InsertDocumentInDocTree()
 {
-  nsCOMPtr<nsIDocShell> parent;
-  NS_ENSURE_SUCCESS(GetParent(getter_AddRefs(parent)), NS_ERROR_FAILURE);
-  // null parent is legal.  If we have a parent, hook up our doc to the parent's doc
-  if (parent)
+   nsCOMPtr<nsIDocShell> parent(do_QueryInterface(mParent));
+  if(parent)
   {
     // Get the document object for the parent
     nsCOMPtr<nsIContentViewer> parentContentViewer;
@@ -1765,10 +1774,10 @@ NS_IMETHODIMP nsDocShell::InsertDocumentInDocTree()
 NS_IMETHODIMP nsDocShell::DestroyChildren()
 {
    PRInt32 i, n = mChildren.Count();
-   nsCOMPtr<nsIDocShell>   shell;
+   nsCOMPtr<nsIDocShellTreeItem>   shell;
    for (i = 0; i < n; i++) 
       {
-      shell = (nsIDocShell*) mChildren.ElementAt(i);
+      shell = dont_AddRef((nsIDocShellTreeItem*)mChildren.ElementAt(i));
       if(!NS_WARN_IF_FALSE(shell, "docshell has null child"))
          shell->SetParent(nsnull);
       }

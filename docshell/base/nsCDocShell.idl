@@ -21,6 +21,7 @@
  */
 
 #include "nsIDocShell.idl"
+#include "nsIDocShellTreeItem.idl"
 #include "nsIDocShellTreeNode.idl"
 #include "nsIBaseWindow.idl"
 #include "nsIScrollable.idl"
@@ -31,7 +32,8 @@
 nsCHTMLDocShell implements:
 -------------------------
 nsIDocShell
-nsIHTMLDocShell
+nsIDocShellTreeItem
+nsIDocShellTreeNode
 nsIBaseWindow
 nsIScrollable
 nsITextScroll

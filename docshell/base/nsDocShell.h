@@ -59,7 +59,8 @@ public:
    PRBool         visible;
 };
 
-class nsDocShell : public nsIDocShell, 
+class nsDocShell : public nsIDocShell,
+                   public nsIDocShellTreeItem, 
                    public nsIDocShellTreeNode,
                    public nsIBaseWindow, 
                    public nsIScrollable, 
@@ -74,6 +75,7 @@ public:
    NS_DECL_ISUPPORTS
 
    NS_DECL_NSIDOCSHELL
+   NS_DECL_NSIDOCSHELLTREEITEM
    NS_DECL_NSIDOCSHELLTREENODE
    NS_DECL_NSIBASEWINDOW
    NS_DECL_NSISCROLLABLE
@@ -148,7 +150,7 @@ protected:
    parent thus a cycle.  A weak reference would work, but not required as the
    interface states a requirement to zero out the parent when the parent is
    releasing the interface.*/
-   nsIDocShell*               mParent;
+   nsIDocShellTreeItem*       mParent;
    
 };
 
