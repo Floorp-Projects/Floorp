@@ -17,7 +17,8 @@
         title="&prefWindow.title;" 
         orient="vertical" class="dialog"
         style="width: 51em; height: 40em;"
-        onload="Startup();"> 
+        onload="Startup();"
+        persist="screenX screenY"> 
 
   <script>
   <![CDATA[
