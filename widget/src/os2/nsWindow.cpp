@@ -1794,9 +1794,9 @@ PRBool nsWindow::OnKey( MPARAM mp1, MPARAM mp2)
       }
       else if( !event.isControl && !event.isAlt && event.charCode != 0)
       {
-         if (!(fsFlags & KC_VIRTUALKEY))
+         if (!(fsFlags & KC_VIRTUALKEY) || (event.keyCode == 0))
          {
-            event.isShift = PR_FALSE;  // OS2TODO - Why do we need this?
+            event.isShift = PR_FALSE;
             event.keyCode = 0;
          }
          else if (usVKey != VK_SPACE)
@@ -2742,12 +2742,14 @@ PRUint32 WMChar2KeyCode( MPARAM mp1, MPARAM mp2)
    else if( flags & KC_VIRTUALKEY)
    {
       USHORT vk = SHORT2FROMMP( mp2);
-      if( (flags & KC_ALT) && isNumPadScanCode(CHAR4FROMMP(mp1)) )
+      if( isNumPadScanCode(CHAR4FROMMP(mp1)) && 
+          ( ((flags & KC_ALT) && (CHAR4FROMMP(mp1) != PMSCAN_PADPERIOD)) || 
+            ((flags & (KC_CHAR | KC_SHIFT)) == KC_CHAR) ) )
       {
-          // No virtual key value for Alt+NumPad keystrokes
-          rc = 0;
+         // No virtual key for Alt+NumPad or NumLock+NumPad
+         rc = 0;
       }
-      else if( !(flags & KC_CHAR) ||
+      else if( !(flags & KC_CHAR) || isNumPadScanCode(CHAR4FROMMP(mp1)) ||
           (vk == VK_BACKSPACE) || (vk == VK_TAB) || 
           (vk == VK_ENTER) || (vk == VK_NEWLINE) || (vk == VK_SPACE) )
       {
@@ -2763,7 +2765,7 @@ PRUint32 WMChar2KeyCode( MPARAM mp1, MPARAM mp2)
             case VK_BACKTAB:   rc = NS_VK_TAB; break; // layout tests for isShift
             case VK_CLEAR:     rc = NS_VK_CLEAR; break;
             case VK_NEWLINE:   rc = NS_VK_RETURN; break;
-            case VK_ENTER:     rc = NS_VK_ENTER; break;
+            case VK_ENTER:     rc = NS_VK_RETURN; break;
             case VK_SHIFT:     rc = NS_VK_SHIFT; break;
             case VK_CTRL:      rc = NS_VK_CONTROL; break;
             case VK_ALT:       rc = NS_VK_ALT; break;

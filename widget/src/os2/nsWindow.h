@@ -309,9 +309,10 @@ protected:
 #define PMSCAN_PAD2         0x50
 #define PMSCAN_PAD3         0x51
 #define PMSCAN_PAD0         0x52
+#define PMSCAN_PADPERIOD    0x53
 
 #define isNumPadScanCode(scanCode) !( (scanCode < PMSCAN_PAD7) ||      \
-                                      (scanCode > PMSCAN_PAD0) ||      \
+                                      (scanCode > PMSCAN_PADPERIOD) || \
                                       (scanCode == PMSCAN_PADMINUS) || \
                                       (scanCode == PMSCAN_PADPLUS) )
 
