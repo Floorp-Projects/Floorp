@@ -134,14 +134,7 @@ nsresult nsMsgLocalFactory::CreateInstance(nsISupports * /* aOuter */, const nsI
 	}
 	else if (mClassID.Equals(kPop3UrlCID))
 	{
-		nsPop3URL * popUrl = new nsPop3URL(nsnull, nsnull);
-		if (popUrl)
-			rv = popUrl->QueryInterface(aIID, aResult);
-		else
-			rv = NS_ERROR_OUT_OF_MEMORY;
-		
-		if (NS_FAILED(rv) && popUrl)
-			delete popUrl;
+		rv = NS_NewPopUrl(nsIPop3URL::GetIID(), aResult);
 	}
 	else if (mClassID.Equals(kMailboxParserCID)) 
 	{
