@@ -27,6 +27,7 @@ typedef enum
 		[propget, id(2), helpstring("property WebBrowser")] HRESULT WebBrowser([out, retval] LPDISPATCH *pVal);
 		[propput, id(3), helpstring("property Result")] HRESULT Result([in] TestResult newVal);
 		[propget, id(4), helpstring("property TestURL")] HRESULT TestURL([out, retval] BSTR *pVal);
+		[propget, id(5), helpstring("property TestCGI")] HRESULT TestCGI([out, retval] BSTR *pVal);
 	};
 
 
