@@ -146,7 +146,7 @@ protected:
     HTTPVersion                 mVersion;
     // The actual request stream! 
     nsIBufferInputStream*       mRequest; 
-    nsIChannel*                 mTransport;
+    nsCOMPtr<nsIChannel>        mTransport;
     nsHTTPChannel*              mConnection;
 
     nsHTTPHeaderArray           mHeaders;
