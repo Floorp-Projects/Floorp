@@ -804,9 +804,6 @@ nsDownloadManager::CleanUp()
     }
   }
 
-  // 2). Now, ensure that all the other download items are valid. 
-  ValidateDownloadsContainer();
-
   EndBatchUpdate();
 
   return NS_OK;
@@ -876,30 +873,8 @@ nsDownloadManager::ValidateDownloadsContainer()
       }
     }
 
-#if 0
-    // NC:DownloadState
-    mDataSource->HasArcOut(downloadRes, gNC_DownloadState, &hasProperty);
-    if (!hasProperty)
-      ary->AppendElement(downloadRes);
-    else {
-      // NC:File
-      mDataSource->HasArcOut(downloadRes, gNC_File, &hasProperty);
-      if (!hasProperty) 
-        ary->AppendElement(downloadRes);
-      else {
-        // NC:Name
-        mDataSource->HasArcOut(downloadRes, gNC_Name, &hasProperty);
-        if (!hasProperty)
-          ary->AppendElement(downloadRes);
-      }
-    }
-#endif
-
     e->HasMoreElements(&hasMore);
   }
-
-  if (!mBatches) 
-    StartBatchUpdate();
 
   // Now Remove all the bad downloads. 
   PRUint32 cnt;
@@ -910,9 +885,6 @@ nsDownloadManager::ValidateDownloadsContainer()
     // Use the internal method because we know what we're doing! (We hope!)
     RemoveDownload(download);
   }
-
-  if (mBatches)
-    EndBatchUpdate();
 
   return NS_OK;
 }
