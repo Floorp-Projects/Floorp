@@ -22,6 +22,7 @@
  *  Brian Ryner <bryner@netscape.com>
  *  Jan Varga <varga@utcru.sk>
  *  Peter Annema <disttsc@bart.nl>
+ *  Johann Petrak <johann@ai.univie.ac.at>
  */
 
 const nsIFilePicker       = Components.interfaces.nsIFilePicker;
@@ -33,6 +34,7 @@ const nsFileView_CONTRACTID = "@mozilla.org/filepicker/fileview;1";
 const nsITreeView = Components.interfaces.nsITreeView;
 const nsILocalFile = Components.interfaces.nsILocalFile;
 const nsLocalFile_CONTRACTID = "@mozilla.org/file/local;1";
+const nsIPromptService_CONTRACTID = "@mozilla.org/embedcomp/prompt-service;1";
 
 var sfile = Components.classes[nsLocalFile_CONTRACTID].createInstance(nsILocalFile);
 var retvals;
@@ -44,6 +46,10 @@ var textInput;
 var okButton;
 
 var gFilePickerBundle;
+
+// name of new directory entered by the user to be remembered
+// for next call of newDir() in case something goes wrong with creation
+var gNewDirName = { value: "" };
 
 function filepickerLoad() {
   gFilePickerBundle = document.getElementById("bundle_filepicker");
@@ -70,6 +76,11 @@ function filepickerLoad() {
     if (initialText) {
       textInput.value = initialText;
     }
+  }
+
+  if (filePickerMode != nsIFilePicker.modeOpen) {
+    var newDirButton = document.getElementById("newDirButton");
+    newDirButton.removeAttribute("hidden");
   }
 
   if ((filePickerMode == nsIFilePicker.modeOpen) ||
@@ -161,25 +172,25 @@ function changeFilter(filterTypes)
   window.setCursor("auto");
 }
 
-function showFilePermissionsErrorDialog(titleStrName, messageStrName, file)
+function showErrorDialog(titleStrName, messageStrName, file)
 {
   var errorTitle =
     gFilePickerBundle.getFormattedString(titleStrName, [file.path]);
   var errorMessage =
     gFilePickerBundle.getFormattedString(messageStrName, [file.path]);
   var promptService =
-    Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
+    Components.classes[nsIPromptService_CONTRACTID].getService(Components.interfaces.nsIPromptService);
 
-  promptService.alert(window, errorTitle, errorMessage)
+  promptService.alert(window, errorTitle, errorMessage);
 }
 
 function openOnOK()
 {
   var dir = treeView.getSelectedFile();
   if (!dir.isReadable()) {
-    showFilePermissionsErrorDialog("errorOpenFileDoesntExistTitle",
-                                   "errorDirNotReadableMessage",
-                                   dir);
+    showErrorDialog("errorOpenFileDoesntExistTitle",
+                    "errorDirNotReadableMessage",
+                    dir);
     return false;
   }
 
@@ -202,38 +213,28 @@ function selectOnOK()
   var isDir = false;
   var isFile = false;
 
-  var input = textInput.value;
-  if (input[0] == '~') // XXX XP?
-    input  = homeDir.path + input.substring(1);
+  var file = processPath(textInput.value);
 
-  var file = sfile.clone().QueryInterface(nsILocalFile);
-  if (!file)
+  if (!file) { // generic error message, should probably never happen
+    showErrorDialog("errorPathProblemTitle",
+                    "errorPathProblemMessage",
+                    textInput.value);
     return false;
-
-  /* XXX we need an XP way to test for an absolute path! */
-  if (input[0] == '/')   /* an absolute path was entered */
-    file.initWithPath(input);
-  else if ((input.indexOf("/../") > 0) ||
-           (input.substr(-3) == "/..") ||
-           (input.substr(0,3) == "../") ||
-           (input == "..")) {
-    /* appendRelativePath doesn't allow .. */
-    file.initWithPath(file.path + "/" + input);
-    file.normalize();
   }
-  else {
-    try {
-      file.appendRelativePath(input);
-    } catch (e) {
-      dump("Can't append relative path '"+input+"':\n");
-      return false;
-    }
+
+  // try to normalize - if this fails we will ignore the error
+  // because we will notice the
+  // error later and show a fitting error alert.
+  try{
+    file.normalize();
+  } catch(e) {
+    //promptService.alert(window, "Problem", "normalize failed, continuing");
   }
 
   if (!file.exists() && (filePickerMode != nsIFilePicker.modeSave)) {
-    showFilePermissionsErrorDialog("errorOpenFileDoesntExistTitle",
-                                   "errorOpenFileDoesntExistMessage",
-                                   file);
+    showErrorDialog("errorOpenFileDoesntExistTitle",
+                    "errorOpenFileDoesntExistMessage",
+                    file);
     return false;
   }
 
@@ -249,9 +250,9 @@ function selectOnOK()
         retvals.directory = file.parent.path;
         ret = nsIFilePicker.returnOK;
       } else {
-        showFilePermissionsErrorDialog("errorOpeningFileTitle",
-                                       "openWithoutPermissionMessage_file",
-                                       file);
+        showErrorDialog("errorOpeningFileTitle",
+                        "openWithoutPermissionMessage_file",
+                        file);
         ret = nsIFilePicker.returnCancel;
       }
     } else if (isDir) {
@@ -266,9 +267,9 @@ function selectOnOK()
   case nsIFilePicker.modeSave:
     if (isFile) { // can only be true if file.exists()
       if (!file.isWritable()) {
-        showFilePermissionsErrorDialog("errorSavingFileTitle",
-                                       "saveWithoutPermissionMessage_file",
-                                       file);
+        showErrorDialog("errorSavingFileTitle",
+                        "saveWithoutPermissionMessage_file",
+                        file);
         ret = nsIFilePicker.returnCancel;
       } else {
         // we need to pop up a dialog asking if you want to save
@@ -318,8 +319,7 @@ function selectOnOK()
           errorMessage =
             gFilePickerBundle.getFormattedString("saveWithoutPermissionMessage_dir", [parent.path]);
         }
-        promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
-                                  .getService(Components.interfaces.nsIPromptService);
+        promptService = Components.classes[nsIPromptService_CONTRACTID].getService(Components.interfaces.nsIPromptService);
         promptService.alert(window, errorTitle, errorMessage);
         ret = nsIFilePicker.returnCancel;
       }
@@ -491,7 +491,6 @@ function onFileSelected(file) {
       return;
     }
   }
-
   okButton.disabled = (textInput.value == "");
 }
 
@@ -557,6 +556,71 @@ function goHome() {
   gotoDirectory(homeDir);
 }
 
+function newDir() {
+  var file;
+  var promptService =
+    Components.classes[nsIPromptService_CONTRACTID].getService(Components.interfaces.nsIPromptService);
+  var dialogTitle =
+    gFilePickerBundle.getString("promptNewDirTitle");
+  var dialogMsg =
+    gFilePickerBundle.getString("promptNewDirMessage");
+  var ret = promptService.prompt(window, dialogTitle, dialogMsg, gNewDirName, null, {value:0});
+
+  if (ret) {
+    file = processPath(gNewDirName.value);
+    if (!file) {
+      showErrorDialog("errorCreateNewDirTitle",
+                      "errorCreateNewDirMessage",
+                      file);
+      return false;
+    }
+    
+    if (file.exists()) {
+      showErrorDialog("errorNewDirDoesExistTitle",
+                      "errorNewDirDoesExistMessage",
+                      file);
+      return false;
+    }
+
+    var parent = file.parent;
+    if (!(parent.exists() && parent.isDirectory() && parent.isWritable())) {
+      var oldParent = parent;
+      while (!parent.exists()) {
+        oldParent = parent;
+        parent = parent.parent;
+      }
+      if (parent.isFile()) {
+        showErrorDialog("errorCreateNewDirTitle",
+                        "errorCreateNewDirIsFileMessage",
+                        parent);
+        return false;
+      }
+      if (!parent.isWritable()) {
+        showErrorDialog("errorCreateNewDirTitle",
+                        "errorCreateNewDirPermissionMessage",
+                        parent);
+        return false;
+      }
+    }
+
+    try {
+      file.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0755); 
+    } catch (e) {
+      showErrorDialog("errorCreateNewDirTitle",
+                      "errorCreateNewDirMessage",
+                      file);
+      return false;
+    }
+    file.normalize(); // ... in case ".." was used in the path
+    gotoDirectory(file);
+    // we remember and reshow a dirname if something goes wrong
+    // so that errors can be corrected more easily. If all went well,
+    // reset the default value to blank
+    gNewDirName = { value: "" }; 
+  }
+  return true;
+}
+
 function gotoDirectory(directory) {
   window.setCursor("wait");
   try {
@@ -570,10 +634,57 @@ function gotoDirectory(directory) {
   window.setCursor("auto");
 
   treeView.QueryInterface(nsITreeView).selection.clearSelection();
+  if (filePickerMode == nsIFilePicker.modeGetFolder) {
+    textInput.value = "";
+  }
   textInput.focus();
   sfile = directory;
 }
 
 function toggleShowHidden(event) {
   treeView.showHiddenFiles = !treeView.showHiddenFiles;
+}
+
+// from the current directory and whatever was entered
+// in the entry field, try to make a new path. This
+// uses "/" as the directory seperator, "~" as a shortcut
+// for the home directory (but only when seen at the start
+// of a path), and ".." to denote the parent directory.
+// returns the path or false if an error occurred.
+function processPath(path)
+{
+  var file;
+  if (path[0] == '~') 
+    path  = homeDir.path + path.substring(1);
+
+  try{
+    file = sfile.clone().QueryInterface(nsILocalFile);
+  } catch(e) {
+    dump("Couldn't clone\n"+e);
+    return false;
+  }
+
+  if (path[0] == '/')   /* an absolute path was entered */
+    file.initWithPath(path);
+  else if ((path.indexOf("/../") > 0) ||
+           (path.substr(-3) == "/..") ||
+           (path.substr(0,3) == "../") ||
+           (path == "..")) {
+    /* appendRelativePath doesn't allow .. */
+    try{
+      file.initWithPath(file.path + "/" + path);
+    } catch (e) {
+      dump("Couldn't init path\n"+e);
+      return false;
+    }
+  }
+  else {
+    try {
+      file.appendRelativePath(path);
+    } catch (e) {
+      dump("Couldn't append path\n"+e);
+      return false;
+    }
+  }
+  return file;
 }
