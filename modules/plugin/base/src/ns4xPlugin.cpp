@@ -26,6 +26,7 @@
 #include "nsplugin.h"
 #include "ns4xPlugin.h"
 #include "ns4xPluginInstance.h"
+#include "ns4xPluginStreamListener.h"
 #include "nsIServiceManager.h"
 #include "nsIMemory.h"
 #include "nsIPluginStreamListener.h"
@@ -676,6 +677,11 @@ ns4xStreamWrapper::GetStream(nsIOutputStream* &result)
 NPError NP_EXPORT
 _newstream(NPP npp, NPMIMEType type, const char* window, NPStream* *result)
 {
+    
+#ifdef NS_DEBUG
+  printf("\nNewStream called \n\n");
+#endif
+
 	if(!npp)
 		return NPERR_INVALID_INSTANCE_ERROR;
 
@@ -719,6 +725,10 @@ _newstream(NPP npp, NPMIMEType type, const char* window, NPStream* *result)
 int32 NP_EXPORT
 _write(NPP npp, NPStream *pstream, int32 len, void *buffer)
 {
+#ifdef NS_DEBUG
+  printf("\nWrite called by plugin: \n%s\n", buffer);
+#endif
+
 	// negative return indicates failure to the plugin
 	if(!npp)
 		return -1;
@@ -745,6 +755,11 @@ _write(NPP npp, NPStream *pstream, int32 len, void *buffer)
 NPError NP_EXPORT
 _destroystream(NPP npp, NPStream *pstream, NPError reason)
 {
+
+        
+#ifdef NS_DEBUG
+  printf("\nDestroy Stream called \n\n");
+#endif
 	if(!npp)
 		return NPERR_INVALID_INSTANCE_ERROR;
 
@@ -770,7 +785,7 @@ _destroystream(NPP npp, NPStream *pstream, NPError reason)
 
   // This will release the wrapped nsIOutputStream.
   delete wrapper;
-
+  pstream->ndata = nsnull;
   return NPERR_NO_ERROR;
 }
 
@@ -1035,7 +1050,38 @@ _setvalue(NPP npp, NPPVariable variable, void *result)
 NPError NP_EXPORT
 _requestread(NPStream *pstream, NPByteRange *rangeList)
 {
+#ifdef NS_DEBUG
+  printf("\nRequestRead called by plugin: ");
+  for(NPByteRange * range = rangeList; range != nsnull; range = range->next)
+  {
+    printf("%i-%i", range->offset, range->offset + range->length - 1);
+    if(range->next)
+      printf(",");
+  }
+  printf("\n\n");
+#endif
+
+  if(!pstream || !rangeList || !pstream->ndata)
+    return NPERR_INVALID_PARAM;
+
+  nsresult res = NS_OK;
+  
+  ns4xPluginStreamListener * streamlistener = (ns4xPluginStreamListener *)pstream->ndata;
+  
+  if(NS_FAILED(res))
+    return NPERR_GENERIC_ERROR;
+
+  nsPluginStreamType streamtype = nsPluginStreamType_Normal;
+  
+  streamlistener->GetStreamType(&streamtype);
+
+  if(streamtype != nsPluginStreamType_Seek)
     return NPERR_STREAM_NOT_SEEKABLE;
+
+  if(streamlistener->mStreamInfo)
+    streamlistener->mStreamInfo->RequestRead((nsByteRange *)rangeList);
+
+  return NS_OK;
 }
 
 
