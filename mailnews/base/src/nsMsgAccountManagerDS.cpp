@@ -346,13 +346,9 @@ nsMsgAccountManagerDataSource::GetTargets(nsIRDFResource *source,
       if (property == kNC_Settings) {
         
         nsIRDFResource* res;
-        rv = getRDFService()->GetResource(NC_RDF_PAGETITLE_MAIN, &res);
-        if (NS_SUCCEEDED(rv)) nodes->AppendElement(res);
         rv = getRDFService()->GetResource(NC_RDF_PAGETITLE_SERVER, &res);
         if (NS_SUCCEEDED(rv)) nodes->AppendElement(res);
         rv = getRDFService()->GetResource(NC_RDF_PAGETITLE_COPIES, &res);
-        if (NS_SUCCEEDED(rv)) nodes->AppendElement(res);
-        rv = getRDFService()->GetResource(NC_RDF_PAGETITLE_ADVANCED, &res);
         if (NS_SUCCEEDED(rv)) nodes->AppendElement(res);
         
         PRUint32 nodecount;
