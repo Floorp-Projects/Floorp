@@ -128,7 +128,6 @@ intl/uconv/src/Makefile
 intl/uconv/tests/Makefile
 intl/uconv/ucvja/Makefile
 intl/uconv/ucvlatin/Makefile
-intl/uconv/ucvja2/Makefile
 intl/uconv/ucvcn/Makefile
 intl/uconv/ucvtw/Makefile
 intl/uconv/ucvtw2/Makefile
