@@ -1016,11 +1016,9 @@ NS_IMETHODIMP nsMsgDatabase::ForceClosed()
   // make sure someone has a reference so object won't get deleted out from under us.
   AddRef();	
   NotifyAnnouncerGoingAway();
+  // make sure dbFolderInfo isn't holding onto mork stuff because mork db is going away
+  m_dbFolderInfo->ReleaseExternalReferences();
   NS_IF_RELEASE(m_dbFolderInfo);
-  // clear out db ptr in folder info; it might have just become invalid
-  if (m_dbFolderInfo)
-    m_dbFolderInfo->m_mdb = nsnull;
-  m_dbFolderInfo = nsnull;
   
   err = CloseMDB(PR_FALSE);	// since we're about to delete it, no need to commit.
   ClearHdrCache(PR_FALSE);
@@ -3238,33 +3236,33 @@ nsIMsgThread *nsMsgDatabase::GetThreadForReference(nsCString &msgID, nsIMsgDBHdr
 
 nsIMsgThread *	nsMsgDatabase::GetThreadForSubject(nsCString &subject)
 {
-	nsIMsgThread *thread = nsnull;
-
-	mdbYarn	subjectYarn;
-
-	subjectYarn.mYarn_Buf = (void*)subject.get();
-	subjectYarn.mYarn_Fill = PL_strlen(subject.get());
-	subjectYarn.mYarn_Form = 0;
-	subjectYarn.mYarn_Size = subjectYarn.mYarn_Fill;
-
-	nsIMdbRow	*threadRow;
-	mdbOid		outRowId;
+  nsIMsgThread *thread = nsnull;
+  
+  mdbYarn	subjectYarn;
+  
+  subjectYarn.mYarn_Buf = (void*)subject.get();
+  subjectYarn.mYarn_Fill = PL_strlen(subject.get());
+  subjectYarn.mYarn_Form = 0;
+  subjectYarn.mYarn_Size = subjectYarn.mYarn_Fill;
+  
+  nsIMdbRow	*threadRow;
+  mdbOid		outRowId;
   if (m_mdbStore)
   {
-	  mdb_err result = m_mdbStore->FindRow(GetEnv(), m_threadRowScopeToken,
-		  m_threadSubjectColumnToken, &subjectYarn,  &outRowId, &threadRow);
-	  if (NS_SUCCEEDED(result) && threadRow)
-	  {
-		  //Get key from row
-		  mdbOid outOid;
-		  nsMsgKey key = 0;
-		  if (threadRow->GetOid(GetEnv(), &outOid) == NS_OK)
-			  key = outOid.mOid_Id;
-		  // find thread header for header whose message id we matched.
-		  thread = GetThreadForThreadId(key);
-	  }
+    mdb_err result = m_mdbStore->FindRow(GetEnv(), m_threadRowScopeToken,
+      m_threadSubjectColumnToken, &subjectYarn,  &outRowId, &threadRow);
+    if (NS_SUCCEEDED(result) && threadRow)
+    {
+      //Get key from row
+      mdbOid outOid;
+      nsMsgKey key = 0;
+      if (threadRow->GetOid(GetEnv(), &outOid) == NS_OK)
+        key = outOid.mOid_Id;
+      // find thread header for header whose message id we matched.
+      thread = GetThreadForThreadId(key);
+    }
   }
-	return thread;
+  return thread;
 }
 
 nsresult nsMsgDatabase::ThreadNewHdr(nsMsgHdr* newHdr, PRBool &newThread)

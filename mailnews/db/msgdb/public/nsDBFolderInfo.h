@@ -98,8 +98,10 @@ public:
 protected:
 	
 	// initialize from appropriate table and row in existing db.
-	nsresult			InitMDBInfo();
-	nsresult			LoadMemberVariables();
+	nsresult InitMDBInfo();
+	nsresult LoadMemberVariables();
+
+        void ReleaseExternalReferences(); // let go of any references to other objects.
 
 	PRInt32		m_folderSize;
 	PRInt32		m_expungedBytes;	// sum of size of deleted messages in folder

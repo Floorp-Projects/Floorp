@@ -260,22 +260,34 @@ nsDBFolderInfo::nsDBFolderInfo(nsMsgDatabase *mdb)
 
 nsDBFolderInfo::~nsDBFolderInfo()
 {
+  // nsMsgDatabase strictly owns nsDBFolderInfo, so don't ref-count db.
+  ReleaseExternalReferences();
+}
+
+// Release any objects we're holding onto. This needs to be safe
+// to call multiple times.
+void nsDBFolderInfo::ReleaseExternalReferences()
+{
   if (gReleaseObserver) 
   {
     NS_IF_RELEASE(gFolderCharsetObserver);
   }
-
-	if (m_mdb)
-	{
-		if (m_mdbTable)
-			m_mdbTable->CutStrongRef(m_mdb->GetEnv());
-		if (m_mdbRow)
-			m_mdbRow->CutStrongRef(m_mdb->GetEnv());
-		// nsMsgDatabase strictly owns nsDBFolderInfo, so don't ref-count db.
-//		m_mdb->Release();
-	}
+  
+  if (m_mdb)
+  {
+    if (m_mdbTable)
+    {
+      m_mdbTable->CutStrongRef(m_mdb->GetEnv());
+      m_mdbTable = nsnull;
+    }
+    if (m_mdbRow)
+    {
+      m_mdbRow->CutStrongRef(m_mdb->GetEnv());
+      m_mdbRow = nsnull;
+    }
+    m_mdb = nsnull;
+  }
 }
-
 
 // this routine sets up a new db to know about the dbFolderInfo stuff...
 nsresult nsDBFolderInfo::AddToNewMDB()
