@@ -2324,7 +2324,6 @@ int
 main(int argc, char **argv, char **envp)
 {
     int stackDummy;
-    JSVersion version;
     JSRuntime *rt;
     JSContext *cx;
     JSObject *glob, *it, *envobj;
@@ -2387,8 +2386,6 @@ main(int argc, char **argv, char **envp)
     gOutFile = gTestResultFile;
 #endif
 
-    version = JSVERSION_DEFAULT;
-
     argc--;
     argv++;
 
@@ -2412,10 +2409,6 @@ main(int argc, char **argv, char **envp)
 #endif
     if (!JS_DefineFunctions(cx, glob, shell_functions))
         return 1;
-
-    /* Set version only after there is a global object. */
-    if (version != JSVERSION_DEFAULT)
-        JS_SetVersion(cx, version);
 
     it = JS_DefineObject(cx, glob, "it", &its_class, NULL, 0);
     if (!it)
