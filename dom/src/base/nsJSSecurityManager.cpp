@@ -2282,3 +2282,4 @@ lm_CheckPrivateTag(JSContext *cx, JSObject *obj, jsval id)
 
 
 #endif
+
