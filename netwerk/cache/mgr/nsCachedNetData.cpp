@@ -1044,7 +1044,7 @@ nsCachedNetData::Delete(void)
         nsCOMPtr<nsINetDataCacheRecord> record;
 
         rv = GetRecord(getter_AddRefs(record));
-        if (NS_SUCCEEDED(rv))
+        if (NS_SUCCEEDED(rv) && record)
         {
             // Delete the record if we can get a record.
             record->Delete();
