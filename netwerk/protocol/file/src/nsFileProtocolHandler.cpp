@@ -23,6 +23,7 @@
 #include "nsFileChannel.h"
 #include "nsFileProtocolHandler.h"
 #include "nsIURL.h"
+#include "nsNoAuthURLParser.h"
 #include "nsCRT.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
@@ -34,7 +35,8 @@
 #include "nsFileSpec.h"
 #include "nsAutoLock.h"
 
-static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
+static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
+static NS_DEFINE_CID(kNoAuthUrlParserCID, NS_NOAUTHORITYURLPARSER_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -103,17 +105,31 @@ nsFileProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
     // file: URLs (currently) have no additional structure beyond that provided by standard
     // URLs, so there is no "outer" given to CreateInstance 
 
-    nsIURI* url;
+    nsIURI* url = nsnull;
+    nsIURLParser* urlparser = nsnull;
     if (aBaseURI) {
         rv = aBaseURI->Clone(&url);
         if (NS_FAILED(rv)) return rv;
         rv = url->SetRelativePath(aSpec);
     }
     else {
-        rv = nsComponentManager::CreateInstance(kStandardURLCID, nsnull,
-                                                NS_GET_IID(nsIURI),
-                                                (void**)&url);
+        rv = nsComponentManager::CreateInstance(kNoAuthUrlParserCID, 
+                                    nsnull, NS_GET_IID(nsIURLParser),
+                                    (void**)&urlparser);
         if (NS_FAILED(rv)) return rv;
+        rv = nsComponentManager::CreateInstance(kStandardUrlCID, 
+                                    nsnull, NS_GET_IID(nsIURI),
+                                    (void**)&url);
+        if (NS_FAILED(rv)) {
+            NS_RELEASE(urlparser);
+            return rv;
+        }
+        rv = url->SetURLParser(urlparser);
+        if (NS_FAILED(rv)) {
+            NS_RELEASE(urlparser);
+            NS_RELEASE(url);
+            return rv;
+        }
         rv = url->SetSpec((char*)aSpec);
     }
 

@@ -66,7 +66,7 @@ public:
     NS_ADDREF(mURL);
     mHashValue = 0;
 
-    char* urlStr;
+    char* urlStr = nsnull;
     mURL->GetSpec(&urlStr);
     if (urlStr) {
       mHashValue = nsCRT::HashValue(urlStr);

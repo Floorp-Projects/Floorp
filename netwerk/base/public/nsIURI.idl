@@ -21,6 +21,7 @@
  */
 
 #include "nsISupports.idl"
+#include "nsIURLParser.idl"
 
 /**
  * URIs are essentially structured names for things -- anything.
@@ -79,6 +80,10 @@ interface nsIURI : nsISupports
      */
     attribute string preHost;
 
+    attribute string username;
+
+    attribute string password;
+
     /**
      * The Host is the internet domain name to which this URI refers. 
      * Note that it could be an IP address as well. 
@@ -102,6 +107,11 @@ interface nsIURI : nsISupports
      * For SetPath if none is provided, one would be prefixed to the path. 
      */
     attribute string path;
+
+    /**
+     * This is a handle to the Parser used to parse the URI
+     */
+    attribute nsIURLParser URLParser;
 
     /**
      * Note that this comparison is only on char* level. Use 
@@ -137,6 +147,7 @@ interface nsIURI : nsISupports
      * This method subsumes the deprecated method nsIIOService::MakeAbsolute.
      */
     string resolve(in string relativePath);
+
 };
 
 %{C++

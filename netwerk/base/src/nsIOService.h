@@ -25,6 +25,7 @@
 
 #include "nsIIOService.h"
 #include "nsString2.h"
+#include "nsURLHelper.h"
 
 class nsIOService : public nsIIOService
 {

@@ -27,6 +27,10 @@ LCFLAGS = -DWIN32_LEAN_AND_MEAN -D_IMPL_NS_NET
 LIBRARY_NAME=neckobase_s
 
 CPP_OBJS =                                         \
+        .\$(OBJDIR)\nsURLHelper.obj                \
+        .\$(OBJDIR)\nsStdURLParser.obj             \
+        .\$(OBJDIR)\nsAuthURLParser.obj            \
+        .\$(OBJDIR)\nsNoAuthURLParser.obj          \
         .\$(OBJDIR)\nsAsyncStreamListener.obj      \
         .\$(OBJDIR)\nsSyncStreamListener.obj       \
         .\$(OBJDIR)\nsIOService.obj                \
@@ -42,6 +46,11 @@ CPP_OBJS =                                         \
         .\$(OBJDIR)\nsInputStreamChannel.obj       \
         .\$(OBJDIR)\nsDirectoryIndexStream.obj     \
         .\$(OBJDIR)\nsUnicharStreamLoader.obj      \
+        $(NULL)
+
+EXPORTS =                            \
+        nsAuthURLParser.h            \
+        nsNoAuthURLParser.h          \
         $(NULL)
 
 INCS = $(INCS)                  \
