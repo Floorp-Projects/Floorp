@@ -47,7 +47,6 @@
 #define nsIXBLBinding_h__
 
 #include "nsISupports.h"
-#include "nsISupportsArray.h"
 #include "nsIStyleRuleProcessor.h"
 
 class nsIContent;
