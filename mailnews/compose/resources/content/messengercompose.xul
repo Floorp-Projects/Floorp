@@ -505,6 +505,7 @@
   </box>
 
   <statusbar id="status-bar">
+    <statusbarpanel id="offline-status"/> 
     <progressmeter class="progressmeter-statusbar" mode="normal" value="0"/>
     <statusbarpanel id="statusText" flex="1" value="&defaultStatusText.label;"/>
   </statusbar>
