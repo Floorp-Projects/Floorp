@@ -2638,16 +2638,21 @@ NS_IMETHODIMP nsWebShellWindow::SizeWindowTo(PRInt32 aWidth, PRInt32 aHeight)
  
 NS_IMETHODIMP nsWebShellWindow::SizeContentTo(PRInt32 aWidth, PRInt32 aHeight)
 {
-   PRInt32 x,y,width,height;
-   mWebShell->GetBounds(x,y,width,height);
-   PRInt32 aWidthDelta = aWidth - width;
-   PRInt32 aHeightDelta = aHeight - height;
+   nsCOMPtr<nsIWebShell> content;
+   GetContentWebShell(getter_AddRefs(content));
+   if (content) {
+     PRInt32 x, y, width, height,
+             widthDelta, heightDelta;
+     content->GetBounds(x,y,width,height);
+     widthDelta = aWidth - width;
+     heightDelta = aHeight - height;
    
-   nsRect windowBounds;
-   mWindow->GetBounds(windowBounds);
-   mWindow->Resize(windowBounds.width + aWidthDelta, 
-                   windowBounds.height + aHeightDelta,
-                   PR_TRUE);
+     nsRect windowBounds;
+     mWindow->GetBounds(windowBounds);
+     mWindow->Resize(windowBounds.width + widthDelta, 
+                     windowBounds.height + heightDelta,
+                     PR_TRUE);
+   }
    return NS_OK;
 }
 
