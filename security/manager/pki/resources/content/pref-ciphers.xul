@@ -50,7 +50,7 @@
 
     function createCell(label) {
       var cell = document.createElement("listcell");
-      cell.setAttribute("label", label)
+      cell.setAttribute("label", label);
       return cell;
     }
     
@@ -96,6 +96,7 @@
         } catch(e) { /* Put debug output here */ }
         
         var listitem  = document.createElement("listitem");
+        listitem.setAttribute("allowevents", "true");
 
         var checkbox = document.createElement("checkbox");
         checkbox.setAttribute("checked", prefValue);
