@@ -2049,13 +2049,14 @@ PRInt32 nsNNTPProtocol::BeginArticle()
   if (!cd->stream) return -1;
 #endif
 
-  if ((m_newsAction == nsINntpUrl::ActionDisplayArticle) || (m_newsAction == nsINntpUrl::ActionGetArticleForQuoting))
-  {
-	  // create a pipe to pump the message into...the output will go to whoever
-	  // is consuming the message display
-	  nsresult rv;
+  // if we have a channel listener,
+  // create a pipe to pump the message into...the output will go to whoever
+  // is consuming the message display
+  if (m_channelListener) {
+	nsresult rv;
 	rv = NS_NewPipe(getter_AddRefs(mDisplayInputStream), getter_AddRefs(mDisplayOutputStream));
-	// TODO: check rv for failure?
+	NS_ASSERTION(NS_SUCCEEDED(rv), "failed to create pipe");
+	// TODO: return on failure?
   }
 
   if (m_newsAction == nsINntpUrl::ActionSaveMessageToDisk)
@@ -2173,7 +2174,7 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
 	// if we have a channel listener, spool directly to it....
 	// otherwise we must be doing something like save to disk or cancel
 	// in which case we are doing the work.
-	if ((m_newsAction == nsINntpUrl::ActionDisplayArticle) || (m_newsAction == nsINntpUrl::ActionGetArticleForQuoting)) {
+	if (m_channelListener) {
 		return DisplayArticle(inputStream, length);
         }
 
