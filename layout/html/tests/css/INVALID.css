@@ -18,8 +18,8 @@
  *
  * Contributor(s): 
  */
-// Test of illegal CSS1 input.
-// Illegal @ rules
+/* Test of illegal CSS1 input.
+   Illegal @ rules */
 @ignored;
 P { color: purple }
 @ignored [ skip me ];
@@ -29,16 +29,16 @@ P { color: purple }
 @ignored ( skip me too );
 P { color: purple }
 
-// Handle dangling semi-colons. Outside the scope of the CSS1 document
-// but a reasonable parser should be able to eat them.
+/* Handle dangling semi-colons. Outside the scope of the CSS1 document
+   but a reasonable parser should be able to eat them. */
 @extra-semicolon;;
 P { color: purple }
 
-// These are all properties that have an extra keyword (fish) at the
-// end. CSS1 says that such properties are to be ignored. Because the
-// properties are all set in the BODY tag we can see if anything
-// happens to invalid.html when this sheet is loaded (there should be
-// no effect because the entire declaration block should be skipped).
+/* These are all properties that have an extra keyword (fish) at the
+   end. CSS1 says that such properties are to be ignored. Because the
+   properties are all set in the BODY tag we can see if anything
+   happens to invalid.html when this sheet is loaded (there should be
+   no effect because the entire declaration block should be skipped). */
 BODY {
   word-spacing: normal fish;
   wOrd-spacing: 12.0em fish;
@@ -346,7 +346,7 @@ BODY {
 }
 P { color: purple }
 
-// Illegal color values
+/* Illegal color values */
 InvalidColor {
   color: RGB(110;
   color: RGB(110,;
@@ -365,7 +365,7 @@ InvalidColor {
 }
 P { color: purple }
 
-// Illegal numeric values
+/* Illegal numeric values */
 InvalidNumber {
   list-indent: 2..3;
   list-indent: 17a;
@@ -374,7 +374,7 @@ InvalidNumber {
 }
 P { color: purple }
 
-// Illegal url values
+/* Illegal url values */
 InvalidURL {
   background-image: url;
   background-image: url(goaway;
@@ -382,7 +382,7 @@ InvalidURL {
 }
 P { color: purple }
 
-// Illegal rules
+/* Illegal rules */
 P[align], UL {
   color: red;
   font-size: large

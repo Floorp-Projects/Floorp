@@ -18,7 +18,7 @@
  *
  * Contributor(s): 
  */
-// Combinatorics for selectors
+/* Combinatorics for selectors */
 Tag { color: purple }
 Tag#Id { color: purple }
 Tag#Id.Class { color: purple }
