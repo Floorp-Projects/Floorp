@@ -54,6 +54,7 @@
 #include "nsReadableUtils.h"
 #include "nsVoidArray.h"
 
+#include <Application.h>
 #include <InterfaceDefs.h>
 #include <Region.h>
 #include <Debug.h>
@@ -166,7 +167,10 @@ NS_METHOD nsWindow::BeginResizingChildren(void)
 {
 	if(mView && mView->LockLooper())
 	{
-		mView->Window()->BeginViewTransaction();
+		//It appears that only effective method in Be API to avoid invalidation chain overhead
+		//while performing action on BView's children is to use B_DRAW_ON_CHILDREN flag
+		//together with implementation of BView::DrawAfterChildren() hook
+		mView->SetFlags(mView->Flags() | B_DRAW_ON_CHILDREN);
 		mView->UnlockLooper();
 	}
 	return NS_OK;
@@ -176,7 +180,7 @@ NS_METHOD nsWindow::EndResizingChildren(void)
 {
 	if(mView && mView->LockLooper())
 	{
-		mView->Window()->EndViewTransaction();
+		mView->SetFlags(mView->Flags() & ~B_DRAW_ON_CHILDREN);
 		mView->UnlockLooper();
 	}
 	return NS_OK;
@@ -1085,6 +1089,7 @@ NS_METHOD nsWindow::Resize(PRInt32 aX,
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::Enable(PRBool aState)
 {
+	//TODO: Needs real corect implementation in future
 	if(mView && mView->LockLooper()) 
 	{
 		if (mView->Window()) 
@@ -1445,12 +1450,8 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
 				break;
 		}
 		NS_ASSERTION(newCursor != nsnull, "Cursor not stored in array properly!");
-		if (mView && mView->LockLooper()) 
-		{
-			mCursor = aCursor;
-			mView->SetViewCursor(newCursor, true);
-			mView->UnlockLooper();
-		}
+		mCursor = aCursor;
+		be_app->SetCursor(newCursor, true);
 	}
 	return NS_OK;
 }
@@ -1462,16 +1463,28 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::Invalidate(PRBool aIsSynchronous)
 {
-	if(mView && mView->LockLooper())
-	{
-		if(PR_TRUE == aIsSynchronous)
-			OnPaint(mBounds);
-		else
-			mView->Invalidate();
-		mView->UnlockLooper();
-	}
+	nsresult rv = NS_ERROR_FAILURE;
 
-	return NS_OK;
+	if (PR_TRUE == aIsSynchronous)
+	{
+		//Synchronous painting is using direct call of OnPaint() now,
+		//to avoid senseless overhead of callbacks and messages
+		rv = OnPaint(mBounds) ? NS_OK : NS_ERROR_FAILURE;
+	}
+	else
+	{
+		//Asynchronous painting is performed with implicit usage of BWindow/app_server queues, via Draw() calls. 
+		//All update rects are collected in nsViewBeOS member  "paintregion".
+		//Flushing and cleanup of paintregion happens in nsViewBeOS::GetPaintRegion() when it
+		//is called in nsWindow::CallMethod() in case of ONPAINT.
+		if (mView && mView->LockLooper())
+		{
+			mView->Draw(mView->Bounds());
+			mView->UnlockLooper();
+			rv = NS_OK;
+		}
+	}
+	return rv;
 }
 
 //-------------------------------------------------------------------------
@@ -1481,20 +1494,26 @@ NS_METHOD nsWindow::Invalidate(PRBool aIsSynchronous)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
 {
-	if(mView && mView->LockLooper())
+	nsresult rv = NS_ERROR_FAILURE;
+
+	if (PR_TRUE == aIsSynchronous)
 	{
-		BRect	r(aRect.x, 
-		        aRect.y, 
-		        aRect.x + aRect.width - 1, 
-		        aRect.y + aRect.height - 1);
-		if(PR_TRUE == aIsSynchronous)
+		rv = OnPaint((nsRect &)aRect) ? NS_OK : NS_ERROR_FAILURE;
+	}
+	else
+	{
+		if (mView && mView->LockLooper()) 
+		{
+			BRect	r(aRect.x, 
+					aRect.y, 
+					aRect.x + aRect.width - 1, 
+					aRect.y + aRect.height - 1);
 			mView->Draw(r);
-		else
-			mView->Invalidate(r);
+			rv = NS_OK;
+		}
 		mView->UnlockLooper();
 	}
-
-	return NS_OK;
+	return rv;
 }
 
 //-------------------------------------------------------------------------
@@ -1502,29 +1521,35 @@ NS_METHOD nsWindow::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
 // Invalidate this component visible area
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP
-nsWindow::InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSynchronous)
+NS_IMETHODIMP nsWindow::InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSynchronous)
 {
-	nsresult rv = NS_ERROR_FAILURE;
+	
 	nsRect r;
-	BRegion *rgn = nsnull;
-
+	nsRegionRectSet *rectSet = nsnull;
 	if (!aRegion)
 		return NS_ERROR_FAILURE;
+	nsresult rv = ((nsIRegion *)aRegion)->GetRects(&rectSet);
+	if (NS_FAILED(rv))
+		return rv;
 
-	aRegion->GetNativeRegion((void*&)rgn);
-
-	if (rgn) 
+	for (PRUint32 i=0; i< rectSet->mRectsLen; ++i)
 	{
-		BRect br(0,0,0,0);
-		br = rgn->Frame(); // get bounding box of the region
-		if (br.IsValid()) 
+		r.x = rectSet->mRects[i].x;
+		r.y = rectSet->mRects[i].y;
+		r.width = rectSet->mRects[i].width;
+		r.height = rectSet->mRects[i].height;
+		if (aIsSynchronous)
 		{
-			r.SetRect(br.left, 
-			          br.top, 
-			          br.IntegerWidth() + 1, 
-			          br.IntegerHeight() + 1);
-			rv = this->Invalidate(r, aIsSynchronous);
+			rv = OnPaint(r) ? NS_OK : NS_ERROR_FAILURE;
+		}
+		else
+		{
+			if (mView && mView->LockLooper())
+			{
+				mView->Draw(BRect(r.x, r.y, r.x + r.width -1, r.y + r.height -1));
+				mView->UnlockLooper();
+				rv = NS_OK;
+			}
 		}
 	}
 
@@ -1538,12 +1563,13 @@ nsWindow::InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSynchronous)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsWindow::Update()
 {
-	if(mView && mView->LockLooper())
+	nsresult rv = NS_ERROR_FAILURE;
+	if( mView && mView->Window())
 	{
 		mView->Window()->UpdateIfNeeded();
-		mView->UnlockLooper();
+		rv = NS_OK;
 	}
-	return NS_OK;
+	return rv;
 }
 
 //-------------------------------------------------------------------------
@@ -1618,18 +1644,26 @@ NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 			src.bottom = b.bottom - aDy;
 		BRect dest = src.OffsetByCopy(aDx, aDy);
 
-		mView->ConstrainClippingRegion(0);
+		mView->ConstrainClippingRegion(&invalid);
+
 		if(src.IsValid() && dest.IsValid())
 			mView->CopyBits(src, dest);
 
-		invalid.Exclude(dest);
-		mView->ConstrainClippingRegion(0);
-
+		invalid.Exclude(dest);		
+		//Preventing main view invalidation loop-chain  when children are moving
+		//by forcing call of DrawAfterChildren() method instead Draw()
+		//We don't use BeginResizingChildren here in order to avoid extra locking
+		mView->SetFlags(mView->Flags() | B_DRAW_ON_CHILDREN);
+		//Now moving children
 		for(BView *child = mView->ChildAt(0); child; child = child->NextSibling())
 		{
 			child->MoveBy(aDx, aDy);
 		}
-
+		//Returning to normal Draw()
+		mView->SetFlags(mView->Flags() & ~B_DRAW_ON_CHILDREN);
+		mView->ConstrainClippingRegion(&invalid);
+		//We'll call OnPaint() without locking mView - OnPaint does it itself
+		mView->UnlockLooper();
 		// scan through rects and paint them directly
 		// so we avoid going through the callback stuff
 		int32 rects = invalid.CountRects();
@@ -1643,10 +1677,7 @@ NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 			r.height = (nscoord)curr.Height() + 1;
 			OnPaint(r);
 		}
-
-		mView->UnlockLooper();
 	}
-
 	return NS_OK;
 }
 
@@ -1818,13 +1849,26 @@ bool nsWindow::CallMethod(MethodInfo *info)
 
 	case nsWindow::ONPAINT :
 		NS_ASSERTION(info->nArgs == 0, "Wrong number of arguments to CallMethod");
-		if(mView && mView->LockLooper())
+		if(mView)
 		{
-			nsRect r;
+			BRegion reg;
+			reg.MakeEmpty();
 			nsViewBeOS *bv = dynamic_cast<nsViewBeOS *>(mView);
-			if(bv && bv->GetPaintRect(r))
-				OnPaint(r);
-			mView->UnlockLooper();
+			if(bv && bv->GetPaintRegion(&reg) && reg.Frame().IsValid())
+			{
+				int32 rects = reg.CountRects();
+				for(int32 i = 0; i < rects; ++i)
+				{
+					nsRect r;
+					BRect br = reg.RectAt(i);
+					r.x = (nscoord)br.left; 
+					r.y = (nscoord)br.top;
+					r.width = (nscoord)br.IntegerWidth() + 1;
+					r.height = (nscoord)br.IntegerHeight() + 1;
+					OnPaint(r);
+				}
+			}
+
 		}
 		break;
 
@@ -1849,13 +1893,13 @@ bool nsWindow::CallMethod(MethodInfo *info)
 		break;
 
 	case nsWindow::ONMOUSE :
-		NS_ASSERTION(info->nArgs == 5, "Wrong number of arguments to CallMethod");
+		NS_ASSERTION(info->nArgs == 4, "Wrong number of arguments to CallMethod");
 		if (!mEnabled)
 			return false;
 		DispatchMouseEvent(((int32 *)info->args)[0],
 		                   nsPoint(((int32 *)info->args)[1], ((int32 *)info->args)[2]),
-		                   ((int32 *)info->args)[3],
-		                   ((int32 *)info->args)[4]);
+		                   0,
+		                   ((int32 *)info->args)[3]);
 		break;
 
 	case nsWindow::ONACTIVATE:
@@ -2326,7 +2370,7 @@ PRBool nsWindow::OnMove(PRInt32 aX, PRInt32 aY)
 //-------------------------------------------------------------------------
 PRBool nsWindow::OnPaint(nsRect &r)
 {
-	PRBool result = PR_TRUE;
+	PRBool result = PR_FALSE;
 
 	if((r.width || r.height) && mEventCallback)
 	{
@@ -2336,7 +2380,8 @@ PRBool nsWindow::OnPaint(nsRect &r)
 			BRegion invalid;
 			invalid.Include(BRect(r.x, r.y, r.x + r.width - 1, r.y + r.height - 1));
 			mView->ConstrainClippingRegion(&invalid);
-
+			mView->Flush();
+			mView->UnlockLooper();
 			nsPaintEvent event(NS_PAINT, this);
 
 			InitEvent(event);
@@ -2352,16 +2397,15 @@ PRBool nsWindow::OnPaint(nsRect &r)
 				result = DispatchWindowEvent(&event);
 
 				NS_RELEASE(event.renderingContext);
+				result = PR_TRUE;
 			}
 			else
 				result = PR_FALSE;
 
 			NS_RELEASE(event.widget);
 
-			mView->UnlockLooper();
 		}
 	}
-
 	return result;
 }
 
@@ -2766,27 +2810,36 @@ void nsViewBeOS::AttachedToWindow()
 
 void nsViewBeOS::Draw(BRect updateRect)
 {
+	DoDraw(updateRect);
+}
+
+void nsViewBeOS::DrawAfterChildren(BRect updateRect)
+{
+//Stub for B_DRAW_ON_CHILDREN flags
+//If some problem appears, line below may be uncommented.
+//	DoDraw(updateRect);
+} 
+
+void nsViewBeOS::DoDraw(BRect updateRect)
+{
 	paintregion.Include(updateRect);
 	nsWindow	*w = (nsWindow *)GetMozillaWidget();
 	nsToolkit	*t;
 	if(w && (t = w->GetToolkit()) != 0)
 	{
 		MethodInfo *info = nsnull;
-		if(nsnull != (info = new MethodInfo(w, w, nsWindow::ONPAINT)))
-		t->CallMethodAsync(info);
+		info = new MethodInfo(w, w, nsWindow::ONPAINT);
+		if(info)
+			t->CallMethodAsync(info);
 		NS_RELEASE(t);
 	}
 }
 
-bool nsViewBeOS::GetPaintRect(nsRect &r)
+bool nsViewBeOS::GetPaintRegion(BRegion *r)
 {
 	if(paintregion.CountRects() == 0)
 		return false;
-	BRect	paint = paintregion.Frame();
-	r.x = (nscoord)paint.left;
-	r.y = (nscoord)paint.top;
-	r.width = (nscoord)(paint.Width() + 1);
-	r.height = (nscoord)(paint.Height() + 1);
+	r->Include(&paintregion);
 	paintregion.MakeEmpty();
 	return true;
 }
@@ -2827,30 +2880,29 @@ void nsViewBeOS::MouseMoved(BPoint point, uint32 transit, const BMessage *msg)
 	nsToolkit	*t;
 	if(w && (t = w->GetToolkit()) != 0)
 	{
-		uint32	args[5];
+		uint32	args[4];
 		args[1] = (uint32)point.x;
 		args[2] = (uint32)point.y;
-		args[3] = 0;
-		args[4] = modifiers();
+		args[3] = modifiers();
 
 		if(transit == B_ENTERED_VIEW)
 		{
 			args[0] = NS_MOUSE_ENTER;
 			MethodInfo *enterInfo = nsnull;
-			if(nsnull != (enterInfo = new MethodInfo(w, w, nsWindow::ONMOUSE, 5, args)))
+			if(nsnull != (enterInfo = new MethodInfo(w, w, nsWindow::ONMOUSE, 4, args)))
 			t->CallMethodAsync(enterInfo);
 		}
 
 		args[0] = NS_MOUSE_MOVE;
 		MethodInfo *moveInfo = nsnull;
-		if(nsnull != (moveInfo = new MethodInfo(w, w, nsWindow::ONMOUSE, 5, args)))
+		if(nsnull != (moveInfo = new MethodInfo(w, w, nsWindow::ONMOUSE, 4, args)))
 		t->CallMethodAsync(moveInfo);
 
 		if(transit == B_EXITED_VIEW)
 		{
 			args[0] = NS_MOUSE_EXIT;
 			MethodInfo *exitInfo = nsnull;
-			if(nsnull != (exitInfo = new MethodInfo(w, w, nsWindow::ONMOUSE, 5, args)))
+			if(nsnull != (exitInfo = new MethodInfo(w, w, nsWindow::ONMOUSE, 4, args)))
 			t->CallMethodAsync(exitInfo);
 		}
 		NS_RELEASE(t);
