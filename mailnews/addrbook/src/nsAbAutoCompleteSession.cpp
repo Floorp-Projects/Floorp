@@ -28,7 +28,7 @@ nsresult NS_NewAbAutoCompleteSession(const nsIID &aIID, void ** aInstancePtrResu
 	{
 		nsAbAutoCompleteSession * abSession = new nsAbAutoCompleteSession(); 
 		if (abSession)
-			return abSession->QueryInterface(nsCOMTypeInfo<nsIAbAutoCompleteSession>::GetIID(), aInstancePtrResult);
+			return abSession->QueryInterface(nsCOMTypeInfo<nsIAutoCompleteSession>::GetIID(), aInstancePtrResult);
 		else
 			return NS_ERROR_OUT_OF_MEMORY; /* we couldn't allocate the object */
 	}
@@ -36,17 +36,17 @@ nsresult NS_NewAbAutoCompleteSession(const nsIID &aIID, void ** aInstancePtrResu
 		return NS_ERROR_NULL_POINTER; /* aInstancePtrResult was NULL....*/
 }
 
-NS_IMPL_ISUPPORTS(nsAbAutoCompleteSession, nsCOMTypeInfo<nsIAbAutoCompleteSession>::GetIID())
+NS_IMPL_ISUPPORTS(nsAbAutoCompleteSession, nsCOMTypeInfo<nsIAutoCompleteSession>::GetIID())
 
 nsAbAutoCompleteSession::nsAbAutoCompleteSession()
 {
-	NS_INIT_REFCNT;
+	NS_INIT_REFCNT();
 }
 
 nsAbAutoCompleteSession::~nsAbAutoCompleteSession()
 {}
 
-NS_IMETHODIMP nsAbAutoCompleteSession::AutoComplete(const PRUnichar *aSearchString, nsIAutoCompleteListener *aResultListener)
+NS_IMETHODIMP nsAbAutoCompleteSession::AutoComplete(const PRUnichar *aDocId, const PRUnichar *aSearchString, nsIAutoCompleteListener *aResultListener)
 {
 	// mscott - right now I'm not even going to bother to make this synchronous...
 	// I'll beef it up with some test data later but we want to see if this idea works for right now...
@@ -54,7 +54,7 @@ NS_IMETHODIMP nsAbAutoCompleteSession::AutoComplete(const PRUnichar *aSearchStri
 	nsresult rv = NS_OK;
 	nsString2 searchResult("Scott MacGregor <mscott@netscape.com>");
 	if (aResultListener)
-		rv = aResultListener->OnAutoCompleteResult(aSearchString, searchResult.GetUnicode());
+		rv = aResultListener->OnAutoCompleteResult(aDocId, aSearchString, searchResult.GetUnicode());
 	else
 		rv = NS_ERROR_NULL_POINTER;
 

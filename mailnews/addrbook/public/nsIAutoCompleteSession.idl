@@ -23,6 +23,6 @@ interface nsIAutoCompleteListener;
 
 [scriptable, uuid(CA2A6B07-3625-11d3-988E-001083010E9B)]
 interface nsIAutoCompleteSession : nsISupports {
-	void AutoComplete(in wstring aSearchString, in nsIAutoCompleteListener aResultListener);
+	void AutoComplete(in wstring doc_id, in wstring aSearchString, in nsIAutoCompleteListener aResultListener);
 };
 

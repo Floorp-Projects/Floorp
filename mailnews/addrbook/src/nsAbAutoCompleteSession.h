@@ -31,7 +31,7 @@ public:
 	nsAbAutoCompleteSession();
 	virtual ~nsAbAutoCompleteSession();
 
-	NS_IMETHOD AutoComplete(const PRUnichar *aSearchString, nsIAutoCompleteListener *aResultListener); 
+	NS_IMETHOD AutoComplete(const PRUnichar *aDocId, const PRUnichar *aSearchString, nsIAutoCompleteListener *aResultListener); 
 
 protected:
 	nsCOMPtr<nsIAutoCompleteListener> m_resultListener;
