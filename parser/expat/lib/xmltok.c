@@ -1566,3 +1566,7 @@ XmlInitUnknownEncodingNS(void *mem,
 }
 
 #endif /* XML_NS */
+
+#ifdef MOZILLA_CLIENT
+#include "moz_extensions.c"
+#endif /* MOZILLA_CLIENT */
