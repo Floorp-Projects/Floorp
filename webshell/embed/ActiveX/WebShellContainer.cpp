@@ -337,7 +337,7 @@ CWebShellContainer::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURL* aURL,
 
 // we need this to fire the document complete 
 NS_IMETHODIMP
-CWebShellContainer::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIURL *aUrl, PRInt32 aStatus)
+CWebShellContainer::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIURL *aUrl, PRInt32 aStatus, nsIDocumentLoaderObserver * aObserver)
 {
 	PRUnichar* wString = nsnull;    
 

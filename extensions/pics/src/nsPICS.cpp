@@ -147,7 +147,8 @@ public:
                                  const char* aCommand);
   NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, 
                                nsIURL* aURL, 
-                               PRInt32 aStatus);
+                               PRInt32 aStatus,
+                               nsIDocumentLoaderObserver * aObserver);
   NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, 
                             nsIURL* aURL, const char* aContentType, 
                             nsIContentViewer* aViewer);
@@ -755,7 +756,8 @@ nsPICS::OnStartDocumentLoad(nsIDocumentLoader* loader,
 NS_IMETHODIMP
 nsPICS::OnEndDocumentLoad(nsIDocumentLoader* loader, 
                               nsIURL* aURL, 
-                              PRInt32 aStatus)
+                              PRInt32 aStatus,
+                              nsIDocumentLoaderObserver * aObserver)
 {
   nsresult rv = NS_OK;
 
