@@ -194,7 +194,7 @@ static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
     if (NS_SUCCEEDED(macro_rv)) { \
 	char *macro_oldStr = nsnull; \
 	macro_rv = macro_spec->GetUnixStyleFilePath(&macro_oldStr);	\
-    	if (NS_SUCCEEDED(macro_rv) && macro_oldStr && (PL_strlen(macro_oldStr) > 0)) { \
+    if (NS_SUCCEEDED(macro_rv) && macro_oldStr && (PL_strlen(macro_oldStr))) { \
 		MACRO_OBJECT->MACRO_METHOD(PR_TRUE); \
 	}	\
 	else {	\
@@ -218,23 +218,29 @@ static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 			macro_rv = macro_spec->GetUnixStyleFilePath(&macro_oldStr);	\
     		if (NS_SUCCEEDED(macro_rv)) { \
 				MACRO_OBJECT->MACRO_METHOD(macro_oldStr); \
-			}	\
-			PR_FREEIF(macro_oldStr); \
+            } \
+            PR_FREEIF(macro_oldStr); \
     	} \
 	} \
 	else { \
 		MACRO_OBJECT->MACRO_METHOD(""); \
 	}	\
+    PR_FREEIF(macro_val); \
   }
 
 #define MIGRATE_SIMPLE_FILE_PREF_TO_FILE_PREF(PREFNAME,MACRO_OBJECT,MACRO_METHOD) \
   { \
     nsresult macro_rv; \
     nsCOMPtr <nsILocalFile> macro_file; \
-    macro_rv = m_prefs->GetFileXPref(PREFNAME, getter_AddRefs(macro_file)); \
-    if (NS_SUCCEEDED(macro_rv)) { \
-      MACRO_OBJECT->MACRO_METHOD(macro_file); \
+    char *macro_oldStr = nsnull; \
+    macro_rv = m_prefs->CopyCharPref(PREFNAME, &macro_oldStr); \
+    if (NS_SUCCEEDED(macro_rv) && macro_oldStr && PL_strlen(macro_oldStr)) { \
+      macro_rv = m_prefs->GetFileXPref(PREFNAME, getter_AddRefs(macro_file)); \
+      if (NS_SUCCEEDED(macro_rv)) { \
+        MACRO_OBJECT->MACRO_METHOD(macro_file); \
+      } \
     } \
+    PR_FREEIF(macro_oldStr); \
   }
 
 #define MIGRATE_SIMPLE_STR_PREF(PREFNAME,MACRO_OBJECT,MACRO_METHOD) \
@@ -244,8 +250,8 @@ static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
     macro_rv = m_prefs->CopyCharPref(PREFNAME, &macro_oldStr); \
     if (NS_SUCCEEDED(macro_rv)) { \
       MACRO_OBJECT->MACRO_METHOD(macro_oldStr); \
-      PR_FREEIF(macro_oldStr); \
     } \
+    PR_FREEIF(macro_oldStr); \
   }
 
 #define MIGRATE_SIMPLE_WSTR_PREF(PREFNAME,MACRO_OBJECT,MACRO_METHOD) \
@@ -255,8 +261,8 @@ static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
     macro_rv = m_prefs->CopyUnicharPref(PREFNAME, &macro_oldStr); \
     if (NS_SUCCEEDED(macro_rv)) { \
       MACRO_OBJECT->MACRO_METHOD(macro_oldStr); \
-      PR_FREEIF(macro_oldStr); \
     } \
+    PR_FREEIF(macro_oldStr); \
   }
 
 #define MIGRATE_SIMPLE_INT_PREF(PREFNAME,MACRO_OBJECT,MACRO_METHOD) \
@@ -288,8 +294,8 @@ static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
     macro_rv = m_prefs->CopyCharPref(prefName, &macro_oldStr); \
     if (NS_SUCCEEDED(macro_rv)) { \
       INCOMINGSERVERPTR->INCOMINGSERVERMETHOD(macro_oldStr); \
-      PR_FREEIF(macro_oldStr); \
     } \
+    PR_FREEIF(macro_oldStr); \
   }
 
 #define MIGRATE_INT_PREF(PREFFORMATSTR,PREFFORMATVALUE,INCOMINGSERVERPTR,INCOMINGSERVERMETHOD) \
@@ -2340,10 +2346,11 @@ nsMessengerMigrator::MigrateOldNntpPrefs(nsIMsgIncomingServer *server, const cha
   MIGRATE_SIMPLE_INT_PREF(PREF_4X_NEWS_MAX_ARTICLES,nntpServer,SetMaxArticles)
  
   /* in 4.x, news username and passwords did not persist beyond the session
-   * so when we migrate them, we make sure to set this to false
-   * the user can always change it in the prefs UI if they want */
-  rv = server->SetRememberPassword(PR_FALSE);          
-  if (NS_FAILED(rv)) return rv;
+   * so we don't need to call server->SetRememberPassword(PR_FALSE);
+   * doing so is also bad since it will call nsNntpIncomingServer::ForgetPassword()
+   * which fail since don't have any subfolders (newgroups) yet. 
+   */
+
 	
   nsCOMPtr <nsIFileSpec> path;
   rv = NS_NewFileSpecWithSpec(newsrcfile, getter_AddRefs(path));
