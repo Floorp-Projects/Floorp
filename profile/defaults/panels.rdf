@@ -13,6 +13,7 @@
 <!ENTITY sidebar.panel.tinderbox-ports "Tinderbox-Ports">
 <!ENTITY sidebar.nc-panel.stocks "Stocks">
 <!ENTITY sidebar.panel.client-bookmarks "Bookmarks">
+<!ENTITY sidebar.panel.client-history "History">
 ]
 >
 
@@ -27,6 +28,7 @@
         <RDF:li resource="urn:sidebar:panel:tinderbox"/>
         <RDF:li resource="urn:sidebar:panel:tinderbox-ports"/>
         <RDF:li resource="urn:sidebar:panel:bookmarks"/>
+        <RDF:li resource="urn:sidebar:panel:history"/>
       </RDF:Seq>
     </NC:panel-list>
     <NC:version>0.1</NC:version>
@@ -50,5 +52,9 @@
   <RDF:Description about="urn:sidebar:panel:bookmarks">
     <NC:title>&sidebar.panel.client-bookmarks;</NC:title>
     <NC:content>chrome://communicator/content/bookmarks/bm-panel.xul</NC:content>
+  </RDF:Description>
+  <RDF:Description about="urn:sidebar:panel:history">
+    <NC:title>&sidebar.panel.client-history;</NC:title>
+    <NC:content>chrome://communicator/content/history/history-panel.xul</NC:content>
   </RDF:Description>
 </RDF:RDF>
