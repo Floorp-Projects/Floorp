@@ -16,19 +16,35 @@
 <html:script language="JavaScript">
 
 var AutoCompleteSession = {
-    onStartLookup: function(event, value, prevResult, listener)
+    onStartLookup: function(value, prevResult, listener)
     {
         dump("Search Session: onStartLookup\n");
+
+        var results = Components.classes["component://netscape/autocomplete/results"].createInstance();
+        results = results.QueryInterface(Components.interfaces.nsIAutoCompleteResults);
+        results.searchString = value;
+        results.defaultItemIndex = 0;
+        results.param = null;
+
+        var item = Components.classes["component://netscape/autocomplete/item"].createInstance();
+        item = item.QueryInterface(Components.interfaces.nsIAutoCompleteItem);
+        item.value = "Jean-Francois Ducarroz";
+        item.comment = "[put your comment here]";
+        item.className = "";
+        item.param = null;
+        
+        results.items.AppendElement(item);
+        listener.onAutoComplete(results, Components.interfaces.nsIAutoCompleteStatus.matchFound);
     },
 
-    onStopLookup: function(event)
+    onStopLookup: function()
     {
         dump("Search Session: onStopLookup\n");
     },
 
-    onAutoComplete: function(event, value, prevResult, listener)
+    onAutoComplete: function(value, prevResult, listener)
     {
-        dump("Search Session: onAutoComplete, value =" + value +"\n");
+        dump("Search Session: onAutoComplete, value =" + value + "\n");
         
         var results = Components.classes["component://netscape/autocomplete/results"].createInstance();
         results = results.QueryInterface(Components.interfaces.nsIAutoCompleteResults);
@@ -58,9 +74,45 @@ var AutoCompleteSession = {
     }
 };
 
+function function1()
+{
+    var myAutoComplete = document.getElementById("test");
+    value = myAutoComplete.value;
+    match = "Jean-Francois Ducarroz";
+    
+    lmatch = match.toLowerCase();
+    lvalue = value.toLowerCase();
+
+    dump("value = " + lvalue + ", match = " + lmatch + "\n");
+    
+    if (lvalue == lmatch)
+        dump("exact match\n");
+    else
+    {
+        dump("substring = " + lmatch.substring(0, lvalue.length) + "\n");
+        if (lmatch.substring(0, lvalue.length) == lvalue)
+        {
+            dump("Ok, we can merge\n");
+            myAutoComplete.value = value + match.substring(value.length, match.length);
+//            myAutoComplete.anonymousContent[0].firstChild.anonymousContent[0].firstChild.setSelectionRange(value.length, match.length);
+        }
+        else
+       {
+            dump("oops, no match!\n");
+            myAutoComplete.value = value + " " + match;
+       }
+    }
+    
+}
+
 function Initialize()
 {
-    dump("Initialize\n");
+    dump("Initialize!!\n");
+    var secondAutoComplete = document.getElementById("test2");
+    abSession = secondAutoComplete.autoCompleteSession.QueryInterface(Components.interfaces.nsIAbAutoCompleteSession)
+    dump("abSession = " + secondAutoComplete + ", abSession = " + secondAutoComplete.autoCompleteSession + "\n");
+    abSession.defaultDomain = "mozilla.org";
+
     var myAutoComplete = document.getElementById("test");
     dump("myAutoComplete = " + myAutoComplete + ", session = " + myAutoComplete.autoCompleteSession + "\n");
     myAutoComplete.autoCompleteSession = AutoCompleteSession;
@@ -68,11 +120,19 @@ function Initialize()
 
 </html:script>
 
+<!--autocomplete id="test" timeout="300" /-->
 
-<autocomplete id="test" timeout="300" />
+<autocomplete id="test2"
+    searchSessionType="addrbook"
+    timeout="300"
+    onkeypress="if (event.which == 13) dump('Done, value=' + this.value + '\n');"
+/>
 
+<<<<<<< autocomplete_test.xul
+</window>=======
 <!--autocomplete
     searchSessionClass="netscape%2Fmessenger%2Fautocomplete%26type%3Daddrbook"
     timeout="300"
 /-->
 </window>
+>>>>>>> 1.2

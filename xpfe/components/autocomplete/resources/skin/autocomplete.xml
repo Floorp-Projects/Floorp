@@ -5,11 +5,11 @@
             xmlns:html="http://www.w3.org/TR/REC-html40"
             xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<binding id="autocomplete" extends="xul:box">
+<binding id="autocomplete" extends="resource:/chrome/xulBindings.xml#textfield">
     <content excludes="template,observes,menupopup">
-        <xul:box
+        <xul:box flex="1"
             onkeydown=" me = this.parentNode;
-                        me.callListener(me, event, 'stopLookup'); 
+                        me.callListener(me, 'stopLookup'); 
                         if (me.autoCompleteTimer) {
                             clearTimeout(me.autoCompleteTimer);
                             me.autoCompleteTimer = 0;
@@ -19,10 +19,10 @@
                             clearTimeout(me.autoCompleteTimer);
                         if (event.which != 13) {
                             me.needToAutocomplete = true;
-                            me.autoCompleteTimer = setTimeout(me.callListener, me.timeout, me, event, 'startLookup');
+                            me.autoCompleteTimer = setTimeout(me.callListener, me.timeout, me, 'startLookup');
                         }"
         >
-            <xul:textfield class="addressingWidget" inherits="value,timeout"/>
+            <html:input flex="1" inherits="value,type,maxlength,disabled,size,readonly"/>
             <xul:popupset>
                 <xul:popup>
                 </xul:popup>
@@ -31,19 +31,19 @@
     </content>
 
     <interface>
-        <property name="value"      onset="return this.anonymousContent[0].firstChild.value = val;"
-                                    onget="return this.anonymousContent[0].firstChild.value;"/>
-
         <property name="timeout"    onset="return this.setAttribute('timeout', val);"
                                     onget="return this.getAttribute('timeout');"/>
 
         <property name="autoCompleteSession">
         <![CDATA[
-            if (this.getAttribute('searchSessionClass') != "") {
-                searchSession = 'component://' + unescape(this.getAttribute('searchSessionClass'));
+            if (this.getAttribute('searchSessionType') != "") {
+                searchSession = unescape('component:%2F%2Fnetscape%2FautocompleteSession%26type=');
+                searchSession = searchSession + this.getAttribute('searchSessionType');
                 try {
                     Components.classes[searchSession].getService(Components.interfaces.nsIAutoCompleteSession);
-                } catch (e) {}
+//                      var session = Components.classes[searchSession].createInstance();
+//                      session.QueryInterface(Components.interfaces.nsIAutoCompleteSession);
+                } catch (e) {dump("### ERROR, cannot create a search session. " + e + "\n");}
             }
         ]]>
         </property>
@@ -54,12 +54,31 @@
         ]]>
         </property>
 
+        <property name="lastResults">
+        <![CDATA[
+            var results = Components.classes["component://netscape/autocomplete/results"].createInstance();
+            results.QueryInterface(Components.interfaces.nsIAutoCompleteResults);
+        ]]>
+        </property>
+
         <property name="autoCompleteListener">
         <![CDATA[
         ({
             onAutoComplete: function(result, status) {
-                dump("onAutoComplete, result=" + result + ", status=" + status + "\n");
-                this.param.lastResult = result;
+                if (status == Components.interfaces.nsIAutoCompleteStatus.failed)
+                    return;
+                    
+                this.param.lastResults = result;
+                if (status == Components.interfaces.nsIAutoCompleteStatus.ignored || 
+                    status == Components.interfaces.nsIAutoCompleteStatus.noMatch)
+                    return;
+                
+                if (result == null && result.items.Count() == 0)
+                    return;
+
+                if (result.defaultItemIndex > result.items.Count())
+                    result.defaultItemIndex = 0;
+                
                 item = result.items.QueryElementAt(result.defaultItemIndex, Components.interfaces.nsIAutoCompleteItem);
                 
                 //Time to build the new edit field value
@@ -69,7 +88,7 @@
 
                 match = item.value.toLowerCase();
                 entry = this.param.value.toLowerCase();
-                inputElement = this.param.anonymousContent[0].firstChild.anonymousContent[0].firstChild;
+                inputElement = this.param.anonymousContent[0].firstChild;
                 
                 if (entry != match)
                 {
@@ -77,17 +96,17 @@
                     {
                         this.param.value = this.param.value + item.value.substring(entry.length, match.length);
                         inputElement.setSelectionRange(entry.length, match.length);
+                        this.param.noDirectMatch = false;
                     }
                     else
                    {
-                        dump("oops, no direct match!\n");
-//                        this.param.value = this.param.value + " " + item.value;
-//                        inputElement.setSelectionRange(entry.length + 1, this.param.value.length);
+                        this.param.value = this.param.value + " >> " + item.value;
+                        inputElement.setSelectionRange(entry.length, this.param.value.length);
+                        this.param.noDirectMatch = true;
                    }
                 }
 
                 popupset = this.param.anonymousContent[0].childNodes[1];
-                dump("popupset=" + popupset + ", popup=" + popupset.firstChild + "\n");
                 
                 //Now, build the popup content
                 popupElement = popupset.firstChild.cloneNode(false);
@@ -98,11 +117,11 @@
                     menuitem.setAttribute('id', i);
                     menuitem.setAttribute('value', item.value);
                     popupElement.appendChild(menuitem);
+                    dump("  match=" + item.value + "\n");
                 }
                 popupset.replaceChild(popupElement, popupset.firstChild);
 //TODO: Select the default item
-//                popupset.selectedItem = result.defaultItemIndex;
-                
+//                popupset.selectedItem = result.defaultItemIndex;                
 //                popupset.firstChild.openPopup(this.param.anonymousContent[0].firstChild, -1, -1, "popup", "bottomleft", "topleft");
             },
 
@@ -113,30 +132,26 @@
 
         <method name="callListener">
             <argument name="me"/>
-            <argument name="event"/>
             <argument name="action"/>
             <body>
             <![CDATA[
-                dump("callListener, action=" + action + ", me=" + me + "\n");
                 switch (action) {
                     case 'startLookup':
-                        dump('>>> startLookup...\n');
-                        me.autoCompleteSession.onStartLookup(event, me.value, me.lastResult, me.autoCompleteListener);
+                        if (!me.lastResults || me.value != me.lastResults.searchString)
+                            me.autoCompleteSession.onStartLookup(me.value, me.lastResults, me.autoCompleteListener);
                         break;
 
                     case 'stopLookup':
-                        dump('>>> stopLookup...\n');
                         //TODO: hide the popup menu now. How do we to that?
-                        me.autoCompleteSession.onStopLookup(event);
+                        me.autoCompleteSession.onStopLookup();
                         break;
 
                     case 'autoComplete':
-                        dump('>>> autoComplete...\n');
                         if (me.autoCompleteTimer) {
                             clearTimeout(me.autoCompleteTimer);
                             me.autoCompleteTimer = 0;
                         }
-                        me.autoCompleteSession.onAutoComplete(event, me.value, me.lastResult, me.autoCompleteListener);
+                        me.autoCompleteSession.onAutoComplete(me.value, me.lastResults, me.autoCompleteListener);
                         me.needToAutocomplete = false;
                         break;
                 }
@@ -145,22 +160,25 @@
         </method>
         
         <method name="finishAutoComplete">
+            <argument name="event"/>
             <body>
             <![CDATA[
-                inputElement = this.anonymousContent[0].firstChild.anonymousContent[0].firstChild;
+                inputElement = this.anonymousContent[0].firstChild;
                 entry = this.value.substring(0, inputElement.selectionStart) + this.value.substring(inputElement.selectionEnd, this.value.length);
 
-                if (this.lastResult)
+                if (this.lastResults)
                 {
-                    if (this.lastResult.searchString == entry)
+                    if (this.lastResults.searchString == entry)
                     {
-                        dump('dont need to autocomplete again, just use previous result\n');
-                        this.value = this.lastResult.items.QueryElementAt(this.lastResult.defaultItemIndex, Components.interfaces.nsIAutoCompleteItem).value;
+                        try {
+                            this.value = this.lastResults.items.QueryElementAt(this.lastResults.defaultItemIndex, Components.interfaces.nsIAutoCompleteItem).value;
+                        } catch(e) {};
+                        inputElement.setSelectionRange(inputElement.value.length, inputElement.value.length);
                         return;
                     }
                 }
                 
-                this.callListener(this, event, 'autoComplete');
+                this.callListener(this, 'autoComplete');
             ]]>
             </body>
         </method>
@@ -168,16 +186,15 @@
     </interface>
 
     <handlers>
-        <handler type="keypress" keycode="vk_return" value="this.finishAutoComplete();"/>
+        <handler type="keydown" keycode="vk_return" value="this.finishAutoComplete(event);"/>
 
         <handler type="focus" value="this.needToAutocomplete = false;"/>
 
         <handler type="blur" value="
             if (this.needToAutocomplete)
-                this.finishAutoComplete();
+                this.finishAutoComplete(event);
             "/>
     </handlers>
 
 </binding> 
-
-</bindings>
+</bindings> 
