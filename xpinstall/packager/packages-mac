@@ -32,11 +32,12 @@ viewer:Mozilla Editor
 viewer:Mozilla Installer
 viewer:Mozilla Message Compose 
 viewer:Mozilla Messenger 
-viewer:NSPR Logging
 viewer:Mozilla Preferences 
 viewer:Mozilla Profile Manager
 viewer:Mozilla Profile Wizard
 viewer:Mozilla Select Profile
+viewer:NSPR Logging
+
 viewer:Essential Files:AppCores.shlb 
 viewer:Essential Files:AppShell.shlb 
 viewer:Essential Files:gfx.shlb 
@@ -47,6 +48,7 @@ viewer:Essential Files:RaptorShell.shlb
 viewer:Essential Files:WASTELib 
 viewer:Essential Files:webshell.shlb 
 viewer:Essential Files:widget.shlb 
+
 viewer:Components:about.shlb 
 viewer:Components:about.xpt 
 viewer:Components:appshell.xpt 
@@ -57,10 +59,17 @@ viewer:Components:Caps.shlb
 viewer:Components:caps.xpt 
 viewer:Components:chardet.shlb 
 viewer:Components:ChomeRegistry.shlb 
+viewer:Components:chrome.xpt
 viewer:Components:Cookie.shlb 
 viewer:Components:data.shlb 
+viewer:Components:data.shlb 
 viewer:Components:data.xpt 
+viewer:Components:Directory.shlb 
+viewer:Components:Directory.xpt 
+viewer:Components:docshell.xpt
 viewer:Components:dom.xpt 
+viewer:Components:DOMDataSource.shlb
+viewer:Components:domds.xpt
 viewer:Components:editor.xpt 
 viewer:Components:EditorCore.shlb 
 viewer:Components:EditorTxmgr.shlb 
@@ -76,13 +85,18 @@ viewer:Components:history.xpt
 viewer:Components:htmlparser.shlb 
 viewer:Components:http.shlb 
 viewer:Components:http.xpt 
+viewer:Components:jar.shlb
+viewer:Components:jar.xpt
 viewer:Components:jpgdecoder.shlb 
 viewer:Components:JSLoader.shlb 
 viewer:Components:jsurl.shlb 
+viewer:Components:jsurl.xpt
 viewer:Components:layout.shlb 
+viewer:Components:layout.xpt
 viewer:Components:libjar.xpt 
 viewer:Components:libpref.shlb 
 viewer:Components:libpref.xpt 
+viewer:Components:libutil.xpt
 viewer:Components:lwbrk.shlb 
 viewer:Components:mimetype.shlb 
 viewer:Components:mozBrowser.shlb 
@@ -93,6 +107,7 @@ viewer:Components:netwerk.xpt
 viewer:Components:Network.shlb 
 viewer:Components:nkcache.shlb 
 viewer:Components:nkcache.xpt
+viewer:Components:nsCategoryManager.js
 viewer:Components:nsIStringBundle.xpt 
 viewer:Components:nslocale.shlb 
 viewer:Components:nsLocale.xpt 
@@ -112,8 +127,11 @@ viewer:Components:RegViewer.xpt
 viewer:Components:Related.shlb 
 viewer:Components:related.xpt 
 viewer:Components:res.shlb 
+viewer:Components:res.xpt
+viewer:Components:resource.shlb
 viewer:Components:Search.shlb 
 viewer:Components:search.xpt 
+viewer:Components:smime.shlb
 viewer:Components:streamconv.shlb 
 viewer:Components:streamconv.xpt 
 viewer:Components:strres.shlb 
@@ -142,9 +160,7 @@ viewer:Components:xpcom.xpt
 viewer:Components:XPConnect.shlb 
 viewer:Components:xpconnect.xpt 
 viewer:Components:xpinstall.xpt 
-viewer:Components:Directory.shlb 
-viewer:Components:Directory.xpt 
-viewer:Components:data.shlb 
+
 viewer:chrome:bookmarks:*
 viewer:chrome:editor:*
 -viewer:chrome:editor:content:default:EditorInitPage.html
@@ -166,29 +182,72 @@ viewer:chrome:navigator:*
 viewer:chrome:pref:* 
 viewer:chrome:profile:* 
 viewer:chrome:related:* 
+viewer:chrome:RegViewer:*
+viewer:chrome:Search:*
 viewer:chrome:sidebar:* 
 viewer:chrome:wallet:*
 viewer:chrome:xpinstall:* 
 viewer:chrome:xul.css
 viewer:defaults:pref:all.js 
 viewer:defaults:pref:config.js 
+viewer:defaults:Pref:editor.js
 viewer:defaults:pref:initpref.js 
 viewer:defaults:pref:macprefs.js 
 viewer:defaults:pref:xpinstall.js
 viewer:defaults:profile:*
-viewer:res:html.css
-viewer:res:ua.css
-viewer:res:maccharset.properties 
+viewer:res:arrow.gif
 viewer:res:charsetalias.properties 
 viewer:res:entityTables:*
+viewer:res:FieldSchema.tbl
+viewer:res:html:*
+viewer:res:html.css
+viewer:res:maccharset.properties 
 viewer:res:rdf:article.gif
+viewer:res:rdf:collapser.gif
+viewer:res:rdf:datasets:*
 viewer:res:rdf:document.gif
+viewer:res:rdf:dom-test-1.xul
+viewer:res:rdf:dom-test-2.xul
+viewer:res:rdf:dom-test-3.xul
+viewer:res:rdf:dom-test-4.css
+viewer:res:rdf:dom-test-4.xul
+viewer:res:rdf:dom-test-5.xul
+viewer:res:rdf:dom-test-6.xul
+viewer:res:rdf:dom-test-7.xul
+viewer:res:rdf:dom-test-8.xul
+viewer:res:rdf:expander.gif
 viewer:res:rdf:folder-closed.gif
 viewer:res:rdf:folder-open.gif
 viewer:res:rdf:loading.gif
-viewer:res:xpinstall:*
+viewer:res:rdf:LocalStore.css
+viewer:res:rdf:LocalStore.rdf
+viewer:res:rdf:online.gif
+viewer:res:rdf:stock.gif
+viewer:res:rdf:unread.gif
+viewer:res:rdf:xpidl-test-1.xul
+viewer:res:samples:*
+; the line above will skip aliases to subdirectories; let's list them explicitly
+viewer:res:samples:resources
+viewer:res:samples:sampleimages
+
+-viewer:res:samples:.cvsignore
+-viewer:res:samples:Makefile.in
+-viewer:res:samples:makefile.win
+-viewer:res:samples:resources:.cvsignore
+-viewer:res:samples:resources:CVS
+-viewer:res:samples:sampleimages:.cvsignore
+-viewer:res:samples:sampleimages:CVS
+-viewer:res:samples:sampleimages:Makefile.in
+-viewer:res:samples:sampleimages:makefile.win
+viewer:res:SchemaConcat.tbl
+viewer:res:strres-test.js
+viewer:res:strres-test.xul
 viewer:res:throbber:*
 viewer:res:toolbar:*
+-viewer:res:toolbar:.cvsignore
+viewer:res:ua.css
+viewer:res:URLFieldSchema.tbl
+viewer:res:xpinstall:*
 
 [mail] 
 viewer:Components:MsgAddrbook.shlb 
@@ -214,3 +273,4 @@ viewer:chrome:addressbook:*
 viewer:chrome:messenger:* 
 viewer:chrome:messengercompose:* 
 viewer:defaults:pref:mailnews.js
+viewer:res:Mailnews:*
