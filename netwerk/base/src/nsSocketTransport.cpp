@@ -755,7 +755,11 @@ nsresult nsSocketTransport::doConnection(PRInt16 aSelectFlags)
       opt.option = PR_SockOpt_Linger;
       opt.value.linger.polarity = PR_TRUE;
       opt.value.linger.linger = PR_INTERVAL_NO_WAIT;
+#ifdef XP_OS2
+      PR_SetSocketOption(mSocketFD, &opt);
+#else
       PR_SetSocketOption(*sock, &opt);
+#endif
 #endif /* XP_WIN16 || XP_OS2*/
     } 
     else {
