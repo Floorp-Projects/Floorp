@@ -92,6 +92,10 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),gtk)
 SHAREDSRCS += nsNativeAppSupportGtk.cpp
 endif
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
+SHAREDSRCS += nsNativeAppSupportOS2.cpp
+endif
+
 CPPSRCS = \
 	$(SHAREDSRCS) \
 	nsAppRunner.cpp \
