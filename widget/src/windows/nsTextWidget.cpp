@@ -62,6 +62,50 @@ nsresult nsTextWidget::QueryObject(const nsIID& aIID, void** aInstancePtr)
     return result;
 }
 
+// -----------------------------------------------------------------------
+//
+// Subclass (or remove the subclass from) this component's nsWindow
+// this is need for filtering out the "ding" when the return key is pressed
+//
+// -----------------------------------------------------------------------
+void nsTextWidget::SubclassWindow(BOOL bState)
+{
+    NS_PRECONDITION(::IsWindow(mWnd), "Invalid window handle");
+    
+    if (bState) {
+        // change the nsWindow proc
+        mPrevWndProc = (WNDPROC)::SetWindowLong(mWnd, GWL_WNDPROC, 
+                                                 (LONG)nsTextWidget::TextWindowProc);
+        NS_ASSERTION(mPrevWndProc, "Null standard window procedure");
+        // connect the this pointer to the nsWindow handle
+        ::SetWindowLong(mWnd, GWL_USERDATA, (LONG)this);
+    } 
+    else {
+        (void) ::SetWindowLong(mWnd, GWL_WNDPROC, (LONG)mPrevWndProc);
+        mPrevWndProc = NULL;
+    }
+}
+
+//-------------------------------------------------------------------------
+//
+// the nsTextWidget procedure for all nsTextWidget in this toolkit
+// this is need for filtering out the "ding" when the return key is pressed
+//
+//-------------------------------------------------------------------------
+LRESULT CALLBACK nsTextWidget::TextWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    // Filters the "ding" when hitting the return key
+    if (msg == WM_CHAR) {
+      long chCharCode = (TCHAR) wParam;    // character code 
+      if (chCharCode == 13 || chCharCode == 9) {
+        return 0L;
+      }
+    }
+
+    return nsWindow::WindowProc(hWnd, msg, wParam, lParam);
+}
+
+
 //-------------------------------------------------------------------------
 //
 // move, paint, resizes message - ignore

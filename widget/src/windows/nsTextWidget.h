@@ -46,6 +46,8 @@ public:
     virtual PRBool  OnResize(nsRect &aWindowRect);
     virtual void    GetBounds(nsRect &aRect);
 
+    virtual void SubclassWindow(BOOL bState);
+
     // nsIWidget interface
     BASE_IWIDGET_IMPL
 
@@ -53,6 +55,12 @@ protected:
     virtual LPCTSTR     WindowClass();
     virtual DWORD       WindowStyle();
     virtual DWORD       WindowExStyle();
+
+    static LRESULT CALLBACK TextWindowProc(HWND hWnd,
+                                    UINT msg,
+                                    WPARAM wParam,
+                                    LPARAM lParam);
+
 };
 
 #endif // nsTextWidget_h__
