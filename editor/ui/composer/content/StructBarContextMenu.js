@@ -144,14 +144,13 @@ function StructChangeTag()
 {
   var textbox = document.createElementNS(XUL_NS, "textbox");
   textbox.setAttribute("value", gContextMenuNode.getAttribute("value"));
-  textbox.setAttribute("size",  5);
+  textbox.setAttribute("width", gContextMenuNode.boxObject.width);
+  textbox.className = "struct-textbox";
 
-  gContextMenuNode.parentNode.insertBefore(textbox, gContextMenuNode);
+  gContextMenuNode.parentNode.replaceChild(textbox, gContextMenuNode);
 
   textbox.addEventListener("keypress", OnKeyPress, false);
-
-  textbox.setAttribute("style", "font-size: smaller");
-  gContextMenuNode.parentNode.removeChild(gContextMenuNode);
+  textbox.addEventListener("blur", ResetStructToolbar, true);
 
   textbox.select();
 }
@@ -198,9 +197,7 @@ function OnKeyPress(event)
         editor.deleteNode(element);
         editor.selectElement(newElt);
 
-        window._content.focus();
-
-        ResetStructToolbar();
+        window.content.focus();
       }
     }
     catch (e) {}
@@ -210,6 +207,6 @@ function OnKeyPress(event)
   }
   else if (keyCode == 27) {
     // if the user hits Escape, we discard the changes
-    ResetStructToolbar();
+    window.content.focus();
   }
 }

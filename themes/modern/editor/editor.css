@@ -63,3 +63,28 @@
   font-size: -moz-initial;
 }
 
+/* ::::: struct toolbar ::::: */
+
+#structToolbar {
+  min-width: 1px;
+  overflow: hidden;
+}
+
+#structSpacer {
+  margin: 1px 0px;
+}
+
+.struct-button {
+  padding: 0px;
+}
+
+.struct-button[checked="true"] {
+  font-weight: bold;
+}
+
+.struct-textbox {
+  padding: 0px !important;
+  border: 1px solid #000000 !important;
+  margin: 0px !important;
+}
+

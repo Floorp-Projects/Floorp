@@ -3007,12 +3007,13 @@ function UpdateStructToolbar()
   gLastFocusNode = element;
   gLastFocusNodeWasSelected = mixed.oneElementSelected;
 
-  var toolbar = document.getElementById("statusText");
+  var toolbar = document.getElementById("structToolbar");
   if (!toolbar) return;
   var childNodes = toolbar.childNodes;
   var childNodesLength = childNodes.length;
-  var i;
-  for (i = childNodesLength-1; i >= 0; i--) {
+  // We need to leave the <label> to flex the buttons to the left
+  // so, don't remove the last child at position length - 1
+  for (var i = childNodesLength - 2; i >= 0; i--) {
     toolbar.removeChild(childNodes.item(i));
   }
 
@@ -3036,6 +3037,7 @@ function UpdateStructToolbar()
     button.setAttribute("label",   "<" + tag + ">");
     button.setAttribute("value",   tag);
     button.setAttribute("context", "structToolbarContext");
+    button.className = "struct-button";
 
     toolbar.insertBefore(button, toolbar.firstChild);
 
@@ -3044,7 +3046,7 @@ function UpdateStructToolbar()
     button.addEventListener("contextmenu", newContextmenuListener(button, element), false);
 
     if (isFocusNode && oneElementSelected) {
-      button.setAttribute("style", "font-weight: bold");
+      button.setAttribute("checked", "true");
       isFocusNode = false;
     }
 
