@@ -68,7 +68,6 @@ native_netscape_npasw_SetupPlugin_SECURE_0005fGetCurrentProfileDirectory(JRIEnv*
 	char buf[MAX_PATH_LENGTH];
 	buf[0] = '\0';
 
-
 #ifdef WIN32 // ***************************** WIN32 ********************************
 	HREG   reg;
 	RKEY   rKey1, rKey2;
@@ -100,6 +99,15 @@ native_netscape_npasw_SetupPlugin_SECURE_0005fGetCurrentProfileDirectory(JRIEnv*
 						strcat(buf, "\\");	
 
 						profilePath = JRI_NewStringPlatform(env, buf, strlen(buf), NULL, 0);
+
+						if (REGERR_OK == NR_RegSetEntryString(reg, rKey2, "Temporary", "Temporary"))
+						{
+							trace("profile.cpp : GetCurrentProfileDirectiory : Temp flag set for Current User profile directory");
+						}	
+						else
+						{
+							trace("profile.cpp : GetCurrentProfileDirectiory : Error in setting Temp flag to Current User profile location");
+						}
 
 						NR_RegClose(reg);
 					} 
@@ -371,7 +379,7 @@ native_netscape_npasw_SetupPlugin_SECURE_0005fSetCurrentProfileName(JRIEnv* env,
 
 
 	HREG   reg;
-	RKEY   rKey1, rKey2;
+	RKEY   rKey1, rKey2, rKey3;
 
 	BOOL Err = FALSE;
 
@@ -394,10 +402,10 @@ native_netscape_npasw_SetupPlugin_SECURE_0005fSetCurrentProfileName(JRIEnv* env,
 			if (REGERR_OK == NR_RegGetEntryString(reg, rKey1, "LastNetscapeUser", buf, MAX_PATH_LENGTH))
 			{
 				// old user profile key path
-				strcat (oldProfName, buf);
+				strcpy (oldProfName, buf);
 
 				// new user profile key path
-				strcat (newProfName, newProfileName);
+				strcpy (newProfName, newProfileName);
 
 				// check if the new ProfileName is same as old ProfileName, if it is, we don't
 				// need to do anything.
@@ -413,6 +421,22 @@ native_netscape_npasw_SetupPlugin_SECURE_0005fSetCurrentProfileName(JRIEnv* env,
 				{
 					if (REGERR_OK == CopyNetscapeRegKey (reg, ROOTKEY_USERS, (char *)oldProfName, ROOTKEY_USERS, (char *) newProfName))	
 					{
+						if (REGERR_OK == NR_RegGetKey(reg, ROOTKEY_USERS, newProfName, &rKey3))
+						{
+							if (REGERR_OK == NR_RegDeleteEntry(reg, rKey3, "Temporary"))
+							{
+								trace("profile.cpp : SetCurrentProfile : Profile marked permanent");
+							}
+							else
+							{
+								trace("profile.cpp : SetCurrentProfile : Error in deleting Temp entry fron new profile");
+							}
+						}	
+						else
+						{
+							trace("profile.cpp : SetCurrentProfile : Error in obtaining new profile handle");
+						}
+
 						DeleteKeyTree(reg, ROOTKEY_USERS, (char *)oldProfName);
 					}
 					else
