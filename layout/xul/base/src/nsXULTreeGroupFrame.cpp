@@ -717,8 +717,9 @@ nsXULTreeGroupFrame :: ForceDrawFrame(nsIPresContext* aPresContext, nsIFrame * a
 // coordinate of where the drop feedback bar should be drawn.
 //
 NS_IMETHODIMP
-nsXULTreeGroupFrame :: AttributeChanged ( nsIPresContext* aPresContext, nsIContent* aChild,
-                                           PRInt32 aNameSpaceID, nsIAtom* aAttribute, PRInt32 aHint)
+nsXULTreeGroupFrame::AttributeChanged(nsIPresContext* aPresContext, nsIContent* aChild,
+                                      PRInt32 aNameSpaceID, nsIAtom* aAttribute, 
+                                      PRInt32 aModType, PRInt32 aHint)
 {
   nsresult rv = NS_OK;
   PRInt32 ignore;
@@ -741,7 +742,7 @@ nsXULTreeGroupFrame :: AttributeChanged ( nsIPresContext* aPresContext, nsIConte
     mDropOnContainer = attribute.EqualsWithConversion("true");
   }
   else
-    rv = nsBoxFrame::AttributeChanged ( aPresContext, aChild, aNameSpaceID, aAttribute, aHint );
+    rv = nsBoxFrame::AttributeChanged ( aPresContext, aChild, aNameSpaceID, aAttribute, aModType, aHint );
 
   return rv;
   

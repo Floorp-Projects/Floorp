@@ -52,7 +52,7 @@ public:
   // nsIDOMHTMLBaseElement
   NS_DECL_NSIDOMHTMLBASEFONTELEMENT
 
-  NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,
+  NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
                                       PRInt32& aHint) const;
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 };
@@ -140,7 +140,7 @@ NS_IMPL_STRING_ATTR(nsHTMLBaseFontElement, Size, size)
 
 
 NS_IMETHODIMP
-nsHTMLBaseFontElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
+nsHTMLBaseFontElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
                                                 PRInt32& aHint) const
 {
   if ((nsHTMLAtoms::color == aAttribute) ||

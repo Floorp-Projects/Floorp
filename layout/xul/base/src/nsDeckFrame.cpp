@@ -171,10 +171,11 @@ nsDeckFrame::AttributeChanged(nsIPresContext* aPresContext,
                                nsIContent* aChild,
                                PRInt32 aNameSpaceID,
                                nsIAtom* aAttribute,
+                               PRInt32 aModType, 
                                PRInt32 aHint)
 {
   nsresult rv = nsBoxFrame::AttributeChanged(aPresContext, aChild,
-                                              aNameSpaceID, aAttribute, aHint);
+                                              aNameSpaceID, aAttribute, aModType, aHint);
 
 
    // if the index changed hide the old element and make the now element visible

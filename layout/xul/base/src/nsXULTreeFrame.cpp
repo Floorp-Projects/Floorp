@@ -347,7 +347,7 @@ nsXULTreeFrame::GetTreeBody(nsXULTreeOuterGroupFrame** aResult)
 
 NS_IMETHODIMP
 nsXULTreeFrame::AttributeChanged (nsIPresContext* aPresContext, nsIContent* aChild,
-                                  PRInt32 aNameSpaceID, nsIAtom* aAttribute, PRInt32 aHint)
+                                  PRInt32 aNameSpaceID, nsIAtom* aAttribute, PRInt32 aModType, PRInt32 aHint)
 {
   if (aAttribute == nsXULAtoms::rows) {
     nsXULTreeOuterGroupFrame* treeOuterGroup = nsnull;
@@ -378,5 +378,5 @@ nsXULTreeFrame::AttributeChanged (nsIPresContext* aPresContext, nsIContent* aChi
     return NS_OK;
   }
   else
-    return nsBoxFrame::AttributeChanged(aPresContext, aChild, aNameSpaceID, aAttribute, aHint);
+    return nsBoxFrame::AttributeChanged(aPresContext, aChild, aNameSpaceID, aAttribute, aModType, aHint);
 }

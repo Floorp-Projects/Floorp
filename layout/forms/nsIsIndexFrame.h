@@ -99,6 +99,7 @@ public:
                               nsIContent*     aChild,
                               PRInt32         aNameSpaceID,
                               nsIAtom*        aAttribute,
+                              PRInt32         aModType, 
                               PRInt32         aHint);
 
   void           SetFocus(PRBool aOn, PRBool aRepaint);

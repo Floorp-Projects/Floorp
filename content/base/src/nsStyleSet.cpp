@@ -162,6 +162,7 @@ public:
                               nsIContent* aChild,
                               PRInt32 aNameSpaceID,
                               nsIAtom* aAttribute,
+                              PRInt32 aModType, 
                               PRInt32 aHint); // See nsStyleConsts fot hint values
 
   // xxx style rules enumeration
@@ -1221,10 +1222,11 @@ StyleSetImpl::AttributeChanged(nsIPresContext* aPresContext,
                                nsIContent* aContent,
                                PRInt32 aNameSpaceID,
                                nsIAtom* aAttribute,
+                               PRInt32 aModType, 
                                PRInt32 aHint)
 {
   return mFrameConstructor->AttributeChanged(aPresContext, aContent, 
-                                             aNameSpaceID, aAttribute, aHint);
+                                             aNameSpaceID, aAttribute, aModType, aHint);
 }
 
 

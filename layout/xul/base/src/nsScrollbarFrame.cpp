@@ -82,10 +82,11 @@ nsScrollbarFrame::AttributeChanged(nsIPresContext* aPresContext,
                                nsIContent* aChild,
                                PRInt32 aNameSpaceID,
                                nsIAtom* aAttribute,
+                               PRInt32 aModType, 
                                PRInt32 aHint)
 {
   nsresult rv = nsBoxFrame::AttributeChanged(aPresContext, aChild,
-                                              aNameSpaceID, aAttribute, aHint);
+                                              aNameSpaceID, aAttribute, aModType, aHint);
   /*// if the current position changes
   if (       aAttribute == nsXULAtoms::curpos || 
              aAttribute == nsXULAtoms::maxpos || 
@@ -96,7 +97,7 @@ nsScrollbarFrame::AttributeChanged(nsIPresContext* aPresContext,
      nsIFrame* slider;
      nsScrollbarButtonFrame::GetChildWithTag(aPresContext, nsXULAtoms::slider, this, slider);
      if (slider)
-        slider->AttributeChanged(aPresContext, aChild, aNameSpaceID, aAttribute, aHint);
+        slider->AttributeChanged(aPresContext, aChild, aNameSpaceID, aAttribute, aModType, aHint);
   }
 */
 

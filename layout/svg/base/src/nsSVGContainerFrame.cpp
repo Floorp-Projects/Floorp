@@ -331,10 +331,11 @@ nsSVGContainerFrame::AttributeChanged(nsIPresContext* aPresContext,
                                nsIContent* aChild,
                                PRInt32 aNameSpaceID,
                                nsIAtom* aAttribute,
+                               PRInt32 aModType, 
                                PRInt32 aHint)
 {
     nsresult rv = nsHTMLContainerFrame::AttributeChanged(aPresContext, aChild,
-                                              aNameSpaceID, aAttribute, aHint);
+                                              aNameSpaceID, aAttribute, aModType, aHint);
 #if 0
     if (aAttribute == nsHTMLAtoms::width ||
         aAttribute == nsHTMLAtoms::height ||

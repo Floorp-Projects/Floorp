@@ -74,6 +74,7 @@ public:
                                nsIContent*     aChild,
                                PRInt32         aNameSpaceID,
                                nsIAtom*        aAttribute,
+                               PRInt32         aModType, 
                                PRInt32         aHint);
 
   // table cells contain an area frame which does most of the work, and

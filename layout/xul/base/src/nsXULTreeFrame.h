@@ -53,7 +53,7 @@ public:
   NS_IMETHOD BeginBatch();
   NS_IMETHOD EndBatch();
   NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext, nsIContent* aChild,
-                              PRInt32 aNameSpaceID, nsIAtom* aAttribute, PRInt32 aHinta);
+                              PRInt32 aNameSpaceID, nsIAtom* aAttribute, PRInt32 aModType, PRInt32 aHint);
 
 protected:
   nsXULTreeFrame(nsIPresShell* aPresShell, PRBool aIsRoot = nsnull, nsIBoxLayout* aLayoutManager = nsnull);

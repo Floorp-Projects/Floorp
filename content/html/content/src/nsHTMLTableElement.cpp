@@ -74,7 +74,7 @@ public:
                                const nsHTMLValue& aValue,
                                nsAWritableString& aResult) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
-  NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,
+  NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
                                       PRInt32& aHint) const;
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 
@@ -1456,7 +1456,7 @@ MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
 }
 
 NS_IMETHODIMP
-nsHTMLTableElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
+nsHTMLTableElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
                                              PRInt32& aHint) const
 {
   if ((aAttribute == nsHTMLAtoms::layout) ||

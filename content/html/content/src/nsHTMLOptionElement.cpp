@@ -83,7 +83,7 @@ public:
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
                                const nsAReadableString& aValue,
                                nsHTMLValue& aResult);
-  NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,
+  NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
                                       PRInt32& aHint) const;
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 
@@ -465,7 +465,7 @@ nsHTMLOptionElement::StringToAttribute(nsIAtom* aAttribute,
 }
 
 NS_IMETHODIMP
-nsHTMLOptionElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
+nsHTMLOptionElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
                                               PRInt32& aHint) const
 {
   if (aAttribute == nsHTMLAtoms::label) {

@@ -218,10 +218,11 @@ nsSliderFrame::AttributeChanged(nsIPresContext* aPresContext,
                                nsIContent* aChild,
                                PRInt32 aNameSpaceID,
                                nsIAtom* aAttribute,
+                               PRInt32 aModType, 
                                PRInt32 aHint)
 {
   nsresult rv = nsBoxFrame::AttributeChanged(aPresContext, aChild,
-                                              aNameSpaceID, aAttribute, aHint);
+                                              aNameSpaceID, aAttribute, aModType, aHint);
   // if the current position changes
   if (aAttribute == nsXULAtoms::curpos) {
      rv = CurrentPositionChanged(aPresContext);

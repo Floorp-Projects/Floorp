@@ -275,7 +275,7 @@ public:
   NS_IMETHOD HasClass(nsIAtom* aClass) const;
   NS_IMETHOD WalkContentStyleRules(nsIRuleWalker* aRuleWalker);
   NS_IMETHOD WalkInlineStyleRules(nsIRuleWalker* aRuleWalker);
-  NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,
+  NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType, 
                                       PRInt32& aHint) const;
 
   // nsIXMLContent interface methods

@@ -35,7 +35,7 @@
 #include "nsIHTMLStyleSheet.h"
 #include "nsIHTMLContentContainer.h"
 #include "nsIHTMLAttributes.h"
-
+#include "nsIDOMMutationEvent.h"
 
 class nsHTMLUnknownElement : public nsGenericHTMLContainerElement,
                              public nsIDOMHTMLElement
@@ -255,7 +255,7 @@ nsHTMLUnknownElement::SetAttribute(PRInt32 aNameSpaceID,
 
     // set as string value to avoid another string copy
     PRBool  impact = NS_STYLE_HINT_NONE;
-    GetMappedAttributeImpact(aAttribute, impact);
+    GetMappedAttributeImpact(aAttribute, nsIDOMMutationEvent::MODIFICATION, impact);
 
     nsCOMPtr<nsIHTMLStyleSheet> sheet(dont_AddRef(GetAttrStyleSheet(mDocument)));
     if (sheet) { // set attr via style sheet
@@ -279,7 +279,7 @@ nsHTMLUnknownElement::SetAttribute(PRInt32 aNameSpaceID,
   }
 
   if (aNotify && (mDocument)) {
-    result = mDocument->AttributeChanged(this, aNameSpaceID, aAttribute,
+    result = mDocument->AttributeChanged(this, aNameSpaceID, aAttribute, nsIDOMMutationEvent::MODIFICATION, 
                                          NS_STYLE_HINT_UNKNOWN);
     mDocument->EndUpdate();
   }

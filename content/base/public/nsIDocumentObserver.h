@@ -133,11 +133,15 @@ public:
    * @param aDocument The document being observed
    * @param aContent the piece of content whose attribute changed
    * @param aAttribute the atom name of the attribute
+   * @param aModType Whether or not the attribute was added, changed, or removed.
+   *   The constants are defined in nsIDOMMutationEvent.h.
+   * @param aHint The style hint.
    */
   NS_IMETHOD AttributeChanged(nsIDocument *aDocument,
                               nsIContent*  aContent,
                               PRInt32      aNameSpaceID,
                               nsIAtom*     aAttribute,
+                              PRInt32      aModType,    
                               PRInt32      aHint) = 0;  // See nsStyleConsts fot hint values
 
   /**

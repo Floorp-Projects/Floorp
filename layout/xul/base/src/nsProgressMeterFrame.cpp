@@ -82,7 +82,7 @@ nsProgressMeterFrame::SetInitialChildList(nsIPresContext* aPresContext,
 { 
   // Set up our initial flexes.
   nsresult rv = nsBoxFrame::SetInitialChildList(aPresContext, aListName, aChildList);
-  AttributeChanged(aPresContext, mContent, kNameSpaceID_None, nsHTMLAtoms::value, 0);
+  AttributeChanged(aPresContext, mContent, kNameSpaceID_None, nsHTMLAtoms::value, 0, 0);
   return rv;
 }
 
@@ -91,10 +91,11 @@ nsProgressMeterFrame::AttributeChanged(nsIPresContext* aPresContext,
                                nsIContent* aChild,
                                PRInt32 aNameSpaceID,
                                nsIAtom* aAttribute,
+                               PRInt32 aModType, 
                                PRInt32 aHint)
 {
   nsresult rv = nsBoxFrame::AttributeChanged(aPresContext, aChild,
-                                             aNameSpaceID, aAttribute, aHint);
+                                             aNameSpaceID, aAttribute, aModType, aHint);
   if (NS_OK != rv) {
     return rv;
   }

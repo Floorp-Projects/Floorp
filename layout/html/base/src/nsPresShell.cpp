@@ -1002,6 +1002,7 @@ public:
                               nsIContent*  aContent,
                               PRInt32      aNameSpaceID,
                               nsIAtom*     aAttribute,
+                              PRInt32      aModType, 
                               PRInt32      aHint);
   NS_IMETHOD ContentAppended(nsIDocument *aDocument,
                              nsIContent* aContainer,
@@ -4944,10 +4945,11 @@ PresShell::AttributeChanged(nsIDocument *aDocument,
                             nsIContent*  aContent,
                             PRInt32      aNameSpaceID,
                             nsIAtom*     aAttribute,
+                            PRInt32      aModType, 
                             PRInt32      aHint)
 {
   WillCauseReflow();
-  nsresult rv = mStyleSet->AttributeChanged(mPresContext, aContent, aNameSpaceID, aAttribute, aHint);
+  nsresult rv = mStyleSet->AttributeChanged(mPresContext, aContent, aNameSpaceID, aAttribute, aModType, aHint);
   VERIFY_STYLE_TREE;
   DidCauseReflow();
   return rv;

@@ -289,6 +289,7 @@ nsPolygonFrame::AttributeChanged(nsIPresContext* aPresContext,
                                           nsIContent*     aChild,
                                           PRInt32         aNameSpaceID,
                                           nsIAtom*        aAttribute,
+                                          PRInt32         aModType, 
                                           PRInt32         aHint)
 {
   if (aAttribute == nsSVGAtoms::points) {
@@ -309,7 +310,7 @@ nsPolygonFrame::AttributeChanged(nsIPresContext* aPresContext,
   } else if (aAttribute == nsSVGAtoms::x) {
   } else if (aAttribute == nsSVGAtoms::y) {
   }
-  return nsLeafFrame::AttributeChanged(aPresContext, aChild, aNameSpaceID, aAttribute, aHint);
+  return nsLeafFrame::AttributeChanged(aPresContext, aChild, aNameSpaceID, aAttribute, aModType, aHint);
 }
   
 NS_METHOD nsPolygonFrame::RenderPoints(nsIRenderingContext& aRenderingContext,

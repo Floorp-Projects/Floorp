@@ -1703,6 +1703,7 @@ NS_IMETHODIMP
 nsDocument::AttributeChanged(nsIContent* aChild,
                              PRInt32 aNameSpaceID,
                              nsIAtom* aAttribute,
+                             PRInt32 aModType,
                              PRInt32 aHint)
 {
   NS_ABORT_IF_FALSE(aChild, "Null child!");
@@ -1713,7 +1714,7 @@ nsDocument::AttributeChanged(nsIContent* aChild,
   // observers remove themselves during the loop.
   for (i = 0; i < mObservers.Count(); i++) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
-    nsresult rv = observer->AttributeChanged(this, aChild, aNameSpaceID, aAttribute, aHint);
+    nsresult rv = observer->AttributeChanged(this, aChild, aNameSpaceID, aAttribute, aModType, aHint);
     if (NS_FAILED(rv) && NS_SUCCEEDED(result))
       result = rv;
     // Make sure that the observer didn't remove itself during the

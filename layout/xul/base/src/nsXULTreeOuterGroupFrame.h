@@ -115,7 +115,7 @@ public:
   NS_IMETHOD Paint(nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext,
                     const nsRect& aDirtyRect, nsFramePaintLayer aWhichLayer);
   NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext, nsIContent* aChild,
-                                 PRInt32 aNameSpaceID, nsIAtom* aAttribute, PRInt32 aHint) ;
+                                 PRInt32 aNameSpaceID, nsIAtom* aAttribute, PRInt32 aModType, PRInt32 aHint) ;
 
   NS_IMETHOD IsOutermostFrame(PRBool *aResult) { *aResult = PR_TRUE; return NS_OK; };
 

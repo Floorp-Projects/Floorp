@@ -1476,7 +1476,8 @@ nsXULTreeOuterGroupFrame :: Paint ( nsIPresContext* aPresContext, nsIRenderingCo
 //
 NS_IMETHODIMP
 nsXULTreeOuterGroupFrame :: AttributeChanged ( nsIPresContext* aPresContext, nsIContent* aChild,
-                                                 PRInt32 aNameSpaceID, nsIAtom* aAttribute, PRInt32 aHint)
+                                                 PRInt32 aNameSpaceID, nsIAtom* aAttribute, 
+                                                 PRInt32 aModType, PRInt32 aHint)
 {
   nsresult rv = NS_OK;
    
@@ -1488,7 +1489,7 @@ nsXULTreeOuterGroupFrame :: AttributeChanged ( nsIPresContext* aPresContext, nsI
     mTreeIsSorted = PR_FALSE;
   }
   else
-    rv = nsXULTreeGroupFrame::AttributeChanged ( aPresContext, aChild, aNameSpaceID, aAttribute, aHint );
+    rv = nsXULTreeGroupFrame::AttributeChanged ( aPresContext, aChild, aNameSpaceID, aAttribute, aModType, aHint );
 
   return rv;
  

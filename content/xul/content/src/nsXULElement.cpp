@@ -3085,7 +3085,9 @@ nsXULElement::SetAttr(nsINodeInfo* aNodeInfo,
             (tagName.get() == nsXULAtoms::command) ||
             (tagName.get() == nsXULAtoms::key))
             return rv;
-        mDocument->AttributeChanged(this, attrns, attrName,
+
+        PRInt32 modHint = modification ? nsIDOMMutationEvent::MODIFICATION : nsIDOMMutationEvent::ADDITION;
+        mDocument->AttributeChanged(this, attrns, attrName, modHint, 
                                     NS_STYLE_HINT_UNKNOWN);
       }
     }
@@ -3340,7 +3342,7 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID,
                 (tagName.get() == nsXULAtoms::key))
                 return rv;
             mDocument->AttributeChanged(NS_STATIC_CAST(nsIStyledContent*, this),
-                                        aNameSpaceID, aName,
+                                        aNameSpaceID, aName, nsIDOMMutationEvent::REMOVAL, 
                                         NS_STYLE_HINT_UNKNOWN);
           }
         }
@@ -4310,12 +4312,24 @@ nsXULElement::WalkInlineStyleRules(nsIRuleWalker* aRuleWalker)
 }
 
 NS_IMETHODIMP
-nsXULElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
-                                         PRInt32& aHint) const
+nsXULElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
+                                       PRInt32& aHint) const
 {
     aHint = NS_STYLE_HINT_CONTENT;  // by default, never map attributes to style
 
-    if (aAttribute == nsXULAtoms::value || aAttribute == nsXULAtoms::flex ||
+    if (aAttribute == nsXULAtoms::value && 
+        (aModType == nsIDOMMutationEvent::REMOVAL || aModType == nsIDOMMutationEvent::ADDITION)) {
+      nsCOMPtr<nsIAtom> tag;
+      GetTag(*getter_AddRefs(tag));
+      if (tag.get() == nsXULAtoms::label || tag.get() == nsXULAtoms::description)
+        // Label and description dynamically morph between a normal block and a cropping single-line
+        // XUL text frame.  If the value attribute is being added or removed, then we need to return
+        // a hint of frame change.  (See bugzilla bug 95475 for details.)
+        aHint = NS_STYLE_HINT_FRAMECHANGE;
+      else
+        aHint = NS_STYLE_HINT_ATTRCHANGE;
+    }
+    else if (aAttribute == nsXULAtoms::value || aAttribute == nsXULAtoms::flex ||
         aAttribute == nsXULAtoms::label) {
       // VERY IMPORTANT! This has a huge positive performance impact!
       aHint = NS_STYLE_HINT_ATTRCHANGE;
