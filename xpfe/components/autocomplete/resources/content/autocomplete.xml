@@ -66,11 +66,17 @@
       <!-- =================== PUBLIC PROPERTIES =================== -->
 
       <property name="value"
-                onset="this.ignoreInputEvent = true;
-                       this.mInputElt.value = val;
-                       this.ignoreInputEvent = false;
-                       return val;"
-                onget="return this.mInputElt ? this.mInputElt.value : null;"/>
+                onget="return this.mInputElt.value;">
+        <setter><![CDATA[
+          this.ignoreInputEvent = true;
+          this.mInputElt.value = val;
+          this.ignoreInputEvent = false;
+          var event = document.createEvent('Events');
+          event.initEvent('ValueChange', true, true);
+          this.mInputElt.dispatchEvent(event);
+          return val;
+        ]]></setter>
+      </property>
   
       <property name="focused"
                 onget="return this.getAttribute('focused') == 'true';"/>
@@ -1175,6 +1181,12 @@
             
             if (aRow != null)
               this.mBoxObject.ensureRowIsVisible(aRow);
+
+            // Fire select event on xul:tree so that accessibility API 
+            // support layer can fire appropriate accessibility events.
+            var event = document.createEvent('Events');
+            event.initEvent("select", true, true);
+            this.mTree.element.dispatchEvent(event);
           },
           
           get selectedIndex()
@@ -1357,19 +1369,9 @@
      <property name="pageCount"
                onget="return this.tree.treeBoxObject.getPageLength();"/>
 
-      <property name="selectedIndex"
-                onget="return this.textbox.view.selectedIndex">
-        <setter><![CDATA[
-          this.textbox.view.selectedIndex = val;
-          // Fire DOM events necessary for translation into accessibility events
-          var event = document.createEvent("Events");
-          event.initEvent("ValueChange", true, true);
-          this.textbox.dispatchEvent(event);
-          event.initEvent("DOMMenuItemActive", true, true);
-          this.textbox.resultsPopup.tree.dispatchEvent(event);
-          return val;
-        ]]></setter>
-      </property>
+     <property name="selectedIndex"
+               onget="return this.textbox.view.selectedIndex"
+               onset="this.textbox.view.selectedIndex = val; return val;"/>
 
      <field name="mLastRows">0</field>
 
@@ -1510,6 +1512,8 @@
     <implementation>
       <property name="textbox"
                 onget="return this.__AUTOCOMPLETE_BOX__;"/>
+      <property name="currentIndex" onget="return this.textbox.view.selectedIndex;"
+                                    onset="this.textbox.view.selectedIndex = val; return val;"/>
     </implementation>
   </binding>
 
