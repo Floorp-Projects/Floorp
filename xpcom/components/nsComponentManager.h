@@ -40,10 +40,6 @@ class nsIServiceManager;
 // here rather than in nsIRegistry.h
 extern "C" NS_EXPORT nsresult NS_RegistryGetFactory(nsIFactory** aFactory);
 
-extern const char xpcomBaseName[];
-extern const char xpcomKeyName[];
-extern const char lastModValueName[];
-extern const char fileSizeValueName[];
 extern const char XPCOM_LIB_PREFIX[];
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -61,6 +57,7 @@ public:
     nsresult Init(void);
     nsresult PlatformPrePopulateRegistry();
 
+    friend class nsFactoryEntry;
 protected:
     nsresult RegistryNameForLib(const char *aLibName, char **aRegistryName);
     nsresult RegisterComponentCommon(const nsCID &aClass,
@@ -178,13 +175,21 @@ public:
     nsFactoryEntry(const nsCID &aClass, nsIFactory *aFactory);
     ~nsFactoryEntry();
 
-    nsresult GetFactory(nsIFactory **aFactory) {
+    nsresult GetFactory(nsIFactory **aFactory, 
+                        nsComponentManagerImpl * mgr) {
         if (factory) {
             *aFactory = factory.get();
             NS_ADDREF(*aFactory);
             return NS_OK;
         }
-        nsresult rv = loader->GetFactory(cid, location, type, aFactory);
+
+        nsresult rv;
+        if (!loader.get()) {
+            rv = mgr->GetLoaderForType(type, getter_AddRefs(loader));
+            if(NS_FAILED(rv))
+                return rv;
+        }
+        rv = loader->GetFactory(cid, location, type, aFactory);
         if (NS_SUCCEEDED(rv))
             factory = do_QueryInterface(*aFactory);
         return rv;

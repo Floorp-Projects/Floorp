@@ -777,10 +777,18 @@ nsresult nsComponentManagerImpl::PlatformPrePopulateRegistry()
         nsCID aClass;
         if (!(aClass.Parse(cidString))) continue;
 
+        char *componentType;
+        if (NS_FAILED(mRegistry->GetString(cidKey, componentTypeValueName,
+                                           &componentType)))
+            continue;
+
         nsFactoryEntry* entry = 
             new nsFactoryEntry(aClass, PL_strdup(library),
-                               PL_strdup(nativeComponentType),
-                               mNativeComponentLoader);
+                               /* hand off */
+                               componentType, 
+                               nsCRT::strcmp(componentType,
+                                             nativeComponentType) ?
+                               0 : mNativeComponentLoader);
         if (!entry)
             continue;
 
@@ -962,7 +970,8 @@ nsComponentManagerImpl::LoadFactory(nsFactoryEntry *aEntry,
         return NS_ERROR_NULL_POINTER;
     *aFactory = NULL;
 
-    nsresult rv = aEntry->GetFactory(aFactory);
+    nsresult rv;
+    rv = aEntry->GetFactory(aFactory, this);
     if (NS_FAILED(rv)) {
         PR_LOG(nsComponentManagerLog, PR_LOG_ERROR,
                ("nsComponentManager: failed to load factory from %s (%s)\n",
@@ -1034,7 +1043,7 @@ nsComponentManagerImpl::FindFactory(const nsCID &aClass,
     if (!entry)
         return NS_ERROR_FACTORY_NOT_REGISTERED;
 
-    return entry->GetFactory(aFactory);
+    return entry->GetFactory(aFactory, this);
 }
 
 /**
