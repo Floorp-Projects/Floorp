@@ -51,7 +51,7 @@ Dump(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 #ifdef XP_MAC
     for (char *c = bytes; *c; c++)
         if (*c == '\r')
-            *c == '\n';
+            *c = '\n';
 #endif
     fputs(bytes, stderr);
     nsAllocator::Free(bytes);
@@ -191,8 +191,9 @@ mozJSComponentLoader::Init(nsIComponentManager *aCompMgr, nsISupports *aReg)
     
     if (NS_FAILED(rv = rtsvc->GetRuntime(&mRuntime))) {
 #ifdef DEBUG_shaver
-        fprintf(stderr, "mJCL: runtime initialized!\n");
+        fprintf(stderr, "mJCL: runtime NOT initialized!\n");
 #endif
+        return rv;
     }
     
     mContext = JS_NewContext(mRuntime, 8192 /* pref? */);
@@ -223,7 +224,8 @@ mozJSComponentLoader::Init(nsIComponentManager *aCompMgr, nsISupports *aReg)
                           getter_AddRefs(wrappedCM));
     if (NS_FAILED(rv)) {
 #ifdef DEBUG_shaver
-        fprintf(stderr, "failed to wrap comp mgr as nXPCWN\n");
+        fprintf(stderr, "WrapNative(%p,%p,nsIComponentManager) failed: %x\n",
+                mContext, mCompMgr.get(), rv);
 #endif
         return rv;
     }
