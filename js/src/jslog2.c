@@ -16,14 +16,14 @@
  * Reserved.
  */
 
-#include "prbit.h"
+#include "jsbit.h"
 
 /*
 ** Compute the log of the least power of 2 greater than or equal to n
 */
-PR_IMPLEMENT(PRIntn) PR_CeilingLog2(PRUint32 n)
+JS_EXPORT_API(JSIntn) JS_CeilingLog2(JSUint32 n)
 {
-    PRIntn log2 = 0;
+    JSIntn log2 = 0;
 
     if (n & (n-1))
 	log2++;
@@ -44,9 +44,9 @@ PR_IMPLEMENT(PRIntn) PR_CeilingLog2(PRUint32 n)
 ** Compute the log of the greatest power of 2 less than or equal to n.
 ** This really just finds the highest set bit in the word.
 */
-PR_IMPLEMENT(PRIntn) PR_FloorLog2(PRUint32 n)
+JS_EXPORT_API(JSIntn) JS_FloorLog2(JSUint32 n)
 {
-    PRIntn log2 = 0;
+    JSIntn log2 = 0;
 
     if (n >> 16)
 	log2 += 16, n >>= 16;

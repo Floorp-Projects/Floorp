@@ -22,8 +22,8 @@
 #include "jsstddef.h"
 #include <math.h>
 #include <stdlib.h>
-#include "prtypes.h"
-#include "prlong.h"
+#include "jstypes.h"
+#include "jslong.h"
 #include "prmjtime.h"
 #include "jsapi.h"
 #include "jsatom.h"
@@ -237,10 +237,10 @@ random_setSeed(JSRuntime *rt, int64 seed)
 {
     int64 tmp;
 
-    LL_I2L(tmp, 1000);
-    LL_DIV(seed, seed, tmp);
-    LL_XOR(tmp, seed, rt->rngMultiplier);
-    LL_AND(rt->rngSeed, tmp, rt->rngMask);
+    JSLL_I2L(tmp, 1000);
+    JSLL_DIV(seed, seed, tmp);
+    JSLL_XOR(tmp, seed, rt->rngMultiplier);
+    JSLL_AND(rt->rngSeed, tmp, rt->rngMask);
 }
 
 static void
@@ -254,21 +254,21 @@ random_init(JSRuntime *rt)
     rt->rngInitialized = JS_TRUE;
 
     /* rt->rngMultiplier = 0x5DEECE66DL */
-    LL_ISHL(tmp, 0x5D, 32);
-    LL_UI2L(tmp2, 0xEECE66DL);
-    LL_OR(rt->rngMultiplier, tmp, tmp2);
+    JSLL_ISHL(tmp, 0x5D, 32);
+    JSLL_UI2L(tmp2, 0xEECE66DL);
+    JSLL_OR(rt->rngMultiplier, tmp, tmp2);
 
     /* rt->rngAddend = 0xBL */
-    LL_I2L(rt->rngAddend, 0xBL);
+    JSLL_I2L(rt->rngAddend, 0xBL);
 
     /* rt->rngMask = (1L << 48) - 1 */
-    LL_I2L(tmp, 1);
-    LL_SHL(tmp2, tmp, 48);
-    LL_SUB(rt->rngMask, tmp2, tmp);
+    JSLL_I2L(tmp, 1);
+    JSLL_SHL(tmp2, tmp, 48);
+    JSLL_SUB(rt->rngMask, tmp2, tmp);
 
     /* rt->rngDscale = (jsdouble)(1L << 54) */
-    LL_SHL(tmp2, tmp, 54);
-    LL_L2D(rt->rngDscale, tmp2);
+    JSLL_SHL(tmp2, tmp, 54);
+    JSLL_L2D(rt->rngDscale, tmp2);
 
     /* Finally, set the seed from current time. */
     random_setSeed(rt, PRMJ_Now());
@@ -280,12 +280,12 @@ random_next(JSRuntime *rt, int bits)
     int64 nextseed, tmp;
     uint32 retval;
 
-    LL_MUL(nextseed, rt->rngSeed, rt->rngMultiplier);
-    LL_ADD(nextseed, nextseed, rt->rngAddend);
-    LL_AND(nextseed, nextseed, rt->rngMask);
+    JSLL_MUL(nextseed, rt->rngSeed, rt->rngMultiplier);
+    JSLL_ADD(nextseed, nextseed, rt->rngAddend);
+    JSLL_AND(nextseed, nextseed, rt->rngMask);
     rt->rngSeed = nextseed;
-    LL_USHR(tmp, nextseed, 48 - bits);
-    LL_L2I(retval, tmp);
+    JSLL_USHR(tmp, nextseed, 48 - bits);
+    JSLL_L2I(retval, tmp);
     return retval;
 }
 
@@ -295,10 +295,10 @@ random_nextDouble(JSRuntime *rt)
     int64 tmp, tmp2;
     jsdouble d;
 
-    LL_ISHL(tmp, random_next(rt, 27), 27);
-    LL_UI2L(tmp2, random_next(rt, 27));
-    LL_ADD(tmp, tmp, tmp2);
-    LL_L2D(d, tmp);
+    JSLL_ISHL(tmp, random_next(rt, 27), 27);
+    JSLL_UI2L(tmp2, random_next(rt, 27));
+    JSLL_ADD(tmp, tmp, tmp2);
+    JSLL_L2D(d, tmp);
     return d / rt->rngDscale;
 }
 
@@ -405,7 +405,7 @@ js_InitMathClass(JSContext *cx, JSObject *obj)
     JSObject *proto;
 
     proto = JS_InitClass(cx, obj, NULL, &math_class, NULL, 0,
-		         NULL, math_methods, NULL, math_static_methods);
+			 NULL, math_methods, NULL, math_static_methods);
     if (!proto)
 	return NULL;
     if (!JS_DefineConstDoubles(cx, proto, math_constants))

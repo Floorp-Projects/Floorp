@@ -25,13 +25,10 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
-#ifndef MINI_NSPR
-#include "primpl.h"
-#endif
-#include "prprf.h"
-#include "prlong.h"
-#include "prlog.h"
-#include "prmem.h"
+#include <stdlib.h>
+#include "jsprf.h"
+#include "jslong.h"
+#include "jsutil.h" /* Added by JSIFY */
 
 /*
 ** Note: on some platforms va_list is defined as an array,
@@ -44,7 +41,7 @@
 #endif /*MKLINUX*/
 
 /*
-** WARNING: This code may *NOT* call PR_LOG (because PR_LOG calls it)
+** WARNING: This code may *NOT* call JS_LOG (because JS_LOG calls it)
 */
 
 /*
@@ -54,13 +51,13 @@
 typedef struct SprintfStateStr SprintfState;
 
 struct SprintfStateStr {
-    int (*stuff)(SprintfState *ss, const char *sp, PRUint32 len);
+    int (*stuff)(SprintfState *ss, const char *sp, JSUint32 len);
 
     char *base;
     char *cur;
-    PRUint32 maxlen;
+    JSUint32 maxlen;
 
-    int (*func)(void *arg, const char *sp, PRUint32 len);
+    int (*func)(void *arg, const char *sp, JSUint32 len);
     void *arg;
 };
 
@@ -72,8 +69,8 @@ struct NumArgState{
     va_list ap;			/* point to the corresponding position on ap */
 };
 
-static PRBool  l10n_debug_init = PR_FALSE;
-static PRBool  l10n_debug = PR_FALSE;
+static JSBool  l10n_debug_init = JS_FALSE;
+static JSBool  l10n_debug = JS_FALSE;
 
 #define NAS_DEFAULT_NUM 20  /* default number of NumberedArgumentState array */
 
@@ -270,16 +267,16 @@ static int cvt_l(SprintfState *ss, long num, int width, int prec, int radix,
 /*
 ** Convert a 64-bit integer into its printable form
 */
-static int cvt_ll(SprintfState *ss, PRInt64 num, int width, int prec, int radix,
+static int cvt_ll(SprintfState *ss, JSInt64 num, int width, int prec, int radix,
 		  int type, int flags, const char *hexp)
 {
     char cvtbuf[100];
     char *cvt;
     int digits;
-    PRInt64 rad;
+    JSInt64 rad;
 
     /* according to the man page this needs to happen */
-    if ((prec == 0) && (LL_IS_ZERO(num))) {
+    if ((prec == 0) && (JSLL_IS_ZERO(num))) {
 	return 0;
     }
 
@@ -288,14 +285,14 @@ static int cvt_ll(SprintfState *ss, PRInt64 num, int width, int prec, int radix,
     ** need to stop when we hit 10 digits. In the signed case, we can
     ** stop when the number is zero.
     */
-    LL_I2L(rad, radix);
+    JSLL_I2L(rad, radix);
     cvt = cvtbuf + sizeof(cvtbuf);
     digits = 0;
-    while (!LL_IS_ZERO(num)) {
-	PRInt32 digit;
-	PRInt64 quot, rem;
-	LL_UDIVMOD(&quot, &rem, num, rad);
-	LL_L2I(digit, rem);
+    while (!JSLL_IS_ZERO(num)) {
+	JSInt32 digit;
+	JSInt64 quot, rem;
+	JSLL_UDIVMOD(&quot, &rem, num, rad);
+	JSLL_L2I(digit, rem);
 	*--cvt = hexp[digit & 0xf];
 	digits++;
 	num = quot;
@@ -324,7 +321,7 @@ static int cvt_f(SprintfState *ss, double d, const char *fmt0, const char *fmt1)
     char fout[300];
     int amount = fmt1 - fmt0;
 
-    PR_ASSERT((amount > 0) && (amount < sizeof(fin)));
+    JS_ASSERT((amount > 0) && (amount < sizeof(fin)));
     if (amount >= sizeof(fin)) {
 	/* Totally bogus % command to sprintf. Just ignore it */
 	return 0;
@@ -337,7 +334,7 @@ static int cvt_f(SprintfState *ss, double d, const char *fmt0, const char *fmt1)
     {
         const char *p = fin;
         while (*p) {
-            PR_ASSERT(*p != 'L');
+            JS_ASSERT(*p != 'L');
             p++;
         }
     }
@@ -349,7 +346,7 @@ static int cvt_f(SprintfState *ss, double d, const char *fmt0, const char *fmt1)
     ** debugging on. At least this way we can track down the evil piece
     ** of calling code and fix it!
     */
-    PR_ASSERT(strlen(fout) < sizeof(fout));
+    JS_ASSERT(strlen(fout) < sizeof(fout));
 
     return (*ss->stuff)(ss, fout, strlen(fout));
 }
@@ -400,10 +397,10 @@ static struct NumArgState* BuildArgArray( const char *fmt, va_list ap, int* rv, 
     ** 'cause getenv does take time
     */
     if( !l10n_debug_init ){
-	l10n_debug_init = PR_TRUE;
+	l10n_debug_init = JS_TRUE;
 	p = getenv( "NETSCAPE_LOCALIZATION_DEBUG" );
 	if( ( p != NULL ) && ( *p == '1' ) ){
-	    l10n_debug = PR_TRUE;
+	    l10n_debug = JS_TRUE;
 	}
     }
 
@@ -456,11 +453,11 @@ static struct NumArgState* BuildArgArray( const char *fmt, va_list ap, int* rv, 
 
     
     if( number > NAS_DEFAULT_NUM ){
-	nas = (struct NumArgState*)PR_MALLOC( number * sizeof( struct NumArgState ) );
+	nas = (struct NumArgState*)malloc( number * sizeof( struct NumArgState ) );
 	if( !nas ){
 	    *rv = -1;
 	    if( l10n_debug )
-		printf( "PR_MALLOC() error for \"%s\"\n", fmt );
+		printf( "malloc() error for \"%s\"\n", fmt );
 	    return NULL;
 	}
     } else {
@@ -569,11 +566,11 @@ static struct NumArgState* BuildArgArray( const char *fmt, va_list ap, int* rv, 
 
 	case 'p':
 	    /* XXX should use cpp */
-	    if (sizeof(void *) == sizeof(PRInt32)) {
+	    if (sizeof(void *) == sizeof(JSInt32)) {
 		nas[ cn ].type = TYPE_UINT32;
-	    } else if (sizeof(void *) == sizeof(PRInt64)) {
+	    } else if (sizeof(void *) == sizeof(JSInt64)) {
 	        nas[ cn ].type = TYPE_UINT64;
-	    } else if (sizeof(void *) == sizeof(PRIntn)) {
+	    } else if (sizeof(void *) == sizeof(JSIntn)) {
 	        nas[ cn ].type = TYPE_UINTN;
 	    } else {
 	        nas[ cn ].type = TYPE_UNKNOWN;
@@ -585,7 +582,7 @@ static struct NumArgState* BuildArgArray( const char *fmt, va_list ap, int* rv, 
 	case 'E':
 	case 'G':
 	    /* XXX not supported I suppose */
-	    PR_ASSERT(0);
+	    JS_ASSERT(0);
 	    nas[ cn ].type = TYPE_UNKNOWN;
 	    break;
 
@@ -598,7 +595,7 @@ static struct NumArgState* BuildArgArray( const char *fmt, va_list ap, int* rv, 
 	    break;
 
 	default:
-	    PR_ASSERT(0);
+	    JS_ASSERT(0);
 	    nas[ cn ].type = TYPE_UNKNOWN;
 	    break;
 	}
@@ -620,7 +617,7 @@ static struct NumArgState* BuildArgArray( const char *fmt, va_list ap, int* rv, 
 
     if( *rv < 0 ){
 	if( nas != nasArray )
-	    PR_DELETE( nas );
+	    JS_DELETE( nas );
 	return NULL;
     }
 
@@ -637,25 +634,25 @@ static struct NumArgState* BuildArgArray( const char *fmt, va_list ap, int* rv, 
 	case TYPE_INT16:
 	case TYPE_UINT16:
 	case TYPE_INTN:
-	case TYPE_UINTN:		(void)va_arg( ap, PRIntn );		break;
+	case TYPE_UINTN:		(void)va_arg( ap, JSIntn );		break;
 
-	case TYPE_INT32:		(void)va_arg( ap, PRInt32 );		break;
+	case TYPE_INT32:		(void)va_arg( ap, JSInt32 );		break;
 
-	case TYPE_UINT32:	(void)va_arg( ap, PRUint32 );	break;
+	case TYPE_UINT32:	(void)va_arg( ap, JSUint32 );	break;
 
-	case TYPE_INT64:	(void)va_arg( ap, PRInt64 );		break;
+	case TYPE_INT64:	(void)va_arg( ap, JSInt64 );		break;
 
-	case TYPE_UINT64:	(void)va_arg( ap, PRUint64 );		break;
+	case TYPE_UINT64:	(void)va_arg( ap, JSUint64 );		break;
 
 	case TYPE_STRING:	(void)va_arg( ap, char* );		break;
 
-	case TYPE_INTSTR:	(void)va_arg( ap, PRIntn* );		break;
+	case TYPE_INTSTR:	(void)va_arg( ap, JSIntn* );		break;
 
 	case TYPE_DOUBLE:	(void)va_arg( ap, double );		break;
 
 	default:
 	    if( nas != nasArray )
-		PR_DELETE( nas );
+		JS_DELETE( nas );
 	    *rv = -1;
 	    return NULL;
 	}
@@ -678,7 +675,7 @@ static int dosprintf(SprintfState *ss, const char *fmt, va_list ap)
 	char ch;
 	int i;
 	long l;
-	PRInt64 ll;
+	JSInt64 ll;
 	double d;
 	const char *s;
 	int *ip;
@@ -702,7 +699,7 @@ static int dosprintf(SprintfState *ss, const char *fmt, va_list ap)
     nas = BuildArgArray( fmt, ap, &rv, nasArray );
     if( rv < 0 ){
 	/* the fmt contains error Numbered Argument format, jliu@netscape.com */
-	PR_ASSERT(0);
+	JS_ASSERT(0);
 	return rv;
     }
 
@@ -743,7 +740,7 @@ static int dosprintf(SprintfState *ss, const char *fmt, va_list ap)
 		if( l10n_debug )
 		    printf( "numbered argument type unknown\n" );
 		if( nas && ( nas != nasArray ) )
-		    PR_DELETE( nas );
+		    JS_DELETE( nas );
 		return -1;
 	    }
 
@@ -867,14 +864,14 @@ static int dosprintf(SprintfState *ss, const char *fmt, va_list ap)
 		goto do_long;
 
 	      case TYPE_INT32:
-		u.l = va_arg(ap, PRInt32);
+		u.l = va_arg(ap, JSInt32);
 		if (u.l < 0) {
 		    u.l = -u.l;
 		    flags |= _NEG;
 		}
 		goto do_long;
 	      case TYPE_UINT32:
-		u.l = (long)va_arg(ap, PRUint32);
+		u.l = (long)va_arg(ap, JSUint32);
 	      do_long:
 		rv = cvt_l(ss, u.l, width, prec, radix, type, flags, hexp);
 		if (rv < 0) {
@@ -883,14 +880,14 @@ static int dosprintf(SprintfState *ss, const char *fmt, va_list ap)
 		break;
 
 	      case TYPE_INT64:
-		u.ll = va_arg(ap, PRInt64);
-		if (!LL_GE_ZERO(u.ll)) {
-		    LL_NEG(u.ll, u.ll);
+		u.ll = va_arg(ap, JSInt64);
+		if (!JSLL_GE_ZERO(u.ll)) {
+		    JSLL_NEG(u.ll, u.ll);
 		    flags |= _NEG;
 		}
 		goto do_longlong;
 	      case TYPE_UINT64:
-		u.ll = va_arg(ap, PRUint64);
+		u.ll = va_arg(ap, JSUint64);
 	      do_longlong:
 		rv = cvt_ll(ss, u.ll, width, prec, radix, type, flags, hexp);
 		if (rv < 0) {
@@ -945,14 +942,14 @@ static int dosprintf(SprintfState *ss, const char *fmt, va_list ap)
 	    break;
 
 	  case 'p':
-	    if (sizeof(void *) == sizeof(PRInt32)) {
+	    if (sizeof(void *) == sizeof(JSInt32)) {
 	    	type = TYPE_UINT32;
-	    } else if (sizeof(void *) == sizeof(PRInt64)) {
+	    } else if (sizeof(void *) == sizeof(JSInt64)) {
 	    	type = TYPE_UINT64;
 	    } else if (sizeof(void *) == sizeof(int)) {
 		type = TYPE_UINTN;
 	    } else {
-		PR_ASSERT(0);
+		JS_ASSERT(0);
 		break;
 	    }
 	    radix = 16;
@@ -964,7 +961,7 @@ static int dosprintf(SprintfState *ss, const char *fmt, va_list ap)
 	  case 'E':
 	  case 'G':
 	    /* XXX not supported I suppose */
-	    PR_ASSERT(0);
+	    JS_ASSERT(0);
 	    break;
 #endif
 
@@ -986,7 +983,7 @@ static int dosprintf(SprintfState *ss, const char *fmt, va_list ap)
 	  default:
 	    /* Not a % token after all... skip it */
 #if 0
-	    PR_ASSERT(0);
+	    JS_ASSERT(0);
 #endif
 	    rv = (*ss->stuff)(ss, "%", 1);
 	    if (rv < 0) {
@@ -1003,7 +1000,7 @@ static int dosprintf(SprintfState *ss, const char *fmt, va_list ap)
     rv = (*ss->stuff)(ss, "\0", 1);
 
     if( nas && ( nas != nasArray ) ){
-	PR_DELETE( nas );
+	JS_DELETE( nas );
     }
 
     return rv;
@@ -1011,7 +1008,7 @@ static int dosprintf(SprintfState *ss, const char *fmt, va_list ap)
 
 /************************************************************************/
 
-static int FuncStuff(SprintfState *ss, const char *sp, PRUint32 len)
+static int FuncStuff(SprintfState *ss, const char *sp, JSUint32 len)
 {
     int rv;
 
@@ -1023,19 +1020,19 @@ static int FuncStuff(SprintfState *ss, const char *sp, PRUint32 len)
     return 0;
 }
 
-PR_IMPLEMENT(PRUint32) PR_sxprintf(PRStuffFunc func, void *arg, 
+JS_EXPORT_API(JSUint32) JS_sxprintf(JSStuffFunc func, void *arg, 
                                  const char *fmt, ...)
 {
     va_list ap;
     int rv;
 
     va_start(ap, fmt);
-    rv = PR_vsxprintf(func, arg, fmt, ap);
+    rv = JS_vsxprintf(func, arg, fmt, ap);
     va_end(ap);
     return rv;
 }
 
-PR_IMPLEMENT(PRUint32) PR_vsxprintf(PRStuffFunc func, void *arg, 
+JS_EXPORT_API(JSUint32) JS_vsxprintf(JSStuffFunc func, void *arg, 
                                   const char *fmt, va_list ap)
 {
     SprintfState ss;
@@ -1046,27 +1043,27 @@ PR_IMPLEMENT(PRUint32) PR_vsxprintf(PRStuffFunc func, void *arg,
     ss.arg = arg;
     ss.maxlen = 0;
     rv = dosprintf(&ss, fmt, ap);
-    return (rv < 0) ? (PRUint32)-1 : ss.maxlen;
+    return (rv < 0) ? (JSUint32)-1 : ss.maxlen;
 }
 
 /*
 ** Stuff routine that automatically grows the malloc'd output buffer
 ** before it overflows.
 */
-static int GrowStuff(SprintfState *ss, const char *sp, PRUint32 len)
+static int GrowStuff(SprintfState *ss, const char *sp, JSUint32 len)
 {
     ptrdiff_t off;
     char *newbase;
-    PRUint32 newlen;
+    JSUint32 newlen;
 
     off = ss->cur - ss->base;
     if (off + len >= ss->maxlen) {
 	/* Grow the buffer */
 	newlen = ss->maxlen + ((len > 32) ? len : 32);
 	if (ss->base) {
-	    newbase = (char*) PR_REALLOC(ss->base, newlen);
+	    newbase = (char*) realloc(ss->base, newlen);
 	} else {
-	    newbase = (char*) PR_MALLOC(newlen);
+	    newbase = (char*) malloc(newlen);
 	}
 	if (!newbase) {
 	    /* Ran out of memory */
@@ -1082,33 +1079,33 @@ static int GrowStuff(SprintfState *ss, const char *sp, PRUint32 len)
 	--len;
 	*ss->cur++ = *sp++;
     }
-    PR_ASSERT((PRUint32)(ss->cur - ss->base) <= ss->maxlen);
+    JS_ASSERT((JSUint32)(ss->cur - ss->base) <= ss->maxlen);
     return 0;
 }
 
 /*
 ** sprintf into a malloc'd buffer
 */
-PR_IMPLEMENT(char *) PR_smprintf(const char *fmt, ...)
+JS_EXPORT_API(char *) JS_smprintf(const char *fmt, ...)
 {
     va_list ap;
     char *rv;
 
     va_start(ap, fmt);
-    rv = PR_vsmprintf(fmt, ap);
+    rv = JS_vsmprintf(fmt, ap);
     va_end(ap);
     return rv;
 }
 
 /*
-** Free memory allocated, for the caller, by PR_smprintf
+** Free memory allocated, for the caller, by JS_smprintf
 */
-PR_IMPLEMENT(void) PR_smprintf_free(char *mem)
+JS_EXPORT_API(void) JS_smprintf_free(char *mem)
 {
-	PR_DELETE(mem);
+	JS_DELETE(mem);
 }
 
-PR_IMPLEMENT(char *) PR_vsmprintf(const char *fmt, va_list ap)
+JS_EXPORT_API(char *) JS_vsmprintf(const char *fmt, va_list ap)
 {
     SprintfState ss;
     int rv;
@@ -1120,7 +1117,7 @@ PR_IMPLEMENT(char *) PR_vsmprintf(const char *fmt, va_list ap)
     rv = dosprintf(&ss, fmt, ap);
     if (rv < 0) {
 	if (ss.base) {
-	    PR_DELETE(ss.base);
+	    JS_DELETE(ss.base);
 	}
 	return 0;
     }
@@ -1130,9 +1127,9 @@ PR_IMPLEMENT(char *) PR_vsmprintf(const char *fmt, va_list ap)
 /*
 ** Stuff routine that discards overflow data
 */
-static int LimitStuff(SprintfState *ss, const char *sp, PRUint32 len)
+static int LimitStuff(SprintfState *ss, const char *sp, JSUint32 len)
 {
-    PRUint32 limit = ss->maxlen - (ss->cur - ss->base);
+    JSUint32 limit = ss->maxlen - (ss->cur - ss->base);
 
     if (len > limit) {
 	len = limit;
@@ -1148,30 +1145,30 @@ static int LimitStuff(SprintfState *ss, const char *sp, PRUint32 len)
 ** sprintf into a fixed size buffer. Make sure there is a NUL at the end
 ** when finished.
 */
-PR_IMPLEMENT(PRUint32) PR_snprintf(char *out, PRUint32 outlen, const char *fmt, ...)
+JS_EXPORT_API(JSUint32) JS_snprintf(char *out, JSUint32 outlen, const char *fmt, ...)
 {
     va_list ap;
     int rv;
 
-    PR_ASSERT((PRInt32)outlen > 0);
-    if ((PRInt32)outlen <= 0) {
+    JS_ASSERT((JSInt32)outlen > 0);
+    if ((JSInt32)outlen <= 0) {
 	return 0;
     }
 
     va_start(ap, fmt);
-    rv = PR_vsnprintf(out, outlen, fmt, ap);
+    rv = JS_vsnprintf(out, outlen, fmt, ap);
     va_end(ap);
     return rv;
 }
 
-PR_IMPLEMENT(PRUint32) PR_vsnprintf(char *out, PRUint32 outlen,const char *fmt,
+JS_EXPORT_API(JSUint32) JS_vsnprintf(char *out, JSUint32 outlen,const char *fmt,
                                   va_list ap)
 {
     SprintfState ss;
-    PRUint32 n;
+    JSUint32 n;
 
-    PR_ASSERT((PRInt32)outlen > 0);
-    if ((PRInt32)outlen <= 0) {
+    JS_ASSERT((JSInt32)outlen > 0);
+    if ((JSInt32)outlen <= 0) {
 	return 0;
     }
 
@@ -1189,18 +1186,18 @@ PR_IMPLEMENT(PRUint32) PR_vsnprintf(char *out, PRUint32 outlen,const char *fmt,
     return n ? n - 1 : n;
 }
 
-PR_IMPLEMENT(char *) PR_sprintf_append(char *last, const char *fmt, ...)
+JS_EXPORT_API(char *) JS_sprintf_append(char *last, const char *fmt, ...)
 {
     va_list ap;
     char *rv;
 
     va_start(ap, fmt);
-    rv = PR_vsprintf_append(last, fmt, ap);
+    rv = JS_vsprintf_append(last, fmt, ap);
     va_end(ap);
     return rv;
 }
 
-PR_IMPLEMENT(char *) PR_vsprintf_append(char *last, const char *fmt, va_list ap)
+JS_EXPORT_API(char *) JS_vsprintf_append(char *last, const char *fmt, va_list ap)
 {
     SprintfState ss;
     int rv;
@@ -1219,7 +1216,7 @@ PR_IMPLEMENT(char *) PR_vsprintf_append(char *last, const char *fmt, va_list ap)
     rv = dosprintf(&ss, fmt, ap);
     if (rv < 0) {
 	if (ss.base) {
-	    PR_DELETE(ss.base);
+	    JS_DELETE(ss.base);
 	}
 	return 0;
     }

@@ -23,7 +23,7 @@
  */
 #include "jspubtd.h"
 
-PR_BEGIN_EXTERN_C
+JS_BEGIN_EXTERN_C
 
 /* GC thing type indexes. */
 #define GCX_OBJECT	0			/* JSObject */
@@ -33,12 +33,12 @@ PR_BEGIN_EXTERN_C
 #define GCX_NTYPES      4
 
 /* GC flag definitions (type index goes in low bits). */
-#define GCF_TYPEMASK	PR_BITMASK(2)		/* use low bits for type */
-#define GCF_MARK	PR_BIT(2)		/* mark bit */
-#define GCF_FINAL	PR_BIT(3)		/* in finalization bit */
+#define GCF_TYPEMASK	JS_BITMASK(2)		/* use low bits for type */
+#define GCF_MARK	JS_BIT(2)		/* mark bit */
+#define GCF_FINAL	JS_BIT(3)		/* in finalization bit */
 #define GCF_LOCKBIT	4			/* lock bit shift and mask */
-#define GCF_LOCKMASK	(PR_BITMASK(4) << GCF_LOCKBIT)
-#define GCF_LOCK	PR_BIT(GCF_LOCKBIT)	/* lock request bit in API */
+#define GCF_LOCKMASK	(JS_BITMASK(4) << GCF_LOCKBIT)
+#define GCF_LOCK	JS_BIT(GCF_LOCKBIT)	/* lock request bit in API */
 
 #if 1
 /*
@@ -105,6 +105,6 @@ js_DumpGCStats(JSRuntime *rt, FILE *fp);
 
 #endif /* JS_GCMETER */
 
-PR_END_EXTERN_C
+JS_END_EXTERN_C
 
 #endif /* jsgc_h___ */

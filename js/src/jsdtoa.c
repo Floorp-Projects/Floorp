@@ -20,10 +20,10 @@
  * Portable double to alphanumeric string and back converters.
  */
 #include "jsstddef.h"
-#include "prtypes.h"
-#include "prdtoa.h"
-#include "prprf.h"
-#include "prlog.h"
+#include "jstypes.h"
+#include "jsdtoa.h"
+#include "jsprf.h"
+#include "jsutil.h" /* Added by JSIFY */
 
 #ifdef JS_THREADSAFE
 #include "prlock.h"
@@ -99,7 +99,7 @@
  * #define VAX for VAX-style floating-point arithmetic.
  * #define Unsigned_Shifts if >> does treats its left operand as unsigned.
  * #define No_leftright to omit left-right logic in fast floating-point
- *	computation of PR_dtoa.
+ *	computation of JS_dtoa.
  * #define Check_FLT_ROUNDS if FLT_ROUNDS can assume the values 2 or 3.
  * #define RND_PRODQUOT to use rnd_prod and rnd_quot (assembly routines
  *	that use extended-precision instructions to compute rounded
@@ -206,7 +206,7 @@ extern void *MALLOC(size_t);
 #define Sign_Extend(a,b) /*no-op*/
 #endif
 
-#if defined(IEEE_8087) + defined(IEEE_MC68k) + defined(VAX) + defined(IBM)	!= 1
+#if defined(IEEE_8087) + defined(IEEE_MC68k) + defined(VAX) + defined(IBM) != 1
 Exactly one of IEEE_8087, IEEE_MC68k, VAX, or IBM should be defined.
 #endif
 
@@ -1184,22 +1184,22 @@ static CONST double tinytens[] = { 1e-16, 1e-32 };
 #endif
 
 #ifdef JS_THREADSAFE
-static PRBool initialized = PR_FALSE;
+static JSBool initialized = JS_FALSE;
 
 /* hacked replica of nspr _PR_InitDtoa */
 static void InitDtoa(void)
 {
 	freelist_lock = PR_NewLock();
         p5s_lock = PR_NewLock();
-	initialized = PR_TRUE;
+	initialized = JS_TRUE;
 }
 #endif
 
 
 /* nspr2 watcom bug ifdef omitted */
 
-PR_PUBLIC_API(double)
-PR_strtod(CONST char *s00, char **se)
+JS_FRIEND_API(double)
+JS_strtod(CONST char *s00, char **se)
 {
 	int32 bb2, bb5, bbe, bd2, bd5, bbbits, bs2, c, dsign,
 		e, e1, esign, i, j, k, nd, nd0, nf, nz, nz0, sign;
@@ -1872,8 +1872,8 @@ quorem(Bigint *b, Bigint *S)
  *	   calculation.
  */
 
-static PRBool
-PR_dtoa(double d, int mode, int ndigits,
+static JSBool
+JS_dtoa(double d, int mode, int ndigits,
 	int *decpt, int *sign, char **rve, char *buf, size_t bufsize)
 {
 	/*	Arguments ndigits, decpt, sign are similar to those
@@ -1923,7 +1923,7 @@ PR_dtoa(double d, int mode, int ndigits,
 	char *s, *s0;
 	Bigint *result = 0;
 	static int32 result_k;
-	PRBool retval;
+	JSBool retval;
         size_t strsize;
 
 #ifdef JS_THREADSAFE
@@ -1953,9 +1953,9 @@ PR_dtoa(double d, int mode, int ndigits,
 #endif
 					"NaN";
 				if ((s[0] == 'I' && bufsize < 9) || (s[0] == 'N' && bufsize < 4)) {
-					PR_ASSERT(PR_FALSE);
-/* 					PR_SetError(PR_BUFFER_OVERFLOW_ERROR, 0); */
-					return PR_FALSE;
+					JS_ASSERT(JS_FALSE);
+/* 					JS_SetError(JS_BUFFER_OVERFLOW_ERROR, 0); */
+					return JS_FALSE;
 				}
 				strcpy(buf, s);
 				if (rve) {
@@ -1964,9 +1964,9 @@ PR_dtoa(double d, int mode, int ndigits,
 						buf[3] ? buf + 8 :
 #endif
 					buf + 3;
-					PR_ASSERT(**rve == '\0');
+					JS_ASSERT(**rve == '\0');
                                 }
-				return PR_TRUE;
+				return JS_TRUE;
 			}
 #endif
 #ifdef IBM
@@ -1975,16 +1975,16 @@ PR_dtoa(double d, int mode, int ndigits,
 	if (!d) {
 		*decpt = 1;
 		if (bufsize < 2) {
-			PR_ASSERT(PR_FALSE);
-/* 			PR_SetError(PR_BUFFER_OVERFLOW_ERROR, 0); */
-			return PR_FALSE;
+			JS_ASSERT(JS_FALSE);
+/* 			JS_SetError(JS_BUFFER_OVERFLOW_ERROR, 0); */
+			return JS_FALSE;
 		}
 		buf[0] = '0'; buf[1] = '\0';  /* copy "0" to buffer */
 		if (rve) {
 			*rve = buf + 1;
-			PR_ASSERT(**rve == '\0');
+			JS_ASSERT(**rve == '\0');
 		}
-		return PR_TRUE;
+		return JS_TRUE;
 	}
 
 	b = d2b(d, &be, &bbits);
@@ -2488,16 +2488,16 @@ ret1:
 	*decpt = k + 1;
 	strsize = (s - s0) + 1;
 	if (strsize <= bufsize) {
-		retval = PR_TRUE;
+		retval = JS_TRUE;
 		memcpy(buf, s0, strsize);
 		if (rve) {
 			*rve = buf + strsize - 1;
-			PR_ASSERT(**rve == '\0');
+			JS_ASSERT(**rve == '\0');
 		}
 	} else {
-		PR_ASSERT(PR_FALSE);
-/* 		PR_SetError(PR_BUFFER_OVERFLOW_ERROR, 0); */
-		retval = PR_FALSE;
+		JS_ASSERT(JS_FALSE);
+/* 		JS_SetError(JS_BUFFER_OVERFLOW_ERROR, 0); */
+		retval = JS_FALSE;
 	}
 
 	/* cleanup */
@@ -2519,8 +2519,8 @@ ret1:
 ** Also, the ECMA spec says that there should always be a
 **   '+' or '-' after the 'e' in scientific notation
 */
-PR_PUBLIC_API(void)
-PR_cnvtf(char *buf,int bufsz, int prcsn,double fval)
+JS_FRIEND_API(void)
+JS_cnvtf(char *buf,int bufsz, int prcsn,double fval)
 {
     intN decpt,sign,numdigits;
     char *num, *nump;
@@ -2534,8 +2534,8 @@ PR_cnvtf(char *buf,int bufsz, int prcsn,double fval)
 		return;
 	}
 	/* XXX Why use mode 1? */
-	if (PR_dtoa(fval,1,prcsn,&decpt,&sign,&endnum,num,bufsz)
-			== PR_FALSE) {
+	if (JS_dtoa(fval,1,prcsn,&decpt,&sign,&endnum,num,bufsz)
+			== JS_FALSE) {
 		buf[0] = '\0';
 		goto done;
 	}
@@ -2565,7 +2565,7 @@ PR_cnvtf(char *buf,int bufsz, int prcsn,double fval)
 			*bufp++ = *nump++;
 	    }
 	    *bufp++ = 'e';
-	    PR_snprintf(bufp,bufsz - (bufp - buf), "%+d",decpt-1);
+	    JS_snprintf(bufp,bufsz - (bufp - buf), "%+d",decpt-1);
 	}
 	else if(decpt >= 0){
 	    if (decpt == 0){

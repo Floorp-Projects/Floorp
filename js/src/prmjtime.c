@@ -24,8 +24,9 @@
 #endif
 #include <string.h>
 #include <time.h>
-#include "prtypes.h"
-#include "prprf.h"
+#include "jstypes.h"
+
+#include "jsprf.h"
 #include "prmjtime.h"
 
 #define PRMJ_DO_MILLISECONDS 1
@@ -43,26 +44,81 @@
 
 #ifdef XP_UNIX
 
+#ifdef SOLARIS
+extern int gettimeofday(struct timeval *tv);
+#endif
+
 #include <sys/time.h>
 
 #endif /* XP_UNIX */
 
 #ifdef XP_MAC
-extern UnsignedWide		dstLocalBaseMicroseconds;
-extern PRUintn			gJanuaryFirst1970Seconds;
+static UnsignedWide		dstLocalBaseMicroseconds;
+static unsigned long	gJanuaryFirst1970Seconds;
+
+static void MacintoshInitializeTime(void)
+{
+	UnsignedWide			upTime;
+	unsigned long			currentLocalTimeSeconds,
+							startupTimeSeconds;
+	uint64					startupTimeMicroSeconds;
+	uint32					upTimeSeconds;
+	uint64					oneMillion, upTimeSecondsLong, microSecondsToSeconds;
+	DateTimeRec				firstSecondOfUnixTime;
+
+	//	Figure out in local time what time the machine
+	//	started up.  This information can be added to
+	//	upTime to figure out the current local time
+	//	as well as GMT.
+
+	Microseconds(&upTime);
+
+	GetDateTime(&currentLocalTimeSeconds);
+
+	JSLL_I2L(microSecondsToSeconds, PRMJ_USEC_PER_SEC);
+	JSLL_DIV(upTimeSecondsLong,  *((uint64 *)&upTime), microSecondsToSeconds);
+	JSLL_L2I(upTimeSeconds, upTimeSecondsLong);
+
+	startupTimeSeconds = currentLocalTimeSeconds - upTimeSeconds;
+
+	//	Make sure that we normalize the macintosh base seconds
+	//	to the unix base of January 1, 1970.
+
+	firstSecondOfUnixTime.year = 1970;
+	firstSecondOfUnixTime.month = 1;
+	firstSecondOfUnixTime.day = 1;
+	firstSecondOfUnixTime.hour = 0;
+	firstSecondOfUnixTime.minute = 0;
+	firstSecondOfUnixTime.second = 0;
+	firstSecondOfUnixTime.dayOfWeek = 0;
+
+	DateToSeconds(&firstSecondOfUnixTime, &gJanuaryFirst1970Seconds);
+
+	startupTimeSeconds -= gJanuaryFirst1970Seconds;
+
+	//	Now convert the startup time into a wide so that we
+	//	can figure out GMT and DST.
+
+	JSLL_I2L(startupTimeMicroSeconds, startupTimeSeconds);
+	JSLL_I2L(oneMillion, PRMJ_USEC_PER_SEC);
+	JSLL_MUL(dstLocalBaseMicroseconds, oneMillion, startupTimeMicroSeconds);
+}
+
+// Because serial port and SLIP conflict with ReadXPram calls,
+// we cache the call here
 
 static void MyReadLocation(MachineLocation * loc)
 {
 	static MachineLocation storedLoc;	// InsideMac, OSUtilities, page 4-20
-	static Boolean didReadLocation = FALSE;
+	static JSBool didReadLocation = JS_FALSE;
 	if (!didReadLocation)
-	{	
+	{
+		MacintoshInitializeTime();
 		ReadLocation(&storedLoc);
-		didReadLocation = TRUE;
+		didReadLocation = JS_TRUE;
 	}
 	*loc = storedLoc;
 }
-
 #endif /* XP_MAC */
 
 #define IS_LEAP(year) \
@@ -75,11 +131,11 @@ static void MyReadLocation(MachineLocation * loc)
 #define PRMJ_YEAR_SECONDS (PRMJ_DAY_SECONDS * 365L)
 #define PRMJ_MAX_UNIX_TIMET 2145859200L /*time_t value equiv. to 12/31/2037 */
 /* function prototypes */
-static void PRMJ_basetime(PRInt64 tsecs, PRMJTime *prtm);
+static void PRMJ_basetime(JSInt64 tsecs, PRMJTime *prtm);
 /*
  * get the difference in seconds between this time zone and UTC (GMT)
  */
-PR_IMPLEMENT(time_t)
+time_t
 PRMJ_LocalGMTDifference()
 {
 #if defined(XP_UNIX) || defined(XP_PC)
@@ -100,10 +156,10 @@ PRMJ_LocalGMTDifference()
 #if defined(XP_MAC)
     static time_t    zone = -1L;
     MachineLocation  machineLocation;
-    PRUint64	     gmtOffsetSeconds;
-    PRUint64	     gmtDelta;
-    PRUint64	     dlsOffset;
-    PRInt32	     offset;
+    JSUint64	     gmtOffsetSeconds;
+    JSUint64	     gmtDelta;
+    JSUint64	     dlsOffset;
+    JSInt32	     offset;
 
     /* difference has been set no need to recalculate */
     if(zone != -1)
@@ -122,28 +178,28 @@ PRMJ_LocalGMTDifference()
     if ((machineLocation.u.gmtDelta & 0x00800000) != 0) {
 	gmtOffsetSeconds.lo = (machineLocation.u.gmtDelta & 0x00FFFFFF) | 0xFF000000;
 	gmtOffsetSeconds.hi = 0xFFFFFFFF;
-	LL_UI2L(gmtDelta,0);
+	JSLL_UI2L(gmtDelta,0);
     } else {
 	gmtOffsetSeconds.lo = (machineLocation.u.gmtDelta & 0x00FFFFFF);
 	gmtOffsetSeconds.hi = 0;
-	LL_UI2L(gmtDelta,PRMJ_DAY_SECONDS);
+	JSLL_UI2L(gmtDelta,PRMJ_DAY_SECONDS);
     }
 
     /*
      * Normalize time to be positive if you are behind GMT. gmtDelta will
      * always be positive.
      */
-    LL_SUB(gmtDelta,gmtDelta,gmtOffsetSeconds);
+    JSLL_SUB(gmtDelta,gmtDelta,gmtOffsetSeconds);
 
     /* Is Daylight Savings On?  If so, we need to add an hour to the offset. */
     if (machineLocation.u.dlsDelta != 0) {
-	LL_UI2L(dlsOffset, PRMJ_HOUR_SECONDS);
+	JSLL_UI2L(dlsOffset, PRMJ_HOUR_SECONDS);
     } else {
-	LL_I2L(dlsOffset, 0);
+	JSLL_I2L(dlsOffset, 0);
     }
 
-    LL_ADD(gmtDelta,gmtDelta, dlsOffset);
-    LL_L2I(offset,gmtDelta);
+    JSLL_ADD(gmtDelta,gmtDelta, dlsOffset);
+    JSLL_L2I(offset,gmtDelta);
 
     zone = offset;
     return (time_t)offset;
@@ -158,105 +214,109 @@ PRMJ_LocalGMTDifference()
 #define G2037GMTMICROLOW       0x7a238000 /* micro secs to 2037 low */
 
 /* Convert from base time to extended time */
-PR_IMPLEMENT(PRInt64)
-PRMJ_ToExtendedTime(PRInt32 time)
+static JSInt64
+PRMJ_ToExtendedTime(JSInt32 time)
 {
-    PRInt64 exttime;
-    PRInt64 g1970GMTMicroSeconds;
-    PRInt64 low;
+    JSInt64 exttime;
+    JSInt64 g1970GMTMicroSeconds;
+    JSInt64 low;
     time_t diff;
-    PRInt64  tmp;
-    PRInt64  tmp1;
+    JSInt64  tmp;
+    JSInt64  tmp1;
 
     diff = PRMJ_LocalGMTDifference();
-    LL_UI2L(tmp, PRMJ_USEC_PER_SEC);
-    LL_I2L(tmp1,diff);
-    LL_MUL(tmp,tmp,tmp1);
+    JSLL_UI2L(tmp, PRMJ_USEC_PER_SEC);
+    JSLL_I2L(tmp1,diff);
+    JSLL_MUL(tmp,tmp,tmp1);
 
-    LL_UI2L(g1970GMTMicroSeconds,G1970GMTMICROHI);
-    LL_UI2L(low,G1970GMTMICROLOW);
+    JSLL_UI2L(g1970GMTMicroSeconds,G1970GMTMICROHI);
+    JSLL_UI2L(low,G1970GMTMICROLOW);
 #ifndef HAVE_LONG_LONG
-    LL_SHL(g1970GMTMicroSeconds,g1970GMTMicroSeconds,16);
-    LL_SHL(g1970GMTMicroSeconds,g1970GMTMicroSeconds,16);
+    JSLL_SHL(g1970GMTMicroSeconds,g1970GMTMicroSeconds,16);
+    JSLL_SHL(g1970GMTMicroSeconds,g1970GMTMicroSeconds,16);
 #else
-    LL_SHL(g1970GMTMicroSeconds,g1970GMTMicroSeconds,32);
+    JSLL_SHL(g1970GMTMicroSeconds,g1970GMTMicroSeconds,32);
 #endif
-    LL_ADD(g1970GMTMicroSeconds,g1970GMTMicroSeconds,low);
+    JSLL_ADD(g1970GMTMicroSeconds,g1970GMTMicroSeconds,low);
 
-    LL_I2L(exttime,time);
-    LL_ADD(exttime,exttime,g1970GMTMicroSeconds);
-    LL_SUB(exttime,exttime,tmp);
+    JSLL_I2L(exttime,time);
+    JSLL_ADD(exttime,exttime,g1970GMTMicroSeconds);
+    JSLL_SUB(exttime,exttime,tmp);
     return exttime;
 }
 
-PR_IMPLEMENT(PRInt64)
+JSInt64
 PRMJ_Now(void)
 {
 #ifdef XP_PC
-    PRInt64 s, us, ms2us, s2us;
+    JSInt64 s, us, ms2us, s2us;
     struct timeb b;
 #endif /* XP_PC */
 #ifdef XP_UNIX
     struct timeval tv;
-    PRInt64 s, us, s2us;
+    JSInt64 s, us, s2us;
 #endif /* XP_UNIX */
 #ifdef XP_MAC
     UnsignedWide upTime;
-    PRInt64	 localTime;
-    PRInt64       gmtOffset;
-    PRInt64    dstOffset;
+    JSInt64	 localTime;
+    JSInt64       gmtOffset;
+    JSInt64    dstOffset;
     time_t       gmtDiff;
-    PRInt64	 s2us;
+    JSInt64	 s2us;
 #endif /* XP_MAC */
 
 #ifdef XP_PC
     ftime(&b);
-    LL_UI2L(ms2us, PRMJ_USEC_PER_MSEC);
-    LL_UI2L(s2us, PRMJ_USEC_PER_SEC);
-    LL_UI2L(s, b.time);
-    LL_UI2L(us, b.millitm);
-    LL_MUL(us, us, ms2us);
-    LL_MUL(s, s, s2us);
-    LL_ADD(s, s, us);
+    JSLL_UI2L(ms2us, PRMJ_USEC_PER_MSEC);
+    JSLL_UI2L(s2us, PRMJ_USEC_PER_SEC);
+    JSLL_UI2L(s, b.time);
+    JSLL_UI2L(us, b.millitm);
+    JSLL_MUL(us, us, ms2us);
+    JSLL_MUL(s, s, s2us);
+    JSLL_ADD(s, s, us);
     return s;
 #endif
 
 #ifdef XP_UNIX
+#if defined(SOLARIS)
+    gettimeofday(&tv);
+#else
     gettimeofday(&tv, 0);
-    LL_UI2L(s2us, PRMJ_USEC_PER_SEC);
-    LL_UI2L(s, tv.tv_sec);
-    LL_UI2L(us, tv.tv_usec);
-    LL_MUL(s, s, s2us);
-    LL_ADD(s, s, us);
+#endif /* SOLARIS */
+    JSLL_UI2L(s2us, PRMJ_USEC_PER_SEC);
+    JSLL_UI2L(s, tv.tv_sec);
+    JSLL_UI2L(us, tv.tv_usec);
+    JSLL_MUL(s, s, s2us);
+    JSLL_ADD(s, s, us);
     return s;
 #endif /* XP_UNIX */
 #ifdef XP_MAC
-    LL_UI2L(localTime,0);
+    JSLL_UI2L(localTime,0);
     gmtDiff = PRMJ_LocalGMTDifference();
-    LL_I2L(gmtOffset,gmtDiff);
-    LL_UI2L(s2us, PRMJ_USEC_PER_SEC);
-    LL_MUL(gmtOffset,gmtOffset,s2us);
-    LL_UI2L(dstOffset,0);
+    JSLL_I2L(gmtOffset,gmtDiff);
+    JSLL_UI2L(s2us, PRMJ_USEC_PER_SEC);
+    JSLL_MUL(gmtOffset,gmtOffset,s2us);
+    JSLL_UI2L(dstOffset,0);
     dstOffset = PRMJ_DSTOffset(dstOffset);
-    LL_SUB(gmtOffset,gmtOffset,dstOffset);
+    JSLL_SUB(gmtOffset,gmtOffset,dstOffset);
     /* don't adjust for DST since it sets ctime and gmtime off on the MAC */
     Microseconds(&upTime);
-    LL_ADD(localTime,localTime,gmtOffset);
-    LL_ADD(localTime,localTime, *((PRUint64 *)&dstLocalBaseMicroseconds));
-    LL_ADD(localTime,localTime, *((PRUint64 *)&upTime));
+    JSLL_ADD(localTime,localTime,gmtOffset);
+    JSLL_ADD(localTime,localTime, *((JSUint64 *)&dstLocalBaseMicroseconds));
+    JSLL_ADD(localTime,localTime, *((JSUint64 *)&upTime));
 
-    return *((PRUint64 *)&localTime);
+    return *((JSUint64 *)&localTime);
 #endif /* XP_MAC */
 }
 
 /* Get the DST timezone offset for the time passed in */
-PR_IMPLEMENT(PRInt64)
-PRMJ_DSTOffset(PRInt64 time)
+JSInt64
+PRMJ_DSTOffset(JSInt64 time)
 {
-    PRInt64 us2s;
+    JSInt64 us2s;
 #ifdef XP_MAC
     MachineLocation  machineLocation;
-    PRInt64 dlsOffset;
+    JSInt64 dlsOffset;
     /*	Get the information about the local machine, including
      *	its GMT offset and its daylight savings time info.
      *	Convert each into wides that we can add to
@@ -266,17 +326,17 @@ PRMJ_DSTOffset(PRInt64 time)
 
     /* Is Daylight Savings On?  If so, we need to add an hour to the offset. */
     if (machineLocation.u.dlsDelta != 0) {
-	LL_UI2L(us2s, PRMJ_USEC_PER_SEC); /* seconds in a microseconds */
-	LL_UI2L(dlsOffset, PRMJ_HOUR_SECONDS);  /* seconds in one hour       */
-	LL_MUL(dlsOffset, dlsOffset, us2s);
+	JSLL_UI2L(us2s, PRMJ_USEC_PER_SEC); /* seconds in a microseconds */
+	JSLL_UI2L(dlsOffset, PRMJ_HOUR_SECONDS);  /* seconds in one hour       */
+	JSLL_MUL(dlsOffset, dlsOffset, us2s);
     } else {
-	LL_I2L(dlsOffset, 0);
+	JSLL_I2L(dlsOffset, 0);
     }
     return(dlsOffset);
 #else
     time_t local;
-    PRInt32 diff;
-    PRInt64  maxtimet;
+    JSInt32 diff;
+    JSInt64  maxtimet;
     struct tm tm;
     PRMJTime prtm;
 #if defined( XP_PC ) || defined( FREEBSD ) || defined ( HPUX9 ) || defined ( SNI ) || defined ( NETBSD ) || defined ( OPENBSD ) || defined( RHAPSODY )
@@ -284,24 +344,24 @@ PRMJ_DSTOffset(PRInt64 time)
 #endif
 
 
-    LL_UI2L(us2s, PRMJ_USEC_PER_SEC);
-    LL_DIV(time, time, us2s);
+    JSLL_UI2L(us2s, PRMJ_USEC_PER_SEC);
+    JSLL_DIV(time, time, us2s);
 
     /* get the maximum of time_t value */
-    LL_UI2L(maxtimet,PRMJ_MAX_UNIX_TIMET);
+    JSLL_UI2L(maxtimet,PRMJ_MAX_UNIX_TIMET);
 
-    if(LL_CMP(time,>,maxtimet)){
-      LL_UI2L(time,PRMJ_MAX_UNIX_TIMET);
-    } else if(!LL_GE_ZERO(time)){
+    if(JSLL_CMP(time,>,maxtimet)){
+      JSLL_UI2L(time,PRMJ_MAX_UNIX_TIMET);
+    } else if(!JSLL_GE_ZERO(time)){
       /*go ahead a day to make localtime work (does not work with 0) */
-      LL_UI2L(time,PRMJ_DAY_SECONDS);
+      JSLL_UI2L(time,PRMJ_DAY_SECONDS);
     }
-    LL_L2UI(local,time);
+    JSLL_L2UI(local,time);
     PRMJ_basetime(time,&prtm);
 #if defined( XP_PC ) || defined( FREEBSD ) || defined ( HPUX9 ) || defined ( SNI ) || defined ( NETBSD ) || defined ( OPENBSD ) || defined( RHAPSODY )
     ptm = localtime(&local);
     if(!ptm){
-      return LL_ZERO;
+      return JSLL_ZERO;
     }
     tm = *ptm;
 #else
@@ -315,16 +375,16 @@ PRMJ_DSTOffset(PRInt64 time)
 	diff += PRMJ_DAY_SECONDS;
     }
 
-    LL_UI2L(time,diff);
+    JSLL_UI2L(time,diff);
 
-    LL_MUL(time,time,us2s);
+    JSLL_MUL(time,time,us2s);
 
     return(time);
 #endif
 }
 
 /* Format a time value into a buffer. Same semantics as strftime() */
-PR_IMPLEMENT(size_t)
+size_t
 PRMJ_FormatTime(char *buf, int buflen, char *fmt, PRMJTime *prtm)
 {
 #if defined(XP_UNIX) || defined(XP_PC) || defined(XP_MAC)
@@ -342,7 +402,7 @@ PRMJ_FormatTime(char *buf, int buflen, char *fmt, PRMJTime *prtm)
      * N.B. This hasn't been tested with anything that actually _uses_
      * tm_gmtoff; zero might be the wrong thing to set it to if you really need
      * to format a time.  This fix is for jsdate.c, which only uses
-     * PR_FormatTime to get a string representing the time zone.  */
+     * JS_FormatTime to get a string representing the time zone.  */
     memset(&a, 0, sizeof(struct tm));
 
     a.tm_sec = prtm->tm_sec;
@@ -398,56 +458,56 @@ static int mtab[] = {
  * of seconds.
  */
 static void
-PRMJ_basetime(PRInt64 tsecs, PRMJTime *prtm)
+PRMJ_basetime(JSInt64 tsecs, PRMJTime *prtm)
 {
     /* convert tsecs back to year,month,day,hour,secs */
-    PRInt32 year    = 0;
-    PRInt32 month   = 0;
-    PRInt32 yday    = 0;
-    PRInt32 mday    = 0;
-    PRInt32 wday    = 6; /* start on a Sunday */
-    PRInt32 days    = 0;
-    PRInt32 seconds = 0;
-    PRInt32 minutes = 0;
-    PRInt32 hours   = 0;
-    PRInt32 isleap  = 0;
-    PRInt64 result;
-    PRInt64	result1;
-    PRInt64	result2;
-    PRInt64 base;
+    JSInt32 year    = 0;
+    JSInt32 month   = 0;
+    JSInt32 yday    = 0;
+    JSInt32 mday    = 0;
+    JSInt32 wday    = 6; /* start on a Sunday */
+    JSInt32 days    = 0;
+    JSInt32 seconds = 0;
+    JSInt32 minutes = 0;
+    JSInt32 hours   = 0;
+    JSInt32 isleap  = 0;
+    JSInt64 result;
+    JSInt64	result1;
+    JSInt64	result2;
+    JSInt64 base;
 
-    LL_UI2L(result,0);
-    LL_UI2L(result1,0);
-    LL_UI2L(result2,0);
+    JSLL_UI2L(result,0);
+    JSLL_UI2L(result1,0);
+    JSLL_UI2L(result2,0);
 
     /* get the base time via UTC */
     base = PRMJ_ToExtendedTime(0);
-    LL_UI2L(result,  PRMJ_USEC_PER_SEC);
-    LL_DIV(base,base,result);
-    LL_ADD(tsecs,tsecs,base);
+    JSLL_UI2L(result,  PRMJ_USEC_PER_SEC);
+    JSLL_DIV(base,base,result);
+    JSLL_ADD(tsecs,tsecs,base);
 
-    LL_UI2L(result, PRMJ_YEAR_SECONDS);
-    LL_UI2L(result1,PRMJ_DAY_SECONDS);
-    LL_ADD(result2,result,result1);
+    JSLL_UI2L(result, PRMJ_YEAR_SECONDS);
+    JSLL_UI2L(result1,PRMJ_DAY_SECONDS);
+    JSLL_ADD(result2,result,result1);
 
   /* get the year */
-    while ((isleap == 0) ? !LL_CMP(tsecs,<,result) : !LL_CMP(tsecs,<,result2)) {
+    while ((isleap == 0) ? !JSLL_CMP(tsecs,<,result) : !JSLL_CMP(tsecs,<,result2)) {
 	/* subtract a year from tsecs */
-	LL_SUB(tsecs,tsecs,result);
+	JSLL_SUB(tsecs,tsecs,result);
 	days += 365;
 	/* is it a leap year ? */
 	if(IS_LEAP(year)){
-	    LL_SUB(tsecs,tsecs,result1);
+	    JSLL_SUB(tsecs,tsecs,result1);
 	    days++;
 	}
 	year++;
 	isleap = IS_LEAP(year);
     }
 
-    LL_UI2L(result1,PRMJ_DAY_SECONDS);
+    JSLL_UI2L(result1,PRMJ_DAY_SECONDS);
 
-    LL_DIV(result,tsecs,result1);
-    LL_L2I(mday,result);
+    JSLL_DIV(result,tsecs,result1);
+    JSLL_L2I(mday,result);
 
   /* let's find the month */
     while(((month == 1 && isleap) ?
@@ -468,8 +528,8 @@ PRMJ_basetime(PRInt64 tsecs, PRMJTime *prtm)
     }
 
     /* now adjust tsecs */
-    LL_MUL(result,result,result1);
-    LL_SUB(tsecs,tsecs,result);
+    JSLL_MUL(result,result,result1);
+    JSLL_SUB(tsecs,tsecs,result);
 
     mday++; /* day of month always start with 1 */
     days += mday;
@@ -478,28 +538,28 @@ PRMJ_basetime(PRInt64 tsecs, PRMJTime *prtm)
     yday += mday;
 
     /* get the hours */
-    LL_UI2L(result1,PRMJ_HOUR_SECONDS);
-    LL_DIV(result,tsecs,result1);
-    LL_L2I(hours,result);
-    LL_MUL(result,result,result1);
-    LL_SUB(tsecs,tsecs,result);
+    JSLL_UI2L(result1,PRMJ_HOUR_SECONDS);
+    JSLL_DIV(result,tsecs,result1);
+    JSLL_L2I(hours,result);
+    JSLL_MUL(result,result,result1);
+    JSLL_SUB(tsecs,tsecs,result);
 
     /* get minutes */
-    LL_UI2L(result1,60);
-    LL_DIV(result,tsecs,result1);
-    LL_L2I(minutes,result);
-    LL_MUL(result,result,result1);
-    LL_SUB(tsecs,tsecs,result);
+    JSLL_UI2L(result1,60);
+    JSLL_DIV(result,tsecs,result1);
+    JSLL_L2I(minutes,result);
+    JSLL_MUL(result,result,result1);
+    JSLL_SUB(tsecs,tsecs,result);
 
-    LL_L2I(seconds,tsecs);
+    JSLL_L2I(seconds,tsecs);
 
     prtm->tm_usec  = 0L;
-    prtm->tm_sec   = (PRInt8)seconds;
-    prtm->tm_min   = (PRInt8)minutes;
-    prtm->tm_hour  = (PRInt8)hours;
-    prtm->tm_mday  = (PRInt8)mday;
-    prtm->tm_mon   = (PRInt8)month;
-    prtm->tm_wday  = (PRInt8)wday;
-    prtm->tm_year  = (PRInt16)year;
-    prtm->tm_yday  = (PRInt16)yday;
+    prtm->tm_sec   = (JSInt8)seconds;
+    prtm->tm_min   = (JSInt8)minutes;
+    prtm->tm_hour  = (JSInt8)hours;
+    prtm->tm_mday  = (JSInt8)mday;
+    prtm->tm_mon   = (JSInt8)month;
+    prtm->tm_wday  = (JSInt8)wday;
+    prtm->tm_year  = (JSInt16)year;
+    prtm->tm_yday  = (JSInt16)yday;
 }

@@ -24,37 +24,39 @@
 #include "jsstddef.h"
 #include <stdlib.h>
 #include <string.h>
-#include "prtypes.h"
-#include "prarena.h"
-#include "prlog.h"
+#include "jstypes.h"
+#include "jsbit.h"
+#include "jsarena.h" /* Added by JSIFY */
+#include "jsutil.h" /* Added by JSIFY */
+
 #ifdef JS_THREADSAFE
-extern js_CompareAndSwap(prword *, prword, prword);
+extern js_CompareAndSwap(jsword *, jsword, jsword);
 #endif
 
-static PRArena *arena_freelist;
+static JSArena *arena_freelist;
 
-#ifdef PR_ARENAMETER
-static PRArenaStats *arena_stats_list;
+#ifdef JS_ARENAMETER
+static JSArenaStats *arena_stats_list;
 
 #define COUNT(pool,what)  (pool)->stats.what++
 #else
 #define COUNT(pool,what)  /* nothing */
 #endif
 
-#define PR_ARENA_DEFAULT_ALIGN  sizeof(double)
+#define JS_ARENA_DEFAULT_ALIGN  sizeof(double)
 
-PR_PUBLIC_API(void)
-PR_InitArenaPool(PRArenaPool *pool, const char *name, size_t size, size_t align)
+JS_EXPORT_API(void)
+JS_InitArenaPool(JSArenaPool *pool, const char *name, JSUint32 size, JSUint32 align)
 {
     if (align == 0)
-	align = PR_ARENA_DEFAULT_ALIGN;
-    pool->mask = PR_BITMASK(PR_CeilingLog2(align));
+	align = JS_ARENA_DEFAULT_ALIGN;
+    pool->mask = JS_BITMASK(JS_CeilingLog2(align));
     pool->first.next = NULL;
     pool->first.base = pool->first.avail = pool->first.limit =
-	(pruword)PR_ARENA_ALIGN(pool, &pool->first + 1);
+	(jsuword)JS_ARENA_ALIGN(pool, &pool->first + 1);
     pool->current = &pool->first;
     pool->arenasize = size;
-#ifdef PR_ARENAMETER
+#ifdef JS_ARENAMETER
     memset(&pool->stats, 0, sizeof pool->stats);
     pool->stats.name = strdup(name);
     pool->stats.next = arena_stats_list;
@@ -62,17 +64,17 @@ PR_InitArenaPool(PRArenaPool *pool, const char *name, size_t size, size_t align)
 #endif
 }
 
-PR_PUBLIC_API(void *)
-PR_ArenaAllocate(PRArenaPool *pool, size_t nb)
+JS_EXPORT_API(void *)
+JS_ArenaAllocate(JSArenaPool *pool, JSUint32 nb)
 {
-    PRArena **ap, *a, *b;
+    JSArena **ap, *a, *b;
 #ifdef JS_THREADSAFE
-	PRArena *c;
+    JSArena *c;
 #endif
-    size_t sz;
+    JSUint32 sz;
     void *p;
 
-    PR_ASSERT((nb & pool->mask) == 0);
+    JS_ASSERT((nb & pool->mask) == 0);
 #if defined(XP_PC) && !defined(_WIN32)
     if (nb >= 60000U)
 	return 0;
@@ -87,8 +89,9 @@ PR_ArenaAllocate(PRArenaPool *pool, size_t nb)
 	    if (b->limit - b->base == pool->arenasize) {
 #ifdef JS_THREADSAFE
 		do {
-		  c = b->next;
-		} while (!js_CompareAndSwap((prword *)ap,(prword)b,(prword)c));
+                    b = *ap;
+		    c = b->next;
+		} while (!js_CompareAndSwap((jsword *)ap,(jsword)b,(jsword)c));
 #else
 		*ap = b->next;
 #endif
@@ -99,30 +102,30 @@ PR_ArenaAllocate(PRArenaPool *pool, size_t nb)
 	    }
 	    ap = &b->next;
 	}
-	sz = PR_MAX(pool->arenasize, nb);	/* allocate a new arena */
+	sz = JS_MAX(pool->arenasize, nb);	/* allocate a new arena */
 	sz += sizeof *a + pool->mask;           /* header and alignment slop */
 	b = malloc(sz);
 	if (!b)
 	    return 0;
 	a = a->next = b;
 	a->next = NULL;
-	a->limit = (pruword)a + sz;
-	PR_COUNT_ARENA(pool,++);
+	a->limit = (jsuword)a + sz;
+	JS_COUNT_ARENA(pool,++);
 	COUNT(pool, nmallocs);
     claim:
-	a->base = a->avail = (pruword)PR_ARENA_ALIGN(pool, a + 1);
+	a->base = a->avail = (jsuword)JS_ARENA_ALIGN(pool, a + 1);
     }
     p = (void *)a->avail;
     a->avail += nb;
     return p;
 }
 
-PR_PUBLIC_API(void *)
-PR_ArenaGrow(PRArenaPool *pool, void *p, size_t size, size_t incr)
+JS_EXPORT_API(void *)
+JS_ArenaGrow(JSArenaPool *pool, void *p, JSUint32 size, JSUint32 incr)
 {
     void *newp;
 
-    PR_ARENA_ALLOCATE(newp, pool, size + incr);
+    JS_ARENA_ALLOCATE(newp, pool, size + incr);
     memcpy(newp, p, size);
     return newp;
 }
@@ -132,11 +135,11 @@ PR_ArenaGrow(PRArenaPool *pool, void *p, size_t size, size_t incr)
  * Reset pool->current to point to head in case it pointed at a tail arena.
  */
 static void
-FreeArenaList(PRArenaPool *pool, PRArena *head, PRBool reallyFree)
+FreeArenaList(JSArenaPool *pool, JSArena *head, JSBool reallyFree)
 {
-    PRArena **ap, *a;
+    JSArena **ap, *a;
 #ifdef JS_THREADSAFE
-	PRArena *b;
+    JSArena *b;
 #endif
 
     ap = &head->next;
@@ -146,9 +149,9 @@ FreeArenaList(PRArenaPool *pool, PRArena *head, PRBool reallyFree)
 
 #ifdef DEBUG
     do {
-	PR_ASSERT(a->base <= a->avail && a->avail <= a->limit);
+	JS_ASSERT(a->base <= a->avail && a->avail <= a->limit);
 	a->avail = a->base;
-	PR_CLEAR_UNUSED(a);
+	JS_CLEAR_UNUSED(a);
     } while ((a = a->next) != NULL);
     a = *ap;
 #endif
@@ -156,8 +159,8 @@ FreeArenaList(PRArenaPool *pool, PRArena *head, PRBool reallyFree)
     if (reallyFree) {
 	do {
 	    *ap = a->next;
-	    PR_CLEAR_ARENA(a);
-	    PR_COUNT_ARENA(pool,--);
+	    JS_CLEAR_ARENA(a);
+	    JS_COUNT_ARENA(pool,--);
 	    free(a);
 	} while ((a = *ap) != NULL);
     } else {
@@ -167,8 +170,8 @@ FreeArenaList(PRArenaPool *pool, PRArena *head, PRBool reallyFree)
 	} while (*ap);
 #ifdef JS_THREADSAFE
 	do {
-	  *ap = b = arena_freelist;
-	} while (!js_CompareAndSwap((prword*)&arena_freelist,(prword)b,(prword)a));
+	    *ap = b = arena_freelist;
+	} while (!js_CompareAndSwap((jsword*)&arena_freelist,(jsword)b,(jsword)a));
 #else
 	*ap = arena_freelist;
 	arena_freelist = a;
@@ -179,34 +182,34 @@ FreeArenaList(PRArenaPool *pool, PRArena *head, PRBool reallyFree)
     pool->current = head;
 }
 
-PR_PUBLIC_API(void)
-PR_ArenaRelease(PRArenaPool *pool, char *mark)
+JS_EXPORT_API(void)
+JS_ArenaRelease(JSArenaPool *pool, char *mark)
 {
-    PRArena *a;
+    JSArena *a;
 
     for (a = pool->first.next; a; a = a->next) {
-	if (PR_UPTRDIFF(mark, a) < PR_UPTRDIFF(a->avail, a)) {
-	    a->avail = (pruword)PR_ARENA_ALIGN(pool, mark);
-	    FreeArenaList(pool, a, PR_TRUE);
+	if (JS_UPTRDIFF(mark, a) < JS_UPTRDIFF(a->avail, a)) {
+	    a->avail = (jsuword)JS_ARENA_ALIGN(pool, mark);
+	    FreeArenaList(pool, a, JS_TRUE);
 	    return;
 	}
     }
 }
 
-PR_PUBLIC_API(void)
-PR_FreeArenaPool(PRArenaPool *pool)
+JS_EXPORT_API(void)
+JS_FreeArenaPool(JSArenaPool *pool)
 {
-    FreeArenaList(pool, &pool->first, PR_FALSE);
+    FreeArenaList(pool, &pool->first, JS_FALSE);
     COUNT(pool, ndeallocs);
 }
 
-PR_PUBLIC_API(void)
-PR_FinishArenaPool(PRArenaPool *pool)
+JS_EXPORT_API(void)
+JS_FinishArenaPool(JSArenaPool *pool)
 {
-    FreeArenaList(pool, &pool->first, PR_TRUE);
-#ifdef PR_ARENAMETER
+    FreeArenaList(pool, &pool->first, JS_TRUE);
+#ifdef JS_ARENAMETER
     {
-	PRArenaStats *stats, **statsp;
+	JSArenaStats *stats, **statsp;
 
 	if (pool->stats.name)
 	    free(pool->stats.name);
@@ -221,30 +224,30 @@ PR_FinishArenaPool(PRArenaPool *pool)
 #endif
 }
 
-PR_PUBLIC_API(void)
-PR_CompactArenaPool(PRArenaPool *pool)
+JS_EXPORT_API(void)
+JS_CompactArenaPool(JSArenaPool *pool)
 {
 #if 0 /* XP_MAC */
-    PRArena *a = pool->first.next;
+    JSArena *a = pool->first.next;
 
     while (a) {
-        reallocSmaller(a, a->avail - (pruword)a);
+        reallocSmaller(a, a->avail - (jsuword)a);
         a->limit = a->avail;
         a = a->next;
     }
 #endif
 }
 
-PR_PUBLIC_API(void)
-PR_ArenaFinish()
+JS_EXPORT_API(void)
+JS_ArenaFinish()
 {
-    PRArena *a, *next;
+    JSArena *a, *next;
 
 #ifdef JS_THREADSAFE
     while (arena_freelist) {
 	a = arena_freelist;
 	next = a->next;
-	if (js_CompareAndSwap((prword*)&arena_freelist,(prword)a,(prword)next))
+	if (js_CompareAndSwap((jsword*)&arena_freelist,(jsword)a,(jsword)next))
 	    free(a);
     }
 #else
@@ -256,9 +259,9 @@ PR_ArenaFinish()
 #endif
 }
 
-#ifdef PR_ARENAMETER
-PR_PUBLIC_API(void)
-PR_ArenaCountAllocation(PRArenaPool *pool, size_t nb)
+#ifdef JS_ARENAMETER
+JS_EXPORT_API(void)
+JS_ArenaCountAllocation(JSArenaPool *pool, JSUint32 nb)
 {
     pool->stats.nallocs++;
     pool->stats.nbytes += nb;
@@ -267,14 +270,14 @@ PR_ArenaCountAllocation(PRArenaPool *pool, size_t nb)
     pool->stats.variance += nb * nb;
 }
 
-PR_PUBLIC_API(void)
-PR_ArenaCountInplaceGrowth(PRArenaPool *pool, size_t size, size_t incr)
+JS_EXPORT_API(void)
+JS_ArenaCountInplaceGrowth(JSArenaPool *pool, JSUint32 size, JSUint32 incr)
 {
     pool->stats.ninplace++;
 }
 
-PR_PUBLIC_API(void)
-PR_ArenaCountGrowth(PRArenaPool *pool, size_t size, size_t incr)
+JS_EXPORT_API(void)
+JS_ArenaCountGrowth(JSArenaPool *pool, JSUint32 size, JSUint32 incr)
 {
     pool->stats.ngrows++;
     pool->stats.nbytes += incr;
@@ -285,14 +288,14 @@ PR_ArenaCountGrowth(PRArenaPool *pool, size_t size, size_t incr)
     pool->stats.variance += size * size;
 }
 
-PR_PUBLIC_API(void)
-PR_ArenaCountRelease(PRArenaPool *pool, char *mark)
+JS_EXPORT_API(void)
+JS_ArenaCountRelease(JSArenaPool *pool, char *mark)
 {
     pool->stats.nreleases++;
 }
 
-PR_PUBLIC_API(void)
-PR_ArenaCountRetract(PRArenaPool *pool, char *mark)
+JS_EXPORT_API(void)
+JS_ArenaCountRetract(JSArenaPool *pool, char *mark)
 {
     pool->stats.nfastrels++;
 }
@@ -300,10 +303,10 @@ PR_ArenaCountRetract(PRArenaPool *pool, char *mark)
 #include <math.h>
 #include <stdio.h>
 
-PR_PUBLIC_API(void)
-PR_DumpArenaStats(FILE *fp)
+JS_EXPORT_API(void)
+JS_DumpArenaStats(FILE *fp)
 {
-    PRArenaStats *stats;
+    JSArenaStats *stats;
     double mean, variance;
 
     for (stats = arena_stats_list; stats; stats = stats->next) {
@@ -330,4 +333,4 @@ PR_DumpArenaStats(FILE *fp)
         fprintf(fp, "       maximum allocation size: %u\n", stats->maxalloc);
     }
 }
-#endif /* PR_ARENAMETER */
+#endif /* JS_ARENAMETER */

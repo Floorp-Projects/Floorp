@@ -1,15 +1,15 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/*
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
  * compliance with the NPL.  You may obtain a copy of the NPL at
  * http://www.mozilla.org/NPL/
- * 
+ *
  * Software distributed under the NPL is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
  * for the specific language governing rights and limitations under the
  * NPL.
- * 
+ *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
@@ -17,22 +17,21 @@
  */
 
 /*
- * PL hash table package.
+ * PR hash table package.
  */
-#include "plhash.h"
-#include "prbit.h"
-#include "prlog.h"
-#include "prmem.h"
-#include "prtypes.h"
 #include <stdlib.h>
 #include <string.h>
+#include "jstypes.h"
+#include "jsbit.h"
+#include "jsutil.h" /* Added by JSIFY */
+#include "jshash.h" /* Added by JSIFY */
 
 /* Compute the number of buckets in ht */
-#define NBUCKETS(ht)    (1 << (PL_HASH_BITS - (ht)->shift))
+#define NBUCKETS(ht)    JS_BIT(JS_HASH_BITS - (ht)->shift)
 
 /* The smallest table has 16 buckets */
 #define MINBUCKETSLOG2  4
-#define MINBUCKETS      (1 << MINBUCKETSLOG2)
+#define MINBUCKETS      JS_BIT(MINBUCKETSLOG2)
 
 /* Compute the maximum entries given n buckets that we will tolerate, ~90% */
 #define OVERLOADED(n)   ((n) - ((n) >> 3))
@@ -43,87 +42,71 @@
 /*
 ** Stubs for default hash allocator ops.
 */
-static void * PR_CALLBACK
-DefaultAllocTable(void *pool, PRSize size)
+static void *
+DefaultAllocTable(void *pool, size_t size)
 {
-#if defined(XP_MAC)
-#pragma unused (pool)
-#endif
-
-    return PR_MALLOC(size);
+    return malloc(size);
 }
 
-static void PR_CALLBACK
+static void
 DefaultFreeTable(void *pool, void *item)
 {
-#if defined(XP_MAC)
-#pragma unused (pool)
-#endif
-
-    PR_DELETE(item);
+    free(item);
 }
 
-static PLHashEntry * PR_CALLBACK
+static JSHashEntry *
 DefaultAllocEntry(void *pool, const void *key)
 {
-#if defined(XP_MAC)
-#pragma unused (pool,key)
-#endif
-
-    return PR_NEW(PLHashEntry);
+    return malloc(sizeof(JSHashEntry));
 }
 
-static void PR_CALLBACK
-DefaultFreeEntry(void *pool, PLHashEntry *he, PRUintn flag)
+static void
+DefaultFreeEntry(void *pool, JSHashEntry *he, uintN flag)
 {
-#if defined(XP_MAC)
-#pragma unused (pool)
-#endif
-
     if (flag == HT_FREE_ENTRY)
-        PR_DELETE(he);
+        free(he);
 }
 
-static PLHashAllocOps defaultHashAllocOps = {
+static JSHashAllocOps defaultHashAllocOps = {
     DefaultAllocTable, DefaultFreeTable,
     DefaultAllocEntry, DefaultFreeEntry
 };
 
-PR_IMPLEMENT(PLHashTable *)
-PL_NewHashTable(PRUint32 n, PLHashFunction keyHash,
-                PLHashComparator keyCompare, PLHashComparator valueCompare,
-                PLHashAllocOps *allocOps, void *allocPriv)
+JS_EXPORT_API(JSHashTable *)
+JS_NewHashTable(uint32 n, JSHashFunction keyHash,
+                JSHashComparator keyCompare, JSHashComparator valueCompare,
+                JSHashAllocOps *allocOps, void *allocPriv)
 {
-    PLHashTable *ht;
-    PRUint32 nb;
+    JSHashTable *ht;
+    size_t nb;
 
     if (n <= MINBUCKETS) {
         n = MINBUCKETSLOG2;
     } else {
-        n = PR_CeilingLog2(n);
-        if ((PRInt32)n < 0)
-            return 0;
+        n = JS_CeilingLog2(n);
+        if ((int32)n < 0)
+            return NULL;
     }
 
     if (!allocOps) allocOps = &defaultHashAllocOps;
 
-    ht = (PLHashTable*)((*allocOps->allocTable)(allocPriv, sizeof *ht));
+    ht = (*allocOps->allocTable)(allocPriv, sizeof *ht);
     if (!ht)
-	return 0;
+	return NULL;
     memset(ht, 0, sizeof *ht);
-    ht->shift = PL_HASH_BITS - n;
-    n = 1 << n;
-#if defined(XP_PC) && !defined(_WIN32)
+    ht->shift = JS_HASH_BITS - n;
+    n = JS_BIT(n);
+#if defined(XP_PC) && defined _MSC_VER && _MSC_VER <= 800
     if (n > 16000) {
         (*allocOps->freeTable)(allocPriv, ht);
-        return 0;
+        return NULL;
     }
 #endif  /* WIN16 */
-    nb = n * sizeof(PLHashEntry *);
-    ht->buckets = (PLHashEntry**)((*allocOps->allocTable)(allocPriv, nb));
+    nb = n * sizeof(JSHashEntry *);
+    ht->buckets = (*allocOps->allocTable)(allocPriv, nb);
     if (!ht->buckets) {
         (*allocOps->freeTable)(allocPriv, ht);
-        return 0;
+        return NULL;
     }
     memset(ht->buckets, 0, nb);
 
@@ -135,12 +118,12 @@ PL_NewHashTable(PRUint32 n, PLHashFunction keyHash,
     return ht;
 }
 
-PR_IMPLEMENT(void)
-PL_HashTableDestroy(PLHashTable *ht)
+JS_EXPORT_API(void)
+JS_HashTableDestroy(JSHashTable *ht)
 {
-    PRUint32 i, n;
-    PLHashEntry *he, *next;
-    PLHashAllocOps *allocOps = ht->allocOps;
+    uint32 i, n;
+    JSHashEntry *he, *next;
+    JSHashAllocOps *allocOps = ht->allocOps;
     void *allocPriv = ht->allocPriv;
 
     n = NBUCKETS(ht);
@@ -163,21 +146,19 @@ PL_HashTableDestroy(PLHashTable *ht)
 /*
 ** Multiplicative hash, from Knuth 6.4.
 */
-#define GOLDEN_RATIO    0x9E3779B9U
-
-PR_IMPLEMENT(PLHashEntry **)
-PL_HashTableRawLookup(PLHashTable *ht, PLHashNumber keyHash, const void *key)
+JS_EXPORT_API(JSHashEntry **)
+JS_HashTableRawLookup(JSHashTable *ht, JSHashNumber keyHash, const void *key)
 {
-    PLHashEntry *he, **hep, **hep0;
-    PLHashNumber h;
+    JSHashEntry *he, **hep, **hep0;
+    JSHashNumber h;
 
 #ifdef HASHMETER
     ht->nlookups++;
 #endif
-    h = keyHash * GOLDEN_RATIO;
+    h = keyHash * JS_GOLDEN_RATIO;
     h >>= ht->shift;
     hep = hep0 = &ht->buckets[h];
-    while ((he = *hep) != 0) {
+    while ((he = *hep) != NULL) {
         if (he->keyHash == keyHash && (*ht->keyCompare)(key, he->key)) {
             /* Move to front of chain if not already there */
             if (hep != hep0) {
@@ -195,13 +176,13 @@ PL_HashTableRawLookup(PLHashTable *ht, PLHashNumber keyHash, const void *key)
     return hep;
 }
 
-PR_IMPLEMENT(PLHashEntry *)
-PL_HashTableRawAdd(PLHashTable *ht, PLHashEntry **hep,
-                   PLHashNumber keyHash, const void *key, void *value)
+JS_EXPORT_API(JSHashEntry *)
+JS_HashTableRawAdd(JSHashTable *ht, JSHashEntry **hep,
+                   JSHashNumber keyHash, const void *key, void *value)
 {
-    PRUint32 i, n;
-    PLHashEntry *he, *next, **oldbuckets;
-    PRUint32 nb;
+    uint32 i, n;
+    JSHashEntry *he, *next, **oldbuckets;
+    size_t nb;
 
     /* Grow the table if it is overloaded */
     n = NBUCKETS(ht);
@@ -211,25 +192,24 @@ PL_HashTableRawAdd(PLHashTable *ht, PLHashEntry **hep,
 #endif
         ht->shift--;
         oldbuckets = ht->buckets;
-#if defined(XP_PC) && !defined(_WIN32)
+#if defined(XP_PC) && defined _MSC_VER && _MSC_VER <= 800
         if (2 * n > 16000)
-            return 0;
+            return NULL;
 #endif  /* WIN16 */
-        nb = 2 * n * sizeof(PLHashEntry *);
-        ht->buckets = (PLHashEntry**)
-            ((*ht->allocOps->allocTable)(ht->allocPriv, nb));
+        nb = 2 * n * sizeof(JSHashEntry *);
+        ht->buckets = (*ht->allocOps->allocTable)(ht->allocPriv, nb);
         if (!ht->buckets) {
             ht->buckets = oldbuckets;
-            return 0;
-        }
+            return NULL;
+	}
         memset(ht->buckets, 0, nb);
 
         for (i = 0; i < n; i++) {
             for (he = oldbuckets[i]; he; he = next) {
                 next = he->next;
-                hep = PL_HashTableRawLookup(ht, he->keyHash, he->key);
-                PR_ASSERT(*hep == 0);
-                he->next = 0;
+                hep = JS_HashTableRawLookup(ht, he->keyHash, he->key);
+                JS_ASSERT(*hep == NULL);
+                he->next = NULL;
                 *hep = he;
             }
         }
@@ -237,13 +217,13 @@ PL_HashTableRawAdd(PLHashTable *ht, PLHashEntry **hep,
         memset(oldbuckets, 0xDB, n * sizeof oldbuckets[0]);
 #endif
         (*ht->allocOps->freeTable)(ht->allocPriv, oldbuckets);
-        hep = PL_HashTableRawLookup(ht, keyHash, key);
+        hep = JS_HashTableRawLookup(ht, keyHash, key);
     }
 
     /* Make a new key value entry */
     he = (*ht->allocOps->allocEntry)(ht->allocPriv, key);
     if (!he)
-	return 0;
+	return NULL;
     he->keyHash = keyHash;
     he->key = key;
     he->value = value;
@@ -253,15 +233,15 @@ PL_HashTableRawAdd(PLHashTable *ht, PLHashEntry **hep,
     return he;
 }
 
-PR_IMPLEMENT(PLHashEntry *)
-PL_HashTableAdd(PLHashTable *ht, const void *key, void *value)
+JS_EXPORT_API(JSHashEntry *)
+JS_HashTableAdd(JSHashTable *ht, const void *key, void *value)
 {
-    PLHashNumber keyHash;
-    PLHashEntry *he, **hep;
+    JSHashNumber keyHash;
+    JSHashEntry *he, **hep;
 
     keyHash = (*ht->keyHash)(key);
-    hep = PL_HashTableRawLookup(ht, keyHash, key);
-    if ((he = *hep) != 0) {
+    hep = JS_HashTableRawLookup(ht, keyHash, key);
+    if ((he = *hep) != NULL) {
         /* Hit; see if values match */
         if ((*ht->valueCompare)(he->value, value)) {
             /* key,value pair is already present in table */
@@ -272,15 +252,15 @@ PL_HashTableAdd(PLHashTable *ht, const void *key, void *value)
         he->value = value;
         return he;
     }
-    return PL_HashTableRawAdd(ht, hep, keyHash, key, value);
+    return JS_HashTableRawAdd(ht, hep, keyHash, key, value);
 }
 
-PR_IMPLEMENT(void)
-PL_HashTableRawRemove(PLHashTable *ht, PLHashEntry **hep, PLHashEntry *he)
+JS_EXPORT_API(void)
+JS_HashTableRawRemove(JSHashTable *ht, JSHashEntry **hep, JSHashEntry *he)
 {
-    PRUint32 i, n;
-    PLHashEntry *next, **oldbuckets;
-    PRUint32 nb;
+    uint32 i, n;
+    JSHashEntry *next, **oldbuckets;
+    size_t nb;
 
     *hep = he->next;
     (*ht->allocOps->freeEntry)(ht->allocPriv, he, HT_FREE_ENTRY);
@@ -293,9 +273,8 @@ PL_HashTableRawRemove(PLHashTable *ht, PLHashEntry **hep, PLHashEntry *he)
 #endif
         ht->shift++;
         oldbuckets = ht->buckets;
-        nb = n * sizeof(PLHashEntry*) / 2;
-        ht->buckets = (PLHashEntry**)(
-            (*ht->allocOps->allocTable)(ht->allocPriv, nb));
+        nb = n * sizeof(JSHashEntry*) / 2;
+        ht->buckets = (*ht->allocOps->allocTable)(ht->allocPriv, nb);
         if (!ht->buckets) {
             ht->buckets = oldbuckets;
             return;
@@ -305,9 +284,9 @@ PL_HashTableRawRemove(PLHashTable *ht, PLHashEntry **hep, PLHashEntry *he)
         for (i = 0; i < n; i++) {
             for (he = oldbuckets[i]; he; he = next) {
                 next = he->next;
-                hep = PL_HashTableRawLookup(ht, he->keyHash, he->key);
-                PR_ASSERT(*hep == 0);
-                he->next = 0;
+                hep = JS_HashTableRawLookup(ht, he->keyHash, he->key);
+                JS_ASSERT(*hep == NULL);
+                he->next = NULL;
                 *hep = he;
             }
         }
@@ -318,53 +297,53 @@ PL_HashTableRawRemove(PLHashTable *ht, PLHashEntry **hep, PLHashEntry *he)
     }
 }
 
-PR_IMPLEMENT(PRBool)
-PL_HashTableRemove(PLHashTable *ht, const void *key)
+JS_EXPORT_API(JSBool)
+JS_HashTableRemove(JSHashTable *ht, const void *key)
 {
-    PLHashNumber keyHash;
-    PLHashEntry *he, **hep;
+    JSHashNumber keyHash;
+    JSHashEntry *he, **hep;
 
     keyHash = (*ht->keyHash)(key);
-    hep = PL_HashTableRawLookup(ht, keyHash, key);
-    if ((he = *hep) == 0)
-        return PR_FALSE;
+    hep = JS_HashTableRawLookup(ht, keyHash, key);
+    if ((he = *hep) == NULL)
+        return JS_FALSE;
 
     /* Hit; remove element */
-    PL_HashTableRawRemove(ht, hep, he);
-    return PR_TRUE;
+    JS_HashTableRawRemove(ht, hep, he);
+    return JS_TRUE;
 }
 
-PR_IMPLEMENT(void *)
-PL_HashTableLookup(PLHashTable *ht, const void *key)
+JS_EXPORT_API(void *)
+JS_HashTableLookup(JSHashTable *ht, const void *key)
 {
-    PLHashNumber keyHash;
-    PLHashEntry *he, **hep;
+    JSHashNumber keyHash;
+    JSHashEntry *he, **hep;
 
     keyHash = (*ht->keyHash)(key);
-    hep = PL_HashTableRawLookup(ht, keyHash, key);
-    if ((he = *hep) != 0) {
+    hep = JS_HashTableRawLookup(ht, keyHash, key);
+    if ((he = *hep) != NULL) {
         return he->value;
     }
-    return 0;
+    return NULL;
 }
 
 /*
 ** Iterate over the entries in the hash table calling func for each
-** entry found. Stop if "f" says to (return value & PR_ENUMERATE_STOP).
+** entry found. Stop if "f" says to (return value & JS_ENUMERATE_STOP).
 ** Return a count of the number of elements scanned.
 */
-PR_IMPLEMENT(int)
-PL_HashTableEnumerateEntries(PLHashTable *ht, PLHashEnumerator f, void *arg)
+JS_EXPORT_API(int)
+JS_HashTableEnumerateEntries(JSHashTable *ht, JSHashEnumerator f, void *arg)
 {
-    PLHashEntry *he, **hep;
-    PRUint32 i, nbuckets;
+    JSHashEntry *he, **hep;
+    uint32 i, nbuckets;
     int rv, n = 0;
-    PLHashEntry *todo = 0;
+    JSHashEntry *todo = NULL;
 
     nbuckets = NBUCKETS(ht);
     for (i = 0; i < nbuckets; i++) {
         hep = &ht->buckets[i];
-        while ((he = *hep) != 0) {
+        while ((he = *hep) != NULL) {
             rv = (*f)(he, n, arg);
             n++;
             if (rv & (HT_ENUMERATE_REMOVE | HT_ENUMERATE_UNHASH)) {
@@ -384,8 +363,8 @@ PL_HashTableEnumerateEntries(PLHashTable *ht, PLHashEnumerator f, void *arg)
 
 out:
     hep = &todo;
-    while ((he = *hep) != 0) {
-        PL_HashTableRawRemove(ht, hep, he);
+    while ((he = *hep) != NULL) {
+        JS_HashTableRawRemove(ht, hep, he);
     }
     return n;
 }
@@ -394,13 +373,13 @@ out:
 #include <math.h>
 #include <stdio.h>
 
-PR_IMPLEMENT(void)
-PL_HashTableDumpMeter(PLHashTable *ht, PLHashEnumerator dump, FILE *fp)
+JS_EXPORT_API(void)
+JS_HashTableDumpMeter(JSHashTable *ht, JSHashEnumerator dump, FILE *fp)
 {
     double mean, variance;
-    PRUint32 nchains, nbuckets;
-    PRUint32 i, n, maxChain, maxChainLen;
-    PLHashEntry *he;
+    uint32 nchains, nbuckets;
+    uint32 i, n, maxChain, maxChainLen;
+    JSHashEntry *he;
 
     variance = 0;
     nchains = 0;
@@ -440,38 +419,32 @@ PL_HashTableDumpMeter(PLHashTable *ht, PLHashEnumerator dump, FILE *fp)
 }
 #endif /* HASHMETER */
 
-PR_IMPLEMENT(int)
-PL_HashTableDump(PLHashTable *ht, PLHashEnumerator dump, FILE *fp)
+JS_EXPORT_API(int)
+JS_HashTableDump(JSHashTable *ht, JSHashEnumerator dump, FILE *fp)
 {
     int count;
 
-    count = PL_HashTableEnumerateEntries(ht, dump, fp);
+    count = JS_HashTableEnumerateEntries(ht, dump, fp);
 #ifdef HASHMETER
-    PL_HashTableDumpMeter(ht, dump, fp);
+    JS_HashTableDumpMeter(ht, dump, fp);
 #endif
     return count;
 }
 
-PR_IMPLEMENT(PLHashNumber)
-PL_HashString(const void *key)
+JS_EXPORT_API(JSHashNumber)
+JS_HashString(const void *key)
 {
-    PLHashNumber h;
-    const PRUint8 *s;
+    JSHashNumber h;
+    const unsigned char *s;
 
     h = 0;
-    for (s = (const PRUint8*)key; *s; s++)
+    for (s = key; *s; s++)
         h = (h >> 28) ^ (h << 4) ^ *s;
     return h;
 }
 
-PR_IMPLEMENT(int)
-PL_CompareStrings(const void *v1, const void *v2)
-{
-    return strcmp((const char*)v1, (const char*)v2) == 0;
-}
-
-PR_IMPLEMENT(int)
-PL_CompareValues(const void *v1, const void *v2)
+JS_EXPORT_API(int)
+JS_CompareValues(const void *v1, const void *v2)
 {
     return v1 == v2;
 }

@@ -23,12 +23,12 @@
  * Navigator and localize changes to mocha.
  */
 #include <time.h>
-#include "prlong.h"
+#include "jslong.h"
 #ifdef MOZILLA_CLIENT
 #include "jscompat.h"
 #endif
 
-PR_BEGIN_EXTERN_C
+JS_BEGIN_EXTERN_C
 
 typedef struct PRMJTime       PRMJTime;
 
@@ -36,16 +36,16 @@ typedef struct PRMJTime       PRMJTime;
  * Broken down form of 64 bit time value.
  */
 struct PRMJTime {
-    PRInt32 tm_usec;		/* microseconds of second (0-999999) */
-    PRInt8 tm_sec;		/* seconds of minute (0-59) */
-    PRInt8 tm_min;		/* minutes of hour (0-59) */
-    PRInt8 tm_hour;		/* hour of day (0-23) */
-    PRInt8 tm_mday;		/* day of month (1-31) */
-    PRInt8 tm_mon;		/* month of year (0-11) */
-    PRInt8 tm_wday;		/* 0=sunday, 1=monday, ... */
-    PRInt16 tm_year;		/* absolute year, AD */
-    PRInt16 tm_yday;		/* day of year (0 to 365) */
-    PRInt8 tm_isdst;		/* non-zero if DST in effect */
+    JSInt32 tm_usec;		/* microseconds of second (0-999999) */
+    JSInt8 tm_sec;		/* seconds of minute (0-59) */
+    JSInt8 tm_min;		/* minutes of hour (0-59) */
+    JSInt8 tm_hour;		/* hour of day (0-23) */
+    JSInt8 tm_mday;		/* day of month (1-31) */
+    JSInt8 tm_mon;		/* month of year (0-11) */
+    JSInt8 tm_wday;		/* 0=sunday, 1=monday, ... */
+    JSInt16 tm_year;		/* absolute year, AD */
+    JSInt16 tm_yday;		/* day of year (0 to 365) */
+    JSInt8 tm_isdst;		/* non-zero if DST in effect */
 };
 
 /* Some handy constants */
@@ -53,22 +53,22 @@ struct PRMJTime {
 #define PRMJ_USEC_PER_MSEC	1000L
 
 /* Return the current local time in micro-seconds */
-extern PR_IMPLEMENT(PRInt64)
+extern JSInt64
 PRMJ_Now(void);
 
 /* get the difference between this time zone and  gmt timezone in seconds */
-extern PR_IMPLEMENT(time_t)
+extern time_t
 PRMJ_LocalGMTDifference(void);
 
 /* Format a time value into a buffer. Same semantics as strftime() */
-extern PR_IMPLEMENT(size_t)
+extern size_t
 PRMJ_FormatTime(char *buf, int buflen, char *fmt, PRMJTime *tm);
 
 /* Get the DST offset for the local time passed in */
-extern PR_IMPLEMENT(PRInt64)
-PRMJ_DSTOffset(PRInt64 time);
+extern JSInt64
+PRMJ_DSTOffset(JSInt64 time);
 
-PR_END_EXTERN_C
+JS_END_EXTERN_C
 
 #endif /* prmjtime_h___ */
 

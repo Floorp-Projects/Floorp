@@ -22,13 +22,9 @@
 #include "jsstddef.h"
 #include <stdlib.h>
 #include <string.h>
-#include "prtypes.h"
-#ifndef NSPR20
-#include "prarena.h"
-#else
-#include "plarena.h"
-#endif
-#include "prlog.h"
+#include "jstypes.h"
+#include "jsarena.h" /* Added by JSIFY */
+#include "jsutil.h" /* Added by JSIFY */
 #include "jsapi.h"
 #include "jsarray.h"
 #include "jsatom.h"
@@ -106,7 +102,7 @@ uint8 reopsize[] = {
     /* LPAREN */        3,
     /* RPAREN */        3,
     /* DOT */           1,
-    /* CCLASS */        1 + (CCLASS_CHARSET_SIZE / PR_BITS_PER_BYTE),
+    /* CCLASS */        1 + (CCLASS_CHARSET_SIZE / JS_BITS_PER_BYTE),
     /* DIGIT */         1,
     /* NONDIGIT */      1,
     /* ALNUM */         1,
@@ -130,7 +126,7 @@ uint8 reopsize[] = {
     /* UCFLATi */       2,	/* (2 = op + len) + [len 2-byte chars] */
     /* UCFLAT1i */      3,      /* op + hibyte + lobyte */
     /* ANCHOR1 */       1,
-    /* NCCLASS */       1 + (CCLASS_CHARSET_SIZE / PR_BITS_PER_BYTE),
+    /* NCCLASS */       1 + (CCLASS_CHARSET_SIZE / JS_BITS_PER_BYTE),
     /* END */           0,
 };
 
@@ -143,17 +139,17 @@ struct RENode {
     RENode          *next;      /* next in concatenation order */
     void            *kid;       /* first operand */
     union {
-        void        *kid2;      /* second operand */
-        jsint       num;        /* could be a number */
-        jschar      chr;        /* or a character */
-        struct {                /* or a quantifier range */
-            uint16  min;
-            uint16  max;
-        } range;
-        struct {                /* or a Unicode character class */
-            uint16  kidlen;     /* length of string at kid, in jschars */
-            uint16  bmsize;     /* bitmap size, based on max char code */
-        } ucclass;
+	void        *kid2;      /* second operand */
+	jsint       num;        /* could be a number */
+	jschar      chr;        /* or a character */
+	struct {                /* or a quantifier range */
+	    uint16  min;
+	    uint16  max;
+	} range;
+	struct {                /* or a Unicode character class */
+	    uint16  kidlen;     /* length of string at kid, in jschars */
+	    uint16  bmsize;     /* bitmap size, based on max char code */
+	} ucclass;
     } u;
 };
 
@@ -183,7 +179,7 @@ NewRENode(CompilerState *state, REOp op, void *kid)
     RENode *ren;
 
     cx = state->context;
-    PR_ARENA_ALLOCATE(ren, &cx->tempPool, sizeof *ren);
+    JS_ARENA_ALLOCATE(ren, &cx->tempPool, sizeof *ren);
     if (!ren) {
 	JS_ReportOutOfMemory(cx);
 	return NULL;
@@ -407,7 +403,7 @@ FixNext(CompilerState *state, RENode *ren1, RENode *ren2, RENode *oldnext)
 	    if (REOP(kid) == REOP_JUMP)
 		continue;
 	    for (ren = kid; ren->next; ren = ren->next)
-		PR_ASSERT(REOP(ren) != REOP_ALT);
+		JS_ASSERT(REOP(ren) != REOP_ALT);
 
 	    /* Append a jump node to all but the last alternative. */
 	    ren->next = NewRENode(state, REOP_JUMP, NULL);
@@ -653,15 +649,16 @@ loop:
       case '{':
 	c = *++cp;
 	if (!JS7_ISDEC(c)) {
-	    JS_ReportError(state->context, "invalid quantifier %s", state->cp);
+	    JS_ReportErrorNumber(state->context, js_GetErrorMessage, NULL,
+				 JSMSG_BAD_QUANTIFIER, state->cp);
 	    return NULL;
 	}
 	min = (uint32)JS7_UNDEC(c);
 	for (c = *++cp; JS7_ISDEC(c); c = *++cp) {
 	    min = 10 * min + (uint32)JS7_UNDEC(c);
 	    if (min >> 16) {
-		JS_ReportError(state->context, "overlarge minimum %s",
-			       state->cp);
+		JS_ReportErrorNumber(state->context, js_GetErrorMessage, NULL,
+				     JSMSG_MIN_TOO_BIG, state->cp);
 		return NULL;
 	    }
 	}
@@ -672,16 +669,18 @@ loop:
 		for (c = *++cp; JS7_ISDEC(c); c = *++cp) {
 		    max = 10 * max + (uint32)JS7_UNDEC(c);
 		    if (max >> 16) {
-			JS_ReportError(state->context, "overlarge maximum %s",
-				       up);
+			JS_ReportErrorNumber(state->context,
+					     js_GetErrorMessage, NULL,
+					     JSMSG_MAX_TOO_BIG, up);
 			return NULL;
 		    }
 		}
 		if (max == 0)
 		    goto zero_quant;
 		if (min > max) {
-		    JS_ReportError(state->context,
-				   "maximum %s less than minimum", up);
+		    JS_ReportErrorNumber(state->context,
+					 js_GetErrorMessage, NULL,
+					 JSMSG_OUT_OF_ORDER, up);
 		    return NULL;
 		}
 	    } else {
@@ -692,14 +691,15 @@ loop:
 	    /* Exactly n times. */
 	    if (min == 0) {
       zero_quant:
-		JS_ReportError(state->context, "zero quantifier %s", state->cp);
+		JS_ReportErrorNumber(state->context, js_GetErrorMessage, NULL,
+				     JSMSG_ZERO_QUANTIFIER, state->cp);
 		return NULL;
 	    }
 	    max = min;
 	}
 	if (*cp != '}') {
-	    JS_ReportError(state->context, "unterminated quantifier %s",
-			   state->cp);
+	    JS_ReportErrorNumber(state->context, js_GetErrorMessage, NULL,
+				 JSMSG_UNTERM_QUANTIFIER, state->cp);
 	    return NULL;
 	}
 	cp++;
@@ -716,8 +716,8 @@ loop:
 
       case '*':
 	if (!(ren->flags & RENODE_NONEMPTY)) {
-	    JS_ReportError(state->context,
-			   "regular expression before * could be empty");
+	    JS_ReportErrorNumber(state->context, js_GetErrorMessage, NULL,
+				 JSMSG_EMPTY_BEFORE_STAR);
 	    return NULL;
 	}
 	cp++;
@@ -726,8 +726,8 @@ loop:
 
       case '+':
 	if (!(ren->flags & RENODE_NONEMPTY)) {
-	    JS_ReportError(state->context,
-			   "regular expression before + could be empty");
+	    JS_ReportErrorNumber(state->context, js_GetErrorMessage, NULL,
+				 JSMSG_EMPTY_BEFORE_PLUS);
 	    return NULL;
 	}
 	cp++;
@@ -809,8 +809,8 @@ ParseAtom(CompilerState *state)
 	    return NULL;
 	cp = state->cp;
 	if (*cp != ')') {
-	    JS_ReportError(state->context, "unterminated parenthetical %s",
-			   ocp);
+	    JS_ReportErrorNumber(state->context, js_GetErrorMessage, NULL,
+				 JSMSG_MISSING_PAREN, ocp);
 	    return NULL;
 	}
 	cp++;
@@ -850,8 +850,8 @@ ParseAtom(CompilerState *state)
 	while ((c = *++cp) != ']') {
 	    if (c == 0) {
       bad_cclass:
-		JS_ReportError(state->context,
-			       "unterminated character class %s", ocp);
+		JS_ReportErrorNumber(state->context, js_GetErrorMessage, NULL,
+				     JSMSG_UNTERM_CLASS, ocp);
 		return NULL;
 	    }
 	    if (c == '\\' && cp[1] != 0)
@@ -867,7 +867,8 @@ ParseAtom(CompilerState *state)
 	c = *++cp;
 	switch (c) {
 	  case 0:
-	    JS_ReportError(state->context, "trailing \\ in regular expression");
+	    JS_ReportErrorNumber(state->context, js_GetErrorMessage, NULL,
+				 JSMSG_TRAILING_SLASH);
 	    return NULL;
 
 	  case 'f':
@@ -1045,13 +1046,13 @@ CountFirstChars(RENode *alt)
 	switch (REOP(kid)) {
 	  case REOP_QUANT:
 	    if (kid->u.range.min == 0)
-	    	return -1;
+		return -1;
 	    /* FALL THROUGH */
 	  case REOP_PLUS:
 	  case REOP_ALT:
 	    sublen = CountFirstChars(kid);
 	    if (sublen < 0)
-	    	return sublen;
+		return sublen;
 	    len += sublen;
 	    break;
 	  case REOP_FLAT:
@@ -1062,7 +1063,7 @@ CountFirstChars(RENode *alt)
 	  count_char:
 	    /* Only '\\' and '-' need escaping within a character class. */
 	    if (c == '\\' || c == '-')
-	    	len += 2;
+		len += 2;
 	    else
 		len++;
 	    break;
@@ -1123,7 +1124,7 @@ StoreFirstChars(RENode *alt, jschar *cp, ptrdiff_t i)
 	    ;
 	switch (REOP(kid)) {
 	  case REOP_QUANT:
-	    PR_ASSERT(kid->u.range.min != 0);
+	    JS_ASSERT(kid->u.range.min != 0);
 	    /* FALL THROUGH */
 	  case REOP_PLUS:
 	  case REOP_ALT:
@@ -1159,7 +1160,7 @@ StoreFirstChars(RENode *alt, jschar *cp, ptrdiff_t i)
 	    i = StoreChar(cp, i, 'S', JS_TRUE);
 	    break;
 	  default:
-	    PR_ASSERT(0);
+	    JS_ASSERT(0);
 	}
 	/* Test for non-alt so quant and plus execute to here only. */
 	if (REOP(alt) != REOP_ALT)
@@ -1184,7 +1185,7 @@ AnchorRegExp(CompilerState *state, RENode *ren)
 	len = CountFirstChars(ren2);
 	if (len <= 0)
 	    goto do_anchor;
-	PR_ARENA_ALLOCATE(cp, &state->context->tempPool, len * sizeof(jschar));
+	JS_ARENA_ALLOCATE(cp, &state->context->tempPool, len * sizeof(jschar));
 	if (!cp) {
 	    JS_ReportOutOfMemory(state->context);
 	    return JS_FALSE;
@@ -1257,8 +1258,8 @@ AnchorRegExp(CompilerState *state, RENode *ren)
 	goto do_first_char;
 
       case REOP_FLAT1:
-      	cp = &ren2->u.chr;
-      	op = REOP_FLAT1;
+	cp = &ren2->u.chr;
+	op = REOP_FLAT1;
 	goto do_first_char;
 
       case REOP_DOTSTAR:
@@ -1273,8 +1274,8 @@ AnchorRegExp(CompilerState *state, RENode *ren)
 	 * Any node other than dotstar that's unanchored and nonempty must be
 	 * prefixed by REOP_ANCHOR.
 	 */
-	PR_ASSERT(REOP(ren2) != REOP_ANCHOR);
-	PR_ASSERT(!(ren2->flags & RENODE_ISNEXT));
+	JS_ASSERT(REOP(ren2) != REOP_ANCHOR);
+	JS_ASSERT(!(ren2->flags & RENODE_ISNEXT));
 	if ((ren2->flags & (RENODE_ANCHORED | RENODE_NONEMPTY))
 	    == RENODE_NONEMPTY) {
 	    ren2 = NewRENode(state, REOP(ren), ren->kid);
@@ -1430,10 +1431,10 @@ OptimizeRegExp(CompilerState *state, RENode *ren)
 		    /* Try to extend the last alloc, to fuse FLAT,FLAT1,... */
 		    size = (len + 1) * sizeof(jschar);
 		    incr = len2 * sizeof(jschar);
-		    PR_ARENA_GROW(cp, &cx->tempPool, size, incr);
+		    JS_ARENA_GROW(cp, &cx->tempPool, size, incr);
 		} else {
 		    size = (len + len2 + 1) * sizeof(jschar);
-		    PR_ARENA_ALLOCATE(cp, &cx->tempPool, size);
+		    JS_ARENA_ALLOCATE(cp, &cx->tempPool, size);
 		}
 		if (!cp) {
 		    JS_ReportOutOfMemory(cx);
@@ -1448,7 +1449,7 @@ OptimizeRegExp(CompilerState *state, RENode *ren)
 		cp[len] = 0;
 	  end_coalesce:
 		ren->kid = cp;
-		PR_ASSERT(ren->flags & RENODE_GOODNEXT);
+		JS_ASSERT(ren->flags & RENODE_GOODNEXT);
 		if (!(next->flags & RENODE_GOODNEXT))
 		    ren->flags &= ~RENODE_GOODNEXT;
 		ren->u.kid2 = cp + len;
@@ -1475,7 +1476,7 @@ OptimizeRegExp(CompilerState *state, RENode *ren)
 		    len = 1;
 		}
 		cx = state->context;
-		PR_ARENA_ALLOCATE(cp, &cx->tempPool, len + 2);
+		JS_ARENA_ALLOCATE(cp, &cx->tempPool, (len+2) * sizeof(jschar));
 		if (!cp) {
 		    JS_ReportOutOfMemory(cx);
 		    return JS_FALSE;
@@ -1528,7 +1529,7 @@ OptimizeRegExp(CompilerState *state, RENode *ren)
 			JS7_ISHEX(cp[1]) && JS7_ISHEX(cp[2]) &&
 			JS7_ISHEX(cp[3]) && JS7_ISHEX(cp[4])) {
 			c = (((((JS7_UNHEX(cp[1]) << 4)
-			        + JS7_UNHEX(cp[2])) << 4)
+				+ JS7_UNHEX(cp[2])) << 4)
 			      + JS7_UNHEX(cp[3])) << 4)
 			    + JS7_UNHEX(cp[4]);
 			cp += 5;
@@ -1557,7 +1558,7 @@ OptimizeRegExp(CompilerState *state, RENode *ren)
 	    }
 	    if (maxc >= CCLASS_CHARSET_SIZE) {
 		ren->op = (uint8)REOP_UCCLASS;
-		size = (size_t)(maxc + PR_BITS_PER_BYTE) / PR_BITS_PER_BYTE;
+		size = (size_t)(maxc + JS_BITS_PER_BYTE) / JS_BITS_PER_BYTE;
 		ren->u.ucclass.kidlen = (uint16)len;
 		ren->u.ucclass.bmsize = (uint16)size;
 		state->progLength -= reopsize[REOP_CCLASS];
@@ -1689,7 +1690,7 @@ EmitRegExp(CompilerState *state, RENode *ren, JSRegExp *re)
 	    pc++;
 	    if (op == REOP_CCLASS) {
 		end = ren->u.kid2;
-		for (i = 0; i < CCLASS_CHARSET_SIZE / PR_BITS_PER_BYTE; i++)
+		for (i = 0; i < CCLASS_CHARSET_SIZE / JS_BITS_PER_BYTE; i++)
 		    pc[i] = fill;
 		nchars = CCLASS_CHARSET_SIZE;
 	    } else {
@@ -1700,7 +1701,7 @@ EmitRegExp(CompilerState *state, RENode *ren, JSRegExp *re)
 		state->progLength += n;
 		for (i = 0; i < n; i++)
 		    pc[i] = fill;
-		nchars = n * PR_BITS_PER_BYTE;
+		nchars = n * JS_BITS_PER_BYTE;
 	    }
 
 /* Split ops up into statements to keep MSVC1.52 from crashing. */
@@ -1838,8 +1839,9 @@ EmitRegExp(CompilerState *state, RENode *ren, JSRegExp *re)
 
 		if (inrange) {
 		    if (lastc > c) {
-			JS_ReportError(state->context,
-				       "invalid range in character class");
+			JS_ReportErrorNumber(state->context,
+					     js_GetErrorMessage, NULL,
+					     JSMSG_BAD_CLASS_RANGE);
 			return JS_FALSE;
 		    }
 		    inrange = JS_FALSE;
@@ -1954,7 +1956,7 @@ js_NewRegExp(JSContext *cx, JSString *str, uintN flags)
     size_t resize;
 
     re = NULL;
-    mark = PR_ARENA_MARK(&cx->tempPool);
+    mark = JS_ARENA_MARK(&cx->tempPool);
 
     state.context = cx;
     state.cpbegin = state.cp = str->chars;
@@ -1981,7 +1983,7 @@ js_NewRegExp(JSContext *cx, JSString *str, uintN flags)
 #endif
 
     resize = sizeof *re + state.progLength - 1;
-    re = JS_malloc(cx, PR_ROUNDUP(resize, sizeof(prword)));
+    re = JS_malloc(cx, JS_ROUNDUP(resize, sizeof(jsword)));
     if (!re)
 	goto out;
     re->source = str;
@@ -1999,24 +2001,24 @@ js_NewRegExp(JSContext *cx, JSString *str, uintN flags)
 
 #ifdef DEBUG_notme
     {
-        /* print the compiled regexp program bytecode */
-        size_t i;
-        for (i = 0; i < state.progLength; i++) {
-            int b = (int) re->program[i];
-            fprintf(stderr, "%d", b);
-            if ((i > 0 && i % 8 == 0) || i == state.progLength-1)
-                fprintf(stderr, "\n");
-            else
-                fprintf(stderr, ", ");
-        }
-        fprintf(stderr, "\n");
+	/* print the compiled regexp program bytecode */
+	size_t i;
+	for (i = 0; i < state.progLength; i++) {
+	    int b = (int) re->program[i];
+	    fprintf(stderr, "%d", b);
+	    if ((i > 0 && i % 8 == 0) || i == state.progLength-1)
+		fprintf(stderr, "\n");
+	    else
+		fprintf(stderr, ", ");
+	}
+	fprintf(stderr, "\n");
     }
 #endif
 
     /* Success: lock re->source string. */
     (void) js_LockGCThing(cx, str);
 out:
-    PR_ARENA_RELEASE(&cx->tempPool, mark);
+    JS_ARENA_RELEASE(&cx->tempPool, mark);
     return re;
 }
 
@@ -2036,10 +2038,13 @@ js_NewRegExpOpt(JSContext *cx, JSString *str, JSString *opt)
 	      case 'i':
 		flags |= JSREG_FOLD;
 		break;
-	      default:
-		JS_ReportError(cx, "invalid regular expression flag %c",
-			       (char) *cp);
+	      default: {
+		char charBuf[2] = " ";
+		charBuf[0] = (char)*cp;
+		JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+				     JSMSG_BAD_FLAG, charBuf);
 		return NULL;
+	      }
 	    }
 	}
     }
@@ -2280,7 +2285,7 @@ MatchRegExp(MatchState *state, jsbytecode *pc, const jschar *cp)
 	    matched = (cp != cpend && *cp != '\n');                           \
 	    matchlen = 1;                                                     \
 	    break;                                                            \
-                                                                              \
+									      \
 	  NONDOT_SINGLE_CASES                                                 \
 /* END SINGLE_CASES */
 
@@ -2298,65 +2303,65 @@ MatchRegExp(MatchState *state, jsbytecode *pc, const jschar *cp)
 	    }                                                                 \
 	    matchlen = 1;                                                     \
 	    break;                                                            \
-                                                                              \
+									      \
 	  case REOP_DIGIT:                                                    \
 	    matched = JS_ISDIGIT(*cp);                                        \
 	    matchlen = 1;                                                     \
 	    break;                                                            \
-                                                                              \
+									      \
 	  case REOP_NONDIGIT:                                                 \
 	    matched = !JS_ISDIGIT(*cp);                                       \
 	    matchlen = 1;                                                     \
 	    break;                                                            \
-                                                                              \
+									      \
 	  case REOP_ALNUM:                                                    \
 	    matched = JS_ISWORD(*cp);                                         \
 	    matchlen = 1;                                                     \
 	    break;                                                            \
-                                                                              \
+									      \
 	  case REOP_NONALNUM:                                                 \
 	    matched = !JS_ISWORD(*cp);                                        \
 	    matchlen = 1;                                                     \
 	    break;                                                            \
-                                                                              \
+									      \
 	  case REOP_SPACE:                                                    \
 	    matched = JS_ISSPACE(*cp);                                        \
 	    matchlen = 1;                                                     \
 	    break;                                                            \
-                                                                              \
+									      \
 	  case REOP_NONSPACE:                                                 \
 	    matched = !JS_ISSPACE(*cp);                                       \
 	    matchlen = 1;                                                     \
 	    break;                                                            \
-                                                                              \
+									      \
 	  case REOP_FLAT1:                                                    \
 	    c  = *cp;                                                         \
 	    c2 = (jschar)pc[1];                                               \
 	    matched = (c == c2);                                              \
 	    matchlen = 1;                                                     \
 	    break;                                                            \
-                                                                              \
+									      \
 	  case REOP_FLAT1i:                                                   \
 	    c  = *cp;                                                         \
 	    c2 = (jschar)pc[1];                                               \
 	    matched = MATCH_CHARS_IGNORING_CASE(c, c2);                       \
 	    matchlen = 1;                                                     \
 	    break;                                                            \
-                                                                              \
+									      \
 	  case REOP_UCFLAT1:                                                  \
 	    c  = *cp;                                                         \
 	    c2 = ((pc[1] << 8) | pc[2]);                                      \
 	    matched = (c == c2);                                              \
 	    matchlen = 1;                                                     \
 	    break;                                                            \
-                                                                              \
+									      \
 	  case REOP_UCFLAT1i:                                                 \
 	    c  = *cp;                                                         \
 	    c2 = ((pc[1] << 8) | pc[2]);                                      \
 	    matched = MATCH_CHARS_IGNORING_CASE(c, c2);                       \
 	    matchlen = 1;                                                     \
 	    break;                                                            \
-                                                                              \
+									      \
 	  case REOP_UCCLASS:                                                  \
 	  case REOP_NUCCLASS:                                                 \
 	    size = (pc[1] << 8) | pc[2];                                      \
@@ -2386,7 +2391,7 @@ MatchRegExp(MatchState *state, jsbytecode *pc, const jschar *cp)
 		switch (op) {
 		  NONDOT_SINGLE_CASES
 		  default:
-		    PR_ASSERT(0);
+		    JS_ASSERT(0);
 		}
 		if (!matched)
 		    break;
@@ -2408,7 +2413,7 @@ MatchRegExp(MatchState *state, jsbytecode *pc, const jschar *cp)
 		switch (op) {
 		  SINGLE_CASES
 		  default:
-		    PR_ASSERT(0);
+		    JS_ASSERT(0);
 		}
 		if (!matched)
 		    break;
@@ -2427,7 +2432,7 @@ MatchRegExp(MatchState *state, jsbytecode *pc, const jschar *cp)
 	    switch (op) {
 	      SINGLE_CASES
 	      default:
-		PR_ASSERT(0);
+		JS_ASSERT(0);
 	    }
 	    pc += oplen;
 	    if (matched) {
@@ -2530,12 +2535,12 @@ MatchRegExp(MatchState *state, jsbytecode *pc, const jschar *cp)
 	    op = (REOp) *++pc;
 	    oplen = reopsize[op];
 	    pc2 = pc + oplen;
-	    PR_ASSERT(pc2 < pcend);
+	    JS_ASSERT(pc2 < pcend);
 	    for (cp2 = cp; cp < cpend; cp++) {
 		switch (op) {
 		  NONDOT_SINGLE_CASES
 		  default:
-		    PR_ASSERT(0);
+		    JS_ASSERT(0);
 		}
 		if (matched) {
 		    cp3 = MatchRegExp(state, pc2, cp);
@@ -2552,7 +2557,7 @@ MatchRegExp(MatchState *state, jsbytecode *pc, const jschar *cp)
 #undef NONDOT_SINGLE_CASES
 
 	  default:
-	    PR_ASSERT(0);
+	    JS_ASSERT(0);
 	    return NULL;
 	}
 
@@ -2609,12 +2614,12 @@ js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
 
     /*
      * Use the temporary arena pool to grab space for parenthetical matches.
-     * After the PR_ARENA_ALLOCATE early return on error, goto out to be sure
+     * After the JS_ARENA_ALLOCATE early return on error, goto out to be sure
      * to free this memory.
      */
     length = 2 * sizeof(JSSubString) * re->parenCount;
-    mark = PR_ARENA_MARK(&cx->tempPool);
-    PR_ARENA_ALLOCATE(parsub, &cx->tempPool, length);
+    mark = JS_ARENA_MARK(&cx->tempPool);
+    JS_ARENA_ALLOCATE(parsub, &cx->tempPool, length);
     if (!parsub) {
 	JS_ReportOutOfMemory(cx);
 	return JS_FALSE;
@@ -2681,7 +2686,7 @@ js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
     }
 
     res = &cx->regExpStatics;
-    PR_ASSERT(state.parenCount <= re->parenCount);
+    JS_ASSERT(state.parenCount <= re->parenCount);
     if (state.parenCount == 0) {
 	res->parenCount = 0;
 	res->lastParen = js_EmptySubString;
@@ -2773,7 +2778,7 @@ js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
     res->rightContext.length = state.cpend - ep;
 
 out:
-    PR_ARENA_RELEASE(&cx->tempPool, mark);
+    JS_ARENA_RELEASE(&cx->tempPool, mark);
     return ok;
 }
 
@@ -3069,7 +3074,7 @@ JSClass js_RegExpClass = {
 
 static JSBool
 regexp_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-	        jsval *rval)
+		jsval *rval)
 {
     JSBool ok;
     JSRegExp *re;
@@ -3084,7 +3089,7 @@ regexp_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     JS_LOCK_OBJ(cx, obj);
     re = JS_GetPrivate(cx, obj);
     if (!re) {
-    	*rval = STRING_TO_JSVAL(cx->runtime->emptyString);
+	*rval = STRING_TO_JSVAL(cx->runtime->emptyString);
 	goto out;
     }
 
@@ -3183,15 +3188,16 @@ regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 	return JS_FALSE;
     re = JS_GetPrivate(cx, obj);
     if (!re)
-    	return JS_TRUE;
+	return JS_TRUE;
     ok = locked = JS_FALSE;
     if (argc == 0) {
 	str = cx->regExpStatics.input;
 	if (!str) {
-	    JS_ReportError(cx, "no input for /%s/%s%s",
-			   JS_GetStringBytes(re->source),
-			   (re->flags & JSREG_GLOB) ? "g" : "",
-			   (re->flags & JSREG_FOLD) ? "i" : "");
+	    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+				 JSMSG_NO_INPUT,
+				 JS_GetStringBytes(re->source),
+				 (re->flags & JSREG_GLOB) ? "g" : "",
+				 (re->flags & JSREG_FOLD) ? "i" : "");
 	    goto out;
 	}
     } else {
@@ -3248,8 +3254,8 @@ RegExp(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     /* If not constructing, replace obj with a new RegExp object. */
     if (!cx->fp->constructing) {
-    	obj = js_NewObject(cx, &js_RegExpClass, NULL, NULL);
-    	if (!obj)
+	obj = js_NewObject(cx, &js_RegExpClass, NULL, NULL);
+	if (!obj)
 	    return JS_FALSE;
     }
     return regexp_compile(cx, obj, argc, argv, rval);

@@ -21,9 +21,9 @@
  */
 #include "jsstddef.h"
 #include <string.h>
-#include "prtypes.h"
-#include "prlog.h"
-#include "prclist.h"
+#include "jstypes.h"
+#include "jsutil.h" /* Added by JSIFY */
+#include "jsclist.h"
 #include "jsapi.h"
 #include "jscntxt.h"
 #include "jsconfig.h"
@@ -39,7 +39,7 @@
 #include "jsstr.h"
 
 typedef struct JSTrap {
-    PRCList         links;
+    JSCList         links;
     JSScript        *script;
     jsbytecode      *pc;
     JSOp            op;
@@ -93,7 +93,7 @@ JS_SetTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
 	    return JS_FALSE;
 	}
     }
-    PR_APPEND_LINK(&trap->links, &rt->trapList);
+    JS_APPEND_LINK(&trap->links, &rt->trapList);
     trap->script = script;
     trap->pc = pc;
     trap->op = (JSOp)*pc;
@@ -110,7 +110,7 @@ JS_GetTrapOpcode(JSContext *cx, JSScript *script, jsbytecode *pc)
 
     trap = FindTrap(cx->runtime, script, pc);
     if (!trap) {
-	PR_ASSERT(0);	/* XXX can't happen */
+	JS_ASSERT(0);	/* XXX can't happen */
 	return JSOP_LIMIT;
     }
     return trap->op;
@@ -119,7 +119,7 @@ JS_GetTrapOpcode(JSContext *cx, JSScript *script, jsbytecode *pc)
 static void
 DestroyTrap(JSContext *cx, JSTrap *trap)
 {
-    PR_REMOVE_LINK(&trap->links);
+    JS_REMOVE_LINK(&trap->links);
     *trap->pc = (jsbytecode)trap->op;
     js_RemoveRoot(cx, &trap->closure);
     JS_free(cx, trap);
@@ -180,7 +180,7 @@ JS_HandleTrap(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval)
 
     trap = FindTrap(cx->runtime, script, pc);
     if (!trap) {
-	PR_ASSERT(0);	/* XXX can't happen */
+	JS_ASSERT(0);	/* XXX can't happen */
 	return JSTRAP_ERROR;
     }
     /*
@@ -218,7 +218,7 @@ JS_ClearInterrupt(JSRuntime *rt, JSTrapHandler *handlerp, void **closurep)
 
 
 typedef struct JSWatchPoint {
-    PRCList             links;
+    JSCList             links;
     JSObject            *object;	/* weak link, see js_FinalizeObject */
     jsval               userid;
     JSScopeProperty     *sprop;
@@ -239,7 +239,7 @@ DropWatchPoint(JSContext *cx, JSWatchPoint *wp)
     JS_LOCK_OBJ_VOID(cx, wp->object,
 		     js_DropScopeProperty(cx, (JSScope *)wp->object->map,
 					  wp->sprop));
-    PR_REMOVE_LINK(&wp->links);
+    JS_REMOVE_LINK(&wp->links);
     js_RemoveRoot(cx, &wp->closure);
     JS_free(cx, wp);
 }
@@ -269,7 +269,7 @@ js_FindWatchPoint(JSRuntime *rt, JSObject *obj, jsval userid)
     return wp->sprop;
 }
 
-JSBool PR_CALLBACK
+JSBool JS_DLL_CALLBACK
 js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
     JSRuntime *rt;
@@ -304,7 +304,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 		    symid = (jsid)atom;
 		}
 		scope = (JSScope *) obj->map;
-		PR_ASSERT(scope->props);
+		JS_ASSERT(scope->props);
 		ok = LOCKED_OBJ_GET_CLASS(obj)->addProperty(cx, obj, sprop->id,
 							    &value);
 		if (!ok) {
@@ -329,7 +329,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 	    return ok;
 	}
     }
-    PR_ASSERT(0);	/* XXX can't happen */
+    JS_ASSERT(0);	/* XXX can't happen */
     return JS_FALSE;
 }
 
@@ -345,8 +345,8 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval id,
     JSWatchPoint *wp;
 
     if (!OBJ_IS_NATIVE(obj)) {
-	JS_ReportError(cx, "can't watch non-native objects of class %s",
-		       OBJ_GET_CLASS(cx, obj)->name);
+	JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_WATCH,
+			     OBJ_GET_CLASS(cx, obj)->name);
 	return JS_FALSE;
     }
 
@@ -415,7 +415,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval id,
 	    JS_free(cx, wp);
 	    return JS_FALSE;
 	}
-	PR_APPEND_LINK(&wp->links, &rt->watchPointList);
+	JS_APPEND_LINK(&wp->links, &rt->watchPointList);
 	wp->object = obj;
 	wp->userid = id;
 	wp->sprop = js_HoldScopeProperty(cx, (JSScope *)obj->map, sprop);
@@ -580,11 +580,35 @@ JS_IsNativeFrame(JSContext *cx, JSStackFrame *fp)
     return fp->fun && fp->fun->call;
 }
 
+/* this is deprecated, use JS_GetFrameScopeChain instead */
 JS_PUBLIC_API(JSObject *)
 JS_GetFrameObject(JSContext *cx, JSStackFrame *fp)
 {
     return fp->scopeChain;
 }
+
+JS_PUBLIC_API(JSObject *)
+JS_GetFrameScopeChain(JSContext *cx, JSStackFrame *fp)
+{
+    /* Force creation of argument and call objects if not yet created */
+    JS_GetFrameCallObject(cx, fp);
+    return fp->scopeChain;
+}
+
+JS_PUBLIC_API(JSObject *)
+JS_GetFrameCallObject(JSContext *cx, JSStackFrame *fp)
+{
+    if (! fp->fun)
+	return NULL;
+    /* Force creation of argument object if not yet created */
+     js_GetArgsObject(cx, fp);
+#if JS_HAS_CALL_OBJECT
+    return js_GetCallObject(cx, fp, NULL, NULL);
+#else
+    return NULL;
+#endif /* JS_HAS_CALL_OBJECT */
+}
+
 
 JS_PUBLIC_API(JSObject *)
 JS_GetFrameThis(JSContext *cx, JSStackFrame *fp)
@@ -597,6 +621,30 @@ JS_GetFrameFunction(JSContext *cx, JSStackFrame *fp)
 {
     return fp->fun;
 }
+
+JS_PUBLIC_API(JSBool)
+JS_IsContructorFrame(JSContext *cx, JSStackFrame *fp)
+{
+    return fp->constructing;
+}        
+
+JS_PUBLIC_API(JSBool)
+JS_IsDebuggerFrame(JSContext *cx, JSStackFrame *fp)
+{
+    return fp->debugging;
+}        
+
+JS_PUBLIC_API(jsval)
+JS_GetFrameReturnValue(JSContext *cx, JSStackFrame *fp)
+{
+    return fp->rval;
+}        
+
+JS_PUBLIC_API(void)
+JS_SetFrameReturnValue(JSContext *cx, JSStackFrame *fp, jsval rval)
+{
+    fp->rval = rval;
+}        
 
 /************************************************************************/
 
@@ -680,12 +728,22 @@ JS_GetPropertyDesc(JSContext *cx, JSObject *obj, JSScopeProperty *sprop,
 
     sym = sprop->symbols;
     pd->id = sym ? js_IdToValue(sym_id(sym)) : JSVAL_VOID;
-    pd->value = OBJ_GET_SLOT(cx, obj, sprop->slot);
+    if (!sym || !js_GetProperty(cx, obj, sym_id(sym), &pd->value))
+	pd->value = OBJ_GET_SLOT(cx, obj, sprop->slot);
     pd->flags = ((sprop->attrs & JSPROP_ENUMERATE)      ? JSPD_ENUMERATE : 0)
 	      | ((sprop->attrs & JSPROP_READONLY)       ? JSPD_READONLY  : 0)
 	      | ((sprop->attrs & JSPROP_PERMANENT)      ? JSPD_PERMANENT : 0)
+#if JS_HAS_CALL_OBJECT
+	      | ((sprop->getter == js_GetCallVariable)  ? JSPD_VARIABLE  : 0)
+#endif /* JS_HAS_CALL_OBJECT */
 	      | ((sprop->getter == js_GetArgument)      ? JSPD_ARGUMENT  : 0)
 	      | ((sprop->getter == js_GetLocalVariable) ? JSPD_VARIABLE  : 0);
+#if JS_HAS_CALL_OBJECT
+    /* for Call Object 'real' getter isn't passed in to us */
+    if (OBJ_GET_CLASS(cx, obj) == &js_CallClass &&
+	OBJ_GET_CLASS(cx, obj)->getProperty == sprop->getter)
+	pd->flags |= JSPD_ARGUMENT;
+#endif /* JS_HAS_CALL_OBJECT */
     pd->spare = 0;
     pd->slot = (pd->flags & (JSPD_ARGUMENT | JSPD_VARIABLE))
 	       ? JSVAL_TO_INT(sprop->id)
@@ -706,11 +764,16 @@ JS_GetPropertyDescArray(JSContext *cx, JSObject *obj, JSPropertyDescArray *pda)
     uint32 i, n;
     JSPropertyDesc *pd;
     JSScopeProperty *sprop;
+    jsval state;
+    jsid  num_prop;
 
-    if (!OBJ_GET_CLASS(cx, obj)->enumerate(cx, obj))
+    if (!OBJ_ENUMERATE(cx, obj, JSENUMERATE_INIT, &state, &num_prop))
 	return JS_FALSE;
     scope = (JSScope *)obj->map;
-    if (!scope->props) {
+    /* have no props, or object's scope has not mutated from that of proto */
+    if (!scope->props ||
+	(OBJ_GET_PROTO(cx,obj) &&
+	 scope == (JSScope *)(OBJ_GET_PROTO(cx,obj)->map))) {
 	pda->length = 0;
 	pda->array = NULL;
 	return JS_TRUE;
@@ -767,3 +830,35 @@ JS_SetDebuggerHandler(JSRuntime *rt, JSTrapHandler handler, void *closure)
     rt->debuggerHandlerData = closure;
     return JS_TRUE;
 }
+
+JS_PUBLIC_API(JSBool)
+JS_SetSourceHandler(JSRuntime *rt, JSSourceHandler handler, void *closure)
+{
+    rt->sourceHandler = handler;
+    rt->sourceHandlerData = closure;
+    return JS_TRUE;
+}        
+
+JS_PUBLIC_API(JSBool)
+JS_SetExecuteHook(JSRuntime *rt, JSInterpreterHook hook, void *closure)
+{
+    rt->executeHook = hook;
+    rt->executeHookData = closure;
+    return JS_TRUE;
+}        
+
+JS_PUBLIC_API(JSBool)
+JS_SetCallHook(JSRuntime *rt, JSInterpreterHook hook, void *closure)
+{
+    rt->callHook = hook;
+    rt->callHookData = closure;
+    return JS_TRUE;
+}        
+
+JS_PUBLIC_API(JSBool)
+JS_SetObjectHook(JSRuntime *rt, JSObjectHook hook, void *closure)
+{
+    rt->objectHook = hook;
+    rt->objectHookData = closure;
+    return JS_TRUE;
+}        

@@ -25,7 +25,7 @@
 #include "jspubtd.h"
 #include "jsscan.h"
 
-PR_BEGIN_EXTERN_C
+JS_BEGIN_EXTERN_C
 
 /*
  * Parsing builds a tree of nodes that directs code generation.  This tree is
@@ -55,11 +55,11 @@ PR_BEGIN_EXTERN_C
  *                            Each sub-tree's root node has a pn_op in the set
  *                            JSOP_IMPORT{ALL,PROP,ELEM}
  * TOK_IF       ternary     pn_kid1: cond, pn_kid2: then, pn_kid3: else or null
- * TOK_SWITCH   ternary     pn_kid1: discriminant
- *                          pn_kid2: list of TOK_CASE nodes
- *                          pn_kid3: TOK_LC node for default statements or null
- * TOK_CASE     binary      pn_left: case expr
- *                          pn_right: TOK_LC node for case statements
+ * TOK_SWITCH   binary      pn_left: discriminant
+ *                          pn_right: list of TOK_CASE nodes, with at most one
+ *                            TOK_DEFAULT node
+ * TOK_CASE,    binary      pn_left: case expr or null if TOK_DEFAULT
+ * TOK_DEFAULT              pn_right: TOK_LC node for this case's statements
  * TOK_WHILE    binary      pn_left: cond, pn_right: body
  * TOK_DO       binary      pn_left: body, pn_right: cond
  * TOK_FOR      binary      pn_left: either
@@ -125,6 +125,9 @@ PR_BEGIN_EXTERN_C
  *                          each has pn_left: property id, pn_right: value
  *                          #n={...} produces TOK_DEFSHARP at head of list
  * TOK_DEFSHARP unary       pn_num: jsint value of n in #n=
+ *                          pn_kid: null for #n=[...] and #n={...}, primary
+ *                          if #n=primary for function, paren, name, object
+ *                          literal expressions
  * TOK_USESHARP nullary     pn_num: jsint value of n in #n#
  * TOK_RP       unary       pn_kid: parenthesized expression
  * TOK_NAME,    name        pn_atom: name, string, or object atom
@@ -151,34 +154,34 @@ struct JSParseNode {
     JSParseNodeArity    pn_arity;
     union {
 	struct {                        /* TOK_FUNCTION node */
-            JSFunction  *fun;           /* function object private data */
-            JSParseNode *body;          /* TOK_LC list of statements */
+	    JSFunction  *fun;           /* function object private data */
+	    JSParseNode *body;          /* TOK_LC list of statements */
 	    uint32      tryCount;       /* try statement count */
 	} func;
-        struct {                        /* list of next-linked nodes */
+	struct {                        /* list of next-linked nodes */
 	    JSParseNode *head;          /* first node in list */
 	    JSParseNode **tail;         /* ptr to ptr to last node in list */
 	    uint32      count;          /* number of nodes in list */
 	    JSBool      extra;          /* extra comma flag for [1,2,,] */
-        } list;
-        struct {                        /* ternary: if, switch, for(;;), ?: */
-            JSParseNode *kid1;          /* condition, discriminant, etc. */
-            JSParseNode *kid2;          /* then-part, case list, etc. */
-            JSParseNode *kid3;          /* else-part, default case, etc. */
+	} list;
+	struct {                        /* ternary: if, for(;;), ?: */
+	    JSParseNode *kid1;          /* condition, discriminant, etc. */
+	    JSParseNode *kid2;          /* then-part, case list, etc. */
+	    JSParseNode *kid3;          /* else-part, default case, etc. */
 	} ternary;
-        struct {                        /* two kids if binary */
-            JSParseNode *left;
-            JSParseNode *right;
+	struct {                        /* two kids if binary */
+	    JSParseNode *left;
+	    JSParseNode *right;
 	    jsval       val;            /* switch case value */
-        } binary;
-        struct {                        /* one kid if unary */
-            JSParseNode *kid;
-            jsint       num;            /* -1 or arg or local/sharp var num */
-        } unary;
-        struct {                        /* name, labeled statement, etc. */
-            JSAtom      *atom;          /* name or label atom, null if slot */
-            JSParseNode *expr;          /* object or initializer */
-            jsint       slot;           /* -1 or arg or local var slot */
+	} binary;
+	struct {                        /* one kid if unary */
+	    JSParseNode *kid;
+	    jsint       num;            /* -1 or arg or local/sharp var num */
+	} unary;
+	struct {                        /* name, labeled statement, etc. */
+	    JSAtom      *atom;          /* name or label atom, null if slot */
+	    JSParseNode *expr;          /* object or initializer */
+	    jsint       slot;           /* -1 or arg or local var slot */
 	} name;
 	jsdouble        dval;           /* aligned numeric literal value */
     } pn_u;
@@ -213,25 +216,25 @@ struct JSParseNode {
     ((JSParseNode *)((char *)(list)->pn_tail - offsetof(JSParseNode, pn_next)))
 
 #define PN_INIT_LIST(list)                                                    \
-    PR_BEGIN_MACRO                                                            \
-    	(list)->pn_head = NULL;                                               \
-    	(list)->pn_tail = &(list)->pn_head;                                   \
-    	(list)->pn_count = 0;                                                 \
-    PR_END_MACRO
+    JS_BEGIN_MACRO                                                            \
+	(list)->pn_head = NULL;                                               \
+	(list)->pn_tail = &(list)->pn_head;                                   \
+	(list)->pn_count = 0;                                                 \
+    JS_END_MACRO
 
 #define PN_INIT_LIST_1(list, pn)                                              \
-    PR_BEGIN_MACRO                                                            \
-    	(list)->pn_head = (pn);                                               \
-    	(list)->pn_tail = &(pn)->pn_next;                                     \
-    	(list)->pn_count = 1;                                                 \
-    PR_END_MACRO
+    JS_BEGIN_MACRO                                                            \
+	(list)->pn_head = (pn);                                               \
+	(list)->pn_tail = &(pn)->pn_next;                                     \
+	(list)->pn_count = 1;                                                 \
+    JS_END_MACRO
 
 #define PN_APPEND(list, pn)                                                   \
-    PR_BEGIN_MACRO                                                            \
+    JS_BEGIN_MACRO                                                            \
 	*(list)->pn_tail = (pn);                                              \
 	(list)->pn_tail = &(pn)->pn_next;                                     \
 	(list)->pn_count++;                                                   \
-    PR_END_MACRO
+    JS_END_MACRO
 
 /* New names to connote code generation in addition to parse tree gen. */
 #define js_CompileTokenStream   js_Parse
@@ -248,6 +251,6 @@ js_CompileFunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun);
 extern JSBool
 js_FoldConstants(JSContext *cx, JSParseNode *pn);
 
-PR_END_EXTERN_C
+JS_END_EXTERN_C
 
 #endif /* jsparse_h___ */

@@ -21,9 +21,9 @@
  */
 #include "jsstddef.h"
 #include <string.h>
-#include "prtypes.h"
-#include "prlog.h"
-#include "prprf.h"
+#include "jstypes.h"
+#include "jsutil.h" /* Added by JSIFY */
+#include "jsprf.h"
 #include "jsapi.h"
 #include "jsatom.h"
 #include "jscntxt.h"
@@ -58,7 +58,7 @@ script_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     script = JS_GetPrivate(cx, obj);
 
     /* Let n count the source string length, j the "front porch" length. */
-    j = PR_snprintf(buf, sizeof buf, "(new %s(", js_ScriptClass.name);
+    j = JS_snprintf(buf, sizeof buf, "(new %s(", js_ScriptClass.name);
     n = j + 2;
     if (!script) {
 	/* Let k count the constructor argument string length. */
@@ -71,12 +71,12 @@ script_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 				 (uintN)indent);
 	if (!str)
 	    return JS_FALSE;
-    	str = js_QuoteString(cx, str, '\'');
+	str = js_QuoteString(cx, str, '\'');
 	if (!str)
 	    return JS_FALSE;
-        s = str->chars;
+	s = str->chars;
 	k = str->length;
-    	n += k;
+	n += k;
     }
 
     /* Allocate the source string and copy into it. */
@@ -111,11 +111,11 @@ script_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     JSString *str;
 
     if (!JS_InstanceOf(cx, obj, &js_ScriptClass, argv))
-    	return JS_FALSE;
+	return JS_FALSE;
     script = JS_GetPrivate(cx, obj);
     if (!script) {
-    	*rval = STRING_TO_JSVAL(cx->runtime->emptyString);
-    	return JS_TRUE;
+	*rval = STRING_TO_JSVAL(cx->runtime->emptyString);
+	return JS_TRUE;
     }
 
     indent = 0;
@@ -124,7 +124,7 @@ script_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     str = JS_DecompileScript(cx, script, "Script.prototype.toString",
 			     (uintN)indent);
     if (!str)
-    	return JS_FALSE;
+	return JS_FALSE;
     *rval = STRING_TO_JSVAL(str);
     return JS_TRUE;
 }
@@ -143,26 +143,26 @@ script_compile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     /* If no args, leave private undefined and return early. */
     if (argc == 0)
-    	goto out;
+	goto out;
 
     /* Otherwise, the first arg is the script source to compile. */
     str = js_ValueToString(cx, argv[0]);
     if (!str)
-    	return JS_FALSE;
+	return JS_FALSE;
 
     /* Compile using the caller's scope chain, which js_Invoke passes to fp. */
     fp = cx->fp;
     caller = fp->down;
-    PR_ASSERT(fp->scopeChain == caller->scopeChain);
+    JS_ASSERT(fp->scopeChain == caller->scopeChain);
 
     scopeobj = NULL;
     if (argc >= 2) {
-    	if (!js_ValueToObject(cx, argv[1], &scopeobj))
+	if (!js_ValueToObject(cx, argv[1], &scopeobj))
 	    return JS_FALSE;
-    	argv[1] = OBJECT_TO_JSVAL(scopeobj);
+	argv[1] = OBJECT_TO_JSVAL(scopeobj);
     }
     if (!scopeobj)
-    	scopeobj = caller->scopeChain;
+	scopeobj = caller->scopeChain;
 
     if (caller->script) {
 	file = caller->script->filename;
@@ -179,13 +179,13 @@ script_compile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 					     str->chars, str->length,
 					     file, line);
     if (!script)
-    	return JS_FALSE;
+	return JS_FALSE;
 
     /* Swap script for obj's old script, if any. */
     oldscript = JS_GetPrivate(cx, obj);
     if (!JS_SetPrivate(cx, obj, script)) {
 	js_DestroyScript(cx, script);
-    	return JS_FALSE;
+	return JS_FALSE;
     }
     if (oldscript)
 	js_DestroyScript(cx, oldscript);
@@ -205,25 +205,25 @@ script_exec(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSObject *scopeobj;
 
     if (!JS_InstanceOf(cx, obj, &js_ScriptClass, argv))
-    	return JS_FALSE;
+	return JS_FALSE;
     script = JS_GetPrivate(cx, obj);
     if (!script)
-    	return JS_TRUE;
+	return JS_TRUE;
 
     scopeobj = NULL;
     if (argc) {
-    	if (!js_ValueToObject(cx, argv[0], &scopeobj))
+	if (!js_ValueToObject(cx, argv[0], &scopeobj))
 	    return JS_FALSE;
-    	argv[0] = OBJECT_TO_JSVAL(scopeobj);
+	argv[0] = OBJECT_TO_JSVAL(scopeobj);
     }
 
     /* Emulate eval() by using caller's this, scope chain, and sharp array. */
     fp = cx->fp;
     caller = fp->down;
     if (!scopeobj)
-    	scopeobj = caller->scopeChain;
+	scopeobj = caller->scopeChain;
     fp->thisp = caller->thisp;
-    PR_ASSERT(fp->scopeChain == caller->scopeChain);
+    JS_ASSERT(fp->scopeChain == caller->scopeChain);
     fp->sharpArray = caller->sharpArray;
     return js_Execute(cx, scopeobj, script, NULL, fp, JS_FALSE, rval);
 }
@@ -271,15 +271,15 @@ XDRAtomMap(JSXDRState *xdr, JSAtomMap *map)
 	JSAtomListElement *ale;
 
 	cx = xdr->cx;
-	mark = PR_ARENA_MARK(&cx->tempPool);
+	mark = JS_ARENA_MARK(&cx->tempPool);
 	ATOM_LIST_INIT(&al);
 	for (i = 0; i < length; i++) {
-	    PR_ARENA_ALLOCATE(ale, &cx->tempPool, sizeof(*ale));
+	    JS_ARENA_ALLOCATE(ale, &cx->tempPool, sizeof(*ale));
 	    if (!ale ||
 		!XDRAtom1(xdr, ale)) {
 		if (!ale)
 		    JS_ReportOutOfMemory(cx);
-		PR_ARENA_RELEASE(&cx->tempPool, mark);
+		JS_ARENA_RELEASE(&cx->tempPool, mark);
 		return JS_FALSE;
 	    }
 	    ale->next = al.list;
@@ -287,10 +287,10 @@ XDRAtomMap(JSXDRState *xdr, JSAtomMap *map)
 	    al.list = ale;
 	}
 	if (!js_InitAtomMap(cx, map, &al)) {
-	    PR_ARENA_RELEASE(&cx->tempPool, mark);
+	    JS_ARENA_RELEASE(&cx->tempPool, mark);
 	    return JS_FALSE;
 	}
-	PR_ARENA_RELEASE(&cx->tempPool, mark);
+	JS_ARENA_RELEASE(&cx->tempPool, mark);
     } else if (xdr->mode == JSXDR_ENCODE) {
 	JSAtomListElement ale;
 
@@ -389,7 +389,7 @@ script_freeze(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 	goto out;
     }
 
-    PR_ASSERT((prword)buf % sizeof(jschar) == 0);
+    JS_ASSERT((jsword)buf % sizeof(jschar) == 0);
     len /= sizeof(jschar);
     str = JS_NewUCStringCopyN(cx, (jschar *)buf, len);
     if (!str) {
@@ -405,7 +405,7 @@ script_freeze(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     /* Swap bytes in Unichars to keep frozen strings machine-independent. */
     chars = JS_GetStringChars(str);
     for (i = 0; i < len; i++)
-    	chars[i] = JSXDR_SWAB16(chars[i]);
+	chars[i] = JSXDR_SWAB16(chars[i]);
   }
 #endif
     *rval = STRING_TO_JSVAL(str);
@@ -430,10 +430,10 @@ script_thaw(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 	return JS_FALSE;
 
     if (argc == 0)
-    	return JS_TRUE;
+	return JS_TRUE;
     str = js_ValueToString(cx, argv[0]);
     if (!str)
-    	return JS_FALSE;
+	return JS_FALSE;
 
     /* create new XDR */
     xdr = JS_XDRNewMem(cx, JSXDR_DECODE);
@@ -451,9 +451,9 @@ script_thaw(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     from = (jschar *)buf;
     to = JS_malloc(cx, len * sizeof(jschar));
     if (!to)
-    	return JS_FALSE;
+	return JS_FALSE;
     for (i = 0; i < len; i++)
-    	to[i] = JSXDR_SWAB16(from[i]);
+	to[i] = JSXDR_SWAB16(from[i]);
     buf = (char *)to;
   }
 #endif
@@ -522,7 +522,7 @@ script_finalize(JSContext *cx, JSObject *obj)
 
     script = JS_GetPrivate(cx, obj);
     if (script)
-    	js_DestroyScript(cx, script);
+	js_DestroyScript(cx, script);
 }
 
 static JSBool
@@ -546,8 +546,8 @@ Script(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     /* If not constructing, replace obj with a new Script object. */
     if (!cx->fp->constructing) {
-    	obj = js_NewObject(cx, &js_ScriptClass, NULL, NULL);
-    	if (!obj)
+	obj = js_NewObject(cx, &js_ScriptClass, NULL, NULL);
+	if (!obj)
 	    return JS_FALSE;
     }
     return script_compile(cx, obj, argc, argv, rval);
@@ -563,7 +563,7 @@ script_static_thaw(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     if (!obj)
 	return JS_FALSE;
     if (!script_thaw(cx, obj, argc, argv, rval))
-    	return JS_FALSE;
+	return JS_FALSE;
     *rval = OBJECT_TO_JSVAL(obj);
     return JS_TRUE;
 }
@@ -612,11 +612,11 @@ js_NewScriptFromParams(JSContext *cx, jsbytecode *code, uint32 length,
 
     script = js_NewScript(cx, length);
     if (!script)
-        return NULL;
+	return NULL;
     memcpy(script->code, code, length * sizeof(jsbytecode));
     if (filename) {
-        script->filename = JS_strdup(cx, filename);
-        if (!script->filename) {
+	script->filename = JS_strdup(cx, filename);
+	if (!script->filename) {
 	    js_DestroyScript(cx, script);
 	    return NULL;
 	}
@@ -626,7 +626,7 @@ js_NewScriptFromParams(JSContext *cx, jsbytecode *code, uint32 length,
     script->notes = notes;
     script->trynotes = trynotes;
     if (principals)
-        JSPRINCIPALS_HOLD(cx, principals);
+	JSPRINCIPALS_HOLD(cx, principals);
     script->principals = principals;
     return script;
 }
@@ -648,7 +648,7 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg, JSFunction *fun)
 				    cg->maxStackDepth, notes, trynotes,
 				    cg->principals);
     if (!script)
-        return NULL;
+	return NULL;
     if (!notes || !js_InitAtomMap(cx, &script->atomMap, &cg->atomList)) {
 	js_DestroyScript(cx, script);
 	return NULL;
@@ -658,8 +658,8 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg, JSFunction *fun)
     rt = cx->runtime;
     hook = rt->newScriptHook;
     if (hook) {
-        (*hook)(cx, cg->filename, cg->firstLine, script, fun,
-        	rt->newScriptHookData);
+	(*hook)(cx, cg->filename, cg->firstLine, script, fun,
+		rt->newScriptHookData);
     }
     return script;
 }
@@ -673,17 +673,15 @@ js_DestroyScript(JSContext *cx, JSScript *script)
     rt = cx->runtime;
     hook = rt->destroyScriptHook;
     if (hook)
-        (*hook)(cx, script, rt->destroyScriptHookData);
+	(*hook)(cx, script, rt->destroyScriptHookData);
 
     JS_ClearScriptTraps(cx, script);
     js_FreeAtomMap(cx, &script->atomMap);
-    if (js_InterpreterHooks && js_InterpreterHooks->destroyScript)
-        js_InterpreterHooks->destroyScript(cx, script);
     JS_free(cx, (void *)script->filename);
     JS_free(cx, script->notes);
     JS_free(cx, script->trynotes);
     if (script->principals)
-        JSPRINCIPALS_DROP(cx, script->principals);
+	JSPRINCIPALS_DROP(cx, script->principals);
     JS_free(cx, script);
 }
 
@@ -695,14 +693,14 @@ js_GetSrcNote(JSScript *script, jsbytecode *pc)
 
     sn = script->notes;
     if (!sn)
-        return NULL;
+	return NULL;
     target = PTRDIFF(pc, script->code, jsbytecode);
     if ((uintN)target >= script->length)
-        return NULL;
+	return NULL;
     for (offset = 0; !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {
-        offset += SN_DELTA(sn);
-        if (offset == target && SN_IS_GETTABLE(sn))
-            return sn;
+	offset += SN_DELTA(sn);
+	if (offset == target && SN_IS_GETTABLE(sn))
+	    return sn;
     }
     return NULL;
 }
@@ -717,21 +715,21 @@ js_PCToLineNumber(JSScript *script, jsbytecode *pc)
 
     sn = script->notes;
     if (!sn)
-        return 0;
+	return 0;
     target = PTRDIFF(pc, script->code, jsbytecode);
     lineno = script->lineno;
     for (offset = 0; !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {
-        offset += SN_DELTA(sn);
-        type = SN_TYPE(sn);
-        if (type == SRC_SETLINE) {
-            if (offset <= target)
-                lineno = (uintN) js_GetSrcNoteOffset(sn, 0);
-        } else if (type == SRC_NEWLINE) {
-            if (offset <= target)
-                lineno++;
-        }
-        if (offset > target)
-            break;
+	offset += SN_DELTA(sn);
+	type = SN_TYPE(sn);
+	if (type == SRC_SETLINE) {
+	    if (offset <= target)
+		lineno = (uintN) js_GetSrcNoteOffset(sn, 0);
+	} else if (type == SRC_NEWLINE) {
+	    if (offset <= target)
+		lineno++;
+	}
+	if (offset > target)
+	    break;
     }
     return lineno;
 }
@@ -746,18 +744,18 @@ js_LineNumberToPC(JSScript *script, uintN target)
 
     sn = script->notes;
     if (!sn)
-        return NULL;
+	return NULL;
     lineno = script->lineno;
     for (offset = 0; !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {
-        if (lineno >= target)
-            break;
-        offset += SN_DELTA(sn);
-        type = SN_TYPE(sn);
-        if (type == SRC_SETLINE) {
-            lineno = (uintN) js_GetSrcNoteOffset(sn, 0);
-        } else if (type == SRC_NEWLINE) {
-            lineno++;
-        }
+	if (lineno >= target)
+	    break;
+	offset += SN_DELTA(sn);
+	type = SN_TYPE(sn);
+	if (type == SRC_SETLINE) {
+	    lineno = (uintN) js_GetSrcNoteOffset(sn, 0);
+	} else if (type == SRC_NEWLINE) {
+	    lineno++;
+	}
     }
     return script->code + offset;
 }
@@ -771,15 +769,15 @@ js_GetScriptLineExtent(JSScript *script)
 
     sn = script->notes;
     if (!sn)
-        return 0;
+	return 0;
     lineno = script->lineno;
     for (; !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {
-        type = SN_TYPE(sn);
-        if (type == SRC_SETLINE) {
-            lineno = (uintN) js_GetSrcNoteOffset(sn, 0);
-        } else if (type == SRC_NEWLINE) {
-            lineno++;
-        }
+	type = SN_TYPE(sn);
+	if (type == SRC_SETLINE) {
+	    lineno = (uintN) js_GetSrcNoteOffset(sn, 0);
+	} else if (type == SRC_NEWLINE) {
+	    lineno++;
+	}
     }
     return 1 + lineno - script->lineno;
 }

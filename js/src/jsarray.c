@@ -22,9 +22,8 @@
 #include "jsstddef.h"
 #include <stdlib.h>
 #include <string.h>
-#include "prtypes.h"
-#include "prlog.h"
-#include "prprf.h"
+#include "jstypes.h"
+#include "jsutil.h" /* Added by JSIFY */
 #include "jsapi.h"
 #include "jsarray.h"
 #include "jsatom.h"
@@ -66,11 +65,11 @@ IdIsIndex(jsid id, jsuint *indexp)
 
     if (JSVAL_IS_INT(id)) {
 	jsint i;
-        i = JSVAL_TO_INT(id);
-        if (i < 0)
-            return JS_FALSE;
-        *indexp = (jsuint)i;
-        return JS_TRUE;
+	i = JSVAL_TO_INT(id);
+	if (i < 0)
+	    return JS_FALSE;
+	*indexp = (jsuint)i;
+	return JS_TRUE;
     }
 
     /* It must be a string. */
@@ -78,26 +77,26 @@ IdIsIndex(jsid id, jsuint *indexp)
     cp = str->chars;
     if (JS7_ISDEC(*cp) && str->length < sizeof(MAXSTR)) {
 	jsuint index = JS7_UNDEC(*cp++);
-        jsuint oldIndex = 0;
-        jsint c;
-        if (index != 0) {
-            while (JS7_ISDEC(*cp)) {
-                oldIndex = index;
-                c = JS7_UNDEC(*cp);
-                index = 10*index + c;
-	        cp++;
+	jsuint oldIndex = 0;
+	jsint c;
+	if (index != 0) {
+	    while (JS7_ISDEC(*cp)) {
+		oldIndex = index;
+		c = JS7_UNDEC(*cp);
+		index = 10*index + c;
+		cp++;
 	    }
-        }
-        /* Make sure all characters were consumed and that it couldn't
-         * have overflowed.
-         */
-        if (*cp == 0 &&
-             (oldIndex < (MAXINDEX / 10) ||
-              (oldIndex == (MAXINDEX / 10) && c < (MAXINDEX % 10))))
-        {
-            *indexp = index;
-            return JS_TRUE;
-        }
+	}
+	/* Make sure all characters were consumed and that it couldn't
+	 * have overflowed.
+	 */
+	if (*cp == 0 &&
+	     (oldIndex < (MAXINDEX / 10) ||
+	      (oldIndex == (MAXINDEX / 10) && c < (MAXINDEX % 10))))
+	{
+	    *indexp = index;
+	    return JS_TRUE;
+	}
     }
     return JS_FALSE;
 }
@@ -116,18 +115,18 @@ ValueIsLength(JSContext *cx, jsval v, jsuint *lengthp)
      * javascript.
      */
     if (JSVAL_IS_INT(v)) {
-        i = JSVAL_TO_INT(v);
-        /* jsuint cast does ToUint32 */
+	i = JSVAL_TO_INT(v);
+	/* jsuint cast does ToUint32 */
 	if (lengthp)
-            *lengthp = (jsuint) i;
-        return JS_TRUE;
+	    *lengthp = (jsuint) i;
+	return JS_TRUE;
     }
     if (JSVAL_IS_DOUBLE(v)) {
-        /*
+	/*
 	 * XXXmccabe I'd love to add another check here, against
-         * js_DoubleToInteger(d) != d), so that ValueIsLength matches
-         * IdIsIndex, but it doesn't seem to follow from ECMA.
-         * (seems to be appropriate for IdIsIndex, though).
+	 * js_DoubleToInteger(d) != d), so that ValueIsLength matches
+	 * IdIsIndex, but it doesn't seem to follow from ECMA.
+	 * (seems to be appropriate for IdIsIndex, though).
 	 */
 	return js_ValueToECMAUint32(cx, v, (uint32 *)lengthp);
     }
@@ -142,10 +141,10 @@ ValueToIndex(JSContext *cx, jsval v, jsuint *lengthp)
 
     if (JSVAL_IS_INT(v)) {
 	i = JSVAL_TO_INT(v);
-        /* jsuint cast does ToUint32. */
+	/* jsuint cast does ToUint32. */
 	if (lengthp)
-            *lengthp = (jsuint)i;
-        return JS_TRUE;
+	    *lengthp = (jsuint)i;
+	return JS_TRUE;
     }
     return js_ValueToECMAUint32(cx, v, (uint32 *)lengthp);
 }
@@ -165,10 +164,10 @@ js_GetLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp)
      * called during init time.
      */
     if (JSVAL_IS_INT(v)) {
-        i = JSVAL_TO_INT(v);
-        /* jsuint cast does ToUint32. */
-        *lengthp = (jsuint)i;
-        return JS_TRUE;
+	i = JSVAL_TO_INT(v);
+	/* jsuint cast does ToUint32. */
+	*lengthp = (jsuint)i;
+	return JS_TRUE;
     }
     return js_ValueToECMAUint32(cx, v, (uint32 *)lengthp);
 }
@@ -177,8 +176,8 @@ static JSBool
 IndexToValue(JSContext *cx, jsuint length, jsval *vp)
 {
     if (length <= JSVAL_INT_MAX) {
-        *vp = INT_TO_JSVAL(length);
-        return JS_TRUE;
+	*vp = INT_TO_JSVAL(length);
+	return JS_TRUE;
     }
     return js_NewDoubleValue(cx, (jsdouble)length, vp);
 }
@@ -198,7 +197,7 @@ IndexToId(JSContext *cx, jsuint length, jsid *idp)
 	atom = js_AtomizeString(cx, str, 0);
 	if (!atom)
 	    return JS_FALSE;
-    	*idp = (jsid)atom;
+	*idp = (jsid)atom;
 
     }
     return JS_TRUE;
@@ -211,7 +210,7 @@ js_SetLengthProperty(JSContext *cx, JSObject *obj, jsuint length)
     jsid id;
 
     if (!IndexToValue(cx, length, &v))
-    	return JS_FALSE;
+	return JS_FALSE;
     id = (jsid) cx->runtime->atomState.lengthAtom;
     return OBJ_SET_PROPERTY(cx, obj, id, &v);
 }
@@ -229,7 +228,7 @@ js_HasLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp)
     ok = OBJ_GET_PROPERTY(cx, obj, id, &v);
     JS_SetErrorReporter(cx, older);
     if (!ok)
-        return JS_FALSE;
+	return JS_FALSE;
     return ValueIsLength(cx, v, lengthp);
 }
 
@@ -272,7 +271,7 @@ array_addProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     if (!(IdIsIndex(id, &index)))
 	return JS_TRUE;
     if (!js_GetLengthProperty(cx, obj, &length))
-    	return JS_FALSE;
+	return JS_FALSE;
     if (index >= length) {
 	length = index + 1;
 	return js_SetLengthProperty(cx, obj, length);
@@ -298,8 +297,7 @@ array_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 	    return JS_TRUE;
 	}
     }
-    js_TryValueOf(cx, obj, type, vp);
-    return JS_TRUE;
+    return js_TryValueOf(cx, obj, type, vp);
 }
 
 JSClass js_ArrayClass = {
@@ -320,7 +318,7 @@ array_join_sub(JSContext *cx, JSObject *obj, JSString *sep, JSBool literalize,
     size_t nchars, growth, seplen;
     const jschar *sepstr;
     JSString *str;
-    PRHashEntry *he;
+    JSHashEntry *he;
 
     ok = js_GetLengthProperty(cx, obj, &length);
     if (!ok)
@@ -358,7 +356,7 @@ array_join_sub(JSContext *cx, JSObject *obj, JSString *sep, JSBool literalize,
 	    nchars = js_strlen(chars);
 	    chars = realloc((ochars = chars), nchars * sizeof(jschar) + growth);
 	    if (!chars) {
-	    	free(ochars);
+		free(ochars);
 		goto done;
 	    }
 	}
@@ -495,8 +493,7 @@ array_join(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 static JSBool
 array_nyi(JSContext *cx, const char *what)
 {
-    JS_ReportError(cx, "sorry, Array.prototype.%s is not yet implemented",
-		   what);
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NO_PROTO, what);
     return JS_FALSE;
 }
 #endif
@@ -509,7 +506,7 @@ InitArrayObject(JSContext *cx, JSObject *obj, jsuint length, jsval *vector)
     jsuint index;
 
     if (!IndexToValue(cx, length, &v))
-    	return JS_FALSE;
+	return JS_FALSE;
     id = (jsid) cx->runtime->atomState.lengthAtom;
     if (!js_DefineProperty(cx, obj, id, v,
 			   array_length_getter, array_length_setter,
@@ -553,9 +550,9 @@ array_reverse(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 	    return JS_FALSE;
 	if (!OBJ_GET_PROPERTY(cx, obj, id2, &v2))
 	    return JS_FALSE;
-    	if (!OBJ_SET_PROPERTY(cx, obj, id, &v2))
+	if (!OBJ_SET_PROPERTY(cx, obj, id, &v2))
 	    return JS_FALSE;
-    	if (!OBJ_SET_PROPERTY(cx, obj, id2, &v))
+	if (!OBJ_SET_PROPERTY(cx, obj, id2, &v))
 	    return JS_FALSE;
     }
 
@@ -608,7 +605,7 @@ js_qsort_r(QSortArgs *qa, int lo, int hi)
     }
 }
 
-PRBool
+JSBool
 js_qsort(void *vec, size_t nel, size_t elsize, JSComparator cmp, void *arg)
 {
     void *pivot;
@@ -616,7 +613,7 @@ js_qsort(void *vec, size_t nel, size_t elsize, JSComparator cmp, void *arg)
 
     pivot = malloc(elsize);
     if (!pivot)
-	return PR_FALSE;
+	return JS_FALSE;
     qa.vec = vec;
     qa.elsize = elsize;
     qa.pivot = pivot;
@@ -624,7 +621,7 @@ js_qsort(void *vec, size_t nel, size_t elsize, JSComparator cmp, void *arg)
     qa.arg = arg;
     js_qsort_r(&qa, 0, (int)(nel - 1));
     free(pivot);
-    return PR_TRUE;
+    return JS_TRUE;
 }
 
 typedef struct CompareArgs {
@@ -666,20 +663,20 @@ sort_compare(const void *a, const void *b, void *arg)
 				  fval, 2, argv, &rval);
 	if (ok) {
 	    ok = js_ValueToNumber(cx, rval, &cmp);
-            /* Clamp cmp to -1, 0, 1. */
-            if (JSDOUBLE_IS_NaN(cmp)) {
-                /* XXX report some kind of error here?  ECMA talks about
-                 * 'consistent compare functions' that don't return NaN, but is
-                 * silent about what the result should be.  So we currently
-                 * ignore it.
-                 */
-                cmp = 0;
-            } else if (cmp != 0) {
-                cmp = cmp > 0 ? 1 : -1;
-            }
-        } else {
+	    /* Clamp cmp to -1, 0, 1. */
+	    if (JSDOUBLE_IS_NaN(cmp)) {
+		/* XXX report some kind of error here?  ECMA talks about
+		 * 'consistent compare functions' that don't return NaN, but is
+		 * silent about what the result should be.  So we currently
+		 * ignore it.
+		 */
+		cmp = 0;
+	    } else if (cmp != 0) {
+		cmp = cmp > 0 ? 1 : -1;
+	    }
+	} else {
 	    ca->status = ok;
-        }
+	}
     }
     return (int)cmp;
 }
@@ -699,7 +696,8 @@ array_sort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     if (argc > 0) {
 	if (JSVAL_IS_PRIMITIVE(argv[0])) {
-	    JS_ReportError(cx, "invalid Array.prototype.sort argument");
+	    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+				 JSMSG_BAD_SORT_ARG);
 	    return JS_FALSE;
 	}
 	fval = argv[0];
@@ -708,7 +706,7 @@ array_sort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     }
 
     if (!js_GetLengthProperty(cx, obj, &len))
-    	return JS_FALSE;
+	return JS_FALSE;
     vec = JS_malloc(cx, (size_t) len * sizeof(jsval));
     if (!vec)
 	return JS_FALSE;
@@ -828,7 +826,7 @@ array_pop(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     jsval junk;
 
     if (!js_GetLengthProperty(cx, obj, &index))
-    	return JS_FALSE;
+	return JS_FALSE;
     if (index > 0) {
 	index--;
 	if (!IndexToId(cx, index, &id))
@@ -856,7 +854,7 @@ array_shift(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     jsval v, junk;
 
     if (!js_GetLengthProperty(cx, obj, &length))
-    	return JS_FALSE;
+	return JS_FALSE;
     if (length > 0) {
 	length--;
 	id = JSVAL_ZERO;
@@ -906,8 +904,8 @@ array_unshift(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     if (argc > 0) {
 	/* Slide up the array to make room for argc at the bottom. */
 	if (length > 0) {
-            last = length;
-            while (last--) {
+	    last = length;
+	    while (last--) {
 		if (!IndexToId(cx, last, &id))
 		    return JS_FALSE;
 		if (!IndexToId(cx, last + argc, &id2))
@@ -916,7 +914,7 @@ array_unshift(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 		    return JS_FALSE;
 		if (!OBJ_SET_PROPERTY(cx, obj, id2, &v))
 		    return JS_FALSE;
-            }
+	    }
 	}
 
 	/* Copy from argv to the bottom of the array. */
@@ -1036,10 +1034,10 @@ array_splice(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     /* Find the direction (up or down) to copy and make way for argv. */
     if (argc > count) {
-        delta = (jsuint)argc - count;
-        last = length;
-        /* (uint) end could be 0, so can't use vanilla >= test */
-        while (last-- > end) {
+	delta = (jsuint)argc - count;
+	last = length;
+	/* (uint) end could be 0, so can't use vanilla >= test */
+	while (last-- > end) {
 	    if (!IndexToId(cx, last, &id))
 		return JS_FALSE;
 	    if (!IndexToId(cx, last + delta, &id2))
@@ -1049,9 +1047,9 @@ array_splice(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	    if (!OBJ_SET_PROPERTY(cx, obj, id2, &v))
 		return JS_FALSE;
 	}
-        length += delta;
+	length += delta;
     } else if (argc < count) {
-        delta = count - (jsuint)argc;
+	delta = count - (jsuint)argc;
 	for (last = end; last < length; last++) {
 	    if (!IndexToId(cx, last, &id))
 		return JS_FALSE;
@@ -1062,7 +1060,7 @@ array_splice(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	    if (!OBJ_SET_PROPERTY(cx, obj, id2, &v))
 		return JS_FALSE;
 	}
-        length -= delta;
+	length -= delta;
     }
 
     /* Copy from argv into the hole to complete the splice. */
@@ -1103,19 +1101,19 @@ array_concat(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     /* XXXmccabe Might make sense to recast all of this as a do-while. */
     if (js_HasLengthProperty(cx, obj, &length)) {
-        for (slot = 0; slot < length; slot++) {
-            if (!IndexToId(cx, slot, &id))
-                return JS_FALSE;
-            if (!OBJ_GET_PROPERTY(cx, obj, id, &v))
-                return JS_FALSE;
-            if (!OBJ_SET_PROPERTY(cx, nobj, id, &v))
-                return JS_FALSE;
-        }
+	for (slot = 0; slot < length; slot++) {
+	    if (!IndexToId(cx, slot, &id))
+		return JS_FALSE;
+	    if (!OBJ_GET_PROPERTY(cx, obj, id, &v))
+		return JS_FALSE;
+	    if (!OBJ_SET_PROPERTY(cx, nobj, id, &v))
+		return JS_FALSE;
+	}
     } else {
-        length = 1;
-        v = OBJECT_TO_JSVAL(obj);
-        if (!OBJ_SET_PROPERTY(cx, nobj, JSVAL_ZERO, &v))
-            return JS_FALSE;
+	length = 1;
+	v = OBJECT_TO_JSVAL(obj);
+	if (!OBJ_SET_PROPERTY(cx, nobj, JSVAL_ZERO, &v))
+	    return JS_FALSE;
     }
 
     for (i = 0; i < argc; i++) {
@@ -1246,8 +1244,8 @@ Array(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     /* If called without new, replace obj with a new Array object. */
     if (!cx->fp->constructing) {
-    	obj = js_NewObject(cx, &js_ArrayClass, NULL, NULL);
-    	if (!obj)
+	obj = js_NewObject(cx, &js_ArrayClass, NULL, NULL);
+	if (!obj)
 	    return JS_FALSE;
 	*rval = OBJECT_TO_JSVAL(obj);
     }
@@ -1261,7 +1259,7 @@ Array(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	/*
 	 * Only use 1 arg as first element for version 1.2; for any other
 	 * version (including 1.3), follow ECMA and use it as a length.
-         */
+	 */
 	vector = NULL;
     } else {
 	length = (jsuint) argc;
@@ -1276,11 +1274,11 @@ js_InitArrayClass(JSContext *cx, JSObject *obj)
     JSObject *proto;
 
     proto = JS_InitClass(cx, obj, NULL, &js_ArrayClass, Array, 1,
-                         NULL, array_methods, NULL, NULL);
+			 NULL, array_methods, NULL, NULL);
 
     /* Initialize the Array prototype object so it gets a length property. */
     if (!proto || !InitArrayObject(cx, proto, 0, NULL))
-        return NULL;
+	return NULL;
     return proto;
 }
 

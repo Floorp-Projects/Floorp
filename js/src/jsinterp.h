@@ -48,8 +48,6 @@ struct JSStackFrame {
     JSPackedBool    constructing;   /* true if called via new operator */
     uint8           overrides;      /* bit-set of overridden Call properties */
     JSPackedBool    debugging;      /* true if for JS_EvaluateInStackFrame */
-    JSPackedBool    throwing;       /* is there a pending exception? */
-    jsval	    exception;      /* most-recently-thrown exceptin */
     JSStackFrame    *dormantNext;   /* next dormant frame chain */
 };
 
@@ -57,23 +55,23 @@ struct JSStackFrame {
  * Property cache for quickened get/set property opcodes.
  */
 #define PROPERTY_CACHE_LOG2     10
-#define PROPERTY_CACHE_SIZE     PR_BIT(PROPERTY_CACHE_LOG2)
-#define PROPERTY_CACHE_MASK     PR_BITMASK(PROPERTY_CACHE_LOG2)
+#define PROPERTY_CACHE_SIZE     JS_BIT(PROPERTY_CACHE_LOG2)
+#define PROPERTY_CACHE_MASK     JS_BITMASK(PROPERTY_CACHE_LOG2)
 
 #define PROPERTY_CACHE_HASH(obj, id) \
-    ((((pruword)(obj) >> JSVAL_TAGBITS) ^ (pruword)(id)) & PROPERTY_CACHE_MASK)
+    ((((jsuword)(obj) >> JSVAL_TAGBITS) ^ (jsuword)(id)) & PROPERTY_CACHE_MASK)
 
 #ifdef JS_THREADSAFE
 
 #if HAVE_ATOMIC_DWORD_ACCESS
 
-#define PCE_LOAD(cache, pce, entry)     PR_ATOMIC_DWORD_LOAD(pce, entry)
-#define PCE_STORE(cache, pce, entry)    PR_ATOMIC_DWORD_STORE(pce, entry)
+#define PCE_LOAD(cache, pce, entry)     JS_ATOMIC_DWORD_LOAD(pce, entry)
+#define PCE_STORE(cache, pce, entry)    JS_ATOMIC_DWORD_STORE(pce, entry)
 
 #else  /* !HAVE_ATOMIC_DWORD_ACCESS */
 
 #define PCE_LOAD(cache, pce, entry)                                           \
-    PR_BEGIN_MACRO                                                            \
+    JS_BEGIN_MACRO                                                            \
 	uint32 _prefills;                                                     \
 	uint32 _fills = (cache)->fills;                                       \
 	do {                                                                  \
@@ -81,16 +79,16 @@ struct JSStackFrame {
 	    _prefills = _fills;                                               \
 	    (entry) = *(pce);                                                 \
 	} while ((_fills = (cache)->fills) != _prefills);                     \
-    PR_END_MACRO
+    JS_END_MACRO
 
 #define PCE_STORE(cache, pce, entry)                                          \
-    PR_BEGIN_MACRO                                                            \
+    JS_BEGIN_MACRO                                                            \
 	do {                                                                  \
 	    /* Store until no racing collider stores half or all of pce. */   \
 	    *(pce) = (entry);                                                 \
 	} while (PCE_OBJECT(*pce) != PCE_OBJECT(entry) ||                     \
 		 PCE_PROPERTY(*pce) != PCE_PROPERTY(entry));                  \
-    PR_END_MACRO
+    JS_END_MACRO
 
 #endif /* !HAVE_ATOMIC_DWORD_ACCESS */
 
@@ -126,12 +124,12 @@ typedef struct JSPropertyCache {
 } JSPropertyCache;
 
 /* Property-not-found lookup results are cached using this invalid pointer. */
-#define PROP_NOT_FOUND(obj,id)  ((JSProperty *) ((prword)(id) | 1))
-#define PROP_NOT_FOUND_ID(prop) ((jsid) ((prword)(prop) & ~1))
-#define PROP_FOUND(prop)        ((prop) && ((prword)(prop) & 1) == 0)
+#define PROP_NOT_FOUND(obj,id)  ((JSProperty *) ((jsword)(id) | 1))
+#define PROP_NOT_FOUND_ID(prop) ((jsid) ((jsword)(prop) & ~1))
+#define PROP_FOUND(prop)        ((prop) && ((jsword)(prop) & 1) == 0)
 
 #define PROPERTY_CACHE_FILL(cx, cache, obj, id, prop)                         \
-    PR_BEGIN_MACRO                                                            \
+    JS_BEGIN_MACRO                                                            \
 	uintN _hashIndex = (uintN)PROPERTY_CACHE_HASH(obj, id);               \
 	JSPropertyCache *_cache = (cache);                                    \
 	JSPropertyCacheEntry *_pce = &_cache->table[_hashIndex];              \
@@ -146,10 +144,10 @@ typedef struct JSPropertyCache {
 	_cache->empty = JS_FALSE;                                             \
 	_cache->fills++;                                                      \
 	PCE_STORE(_cache, _pce, _entry);                                      \
-    PR_END_MACRO
+    JS_END_MACRO
 
 #define PROPERTY_CACHE_TEST(cache, obj, id, prop)                             \
-    PR_BEGIN_MACRO                                                            \
+    JS_BEGIN_MACRO                                                            \
 	uintN _hashIndex = (uintN)PROPERTY_CACHE_HASH(obj, id);               \
 	JSPropertyCache *_cache = (cache);                                    \
 	JSPropertyCacheEntry *_pce = &_cache->table[_hashIndex];              \
@@ -159,7 +157,7 @@ typedef struct JSPropertyCache {
 	_pce_prop = PCE_PROPERTY(_entry);                                     \
 	_cache->tests++;                                                      \
 	if (_pce_prop &&                                                      \
-	    (((prword)_pce_prop & 1)                                          \
+	    (((jsword)_pce_prop & 1)                                          \
 	     ? PROP_NOT_FOUND_ID(_pce_prop)                                   \
 	     : sym_id(((JSScopeProperty *)_pce_prop)->symbols)) == id &&      \
 	    PCE_OBJECT(_entry) == obj) {                                      \
@@ -168,7 +166,7 @@ typedef struct JSPropertyCache {
 	    _cache->misses++;                                                 \
 	    prop = NULL;                                                      \
 	}                                                                     \
-    PR_END_MACRO
+    JS_END_MACRO
 
 extern void
 js_FlushPropertyCache(JSContext *cx);

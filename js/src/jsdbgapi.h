@@ -25,7 +25,7 @@
 #include "jsopcode.h"
 #include "jsprvtd.h"
 
-PR_BEGIN_EXTERN_C
+JS_BEGIN_EXTERN_C
 
 extern void
 js_PatchOpcode(JSContext *cx, JSScript *script, jsbytecode *pc, JSOp op);
@@ -58,10 +58,6 @@ JS_ClearInterrupt(JSRuntime *rt, JSTrapHandler *handlerp, void **closurep);
 
 /************************************************************************/
 
-typedef JSBool
-(*JSWatchPointHandler)(JSContext *cx, JSObject *obj, jsval id,
-		       jsval old, jsval *newp, void *closure);
-
 extern JS_PUBLIC_API(JSBool)
 JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval id,
 		 JSWatchPointHandler handler, void *closure);
@@ -84,7 +80,7 @@ JS_ClearAllWatchPoints(JSContext *cx);
 extern JSScopeProperty *
 js_FindWatchPoint(JSRuntime *rt, JSObject *obj, jsval userid);
 
-extern JSBool PR_CALLBACK
+extern JSBool JS_DLL_CALLBACK
 js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
 #endif
 
@@ -130,14 +126,33 @@ JS_SetFrameAnnotation(JSContext *cx, JSStackFrame *fp, void *annotation);
 extern JS_PUBLIC_API(void *)
 JS_GetFramePrincipalArray(JSContext *cx, JSStackFrame *fp);
 
+/* this is deprecated, use JS_GetFrameScopeChain instead */
 extern JS_PUBLIC_API(JSObject *)
 JS_GetFrameObject(JSContext *cx, JSStackFrame *fp);
+
+extern JS_PUBLIC_API(JSObject *)
+JS_GetFrameScopeChain(JSContext *cx, JSStackFrame *fp);
+
+extern JS_PUBLIC_API(JSObject *)
+JS_GetFrameCallObject(JSContext *cx, JSStackFrame *fp);
 
 extern JS_PUBLIC_API(JSObject *)
 JS_GetFrameThis(JSContext *cx, JSStackFrame *fp);
 
 extern JS_PUBLIC_API(JSFunction *)
 JS_GetFrameFunction(JSContext *cx, JSStackFrame *fp);
+
+extern JS_PUBLIC_API(JSBool)
+JS_IsContructorFrame(JSContext *cx, JSStackFrame *fp);
+
+extern JS_PUBLIC_API(JSBool)
+JS_IsDebuggerFrame(JSContext *cx, JSStackFrame *fp);
+
+extern JS_PUBLIC_API(jsval)
+JS_GetFrameReturnValue(JSContext *cx, JSStackFrame *fp);
+
+extern JS_PUBLIC_API(void)
+JS_SetFrameReturnValue(JSContext *cx, JSStackFrame *fp, jsval rval);
 
 /************************************************************************/
 
@@ -216,6 +231,18 @@ JS_PutPropertyDescArray(JSContext *cx, JSPropertyDescArray *pda);
 extern JS_PUBLIC_API(JSBool)
 JS_SetDebuggerHandler(JSRuntime *rt, JSTrapHandler handler, void *closure);
 
-PR_END_EXTERN_C
+extern JS_PUBLIC_API(JSBool)
+JS_SetSourceHandler(JSRuntime *rt, JSSourceHandler handler, void *closure);
+
+extern JS_PUBLIC_API(JSBool)
+JS_SetExecuteHook(JSRuntime *rt, JSInterpreterHook hook, void *closure);
+
+extern JS_PUBLIC_API(JSBool)
+JS_SetCallHook(JSRuntime *rt, JSInterpreterHook hook, void *closure);
+
+extern JS_PUBLIC_API(JSBool)
+JS_SetObjectHook(JSRuntime *rt, JSObjectHook hook, void *closure);
+
+JS_END_EXTERN_C
 
 #endif /* jsdbgapi_h___ */

@@ -22,11 +22,11 @@
  * JS math functions.
  */
 
-PR_BEGIN_EXTERN_C
+JS_BEGIN_EXTERN_C
 
 extern JSObject *
 js_InitMathClass(JSContext *cx, JSObject *obj);
 
-PR_END_EXTERN_C
+JS_END_EXTERN_C
 
 #endif /* jsmath_h___ */

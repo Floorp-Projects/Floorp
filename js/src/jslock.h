@@ -20,18 +20,14 @@
 
 #ifdef JS_THREADSAFE
 
-#include "prtypes.h"
+#include "jstypes.h"
 #include "prlock.h"
 #include "prcvar.h"
-#ifndef NSPR20
-#include "prhash.h"
-#else
-#include "plhash.h"
-#endif
+#include "jshash.h" /* Added by JSIFY */
 
-#define Thin_GetWait(W) ((prword)(W) & 0x1)
-#define Thin_SetWait(W) ((prword)(W) | 0x1)
-#define Thin_RemoveWait(W) ((prword)(W) & ~0x1)
+#define Thin_GetWait(W) ((jsword)(W) & 0x1)
+#define Thin_SetWait(W) ((jsword)(W) | 0x1)
+#define Thin_RemoveWait(W) ((jsword)(W) & ~0x1)
 
 typedef struct JSFatLock {
     int susp;
@@ -42,7 +38,7 @@ typedef struct JSFatLock {
 } JSFatLock;
 
 typedef struct JSThinLock {
-  prword owner;
+  jsword owner;
   JSFatLock *fat;
 } JSThinLock;
 
@@ -55,7 +51,7 @@ typedef struct JSFatLockTable {
 
 #define JS_ATOMIC_ADDREF(p, i) js_AtomicAdd(p,i)
 
-#define CurrentThreadId() (prword)PR_GetCurrentThread()
+#define CurrentThreadId() (jsword)PR_GetCurrentThread()
 #define JS_CurrentThreadId() js_CurrentThreadId()
 #define JS_NEW_LOCK()               PR_NewLock()
 #define JS_DESTROY_LOCK(l)          PR_DestroyLock(l)
@@ -78,7 +74,7 @@ typedef struct JSFatLockTable {
     _SET_SCOPE_INFO(((JSScope*)obj->map),f,l)
 
 #define _SET_SCOPE_INFO(scope,f,l)                                            \
-    (PR_ASSERT(scope->count > 0 && scope->count <= 4),                        \
+    (JS_ASSERT(scope->count > 0 && scope->count <= 4),                        \
      scope->file[scope->count-1] = f,                                         \
      scope->line[scope->count-1] = l)
 #endif /* DEBUG */
@@ -93,19 +89,19 @@ typedef struct JSFatLockTable {
 #define JS_UNLOCK_SCOPE(cx,scope)   js_UnlockScope(cx, scope)
 #define JS_TRANSFER_SCOPE_LOCK(cx, scope, newscope) js_TransferScopeLock(cx, scope, newscope)
 
-extern prword js_CurrentThreadId();
-extern PR_INLINE void js_Lock(JSThinLock *, prword);
-extern PR_INLINE void js_Unlock(JSThinLock *, prword);
-extern int js_CompareAndSwap(prword *, prword, prword);
-extern void js_AtomicAdd(prword*, prword);
+extern jsword js_CurrentThreadId();
+extern JS_INLINE void js_Lock(JSThinLock *, jsword);
+extern JS_INLINE void js_Unlock(JSThinLock *, jsword);
+extern int js_CompareAndSwap(jsword *, jsword, jsword);
+extern void js_AtomicAdd(jsword*, jsword);
 extern void js_LockRuntime(JSRuntime *rt);
 extern void js_UnlockRuntime(JSRuntime *rt);
 extern void js_LockObj(JSContext *cx, JSObject *obj);
 extern void js_UnlockObj(JSContext *cx, JSObject *obj);
 extern void js_LockScope(JSContext *cx, JSScope *scope);
 extern void js_UnlockScope(JSContext *cx, JSScope *scope);
-extern JS_PUBLIC_API(int) js_SetupLocks(int);
-extern JS_PUBLIC_API(void) js_CleanupLocks();
+extern int js_SetupLocks(int);
+extern void js_CleanupLocks();
 extern JS_PUBLIC_API(void) js_InitContextForLocking(JSContext *);
 extern void js_TransferScopeLock(JSContext *, JSScope *, JSScope *);
 extern JS_PUBLIC_API(jsval) js_GetSlotWhileLocked(JSContext *, JSObject *, uint32);
@@ -132,19 +128,19 @@ extern JSBool js_IsScopeLocked(JSScope *scope);
 #endif /* DEBUG */
 
 #define JS_LOCK_OBJ_VOID(cx, obj, e)                                          \
-    PR_BEGIN_MACRO                                                            \
+    JS_BEGIN_MACRO                                                            \
 	js_LockObj(cx, obj);                                                 \
 	e;                                                                    \
 	js_UnlockObj(cx, obj);                                               \
-    PR_END_MACRO
+    JS_END_MACRO
 
 #define JS_LOCK_VOID(cx, e)                                                   \
-    PR_BEGIN_MACRO                                                            \
+    JS_BEGIN_MACRO                                                            \
 	JSRuntime *_rt = (cx)->runtime;                                       \
 	JS_LOCK_RUNTIME_VOID(_rt, e);                                         \
-    PR_END_MACRO
+    JS_END_MACRO
 
-#if defined(JS_ONLY_NSPR_LOCKS) || !(defined(_WIN32) || defined(SOLARIS) || defined(AIX))
+#if defined(JS_USE_ONLY_NSPR_LOCKS) || !(defined(_WIN32) || defined(SOLARIS) || defined(AIX))
 
 #undef JS_LOCK0
 #undef JS_UNLOCK0
@@ -189,11 +185,11 @@ extern JSBool js_IsScopeLocked(JSScope *scope);
 #endif /* !JS_THREADSAFE */
 
 #define JS_LOCK_RUNTIME_VOID(rt,e)                                            \
-    PR_BEGIN_MACRO                                                            \
+    JS_BEGIN_MACRO                                                            \
 	JS_LOCK_RUNTIME(rt);                                                  \
 	e;                                                                    \
 	JS_UNLOCK_RUNTIME(rt);                                                \
-    PR_END_MACRO
+    JS_END_MACRO
 
 #define JS_LOCK_GC(rt)              JS_ACQUIRE_LOCK((rt)->gcLock)
 #define JS_UNLOCK_GC(rt)            JS_RELEASE_LOCK((rt)->gcLock)

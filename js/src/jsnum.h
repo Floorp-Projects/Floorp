@@ -30,7 +30,7 @@
  * wraps it with a JSObject whose valueOf method returns the unwrapped number.
  */
 
-PR_BEGIN_EXTERN_C
+JS_BEGIN_EXTERN_C
 
 #ifdef IS_LITTLE_ENDIAN
 #define JSDOUBLE_HI32(x)        (((uint32 *)&(x))[1])
@@ -64,7 +64,7 @@ PR_BEGIN_EXTERN_C
  * comparisons under MSVC.
  */
 #define JSDOUBLE_IS_INT(d, i) (JSDOUBLE_IS_FINITE(d) && !JSDOUBLE_IS_NEGZERO(d) \
-                               && ((d) == (i = (jsint)(d))))
+			       && ((d) == (i = (jsint)(d))))
 
 /* Initialize the Number class, returning its prototype object. */
 extern JSObject *
@@ -162,6 +162,6 @@ js_strtod(JSContext *cx, const jschar *s, const jschar **ep, jsdouble *dp);
 extern JSBool
 js_strtointeger(JSContext *cx, const jschar *s, const jschar **ep, jsint radix, jsdouble *dp);
 
-PR_END_EXTERN_C
+JS_END_EXTERN_C
 
 #endif /* jsnum_h___ */

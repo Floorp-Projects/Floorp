@@ -194,9 +194,24 @@ OPDEF(JSOP_INSTANCEOF,112,js_instanceof_str,js_instanceof_str,1,2,1,6,JOF_BYTE)
 /* debugger op */
 OPDEF(JSOP_DEBUGGER,  113,"debugger",   NULL,         1,  0,  0,  0,  JOF_BYTE)
 
-/* jsr/return for finally handling */
-OPDEF(JSOP_JSR,       114,"jsr",	NULL,	      3,  0,  1,  0,  JOF_JUMP)
+/* gosub/retsub for finally handling */
+OPDEF(JSOP_GOSUB,     114,"gosub",      NULL,         3,  0,  1,  0,  JOF_JUMP)
 OPDEF(JSOP_RETSUB,    115,"retsub",     NULL,         1,  1,  0,  0,  JOF_BYTE)
 
 /* more exception handling ops */
 OPDEF(JSOP_EXCEPTION, 116,"exception",  NULL,         1,  0,  1,  0,  JOF_BYTE)
+OPDEF(JSOP_SETSP,     117,"setsp",      NULL,         3,  0,  0,  0,  JOF_UINT16)
+
+/*
+ * ECMA-compliant switch statement ops.
+ * CONDSWITCH is a decompilable NOP; CASE is ===, POP, jump if true, re-push
+ * lval if false; and DEFAULT is POP lval and GOTO.
+ */
+OPDEF(JSOP_CONDSWITCH,118,"condswitch", NULL,         1,  0,  0,  0,  JOF_BYTE)
+OPDEF(JSOP_CASE,      119,"case",       NULL,         3,  1,  0,  0,  JOF_JUMP)
+OPDEF(JSOP_DEFAULT,   120,"default",    NULL,         3,  1,  0,  0,  JOF_JUMP)
+
+/*
+* ECMA-compliant call to eval op
+*/
+OPDEF(JSOP_CALLSPECIAL,121,"callspecial",NULL,         3, -1,  1, 11,  JOF_UINT16)

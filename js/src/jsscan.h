@@ -29,11 +29,7 @@
 #include "jsprvtd.h"
 #include "jspubtd.h"
 
-#ifdef JSD_LOWLEVEL_SOURCE
-#include "jsdebug.h"
-#endif
-
-PR_BEGIN_EXTERN_C
+JS_BEGIN_EXTERN_C
 
 typedef enum JSTokenType {
     TOK_ERROR = -1,                     /* well-known as the only code < EOF */
@@ -114,11 +110,11 @@ struct JSToken {
     JSTokenPos          pos;            /* token position in file */
     jschar              *ptr;           /* beginning of token in line buffer */
     union {
-        struct {
+	struct {
 	    JSOp        op;             /* operator, for minimal parser */
 	    JSAtom      *atom;          /* atom table entry */
-        } s;
-        jsdouble        dval;           /* floating point number */
+	} s;
+	jsdouble        dval;           /* floating point number */
     } u;
 };
 
@@ -133,7 +129,7 @@ typedef struct JSTokenBuf {
 } JSTokenBuf;
 
 #define JS_LINE_LIMIT   256             /* logical line buffer size limit --
-                                           physical line length is unlimited */
+					   physical line length is unlimited */
 
 struct JSTokenStream {
     JSToken             token;          /* last token scanned */
@@ -152,10 +148,9 @@ struct JSTokenStream {
     FILE                *file;          /* stdio stream if reading from file */
 #endif
     JSPrincipals        *principals;    /* principals associated with given input */
-#ifdef JSD_LOWLEVEL_SOURCE
-    JSDContext          *jsdc;          /* used to cram source into debugger */
-    JSDSourceText       *jsdsrc;        /* used to cram source into debugger */
-#endif
+    JSSourceHandler     listener;       /* callback for source; eg debugger */
+    void                *listenerData;  /* listener 'this' data */
+    void                *listenerTSData;/* listener data for this TokenStream */
 };
 
 /* JSTokenStream flags */
@@ -176,11 +171,11 @@ struct JSTokenStream {
 #define CLEAR_PUSHBACK(ts)  ((ts)->pushback.type = TOK_EOF)
 #define SCAN_NEWLINES(ts)   ((ts)->flags |= TSF_NEWLINES)
 #define HIDE_NEWLINES(ts)                                                     \
-    PR_BEGIN_MACRO                                                            \
+    JS_BEGIN_MACRO                                                            \
 	(ts)->flags &= ~TSF_NEWLINES;                                         \
 	if ((ts)->pushback.type == TOK_EOL)                                   \
 	    (ts)->pushback.type = TOK_EOF;                                    \
-    PR_END_MACRO
+    JS_END_MACRO
 
 /* Clear ts member that might point above a released cx->tempPool mark. */
 #define RESET_TOKENBUF(ts)  ((ts)->tokenbuf.base = (ts)->tokenbuf.limit = NULL)
@@ -191,7 +186,7 @@ struct JSTokenStream {
  *
  * NB: All of js_New{,Buffer,File}TokenStream() return a pointer to transient
  * memory in the current context's temp pool.  This memory is deallocated via
- * PR_ARENA_RELEASE() after parsing is finished.
+ * JS_ARENA_RELEASE() after parsing is finished.
  */
 extern JSTokenStream *
 js_NewTokenStream(JSContext *cx, const jschar *base, size_t length,
@@ -226,8 +221,12 @@ js_MapKeywords(void (*mapfun)(const char *));
  * associated with cx.
  */
 extern void
-js_ReportCompileError(JSContext *cx, JSTokenStream *ts, const char *format,
-		      ...);
+js_ReportCompileError(JSContext *cx, JSTokenStream *ts, uintN flags,
+		      const char *format, ...);
+
+void
+js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts, uintN flags,
+		      const uintN errorNumber, ...);
 
 /*
  * Look ahead one token and return its type.
@@ -256,6 +255,6 @@ js_UngetToken(JSTokenStream *ts);
 extern JSBool
 js_MatchToken(JSContext *cx, JSTokenStream *ts, JSTokenType tt);
 
-PR_END_EXTERN_C
+JS_END_EXTERN_C
 
 #endif /* jsscan_h___ */
