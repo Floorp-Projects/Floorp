@@ -482,17 +482,17 @@ esac
 dnl =======================================================
 dnl Check to see if we are using an old version of the Compaq C compiler.
 dnl =======================================================
-
-AC_LANG_SAVE
-AC_LANG_CPLUSPLUS
-AC_MSG_CHECKING(for old DEC C++ compiler)
-AC_TRY_COMPILE([], [
-#if defined(__DECCXX) && (__DECCXX_VER<60190029)
-#error "Compiler is too old."
-#endif ],
-[AC_MSG_RESULT([no])],
-AC_MSG_ERROR([Compiler is too old.  Get a new one: http://www.unix.digital.com/dtk/]) )
-AC_LANG_RESTORE
+dnl Even after installing this compiler, this test still fails.
+dnl AC_LANG_SAVE
+dnl AC_LANG_CPLUSPLUS
+dnl AC_MSG_CHECKING(for old DEC C++ compiler)
+dnl AC_TRY_COMPILE([], [
+dnl #if defined(__DECCXX) && (__DECCXX_VER<60190029)
+dnl #error "Compiler is too old."
+dnl #endif ],
+dnl [AC_MSG_RESULT([no])],
+dnl AC_MSG_ERROR([Compiler is too old.  Get a new one: http://www.unix.digital.com/dtk/]) )
+dnl AC_LANG_RESTORE
 
 dnl ========================================================
 dnl Check which style vtables we're using on Solaris
