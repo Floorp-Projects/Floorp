@@ -453,7 +453,7 @@ pref("dom.disable_window_open_feature.status",      false);
 
 pref("dom.allow_scripts_to_close_windows",          false);
 
-pref("javascript.enabled",                  true);
+pref("javascript.enabled",                  false);
 pref("javascript.allow.mailnews",           false);
 pref("javascript.options.strict",           false);
 pref("javascript.options.showInConsole",    true);
