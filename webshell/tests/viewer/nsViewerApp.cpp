@@ -378,14 +378,6 @@ nsViewerApp::Exit()
     mAppShell->Exit();
     NS_RELEASE(mAppShell);
   }
-  if (mEventQService) {
-    printf("Going to destroy the event queue\n");
-    rv = mEventQService->DestroyThreadEventQueue();
-    if (nsnull != mEventQService) {
-      nsServiceManager::ReleaseService(kEventQueueServiceCID, mEventQService);
-      mEventQService = nsnull;
-    }
-  }
 
     // Unregister the test form processor registered in nsViewerApp::SetupRegistry
   rv = nsServiceManager::UnregisterService(kFormProcessorCID);
@@ -540,16 +532,6 @@ nsViewerApp::ProcessArguments(int argc, char** argv)
           exit(-1);
         }
         mCrawler->SetOutputDir(NS_ConvertASCIItoUCS2(argv[i]));
-      }
-      else if (PL_strcmp(argv[i], "-d") == 0) {
-        int delay;
-        i++;
-        if (i>=argc || 1!=sscanf(argv[i], "%d", &delay))
-        {
-          PrintHelpInfo(argv);
-          exit(-1);
-        }
-        mCrawler->SetDelay(delay);
       }
       else if (PL_strcmp(argv[i], "-w") == 0) {
         int width;

@@ -538,7 +538,7 @@ PRBool
 nsFrameUtil::CompareTrees(Node* tree1, Node* tree2)
 {
   PRBool result = PR_TRUE;
-  for (;;) {
+  for (;; tree1 = tree1->next, tree2 = tree2->next) {
     // Make sure both nodes are non-null, or at least agree with each other
     if (nsnull == tree1) {
       if (nsnull == tree2) {
@@ -561,14 +561,31 @@ nsFrameUtil::CompareTrees(Node* tree1, Node* tree2)
       DumpNode(tree2, stdout, 1);
       return PR_FALSE;
     }
-    if (tree1->state != tree2->state) {
+
+    // Ignore the XUL scrollbar frames
+    static const char kScrollbarFrame[] = "ScrollbarFrame";
+    if (0 == PL_strncmp(tree1->type, kScrollbarFrame, sizeof(kScrollbarFrame) - 1))
+      continue;
+
+    // We'll ignore these flags for the purposes of comparing frame state:
+    //
+    //   NS_FRAME_EXTERNAL_REFERENCE
+    //     because this is set by the event state manager or the
+    //     caret code when a frame is focused. Depending on whether
+    //     or not the regression tests are run as the focused window
+    //     will make this value vary randomly.
+#define IRRELEVANT_FRAME_STATE_FLAGS NS_FRAME_EXTERNAL_REFERENCE
+
+#define FRAME_STATE_MASK (~(IRRELEVANT_FRAME_STATE_FLAGS))
+
+    if ((tree1->state & FRAME_STATE_MASK) != (tree2->state & FRAME_STATE_MASK)) {
       printf("frame state mismatch: 0x%x vs. 0x%x\n",
              tree1->state, tree2->state);
       printf("Node 1:\n");
       DumpNode(tree1, stdout, 1);
       printf("Node 2:\n");
       DumpNode(tree2, stdout, 1);
-      //result = PR_FALSE; // we have a non-critical failure, so remember that but continue
+      result = PR_FALSE; // we have a non-critical failure, so remember that but continue
     }
     if (tree1->bbox != tree2->bbox) {
       printf("frame bbox mismatch: %d,%d,%d,%d vs. %d,%d,%d,%d\n",
@@ -628,10 +645,6 @@ nsFrameUtil::CompareTrees(Node* tree1, Node* tree2)
       list1 = list1->next;
       list2 = list2->next;
     }
-
-    // Check siblings next
-    tree1 = tree1->next;
-    tree2 = tree2->next;
   }
   return result;
 }

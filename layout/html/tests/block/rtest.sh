@@ -16,6 +16,10 @@ nodots() {
 
 dirs="base bugs ../table/core ../table/viewer_tests ../table/bugs ../table/marvin ../table/other ../table/dom"
 
+# This doesn't appear to work on Linux right now; needs support for a
+# null driver, perhaps?
+#extra_dirs="../table/printing"
+
 #extra_dirs="net/HTML_Chars net/W3C net/baron net/boxAcidTest net/glazman net/mozilla"
 
 DEPTH="../../../../.."

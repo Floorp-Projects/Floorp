@@ -11,11 +11,11 @@ if %1==baseline goto baseline
 
 :verify
 if not exist verify mkdir verify
-s:\mozilla\dist\win32_d.obj\bin\viewer -Prt 1 -d 5 -o s:\mozilla\layout\html\tests\table\printing\verify\ -rd s:\mozilla\layout\html\tests\table\printing -f s:\mozilla\layout\html\tests\table\printing\file_list.txt
+s:\mozilla\dist\win32_d.obj\bin\viewer -Prt 1 -o s:\mozilla\layout\html\tests\table\printing\verify\ -rd s:\mozilla\layout\html\tests\table\printing -f s:\mozilla\layout\html\tests\table\printing\file_list_printing.txt
 goto done
 
 :baseline
-s:\mozilla\dist\win32_d.obj\bin\viewer -Prt 1 -d 5 -o s:\mozilla\layout\html\tests\table\printing\ -rd s:\mozilla\layout\html\tests\table\printing -f s:\mozilla\layout\html\tests\table\printing\file_list.txt
+s:\mozilla\dist\win32_d.obj\bin\viewer -Prt 1 -o s:\mozilla\layout\html\tests\table\printing\ -rd s:\mozilla\layout\html\tests\table\printing -f s:\mozilla\layout\html\tests\table\printing\file_list_printing.txt
 goto done
 
 :error

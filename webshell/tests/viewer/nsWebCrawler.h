@@ -64,11 +64,6 @@ public:
   void SetBrowserWindow(nsBrowserWindow* aWindow);
   void GetBrowserWindow(nsBrowserWindow** aWindow);
 
-  // Set the delay (by default, the timer is set to one second)
-  void SetDelay(PRInt32 aSeconds) {
-    mDelay = aSeconds;
-  }
-
   void SetPrintTest(PRInt32 aTestType) { mPrinterTestType = aTestType; }
 
   void RegressionOutput(PRInt32 aRegressionOutputLevel) { mRegressionOutputLevel = aRegressionOutputLevel; }
@@ -100,19 +95,24 @@ public:
 
   void SetOutputDir(const nsString& aOutputDir);
 
-  void DumpRegressionData(nsIWebShell* aWebShell,
-                          nsIURI*      aURL);
+  void DumpRegressionData();
   void SetRegressionDir(const nsString& aOutputDir);
 
   void SetEnableRegression(PRBool aSetting) {
     mRegressing = aSetting;
   }
 
+  static void
+  LoadNextURLCallback(nsITimer* aTimer, void* aClosure);
+
   void LoadNextURL(PRBool aQueueLoad);
 
   nsresult QueueLoadURL(const nsString& aURL);
 
   void GoToQueuedURL(const nsString& aURL);
+
+  static void
+  QueueExitCallback(nsITimer* atimer, void* aClosure);
 
   void QueueExit();
 
@@ -169,13 +169,11 @@ protected:
   PRBool mHaveURLList;
   PRBool mJiggleLayout;
   PRBool mPostExit;
-  PRInt32 mDelay;     // first delay encountered from command line or delay:= in file
-  PRInt32 mLastDelay; // last  delay encountered from command line or delay:= in file 
+  PRInt32 mDelay;
   PRInt32 mMaxPages;
 
   nsString mCurrentURL;
   nsCOMPtr<nsIURI>  mLastURL;
-  nsIWebShell* mLastWebShell;
 
   PRTime mStartLoad;
   PRBool mVerbose;
