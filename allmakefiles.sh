@@ -598,7 +598,7 @@ xpcom/tools/Makefile
 xpcom/tools/registry/Makefile
 xpcom/tools/windows/Makefile
 xpcom/windbgdlg/Makefile
-MAKEFILES_libreg
+$MAKEFILES_libreg
 $MAKEFILES_libjar
 intl/unicharutil/public/Makefile
 intl/uconv/public/Makefile
