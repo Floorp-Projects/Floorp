@@ -1796,7 +1796,7 @@ void nsWindow::SetBorderStyle(nsBorderStyle aBorderStyle)
   mBorderStyle = aBorderStyle; 
 } 
 
-void nsWindow::SetTitle(nsString aTitle) 
+void nsWindow::SetTitle(const nsString& aTitle) 
 {
   NS_ALLOC_STR_BUF(buf, aTitle, 256);
   ::SendMessage(mWnd, WM_SETTEXT, (WPARAM)0, (LPARAM)(LPCTSTR)buf);
