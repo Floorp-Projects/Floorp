@@ -538,7 +538,9 @@ function OpenBookmarkURL(node, datasources)
 
 function OpenSearch(tabName, forceDialogFlag, searchStr)
 {
+
   //This function needs to be split up someday.
+
   var autoOpenSearchPanel = false;
   var defaultSearchURL = null;
   var fallbackDefaultSearchURL = gNavigatorRegionBundle.getString("fallbackDefaultSearchURL");
@@ -547,10 +549,11 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
   // var url = getWebNavigation().currentURI.spec;
   var url = _content.location.href;
 
-  //Check to see if search string contains "://" or ".".
+  //Check to see if search string contains "://" or "ftp." or white space.
   //If it does treat as url and match for pattern
-  var urlmatch= /:\/\/|\./ ;
-  var result = urlmatch.test(searchStr);
+  
+    var urlmatch= /(:\/\/|^ftp\.)[^ \S]+$/ 
+    var forceAsURL = urlmatch.test(searchStr);
 
   try {
     autoOpenSearchPanel = pref.GetBoolPref("browser.search.opensidebarsearchpanel");
@@ -576,7 +579,7 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
   //Check to see if location bar field is a url
   //If it is a url go to URL.  A Url is "://" or "." as commented above
   //Otherwise search on entry
-  if (result) {
+  if (forceAsURL) {
      BrowserLoadURL()
    } else {
     var searchMode = 0;
