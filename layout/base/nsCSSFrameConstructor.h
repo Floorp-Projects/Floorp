@@ -142,6 +142,9 @@ public:
   nsresult ProcessRestyledFrames(nsStyleChangeList& aRestyleArray, 
                                  nsPresContext*    aPresContext);
 
+  void ProcessOneRestyle(nsIPresShell* aShell, nsPresContext* aContext,
+                         nsIContent* aContent, nsReStyleHint aRestyleHint,
+                         nsChangeHint aChangeHint);
   void ProcessPendingRestyles();
   void PostRestyleEvent(nsIContent* aContent, nsReStyleHint aRestyleHint,
                         nsChangeHint aMinChangeHint);
