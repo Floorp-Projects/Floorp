@@ -412,6 +412,21 @@ gtk_moz_embed_class_init(GtkMozEmbedClass *klass)
 		   GTK_SIGNAL_OFFSET(GtkMozEmbedClass, dom_mouse_out),
 		   gtk_marshal_BOOL__POINTER,
 		   GTK_TYPE_BOOL, 1, GTK_TYPE_POINTER);
+  moz_embed_signals[SECURITY_CHANGE] =
+    gtk_signal_new("security_change",
+		   GTK_RUN_LAST,
+		   object_class->type,
+		   GTK_SIGNAL_OFFSET(GtkMozEmbedClass, security_change),
+		   gtk_marshal_NONE__POINTER_UINT,
+		   GTK_TYPE_NONE, 2, GTK_TYPE_POINTER, GTK_TYPE_UINT);
+  moz_embed_signals[STATUS_CHANGE] =
+    gtk_signal_new("status_change",
+		   GTK_RUN_LAST,
+		   object_class->type,
+		   GTK_SIGNAL_OFFSET(GtkMozEmbedClass, status_change),
+		   gtk_marshal_NONE__POINTER_INT_POINTER,
+		   GTK_TYPE_NONE, 3,
+		   GTK_TYPE_POINTER, GTK_TYPE_INT, GTK_TYPE_POINTER);
 
   gtk_object_class_add_signals(object_class, moz_embed_signals,
 			       EMBED_LAST_SIGNAL);
