@@ -16,7 +16,9 @@ static char THIS_FILE[] = __FILE__;
 static const CLSID CLSID_Mozilla =
 { 0x1339B54C, 0x3453, 0x11D2, { 0x93, 0xB9, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } };
 
-static const CLSID CLSID_InternetExplorer =
+// XX is a hack to avoid linker errors with some Platform SDKs defining
+// a GUID with the same name
+static const CLSID CLSID_XXInternetExplorer =
 { 0x8856F961, 0x340A, 0x11D0, { 0xA9, 0x6B, 0x00, 0xC0, 0x4F, 0xD7, 0x05, 0xA2 } };
 
 static const CLSID CLSID_MSHTML = 
@@ -31,7 +33,7 @@ struct BrowserControl
 BrowserControl aControls[] =
 {
 	{ _T("Mozilla Control"), &CLSID_Mozilla },
-	{ _T("Internet Explorer Control"), &CLSID_InternetExplorer }
+	{ _T("Internet Explorer Control"), &CLSID_XXInternetExplorer }
 };
 
 
