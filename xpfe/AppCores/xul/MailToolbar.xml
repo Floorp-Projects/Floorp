@@ -19,19 +19,19 @@
    
     <xul:toolbar>
           <html:button cmd="nsCmd:MailSendMsg" style="background-color:rgb(192,192,192);">
-                          <html:img src="resource:/res/toolbar/sendmsg.gif"/><html:BR/>Send
+                          <html:img src="resource:/res/toolbar/Mail_SendMsg.gif"/><html:BR/>Send
           </html:button>
           <html:button cmd="nsCmd:MailGetMsg" style="background-color:rgb(192,192,192);">
-                          <html:img src="resource:/res/toolbar/getmsg.gif"/><html:BR/>GetMsg
+                          <html:img src="resource:/res/toolbar/Mail_GetMsg.gif"/><html:BR/>GetMsg
           </html:button>
           <html:button cmd="nsCmd:MailNewMsg" style="background-color:rgb(192,192,192);">
-                          <html:img src="resource:/res/toolbar/newmsg.gif"/><html:BR/>New Msg
+                          <html:img src="resource:/res/toolbar/Mail_NewMsg.gif"/><html:BR/>New Msg
           </html:button>
           <html:button cmd="nsCmd:MailReply" style="background-color:rgb(192,192,192);">
-                          <html:img src="resource:/res/toolbar/reply.gif"/><html:BR/>Reply
+                          <html:img src="resource:/res/toolbar/Mail_Reply.gif"/><html:BR/>Reply
           </html:button>
           <html:button cmd="nsCmd:MailForward" style="background-color:rgb(192,192,192);">
-                          <html:img src="resource:/res/toolbar/forward.gif"/><html:BR/>Forward
+                          <html:img src="resource:/res/toolbar/Mail_Forward.gif"/><html:BR/>Forward
           </html:button>
           <html:button cmd="nsCmd:BrowserPrint" style="background-color:rgb(192,192,192);">
                           <html:img src="resource:/res/toolbar/TB_Print.gif"/><html:BR/>Print
