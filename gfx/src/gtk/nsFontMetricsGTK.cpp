@@ -1414,13 +1414,10 @@ nsFontGTK::LoadFont(nsFontCharSet* aCharSet, nsFontMetricsGTK* aMetrics)
     }
     mFont = gdkFont;
 
-#ifdef MOZ_MATHML
     // setting the actual size to the pixel size mSize from the XFLD
     // seems to be more reliable.
     mActualSize = mSize;
-#else
-    mActualSize = xFont->max_bounds.ascent + xFont->max_bounds.descent;
-#endif
+    //mActualSize = xFont->max_bounds.ascent + xFont->max_bounds.descent;
 
 #if 0
     if (aCharSet->mInfo->mSpecialUnderline && aMetrics->mFontHandle) {
