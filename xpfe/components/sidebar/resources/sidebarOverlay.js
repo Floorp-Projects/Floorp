@@ -1153,6 +1153,8 @@ function SidebarShowHide() {
     if (sidebar_box.firstChild != sidebar_panels_splitter) {
       debug("Showing the panels splitter");
       sidebar_panels_splitter.removeAttribute('hidden');
+      if (sidebar_panels_splitter.getAttribute('state') == 'collapsed')
+        sidebar_panels_splitter.removeAttribute('state');
     }
     sidebar_overlay_init();
     sidebar_menu_item.setAttribute('checked', 'true');
