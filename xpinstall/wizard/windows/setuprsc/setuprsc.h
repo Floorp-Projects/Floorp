@@ -1,3 +1,8 @@
+//{{NO_DEPENDENCIES}}
+// Microsoft Developer Studio generated include file.
+// Used by setuprsc.rc
+//
+
 /* -*- Mode: C; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /*
  * The contents of this file are subject to the Netscape Public License
@@ -22,10 +27,6 @@
  *     Sean Su <ssu@netscape.com>
  */
 
-//{{NO_DEPENDENCIES}}
-// Microsoft Developer Studio generated include file.
-// Used by setuprsc.rc
-//
 #define IDS_ERROR_DIALOG_CREATE         1
 #define IDS_ERROR_FAILED                2
 #define IDS_ERROR_FILE_NOT_FOUND        3
@@ -47,6 +48,7 @@
 #define IDS_STR_FILE_NUMBER             19
 #define IDS_STR_FILENAME                20
 #define IDS_MSG_SMARTUPDATE_START       21
+#define IDS_MSG_CONFIGURING             22
 #define IDI_ICON1                       105
 #define IDI_SETUP                       105
 #define IDB_BITMAP_WELCOME              108
