@@ -39,18 +39,20 @@ Install Size=<#install_size>
 Attributes=SELECTED|INVISIBLE
 
 [Component1]
-Description Short= Browser component
+Description Short= Browser
 Description Long=Apprunner & Editor (<#buildID>)
 Archive=browser.xpi
 Install Size=<#browser_size>
 URL0=ftp://sweetlou.mcom.com/products/client/seamonkey/macos/8.x/ppc/<#buildID>/
+Attributes=SELECTED
 
 [Component2]
-Description Short= Mail-News component
+Description Short= Mail-News
 Description Long=Mail & News component (<#buildID>)
 Archive=mail.xpi
 Install Size=<#mail_size>
 URL0=ftp://sweetlou.mcom.com/products/client/seamonkey/macos/8.x/ppc/<#buildID>/
+Attributes=SELECTED
 
 [Dialog Start Install]
 Message0=Click the Install button to download and install the selected components.  
@@ -62,3 +64,13 @@ no_ads=true
 silent=false
 execution=false
 confirm_install=true
+
+
+[RunApp0]
+Target App Creator Type=MOZZ
+Target Document=Mozilla Installer
+
+[LegacyCheck0]
+Filename=Mozilla
+Version=5.0.0b.14
+Message=An older installation of Mozilla has been detected in the folder selected. You may select another folder or continue.
