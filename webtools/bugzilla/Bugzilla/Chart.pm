@@ -93,7 +93,7 @@ sub init {
     foreach my $date ('datefrom', 'dateto') {
         if ($self->{$date}) {
             $self->{$date} = &::str2time($self->{$date}) 
-              || ThrowUserError("illegal_date", { date => $self->{$date}});
+              || &::ThrowUserError("illegal_date", { date => $self->{$date}});
         }
     }
 
