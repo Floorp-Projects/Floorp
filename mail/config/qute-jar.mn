@@ -61,7 +61,6 @@ skin/classic/mozapps/downloads,                       classic/skin/classic/mozap
 # Global
 #################################################################################################
 skin/classic/global,                                   classic/skin/classic/global
-skin/classic/global/filepicker,                        classic/skin/classic/global/filepicker
 skin/classic/global/arrow,                             classic/skin/classic/global/arrow
 skin/classic/global/tree,                              classic/skin/classic/global/tree
 skin/classic/global/checkbox,                          classic/skin/classic/global/checkbox
