@@ -189,14 +189,14 @@ nsAboutCache::VisitDevice(const char *deviceID,
         deviceInfo->GetMaximumSize(&value);
         mBuffer.Append("<td><tt>");
         mBuffer.AppendInt(value/1024);
-        mBuffer.Append(" k</tt></td>\n</tr>\n");
+        mBuffer.Append(" KiB</tt></td>\n</tr>\n");
 
         mBuffer.Append("\n<tr>\n<td><b>Storage in use: </b></td>\n");
         mBuffer.Append("<td><tt>");
         value = 0;
         deviceInfo->GetTotalSize(&value);
         mBuffer.AppendInt(value/1024);
-        mBuffer.Append(" k</tt></td>\n</tr>\n");
+        mBuffer.Append(" KiB</tt></td>\n</tr>\n");
 
         deviceInfo->GetUsageReport(getter_Copies(str));
         mBuffer.Append(str);
