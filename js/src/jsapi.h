@@ -1175,6 +1175,15 @@ JS_RestoreExceptionState(JSContext *cx, JSExceptionState *state);
 extern JS_PUBLIC_API(void)
 JS_DropExceptionState(JSContext *cx, JSExceptionState *state);
 
+/*
+ * If the given jsval is an engine exception with an attached error report
+ * then return a pointer to that report. Else, return NULL.
+ * The lifetime of the error report that might be returned is linked to the
+ * lifetime of the exception.
+ */
+extern JS_PUBLIC_API(JSErrorReport *)
+JS_ErrorFromException(JSContext *cx, jsval v);
+
 #ifdef JS_THREADSAFE
 /*
  * Associate the current thread with the given context.  This is done

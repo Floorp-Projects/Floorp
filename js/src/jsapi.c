@@ -3099,6 +3099,17 @@ JS_DropExceptionState(JSContext *cx, JSExceptionState *state)
 #endif
 }
 
+JS_PUBLIC_API(JSErrorReport *)
+JS_ErrorFromException(JSContext *cx, jsval v)
+{
+#if JS_HAS_EXCEPTIONS
+    CHECK_REQUEST(cx);
+    return js_ErrorFromException(cx, v);
+#else
+    return NULL;
+#endif
+}
+
 #ifdef JS_THREADSAFE
 JS_PUBLIC_API(intN)
 JS_GetContextThread(JSContext *cx)

@@ -52,7 +52,7 @@
 # error "JS_HAS_EXCEPTIONS must be defined to use JS_HAS_ERROR_EXCEPTIONS"
 #endif
 
-/* Declaration to resolve circular reference of exn_class by Exception. */
+/* Declaration to resolve circular reference of js_ErrorClass by Exception. */
 static JSBool
 Exception(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
 JSBool
@@ -61,7 +61,7 @@ js_exnHasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp);
 static void
 exn_finalize(JSContext *cx, JSObject *obj);
 
-JSClass exn_class = {
+JSClass js_ErrorClass = {
     "Exception",
     JSCLASS_HAS_PRIVATE,
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
@@ -203,7 +203,7 @@ exn_finalize(JSContext *cx, JSObject *obj)
     }
 }
 
-static JSErrorReport *
+JSErrorReport *
 js_ErrorFromException(JSContext *cx, jsval exn)
 {
     JSObject *obj;
@@ -213,10 +213,12 @@ js_ErrorFromException(JSContext *cx, jsval exn)
     if (!JSVAL_IS_OBJECT(exn))
         return NULL;
     obj = JSVAL_TO_OBJECT(exn);
-    if (OBJ_GET_CLASS(cx, obj) != &exn_class)
+    if (OBJ_GET_CLASS(cx, obj) != &js_ErrorClass)
         return NULL;
     private = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
-    privateData = JSVAL_TO_PRIVATE(OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE));
+    if (private == JSVAL_NULL)
+        return NULL;
+    privateData = JSVAL_TO_PRIVATE(private);
     if (!privateData)
         return NULL;
     
@@ -274,7 +276,7 @@ Exception(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
      * If it's a new object of class Exception, then null out the private
      * data so that the finalizer doesn't attempt to free it.
      */
-    if (OBJ_GET_CLASS(cx, obj) == &exn_class)
+    if (OBJ_GET_CLASS(cx, obj) == &js_ErrorClass)
         OBJ_SET_SLOT(cx, obj, JSSLOT_PRIVATE, JSVAL_NULL);
 
     /*
@@ -294,7 +296,7 @@ Exception(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 }
 
 /*
-*   Called by fun_hasInstance when 'obj' has exn_class, to see if
+*   Called by fun_hasInstance when 'obj' has js_ErrorClass, to see if
 *   'v' could be an instanceof an exception from some other context
 *   - we'll know it is if it has that special 'something'
 */
@@ -445,7 +447,7 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
         int protoidx = exceptions[i].protoIndex;
         
         /* Make the prototype for the current constructor name. */
-        protos[i] = js_NewObject(cx, &exn_class,
+        protos[i] = js_NewObject(cx, &js_ErrorClass,
                                  protoidx >= 0 ? protos[protoidx] : NULL,
                                  obj);
         if (!protos[i])
@@ -473,7 +475,7 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
             return NULL; /* XXX also remove named property from obj... */
 
         /* Make this constructor make objects of class Exception. */
-        fun->clasp = &exn_class;
+        fun->clasp = &js_ErrorClass;
 
         /* Make the prototype and constructor links. */
         if (!js_SetClassPrototype(cx, fun->object, 
@@ -578,7 +580,7 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp)
      * Use js_NewObject instead of js_ConstructObject, because
      * js_ConstructObject seems to require a frame.
      */
-    errObject = js_NewObject(cx, &exn_class, errProto, NULL);
+    errObject = js_NewObject(cx, &js_ErrorClass, errProto, NULL);
 
     /* Store 'message' as a javascript-visible value. */
     msgstr = JS_NewStringCopyZ(cx, message);

@@ -1142,7 +1142,7 @@ fun_hasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
     call into js_exnHasInstance.
 */
         if (*bp == JS_TRUE) return JS_TRUE;
-        if (OBJ_GET_CLASS(cx, protoObj) == &exn_class)
+        if (OBJ_GET_CLASS(cx, protoObj) == &js_ErrorClass)
             return js_exnHasInstance(cx, obj, v, bp);
 #endif /* JS_HAS_ERROR_EXCEPTIONS */
 	return JS_TRUE;
