@@ -1469,8 +1469,11 @@ static XP_Bool pref_ValueChanged(PrefValue oldValue, PrefValue newValue, PrefTyp
 			break;
 			
 		case PREF_BOOL:
-			changed = oldValue.boolVal != newValue.boolVal;
+            changed = oldValue.boolVal != newValue.boolVal;
 			break;
+        default:
+          /* PREF_LOCKED, PREF_USERSET, PREF_CONFIG, PREF_LILOCAL */
+          break;
 	}
 	return changed;
 }
