@@ -394,7 +394,7 @@ namespace Shell {
 } /* namespace JavaScript */
 
     
-int main(int /* argc */, char /* **argv */)
+int main(int argc, char **argv)
 {
 #if defined(XP_MAC) && !defined(XP_MAC_MPW)
     initConsole("\pJavaScript Shell", "Welcome to the js2 shell.\n", argc, argv);
