@@ -56,7 +56,7 @@ import org.w3c.dom.Node;
 import com.sun.xml.parser.Resolver;
 import com.sun.xml.parser.Parser;
 import com.sun.xml.tree.XmlDocument;
-import com.sun.xml.tree.XmlDocumentBuilder;
+// import com.sun.xml.tree.XmlDocumentBuilder;
 import com.sun.xml.tree.TreeWalker;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -144,7 +144,7 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
     Element current;
 
     try {
-      doc = XmlDocumentBuilder.createXmlDocument(stream, false);
+      doc = XmlDocument.createXmlDocument(stream, false);
       current = doc.getDocumentElement();
       tree = new TreeWalker(current);
 
