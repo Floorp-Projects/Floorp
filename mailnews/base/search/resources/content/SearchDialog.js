@@ -58,7 +58,7 @@ var nsSearchResultsController =
     {
         switch(command) {
         case "cmd_delete":
-        case "cmd_shiftdelete":
+        case "cmd_shiftDelete":
         case "button_delete":
         case "cmd_open":
         case "file_message_button":
@@ -82,7 +82,7 @@ var nsSearchResultsController =
               enabled = false;
             break;
           case "cmd_delete":
-          case "cmd_shiftdelete":
+          case "cmd_shiftDelete":
           case "button_delete":
             // this assumes that advanced searches don't cross accounts
             if (GetNumSelectedMessages() <= 0 || isNewsURI(gSearchView.getURIForViewIndex(0)))
@@ -108,7 +108,7 @@ var nsSearchResultsController =
         case "button_delete":
             MsgDeleteSelectedMessages(nsMsgViewCommandType.deleteMsg);
             return true;
-        case "cmd_shiftdelete":
+        case "cmd_shiftDelete":
             MsgDeleteSelectedMessages(nsMsgViewCommandType.deleteNoTrash);
             return true;
 
