@@ -79,6 +79,7 @@ input {
   background-color: -moz-Field;
   color: -moz-FieldText;
   font: -moz-field;
+  line-height: normal !important;
   text-align: start;
   text-transform: none;
   vertical-align: text-bottom;
@@ -94,6 +95,7 @@ textarea {
   background-color: -moz-Field;
   color: -moz-FieldText;
   font: medium -moz-fixed;
+  line-height: normal !important;
   text-align: start;
   text-transform: none;
   vertical-align: text-bottom;
@@ -121,6 +123,7 @@ select {
   background-color: -moz-Field;
   color: -moz-FieldText;
   font: -moz-list;
+  line-height: normal !important;
   white-space: nowrap;
   text-align: start; 
   vertical-align: text-bottom;
@@ -186,6 +189,7 @@ select:-moz-dummy-option {
 option {
   display: block;
   min-height: 1em;
+  line-height: normal !important;
   -moz-user-select: none;
   -moz-user-focus: none;
 }
@@ -202,6 +206,7 @@ option:checked {
 optgroup {
   display: block;
   font: -moz-list;
+  line-height: normal !important;
   font-style: italic;
   font-weight: bold;
   -moz-user-select: none;
@@ -384,6 +389,7 @@ input[type="submit"] {
   background-color: ButtonFace;
   color: ButtonText; 
   font: -moz-button;
+  line-height: normal !important;
   white-space: pre;
   vertical-align: text-bottom;
   cursor: default;
