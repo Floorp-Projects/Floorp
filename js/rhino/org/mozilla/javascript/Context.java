@@ -1754,14 +1754,16 @@ public final class Context {
         Object result = null;
         if (securitySupport != null) {
             Class[] classes = securitySupport.getClassContext();
-            if (depth != -1) {
-                int depth1 = depth + 1;
-                result = getSecurityDomainFromClass(classes[depth1]);
-            } else {
-                for (int i=1; i < classes.length; i++) {
-                    result = getSecurityDomainFromClass(classes[i]);
-                    if (result != null)
-                        break;
+            if (classes != null) {
+                if (depth != -1) {
+                    int depth1 = depth + 1;
+                    result = getSecurityDomainFromClass(classes[depth1]);
+                } else {
+                    for (int i=1; i < classes.length; i++) {
+                        result = getSecurityDomainFromClass(classes[i]);
+                        if (result != null)
+                            break;
+                    }
                 }
             }
         }

@@ -118,17 +118,18 @@ public class Codegen extends Interpreter {
                         }
                     }
                     try {
-                        Class clazz;
-                        if (securitySupport == null) {
+                        Class clazz = null;
+                        if (securitySupport != null) {
+                            clazz = securitySupport.defineClass(name, classFile, 
+                                                                securityDomain);
+                        }
+                        if (clazz == null) {
                             Context.checkSecurityDomainRequired();
                             if (classLoader == null)
                                 classLoader = new JavaScriptClassLoader();
                             clazz = classLoader.defineClass(name, classFile);
                             ClassLoader loader = clazz.getClassLoader();
                             clazz = loader.loadClass(name);
-                        } else {
-                            clazz = securitySupport.defineClass(name, classFile, 
-                                                                securityDomain);
                         }
                         if (name.equals(generatedName))
                             result = clazz;

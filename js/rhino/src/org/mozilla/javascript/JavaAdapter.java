@@ -283,17 +283,18 @@ public class JavaAdapter extends ScriptableObject {
         SecuritySupport ss = cx.getSecuritySupport();
         if (ss != null)  {
             Object securityDomain = cx.getSecurityDomainForStackDepth(-1);
-            return ss.defineClass(adapterName, bytes, securityDomain);
-        } else {
-            if (classLoader == null)
-                classLoader = new MyClassLoader();
-            classLoader.defineClass(adapterName, bytes);
-            return classLoader.loadClass(adapterName, true);
-        }
+            Class result = ss.defineClass(adapterName, bytes, securityDomain);
+            if (result != null)
+                return result;
+        } 
+        if (classLoader == null)
+            classLoader = new MyClassLoader();
+        classLoader.defineClass(adapterName, bytes);
+        return classLoader.loadClass(adapterName, true);
     }
     
     /**
-     * Utility method, which dynamically binds a Context to the current thread, 
+     * Utility method which dynamically binds a Context to the current thread, 
      * if none already exists.
      */
     public static Object callMethod(Scriptable object, Object thisObj,
