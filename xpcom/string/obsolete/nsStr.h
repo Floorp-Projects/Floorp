@@ -104,7 +104,7 @@
                     ----------------------------------- 
     
   
-    Note: The i18n folks will stenously object if we get too carried away with the
+    Note: The i18n folks will stenuously object if we get too carried away with the
           use of nsCString's that pass interface boundaries. Try to limit your
           use of these to external interfaces that demand them, or for your own
           private purposes in cases where they'll never be seen by humans. 
@@ -130,7 +130,7 @@
          (after all, the whole point is to avoid a heap allocation of the buffer).
 
 
-      4) Consider using nsString to write into your arbitrarily-sized stack buffers, rather
+      4) Consider using an autoString to write into your arbitrarily-sized stack buffers, rather
          than it's own buffers.
 
          For example, let's say you're going to call printf() to emit pretty-printed debug output 
@@ -151,9 +151,9 @@
          }
 
          The assignment statment to s3 will cause the given string to be written to your
-         stack-based buffer via the normal nsString interfaces. Cool, huh?  Note however
-         that just like any other nsString use, if you write more data than will fit in
-         the buffer, nsString *will* go to the heap. 
+         stack-based buffer via the normal nsString/nsCString interfaces. Cool, huh?  
+         Note however that just like any other nsStringXXX use, if you write more data 
+         than will fit in the buffer, a visit to the heap manager will be in order. 
      
 
  **********************************************************************************/
