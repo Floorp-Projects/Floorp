@@ -795,6 +795,7 @@ nsBaseIBFrame::Reflow(nsIPresContext&          aPresContext,
 }
 
 // XXX make this virtual
+// XXX factor into its component pieces
 void
 nsBaseIBFrame::ComputeFinalSize(nsBlockReflowState& aState,
                                 nsHTMLReflowMetrics& aMetrics)
@@ -806,11 +807,6 @@ nsBaseIBFrame::ComputeFinalSize(nsBlockReflowState& aState,
     eHTMLFrameConstraint_FixedContent == aState.heightConstraint;
 
 #if 0
-  if (NS_STYLE_FLOAT_NONE != aState.mStyleDisplay->mFloats) {
-    isFixedWidth = PR_FALSE;
-    isFixedHeight = PR_FALSE;
-  }
-#else
   if (NS_BODY_SHRINK_WRAP & mFlags) {
     isFixedWidth = PR_FALSE;
     isFixedHeight = PR_FALSE;
@@ -1489,6 +1485,9 @@ nsBaseIBFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       }
       DidReflowLine(aState, line, keepGoing);
       if (!keepGoing) {
+        if (0 == line->ChildCount()) {
+          DeleteLine(aState, line);
+        }
         break;
       }
       nscoord newHeight = line->mBounds.height;
@@ -1600,6 +1599,9 @@ nsBaseIBFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       }
       DidReflowLine(aState, line, keepGoing);
       if (!keepGoing) {
+        if (0 == line->ChildCount()) {
+          DeleteLine(aState, line);
+        }
         break;
       }
 
@@ -1646,6 +1648,24 @@ nsBaseIBFrame::ReflowDirtyLines(nsBlockReflowState& aState)
 #endif
 
   return rv;
+}
+
+void
+nsBaseIBFrame::DeleteLine(nsBlockReflowState& aState,
+                          nsLineBox* aLine)
+{
+  NS_PRECONDITION(0 == aLine->ChildCount(), "can't delete !empty line");
+  if (0 == aLine->ChildCount()) {
+    if (nsnull == aState.mPrevLine) {
+      NS_ASSERTION(aLine == mLines, "huh");
+      mLines = nsnull;
+    }
+    else {
+      NS_ASSERTION(aState.mPrevLine->mNext == aLine, "bad prev-line");
+      aState.mPrevLine->mNext = aLine->mNext;
+    }
+    delete aLine;
+  }
 }
 
 // XXX add in some state to nsBlockReflowState that indicates whether
@@ -1707,12 +1727,14 @@ nsBaseIBFrame::ReflowLine(nsBlockReflowState& aState,
       return rv;
     }
     if (nsnull == frame) {
+#if 0
       // If there is nothing left to pull then get rid of the empty
       // line and return.
       if (nsnull != aState.mPrevLine) {
         aState.mPrevLine->mNext = nsnull;
       }
       delete aLine;
+#endif
       aKeepGoing = PR_FALSE;
       return rv;
     }
