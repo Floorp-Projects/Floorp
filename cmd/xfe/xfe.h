@@ -252,9 +252,6 @@ extern Widget fe_MakeToolbarFromSpec (Widget parent, MWContext *context,
 extern void fe_GetSashGeometry(char *geom_str, int pane_config,
 			       unsigned int *w, unsigned int *h);
 extern void fe_RebuildWindow (MWContext *context);
-extern void fe_GenerateBookmarkMenu (MWContext *context);
-extern void fe_GenerateWindowsMenu (MWContext *context);
-extern void fe_InvalidateAllBookmarkMenus (void);
 extern Boolean fe_ImportBookmarks (char *filename);
 extern Boolean fe_LoadBookmarks (char *filename);
 extern Boolean fe_SaveBookmarks (void);
@@ -297,7 +294,7 @@ extern void fe_SetURLString (MWContext *context, URL_Struct *url);
 extern void fe_perror (MWContext *context, const char *message);
 extern void fe_stderr (MWContext *context, const char *message);
 extern void fe_Message (MWContext *context, const char *message);
-extern char *fe_Basename (const char *string);
+extern char *fe_Basename (char *string);
 extern XP_Bool fe_StrEndsWith(char *string, char *endString);
 extern void fe_MidTruncatedProgress (MWContext *context, const char *message);
 extern Boolean fe_ContextHasPopups(MWContext* context);
@@ -354,9 +351,10 @@ extern XP_Bool fe_SetTransparentPixel(MWContext *context, uint8 red,
 extern void fe_InitIconColors (MWContext *context);
 extern void fe_InitIcons (MWContext *context, MSG_BIFF_STATE state);
 extern void fe_IconSize (int icon_number, long *width, long *height);
+#ifdef EDITOR
 extern Pixmap fe_ToolbarPixmap (MWContext *context, int i, Boolean disabled_p,
 				Boolean urls_p);
-
+#endif
 
 /* Image rendering methods.  */
 extern Pixmap
@@ -377,9 +375,6 @@ fe_DrawMaskedImageWithClipRegion(Display *dpy, Drawable drawable,
 
 
 
-/* used for the mail window, where integer indexes just don't work. */
-extern Pixmap fe_ToolbarPixmapByName (MWContext *context, char *pixmap_name, Boolean disabled_p,
-				      Boolean urls_p);
 #ifndef NO_SECURITY
 extern Pixmap fe_SecurityPixmap (MWContext *context,
 				 Dimension *w, Dimension *h,
@@ -914,51 +909,9 @@ typedef struct fe_ContextData
 
   Widget widget;		/* The main shell widget for this window. */
 
-  Widget url_label;		/* Label indicating what mode the url_text */
-				/* is (either "Location:" or "Go To") */
-  Widget url_text;		/* Text field displaying the current URL (or */
-				/* a URL that the user is typing in) */
-  Widget back_button;		/* Toolbar button to go back in history. */
-  Widget forward_button;	/* Toolbar button to go forward in history. */
-  Widget home_button;		/* Toolbar button to load home page. */
+  /* Still used by editor */
+  Widget menubar;       /* Menubar, containing all menu buttons. */
 
-  Widget back_menuitem;		/* Menuitem to go back in history. */
-  Widget forward_menuitem;	/* Menuitem to go foreward in history. */
-  Widget home_menuitem;		/* Menuitem to load home page. */
-  Widget delete_menuitem;	/* Menuitem to delete this window. */
-
-  Widget back_popupitem;	/* Popup menuitem to go back in history. */
-  Widget forward_popupitem;	/* Popup menuitem to go foreward in history. */
-
-  Widget cut_menuitem, copy_menuitem, paste_menuitem, paste_quoted_menuitem;
-				/* Menuitems to cut/copy/paste. */
-
-  Widget findAgain_menuitem;	/* Menuitems to findAgain. */
-  Widget reloadFrame_menuitem;	/* Menuitems to reload selected Frame. */
-  Widget frameSource_menuitem;	/* Menuitem to view source of selected Frame. */
-  Widget frameInfo_menuitem;	/* Menuitem to view info of selected Frame. */
-
-  Widget mailto_menuitem;	/* Menuitem to mail this URL to someone. */
-  Widget saveAs_menuitem;	/* Menuitem to save this URL as */
-  Widget uploadFile_menuitem;   /* Menuitem to upload a file to an FTP site */
-  Widget print_menuitem;	/* Menuitem to print this URL. */
-  Widget refresh_menuitem;	/* Menuitem to refresh this URL. */
-  Widget print_button;		/* Toolbar button to print this URL. */
-
-  Widget bookmark_menu;		/* Menu containing the bookmark entries. */
-  Widget windows_menu;		/* Menu containing the list of windows. */
-  Widget history_menu;		/* Menu containing the URL history. */
-  Widget delayed_menuitem;	/* Menuitem to load in delayed images. */
-  Widget delayed_button;	/* Toolbar button to load in delayed images. */
-  Widget abort_menuitem;	/* Menuitem to abort downloads. */
-  Widget abort_button;		/* Toolbar button to abort downloads. */
-  Widget menubar;		/* Menubar, containing all menu buttons. */
-  Widget top_area;		/* Form containing the toolbar, current URL */
-				/* info, directory buttons, and logo. */
-  Widget toolbar;		/* RowColumn containing the toolbar buttons. */
-  Widget character_toolbar;	/* RowColumn containing editor char buttons. */
-  Widget paragraph_toolbar;	/* RowColumn containing editor para buttons. */
-  Widget dashboard;		/* Form containing the status/thermometer */
 				/* info at bottom of window.*/
 #ifdef LEDGES
   Widget top_ledge, bottom_ledge; /* Half-implemented fixed areas that */
@@ -1152,12 +1105,6 @@ typedef struct fe_ContextData
 
   Boolean confirm_exit_p;
   Boolean show_url_p;
-  Boolean show_toolbar_p;
-  Boolean show_toolbar_icons_p;
-  Boolean show_toolbar_text_p;
-  Boolean show_directory_buttons_p;
-  Boolean show_menubar_p;
-  Boolean show_bottom_status_bar_p;
   Boolean show_character_toolbar_p;
   Boolean show_paragraph_toolbar_p;
   Boolean autoload_images_p;
