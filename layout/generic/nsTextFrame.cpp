@@ -1616,6 +1616,12 @@ TextFrame::Reflow(nsIPresContext& aPresContext,
       gTextBlinker->AddFrame(this);
     }
   }
+  else {
+    if (0 != (mFlags & TEXT_BLINK_ON)) {
+      mFlags &= ~TEXT_BLINK_ON;
+      gTextBlinker->RemoveFrame(this);
+    }
+  }
 
   PRBool wrapping = NS_STYLE_WHITESPACE_NORMAL == ts.mText->mWhiteSpace;
   PRBool firstLetterOK = lineLayout.GetFirstLetterStyleOK();
