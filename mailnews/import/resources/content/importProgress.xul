@@ -38,9 +38,9 @@ Rights Reserved.
 
 	<keyset id="keyset"/>
 
-	<text id="progressTitle" value="Title"/>
+	<text class="header" id="progressTitle" value="Title"/>
 	
-	<text id="progressStatus" value="Processing" flex="1"/>
+	<text class="label" id="progressStatus" value="Processing" flex="1"/>
 				
 	<progressmeter id="progressMeter" mode="normal" value="5" flex="1"/>
 

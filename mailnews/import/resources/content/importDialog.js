@@ -63,8 +63,6 @@ function OnLoadImportDialog()
 	top.progressInfo.importSuccess = false;
 	top.progressInfo.importType = null;
 
-	doSetOKCancel(ImportDialogOKButton, 0);
-
 	// look in arguments[0] for parameters
 	if (window.arguments && window.arguments[0] && window.arguments.importType)
 	{
@@ -88,14 +86,14 @@ function SetUpImportType()
 	switch ( top.importType )
 	{
 		case "mail":
-			document.getElementById( "listLabel").setAttribute('value', GetBundleString( 'ImportMailListLabel'));
+			//document.getElementById( "listLabel").setAttribute('value', GetBundleString( 'ImportMailListLabel'));
 			document.getElementById( "mailRadio").checked = true;
 			document.getElementById( "addressbookRadio").checked = false;
 			document.getElementById( "settingsRadio").checked = false;
 			break;
 		case "addressbook":
 			// top.window.title = top.bundle.GetStringFromName('ImportAddressBooksDialogTitle');
-			document.getElementById( "listLabel").setAttribute('value', GetBundleString('ImportAddressBooksListLabel'));
+			//document.getElementById( "listLabel").setAttribute('value', GetBundleString('ImportAddressBooksListLabel'));
 			//SetDivText('listLabel', GetBundleString('ImportAddressBooksListLabel'));
 			document.getElementById( "addressbookRadio").checked = true;
 			document.getElementById( "mailRadio").checked = false;
@@ -103,7 +101,7 @@ function SetUpImportType()
 			break;
 		case "settings":
 			// top.window.title = top.bundle.GetStringFromName('ImportSettingsDialogTitle');
-			document.getElementById( "listLabel").setAttribute('value', GetBundleString('ImportSettingsListLabel'));
+			//document.getElementById( "listLabel").setAttribute('value', GetBundleString('ImportSettingsListLabel'));
 			//SetDivText('listLabel', GetBundleString('ImportSettingsListLabel'));
 			document.getElementById( "settingsRadio").checked = true;
 			document.getElementById( "addressbookRadio").checked = false;
@@ -119,10 +117,8 @@ function SetDivText(id, text)
 {
 	var div = document.getElementById(id);
 		
-	if ( div )
-	{
-		if ( div.childNodes.length == 0 )
-		{			
+	if (div) {
+		if (!div.childNodes.length) {			
 			var textNode = document.createTextNode(text);
 			div.appendChild(textNode);                   			
 		}
@@ -136,23 +132,35 @@ function SetDivText(id, text)
 function ImportDialogOKButton()
 {
 	var tree = document.getElementById('moduleList');
+  var deck = document.getElementById("stateDeck");
+  var header = document.getElementById("header");
+  var progressMeterEl = document.getElementById("progressMeter");
+  var progressStatusEl = document.getElementById("progressStatus");
+  var progressTitleEl = document.getElementById("progressTitle");
+
+  // better not mess around with navigation at this point
+  var nextButton = document.getElementById("forward");
+  nextButton.setAttribute("disabled", "true");
+  var backButton = document.getElementById("back");
+  backButton.setAttribute("disabled", "true");
+  
 	if ( tree && tree.selectedItems && (tree.selectedItems.length == 1) )
 	{
 		var index = tree.selectedItems[0].getAttribute('list-index');
 		var module = top.importService.GetModule( top.importType, index);
 		var name = top.importService.GetModuleName( top.importType, index);
 		top.selectedModuleName = name;
-		if (module != null) 
+		if (module) 
 		{
 			switch( top.importType )
 			{
 				case "mail":
 					top.successStr = Components.classes["component://netscape/supports-wstring"].createInstance();
-					if (top.successStr != null) {
+					if (top.successStr) {
 						top.successStr = top.successStr.QueryInterface( Components.interfaces.nsISupportsWString);
 					}
 					top.errorStr = Components.classes["component://netscape/supports-wstring"].createInstance();
-					if (top.errorStr != null)
+					if (top.errorStr)
 						top.errorStr = top.errorStr.QueryInterface( Components.interfaces.nsISupportsWString);
 					
 					if (ImportMail( module, top.successStr, top.errorStr) == true) 
@@ -161,70 +169,64 @@ function ImportDialogOKButton()
 						// wait for the import to finish
 						// or we are done!
 						if (top.progressInfo.importInterface == null) {
-							ShowMailComplete( true);
+							ShowImportResults(true, 'Mail');
 							return( true);
 						}
 						else {
-							var meterText = GetFormattedBundleString( 'MailProgressMeterText', name);
-							// show the progress window...
-							top.window.openDialog(
-								"chrome://messenger/content/importProgress.xul",
-								"",
-								"chrome,modal,titlebar",
-								{windowTitle: GetBundleString( 'MailProgressTitle'),
-								 progressTitle: meterText,
-								 progressStatus: "",
-								 progressInfo: top.progressInfo});
-							
-							dump( "*** Returned from progress window\n");
+							var meterText = GetFormattedBundleString('MailProgressMeterText', name);
+              header.setAttribute("description", meterText);
+              
+              progressStatusEl.setAttribute("value", "");
+              progressTitleEl.setAttribute("value", meterText);
+              
+              deck.setAttribute("index", "2");
+              progressInfo.progressWindow = top.window;
+              progressInfo.intervalState = setInterval("ContinueImportCallback()", 100);
 
 							return( true);
 						}
 					}
 					else 
 					{
-						ShowMailComplete( false);
+						ShowImportResults(false, 'Mail');
 						return( false);
 					}
 					break;
 					
 				case "addressbook":
 					top.successStr = Components.classes["component://netscape/supports-wstring"].createInstance();
-					if (top.successStr != null) {
+					if (top.successStr)
 						top.successStr = top.successStr.QueryInterface( Components.interfaces.nsISupportsWString);
-					}
 					top.errorStr = Components.classes["component://netscape/supports-wstring"].createInstance();
-					if (top.errorStr != null)
+					if (top.errorStr)
 						top.errorStr = top.errorStr.QueryInterface( Components.interfaces.nsISupportsWString);
 					
-					if (ImportAddress( module, top.successStr, top.errorStr) == true) 
-					{
+					if (ImportAddress( module, top.successStr, top.errorStr) == true) {
 						// We think it was a success, either, we need to 
 						// wait for the import to finish
 						// or we are done!
 						if (top.progressInfo.importInterface == null) {
-							ShowAddressComplete( true);
+							ShowImportResults(true, 'Address');
 							return( true);
 						}
 						else {
-							var meterText = GetFormattedBundleString( 'AddrProgressMeterText', name);
-							var titleText = GetBundleString( 'AddrProgressTitle');
-							// show the progress window...
-							top.window.openDialog(
-								"chrome://messenger/content/importProgress.xul",
-								"",
-								"chrome,modal,titlebar",
-								{windowTitle: titleText,
-								 progressTitle: meterText,
-								 progressStatus: "",
-								 progressInfo: top.progressInfo});
 
+							var meterText = GetFormattedBundleString('MailProgressMeterText', name);
+              header.setAttribute("description", meterText);
+              
+              progressStatusEl.setAttribute("value", "");
+              progressTitleEl.setAttribute("value", meterText);
+              
+              deck.setAttribute("index", "2");
+              progressInfo.progressWindow = top.window;
+              progressInfo.intervalState = setInterval("ContinueImportCallback()", 100);
+            
 							return( true);
 						}
 					}
 					else 
 					{
-						ShowAddressComplete( false);
+						ShowImportResults(false, 'Address');
 						return( false);
 					}
 					break;
@@ -235,21 +237,14 @@ function ImportDialogOKButton()
 					var newAccount = new Object();
 					if (!ImportSettings( module, newAccount, error)) 
 					{
-						if (error.value != null)
-						{
-							// Show error alert with error
-							// information
-							alert( GetBundleString( 'ImportSettingsFailed'));
-						}
+						if (error.value)
+              ShowImportResultsRaw(GetBundleString( 'ImportSettingsFailed'), null);
 						// the user canceled the operation, shoud we dismiss
 						// this dialog or not?
 						return false;
 					}
 					else
-					{
-						// Alert to show success
-						alert( GetFormattedBundleString( 'ImportSettingsSuccess', name));
-					}
+            ShowImportResultsRaw(GetFormattedBundleString( 'ImportSettingsSuccess', name), null);
 					break;
 			}
 		}
@@ -258,6 +253,22 @@ function ImportDialogOKButton()
 	return true;
 }
 
+function SetStatusText( val)
+{
+  var progressStatus = document.getElementById("progressStatus");
+	progressStatus.setAttribute( "value", val);
+}
+
+function SetProgress( val)
+{
+  var progressMeter = document.getElementById("progressMeter");
+	progressMeter.setAttribute( "value", val);
+}
+
+function ContinueImportCallback()
+{
+	progressInfo.mainWindow.ContinueImport( top.progressInfo);
+}
 
 function ImportSelectionChanged()
 {
@@ -303,42 +314,33 @@ function AddModuleToList(moduleName, index)
 
 
 function ContinueImport( info) {
-	var isMail = false;
-
-	/* dump( "*** ContinueImport\n"); */
-
-	if (info.importType == 'mail')
-		isMail = true;
-	else
-		isMail = false;
-
+  var isMail = info.importType == 'mail' ? true : false;
 	var clear = true;
+
 	if (info.importInterface) {
 		if (!info.importInterface.ContinueImport()) {
 			info.importSuccess = false;
 			clearInterval( info.intervalState);
 			if (info.progressWindow != null) {
-				info.progressWindow.close();
+				var deck = document.getElementById("stateDeck");
+        deck.setAttribute("index", "3");
 				info.progressWindow = null;
 			}
 
-			if (isMail == true)
-				ShowMailComplete( false);
-			else
-				ShowAddressComplete( false);
+      ShowImportResults(false, isMail ? 'Mail' : 'Address');
 		}
 		else if ((pcnt = info.importInterface.GetProgress()) < 100) {
 			clear = false;
 			if (info.progressWindow != null) {
 				if (pcnt < 5)
 					pcnt = 5;
-				info.progressWindow.SetProgress( pcnt);
-				if (isMail == true) {
+				SetProgress( pcnt);
+				if (isMail) {
 					var mailName = info.importInterface.GetData( "currentMailbox");
-					if (mailName != null) {
+					if (mailName) {
 						mailName = mailName.QueryInterface( Components.interfaces.nsISupportsWString);
-						if (mailName != null)
-							info.progressWindow.SetStatusText( mailName.data);
+						if (mailName)
+							SetStatusText( mailName.data);
 					}
 				}
 			}
@@ -346,55 +348,69 @@ function ContinueImport( info) {
 		else {
 			clearInterval( info.intervalState);
 			info.importSuccess = true;
-			if (info.progressWindow != null) {
-				info.progressWindow.close();
+			if (info.progressWindow) {
+				var deck = document.getElementById("stateDeck");
+        deck.setAttribute("index", "3");
 				info.progressWindow = null;
 			}
-
-			if (isMail == true)
-				ShowMailComplete( true);
-			else
-				ShowAddressComplete( true);
+      
+      ShowImportResults(true, isMail ? 'Mail' : 'Address');
 		}
 	}
-	else {
-		dump( "*** ERROR: info.importInterface is null\n");
-	}
-
-	if (clear == true) {
+	if (clear) {
 		info.intervalState = null;
 		info.importInterface = null;
 	}
 }
 
-
-function ShowMailComplete( good)
+function ShowImportResults(good, module)
 {
-	var str = null;
-	if (good == true) {
-		if ((top.selectedModuleName != null) && (top.selectedModuleName.length > 0))
-			str = GetFormattedBundleString( 'ImportMailSuccess', top.selectedModuleName);
-		else
-			str = GetFormattedBundleString( 'ImportMailSuccess', "");
-
-		str += "\n";
-		if ((top.successStr.data != null) && (top.successStr.data.length > 0))
-			str += "\n" + "\n" + top.successStr.data;
+  var modSuccess = 'Import' + module + 'Success';
+  var modFailed = 'Import' + module + 'Failed';
+	if (good) {
+    var title = GetFormattedBundleString(modSuccess, selectedModuleName ? selectedModuleName : '');
+    var results = successStr.data;    
 	}
-	else {
-		if ((top.errorStr.data != null) && (top.errorStr.data.length > 0)) {
-			if ((top.selectedModuleName != null) && (top.selectedModuleName.length > 0))
-				str = GetFormattedBundleString( 'ImportMailFailed', top.selectedModuleName);
-			else
-				str = GetFormattedBundleString( 'ImportMailFailed', "");
-			str += "\n" + top.errorStr.data;
-		}
+	else if (errorStr.data) { 
+    var title = GetFormattedBundleString(modFailed, selectedModuleName ? selectedModuleName : '');
+    var results = errorStr.data;
 	}
 	
-	if (str != null)
-		alert( str);
+	if (results && title) 
+    ShowImportResultsRaw(title, results)
 }
 
+function ShowImportResultsRaw(title, results)
+{
+  SetDivText("status", title);
+  var header = document.getElementById("header");
+  header.setAttribute("description", title);
+  dump("*** results = " + results + "\n");
+  attachStrings("results", results);
+  var deck = document.getElementById("stateDeck");
+  deck.setAttribute("index", "3");
+  var nextButton = document.getElementById("forward");
+  nextButton.value = nextButton.getAttribute("finishedval");    
+  nextButton.removeAttribute("disabled");
+  var cancelButton = document.getElementById("cancel");
+  cancelButton.setAttribute("disabled", "true");
+}
+
+function attachStrings(aNode, aString)
+{
+  var attachNode = document.getElementById(aNode);
+  if (!aString) {
+    attachNode.parentNode.setAttribute("hidden", "true");
+    return;
+  }
+  var strings = aString.split("\n");
+  for (var i = 0; i < strings.length; i++) {
+    if (strings[i]) {
+      var currNode = document.createTextNode(strings[i]);
+      attachNode.appendChild(currNode);
+    }
+  }
+}
 
 function ShowAddressComplete( good)
 {
@@ -584,22 +600,13 @@ function ImportMail( module, success, error) {
 		if (mailInterface.BeginImport( success, error)) {
 			top.progressInfo.importInterface = mailInterface;
 			// top.intervalState = setInterval( "ContinueImport()", 100);
-			return( true);
+			return true;
 		}
-		else {
-			return( false);
-		}
+		else
+			return false;
 	}
-	else {
-		dump( "*** WantsProgress returned false\n");
-
-		if (mailInterface.BeginImport( success, error)) {
-			return( true);
-		}
-		else {
-			return( false);
-		}
-	}
+	else
+    return mailInterface.BeginImport( success, error) ? true : false;
 }
 
 
@@ -746,18 +753,48 @@ function SwitchType( newType)
 	SetDivText('description', "");
 }
 
-function OnMailType()
+
+function next()
 {
-	SwitchType( "mail");
+  var deck = document.getElementById("stateDeck");
+  var index = deck.getAttribute("index");
+  switch (index) {
+  case "0":
+    var backButton = document.getElementById("back");
+    backButton.removeAttribute("disabled");
+    var radioGroup = document.getElementById("importFields");
+    SwitchType(radioGroup.data);
+    deck.setAttribute("index", "1");
+    enableAdvance();
+    break;
+  case "1":
+    ImportDialogOKButton();
+    break;
+  case "3":
+    close();
+    break;
+  }      
 }
 
-function OnSettingsType()
+function enableAdvance()
 {
-	SwitchType( "settings");
+  var tree = document.getElementById("moduleList");
+  var nextButton = document.getElementById("forward");
+  if (tree.selectedItems.length)
+    nextButton.removeAttribute("disabled");
+  else
+    nextButton.setAttribute("disabled", "true");
 }
 
-function OnAddressType()
+function back()
 {
-	SwitchType( "addressbook");
+  var deck = document.getElementById("stateDeck");
+  if (deck.getAttribute("index") == "1") {
+    var backButton = document.getElementById("back");
+    backButton.setAttribute("disabled", "true");
+    var nextButton = document.getElementById("forward");
+    nextButton.value = nextButton.getAttribute("nextval");
+    nextButton.removeAttribute("disabled");
+    deck.setAttribute("index", "0");
+  }
 }
-

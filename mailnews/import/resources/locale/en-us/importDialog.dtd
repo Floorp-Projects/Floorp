@@ -19,7 +19,21 @@ Rights Reserved.
 --> 
 
 <!ENTITY importDialog.windowTitle "Import">
-<!ENTITY importDialog.mailTitle "Mail">
+<!ENTITY importDialog.mailTitle   "Mail">
 <!ENTITY importDialog.addressbookTitle "Address Books">
 <!ENTITY importDialog.settingsTitle "Settings">
 
+<!ENTITY importTitle.label        "&brandShortName; Mail Import Wizard">
+<!ENTITY importDesc.label         "Import Mail and Address Books from other programs">
+
+<!ENTITY importDescription.label  "This wizard will import mail messages, addressbook entries and/or preferences from other mail programs and common addressbook formats into &brandShortName; Mail.">
+<!ENTITY importDescription2.label "Once they have been imported, you will be able to access them from within &brandShortName; Mail and/or Addressbook.">
+
+<!ENTITY selectDescription.label  "Please select the program from which you would like to import:">
+
+<!ENTITY back.label               "&lt; Back">
+<!ENTITY forward.label            "Next &gt;">
+<!ENTITY finish.label             "Finish">
+<!ENTITY cancel.label             "Cancel">
+
+<!ENTITY select.label             "Select the type of material to import:">

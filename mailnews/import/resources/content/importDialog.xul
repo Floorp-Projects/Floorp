@@ -19,19 +19,21 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 --> 
 
-<?xml-stylesheet href="chrome://messenger/skin/importDialog.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?> 
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
-
-<!DOCTYPE window SYSTEM "chrome://messenger/locale/importDialog.dtd">
-
+<!DOCTYPE window [
+<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+%brandDTD;
+<!ENTITY % importDTD SYSTEM "chrome://messenger/locale/importDialog.dtd" >
+%importDTD;
+]>
 
 <window xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        class="dialog"
-        onload="OnLoadImportDialog()"
-        orient="vertical"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="OnLoadImportDialog()" class="color-dialog"
+        orient="vertical" style="width: 40em;"
         title="&importDialog.windowTitle;">
 
 <script src="chrome://global/content/strres.js"/>
@@ -39,32 +41,66 @@ Rights Reserved.
 
 	<keyset id="keyset"/>
 	
-	<box id="import-type-radio-box" orient="horizontal">
-		<spring flex="1"/>
-      		<radio id="addressbookRadio" value="&importDialog.addressbookTitle;" onclick="OnAddressType();"/>
-      		<radio id="mailRadio" value="&importDialog.mailTitle;" onclick="OnMailType();"/>
-      		<radio id="settingsRadio" value="&importDialog.settingsTitle;" onclick="OnSettingsType();"/>
-		<spring flex="1"/>
-	</box>
-				
-	<!-- module list -->
-	<box id="import-module-list-box" orient="vertical">
-		<text id="listLabel"/>
-		
-		<box id="import-module-tree-box" orient="vertical">
-			<tree id="moduleList" flex="1" onselect="ImportSelectionChanged()">
-                                <treecolgroup>
-				  <treecol flex="1"/>
-                                </treecolgroup>
-				<treechildren id="bucketBody" flex="1"/>
-			</tree>
-		</box>
-		
-		<html id="description"/>
-	</box>
+  <box class="box-header" id="header"
+       title="&importTitle.label;"
+       description="&importDesc.label;"/>
 
+  <deck id="stateDeck" index="0">
+    <box class="wizard-box" orient="vertical">
+      <html>&importDescription.label;</html>
+      <html>&importDescription2.label;</html>
+      <separator/>
+      <html>&select.label;</html>
+      <separator class="thin"/>
+      <radiogroup id="importFields" orient="vertical" class="indent" autostretch="never">
+    		<radio data="addressbook" id="addressbookRadio" value="&importDialog.addressbookTitle;"/>
+    		<radio data="mail" id="mailRadio" value="&importDialog.mailTitle;"/>
+  	  	<radio data="settings" id="settingsRadio" value="&importDialog.settingsTitle;"/>
+      </radiogroup>
+    </box>
+    <box class="wizard-box" orient="vertical">
+		  <html>&selectDescription.label;</html>
+      <tree class="inset" id="moduleList" flex="3" onselect="ImportSelectionChanged(); enableAdvance();" 
+            style="height: 0px;">
+        <treecolgroup>
+          <treecol flex="1"/>
+        </treecolgroup>
+        <treechildren id="bucketBody" flex="1"/>
+      </tree>
+      <html id="description" class="box-padded" flex="1"/>
+		</box>
+    <box class="wizard-box" orient="vertical">
+      <spring flex="1"/>
+      <titledbox orient="vertical">
+        <title id="progressTitle" value="Title"/>
+      	<text class="label indent" id="progressStatus" value="Processing"/>
+        <box class="box-padded" orient="vertical">
+          <progressmeter id="progressMeter" mode="normal" value="5"/>
+        </box>
+      </titledbox>
+    </box>
+    <box class="wizard-box" orient="vertical">
+      <html id="status"/>
+      <box style="overflow: auto" class="inset color-window" flex="1">
+        <html id="results" flex="1"/>
+      </box>
+    </box>
+	</deck>
+
+  <separator/>
+  
+  <separator class="groove"/>
+  
+  <box class="box-padded">
+    <spring flex="1"/>
+    <button id="back" value="&back.label;" disabled="true"
+            oncommand="back();"/>
+    <button id="forward" value="&forward.label;" nextval="&forward.label;" finishedval="&finish.label;" 
+            oncommand="next();"/>
+    <separator orient="vertical"/>
+    <button id="cancel" value="&cancel.label;"
+            oncommand="close();"/>
+  </box>
 	
-	<!-- OK & Cancel buttons -->
-	<box id="okCancelButtons"/>
 
 </window>
