@@ -87,8 +87,6 @@ INCLUDES += \
 			-I$(PUBLIC)/xp \
 			-I$(PUBLIC)/editor
 
-OBJS    = $(CPPSRCS:.cpp=.o)
-
 ifdef MOZ_OJI
 	JSJ_LIB = -ljsj
 endif
