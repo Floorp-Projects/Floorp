@@ -669,7 +669,7 @@ public:
   NS_DECL_NSIOBSERVER
 
   // Hashtable to cache the preferred fonts of some chars at their base size
-  static nsBaseFontHashtable gBaseFonts;
+  static nsBaseFontHashtable* gBaseFonts;
 
   // These are placeholders used to cache the indices (in mTableList) of
   // the preferred extension tables for the particular chars.
@@ -770,7 +770,7 @@ NS_IMPL_ISUPPORTS1(nsGlyphTableList, nsIObserver);
 // -----------------------------------------------------------------------------------
 // Here is the global list of applicable glyph tables that we will be using
 static nsGlyphTableList* gGlyphTableList = nsnull;
-nsBaseFontHashtable nsGlyphTableList::gBaseFonts;
+nsBaseFontHashtable* nsGlyphTableList::gBaseFonts = nsnull;
 PRInt32* nsGlyphTableList::gParts = nsnull;
 PRInt32* nsGlyphTableList::gVariants = nsnull;
 
@@ -823,6 +823,7 @@ nsGlyphTableList::Finalize()
     delete glyphTable;
   }
   // delete the other variables
+  delete gBaseFonts;
   delete gParts;
   delete gVariants;
   gParts = gVariants = nsnull;
@@ -1081,7 +1082,7 @@ SetPreferredFonts(const char* aKey, nsString& aFamilyList)
 
   if (!strcmp(extension, ".base")) {
     // fonts to be used for the base size of the char (i.e., no stretching)
-    nsBaseFontEntry* entry = nsGlyphTableList::gBaseFonts.AddEntry(uchar);
+    nsBaseFontEntry* entry = nsGlyphTableList::gBaseFonts->AddEntry(uchar);
     if (entry) {
       entry->mFontFamily = aFamilyList;
     }
@@ -1155,21 +1156,21 @@ InitGlobals(nsIPresContext* aPresContext)
   // Allocate the placeholders for the preferred parts and variants
   nsresult rv = NS_ERROR_OUT_OF_MEMORY;
   gGlyphTableList = new nsGlyphTableList();
-  if (gGlyphTableList) {
+  nsGlyphTableList::gBaseFonts = new nsBaseFontHashtable();
+  if (gGlyphTableList && nsGlyphTableList::gBaseFonts) {
     nsGlyphTableList::gParts = new PRInt32[count];
     nsGlyphTableList::gVariants = new PRInt32[count];
     if (nsGlyphTableList::gParts && nsGlyphTableList::gVariants) {
       rv = gGlyphTableList->Initialize();
     }
   }
-  if (NS_FAILED(rv) ||
-      !gGlyphTableList ||
-      !nsGlyphTableList::gParts ||
-      !nsGlyphTableList::gVariants) {
+  if (NS_FAILED(rv)) {
     delete gGlyphTableList;
+    delete nsGlyphTableList::gBaseFonts;
     delete nsGlyphTableList::gParts;
     delete nsGlyphTableList::gVariants;
     gGlyphTableList = nsnull;
+    nsGlyphTableList::gBaseFonts = nsnull;
     nsGlyphTableList::gParts = nsnull;
     nsGlyphTableList::gVariants = nsnull;
     return rv;
@@ -1185,7 +1186,7 @@ InitGlobals(nsIPresContext* aPresContext)
     nsGlyphTableList::gParts[i] = kNotFound; // i.e., -1
     nsGlyphTableList::gVariants[i] = kNotFound; // i.e., -1
   }
-  nsGlyphTableList::gBaseFonts.Init(5);
+  nsGlyphTableList::gBaseFonts->Init(5);
 
   nsCAutoString key;
   nsAutoString value;
@@ -1274,7 +1275,8 @@ InitGlobals(nsIPresContext* aPresContext)
 static void
 SetBaseFamily(PRUnichar aChar, nsFont& aFont)
 {
-  nsBaseFontEntry* entry = nsGlyphTableList::gBaseFonts.GetEntry(aChar);
+  if (!nsGlyphTableList::gBaseFonts) return;
+  nsBaseFontEntry* entry = nsGlyphTableList::gBaseFonts->GetEntry(aChar);
   if (entry) {
     aFont.name.Assign(entry->mFontFamily);
   }
