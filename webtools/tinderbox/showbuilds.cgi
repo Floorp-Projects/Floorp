@@ -669,6 +669,12 @@ sub do_quickparse {
     }
     my @treelist = split(/,/, $tree);
     foreach my $t (@treelist) {
+        $bonsai_tree = "";
+        require "$t/treedata.pl";
+        if ($bonsai_tree ne "") {
+            my $state = tree_open() ? "Open" : "Close";
+            print "State|$t|$bonsai_tree|$state\n";
+        }
         my %build;
         my %times;
         open(BUILDLOG, "<$t/build.dat" ) || die "Bad treename $t";
@@ -697,7 +703,7 @@ sub do_quickparse {
                 # This build is more than 12 hours old.  Ignore it.
                 next;
             }
-            print "$t|$buildname|$build{$buildname}\n";
+            print "Build|$t|$buildname|$build{$buildname}\n";
         }
     }
 }
