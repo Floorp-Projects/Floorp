@@ -30,7 +30,7 @@
 
   <property name="Name" value="java.supplement.build"/>
   <property name="name" value="java.supplement.build"/>
-  <property name="version" value="20021109"/>
+  <property name="version" value="20021220"/>
 
 <!-- ************ Per user local properties ******************************* -->
 
@@ -45,7 +45,7 @@
   <property name="package.version" value="1_3"/>
   <property name="dist" value="${build.home}/.."/>
 
-  <target name="main" depends="prepare,set.debug.vars,build.webclient"/>
+  <target name="main" depends="prepare,set.debug.vars,build.webclient.javadev,build.webclient.xpi"/>
 
   <target name="prepare">
 
@@ -53,9 +53,18 @@
       <os family="dos" />
     </condition>
 
+    <condition property="short.os.name" value="linux">
+      <os family="unix" />
+    </condition>
+
     <condition property="win.bin" value="WIN32_O.OBJ">
       <os family="dos" />
     </condition>
+
+    <condition property="win.bin" value="">
+      <os family="unix" />
+    </condition>
+
 
     <condition property="so.suffix" value="dll">
       <os family="dos" />
@@ -70,6 +79,22 @@
     </condition>
 
     <condition property="ar.suffix" value="a">
+      <os family="unix" />
+    </condition>
+
+    <condition property="lib.prefix" value="">
+      <os family="dos" />
+    </condition>
+
+    <condition property="lib.prefix" value="lib">
+      <os family="unix" />
+    </condition>
+
+    <condition property="javadomjni.location" value="components">
+      <os family="dos" />
+    </condition>
+
+    <condition property="javadomjni.location" value="">
       <os family="unix" />
     </condition>
 
@@ -95,31 +120,40 @@
 
   </target>
 
-  <target name="build.webclient" 
+  <target name="build.webclient.javadev" 
           depends="create.webclient.manifest,build.webclient.jar,create.webclient.scripts">
 
-    <copy file="${dist}/${win.bin}/bin/components/javadomjni.${so.suffix}" 
+    <copy file="${dist}/${win.bin}/bin/${javadomjni.location}/${lib.prefix}javadomjni.${so.suffix}" 
           todir="${package.lib}"/>
-    <copy file="${dist}/${win.bin}/bin/components/javadom.${so.suffix}" 
+    <copy file="${dist}/${win.bin}/bin/components/${lib.prefix}javadom.${so.suffix}" 
           todir="${package.lib}"/>
-    <copy file="${dist}/${win.bin}/bin/webclient.${so.suffix}" 
+    <copy file="${dist}/${win.bin}/bin/${lib.prefix}webclient.${so.suffix}" 
           todir="${package.lib}"/>
-    <copy file="${dist}/${win.bin}/lib/wc_share.${ar.suffix}" 
+    <copy file="${dist}/${win.bin}/lib/${lib.prefix}wc_share.${ar.suffix}" 
           todir="${package.lib}"/>
     <copy file="../webclient/src_share/runem.pl" 
           todir="${package.example}"/>
     <copy file="README.WEBCLIENT" 
           todir="${package.home}"/>
 
-    <chmod perm="775" file="${package.lib}/javadomjni.${so.suffix}"/>
-    <chmod perm="775" file="${package.lib}/javadom.${so.suffix}"/>
-    <chmod perm="775" file="${package.lib}/webclient.${ar.suffix}"/>
-    <chmod perm="775" file="${package.lib}/wc_share.${ar.suffix}"/>
+    <chmod perm="775" file="${package.lib}/${lib.prefix}javadomjni.${so.suffix}"/>
+    <chmod perm="775" file="${package.lib}/${lib.prefix}javadom.${so.suffix}"/>
+    <chmod perm="775" file="${package.lib}/${lib.prefix}webclient.${so.suffix}"/>
+    <chmod perm="775" file="${package.lib}/${lib.prefix}wc_share.${ar.suffix}"/>
     <chmod perm="775" file="${package.example}/runem.pl"/>
 
+  </target>
+
+  <target name="build.webclient.xpi" depends="build.win32.webclient.xpi,build.unix.webclient.xpi"/>
+
+  <target name="build.win32.webclient.xpi" if="build.win32.classes">
     <jar jarfile="webclient_${package.version}_${short.os.name}.xpi" 
          basedir="${dist}"  includes="install.js,javadev/**"/>
+  </target>
 
+  <target name="build.unix.webclient.xpi" if="build.unix.classes">
+    <jar jarfile="webclient_${package.version}_${short.os.name}.xpi" 
+         basedir="${dist}"  includes="install.js,javadev/**"/>
   </target>
 
   <target name="create.webclient.scripts" depends="create.win32.webclient.scripts,create.unix.webclient.scripts"/>
@@ -139,6 +173,17 @@ perl .\runem.pl org.mozilla.webclient.test.EmbeddedMozillaImpl ..\.. %1%
 
   <target name="create.unix.webclient.scripts" if="build.unix.classes">
 
+    <echo file="${package.example}/runem">perl ./runem.pl org.mozilla.webclient.test.EmbeddedMozillaImpl ../../.. \$1 \$2 \$3 \$4 \$4 \$6
+    </echo>
+    <chmod perm="775" file="${package.example}/runem"/>
+
+    <copy file="install_webclient_unix.js" 
+          tofile="${dist}/install.js"/>
+    <copy file="symlink.sh" 
+          todir="${dist}"/>
+    <copy file="chmodx.sh" 
+          todir="${dist}"/>
+
   </target>
 
   <target name="clean">
@@ -146,6 +191,8 @@ perl .\runem.pl org.mozilla.webclient.test.EmbeddedMozillaImpl ..\.. %1%
     <delete dir="${package.home}"/>
     <delete dir="${build.home}/META-INF"/>
     <delete file="${dist}/install.js"/>
+    <delete file="${dist}/symlink.sh"/>
+    <delete file="${dist}/chmodx.sh"/>
     <delete>
       <fileset dir="." includes="*.xpi"/>
     </delete>
