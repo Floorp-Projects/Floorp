@@ -1787,11 +1787,10 @@ nsDocument::GetScriptLoader(nsIScriptLoader** aScriptLoader)
   NS_ENSURE_ARG_POINTER(aScriptLoader);
 
   if (!mScriptLoader) {
-    nsScriptLoader* loader = new nsScriptLoader();
-    if (!loader) {
+    mScriptLoader = new nsScriptLoader();
+    if (!mScriptLoader) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    mScriptLoader = loader;
     mScriptLoader->Init(this);
   }
 
