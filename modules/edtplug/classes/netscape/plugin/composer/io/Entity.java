@@ -135,7 +135,7 @@ public class Entity extends Token {
     return false;
   }
 
-  static private Entity knownEntities[] = new Entity[106];
+  static private Entity knownEntities[] = new Entity[107];
   static {
     int i = 0;
 
@@ -266,6 +266,9 @@ public class Entity extends Token {
     knownEntities[i++] = new Entity("thorn", '\376');
 
     knownEntities[i++] = new Entity("yuml", '\377');
+	
+	// the euro currency character
+    knownEntities[i++] = new Entity("euro", '\u20AC');
   }
 }
 
