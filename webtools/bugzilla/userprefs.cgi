@@ -130,9 +130,10 @@ sub ShowAccount {
     my ($realname) = (FetchSQLData());
 
     $realname = value_quote($realname);
-    
+        
     EmitEntry("Old password",
-              qq{<input type=password name="oldpwd">});
+              qq|<input type=hidden name="Bugzilla_login" value="$::COOKIE{Bugzilla_login}">| .
+              qq|<input type=password name="Bugzilla_password">|);
     EmitEntry("New password",
               qq{<input type=password name="pwd1">});
     EmitEntry("Re-enter new password", 
@@ -142,9 +143,9 @@ sub ShowAccount {
 }
 
 sub SaveAccount {
-    if ($::FORM{'oldpwd'} ne ""
+    if ($::FORM{'Bugzilla_password'} ne ""
         || $::FORM{'pwd1'} ne "" || $::FORM{'pwd2'} ne "") {
-        my $old = SqlQuote($::FORM{'oldpwd'});
+        my $old = SqlQuote($::FORM{'Bugzilla_password'});
         my $pwd1 = SqlQuote($::FORM{'pwd1'});
         my $pwd2 = SqlQuote($::FORM{'pwd2'});
         SendSQL("SELECT cryptpassword = ENCRYPT($old, LEFT(cryptpassword, 2)) " .
