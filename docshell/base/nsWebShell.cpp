@@ -70,6 +70,7 @@
 #include "nsIDOMHTMLDocument.h"
 #include "nsLayoutCID.h"
 #include "nsIDOMRange.h"
+#include "nsIURIContentListener.h"
 #include "nsIDOMDocument.h"
 #include "nsTimer.h"
 
@@ -157,9 +158,9 @@ class nsWebShell : public nsIWebShell,
                    public nsIProgressEventSink, // should go away (nsIDocLoaderObs)
                    public nsIPrompt,
                    public nsIRefreshURI,
+                   public nsIURIContentListener,
                    public nsIClipboardCommands,
                    public nsIInterfaceRequestor
-                   
 {
 public:
   nsWebShell();
@@ -170,6 +171,8 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS
   NS_DECL_NSICAPABILITIES
+
+  NS_DECL_NSIURICONTENTLISTENER
 
   // nsIInterfaceRequestor
   NS_DECL_NSIINTERFACEREQUESTOR
@@ -417,6 +420,9 @@ public:
   NS_IMETHOD SetUrlDispatcher(nsIUrlDispatcher * anObserver);
   NS_IMETHOD GetUrlDispatcher(nsIUrlDispatcher *& aResult);
 
+  NS_IMETHOD SetParentURIContentListener(nsIURIContentListener * aContentListener);
+  NS_IMETHOD GetParentURIContentListener(nsIURIContentListener ** aContentListener);
+
 protected:
   void GetRootWebShellEvenIfChrome(nsIWebShell** aResult);
   void InitFrameData(PRBool aCompleteInitScrolling);
@@ -483,8 +489,17 @@ protected:
                      nsIInputStream* aPostDataStream,
                      nsLoadFlags aType,
                      const PRUint32 aLocalIP,
-                     const PRUnichar* aReferrer);
+                     const PRUnichar* aReferrer,
+                     PRBool aKickOffLoad = PR_TRUE);
 
+  nsresult PrepareToLoadURI(nsIURI * aUri, 
+                            const char * aCommand,
+                            nsIInputStream * aPostStream,
+                            PRBool aModifyHistory,
+                            nsLoadFlags aType,
+                            const PRUint32 aLocalIP,
+                            nsISupports * aHistoryState,
+                            const PRUnichar * aReferrer);
   float mZoom;
 
   static nsIPluginHost    *mPluginHost;
@@ -500,6 +515,10 @@ protected:
 
   // if there is no mWindow, this will keep track of the bounds  --dwc0001
   nsRect  mBounds;
+
+  // the parent content listener has a life time longer than our own...
+  // so we should not have an owning ref on this variable
+  nsIURIContentListener * mParentContentListener;
 
   MOZ_TIMER_DECLARE(mTotalTime)
 
@@ -654,6 +673,7 @@ nsWebShell::nsWebShell()
   mForceCharacterSet = "";
   mHistoryService = nsnull;
   mHistoryState = nsnull;
+  mParentContentListener = nsnull;
 }
 
 nsWebShell::~nsWebShell()
@@ -781,6 +801,7 @@ NS_IMPL_QUERY_HEAD(nsWebShell)
    NS_IMPL_QUERY_BODY(nsIRefreshURI)
    NS_IMPL_QUERY_BODY(nsIClipboardCommands)
    NS_IMPL_QUERY_BODY(nsIInterfaceRequestor)
+   NS_IMPL_QUERY_BODY(nsIURIContentListener)
    NS_IMPL_QUERY_BODY(nsICapabilities)
 NS_IMPL_QUERY_TAIL(nsIWebShell)
 
@@ -1353,7 +1374,21 @@ nsWebShell::SetContainer(nsIWebShellContainer* aContainer)
 {
   NS_IF_RELEASE(mContainer);
   mContainer = aContainer;
-  NS_IF_ADDREF(aContainer);
+  NS_IF_ADDREF(mContainer);
+
+  // uri dispatching change.....if you set a container for a webshell
+  // and that container is a content listener itself....then use
+  // it as our parent container. 
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIURIContentListener> contentListener = do_QueryInterface(mContainer, &rv);
+  if (NS_SUCCEEDED(rv) && contentListener)
+    SetParentURIContentListener(contentListener);
+
+  // if the container is getting set to null, then our parent must be going away
+  // so clear out our knowledge of the content listener represented by the container
+  if (!aContainer)
+    SetParentURIContentListener(nsnull);
+
   return NS_OK;
 }
 
@@ -2025,7 +2060,8 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
                       nsIInputStream* aPostDataStream,
                       nsLoadFlags aType,
                       const PRUint32 aLocalIP,
-                      const PRUnichar* aReferrer)
+                      const PRUnichar* aReferrer,
+                      PRBool aKickOffLoad)
 {
   if (!aUri)
     return NS_ERROR_NULL_POINTER;
@@ -2121,7 +2157,7 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
   // Stop loading the current document (if any...).  This call may result in
   // firing an EndLoadURL notification for the old document...
   StopBeforeRequestingURL();
-
+  
 
   // Tell web-shell-container we are loading a new url
   if (nsnull != mContainer) {
@@ -2153,7 +2189,8 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
  /* WebShell was primarily passing the buck when it came to streamObserver.
   * So, pass on the observer which is already a streamObserver to DocLoder.
   */
-  rv = mDocLoader->LoadDocument(aUri,        // URL string
+  if (aKickOffLoad)
+    rv = mDocLoader->LoadDocument(aUri,        // URL string
                                   aCommand,        // Command
                                   NS_STATIC_CAST(nsIContentViewerContainer*, this),// Container
                                   aPostDataStream, // Post Data
@@ -2162,7 +2199,7 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
                                   aLocalIP,        // load attributes.
                                   aReferrer);      // referrer
 
-  // Fix for bug 1646.  Change the notion of current url and referrer only after
+    // Fix for bug 1646.  Change the notion of current url and referrer only after
   // the document load succeeds.
   if (NS_SUCCEEDED(rv)) {
     mURL = urlSpec;
@@ -2172,15 +2209,93 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
   return rv;
 }
 
+// nsIURIContentListener support
+NS_IMETHODIMP
+nsWebShell::GetProtocolHandler(nsIURI *aURI, nsIProtocolHandler **aProtocolHandler)
+{
+  // ask our parent if they want to use a particular handler...
+  if (mParentContentListener)
+    return mParentContentListener->GetProtocolHandler(aURI, aProtocolHandler);
+  else
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsWebShell::SetParentURIContentListener(nsIURIContentListener * aContentListener)
+{
+  mParentContentListener = aContentListener;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsWebShell::GetParentURIContentListener(nsIURIContentListener ** aContentListener)
+{
+  nsresult rv = NS_OK;
+  if (mParentContentListener)
+  {
+    *aContentListener = mParentContentListener;
+    NS_ADDREF(*aContentListener);
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP nsWebShell::CanHandleContent(const char * aContentType,
+                                           const char * aCommand,
+                                           const char * aWindowTarget,
+                                           char ** aDesiredContentType,
+                                           PRBool * aCanHandleContent)
+
+{
+  // the webshell knows nothing about content policy....pass this
+  // up to our parent content handler...
+  nsCOMPtr<nsIURIContentListener> parentListener;
+  nsresult rv = GetParentURIContentListener(getter_AddRefs(parentListener));
+  if (NS_SUCCEEDED(rv))
+    rv = parentListener->CanHandleContent(aContentType, aCommand, aWindowTarget, aDesiredContentType, 
+                                          aCanHandleContent);
+  else
+    *aCanHandleContent = PR_FALSE;
+  return NS_OK;
+} 
+
 NS_IMETHODIMP 
-nsWebShell::LoadURI(nsIURI * aUri,
-                    const char * aCommand,
-                    nsIInputStream* aPostDataStream,
-                    PRBool aModifyHistory,
-                    nsLoadFlags aType,
-                    const PRUint32 aLocalIP,
-					          nsISupports * aHistoryState,
-                    const PRUnichar* aReferrer)
+nsWebShell::DoContent(const char * aContentType,
+                       const char * aCommand,
+                       const char * aWindowTarget,
+                       nsIChannel * aOpenedChannel,
+                       nsIStreamListener ** aContentHandler,
+                       PRBool * aAbortProcess)
+{
+  if (aAbortProcess)
+    *aAbortProcess = PR_FALSE;
+
+  // first, run any uri preparation stuff that we would have run normally
+  // had we gone through OpenURI
+  nsCOMPtr<nsIURI> aUri;
+  aOpenedChannel->GetURI(getter_AddRefs(aUri));
+  PrepareToLoadURI(aUri, aCommand, nsnull, PR_TRUE, nsIChannel::LOAD_NORMAL, 0, nsnull, nsnull);
+  // mscott: when I called DoLoadURL I found that we ran into problems because
+  // we currently don't have channel retargeting yet. Basically, what happens is that
+  // DoLoadURL calls StopBeforeRequestingURL and this cancels the current load group
+  // however since we can't retarget yet, we were basically canceling our very
+  // own load group!!! So the request would get canceled out from under us...
+  // after retargeting we may be able to safely call DoLoadURL. 
+  // DoLoadURL(aUri, aCommand, nsnull, nsIChannel::LOAD_NORMAL, 0, nsnull, PR_FALSE);
+  return mDocLoader->LoadOpenedDocument(aOpenedChannel, 
+                                        aCommand,
+                                        this,
+                                        nsnull,
+                                        nsnull,
+                                        aContentHandler);
+}
+
+nsresult nsWebShell::PrepareToLoadURI(nsIURI * aUri, 
+                                      const char * aCommand,
+                                      nsIInputStream * aPostStream,
+                                      PRBool aModifyHistory,
+                                      nsLoadFlags aType,
+                                      const PRUint32 aLocalIP,
+                                      nsISupports * aHistoryState,
+                                      const PRUnichar * aReferrer)
 {
   nsresult rv;
   CancelRefreshURITimers();
@@ -2225,7 +2340,6 @@ nsWebShell::LoadURI(nsIURI * aUri,
   }
   ShowHistory();
 
-
   // Give web-shell-container right of refusal
   if (nsnull != mContainer) {
     nsAutoString str(spec);
@@ -2235,8 +2349,26 @@ nsWebShell::LoadURI(nsIURI * aUri,
     }
   }
 
+  return rv;
+}
 
-  return DoLoadURL(aUri, aCommand, aPostDataStream, aType, aLocalIP, aReferrer);
+
+NS_IMETHODIMP 
+nsWebShell::LoadURI(nsIURI * aUri,
+                    const char * aCommand,
+                    nsIInputStream* aPostDataStream,
+                    PRBool aModifyHistory,
+                    nsLoadFlags aType,
+                    const PRUint32 aLocalIP,
+					          nsISupports * aHistoryState,
+                    const PRUnichar* aReferrer)
+{
+  nsresult rv = PrepareToLoadURI(aUri, aCommand, aPostDataStream,
+                                 aModifyHistory, aType, aLocalIP,
+                                 aHistoryState, aReferrer);
+  if (NS_SUCCEEDED(rv))
+    rv =  DoLoadURL(aUri, aCommand, aPostDataStream, aType, aLocalIP, aReferrer);
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -2357,21 +2489,6 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
   if (shist)
 	  shist->GetLoadingFlag(&isLoadingHistory);
 
-  /* Ask the URL dispatcher to take care of this URL only if it is a
-   * mailto: link clicked inside a browser. Note this mechanism s'd go 
-   * away once we have URL dispatcher in place.
-   */
-  if (root && isMail) {
-      //Ask the url Dispatcher to load the appropriate component for the URL.
-      nsCOMPtr<nsIUrlDispatcher>  urlDispatcher;
-      rv = root->GetUrlDispatcher(*getter_AddRefs(urlDispatcher));
-      if (NS_SUCCEEDED(rv) && urlDispatcher) {
-        nsAutoString LinkCommand("linkclick");
-        urlDispatcher->HandleUrl(LinkCommand.GetUnicode(),
-                                 urlAStr.GetUnicode(), aPostDataStream);
-        return NS_OK;
-      }
-  }
 
   /* 
    * Save the history state for the current index iff this loadurl() request
