@@ -833,7 +833,8 @@ void nsWindow::SetFont(const nsFont &aFont)
     if (mContext == nsnull) {
       return;
     }
-    nsIFontCache* fontCache = mContext->GetFontCache();
+    nsIFontCache* fontCache;
+    mContext->GetFontCache(fontCache);
     if (fontCache != nsnull) {
       nsIFontMetrics* metrics = fontCache->GetMetricsFor(aFont);
       if (metrics != nsnull) {
