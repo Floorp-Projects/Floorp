@@ -93,7 +93,6 @@ GetMyStack()
 nsXPCThreadJSContextStackImpl::nsXPCThreadJSContextStackImpl()
 {
     NS_INIT_ISUPPORTS();
-    NS_ADDREF_THIS();
 }
 
 nsXPCThreadJSContextStackImpl::~nsXPCThreadJSContextStackImpl() {}
@@ -108,8 +107,10 @@ nsXPCThreadJSContextStackImpl::GetSingleton()
 {
     if(!gXPCThreadJSContextStack)
     {
-        if(nsnull != (gXPCThreadJSContextStack = new nsXPCThreadJSContextStackImpl()))
+        gXPCThreadJSContextStack = new nsXPCThreadJSContextStackImpl();
+        if(gXPCThreadJSContextStack) {
             NS_ADDREF(gXPCThreadJSContextStack);
+        }
     }
     NS_IF_ADDREF(gXPCThreadJSContextStack);
     return gXPCThreadJSContextStack;
