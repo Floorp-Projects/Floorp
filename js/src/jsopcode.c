@@ -1274,11 +1274,12 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 
               case JSOP_SETRVAL:
               case JSOP_RETURN:
+                lval = js_CodeSpec[JSOP_RETURN].name;
                 rval = POP_STR();
                 if (*rval != '\0')
-                    js_printf(jp, "\t%s %s;\n", cs->name, rval);
+                    js_printf(jp, "\t%s %s;\n", lval, rval);
                 else
-                    js_printf(jp, "\t%s;\n", cs->name);
+                    js_printf(jp, "\t%s;\n", lval);
                 todo = -2;
                 break;
 
