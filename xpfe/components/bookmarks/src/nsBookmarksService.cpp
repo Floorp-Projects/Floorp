@@ -1339,7 +1339,7 @@ nsBookmarksService::WriteBookmarks(nsIRDFDataSource *ds, nsIRDFResource *root)
 
 	// XXX we should get this from prefs.
 	bookmarksFile += "res";
-	bookmarksFile += "rdf";
+	bookmarksFile += "samples";
 	bookmarksFile += "bookmarks.html";
 
 	nsresult		rv = NS_ERROR_FAILURE;
