@@ -1321,7 +1321,7 @@ static void
 lo_process_span_tag(MWContext *context, lo_DocState *state, PA_Tag *tag)
 {
   LO_SpanStruct *span;
-  PA_Block buf;
+  PA_Block buff;
   lo_DocLists *doc_lists;
   
   doc_lists = lo_GetCurrentDocLists(state);
