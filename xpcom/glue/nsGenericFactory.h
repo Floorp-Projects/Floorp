@@ -81,7 +81,8 @@ public:
                     PRUint32 componentCount,
                     const nsModuleComponentInfo* components,
                     nsModuleConstructorProc ctor,
-                    nsModuleDestructorProc dtor);
+                    nsModuleDestructorProc dtor,
+                    const char** alibDepends);
 
     virtual ~nsGenericModule();
 
@@ -118,6 +119,7 @@ protected:
     FactoryNode*                 mFactoriesNotToBeRegistered;
     nsModuleConstructorProc      mCtor;
     nsModuleDestructorProc       mDtor;
+    const char**                 mLibraryDependencies;
 };
 
 #endif /* nsGenericFactory_h___ */
