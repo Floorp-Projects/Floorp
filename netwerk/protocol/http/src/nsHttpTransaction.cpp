@@ -30,6 +30,7 @@
 #include "nsHttpChunkedDecoder.h"
 #include "nsIStringStream.h"
 #include "nsIFileStream.h"
+#include "nsISocketTransportService.h"
 #include "pratom.h"
 #include "plevent.h"
 
@@ -223,43 +224,12 @@ nsHttpTransaction::OnDataReadable(nsIInputStream *is)
 
     // check if this transaction needs to be restarted
     if (mPrematureEOF) {
-        // limit the number of restart attempts - bug 92224
-        if (++mRestartCount >= nsHttpHandler::get()->MaxRequestAttempts()) {
-            LOG(("reached max request attempts, failing transaction @%x\n", this));
-            return NS_BINDING_FAILED;
-        }
-
         mPrematureEOF = PR_FALSE;
-
-        LOG(("restarting transaction @%x\n", this));
-
-        // rewind streams in case we already wrote out the request
-        nsCOMPtr<nsIRandomAccessStore> ras = do_QueryInterface(mReqHeaderStream);
-        if (ras)
-            ras->Seek(PR_SEEK_SET, 0);
-        ras = do_QueryInterface(mReqUploadStream);
-        if (ras)
-            ras->Seek(PR_SEEK_SET, 0);
-
-        // just in case the connection is holding the last reference to us...
-        NS_ADDREF_THIS();
-
-        // we don't want the connection to send anymore notifications to us.
-        mConnection->DropTransaction();
-
-        nsHttpConnectionInfo *ci = mConnection->ConnectionInfo();
-        NS_ADDREF(ci);
-
-        // we must release the connection before calling initiate transaction
-        // since we will be getting a new connection.
-        NS_RELEASE(mConnection);
-
-        rv = nsHttpHandler::get()->InitiateTransaction(this, ci);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "InitiateTransaction failed");
-
-        NS_RELEASE(ci);
-        NS_RELEASE_THIS();
-        return NS_BINDING_ABORTED;
+        rv = Restart();
+        // if successfully restarted, then return an error to abort the 
+        // socket transport.
+        if (NS_SUCCEEDED(rv))
+            rv = NS_BINDING_ABORTED;
     }
 
     return rv;
@@ -271,6 +241,14 @@ nsHttpTransaction::OnStopTransaction(nsresult status)
 {
     LOG(("nsHttpTransaction::OnStopTransaction [this=%x status=%x]\n",
         this, status));
+
+    // if the connection was reset before we read any part of the response,
+    // then we must try to restart the transaction.
+    if ((status == NS_ERROR_NET_RESET) && (mContentRead == 0)) {
+        // if restarting fails, then we must notify our listener.
+        if (NS_SUCCEEDED(Restart()))
+            return NS_OK;
+    }
 
     mStatus = status;
 
@@ -300,6 +278,48 @@ nsHttpTransaction::OnStatus(nsresult status, const PRUnichar *statusText)
 //-----------------------------------------------------------------------------
 // nsHttpTransaction <private>
 //-----------------------------------------------------------------------------
+
+nsresult
+nsHttpTransaction::Restart()
+{
+    nsresult rv;
+
+    // limit the number of restart attempts - bug 92224
+    if (++mRestartCount >= nsHttpHandler::get()->MaxRequestAttempts()) {
+        LOG(("reached max request attempts, failing transaction @%x\n", this));
+        return NS_BINDING_FAILED;
+    }
+
+    LOG(("restarting transaction @%x\n", this));
+
+    // rewind streams in case we already wrote out the request
+    nsCOMPtr<nsIRandomAccessStore> ras = do_QueryInterface(mReqHeaderStream);
+    if (ras)
+        ras->Seek(PR_SEEK_SET, 0);
+    ras = do_QueryInterface(mReqUploadStream);
+    if (ras)
+        ras->Seek(PR_SEEK_SET, 0);
+
+    // just in case the connection is holding the last reference to us...
+    NS_ADDREF_THIS();
+
+    // we don't want the connection to send anymore notifications to us.
+    mConnection->DropTransaction();
+
+    nsHttpConnectionInfo *ci = mConnection->ConnectionInfo();
+    NS_ADDREF(ci);
+
+    // we must release the connection before calling initiate transaction
+    // since we will be getting a new connection.
+    NS_RELEASE(mConnection);
+
+    rv = nsHttpHandler::get()->InitiateTransaction(this, ci);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "InitiateTransaction failed");
+
+    NS_RELEASE(ci);
+    NS_RELEASE_THIS();
+    return NS_OK;
+}
 
 void
 nsHttpTransaction::ParseLine(char *line)

@@ -96,6 +96,7 @@ public:
     void     OnStatus(nsresult status, const PRUnichar *statusText);
 
 private:
+    nsresult Restart();
     void     ParseLine(char *line);
     void     ParseLineSegment(char *seg, PRUint32 len);
     nsresult ParseHead(char *, PRUint32 count, PRUint32 *countRead);

@@ -980,12 +980,12 @@ nsSocketTransport::doReadWrite(PRInt16 aSelectFlags)
     if (PR_POLL_EXCEPT & aSelectFlags) {
         LOG(("nsSocketTransport: [this=%x] received PR_POLL_EXCEPT\n", this));
         // The socket will be closed when we reach eSocketState_Error.
-        return NS_BINDING_FAILED;
+        return NS_ERROR_NET_RESET;
     }
     if (PR_POLL_ERR & aSelectFlags) {
         LOG(("nsSocketTransport: [this=%x] received PR_POLL_ERR\n", this));
         // The socket will be closed when we reach eSocketState_Error.
-        return NS_BINDING_FAILED;
+        return NS_ERROR_NET_RESET;
     }
     if (PR_POLL_HUP & aSelectFlags) {
         LOG(("nsSocketTransport: [this=%x] received PR_POLL_HUP\n", this));

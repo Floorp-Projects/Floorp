@@ -42,7 +42,7 @@
 #define NS_ERROR_NOT_CONNECTED \
     NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 12)
 
-/* NS_ERROR_CONNECTION_REFUSED and NS_ERROR_NET_TIMEOUT moved to nsISocketTransportService.idl */
+/* see nsISocketTransportService.idl for other errors */
 
 #define NS_ERROR_IN_PROGRESS \
     NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 15)
