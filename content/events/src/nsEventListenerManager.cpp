@@ -2029,7 +2029,7 @@ nsEventListenerManager::FixContextMenuEvent(nsPresContext* aPresContext,
     // the client X/Y will be 0,0. We can make use of that if the widget is null.
     if (aEvent->message == NS_CONTEXTMENU_KEY)
       NS_IF_RELEASE(((nsGUIEvent*)aEvent)->widget);   // nulls out widget
-    ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, NS_STATIC_CAST(nsGUIEvent*,aEvent));
+    ret = NS_NewDOMMouseEvent(aDOMEvent, aPresContext, NS_STATIC_CAST(nsInputEvent*, aEvent));
   }
 
   if (NS_SUCCEEDED(ret)) {
