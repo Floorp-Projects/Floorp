@@ -1554,8 +1554,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
 
   // notice that we ignore the result
   NotifyReflowObservers(NS_PRESSHELL_INITIAL_REFLOW);
-
-  StCaretHider  caretHider(this);			// stack-based class hides caret until dtor.
+  StCaretHider  caretHider(mCaret);			// stack-based class hides caret until dtor.
   
   WillCauseReflow();
 
@@ -1693,7 +1692,7 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
   NotifyReflowObservers(NS_PRESSHELL_RESIZE_REFLOW);
   mViewManager->CacheWidgetChanges(PR_TRUE);
 
-  StCaretHider  caretHider(this);			// stack-based class hides caret until dtor.
+  StCaretHider  caretHider(mCaret);			// stack-based class hides caret until dtor.
   WillCauseReflow();
 
   if (mPresContext) {
@@ -1889,11 +1888,10 @@ NS_IMETHODIMP PresShell::SetCaretEnabled(PRBool aInEnable)
     if (mDocument)
       mDocument->FlushPendingNotifications();
 
-    nsCOMPtr<nsIDOMSelection> sel;
-    if (NS_SUCCEEDED(GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(sel))) && sel)
-    {
-      result = mCaret->SetCaretVisible(mCaretEnabled, sel);
-    }
+    nsCOMPtr<nsIDOMSelection> domSel;
+    if (NS_SUCCEEDED(GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSel))) && domSel)
+      mCaret->SetCaretDOMSelection(domSel);
+    result = mCaret->SetCaretVisible(mCaretEnabled);
 	}
 	
 	return result;
@@ -1902,11 +1900,7 @@ NS_IMETHODIMP PresShell::SetCaretEnabled(PRBool aInEnable)
 
 NS_IMETHODIMP PresShell::SetCaretReadOnly(PRBool aReadOnly)
 {
-  nsCOMPtr<nsIDOMSelection> domSel;
-  if (NS_SUCCEEDED(GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSel))) && domSel)
-  {
-    return mCaret->SetCaretReadOnly(aReadOnly, domSel);
-  }
+  return mCaret->SetCaretReadOnly(aReadOnly);
   return NS_ERROR_FAILURE;
 }
 
@@ -3356,7 +3350,7 @@ PresShell::Paint(nsIView              *aView,
       
   if (nsnull != frame)
   {
-    StCaretHider  caretHider(this);			// stack-based class hides caret until dtor.
+    StCaretHider  caretHider(mCaret);			// stack-based class hides caret until dtor.
 
     // If the frame is absolutely positioned, then the 'clip' property
     // applies

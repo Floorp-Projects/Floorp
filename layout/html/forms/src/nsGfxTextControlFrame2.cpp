@@ -239,7 +239,10 @@ nsTextAreaSelectionImpl::SetCaretEnabled(PRBool enabled)
       nsCOMPtr<nsIDOMSelection> domSel;
       if (NS_SUCCEEDED(result = mFrameSelection->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSel))))
       {
-        return caret->SetCaretVisible(enabled, domSel);
+        nsCOMPtr<nsIDOMSelection> domSel;
+        if (NS_SUCCEEDED(GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSel))) && domSel)
+          caret->SetCaretDOMSelection(domSel);
+        return caret->SetCaretVisible(enabled);
       }
     }
 
@@ -261,7 +264,7 @@ nsTextAreaSelectionImpl::SetCaretReadOnly(PRBool aReadOnly)
       nsCOMPtr<nsIDOMSelection> domSel;
       if (NS_SUCCEEDED(result = mFrameSelection->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSel))))
       {
-        return caret->SetCaretReadOnly(aReadOnly, domSel);
+        return caret->SetCaretReadOnly(aReadOnly);
       }
     }
 
@@ -273,10 +276,20 @@ NS_IMETHODIMP
 nsTextAreaSelectionImpl::GetCaretEnabled(PRBool *_retval)
 {
   if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
-  nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mPresShellWeak);
-  if (selCon)
+  nsresult result;
+  nsCOMPtr<nsIPresShell> shell = do_QueryReferent(mPresShellWeak, &result);
+  if (shell)
   {
-    return selCon->GetCaretEnabled(_retval);//we can use presshells because there is only 1 caret
+    nsCOMPtr<nsICaret> caret;
+    if (NS_SUCCEEDED(result = shell->GetCaret(getter_AddRefs(caret))))
+    {
+      nsCOMPtr<nsIDOMSelection> domSel;
+      if (NS_SUCCEEDED(result = mFrameSelection->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSel))))
+      {
+        return caret->GetCaretVisible(_retval);
+      }
+    }
+
   }
   return NS_ERROR_FAILURE;
 }
@@ -540,6 +553,13 @@ nsGfxTextControlFrame2::~nsGfxTextControlFrame2()
 NS_IMETHODIMP
 nsGfxTextControlFrame2::Destroy(nsIPresContext* aPresContext)
 {
+  mSelCon = 0;
+  mEditor = 0;
+  if (mCachedState)
+  {
+    delete mCachedState;
+    mCachedState = nsnull;
+  }
   nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
   if (mFormFrame) {
     mFormFrame->RemoveFormControlFrame(*this);
@@ -1725,19 +1745,7 @@ nsGfxTextControlFrame2::GetText(nsString* aText, PRBool aInitialValue)
     }
     else
     {
-      if (mEditor)
-      {
-        nsCOMPtr<nsIEditorIMESupport> imeSupport = do_QueryInterface(mEditor);
-        if(imeSupport) 
-            imeSupport->ForceCompositionEnd();
-        nsString format; format.AssignWithConversion("text/plain");
-        mEditor->OutputToString(*aText, format, 0);
-      }
-      // we've never built our editor, so the content attribute is the value
-      else
-      {
-        rv = nsFormControlHelper::GetInputElementValue(mContent, aText, aInitialValue);
-      }
+      GetTextControlFrameState(*aText);
     }
     RemoveNewlines(*aText);
   } 
