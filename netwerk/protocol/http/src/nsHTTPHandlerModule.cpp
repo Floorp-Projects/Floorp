@@ -34,14 +34,14 @@
 
 ////////////////////////////////////////////////////////////////////////
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTTPHandler);
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsHTTPHandler, Init);
 
 static nsModuleComponentInfo components[] =
 {
   { "HTTP Handler",
     NS_IHTTPHANDLER_CID,
     NS_NETWORK_PROTOCOL_PROGID_PREFIX "http",
-    nsHTTPHandler::Create }
+    nsHTTPHandlerConstructor }
 };
 
   
