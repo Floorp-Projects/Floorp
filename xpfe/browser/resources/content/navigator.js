@@ -506,7 +506,8 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
 	if ((defaultSearchURL == null) || (defaultSearchURL == ""))
 	{
 		// Fallback to a Netscape default (one that we can get sidebar search results for)
-		defaultSearchURL = "http://search.netscape.com/cgi-bin/search?search=";
+//		defaultSearchURL = "http://search.netscape.com/cgi-bin/search?search=";
+		defaultSearchURL = "http://info.netscape.com/fwd/sidb1dnet/http://search.netscape.com/cgi-bin/search?search=";
 	}
 
 	if (window.content.location.href == searchStr) 
