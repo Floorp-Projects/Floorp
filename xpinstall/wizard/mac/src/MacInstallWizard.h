@@ -63,7 +63,15 @@
 err = _funcCall;				\
 if (err) 						\
 {								\
-	ErrorHandler(err);			\
+    ErrorHandler(err, nil);         \
+    return;                     \
+}
+
+#define ERR_CHECK_MSG(_funcCall, _rv, _msg) \
+err = _funcCall;                \
+if (err)                        \
+{                               \
+    ErrorHandler(err, _msg);            \
 	return;						\
 }
 										
@@ -71,7 +79,7 @@ if (err) 						\
 err = _funcCall;						\
 if (err) 								\
 {										\
-	ErrorHandler(err);		    		\
+    ErrorHandler(err, nil);                 \
 	return _rv;							\
 }
 	
@@ -403,6 +411,12 @@ typedef struct XPISpec {
     struct XPISpec *next;
 } XPISpec;
 
+typedef struct _errTableEnt {
+    short num;
+    Str255 msg;
+} ErrTableEnt;
+
+
 typedef struct InstComp {
 	/* descriptions */
 	Handle	shortDesc;
@@ -669,7 +683,8 @@ void		MakeMenus(void);
 void 		MainEventLoop(void);
 void        MainEventLoopPass();
 int         BreathFunc();
-void		ErrorHandler(short);
+void        ErrorHandler(short, Str255);
+Boolean LookupErrorMsg( short code, Str255 msg );
 void		Shutdown(void);
 
 /*-----------------------------------------------------------*
@@ -702,6 +717,8 @@ Boolean		GetNextKeyVal(char **, char *, char*);
 unsigned char *CToPascal(char *);
 char *		PascalToC(unsigned char *);
 void        CopyPascalStrToC(ConstStr255Param srcPString, char* dest);
+OSErr ReadSystemErrors(const char *instText);
+
 
 /*-----------------------------------------------------------*
  *   EvtHandlers

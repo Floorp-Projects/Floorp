@@ -149,7 +149,7 @@ KeepCheckingVersion:
 		if (!gControls->stw->instType || !gControls->stw->instDescBox || 
 			!gControls->stw->destLocBox || !gControls->stw->destLoc)
 		{
-			ErrorHandler(eMem);
+			ErrorHandler(eMem, nil);
 			return;
 		}
 
@@ -564,7 +564,7 @@ DrawDiskSpaceMsgs(short vRefNum)
 	reserr = ResError();
 	if (reserr!=noErr || !instDescRectH)
 	{
-		ErrorHandler(reserr);
+		ErrorHandler(reserr, nil);
 		return;
 	}
 	
@@ -584,7 +584,7 @@ DrawDiskSpaceMsgs(short vRefNum)
 	dsAvailH = TENew(&viewRect, &viewRect);
 	if (!dsAvailH)
 	{
-		ErrorHandler(eMem);
+		ErrorHandler(eMem, nil);
 		return;
 	}
 	
@@ -627,7 +627,7 @@ DrawDiskSpaceMsgs(short vRefNum)
 	dsNeededH = TENew( &viewRect, &viewRect );
 	if (!dsNeededH)
 	{
-		ErrorHandler(eMem);
+		ErrorHandler(eMem, nil);
 		return;
 	}
 	
@@ -726,7 +726,7 @@ ClearDiskSpaceMsgs(void)
 	reserr = ResError();
 	if (reserr!=noErr || !instDescRectH)
 	{
-		ErrorHandler(reserr);
+		ErrorHandler(reserr, nil);
 		return;
 	}
 

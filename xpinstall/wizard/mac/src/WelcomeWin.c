@@ -64,7 +64,7 @@ ShowWelcomeMsg(void)
         gControls->ww->welcMsgCntl[i] = GetNewControl(rWelcMsgTextbox+i, gWPtr);
     	if (!gControls->ww->welcMsgCntl)
     	{
-    		ErrorHandler(eMem);
+    		ErrorHandler(eMem, nil);
     		return;
     	}
 	}

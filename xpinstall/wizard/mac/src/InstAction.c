@@ -76,7 +76,7 @@ pascal void* Install(void* unused)
 		err = FSpDirCreate(&tmpSpec, smSystemScript, &dirID);
 		if (err != noErr)
 		{
-			ErrorHandler(err);
+			ErrorHandler(err, nil);
 			return (void*)0;
 		}
 	}
@@ -85,7 +85,7 @@ pascal void* Install(void* unused)
 		err = FSpGetDirectoryID( &tmpSpec, &dirID, &isDir );
 		if (!isDir || err!=noErr)
 		{
-			ErrorHandler(err);
+			ErrorHandler(err, nil);
 			return (void*)0;
 		}
 	}	
@@ -94,7 +94,7 @@ pascal void* Install(void* unused)
 	err = GetCWD(&srcDirID, &srcVRefNum);
 	if (err != noErr)
 	{
-		ErrorHandler(err);
+		ErrorHandler(err, nil);
 		return (void*)nil;
 	}
 	
@@ -138,7 +138,7 @@ pascal void* Install(void* unused)
         }
 		if (dlErr != 0)
 		{
-		    ErrorHandler(dlErr);
+		    ErrorHandler(dlErr, nil);
 			return (void*) nil;
 		}
         ClearDLProgControls(false);
@@ -187,7 +187,7 @@ pascal void* Install(void* unused)
 			err = ExtractCoreFile(srcVRefNum, srcDirID, vRefNum, dirID);
 			if (err!=noErr) 
 			{
-				ErrorHandler(err);
+				ErrorHandler(err, nil);
 				if (coreFile)
 					DisposePtr((Ptr)coreFile);
 				return (void*) nil;
@@ -196,7 +196,7 @@ pascal void* Install(void* unused)
 			/* run all .xpi's through XPInstall */
 			err = RunAllXPIs(srcVRefNum, srcDirID, vRefNum, dirID);
 			if (err!=noErr)
-				ErrorHandler(err);
+				ErrorHandler(err, nil);
 				
 			CleanupExtractedFiles(vRefNum, dirID);
 		}
@@ -331,7 +331,7 @@ TRY_DOWNLOAD:
                     if (++currGlobalURLIndex < gControls->cfg->numGlobalURLs)
                         goto TRY_DOWNLOAD;
                         
-                    ErrorHandler(rv);
+                    ErrorHandler(rv, nil);
                     break;
                 } else
                 	currGlobalURLIndex = 0;
@@ -360,7 +360,7 @@ TRY_DOWNLOAD:
  	CheckConn( "", TYPE_UNDEF, &myConn, true );  
  	     	 
     if ( crcPass >= MAXCRC ) {
-        ErrorHandler( eDownload );  // XXX need a better error message here
+        ErrorHandler( eDownload, nil );  // XXX need a better error message here
         rv = eDownload;
     }
     
@@ -1095,13 +1095,13 @@ GenerateIDIFromOpt(Str255 idiName, long dirID, short vRefNum, FSSpec *idiSpec)
 	err = FSMakeFSSpec(vRefNum, dirID, idiName, idiSpec);
 	if ((err != noErr) && (err != fnfErr))
 	{
-		ErrorHandler(err);
+		ErrorHandler(err, nil);
 		return false;
 	}
 	err = FSpCreate(idiSpec, 'NSCP', 'TEXT', smSystemScript);
 	if ( (err != noErr) && (err != dupFNErr))
 	{
-		ErrorHandler(err);
+		ErrorHandler(err, nil);
 		return false;
 	}
 	ERR_CHECK_RET(FSpOpenDF(idiSpec, fsRdWrPerm, &refNum), false);

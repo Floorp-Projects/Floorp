@@ -67,7 +67,7 @@ ShowTerminalWin(void)
         }
 		else
 		{
-			ErrorHandler(reserr);
+			ErrorHandler(reserr, nil);
 			return;
 		}
 		
@@ -79,7 +79,7 @@ ShowTerminalWin(void)
 		gControls->tw->startMsg = TENew(&viewRect, &viewRect);
         if (gControls->tw->startMsg == NULL)
         {
-        	ErrorHandler(eMem);
+        	ErrorHandler(eMem, nil);
         	return;
         }
     
@@ -120,7 +120,7 @@ ShowTerminalWin(void)
         			gControls->tw->siteSelector = GetNewControl( rSiteSelector, gWPtr );
         			if (!gControls->tw->siteSelector)
         			{
-        				ErrorHandler(eMem);
+        				ErrorHandler(eMem, nil);
         				return;
         			}
         			
@@ -147,7 +147,7 @@ ShowTerminalWin(void)
 				gControls->tw->saveBitsCheckbox = GetNewControl( rSaveCheckbox, gWPtr );
 				if (!gControls->tw->saveBitsCheckbox)
 				{
-					ErrorHandler(eMem);
+					ErrorHandler(eMem, nil);
 					return;
 				}
 				if (gControls->opt->saveBits)
@@ -164,7 +164,7 @@ ShowTerminalWin(void)
 			    }
 				else
 				{
-					ErrorHandler(reserr);
+					ErrorHandler(reserr, nil);
 					return;
 				}
 				
@@ -173,7 +173,7 @@ ShowTerminalWin(void)
 												   &gControls->tw->saveBitsMsgBox );
 			    if (gControls->tw->saveBitsMsg == NULL)
 			    {
-			    	ErrorHandler(eMem);
+			    	ErrorHandler(eMem, nil);
 			    	return;
 			    }
 			    HLock(gControls->cfg->saveBitsMsg);
@@ -188,7 +188,7 @@ ShowTerminalWin(void)
 				gControls->tw->proxySettingsBtn = GetNewControl(rProxySettgBtn, gWPtr);
 				if (!gControls->tw->proxySettingsBtn)
 				{
-					ErrorHandler(eMem);
+					ErrorHandler(eMem, nil);
 					return;
 				}
 				Str255 proxySettingsTitle;
@@ -231,7 +231,7 @@ GetRectFromRes(Rect *outRect, short inResID)
     }
 	else
 	{
-		ErrorHandler(reserr);
+		ErrorHandler(reserr, nil);
 		return reserr;
 	}
 	
@@ -369,7 +369,7 @@ InTerminalContent(EventRecord* evt, WindowPtr wCurrPtr)
     			}
     			else
     			{
-    				ErrorHandler(eParam);	
+    				ErrorHandler(eParam, nil);	
     				return;
     			}
     			ClearSaveBitsMsg();
