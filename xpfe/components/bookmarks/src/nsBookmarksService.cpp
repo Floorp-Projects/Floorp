@@ -1749,12 +1749,15 @@ nsBookmarksService::Init()
 	{
 		char	*prefVal = nsnull;
 		if (NS_SUCCEEDED(rv = prefServ->CopyCharPref("custtoolbar.personal_toolbar_folder",
-			&prefVal)) && (prefVal) && (*prefVal))
+			&prefVal)) && (prefVal))
 		{
-			mPersonalToolbarName = prefVal;
+			if (*prefVal)
+			{
+				mPersonalToolbarName = prefVal;
 #ifdef	DEBUG
-			printf("Obtained name of Personal Toolbar from user preferences.\n");
+				printf("Obtained name of Personal Toolbar from user preferences.\n");
 #endif
+			}
 			nsCRT::free(prefVal);
 			prefVal = nsnull;
 		}
