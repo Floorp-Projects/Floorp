@@ -645,7 +645,9 @@ nsJAR::ParseOneFile(nsISignatureVerifier* verifier,
   nsJARManifestItem* curItemMF = nsnull;
   PRBool foundName = PR_FALSE;
   if (aFileType == JAR_MF)
-    curItemMF = new nsJARManifestItem();
+    if (!(curItemMF = new nsJARManifestItem()))
+      return NS_ERROR_OUT_OF_MEMORY;
+
   nsCAutoString curItemName;
   nsCAutoString storedSectionDigest;
 
@@ -698,7 +700,8 @@ nsJAR::ParseOneFile(nsISignatureVerifier* verifier,
           break;
 
         sectionStart = nextLineStart;
-        curItemMF = new nsJARManifestItem();
+        if (!(curItemMF = new nsJARManifestItem()))
+          return NS_ERROR_OUT_OF_MEMORY;
       } // (aFileType == JAR_MF)
       else
         //-- file type is SF, compare digest with calculated 
