@@ -78,10 +78,8 @@ nsSetDefaultBrowser.prototype = {
       // Now, turn on all "default browser" settings.
       settings.isHandlingHTTP  = true;
       settings.isHandlingHTTPS = true;
-      settings.isHandlingFTP   = true;
       settings.isHandlingHTML  = true;
       settings.isHandlingXHTML = true;
-      settings.isHandlingXML   = true;
 
       // Finally, apply the (new) settings.
       winHooks.settings = settings;
