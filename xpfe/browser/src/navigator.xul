@@ -294,6 +294,21 @@
     }
   }
 
+  function OpenMessenger()
+  {
+    var toolkitCore = XPAppCoresManager.Find("ToolkitCore");
+    if (!toolkitCore) {
+      toolkitCore = new ToolkitCore();
+      if (toolkitCore) {
+        toolkitCore.Init("ToolkitCore");
+      }
+    }
+    if (toolkitCore) {
+      toolkitCore.ShowWindow("resource:/res/samples/mailshell.xul",
+                             window);
+    }
+  }
+
 
   </html:script>
 
@@ -425,7 +440,7 @@
 	</menu>
 	 <menu name="Tasks">
       <menuitem name="Navigator" onclick="BrowserReload();"/>
-      <menuitem name="Messenger" onclick="BrowserReload();" />
+      <menuitem name="Messenger" onclick="OpenMessenger();" />
       <menuitem name="Chat" onclick="BrowserReload();"/>
       <menuitem name="Shopping Cart" onclick="BrowserReload();"/>
       <separator />
