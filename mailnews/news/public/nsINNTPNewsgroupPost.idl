@@ -68,27 +68,8 @@ interface nsINNTPNewsgroupPost : nsISupports {
     /* the path to the message */
     /* attribute nsFilePath postMessageFile; */
         
-    /* control messages */
-    void MakeControlCancel(in string messageID);
-    /* probably don't need these
-       void MakeControlNewgroup(in string groupname);
-       void MakeControlRmgroup(in string groupname);
-       void MakeControlSendsys();
-       void MakeControlSenduuname();
-       void MakeControlVersion();
-    */
     /* is this a control message? */
     readonly attribute boolean isControl;
-
-    /* this should return a pointer to the full text of the RFC850 message
-     * that gets sent to the NNTP server
-     * return a reference so that we are not strdup()ing an entire message
-     * Each call to getFullMessage will destroy the last reference and return
-     * a new one by reassembling the message.
-     * A better solution would just be to give this message an nsIOutputStream
-     * to write to so that it can better manage the assembled message.
-     */
-    string GetFullMessage();
 
     attribute nsIFileSpec postMessageFile;
 };

@@ -97,12 +97,8 @@ public:
 
 
     NS_IMETHOD IsValid(PRBool *_retval);
-    
-    NS_IMETHOD MakeControlCancel(const char *messageID);
 
     NS_IMPL_CLASS_GETTER(GetIsControl, PRBool, m_isControl);
-
-    NS_IMETHOD GetFullMessage(char **message);
 
     // the message can be stored in a file....allow accessors for getting and setting
 	// the file name to post...

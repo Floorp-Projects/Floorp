@@ -108,65 +108,6 @@ nsNNTPNewsgroupPost::IsValid(PRBool *_retval)
     return NS_OK;
 }
 
-/* XXX - I'm just guessing at how this works, see RFC850 for more */
-nsresult
-nsNNTPNewsgroupPost::MakeControlCancel(const char *messageID)
-{
-    char *new_subject = (char *)PR_Calloc(PL_strlen(messageID) +
-                                          PL_strlen("CANCEL ") + 1,
-                                          sizeof(char));
-    PL_strcpy(new_subject, "CANCEL ");
-    PL_strcat(new_subject, messageID);
-
-    m_isControl = PR_TRUE;
-    SetSubject(new_subject);
-
-    return NS_OK;
-}
-
-nsresult
-nsNNTPNewsgroupPost::GetFullMessage(char **message)
-{
-    if (!message) return NS_ERROR_NULL_POINTER;
-    PRBool valid=PR_FALSE;
-    IsValid(&valid);
-    if (!valid) return NS_ERROR_NOT_INITIALIZED;
-
-    int len=0;
-    int i;
-    for (i=0; i<=HEADER_LAST; i++) {
-        if (m_header[i]) {
-            len+=PL_strlen(m_headerName[i]);
-            len+=PL_strlen(m_header[i]);
-            len+=2;
-        }
-    }
-    len += PL_strlen(m_body);
-
-    // for trailing \0 and CRLF between headers and message
-    len+= PL_strlen(CRLF)+1;
-
-    PR_FREEIF(m_messageBuffer);
-    m_messageBuffer = (char *)PR_Calloc(len, sizeof(char));
-
-    PL_strcpy(m_messageBuffer,"");
-    for (i=0; i<=HEADER_LAST; i++) {
-        if (m_header[i]) {
-            PL_strcat(m_messageBuffer, m_headerName[i]);
-            PL_strcat(m_messageBuffer, m_header[i]);
-            PL_strcat(m_messageBuffer, CRLF);
-        }
-    }
-    
-    PL_strcat(m_messageBuffer, CRLF);
-    PL_strcat(m_messageBuffer, m_body);
-    
-    *message=m_messageBuffer;
-
-    printf("Assembled message:\n%s\n",m_messageBuffer);
-    return NS_OK;
-}
-
 char *
 nsNNTPNewsgroupPost::AppendAndAlloc(char *string,
                                     const char *newSubstring,
