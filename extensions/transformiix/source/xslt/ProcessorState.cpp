@@ -65,6 +65,8 @@ nsresult txLoadedDocumentsHash::init(Document* aSourceDocument,
     if (mStyleDocument) {
         Add(mStyleDocument);
     }
+
+    return NS_OK;
 }
 
 txLoadedDocumentsHash::~txLoadedDocumentsHash()
