@@ -18,7 +18,8 @@
 # 
 # Contributor(s):
 #   Scott Collins <scc@mozilla.org> (original author)
-# 
+#
+ 
 
 nsAlgorithm.h
 nsAReadableString.h
