@@ -31,6 +31,7 @@ LIBRARY_NAME	= timer_$(TIMER_SUFFIX)
 REQUIRES	= xpcom \
 		  string \
 		  widget \
+		  xlibrgb \
 		  $(NULL)
 
 CPPSRCS		= nsTimerXlib.cpp
@@ -49,7 +50,7 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-EXTRA_DSO_LDOPTS += -lXt
+EXTRA_DSO_LDOPTS += -lXt -lxlibrgb
 
 INCLUDES	+= $(MOZ_XLIB_CFLAGS) -I$(srcdir)/..
 

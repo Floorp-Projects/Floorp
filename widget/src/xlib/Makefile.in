@@ -17,6 +17,7 @@
 # Rights Reserved.
 #
 # Contributor(s): 
+#   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
 #
 
 DEPTH		= ../../..
@@ -30,7 +31,7 @@ MODULE		= widget
 LIBRARY_NAME	= widget_xlib
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
-MODULE_NAME	= nsWidgetXLIBModule
+MODULE_NAME	= nsWidgetXLibModule
 REQUIRES	= xpcom \
 		  string \
 		  appshell \
@@ -49,8 +50,6 @@ REQUIRES	= xpcom \
 		  necko \
 		  gfx2 \
 		  $(NULL)
-
-DIRS		= window_service
 
 CPPSRCS		= \
 		nsAppShell.cpp \
