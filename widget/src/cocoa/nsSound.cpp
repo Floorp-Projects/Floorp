@@ -42,7 +42,7 @@
 #include "plstr.h"
 #include "nsVoidArray.h"
 
-#include "nsIURI.h"
+#include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "prmem.h"
 #include "nsGfxUtils.h"
@@ -265,7 +265,7 @@ nsSound::Play(nsIURL *aURL)
 
   // try to get from cache
   nsCOMPtr<nsISupports>   requestSupports;
-  (void)GetSoundFromCache(aURL, getter_AddRefs(requestSupports));
+  (void)GetSoundFromCache(NS_STATIC_CAST(nsIURI*,aURL), getter_AddRefs(requestSupports));
   if (requestSupports)
   {
     nsSoundRequest* cachedRequest = nsSoundRequest::GetFromISupports(requestSupports);
@@ -340,15 +340,15 @@ nsSound::GetSoundFromCache(nsIURI* inURI, nsISupports** outSound)
 {
   nsresult rv;
   
-  nsXPIDLCString uriSpec;
-  inURI->GetSpec(getter_Copies(uriSpec));
+  nsCAutoString uriSpec;
+  inURI->GetAsciiSpec(uriSpec);
 
   nsCOMPtr<nsICacheSession> cacheSession;
   rv = GetCacheSession(getter_AddRefs(cacheSession));
   if (NS_FAILED(rv)) return rv;
   
   nsCOMPtr<nsICacheEntryDescriptor> entry;
-  rv = cacheSession->OpenCacheEntry(uriSpec, nsICache::ACCESS_READ, nsICache::BLOCKING, getter_AddRefs(entry));
+  rv = cacheSession->OpenCacheEntry(uriSpec.get(), nsICache::ACCESS_READ, nsICache::BLOCKING, getter_AddRefs(entry));
 
 #ifdef SOUND_DEBUG
   printf("Got sound from cache with rv %ld\n", rv);
@@ -371,8 +371,8 @@ nsSound::PutSoundInCache(nsIChannel* inChannel, PRUint32 inDataSize, nsISupports
   inChannel->GetOriginalURI(getter_AddRefs(uri));
   if (!uri) return NS_ERROR_FAILURE;
   
-  nsXPIDLCString uriSpec;
-  rv = uri->GetSpec(getter_Copies(uriSpec));
+  nsCAutoString uriSpec;
+  rv = uri->GetAsciiSpec(uriSpec);
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsICacheSession> cacheSession;
@@ -380,7 +380,7 @@ nsSound::PutSoundInCache(nsIChannel* inChannel, PRUint32 inDataSize, nsISupports
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsICacheEntryDescriptor> entry;
-  rv = cacheSession->OpenCacheEntry(uriSpec, nsICache::ACCESS_WRITE, nsICache::BLOCKING, getter_AddRefs(entry));
+  rv = cacheSession->OpenCacheEntry(uriSpec.get(), nsICache::ACCESS_WRITE, nsICache::BLOCKING, getter_AddRefs(entry));
 #ifdef SOUND_DEBUG
   printf("Put sound in cache with rv %ld\n", rv);
 #endif
