@@ -1192,9 +1192,6 @@ public:
 
   virtual already_AddRefed<nsIStyleRule> GetImportantRule(void);
 
-  // hook for inspector
-  virtual nsresult GetValue(nsCSSProperty aProperty, nsCSSValue& aValue);
-
   NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const;
   NS_IMETHOD SetStyleSheet(nsICSSStyleSheet* aSheet);
   
@@ -1350,12 +1347,6 @@ already_AddRefed<nsIStyleRule> CSSStyleRuleImpl::GetImportantRule(void)
   }
   NS_IF_ADDREF(mImportantRule);
   return mImportantRule;
-}
-
-nsresult
-CSSStyleRuleImpl::GetValue(nsCSSProperty aProperty, nsCSSValue& aValue)
-{
-  return mDeclaration->GetValueOrImportantValue(aProperty, aValue);
 }
 
 NS_IMETHODIMP
