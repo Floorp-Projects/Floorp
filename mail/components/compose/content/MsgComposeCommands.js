@@ -2054,6 +2054,38 @@ function SelectAddress()
   AdjustFocus();
 }
 
+// walk through the recipients list and add them to the inline spell checker ignore list
+function addRecipientsToIgnoreList(aAddressesToAdd)
+{ 
+  if (InlineSpellChecker.inlineSpellChecker && InlineSpellChecker.inlineSpellChecker.enableRealTimeSpell)
+  {
+    // break the list of potentially many recipients back into individual names
+    var hdrParser = Components.classes["@mozilla.org/messenger/headerparser;1"].getService(Components.interfaces.nsIMsgHeaderParser);
+    var emailAddresses = {};
+    var names = {};
+    var fullNames = {};
+    var numAddresses = hdrParser.parseHeadersWithArray(aAddressesToAdd, emailAddresses, names, fullNames);
+    var tokenizedNames = new Array();
+
+    // each name could consist of multiple word delimited by either commas or spaces. i.e. Green Lantern
+    // or Lantern,Green. Tokenize on comma first, then tokenize again on spaces.
+    for (name in names.value)
+    {
+      var splitNames = names.value[name].split(',');
+      for (var i=0; i < splitNames.length; i++)
+      {
+        // now tokenize off of white space
+        var splitNamesFromWhiteSpaceArray = splitNames[i].split(' ');
+        for (var whiteSpaceIndex = 0; whiteSpaceIndex < splitNamesFromWhiteSpaceArray.length; whiteSpaceIndex++)
+          if (splitNamesFromWhiteSpaceArray[whiteSpaceIndex])
+            tokenizedNames.push(splitNamesFromWhiteSpaceArray[whiteSpaceIndex]);
+      }
+    }
+
+    InlineSpellChecker.inlineSpellChecker.ignoreWords(tokenizedNames, tokenizedNames.length);
+  }
+}
+
 function ToggleInlineSpellChecker(target)
 {
   if (InlineSpellChecker.inlineSpellChecker)
@@ -2856,6 +2888,8 @@ function LoadIdentity(startup)
               // catch the exception and ignore it, so that if LDAP setup 
               // fails, the entire compose window doesn't end up horked
           }
+
+          addRecipientsToIgnoreList(gCurrentIdentity.identityName);  // only do this if we aren't starting up....it gets done as part of startup already
       }
     }
 }
@@ -3341,3 +3375,4 @@ function InitEditor()
   InlineSpellChecker.Init(editor, sPrefs.getBoolPref("mail.spellcheck.inline"));
   InlineSpellChecker.checkDocument(window.content.document);
 }
+

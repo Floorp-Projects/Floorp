@@ -1,38 +1,40 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is mozilla.org code.
- *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+# -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Mozilla Communicator client code, released
+# March 31, 1998.
+#
+# The Initial Developer of the Original Code is
+# Netscape Communications Corporation.
+# Portions created by the Initial Developer are Copyright (C) 1998-1999
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
 
 top.MAX_RECIPIENTS = 0;
 
@@ -46,17 +48,8 @@ var gDragService = Components.classes["@mozilla.org/widget/dragservice;1"].getSe
 gDragService = gDragService.QueryInterface(Components.interfaces.nsIDragService);
 var gMimeHeaderParser = null;
 
-/**
- * global variable inherited from MsgComposeCommands.js
- *
- 
- var sPrefs;
- var gPromptService;
- var gMsgCompose;
- 
- */
-
 var test_addresses_sequence = false;
+
 try {
   if (sPrefs)
     test_addresses_sequence = sPrefs.getBoolPref("mail.debug.test_addresses_sequence");
@@ -84,33 +77,34 @@ function awGetNumberOfCols()
 
 function awInputElementName()
 {
-    if (inputElementType == "")
-        inputElementType = document.getElementById("addressCol2#1").localName;
-    return inputElementType;
+  if (inputElementType == "")
+    inputElementType = document.getElementById("addressCol2#1").localName;
+  return inputElementType;
 }
 
 function awSelectElementName()
 {
-    if (selectElementType == "")
-        selectElementType = document.getElementById("addressCol1#1").localName;
-    return selectElementType;
+  if (selectElementType == "")
+      selectElementType = document.getElementById("addressCol1#1").localName;
+  return selectElementType;
 }
 
 // TODO: replace awGetSelectItemIndex with recipient type index constants
 
 function awGetSelectItemIndex(itemData)
 {
-    if (selectElementIndexTable == null)
+  if (selectElementIndexTable == null)
+  {
+    selectElementIndexTable = new Object();
+    var selectElem = document.getElementById("addressCol1#1");
+    for (var i = 0; i < selectElem.childNodes[0].childNodes.length; i ++)
     {
-      selectElementIndexTable = new Object();
-      var selectElem = document.getElementById("addressCol1#1");
-        for (var i = 0; i < selectElem.childNodes[0].childNodes.length; i ++)
-    {
-            var aData = selectElem.childNodes[0].childNodes[i].getAttribute("value");
-            selectElementIndexTable[aData] = i;
-        }
+      var aData = selectElem.childNodes[0].childNodes[i].getAttribute("value");
+      selectElementIndexTable[aData] = i;
     }
-    return selectElementIndexTable[itemData];
+  }
+  
+  return selectElementIndexTable[itemData];
 }
 
 function Recipients2CompFields(msgCompFields)
@@ -238,6 +232,10 @@ function CompFields2Recipients(msgCompFields, msgType)
     parent.replaceChild(newListBoxNode, listbox);
     awFitDummyRows(2);
 
+    // CompFields2Recipients is called whenever a user replies or edits an existing message. We want to
+    // add all of the recipients for this message to the ignore list for spell check 
+    addRecipientsToIgnoreList((gCurrentIdentity ? gCurrentIdentity.identityName + ', ' : '') + msgTo + ', ' + msgCC + ', ' + msgBCC);
+
     gMimeHeaderParser = null; //Release the mime parser
   }
 }
@@ -347,7 +345,7 @@ function awAddRecipients(msgCompFields, recipientType, recipientsList)
 // this was broken out of awAddRecipients so it can be re-used...adds a new row matching recipientType and
 // drops in the single address.
 function awAddRecipient(recipientType, address)
-{
+{ 
   for (var row = 1; row <= top.MAX_RECIPIENTS; row ++)
   {
     if (awGetInputElement(row).value == "")
@@ -365,6 +363,9 @@ function awAddRecipient(recipientType, address)
     awAppendNewRow(true);
     awSetInputAndPopupValue(awGetInputElement(top.MAX_RECIPIENTS), "", awGetPopupElement(top.MAX_RECIPIENTS), "addr_to", top.MAX_RECIPIENTS);
   }
+  
+  // add the recipient to our spell check ignore list
+  addRecipientsToIgnoreList(address);
 }
 
 function awTestRowSequence()
@@ -491,6 +492,10 @@ function awReturnHit(inputElement)
     nextInput.select();
     awSetFocus(row+1, nextInput);
   }
+
+  // be sure to add the user add recipient to our ignore list
+  // when the user hits enter in an autocomplete widget...
+  addRecipientsToIgnoreList(inputElement.value);
 }
 
 function awDeleteHit(inputElement)
@@ -518,9 +523,6 @@ function awDeleteHit(inputElement)
 
 function awInputChanged(inputElement)
 {
-  dump("awInputChanged\n");
-//  AutoCompleteAddress(inputElement);
-
   //Do we need to add a new row?
   var lastInput = awGetInputElement(top.MAX_RECIPIENTS);
   if ( lastInput && lastInput.value && !top.doNotCreateANewRow)
@@ -725,7 +727,7 @@ function _awSetFocus()
 
 function awTabFromRecipient(element, event)
 {
-  //If we are le last element in the listbox, we don't want to create a new row.
+  //If we are the last element in the listbox, we don't want to create a new row.
   if (element == awGetInputElement(top.MAX_RECIPIENTS))
     top.doNotCreateANewRow = true;
 
@@ -735,6 +737,10 @@ function awTabFromRecipient(element, event)
     var listBox = document.getElementById("addressingWidget");
     listBox.listBoxObject.ensureIndexIsVisible(listBoxRow + 1);
   }
+
+  // be sure to add the user add recipient to our ignore list
+  // when the user tabs out of an autocomplete line...
+  addRecipientsToIgnoreList(element.value);
 }
 
 function awTabFromMenulist(element, event)
@@ -827,39 +833,37 @@ function awRecipientTextCommand(userAction, element)
 //
 function awRecipientErrorCommand(errItem, element)
 {
-    // remove the angle brackets from the general error message to construct 
-    // the title for the alert.  someday we'll pass this info using a real
-    // exception object, and then this code can go away.
-    //
-    var generalErrString;
-    if (errItem.value != "") {
-	generalErrString = errItem.value.slice(1, errItem.value.length-1);
-    } else {
-	generalErrString = "Unknown LDAP server problem encountered";
-    }	
+  // remove the angle brackets from the general error message to construct 
+  // the title for the alert.  someday we'll pass this info using a real
+  // exception object, and then this code can go away.
+  //
+  var generalErrString;
+  if (errItem.value != "") 
+    generalErrString = errItem.value.slice(1, errItem.value.length-1);
+  else 
+    generalErrString = "Unknown LDAP server problem encountered";	
 
-    // try and get the string of the specific error to contruct the complete
-    // err msg, otherwise fall back to something generic.  This message is
-    // handed to us as an nsISupportsString in the param slot of the 
-    // autocomplete error item, by agreement documented in 
-    // nsILDAPAutoCompFormatter.idl
-    //
-    var specificErrString = "";
-    try {
-	var specificError = errItem.param.QueryInterface(
-	    Components.interfaces.nsISupportsString);
-	specificErrString = specificError.data;
-    } catch (ex) {
-    }
-    if (specificErrString == "") {
-	specificErrString = "Internal error";
-    }
+  // try and get the string of the specific error to contruct the complete
+  // err msg, otherwise fall back to something generic.  This message is
+  // handed to us as an nsISupportsString in the param slot of the 
+  // autocomplete error item, by agreement documented in 
+  // nsILDAPAutoCompFormatter.idl
+  //
+  var specificErrString = "";
+  try 
+  {
+    var specificError = errItem.param.QueryInterface(Components.interfaces.nsISupportsString);
+	  specificErrString = specificError.data;
+  } catch (ex) 
+  {}
+  
+  if (specificErrString == "") 
+	  specificErrString = "Internal error";
 
-    if (gPromptService) {
-	gPromptService.alert(window, generalErrString, specificErrString);
-    } else {
-	window.alert(generalErrString + ": " + specificErrString);
-    }
+  if (gPromptService) 
+    gPromptService.alert(window, generalErrString, specificErrString);
+  else 
+	  window.alert(generalErrString + ": " + specificErrString);
 }
 
 function awRecipientKeyPress(event, element)
