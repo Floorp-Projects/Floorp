@@ -25,7 +25,7 @@
  * Pierre Phaneuf, pp@ludusdesign.com
  *    -- fixed some XPCOM usage.
  *
- * $Id: XSLProcessor.cpp,v 1.9 2000/02/22 11:16:40 kvisco%ziplink.net Exp $
+ * $Id: XSLProcessor.cpp,v 1.10 2000/03/23 10:17:54 kvisco%ziplink.net Exp $
  */
 
 #include "XSLProcessor.h"
@@ -38,7 +38,7 @@
 /**
  * XSLProcessor is a class for Processing XSL styelsheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.9 $ $Date: 2000/02/22 11:16:40 $
+ * @version $Revision: 1.10 $ $Date: 2000/03/23 10:17:54 $
 **/
 
 /**
@@ -59,7 +59,7 @@ XSLProcessor::XSLProcessor() {
 
     xslVersion.append("1.0");
     appName.append("TransforMiiX");
-    appVersion.append("1.0 [beta v20000222]");
+    appVersion.append("1.0 [beta v20000322]");
 
 
     //-- create XSL element types
