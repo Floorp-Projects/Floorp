@@ -20,6 +20,7 @@
  *
  * Contributor(s): 
  *     Sean Su <ssu@netscape.com>
+ *     Curt Patrick <curt@netscape.com>
  */
 
 #include "extern.h"
@@ -2593,7 +2594,7 @@ void SetTurboArgs(void)
     wsprintf(szKey,
              SETUP_STATE_REG_KEY,
              sgProduct.szCompanyName,
-             sgProduct.szProductName,
+             sgProduct.szProductNameInternal,
              sgProduct.szUserAgent);
     AppendWinReg(HKEY_CURRENT_USER,
                  szKey,

@@ -20,6 +20,7 @@
  *
  * Contributor(s): 
  *     Sean Su <ssu@netscape.com>
+ *     Curt Patrick <curt@netscape.com>
  */
 
 #include "extern.h"
@@ -126,7 +127,7 @@ void GetUserAgentShort(char *szUserAgent, char *szOutUAShort, DWORD dwOutUAShort
   }
 }
 
-char *GetWinRegSubKeyProductPath(HKEY hkRootKey, char *szInKey, char *szReturnSubKey, DWORD dwReturnSubKeySize, char *szInSubSubKey, char *szInName, char *szCompare)
+DWORD GetWinRegSubKeyProductPath(HKEY hkRootKey, char *szInKey, char *szReturnSubKey, DWORD dwReturnSubKeySize, char *szInSubSubKey, char *szInName, char *szCompare, BOOL bUseCurrentVersion)
 {
   char      *szRv = NULL;
   char      szKey[MAX_BUF];
@@ -138,12 +139,18 @@ char *GetWinRegSubKeyProductPath(HKEY hkRootKey, char *szInKey, char *szReturnSu
   DWORD     dwTotalSubKeys;
   DWORD     dwTotalValues;
   FILETIME  ftLastWriteFileTime;
+  BOOL      bFoundSubKey;
+
+  bFoundSubKey = FALSE;
 
   /* get the current version value for this product */
   GetWinReg(hkRootKey, szInKey, "CurrentVersion", szCurrentVersion, sizeof(szCurrentVersion));
 
   if(RegOpenKeyEx(hkRootKey, szInKey, 0, KEY_READ, &hkHandle) != ERROR_SUCCESS)
-    return(szRv);
+  {
+    *szReturnSubKey = '\0';
+    return(0);
+  }
 
   dwTotalSubKeys = 0;
   dwTotalValues  = 0;
@@ -153,7 +160,9 @@ char *GetWinRegSubKeyProductPath(HKEY hkRootKey, char *szInKey, char *szReturnSu
     dwBufSize = dwReturnSubKeySize;
     if(RegEnumKeyEx(hkHandle, dwIndex, szReturnSubKey, &dwBufSize, NULL, NULL, NULL, &ftLastWriteFileTime) == ERROR_SUCCESS)
     {
-      if((*szCurrentVersion != '\0') && (lstrcmpi(szCurrentVersion, szReturnSubKey) != 0))
+      if(  (*szCurrentVersion != '\0') && (lstrcmpi(szCurrentVersion, szReturnSubKey) != 0)
+         ||(!bUseCurrentVersion)
+        )
       {
         /* The key found is not the CurrentVersion (current UserAgent), so we can return it to be deleted.
          * We don't want to return the SubKey that is the same as the CurrentVersion because it might
@@ -173,7 +182,7 @@ char *GetWinRegSubKeyProductPath(HKEY hkRootKey, char *szInKey, char *szReturnSu
         AppendBackSlash(szBuf, sizeof(szBuf));
         if(lstrcmpi(szBuf, szCompare) == 0)
         {
-          szRv = szReturnSubKey;
+          bFoundSubKey = TRUE;
           /* found one subkey. break out of the for() loop */
           break;
         }
@@ -182,19 +191,22 @@ char *GetWinRegSubKeyProductPath(HKEY hkRootKey, char *szInKey, char *szReturnSu
   }
 
   RegCloseKey(hkHandle);
-  return(szRv);
+  if(!bFoundSubKey)
+    *szReturnSubKey = '\0';
+  return(dwTotalSubKeys);
 }
 
 void CleanupPreviousVersionRegKeys(void)
 {
-  char  *szRvSubKey;
-  char  szSubKeyFound[MAX_PATH + 1];
+  char  szRvSubKey[MAX_PATH + 1];
   char  szSubSubKey[] = "Main";
   char  szName[] = "Install Directory";
   char  szWRMSUninstall[] = "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall";
   char  szPath[MAX_BUF];
   char  szUAShort[MAX_BUF_TINY];
   char  szKey[MAX_BUF];
+  char  szCleanupProduct[MAX_BUF];
+  DWORD dwSubKeyCount;
 
   lstrcpy(szPath, sgProduct.szPath);
   if(*sgProduct.szSubPath != '\0')
@@ -206,30 +218,42 @@ void CleanupPreviousVersionRegKeys(void)
 
   do
   {
-    /* build prodyct key path here */
-    wsprintf(szKey, "Software\\%s\\%s", sgProduct.szCompanyName, sgProduct.szProductName);
-    szRvSubKey = GetWinRegSubKeyProductPath(HKEY_LOCAL_MACHINE, szKey, szSubKeyFound, sizeof(szSubKeyFound), szSubSubKey, szName, szPath);
-    if(szRvSubKey)
+    /* build product key path here */
+    lstrcpy(szCleanupProduct, sgProduct.szProductNameInternal);
+    wsprintf(szKey, "Software\\%s\\%s", sgProduct.szCompanyName, sgProduct.szProductNameInternal);
+    dwSubKeyCount = GetWinRegSubKeyProductPath(HKEY_LOCAL_MACHINE, szKey, szRvSubKey, sizeof(szRvSubKey), szSubSubKey, szName, szPath, TRUE);
+
+    if( (*szRvSubKey == '\0') && (*sgProduct.szProductNamePrevious != '\0') )
     {
-      AppendBackSlash(szKey, sizeof(szKey));
-      lstrcat(szKey, szSubKeyFound);
+      lstrcpy(szCleanupProduct, sgProduct.szProductNamePrevious);
+      wsprintf(szKey, "Software\\%s\\%s", sgProduct.szCompanyName, sgProduct.szProductNamePrevious);
+      dwSubKeyCount = GetWinRegSubKeyProductPath(HKEY_LOCAL_MACHINE, szKey, szRvSubKey, sizeof(szRvSubKey), szSubSubKey, szName, szPath, FALSE);
+    }
+
+    if(*szRvSubKey != '\0')
+    {
+      if(dwSubKeyCount > 1)
+      {
+        AppendBackSlash(szKey, sizeof(szKey));
+        lstrcat(szKey, szRvSubKey);
+      }
       DeleteWinRegKey(HKEY_LOCAL_MACHINE, szKey, TRUE);
 
-      GetUserAgentShort(szSubKeyFound, szUAShort, sizeof(szUAShort));
+      GetUserAgentShort(szRvSubKey, szUAShort, sizeof(szUAShort));
       if(*szUAShort != '\0')
       {
         /* delete uninstall key that contains product name and its user agent in parenthesis, for
          * example:
          *     Mozilla (0.8)
          */
-        wsprintf(szKey, "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\%s (%s)", sgProduct.szProductName, szUAShort);
+        wsprintf(szKey, "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\%s (%s)", szCleanupProduct, szUAShort);
         DeleteWinRegKey(HKEY_LOCAL_MACHINE, szKey, TRUE);
 
         /* delete uninstall key that contains product name and its user agent not in parenthesis,
          * for example:
          *     Mozilla 0.8
          */
-        wsprintf(szKey, "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\%s %s", sgProduct.szProductName, szUAShort);
+        wsprintf(szKey, "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\%s %s", szCleanupProduct, szUAShort);
         DeleteWinRegKey(HKEY_LOCAL_MACHINE, szKey, TRUE);
 
         /* We are not looking to delete just the product name key, for example:
@@ -243,7 +267,7 @@ void CleanupPreviousVersionRegKeys(void)
       }
     }
 
-  } while(szRvSubKey);
+  } while(*szRvSubKey);
 }
 
 void ProcessFileOps(DWORD dwTiming, char *szSectionPrefix)
@@ -451,7 +475,7 @@ HRESULT CleanupArgsRegistry()
 {
   char  szKey[MAX_BUF];
 
-  wsprintf(szKey, SETUP_STATE_REG_KEY, sgProduct.szCompanyName, sgProduct.szProductName,
+  wsprintf(szKey, SETUP_STATE_REG_KEY, sgProduct.szCompanyName, sgProduct.szProductNameInternal,
     sgProduct.szUserAgent);
   DeleteWinRegValue(HKEY_CURRENT_USER, szKey, "browserargs");
   return(FO_SUCCESS);

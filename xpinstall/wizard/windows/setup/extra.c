@@ -20,6 +20,7 @@
  *
  * Contributor(s): 
  *     Sean Su <ssu@netscape.com>
+ *     Curt Patrick <curt@netscape.com>
  */
 
 #include "extern.h"
@@ -280,7 +281,7 @@ void UnsetDownloadState(void)
   wsprintf(szKey,
            SETUP_STATE_REG_KEY,
            sgProduct.szCompanyName,
-           sgProduct.szProductName,
+           sgProduct.szProductNameInternal,
            sgProduct.szUserAgent);
   DeleteWinRegValue(HKEY_CURRENT_USER, szKey, "Setup State");
 }
@@ -293,7 +294,7 @@ void SetDownloadState(void)
   wsprintf(szKey,
            SETUP_STATE_REG_KEY,
            sgProduct.szCompanyName,
-           sgProduct.szProductName,
+           sgProduct.szProductNameInternal,
            sgProduct.szUserAgent);
   lstrcpy(szValue, "downloading");
 
@@ -308,13 +309,13 @@ BOOL CheckForPreviousUnfinishedDownload(void)
   BOOL bRv = FALSE;
 
   if(sgProduct.szCompanyName &&
-     sgProduct.szProductName &&
+     sgProduct.szProductNameInternal &&
      sgProduct.szUserAgent)
   {
     wsprintf(szKey,
              SETUP_STATE_REG_KEY,
              sgProduct.szCompanyName,
-             sgProduct.szProductName,
+             sgProduct.szProductNameInternal,
              sgProduct.szUserAgent);
     GetWinReg(HKEY_CURRENT_USER, szKey, "Setup State", szBuf, sizeof(szBuf));
     if(lstrcmpi(szBuf, "downloading") == 0)
@@ -331,7 +332,7 @@ void UnsetSetupCurrentDownloadFile(void)
   wsprintf(szKey,
            SETUP_STATE_REG_KEY,
            sgProduct.szCompanyName,
-           sgProduct.szProductName,
+           sgProduct.szProductNameInternal,
            sgProduct.szUserAgent);
   DeleteWinRegValue(HKEY_CURRENT_USER,
                     szKey,
@@ -345,7 +346,7 @@ void SetSetupCurrentDownloadFile(char *szCurrentFilename)
   wsprintf(szKey,
            SETUP_STATE_REG_KEY,
            sgProduct.szCompanyName,
-           sgProduct.szProductName,
+           sgProduct.szProductNameInternal,
            sgProduct.szUserAgent);
   SetWinReg(HKEY_CURRENT_USER,
             szKey,
@@ -369,13 +370,13 @@ char *GetSetupCurrentDownloadFile(char *szCurrentDownloadFile,
 
   ZeroMemory(szCurrentDownloadFile, dwCurrentDownloadFileBufSize);
   if(sgProduct.szCompanyName &&
-     sgProduct.szProductName &&
+     sgProduct.szProductNameInternal &&
      sgProduct.szUserAgent)
   {
     wsprintf(szKey,
              SETUP_STATE_REG_KEY,
              sgProduct.szCompanyName,
-             sgProduct.szProductName,
+             sgProduct.szProductNameInternal,
              sgProduct.szUserAgent);
     GetWinReg(HKEY_CURRENT_USER,
               szKey,
@@ -2508,6 +2509,10 @@ HRESULT InitSetupGeneral()
     return(1);
   if((sgProduct.szProductName                 = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
+  if((sgProduct.szProductNameInternal         = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+  if((sgProduct.szProductNamePrevious         = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
   if((sgProduct.szUninstallFilename           = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
   if((sgProduct.szUserAgent                   = NS_GlobalAlloc(MAX_BUF)) == NULL)
@@ -2539,6 +2544,8 @@ void DeInitSetupGeneral()
   FreeMemory(&(sgProduct.szProgramName));
   FreeMemory(&(sgProduct.szCompanyName));
   FreeMemory(&(sgProduct.szProductName));
+  FreeMemory(&(sgProduct.szProductNameInternal));
+  FreeMemory(&(sgProduct.szProductNamePrevious));
   FreeMemory(&(sgProduct.szUninstallFilename));
   FreeMemory(&(sgProduct.szUserAgent));
   FreeMemory(&(sgProduct.szProgramFolderName));
@@ -5427,6 +5434,10 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   /* get product name description */
   GetPrivateProfileString("General", "Company Name", "", sgProduct.szCompanyName, MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("General", "Product Name", "", sgProduct.szProductName, MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("General", "Product Name Internal", "", sgProduct.szProductNameInternal, MAX_BUF, szFileIniConfig);
+  if (sgProduct.szProductNameInternal[0] == 0)
+    lstrcpy(sgProduct.szProductNameInternal, sgProduct.szProductName);
+  GetPrivateProfileString("General", "Product Name Previous", "", sgProduct.szProductNamePrevious, MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("General", "Uninstall Filename", "", sgProduct.szUninstallFilename, MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("General", "User Agent",   "", sgProduct.szUserAgent,   MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("General", "Sub Path",     "", sgProduct.szSubPath,     MAX_BUF, szFileIniConfig);
@@ -6559,7 +6570,7 @@ HRESULT DecryptVariable(LPSTR szVariable, DWORD dwVariableSize)
   {
     char szKey[MAX_BUF];
 
-    wsprintf(szKey, "Software\\%s\\%s", sgProduct.szCompanyName, sgProduct.szProductName);
+    wsprintf(szKey, "Software\\%s\\%s", sgProduct.szCompanyName, sgProduct.szProductNameInternal);
 
     /* parse for the current Netscape WinReg key */
     GetWinReg(HKEY_LOCAL_MACHINE, szKey, "CurrentVersion", szBuf, sizeof(szBuf));
@@ -6567,7 +6578,21 @@ HRESULT DecryptVariable(LPSTR szVariable, DWORD dwVariableSize)
     if(*szBuf == '\0')
       return(FALSE);
 
-    wsprintf(szVariable, "Software\\%s\\%s\\%s", sgProduct.szCompanyName, sgProduct.szProductName, szBuf);
+    wsprintf(szVariable, "Software\\%s\\%s\\%s", sgProduct.szCompanyName, sgProduct.szProductNameInternal, szBuf);
+  }
+  else if(lstrcmpi(szVariable, "Product PreviousVersion") == 0)
+  {
+    char szKey[MAX_BUF];
+
+    wsprintf(szKey, "Software\\%s\\%s", sgProduct.szCompanyName, sgProduct.szProductNamePrevious);
+
+    /* parse for the current Netscape WinReg key */
+    GetWinReg(HKEY_LOCAL_MACHINE, szKey, "CurrentVersion", szBuf, sizeof(szBuf));
+
+    if(*szBuf == '\0')
+      return(FALSE);
+
+    wsprintf(szVariable, "Software\\%s\\%s\\%s", sgProduct.szCompanyName, sgProduct.szProductNamePrevious, szBuf);
   }
   else
     return(FALSE);
