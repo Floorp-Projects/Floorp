@@ -467,6 +467,12 @@ sub open_showbuilds_href {
   return "<a href=".open_showbuilds_url(@_).">";
 }
 
+# Same as open_showbuilds_href, but adding parent target
+# so that URL's in iframes take over the parent window.
+sub open_showbuilds_href_target {
+  return "<a href=".open_showbuilds_url(@_)." target=\"_parent\">";
+}
+
 sub query_ref {
   my ($td, $mindate, $maxdate, $who) = @_;
   my $output = '';
@@ -779,7 +785,7 @@ sub do_express {
   my $tm = &print_time(time);
   print "<table border=1 cellpadding=1 cellspacing=1><tr>";
   print "<th align=left colspan=$keycount>";
-  print &open_showbuilds_href."$::tree";
+  print &open_showbuilds_href_target."$::tree";
   if (is_tree_state_available()) {
     print (is_tree_open() ? ' is open' : ' is closed');
   }
