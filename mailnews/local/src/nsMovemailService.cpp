@@ -298,10 +298,7 @@ nsMovemailService::GetNewMail(nsIMsgWindow *aMsgWindow,
     nsCAutoString wholeboxname;
 
     if (in_server) {   
-        nsCOMPtr<nsIFileSpec> mailDirectory;
-
         in_server->SetServerBusy(PR_TRUE);
-        rv = in_server->GetLocalPath(getter_AddRefs(mailDirectory));
 
         // FUN STUFF starts here
         {
