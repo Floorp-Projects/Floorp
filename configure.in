@@ -3437,16 +3437,9 @@ dnl = Timeline is off by default.
 dnl ========================================================
 MOZ_TIMELINE=
 MOZ_ARG_ENABLE_BOOL(timeline,
-[  --enable-timeline       Enable timeline services (default=debug)],
-    _MOZ_TIMELINE=1 , ,
-    [ if test "$MOZ_DEBUG"; then
-        _MOZ_TIMELINE=1 
-    fi])
-
-if test "$_MOZ_TIMELINE"; then
+[  --enable-timeline       Enable timeline services ],
     AC_DEFINE(MOZ_TIMELINE)
-    MOZ_TIMELINE=1
-fi
+    MOZ_TIMELINE=1)
 
 dnl ========================================================
 dnl Turn on reflow counting
@@ -3471,14 +3464,9 @@ dnl = Enable trace malloc
 dnl ========================================================
 NS_TRACE_MALLOC=
 MOZ_ARG_ENABLE_BOOL(trace-malloc,
-[  --enable-trace-malloc   Enable malloc tracing (default=debug)],
-    _NS_TRACE_MALLOC=1 , ,
-    [ if test "$MOZ_DEBUG"; then
-        _NS_TRACE_MALLOC=1 
-    fi])
-
-if test "$_NS_TRACE_MALLOC"; then
-  NS_TRACE_MALLOC=1
+[  --enable-trace-malloc   Enable malloc tracing],
+    NS_TRACE_MALLOC=1 )
+if test "$NS_TRACE_MALLOC"; then
   # Please, Mr. Linker Man, don't take away our symbol names
   MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS=
   USE_ELF_DYNSTR_GC=
