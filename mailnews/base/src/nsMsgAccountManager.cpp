@@ -23,6 +23,7 @@
 #include "nsMsgAccountManager.h"
 #include "nsHashtable.h"
 #include "nsMsgBaseCID.h"
+#include "nsMsgCompCID.h"
 #include "nsIPref.h"
 #include "nsCOMPtr.h"
 #include "prmem.h"
@@ -42,6 +43,8 @@
 #include "nsIFileLocator.h" 
 #include "nsFileLocations.h" 
 #include "nsIURL.h"
+#include "nsISmtpService.h"
+#include "nsISmtpServer.h"
 
 // this should eventually be moved to the pop3 server for upgrading
 #include "nsIPop3IncomingServer.h"
@@ -66,6 +69,7 @@ static NS_DEFINE_CID(kProfileCID, NS_PROFILE_CID);
 static NS_DEFINE_CID(kCNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID); 
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);   
+static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID);   
 
 #define IMAP_SCHEMA "imap:/"
 #define IMAP_SCHEMA_LENGTH 6
@@ -380,6 +384,7 @@ private:
 
   // methods for migration / upgrading
   nsresult MigrateIdentity(nsIMsgIdentity *identity);
+  nsresult MigrateSmtpServer(nsISmtpServer *server);
   nsresult CopyIdentity(nsIMsgIdentity *srcIdentity, nsIMsgIdentity *destIdentity);
   nsresult SetNewsCcAndFccValues(nsIMsgIdentity *identity);
   nsresult SetMailCcAndFccValues(nsIMsgIdentity *identity);
@@ -1308,6 +1313,16 @@ nsMsgAccountManager::UpgradePrefs()
     rv = MigrateIdentity(identity);
     if (NS_FAILED(rv)) return rv;    
     
+    nsCOMPtr<nsISmtpServer> smtpServer;
+    NS_WITH_SERVICE(nsISmtpService, smtpService, kSmtpServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;    
+
+    rv = smtpService->GetDefaultServer(getter_AddRefs(smtpServer));
+    if (NS_FAILED(rv)) return rv;    
+
+    rv = MigrateSmtpServer(smtpServer);
+    if (NS_FAILED(rv)) return rv;    
+
     if ( oldMailType == POP_4X_MAIL_TYPE) {
       // in 4.x, you could only have one pop account
       rv = MigratePopAccount(identity);
@@ -1349,9 +1364,6 @@ nsMsgAccountManager::MigrateIdentity(nsIMsgIdentity *identity)
   MIGRATE_SIMPLE_STR_PREF(PREF_4X_MAIL_IDENTITY_REPLY_TO,identity,SetReplyTo)
   MIGRATE_SIMPLE_STR_PREF(PREF_4X_MAIL_IDENTITY_ORGANIZATION,identity,SetOrganization)
   MIGRATE_SIMPLE_BOOL_PREF(PREF_4X_MAIL_COMPOSE_HTML,identity,SetComposeHtml)
-    /*  MIGRATE_SIMPLE_STR_PREF(PREF_4X_NETWORK_HOSTS_SMTP_SERVER,identity,SetSmtpHostname)
-  MIGRATE_SIMPLE_STR_PREF(PREF_4X_MAIL_SMTP_NAME,identity,SetSmtpUsername)
-    */
   MIGRATE_SIMPLE_STR_PREF(PREF_4X_MAIL_DEFAULT_DRAFTS,identity,SetDraftFolder)
   CONVERT_4X_URI(identity,GetDraftFolder,SetDraftFolder)
     
@@ -1359,7 +1371,14 @@ nsMsgAccountManager::MigrateIdentity(nsIMsgIdentity *identity)
   CONVERT_4X_URI(identity,GetStationaryFolder,SetStationaryFolder)
     
   // what about the new 5.0 spam folder pref?
-    
+  return NS_OK;
+}
+
+nsresult
+nsMsgAccountManager::MigrateSmtpServer(nsISmtpServer *server)
+{
+  MIGRATE_SIMPLE_STR_PREF(PREF_4X_NETWORK_HOSTS_SMTP_SERVER,server,SetHostname)
+  MIGRATE_SIMPLE_STR_PREF(PREF_4X_MAIL_SMTP_NAME,server,SetUsername)
   return NS_OK;
 }
 
