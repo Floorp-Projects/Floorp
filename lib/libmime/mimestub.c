@@ -36,6 +36,7 @@
  */
 
 #include "xp.h"
+#include "rosetta.h"
 
 
 #ifndef XP_UNIX
@@ -430,9 +431,8 @@ NET_URL_Type (CONST char *URL)
     switch(*URL) {
     case 'a':
     case 'A':
-		if(!strncasecomp(URL,"about:security", 14))
-		    return(SECURITY_TYPE_URL);
-		else if(!strncasecomp(URL,"about:",6))
+		HG82921
+		if(!strncasecomp(URL,"about:",6))
 		    return(ABOUT_TYPE_URL);
 		break;
 	case 'f':
@@ -468,8 +468,7 @@ NET_URL_Type (CONST char *URL)
 			return(HTML_DIALOG_HANDLER_TYPE_URL);
 		else if(!strncasecomp(URL,"internal-panel-handler",22))
 			return(HTML_PANEL_HANDLER_TYPE_URL);
-		else if(!strncasecomp(URL,"internal-security-",18))
-			return(INTERNAL_SECLIB_TYPE_URL);
+		HG87988
 		break;
 	case 'j':
 	case 'J':

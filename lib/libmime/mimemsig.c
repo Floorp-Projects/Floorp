@@ -20,6 +20,7 @@
    Created: Jamie Zawinski <jwz@netscape.com>, 23-Sep-96.
  */
 
+#include "rosetta.h"
 #include "mimemsig.h"
 #include "nspr.h"
 #include "xp_error.h"
@@ -94,15 +95,7 @@ MimeMultipartSigned_cleanup (MimeObject *obj, XP_Bool finalizing_p)
   mult->state = MimeMultipartEpilogue;  /* #58075.  Fix suggested by jwz */
   sig->state = MimeMultipartSignedEpilogue;
 
-  if (finalizing_p && sig->crypto_closure)
-	{
-	  /* Don't free these until this object is really going away -- keep them
-		 around for the lifetime of the MIME object, so that we can get at the
-		 security info of sub-parts of the currently-displayed message. */
-	  ((MimeMultipartSignedClass *) obj->class)
-		->crypto_free (sig->crypto_closure);
-	  sig->crypto_closure = 0;
-	}
+  HG09862
 
   if (sig->sig_decoder_data)
 	{
@@ -127,9 +120,7 @@ MimeMultipartSigned_parse_eof (MimeObject *obj, XP_Bool abort_p)
 	  sig->state == MimeMultipartSignedSignatureLine ||
 	  sig->state == MimeMultipartSignedEpilogue)
 	{
-	  status = (((MimeMultipartSignedClass *) obj->class)
-				->crypto_signature_eof) (sig->crypto_closure, abort_p);
-	  if (status < 0) return status;
+	  HG09863
 	}
 
   if (!abort_p)
@@ -138,7 +129,7 @@ MimeMultipartSigned_parse_eof (MimeObject *obj, XP_Bool abort_p)
 		 have presumably verified the signature) write out a blurb, and then
 		 the signed object.
 	   */
-	  XP_ASSERT(sig->crypto_closure);
+	  HG09864
 	  status = MimeMultipartSigned_emit_child(obj);
 	  if (status < 0) return status;
 	}
@@ -175,8 +166,7 @@ MimeMultipartSigned_parse_line (char *line, int32 length, MimeObject *obj)
   if (status < 0) return status;
 
 
-  /* Now we want to do various other crypto-related things to these lines.
-   */
+  HG09865
 
 
   /* The instance variable MimeMultipartClass->state tracks motion through
@@ -275,20 +265,7 @@ MimeMultipartSigned_parse_line (char *line, int32 length, MimeObject *obj)
 	case MimeMultipartSignedBodyHeaders:
 	case MimeMultipartSignedBodyLine:
 
-	  if (!sig->crypto_closure)
-		{
-		  XP_SetError(0);
-		  /* Initialize the signature verification library. */
-		  sig->crypto_closure = (((MimeMultipartSignedClass *) obj->class)
-								 ->crypto_init) (obj);
-		  if (!sig->crypto_closure)
-			{
-			  status = PR_GetError();
-			  XP_ASSERT(status < 0);
-			  if (status >= 0) status = -1;
-			  return status;
-			}
-		}
+	  HG09866
 
 	  if (hash_line_p)
 		{
@@ -312,7 +289,7 @@ MimeMultipartSigned_parse_line (char *line, int32 length, MimeObject *obj)
 			 of after, except for the first line, which is not preceeded by a
 			 newline.
 
-			 For purposes of cryptographic hashing, we always hash line
+			 For purposes of bigfun hashing, we always hash line
 			 breaks as CRLF -- the canonical, on-the-wire linebreaks, since
 			 we have no idea of knowing what line breaks were used on the
 			 originating system (SMTP rightly destroys that information.)
@@ -322,28 +299,29 @@ MimeMultipartSigned_parse_line (char *line, int32 length, MimeObject *obj)
 		  if (length > 0 && line[length-1] == LF) length--;
 		  if (length > 0 && line[length-1] == CR) length--;
 
-		  XP_ASSERT(sig->crypto_closure);
+		  HG09867
 
 		  if (!first_line_p)
 			{
 			  /* Push out a preceeding newline... */
 			  char nl[] = CRLF;
+
 			  status = (((MimeMultipartSignedClass *) obj->class)
-						->crypto_data_hash (nl, 2, sig->crypto_closure));
+						->bigfun_data_hash (nl, 2, sig->bigfun_closure));
 			  if (status < 0) return status;
 			}
 
 		  /* Now push out the line sans trailing newline. */
 		  if (length > 0)
 			status = (((MimeMultipartSignedClass *) obj->class)
-					  ->crypto_data_hash (line,length, sig->crypto_closure));
+					  ->bigfun_data_hash (line,length, sig->bigfun_closure));
 		  if (status < 0) return status;
 		}
 	  break;
 
 	case MimeMultipartSignedSignatureHeaders:
 
-	  if (sig->crypto_closure &&
+	  if (sig->bigfun_closure &&
 		  old_state != mult->state)
 		{
 		  /* We have just moved out of the MimeMultipartSignedBodyLine
@@ -351,7 +329,7 @@ MimeMultipartSigned_parse_line (char *line, int32 length, MimeObject *obj)
 			 reached the end of the signed data.
 		   */
 		  status = (((MimeMultipartSignedClass *) obj->class)
-					->crypto_data_eof) (sig->crypto_closure, FALSE);
+					->bigfun_data_eof) (sig->bigfun_closure, FALSE);
 		  if (status < 0) return status;
 		}
 	  break;
@@ -391,18 +369,18 @@ MimeMultipartSigned_parse_line (char *line, int32 length, MimeObject *obj)
 			sig->sig_decoder_data =
 			  fn (((int (*) (const char *, int32, void *))
 				   (((MimeMultipartSignedClass *) obj->class)
-					->crypto_signature_hash)),
-				  sig->crypto_closure);
+					->bigfun_signature_hash)),
+				  sig->bigfun_closure);
 			if (!sig->sig_decoder_data)
 			  return MK_OUT_OF_MEMORY;
 		  }
 	  }
 
-	  /* Show these headers to the crypto module. */
+	  /* Show these headers to the bigfun module. */
 	  if (hash_line_p)
 		{
 		  status = (((MimeMultipartSignedClass *) obj->class)
-					->crypto_signature_init) (sig->crypto_closure,
+					->bigfun_signature_init) (sig->bigfun_closure,
 											  obj, sig->sig_hdrs);
 		  if (status < 0) return status;
 		}
@@ -418,8 +396,8 @@ MimeMultipartSigned_parse_line (char *line, int32 length, MimeObject *obj)
 			status = MimeDecoderWrite (sig->sig_decoder_data, line, length);
 		  else
 			status = (((MimeMultipartSignedClass *) obj->class)
-					  ->crypto_signature_hash (line, length,
-											   sig->crypto_closure));
+					  ->bigfun_signature_hash (line, length,
+											   sig->bigfun_closure));
 		  if (status < 0) return status;
 		}
 	  break;
@@ -585,7 +563,7 @@ MimeMultipartSigned_emit_child (MimeObject *obj)
   int status = 0;
   MimeObject *body;
 
-  XP_ASSERT(sig->crypto_closure);
+  XP_ASSERT(sig->bigfun_closure);
 
   /* Emit some HTML saying whether the signature was cool.
 	 But don't emit anything if in FO_QUOTE_MESSAGE mode.
@@ -595,17 +573,17 @@ MimeMultipartSigned_emit_child (MimeObject *obj)
 	  obj->options->write_html_p &&
 	  obj->options->output_fn &&
 	  obj->options->headers != MimeHeadersCitation &&
-	  sig->crypto_closure)
+	  sig->bigfun_closure)
 	{
 	  char *html = (((MimeMultipartSignedClass *) obj->class)
-					->crypto_generate_html (sig->crypto_closure));
+					->bigfun_generate_html (sig->bigfun_closure));
 	  if (!html) return -1; /* MK_OUT_OF_MEMORY? */
 
 	  status = MimeObject_write(obj, html, XP_STRLEN(html), FALSE);
 	  XP_FREE(html);
 	  if (status < 0) return status;
 
-	  /* Now that we have written out the crypto stamp, the outermost header
+	  /* Now that we have written out the bigfun stamp, the outermost header
 		 block is well and truly closed.  If this is in fact the outermost
 		 message, then run the post_header_html_fn now.
 	   */

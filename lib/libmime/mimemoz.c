@@ -331,7 +331,7 @@ mime_display_stream_write_ready (NET_StreamClass *stream)
 }
 
 
-extern void MSG_MimeNotifyCryptoAttachmentKludge(NET_StreamClass *);
+HG09857
 
 static void
 mime_display_stream_complete (NET_StreamClass *stream)
@@ -417,7 +417,7 @@ mime_display_stream_complete (NET_StreamClass *stream)
           obj->options &&
           obj->options->state &&
           obj->options->state->decrypted_p)
-        MSG_MimeNotifyCryptoAttachmentKludge(msd->stream);
+        HG09858 ;
 
       /* Close the output stream. */
       msd->stream->complete (msd->stream);
@@ -1166,11 +1166,7 @@ MIME_MessageConverter (int format_out, void *closure,
     msd->options->headers = MimeHeadersSomeNoRef;
 
 #ifdef FO_MAIL_MESSAGE_TO
-  /* If we're attaching a message (for forwarding) then we must eradicate all
-     traces of encryption from it, since forwarding someone else a message
-     that wasn't encrypted for them doesn't work.  We have to decrypt it
-     before sending it.
-   */
+  HG09859
   if ((format_out == FO_MAIL_TO || format_out == FO_CACHE_AND_MAIL_TO) &&
       msd->options->write_html_p == FALSE)
     msd->options->decrypt_p = TRUE;
@@ -1693,9 +1689,8 @@ mime_get_main_object(MimeObject* obj)
 #endif
       return obj;
     }
-  /* Our main thing is a signed or encrypted object.
-     We don't care about that; go on inside to the thing that we signed or
-     encrypted. */
+
+    HG09860
     cobj = (MimeContainer*) obj;
     if (cobj->nchildren != 1) return obj;
     obj = cobj->children[0];

@@ -37,17 +37,9 @@
      until it finds a part which cannot be displayed; and then it displays
      the *previous* part (the last which *could* be displayed.)  This code
      is used to hold the previous part until it is needed.
+*/
 
-   = The S/MIME code (both MimeEncryptedPKCS7 and MimeMultipartSignedPKCS7)
-     use this code to delay presenting an object to the user until its
-     signature has been verified.  The signature cannot be completely verified
-     by the underlying crypto code until the entire object has been read;
-     however, it would be wrong to present a signed object to the user without
-     first knowing whether the signature is correct (in other words, we want
-     to present the "signature matches" or "signature does not match" blurb to
-     the user *before* we show them the object which has been signed, rather
-     than *after*.)
- */
+HG89321
 
 /* An opaque object used to represent the buffered data.
  */

@@ -220,10 +220,6 @@ typedef struct MimeObjectClass MimeObjectClass;
 # define mimeMultipartRelated	  mimeMultipartRelated16
 # define mimeMultipartAppleDouble mimeMultipartAppleDouble16
 # define mimeSunAttachment		  mimeSunAttachment16
-# define mimeMultipartSigned	  mimeMultipartSigned16
-# define mimeMultipartSignedPKCS7 mimeMultipartSignedPKCS716
-# define mimeEncrypted			  mimeEncrypted16
-# define mimeEncryptedPKCS7		  mimeEncryptedPKCS716
 # define mimeMessage			  mimeMessage16
 # define mimeUntypedText		  mimeUntypedText16
 # define mimeLeaf				  mimeLeaf16
@@ -332,51 +328,11 @@ extern char *mime_find_suggested_name_of_part(const char *part,
  */
 extern char *mime_find_content_type_of_part(const char *part, MimeObject *obj);
 
-/* Given a part ID, looks through the MimeObject tree for a sub-part whose ID
-   number matches; if one is found, and if it represents a PKCS7-encrypted
-   object, returns information about the security status of that object.
-
-   `part' is not a URL -- it's of the form "1.3.5" and is interpreted relative
-   to the `obj' argument.
- */
-extern void mime_find_security_info_of_part(const char *part, MimeObject *obj,
-									  void **pkcs7_encrypt_content_info_return,
-									     void **pkcs7_sign_content_info_return,
-											char **sender_email_addr_return,
-											int32 *decode_error_return,
-											int32 *verify_error_return);
-
+HG09856
 
 /* Parse the various "?" options off the URL and into the options struct.
  */
 extern int mime_parse_url_options(const char *url, MimeDisplayOptions *);
-
-
-/* Asks whether the given object is one of the cryptographically signed
-   or encrypted objects that we know about.  (MimeMessageClass uses this
-   to decide if the headers need to be presented differently.)
- */
-extern XP_Bool mime_crypto_object_p(MimeHeaders *, XP_Bool clearsigned_counts);
-
-/* Tells whether the given MimeObject is a message which has been encrypted
-   or signed.  (Helper for MIME_GetMessageCryptoState()). 
- */
-extern void mime_get_crypto_state (MimeObject *obj,
-								   XP_Bool *signed_p, XP_Bool *encrypted_p,
-								   XP_Bool *signed_ok, XP_Bool *encrypted_ok);
-
-
-/* Whether the given object has written out the HTML version of its headers
-   in such a way that it will have a "crypto stamp" next to the headers.  If
-   this is true, then the child must write out its HTML slightly differently
-   to take this into account...
- */
-extern XP_Bool mime_crypto_stamped_p(MimeObject *obj);
-
-/* How the crypto code tells the MimeMessage object what the crypto stamp
-   on it says. */
-extern void mime_set_crypto_stamp(MimeObject *obj,
-								  XP_Bool signed_p, XP_Bool encrypted_p);
 
 
 struct MimeParseStateObject {

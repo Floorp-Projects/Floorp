@@ -19,6 +19,7 @@
 /* mimecont.c --- definition of the MimeContainer class (see mimei.h)
  */
 
+#include "rosetta.h"
 #include "mimecont.h"
 
 #define MIME_SUPERCLASS mimeObjectClass
@@ -31,7 +32,7 @@ static int MimeContainer_add_child (MimeObject *, MimeObject *);
 static int MimeContainer_parse_eof (MimeObject *, XP_Bool);
 static int MimeContainer_parse_end (MimeObject *, XP_Bool);
 static XP_Bool MimeContainer_displayable_inline_p (MimeObjectClass *class,
-												   MimeHeaders *hdrs);
+    MimeHeaders *hdrs);
 
 #if defined(DEBUG) && defined(XP_UNIX)
 static int MimeContainer_debug_print (MimeObject *, FILE *, int32 depth);

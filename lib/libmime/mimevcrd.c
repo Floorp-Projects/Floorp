@@ -20,6 +20,7 @@
 /* mimevcrd.c --- definition of the MimeInlineTextVCard class (see mimei.h)
  */
 
+#include "rosetta.h"
 #include "mimevcrd.h"
 #include "xpgetstr.h"
 #include "xp_core.h"

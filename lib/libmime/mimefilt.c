@@ -49,6 +49,7 @@
    in fact, a raw HTTP response.)
  */
 
+#include "rosetta.h"
 #include "mimemsg.h"
 #include "prglobal.h"
 
@@ -103,12 +104,9 @@ test_file_type (const char *filename, void *stream_closure)
 	return XP_STRDUP("audio/x-aiff");
   else if (!strcasecomp(suf, "ps"))
 	return XP_STRDUP("application/postscript");
-  else if (!strcasecomp(suf, "p7m"))
-	return XP_STRDUP("application/x-pkcs7-mime");
-  else if (!strcasecomp(suf, "p7c"))
-	return XP_STRDUP("application/x-pkcs7-mime");
-  else if (!strcasecomp(suf, "p7s"))
-	return XP_STRDUP("application/x-pkcs7-signature");
+
+  HG43290
+
   else
 	return 0;
 }
@@ -350,10 +348,7 @@ static char *
 test_cdb_name_cb (void *arg, int vers)
 {
   static char f[1024];
-  if (vers <= 4)
-	sprintf(f, "%s/.netscape/cert.db", getenv("HOME"));
-  else
-	sprintf(f, "%s/.netscape/cert%d.db", getenv("HOME"), vers);
+  HG09845
   return f;
 }
 
@@ -380,30 +375,8 @@ main (int argc, char **argv)
   XP_Bool outline_p = FALSE;
   XP_Bool decrypt_p = FALSE;
   char filename[1000];
-  CERTCertDBHandle *cdb_handle;
-  SECKEYKeyDBHandle *kdb_handle;
 
-  PR_Init("mimefilt", 24, 1, 0);
-
-  cdb_handle = (CERTCertDBHandle *)  malloc(sizeof(*cdb_handle));
-  memset(cdb_handle, 0, sizeof(*cdb_handle));
-
-  if (SECSuccess != CERT_OpenCertDB(cdb_handle, FALSE, test_cdb_name_cb, NULL))
-	CERT_OpenVolatileCertDB(cdb_handle);
-  CERT_SetDefaultCertDB(cdb_handle);
-
-  RNG_RNGInit();
-
-  kdb_handle = SECKEY_OpenKeyDB(PR_FALSE, test_kdb_name_cb, NULL);
-  SECKEY_SetDefaultKeyDB(kdb_handle);
-
-  PK11_SetPasswordFunc(test_passwd_prompt);
-
-  sprintf(filename, "%s/.netscape/secmodule.db", getenv("HOME"));
-  SECMOD_init(filename);
-
-  SEC_Init();
-
+  HG09846
 
   if (i < argc)
 	{
@@ -430,12 +403,11 @@ main (int argc, char **argv)
 		html_p = FALSE;
 	  else if (!XP_STRCMP(argv[i], "-outline"))
 		outline_p = TRUE;
-	  else if (!XP_STRCMP(argv[i], "-decrypt"))
-		decrypt_p = TRUE;
+	  HG09847
 	  else
 		{
 		  fprintf(stderr,
-		  "usage: %s [ URL [ -fancy | -no-fancy | -html | -raw | -outline | -decrypt ]]\n"
+				  HG09848 ,
 				  "     < message/rfc822 > output\n",
 				  (XP_STRRCHR(argv[0], '/') ?
 				   XP_STRRCHR(argv[0], '/') + 1 :
@@ -452,8 +424,7 @@ main (int argc, char **argv)
 
  FAIL:
 
-  CERT_ClosePermCertDB(cdb_handle);
-  SECKEY_CloseKeyDB(kdb_handle);
+  HG09849
 
   exit(i);
 }

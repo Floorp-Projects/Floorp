@@ -20,6 +20,7 @@
    Created: Jamie Zawinski <jwz@netscape.com>, 15-May-96.
  */
 
+#include "rosetta.h"
 #include "mime.h"
 #include "mimeobj.h"	/*  MimeObject (abstract)							*/
 #include "mimecont.h"	/*   |--- MimeContainer (abstract)					*/
@@ -182,8 +183,7 @@ mime_find_class (const char *content_type, MimeHeaders *hdrs,
 		class = (MimeObjectClass *)&mimeMultipartMixedClass;
 
 #ifndef NO_SECURITY
-	  else if (!strcasecomp(content_type+10,	"signed"))
-        class = mime_find_signed_class_from_proto(hdrs);
+HG09850
 #endif /* NO_SECURITY */
 
 	  if (!class && !exact_match_p)
@@ -230,7 +230,7 @@ mime_find_class (const char *content_type, MimeHeaders *hdrs,
 	class = (MimeObjectClass *)&mimeSunAttachmentClass;
 
 #ifndef NO_SECURITY
-  /* check for other, possibly encrypted, types */
+  HG09855
   else if ((class = mime_find_class_from_content_type(content_type)) != 0)
     ;
 #endif /* NO_SECURITY */
@@ -580,91 +580,12 @@ mime_imap_part_address(MimeObject *obj)
 	return imap_part;
 }
 
-
-/* Asks whether the given object is one of the cryptographically signed
-   or encrypted objects that we know about.  (MimeMessageClass uses this
-   to decide if the headers need to be presented differently.)
- */
-XP_Bool
-mime_crypto_object_p(MimeHeaders *hdrs, XP_Bool clearsigned_counts)
-{
-  char *ct;
-  MimeObjectClass *class;
-
-  if (!hdrs) return FALSE;
-
-  ct = MimeHeaders_get (hdrs, HEADER_CONTENT_TYPE, TRUE, FALSE);
-  if (!ct) return FALSE;
-
-  /* Rough cut -- look at the string before doing a more complex comparison. */
-  if (strcasecomp(ct, MULTIPART_SIGNED) &&
-	  strncasecomp(ct, "application/", 12))
-	{
-	  XP_FREE(ct);
-	  return FALSE;
-	}
-
-  /* It's a candidate for being a crypto object.  Let's find out for sure... */
-  class = mime_find_class (ct, hdrs, 0, TRUE);
-  XP_FREE(ct);
-
+HG09851
 #ifndef NO_SECURITY
-  return mime_is_sec_class_p(class, clearsigned_counts);
+HG09852
 #endif /* NO_SECURITY */
-}
-
-
-/* Whether the given object has written out the HTML version of its headers
-   in such a way that it will have a "crypto stamp" next to the headers.  If
-   this is true, then the child must write out its HTML slightly differently
-   to take this into account...
- */
-XP_Bool
-mime_crypto_stamped_p(MimeObject *obj)
-{
-  XP_ASSERT(obj);
-  if (!obj) return FALSE;
-  if (mime_typep (obj, (MimeObjectClass *) &mimeMessageClass))
-	return ((MimeMessage *) obj)->crypto_stamped_p;
-  else
-	return FALSE;
-}
-
-
-
-/* How the crypto code tells the MimeMessage object what the crypto stamp
-   on it says. */
-void
-mime_set_crypto_stamp(MimeObject *obj, XP_Bool signed_p, XP_Bool encrypted_p)
-{
-  if (!obj) return;
-  if (mime_typep (obj, (MimeObjectClass *) &mimeMessageClass))
-	{
-	  MimeMessage *msg = (MimeMessage *) obj;
-	  if (!msg->crypto_msg_signed_p)
-		msg->crypto_msg_signed_p = signed_p;
-	  if (!msg->crypto_msg_encrypted_p)
-		msg->crypto_msg_encrypted_p = encrypted_p;
-
-	  /* If the `decrypt_p' option is on, record whether any decryption has
-		 actually occurred. */
-	  if (encrypted_p &&
-		  obj->options &&
-		  obj->options->decrypt_p &&
-		  obj->options->state)
-		{
-		  /* decrypt_p and write_html_p are incompatible. */
-		  XP_ASSERT(!obj->options->write_html_p);
-		  obj->options->state->decrypted_p = TRUE;
-		}
-
-	  return;  /* continue up the tree?  I think that's not a good idea. */
-	}
-
-  if (obj->parent)
-	mime_set_crypto_stamp(obj->parent, signed_p, encrypted_p);
-}
-
+HG09853
+HG09854
 
 
 /* Puts a part-number into a URL.  If append_p is true, then the part number

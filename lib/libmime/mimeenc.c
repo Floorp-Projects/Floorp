@@ -21,6 +21,7 @@
  */
 
 
+#include "rosetta.h"
 #include "mimeenc.h"
 #include "mimei.h"
 

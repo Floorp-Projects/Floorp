@@ -20,6 +20,7 @@
    Created: Jamie Zawinski <jwz@netscape.com>, 24-Sep-96.
  */
 
+#include "rosetta.h"
 #include "mimepbuf.h"
 #include "xp_file.h"
 

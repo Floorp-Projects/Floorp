@@ -20,6 +20,7 @@
    Created: Jamie Zawinski <jwz@netscape.com>, 15-May-96.
  */
 
+#include "rosetta.h"
 #include "mimemsg.h"
 
 #define MIME_SUPERCLASS mimeContainerClass
@@ -105,16 +106,7 @@ MimeMessage_parse_line (char *line, int32 length, MimeObject *obj)
   XP_ASSERT(line && *line);
   if (!line || !*line) return -1;
 
-  /* If we're supposed to write this object, but aren't supposed to convert
-	 it to HTML, simply pass it through unaltered.  (But, if we're supposed
-	 to decrypt... uh, do something else.)
-   */
-  if (obj->output_p &&
-	  obj->options &&
-	  !obj->options->write_html_p &&
-	  !obj->options->decrypt_p &&
-	  obj->options->output_fn)
-	return MimeObject_write(obj, line, length, TRUE);
+  HG09869
 
   /* If we already have a child object, then we're done parsing headers,
 	 and all subsequent lines get passed to the inferior object without
@@ -145,7 +137,8 @@ MimeMessage_parse_line (char *line, int32 length, MimeObject *obj)
 		   ! obj->options->is_multipart_msg &&
 		   obj->options->decompose_file_output_fn )
 		{
-		  if (!obj->options->decrypt_p) {
+		  HG09870
+		  {
 			  status = obj->options->decompose_file_output_fn (line,
 															   length,
 													 obj->options->stream_closure);
@@ -233,9 +226,7 @@ MimeMessage_close_headers (MimeObject *obj)
 		  obj->options->decompose_file_p &&
 		  obj->options->decompose_headers_info_fn)
 		{
-		  if (obj->options->decrypt_p && 
-			  !mime_crypto_object_p (msg->hdrs, FALSE))
-			  obj->options->decrypt_p = FALSE;
+		  HG09868
 		  status = obj->options->decompose_headers_info_fn (
 												 obj->options->stream_closure,
 															 msg->hdrs );
@@ -323,24 +314,7 @@ MimeMessage_close_headers (MimeObject *obj)
 		FREEIF(mv);  /* done with this now. */
 	  }
 
-
-	  /* If this message has a body which is encrypted, and we're going to
-		 decrypt it (without converting it to HTML, since decrypt_p and
-		 write_html_p ar never true at the same time.)
-	   */
-	  if (obj->output_p &&
-		  obj->options->decrypt_p &&
-		  !mime_crypto_object_p (msg->hdrs, FALSE))
-		{
-		  /* The body of this message is not an encrypted object, so we need
-			 to turn off the decrypt_p flag (to prevent us from s#$%ing the
-			 body of the internal object up into this one.)  In this case,
-			 our output will end up being identical to our input.
-		   */
-		  if (obj->options)
-			obj->options->decrypt_p = FALSE;
-		}
-
+	  HG09871
 
 	  /* Emit the HTML for this message's headers.  Do this before
 		 creating the object representing the body.
@@ -363,8 +337,7 @@ MimeMessage_close_headers (MimeObject *obj)
 		  /* Dump the headers, raw. */
 		  status = MimeObject_write(obj, "", 0, FALSE);  /* initialize */
 		  if (status < 0) return status;
-		  status = MimeHeaders_write_raw_headers(msg->hdrs, obj->options,
-												 obj->options->decrypt_p);
+		  HG09872
 		  if (status < 0) return status;
 		}
 
@@ -498,7 +471,7 @@ static int
 MimeMessage_write_headers_html (MimeObject *obj)
 {
   MimeMessage *msg = (MimeMessage *) obj;
-  XP_Bool crypto_p;
+  XP_Bool altform_p;
   int status;
   if (!obj->options ||
 	  !obj->options->output_fn)
@@ -513,50 +486,20 @@ MimeMessage_write_headers_html (MimeObject *obj)
 	  XP_ASSERT(obj->options->state->first_data_written_p);
 	}
 
-  crypto_p = (msg && msg->hdrs && mime_crypto_object_p(msg->hdrs, TRUE));
+  HG09873
+  HG43771
 
-  /* If this message contains crypto data, wrap the headers so that we can
-	 put a crypto stamp next to it.  (But don't do this if in FO_QUOTE_MESSAGE
-	 mode.)
-   */
-  if (crypto_p &&
-	  obj->options->headers != MimeHeadersCitation &&
-	  obj->options->write_html_p &&
-	  obj->options->output_fn)
-	{
-	  /* This assumes that the code in the crypto-object classes will close
-		 off this table before writing out the body. */
-	  char *s = MimeHeaders_open_crypto_stamp();
-	  if (!s) return MK_OUT_OF_MEMORY;
-	  status = MimeObject_write(obj, s, XP_STRLEN(s), FALSE);
-	  XP_FREE(s);
-	  if (status < 0) return status;
-	  XP_ASSERT(!msg->crypto_stamped_p);
-	  msg->crypto_stamped_p = TRUE;
-	}
 
   status = MimeHeaders_write_headers_html (msg->hdrs, obj->options);
   if (status < 0) return status;
 
-  if (msg->crypto_stamped_p)
+  if (HG56232)
 	{
-	  /* This doesn't actually write the stamp, just prepares for it; the
-		 stamp itself can't be written until the crypto object is fully
-		 parsed, so that we know whether the sig checked out and so on. */
-	  char *s = MimeHeaders_finish_open_crypto_stamp();
-	  if (!s) return MK_OUT_OF_MEMORY;
-	  status = MimeObject_write(obj, s, XP_STRLEN(s), FALSE);
-	  XP_FREE(s);
-	  if (status < 0) return status;
+	    HG78388
 	}
   else
 	{
-	  /* If we're not writing a crypto stamp, and this is the outermost
-		 message, then now is the time to run the post_header_html_fn.
-		 (Otherwise, it will be run when the crypto-stamp is finally
-		 closed off, in MimeFilter_emit_buffered_child() or
-		 MimeMultipartSigned_emit_child().)
-	   */
+	  HG80200
 	  if (obj->options &&
 		  obj->options->state &&
 		  obj->options->generate_post_header_html_fn &&

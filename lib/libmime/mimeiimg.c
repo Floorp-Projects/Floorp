@@ -20,6 +20,7 @@
    Created: Jamie Zawinski <jwz@netscape.com>, 15-May-96.
  */
 
+#include "rosetta.h"
 #include "mimeiimg.h"
 
 #define MIME_SUPERCLASS mimeLeafClass

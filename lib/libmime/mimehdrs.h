@@ -76,12 +76,12 @@ extern int MimeHeaders_write_attachment_box(MimeHeaders *hdrs,
 											const char *name_url,
 											const char *body);
 
-/* Some crypto-related HTML-generated utility routines.
+/* Some bigfun-related HTML-generated utility routines.
  */
-extern char *MimeHeaders_open_crypto_stamp(void);
-extern char *MimeHeaders_finish_open_crypto_stamp(void);
-extern char *MimeHeaders_close_crypto_stamp(void);
-extern char *MimeHeaders_make_crypto_stamp(XP_Bool encrypted_p,
+extern char *MimeHeaders_open_bigfun_stamp(void);
+extern char *MimeHeaders_finish_open_bigfun_stamp(void);
+extern char *MimeHeaders_close_bigfun_stamp(void);
+extern char *MimeHeaders_make_bigfun_stamp(XP_Bool bigfun_p,
 										   XP_Bool signed_p,
 										   XP_Bool good_p,
 										   XP_Bool unverified_p,

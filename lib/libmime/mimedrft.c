@@ -292,7 +292,7 @@ mime_parse_stream_complete (NET_StreamClass *stream)
   char *priority = 0;
   char *draftInfo = 0;
 
-  XP_Bool encrypt_p = FALSE;	/* #### how do we determine this? */
+  XP_Bool altform_p = FALSE;	/* #### how do we determine this? */
   XP_Bool sign_p = FALSE;		/* #### how do we determine this? */
   
   XP_ASSERT (mdd);
@@ -305,7 +305,7 @@ mime_parse_stream_complete (NET_StreamClass *stream)
     status = mdd->obj->class->parse_eof ( mdd->obj, FALSE );
     mdd->obj->class->parse_end( mdd->obj, status < 0 ? TRUE : FALSE );
     
-	encrypt_p = mdd->options->decrypt_p;
+	altform_p = HG09842 ;
 	sign_p = mdd->options->signed_p;
 
     XP_ASSERT ( mdd->options == mdd->obj->options );
@@ -370,7 +370,7 @@ mime_parse_stream_complete (NET_StreamClass *stream)
 
 	fields = MSG_CreateCompositionFields( from, repl, to, cc, bcc, fcc, grps, foll,
 										  org, subj, refs, 0, priority, 0, news_host,
-										  encrypt_p, sign_p);
+										  altform_p, sign_p);
 
 	draftInfo = MimeHeaders_get(mdd->headers, HEADER_X_MOZILLA_DRAFT_INFO, FALSE, FALSE);
 	if (draftInfo && fields) {
@@ -501,8 +501,8 @@ mime_parse_stream_complete (NET_StreamClass *stream)
   {
 	  fields = MSG_CreateCompositionFields( from, repl, to, cc, bcc, fcc, grps, foll,
 											org, subj, refs, 0, priority, 0, news_host,
-											MSG_GetMailEncryptionPreference(), 
-											MSG_GetMailSigningPreference());
+											HG09843, 
+											HG09844 );
 	  if (fields)
 		  cpane = FE_CreateCompositionPane(mdd->context, fields, NULL, MSG_DEFAULT);
   }
@@ -755,7 +755,7 @@ mime_decompose_file_init_fn ( void *stream_closure,
 
 	/* Initialize a decoder if necessary.
 	 */
-	if (!newAttachment->encoding || mdd->options->decrypt_p)
+	if (!newAttachment->encoding || HG89332)
 	;
 	else if (!strcasecomp(newAttachment->encoding, ENCODING_BASE64))
 	  fn = &MimeB64DecoderInit;
@@ -818,7 +818,7 @@ mime_decompose_file_close_fn ( void *stream_closure )
 {
   struct mime_draft_data *mdd = (struct mime_draft_data *) stream_closure;
   
-  /* relax the rule in case we encountered invalid encrypted situation
+  /* relax the rule in case we encountered invalid bigfun situation
     XP_ASSERT (mdd && mdd->tmp_file); 
    */
   if ( !mdd || !mdd->tmp_file )
@@ -880,11 +880,11 @@ MIME_ToDraftConverter ( int format_out,
   mdd->options->decompose_file_close_fn = mime_decompose_file_close_fn;
 #ifdef FO_MAIL_MESSAGE_TO
   /* If we're attaching a message (for forwarding) then we must eradicate all
-	 traces of encryption from it, since forwarding someone else a message
-	 that wasn't encrypted for them doesn't work.  We have to decrypt it
+	 traces of bigfun from it, since forwarding someone else a message
+	 that wasn't bigfun for them doesn't work.  We have to bigfun it
 	 before sending it.
    */
-  mdd->options->decrypt_p = TRUE;
+  HG09878
 #endif /* FO_MAIL_MESSAGE_TO */
 
   obj = mime_new ( (MimeObjectClass *) &mimeMessageClass,

@@ -42,12 +42,7 @@ struct MimeMessage {
   MimeContainer container;		/* superclass variables */
   MimeHeaders *hdrs;			/* headers of this message */
   XP_Bool newline_p;			/* whether the last line ended in a newline */
-  XP_Bool crypto_stamped_p;		/* whether the header of this message has been
-								   emitted expecting its child to emit HTML
-								   which says that it is encrypted. */
-
-  XP_Bool crypto_msg_signed_p;	/* What the emitted crypto-stamp *says*. */
-  XP_Bool crypto_msg_encrypted_p;
+  HG88918
 };
 
 #endif /* _MIMEMSG_H_ */

@@ -107,6 +107,7 @@
 
 
 
+#include "rosetta.h"
 #include "mimemrel.h"
 
 extern int MK_UNABLE_TO_OPEN_TMP_FILE;

@@ -21,6 +21,7 @@
  */
 
 
+#include "rosetta.h"
 #include "mimei.h"
 #include "xpgetstr.h"
 #include "libi18n.h"
@@ -63,21 +64,11 @@ extern int MK_MIMEHTML_DISP_REFERENCES;
 extern int MK_MIMEHTML_DISP_MESSAGE_ID;
 extern int MK_MIMEHTML_DISP_RESENT_MESSAGE_ID;
 extern int MK_MIMEHTML_DISP_BCC;
-extern int MK_MIMEHTML_SHOW_SECURITY_ADVISOR;
 extern int MK_MIMEHTML_VERIFY_SIGNATURE;
 extern int MK_MIMEHTML_DOWNLOAD_STATUS_HEADER;
 extern int MK_MIMEHTML_DOWNLOAD_STATUS_NOT_DOWNLOADED;
 
-extern int MK_MIMEHTML_ENC_AND_SIGNED;
-extern int MK_MIMEHTML_SIGNED;
-extern int MK_MIMEHTML_ENCRYPTED;
-extern int MK_MIMEHTML_CERTIFICATES;
-extern int MK_MIMEHTML_ENC_SIGNED_BAD;
-extern int MK_MIMEHTML_SIGNED_BAD;
-extern int MK_MIMEHTML_ENCRYPTED_BAD;
-extern int MK_MIMEHTML_CERTIFICATES_BAD;
-extern int MK_MIMEHTML_SIGNED_UNVERIFIED;
-
+HG82991
 
 char *
 strip_continuations(char *original);
@@ -2616,12 +2607,12 @@ MimeHeaders_write_attachment_box(MimeHeaders *hdrs,
 }
 
 
-/* Some crypto-related HTML-generated utility routines.
+/* Some bigfun-related HTML-generated utility routines.
  */
 
 
 char *
-MimeHeaders_open_crypto_stamp(void)
+MimeHeaders_open_bigfun_stamp(void)
 {
   return XP_STRDUP("<TABLE CELLPADDING=0 CELLSPACING=0"
 				          " WIDTH=\"100%\" BORDER=0>"
@@ -2629,20 +2620,20 @@ MimeHeaders_open_crypto_stamp(void)
 }
 
 char *
-MimeHeaders_finish_open_crypto_stamp(void)
+MimeHeaders_finish_open_bigfun_stamp(void)
 {
   return XP_STRDUP("</TD><TD ALIGN=RIGHT VALIGN=TOP>");
 }
 
 char *
-MimeHeaders_close_crypto_stamp(void)
+MimeHeaders_close_bigfun_stamp(void)
 {
   return XP_STRDUP("</TD></TR></TABLE><P>");
 }
 
 
 char *
-MimeHeaders_make_crypto_stamp(XP_Bool encrypted_p,
+MimeHeaders_make_bigfun_stamp(XP_Bool bigfun_p,
 							  XP_Bool signed_p,
 							  XP_Bool good_p,
 							  XP_Bool unverified_p,
@@ -2650,16 +2641,16 @@ MimeHeaders_make_crypto_stamp(XP_Bool encrypted_p,
 							  const char *stamp_url)
 {
   const char *open = ("%s"
-					  "<P>"
-				      "<CENTER>"
-			            "<TABLE CELLPADDING=3 CELLSPACING=0 BORDER=1>"
-			              "<TR>"
-			                "<TD ALIGN=RIGHT VALIGN=BOTTOM BGCOLOR=\"white\">"
-			                  "%s<IMG SRC=\"%s\" BORDER=0 ALT=\"S/MIME\">%s"
-		                      "<B>"
-				                "<FONT COLOR=\"red\" SIZE=\"-1\">"
-		                          "<BR>"
-					  "%s%s%s");
+    "<P>"
+    "<CENTER>"
+    "<TABLE CELLPADDING=3 CELLSPACING=0 BORDER=1>"
+    "<TR>"
+    "<TD ALIGN=RIGHT VALIGN=BOTTOM BGCOLOR=\"white\">"
+    HG82001
+    "<B>"
+    "<FONT COLOR=\"red\" SIZE=\"-1\">"
+    "<BR>"
+    "%s%s%s");
   int16 middle_key = 0;
   char *href_open = 0;
   const char *img_src = "";
@@ -2676,58 +2667,8 @@ MimeHeaders_make_crypto_stamp(XP_Bool encrypted_p,
   const char *parent_close_early = 0;
   const char *parent_close_late = 0;
   char *result = 0;
-  /* Neither encrypted nor signed means "certs only". */
 
-  if (unverified_p)
-  {
-	  /* an unverified signature can never occur with an encrypted
-	     message;  by nature, an unverified signature implies
-		 that not all parts were downloaded.  Therefore, the
-		 message could not have been encrypted. */
-	  middle_key = MK_MIMEHTML_SIGNED_UNVERIFIED;
-	  img_src = "internal-smime-signed-bad";
-  }
-  else if (encrypted_p && signed_p && good_p)				/* 111 */
-	{
-	  middle_key = MK_MIMEHTML_ENC_AND_SIGNED;
-	  img_src = "internal-smime-encrypted-signed";
-	}
-  else if (!encrypted_p && signed_p && good_p)			/* 011 */
-	{
-	  middle_key = MK_MIMEHTML_SIGNED;
-	  img_src = "internal-smime-signed";
-	}
-  else if (encrypted_p && !signed_p && good_p)			/* 101 */
-	{
-	  middle_key = MK_MIMEHTML_ENCRYPTED;
-	  img_src = "internal-smime-encrypted";
-	}
-  else if (!encrypted_p && !signed_p && good_p)			/* 001 */
-	{
-	  middle_key = MK_MIMEHTML_CERTIFICATES;
-	  img_src = "internal-smime-attached";
-	}
-
-  else if (encrypted_p && signed_p && !good_p)			/* 110 */
-	{
-	  middle_key = MK_MIMEHTML_ENC_SIGNED_BAD;
-	  img_src = "internal-smime-encrypted-signed-bad";
-	}
-  else if (!encrypted_p && signed_p && !good_p)			/* 010 */
-	{
-	  middle_key = MK_MIMEHTML_SIGNED_BAD;
-	  img_src = "internal-smime-signed-bad";
-	}
-  else if (encrypted_p && !signed_p && !good_p)			/* 100 */
-	{
-	  middle_key = MK_MIMEHTML_ENCRYPTED_BAD;
-	  img_src = "internal-smime-encrypted-bad";
-	}
-  else /* (!encrypted_p && !signed_p && !good_p) */		/* 000 */
-	{
-	  middle_key = MK_MIMEHTML_CERTIFICATES_BAD;
-	  img_src = "internal-smime-signed-bad";
-	}
+  HG89202
 
   if (middle_key)
 	{
@@ -2740,13 +2681,13 @@ MimeHeaders_make_crypto_stamp(XP_Bool encrypted_p,
 
   if (close_parent_stamp_p)
 	{
-	  parent_close = MimeHeaders_close_crypto_stamp();
+	  parent_close = MimeHeaders_close_bigfun_stamp();
 	  if (!parent_close) goto FAIL; /* MK_OUT_OF_MEMORY */
 	}
 
   parent_close_early = 0;
   parent_close_late = parent_close;
-  if (!encrypted_p && !signed_p)
+  if (!bigfun_p && !signed_p)
 	{
 	  /* Kludge for certs-only messages -- close off the parent early
 		 so that the stamp goes in the body, not next to the headers. */
@@ -2754,21 +2695,7 @@ MimeHeaders_make_crypto_stamp(XP_Bool encrypted_p,
 	  parent_close_late  = 0;
 	}
 
-  if (stamp_url)
-	{
-	  const char *stamp_text = 0;
-	  if (unverified_p)
-		  stamp_text = XP_GetString(MK_MIMEHTML_VERIFY_SIGNATURE);
-	  else
-		  stamp_text = XP_GetString(MK_MIMEHTML_SHOW_SECURITY_ADVISOR);
-	  href_open = PR_smprintf("<A HREF=\"%s\""
-							  " onMouseOver=\"window.status='%s';"
-							  " return true\">",
-							  stamp_url,
-							  stamp_text);
-	  href_close = "</A>";
-	  if (!href_open) goto FAIL; /* MK_OUT_OF_MEMORY */
-	}
+  HG28974
 
   result = PR_smprintf(open,
 					   (parent_close_early ? parent_close_early : ""),

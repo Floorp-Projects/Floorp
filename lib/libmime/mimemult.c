@@ -20,6 +20,7 @@
    Created: Jamie Zawinski <jwz@netscape.com>, 15-May-96.
  */
 
+#include "rosetta.h"
 #include "mimemult.h"
 #include "mime.h"
 
@@ -361,8 +362,7 @@ MimeMultipart_create_child(MimeObject *obj)
 			  showIcon = FALSE;
 		  else if (XP_STRSTR(body->content_type, "multipart/signed"))
 			  showIcon = FALSE;
-		  else if (XP_STRSTR(body->content_type, "application/x-pkcs7-signature"))
-			  showIcon = FALSE;
+		  HG09861
 		  else if (XP_STRSTR(body->content_type, "multipart/mixed"))
 			  showIcon = FALSE;
 

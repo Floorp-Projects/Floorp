@@ -20,6 +20,7 @@
    Created: Jamie Zawinski <jwz@netscape.com>, 15-May-96.
  */
 
+#include "rosetta.h"
 #include "mimetenr.h"
 
 /* All the magic for this class is in mimetric.c; since text/enriched and

@@ -21,6 +21,7 @@
  */
 
 
+#include "rosetta.h"
 #include "mimeeobj.h"
 #include "xpgetstr.h"
 
