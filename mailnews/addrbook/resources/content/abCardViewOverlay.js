@@ -135,6 +135,25 @@ function GetCurrentPrefs()
 			dump("failed to get the mail.addr_book.displayName.lastnamefirst pref\n");
 		}
 	}
+	
+	// check "Show Name As" menu item based on pref
+	var menuitemID;
+	switch ( cvPrefs.nameColumn )
+	{
+		case 2:
+			menuitemID = 'firstLastCmd';
+			break;
+		case 1:
+			menuitemID = 'lastFirstCmd';
+			break;
+		case 0:
+		default:
+			menuitemID = 'displayNameCmd';
+			break;
+	}
+	menuitem = top.document.getElementById(menuitemID);
+	if ( menuitem )
+		menuitem.setAttribute('checked', 'true');
 }
 
 

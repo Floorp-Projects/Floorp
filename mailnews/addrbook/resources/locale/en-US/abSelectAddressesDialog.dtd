@@ -30,11 +30,7 @@ Rights Reserved.
 	<!ENTITY searchButton.label	".Search..."> 
 	<!ENTITY newButton.label	"New..."> 
 	<!ENTITY editButton.label	"Edit..."> 
-	<!ENTITY viewButton.label	".View"> 
 	<!ENTITY removeButton.label	"Remove"> 
-	<!ENTITY okButton.label		"OK"> 
-	<!ENTITY cancelButton.label	"Cancel"> 
-	<!ENTITY helpButton.label	".Help"> 
 
 <!-- Toolbar items -->  
 	<!ENTITY search.label "Show names containing:">  
