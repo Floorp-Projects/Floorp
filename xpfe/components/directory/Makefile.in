@@ -34,19 +34,6 @@ REQUIRES	= xpcom necko rdf layout timer js xpconnect docshell widget dom webshel
 
 CPPSRCS		= nsDirectoryViewer.cpp
 
-CHROME_DIR	= .
-CHROME_CONTENT_DIR = packages/core/communicator/content/directory
-CHROME_L10N_DIR = locales/en-US/communicator/locale/directory
-
-CHROME_CONTENT	= \
-		directory.xul \
-		directory.js \
-		$(NULL)
-
-CHROME_L10N = \
-		locale/en-US/directory.dtd \
-		$(NULL)
-
 # we don't want the shared lib, but we want to force the creation of a
 # static lib.
 override NO_SHARED_LIB=1

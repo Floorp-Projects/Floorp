@@ -32,31 +32,6 @@ else
 DIRS		= unix
 endif
 
-CHROME_DIR=packages/core
-CHROME_CONTENT_DIR=navigator/content
-
-CHROME_CONTENT = \
-	nsContextMenu.js \
-	tooltip.js \
-	openLocation.js \
-	viewsource.js \
-	navigator.xul \
-	sessionHistoryUI.js \
-	keywords.js \
-	navigatorOverlay.xul \
-	navExtraOverlay.xul \
-	navigator.js \
-	navigatorDD.js \
-	openLocation.xul \
-	NetSupportConfirmYN.xul \
-	NetSupportConfirmCheckYN.xul \
-	pageInfo.xul \
-	pageInfo.js \
-	askViewZoom.xul \
-	askViewZoom.js \
-	viewSource.xul \
-	$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
 # the need for this stuff got whacked when smfr removed the build id

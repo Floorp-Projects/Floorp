@@ -28,56 +28,5 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS		= unix
 
-CHROME_DIR = packages/core
-CHROME_CONTENT_DIR = communicator/content/pref
-
-CHROME_CONTENT = \
-		nsPrefWindow.js \
-		pref.xul \
-		pref-advanced.xul \
-		pref-appearance.xul \
-		pref-applications.xul \
-		pref-applications.js \
-		pref-applications-edit.xul \
-		pref-applications-new.js \
-		pref-applications-new.xul \
-		overrideHandler.js \
-		pref-cache.xul \
-		pref-cache.js \
-		pref-charset.xul \
-		pref-charset.js \
-		pref-colors.xul \
-		pref-cookies.xul \
-		pref-colors.js \
-		pref-themes.xul \
-		pref-themes.js \
-		pref-debug.xul \
-		pref-debug1.xul \
-		pref-debug2.xul \
-		pref-download.xul \
-		pref-fonts.xul \
-		pref-fonts.js \
-		pref-history.xul \
-		pref-images.xul \
-		pref-languages.xul \
-		pref-languages-add.xul \
-		pref-languages.js \
-		pref-navigator.xul \
-		pref-navigator.js \
-		pref-offline.xul \
-		pref-policies.xul \
-		pref-proxies.js \
-		pref-proxies.xul \
-		pref-mousewheel.xul \
-		pref-wallet.xul \
-		pref-passwords.xul \
-		pref-search.js \
-		pref-search.xul \
-		pref-smart_browsing.xul \
-		pref-smartupdate.xul \
-		prefutilities.js \
-		preftree.xul \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 

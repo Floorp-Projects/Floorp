@@ -36,19 +36,6 @@ XPIDLSRCS	= nsIRegistryDataSource.idl
 
 CPPSRCS		= nsRegistryDataSource.cpp
 
-CHROME_DIR = .
-CHROME_CONTENT_DIR = packages/core/communicator/content/regviewer
-CHROME_L10N_DIR = locales/en-US/communicator/locale/regviewer
-
-CHROME_CONTENT	= \
-		regviewer.xul \
-		regviewer.js \
-		$(NULL)
-
-CHROME_L10N = \
-		locale/en-US/regviewer.dtd \
-		$(NULL)
-
 EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \
 		$(XPCOM_LIBS) \

@@ -26,12 +26,5 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-CHROME_DIR=packages/core
-CHROME_CONTENT_DIR=navigator/content
-
-CHROME_CONTENT = \
-	platformNavigationBindings.xul \
-	$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
