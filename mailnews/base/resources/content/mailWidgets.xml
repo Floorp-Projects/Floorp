@@ -9,10 +9,10 @@
   <!-- Message Pane Widgets -->
   <binding id="mail-emailaddress" extends="xul:box">
     <content>
-      	<xul:box inherits="orient" autostretch="never" flex="1">
-          <xul:text class="emailDisplayButton" popup="emailAddressPopup" context="emailAddressPopup" inherits="value,crop"/>
-          <xul:image class="emailDisplayImage" context="emailAddressPopup" inherits="value,crop"/>
-        </xul:box>
+      <xul:box inherits="orient" autostretch="never" flex="1">
+        <xul:text class="emailDisplayButton" popup="emailAddressPopup" context="emailAddressPopup" inherits="value,crop"/>
+        <xul:image class="emailDisplayImage" context="emailAddressPopup" inherits="value,crop"/>
+      </xul:box>
     </content>
     
     <implementation>  
@@ -31,7 +31,7 @@
         <parameter name="attributeValue"/>
         <body>
           <![CDATA[   
-			var IconNode = document.getAnonymousNodes(this)[0].childNodes[1];
+            var IconNode = document.getAnonymousNodes(this)[0].childNodes[1];
             IconNode.setAttribute(attributeName, attributeValue);          
             var textNode = document.getAnonymousNodes(this)[0].firstChild;
             textNode.setAttribute(attributeName, attributeValue);
@@ -44,18 +44,17 @@
         <parameter name="attributeValue"/>
         <body>
           <![CDATA[   
-			   
             var textNode = document.getAnonymousNodes(this)[0].firstChild;
             return textNode.getAttribute(attributeName, attributeValue);
           ]]>
         </body>
       </method>
 
-	  <method name="GetIconNode">
+      <method name="GetIconNode">
         <body>
           <![CDATA[            
             var ImageNode = document.getAnonymousNodes(this)[0].childNodes[1];
-			return ImageNode;
+            return ImageNode;
           ]]>
         </body>
       </method>
@@ -70,6 +69,7 @@
     </content>
 
     <implementation>
+      <property name="internalScope">null</property>
       <property readonly="true" name="validityManager">
         <![CDATA[
            Components.classes['@mozilla.org/mail/search/validityManager;1'].getService(Components.interfaces.nsIMsgSearchValidityManager);
@@ -83,7 +83,6 @@
             if (this.internalScope == val) return val;
 
             this.internalScope = val;
-            //dump("\trefreshList via .searchScope setter\n");
             this.refreshList();
             var targets = this.targets;
             if (targets) {
@@ -133,7 +132,6 @@
       <property name="value" onget="return document.getAnonymousNodes(this)[0].selectedItem.getAttribute('data');">
         <setter>
           <![CDATA[
-            dump("\tsetting value on id=" + this.id + "\n");
             var menulist = document.getAnonymousNodes(this)[0];
             var dataItems = menulist.getElementsByAttribute("data", val);
             if (dataItems.length > 0)
@@ -143,7 +141,6 @@
             var targets = this.targets;
             if (targets) {
               for (var i=0; i< targets.length; i++) {
-                //dump("setting parentValue via abstract .value on <" + this.localName +">\n");
                 targets[i].parentValue = val;
               }
             } else {
@@ -231,6 +228,7 @@
   <binding id="searchoperator" name="searchOperator"
            extends="chrome://messenger/content/mailWidgets.xml#search-menulist-abstract">
     <implementation>
+      <property name="searchAttribute">null</property>
       <property name="stringBundle">
           <![CDATA[
             srGetStrBundle("chrome://messenger/locale/search-operators.properties");
@@ -249,7 +247,6 @@
           <![CDATA[
             if (this.searchAttribute == val) return val;
             this.searchAttribute = val;
-            //dump("\trefreshList via .parentValue on " + this.localName + "\n");
             this.refreshList();
             return val;
           ]]>
@@ -291,6 +288,7 @@
       </xul:menulist>
     </content>
     <implementation>
+      <property name="internalAttribute">null</property>
       <!-- parentValue forwards to the attribute -->
       <property name="parentValue" onset="return this.searchAttribute=val;"
                                    onget="return this.searchAttribute;"/>
@@ -315,7 +313,6 @@
       <property name="value" onget="return this.internalValue;">
         <setter>
           <![CDATA[
-          dump("\tsetting value on id=" + this.id + "\n");
           // val is a nsIMsgSearchValue object
           this.internalValue = val;
           var attrib = val.attrib;
@@ -323,10 +320,8 @@
           var children = document.getAnonymousNodes(this);
           this.searchAttribute = attrib;
           if (attrib == nsMsgSearchAttrib.Priority) {
-            dump("Setting priority to " + val.priority + "..\n");
             var matchingPriority =
                 children[1].getElementsByAttribute("data", val.priority);
-            dump("found " + matchingPriority.length + " matching priority nodes\n");
             if (matchingPriority.length > 0)
                 children[1].selectedItem = matchingPriority[0];
           }
@@ -354,7 +349,6 @@
 
             searchValue.attrib = searchAttribute;
             if (searchAttribute == nsMsgSearchAttrib.Priority) {
-               dump("\tSaving priority " + children[1].selectedItem.data + "\n");
                searchValue.priority = children[1].selectedItem.data;
             }
             else if (searchAttribute == nsMsgSearchAttrib.MsgStatus)
