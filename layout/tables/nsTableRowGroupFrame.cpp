@@ -1118,7 +1118,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsIPresContext*          aPresContext,
             }
           }
         }
-      } //if (!prevRowFrame || (availHeight - aDesiredSize.height > pageHeight / 20)) {
+      } //if (!prevRowFrame || (availHeight - aDesiredSize.height > pageHeight / 20))
       else { 
         // put the row on the next page to give it more height
         rowIsOnPage = PR_FALSE;
@@ -1127,7 +1127,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsIPresContext*          aPresContext,
       nsTableRowFrame* lastRowThisPage = rowFrame;
       if (!rowIsOnPage) {
         if (prevRowFrame) {
-          availHeight = prevRowFrame->GetRect().YMost();
+          availHeight -= prevRowFrame->GetRect().YMost();
           lastRowThisPage = prevRowFrame;
           isTopOfPage = (lastRowThisPage == firstRowThisPage) && aReflowState.mFlags.mIsTopOfPage;
           aStatus = NS_FRAME_NOT_COMPLETE;
@@ -1161,7 +1161,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsIPresContext*          aPresContext,
         else { // (firstTruncatedRow != firstRowThisPage)
           // Try to put firstTruncateRow on the next page 
           nsTableRowFrame* rowBefore = ::GetRowBefore(*firstRowThisPage, *firstTruncatedRow);
-          availHeight = rowBefore->GetRect().YMost();
+          availHeight -= rowBefore->GetRect().YMost();
 
           UndoContinuedRow(aPresContext, contRow);
           nsTableRowFrame* oldLastRowThisPage = lastRowThisPage;
@@ -1190,7 +1190,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsIPresContext*          aPresContext,
             }
           }
         } // if (firstTruncatedRow == firstRowThisPage)
-      } // if (firstTruncatedRow) {
+      } // if (firstTruncatedRow)
       else {
         aDesiredSize.height = PR_MAX(aDesiredSize.height, yMost);
         if (contRow) {
