@@ -56,6 +56,7 @@
 #include "nsISVGSVGElement.h"
 #include "nsRuleWalker.h"
 #include "nsCSSDeclaration.h"
+#include "nsCSSProps.h"
 #include "nsICSSParser.h"
 #include "nsGenericHTMLElement.h"
 
@@ -689,7 +690,8 @@ nsSVGElement::UpdateContentStyleRule()
     mAttrsAndChildren.AttrAt(i)->ToString(value);
 
     PRBool changed;
-    parser->ParseProperty(name, value, baseURI, declaration, &changed);
+    parser->ParseProperty(nsCSSProps::LookupProperty(name), value, baseURI,
+                          declaration, &changed);
   }
   
   NS_NewCSSStyleRule(getter_AddRefs(mContentStyleRule), nsnull, declaration);

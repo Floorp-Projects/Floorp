@@ -120,7 +120,7 @@ public:
                        nsIURI*            aBaseURL,
                        nsISupportsArray** aResult);
 
-  NS_IMETHOD ParseProperty(const nsAString& aPropName,
+  NS_IMETHOD ParseProperty(const nsCSSProperty aPropID,
                            const nsAString& aPropValue,
                            nsIURI* aBaseURL,
                            nsCSSDeclaration* aDeclaration,
@@ -774,7 +774,7 @@ CSSParserImpl::ParseRule(const nsAString& aRule,
 //in the decl, then ignore the !important.  It should either fail to
 //parse this or do !important correctly....
 NS_IMETHODIMP
-CSSParserImpl::ParseProperty(const nsAString& aPropName,
+CSSParserImpl::ParseProperty(const nsCSSProperty aPropID,
                              const nsAString& aPropValue,
                              nsIURI* aBaseURL,
                              nsCSSDeclaration* aDeclaration,
@@ -804,10 +804,9 @@ CSSParserImpl::ParseProperty(const nsAString& aPropName,
   mSection = eCSSSection_General;
   nsresult errorCode = NS_OK;
 
-  nsCSSProperty propID = nsCSSProps::LookupProperty(aPropName);
-  if (eCSSProperty_UNKNOWN == propID) { // unknown property
+  if (eCSSProperty_UNKNOWN == aPropID) { // unknown property
     REPORT_UNEXPECTED(NS_LITERAL_STRING("Unknown property '") +
-                      aPropName +
+                      NS_ConvertASCIItoUTF16(nsCSSProps::GetStringValue(aPropID)) +
                       NS_LITERAL_STRING("'.  Declaration dropped."));
     OUTPUT_ERROR();
     ReleaseScanner();
@@ -818,15 +817,15 @@ CSSParserImpl::ParseProperty(const nsAString& aPropName,
   mTempData.AssertInitialState();
   aDeclaration->ExpandTo(&mData);
   nsresult result = NS_OK;
-  if (ParseProperty(errorCode, propID)) {
-    TransferTempData(aDeclaration, propID, PR_FALSE, aChanged);
+  if (ParseProperty(errorCode, aPropID)) {
+    TransferTempData(aDeclaration, aPropID, PR_FALSE, aChanged);
   } else {
     REPORT_UNEXPECTED(
       NS_LITERAL_STRING("Error in parsing value for property '") +
-      aPropName +
+      NS_ConvertASCIItoUTF16(nsCSSProps::GetStringValue(aPropID)) +
       NS_LITERAL_STRING("'.  Declaration dropped."));
     OUTPUT_ERROR();
-    ClearTempData(propID);
+    ClearTempData(aPropID);
     NS_ASSERTION(errorCode != nsresult(-1), "-1 is no longer used for EOF");
     result = errorCode;
   }

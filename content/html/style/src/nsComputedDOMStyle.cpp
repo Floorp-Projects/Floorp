@@ -124,6 +124,7 @@ nsComputedDOMStyle::Shutdown()
 // QueryInterface implementation for nsComputedDOMStyle
 NS_INTERFACE_MAP_BEGIN(nsComputedDOMStyle)
   NS_INTERFACE_MAP_ENTRY(nsIComputedDOMStyle)
+  NS_INTERFACE_MAP_ENTRY(nsICSSDeclaration)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSStyleDeclaration)
   NS_INTERFACE_MAP_ENTRY_AGGREGATED(nsIDOMCSS2Properties, &mInner)
   NS_INTERFACE_MAP_ENTRY_AGGREGATED(nsIDOMNSCSS2Properties, &mInner)
@@ -203,6 +204,26 @@ nsComputedDOMStyle::Init(nsIDOMElement *aElement,
 
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsComputedDOMStyle::GetPropertyValue(const nsCSSProperty aPropID,
+                                     nsAString& aValue)
+{
+  // This is mostly to avoid code duplication with GetPropertyCSSValue(); if
+  // perf ever becomes an issue here (doubtful), we can look into changing
+  // this.
+  return GetPropertyValue(
+    NS_ConvertASCIItoUTF16(nsCSSProps::GetStringValue(aPropID)),
+    aValue);
+}
+
+NS_IMETHODIMP
+nsComputedDOMStyle::SetPropertyValue(const nsCSSProperty aPropID,
+                                     const nsAString& aValue)
+{
+  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
+}
+
 
 NS_IMETHODIMP
 nsComputedDOMStyle::GetCssText(nsAString& aCssText)

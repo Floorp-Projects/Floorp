@@ -37,7 +37,7 @@
 #ifndef nsDOMCSSDeclaration_h___
 #define nsDOMCSSDeclaration_h___
 
-#include "nsIDOMCSSStyleDeclaration.h"
+#include "nsICSSDeclaration.h"
 #include "nsIDOMCSS2Properties.h"
 
 class nsCSSDeclaration;
@@ -53,14 +53,14 @@ public:
   NS_DECL_NSIDOMCSS2PROPERTIES
   NS_DECL_NSIDOMNSCSS2PROPERTIES
 
-  CSS2PropertiesTearoff(nsIDOMCSSStyleDeclaration *aOuter);
+  CSS2PropertiesTearoff(nsICSSDeclaration *aOuter);
   virtual ~CSS2PropertiesTearoff();
 
 private:
-  nsIDOMCSSStyleDeclaration* mOuter;
+  nsICSSDeclaration* mOuter;
 };
 
-class nsDOMCSSDeclaration : public nsIDOMCSSStyleDeclaration
+class nsDOMCSSDeclaration : public nsICSSDeclaration
 {
 public:
   nsDOMCSSDeclaration();
@@ -68,6 +68,8 @@ public:
   // Only implement QueryInterface; subclasses have the responsibility
   // of implementing AddRef/Release.
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
+
+  NS_DECL_NSICSSDECLARATION
 
   // Require subclasses to implement |GetParentRule|.
   //NS_DECL_NSIDOMCSSSTYLEDECLARATION
@@ -102,10 +104,15 @@ protected:
                                             nsICSSLoader** aCSSLoader,
                                             nsICSSParser** aCSSParser) = 0;
 
-  nsresult ParsePropertyValue(const nsAString& aPropName,
+  nsresult ParsePropertyValue(const nsCSSProperty aPropID,
                               const nsAString& aPropValue);
   nsresult ParseDeclaration(const nsAString& aDecl,
                             PRBool aParseOnlyOneDecl, PRBool aClearOldDecl);
+
+  // Prop-id based version of RemoveProperty.  Note that this does not
+  // return the old value; it just does a straight removal.
+  nsresult RemoveProperty(const nsCSSProperty aPropID);
+  
   
 protected:
   virtual ~nsDOMCSSDeclaration();
