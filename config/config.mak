@@ -142,7 +142,7 @@ INCS=$(INCS) -I$(PUBLIC) -I$(DIST)\include -I$(XPDIST)\include\nspr
 
 # use perl to translate REQUIRES into a proper include line
 # using \1 instead of $1 because nmake barfs on $1
-!if [echo $(REQUIRES) | perl -pe "s/(\w+)/-I$(XPDIST:\=\\)\\include\\\1/g; print \"REQINCS=$_\";" > reqincs.inc]
+!if [echo $(REQUIRES) | perl -pe "s/(\w+)/-I$(XPDIST:\=\/)\\\include\\\\\1/g; print \"REQINCS=$_\";" > reqincs.inc]
 !endif
  
 !else
