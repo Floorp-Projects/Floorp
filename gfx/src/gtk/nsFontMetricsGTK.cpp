@@ -33,21 +33,21 @@ nsFontMetricsGTK :: nsFontMetricsGTK()
   mFont = nsnull;
   mFontHandle = nsnull;
 }
-  
+
 nsFontMetricsGTK :: ~nsFontMetricsGTK()
 {
-  if (nsnull != mFont) {    
+  if (nsnull != mFont) {
     delete mFont;
     mFont = nsnull;
   }
-  
+
   if (nsnull != mFontHandle) {
     gdk_font_unref (mFontHandle);
   }
 }
 
 NS_IMPL_ISUPPORTS(nsFontMetricsGTK, kIFontMetricsIID)
-  
+
 NS_IMETHODIMP nsFontMetricsGTK::Init(const nsFont& aFont, nsIDeviceContext* aContext)
 {
   NS_ASSERTION(!(nsnull == aContext), "attempt to init fontmetrics with null device context");
@@ -149,7 +149,7 @@ NS_IMETHODIMP nsFontMetricsGTK::Init(const nsFont& aFont, nsIDeviceContext* aCon
   if (numnames > 0)
   {
     char *nametouse = PickAppropriateSize(fnames, fonts, numnames, aFont.size);
-    
+
     mFontHandle = ::gdk_font_load(nametouse);
 
 #ifdef NOISY_FONTS
@@ -187,7 +187,8 @@ char * nsFontMetricsGTK::PickAppropriateSize(char **names, XFontStruct *fonts, i
   int         idx;
   float       app2dev;
   mContext->GetAppUnitsToDevUnits(app2dev);
-  PRInt32     desiredpix = NSToIntRound(app2dev * desired);
+//  XXX FIX ME
+  PRInt32     desiredpix = NSToIntRound(app2dev * desired) + 10;
   XFontStruct *curfont;
   PRInt32     closestmin = -1, minidx;
 
@@ -241,12 +242,12 @@ void nsFontMetricsGTK::RealizeFont()
 
   float f;
   mContext->GetDevUnitsToAppUnits(f);
-  
+
   mAscent = nscoord(fontInfo->ascent * f);
   mDescent = nscoord(fontInfo->descent * f);
   mMaxAscent = nscoord(fontInfo->ascent * f) ;
   mMaxDescent = nscoord(fontInfo->descent * f);
-  
+
   mHeight = nscoord((fontInfo->ascent + fontInfo->descent) * f) ;
   mMaxAdvance = nscoord(fontInfo->max_bounds.width * f);
 
