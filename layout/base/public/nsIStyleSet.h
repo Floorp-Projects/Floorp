@@ -195,7 +195,9 @@ public:
 
   // Test if style is dependent on content state
   NS_IMETHOD  HasStateDependentStyle(nsIPresContext* aPresContext,
-                                     nsIContent*     aContent) = 0;
+                                     nsIContent*     aContent,
+                                     PRInt32         aStateMask,
+                                     PRBool*         aResult) = 0;
 
   // Create frames for the root content element and its child content
   NS_IMETHOD  ConstructRootFrame(nsIPresContext* aPresContext,
@@ -231,7 +233,7 @@ public:
   NS_IMETHOD ContentStatesChanged(nsIPresContext* aPresContext, 
                                   nsIContent* aContent1,
                                   nsIContent* aContent2,
-                                  nsIAtom* aChangedPseudoClass) = 0;
+                                  PRInt32 aStateMask) = 0;
   NS_IMETHOD AttributeChanged(nsIPresContext*  aPresContext,
                               nsIContent* aChild,
                               PRInt32 aNameSpaceID,

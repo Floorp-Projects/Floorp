@@ -840,7 +840,8 @@ public:
                            nsIAtom* aMedium);
 
   NS_IMETHOD HasStateDependentStyle(StateRuleProcessorData* aData,
-                                    nsIAtom* aMedium);
+                                    nsIAtom* aMedium,
+                                    PRBool* aResult);
 
   // nsIHTMLStyleSheet api
   NS_IMETHOD Init(nsIURI* aURL, nsIDocument* aDocument);
@@ -1149,24 +1150,19 @@ HTMLStyleSheetImpl::RulesMatching(ElementRuleProcessorData* aData,
 // Test if style is dependent on content state
 NS_IMETHODIMP
 HTMLStyleSheetImpl::HasStateDependentStyle(StateRuleProcessorData* aData,
-                                           nsIAtom* aMedium)
+                                           nsIAtom* aMedium,
+                                           PRBool* aResult)
 {
-  nsresult result = NS_COMFALSE;
+  *aResult = mActiveRule &&
+             (aData->mStateMask & NS_EVENT_STATE_ACTIVE) &&
+             aData->mStyledContent &&
+             aData->mIsHTMLContent &&
+             aData->mContentTag == nsHTMLAtoms::a &&
+             aData->mStyledContent->HasAttr(kNameSpaceID_None,
+                                            nsHTMLAtoms::href);
 
-  if ((mActiveRule || mLinkRule || mVisitedRule) &&
-      aData->mStyledContent &&
-      aData->mIsHTMLContent &&
-      aData->mContentTag == nsHTMLAtoms::a) {
-    PRBool hasHrefAttr =
-      aData->mStyledContent->HasAttr(kNameSpaceID_None,
-                                     nsHTMLAtoms::href);
-    if (hasHrefAttr)
-      result = NS_OK; // yes, style will depend on link state
-  }
-
-  return result;
+  return NS_OK;
 }
-
 
 
 NS_IMETHODIMP

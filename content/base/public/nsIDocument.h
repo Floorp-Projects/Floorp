@@ -319,7 +319,7 @@ public:
   // either may be nsnull, but not both
   NS_IMETHOD ContentStatesChanged(nsIContent* aContent1,
                                   nsIContent* aContent2,
-                                  nsIAtom* aChangedPseudoClass) = 0;
+                                  PRInt32 aStateMask) = 0;
   NS_IMETHOD AttributeWillChange(nsIContent* aChild,
                                  PRInt32 aNameSpaceID,
                                  nsIAtom* aAttribute) = 0;

@@ -126,6 +126,8 @@ public:
 #define NS_EVENT_STATE_FOCUS        0x0002 // content has focus
 #define NS_EVENT_STATE_HOVER        0x0004 // mouse is hovering over content
 #define NS_EVENT_STATE_DRAGOVER     0x0008 // drag  is hovering over content
+// The following states are used only for ContentStatesChanged
+#define NS_EVENT_STATE_CHECKED      0x0010
 
 enum EFocusedWithType {
   eEventFocusedByUnknown,     // focus gained via unknown method

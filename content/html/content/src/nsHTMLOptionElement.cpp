@@ -68,7 +68,7 @@
 #include "nsNodeInfoManager.h"
 #include "nsCOMPtr.h"
 #include "nsLayoutAtoms.h"
-#include "nsCSSAtoms.h"
+#include "nsIEventStateManager.h"
 
 class nsHTMLOptionElement : public nsGenericHTMLContainerElement,
                             public nsIDOMHTMLOptionElement,
@@ -269,7 +269,7 @@ nsHTMLOptionElement::SetSelectedInternal(PRBool aValue, PRBool aNotify)
   mIsSelected = aValue;
 
   if (aNotify && mDocument)
-    mDocument->ContentStatesChanged(this, nsnull, nsCSSAtoms::checkedPseudo);
+    mDocument->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_CHECKED);
 
   return NS_OK;
 }

@@ -1117,7 +1117,7 @@ NS_IMETHODIMP
 nsImageMap::ContentStatesChanged(nsIDocument* aDocument,
                                  nsIContent* aContent1,
                                  nsIContent* aContent2,
-                                 nsIAtom* aChangedPseudoClass)
+                                 PRInt32 aStateMask)
 {
   return NS_OK;
 }

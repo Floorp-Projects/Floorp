@@ -771,7 +771,7 @@ nsMenuBarX::ContentChanged( nsIDocument * aDocument, nsIContent * aContent, nsIS
 
 NS_IMETHODIMP
 nsMenuBarX::ContentStatesChanged( nsIDocument * aDocument, nsIContent  * aContent1,
-                                  nsIContent  * aContent2, nsIAtom * aChangedPseudoClass)
+                                  nsIContent  * aContent2, PRInt32 aStateMask)
 {
   return NS_OK;
 }

@@ -131,11 +131,15 @@ struct PseudoRuleProcessorData : public RuleProcessorData {
 
 struct StateRuleProcessorData : public RuleProcessorData {
   StateRuleProcessorData(nsIPresContext* aPresContext,
-                         nsIContent* aContent)
-    : RuleProcessorData(aPresContext, aContent, nsnull)
+                         nsIContent* aContent,
+                         PRInt32 aStateMask)
+    : RuleProcessorData(aPresContext, aContent, nsnull),
+      mStateMask(aStateMask)
   {
     NS_PRECONDITION(aContent, "null pointer");
   }
+  const PRInt32 mStateMask; // |HasStateDependentStyle| for which state(s)?
+                            //  Constants defined in nsIEventStateManager.h .
 };
 
 
@@ -162,8 +166,9 @@ public:
                            nsIAtom* aMedium) = 0;
 
   // Test if style is dependent on content state
-  NS_IMETHOD  HasStateDependentStyle(StateRuleProcessorData* aData,
-                                     nsIAtom* aMedium) = 0;
+  NS_IMETHOD HasStateDependentStyle(StateRuleProcessorData* aData,
+                                    nsIAtom* aMedium,
+                                    PRBool* aResult) = 0;
 
 #ifdef DEBUG
   virtual void SizeOf(nsISizeOfHandler *aSizeofHandler, PRUint32 &aSize) = 0;

@@ -1857,14 +1857,14 @@ nsDocument::ContentChanged(nsIContent* aContent,
 NS_IMETHODIMP
 nsDocument::ContentStatesChanged(nsIContent* aContent1,
                                  nsIContent* aContent2,
-                                 nsIAtom* aChangedPseudoClass)
+                                 PRInt32 aStateMask)
 {
   PRInt32 i;
   // Get new value of count for every iteration in case
   // observers remove themselves during the loop.
   for (i = 0; i < mObservers.Count(); i++) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
-    observer->ContentStatesChanged(this, aContent1, aContent2, aChangedPseudoClass);
+    observer->ContentStatesChanged(this, aContent1, aContent2, aStateMask);
     // Make sure that the observer didn't remove itself during the
     // notification. If it did, update our index and count.
     if (i < mObservers.Count() &&

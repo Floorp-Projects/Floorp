@@ -735,7 +735,8 @@ public:
                            nsIAtom* aMedium);
 
   NS_IMETHOD HasStateDependentStyle(StateRuleProcessorData* aData,
-                                    nsIAtom* aMedium);
+                                    nsIAtom* aMedium,
+                                    PRBool* aResult);
 
 #ifdef DEBUG
   virtual void SizeOf(nsISizeOfHandler *aSizeofHandler, PRUint32 &aSize);
@@ -3456,9 +3457,14 @@ static PRBool IsSignificantChild(nsIContent* aChild, PRBool aAcceptNonWhitespace
 }
 
 
+// NOTE:  The |aStateMask| code isn't going to work correctly anymore if
+// we start batching style changes, because if multiple states change in
+// separate notifications then we might determine the style is not
+// state-dependent when it really is (e.g., determining that a
+// :hover:active rule no longer matches when both states are unset).
 static PRBool SelectorMatches(RuleProcessorData &data,
                               nsCSSSelector* aSelector,
-                              PRBool aTestState,
+                              PRInt32 aStateMask, // states NOT to test
                               PRInt8 aNegationIndex) 
 
 {
@@ -3587,24 +3593,28 @@ static PRBool SelectorMatches(RuleProcessorData &data,
         if ((data.mIsHTMLContent) &&
             (!IsEventSensitive(pseudoClass->mAtom, data.mContentTag, isSelectorGlobal))){
           result = localFalse;
-        } else if (aTestState) {
+        } else {
           if (nsCSSAtoms::activePseudo == pseudoClass->mAtom) {
-            result = PRBool(localTrue == (0 != (data.mEventState & NS_EVENT_STATE_ACTIVE)));
+            result = (aStateMask & NS_EVENT_STATE_ACTIVE) ||
+                     (localTrue == (0 != (data.mEventState & NS_EVENT_STATE_ACTIVE)));
           }
           else if (nsCSSAtoms::focusPseudo == pseudoClass->mAtom) {
-            result = PRBool(localTrue == (0 != (data.mEventState & NS_EVENT_STATE_FOCUS)));
+            result = (aStateMask & NS_EVENT_STATE_FOCUS) ||
+                     (localTrue == (0 != (data.mEventState & NS_EVENT_STATE_FOCUS)));
           }
           else if (nsCSSAtoms::hoverPseudo == pseudoClass->mAtom) {
-            result = PRBool(localTrue == (0 != (data.mEventState & NS_EVENT_STATE_HOVER)));
+            result = (aStateMask & NS_EVENT_STATE_HOVER) ||
+                     (localTrue == (0 != (data.mEventState & NS_EVENT_STATE_HOVER)));
           }
           else if (nsCSSAtoms::dragOverPseudo == pseudoClass->mAtom) {
-            result = PRBool(localTrue == (0 != (data.mEventState & NS_EVENT_STATE_DRAGOVER)));
+            result = (aStateMask & NS_EVENT_STATE_DRAGOVER) ||
+                     (localTrue == (0 != (data.mEventState & NS_EVENT_STATE_DRAGOVER)));
           }
         } 
       }
       else if (IsLinkPseudo(pseudoClass->mAtom)) {
         if (data.mIsHTMLLink || data.mIsSimpleXLink) {
-          if (result && aTestState) {
+          if (result) {
             if (nsCSSAtoms::anyLinkPseudo == pseudoClass->mAtom) {
               result = localTrue;
             }
@@ -3625,7 +3635,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
         //  <option>
         //  <input type=checkbox>
         //  <input type=radio>
-        if (aTestState)
+        if (!(aStateMask & NS_EVENT_STATE_CHECKED))
           result = data.mIsChecked ? localTrue : localFalse;
       }
       else {
@@ -3778,7 +3788,8 @@ static PRBool SelectorMatches(RuleProcessorData &data,
   
   // apply SelectorMatches to the negated selectors in the chain
   if (result && (nsnull != aSelector->mNegations)) {
-    result = SelectorMatches(data, aSelector->mNegations, aTestState, aNegationIndex+1);
+    result = SelectorMatches(data, aSelector->mNegations, aStateMask,
+                             aNegationIndex+1);
   }
   return result;
 }
@@ -3853,7 +3864,7 @@ static PRBool SelectorMatchesTree(RuleProcessorData &data,
         NS_ASSERTION(!content, "content must be null");
         break;
       }
-      if (SelectorMatches(*newdata, selector, PR_TRUE, 0)) {
+      if (SelectorMatches(*newdata, selector, 0, 0)) {
         // to avoid greedy matching, we need to recurse if this is a
         // descendant combinator and the next combinator is not
         if ((NS_IS_GREEDY_OPERATOR(selector->mOperator)) &&
@@ -3897,7 +3908,7 @@ static void ContentEnumFunc(nsICSSStyleRule* aRule, void* aData)
   ElementRuleProcessorData* data = (ElementRuleProcessorData*)aData;
 
   nsCSSSelector* selector = aRule->FirstSelector();
-  if (SelectorMatches(*data, selector, PR_TRUE, 0)) {
+  if (SelectorMatches(*data, selector, 0, 0)) {
     selector = selector->mNext;
     if (SelectorMatchesTree(*data, selector)) {
       // for performance, require that every implementation of
@@ -3976,7 +3987,7 @@ static void PseudoEnumFunc(nsICSSStyleRule* aRule, void* aData)
       if (PRUnichar('+') == selector->mOperator) {
         return; // not valid here, can't match
       }
-      if (SelectorMatches(*data, selector, PR_TRUE, 0)) {
+      if (SelectorMatches(*data, selector, 0, 0)) {
         selector = selector->mNext;
       }
       else {
@@ -4049,7 +4060,7 @@ PRBool PR_CALLBACK StateEnumFunc(void* aSelector, void* aData)
   StateRuleProcessorData* data = (StateRuleProcessorData*)aData;
 
   nsCSSSelector* selector = (nsCSSSelector*)aSelector;
-  if (SelectorMatches(*data, selector, PR_FALSE, 0)) {
+  if (SelectorMatches(*data, selector, data->mStateMask, 0)) {
     selector = selector->mNext;
     if (SelectorMatchesTree(*data, selector)) {
       return PR_FALSE;
@@ -4060,21 +4071,19 @@ PRBool PR_CALLBACK StateEnumFunc(void* aSelector, void* aData)
 
 NS_IMETHODIMP
 CSSRuleProcessor::HasStateDependentStyle(StateRuleProcessorData* aData,
-                                         nsIAtom* aMedium)
+                                         nsIAtom* aMedium,
+                                         PRBool* aResult)
 {
   NS_PRECONDITION(aData->mContent->IsContentOfType(nsIContent::eELEMENT),
                   "content must be element");
 
-  PRBool isStateful = PR_FALSE;
-
   RuleCascadeData* cascade = GetRuleCascade(aData->mPresContext, aMedium);
 
-  if (cascade) {
-    // look up content in state rule list
-    isStateful = ! cascade->mStateSelectors.EnumerateForwards(StateEnumFunc, aData); // if stopped, have state
-  }
+  // Look up content in state rule list.  If enumeration stopped, have state.
+  *aResult = cascade &&
+             !cascade->mStateSelectors.EnumerateForwards(StateEnumFunc, aData);
 
-  return ((isStateful) ? NS_OK : NS_COMFALSE);
+  return NS_OK;
 }
 
 
