@@ -72,9 +72,15 @@ public:
 
   NS_IMPL_ICONTENT_USING_GENERIC(mInner)
 
+
   // NS_IMPL_ICONTENT_USING_GENERIC_DOM_DATA(mInner)
 
 };
+
+NS_IMETHODIMP
+AnonymousElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const {
+  return this->nsXMLElement::SizeOf(aSizer, aResult);
+}
 
 /*
 NS_IMETHODIMP 

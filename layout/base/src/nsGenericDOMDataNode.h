@@ -478,9 +478,6 @@ struct nsGenericDOMDataNode {
   }                                                                        \
   NS_IMETHOD GetRangeList(nsVoidArray*& aResult) const {                   \
     return _g.GetRangeList(aResult);                                       \
-  }                                                                        \
-  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const {   \
-    return _g.SizeOf(aSizer, aResult, sizeof(*this));                      \
   }
 
 /**

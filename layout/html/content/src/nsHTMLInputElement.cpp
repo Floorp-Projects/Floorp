@@ -16,6 +16,7 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation.  All Rights Reserved.
  */
+#include "nsCOMPtr.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIScriptObjectOwner.h"
@@ -36,7 +37,7 @@
 #include "nsIFrame.h"
 #include "nsIFocusableContent.h"
 #include "nsIEventStateManager.h"
-#include "nsCOMPtr.h"
+#include "nsISizeOfHandler.h"
 
 // XXX align=left, hspace, vspace, border? other nav4 attrs
 
@@ -161,8 +162,11 @@ NS_NewHTMLInputElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
   return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
 
+MOZ_DECL_CTOR_COUNTER(nsHTMLInputElement);
+
 nsHTMLInputElement::nsHTMLInputElement(nsIAtom* aTag)
 {
+  MOZ_COUNT_CTOR(nsHTMLInputElement);
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
   mType = NS_FORM_INPUT_TEXT; // default value
@@ -173,6 +177,7 @@ nsHTMLInputElement::nsHTMLInputElement(nsIAtom* aTag)
 
 nsHTMLInputElement::~nsHTMLInputElement()
 {
+  MOZ_COUNT_DTOR(nsHTMLInputElement);
   if (nsnull != mForm) {
     // prevent mForm from decrementing its ref count on us
     mForm->RemoveElement(this, PR_FALSE); 
@@ -844,3 +849,22 @@ nsHTMLInputElement::GetType(PRInt32* aType)
 }
 
 
+
+NS_IMETHODIMP
+nsHTMLInputElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
+{
+  if (!aResult) return NS_ERROR_NULL_POINTER;
+#ifdef DEBUG
+  mInner.SizeOf(aSizer, aResult, sizeof(*this));
+  if (mForm) {
+    PRBool recorded;
+    aSizer->RecordObject(mForm, &recorded);
+    if (!recorded) {
+      PRUint32 formSize;
+      mForm->SizeOf(aSizer, &formSize);
+      aSizer->AddSize(nsHTMLAtoms::iform, formSize);
+    }
+  }
+#endif
+  return NS_OK;
+}

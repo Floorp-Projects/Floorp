@@ -531,9 +531,7 @@ public:
   NS_IMETHOD GetRangeList(nsVoidArray*& aResult) const {                   \
     return _g.GetRangeList(aResult);                                       \
   }                                                                        \
-  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const {   \
-    return _g.SizeOf(aSizer, aResult, sizeof(*this));                      \
-  }
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 
 #define NS_IMPL_ICONTENT_NO_SETPARENT_USING_GENERIC(_g)                    \
   NS_IMETHOD GetDocument(nsIDocument*& aResult) const {                    \
@@ -642,9 +640,7 @@ public:
   NS_IMETHOD GetRangeList(nsVoidArray*& aResult) const {                   \
     return _g.GetRangeList(aResult);                                       \
   }                                                                        \
-  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const {   \
-    return _g.SizeOf(aSizer, aResult, sizeof(*this));                      \
-  }
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 
 #define NS_IMPL_ICONTENT_NO_SETDOCUMENT_USING_GENERIC(_g)                  \
   NS_IMETHOD GetDocument(nsIDocument*& aResult) const {                    \
@@ -753,9 +749,7 @@ public:
   NS_IMETHOD GetRangeList(nsVoidArray*& aResult) const {                   \
     return _g.GetRangeList(aResult);                                       \
   }                                                                        \
-  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const {   \
-    return _g.SizeOf(aSizer, aResult, sizeof(*this));                      \
-  }
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 
 #define NS_IMPL_ICONTENT_NO_SETPARENT_NO_SETDOCUMENT_USING_GENERIC(_g)     \
   NS_IMETHOD GetDocument(nsIDocument*& aResult) const {                    \
@@ -862,9 +856,7 @@ public:
   NS_IMETHOD GetRangeList(nsVoidArray*& aResult) const {                   \
     return _g.GetRangeList(aResult);                                       \
   }                                                                        \
-  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const {   \
-    return _g.SizeOf(aSizer, aResult, sizeof(*this));                      \
-  }
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
   
 /**
  * Implement the nsIScriptObjectOwner API by forwarding the methods to a

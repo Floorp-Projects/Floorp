@@ -470,3 +470,37 @@ nsDOMAttributeMap::GetLength(PRUint32 *aLength)
   }
   return rv;
 }
+
+#ifdef DEBUG
+PR_STATIC_CALLBACK (PRIntn)
+SizeAttributes(PLHashEntry* he, PRIntn i, void* arg)
+{
+  char* str = (char*)he->key;
+  PRUint32 size = sizeof(PLHashEntry);
+  if (str) {
+    size += PL_strlen(str) + 1;
+  }
+  PRUint32* sump = (PRUint32*) arg;
+  *sump = *sump + size;
+  return HT_ENUMERATE_NEXT;
+}
+
+nsresult
+nsDOMAttributeMap::SizeOfNamedNodeMap(nsIDOMNamedNodeMap* aMap,
+                                      nsISizeOfHandler* aSizer,
+                                      PRUint32* aResult)
+{
+  if (!aResult) return NS_ERROR_NULL_POINTER;
+  nsDOMAttributeMap* map = (nsDOMAttributeMap*) aMap;
+  PRUint32 sum = sizeof(nsDOMAttributeMap);
+  if (map->mAttributes) {
+    sum += sizeof(*map->mAttributes);
+    PRUint32 esize = 0;
+    PL_HashTableEnumerateEntries(map->mAttributes, SizeAttributes,
+                                 (void*) &esize);
+    sum += esize;
+  }
+  *aResult = sum;
+  return NS_OK;
+}
+#endif

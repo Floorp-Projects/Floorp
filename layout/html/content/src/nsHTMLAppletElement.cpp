@@ -125,8 +125,11 @@ NS_NewHTMLAppletElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
   return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
 
+MOZ_DECL_CTOR_COUNTER(nsHTMLAppletElement);
+
 nsHTMLAppletElement::nsHTMLAppletElement(nsIAtom* aTag)
 {
+  MOZ_COUNT_CTOR(nsHTMLAppletElement);
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
   mReflectedApplet = PR_FALSE;
@@ -134,6 +137,7 @@ nsHTMLAppletElement::nsHTMLAppletElement(nsIAtom* aTag)
 
 nsHTMLAppletElement::~nsHTMLAppletElement()
 {
+  MOZ_COUNT_DTOR(nsHTMLAppletElement);
 }
 
 NS_IMPL_ADDREF(nsHTMLAppletElement)
@@ -340,4 +344,10 @@ NS_IMETHODIMP
 nsHTMLAppletElement::SetScriptObject(void *aScriptObject)
 {
 	return mInner.SetScriptObject(aScriptObject);
+}
+
+NS_IMETHODIMP
+nsHTMLAppletElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
+{
+  return mInner.SizeOf(aSizer, aResult, sizeof(*this));
 }

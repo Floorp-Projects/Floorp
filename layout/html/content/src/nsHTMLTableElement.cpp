@@ -139,18 +139,28 @@ public:
 
   NS_IMETHOD    ParentDestroyed();
 
+#ifdef DEBUG
+  void SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const {
+    *aResult = sizeof(*this);
+  }
+#endif
+
 protected:
   nsHTMLTableElement * mParent;
 };
 
+MOZ_DECL_CTOR_COUNTER(TableRowsCollection);
+
 TableRowsCollection::TableRowsCollection(nsHTMLTableElement *aParent)
   : nsGenericDOMHTMLCollection()
 {
+  MOZ_COUNT_CTOR(TableRowsCollection);
   mParent = aParent;
 }
 
 TableRowsCollection::~TableRowsCollection()
 {
+  MOZ_COUNT_DTOR(TableRowsCollection);
   // we do NOT have a ref-counted reference to mParent, so do NOT release it!
   // this is to avoid circular references.  The instantiator who provided mParent
   // is responsible for managing our reference for us.
@@ -325,8 +335,11 @@ NS_NewHTMLTableElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
   return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
 
+MOZ_DECL_CTOR_COUNTER(nsHTMLTableElement);
+
 nsHTMLTableElement::nsHTMLTableElement(nsIAtom* aTag)
 {
+  MOZ_COUNT_CTOR(nsHTMLTableElement);
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
   mTBodies=nsnull;
@@ -335,6 +348,7 @@ nsHTMLTableElement::nsHTMLTableElement(nsIAtom* aTag)
 
 nsHTMLTableElement::~nsHTMLTableElement()
 {
+  MOZ_COUNT_DTOR(nsHTMLTableElement);
   if (nsnull!=mTBodies)
   {
     mTBodies->ParentDestroyed();
@@ -1287,3 +1301,25 @@ nsHTMLTableElement::HandleDOMEvent(nsIPresContext& aPresContext,
                                aFlags, aEventStatus);
 }
 
+
+NS_IMETHODIMP
+nsHTMLTableElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
+{
+  if (!aResult) return NS_ERROR_NULL_POINTER;
+#ifdef DEBUG
+  PRUint32 sum = 0;
+  mInner.SizeOf(aSizer, &sum, sizeof(*this));
+  if (mTBodies) {
+    PRUint32 asize;
+    mTBodies->SizeOf(aSizer, &asize);
+    sum += asize;
+  }
+  if (mRows) {
+    PRUint32 asize;
+    mRows->SizeOf(aSizer, &asize);
+    sum += asize;
+  }
+  *aResult = sum;
+#endif
+  return NS_OK;
+}

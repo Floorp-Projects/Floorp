@@ -28,6 +28,8 @@
 #include "nsLayoutAtoms.h"
 #include "nsString.h"
 #include "nsIXMLContent.h"
+#include "nsISizeOfHandler.h"
+#include "nsDOMAttributeMap.h"
 
 static NS_DEFINE_IID(kIDOMDocumentTypeIID, NS_IDOMDOCUMENTTYPE_IID);
 
@@ -62,6 +64,8 @@ public:
 
   // nsIContent
   NS_IMPL_ICONTENT_USING_GENERIC_DOM_DATA(mInner)
+
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 
 protected:
   // XXX Processing instructions are currently implemented by using
@@ -307,4 +311,36 @@ NS_IMETHODIMP
 nsXMLDocumentType::SetContentID(PRUint32 aID) 
 {
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsXMLDocumentType::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
+{
+  if (!aResult) return NS_ERROR_NULL_POINTER;
+#ifdef DEBUG
+  PRUint32 sum;
+  mInner.SizeOf(aSizer, &sum, sizeof(*this));
+  PRUint32 ssize;
+  mName.SizeOf(aSizer, &ssize);
+  sum = sum - sizeof(mName) + ssize;
+  if (mEntities) {
+    PRBool recorded;
+    aSizer->RecordObject((void*) mEntities, &recorded);
+    if (!recorded) {
+      PRUint32 size;
+      nsDOMAttributeMap::SizeOfNamedNodeMap(mEntities, aSizer, &size);
+      aSizer->AddSize(nsLayoutAtoms::xml_document_entities, size);
+    }
+  }
+  if (mNotations) {
+    PRBool recorded;
+    aSizer->RecordObject((void*) mNotations, &recorded);
+    if (!recorded) {
+      PRUint32 size;
+      nsDOMAttributeMap::SizeOfNamedNodeMap(mNotations, aSizer, &size);
+      aSizer->AddSize(nsLayoutAtoms::xml_document_notations, size);
+    }
+  }
+#endif
+  return NS_OK;
 }

@@ -111,8 +111,11 @@ NS_NewHTMLLinkElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
   return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
 
+MOZ_DECL_CTOR_COUNTER(nsHTMLLinkElement);
+
 nsHTMLLinkElement::nsHTMLLinkElement(nsIAtom* aTag)
 {
+  MOZ_COUNT_CTOR(nsHTMLLinkElement);
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
   mStyleSheet = nsnull;
@@ -120,6 +123,7 @@ nsHTMLLinkElement::nsHTMLLinkElement(nsIAtom* aTag)
 
 nsHTMLLinkElement::~nsHTMLLinkElement()
 {
+  MOZ_COUNT_DTOR(nsHTMLLinkElement);
   NS_IF_RELEASE(mStyleSheet);
 }
 
@@ -282,3 +286,9 @@ nsHTMLLinkElement::HandleDOMEvent(nsIPresContext& aPresContext,
                                aFlags, aEventStatus);
 }
 
+
+NS_IMETHODIMP
+nsHTMLLinkElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
+{
+  return mInner.SizeOf(aSizer, aResult, sizeof(*this));
+}

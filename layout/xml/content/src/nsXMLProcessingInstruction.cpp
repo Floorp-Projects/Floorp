@@ -61,6 +61,8 @@ public:
   // nsIContent
   NS_IMPL_ICONTENT_USING_GENERIC_DOM_DATA(mInner)
 
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
+
 protected:
   // XXX Processing instructions are currently implemented by using
   // the generic CharacterData inner object, even though PIs are not
@@ -284,4 +286,20 @@ NS_IMETHODIMP
 nsXMLProcessingInstruction::SetContentID(PRUint32 aID) 
 {
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP
+nsXMLProcessingInstruction::SizeOf(nsISizeOfHandler* aSizer,
+                                   PRUint32* aResult) const
+{
+  if (!aResult) return NS_ERROR_NULL_POINTER;
+#ifdef DEBUG
+  PRUint32 sum;
+  mInner.SizeOf(aSizer, &sum, sizeof(*this));
+  PRUint32 ssize;
+  mTarget.SizeOf(aSizer, &ssize);
+  sum = sum - sizeof(mTarget) + ssize;
+#endif
+  return NS_OK;
 }

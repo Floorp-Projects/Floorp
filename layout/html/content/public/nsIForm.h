@@ -20,6 +20,7 @@
 
 #include "nsISupports.h"
 class nsIFormControl;
+class nsISizeOfHandler;
 
 #define NS_FORM_METHOD_GET  0
 #define NS_FORM_METHOD_POST 1
@@ -31,10 +32,11 @@ class nsIFormControl;
 { 0xb7e94510, 0x4c19, 0x11d2,  \
   { 0x80, 0x3f, 0x0, 0x60, 0x8, 0x15, 0xa7, 0x91 } }
 
-/** 
-  * This interface provides a complete set of methods dealing with elements which
-  * belong to a form element. When nsIDOMHTMLCollection allows write operations
- **/
+/**
+ * This interface provides a complete set of methods dealing with
+ * elements which belong to a form element. When nsIDOMHTMLCollection
+ * allows write operations
+ */
 class nsIForm : public nsISupports {
 public:
 
@@ -70,6 +72,7 @@ public:
   NS_IMETHOD RemoveElement(nsIFormControl* aElement, 
                            PRBool aChildIsRef = PR_TRUE) = 0;
 
+  NS_IMETHOD  SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const = 0;
 };
 
 #endif /* nsIForm_h___ */

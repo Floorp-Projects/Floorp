@@ -64,6 +64,10 @@ public:
   // nsIContent
   NS_IMPL_ICONTENT_USING_GENERIC_DOM_DATA(mInner)
 
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const {
+    return mInner.SizeOf(aSizer, aResult, sizeof(*this));
+  }
+
   // nsITextContent
   NS_IMPL_ITEXTCONTENT_USING_GENERIC_DOM_DATA(mInner)
 
@@ -86,8 +90,11 @@ NS_NewXMLCDATASection(nsIContent** aInstancePtrResult)
   return it->QueryInterface(kIContentIID, (void **) aInstancePtrResult);
 }
 
+MOZ_DECL_CTOR_COUNTER(nsXMLCDATASection);
+
 nsXMLCDATASection::nsXMLCDATASection()
 {
+  MOZ_COUNT_CTOR(nsXMLCDATASection);
   NS_INIT_REFCNT();
   mInner.Init(this);
   mContentID = 0;
@@ -95,6 +102,7 @@ nsXMLCDATASection::nsXMLCDATASection()
 
 nsXMLCDATASection::~nsXMLCDATASection()
 {
+  MOZ_COUNT_DTOR(nsXMLCDATASection);
 }
 
 NS_IMPL_ADDREF(nsXMLCDATASection)

@@ -19,14 +19,18 @@
 
 #include "nsGenericDOMHTMLCollection.h"
 
+MOZ_DECL_CTOR_COUNTER(nsGenericDOMHTMLCollection);
+
 nsGenericDOMHTMLCollection::nsGenericDOMHTMLCollection() 
 {
+  MOZ_COUNT_CTOR(nsGenericDOMHTMLCollection);
   mRefCnt = 0;
   mScriptObject = nsnull;
 }
 
 nsGenericDOMHTMLCollection::~nsGenericDOMHTMLCollection()
 {
+  MOZ_COUNT_DTOR(nsGenericDOMHTMLCollection);
 }
 
 nsresult 

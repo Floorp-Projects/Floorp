@@ -36,6 +36,7 @@
 #include "nsIDocument.h"
 #include "nsIPresShell.h"   
 #include "nsIFrame.h"
+#include "nsISizeOfHandler.h"
 
 static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
@@ -148,6 +149,10 @@ public:
   // should drop our (non ref-counted) reference to it
   void ReleaseForm();
 
+#ifdef DEBUG
+  nsresult SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
+#endif
+
   void        *mScriptObject;
   nsVoidArray  mElements;
 };
@@ -169,8 +174,11 @@ NS_NewHTMLFormElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
   return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
 
+MOZ_DECL_CTOR_COUNTER(nsHTMLFormElement);
+
 nsHTMLFormElement::nsHTMLFormElement(nsIAtom* aTag)
 {
+  MOZ_COUNT_CTOR(nsHTMLFormElement);
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
   mControls = new nsFormControlList();
@@ -180,6 +188,8 @@ nsHTMLFormElement::nsHTMLFormElement(nsIAtom* aTag)
 
 nsHTMLFormElement::~nsHTMLFormElement()
 {
+  MOZ_COUNT_DTOR(nsHTMLFormElement);
+
   // set the controls to have no form
   PRUint32 numControls;
   GetElementCount(&numControls);
@@ -622,16 +632,22 @@ nsHTMLFormElement::Item(PRUint32 aIndex, nsIDOMElement** aReturn)
   return NS_ERROR_FAILURE;
 }
 
+//----------------------------------------------------------------------
+
 // nsFormControlList implementation, this could go away if there were a lightweight collection implementation somewhere
+
+MOZ_DECL_CTOR_COUNTER(nsFormControlList);
 
 nsFormControlList::nsFormControlList() 
 {
-  mRefCnt = 0;
+  MOZ_COUNT_CTOR(nsFormControlList);
+  NS_INIT_REFCNT();
   mScriptObject = nsnull;
 }
 
 nsFormControlList::~nsFormControlList()
 {
+  MOZ_COUNT_DTOR(nsFormControlList);
   Clear();
 }
 
@@ -748,3 +764,33 @@ nsFormControlList::NamedItem(const nsString& aName, nsIDOMNode** aReturn)
   return result;
 }
 
+#ifdef DEBUG
+nsresult
+nsFormControlList::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
+{
+  if (!aResult) return NS_ERROR_NULL_POINTER;
+  PRUint32 asize;
+  mElements.SizeOf(aSizer, &asize);
+  *aResult = sizeof(*this) - sizeof(mElements) + asize;
+  return NS_OK;
+}
+#endif
+
+NS_IMETHODIMP
+nsHTMLFormElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
+{
+  if (!aResult) return NS_ERROR_NULL_POINTER;
+#ifdef DEBUG
+  mInner.SizeOf(aSizer, aResult, sizeof(*this));
+  if (mControls) {
+    PRBool recorded;
+    aSizer->RecordObject((void*) mControls, &recorded);
+    if (!recorded) {
+      PRUint32 controlSize;
+      mControls->SizeOf(aSizer, &controlSize);
+      aSizer->AddSize(nsHTMLAtoms::form_control_list, controlSize);
+    }
+  }
+#endif
+  return NS_OK;
+}
