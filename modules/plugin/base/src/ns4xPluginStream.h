@@ -19,6 +19,9 @@
 #ifndef ns4xPluginStream_h__
 #define ns4xPluginStream_h__
 
+#define _UINT32
+#define _INT32
+
 #include "jri.h"                 // XXX should be jni.h
 #include "nsplugin.h"
 #include "ns4xPluginInstance.h"
