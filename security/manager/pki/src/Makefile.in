@@ -73,7 +73,6 @@ REQUIRES	= nspr \
 include $(topsrcdir)/config/rules.mk
 
 INCLUDES	+= \
-		-I$(DIST)/public/security \
 		-I$(DIST)/public/nss \
 		$(NULL)
 
