@@ -198,7 +198,7 @@ END_OF_APPLESCRIPT
 			}
 	}
 
-sub MakeAlias($$)
+sub MakeAlias($;$)
 	{
 		my ($old_file, $new_file) = @_;
 
@@ -214,9 +214,9 @@ sub MakeAlias($$)
 				$new_file .= $1;
 			}
 
-		die "Can't make an alias for \"$old_file\"; it doesn't exist.\n" unless -e $old_file;
+		die "Can't make an alias \"$new_file\" for \"$old_file\"; it doesn't exist.\n" unless -e $old_file;
 		unlink $new_file;
-		symlink($old_file, $new_file) || die "Can't make an alias for \"$old_file\"; unknown error.\n";
+		symlink($old_file, $new_file) || die "Can't make an alias \"$new_file\" for \"$old_file\"; unknown error.\n";
 	}
 
 
