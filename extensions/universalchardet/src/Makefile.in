@@ -81,7 +81,8 @@ CPPSRCS = \
 		nsLatin1Prober.cpp \
 		nsUniversalCharDetModule.cpp \
 		nsUniversalDetector.cpp \
-		$(NULL)
+		nsUdetXPCOMWrapper.cpp \
+               $(NULL)
 
 # Not built on win32. Not sure why not
 ifneq ($(OS_ARCH),WINNT)
