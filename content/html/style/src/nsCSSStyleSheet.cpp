@@ -72,47 +72,47 @@ NS_DEF_PTR(nsICSSStyleSheet);
 // ----------------------
 // Rule hash key
 //
-class RuleKey: public nsHashKey {
+class AtomKey: public nsHashKey {
 public:
-  RuleKey(nsIAtom* aAtom);
-  RuleKey(const RuleKey& aKey);
-  virtual ~RuleKey(void);
+  AtomKey(nsIAtom* aAtom);
+  AtomKey(const AtomKey& aKey);
+  virtual ~AtomKey(void);
   virtual PRUint32 HashValue(void) const;
   virtual PRBool Equals(const nsHashKey *aKey) const;
   virtual nsHashKey *Clone(void) const;
   nsIAtom*  mAtom;
 };
 
-RuleKey::RuleKey(nsIAtom* aAtom)
+AtomKey::AtomKey(nsIAtom* aAtom)
 {
   mAtom = aAtom;
   NS_ADDREF(mAtom);
 }
 
-RuleKey::RuleKey(const RuleKey& aKey)
+AtomKey::AtomKey(const AtomKey& aKey)
 {
   mAtom = aKey.mAtom;
   NS_ADDREF(mAtom);
 }
 
-RuleKey::~RuleKey(void)
+AtomKey::~AtomKey(void)
 {
   NS_RELEASE(mAtom);
 }
 
-PRUint32 RuleKey::HashValue(void) const
+PRUint32 AtomKey::HashValue(void) const
 {
   return (PRUint32)mAtom;
 }
 
-PRBool RuleKey::Equals(const nsHashKey* aKey) const
+PRBool AtomKey::Equals(const nsHashKey* aKey) const
 {
-  return PRBool (((RuleKey*)aKey)->mAtom == mAtom);
+  return PRBool (((AtomKey*)aKey)->mAtom == mAtom);
 }
 
-nsHashKey* RuleKey::Clone(void) const
+nsHashKey* AtomKey::Clone(void) const
 {
-  return new RuleKey(*this);
+  return new AtomKey(*this);
 }
 
 struct RuleValue {
@@ -192,7 +192,7 @@ void RuleHash::AppendRuleToTable(nsHashtable& aTable, nsIAtom* aAtom, nsICSSStyl
 {
   NS_ASSERTION(nsnull != aAtom, "null hash key");
 
-  RuleKey key(aAtom);
+  AtomKey key(aAtom);
   RuleValue*  value = (RuleValue*)aTable.Get(&key);
 
   if (nsnull == value) {
@@ -249,21 +249,21 @@ void RuleHash::EnumerateAllRules(nsIAtom* aTag, nsIAtom* aID, const nsVoidArray&
   PRInt32 valueCount = 0;
 
   { // universal tag rules
-    RuleKey universalKey(nsCSSAtoms::universalSelector);
+    AtomKey universalKey(nsCSSAtoms::universalSelector);
     RuleValue*  value = (RuleValue*)mTagTable.Get(&universalKey);
     if (nsnull != value) {
       mEnumList[valueCount++] = value;
     }
   }
   if (nsnull != aTag) {
-    RuleKey tagKey(aTag);
+    AtomKey tagKey(aTag);
     RuleValue* value = (RuleValue*)mTagTable.Get(&tagKey);
     if (nsnull != value) {
       mEnumList[valueCount++] = value;
     }
   }
   if (nsnull != aID) {
-    RuleKey idKey(aID);
+    AtomKey idKey(aID);
     RuleValue* value = (RuleValue*)mIdTable.Get(&idKey);
     if (nsnull != value) {
       mEnumList[valueCount++] = value;
@@ -271,7 +271,7 @@ void RuleHash::EnumerateAllRules(nsIAtom* aTag, nsIAtom* aID, const nsVoidArray&
   }
   for (index = 0; index < classCount; index++) {
     nsIAtom* classAtom = (nsIAtom*)aClassList.ElementAt(index);
-    RuleKey classKey(classAtom);
+    AtomKey classKey(classAtom);
     RuleValue* value = (RuleValue*)mClassTable.Get(&classKey);
     if (nsnull != value) {
       mEnumList[valueCount++] = value;
@@ -312,8 +312,8 @@ void RuleHash::EnumerateAllRules(nsIAtom* aTag, nsIAtom* aID, const nsVoidArray&
 
 void RuleHash::EnumerateTagRules(nsIAtom* aTag, RuleEnumFunc aFunc, void* aData)
 {
-  RuleKey tagKey(aTag);
-  RuleKey universalKey(nsCSSAtoms::universalSelector);
+  AtomKey tagKey(aTag);
+  AtomKey universalKey(nsCSSAtoms::universalSelector);
   RuleValue*  tagValue = (RuleValue*)mTagTable.Get(&tagKey);
   RuleValue*  uniValue = (RuleValue*)mTagTable.Get(&universalKey);
 
@@ -614,6 +614,27 @@ CSSImportsCollectionImpl::SetScriptObject(void* aScriptObject)
   return NS_OK;
 }
 
+//--------------------------------
+
+struct RuleCascadeData {
+  RuleCascadeData(void)
+    : mWeightedRules(nsnull),
+      mRuleHash(),
+      mStateSelectors()
+  {
+    NS_NewISupportsArray(&mWeightedRules);
+  }
+
+  ~RuleCascadeData(void)
+  {
+    NS_IF_RELEASE(mWeightedRules);
+  }
+  nsISupportsArray* mWeightedRules;
+  RuleHash          mRuleHash;
+  nsVoidArray       mStateSelectors;
+};
+
+
 // -------------------------------
 // CSS Style Sheet
 //
@@ -640,6 +661,7 @@ public:
   NS_IMETHOD GetMediumCount(PRInt32& aCount) const;
   NS_IMETHOD GetMediumAt(PRInt32 aIndex, nsIAtom*& aMedium) const;
   NS_IMETHOD AppendMedium(nsIAtom* aMedium);
+  NS_IMETHOD ClearMedia(void);
 
   NS_IMETHOD GetEnabled(PRBool& aEnabled) const;
   NS_IMETHOD SetEnabled(PRBool aEnabled);
@@ -712,8 +734,9 @@ private:
 protected:
   virtual ~CSSStyleSheetImpl();
 
-  void ClearHash(void);
-  void BuildHash(void);
+  void ClearRuleCascades(void);
+  nsresult CascadeRulesInto(nsIAtom* aMedium, nsISupportsArray* aRules);
+  RuleCascadeData* GetRuleCascade(nsIAtom* aMedium);
 
 protected:
   PRUint32 mInHeap : 1;
@@ -723,12 +746,10 @@ protected:
   nsString              mTitle;
   nsISupportsArray*     mMedia;
   CSSStyleSheetImpl*    mFirstChild;
-  nsISupportsArrayPtr   mOrderedRules;
-  nsISupportsArrayPtr   mWeightedRules;
+  nsISupportsArray*     mOrderedRules;
   CSSStyleSheetImpl*    mNext;
   nsICSSStyleSheet*     mParent;
-  RuleHash*             mRuleHash;
-  nsVoidArray           mStateSelectors;
+  nsHashtable*          mMediumCascadeTable;
   CSSStyleRuleCollectionImpl* mRuleCollection;
   CSSImportsCollectionImpl* mImportsCollection;
   nsIDocument*          mDocument;
@@ -780,9 +801,9 @@ CSSStyleSheetImpl::CSSStyleSheetImpl()
   : nsICSSStyleSheet(),
     mURL(nsnull), mTitle(), mMedia(nsnull),
     mFirstChild(nsnull), 
-    mOrderedRules(nsnull), mWeightedRules(nsnull), 
+    mOrderedRules(nsnull),
     mNext(nsnull),
-    mRuleHash(nsnull)
+    mMediumCascadeTable(nsnull)
 {
   NS_INIT_REFCNT();
   nsCSSAtoms::AddrefAtoms();
@@ -835,10 +856,11 @@ CSSStyleSheetImpl::~CSSStyleSheetImpl()
     mImportsCollection->DropReference();
     NS_RELEASE(mImportsCollection);
   }
-  if (mOrderedRules.IsNotNull()) {
+  if (mOrderedRules) {
     mOrderedRules->EnumerateForwards(DropStyleSheetReference, nsnull);
+    NS_RELEASE(mOrderedRules);
   }
-  ClearHash();
+  ClearRuleCascades();
   // XXX The document reference is not reference counted and should
   // not be released. The document will let us know when it is going
   // away.
@@ -1307,35 +1329,10 @@ PRInt32 CSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
 
   nsIAtom* presMedium = nsnull;
   aPresContext->GetMedium(&presMedium);
-  CSSStyleSheetImpl*  child = mFirstChild;
-  while (nsnull != child) {
-    PRBool mediumOK = PR_FALSE;
-    PRInt32 mediumCount;
-    child->GetMediumCount(mediumCount);
-    if (0 < mediumCount) {
-      PRInt32 index = 0;
-      nsIAtom* medium;
-      while ((PR_FALSE == mediumOK) && (index < mediumCount)) {
-        child->GetMediumAt(index++, medium);
-        if ((medium == nsLayoutAtoms::all) || (medium == presMedium)) {
-          mediumOK = PR_TRUE;
-        }
-        NS_RELEASE(medium);
-      }
-    }
-    else {
-      mediumOK = PR_TRUE;
-    }
-    if (mediumOK) {
-      matchCount += child->RulesMatching(aPresContext, aContent, aParentContext, aResults);
-    }
-    child = child->mNext;
-  }
 
-  if (mWeightedRules.IsNotNull()) {
-    if (nsnull == mRuleHash) {
-      BuildHash();
-    }
+  RuleCascadeData* cascade = GetRuleCascade(presMedium);
+
+  if (cascade) {
     ContentEnumData data(aPresContext, aContent, aParentContext, aResults);
     nsIAtom* tagAtom;
     aContent->GetTag(tagAtom);
@@ -1349,7 +1346,7 @@ PRInt32 CSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
       NS_RELEASE(styledContent);
     }
 
-    mRuleHash->EnumerateAllRules(tagAtom, idAtom, classArray, ContentEnumFunc, &data);
+    cascade->mRuleHash.EnumerateAllRules(tagAtom, idAtom, classArray, ContentEnumFunc, &data);
     matchCount += data.mCount;
 
 #ifdef DEBUG_RULES
@@ -1359,9 +1356,9 @@ PRInt32 CSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
     NS_NewISupportsArray(&list2);
 
     data.mResults = list1;
-    mRuleHash->EnumerateAllRules(tagAtom, idAtom, classArray, ContentEnumFunc, &data);
+    cascade->mRuleHash.EnumerateAllRules(tagAtom, idAtom, classArray, ContentEnumFunc, &data);
     data.mResults = list2;
-    mWeightedRules->EnumerateBackwards(ContentEnumWrap, &data);
+    cascade->mWeightedRules->EnumerateBackwards(ContentEnumWrap, &data);
     NS_ASSERTION(list1->Equals(list2), "lists not equal");
     NS_RELEASE(list1);
     NS_RELEASE(list2);
@@ -1459,38 +1456,12 @@ PRInt32 CSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
 
   nsIAtom* presMedium = nsnull;
   aPresContext->GetMedium(&presMedium);
-  CSSStyleSheetImpl*  child = mFirstChild;
-  while (nsnull != child) {
-    PRBool mediumOK = PR_FALSE;
-    PRInt32 mediumCount;
-    child->GetMediumCount(mediumCount);
-    if (0 < mediumCount) {
-      PRInt32 index = 0;
-      nsIAtom* medium;
-      while ((PR_FALSE == mediumOK) && (index < mediumCount)) {
-        child->GetMediumAt(index++, medium);
-        if ((medium == nsLayoutAtoms::all) || (medium == presMedium)) {
-          mediumOK = PR_TRUE;
-        }
-        NS_RELEASE(medium);
-      }
-    }
-    else {
-      mediumOK = PR_TRUE;
-    }
-    if (mediumOK) {
-      matchCount += child->RulesMatching(aPresContext, aParentContent, aPseudoTag, 
-                                         aParentContext, aResults);
-    }
-    child = child->mNext;
-  }
 
-  if (mWeightedRules.IsNotNull()) {
-    if (nsnull == mRuleHash) {
-      BuildHash();
-    }
+  RuleCascadeData* cascade = GetRuleCascade(presMedium);
+
+  if (cascade) {
     PseudoEnumData data(aPresContext, aParentContent, aPseudoTag, aParentContext, aResults);
-    mRuleHash->EnumerateTagRules(aPseudoTag, PseudoEnumFunc, &data);
+    cascade->mRuleHash.EnumerateTagRules(aPseudoTag, PseudoEnumFunc, &data);
     matchCount += data.mCount;
 
 #ifdef DEBUG_RULES
@@ -1499,9 +1470,9 @@ PRInt32 CSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
     NS_NewISupportsArray(&list1);
     NS_NewISupportsArray(&list2);
     data.mResults = list1;
-    mRuleHash->EnumerateTagRules(aPseudoTag, PseudoEnumFunc, &data);
+    cascade->mRuleHash.EnumerateTagRules(aPseudoTag, PseudoEnumFunc, &data);
     data.mResults = list2;
-    mWeightedRules->EnumerateBackwards(PseudoEnumWrap, &data);
+    cascade->mWeightedRules->EnumerateBackwards(PseudoEnumWrap, &data);
     NS_ASSERTION(list1->Equals(list2), "lists not equal");
     NS_RELEASE(list1);
     NS_RELEASE(list2);
@@ -1542,41 +1513,19 @@ CSSStyleSheetImpl::HasStateDependentStyle(nsIPresContext* aPresContext,
                                           nsIContent*     aContent)
 {
   PRBool isStateful = PR_FALSE;
-  // look up content in state rule list
-  StateEnumData data(aPresContext, aContent);
-  isStateful = (! mStateSelectors.EnumerateForwards(StateEnumFunc, &data)); // if stopped, have state
-  
-  if (! isStateful) {
-    nsIAtom* presMedium = nsnull;
-    aPresContext->GetMedium(&presMedium);
 
-    CSSStyleSheetImpl*  child = mFirstChild;
-    while ((! isStateful) && (nsnull != child)) {
-      PRBool mediumOK = PR_FALSE;
-      PRInt32 mediumCount;
-      child->GetMediumCount(mediumCount);
-      if (0 < mediumCount) {
-        PRInt32 index = 0;
-        nsIAtom* medium;
-        while ((PR_FALSE == mediumOK) && (index < mediumCount)) {
-          child->GetMediumAt(index++, medium);
-          if ((medium == nsLayoutAtoms::all) || (medium == presMedium)) {
-            mediumOK = PR_TRUE;
-          }
-          NS_RELEASE(medium);
-        }
-      }
-      else {
-        mediumOK = PR_TRUE;
-      }
-      if (mediumOK) {
-        nsresult result = child->HasStateDependentStyle(aPresContext, aContent);
-        isStateful = (NS_OK == result);
-      }
-      child = child->mNext;
-    }
-    NS_IF_RELEASE(presMedium);
+  nsIAtom* presMedium = nsnull;
+  aPresContext->GetMedium(&presMedium);
+
+  RuleCascadeData* cascade = GetRuleCascade(presMedium);
+
+  if (cascade) {
+    // look up content in state rule list
+    StateEnumData data(aPresContext, aContent);
+    isStateful = (! cascade->mStateSelectors.EnumerateForwards(StateEnumFunc, &data)); // if stopped, have state
   }
+  NS_IF_RELEASE(presMedium);
+
   return ((isStateful) ? NS_OK : NS_COMFALSE);
 }
 
@@ -1671,6 +1620,16 @@ CSSStyleSheetImpl::AppendMedium(nsIAtom* aMedium)
 }
 
 NS_IMETHODIMP
+CSSStyleSheetImpl::ClearMedia(void)
+{
+  if (mMedia) {
+    mMedia->Clear();
+  }
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
 CSSStyleSheetImpl::GetEnabled(PRBool& aEnabled) const
 {
   aEnabled = ((PR_TRUE == mDisabled) ? PR_FALSE : PR_TRUE);
@@ -1762,6 +1721,7 @@ void CSSStyleSheetImpl::AppendStyleSheet(nsICSSStyleSheet* aSheet)
   // This is not reference counted. Our parent tells us when
   // it's going away.
   sheet->mParent = this;
+  ClearRuleCascades();
 }
 
 NS_IMETHODIMP
@@ -1788,6 +1748,7 @@ CSSStyleSheetImpl::InsertStyleSheetAt(nsICSSStyleSheet* aSheet, PRInt32 aIndex)
   // This is not reference counted. Our parent tells us when
   // it's going away.
   sheet->mParent = this;
+  ClearRuleCascades();
   return NS_OK;
 }
 
@@ -1795,70 +1756,33 @@ void CSSStyleSheetImpl::PrependStyleRule(nsICSSStyleRule* aRule)
 {
   NS_PRECONDITION(nsnull != aRule, "null arg");
 
-  ClearHash();
-  //XXX replace this with a binary search?
-  PRInt32 weight = aRule->GetWeight();
-  if (mWeightedRules.IsNull()) {
-    if (NS_OK != NS_NewISupportsArray(mWeightedRules.AssignPtr()))
-      return;
+  ClearRuleCascades();
+  if (! mOrderedRules) {
+    NS_NewISupportsArray(&mOrderedRules);
   }
-  if (mOrderedRules.IsNull()) {
-    if (NS_OK != NS_NewISupportsArray(mOrderedRules.AssignPtr()))
-      return;
+  if (mOrderedRules) {
+    mOrderedRules->InsertElementAt(aRule, 0);
+    aRule->SetStyleSheet(this);
   }
-  PRUint32 cnt;
-  nsresult rv = mWeightedRules->Count(&cnt);
-  if (NS_FAILED(rv)) return;    // XXX error?
-  PRInt32 index = cnt;
-  while (0 <= --index) {
-    nsICSSStyleRule* rule = (nsICSSStyleRule*)mWeightedRules->ElementAt(index);
-    if (rule->GetWeight() >= weight) { // insert before rules with equal or lesser weight
-      NS_RELEASE(rule);
-      break;
-    }
-    NS_RELEASE(rule);
-  }
-  mWeightedRules->InsertElementAt(aRule, index + 1);
-  mOrderedRules->InsertElementAt(aRule, 0);
-  aRule->SetStyleSheet(this);
 }
 
 void CSSStyleSheetImpl::AppendStyleRule(nsICSSStyleRule* aRule)
 {
   NS_PRECONDITION(nsnull != aRule, "null arg");
 
-  ClearHash();
-  //XXX replace this with a binary search?
-  PRInt32 weight = aRule->GetWeight();
-  if (mWeightedRules.IsNull()) {
-    if (NS_OK != NS_NewISupportsArray(mWeightedRules.AssignPtr()))
-      return;
+  ClearRuleCascades();
+  if (! mOrderedRules) {
+    NS_NewISupportsArray(&mOrderedRules);
   }
-  if (mOrderedRules.IsNull()) {
-    if (NS_OK != NS_NewISupportsArray(mOrderedRules.AssignPtr()))
-      return;
+  if (mOrderedRules) {
+    mOrderedRules->AppendElement(aRule);
+    aRule->SetStyleSheet(this);
   }
-  PRUint32 cnt;
-  nsresult rv = mWeightedRules->Count(&cnt);
-  if (NS_FAILED(rv)) return;    // XXX error?
-  PRInt32 count = cnt;
-  PRInt32 index = -1;
-  while (++index < count) {
-    nsICSSStyleRule* rule = (nsICSSStyleRule*)mWeightedRules->ElementAt(index);
-    if (rule->GetWeight() <= weight) { // insert after rules with greater weight (before equal or lower weight)
-      NS_RELEASE(rule);
-      break;
-    }
-    NS_RELEASE(rule);
-  }
-  mWeightedRules->InsertElementAt(aRule, index);
-  mOrderedRules->AppendElement(aRule);
-  aRule->SetStyleSheet(this);
 }
 
 PRInt32 CSSStyleSheetImpl::StyleRuleCount(void) const
 {
-  if (mOrderedRules.IsNotNull()) {
+  if (mOrderedRules) {
     PRUint32 cnt;
     nsresult rv = ((CSSStyleSheetImpl*)this)->mOrderedRules->Count(&cnt);      // XXX bogus cast -- this method should not be const
     if (NS_FAILED(rv)) return 0;        // XXX error?
@@ -1871,7 +1795,7 @@ nsresult CSSStyleSheetImpl::GetStyleRuleAt(PRInt32 aIndex, nsICSSStyleRule*& aRu
 {
   nsresult result = NS_ERROR_ILLEGAL_VALUE;
 
-  if (mOrderedRules.IsNotNull()) {
+  if (mOrderedRules) {
     aRule = (nsICSSStyleRule*)mOrderedRules->ElementAt(aIndex);
     if (nsnull != aRule) {
       result = NS_OK;
@@ -1929,6 +1853,47 @@ CSSStyleSheetImpl::Clone(nsICSSStyleSheet*& aClone) const
   return NS_OK;
 }
 
+static void
+ListRules(nsISupportsArray* aRules, FILE* aOut, PRInt32 aIndent)
+{
+  PRUint32 count;
+  PRUint32 index;
+  if (aRules) {
+    aRules->Count(&count);
+    for (index = 0; index < count; index++) {
+      nsICSSStyleRulePtr rule = (nsICSSStyleRule*)aRules->ElementAt(index);
+      rule->List(aOut, aIndent);
+    }
+  }
+}
+
+struct ListEnumData {
+  ListEnumData(FILE* aOut, PRInt32 aIndent)
+    : mOut(aOut),
+      mIndent(aIndent)
+  {
+  }
+  FILE*   mOut;
+  PRInt32 mIndent;
+};
+
+static PRBool ListCascade(nsHashKey* aKey, void* aValue, void* aClosure)
+{
+  AtomKey* key = (AtomKey*)aKey;
+  RuleCascadeData* cascade = (RuleCascadeData*)aValue;
+  ListEnumData* data = (ListEnumData*)aClosure;
+
+  fputs("\nRules in cascade order for medium: \"", data->mOut);
+  nsAutoString  buffer;
+  key->mAtom->ToString(buffer);
+  fputs(buffer, data->mOut);
+  fputs("\"\n", data->mOut);
+
+  ListRules(cascade->mWeightedRules, data->mOut, data->mIndent);
+  return PR_TRUE;
+}
+
+
 void CSSStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
 {
   PRUnichar* buffer;
@@ -1950,26 +1915,31 @@ void CSSStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
     child = child->mNext;
   }
 
-  PRInt32 count = 0;
-  if (mWeightedRules.IsNotNull()) {
-    PRUint32 cnt;
-    nsresult rv = ((CSSStyleSheetImpl*)this)->mWeightedRules->Count(&cnt);      // XXX bogus cast -- this method should not be const
-    if (NS_FAILED(rv)) return;  // XXX error?
-    count = cnt;
-  }
+  fputs("Rules in source order:\n", out);
+  ListRules(mOrderedRules, out, aIndent);
 
-  for (index = 0; index < count; index++) {
-    nsICSSStyleRulePtr rule = (nsICSSStyleRule*)mWeightedRules->ElementAt(index);
-    rule->List(out, aIndent);
+  if (mMediumCascadeTable) {
+    ListEnumData  data(out, aIndent);
+    mMediumCascadeTable->Enumerate(ListCascade, &data);
   }
 }
 
-void CSSStyleSheetImpl::ClearHash(void)
+static PRBool DeleteRuleCascade(nsHashKey* aKey, void* aValue, void* closure)
 {
-  if (nsnull != mRuleHash) {
-    delete mRuleHash;
-    mRuleHash = nsnull;
-    mStateSelectors.Clear();
+  delete ((RuleCascadeData*)aValue);
+  return PR_TRUE;
+}
+
+void CSSStyleSheetImpl::ClearRuleCascades(void)
+{
+  if (mMediumCascadeTable) {
+    mMediumCascadeTable->Enumerate(DeleteRuleCascade, nsnull);
+    delete mMediumCascadeTable;
+    mMediumCascadeTable = nsnull;
+  }
+  if (mParent) {
+    CSSStyleSheetImpl* parent = (CSSStyleSheetImpl*)mParent;
+    parent->ClearRuleCascades();
   }
 }
 
@@ -2023,15 +1993,117 @@ PRBool BuildStateEnum(nsISupports* aRule, void* aArray)
   return PR_TRUE;
 }
 
-void CSSStyleSheetImpl::BuildHash(void)
-{
-  NS_ASSERTION(nsnull == mRuleHash, "clear rule hash first");
-
-  mRuleHash = new RuleHash();
-  if ((nsnull != mRuleHash) && mWeightedRules.IsNotNull()) {
-    mWeightedRules->EnumerateBackwards(BuildHashEnum, mRuleHash);
-    mWeightedRules->EnumerateBackwards(BuildStateEnum, &mStateSelectors);
+struct CascadeEnumData {
+  CascadeEnumData(nsIAtom* aMedium, nsISupportsArray* aRules)
+    : mMedium(aMedium),
+      mRules(aRules)
+  {
   }
+  nsIAtom* mMedium;
+  nsISupportsArray* mRules;
+};
+
+struct WeightEnumData {
+  WeightEnumData(PRInt32 aWeight)
+    : mWeight(aWeight),
+      mIndex(0)
+  {
+  }
+  PRInt32 mWeight;
+  PRInt32 mIndex;
+};
+
+static PRBool
+FindEndOfWeight(nsISupports* aRule, void* aData)
+{
+  nsICSSStyleRule* rule = (nsICSSStyleRule*)aRule;
+  WeightEnumData* data = (WeightEnumData*)aData;
+  if (rule->GetWeight() <= data->mWeight) {
+    return PR_FALSE;  // stop loop
+  }
+  data->mIndex++;
+  return PR_TRUE;
+}
+
+static PRBool
+InsertRuleByWeight(nsISupports* aRule, void* aData)
+{
+  nsICSSStyleRule* rule = (nsICSSStyleRule*)aRule;
+  CascadeEnumData* data = (CascadeEnumData*)aData;
+
+  //XXX replace this with a binary search?
+  WeightEnumData  weight(rule->GetWeight());
+  data->mRules->EnumerateForwards(FindEndOfWeight, &weight);
+
+  data->mRules->InsertElementAt(rule, weight.mIndex);
+  return PR_TRUE;
+}
+
+nsresult
+CSSStyleSheetImpl::CascadeRulesInto(nsIAtom* aMedium, nsISupportsArray* aRules)
+{
+  if (aRules) {
+    // get child rules first
+    CSSStyleSheetImpl*  child = mFirstChild;
+    while (nsnull != child) {
+      PRBool mediumOK = PR_FALSE;
+      PRInt32 mediumCount;
+      child->GetMediumCount(mediumCount);
+      if (0 < mediumCount) {
+        PRInt32 index = 0;
+        nsIAtom* medium;
+        while ((PR_FALSE == mediumOK) && (index < mediumCount)) {
+          child->GetMediumAt(index++, medium);
+          if ((medium == nsLayoutAtoms::all) || (medium == aMedium)) {
+            mediumOK = PR_TRUE;
+          }
+          NS_RELEASE(medium);
+        }
+      }
+      else {
+        mediumOK = PR_TRUE;
+      }
+      if (mediumOK) {
+        child->CascadeRulesInto(aMedium, aRules);
+      }
+      child = child->mNext;
+    }
+    
+    if (mOrderedRules) {
+      CascadeEnumData data(aMedium, aRules);
+      mOrderedRules->EnumerateForwards(InsertRuleByWeight, &data);
+    }
+  }
+  return NS_OK;
+}
+
+RuleCascadeData* 
+CSSStyleSheetImpl::GetRuleCascade(nsIAtom* aMedium)
+{
+  AtomKey mediumKey(aMedium);
+  RuleCascadeData* cascade = nsnull;
+  if (mMediumCascadeTable) {
+    cascade = (RuleCascadeData*)mMediumCascadeTable->Get(&mediumKey);
+  }
+
+  if (! cascade) {
+    if (mOrderedRules || mFirstChild) {
+      if (! mMediumCascadeTable) {
+        mMediumCascadeTable = new nsHashtable();
+      }
+      if (mMediumCascadeTable) {
+        cascade = new RuleCascadeData();
+        if (cascade) {
+          mMediumCascadeTable->Put(&mediumKey, cascade);
+
+          CascadeRulesInto(aMedium, cascade->mWeightedRules);
+          cascade->mWeightedRules->EnumerateBackwards(BuildHashEnum, &(cascade->mRuleHash));
+          cascade->mWeightedRules->EnumerateBackwards(BuildStateEnum, &(cascade->mStateSelectors));
+        }
+      }
+    }
+  }
+  return cascade;
 }
 
   // nsIDOMStyleSheet interface
@@ -2175,15 +2247,17 @@ CSSStyleSheetImpl::InsertRule(const nsString& aRule,
       NS_RELEASE(tmp);
       NS_RELEASE(input);
       PRUint32 cnt;
-      nsresult rv = mOrderedRules->Count(&cnt);
-      if (NS_SUCCEEDED(rv)) {
-        *aReturn = cnt;
-        if (nsnull != mDocument) {
-          nsICSSStyleRule* rule;
+      if (mOrderedRules) {
+        result = mOrderedRules->Count(&cnt);
+        if (NS_SUCCEEDED(result)) {
+          *aReturn = cnt;
+          if (nsnull != mDocument) {
+            nsICSSStyleRule* rule;
 
-          rule = (nsICSSStyleRule*)mOrderedRules->ElementAt(aIndex);
-          mDocument->StyleRuleAdded(this, rule);
-          NS_IF_RELEASE(rule);
+            rule = (nsICSSStyleRule*)mOrderedRules->ElementAt(aIndex);
+            mDocument->StyleRuleAdded(this, rule);
+            NS_IF_RELEASE(rule);
+          }
         }
       }
     }
@@ -2198,14 +2272,16 @@ NS_IMETHODIMP
 CSSStyleSheetImpl::DeleteRule(PRUint32 aIndex)
 {
   // XXX TBI: handle @rule types
-  nsICSSStyleRule *rule;
+  if (mOrderedRules) {
+    nsICSSStyleRule *rule;
   
-  rule = (nsICSSStyleRule *)mOrderedRules->ElementAt(aIndex);
-  if (nsnull != rule) {
-    mOrderedRules->RemoveElementAt(aIndex);
-    mWeightedRules->RemoveElement(rule);
-    rule->SetStyleSheet(nsnull);
-    NS_RELEASE(rule);
+    rule = (nsICSSStyleRule *)mOrderedRules->ElementAt(aIndex);
+    if (nsnull != rule) {
+      ClearRuleCascades();
+      mOrderedRules->RemoveElementAt(aIndex);
+      rule->SetStyleSheet(nsnull);
+      NS_RELEASE(rule);
+    }
   }
 
   return NS_OK;
