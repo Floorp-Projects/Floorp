@@ -610,14 +610,21 @@ nsPopupSetFrame::ActivatePopup(PRBool aActivateFlag)
       content->GetDocument(*getter_AddRefs(doc));
       doc->FlushPendingNotifications();
          
-      // make sure we hide the popup.
+      // make sure we hide the popup. We can't assume that we'll have a view
+      // since we could be cleaning up after someone that didn't correctly 
+      // destroy the popup.
       nsIFrame* activeChild = GetActiveChild();
       nsIView* view = nsnull;
-      activeChild->GetView(mPresContext, &view);
-      nsCOMPtr<nsIViewManager> viewManager;
-      view->GetViewManager(*getter_AddRefs(viewManager));
-      viewManager->SetViewVisibility(view, nsViewVisibility_kHide);
-      viewManager->ResizeView(view, 0, 0);
+      if ( activeChild ) {
+        activeChild->GetView(mPresContext, &view);
+        NS_ASSERTION ( view, "View is gone, looks like someone forgot to rollup the popup!" );
+        if ( view ) {
+          nsCOMPtr<nsIViewManager> viewManager;
+          view->GetViewManager(*getter_AddRefs(viewManager));
+          viewManager->SetViewVisibility(view, nsViewVisibility_kHide);
+          viewManager->ResizeView(view, 0, 0);
+        }
+      }
     }
   }
 }
