@@ -1564,6 +1564,9 @@ nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
         || aEvent->keyval == GDK_Alt_R
         || aEvent->keyval == GDK_Meta_L
         || aEvent->keyval == GDK_Meta_R) {
+        // reset the key repeat flag so that the next keypress gets the
+        // key down event
+        mInKeyRepeat = PR_FALSE;
         return TRUE;
     }
     nsKeyEvent event(NS_KEY_PRESS, this);
