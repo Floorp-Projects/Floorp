@@ -63,38 +63,38 @@ GetElementNameForType(PRInt32 aType, PRUnichar** name)
   switch (aType) {
     case nsISOAPParameter::PARAMETER_TYPE_NULL:
     case nsISOAPParameter::PARAMETER_TYPE_VOID:
-      *name = ToNewUnicode(nsLiteralCString(kStructElementName));
+      *name = ToNewUnicode(nsDependentCString(kStructElementName));
       break;
     case nsISOAPParameter::PARAMETER_TYPE_STRING:
-      *name = ToNewUnicode(nsLiteralCString(kStringElementName));
+      *name = ToNewUnicode(nsDependentCString(kStringElementName));
       break;
     case nsISOAPParameter::PARAMETER_TYPE_BOOLEAN:
-      *name = ToNewUnicode(nsLiteralCString(kBooleanElementName));
+      *name = ToNewUnicode(nsDependentCString(kBooleanElementName));
       break;
     case nsISOAPParameter::PARAMETER_TYPE_DOUBLE:
-      *name = ToNewUnicode(nsLiteralCString(kDoubleElementName));
+      *name = ToNewUnicode(nsDependentCString(kDoubleElementName));
       break;
     case nsISOAPParameter::PARAMETER_TYPE_FLOAT:
-      *name = ToNewUnicode(nsLiteralCString(kFloatElementName));
+      *name = ToNewUnicode(nsDependentCString(kFloatElementName));
       break;
     case nsISOAPParameter::PARAMETER_TYPE_LONG:
-      *name = ToNewUnicode(nsLiteralCString(kLongElementName));
+      *name = ToNewUnicode(nsDependentCString(kLongElementName));
       break;
     case nsISOAPParameter::PARAMETER_TYPE_INT:
-      *name = ToNewUnicode(nsLiteralCString(kIntElementName));
+      *name = ToNewUnicode(nsDependentCString(kIntElementName));
       break;
     case nsISOAPParameter::PARAMETER_TYPE_SHORT:
-      *name = ToNewUnicode(nsLiteralCString(kShortElementName));
+      *name = ToNewUnicode(nsDependentCString(kShortElementName));
       break;
     case nsISOAPParameter::PARAMETER_TYPE_BYTE:
-      *name = ToNewUnicode(nsLiteralCString(kByteElementName));
+      *name = ToNewUnicode(nsDependentCString(kByteElementName));
       break;
     case nsISOAPParameter::PARAMETER_TYPE_ARRAY:
     case nsISOAPParameter::PARAMETER_TYPE_JAVASCRIPT_ARRAY:
-      *name = ToNewUnicode(nsLiteralCString(kArrayElementName));
+      *name = ToNewUnicode(nsDependentCString(kArrayElementName));
       break;
     case nsISOAPParameter::PARAMETER_TYPE_JAVASCRIPT_OBJECT:
-      *name = ToNewUnicode(nsLiteralCString(kStructElementName));
+      *name = ToNewUnicode(nsDependentCString(kStructElementName));
       break;
   }
 }
@@ -103,34 +103,34 @@ static void
 GetTypeForElementName(const PRUnichar* name, PRInt32* aType)
 {
   *aType = nsISOAPParameter::PARAMETER_TYPE_NULL;
-  if (nsLiteralString(name).Equals(NS_ConvertASCIItoUCS2(kStringElementName))) {
+  if (nsDependentString(name).Equals(NS_ConvertASCIItoUCS2(kStringElementName))) {
     *aType = nsISOAPParameter::PARAMETER_TYPE_STRING;
   }
-  else if (nsLiteralString(name).Equals(NS_ConvertASCIItoUCS2(kBooleanElementName))) {
+  else if (nsDependentString(name).Equals(NS_ConvertASCIItoUCS2(kBooleanElementName))) {
     *aType = nsISOAPParameter::PARAMETER_TYPE_BOOLEAN;
   }
-  else if (nsLiteralString(name).Equals(NS_ConvertASCIItoUCS2(kDoubleElementName))) {
+  else if (nsDependentString(name).Equals(NS_ConvertASCIItoUCS2(kDoubleElementName))) {
     *aType = nsISOAPParameter::PARAMETER_TYPE_DOUBLE;
   }
-  else if (nsLiteralString(name).Equals(NS_ConvertASCIItoUCS2(kFloatElementName))) {
+  else if (nsDependentString(name).Equals(NS_ConvertASCIItoUCS2(kFloatElementName))) {
     *aType = nsISOAPParameter::PARAMETER_TYPE_FLOAT;
   }
-  else if (nsLiteralString(name).Equals(NS_ConvertASCIItoUCS2(kLongElementName))) {
+  else if (nsDependentString(name).Equals(NS_ConvertASCIItoUCS2(kLongElementName))) {
     *aType = nsISOAPParameter::PARAMETER_TYPE_LONG;
   }
-  else if (nsLiteralString(name).Equals(NS_ConvertASCIItoUCS2(kIntElementName))) {
+  else if (nsDependentString(name).Equals(NS_ConvertASCIItoUCS2(kIntElementName))) {
     *aType = nsISOAPParameter::PARAMETER_TYPE_INT;
   }
-  else if (nsLiteralString(name).Equals(NS_ConvertASCIItoUCS2(kShortElementName))) {
+  else if (nsDependentString(name).Equals(NS_ConvertASCIItoUCS2(kShortElementName))) {
     *aType = nsISOAPParameter::PARAMETER_TYPE_SHORT;
   }
-  else if (nsLiteralString(name).Equals(NS_ConvertASCIItoUCS2(kByteElementName))) {
+  else if (nsDependentString(name).Equals(NS_ConvertASCIItoUCS2(kByteElementName))) {
     *aType = nsISOAPParameter::PARAMETER_TYPE_BYTE;
   }
-  else if (nsLiteralString(name).Equals(NS_ConvertASCIItoUCS2(kArrayElementName))) {
+  else if (nsDependentString(name).Equals(NS_ConvertASCIItoUCS2(kArrayElementName))) {
     *aType = nsISOAPParameter::PARAMETER_TYPE_ARRAY;
   }
-  else if (nsLiteralString(name).Equals(NS_ConvertASCIItoUCS2(kStructElementName))) {
+  else if (nsDependentString(name).Equals(NS_ConvertASCIItoUCS2(kStructElementName))) {
     *aType = nsISOAPParameter::PARAMETER_TYPE_JAVASCRIPT_OBJECT;
   }
 }
@@ -157,35 +157,35 @@ GetXSDTypeForType(PRInt32 aType, PRUnichar** name)
       // This will have a xsi:null attribute instead
       break;
     case nsISOAPParameter::PARAMETER_TYPE_STRING:
-      *name = ToNewUnicode(nsLiteralCString(kXSDStringName));
+      *name = ToNewUnicode(nsDependentCString(kXSDStringName));
       break;
     case nsISOAPParameter::PARAMETER_TYPE_BOOLEAN:
-      *name = ToNewUnicode(nsLiteralCString(kXSDBooleanName));
+      *name = ToNewUnicode(nsDependentCString(kXSDBooleanName));
       break;
     case nsISOAPParameter::PARAMETER_TYPE_DOUBLE:
-      *name = ToNewUnicode(nsLiteralCString(kXSDDoubleName));
+      *name = ToNewUnicode(nsDependentCString(kXSDDoubleName));
       break;
     case nsISOAPParameter::PARAMETER_TYPE_FLOAT:
-      *name = ToNewUnicode(nsLiteralCString(kXSDFloatName));
+      *name = ToNewUnicode(nsDependentCString(kXSDFloatName));
       break;
     case nsISOAPParameter::PARAMETER_TYPE_LONG:
-      *name = ToNewUnicode(nsLiteralCString(kXSDLongName));
+      *name = ToNewUnicode(nsDependentCString(kXSDLongName));
       break;
     case nsISOAPParameter::PARAMETER_TYPE_INT:
-      *name = ToNewUnicode(nsLiteralCString(kXSDIntName));
+      *name = ToNewUnicode(nsDependentCString(kXSDIntName));
       break;
     case nsISOAPParameter::PARAMETER_TYPE_SHORT:
-      *name = ToNewUnicode(nsLiteralCString(kXSDShortName));
+      *name = ToNewUnicode(nsDependentCString(kXSDShortName));
       break;
     case nsISOAPParameter::PARAMETER_TYPE_BYTE:
-      *name = ToNewUnicode(nsLiteralCString(kXSDByteName));
+      *name = ToNewUnicode(nsDependentCString(kXSDByteName));
       break;
     case nsISOAPParameter::PARAMETER_TYPE_ARRAY:
     case nsISOAPParameter::PARAMETER_TYPE_JAVASCRIPT_ARRAY:
-      *name = ToNewUnicode(nsLiteralCString(kSOAPEncArrayAttrName));
+      *name = ToNewUnicode(nsDependentCString(kSOAPEncArrayAttrName));
       break;
     case nsISOAPParameter::PARAMETER_TYPE_JAVASCRIPT_OBJECT:
-      *name = ToNewUnicode(nsLiteralCString(kXSDStructName));
+      *name = ToNewUnicode(nsDependentCString(kXSDStructName));
       break;
   }  
 }
@@ -194,37 +194,37 @@ static void
 GetTypeForXSDType(const PRUnichar* name, PRInt32* aType)
 {
   *aType = nsISOAPParameter::PARAMETER_TYPE_NULL;
-  if (nsLiteralString(name).Equals(NS_ConvertASCIItoUCS2(kXSDStringName))) {
+  if (nsDependentString(name).Equals(NS_ConvertASCIItoUCS2(kXSDStringName))) {
     *aType = nsISOAPParameter::PARAMETER_TYPE_STRING;
   }
-  else if (nsLiteralString(name).Equals(NS_ConvertASCIItoUCS2(kXSDBooleanName))) {
+  else if (nsDependentString(name).Equals(NS_ConvertASCIItoUCS2(kXSDBooleanName))) {
     *aType = nsISOAPParameter::PARAMETER_TYPE_BOOLEAN;
   }
-  else if (nsLiteralString(name).Equals(NS_ConvertASCIItoUCS2(kXSDDoubleName))) {
+  else if (nsDependentString(name).Equals(NS_ConvertASCIItoUCS2(kXSDDoubleName))) {
     *aType = nsISOAPParameter::PARAMETER_TYPE_DOUBLE;
   }
-  else if (nsLiteralString(name).Equals(NS_ConvertASCIItoUCS2(kXSDFloatName))) {
+  else if (nsDependentString(name).Equals(NS_ConvertASCIItoUCS2(kXSDFloatName))) {
     *aType = nsISOAPParameter::PARAMETER_TYPE_FLOAT;
   }
-  else if (nsLiteralString(name).Equals(NS_ConvertASCIItoUCS2(kXSDLongName))) {
+  else if (nsDependentString(name).Equals(NS_ConvertASCIItoUCS2(kXSDLongName))) {
     *aType = nsISOAPParameter::PARAMETER_TYPE_LONG;
   }
-  else if (nsLiteralString(name).Equals(NS_ConvertASCIItoUCS2(kXSDIntName))) {
+  else if (nsDependentString(name).Equals(NS_ConvertASCIItoUCS2(kXSDIntName))) {
     *aType = nsISOAPParameter::PARAMETER_TYPE_INT;
   }
-  else if (nsLiteralString(name).Equals(NS_ConvertASCIItoUCS2(kXSDShortName))) {
+  else if (nsDependentString(name).Equals(NS_ConvertASCIItoUCS2(kXSDShortName))) {
     *aType = nsISOAPParameter::PARAMETER_TYPE_SHORT;
   }
-  else if (nsLiteralString(name).Equals(NS_ConvertASCIItoUCS2(kXSDByteName))) {
+  else if (nsDependentString(name).Equals(NS_ConvertASCIItoUCS2(kXSDByteName))) {
     *aType = nsISOAPParameter::PARAMETER_TYPE_BYTE;
   }
-  else if (nsLiteralString(name).Equals(NS_ConvertASCIItoUCS2(kSOAPEncArrayAttrName))) {
+  else if (nsDependentString(name).Equals(NS_ConvertASCIItoUCS2(kSOAPEncArrayAttrName))) {
     *aType = nsISOAPParameter::PARAMETER_TYPE_ARRAY;
   }
-  else if (nsLiteralString(name).Equals(NS_ConvertASCIItoUCS2(kXSDStructName))) {
+  else if (nsDependentString(name).Equals(NS_ConvertASCIItoUCS2(kXSDStructName))) {
     *aType = nsISOAPParameter::PARAMETER_TYPE_JAVASCRIPT_OBJECT;
   }
-  else if (nsLiteralString(name).Equals(NS_ConvertASCIItoUCS2(kXSDUrTypeName))) {
+  else if (nsDependentString(name).Equals(NS_ConvertASCIItoUCS2(kXSDUrTypeName))) {
     *aType = nsISOAPParameter::PARAMETER_TYPE_UNKNOWN;
   }
 }
