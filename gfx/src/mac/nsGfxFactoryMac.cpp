@@ -48,6 +48,7 @@
 #include "nsDeviceContextMac.h"
 #include "nsRegionMac.h"
 #include "nsScriptableRegion.h"
+#include "nsNativeThemeMac.h"
 #if TARGET_CARBON
 #include "nsDeviceContextSpecX.h"
 #include "nsPrintOptionsX.h"
@@ -83,6 +84,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecFactoryMac)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontEnumeratorMac)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontList)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerMac)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeThemeMac)
 
 static NS_IMETHODIMP
 nsScriptableRegionConstructor(nsISupports* aOuter, REFNSIID aIID, void** aResult)
@@ -168,7 +170,11 @@ static nsModuleComponentInfo components[] =
   { "nsScreenManager",
     NS_SCREENMANAGER_CID,
     "@mozilla.org/gfx/screenmanager;1",
-    nsScreenManagerMacConstructor }
+    nsScreenManagerMacConstructor },
+  { "Native Theme Renderer", 
+    NS_THEMERENDERER_CID,
+    "@mozilla.org/chrome/chrome-native-theme;1", 
+    nsNativeThemeMacConstructor }
 };
 
 PR_STATIC_CALLBACK(void)
