@@ -263,7 +263,7 @@ nsFieldSetFrame::Reflow(nsIPresContext& aPresContext,
   nsMargin legendMargin;
   if (mLegendFrame) {
     nsIStyleContext* legendSC = nsnull;
-    mLegendFrame->GetStyleContext(legendSC);
+    mLegendFrame->GetStyleContext(&legendSC);
     if (legendSC) {
       const nsStyleSpacing* legendSpacing =
         (const nsStyleSpacing*)legendSC->GetStyleData(eStyleStruct_Spacing);

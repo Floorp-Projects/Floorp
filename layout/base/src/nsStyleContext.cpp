@@ -140,7 +140,7 @@ static nscoord CalcSideFor(const nsIFrame* aFrame, const nsStyleCoord& aCoord,
       aFrame->GetParent(parentFrame);  // XXX may not be direct parent...
       if (nsnull != parentFrame) {
         nsIStyleContext* parentContext;
-        parentFrame->GetStyleContext(parentContext);
+        parentFrame->GetStyleContext(&parentContext);
         if (nsnull != parentContext) {
           const nsStyleSpacing* parentSpacing = (const nsStyleSpacing*)parentContext->GetStyleData(eStyleStruct_Spacing);
           nsMargin  parentMargin;

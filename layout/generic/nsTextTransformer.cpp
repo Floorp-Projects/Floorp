@@ -61,7 +61,7 @@ nsTextTransformer::Init(/*nsTextRun& aTextRun, XXX*/
 
   // Get the frames text content
   nsIContent* content;
-  aFrame->GetContent(content);
+  aFrame->GetContent(&content);
   nsITextContent* tc;
   if (NS_OK != content->QueryInterface(kITextContentIID, (void**) &tc)) {
     NS_RELEASE(content);

@@ -1103,7 +1103,7 @@ nsTableOuterFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
   nsIFrame*         childList;
   nsIStyleContext*  kidSC;
 
-  mInnerTableFrame->GetStyleContext(kidSC);
+  mInnerTableFrame->GetStyleContext(&kidSC);
   mInnerTableFrame->CreateContinuingFrame(aPresContext, cf, kidSC, childList);
   NS_RELEASE(kidSC);
   cf->SetInitialChildList(aPresContext, nsnull, childList);

@@ -630,7 +630,12 @@ nsFormControlFrame::Reset()
 NS_IMETHODIMP
 nsFormControlFrame::GetFormContent(nsIContent*& aContent) const
 {
-  return GetContent(aContent);
+  nsIContent* content;
+  nsresult    rv;
+
+  rv = GetContent(&content);
+  aContent = content;
+  return rv;
 }
 
 NS_IMETHODIMP

@@ -592,7 +592,7 @@ NS_METHOD nsTableRowGroupFrame::PullUpChildren(nsIPresContext&      aPresContext
         // prepares it for reflow.
         nsIFrame* continuingFrame;
         nsIStyleContext* kidSC;
-        kidFrame->GetStyleContext(kidSC);
+        kidFrame->GetStyleContext(&kidSC);
         kidFrame->CreateContinuingFrame(aPresContext, this, kidSC,
                                         continuingFrame);
         NS_RELEASE(kidSC);
@@ -901,7 +901,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsIPresContext&          aPresContext,
           nsIFrame*        continuingFrame;
           nsIStyleContext* kidSC;
   
-          kidFrame->GetStyleContext(kidSC);
+          kidFrame->GetStyleContext(&kidSC);
           kidFrame->CreateContinuingFrame(aPresContext, this, kidSC, continuingFrame);
           NS_RELEASE(kidSC);
   

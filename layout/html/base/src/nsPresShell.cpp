@@ -1373,7 +1373,7 @@ FindFrameWithContent(nsIFrame* aFrame, nsIContent* aContent)
 {
   nsIContent* frameContent;
    
-  aFrame->GetContent(frameContent);
+  aFrame->GetContent(&frameContent);
   if (frameContent == aContent) {
     nsIStyleContext*  styleContext;
     nsIAtom*          pseudoTag;
@@ -1381,7 +1381,7 @@ FindFrameWithContent(nsIFrame* aFrame, nsIContent* aContent)
 
     // If it's a placeholder frame, then ignore it and keep looking for the
     // primary frame
-    aFrame->GetStyleContext(styleContext);
+    aFrame->GetStyleContext(&styleContext);
     styleContext->GetPseudoType(pseudoTag);
     if (pseudoTag == nsHTMLAtoms::placeholderPseudo) {
       isPlaceholder = PR_TRUE;
@@ -1532,7 +1532,7 @@ PresShell::HandleEvent(nsIView         *aView,
         //2. Give event to the DOM for third party and JS use.
         if (nsnull != mCurrentEventFrame && NS_OK == rv) {
           nsIContent* targetContent;
-          if (NS_OK == mCurrentEventFrame->GetContent(targetContent) && nsnull != targetContent) {
+          if (NS_OK == mCurrentEventFrame->GetContent(&targetContent) && nsnull != targetContent) {
             rv = targetContent->HandleDOMEvent(*mPresContext, (nsEvent*)aEvent, nsnull, 
                                                DOM_EVENT_INIT, aEventStatus);
             NS_RELEASE(targetContent);

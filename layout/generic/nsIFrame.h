@@ -261,7 +261,7 @@ public:
    *
    * @see nsISupports#Release()
    */
-  NS_IMETHOD  GetContent(nsIContent*& aContent) const = 0;
+  NS_IMETHOD  GetContent(nsIContent** aContent) const = 0;
 
   /**
    * Get the offsets of the frame. most will be 0,0
@@ -275,7 +275,7 @@ public:
    *
    * @see nsISupports#Release()
    */
-  NS_IMETHOD  GetStyleContext(nsIStyleContext*& aStyleContext) const = 0;
+  NS_IMETHOD  GetStyleContext(nsIStyleContext** aStyleContext) const = 0;
   NS_IMETHOD  SetStyleContext(nsIPresContext* aPresContext,
                               nsIStyleContext* aContext) = 0;
 

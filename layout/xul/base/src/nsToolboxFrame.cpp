@@ -285,7 +285,7 @@ nsToolboxFrame :: Reflow(nsIPresContext&          aPresContext,
 
   // Get the first child of the toolbox content node and the first child frame of the toolbox
   nsCOMPtr<nsIContent> toolboxContent;
-  GetContent ( *getter_AddRefs(toolboxContent) );
+  GetContent ( getter_AddRefs(toolboxContent) );
   nsCOMPtr<nsIContent> childContent;
   toolboxContent->ChildAt(0, *getter_AddRefs(childContent));
   unsigned int contentCounter = 0;
@@ -312,7 +312,7 @@ nsToolboxFrame :: Reflow(nsIPresContext&          aPresContext,
     
     // first determine if the current content node matches the current frame
     nsCOMPtr<nsIContent> currentFrameContent;
-    childFrame->GetContent(*getter_AddRefs(currentFrameContent));
+    childFrame->GetContent(getter_AddRefs(currentFrameContent));
     if ( childContent == currentFrameContent ) {
       // they are the same, so find the width/height desired by the toolbar frame.
       nsSize maxSize(aReflowState.availableWidth, aReflowState.availableHeight);

@@ -366,7 +366,7 @@ void ReflowTemp(nsIPresContext& aPresContext, nsHTMLButtonControlFrame* aFrame, 
   NS_RELEASE(cmd);
 #else
   nsIContent* content;
-  aFrame->GetContent(content);
+  aFrame->GetContent(&content);
   if (nsnull != content) {
     nsIDocument*  document;
 
@@ -714,7 +714,12 @@ nsHTMLButtonControlFrame::GetFont(nsIPresContext*        aPresContext,
 NS_IMETHODIMP
 nsHTMLButtonControlFrame::GetFormContent(nsIContent*& aContent) const
 {
-  return GetContent(aContent);
+  nsIContent* content;
+  nsresult    rv;
+
+  rv = GetContent(&content);
+  aContent = content;
+  return rv;
 }
 
 nscoord 

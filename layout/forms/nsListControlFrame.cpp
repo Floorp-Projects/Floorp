@@ -195,7 +195,7 @@ nsListControlFrame::GetFrameForPointUsing(const nsPoint& aPoint,
       tmp.MoveTo(aPoint.x - kidRect.x, aPoint.y - kidRect.y);
 
       nsIContent * content;
-      kid->GetContent(content);
+      kid->GetContent(&content);
       static NS_DEFINE_IID(kIDOMHTMLOptionElementIID, NS_IDOMHTMLOPTIONELEMENT_IID);
       nsIDOMHTMLOptionElement* oe;
       if (content && (NS_OK == content->QueryInterface(kIDOMHTMLOptionElementIID, (void**) &oe))) {
@@ -365,7 +365,7 @@ nsListControlFrame::GetOptionFromChild(nsIFrame* aParentFrame)
   aParentFrame->FirstChild(nsnull, kid);
   while (nsnull != kid) {
     nsIContent * content;
-    kid->GetContent(content);
+    kid->GetContent(&content);
     static NS_DEFINE_IID(kIDOMHTMLOptionElementIID, NS_IDOMHTMLOPTIONELEMENT_IID);
     nsIDOMHTMLOptionElement* element;
     if (content && (NS_OK == content->QueryInterface(kIDOMHTMLOptionElementIID, (void**) &element))) {
@@ -387,7 +387,12 @@ nsListControlFrame::GetOptionFromChild(nsIFrame* aParentFrame)
 NS_IMETHODIMP
 nsListControlFrame::GetFormContent(nsIContent*& aContent) const
 {
-  return GetContent(aContent);
+  nsIContent* content;
+  nsresult    rv;
+
+  rv = GetContent(&content);
+  aContent = content;
+  return rv;
 }
 
 //--------------------------------------------------------------
@@ -427,7 +432,9 @@ PRInt32 nsListControlFrame::SetContentSelected(nsIFrame *    aHitFrame,
   while (nsnull != kid) {
     if (kid == aHitFrame) {
       NS_IF_RELEASE(aHitContent);
-      kid->GetContent(aHitContent);
+      nsIContent* content;
+      kid->GetContent(&content);
+      aHitContent = content;
       aHitContent->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::kClass, (aIsSelected?kSelectedFocus:kNormal), PR_TRUE);
       return index;
     }
@@ -445,7 +452,7 @@ void nsListControlFrame::ClearSelection()
   mContentFrame->FirstChild(nsnull, kid);
   while (nsnull != kid) {
     nsIContent * content;
-    kid->GetContent(content);
+    kid->GetContent(&content);
     if (mIsFrameSelected[i]) {
       if (i != mSelectedIndex) {
         content->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::kClass, kNormal, PR_TRUE);
@@ -478,7 +485,7 @@ void nsListControlFrame::ExtendedSelection(PRInt32 aStartIndex, PRInt32 aEndInde
   mContentFrame->FirstChild(nsnull, kid);
   while (nsnull != kid) {
     nsIContent * content;
-    kid->GetContent(content);
+    kid->GetContent(&content);
     if (i == startInx) {
       startInverting = PR_TRUE;
     }
@@ -1031,7 +1038,7 @@ nsListControlFrame::AboutToDropDown()
   mContentFrame->FirstChild(nsnull, kid);
   while (nsnull != kid) {
     nsIContent * content;
-    kid->GetContent(content);
+    kid->GetContent(&content);
     if (i == mSelectedIndex) {
       mSelectedContent = content;
       mSelectedFrame   = kid;
@@ -1059,7 +1066,7 @@ nsListControlFrame::InitializeFromContent(PRBool aDoDisplay)
   mContentFrame->FirstChild(nsnull, kid);
   while (nsnull != kid) {
     nsIContent * content;
-    kid->GetContent(content);
+    kid->GetContent(&content);
 
     nsIDOMHTMLOptionElement* option = nsnull;
     nsresult result = content->QueryInterface(kIDOMHTMLOptionElementIID, (void**)&option);

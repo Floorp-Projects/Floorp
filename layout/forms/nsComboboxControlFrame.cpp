@@ -172,7 +172,11 @@ nsComboboxControlFrame::GetType(PRInt32* aType) const
 NS_IMETHODIMP
 nsComboboxControlFrame::GetFormContent(nsIContent*& aContent) const
 {
-  return GetContent(aContent);
+  nsIContent* content;
+  nsresult    rv;
+  rv = GetContent(&content);
+  aContent = content;
+  return rv;
 }
 
 //--------------------------------------------------------------

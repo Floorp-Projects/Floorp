@@ -77,7 +77,7 @@ NS_METHOD nsPageFrame::Reflow(nsIPresContext&          aPresContext,
 
       // Create a continuing child of the previous page's last child
       nsIStyleContext* kidSC;
-      prevLastChild->GetStyleContext(kidSC);
+      prevLastChild->GetStyleContext(&kidSC);
       nsIFrame* newFrame;
       nsresult rv = prevLastChild->CreateContinuingFrame(aPresContext, this,
                                                          kidSC,

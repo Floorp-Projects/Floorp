@@ -339,7 +339,7 @@ void nsFormFrame::AddFormControlFrame(nsIPresContext& aPresContext, nsIFrame& aF
   }
 
   nsIContent* iContent = nsnull;
-  aFrame.GetContent(iContent);
+  aFrame.GetContent(&iContent);
   if (nsnull != iContent) {
     nsIFormControl* formControl = nsnull;
     result = iContent->QueryInterface(kIFormControlIID, (void**)&formControl);
@@ -1173,7 +1173,7 @@ nsFormFrame::GetDisabled(nsIFrame* aChildFrame, nsIContent* aContent)
 
   nsIContent* content = aContent;
   if (nsnull == content) {
-    aChildFrame->GetContent(content);
+    aChildFrame->GetContent(&content);
   }
   if (nsnull != content) {
     nsIHTMLContent* htmlContent = nsnull;
@@ -1199,7 +1199,7 @@ nsFormFrame::GetReadonly(nsIFrame* aChildFrame, nsIContent* aContent)
 
   nsIContent* content = aContent;
   if (nsnull == content) {
-    aChildFrame->GetContent(content);
+    aChildFrame->GetContent(&content);
   }
   if (nsnull != content) {
     nsIHTMLContent* htmlContent = nsnull;
@@ -1225,7 +1225,7 @@ nsFormFrame::GetName(nsIFrame* aChildFrame, nsString& aName, nsIContent* aConten
 
   nsIContent* content = aContent;
   if (nsnull == content) {
-    aChildFrame->GetContent(content);
+    aChildFrame->GetContent(&content);
   }
   if (nsnull != content) {
     nsIHTMLContent* htmlContent = nsnull;
@@ -1254,7 +1254,7 @@ nsFormFrame::GetValue(nsIFrame* aChildFrame, nsString& aValue, nsIContent* aCont
 
   nsIContent* content = aContent;
   if (nsnull == content) {
-    aChildFrame->GetContent(content);
+    aChildFrame->GetContent(&content);
   }
   if (nsnull != content) {
     nsIHTMLContent* htmlContent = nsnull;

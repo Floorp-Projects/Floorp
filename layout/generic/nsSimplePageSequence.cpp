@@ -151,7 +151,7 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext&          aPresContext,
         // The page isn't complete and it doesn't have a next-in-flow so
         // create a continuing page
         nsIStyleContext* kidSC;
-        kidFrame->GetStyleContext(kidSC);
+        kidFrame->GetStyleContext(&kidSC);
         nsIFrame*  continuingPage;
         nsresult rv = kidFrame->CreateContinuingFrame(aPresContext, this,
                                                       kidSC, continuingPage);

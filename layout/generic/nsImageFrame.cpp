@@ -371,7 +371,7 @@ UpdateImageFrame(nsIPresContext& aPresContext, nsIFrame* aFrame,
   if (NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE & aStatus) {
     // Now that the size is available, trigger a content-changed reflow
     nsIContent* content = nsnull;
-    aFrame->GetContent(content);
+    aFrame->GetContent(&content);
     if (nsnull != content) {
       nsIDocument* document = nsnull;
       content->GetDocument(document);

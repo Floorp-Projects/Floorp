@@ -95,7 +95,7 @@ nsTreeCellFrame::Init(nsIPresContext&  aPresContext,
   {
 		// Get the display type of the row group frame and see if it's a header or body
 		nsCOMPtr<nsIStyleContext> parentContext;
-		pRowGroupFrame->GetStyleContext(*getter_AddRefs(parentContext));
+		pRowGroupFrame->GetStyleContext(getter_AddRefs(parentContext));
 		if (parentContext)
 		{
 			const nsStyleDisplay* display = (const nsStyleDisplay*)

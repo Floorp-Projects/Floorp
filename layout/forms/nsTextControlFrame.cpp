@@ -210,7 +210,7 @@ nsTextControlFrame::EnterPressed(nsIPresContext& aPresContext)
   if (mFormFrame && mFormFrame->CanSubmit(*this)) {
     nsIContent *formContent = nsnull;
 
-    mFormFrame->GetContent(formContent);
+    mFormFrame->GetContent(&formContent);
     if (nsnull != formContent) {
       nsEvent event;
       nsEventStatus status = nsEventStatus_eIgnore;

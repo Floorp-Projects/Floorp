@@ -2084,7 +2084,7 @@ nsBlockFrame::WillReflowFrame(nsBlockReflowState& aState,
   if (repairStyleContext) {
     // Update style context when appropriate
     nsIStyleContext* kidSC;
-    aFrame->GetStyleContext(kidSC);
+    aFrame->GetStyleContext(&kidSC);
     if (nsnull != kidSC) {
       nsIStyleContext* kidParentSC;
       kidParentSC = kidSC->GetParent();
@@ -2668,7 +2668,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
       // that it can compress with other block margins.
       nsIStyleContext* brSC;
       nsIPresContext& px = aState.mPresContext;
-      nsresult rv = brFrame->GetStyleContext(brSC);
+      nsresult rv = brFrame->GetStyleContext(&brSC);
       if ((NS_OK == rv) && (nsnull != brSC)) {
         const nsStyleFont* font = (const nsStyleFont*)
           brSC->GetStyleData(eStyleStruct_Font);
@@ -3129,7 +3129,7 @@ nsBlockFrame::AppendNewFrames(nsIPresContext& aPresContext,
     else {
       // Wrap the frame in a view if necessary
       nsIStyleContext* kidSC;
-      frame->GetStyleContext(kidSC);
+      frame->GetStyleContext(&kidSC);
       rv = CreateViewForFrame(aPresContext, frame, kidSC, PR_FALSE);
       NS_RELEASE(kidSC);
       if (NS_OK != rv) {
@@ -3264,7 +3264,7 @@ nsBlockFrame::InsertNewFrames(nsIPresContext& aPresContext,
     else {
       // Wrap the frame in a view if necessary
       nsIStyleContext* kidSC;
-      newFrame->GetStyleContext(kidSC);
+      newFrame->GetStyleContext(&kidSC);
       nsresult rv = CreateViewForFrame(aPresContext, newFrame, kidSC, PR_FALSE);    
       NS_RELEASE(kidSC);
       if (NS_OK != rv) {
@@ -3563,7 +3563,7 @@ IsEmptyLine(nsIPresContext& aPresContext, nsLineBox* aLine)
   nsIFrame* frame = aLine->mFirstChild;
   for (i = 0; i < n; i++) {
     nsIContent* content;
-    nsresult rv = frame->GetContent(content);
+    nsresult rv = frame->GetContent(&content);
     if (NS_FAILED(rv) || (nsnull == content)) {
       // If it doesn't have any content then this can't be an empty line
       return PR_FALSE;
