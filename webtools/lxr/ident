@@ -1,5 +1,5 @@
 #!/usr/bonsaitools/bin/perl
-# $Id: ident,v 1.6 2001/05/24 04:10:23 timeless%mac.com Exp $
+# $Id: ident,v 1.7 2003/09/21 21:07:07 timeless%mozdev.org Exp $
 
 # ident --	Look up identifiers
 #
@@ -136,7 +136,7 @@ sub ident {
 "View "
 ."<a href=\"" . $Conf->bonsaihome ."/cvslog.cgi?file=/mozilla/"
 .$fnam
-."&root=/cvsroot\">change log</a> or Blame"
+."&root=/cvsroot\">change log</a> or Blame "
 ."<a href=\"" . $Conf->bonsaihome . "/cvsblame.cgi?&file=/mozilla/"
 .$fnam
 ."&root=/cvsroot\">"
