@@ -42,7 +42,9 @@ struct nsKeyConverter nsKeycodes[] = {
   { NS_VK_CANCEL,     XK_Cancel },
   { NS_VK_BACK,       XK_BackSpace },
   { NS_VK_TAB,        XK_Tab },
-  { NS_VK_TAB,        XK_ISO_Left_Tab },
+#ifdef  XK_ISO_Left_Tab
+  { NS_VK_TAB,        XK_ISO_Left_Tab }, // SunOs 5.5.1 doesnt have it
+#endif
   { NS_VK_CLEAR,      XK_Clear },
   { NS_VK_RETURN,     XK_Return },
   { NS_VK_SHIFT,      XK_Shift_L },
