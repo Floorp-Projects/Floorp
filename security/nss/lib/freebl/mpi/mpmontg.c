@@ -29,7 +29,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the
  * GPL.
- *  $Id: mpmontg.c,v 1.4 2000/08/02 01:03:14 nelsonb%netscape.com Exp $
+ *  $Id: mpmontg.c,v 1.5 2000/08/04 19:58:20 nelsonb%netscape.com Exp $
  */
 
 /* This file implements moduluar exponentiation using Montgomery's
@@ -55,24 +55,24 @@
 #define ODD_INTS    16   /* 2 ** (WINDOW_BITS - 1) */
 
 typedef struct {
+  mp_int       N;	/* modulus N */
   mp_digit     n0prime; /* n0' = - (n0 ** -1) mod MP_RADIX */
   mp_size      b;	/* R == 2 ** b,  also b = # significant bits in N */
-  mp_int       N;	/* modulus N */
 } mp_mont_modulus;
 
 /* computes T = REDC(T), 2^b == R */
 STATIC
 mp_err s_mp_redc(mp_int *T, mp_mont_modulus *mmm)
 {
-  mp_int m;
   mp_err rv;
-  mp_digit n0prime = mmm->n0prime;
   int i;
-  int n = MP_USED(&mmm->N);
+#ifdef DEBUG
+  mp_int m;
+#endif
 
-  MP_CHECKOK( s_mp_pad(T, MP_USED(T) + n + 2) );
-  for (i = 0; i < n; ++i ) {
-    mp_digit m_i = MP_DIGIT(T, i) * n0prime;
+  MP_CHECKOK( s_mp_pad(T, MP_USED(T) + MP_USED(&mmm->N) + 2) );
+  for (i = 0; i < MP_USED(&mmm->N); ++i ) {
+    mp_digit m_i = MP_DIGIT(T, i) * mmm->n0prime;
     /* T += N * m_i * (MP_RADIX ** i); */
     MP_CHECKOK( s_mp_mul_d_add_offset(&mmm->N, m_i, T, i) );
   }
@@ -121,26 +121,21 @@ loser:
 
 /* compute n0', given n0, n0' = -(n0 ** -1) mod MP_RADIX
 **		where n0 = least significant mp_digit of N, the modulus.
+** This technique from the paper "Fast Modular Reciprocals" (unpublished)
+** by Richard Schroeppel (a.k.a. Captain Nemo).
 */ 
 STATIC
 mp_err mp_n_to_n0prime(mp_mont_modulus *mmm)
 {
   mp_digit n0    	= MP_DIGIT(&mmm->N, 0);
-  mp_digit n0inv     	= 1;
-  mp_size  i;
+  mp_digit n0inv     	= n0;
 
-#define TWO_TO_I(i) ((mp_digit)1 << (i))
-#define MOD_2_TO_I(x, i) ((x) & (mp_digit)((twoToIMinus1 << 1) - 1))
+/* 4 iterations suffice for integers up to 32 bits. */
+  n0inv *= 2 - n0 * n0inv;
+  n0inv *= 2 - n0 * n0inv;
+  n0inv *= 2 - n0 * n0inv;
+  n0inv *= 2 - n0 * n0inv;
 
-  mp_digit twoToIMinus1 = 1;
-  mp_digit xy_mod_2_to_i;
-  for (i = 2; i <= MP_DIGIT_BIT; ++i) {
-    twoToIMinus1 <<= 1;
-    xy_mod_2_to_i = MOD_2_TO_I(n0 * n0inv, i);
-    if (xy_mod_2_to_i >= twoToIMinus1) {
-      n0inv += twoToIMinus1;
-    }
-  }
   mmm->n0prime = 0 - n0inv;
   return MP_OKAY;
 }
@@ -206,10 +201,10 @@ mp_err mp_exptmod(const mp_int *inBase, const mp_int *exponent,
     MP_CHECKOK( mp_to_mont(&accum, &mmm, &accum) );
 
 #define SQUARE \
-    memset(tmp.dp, 0, tmp.alloc * sizeof(mp_digit)); \
     MP_CHECKOK( mp_sqr(&accum, &tmp) );\
     mp_exch(&accum, &tmp); \
     MP_CHECKOK( s_mp_redc(&accum, &mmm) )
+
 #define MUL(x) \
     MP_CHECKOK( mp_mul(&accum, oddPowers + (x), &tmp) ); \
     mp_exch(&accum, &tmp); \
