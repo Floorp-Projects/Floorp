@@ -1061,7 +1061,6 @@ sub BuildClientDist()
     InstallFromManifest(":mozilla:editor:txmgr:idl:MANIFEST",                      "$distdirectory:idl:");
     InstallFromManifest(":mozilla:editor:public:MANIFEST",                         "$distdirectory:editor:");
     InstallFromManifest(":mozilla:editor:txmgr:public:MANIFEST",                   "$distdirectory:editor:txmgr");
-    InstallFromManifest(":mozilla:editor:txtsvc:public:MANIFEST_IDL",              "$distdirectory:idl:");
     InstallFromManifest(":mozilla:editor:txtsvc:public:MANIFEST",                  "$distdirectory:editor:txtsvc");
     
     #SILENTDL
