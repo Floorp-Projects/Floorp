@@ -20,6 +20,7 @@
 #define nsIFileWidget_h__
 
 #include "nsString.h"
+#include "nsFileSpec.h"
 
 // {F8030015-C342-11d1-97F0-00609703C14E}
 #define NS_IFILEWIDGET_IID \
@@ -34,7 +35,10 @@ enum nsMode {
         /// Load a file or directory
       eMode_load,
         /// Save a file or directory
-      eMode_save };
+      eMode_save,
+        /// Select a fodler/directory
+      eMode_getfolder
+      };
 
 /**
  * File selector widget.
@@ -94,6 +98,14 @@ public:
   */
   
   NS_IMETHOD GetFile(nsString& aFile) = 0;
+ 
+ /**
+  * Get the nsFileSpec for the file or directory.
+  *
+  * @param aFile on exit it contains the file or directory selected
+  */
+  
+  NS_IMETHOD GetFile(nsFileSpec& aFile) = 0;
 
 
  /**
