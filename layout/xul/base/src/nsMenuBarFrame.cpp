@@ -19,7 +19,7 @@
  *
  * Original Author: David W. Hyatt (hyatt@netscape.com)
  *
- * Contributor(s): 
+ * Contributor(s): Dan Rosen <dr@netscape.com>
  */
 
 #include "nsMenuListener.h"
@@ -79,13 +79,13 @@ nsMenuBarFrame::Release(void)
 //
 NS_INTERFACE_MAP_BEGIN(nsMenuBarFrame)
   NS_INTERFACE_MAP_ENTRY(nsIMenuParent)
-NS_INTERFACE_MAP_END_INHERITING(nsToolbarFrame)
+NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
 
 
 //
 // nsMenuBarFrame cntr
 //
-nsMenuBarFrame::nsMenuBarFrame(nsIPresShell* aShell):nsToolbarFrame(aShell),
+nsMenuBarFrame::nsMenuBarFrame(nsIPresShell* aShell):nsBoxFrame(aShell),
 mMenuBarListener(nsnull), mKeyboardNavigator(nsnull),
 mIsActive(PR_FALSE), mTarget(nsnull)
 {
@@ -110,7 +110,7 @@ nsMenuBarFrame::Init(nsIPresContext*  aPresContext,
                      nsIStyleContext* aContext,
                      nsIFrame*        aPrevInFlow)
 {
-  nsresult  rv = nsToolbarFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+  nsresult  rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
   // XXX hack
   mPresContext = aPresContext;
@@ -680,5 +680,5 @@ nsMenuBarFrame::Destroy(nsIPresContext* aPresContext)
 
   NS_IF_RELEASE(mMenuBarListener);
 
-  return nsToolbarFrame::Destroy(aPresContext);
+  return nsBoxFrame::Destroy(aPresContext);
 }

@@ -74,9 +74,6 @@ CPPSRCS		= \
 		nsBoxFrame.cpp \
 		nsProgressMeterFrame.cpp \
 		nsTitledButtonFrame.cpp \
-		nsToolbarFrame.cpp \
-		nsToolbarDragListener.cpp \
-		nsToolboxFrame.cpp \
 		nsTreeIndentationFrame.cpp \
                 nsTreeItemDragCapturer.cpp \
                 nsSpinnerFrame.cpp \
