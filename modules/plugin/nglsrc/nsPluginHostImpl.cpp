@@ -52,6 +52,10 @@
 #include "nsIProgressEventSink.h"
 #include "nsIDocument.h"
 
+
+#if MOZ_NEW_CACHE
+#include "nsICachingChannel.h"
+#endif
 // Friggin' X11 has to "#define None". Lame!
 #ifdef None
 #undef None
@@ -1282,6 +1286,18 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request, nsISupports* aCo
   if (!channel)
       return NS_ERROR_FAILURE;
 
+#if MOZ_NEW_CACHE
+    nsCOMPtr<nsICachingChannel> cacheChannel = do_QueryInterface(channel);
+    if (cacheChannel) {
+        rv = cacheChannel->SetCacheAsFile(PR_TRUE);
+        if (NS_FAILED(rv)) {
+           // FIX: Cache must be disabled.  We should try to stream this file
+           // to disk ourselves otherwise OnFileAvailable will never be fired.
+           NS_ASSERTION(PR_FALSE, "No Disk Cache Aval.  Some plugins wont work.");
+        }
+    }
+#endif
+
   char* aContentType = nsnull;
   rv = channel->GetContentType(&aContentType);
   if (NS_FAILED(rv)) return rv;
@@ -1439,11 +1455,16 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopRequest(nsIRequest *request,
   {
     char* urlString;
     nsCOMPtr<nsIFile> localFile;
+
+#if MOZ_NEW_CACHE
+    nsCOMPtr<nsICachingChannel> cacheChannel = do_QueryInterface(channel);
+    if (cacheChannel)
+        rv = cacheChannel->GetCacheFile(getter_AddRefs(localFile));
+#else
     nsCOMPtr<nsIStreamAsFile> streamAsFile = do_QueryInterface(channel);
-    
     if (streamAsFile)
         rv = streamAsFile->GetFile(getter_AddRefs(localFile));
-    
+#endif
     if (NS_SUCCEEDED(rv) && localFile)
     {
       char* pathAndFilename;
