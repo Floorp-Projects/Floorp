@@ -29,18 +29,18 @@
 
 #define BASE_INDENT 3
 
-static char *type_array[20] = {"int8", "int16", "int32", "int64",
+static char *type_array[18] = {"int8", "int16", "int32", "int64",
                                "uint8", "uint16", "uint32", "uint64",
                                "float", "double", "boolean", "char",
                                "wchar_t", "void", "reserved", "reserved",
-                               "reserved", "reserved", "Interface *", 
-                               "InterfaceIs *"};
+                               "reserved", "reserved"};
 
-static char *ptype_array[18] = {"int8 *", "int16 *", "int32 *", "int64 *",
+static char *ptype_array[20] = {"int8 *", "int16 *", "int32 *", "int64 *",
                                 "uint8 *", "uint16 *", "uint32 *", "uint64 *",
                                 "float *", "double *", "boolean *", "char *",
                                 "wchar_t *", "void *", "nsIID *", "bstr",
-                                "string", "wstring"};
+                                "string", "wstring", "Interface *", 
+                                "InterfaceIs *"};
 
 PRBool param_problems = PR_FALSE;
 
