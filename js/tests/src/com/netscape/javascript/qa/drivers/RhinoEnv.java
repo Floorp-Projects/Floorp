@@ -3,7 +3,7 @@ package com.netscape.javascript.qa.drivers;
 import java.io.*;
 import com.netscape.javascript.*;
 import org.mozilla.javascript.*;
-import org.mozilla.javascript.tools.shell.Main;
+import org.mozilla.javascript.tools.shell.*;
 
 /**
         This class creates a javax.javascript.Context, which evaluates
@@ -24,7 +24,7 @@ import org.mozilla.javascript.tools.shell.Main;
         
 */
 public class RhinoEnv implements TestEnvironment {
-    public Main global;
+    public Global global;
     Object cx;
     Object result; 
     TestDriver driver;
@@ -82,7 +82,7 @@ public class RhinoEnv implements TestEnvironment {
         cx = new Context();
         ((Context) cx).enter();
 
-        global = new Main();
+        global = new Global();
         ((Context) cx).initStandardObjects(global);
 
         String[] names = { "print", "quit", "version", "load", "help",

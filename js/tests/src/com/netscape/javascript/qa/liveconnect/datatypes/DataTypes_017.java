@@ -75,21 +75,15 @@ public class DataTypes_017 extends LiveConnectTest {
      *
      */
      
-	public void	executeTest() {
-		for	( int i	= 0; i < jsVals.length;	i++	) {
-
-			doSetterTest( jsVals[i],
-			              "dt.setDouble",
-						  "dt.getDouble",
-						  "dt.PUB_DOUBLE",
-						  
-						  ( new Double(jsVals[i]).doubleValue() > Double.MAX_VALUE 
-						    ? EXCEPTION
-						    : ( new Double(jsVals[i]).doubleValue() < Double.MIN_VALUE
-						      ? EXCEPTION
-						      : new Double( jsVals[i] )
-						      )
-						  ));
+    public void	executeTest() {
+        for ( int i = 0; i < jsVals.length; i++ ) {
+            doSetterTest(jsVals[i],
+                         "dt.setDouble", "dt.getDouble", "dt.PUB_DOUBLE",
+                         (new Double(jsVals[i]).doubleValue() > Double.MAX_VALUE 
+                          ? (Object) EXCEPTION
+                          : (new Double(jsVals[i]).doubleValue() < Double.MIN_VALUE
+                             ? (Object) EXCEPTION : new Double( jsVals[i] ))
+                          ));
 						  
 /*
 			doSetterTest( "dt.setByte",
@@ -149,63 +143,70 @@ public class DataTypes_017 extends LiveConnectTest {
 	 *	@param eResult	expected result, which should be of	some Number	type
 	 */
 
-	public void	doSetterTest( String jsValue, String setter, String	getter,
-								String field, Object eResult )
-	{
-		String setMethod = setter +"(" + jsValue +");";
-		String getMethod = getter +	"();";
-		String setterResult = "No exception thrown";
-		Double getterResult = null;
-		Double fieldResult = null;
-		
-		Object expectedResult = null;
-		
-		if ( eResult.getClass().equals(Class.forName("java.lang.String")) ) {
-		    try {
-		        global.eval( setMethod );
+    public void	doSetterTest(String jsValue, String setter, String getter,
+                             String field, Object eResult )
+    {
+        String setMethod = setter +"(" + jsValue +");";
+        String getMethod = getter +	"();";
+        String setterResult = "No exception thrown";
+        Double getterResult = null;
+        Double fieldResult = null;
+        Object expectedResult = null;
+        boolean eq = false;
+        
+        try {
+            eq = eResult.getClass().equals(Class.forName("java.lang.String"));
+        }
+        catch (ClassNotFoundException e) {
+            addTestCase (setMethod + " driver error.",
+                         "very", "bad", file.exception);
+        }
+        
+        if (eq) {
+            try {
+                global.eval( setMethod );
             } catch ( Exception e ) {
                 setterResult = EXCEPTION;
                 file.exception = e.toString();
                 e.printStackTrace();
             } finally {
-                addTestCase(
-                    setMethod +" should throw a JSException",
-                    EXCEPTION,
-                    setterResult,
-                    file.exception );
+                addTestCase(setMethod +" should throw a JSException",
+                            EXCEPTION,
+                            setterResult,
+                            file.exception );
             }
-		} else {    
+        } else {    
 		
-		    try	{
-			    // From	JavaScript,	call the setter
-			    global.eval( setMethod );
+            try	{
+                // From	JavaScript,	call the setter
+                global.eval( setMethod );
+                
+                // From	JavaScript,	call the getter
+                getterResult = (Double)	global.eval( getMethod );
+                
+                // From	JavaSript, access the field
+                fieldResult	= (Double) global.eval(	field );
+                
+            } catch	( Exception	e )	{
+                e.printStackTrace();
+                file.exception = e.toString();
+            } finally {
+                addTestCase("[value: " + getterResult +"; expected:	" +
+                            expectedResult +"] "+ setMethod + getMethod +
+                            "( " + expectedResult + ").equals(" + 
+                            getterResult +")", "true",
+                            expectedResult.equals(getterResult)	+ "",
+                            file.exception);
 
-			    // From	JavaScript,	call the getter
-			    getterResult = (Double)	global.eval( getMethod );
-
-			    // From	JavaSript, access the field
-			    fieldResult	= (Double) global.eval(	field );
-
-		    } catch	( Exception	e )	{
-			    e.printStackTrace();
-			    file.exception = e.toString();
-		    } finally {
-    		    addTestCase(
-	    		    "[value: " + getterResult +"; expected:	" +	expectedResult +"] "+
-		    	    setMethod +	getMethod +	"( " + expectedResult +").equals(" + getterResult +")",
-			        "true",
-			        expectedResult.equals(getterResult)	+"",
-			        file.exception );
-
-		        addTestCase(
-			        "[value: " + fieldResult +"; expected: " + expectedResult +"] "+
-			        setMethod +	field +"; (" + expectedResult +").equals(" + fieldResult +")",
-			        "true",
-			        expectedResult.equals(fieldResult) +"",
-			        file.exception );
-	        }
+                addTestCase("[value: " + fieldResult + "; expected: " +
+                            expectedResult + "] " + setMethod + field +
+                            "; (" + expectedResult +").equals(" +
+                            fieldResult +")", "true",
+                            expectedResult.equals(fieldResult) +"",
+                            file.exception );
+            }
         }   
-	}
+    }
 	
     String EXCEPTION = "JSException expected";
 }
