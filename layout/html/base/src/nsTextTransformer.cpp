@@ -165,6 +165,8 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
                                PRBool aForLineBreak)
 {
   NS_PRECONDITION(mOffset <= mContentLength, "bad offset");
+  NS_PRECONDITION(((nsnull != mLineBreaker)||(!aForLineBreak)), "null in line breaker");
+  NS_PRECONDITION(((nsnull != mWordBreaker)||( aForLineBreak)), "null in word breaker");
 
   // See if the content has been exhausted
   if (mOffset == mContentLength) {
@@ -405,6 +407,8 @@ nsTextTransformer::GetPrevWord(PRBool aInWord,
                                PRBool aForLineBreak)
 {
   NS_PRECONDITION(mOffset <= mContentLength, "bad offset");
+  NS_PRECONDITION(((nsnull != mLineBreaker)||(!aForLineBreak)), "null in line breaker");
+  NS_PRECONDITION(((nsnull != mWordBreaker)||( aForLineBreak)), "null in word breaker");
 
   // See if the content has been exhausted
   if (mOffset == 0) {
