@@ -68,6 +68,7 @@
 #include "nsIStreamIO.h"
 #include "nsIPipe.h"
 #include "nsIProtocolHandler.h"
+#include "nsIFileProtocolHandler.h"
 #include "nsIStringStream.h"
 #include "nsILocalFile.h"
 #include "nsIFileStreams.h"
@@ -763,31 +764,45 @@ NS_NewProxyInfo(const char* type, const char* host, PRInt32 port, nsIProxyInfo* 
 }
 
 inline nsresult
-NS_GetFileFromURLSpec(const nsACString &inURL, nsIFile **result,
-                      nsIIOService *ioService=nsnull)
+NS_GetFileProtocolHandler(nsIFileProtocolHandler **result,
+                          nsIIOService *ioService=nsnull)
 {
+    nsresult rv;
+
     nsCOMPtr<nsIIOService> serv;
     if (ioService == nsnull) {
-        nsresult rv;
         serv = do_GetIOService(&rv);
         if (NS_FAILED(rv)) return rv;
         ioService = serv.get();
     }
-    return ioService->GetFileFromURLSpec(inURL, result);
+
+    nsCOMPtr<nsIProtocolHandler> handler;
+    rv = ioService->GetProtocolHandler("file", getter_AddRefs(handler));
+    if (NS_FAILED(rv)) return rv;
+
+    return CallQueryInterface(handler, result);
+}
+
+inline nsresult
+NS_GetFileFromURLSpec(const nsACString &inURL, nsIFile **result,
+                      nsIIOService *ioService=nsnull)
+{
+    nsCOMPtr<nsIFileProtocolHandler> fileHandler;
+    nsresult rv = NS_GetFileProtocolHandler(getter_AddRefs(fileHandler), ioService);
+    if (NS_FAILED(rv)) return rv;
+
+    return fileHandler->GetFileFromURLSpec(inURL, result);
 }
 
 inline nsresult
 NS_GetURLSpecFromFile(nsIFile* aFile, nsACString &aUrl,
                       nsIIOService *ioService=nsnull)
 {
-    nsCOMPtr<nsIIOService> serv;
-    if (ioService == nsnull) {
-        nsresult rv;
-        serv = do_GetIOService(&rv);
-        if (NS_FAILED(rv)) return rv;
-        ioService = serv.get();
-    }
-    return ioService->GetURLSpecFromFile(aFile, aUrl);
+    nsCOMPtr<nsIFileProtocolHandler> fileHandler;
+    nsresult rv = NS_GetFileProtocolHandler(getter_AddRefs(fileHandler), ioService);
+    if (NS_FAILED(rv)) return rv;
+
+    return fileHandler->GetURLSpecFromFile(aFile, aUrl);
 }
 
 inline nsresult

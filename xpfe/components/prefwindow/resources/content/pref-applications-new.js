@@ -99,8 +99,9 @@ function onOK()
   var file = fileLocator.get(mimeTypes, Components.interfaces.nsIFile);
   
   var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
+  var fileHandler = ioService.getProtocolHandler("file").QueryInterface(Components.interfaces.nsIFileProtocolHandler);
   
-  gDS = gRDF.GetDataSource(ioService.getURLSpecFromFile(file));
+  gDS = gRDF.GetDataSource(fileHandler.getURLSpecFromFile(file));
 
   gMIMEField.value = gMIMEField.value.toLowerCase();
 	

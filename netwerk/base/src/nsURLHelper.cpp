@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Darin Fisher <darin@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,22 +37,178 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsURLHelper.h"
-#include "prprf.h"
-#include "nsCRT.h"
-#include "nsMemory.h"
+#include "nsIServiceManager.h"
 #include "nsIIOService.h"
+#include "nsIURLParser.h"
 #include "nsIURI.h"
+#include "nsMemory.h"
 #include "nsEscape.h"
+#include "nsCOMPtr.h"
+#include "nsCRT.h"
+#include "nsNetCID.h"
 #include "netCore.h"
+#include "prprf.h"
 
 #if defined(XP_WIN)
 #include <windows.h> // ::IsDBCSLeadByte need
 #endif
 
+//----------------------------------------------------------------------------
+// Init/Shutdown
+//----------------------------------------------------------------------------
+
+static PRBool gInitialized = PR_FALSE;
+static nsIURLParser *gNoAuthURLParser = nsnull;
+static nsIURLParser *gAuthURLParser = nsnull;
+static nsIURLParser *gStdURLParser = nsnull;
+
+static void
+InitGlobals()
+{
+    nsCOMPtr<nsIURLParser> parser;
+
+    parser = do_GetService(NS_NOAUTHURLPARSER_CONTRACTID);
+    NS_ASSERTION(parser, "failed getting 'noauth' url parser");
+    if (parser) {
+        gNoAuthURLParser = parser.get();
+        NS_ADDREF(gNoAuthURLParser);
+    }
+
+    parser = do_GetService(NS_AUTHURLPARSER_CONTRACTID);
+    NS_ASSERTION(parser, "failed getting 'auth' url parser");
+    if (parser) {
+        gAuthURLParser = parser.get();
+        NS_ADDREF(gAuthURLParser);
+    }
+
+    parser = do_GetService(NS_STDURLPARSER_CONTRACTID);
+    NS_ASSERTION(parser, "failed getting 'std' url parser");
+    if (parser) {
+        gStdURLParser = parser.get();
+        NS_ADDREF(gStdURLParser);
+    }
+
+    gInitialized = PR_TRUE;
+}
+
+void
+net_ShutdownURLHelper()
+{
+    if (gInitialized) {
+        NS_IF_RELEASE(gNoAuthURLParser);
+        NS_IF_RELEASE(gAuthURLParser);
+        NS_IF_RELEASE(gStdURLParser);
+        gInitialized = PR_FALSE;
+    }
+}
+
+//----------------------------------------------------------------------------
+// nsIURLParser getters
+//----------------------------------------------------------------------------
+
+nsIURLParser *
+net_GetAuthURLParser()
+{
+    if (!gInitialized)
+        InitGlobals();
+    return gAuthURLParser;
+}
+
+nsIURLParser *
+net_GetNoAuthURLParser()
+{
+    if (!gInitialized)
+        InitGlobals();
+    return gNoAuthURLParser;
+}
+
+nsIURLParser *
+net_GetStdURLParser()
+{
+    if (!gInitialized)
+        InitGlobals();
+    return gStdURLParser;
+}
+
+//----------------------------------------------------------------------------
+// file:// URL parsing
+//----------------------------------------------------------------------------
+
+nsresult
+net_ParseFileURL(const nsACString &inURL,
+                 nsACString &outDirectory,
+                 nsACString &outFileBaseName,
+                 nsACString &outFileExtension)
+{
+    nsresult rv;
+
+    outDirectory.Truncate();
+    outFileBaseName.Truncate();
+    outFileExtension.Truncate();
+
+    // XXX optimization: no need to copy scheme
+	PRUint32 schemeBeg, schemeEnd;
+    rv = net_ExtractURLScheme(inURL, &schemeBeg, &schemeEnd, nsnull);
+    if (NS_FAILED(rv)) return rv;
+
+    if (Substring(inURL, schemeBeg, schemeBeg + schemeEnd) != NS_LITERAL_CSTRING("file")) {
+        NS_ERROR("must be a file:// url");
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    const nsPromiseFlatCString &flatURL = PromiseFlatCString(inURL);
+    const char *url = flatURL.get();
+    
+    nsIURLParser *parser = net_GetNoAuthURLParser();
+    NS_ENSURE_TRUE(parser, NS_ERROR_UNEXPECTED);
+
+    PRUint32 pathPos, filepathPos, directoryPos, basenamePos, extensionPos;
+    PRInt32 pathLen, filepathLen, directoryLen, basenameLen, extensionLen;
+
+    // invoke the parser to extract the URL path
+    rv = parser->ParseURL(url, flatURL.Length(),
+                          nsnull, nsnull, // dont care about scheme
+                          nsnull, nsnull, // dont care about authority
+                          &pathPos, &pathLen);
+    if (NS_FAILED(rv)) return rv;
+
+    // invoke the parser to extract filepath from the path
+    rv = parser->ParsePath(url + pathPos, pathLen,
+                           &filepathPos, &filepathLen,
+                           nsnull, nsnull,  // dont care about param
+                           nsnull, nsnull,  // dont care about query
+                           nsnull, nsnull); // dont care about ref
+    if (NS_FAILED(rv)) return rv;
+
+    filepathPos += pathPos;
+
+    // invoke the parser to extract the directory and filename from filepath
+    rv = parser->ParseFilePath(url + filepathPos, filepathLen,
+                               &directoryPos, &directoryLen,
+                               &basenamePos, &basenameLen,
+                               &extensionPos, &extensionLen);
+    if (NS_FAILED(rv)) return rv;
+
+    if (directoryLen > 0)
+        outDirectory = Substring(inURL, filepathPos + directoryPos, directoryLen);
+    if (basenameLen > 0)
+        outFileBaseName = Substring(inURL, filepathPos + basenamePos, basenameLen);
+    if (extensionLen > 0)
+        outFileExtension = Substring(inURL, filepathPos + extensionPos, extensionLen);
+    // since we are using a no-auth url parser, there will never be a host
+    // XXX not strictly true... file://localhost/foo/bar.html is a valid URL
+
+    return NS_OK;
+}
+
+//----------------------------------------------------------------------------
+// path manipulation functions
+//----------------------------------------------------------------------------
+
 // Replace all /./ with a / while resolving relative URLs
 // But only till #? 
 void 
-CoalesceDirsRel(char* io_Path)
+net_CoalesceDirsRel(char* io_Path)
 {
     /* Stolen from the old netlib's mkparse.c.
      *
@@ -125,7 +282,7 @@ CoalesceDirsRel(char* io_Path)
 // Replace all /./ with a / while resolving absolute URLs
 // But only till #? 
 void 
-CoalesceDirsAbs(char* io_Path)
+net_CoalesceDirsAbs(char* io_Path)
 {
     /* Stolen from the old netlib's mkparse.c.
      *
@@ -214,97 +371,10 @@ CoalesceDirsAbs(char* io_Path)
         *(urlPtr-1) = '\0';
 }
 
-static inline
-void ToLower(char &c)
-{
-    if ((unsigned)(c - 'A') <= (unsigned)('Z' - 'A'))
-        c += 'a' - 'A';
-}
-
-void
-ToLowerCase(char *str, PRUint32 length)
-{
-    for (char *end = str + length; str < end; ++str)
-        ToLower(*str);
-}
-
-void
-ToLowerCase(char *str)
-{
-    for (; *str; ++str)
-        ToLower(*str);
-}
-
-/* Extract URI-Scheme if possible */
-nsresult ExtractURLScheme(const nsACString &inURI, PRUint32 *startPos, 
-                          PRUint32 *endPos, nsACString *scheme)
-{
-    // search for something up to a colon, and call it the scheme
-    const nsPromiseFlatCString flatURI( PromiseFlatCString(inURI) );
-    const char* uri_start = flatURI.get();
-    const char* uri = uri_start;
-
-    // skip leading white space
-    while (nsCRT::IsAsciiSpace(*uri))
-        uri++;
-
-    PRUint32 start = uri - uri_start;
-    if (startPos) {
-        *startPos = start;
-    }
-
-    PRUint32 length = 0;
-    char c;
-    while ((c = *uri++) != '\0') {
-        // First char must be Alpha
-        if (length == 0 && nsCRT::IsAsciiAlpha(c)) {
-            length++;
-        } 
-        // Next chars can be alpha + digit + some special chars
-        else if (length > 0 && (nsCRT::IsAsciiAlpha(c) || 
-                 nsCRT::IsAsciiDigit(c) || c == '+' || 
-                 c == '.' || c == '-')) {
-            length++;
-        }
-        // stop if colon reached but not as first char
-        else if (c == ':' && length > 0) {
-            if (endPos) {
-                *endPos = start + length + 1;
-            }
-
-            if (scheme)
-                scheme->Assign(Substring(inURI, start, length));
-            return NS_OK;
-        }
-        else 
-            break;
-    }
-    return NS_ERROR_MALFORMED_URI;
-}
-
-PRBool
-IsValidScheme(const char *scheme, PRUint32 schemeLen)
-{
-    // first char much be alpha
-    if (!nsCRT::IsAsciiAlpha(*scheme))
-        return PR_FALSE;
-    
-    for (; schemeLen && *scheme; ++scheme, --schemeLen) {
-        if (!(nsCRT::IsAsciiAlpha(*scheme) ||
-              nsCRT::IsAsciiDigit(*scheme) ||
-              *scheme == '+' ||
-              *scheme == '.' ||
-              *scheme == '-'))
-            return PR_FALSE;
-    }
-
-    return PR_TRUE;
-}
-
 nsresult
-ResolveRelativePath(const nsACString &relativePath,
-                    const nsACString &basePath,
-                    nsACString &result)
+net_ResolveRelativePath(const nsACString &relativePath,
+                        const nsACString &basePath,
+                        nsACString &result)
 {
     nsCAutoString name;
     nsCAutoString path(basePath);
@@ -369,4 +439,102 @@ ResolveRelativePath(const nsACString &relativePath,
 
     result = path;
     return NS_OK;
+}
+
+//----------------------------------------------------------------------------
+// scheme fu
+//----------------------------------------------------------------------------
+
+/* Extract URI-Scheme if possible */
+nsresult
+net_ExtractURLScheme(const nsACString &inURI,
+                     PRUint32 *startPos, 
+                     PRUint32 *endPos,
+                     nsACString *scheme)
+{
+    // search for something up to a colon, and call it the scheme
+    const nsPromiseFlatCString flatURI( PromiseFlatCString(inURI) );
+    const char* uri_start = flatURI.get();
+    const char* uri = uri_start;
+
+    // skip leading white space
+    while (nsCRT::IsAsciiSpace(*uri))
+        uri++;
+
+    PRUint32 start = uri - uri_start;
+    if (startPos) {
+        *startPos = start;
+    }
+
+    PRUint32 length = 0;
+    char c;
+    while ((c = *uri++) != '\0') {
+        // First char must be Alpha
+        if (length == 0 && nsCRT::IsAsciiAlpha(c)) {
+            length++;
+        } 
+        // Next chars can be alpha + digit + some special chars
+        else if (length > 0 && (nsCRT::IsAsciiAlpha(c) || 
+                 nsCRT::IsAsciiDigit(c) || c == '+' || 
+                 c == '.' || c == '-')) {
+            length++;
+        }
+        // stop if colon reached but not as first char
+        else if (c == ':' && length > 0) {
+            if (endPos) {
+                *endPos = start + length;
+            }
+
+            if (scheme)
+                scheme->Assign(Substring(inURI, start, length));
+            return NS_OK;
+        }
+        else 
+            break;
+    }
+    return NS_ERROR_MALFORMED_URI;
+}
+
+PRBool
+net_IsValidScheme(const char *scheme, PRUint32 schemeLen)
+{
+    // first char much be alpha
+    if (!nsCRT::IsAsciiAlpha(*scheme))
+        return PR_FALSE;
+    
+    for (; schemeLen && *scheme; ++scheme, --schemeLen) {
+        if (!(nsCRT::IsAsciiAlpha(*scheme) ||
+              nsCRT::IsAsciiDigit(*scheme) ||
+              *scheme == '+' ||
+              *scheme == '.' ||
+              *scheme == '-'))
+            return PR_FALSE;
+    }
+
+    return PR_TRUE;
+}
+
+//----------------------------------------------------------------------------
+// miscellaneous (i.e., stuff that should really be elsewhere)
+//----------------------------------------------------------------------------
+
+static inline
+void ToLower(char &c)
+{
+    if ((unsigned)(c - 'A') <= (unsigned)('Z' - 'A'))
+        c += 'a' - 'A';
+}
+
+void
+net_ToLowerCase(char *str, PRUint32 length)
+{
+    for (char *end = str + length; str < end; ++str)
+        ToLower(*str);
+}
+
+void
+net_ToLowerCase(char *str)
+{
+    for (; *str; ++str)
+        ToLower(*str);
 }

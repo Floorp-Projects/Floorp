@@ -550,7 +550,8 @@ nsHelperAppDialog.prototype = {
         // Get the data source; load it synchronously if it must be
         // initialized.
         var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
-        var fileurl = ioService.getURLSpecFromFile(file);
+        var fileHandler = ioService.getProtocolHandler("file").QueryInterface(Components.interfaces.nsIFileProtocolHandler);
+        var fileurl = fileHandler.getURLSpecFromFile(file);
         
         var ds = rdf.GetDataSourceBlocking( fileurl );
 

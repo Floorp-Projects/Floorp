@@ -62,6 +62,7 @@ static PRLogModuleInfo* gLog;
 #include "nsCollationCID.h"
 #include "nsIPlatformCharset.h"
 #include "nsReadableUtils.h"
+#include "nsURLHelper.h"
 #include "nsNetUtil.h"
 #include "nsCRT.h"
 
@@ -216,7 +217,7 @@ nsDirectoryIndexStream::Init(nsIFile* aDir)
 
     mBuf.Append("300: ");
     nsCAutoString url;
-    rv = NS_GetURLSpecFromFile(mDir, url);
+    rv = net_GetURLSpecFromFile(mDir, url);
     if (NS_FAILED(rv)) return rv;
     mBuf.Append(url);
     mBuf.Append('\n');

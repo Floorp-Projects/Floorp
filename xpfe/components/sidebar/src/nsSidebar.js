@@ -429,7 +429,8 @@ function getSidebarDatasourceURI(panels_file_id)
         }
 
         var io_service = Components.classes[IO_SERV_CONTRACTID].getService(Components.interfaces.nsIIOService);
-        var sidebar_uri = io_service.getURLSpecFromFile(sidebar_file);
+        var file_handler = io_service.getProtocolHandler("file").QueryInterface(Components.interfaces.nsIFileProtocolHandler);
+        var sidebar_uri = file_handler.getURLSpecFromFile(sidebar_file);
         debug("sidebar uri is " + sidebar_uri);
         return sidebar_uri;
     }

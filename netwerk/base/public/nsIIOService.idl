@@ -56,10 +56,6 @@ interface nsIFile;
 [scriptable, uuid(bddeda3f-9020-4d12-8c70-984ee9f7935e)]
 interface nsIIOService : nsISupports
 {
-    /*************************************************************************
-     * Protocol handler utilities
-     */
-
     /**
      * Returns a protocol handler for a given URI scheme.
      *
@@ -133,23 +129,13 @@ interface nsIIOService : nsISupports
      */
     boolean allowPort(in long aPort, in string aScheme);
 
-
-    /*************************************************************************
-     * URL parsing utilities
-     *
-     * The set of methods provided here is intentionally limited.  Most of
-     * Necko's URL parsing functionality is provided via nsIURI.  This is
-     * done to ensure a common point of access to URL parsing, which is
-     * protocol dependent.  Do not try to parse a random URL string as the
-     * result will likely differ (perhaps only in some subtle way) from the
-     * value of the corresponding nsIURI attribute.  Violating this rule
-     * may make your code vulnerable to various kinds of security exploits.
-     * DON'T RISK IT!  --darin
-     */
-
     /**
      * Utility to extract the scheme from a URL string, consistently and
      * according to spec (see RFC 2396).
+     *
+     * NOTE: Most URL parsing is done via nsIURI, and in fact the scheme
+     * can also be extracted from a URL string via nsIURI.  This method
+     * is provided purely as an optimization.
      *
      * @param aSpec the URL string to parse
      * @return URL scheme
@@ -157,20 +143,4 @@ interface nsIIOService : nsISupports
      * @throws NS_ERROR_MALFORMED_URI if URL string is not of the right form.
      */
     ACString extractScheme(in AUTF8String urlString);
-
-    /**
-     * Converts the nsIFile to the corresponding URL string.  NOTE: under
-     * some platforms this is a lossy conversion (e.g., Mac Carbon build).
-     * If the nsIFile is a local file, then the result will be a file://
-     * URL string.
-     *
-     * The resulting string may contain URL-escaped characters.
-     */
-    AUTF8String getURLSpecFromFile(in nsIFile file);
-
-    /**
-     * Converts the URL string into the corresponding nsIFile if possible.
-     * A local file will be created if the URL string begins with file://.
-     */
-    nsIFile getFileFromURLSpec(in AUTF8String url);
 };

@@ -538,8 +538,8 @@ function GetLocalFileURL(filterType)
   }
   SaveFilePickerDirectory(fp, fileType);
   
-  var ioService = GetIOService();
-  return fp.file ? ioService.getURLSpecFromFile(fp.file) : null;
+  var fileHandler = GetFileProtocolHandler();
+  return fp.file ? fileHandler.getURLSpecFromFile(fp.file) : null;
 }
 
 function GetMetaElement(name)

@@ -496,6 +496,7 @@ function getURLSpecFromFile (file)
 
     const nsIIOService = Components.interfaces.nsIIOService;
     const nsILocalFile = Components.interfaces.nsILocalFile;
+    const nsIFileProtocolHandler = Components.interfaces.nsIFileProtocolHandler;
     
     if (typeof file == "string")
     {
@@ -506,7 +507,9 @@ function getURLSpecFromFile (file)
     }
     
     var service = Components.classes[IOS_CTRID].getService(nsIIOService);
-    return service.getURLSpecFromFile(file);
+    var fileHandler = service.getProtocolHandler("file")
+                             .QueryInterface(nsIFileProtocolHandler);
+    return fileHandler.getURLSpecFromFile(file);
 }
 
 function getCommonPfx (list)

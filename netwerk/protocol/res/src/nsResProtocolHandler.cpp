@@ -49,6 +49,7 @@
 #include "nsIFile.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsNetUtil.h"
+#include "nsURLHelper.h"
 
 static nsResProtocolHandler *gResHandler = nsnull;
 
@@ -91,7 +92,7 @@ nsResURL::GetFile(nsIFile **result)
     rv = gResHandler->ResolveURI(this, spec);
     if (NS_FAILED(rv)) return rv;
 
-    return NS_GetFileFromURLSpec(spec, result, gResHandler->mIOService);
+    return net_GetFileFromURLSpec(spec, result);
 }
 
 //----------------------------------------------------------------------------

@@ -58,7 +58,6 @@
 #include "nsIPrefBranchInternal.h"
 #include "nsIPrefLocalizedString.h"
 #include "nsICategoryManager.h"
-#include "nsIURLParser.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIProxiedProtocolHandler.h"
@@ -267,13 +266,6 @@ nsIOService::Init()
 
 nsIOService::~nsIOService()
 {
-    // mURLParsers is a voidarray; we must release ourselves
-    for (PRInt32 i = 0; i < mURLParsers.Count(); i++)
-    {
-        nsISupports *temp;
-        temp = NS_STATIC_CAST(nsISupports*, mURLParsers[i]);
-        NS_IF_RELEASE(temp);
-    }
 }   
 
 NS_METHOD
@@ -324,7 +316,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(nsIOService,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-NS_IMETHODIMP
+nsresult
 nsIOService::CacheProtocolHandler(const char *scheme, nsIProtocolHandler *handler)
 {
     for (unsigned int i=0; i<NS_N(gScheme); i++)
@@ -351,7 +343,7 @@ nsIOService::CacheProtocolHandler(const char *scheme, nsIProtocolHandler *handle
     return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
+nsresult
 nsIOService::GetCachedProtocolHandler(const char *scheme, nsIProtocolHandler **result, PRUint32 start, PRUint32 end)
 {
     PRUint32 len = end - start - 1;
@@ -378,50 +370,6 @@ nsIOService::GetCachedProtocolHandler(const char *scheme, nsIProtocolHandler **r
     return NS_ERROR_FAILURE;
 }
  
-NS_IMETHODIMP
-nsIOService::CacheURLParser(const char *scheme, nsIURLParser *parser)
-{
-    NS_ENSURE_ARG_POINTER(scheme);
-    NS_ENSURE_ARG_POINTER(parser);
-    for (PRInt32 i=0; i< (PRInt32) NS_N(gScheme); i++)
-    {
-        if (!nsCRT::strcasecmp(scheme, gScheme[i]))
-        {
-            // we're going to store this in an nsVoidArray, which extends,
-            // unlike nsSupportsArray, which doesn't.  We must release
-            // them on delete!
-            // grab this before overwriting it
-            nsIURLParser *old_parser;
-            old_parser = NS_STATIC_CAST(nsIURLParser*,mURLParsers.SafeElementAt(i));
-
-            NS_ADDREF(parser);
-            mURLParsers.ReplaceElementAt(parser, i);
-            // release any old entry, if any, AFTER adding new entry in
-            // case they were the same (paranoia)
-            NS_IF_RELEASE(old_parser);
-            return NS_OK;
-        }
-    }
-    return NS_ERROR_FAILURE;
-}
-
-
-NS_IMETHODIMP
-nsIOService::GetCachedURLParser(const char *scheme, nsIURLParser **result)
-{
-    PRInt32 count = mURLParsers.Count();
-    for (PRInt32 i=0; i < count; i++)
-    {
-        if (!nsCRT::strcasecmp(scheme, gScheme[i]))
-        {
-            *result = NS_STATIC_CAST(nsIURLParser*, mURLParsers[i]);
-            NS_IF_ADDREF(*result);
-            return *result ? NS_OK : NS_ERROR_FAILURE;
-        }
-    }
-    return NS_ERROR_FAILURE;
-}
-
 NS_IMETHODIMP
 nsIOService::GetProtocolHandler(const char* scheme, nsIProtocolHandler* *result)
 {
@@ -473,237 +421,8 @@ nsIOService::GetProtocolHandler(const char* scheme, nsIProtocolHandler* *result)
 NS_IMETHODIMP
 nsIOService::ExtractScheme(const nsACString &inURI, nsACString &scheme)
 {
-    return ExtractURLScheme(inURI, nsnull, nsnull, &scheme);
+    return net_ExtractURLScheme(inURI, nsnull, nsnull, &scheme);
 }
-
-NS_METHOD 
-nsIOService::GetParserForScheme(const char *scheme, nsIURLParser **_retval)
-{
-    nsresult rv;
-    
-    rv = GetCachedURLParser(scheme, _retval);
-    if (NS_SUCCEEDED(rv) && *_retval) return NS_OK;
-
-
-    if (!scheme) {
-        if (!mDefaultURLParser) {
-            rv = nsServiceManager::GetService(kStdURLParserCID, 
-                                              NS_GET_IID(nsIURLParser), 
-                                              getter_AddRefs(mDefaultURLParser));
-            if (NS_FAILED(rv)) return rv;
-        }
-        
-        *_retval = mDefaultURLParser;
-        NS_ADDREF(*_retval);
-        return NS_OK;
-    }
-
-    nsCOMPtr<nsICategoryManager> catmgr(do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv));
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsISimpleEnumerator> parserList;
-    rv = catmgr->EnumerateCategory(NS_IURLPARSER_KEY, getter_AddRefs(parserList));
-    if (NS_FAILED(rv)) return rv;
-    
-    nsCOMPtr<nsISupportsCString> entry;
-
-    // Walk the list of parsers...
-    while (1) {
-        rv = parserList->GetNext(getter_AddRefs(entry));
-        if (NS_FAILED(rv)) break;
-
-        // get the entry string
-        nsCAutoString entryString;
-        rv = entry->GetData(entryString);
-        if (NS_FAILED(rv)) break;
-
-        if (entryString.Equals(scheme)) {
-            nsXPIDLCString contractID;
-            rv = catmgr->GetCategoryEntry(NS_IURLPARSER_KEY, entryString.get(), getter_Copies(contractID));
-            if (NS_FAILED(rv)) break;
-
-            rv = nsServiceManager::GetService(contractID, NS_GET_IID(nsIURLParser), (nsISupports **)_retval);
-            if (NS_FAILED(rv))
-                return rv;
-            if (*_retval)
-                CacheURLParser(scheme, *_retval);
-            return *_retval ? NS_OK : NS_ERROR_FAILURE;
-        }
-    }
-
-    // no registered url parser. Just use the default...
-    if (!mDefaultURLParser) {
-        rv = nsServiceManager::GetService(kStdURLParserCID, 
-                                          NS_GET_IID(nsIURLParser), 
-                                          getter_AddRefs(mDefaultURLParser));
-        if (NS_FAILED(rv)) return rv;
-    }
-
-    *_retval = mDefaultURLParser;
-    NS_ADDREF(*_retval);
-    CacheURLParser(scheme, *_retval);
-    return NS_OK;
-}
-
-#if 0
-static inline void
-ExtractUrlPart_Helper(const nsACString &src, PRUint32 pos, PRInt32 len, nsACString &result)
-{
-    if (len >= 0)
-        result = Substring(src, pos, len);
-}
-
-NS_IMETHODIMP 
-nsIOService::ExtractUrlPart(const nsACString &urlString, PRInt16 flag, nsACString &urlPart)
-{
-    nsresult rv;
-    nsCAutoString scheme;
-
-    rv = ExtractURLScheme(urlString, nsnull, nsnull, &scheme);
-    if (NS_FAILED(rv)) return rv;
-
-    if (flag == url_Scheme) {
-        urlPart = scheme;
-        return NS_OK;
-    }
-
-    urlPart.Truncate();
-
-    nsCOMPtr<nsIURLParser> parser;
-    rv = GetParserForScheme(scheme.get(), getter_AddRefs(parser));
-    if (NS_FAILED(rv)) return rv;
-    
-    // we work only with flat strings around these parts
-    const nsPromiseFlatCString &flat = PromiseFlatCString(urlString);
-    const char *url = flat.get();
-
-    PRUint32 authPos, pathPos;
-    PRInt32 authLen, pathLen;
-
-    rv = parser->ParseURL(url, -1,
-                          nsnull, nsnull,
-                          &authPos, &authLen,
-                          &pathPos, &pathLen);
-    if (NS_FAILED(rv)) return rv;
-
-    if (flag == url_Path)
-        ExtractUrlPart_Helper(urlString, pathPos, pathLen, urlPart);
-    else if (flag < url_Directory || flag & url_Port) {
-        PRUint32 usernamePos, passwordPos, hostnamePos;
-        PRInt32 usernameLen, passwordLen, hostnameLen;
-        PRInt32 port;
-
-        if (authLen < 0)
-            return NS_OK;
-
-        rv = parser->ParseAuthority(url + authPos, authLen,
-                                    &usernamePos, &usernameLen,
-                                    &passwordPos, &passwordLen,
-                                    &hostnamePos, &hostnameLen,
-                                    &port);
-        if (NS_FAILED(rv)) return rv;
-
-        usernamePos += authPos;
-        passwordPos += authPos;
-        hostnamePos += authPos;
-
-        switch (flag) {
-        case url_Username:
-            ExtractUrlPart_Helper(urlString, usernamePos, usernameLen, urlPart);
-            break;
-        case url_Password:
-            ExtractUrlPart_Helper(urlString, passwordPos, passwordLen, urlPart);
-            break;
-        case url_Host:
-            ExtractUrlPart_Helper(urlString, hostnamePos, hostnameLen, urlPart);
-            break;
-        case url_Port:
-            if (port != -1) {
-                PRInt32 pos = hostnamePos + hostnameLen + 1;
-                ExtractUrlPart_Helper(urlString, pos, pathPos - pos, urlPart);
-            }
-            break;
-        case url_Host | url_Port:
-            if (port != -1 && hostnameLen > 0) {
-                urlPart = Substring(urlString, hostnamePos, hostnameLen)
-                        + NS_LITERAL_CSTRING(":")
-                        + nsPrintfCString("%d", port);
-            }
-            else
-                ExtractUrlPart_Helper(urlString, hostnamePos, hostnameLen, urlPart);
-            break;
-        default:
-            NS_NOTREACHED("unexpected flag");
-            return NS_ERROR_UNEXPECTED;
-        }
-    }
-    else {
-        PRUint32 filepathPos, paramPos, queryPos, refPos;
-        PRInt32 filepathLen, paramLen, queryLen, refLen;
-
-        if (pathLen < 0)
-            return NS_OK;
-
-        rv = parser->ParsePath(url + pathPos, pathLen,
-                               &filepathPos, &filepathLen,
-                               &paramPos, &paramLen,
-                               &queryPos, &queryLen,
-                               &refPos, &refLen);
-        if (NS_FAILED(rv)) return rv;
-
-        filepathPos += pathPos;
-        paramPos += pathPos;
-        queryPos += pathPos;
-        refPos += pathPos;
-
-        if (flag < url_Param) {
-            PRUint32 directoryPos, basenamePos, extensionPos;
-            PRInt32 directoryLen, basenameLen, extensionLen;
-
-            rv = parser->ParseFilePath(url + filepathPos, filepathLen,
-                                       &directoryPos, &directoryLen,
-                                       &basenamePos, &basenameLen,
-                                       &extensionPos, &extensionLen);
-
-            directoryPos += filepathPos;
-            basenamePos += filepathPos;
-            extensionPos += filepathPos;
-
-            switch (flag) {
-            case url_Directory:
-                ExtractUrlPart_Helper(urlString, directoryPos, directoryLen, urlPart);
-                break;
-            case url_FileBaseName:
-                ExtractUrlPart_Helper(urlString, basenamePos, basenameLen, urlPart);
-                break;
-            case url_FileExtension:
-                ExtractUrlPart_Helper(urlString, extensionPos, extensionLen, urlPart);
-                break;
-            default:
-                NS_NOTREACHED("unexpected flag");
-                return NS_ERROR_UNEXPECTED;
-            }
-        }
-        else {
-            switch (flag) {
-            case url_Param:
-                ExtractUrlPart_Helper(urlString, paramPos, paramLen, urlPart);
-                break;
-            case url_Query:
-                ExtractUrlPart_Helper(urlString, queryPos, queryLen, urlPart);
-                break;
-            case url_Ref:
-                ExtractUrlPart_Helper(urlString, refPos, refLen, urlPart);
-                break;
-            default:
-                NS_NOTREACHED("unexpected flag");
-                return NS_ERROR_UNEXPECTED;
-            }
-        }
-    }
-    return NS_OK;
-}
-#endif
 
 NS_IMETHODIMP 
 nsIOService::GetProtocolFlags(const char* scheme, PRUint32 *flags)
@@ -715,7 +434,6 @@ nsIOService::GetProtocolFlags(const char* scheme, PRUint32 *flags)
     rv = handler->GetProtocolFlags(flags);
     return rv;
 }
-
 
 nsresult
 nsIOService::NewURI(const nsACString &aSpec, const char *aCharset, nsIURI *aBaseURI, nsIURI **result)
@@ -1005,71 +723,3 @@ nsIOService::Observe(nsISupports *subject,
     }
     return NS_OK;
 }
-
-nsresult
-nsIOService::ParseFileURL(const nsACString &inURL,
-                          nsACString &outDirectory,
-                          nsACString &outFileBaseName,
-                          nsACString &outFileExtension)
-{
-    nsresult rv;
-
-    outDirectory.Truncate();
-    outFileBaseName.Truncate();
-    outFileExtension.Truncate();
-
-	nsCAutoString scheme;
-    rv = ExtractScheme(inURL, scheme);
-    if (NS_FAILED(rv)) return rv;
-
-    if (strcmp(scheme.get(), "file") != 0) {
-        NS_ERROR("must be a file:// url");
-        return NS_ERROR_UNEXPECTED;
-    }
-
-    const nsPromiseFlatCString &flatURL = PromiseFlatCString(inURL);
-    const char *url = flatURL.get();
-    
-    nsCOMPtr<nsIURLParser> parser;
-    rv = GetParserForScheme(scheme.get(), getter_AddRefs(parser));
-    if (NS_FAILED(rv)) return rv;
-
-    PRUint32 pathPos, filepathPos, directoryPos, basenamePos, extensionPos;
-    PRInt32 pathLen, filepathLen, directoryLen, basenameLen, extensionLen;
-
-    // invoke the parser to extract the URL path
-    rv = parser->ParseURL(url, -1,
-                          nsnull, nsnull, // dont care about scheme
-                          nsnull, nsnull, // dont care about authority
-                          &pathPos, &pathLen);
-    if (NS_FAILED(rv)) return rv;
-
-    // invoke the parser to extract filepath from the path
-    rv = parser->ParsePath(url + pathPos, pathLen,
-                           &filepathPos, &filepathLen,
-                           nsnull, nsnull,  // dont care about param
-                           nsnull, nsnull,  // dont care about query
-                           nsnull, nsnull); // dont care about ref
-    if (NS_FAILED(rv)) return rv;
-
-    filepathPos += pathPos;
-
-    // invoke the parser to extract the directory and filename from filepath
-    rv = parser->ParseFilePath(url + filepathPos, filepathLen,
-                               &directoryPos, &directoryLen,
-                               &basenamePos, &basenameLen,
-                               &extensionPos, &extensionLen);
-    if (NS_FAILED(rv)) return rv;
-
-    if (directoryLen > 0)
-        outDirectory = Substring(inURL, filepathPos + directoryPos, directoryLen);
-    if (basenameLen > 0)
-        outFileBaseName = Substring(inURL, filepathPos + basenamePos, basenameLen);
-    if (extensionLen > 0)
-        outFileExtension = Substring(inURL, filepathPos + extensionPos, extensionLen);
-    // since we are using a no-auth url parser, there will never be a host
-    // XXX not strictly true... file://localhost/foo/bar.html is a valid URL
-
-    return NS_OK;
-}
- 

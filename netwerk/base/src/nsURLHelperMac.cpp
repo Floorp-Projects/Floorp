@@ -38,7 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 /* Mac-specific local file url parsing */
-#include "nsIOService.h"
+#include "nsURLHelper.h"
 #include "nsEscape.h"
 #include "nsILocalFile.h"
 
@@ -65,8 +65,8 @@ static void PascalStringCopy(Str255 dst, const char *src)
 }
 
 
-NS_IMETHODIMP
-nsIOService::GetURLSpecFromFile(nsIFile *aFile, nsACString &aURL)
+nsresult
+net_GetURLSpecFromFile(nsIFile *aFile, nsACString &aURL)
 {
     nsresult rv;
     NS_ENSURE_ARG(aFile);
@@ -109,8 +109,8 @@ nsIOService::GetURLSpecFromFile(nsIFile *aFile, nsACString &aURL)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsIOService::GetFileFromURLSpec(const nsACString &aURL, nsIFile **result)
+nsresult
+net_GetFileFromURLSpec(const nsACString &aURL, nsIFile **result)
 {
     nsresult rv;
        
@@ -123,7 +123,7 @@ nsIOService::GetFileFromURLSpec(const nsACString &aURL, nsIFile **result)
      
     nsCAutoString directory, fileBaseName, fileExtension;
     
-    rv = ParseFileURL(aURL, directory, fileBaseName, fileExtension);
+    rv = net_ParseFileURL(aURL, directory, fileBaseName, fileExtension);
     if (NS_FAILED(rv)) return rv;
                    
     nsCAutoString path;

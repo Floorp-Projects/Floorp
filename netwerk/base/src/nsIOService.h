@@ -87,45 +87,30 @@ public:
                     nsIURI* *result, nsIProtocolHandler* *hdlrResult);
 
 protected:
-    NS_METHOD GetCachedProtocolHandler(const char *scheme,
+    nsresult GetCachedProtocolHandler(const char *scheme,
                                        nsIProtocolHandler* *hdlrResult,
                                        PRUint32 start=0,
                                        PRUint32 end=0);
-    NS_METHOD CacheProtocolHandler(const char *scheme,
+    nsresult CacheProtocolHandler(const char *scheme,
                                    nsIProtocolHandler* hdlr);
-
-    NS_METHOD GetCachedURLParser(const char *scheme,
-                                 nsIURLParser* *hdlrResult);
-
-    NS_METHOD CacheURLParser(const char *scheme,
-                             nsIURLParser* hdlr);
-
-    NS_METHOD GetParserForScheme(const char *scheme, nsIURLParser **);
 
     // Prefs wrangling
     void PrefsChanged(nsIPrefBranch *prefs, const char *pref = nsnull);
     void GetPrefBranch(nsIPrefBranch **);
     void ParsePortList(nsIPrefBranch *prefBranch, const char *pref, PRBool remove);
 
-    nsresult ParseFileURL(const nsACString &inURL,
-                          nsACString &outDirectory,
-                          nsACString &outFileBaseName,
-                          nsACString &outFileExtension);
 protected:
-    PRPackedBool      mOffline;
-    PRPackedBool      mOfflineForProfileChange;
+    PRPackedBool                        mOffline;
+    PRPackedBool                        mOfflineForProfileChange;
     nsCOMPtr<nsISocketTransportService> mSocketTransportService;
     nsCOMPtr<nsIFileTransportService>   mFileTransportService;
     nsCOMPtr<nsIDNSService>             mDNSService;
     nsCOMPtr<nsIProtocolProxyService>   mProxyService;
-    nsCOMPtr<nsIEventQueueService> mEventQueueService;
+    nsCOMPtr<nsIEventQueueService>      mEventQueueService;
     
     // Cached protocol handlers
-    nsWeakPtr                  mWeakHandler[NS_N(gScheme)];
+    nsWeakPtr                           mWeakHandler[NS_N(gScheme)];
 
-    // Cached url handlers
-    nsCOMPtr<nsIURLParser>              mDefaultURLParser;
-    nsAutoVoidArray                     mURLParsers;
     nsVoidArray                         mRestrictedPortList;
 
 public:
