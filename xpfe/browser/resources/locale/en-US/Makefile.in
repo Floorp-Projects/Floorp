@@ -45,14 +45,21 @@ CHROME_L10N = \
 include $(topsrcdir)/config/rules.mk
 
 # Apparantly nsinstall created a directory navigator.dtd.out on Puma, temporary fix
-# GARBAGE	+= navigator.dtd.out
-GARBAGE_DIRS	+= navigator.dtd.out
+GARBAGE	+= navigator.dtd.out local-jar.mn
 
-ifeq ($(MOZ_ENABLE_JAR_PACKAGING),)
-navigator.dtd.out: navigator.dtd $(DEPTH)/config/build_number
+navigator.dtd.out: navigator.dtd $(DEPTH)/config/build_number Makefile Makefile.in
 	cp $(srcdir)/navigator.dtd $@
 	$(PERL) $(topsrcdir)/config/aboutime.pl $@ $(DEPTH)/config/build_number
 
+local-jar.mn: Makefile Makefile.in
+	@rm -f $@
+	@echo "packages/core.jar:" > $@
+	@echo "+       navigator/locale/navigator.dtd               (navigator.dtd.out)" >> $@
+
+ifndef MOZ_ENABLE_JAR_PACKAGING
 install:: navigator.dtd.out
 	cp navigator.dtd.out $(CHROME_DIST)/$(CHROME_L10N_DIR)/navigator.dtd
+else
+install:: navigator.dtd.out local-jar.mn
+	$(PERL) $(topsrcdir)/config/make-jars-unix.pl -d $(DIST)/bin/chrome < local-jar.mn
 endif
