@@ -64,7 +64,11 @@ nsURLProperties::nsURLProperties(nsString& aUrl)
   nsIChannel *channel = nsnull;
   // XXX NECKO verb? sinkGetter?
   const char *urlStr = aUrl.GetBuffer();
+  if (!urlStr)
+      urlStr = aUrl.ToNewCString();
   res = pNetService->NewChannel("load", urlStr, nsnull, nsnull, &channel);
+  if (urlStr)
+      delete [] (char*)urlStr;
   if (NS_FAILED(res)) return;
 
   res = channel->OpenInputStream(0, -1, &in);
