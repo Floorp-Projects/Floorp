@@ -407,3 +407,10 @@ mtd[-moz-math-columnline="dashed"] {
 }
 :-moz-math-font-style-anonymous {
 }
+
+/**********************************************************************/
+/* Hide embedded semantic MathML content (as opposed to presentational
+   content, which we render). */
+annotation-xml[encoding="MathML-Content"] { 
+  display: none;
+}
