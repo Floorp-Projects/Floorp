@@ -18,7 +18,6 @@
  */
 
 #include "nsIPlatformCharset.h"
-#include "nsPlatformCharsetFactory.h"
 #include "pratom.h"
 #include "nsURLProperties.h"
 #include <Script.h>
@@ -127,57 +126,29 @@ nsMacCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar*
 	return rv;
 }
 
-class nsMacCharsetFactory : public nsIFactory {
-   NS_DECL_ISUPPORTS
+//----------------------------------------------------------------------
 
-public:
-   nsMacCharsetFactory() {
-     NS_INIT_REFCNT();
-     PR_AtomicIncrement(&g_InstanceCount);
-   }
-   virtual ~nsMacCharsetFactory() {
-     PR_AtomicDecrement(&g_InstanceCount);
-   }
-
-   NS_IMETHOD CreateInstance(nsISupports* aDelegate, const nsIID& aIID, void** aResult);
-   NS_IMETHOD LockFactory(PRBool aLock);
- 
-};
-
-NS_DEFINE_IID( kIFactoryIID, NS_IFACTORY_IID);
-NS_IMPL_ISUPPORTS( nsMacCharsetFactory , kIFactoryIID);
-
-NS_IMETHODIMP nsMacCharsetFactory::CreateInstance(
-    nsISupports* aDelegate, const nsIID &aIID, void** aResult)
+NS_IMETHODIMP
+NS_NewPlatformCharset(nsISupports* aOuter, 
+                      const nsIID &aIID,
+                      void **aResult)
 {
-  if(NULL == aResult) 
-        return NS_ERROR_NULL_POINTER;
-  if(NULL != aDelegate) 
-        return NS_ERROR_NO_AGGREGATION;
-
-  *aResult = NULL;
-  nsISupports *inst = new nsMacCharset();
-  if(NULL == inst) {
+  if (!aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aOuter) {
+    *aResult = nsnull;
+    return NS_ERROR_NO_AGGREGATION;
+  }
+  nsMacCharset* inst = new nsMacCharset();
+  if (!inst) {
+    *aResult = nsnull;
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  nsresult res =inst->QueryInterface(aIID, aResult);
-  if(NS_FAILED(res)) {
-     delete inst;
+  nsresult res = inst->QueryInterface(aIID, aResult);
+  if (NS_FAILED(res)) {
+    *aResult = nsnull;
+    delete inst;
   }
-  
   return res;
 }
-NS_IMETHODIMP nsMacCharsetFactory::LockFactory(PRBool aLock)
-{
-  if(aLock)
-     PR_AtomicIncrement( &g_LockCount );
-  else
-     PR_AtomicDecrement( &g_LockCount );
-  return NS_OK;
-}
-
-nsIFactory* NEW_PLATFORMCHARSETFACTORY()
-{
-  return new nsMacCharsetFactory();
-}
-

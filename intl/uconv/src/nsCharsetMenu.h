@@ -30,37 +30,4 @@
 
 #define NS_CHARSETMENU_PID "charset-menu"
 
-//----------------------------------------------------------------------------
-// Class nsCharsetMenuFactory [declaration]
-
-/**
- * Factory class for the nsCharsetMenu objects.
- * 
- * @created         17/Sep/1999
- * @author  Catalin Rotaru [CATA]
- */
-class nsCharsetMenuFactory : public nsIFactory
-{
-  NS_DECL_ISUPPORTS
-
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsCharsetMenuFactory();
-
-  /**
-   * Class destructor.
-   */
-  virtual ~nsCharsetMenuFactory();
-
-  //--------------------------------------------------------------------------
-  // Interface nsIFactory [declaration]
-
-  NS_IMETHOD CreateInstance(nsISupports *aDelegate, const nsIID &aIID,
-                            void **aResult);
-  NS_IMETHOD LockFactory(PRBool aLock);
-};
-
 #endif /* nsCharsetMenu_h___ */

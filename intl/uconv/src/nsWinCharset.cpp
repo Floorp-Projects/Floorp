@@ -22,7 +22,6 @@
 #include "pratom.h"
 #include <windows.h>
 #include "nsUConvDll.h"
-#include "nsPlatformCharsetFactory.h"
 #include "nsIWin32Locale.h"
 #include "nsCOMPtr.h"
 #include "nsLocaleCID.h"
@@ -121,57 +120,29 @@ nsWinCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar*
 	 return result;
 }
 
-class nsWinCharsetFactory : public nsIFactory {
-   NS_DECL_ISUPPORTS
+//----------------------------------------------------------------------
 
-public:
-   nsWinCharsetFactory() {
-     NS_INIT_REFCNT();
-     PR_AtomicIncrement(&g_InstanceCount);
-   }
-   virtual ~nsWinCharsetFactory() {
-     PR_AtomicDecrement(&g_InstanceCount);
-   }
-
-   NS_IMETHOD CreateInstance(nsISupports* aDelegate, const nsIID& aIID, void** aResult);
-   NS_IMETHOD LockFactory(PRBool aLock);
- 
-};
-
-NS_DEFINE_IID( kIFactoryIID, NS_IFACTORY_IID);
-NS_IMPL_ISUPPORTS( nsWinCharsetFactory , kIFactoryIID);
-
-NS_IMETHODIMP nsWinCharsetFactory::CreateInstance(
-    nsISupports* aDelegate, const nsIID &aIID, void** aResult)
+NS_IMETHODIMP
+NS_NewPlatformCharset(nsISupports* aOuter, 
+                      const nsIID &aIID,
+                      void **aResult)
 {
-  if(NULL == aResult) 
-        return NS_ERROR_NULL_POINTER;
-  if(NULL != aDelegate) 
-        return NS_ERROR_NO_AGGREGATION;
-
-  *aResult = NULL;
-  nsISupports *inst = new nsWinCharset();
-  if(NULL == inst) {
+  if (!aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aOuter) {
+    *aResult = nsnull;
+    return NS_ERROR_NO_AGGREGATION;
+  }
+  nsWinCharset* inst = new nsWinCharset();
+  if (!inst) {
+    *aResult = nsnull;
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  nsresult res =inst->QueryInterface(aIID, aResult);
-  if(NS_FAILED(res)) {
-     delete inst;
+  nsresult res = inst->QueryInterface(aIID, aResult);
+  if (NS_FAILED(res)) {
+    *aResult = nsnull;
+    delete inst;
   }
-  
   return res;
 }
-NS_IMETHODIMP nsWinCharsetFactory::LockFactory(PRBool aLock)
-{
-  if(aLock)
-     PR_AtomicIncrement( &g_LockCount );
-  else
-     PR_AtomicDecrement( &g_LockCount );
-  return NS_OK;
-}
-
-nsIFactory* NEW_PLATFORMCHARSETFACTORY()
-{
-  return new nsWinCharsetFactory();
-}
-

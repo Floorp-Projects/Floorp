@@ -21,7 +21,6 @@
 #include "unicpriv.h"
 #include "nsIUnicodeEncoder.h"
 #include "nsIUnicodeEncodeHelper.h"
-#include "nsUnicodeEncodeHelper.h"
 #include "nsUConvDll.h"
 #include "nsIMappingCache.h"
 #include "nsMappingCache.h"
@@ -195,46 +194,30 @@ NS_IMETHODIMP nsUnicodeEncodeHelper::FillInfo(PRUint32 *aInfo, PRInt32 aTableCou
       uFillInfo((uTable*) aMappingTable[i], aInfo);
    return NS_OK;
 }
-//----------------------------------------------------------------------
-// Class nsEncodeHelperFactory [implementation]
-
-NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
-NS_IMPL_ISUPPORTS(nsEncodeHelperFactory, kIFactoryIID);
-
-nsEncodeHelperFactory::nsEncodeHelperFactory() 
-{
-  NS_INIT_REFCNT();
-  PR_AtomicIncrement(&g_InstanceCount);
-}
-
-nsEncodeHelperFactory::~nsEncodeHelperFactory() 
-{
-  PR_AtomicDecrement(&g_InstanceCount);
-}
 
 //----------------------------------------------------------------------
-// Interface nsIFactory [implementation]
 
-NS_IMETHODIMP nsEncodeHelperFactory::CreateInstance(nsISupports *aDelegate, 
-                                                    const nsIID &aIID,
-                                                    void **aResult)
+NS_IMETHODIMP
+NS_NewUnicodeEncodeHelper(nsISupports* aOuter, 
+                          const nsIID &aIID,
+                          void **aResult)
 {
-  if (aResult == NULL) return NS_ERROR_NULL_POINTER;
-  if (aDelegate != NULL) return NS_ERROR_NO_AGGREGATION;
-
-  nsIUnicodeEncodeHelper * t = new nsUnicodeEncodeHelper;
-  if (t == NULL) return NS_ERROR_OUT_OF_MEMORY;
-  
-  nsresult res = t->QueryInterface(aIID, aResult);
-  if (NS_FAILED(res)) delete t;
-
+  if (!aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aOuter) {
+    *aResult = nsnull;
+    return NS_ERROR_NO_AGGREGATION;
+  }
+  nsUnicodeEncodeHelper* inst = new nsUnicodeEncodeHelper();
+  if (!inst) {
+    *aResult = nsnull;
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  nsresult res = inst->QueryInterface(aIID, aResult);
+  if (NS_FAILED(res)) {
+    *aResult = nsnull;
+    delete inst;
+  }
   return res;
-}
-
-NS_IMETHODIMP nsEncodeHelperFactory::LockFactory(PRBool aLock)
-{
-  if (aLock) PR_AtomicIncrement(&g_LockCount);
-  else PR_AtomicDecrement(&g_LockCount);
-
-  return NS_OK;
 }
