@@ -118,22 +118,24 @@
         </rule>
       </template>
     </outlinerbody>
-    <outlinercol id="folderNameCol"
-                 flex="5"
-                 label="&nameColumn.label;"
-                 persist="width"
-		 ignoreincolumnpicker="true"
-                 primary="true"
-                 sort="?folderTreeNameSort"/>
-    <splitter class="tree-splitter"/>
-    <outlinercol id="folderUnreadCol"
-                 persist="hidden width"
-                 flex="1"
-		 label="&unreadColumn.label;"/>
-    <splitter class="tree-splitter"/>
-    <outlinercol id="folderTotalCol"
-                 persist="hidden width"
-                 flex="1"
-		 label="&totalColumn.label;"/>
+    <outlinercols>
+      <outlinercol id="folderNameCol"
+                   flex="5"
+                   label="&nameColumn.label;"
+                   persist="width"
+                   ignoreincolumnpicker="true"
+                   primary="true"
+                   sort="?folderTreeNameSort"/>
+      <splitter class="tree-splitter"/>
+      <outlinercol id="folderUnreadCol"
+                   persist="hidden width"
+                   flex="1"
+                   label="&unreadColumn.label;"/>
+      <splitter class="tree-splitter"/>
+      <outlinercol id="folderTotalCol"
+                   persist="hidden width"
+                   flex="1"
+                   label="&totalColumn.label;"/>
+    </outlinercols>
   </outliner>
 </overlay>

@@ -803,7 +803,7 @@ nsXULOutlinerBuilder::CycleHeader(const PRUnichar* aColID, nsIDOMElement* aEleme
         if (parentContent) {
             nsCOMPtr<nsIAtom> parentTag;
             parentContent->GetTag(*getter_AddRefs(parentTag));
-            if (parentTag.get() == nsXULAtoms::outliner) {
+            if (parentTag == nsXULAtoms::outlinercols) {
                 PRInt32 numChildren;
                 parentContent->ChildCount(numChildren);
                 for (int i = 0; i < numChildren; ++i) {
@@ -812,7 +812,7 @@ nsXULOutlinerBuilder::CycleHeader(const PRUnichar* aColID, nsIDOMElement* aEleme
                     parentContent->ChildAt(i, *getter_AddRefs(childContent));
                     if (childContent) {
                         childContent->GetTag(*getter_AddRefs(childTag));
-                        if (childTag.get() == nsXULAtoms::outlinercol && childContent != header) {
+                        if (childTag == nsXULAtoms::outlinercol && childContent != header) {
                             childContent->UnsetAttr(kNameSpaceID_None,
                                                     nsXULAtoms::sortDirection, PR_FALSE);
                         }

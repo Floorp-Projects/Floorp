@@ -13,10 +13,7 @@
 
   <binding id="outliner" extends="chrome://global/content/bindings/outliner.xml#outliner-base">
     <content orient="vertical">
-      <xul:hbox class="outliner-columns">
-        <children includes="outlinercol|splitter"/>
-        <xul:outlinercol class="outliner-columnpicker" fixed="true" ordinal="2147483647"/>
-      </xul:hbox>
+      <children includes="outlinercols"/>
       <xul:outlinerrows class="outliner-rows" flex="1">
         <children/>
       </xul:outlinerrows>
@@ -98,7 +95,7 @@
             var col = this.firstOrdinalColumn;
             var cols = [];
             while (col) {
-              if (col.localName == "outlinercol" && col.parentNode == this)
+              if (col.localName == "outlinercol" && col.parentNode.parentNode == this)
                 cols[cols.length] = col;
               col = col.boxObject.nextSibling;
             }
@@ -169,7 +166,7 @@
           var lastCol = null;
           var currentX = this.boxObject.x;
           while (col) {
-            if (col.localName == "outlinercol" && col.parentNode == this) {
+            if (col.localName == "outlinercol" && col.parentNode.parentNode == this) {
               var cw = col.boxObject.width;
               if (cw > 0) {
                 currentX += cw;
@@ -568,12 +565,16 @@
     </handlers>    
   </binding>
 
-  <binding id="outlinerrows" extends="chrome://global/content/bindings/outliner.xml#outliner-base">
-    <resources>
-      <stylesheet src="chrome://global/content/bindings/outliner.css"/>
-      <stylesheet src="chrome://global/skin/outliner.css"/>
-    </resources>
+  <binding id="outlinercols" extends="chrome://global/content/bindings/outliner.xml#outliner-base">
+    <content>
+      <xul:hbox flex="1" class="outliner-columns">
+        <children includes="outlinercol|splitter"/>
+        <xul:outlinercol class="outliner-columnpicker" fixed="true" ordinal="2147483647"/>
+      </xul:hbox>
+    </content>
+  </binding>
 
+  <binding id="outlinerrows" extends="chrome://global/content/bindings/outliner.xml#outliner-base">
     <content>
       <xul:hbox flex="1" class="outliner-bodybox">
         <children/>
@@ -697,7 +698,7 @@
   <binding id="outlinercol-base" extends="chrome://global/content/bindings/outliner.xml#outliner-base">
     <implementation>
       <constructor>
-        this.parentNode._columnsDirty = true;
+        this.parentNode.parentNode._columnsDirty = true;
       </constructor>
 
       <property name="ordinal">
@@ -742,12 +743,12 @@
           }
                     
           var pos = {};
-          var targetCol = col.parentNode._getColumnAtX(aEvent.clientX, 0.5, pos);
+          var targetCol = col.parentNode.parentNode._getColumnAtX(aEvent.clientX, 0.5, pos);
           
           // bail if we haven't mousemoved to a different column
           if (col.mTargetCol == targetCol && col.mTargetDir == pos.value)
             return;
-            
+
           var sib;
           if (col.mTargetCol) {
             // remove previous insertbefore/after attributes
@@ -776,7 +777,7 @@
           
           // XXX should really just invalidate columns
           // XXX need to implement nsIOutlinerBoxObject::invalidateColumn(in long column)
-          col.parentNode.outlinerBoxObject.invalidate();
+          col.parentNode.parentNode.outlinerBoxObject.invalidate();
         ]]></body>        
       </method>
 
@@ -799,10 +800,10 @@
                           
               // move the column
               if (col != col.mTargetCol)
-                col.parentNode._reorderColumn(col, col.mTargetCol, before);
+                col.parentNode.parentNode._reorderColumn(col, col.mTargetCol, before);
             
               // repaint to remove lines
-              col.parentNode.outlinerBoxObject.invalidate();
+              col.parentNode.parentNode.outlinerBoxObject.invalidate();
   
               col.mTargetCol = null;
             }
@@ -835,7 +836,7 @@
     
     <handlers>
       <handler event="mousedown" button="0"><![CDATA[
-        if (this.parentNode.enableColumnDrag) {
+        if (this.parentNode.parentNode.enableColumnDrag) {
           var xulns = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
           var cols = this.parentNode.getElementsByTagNameNS(xulns, "outlinercol");
           
@@ -866,7 +867,7 @@
       </xul:hbox>
     </content>
     <handlers>
-      <handler event="click" button="0" action="if (event.originalTarget == this) { this.parentNode.outlinerBoxObject.view.cycleHeader(this.id, this); }"/>
+      <handler event="click" button="0" action="if (event.originalTarget == this) { this.parentNode.parentNode.outlinerBoxObject.view.cycleHeader(this.id, this); }"/>
     </handlers>
   </binding>
 
@@ -877,7 +878,7 @@
       </xul:hbox>
     </content>
     <handlers>
-      <handler event="click" button="0" action="this.parentNode.outlinerBoxObject.view.cycleHeader(this.id, this)"/>
+      <handler event="click" button="0" action="this.parentNode.parentNode.outlinerBoxObject.view.cycleHeader(this.id, this)"/>
     </handlers>
   </binding>
 

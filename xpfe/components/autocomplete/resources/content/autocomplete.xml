@@ -1233,6 +1233,7 @@
           isContainerOpen: function(aIndex) {},
           isContainerEmpty: function(aIndex) {},
           isSeparator: function(aIndex) {},
+          isSorted: function() {},
           toggleOpenState: function(aIndex) {},
           selectionChanged: function() {},
           cycleHeader: function(aColId, aElt) {},

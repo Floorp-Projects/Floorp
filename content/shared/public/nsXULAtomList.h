@@ -97,6 +97,7 @@ XUL_ATOM(focus, "focus")
 
 XUL_ATOM(outliner, "outliner")
 XUL_ATOM(outlinerbody, "outlinerbody")
+XUL_ATOM(outlinercols, "outlinercols")
 XUL_ATOM(outlinercol, "outlinercol")
 XUL_ATOM(outlinerchildren, "outlinerchildren")
 XUL_ATOM(outlineritem, "outlineritem")

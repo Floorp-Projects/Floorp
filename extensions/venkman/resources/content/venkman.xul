@@ -65,17 +65,19 @@
           <outliner flex="1" id="project-outliner" persist="height"
             onselect="console.onProjectSelect(event);">
 
-            <outlinercol id="project-col-0" label="" primary="true" flex="5"
-              persist="hidden width"/>
-            <splitter class="tree-splitter"/>
-            <outlinercol id="project-col-1" flex="1" label = ""
-              persist="hidden width"/>
-            <splitter class="tree-splitter"/>
-            <outlinercol id="project-col-2" flex="1" label = ""
-              persist="hidden width"/>
-            <splitter class="tree-splitter"/>
-            <outlinercol id="project-col-3" flex="1" label = ""
-              persist="hidden width"/>
+            <outlinercols>
+              <outlinercol id="project-col-0" label="" primary="true" flex="5"
+                persist="hidden width"/>
+              <splitter class="tree-splitter"/>
+              <outlinercol id="project-col-1" flex="1" label = ""
+                persist="hidden width"/>
+              <splitter class="tree-splitter"/>
+              <outlinercol id="project-col-2" flex="1" label = ""
+                persist="hidden width"/>
+              <splitter class="tree-splitter"/>
+              <outlinercol id="project-col-3" flex="1" label = ""
+                persist="hidden width"/>
+            </outlinercols>
 
             <outlinerbody id="project-body" flex="1"/>
           </outliner>
@@ -88,14 +90,16 @@
             onselect="console.onScriptSelect(event);"
             onclick="console.onScriptClick(event);">
 
-            <outlinercol id="script-name" label="&ScriptCol0.header;"
-             primary="true" flex="5" persist="hidden width"/>
-            <splitter class="tree-splitter"/>
-            <outlinercol flex="1" id="script-line-start"
-              label="&ScriptCol1.header;" persist="hidden width"/>
-            <splitter class="tree-splitter"/>
-            <outlinercol flex="1" id="script-line-extent"
-              label="&ScriptCol2.header;" persist="hidden width" hidden="true"/>
+            <outlinercols>
+              <outlinercol id="script-name" label="&ScriptCol0.header;"
+                primary="true" flex="5" persist="hidden width"/>
+              <splitter class="tree-splitter"/>
+              <outlinercol flex="1" id="script-line-start"
+                label="&ScriptCol1.header;" persist="hidden width"/>
+              <splitter class="tree-splitter"/>
+              <outlinercol flex="1" id="script-line-extent"
+                label="&ScriptCol2.header;" persist="hidden width" hidden="true"/>
+            </outlinercols>
             <outlinerbody id="script-list-body" flex="1"/>
           </outliner>
         </vbox>
@@ -107,13 +111,15 @@
         <outliner id="source-outliner" flex="50" persist="width"
           onselect="console.onSourceSelect(event);"
           onclick="console.onSourceClick(event);">
-          <outlinercol id="breakpoint-col" flex="3"
-            display="&SourceCol0.display;" persist="hidden width"/>
-          <splitter class="tree-splitter"/>
-          <outlinercol id="source-line-number" flex="7"
-            display="&SourceCol1.display;" persist="hidden width"/>
-          <splitter class="tree-splitter"/>
-          <outlinercol id="source-line-text" flex="90" persist="hidden width"/>
+          <outlinercols>
+            <outlinercol id="breakpoint-col" flex="3"
+              display="&SourceCol0.display;" persist="hidden width"/>
+            <splitter class="tree-splitter"/>
+            <outlinercol id="source-line-number" flex="7"
+              display="&SourceCol1.display;" persist="hidden width"/>
+            <splitter class="tree-splitter"/>
+            <outlinercol id="source-line-text" flex="90" persist="hidden width"/>
+          </outlinercols>
           <outlinerbody id="source-outliner-body" flex="1"/>
         </outliner>
 
@@ -128,20 +134,22 @@
         <outliner flex="2" id="stack-outliner" persist="width"
           onselect="console.onStackSelect(event);">
 
-          <outlinercol id="stack-col-0" flex="1" persist="hidden width"
-            primary="true" label="&StackCol0.header;"/>
-          <splitter class="tree-splitter"/>
+          <outlinercols>
+            <outlinercol id="stack-col-0" flex="1" persist="hidden width"
+              primary="true" label="&StackCol0.header;"/>
+            <splitter class="tree-splitter"/>
 
-          <outlinercol flex="2" id="stack-col-1" persist="hidden width"
-            hidden="true" label="&StackCol1.header;"/>
-          <splitter class="tree-splitter"/>
+            <outlinercol flex="2" id="stack-col-1" persist="hidden width"
+              hidden="true" label="&StackCol1.header;"/>
+            <splitter class="tree-splitter"/>
 
-          <outlinercol flex="1" id="stack-col-2" persist="hidden width"
-             label="&StackCol2.header;"/>
-          <splitter class="tree-splitter"/>
+            <outlinercol flex="1" id="stack-col-2" persist="hidden width"
+              label="&StackCol2.header;"/>
+            <splitter class="tree-splitter"/>
 
-          <outlinercol flex="1" id="stack-col-3" persist="hidden width"
-            label="&StackCol3.header;" hidden="true"/>
+            <outlinercol flex="1" id="stack-col-3" persist="hidden width"
+              label="&StackCol3.header;" hidden="true"/>
+          </outlinercols>
 
           <outlinerbody id="stack-body" flex="1"/>
         </outliner>

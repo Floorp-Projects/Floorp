@@ -131,11 +131,13 @@ Rights Reserved.
      </hbox>
      <hbox id="searchview">
        <outliner id="searchOutliner" flex="1" onclick="SearchOnClick(event);"> 
-         <outlinercol id="nameCol" label="..." flex="5" width="0" persist="hidden width" ignoreincolumnpicker="true" />
-         <splitter class="tree-splitter" />
-         <outlinercol id="subscribedCol" flex="1" width="0" persist="hidden width" label="&subscribedHeader.label;" />
-         <splitter class="tree-splitter" />
-         <outlinercol id="messagesCol" label="&messagesHeader.label;" flex="1" width="0" persist="hidden width" />
+         <outlinercols>
+           <outlinercol id="nameCol" label="..." flex="5" width="0" persist="hidden width" ignoreincolumnpicker="true" />
+           <splitter class="tree-splitter" />
+           <outlinercol id="subscribedCol" flex="1" width="0" persist="hidden width" label="&subscribedHeader.label;" />
+           <splitter class="tree-splitter" />
+           <outlinercol id="messagesCol" label="&messagesHeader.label;" flex="1" width="0" persist="hidden width" />
+         </outlinercols>
          <outlinerbody id="searchOutlinerBody" flex="1" />
        </outliner>
      </hbox>

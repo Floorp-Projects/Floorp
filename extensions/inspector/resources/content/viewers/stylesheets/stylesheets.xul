@@ -16,10 +16,11 @@
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/events/ObserverManager.js"/>  
 
   <outliner id="olStyleSheets" flex="1" onselect="viewer.onItemSelected()">
-    <outlinercol id="olcHref" label="Stylesheet" primary="true" persist="width,hidden,ordinal" flex="1"/>
-    <splitter class="tree-splitter"/>
-    <outlinercol id="olcRules" label="Rules" persist="width,hidden,ordinal" style="width: 4em"/>
-
+    <outlinercols>
+      <outlinercol id="olcHref" label="Stylesheet" primary="true" persist="width,hidden,ordinal" flex="1"/>
+      <splitter class="tree-splitter"/>
+      <outlinercol id="olcRules" label="Rules" persist="width,hidden,ordinal" style="width: 4em"/>
+    </outlinercols>
     <outlinerbody id="olbStyleSheets" flex="1"/>
   </outliner>
 </page>

@@ -25,10 +25,11 @@
   <multipanelset id="mpsBinding" flex="1">
     <multipanel id="bxContent" label="Content" open="true" persist="open" onopen="if (viewer) {viewer.initContent();} else {gInitContent = true;}">
       <outliner id="olContent" flex="1">
-        <outlinercol id="colNodeName" primary="true" label="nodeName" flex="1"/>
-        <splitter class="tree-splitter"/>
-        <outlinercol id="colNodeValue" label="nodeValue" flex="1"/>
-        
+        <outlinercols>
+          <outlinercol id="colNodeName" primary="true" label="nodeName" flex="1"/>
+          <splitter class="tree-splitter"/>
+          <outlinercol id="colNodeValue" label="nodeValue" flex="1"/>
+        </outlinercols>
         <outlinerbody id="olbContent" flex="1"/>
       </outliner>
     </multipanel>
@@ -36,7 +37,9 @@
     <multipanel id="bxMethods" label="Methods" open="true" persist="open">
       <outliner id="olMethods" class="outliner-list" flex="1"
                 onselect="viewer.onMethodSelected()">
-        <outlinercol id="olcMethodName" flex="1"/>
+        <outlinercols>
+          <outlinercol id="olcMethodName" flex="1"/>
+        </outlinercols>
         <outlinerbody id="olbMethods" flex="1" context="ppDOMContext"/>
       </outliner>
     </multipanel>
@@ -49,7 +52,9 @@
         </radiogroup>
         <outliner id="olProps" class="outliner-list" flex="1"
                   onselect="viewer.onPropSelected()">
-          <outlinercol id="olcPropName" label="Property" flex="1"/>
+          <outlinercols>
+            <outlinercol id="olcPropName" label="Property" flex="1"/>
+          </outlinercols>
           <outlinerbody id="olbProps" flex="1" context="ppDOMContext"/>
         </outliner>
       </vbox>
@@ -58,16 +63,20 @@
     <multipanel id="bxHandlers" label="Handlers" persist="open">
       <outliner id="olHandlers" class="outliner-list" flex="1"
                 onselect="viewer.onHandlerSelected()">
-        <outlinercol id="olcHandlerEvent" flex="1"/>
-        <outlinercol id="olcHandlerPhase"/>
+        <outlinercols>
+          <outlinercol id="olcHandlerEvent" flex="1"/>
+          <outlinercol id="olcHandlerPhase"/>
+        </outlinercols>
         <outlinerbody id="olbHandlers" flex="1" context="ppDOMContext"/>
       </outliner>
     </multipanel>
   
     <multipanel id="bxResources" label="Resources" persist="open">
       <outliner id="olResources" class="outliner-list" flex="1">
-        <outlinercol id="olcResourceType" flex="1"/>
-        <outlinercol id="olcResourceSrc" flex="2"/>
+        <outlinercols>
+          <outlinercol id="olcResourceType" flex="1"/>
+          <outlinercol id="olcResourceSrc" flex="2"/>
+        </outlinercols>
         <outlinerbody id="olbResources" flex="1" context="ppDOMContext"/>
       </outliner>
     </multipanel>

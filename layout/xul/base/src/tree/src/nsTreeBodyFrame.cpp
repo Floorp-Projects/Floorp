@@ -2548,15 +2548,18 @@ nsOutlinerBodyFrame::EnsureColumns()
       nsCOMPtr<nsIDOMElement> colElt(do_QueryInterface(content));
       nsCOMPtr<nsIDOMNode> colParentElt;
       colElt->GetParentNode(getter_AddRefs(colParentElt));
-      if (colParentElt == elt) {
-        // Create a new column structure.
-        nsOutlinerColumn* col = new nsOutlinerColumn(content, frame);
-        if (currCol)
-          currCol->SetNext(col);
-        else mColumns = col;
-        currCol = col;
+      if (colParentElt) {
+        nsCOMPtr<nsIDOMNode> colGrandParentElt;
+        colParentElt->GetParentNode(getter_AddRefs(colGrandParentElt));
+        if (colGrandParentElt == elt) {
+          // Create a new column structure.
+          nsOutlinerColumn* col = new nsOutlinerColumn(content, frame);
+          if (currCol)
+            currCol->SetNext(col);
+          else mColumns = col;
+          currCol = col;
+        }
       }
-      
       colBox->GetNextBox(&colBox);
     }
   }

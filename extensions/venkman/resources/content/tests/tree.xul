@@ -24,11 +24,13 @@
     <script src="chrome://venkman/content/outliner-utils.js"/>    
     <script src="chrome://venkman/content/tests/tree.js"/>    
     <outliner flex="1" id="sample-outliner">
-      <outlinercol id="sample-name" label="Name" primary="true" flex="1"
-       class="outlinercol-header outlinercol-inset-header"/>
-      <splitter class="sample-splitter"/>
-      <outlinercol flex="1" id="sample-gender" label="Gender"
-        class="outlinercol-header outlinercol-inset-header"/>
+      <outlinercols>
+        <outlinercol id="sample-name" label="Name" primary="true" flex="1"
+          class="outlinercol-header outlinercol-inset-header"/>
+        <splitter class="sample-splitter"/>
+        <outlinercol flex="1" id="sample-gender" label="Gender"
+          class="outlinercol-header outlinercol-inset-header"/>
+      </outlinercols>
       <outlinerbody id="sample-body" flex="1"/>
     </outliner>
 

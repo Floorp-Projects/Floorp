@@ -265,20 +265,16 @@ function UpdateSortIndicators(sortType, sortOrder)
       else {
         sortedColumn.setAttribute("sortDirection","descending");
       }
-    }
-  }
 
-  // remove the sort indicator from all the columns
-  // except the one we are sorted by
-  var currCol = GetThreadOutliner().firstChild;
-  while (currCol) {
-    while (currCol && currCol.localName != "outlinercol")
-      currCol = currCol.nextSibling;
-    if (currCol && (currCol != sortedColumn)) {
-      currCol.removeAttribute("sortDirection");
+      // remove the sort indicator from all the columns
+      // except the one we are sorted by
+      var currCol = sortedColumn.parentNode.firstChild;
+      while (currCol) {
+        if (currCol != sortedColumn && currCol.localName == "outlinercol")
+          currCol.removeAttribute("sortDirection");
+        currCol = currCol.nextSibling;
+      }
     }
-    if (currCol) 
-      currCol = currCol.nextSibling;
   }
 }
 

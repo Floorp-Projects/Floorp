@@ -32,29 +32,31 @@ Rights Reserved.
 
 <outliner id="threadOutliner" flex="1" enableColumnDrag="true"
     onkeypress="ThreadPaneKeyPress(event);">
-  <outlinercol id="threadCol" display="&threadColumn.label;" class="outlinercol-image threadColumnHeader" currentView="unthreaded" cycler="true" persist="hidden ordinal" fixed="true" />
-  <outlinercol id="subjectCol" class="sortDirectionIndicator" persist="hidden ordinal width" flex="7" label="&subjectColumn.label;" primary="true"/>
-  <splitter class="tree-splitter"/>
-  <outlinercol id="senderOrRecipientCol" class="sortDirectionIndicator" persist="hidden ordinal width"  flex="4" label="&senderColumn.label;"/>
-  <splitter class="tree-splitter"/>
-  <outlinercol id="unreadButtonColHeader" fixed="true" persist="hidden ordinal" class="outlinercol-image readColumnHeader" display="&readColumn.label;" cycler="true"/> 
-  <splitter class="tree-splitter"/>
-  <outlinercol id="dateCol" class="sortDirectionIndicator" persist="hidden ordinal width"  flex="2" label="&dateColumn.label;"/>
-  <splitter class="tree-splitter"/>
-  <outlinercol id="statusCol" class="sortDirectionIndicator" persist="hidden ordinal width" flex="1" label="&statusColumn.label;"/>
-  <splitter class="tree-splitter"/>
-  <outlinercol id="sizeCol" class="sortDirectionIndicator" persist="hidden ordinal width" flex="1"  label="&sizeColumn.label;"/>
-  <splitter class="tree-splitter"/>
-  <outlinercol id="flaggedCol" fixed="true" persist="hidden ordinal" class="outlinercol-image flagColumnHeader" display="&flagColumn.label;" cycler="true"/>
-  <splitter class="tree-splitter"/>
-  <outlinercol id="labelCol" class="sortDirectionIndicator" persist="hidden ordinal width" flex="1" label="&labelColumn.label;"/>
-  <splitter class="tree-splitter"/>
-  <outlinercol id="priorityCol" class="sortDirectionIndicator" persist="hidden ordinal width" flex="1" label="&priorityColumn.label;"/>
-  <splitter class="tree-splitter"/>
-  <outlinercol id="unreadCol" class="sortDirectionIndicator" persist="hidden ordinal width" flex="1" label="&unreadColumn.label;"/>
-  <splitter class="tree-splitter"/>
-  <outlinercol id="totalCol" class="sortDirectionIndicator" persist="hidden ordinal width" flex="1" label="&totalColumn.label;"/>
-  <outlinercol id="locationCol" class="sortDirectionIndicator" persist="width" flex="1" hidden="true" ignoreincolumnpicker="true" label="&locationColumn.label;"/>
+  <outlinercols>
+    <outlinercol id="threadCol" display="&threadColumn.label;" class="outlinercol-image threadColumnHeader" currentView="unthreaded" cycler="true" persist="hidden ordinal" fixed="true" />
+    <outlinercol id="subjectCol" class="sortDirectionIndicator" persist="hidden ordinal width" flex="7" label="&subjectColumn.label;" primary="true"/>
+    <splitter class="tree-splitter"/>
+    <outlinercol id="senderOrRecipientCol" class="sortDirectionIndicator" persist="hidden ordinal width"  flex="4" label="&senderColumn.label;"/>
+    <splitter class="tree-splitter"/>
+    <outlinercol id="unreadButtonColHeader" fixed="true" persist="hidden ordinal" class="outlinercol-image readColumnHeader" display="&readColumn.label;" cycler="true"/> 
+    <splitter class="tree-splitter"/>
+    <outlinercol id="dateCol" class="sortDirectionIndicator" persist="hidden ordinal width"  flex="2" label="&dateColumn.label;"/>
+    <splitter class="tree-splitter"/>
+    <outlinercol id="statusCol" class="sortDirectionIndicator" persist="hidden ordinal width" flex="1" label="&statusColumn.label;"/>
+    <splitter class="tree-splitter"/>
+    <outlinercol id="sizeCol" class="sortDirectionIndicator" persist="hidden ordinal width" flex="1"  label="&sizeColumn.label;"/>
+    <splitter class="tree-splitter"/>
+    <outlinercol id="flaggedCol" fixed="true" persist="hidden ordinal" class="outlinercol-image flagColumnHeader" display="&flagColumn.label;" cycler="true"/>
+    <splitter class="tree-splitter"/>
+    <outlinercol id="labelCol" class="sortDirectionIndicator" persist="hidden ordinal width" flex="1" label="&labelColumn.label;"/>
+    <splitter class="tree-splitter"/>
+    <outlinercol id="priorityCol" class="sortDirectionIndicator" persist="hidden ordinal width" flex="1" label="&priorityColumn.label;"/>
+    <splitter class="tree-splitter"/>
+    <outlinercol id="unreadCol" class="sortDirectionIndicator" persist="hidden ordinal width" flex="1" label="&unreadColumn.label;"/>
+    <splitter class="tree-splitter"/>
+    <outlinercol id="totalCol" class="sortDirectionIndicator" persist="hidden ordinal width" flex="1" label="&totalColumn.label;"/>
+    <outlinercol id="locationCol" class="sortDirectionIndicator" persist="width" flex="1" hidden="true" ignoreincolumnpicker="true" label="&locationColumn.label;"/>
+  </outlinercols>
   <outlinerbody flex="1"
     onselect="this.parentNode.outlinerBoxObject.view.selectionChanged();"
     ondraggesture="return BeginDragThreadPane(event);"/>

@@ -41,20 +41,20 @@
   <popupset id="historyContextMenu"/>
   <!-- use deep merging to hide certain columns by default -->
   <outliner id="historyOutliner">
-    <outlinercol id="Name"/>
-    <splitter id="pre-URL-splitter"/>
-    <outlinercol id="URL" hidden="true"/>
-    <splitter id="pre-Date-splitter"/>
-    <outlinercol id="Date" hidden="true"/>
-    <splitter id="pre-FirstVisitDate-splitter"/>
-    <outlinercol id="FirstVisitDate" hidden="true"/>
-    <splitter id="pre-Hostname-splitter"/>
-    <outlinercol id="Hostname" hidden="true"/>
-    <splitter id="pre-Referrer-splitter"/>
-    <outlinercol id="Referrer" hidden="true"/>
-    <splitter id="pre-VisitCount-splitter"/>
-    <outlinercol id="VisitCount" hidden="true"/>
+    <outlinercols id="historyOutlinerCols">
+      <outlinercol id="Name"/>
+      <splitter id="pre-URL-splitter"/>
+      <outlinercol id="URL" hidden="true"/>
+      <splitter id="pre-Date-splitter"/>
+      <outlinercol id="Date" hidden="true"/>
+      <splitter id="pre-FirstVisitDate-splitter"/>
+      <outlinercol id="FirstVisitDate" hidden="true"/>
+      <splitter id="pre-Hostname-splitter"/>
+      <outlinercol id="Hostname" hidden="true"/>
+      <splitter id="pre-Referrer-splitter"/>
+      <outlinercol id="Referrer" hidden="true"/>
+      <splitter id="pre-VisitCount-splitter"/>
+      <outlinercol id="VisitCount" hidden="true"/>
+    </outlinercols>
   </outliner>
-
-
 </page>

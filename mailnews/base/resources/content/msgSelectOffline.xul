@@ -101,10 +101,11 @@ Contributors:
           </rule>
         </template>
       </outlinerbody>
-
-      <outlinercol id="folderNameCol" flex="5" persist="hidden width" label="&MsgSelectItems.label;" primary="true" />
-      <splitter class="tree-splitter"/>		  
-      <outlinercol id="syncCol" flex="1" persist="hidden width" label="&MsgSelectInd.label;" />
+      <outlinercols>
+        <outlinercol id="folderNameCol" flex="5" persist="hidden width" label="&MsgSelectItems.label;" primary="true" />
+        <splitter class="tree-splitter"/>		  
+        <outlinercol id="syncCol" flex="1" persist="hidden width" label="&MsgSelectInd.label;" />
+      </outlinercols>
     </outliner>
 
 </dialog>

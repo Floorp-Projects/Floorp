@@ -54,11 +54,13 @@
           <separator class="thin"/>
           <outliner id="cookiesOutliner" flex="1" style="height: 10em;" multiple="true"
                     onkeypress="HandleCookieKeyPress(event)">
-            <outlinercol id="domainCol" label="&treehead.cookiedomain.label;" flex="3"
-                         onclick="CookieColumnSort('rawHost');"/>
-            <splitter class="tree-splitter"/>
-            <outlinercol id="nameCol" label="&treehead.cookiename.label;" flex="7"
-                         onclick="CookieColumnSort('name');"/>
+            <outlinercols>
+              <outlinercol id="domainCol" label="&treehead.cookiedomain.label;" flex="3"
+                           onclick="CookieColumnSort('rawHost');"/>
+              <splitter class="tree-splitter"/>
+              <outlinercol id="nameCol" label="&treehead.cookiename.label;" flex="7"
+                           onclick="CookieColumnSort('name');"/>
+            </outlinercols>
             <outlinerbody flex="1" onselect="CookieSelected();"/>
           </outliner>
           <groupbox>
@@ -117,11 +119,13 @@
           <separator class="thin"/>
           <outliner id="permissionsOutliner" flex="1" style="height: 10em;" multiple="true"
                     onkeypress="HandlePermissionKeyPress(event)">
-            <outlinercol id="siteCol" label="&treehead.sitename.label;" flex="5"
-                         onclick="PermissionColumnSort('rawHost');"/>
-            <splitter class="tree-splitter"/>
-            <outlinercol id="statusCol" label="&treehead.status.label;" flex="5"
-                         onclick="PermissionColumnSort('capability');"/>
+            <outlinercols>
+              <outlinercol id="siteCol" label="&treehead.sitename.label;" flex="5"
+                           onclick="PermissionColumnSort('rawHost');"/>
+              <splitter class="tree-splitter"/>
+              <outlinercol id="statusCol" label="&treehead.status.label;" flex="5"
+                           onclick="PermissionColumnSort('capability');"/>
+            </outlinercols>
             <outlinerbody flex="1" onselect="PermissionSelected();"/>
           </outliner>
           <hbox>

@@ -4,23 +4,25 @@
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         orient="vertical">
   <outliner flex="1">
-    <outlinercol id="description"
-                 class="sortDirectionIndicator"
-                 flex="1"
-                 label="Description"
-                 sort="rdf:http://www.mozilla.org/LDAPATTR-rdf#description"
-                 sortActive="true"
-                 primary="true"
-                 persist="width sortActive sortDirection" />
+    <outlinercols>
+      <outlinercol id="description"
+                   class="sortDirectionIndicator"
+                   flex="1"
+                   label="Description"
+                   sort="rdf:http://www.mozilla.org/LDAPATTR-rdf#description"
+                   sortActive="true"
+                   primary="true"
+                   persist="width sortActive sortDirection" />
 
-    <splitter class="tree-splitter" />
+      <splitter class="tree-splitter" />
 
-    <outlinercol id="cn"
-                 class="sortDirectionIndicator"
-                 flex="1"
-                 label="CN"
-                 sort="rdf:http://www.mozilla.org/LDAPATTR-rdf#cn"
-                 persist="width sortActive sortDirection" />
+      <outlinercol id="cn"
+                   class="sortDirectionIndicator"
+                   flex="1"
+                   label="CN"
+                   sort="rdf:http://www.mozilla.org/LDAPATTR-rdf#cn"
+                   persist="width sortActive sortDirection" />
+    </outlinercols>
 
     <outlinerbody id="tree"
                   datasources="rdf:ldap"

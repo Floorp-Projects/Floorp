@@ -129,11 +129,13 @@
         primary="true" onselect="onComponentSelect(event);"
         onclick="onComponentClick(event);">
 
-        <outlinercol id="cmp-name" label="Name" primary="true" flex="1"
-          persist="hidden width"/>
-        <splitter class="tree-splitter"/>
-        <outlinercol id="cmp-number" flex="1" label="Number"
-          persist="hidden width"/>
+        <outlinercols>
+          <outlinercol id="cmp-name" label="Name" primary="true" flex="1"
+            persist="hidden width"/>
+          <splitter class="tree-splitter"/>
+          <outlinercol id="cmp-number" flex="1" label="Number"
+            persist="hidden width"/>
+        </outlinercols>
         <outlinerbody id="project-body" flex="1"/>
       </outliner>
 
@@ -151,11 +153,13 @@
         onclick="onInterfaceClick(event);" context="interfacePopup"
         onselect="onInterfaceSelect(event);">
 
-        <outlinercol id="ifc-name" label="Name" primary="true" flex="1"
-          persist="hidden width"/>
-        <splitter class="tree-splitter"/>
-        <outlinercol id="ifc-number" flex="1" label="Number"
-          persist="hidden width"/>
+        <outlinercols>
+          <outlinercol id="ifc-name" label="Name" primary="true" flex="1"
+            persist="hidden width"/>
+          <splitter class="tree-splitter"/>
+          <outlinercol id="ifc-number" flex="1" label="Number"
+            persist="hidden width"/>
+        </outlinercols>
         <outlinerbody id="project-body" flex="1"/>
       </outliner>
 
