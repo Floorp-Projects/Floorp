@@ -283,7 +283,7 @@ static PRBool EatClose(eHTMLTags aTag);
 static PRBool PermitWSAfterOpen(eHTMLTags aTag);
 static PRBool PermitWSBeforeClose(eHTMLTags aTag);
 static PRBool PermitWSAfterClose(eHTMLTags aTag);
-#endif OBSOLETE
+#endif // OBSOLETE
 
 static PRBool IgnoreWS(eHTMLTags aTag);
 
