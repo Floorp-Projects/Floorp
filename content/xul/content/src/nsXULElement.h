@@ -594,44 +594,8 @@ protected:
         nsCOMPtr<nsINodeInfo>               mNodeInfo;           // [OWNER]
         nsCOMPtr<nsIControllers>            mControllers;        // [OWNER]
         nsRefPtr<nsDOMCSSDeclaration>       mDOMStyle;           // [OWNER]
-
-        /**
-         * Contains the mLazyState in the low two bits, and a pointer
-         * to the nsDOMAttributeMap structure in the high bits.
-         */
-        PRWord                              mBits;
-
-#define LAZYSTATE_MASK  ((PRWord(1) << LAZYSTATE_BITS) - 1)
-#define ATTRIBUTES_MASK (~LAZYSTATE_MASK)
-
-        nsDOMAttributeMap *
-        GetAttributeMap() const {
-            return NS_REINTERPRET_CAST(nsDOMAttributeMap *, mBits & ATTRIBUTES_MASK);
-        }
-
-        void
-        SetAttributeMap(nsDOMAttributeMap *aAttributeMap) {
-            NS_ASSERTION((NS_REINTERPRET_CAST(PRWord, aAttributeMap) &
-                          ~ATTRIBUTES_MASK) == 0,
-                         "nsDOMAttributeMap pointer is unaligned");
-
-            mBits &= ~ATTRIBUTES_MASK;
-            mBits |= NS_REINTERPRET_CAST(PRWord, aAttributeMap);
-        }
-
-        LazyState
-        GetLazyState() const {
-            return LazyState(mBits & LAZYSTATE_MASK);
-        }
-
-        void
-        SetLazyState(LazyState aLazyState) {
-            NS_ASSERTION((aLazyState & ~LAZYSTATE_MASK) == 0,
-                         "lazy state includes high bits");
-
-            mBits &= ~LAZYSTATE_MASK;
-            mBits |= PRWord(aLazyState);
-        }
+        nsRefPtr<nsDOMAttributeMap>         mAttributeMap;       // [OWNER]
+        PRUint32                            mLazyState;
     };
 
     friend struct Slots;

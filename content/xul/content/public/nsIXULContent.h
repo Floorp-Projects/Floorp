@@ -90,8 +90,6 @@ public:
         eContainerContentsBuilt = 0x4
     };
 
-#define LAZYSTATE_BITS 3
-
     /**
      * Set one or more ``lazy state'' flags.
      * @aFlags a mask of flags to set
