@@ -1928,7 +1928,7 @@ AC_ARG_WITH(pthreads,
 	    USE_PTHREADS=
 	    _PTHREAD_LDFLAGS=
 	  fi],
-	[ if test -n "$_HAVE_PTHREADS" && test -z "$USE_USER_PTHREADS" && test -z "$USER_NSPR_THREADS"; then
+	[ if test -n "$_HAVE_PTHREADS" && test -z "$USE_USER_PTHREADS" && test -z "$USE_NSPR_THREADS"; then
 	    USE_PTHREADS=1
 	    USE_USER_PTHREADS=
 	    USE_NSPR_THREADS=
@@ -2153,7 +2153,7 @@ case "$target" in
     _PTHREAD_LDFLAGS=
     USE_USER_PTHREADS=
     ;;
-*-netbsd*)
+*-netbsd*|*-openbsd*)
     if test -n "$USE_NSPR_THREADS"; then
         AC_DEFINE(_PR_LOCAL_THREADS_ONLY)
     fi
