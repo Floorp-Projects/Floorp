@@ -480,7 +480,8 @@ txFnStartLREStylesheet(PRInt32 aNamespaceID,
 
     txExpandedName nullExpr;
     double prio = Double::NaN;
-    nsAutoPtr<txPattern> match(new txRootPattern(MB_TRUE));
+
+    nsAutoPtr<txPattern> match(new txRootPattern());
     NS_ENSURE_TRUE(match, NS_ERROR_OUT_OF_MEMORY);
 
     nsAutoPtr<txTemplateItem> templ(new txTemplateItem(match, nullExpr,

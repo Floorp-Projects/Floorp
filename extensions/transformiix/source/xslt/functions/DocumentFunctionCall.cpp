@@ -177,9 +177,12 @@ DocumentFunctionCall::evaluate(txIEvalContext* aContext,
     return NS_OK;
 }
 
-nsresult DocumentFunctionCall::getNameAtom(nsIAtom** aAtom)
+#ifdef TX_TO_STRING
+nsresult
+DocumentFunctionCall::getNameAtom(nsIAtom** aAtom)
 {
     *aAtom = txXSLTAtoms::document;
     NS_ADDREF(*aAtom);
     return NS_OK;
 }
+#endif

@@ -124,6 +124,7 @@ MBool PredicateList::isEmpty()
     return (MBool)(predicates.getLength() == 0);
 } // isEmpty
 
+#ifdef TX_TO_STRING
 void PredicateList::toString(nsAString& dest)
 {
     txListIterator iter(&predicates);
@@ -133,5 +134,5 @@ void PredicateList::toString(nsAString& dest)
         expr->toString(dest);
         dest.Append(PRUnichar(']'));
     }
-} // toString
-
+}
+#endif

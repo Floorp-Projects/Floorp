@@ -158,8 +158,11 @@ PRBool FunctionCall::requireParams(PRInt32 aParamCountMin,
     PRInt32 argc = params.getLength();
     if (argc < aParamCountMin ||
         (aParamCountMax > -1 && argc > aParamCountMax)) {
-        nsAutoString err(NS_LITERAL_STRING("invalid number of parameters for function: "));
+        nsAutoString err(NS_LITERAL_STRING("invalid number of parameters for function"));
+#ifdef TX_TO_STRING
+        err.Append(NS_LITERAL_STRING(": "));
         toString(err);
+#endif
         aContext->receiveError(err, NS_ERROR_XPATH_INVALID_ARG);
 
         return PR_FALSE;
@@ -168,15 +171,9 @@ PRBool FunctionCall::requireParams(PRInt32 aParamCountMin,
     return PR_TRUE;
 }
 
-/**
- * Returns the String representation of this NodeExpr.
- * @param dest the String to use when creating the String
- * representation. The String representation will be appended to
- * any data in the destination String, to allow cascading calls to
- * other #toString() methods for Expressions.
- * @return the String representation of this NodeExpr.
-**/
-void FunctionCall::toString(nsAString& aDest)
+#ifdef TX_TO_STRING
+void
+FunctionCall::toString(nsAString& aDest)
 {
     nsCOMPtr<nsIAtom> functionNameAtom;
     nsAutoString functionName;
@@ -200,6 +197,7 @@ void FunctionCall::toString(nsAString& aDest)
     }
     aDest.Append(PRUnichar(')'));
 }
+#endif
 
 /**
  * Implementation of txErrorFunctionCall
@@ -216,6 +214,7 @@ txErrorFunctionCall::evaluate(txIEvalContext* aContext,
     return NS_ERROR_XPATH_BAD_EXTENSION_FUNCTION;
 }
 
+#ifdef TX_TO_STRING
 nsresult
 txErrorFunctionCall::getNameAtom(nsIAtom** aAtom)
 {
@@ -224,3 +223,4 @@ txErrorFunctionCall::getNameAtom(nsIAtom** aAtom)
 
     return NS_OK;
 }
+#endif

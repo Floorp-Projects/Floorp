@@ -304,7 +304,7 @@ txStylesheetCompiler::startElementInternal(PRInt32 aNamespaceID,
             rv = ensureNewElementContext();
             NS_ENSURE_SUCCESS(rv, rv);
 
-            if (attr->mValue.Equals(NS_LITERAL_STRING("1.0"))) {
+            if (attr->mValue.EqualsLiteral("1.0")) {
                 mElementContext->mForwardsCompatibleParsing = MB_FALSE;
             }
             else {

@@ -49,6 +49,10 @@
 #include "nsAutoPtr.h"
 #include "ExprResult.h"
 
+#ifdef DEBUG
+#define TX_TO_STRING
+#endif
+
 /*
   XPath class definitions.
   Much of this code was ported from XSL:P.
@@ -84,6 +88,7 @@ public:
     virtual nsresult evaluate(txIEvalContext* aContext,
                               txAExprResult** aResult) = 0;
 
+#ifdef TX_TO_STRING
     /**
      * Returns the String representation of this Expr.
      * @param dest the String to use when creating the String
@@ -93,12 +98,16 @@ public:
      * @return the String representation of this Expr.
     **/
     virtual void toString(nsAString& str) = 0;
-
+#endif
 }; //-- Expr
 
 #define TX_DECL_EVALUATE \
     nsresult evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 
+#ifndef TX_TO_STRING
+#define TX_DECL_EXPR TX_DECL_EVALUATE
+#define TX_DECL_FUNCTION TX_DECL_EVALUATE
+#else
 #define TX_DECL_EXPR \
     TX_DECL_EVALUATE; \
     void toString(nsAString& aDest)
@@ -106,6 +115,7 @@ public:
 #define TX_DECL_FUNCTION \
     TX_DECL_EVALUATE; \
     nsresult getNameAtom(nsIAtom** aAtom)
+#endif
 
 /**
  * This class represents a FunctionCall as defined by the XPath 1.0
@@ -115,11 +125,6 @@ class FunctionCall : public Expr {
 
 public:
     virtual ~FunctionCall();
-
-    /**
-     * Virtual methods from Expr 
-    **/
-    void toString(nsAString& aDest);
 
     /**
      * Adds the given parameter to this FunctionCall's parameter list.
@@ -144,6 +149,10 @@ public:
     virtual PRBool requireParams(PRInt32 aParamCountMin,
                                  PRInt32 aParamCountMax,
                                  txIEvalContext* aContext);
+
+#ifdef TX_TO_STRING
+    void toString(nsAString& aDest);
+#endif
 
 protected:
 
@@ -175,10 +184,12 @@ protected:
     nsresult evaluateToNodeSet(Expr* aExpr, txIEvalContext* aContext,
                                txNodeSet** aResult);
 
+#ifdef TX_TO_STRING
     /*
      * Returns the name of the function as an atom.
      */
     virtual nsresult getNameAtom(nsIAtom** aAtom) = 0;
+#endif
 }; //-- FunctionCall
 
 
@@ -221,13 +232,23 @@ public:
     virtual PRBool matches(const txXPathNode& aNode,
                            txIMatchContext* aContext) = 0;
     virtual double getDefaultPriority() = 0;
+
+#ifdef TX_TO_STRING
     virtual void toString(nsAString& aDest) = 0;
+#endif
 };
 
-#define TX_DECL_NODE_TEST \
+#define TX_DECL_NODE_TEST_BASE \
     PRBool matches(const txXPathNode& aNode, txIMatchContext* aContext); \
-    double getDefaultPriority(); \
+    double getDefaultPriority()
+
+#ifndef TX_TO_STRING
+#define TX_DECL_NODE_TEST TX_DECL_NODE_TEST_BASE
+#else
+#define TX_DECL_NODE_TEST \
+    TX_DECL_NODE_TEST_BASE; \
     void toString(nsAString& aDest)
+#endif
 
 /*
  * This class represents a NameTest as defined by the XPath spec
@@ -319,6 +340,7 @@ public:
     **/
     MBool isEmpty();
 
+#ifdef TX_TO_STRING
     /**
      * Returns the String representation of this PredicateList.
      * @param dest the String to use when creating the String
@@ -328,6 +350,7 @@ public:
      * @return the String representation of this PredicateList.
     **/
     virtual void toString(nsAString& dest);
+#endif
 
 protected:
     //-- list of predicates
@@ -635,21 +658,30 @@ private:
  * This class represents a RootExpr, which only matches the Document node
 **/
 class RootExpr : public Expr {
-
 public:
-
     /**
      * Creates a new RootExpr
-     * @param aSerialize should this RootExpr be serialized
      */
-    RootExpr(MBool aSerialize);
+    RootExpr()
+#ifdef TX_TO_STRING
+        : mSerialize(PR_TRUE)
+#endif
+    {
+    }
 
     TX_DECL_EXPR;
 
+#ifdef TX_TO_STRING
+public:
+    void setSerialize(PRBool aSerialize)
+    {
+        mSerialize = aSerialize;
+    }
+
 private:
     // When a RootExpr is used in a PathExpr it shouldn't be serialized
-    MBool mSerialize;
-
+    PRBool mSerialize;
+#endif
 }; //-- RootExpr
 
 /**

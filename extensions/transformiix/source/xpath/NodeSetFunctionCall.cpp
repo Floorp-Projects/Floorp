@@ -236,7 +236,9 @@ NodeSetFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
     return NS_ERROR_UNEXPECTED;
 }
 
-nsresult NodeSetFunctionCall::getNameAtom(nsIAtom** aAtom)
+#ifdef TX_TO_STRING
+nsresult
+NodeSetFunctionCall::getNameAtom(nsIAtom** aAtom)
 {
     switch (mType) {
         case COUNT:
@@ -283,3 +285,4 @@ nsresult NodeSetFunctionCall::getNameAtom(nsIAtom** aAtom)
     NS_ADDREF(*aAtom);
     return NS_OK;
 }
+#endif
