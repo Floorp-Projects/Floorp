@@ -586,7 +586,6 @@ function OutputEmailAddresses(headerEntry, emailAddresses)
 
     numAddresses = msgHeaderParser.ParseHeadersWithArray(emailAddresses, addresses, names, fullNames);
     var index = 0;
-    var address = {};
     while (index < numAddresses)
     {
       // if we want to include short/long toggle views and we have a long view, always add it.
@@ -594,6 +593,7 @@ function OutputEmailAddresses(headerEntry, emailAddresses)
       // addresses to reach the cutoff valve yet then add it to the default (short) div.
       if (headerEntry.useToggle)
       {
+        var address = {};
         address.emailAddress = addresses.value[index];
         address.fullAddress = fullNames.value[index];
         address.displayName = names.value[index];
