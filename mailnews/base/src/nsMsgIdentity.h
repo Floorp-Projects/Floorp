@@ -50,6 +50,9 @@ public:
 	NS_IMETHOD GetPopServer(const char ** aHostName);
 	NS_IMETHOD GetSmtpServer(const char ** aHostName);
 	NS_IMETHOD GetReplyTo(const char ** aReplyTo);
+	NS_IMETHOD GetImapServer(const char ** aHostName);
+	NS_IMETHOD GetImapName(const char ** aImapName);
+	NS_IMETHOD GetImapPassword(const char ** aImapPassword);
 
 protected:
 	char	*m_popName;
@@ -62,6 +65,9 @@ protected:
 	char	*m_popHost;
 	char	*m_rootPath;
 	char	*m_replyTo;
+	char	*m_imapName;
+	char	*m_imapHost;
+	char	*m_imapPassword;
 
 	void InitializeIdentity();
 };

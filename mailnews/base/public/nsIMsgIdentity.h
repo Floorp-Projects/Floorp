@@ -60,6 +60,10 @@ public:
 	NS_IMETHOD GetPopServer(const char ** aHostName) = 0;
 	NS_IMETHOD GetSmtpServer(const char ** aHostName) = 0;
 	NS_IMETHOD GetReplyTo(const char ** aReplyTo) = 0;
+	NS_IMETHOD GetImapServer(const char ** aHostName) = 0;
+	NS_IMETHOD GetImapName(const char ** aImapName) = 0;
+	NS_IMETHOD GetImapPassword(const char ** aImapPassword) = 0;
+
 };
 
 #endif /* nsIMsgIdentity_h___ */

@@ -42,6 +42,11 @@ nsMsgIdentity::nsMsgIdentity()
 	m_replyTo = nsnull;
 
 	m_rootPath = nsnull;
+
+	m_imapName = nsnull;
+	m_imapHost = nsnull;
+	m_imapPassword = nsnull;
+
 	InitializeIdentity();
 }
 
@@ -57,6 +62,9 @@ nsMsgIdentity::~nsMsgIdentity()
 	PR_FREEIF(m_smtpHost);
 	PR_FREEIF(m_popHost);
 	PR_FREEIF(m_rootPath);
+	PR_FREEIF(m_imapName);
+	PR_FREEIF(m_imapHost);
+	PR_FREEIF(m_imapPassword);
 }
 
 void nsMsgIdentity::InitializeIdentity()
@@ -122,6 +130,21 @@ void nsMsgIdentity::InitializeIdentity()
 		if (NS_SUCCEEDED(rv) && prefLength > 0)
 			m_userPassword = PL_strdup(prefValue);
 
+		prefLength = PREF_LENGTH;
+		rv = prefs->GetCharPref("mail.imap_name", prefValue, &prefLength);
+		if (NS_SUCCEEDED(rv) && prefLength > 0)
+			m_imapName = PL_strdup(prefValue);
+
+		prefLength = PREF_LENGTH;
+		rv = prefs->GetCharPref("mail.imap_password", prefValue, &prefLength);
+		if (NS_SUCCEEDED(rv) && prefLength > 0)
+			m_imapPassword = PL_strdup(prefValue);
+
+		prefLength = PREF_LENGTH;
+		rv = prefs->GetCharPref("mail.imap_host", prefValue, &prefLength);
+		if (NS_SUCCEEDED(rv) && prefLength > 0)
+			m_imapHost = PL_strdup(prefValue);
+		
 		nsServiceManager::ReleaseService(kPrefCID, prefs);
 	}
 	else
@@ -204,3 +227,24 @@ nsresult nsMsgIdentity::GetReplyTo(const char ** aReplyTo)
 		*aReplyTo = m_replyTo;
 	return NS_OK;
 }	
+
+nsresult nsMsgIdentity::GetImapServer(const char ** aHostName)
+{
+	if (aHostName)
+		*aHostName = m_imapHost;
+	return NS_OK;
+}
+
+nsresult nsMsgIdentity::GetImapName(const char ** aImapName)
+{
+	if (aImapName)
+		*aImapName = m_imapName;
+	return NS_OK;
+}
+
+nsresult nsMsgIdentity::GetImapPassword(const char ** aImapPassword)
+{
+	if (aImapPassword)
+		*aImapPassword = m_imapPassword;
+	return NS_OK;
+}
