@@ -677,6 +677,8 @@ sub BuildIDLProjects()
 	BuildIDLProject(":mozilla:mailnews:local:macbuild:msglocalIDL.mcp",				"MsgLocal");
 	BuildIDLProject(":mozilla:mailnews:news:macbuild:msgnewsIDL.mcp",				"MsgNews");
 	BuildIDLProject(":mozilla:mailnews:addrbook:macbuild:msgAddrbookIDL.mcp",		"MsgAddrbook");
+
+	print("--- IDL projects complete ----\n")
 }
 
 #//--------------------------------------------------------------------------------------------------
