@@ -1,4 +1,4 @@
-#! perl -w
+#!/usr/bin/perl -w
 
 # Usage:
 # module-graph.pl [directory [ directory ..] ] > foo.dot
