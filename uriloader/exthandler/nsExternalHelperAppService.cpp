@@ -1845,6 +1845,11 @@ nsresult nsExternalAppHandler::InitializeDownload(nsIDownload* aDownload)
   
   rv = aDownload->SetObserver(this);
 
+  // Tell the listener about the location of the target file
+  nsCOMPtr<nsIObserver> obs(do_QueryInterface(aDownload));
+  if (obs)
+    obs->Observe(mTempFile, "temp-file", nsnull);
+
   return rv;
 }
 
@@ -2169,7 +2174,11 @@ NS_IMETHODIMP nsExternalAppHandler::Cancel()
   }
 
   // clean up after ourselves and delete the temp file...
-  if (mTempFile)
+  // but only if we got asked to open the file. when saving,
+  // we leave the file there - the partial file might be useful
+  nsMIMEInfoHandleAction action = nsIMIMEInfo::saveToDisk;
+  mMimeInfo->GetPreferredAction(&action);
+  if (mTempFile && action != nsIMIMEInfo::saveToDisk)
   {
     mTempFile->Remove(PR_TRUE);
     mTempFile = nsnull;
