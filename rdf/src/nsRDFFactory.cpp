@@ -71,7 +71,7 @@ NS_IMETHODIMP
 nsRDFFactory::QueryInterface(const nsIID &aIID,
                                       void **aResult)
 {
-    if (aResult)
+    if (! aResult)
         return NS_ERROR_NULL_POINTER;
 
     // Always NULL result, in case of failure
@@ -132,7 +132,7 @@ nsresult nsRDFFactory::LockFactory(PRBool aLock)
 }
 
 // return the proper factory to the caller
-extern "C" nsresult
+extern "C" PR_EXTERN(nsresult)
 NSGetFactory(const nsCID &aClass, nsIFactory **aFactory)
 {
     if (! aFactory)
