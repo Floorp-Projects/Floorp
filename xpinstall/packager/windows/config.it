@@ -210,7 +210,8 @@ Message1=Check the option below if you wish to save the downloaded installer fil
 [Dialog Start Install]
 Show Dialog=TRUE
 Title=Start Install
-Message0=Setup has enough information to start copying the program files.  If you want to review or change settings, click Back.  If you are satisfied with the current settings, click Install to begin copying files.
+Message Install=Setup has enough information to start copying the program files.  If you want to review or change settings, click Back.  If you are satisfied with the current settings, click Install to begin copying files.
+Message Download=Setup has enough information to start downloading and copying the program files.  If you want to review or change settings, click Back.  If you are satisfied with the current settings, make sure you are currently connected to the internet and click Install to begin downloading files.
 
 [Dialog Reboot]
 ; Show Dialog values are:
@@ -243,11 +244,11 @@ exe_param=
 [Check Instance0]
 Class Name=NetscapeWindowClass
 Window Name=
-Message=Setup has detected that an instance of Seamonkey is currently running.  Please quit Seamonkey before continuing Setup.
+Message=Setup has detected that an instance of $ProductName$ is currently running.  Please quit $ProductName$ before continuing Setup.  Click Retry to perform the check again, or Cancel to exit Setup.
 
-[Check Instance1]
-Process Name=psm.exe
-Message=Setup has detected that an instance of Personal Security Manager is currently running.  Personal Security Manager will quit by itself when there are no other applications running that require it.  A reboot might be necessary.  Setup will then be able to continue.
+;[Check Instance1]
+;Process Name=psm.exe
+;Message=Setup has detected that an instance of Personal Security Manager is currently running.  Personal Security Manager will quit by itself when there are no other applications running that require it.  A reboot may be necessary.  Setup will then be able to continue.  Click Retry to perform the check again, or Cancel to exit Setup.
 
 ; These are the components to be offered to the user (shown in the Select
 ; Components dialog) for installation.
