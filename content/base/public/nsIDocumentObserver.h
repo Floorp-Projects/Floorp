@@ -235,10 +235,10 @@ public:
                             PRInt32 aIndexInContainer) = 0;
 
   /**
-   * A StyleSheet has just been added to the document.
-   * This method is called automatically when a StyleSheet gets added
-   * to the document. The notification is passed on to all of the 
-   * document observers.
+   * A StyleSheet has just been added to the document.  This method is
+   * called automatically when a StyleSheet gets added to the
+   * document, even if the stylesheet is not applicable. The
+   * notification is passed on to all of the document observers.   
    *
    * @param aDocument The document being observed
    * @param aStyleSheet the StyleSheet that has been added
@@ -247,32 +247,32 @@ public:
                              nsIStyleSheet* aStyleSheet) = 0;
 
   /**
-   * A StyleSheet has just been removed from the document.
-   * This method is called automatically when a StyleSheet gets removed
-   * from the document. The notification is passed on to all of the 
-   * document observers.
+   * A StyleSheet has just been removed from the document.  This
+   * method is called automatically when a StyleSheet gets removed
+   * from the document, even if the stylesheet is not applicable. The
+   * notification is passed on to all of the document observers.
    *
    * @param aDocument The document being observed
    * @param aStyleSheet the StyleSheet that has been removed
    */
   NS_IMETHOD StyleSheetRemoved(nsIDocument *aDocument,
                                nsIStyleSheet* aStyleSheet) = 0;
-
+  
   /**
-   * A StyleSheet has just disabled or enabled.
-   * This method is called automatically when the disabled state
+   * A StyleSheet has just changed its applicable state.
+   * This method is called automatically when the applicable state
    * of a StyleSheet gets changed. The style sheet passes this
    * notification to the document. The notification is passed on 
    * to all of the document observers.
    *
    * @param aDocument The document being observed
-   * @param aStyleSheet the StyleSheet that has been added
-   * @param aDisabled PR_TRUE if the sheet is disabled, PR_FALSE if
-   *        it is enabled
+   * @param aStyleSheet the StyleSheet that has changed state
+   * @param aApplicable PR_TRUE if the sheet is applicable, PR_FALSE if
+   *        it is not applicable
    */
-  NS_IMETHOD StyleSheetDisabledStateChanged(nsIDocument *aDocument,
-                                            nsIStyleSheet* aStyleSheet,
-                                            PRBool aDisabled) = 0;
+  NS_IMETHOD StyleSheetApplicableStateChanged(nsIDocument *aDocument,
+                                              nsIStyleSheet* aStyleSheet,
+                                              PRBool aApplicable) = 0;
 
   /**
    * A StyleRule has just been modified within a style sheet.
@@ -331,62 +331,62 @@ public:
   NS_IMETHOD DocumentWillBeDestroyed(nsIDocument *aDocument) = 0;
 };
 
-#define NS_DECL_NSIDOCUMENTOBSERVER                                       \
-    NS_IMETHOD BeginUpdate(nsIDocument* aDocument);                       \
-    NS_IMETHOD EndUpdate(nsIDocument* aDocument);                         \
-    NS_IMETHOD BeginLoad(nsIDocument* aDocument);                         \
-    NS_IMETHOD EndLoad(nsIDocument* aDocument);                           \
-    NS_IMETHOD BeginReflow(nsIDocument* aDocument,                        \
-                           nsIPresShell* aShell);                         \
-    NS_IMETHOD EndReflow(nsIDocument* aDocument,                          \
-                         nsIPresShell* aShell);                           \
-    NS_IMETHOD ContentChanged(nsIDocument* aDocument,                     \
-                              nsIContent* aContent,                       \
-                              nsISupports* aSubContent);                  \
-    NS_IMETHOD ContentStatesChanged(nsIDocument* aDocument,               \
-                                    nsIContent* aContent1,                \
-                                    nsIContent* aContent2,                \
-                                    PRInt32 aStateMask);                  \
-    NS_IMETHOD AttributeChanged(nsIDocument* aDocument,                   \
-                                nsIContent* aContent,                     \
-                                PRInt32 aNameSpaceID,                     \
-                                nsIAtom* aAttribute,                      \
-                                PRInt32 aModType,                         \
-                                nsChangeHint aHint);                      \
-    NS_IMETHOD ContentAppended(nsIDocument* aDocument,                    \
-                               nsIContent* aContainer,                    \
-                               PRInt32 aNewIndexInContainer);             \
-    NS_IMETHOD ContentInserted(nsIDocument* aDocument,                    \
-                               nsIContent* aContainer,                    \
-                               nsIContent* aChild,                        \
-                               PRInt32 aIndexInContainer);                \
-    NS_IMETHOD ContentReplaced(nsIDocument* aDocument,                    \
-                               nsIContent* aContainer,                    \
-                               nsIContent* aOldChild,                     \
-                               nsIContent* aNewChild,                     \
-                               PRInt32 aIndexInContainer);                \
-    NS_IMETHOD ContentRemoved(nsIDocument* aDocument,                     \
-                              nsIContent* aContainer,                     \
-                              nsIContent* aChild,                         \
-                              PRInt32 aIndexInContainer);                 \
-    NS_IMETHOD StyleSheetAdded(nsIDocument* aDocument,                    \
-                               nsIStyleSheet* aStyleSheet);               \
-    NS_IMETHOD StyleSheetRemoved(nsIDocument* aDocument,                  \
-                                 nsIStyleSheet* aStyleSheet);             \
-    NS_IMETHOD StyleSheetDisabledStateChanged(nsIDocument* aDocument,     \
-                                              nsIStyleSheet* aStyleSheet, \
-                                              PRBool aDisabled);          \
-    NS_IMETHOD StyleRuleChanged(nsIDocument* aDocument,                   \
-                                nsIStyleSheet* aStyleSheet,               \
-                                nsIStyleRule* aStyleRule,                 \
-                                nsChangeHint aHint);                      \
-    NS_IMETHOD StyleRuleAdded(nsIDocument* aDocument,                     \
-                              nsIStyleSheet* aStyleSheet,                 \
-                              nsIStyleRule* aStyleRule);                  \
-    NS_IMETHOD StyleRuleRemoved(nsIDocument* aDocument,                   \
-                                nsIStyleSheet* aStyleSheet,               \
-                                nsIStyleRule* aStyleRule);                \
-    NS_IMETHOD DocumentWillBeDestroyed(nsIDocument* aDocument);           \
+#define NS_DECL_NSIDOCUMENTOBSERVER                                          \
+    NS_IMETHOD BeginUpdate(nsIDocument* aDocument);                          \
+    NS_IMETHOD EndUpdate(nsIDocument* aDocument);                            \
+    NS_IMETHOD BeginLoad(nsIDocument* aDocument);                            \
+    NS_IMETHOD EndLoad(nsIDocument* aDocument);                              \
+    NS_IMETHOD BeginReflow(nsIDocument* aDocument,                           \
+                           nsIPresShell* aShell);                            \
+    NS_IMETHOD EndReflow(nsIDocument* aDocument,                             \
+                         nsIPresShell* aShell);                              \
+    NS_IMETHOD ContentChanged(nsIDocument* aDocument,                        \
+                              nsIContent* aContent,                          \
+                              nsISupports* aSubContent);                     \
+    NS_IMETHOD ContentStatesChanged(nsIDocument* aDocument,                  \
+                                    nsIContent* aContent1,                   \
+                                    nsIContent* aContent2,                   \
+                                    PRInt32 aStateMask);                     \
+    NS_IMETHOD AttributeChanged(nsIDocument* aDocument,                      \
+                                nsIContent* aContent,                        \
+                                PRInt32 aNameSpaceID,                        \
+                                nsIAtom* aAttribute,                         \
+                                PRInt32 aModType,                            \
+                                nsChangeHint aHint);                         \
+    NS_IMETHOD ContentAppended(nsIDocument* aDocument,                       \
+                               nsIContent* aContainer,                       \
+                               PRInt32 aNewIndexInContainer);                \
+    NS_IMETHOD ContentInserted(nsIDocument* aDocument,                       \
+                               nsIContent* aContainer,                       \
+                               nsIContent* aChild,                           \
+                               PRInt32 aIndexInContainer);                   \
+    NS_IMETHOD ContentReplaced(nsIDocument* aDocument,                       \
+                               nsIContent* aContainer,                       \
+                               nsIContent* aOldChild,                        \
+                               nsIContent* aNewChild,                        \
+                               PRInt32 aIndexInContainer);                   \
+    NS_IMETHOD ContentRemoved(nsIDocument* aDocument,                        \
+                              nsIContent* aContainer,                        \
+                              nsIContent* aChild,                            \
+                              PRInt32 aIndexInContainer);                    \
+    NS_IMETHOD StyleSheetAdded(nsIDocument* aDocument,                       \
+                               nsIStyleSheet* aStyleSheet);                  \
+    NS_IMETHOD StyleSheetRemoved(nsIDocument* aDocument,                     \
+                                 nsIStyleSheet* aStyleSheet);                \
+    NS_IMETHOD StyleSheetApplicableStateChanged(nsIDocument* aDocument,      \
+                                                nsIStyleSheet* aStyleSheet,  \
+                                                PRBool aApplicable);         \
+    NS_IMETHOD StyleRuleChanged(nsIDocument* aDocument,                      \
+                                nsIStyleSheet* aStyleSheet,                  \
+                                nsIStyleRule* aStyleRule,                    \
+                                nsChangeHint aHint);                         \
+    NS_IMETHOD StyleRuleAdded(nsIDocument* aDocument,                        \
+                              nsIStyleSheet* aStyleSheet,                    \
+                              nsIStyleRule* aStyleRule);                     \
+    NS_IMETHOD StyleRuleRemoved(nsIDocument* aDocument,                      \
+                                nsIStyleSheet* aStyleSheet,                  \
+                                nsIStyleRule* aStyleRule);                   \
+    NS_IMETHOD DocumentWillBeDestroyed(nsIDocument* aDocument);              \
 
 
 #define NS_IMPL_NSIDOCUMENTOBSERVER_CORE_STUB(_class)                     \
@@ -507,9 +507,9 @@ _class::StyleSheetRemoved(nsIDocument* aDocument,                         \
   return NS_OK;                                                           \
 }                                                                         \
 NS_IMETHODIMP                                                             \
-_class::StyleSheetDisabledStateChanged(nsIDocument* aDocument,            \
-                                       nsIStyleSheet* aStyleSheet,        \
-                                       PRBool aDisabled)                  \
+_class::StyleSheetApplicableStateChanged(nsIDocument* aDocument,          \
+                                         nsIStyleSheet* aStyleSheet,      \
+                                         PRBool aApplicable)              \
 {                                                                         \
   return NS_OK;                                                           \
 }                                                                         \

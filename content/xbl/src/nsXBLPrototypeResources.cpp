@@ -136,8 +136,7 @@ nsXBLPrototypeResources::FlushSkinSheets()
     oldSheet->GetURL(*getter_AddRefs(uri));
 
     if (IsChromeURI(uri)) {
-      PRBool complete;
-      if (NS_FAILED(loader->LoadAgentSheet(uri, *getter_AddRefs(newSheet), complete, nsnull)))
+      if (NS_FAILED(loader->LoadAgentSheet(uri, getter_AddRefs(newSheet))))
         continue;
     }
     else 

@@ -1661,21 +1661,21 @@ DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument,
   rv = CallCreateInstance(kStyleSetCID, aStyleSet);
   if (NS_OK == rv) {
     PRInt32 index = 0;
-    aDocument->GetNumberOfStyleSheets(&index);
+    aDocument->GetNumberOfStyleSheets(PR_TRUE, &index);
 
     while (0 < index--) {
       nsCOMPtr<nsIStyleSheet> sheet;
-      aDocument->GetStyleSheetAt(index, getter_AddRefs(sheet));
+      aDocument->GetStyleSheetAt(index, PR_TRUE, getter_AddRefs(sheet));
 
       /*
        * GetStyleSheetAt will return all style sheets in the document but
        * we're only interested in the ones that are enabled.
        */
 
-      PRBool styleEnabled;
-      sheet->GetEnabled(styleEnabled);
+      PRBool styleApplicable;
+      sheet->GetApplicable(styleApplicable);
 
-      if (styleEnabled) {
+      if (styleApplicable) {
         (*aStyleSet)->AddDocStyleSheet(sheet, aDocument);
       }
     }

@@ -144,21 +144,13 @@ nsXBLResourceLoader::LoadResources(PRBool* aResult)
 
       // Kick off the load of the stylesheet.
       PRBool doneLoading;
-      nsAutoString empty;
-      PRInt32 numSheets = 0;
-      doc->GetNumberOfStyleSheets(&numSheets);
+      NS_NAMED_LITERAL_STRING(empty, "");
 
-#ifdef DEBUG
-      nsCOMPtr<nsILoadGroup> loadGroup;
-      doc->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
-      
-      NS_ASSERTION(loadGroup, "An XBL scoped stylesheet is unable to locate a load group. This means the onload is going to fire too early!");
-#endif
-
-      cssLoader->LoadStyleLink(nsnull, url, empty, empty, kNameSpaceID_Unknown,
-                               numSheets,
+      nsresult rv = cssLoader->LoadStyleLink(nsnull, url, empty, empty, kNameSpaceID_Unknown,
                                nsnull,
                                doneLoading, this);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "Load failed!!!");
+
       if (!doneLoading)
         mPendingSheets++;
     }

@@ -701,8 +701,7 @@ nsContentDLF::EnsureUAStyleSheet()
   NS_NewCSSLoader(getter_AddRefs(cssLoader));
   if (!cssLoader)
     return NS_ERROR_OUT_OF_MEMORY;
-  PRBool complete;
-  rv = cssLoader->LoadAgentSheet(uri, gUAStyleSheet, complete, nsnull);
+  rv = cssLoader->LoadAgentSheet(uri, &gUAStyleSheet);
 #ifdef DEBUG
   if (NS_FAILED(rv))
     printf("*** open of %s failed: error=%x\n", UA_CSS_URL, rv);

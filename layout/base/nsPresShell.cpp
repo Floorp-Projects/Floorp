@@ -1969,19 +1969,21 @@ PresShell::SelectAlternateStyleSheet(const nsString& aSheetTitle)
 {
   if (mDocument && mStyleSet) {
     PRInt32 count = 0;
-    mDocument->GetNumberOfStyleSheets(&count);
+    mDocument->GetNumberOfStyleSheets(PR_FALSE, &count);
     PRInt32 index;
     NS_NAMED_LITERAL_STRING(textHtml,"text/html");
     for (index = 0; index < count; index++) {
       nsCOMPtr<nsIStyleSheet> sheet;
-      mDocument->GetStyleSheetAt(index, getter_AddRefs(sheet));
-      if (sheet) {
+      mDocument->GetStyleSheetAt(index, PR_FALSE, getter_AddRefs(sheet));
+      PRBool complete;
+      sheet->GetComplete(complete);
+      if (complete) {
         nsAutoString type;
         sheet->GetType(type);
-        if (PR_FALSE == type.Equals(textHtml)) {
-          nsAutoString  title;
+        if (!type.Equals(textHtml)) {
+          nsAutoString title;
           sheet->GetTitle(title);
-          if (0 < title.Length()) {
+          if (!title.IsEmpty()) {
             if (title.Equals(aSheetTitle)) {
               mStyleSet->AddDocStyleSheet(sheet, mDocument);
             }
@@ -2004,14 +2006,15 @@ PresShell::SelectAlternateStyleSheet(const nsString& aSheetTitle)
 NS_IMETHODIMP
 PresShell::ListAlternateStyleSheets(nsStringArray& aTitleList)
 {
+  // XXX should this be returning incomplete sheets?  Probably.
   if (mDocument) {
     PRInt32 count = 0;
-    mDocument->GetNumberOfStyleSheets(&count);
+    mDocument->GetNumberOfStyleSheets(PR_FALSE, &count);
     PRInt32 index;
     NS_NAMED_LITERAL_STRING(textHtml,"text/html");
     for (index = 0; index < count; index++) {
       nsCOMPtr<nsIStyleSheet> sheet;
-      mDocument->GetStyleSheetAt(index, getter_AddRefs(sheet));
+      mDocument->GetStyleSheetAt(index, PR_FALSE, getter_AddRefs(sheet));
       if (sheet) {
         nsAutoString type;
         sheet->GetType(type);
@@ -2149,7 +2152,7 @@ PresShell::SetPreferenceStyleRules(PRBool aForceReflow)
       // update the styleset now that we are done inserting our rules
       if (NS_SUCCEEDED(result)) {
         if (mStyleSet) {
-          mStyleSet->NotifyStyleSheetStateChanged(PR_FALSE);
+          mStyleSet->NotifyStyleSheetStateChanged(PR_TRUE);
         }
       }
     }
@@ -2215,6 +2218,7 @@ nsresult PresShell::CreatePreferenceStyleSheet(void)
       NS_ASSERTION(uri, "null but no error");
       result = mPrefStyleSheet->Init(uri);
       if (NS_SUCCEEDED(result)) {
+        mPrefStyleSheet->SetComplete();
         mPrefStyleSheet->SetDefaultNameSpaceID(kNameSpaceID_XHTML);
         mStyleSet->InsertUserStyleSheetBefore(mPrefStyleSheet, nsnull);
       }
@@ -5465,29 +5469,45 @@ NS_IMETHODIMP
 PresShell::StyleSheetAdded(nsIDocument *aDocument,
                            nsIStyleSheet* aStyleSheet)
 {
-  // If style information is being added, we don't need to rebuild the
-  // rule tree, since no rule nodes have been rendered invalid by the
-  // addition of new rule content.
-  return ReconstructStyleData(PR_FALSE);
+  // We only care when enabled sheets are added
+  NS_PRECONDITION(aStyleSheet, "Must have a style sheet!");
+  PRBool applicable;
+  aStyleSheet->GetApplicable(applicable);
+  if (applicable) {
+    // If style information is being added, we don't need to rebuild the
+    // rule tree, since no rule nodes have been rendered invalid by the
+    // addition of new rule content.
+    return ReconstructStyleData(PR_FALSE);
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
 PresShell::StyleSheetRemoved(nsIDocument *aDocument,
                              nsIStyleSheet* aStyleSheet)
 {
-  // XXXdwh We'd like to be able to use ReconstructStyleData in all the
-  // other style sheet calls, but it doesn't quite work because of HTML tables.
-  return ReconstructStyleData(PR_TRUE);
+  // We only care when enabled sheets are removed
+  NS_PRECONDITION(aStyleSheet, "Must have a style sheet!");
+  PRBool applicable;
+  aStyleSheet->GetApplicable(applicable);
+  if (applicable) {
+    // XXXdwh We'd like to be able to use ReconstructStyleData in all the
+    // other style sheet calls, but it doesn't quite work because of HTML tables.
+    return ReconstructStyleData(PR_TRUE);
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-PresShell::StyleSheetDisabledStateChanged(nsIDocument *aDocument,
-                                          nsIStyleSheet* aStyleSheet,
-                                          PRBool aDisabled)
+PresShell::StyleSheetApplicableStateChanged(nsIDocument *aDocument,
+                                            nsIStyleSheet* aStyleSheet,
+                                            PRBool aApplicable)
 {
   // first notify the style set that a sheet's state has changed
   if (mStyleSet) {
-    nsresult rv = mStyleSet->NotifyStyleSheetStateChanged(!aDisabled);
+    nsresult rv = mStyleSet->NotifyStyleSheetStateChanged(aApplicable);
     if (NS_FAILED(rv))
       return rv;
   }

@@ -333,7 +333,6 @@ protected:
   nsCSSScanner* mScanner;
   nsIURI* mURL;
   nsICSSStyleSheet* mSheet;
-  PRInt32 mChildSheetCount;
   nsICSSLoader* mChildLoader; // not ref counted, it owns us
 
   enum nsCSSSection { 
@@ -428,7 +427,6 @@ CSSParserImpl::CSSParserImpl()
     mScanner(nsnull),
     mURL(nsnull),
     mSheet(nsnull),
-    mChildSheetCount(0),
     mChildLoader(nsnull),
     mSection(eCSSSection_Charset),
     mNavQuirkMode(PR_FALSE),
@@ -449,7 +447,6 @@ CSSParserImpl::Init(nsICSSStyleSheet* aSheet)
   mSheet = aSheet;
   if (mSheet) {
     NS_ADDREF(aSheet);
-    mSheet->StyleSheetCount(mChildSheetCount);
     mSheet->GetNameSpace(mNameSpace);
   }
   return NS_OK;
@@ -486,7 +483,6 @@ CSSParserImpl::SetStyleSheet(nsICSSStyleSheet* aSheet)
     NS_IF_RELEASE(mSheet);
     mSheet = aSheet;
     NS_ADDREF(mSheet);
-    mSheet->StyleSheetCount(mChildSheetCount);
     mSheet->GetNameSpace(mNameSpace);
   }
 
@@ -554,8 +550,17 @@ CSSParserImpl::Parse(nsIUnicharInputStream* aInput,
 
   if (! mSheet) {
     NS_NewCSSStyleSheet(&mSheet, aInputURL);
-    mChildSheetCount = 0;
   }
+#ifdef DEBUG
+  else {
+    nsCOMPtr<nsIURI> uri;
+    mSheet->GetURL(*getter_AddRefs(uri));
+    PRBool equal;
+    aInputURL->Equals(uri, &equal);
+    NS_ASSERTION(equal, "Sheet URI does not match passed URI");
+  }
+#endif
+  
   if (! mSheet) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -1189,7 +1194,7 @@ PRBool CSSParserImpl::ProcessImport(PRInt32& aErrorCode, const nsString& aURLSpe
     PRBool bContains = PR_FALSE;
     if (NS_SUCCEEDED(mSheet->ContainsStyleSheet(url,bContains)) && 
         bContains != PR_TRUE ) { // don't allow circular references
-      mChildLoader->LoadChildSheet(mSheet, url, aMedia, kNameSpaceID_Unknown, mChildSheetCount++, rule);
+      mChildLoader->LoadChildSheet(mSheet, url, aMedia, kNameSpaceID_Unknown, rule);
     }
   }
   

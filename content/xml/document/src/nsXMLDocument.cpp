@@ -597,20 +597,27 @@ nsXMLDocument::GetInlineStyleSheet(nsIHTMLCSSStyleSheet** aResult)
 // subclass hook for sheet ordering
 void nsXMLDocument::InternalAddStyleSheet(nsIStyleSheet* aSheet, PRUint32 aFlags)
 {
+  // XXXbz this catalog stuff should be in the UA level in the cascade!
   if (aFlags & NS_STYLESHEET_FROM_CATALOG) {
     // always after other catalog sheets
     mStyleSheets.InsertObjectAt(aSheet, mCountCatalogSheets);
     ++mCountCatalogSheets;
   }
   else if (aSheet == mAttrStyleSheet) {  // always after catalog sheets
+    NS_ASSERTION(mStyleSheets.Count() == 0 ||
+                 mAttrStyleSheet != mStyleSheets[0],
+                 "Adding attr sheet twice!");
     mStyleSheets.InsertObjectAt(aSheet, mCountCatalogSheets);
   }
   else if (aSheet == mInlineStyleSheet) {  // always last
+    NS_ASSERTION(mStyleSheets.Count() == 0 ||
+                 mStyleSheets[mStyleSheets.Count() - 1] != mInlineStyleSheet,
+                 "Adding style attr sheet twice!");
     mStyleSheets.AppendObject(aSheet);
   }
   else {
     PRInt32 count = mStyleSheets.Count();
-    if (count != 0 && mInlineStyleSheet == mStyleSheets.ObjectAt(count - 1)) {
+    if (count != 0 && mInlineStyleSheet == mStyleSheets[count - 1]) {
       // keep attr sheet last
       mStyleSheets.InsertObjectAt(aSheet, count - 1);
     }
@@ -623,8 +630,45 @@ void nsXMLDocument::InternalAddStyleSheet(nsIStyleSheet* aSheet, PRUint32 aFlags
 void
 nsXMLDocument::InternalInsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex)
 {
+  NS_ASSERTION(0 <= aIndex &&
+               aIndex <= (
+                          mStyleSheets.Count()
+                          /* Don't count Attribute stylesheet */
+                          - 1
+                          /* Don't count catalog sheets */
+                          - mCountCatalogSheets
+                          /* No insertion allowed after StyleAttr stylesheet */
+                          - (mInlineStyleSheet ? 1: 0)
+                          ),
+               "index out of bounds");
   // offset w.r.t. catalog style sheets and the attr style sheet
   mStyleSheets.InsertObjectAt(aSheet, aIndex + mCountCatalogSheets + 1);
+}
+
+already_AddRefed<nsIStyleSheet>
+nsXMLDocument::InternalGetStyleSheetAt(PRInt32 aIndex)
+{
+  PRInt32 count = InternalGetNumberOfStyleSheets();
+
+  if (aIndex >= 0 && aIndex < count) {
+    nsIStyleSheet* sheet = mStyleSheets[aIndex + mCountCatalogSheets + 1];
+    NS_ADDREF(sheet);
+    return sheet;
+  } else {
+    NS_ERROR("Index out of range");
+    return nsnull;
+  }
+}
+
+PRInt32
+nsXMLDocument::InternalGetNumberOfStyleSheets()
+{
+  PRInt32 count = mStyleSheets.Count();
+  if (count != 0 && mInlineStyleSheet == mStyleSheets[count - 1])
+    --count;
+  count -= (mCountCatalogSheets + 1); // +1 for the attr sheet
+  NS_ASSERTION(count >= 0, "Why did we end up with a negative count?");
+  return count;
 }
 
 // nsIDOMDocument interface

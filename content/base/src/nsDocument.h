@@ -62,7 +62,6 @@
 #include "nsINodeInfo.h"
 #include "nsIDOMDocumentEvent.h"
 #include "nsIDOM3DocumentEvent.h"
-#include "nsISupportsArray.h"
 #include "nsCOMArray.h"
 #include "nsHashtable.h"
 #include "nsIWordBreakerFactory.h"
@@ -203,9 +202,9 @@ public:
                              nsIStyleSheet* aStyleSheet);
   NS_IMETHOD StyleSheetRemoved(nsIDocument *aDocument,
                                nsIStyleSheet* aStyleSheet);
-  NS_IMETHOD StyleSheetDisabledStateChanged(nsIDocument *aDocument,
-                                        nsIStyleSheet* aStyleSheet,
-                                        PRBool aDisabled) { return NS_OK; }
+  NS_IMETHOD StyleSheetApplicableStateChanged(nsIDocument *aDocument,
+                                              nsIStyleSheet* aStyleSheet,
+                                              PRBool aApplicable) { return NS_OK; }
   NS_IMETHOD StyleRuleChanged(nsIDocument *aDocument,
                               nsIStyleSheet* aStyleSheet,
                               nsIStyleRule* aStyleRule,
@@ -429,21 +428,22 @@ public:
    * Get the style sheets owned by this document.
    * These are ordered, highest priority last
    */
-  NS_IMETHOD GetNumberOfStyleSheets(PRInt32* aCount);
-  NS_IMETHOD GetStyleSheetAt(PRInt32 aIndex, nsIStyleSheet** aSheet);
+  NS_IMETHOD GetNumberOfStyleSheets(PRBool aIncludeSpecialSheets,
+                                    PRInt32* aCount);
+  NS_IMETHOD GetStyleSheetAt(PRInt32 aIndex, PRBool aIncludeSpecialSheets,
+                             nsIStyleSheet** aSheet);
   NS_IMETHOD GetIndexOfStyleSheet(nsIStyleSheet* aSheet, PRInt32* aIndex);
   virtual void AddStyleSheet(nsIStyleSheet* aSheet, PRUint32 aFlags);
   virtual void RemoveStyleSheet(nsIStyleSheet* aSheet);
   
-  NS_IMETHOD UpdateStyleSheets(nsISupportsArray* aOldSheets,
-                               nsISupportsArray* aNewSheets);
+  NS_IMETHOD UpdateStyleSheets(nsCOMArray<nsIStyleSheet>& aOldSheets,
+                               nsCOMArray<nsIStyleSheet>& aNewSheets);
   virtual void AddStyleSheetToStyleSets(nsIStyleSheet* aSheet);
   virtual void RemoveStyleSheetFromStyleSets(nsIStyleSheet* aSheet);
 
-  NS_IMETHOD InsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex,
-                                PRBool aNotify);
-  virtual void SetStyleSheetDisabledState(nsIStyleSheet* aSheet,
-                                          PRBool mDisabled);
+  NS_IMETHOD InsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex);
+  virtual void SetStyleSheetApplicableState(nsIStyleSheet* aSheet,
+                                            PRBool aApplicable);
 
   /**
    * Set the object from which a document can get a script context.
@@ -609,6 +609,8 @@ protected:
                                      PRUint32 aFlags);
   virtual void InternalInsertStyleSheetAt(nsIStyleSheet* aSheet,
                                           PRInt32 aIndex);
+  virtual already_AddRefed<nsIStyleSheet> InternalGetStyleSheetAt(PRInt32 aIndex);
+  virtual PRInt32 InternalGetNumberOfStyleSheets();
 
   nsDocument();
   virtual ~nsDocument(); 

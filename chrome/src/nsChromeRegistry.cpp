@@ -1389,7 +1389,7 @@ nsresult nsChromeRegistry::RefreshWindow(nsIDOMWindowInternal* aWindow)
   if (!document)
     return NS_OK;
 
-  // Deal with the agent sheets first.
+  // Deal with the agent sheets first.  Have to do all the style sets by hand.
   PRInt32 shellCount = document->GetNumberOfShells();
   for (PRInt32 k = 0; k < shellCount; k++) {
     nsCOMPtr<nsIPresShell> shell;
@@ -1434,76 +1434,63 @@ nsresult nsChromeRegistry::RefreshWindow(nsIDOMWindowInternal* aWindow)
         styleSet->ReplaceAgentStyleSheets(newAgentSheets);
       }
     }
-    
-    nsCOMPtr<nsIHTMLContentContainer> container = do_QueryInterface(document);
-    nsCOMPtr<nsICSSLoader> cssLoader;
-    rv = container->GetCSSLoader(*getter_AddRefs(cssLoader));
-    if (NS_FAILED(rv)) return rv;
-
-    // Build an array of nsIURIs of style sheets we need to load.
-    nsCOMPtr<nsISupportsArray> oldSheets;
-    rv = NS_NewISupportsArray(getter_AddRefs(oldSheets));
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsISupportsArray> newSheets;
-    rv = NS_NewISupportsArray(getter_AddRefs(newSheets));
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsIHTMLStyleSheet> attrSheet;
-    rv = container->GetAttributeStyleSheet(getter_AddRefs(attrSheet));
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsIHTMLCSSStyleSheet> inlineSheet;
-    rv = container->GetInlineStyleSheet(getter_AddRefs(inlineSheet));
-    if (NS_FAILED(rv)) return rv;
-
-    PRInt32 count = 0;
-    document->GetNumberOfStyleSheets(&count);
-
-    // Iterate over the style sheets.
-    PRUint32 i;
-    for (i = 0; i < (PRUint32)count; i++) {
-      // Get the style sheet
-      nsCOMPtr<nsIStyleSheet> styleSheet;
-      document->GetStyleSheetAt(i, getter_AddRefs(styleSheet));
-
-      // Make sure we aren't the special style sheets that never change.  We
-      // want to skip those.
-
-      nsCOMPtr<nsIStyleSheet> attr = do_QueryInterface(attrSheet);
-      nsCOMPtr<nsIStyleSheet> inl = do_QueryInterface(inlineSheet);
-      if ((attr.get() != styleSheet.get()) &&
-          (inl.get() != styleSheet.get()))
-        // Add this sheet to the list of old style sheets.
-        oldSheets->AppendElement(styleSheet);
-    }
-
-    // Iterate over our old sheets and kick off a sync load of the new 
-    // sheet if and only if it's a chrome URL.
-    PRUint32 oldCount;
-    oldSheets->Count(&oldCount);
-    for (i = 0; i < oldCount; i++) {
-      nsCOMPtr<nsISupports> supp = getter_AddRefs(oldSheets->ElementAt(i));
-      nsCOMPtr<nsIStyleSheet> sheet(do_QueryInterface(supp));
-      nsCOMPtr<nsIURI> uri;
-      rv = sheet->GetURL(*getter_AddRefs(uri));
-      if (NS_FAILED(rv)) return rv;
-
-      if (IsChromeURI(uri)) {
-        // Reload the sheet.
-        nsCOMPtr<nsICSSStyleSheet> newSheet;
-        LoadStyleSheetWithURL(uri, getter_AddRefs(newSheet));
-        if (newSheet)
-          newSheets->AppendElement(newSheet);
-      }
-      else  // Just use the same sheet.
-        newSheets->AppendElement(sheet);
-    }
-
-    // Now notify the document that multiple sheets have been added and removed.
-    document->UpdateStyleSheets(oldSheets, newSheets);
   }
 
+  // The document sheets just need to be done once; the document will notify
+  // the presshells and style sets
+  nsCOMPtr<nsIHTMLContentContainer> container = do_QueryInterface(document);
+  nsCOMPtr<nsICSSLoader> cssLoader;
+  rv = container->GetCSSLoader(*getter_AddRefs(cssLoader));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Build an array of nsIURIs of style sheets we need to load.
+  nsCOMArray<nsIStyleSheet> oldSheets;
+  nsCOMArray<nsIStyleSheet> newSheets;
+
+  PRInt32 count = 0;
+  document->GetNumberOfStyleSheets(PR_FALSE, &count);
+
+  // Iterate over the style sheets.
+  PRInt32 i;
+  for (i = 0; i < count; i++) {
+    // Get the style sheet
+    nsCOMPtr<nsIStyleSheet> styleSheet;
+    document->GetStyleSheetAt(i, PR_FALSE, getter_AddRefs(styleSheet));
+    
+    if (!oldSheets.AppendObject(styleSheet)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+
+  // Iterate over our old sheets and kick off a sync load of the new 
+  // sheet if and only if it's a chrome URL.
+  for (i = 0; i < count; i++) {
+    nsCOMPtr<nsIStyleSheet> sheet = oldSheets[i];
+    nsCOMPtr<nsIURI> uri;
+    rv = sheet->GetURL(*getter_AddRefs(uri));
+    if (NS_FAILED(rv)) return rv;
+
+    if (IsChromeURI(uri)) {
+      // Reload the sheet.
+#ifdef DEBUG
+      nsCOMPtr<nsICSSStyleSheet> oldCSSSheet = do_QueryInterface(sheet);
+      NS_ASSERTION(oldCSSSheet, "Don't know how to reload a non-CSS sheet");
+#endif
+      nsCOMPtr<nsICSSStyleSheet> newSheet;
+      // XXX what about chrome sheets that have a title or are disabled?  This
+      // only works by sheer dumb luck.
+      LoadStyleSheetWithURL(uri, getter_AddRefs(newSheet));
+      // Even if it's null, we put in in there.
+      newSheets.AppendObject(newSheet);
+    }
+    else {
+      // Just use the same sheet.
+      newSheets.AppendObject(sheet);
+    }
+  }
+
+  // Now notify the document that multiple sheets have been added and removed.
+  document->UpdateStyleSheets(oldSheets, newSheets);
   return NS_OK;
 }
 
@@ -3085,9 +3072,7 @@ nsresult nsChromeRegistry::LoadStyleSheetWithURL(nsIURI* aURL, nsICSSStyleSheet*
                                     getter_AddRefs(loader));
   if (NS_FAILED(rv)) return rv;
   if (loader) {
-      PRBool complete;
-      rv = loader->LoadAgentSheet(aURL, *aSheet, complete,
-                                  nsnull);
+      rv = loader->LoadAgentSheet(aURL, aSheet);
       if (NS_FAILED(rv)) return rv;
   }
   return NS_OK;

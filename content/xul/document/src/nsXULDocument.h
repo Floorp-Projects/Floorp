@@ -71,6 +71,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsISupportsArray.h"
+#include "nsCOMArray.h"
 #include "nsIURI.h"
 #include "nsIWordBreakerFactory.h"
 #include "nsIXULDocument.h"
@@ -240,20 +241,23 @@ public:
     NS_IMETHOD IndexOf(nsIContent* aPossibleChild, PRInt32& aIndex) const;
     NS_IMETHOD GetChildCount(PRInt32& aCount);
 
-    NS_IMETHOD GetNumberOfStyleSheets(PRInt32* aCount);
-    NS_IMETHOD GetStyleSheetAt(PRInt32 aIndex, nsIStyleSheet** aSheet);
+    NS_IMETHOD GetNumberOfStyleSheets(PRBool aIncludeSpecialSheets,
+                                      PRInt32* aCount);
+    NS_IMETHOD GetStyleSheetAt(PRInt32 aIndex, PRBool aIncludeSpecialSheets,
+                               nsIStyleSheet** aSheet);
     NS_IMETHOD GetIndexOfStyleSheet(nsIStyleSheet* aSheet, PRInt32* aIndex);
 
     virtual void AddStyleSheet(nsIStyleSheet* aSheet, PRUint32 aFlags);
     virtual void RemoveStyleSheet(nsIStyleSheet* aSheet);
-    NS_IMETHOD UpdateStyleSheets(nsISupportsArray* aOldSheets, nsISupportsArray* aNewSheets);
+    NS_IMETHOD UpdateStyleSheets(nsCOMArray<nsIStyleSheet>& aOldSheets,
+                                 nsCOMArray<nsIStyleSheet>& aNewSheets);
     void AddStyleSheetToStyleSets(nsIStyleSheet* aSheet);
     void RemoveStyleSheetFromStyleSets(nsIStyleSheet* aSheet);
 
-    NS_IMETHOD InsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex, PRBool aNotify);
+    NS_IMETHOD InsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex);
 
-    virtual void SetStyleSheetDisabledState(nsIStyleSheet* aSheet,
-                                            PRBool aDisabled);
+    virtual void SetStyleSheetApplicableState(nsIStyleSheet* aSheet,
+                                              PRBool aApplicable);
 
     NS_IMETHOD GetCSSLoader(nsICSSLoader*& aLoader);
 

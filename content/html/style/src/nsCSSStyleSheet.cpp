@@ -805,6 +805,7 @@ public:
   nsCOMPtr<nsINameSpace> mNameSpace;
   PRInt32               mDefaultNameSpaceID;
   nsHashtable           mRelevantAttributes;
+  PRPackedBool          mComplete;
 };
 
 
@@ -829,7 +830,7 @@ public:
   NS_IMETHOD Init(nsIURI* aURL);
   NS_IMETHOD GetURL(nsIURI*& aURL) const;
   NS_IMETHOD GetTitle(nsString& aTitle) const;
-  NS_IMETHOD SetTitle(const nsString& aTitle);
+  NS_IMETHOD SetTitle(const nsAString& aTitle);
   NS_IMETHOD GetType(nsString& aType) const;
   NS_IMETHOD GetMediumCount(PRInt32& aCount) const;
   NS_IMETHOD GetMediumAt(PRInt32 aIndex, nsIAtom*& aMedium) const;
@@ -839,9 +840,13 @@ public:
   NS_IMETHOD DeleteRuleFromGroup(nsICSSGroupRule* aGroup, PRUint32 aIndex);
   NS_IMETHOD InsertRuleIntoGroup(const nsAString& aRule, nsICSSGroupRule* aGroup, PRUint32 aIndex, PRUint32* _retval);
   
-  NS_IMETHOD GetEnabled(PRBool& aEnabled) const;
+  NS_IMETHOD GetApplicable(PRBool& aApplicable) const;
+  
   NS_IMETHOD SetEnabled(PRBool aEnabled);
 
+  NS_IMETHOD GetComplete(PRBool& aComplete) const;
+  NS_IMETHOD SetComplete();
+  
   // style sheet owner info
   NS_IMETHOD GetParentSheet(nsIStyleSheet*& aParent) const;  // may be null
   NS_IMETHOD GetOwningDocument(nsIDocument*& aDocument) const;
@@ -927,8 +932,8 @@ protected:
   CSSRuleListImpl*      mRuleCollection;
   nsIDocument*          mDocument;
   nsIDOMNode*           mOwningNode; // weak ref
-  PRBool                mDisabled;
-  PRBool                mDirty; // has been modified 
+  PRPackedBool          mDisabled;
+  PRPackedBool          mDirty; // has been modified 
 
   CSSStyleSheetInner*   mInner;
 
@@ -1482,7 +1487,8 @@ CSSStyleSheetInner::CSSStyleSheetInner(nsICSSStyleSheet* aParentSheet)
     mOrderedRules(nsnull),
     mNameSpace(nsnull),
     mDefaultNameSpaceID(kNameSpaceID_None),
-    mRelevantAttributes()
+    mRelevantAttributes(),
+    mComplete(PR_FALSE)
 {
   MOZ_COUNT_CTOR(CSSStyleSheetInner);
   mSheets.AppendElement(aParentSheet);
@@ -1519,7 +1525,8 @@ CSSStyleSheetInner::CSSStyleSheetInner(CSSStyleSheetInner& aCopy,
     mURL(aCopy.mURL),
     mNameSpace(nsnull),
     mDefaultNameSpaceID(aCopy.mDefaultNameSpaceID),
-    mRelevantAttributes()
+    mRelevantAttributes(),
+    mComplete(aCopy.mComplete)
 {
   MOZ_COUNT_CTOR(CSSStyleSheetInner);
   mSheets.AppendElement(aParentSheet);
@@ -1758,6 +1765,7 @@ CSSStyleSheetImpl::CSSStyleSheetImpl(const CSSStyleSheetImpl& aCopy)
 
   if (aCopy.mRuleCollection && 
       aCopy.mRuleCollection->mRulesAccessed) {  // CSSOM's been there, force full copy now
+    NS_ASSERTION(mInner->mComplete, "Why have rules been accessed on an incomplete sheet?");
     EnsureUniqueInner();
   }
 
@@ -1925,7 +1933,7 @@ CSSStyleSheetImpl::GetURL(nsIURI*& aURL) const
 }
 
 NS_IMETHODIMP
-CSSStyleSheetImpl::SetTitle(const nsString& aTitle)
+CSSStyleSheetImpl::SetTitle(const nsAString& aTitle)
 {
   mTitle = aTitle;
   return NS_OK;
@@ -2012,22 +2020,43 @@ CSSStyleSheetImpl::ClearMedia(void)
 
 
 NS_IMETHODIMP
-CSSStyleSheetImpl::GetEnabled(PRBool& aEnabled) const
+CSSStyleSheetImpl::GetApplicable(PRBool& aApplicable) const
 {
-  aEnabled = !mDisabled;
+  aApplicable = !mDisabled && mInner && mInner->mComplete;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 CSSStyleSheetImpl::SetEnabled(PRBool aEnabled)
 {
-  PRBool oldState = mDisabled;
+  PRBool oldDisabled = mDisabled;
   mDisabled = !aEnabled;
 
-  if ((nsnull != mDocument) && (mDisabled != oldState)) {
-    mDocument->SetStyleSheetDisabledState(this, mDisabled);
+  if (mDocument && mInner && mInner->mComplete && oldDisabled != mDisabled) {
+    mDocument->SetStyleSheetApplicableState(this, !mDisabled);
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CSSStyleSheetImpl::GetComplete(PRBool& aComplete) const
+{
+  aComplete = mInner && mInner->mComplete;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CSSStyleSheetImpl::SetComplete()
+{
+  if (!mInner)
+    return NS_ERROR_UNEXPECTED;
+  NS_ASSERTION(!mDirty, "Can't set a dirty sheet complete!");
+  mInner->mComplete = PR_TRUE;
+  if (mDocument && !mDisabled) {
+    // Let the document know
+    mDocument->SetStyleSheetApplicableState(this, PR_TRUE);
+  }
   return NS_OK;
 }
 
@@ -2416,7 +2445,7 @@ CSSStyleSheetImpl::EnsureUniqueInner(void)
   if (! mInner) {
     return NS_ERROR_NOT_INITIALIZED;
   }
-  if (1 < mInner->mSheets.Count()) {  
+  if (1 < mInner->mSheets.Count()) {
     CSSStyleSheetInner* clone = mInner->CloneFor(this);
     if (clone) {
       mInner->RemoveSheet(this);
@@ -2609,6 +2638,11 @@ CSSStyleSheetImpl::ClearRuleCascades(void)
 nsresult
 CSSStyleSheetImpl::WillDirty(void)
 {
+  if (mInner && !mInner->mComplete) {
+    // Do nothing
+    return NS_OK;
+  }
+  
   return EnsureUniqueInner();
 }
 
@@ -2651,11 +2685,11 @@ CSSStyleSheetImpl::GetDisabled(PRBool* aDisabled)
 NS_IMETHODIMP    
 CSSStyleSheetImpl::SetDisabled(PRBool aDisabled)
 {
-  PRBool oldState = mDisabled;
+  PRBool oldDisabled = mDisabled;
   mDisabled = aDisabled;
 
-  if (mDocument && (mDisabled != oldState)) {
-    mDocument->SetStyleSheetDisabledState(this, mDisabled);
+  if (mDocument && mInner && mInner->mComplete && oldDisabled != mDisabled) {
+    mDocument->SetStyleSheetApplicableState(this, !mDisabled);
   }
 
   return NS_OK;
@@ -2750,6 +2784,13 @@ CSSStyleSheetImpl::GetOwnerRule(nsIDOMCSSRule** aOwnerRule)
 NS_IMETHODIMP    
 CSSStyleSheetImpl::GetCssRules(nsIDOMCSSRuleList** aCssRules)
 {
+  // No doing this on incomplete sheets!
+  PRBool complete;
+  GetComplete(complete);
+  if (!complete) {
+    return NS_ERROR_DOM_INVALID_ACCESS_ERR;
+  }
+  
   //-- Security check: Only scripts from the same origin as the
   //   style sheet can access rule collections
 
@@ -2798,6 +2839,13 @@ CSSStyleSheetImpl::InsertRule(const nsAString& aRule,
                               PRUint32* aReturn)
 {
   NS_ENSURE_TRUE(mInner, NS_ERROR_FAILURE);
+  // No doing this if the sheet is not complete!
+  PRBool complete;
+  GetComplete(complete);
+  if (!complete) {
+    return NS_ERROR_DOM_INVALID_ACCESS_ERR;
+  }
+  
   nsresult result;
   result = WillDirty();
   if (NS_FAILED(result))
@@ -2979,6 +3027,12 @@ NS_IMETHODIMP
 CSSStyleSheetImpl::DeleteRule(PRUint32 aIndex)
 {
   nsresult result = NS_ERROR_DOM_INDEX_SIZE_ERR;
+  // No doing this if the sheet is not complete!
+  PRBool complete;
+  GetComplete(complete);
+  if (!complete) {
+    return NS_ERROR_DOM_INVALID_ACCESS_ERR;
+  }
 
   // XXX TBI: handle @rule types
   if (mInner && mInner->mOrderedRules) {
@@ -3020,7 +3074,8 @@ NS_IMETHODIMP
 CSSStyleSheetImpl::DeleteRuleFromGroup(nsICSSGroupRule* aGroup, PRUint32 aIndex)
 {
   NS_ENSURE_ARG_POINTER(aGroup);
-  
+  NS_ASSERTION(mInner && mInner->mComplete,
+               "No deleting from an incomplete sheet!");
   nsresult result;
   nsCOMPtr<nsICSSRule> rule;
   result = aGroup->GetStyleRuleAt(aIndex, *getter_AddRefs(rule));
@@ -3038,8 +3093,10 @@ CSSStyleSheetImpl::DeleteRuleFromGroup(nsICSSGroupRule* aGroup, PRUint32 aIndex)
     return NS_ERROR_INVALID_ARG;
   }
 
-  result = mDocument->BeginUpdate();
-  NS_ENSURE_SUCCESS(result, result);
+  if (mDocument) {
+    result = mDocument->BeginUpdate();
+    NS_ENSURE_SUCCESS(result, result);
+  }
 
   result = WillDirty();
   NS_ENSURE_SUCCESS(result, result);
@@ -3051,11 +3108,13 @@ CSSStyleSheetImpl::DeleteRuleFromGroup(nsICSSGroupRule* aGroup, PRUint32 aIndex)
   
   DidDirty();
 
-  result = mDocument->StyleRuleRemoved(this, rule);
-  NS_ENSURE_SUCCESS(result, result);
-
-  result = mDocument->EndUpdate();
-  NS_ENSURE_SUCCESS(result, result);
+  if (mDocument) {
+    result = mDocument->StyleRuleRemoved(this, rule);
+    NS_ENSURE_SUCCESS(result, result);
+    
+    result = mDocument->EndUpdate();
+    NS_ENSURE_SUCCESS(result, result);
+  }
 
   return NS_OK;
 }
@@ -3064,6 +3123,8 @@ NS_IMETHODIMP
 CSSStyleSheetImpl::InsertRuleIntoGroup(const nsAString & aRule, nsICSSGroupRule* aGroup, PRUint32 aIndex, PRUint32* _retval)
 {
   nsresult result;
+  NS_ASSERTION(mInner && mInner->mComplete,
+               "No inserting into an incomplete sheet!");
   // check that the group actually belongs to this sheet!
   nsCOMPtr<nsIDOMCSSRule> domGroup(do_QueryInterface(aGroup));
   nsCOMPtr<nsIDOMCSSStyleSheet> groupSheet;
@@ -3097,8 +3158,10 @@ CSSStyleSheetImpl::InsertRuleIntoGroup(const nsAString & aRule, nsICSSGroupRule*
   NS_ENSURE_SUCCESS(result, result);
 
   // parse and grab the rule 
-  result = mDocument->BeginUpdate();
-  NS_ENSURE_SUCCESS(result, result);
+  if (mDocument) {
+    result = mDocument->BeginUpdate();
+    NS_ENSURE_SUCCESS(result, result);
+  }
 
   result = WillDirty();
   NS_ENSURE_SUCCESS(result, result);
@@ -3132,12 +3195,16 @@ CSSStyleSheetImpl::InsertRuleIntoGroup(const nsAString & aRule, nsICSSGroupRule*
     rule = dont_AddRef((nsICSSRule*)rules->ElementAt(counter));
     CheckRuleForAttributes(rule);
   
-    result = mDocument->StyleRuleAdded(this, rule);
-    NS_ENSURE_SUCCESS(result, result);
+    if (mDocument) {
+      result = mDocument->StyleRuleAdded(this, rule);
+      NS_ENSURE_SUCCESS(result, result);
+    }
   }
 
-  result = mDocument->EndUpdate();
-  NS_ENSURE_SUCCESS(result, result);
+  if (mDocument) {
+    result = mDocument->EndUpdate();
+    NS_ENSURE_SUCCESS(result, result);
+  }
 
   if (loader) {
     loader->RecycleParser(css);
@@ -4459,10 +4526,10 @@ CSSRuleProcessor::CascadeSheetRulesInto(nsISupports* aSheet, void* aData)
   nsICSSStyleSheet* iSheet = (nsICSSStyleSheet*)aSheet;
   CSSStyleSheetImpl*  sheet = (CSSStyleSheetImpl*)iSheet;
   CascadeEnumData*  data = (CascadeEnumData*)aData;
-  PRBool bSheetEnabled = PR_TRUE;
-  sheet->GetEnabled(bSheetEnabled);
+  PRBool bSheetApplicable = PR_TRUE;
+  sheet->GetApplicable(bSheetApplicable);
 
-  if ((bSheetEnabled) && (sheet->UseForMedium(data->mMedium))) {
+  if (bSheetApplicable && sheet->UseForMedium(data->mMedium)) {
     CSSStyleSheetImpl*  child = sheet->mFirstChild;
     while (child) {
       CascadeSheetRulesInto((nsICSSStyleSheet*)child, data);

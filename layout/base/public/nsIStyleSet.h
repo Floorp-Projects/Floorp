@@ -148,7 +148,7 @@ public:
   NS_IMETHOD EnableQuirkStyleSheet(PRBool aEnable) = 0;
 
   
-  NS_IMETHOD NotifyStyleSheetStateChanged(PRBool aDisabled) = 0;
+  NS_IMETHOD NotifyStyleSheetStateChanged(PRBool aApplicable) = 0;
 
   // get a style context for a non-pseudo frame
   virtual nsIStyleContext* ResolveStyleFor(nsIPresContext* aPresContext,

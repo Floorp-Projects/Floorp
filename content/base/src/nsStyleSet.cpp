@@ -568,6 +568,11 @@ StyleSetImpl::GatherRuleProcessors(void)
 void StyleSetImpl::AppendOverrideStyleSheet(nsIStyleSheet* aSheet)
 {
   NS_PRECONDITION(nsnull != aSheet, "null arg");
+#ifdef DEBUG
+  PRBool applicable = PR_TRUE;
+  aSheet->GetApplicable(applicable);
+  NS_ASSERTION(applicable, "Inapplicable sheet being placed in style set");
+#endif
   if (EnsureArray(mOverrideSheets)) {
     mOverrideSheets->RemoveElement(aSheet);
     mOverrideSheets->AppendElement(aSheet);
@@ -579,6 +584,11 @@ void StyleSetImpl::InsertOverrideStyleSheetAfter(nsIStyleSheet* aSheet,
                                                  nsIStyleSheet* aAfterSheet)
 {
   NS_PRECONDITION(nsnull != aSheet, "null arg");
+#ifdef DEBUG
+  PRBool applicable = PR_TRUE;
+  aSheet->GetApplicable(applicable);
+  NS_ASSERTION(applicable, "Inapplicable sheet being placed in style set");
+#endif
   if (EnsureArray(mOverrideSheets)) {
     mOverrideSheets->RemoveElement(aSheet);
     PRInt32 index = mOverrideSheets->IndexOf(aAfterSheet);
@@ -591,6 +601,11 @@ void StyleSetImpl::InsertOverrideStyleSheetBefore(nsIStyleSheet* aSheet,
                                                   nsIStyleSheet* aBeforeSheet)
 {
   NS_PRECONDITION(nsnull != aSheet, "null arg");
+#ifdef DEBUG
+  PRBool applicable = PR_TRUE;
+  aSheet->GetApplicable(applicable);
+  NS_ASSERTION(applicable, "Inapplicable sheet being placed in style set");
+#endif
   if (EnsureArray(mOverrideSheets)) {
     mOverrideSheets->RemoveElement(aSheet);
     PRInt32 index = mOverrideSheets->IndexOf(aBeforeSheet);
@@ -602,7 +617,11 @@ void StyleSetImpl::InsertOverrideStyleSheetBefore(nsIStyleSheet* aSheet,
 void StyleSetImpl::RemoveOverrideStyleSheet(nsIStyleSheet* aSheet)
 {
   NS_PRECONDITION(nsnull != aSheet, "null arg");
-
+#ifdef DEBUG
+  PRBool complete = PR_TRUE;
+  aSheet->GetComplete(complete);
+  NS_ASSERTION(complete, "Incomplete sheet being removed from style set");
+#endif
   if (nsnull != mOverrideSheets) {
     mOverrideSheets->RemoveElement(aSheet);
     ClearOverrideRuleProcessors();
@@ -634,6 +653,11 @@ nsIStyleSheet* StyleSetImpl::GetOverrideStyleSheetAt(PRInt32 aIndex)
 void StyleSetImpl::AddDocStyleSheet(nsIStyleSheet* aSheet, nsIDocument* aDocument)
 {
   NS_PRECONDITION((nsnull != aSheet) && (nsnull != aDocument), "null arg");
+#ifdef DEBUG
+  PRBool applicable = PR_TRUE;
+  aSheet->GetApplicable(applicable);
+  NS_ASSERTION(applicable, "Inapplicable sheet being placed in style set");
+#endif
   if (EnsureArray(mDocSheets)) {
     mDocSheets->RemoveElement(aSheet);
     // lowest index last
@@ -670,7 +694,11 @@ void StyleSetImpl::AddDocStyleSheet(nsIStyleSheet* aSheet, nsIDocument* aDocumen
 void StyleSetImpl::RemoveDocStyleSheet(nsIStyleSheet* aSheet)
 {
   NS_PRECONDITION(nsnull != aSheet, "null arg");
-
+#ifdef DEBUG
+  PRBool complete = PR_TRUE;
+  aSheet->GetComplete(complete);
+  NS_ASSERTION(complete, "Incomplete sheet being removed from style set");
+#endif
   if (nsnull != mDocSheets) {
     mDocSheets->RemoveElement(aSheet);
     ClearDocRuleProcessors();
@@ -702,6 +730,11 @@ nsIStyleSheet* StyleSetImpl::GetDocStyleSheetAt(PRInt32 aIndex)
 void StyleSetImpl::AppendUserStyleSheet(nsIStyleSheet* aSheet)
 {
   NS_PRECONDITION(nsnull != aSheet, "null arg");
+#ifdef DEBUG
+  PRBool applicable = PR_TRUE;
+  aSheet->GetApplicable(applicable);
+  NS_ASSERTION(applicable, "Inapplicable sheet being placed in style set");
+#endif
   if (EnsureArray(mUserSheets)) {
     mUserSheets->RemoveElement(aSheet);
     mUserSheets->AppendElement(aSheet);
@@ -713,6 +746,11 @@ void StyleSetImpl::InsertUserStyleSheetAfter(nsIStyleSheet* aSheet,
                                              nsIStyleSheet* aAfterSheet)
 {
   NS_PRECONDITION(nsnull != aSheet, "null arg");
+#ifdef DEBUG
+  PRBool applicable = PR_TRUE;
+  aSheet->GetApplicable(applicable);
+  NS_ASSERTION(applicable, "Inapplicable sheet being placed in style set");
+#endif
   if (EnsureArray(mUserSheets)) {
     mUserSheets->RemoveElement(aSheet);
     PRInt32 index = mUserSheets->IndexOf(aAfterSheet);
@@ -725,6 +763,11 @@ void StyleSetImpl::InsertUserStyleSheetBefore(nsIStyleSheet* aSheet,
                                               nsIStyleSheet* aBeforeSheet)
 {
   NS_PRECONDITION(nsnull != aSheet, "null arg");
+#ifdef DEBUG
+  PRBool applicable = PR_TRUE;
+  aSheet->GetApplicable(applicable);
+  NS_ASSERTION(applicable, "Inapplicable sheet being placed in style set");
+#endif
   if (EnsureArray(mUserSheets)) {
     mUserSheets->RemoveElement(aSheet);
     PRInt32 index = mUserSheets->IndexOf(aBeforeSheet);
@@ -736,7 +779,11 @@ void StyleSetImpl::InsertUserStyleSheetBefore(nsIStyleSheet* aSheet,
 void StyleSetImpl::RemoveUserStyleSheet(nsIStyleSheet* aSheet)
 {
   NS_PRECONDITION(nsnull != aSheet, "null arg");
-
+#ifdef DEBUG
+  PRBool complete = PR_TRUE;
+  aSheet->GetComplete(complete);
+  NS_ASSERTION(complete, "Incomplete sheet being removed from style set");
+#endif
   if (nsnull != mUserSheets) {
     mUserSheets->RemoveElement(aSheet);
     ClearUserRuleProcessors();
@@ -775,6 +822,11 @@ StyleSetImpl::ReplaceUserStyleSheets(nsISupportsArray* aNewUserSheets)
 void StyleSetImpl::AppendAgentStyleSheet(nsIStyleSheet* aSheet)
 {
   NS_PRECONDITION(nsnull != aSheet, "null arg");
+#ifdef DEBUG
+  PRBool applicable = PR_TRUE;
+  aSheet->GetApplicable(applicable);
+  NS_ASSERTION(applicable, "Inapplicable sheet being placed in style set");
+#endif
   if (EnsureArray(mAgentSheets)) {
     mAgentSheets->RemoveElement(aSheet);
     mAgentSheets->AppendElement(aSheet);
@@ -786,6 +838,11 @@ void StyleSetImpl::InsertAgentStyleSheetAfter(nsIStyleSheet* aSheet,
                                               nsIStyleSheet* aAfterSheet)
 {
   NS_PRECONDITION(nsnull != aSheet, "null arg");
+#ifdef DEBUG
+  PRBool applicable = PR_TRUE;
+  aSheet->GetApplicable(applicable);
+  NS_ASSERTION(applicable, "Inapplicable sheet being placed in style set");
+#endif
   if (EnsureArray(mAgentSheets)) {
     mAgentSheets->RemoveElement(aSheet);
     PRInt32 index = mAgentSheets->IndexOf(aAfterSheet);
@@ -798,6 +855,11 @@ void StyleSetImpl::InsertAgentStyleSheetBefore(nsIStyleSheet* aSheet,
                                                nsIStyleSheet* aBeforeSheet)
 {
   NS_PRECONDITION(nsnull != aSheet, "null arg");
+#ifdef DEBUG
+  PRBool applicable = PR_TRUE;
+  aSheet->GetApplicable(applicable);
+  NS_ASSERTION(applicable, "Inapplicable sheet being placed in style set");
+#endif
   if (EnsureArray(mAgentSheets)) {
     mAgentSheets->RemoveElement(aSheet);
     PRInt32 index = mAgentSheets->IndexOf(aBeforeSheet);
@@ -809,7 +871,11 @@ void StyleSetImpl::InsertAgentStyleSheetBefore(nsIStyleSheet* aSheet,
 void StyleSetImpl::RemoveAgentStyleSheet(nsIStyleSheet* aSheet)
 {
   NS_PRECONDITION(nsnull != aSheet, "null arg");
-
+#ifdef DEBUG
+  PRBool complete = PR_TRUE;
+  aSheet->GetComplete(complete);
+  NS_ASSERTION(complete, "Incomplete sheet being removed from style set");
+#endif
   if (nsnull != mAgentSheets) {
     mAgentSheets->RemoveElement(aSheet);
     ClearAgentRuleProcessors();
@@ -870,10 +936,10 @@ NS_IMETHODIMP StyleSetImpl::EnableQuirkStyleSheet(PRBool aEnable)
     PRUint32 count = 0;
     if (mAgentRuleProcessors)
       mAgentRuleProcessors->Count(&count);
-    PRBool enabledNow;
-    mQuirkStyleSheet->GetEnabled(enabledNow);
-    NS_ASSERTION(count == 0 || aEnable == enabledNow,
-                 "enabling/disabling quirk stylesheet too late");
+    PRBool applicableNow;
+    mQuirkStyleSheet->GetApplicable(applicableNow);
+    NS_ASSERTION(count == 0 || aEnable == applicableNow,
+                 "enabling/disabling quirk stylesheet too late or incomplete quirk stylesheet");
     if (count != 0 && aEnable == enabledNow)
       printf("WARNING: We set the quirks mode too many times.\n"); // we do!
 #endif
@@ -899,7 +965,7 @@ StyleSetImpl::ReplaceAgentStyleSheets(nsISupportsArray* aNewAgentSheets)
 }
 
 NS_IMETHODIMP 
-StyleSetImpl::NotifyStyleSheetStateChanged(PRBool aDisabled)
+StyleSetImpl::NotifyStyleSheetStateChanged(PRBool aApplicable)
 {
   ClearRuleProcessors();
   GatherRuleProcessors();

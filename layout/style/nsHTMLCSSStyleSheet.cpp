@@ -200,8 +200,12 @@ public:
   NS_IMETHOD GetMediumAt(PRInt32 aIndex, nsIAtom*& aMedium) const;
   NS_IMETHOD_(PRBool) UseForMedium(nsIAtom* aMedium) const;
 
-  NS_IMETHOD GetEnabled(PRBool& aEnabled) const;
+  NS_IMETHOD GetApplicable(PRBool& aApplicable) const;
+  
   NS_IMETHOD SetEnabled(PRBool aEnabled);
+
+  NS_IMETHOD GetComplete(PRBool& aComplete) const;
+  NS_IMETHOD SetComplete();
 
   // style sheet owner info
   NS_IMETHOD GetParentSheet(nsIStyleSheet*& aParent) const;  // will be null
@@ -427,15 +431,28 @@ HTMLCSSStyleSheetImpl::UseForMedium(nsIAtom* aMedium) const
 }
 
 NS_IMETHODIMP
-HTMLCSSStyleSheetImpl::GetEnabled(PRBool& aEnabled) const
+HTMLCSSStyleSheetImpl::GetApplicable(PRBool& aApplicable) const
 {
-  aEnabled = PR_TRUE;
+  aApplicable = PR_TRUE;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 HTMLCSSStyleSheetImpl::SetEnabled(PRBool aEnabled)
 { // these can't be disabled
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLCSSStyleSheetImpl::GetComplete(PRBool& aComplete) const
+{
+  aComplete = PR_TRUE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLCSSStyleSheetImpl::SetComplete()
+{
   return NS_OK;
 }
 

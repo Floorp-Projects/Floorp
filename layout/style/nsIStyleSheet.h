@@ -70,8 +70,26 @@ public:
   NS_IMETHOD GetMediumAt(PRInt32 aIndex, nsIAtom*& aMedium) const = 0;
   NS_IMETHOD_(PRBool) UseForMedium(nsIAtom* aMedium) const = 0;
 
-  NS_IMETHOD GetEnabled(PRBool& aEnabled) const = 0;
+  /**
+   * Whether the sheet is applicable.  A sheet that is not applicable
+   * should never be inserted into a style set.  A sheet may not be
+   * applicable for a variety of reasons including being disabled and
+   * being incomplete.
+   *
+   */
+  NS_IMETHOD GetApplicable(PRBool& aApplicable) const = 0;
+
+  /**
+   * Set the stylesheet to be enabled.  This may or may not make it
+   * applicable.
+   */
   NS_IMETHOD SetEnabled(PRBool aEnabled) = 0;
+
+  /**
+   * Whether the sheet is complete.
+   */
+  NS_IMETHOD GetComplete(PRBool& aComplete) const = 0;
+  NS_IMETHOD SetComplete() = 0;
 
   // style sheet owner info
   NS_IMETHOD GetParentSheet(nsIStyleSheet*& aParent) const = 0;  // may be null

@@ -204,6 +204,9 @@ protected:
                                      PRUint32 aFlags);
   virtual void InternalInsertStyleSheetAt(nsIStyleSheet* aSheet,
                                           PRInt32 aIndex);
+  virtual already_AddRefed<nsIStyleSheet> InternalGetStyleSheetAt(PRInt32 aIndex);
+  virtual PRInt32 InternalGetNumberOfStyleSheets();
+
   static PRBool MatchLinks(nsIContent *aContent, nsString* aData);
   static PRBool MatchAnchors(nsIContent *aContent, nsString* aData);
   static PRBool MatchLayers(nsIContent *aContent, nsString* aData);
