@@ -24,6 +24,5 @@
 <!ENTITY down.label "Download">
 <!ENTITY cache.label "Cache">
 <!ENTITY proxies.label "Proxies">
-<!--LOCALIZATION NOTE smart.label Don't translate the term 'Smart Update' -->
-<!ENTITY smart.label "Smart Update">
+<!ENTITY smart.label "Software Installation">
 <!ENTITY debug.label "Debug">
