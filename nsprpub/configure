@@ -2991,7 +2991,7 @@ EOF
     PR_MD_ARCH_DIR=beos
     RESOLVE_LINK_SYMBOLS=1
     case "${target_cpu}" in
-    i?86)
+    i*86)
         _OPTIMIZE_FLAGS=-O2
         _DEBUG_FLAGS='-gdwarf-2 -O0'
         MKSHLIB='$(CCC) $(DSO_LDOPTS) -o $@'
@@ -3719,7 +3719,7 @@ EOF
         CFLAGS="$CFLAGS -mieee"
         CXXFLAGS="$CXXFLAGS -mieee"
         ;;
-    i?86)
+    i*86)
         cat >> confdefs.h <<\EOF
 #define i386 1
 EOF
@@ -3879,7 +3879,7 @@ EOF
     esac
 
     case "$target_cpu" in
-    i?86)
+    i*86)
 	    cat >> confdefs.h <<\EOF
 #define _X86_ 1
 EOF
