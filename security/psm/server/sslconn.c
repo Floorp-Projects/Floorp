@@ -1203,7 +1203,7 @@ void SSM_SSLDataServiceThread(void* arg)
                     else {
                         /* Got data, write it to the client socket */
                         SSM_DEBUG("Writing to client socket.\n");
-#ifdef DEBUG_javi
+#if 0
                         SSM_DumpBuffer(inbound, read);
 #endif
                         sent = PR_Send(SSMDATACONNECTION(conn)->m_clientSocket,

@@ -227,5 +227,6 @@ char * SSM_ConvertStringToHTMLString(char * string);
 
 SSMStatus SSM_ProcessPasswordWindow(HTTPRequest * req);
 
+char * SSM_GenerateChangePasswordURL(PK11SlotInfo *slot, SSMResource *target);
 #endif
 

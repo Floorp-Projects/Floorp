@@ -567,17 +567,15 @@ SSMStatus SSMKeyGenContext_GetAttr(SSMResource *res,
       break;
     case SSM_FID_INIT_DB_URL:
       {
-        PRUint32 width, height;
-        char *url;
-
-        rv = SSM_GenerateURL(res->m_connection,"get", "set_password", res, 
-                             "slot=all&mech=1", &width, &height, &url);
-        if (rv != SSM_SUCCESS) {
-            goto loser;
-        }
-        value->u.string.data = (unsigned char*)url;
-        value->u.string.len  = PL_strlen(url);
-        value->type = SSM_STRING_ATTRIBUTE;
+          char *url;
+          
+          url = SSM_GenerateChangePasswordURL(cxt->slot, res);
+          if (url == NULL){
+              goto loser;
+          }
+          value->u.string.data = (unsigned char*)url;
+          value->u.string.len  = PL_strlen(url);
+          value->type = SSM_STRING_ATTRIBUTE;
       }
       break;
     default:
