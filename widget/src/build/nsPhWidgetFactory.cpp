@@ -260,20 +260,20 @@ PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidgetFactory::CreateInstance\n"));
       inst = (nsISupports*)(nsILabel *)new nsLabel();
     }
     else if (mClassID.Equals(kCClipboard)) {
-    printf( "Creating nsClipboard instance.\n" );
+        PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidgetFactory::CreateInstance of nsClipboard\n"));
         inst = (nsISupports*)(nsBaseClipboard *)new nsClipboard();
     }
     else if (mClassID.Equals(kCXIFFormatConverter)) {
-    printf( "Creating nsXIFFormatConverter instance.\n" );
+        PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsXIFFormatConverter\n" ));
         inst = (nsISupports*)new nsXIFFormatConverter();
     }
     else if (mClassID.Equals(kCFileSpecWithUI))
     {
-    printf( "Creating nsFileSpecWithUIImpl instance.\n" );
+        PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsFileSpecWithUIImpl\n" ));
     	inst = (nsISupports*) (nsIFileSpecWithUI *) new nsFileSpecWithUIImpl;
     }
     else if (mClassID.Equals(kCTransferable)) {
-    printf( "Creating nsTransferable instance.\n" );
+        PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsTransferable\n" ));
         inst = (nsISupports*)new nsTransferable();
     }
 												
