@@ -141,8 +141,6 @@ nsresult nsAbCard::AddSubNode(nsAutoString name, nsIAbCard **childCard)
 	*childCard = card;
 	NS_IF_ADDREF(*childCard);
 
-    (void)nsServiceManager::ReleaseService(kRDFServiceCID, rdf);
-
 	return rv;
 }
 

@@ -192,8 +192,6 @@ NS_IMETHODIMP nsAbDirectory::AddDirectory(const char *uriName, nsIAbDirectory **
 	*childDir = directory;
 	NS_IF_ADDREF(*childDir);
 	 
-    (void)nsServiceManager::ReleaseService(kRDFServiceCID, rdf);
-
 	return rv;
 }
 
@@ -321,30 +319,31 @@ NS_IMETHODIMP nsAbDirectory::DeleteCards(nsISupportsArray *cards)
 
 NS_IMETHODIMP nsAbDirectory::DeleteDirectories(nsISupportsArray *dierctories)
 {
-	nsresult rv = NS_OK;
-/*
-	if (!mDatabase)
-		rv = GetAbDatabase();
+	nsresult rv = NS_ERROR_FAILURE;
 
-	if (NS_SUCCEEDED(rv) && mDatabase)
+	PRUint32 i, dirCount;
+	rv = dierctories->Count(&dirCount);
+	if (NS_FAILED(rv)) return rv;
+	for (i = 0; i < dirCount; i++)
 	{
-		PRUint32 cardCount;
-		rv = cards->Count(&cardCount);
-		if (NS_FAILED(rv)) return rv;
-		for(PRUint32 i = 0; i < cardCount; i++)
+		nsCOMPtr<nsISupports> dirSupports;
+		nsCOMPtr<nsIAbDirectory> directory;
+		dirSupports = getter_AddRefs(dierctories->ElementAt(i));
+		directory = do_QueryInterface(dirSupports, &rv);
+		if (NS_SUCCEEDED(rv) && directory)
 		{
-			nsCOMPtr<nsISupports> cardSupports;
-			nsCOMPtr<nsIAbCard> card;
-			cardSupports = getter_AddRefs(cards->ElementAt(i));
-			card = do_QueryInterface(cardSupports, &rv);
-			if (card)
+			DIR_Server *server = nsnull;
+			rv = directory->GetServer(&server);
+			if (server)
 			{
-				mDatabase->DeleteCard(card, PR_TRUE);
+				DIR_DeleteServerFromList(server);
+
+				rv = mSubDirectories->RemoveElement(directory);
+				NotifyItemDeleted(directory);
 			}
 		}
-		mDatabase->Commit(kLargeCommit);
 	}
-*/
+
 	return rv;
 }
 

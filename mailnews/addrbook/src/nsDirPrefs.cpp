@@ -400,7 +400,7 @@ nsresult DIR_ContainsServer(DIR_Server* pServer, PRBool *hasDir)
 		}
 	}
 	*hasDir = PR_FALSE;
-	return NS_ERROR_FAILURE;
+	return NS_OK;
 }
 
 nsresult DIR_AddNewAddressBook(const char *name, DIR_Server** pServer)
@@ -1884,7 +1884,7 @@ static nsresult dir_DeleteServerContents (DIR_Server *server)
 	return NS_OK;
 }
 
-nsresult DIR_DeleteServer (DIR_Server *server)
+nsresult DIR_DeleteServer(DIR_Server *server)
 {
 	if (server)
 	{
@@ -1893,6 +1893,32 @@ nsresult DIR_DeleteServer (DIR_Server *server)
 	}
 
 	return NS_OK;
+}
+
+nsresult DIR_DeleteServerFromList(DIR_Server *server)
+{
+	if (!server)
+		return NS_ERROR_NULL_POINTER;
+
+	nsresult rv = NS_OK;
+	nsFileSpec* dbPath = nsnull;
+
+	NS_WITH_SERVICE(nsIAddrBookSession, abSession, kAddrBookSessionCID, &rv); 
+	if(NS_SUCCEEDED(rv))
+		abSession->GetUserProfileDirectory(&dbPath);
+	
+	if (dbPath)
+	{
+		nsFileSpec prefFile = (*dbPath);
+		prefFile += server->fileName;
+		prefFile.Delete(PR_FALSE);
+
+		nsVoidArray *dirList = DIR_GetDirectories();
+		DIR_SetServerPosition(dirList, server, DIR_POS_DELETE);
+		DIR_DeleteServer(server);
+		return NS_OK;
+	}
+	return NS_ERROR_NULL_POINTER;
 }
 
 nsresult DIR_DeleteServerList(nsVoidArray *wholeList)
@@ -2651,14 +2677,16 @@ void DIR_SetFileName(char** fileName, const char* defaultName)
 	NS_WITH_SERVICE(nsIAddrBookSession, abSession, kAddrBookSessionCID, &rv); 
 	if(NS_SUCCEEDED(rv))
 		abSession->GetUserProfileDirectory(&dbPath);
-	
-	(*dbPath) += defaultName;
-	dbPath->MakeUnique(defaultName);
-	char* file = nsnull;
-	file = dbPath->GetLeafName();
-	*fileName = PL_strdup(file);
-	if (file)
-		nsCRT::free(file);
+	if (dbPath)
+	{
+		(*dbPath) += defaultName;
+		dbPath->MakeUnique(defaultName);
+		char* file = nsnull;
+		file = dbPath->GetLeafName();
+		*fileName = PL_strdup(file);
+		if (file)
+			nsCRT::free(file);
+	}
 }
 
 /****************************************************************
@@ -3286,20 +3314,7 @@ void DIR_ClearPrefBranch(const char *branch)
 	if (NS_FAILED(rv) || !pPref) 
 		return;
 
-	/* This little function provides a way to delete a prefs object but still
-	 * allow reassignment of that object later. 
-	 */
-	char *recreateBranch = nsnull;
-
 	pPref->DeleteBranch (branch);
-	recreateBranch = PR_smprintf("pref_inittree(\"%s\")", branch);
-	if (recreateBranch)
-	{
-#ifdef PREF_QuietEvaluateJSBuffer
-		PREF_QuietEvaluateJSBuffer (recreateBranch, PL_strlen(recreateBranch));
-#endif /* PREF_QuietEvaluateJSBuffer */
-		PR_smprintf_free(recreateBranch);
-	}
 }
 
 

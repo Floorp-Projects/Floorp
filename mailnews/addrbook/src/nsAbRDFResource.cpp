@@ -76,30 +76,30 @@ NS_IMETHODIMP nsAbRDFResource::OnAnnouncerGoingAway(nsIAddrDBAnnouncer *instigat
 
 nsresult nsAbRDFResource::GetAbDatabase()
 {
-	nsresult openAddrDB = NS_OK;
+	nsresult rv = NS_OK;
 	if (!mDatabase && mURI)
 	{
-		nsresult rv = NS_OK;
 		nsFileSpec* dbPath = nsnull;
 
 		NS_WITH_SERVICE(nsIAddrBookSession, abSession, kAddrBookSessionCID, &rv); 
 		if(NS_SUCCEEDED(rv))
 			abSession->GetUserProfileDirectory(&dbPath);
-
+		
 		const char* file = nsnull;
 		file = &(mURI[PL_strlen(kDirectoryDataSourceRoot)]);
 		(*dbPath) += file;
 
-		if (NS_SUCCEEDED(rv))
-		{
-			NS_WITH_SERVICE(nsIAddrDatabase, addrDBFactory, kAddressBookDBCID, &rv);
+		NS_WITH_SERVICE(nsIAddrDatabase, addrDBFactory, kAddressBookDBCID, &rv);
 
-			if (NS_SUCCEEDED(rv) && addrDBFactory)
-				openAddrDB = addrDBFactory->Open(dbPath, PR_TRUE, getter_AddRefs(mDatabase), PR_TRUE);
+		if (NS_SUCCEEDED(rv) && addrDBFactory)
+			rv = addrDBFactory->Open(dbPath, PR_TRUE, getter_AddRefs(mDatabase), PR_TRUE);
 
-			if (mDatabase)
-				mDatabase->AddListener(this);
-		}
+		if (mDatabase)
+			mDatabase->AddListener(this);
+
+		return NS_OK;
 	}
+	if (!mDatabase)
+		return NS_ERROR_NULL_POINTER;
 	return NS_OK;
 }

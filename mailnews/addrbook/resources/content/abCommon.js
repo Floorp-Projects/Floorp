@@ -112,6 +112,7 @@ function GetSelectedAddresses()
 function ChangeDirectoryByDOMNode(dirNode)
 {
 	var uri = dirNode.getAttribute('id');
+	dump("uri = " + uri + "\n");
 	ChangeDirectoryByURI(uri);
 }
 

@@ -35,6 +35,18 @@ function AbDelete()
 }
 
 
+function AbDeleteDirectory()
+{
+	dump("\AbDeleteDirectory from XUL\n");
+	var tree = document.getElementById('dirTree');
+	var selArray = tree.getElementsByAttribute('selected', 'true');
+	if ( selArray && selArray.length )
+	{
+		top.addressbook.DeleteAddressBooks(tree.database, tree, selArray);
+	}
+}
+
+
 function UpdateCardView()
 {
 	var selArray = document.getElementById('resultsTree').getElementsByAttribute('selected', 'true');

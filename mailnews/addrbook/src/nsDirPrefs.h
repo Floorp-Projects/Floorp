@@ -254,6 +254,7 @@ PRBool	DIR_AreServersSame (DIR_Server *first, DIR_Server *second);
 DIR_Server *DIR_LookupServer(char *serverName, PRInt32 port, char *searchBase);
 
 nsresult DIR_DeleteServer (DIR_Server *);
+nsresult DIR_DeleteServerFromList (DIR_Server *);
 nsresult DIR_DeleteServerList(nsVoidArray *wholeList);
 
 #define DIR_POS_APPEND                     0x80000000

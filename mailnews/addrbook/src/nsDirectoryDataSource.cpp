@@ -472,7 +472,7 @@ NS_IMETHODIMP nsAbDirectoryDataSource::OnItemRemoved(nsISupports *parentDirector
 			if(NS_SUCCEEDED(rv))
 			{
 				//Notify a directory was deleted.
-				NotifyObservers(parentResource, kNC_DirName, itemNode, PR_FALSE);
+				NotifyObservers(parentResource, kNC_Child, itemNode, PR_FALSE);
 			}
 		}
 	}

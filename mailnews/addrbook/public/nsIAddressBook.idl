@@ -34,7 +34,7 @@ interface nsIAddressBook : nsISupports {
 
     void DeleteCards(in nsIDOMXULElement tree, in nsIDOMXULElement srcDir, in nsIDOMNodeList node);
 	void NewAddressBook(in nsIRDFCompositeDataSource db, in nsIDOMXULElement srcDir, in string name);
-    void DeleteAddressBook(in nsIDOMXULElement tree, in nsIDOMXULElement srcDir, in nsIDOMNodeList node);
+    void DeleteAddressBooks(in nsIRDFCompositeDataSource db, in nsIDOMXULElement srcDir, in nsIDOMNodeList node);
     void PrintCard();
     void PrintAddressbook();
     void SetWebShellWindow(in nsIDOMWindow win);

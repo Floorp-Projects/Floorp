@@ -154,8 +154,6 @@ NS_IMETHODIMP nsAddressBook::NewAddressBook
 	if(!db || !srcDirectory || !name)
 		return NS_ERROR_NULL_POINTER;
 
-//	DIR_Server * server = nsnull;
-//	nsresult rv = DIR_AddNewAddressBook(name, &server);
 	nsresult rv = NS_OK;
     NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
 	if(NS_FAILED(rv))
@@ -180,68 +178,51 @@ NS_IMETHODIMP nsAddressBook::NewAddressBook
 	rv = NS_NewISupportsArray(getter_AddRefs(nameArray));
 	if(NS_FAILED(rv))
 		return NS_ERROR_OUT_OF_MEMORY;
-	/*
-	nsCOMPtr<nsIRDFResource> itemResource;
-	char *uri = PR_smprintf("%s%s", kDirectoryDataSourceRoot, server->fileName);
-	rv = rdfService->GetResource(uri, getter_AddRefs(itemResource));
-	if (uri)
-		PR_smprintf_free(uri);
-	nsCOMPtr<nsIAbDirectory> newDir = do_QueryInterface(itemResource);
-	if (newDir)
-	{
-		newDir->SetDirName(server->description);
-		newDir->SetServer(server);
-	}
-	else
-		return NS_ERROR_NULL_POINTER;
-*/
 	nsString nameStr = name;
 	nsCOMPtr<nsIRDFLiteral> nameLiteral;
 
 	rdfService->GetLiteral(nameStr.GetUnicode(), getter_AddRefs(nameLiteral));
 	nameArray->AppendElement(nameLiteral);
-//	resourceArray->AppendElement(itemResource);
-
 
 	DoCommand(db, "http://home.netscape.com/NC-rdf#NewDirectory", dirArray, nameArray);
 	return rv;
 }
 
-NS_IMETHODIMP nsAddressBook::DeleteAddressBook
-(nsIDOMXULElement *tree, nsIDOMXULElement *srcDirectory, nsIDOMNodeList *nodeList)
+NS_IMETHODIMP nsAddressBook::DeleteAddressBooks
+(nsIRDFCompositeDataSource* db, nsIDOMXULElement *srcDirectory, nsIDOMNodeList *nodeList)
 {
-	nsresult rv;
-
-	if(!tree || !srcDirectory || !nodeList)
+	if(!db || !srcDirectory || !nodeList)
 		return NS_ERROR_NULL_POINTER;
 
-	nsCOMPtr<nsIRDFCompositeDataSource> database;
-	nsCOMPtr<nsISupportsArray> resourceArray, dirArray;
-	nsCOMPtr<nsIRDFResource> resource;
-
-	rv = srcDirectory->GetResource(getter_AddRefs(resource));
-
+	nsresult rv = NS_OK;
+    NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
 	if(NS_FAILED(rv))
 		return rv;
 
-	rv = tree->GetDatabase(getter_AddRefs(database));
+	nsCOMPtr<nsISupportsArray> dirArray;
+
+	rv = NS_NewISupportsArray(getter_AddRefs(dirArray));
 	if(NS_FAILED(rv))
-		return rv;
+		return NS_ERROR_OUT_OF_MEMORY;
+	nsCOMPtr<nsIRDFResource> parentResource;
+	char *parentUri = PR_smprintf("%s", kDirectoryDataSourceRoot);
+	rv = rdfService->GetResource(parentUri, getter_AddRefs(parentResource));
+	nsCOMPtr<nsIAbDirectory> parentDir = do_QueryInterface(parentResource);
+	if (!parentDir)
+		return NS_ERROR_NULL_POINTER;
+	if (parentUri)
+		PR_smprintf_free(parentUri);
+
+	dirArray->AppendElement(parentResource);
+
+
+	nsCOMPtr<nsISupportsArray> resourceArray;
 
 	rv = ConvertDOMListToResourceArray(nodeList, getter_AddRefs(resourceArray));
 	if(NS_FAILED(rv))
 		return rv;
 
-	rv = NS_NewISupportsArray(getter_AddRefs(dirArray));
-	if(NS_FAILED(rv))
-	{
-		return NS_ERROR_OUT_OF_MEMORY;
-	}
-
-	dirArray->AppendElement(resource);
-	
-	rv = DoCommand(database, NC_RDF_DELETE, dirArray, resourceArray);
-
+	DoCommand(db, NC_RDF_DELETE, dirArray, resourceArray);
 	return rv;
 }
 

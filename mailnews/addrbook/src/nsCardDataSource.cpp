@@ -66,24 +66,27 @@ nsAbCardDataSource::nsAbCardDataSource():
 
 nsAbCardDataSource::~nsAbCardDataSource (void)
 {
-  mRDFService->UnregisterDataSource(this);
+	mRDFService->UnregisterDataSource(this);
 
-  nsresult rv = NS_OK;
-  NS_WITH_SERVICE(nsIAddrBookSession, abSession, kAddrBookSessionCID, &rv); 
-  if(NS_SUCCEEDED(rv))
-    abSession->RemoveAddressBookListener(this);
+	nsresult rv = NS_OK;
+	NS_WITH_SERVICE(nsIAddrBookSession, abSession, kAddrBookSessionCID, &rv); 
+	if(NS_SUCCEEDED(rv))
+	abSession->RemoveAddressBookListener(this);
 
-  nsrefcnt refcnt;
+	nsrefcnt refcnt;
 
-  NS_RELEASE2(kNC_DisplayName, refcnt);
-  NS_RELEASE2(kNC_PrimaryEmail, refcnt);
-  NS_RELEASE2(kNC_WorkPhone, refcnt);
+	NS_RELEASE2(kNC_DisplayName, refcnt);
+	NS_RELEASE2(kNC_PrimaryEmail, refcnt);
+	NS_RELEASE2(kNC_WorkPhone, refcnt);
 
-  NS_RELEASE2(kNC_Delete, refcnt);
-  NS_RELEASE2(kNC_NewCard, refcnt);
+	NS_RELEASE2(kNC_Delete, refcnt);
+	NS_RELEASE2(kNC_NewCard, refcnt);
 
-  nsServiceManager::ReleaseService(kRDFServiceCID, mRDFService); // XXX probably need shutdown listener here
-  mRDFService = nsnull;
+	if (mRDFService)
+	{
+		nsServiceManager::ReleaseService(kRDFServiceCID, mRDFService); 
+		mRDFService = nsnull;
+	}
 }
 
 nsresult nsAbCardDataSource::Init()

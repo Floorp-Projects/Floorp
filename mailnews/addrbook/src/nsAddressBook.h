@@ -42,7 +42,7 @@ public:
 	// nsIAddressBook
 	NS_IMETHOD DeleteCards(nsIDOMXULElement *tree, nsIDOMXULElement *srcDirectory, nsIDOMNodeList *nodeList);
 	NS_IMETHOD NewAddressBook(nsIRDFCompositeDataSource* db, nsIDOMXULElement *srcDirectory, const char *name);
-	NS_IMETHOD DeleteAddressBook(nsIDOMXULElement *tree, nsIDOMXULElement *srcDirectory, nsIDOMNodeList *nodeList);
+	NS_IMETHOD DeleteAddressBooks(nsIRDFCompositeDataSource* db, nsIDOMXULElement *srcDirectory, nsIDOMNodeList *nodeList);
 	NS_IMETHOD PrintCard();
         NS_IMETHOD PrintAddressbook();
 	NS_IMETHOD SetWebShellWindow(nsIDOMWindow *win);
