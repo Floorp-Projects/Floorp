@@ -49,7 +49,7 @@ var inspector;
 
 const kSearchRegURL        = "resource:///res/inspector/search-registry.rdf";
 
-const kWindowMediatorCID   = "@mozilla.org/appshell/window-mediator;1";
+const kWindowDataSourceCID = "@mozilla.org/rdf/datasource;1?name=window-mediator";
 const kClipboardHelperCID  = "@mozilla.org/widget/clipboardhelper;1";
 const nsIWebNavigation     = Components.interfaces.nsIWebNavigation;
 
@@ -312,7 +312,7 @@ InspectorApp.prototype =
 
   setTargetWindowById: function(aResId)
   {
-    var windowManager = XPCU.getService(kWindowMediatorCID, "nsIWindowMediator");
+    var windowManager = XPCU.getService(kWindowDataSourceCID, "nsIWindowDataSource");
     var win = windowManager.getWindowForResource(aResId);
 
     if (win) {

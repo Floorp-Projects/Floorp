@@ -38,6 +38,7 @@
 
 const nsIDOMWindowInternal = Components.interfaces.nsIDOMWindowInternal;
 const nsIWindowMediator = Components.interfaces.nsIWindowMediator;
+const nsIWindowDataSource = Components.interfaces.nsIWindowDataSource;
 
 function toNavigator()
 {
@@ -162,12 +163,11 @@ function CycleWindow( aType )
 
 function ShowWindowFromResource( node )
 {
-	var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
-	var	windowManagerInterface = windowManager.QueryInterface(nsIWindowMediator);
+	var windowManagerDS = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService(nsIWindowDataSource);
     
     var desiredWindow = null;
     var url = node.getAttribute('id');
-	desiredWindow = windowManagerInterface.getWindowForResource( url );
+	desiredWindow = windowManagerDS.getWindowForResource( url );
 	if ( desiredWindow )
 	{
 		desiredWindow.focus();
@@ -190,14 +190,13 @@ function ShowUpdateFromResource( node )
 
 function checkFocusedWindow()
 {
-  var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
-  var windowManagerInterface = windowManager.QueryInterface(nsIWindowMediator);
+  var windowManagerDS = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService(nsIWindowDataSource);
 
   var sep = document.getElementById("sep-window-list");
   // Using double parens to avoid warning
   while ((sep = sep.nextSibling)) {
     var url = sep.getAttribute('id');
-    var win = windowManagerInterface.getWindowForResource(url);
+    var win = windowManagerDS.getWindowForResource(url);
     if (win == window) {
       sep.setAttribute("checked", "true");
       break;
