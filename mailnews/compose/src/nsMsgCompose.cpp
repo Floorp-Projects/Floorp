@@ -75,11 +75,7 @@ static nsresult RemoveDuplicateAddresses(const char * addresses, const char * an
 {
 	nsresult rv;
 
-	nsCOMPtr<nsIMsgHeaderParser> parser;
-	nsComponentManager::CreateInstance(kHeaderParserCID,
-	                           nsnull,
-	                           nsCOMTypeInfo<nsIMsgHeaderParser>::GetIID(),
-	                           getter_AddRefs(parser));
+	nsCOMPtr<nsIMsgHeaderParser> parser = do_GetService(kHeaderParserCID);;
 	if (parser)
 		rv= parser->RemoveDuplicateAddresses(msgCompHeaderInternalCharset(), addresses, anothersAddresses, removeAliasesToMe, newAddress);
 	else
@@ -933,8 +929,8 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
               if (NS_SUCCEEDED(rv = nsMsgI18NDecodeMimePartIIStr(recipStr, encodedCharset, decodedString)))
                 if (NS_SUCCEEDED(rv = ConvertFromUnicode(msgCompHeaderInternalCharset(), decodedString, &aCString)))
                 {
-					char * resultStr = nsnull;
-					nsCString addressToBeRemoved = m_compFields->GetTo();
+					        char * resultStr = nsnull;
+					        nsCString addressToBeRemoved = m_compFields->GetTo();
 					  	
 		            if (m_identity)
 		            {
