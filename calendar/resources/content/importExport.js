@@ -667,11 +667,10 @@ function eventArrayToICalString( calendarEventArray, doPatchForExport )
    for( var eventArrayIndex = 0;  eventArrayIndex < calendarEventArray.length; ++eventArrayIndex )
    {
       var calendarEvent = calendarEventArray[ eventArrayIndex ].clone();
-
       // convert time to represent local to produce correct DTSTART and DTEND
       if(calendarEvent.allDay != true)
-      convertLocalToZulu( calendarEvent );
-     
+         convertLocalToZulu( calendarEvent );
+      
       // check if all required properties are available
       if( calendarEvent.method == 0 )
          calendarEvent.method = calendarEvent.ICAL_METHOD_PUBLISH;
@@ -683,7 +682,7 @@ function eventArrayToICalString( calendarEventArray, doPatchForExport )
       else
         sTextiCalendar += calendarEvent.getIcalString() ;
    }
-
+   
    return sTextiCalendar;
 }
 

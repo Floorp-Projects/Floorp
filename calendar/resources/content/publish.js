@@ -78,14 +78,12 @@ function calendarPublish(aDataString, newLocation, fileName, login, password, co
       dump("failed to get a destination channel\n");
       return;
     }
-
     output_string_to_channel(protocolChannel, aDataString, contentType);
     protocolChannel.asyncOpen(gPublishingListener, null);
-    dump("done\n");
-  }
+  }  
   catch (e)
   {
-    alert("an error occurred: " + e + "\n");
+    alert("an error occurred in calendarPublish: " + e + "\n");
   }
 }
 
@@ -107,7 +105,7 @@ function calendarUploadFile(aSourceFilename, newLocation, fileName, login, passw
    }
    catch (e)
    {
-      alert("an error occurred: " + e + "\n");
+      alert("an error occurred in calendarUploadFile: " + e + "\n");
    }
 }
 

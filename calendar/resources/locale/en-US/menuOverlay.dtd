@@ -76,7 +76,7 @@
 <!ENTITY calendar.subscribe.label "Subscribe To Remote Calendar...">
 <!ENTITY calendar.subscribe.accesskey "s">
 
-<!ENTITY calendar.publish.label "Publish Events...">
+<!ENTITY calendar.publish.label "Publish Selected Events...">
 <!ENTITY calendar.publish.accesskey "p">
 
 <!ENTITY calendar.about.label	"About Calendar">

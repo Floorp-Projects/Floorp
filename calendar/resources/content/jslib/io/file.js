@@ -9,7 +9,7 @@ IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
 implied. See the License for the specific language governing
 rights and limitations under the License.
 
-The Original Code is Collabnet code.
+The Original Code is jslib code.
 The Initial Developer of the Original Code is jslib team.
 
 Portions created by jslib team are
@@ -128,12 +128,14 @@ const JS_FILE_FILE             = "file.js";
 const JS_FILE_F_CHANNEL_CID    = "@mozilla.org/network/local-file-channel;1";
 const JS_FILE_IOSERVICE_CID    = "@mozilla.org/network/io-service;1";
 const JS_FILE_I_STREAM_CID     = "@mozilla.org/scriptableinputstream;1";
+const JS_FILE_OUTSTREAM_CID    = "@mozilla.org/network/file-output-stream;1";
 
 const JS_FILE_F_TRANSPORT_SERVICE_CID  = "@mozilla.org/network/file-transport-service;1";
 
 const JS_FILE_I_FILE_CHANNEL           = "nsIFileChannel";
 const JS_FILE_I_IOSERVICE              = C.interfaces.nsIIOService;
 const JS_FILE_I_SCRIPTABLE_IN_STREAM   = "nsIScriptableInputStream";
+const JS_FILE_I_FILE_OUT_STREAM        = C.interfaces.nsIFileOutputStream;
 
 const JS_FILE_READ          = 0x01;  // 1
 const JS_FILE_WRITE         = 0x08;  // 8
@@ -160,15 +162,6 @@ try {
 
   const JS_FILE_IOSERVICE    = C.classes[JS_FILE_IOSERVICE_CID].
   getService(JS_FILE_I_IOSERVICE);
-
-  /***
-   * The File Transport Service provides nsITransport objects 
-   * which can supply nsIOutputStream objects for writing to files.
-   */
-  const JS_FILE_FileTransportService =
-  C.classes[JS_FILE_F_TRANSPORT_SERVICE_CID].
-  getService(C.interfaces.nsIFileTransportService);
-  
 } catch (e) {
   jslibError (e, "open("+this.mMode+") (unable to get nsIFileChannel)", 
                 "NS_ERROR_FAILURE", 
@@ -176,11 +169,7 @@ try {
 }
 
 /***
- * Possible values for the ioFlags parameter to 
- *  FileTransportService.createTransport.
- */
-
-/***
+ * Possible values for the ioFlags parameter 
  * From: 
  * http://lxr.mozilla.org/seamonkey/source/nsprpub/pr/include/prio.h#601
  */
@@ -325,35 +314,35 @@ File.prototype.open = function(aMode, aPerms)
         var offSet=0;
         if (aMode == JS_FILE_WRITE_MODE) {
           this.mMode=JS_FILE_WRITE_MODE;
-          // Create a file transport in write mode
-          if (!this.mTransport) {
-            this.mTransport = JS_FILE_FileTransportService.createTransport
-                  (this.mFileInst, 
-                   JS_FILE_NS_WRONLY | JS_FILE_NS_CREATE_FILE | 
-                   JS_FILE_NS_TRUNCATE, aPerms, true);
-          }
+          // create a filestream                                   
+          var fs = C.classes[JS_FILE_OUTSTREAM_CID].               
+                   createInstance(JS_FILE_I_FILE_OUT_STREAM);      
+                                                                   
+          fs.init(this.mFileInst, JS_FILE_NS_TRUNCATE |            
+                                  JS_FILE_NS_WRONLY, 00004, null); 
+          this.mOutStream = fs;                                    
         } else {
           this.mMode=JS_FILE_APPEND_MODE;
-          if (!this.mTransport) {
-              this.mTransport = JS_FILE_FileTransportService.createTransport(
-                                this.mFileInst, 
-                                JS_FILE_NS_CREATE_FILE | JS_FILE_NS_WRONLY 
-                                | JS_FILE_NS_APPEND,
-                                aPerms, true);
-          }
-          jslib_debug("this.mTransport: "+this.mTransport);
+          // create a filestream                                  
+          var fs = C.classes[JS_FILE_OUTSTREAM_CID].              
+                   createInstance(JS_FILE_I_FILE_OUT_STREAM);     
+                                                                  
+          fs.init(this.mFileInst, JS_FILE_NS_RDWR |               
+                                  JS_FILE_NS_APPEND, 00004, null);
+          this.mOutStream = fs;                                   
         }
       } catch(e) {
-        jslibError(e, "open("+this.mMode+") (unable to get transport)", 
-                  "NS_ERROR_FAILURE", 
-                  JS_FILE_FILE+":open");
+        jslibError(e, "open("+this.mMode+") (unable to get file stream)", 
+                    "NS_ERROR_FAILURE", 
+                    JS_FILE_FILE+":open");
         return null;
       }
       try {
         // Use the previously created file transport to open an output 
         // stream for writing to the file
         if (!this.mOutStream) {
-          this.mOutStream = this.mTransport.openOutputStream(offSet, -1, 0);
+          // this.mOutStream = this.mTransport.openOutputStream(offSet, -1, 0);
+          // this.mOutStream = 
         }
       } catch(e) {
         jslibError(e, "open("+this.mMode+") (unable to get outputstream)", 
@@ -378,15 +367,13 @@ File.prototype.open = function(aMode, aPerms)
       try {
         this.mFileChannel = JS_FILE_IOSERVICE.newChannelFromURI(this.mURI);
         this.mInputStream        = new JS_FILE_InputStream();    
-        this.mLineBuffer         = new Array();
-        this.mFileChannel.init(this.mFileInst, JS_FILE_READ, this.permissions);
         this.mInputStream.init(this.mFileChannel.open());
         this.mLineBuffer         = new Array();
         rv=true;
       } catch (e) {
         jslibError(e, "open(r) (error setting permissions)", 
                       "NS_ERROR_FAILURE", 
-                      JS_FILE_FILE+":open");
+                      JS_FILE_FILE+":open\n"+e);
         return null;
       }
       break;
@@ -571,14 +558,14 @@ File.prototype.write = function(aBuffer, aPerms)
                       "NS_ERROR_FAILURE", 
                       JS_FILE_FILE+":write");
     this.close();
-    return false;
+    return null;
   }
 
   if (!this.mFileInst) {
     jslibError(null, "(no file instance)", 
                       "NS_ERROR_NOT_INITIALIZED", 
                       JS_FILE_FILE+":write");
-    return false;
+    return null;
   }
 
   if (!aBuffer)

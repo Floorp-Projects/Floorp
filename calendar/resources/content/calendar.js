@@ -1038,6 +1038,25 @@ function publishEntireCalendar()
    var args = new Object();
    
    args.onOk =  self.publishEntireCalendarDialogResponse;
+   var name = gCalendarWindow.calendarManager.getSelectedCalendarId();
+   var node = gCalendarWindow.calendarManager.rdf.getNode( name );
+
+   var remotePath = node.getAttribute( "http://home.netscape.com/NC-rdf#remotePath" );
+   
+   if( remotePath != "" )
+   {
+      var publishObject = new Object( );
+      publishObject.username = node.getAttribute( "http://home.netscape.com/NC-rdf#username" );
+      
+      //get the url and the filename from the remotePath
+      var arrayOfPath = remotePath.split( "/" );
+      publishObject.filename = arrayOfPath.pop();
+      
+      publishObject.url = remotePath.substr( 0, ( remotePath.length - publishObject.filename.length) );
+      
+      publishObject.password = node.getAttribute( "http://home.netscape.com/NC-rdf#password" );
+      args.publishObject = publishObject;
+   }
    
    openDialog("chrome://calendar/content/publishDialog.xul", "caPublishEvents", "chrome,modal", args );
 }

@@ -97,12 +97,22 @@ function loadCalendarPublishDialog()
    
    gOnOkFunction = args.onOk;
    
-   //get default values from the prefs
-   document.getElementById( "publish-url-textbox" ).value = opener.getCharPref( opener.gCalendarWindow.calendarPreferences.calendarPref, "publish.path", "" );
-   document.getElementById( "publish-remotefilename-textbox" ).value = opener.getCharPref( opener.gCalendarWindow.calendarPreferences.calendarPref, "publish.filename", "" );
-   document.getElementById( "publish-username-textbox" ).value = opener.getCharPref( opener.gCalendarWindow.calendarPreferences.calendarPref, "publish.username", "" );
-   document.getElementById( "publish-password-textbox" ).value = opener.getCharPref( opener.gCalendarWindow.calendarPreferences.calendarPref, "publish.password", "" );
-
+   if( args.publishObject )
+   {
+      document.getElementById( "publish-url-textbox" ).value = args.publishObject.url;
+      document.getElementById( "publish-remotefilename-textbox" ).value = args.publishObject.filename;
+      document.getElementById( "publish-username-textbox" ).value = args.publishObject.username;
+      document.getElementById( "publish-password-textbox" ).value = args.publishObject.password;
+   }
+   else
+   {
+      //get default values from the prefs
+      document.getElementById( "publish-url-textbox" ).value = opener.getCharPref( opener.gCalendarWindow.calendarPreferences.calendarPref, "publish.path", "" );
+      document.getElementById( "publish-remotefilename-textbox" ).value = opener.getCharPref( opener.gCalendarWindow.calendarPreferences.calendarPref, "publish.filename", "" );
+      document.getElementById( "publish-username-textbox" ).value = opener.getCharPref( opener.gCalendarWindow.calendarPreferences.calendarPref, "publish.username", "" );
+      document.getElementById( "publish-password-textbox" ).value = opener.getCharPref( opener.gCalendarWindow.calendarPreferences.calendarPref, "publish.password", "" );
+   }
+      
    var firstFocus = document.getElementById( "publish-url-textbox" );
    firstFocus.focus();
 }
