@@ -257,7 +257,8 @@ Rights Reserved.
 <html:script src="chrome://messenger/content/commandglue.js"/>
 <html:script src="chrome://messenger/content/shareglue.js"/>
 
-  <menubar>
+  <toolbox>
+     <menubar>
     <menu id="fileMenu" value="&fileMenu.label;">
 	  <menupopup>
       <menu value="&newMenu.label;">
@@ -559,11 +560,9 @@ Rights Reserved.
     
 	<menu id="tasksMenu"/>
 	<menu id="helpMenu"/>
-
+	<spring flex="100%"/>
   </menubar>
 
-
-   <toolbox>
 	  <toolbar>
 	  <titledbutton src="&getMsgButton.img;" align="top" value="&getMsgButton.label;" onclick="MsgGetMessage()"/>
 	  <titledbutton src="&newMsgButton.img;" align="top" value="&newMsgButton.label;" onclick="MsgNewMessage()"/>

@@ -97,7 +97,9 @@
 <html:script language="JavaScript" src="chrome://messenger/content/commandglue.js"/>
 <html:script language="JavaScript" src="resource:/res/samples/DumpDOM.js"/>
 -->
-	<menubar>
+
+  <toolbox>
+  <menubar>
 		<menu id="fileMenu" value="&fileMenu.label;">
 		  <menupopup>
 			<menu value="&newMenu.label;">
@@ -170,9 +172,8 @@
 	    
 		<menu id="tasksMenu"/>
 		<menu id="helpMenu"/>
+		<spring flex="100%"/>
 	</menubar>
-
-	<toolbox>
 		<toolbar>
 			<titledbutton src="&newcardButton.img;" align="bottom" value="&newcardButton.label;" onclick="AbNewCardDialog()"/>
 			<titledbutton src="&newlistButton.img;" align="bottom" value="&newlistButton.label;" onclick="AbNewList()"/>

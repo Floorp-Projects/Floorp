@@ -54,7 +54,10 @@ Rights Reserved.
 <broadcaster id="dialog.start" ready="false"/>
 <observes element="dialog.start" attribute="ready" onchange="ComposeStartup()"/>
 
-<menubar>
+
+<!-- box id="toolbar" align="vertical" style="width:100%;height:100%" -->
+<toolbox>
+  <menubar>
 	<menu id="fileMenu" value="&fileMenu.label;">
 	    <menupopup>
 		<menuitem value="&newCmd.label;" cmd="nsCmd:ComposeNew"/>
@@ -184,10 +187,9 @@ Rights Reserved.
     </menu>
 	<menu id="tasksMenu"/>
 	<menu id="helpMenu"/>
-</menubar>
+	<spring flex="100%"/>
+  </menubar>
 
-<!-- box id="toolbar" align="vertical" style="width:100%;height:100%" -->
-<toolbox>
 	<toolbar>
  		<titledbutton src="&sendButton.img;" align="bottom" value="&sendButton.label;" onclick="SendMessage()"/>
  		<titledbutton src="&quoteButton.img;" align="bottom" value="&quoteButton.label;" onclick="QuoteMessage()"/>
