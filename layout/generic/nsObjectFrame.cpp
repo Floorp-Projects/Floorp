@@ -661,10 +661,14 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
                 SetFullURL(fullURL);
 
                 NS_IF_RELEASE(group);
-              }
+			  }
             }
 
-            nsIView *parentWithView;
+			// if there's no fullURL at this point, we need to set one
+			if(!fullURL && baseURL)
+			  SetFullURL(baseURL); 
+      
+			nsIView *parentWithView;
             nsPoint origin;
 
             // we need to recalculate this now that we have access to the nsPluginInstanceOwner
@@ -693,7 +697,7 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
 #ifdef XP_UNIX
             window->ws_info = nsnull;   //XXX need to figure out what this is. MMP
 #endif
-            rv = pm->InstantiateEmbededPlugin(buf, src, mInstanceOwner);
+            rv = pm->InstantiateEmbededPlugin(buf, fullURL, mInstanceOwner);
             NS_IF_RELEASE(fullURL);
             NS_IF_RELEASE(baseURL);
 
