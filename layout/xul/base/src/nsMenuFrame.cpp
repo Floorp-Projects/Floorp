@@ -167,7 +167,7 @@ NS_IMETHODIMP
 nsMenuFrame::Destroy(nsIPresContext& aPresContext)
 {
    // Cleanup frames in popup child list
-  mPopupFrames.DeleteFrames(aPresContext);
+  mPopupFrames.DestroyFrames(aPresContext);
   return nsBoxFrame::Destroy(aPresContext);
 }
 

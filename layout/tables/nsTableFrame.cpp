@@ -344,7 +344,7 @@ nsTableFrame::~nsTableFrame()
 NS_IMETHODIMP
 nsTableFrame::Destroy(nsIPresContext& aPresContext)
 {
-  mColGroups.DeleteFrames(aPresContext);
+  mColGroups.DestroyFrames(aPresContext);
   return nsHTMLContainerFrame::Destroy(aPresContext);
 }
 
@@ -3313,7 +3313,7 @@ NS_METHOD nsTableFrame::IR_TargetIsMe(nsIPresContext&        aPresContext,
     }
     else
     {
-      rv = mFrames.DeleteFrame(aPresContext, objectFrame);
+      rv = mFrames.DestroyFrame(aPresContext, objectFrame);
     }
     break;
 
@@ -3603,7 +3603,7 @@ NS_METHOD nsTableFrame::IR_RowGroupRemoved(nsIPresContext&        aPresContext,
                                            nsTableRowGroupFrame * aDeletedFrame)
 {
   if (PR_TRUE==gsDebugIR) printf("TIF IR: IR_RowGroupRemoved for frame %p\n", aDeletedFrame);
-  nsresult rv = mFrames.DeleteFrame(aPresContext, aDeletedFrame);
+  nsresult rv = mFrames.DestroyFrame(aPresContext, aDeletedFrame);
   InvalidateCellMap();
   InvalidateColumnCache();
 

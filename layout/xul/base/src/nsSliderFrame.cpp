@@ -658,7 +658,7 @@ nsSliderFrame::RemoveFrame(nsIPresContext& aPresContext,
 {
       // remove the child frame
       nsresult rv = nsHTMLContainerFrame::RemoveFrame(aPresContext, aPresShell, aListName, aOldFrame);
-      mFrames.DeleteFrame(aPresContext, aOldFrame);
+      mFrames.DestroyFrame(aPresContext, aOldFrame);
       return rv;
 }
 

@@ -19,7 +19,7 @@
 #include "nsFrameList.h"
 
 void
-nsFrameList::DeleteFrames(nsIPresContext& aPresContext)
+nsFrameList::DestroyFrames(nsIPresContext& aPresContext)
 {
   nsIFrame* frame = mFirstChild;
   while (nsnull != frame) {
@@ -107,7 +107,7 @@ nsFrameList::RemoveFirstChild()
 }
 
 PRBool
-nsFrameList::DeleteFrame(nsIPresContext& aPresContext, nsIFrame* aFrame)
+nsFrameList::DestroyFrame(nsIPresContext& aPresContext, nsIFrame* aFrame)
 {
   NS_PRECONDITION(nsnull != aFrame, "null ptr");
   if (RemoveFrame(aFrame)) {
@@ -200,10 +200,10 @@ nsFrameList::ReplaceFrame(nsIFrame* aParent,
 }
 
 PRBool
-nsFrameList::ReplaceAndDeleteFrame(nsIPresContext& aPresContext,
-                                   nsIFrame* aParent,
-                                   nsIFrame* aOldFrame,
-                                   nsIFrame* aNewFrame)
+nsFrameList::ReplaceAndDestroyFrame(nsIPresContext& aPresContext,
+                                    nsIFrame* aParent,
+                                    nsIFrame* aOldFrame,
+                                    nsIFrame* aNewFrame)
 {
   NS_PRECONDITION(nsnull != aOldFrame, "null ptr");
   NS_PRECONDITION(nsnull != aNewFrame, "null ptr");

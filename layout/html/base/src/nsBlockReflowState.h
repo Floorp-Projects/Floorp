@@ -817,7 +817,7 @@ nsBlockFrame::Destroy(nsIPresContext& aPresContext)
     mBullet = nsnull;
   }
 
-  mFloaters.DeleteFrames(aPresContext);
+  mFloaters.DestroyFrames(aPresContext);
 
   nsLineBox::DeleteLineList(aPresContext, mLines);
   nsLineBox::DeleteLineList(aPresContext, mOverflowLines);

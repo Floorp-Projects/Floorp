@@ -136,7 +136,7 @@ void nsTreeRowGroupFrame::DestroyRows(nsIPresContext& aPresContext, PRInt32& row
     nsIFrame* nextFrame;
     GetNextFrame(childFrame, &nextFrame);
     mFrameConstructor->RemoveMappingsForFrameSubtree(&aPresContext, childFrame);
-    mFrames.DeleteFrame(aPresContext, childFrame);
+    mFrames.DestroyFrame(aPresContext, childFrame);
     mTopFrame = childFrame = nextFrame;
   }
 }
@@ -170,7 +170,7 @@ void nsTreeRowGroupFrame::ReverseDestroyRows(nsIPresContext& aPresContext, PRInt
     nsIFrame* prevFrame;
     prevFrame = mFrames.GetPrevSiblingFor(childFrame);
     mFrameConstructor->RemoveMappingsForFrameSubtree(&aPresContext, childFrame);
-    mFrames.DeleteFrame(aPresContext, childFrame);
+    mFrames.DestroyFrame(aPresContext, childFrame);
     mBottomFrame = childFrame = prevFrame;
   }
 }
@@ -460,7 +460,7 @@ nsTreeRowGroupFrame::PositionChanged(nsIPresContext& aPresContext, PRInt32 aOldI
     // as a hint to figure out how to build the frames.
     // Remove the scrollbar first.
     mFrameConstructor->RemoveMappingsForFrameSubtree(&aPresContext, this);
-    mFrames.DeleteFrames(aPresContext);
+    mFrames.DestroyFrames(aPresContext);
     nsCOMPtr<nsIContent> topRowContent;
     FindRowContentAtIndex(aNewIndex, mContent, getter_AddRefs(topRowContent));
     if (topRowContent)
@@ -644,7 +644,7 @@ nsTreeRowGroupFrame::ReflowAfterRowLayout(nsIPresContext&       aPresContext,
     if (value == "0" && !mIsFull) {
       // Nuke the scrollbar.
       mFrameConstructor->RemoveMappingsForFrameSubtree(&aPresContext, mScrollbar);
-      mScrollbarList.DeleteFrames(aPresContext);
+      mScrollbarList.DestroyFrames(aPresContext);
       mScrollbar = nsnull;
     }
   }
@@ -940,7 +940,7 @@ PRBool nsTreeRowGroupFrame::ContinueReflow(nsIPresContext& aPresContext, nscoord
         nsIFrame* nextFrame;
         currFrame->GetNextSibling(&nextFrame);
         mFrameConstructor->RemoveMappingsForFrameSubtree(&aPresContext, currFrame);
-        mFrames.DeleteFrame(aPresContext, currFrame);
+        mFrames.DestroyFrame(aPresContext, currFrame);
         currFrame = nextFrame;
       }
     }
@@ -989,7 +989,7 @@ void nsTreeRowGroupFrame::OnContentRemoved(nsIPresContext& aPresContext,
   // Go ahead and delete the frame.
   if (aChildFrame) {
     mFrameConstructor->RemoveMappingsForFrameSubtree(&aPresContext, aChildFrame);
-    mFrames.DeleteFrame(aPresContext, aChildFrame);
+    mFrames.DestroyFrame(aPresContext, aChildFrame);
     treeFrame->InvalidateCellMap();
     treeFrame->InvalidateColumnCache();
   }
