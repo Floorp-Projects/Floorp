@@ -1805,25 +1805,6 @@ HTMLStyleSheetImpl::ContentRemoved(nsIPresContext* aPresContext,
 }
 
 static void
-RemapStyleInTree(nsIPresContext* aPresContext,
-                 nsIFrame* aFrame)
-{
-  nsIStyleContext*  sc;
-  aFrame->GetStyleContext(nsnull, sc);
-  if (nsnull != sc) {
-    sc->RemapStyle(aPresContext);
-
-    // Update the children too...
-    nsIFrame* kid;
-    aFrame->FirstChild(kid);
-    while (nsnull != kid) {
-      RemapStyleInTree(aPresContext, kid);
-      kid->GetNextSibling(kid);
-    }
-  }
-}
-
-static void
 ApplyStyleChangeToTree(nsIPresContext* aPresContext,
                        nsIFrame* aFrame)
 {
@@ -1854,13 +1835,7 @@ ApplyStyleChangeToTree(nsIPresContext* aPresContext,
     // Update the children too...
     nsIFrame* kid;
     aFrame->FirstChild(kid);
-    if (onlyRemap) {
-      while (nsnull != kid) {
-        RemapStyleInTree(aPresContext, kid);
-        kid->GetNextSibling(kid);
-      }
-    }
-    else {
+    if (PR_FALSE == onlyRemap) {  // remap already did children
       while (nsnull != kid) {
         ApplyStyleChangeToTree(aPresContext, kid);
         kid->GetNextSibling(kid);
