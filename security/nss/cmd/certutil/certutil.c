@@ -2450,14 +2450,7 @@ main(int argc, char **argv)
     rv = NSS_Initialize(SECU_ConfigDirectory(NULL), certPrefix, certPrefix,
                         "secmod.db", PR_FALSE);
     if (rv != SECSuccess) {
-	char buffer[513];
-	PRErrorCode err    = PR_GetError();
-	PRInt32     errLen = PR_GetErrorTextLength();
-	if (errLen > 0 && errLen < sizeof buffer)
-	    PR_GetErrorText(buffer);
-	SECU_PrintError(progName, "NSS_Initialize failed");
-	if (errLen > 0 && errLen < sizeof buffer)
-	    PR_fprintf(PR_STDERR, "\t%s\n", buffer);
+	SECU_PrintPRandOSError(progName);
 	return -1;
     }
     certHandle = CERT_GetDefaultCertDB();

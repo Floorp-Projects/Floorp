@@ -268,6 +268,7 @@ int main(int argc, char **argv)
     int crlType;
     PLOptState *optstate;
     PLOptStatus status;
+    SECStatus secstatus;
 
     progName = strrchr(argv[0], '/');
     progName = progName ? progName+1 : argv[0];
@@ -346,7 +347,11 @@ int main(int argc, char **argv)
     if (importCRL && !inFile) Usage (progName);
     
     PR_Init( PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 1);
-    NSS_InitReadWrite(SECU_ConfigDirectory(NULL));
+    secstatus = NSS_InitReadWrite(SECU_ConfigDirectory(NULL));
+    if (secstatus != SECSuccess) {
+	SECU_PrintPRandOSError(progName);
+	return -1;
+    }
 
     certHandle = CERT_GetDefaultCertDB();
     if (certHandle == NULL) {

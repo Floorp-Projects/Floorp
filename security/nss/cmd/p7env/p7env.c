@@ -34,7 +34,7 @@
 /*
  * p7env -- A command to create a pkcs7 enveloped data.
  *
- * $Id: p7env.c,v 1.3 2001/01/07 07:43:15 nelsonb%netscape.com Exp $
+ * $Id: p7env.c,v 1.4 2001/01/31 23:24:47 kirke%netscape.com Exp $
  */
 
 #include "nspr.h"
@@ -169,6 +169,7 @@ main(int argc, char **argv)
     struct recipient *recipients, *rcpt;
     PLOptState *optstate;
     PLOptStatus status;
+	SECStatus rv;
 
     progName = strrchr(argv[0], '/');
     progName = progName ? progName+1 : argv[0];
@@ -240,7 +241,11 @@ main(int argc, char **argv)
 
     /* Call the libsec initialization routines */
     PR_Init(PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 1);
-    NSS_Init(SECU_ConfigDirectory(NULL));
+    rv = NSS_Init(SECU_ConfigDirectory(NULL));
+    if (rv != SECSuccess) {
+    	SECU_PrintPRandOSError(progName);
+	return -1;
+    }
 
     /* open cert database */
     certHandle = CERT_GetDefaultCertDB();

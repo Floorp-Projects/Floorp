@@ -62,6 +62,7 @@
 #define SERIAL_FILE    "../serial"
 #define DB_DIRECTORY   ".."
 
+static char *progName;
 
 typedef struct PairStr Pair;
 
@@ -2201,8 +2202,8 @@ done:
 }
 
 
-void
-main()
+int
+main(int argc, char **argv)
 {
     int                    length = 500;
     int                    remaining = 500;
@@ -2240,6 +2241,9 @@ main()
     PRBool                 UChain = PR_FALSE;
 
 
+    progName = strrchr(argv[0], '/');
+    progName = progName ? progName+1 : argv[0];
+
 
 #ifdef TEST
     sleep(20);
@@ -2251,6 +2255,10 @@ main()
 
     PK11_SetPasswordFunc(return_dbpasswd);
     NSS_InitReadWrite(DBdir);
+    if (status != SECSuccess) {
+	SECU_PrintPRandOSError(progName);
+	return -1;
+    }
     handle = CERT_GetDefaultCertDB();
 
     prefix[0]= '\0';

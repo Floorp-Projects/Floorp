@@ -1992,7 +1992,11 @@ int main(int argc, char **argv)
     progName = strrchr(argv[0], '/');
     progName = progName ? progName+1 : argv[0];
 
-    NSS_NoDB_Init(NULL);
+    rv = NSS_NoDB_Init(NULL);
+    if (rv != SECSuccess) {
+    	SECU_PrintPRandOSError(progName);
+	return -1;
+    }
 
     rv = SECU_ParseCommandLine(argc, argv, progName, &bltest);
 

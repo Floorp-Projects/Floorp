@@ -34,7 +34,7 @@
 /*
  * p7verify -- A command to do a verification of a *detached* pkcs7 signature.
  *
- * $Id: p7verify.c,v 1.4 2001/01/07 07:43:24 nelsonb%netscape.com Exp $
+ * $Id: p7verify.c,v 1.5 2001/01/31 23:24:53 kirke%netscape.com Exp $
  */
 
 #include "nspr.h"
@@ -216,6 +216,7 @@ main(int argc, char **argv)
     SECCertUsage certUsage = certUsageEmailSigner;
     PLOptState *optstate;
     PLOptStatus status;
+	SECStatus rv;
 
     progName = strrchr(argv[0], '/');
     progName = progName ? progName+1 : argv[0];
@@ -284,7 +285,11 @@ main(int argc, char **argv)
 
     /* Call the libsec initialization routines */
     PR_Init(PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 1);
-    NSS_Init(SECU_ConfigDirectory(NULL));
+    rv = NSS_Init(SECU_ConfigDirectory(NULL));
+    if (rv != SECSuccess) {
+    	SECU_PrintPRandOSError(progName);
+	return -1;
+    }
 
     if (HashDecodeAndVerify(outFile, contentFile, signatureFile,
 			    certUsage, progName)) {
