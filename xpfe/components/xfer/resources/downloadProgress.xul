@@ -52,7 +52,7 @@
             </html:td>
             <html:td align="left">
                 <html:span id="dialog.status">
-                    &progressMsg;
+                    &#160;
                 </html:span>
             </html:td>
         </html:tr>
@@ -63,7 +63,7 @@
             </html:td>
             <html:td align="left">
                 <html:span id="dialog.timeElapsed">
-                    00:00:00
+                    &#160;    
                 </html:span>
             </html:td>
         </html:tr>
@@ -74,7 +74,7 @@
             </html:td>
             <html:td align="left">
                 <html:span id="dialog.timeLeft">
-                    00:00:00
+                    &#160;
                 </html:span>
             </html:td>
         </html:tr>
@@ -84,7 +84,7 @@
                 <progressmeter id="dialog.progress" mode="normal" value="0"
                                style="width:300px;height:16px;"/>
                 <html:span id="dialog.progressPercent" style="border-left:5px solid lightgray;">
-                    &percentMsg;
+                    0%
                 </html:span>
             </html:td>
         </html:tr>
