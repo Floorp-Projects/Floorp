@@ -38,6 +38,8 @@ class ilINetReader;
 class ilINetContext : public nsISupports {
 public:
 
+  NS_DEFINE_STATIC_IID_ACCESSOR(IL_INETCONTEXT_IID)
+
   virtual ilINetContext* Clone()=0;
 
   virtual NET_ReloadMethod GetReloadPolicy()=0;
