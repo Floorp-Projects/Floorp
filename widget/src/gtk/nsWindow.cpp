@@ -2350,6 +2350,13 @@ NS_IMETHODIMP nsWindow::SetTitle(const nsString& aTitle)
                 8, PropModeReplace, (unsigned char *) utf8_title.get(),
                 utf8_title.Length());
 
+  // Set UTF8_STRING title for _NET_WM_ICON_NAME as well
+  XChangeProperty(GDK_DISPLAY(), GDK_WINDOW_XWINDOW(mShell->window),
+                XInternAtom(GDK_DISPLAY(), "_NET_WM_ICON_NAME", False),
+                XInternAtom(GDK_DISPLAY(), "UTF8_STRING", False),
+                8, PropModeReplace, (unsigned char *) utf8_title.get(),
+                utf8_title.Length());
+
   nsCOMPtr<nsIUnicodeEncoder> encoder;
   // get the charset
   nsAutoString platformCharset;
