@@ -38,10 +38,12 @@ CPPSRCS = \
     nsRDFDOMResourceFactory.cpp \
 	$(NULL)
 
-EXTRA_DSO_LDOPTS 	+=	\
+EXTRA_DSO_LDOPTS 	=	\
 	$(NSPR_LIBS)	\
 	-L$(DIST)/bin	\
 	-lxpcom			\
+	-L$(DIST)/lib	\
+	-lrdfutil_s		\
 	$(NULL)
 
 include $(topsrcdir)/config/config.mk
