@@ -1278,7 +1278,9 @@ RDFGenericBuilderImpl::OnAssert(nsIRDFResource* aSubject,
     rv = elements->Count(&cnt);
     NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
     for (PRInt32 i = cnt - 1; i >= 0; --i) {
-        nsCOMPtr<nsIContent> element( do_QueryInterface(elements->ElementAt(i)) );
+		nsISupports* isupports = elements->ElementAt(i);
+        nsCOMPtr<nsIContent> element( do_QueryInterface(isupports) );
+		NS_IF_RELEASE(isupports);
         
         // XXX somehow figure out if building XUL kids on this
         // particular element makes any sense whatsoever.
@@ -1368,7 +1370,9 @@ RDFGenericBuilderImpl::OnUnassert(nsIRDFResource* aSubject,
     rv = elements->Count(&cnt);
     NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
     for (PRInt32 i = cnt - 1; i >= 0; --i) {
-        nsCOMPtr<nsIContent> element( do_QueryInterface(elements->ElementAt(i)) );
+		nsISupports* isupports = elements->ElementAt(i);
+        nsCOMPtr<nsIContent> element( do_QueryInterface(isupports) );
+		NS_IF_RELEASE(isupports);
         
         // XXX somehow figure out if building XUL kids on this
         // particular element makes any sense whatsoever.
