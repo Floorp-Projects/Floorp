@@ -34,7 +34,7 @@
 /*
  * cmsutil -- A command to work with CMS data
  *
- * $Id: cmsutil.c,v 1.32 2002/08/27 00:05:01 kaie%netscape.com Exp $
+ * $Id: cmsutil.c,v 1.33 2002/08/27 13:14:36 kaie%netscape.com Exp $
  */
 
 #include "nspr.h"
@@ -509,6 +509,12 @@ signed_data(struct signOptionsStr *signOptions)
 	    fprintf(stderr, "ERROR: cannot add SMIMEEncKeyPrefs attribute.\n");
 	    goto loser;
 	}
+	if (NSS_CMSSignerInfo_AddMSSMIMEEncKeyPrefs(signerinfo, ekpcert, 
+	                                     signOptions->options->certHandle)
+	      != SECSuccess) {
+	    fprintf(stderr, "ERROR: cannot add MS SMIMEEncKeyPrefs attribute.\n");
+	    goto loser;
+	}
 	if (NSS_CMSSignedData_AddCertificate(sigd, ekpcert) != SECSuccess) {
 	    fprintf(stderr, "ERROR: cannot add encryption certificate.\n");
 	    goto loser;
@@ -525,6 +531,13 @@ signed_data(struct signOptionsStr *signOptions)
                   != SECSuccess) {
                 fprintf(stderr, 
                     "ERROR: cannot add default SMIMEEncKeyPrefs attribute.\n");
+                goto loser;
+            }
+            if (NSS_CMSSignerInfo_AddMSSMIMEEncKeyPrefs(signerinfo, cert, 
+                                              signOptions->options->certHandle)
+                  != SECSuccess) {
+                fprintf(stderr, 
+                    "ERROR: cannot add default MS SMIMEEncKeyPrefs attribute.\n");
                 goto loser;
             }
         } else {
@@ -547,6 +560,13 @@ signed_data(struct signOptionsStr *signOptions)
                   != SECSuccess) {
                 fprintf(stderr, 
                         "ERROR: cannot add SMIMEEncKeyPrefs attribute.\n");
+                goto loser;
+            }
+            if (NSS_CMSSignerInfo_AddMSSMIMEEncKeyPrefs(signerinfo, ekpcert, 
+                                              signOptions->options->certHandle)
+                  != SECSuccess) {
+                fprintf(stderr, 
+                        "ERROR: cannot add MS SMIMEEncKeyPrefs attribute.\n");
                 goto loser;
             }
             if (NSS_CMSSignedData_AddCertificate(sigd, ekpcert) != SECSuccess) {

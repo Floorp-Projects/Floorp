@@ -34,7 +34,7 @@
 /*
  * Interfaces of the CMS implementation.
  *
- * $Id: cms.h,v 1.11 2002/08/27 00:05:05 kaie%netscape.com Exp $
+ * $Id: cms.h,v 1.12 2002/08/27 13:14:38 kaie%netscape.com Exp $
  */
 
 #ifndef _CMS_H_
@@ -730,6 +730,16 @@ NSS_CMSSignerInfo_AddSMIMECaps(NSSCMSSignerInfo *signerinfo);
  */
 SECStatus
 NSS_CMSSignerInfo_AddSMIMEEncKeyPrefs(NSSCMSSignerInfo *signerinfo, CERTCertificate *cert, CERTCertDBHandle *certdb);
+
+/*
+ * NSS_CMSSignerInfo_AddMSSMIMEEncKeyPrefs - add a SMIMEEncryptionKeyPreferences attribute to the
+ * authenticated (i.e. signed) attributes of "signerinfo", using the OID prefered by Microsoft.
+ *
+ * This is expected to be included in outgoing signed messages for email (S/MIME),
+ * if compatibility with Microsoft mail clients is wanted.
+ */
+SECStatus
+NSS_CMSSignerInfo_AddMSSMIMEEncKeyPrefs(NSSCMSSignerInfo *signerinfo, CERTCertificate *cert, CERTCertDBHandle *certdb);
 
 /* 
  * NSS_CMSSignerInfo_AddCounterSignature - countersign a signerinfo

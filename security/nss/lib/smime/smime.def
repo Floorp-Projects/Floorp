@@ -209,3 +209,9 @@ NSS_CMSMessage_IsEncrypted;
 ;+    local:
 ;+       *;
 ;+};
+;+NSS_3.6 {     # NSS 3.6 release
+;+    global:
+NSS_CMSSignerInfo_AddMSSMIMEEncKeyPrefs;
+;+    local:
+;+       *;
+;+};
