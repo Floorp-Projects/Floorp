@@ -33,11 +33,7 @@ IMPL_STRATEGY   = _PTH
 endif
 
 CC              = cc
-ifeq ($(OS_RELEASE),5.0)
-CCC             = cc++
-else
 CCC             = c++
-endif
 RANLIB			= ranlib
 
 ifeq (86,$(findstring 86,$(OS_TEST)))
