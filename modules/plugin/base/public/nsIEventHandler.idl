@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -45,22 +45,22 @@
 [uuid(a447ddf0-1a99-11d2-815f-006008119d7a)]
 interface nsIEventHandler : nsISupports
 {
-    /**
-     * Handles an event. An nsIEventHandler can also get registered with with
-     * nsIPluginManager2::RegisterWindow and will be called whenever an event
-     * comes in for that window.
-     *
-     * Note that for Unix and Mac the nsPluginEvent structure is different
-     * from the old NPEvent structure -- it's no longer the native event
-     * record, but is instead a struct. This was done for future extensibility,
-     * and so that the Mac could receive the window argument too. For Windows
-     * and OS2, it's always been a struct, so there's no change for them.
-     *
-     * (Corresponds to NPP_HandleEvent.)
-     *
+  /**
+   * Handles an event. An nsIEventHandler can also get registered with with
+   * nsIPluginManager2::RegisterWindow and will be called whenever an event
+   * comes in for that window.
+   *
+   * Note that for Unix and Mac the nsPluginEvent structure is different
+   * from the old NPEvent structure -- it's no longer the native event
+   * record, but is instead a struct. This was done for future extensibility,
+   * and so that the Mac could receive the window argument too. For Windows
+   * and OS2, it's always been a struct, so there's no change for them.
+   *
+   * (Corresponds to NPP_HandleEvent.)
+   *
    * @param aEvent   - the event to be handled
    * @param aHandled - set to PR_TRUE if event was handled
    * @result         - NS_OK if this operation was successful
-     */
+   */
   void handleEvent(in nsPluginEventPtr aEvent, out boolean aHandled);
 };
