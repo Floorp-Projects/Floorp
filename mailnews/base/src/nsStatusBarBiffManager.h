@@ -61,7 +61,6 @@ public:
 private:
 	PRBool   mInitialized;
 	PRUint32 mCurrentBiffState;
-    nsCString mDefaultSoundURL;
 
 protected:
 	  static nsIAtom* kBiffStateAtom;

@@ -79,32 +79,23 @@ nsStatusBarBiffManager::~nsStatusBarBiffManager()
 }
 
 #define PREF_PLAY_SOUND_ON_NEW_MAIL      "mail.biff.play_sound"
-#define PREF_PLAY_DEFAULT_SOUND          "mail.biff.use_default_sound"
-#define PREF_USER_SPECIFIED_SOUND_FILE   "mail.biff.sound_file"
-#define DEFAULT_NEW_MAIL_SOUND_URL_PREF  "mail.biff.default_sound_url"
 
 nsresult nsStatusBarBiffManager::Init()
 {
-	if (mInitialized)
-		return NS_ERROR_ALREADY_INITIALIZED;
+  if (mInitialized)
+    return NS_ERROR_ALREADY_INITIALIZED;
 
-	nsresult rv;
+  nsresult rv;
 
-    kBiffStateAtom               = NS_NewAtom("BiffState");
+  kBiffStateAtom = NS_NewAtom("BiffState");
 
-	nsCOMPtr<nsIMsgMailSession> mailSession = 
-	         do_GetService(kMsgMailSessionCID, &rv); 
-	if(NS_SUCCEEDED(rv))
-		mailSession->AddFolderListener(this);
+  nsCOMPtr<nsIMsgMailSession> mailSession = 
+    do_GetService(kMsgMailSessionCID, &rv); 
+  if(NS_SUCCEEDED(rv))
+    mailSession->AddFolderListener(this);
 
-    nsCOMPtr<nsIPref> pref = do_GetService(NS_PREF_CONTRACTID);
-    nsXPIDLCString url;
-    rv = pref->CopyCharPref(DEFAULT_NEW_MAIL_SOUND_URL_PREF, getter_Copies(url));
-    NS_ENSURE_SUCCESS(rv,rv);
-    
-    mDefaultSoundURL = url;
-	mInitialized = PR_TRUE;
-	return NS_OK;
+  mInitialized = PR_TRUE;
+  return NS_OK;
 }
 
 nsresult nsStatusBarBiffManager::Shutdown()
