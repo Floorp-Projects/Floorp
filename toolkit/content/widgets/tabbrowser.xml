@@ -644,6 +644,7 @@
       <method name="addTab">
         <parameter name="aURI"/>
         <parameter name="aReferrerURI"/>
+        <parameter name="aCharset"/>
         <body>
           <![CDATA[
             var blank = (aURI == "about:blank");
@@ -1018,9 +1019,10 @@
       <method name="loadURI">
         <parameter name="aURI"/>
         <parameter name="aReferrerURI"/>
+        <parameter name="aCharset"/>
         <body>
           <![CDATA[
-            return this.mCurrentBrowser.loadURI(aURI, aReferrerURI);
+            return this.mCurrentBrowser.loadURI(aURI, aReferrerURI, aCharset);
           ]]>
         </body>
       </method>
@@ -1030,9 +1032,10 @@
         <parameter name="aURI"/>
         <parameter name="aFlags"/>
         <parameter name="aReferrerURI"/>
+        <parameter name="aCharset"/>
         <body>
           <![CDATA[
-            return this.mCurrentBrowser.loadURIWithFlags(aURI, aFlags, aReferrerURI);
+            return this.mCurrentBrowser.loadURIWithFlags(aURI, aFlags, aReferrerURI, aCharset);
           ]]>
         </body>
       </method>
