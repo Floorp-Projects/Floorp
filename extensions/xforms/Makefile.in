@@ -138,6 +138,4 @@ CPPSRCS		= \
 
 EXTRA_DSO_LDOPTS = $(MOZ_COMPONENT_LIBS)
 
-PREF_JS_EXPORTS = $(srcdir)/xforms.js
-
 include $(topsrcdir)/config/rules.mk
