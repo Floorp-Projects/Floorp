@@ -43,43 +43,77 @@ public:
 /* we're still trying to decide how edit atoms will work.  Until then, use these */
 // XXX: fix ASAP!
   // inline tags
-  static nsIAtom *a;
-  static nsIAtom *b;
-  static nsIAtom *big;
-  static nsIAtom *font;
-  static nsIAtom *i;
-  static nsIAtom *img;
-  static nsIAtom *span;
-  static nsIAtom *small;
-  static nsIAtom *strike;
-  static nsIAtom *sub;
-  static nsIAtom *sup;
-  static nsIAtom *tt;
-  static nsIAtom *u;
-
-/* from HTML 3.2 spec
-TT teletype or monospaced text 
-I italic text style 
-B bold text style 
-U underlined text style 
-STRIKE strike-through text style 
-BIG places text in a large font 
-SMALL places text in a small font 
-SUB places text in subscript style 
-SUP places text in superscript style 
-*/
-
-  // block tags 
+  static nsIAtom *b;         
+  static nsIAtom *big;       
+  static nsIAtom *i;         
+  static nsIAtom *small;     
+  static nsIAtom *strike;    
+  static nsIAtom *sub;       
+  static nsIAtom *sup;       
+  static nsIAtom *tt;        
+  static nsIAtom *u;         
+  static nsIAtom *em;        
+  static nsIAtom *strong;    
+  static nsIAtom *dfn;       
+  static nsIAtom *code;      
+  static nsIAtom *samp;      
+  static nsIAtom *kbd;       
+  static nsIAtom *var;       
+  static nsIAtom *cite;      
+  static nsIAtom *abbr;      
+  static nsIAtom *acronym;   
+  static nsIAtom *font;      
+  static nsIAtom *a;         
+  static nsIAtom *img;       
+  static nsIAtom *object;    
+  static nsIAtom *br;        
+  static nsIAtom *script;    
+  static nsIAtom *map;       
+  static nsIAtom *q;         
+  static nsIAtom *span;      
+  static nsIAtom *bdo;       
+  static nsIAtom *input;     
+  static nsIAtom *select;    
+  static nsIAtom *textarea;  
+  static nsIAtom *label;     
+  static nsIAtom *button;   
+  // Block tags
+  static nsIAtom *p;         
+  static nsIAtom *div;       
   static nsIAtom *blockquote;
-  static nsIAtom *br;
-  static nsIAtom *h1;
-  static nsIAtom *h2;
-
-
-  /** properties */
-  static nsIAtom *color;
-  static nsIAtom *face;
-  static nsIAtom *size;
+  static nsIAtom *h1;        
+  static nsIAtom *h2;        
+  static nsIAtom *h3;        
+  static nsIAtom *h4;        
+  static nsIAtom *h5;        
+  static nsIAtom *h6;        
+  static nsIAtom *ul;        
+  static nsIAtom *ol;        
+  static nsIAtom *dl;        
+  static nsIAtom *pre;       
+  static nsIAtom *noscript;  
+  static nsIAtom *form;      
+  static nsIAtom *hr;        
+  static nsIAtom *table;     
+  static nsIAtom *fieldset;  
+  static nsIAtom *address;   
+  // Assumed to be block:
+  static nsIAtom *body;      
+  static nsIAtom *tr;        
+  static nsIAtom *td;        
+  static nsIAtom *th;        
+  static nsIAtom *caption;   
+  static nsIAtom *col;       
+  static nsIAtom *colgroup;  
+  static nsIAtom *thead;     
+  static nsIAtom *tfoot;     
+  static nsIAtom *li;        
+  static nsIAtom *dt;        
+  static nsIAtom *dd;        
+  static nsIAtom *legend;    
+  static nsIAtom *color;     
+  static nsIAtom *face;      
+  static nsIAtom *size;      
 
   /** special strings */
   static nsString *allProperties;   // this magic string represents the union of all inline style tags
