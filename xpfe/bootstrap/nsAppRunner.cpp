@@ -73,7 +73,6 @@
 #include "nsIXULWindow.h"
 #include "nsIChromeRegistry.h"
 #include "nsIContentHandler.h"
-#include "nsIBrowserInstance.h"
 #include "nsIEventQueueService.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsIHttpProtocolHandler.h"
@@ -116,7 +115,6 @@
 
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 static NS_DEFINE_CID(kIProcessCID, NS_PROCESS_CID);
-static NS_DEFINE_CID(kChromeRegistryCID, NS_CHROMEREGISTRY_CID);
 
 #define UILOCALE_CMD_LINE_ARG "-UILocale"
 #define CONTENTLOCALE_CMD_LINE_ARG "-contentLocale"
@@ -931,7 +929,7 @@ static nsresult ConvertToUnicode(nsString& aCharset, const char* inString, nsASt
 static nsresult OpenBrowserWindow(PRInt32 height, PRInt32 width)
 {
     nsresult rv;
-    nsCOMPtr<nsICmdLineHandler> handler(do_GetService(NS_BROWSERSTARTUPHANDLER_CONTRACTID, &rv));
+    nsCOMPtr<nsICmdLineHandler> handler(do_GetService("@mozilla.org/commandlinehandler/general-startup;1?type=browser", &rv));
     if (NS_FAILED(rv)) return rv;
 
     nsXPIDLCString chromeUrlForTask;
@@ -1116,14 +1114,14 @@ static nsresult InstallGlobalLocale(nsICmdLineService *cmdLineArgs)
         if (cmdUI) {
             nsAutoString UILocaleName;
             UILocaleName.AssignWithConversion(cmdUI);
-            nsCOMPtr<nsIXULChromeRegistry> chromeRegistry = do_GetService(kChromeRegistryCID, &rv);
+            nsCOMPtr<nsIXULChromeRegistry> chromeRegistry = do_GetService(NS_CHROMEREGISTRY_CONTRACTID, &rv);
             if (chromeRegistry)
                 rv = chromeRegistry->SelectLocale(UILocaleName.get(), PR_FALSE);
         }
     }
     // match OS when no cmdline override
     if (!cmdUI && matchOS) {
-      nsCOMPtr<nsIXULChromeRegistry> chromeRegistry = do_GetService(kChromeRegistryCID, &rv);
+      nsCOMPtr<nsIXULChromeRegistry> chromeRegistry = do_GetService(NS_CHROMEREGISTRY_CONTRACTID, &rv);
       if (chromeRegistry) {
         chromeRegistry->SetRuntimeProvider(PR_TRUE);
         rv = chromeRegistry->SelectLocale(uiLang.get(), PR_FALSE);
@@ -1136,14 +1134,14 @@ static nsresult InstallGlobalLocale(nsICmdLineService *cmdLineArgs)
         if (cmdContent) {
             nsAutoString ContentLocaleName;
             ContentLocaleName.AssignWithConversion(cmdContent);
-            nsCOMPtr<nsIXULChromeRegistry> chromeRegistry = do_GetService(kChromeRegistryCID, &rv);
+            nsCOMPtr<nsIXULChromeRegistry> chromeRegistry = do_GetService(NS_CHROMEREGISTRY_CONTRACTID, &rv);
             if(chromeRegistry)
                 rv = chromeRegistry->SelectLocale(ContentLocaleName.get(), PR_FALSE);
         }
     }
     // match OS when no cmdline override
     if (!cmdContent && matchOS) {
-      nsCOMPtr<nsIXULChromeRegistry> chromeRegistry = do_GetService(kChromeRegistryCID, &rv);
+      nsCOMPtr<nsIXULChromeRegistry> chromeRegistry = do_GetService(NS_CHROMEREGISTRY_CONTRACTID, &rv);
       if (chromeRegistry) {
         chromeRegistry->SetRuntimeProvider(PR_TRUE);        
         rv = chromeRegistry->SelectLocale(country.get(), PR_FALSE);

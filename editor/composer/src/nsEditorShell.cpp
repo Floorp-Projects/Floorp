@@ -132,7 +132,6 @@ static NS_DEFINE_CID(kHTMLEditorCID,            NS_HTMLEDITOR_CID);
 static NS_DEFINE_CID(kCTextServicesDocumentCID, NS_TEXTSERVICESDOCUMENT_CID);
 static NS_DEFINE_CID(kCStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kPrefServiceCID,           NS_PREF_CID);
-static NS_DEFINE_CID(kChromeRegistryCID,        NS_CHROMEREGISTRY_CID);
 
 #define APP_DEBUG 0 
 
@@ -3798,7 +3797,7 @@ nsEditorShell::InitSpellChecker()
       }
 
       nsCOMPtr<nsIXULChromeRegistry> packageRegistry =
-        do_GetService(kChromeRegistryCID, &result);
+        do_GetService(NS_CHROMEREGISTRY_CONTRACTID, &result);
 
       if (NS_SUCCEEDED(result) && packageRegistry)
         result = packageRegistry->GetSelectedLocale(NS_LITERAL_STRING("navigator").get(), &dictName);

@@ -355,8 +355,6 @@ static PRBool IsChromeOrResourceURI(nsIURI* aURI)
 /* Implementation file */
 NS_IMPL_ISUPPORTS3(nsXBLDocumentInfo, nsIXBLDocumentInfo, nsIScriptGlobalObjectOwner, nsISupportsWeakReference)
 
-static NS_DEFINE_CID(kChromeRegistryCID,          NS_CHROMEREGISTRY_CID);
-
 nsXBLDocumentInfo::nsXBLDocumentInfo(const char* aDocURI, nsIDocument* aDocument)
 {
   NS_INIT_ISUPPORTS();
@@ -370,7 +368,7 @@ nsXBLDocumentInfo::nsXBLDocumentInfo(const char* aDocURI, nsIDocument* aDocument
   mDocument->GetDocumentURL(getter_AddRefs(uri));
   if (IsChromeOrResourceURI(uri)) {
     // Cache whether or not this chrome XBL can execute scripts.
-    nsCOMPtr<nsIXULChromeRegistry> reg(do_GetService(kChromeRegistryCID));
+    nsCOMPtr<nsIXULChromeRegistry> reg(do_GetService(NS_CHROMEREGISTRY_CONTRACTID));
     if (reg) {
       PRBool allow = PR_TRUE;
       reg->AllowScriptsForSkin(uri, &allow);

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 3; indent-tabs-mode: nil; c-basic-offset: 3 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -99,13 +99,27 @@ class nsProxiedService
     nsProxiedService(const nsCID &aClass, const nsIID &aIID, 
                      nsIEventQueue* pIProxyQueue, PRBool always, nsresult*rv)
     {
-       static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
-
-
        *rv = nsServiceManager::GetService(aClass, 
                                           aIID, 
                                           getter_AddRefs(mService));
        if (NS_FAILED(*rv)) return;
+       InitProxy(aIID, pIProxyQueue, always, rv);
+    }
+
+    nsProxiedService(const char* aContractID, const nsIID &aIID, 
+                     nsIEventQueue* pIProxyQueue, PRBool always, nsresult*rv)
+    {
+       *rv = nsServiceManager::GetService(aContractID, 
+                                          aIID, 
+                                          getter_AddRefs(mService));
+       if (NS_FAILED(*rv)) return;
+       InitProxy(aIID, pIProxyQueue, always, rv);
+    }
+
+    void InitProxy(const nsIID &aIID, nsIEventQueue* pIProxyQueue,
+                   PRBool always, nsresult*rv)
+    {
+       static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 
        nsCOMPtr<nsIProxyObjectManager> pIProxyObjectManager = 
                 do_GetService(kProxyObjectManagerCID, rv);
@@ -119,8 +133,7 @@ class nsProxiedService
                                                   proxyType, 
                                                   getter_AddRefs(mProxiedService));
     }
-
-
+    
     ~nsProxiedService()
     {
     }

@@ -86,7 +86,6 @@ static NS_DEFINE_CID(kInstallTrigger_CID, NS_SoftwareUpdateInstallTrigger_CID);
 
 static NS_DEFINE_CID(kInstallVersion_CID, NS_SoftwareUpdateInstallVersion_CID);
 
-static NS_DEFINE_CID(kChromeRegistryCID, NS_CHROMEREGISTRY_CID);
 static NS_DEFINE_CID(knsRegistryCID, NS_REGISTRY_CID);
 
 static NS_DEFINE_CID(kIProcessCID, NS_PROCESS_CID);
@@ -315,7 +314,7 @@ nsSoftwareUpdate::InstallJar(  nsIFile* aLocalFile,
     nsIXULChromeRegistry* chromeRegistry = nsnull;
     NS_WITH_ALWAYS_PROXIED_SERVICE( nsIXULChromeRegistry,
                                     tmpReg,
-                                    kChromeRegistryCID,
+                                    NS_CHROMEREGISTRY_CONTRACTID,
                                     NS_UI_THREAD_EVENTQ, &rv);
     if (NS_SUCCEEDED(rv))
         chromeRegistry = tmpReg;
@@ -347,7 +346,7 @@ nsSoftwareUpdate::InstallChrome( PRUint32 aType,
     nsresult rv;
     NS_WITH_ALWAYS_PROXIED_SERVICE( nsIXULChromeRegistry,
                                     chromeRegistry,
-                                    kChromeRegistryCID,
+                                    NS_CHROMEREGISTRY_CONTRACTID,
                                     NS_UI_THREAD_EVENTQ, &rv);
     if (NS_FAILED(rv))
         return rv;
