@@ -203,6 +203,11 @@ public:
    */
   NS_IMETHOD ScrollByPages(PRInt32 aNumPages) = 0;
 
+  /**
+   * Returns the clip view
+   */
+  NS_IMETHOD GetClipView(const nsIView** aClipView) const = 0;
+
 private:
   NS_IMETHOD_(nsrefcnt) AddRef(void) = 0;
   NS_IMETHOD_(nsrefcnt) Release(void) = 0;

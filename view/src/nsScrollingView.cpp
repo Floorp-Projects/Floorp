@@ -607,7 +607,13 @@ NS_IMETHODIMP nsScrollingView :: SetVisibility(nsViewVisibility aVisibility)
   }
   return rv;
 }
-
+  
+NS_IMETHODIMP nsScrollingView :: GetClipView(const nsIView** aClipView) const
+{
+  NS_PRECONDITION(aClipView, "null pointer");
+  *aClipView = mClipView;
+  return NS_OK;
+}
 
 void nsScrollingView :: HandleScrollEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags)
 {
@@ -1087,7 +1093,7 @@ NS_IMETHODIMP nsScrollingView :: ComputeScrollOffsets(PRBool aAdjustWidgets)
           // of a problem. 
           if (0 == oldsizey)
             mOffsetY = 0;
-          else
+            else
           {
             mOffsetY = NSIntPixelsToTwips(NSTwipsToIntPixels(nscoord(((float)oldpos * mSizeY) / oldsizey), scale), p2t);
 
