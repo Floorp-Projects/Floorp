@@ -168,7 +168,11 @@ nsRecyclingAllocator::Malloc(PRSize bytes, PRBool zeroit)
     Block* freeBlock = FindFreeBlock(bytes);
     if (freeBlock)
     {
-        return DATA(freeBlock);
+        void *data = DATA(freeBlock);
+
+        if (zeroit)
+            memset(data, 0, bytes);
+        return data;
     }
      
     // We need to do an allocation

@@ -214,7 +214,14 @@ nsresult nsGIFDecoder2::ProcessData(unsigned char *data, PRUint32 count, PRUint3
 /* unsigned long writeFrom (in nsIInputStream inStr, in unsigned long count); */
 NS_IMETHODIMP nsGIFDecoder2::WriteFrom(nsIInputStream *inStr, PRUint32 count, PRUint32 *_retval)
 {
-  return inStr->ReadSegments(ReadDataOut, this,  count, _retval);
+  nsresult rv = inStr->ReadSegments(ReadDataOut, this,  count, _retval);
+
+  /* necko doesn't propagate the errors from ReadDataOut - take matters
+     into our own hands */
+  if (NS_SUCCEEDED(rv) && mGIFStruct && mGIFStruct->state == gif_error)
+    return NS_ERROR_FAILURE;
+
+  return rv;
 }
 
 
