@@ -39,18 +39,35 @@ sub sillyness {
 
 my $verbose = 0;
 my $syncall = 0;
+my $shutdown = 0;
+my $tempdir = "data";
+my $force = 0;
+
+my $shutdown_msg = "Bugzilla is temporarily disabled while the database is backed up. Try again in a few minutes.";
 
 sub Usage {
-    print "Usage: syncshadowdb [-v] [-syncall]\n";
+    print "Usage: syncshadowdb [-v] [-syncall] [-shutdown] [-tempdir dirname] [-force]\n";
     exit;
 }
 
-foreach my $opt (@ARGV) {
+while (my $opt = shift @ARGV) {
     if ($opt eq '-v') {
         $verbose = 1;
     } elsif ($opt eq '-syncall') {
         $syncall = 1;
         $verbose = 1;
+    } elsif ($opt eq '-shutdown') {
+        $shutdown = 1;
+    } elsif ($opt eq '-tempdir') {
+        my $dir = shift @ARGV;
+        if (-d $dir) {
+            $tempdir = $dir;
+        } else {
+            print "$dir does not exist or is not a directory.  No syncing performed";
+            exit;
+        }
+    } elsif ($opt eq '-force') {
+        $force = 1;
     } elsif ($opt eq '--') {
         # do nothing - null parameter so we can use
         # multi-param system() call in globals.pl
@@ -77,6 +94,63 @@ if (!Param("shadowdb")) {
     Verbose("We don't have shadow databases turned on; no syncing performed.");
     exit;
 }
+
+if (Param("shutdownhtml") && ! $force) {
+    Verbose("Bugzilla was shutdown prior to running syncshadowdb. \n" .
+            "  If you wish to sync anyway, use the -force command line option");
+    exit;
+}
+
+my $wasshutdown = "";
+if ($shutdown) {
+    Verbose ("Shutting down bugzilla and waiting for connections to clear");
+    # Record the old shutdownhtml so it can be restored at the end (this will
+    # only be an issue if we are called using the -force comand line param)
+    $wasshutdown = Param("shutdownhtml");
+    $::param{'shutdownhtml'} = $shutdown_msg;
+    WriteParams();
+    # Now we need to wait for existing connections to this database to clear. We
+    # do this by looking for connections to the main or shadow database using
+    # 'mysqladmin processlist'
+    my $cmd = "$::mysqlpath/mysqladmin -u $::db_user";
+    if ($::db_pass) { $cmd .= " -p$::db_pass" }
+    $cmd .= " processlist";
+    my $found_proc = 1;
+    # We need to put together a nice little regular expression to use in the
+    # following loop that'll tell us if the return from mysqladmin contains
+    # either the main or shadow database.
+    my @dbs = ($::db_name, Param("shadowdb"));
+    my $db_expr = "^\\s*(" . join ("\|", @dbs) . ")\\s*\$";
+    # Don't let this thing wait forever...
+    my $starttime = time();
+    while ($found_proc) {
+        $found_proc = 0;
+        open (PROC, $cmd . "|");
+        my @output = <PROC>;
+        close (PROC);
+        foreach my $line(@output) {
+            my @info = split (/\|/, $line);
+            # Ignore any line that doesn't have 9 pieces of info
+            # or contain Id (pretty printing crap)
+            if ($#info != 9 || $line =~ /Id/) { next }
+            if ($info[4] =~ m/$db_expr/) {
+                $found_proc = 1;
+            }
+        }
+        # If there are still active connections to Bugzilla 10 minutes after
+        # shutting it down, then something is wrong.
+        if ((time() - $starttime) > 600) {
+            # There should be a better way to notify the admin of something bad like
+            # this happening.
+            Verbose ("*** Waited for 10 minutes and there were still active \n" .
+                     "    connections to the bugzilla database.  Giving up.");
+            $::param{'shutdownhtml'} = $wasshutdown;
+            WriteParams();
+            exit;
+        }
+    }
+}
+
 
 my $wasusing = Param("queryagainstshadowdb");
 
@@ -114,8 +188,10 @@ if ($syncall) {
     if ($wasusing) {
         $::param{'queryagainstshadowdb'} = 0;
         WriteParams();
-        Verbose("Disabled reading from the shadowdb. Sleeping 10 seconds to let other procs catch up.");
-        sleep(10);
+        if (! $shutdown) {
+            Verbose("Disabled reading from the shadowdb. Sleeping 10 seconds to let other procs catch up.");
+            sleep(10);
+        }
         $::param{'queryagainstshadowdb'} = 1;
     }
     my @tables;
@@ -157,7 +233,7 @@ if ($syncall) {
     }
     Verbose("Locking entire database");
     SendSQL($query);
-    my $tempfile = "data/tmpsyncshadow.$$";
+    my $tempfile = "$tempdir/tmpsyncshadow.$$";
     Verbose("Dumping database to a temp file ($tempfile).");
     my @ARGS = ("-u", $::db_user);
     if ($::db_pass) { push @ARGS, "-p$::db_pass" }
@@ -165,7 +241,7 @@ if ($syncall) {
     open SAVEOUT, ">&STDOUT";     # stash the original output stream
     open STDOUT, ">$tempfile";    # redirect to file
     select STDOUT; $| = 1;        # disable buffering
-    system("mysqldump", @ARGS);
+    system("$::mysqlpath/mysqldump", @ARGS);
     open STDOUT, ">&SAVEOUT";     # redirect back to original stream
     Verbose("Restoring from tempfile into shadowdb");
     my $extra = "-u $::db_user";
@@ -175,7 +251,7 @@ if ($syncall) {
     if ($verbose) {
         $extra .= " -v";
     }
-    open(MYSQL, "cat $tempfile | mysql $extra " .
+    open(MYSQL, "cat $tempfile | $::mysqlpath/mysql $extra " .
          Param("shadowdb") . "|") || die "Couldn't do db copy";
     my $count = 0;
     while (<MYSQL>) {
@@ -197,6 +273,11 @@ if ($syncall) {
     if ($wasusing) {
         Verbose("Reenabling other processes to read from the shadow db");
         $::param{'queryagainstshadowdb'} = 1;
+        WriteParams();
+    }
+    if ($shutdown) {
+        Verbose("Restoring the original shutdown message (if any)");
+        $::param{'shutdownhtml'} = $wasshutdown;
         WriteParams();
     }
     Verbose("OK, done.");

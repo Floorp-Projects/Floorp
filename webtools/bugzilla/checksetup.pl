@@ -283,6 +283,25 @@ sub LocalVar ($$)
 # Set up the defaults for the --LOCAL-- variables below:
 #
 
+my $mysql_binaries = `which mysql`;
+if ($mysql_binaries =~ /no mysql/) {
+    # If which didn't find it, just provide a reasonable default
+    $mysql_binaries = "/usr/bin";
+} else {
+    $mysql_binaries =~ s:/mysql\n$::;
+}
+
+LocalVar('mysqlpath', <<"END");
+#
+# In order to do certain functions in Bugzilla (such as sync the shadow
+# database), we require the MySQL Binaries (mysql, mysqldump, and mysqladmin).
+# Because it's possible that these files aren't in your path, you can specify
+# their location here.
+# Please specify only the directory name, with no trailing slash.
+\$mysqlpath = "$mysql_binaries";
+END
+
+
 LocalVar('create_htaccess', <<'END');
 #
 # If you are using Apache for your web server, Bugzilla can create .htaccess
