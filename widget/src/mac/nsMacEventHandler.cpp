@@ -1054,8 +1054,12 @@ PRBool nsMacEventHandler::HandleActivateEvent(EventRecord& aOSEvent)
 #endif
 		
 		
+		PRBool active;
+		mTopLevelWidget->IsActive(&active);
 		nsWindow*	focusedWidget = mTopLevelWidget;
-		gEventDispatchHandler.SetActivated(focusedWidget);
+	  if(!active) {
+		  gEventDispatchHandler.SetActivated(focusedWidget);
+		}
 		
 		// Twiddle menu bars
 		nsIMenuBar* menuBar = focusedWidget->GetMenuBar();

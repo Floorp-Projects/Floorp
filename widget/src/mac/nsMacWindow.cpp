@@ -910,3 +910,8 @@ NS_IMETHODIMP nsMacWindow::PasswordFieldInit()
 	// to be implemented
 	return NS_OK;
 }
+
+void nsMacWindow::IsActive(PRBool* aActive)
+{
+  *aActive = NS_REINTERPRET_CAST(WindowPeek, mWindowPtr)->hilited;
+}

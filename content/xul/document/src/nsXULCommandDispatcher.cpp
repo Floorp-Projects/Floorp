@@ -56,7 +56,7 @@ static PRLogModuleInfo* gLog;
 ////////////////////////////////////////////////////////////////////////
 
 nsXULCommandDispatcher::nsXULCommandDispatcher(void)
-    : mScriptObject(nsnull), mSuppressFocus(PR_FALSE), 
+    : mScriptObject(nsnull), mSuppressFocus(0), 
 	mActive(PR_FALSE), mFocusInitialized(PR_FALSE), mUpdaters(nsnull)
 {
 	NS_INIT_REFCNT();
@@ -618,18 +618,26 @@ nsXULCommandDispatcher::SetSuppressFocusScroll(PRBool aSuppressFocusScroll)
 NS_IMETHODIMP
 nsXULCommandDispatcher::GetSuppressFocus(PRBool* aSuppressFocus)
 {
-  *aSuppressFocus = mSuppressFocus;
+  if(mSuppressFocus)
+    *aSuppressFocus = PR_TRUE;
+  else
+    *aSuppressFocus = PR_FALSE;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXULCommandDispatcher::SetSuppressFocus(PRBool aSuppressFocus)
 {
-  mSuppressFocus = aSuppressFocus;
+  if(aSuppressFocus)
+    ++mSuppressFocus;
+  else if(mSuppressFocus > 0)
+    --mSuppressFocus;
 
+  //printf("mSuppressFocus == %d\n", mSuppressFocus);
+  
   // we are unsuppressing after activating, so update focus-related commands
   // we need this to update commands in the case where an element is focussed.
-  if (!aSuppressFocus && mCurrentElement)
+  if (!mSuppressFocus && mCurrentElement)
     UpdateCommands(NS_LITERAL_STRING("focus"));
   
   return NS_OK;

@@ -105,6 +105,7 @@ public:
 
     void              		MoveToGlobalPoint(PRInt32 aX, PRInt32 aY);
 
+    void IsActive(PRBool* aActive);
 protected:
 
 	pascal static OSErr DragTrackingHandler ( DragTrackingMessage theMessage, WindowPtr theWindow, 

@@ -87,7 +87,8 @@ protected:
     nsCOMPtr<nsIDOMElement> mCurrentElement; // [OWNER]
     nsCOMPtr<nsIDOMWindowInternal> mCurrentWindow; // [OWNER]
 
-    PRBool mSuppressFocus;
+    //PRBool mSuppressFocus;
+    PRUint32 mSuppressFocus;
     PRBool mSuppressFocusScroll;
 	PRBool mActive;
 	PRBool mFocusInitialized;
