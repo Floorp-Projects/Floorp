@@ -52,6 +52,7 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIIOService.h"
 #include "nsNetCID.h"
+#include "nsEscape.h"
 
 static NS_DEFINE_CID(kUrlListenerManagerCID, NS_URLLISTENERMANAGER_CID);
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
@@ -177,10 +178,10 @@ NS_IMETHODIMP nsMsgMailNewsUrl::GetServer(nsIMsgIncomingServer ** aIncomingServe
 
 	nsresult rv = GetAsciiHost(host);
 
-	/* GetUsername() returns an unescaped string.
-	 * do not unescape it again.
+	/* GetUsername() returns an escaped string, so we need to manually unescape it.
 	 */
 	GetUsername(userName);
+	NS_UnescapeURL(userName); // XXX may result in non-ASCII octets!
 
 	rv = GetScheme(scheme);
     if (NS_SUCCEEDED(rv))
@@ -474,7 +475,7 @@ NS_IMETHODIMP nsMsgMailNewsUrl::SetUserPass(const nsACString &aUserPass)
 
 NS_IMETHODIMP nsMsgMailNewsUrl::GetUsername(nsACString &aUsername)
 {
-	/* note:  this will return an unescaped string */
+	/* note:  this will return an escaped string */
 	return m_baseURL->GetUsername(aUsername);
 }
 
