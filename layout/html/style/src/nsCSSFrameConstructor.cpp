@@ -1299,7 +1299,7 @@ nsCSSFrameConstructor::ConstructTableGroupFrameOnly(nsIPresContext*          aPr
     // The scroll frame gets the original style context, the scrolled frame gets  
     // a pseudo element style context that inherits the background properties
     nsCOMPtr<nsIStyleContext> scrolledPseudoStyle;
-    aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::scrolledContentPseudo,
+    aPresContext->ResolvePseudoStyleContextFor(aContent, nsLayoutAtoms::scrolledContentPseudo,
                                                aStyleContext, PR_FALSE,
                                                getter_AddRefs(scrolledPseudoStyle));
 
@@ -1888,7 +1888,7 @@ nsCSSFrameConstructor::TableGetAsNonScrollFrame(nsIPresContext*       aPresConte
 
 //  nsIAtom* pseudoTag;
 //  styleContext->GetPseudoType(pseudoTag);
-//  if (pseudoTag != nsHTMLAtoms::scrolledContentPseudo) {
+//  if (pseudoTag != nsLayoutAtoms::scrolledContentPseudo) {
 //  NS_IF_RELEASE(pseudoTag);
 
 const nsStyleDisplay* 
@@ -2023,7 +2023,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresContext*          aPresCo
       // The scrolled frame gets a pseudo element style context
       nsCOMPtr<nsIStyleContext>  scrolledPseudoStyle;
       aPresContext->ResolvePseudoStyleContextFor(nsnull,
-                                                 nsHTMLAtoms::scrolledContentPseudo,
+                                                 nsLayoutAtoms::scrolledContentPseudo,
                                                  styleContext,
                                                  PR_FALSE,
                                                  getter_AddRefs(scrolledPseudoStyle));
@@ -2217,10 +2217,13 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresContext* aPresContext,
   // If the viewport should offer a scrolling mechanism, then create a
   // scroll frame
   nsIFrame* scrollFrame;
+  nsCOMPtr<nsIStyleContext> scrollFrameStyle;
   if (isScrollable) {
     NS_NewScrollFrame(&scrollFrame);
-    // XXX should probably be a scrolled content pseudo style context
-    scrollFrame->Init(*aPresContext, nsnull, viewportFrame, viewportPseudoStyle,
+    aPresContext->ResolvePseudoStyleContextFor(nsnull, nsLayoutAtoms::viewportScrollPseudo,
+                                               viewportPseudoStyle, PR_FALSE,
+                                               getter_AddRefs(scrollFrameStyle));
+    scrollFrame->Init(*aPresContext, nsnull, viewportFrame, scrollFrameStyle,
                       nsnull);
 
     // Inform the view manager about the root scrollable view
@@ -2240,12 +2243,16 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresContext* aPresContext,
 
     // Create a page sequence frame
     NS_NewSimplePageSequenceFrame(&pageSequenceFrame);
-    // XXX should probably be a page sequence pseudo style context
+    nsCOMPtr<nsIStyleContext> pageSequenceStyle;
+    aPresContext->ResolvePseudoStyleContextFor(nsnull, nsLayoutAtoms::pageSequencePseudo,
+                                               (isScrollable ? scrollFrameStyle : viewportPseudoStyle), 
+                                               PR_FALSE,
+                                               getter_AddRefs(pageSequenceStyle));
     pageSequenceFrame->Init(*aPresContext, nsnull, isScrollable ? scrollFrame :
-                            viewportFrame, viewportPseudoStyle, nsnull);
+                            viewportFrame, pageSequenceStyle, nsnull);
     if (isScrollable) {
       nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, pageSequenceFrame,
-                                               viewportPseudoStyle, PR_TRUE);
+                                               pageSequenceStyle, PR_TRUE);
     }
 
     // Create the first page
@@ -2262,7 +2269,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresContext* aPresContext,
     nsCOMPtr<nsIStyleContext> pagePseudoStyle;
 
     aPresContext->ResolvePseudoStyleContextFor(nsnull, nsLayoutAtoms::pagePseudo,
-                                               viewportPseudoStyle, PR_FALSE,
+                                               pageSequenceStyle, PR_FALSE,
                                                getter_AddRefs(pagePseudoStyle));
 
     pageFrame->Init(*aPresContext, nsnull, pageSequenceFrame, pagePseudoStyle,
@@ -2296,12 +2303,17 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresContext* aPresContext,
     nsIFrame* rootFrame;
     NS_NewRootFrame(&rootFrame);
 
-    // XXX this should be a root pseudo style context
+    nsCOMPtr<nsIStyleContext> canvasPseudoStyle;
+    aPresContext->ResolvePseudoStyleContextFor(nsnull, nsLayoutAtoms::canvasPseudo,
+                                               (isScrollable ? scrollFrameStyle : viewportPseudoStyle), 
+                                               PR_FALSE,
+                                               getter_AddRefs(canvasPseudoStyle));
+    // XXX this should be a canvas pseudo style context
     rootFrame->Init(*aPresContext, nsnull, isScrollable ? scrollFrame :
-                    viewportFrame, viewportPseudoStyle, nsnull);
+                    viewportFrame, canvasPseudoStyle, nsnull);
     if (isScrollable) {
       nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, rootFrame,
-                                               viewportPseudoStyle, PR_TRUE);
+                                               canvasPseudoStyle, PR_TRUE);
     }
 
     // The eventual parent of the document element frame
@@ -3319,7 +3331,7 @@ nsCSSFrameConstructor::InitializeScrollFrame(nsIPresContext*          aPresConte
   // inherits the background properties
   nsCOMPtr<nsIStyleContext> scrolledPseudoStyle;
   aPresContext->ResolvePseudoStyleContextFor(aContent,
-                                          nsHTMLAtoms::scrolledContentPseudo,
+                                          nsLayoutAtoms::scrolledContentPseudo,
                                           aStyleContext, PR_FALSE,
                                           getter_AddRefs(scrolledPseudoStyle));
 
@@ -3365,7 +3377,7 @@ nsCSSFrameConstructor::InitializeScrollFrame(nsIPresContext*          aPresConte
       nsIFrame*         generatedFrame = nsnull; 
       scrolledFrame->GetStyleContext(&styleContext); 
       if (CreateGeneratedContentFrame(aPresContext, aState, scrolledFrame, aContent, 
-                                      styleContext, nsCSSAtoms::mozDummyOptionPseudo, 
+                                      styleContext, nsLayoutAtoms::dummyOptionPseudo, 
                                       PR_FALSE, PR_FALSE, &generatedFrame)) { 
         // Add the generated frame to the child list 
         childItems.AddChild(generatedFrame); 
@@ -4823,7 +4835,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
       //shell->GetPrimaryFrameFor(aContainer, &contentFrame);
       parentFrame->GetStyleContext(&styleContext); 
       if (CreateGeneratedContentFrame(aPresContext, state, parentFrame, aContainer, 
-                                      styleContext, nsCSSAtoms::mozDummyOptionPseudo, 
+                                      styleContext, nsLayoutAtoms::dummyOptionPseudo, 
                                       PR_FALSE, PR_FALSE, &generatedFrame)) { 
         // Add the generated frame to the child list 
         shell->GetFrameManager(getter_AddRefs(frameManager));
