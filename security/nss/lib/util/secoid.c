@@ -148,10 +148,6 @@
 #define PKIX_ID_REGCTRL  	PKIX_ID_PKIP, 1 
 #define PKIX_ID_REGINFO  	PKIX_ID_PKIP, 2
 
-/* Microsoft Object ID space */
-/* { 1.3.6.1.4.1.311 } */
-#define MICROSOFT_OID 0x2b, 0x6, 0x1, 0x4, 0x1, 0x82, 0x37
-
 #define CONST_OID static const unsigned char
 
 CONST_OID md2[]        				= { DIGEST, 0x02 };
@@ -216,7 +212,6 @@ CONST_OID cmsRC2wrap[]  			= { PKCS9_SMIME_ALGS, 7 };
 
 /* RFC2633 SMIME message attributes */
 CONST_OID smimeEncryptionKeyPreference[] 	= { PKCS9_SMIME_ATTRS, 11 };
-CONST_OID ms_smimeEncryptionKeyPreference[] 	= { MICROSOFT_OID, 0x10, 0x4 };
 
 CONST_OID x520CommonName[]          		= { X520_ATTRIBUTE_TYPE, 3 };
 CONST_OID x520CountryName[]         		= { X520_ATTRIBUTE_TYPE, 6 };
@@ -1008,10 +1003,6 @@ const static SECOidData oids[] = {
     /* More bogus DSA OIDs */
     OD( sdn702DSASignature, SEC_OID_SDN702_DSA_SIGNATURE, 
 	"SDN.702 DSA Signature", CKM_DSA_SHA1, INVALID_CERT_EXTENSION ),
-
-    OD( ms_smimeEncryptionKeyPreference, SEC_OID_MS_SMIME_ENCRYPTION_KEY_PREFERENCE,
-	"Microsoft S/MIME Encryption Key Preference", 
-	CKM_INVALID_MECHANISM, INVALID_CERT_EXTENSION ),
 };
 
 /*

@@ -34,7 +34,7 @@
 /*
  * Stuff specific to S/MIME policy and interoperability.
  *
- * $Id: smimeutil.c,v 1.10 2002/08/26 21:34:28 kaie%netscape.com Exp $
+ * $Id: smimeutil.c,v 1.11 2002/08/27 00:05:08 kaie%netscape.com Exp $
  */
 
 #include "secmime.h"
@@ -673,40 +673,6 @@ NSS_SMIMEUtil_CreateSMIMEEncKeyPrefs(PLArenaPool *poolp, SECItem *dest, CERTCert
 	goto loser;
 
     dummy = SEC_ASN1EncodeItem(poolp, dest, &ekp, smime_encryptionkeypref_template);
-
-loser:
-    if (tmppoolp) PORT_FreeArena(tmppoolp, PR_FALSE);
-
-    return (dummy == NULL) ? SECFailure : SECSuccess;
-}
-
-/*
- * NSS_SMIMEUtil_CreateSMIMEEncKeyPrefs - create S/MIME encryption key preferences attr value using MS oid
- *
- * "poolp" - arena pool to create the attr value on
- * "dest" - SECItem to put the data in
- * "cert" - certificate that should be marked as preferred encryption key
- *          cert is expected to have been verified for EmailRecipient usage.
- */
-SECStatus
-NSS_SMIMEUtil_CreateMSSMIMEEncKeyPrefs(PLArenaPool *poolp, SECItem *dest, CERTCertificate *cert)
-{
-    SECItem *dummy = NULL;
-    PLArenaPool *tmppoolp = NULL;
-    CERTIssuerAndSN *isn;
-
-    if (cert == NULL)
-	goto loser;
-
-    tmppoolp = PORT_NewArena(1024);
-    if (tmppoolp == NULL)
-	goto loser;
-
-    isn = CERT_GetCertIssuerAndSN(tmppoolp, cert);
-    if (isn == NULL)
-	goto loser;
-
-    dummy = SEC_ASN1EncodeItem(poolp, dest, isn, CERT_IssuerAndSNTemplate);
 
 loser:
     if (tmppoolp) PORT_FreeArena(tmppoolp, PR_FALSE);
