@@ -1153,7 +1153,7 @@ PRUint32 StyleTextImpl::ComputeCRC32(PRUint32 aCrc) const
   crc = StyleCoordCRC(crc,&mWordSpacing);
   crc = StyleCoordCRC(crc,&mVerticalAlign);
 #endif
-  return aCrc;
+  return crc;
 }
 
 // --------------------
@@ -1948,7 +1948,7 @@ public:
 
   friend class StyleContextImpl;
 
-  virtual void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize);
+  void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize);
 
 private:  // all data and methods private: only friends have access
 

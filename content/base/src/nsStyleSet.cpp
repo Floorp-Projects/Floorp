@@ -683,8 +683,10 @@ EnumRulesMatching(nsISupports* aProcessor, void* aData)
 }
 
 #ifdef SHARE_STYLECONTEXTS
-  static int gNewCount=0;
-  static int gSharedCount=0;
+  #ifdef NOISY_DEBUG
+    static int gNewCount=0;
+    static int gSharedCount=0;
+  #endif
 #endif
 
 nsIStyleContext* StyleSetImpl::GetContext(nsIPresContext* aPresContext, 
