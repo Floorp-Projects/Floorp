@@ -1259,11 +1259,13 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
             NS_ConvertASCIItoUCS2("dnsNotFound").GetUnicode(), 
             getter_Copies(messageStr)), NS_ERROR_FAILURE);
 
-         PRUnichar *msg = nsTextFormatter::smprintf(messageStr, (const char*)host);
-         if (!msg) return NS_ERROR_OUT_OF_MEMORY;
+         if (host) {
+             PRUnichar *msg = nsTextFormatter::smprintf(messageStr, (const char*)host);
+             if (!msg) return NS_ERROR_OUT_OF_MEMORY;
 
-         prompter->Alert(nsnull, msg);
-         nsTextFormatter::smprintf_free(msg);
+             prompter->Alert(nsnull, msg);
+             nsTextFormatter::smprintf_free(msg);
+             }
          } 
       else if(aStatus == NS_ERROR_CONNECTION_REFUSED)
          {// Doc failed to load because we couldn't connect to the server.
