@@ -45,10 +45,10 @@
 #include "nsImageButton.h"
 #include "nsMenuButton.h"
 #include "nsAppShell.h"
-#include "DataObj.h"
 #include "nsIServiceManager.h"
 
 // Drag & Drop, Clipboard
+//#include "DataObj.h"
 #include "nsClipboard.h"
 #include "nsTransferable.h"
 #include "nsDataFlavor.h"
