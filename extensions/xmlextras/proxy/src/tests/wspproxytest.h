@@ -43,20 +43,28 @@
 
 #include "nsIWSPProxyTest.h"
 #include "nsIPropertyBag.h"
-#include "wspprivate.h"
+#include "nsIWSDLLoader.h"
 
-class WSPProxyTest : public nsIWSPProxyTest {
+class WSPProxyTest : public nsIWSPProxyTest,
+                     public nsIWSDLLoadListener,
+                     public SpheonJSAOPStatisticsPortTypeListener
+{
 public:
   WSPProxyTest();
   virtual ~WSPProxyTest();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIWSPPROXYTEST
+  NS_DECL_NSIWSDLLOADLISTENER
+  NS_DECL_SPHEONJSAOPSTATISTICSPORTTYPELISTENER
 
 protected:
-  nsresult CreateComplexTypeWrapper(WSPComplexTypeWrapper** aWrapper,
+  nsresult CreateComplexTypeWrapper(nsIWebServiceComplexTypeWrapper** aWrapper,
                                     nsIInterfaceInfo** aInfo);
-  nsresult TestComplexTypeWrapperInstance(nsIPropertyBag* propBag);
+  nsresult TestComplexTypeWrapperInstance(nsIPropertyBag* propBag,
+                                          nsAWritableString& aResult);
+  nsCOMPtr<nsIWSPProxyTestListener> mListener;
+  nsCOMPtr<SpheonJSAOPStatisticsPortTypeAsync> mProxy;
 };
 
 class WSPTestComplexType : public nsIWSPTestComplexType {

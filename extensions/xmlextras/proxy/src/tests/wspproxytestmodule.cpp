@@ -38,42 +38,44 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __wspproxytest_h__
-#define __wspproxytest_h__
+#include "wspproxytest.h"
+#include "nsIGenericFactory.h"
+#include "nsIServiceManager.h"
+#include "nsICategoryManager.h"
+#include "nsIScriptNameSpaceManager.h"
 
-#include "nsIWSPProxyTest.h"
-#include "nsIPropertyBag.h"
-#include "nsIWSDLLoader.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR(WSPProxyTest)
+NS_DECL_CLASSINFO(WSPProxyTest)
 
-class WSPProxyTest : public nsIWSPProxyTest,
-                     public nsIWSDLLoadListener,
-                     public SpheonJSAOPStatisticsPortTypeListener
+static NS_METHOD 
+RegisterWSPProxyTest(nsIComponentManager *aCompMgr,
+                     nsIFile *aPath,
+                     const char *registryLocation,
+                     const char *componentType,
+                     const nsModuleComponentInfo *info)
 {
-public:
-  WSPProxyTest();
-  virtual ~WSPProxyTest();
+  nsresult rv = NS_OK;
 
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIWSPPROXYTEST
-  NS_DECL_NSIWSDLLOADLISTENER
-  NS_DECL_SPHEONJSAOPSTATISTICSPORTTYPELISTENER
+  nsCOMPtr<nsICategoryManager> catman =
+    do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
 
-protected:
-  nsresult CreateComplexTypeWrapper(nsIWebServiceComplexTypeWrapper** aWrapper,
-                                    nsIInterfaceInfo** aInfo);
-  nsresult TestComplexTypeWrapperInstance(nsIPropertyBag* propBag,
-                                          nsAWritableString& aResult);
-  nsCOMPtr<nsIWSPProxyTestListener> mListener;
-  nsCOMPtr<SpheonJSAOPStatisticsPortTypeAsync> mProxy;
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsXPIDLCString previous;
+  rv = catman->AddCategoryEntry(JAVASCRIPT_GLOBAL_CONSTRUCTOR_CATEGORY,
+                                "WebServiceProxyTest",
+                                NS_WSPPROXYTEST_CONTRACTID,
+                                PR_TRUE, PR_TRUE, getter_Copies(previous));
+  return rv;
+}
+
+static nsModuleComponentInfo components[] = {
+  { "WebServiceProxyTest", NS_WSPPROXYTEST_CID, NS_WSPPROXYTEST_CONTRACTID,
+    WSPProxyTestConstructor, RegisterWSPProxyTest, nsnull, nsnull, 
+    NS_CI_INTERFACE_GETTER_NAME(WSPProxyTest), 
+    nsnull, &NS_CLASSINFO_NAME(WSPProxyTest), 
+    nsIClassInfo::DOM_OBJECT }
 };
 
-class WSPTestComplexType : public nsIWSPTestComplexType {
-public:
-  WSPTestComplexType();
-  virtual ~WSPTestComplexType();
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIWSPTESTCOMPLEXTYPE
-};
-
-#endif // __wspproxytest_h__
+NS_IMPL_NSGETMODULE(WSPProxyTestModule, components)

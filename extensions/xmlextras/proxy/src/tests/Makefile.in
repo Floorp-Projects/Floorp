@@ -26,8 +26,10 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE          = wsproxytests
-XPIDL_MODULE	= wsproxytests
+MODULE		= wsproxytest
+LIBRARY_NAME	= wsproxytest
+IS_COMPONENT	= 1
+MODULE_NAME	= WSPProxyTestModule
 
 REQUIRES = xpcom \
 	   string \
@@ -36,6 +38,7 @@ REQUIRES = xpcom \
 	   caps \
 	   js \
 	   necko \
+	   dom \
 	   $(NULL)
 
 XPIDLSRCS = .\nsIWSPProxyTest.idl \
@@ -43,19 +46,18 @@ XPIDLSRCS = .\nsIWSPProxyTest.idl \
 
 CPPSRCS		= \
 		wspproxytest.cpp \
+		wspproxytestmodule.cpp \
 		$(NULL)
 
-SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
+LOCAL_INCLUDES	= \
+		-I$(srcdir)/../ \
+		$(NULL)
 
-#include $(topsrcdir)/config/config.mk
-
-LIBS		= \
-		$(DIST)/lib/libxmlextrasproxy_s.$(LIB_SUFFIX) \
+EXTRA_DSO_LDOPTS = \
+		$(LIBS_DIR) \
+		$(MOZ_COMPONENT_LIBS) \
+		$(ZLIB_LIBS) \
 		$(MOZ_JS_LIBS) \
-		$(XPCOM_LIBS) \
-		$(NSPR_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
-DEFINES		+= -DUSE_NSREG

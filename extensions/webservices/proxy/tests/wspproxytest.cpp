@@ -79,10 +79,13 @@ WSPProxyTest::~WSPProxyTest()
 {
 }
 
-NS_IMPL_ISUPPORTS1(WSPProxyTest, nsIWSPProxyTest)
+NS_IMPL_ISUPPORTS3_CI(WSPProxyTest, 
+                      nsIWSPProxyTest,
+                      nsIWSDLLoadListener,
+                      SpheonJSAOPStatisticsPortTypeListener)
 
 nsresult
-WSPProxyTest::CreateComplexTypeWrapper(WSPComplexTypeWrapper** aWrapper,
+WSPProxyTest::CreateComplexTypeWrapper(nsIWebServiceComplexTypeWrapper** aWrapper,
                                        nsIInterfaceInfo** aInfo)
 {
   static nsIID sComplexTypeIID = NS_GET_IID(nsIWSPTestComplexType);
@@ -105,40 +108,52 @@ WSPProxyTest::CreateComplexTypeWrapper(WSPComplexTypeWrapper** aWrapper,
   *aInfo = iinfo;
   NS_ADDREF(*aInfo);
 
-  return WSPComplexTypeWrapper::Create(ct, iinfo, aWrapper);
+  nsCOMPtr<nsIWebServiceComplexTypeWrapper> wrapper = do_CreateInstance(NS_WEBSERVICECOMPLEXTYPEWRAPPER_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  rv = wrapper->Init(ct, iinfo);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  *aWrapper = wrapper;
+  NS_ADDREF(*aWrapper);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-WSPProxyTest::TestComplexTypeWrapper()
+WSPProxyTest::TestComplexTypeWrapper(nsAWritableString& aResult)
 {
   nsCOMPtr<nsIInterfaceInfo> info;
-  nsCOMPtr<WSPComplexTypeWrapper> wrapper;
+  nsCOMPtr<nsIWebServiceComplexTypeWrapper> wrapper;
   nsresult rv = CreateComplexTypeWrapper(getter_AddRefs(wrapper),
                                          getter_AddRefs(info));
   if (NS_FAILED(rv)) {
-    return rv;
+    aResult.Assign(NS_LITERAL_STRING("WSPProxyTest: Failed creating complex type wrapper"));
+    return NS_OK;
   }
 
   nsCOMPtr<nsIPropertyBag> propBag = do_QueryInterface(wrapper);
   if (!propBag) {
+    aResult.Assign(NS_LITERAL_STRING("WSPProxyTest: Wrapper is not property bag"));
     return NS_ERROR_FAILURE;
   }
 
-  rv = TestComplexTypeWrapperInstance(propBag);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  TestComplexTypeWrapperInstance(propBag, aResult);
 
   return NS_OK;
 }
 
 
 nsresult
-WSPProxyTest::TestComplexTypeWrapperInstance(nsIPropertyBag* propBag)
+WSPProxyTest::TestComplexTypeWrapperInstance(nsIPropertyBag* propBag,
+                                             nsAWritableString& aResult)
 {
   nsCOMPtr<nsISimpleEnumerator> enumerator;
   nsresult rv = propBag->GetEnumerator(getter_AddRefs(enumerator));
   if (NS_FAILED(rv)) {
+    aResult.Assign(NS_LITERAL_STRING("WSPProxyTest: Failed getting property bag enumerator"));
     return rv;
   }
 
@@ -150,7 +165,7 @@ WSPProxyTest::TestComplexTypeWrapperInstance(nsIPropertyBag* propBag)
 #define GET_AND_TEST_NAME(_name)                                          \
     rv = enumerator->GetNext(getter_AddRefs(sup));                        \
     if (NS_FAILED(rv)) {                                                  \
-      printf("WSPProxyTest: Failed getting property " #_name "\n");       \
+      aResult.Assign(NS_LITERAL_STRING("WSPProxyTest: Failed getting property ") + NS_LITERAL_STRING(#_name));    \
       return rv;                                                          \
     }                                                                     \
                                                                           \
@@ -161,7 +176,7 @@ WSPProxyTest::TestComplexTypeWrapperInstance(nsIPropertyBag* propBag)
                                                                           \
     prop->GetName(propName);                                              \
     if (!propName.Equals(NS_LITERAL_STRING(#_name))) {                    \
-      printf("WSPProxyTest: Name doesn't match for property " #_name "\n");\
+      aResult.Assign(NS_LITERAL_STRING("WSPProxyTest: Name doesn't match for property ") + NS_LITERAL_STRING(#_name)); \
       return NS_ERROR_FAILURE;                                            \
     }                                                                     \
     prop->GetValue(getter_AddRefs(val));                                  \
@@ -174,11 +189,11 @@ WSPProxyTest::TestComplexTypeWrapperInstance(nsIPropertyBag* propBag)
     _t _name;                                                               \
     rv = val->GetAs##_n(&_name);                                            \
     if (NS_FAILED(rv)) {                                                    \
-      printf("WSPProxyTest: Failed getting value for property " #_name "\n");\
+      aResult.Assign(NS_LITERAL_STRING("WSPProxyTest: Failed getting value for property ") + NS_LITERAL_STRING(#_name)); \
       return rv;                                                            \
     }                                                                       \
     if (_name != _val) {                                                    \
-      printf("WSPProxyTest: Value doesn't match for property " #_name "\n");\
+      aResult.Assign(NS_LITERAL_STRING("WSPProxyTest: Value doesn't match for property ") + NS_LITERAL_STRING(#_name)); \
       return NS_ERROR_FAILURE;                                              \
     }                                                                       
                                                                              
@@ -200,12 +215,12 @@ WSPProxyTest::TestComplexTypeWrapperInstance(nsIPropertyBag* propBag)
   nsAutoString str;
   rv = val->GetAsAString(str);
   if (NS_FAILED(rv)) {
-    printf("WSPProxyTest: Failed getting value for property s\n");
+    aResult.Assign(NS_LITERAL_STRING("WSPProxyTest: Failed getting value for property s"));
     return rv;
   }
 
   if (!str.Equals(NS_LITERAL_STRING(STRING_VAL))) {
-    printf("WSPProxyTest: Value doesn't match for property s\n");
+    aResult.Assign(NS_LITERAL_STRING("WSPProxyTest: Value doesn't match for property s"));
     return NS_ERROR_FAILURE;
   }
 
@@ -213,12 +228,12 @@ WSPProxyTest::TestComplexTypeWrapperInstance(nsIPropertyBag* propBag)
   nsCOMPtr<nsISupports> supVal;  
   rv = val->GetAsISupports(getter_AddRefs(supVal));  
   if (NS_FAILED(rv)) {
-    printf("WSPProxyTest: Failed getting value for property p\n");
+    aResult.Assign(NS_LITERAL_STRING("WSPProxyTest: Failed getting value for property p"));
     return rv;
   }
   nsCOMPtr<nsIPropertyBag> propBagVal = do_QueryInterface(supVal, &rv);
   if (NS_FAILED(rv)) {
-    printf("WSPProxyTest: Value doesn't match for property p\n");
+    aResult.Assign(NS_LITERAL_STRING("WSPProxyTest: Value doesn't match for property p"));
     return rv;
   }
 
@@ -226,129 +241,115 @@ WSPProxyTest::TestComplexTypeWrapperInstance(nsIPropertyBag* propBag)
   PRUint16 dataType;
   val->GetDataType(&dataType);
   if (dataType != nsIDataType::VTYPE_EMPTY) {
-    printf("WSPProxyTest: Value doesn't match for property p\n");
+    aResult.Assign(NS_LITERAL_STRING("WSPProxyTest: Value doesn't match for property p"));
     return NS_ERROR_FAILURE;
   }
 
   PRUint16 type;
   PRUint32 index, count;
-  nsIVariant** arrayVal;
+  PRUint32* arrayVal1;
 
   GET_AND_TEST_NAME(array1)
   nsIID iid;
-  rv = val->GetAsArray(&type, &iid, &count, (void**)&arrayVal);
+  rv = val->GetAsArray(&type, &iid, &count, (void**)&arrayVal1);
   if (NS_FAILED(rv)) {
-    printf("WSPProxyTest: Failed getting value for property array1\n");
+    aResult.Assign(NS_LITERAL_STRING("WSPProxyTest: Failed getting value for property array1"));
     return rv;
   }
   for (index = 0; index < count; index++) {
-    nsIVariant* arrayVar = arrayVal[index];
-    PRUint32 arrayInt;
-    rv = arrayVar->GetAsUint32(&arrayInt);
-    if (NS_FAILED(rv)) {
-      printf("WSPProxyTest: Failed getting value for element of property array1\n");
-      return rv;
-    }
-    
-    if (arrayInt != sArray1[index]) {
-      printf("WSPProxyTest: Value doesn't match for element of property array1\n");
+    if (arrayVal1[index] != sArray1[index]) {
+      aResult.Assign(NS_LITERAL_STRING("WSPProxyTest: Value doesn't match for element of property array1"));
       return rv;      
     }
   }
-  NS_FREE_XPCOM_ISUPPORTS_POINTER_ARRAY(count, arrayVal);
+  nsMemory::Free(arrayVal1);
 
+  double* arrayVal2;
   GET_AND_TEST_NAME(array2)
-  rv = val->GetAsArray(&type, &iid, &count, (void**)&arrayVal);
+  rv = val->GetAsArray(&type, &iid, &count, (void**)&arrayVal2);
   if (NS_FAILED(rv)) {
-    printf("WSPProxyTest: Failed getting value for property array2\n");
+    aResult.Assign(NS_LITERAL_STRING("WSPProxyTest: Failed getting value for property array2"));
     return rv;
   }
   for (index = 0; index < count; index++) {
-    nsIVariant* arrayVar = arrayVal[index];
-    double arrayDouble;
-    rv = arrayVar->GetAsDouble(&arrayDouble);
-    if (NS_FAILED(rv)) {
-      printf("WSPProxyTest: Failed getting value for element of property array1\n");
-      return rv;
-    }
-    
-    if (arrayDouble != sArray2[index]) {
-      printf("WSPProxyTest: Value doesn't match for element of property array1\n");
+    if (arrayVal2[index] != sArray2[index]) {
+      aResult.Assign(NS_LITERAL_STRING("WSPProxyTest: Value doesn't match for element of property array2"));
       return rv;      
     }
   }
-  NS_FREE_XPCOM_ISUPPORTS_POINTER_ARRAY(count, arrayVal);
+  nsMemory::Free(arrayVal2);
 
+  nsISupports** arrayVal3;
   GET_AND_TEST_NAME(array3)
-  rv = val->GetAsArray(&type, &iid, &count, (void**)&arrayVal);
+  rv = val->GetAsArray(&type, &iid, &count, (void**)&arrayVal3);
   if (NS_FAILED(rv)) {
-    printf("WSPProxyTest: Failed getting value for property array2\n");
+    aResult.Assign(NS_LITERAL_STRING("WSPProxyTest: Failed getting value for property array3"));
     return rv;
   }
-  nsIVariant* array3Var = arrayVal[0];
-  rv = array3Var->GetAsISupports(getter_AddRefs(supVal));  
+  propBagVal = do_QueryInterface(arrayVal3[0], &rv);
   if (NS_FAILED(rv)) {
-    printf("WSPProxyTest: Failed getting value for element of property array3\n");
+    aResult.Assign(NS_LITERAL_STRING("WSPProxyTest: Value doesn't match for element of property array3"));
     return rv;
   }
-  propBagVal = do_QueryInterface(supVal, &rv);
-  if (NS_FAILED(rv)) {
-    printf("WSPProxyTest: Value doesn't match for element of property array3\n");
-    return rv;
-  }
-  array3Var = arrayVal[1];
-  array3Var->GetDataType(&dataType);
-  if (dataType != nsIDataType::VTYPE_EMPTY) {
-    printf("WSPProxyTest: Value doesn't match for element of  property array3\n");
+  if (arrayVal3[1] != nsnull) {
+    aResult.Assign(NS_LITERAL_STRING("WSPProxyTest: Value doesn't match for element of  property array3"));
     return NS_ERROR_FAILURE;
   }
-  NS_FREE_XPCOM_ISUPPORTS_POINTER_ARRAY(count, arrayVal);
+  NS_FREE_XPCOM_ISUPPORTS_POINTER_ARRAY(count, arrayVal3);
 
 #undef GET_AND_TEST
 #undef GET_AND_TEST_NAME
 
+  aResult.Assign(NS_LITERAL_STRING("WSPProxyTest: Test Succeeded!"));
   return NS_OK;
 }
 
 
 NS_IMETHODIMP
-WSPProxyTest::TestPropertyBagWrapper()
+WSPProxyTest::TestPropertyBagWrapper(nsAWritableString& aResult)
 {
   nsCOMPtr<nsIInterfaceInfo> info;
-  nsCOMPtr<WSPComplexTypeWrapper> ctwrapper;
+  nsCOMPtr<nsIWebServiceComplexTypeWrapper> ctwrapper;
   nsresult rv = CreateComplexTypeWrapper(getter_AddRefs(ctwrapper),
                                          getter_AddRefs(info));
   if (NS_FAILED(rv)) {
-    return rv;
+    aResult.Assign(NS_LITERAL_STRING("WSPProxyTest: Failed creating complex type wrapper"));
+    return NS_OK;
   }
 
   nsCOMPtr<nsIPropertyBag> propBag = do_QueryInterface(ctwrapper);
   if (!propBag) {
-    return NS_ERROR_FAILURE;
+    aResult.Assign(NS_LITERAL_STRING("WSPProxyTest: Wrapper is not property bag"));
+    return NS_OK;
   }
 
-  WSPPropertyBagWrapper* wrapper;
-  rv = WSPPropertyBagWrapper::Create(propBag, info, &wrapper);
+  nsCOMPtr<nsIWebServicePropertyBagWrapper> wrapper = do_CreateInstance(NS_WEBSERVICEPROPERTYBAGWRAPPER_CONTRACTID, &rv);
   if (NS_FAILED(rv)) {
-    return rv;
+    aResult.Assign(NS_LITERAL_STRING("WSPProxyTest: Failed creating property bag wrapper"));
+    return NS_OK;
+  }
+  rv = wrapper->Init(propBag, info);
+  if (NS_FAILED(rv)) {
+    aResult.Assign(NS_LITERAL_STRING("WSPProxyTest: Failed initializing property bag wrapper"));
+    return NS_OK;
   }
 
   nsCOMPtr<nsIWSPTestComplexType> ct = do_QueryInterface(wrapper, &rv);
-  NS_RELEASE(wrapper);
   if (NS_FAILED(rv)) {
-    return rv;
+    aResult.Assign(NS_LITERAL_STRING("WSPProxyTest: Property bag wrapper doesn't QI correctly"));
+    return NS_OK;
   }
   
 #define GET_AND_TEST(_t, _name, _val)                                       \
   _t _name;                                                                 \
   rv = ct->Get##_name(&_name);                                              \
   if (NS_FAILED(rv)) {                                                      \
-    printf("WSPProxyTest: Failed to get value for attribute" #_name "\n");  \
-    return rv;                                                              \
+    aResult.Assign(NS_LITERAL_STRING("WSPProxyTest: Failed to get value for attribute") + NS_LITERAL_STRING(#_name)); \
+    return NS_OK;                                                           \
   }                                                                         \
   if (_name != _val) {                                                      \
-    printf("WSPProxyTest: Value doesn't match for attribute " #_name "\n"); \
-    return NS_ERROR_FAILURE;                                                \
+    aResult.Assign(NS_LITERAL_STRING("WSPProxyTest: Value doesn't match for attribute ") + NS_LITERAL_STRING(#_name)); \
+    return NS_OK;                                                           \
   }
                                                                            
   GET_AND_TEST(PRUint8, I8, sInt8Val)
@@ -368,29 +369,29 @@ WSPProxyTest::TestPropertyBagWrapper()
   nsAutoString str;
   rv = ct->GetS(str);
   if (NS_FAILED(rv)) {
-    printf("WSPProxyTest: Failed to get value for attribute s\n");
-    return rv;
+    aResult.Assign(NS_LITERAL_STRING("WSPProxyTest: Failed to get value for attribute s"));
+    return NS_OK;
   }
   if (!str.Equals(NS_LITERAL_STRING(STRING_VAL))) {
-    printf("WSPProxyTest: Value doesn't match for attribute s\n");
-    return NS_ERROR_FAILURE;
+    aResult.Assign(NS_LITERAL_STRING("WSPProxyTest: Value doesn't match for attribute s"));
+    return NS_OK;
   }
 
   nsCOMPtr<nsIWSPTestComplexType> p;
   rv = ct->GetP(getter_AddRefs(p));
   if (NS_FAILED(rv)) {
-    printf("WSPProxyTest: Failed to get value for attribute p\n");
-    return rv;
+    aResult.Assign(NS_LITERAL_STRING("WSPProxyTest: Failed to get value for attribute p"));
+    return NS_OK;
   }
 
   rv = ct->GetP2(getter_AddRefs(p));
   if (NS_FAILED(rv)) {
-    printf("WSPProxyTest: Failed to get value for attribute p2\n");
-    return rv;
+    aResult.Assign(NS_LITERAL_STRING("WSPProxyTest: Failed to get value for attribute p2"));
+    return NS_OK;
   }
   if (p) {
-    printf("WSPProxyTest: Value doesn't match for attribute p2\n");
-    return NS_ERROR_FAILURE;
+    aResult.Assign(NS_LITERAL_STRING("WSPProxyTest: Value doesn't match for attribute p2"));
+    return NS_OK;
   }
 
   PRUint32 index, count;
@@ -398,13 +399,13 @@ WSPProxyTest::TestPropertyBagWrapper()
   PRUint32* array1;
   rv = ct->Array1(&count, &array1);
   if (NS_FAILED(rv)) {
-    printf("WSPProxyTest: Failed to get value for attribute array1\n");
-    return rv;
+    aResult.Assign(NS_LITERAL_STRING("WSPProxyTest: Failed to get value for attribute array1"));
+    return NS_OK;
   }
   for (index = 0; index < count; index++) {
     if (array1[index] != sArray1[index]) {
-      printf("WSPProxyTest: Value doesn't match for element of attribute array1\n");
-      return NS_ERROR_FAILURE;
+      aResult.Assign(NS_LITERAL_STRING("WSPProxyTest: Value doesn't match for element of attribute array1"));
+      return NS_OK;
     }
   }
   nsMemory::Free(array1);
@@ -412,13 +413,13 @@ WSPProxyTest::TestPropertyBagWrapper()
   double* array2;
   rv = ct->Array2(&count, &array2);
   if (NS_FAILED(rv)) {
-    printf("WSPProxyTest: Failed to get value for attribute array2\n");
-    return rv;
+    aResult.Assign(NS_LITERAL_STRING("WSPProxyTest: Failed to get value for attribute array2"));
+    return NS_OK;
   }
   for (index = 0; index < count; index++) {
     if (array2[index] != sArray2[index]) {
-      printf("WSPProxyTest: Value doesn't match for element of attribute array2\n");
-      return NS_ERROR_FAILURE;
+      aResult.Assign(NS_LITERAL_STRING("WSPProxyTest: Value doesn't match for element of attribute array2"));
+      return NS_OK;
     }
   }
   nsMemory::Free(array2);
@@ -426,20 +427,164 @@ WSPProxyTest::TestPropertyBagWrapper()
   nsIWSPTestComplexType** array3;
   rv = ct->Array3(&count, &array3);
   if (NS_FAILED(rv)) {
-    printf("WSPProxyTest: Failed to get value for attribute array3\n");
-    return rv;
+    aResult.Assign(NS_LITERAL_STRING("WSPProxyTest: Failed to get value for attribute array3"));
+    return NS_OK;
   }
   if (!array3[0] || array3[1]) {
-    printf("WSPProxyTest: Value doesn't match for element of attribute array3\n");
-    return NS_ERROR_FAILURE;
+    aResult.Assign(NS_LITERAL_STRING("WSPProxyTest: Value doesn't match for element of attribute array3"));
+    return NS_OK;
   }
   NS_FREE_XPCOM_ISUPPORTS_POINTER_ARRAY(count, array3);
 
 #undef GET_AND_TEST
 
+  aResult.Assign(NS_LITERAL_STRING("WSPProxyTest: Test Succeeded!"));
   return NS_OK;
 }
 
+/* void testIsPrimeProxy(nsIWSPProxyTestListener* aListener); */
+NS_IMETHODIMP
+WSPProxyTest::TestIsPrimeProxy(nsIWSPProxyTestListener* aListener)
+{
+  mListener = aListener;
+  nsCOMPtr<nsIWSDLLoader> loader = do_CreateInstance(NS_WSDLLOADER_CONTRACTID);
+  if (!loader) {
+    mListener->OnIsPrimeProxyTestComplete(NS_LITERAL_STRING("Couldn't create WSDL loader"));
+    return NS_OK;
+  }
+  
+#define ISPRIMEURL "http://green.nscp.aoltw.net/vidur/wsdl/statistics.wsdl"
+#define ISPRIMEPORT "SpheonJSAOPStatisticsPort"
+  nsresult rv = loader->LoadAsync(NS_LITERAL_STRING(ISPRIMEURL),
+                                  NS_LITERAL_STRING(ISPRIMEPORT),
+                                  this);
+  if (NS_FAILED(rv)) {
+    mListener->OnIsPrimeProxyTestComplete(NS_LITERAL_STRING("Failed loading WSDL file"));
+  }
+  return NS_OK;
+}
+
+/* void onLoad (in nsIWSDLPort port); */
+NS_IMETHODIMP 
+WSPProxyTest::OnLoad(nsIWSDLPort *port)
+{
+  nsresult rv;
+  nsCOMPtr<nsIInterfaceInfoManager> manager = do_GetService(NS_INTERFACEINFOMANAGER_SERVICE_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) {
+    mListener->OnIsPrimeProxyTestComplete(NS_LITERAL_STRING("Couldn't create interface info manager"));
+    return NS_OK;
+  }
+
+  static nsIID sPortIID = NS_GET_IID(SpheonJSAOPStatisticsPortTypeAsync);
+  nsCOMPtr<nsIInterfaceInfo> iinfo;
+  rv = manager->GetInfoForIID(&sPortIID, getter_AddRefs(iinfo));
+  if (NS_FAILED(rv)) {
+    mListener->OnIsPrimeProxyTestComplete(NS_LITERAL_STRING("Couldn't find interface info for port"));
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIWebServiceProxy> proxy(do_CreateInstance(NS_WEBSERVICEPROXY_CONTRACTID));
+  if (!proxy) {
+    mListener->OnIsPrimeProxyTestComplete(NS_LITERAL_STRING("Couldn't create proxy"));
+    return NS_OK;    
+  }
+
+  proxy->Init(port, iinfo, NS_LITERAL_STRING("foo"), PR_TRUE);
+
+  mProxy = do_QueryInterface(proxy);
+  if (!mProxy) {
+    mListener->OnIsPrimeProxyTestComplete(NS_LITERAL_STRING("Couldn't QI proxy to isPrime interface"));
+    return NS_OK;
+  }
+
+  mProxy->SetListener(this);
+
+  nsCOMPtr<nsIWebServiceCallContext> context;
+  rv = mProxy->IsPrimeNumber(5, getter_AddRefs(context));
+  if (NS_FAILED(rv)) {
+    mListener->OnIsPrimeProxyTestComplete(NS_LITERAL_STRING("Failed call to IsPrimeNumber"));
+    return NS_OK;
+  }
+
+  return NS_OK;
+}
+
+/* void onError (in nsresult status, in AString statusMessage); */
+NS_IMETHODIMP 
+WSPProxyTest::OnError(nsresult status, const nsAString & statusMessage)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+/* void getStatisticsCallback (in nsIException error, in statisticStruct retval); */
+NS_IMETHODIMP 
+WSPProxyTest::GetStatisticsCallback(nsIException *error, statisticStruct *retval)
+{
+  if (error) {
+    nsXPIDLCString str;
+    error->ToString(getter_Copies(str));
+    mListener->OnIsPrimeProxyTestComplete(NS_ConvertASCIItoUCS2(str.get()));
+  }
+  else if (!retval) {
+    mListener->OnIsPrimeProxyTestComplete(NS_LITERAL_STRING("Incorrect value returned from IsPrimeNumber"));
+  }
+  else {
+    double average;
+    retval->GetAverage(&average);
+    if (average != 2.725) {
+      mListener->OnIsPrimeProxyTestComplete(NS_LITERAL_STRING("Incorrect value returned from IsPrimeNumber"));
+    }
+    else {
+      mListener->OnIsPrimeProxyTestComplete(NS_LITERAL_STRING("Test Succeeded!"));
+    }
+  }
+
+  return NS_OK;
+}
+
+/* void isPrimeNumberCallback (in nsIException error, in boolean retval); */
+NS_IMETHODIMP 
+WSPProxyTest::IsPrimeNumberCallback(nsIException *error, PRBool retval)
+{
+  if (error) {
+    nsXPIDLCString str;
+    error->ToString(getter_Copies(str));
+    mListener->OnIsPrimeProxyTestComplete(NS_ConvertASCIItoUCS2(str.get()));
+  }
+  else if (!retval) {
+    mListener->OnIsPrimeProxyTestComplete(NS_LITERAL_STRING("Incorrect value returned from IsPrimeNumber"));
+  }
+  else {
+    // Success!!
+    mListener->OnIsPrimeProxyTestComplete(NS_LITERAL_STRING("Test Succeeded!"));
+#if 0
+    static double vals[4] = { 1.7, 3.4, 5.6, 0.2 };
+    nsCOMPtr<nsIWebServiceCallContext> context;
+    nsresult rv = mProxy->GetStatistics(sizeof(vals)/sizeof(double), vals, 
+                                        getter_AddRefs(context));
+    if (NS_FAILED(rv)) {
+      mListener->OnIsPrimeProxyTestComplete(NS_LITERAL_STRING("Failed call to GetStatistics"));
+    }
+#endif
+  }
+
+  return NS_OK;
+}
+
+/* void crossSumCallback (in nsIException error, in PRInt32 retval); */
+NS_IMETHODIMP 
+WSPProxyTest::CrossSumCallback(nsIException *error, PRInt32 retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+///////////////////////////////////////////////////
+//
+// Implementation of WSPTestComplexType
+//
+///////////////////////////////////////////////////
 WSPTestComplexType::WSPTestComplexType()
 {
   NS_INIT_ISUPPORTS();
@@ -643,45 +788,4 @@ WSPTestComplexType::Array3(PRUint32 *length, nsIWSPTestComplexType ***array3)
   *array3 = ptr;
   
   return NS_OK;
-}
-
-
-int main (int argc, char* argv[]) 
-{
-  nsIServiceManager *servMgr;
-
-  nsresult rv = NS_InitXPCOM2(&servMgr, nsnull, nsnull);
-  if (NS_FAILED(rv)) {
-    printf("failed to initialize XPCOM");
-    return rv;
-  }
-
-  nsCOMPtr<WSPProxyTest> test = new WSPProxyTest();
-  if (!test) {
-    printf("Error creating proxy test instance\n");
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  printf("--- Testing complex type wrapper --- \n");
-  rv = test->TestComplexTypeWrapper();
-  if (NS_FAILED(rv)) {
-    printf("--- Test FAILED --- \n");
-  }
-  else {
-    printf("--- Test SUCCEEDED --- \n");
-  }
-
-  printf("--- Testing property bag wrapper --- \n");
-  rv = test->TestPropertyBagWrapper();
-  if (NS_FAILED(rv)) {
-    printf("--- Test FAILED --- \n");
-  }
-  else {
-    printf("--- Test SUCCEEDED --- \n");
-  }
-
-  if (servMgr)
-    rv = NS_ShutdownXPCOM(servMgr);
-
-  return rv;
 }

@@ -22,6 +22,10 @@
 DEPTH=..\..\..\..\..
 
 MODULE=wsproxytest
+LIBRARY_NAME=wsproxytest
+MODULE_NAME=WSPProxyTestModule
+
+DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
 XPIDLSRCS = .\nsIWSPProxyTest.idl \
 	    $(NULL)
@@ -33,31 +37,25 @@ REQUIRES = xpcom \
 	   caps \
 	   js \
 	   necko \
+	   dom \
 	   $(NULL)
 
+CPP_OBJS=					\
+	.\$(OBJDIR)\wspproxytest.obj		\
+	.\$(OBJDIR)\wspproxytestmodule.obj	\
+	$(NULL)
+
+EXPORTS =					\
+	$(NULL)
+
+LLIBS=						      \
+		$(DIST)\lib\xpcom.lib		      \
+		$(DIST)\lib\js3250.lib		      \
+		$(LIBNSPR)	 	              \
+		$(NULL)
+
 include <$(DEPTH)/config/config.mak>
-
-MAKE_OBJ_TYPE = EXE
-PROG1 = .\$(OBJDIR)\wspproxytest.exe
-
-PROGRAMS = $(PROG1) \
-           $(NULL)
-
-LCFLAGS  = -DUSE_NSREG -GX
-
-LLIBS =                       \
-        $(DIST)\lib\xpcom.lib \
-        $(DIST)\lib\xmlextrasproxy_s.lib \
-        $(LIBNSPR)
 
 LINCS=-I..\
 
 include <$(DEPTH)\config\rules.mak>
-
-libs:: $(PROGRAMS)
-	-for %p in ($(PROGRAMS)) do $(MAKE_INSTALL) %p $(DIST)\bin
-
-clobber::
-	-for %p in ($(PROGRAMS)) do $(RM) %p $(DIST)\bin\%p
-
-$(PROG1): $(OBJDIR) wspproxytest.cpp

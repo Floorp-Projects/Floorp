@@ -41,10 +41,16 @@
 #include "nsISupports.idl"
 #include "nsIWebServiceProxy.idl"
 
+[scriptable, uuid(f8127804-529d-4f9f-90cc-e7447491ed42)]
+interface nsIWSPProxyTestListener : nsISupports {
+  void onIsPrimeProxyTestComplete(in AString result);
+};
+
 [scriptable, uuid(fd25b392-f435-4aea-bbbc-0886f8239dce)]
 interface nsIWSPProxyTest : nsISupports {
-  void testComplexTypeWrapper();
-  void testPropertyBagWrapper();
+  AString testComplexTypeWrapper();
+  AString testPropertyBagWrapper();
+  void testIsPrimeProxy(in nsIWSPProxyTestListener aListener);
 };
 
 [uuid(6de70ec8-46fb-49d5-8dac-9d2eae42ea5a)]
@@ -77,3 +83,33 @@ interface nsIWSPTestComplexType : nsISupports {
   0xcdb03ec6, 0x4a5e, 0x4461,                      \
  {0x99, 0x6e, 0x16, 0xf5, 0x17, 0xe5, 0x3b, 0x87} }
 %} 
+
+[scriptable, uuid(5d557963-b082-4f93-b96d-8e4d6b7cd5cd)]
+interface statisticStruct : nsISupports {
+  readonly attribute double average;
+  readonly attribute double standardDeviation;
+};
+
+[scriptable, uuid(4814fb14-d081-4cb9-995d-fd6472913c6c)]
+interface SpheonJSAOPStatisticsPortType : nsISupports {
+  statisticStruct getStatistics(in PRUint32 valsLength, [array, size_is(valsLength)] in double vals);
+  boolean isPrimeNumber(in PRInt32 prime);
+  PRInt32 crossSum(in PRInt32 sum);
+};
+
+[scriptable, uuid(7b7b9508-8a0a-4b41-bf35-167804376c40)]
+interface SpheonJSAOPStatisticsPortTypeListener : nsISupports {
+  void getStatisticsCallback(in nsIException error, in statisticStruct retval);
+  void isPrimeNumberCallback(in nsIException error, in boolean retval);
+  void crossSumCallback(in nsIException error, in PRInt32 retval);
+};
+
+[scriptable, uuid(bbae3748-d7eb-453c-8b48-7b760f7075f6)]
+interface SpheonJSAOPStatisticsPortTypeAsync : nsISupports {
+  void setListener(in SpheonJSAOPStatisticsPortTypeListener listener);
+  nsIWebServiceCallContext getStatistics(in PRUint32 valsLength,
+				 [array, size_is(valsLength)] in double vals);
+  nsIWebServiceCallContext isPrimeNumber(in PRInt32 prime);
+  nsIWebServiceCallContext crossSum(in PRInt32 sum);
+};
+
