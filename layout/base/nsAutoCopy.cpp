@@ -170,7 +170,7 @@ nsAutoCopyService::NotifySelectionChanged(nsIDOMDocument *aDoc, nsIDOMSelection 
   nsCOMPtr<nsISupports> generic(do_QueryInterface(dataWrapper));
   /* Length() is in characters, *2 gives bytes. */
   trans->SetTransferData(kXIFMime, generic, xifBuffer.Length() * 2);
-  mClipboard->SetData(trans, nsnull);
+  mClipboard->SetData(trans, nsnull,0);
 
 #ifdef DEBUG_CLIPBOARD
   static char *reasons[] = {
