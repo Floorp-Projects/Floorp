@@ -60,7 +60,7 @@ Rights Reserved.
 <!ENTITY copyCmd.label ".Copy">  
 <!ENTITY pasteCmd.label ".Paste">  
 <!ENTITY deleteMsgCmd.label "Delete Message">  
-<!ENTITY deleteFolderCmd.label ".Delete Folder">  
+<!ENTITY deleteFolderCmd.label "Delete Folder">  
 <!ENTITY selectMenu.label ".Select"> 
 <!ENTITY selectAllCmd.label ".All">  
 <!ENTITY selectThreadCmd.label ".Thread">  
