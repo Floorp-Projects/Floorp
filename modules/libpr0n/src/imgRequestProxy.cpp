@@ -43,8 +43,8 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(imgRequestProxy, imgIRequest, nsIRequest)
 imgRequestProxy::imgRequestProxy() :
   mOwner(nsnull),
   mLoadFlags(nsIRequest::LOAD_NORMAL),
-  mIsInLoadGroup(PR_FALSE),
   mCanceled(PR_FALSE),
+  mIsInLoadGroup(PR_FALSE),
   mLock(nsnull)
 {
   NS_INIT_ISUPPORTS();
