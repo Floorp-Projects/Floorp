@@ -411,6 +411,7 @@ private:
      * @return  ptr to recycler (or null)
      */
     virtual nsITokenRecycler* GetTokenRecycler(void);
+    eHTMLTags GetStartTag(const nsIParserNode& aNode, nsString& aName);
 
 private:
 
@@ -453,7 +454,7 @@ protected:
 		nsresult		CollectAttributes(nsCParserNode& aNode,PRInt32 aCount);
 		nsresult		CollectSkippedContent(nsCParserNode& aNode,PRInt32& aCount);
     nsresult    CollectContentComment(CToken* aToken,nsCParserNode& aNode);
-    
+
     nsParser*             mParser;
     nsIHTMLContentSink*   mSink;
 
