@@ -51,11 +51,16 @@ INSTALL_DIR=$(DIST)\bin
 #//------------------------------------------------------------------------
 include <$(DEPTH)/config/rules.mak>
 
+# update build number from within make script
+build_number::
+    $(RM) $@
+    $(PERL) bdate.pl > $@
+    echo Setting build number...
+    $(PERL) aboutime.pl $(DEPTH)/xpfe/browser/src/navigator.xul $@
+
+
 #// Rule to set the timebomb on official mozilla builds
-!ifdef MOZILLA_OFFICIAL
-export:: build_number
-    $(PERL) set-timebomb.pl 0 30
-!endif
+
 
 #//
 #// Rule to build makedir.exe
@@ -75,21 +80,12 @@ bin2rc.exe:: bin2rc.c
 makedep.exe:: makedep.cpp
     @cl -MT makedep.cpp 
 
-export:: makecopy.exe mangle.exe mantomak.exe bin2rc.exe makedep.exe build_number 
-
-
-
-# update build number from within make script
-build_number:: FORCE
-    $(RM) $@
-    $(PERL) bdate.pl > $@
-    echo Setting build number...
-    $(PERL) aboutime.pl $(DEPTH)/xpfe/browser/src/navigator.xul $@
-
+export:: makecopy.exe mangle.exe mantomak.exe bin2rc.exe makedep.exe build_number INSTALL_FILES
+!ifdef MOZILLA_OFFICIAL
+    $(PERL) set-timebomb.pl 0 30
+!endif
 
 !ifdef MOZ_FULLCIRCLE
-
-export:: INSTALL_FILES
 
 master.pl: build_number
         $(PERL) build-number.pl
@@ -101,7 +97,5 @@ master.ini: master.pl
 install:: master.ini
 	$(MAKE_INSTALL) master.ini $(DIST)\bin\
 !endif
-
-install:: export
 
 FORCE::
