@@ -36,8 +36,8 @@ Contributor(s): Michael Lowe <michael.lowe@bigfoot.com> -->
 
 <tabcontrol flex="100%" align="vertical">
   <tabbox>
-    <tab selected="true">&aboutTab.label;</tab>
-    <tab>&contributorsTab.label;</tab>
+    <tab selected="true" value="&aboutTab.label;"/>
+    <tab value="&contributorsTab.label;"/>
   </tabbox>
 
   <tabpanel align="vertical" flex="100%">
