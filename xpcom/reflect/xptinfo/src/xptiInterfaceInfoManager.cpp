@@ -136,6 +136,11 @@ xptiInterfaceInfoManager::~xptiInterfaceInfoManager()
 {
     // We only do this on shutdown of the service.
     mWorkingSet.InvalidateInterfaceInfos();
+
+    if(mResolveLock)
+        PR_DestroyLock(mResolveLock);
+    if(mAutoRegLock)
+        PR_DestroyLock(mAutoRegLock);
 }
 
 PRBool 
