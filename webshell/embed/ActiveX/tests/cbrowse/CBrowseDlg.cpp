@@ -108,7 +108,7 @@ BOOL CBrowseDlg::OnInitDialog()
 	CRect rcTabMarker;
 	GetDlgItem(IDC_TAB_MARKER)->GetWindowRect(&rcTabMarker);
 	ScreenToClient(rcTabMarker);
-	GetDlgItem(IDC_TAB_MARKER)->DestroyWindow();
+//	GetDlgItem(IDC_TAB_MARKER)->DestroyWindow();
 
     m_dlgPropSheet.AddPage(&m_TabMessages);
     m_dlgPropSheet.AddPage(&m_TabTests);
@@ -194,16 +194,66 @@ struct EnumData
 BOOL CALLBACK EnumChildProc(HWND hwnd, LPARAM lParam)
 {
 	EnumData *pData = (EnumData *) lParam;
+	CBrowseDlg *pThis =pData->pBrowseDlg;
+
+	switch (::GetDlgCtrlID(hwnd))
+	{
+	case IDC_BROWSER_MARKER:
+		{
+			CWnd *pMarker = pThis->GetDlgItem(IDC_BROWSER_MARKER);
+			CRect rcMarker;
+			pMarker->GetWindowRect(&rcMarker);
+			pThis->ScreenToClient(rcMarker);
+
+			rcMarker.right += pData->sizeDelta.cx;
+			rcMarker.bottom += pData->sizeDelta.cy;
+
+			if (rcMarker.Width() > 10 && rcMarker.Height() > 10)
+			{
+				pMarker->SetWindowPos(&CWnd::wndBottom, 0, 0, rcMarker.Width(), rcMarker.Height(), 
+						SWP_NOMOVE | SWP_NOACTIVATE | SWP_HIDEWINDOW);
+				pThis->m_pControlSite->SetPosition(rcMarker);
+			}
+		}
+		break;
+	case IDC_TAB_MARKER:
+		{
+			CWnd *pMarker = pThis->GetDlgItem(IDC_TAB_MARKER);
+			CRect rcMarker;
+			pMarker->GetWindowRect(&rcMarker);
+			pThis->ScreenToClient(rcMarker);
+
+			rcMarker.top += pData->sizeDelta.cy;
+
+			if (rcMarker.top > 70)
+			{
+				pMarker->SetWindowPos(&CWnd::wndBottom, rcMarker.left, rcMarker.top, 0, 0, 
+						SWP_NOSIZE | SWP_NOACTIVATE | SWP_HIDEWINDOW);
+				pThis->m_dlgPropSheet.SetWindowPos(NULL, rcMarker.left - 7, rcMarker.top - 7, 0, 0, 
+						SWP_NOREPOSITION | SWP_NOSIZE | SWP_NOACTIVATE);
+			}
+		}
+
+	}
+
 	return TRUE;
 }
 
 void CBrowseDlg::OnSize(UINT nType, int cx, int cy) 
 {
 	CDialog::OnSize(nType, cx, cy);
-	EnumData data;
-	data.pBrowseDlg = this;
-	data.sizeDelta = CSize(cx, cy);
-	::EnumChildWindows(GetSafeHwnd(), EnumChildProc, (LPARAM) &data);
+
+	static CSize sizeOld(-1, -1);
+	CSize sizeNew(cx, cy);
+
+	if (sizeOld.cx != -1)
+	{
+		EnumData data;
+		data.pBrowseDlg = this;
+		data.sizeDelta = sizeNew - sizeOld;
+		::EnumChildWindows(GetSafeHwnd(), EnumChildProc, (LPARAM) &data);
+	}
+	sizeOld = sizeNew;
 }
 
 HRESULT CBrowseDlg::CreateWebBrowser()
@@ -212,8 +262,9 @@ HRESULT CBrowseDlg::CreateWebBrowser()
 	CRect rcMarker;
 	GetDlgItem(IDC_BROWSER_MARKER)->GetWindowRect(&rcMarker);
 	ScreenToClient(rcMarker);
+	GetDlgItem(IDC_BROWSER_MARKER)->ShowWindow(FALSE);
 
-	GetDlgItem(IDC_BROWSER_MARKER)->DestroyWindow();
+//	GetDlgItem(IDC_BROWSER_MARKER)->DestroyWindow();
 
 	CControlSiteInstance::CreateInstance(&m_pControlSite);
 	if (m_pControlSite == NULL)

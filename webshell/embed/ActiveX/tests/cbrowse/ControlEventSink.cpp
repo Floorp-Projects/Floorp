@@ -49,10 +49,19 @@ HRESULT STDMETHODCALLTYPE CControlEventSink:: Invoke(
 			USES_CONVERSION;
 			CString szText(OLE2T(pDispParams->rgvarg[0].bstrVal));
 			szEvent.Format(_T("StatusTextChange: \"%s\""), szText);
+			m_pBrowseDlg->m_TabMessages.m_szStatus = szText;
+			m_pBrowseDlg->m_TabMessages.UpdateData(FALSE);
 		}
 		break;
 	case 0x6c:
-		szEvent = _T("ProgressChange");
+		{
+			LONG nProgress = pDispParams->rgvarg[1].lVal;
+			LONG nProgressMax = pDispParams->rgvarg[0].lVal;
+			szEvent.Format("ProgressChange(%d of %d)", nProgress, nProgressMax);
+			CProgressCtrl &pc = m_pBrowseDlg->m_TabMessages.m_pcProgress;
+			pc.SetRange(0, nProgressMax);
+			pc.SetPos(nProgress);
+		}
 		break;
 	case 0x69:
 		szEvent = _T("CommandStateChange");

@@ -26,7 +26,9 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CTabMessages)
 	enum { IDD = IDD_TAB_MESSAGES };
+	CProgressCtrl	m_pcProgress;
 	CListBox	m_lbMessages;
+	CString	m_szStatus;
 	//}}AFX_DATA
 
 

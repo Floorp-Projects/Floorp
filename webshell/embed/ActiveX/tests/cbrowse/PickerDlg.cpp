@@ -86,6 +86,7 @@ BOOL CPickerDlg::OnInitDialog()
 	              // EXCEPTION: OCX Property Pages should return FALSE
 }
 
+
 void CPickerDlg::OnOk() 
 {
 	UpdateData();
