@@ -362,7 +362,7 @@ nsInterfaceInfoManager::initInterfaceTables()
 #endif
 
         nsresult nsr = this->indexify_file(fullname);
-        if (NS_IS_ERROR(nsr)) {
+        if (NS_FAILED(nsr)) {
             char *warnstr = PR_smprintf("failed to process typelib file %s",
                                         fullname);
             NS_WARNING(warnstr);
@@ -446,7 +446,7 @@ nsInterfaceInfoManager::GetNameForIID(const nsIID* iid, char** name)
     // Note that this might fail for same-name, different-iid interfaces!
     nsIID *newid;
     nsresult isok = GetIIDForName(record->name, &newid);
-    PR_ASSERT(!(NS_IS_ERROR(isok)));
+    PR_ASSERT(!(NS_FAILED(isok)));
     PR_ASSERT(newid->Equals(*newid));
 #endif
     PR_ASSERT(record->name != NULL);
