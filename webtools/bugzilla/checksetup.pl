@@ -305,7 +305,7 @@ foreach my $module (@{$modules}) {
 
 print "\nThe following Perl modules are optional:\n" unless $silent;
 my $gd          = have_vers("GD","1.20");
-my $chartbase   = have_vers("Chart::Base","0.99");
+my $chartbase   = have_vers("Chart::Base","1.0");
 my $xmlparser   = have_vers("XML::Parser",0);
 my $gdgraph     = have_vers("GD::Graph",0);
 my $gdtextalign = have_vers("GD::Text::Align",0);
@@ -340,7 +340,7 @@ if ((!$gd || !$chartbase) && !$silent) {
     print "If you you want to see graphical bug charts (plotting historical ";
     print "data over \ntime), you should install libgd and the following Perl ";     print "modules:\n\n";
     print "GD:          " . install_command("GD") ."\n" if !$gd;
-    print "Chart 0.99b: " . install_command("Chart::Base") . "\n" if !$chartbase;
+    print "Chart:       " . install_command("Chart::Base") . "\n" if !$chartbase;
     print "\n";
 }
 if (!$xmlparser && !$silent) {
