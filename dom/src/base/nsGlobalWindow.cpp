@@ -3062,8 +3062,8 @@ GlobalWindowImpl::CheckForAbusePoint()
 
   // limit the number of simultaneously open popups
   intPref = 0;
-  gPrefBranch->GetIntPref("dom.popup_maximum", &intPref);
-  if (intPref > 0 && gOpenPopupSpamCount >= intPref)
+  nsresult gotPref = gPrefBranch->GetIntPref("dom.popup_maximum", &intPref);
+  if (NS_SUCCEEDED(gotPref) && intPref >= 0 && gOpenPopupSpamCount >= intPref)
     return openAbuseOverride;
 
   // is a timer running?
