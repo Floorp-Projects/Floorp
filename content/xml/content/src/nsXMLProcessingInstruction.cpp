@@ -36,173 +36,20 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
-#include "nsIDOMProcessingInstruction.h"
-#include "nsIDOMLinkStyle.h"
-#include "nsIDOMStyleSheet.h"
-#include "nsIDocument.h"
-#include "nsIStyleSheet.h"
-#include "nsIURI.h"
-#include "nsGenericDOMDataNode.h"
 #include "nsGenericElement.h"
 #include "nsLayoutAtoms.h"
-#include "nsHTMLAtoms.h"
-#include "nsAString.h"
-#include "nsXPIDLString.h"
 #include "nsUnicharUtils.h"
-#include "nsStyleLinkElement.h"
+#include "nsXMLProcessingInstruction.h"
 #include "nsParserUtils.h"
-#include "nsNetUtil.h"
-
-
-class nsXMLProcessingInstruction : public nsGenericDOMDataNode,
-                                   public nsIDOMProcessingInstruction,
-                                   public nsStyleLinkElement
-{
-public:
-  nsXMLProcessingInstruction(const nsAString& aTarget,
-                             const nsAString& aData);
-  virtual ~nsXMLProcessingInstruction();
-
-  // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
-
-  // nsIDOMNode
-  NS_IMETHOD GetNodeName(nsAString& aNodeName);
-  NS_IMETHOD GetLocalName(nsAString& aLocalName) {
-    return nsGenericDOMDataNode::GetLocalName(aLocalName);
-  }
-  NS_IMETHOD GetNodeValue(nsAString& aNodeValue) {
-    return nsGenericDOMDataNode::GetNodeValue(aNodeValue);
-  }
-  NS_IMETHOD SetNodeValue(const nsAString& aNodeValue) {
-    nsresult rv = nsGenericDOMDataNode::SetNodeValue(aNodeValue);
-    if (NS_SUCCEEDED(rv)) {
-      UpdateStyleSheet();
-    }
-    return rv;
-  }
-  NS_IMETHOD GetNodeType(PRUint16* aNodeType);
-  NS_IMETHOD GetParentNode(nsIDOMNode** aParentNode) {
-    return nsGenericDOMDataNode::GetParentNode(aParentNode);
-  }
-  NS_IMETHOD GetChildNodes(nsIDOMNodeList** aChildNodes) {
-    return nsGenericDOMDataNode::GetChildNodes(aChildNodes);
-  }
-  NS_IMETHOD HasChildNodes(PRBool* aHasChildNodes) {
-    return nsGenericDOMDataNode::HasChildNodes(aHasChildNodes);
-  }
-  NS_IMETHOD HasAttributes(PRBool* aHasAttributes) {
-    return nsGenericDOMDataNode::HasAttributes(aHasAttributes);
-  }
-  NS_IMETHOD GetFirstChild(nsIDOMNode** aFirstChild) {
-    return nsGenericDOMDataNode::GetFirstChild(aFirstChild);
-  }
-  NS_IMETHOD GetLastChild(nsIDOMNode** aLastChild) {
-    return nsGenericDOMDataNode::GetLastChild(aLastChild);
-  }
-  NS_IMETHOD GetPreviousSibling(nsIDOMNode** aPreviousSibling) {
-    return nsGenericDOMDataNode::GetPreviousSibling(aPreviousSibling);
-  }
-  NS_IMETHOD GetNextSibling(nsIDOMNode** aNextSibling) {
-    return nsGenericDOMDataNode::GetNextSibling(aNextSibling);
-  }
-  NS_IMETHOD GetAttributes(nsIDOMNamedNodeMap** aAttributes) {
-    return nsGenericDOMDataNode::GetAttributes(aAttributes);
-  }
-  NS_IMETHOD InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
-                             nsIDOMNode** aReturn) {
-    return nsGenericDOMDataNode::InsertBefore(aNewChild, aRefChild, aReturn);
-  }
-  NS_IMETHOD AppendChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn) {
-    return nsGenericDOMDataNode::AppendChild(aOldChild, aReturn);
-  }
-  NS_IMETHOD ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
-                             nsIDOMNode** aReturn) {
-    return nsGenericDOMDataNode::ReplaceChild(aNewChild, aOldChild, aReturn);
-  }
-  NS_IMETHOD RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn) {
-    return nsGenericDOMDataNode::RemoveChild(aOldChild, aReturn);
-  }
-  NS_IMETHOD GetOwnerDocument(nsIDOMDocument** aOwnerDocument) {
-    return nsGenericDOMDataNode::GetOwnerDocument(aOwnerDocument);
-  }
-  NS_IMETHOD GetNamespaceURI(nsAString& aNamespaceURI) {
-    return nsGenericDOMDataNode::GetNamespaceURI(aNamespaceURI);
-  }
-  NS_IMETHOD GetPrefix(nsAString& aPrefix) {
-    return nsGenericDOMDataNode::GetPrefix(aPrefix);
-  }
-  NS_IMETHOD SetPrefix(const nsAString& aPrefix) {
-    return nsGenericDOMDataNode::SetPrefix(aPrefix);
-  }
-  NS_IMETHOD Normalize() {
-    return NS_OK;
-  }
-  NS_IMETHOD IsSupported(const nsAString& aFeature,
-                      const nsAString& aVersion,
-                      PRBool* aReturn) {
-    return nsGenericDOMDataNode::IsSupported(aFeature, aVersion, aReturn);
-  }
-  NS_IMETHOD GetBaseURI(nsAString& aURI) {
-    return nsGenericDOMDataNode::GetBaseURI(aURI);
-  }
-  NS_IMETHOD LookupNamespacePrefix(const nsAString& aNamespaceURI,
-                                   nsAString& aPrefix) {
-    return nsGenericDOMDataNode::LookupNamespacePrefix(aNamespaceURI, aPrefix);
-  }
-  NS_IMETHOD LookupNamespaceURI(const nsAString& aNamespacePrefix,
-                                nsAString& aNamespaceURI) {
-    return nsGenericDOMDataNode::LookupNamespaceURI(aNamespacePrefix,
-                                                    aNamespaceURI);
-  }
-
-  NS_IMETHOD CloneNode(PRBool aDeep, nsIDOMNode** aReturn);
-
-  // nsIDOMProcessingInstruction
-  NS_DECL_NSIDOMPROCESSINGINSTRUCTION
-
-  // nsIContent
-  NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                         PRBool aCompileEventHandlers)
-  {
-    nsCOMPtr<nsIDocument> oldDoc = mDocument;
-    nsresult rv = nsGenericDOMDataNode::SetDocument(aDocument, aDeep,
-                                                    aCompileEventHandlers);
-    if (NS_SUCCEEDED(rv)) {
-      UpdateStyleSheet(oldDoc);
-    }
-    return rv;
-  }
-  NS_IMETHOD GetTag(nsIAtom*& aResult) const;
-
-#ifdef DEBUG
-  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
-  NS_IMETHOD DumpContent(FILE* out, PRInt32 aIndent, PRBool aDumpAll) const;
-  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
-#endif
-
-  // nsStyleLinkElement
-  NS_IMETHOD GetCharset(nsAString& aCharset);
-
-protected:
-  void GetStyleSheetURL(PRBool* aIsInline,
-                        nsAString& aUrl);
-  void GetStyleSheetInfo(nsAString& aTitle,
-                         nsAString& aType,
-                         nsAString& aMedia,
-                         PRBool* aIsAlternate);
-
-  PRBool GetAttrValue(const nsAString& aAttr, nsAString& aValue);
-
-  nsAutoString mTarget;
-};
 
 nsresult
 NS_NewXMLProcessingInstruction(nsIContent** aInstancePtrResult,
                                const nsAString& aTarget,
                                const nsAString& aData)
 {
+  if (aTarget.Equals(NS_LITERAL_STRING("xml-stylesheet"))) {
+    return NS_NewXMLStylesheetProcessingInstruction(aInstancePtrResult, aData);
+  }
   *aInstancePtrResult = new nsXMLProcessingInstruction(aTarget, aData);
   NS_ENSURE_TRUE(*aInstancePtrResult, NS_ERROR_OUT_OF_MEMORY);
 
@@ -227,8 +74,6 @@ nsXMLProcessingInstruction::~nsXMLProcessingInstruction()
 NS_INTERFACE_MAP_BEGIN(nsXMLProcessingInstruction)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
   NS_INTERFACE_MAP_ENTRY(nsIDOMProcessingInstruction)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMLinkStyle)
-  NS_INTERFACE_MAP_ENTRY(nsIStyleSheetLinkingElement)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(ProcessingInstruction)
 NS_INTERFACE_MAP_END_INHERITING(nsGenericDOMDataNode)
 
@@ -248,11 +93,7 @@ nsXMLProcessingInstruction::GetTarget(nsAString& aTarget)
 NS_IMETHODIMP
 nsXMLProcessingInstruction::SetData(const nsAString& aData)
 {
-  nsresult rv = nsGenericDOMDataNode::SetData(aData);
-  if (NS_SUCCEEDED(rv)) {
-    UpdateStyleSheet();
-  }
-  return rv;
+  return SetNodeValue(aData);
 }
 
 NS_IMETHODIMP
@@ -348,126 +189,3 @@ nsXMLProcessingInstruction::SizeOf(nsISizeOfHandler* aSizer,
   return NS_OK;
 }
 #endif
-
-static PRBool InProlog(nsIDOMNode *aThis)
-{
-  // Check that there are no ancestor elements
-  // Typically this should loop once
-  nsCOMPtr<nsIDOMNode> current = aThis;
-  for(;;) {
-    nsCOMPtr<nsIDOMNode> parent;
-    current->GetParentNode(getter_AddRefs(parent));
-    if (!parent)
-      break;
-    PRUint16 type;
-    parent->GetNodeType(&type);
-    if (type == nsIDOMNode::ELEMENT_NODE)
-      return PR_FALSE;
-    current = parent;
-  }
-
-  // Check that there are no elements before
-  // Makes sure we are not in epilog
-  current = aThis;
-  for(;;) {
-    nsCOMPtr<nsIDOMNode> prev;
-    current->GetPreviousSibling(getter_AddRefs(prev));
-    if (!prev)
-      break;
-    PRUint16 type;
-    prev->GetNodeType(&type);
-    if (type == nsIDOMNode::ELEMENT_NODE)
-      return PR_FALSE;
-    current = prev;
-  }
-
-  return PR_TRUE;
-}
-
-NS_IMETHODIMP
-nsXMLProcessingInstruction::GetCharset(nsAString& aCharset)
-{
-  if (!GetAttrValue(NS_LITERAL_STRING("charset"), aCharset)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return NS_OK;
-}
-
-void
-nsXMLProcessingInstruction::GetStyleSheetURL(PRBool* aIsInline,
-                                             nsAString& aUrl)
-{
-  *aIsInline = PR_FALSE;
-  aUrl.Truncate();
-
-  nsAutoString href;
-  GetAttrValue(NS_LITERAL_STRING("href"), href);
-  if (href.IsEmpty()) {
-    return;
-  }
-
-  nsCOMPtr<nsIURI> url, baseURL;
-  if (mDocument) {
-    mDocument->GetBaseURL(*getter_AddRefs(baseURL));
-  }
-  NS_MakeAbsoluteURI(aUrl, href, baseURL);
-}
-
-void
-nsXMLProcessingInstruction::GetStyleSheetInfo(nsAString& aTitle,
-                                              nsAString& aType,
-                                              nsAString& aMedia,
-                                              PRBool* aIsAlternate)
-{
-  aTitle.Truncate();
-  aType.Truncate();
-  aMedia.Truncate();
-  *aIsAlternate = PR_FALSE;
-
-  if (!mTarget.Equals(NS_LITERAL_STRING("xml-stylesheet"))) {
-    return;
-  }
-
-  // xml-stylesheet PI is special only in prolog
-  if (!InProlog(this)) {
-    return;
-  }
-
-  nsAutoString title, type, media, alternate;
-
-  GetAttrValue(NS_LITERAL_STRING("title"), title);
-  title.CompressWhitespace();
-  aTitle.Assign(title);
-
-  GetAttrValue(NS_LITERAL_STRING("alternate"), alternate);
-
-  // if alternate, does it have title?
-  if (alternate.Equals(NS_LITERAL_STRING("yes"))) {
-    if (aTitle.IsEmpty()) { // alternates must have title
-      return;
-    } else {
-      *aIsAlternate = PR_TRUE;
-    }
-  }
-
-  GetAttrValue(NS_LITERAL_STRING("media"), media);
-  aMedia.Assign(media);
-  ToLowerCase(aMedia); // case sensitivity?
-
-  GetAttrValue(NS_LITERAL_STRING("type"), type);
-
-  nsAutoString mimeType;
-  nsAutoString notUsed;
-  nsParserUtils::SplitMimeType(type, mimeType, notUsed);
-  if (!mimeType.IsEmpty() && !mimeType.EqualsIgnoreCase("text/css")) {
-    aType.Assign(type);
-    return;
-  }
-
-  // If we get here we assume that we're loading a css file, so set the
-  // type to 'text/css'
-  aType.Assign(NS_LITERAL_STRING("text/css"));
-
-  return;
-}

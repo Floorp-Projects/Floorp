@@ -238,6 +238,9 @@ sub InstallNonChromeResources()
     my($html_dir) = "$resource_dir" . "html:";
     InstallResources(":mozilla:layout:html:base:src:MANIFEST_RES",                     "$html_dir");
 
+    my($xml_dir)  = "$resource_dir" . "xml:";
+    InstallResources(":mozilla:content:xml:document:resources:MANIFEST_RES",           "$xml_dir");
+
     my($throbber_dir) = "$resource_dir" . "throbber:";
     BuildFolderResourceAliases(":mozilla:webshell:tests:viewer:throbber:",              "$throbber_dir");
     

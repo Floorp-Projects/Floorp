@@ -186,6 +186,10 @@ public:
 
   static void GetDocShellFromCaller(nsIDocShell** aDocShell);
 
+  // Check if a node is in the document prolog, i.e. before the document
+  // element.
+  static PRBool InProlog(nsIDOMNode *aNode);
+
 private:
   static nsresult doReparentContentWrapper(nsIContent *aChild,
                                            nsIDocument *aNewDocument,

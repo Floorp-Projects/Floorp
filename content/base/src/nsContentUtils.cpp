@@ -591,6 +591,46 @@ nsContentUtils::CanCallerAccess(nsIDOMNode *aNode)
   return NS_SUCCEEDED(rv);
 }
 
+//static
+PRBool
+nsContentUtils::InProlog(nsIDOMNode *aNode)
+{
+  NS_PRECONDITION(aNode, "missing node to nsContentUtils::InProlog");
+
+  // Check that there is an ancestor and that it is a document
+  nsCOMPtr<nsIDOMNode> parent;
+  aNode->GetParentNode(getter_AddRefs(parent));
+  if (!parent) {
+    return PR_FALSE;
+  }
+
+  PRUint16 type;
+  parent->GetNodeType(&type);
+  if (type != nsIDOMNode::DOCUMENT_NODE) {
+    return PR_FALSE;
+  }
+
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(parent);
+  NS_ASSERTION(doc, "document doesn't implement nsIDocument");
+  nsCOMPtr<nsIContent> cont = do_QueryInterface(aNode);
+  NS_ASSERTION(cont, "node doesn't implement nsIContent");
+
+  // Check that there are no elements before aNode to make sure we are not
+  // in the epilog
+  PRInt32 pos, i;
+  doc->IndexOf(cont, pos);
+  while (pos > 0) {
+    --pos;
+    nsCOMPtr<nsIContent> sibl;
+    doc->ChildAt(pos, *getter_AddRefs(sibl));
+    if (sibl->IsContentOfType(nsIContent::eELEMENT)) {
+      return PR_FALSE;
+    }
+  }
+
+  return PR_TRUE;
+}
+
 // static
 nsresult
 nsContentUtils::doReparentContentWrapper(nsIContent *aChild,

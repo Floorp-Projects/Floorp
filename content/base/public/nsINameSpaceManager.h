@@ -102,6 +102,9 @@ public:
 
   NS_IMETHOD GetElementFactory(PRInt32 aNameSpaceID,
                                nsIElementFactory **aElementFactory) = 0;
+
+  NS_IMETHOD HasRegisteredFactory(PRInt32 aNameSpaceID,
+                                  PRBool* aHasFactory) = 0;
 };
 
 nsresult

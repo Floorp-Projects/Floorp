@@ -211,6 +211,8 @@ LAYOUT_ATOM(Korean, "ko")
   // other
 LAYOUT_ATOM(wildcard, "*")
 LAYOUT_ATOM(mozdirty, "_moz_dirty")
+LAYOUT_ATOM(stylesheet, "stylesheet")
+LAYOUT_ATOM(transform, "transform")
 
 #ifdef IBMBIDI
 LAYOUT_ATOM(directionalFrame, "DirectionalFrame")
