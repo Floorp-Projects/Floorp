@@ -1316,9 +1316,8 @@ AC_ARG_WITH(pthreads,
             *-*-linux*) 
                 AC_DEFINE(_REENTRANT) ;;
             alpha*-*-osf*)
-                if test "$GNU_CC"; then
-                    AC_DEFINE(_REENTRANT)
-                else
+                AC_DEFINE(_REENTRANT)
+                if test ! "$GNU_CC"; then
                     CFLAGS="$CFLAGS -pthread" 
                     CXXFLAGS="$CXXFLAGS -pthread" 
                 fi ;;
