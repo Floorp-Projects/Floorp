@@ -484,7 +484,7 @@ GetPresShellFor(nsIDocShell* aDocShell)
   return shell;
 }
 
-nsVoidArray nsBrowserWindow::gBrowsers;
+nsVoidArray* nsBrowserWindow::gBrowsers = nsnull;
 
 nsBrowserWindow*
 nsBrowserWindow::FindBrowserFor(nsIWidget* aWidget, PRIntn aWhich)
@@ -492,9 +492,12 @@ nsBrowserWindow::FindBrowserFor(nsIWidget* aWidget, PRIntn aWhich)
   nsIWidget*        widget;
   nsBrowserWindow*  result = nsnull;
 
-  PRInt32 i, n = gBrowsers.Count();
+  if (!gBrowsers)
+    return nsnull;
+
+  PRInt32 i, n = gBrowsers->Count();
   for (i = 0; i < n; i++) {
-    nsBrowserWindow* bw = (nsBrowserWindow*) gBrowsers.ElementAt(i);
+    nsBrowserWindow* bw = (nsBrowserWindow*) gBrowsers->ElementAt(i);
     if (nsnull != bw) {
       switch (aWhich) {
       case FIND_WINDOW:
@@ -545,7 +548,12 @@ nsBrowserWindow::FindBrowserFor(nsIWidget* aWidget, PRIntn aWhich)
 void
 nsBrowserWindow::AddBrowser(nsBrowserWindow* aBrowser)
 {
-  gBrowsers.AppendElement(aBrowser);
+  if (!gBrowsers) {
+    gBrowsers = new nsVoidArray();
+    if (!gBrowsers)
+      return;
+  }
+  gBrowsers->AppendElement(aBrowser);
   NS_ADDREF(aBrowser);
 }
 
@@ -553,20 +561,29 @@ void
 nsBrowserWindow::RemoveBrowser(nsBrowserWindow* aBrowser)
 {
   //nsViewerApp* app = aBrowser->mApp;
-  gBrowsers.RemoveElement(aBrowser);
+  if (!gBrowsers)
+    return;
+  gBrowsers->RemoveElement(aBrowser);
+  if (!gBrowsers->Count()) {
+    delete gBrowsers;
+    gBrowsers = nsnull;
+  }
   NS_RELEASE(aBrowser);
 }
 
 void
 nsBrowserWindow::CloseAllWindows()
 {
-  while (0 != gBrowsers.Count()) {
-    nsBrowserWindow* bw = (nsBrowserWindow*) gBrowsers.ElementAt(0);
+  if (!gBrowsers)
+    return;
+  while (0 != gBrowsers->Count()) {
+    nsBrowserWindow* bw = (nsBrowserWindow*) gBrowsers->ElementAt(0);
     NS_ADDREF(bw);
     bw->Destroy();
     NS_RELEASE(bw);
   }
-  gBrowsers.Clear();
+  delete gBrowsers;
+  gBrowsers = nsnull;
 }
 
 static nsEventStatus PR_CALLBACK
@@ -594,7 +611,7 @@ HandleBrowserEvent(nsGUIEvent *aEvent)
 
 #ifndef XP_MAC
       // XXX Really shouldn't just exit, we should just notify somebody...
-      if (0 == nsBrowserWindow::gBrowsers.Count()) {
+      if (!nsBrowserWindow::gBrowsers || !nsBrowserWindow::gBrowsers->Count()) {
         app->Exit();
       }
 #endif
@@ -2042,13 +2059,13 @@ nsBrowserWindow::ContentShellAdded(nsIWebShell* aChildShell, nsIContent* frameNo
 NS_IMETHODIMP
 nsBrowserWindow::FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aResult)
 {
-  PRInt32 i, n = gBrowsers.Count();
+  PRInt32 i, n = gBrowsers ? gBrowsers->Count() : 0;
 
   aResult = nsnull;
   nsString aNameStr(aName);
 
   for (i = 0; i < n; i++) {
-    nsBrowserWindow* bw = (nsBrowserWindow*) gBrowsers.ElementAt(i);
+    nsBrowserWindow* bw = (nsBrowserWindow*) gBrowsers->ElementAt(i);
     nsCOMPtr<nsIWebShell> webShell;
     
     if (NS_OK == bw->GetWebShell(*getter_AddRefs(webShell))) {
