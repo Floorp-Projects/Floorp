@@ -47,6 +47,7 @@
 #include "prmem.h"
 #include "nsIFileChannel.h"
 #include "nsReadableUtils.h"
+#include "nsIMsgMdnGenerator.h"
 
 /* the following macro actually implement addref, release and query interface for our component. */
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsMsgCompFields, nsIMsgCompFields)
@@ -66,6 +67,7 @@ nsMsgCompFields::nsMsgCompFields()
   m_useMultipartAlternative = PR_FALSE;
   m_uuEncodeAttachments = PR_FALSE;
   m_returnReceipt = PR_FALSE;
+  m_receiptHeaderType = nsIMsgMdnGenerator::eDntType;
   m_bodyIsAsciiOnly = PR_FALSE;
 
   nsCOMPtr<nsIPref> prefs (do_GetService(NS_PREF_CONTRACTID));

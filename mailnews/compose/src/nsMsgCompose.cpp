@@ -115,6 +115,7 @@
 #include "nsILocalFile.h"
 #include "nsIContentViewer.h"
 #include "nsIMarkupDocumentViewer.h"
+#include "nsIMsgMdnGenerator.h"
 
 // Defines....
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
@@ -721,6 +722,22 @@ nsMsgCompose::Initialize(nsIDOMWindowInternal *aWindow, nsIMsgComposeParams *par
  
   rv = composeService->DetermineComposeHTML(m_identity, format, &m_composeHTML);
   NS_ENSURE_SUCCESS(rv,rv);
+
+  // Set return receipt flag and type.
+  if (m_identity && composeFields)
+  {
+    PRBool requestReturnReceipt = PR_FALSE;
+    rv = m_identity->GetRequestReturnReceipt(&requestReturnReceipt);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = composeFields->SetReturnReceipt(requestReturnReceipt);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PRInt32 receiptType = nsIMsgMdnGenerator::eDntType;
+    rv = m_identity->GetReceiptHeaderType(&type);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = composeFields->SetReceiptHeaderType(receiptType);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   params->GetSendListener(getter_AddRefs(mExternalSendListener));
   nsXPIDLCString smtpPassword;

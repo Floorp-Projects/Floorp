@@ -77,7 +77,6 @@
 
 #include "nsMsgBaseCID.h"
 #include "nsIMsgAccountManager.h"
-#include "nsIMsgMdnGenerator.h"
 
 #ifdef MSGCOMP_TRACE_PERFORMANCE
 #include "prlog.h"
@@ -455,16 +454,6 @@ nsMsgComposeService::OpenComposeWindow(const char *msgComposeWindowURL, const ch
       }
       else
         pMsgComposeParams->SetOriginalMsgURI(originalMsgURI);
-        
-      PRBool requestReturnReceipt = PR_FALSE;
-      PRInt32 receiptType = nsIMsgMdnGenerator::eDntType;
-      if (identity)
-      {
-        identity->GetRequestReturnReceipt(&requestReturnReceipt);
-        identity->GetReceiptHeaderType(&type);
-      }
-      pMsgCompFields->SetReturnReceipt(requestReturnReceipt);
-      pMsgCompFields->SetReceiptHeaderType(receiptType);
 
       pMsgComposeParams->SetComposeFields(pMsgCompFields);
 
