@@ -20,6 +20,7 @@
  *
  * Contributor(s): Garth Smedley <garths@oeone.com>
  *                 Mike Potter <mikep@oeone.com>
+ *                 Matthew Willis <mattwillis@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -114,13 +115,21 @@
   border-bottom  : 1px solid #2060c7; 
 }
 
+.oe-time-picker-hour-box-class:hover {
+  color: #ff0000;
+  cursor: pointer;
+}
+
 /* selected hour box */
 
 .oe-time-picker-hour-box-class[selected="true"] {
   background-color : #6699CC;
 }
 
-
+.oe-time-picker-hour-name-class:hover {
+  color: #ff0000;
+  cursor: pointer;
+}
 
 /* box around five minute grid */
 
@@ -147,13 +156,21 @@
   -moz-box-align : center;
 }
 
+.oe-time-picker-five-minute-box-class:hover {
+  color: #ff0000;
+  cursor: pointer;
+}
+
 /* selected five-minute grid element box */
 
 .oe-time-picker-five-minute-box-class[selected="true"] {
   background-color : #6699CC;
 }
 
-
+.oe-time-picker-five-minute-number-class:hover {
+  color: #ff0000;
+  cursor: pointer;
+}
 
 /* box around one minute grid */
 
@@ -179,10 +196,20 @@
   -moz-box-align : center;
 }
 
+.oe-time-picker-one-minute-box-class:hover {
+  color: #ff0000;
+  cursor: pointer;
+}
+
 /* selected one-minute grid element box */
 
 .oe-time-picker-one-minute-box-class[selected="true"] {
   background-color : #6699CC;
+}
+
+.oe-time-picker-one-minute-number-class:hover {
+  color: #ff0000;
+  cursor: pointer;
 }
 
 .oe-time-picker-more-control-label {

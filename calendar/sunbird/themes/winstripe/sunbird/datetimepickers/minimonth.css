@@ -83,15 +83,15 @@
   background: url("chrome://calendar/skin/datetimepickers/right-arrow.gif") no-repeat 50% 50%;
 }
 
-/*
 .minimonth-navbtn[dir="-1"]:hover {
-  background: url("chrome://calendar/skin/datetimepickers/left-arrow-hover.gif") no-repeat 50% 50%;
+  cursor: pointer;
 }
 
 .minimonth-navbtn[dir="1"]:hover {
-  background: url("chrome://calendar/skin/datetimepickers/right-arrow-hover.gif") no-repeat 50% 50%;
+  cursor: pointer;
 }
-*/
+/*  background: url("chrome://calendar/skin/datetimepickers/left-arrow-hover.gif") no-repeat 50% 50%; 
+  background: url("chrome://calendar/skin/datetimepickers/right-arrow-hover.gif") no-repeat 50% 50%; */
 
 .minimonth-navbtn:active {
   left: 2px;
@@ -136,6 +136,7 @@
 
 .minimonth-day:hover {
   color: #ff0000;
+  cursor: pointer;
   border: 1px solid #d2d2d2;
 }
 
