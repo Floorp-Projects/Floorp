@@ -195,6 +195,9 @@ PRBool nsMsgMdnGenerator::ProcessSendMode()
     if (m_identity)
     {
         m_identity->GetEmail(getter_Copies(m_email));
+        if (!m_email)
+            return m_reallySendMdn;
+
         const char *accountDomain = strchr(m_email.get(), '@');
         if (!accountDomain)
             return m_reallySendMdn;
