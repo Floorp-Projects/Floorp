@@ -37,7 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsUCRegUTils.h"
+#include "nsUCRegUtils.h"
 #include "nsICategoryManager.h"
 #include "nsCOMPtr.h"
 #include "nsIServiceManagerUtils.h"
