@@ -1478,7 +1478,7 @@ nsHTMLEditRules::WillMakeBasicBlock(nsIDOMSelection *aSelection,
   return res;
 }
 
-NS_IMETHODIMP 
+nsresult 
 nsHTMLEditRules::DidMakeBasicBlock(nsIDOMSelection *aSelection,
                                    nsRulesInfo *aInfo, nsresult aResult)
 {
