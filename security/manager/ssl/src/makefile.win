@@ -57,6 +57,7 @@ LLIBS   = \
     $(DIST)/lib/ssl.lib \
     $(DIST)/lib/certhi.lib \
     $(DIST)/lib/cryptohi.lib \
+    $(DIST)/lib/ssl.lib \
     $(DIST)/lib/pk11wrap.lib \
     $(DIST)/lib/certdb.lib \
     $(DIST)/lib/softoken.lib \
@@ -78,7 +79,12 @@ OBJS = \
     .\$(OBJDIR)\nsSSLSocketProvider.obj \
     .\$(OBJDIR)\nsSecureBrowserUIImpl.obj \
     .\$(OBJDIR)\nsTLSSocketProvider.obj \
+    .\$(OBJDIR)\nsSDR.obj \
     $(NULL)
+
+!ifdef USE_NSCERTIFICATEDB
+OBJS = $(OBJS) .\$(OBJDIR)\nsCertificateDB.obj
+!endif
 
 include <$(DEPTH)\config\rules.mak>
 

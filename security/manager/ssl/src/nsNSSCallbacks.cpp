@@ -45,37 +45,39 @@ char* PK11PasswordPrompt(PK11SlotInfo* slot, PRBool retry, void* arg) {
   nsresult rv = NS_OK;
   PRUnichar *password = nsnull;
   PRBool value = PR_FALSE;
+  nsIInterfaceRequestor *ir = NS_STATIC_CAST(nsIInterfaceRequestor*, arg);
+  nsCOMPtr<nsIPrompt> proxyPrompt;
 
-  if (retry)
+  // If no context is provided, no prompt is possible.
+  if (!ir)
     return nsnull;
 
-  nsIChannelSecurityInfo* csi = NS_STATIC_CAST(nsIChannelSecurityInfo*, arg);
-  nsCOMPtr<nsIChannel> channel;
-  csi->GetChannel(getter_AddRefs(channel));
-  if (!channel) return nsnull;
+  /* TODO: Retry should generate a different dialog message */
+/*
+  if (retry)
+    return nsnull;
+*/
 
-  nsCOMPtr<nsIInterfaceRequestor> callbacks;
-  channel->GetNotificationCallbacks(getter_AddRefs(callbacks));
-  if (!callbacks) return nsnull;
-
-  // The notification callbacks object may not be safe, so
+  // The interface requestor object may not be safe, so
   // proxy the call to get the nsIPrompt.
 
   nsCOMPtr<nsIProxyObjectManager> proxyman(do_GetService(NS_XPCOMPROXY_CONTRACTID));
+  if (!proxyman) return nsnull;
+
   nsCOMPtr<nsIInterfaceRequestor> proxiedCallbacks;
   proxyman->GetProxyForObject(NS_UI_THREAD_EVENTQ,
                               NS_GET_IID(nsIInterfaceRequestor),
-                              callbacks,
+                              ir,
                               PROXY_SYNC,
                               getter_AddRefs(proxiedCallbacks));
 
+  // Get the desired interface
   nsCOMPtr<nsIPrompt> prompt(do_GetInterface(proxiedCallbacks));
+  if (!prompt) return nsnull;
 
   // Finally, get a proxy for the nsIPrompt
-
-  nsCOMPtr<nsIPrompt> proxyPrompt;
   proxyman->GetProxyForObject(NS_UI_THREAD_EVENTQ,
-	                          NS_GET_IID(nsIPrompt),
+	                      NS_GET_IID(nsIPrompt),
                               prompt,
                               PROXY_SYNC,
                               getter_AddRefs(proxyPrompt));

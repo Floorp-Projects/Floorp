@@ -71,9 +71,10 @@ nsNSSSocketInfo::~nsNSSSocketInfo()
 {
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsNSSSocketInfo,
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsNSSSocketInfo,
                               nsIChannelSecurityInfo,
-                              nsISSLSocketControl)
+                              nsISSLSocketControl,
+                              nsIInterfaceRequestor)
 
 NS_IMETHODIMP
 nsNSSSocketInfo::GetHostName(char * *aHostName)
@@ -183,6 +184,21 @@ nsresult
 nsNSSSocketInfo::SetShortSecurityDescription(const PRUnichar* aText) {
   mShortDesc.Assign(aText);
   return NS_OK;
+}
+
+/* void getInterface (in nsIIDRef uuid, [iid_is (uuid), retval] out nsQIResult result); */
+NS_IMETHODIMP nsNSSSocketInfo::GetInterface(const nsIID & uuid, void * *result)
+{
+  if (!mChannel) return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIInterfaceRequestor> callbacks;
+  mChannel->GetNotificationCallbacks(getter_AddRefs(callbacks));
+  if (!callbacks) return NS_ERROR_FAILURE;
+
+  // Proxy of the channel callbacks should probably go here, rather
+  // than in the password callback code
+
+  return callbacks->GetInterface(uuid, result);
 }
 
 NS_IMETHODIMP
@@ -492,7 +508,7 @@ nsSSLIOLayerAddToSocket(const char* host,
     goto loser;
   }
 
-  SSL_SetPKCS11PinArg(sslSock, infoObject);
+  SSL_SetPKCS11PinArg(sslSock, (nsIInterfaceRequestor*)infoObject);
   SSL_HandshakeCallback(sslSock, HandshakeCallback, infoObject);
   SSL_GetClientAuthDataHook(sslSock, (SSLGetClientAuthData)NSS_GetClientAuthData,
                             nsnull);

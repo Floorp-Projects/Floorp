@@ -23,21 +23,69 @@
 
 #include "stdlib.h"
 #include "plstr.h"
-#include "nsMemory.h"
-#include "nsCOMPtr.h"
-#include "nsIServiceManager.h"
-
 #include "plbase64.h"
 
+#include "nsMemory.h"
+#include "nsCOMPtr.h"
+#include "nsISupports.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsIServiceManager.h"
 #include "nsISecurityManagerComponent.h"
+#include "nsINetSupportDialogService.h"
+#include "nsProxiedService.h"
+
 #include "nsISecretDecoderRing.h"
 #include "nsSDR.h"
 
-// Import PK11_* functions
 #include "pk11func.h"
+#include "pk11sdr.h" // For PK11SDR_Encrypt, PK11SDR_Decrypt
 
-// Import PK11SDR_Encrypt and PK11SDR_Decrypt
-#include "pk11sdr.h"
+static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
+
+//
+// Implementation of an nsIInterfaceRequestor for use
+// as context for NSS calls
+//
+class nsSDRContext : public nsIInterfaceRequestor
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIINTERFACEREQUESTOR
+
+  nsSDRContext();
+  virtual ~nsSDRContext();
+
+};
+
+NS_IMPL_ISUPPORTS1(nsSDRContext, nsIInterfaceRequestor)
+
+nsSDRContext::nsSDRContext()
+{
+  NS_INIT_ISUPPORTS();
+}
+
+nsSDRContext::~nsSDRContext()
+{
+}
+
+/* void getInterface (in nsIIDRef uuid, [iid_is (uuid), retval] out nsQIResult result); */
+NS_IMETHODIMP nsSDRContext::GetInterface(const nsIID & uuid, void * *result)
+{
+  nsresult rv;
+
+  if (uuid.Equals(NS_GET_IID(nsIPrompt))) {
+    NS_WITH_PROXIED_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID,
+                          NS_UI_THREAD_EVENTQ, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    *result = dialog;
+    NS_ADDREF(dialog);
+  } else {
+    rv = NS_ERROR_NO_INTERFACE;
+  }
+
+  return rv;
+}
 
 // Standard ISupports implementation
 // NOTE: Should these be the thread-safe versions?
@@ -49,6 +97,8 @@ nsSecretDecoderRing::nsSecretDecoderRing()
   // initialize superclass
   NS_INIT_ISUPPORTS();
 
+  // (Possibly) create the Security Manager component to get things
+  // initialized
   nsCOMPtr<nsISecurityManagerComponent> nss = do_GetService(PSM_COMPONENT_CONTRACTID);
 }
 
@@ -67,6 +117,7 @@ Encrypt(unsigned char * data, PRInt32 dataLen, unsigned char * *result, PRInt32 
   SECItem request;
   SECItem reply;
   SECStatus s;
+  nsCOMPtr<nsIInterfaceRequestor> ctx = new nsSDRContext();
 
   slot = PK11_GetInternalKeySlot();
   if (!slot) { rv = NS_ERROR_NOT_AVAILABLE; goto loser; }
@@ -74,7 +125,7 @@ Encrypt(unsigned char * data, PRInt32 dataLen, unsigned char * *result, PRInt32 
   /* Make sure token is initialized.  FIX THIS: needs UI */
   if (PK11_NeedUserInit(slot)) { rv = NS_ERROR_NOT_AVAILABLE; goto loser; }
 
-  s = PK11_Authenticate(slot, PR_TRUE, 0);
+  s = PK11_Authenticate(slot, PR_TRUE, ctx);
   if (s != SECSuccess) { rv = NS_ERROR_FAILURE; goto loser; }
 
   /* Use default key id */
@@ -82,7 +133,9 @@ Encrypt(unsigned char * data, PRInt32 dataLen, unsigned char * *result, PRInt32 
   keyid.len = 0;
   request.data = data;
   request.len = dataLen;
-  s= PK11SDR_Encrypt(&keyid, &request, &reply, 0);
+  reply.data = 0;
+  reply.len = 0;
+  s= PK11SDR_Encrypt(&keyid, &request, &reply, ctx);
   if (s != SECSuccess) { rv = NS_ERROR_FAILURE; goto loser; }
 
   *result = reply.data;
@@ -102,6 +155,7 @@ Decrypt(unsigned char * data, PRInt32 dataLen, unsigned char * *result, PRInt32 
   SECStatus s;
   SECItem request;
   SECItem reply;
+  nsCOMPtr<nsIInterfaceRequestor> ctx = new nsSDRContext();
 
   *result = 0;
   *_retval = 0;
@@ -111,7 +165,7 @@ Decrypt(unsigned char * data, PRInt32 dataLen, unsigned char * *result, PRInt32 
   if (!slot) { rv = NS_ERROR_NOT_AVAILABLE; goto loser; }
 
   /* Force authentication */
-  if (PK11_Authenticate(slot, PR_TRUE, 0) != SECSuccess)
+  if (PK11_Authenticate(slot, PR_TRUE, ctx) != SECSuccess)
   {
     rv = NS_ERROR_NOT_AVAILABLE;
     goto loser;
@@ -119,7 +173,9 @@ Decrypt(unsigned char * data, PRInt32 dataLen, unsigned char * *result, PRInt32 
 
   request.data = data;
   request.len = dataLen;
-  s = PK11SDR_Decrypt(&request, &reply, 0);
+  reply.data = 0;
+  reply.len = 0;
+  s = PK11SDR_Decrypt(&request, &reply, ctx);
   if (s != SECSuccess) { rv = NS_ERROR_FAILURE; goto loser; }
 
   *result = reply.data;
