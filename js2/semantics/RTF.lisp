@@ -535,8 +535,6 @@
     ((:vector-append 2) :circle-plus-10)
     ((:tuple-begin 1) (b :left-triangle-bracket-10))
     ((:tuple-end 1) (b :right-triangle-bracket-10))
-    ((:record-begin 1) (b :left-triangle-bracket-10 :left-triangle-bracket-10))
-    ((:record-end 1) (b :right-triangle-bracket-10 :right-triangle-bracket-10))
     ((:true 4) (:global-variable "true"))
     ((:false 5) (:global-variable "false"))
     ((:unique 6) (:semantic-keyword "unique"))

@@ -546,8 +546,6 @@
     ((:vector-append 2) :circle-plus-10)
     ((:tuple-begin 1) (b :left-triangle-bracket-10))
     ((:tuple-end 1) (b :right-triangle-bracket-10))
-    ((:record-begin 1) (b (:script "document.write(U_lang+U_lang)")))
-    ((:record-end 1) (b (:script "document.write(U_rang+U_rang)")))
     ((:true 4) (:global-variable "true"))
     ((:false 5) (:global-variable "false"))
     ((:unique 6) (:semantic-keyword "unique"))
