@@ -120,7 +120,19 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      * @return true if and only if the property was found in the object
      */
     public boolean has(String name, Scriptable start) {
-        return getSlot(name, name.hashCode(), false) != null;
+        // See comments in get about cache operations
+        Slot slot = lastAccess;
+        if (name == slot.stringKey && slot.wasDeleted == 0) {
+            return true;
+        }
+        slot = getSlot(name, name.hashCode(), false);
+        if (slot != null) {
+        // Update cache
+            slot.stringKey = name;
+            lastAccess = slot;
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -249,10 +261,8 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
             return;
         }
         if (this == start) {
+            // Note: no cache update
             slot.value = value;
-            // Make cache work
-            slot.stringKey = name;
-            lastAccess = slot;
         } else {
             start.put(name, start, value);
         }
@@ -1423,13 +1433,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      * @since 1.5R2
      */
     public static boolean hasProperty(Scriptable obj, String name) {
-        Scriptable start = obj;
-        do {
-            if (obj.has(name, start))
-                return true;
-            obj = obj.getPrototype();
-        } while (obj != null);
-        return false;
+        return null != getBase(obj, name);
     }
 
     /**
@@ -1444,13 +1448,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      * @since 1.5R2
      */
     public static boolean hasProperty(Scriptable obj, int index) {
-        Scriptable start = obj;
-        do {
-            if (obj.has(index, start))
-                return true;
-            obj = obj.getPrototype();
-        } while (obj != null);
-        return false;
+        return null != getBase(obj, index);
     }
 
     /**
@@ -1505,7 +1503,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
         if (base == null)
             return true;
         base.delete(name);
-        return base.get(name, obj) == NOT_FOUND;
+        return !base.has(name, obj);
     }
 
     /**
@@ -1524,7 +1522,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
         if (base == null)
             return true;
         base.delete(index);
-        return base.get(index, obj) == NOT_FOUND;
+        return !base.has(index, obj);
     }
 
     /**
@@ -1577,22 +1575,24 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
         }
     }
 
-    private static Scriptable getBase(Scriptable obj, String s) {
-        Scriptable m = obj;
-        while (!m.has(s, obj)) {
-            m = m.getPrototype();
-            if (m == null) { break; }
-        }
-        return m;
+    private static Scriptable getBase(Scriptable obj, String name) {
+        Scriptable start = obj;
+        do {
+            if (obj.has(name, start))
+                break;
+            obj = obj.getPrototype();
+        } while(obj != null);
+        return obj;
     }
 
     private static Scriptable getBase(Scriptable obj, int index) {
-        Scriptable m = obj;
-        while (!m.has(index, obj)) {
-            m = m.getPrototype();
-            if (m == null) { break; }
-        }
-        return m;
+        Scriptable start = obj;
+        do {
+            if (obj.has(index, start))
+                break;
+            obj = obj.getPrototype();
+        } while(obj != null);
+        return obj;
     }
 
     /**

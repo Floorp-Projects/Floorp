@@ -61,7 +61,7 @@ public abstract class IdScriptable extends ScriptableObject
 {
     public boolean has(String name, Scriptable start) {
         if (maxId != 0) {
-            int id = mapNameToId(name);
+            int id = mapNameToId_writeCached(name);
             if (id != 0) {
                 return hasValue(id);
             }
@@ -70,24 +70,14 @@ public abstract class IdScriptable extends ScriptableObject
     }
 
     public Object get(String name, Scriptable start) {
-        if (CACHE_NAMES) {
-            int maxId = this.maxId;
-            L:if (maxId != 0) {
+        if (maxId != 0) {
+            int id = mapNameToId_writeCached(name);
+            if (id != 0) {
                 Object[] data = idMapData;
                 if (data == null) {
-                    int id = mapNameToId(name);
-                    if (id != 0) {
-                        return getIdValue(id);
-                    }
+                    return getIdValue(id);
                 }
                 else {
-                    int id = lastIdCache;
-                    if (data[id - 1 + maxId] != name) {
-                        id = mapNameToId(name);
-                        if (id == 0) { break L; }
-                           data[id - 1 + maxId] = name;
-                           lastIdCache = id;
-                    }
                     Object value = data[id - 1];
                     if (value == null) {
                         value = getIdValue(id);
@@ -99,33 +89,12 @@ public abstract class IdScriptable extends ScriptableObject
                 }
             }
         }
-        else {
-            if (maxId != 0) {
-                int id = mapNameToId(name);
-                if (id != 0) {
-                    Object[] data = idMapData;
-                    if (data == null) {
-                        return getIdValue(id);
-                    }
-                    else {
-                        Object value = data[id - 1];
-                        if (value == null) {
-                            value = getIdValue(id);
-                        }
-                        else if (value == UniqueTag.NULL_VALUE) {
-                            value = null;
-                        }
-                        return value;
-                    }
-                }
-            }
-        }
         return super.get(name, start);
     }
 
     public void put(String name, Scriptable start, Object value) {
         if (maxId != 0) {
-            int id = mapNameToId(name);
+            int id = mapNameToId_cached(name);
             if (id != 0) {
                 int attr = getAttributes(id);
                 if ((attr & READONLY) == 0) {
@@ -256,6 +225,40 @@ public abstract class IdScriptable extends ScriptableObject
             }
         }
         return result;
+    }
+
+// Try to avoid calls to mapNameToId by quering name cache
+    private int mapNameToId_cached(String name) {
+        if (CACHE_NAMES) {
+            Object[] data = idMapData;
+            if (data != null) {
+                int id = lastIdCache;
+                if (data[id - 1 + maxId] == name) {
+                    return id;
+                }
+            }
+        }
+        return mapNameToId(name);
+    }
+
+// Same as mapNameToId_cached but put to cache id found by mapNameToId
+    private int mapNameToId_writeCached(String name) {
+        if (CACHE_NAMES) {
+            Object[] data = idMapData;
+            if (data != null) {
+                int id = lastIdCache;
+                if (data[id - 1 + maxId] == name) {
+                    return id;
+                }
+                id = mapNameToId(name);
+                if (id != 0) {
+                    data[id - 1 + maxId] = name;
+                    lastIdCache = id;
+                }
+                return id;
+            }
+        }
+        return mapNameToId(name);
     }
 
     /**
