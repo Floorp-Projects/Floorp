@@ -960,41 +960,72 @@ loser:
     return NULL;
 }
 
+/* This function does very basic regular expression matching.
+** The only wildcard character is "*", which matches any substring.
+** constraint is the regular expression.  name is to be tested against it.
+** return SECSuccess on match, SECFailure otherwise.  Does not set error.
+*/
 static SECStatus
-compareNameToConstraint(char *name, char *constraint, PRBool substring)
+compareNameToConstraint(const char *name, const char *constraint, int level)
 {
+    PRBool substring = PR_FALSE;
     SECStatus  rv;
 
-    if (*constraint == '\0' && *name == '\0') {
+    while (*name == *constraint && *constraint != '\0' && *constraint != '*') {
+        ++name;
+	++constraint;
+    }
+    if (*constraint == '\0' && *name == '\0') 
 	return SECSuccess;
+
+    while (*constraint == '*') {
+        ++constraint;
+	substring = PR_TRUE;
     }
-    if (*constraint == '*') {
-	return compareNameToConstraint(name, constraint + 1, PR_TRUE);
-    }
-    if (substring) {
-	if (*constraint == '\0') {
-	    return SECSuccess;
-	}
-	while (*name != *constraint) {
-	    if (*name == '\0') {
-		return SECFailure;
-	    }
+
+    if (!substring) 
+        return SECFailure;
+
+    if (*constraint == '\0') 
+	return SECSuccess;
+
+    if (++level > 20)
+    	return SECFailure;  /* prevent stack overflow */
+
+    do {
+	while (*name != *constraint && *name != '\0')
 	    name++;
-	}
-	rv = compareNameToConstraint(name + 1, constraint + 1, PR_FALSE);
-	if (rv == SECSuccess) {
-	    return rv;
-	}
-	name++;
-    } else {
-	if (*name == *constraint) {
-	    name++;
-	    constraint++;
-	} else {
+	if (*name == '\0') 
 	    return SECFailure;
-	}
+
+	/* recurse */
+	rv = compareNameToConstraint(name + 1, constraint + 1, level); 
+
+	++name;
+    } while (rv != SECSuccess);
+    return rv;
+}
+
+#define compareN2C(n,c) compareNameToConstraint((n),(c),0)
+
+/* This isn't right for items containing UCS2 or UCS4.
+** Those should be converted to UTF8 rather than merely strncpy'ed.
+** But it's not clear that we can tell what the encoding is here.
+*/
+static char *
+secItem2String(PLArenaPool *arena, SECItem *item)
+{
+    char * cPtr;
+    if (arena)
+        cPtr = PORT_ArenaAlloc(arena, item->len + 1);
+    else
+        cPtr = PORT_Alloc(item->len + 1);
+    if (cPtr) {
+	if (item->len)
+	    PORT_Strncpy(cPtr, (char *)item->data, item->len);
+	cPtr[item->len] = '\0';
     }
-    return compareNameToConstraint(name, constraint, substring);
+    return cPtr;
 }
 
 SECStatus
@@ -1003,234 +1034,247 @@ cert_CompareNameWithConstraints(CERTGeneralName     *name,
 				PRBool              excluded)
 {
     SECStatus           rv = SECSuccess;
-    char                *nameString = NULL;
-    char                *constraintString = NULL;
+    char                *nString = NULL;
+    char                *cString = NULL;
     int                 start;
     int                 end;
-    int                 tag;
-    CERTRDN             **nameRDNS, *nameRDN;
-    CERTRDN             **constraintRDNS, *constraintRDN;
-    CERTAVA             **nameAVAS, *nameAVA;
-    CERTAVA             **constraintAVAS, *constraintAVA;
+    CERTRDN             **nRDNs, *nRDN;
+    CERTAVA             **nAVAs, *nAVA;
     CERTNameConstraint  *current;
-    SECItem             *avaValue;
-    CERTName            constraintName;
     CERTName            certName;
     SECComparison       status = SECEqual;
-    PRArenaPool         *certNameArena;
-    PRArenaPool         *constraintNameArena;
+    PRArenaPool         *nArena;
+
+    if (!constraints)
+        return SECSuccess;
+
+    nArena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+    if (!nArena)
+        return SECFailure;
 
     certName.arena = NULL;
-    certName.rdns = NULL;
-    constraintName.arena = NULL;
-    constraintName.rdns = NULL;
-    if (constraints != NULL) {
-	current = constraints;
-	if (name->type == certDirectoryName) {
-	    certNameArena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-	    CERT_CopyName(certNameArena, &certName, &name->name.directoryName);
-	    nameRDNS = certName.rdns;
-	    for (;;) {
-		nameRDN = *nameRDNS++;
-		nameAVAS = nameRDN->avas;
-		for(;;) {
-		    nameAVA = *nameAVAS++;
-		    tag = CERT_GetAVATag(nameAVA);
-		    if ( tag == SEC_OID_PKCS9_EMAIL_ADDRESS ||
-			 tag == SEC_OID_RFC1274_MAIL) {
-			avaValue = CERT_DecodeAVAValue(&nameAVA->value);
-			nameString = (char*)PORT_ZAlloc(avaValue->len + 1);
-			nameString = PORT_Strncpy(nameString, (char *) avaValue->data, avaValue->len);
-			start = 0;
-			while(nameString[start] != '@' && nameString[start + 1] != '\0') {
-			    start++;
-			} 
-			start++;
-			do{
-			    if (current->name.type == certRFC822Name) {
-				constraintString = (char*)PORT_ZAlloc(current->name.name.other.len + 1);
-				constraintString = PORT_Strncpy(constraintString, 
-								(char *) current->name.name.other.data,
-								current->name.name.other.len);
-				rv = compareNameToConstraint(nameString + start, constraintString, 
-							     PR_FALSE);
+    certName.rdns  = NULL;
 
-				if (constraintString != NULL) {
-				    PORT_Free(constraintString);
-				    constraintString = NULL;
-				}
-				if (nameString != NULL) {
-				    PORT_Free(nameString);
-				    nameString = NULL;
-				}
-				if (rv == SECSuccess && excluded == PR_TRUE) {
+    /* Phase 1.  If the name is a Directory Name, look through all the
+    ** AVAs in all the RDNs for any that are email addresses.  
+    ** Subject all email addresses to all RFC822 email address constraints.
+    */
+    if (name->type == certDirectoryName) {
+	rv = CERT_CopyName(nArena, &certName, &name->name.directoryName);
+	if (rv != SECSuccess)
+	    goto loser;
+	nRDNs = certName.rdns;
+	while (nRDNs && *nRDNs) { /* loop over RDNs */
+	    nRDN = *nRDNs++;
+	    nAVAs = nRDN->avas;
+	    while (nAVAs && *nAVAs) { /* loop over AVAs */
+		int tag;
+		nAVA = *nAVAs++;
+		tag = CERT_GetAVATag(nAVA);
+		if ( tag == SEC_OID_PKCS9_EMAIL_ADDRESS ||
+		     tag == SEC_OID_RFC1274_MAIL) { /* email AVA */
+		    SECItem *avaValue;
+		    avaValue = CERT_DecodeAVAValue(&nAVA->value);
+		    if (!avaValue)
+		        goto loser;
+		    nString = secItem2String(nArena, avaValue);
+		    SECITEM_FreeItem(avaValue, PR_TRUE);
+		    if (!nString) 
+		         goto loser;
+		    start = 0;
+		    while (nString[start] != '@' && nString[start] != '\0') {
+			start++;
+		    } 
+		    if (nString[start])
+			start++;
+		    current = constraints;
+		    do { /* loop over constraints */
+			if (current->name.type == certRFC822Name) {
+			    cString = 
+			      secItem2String(nArena, &current->name.name.other);
+			    if (!cString)
+			        goto loser;
+			    rv = compareN2C(nString + start, cString);
+			    if (rv == SECSuccess) {
+			    	if (excluded) 
 				    goto found;
-				}
-				if (rv == SECSuccess && excluded == PR_FALSE) {
-				    break;
-				}
+				break; /* out of loop over constraints. */
 			    }
-			    current = cert_get_next_name_constraint(current);
-			} while (current != constraints);
-		    }
-		    if (rv != SECSuccess && excluded == PR_FALSE) {
-			goto loser;
-		    }
-		    if (*nameAVAS == NULL) {
-			break;
-		    }
-		}
-		if (*nameRDNS == NULL) {
-		    break;
+			} /* email address constraint */
+			current = cert_get_next_name_constraint(current);
+		    } while (current != constraints); /*loop over constraints*/
+		} /* handle one email AVA */
+		if (rv != SECSuccess && excluded == PR_FALSE) {
+		    goto no_match;
 		}
 	    }
-	}
-	current = constraints;
-	do {
-	    switch (name->type) {
-	      case certDNSName:
-		nameString = (char*)PORT_ZAlloc(name->name.other.len + 1);
-		nameString = PORT_Strncpy(nameString, (char *) name->name.other.data, 
-					  name->name.other.len);
-		constraintString = (char*)PORT_ZAlloc(current->name.name.other.len + 1);
-		constraintString = PORT_Strncpy(constraintString, 
-						(char *) current->name.name.other.data,
-						current->name.name.other.len);
-		rv = compareNameToConstraint(nameString, constraintString, PR_FALSE);
-		if (nameString != NULL) {
-		    PORT_Free(nameString);
-		}
-		if (constraintString != NULL) {
-		    PORT_Free(constraintString);
-		}
-		break;
-	      case certRFC822Name:
-		nameString = (char*)PORT_ZAlloc(name->name.other.len + 1);
-		nameString = PORT_Strncpy(nameString, (char *) name->name.other.data, 
-					  name->name.other.len);
-		start = 0;
-		while(nameString[start] != '@' && nameString[start + 1] != '\0') {
-		    start++;
-		} 
+	} /* loop over RDNs */
+    } /* name->type == certDirectoryName */
+
+    /* Phase 2. loop over all constratints for this name. */
+    current = constraints;
+    do {
+	switch (name->type) {
+
+	case certDNSName:
+	    PORT_Assert(name->type == current->name.type);
+	    nString = secItem2String(nArena, &name->name.other);
+	    if (!nString)
+	        goto loser;
+	    cString = secItem2String(nArena, &current->name.name.other);
+	    if (!cString)
+	        goto loser;
+	    rv = compareN2C(nString, cString);
+	    break;
+
+	case certRFC822Name:
+	    PORT_Assert(name->type == current->name.type);
+	    nString = secItem2String(nArena, &name->name.other);
+	    if (!nString)
+	        goto loser;
+	    start = 0;
+	    while (nString[start] != '@' && 
+	           nString[start] != '\0') {
 		start++;
-		constraintString = (char*)PORT_ZAlloc(current->name.name.other.len + 1);
-		constraintString = PORT_Strncpy(constraintString, 
-						(char *) current->name.name.other.data,
-						current->name.name.other.len);
-		rv = compareNameToConstraint(nameString + start, constraintString, PR_FALSE);
-		if (nameString != NULL) {
-		    PORT_Free(nameString);
-		}
-		if (constraintString != NULL) {
-		    PORT_Free(constraintString);
-		}
-		break;
-	      case certURI:
-	        nameString = (char*)PORT_ZAlloc(name->name.other.len + 1);
-		nameString = PORT_Strncpy(nameString, (char *) name->name.other.data, 
-					  name->name.other.len);
-		start = 0;
-		while(PORT_Strncmp(nameString + start, "://", 3) != 0 && 
-		      nameString[start + 3] != '\0') {
-		    start++;
-		}
+	    } 
+	    if (nString[start])
+		start++;
+	    cString = secItem2String(nArena, &current->name.name.other);
+	    if (!cString)
+	        goto loser;
+	    rv = compareN2C(nString + start, cString);
+	    break;
+
+	case certURI:
+	    PORT_Assert(name->type == current->name.type);
+	    nString = secItem2String(nArena, &name->name.other);
+	    if (!nString)
+	        goto loser;
+	    /* XXX This URI hostname parsing is wrong because it doesn't
+	    ** handle user name and password strings that can come
+	    ** before the host name.
+	    */
+	    start = 0;
+	    while(nString[start] != 0 &&
+	          PORT_Strncmp(nString + start, "://", 3) != 0 ) {
+		start++;
+	    }
+	    if (nString[start])
 		start +=3;
-		end = 0;
-		while(nameString[start + end] != '/' && 
-		      nameString[start + end] != '\0') {
-		    end++;
-		}
-		nameString[start + end] = '\0';
-		constraintString = (char*)PORT_ZAlloc(current->name.name.other.len + 1);
-		constraintString = PORT_Strncpy(constraintString, 
-						(char *) current->name.name.other.data,
-						current->name.name.other.len);
-		rv = compareNameToConstraint(nameString + start, constraintString, PR_FALSE);
-		if (nameString != NULL) {
-		    PORT_Free(nameString);
-		}
-		if (constraintString != NULL) {
-		    PORT_Free(constraintString);
-		}
-		break;
-	      case certDirectoryName:  
-		if (current->name.type == certDirectoryName) {
-		    constraintNameArena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE); 
-		    CERT_CopyName(constraintNameArena, &constraintName, &current->name.name.directoryName);
-		    constraintRDNS = constraintName.rdns;  
-		    for (;;) {
-			constraintRDN = *constraintRDNS++;
-			constraintAVAS = constraintRDN->avas;
-			for(;;) {
-			    constraintAVA = *constraintAVAS++;
-			    certNameArena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-			    CERT_CopyName(certNameArena, &certName, &name->name.directoryName);
-			    nameRDNS = certName.rdns;
-			    for (;;) {
-				nameRDN = *nameRDNS++;
-				nameAVAS = nameRDN->avas++;
-				for(;;) {
-				    nameAVA = *nameAVAS++;
-				    status = CERT_CompareAVA(constraintAVA, nameAVA);
-				    if (status == SECEqual || *nameAVAS == NULL) {
-					break;
-				    }
-				}
-				if (status == SECEqual || *nameRDNS == NULL) {
-				    break;
-				}
-			    }
-			    if (status != SECEqual || *constraintAVAS == NULL) {
-				break;
-			    }
-			}
-			if (status != SECEqual || *constraintRDNS == NULL) {
-			    break;
-			}
-		    }
-		    if (status == SECEqual) {
-			if (excluded == PR_FALSE) {
-			    goto found;
-			} else {
-			    goto loser;
-			}
-		    }
-		    break;
-		} else if (current->name.type == certRFC822Name) {
-		    current = cert_get_next_name_constraint(current);
-		    continue;
-		}
-	      default:
-		/* other types are not supported */
-		if (excluded) {
-		    goto found;
-		} else {
+	    end = 0;
+	    while(nString[start + end] != '/' && 
+		  nString[start + end] != ':' &&
+		  nString[start + end] != '\0') {
+		end++;
+	    }
+	    nString[start + end] = '\0';
+	    cString = secItem2String(nArena, &current->name.name.other);
+	    if (!cString)
+	        goto loser;
+	    rv = compareN2C(nString + start, cString);
+	    break;
+
+	case certDirectoryName:  
+	    PORT_Assert(current->name.type == certDirectoryName || \
+	                current->name.type == certRFC822Name);
+	    if (current->name.type == certRFC822Name) 
+		goto next_constraint; /* already handled in phase 1. */
+	    if (current->name.type == certDirectoryName) {
+		PRArenaPool         *cArena;
+		CERTRDN             **cRDNs, *cRDN;
+		CERTAVA             **cAVAs, *cAVA;
+		CERTName            constraintName;
+
+		constraintName.arena = NULL;
+		constraintName.rdns  = NULL;
+
+		cArena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE); 
+		if (!cArena)
+		    goto loser;
+		rv = CERT_CopyName(cArena, &constraintName, 
+		                   &current->name.name.directoryName);
+		if (rv != SECSuccess) {
+		    PORT_FreeArena(cArena, PR_FALSE);
 		    goto loser;
 		}
+		cRDNs = constraintName.rdns;  
+		while (cRDNs && *cRDNs) { /* loop over constraint RDNs */
+		    cRDN = *cRDNs++;
+		    cAVAs = cRDN->avas;
+		    while (cAVAs && *cAVAs) { /* loop over constraint AVAs */
+			cAVA = *cAVAs++;
+
+			/* certName was initialized in Phase 1. */
+			PORT_Assert(certName.arena != NULL);
+
+			nRDNs = certName.rdns;
+			while (nRDNs && *nRDNs) { /* loop over name RDNs */
+			    nRDN = *nRDNs++;
+			    nAVAs = nRDN->avas;
+			    while (nAVAs && *nAVAs) { /* loop over name AVAs */
+				nAVA = *nAVAs++;
+				status = CERT_CompareAVA(cAVA, nAVA);
+				if (status == SECEqual) 
+				    break;
+			    } /* loop over name AVAs */
+			    if (status == SECEqual) 
+				break;
+			} /* loop over name RDNs */
+			if (status != SECEqual) 
+			    break;
+		    } /* loop over AVAs in constraint */
+		    if (status != SECEqual) 
+			break;
+		} /* loop over RDNs in constraint */
+		PORT_FreeArena(cArena, PR_FALSE);
+		if (status == SECEqual) {
+		    if (!excluded) 
+			goto found;
+		    goto no_match;
+		}
+		break;
 	    }
-	    if (rv == SECSuccess && status == SECEqual) {
-		goto found;
-	    }
-	    current = cert_get_next_name_constraint(current);
-	} while (current !=constraints);
-    } else {
-	goto found;
-    }
-loser:
-    if (certName.arena) {
-	CERT_DestroyName(&certName);
-    }
-    if (constraintName.arena) {
-	CERT_DestroyName(&constraintName);
-    }
+	    goto loser;
+#ifdef NOTYET
+	case certOtherName:	/* type 1 */
+	case certX400Address:	/* type 4 */
+	case certEDIPartyName:  /* type 6 */
+	case certIPAddress:	/* type 8 */
+	case certRegisterID:	/* type 9 */
+	    PORT_Assert(name->type == current->name.type);
+	    if (name->type == current->name.type &&
+		name->name.other.len == current->name.name.other.len &&
+		!memcmp(name->name.other.data, current->name.name.other.data,
+		        name->name.other.len))
+		rv = SECSuccess;
+	    else
+	    	rv = SECFailure;
+	    break;
+#endif
+	default:
+	    /* non-standard types are not supported */
+	    goto loser;
+	}
+	if (rv == SECSuccess && status == SECEqual) {
+	    goto found;
+	}
+next_constraint:
+	current = cert_get_next_name_constraint(current);
+    } while (current !=constraints);
+
+no_match:
+    if (nArena)
+    	PORT_FreeArena(nArena, PR_FALSE);
     return SECFailure;
+
+loser:
+    if (nArena)
+    	PORT_FreeArena(nArena, PR_FALSE);
+    return excluded ? SECSuccess : SECFailure;
+
 found:
-    if (certName.arena) {
-	CERT_DestroyName(&certName);
-    }
-    if (constraintName.arena) {
-	CERT_DestroyName(&constraintName);
-    }
+    if (nArena)
+    	PORT_FreeArena(nArena, PR_FALSE);
     return SECSuccess;
 }
 
