@@ -768,12 +768,15 @@ void CTests::OnInterfacesNsiwebnav()
    LoadUriTest("http://www.yahoo.com/", nsIWebNavigation::LOAD_FLAGS_NONE);
    ReloadTest(nsIWebNavigation::LOAD_FLAGS_NONE);
 
-   LoadUriTest("http://www.cisco.com/", nsIWebNavigation::LOAD_FLAGS_MASK);
- // ReloadTest(nsIWebNavigation::LOAD_FLAGS_MASK);
+   LoadUriTest("http://www.cisco.com/", nsIWebNavigation::LOAD_FLAGS_IS_REFRESH);
+   ReloadTest(nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE);
 
    LoadUriTest("http://www.netscape.com/", nsIWebNavigation::LOAD_FLAGS_IS_LINK);
-   LoadUriTest("http://www.aol.com/", nsIWebNavigation::LOAD_FLAGS_BYPASS_HISTORY);
- 
+   ReloadTest(nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY);
+
+   LoadUriTest("http://www.aol.com/", nsIWebNavigation::LOAD_FLAGS_REPLACE_HISTORY);
+   ReloadTest(nsIWebNavigation::LOAD_FLAGS_CHARSET_CHANGE);
+
 	// Stop() test
    StopUriTest("http://www.microsoft.com/");
 
@@ -863,6 +866,9 @@ void CTests::LoadUriTest(char *theUrl, const unsigned long theFlag)
    case nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY:
 	   strcpy(theFlagName, "LOAD_FLAGS_BYPASS_PROXY");
 	   break;
+   case nsIWebNavigation::LOAD_FLAGS_CHARSET_CHANGE:
+	   strcpy(theFlagName, "LOAD_FLAGS_BYPASS_PROXY");
+	   break;
    }
 
    rv = qaWebNav->LoadURI(NS_ConvertASCIItoUCS2(theUrl).get(), 
@@ -900,6 +906,9 @@ void CTests::ReloadTest(const unsigned long theFlag)
 	   strcpy(theFlagName, "LOAD_FLAGS_BYPASS_CACHE");
 	   break;
    case nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY:
+	   strcpy(theFlagName, "LOAD_FLAGS_BYPASS_PROXY");
+	   break;
+   case nsIWebNavigation::LOAD_FLAGS_CHARSET_CHANGE:
 	   strcpy(theFlagName, "LOAD_FLAGS_BYPASS_PROXY");
 	   break;
    }
@@ -976,13 +985,13 @@ void CTests::GetSHTest()
 //  table columns corrsp to: pending, status, suspend, resume, cancel,
 //  setLoadGroup & getLoadGroup tests respectively.
 
-Element UrlTable[] = {
-	{"http://www.netscape.com", 1, 1, 0, 0, 0, 1, 1},
-	{"http://www.yahoo.com",    0, 0, 1, 1, 0, 0, 0},
-	{"http://www.cisco.com",    0, 0, 0, 0, 1, 0, 0},
-	{"http://www.sun.com",      0, 0, 0, 0, 0, 1, 1},
-	{"http://www.intel.com",    1, 1, 1, 0, 0, 0, 0},
-	{"http://www.aol.com",      0, 1, 0, 0, 0, 1, 1}
+Element UriTable[] = {
+	{"http://www.netscape.com",		1, 1, 0, 0, 0, 1, 1},
+	{"http://www.yahoo.com",		0, 0, 1, 1, 0, 0, 0},
+	{"http://www.cisco.com",		0, 0, 0, 0, 1, 0, 0},
+	{"http://www.sun.com",			0, 0, 0, 0, 0, 1, 1},
+	{"http://www.intel.com",		1, 1, 1, 0, 0, 0, 0},
+	{"http://www.aol.com",			0, 1, 0, 0, 0, 1, 1}
 }; 
 
 void CTests::OnInterfacesNsirequest() 
@@ -1004,7 +1013,7 @@ void CTests::OnInterfacesNsirequest()
 //	theSpec = "http://www.netscape.com";
 	for (i=0; i<6; i++)
 	{
-		theSpec = UrlTable[i].theUrl;
+		theSpec = UriTable[i].theUri;
 		CQaUtils::FormatAndPrintOutput("the uri spec = ", theSpec, 2);
 
 		rv = NS_NewURI(getter_AddRefs(theURI), theSpec);
@@ -1044,25 +1053,25 @@ void CTests::OnInterfacesNsirequest()
 
 		nsCOMPtr<nsIRequest> theRequest = do_QueryInterface(theChannel);
 
-		if (UrlTable[i].reqPend == TRUE)
+		if (UriTable[i].reqPend == TRUE)
 			IsPendingReqTest(theRequest);
 
-		if (UrlTable[i].reqStatus == TRUE)
+		if (UriTable[i].reqStatus == TRUE)
 			GetStatusReqTest(theRequest);
 
-		if (UrlTable[i].reqSuspend == TRUE)
+		if (UriTable[i].reqSuspend == TRUE)
 			SuspendReqTest(theRequest);	
 
-		if (UrlTable[i].reqResume == TRUE)
+		if (UriTable[i].reqResume == TRUE)
 			ResumeReqTest(theRequest);	
 
-		if (UrlTable[i].reqCancel == TRUE)
+		if (UriTable[i].reqCancel == TRUE)
 			CancelReqTest(theRequest);	
 
-		if (UrlTable[i].reqSetLoadGroup == TRUE)
+		if (UriTable[i].reqSetLoadGroup == TRUE)
 			SetLoadGroupTest(theRequest, theLoadGroup);	
 
-		if (UrlTable[i].reqGetLoadGroup == TRUE)
+		if (UriTable[i].reqGetLoadGroup == TRUE)
 			GetLoadGroupTest(theRequest);
 
 		CQaUtils::QAOutput("- - - - - - - - - - - - - - - - - - - - -", 1);
