@@ -428,8 +428,6 @@ displayAlert(nsXPIDLString formattedString, nsNSSSocketInfo *infoObject)
      
 }
 
-
-
 static nsresult
 nsHandleSSLError(nsNSSSocketInfo *socketInfo, PRInt32 err)
 {
@@ -439,9 +437,24 @@ nsHandleSSLError(nsNSSSocketInfo *socketInfo, PRInt32 err)
   if (NS_FAILED(rv))
     return rv;
 
+  char buf[80];
+  PR_snprintf(buf, 80, "%ld", err);
+  NS_ConvertASCIItoUCS2 errorCode(buf);
+
   nsXPIDLCString hostName;
   socketInfo->GetHostName(getter_Copies(hostName));
   NS_ConvertASCIItoUCS2 hostNameU(hostName);
+
+  NS_DEFINE_CID(StringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
+  nsCOMPtr<nsIStringBundleService> service = 
+                              do_GetService(StringBundleServiceCID, &rv);
+  nsCOMPtr<nsIStringBundle> brandBundle;
+  service->CreateBundle("chrome://global/locale/brand.properties",
+                        getter_AddRefs(brandBundle));
+  nsXPIDLString brandShortName;
+  brandBundle->GetStringFromName(NS_LITERAL_STRING("brandShortName").get(),
+                                 getter_Copies(brandShortName));
+    
   const PRUnichar *params[2];
   nsXPIDLString formattedString;
 
@@ -461,37 +474,310 @@ nsHandleSSLError(nsNSSSocketInfo *socketInfo, PRInt32 err)
   case SSL_ERROR_EXPORT_ONLY_SERVER:
   case SSL_ERROR_US_ONLY_SERVER:
   case SSL_ERROR_NO_CYPHER_OVERLAP:
-    {
-      NS_DEFINE_CID(StringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
-      nsCOMPtr<nsIStringBundleService> service = 
-                                  do_GetService(StringBundleServiceCID, &rv);
-      nsCOMPtr<nsIStringBundle> brandBundle;
-      service->CreateBundle("chrome://global/locale/brand.properties",
-                            getter_AddRefs(brandBundle));
-      nsXPIDLString brandShortName;
-      brandBundle->GetStringFromName(NS_LITERAL_STRING("brandShortName").get(),
-                                     getter_Copies(brandShortName));
-      params[0] = brandShortName.get();
-      params[1] = hostNameU.get();
-      nssComponent->PIPBundleFormatStringFromName(NS_LITERAL_STRING("SSLNoMatchingCiphers").get(),
-                                                  params, 2,
-                                                  getter_Copies(formattedString));
+  case SSL_ERROR_UNSUPPORTED_VERSION:
+  case SSL_ERROR_UNKNOWN_CIPHER_SUITE:
+  case SSL_ERROR_NO_CIPHERS_SUPPORTED:
+  case SSL_ERROR_FORTEZZA_PQG:
+    params[0] = brandShortName.get();
+    params[1] = hostNameU.get();
+    nssComponent->PIPBundleFormatStringFromName(NS_LITERAL_STRING("SSLNoMatchingCiphers").get(),
+                                                params, 2,
+                                                getter_Copies(formattedString));
                                                   
-    }
     break;
+
+  //Clients Cert Rejected
+  case SSL_ERROR_REVOKED_CERT_ALERT :
+    params[0] = hostNameU.get();
+    nssComponent->PIPBundleFormatStringFromName(NS_LITERAL_STRING("UsersCertRevoked").get(),
+                                                params, 1,
+                                                getter_Copies(formattedString));
+    break;
+
+  case SSL_ERROR_EXPIRED_CERT_ALERT:
+    params[0] = hostNameU.get();
+    nssComponent->PIPBundleFormatStringFromName(NS_LITERAL_STRING("UsersCertExpired").get(),
+                                                params, 1,
+                                                getter_Copies(formattedString));
+    break;
+
+  case SSL_ERROR_BAD_CERT_ALERT:
+  case SSL_ERROR_UNSUPPORTED_CERT_ALERT:
+  case SSL_ERROR_CERTIFICATE_UNKNOWN_ALERT:
+    params[0] = hostNameU.get();
+    params[1] = errorCode.get();
+    nssComponent->PIPBundleFormatStringFromName(NS_LITERAL_STRING("UsersCertRejected").get(),
+                                                params, 2,
+                                                getter_Copies(formattedString));
+    break;
+
+  //Errors related to Peers Certificate
+  case SEC_ERROR_CRL_EXPIRED:
+    params[0] = hostNameU.get();
+    nssComponent->PIPBundleFormatStringFromName(NS_LITERAL_STRING("CRLExpired").get(), 
+                                                params, 1,
+                                                getter_Copies(formattedString));
+    break;
+
+  case SEC_ERROR_CRL_NOT_YET_VALID:
+    params[0] = hostNameU.get();
+    nssComponent->PIPBundleFormatStringFromName(NS_LITERAL_STRING("CRLNotYetValid").get(), 
+                                                params, 1,
+                                                getter_Copies(formattedString));
+    break;
+
+  case SEC_ERROR_CRL_INVALID:
+    params[0] = hostNameU.get();
+    nssComponent->PIPBundleFormatStringFromName(NS_LITERAL_STRING("CRLSNotValid").get(), 
+                                                params, 1,
+                                                getter_Copies(formattedString));
+    break;
+
+  case SEC_ERROR_CRL_BAD_SIGNATURE:
+    params[0] = hostNameU.get();
+    nssComponent->PIPBundleFormatStringFromName(NS_LITERAL_STRING("CRLSigNotValid").get(), 
+                                                params, 1,
+                                                getter_Copies(formattedString));
+    break;
+
+  case SEC_ERROR_OCSP_MALFORMED_REQUEST:
+    params[0] = hostNameU.get();
+    nssComponent->PIPBundleFormatStringFromName(NS_LITERAL_STRING("OCSPMalformedRequest").get(), 
+                                             params, 1,
+                                             getter_Copies(formattedString));
+    break;
+
+  case SEC_ERROR_OCSP_REQUEST_NEEDS_SIG:
+    params[0] = hostNameU.get();
+    nssComponent->PIPBundleFormatStringFromName(NS_LITERAL_STRING("OCSPRequestNeedsSig").get(), 
+                                             params, 1,
+                                             getter_Copies(formattedString));
+    break;
+
+  case SEC_ERROR_OCSP_UNAUTHORIZED_REQUEST:
+    params[0] = hostNameU.get();
+    nssComponent->PIPBundleFormatStringFromName(NS_LITERAL_STRING("OCSPUnauthorizedReq").get(), 
+                                             params, 1,
+                                             getter_Copies(formattedString));
+    break;
+
+  case SEC_ERROR_OCSP_SERVER_ERROR:
+    params[0] = hostNameU.get();
+    nssComponent->PIPBundleFormatStringFromName(NS_LITERAL_STRING("OCSPServerError").get(), 
+                                             params, 1,
+                                             getter_Copies(formattedString));
+    break;
+
+  case SEC_ERROR_OCSP_TRY_SERVER_LATER:
+    params[0] = hostNameU.get();
+    nssComponent->PIPBundleFormatStringFromName(NS_LITERAL_STRING("OCSPTryServerLater").get(), 
+                                             params, 1,
+                                             getter_Copies(formattedString));
+    break;
+  
+  case SEC_ERROR_OCSP_FUTURE_RESPONSE:
+    params[0] = hostNameU.get();
+    nssComponent->PIPBundleFormatStringFromName(NS_LITERAL_STRING("OCSPFutureResponse").get(), 
+                                             params, 1,
+                                             getter_Copies(formattedString));
+    break;
+
+  case SEC_ERROR_OCSP_OLD_RESPONSE:
+    params[0] = hostNameU.get();
+    nssComponent->PIPBundleFormatStringFromName(NS_LITERAL_STRING("OCSPOldResponse").get(), 
+                                             params, 1,
+                                             getter_Copies(formattedString));
+    break;
+
+  case SEC_ERROR_OCSP_UNKNOWN_RESPONSE_TYPE:
+  case SEC_ERROR_OCSP_BAD_HTTP_RESPONSE:
+  case SEC_ERROR_OCSP_UNKNOWN_RESPONSE_STATUS:
+  case SEC_ERROR_OCSP_MALFORMED_RESPONSE:
+    params[0] = hostNameU.get();
+    params[1] = errorCode.get();
+    nssComponent->PIPBundleFormatStringFromName(NS_LITERAL_STRING("OCSPCorruptedResponse").get(), 
+                                             params, 2,
+                                             getter_Copies(formattedString));
+    break;
+
+  case SEC_ERROR_OCSP_UNAUTHORIZED_RESPONSE:
+    params[0] = hostNameU.get();
+    nssComponent->PIPBundleFormatStringFromName(NS_LITERAL_STRING("OCSPUnauthorizedResponse").get(), 
+                                             params, 1,
+                                             getter_Copies(formattedString));
+    break;
+    
+  case SEC_ERROR_OCSP_UNKNOWN_CERT:
+    params[0] = hostNameU.get();
+    nssComponent->PIPBundleFormatStringFromName(NS_LITERAL_STRING("OCSPUnknownCert").get(), 
+                                             params, 1,
+                                             getter_Copies(formattedString));
+    break;
+
+
+  case SEC_ERROR_OCSP_NO_DEFAULT_RESPONDER:
+    params[0] = hostNameU.get();
+    nssComponent->PIPBundleFormatStringFromName(NS_LITERAL_STRING("OCSPNoDefaultResponder").get(), 
+                                             params, 1,
+                                             getter_Copies(formattedString));
+    break;
+
+  case SEC_ERROR_REVOKED_CERTIFICATE:
+    params[0] = hostNameU.get();
+    nssComponent->PIPBundleFormatStringFromName(NS_LITERAL_STRING("PeersCertRevoked").get(), 
+                                             params, 1, 
+                                             getter_Copies(formattedString));
+    break;
+
+  case SEC_ERROR_UNTRUSTED_CERT:
+    params[0] = hostNameU.get();
+	  nssComponent->PIPBundleFormatStringFromName(NS_LITERAL_STRING("PeersCertUntrusted").get(), 
+                                            params, 1, 
+                                            getter_Copies(formattedString));
+	  break;
+
+  case SSL_ERROR_BAD_CERT_DOMAIN:
+    params[0] = hostNameU.get();
+	  nssComponent->PIPBundleFormatStringFromName(NS_LITERAL_STRING("PeersCertWrongDomain").get(), 
+                                            params, 1, 
+                                            getter_Copies(formattedString));
+	  break;
+
+  case SEC_ERROR_EXPIRED_CERTIFICATE:
+    params[0] = hostNameU.get();
+	  nssComponent->PIPBundleFormatStringFromName(NS_LITERAL_STRING("PeersCertExpired").get(), 
+                                            params, 1, 
+                                            getter_Copies(formattedString));
+	  break;
+
+  //A generic error handler for peer cert
+  case SEC_ERROR_UNKNOWN_CERT:
+  case SEC_ERROR_BAD_SIGNATURE:
+  case SEC_ERROR_BAD_KEY:
+  case SEC_ERROR_CERT_USAGES_INVALID:
+  case SEC_ERROR_INADEQUATE_KEY_USAGE:
+  case SEC_ERROR_INADEQUATE_CERT_TYPE:
+  case SEC_ERROR_CERT_NOT_IN_NAME_SPACE:
+  case SEC_ERROR_CERT_NOT_VALID:
+  case SEC_ERROR_CERT_ADDR_MISMATCH:
+  case SSL_ERROR_BAD_CERTIFICATE:
+  case SSL_ERROR_UNSUPPORTED_CERTIFICATE_TYPE:
+  case SSL_ERROR_WRONG_CERTIFICATE:
+  case SSL_ERROR_CERT_KEA_MISMATCH:
+  case SEC_ERROR_EXTENSION_VALUE_INVALID :
+  case SEC_ERROR_EXTENSION_NOT_FOUND:
+  case SEC_ERROR_UNKNOWN_CRITICAL_EXTENSION:
+    params[0] = hostNameU.get();
+    params[1] = errorCode.get();
+    nssComponent->PIPBundleFormatStringFromName(NS_LITERAL_STRING("PeersCertNoGood").get(), 
+                                               params, 2 ,
+                                               getter_Copies(formattedString));
+	  break;
+
+  case SSL_ERROR_BAD_MAC_READ:
+    params[0] = brandShortName.get();
+    nssComponent->PIPBundleFormatStringFromName(NS_LITERAL_STRING("BadMac").get(),
+                                                params, 1,
+                                                getter_Copies(formattedString));
+    break;
+
+  case SSL_ERROR_BAD_MAC_ALERT:
+    params[0] = hostNameU.get();
+    nssComponent->PIPBundleFormatStringFromName(NS_LITERAL_STRING("BadMac").get(),
+                                                params, 1,
+                                                getter_Copies(formattedString));
+    break;
+
+  //Connection Reset by peer
+  case SSL_ERROR_CLOSE_NOTIFY_ALERT:
+  case SSL_ERROR_SOCKET_WRITE_FAILURE:
+    params[0] = hostNameU.get();
+    params[1] = errorCode.get();
+    nssComponent->PIPBundleFormatStringFromName(NS_LITERAL_STRING("PeerResetConnection").get(),
+                                                params, 2,
+                                                getter_Copies(formattedString));
+    break;
+
+  //Connection reset by host
+  case SEC_ERROR_USER_CANCELLED:
+  case SEC_ERROR_MESSAGE_SEND_ABORTED:
+    nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("HostResetConnection").get(),
+                                                getter_Copies(formattedString));
+    break;
+
+  //Bad password
+  case SEC_ERROR_BAD_PASSWORD:
+  case SEC_ERROR_RETRY_PASSWORD:
+    nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("BadPassword").get(),
+                                                getter_Copies(formattedString));
+    break;
+
+  //Bad Database
+  case SEC_ERROR_BAD_DATABASE:
+  case SEC_ERROR_NO_KEY:
+  case SEC_ERROR_CERT_NO_RESPONSE:
+    params[0] = errorCode.get();
+    nssComponent->PIPBundleFormatStringFromName(NS_LITERAL_STRING("BadDatabase").get(),
+                                                params, 1,
+                                                getter_Copies(formattedString));
+    break;
+
+  //Malformed or unxepected data or message was received from server
+  case SSL_ERROR_BAD_SERVER:
+  case SSL_ERROR_BAD_BLOCK_PADDING:
+  case SSL_ERROR_RX_RECORD_TOO_LONG:
+  case SSL_ERROR_TX_RECORD_TOO_LONG:
+  case SSL_ERROR_RX_MALFORMED_HELLO_REQUEST:
+  case SSL_ERROR_RX_MALFORMED_SERVER_HELLO:
+  case SSL_ERROR_RX_MALFORMED_CERTIFICATE:
+  case SSL_ERROR_RX_MALFORMED_SERVER_KEY_EXCH:
+  case SSL_ERROR_RX_MALFORMED_CERT_REQUEST:
+  case SSL_ERROR_RX_MALFORMED_HELLO_DONE:
+  case SSL_ERROR_RX_MALFORMED_FINISHED:
+  case SSL_ERROR_RX_MALFORMED_CHANGE_CIPHER:
+  case SSL_ERROR_RX_MALFORMED_ALERT:
+  case SSL_ERROR_RX_MALFORMED_HANDSHAKE:
+  case SSL_ERROR_RX_MALFORMED_APPLICATION_DATA:
+  case SSL_ERROR_RX_UNEXPECTED_HELLO_REQUEST:
+  case SSL_ERROR_RX_UNEXPECTED_SERVER_HELLO:
+  case SSL_ERROR_RX_UNEXPECTED_CERTIFICATE:
+  case SSL_ERROR_RX_UNEXPECTED_SERVER_KEY_EXCH:
+  case SSL_ERROR_RX_UNEXPECTED_CERT_REQUEST:
+  case SSL_ERROR_RX_UNEXPECTED_HELLO_DONE:
+  case SSL_ERROR_RX_UNEXPECTED_FINISHED:
+  case SSL_ERROR_RX_UNEXPECTED_CHANGE_CIPHER:
+  case SSL_ERROR_RX_UNEXPECTED_ALERT:
+  case SSL_ERROR_RX_UNEXPECTED_HANDSHAKE:
+  case SSL_ERROR_RX_UNEXPECTED_APPLICATION_DATA:
+  case SSL_ERROR_RX_UNKNOWN_RECORD_TYPE:
+  case SSL_ERROR_RX_UNKNOWN_HANDSHAKE:
+  case SSL_ERROR_RX_UNKNOWN_ALERT:
+    params[0] = hostNameU.get();
+    params[1] = errorCode.get();
+    nssComponent->PIPBundleFormatStringFromName(NS_LITERAL_STRING("BadServer").get(),
+                                                params, 2,
+                                                getter_Copies(formattedString));
+    break;
+
+  //Alert for Malformed or unexpected data or message recieved by server
+  case SSL_ERROR_HANDSHAKE_UNEXPECTED_ALERT:
+  case SSL_ERROR_DECOMPRESSION_FAILURE_ALERT:
+  case SSL_ERROR_HANDSHAKE_FAILURE_ALERT:
+  case SSL_ERROR_ILLEGAL_PARAMETER_ALERT:
+    params[0] = hostNameU.get();
+    params[1] = errorCode.get();
+    nssComponent->PIPBundleFormatStringFromName(NS_LITERAL_STRING("BadClient").get(),
+                                                params, 2,
+                                                getter_Copies(formattedString));
+    break;
+
   default:
-    {
-      char buf[80];
-      PR_snprintf(buf, 80, "%ld", err);
-      NS_ConvertASCIItoUCS2 errorCode(buf);
-      params[0] = hostNameU.get();
-      params[1] = errorCode.get(); 
-      nssComponent->PIPBundleFormatStringFromName(NS_LITERAL_STRING("SSLGenericError").get(),
-                                                  params, 2, 
-                                                  getter_Copies(formattedString));
+    params[0] = hostNameU.get();
+    params[1] = errorCode.get(); 
+    nssComponent->PIPBundleFormatStringFromName(NS_LITERAL_STRING("SSLGenericError").get(),
+                                                params, 2, 
+                                                getter_Copies(formattedString));
       
-    }                                           
-    break;
   }
 
    rv = displayAlert(formattedString, socketInfo);
@@ -987,9 +1273,9 @@ nsContinueDespiteCertError(nsNSSSocketInfo  *infoObject,
     }
     break;
   default:
-    displayUnknownCertErrorAlert(infoObject, error);
-    rv = NS_ERROR_FAILURE;
-    break;
+    nsHandleSSLError(infoObject,error);
+    retVal = PR_FALSE;
+
   }
   if (retVal && addType != nsIBadCertListener::UNINIT_ADD_FLAG) {
     addCertToDB(peerCert, addType);
@@ -998,42 +1284,6 @@ nsContinueDespiteCertError(nsNSSSocketInfo  *infoObject,
   CERT_DestroyCertificate(peerCert);
   return NS_FAILED(rv) ? PR_FALSE : retVal;
 }
-
-
-
-nsresult
-displayUnknownCertErrorAlert(nsNSSSocketInfo *infoObject, int error)
-{
-    nsresult rv;
-    NS_DEFINE_CID(nssComponentCID, NS_NSSCOMPONENT_CID);
-    nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(nssComponentCID, &rv));
-    if (NS_FAILED(rv))
-      return rv;
-    nsXPIDLString formattedString;
-    nsXPIDLCString hostName;
-    infoObject->GetHostName(getter_Copies(hostName));
-    NS_ConvertASCIItoUCS2 hostNameU(hostName);
-    const PRUnichar *params[2];
-    char buf[80];
-    PR_snprintf(buf, 80, "%ld", error);
-    NS_ConvertASCIItoUCS2 errorCode(buf);
-    params[0] = hostNameU.get();
-    params[1] = errorCode.get();
-	
-    //This is not a very precise String - should add some entry like 'unknown cert
-    //error code etc. ...' in the .property file. Using 'Generic ssl error for now.
-    nssComponent->PIPBundleFormatStringFromName(NS_LITERAL_STRING("SSLGenericError").get(),
-                                                  params, 2, 
-                                                  getter_Copies(formattedString));
-    
-    rv = displayAlert(formattedString, infoObject);
-
-    //Possibly, in most of the cases, we would never not look into this return 
-    //value in the caller
-    return rv;
-}
-
-
 
 static SECStatus
 verifyCertAgain(CERTCertificate *cert, 
